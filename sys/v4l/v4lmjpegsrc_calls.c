@@ -17,8 +17,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/*#define DEBUG */
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -33,6 +31,12 @@
 #define MAP_FAILED ( (caddr_t) -1 )
 #endif
 
+#define DEBUG(format, args...) \
+	GST_DEBUG_ELEMENT(GST_CAT_PLUGIN_INFO, \
+		GST_ELEMENT(v4lmjpegsrc), \
+		"V4LMJPEGSRC: " format "\n", ##args)
+
+
 char *input_name[] = { "Composite", "S-Video", "TV-Tuner", "Autodetect" };
 
 
@@ -46,10 +50,7 @@ static gboolean
 gst_v4lmjpegsrc_queue_frame (GstV4lMjpegSrc *v4lmjpegsrc,
                              gint           num)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4LMJPEGSRC: gst_v4lmjpegsrc_queue_frame(), num = %d\n",
-    num);
-#endif
+  DEBUG("queueing frame %d", num);
 
   if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_QBUF_CAPT, &num) < 0)
   {
@@ -73,10 +74,7 @@ static gboolean
 gst_v4lmjpegsrc_sync_next_frame (GstV4lMjpegSrc *v4lmjpegsrc,
                                  gint           *num)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4LMJPEGSRC: gst_v4lmjpegsrc_sync_frame(), num = %d\n",
-    num);
-#endif
+  DEBUG("syncing on next frame");
 
   if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_SYNC, &(v4lmjpegsrc->bsync)) < 0)
   {
@@ -106,10 +104,8 @@ gst_v4lmjpegsrc_set_input_norm (GstV4lMjpegSrc       *v4lmjpegsrc,
 {
   struct mjpeg_status bstat;
 
-#ifdef DEBUG
-  fprintf(stderr, "V4LMJPEGSRC: gst_v4lmjpegsrc_set_input_norm(), input = %d (%s), norm = %d (%s)\n",
+  DEBUG("setting input = %d (%s), norm = %d (%s)",
     input, input_name[input], norm, norm_name[norm]);
-#endif
 
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsrc));
   GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
@@ -198,11 +194,8 @@ gst_v4lmjpegsrc_set_buffer (GstV4lMjpegSrc *v4lmjpegsrc,
                             gint           numbufs,
                             gint           bufsize)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4LMJPEGSRC: gst_v4lmjpegsrc_set_buffer(), numbufs = %d, bufsize = %d KB\n",
+  DEBUG("setting buffer info to numbufs = %d, bufsize = %d KB",
     numbufs, bufsize);
-#endif
-
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsrc));
   GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
 
@@ -227,11 +220,8 @@ gst_v4lmjpegsrc_set_capture (GstV4lMjpegSrc *v4lmjpegsrc,
   int norm, input, mw;
   struct mjpeg_params bparm;
 
-#ifdef DEBUG
-  fprintf(stderr, "V4LMJPEGSRC: gst_v4lmjpegsrc_set_capture(), decimation = %d, quality = %d\n",
+  DEBUG("setting decimation = %d, quality = %d",
     decimation, quality);
-#endif
-
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsrc));
   GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
 
@@ -297,12 +287,9 @@ gboolean gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc *v4lmjpegsrc,
   gint maxwidth;
   struct mjpeg_params bparm;
 
-#ifdef DEBUG
-  fprintf(stderr, "V4LMJPEGSRC: gst_v4lmjpegsrc_set_capture_m(), x_offset = %d, y_offset = %d, "
+  DEBUG("setting x_offset = %d, y_offset = %d, "
     "width = %d, height = %d, h_decimation = %d, v_decimation = %d, quality = %d\n",
     x_offset, y_offset, width, height, h_decimation, v_decimation, quality);
-#endif
-
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsrc));
   GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
 
@@ -419,10 +406,7 @@ gboolean gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc *v4lmjpegsrc,
 gboolean
 gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc *v4lmjpegsrc)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4LMJPEGSRC: gst_v4lmjpegsrc_capture_init()\n");
-#endif
-
+  DEBUG("initting capture subsystem");
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsrc));
   GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
 
@@ -441,7 +425,7 @@ gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc *v4lmjpegsrc)
   /* Map the buffers */
   GST_V4LELEMENT(v4lmjpegsrc)->buffer = mmap(0,
     v4lmjpegsrc->breq.count * v4lmjpegsrc->breq.size, 
-    PROT_READ, MAP_SHARED, GST_V4LELEMENT(v4lmjpegsrc)->video_fd, 0);
+    PROT_READ|PROT_WRITE, MAP_SHARED, GST_V4LELEMENT(v4lmjpegsrc)->video_fd, 0);
   if (GST_V4LELEMENT(v4lmjpegsrc)->buffer == MAP_FAILED)
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsrc),
@@ -466,10 +450,7 @@ gst_v4lmjpegsrc_capture_start (GstV4lMjpegSrc *v4lmjpegsrc)
 {
   int n;
 
-#ifdef DEBUG
-  fprintf(stderr, "V4LMJPEGSRC: gst_v4lmjpegsrc_capture_start()\n");
-#endif
-
+  DEBUG("starting capture");
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
 
@@ -493,10 +474,7 @@ gst_v4lmjpegsrc_grab_frame (GstV4lMjpegSrc *v4lmjpegsrc,
                             gint           *num,
                             gint           *size)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4LMJPEGSRC: gst_v4lmjpegsrc_grab_frame()\n");
-#endif
-
+  DEBUG("grabbing frame");
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
 
@@ -520,10 +498,7 @@ guint8 *
 gst_v4lmjpegsrc_get_buffer (GstV4lMjpegSrc *v4lmjpegsrc,
                             gint           num)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4LMJPEGSRC: gst_v4lmjpegsrc_get_buffer(), num = %d\n",
-    num);
-#endif
+  DEBUG("gst_v4lmjpegsrc_get_buffer(), num = %d", num);
 
   if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc)) ||
       !GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lmjpegsrc)))
@@ -546,11 +521,7 @@ gboolean
 gst_v4lmjpegsrc_requeue_frame (GstV4lMjpegSrc *v4lmjpegsrc,
                                gint           num)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4LMJPEGSRC: gst_v4lmjpegsrc_requeue_frame(), num = %d\n",
-    num);
-#endif
-
+  DEBUG("requeueing frame %d", num);
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
 
@@ -570,10 +541,7 @@ gst_v4lmjpegsrc_requeue_frame (GstV4lMjpegSrc *v4lmjpegsrc,
 gboolean
 gst_v4lmjpegsrc_capture_stop (GstV4lMjpegSrc *v4lmjpegsrc)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4LMJPEGSRC: gst_v4lmjpegsrc_capture_stop()\n");
-#endif
-
+  DEBUG("stopping capture");
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
 
@@ -594,10 +562,7 @@ gst_v4lmjpegsrc_capture_stop (GstV4lMjpegSrc *v4lmjpegsrc)
 gboolean
 gst_v4lmjpegsrc_capture_deinit (GstV4lMjpegSrc *v4lmjpegsrc)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4LMJPEGSRC: gst_v4lmjpegsrc_capture_deinit()\n");
-#endif
-
+  DEBUG("quitting capture subsystem");
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
 

@@ -55,8 +55,8 @@ struct _GstV4lMjpegSrc {
   struct mjpeg_sync bsync;
   struct mjpeg_requestbuffers breq;
 
-  /* list of available caps */
-  GstCaps *capslist;
+  /* first timestamp */
+  guint64 first_timestamp;
 
   /* caching values */
   gint x_offset;

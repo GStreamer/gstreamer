@@ -206,8 +206,6 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
 
   v4lmjpegsrc->numbufs = 64;
   v4lmjpegsrc->bufsize = 256;
-
-  v4lmjpegsrc->capslist = capslist;
 }
 
 
@@ -219,7 +217,55 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
 
   v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));
 
-  /* we will try_set_caps() with the actual size (wxh) when we know it */
+  /* in case the buffers are active (which means that we already
+   * did capsnego before and didn't clean up), clean up anyways */
+  if (GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc)))
+    if (!gst_v4lmjpegsrc_capture_deinit(v4lmjpegsrc))
+      return GST_PAD_CONNECT_REFUSED;
+
+  /* Note: basically, we don't give a damn about the opposite caps here.
+   * that might seem odd, but it isn't. we know that the opposite caps is
+   * either NULL or has mime type video/jpeg, and in both cases, we'll set
+   * our own mime type back and it'll work. Other properties are to be set
+   * by the src, not by the opposite caps */
+
+  /* set buffer info */
+  if (!gst_v4lmjpegsrc_set_buffer(v4lmjpegsrc, v4lmjpegsrc->numbufs, v4lmjpegsrc->bufsize))
+    return GST_PAD_CONNECT_REFUSED;
+
+  /* set capture parameters and mmap the buffers */
+  if (!v4lmjpegsrc->frame_width && !v4lmjpegsrc->frame_height &&
+       v4lmjpegsrc->x_offset < 0 && v4lmjpegsrc->y_offset < 0 &&
+       v4lmjpegsrc->horizontal_decimation == v4lmjpegsrc->vertical_decimation)
+  {
+    if (!gst_v4lmjpegsrc_set_capture(v4lmjpegsrc,
+        v4lmjpegsrc->horizontal_decimation, v4lmjpegsrc->quality))
+      return GST_PAD_CONNECT_REFUSED;
+  }
+  else
+  {
+    if (!gst_v4lmjpegsrc_set_capture_m(v4lmjpegsrc,
+         v4lmjpegsrc->x_offset, v4lmjpegsrc->y_offset,
+         v4lmjpegsrc->frame_width, v4lmjpegsrc->frame_height,
+         v4lmjpegsrc->horizontal_decimation, v4lmjpegsrc->vertical_decimation,
+         v4lmjpegsrc->quality))
+      return GST_PAD_CONNECT_REFUSED;
+  }
+  /* we now have an actual width/height - *set it* */
+  caps = gst_caps_new("v4lmjpegsrc_caps",
+                      "video/jpeg",
+                      gst_props_new(
+                        "width",  GST_PROPS_INT(v4lmjpegsrc->end_width),
+                        "height", GST_PROPS_INT(v4lmjpegsrc->end_height),
+                        NULL       ) );
+  if (!gst_pad_try_set_caps(v4lmjpegsrc->srcpad, caps))
+  {
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Failed to set new caps");
+    return GST_PAD_CONNECT_REFUSED;
+  }
+  if (!gst_v4lmjpegsrc_capture_init(v4lmjpegsrc))
+    return GST_PAD_CONNECT_REFUSED;
 
   return GST_PAD_CONNECT_OK;
 }
@@ -248,8 +294,11 @@ gst_v4lmjpegsrc_get (GstPad *pad)
   if (!gst_v4lmjpegsrc_grab_frame(v4lmjpegsrc, &num, &(GST_BUFFER_SIZE(buf))))
     return NULL;
   GST_BUFFER_DATA(buf) = gst_v4lmjpegsrc_get_buffer(v4lmjpegsrc, num);
-  GST_BUFFER_TIMESTAMP (buf) = v4lmjpegsrc->bsync.timestamp.tv_sec * 1000000000 +
-    v4lmjpegsrc->bsync.timestamp.tv_usec * 1000;
+  if (!v4lmjpegsrc->first_timestamp)
+    v4lmjpegsrc->first_timestamp = v4lmjpegsrc->bsync.timestamp.tv_sec * 1000000 +
+      v4lmjpegsrc->bsync.timestamp.tv_usec;
+  GST_BUFFER_TIMESTAMP(buf) = v4lmjpegsrc->bsync.timestamp.tv_sec * 1000000 +
+    v4lmjpegsrc->bsync.timestamp.tv_usec - v4lmjpegsrc->first_timestamp;
 
   return buf;
 }
@@ -358,7 +407,6 @@ gst_v4lmjpegsrc_change_state (GstElement *element)
 {
   GstV4lMjpegSrc *v4lmjpegsrc;
   GstElementStateReturn parent_value;
-  GstCaps *caps;
 
   g_return_val_if_fail(GST_IS_V4LMJPEGSRC(element), GST_STATE_FAILURE);
   
@@ -366,42 +414,9 @@ gst_v4lmjpegsrc_change_state (GstElement *element)
 
   switch (GST_STATE_TRANSITION(element)) {
     case GST_STATE_READY_TO_PAUSED:
-      /* set buffer info */
-      if (!gst_v4lmjpegsrc_set_buffer(v4lmjpegsrc, v4lmjpegsrc->numbufs, v4lmjpegsrc->bufsize))
-        return GST_STATE_FAILURE;
-      /* set capture parameters and mmap the buffers */
-      if (!v4lmjpegsrc->frame_width && !v4lmjpegsrc->frame_height &&
-           v4lmjpegsrc->x_offset < 0 && v4lmjpegsrc->y_offset < 0 &&
-           v4lmjpegsrc->horizontal_decimation == v4lmjpegsrc->vertical_decimation)
-      {
-        if (!gst_v4lmjpegsrc_set_capture(v4lmjpegsrc,
-            v4lmjpegsrc->horizontal_decimation, v4lmjpegsrc->quality))
-          return GST_STATE_FAILURE;
-      }
-      else
-      {
-        if (!gst_v4lmjpegsrc_set_capture_m(v4lmjpegsrc,
-             v4lmjpegsrc->x_offset, v4lmjpegsrc->y_offset,
-             v4lmjpegsrc->frame_width, v4lmjpegsrc->frame_height,
-             v4lmjpegsrc->horizontal_decimation, v4lmjpegsrc->vertical_decimation,
-             v4lmjpegsrc->quality))
-          return GST_STATE_FAILURE;
-      }
-      /* we now have an actual width/height - *set it* */
-      caps = gst_caps_new("v4lmjpegsrc_caps",
-                          "video/jpeg",
-                          gst_props_new(
-                            "width",  GST_PROPS_INT(v4lmjpegsrc->end_width),
-                            "height", GST_PROPS_INT(v4lmjpegsrc->end_height),
-                            NULL       ) );
-      if (!gst_pad_try_set_caps(v4lmjpegsrc->srcpad, caps))
-      {
-        gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-          "Failed to set new caps");
-        return GST_STATE_FAILURE;
-      }
-      if (!gst_v4lmjpegsrc_capture_init(v4lmjpegsrc))
-        return GST_STATE_FAILURE;
+      /* actual buffer set-up used to be done here - but I moved
+       * it to capsnego itself */
+      v4lmjpegsrc->first_timestamp = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       /* queue all buffer, start streaming capture */

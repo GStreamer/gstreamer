@@ -68,8 +68,8 @@ struct _GstV4lSrc {
   pthread_mutex_t mutex_queued_frames;
   pthread_cond_t cond_queued_frames;
 
-  /* list of available caps */
-  GstCaps *capslist;
+  /* first timestamp */
+  guint64 first_timestamp;
 
   /* caching values */
   gint width;

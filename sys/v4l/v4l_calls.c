@@ -17,8 +17,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/*#define DEBUG */
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -27,6 +25,11 @@
 #include <string.h>
 #include <errno.h>
 #include "v4l_calls.h"
+
+#define DEBUG(format, args...) \
+	GST_DEBUG_ELEMENT(GST_CAT_PLUGIN_INFO, \
+		GST_ELEMENT(v4lelement), \
+		"V4L: " format "\n", ##args)
 
 
 char *picture_name[] = { "Hue", "Brightness", "Contrast", "Saturation", NULL };
@@ -44,10 +47,7 @@ char *norm_name[] = { "PAL", "NTSC", "SECAM", NULL };
 static gboolean
 gst_v4l_get_capabilities (GstV4lElement *v4lelement)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4L: gst_v4l_get_capabilities()\n");
-#endif
-
+  DEBUG("getting capabilities");
   GST_V4L_CHECK_OPEN(v4lelement);
 
   if (ioctl(v4lelement->video_fd, VIDIOCGCAP, &(v4lelement->vcap)) < 0)
@@ -71,10 +71,7 @@ gst_v4l_get_capabilities (GstV4lElement *v4lelement)
 gboolean
 gst_v4l_open (GstV4lElement *v4lelement)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4L: gst_v4l_open()\n");
-#endif
-
+  DEBUG("opening device %s", v4lelement->videodev);
   GST_V4L_CHECK_NOT_OPEN(v4lelement);
   GST_V4L_CHECK_NOT_ACTIVE(v4lelement);
 
@@ -130,10 +127,7 @@ gst_v4l_open (GstV4lElement *v4lelement)
 gboolean
 gst_v4l_close (GstV4lElement *v4lelement)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4L: gst_v4l_close()\n");
-#endif
-
+  DEBUG("closing device");
   GST_V4L_CHECK_OPEN(v4lelement);
   GST_V4L_CHECK_NOT_ACTIVE(v4lelement);
 
@@ -152,10 +146,7 @@ gst_v4l_close (GstV4lElement *v4lelement)
 gint
 gst_v4l_get_num_chans (GstV4lElement *v4lelement)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4L: gst_v4l_get_num_chans()\n");
-#endif
-
+  DEBUG("getting number of channels");
   GST_V4L_CHECK_OPEN(v4lelement);
 
   return v4lelement->vcap.channels;
@@ -174,9 +165,7 @@ gst_v4l_get_chan_names (GstV4lElement *v4lelement)
   GList *list = NULL;
   gint i;
 
-#ifdef DEBUG
-  fprintf(stderr, "V4L: gst_v4l_get_chan_names()\n");
-#endif
+  DEBUG("getting channel names");
 
   if (!GST_V4L_IS_OPEN(v4lelement))
     return NULL;
@@ -205,10 +194,7 @@ gst_v4l_get_chan_norm (GstV4lElement *v4lelement,
                        gint          *channel,
                        gint          *norm)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4L: gst_v4l_get_chan_norm()\n");
-#endif
-
+  DEBUG("getting current channel and norm");
   GST_V4L_CHECK_OPEN(v4lelement);
 
   if (channel)
@@ -232,11 +218,8 @@ gst_v4l_set_chan_norm (GstV4lElement *v4lelement,
                        gint          channel,
                        gint          norm)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4L: gst_v4l_set_chan_norm(), channel = %d, norm = %d (%s)\n",
+  DEBUG("setting channel = %d, norm = %d (%s)",
     channel, norm, norm_name[norm]);
-#endif
-
   GST_V4L_CHECK_OPEN(v4lelement);
   GST_V4L_CHECK_NOT_ACTIVE(v4lelement);
 
@@ -271,10 +254,7 @@ gst_v4l_set_chan_norm (GstV4lElement *v4lelement,
 gboolean
 gst_v4l_has_tuner (GstV4lElement *v4lelement)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4L: gst_v4l_has_tuner()\n");
-#endif
-
+  DEBUG("checking whether device has a tuner");
   GST_V4L_CHECK_OPEN(v4lelement);
 
   return (v4lelement->vcap.type & VID_TYPE_TUNER &&
@@ -292,10 +272,7 @@ gboolean
 gst_v4l_get_frequency (GstV4lElement *v4lelement,
                        gulong        *frequency)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4L: gst_v4l_get_frequency()\n");
-#endif
-
+  DEBUG("getting tuner frequency");
   GST_V4L_CHECK_OPEN(v4lelement);
 
   if (!gst_v4l_has_tuner(v4lelement))
@@ -323,11 +300,7 @@ gboolean
 gst_v4l_set_frequency (GstV4lElement *v4lelement,
                        gulong        frequency)
 {
-#ifdef DEBUG
-  fprintf(stderr, "gst_v4l_set_frequency(), frequency = %ul\n",
-    frequency);
-#endif
-
+  DEBUG("setting tuner frequency to %lu", frequency);
   GST_V4L_CHECK_OPEN(v4lelement);
   GST_V4L_CHECK_NOT_ACTIVE(v4lelement);
 
@@ -359,11 +332,8 @@ gst_v4l_get_picture (GstV4lElement     *v4lelement,
 {
   struct video_picture vpic;
 
-#ifdef DEBUG
-  fprintf(stderr, "V4L: gst_v4l_get_picture(), type = %d (%s)\n",
+  DEBUG("getting picture property type %d (%s)",
     type, picture_name[type]);
-#endif
-
   GST_V4L_CHECK_OPEN(v4lelement);
 
   if (ioctl(v4lelement->video_fd, VIDIOCGPICT, &vpic) < 0)
@@ -412,11 +382,8 @@ gst_v4l_set_picture (GstV4lElement     *v4lelement,
 {
   struct video_picture vpic;
 
-#ifdef DEBUG
-  fprintf(stderr, "V4L: gst_v4l_set_picture(), type = %d (%s), value = %d\n",
+  DEBUG("setting picture type %d (%s) to value %d",
     type, picture_name[type], value);
-#endif
-
   GST_V4L_CHECK_OPEN(v4lelement);
 
   if (ioctl(v4lelement->video_fd, VIDIOCGPICT, &vpic) < 0)
@@ -468,10 +435,7 @@ gst_v4l_set_picture (GstV4lElement     *v4lelement,
 gboolean
 gst_v4l_has_audio (GstV4lElement *v4lelement)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4L: gst_v4l_has_audio()\n");
-#endif
-
+  DEBUG("checking whether device has audio");
   GST_V4L_CHECK_OPEN(v4lelement);
 
   return (v4lelement->vcap.audios > 0 &&
@@ -492,11 +456,8 @@ gst_v4l_get_audio (GstV4lElement   *v4lelement,
 {
   struct video_audio vau;
 
-#ifdef DEBUG
-  fprintf(stderr, "V4L: v4l_gst_get_audio(), type = %d (%s)\n",
+  DEBUG("getting audio parameter type %d (%s)",
     type, audio_name[type]);
-#endif
-
   GST_V4L_CHECK_OPEN(v4lelement);
 
   if (!gst_v4l_has_audio(v4lelement))
@@ -545,11 +506,8 @@ gst_v4l_set_audio (GstV4lElement   *v4lelement,
 {
   struct video_audio vau;
 
-#ifdef DEBUG
-  fprintf(stderr, "V4L: v4l_gst_set_audio(), type = %d (%s), value = %d\n",
+  DEBUG("setting audio parameter type %d (%s) to value %d",
     type, audio_name[type], value);
-#endif
-
   GST_V4L_CHECK_OPEN(v4lelement);
 
   if (!gst_v4l_has_audio(v4lelement))

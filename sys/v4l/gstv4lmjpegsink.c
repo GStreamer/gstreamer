@@ -188,6 +188,12 @@ gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
   if (!GST_CAPS_IS_FIXED (vscapslist) || !GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lmjpegsink)))
     return GST_PAD_CONNECT_DELAYED;
 
+  /* in case the buffers are active (which means that we already
+   * did capsnego before and didn't clean up), clean up anyways */
+  if (GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsink)))
+    if (!gst_v4lmjpegsink_playback_deinit(v4lmjpegsink))
+      return GST_PAD_CONNECT_REFUSED;
+
   for (caps = vscapslist; caps != NULL; caps = vscapslist = vscapslist->next)
   {
     gst_caps_get_int (caps, "width", &v4lmjpegsink->width);
@@ -197,6 +203,13 @@ gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
          v4lmjpegsink->width, v4lmjpegsink->height,
          v4lmjpegsink->x_offset, v4lmjpegsink->y_offset,
          GST_V4LELEMENT(v4lmjpegsink)->norm, 0)) /* TODO: interlacing */
+      continue;
+
+    /* set buffer info */
+    if (!gst_v4lmjpegsink_set_buffer(v4lmjpegsink,
+         v4lmjpegsink->numbufs, v4lmjpegsink->bufsize))
+      continue;
+    if (!gst_v4lmjpegsink_playback_init(v4lmjpegsink))
       continue;
 
     g_signal_emit (G_OBJECT (v4lmjpegsink), gst_v4lmjpegsink_signals[SIGNAL_HAVE_SIZE], 0,
@@ -243,7 +256,7 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
 
     gst_element_clock_wait(GST_ELEMENT(v4lmjpegsink), v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf), NULL);
   }
-  
+
   /* check size */
   if (GST_BUFFER_SIZE(buf) > v4lmjpegsink->breq.size)
   {
@@ -342,12 +355,8 @@ gst_v4lmjpegsink_change_state (GstElement *element)
   /* set up change state */
   switch (GST_STATE_TRANSITION(element)) {
     case GST_STATE_READY_TO_PAUSED:
-      /* set buffer info */
-      if (!gst_v4lmjpegsink_set_buffer(v4lmjpegsink,
-           v4lmjpegsink->numbufs, v4lmjpegsink->bufsize))
-        return GST_STATE_FAILURE;
-      if (!gst_v4lmjpegsink_playback_init(v4lmjpegsink))
-        return GST_STATE_FAILURE;
+      /* we used to do buffer setup here, but that's now done
+       * right after capsnego */
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       /* start */

@@ -17,8 +17,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/*#define DEBUG */
-
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -38,6 +36,10 @@
 #define MAP_FAILED ( (caddr_t) -1 )
 #endif
 
+#define DEBUG(format, args...) \
+	GST_DEBUG_ELEMENT(GST_CAT_PLUGIN_INFO, \
+		GST_ELEMENT(v4lsrc), \
+		"V4LSRC: " format "\n", ##args)
 
 /* palette names */
 char *palette_name[] = {
@@ -71,10 +73,7 @@ static gboolean
 gst_v4lsrc_queue_frame (GstV4lSrc *v4lsrc,
                         gint      num)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4LSRC: gst_v4lsrc_queue_frame(), num = %d\n",
-    num);
-#endif
+  DEBUG("queueing frame %d", num);
 
   v4lsrc->mmap.frame = num;
 
@@ -115,9 +114,7 @@ gst_v4lsrc_soft_sync_thread (void *arg)
   GstV4lSrc *v4lsrc = GST_V4LSRC(arg);
   gint frame = 0;
 
-#ifdef DEBUG
-  fprintf(stderr, "gst_v4lsrc_soft_sync_thread()\n");
-#endif
+  DEBUG("starting software sync thread");
 
   /* Allow easy shutting down by other processes... */
   pthread_setcancelstate( PTHREAD_CANCEL_ENABLE, NULL );
@@ -131,10 +128,10 @@ gst_v4lsrc_soft_sync_thread (void *arg)
     {
       if (v4lsrc->frame_queued[frame] < 0)
         break;
-#ifdef DEBUG
-      fprintf(stderr, "Waiting for new frames to be queued (%d < %d)\n",
+
+      DEBUG("Waiting for new frames to be queued (%d < %d)",
         v4lsrc->num_queued_frames, MIN_BUFFERS_QUEUED);
-#endif
+
       pthread_cond_wait(&(v4lsrc->cond_queued_frames),
         &(v4lsrc->mutex_queued_frames));
     }
@@ -142,16 +139,12 @@ gst_v4lsrc_soft_sync_thread (void *arg)
 
     if (!v4lsrc->num_queued_frames)
     {
-#ifdef DEBUG
-      fprintf(stderr, "Got signal to exit...\n");
-#endif
+      DEBUG("Got signal to exit...");
       goto end;
     }
 
     /* sync on the frame */
-#ifdef DEBUG
-    fprintf(stderr, "Sync\'ing on frame %d\n", frame);
-#endif
+    DEBUG("Sync\'ing on frame %d", frame);
 retry:
     if (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd, VIDIOCSYNC, &frame) < 0)
     {
@@ -185,9 +178,7 @@ retry:
   }
 
 end:
-#ifdef DEBUG
-  fprintf(stderr, "Software sync thread got signalled to exit\n");
-#endif
+  DEBUG("Software sync thread got signalled to exit");
   pthread_exit(NULL);
 }
 
@@ -202,20 +193,15 @@ static gboolean
 gst_v4lsrc_sync_next_frame (GstV4lSrc *v4lsrc,
                             gint      *num)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4LSRC: gst_v4lsrc_sync_frame()\n");
-#endif
-
   *num = v4lsrc->sync_frame = (v4lsrc->sync_frame + 1)%v4lsrc->mbuf.frames;
+
+  DEBUG("syncing on next frame (%d)", *num);
 
   /* "software sync()" on the frame */
   pthread_mutex_lock(&(v4lsrc->mutex_soft_sync));
   if (v4lsrc->isready_soft_sync[*num] == 0)
   {
-#ifdef DEBUG
-    fprintf(stderr, "Waiting for frame %d to be synced on\n",
-      *num);
-#endif
+    DEBUG("Waiting for frame %d to be synced on", *num);
     pthread_cond_wait(&(v4lsrc->cond_soft_sync[*num]),
       &(v4lsrc->mutex_soft_sync));
   }
@@ -241,13 +227,11 @@ gst_v4lsrc_set_capture (GstV4lSrc *v4lsrc,
                         gint      height,
                         gint      palette)
 {
-#ifdef DBUG
-  fprintf(stderr, "V4LSRC: gst_v4lsrc_set_capture(), width = %d, height = %d, palette = %d\n",
+  DEBUG("capture properties set to width = %d, height = %d, palette = %d",
     width, height, palette);
-#endif
 
   /*GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc));*/
-  GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lsrc));
+  /*GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lsrc));*/
 
   v4lsrc->mmap.width = width;
   v4lsrc->mmap.height = height;
@@ -268,10 +252,7 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
 {
   int n;
 
-#ifdef DEBUG
-  fprintf(stderr, "V4LSRC: gst_v4lsrc_capture_init()\n");
-#endif
-
+  DEBUG("initting capture subsystem");
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc));
   GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lsrc));
 
@@ -371,10 +352,7 @@ gst_v4lsrc_capture_start (GstV4lSrc *v4lsrc)
 {
   int n;
 
-#ifdef DEBUG
-  fprintf(stderr, "V4LSRC: gst_v4lsrc_capture_start()\n");
-#endif
-
+  DEBUG("starting capture");
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lsrc));
 
@@ -410,10 +388,7 @@ gst_v4lsrc_capture_start (GstV4lSrc *v4lsrc)
 gboolean
 gst_v4lsrc_grab_frame (GstV4lSrc *v4lsrc, gint *num)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4LSRC: gst_v4lsrc_grab_frame()\n");
-#endif
-
+  DEBUG("grabbing frame");
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lsrc));
 
@@ -434,10 +409,7 @@ gst_v4lsrc_grab_frame (GstV4lSrc *v4lsrc, gint *num)
 guint8 *
 gst_v4lsrc_get_buffer (GstV4lSrc *v4lsrc, gint  num)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4LSRC: gst_v4lsrc_get_buffer(), num = %d\n",
-    num);
-#endif
+  DEBUG("gst_v4lsrc_get_buffer(), num = %d", num);
 
   if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lsrc)) ||
       !GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lsrc)))
@@ -459,11 +431,7 @@ gst_v4lsrc_get_buffer (GstV4lSrc *v4lsrc, gint  num)
 gboolean
 gst_v4lsrc_requeue_frame (GstV4lSrc *v4lsrc, gint  num)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4LSRC: gst_v4lsrc_requeue_buffer(), num = %d\n",
-    num);
-#endif
-
+  DEBUG("requeueing frame %d", num);
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lsrc));
 
@@ -486,10 +454,7 @@ gst_v4lsrc_capture_stop (GstV4lSrc *v4lsrc)
 {
   int n;
 
-#ifdef DEBUG
-  fprintf(stderr, "V4LSRC: gst_v4lsrc_capture_stop()\n");
-#endif
-
+  DEBUG("stopping capture");
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lsrc));
 
@@ -512,10 +477,7 @@ gst_v4lsrc_capture_stop (GstV4lSrc *v4lsrc)
 gboolean
 gst_v4lsrc_capture_deinit (GstV4lSrc *v4lsrc)
 {
-#ifdef DEBUG
-  fprintf(stderr, "V4LSRC: gst_v4lsrc_capture_deinit()\n");
-#endif
-
+  DEBUG("quitting capture subsystem");
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lsrc));
 

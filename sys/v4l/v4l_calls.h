@@ -61,7 +61,7 @@ extern "C" {
   if (!(v4lelement->vcap.type & VID_TYPE_OVERLAY)) \
   {                                                \
     gst_element_error(GST_ELEMENT(v4lelement),     \
-      "Device doesn';t do overlay");               \
+      "Device doesn't do overlay");               \
     return FALSE;                                  \
   }
 
