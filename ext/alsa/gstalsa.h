@@ -100,47 +100,48 @@ typedef int (*GstAlsaTransmitFunction) (GstAlsa *this, snd_pcm_sframes_t *avail)
 
 typedef struct {
   GstPad *	pad;
-  guint8 *	data;	/* pointer into buffer */
-  guint		size;	/* sink: bytes left in buffer */
-  GstBuffer *	buf;	/* current buffer */
-  guint		behaviour; /* 0 = data points into buffer (so unref when size == 0), 
-                              1 = data should be freed, use buffer after that */
+  guint8 *	data;		/* pointer into buffer */
+  guint		size;		/* sink: bytes left in buffer */
+  GstBuffer *	buf;		/* current buffer */
+  guint		behaviour; 	/* 0 = data points into buffer (so unref when size == 0), 
+				   1 = data should be freed, use buffer after that */
 } GstAlsaPad;
 typedef struct {
-  snd_pcm_format_t format;
-  guint rate;
-  gint channels;  
+  snd_pcm_format_t	format;
+  guint			rate;
+  gint			channels;  
 } GstAlsaFormat;
+
 struct _GstAlsa {
-  GstElement parent;
+  GstElement			parent;
 
   /* array of GstAlsaPads */
-  GstAlsaPad pads[GST_ALSA_MAX_CHANNELS];
+  GstAlsaPad			pads[GST_ALSA_MAX_CHANNELS];
 
-  gchar *device;
-  snd_pcm_stream_t stream;
-  snd_pcm_t *handle;
-  guint pcm_caps; /* capabilities of the pcm device */
-  snd_output_t *out;
+  gchar *			device;
+  snd_pcm_stream_t		stream;
+  snd_pcm_t *			handle;
+  guint				pcm_caps;	/* capabilities of the pcm device, see GstAlsaPcmCaps */
+  snd_output_t *		out;
 
-  GstAlsaFormat *format; /* NULL if undefined */
-  gboolean mmap; /* use mmap transmit (fast) or read/write (sloooow) */
-  GstAlsaTransmitFunction transmit;
+  GstAlsaFormat *		format;		/* NULL if undefined */
+  gboolean			mmap; 		/* use mmap transmit (fast) or read/write (sloooow) */
+  GstAlsaTransmitFunction	transmit;
 
   /* latency / performance parameters */
-  snd_pcm_uframes_t period_size;
-  unsigned int period_count;
+  snd_pcm_uframes_t		period_size;
+  unsigned int			period_count;
 
-  gboolean autorecover;
+  gboolean			autorecover;
 
   /* clocking */
-  GstAlsaClock         *clock;			/* our provided clock */
-  snd_pcm_uframes_t	transmitted; 		/* samples transmitted since last sync 
-                                                   This thing actually is our master clock.
+  GstAlsaClock *		clock;		/* our provided clock */
+  snd_pcm_uframes_t		transmitted; 	/* samples transmitted since last sync 
+						   This thing actually is our master clock.
 						   We will event insert silent samples or
 						   drop some to sync to incoming timestamps.
-                                                 */
-  GstClockTime		max_discont;		/* max difference between current
+						 */
+  GstClockTime			max_discont;	/* max difference between current
   						   playback timestamp and buffers timestamps
 						 */
 };
