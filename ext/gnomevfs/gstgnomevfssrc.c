@@ -97,7 +97,6 @@ struct _GstGnomeVFSSrc {
 	GnomeVFSFileOffset curoffset;	/* current offset in file */
 	gulong bytes_per_read;		/* bytes per read */
 	gboolean new_seek;
-	gboolean in_first_get;
 
 	/* icecast/audiocast metadata extraction handling */
 	gboolean iradio_mode;
@@ -328,7 +327,6 @@ static void gst_gnomevfssrc_init(GstGnomeVFSSrc *gnomevfssrc)
 	gnomevfssrc->curoffset = 0;
 	gnomevfssrc->bytes_per_read = 4096;
 	gnomevfssrc->new_seek = FALSE;
-	gnomevfssrc->in_first_get = TRUE;
 
 	gnomevfssrc->icy_metaint = 0;
 
@@ -961,37 +959,28 @@ static GstData *gst_gnomevfssrc_get(GstPad *pad)
 		g_return_val_if_fail (GST_BUFFER_DATA (buf) != NULL, NULL);
 
 		GST_BUFFER_SIZE (buf) = 0;
-		/* FIXME GROSS HACK: We try to read in at least 8000
-		 * bytes of data so that mp3 typefinding will work. */
-		do
-		{
-			GST_DEBUG ("doing read: icy_count: %" G_GINT64_FORMAT, src->icy_count);
-			result = gnome_vfs_read (src->handle, data,
-						 src->icy_metaint - src->icy_count,
-						 &readbytes);
-
-			/* EOS? */
-			if (readbytes == 0) {
-				gst_buffer_unref (buf);
-				gst_element_set_eos (GST_ELEMENT (src));
-				src->in_first_get = FALSE;
-				return GST_DATA (gst_event_new (GST_EVENT_EOS));
-			}
-			
-			src->icy_count += readbytes;
-			GST_BUFFER_OFFSET (buf) = src->curoffset;
-			GST_BUFFER_SIZE (buf) += readbytes;
-		      	data += readbytes;
-			src->curoffset += readbytes;
-			
-			if (src->icy_count == src->icy_metaint) {
-				gst_gnomevfssrc_get_icy_metadata (src);
-				src->icy_count = 0;
-			}
-		} while (src->in_first_get
-			 && GST_BUFFER_OFFSET (buf) < 8000 &&
-			 src->icy_metaint - src->icy_count >= 8000);
-		src->in_first_get = FALSE;
+		GST_DEBUG ("doing read: icy_count: %" G_GINT64_FORMAT, src->icy_count);
+		result = gnome_vfs_read (src->handle, data,
+					 src->icy_metaint - src->icy_count,
+					 &readbytes);
+		
+		/* EOS? */
+		if (readbytes == 0) {
+		  gst_buffer_unref (buf);
+		  gst_element_set_eos (GST_ELEMENT (src));
+		  return GST_DATA (gst_event_new (GST_EVENT_EOS));
+		}
+		
+		src->icy_count += readbytes;
+		GST_BUFFER_OFFSET (buf) = src->curoffset;
+		GST_BUFFER_SIZE (buf) += readbytes;
+		data += readbytes;
+		src->curoffset += readbytes;
+		
+		if (src->icy_count == src->icy_metaint) {
+		  gst_gnomevfssrc_get_icy_metadata (src);
+		  src->icy_count = 0;
+		}
 	} else {
 		/* allocate the space for the buffer data */
 		GST_BUFFER_DATA(buf) = g_malloc(src->bytes_per_read);
@@ -1100,10 +1089,8 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 	
 	GST_DEBUG ("open result: %s", gnome_vfs_result_to_string (result));
 
-	src->in_first_get = TRUE;
-
 	if(gnome_vfs_seek(src->handle, GNOME_VFS_SEEK_CURRENT, 0)
-	    == GNOME_VFS_OK){
+	    == GNOME_VFS_OK) {
 		src->seekable = TRUE;
 	}else{
 		src->seekable = FALSE;

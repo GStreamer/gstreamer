@@ -1,3 +1,9 @@
+2004-01-26  Colin Walters  <walters@verbum.org>
+
+	* ext/gnomevfs/gstgnomevfssrc.c (gst_gnomevfssrc_get): Remove ugly
+	code to pull a bigger buffer in iradio mode.  This as a side effect
+	makes typefinding work.
+
 2004-01-26  Jeremy Simon  <jesimon@libertysurf.fr>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_to_extradata):
