@@ -264,7 +264,6 @@ distclean-local: clean
 	rm -rf *.o
 
 # thomas: make docs parallel installable; devhelp requires majorminor too
-if DOC_HTML
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR) 
 	(installfiles=`echo ./html/*.html`; \
@@ -312,11 +311,6 @@ uninstall-local:
 	  rm -f $(DESTDIR)$(TARGET_DIR)/index.sgml; \
 	fi) 
 	if test -d $(DESTDIR)$(TARGET_DIR); then rmdir -p --ignore-fail-on-non-empty $(DESTDIR)$(TARGET_DIR); fi
-else
-install-data-local:
-uninstall-local:
-all-local:
-endif
 
 #
 # Require gtk-doc when making dist
@@ -337,6 +331,7 @@ dist-hook: dist-check-gtkdoc dist-hook-local
 	-cp $(srcdir)/sgml/*.xml $(distdir)/xml
 	-cp $(srcdir)/html/index.sgml $(distdir)/html
 	-cp $(srcdir)/html/*.html $(srcdir)/html/*.css $(distdir)/html
+	-cp $(srcdir)/html/gstreamer.devhelp $(distdir)/html
 
 	images=$(HTML_IMAGES) ;    	      \
 	for i in "" $$images ; do		      \

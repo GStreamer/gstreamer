@@ -1,4 +1,13 @@
+2004-05-02  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
+	* docs/gst/Makefile.am :
+	* docs/libs/Makefile.am :
+		apply a patch from Arwed v. Merkatz so that gtk-doc
+		generated docs install (same for .devhelp file)
+		(fixes part 1 of #138836)
+
 2004-04-30  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
 	* docs/faq/dependencies.xml: typo
 	* docs/faq/getting.xml :
 	    - fix download URL for new gstreamer site
