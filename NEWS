@@ -1,4 +1,59 @@
-This is GStreamer Plugins 0.8.4
+This is GStreamer Plugins 0.8.5
+
+Changes since 0.8.4:
+
+      * New translation in this release: Oriya
+      * licensing corrections
+      * new element: mngdec
+      * pixel aspect ratio conversion fixes
+      * 64 bit fixes
+      * NEW_MEDIA fixes
+      * ogm support added
+      * matroska fixes
+      * playbin fixes
+      * alsamixer fixes
+      * gnomevfssrc fixes
+      * ogg fixes
+      * multifdsink fixes
+      * multifilesink fixes
+      * qtdemux fixes
+      * avidemux fixes
+      * asfdemux fixes
+      * wavenc fixes
+      * flac fixes
+      * fli/flx fixes
+      * mpeg fixes
+      * speex now actually works
+
+Bugs fixed since 0.8.4:
+
+      * 121809 : [Solaris] Not able to record
+      * 130682 : [alsasink] fails to negotiate with audio decoders
+      * 135407 : [xviddec] shows green frames when decoding packed bitstre...
+      * 140432 : Osssink and alsasink broken on nforce2 (intel8x0) soundcard
+      * 140897 : Incorrect segment duration in files created with matroska...
+      * 140898 : No writing application specified in matroska files create...
+      * 141554 : vorbis in matroska files makes the vorbisdec plugin segfault
+      * 144091 : [Solaris] audio mixer element
+      * 144616 : Infinite loop in wavparse.
+      * 148711 : typefind function for TTA audio files
+      * 148950 : matroskademux doesn't set buffer duration
+      * 148951 : matroskademux misses the tta codec in its codec list
+      * 151232 : [lame] doesn't build with lame-3.90
+      * 151236 : [v4l] compile failure
+      * 151410 : Memory leaks in multifdsink
+      * 151462 : theora plugin Makefile broken
+      * 151877 : [PATCH] Fix bad casts in ximagesink.c
+      * 151879 : [PATCH] fix bad pointer casts in xvimagesink.c
+      * 151881 : [PATCH] Fix format strings for amd64 in seek.c
+      * 151882 : [PATCH] Fix format string warnings in spider_seek.c
+      * 151883 : [PATCH] fix cdplayer.c warnings on amd64
+      * 151884 : [PATCH] Fix format string warnings in cdparanoia.c
+      * 151886 : [PATCH] Fix format string warnings in vorbisfile.c
+      * 151887 : [PATCH] Fix format string warnings in player.c
+      * 152102 : wavenc leaks events
+      * 152341 : patch for ivorbis compile failure
+      * 154301 : typefind and rmdemux don't use the same mime type for rea...
 
 Changes since 0.8.3:
 
