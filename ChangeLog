@@ -1,3 +1,8 @@
+2005-02-24  Andy Wingo  <wingo@pobox.com>
+
+	* tests/bench-mass_elements.scm, tests/mass_elements.gnuplot:
+	Merged from HEAD.
+
 2005-02-23  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_basesink_get_template),
