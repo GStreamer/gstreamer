@@ -1,0 +1,98 @@
+
+Some notes on pad negotiation
+
+
+A "pad link" is a connection between two pads.  It can be in one of
+two states, "negotiated" or "not negotiated".  Pad links are created
+by gst_pad_link().
+
+
+
+A "pad link" is created when two pads are linked using gst_pad_link().
+When initially created, the link only specifies a src pad, a sink pad,
+and optionally a filter caps and a fixate function (both provided by
+the application).
+
+
+In order to pass data through a link, the peer pads must decide on
+what data format to use.  This is called negotiation.  Pads can
+describe acceptable data formats either by pad template caps or a
+pad->getcaps function.
+
+
+Steps in negotiation:
+
+ - core checks that both pad's parent elements are in the READY or
+   higher state.
+
+ - core calls gst_pad_get_caps() on each pad, intersects the two caps,
+   and intersects again with the filter caps.  If the intersection is
+   empty, then the pads have no formats in common, and the link fails.
+
+ - If the intersection caps is not fixed, there are multiple possible
+   formats that the link could use.  If this is the case, fixate
+   functions are called until the caps are fixed.  The fixate functions
+   are called by priority -- application fixate function, src and sink
+   fixate functions, and the default core fixate function.
+
+ - Each pad can have a pad_link function, which is called with the
+   fixed caps.  The pad_link function has the option of accepting
+   or rejecting the caps.
+
+ - If both pads accept the caps, the link is then negotiated.
+
+Steps in pad-initiated negotiation (gst_pad_try_set_caps):
+
+ - both elements are assumed to be in a non-NULL state
+
+ - the caps in try_set_caps() must be fixed, and are checked to be
+   compatible with the peer's caps.
+
+ - Fixate functions don't need to be called, since the caps are
+   already fixed.
+
+ - The peer's pad_link function is called.
+
+ - If the peer's pad_link function accepts the caps, the link is then
+   negotiated.
+
+Steps in renegotiation:
+
+ - same as negotiation.  Note that get_caps() functions should always
+   ignore the currently negotiated caps of a link.
+
+ - if renegotiation fails, the previous negotiation is still in effect.
+   If the renegotiation fails in the last pad_link step, the pad_link
+   functions are called with the previously negotiated caps.  (FIXME:
+   this is currently buggy.)
+
+
+Notes for sources:
+
+ - sources and sinks that talk to hardware may not be able to fully
+   describe their available formats, and thus need to rely on pad_link
+   functions to test a particular format.  FIXME: currently, the core
+   completely fails negotiation if a pad_link function refuses a caps,
+   instead of attempting with an alternate caps.
+
+Notes for decoders/demuxers:
+
+ - Decoders will typically negotiate a sink pad, receive some data,
+   determine the output format, and call try_set_caps() with the given
+   format.  If the output format is non-fixed, gst_pad_renegotiate()
+   may be used instead, in order to have the fixate functions choose
+   the optimal format.  Note that this requires communication so that
+   the pad's getcaps function returns the correct caps.
+
+Notes for converters:
+
+ - Converters change one or more properties of the format of a data
+   stream.  A typical converter's getcaps function will call
+   gst_pad_get_allowed_caps() for the opposite pad in the element,
+   change one or more fields in the caps, and return the result.
+
+Notes for filters:
+
+ - Filters can almost always use proxied getcaps and pad_link functions.
+
+
