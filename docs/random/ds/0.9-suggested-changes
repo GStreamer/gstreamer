@@ -90,6 +90,11 @@ caps:
 
   But that's 0.10 material."
 
+  (Thaytan)
+  - Add rowstride as a property so that video frames don't have to have 
+    rowstride == width. For example, gdkpixbufdec would prefer to pad 
+    rowstrides to multiples of 4 bytes.
+
 negotiation:
 
 - autopluggers would be easier to write if there was a core method

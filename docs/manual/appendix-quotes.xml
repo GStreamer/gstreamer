@@ -5,12 +5,23 @@
     <application>GStreamer</application> is a lively project, with
     developers from around the globe very actively contributing.
     We often hang out on the #gstreamer IRC channel on
-    irc.freenode.org: the following are a selection of amusing<footnote>
+    irc.freenode.net: the following are a selection of amusing<footnote>
     <para>No guarantee of sense of humour compatibility is given.</para>
     </footnote> quotes from our conversations.
   </para>
 
   <variablelist>
+    <varlistentry>
+      <term>14 Jun 2004</term>
+      <listitem>
+        <para>
+          <emphasis>teuf</emphasis>: ok, things work much better when I don't write incredibly stupid and buggy code
+	</para>
+	<para>
+	  <emphasis>thaytan</emphasis>: I find that too
+	</para>
+      </listitem>
+    </varlistentry>
     <varlistentry>
       <term>23 Nov 2003</term>
       <listitem>

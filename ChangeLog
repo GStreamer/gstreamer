@@ -1,3 +1,10 @@
+2004-07-12  Jan Schmidt  <thaytan@mad.scientis.com>
+	* docs/manual/quotes.xml:
+	  Keep the quotes file alive
+	* docs/random/ds/0.9-suggested-changes:
+	  Add the suggestion of including a 'rowstride' as part of video
+	  format caps
+
 2004-07-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstelement.c: (gst_element_set_state),
