@@ -520,7 +520,7 @@ gst_clock_reset (GstClock *clock)
  * @time: The new time
  *
  * Notifies the clock of a discontinuity in time.
- * 
+ *
  * Returns: TRUE if the clock was updated. It is possible that
  * the clock was not updated by this call because only the first
  * discontinuitity in the pipeline is honoured.
@@ -529,8 +529,10 @@ gboolean
 gst_clock_handle_discont (GstClock *clock, guint64 time)
 {
   GstClockTime itime = 0LL;
-  
-  GST_DEBUG (GST_CAT_CLOCK, "clock discont %llu %llu %d", time, clock->start_time, clock->accept_discont);
+
+  GST_DEBUG (GST_CAT_CLOCK, "clock discont %" G_GUINT64_FORMAT
+		            " %" G_GUINT64_FORMAT " %d",
+			    time, clock->start_time, clock->accept_discont);
 
   if (time == GST_CLOCK_TIME_NONE)
     return TRUE;
@@ -543,7 +545,9 @@ gst_clock_handle_discont (GstClock *clock, guint64 time)
   }
   else {
     GST_UNLOCK (clock);
-    GST_DEBUG (GST_CAT_CLOCK, "clock discont refused %llu %llu", time, clock->start_time);
+    GST_DEBUG (GST_CAT_CLOCK, "clock discont refused %" G_GUINT64_FORMAT
+		              " %" G_GUINT64_FORMAT,
+			      time, clock->start_time);
     return FALSE;
   }
 
@@ -552,11 +556,12 @@ gst_clock_handle_discont (GstClock *clock, guint64 time)
   clock->accept_discont = FALSE;
   GST_UNLOCK (clock);
 
-  GST_DEBUG (GST_CAT_CLOCK, "new time %llu", gst_clock_get_time (clock));
+  GST_DEBUG (GST_CAT_CLOCK, "new time %" G_GUINT64_FORMAT,
+	     gst_clock_get_time (clock));
 
-  g_mutex_lock (clock->active_mutex);	
-  g_cond_broadcast (clock->active_cond);	
-  g_mutex_unlock (clock->active_mutex);	
+  g_mutex_lock (clock->active_mutex);
+  g_cond_broadcast (clock->active_cond);
+  g_mutex_unlock (clock->active_mutex);
 
   return TRUE;
 }
@@ -567,7 +572,7 @@ gst_clock_handle_discont (GstClock *clock, guint64 time)
  *
  * Gets the current time of the given clock. The time is always
  * monotonically increasing.
- * 
+ *
  * Returns: the time of the clock.
  */
 GstClockTime
