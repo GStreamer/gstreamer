@@ -1,3 +1,16 @@
+2004-07-08  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* configure.ac:
+	* gst-libs/gst/play/play.c: (gst_play_pipeline_setup),
+	(gst_play_dispose), (gst_play_set_location),
+	(gst_play_set_data_src), (gst_play_set_video_sink),
+	(gst_play_set_audio_sink), (gst_play_set_visualization),
+	(gst_play_connect_visualization), (gst_play_get_sink_element),
+	(gst_play_get_all_by_interface):
+	* gst-libs/gst/play/play.h:
+	  add new method to get elements implementing an interface.
+	  add various error logging
+
 2004-07-08  Wim Taymans  <wim@fluendo.com>
 
 	* examples/seeking/seek.c: (make_dv_pipeline), (make_avi_pipeline),
