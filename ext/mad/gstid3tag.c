@@ -692,13 +692,15 @@ gst_id3_tag_handle_event (GstPad * pad, GstEvent * event)
         case GST_ID3_TAG_STATE_READING_V2_TAG:{
           guint64 value;
 
-          gst_event_discont_get_value (event, GST_FORMAT_BYTES, &value);
-          if (value !=
-              (tag->buffer ? GST_BUFFER_OFFSET (tag->buffer) +
-                  GST_BUFFER_SIZE (tag->buffer)
-                  : 0))
-            GST_ELEMENT_ERROR (tag, CORE, EVENT, (NULL),
-                ("Seek during ID3v2 tag reading"));
+          if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &value) ||
+              gst_event_discont_get_value (event, GST_FORMAT_DEFAULT, &value)) {
+            if (value !=
+                (tag->buffer ? GST_BUFFER_OFFSET (tag->buffer) +
+                    GST_BUFFER_SIZE (tag->buffer)
+                    : 0))
+              GST_ELEMENT_ERROR (tag, CORE, EVENT, (NULL),
+                  ("Seek during ID3v2 tag reading"));
+          }
           gst_data_unref (GST_DATA (event));
           break;
         }
