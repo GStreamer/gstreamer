@@ -29,7 +29,7 @@ main (int argc,char *argv[])
 
   gnome_init("Videotest","0.0.1",argc,argv);
 
-  bin = gst_bin_new("bin");
+  bin = gst_pipeline_new("pipeline");
 
   if (argc == 1) {
     src = gst_elementfactory_make ("dv1394src", "src");

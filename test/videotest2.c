@@ -27,7 +27,7 @@ main (int argc,char *argv[])
 
   gnome_init("Videotest","0.0.1",argc,argv);
 
-  bin = gst_bin_new("bin");
+  bin = gst_pipeline_new("pipeline");
 
   src = gst_elementfactory_make ("v4lsrc", "src");
   gtk_object_set(GTK_OBJECT(src),"format",9,NULL);

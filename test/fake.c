@@ -10,7 +10,7 @@ int main(int argc,char *argv[]) {
 //  _gst_plugin_spew = TRUE;
   gst_init(&argc,&argv);
 
-  bin = gst_bin_new("bin");
+  bin = gst_pipeline_new("pipeline");
   g_return_if_fail(bin != NULL);
 
   g_print("--- creating src and sink elements\n");
