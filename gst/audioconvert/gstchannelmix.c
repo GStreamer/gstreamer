@@ -438,7 +438,7 @@ gst_audio_convert_fill_normalize (GstAudioConvert * this)
     /* calculate sum */
     sum = 0.0;
     for (i = 0; i < this->sinkcaps.channels; i++) {
-      sum += this->matrix[i][j];
+      sum += fabs (this->matrix[i][j]);
     }
     if (sum > top) {
       top = sum;
