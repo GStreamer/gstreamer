@@ -291,9 +291,9 @@
   (gtype-id "GST_TYPE_PAD_CONNECT_RETURN")
   (values
     '("refused" "GST_PAD_CONNECT_REFUSED")
+    '("delayed" "GST_PAD_CONNECT_DELAYED")
     '("ok" "GST_PAD_CONNECT_OK")
     '("done" "GST_PAD_CONNECT_DONE")
-    '("delayed" "GST_PAD_CONNECT_DELAYED")
   )
 )
 
@@ -330,35 +330,45 @@
   )
 )
 
-(define-enum ParseErrors
+(define-enum ParseError
   (in-module "Gst")
-  (c-name "GstParseErrors")
-  (gtype-id "GST_TYPE_PARSE_ERRORS")
+  (c-name "GstParseError")
+  (gtype-id "GST_TYPE_PARSE_ERROR")
   (values
     '("syntax" "GST_PARSE_ERROR_SYNTAX")
-    '("creating-element" "GST_PARSE_ERROR_CREATING_ELEMENT")
-    '("nosuch-element" "GST_PARSE_ERROR_NOSUCH_ELEMENT")
-    '("internal" "GST_PARSE_ERROR_INTERNAL")
+    '("no-such-element" "GST_PARSE_ERROR_NO_SUCH_ELEMENT")
+    '("no-such-property" "GST_PARSE_ERROR_NO_SUCH_PROPERTY")
     '("connect" "GST_PARSE_ERROR_CONNECT")
   )
 )
 
-(define-enum PropsId
+(define-enum PropsType
   (in-module "Gst")
-  (c-name "GstPropsId")
-  (gtype-id "GST_TYPE_PROPS_ID")
+  (c-name "GstPropsType")
+  (gtype-id "GST_TYPE_PROPS_TYPE")
   (values
-    '("end-id" "GST_PROPS_END_ID")
-    '("int-id" "GST_PROPS_INT_ID")
-    '("float-id" "GST_PROPS_FLOAT_ID")
-    '("fourcc-id" "GST_PROPS_FOURCC_ID")
-    '("bool-id" "GST_PROPS_BOOL_ID")
-    '("string-id" "GST_PROPS_STRING_ID")
-    '("var-id" "GST_PROPS_VAR_ID")
-    '("list-id" "GST_PROPS_LIST_ID")
-    '("float-range-id" "GST_PROPS_FLOAT_RANGE_ID")
-    '("int-range-id" "GST_PROPS_INT_RANGE_ID")
-    '("last-id" "GST_PROPS_LAST_ID")
+    '("end-type" "GST_PROPS_END_TYPE")
+    '("invalid-type" "GST_PROPS_INVALID_TYPE")
+    '("int-type" "GST_PROPS_INT_TYPE")
+    '("float-type" "GST_PROPS_FLOAT_TYPE")
+    '("fourcc-type" "GST_PROPS_FOURCC_TYPE")
+    '("bool-type" "GST_PROPS_BOOL_TYPE")
+    '("string-type" "GST_PROPS_STRING_TYPE")
+    '("var-type" "GST_PROPS_VAR_TYPE")
+    '("list-type" "GST_PROPS_LIST_TYPE")
+    '("float-range-type" "GST_PROPS_FLOAT_RANGE_TYPE")
+    '("int-range-type" "GST_PROPS_INT_RANGE_TYPE")
+    '("last-type" "GST_PROPS_LAST_TYPE")
+  )
+)
+
+(define-enum SchedulerFlags
+  (in-module "Gst")
+  (c-name "GstSchedulerFlags")
+  (gtype-id "GST_TYPE_SCHEDULER_FLAGS")
+  (values
+    '("fixed-clock" "GST_SCHEDULER_FLAG_FIXED_CLOCK")
+    '("last" "GST_SCHEDULER_FLAG_LAST")
   )
 )
 
@@ -391,11 +401,11 @@
   (c-name "GstTimeCacheCertainty")
   (gtype-id "GST_TYPE_TIME_CACHE_CERTAINTY")
   (values
-    '("unknown" "GST_TIMECACHE_UNKNOWN")
-    '("certain" "GST_TIMECACHE_CERTAIN")
-    '("fuzzy-location" "GST_TIMECACHE_FUZZY_LOCATION")
-    '("fuzzy-timestamp" "GST_TIMECACHE_FUZZY_TIMESTAMP")
-    '("fuzzy" "GST_TIMECACHE_FUZZY")
+    '("unknown" "GST_TIME_CACHE_UNKNOWN")
+    '("certain" "GST_TIME_CACHE_CERTAIN")
+    '("fuzzy-location" "GST_TIME_CACHE_FUZZY_LOCATION")
+    '("fuzzy-timestamp" "GST_TIME_CACHE_FUZZY_TIMESTAMP")
+    '("fuzzy" "GST_TIME_CACHE_FUZZY")
   )
 )
 
@@ -486,13 +496,13 @@
   (varargs #t)
 )
 
-(define-function gst_autoplugfactory_get_type
-  (c-name "gst_autoplugfactory_get_type")
+(define-function gst_autoplug_factory_get_type
+  (c-name "gst_autoplug_factory_get_type")
   (return-type "GType")
 )
 
-(define-function gst_autoplugfactory_new
-  (c-name "gst_autoplugfactory_new")
+(define-function gst_autoplug_factory_new
+  (c-name "gst_autoplug_factory_new")
   (return-type "GstAutoplugFactory*")
   (parameters
     '("const-gchar*" "name")
@@ -503,31 +513,31 @@
 
 (define-method destroy
   (of-object "GstAutoplugFactory")
-  (c-name "gst_autoplugfactory_destroy")
+  (c-name "gst_autoplug_factory_destroy")
   (return-type "none")
 )
 
-(define-function gst_autoplugfactory_find
-  (c-name "gst_autoplugfactory_find")
+(define-function gst_autoplug_factory_find
+  (c-name "gst_autoplug_factory_find")
   (return-type "GstAutoplugFactory*")
   (parameters
     '("const-gchar*" "name")
   )
 )
 
-(define-function gst_autoplugfactory_get_list
-  (c-name "gst_autoplugfactory_get_list")
+(define-function gst_autoplug_factory_get_list
+  (c-name "gst_autoplug_factory_get_list")
   (return-type "GList*")
 )
 
 (define-method create
   (of-object "GstAutoplugFactory")
-  (c-name "gst_autoplugfactory_create")
+  (c-name "gst_autoplug_factory_create")
   (return-type "GstAutoplug*")
 )
 
-(define-function gst_autoplugfactory_make
-  (c-name "gst_autoplugfactory_make")
+(define-function gst_autoplug_factory_make
+  (c-name "gst_autoplug_factory_make")
   (return-type "GstAutoplug*")
   (parameters
     '("const-gchar*" "name")
@@ -647,15 +657,6 @@
   (parameters
     '("GstElementState" "oldstate")
     '("GstElementState" "newstate")
-    '("GstElement*" "child")
-  )
-)
-
-(define-method child_error
-  (of-object "GstBin")
-  (c-name "gst_bin_child_error")
-  (return-type "none")
-  (parameters
     '("GstElement*" "child")
   )
 )
@@ -928,9 +929,9 @@
   (return-type "GstCaps*")
 )
 
-(define-method copy_1
+(define-method copy_first
   (of-object "GstCaps")
-  (c-name "gst_caps_copy_1")
+  (c-name "gst_caps_copy_first")
   (return-type "GstCaps*")
 )
 
@@ -1098,10 +1099,7 @@
 (define-method get_speed
   (of-object "GstClock")
   (c-name "gst_clock_get_speed")
-  (return-type "none")
-  (parameters
-    '("gdouble" "speed")
-  )
+  (return-type "gdouble")
 )
 
 (define-method activate
@@ -1125,13 +1123,10 @@
   (return-type "none")
 )
 
-(define-method set_time
+(define-method async_supported
   (of-object "GstClock")
-  (c-name "gst_clock_set_time")
-  (return-type "none")
-  (parameters
-    '("GstClockTime" "time")
-  )
+  (c-name "gst_clock_async_supported")
+  (return-type "gboolean")
 )
 
 (define-method get_time
@@ -1189,6 +1184,36 @@
   )
 )
 
+(define-method wait_id
+  (of-object "GstClock")
+  (c-name "gst_clock_wait_id")
+  (return-type "GstClockReturn")
+  (parameters
+    '("GstClockID" "id")
+  )
+)
+
+(define-method get_next_id
+  (of-object "GstClock")
+  (c-name "gst_clock_get_next_id")
+  (return-type "GstClockID")
+)
+
+(define-method unlock_id
+  (of-object "GstClock")
+  (c-name "gst_clock_unlock_id")
+  (return-type "none")
+  (parameters
+    '("GstClockID" "id")
+  )
+)
+
+(define-method get_time
+  (of-object "GstClockID")
+  (c-name "gst_clock_id_get_time")
+  (return-type "GstClockTime")
+)
+
 (define-method set_resolution
   (of-object "GstClock")
   (c-name "gst_clock_set_resolution")
@@ -1225,9 +1250,9 @@
 
 ;; From /usr/include/gst/gstelement.h
 
-(define-method add_padtemplate
+(define-method add_pad_template
   (of-object "GstElementClass")
-  (c-name "gst_element_class_add_padtemplate")
+  (c-name "gst_element_class_add_pad_template")
   (return-type "none")
   (parameters
     '("GstPadTemplate*" "templ")
@@ -1348,36 +1373,6 @@
   )
 )
 
-(define-method get_pad
-  (of-object "GstElement")
-  (c-name "gst_element_get_pad")
-  (return-type "GstPad*")
-  (parameters
-    '("const-gchar*" "name")
-  )
-)
-
-(define-method get_pad_list
-  (of-object "GstElement")
-  (c-name "gst_element_get_pad_list")
-  (return-type "GList*")
-)
-
-(define-method get_padtemplate_list
-  (of-object "GstElement")
-  (c-name "gst_element_get_padtemplate_list")
-  (return-type "GList*")
-)
-
-(define-method get_padtemplate_by_name
-  (of-object "GstElement")
-  (c-name "gst_element_get_padtemplate_by_name")
-  (return-type "GstPadTemplate*")
-  (parameters
-    '("const-guchar*" "name")
-  )
-)
-
 (define-method add_ghost_pad
   (of-object "GstElement")
   (c-name "gst_element_add_ghost_pad")
@@ -1397,21 +1392,45 @@
   )
 )
 
-(define-method request_compatible_pad
+(define-method get_pad
   (of-object "GstElement")
-  (c-name "gst_element_request_compatible_pad")
-  (return-type "GstPad*")
-  (parameters
-    '("GstPadTemplate*" "templ")
-  )
-)
-
-(define-method request_pad_by_name
-  (of-object "GstElement")
-  (c-name "gst_element_request_pad_by_name")
+  (c-name "gst_element_get_pad")
   (return-type "GstPad*")
   (parameters
     '("const-gchar*" "name")
+  )
+)
+
+(define-method get_static_pad
+  (of-object "GstElement")
+  (c-name "gst_element_get_static_pad")
+  (return-type "GstPad*")
+  (parameters
+    '("const-gchar*" "name")
+  )
+)
+
+(define-method get_request_pad
+  (of-object "GstElement")
+  (c-name "gst_element_get_request_pad")
+  (return-type "GstPad*")
+  (parameters
+    '("const-gchar*" "name")
+  )
+)
+
+(define-method get_pad_list
+  (of-object "GstElement")
+  (c-name "gst_element_get_pad_list")
+  (return-type "GList*")
+)
+
+(define-method get_compatible_pad
+  (of-object "GstElement")
+  (c-name "gst_element_get_compatible_pad")
+  (return-type "GstPad*")
+  (parameters
+    '("GstPad*" "pad")
   )
 )
 
@@ -1425,31 +1444,27 @@
   )
 )
 
-(define-method get_compatible_pad
+(define-method get_pad_template
   (of-object "GstElement")
-  (c-name "gst_element_get_compatible_pad")
-  (return-type "GstPad*")
+  (c-name "gst_element_get_pad_template")
+  (return-type "GstPadTemplate*")
   (parameters
-    '("GstPad*" "pad")
+    '("const-guchar*" "name")
   )
 )
 
-(define-method connect_elements
+(define-method get_pad_template_list
   (of-object "GstElement")
-  (c-name "gst_element_connect_elements")
-  (return-type "gboolean")
-  (parameters
-    '("GstElement*" "dest")
-  )
+  (c-name "gst_element_get_pad_template_list")
+  (return-type "GList*")
 )
 
-(define-method connect_elements_filtered
+(define-method get_compatible_pad_template
   (of-object "GstElement")
-  (c-name "gst_element_connect_elements_filtered")
-  (return-type "gboolean")
+  (c-name "gst_element_get_compatible_pad_template")
+  (return-type "GstPadTemplate*")
   (parameters
-    '("GstElement*" "dest")
-    '("GstCaps*" "filtercaps")
+    '("GstPadTemplate*" "compattempl")
   )
 )
 
@@ -1458,10 +1473,18 @@
   (c-name "gst_element_connect")
   (return-type "gboolean")
   (parameters
-    '("const-gchar*" "srcpadname")
     '("GstElement*" "dest")
-    '("const-gchar*" "destpadname")
   )
+)
+
+(define-method connect_many
+  (of-object "GstElement")
+  (c-name "gst_element_connect_many")
+  (return-type "gboolean")
+  (parameters
+    '("GstElement*" "element_2")
+  )
+  (varargs #t)
 )
 
 (define-method connect_filtered
@@ -1469,9 +1492,7 @@
   (c-name "gst_element_connect_filtered")
   (return-type "gboolean")
   (parameters
-    '("const-gchar*" "srcpadname")
     '("GstElement*" "dest")
-    '("const-gchar*" "destpadname")
     '("GstCaps*" "filtercaps")
   )
 )
@@ -1481,29 +1502,52 @@
   (c-name "gst_element_disconnect")
   (return-type "none")
   (parameters
+    '("GstElement*" "dest")
+  )
+)
+
+(define-method disconnect_many
+  (of-object "GstElement")
+  (c-name "gst_element_disconnect_many")
+  (return-type "none")
+  (parameters
+    '("GstElement*" "element_2")
+  )
+  (varargs #t)
+)
+
+(define-method connect_pads
+  (of-object "GstElement")
+  (c-name "gst_element_connect_pads")
+  (return-type "gboolean")
+  (parameters
     '("const-gchar*" "srcpadname")
     '("GstElement*" "dest")
     '("const-gchar*" "destpadname")
   )
 )
 
-(define-method disconnect_elements
+(define-method connect_pads_filtered
   (of-object "GstElement")
-  (c-name "gst_element_disconnect_elements")
-  (return-type "none")
+  (c-name "gst_element_connect_pads_filtered")
+  (return-type "gboolean")
   (parameters
+    '("const-gchar*" "srcpadname")
     '("GstElement*" "dest")
+    '("const-gchar*" "destpadname")
+    '("GstCaps*" "filtercaps")
   )
 )
 
-(define-method connect_elements_many
+(define-method disconnect_pads
   (of-object "GstElement")
-  (c-name "gst_element_connect_elements_many")
-  (return-type "gboolean")
+  (c-name "gst_element_disconnect_pads")
+  (return-type "none")
   (parameters
-    '("GstElement*" "element_2")
+    '("const-gchar*" "srcpadname")
+    '("GstElement*" "dest")
+    '("const-gchar*" "destpadname")
   )
-  (varargs #t)
 )
 
 (define-method set_eos
@@ -1512,13 +1556,14 @@
   (return-type "none")
 )
 
-(define-method send_event
+(define-method error
   (of-object "GstElement")
-  (c-name "gst_element_send_event")
+  (c-name "gst_element_error")
   (return-type "none")
   (parameters
-    '("GstEvent*" "event")
+    '("const-gchar*" "error")
   )
+  (varargs #t)
 )
 
 (define-method get_state
@@ -1548,37 +1593,17 @@
   (return-type "const-gchar*")
 )
 
-(define-method info
-  (of-object "GstElement")
-  (c-name "gst_element_info")
-  (return-type "none")
-  (parameters
-    '("const-gchar*" "info")
-  )
-  (varargs #t)
-)
-
-(define-method error
-  (of-object "GstElement")
-  (c-name "gst_element_error")
-  (return-type "none")
-  (parameters
-    '("const-gchar*" "error")
-  )
-  (varargs #t)
-)
-
 (define-method get_factory
   (of-object "GstElement")
   (c-name "gst_element_get_factory")
   (return-type "GstElementFactory*")
 )
 
-(define-function gst_element_install_std_props
-  (c-name "gst_element_install_std_props")
+(define-method install_std_props
+  (of-object "GstElementClass")
+  (c-name "gst_element_class_install_std_props")
   (return-type "none")
   (parameters
-    '("GstElementClass*" "klass")
     '("const-char*" "first_name")
   )
   (varargs #t)
@@ -1590,13 +1615,13 @@
   (return-type "GstBin*")
 )
 
-(define-function gst_elementfactory_get_type
-  (c-name "gst_elementfactory_get_type")
+(define-function gst_element_factory_get_type
+  (c-name "gst_element_factory_get_type")
   (return-type "GType")
 )
 
-(define-function gst_elementfactory_new
-  (c-name "gst_elementfactory_new")
+(define-function gst_element_factory_new
+  (c-name "gst_element_factory_new")
   (return-type "GstElementFactory*")
   (parameters
     '("const-gchar*" "name")
@@ -1605,22 +1630,22 @@
   )
 )
 
-(define-function gst_elementfactory_find
-  (c-name "gst_elementfactory_find")
+(define-function gst_element_factory_find
+  (c-name "gst_element_factory_find")
   (return-type "GstElementFactory*")
   (parameters
     '("const-gchar*" "name")
   )
 )
 
-(define-function gst_elementfactory_get_list
-  (c-name "gst_elementfactory_get_list")
+(define-function gst_element_factory_get_list
+  (c-name "gst_element_factory_get_list")
   (return-type "const-GList*")
 )
 
-(define-method add_padtemplate
+(define-method add_pad_template
   (of-object "GstElementFactory")
-  (c-name "gst_elementfactory_add_padtemplate")
+  (c-name "gst_element_factory_add_pad_template")
   (return-type "none")
   (parameters
     '("GstPadTemplate*" "templ")
@@ -1629,7 +1654,7 @@
 
 (define-method can_src_caps
   (of-object "GstElementFactory")
-  (c-name "gst_elementfactory_can_src_caps")
+  (c-name "gst_element_factory_can_src_caps")
   (return-type "gboolean")
   (parameters
     '("GstCaps*" "caps")
@@ -1638,7 +1663,7 @@
 
 (define-method can_sink_caps
   (of-object "GstElementFactory")
-  (c-name "gst_elementfactory_can_sink_caps")
+  (c-name "gst_element_factory_can_sink_caps")
   (return-type "gboolean")
   (parameters
     '("GstCaps*" "caps")
@@ -1647,15 +1672,15 @@
 
 (define-method create
   (of-object "GstElementFactory")
-  (c-name "gst_elementfactory_create")
+  (c-name "gst_element_factory_create")
   (return-type "GstElement*")
   (parameters
     '("const-gchar*" "name")
   )
 )
 
-(define-function gst_elementfactory_make
-  (c-name "gst_elementfactory_make")
+(define-function gst_element_factory_make
+  (c-name "gst_element_factory_make")
   (return-type "GstElement*")
   (parameters
     '("const-gchar*" "factoryname")
@@ -1887,7 +1912,7 @@
   (c-name "gst_object_restore_thyself")
   (return-type "none")
   (parameters
-    '("xmlNodePtr" "parent")
+    '("xmlNodePtr" "self")
   )
 )
 
@@ -2049,9 +2074,9 @@
   (return-type "GstCaps*")
 )
 
-(define-method get_padtemplate_caps
+(define-method get_pad_template_caps
   (of-object "GstPad")
-  (c-name "gst_pad_get_padtemplate_caps")
+  (c-name "gst_pad_get_pad_template_caps")
   (return-type "GstCaps*")
 )
 
@@ -2169,9 +2194,9 @@
   (return-type "GList*")
 )
 
-(define-method get_padtemplate
+(define-method get_pad_template
   (of-object "GstPad")
-  (c-name "gst_pad_get_padtemplate")
+  (c-name "gst_pad_get_pad_template")
   (return-type "GstPadTemplate*")
 )
 
@@ -2354,13 +2379,13 @@
   )
 )
 
-(define-function gst_padtemplate_get_type
-  (c-name "gst_padtemplate_get_type")
+(define-function gst_pad_template_get_type
+  (c-name "gst_pad_template_get_type")
   (return-type "GType")
 )
 
-(define-function gst_padtemplate_new
-  (c-name "gst_padtemplate_new")
+(define-function gst_pad_template_new
+  (c-name "gst_pad_template_new")
   (return-type "GstPadTemplate*")
   (parameters
     '("gchar*" "name_template")
@@ -2373,13 +2398,13 @@
 
 (define-method get_caps
   (of-object "GstPadTemplate")
-  (c-name "gst_padtemplate_get_caps")
+  (c-name "gst_pad_template_get_caps")
   (return-type "GstCaps*")
 )
 
 (define-method get_caps_by_name
   (of-object "GstPadTemplate")
-  (c-name "gst_padtemplate_get_caps_by_name")
+  (c-name "gst_pad_template_get_caps_by_name")
   (return-type "GstCaps*")
   (parameters
     '("const-gchar*" "name")
@@ -2388,15 +2413,15 @@
 
 (define-method save_thyself
   (of-object "GstPadTemplate")
-  (c-name "gst_padtemplate_save_thyself")
+  (c-name "gst_pad_template_save_thyself")
   (return-type "xmlNodePtr")
   (parameters
     '("xmlNodePtr" "parent")
   )
 )
 
-(define-function gst_padtemplate_load_thyself
-  (c-name "gst_padtemplate_load_thyself")
+(define-function gst_pad_template_load_thyself
+  (c-name "gst_pad_template_load_thyself")
   (return-type "GstPadTemplate*")
   (parameters
     '("xmlNodePtr" "parent")
@@ -2417,11 +2442,21 @@
 
 ;; From /usr/include/gst/gstparse.h
 
+(define-function gst_parse_launch
+  (c-name "gst_parse_launch")
+  (return-type "GstBin*")
+  (parameters
+    '("const-gchar*" "pipeline_description")
+    '("GError**" "error")
+  )
+)
+
 (define-function gst_parse_launchv
   (c-name "gst_parse_launchv")
-  (return-type "GstPipeline*")
+  (return-type "GstBin*")
   (parameters
     '("const-gchar**" "argv")
+    '("GError**" "error")
   )
 )
 
@@ -2715,6 +2750,16 @@
   (varargs #t)
 )
 
+(define-method get
+  (of-object "GstProps")
+  (c-name "gst_props_get")
+  (return-type "gboolean")
+  (parameters
+    '("gchar*" "first_name")
+  )
+  (varargs #t)
+)
+
 (define-method has_property
   (of-object "GstProps")
   (c-name "gst_props_has_property")
@@ -2724,48 +2769,132 @@
   )
 )
 
-(define-method get_int
+(define-method has_property_typed
   (of-object "GstProps")
-  (c-name "gst_props_get_int")
-  (return-type "gint")
+  (c-name "gst_props_has_property_typed")
+  (return-type "gboolean")
   (parameters
     '("const-gchar*" "name")
+    '("GstPropsType" "type")
   )
 )
 
-(define-method get_float
+(define-method has_fixed_property
   (of-object "GstProps")
-  (c-name "gst_props_get_float")
-  (return-type "gfloat")
-  (parameters
-    '("const-gchar*" "name")
-  )
-)
-
-(define-method get_fourcc_int
-  (of-object "GstProps")
-  (c-name "gst_props_get_fourcc_int")
-  (return-type "gulong")
-  (parameters
-    '("const-gchar*" "name")
-  )
-)
-
-(define-method get_boolean
-  (of-object "GstProps")
-  (c-name "gst_props_get_boolean")
+  (c-name "gst_props_has_fixed_property")
   (return-type "gboolean")
   (parameters
     '("const-gchar*" "name")
   )
 )
 
-(define-method get_string
+(define-method get_entry
   (of-object "GstProps")
-  (c-name "gst_props_get_string")
-  (return-type "const-gchar*")
+  (c-name "gst_props_get_entry")
+  (return-type "const-GstPropsEntry*")
   (parameters
     '("const-gchar*" "name")
+  )
+)
+
+(define-method get_type
+  (of-object "GstPropsEntry")
+  (c-name "gst_props_entry_get_type")
+  (return-type "GstPropsType")
+)
+
+(define-method get_name
+  (of-object "GstPropsEntry")
+  (c-name "gst_props_entry_get_name")
+  (return-type "const-gchar*")
+)
+
+(define-method is_fixed
+  (of-object "GstPropsEntry")
+  (c-name "gst_props_entry_is_fixed")
+  (return-type "gboolean")
+)
+
+(define-method get
+  (of-object "GstPropsEntry")
+  (c-name "gst_props_entry_get")
+  (return-type "gboolean")
+  (parameters
+  )
+  (varargs #t)
+)
+
+(define-method get_int
+  (of-object "GstPropsEntry")
+  (c-name "gst_props_entry_get_int")
+  (return-type "gboolean")
+  (parameters
+    '("gint*" "val")
+  )
+)
+
+(define-method get_float
+  (of-object "GstPropsEntry")
+  (c-name "gst_props_entry_get_float")
+  (return-type "gboolean")
+  (parameters
+    '("gfloat*" "val")
+  )
+)
+
+(define-method get_fourcc_int
+  (of-object "GstPropsEntry")
+  (c-name "gst_props_entry_get_fourcc_int")
+  (return-type "gboolean")
+  (parameters
+    '("guint32*" "val")
+  )
+)
+
+(define-method get_boolean
+  (of-object "GstPropsEntry")
+  (c-name "gst_props_entry_get_boolean")
+  (return-type "gboolean")
+  (parameters
+    '("gboolean*" "val")
+  )
+)
+
+(define-method get_string
+  (of-object "GstPropsEntry")
+  (c-name "gst_props_entry_get_string")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar**" "val")
+  )
+)
+
+(define-method get_int_range
+  (of-object "GstPropsEntry")
+  (c-name "gst_props_entry_get_int_range")
+  (return-type "gboolean")
+  (parameters
+    '("gint*" "min")
+    '("gint*" "max")
+  )
+)
+
+(define-method get_float_range
+  (of-object "GstPropsEntry")
+  (c-name "gst_props_entry_get_float_range")
+  (return-type "gboolean")
+  (parameters
+    '("gfloat*" "min")
+    '("gfloat*" "max")
+  )
+)
+
+(define-method get_list
+  (of-object "GstPropsEntry")
+  (c-name "gst_props_entry_get_list")
+  (return-type "gboolean")
+  (parameters
+    '("const-GList**" "val")
   )
 )
 
@@ -2793,6 +2922,28 @@
 (define-function gst_queue_get_type
   (c-name "gst_queue_get_type")
   (return-type "GType")
+)
+
+
+
+;; From /usr/include/gst/gstregistry.h
+
+(define-function gst_registry_write_get
+  (c-name "gst_registry_write_get")
+  (return-type "GstRegistryWrite*")
+)
+
+(define-function gst_registry_read_get
+  (c-name "gst_registry_read_get")
+  (return-type "GstRegistryRead*")
+)
+
+(define-function gst_registry_option_set
+  (c-name "gst_registry_option_set")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "registry")
+  )
 )
 
 
@@ -2831,6 +2982,24 @@
   (return-type "none")
   (parameters
     '("GstElement*" "element")
+  )
+)
+
+(define-method add_scheduler
+  (of-object "GstScheduler")
+  (c-name "gst_scheduler_add_scheduler")
+  (return-type "none")
+  (parameters
+    '("GstScheduler*" "sched2")
+  )
+)
+
+(define-method remove_scheduler
+  (of-object "GstScheduler")
+  (c-name "gst_scheduler_remove_scheduler")
+  (return-type "none")
+  (parameters
+    '("GstScheduler*" "sched2")
   )
 )
 
@@ -2918,10 +3087,51 @@
   )
 )
 
+(define-method clock_wait
+  (of-object "GstScheduler")
+  (c-name "gst_scheduler_clock_wait")
+  (return-type "GstClockReturn")
+  (parameters
+    '("GstElement*" "element")
+    '("GstClock*" "clock")
+    '("GstClockTime" "time")
+  )
+)
+
 (define-method iterate
   (of-object "GstScheduler")
   (c-name "gst_scheduler_iterate")
   (return-type "gboolean")
+)
+
+(define-method use_clock
+  (of-object "GstScheduler")
+  (c-name "gst_scheduler_use_clock")
+  (return-type "none")
+  (parameters
+    '("GstClock*" "clock")
+  )
+)
+
+(define-method set_clock
+  (of-object "GstScheduler")
+  (c-name "gst_scheduler_set_clock")
+  (return-type "none")
+  (parameters
+    '("GstClock*" "clock")
+  )
+)
+
+(define-method get_clock
+  (of-object "GstScheduler")
+  (c-name "gst_scheduler_get_clock")
+  (return-type "GstClock*")
+)
+
+(define-method auto_clock
+  (of-object "GstScheduler")
+  (c-name "gst_scheduler_auto_clock")
+  (return-type "none")
 )
 
 (define-method show
@@ -2930,13 +3140,13 @@
   (return-type "none")
 )
 
-(define-function gst_schedulerfactory_get_type
-  (c-name "gst_schedulerfactory_get_type")
+(define-function gst_scheduler_factory_get_type
+  (c-name "gst_scheduler_factory_get_type")
   (return-type "GType")
 )
 
-(define-function gst_schedulerfactory_new
-  (c-name "gst_schedulerfactory_new")
+(define-function gst_scheduler_factory_new
+  (c-name "gst_scheduler_factory_new")
   (return-type "GstSchedulerFactory*")
   (parameters
     '("const-gchar*" "name")
@@ -2947,34 +3157,34 @@
 
 (define-method destroy
   (of-object "GstSchedulerFactory")
-  (c-name "gst_schedulerfactory_destroy")
+  (c-name "gst_scheduler_factory_destroy")
   (return-type "none")
 )
 
-(define-function gst_schedulerfactory_find
-  (c-name "gst_schedulerfactory_find")
+(define-function gst_scheduler_factory_find
+  (c-name "gst_scheduler_factory_find")
   (return-type "GstSchedulerFactory*")
   (parameters
     '("const-gchar*" "name")
   )
 )
 
-(define-function gst_schedulerfactory_get_list
-  (c-name "gst_schedulerfactory_get_list")
+(define-function gst_scheduler_factory_get_list
+  (c-name "gst_scheduler_factory_get_list")
   (return-type "GList*")
 )
 
 (define-method create
   (of-object "GstSchedulerFactory")
-  (c-name "gst_schedulerfactory_create")
+  (c-name "gst_scheduler_factory_create")
   (return-type "GstScheduler*")
   (parameters
     '("GstElement*" "parent")
   )
 )
 
-(define-function gst_schedulerfactory_make
-  (c-name "gst_schedulerfactory_make")
+(define-function gst_scheduler_factory_make
+  (c-name "gst_scheduler_factory_make")
   (return-type "GstScheduler*")
   (parameters
     '("const-gchar*" "name")
@@ -2982,16 +3192,16 @@
   )
 )
 
-(define-function gst_schedulerfactory_set_default_name
-  (c-name "gst_schedulerfactory_set_default_name")
+(define-function gst_scheduler_factory_set_default_name
+  (c-name "gst_scheduler_factory_set_default_name")
   (return-type "none")
   (parameters
     '("const-gchar*" "name")
   )
 )
 
-(define-function gst_schedulerfactory_get_default_name
-  (c-name "gst_schedulerfactory_get_default_name")
+(define-function gst_scheduler_factory_get_default_name
+  (c-name "gst_scheduler_factory_get_default_name")
   (return-type "const-gchar*")
 )
 
@@ -3030,31 +3240,31 @@
 
 ;; From /usr/include/gst/gsttimecache.h
 
-(define-function gst_timecache_get_type
-  (c-name "gst_timecache_get_type")
+(define-function gst_time_cache_get_type
+  (c-name "gst_time_cache_get_type")
   (return-type "GType")
 )
 
-(define-function gst_timecache_new
-  (c-name "gst_timecache_new")
+(define-function gst_time_cache_new
+  (c-name "gst_time_cache_new")
   (return-type "GstTimeCache*")
 )
 
 (define-method get_group
   (of-object "GstTimeCache")
-  (c-name "gst_timecache_get_group")
+  (c-name "gst_time_cache_get_group")
   (return-type "gint")
 )
 
 (define-method new_group
   (of-object "GstTimeCache")
-  (c-name "gst_timecache_new_group")
+  (c-name "gst_time_cache_new_group")
   (return-type "gint")
 )
 
 (define-method set_group
   (of-object "GstTimeCache")
-  (c-name "gst_timecache_set_group")
+  (c-name "gst_time_cache_set_group")
   (return-type "gboolean")
   (parameters
     '("gint" "groupnum")
@@ -3063,7 +3273,7 @@
 
 (define-method set_certainty
   (of-object "GstTimeCache")
-  (c-name "gst_timecache_set_certainty")
+  (c-name "gst_time_cache_set_certainty")
   (return-type "none")
   (parameters
     '("GstTimeCacheCertainty" "certainty")
@@ -3072,13 +3282,13 @@
 
 (define-method get_certainty
   (of-object "GstTimeCache")
-  (c-name "gst_timecache_get_certainty")
+  (c-name "gst_time_cache_get_certainty")
   (return-type "GstTimeCacheCertainty")
 )
 
 (define-method add_entry
   (of-object "GstTimeCache")
-  (c-name "gst_timecache_add_entry")
+  (c-name "gst_time_cache_add_entry")
   (return-type "none")
   (parameters
     '("guint64" "location")
@@ -3088,7 +3298,7 @@
 
 (define-method find_location
   (of-object "GstTimeCache")
-  (c-name "gst_timecache_find_location")
+  (c-name "gst_time_cache_find_location")
   (return-type "gboolean")
   (parameters
     '("guint64" "location")
@@ -3098,7 +3308,7 @@
 
 (define-method find_timestamp
   (of-object "GstTimeCache")
-  (c-name "gst_timecache_find_timestamp")
+  (c-name "gst_time_cache_find_timestamp")
   (return-type "gboolean")
   (parameters
     '("gint64" "timestamp")
@@ -3166,29 +3376,29 @@
 
 ;; From /usr/include/gst/gsttype.h
 
-(define-function gst_typefactory_get_type
-  (c-name "gst_typefactory_get_type")
+(define-function gst_type_factory_get_type
+  (c-name "gst_type_factory_get_type")
   (return-type "GType")
 )
 
-(define-function gst_typefactory_new
-  (c-name "gst_typefactory_new")
+(define-function gst_type_factory_new
+  (c-name "gst_type_factory_new")
   (return-type "GstTypeFactory*")
   (parameters
     '("GstTypeDefinition*" "definition")
   )
 )
 
-(define-function gst_typefactory_find
-  (c-name "gst_typefactory_find")
+(define-function gst_type_factory_find
+  (c-name "gst_type_factory_find")
   (return-type "GstTypeFactory*")
   (parameters
     '("const-gchar*" "name")
   )
 )
 
-(define-function gst_typefactory_get_list
-  (c-name "gst_typefactory_get_list")
+(define-function gst_type_factory_get_list
+  (c-name "gst_type_factory_get_list")
   (return-type "GList*")
 )
 
@@ -3233,8 +3443,8 @@
 
 ;; From /usr/include/gst/gsttypefind.h
 
-(define-function gst_typefind_get_type
-  (c-name "gst_typefind_get_type")
+(define-function gst_type_find_get_type
+  (c-name "gst_type_find_get_type")
   (return-type "GType")
 )
 
@@ -3456,6 +3666,10 @@
   )
 )
 
+
+;;
+;; HACK
+;;
 
 (define-function gst_buffer_get_data
   (c-name "gst_buffer_get_data")

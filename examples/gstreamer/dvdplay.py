@@ -85,16 +85,16 @@ class DVDPlay(object):
       self.v_thread = gst_thread_new('v_thread')
       assert self.v_thread
 
-      self.v_queue = gst_elementfactory_make('queue','v_queue')
+      self.v_queue = gst_element_factory_make('queue','v_queue')
       assert self.v_queue
 
-      self.v_decode = gst_elementfactory_make('mpeg2dec','decode_video')
+      self.v_decode = gst_element_factory_make('mpeg2dec','decode_video')
       assert self.v_decode
 
-      self.color = gst_elementfactory_make('colorspace','color')
+      self.color = gst_element_factory_make('colorspace','color')
       assert self.color
 
-      self.show = gst_elementfactory_make('videosink','show')
+      self.show = gst_element_factory_make('videosink','show')
       assert self.show
 
       for e in (self.v_queue, self.v_decode, self.color, self.show):
@@ -109,13 +109,13 @@ class DVDPlay(object):
       self.a_thread = gst_thread_new('a_thread')
       assert self.a_thread
 
-      self.a_queue = gst_elementfactory_make('queue','a_queue')
+      self.a_queue = gst_element_factory_make('queue','a_queue')
       assert self.a_queue
 
-      self.a_decode = gst_elementfactory_make('a52dec','decode_audio')
+      self.a_decode = gst_element_factory_make('a52dec','decode_audio')
       assert self.a_decode
 
-      self.osssink = gst_elementfactory_make('osssink','osssink')
+      self.osssink = gst_element_factory_make('osssink','osssink')
       assert self.osssink
 
       for e in (self.a_queue, self.a_decode, self.osssink):
@@ -129,7 +129,7 @@ class DVDPlay(object):
       self.pipeline = gst_pipeline_new('pipeline')
       assert self.pipeline
 
-      self.src = gst_elementfactory_make('dvdsrc','src');
+      self.src = gst_element_factory_make('dvdsrc','src');
       assert self.src
 
       self.src.set_property('location', self.location)
@@ -137,7 +137,7 @@ class DVDPlay(object):
       self.src.set_property('chapter', self.chapter)
       self.src.set_property('angle', self.angle)
 
-      self.parse = gst_elementfactory_make('mpegdemux','parse')
+      self.parse = gst_element_factory_make('mpegdemux','parse')
       assert self.parse
 
       self.pipeline.add(self.src)

@@ -36,20 +36,20 @@ def main():
    bin = gst_pipeline_new ('pipeline')
 
    # create a disk reader
-   filesrc = gst_elementfactory_make ('filesrc', 'disk_source');
+   filesrc = gst_element_factory_make ('filesrc', 'disk_source');
    if not filesrc:
       print 'could not find plugin \"filesrc\"'
       return -1
    filesrc.set_property('location', sys.argv[1])
 
    # now get the decoder
-   decoder = gst_elementfactory_make ('vorbisdec', 'parse');
+   decoder = gst_element_factory_make ('vorbisdec', 'parse');
    if not decoder:
       print 'could not find plugin \"vorbisdec\"'
       return -1
 
    # and an audio sink
-   osssink = gst_elementfactory_make ('osssink', 'play_audio')
+   osssink = gst_element_factory_make ('osssink', 'play_audio')
    if not osssink:
       print 'could not find plugin \"osssink\"'
       return -1

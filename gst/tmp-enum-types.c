@@ -206,9 +206,9 @@ gst_pad_connect_return_get_type (void)
   if (etype == 0) {
     static const GEnumValue values[] = {
       { GST_PAD_CONNECT_REFUSED, "GST_PAD_CONNECT_REFUSED", "refused" },
+      { GST_PAD_CONNECT_DELAYED, "GST_PAD_CONNECT_DELAYED", "delayed" },
       { GST_PAD_CONNECT_OK, "GST_PAD_CONNECT_OK", "ok" },
       { GST_PAD_CONNECT_DONE, "GST_PAD_CONNECT_DONE", "done" },
-      { GST_PAD_CONNECT_DELAYED, "GST_PAD_CONNECT_DELAYED", "delayed" },
       { 0, NULL, NULL }
     };
     etype = g_enum_register_static ("GstPadConnectReturn", values);
@@ -267,19 +267,18 @@ gst_pad_presence_get_type (void)
 
 /* enumerations from "/usr/include/gst/gstparse.h" */
 GType
-gst_parse_errors_get_type (void)
+gst_parse_error_get_type (void)
 {
   static GType etype = 0;
   if (etype == 0) {
     static const GEnumValue values[] = {
       { GST_PARSE_ERROR_SYNTAX, "GST_PARSE_ERROR_SYNTAX", "syntax" },
-      { GST_PARSE_ERROR_CREATING_ELEMENT, "GST_PARSE_ERROR_CREATING_ELEMENT", "creating-element" },
-      { GST_PARSE_ERROR_NOSUCH_ELEMENT, "GST_PARSE_ERROR_NOSUCH_ELEMENT", "nosuch-element" },
-      { GST_PARSE_ERROR_INTERNAL, "GST_PARSE_ERROR_INTERNAL", "internal" },
+      { GST_PARSE_ERROR_NO_SUCH_ELEMENT, "GST_PARSE_ERROR_NO_SUCH_ELEMENT", "no-such-element" },
+      { GST_PARSE_ERROR_NO_SUCH_PROPERTY, "GST_PARSE_ERROR_NO_SUCH_PROPERTY", "no-such-property" },
       { GST_PARSE_ERROR_CONNECT, "GST_PARSE_ERROR_CONNECT", "connect" },
       { 0, NULL, NULL }
     };
-    etype = g_enum_register_static ("GstParseErrors", values);
+    etype = g_enum_register_static ("GstParseError", values);
   }
   return etype;
 }
@@ -287,31 +286,47 @@ gst_parse_errors_get_type (void)
 
 /* enumerations from "/usr/include/gst/gstprops.h" */
 GType
-gst_props_id_get_type (void)
+gst_props_type_get_type (void)
 {
   static GType etype = 0;
   if (etype == 0) {
     static const GEnumValue values[] = {
-      { GST_PROPS_END_ID, "GST_PROPS_END_ID", "end-id" },
-      { GST_PROPS_INT_ID, "GST_PROPS_INT_ID", "int-id" },
-      { GST_PROPS_FLOAT_ID, "GST_PROPS_FLOAT_ID", "float-id" },
-      { GST_PROPS_FOURCC_ID, "GST_PROPS_FOURCC_ID", "fourcc-id" },
-      { GST_PROPS_BOOL_ID, "GST_PROPS_BOOL_ID", "bool-id" },
-      { GST_PROPS_STRING_ID, "GST_PROPS_STRING_ID", "string-id" },
-      { GST_PROPS_VAR_ID, "GST_PROPS_VAR_ID", "var-id" },
-      { GST_PROPS_LIST_ID, "GST_PROPS_LIST_ID", "list-id" },
-      { GST_PROPS_FLOAT_RANGE_ID, "GST_PROPS_FLOAT_RANGE_ID", "float-range-id" },
-      { GST_PROPS_INT_RANGE_ID, "GST_PROPS_INT_RANGE_ID", "int-range-id" },
-      { GST_PROPS_LAST_ID, "GST_PROPS_LAST_ID", "last-id" },
+      { GST_PROPS_END_TYPE, "GST_PROPS_END_TYPE", "end-type" },
+      { GST_PROPS_INVALID_TYPE, "GST_PROPS_INVALID_TYPE", "invalid-type" },
+      { GST_PROPS_INT_TYPE, "GST_PROPS_INT_TYPE", "int-type" },
+      { GST_PROPS_FLOAT_TYPE, "GST_PROPS_FLOAT_TYPE", "float-type" },
+      { GST_PROPS_FOURCC_TYPE, "GST_PROPS_FOURCC_TYPE", "fourcc-type" },
+      { GST_PROPS_BOOL_TYPE, "GST_PROPS_BOOL_TYPE", "bool-type" },
+      { GST_PROPS_STRING_TYPE, "GST_PROPS_STRING_TYPE", "string-type" },
+      { GST_PROPS_VAR_TYPE, "GST_PROPS_VAR_TYPE", "var-type" },
+      { GST_PROPS_LIST_TYPE, "GST_PROPS_LIST_TYPE", "list-type" },
+      { GST_PROPS_FLOAT_RANGE_TYPE, "GST_PROPS_FLOAT_RANGE_TYPE", "float-range-type" },
+      { GST_PROPS_INT_RANGE_TYPE, "GST_PROPS_INT_RANGE_TYPE", "int-range-type" },
+      { GST_PROPS_LAST_TYPE, "GST_PROPS_LAST_TYPE", "last-type" },
       { 0, NULL, NULL }
     };
-    etype = g_enum_register_static ("GstPropsId", values);
+    etype = g_enum_register_static ("GstPropsType", values);
   }
   return etype;
 }
 
 
 /* enumerations from "/usr/include/gst/gstscheduler.h" */
+GType
+gst_scheduler_flags_get_type (void)
+{
+  static GType etype = 0;
+  if (etype == 0) {
+    static const GEnumValue values[] = {
+      { GST_SCHEDULER_FLAG_FIXED_CLOCK, "GST_SCHEDULER_FLAG_FIXED_CLOCK", "fixed-clock" },
+      { GST_SCHEDULER_FLAG_LAST, "GST_SCHEDULER_FLAG_LAST", "last" },
+      { 0, NULL, NULL }
+    };
+    etype = g_enum_register_static ("GstSchedulerFlags", values);
+  }
+  return etype;
+}
+
 GType
 gst_scheduler_state_get_type (void)
 {
@@ -356,11 +371,11 @@ gst_time_cache_certainty_get_type (void)
   static GType etype = 0;
   if (etype == 0) {
     static const GEnumValue values[] = {
-      { GST_TIMECACHE_UNKNOWN, "GST_TIMECACHE_UNKNOWN", "unknown" },
-      { GST_TIMECACHE_CERTAIN, "GST_TIMECACHE_CERTAIN", "certain" },
-      { GST_TIMECACHE_FUZZY_LOCATION, "GST_TIMECACHE_FUZZY_LOCATION", "fuzzy-location" },
-      { GST_TIMECACHE_FUZZY_TIMESTAMP, "GST_TIMECACHE_FUZZY_TIMESTAMP", "fuzzy-timestamp" },
-      { GST_TIMECACHE_FUZZY, "GST_TIMECACHE_FUZZY", "fuzzy" },
+      { GST_TIME_CACHE_UNKNOWN, "GST_TIME_CACHE_UNKNOWN", "unknown" },
+      { GST_TIME_CACHE_CERTAIN, "GST_TIME_CACHE_CERTAIN", "certain" },
+      { GST_TIME_CACHE_FUZZY_LOCATION, "GST_TIME_CACHE_FUZZY_LOCATION", "fuzzy-location" },
+      { GST_TIME_CACHE_FUZZY_TIMESTAMP, "GST_TIME_CACHE_FUZZY_TIMESTAMP", "fuzzy-timestamp" },
+      { GST_TIME_CACHE_FUZZY, "GST_TIME_CACHE_FUZZY", "fuzzy" },
       { 0, NULL, NULL }
     };
     etype = g_enum_register_static ("GstTimeCacheCertainty", values);

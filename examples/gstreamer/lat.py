@@ -63,7 +63,7 @@ def identity_add(pipeline, first, count):
 
    for i in range(count):
      name = 'identity_%03d' % i
-     ident = gst_elementfactory_make('identity', name)
+     ident = gst_element_factory_make('identity', name)
      assert ident
      ident.set_property('silent', 1)
      pipeline.add(ident)
@@ -73,7 +73,7 @@ def identity_add(pipeline, first, count):
    return last
 
 def fakesrc():
-   src = gst_elementfactory_make('fakesrc','src')
+   src = gst_element_factory_make('fakesrc','src')
    assert src
    src.set_property('silent', 1)
    src.set_property('num_buffers', iterations)
@@ -81,7 +81,7 @@ def fakesrc():
    return src
 
 def fakesink():
-   sink = gst_elementfactory_make('fakesink','fakesink')
+   sink = gst_element_factory_make('fakesink','fakesink')
    assert sink
    sink.set_property('silent', 1)
    GObject.connect(sink, 'handoff', handoff_sink)
@@ -126,7 +126,7 @@ def queue(argv):
    assert src
    src_thr.add(src)
 
-   src_q = gst_elementfactory_make('queue','src_q')
+   src_q = gst_element_factory_make('queue','src_q')
    assert src_q
    src_thr.add(src_q)
    src.get_pad('src').connect(src_q.get_pad('sink'))
@@ -135,7 +135,7 @@ def queue(argv):
 
    last = identity_add(pipeline, src_q, idents)
 
-   sink_q = gst_elementfactory_make('queue','sink_q')
+   sink_q = gst_element_factory_make('queue','sink_q')
    assert sink_q
    pipeline.add(sink_q)
    last.get_pad('src').connect(sink_q.get_pad('sink'))

@@ -38,13 +38,13 @@ def filter(filters):
    # create a new bin to hold the elements
    bin = gst_pipeline_new ('pipeline')
 
-   filesrc = gst_elementfactory_make ('filesrc', 'source');
+   filesrc = gst_element_factory_make ('filesrc', 'source');
    if not filesrc:
       print 'could not find plugin \"filesrc\"'
       return -1
    filesrc.set_property('location', sys.argv[1])
 
-   filesink = gst_elementfactory_make ('disksink', 'sink')
+   filesink = gst_element_factory_make ('disksink', 'sink')
    if not filesink:
       print 'could not find plugin \"disksink\"'
       return -1
@@ -76,7 +76,7 @@ def main():
    "A GStreamer based cp(1) with stats"
    gst_debug_set_categories(0)
 
-   stats = gst_elementfactory_make ('statistics', 'stats');
+   stats = gst_element_factory_make ('statistics', 'stats');
    if not stats:
       print 'could not find plugin \"statistics\"'
       return -1

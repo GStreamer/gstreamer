@@ -33,13 +33,13 @@ def main():
    bin = gst_pipeline_new ('pipeline')
    assert bin
 
-   src = gst_elementfactory_make ('fakesrc', 'src')
+   src = gst_element_factory_make ('fakesrc', 'src')
    assert src
    GObject.connect(src, 'handoff', handoff)
    src.set_property('silent', 1)
    src.set_property('num_buffers', 10)
 
-   sink = gst_elementfactory_make ('fakesink', 'sink')
+   sink = gst_element_factory_make ('fakesink', 'sink')
    assert sink
    GObject.connect(sink, 'handoff', handoff)
    src.set_property('silent', 1)

@@ -70,15 +70,18 @@ GType gst_pad_presence_get_type (void);
 
 /* enumerations from "/usr/include/gst/gstparse.h" */
 
-GType gst_parse_errors_get_type (void);
-#define GST_TYPE_PARSE_ERRORS (gst_parse_errors_get_type())
+GType gst_parse_error_get_type (void);
+#define GST_TYPE_PARSE_ERROR (gst_parse_error_get_type())
 
 /* enumerations from "/usr/include/gst/gstprops.h" */
 
-GType gst_props_id_get_type (void);
-#define GST_TYPE_PROPS_ID (gst_props_id_get_type())
+GType gst_props_type_get_type (void);
+#define GST_TYPE_PROPS_TYPE (gst_props_type_get_type())
 
 /* enumerations from "/usr/include/gst/gstscheduler.h" */
+
+GType gst_scheduler_flags_get_type (void);
+#define GST_TYPE_SCHEDULER_FLAGS (gst_scheduler_flags_get_type())
 
 GType gst_scheduler_state_get_type (void);
 #define GST_TYPE_SCHEDULER_STATE (gst_scheduler_state_get_type())

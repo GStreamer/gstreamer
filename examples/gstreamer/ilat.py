@@ -34,12 +34,12 @@ def build(filters, b):
    # create a new bin to hold the elements
    bin = gst_pipeline_new ('pipeline')
 
-   src = gst_elementfactory_make ('fakesrc', 'source');
+   src = gst_element_factory_make ('fakesrc', 'source');
    assert src
    src.set_property('silent', 1)
    src.set_property('num_buffers', b)
 
-   sink = gst_elementfactory_make ('fakesink', 'sink')
+   sink = gst_element_factory_make ('fakesink', 'sink')
    assert sink
    sink.set_property('silent', 1)
 
@@ -65,7 +65,7 @@ def filter(bin):
 ccnt = 0
 def c():
    global ccnt
-   id = gst_elementfactory_make ('identity', 'c identity %d' % ccnt);
+   id = gst_element_factory_make ('identity', 'c identity %d' % ccnt);
    assert id
    id.set_property('silent', 1)
    id.set_property('loop_based', 0)

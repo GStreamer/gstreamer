@@ -23,10 +23,4 @@
 
 #include "gstreamer-fixes.h"
 
-#define NI fprintf(stderr, "%s not implemented\n", __FUNCTION__);
-
-void gst_clock_set_speed (GstClock *clock, gdouble speed) { NI; }
-void gst_clock_get_speed (GstClock *clock, gdouble speed) { NI; }
-void gst_bin_child_error (GstBin *bin, GstElement *child) { NI; }
-
 #include "tmp-enum-types.c"
