@@ -1,5 +1,10 @@
 2004-04-07  Benjamin Otte  <otte@gnome.org>
 
+	* gst-libs/gst/gconf/test-gconf.c: (main):
+	  add missing gst_init
+
+2004-04-07  Benjamin Otte  <otte@gnome.org>
+
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_dispose):
 	  free the mutexes, too
 
