@@ -50,7 +50,8 @@ static guint16
 gst_dp_crc (const guint8 * buffer, register guint length)
 {
   static gboolean initialized = FALSE;
-  static guint16 crc_register, crc_table[256];
+  static guint16 crc_table[256];
+  guint16 crc_register;
   unsigned long i, j, k;
 
   if (!initialized) {

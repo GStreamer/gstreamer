@@ -1,3 +1,8 @@
+2004-10-01  Wim Taymans  <set EMAIL_ADDRESS environment variable>
+
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_crc):
+	Fix threadsafety of the crc checking function.
+
 2004-09-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch by: Ronald Bultje
