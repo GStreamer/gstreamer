@@ -1,5 +1,17 @@
 2004-10-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_video_caps_with_data),
+	(gst_riff_create_audio_caps_with_data):
+	  Add codec_data handling (like asfdemux used to do).
+	* gst/asfdemux/gstasf.c: (plugin_init):
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_base_init),
+	(gst_asf_demux_add_audio_stream), (gst_asf_demux_add_video_stream):
+	  Use riff-media for caps creation instead of our own (mostly
+	  broken) copy of its functions.
+
+2004-10-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* sys/v4l/v4lsrc_calls.c: (gst_v4lsrc_try_capture):
 	  Don't actually error out if we get another return value than
 	  -EINVAL. Opposite to what I first thought, drivers have random
