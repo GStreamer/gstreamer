@@ -425,8 +425,22 @@ gst_textoverlay_loop (GstElement * element)
   g_return_if_fail (GST_IS_TEXTOVERLAY (element));
   overlay = GST_TEXTOVERLAY (element);
 
-  video_frame = GST_BUFFER (gst_pad_pull (overlay->video_sinkpad));
+  do {
+    GST_DEBUG ("Attempting to pull next video frame");
+    video_frame = GST_BUFFER (gst_pad_pull (overlay->video_sinkpad));
+    if (GST_IS_EVENT (video_frame)) {
+      GstEvent *event = GST_EVENT (video_frame);
+      GstEventType type = GST_EVENT_TYPE (event);
+
+      gst_pad_event_default (overlay->video_sinkpad, event);
+      GST_DEBUG ("Received event of type %d", type);
+      if (type == GST_EVENT_EOS || type == GST_EVENT_INTERRUPT)
+        return;
+      video_frame = NULL;
+    }
+  } while (!video_frame);
   now = GST_BUFFER_TIMESTAMP (video_frame);
+  GST_DEBUG ("Got video frame, time=%" GST_TIME_FORMAT, GST_TIME_ARGS (now));
 
   /*
    * This state machine has a bug that can't be resolved easily.
@@ -439,20 +453,41 @@ gst_textoverlay_loop (GstElement * element)
    * buffer timestamps and durations correctly.  (I think)
    */
 
-  while (overlay->next_buffer == NULL) {
+  while ((!overlay->current_buffer ||
+          PAST_END (overlay->current_buffer, now)) &&
+      overlay->next_buffer == NULL) {
     GST_DEBUG ("attempting to pull a buffer");
 
     /* read all text buffers until we get one "in the future" */
     if (!GST_PAD_IS_USABLE (overlay->text_sinkpad)) {
       break;
     }
-    overlay->next_buffer = GST_BUFFER (gst_pad_pull (overlay->text_sinkpad));
-    if (!overlay->next_buffer)
-      break;
+    do {
+      overlay->next_buffer = GST_BUFFER (gst_pad_pull (overlay->text_sinkpad));
+      if (GST_IS_EVENT (overlay->next_buffer)) {
+        GstEvent *event = GST_EVENT (overlay->next_buffer);
+        GstEventType type = GST_EVENT_TYPE (event);
+
+        gst_pad_event_default (overlay->text_sinkpad, event);
+        if (type == GST_EVENT_EOS || type == GST_EVENT_INTERRUPT)
+          return;
+        overlay->next_buffer = NULL;
+      }
+    } while (!overlay->next_buffer);
 
     if (PAST_END (overlay->next_buffer, now)) {
+      GST_DEBUG ("Received buffer is past end (%" GST_TIME_FORMAT " + %"
+          GST_TIME_FORMAT " < %" GST_TIME_FORMAT ")",
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (overlay->next_buffer)),
+          GST_TIME_ARGS (GST_BUFFER_DURATION (overlay->next_buffer)),
+          GST_TIME_ARGS (now));
       gst_buffer_unref (overlay->next_buffer);
       overlay->next_buffer = NULL;
+    } else {
+      GST_DEBUG ("Received new text buffer of time %" GST_TIME_FORMAT
+          "and duration %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (overlay->next_buffer)),
+          GST_TIME_ARGS (GST_BUFFER_DURATION (overlay->next_buffer)));
     }
   }
 
@@ -573,7 +608,7 @@ gst_textoverlay_init (GstTextOverlay * overlay)
 
   overlay->halign = GST_TEXT_OVERLAY_HALIGN_CENTER;
   overlay->valign = GST_TEXT_OVERLAY_VALIGN_BASELINE;
-  overlay->x0 = overlay->y0 = 0;
+  overlay->x0 = overlay->y0 = 25;
 
   overlay->default_text = g_strdup ("");
   overlay->need_render = TRUE;

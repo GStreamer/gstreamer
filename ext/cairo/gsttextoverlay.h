@@ -7,6 +7,9 @@
 
 G_BEGIN_DECLS
 
+GST_DEBUG_CATEGORY_EXTERN (cairo_debug);
+#define GST_CAT_DEFAULT cairo_debug
+
 #define GST_TYPE_TEXTOVERLAY           (gst_textoverlay_get_type())
 #define GST_TEXTOVERLAY(obj)           (G_TYPE_CHECK_INSTANCE_CAST((obj),\
                                         GST_TYPE_TEXTOVERLAY, GstTextOverlay))

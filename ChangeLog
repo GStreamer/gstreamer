@@ -1,3 +1,15 @@
+2004-12-28  David Schleef  <ds@schleef.org>
+
+	Merge patch from Ronald fixing problems with streaming
+	text.
+	* ext/cairo/gstcairo.c: (plugin_init):
+	* ext/cairo/gsttextoverlay.c: (gst_textoverlay_render_text),
+	(gst_text_overlay_blit_1), (gst_text_overlay_blit_sub2x2),
+	(gst_textoverlay_video_chain), (gst_textoverlay_loop),
+	(gst_textoverlay_font_init), (gst_textoverlay_init),
+	(gst_textoverlay_set_property):
+	* ext/cairo/gsttextoverlay.h:
+
 2004-12-27  David Schleef  <ds@schleef.org>
 
 	* ext/cairo/gsttextoverlay.c: (gst_textoverlay_render_text),

@@ -28,6 +28,8 @@
 #include <string.h>
 #include <math.h>
 
+GST_DEBUG_CATEGORY (cairo_debug);
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -38,6 +40,8 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_TEXTOVERLAY);
   gst_element_register (plugin, "cairotimeoverlay", GST_RANK_NONE,
       GST_TYPE_TIMEOVERLAY);
+
+  GST_DEBUG_CATEGORY_INIT (cairo_debug, "cairo", 0, "Cairo elements");
 
   return TRUE;
 }
