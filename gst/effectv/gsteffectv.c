@@ -32,6 +32,7 @@ static struct _elements_entry _elements[] = {
   { "warpTV",  		gst_warptv_get_type,  		&gst_warptv_details,  		NULL },
   { "shagadelicTV",  	gst_shagadelictv_get_type,  	&gst_shagadelictv_details,  	NULL },
   { "vertigoTV",  	gst_vertigotv_get_type, 	&gst_vertigotv_details,  	NULL },
+  { "revTV",  		gst_revtv_get_type,  		&gst_revtv_details,  		NULL },
   { NULL, 0 },
 };
 
