@@ -39,29 +39,28 @@ all: html ps pdf
 # can we generate HTML ?
 if     DOC_HTML
 HTML_DAT = html
-html: html/index.html
+HTML_TARGET = html/index.html
 else  #!DOC_HTML
 HTML_DAT =
-html:
+HTML_TARGET =
 endif #DOC_HTML
+html: $(HTML_TARGET)
 
 # can we generate PS ?
 if     DOC_PS
 PS_DAT = $(DOC).ps
-ps: $(DOC).ps
 else  #!DOC_PS
 PS_DAT =
-ps:
 endif #DOC_PS
+ps: $(PS_DAT)
 
 # can we generate PDF ?
 if     DOC_PDF
 PDF_DAT = $(DOC).pdf
-pdf: $(DOC).pdf
 else  #!DOC_PDF
 PDF_DAT =
-pdf:
 endif #DOC_PDF
+pdf: $(PDF_DAT)
 
 debug:
 	@echo "outputting some useful debug information"

@@ -4,7 +4,7 @@ dnl Last modification: 23/10/2002
 
 dnl AM_GST_ELEMENT_CHECK(ELEMENT-NAME, ACTION-IF-FOUND, ACTION-IF-NOT-FOUND)
 
-AC_DEFUN(AM_GST_ELEMENT_CHECK,
+AC_DEFUN([AM_GST_ELEMENT_CHECK],
 [
   AC_CHECK_PROG(GST_INSPECT, gst-inspect, gst-inspect, [])
   if test "x$GST_INSPECT" != "x"; then

@@ -1,3 +1,10 @@
+2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/manuals.mak:
+          fix automake complaints
+	* gst-element-check.m4:
+          fix unquotedness
+
 2004-02-11  David Schleef  <ds@schleef.org>
 
 	* docs/gst/Makefile.am: Call gst_init() in built gstreamer-scan.
