@@ -1,3 +1,15 @@
+2004-01-13  Julien MOUTTE <julien@moutte.net>
+
+	* gst-libs/gst/colorbalance/colorbalance.h: Adding a type to the
+	colorbalance interface stating if it is hardware based or software
+	based.
+	* gst/videofilter/gstvideobalance.c: (gst_videobalance_planar411):
+	Removing a trailing comma.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xcontext_get),
+	(gst_xvimagesink_colorbalance_init): Integrating a patch from Jon
+	Trowbridge <trow@ximian.com> querying Xv adaptor for min/max value as
+	the documentation seems to be wrong on the -1000 to 1000 interval.
+
 2004-01-12  David Schleef  <ds@schleef.org>
 
 	* gst/debug/efence.c: (gst_efence_init), (gst_efence_chain),

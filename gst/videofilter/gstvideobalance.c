@@ -43,7 +43,7 @@ enum {
   ARG_CONTRAST,
   ARG_BRIGHTNESS,
   ARG_HUE,
-  ARG_SATURATION,
+  ARG_SATURATION
   /* FILL ME */
 };
 
@@ -314,4 +314,3 @@ static void gst_videobalance_planar411(GstVideofilter *videofilter,
   }
 
 }
-
