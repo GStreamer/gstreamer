@@ -446,17 +446,6 @@ AC_ARG_WITH(configdir,
 esac], 
 [:]) dnl Default value
 
-dnl Default value
-GST_WIN32_LIBDIR="/usr/lib/win32"
-AC_ARG_WITH(win32_libdir,
-[  --with-win32-libdir          specify location for win32 DLLs],
-[case "${withval}" in
-  yes) AC_MSG_ERROR(bad value ${withval} for --with-win32-libdir) ;;
-  no) AC_MSG_ERROR(bad value ${withval} for --with-win32-libdir) ;;
-  *) GST_WIN32_LIBDIR="${withval}" ;;
-esac],
-[:]) dnl Default value
-
 AC_ARG_ENABLE(docs-build,
 [  --enable-docs-build          enable building of documentation],
 [case "${enableval}" in
@@ -618,10 +607,6 @@ dnl ############################
 dnl Set location of configuration dir.
 AC_DEFINE_UNQUOTED(GST_CONFIG_DIR,"$GST_CONFIG_DIR")
 AC_SUBST(GST_CONFIG_DIR)
-
-dnl Set location of windows dll dir.
-AC_DEFINE_UNQUOTED(GST_WIN32_LIBDIR,"$GST_WIN32_LIBDIR")
-AC_SUBST(GST_WIN32_LIBDIR)
 
 dnl Set location of plugin directory
 if test "x${prefix}" = "xNONE"; then
