@@ -1,3 +1,4 @@
+
 /* GStreamer
  * Copyright (C) 2003 Christophe Fergeau <teuf@gnome.org>
  *
@@ -48,8 +49,9 @@ gint min (gint a, gint b) {
 typedef enum {
   GST_FLAC_TAG_STATE_INIT,
   GST_FLAC_TAG_STATE_METADATA_BLOCKS,
+  GST_FLAC_TAG_STATE_METADATA_NEXT_BLOCK,
   GST_FLAC_TAG_STATE_WRITING_METADATA_BLOCK,
-  GST_FLAC_TAG_STATE_SKIP_METADATA_BLOCK,
+  GST_FLAC_TAG_STATE_VC_METADATA_BLOCK,
   GST_FLAC_TAG_STATE_ADD_VORBIS_COMMENT,
   GST_FLAC_TAG_STATE_AUDIO_DATA
 } GstFlacTagState;
@@ -65,10 +67,13 @@ struct _GstFlacTag {
   GstFlacTagState       state;
 
   GstBuffer *		buffer;
+  GstBuffer *           vorbiscomment;
+  GstTagList *          tags;
 
   guint                 metadata_bytes_remaining;
   gboolean              metadata_last_block;  
-  gboolean              metadata_append_vc_block;
+
+  gboolean              only_output_tags;
 };
 
 struct _GstFlacTagClass {
@@ -103,7 +108,12 @@ GST_PAD_TEMPLATE_FACTORY (flac_tag_src_template_factory,
     "flac_tag_tag_src",
     "audio/x-flac",
     NULL
-    )
+    ),
+  GST_CAPS_NEW (
+    "flac_tag_tag_src",
+    "application/x-gst-tags",
+    NULL
+  )
 )
 
 GST_PAD_TEMPLATE_FACTORY (flac_tag_sink_template_factory,
@@ -177,6 +187,50 @@ gst_flac_tag_base_init (gpointer g_class)
 }
 
 
+static void 
+send_eos (GstFlacTag *tag)
+{
+  gst_element_set_eos (GST_ELEMENT (tag));
+  gst_pad_push (tag->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
+  /* Seek to end of sink stream */
+  if (gst_pad_send_event (GST_PAD_PEER (tag->sinkpad),
+			  gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_END | 
+					      GST_SEEK_FLAG_FLUSH, 0))) {
+  } else {
+    g_warning ("Couldn't seek to eos on sinkpad\n");
+  }
+}
+
+
+static gboolean 
+caps_nego (GstFlacTag *tag)
+{
+  /* do caps nego */
+  GstCaps *caps;
+ capsnego:
+  caps = GST_CAPS_NEW ("flac_tag_data_src", "audio/x-flac", NULL);
+  if (gst_pad_try_set_caps (tag->srcpad, caps) != GST_PAD_LINK_REFUSED) {
+    tag->only_output_tags = FALSE;
+    GST_LOG_OBJECT (tag, "normal operation, using audio/x-flac output");
+  } else {
+    if (gst_pad_try_set_caps (tag->srcpad, 
+			      GST_CAPS_NEW ("flac_tag_tag_src", "application/x-gst-tags", NULL))
+	!= GST_PAD_LINK_REFUSED) {
+      tag->only_output_tags = TRUE;
+      GST_LOG_OBJECT (tag, "fast operation, just outputting tags");
+      printf ("output tags only\n");
+    } else {
+      caps = gst_pad_template_get_caps (GST_PAD_TEMPLATE_GET (flac_tag_src_template_factory));
+      if (gst_pad_recover_caps_error (tag->srcpad, caps)) {
+	goto capsnego;
+      } else {
+	return FALSE;
+      }
+    }
+  }  
+  return TRUE;
+}
+
 static void
 gst_flac_tag_class_init (GstFlacTagClass *klass)
 {
@@ -234,6 +288,10 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
 
   /* Initial state, we don't even know if we are dealing with a flac file */
   if (tag->state == GST_FLAC_TAG_STATE_INIT) {
+    if (!caps_nego (tag)) {
+      return;
+    }
+
     if (GST_BUFFER_SIZE (tag->buffer) < sizeof (FLAC_MAGIC)) {
       return;
     }
@@ -255,14 +313,8 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
       /* FIXME: does that work well with FLAC files containing ID3v2 tags ? */
       gst_element_error (GST_ELEMENT (tag), "Not a flac stream\n");
     }
-
-    /* We must know if we'll add a vorbiscomment block as the last metadata
-     * block as soon as possible: if we won't add a block  by ourselves,
-     * we must keep the current vorbiscomment block, and don't change
-     * the "last block" flag when we read it
-     */
-    tag->metadata_append_vc_block = (gst_tag_setter_get_list (GST_TAG_SETTER (tag)) != NULL);
   }
+
 
   /* The fLaC magic string has been skipped, try to detect the beginning
    * of a metadata block
@@ -287,7 +339,7 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
     /* If we have metadata set on the element, the last metadata block 
      * will be the vorbis comment block which we will build ourselves
      */
-    if ((is_last) && (tag->metadata_append_vc_block)) {
+    if (is_last) {
       (GST_BUFFER_DATA (tag->buffer)[0]) &= (~0x80);
     }
 
@@ -302,16 +354,18 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
     tag->metadata_last_block = is_last;
 
     /* Metadata blocks of type 4 are vorbis comment blocks */
-    if ((type == 0x04) && (tag->metadata_append_vc_block)) {
-      tag->state = GST_FLAC_TAG_STATE_SKIP_METADATA_BLOCK;
+    if (type == 0x04) {
+      tag->state = GST_FLAC_TAG_STATE_VC_METADATA_BLOCK;
     } else {
       tag->state = GST_FLAC_TAG_STATE_WRITING_METADATA_BLOCK;
     }
   }
 
+
   /* Reads a metadata block */
   if ((tag->state == GST_FLAC_TAG_STATE_WRITING_METADATA_BLOCK) ||
-  (tag->state == GST_FLAC_TAG_STATE_SKIP_METADATA_BLOCK)) {
+  (tag->state == GST_FLAC_TAG_STATE_VC_METADATA_BLOCK)) {
+    GstBuffer *sub;    
     guint bytes_to_push;
 
     g_assert (tag->metadata_bytes_remaining != 0);
@@ -319,11 +373,18 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
     bytes_to_push = min (tag->metadata_bytes_remaining, 
 			 GST_BUFFER_SIZE (tag->buffer));
 
+    sub = gst_buffer_create_sub (tag->buffer, 0, bytes_to_push);
+
     if (tag->state == GST_FLAC_TAG_STATE_WRITING_METADATA_BLOCK) {
-      GstBuffer *sub;
-      sub = gst_buffer_create_sub (tag->buffer, 0, bytes_to_push);
       gst_pad_push (tag->srcpad, GST_DATA (sub));
+    } else {
+      if (tag->vorbiscomment == NULL) {
+	tag->vorbiscomment = sub;
+      } else {
+	tag->vorbiscomment = gst_buffer_merge (tag->vorbiscomment, sub);
+      }
     }
+
     tag->metadata_bytes_remaining -= (bytes_to_push);
 
     if (GST_BUFFER_SIZE (tag->buffer) > bytes_to_push) {
@@ -333,21 +394,17 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
 				   GST_BUFFER_SIZE (tag->buffer) - bytes_to_push);
       gst_buffer_unref (tag->buffer);
 
-      /* We do a copy because we need a writable buffer, and _create_sub
+      /* We make a copy because we need a writable buffer, and _create_sub
        * sets the buffer it uses to read-only
        */
       tag->buffer = gst_buffer_copy (sub);
       gst_buffer_unref (sub);
 
-      if (tag->metadata_last_block == FALSE) {
-	tag->state = GST_FLAC_TAG_STATE_METADATA_BLOCKS;
-      } else if (tag->metadata_append_vc_block) {
-	tag->state = GST_FLAC_TAG_STATE_ADD_VORBIS_COMMENT;
-      } else {
-	tag->state = GST_FLAC_TAG_STATE_AUDIO_DATA;
-      }
+      tag->state = GST_FLAC_TAG_STATE_METADATA_NEXT_BLOCK;
     } else if (tag->metadata_bytes_remaining == 0) {
-      tag->state = GST_FLAC_TAG_STATE_METADATA_BLOCKS;
+      gst_buffer_unref (tag->buffer);
+      tag->buffer = NULL;
+      tag->state = GST_FLAC_TAG_STATE_METADATA_NEXT_BLOCK;
       tag->buffer = NULL;
     } else {
       tag->state = GST_FLAC_TAG_STATE_WRITING_METADATA_BLOCK;
@@ -355,42 +412,117 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
     }
   }
 
+  /* This state is mainly used to be able to stop as soon as we read
+   * a vorbiscomment block from the flac file if we are in an only output
+   * tags mode
+   */
+  if (tag->state == GST_FLAC_TAG_STATE_METADATA_NEXT_BLOCK) {
+    /* Check if in the previous iteration we read a vorbis comment metadata 
+     * block, and stop now if the user only wants to read tags
+     */
+    if (tag->vorbiscomment != NULL) {
+      /* We found some tags, try to parse them and notify the other elements
+       * that we encoutered some tags
+       */      
+      tag->tags = gst_tag_list_from_vorbiscomment_buffer (tag->vorbiscomment, 
+							  GST_BUFFER_DATA (tag->vorbiscomment),
+							  4, NULL);
+      if (tag->tags != NULL) {
+	gst_element_found_tags (GST_ELEMENT (tag), tag->tags);
+      }
+
+      gst_buffer_unref (tag->vorbiscomment);
+      tag->vorbiscomment = NULL;
+
+      if (tag->only_output_tags) {
+	send_eos (tag);
+	return;
+      }
+    }
+    
+    /* Skip to next state */
+    if (tag->metadata_last_block == FALSE) {
+      tag->state = GST_FLAC_TAG_STATE_METADATA_BLOCKS;
+    } else {
+      if (tag->only_output_tags) {
+	/* If we finished parsing the metadata blocks, we will never find any
+	 * metadata, so just stop now
+	 */
+	send_eos (tag);
+	return;
+      } else {
+	tag->state = GST_FLAC_TAG_STATE_ADD_VORBIS_COMMENT;
+      }
+    }
+  }
+
+
   /* Creates a vorbis comment block from the metadata which was set
    * on the gstreamer element, and add it to the flac stream
    */
   if (tag->state == GST_FLAC_TAG_STATE_ADD_VORBIS_COMMENT) {
-    guchar header[4];
     GstBuffer *buffer;
     gint size;
-    const GstTagList *tags;
+    const GstTagList *user_tags;
+    GstTagList *merged_tags;
 
-    g_assert (tag->metadata_append_vc_block);
-    bzero (header, sizeof (header));
-    header[0] = 0x84; /* 0x80 = Last metadata block, 
-		       * 0x04 = vorbiscomment block
-		       */
-    tags = gst_tag_setter_get_list (GST_TAG_SETTER (tag));
-    buffer = gst_tag_list_to_vorbiscomment_buffer (tags, header, 
-						   sizeof (header), NULL);
-    if (buffer == NULL) {
-      gst_element_error (GST_ELEMENT (tag), "Error filling vorbis comments\n");
-      return;
-    }
-    size = GST_BUFFER_SIZE (buffer) - sizeof (header);
-    if ((size > 0xFFFFFF) || (size < 4)) {
-      /* FLAC vorbis comment blocks are limited to 2^24 bytes, 
-       * while the vorbis specs allow more than that. Shouldn't 
-       * be a real world problem though
+    g_assert (tag->only_output_tags == FALSE);
+
+    user_tags = gst_tag_setter_get_list (GST_TAG_SETTER (tag));
+    merged_tags = gst_tag_list_merge (tag->tags, user_tags, 
+				      gst_tag_setter_get_merge_mode (GST_TAG_SETTER (tag)));
+    
+    if (merged_tags == NULL) {
+      /* If we get a NULL list of tags, we must generate a padding block
+       * which is marked as the last metadata block, otherwise we'll
+       * end up with a corrupted flac file.
        */
-      gst_element_error (GST_ELEMENT (tag), "Vorbis comment too long\n");
-      return;
-    } 
+      g_warning ("No tags found\n");
+      buffer = gst_buffer_new_and_alloc (12);
+      if (buffer == NULL) {
+	gst_element_error (GST_ELEMENT (tag), 
+			   "Error creating padding block\n");
+      }
+      bzero (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
+      GST_BUFFER_DATA (buffer)[0] = 0x81; /* 0x80 = Last metadata block, 
+					   * 0x01 = padding block
+					   */
+    } else {
+      guchar header[4];
+      bzero (header, sizeof (header));
+      header[0] = 0x84; /* 0x80 = Last metadata block, 
+			 * 0x04 = vorbiscomment block
+			 */
+      buffer = gst_tag_list_to_vorbiscomment_buffer (merged_tags, header, 
+						     sizeof (header), NULL);
+      gst_tag_list_free (merged_tags);
+      if (buffer == NULL) {
+	gst_element_error (GST_ELEMENT (tag), "Error filling vorbis comments\n");
+	return;
+      }
+      size = GST_BUFFER_SIZE (buffer) - 4;
+      if ((size > 0xFFFFFF) || (size < 0)) {
+	/* FLAC vorbis comment blocks are limited to 2^24 bytes, 
+	 * while the vorbis specs allow more than that. Shouldn't 
+	 * be a real world problem though
+	 */
+	gst_element_error (GST_ELEMENT (tag), "Vorbis comment too long\n");
+	return;
+      } 
+    }
+
+    /* The 4 byte metadata block header isn't accounted for in the total
+     * size of the metadata block
+     */
+    size = GST_BUFFER_SIZE (buffer) - 4;
+
     GST_BUFFER_DATA (buffer)[1] = ((size & 0xFF0000) >> 16);
     GST_BUFFER_DATA (buffer)[2] = ((size & 0x00FF00) >>  8);
     GST_BUFFER_DATA (buffer)[3] =  (size & 0x0000FF);
     gst_pad_push (tag->srcpad, GST_DATA (buffer));
     tag->state = GST_FLAC_TAG_STATE_AUDIO_DATA;
   }
+
 
   /* The metadata blocks have been read, now we are reading audio data */
   if (tag->state == GST_FLAC_TAG_STATE_AUDIO_DATA) {
@@ -421,6 +553,13 @@ gst_flac_tag_change_state (GstElement *element)
       if (tag->buffer) {
         gst_buffer_unref (tag->buffer);
 	tag->buffer = NULL;
+      }
+      if (tag->vorbiscomment) {
+	gst_buffer_unref (tag->vorbiscomment);
+	tag->vorbiscomment = NULL;
+      }
+      if (tag->tags) {
+	gst_tag_list_free (tag->tags);
       }
       tag->state = GST_FLAC_TAG_STATE_INIT;
       break;
