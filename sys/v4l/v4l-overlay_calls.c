@@ -80,7 +80,7 @@ gst_v4l_set_overlay (GstV4lElement *v4lelement,
  ******************************************************/
 
 gboolean
-gst_v4l_set_window (GstV4lElement     *v4lelement,
+gst_v4l_set_window (GstElement        *element,
                     gint               x,
                     gint               y,
                     gint               w,
@@ -88,6 +88,7 @@ gst_v4l_set_window (GstV4lElement     *v4lelement,
                     struct video_clip *clips,
                     gint               num_clips)
 {
+  GstV4lElement *v4lelement = GST_V4LELEMENT(element);
   struct video_window vwin;
 
   DEBUG("setting video window to position (x,y/wxh) = %d,%d/%dx%d",

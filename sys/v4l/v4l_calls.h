@@ -85,23 +85,23 @@ extern "C" {
 
 
 typedef enum {
-  V4L_PICTURE_HUE,
+  V4L_PICTURE_HUE = 0,
   V4L_PICTURE_BRIGHTNESS,
   V4L_PICTURE_CONTRAST,
   V4L_PICTURE_SATURATION,
 } GstV4lPictureType;
 
-extern char *picture_name[];
+extern const char *picture_name[];
 
 typedef enum {
-  V4L_AUDIO_VOLUME,
+  V4L_AUDIO_VOLUME = 0,
   V4L_AUDIO_MUTE,
   V4L_AUDIO_MODE, /* stereo, mono, ... (see videodev.h) */
 } GstV4lAudioType;
 
-extern char *audio_name[];
+extern const char *audio_name[];
 
-extern char *norm_name[];
+extern const char *norm_name[];
 
 
 /* open/close the device */
@@ -131,7 +131,7 @@ gboolean gst_v4l_set_audio      (GstV4lElement *v4lelement, GstV4lAudioType type
 
 /* overlay */
 gboolean gst_v4l_set_overlay    (GstV4lElement *v4lelement, gchar *display);
-gboolean gst_v4l_set_window     (GstV4lElement *v4lelement, gint x,                   gint y,
+gboolean gst_v4l_set_window     (GstElement    *element,    gint x,                   gint y,
                                                             gint w,                   gint h,
                                                             struct video_clip *clips, gint num_clips);
 gboolean gst_v4l_enable_overlay (GstV4lElement *v4lelement, gboolean enable);

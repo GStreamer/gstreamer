@@ -32,11 +32,27 @@
 		"V4L: " format, ##args)
 
 
-char *picture_name[] = { "Hue", "Brightness", "Contrast", "Saturation", NULL };
+const char *picture_name[] = {
+  "Hue",
+  "Brightness",
+  "Contrast",
+  "Saturation",
+  NULL
+};
 
-char *audio_name[] = { "Volume", "Mute", "Mode", NULL };
+const char *audio_name[] = {
+  "Volume",
+  "Mute",
+  "Mode",
+  NULL
+};
 
-char *norm_name[] = { "PAL", "NTSC", "SECAM", NULL };
+const char *norm_name[] = {
+  "PAL",
+  "NTSC",
+  "SECAM",
+  NULL
+};
 
 /******************************************************
  * gst_v4l_get_capabilities():
@@ -71,6 +87,9 @@ gst_v4l_get_capabilities (GstV4lElement *v4lelement)
 gboolean
 gst_v4l_open (GstV4lElement *v4lelement)
 {
+  int num;
+  GParamSpec *spec;
+
   DEBUG("opening device %s", v4lelement->videodev);
   GST_V4L_CHECK_NOT_OPEN(v4lelement);
   GST_V4L_CHECK_NOT_ACTIVE(v4lelement);
@@ -100,6 +119,23 @@ gst_v4l_open (GstV4lElement *v4lelement)
   gst_info("Opened device \'%s\' (\'%s\') successfully\n",
     v4lelement->vcap.name, v4lelement->videodev);
 
+  for (num=0;norm_name[num]!=NULL;num++)
+    v4lelement->norm_names = g_list_append(v4lelement->norm_names, (gpointer)norm_name[num]);
+  v4lelement->input_names = gst_v4l_get_chan_names(v4lelement);
+
+  for (num=0;picture_name[num]!=NULL;num++)
+  {
+    spec = g_param_spec_int(picture_name[num], picture_name[num],
+                            picture_name[num], 0, 65535, 32768,
+                            G_PARAM_READWRITE);
+    v4lelement->control_specs = g_list_append(v4lelement->control_specs, spec);
+  }
+  spec = g_param_spec_boolean("mute", "mute", "mute", TRUE, G_PARAM_READWRITE);
+  v4lelement->control_specs = g_list_append(v4lelement->control_specs, spec);
+  spec = g_param_spec_int("volume", "volume", "volume",
+                          0, 65535, 0, G_PARAM_READWRITE);
+  v4lelement->control_specs = g_list_append(v4lelement->control_specs, spec);
+
   return TRUE;
 }
 
@@ -119,6 +155,21 @@ gst_v4l_close (GstV4lElement *v4lelement)
 
   close(v4lelement->video_fd);
   v4lelement->video_fd = -1;
+
+  while (g_list_length(v4lelement->input_names) > 0)
+  {
+    gpointer data = g_list_nth_data(v4lelement->input_names, 0);
+    v4lelement->input_names = g_list_remove(v4lelement->input_names, data);
+    g_free(data);
+  }
+  g_list_free(v4lelement->norm_names);
+  v4lelement->norm_names = NULL;
+  while (g_list_length(v4lelement->control_specs) > 0)
+  {
+    gpointer data = g_list_nth_data(v4lelement->control_specs, 0);
+    v4lelement->control_specs = g_list_remove(v4lelement->control_specs, data);
+    g_param_spec_unref(G_PARAM_SPEC(data));
+  }
 
   return TRUE;
 }

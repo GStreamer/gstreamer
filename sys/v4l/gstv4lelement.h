@@ -65,17 +65,15 @@ struct _GstV4lElement {
   /* some more info about the current input's capabilities */
   struct video_channel vchan;
 
+  /* lists... */
+  GList *control_specs;
+  GList *norm_names;
+  GList *input_names;
+
   /* caching values */
   gint channel;
   gint norm;
   gulong frequency;
-  gint8 mute;
-  gint volume;
-  gint mode;
-  gint brightness;
-  gint hue;
-  gint contrast;
-  gint saturation;
   gchar *display;
 };
 
@@ -83,10 +81,25 @@ struct _GstV4lElementClass {
   GstElementClass parent_class;
 
   /* signals */
-  void (*open)  (GstElement  *element,
-                 const gchar *device);
-  void (*close) (GstElement  *element,
-                 const gchar *device);
+  void     (*open)           (GstElement  *element,
+                              const gchar *device);
+  void     (*close)          (GstElement  *element,
+                              const gchar *device);
+
+  /* actions */
+  gboolean (*set_videowindow) (GstElement  *element,
+                               gint         x,
+                               gint         y,
+                               gint         w,
+                               gint         h,
+                               struct video_clip *clips,
+                               gint         num_clips);
+  gboolean (*get_attribute)   (GstElement  *element,
+                               const gchar *attr_name,
+                               int         *value);
+  gboolean (*set_attribute)   (GstElement  *element,
+                               const gchar *attr_name,
+                               const int    value);
 };
 
 GType gst_v4lelement_get_type(void);

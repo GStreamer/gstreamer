@@ -3,6 +3,7 @@ TODO list (short term):
 * fix clocking issues by using gst clock for v4lsrc and by using it
     as a correction for v4lmjpegsrc/v4l2src (pause brokenness etc.)
 * v4lsrc/v4lmjpegsrc/v4l2src: fix interlacing (not handled at all...)
+* v4lsrc - add a property for capture formats?
 
 TODO list (long term):
 ======================
