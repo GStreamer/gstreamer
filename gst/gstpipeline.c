@@ -303,6 +303,7 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
   GList *elements;
   GstElement *element, *srcelement = NULL, *sinkelement= NULL;
   GList **factories;
+  GList **base_factories;
   GstElementFactory *factory;
   GList *src_types;
   guint16 src_type = 0, sink_type = 0;
@@ -354,6 +355,7 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
 
   numsinks = g_list_length(elements);
   factories = g_new0(GList *, numsinks);
+  base_factories = g_new0(GList *, numsinks);
 
   i = 0;
   // fase 2, loop over all the sinks.. 
@@ -376,8 +378,7 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
       pads = g_list_next(pads);
     }
 
-    factories[i] = gst_type_get_sink_to_src(src_type, sink_type);
-    //factories[i] = g_list_append(factories[i], element);
+    base_factories[i] = factories[i] = gst_type_get_sink_to_src(src_type, sink_type);
     i++;
 
     elements = g_list_next(elements);
@@ -419,7 +420,7 @@ differ:
     GstElement *thesrcelement = srcelement;
     GstElement *thebin = GST_ELEMENT(pipeline);
 
-    if (g_list_length(factories[i]) < 1) goto next;
+    if (g_list_length(base_factories[i]) == 0) goto next;
 
     sinkelement = (GstElement *)elements->data;
 

@@ -39,8 +39,8 @@ extern "C" {
 #define GST_IS_PAD_CLASS(obj)        (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_PAD))
 
 // quick test to see if the pad is connected
-#define GST_PAD_CONNECTED(pad) ((pad)->peer != NULL)
-#define GST_PAD_CAN_PULL(pad) ((pad)->pullfunc != NULL)
+#define GST_PAD_CONNECTED(pad) (pad && (pad)->peer != NULL)
+#define GST_PAD_CAN_PULL(pad) (pad && (pad)->pullfunc != NULL)
 
 typedef struct _GstPad GstPad;
 typedef struct _GstPadClass GstPadClass;

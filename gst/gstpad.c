@@ -225,7 +225,8 @@ GstBuffer *gst_pad_pull(GstPad *pad) {
 //      g_print("-- gst_pad_pull(): calling pull handler\n");
       (pad->pullfunc)(pad->peer);
     } else {
-      g_print("-- gst_pad_pull(): no buffer in pen, and no handler to get one there!!!\n");
+      g_print("-- gst_pad_pull(%s:%s): no buffer in pen, and no handler to get one there!!!\n", 
+		      GST_ELEMENT(pad->parent)->name, pad->name);
     }
   }
 
@@ -237,7 +238,8 @@ GstBuffer *gst_pad_pull(GstPad *pad) {
     return buf;
   // else we have a big problem...
   } else {
-    g_print("-- gst_pad_pull(): uh, nothing in pen and no handler\n");
+    g_print("-- gst_pad_pull(%s:%s): no buffer in pen, and no handler\n", 
+		      GST_ELEMENT(pad->parent)->name, pad->peer->name);
     return NULL;
   }
 

@@ -22,6 +22,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+//#define DEBUG_ENABLED
+
 #include <gstdisksrc.h>
 
 
@@ -241,6 +243,7 @@ void gst_disksrc_push(GstSrc *src) {
   DEBUG("pushing with offset %d\n", GST_BUFFER_OFFSET(buf));
   /* we're done, push the buffer off now */
   gst_pad_push(disksrc->srcpad,buf);
+  DEBUG("pushing with offset %d done\n", GST_BUFFER_OFFSET(buf));
 }
 
 

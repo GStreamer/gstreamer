@@ -19,7 +19,8 @@ cothread_state *cothread_create(cothread_context *ctx) {
   cothread_state *s;
 
   DEBUG("cothread: pthread_self() %ld\n",pthread_self());
-  if (pthread_self() == 0) {
+  if (0) {
+  //if (pthread_self() == 0) {
     s = (cothread_state *)malloc(sizeof(int) * COTHREAD_STACKSIZE);
     DEBUG("cothread: new stack at %p\n",s);
   } else {

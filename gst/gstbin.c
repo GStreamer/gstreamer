@@ -716,6 +716,8 @@ void gst_bin_iterate_func(GstBin *bin) {
     DEBUG("** in gst_bin_iterate_func()==================================%s\n",
           gst_element_get_name(GST_ELEMENT(bin->children->data)));
     cothread_switch(GST_ELEMENT(bin->children->data)->threadstate);
+    DEBUG("** out gst_bin_iterate_func()==================================%s\n",
+          gst_element_get_name(GST_ELEMENT(bin->children->data)));
   } else {
     if (bin->numentries <= 0) {
       printf("gstbin: no entries in bin \"%s\" trying children...\n", gst_element_get_name(GST_ELEMENT(bin)));
