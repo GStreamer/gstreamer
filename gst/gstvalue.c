@@ -870,7 +870,7 @@ gst_value_serialize_buffer (const GValue * value)
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
 
-  string = malloc (size * 2 + 1);
+  string = g_malloc (size * 2 + 1);
   for (i = 0; i < size; i++) {
     sprintf (string + i * 2, "%02x", data[i]);
   }
@@ -2523,7 +2523,7 @@ gst_value_deserialize_fraction (GValue * dest, const char *s)
     return FALSE;
   tmp = g_strndup (s, (size_t) (div - s));
   num = atoi (tmp);
-  free (tmp);
+  g_free (tmp);
   den = atoi (div + 1);
 
   gst_value_set_fraction (dest, num, den);

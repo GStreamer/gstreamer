@@ -1,5 +1,10 @@
 2004-08-11  Steve Lhomme  <steve.lhomme@free.fr>
 
+	* gst/gstvalue.c:
+	  fix a possible memory leak under Windows
+
+2004-08-11  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* win32/GStreamer.vcproj:
 	  fix a memory leak that occured under Windows
 	* win32/gstreamer.def:
