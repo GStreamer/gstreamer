@@ -166,9 +166,10 @@ gst_alsa_clock_get_resolution (GstClock * clock)
 static GstClockEntryStatus
 gst_alsa_clock_wait (GstClock * clock, GstClockEntry * entry)
 {
-  GstClockTime target, entry_time;
+  GstClockTime target, entry_time, glib_start, glib_cur;
   GstClockTimeDiff diff;
   GstAlsaClock *this = GST_ALSA_CLOCK (clock);
+  GTimeVal t;
 
   entry_time = gst_alsa_clock_get_internal_time (clock);
   diff = GST_CLOCK_ENTRY_TIME (entry) - gst_clock_get_time (clock);
@@ -192,10 +193,14 @@ gst_alsa_clock_wait (GstClock * clock, GstClockEntry * entry)
       GST_TIME_ARGS (target), GST_TIME_ARGS (GST_CLOCK_ENTRY_TIME (entry)),
       GST_TIME_ARGS (entry_time));
 
+  g_get_current_time (&t);
+  glib_cur = glib_start = GST_TIMEVAL_TO_TIME (t);
   while (gst_alsa_clock_get_internal_time (clock) < target &&
-      this->last_unlock < entry_time) {
+      this->last_unlock < entry_time && glib_start + diff * 1.5 > glib_cur) {
     g_usleep (gst_alsa_clock_get_resolution (clock) * G_USEC_PER_SEC /
         GST_SECOND);
+    g_get_current_time (&t);
+    glib_cur = GST_TIMEVAL_TO_TIME (t);
   }
 
   return entry->status;
