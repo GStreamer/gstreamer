@@ -1,0 +1,125 @@
+-----------------------------------------------------------
+- GStreamer Scheduling / Synchronization (incsched) Notes -
+-----------------------------------------------------------
+
+These notes describe deadlock scenarios and proposed solutions for
+GStreamer.  This will be implemented in the INCSCHED1 branch.
+
+I.   Miscelaneous proposals
+II.  Liveness problems (sometimes deadlock ;) and propsed solutions
+III. State transition approach and responsibility
+
+MattH.
+
+--------------------------------
+-   I. Miscalenous proposals   -
+--------------------------------
+
+1. Change the names of GstThread and GstQueue to GstPtThread and GstPtQueue
+   for pthread versions of Thread and Queue.
+
+2. Change GstPtQueue to check its pads' peers' managers and make sure
+   they are different.  If not, fail and generate error message.  (This
+   ensures a GstPtQueue straddles a pthread boundary.)
+
+3. Change state transitions to NULL <-> READY <-> PAUSED <-> PLAYING.
+
+
+---------------------------------------------------
+-  II. Deadlock Scenarios and Proposed Solutions  -
+-      (in the order they will be implemented)    -
+---------------------------------------------------
+
+1. A downstream element "waits" for a buffer from its upstream element,
+   a state change happens and "pauses" the upstream element -- the
+   downstream element is blocked and cannot execute its change_state.
+
+   Note that this can only happen within a single GstPtQueue!  Either a
+   downstream element calls Pull, finds no buffer, and does a
+   wait_cond(new buffer) or an upstream element calls Push, finds no
+   room, and does a wait_cond(new room).  Thus, GstPtQueue contains all
+   the cond_wait / signal code. 
+ 
+   => The managing container (thread, pipeline) "wakes" up any sleep
+      conditions of its "bottom half".  (In the scenario described, it
+      wakes the blocked downstream element's call to Pull.)  The GstPtQueue
+      cond_wait section determines that it woke up due to a pending state
+      change and does a cothread_switch(0) to return to the main loop,
+      which then executes the state transition.
+
+      Note that a managing container will have only one sleep condition
+      in its "bottom half." 
+
+
+2. Element "blocked" on getting I/O and cannot execute its change_state.
+
+   => We will provide an I/O library for the elements to use that does
+      not actually block.  (A retry-loop with timeout or select() on
+      2 -- or more -- file descriptors: one the one you want I/O from, 
+      the other one that GStreamer uses to "wake" everyone up.)  The
+      I/O library determines that it was woken due to a pending state
+      change and does a cothread_switch(0) to return to the main loop,
+      which then executes the state transition.
+
+      Note that a managing container will have only one elements in
+      the middle of doing blocking I/O.
+
+
+3. Element using a library (code out of its control) which blocks for
+   some reason (e.g., using real blocking I/O) so main loop never gets
+   run to execute change_state.
+
+   => Build in some timeout in the manging container (the "top half")
+      when waiting for bottom half to respond to pending state.  If
+      managing container times out, kill the element's thread with a
+      signal (or series of signals -- escalating priority).  This
+      requires that the element (the "bottom half") have matching
+      signal handler(s) that execute(s) the state-transition.
+
+
+--------------------------------------------------------
+- III.  State-transition Approach and Responsibility   -
+--------------------------------------------------------
+
+A. The "top half" context of the managing container.  (This is likely the
+   context of the application.)
+
+   Call change_state on the managing container (GstPipeline, GstPtThread).
+   If its "bottom half" (main_loop) is asleep, signal the condition to
+   wake it up.  Then do a cond_wait for the "bottom half" to execute the
+   state transition and return (once the state has been changed).
+
+ 
+B. The main_loop (the "bottom half") of the managing container. 
+
+   Needs to check for pending state transition after every switch back from
+   one of its elements.  If a pending state is found, it calls change_state
+   on each of its elements, signals the "top half" that the state has been
+   changed, then continues executing the plan (if Playing) or puts itself
+   to sleep (Paused, Ready).
+
+
+C. Element.
+
+   Implement a change_state function to make transition for that element.
+   The elements' change_state is what actually changes the state variable
+   and notifies the scheduler that the state was changed.  This function
+   may also do things like close or open resources.
+   
+   NOTE: when an element goes through certain state transitions (e.g., from
+   Paused to Ready) its state (stack) will be wiped out.  If it wants to
+   preserve any state or data, it needs to store the information in a safe
+   place.
+
+
+D. Cothread Scheduler.
+
+   Gets notified of state transition by elements' change_state functions
+   then (re)set the plan accordingly.  Assuming
+   NULL <-> READY <-> PAUSED <-> PLAYING, some would be
+
+   + Paused -> Playing: jump back where you were in the Plan and continue
+                        its execution
+
+   + Ready -> Paused: reset the cothread pointers foreach cothread in the 
+                      Plan (don't run)
