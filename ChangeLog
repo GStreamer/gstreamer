@@ -1,3 +1,11 @@
+2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_change_state):
+	  Reset variables on READY.
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_request_new_pad),
+	(gst_matroska_mux_loop):
+	  Require data before writing header.
+
 2005-01-09  Francis Labonte  <francis_labonte@hotmail.com>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
