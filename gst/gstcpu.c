@@ -27,6 +27,8 @@
 
 #include "gstcpu.h"
 #include "gstinfo.h"
+#include <setjmp.h>
+#include <signal.h>
 
 static guint32 _gst_cpu_flags = 0;
 
@@ -63,32 +65,102 @@ _gst_cpu_initialize_none (gulong * flags, GString * featurelist)
 }
 
 #if defined(HAVE_CPU_I386) && defined(__GNUC__)
-static void
-gst_cpuid_i386 (int x, unsigned long *eax, unsigned long *ebx,
-    unsigned long *ecx, unsigned long *edx)
-{
-  unsigned long regs[4];
 
+/* From liboil */
+
+static jmp_buf jump_env;
+static struct sigaction action;
+static struct sigaction oldaction;
+static int in_try_block;
+
+static void
+illegal_instruction_handler (int num)
+{
+  if (in_try_block) {
+    longjmp (jump_env, 1);
+  } else {
+    abort ();
+  }
+}
+
+void
+cpu_fault_check_enable (void)
+{
+  memset (&action, 0, sizeof (action));
+  action.sa_handler = &illegal_instruction_handler;
+  sigaction (SIGILL, &action, &oldaction);
+  in_try_block = 0;
+}
+
+int
+cpu_fault_check_try (void (*func) (void *), void *priv)
+{
+  int ret;
+
+  in_try_block = 1;
+  ret = setjmp (jump_env);
+  if (!ret) {
+    func (priv);
+  }
+  in_try_block = 0;
+
+  return (ret == 0);
+}
+
+void
+cpu_fault_check_disable (void)
+{
+  sigaction (SIGILL, &oldaction, NULL);
+}
+
+/* end of code from liboil */
+
+static void
+gst_cpuid_i386 (int x, unsigned int *eax, unsigned int *ebx,
+    unsigned int *ecx, unsigned int *edx)
+{
+  /* *INDENT-OFF* */
   asm (
       /* GCC-3.2 (and possibly others) don't clobber ebx properly,
        * so we save/restore it directly. */
-"  movl %%ebx, %%esi\n" "  cpuid\n" "  movl %%eax, %0\n" "  movl %%ebx, %1\n" "  movl %%ecx, %2\n" "  movl %%edx, %3\n" "  movl %%esi, %%ebx\n":"=o" (regs[0]), "=o" (regs[1]), "=o" (regs[2]),
-      "=o" (regs
-          [3])
-:    "a" (x)
-:    "ecx", "edx", "esi");
+      "  pushl %%ebx\n"
+      "  cpuid\n"
+      "  mov %%ebx, %%esi\n"
+      "  popl %%ebx\n"
+      : "=a" (*eax), "=S" (*ebx), "=c" (*ecx), "=d" (*edx)
+      : "0" (x));
+  /* *INDENT-ON* */
+}
 
-  *eax = regs[0];
-  *ebx = regs[1];
-  *ecx = regs[2];
-  *edx = regs[3];
+static void
+test_cpuid (void *ignore)
+{
+  unsigned int eax, ebx, ecx, edx;
+
+  gst_cpuid_i386 (0, &eax, &ebx, &ecx, &edx);
+}
+
+static gboolean
+gst_cpuid_test (void)
+{
+  int ret;
+
+  cpu_fault_check_enable ();
+  ret = cpu_fault_check_try (test_cpuid, NULL);
+  cpu_fault_check_disable ();
+
+  return ret;
 }
 
 gboolean
 _gst_cpu_initialize_i386 (gulong * flags, GString * featurelist)
 {
   gboolean AMD;
-  gulong eax = 0, ebx = 0, ecx = 0, edx = 0;
+  guint eax = 0, ebx = 0, ecx = 0, edx = 0;
+
+  if (!gst_cpuid_test ()) {
+    return FALSE;
+  }
 
   gst_cpuid_i386 (0, &eax, &ebx, &ecx, &edx);
 
@@ -122,7 +194,7 @@ _gst_cpu_initialize_i386 (gulong * flags, GString * featurelist)
       }
     }
   }
-  *flags = eax;
+  *flags = _gst_cpu_flags;
   if (_gst_cpu_flags)
     return TRUE;
   return FALSE;
