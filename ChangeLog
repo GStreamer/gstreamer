@@ -1,3 +1,21 @@
+2004-04-23  Benjamin Otte  <otte@gnome.org>
+	  
+	* gst/gstcaps.c: (gst_caps_structure_subtract_field),
+	(gst_caps_structure_subtract), (gst_caps_subtract),
+	(gst_caps_structure_figure_out_union),
+	(gst_caps_structure_simplify), (gst_caps_do_simplify):
+	  fix simplifying and subtracting not working correctly with optional
+	  properties
+	  solve assorted problems that make it now simplify ebven more
+	* docs/gst/tmpl/gstcaps.sgml:
+	* gst/gstcaps.h:
+	  make gst_caps_do_simplify return a bool to indicate if it simplified
+	* testsuite/caps/simplify.c: (main):
+	  add more checks. The tests is quite a bit useless right now because
+	  the core is heavily simplifying itself.
+	* testsuite/caps/caps.h:
+	  fix caps to contain all optional properties
+
 2004-04-22  Benjamin Otte  <otte@gnome.org>
 
 	* docs/gst/tmpl/gstcaps.sgml:

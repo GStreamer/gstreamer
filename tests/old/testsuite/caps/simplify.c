@@ -78,10 +78,11 @@ main (gint argc, gchar ** argv)
     check_caps (caps);
     if (!gst_caps_is_any (caps)) {
       for (j = 0; j < G_N_ELEMENTS (caps_list); j++) {
+        GstCaps *temp, *temp2;
         GstCaps *caps2 = gst_caps_from_string (caps_list[j]);
 
         /* subtraction */
-        GstCaps *temp = gst_caps_subtract (caps, caps2);
+        temp = gst_caps_subtract (caps, caps2);
 
         g_print ("%2u - %2u ", i, j);
         check_caps (temp);
@@ -92,8 +93,14 @@ main (gint argc, gchar ** argv)
         check_caps (temp);
         if (i == j)
           g_assert (gst_caps_get_size (caps) == gst_caps_get_size (temp));
+        g_assert (gst_caps_is_subset (caps, temp));
+        g_assert (gst_caps_is_subset (caps2, temp));
+        /* appending (union without simplifying) */
+        temp2 = gst_caps_copy (caps);
+        gst_caps_append (temp2, caps2);
+        g_assert (gst_caps_is_equal (temp, temp2));
+        gst_caps_free (temp2);
         gst_caps_free (temp);
-        gst_caps_free (caps2);
       }
     }
     gst_caps_free (caps);

@@ -373,6 +373,7 @@ Structure describing sets of media formats
 </para>
 
 @caps: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_caps_save_thyself ##### -->

@@ -900,7 +900,7 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
 typedef struct
 {
   const GstStructure *subtract_from;
-  GstCaps *put_into;
+  GSList *put_into;
 }
 SubtractionEntry;
 
@@ -915,33 +915,46 @@ gst_caps_structure_subtract_field (GQuark field_id, GValue * value,
   GstStructure *structure;
 
   other = gst_structure_id_get_value (e->subtract_from, field_id);
-  if (!other)
-    return TRUE;
+  if (!other) {
+    return FALSE;
+  }
   if (!gst_value_subtract (&subtraction, other, value))
     return TRUE;
-  structure = gst_structure_copy (e->subtract_from);
   if (gst_value_compare (&subtraction, other) == GST_VALUE_EQUAL) {
-    gst_caps_append_structure (e->put_into, structure);
+    g_value_unset (&subtraction);
     return FALSE;
   } else {
+    structure = gst_structure_copy (e->subtract_from);
     gst_structure_id_set_value (structure, field_id, &subtraction);
     g_value_unset (&subtraction);
-    gst_caps_append_structure (e->put_into, structure);
+    e->put_into = g_slist_prepend (e->put_into, structure);
     return TRUE;
   }
 }
 
-static void
-gst_caps_structure_subtract (GstCaps * into, const GstStructure * minuend,
+static gboolean
+gst_caps_structure_subtract (GSList ** into, const GstStructure * minuend,
     const GstStructure * subtrahend)
 {
   SubtractionEntry e;
+  gboolean ret;
 
   e.subtract_from = minuend;
-  e.put_into = into;
+  e.put_into = NULL;
 
-  gst_structure_foreach ((GstStructure *) subtrahend,
+  ret = gst_structure_foreach ((GstStructure *) subtrahend,
       gst_caps_structure_subtract_field, &e);
+  if (ret) {
+    *into = e.put_into;
+  } else {
+    GSList *walk;
+
+    for (walk = e.put_into; walk; walk = g_slist_next (walk)) {
+      gst_structure_free (walk->data);
+    }
+    g_slist_free (e.put_into);
+  }
+  return ret;
 }
 
 GstCaps *
@@ -979,7 +992,18 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
     for (j = 0; j < src->structs->len; j++) {
       min = gst_caps_get_structure (src, j);
       if (gst_structure_get_name_id (min) == gst_structure_get_name_id (sub)) {
-        gst_caps_structure_subtract (dest, min, sub);
+        GSList *list;
+
+        if (gst_caps_structure_subtract (&list, min, sub)) {
+          GSList *walk;
+
+          for (walk = list; walk; walk = g_slist_next (walk)) {
+            gst_caps_append_structure (dest, (GstStructure *) walk->data);
+          }
+          g_slist_free (list);
+        } else {
+          gst_caps_append_structure (dest, gst_structure_copy (min));
+        }
       } else {
         gst_caps_append_structure (dest, gst_structure_copy (min));
       }
@@ -988,6 +1012,7 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
       return dest;
   }
 
+  gst_caps_do_simplify (dest);
   return dest;
 }
 
@@ -1123,7 +1148,6 @@ gst_caps_simplify (const GstCaps * caps)
   return ret;
 }
 
-/* need this here */
 typedef struct
 {
   GQuark name;
@@ -1132,15 +1156,18 @@ typedef struct
 }
 UnionField;
 
-static G_GNUC_UNUSED gboolean
+static gboolean
 gst_caps_structure_figure_out_union (GQuark field_id, GValue * value,
     gpointer user_data)
 {
   UnionField *u = user_data;
   const GValue *val = gst_structure_id_get_value (u->compare, field_id);
 
-  if (!val)
-    return TRUE;
+  if (!val) {
+    if (u->name)
+      g_value_unset (&u->value);
+    return FALSE;
+  }
   if (gst_value_compare (val, value) == GST_VALUE_EQUAL)
     return TRUE;
   if (u->name) {
@@ -1152,40 +1179,52 @@ gst_caps_structure_figure_out_union (GQuark field_id, GValue * value,
   return TRUE;
 }
 
-static GstStructure *
-gst_caps_structure_simplify (const GstStructure * simplify,
-    GstStructure * compare)
+static gboolean
+gst_caps_structure_simplify (GstStructure ** result,
+    const GstStructure * simplify, GstStructure * compare)
 {
-  GstCaps *caps = gst_caps_new_empty ();
-  GstStructure *ret;
+  GSList *list;
   UnionField field = { 0, {0,}, NULL };
 
   /* try to subtract to get a real subset */
-  gst_caps_structure_subtract (caps, simplify, compare);
-  switch (gst_caps_get_size (caps)) {
-    case 0:
-      gst_caps_free (caps);
-      return NULL;
-    case 1:
-      ret = gst_structure_copy (gst_caps_get_structure (caps, 0));
-      break;
-    default:
-      ret = gst_structure_copy (simplify);
-      break;
+  if (gst_caps_structure_subtract (&list, simplify, compare)) {
+    switch (g_slist_length (list)) {
+      case 0:
+        *result = NULL;
+        return TRUE;
+      case 1:
+        *result = list->data;
+        g_slist_free (list);
+        return TRUE;
+      default:
+      {
+        GSList *walk;
+
+        for (walk = list; walk; walk = g_slist_next (walk)) {
+          gst_structure_free (walk->data);
+        }
+        g_slist_free (list);
+        break;
+      }
+    }
   }
-  gst_caps_free (caps);
 
   /* try to union both structs */
   field.compare = compare;
-  if (gst_structure_foreach (ret, gst_caps_structure_figure_out_union, &field)) {
-    g_assert (field.name != 0);
-    gst_structure_id_set_value (compare, field.name, &field.value);
-    gst_structure_free (ret);
+  if (gst_structure_foreach ((GstStructure *) simplify,
+          gst_caps_structure_figure_out_union, &field)) {
+    gboolean ret = FALSE;
+
+    if (gst_structure_n_fields (simplify) == gst_structure_n_fields (compare)) {
+      gst_structure_id_set_value (compare, field.name, &field.value);
+      *result = NULL;
+      ret = TRUE;
+    }
     g_value_unset (&field.value);
-    return NULL;
+    return ret;
   }
 
-  return ret;
+  return FALSE;
 }
 
 /**
@@ -1196,50 +1235,63 @@ gst_caps_structure_simplify (const GstStructure * simplify,
  * same set of formats, but in a simpler form.  Component structures that are 
  * identical are merged.  Component structures that have values that can be 
  * merged are also merged.
+ *
+ * Returns: TRUE, if the caps could be simplified
  */
-void
+gboolean
 gst_caps_do_simplify (GstCaps * caps)
 {
   GstStructure *simplify, *compare, *result;
   gint i, j, start;
+  gboolean changed = FALSE;
 
-  g_return_if_fail (caps != NULL);
+  g_return_val_if_fail (caps != NULL, FALSE);
 
   if (gst_caps_get_size (caps) < 2)
-    return;
+    return FALSE;
 
   g_ptr_array_sort (caps->structs, gst_caps_compare_structures);
 
   start = caps->structs->len - 1;
   for (i = caps->structs->len - 1; i >= 0; i--) {
     simplify = gst_caps_get_structure (caps, i);
+    if (gst_structure_get_name_id (simplify) !=
+        gst_structure_get_name_id (gst_caps_get_structure (caps, start)))
+      start = i;
     for (j = start; j >= 0; j--) {
-      compare = gst_caps_get_structure (caps, j);
       if (j == i)
         continue;
+      compare = gst_caps_get_structure (caps, j);
       if (gst_structure_get_name_id (simplify) !=
           gst_structure_get_name_id (compare)) {
-        start = j;
         break;
       }
-      result = gst_caps_structure_simplify (simplify, compare);
+      if (gst_caps_structure_simplify (&result, simplify, compare)) {
 #if 0
-      g_print ("%s  -  %s  =  %s\n",
-          gst_structure_to_string (simplify),
-          gst_structure_to_string (compare),
-          result ? gst_structure_to_string (result) : "---");
+        g_print ("%s  -  %s  =  %s\n",
+            gst_structure_to_string (simplify),
+            gst_structure_to_string (compare),
+            result ? gst_structure_to_string (result) : "---");
 #endif
-      if (result) {
-        gst_structure_free (simplify);
-        g_ptr_array_index (caps->structs, i) = result;
-        simplify = result;
-      } else {
-        gst_caps_remove_structure (caps, i);
-        start--;
-        break;
+        if (result) {
+          gst_structure_free (simplify);
+          g_ptr_array_index (caps->structs, i) = result;
+          simplify = result;
+        } else {
+          gst_caps_remove_structure (caps, i);
+          start--;
+          break;
+        }
+        changed = TRUE;
       }
     }
   }
+
+  if (!changed)
+    return FALSE;
+
+  /* gst_caps_do_simplify (caps); */
+  return TRUE;
 }
 
 #ifndef GST_DISABLE_LOADSAVE

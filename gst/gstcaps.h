@@ -128,7 +128,7 @@ GstCaps *                gst_caps_normalize                             (const G
 #ifndef GST_DISABLE_DEPRECATED
 GstCaps *                gst_caps_simplify                              (const GstCaps *caps);
 #endif
-void	                 gst_caps_do_simplify                           (GstCaps *caps);
+gboolean                 gst_caps_do_simplify                           (GstCaps *caps);
 
 #ifndef GST_DISABLE_LOADSAVE
 xmlNodePtr               gst_caps_save_thyself                          (const GstCaps *caps,
