@@ -1,3 +1,11 @@
+2005-02-10  Andy Wingo  <wingo@pobox.com>
+
+	* testsuite/bytestream: Removed, getrange replaces bytestream in
+	-THREADED.
+
+	* testsuite/Makefile.am:
+	* configure.ac: Updated.
+
 2005-02-05  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstbuffer.c: (gst_buffer_join):
