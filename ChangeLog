@@ -1,3 +1,21 @@
+2004-06-09  Benjamin Otte  <otte@gnome.org>
+
+	* ext/alsa/gstalsa.c: (add_channels):
+	  handle min <= max correctly
+	* ext/alsa/gstalsa.c: (gst_alsa_fixate_to_mimetype), 
+	(gst_alsa_fixate_field_nearest_int), (gst_alsa_fixate):
+	  add fixation functions so we fixate correctly. No preferring of alaw
+	  anymore because it's the first structure.
+	* ext/alsa/gstalsa.h:
+	* ext/alsa/gstalsa.c: (gst_alsa_sw_params_dump),
+	(gst_alsa_hw_params_dump):
+	  add functions to ease debugging in alsalib
+	* ext/alsa/gstalsa.c: (gst_alsa_probe_hw_params),
+	(gst_alsa_set_hw_params), (gst_alsa_set_sw_params),
+	(gst_alsa_start_audio):
+	  only specify hw params if we really setup a format (fixes #134007 -
+	  or at least works around it)
+
 2004-06-09  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_init),
