@@ -90,9 +90,7 @@ enum {
 
 enum {
   ARG_0,
-  ARG_OFFSET,
   ARG_LOCATION,
-  ARG_FILESIZE,
   ARG_FD,
   ARG_BLOCKSIZE,
   ARG_MAPSIZE,
@@ -172,8 +170,6 @@ gst_filesrc_class_init (GstFileSrcClass *klass)
   gst_element_class_install_std_props (
 	  GST_ELEMENT_CLASS (klass),
 	  "fd",           ARG_FD,           G_PARAM_READABLE,
-	  "offset",       ARG_OFFSET,       G_PARAM_READWRITE,
-	  "filesize",     ARG_FILESIZE,     G_PARAM_READABLE,
 	  "location",     ARG_LOCATION,     G_PARAM_READWRITE,
 	  "blocksize",    ARG_BLOCKSIZE,    G_PARAM_READWRITE,
 	  "mmapsize",     ARG_MAPSIZE,      G_PARAM_READWRITE,
@@ -277,10 +273,6 @@ gst_filesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       src->block_size = g_value_get_ulong (value);
       g_object_notify (G_OBJECT (src), "blocksize");
       break;
-    case ARG_OFFSET:
-      src->curoffset = g_value_get_int64 (value);
-      g_object_notify (G_OBJECT (src), "offset");
-      break;
     case ARG_MAPSIZE:
       if ((src->mapsize % src->pagesize) == 0) {
         src->mapsize = g_value_get_ulong (value);
@@ -312,17 +304,11 @@ gst_filesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
     case ARG_LOCATION:
       g_value_set_string (value, src->filename);
       break;
-    case ARG_FILESIZE:
-      g_value_set_int64 (value, src->filelen);
-      break;
     case ARG_FD:
       g_value_set_int (value, src->fd);
       break;
     case ARG_BLOCKSIZE:
       g_value_set_ulong (value, src->block_size);
-      break;
-    case ARG_OFFSET:
-      g_value_set_int64 (value, src->curoffset);
       break;
     case ARG_MAPSIZE:
       g_value_set_ulong (value, src->mapsize);
@@ -594,7 +580,6 @@ gst_filesrc_get (GstPad *pad)
 
   /* we're done, return the buffer */
   src->curoffset += GST_BUFFER_SIZE(buf);
-  g_object_notify (G_OBJECT (src), "offset");
   return buf;
 }
 
@@ -634,12 +619,6 @@ gst_filesrc_open_file (GstFileSrc *src)
 
     src->curoffset = 0;
 
-    /* now notify of the changes */
-    g_object_freeze_notify (G_OBJECT (src));
-    g_object_notify (G_OBJECT (src), "filesize");
-    g_object_notify (G_OBJECT (src), "offset");
-    g_object_thaw_notify (G_OBJECT (src));
-
     GST_FLAG_SET (src, GST_FILESRC_OPEN);
   }
   return TRUE;
@@ -658,11 +637,6 @@ gst_filesrc_close_file (GstFileSrc *src)
   src->fd = 0;
   src->filelen = 0;
   src->curoffset = 0;
-  /* and notify that things changed */
-  g_object_freeze_notify (G_OBJECT (src));
-  g_object_notify (G_OBJECT (src), "filesize");
-  g_object_notify (G_OBJECT (src), "offset");
-  g_object_thaw_notify (G_OBJECT (src));
 
   if (src->mapbuf)
     gst_buffer_unref (src->mapbuf);
@@ -769,7 +743,6 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
           goto error;
 	  break;
       }
-      g_object_notify (G_OBJECT (src), "offset");  
       src->seek_happened = TRUE;
       src->need_flush = GST_EVENT_SEEK_FLAGS(event) & GST_SEEK_FLAG_FLUSH;
       break;
