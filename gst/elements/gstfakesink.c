@@ -63,7 +63,7 @@ GST_PAD_TEMPLATE_FACTORY (fakesink_sink_factory,
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  NULL                  /* no caps */
+  GST_CAPS_ANY
 );
 
 #define GST_TYPE_FAKESINK_STATE_ERROR (gst_fakesink_state_error_get_type())

@@ -67,14 +67,14 @@ GST_PAD_TEMPLATE_FACTORY (shaper_src_factory,
   "src%d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  NULL                  /* no caps */
+  GST_CAPS_ANY
 );
 
 GST_PAD_TEMPLATE_FACTORY (shaper_sink_factory,
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  NULL                  /* no caps */
+  GST_CAPS_ANY
 );
 
 #define GST_TYPE_SHAPER_POLICY (gst_shaper_policy_get_type())

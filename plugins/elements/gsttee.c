@@ -58,7 +58,7 @@ GST_PAD_TEMPLATE_FACTORY (tee_src_factory,
   "src%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
-  NULL			/* no caps */
+  GST_CAPS_ANY
 );
 
 static void 	gst_tee_class_init	(GstTeeClass *klass);

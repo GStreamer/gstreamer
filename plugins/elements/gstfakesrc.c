@@ -80,7 +80,7 @@ GST_PAD_TEMPLATE_FACTORY (fakesrc_src_factory,
   "src%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
-  NULL                  /* no caps */
+  GST_CAPS_ANY
 );
 
 #define GST_TYPE_FAKESRC_OUTPUT (gst_fakesrc_output_get_type())
