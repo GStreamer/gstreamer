@@ -77,7 +77,6 @@ struct _VorbisEnc {
   gboolean         setup;
   gboolean         header_sent;
   gchar		  *last_message;
-  guint16 newmediacount;
 };
 
 struct _VorbisEncClass {

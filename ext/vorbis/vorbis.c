@@ -26,6 +26,7 @@
 #include "vorbisdec.h"
 #include "vorbisparse.h"
 
+GST_DEBUG_CATEGORY (vorbisenc_debug);
 GST_DEBUG_CATEGORY (vorbisdec_debug);
 GST_DEBUG_CATEGORY (vorbisparse_debug);
 
@@ -54,6 +55,8 @@ plugin_init (GstPlugin * plugin)
           gst_vorbis_parse_get_type ()))
     return FALSE;
 
+  GST_DEBUG_CATEGORY_INIT (vorbisenc_debug, "vorbisenc", 0,
+      "vorbis encoding element");
   GST_DEBUG_CATEGORY_INIT (vorbisdec_debug, "vorbisdec", 0,
       "vorbis decoding element");
   GST_DEBUG_CATEGORY_INIT (vorbisparse_debug, "vorbisparse", 0,

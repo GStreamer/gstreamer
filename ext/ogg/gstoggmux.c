@@ -100,7 +100,7 @@ struct _GstOggMux
   GstOggPad *delta_pad;         /* when a delta frame is detected on a stream, we mark
                                    pages as delta frames up to the page that has the
                                    keyframe */
-  guint16 newmediacount;
+
 };
 
 typedef enum
@@ -270,7 +270,7 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
   ogg_mux->max_page_delay = DEFAULT_MAX_PAGE_DELAY;
 
   ogg_mux->delta_pad = NULL;
-  ogg_mux->newmediacount = 0;
+
   gst_element_set_loop_function (GST_ELEMENT (ogg_mux), gst_ogg_mux_loop);
 }
 
@@ -429,19 +429,11 @@ gst_ogg_mux_next_buffer (GstOggPad * pad)
           return NULL;
         case GST_EVENT_DISCONTINUOUS:
         {
-          gint64 value = 0;
+          guint64 value;
 
           if (GST_EVENT_DISCONT_NEW_MEDIA (event)) {
-            /* only handle if its not first new media event */
-            if (ogg_mux->newmediacount++ > 0) {
-              ogg_mux->next_ts = 0;
-              ogg_mux->offset = 0;
-              ogg_mux->pulling = NULL;
-              pad->offset = 0;
-              GST_DEBUG_OBJECT (ogg_mux, "received new media event");
-              gst_pad_event_default (pad->pad, event);
-              break;
-            }
+            gst_pad_event_default (pad->pad, event);
+            break;
           }
           if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
             GST_DEBUG_OBJECT (ogg_mux,
@@ -450,8 +442,9 @@ gst_ogg_mux_next_buffer (GstOggPad * pad)
           }
           pad->offset = value;
           gst_event_unref (event);
-          break;
+
         }
+          break;
         default:
           gst_pad_event_default (pad->pad, event);
           break;
@@ -856,6 +849,7 @@ gst_ogg_mux_loop (GstElement * element)
 
   best = gst_ogg_mux_queue_pads (ogg_mux);
 
+
   /* we're pulling a pad and there is a better one, see if we need
    * to flush the current page */
   if (ogg_mux->pulling && best &&
@@ -896,6 +890,7 @@ gst_ogg_mux_loop (GstElement * element)
       return;
     }
   }
+
   if (ogg_mux->need_headers) {
     gst_ogg_mux_send_headers (ogg_mux);
     ogg_mux->need_headers = FALSE;

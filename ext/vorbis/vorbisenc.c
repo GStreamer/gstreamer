@@ -30,6 +30,9 @@
 #include <gst/tag/tag.h>
 #include "vorbisenc.h"
 
+GST_DEBUG_CATEGORY_EXTERN (vorbisenc_debug);
+#define GST_CAT_DEFAULT vorbisenc_debug
+
 static GstPadTemplate *gst_vorbisenc_src_template, *gst_vorbisenc_sink_template;
 
 /* elementfactory information */
@@ -473,7 +476,6 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
   vorbisenc->eos = FALSE;
   vorbisenc->header_sent = FALSE;
 
-  vorbisenc->newmediacount = 0;
   vorbisenc->tags = gst_tag_list_new ();
 
   /* we're chained and we can deal with events */
@@ -809,20 +811,6 @@ gst_vorbisenc_chain (GstPad * pad, GstData * _data)
         }
         gst_pad_event_default (pad, event);
         return;
-      case GST_EVENT_DISCONTINUOUS:
-        if (GST_EVENT_DISCONT_NEW_MEDIA (event)) {
-          /* only do for new media events after the first one */
-          if (vorbisenc->newmediacount++ > 0) {
-            vorbisenc->setup = FALSE;
-            vorbisenc->header_sent = FALSE;
-            gst_tag_list_free (vorbisenc->tags);
-            vorbisenc->tags = gst_tag_list_new ();
-            vorbisenc->eos = FALSE;
-            gst_vorbisenc_setup (vorbisenc);
-          }
-          gst_pad_event_default (pad, event);
-          break;
-        }
       default:
         gst_pad_event_default (pad, event);
         return;
