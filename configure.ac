@@ -2,6 +2,11 @@ dnl autoconf configuration file for gst-plugins
 AC_INIT
 AC_CANONICAL_TARGET([])
 
+dnl We disable static building for development, for time savings
+dnl this goes before AS_LIBTOOL to appease autoconf
+dnl *NOTE*: dnl this line before release, so release does static too
+AM_DISABLE_STATIC
+
 dnl when going to/from release please set the nano (fourth number) right !
 AS_VERSION(gst-plugins, GST_PLUGINS, 0, 3, 2, 1)
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
@@ -24,10 +29,6 @@ AS="${CC}"
 AC_PROG_CXX
 AC_PROG_CXXCPP
 AC_ISC_POSIX
-
-dnl We disable static building for development, for time savings
-dnl *NOTE*: dnl this line before release, so release does static too
-AM_DISABLE_STATIC
 
 AC_HEADER_STDC([])
 
