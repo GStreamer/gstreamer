@@ -241,7 +241,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
   gint sync_state;
   gboolean have_sync;
   guchar sync_byte;
-  gulong head;
+  guint32 head;
   gint sync_pos;
   guint64 time_stamp;
   GstBuffer *temp;
@@ -278,9 +278,9 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
 
   GST_DEBUG (0,"mp1videoparse: received buffer of %ld bytes %" G_GINT64_FORMAT,size, GST_BUFFER_TIMESTAMP(buf));
 
-  head = GULONG_FROM_BE(*((gulong *)data));
+  head = GUINT32_FROM_BE(*((guint32 *)data));
 
-  GST_DEBUG (0,"mp1videoparse: head is %08lx", head);
+  GST_DEBUG (0,"mp1videoparse: head is %08x", (unsigned int)head);
 
   if (!mp1videoparse_valid_sync(head) || mp1videoparse->need_resync) {
     sync_pos = mp1videoparse_find_next_gop(mp1videoparse, mp1videoparse->partialbuf);

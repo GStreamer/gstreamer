@@ -202,7 +202,7 @@ fprintf(stderr, "have buffer of %d bytes\n",size);
     while (offset < (size - 4)) {
       start = gst_mp3parse_next_header (data,size,offset);
 fprintf(stderr, "skipped %d bytes searching for the next header\n",start-offset);
-      header = GULONG_FROM_BE(*((guint32 *)(data+start)));
+      header = GUINT32_FROM_BE(*((guint32 *)(data+start)));
 fprintf(stderr, "header is 0x%08x\n",header);
 
       /* figure out how big the frame is supposed to be */
@@ -231,7 +231,7 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
   GstMPEGAudioParse *mp3parse;
   guchar *data;
   glong size,offset = 0;
-  unsigned long header;
+  guint32 header;
   int bpf;
   GstBuffer *outbuf;
   guint64 last_ts;
@@ -282,7 +282,7 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
       GST_DEBUG (0,"mp3parse: **** now at %ld skipped %d bytes",offset,skipped);
     }
     /* construct the header word */
-    header = GULONG_FROM_BE(*((gulong *)(data+offset)));
+    header = GUINT32_FROM_BE(*((guint32 *)(data+offset)));
     /* if it's a valid header, go ahead and send off the frame */
     if (head_check(header)) {
       /* calculate the bpf of the frame */
@@ -301,17 +301,17 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
       *   the frames are not independently coded.
       ********************************************************************************/
       if ( mp3parse->in_flush ) {
-        unsigned long header2;
+        guint32 header2;
 
         if ((size-offset)<(bpf+4)) { if (mp3parse->in_flush) break; } /* wait until we have the the entire current frame as well as the next frame header */
 
-        header2 = GULONG_FROM_BE(*((gulong *)(data+offset+bpf)));
-        GST_DEBUG(0,"mp3parse: header=%08lX, header2=%08lX, bpf=%d", header, header2, bpf );
+        header2 = GUINT32_FROM_BE(*((guint32 *)(data+offset+bpf)));
+        GST_DEBUG(0,"mp3parse: header=%08X, header2=%08X, bpf=%d", (unsigned int)header, (unsigned int)header2, bpf );
 
         #define HDRMASK ~( (0xF<<12)/*bitrate*/ | (1<<9)/*padding*/ | (3<<4)/*mode extension*/ ) /* mask the bits which are allowed to differ between frames */
 
         if ( (header2&HDRMASK) != (header&HDRMASK) ) { /* require 2 matching headers in a row */
-           GST_DEBUG(0,"mp3parse: next header doesn't match (header=%08lX, header2=%08lX, bpf=%d)", header, header2, bpf );
+           GST_DEBUG(0,"mp3parse: next header doesn't match (header=%08X, header2=%08X, bpf=%d)", (unsigned int)header, (unsigned int)header2, bpf );
            offset++; /* This frame is invalid.  Start looking for a valid frame at the next position in the stream */
            continue;
         }

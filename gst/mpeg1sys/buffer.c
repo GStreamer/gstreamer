@@ -353,7 +353,7 @@ static void mpeg1mux_buffer_update_video_info(Mpeg1MuxBuffer *mb) {
 static void mpeg1mux_buffer_update_audio_info(Mpeg1MuxBuffer *mb) {
   guchar *data = mb->buffer;
   gulong offset = mb->scan_pos;
-  gulong id=0;
+  guint32 id=0;
   guint padding_bit;
   gst_getbits_t gb;
   guint startup_delay = 0;
@@ -364,9 +364,9 @@ static void mpeg1mux_buffer_update_audio_info(Mpeg1MuxBuffer *mb) {
 
   GST_DEBUG (0,"mpeg1mux::update_audio_info %lu %lu", mb->base, mb->scan_pos);
   if (mb->base == 0 && mb->scan_pos == 0) {
-    id = GULONG_FROM_BE(*((gulong *)(data)));
+    id = GUINT32_FROM_BE(*((guint32 *)(data)));
 
-    printf("MPEG audio id = %08lx\n", id);
+    printf("MPEG audio id = %08x\n", (unsigned int)id);
     if ((id & 0xfff00000) == AUDIO_SYNCWORD<<20) {
 
       /* mpegver = (header >> 19) & 0x3; don't need this for bpf */
@@ -442,7 +442,7 @@ static void mpeg1mux_buffer_update_audio_info(Mpeg1MuxBuffer *mb) {
     }
   }
   while (offset < mb->length-4) {
-    id = GULONG_FROM_BE(*((gulong *)(data+offset)));
+    id = GUINT32_FROM_BE(*((guint32 *)(data+offset)));
 
     /* mpegver = (header >> 19) & 0x3;  don't need this for bpf */
     layer_index = (id >> 17) & 0x3;

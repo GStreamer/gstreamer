@@ -85,7 +85,7 @@ static GstTypeDefinition vorbisdefinition = {
 static GstCaps* 
 vorbis_type_find (GstBuffer *buf, gpointer private) 
 {
-  gulong head = GULONG_FROM_BE (*((gulong *)GST_BUFFER_DATA (buf)));
+  guint32 head = GUINT32_FROM_BE (*((guint32 *)GST_BUFFER_DATA (buf)));
 
   if (head  != 0x4F676753)
     return NULL;

@@ -69,7 +69,7 @@ static GstTypeDefinition tarkindefinition =
 static GstCaps* 
 tarkin_type_find (GstBuffer *buf, gpointer private) 
 {
-  gulong head = GULONG_FROM_BE (*((gulong *)GST_BUFFER_DATA (buf)));
+  guint32 head = GUINT32_FROM_BE (*((guint32 *)GST_BUFFER_DATA (buf)));
 
   /* FIXME */
   return NULL;
