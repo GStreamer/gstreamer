@@ -297,6 +297,10 @@ gst_opt_scheduler_class_init (GstOptSchedulerClass *klass)
   gstscheduler_class->clock_wait	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_clock_wait);
   gstscheduler_class->iterate 		= GST_DEBUG_FUNCPTR (gst_opt_scheduler_iterate);
   gstscheduler_class->show 		= GST_DEBUG_FUNCPTR (gst_opt_scheduler_show);
+  
+#ifdef USE_COTHREADS
+  do_cothreads_init(NULL);
+#endif
 }
 
 static void
