@@ -1,3 +1,12 @@
+2003-02-14  Colin Walters  <walters@verbum.org>
+
+	* ext/gnomevfs/gstgnomevfssrc.c (unicodify,
+	gst_gnomevfssrc_unicodify): New functions.
+	(audiocast_thread_run): Use them.  Remove redundant if from
+	"if (foo) g_free (foo);" bits.  Change fprintf to g_print.
+	(gst_gnomevfssrc_received_headers_callback): Ditto.
+	(gst_gnomevfssrc_get_icy_metadata): Ditto.
+
 2003-02-06  Colin Walters  <walters@gnu.org>
 
 	* ext/gnomevfs/gstgnomevfssrc.c: Port all the fixes from
