@@ -154,7 +154,23 @@ gboolean
 gst_riff_peek_head (GstRiffRead * riff,
     guint32 * tag, guint32 * length, guint * level_up)
 {
+  GList *last;
   guint8 *data;
+
+  /* if we're at the end of a chunk, but unaligned, then re-align.
+   * Those are essentially broken files, but unfortunately they
+   * exist. */
+  if ((last = g_list_last (riff->level)) != NULL) {
+    GstRiffLevel *level = last->data;
+    guint64 pos = gst_bytestream_tell (riff->bs);
+
+    if (level->start + level->length - pos < 8) {
+      if (!gst_bytestream_flush (riff->bs, level->start + level->length - pos)) {
+        GST_ELEMENT_ERROR (riff, RESOURCE, READ, (NULL), (NULL));
+        return FALSE;
+      }
+    }
+  }
 
   /* read */
   while (gst_bytestream_peek_bytes (riff->bs, &data, 8) != 8) {
