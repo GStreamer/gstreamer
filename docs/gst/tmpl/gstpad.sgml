@@ -2,16 +2,16 @@
 GstPad
 
 <!-- ##### SECTION Short_Description ##### -->
-The connection between Elements
+The link between Elements
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-A #GstElement is connected to other elements via "pads", which are extremely 
-light-weight generic connections points. 
+A #GstElement is linked to other elements via "pads", which are extremely 
+light-weight generic link points. 
 After two pads are retrieved from an element with gst_element_get_pad(), 
-the pads can be connected with gst_pad_connect().  (For quick connections,
-you can also use gst_element_connect(), which will make the obvious
-connection for you if it's straightforward).
+the pads can be link with gst_pad_link(). (For quick links,
+you can also use gst_element_link(), which will make the obvious
+link for you if it's straightforward.)
 </para>
 <para>
 Pads are typically created from a #GstPadTemplate with 
@@ -124,7 +124,7 @@ Gets the capabilities of a pad.
 <!-- ##### MACRO GST_PAD_PEER ##### -->
 <para>
 Gets the peer pad of this pad.  The peer pad is the pad on to which the parent
-element is connected through this pad.
+element is linked through this pad.
 </para>
 
 @pad: a #GstPad to get the peer pad of.
@@ -155,9 +155,9 @@ Checks if the pad is a source pad.
 @pad: a #GstPad to check.
 
 
-<!-- ##### MACRO GST_PAD_IS_CONNECTED ##### -->
+<!-- ##### MACRO GST_PAD_IS_LINKED ##### -->
 <para>
-Checks if the pad is connected.
+Checks if the pad is linked.
 </para>
 
 @pad: a #GstPad to check.
@@ -173,7 +173,7 @@ Checks if the pad is active.
 
 <!-- ##### MACRO GST_PAD_IS_USABLE ##### -->
 <para>
-Checks if a pad is usable. A usable pad both connected and active.
+Checks if a pad is usable. A usable pad is both linked and active.
 </para>
 
 @pad: a #GstPad to check
@@ -234,27 +234,27 @@ Function signature to handle an event for the pad.
 @Returns: TRUE if the pad could handle the event.
 
 
-<!-- ##### USER_FUNCTION GstPadConnectFunction ##### -->
+<!-- ##### USER_FUNCTION GstPadLinkFunction ##### -->
 <para>
-Function signature to handle a new connection on the pad.
+Function signature to handle a new link on the pad.
 </para>
 
-@pad: the #GstPad that is connected.
+@pad: the #GstPad that is linked.
 @caps: the peer's #GstCaps.
-@Returns: the result of the connection with the specified caps.
+@Returns: the result of the link with the specified caps.
 
 
-<!-- ##### ENUM GstPadConnectReturn ##### -->
+<!-- ##### ENUM GstPadLinkReturn ##### -->
 <para>
-The result of a pad connection.
+The result of a pad link.
 </para>
 
-@GST_PAD_CONNECT_REFUSED: the connection was refused.
-@GST_PAD_CONNECT_DELAYED: the connection was delayed, probably because the
-                          element needs more specific pad capabilitiess.
-@GST_PAD_CONNECT_OK:      the connection succeeded.
-@GST_PAD_CONNECT_DONE:    the connection succeeded, 
-                          any more attempts are not needed.
+@GST_PAD_LINK_REFUSED: the link was refused.
+@GST_PAD_LINK_DELAYED: the link was delayed, probably because the
+                       element needs more specific pad capabilitiess.
+@GST_PAD_LINK_OK:      the link succeeded.
+@GST_PAD_LINK_DONE:    the link succeeded, 
+                       any more attempts are not needed.
 
 <!-- ##### USER_FUNCTION GstPadConvertFunction ##### -->
 <para>
@@ -271,7 +271,7 @@ The signature of a convert function.
 
 <!-- ##### USER_FUNCTION GstPadDispatcherFunction ##### -->
 <para>
-A dispatcher function is called for all internally connected pads, see 
+A dispatcher function is called for all internally linked pads, see 
 gst_pad_dispatcher().
 </para>
 
@@ -280,13 +280,13 @@ gst_pad_dispatcher().
 @Returns: TRUE if the dispatching procedure has to be stopped.
 
 
-<!-- ##### USER_FUNCTION GstPadIntConnFunction ##### -->
+<!-- ##### USER_FUNCTION GstPadIntLinkFunction ##### -->
 <para>
-The signature of the internal pad connection function.
+The signature of the internal pad link function.
 </para>
 
 @pad: The #GstPad to query.
-@Returns: a newly allocated #GList of pads that are connected to 
+@Returns: a newly allocated #GList of pads that are linked to 
           the given pad on the inside of the parent element.  
           The caller must call g_list_free() on it after use.
 
@@ -463,13 +463,13 @@ Destroy the pad.
 @bufpool: 
 
 
-<!-- ##### FUNCTION gst_pad_set_connect_function ##### -->
+<!-- ##### FUNCTION gst_pad_set_link_function ##### -->
 <para>
 
 </para>
 
 @pad: 
-@connect: 
+@link: 
 
 
 <!-- ##### FUNCTION gst_pad_set_getcaps_function ##### -->
@@ -609,7 +609,7 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_connect ##### -->
+<!-- ##### FUNCTION gst_pad_link ##### -->
 <para>
 
 </para>
@@ -619,7 +619,7 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_connect_filtered ##### -->
+<!-- ##### FUNCTION gst_pad_link_filtered ##### -->
 <para>
 
 </para>
@@ -630,7 +630,7 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_reconnect_filtered ##### -->
+<!-- ##### FUNCTION gst_pad_relink_filtered ##### -->
 <para>
 
 </para>
@@ -641,7 +641,7 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_try_reconnect_filtered ##### -->
+<!-- ##### FUNCTION gst_pad_try_relink_filtered ##### -->
 <para>
 
 </para>
@@ -652,7 +652,7 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_disconnect ##### -->
+<!-- ##### FUNCTION gst_pad_unlink ##### -->
 <para>
 
 </para>
@@ -661,7 +661,7 @@ Destroy the pad.
 @sinkpad: 
 
 
-<!-- ##### FUNCTION gst_pad_can_connect ##### -->
+<!-- ##### FUNCTION gst_pad_can_link ##### -->
 <para>
 
 </para>
@@ -671,7 +671,7 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_can_connect_filtered ##### -->
+<!-- ##### FUNCTION gst_pad_can_link_filtered ##### -->
 <para>
 
 </para>
@@ -709,7 +709,7 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_load_and_connect ##### -->
+<!-- ##### FUNCTION gst_pad_load_and_link ##### -->
 <para>
 
 </para>
@@ -718,7 +718,7 @@ Destroy the pad.
 @parent: 
 
 
-<!-- ##### FUNCTION gst_pad_proxy_connect ##### -->
+<!-- ##### FUNCTION gst_pad_proxy_link ##### -->
 <para>
 
 </para>
@@ -932,7 +932,7 @@ Destroy the pad.
 @formats: 
 
 
-<!-- ##### FUNCTION gst_pad_get_internal_connections ##### -->
+<!-- ##### FUNCTION gst_pad_get_internal_links ##### -->
 <para>
 
 </para>
@@ -941,7 +941,7 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_get_internal_connections_default ##### -->
+<!-- ##### FUNCTION gst_pad_get_internal_links_default ##### -->
 <para>
 
 </para>
@@ -950,13 +950,13 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_set_internal_connection_function ##### -->
+<!-- ##### FUNCTION gst_pad_set_internal_link_function ##### -->
 <para>
 
 </para>
 
 @pad: 
-@intconn: 
+@intlink: 
 
 
 <!-- ##### FUNCTION gst_pad_set_query_function ##### -->
@@ -1075,7 +1075,7 @@ The realpad object
 @appfilter: 
 @getcapsfunc: 
 @direction: 
-@connectfunc: 
+@linkfunc: 
 @peer: 
 @sched_private: 
 @chainfunc: 
@@ -1090,7 +1090,7 @@ The realpad object
 @queryfunc: 
 @formatsfunc: 
 @querytypefunc: 
-@intconnfunc: 
+@intlinkfunc: 
 @bufferpoolfunc: 
 @probedisp: 
 
@@ -1190,9 +1190,9 @@ Get the gethandler function of this real pad.
 @pad: the real pad to query.
 
 
-<!-- ##### MACRO GST_RPAD_CONNECTFUNC ##### -->
+<!-- ##### MACRO GST_RPAD_LINKFUNC ##### -->
 <para>
-Get the connect function of the pad
+Get the link function of the pad
 </para>
 
 @pad: the pad to query
@@ -1214,9 +1214,9 @@ Get the convert function of this pad
 @pad: the pad to query
 
 
-<!-- ##### MACRO GST_RPAD_INTCONNFUNC ##### -->
+<!-- ##### MACRO GST_RPAD_INTLINKFUNC ##### -->
 <para>
-Get the internal connection function of this pad
+Get the internal link function of this pad
 </para>
 
 @pad: the pad to query

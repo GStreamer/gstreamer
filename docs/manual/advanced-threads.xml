@@ -23,7 +23,7 @@
   gst_bin_add (GST_BIN (my_thread), GST_ELEMENT (funky_src));
   gst_bin_add (GST_BIN (my_thread), GST_ELEMENT (cool_effect));
 
-  /* connect the elements here... */
+  /* link the elements here... */
   ...
   
   /* start playing */
@@ -41,7 +41,7 @@
     <title>Constraints placed on the pipeline by the GstThread</title>
     <para>
       Within the pipeline, everything is the same as in any other bin. The
-      difference lies at the thread boundary, at the connection between the
+      difference lies at the thread boundary, at the link between the
       thread and the outside world (containing bin).  Since GStreamer is
       fundamentally buffer-oriented rather than byte-oriented, the natural
       solution to this problem is an element that can "buffer" the buffers
@@ -135,7 +135,7 @@ main (int argc, char *argv[])
 
   /* add objects to the thread */
   gst_bin_add_many (GST_BIN (thread), filesrc, decoder, audiosink, NULL);
-  /* connect them in the logical order */
+  /* link them in the logical order */
   gst_element_link_many (filesrc, decoder, audiosink, NULL);
 
   /* start playing */

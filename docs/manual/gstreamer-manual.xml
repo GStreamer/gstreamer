@@ -11,7 +11,7 @@
 <!ENTITY INIT SYSTEM "init.xml">
 <!ENTITY ELEMENTS SYSTEM "elements.xml">
 <!ENTITY PADS SYSTEM "pads.xml">
-<!ENTITY CONNECTIONS SYSTEM "connections.xml">
+<!ENTITY LINKS SYSTEM "links.xml">
 <!ENTITY BINS SYSTEM "bins.xml">
 <!ENTITY BUFFERS SYSTEM "buffers.xml">
 <!ENTITY STATES SYSTEM "states.xml">
@@ -145,7 +145,7 @@
 
       &PADS;
 
-      &CONNECTIONS;
+      &LINKS;
 
       &BINS;
 

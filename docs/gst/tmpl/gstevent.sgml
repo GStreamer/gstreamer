@@ -46,6 +46,7 @@ The different major types of events.
 @GST_EVENT_RATE: adjust the output rate of an element
 @GST_EVENT_FILLER: a dummy event that should be ignored by plugins
 @GST_EVENT_TS_OFFSET: an event to set the time offset on buffers
+@GST_EVENT_INTERRUPT: 
 
 <!-- ##### MACRO GST_EVENT_TYPE ##### -->
 <para>

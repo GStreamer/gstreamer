@@ -18,10 +18,10 @@
       Elements are at the core of &GStreamer;. In the context of plugin
       development, an <emphasis>element</emphasis> is an object derived from the
       <classname>GstElement</classname> class. Elements provide some sort of
-      functionality when connected with other elements: For example, a source
+      functionality when linked with other elements: For example, a source
       element provides data to a stream, and a filter element acts on the data
       in a stream. Without elements, &GStreamer; is just a bunch of conceptual
-      pipe fittings with nothing to connect. A large number of elements ship
+      pipe fittings with nothing to link. A large number of elements ship
       with &GStreamer;, but extra elements can also be written.
     </para>
     <para>
@@ -37,7 +37,7 @@
       A <emphasis>filter</emphasis> is an important type of element that
       processes a stream of data. Producers and consumers of data are called
       <emphasis>source</emphasis> and <emphasis>sink</emphasis> elements,
-      respectively. Elements that connect other elements together are called
+      respectively. Elements that link other elements together are called
       <emphasis>autoplugger</emphasis> elements, and a <emphasis>bin</emphasis>
       element contains other elements. Bins are often responsible for scheduling
       the elements that they contain so that data flows smoothly.
@@ -65,27 +65,27 @@
   <sect1 id="sect1-basics-pads" xreflabel="Pads">
     <title>Pads</title>
     <para>
-      <emphasis>Pads</emphasis> are used to negotiate connections and data flow
+      <emphasis>Pads</emphasis> are used to negotiate links and data flow
       between elements in &GStreamer;. A pad can be viewed as a
       <quote>place</quote> or <quote>port</quote> on an element where
-      connections may be made with other elements. Pads have specific data
+      links may be made with other elements. Pads have specific data
       handling capabilities: A pad only knows how to give or receive certain
-      types of data. Connections are only allowed when the capabilities of two
+      types of data. Links are only allowed when the capabilities of two
       pads are compatible.
     </para>
     <para>
       An analogy may be helpful here. A pad is similar to a plug or jack on a
       physical device. Consider, for example, a home theater system consisting
-      of an amplifier, a DVD player, and a (silent) video projector. Connecting
+      of an amplifier, a DVD player, and a (silent) video projector. Linking
       the DVD player to the amplifier is allowed because both devices have audio
-      jacks, and connecting the projector to the DVD player is allowed because
-      both devices have compatible video jacks. Connections between the
+      jacks, and linking the projector to the DVD player is allowed because
+      both devices have compatible video jacks. Links between the
       projector and the amplifier may not be made because the projector and
       amplifier have different types of jacks. Pads in &GStreamer; serve the
       same purpose as the jacks in the home theater system.
     </para>
     <para>
-      For the moment, all data in &GStreamer; flows one way through a connection
+      For the moment, all data in &GStreamer; flows one way through a link
       between elements. Data flows out of one element through one or more
       <emphasis>source pads</emphasis>, and elements accept incoming data through
       one or more <emphasis>sink pads</emphasis>. Source and sink elements have
@@ -107,7 +107,7 @@
       passed from a source pad on one element to a sink pad on another element.
       <emphasis>Buffers</emphasis> are structures used to hold these chunks of
       data. Buffers can be of any size, theoretically, and they may contain any
-      sort of data that the two connected pads know how to handle. Normally, a
+      sort of data that the two linked pads know how to handle. Normally, a
       buffer contains a chunk of some sort of audio or video data that flows
       from one element to another.
     </para>
@@ -188,7 +188,7 @@
       &GStreamer; uses a type system to ensure that the data passed between
       elements is in a recognized format. The type system is also important for
       ensuring that the parameters required to fully specify a format match up
-      correctly when connecting pads between elements. Each connection that is
+      correctly when linking pads between elements. Each link that is
       made between elements has a specified type.
     </para>
 

@@ -16,7 +16,7 @@
   </para>
   <para>
     Elements are at the core of &GStreamer;. Without elements, &GStreamer; is
-    just a bunch of pipe fittings with nothing to connect. A large number of
+    just a bunch of pipe fittings with nothing to link. A large number of
     elements (filters, sources, and sinks) ship with &GStreamer;, but extra
     elements can also be written. The purpose of this guide is to help you
     learn to create new elements.

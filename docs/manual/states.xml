@@ -46,7 +46,7 @@
     <programlisting>
   GstElement *bin;
 
-  // create a bin, put elements in it and connect them
+  // create a bin, put elements in it and link them
   ...
   gst_element_set_state (bin, GST_STATE_PLAYING);
   ...

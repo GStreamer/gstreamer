@@ -103,7 +103,7 @@ main(int argc, char *argv[])
   </programlisting>
   <para>
     We create a very simple pipeline with only a filesrc and the typefind
-    element in it. The sinkpad of the typefind element has been connected
+    element in it. The sinkpad of the typefind element has been linked
     to the source pad of the filesrc.
   </para>
   <para>
@@ -140,7 +140,7 @@ type_found (GstElement *typefind, GstCaps* caps)
   <para>
     A more useful option would be to use the registry to look up an element
     that can handle this particular caps structure, or we can also use the
-    autoplugger to connect this caps structure to, for example, a videosink.
+    autoplugger to link this caps structure to, for example, a videosink.
   </para>
 
 </chapter>

@@ -28,7 +28,7 @@ Basic concepts
    (what is it)
    (types) sink, src, filter
    (have pads)
-  connecting elements
+  linking elements
   bin
    (can contain elements)
    pipeline (a complete graph)
