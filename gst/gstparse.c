@@ -66,13 +66,18 @@ dynamic_connect (GstElement * element, GstPad * newpad, gpointer data)
       return;
     }
   }
+
   /* try to find a target pad if we don't know it yet */
   if (!dc->target_pad) {
-    dc->target_pad = gst_element_get_compatible_pad (dc->target_element, newpad);
-    warn = FALSE;
+    if (!GST_PAD_IS_CONNECTED (newpad)) {
+      dc->target_pad = gst_element_get_compatible_pad (dc->target_element, newpad);
+      warn = FALSE;
+    }
+    else {
+      return;
+    }
   }
-
-  if (!GST_PAD_IS_CONNECTED (newpad)) {
+  if (!GST_PAD_IS_CONNECTED (dc->target_pad)) {
     gst_element_set_state (dc->pipeline, GST_STATE_PAUSED);
     if (!gst_pad_connect (newpad, dc->target_pad) && warn) {
       g_warning ("could not connect %s:%s to %s:%s", GST_DEBUG_PAD_NAME (newpad), 
