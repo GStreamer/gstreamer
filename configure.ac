@@ -254,37 +254,13 @@ dnl AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
 dnl Check for libasound
 alsa_save_LIBS=$LIBS
 alsa_save_CFLAGS=$CFLAGS
-AM_PATH_ALSA(0.5.0, HAVE_LIBASOUND=yes,
+AM_PATH_ALSA(0.5.0, HAVE_LIBASOUND=yes, HAVE_LIBASOUND=no)
+AM_PATH_ALSA(0.9.0,
   HAVE_LIBASOUND=no
-  AC_MSG_WARN(
-***** NOTE: These plugins won't be built: gstalsa
-))
-if test x$HAVE_LIBASOUND = xyes;then
-  AC_MSG_CHECKING(alsa libs == 0.5.x, not 0.9.x)
-  AC_TRY_COMPILE([
-#include <sys/asoundlib.h>
-], [
-#if !defined(SND_LIB_MINOR) && defined(SOUNDLIB_VERSION_MINOR)
-#define SND_LIB_MINOR SOUNDLIB_VERSION_MINOR
-#endif
-
-void main(void) {
-  // succeed only if it's 0.5.x
-#if (SND_LIB_MINOR == 5)
-  exit(0);
-#else
-#error not 0.5.x
-#endif
-
-  exit(1);
-}
-],AC_MSG_RESULT(0.5.x),
-  AC_MSG_RESULT(no)
-  AC_MSG_WARN(
+  AC_MSG_WARN(Alsa 0.9.x not yet supported.
 ***** NOTE: These plugins won't be built: gstalsa
 )
-  HAVE_LIBASOUND=no)
-fi
+  ,:)
 
 LIBS=$alsa_save_LIBS
 CFLAGS=$alsa_save_CFLAGS

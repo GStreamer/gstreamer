@@ -53,6 +53,9 @@ fi
 
 dnl add the alsa library
 ALSA_LIBS="$ALSA_LIBS -lasound -lm -ldl"
+LIBS=`echo $LIBS | sed 's/-lm//'`
+LIBS=`echo $LIBS | sed 's/-ldl//'`
+LIBS=`echo $LIBS | sed 's/  //'`
 LIBS="$ALSA_LIBS $LIBS"
 AC_MSG_RESULT($ALSA_LIBS)
 
@@ -122,6 +125,9 @@ AC_CHECK_LIB([asound], [snd_defaults_card],,
 
 if test "x$alsa_found" = "xyes" ; then
    ifelse([$2], , :, [$2])
+   LIBS=`echo $LIBS | sed 's/-lasound//g'`
+   LIBS=`echo $LIBS | sed 's/  //'`
+   LIBS="-lasound $LIBS"
 fi
 if test "x$alsa_found" = "xno" ; then
    ifelse([$3], , :, [$3])
