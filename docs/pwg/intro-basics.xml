@@ -56,9 +56,9 @@
     <para>
       See the &GstLibRef; for the current implementation details of <ulink
       type="http"
-      url="../gstreamer/gstelement.html"><classname>GstElement</classname></ulink>
+      url="../../gstreamer/gstelement.html"><classname>GstElement</classname></ulink>
       and <ulink type="http"
-      url="../gstreamer/gstreamer-gstplugin.html"><classname>GstPlugin</classname></ulink>.
+      url="../../gstreamer/gstreamer-gstplugin.html"><classname>GstPlugin</classname></ulink>.
     </para>
   </sect1>
 
@@ -97,7 +97,7 @@
     <para>
       See the &GstLibRef; for the current implementation details of a <ulink
       type="http"
-      url="../gstreamer/gstreamer-gstpad.html"><classname>GstPad</classname></ulink>.
+      url="../../gstreamer/gstreamer-gstpad.html"><classname>GstPad</classname></ulink>.
     </para>
   </sect1>
 
@@ -192,9 +192,9 @@
     <para>
       See the &GstLibRef; for the current implementation details of a <ulink
       type="http"
-      url="../gstreamer/gstreamer-gstdata.html"><classname>GstData</classname></ulink>, <ulink type="http"
-      url="../gstreamer/gstreamer-gstbuffer.html"><classname>GstBuffer</classname></ulink> and <ulink type="http"
-      url="../gstreamer/gstreamer-gstevent.html"><classname>GstEvent</classname></ulink>.
+      url="../../gstreamer/gstreamer-gstdata.html"><classname>GstData</classname></ulink>, <ulink type="http"
+      url="../../gstreamer/gstreamer-gstbuffer.html"><classname>GstBuffer</classname></ulink> and <ulink type="http"
+      url="../../gstreamer/gstreamer-gstevent.html"><classname>GstEvent</classname></ulink>.
     </para>
 
     <sect2 id="sect2-buffer-allocation" xreflabel="Buffer Allocation">
