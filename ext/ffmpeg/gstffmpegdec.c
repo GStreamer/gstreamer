@@ -368,6 +368,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
   guchar *data;
   gint size, len = 0;
   gint have_data;
+  guint64 expected_ts = GST_BUFFER_TIMESTAMP (inbuf);
 
   if (!ffmpegdec->opened) {
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
@@ -443,8 +444,14 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
             }
           }
 
-          /* this isn't necessarily true, but it's better than nothing */
-          GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
+          /* note that ffmpeg sometimes gets the FPS wrong */
+          if (GST_CLOCK_TIME_IS_VALID (expected_ts)) {
+            GST_BUFFER_TIMESTAMP (outbuf) = expected_ts;
+            GST_BUFFER_DURATION (outbuf) = GST_SECOND *
+                ffmpegdec->context->frame_rate_base /
+                ffmpegdec->context->frame_rate;
+            expected_ts += GST_BUFFER_DURATION (outbuf);
+          }
         }
         break;
 
@@ -462,8 +469,13 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
 
         if (have_data) {
           GST_BUFFER_SIZE (outbuf) = have_data;
-          GST_BUFFER_DURATION (outbuf) = (have_data * GST_SECOND) /
-              (ffmpegdec->context->channels * ffmpegdec->context->sample_rate);
+          if (GST_CLOCK_TIME_IS_VALID (expected_ts)) {
+            GST_BUFFER_TIMESTAMP (outbuf) = expected_ts;
+            GST_BUFFER_DURATION (outbuf) = (have_data * GST_SECOND) /
+                (2 * ffmpegdec->context->channels *
+                ffmpegdec->context->sample_rate);
+            expected_ts += GST_BUFFER_DURATION (outbuf);
+          }
         } else {
           gst_buffer_unref (outbuf);
         }
@@ -510,8 +522,6 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
         }
 	gst_caps_free (caps);
       }
-
-      GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
 
       gst_pad_push (ffmpegdec->srcpad, GST_DATA (outbuf));
     }

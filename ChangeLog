@@ -1,3 +1,10 @@
+2004-09-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
+	  Update timestamp for every new buffer that we output. Improves
+	  audio playback for several files that have multiple audio chunks
+	  per buffer.
+
 2004-09-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
