@@ -1,3 +1,28 @@
+gstreamer (0.2.0-0.3) unstable; urgency=low
+
+  * GStreamer 0.2.0-pre3
+
+ -- David I. Lehn <dlehn@vt.edu>  Wed,  6 Jun 2001 15:09:59 -0400
+
+gstreamer (0.2.0-0.2) unstable; urgency=low
+
+  * GStreamer 0.2.0-pre2 + CVS 20010604
+  * Added -artsd (vs -arts), -audiofile, -gnomevfs, -gsm, -jpeg,
+    -oss, and -sdl plugin packages
+  * Added osshelper lib to oss package
+  * Added more AVI related plugins and autoplug libs to -common
+  * Added pkgconfig file to libgst-dev
+  * Added gstreamer-all-plugins pseudo package that depends on
+    all other plugin pacakges
+
+ -- David I. Lehn <dlehn@vt.edu>  Mon,  4 Jun 2001 17:33:20 -0400
+
+gstreamer (0.2.0-0.1) unstable; urgency=low
+
+  * GStreamer 0.2.0-pre1
+
+ -- David I. Lehn <dlehn@vt.edu>  Thu, 31 May 2001 17:16:23 -0400
+
 gstreamer (0.1.1.20010504-1) unstable; urgency=low
 
   * Latest CVS code

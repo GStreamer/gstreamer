@@ -16,7 +16,7 @@ export DH_OPTIONS
 # Link special names to a template file.
 # still need "*.files" to be done by hand
 
-PLUGINS=aa alsa arts cdparanoia colorspace common elements esd lame mad mpeg2dec mpg123 vorbis
+PLUGINS=aa alsa arts artsd audiofile cdparanoia colorspace common elements esd gnomevfs gsm jpeg lame mad mpeg2dec mpg123 oss sdl vorbis
 
 setup-links:
 	for i in $(PLUGINS); do \
@@ -36,6 +36,8 @@ configure-stamp:
 		--infodir=\$${prefix}/share/info \
 		--with-configdir=/etc/gstreamer \
 		--disable-plugin-srcdir \
+		--disable-tests \
+		--disable-examples \
 		--enable-docs-build \
 		--disable-plugin-docs
 
@@ -60,6 +62,7 @@ clean:
 
 	dh_clean
 
+	rm -rf debian/gstreamer
 	for i in $(PLUGINS); do \
 		rm -f debian/gstreamer-$$i.postinst; \
 		rm -f debian/gstreamer-$$i.prerm; \

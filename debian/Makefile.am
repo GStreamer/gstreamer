@@ -13,21 +13,28 @@ EXTRA_DIST = \
 	gstreamer-aa.files \
 	gstreamer-alsa.files \
 	gstreamer-arts.files \
+	gstreamer-artsd.files \
+	gstreamer-audiofile.files \
 	gstreamer-cdparanoia.files \
 	gstreamer-colorspace.files \
 	gstreamer-common.files \
 	gstreamer-doc.files \
 	gstreamer-elements.files \
 	gstreamer-esd.files \
+	gstreamer-gnomevfs.files \
+	gstreamer-gsm.files \
 	gstreamer-lame.files \
+	gstreamer-jpeg.files \
 	gstreamer-mad.files \
 	gstreamer-mpeg2dec.files \
 	gstreamer-mpg123.files \
+	gstreamer-oss.files \
 	gstreamer-plugin-template.postinst \
 	gstreamer-plugin-template.prerm \
 	gstreamer-runtime.files \
 	gstreamer-runtime.manpages \
 	gstreamer-runtime.postinst \
+	gstreamer-sdl.files \
 	gstreamer-tools.files \
 	gstreamer-tools.manpages \
 	gstreamer-vorbis.files \

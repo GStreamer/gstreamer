@@ -5,8 +5,13 @@ usr/lib/gst/libalaw.*
 usr/lib/gst/libaudioscale.*
 usr/lib/gst/libavidecoder.*
 usr/lib/gst/libaviencoder.*
+usr/lib/gst/libaviaudiodecoder.*
+usr/lib/gst/libavidemux.*
+usr/lib/gst/libavitypes.*
 usr/lib/gst/libdvdsrc.*
 usr/lib/gst/libflxdec.*
+usr/lib/gst/libgstautoplugcache.*
+usr/lib/gst/libgstautoplugger.*
 usr/lib/gst/libgstcolorspace.*
 usr/lib/gst/libgstgetbits.*
 usr/lib/gst/libgstidct.*
@@ -20,6 +25,7 @@ usr/lib/gst/libgstspectrum.*
 usr/lib/gst/libgsttypes.*
 usr/lib/gst/libgstvideoscale.*
 usr/lib/gst/libintfloatconvert.*
+usr/lib/gst/liblevel.*
 usr/lib/gst/libjpeg.*
 usr/lib/gst/libmedian.*
 usr/lib/gst/libmono2stereo.*

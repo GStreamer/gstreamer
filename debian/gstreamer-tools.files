@@ -1,2 +1,4 @@
 usr/bin/gstreamer-inspect
 usr/bin/gstreamer-launch
+usr/bin/gstreamer-complete
+usr/bin/gstreamer-compprep

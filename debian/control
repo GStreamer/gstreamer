@@ -2,7 +2,7 @@ Source: gstreamer
 Section: x11
 Priority: optional
 Maintainer: David I. Lehn <dlehn@vt.edu>
-Build-Depends: debhelper (>= 3.0.0), libxml-dev (>= 1.8.10), zlib1g-dev (>= 1:1.1.3), libghttp-dev (>= 1.0.6), libglib1.2-dev (>= 1.2.8), libgtk1.2-dev (>= 1.2.8), libglade0-dev (>= 0.14), libglade-gnome0-dev (>= 0.14), libesd0-dev (>= 0.2.22), libcdparanoia0-dev (>= 3a9.7), libvorbis-dev (>= 1.0beta3), libgnome-dev (>= 1.2.11), libasound1-dev (>= 0.5.10), libghttp-dev (>= 1.0.9), libjpeg62-dev (>= 6b), aalib1-dev (>= 1.4p4), libmad0-dev (>= 0.13.0b), hermes1-dev (>= 1.3.1), libarts-dev (>= 2.1.2)
+Build-Depends: debhelper (>= 3.0.0), libxml-dev (>= 1.8.10), zlib1g-dev (>= 1:1.1.3), libghttp-dev (>= 1.0.6), libglib1.2-dev (>= 1.2.8), libgtk1.2-dev (>= 1.2.8), libglade0-dev (>= 0.14), libglade-gnome0-dev (>= 0.14), libesd0-dev (>= 0.2.22), libcdparanoia0-dev (>= 3a9.7), libvorbis-dev (>= 1.0beta3), libgnome-dev (>= 1.2.11), libasound1-dev (>= 0.5.10) | libasound2-dev (>= 0.9), libghttp-dev (>= 1.0.9), libjpeg62-dev (>= 6b), aalib1-dev (>= 1.4p4), libmad0-dev (>= 0.13.0b), hermes1-dev (>= 1.3.1), libarts-dev (>= 2.1.2), libgsm1-dev (>= 1.0.10), libgnome-vfs-dev (>= 1.0.1), libsdl1.1-dev (>= 1.1.8)
 Build-Depends-Indep: debhelper (>= 3.0.0), gtk-doc-tools (>= 0.4), jade (>= 1.2.1), transfig (>= 3.2.3.c)
 Standards-Version: 3.5.2.0
 
@@ -46,6 +46,8 @@ Description: Tools for use with GStreamer
  .
  gstreamer-inspect: query details of installed plugins
  gstreamer-launch: command line pipeline generator
+ gstreamer-compprep: register components for gstreamer-complete
+ gstreamer-complete: gstreamer-launch bash command line completion tool
 
 Package: libgstmediaplay0
 Architecture: any
@@ -91,6 +93,16 @@ Suggests: gstreamer-common
 Description: GStreamer editor
  GStreamer editor
 
+Package: gstreamer-all-plugins
+Architecture: any
+Section: libs
+Depends: gstreamer-aa, gstreamer-alsa, gstreamer-arts, gstreamer-artsd, gstreamer-audiofile, gstreamer-cdparanoia, gstreamer-colorspace, gstreamer-common, gstreamer-elements, gstreamer-esd, gstreamer-gnomevfs, gstreamer-gsm, gstreamer-jpeg, gstreamer-lame, gstreamer-mad, gstreamer-mpeg2dec, gstreamer-mpg123, gstreamer-oss, gstreamer-sdl, gstreamer-vorbis
+Description: Pseudo package for all GStreamer plugins
+ Pseudo package which depends on all current GStreamer plugin
+ packages.
+ .
+ WARNING: this package could bring in many sub-dependencies.
+
 Package: gstreamer-aa
 Architecture: any
 Section: libs
@@ -111,6 +123,20 @@ Section: libs
 Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: aRts plugin for GStreamer
  aRts plugin for GStreamer
+
+Package: gstreamer-artsd
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
+Description: aRtsd plugin for GStreamer
+ aRtsd plugin for GStreamer
+
+Package: gstreamer-audiofile
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
+Description: AudioFile plugin for GStreamer
+ AudioFile plugin for GStreamer
 
 Package: gstreamer-cdparanoia
 Architecture: any
@@ -149,6 +175,27 @@ Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: Enlightened Sound Daemon plugin for GStreamer
  Enlightened Sound Daemon plugin for GStreamer
 
+Package: gstreamer-gnomevfs
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
+Description: Gnome VFS plugin for GStreamer
+ Gnome VFS plugin for GStreamer
+
+Package: gstreamer-gsm
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
+Description: gsm plugin for GStreamer
+ gsm plugin for GStreamer
+
+Package: gstreamer-jpeg
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
+Description: jpeg plugin for GStreamer
+ jpeg plugin for GStreamer
+
 Package: gstreamer-lame
 Architecture: any
 Section: libs
@@ -176,6 +223,20 @@ Section: libs
 Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: mpg123 plugin for GStreamer
  mpg123 plugin for GStreamer
+
+Package: gstreamer-oss
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
+Description: OSS plugin for GStreamer
+ OSS plugin for GStreamer
+
+Package: gstreamer-sdl
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
+Description: SDL videosink plugin for GStreamer
+ SDL videosink plugin for GStreamer
 
 Package: gstreamer-vorbis
 Architecture: any

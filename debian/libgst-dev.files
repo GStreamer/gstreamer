@@ -1,5 +1,6 @@
 usr/include
 usr/share/aclocal
+usr/lib/pkgconfig
 usr/bin/gstreamer-config
 usr/lib/libgst.la
 usr/lib/libgst.so
