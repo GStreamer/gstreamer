@@ -656,7 +656,6 @@ gst_asf_demux_process_stream (GstASFDemux *asf_demux, guint64 *obj_size)
 
   switch (stream_id) {
   case ASF_STREAM_AUDIO:
-
     gst_asf_demux_read_object_header_rest (asf_demux, &ptr, 18);
     audio_object = (asf_stream_audio *)ptr;
     size = GUINT16_FROM_LE (audio_object->size);
@@ -694,6 +693,8 @@ gst_asf_demux_process_stream (GstASFDemux *asf_demux, guint64 *obj_size)
 
       break;
     case ASF_CORRECTION_OFF:
+      GST_INFO ( "Error correction off");
+      gst_bytestream_flush (asf_demux->bs, object->stream_specific_size);
       break;
     default:
       gst_element_error (GST_ELEMENT (asf_demux), "Audio stream using unknown error correction");
@@ -853,6 +854,7 @@ gst_asf_demux_get_stream (GstASFDemux *asf_demux,
 
   /* Base case if we haven't found one at all */
   gst_element_error (GST_ELEMENT (asf_demux), "Segment found for undefined stream: (%d)", id);
+
   return NULL;
 }
 
@@ -1407,7 +1409,7 @@ gst_asf_demux_add_audio_stream (GstASFDemux *asf_demux,
   if (size_left) {
     g_warning ("asfdemux: Audio header contains %d bytes of surplus data", size_left);
     gst_asf_demux_read_object_header_rest (asf_demux, &extradata, size_left);
-/*     gst_bytestream_flush (asf_demux->bs, size_left);*/
+//    gst_bytestream_flush (asf_demux->bs, size_left);
   }
 
   /* Now set up the standard propertis from the header info */
