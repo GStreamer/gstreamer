@@ -1,0 +1,11 @@
+plugindir= $(libdir)/gstreamer-@GST_MAJORMINOR@
+
+plugin_LTLIBRARIES = libgstrmdemux.la
+
+libgstrmdemux_la_SOURCES = rmdemux.c
+
+libgstrmdemux_la_CFLAGS = $(GST_CFLAGS)
+libgstrmdemux_la_LDFLAGS = $(GST_LIBS)
+
+noinst_HEADERS = rmdemux.h
+
