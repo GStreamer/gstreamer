@@ -678,31 +678,13 @@ AC_CHECK_HEADER(dvdread/dvd_reader.h, :, HAVE_LIBDVDREAD=no)
 dnl Check for SDL library
 dnl this bit is taken from vlc's configure.in and modified accordingly
 
-SDL_PATH=$PATH
-AC_PATH_PROG(SDL_CONFIG, sdl-config, no, $SDL_PATH)
-SDL_CONFIG=${SDL_CONFIG}
-if test "x${SDL_CONFIG}" = "xno"
-then
-  AC_PATH_PROG(SDL11_CONFIG, sdl11-config, no, $SDL_PATH)
-  SDL_CONFIG=${SDL11_CONFIG}
-fi
-if test "x${SDL_CONFIG}" = "xno"
-then
-  AC_PATH_PROG(SDL12_CONFIG, sdl11-config, no, $SDL_PATH)
-  SDL_CONFIG=${SDL12_CONFIG}
-fi
-
-if test "x${SDL_CONFIG}" = "xyes"
-then
-  AM_PATH_SDL( , , HAVE_LIBSDL=no)
-fi
+AM_PATH_SDL(1.1.0, HAVE_LIBSDL=yes, HAVE_LIBSDL=no)
 
 if test "x$HAVE_LIBSDL" = "xno"; then
   AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: sdlvideosink
 )
 fi
-
 
 dnl Check for linux/cdrom.h
 AC_CHECK_HEADER(linux/cdrom.h,
