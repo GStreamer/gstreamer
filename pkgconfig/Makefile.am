@@ -9,10 +9,12 @@ endif
 ### all of the standard pc files we need to generate
 pcfiles =  \
 	gstreamer-libs-@GST_MAJORMINOR@.pc \
-	gstreamer-play-@GST_MAJORMINOR@.pc
+	gstreamer-play-@GST_MAJORMINOR@.pc \
+	gstreamer-interfaces-@GST_MAJORMINOR@.pc
 pcfiles_uninstalled = \
 	gstreamer-libs-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-play-@GST_MAJORMINOR@-uninstalled.pc
+	gstreamer-play-@GST_MAJORMINOR@-uninstalled.pc \
+	gstreamer-interfaces-@GST_MAJORMINOR@-uninstalled.pc
 
 pcfiles_gconf = $(GCONF_PC) $(GCONF_PC_UNINSTALLED)
 all-local: $(pcfiles) $(pcfiles_uninstalled) $(pcfiles_gconf)
@@ -37,7 +39,8 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = \
 	$(GCONF_PC) \
 	gstreamer-libs-@GST_MAJORMINOR@.pc \
-	gstreamer-play-@GST_MAJORMINOR@.pc
+	gstreamer-play-@GST_MAJORMINOR@.pc \
+	gstreamer-interfaces-@GST_MAJORMINOR@.pc
 
 CLEANFILES = $(pcfiles) $(pcfiles_uninstalled)
 EXTRA_DIST= \
