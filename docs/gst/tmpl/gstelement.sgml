@@ -298,6 +298,15 @@ circumstances.
 @pad: 
 
 
+<!-- ##### FUNCTION gst_element_remove_ghost_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@pad: 
+
+
 <!-- ##### FUNCTION gst_element_connect ##### -->
 <para>
 

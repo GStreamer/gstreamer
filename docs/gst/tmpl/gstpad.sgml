@@ -76,6 +76,15 @@ the function that will be called when a QoS message is sent.
 @qos_message: the message
 
 
+<!-- ##### USER_FUNCTION GstPadEOSFunction ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
 <!-- ##### USER_FUNCTION GstPadPushFunction ##### -->
 <para>
 
@@ -195,6 +204,15 @@ Destroy the pad
 
 @pad: 
 @qos: 
+
+
+<!-- ##### FUNCTION gst_pad_set_eos_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@eos: 
 
 
 <!-- ##### FUNCTION gst_pad_set_caps_list ##### -->
@@ -371,6 +389,23 @@ Destroy the pad
 
 @pad: 
 @qos_message: 
+
+
+<!-- ##### FUNCTION gst_pad_set_eos ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### MACRO gst_pad_eos ##### -->
+<para>
+
+</para>
+
+@pad: 
 
 
 <!-- ##### FUNCTION gst_pad_save_thyself ##### -->

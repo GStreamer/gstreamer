@@ -15,58 +15,45 @@ to your application.
 
 </para>
 
-<!-- ##### MACRO GST_DEBUG_ENABLED ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GST_DEBUG_PREFIX ##### -->
-<para>
-
-</para>
-
-@format: 
-@args...: 
-
-
-<!-- ##### MACRO GST_DEBUG_PAD_NAME ##### -->
-<para>
-
-</para>
-
-@pad: 
-
-
-<!-- ##### MACRO GST_DEBUG_FUNCPTR ##### -->
-<para>
-
-</para>
-
-@ptr: 
-
-
-<!-- ##### MACRO GST_DEBUG_FUNCPTR_NAME ##### -->
-<para>
-
-</para>
-
-@ptr: 
-
-
-<!-- ##### USER_FUNCTION GstInfoHandler ##### -->
+<!-- ##### FUNCTION gst_get_category_name ##### -->
 <para>
 
 </para>
 
 @category: 
-@file: 
-@function: 
-@line: 
-@debug_string: 
-@element: 
-@string: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_info_get_categories ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_info_set_categories ##### -->
+<para>
+
+</para>
+
+@categories: 
+
+
+<!-- ##### FUNCTION gst_info_enable_category ##### -->
+<para>
+
+</para>
+
+@category: 
+
+
+<!-- ##### FUNCTION gst_info_disable_category ##### -->
+<para>
+
+</para>
+
+@category: 
 
 
 <!-- ##### FUNCTION gst_default_info_handler ##### -->
@@ -83,7 +70,196 @@ to your application.
 @string: 
 
 
-<!-- ##### USER_FUNCTION GstErrorHandler ##### -->
+<!-- ##### MACRO GST_INFO_ENABLED ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_INFO ##### -->
+<para>
+
+</para>
+
+@cat: 
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO GST_INFO_ELEMENT ##### -->
+<para>
+
+</para>
+
+@cat: 
+@element: 
+@format: 
+@args...: 
+
+
+<!-- ##### FUNCTION gst_debug_get_categories ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_debug_set_categories ##### -->
+<para>
+
+</para>
+
+@categories: 
+
+
+<!-- ##### FUNCTION gst_debug_enable_category ##### -->
+<para>
+
+</para>
+
+@category: 
+
+
+<!-- ##### FUNCTION gst_debug_disable_category ##### -->
+<para>
+
+</para>
+
+@category: 
+
+
+<!-- ##### MACRO GST_DEBUG_SET_STRING ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO GST_DEBUG_ENTER ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO GST_DEBUG_ENTER_STRING ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DEBUG_LEAVE ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO GST_DEBUG_LEAVE_STRING ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DEBUG_NOPREFIX ##### -->
+<para>
+
+</para>
+
+@cat: 
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO GST_DEBUG ##### -->
+<para>
+
+</para>
+
+@cat: 
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO GST_DEBUG_ENABLE_CATEGORIES ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DEBUG_FUNCPTR ##### -->
+<para>
+
+</para>
+
+@ptr: 
+
+
+<!-- ##### MACRO GST_DEBUG_PREFIX ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO GST_DEBUG_ENABLED ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DEBUG_FUNCPTR_NAME ##### -->
+<para>
+
+</para>
+
+@ptr: 
+
+
+<!-- ##### MACRO GST_DEBUG_PAD_NAME ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_ERROR ##### -->
+<para>
+
+</para>
+
+@element: 
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO GST_ERROR_OBJECT ##### -->
+<para>
+
+</para>
+
+@element: 
+@object: 
+@format: 
+@args...: 
+
+
+<!-- ##### FUNCTION gst_default_error_handler ##### -->
 <para>
 
 </para>
@@ -97,7 +273,21 @@ to your application.
 @string: 
 
 
-<!-- ##### FUNCTION gst_default_error_handler ##### -->
+<!-- ##### USER_FUNCTION GstInfoHandler ##### -->
+<para>
+
+</para>
+
+@category: 
+@file: 
+@function: 
+@line: 
+@debug_string: 
+@element: 
+@string: 
+
+
+<!-- ##### USER_FUNCTION GstErrorHandler ##### -->
 <para>
 
 </para>

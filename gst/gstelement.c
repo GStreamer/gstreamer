@@ -201,6 +201,14 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad)
   gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[NEW_GHOST_PAD], pad);
 }
 
+/**
+ * gst_element_remove_ghost_pad:
+ * @element: element to remove the ghost pad from
+ * @pad: ghost pad to remove
+ *
+ * removes a ghost pad from an element
+ * 
+ */
 void
 gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
 {

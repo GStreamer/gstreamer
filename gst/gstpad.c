@@ -347,7 +347,7 @@ gst_pad_set_qos_function (GstPad *pad,
 /**
  * gst_pad_set_eos_function:
  * @pad: the pad to set the eos function for
- * @qos: the eos function
+ * @eos: the eos function
  *
  * Set the given EOS function for the pad
  */
@@ -1080,6 +1080,14 @@ gst_pad_eos_func(GstPad *pad)
   return TRUE;
 }
 
+/**
+ * gst_pad_set_eos:
+ * @pad: the pad to set to eos
+ *
+ * sets the given pad to the  eos state
+ *
+ * Returns: TRUE if it succeeded
+ */
 gboolean
 gst_pad_set_eos(GstPad *pad) 
 {
