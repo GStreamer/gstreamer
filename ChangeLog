@@ -1,5 +1,10 @@
 2004-10-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_push), (gst_ogg_pad_push):
+	  Synchronized discont handling.
+
+2004-10-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_event),
 	(gst_ogg_demux_push):
 	  Make seeking sort-of exact again (fixes #156387).
