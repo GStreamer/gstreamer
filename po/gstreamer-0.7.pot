@@ -6,23 +6,23 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-0.7 0.7.0.1\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \"http://bugzilla.gnome.org\"\n"
-"POT-Creation-Date: 2003-10-08 15:36-0700\n"
-"PO-Revision-Date: 2003-10-08 15:36-0700\n"
-"Last-Translator: David Schleef <ds@schleef.org>\n"
-"Language-Team: Gnome Translators <i18n@gnome.org>\n"
+"POT-Creation-Date: 2003-10-08 16:20-0700\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: gst/gst.c:113
 msgid "Print the GStreamer version"
-msgstr "druck die GStreamer Version"
+msgstr ""
 
 #: gst/gst.c:114
 msgid "Make all warnings fatal"
-msgstr "macht alle Achtunge toedlich"
+msgstr ""
 
 #: gst/gst.c:116
 msgid ""
@@ -38,11 +38,11 @@ msgstr ""
 
 #: gst/gst.c:118
 msgid "disable color debugging output"
-msgstr "abschalt Farbe in Fehlersucheausgabe"
+msgstr ""
 
 #: gst/gst.c:119
 msgid "disable debugging"
-msgstr "abschalt die Fehlersuche"
+msgstr ""
 
 #: gst/gst.c:120
 msgid "print available debug categories and exit"
@@ -81,6 +81,3 @@ msgstr ""
 #: gst/gst.c:127
 msgid "registry to use"
 msgstr ""
-
-#~ msgid "This is a test\n"
-#~ msgstr "moo\n"
