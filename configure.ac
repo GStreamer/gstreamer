@@ -54,7 +54,7 @@ GST_MAJORMINOR=0.8
 PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
                   HAVE_GSTREAMER=yes,HAVE_GSTREAMER=no)
 AC_SUBST(GST_CFLAGS)
-AC_SUBST(GST_LDFLAGS)
+AC_SUBST(GST_LIBS)
 
 dnl Give error and exit if we don't have GStreamer
 if test "x$HAVE_GSTREAMER" = "xno"; then
