@@ -23,6 +23,7 @@
 //#define GST_DEBUG_ENABLED
 #include "gst_private.h"
 
+#include "gstlog.h"
 #include "gstprops.h"
 #include "gstpropsprivate.h"
 
