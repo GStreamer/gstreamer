@@ -1,3 +1,7 @@
+2004-03-18  Johan Dahlin  <johan@gnome.org>
+
+	* configure.ac: s/GST_*_INCLUDES/GST_*_LIBS/
+
 2004-03-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/Makefile.am: fix automake don'ts
