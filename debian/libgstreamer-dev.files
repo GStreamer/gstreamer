@@ -1,3 +1,4 @@
 usr/include/gstreamer-*/gst/*.h
+usr/share/aclocal/*.m4
 usr/lib/pkgconfig
 usr/lib/libgstreamer.{a,la,so}

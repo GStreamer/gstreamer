@@ -19,13 +19,19 @@ else
 SUBDIRS_EXAMPLES =
 endif
 
+gst-element-check-@GST_MAJORMINOR@.m4: gst-element-check.m4
+	cp $(srcdir)/gst-element-check.m4 gst-element-check-@GST_MAJORMINOR@.m4
+
+aclocaldir = $(datadir)/aclocal
+aclocal_DATA = gst-element-check-@GST_MAJORMINOR@.m4
+
 SUBDIRS = include gst libs tools \
 	$(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) $(SUBDIRS_DOCS) pkgconfig
 
 # These are all the possible subdirs
 DIST_SUBDIRS = include libs gst tools tests testsuite examples docs pkgconfig
 
-EXTRA_DIST = gstreamer.spec.in \
+EXTRA_DIST = gstreamer.spec.in gst-element-check.m4 \
 	     configure.ac autogen.sh depcomp \
 	     REQUIREMENTS ABOUT-NLS RELEASE DOCBUILDING DEVEL \
 	     idiottest.mak common
