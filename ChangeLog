@@ -1,5 +1,11 @@
 2004-11-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstvalue.sgml:
+	  Add new function to docs to fix build.
+
+2004-11-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/gstcaps.c: (gst_caps_is_fixed_foreach):
 	* gst/gstpad.c: (_gst_pad_default_fixate_value),
 	(_gst_pad_default_fixate_foreach):

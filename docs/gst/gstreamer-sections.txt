@@ -1835,6 +1835,7 @@ GstValueIntersectFunc
 GstValueSubtractFunc
 GstValueTable
 gst_type_is_fixed
+gst_value_is_fixed
 gst_value_register
 gst_value_init_and_copy
 gst_value_serialize

@@ -242,6 +242,15 @@ GST_VALUE_GREATER_THAN or GST_VALUE_UNORDERED
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_value_is_fixed ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_value_register ##### -->
 <para>
 
