@@ -355,6 +355,7 @@ bpf_from_header (GstMPEGAudioParse *parse, unsigned long header)
       layer    != parse->layer) {
     GstCaps *caps = GST_CAPS_NEW ("mp3parse_src",
                                   "audio/mpeg",
+                                    "mpegversion", GST_PROPS_INT (1),
                                     "layer",    GST_PROPS_INT (layer),
                                     "channels", GST_PROPS_INT (channels),
                                     "rate",     GST_PROPS_INT (rate));
