@@ -345,7 +345,7 @@ gst_disksink_chain (GstPad *pad, GstBuffer *buf)
       gst_pad_send_event(pad, event);
 
       /* if the event wasn't handled, we probably need to open a new file ourselves */
-      if (disksink->data_written)
+      if ((disksink->data_written + GST_BUFFER_SIZE(buf))/(1024*1024) > disksink->maxfilesize)
       {
         gst_disksink_close_file(disksink);
         disksink->filenum++;
