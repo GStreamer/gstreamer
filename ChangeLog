@@ -2,6 +2,13 @@
 
 	patch by: Ronald Bultje <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybasebin.c:
+	  Fix unplayable files error handling.  Fixes #158365
+
+2004-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	patch by: Ronald Bultje <rbultje@ronald.bitfreak.net>
+
 	* gst/typefind/gsttypefindfunctions.c:
 	  Fix broken mp3 typefinding.  Fixes #158375
 

@@ -309,35 +309,40 @@ group_destroy (GstPlayBaseGroup * group)
  * and ready for playback
  */
 static void
-group_commit (GstPlayBaseBin * play_base_bin)
+group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal)
 {
   GstPlayBaseGroup *group = play_base_bin->building_group;
   GList *prerolls;
 
   /* if an element signalled a no-more-pads after we stopped due
    * to preroll, the group is NULL. This is not an error */
-  if (group == NULL)
-    return;
+  if (group == NULL) {
+    if (!fatal) {
+      return;
+    } else {
+      GST_DEBUG ("Group loading failed, bailing out");
+    }
+  } else {
+    GST_DEBUG ("group %p done", group);
 
-  GST_DEBUG ("group %p done", group);
+    play_base_bin->queued_groups = g_list_append (play_base_bin->queued_groups,
+        group);
 
-  play_base_bin->queued_groups = g_list_append (play_base_bin->queued_groups,
-      group);
+    play_base_bin->building_group = NULL;
 
-  play_base_bin->building_group = NULL;
+    /* remove signals. We don't want anymore signals from the preroll
+     * elements at this stage. */
+    for (prerolls = group->preroll_elems; prerolls;
+        prerolls = g_list_next (prerolls)) {
+      GstElement *element = GST_ELEMENT (prerolls->data);
+      guint sig_id;
 
-  /* remove signals. We don't want anymore signals from the preroll
-   * elements at this stage. */
-  for (prerolls = group->preroll_elems; prerolls;
-      prerolls = g_list_next (prerolls)) {
-    GstElement *element = GST_ELEMENT (prerolls->data);
-    guint sig_id;
+      sig_id =
+          GPOINTER_TO_INT (g_object_get_data (G_OBJECT (element), "signal_id"));
 
-    sig_id =
-        GPOINTER_TO_INT (g_object_get_data (G_OBJECT (element), "signal_id"));
-
-    GST_LOG ("removing preroll signal %s", gst_element_get_name (element));
-    g_signal_handler_disconnect (G_OBJECT (element), sig_id);
+      GST_LOG ("removing preroll signal %s", gst_element_get_name (element));
+      g_signal_handler_disconnect (G_OBJECT (element), sig_id);
+    }
   }
 
   g_mutex_lock (play_base_bin->group_lock);
@@ -370,7 +375,7 @@ static void
 queue_overrun (GstElement * element, GstPlayBaseBin * play_base_bin)
 {
   GST_DEBUG ("queue %s overrun", gst_element_get_name (element));
-  group_commit (play_base_bin);
+  group_commit (play_base_bin, FALSE);
 }
 
 /* generate a preroll element which is simply a queue. While there
@@ -499,7 +504,7 @@ no_more_pads (GstElement * element, GstPlayBaseBin * play_base_bin)
   /* setup phase */
   GST_DEBUG ("no more pads");
   /* we can commit this group for playback now */
-  group_commit (play_base_bin);
+  group_commit (play_base_bin, FALSE);
 }
 
 static gboolean
@@ -750,7 +755,7 @@ state_change (GstElement * element,
   if (old_state > new_state) {
     /* EOS or error occurred, we have to commit the current group */
     GST_DEBUG ("state changed downwards");
-    group_commit (play_base_bin);
+    group_commit (play_base_bin, TRUE);
   }
 }
 
