@@ -1,4 +1,4 @@
-/* Gnome-Streamer
+/* GStreamer
  * Copyright (C) <2001> Richard Boulton <richard-gst@tartarus.org>
  *
  * Based on example.c:

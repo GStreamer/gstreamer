@@ -251,7 +251,7 @@ gst_jack_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
     }
     
     pad = g_new0(GstJackPad, 1);
-    pad->name = g_strdup_printf ("%s%d", this->port_name_prefix, this->client->default_new_port_number++);
+    pad->name = g_strdup_printf ("%s%d", this->port_name_prefix, 1); /* fixme :) */
     pad->peer_name = newname;
     pad->pad = gst_pad_new_from_template (templ, newname);
     gst_element_add_pad (GST_ELEMENT (this), pad->pad);
@@ -261,6 +261,7 @@ gst_jack_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
         *pad_list = g_list_append (*pad_list, pad);
 /*    this->pads = g_list_append (this->pads, pad); */
     
+    g_print ("returning from request_new_pad, pad %s created, to connect to %s\n", pad->name, pad->peer_name);
     return pad->pad;
 }
 
