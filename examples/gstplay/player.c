@@ -58,20 +58,20 @@ got_found_tag (GstPlay *play,GstElement *source, GstTagList *tag_list)
 static void
 got_time_tick (GstPlay *play, gint64 time_nanos)
 {
-  g_print ("time tick %llu", time_nanos);
+  g_print ("time tick %llu\n", time_nanos);
 }
 
 static void
 got_stream_length (GstPlay *play, gint64 length_nanos)
 {
-  g_print ("got length %llu", length_nanos);
+  g_print ("got length %llu\n", length_nanos);
   length = length_nanos;
 }
 
 static void
 got_video_size (GstPlay *play, gint width, gint height)
 {
-  g_print ("got video size %d, %d", width, height);
+  g_print ("got video size %d, %d\n", width, height);
 }
 
 static void
