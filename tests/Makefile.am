@@ -1,4 +1,4 @@
-SUBDIRS = sched eos
+SUBDIRS = sched eos nego
 
 noinst_PROGRAMS = init loadall simplefake states caps queue registry \
 paranoia rip mp3encode autoplug props case4 markup load tee autoplug2 autoplug3 \

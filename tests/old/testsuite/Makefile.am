@@ -1,4 +1,4 @@
-SUBDIRS =
+SUBDIRS = refcounting capsnego
 
 testprogs = test_gst_init
 
