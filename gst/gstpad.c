@@ -2012,7 +2012,8 @@ gst_pad_send_event (GstPad *pad, GstEvent *event)
 
   if (!handled) {
     GST_DEBUG(GST_CAT_EVENT, "would proceed with default behavior here\n");
-    //gst_pad_event_default (pad, event);
+    gst_pad_event_default (pad, event);
+    handled = TRUE;
   }
 
   return handled;

@@ -75,7 +75,8 @@ gst_schedule_chain_wrapper (int argc,char *argv[])
         buf = gst_pad_pull (pad);
         if (buf) { 
           if (GST_IS_EVENT (buf) && !GST_ELEMENT_IS_EVENT_AWARE (element)) {
-            gst_pad_event_default (pad, GST_EVENT (buf)); 
+            //gst_pad_event_default (pad, GST_EVENT (buf)); 
+            gst_pad_send_event (pad, GST_EVENT (buf)); 
 	  }
 	  else {
             GST_DEBUG (GST_CAT_DATAFLOW,"calling chain function of %s:%s\n", name, GST_PAD_NAME (pad));
