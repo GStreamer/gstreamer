@@ -37,6 +37,7 @@ void pygst_add_constants(PyObject *module, const gchar *strip_prefix);
 extern PyMethodDef pygst_functions[];
 extern GSList *mainloops;
 extern void _pygst_main_quit(void);
+extern PyObject *PyGstExc_LinkError;
 
 
 /* This is a timeout that gets added to the mainloop to handle SIGINT (Ctrl-C)
@@ -133,7 +134,13 @@ init_gst (void)
      PyModule_AddIntConstant(m, "SECOND", GST_SECOND);
      PyModule_AddIntConstant(m, "MSECOND", GST_MSECOND);
      PyModule_AddIntConstant(m, "NSECOND", GST_NSECOND);
-     
+
+     /* LinkError exception */
+     PyGstExc_LinkError = PyErr_NewException("gst.LinkError",
+					     PyExc_RuntimeError,
+					     NULL);
+     PyDict_SetItemString(d, "LinkError", PyGstExc_LinkError);
+
      pygst_register_classes (d);
      pygst_add_constants (m, "GST_");
 

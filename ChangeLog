@@ -1,3 +1,9 @@
+2004-11-29  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gstmodule.c: 
+	* gst/gst.override: Apply patch from Brian Warner to throw a link
+	error when element and pad linking fails.
+
 2004-11-27  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/gst.override (_wrap_gst_event_new_any)

@@ -36,6 +36,7 @@ headers
 #include <gst/gsttaginterface.h>
 
 extern gboolean pygst_data_from_pyobject (PyObject *object, GstData **data);
+PyObject *PyGstExc_LinkError = NULL;
 
 GSList *mainloops = NULL;
 void
@@ -312,8 +313,12 @@ _wrap_gst_element_link_many(PyObject *self, PyObject *args)
 	i = 2;
 	while (1) {
 
-		if (!gst_element_link(GST_ELEMENT(element->obj), GST_ELEMENT(element2->obj)))
-			return PyInt_FromLong(0);
+		if (!gst_element_link(GST_ELEMENT(element->obj),
+                                      GST_ELEMENT(element2->obj)))
+                {
+                    PyErr_SetString(PyGstExc_LinkError, "link failed");
+                    return NULL;
+                }
 
 		if (i >= len)
 			break;
@@ -326,6 +331,122 @@ _wrap_gst_element_link_many(PyObject *self, PyObject *args)
 
 	return PyInt_FromLong(1);
 }
+
+
+%%
+override gst_element_link kwargs
+static PyObject *
+_wrap_gst_element_link(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "dest", NULL };
+    PyGObject *dest;
+    int ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!:GstElement.link",
+                                     kwlist, &PyGstElement_Type, &dest))
+        return NULL;
+    ret = gst_element_link(GST_ELEMENT(self->obj), GST_ELEMENT(dest->obj));
+    if (!ret) {
+        PyErr_SetString(PyGstExc_LinkError, "link failed");
+        return NULL;
+    }
+    return PyBool_FromLong(ret);
+}
+
+%%
+override gst_element_link_filtered kwargs
+static PyObject *
+_wrap_gst_element_link_filtered(PyGObject *self, PyObject *args,
+                                PyObject *kwargs)
+{
+    static char *kwlist[] = { "dest", "filtercaps", NULL };
+    PyGObject *dest;
+    PyObject *py_filtercaps;
+    int ret;
+    GstCaps *filtercaps = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+                                     "O!O:GstElement.link_filtered",
+                                     kwlist, &PyGstElement_Type,
+                                     &dest, &py_filtercaps))
+        return NULL;
+    if (pyg_boxed_check(py_filtercaps, GST_TYPE_CAPS))
+        filtercaps = pyg_boxed_get(py_filtercaps, GstCaps);
+    else {
+        PyErr_SetString(PyExc_TypeError, "filtercaps should be a GstCaps");
+        return NULL;
+    }
+    ret = gst_element_link_filtered(GST_ELEMENT(self->obj),
+                                    GST_ELEMENT(dest->obj),
+                                    filtercaps);
+    if (!ret) {
+        PyErr_SetString(PyGstExc_LinkError, "link failed");
+        return NULL;
+    }
+    return PyBool_FromLong(ret);
+
+}
+
+%%
+override gst_element_link_pads kwargs
+static PyObject *
+_wrap_gst_element_link_pads(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "srcpadname", "dest", "destpadname", NULL };
+    char *srcpadname, *destpadname;
+    PyGObject *dest;
+    int ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+                                     "sO!s:GstElement.link_pads", kwlist,
+                                     &srcpadname, &PyGstElement_Type, &dest,
+                                     &destpadname))
+        return NULL;
+    ret = gst_element_link_pads(GST_ELEMENT(self->obj), srcpadname,
+                                GST_ELEMENT(dest->obj), destpadname);
+    if (!ret) {
+        PyErr_SetString(PyGstExc_LinkError, "link failed");
+        return NULL;
+    }
+    return PyBool_FromLong(ret);
+
+}
+
+%%
+override gst_element_link_pads_filtered kwargs
+static PyObject *
+_wrap_gst_element_link_pads_filtered(PyGObject *self, PyObject *args,
+                                     PyObject *kwargs)
+{
+    static char *kwlist[] = { "srcpadname", "dest", "destpadname",
+                              "filtercaps", NULL };
+    char *srcpadname, *destpadname;
+    PyGObject *dest;
+    int ret;
+    PyObject *py_filtercaps;
+    GstCaps *filtercaps = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+                                     "sO!sO:GstElement.link_pads_filtered",
+                                     kwlist, &srcpadname, &PyGstElement_Type,
+                                     &dest, &destpadname, &py_filtercaps))
+        return NULL;
+    if (pyg_boxed_check(py_filtercaps, GST_TYPE_CAPS))
+        filtercaps = pyg_boxed_get(py_filtercaps, GstCaps);
+    else {
+        PyErr_SetString(PyExc_TypeError, "filtercaps should be a GstCaps");
+        return NULL;
+    }
+    ret = gst_element_link_pads_filtered(GST_ELEMENT(self->obj), srcpadname,
+                                         GST_ELEMENT(dest->obj), destpadname,
+                                         filtercaps);
+    if (!ret) {
+        PyErr_SetString(PyGstExc_LinkError, "link failed");
+        return NULL;
+    }
+    return PyBool_FromLong(ret);
+}
+
 %%
 override gst_element_unlink_many args
 static PyObject *
@@ -371,8 +492,61 @@ _wrap_gst_element_unlink_many(PyObject *self, PyObject *args)
 	Py_INCREF(Py_None);
 	return Py_None;
 }
+
+
 %%
-override GstPad.get_negotiated_caps
+override gst_pad_link kwargs
+static PyObject *
+_wrap_gst_pad_link(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "sinkpad", NULL };
+    PyGObject *sinkpad;
+    int ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!:GstPad.link", kwlist,
+                                     &PyGstPad_Type, &sinkpad))
+        return NULL;
+    ret = gst_pad_link(GST_PAD(self->obj), GST_PAD(sinkpad->obj));
+    if (!ret) {
+        PyErr_SetString(PyGstExc_LinkError, "link failed");
+        return NULL;
+    }
+    return PyBool_FromLong(ret);
+}
+
+%%
+override gst_pad_link_filtered kwargs
+static PyObject *
+_wrap_gst_pad_link_filtered(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "sinkpad", "filtercaps", NULL };
+    PyGObject *sinkpad;
+    PyObject *py_filtercaps;
+    int ret;
+    GstCaps *filtercaps = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O:GstPad.link_filtered",
+                                     kwlist, &PyGstPad_Type, &sinkpad,
+                                     &py_filtercaps))
+        return NULL;
+    if (pyg_boxed_check(py_filtercaps, GST_TYPE_CAPS))
+        filtercaps = pyg_boxed_get(py_filtercaps, GstCaps);
+    else {
+        PyErr_SetString(PyExc_TypeError, "filtercaps should be a GstCaps");
+        return NULL;
+    }
+    ret = gst_pad_link_filtered(GST_PAD(self->obj),
+                                GST_PAD(sinkpad->obj),
+                                filtercaps);
+    if (!ret) {
+        PyErr_SetString(PyGstExc_LinkError, "link failed");
+        return NULL;
+    }
+    return PyBool_FromLong(ret);
+}
+
+%%
+override gst_pad_get_negotiated_caps
 static PyObject *
 _wrap_gst_pad_get_negotiated_caps(PyGObject *self)
 {
