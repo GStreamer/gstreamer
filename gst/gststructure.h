@@ -52,7 +52,7 @@ GstStructure *gst_structure_new(const gchar *name,
     const gchar *firstfield, ...);
 GstStructure *gst_structure_new_valist(const gchar *name,
     const gchar *firstfield, va_list varargs);
-GstStructure *gst_structure_dup(GstStructure *structure);
+GstStructure *gst_structure_copy(GstStructure *structure);
 void gst_structure_free(GstStructure *structure);
 
 const gchar *gst_structure_get_name(GstStructure *structure);
@@ -67,7 +67,7 @@ void gst_structure_set_value(GstStructure *structure, const gchar *field,
 void gst_structure_set(GstStructure *structure, const gchar *field, ...);
 void gst_structure_set_valist(GstStructure *structure, const gchar *field,
     va_list varargs);
-const GValue *gst_structure_get(GstStructure *structure, const gchar *field);
+const GValue *gst_structure_get_value(GstStructure *structure, const gchar *field);
 GstStructureField *gst_structure_get_field(GstStructure *structure,
         const gchar *fieldname);
 GstStructureField *gst_structure_id_get_field(GstStructure *structure,

@@ -75,7 +75,7 @@ void _gst_structure_initialize(void)
       &structure_info, 0);
 #if 0
   _gst_structure_type = g_boxed_type_register_static("GstStructure",
-      (GBoxedCopyFunc) gst_structure_dup,
+      (GBoxedCopyFunc) gst_structure_copy,
       (GBoxedFreeFunc) gst_structure_free);
 #endif
 
@@ -160,14 +160,14 @@ GstStructure *gst_structure_new_valist(const gchar *name,
 }
 
 /**
- * gst_structure_dup:
+ * gst_structure_copy:
  * @structure: a #GstStructure to duplicate
  *
  * Duplicates a #GstStructure and all its fields and values.
  *
  * Returns: a new #GstStructure.
  */
-GstStructure *gst_structure_dup(GstStructure *structure)
+GstStructure *gst_structure_copy(GstStructure *structure)
 {
   GstStructure *new_structure;
   GstStructureField *field;
@@ -462,7 +462,7 @@ gst_structure_get_field(GstStructure *structure, const gchar *fieldname)
 }
 
 /**
- * gst_structure_get:
+ * gst_structure_get_value:
  * @structure: a #GstStructure
  * @fieldname: the name of the field to get
  *
@@ -471,7 +471,7 @@ gst_structure_get_field(GstStructure *structure, const gchar *fieldname)
  * Returns: the #GValue corresponding to the field with the given name.
  */
 const GValue *
-gst_structure_get(GstStructure *structure, const gchar *fieldname)
+gst_structure_get_value(GstStructure *structure, const gchar *fieldname)
 {
   GstStructureField *field;
 
@@ -483,6 +483,13 @@ gst_structure_get(GstStructure *structure, const gchar *fieldname)
 
   return &field->value;
 }
+
+#if 0
+void gst_structure_get(GstStructure *structure, const gchar *fieldname, ...)
+{
+
+}
+#endif
 
 /**
  * gst_structure_remove_field:
@@ -843,7 +850,7 @@ static void _gst_structure_value_free (GValue *value)
 
 static void _gst_structure_value_copy (const GValue *src, GValue *dest)
 {
-  dest->data[0].v_pointer = gst_structure_dup(src->data[0].v_pointer);
+  dest->data[0].v_pointer = gst_structure_copy(src->data[0].v_pointer);
 }
 
 static gpointer _gst_structure_value_peek_pointer (const GValue *value)
