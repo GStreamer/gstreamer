@@ -122,7 +122,7 @@ GstProps*	gst_caps_get_props			(GstCaps *caps);
 #define		gst_caps_get_string(caps,name,res)	gst_props_entry_get_string(gst_props_get_entry((caps)->properties,name),res)
 
 #define		gst_caps_has_property(caps, name)	gst_props_has_property ((caps)->properties, name)
-#define		gst_caps_has_property_typed(caps, name)	gst_props_has_property_typed ((caps)->properties, name)
+#define		gst_caps_has_property_typed(caps, name, type)	gst_props_has_property_typed ((caps)->properties, name, type)
 #define		gst_caps_has_fixed_property(caps, name)	gst_props_has_fixed_property ((caps)->properties, name)
 
 GstCaps*	gst_caps_get_by_name			(GstCaps *caps, const gchar *name);
