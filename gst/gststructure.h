@@ -38,6 +38,8 @@ struct _GstStructure {
   GArray *fields;
 };
 
+#define GST_TYPE_STRUCTURE (gst_structure_get_type())
+
 GType gst_structure_get_type(void);
 void _gst_structure_initialize(void);
 

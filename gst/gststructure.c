@@ -405,9 +405,21 @@ void gst_structure_set_valist(GstStructure *structure, const gchar *fieldname,
 	  i = va_arg(varargs, int);
 	  g_value_init(&field.value, GST_TYPE_FOURCC);
 	  gst_value_set_fourcc(&field.value, i);
-	  break;
-	}else{
+        } else if (type == GST_TYPE_INT_RANGE){
+          int min, max;
+	  min = va_arg(varargs, int);
+	  max = va_arg(varargs, int);
+	  g_value_init(&field.value, GST_TYPE_INT_RANGE);
+	  gst_value_set_int_range(&field.value, min, max);
+        } else if (type == GST_TYPE_DOUBLE_RANGE){
+          double min, max;
+	  min = va_arg(varargs, double);
+	  max = va_arg(varargs, double);
+	  g_value_init(&field.value, GST_TYPE_DOUBLE_RANGE);
+	  gst_value_set_double_range(&field.value, min, max);
+	} else {
 	  g_critical("unimplemented vararg field type %d\n", (int)type);
+          return;
 	}
 	break;
     }
@@ -1046,8 +1058,6 @@ gst_structure_to_string(const GstStructure *structure)
       t = _gst_structure_wrap_string(g_strdup(g_value_get_string(&s_val)));
     }
 
-g_print("appending: %s=(%s)%s\n", g_quark_to_string(field->name),
-	_gst_structure_to_abbr(type), t);
     g_string_append_printf(s, ", %s=(%s)%s", g_quark_to_string(field->name),
 	_gst_structure_to_abbr(type), t);
     g_free(t);
@@ -1116,9 +1126,28 @@ gst_value_from_string (GValue *value, const char *s)
 	int x;
 	x = strtol (s, &end, 0);
 	if (*end == 0) {
-	  g_value_set_int (value, x);
 	  ret = TRUE;
-	}
+	} else {
+	  if (g_ascii_strcasecmp (s, "little_endian") == 0) {
+            x = G_LITTLE_ENDIAN;
+            ret = TRUE;
+          } else if (g_ascii_strcasecmp (s, "big_endian") == 0) {
+            x = G_BIG_ENDIAN;
+            ret = TRUE;
+          } else if (g_ascii_strcasecmp (s, "byte_order") == 0) {
+            x = G_BYTE_ORDER;
+            ret = TRUE;
+          } else if (g_ascii_strcasecmp (s, "min") == 0) {
+            x = G_MININT;
+            ret = TRUE;
+          } else if (g_ascii_strcasecmp (s, "max") == 0) {
+            x = G_MAXINT;
+            ret = TRUE;
+          }
+        }
+        if (ret) {
+	  g_value_set_int (value, x);
+        }
       }
       break;
     case G_TYPE_FLOAT:
@@ -1136,9 +1165,19 @@ gst_value_from_string (GValue *value, const char *s)
 	double x;
 	x = g_ascii_strtod (s, &end);
 	if (*end == 0) {
-	  g_value_set_double (value, x);
 	  ret = TRUE;
-	}
+	} else {
+          if (g_ascii_strcasecmp (s, "min") == 0) {
+            x = G_MINDOUBLE;
+            ret = TRUE;
+          } else if (g_ascii_strcasecmp (s, "max") == 0) {
+            x = G_MAXDOUBLE;
+            ret = TRUE;
+          }
+        }
+        if (ret) {
+	  g_value_set_double (value, x);
+        }
       }
       break;
     case G_TYPE_BOOLEAN:
@@ -1198,36 +1237,27 @@ _gst_structure_parse_range (gchar *s, gchar **after, GValue *value, GType type)
   GType range_type;
   gboolean ret;
 
-g_print("parse_range: \"%s\"\n", s);
 
-g_print("%d \"%s\"\n", __LINE__, s);
   if (*s != '[') return FALSE;
   s++;
 
-g_print("%d \"%s\"\n", __LINE__, s);
   ret = _gst_structure_parse_value(s, &s, &value1, type);
   if (ret == FALSE) return FALSE;
 
   while (g_ascii_isspace (*s)) s++;
     
-g_print("%d \"%s\"\n", __LINE__, s);
   if (*s != ',') return FALSE;
   s++;
 
   while (g_ascii_isspace (*s)) s++;
 
-g_print("%d \"%s\"\n", __LINE__, s);
   ret = _gst_structure_parse_value(s, &s, &value2, type);
   if (ret == FALSE) return FALSE;
 
   while (g_ascii_isspace (*s)) s++;
 
-g_print("%d \"%s\"\n", __LINE__, s);
   if (*s != ']') return FALSE;
   s++;
-
-g_print("type1 %s type2 %s\n", g_type_name(G_VALUE_TYPE(&value1)),
-    g_type_name(G_VALUE_TYPE(&value2)));
 
   if (G_VALUE_TYPE (&value1) != G_VALUE_TYPE (&value2)) return FALSE;
   
@@ -1259,7 +1289,6 @@ _gst_structure_parse_list (gchar *s, gchar **after, GValue *value, GType type)
   gboolean ret;
   GArray *array;
 
-g_print("parse_list: \"%s\"\n", s);
   g_value_init(value, GST_TYPE_LIST);
   array = g_value_peek_pointer (value);
 
@@ -1322,7 +1351,6 @@ _gst_structure_parse_field (gchar *str, gchar **after, GstStructureField *field)
   gchar *s;
   gchar c;
 
-g_print("parse_field: \"%s\"\n", str);
   s = str;
 
   while(g_ascii_isspace (*s)) s++;
@@ -1360,7 +1388,6 @@ _gst_structure_parse_value (gchar *str, gchar **after, GValue *value,
   int ret;
   GType type = default_type;
 
-g_print("parse_value: \"%s\"\n", str);
 
   s = str;
   while(g_ascii_isspace (*s)) s++;
@@ -1381,9 +1408,7 @@ g_print("parse_value: \"%s\"\n", str);
 
     c = *type_end;
     *type_end = 0;
-g_print("type name is \"%s\"\n",type_name);
     type = _gst_structure_from_abbr(type_name);
-g_print("type n is \"%s\"\n",g_type_name(type));
     *type_end = c;
 
     if (type == G_TYPE_INVALID) return FALSE;
@@ -1469,7 +1494,6 @@ gst_structure_from_string (const gchar *string, gchar **end)
 
     memset(&field,0,sizeof(field));
     res = _gst_structure_parse_field (r, &r, &field);
-g_print("returned %d \"%s\"\n", res, r);
     if (!res) {
       gst_structure_free (structure);
       return NULL;
