@@ -75,7 +75,7 @@ checkout:
 
 # on running make install, make sure make has been run first
 install:
-	cd ffmpeg && make
+	cd ffmpeg && $(MAKE)
 
 # we don't install stuff so no need to uninstall
 uninstall:
