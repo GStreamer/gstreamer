@@ -25,6 +25,8 @@ gst-element-check-@GST_MAJORMINOR@.m4: gst-element-check.m4
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = gst-element-check-@GST_MAJORMINOR@.m4
 
+CLEANFILES = $(aclocal_DATA)
+
 SUBDIRS = include gst libs tools \
 	$(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) $(SUBDIRS_DOCS) pkgconfig
 
