@@ -279,6 +279,7 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
 			  srcpadname,GST_DEBUG_PAD_NAME(sinkpad));
 
 	  gtk_signal_connect (GTK_OBJECT (previous), "new_pad", dynamic_connect, connect);
+	  gtk_signal_connect (GTK_OBJECT (previous), "new_ghost_pad", dynamic_connect, connect);
         }
         else {
           GST_DEBUG(0,"CONNECTING %s:%s and %s:%s\n",GST_DEBUG_PAD_NAME(srcpad),GST_DEBUG_PAD_NAME(sinkpad));
