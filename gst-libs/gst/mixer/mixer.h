@@ -24,6 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/mixer/mixertrack.h>
+#include <gst/mixer/mixerenumtypes.h>
 
 G_BEGIN_DECLS
 
