@@ -8,4 +8,4 @@ Description: Streaming-media framework
 Requires: @GST_PKG_DEPS@, libxml >= 1.8.1
 Version: @VERSION@
 Libs: -L${libdir} -lgst
-Cflags: -I${includedir} @GST_DEFINE_CFLAGS@
+Cflags: -I${includedir} @GST_CFLAGS@
