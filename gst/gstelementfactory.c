@@ -168,6 +168,13 @@ gst_element_factory_new (const gchar *name, GType type,
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (type, NULL);
   g_return_val_if_fail (details, NULL);
+  g_return_val_if_fail (details->longname, NULL);
+  g_return_val_if_fail (details->klass, NULL);
+  g_return_val_if_fail (details->license, NULL);
+  g_return_val_if_fail (details->description, NULL);
+  g_return_val_if_fail (details->version, NULL);
+  g_return_val_if_fail (details->author, NULL);
+  g_return_val_if_fail (details->copyright, NULL);
 
   factory = gst_element_factory_find (name);
 
