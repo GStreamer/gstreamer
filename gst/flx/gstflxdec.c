@@ -32,11 +32,8 @@
 static GstElementDetails flxdec_details = {
   "FLX Decoder",
   "Codec/Audio/Decoder",
-  "LGPL",
   "FLX decoder",
-  VERSION,
-  "Sepp Wijnands <mrrazz@garbage-coderz.net>",
-  "(C) 2001",
+  "Sepp Wijnands <mrrazz@garbage-coderz.net>"
 };
 
 /* Flx signals and args */
@@ -83,6 +80,7 @@ GST_PAD_TEMPLATE_FACTORY (src_video_factory,
 
 
 static void	gst_flxdec_class_init	(GstFlxDecClass *klass);
+static void	gst_flxdec_base_init	(GstFlxDecClass *klass);
 static void	gst_flxdec_init		(GstFlxDec *flxdec);
 
 static void	gst_flxdec_loop		(GstElement *element);
@@ -110,7 +108,8 @@ gst_flxdec_get_type(void)
 
   if (!flxdec_type) {
     static const GTypeInfo flxdec_info = {
-      sizeof(GstFlxDecClass),      NULL,
+      sizeof(GstFlxDecClass),
+      (GBaseInitFunc)gst_flxdec_base_init,
       NULL,
       (GClassInitFunc)gst_flxdec_class_init,
       NULL,
@@ -122,6 +121,18 @@ gst_flxdec_get_type(void)
     flxdec_type = g_type_register_static(GST_TYPE_ELEMENT, "GstFlxDec", &flxdec_info, 0);
   }
   return flxdec_type;
+}
+
+static void
+gst_flxdec_base_init (GstFlxDecClass *klass)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  
+  gst_element_class_set_details (gstelement_class, &flxdec_details);
+  gst_element_class_add_pad_template (gstelement_class,
+	GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+	GST_PAD_TEMPLATE_GET (src_video_factory));
 }
 
 static void 
@@ -645,28 +656,24 @@ gst_flxdec_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
-  factory = gst_element_factory_new("flxdec", GST_TYPE_FLXDEC, &flxdec_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_video_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "flxdec",
+			       GST_RANK_PRIMARY, GST_TYPE_FLXDEC);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "flxdec",
-  plugin_init
-};
+  "FLX video decoder",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
