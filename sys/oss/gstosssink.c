@@ -375,8 +375,10 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 	queued = delay * GST_SECOND / osssink->common.bps;
 
 	if  (osssink->resync && osssink->sync) {
-	  gst_element_clock_wait (GST_ELEMENT (osssink), osssink->clock, 
-				buftime - queued, &jitter);
+          GstClockID id = gst_clock_new_single_shot_id (osssink->clock, buftime - queued);
+
+	  gst_element_clock_wait (GST_ELEMENT (osssink), id, &jitter);
+	  gst_clock_id_free (id);
 
 	  if (jitter >= 0) {
             gst_clock_handle_discont (osssink->clock, buftime - queued + jitter);

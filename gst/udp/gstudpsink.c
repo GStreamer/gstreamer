@@ -259,7 +259,6 @@ gst_udpsink_chain (GstPad *pad, GstBuffer *buf)
 {
   GstUDPSink *udpsink;
   guint tolen, i;
-  GstClockTimeDiff *jitter = NULL;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -268,8 +267,11 @@ gst_udpsink_chain (GstPad *pad, GstBuffer *buf)
   udpsink = GST_UDPSINK (GST_OBJECT_PARENT (pad));
   
   if (udpsink->clock) {
+    GstClockID id = gst_clock_new_single_shot_id (udpsink->clock, GST_BUFFER_TIMESTAMP (buf));
+
     GST_DEBUG (0, "udpsink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP (buf));
-    gst_element_clock_wait (GST_ELEMENT (udpsink), udpsink->clock, GST_BUFFER_TIMESTAMP (buf), jitter);
+    gst_element_clock_wait (GST_ELEMENT (udpsink), id, NULL);
+    gst_clock_id_free (id);
   }
   
   tolen = sizeof(udpsink->theiraddr);
