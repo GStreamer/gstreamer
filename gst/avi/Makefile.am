@@ -14,6 +14,7 @@ libgstaviparse_la_SOURCES = gstaviparse.c riff.c
 noinst_HEADERS = \
 		gstavimux.h \
 		gstavidemux.h \
+		riff.h \
 		gstaviaudiodecoder.h
 
 #CFLAGS += -Wall -O3 -fomit-frame-pointer -funroll-all-loops -finline-functions -ffast-math -DNDEBUG
