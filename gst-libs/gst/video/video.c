@@ -33,20 +33,53 @@ gst_video_frame_rate (GstPad *pad)
 
   /* do a convert request on the source pad */
   if (!gst_pad_convert(pad,
-			GST_FORMAT_TIME, GST_SECOND * NUM_UNITS,
-			&dest_format, &dest_value))
+                       GST_FORMAT_TIME, GST_SECOND * NUM_UNITS,
+                       &dest_format, &dest_value))
   {
     g_warning("gstvideo: pad %s:%s failed to convert time to unit!\n",
-		GST_ELEMENT_NAME(gst_pad_get_parent (pad)), GST_PAD_NAME(pad));
+              GST_ELEMENT_NAME(gst_pad_get_parent (pad)), GST_PAD_NAME(pad));
     return 0.;
   }
 
   fps = ((gdouble) dest_value) / NUM_UNITS;
 
   GST_DEBUG(GST_CAT_ELEMENT_PADS, "Framerate request on pad %s:%s - %f fps",
-		GST_ELEMENT_NAME(gst_pad_get_parent (pad)), GST_PAD_NAME(pad), fps);
+            GST_ELEMENT_NAME(gst_pad_get_parent (pad)), GST_PAD_NAME(pad), fps);
 
   return fps;
+}
+
+gboolean
+gst_video_get_size (GstPad *pad,
+                    gint   *width,
+                    gint   *height)
+{
+  GstCaps *caps;
+
+  g_return_val_if_fail(pad != NULL, FALSE);
+
+  caps = GST_PAD_CAPS(pad);
+  if (!caps) {
+    g_warning("gstvideo: failed to get caps of pad %s:%s",
+              GST_ELEMENT_NAME(gst_pad_get_parent (pad)), GST_PAD_NAME(pad));
+    return FALSE;
+  }
+  if (!gst_caps_has_property(caps, "width") ||
+      !gst_caps_has_property(caps, "height")) {
+    g_warning("gstvideo: resulting caps doesn't have width/height properties");
+    return FALSE;
+  }
+
+  if (width)
+    gst_caps_get_int(caps, "width", width);
+  if (height)
+    gst_caps_get_int(caps, "height", height);
+
+  GST_DEBUG(GST_CAT_ELEMENT_PADS, "size request on pad %s:%s: %dx%d",
+	    GST_ELEMENT_NAME(gst_pad_get_parent (pad)), GST_PAD_NAME(pad),
+            width?*width:0, height?*height:0);
+
+  return TRUE;
 }
 
 static gboolean
