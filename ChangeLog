@@ -1,3 +1,13 @@
+2004-05-18  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
+	* gst/asfdemux/asfheaders.c :
+	* gst/asfdemux/asfheaders.h :
+	* gst/asfdemux/gstasfdemux.c :
+	  - fix ASF_OBJ_PADDING guid
+	  - add 3 new object guids (language list, metadata, 
+            extended stream properties)
+          - add a function to parse extended header objects
+
 2004-05-18  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* sys/oss/gstosselement.c: (gst_osselement_sync_parms):
