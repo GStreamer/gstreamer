@@ -70,6 +70,7 @@ typedef struct {
   GstPad *pad;
   GstByteStream *bs;
   guint8 *data;
+  guint8 offset;
 } GstAlsaPad;
 
 struct _GstAlsa {
@@ -91,7 +92,7 @@ struct _GstAlsa {
   snd_pcm_uframes_t period_size;
   unsigned int period_count;
 
-  gboolean autorecover; 
+  gboolean autorecover;
 };
 
 struct _GstAlsaClass {
