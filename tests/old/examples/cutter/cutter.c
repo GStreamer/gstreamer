@@ -123,7 +123,8 @@ int main (int argc, char *argv[])
 	NULL);
 
   /* create an audio src */
-  audiosrc = gst_element_factory_make ("osssrc", "audio_src");
+  if (!(audiosrc = gst_element_factory_make ("osssrc", "audio_src")))
+    g_error ("Could not create 'osssrc' element !\n");
 
   /* set params */
 
@@ -131,9 +132,12 @@ int main (int argc, char *argv[])
                                          "channels", 1,
   					 "format", 16, NULL);
 
-  encoder = gst_element_factory_make ("passthrough", "encoder");
-  disksink = gst_element_factory_make ("afsink", "disk_sink");
-
+  if (!(encoder = gst_element_factory_make ("passthrough", "encoder")))
+    g_error ("Could not create 'passthrough' element !\n");
+  
+  if (!(disksink = gst_element_factory_make ("afsink", "disk_sink")))
+    g_error ("Could not create 'afsink' element !\n");
+  
   g_object_set (G_OBJECT (disksink), "location", "/dev/null", NULL);
 
   thread = gst_thread_new ("thread");
@@ -144,6 +148,7 @@ int main (int argc, char *argv[])
   g_assert (main_bin != NULL);
 
   queue = gst_element_factory_make ("queue", "queue");
+  g_assert (queue);
 
   /* add elements to bin */
   gst_bin_add (GST_BIN (main_bin), audiosrc);
