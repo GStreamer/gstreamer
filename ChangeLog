@@ -1,5 +1,14 @@
 2004-09-17  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstplaybasebin.c: (queue_overrun), (no_more_pads),
+	(setup_source), (gst_play_base_bin_set_property),
+	(gst_play_base_bin_add_element):
+	* gst/playback/gstplaybin.c: (gst_play_bin_send_event):
+	Some more work on making sure seeking pauses the pipeline and
+	that changing the uri actually does something.
+
+2004-09-17  Wim Taymans  <wim@fluendo.com>
+
 	* gst/tcp/gstfdset.c: (gst_fdset_wait):
 	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_close):
 	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_init_send),
