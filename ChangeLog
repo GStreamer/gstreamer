@@ -1,3 +1,31 @@
+2005-02-11  Andy Wingo  <wingo@pobox.com>
+
+	* check/gst/gstcaps.c: New test suite. Only one test at the moment
+	-- this is an infrastructure commit.
+
+	* check/gst/gstobject.c (main): 
+	* check/gst/gstdata.c (main): 
+	* check/gst-libs/gdp.c (main): Use gst_check_init() to initialize
+	gstreamer.
+
+	* check/gstcheck.h: Declare all variables as extern so they are
+	defined once in gstcheck.c.
+	(ASSERT_CRITICAL): New macro, asserts that the expression passed
+	as an argument raises one or more critical logs.
+
+	* check/gstcheck.c: Define the extern-declared variables here.
+	(gst_check_log_message_func, gst_check_log_critical_func): The log
+	function was split in two, one for messages and one for criticals.
+	The criticals logfunc will fail if a critical was not expected.
+	The messages logfunc is the same as before.
+	(gst_check_init): Set up all log handlers, and initialize
+	gstreamer too.
+
+	* check/Makefile.am: Pulled over some pieces from the old
+	testsuite/ directory. Don't use --gst-fatal-warnings though, we
+	have some new mechanisms for that.
+	(TESTS): Added gst/gstcaps.
+
 2005-02-10  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-events.txt:

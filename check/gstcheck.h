@@ -37,17 +37,19 @@
  * a gst unit test can be run with GST_TEST_DEBUG env var set to see the
  * messages
  */
-gboolean _gst_check_threads_running = FALSE;
+extern gboolean _gst_check_threads_running;
+extern gboolean _gst_check_raised_critical;
+extern gboolean _gst_check_expecting_log;
 
-void gst_check_init (void);
+void gst_check_init (int *argc, char **argv[]);
 
 /***
  * thread test macros and variables
  */
-GList *thread_list = NULL;
-GMutex *mutex;
-GCond *start_cond;	/* used to notify main thread of thread startups */
-GCond *sync_cond;	/* used to synchronize all threads and main thread */
+extern GList *thread_list;
+extern GMutex *mutex;
+extern GCond *start_cond;	/* used to notify main thread of thread startups */
+extern GCond *sync_cond;	/* used to synchronize all threads and main thread */
 
 #define MAIN_START_THREADS(count, function, data)		\
 MAIN_INIT();							\
@@ -132,6 +134,17 @@ G_STMT_START {							\
 } G_STMT_END;
 
 #define THREAD_TEST_RUNNING()	(_gst_check_threads_running == TRUE)
+
+#define ASSERT_CRITICAL(code)					\
+G_STMT_START {							\
+  _gst_check_expecting_log = TRUE;				\
+  _gst_check_raised_critical = FALSE;				\
+  code;								\
+  _fail_unless (_gst_check_raised_critical, __FILE__, __LINE__, \
+                "Expected g_critical, got nothing: '"#code"'"); \
+  _gst_check_expecting_log = FALSE;				\
+} G_STMT_END
+
 
 #endif /* __GST_CHECK_H__ */
 

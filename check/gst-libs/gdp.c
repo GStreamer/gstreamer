@@ -243,7 +243,8 @@ START_TEST (test_event)
   gst_event_unref (send);
   gst_event_unref (receive);
 }
-END_TEST Suite * gst_object_suite (void)
+END_TEST Suite *
+gst_object_suite (void)
 {
   Suite *s = suite_create ("data protocol");
   TCase *tc_chain = tcase_create ("general");
@@ -265,9 +266,8 @@ main (int argc, char **argv)
   Suite *s = gst_object_suite ();
   SRunner *sr = srunner_create (s);
 
-  gst_init (&argc, &argv);
+  gst_check_init (&argc, &argv);
   gst_dp_init ();
-  gst_check_init ();
 
   srunner_run_all (sr, CK_NORMAL);
   nf = srunner_ntests_failed (sr);

@@ -163,7 +163,8 @@ START_TEST (test_unref_threaded)
   /* final unref */
   gst_data_unref (data);
 }
-END_TEST Suite * gst_data_suite (void)
+END_TEST Suite *
+gst_data_suite (void)
 {
   Suite *s = suite_create ("GstData");
   TCase *tc_chain = tcase_create ("general");
@@ -185,8 +186,7 @@ main (int argc, char **argv)
   Suite *s = gst_data_suite ();
   SRunner *sr = srunner_create (s);
 
-  gst_init (&argc, &argv);
-  gst_check_init ();
+  gst_check_init (&argc, &argv);
 
   srunner_run_all (sr, CK_NORMAL);
   nf = srunner_ntests_failed (sr);

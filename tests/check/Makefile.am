@@ -1,4 +1,26 @@
-TESTS = \
+TESTS_ENVIRONMENT=\
+	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/check \
+	GST_REGISTRY=$(top_builddir)/check/test-registry.xml
+
+plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
+
+# make all tests depend on the versioned gst-register
+$(TESTS): $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@
+
+# rebuild gst-register-@GST_MAJORMINOR@ if needed
+# the EXEEXT is because am 1.6 complained about overrides
+$(top_builddir)/tools/gst-register-@GST_MAJORMINOR@$(EXEEXT):
+	cd $(top_builddir)/tools && make
+
+# override to _not_ install the test plugins
+install-pluginLTLIBRARIES:
+
+# This rule is here so make distcheck works on machines where core
+# dumps have PIDs appended
+CLEANFILES = core.*
+
+TESTS = $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@ \
+	gst/gstcaps     \
 	gst/gstdata	\
 	gst/gstobject	\
 	gst-libs/gdp

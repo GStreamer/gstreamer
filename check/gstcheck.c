@@ -20,7 +20,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gst.h>
+#include "gstcheck.h"
+
 
 /* logging function for tests
  * a test uses g_message() to log a debug line
@@ -28,24 +29,53 @@
  * messages
  */
 
-gboolean _gst_check_debug = FALSE;
+gboolean _gst_check_threads_running = FALSE;
+GList *thread_list = NULL;
+GMutex *mutex;
+GCond *start_cond;              /* used to notify main thread of thread startups */
+GCond *sync_cond;               /* used to synchronize all threads and main thread */
 
-void gst_check_log_func
+gboolean _gst_check_debug = FALSE;
+gboolean _gst_check_raised_critical = FALSE;
+gboolean _gst_check_expecting_log = FALSE;
+
+void gst_check_log_message_func
     (const gchar * log_domain, GLogLevelFlags log_level,
     const gchar * message, gpointer user_data)
 {
-  // g_print ("HANDLER CALLED\n");
   if (_gst_check_debug) {
     g_print (message);
   }
 }
 
+void gst_check_log_critical_func
+    (const gchar * log_domain, GLogLevelFlags log_level,
+    const gchar * message, gpointer user_data)
+{
+  if (!_gst_check_expecting_log)
+    fail ("Unexpected assertion: %s", message);
+
+  if (_gst_check_debug) {
+    g_print (message);
+  }
+
+  if (log_level & G_LOG_LEVEL_CRITICAL)
+    _gst_check_raised_critical = TRUE;
+}
+
 /* initialize GStreamer testing */
 void
-gst_check_init (void)
+gst_check_init (int *argc, char **argv[])
 {
+  gst_init (argc, argv);
+
   if (g_getenv ("GST_TEST_DEBUG"))
     _gst_check_debug = TRUE;
 
-  g_log_set_handler (NULL, G_LOG_LEVEL_MESSAGE, gst_check_log_func, NULL);
+  g_log_set_handler (NULL, G_LOG_LEVEL_MESSAGE, gst_check_log_message_func,
+      NULL);
+  g_log_set_handler (NULL, G_LOG_LEVEL_CRITICAL, gst_check_log_critical_func,
+      NULL);
+  g_log_set_handler ("GStreamer", G_LOG_LEVEL_CRITICAL,
+      gst_check_log_critical_func, NULL);
 }

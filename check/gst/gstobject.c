@@ -354,8 +354,7 @@ main (int argc, char **argv)
   Suite *s = gst_object_suite ();
   SRunner *sr = srunner_create (s);
 
-  gst_init (&argc, &argv);
-  gst_check_init ();
+  gst_check_init (&argc, &argv);
 
   srunner_run_all (sr, CK_NORMAL);
   nf = srunner_ntests_failed (sr);
