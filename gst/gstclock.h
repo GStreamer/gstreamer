@@ -54,6 +54,8 @@ G_STMT_START { 						\
   (tv).tv_usec = ((t) / GST_USECOND) % GST_MSECOND;	\
 } G_STMT_END
 
+#define GST_CLOCK_ENTRY_TRACE_NAME "GstClockEntry"
+
 typedef struct _GstClockEntry 	GstClockEntry;
 typedef struct _GstClock 	GstClock;
 typedef struct _GstClockClass 	GstClockClass;
