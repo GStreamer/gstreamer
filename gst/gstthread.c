@@ -591,7 +591,7 @@ gst_thread_main_loop (void *arg)
   thread = GST_THREAD (arg);
   g_mutex_lock (thread->lock);
 
-  /* handle scheduler policy */
+  /* handle scheduler policy; do stuff if not the normal scheduler */
   if (thread->sched_policy != SCHED_OTHER) {
     struct sched_param sched_param;
 
@@ -605,8 +605,6 @@ gst_thread_main_loop (void *arg)
       GST_DEBUG (GST_CAT_THREAD, "not running with real-time priority");
     }
   }
-  else
-    g_warning ("thread has SCHED_OTHER policy, unhandled !");
 
   /* set up the element's scheduler */
   gst_scheduler_setup (GST_ELEMENT_SCHED (thread));
