@@ -74,7 +74,7 @@ static void play_on_demand_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void play_on_demand_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void play_on_demand_dispose (GObject * object);
+static void play_on_demand_finalize (GObject * object);
 
 /* GStreamer functionality */
 static GstPadLinkReturn play_on_demand_pad_link (GstPad * pad,
@@ -198,7 +198,7 @@ play_on_demand_class_init (GstPlayOnDemandClass * klass)
 
   gobject_class->set_property = play_on_demand_set_property;
   gobject_class->get_property = play_on_demand_get_property;
-  gobject_class->dispose = play_on_demand_dispose;
+  gobject_class->finalize = play_on_demand_finalize;
 
   gstelement_class->set_clock = play_on_demand_set_clock;
 
@@ -367,15 +367,15 @@ play_on_demand_get_property (GObject * object, guint prop_id,
 }
 
 static void
-play_on_demand_dispose (GObject * object)
+play_on_demand_finalize (GObject * object)
 {
   GstPlayOnDemand *filter = GST_PLAYONDEMAND (object);
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
 
   g_free (filter->ticks);
   g_free (filter->plays);
   g_free (filter->buffer);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstPadLinkReturn

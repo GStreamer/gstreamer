@@ -648,7 +648,7 @@ static int attrListDouble[] = {
 };
 
 /* This function get the X Display and global infos about it. Everything is
-   stored in our object and will be cleaned when the object is disposed. Note
+   stored in our object and will be cleaned when the object is finalized. Note
    here that caps for supported format are generated without any window or 
    image creation */
 static GstXContext *
@@ -1410,7 +1410,7 @@ gst_glimagesink_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_glimagesink_dispose (GObject * object)
+gst_glimagesink_finalize (GObject * object)
 {
   GstGLImageSink *glimagesink;
 
@@ -1424,7 +1424,7 @@ gst_glimagesink_dispose (GObject * object)
   g_mutex_free (glimagesink->x_lock);
   g_mutex_free (glimagesink->pool_lock);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -1521,7 +1521,7 @@ gst_glimagesink_class_init (GstGLImageSinkClass * klass)
       gst_marshal_VOID__POINTER_OBJECT, G_TYPE_NONE, 2,
       GST_TYPE_BUFFER, GST_TYPE_PAD);
 
-  gobject_class->dispose = gst_glimagesink_dispose;
+  gobject_class->finalize = gst_glimagesink_finalize;
   gobject_class->set_property = gst_glimagesink_set_property;
   gobject_class->get_property = gst_glimagesink_get_property;
 

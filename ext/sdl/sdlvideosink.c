@@ -150,12 +150,12 @@ gst_sdlvideosink_base_init (gpointer g_class)
 }
 
 static void
-gst_sdlvideosink_dispose (GObject * obj)
+gst_sdlvideosink_finalize (GObject * obj)
 {
   g_mutex_free (GST_SDLVIDEOSINK (obj)->lock);
 
-  if (((GObjectClass *) parent_class)->dispose)
-    ((GObjectClass *) parent_class)->dispose (obj);
+  if (((GObjectClass *) parent_class)->finalize)
+    ((GObjectClass *) parent_class)->finalize (obj);
 }
 
 static void
@@ -173,7 +173,7 @@ gst_sdlvideosink_class_init (GstSDLVideoSinkClass * klass)
 
   gobject_class->set_property = gst_sdlvideosink_set_property;
   gobject_class->get_property = gst_sdlvideosink_get_property;
-  gobject_class->dispose = gst_sdlvideosink_dispose;
+  gobject_class->finalize = gst_sdlvideosink_finalize;
 
   gstelement_class->change_state = gst_sdlvideosink_change_state;
 

@@ -44,7 +44,7 @@ enum
 static void cdplayer_base_init (gpointer g_class);
 static void cdplayer_class_init (CDPlayerClass * klass);
 static void cdplayer_init (CDPlayer * cdp);
-static void cdplayer_dispose (GObject * object);
+static void cdplayer_finalize (GObject * object);
 
 static void cdplayer_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
@@ -110,7 +110,7 @@ cdplayer_class_init (CDPlayerClass * klass)
 
   parent_class = g_type_class_ref (gst_bin_get_type ());
 
-  gobject_klass->dispose = GST_DEBUG_FUNCPTR (cdplayer_dispose);
+  gobject_klass->finalize = GST_DEBUG_FUNCPTR (cdplayer_finalize);
 
   gstelement_klass->change_state = GST_DEBUG_FUNCPTR (cdplayer_change_state);
   gstbin_klass->iterate = GST_DEBUG_FUNCPTR (cdplayer_iterate);
@@ -235,7 +235,7 @@ cdplayer_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-cdplayer_dispose (GObject * object)
+cdplayer_finalize (GObject * object)
 {
   CDPlayer *cdp;
 
@@ -244,11 +244,9 @@ cdplayer_dispose (GObject * object)
   cdp = CDPLAYER (object);
   g_free (cdp->device);
 
-  if (G_OBJECT_CLASS (parent_class)->dispose) {
-    G_OBJECT_CLASS (parent_class)->dispose (object);
+  if (G_OBJECT_CLASS (parent_class)->finalize) {
+    G_OBJECT_CLASS (parent_class)->finalize (object);
   }
-
-  return;
 }
 
 static gboolean

@@ -310,6 +310,7 @@ gst_divxenc_dispose (GObject * object)
   GstDivxEnc *divxenc = GST_DIVXENC (object);
 
   gst_divxenc_unset (divxenc);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 

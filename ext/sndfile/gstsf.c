@@ -327,7 +327,10 @@ gst_sf_dispose (GObject * object)
 {
   GstSF *this = (GstSF *) object;
 
-  gst_object_unparent (GST_OBJECT (this->provided_clock));
+  if (this->provided_clock) {
+    gst_object_unparent (GST_OBJECT (this->provided_clock));
+    this->provided_clock = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }

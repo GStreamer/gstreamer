@@ -255,6 +255,7 @@ gst_divxdec_dispose (GObject * object)
   GstDivxDec *divxdec = GST_DIVXDEC (object);
 
   gst_divxdec_unset (divxdec);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 
@@ -397,8 +398,7 @@ gst_divxdec_negotiate (GstDivxDec * divxdec)
     guint32 csp;
     gint bitcnt;
   }
-  fmt_list[] =
-  {
+  fmt_list[] = {
     {
     GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'), 16, 16,
           GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'), 0}

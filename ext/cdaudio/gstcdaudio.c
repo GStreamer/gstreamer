@@ -83,7 +83,7 @@ enum
 
 static void gst_cdaudio_class_init (GstCDAudioClass * klass);
 static void gst_cdaudio_init (GstCDAudio * cdaudio);
-static void gst_cdaudio_dispose (GObject * object);
+static void gst_cdaudio_finalize (GObject * object);
 
 static void gst_cdaudio_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
@@ -185,7 +185,7 @@ gst_cdaudio_class_init (GstCDAudioClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstCDAudioClass, track_change), NULL,
       NULL, gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
-  gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_cdaudio_dispose);
+  gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_cdaudio_finalize);
 
   gstelement_klass->change_state = GST_DEBUG_FUNCPTR (gst_cdaudio_change_state);
   gstelement_klass->get_event_masks =
@@ -210,17 +210,14 @@ gst_cdaudio_init (GstCDAudio * cdaudio)
 }
 
 static void
-gst_cdaudio_dispose (GObject * object)
+gst_cdaudio_finalize (GObject * object)
 {
-  GstCDAudio *cdaudio;
+  GstCDAudio *cdaudio = GST_CDAUDIO (object);
 
-  cdaudio = GST_CDAUDIO (object);
   g_timer_destroy (cdaudio->timer);
   g_free (cdaudio->device);
 
-  if (G_OBJECT_CLASS (parent_class)->dispose) {
-    G_OBJECT_CLASS (parent_class)->dispose (object);
-  }
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void

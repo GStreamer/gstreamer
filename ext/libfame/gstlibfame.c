@@ -132,7 +132,7 @@ framerate_to_index (gfloat fps)
 static void gst_fameenc_class_init (GstFameEncClass * klass);
 static void gst_fameenc_base_init (GstFameEncClass * klass);
 static void gst_fameenc_init (GstFameEnc * fameenc);
-static void gst_fameenc_dispose (GObject * object);
+static void gst_fameenc_finalize (GObject * object);
 
 static void gst_fameenc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -205,7 +205,7 @@ gst_fameenc_class_init (GstFameEncClass * klass)
 
   gobject_class->set_property = gst_fameenc_set_property;
   gobject_class->get_property = gst_fameenc_get_property;
-  gobject_class->dispose = gst_fameenc_dispose;
+  gobject_class->finalize = gst_fameenc_finalize;
 
   fame_object_name = g_quark_from_string ("GstFameObjectName");
 
@@ -402,13 +402,13 @@ gst_fameenc_init (GstFameEnc * fameenc)
 }
 
 static void
-gst_fameenc_dispose (GObject * object)
+gst_fameenc_finalize (GObject * object)
 {
   GstFameEnc *fameenc = GST_FAMEENC (object);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-
   g_free (fameenc->buffer);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
