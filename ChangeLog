@@ -1,3 +1,8 @@
+2005-02-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstqueue.c: (gst_queue_chain), (gst_queue_get):
+	  Release interrupt after handling (#166250).
+
 2005-02-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
