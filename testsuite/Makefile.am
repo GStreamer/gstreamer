@@ -4,8 +4,8 @@ else
 ALSA_DIR=
 endif
 
-SUBDIRS=spider $(ALSA_DIR) #seeking
-DIST_SUBDIRS=spider alsa
+SUBDIRS=spider multifilesink $(ALSA_DIR) #seeking
+DIST_SUBDIRS=spider alsa multifilesink
 
 GST_PLUGIN_PATH=$(shell cd $(top_builddir) && pwd)
 

@@ -1,3 +1,32 @@
+2004-07-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/multifilesink/Makefile.am:
+	* gst/multifilesink/gstmultifilesink.c:
+	(gst_multifilesink_get_formats),
+	(gst_multifilesink_get_query_types), (_do_init),
+	(gst_multifilesink_base_init), (gst_multifilesink_class_init),
+	(gst_multifilesink_init), (gst_multifilesink_dispose),
+	(gst_multifilesink_set_location), (gst_multifilesink_set_property),
+	(gst_multifilesink_get_property), (gst_multifilesink_open_file),
+	(gst_multifilesink_close_file), (gst_multifilesink_next_file),
+	(gst_multifilesink_pad_query), (gst_multifilesink_handle_event),
+	(gst_multifilesink_chain), (gst_multifilesink_change_state),
+	(gst_multifilesink_uri_get_type),
+	(gst_multifilesink_uri_get_protocols),
+	(gst_multifilesink_uri_get_uri), (gst_multifilesink_uri_set_uri),
+	(gst_multifilesink_uri_handler_init), (plugin_init):
+	* gst/multifilesink/gstmultifilesink.h:
+	* testsuite/Makefile.am:
+	* testsuite/multifilesink/Makefile.am:
+	* testsuite/multifilesink/fakesrc_test.c: (gst_newmedia_base_init),
+	(gst_newmedia_class_init), (gst_newmedia_init),
+	(gst_newmedia_chain), (gst_newmedia_trigger), (test_format),
+	(newfile_signal), (test_signal), (main):
+	multifilesink plugin for creating new files every time a new media
+	discontinuity event occurs
+
 2004-07-22  Wim Taymans  <wim@fluendo.com>
 
 	* gst/alpha/Makefile.am:
