@@ -44,9 +44,10 @@ dnl ##############################
 dnl # Do automated configuration #
 dnl ##############################
 
-dnl Set up conditionals for (target) host type:
-dnl ===========================================
+dnl Set up conditionals for (target) architecture:
+dnl ==============================================
 
+dnl Determine CPU
 case "x${target_cpu}" in
   xi?86)     HAVE_CPU_I386=yes ;
              AC_DEFINE(HAVE_CPU_I386) ;;
@@ -54,6 +55,8 @@ case "x${target_cpu}" in
              AC_DEFINE(HAVE_CPU_PPC) ;;
 esac
 
+dnl Determine endianness
+AC_C_BIGENDIAN
 
 dnl Check for tools:
 dnl ================
@@ -231,6 +234,11 @@ else
   HAVE_CSSAUTH="no"
 fi
 
+dnl check for libvorbis
+AC_MSG_CHECKING(Vorbis library)
+AC_MSG_RESULT(... check not implemented !! FIXME)
+HAVE_VORBIS="no"
+
 dnl check for gtkdoc
 AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, true, false)
 
@@ -353,6 +361,7 @@ AM_CONDITIONAL(HAVE_LIBMMX,         test "x$USE_LIBMMX" = "xyes")
 AM_CONDITIONAL(HAVE_ATOMIC_H,       test "x$USE_ATOMIC_H" = "xyes")
 AM_CONDITIONAL(HAVE_XAUDIO,         test "x$HAVE_XAUDIO" = "xyes")
 AM_CONDITIONAL(HAVE_CSSAUTH,        test "x$HAVE_CSSAUTH" = "xyes")
+AM_CONDITIONAL(HAVE_VORBIS,         test "x$HAVE_VORBIS" = "xyes")
 AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGLADE_GNOME, test "x$HAVE_LIBGLADE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBXV,          test "x$HAVE_LIBXV" = "xyes")
