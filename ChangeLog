@@ -1,3 +1,13 @@
+2004-11-04  Wim Taymans  <wim@fluendo.com>
+
+	* gst/alpha/gstalpha.c: (gst_alpha_method_get_type),
+	(gst_alpha_class_init), (gst_alpha_init), (gst_alpha_set_property),
+	(gst_alpha_get_property), (gst_alpha_add), (gst_alpha_chroma_key),
+	(gst_alpha_init_params), (gst_alpha_chain),
+	(gst_alpha_change_state):
+	Updated the chroma keying algorithm with something more 
+	sophisticated.
+
 2004-11-03  Wim Taymans  <wim@fluendo.com>
 
 	* gst/videomixer/videomixer.c: (gst_videomixer_blend_ayuv_i420),
