@@ -310,8 +310,9 @@ gst_mikmod_loop (GstElement *element)
   
   if (!GST_PAD_CAPS (mikmod->srcpad)) {
     if (gst_mikmod_negotiate (mikmod) <= 0) {
-      gst_element_error (GST_ELEMENT (mikmod),
-			 "Failed to negotiate with next element in mikmod");
+      gst_element_gerror(GST_ELEMENT (mikmod), GST_ERROR_UNKNOWN,
+        g_strdup ("unconverted error, file a bug"),
+        g_strdup_printf("Failed to negotiate with next element in mikmod"));
       return;
     }
   }

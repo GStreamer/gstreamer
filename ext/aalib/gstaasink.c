@@ -489,8 +489,9 @@ gst_aasink_open (GstAASink *aasink)
 
   aasink->context = aa_autoinit (&aasink->ascii_surf);
   if (aasink->context == NULL) {
-    gst_element_error (GST_ELEMENT (aasink), 
-		    g_strdup("opening aalib context"));
+    gst_element_gerror(GST_ELEMENT (aasink), GST_ERROR_UNKNOWN,
+      g_strdup ("unconverted error, file a bug"),
+      g_strdup ("opening aalib context"));
     return FALSE;
   }
   aa_autoinitkbd(aasink->context, 0);

@@ -291,7 +291,9 @@ gst_flacdec_error_callback (const FLAC__SeekableStreamDecoder *decoder,
 
   GST_DEBUG (error);
 				  
-  gst_element_error (GST_ELEMENT (flacdec), error);
+  gst_element_gerror(GST_ELEMENT (flacdec), GST_ERROR_UNKNOWN,
+    g_strdup ("unconverted error, file a bug"),
+    g_strdup_printf(error));
 }
 
 static FLAC__SeekableStreamDecoderSeekStatus 	
