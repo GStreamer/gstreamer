@@ -11,7 +11,7 @@
 #define GST_MEM_POOL_DATA(pool) 	((gpointer)(((GstMemPoolElement*)(pool)) + 1))
 #define GST_MEM_POOL_LINK(mem) 		((GstMemPoolElement*)((guint8*)(mem) - sizeof (GstMemPoolElement)))
 
-#ifdef HAVE_NASM
+#ifdef HAVE_CPU_I386
 #define USE_ASM
 #endif
 
