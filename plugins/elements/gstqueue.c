@@ -370,7 +370,7 @@ restart:
       if (queue->interrupt) {
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!");
         g_mutex_unlock (queue->qlock);
-	if (gst_element_interrupt (GST_ELEMENT (queue)))
+	if (gst_scheduler_interrupt (GST_RPAD_SCHED (queue->sinkpad), GST_ELEMENT (queue)))
           return;
 	goto restart;
       }
@@ -456,7 +456,7 @@ restart:
     if (queue->interrupt) {
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!");
       g_mutex_unlock (queue->qlock);
-      if (gst_element_interrupt (GST_ELEMENT (queue)))
+      if (gst_scheduler_interrupt (GST_RPAD_SCHED (queue->srcpad), GST_ELEMENT (queue)))
         return NULL;
       goto restart;
     }
