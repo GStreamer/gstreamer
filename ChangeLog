@@ -1,7 +1,12 @@
 2004-08-06  Johan Dahlin  <johan@gnome.org>
 
+	* gst/gst.override (_wrap_gst_structure_from_string): Impl.
+	(_wrap_gst_tag_list_has_key): Impl.
+	(_wrap_gst_caps_get_structure): Don't copy or free me
+
 	* testsuite/struct.py (StructureTest.testStructureChange): Enable
 	some tests.
+	Improve tests
 
 	* gst/gst.override (_wrap_gst_structure_ass_subscript): Impl
 

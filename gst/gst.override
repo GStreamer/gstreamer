@@ -385,6 +385,22 @@ _wrap_gst_pad_get_negotiated_caps(PyGObject *self)
 	return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
 }
 %%
+override gst_caps_get_structure kwargs
+static PyObject *
+_wrap_gst_caps_get_structure(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "index", NULL };
+    int index;
+    GstStructure *ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "i:GstCaps.get_structure", kwlist, &index))
+        return NULL;
+    ret = gst_caps_get_structure(pyg_boxed_get(self, GstCaps), index);
+    
+    /* pyg_boxed_new handles NULL checking */
+    return pyg_boxed_new(GST_TYPE_STRUCTURE, ret, FALSE, FALSE);
+}
+%%
 override-slot GstCaps.tp_as_sequence
 static int
 caps_length(PyGObject *self)
@@ -521,7 +537,7 @@ _wrap_gst_tag_list_has_key(PyGObject *self, PyObject *args)
 	gchar *key;
 	const GValue *gvalue;
     
-	if (!PyArg_ParseTuple(args, "s:GstTagList.keys", &key))
+	if (!PyArg_ParseTuple(args, "s:GstTagList.has_key", &key))
 		return NULL;
 
 	gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(self->obj), key, 0);
@@ -593,8 +609,10 @@ _wrap_gst_structure_new(PyGBoxed *self, PyObject *args, PyObject *kwargs)
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s:GstStructure.__init__", kwlist, &name))
 		return -1;
+	
 	self->gtype = GST_TYPE_STRUCTURE;
 	self->free_on_dealloc = FALSE;
+
 	self->boxed = gst_structure_new(name, NULL);
 
 	if (!self->boxed) {
@@ -650,6 +668,21 @@ _wrap_gst_structure_get_int(PyObject *self, PyObject *args, PyObject *kwargs)
 	return Py_None;
 }
 %%
+define GstStructure.has_key args
+static PyObject*
+_wrap_gst_structure_has_key(PyGObject *self, PyObject *args)
+{
+	gchar *key;
+	gboolean has_field;
+    
+	if (!PyArg_ParseTuple(args, "s:GstStructure.has_key", &key))
+		return NULL;
+
+	has_field = gst_structure_has_field((GstStructure*)self->obj, key);
+	    
+	return PyBool_FromLong(has_field);
+}    
+%%
 override-slot GstStructure.tp_as_mapping
 static int
 _wrap_gst_structure_length(PyGObject *self)
@@ -683,22 +716,23 @@ _wrap_gst_structure_ass_subscript(PyGObject *self,
 				  PyObject *py_value)
 {
 	const char *key;
-	
-	if (py_key != NULL) {
-	    GType gtype;
-	    GValue value = { 0, };
-		
-	    key = PyString_AsString(py_key);
-	    gtype = gst_structure_get_field_type((GstStructure*)self->obj, key);
-	    g_value_init(&value, gtype);
+	GstStructure* structure;
+	GValue value = { 0, };
+	GType gtype;
+
+	structure = (GstStructure*)self->obj;
+	key = PyString_AsString(py_key);
+	if (py_value != NULL) {
+	    g_value_init(&value, g_type_from_name("PyObject"));
 	    if (pyg_value_from_pyobject(&value, py_value)) {
 		PyErr_SetString(PyExc_TypeError, "can't convert value");
 		return -1;
 	    }
 	    
-	    gst_structure_set_value ((GstStructure*)self->obj, key, &value);
+	    gst_structure_set_value(structure, key, &value);
 	    g_value_unset(&value);
-	    
+	} else {
+	    gst_structure_remove_field(structure, key);
 	}
 	
 	return 0;
@@ -794,6 +828,23 @@ _wrap_gst_structure_tp_repr (PyGObject *self)
 	retval = PyString_FromString(buf);
 	g_free(buf);
 	return retval;
+}
+%%
+override gst_structure_from_string kwargs
+static PyObject *
+_wrap_gst_structure_from_string(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "string", NULL };
+    char *string;
+    GstStructure *ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s:structure_from_string", kwlist, &string))
+        return NULL;
+    
+    ret = gst_structure_from_string(string, NULL);
+    
+    /* pyg_boxed_new handles NULL checking */
+    return pyg_boxed_new(GST_TYPE_STRUCTURE, ret, TRUE, TRUE);
 }
 %%
 override gst_tag_list_foreach kwargs
