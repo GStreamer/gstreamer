@@ -853,7 +853,7 @@ gst_asf_demux_process_stream (GstASFDemux *asf_demux, guint64 *obj_size)
     }
     break;
   default:
-    GST_ELEMENT_ERROR (asf_demux, STREAM, WRONG_TYPE, (NULL), (NULL));
+    GST_ELEMENT_ERROR (asf_demux, STREAM, WRONG_TYPE, (NULL), ("unknown asf stream (id %08x)", (guint) stream_id));
     return FALSE;
   }
 
@@ -1291,6 +1291,7 @@ gst_asf_demux_identify_guid (GstASFDemux *asf_demux,
 {
   guint32 i;
 
+  GST_LOG_OBJECT (asf_demux, "identifying 0x%08x/0x%08x/0x%08x/0x%08x", guid->v1, guid->v2, guid->v3, guid->v4); 
   i = 0;
   while (guids[i].obj_id != ASF_OBJ_UNDEFINED) {
     if (guids[i].guid.v1 == guid->v1 &&
