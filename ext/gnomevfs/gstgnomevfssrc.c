@@ -900,6 +900,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 	GnomeVFSResult result = 0;
 	GstBuffer *buf;
 	GnomeVFSFileSize readbytes;
+	guint8 *data;
 
 	g_return_val_if_fail(pad != NULL, NULL);
 	src = GST_GNOMEVFSSRC(gst_pad_get_parent(pad));
@@ -922,6 +923,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 
 	if (src->iradio_mode && src->icy_metaint > 0) {
 		GST_BUFFER_DATA (buf) = g_malloc0 (src->icy_metaint);
+		data = GST_BUFFER_DATA (buf);
 		g_return_val_if_fail (GST_BUFFER_DATA (buf) != NULL, NULL);
 
 		GST_BUFFER_SIZE (buf) = 0;
@@ -930,7 +932,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 		do
 		{
 			GST_DEBUG (0,"doing read: icy_count: %" G_GINT64_FORMAT, src->icy_count);
-			result = gnome_vfs_read (src->handle, GST_BUFFER_DATA (buf),
+			result = gnome_vfs_read (src->handle, data,
 						 src->icy_metaint - src->icy_count,
 						 &readbytes);
 
@@ -945,6 +947,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 			src->icy_count += readbytes;
 			GST_BUFFER_OFFSET (buf) = src->curoffset;
 			GST_BUFFER_SIZE (buf) += readbytes;
+		      	data += readbytes;
 			src->curoffset += readbytes;
 			
 			if (src->icy_count == src->icy_metaint) {
