@@ -122,6 +122,7 @@ gst_asf_demux_base_init (gpointer g_class)
     GST_MAKE_FOURCC ('D', 'V', 'S', 'D'),
     GST_MAKE_FOURCC ('W', 'M', 'V', '1'),
     GST_MAKE_FOURCC ('W', 'M', 'V', '2'),
+    GST_MAKE_FOURCC ('W', 'M', 'V', '3'),
     GST_MAKE_FOURCC ('M', 'P', 'G', '4'),
     GST_MAKE_FOURCC ('M', 'P', '4', '2'),
     GST_MAKE_FOURCC ('M', 'P', '4', '3'),
