@@ -89,8 +89,8 @@ struct _GstBinClass {
   GstElementClass parent_class;
 
   /* vtable */
-  void		(*add_element)		(GstBin *bin, GstElement);
-  void		(*remove_element)	(GstBin *bin, GstElement);
+  void		(*add_element)		(GstBin *bin, GstElement *element);
+  void		(*remove_element)	(GstBin *bin, GstElement *element);
 
   /* run a full iteration of operation */
   gboolean	(*iterate)		(GstBin *bin);

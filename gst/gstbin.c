@@ -51,6 +51,9 @@ static GstElementStateReturn	gst_bin_change_state_norecurse	(GstBin *bin);
 
 static void 			gst_bin_set_index 		(GstBin *bin, GstIndex *index);
 
+static void 			gst_bin_add_func 		(GstBin *bin, GstElement *element);
+static void 			gst_bin_remove_func 		(GstBin *bin, GstElement *element);
+
 static gboolean 		gst_bin_iterate_func 		(GstBin * bin);
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -123,7 +126,6 @@ gst_bin_class_init (GstBinClass * klass)
 		  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
 
   gobject_class->dispose 		= GST_DEBUG_FUNCPTR (gst_bin_dispose);
-  gobject_class->dispose 		= GST_DEBUG_FUNCPTR (gst_bin_dispose);
 
 #ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself 	= GST_DEBUG_FUNCPTR (gst_bin_save_thyself);
@@ -133,6 +135,8 @@ gst_bin_class_init (GstBinClass * klass)
   gstelement_class->change_state 	= GST_DEBUG_FUNCPTR (gst_bin_change_state);
   gstelement_class->set_index	 	= GST_DEBUG_FUNCPTR (gst_bin_set_index);
 
+  klass->add_element 			= GST_DEBUG_FUNCPTR (gst_bin_add_func);
+  klass->remove_element 		= GST_DEBUG_FUNCPTR (gst_bin_remove_func);
   klass->iterate 			= GST_DEBUG_FUNCPTR (gst_bin_iterate_func);
 }
 
@@ -398,34 +402,12 @@ gst_bin_add_many (GstBin *bin, GstElement *element_1, ...)
   va_end (args);
 }
 
-/**
- * gst_bin_add:
- * @bin: #GstBin to add element to
- * @element: #GstElement to add to bin
- *
- * Add the given element to the bin.  Set the elements parent, and thus
- * add a reference.
- */
-void
-gst_bin_add (GstBin *bin, GstElement *element)
+static void
+gst_bin_add_func (GstBin *bin, GstElement *element)
 {
   gint state_idx = 0;
   GstElementState state;
   GstScheduler *sched;
-
-  g_return_if_fail (bin != NULL);
-  g_return_if_fail (GST_IS_BIN (bin));
-  g_return_if_fail (element != NULL);
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  GST_DEBUG (GST_CAT_PARENTAGE, "adding element \"%s\" to bin \"%s\"",
-	     GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (bin));
-
-  /* must be not be in PLAYING state in order to modify bin */
-  g_return_if_fail (GST_STATE (bin) != GST_STATE_PLAYING);
-
-  /* the element must not already have a parent */
-  g_return_if_fail (GST_ELEMENT_PARENT (element) == NULL);
 
   /* then check to see if the element's name is already taken in the bin */
   if (gst_object_check_uniqueness (bin->children, 
@@ -461,32 +443,47 @@ gst_bin_add (GstBin *bin, GstElement *element)
 }
 
 /**
- * gst_bin_remove:
- * @bin: #GstBin to remove element from
- * @element: #GstElement to remove
+ * gst_bin_add:
+ * @bin: #GstBin to add element to
+ * @element: #GstElement to add to bin
  *
- * Remove the element from its associated bin, unparenting as well.
- * The element will also be unreferenced so there's no need to call
- * gst_object_unref on it.
- * If you want the element to still exist after removing, you need to call
- * #gst_object_ref before removing it from the bin.
+ * Add the given element to the bin.  Set the elements parent, and thus
+ * add a reference.
  */
 void
-gst_bin_remove (GstBin *bin, GstElement *element)
+gst_bin_add (GstBin *bin, GstElement *element)
 {
-  gint state_idx = 0;
-  GstElementState state;
-
-  GST_DEBUG_ELEMENT (GST_CAT_PARENTAGE, bin, "trying to remove child %s", GST_ELEMENT_NAME (element));
-
+  GstBinClass *bclass;
+  
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (bin->children != NULL);
 
-  /* must not be in PLAYING state in order to modify bin */
+  GST_DEBUG (GST_CAT_PARENTAGE, "adding element \"%s\" to bin \"%s\"",
+	     GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (bin));
+
+  /* the element must not already have a parent */
+  g_return_if_fail (GST_ELEMENT_PARENT (element) == NULL);
+
+  /* must be not be in PLAYING state in order to modify bin */
   g_return_if_fail (GST_STATE (bin) != GST_STATE_PLAYING);
+
+  bclass = GST_BIN_GET_CLASS (bin);
+
+  if (bclass->add_element) {
+    bclass->add_element (bin, element);
+  }
+  else {
+    g_warning ("cannot add elements to bin %s\n", GST_ELEMENT_NAME (bin));
+  }
+}
+
+static void
+gst_bin_remove_func (GstBin *bin, GstElement *element)
+{
+  gint state_idx = 0;
+  GstElementState state;
 
   /* the element must have its parent set to the current bin */
   g_return_if_fail (GST_ELEMENT_PARENT (element) == (GstObject *) bin);
@@ -525,6 +522,43 @@ gst_bin_remove (GstBin *bin, GstElement *element)
 
   /* element is really out of our control now */
   gst_object_unref (GST_OBJECT (element));
+}
+
+/**
+ * gst_bin_remove:
+ * @bin: #GstBin to remove element from
+ * @element: #GstElement to remove
+ *
+ * Remove the element from its associated bin, unparenting as well.
+ * The element will also be unreferenced so there's no need to call
+ * gst_object_unref on it.
+ * If you want the element to still exist after removing, you need to call
+ * #gst_object_ref before removing it from the bin.
+ */
+void
+gst_bin_remove (GstBin *bin, GstElement *element)
+{
+  GstBinClass *bclass;
+
+  GST_DEBUG_ELEMENT (GST_CAT_PARENTAGE, bin, "trying to remove child %s", GST_ELEMENT_NAME (element));
+
+  g_return_if_fail (bin != NULL);
+  g_return_if_fail (GST_IS_BIN (bin));
+  g_return_if_fail (element != NULL);
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (bin->children != NULL);
+
+  /* must not be in PLAYING state in order to modify bin */
+  g_return_if_fail (GST_STATE (bin) != GST_STATE_PLAYING);
+
+  bclass = GST_BIN_GET_CLASS (bin);
+
+  if (bclass->remove_element) {
+    bclass->remove_element (bin, element);
+  }
+  else {
+    g_warning ("cannot remove elements from bin %s\n", GST_ELEMENT_NAME (bin));
+  }
 }
 
 /**
