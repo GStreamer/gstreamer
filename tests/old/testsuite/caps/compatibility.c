@@ -60,7 +60,7 @@ GST_CAPS_FACTORY (rawcaps3,
   )
 );
 
-
+/* these caps aren't used yet
 GST_CAPS_FACTORY (rawcaps4,
   GST_CAPS_NEW (
     "raw2_sink_caps",
@@ -84,6 +84,7 @@ GST_CAPS_FACTORY (rawcaps5,
       "height",   GST_PROPS_INT_RANGE (16, 4096)
   )
 );
+*/
 
 int 
 main (int argc, char *argv[]) 

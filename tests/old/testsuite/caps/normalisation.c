@@ -84,7 +84,7 @@ GST_CAPS_FACTORY (rawcaps3,
   )
 );
 
-
+/* defined, not used
 GST_CAPS_FACTORY (rawcaps4,
   GST_CAPS_NEW (
     "raw2_sink_caps",
@@ -109,14 +109,14 @@ GST_CAPS_FACTORY (rawcaps5,
       "height",   GST_PROPS_INT_RANGE (16, 4096)
   )
 );
+*/
+
 int 
 main (int argc, char *argv[]) 
 {
-  gboolean testret;
   xmlDocPtr doc;
   xmlNodePtr parent;
   GstCaps *caps;
-  gint i;
 
   gst_init (&argc, &argv);
 
