@@ -665,12 +665,18 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
             GST_CLOCK_TIME_IS_VALID (*in_ts)) {
           ffmpegdec->next_ts = *in_ts;
         }
+
         GST_BUFFER_TIMESTAMP (outbuf) = ffmpegdec->next_ts;
         if (ffmpegdec->context->frame_rate_base != 0 &&
             ffmpegdec->context->frame_rate != 0) {
           GST_BUFFER_DURATION (outbuf) = GST_SECOND *
               ffmpegdec->context->frame_rate_base /
               ffmpegdec->context->frame_rate;
+
+          /* Take repeat_pict into account */
+          GST_BUFFER_DURATION (outbuf) += GST_BUFFER_DURATION (outbuf)
+              * ffmpegdec->picture->repeat_pict / 2;
+	  
           ffmpegdec->next_ts += GST_BUFFER_DURATION (outbuf);
         } else {
           ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
@@ -682,11 +688,17 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
             GST_CLOCK_TIME_IS_VALID (*in_ts)) {
           ffmpegdec->next_ts = *in_ts;
         }
+        
         if (ffmpegdec->context->frame_rate_base != 0 &&
             ffmpegdec->context->frame_rate != 0) {
-          ffmpegdec->next_ts += GST_SECOND *
+          guint64 dur = GST_SECOND *  
             ffmpegdec->context->frame_rate_base /
             ffmpegdec->context->frame_rate;
+
+          /* Take repeat_pict into account */
+          dur += dur * ffmpegdec->picture->repeat_pict / 2;
+	  
+          ffmpegdec->next_ts += dur;
         } else {
           ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
         }
@@ -866,14 +878,21 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
     /* parse, if at all possible */
     if (ffmpegdec->pctx) {
       gint res;
+      gint64 ffpts = AV_NOPTS_VALUE;
 
+      if (GST_CLOCK_TIME_IS_VALID (in_ts))
+	ffpts = in_ts / (GST_SECOND / AV_TIME_BASE);
+    
       res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
           &data, &size, bdata, bsize,
-          in_ts / (GST_SECOND / AV_TIME_BASE),
-          in_ts / (GST_SECOND / AV_TIME_BASE));
+          ffpts, ffpts);
 
       GST_DEBUG_OBJECT (ffmpegdec, "Parsed video frame, res=%d, size=%d",
           res, size);
+      
+      if (ffmpegdec->pctx->pts != AV_NOPTS_VALUE)
+        in_ts = ffmpegdec->pctx->pts * (GST_SECOND / AV_TIME_BASE);
+
       if (res == 0 || size == 0)
         break;
       else {
@@ -1050,7 +1069,6 @@ gst_ffmpegdec_register (GstPlugin * plugin)
      * and use rank=none for H263I for now, until I know what the diff
      * is. */
     switch (in_plugin->id) {
-      case CODEC_ID_MPEG2VIDEO:
       case CODEC_ID_MPEG4:
       case CODEC_ID_MSMPEG4V3:
         rank = GST_RANK_PRIMARY;

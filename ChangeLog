@@ -1,3 +1,12 @@
+2005-02-04  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame),
+	(gst_ffmpegdec_chain), (gst_ffmpegdec_register):
+	  Reduce the rank of the mpeg2 decoder back below mpeg2dec
+	  Use the parser to reorder pts times. Fixes mpeg playback
+	  without changing any other files I tested.
+	  Use the repeat_pict flag to correctly set durations
+
 2005-02-02  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
