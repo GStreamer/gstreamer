@@ -145,6 +145,7 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
 static void
 gst_vorbisenc_setup (VorbisEnc * vorbisenc)
 {
+  static const gchar *comment = "Track encodec with GStreamer";
   /********** Encode setup ************/
 
   /* choose an encoding mode */
@@ -153,9 +154,18 @@ gst_vorbisenc_setup (VorbisEnc * vorbisenc)
   vorbis_encode_init (&vorbisenc->vi, vorbisenc->channels, vorbisenc->frequency,
 		      -1, vorbisenc->bitrate, -1);
 
+  gst_element_send_event (GST_ELEMENT (vorbisenc),
+      gst_event_new_info ("channels", GST_PROPS_INT (vorbisenc->channels), NULL));
+  gst_element_send_event (GST_ELEMENT (vorbisenc),
+      gst_event_new_info ("rate", GST_PROPS_INT (vorbisenc->frequency), NULL));
+  gst_element_send_event (GST_ELEMENT (vorbisenc),
+      gst_event_new_info ("bitrate_nominal", GST_PROPS_INT (vorbisenc->bitrate), NULL));
+
   /* add a comment */
   vorbis_comment_init (&vorbisenc->vc);
-  vorbis_comment_add (&vorbisenc->vc, "Track encoded with GStreamer");
+  vorbis_comment_add (&vorbisenc->vc, comment);
+  gst_element_send_event (GST_ELEMENT (vorbisenc),
+             gst_event_new_info ("comment", GST_PROPS_STRING (comment), NULL));
 
   /* set up the analysis state and auxiliary encoding storage */
   vorbis_analysis_init (&vorbisenc->vd, &vorbisenc->vi);
