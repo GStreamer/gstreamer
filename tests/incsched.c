@@ -10,8 +10,8 @@ int main(int argc,char *argv[]) {
   gst_debug_set_categories(-1);
 
   g_print("\n\nConstructing stuff:\n");
-  thread = gst_pipeline_new("thread");
-  bin = gst_bin_new("bin");
+  thread = GST_BIN (gst_pipeline_new("thread"));
+  bin = GST_BIN (gst_bin_new("bin"));
   src = gst_elementfactory_make("fakesrc","src");
   identity = gst_elementfactory_make("identity","identity");
   sink = gst_elementfactory_make("fakesink","sink");
@@ -132,4 +132,6 @@ int main(int argc,char *argv[]) {
 
   g_print("\n\nIterating:\n");
   gst_bin_iterate(thread);
+
+  return 0;
 }

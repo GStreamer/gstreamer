@@ -8,7 +8,7 @@
 int main(int argc,char *argv[]) {
   GstPipeline *pipeline;
   GstElement *src,*lame,*sink;
-  int bitrate;
+  int bitrate = 128000;
   int fdin = -1;
   int fdout = -1;
   int i;
@@ -22,8 +22,8 @@ int main(int argc,char *argv[]) {
       switch (argv[i][1]) {
         case 'b': bitrate = atoi(argv[++i]);break;
         case 0: {
-          if (fdin == -1) fdin = stdin;
-          else if (fdout == -1) fdout = stdout;
+          if (fdin == -1) fdin = STDIN_FILENO;
+          else if (fdout == -1) fdout = STDOUT_FILENO;
           else fprintf(stderr,"unknown argument\n");exit(1);
           break;
         }
@@ -52,7 +52,7 @@ int main(int argc,char *argv[]) {
     }
   }
 
-  pipeline = gst_pipeline_new("mp3encode");
+  pipeline = GST_PIPELINE (gst_pipeline_new("mp3encode"));
 
   src = gst_elementfactory_make("fdsrc","src");
   g_return_val_if_fail(src != NULL,1);
@@ -81,4 +81,6 @@ int main(int argc,char *argv[]) {
     fprintf(stderr,"\n");
     gst_bin_iterate(GST_BIN(pipeline));
   }
+
+  return 0;
 }

@@ -9,8 +9,8 @@ int main(int argc,char *argv[]) {
   gst_info_set_categories(-1);
   gst_debug_set_categories(-1);
 
-  pipeline = gst_pipeline_new("pipeline");
-  thread = gst_thread_new("thread");
+  pipeline = GST_BIN (gst_pipeline_new("pipeline"));
+  thread = GST_BIN (gst_thread_new("thread"));
   src = gst_elementfactory_make("fakesrc","src");
   queue1 = gst_elementfactory_make("queue","queue");
   sink = gst_elementfactory_make("fakesink","sink");
@@ -23,13 +23,15 @@ int main(int argc,char *argv[]) {
   gst_element_add_ghost_pad(GST_ELEMENT(thread),gst_element_get_pad(sink,"sink"),"sink");
 
   gst_element_connect (src,"src",queue1,"sink");
-  gst_element_connect (queue1, "src", thread, "sink");
+  gst_element_connect (queue1, "src", GST_ELEMENT (thread), "sink");
 
 
   fprintf(stderr,"\n\n\n");
-  gst_element_set_state (pipeline, GST_STATE_READY);
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY);
 
 
   fprintf(stderr,"\n\n\n");
-  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+
+  return 0;
 }

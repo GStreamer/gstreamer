@@ -8,8 +8,7 @@ void paranoia_eos(GstPad *pad) {
 int main(int argc,char *argv[]) {
   GstPipeline *pipeline;
   GstElement *paranoia,*queue,*audio_thread,*osssink;
-  int i;
-  int track = (argc == 2) ? atoi(argv[1]) : 1;
+  //int track = (argc == 2) ? atoi(argv[1]) : 1;
 
   GST_DEBUG_ENTER("(%d)",argc);
 

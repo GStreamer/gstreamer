@@ -3,14 +3,14 @@
 
 int main(int argc,char *argv[]) {
   GstBin *pipeline, *thread;
-  GstElement *src, *queue1, *sink;
+  GstElement *src, *sink;
 
   gst_info_set_categories(-1);
   gst_debug_set_categories(-1);
   gst_init(&argc,&argv);
 
-  pipeline = gst_pipeline_new("pipeline");
-  thread = gst_thread_new("thread");
+  pipeline = GST_BIN (gst_pipeline_new("pipeline"));
+  thread = GST_BIN (gst_thread_new("thread"));
   src = gst_elementfactory_make("fakesrc","src");
   gtk_object_set(GTK_OBJECT(src),"silent",TRUE,NULL);
   sink = gst_elementfactory_make("fakesink","sink");
@@ -28,10 +28,10 @@ int main(int argc,char *argv[]) {
 
   while (1) {
     fprintf(stderr,"\nSWITCHING to PLAYING:\n");
-    gst_element_set_state (thread, GST_STATE_PLAYING);
+    gst_element_set_state (GST_ELEMENT (thread), GST_STATE_PLAYING);
     sleep(1);
     fprintf(stderr,"\nSWITCHING to PAUSED:\n");
-    gst_element_set_state (thread, GST_STATE_PAUSED);
+    gst_element_set_state (GST_ELEMENT (thread), GST_STATE_PAUSED);
 //    sleep(1);
   }
 }

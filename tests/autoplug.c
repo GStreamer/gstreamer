@@ -12,7 +12,7 @@ main (int argc, char *argv[])
   GstElement *element;
   GstElement *videosink, *osssink;
   GstAutoplug *autoplugger;
-  GList *testcaps;
+  GstCaps *testcaps;
 
   gst_init(&argc,&argv);
 
@@ -21,13 +21,12 @@ main (int argc, char *argv[])
   videosink = gst_elementfactory_make ("videosink", "videosink");
   g_assert (videosink != NULL);
 
-  testcaps = g_list_append (NULL,
-				gst_caps_new ("test_caps",
-							 "video/mpeg",
-							 gst_props_new (
-							   "mpegversion",  GST_PROPS_INT (1),
-							   "systemstream", GST_PROPS_BOOLEAN (TRUE),
-							   NULL)));
+  testcaps = gst_caps_new ("test_caps",
+			 "video/mpeg",
+			 gst_props_new (
+			   "mpegversion",  GST_PROPS_INT (1),
+			   "systemstream", GST_PROPS_BOOLEAN (TRUE),
+			   NULL));
 
   autoplugger = gst_autoplugfactory_make ("static");
 

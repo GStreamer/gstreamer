@@ -95,7 +95,7 @@ static void
 print_some_providers (gchar *mime)
 {
   guint16 type;
-  GList *srcs, *sinks;
+  //GList *srcs, *sinks;
   type = gst_type_find_by_mime (mime);
 
   /*
@@ -147,4 +147,6 @@ int main(int argc,char *argv[])
 
   dump_factory ("lame");
   dump_factory ("mpeg_play");
+
+  return 0;
 }

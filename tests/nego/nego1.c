@@ -3,15 +3,15 @@
 /* this is an example of the src pad dictating the caps
  * the sink pad only accepts audio/raw */
 
-static GstCaps*
-negotiate (GstPad *pad, GstCaps *caps, gint count) 
+static GstPadNegotiateReturn
+negotiate (GstPad *pad, GstCaps **caps, gpointer *count) 
 {
   g_print ("negotiation entered\n");
 
-  if (!strcmp (gst_caps_get_mime (caps), "audio/raw"))
-    return caps;
+  if (!strcmp (gst_caps_get_mime (*caps), "audio/raw"))
+    return GST_PAD_NEGOTIATE_AGREE;
 
-  return NULL;
+  return GST_PAD_NEGOTIATE_FAIL;
 }
 
 int 

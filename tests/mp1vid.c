@@ -1,3 +1,4 @@
+#include <string.h>
 #include <gst/gst.h>
 
 GstElement *audiothread;
@@ -38,7 +39,7 @@ void new_pad(GstElement *parse,GstPad *pad,GstElement *pipeline) {
 
 int main(int argc,char *argv[]) {
   GstElement *pipeline, *sourcethread, *src, *parse;
-  int i;
+  //int i;
 
   gst_init(&argc,&argv);
 

@@ -2,7 +2,6 @@
 
 int main(int argc,char *argv[]) 
 {
-  gboolean testret;
   xmlDocPtr doc;
   xmlNodePtr parent;
   GstElement *mpg123;
