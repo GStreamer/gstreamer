@@ -7,9 +7,22 @@ else
 FFMPEG_DIR=
 endif
 
+# patch it up
+all-am: Makefile patches
+
+# ignore failures on patching
+# ignore failures on rm
+PATCHES = patch/function.patch
+
+patches:
+	@patch -p0 -N -r rejects < patch/function.patch > /dev/null || true
+	@rm -f rejects || true
+
+
 SUBDIRS = $(FFMPEG_DIR)
 
 DISTFILES = \
+	$(PATCHES) \
 	Tag \
 	ffmpeg/CVS/Tag \
 	ffmpeg/Changelog \
