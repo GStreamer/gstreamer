@@ -944,7 +944,43 @@ gst_value_serialize_ ## _type (const GValue * value) \
     g_assert_not_reached (); \
   /* NO_COPY_MADNESS!!! */ \
   return (char *) g_value_get_string (&val); \
-} \
+}
+
+static gboolean
+gst_value_deserialize_int_helper (long long *to, const char *s, long long min,
+    long long max)
+{
+  gboolean ret = FALSE;
+  char *end;
+
+  *to = gst_strtoll (s, &end, 0);
+  if (*end == 0) {
+    ret = TRUE;
+  } else {
+    if (g_ascii_strcasecmp (s, "little_endian") == 0) {
+      *to = G_LITTLE_ENDIAN;
+      ret = TRUE;
+    } else if (g_ascii_strcasecmp (s, "big_endian") == 0) {
+      *to = G_BIG_ENDIAN;
+      ret = TRUE;
+    } else if (g_ascii_strcasecmp (s, "byte_order") == 0) {
+      *to = G_BYTE_ORDER;
+      ret = TRUE;
+    } else if (g_ascii_strcasecmp (s, "min") == 0) {
+      *to = min;
+      ret = TRUE;
+    } else if (g_ascii_strcasecmp (s, "max") == 0) {
+      *to = max;
+      ret = TRUE;
+    }
+  }
+  if (ret) {
+    if (*to < min || *to > max) {
+      ret = FALSE;
+    }
+  }
+  return ret;
+}
 
 #define CREATE_SERIALIZATION(_type,_macro) \
 CREATE_SERIALIZATION_START(_type,_macro) \
@@ -953,39 +989,13 @@ static gboolean \
 gst_value_deserialize_ ## _type (GValue * dest, const char *s) \
 { \
   long long x; \
-  char *end; \
-  gboolean ret = FALSE; \
 \
-  x = gst_strtoll (s, &end, 0); \
-  if (*end == 0) { \
-    ret = TRUE; \
+  if (gst_value_deserialize_int_helper (&x, s, G_MIN ## _macro, G_MAX ## _macro)) { \
+    g_value_set_ ## _type (dest, x); \
+    return TRUE; \
   } else { \
-    if (g_ascii_strcasecmp (s, "little_endian") == 0) { \
-      x = G_LITTLE_ENDIAN; \
-      ret = TRUE; \
-    } else if (g_ascii_strcasecmp (s, "big_endian") == 0) { \
-      x = G_BIG_ENDIAN; \
-      ret = TRUE; \
-    } else if (g_ascii_strcasecmp (s, "byte_order") == 0) { \
-      x = G_BYTE_ORDER; \
-      ret = TRUE; \
-    } else if (g_ascii_strcasecmp (s, "min") == 0) { \
-      x = G_MIN ## _macro; \
-      ret = TRUE; \
-    } else if (g_ascii_strcasecmp (s, "max") == 0) { \
-      x = G_MAX ## _macro; \
-      ret = TRUE; \
-    } \
+    return FALSE; \
   } \
-  if (ret) { \
-    if (x > G_MAX ## _macro || \
-	x < G_MIN ## _macro) {\
-      ret = FALSE; \
-    } else { \
-      g_value_set_ ## _type (dest, x); \
-    } \
-  } \
-  return ret; \
 }
 
 #define CREATE_USERIALIZATION(_type,_macro) \
