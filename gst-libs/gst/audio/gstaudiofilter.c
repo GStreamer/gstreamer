@@ -125,7 +125,7 @@ gst_audiofilter_link (GstPad * pad, const GstCaps * caps)
   audiofilter = GST_AUDIOFILTER (gst_pad_get_parent (pad));
   audiofilter_class = GST_AUDIOFILTER_CLASS (G_OBJECT_GET_CLASS (audiofilter));
 
-
+  ret = GST_PAD_LINK_DELAYED;   /* intialise with dummy value */
   if (pad == audiofilter->srcpad) {
     link_ret = gst_pad_try_set_caps (audiofilter->sinkpad, caps);
   } else {
