@@ -53,7 +53,7 @@ int main(int argc,char *argv[]) {
   pipeline = GST_PIPELINE(gst_pipeline_new("pipeline"));
   g_return_val_if_fail(pipeline != NULL, -1);
 
-  src = gst_element_factory_make("dvdsrc","src");
+  src = gst_element_factory_make("dvdreadsrc","src");
   g_return_val_if_fail(src != NULL, -1);
   gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
   gtk_object_set(GTK_OBJECT(src),"title",atoi(argv[2]),NULL);

@@ -18,58 +18,52 @@
  */
 
 
-#ifndef __DVDSRC_H__
-#define __DVDSRC_H__
+#ifndef __DVDREADSRC_H__
+#define __DVDREADSRC_H__
 
 
 #include <config.h>
 #include <gst/gst.h>
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
+
+GstElementDetails dvdreadsrc_details;
 
 
-GstElementDetails dvdsrc_details;
-
-
-#define GST_TYPE_DVDSRC \
-  (dvdsrc_get_type())
-#define DVDSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DVDSRC,DVDSrc))
-#define DVDSRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DVDSRC,DVDSrcClass))
-#define GST_IS_DVDSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DVDSRC))
-#define GST_IS_DVDSRC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DVDSRC))
+#define GST_TYPE_DVDREADSRC \
+  (dvdreadsrc_get_type())
+#define DVDREADSRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DVDREADSRC,DVDReadSrc))
+#define DVDREADSRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DVDREADSRC,DVDReadSrcClass))
+#define GST_IS_DVDREADSRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DVDREADSRC))
+#define GST_IS_DVDREADSRC_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DVDREADSRC))
 
 /* NOTE: per-element flags start with 16 for now */
 typedef enum {
-  DVDSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
+  DVDREADSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
 
-  DVDSRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST+2,
-} DVDSrcFlags;
+  DVDREADSRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST+2,
+} DVDReadSrcFlags;
 
-typedef struct _DVDSrc DVDSrc;
-typedef struct _DVDSrcPrivate DVDSrcPrivate;
-typedef struct _DVDSrcClass DVDSrcClass;
+typedef struct _DVDReadSrc DVDReadSrc;
+typedef struct _DVDReadSrcPrivate DVDReadSrcPrivate;
+typedef struct _DVDReadSrcClass DVDReadSrcClass;
 
-struct _DVDSrc {
+struct _DVDReadSrc {
   GstElement element;
-  DVDSrcPrivate *priv;
+  DVDReadSrcPrivate *priv;
 };
 
-struct _DVDSrcClass {
+struct _DVDReadSrcClass {
   GstElementClass parent_class;
 };
 
-GType dvdsrc_get_type(void);
+GType dvdreadsrc_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
-
-#endif /* __DVDSRC_H__ */
+#endif /* __DVDREADSRC_H__ */

@@ -50,7 +50,7 @@
 #include <linux/cdrom.h>
 #include <assert.h>
 
-#include <dvdsrc.h>
+#include <dvdreadsrc.h>
 
 #include "config.h"
 
@@ -60,7 +60,7 @@
 #include <dvdread/nav_read.h>
 #include <dvdread/nav_print.h>
 
-struct _DVDSrcPrivate {
+struct _DVDReadSrcPrivate {
   GstElement element;
   /* pads */
   GstPad *srcpad;
@@ -83,17 +83,17 @@ struct _DVDSrcPrivate {
 };
 
 
-GstElementDetails dvdsrc_details = {
+GstElementDetails dvdreadsrc_details = {
   "DVD Source",
   "Source/File/DVD",
-  "Asynchronous read from encrypted DVD disk",
+  "Access a DVD title/chapter/angle using libdvdread",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",
   "(C) 2001",
 };
 
 
-/* DVDSrc signals and args */
+/* DVDReadSrc signals and args */
 enum {
   /* FILL ME */
   LAST_SIGNAL
@@ -108,45 +108,45 @@ enum {
 };
 
 
-static void 		dvdsrc_class_init	(DVDSrcClass *klass);
-static void 		dvdsrc_init		(DVDSrc *dvdsrc);
+static void 		dvdreadsrc_class_init	(DVDReadSrcClass *klass);
+static void 		dvdreadsrc_init		(DVDReadSrc *dvdreadsrc);
 
-static void 		dvdsrc_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void 		dvdsrc_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void 		dvdreadsrc_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void 		dvdreadsrc_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-/*static GstBuffer *	dvdsrc_get		(GstPad *pad); */
-static void     	dvdsrc_loop		(GstElement *element);
-/*static GstBuffer *	dvdsrc_get_region	(GstPad *pad,gulong offset,gulong size); */
+/*static GstBuffer *	dvdreadsrc_get		(GstPad *pad); */
+static void     	dvdreadsrc_loop		(GstElement *element);
+/*static GstBuffer *	dvdreadsrc_get_region	(GstPad *pad,gulong offset,gulong size); */
 
-static GstElementStateReturn 	dvdsrc_change_state 	(GstElement *element);
+static GstElementStateReturn 	dvdreadsrc_change_state 	(GstElement *element);
 
 
 static GstElementClass *parent_class = NULL;
-/*static guint dvdsrc_signals[LAST_SIGNAL] = { 0 }; */
+/*static guint dvdreadsrc_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
-dvdsrc_get_type (void) 
+dvdreadsrc_get_type (void) 
 {
-  static GType dvdsrc_type = 0;
+  static GType dvdreadsrc_type = 0;
 
-  if (!dvdsrc_type) {
-    static const GTypeInfo dvdsrc_info = {
-      sizeof(DVDSrcClass),      NULL,
+  if (!dvdreadsrc_type) {
+    static const GTypeInfo dvdreadsrc_info = {
+      sizeof(DVDReadSrcClass),      NULL,
       NULL,
-      (GClassInitFunc)dvdsrc_class_init,
+      (GClassInitFunc)dvdreadsrc_class_init,
       NULL,
       NULL,
-      sizeof(DVDSrc),
+      sizeof(DVDReadSrc),
       0,
-      (GInstanceInitFunc)dvdsrc_init,
+      (GInstanceInitFunc)dvdreadsrc_init,
     };
-    dvdsrc_type = g_type_register_static (GST_TYPE_ELEMENT, "DVDSrc", &dvdsrc_info, 0);
+    dvdreadsrc_type = g_type_register_static (GST_TYPE_ELEMENT, "DVDReadSrc", &dvdreadsrc_info, 0);
   }
-  return dvdsrc_type;
+  return dvdreadsrc_type;
 }
 
 static void
-dvdsrc_class_init (DVDSrcClass *klass) 
+dvdreadsrc_class_init (DVDReadSrcClass *klass) 
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -169,48 +169,48 @@ dvdsrc_class_init (DVDSrcClass *klass)
     g_param_spec_int("angle","angle","angle",
                      0,G_MAXINT,0,G_PARAM_READWRITE));
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR(dvdsrc_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR(dvdsrc_get_property);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR(dvdreadsrc_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR(dvdreadsrc_get_property);
 
-  gstelement_class->change_state = dvdsrc_change_state;
+  gstelement_class->change_state = dvdreadsrc_change_state;
 }
 
 static void 
-dvdsrc_init (DVDSrc *dvdsrc) 
+dvdreadsrc_init (DVDReadSrc *dvdreadsrc) 
 {
-  dvdsrc->priv = g_new(DVDSrcPrivate, 1);
-  dvdsrc->priv->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_element_add_pad (GST_ELEMENT (dvdsrc), dvdsrc->priv->srcpad);
-  gst_element_set_loop_function (GST_ELEMENT(dvdsrc), GST_DEBUG_FUNCPTR(dvdsrc_loop));
+  dvdreadsrc->priv = g_new(DVDReadSrcPrivate, 1);
+  dvdreadsrc->priv->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_element_add_pad (GST_ELEMENT (dvdreadsrc), dvdreadsrc->priv->srcpad);
+  gst_element_set_loop_function (GST_ELEMENT(dvdreadsrc), GST_DEBUG_FUNCPTR(dvdreadsrc_loop));
 
-  dvdsrc->priv->location = "/dev/dvd";
-  dvdsrc->priv->new_seek = FALSE;
-  dvdsrc->priv->title = 1;
-  dvdsrc->priv->chapter = 1;
-  dvdsrc->priv->angle = 1;
+  dvdreadsrc->priv->location = g_strdup("/dev/dvd");
+  dvdreadsrc->priv->new_seek = FALSE;
+  dvdreadsrc->priv->title = 1;
+  dvdreadsrc->priv->chapter = 1;
+  dvdreadsrc->priv->angle = 1;
 }
 
 /* FIXME: this code is not being used */
 #ifdef PLEASEFIXTHISCODE
 static void
-dvdsrc_destroy (DVDSrc *dvdsrc)
+dvdreadsrc_destroy (DVDReadSrc *dvdreadsrc)
 {
   /* FIXME */
   g_print("FIXME\n");
-  g_free(dvdsrc->priv);
+  g_free(dvdreadsrc->priv);
 }
 #endif
 
 static void 
-dvdsrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec) 
+dvdreadsrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec) 
 {
-  DVDSrc *src;
-  DVDSrcPrivate *priv;
+  DVDReadSrc *src;
+  DVDReadSrcPrivate *priv;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_DVDSRC (object));
+  g_return_if_fail (GST_IS_DVDREADSRC (object));
   
-  src = DVDSRC (object);
+  src = DVDREADSRC (object);
   priv = src->priv;
 
   switch (prop_id) {
@@ -222,7 +222,7 @@ dvdsrc_set_property (GObject *object, guint prop_id, const GValue *value, GParam
         g_free (priv->location);
       /* clear the filename if we get a NULL (is that possible?) */
       if (g_value_get_string (value) == NULL)
-        priv->location = "/dev/dvd";
+        priv->location = g_strdup("/dev/dvd");
       /* otherwise set the new filename */
       else
         priv->location = g_strdup (g_value_get_string (value));  
@@ -246,15 +246,15 @@ dvdsrc_set_property (GObject *object, guint prop_id, const GValue *value, GParam
 }
 
 static void 
-dvdsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec) 
+dvdreadsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec) 
 {
-  DVDSrc *src;
-  DVDSrcPrivate *priv;
+  DVDReadSrc *src;
+  DVDReadSrcPrivate *priv;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_DVDSRC (object));
+  g_return_if_fail (GST_IS_DVDREADSRC (object));
   
-  src = DVDSRC (object);
+  src = DVDREADSRC (object);
   priv = src->priv;
 
   switch (prop_id) {
@@ -288,7 +288,7 @@ is_nav_pack( unsigned char *buffer )
 }
 
 static int
-_open(DVDSrcPrivate *priv, const gchar *location)
+_open(DVDReadSrcPrivate *priv, const gchar *location)
 {
   g_return_val_if_fail(priv != NULL, -1);
   g_return_val_if_fail(location != NULL, -1);
@@ -319,7 +319,7 @@ _open(DVDSrcPrivate *priv, const gchar *location)
 }
 
 static int
-_close(DVDSrcPrivate *priv)
+_close(DVDReadSrcPrivate *priv)
 {
     ifoClose( priv->vts_file );
     ifoClose( priv->vmg_file );
@@ -329,7 +329,7 @@ _close(DVDSrcPrivate *priv)
 }
 
 static int
-_seek(DVDSrcPrivate *priv, int title, int chapter, int angle)
+_seek(DVDReadSrcPrivate *priv, int title, int chapter, int angle)
 {
     /**
      * Make sure our title number is valid.
@@ -414,17 +414,17 @@ _seek(DVDSrcPrivate *priv, int title, int chapter, int angle)
 }
 
 static void
-dvdsrc_loop (GstElement *element) 
+dvdreadsrc_loop (GstElement *element) 
 {
-  DVDSrc *dvdsrc;
-  DVDSrcPrivate *priv;
+  DVDReadSrc *dvdreadsrc;
+  DVDReadSrcPrivate *priv;
 
   g_return_if_fail (element != NULL);
-  g_return_if_fail (GST_IS_DVDSRC (element));
+  g_return_if_fail (GST_IS_DVDREADSRC (element));
 
-  dvdsrc = DVDSRC (element);
-  priv = dvdsrc->priv;
-  g_return_if_fail (GST_FLAG_IS_SET (dvdsrc, DVDSRC_OPEN));
+  dvdreadsrc = DVDREADSRC (element);
+  priv = dvdreadsrc->priv;
+  g_return_if_fail (GST_FLAG_IS_SET (dvdreadsrc, DVDREADSRC_OPEN));
 
   /**
    * Playback by cell in this pgc, starting at the cell for our chapter.
@@ -482,7 +482,7 @@ dvdsrc_loop (GstElement *element)
           if( len == 0 ) {
               fprintf( stderr, "Read failed for block %d\n", priv->cur_pack );
               _close(priv);
-              gst_element_set_eos (GST_ELEMENT (dvdsrc));
+              gst_element_set_eos (GST_ELEMENT (dvdreadsrc));
               return;
           }
           assert( is_nav_pack( data ) );
@@ -534,7 +534,7 @@ dvdsrc_loop (GstElement *element)
               fprintf( stderr, "Read failed for %d blocks at %d\n",
                        cur_output_size, priv->cur_pack );
               _close(priv);
-              gst_element_set_eos (GST_ELEMENT (dvdsrc));
+              gst_element_set_eos (GST_ELEMENT (dvdreadsrc));
               return;
           }
 
@@ -547,7 +547,7 @@ dvdsrc_loop (GstElement *element)
 
 #if 0
 static int
-_read(DVDSrcPrivate *priv, int angle, int new_seek, GstBuffer *buf)
+_read(DVDReadSrcPrivate *priv, int angle, int new_seek, GstBuffer *buf)
 {
     unsigned char *data;
 
@@ -668,18 +668,18 @@ _read(DVDSrcPrivate *priv, int angle, int new_seek, GstBuffer *buf)
 }
 
 static GstBuffer *
-dvdsrc_get (GstPad *pad) 
+dvdreadsrc_get (GstPad *pad) 
 {
-  DVDSrc *dvdsrc;
-  DVDSrcPrivate *priv;
+  DVDReadSrc *dvdreadsrc;
+  DVDReadSrcPrivate *priv;
   GstBuffer *buf;
 
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  dvdsrc = DVDSRC (gst_pad_get_parent (pad));
-  priv = dvdsrc->priv;
-  g_return_val_if_fail (GST_FLAG_IS_SET (dvdsrc, DVDSRC_OPEN),NULL);
+  dvdreadsrc = DVDREADSRC (gst_pad_get_parent (pad));
+  priv = dvdreadsrc->priv;
+  g_return_val_if_fail (GST_FLAG_IS_SET (dvdreadsrc, DVDREADSRC_OPEN),NULL);
 
   /* create the buffer */
   /* FIXME: should eventually use a bufferpool for this */
@@ -696,7 +696,7 @@ dvdsrc_get (GstPad *pad)
 
   /* read it in from the file */
   if (_read (priv, priv->angle, priv->new_seek, buf)) {
-    gst_element_signal_eos (GST_ELEMENT (dvdsrc));
+    gst_element_signal_eos (GST_ELEMENT (dvdreadsrc));
     return NULL;
   }
 
@@ -710,11 +710,11 @@ dvdsrc_get (GstPad *pad)
 
 /* open the file, necessary to go to RUNNING state */
 static gboolean 
-dvdsrc_open_file (DVDSrc *src) 
+dvdreadsrc_open_file (DVDReadSrc *src) 
 {
   g_return_val_if_fail (src != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_DVDSRC(src), FALSE);
-  g_return_val_if_fail (!GST_FLAG_IS_SET (src, DVDSRC_OPEN), FALSE);
+  g_return_val_if_fail (GST_IS_DVDREADSRC(src), FALSE);
+  g_return_val_if_fail (!GST_FLAG_IS_SET (src, DVDREADSRC_OPEN), FALSE);
 
   if (_open(src->priv, src->priv->location))
     return FALSE;
@@ -724,37 +724,37 @@ dvdsrc_open_file (DVDSrc *src)
       src->priv->angle))
     return FALSE;
 
-  GST_FLAG_SET (src, DVDSRC_OPEN);
+  GST_FLAG_SET (src, DVDREADSRC_OPEN);
   
   return TRUE;
 }
 
 /* close the file */
 static void 
-dvdsrc_close_file (DVDSrc *src) 
+dvdreadsrc_close_file (DVDReadSrc *src) 
 {
-  g_return_if_fail (GST_FLAG_IS_SET (src, DVDSRC_OPEN));
+  g_return_if_fail (GST_FLAG_IS_SET (src, DVDREADSRC_OPEN));
 
   _close(src->priv);
 
-  GST_FLAG_UNSET (src, DVDSRC_OPEN);
+  GST_FLAG_UNSET (src, DVDREADSRC_OPEN);
 }
 
 static GstElementStateReturn
-dvdsrc_change_state (GstElement *element)
+dvdreadsrc_change_state (GstElement *element)
 {
-  g_return_val_if_fail (GST_IS_DVDSRC (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_DVDREADSRC (element), GST_STATE_FAILURE);
 
-  GST_DEBUG (0,"gstdisksrc: state pending %d", GST_STATE_PENDING (element));
+  GST_DEBUG (0,"gstdvdreadsrc: state pending %d", GST_STATE_PENDING (element));
 
   /* if going down into NULL state, close the file if it's open */
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET (element, DVDSRC_OPEN))
-      dvdsrc_close_file (DVDSRC (element));
+    if (GST_FLAG_IS_SET (element, DVDREADSRC_OPEN))
+      dvdreadsrc_close_file (DVDREADSRC (element));
   /* otherwise (READY or higher) we need to open the file */
   } else {
-    if (!GST_FLAG_IS_SET (element, DVDSRC_OPEN)) {
-      if (!dvdsrc_open_file (DVDSRC (element)))
+    if (!GST_FLAG_IS_SET (element, DVDREADSRC_OPEN)) {
+      if (!dvdreadsrc_open_file (DVDREADSRC (element)))
         return GST_STATE_FAILURE;
     }
   }
@@ -771,9 +771,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  /* create an elementfactory for the dvdsrc element */
-  factory = gst_element_factory_new ("dvdsrc", GST_TYPE_DVDSRC,
-                                    &dvdsrc_details);
+  /* create an elementfactory for the dvdreadsrc element */
+  factory = gst_element_factory_new ("dvdreadsrc", GST_TYPE_DVDREADSRC,
+                                    &dvdreadsrc_details);
   g_return_val_if_fail (factory != NULL, FALSE);
   
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
@@ -784,7 +784,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 GstPluginDesc plugin_desc = {
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "dvdsrc",
+  "dvdreadsrc",
   plugin_init
 };
 

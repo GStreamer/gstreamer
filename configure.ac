@@ -372,9 +372,17 @@ GST_CHECK_FEATURE(DV, [dv library], dv, [
 
 dnl *** dvdread ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVDREAD, true)
-GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdsrc, [
+GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdreadsrc, [
   GST_CHECK_LIBHEADER(DVDREAD, dvdread, DVDOpen, , dvdread/dvd_reader.h, DVDREAD_LIBS="-ldvdread")
   AC_SUBST(DVDREAD_LIBS)
+])
+
+dnl *** dvdnav ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_DVDNAV, true)
+GST_CHECK_FEATURE(DVDNAV, [dvdnav library], dvdnavsrc, [
+  translit(dnm, m, l) AC_SUBST(DVDNAV_LIBS)
+  translit(dnm, m, l) AC_SUBST(DVDNAV_CFLAGS)
+  GST_CHECK_CONFIGPROG(DVDNAV, dvdnav-config)
 ])
 
 dnl **** ESound ****
@@ -831,6 +839,7 @@ ext/avifile/Makefile
 ext/cdparanoia/Makefile
 ext/dv/Makefile
 ext/dvdread/Makefile
+ext/dvdnav/Makefile
 ext/esd/Makefile
 ext/ffmpeg/Makefile
 ext/flac/Makefile
