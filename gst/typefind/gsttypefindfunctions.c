@@ -789,6 +789,8 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
       break;
     }
     offset += GST_READ_UINT32_BE (data);
+    if (GST_READ_UINT32_BE (data) < 8)
+      break;
   }
   if (tip > 0) {
     gst_type_find_suggest (tf, tip, QT_CAPS);
