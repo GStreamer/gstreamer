@@ -60,6 +60,7 @@ struct _cothread_state {
   void *top_sp;
   void *pc;
 
+  int magic_number;
 #ifdef COTHREAD_ATOMIC
   atomic_t lock;
 #else

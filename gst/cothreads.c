@@ -39,6 +39,8 @@
 
 #define STACK_SIZE 0x200000
 
+#define COTHREAD_MAGIC_NUMBER 0xabcdef
+
 #define COTHREAD_MAXTHREADS 16
 #define COTHREAD_STACKSIZE (STACK_SIZE/COTHREAD_MAXTHREADS)
 
@@ -170,7 +172,7 @@ cothread_create (cothread_context *ctx)
     }
   }
 
-  GST_DEBUG(GST_CAT_COTHREADS, "Found free cothread slot %d\n", slot);
+  GST_DEBUG(GST_CAT_COTHREADS, "Found free cothread slot %d", slot);
 
   sp = CURRENT_STACK_FRAME;
   /* FIXME this may not be 64bit clean
@@ -181,8 +183,8 @@ cothread_create (cothread_context *ctx)
 
   thread = (cothread_state *) (stack_end + ((slot - 1) * COTHREAD_STACKSIZE));
   GST_DEBUG (GST_CAT_COTHREADS, 
-             "mmap   cothread slot stack from %p to %p (size %ld)", 
-	     thread, thread + COTHREAD_STACKSIZE - 1, 
+             "mmap   cothread slot stack from %p to %p (size 0x%lx)", 
+	     thread, thread + COTHREAD_STACKSIZE, 
 	     (long) COTHREAD_STACKSIZE);
 
   GST_DEBUG (GST_CAT_COTHREADS, "going into mmap");
@@ -201,6 +203,9 @@ cothread_create (cothread_context *ctx)
     return NULL;
   }
 
+  thread->magic_number = COTHREAD_MAGIC_NUMBER;
+  GST_DEBUG (GST_CAT_COTHREADS, "create  cothread %d with magic number 0x%x",
+             slot, thread->magic_number);
   thread->ctx = ctx;
   thread->threadnum = slot;
   thread->flags = 0;
@@ -215,8 +220,9 @@ cothread_create (cothread_context *ctx)
   thread->lock = g_mutex_new ();
 #endif
 
-  GST_INFO (GST_CAT_COTHREADS, "created cothread #%d in slot %d: %p at sp:%p lock:%p", 
-		  ctx->nthreads, slot, thread, thread->sp, thread->lock);
+  GST_INFO (GST_CAT_COTHREADS, 
+            "created cothread #%d in slot %d: %p at sp:%p lock:%p", 
+	    ctx->nthreads, slot, thread, thread->sp, thread->lock);
 
   ctx->threads[slot] = thread;
   ctx->nthreads++;
@@ -261,19 +267,55 @@ cothread_destroy (cothread_state *thread)
   g_mutex_free (thread->lock);
 #endif
 
-  if (threadnum == 0) {
+  if (threadnum == 0) 
+  {
+    GST_INFO (GST_CAT_COTHREADS,
+	      "trying to destroy cothread 0 with %d cothreads left", 
+	     ctx->nthreads);
+    if (ctx->nthreads > 1)
+    {
+      /* we're trying to destroy cothread 0 when there are still cothreads
+       * active, so kill those first */
+      int i;
+
+      for (i = 1; i < COTHREAD_MAXTHREADS; ++i)
+      {
+	if (ctx->threads[i] != NULL)
+	{
+	  cothread_destroy (ctx->threads[i]);
+	  GST_INFO (GST_CAT_COTHREADS,
+	            "destroyed cothread %d, %d cothreads left\n", 
+		    i, ctx->nthreads);
+	}
+      }
+    }
+    g_assert (ctx->nthreads == 1);
     g_free (thread);
   }
   else {
     int res;
+    
+    /* doing cleanups of the cothread create */
+    GST_DEBUG (GST_CAT_COTHREADS, "destroy cothread %d with magic number 0x%x",
+             threadnum, thread->magic_number);
+    g_assert (thread->magic_number == COTHREAD_MAGIC_NUMBER);
+
+    g_assert (thread->priv == NULL);
+    g_assert (thread->lock != NULL);
+
+    /* FIXME: I'm pretty sure we have to do something to the lock, no ? */
+#ifdef COTHREAD_ATOMIC
+    /* FIXME: I don't think we need to do anything to an atomic lock */
+#else
+    //g_mutex_free (thread->lock);
+    //thread->lock = NULL;
+#endif
 
     GST_DEBUG (GST_CAT_COTHREADS, 
-               "unmap cothread slot stack from %p to %p (size %ld)", 
-  	       thread, thread + COTHREAD_STACKSIZE - 1, 
+               "munmap cothread slot stack from %p to %p (size 0x%lx)", 
+  	       thread, thread + COTHREAD_STACKSIZE, 
 	       (long) COTHREAD_STACKSIZE);
-    GST_DEBUG (GST_CAT_COTHREADS, "doing   an munmap at %p of size %d",
-	       thread, COTHREAD_STACKSIZE);
-    res = munmap ((void *) thread, COTHREAD_STACKSIZE);
+    res = munmap (thread, COTHREAD_STACKSIZE);
     if (res != 0)
     {
       switch (res)
