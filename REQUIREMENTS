@@ -25,11 +25,11 @@ libglade	(for gstplay, gsteditor)
 libghttp	(for httpsrc)
 			http://ftp.gnome.org/pub/GNOME/stable/sources/libghttp/
 libaudiofile    (for afsrc/afsink)
-                        //URL FIXME
+			http://oss.sgi.com/projects/audiofile/
 libmad          (for the mad mp3 decoder plugin)
-                        //URL FIXME
+			http://www.mars.org/home/rob/proj/mpeg/
 libjpeg         (for jpegenc/jpegdec)
-                        //URL FIXME
+			http://www.ijg.org/
 libopenquicktime (for the QT plugin)
                         //URL FIXME
 libXv		(for videosink)
