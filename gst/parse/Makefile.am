@@ -1,7 +1,6 @@
 
 noinst_LTLIBRARIES = libgstparse.la
 
-CLEANFILES = grammer.output
 
 EXTRA_DIST = grammar.y parse.l types.h
 
@@ -23,4 +22,7 @@ lex._gst_parse_yy.c: parse.l
 ## this dir needs gstmarshal.h generated
 ../gstmarshal.h:
 	cd .. && $(MAKE) gstmarshal.h
+
+distclean-local:
+	rm -f grammar.output grammar.tab.h
 

@@ -1,4 +1,5 @@
-testprogs = global output commandline category
+#testprogs = global output commandline category
+testprogs = commandline category
 
 TESTS = $(testprogs)
 

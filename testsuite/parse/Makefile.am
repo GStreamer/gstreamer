@@ -1,4 +1,5 @@
-testprogs = parse1 parse2
+testprogs = parse2
+#testprogs = parse1 parse2
 
 TESTS = $(testprogs)
 

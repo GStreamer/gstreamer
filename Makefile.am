@@ -37,12 +37,15 @@ DIST_SUBDIRS = include libs gst \
 	tests testsuite \
 	examples \
 	docs \
-	pkgconfig
+	pkgconfig \
+	po
 
 EXTRA_DIST = gstreamer.spec.in gst-element-check.m4 \
 	     configure.ac autogen.sh depcomp \
 	     REQUIREMENTS ABOUT-NLS RELEASE DOCBUILDING DEVEL \
-	     idiottest.mak common po/Makefile.in.in po/POTFILES.in po/de.po
+	     idiottest.mak common
+
+CLEANFILES = gst-element-check-@GST_MAJORMINOR@.m4
 
 dist-hook:
 	cp gstreamer.spec $(distdir)
