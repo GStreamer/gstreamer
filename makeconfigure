@@ -1,0 +1,10 @@
+#!/bin/sh
+# Run this to generate configure.in and configure.ac from configure.base
+
+# args: $1 - configure file to create
+
+sed "
+s/^SUBSTFOR $1://g;
+/^SUBSTFOR .*:.*/d;
+s/GST_CHECK_FEATURE *(\\([A-Za-z0-9_]*\\) *,/translit(dnm, m, l) AM_CONDITIONAL(USE_\\1, true)\\
+GST_CHECK_FEATURE(\\1,/"

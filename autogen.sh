@@ -163,8 +163,8 @@ fi
 
 
 # Generate configure.in and configure.ac
-sed <configure.base >configure.in '/^SUBSTFOR configure.ac:.*/d;s/^SUBSTFOR configure.in://g'
-sed <configure.base >configure.ac '/^SUBSTFOR configure.in:.*/d;s/^SUBSTFOR configure.ac://g'
+./makeconfigure <configure.base > configure.in configure.in
+./makeconfigure <configure.base > configure.ac configure.ac
 
 libtoolize --copy --force
 aclocal $ACLOCAL_FLAGS || {

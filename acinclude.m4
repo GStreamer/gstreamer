@@ -143,3 +143,45 @@ AC_SUBST(ALSA_CFLAGS)
 AC_SUBST(ALSA_LIBS)
 ])
 
+
+dnl Perform a check for a feature for GStreamer
+dnl Richard Boulton <richard-alsa@tartarus.org>
+dnl Last modification: 25/06/2001
+dnl GST_CHECK_FEATURE(FEATURE-NAME, FEATURE-DESCRIPTION,
+dnl                   DEPENDENT-PLUGINS, TEST-FOR-FEATURE)
+dnl
+dnl
+AC_DEFUN(GST_CHECK_FEATURE,
+[
+AC_ARG_ENABLE(translit($1, `A-Z', `a-z'),
+  [  --enable-translit($1, `A-Z', `a-z')             enable [$2]: [$3]],
+  [ case "${enableval}" in
+      yes) USE_[$1]=yes ;;
+      no) USE_[$1]=no ;;
+      *) AC_MSG_ERROR(bad value ${enableval} for --enable-translit($1, `A-Z', `a-z')) ;;
+    esac],
+  [ USE_$1=yes ])           dnl DEFAULT
+
+dnl *** If it's enabled
+if test x$USE_[$1] = xyes; then
+  gst_check_save_LIBS=$LIBS
+  gst_check_save_CFLAGS=$CFLAGS
+  $4
+  LIBS=$gst_check_save_LIBS
+  CFLAGS=$gst_check_save_CFLAGS
+
+  dnl If it isn't found, unset USE_[$1]
+  if test x$HAVE_[$1] = xno; then
+    USE_[$1]=yes
+  fi
+fi
+dnl *** Warn if it's disabled or not found
+if test x$USE_[$1] = xno; then
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: [$3]
+)
+fi
+dnl *** Define the conditional as appropriate
+AM_CONDITIONAL(USE_[$1], test x$USE_[$1] = xyes)
+])
+
