@@ -226,7 +226,7 @@ struct _GParamSpec {
 
 #define g_value_init(value,t)			((value)->type = (t))
 #define g_value_copy			gtk_arg_copy
-
+#define g_value_unset(val)
 
 #define g_object_class_install_property		g2g_object_class_install_property
 void g2g_object_class_install_property(GObjectClass *oclass,guint property_id,GParamSpec *pspec);
@@ -259,15 +259,15 @@ GParamSpec *g2g_param_spec_pointer(gchar *name,gchar *nick,gchar *blurb,gint fla
 GParamSpec *g2g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *def,gint flags);
 
 #define g_value_get_char(value)			GTK_VALUE_CHAR(*value)
-#define g_value_set_char(value,data)		(GTK_VALUE_CHAR(*value) = data)
+#define g_value_set_char(value,data)		(GTK_VALUE_CHAR(*value) = (data))
 #define g_value_get_uchar(value)		GTK_VALUE_UCHAR(*value)
-#define g_value_set_uchar(value,data)		(GTK_VALUE_UCHAR(*value) = data)
+#define g_value_set_uchar(value,data)		(GTK_VALUE_UCHAR(*value) = (data))
 #define g_value_get_boolean(value)		GTK_VALUE_BOOL(*value)
 #define g_value_set_boolean(value,data)		(GTK_VALUE_BOOL(*value) = (data))
 #define g_value_get_enum(value)			GTK_VALUE_INT(*value)
 #define g_value_set_enum(value,data)		(GTK_VALUE_INT(*value) = (data))
 #define g_value_get_int(value)			GTK_VALUE_INT(*value)
-#define g_value_set_int(value,data)		(GTK_VALUE_INT(*value) = (data))
+#define g_value_set_int(value,data)			(GTK_VALUE_INT(*value) = (data))
 #define g_value_get_uint(value)			GTK_VALUE_UINT(*value)
 #define g_value_set_uint(value,data)		(GTK_VALUE_UINT(*value) = (data))
 #define g_value_get_long(value)			GTK_VALUE_LONG(*value)
@@ -284,8 +284,17 @@ GParamSpec *g2g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *de
 #define g_value_set_pointer(value,data)		(GTK_VALUE_POINTER(*value) = (data))
 
 
-
-
+#define G_VALUE_HOLDS_CHAR(value) (((value)->type)==GTK_TYPE_CHAR)
+#define G_VALUE_HOLDS_UCHAR(value) (((value)->type)==GTK_TYPE_UCHAR)
+#define G_VALUE_HOLDS_BOOLEAN(value) (((value)->type)==GTK_TYPE_BOOL)
+#define G_VALUE_HOLDS_INT(value) (((value)->type)==GTK_TYPE_INT)
+#define G_VALUE_HOLDS_UINT(value) (((value)->type)==GTK_TYPE_UINT)
+#define G_VALUE_HOLDS_LONG(value) (((value)->type)==GTK_TYPE_LONG)
+#define G_VALUE_HOLDS_ULONG(value) (((value)->type)==GTK_TYPE_ULONG)
+#define G_VALUE_HOLDS_FLOAT(value) (((value)->type)==GTK_TYPE_FLOAT)
+#define G_VALUE_HOLDS_DOUBLE(value) (((value)->type)==GTK_TYPE_DOUBLE)
+#define G_VALUE_HOLDS_STRING(value) (((value)->type)==GTK_TYPE_STRING)
+#define G_VALUE_HOLDS_POINTER(value) (((value)->type)==GTK_TYPE_POINTER)
 
 // the object itself
 //#define GObject				GtkObject
