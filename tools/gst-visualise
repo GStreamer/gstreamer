@@ -64,10 +64,10 @@ sub visualise(@)
 read_config ();
 
 %pipes = ( 
-  "goom", "goom",
-  "chart", "chart",
+  "goom", "stereo2mono ! goom",
+  "chart", "stereo2mono ! chart",
   "synaesthesia", "synaesthesia",
-  "monoscope", "monoscope"
+  "monoscope", "stereo2mono ! monoscope"
 );
 
 if ($#ARGV > 0) {
