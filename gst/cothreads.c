@@ -36,6 +36,10 @@
 #include "gstlog.h"
 #include "gstutils.h"
 
+/* older glibc's have MAP_ANON instead of MAP_ANONYMOUS */
+#ifndef MAP_ANONYMOUS
+#define MAP_ANONYMOUS MAP_ANON
+#endif
 
 #define STACK_SIZE 0x200000
 
