@@ -324,3 +324,114 @@ gst_util_set_object_arg (GObject *object,  const gchar *name,  const gchar *valu
     }
   }
 }
+
+// -----------------------------------------------------
+//
+// The following code will be moved out of the main
+// gstreamer library someday.
+//
+
+#include "gstpad.h"
+#include "gsttype.h"
+#include "gstprops.h"
+#include "gstpropsprivate.h"
+
+static void string_append_indent (GString *str, gint count)
+{
+  gint xx;
+  for (xx=0; xx < count; xx++)
+    g_string_append_c (str, ' ');
+}
+
+static void 
+gst_print_props (GString *buf, gint indent,
+		 GList *props, gboolean showname)
+{
+  GList *elem;
+	    
+  for (elem = props; elem; elem = g_list_next (elem))
+    {
+      GstPropsEntry *prop = elem->data;
+
+      string_append_indent (buf, indent);
+      if (showname)
+	g_string_append (buf, g_quark_to_string (prop->propid));
+
+      switch (prop->propstype) {
+      case GST_PROPS_INT_ID:
+	g_string_printfa (buf, "%d (int)\n", prop->data.int_data);
+	break;
+      case GST_PROPS_INT_RANGE_ID:
+	g_string_printfa (buf, "%d - %d (int)\n",
+			  prop->data.int_range_data.min,
+			  prop->data.int_range_data.max);
+	break;
+      case GST_PROPS_FLOAT_ID:
+	g_string_printfa (buf, "%f (float)\n", prop->data.float_data);
+      break;
+      case GST_PROPS_FLOAT_RANGE_ID:
+	g_string_printfa (buf, "%f - %f (float)\n",
+			  prop->data.float_range_data.min,
+			  prop->data.float_range_data.max);
+	break;
+      case GST_PROPS_BOOL_ID:
+	g_string_printfa (buf, "%s\n",
+			  prop->data.bool_data ? "TRUE" : "FALSE");
+	break;
+      case GST_PROPS_STRING_ID:
+	g_string_printfa (buf, "\"%s\"\n", prop->data.string_data.string);
+	break;
+      case GST_PROPS_FOURCC_ID:
+	g_string_printfa (buf, "'%c%c%c%c' (fourcc)\n",
+			  prop->data.fourcc_data & 0xff,
+			  prop->data.fourcc_data>>8 & 0xff,
+			  prop->data.fourcc_data>>16 & 0xff,
+			  prop->data.fourcc_data>>24 & 0xff);
+	break;
+      case GST_PROPS_LIST_ID:
+	gst_print_props (buf, indent+2, prop->data.list_data.entries, FALSE);
+	break;
+      default:
+	g_string_printfa (buf, "unknown proptype %d\n", prop->propstype);
+	break;
+      }
+  }
+}
+
+void gst_print_pad_caps (GString *buf, gint indent, GstPad *pad)
+{
+  GstRealPad *realpad;
+  GstCaps *caps;
+
+  realpad = GST_PAD_REALIZE(pad);
+  caps = realpad->caps;
+
+  if (!caps)
+    {
+      string_append_indent (buf, indent);
+      g_string_printf (buf, "%s:%s has no capabilities",
+		       GST_DEBUG_PAD_NAME (pad));
+    }
+  else
+    {
+      gint capx = 0;
+
+      while (caps) {
+	GstType *type;
+
+	string_append_indent (buf, indent);
+	g_string_printfa (buf, "Cap[%d]: %s\n", capx++, caps->name);
+
+	type = gst_type_find_by_id (caps->id);
+	string_append_indent (buf, indent+2);
+	g_string_printfa (buf, "MIME type: %s\n",
+			  type->mime? type->mime : "unknown/unknown");
+
+	if (caps->properties)
+	  gst_print_props (buf, indent + 2,
+			   caps->properties->properties, TRUE);
+
+	caps = caps->next;
+      }
+    }
+}
