@@ -1,5 +1,12 @@
 2004-07-13  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_seek_before):
+	When trying to find the stream length, seek back N pages
+	instead of just one, where N is the number of streams in 
+	the current chain.
+
+2004-07-13  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/riff/riff-media.c:
 	(gst_riff_create_audio_caps_with_data),
 	(gst_riff_create_audio_caps),
