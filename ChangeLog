@@ -1,5 +1,15 @@
 2004-10-18  Wim Taymans  <wim@fluendo.com>
 
+	* ext/dv/gstdvdec.c: (gst_dvdec_video_getcaps),
+	(gst_dvdec_video_link), (gst_dvdec_push):
+	* ext/jpeg/gstsmokeenc.c: (gst_smokeenc_class_init),
+	(gst_smokeenc_resync), (gst_smokeenc_chain):
+	Fix mimetype on smoke encoder.
+	Add aspect ratio to dvdec. Not sure if these
+	values are correct though....
+
+2004-10-18  Wim Taymans  <wim@fluendo.com>
+
 	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_class_init):
 	Fix vorbis property descriptions and ranges.
 
