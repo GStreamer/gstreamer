@@ -847,7 +847,7 @@ gst_mpeg_demux_plugin_init (GModule *module, GstPlugin *plugin)
 
   /* this filter needs the bytestream package */
   if (!gst_library_load ("gstbytestream")) {
-    gst_info ("mpeg_demux:: could not load support library: 'gstbytestream'\n");
+    gst_info ("mpegdemux: could not load support library: 'gstbytestream'\n");
     return FALSE;
   }
 
