@@ -143,6 +143,13 @@ fi
 AC_SUBST(LIBXML_PKG)
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
+dnl XML_LIBS might pull in -lz without zlib actually being on the system, so
+dnl try if you can compile with these LIBS
+if test "x$HAVE_LIBXML2" = "xyes"; then
+  AC_CHECK_LIB(xml2, xmlNewDoc, [],
+               [AC_MSG_ERROR([You might be missing zlib development stuff])],
+               $XML_LIBS)
+fi
 
 dnl popt checks
 GST_CHECK_LIBHEADER(POPT, popt, poptStrippedArgv,, popt.h, POPT_LIBS="-lpopt",
