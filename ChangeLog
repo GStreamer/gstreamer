@@ -1,3 +1,11 @@
+2005-01-17  Wim Taymans  <wim@fluendo.com>
+
+	* gst/schedulers/gstoptimalscheduler.c: (add_to_group),
+	(remove_from_group), (schedule_group), (normalize_group),
+	(gst_opt_scheduler_iterate):
+	Also ref/unref decoupled elements before iterating the
+	group since they are not added to the list of elements.
+
 2005-01-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/manual/highlevel-components.xml:

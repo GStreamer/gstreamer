@@ -1141,8 +1141,17 @@ schedule_group (GstOptSchedulerGroup * group)
     return FALSE;
   } else {
     GSList *l, *lcopy;
+    GstElement *entry = NULL;
 
     lcopy = g_slist_copy (group->elements);
+    /* also add entry point, this is made so that decoupled elements
+     * are also reffed since they are not added to the list of group
+     * elements. */
+    if (group->entry && GST_ELEMENT_IS_DECOUPLED (group->entry)) {
+      entry = group->entry;
+      gst_object_ref (GST_OBJECT (entry));
+    }
+
     for (l = lcopy; l; l = l->next) {
       GstElement *e = (GstElement *) l->data;
 
@@ -1161,8 +1170,8 @@ schedule_group (GstOptSchedulerGroup * group)
 
       gst_object_unref (GST_OBJECT (e));
     }
+    gst_object_unref (GST_OBJECT (entry));
     g_slist_free (lcopy);
-
   }
   return TRUE;
 #endif
