@@ -1,5 +1,12 @@
 2004-05-24  Wim Taymans  <wim@fluendo.com>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query):
+	Fix potential division by zero error and hopefully get
+	the position query right to get correct timestamps on avi
+	audio.
+
+2004-05-24  Wim Taymans  <wim@fluendo.com>
+
 	* gst/videoscale/videoscale.c: (gst_videoscale_scale_nearest),
 	(gst_videoscale_scale_nearest_str2),
 	(gst_videoscale_scale_nearest_str4),
