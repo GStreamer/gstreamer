@@ -171,7 +171,7 @@ gst_pipeline_typefind (GstPipeline *pipeline, GstElement *element)
   if (found) {
     caps = gst_util_get_pointer_arg (GTK_OBJECT (typefind), "caps");
     
-    gst_pad_set_caps_list (gst_element_get_pad (element, "src"), g_list_prepend (NULL, caps));
+    gst_pad_set_caps (gst_element_get_pad (element, "src"), caps);
   }
 
   gst_pad_disconnect (gst_element_get_pad (element, "src"),
@@ -199,7 +199,7 @@ gst_pipeline_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
     if (gst_pad_get_direction(sinkpad)	 == GST_PAD_SINK &&
         !GST_PAD_CONNECTED(sinkpad))
     {
-      if (gst_caps_list_check_compatibility (gst_pad_get_caps_list(pad), gst_pad_get_caps_list(sinkpad))) {
+      if (gst_caps_check_compatibility (gst_pad_get_caps(pad), gst_pad_get_caps(sinkpad))) {
         gst_pad_connect(pad, sinkpad);
         GST_DEBUG (0,"gstpipeline: autoconnect pad \"%s\" in element %s <-> ", GST_PAD_NAME (pad),
 		       GST_ELEMENT_NAME(src));
@@ -310,7 +310,7 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
   GList **factories;
   GList **base_factories;
   GstElementFactory *factory;
-  GstCaps *src_caps = 0;
+  GstCaps *src_caps = NULL;
   guint i, numsinks;
   gboolean use_thread = FALSE, have_common = FALSE;
   GList *sinkstart;
@@ -363,7 +363,7 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
     pad = (GstPad *)gst_element_get_pad_list (element)->data;
 
     base_factories[i] = factories[i] = gst_autoplug_caps_list (g_list_append(NULL,src_caps), 
-gst_pad_get_caps_list(pad));
+				g_list_append (NULL, gst_pad_get_caps(pad)));
     // if we have a succesfull connection, proceed
     if (factories[i] != NULL) {
       i++;
@@ -459,11 +459,11 @@ differ:
 	  // FIXME connect matching pads, not just the first one...
           if (gst_pad_get_direction(sinkpad) == GST_PAD_SINK && 
 	      !GST_PAD_CONNECTED(sinkpad)) {
-            GList *caps = gst_pad_get_caps_list (sinkpad);
+            GstCaps *caps = gst_pad_get_caps (sinkpad);
 
 	    // the queue has the type of the elements it connects
-	    gst_pad_set_caps_list (srcpad, caps);
-            gst_pad_set_caps_list (gst_element_get_pad(queue, "sink"), caps);
+	    gst_pad_set_caps (srcpad, caps);
+            gst_pad_set_caps (gst_element_get_pad(queue, "sink"), caps);
 	    break;
 	  }
           sinkpads = g_list_next(sinkpads);

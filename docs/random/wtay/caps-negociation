@@ -128,7 +128,7 @@ the element when it knows the values for the caps.
 -----------------------
 
 when two pads are connected the following steps will take
-placei (not sure, FIXME): 
+place (not sure, FIXME): 
 
  - if both pads have caps, the caps are checked. If the caps
    are incompatible, the padtemplates are checked, if they

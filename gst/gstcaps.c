@@ -308,8 +308,9 @@ gst_caps_get_props (GstCaps *caps)
 gboolean
 gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
 {
-  g_return_val_if_fail (fromcaps != NULL, FALSE);
-  g_return_val_if_fail (tocaps != NULL, FALSE);
+  if (fromcaps == NULL ||
+      tocaps == NULL) 
+    return TRUE;
 	
   if (fromcaps->id != tocaps->id) {
     GST_DEBUG (0,"gstcaps: mime types differ (%d to %d)\n",

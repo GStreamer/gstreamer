@@ -210,8 +210,8 @@ gst_autoplug_pads (GstPad *srcpad, GstPad *sinkpad)
 {
   caps_struct caps;
 
-  caps.src = gst_pad_get_caps_list(srcpad);
-  caps.sink = gst_pad_get_caps_list(sinkpad);
+  caps.src = g_list_prepend (NULL, gst_pad_get_caps(srcpad));
+  caps.sink = g_list_prepend (NULL, gst_pad_get_caps(sinkpad));
 
   GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"autoplugging two caps structures");
 

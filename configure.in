@@ -736,6 +736,7 @@ test/bindings/Makefile
 tests/Makefile
 tests/sched/Makefile
 tests/eos/Makefile
+tests/nego/Makefile
 examples/Makefile
 examples/autoplug/Makefile
 examples/helloworld/Makefile
