@@ -306,29 +306,61 @@ gst_videotestsrc_setup (GstVideotestsrc *v)
 
 }
 
-
 static void
 random_chars(unsigned char *dest, int nbytes)
 {
 	int i;
+	static unsigned int state;
 
 	for(i=0;i<nbytes;i++){
-		dest[i] = random();
+		state *= 1103515245;
+		state += 12345;
+		dest[i] = (state>>16);
 	}
 }
 
-static int u_colors[] = { 128,   0, 192,   0, 255,  64, 255 };
-static int v_colors[] = { 128, 192,   0,   0, 255, 255,  64 };
+static void
+paint_rect_random (unsigned char *dest, int stride, int x, int y, int w, int h)
+{
+	unsigned char *d = dest + stride*y + x;
+	int i;
+
+	for(i=0;i<h;i++){
+		random_chars(d,w);
+		d += stride;
+	}
+}
+
+static void
+paint_rect (unsigned char *dest, int stride, int x, int y, int w, int h, unsigned char color)
+{
+	unsigned char *d = dest + stride*y + x;
+	int i;
+
+	for(i=0;i<h;i++){
+		memset(d,color,w);
+		d += stride;
+	}
+}
+
+/*                        wht  yel  cya  grn  mag  red  blu  blk   -I    Q */
+static int y_colors[] = { 255, 226, 179, 150, 105,  76,  29,   0,   0,   0 };
+static int u_colors[] = { 128,   0, 170,  46, 212,  85, 255, 128,   0, 128 };
+static int v_colors[] = { 128, 155,   0,  21, 235, 255, 107, 128, 128, 255 };
 
 static void
 gst_videotestsrc_random_yuv (GstVideotestsrc *v, unsigned char *dest, int w, int h)
 {
+	unsigned char *yp = dest;
 	unsigned char *up = dest + w*h;
 	unsigned char *vp = up + w*h/4;
-	int w7;
-	int i,j;
+	//int h24 = h/24;
+	//int j,k;
+	int i;
+	int y1,y2;
 
-	memset(dest,255,w*h/2);
+#if 0
+	//memset(dest,255,w*h/2);
 	random_chars(dest + w*h/2,w*h/2);
 
 	//random_chars(dest + w*h, w*h/4);
@@ -336,17 +368,56 @@ gst_videotestsrc_random_yuv (GstVideotestsrc *v, unsigned char *dest, int w, int
 	
 	//random_chars(dest + w*h + w*h/4, w*h/4);
 	memset(dest + w*h + w*h/4, 128, w*h/4);
+#endif
 
-	w7 = w/2/7 + 1;
+	y1 = h/3;
+	y2 = h*0.375;
+
+	/* color bars */
 	for(i=0;i<7;i++){
-		for(j=0;j<w7;j++){
-			up[i*w7 + j] = u_colors[i];
-			vp[i*w7 + j] = v_colors[i];
-		}
+		int x1 = i*(w/2)/7;
+		int x2 = (i+1)*(w/2)/7;
+		paint_rect(yp, w, x1*2, 0, (x2-x1)*2, y1*2, y_colors[i]);
+		paint_rect(up, w/2, x1, 0, x2-x1, y1, u_colors[i]);
+		paint_rect(vp, w/2, x1, 0, x2-x1, y1, v_colors[i]);
 	}
-	for(i=0;i<h/4;i++){
-		memcpy(up+(w/2)*i, up, w/2);
-		memcpy(vp+(w/2)*i, vp, w/2);
+
+	/* inverse blue bars */
+	for(i=0;i<7;i++){
+		int x1 = i*(w/2)/7;
+		int x2 = (i+1)*(w/2)/7;
+		int k;
+		if(i&1){
+			k = 7;
+		}else{
+			k = 6-i;
+		}
+		paint_rect(yp, w, x1*2, y1*2, (x2-x1)*2, (y2-y1)*2, y_colors[k]);
+		paint_rect(up, w/2, x1, y1, x2-x1, y2-y1, u_colors[k]);
+		paint_rect(vp, w/2, x1, y1, x2-x1, y2-y1, v_colors[k]);
+	}
+
+	/* -I, white, Q regions */
+	for(i=0;i<3;i++){
+		int x1 = i*(w/2)/6;
+		int x2 = (i+1)*(w/2)/6;
+		int k;
+
+		if(i==0){ k = 8; }
+		else if(i==1){ k = 0; }
+		else k = 9;
+
+		paint_rect(yp, w, x1*2, y2*2, (x2-x1)*2, h-y2*2, y_colors[k]);
+		paint_rect(up, w/2, x1, y2, x2-x1, h/2-y2, u_colors[k]);
+		paint_rect(vp, w/2, x1, y2, x2-x1, h/2-y2, v_colors[k]);
+	}
+
+	{
+		int x1 = 3*(w/2)/6;
+		int x2 = w/2;
+		paint_rect_random(yp, w, x1*2, y2*2, (x2-x1)*2, h-y2*2);
+		paint_rect(up, w/2, x1, y2, x2-x1, h/2-y2, u_colors[0]);
+		paint_rect(vp, w/2, x1, y2, x2-x1, h/2-y2, v_colors[0]);
 	}
 }
 
