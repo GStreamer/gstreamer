@@ -327,7 +327,7 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
   GstBuffer *buf = GST_BUFFER (_data);
   GstOssSink *osssink;
   GstClockTime buftime;
-g_print ("OSS data\n");
+
   /* this has to be an audio buffer */
   osssink = GST_OSSSINK (gst_pad_get_parent (pad));
 
@@ -343,7 +343,7 @@ g_print ("OSS data\n");
       case GST_EVENT_DISCONTINUOUS:
       {
 	gint64 value;
-g_print ("OSS reset\n");
+
         ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_RESET);
 	if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
           if (!gst_clock_handle_discont (osssink->clock, value))
@@ -351,7 +351,7 @@ g_print ("OSS reset\n");
 	  osssink->handled = 0;
 	}
 	osssink->resync = TRUE;
-g_print ("OSS reset done\n");
+
         break;
       }
       default:
@@ -420,7 +420,7 @@ g_print ("OSS reset done\n");
       }
     }
   }
-g_print ("OSS data done\n");
+
   gst_audio_clock_update_time ((GstAudioClock*)osssink->provided_clock, buftime);
 
   gst_buffer_unref (buf);
