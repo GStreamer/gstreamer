@@ -22,7 +22,6 @@
  */
 
 #include "gst_private.h"
-
 #include "gstinfo.h"
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -38,8 +37,6 @@
 #include <unistd.h>
 #endif
 #include <string.h>             /* G_VA_COPY */
-#include "gstinfo.h"
-#include "gst_private.h"
 #include "gstelement.h"
 #include "gstpad.h"
 #include "gstscheduler.h"
@@ -482,6 +479,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   gchar *obj;
   gchar *pidcolor;
   gint pid;
+  GTimeVal now;
 
   if (level > gst_debug_category_get_threshold (category))
     return;
@@ -503,8 +501,10 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 
   obj = object ? gst_debug_print_object (object) : g_strdup ("");
 
-  g_printerr ("%s %s%15s%s(%s%5d%s) %s%s(%d):%s:%s%s %s\n",
+  g_get_current_time (&now);
+  g_printerr ("%s (%10ld:%06ld) %s%15s%s(%s%5d%s) %s%s(%d):%s:%s%s %s\n",
       gst_debug_level_get_name (level),
+      now.tv_sec, now.tv_usec,
       color, gst_debug_category_get_name (category), clear,
       pidcolor, pid, clear,
       color, file, line, function, obj, clear, gst_debug_message_get (message));

@@ -1,3 +1,10 @@
+2004-05-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/elements/gstidentity.c: (gst_identity_chain):
+          add duration debug
+	* gst/gstinfo.c: (gst_debug_log_default):
+          add timestamp
+
 2004-05-13  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstpipeline.c: (gst_pipeline_dispose),
