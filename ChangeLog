@@ -1,3 +1,8 @@
+2004-02-03  David I. Lehn  <dlehn@users.sourceforge.net>
+
+	* examples/switch/.cvsignore:
+	Ignore generated file.
+
 2004-02-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* common/m4/ax_create_stdint_h.m4:
@@ -16,11 +21,11 @@
 	Add replaygain support to vorbistag
 
 2004-02-02  Jeremy Simon  <jesimon@libertysurf.fr>
-																				         * ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
 	(gst_ffmpeg_caps_to_extradata):
 	  Fix SVQ3 caps flag properties
 	  Use glib macro for bytes swap
-																								     
+
 2004-02-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/audiofile/gstafsink.c: (gst_afsink_plugin_init):
