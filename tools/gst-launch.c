@@ -49,19 +49,26 @@ property_change_callback (GObject *object, GstObject *orig, GParamSpec *pspec)
 #ifdef USE_GLIB2
   if (G_IS_PARAM_SPEC_STRING (pspec))
   {
-    gchar *str = NULL;
+    gchar *str;
     g_object_get (orig, pspec->name, &str, NULL);
     g_print ("%s: %s = \"%s\"\n", GST_OBJECT_NAME (orig), pspec->name, str);
-    g_free (str);
   } else if (G_IS_PARAM_SPEC_CHAR (pspec)) {
     gchar str;
     g_object_get (orig, pspec->name, &str, NULL);
     g_print ("%s: %s = \"%c\"\n", GST_OBJECT_NAME (orig), pspec->name, str);
-  } else if (G_IS_PARAM_SPEC_INT (pspec) || G_IS_PARAM_SPEC_INT64 (pspec)) {
+  } else if (G_IS_PARAM_SPEC_INT (pspec)) {
+    gint i;
+    g_object_get (orig, pspec->name, &i, NULL);
+    g_print ("%s: %s = %d\n", GST_OBJECT_NAME (orig), pspec->name, i);
+  } else if (G_IS_PARAM_SPEC_INT64 (pspec)) {
     gint64 i;
     g_object_get (orig, pspec->name, &i, NULL);
     g_print ("%s: %s = %lld\n", GST_OBJECT_NAME (orig), pspec->name, i);
-  } else if (G_IS_PARAM_SPEC_UINT (pspec) || G_IS_PARAM_SPEC_UINT64 (pspec)) {
+  } else if (G_IS_PARAM_SPEC_UINT (pspec)) {
+    guint i;
+    g_object_get (orig, pspec->name, &i, NULL);
+    g_print ("%s: %s = %u\n", GST_OBJECT_NAME (orig), pspec->name, i);
+  } else if (G_IS_PARAM_SPEC_UINT (pspec)) {
     guint64 i;
     g_object_get (orig, pspec->name, &i, NULL);
     g_print ("%s: %s = %llu\n", GST_OBJECT_NAME (orig), pspec->name, i);
