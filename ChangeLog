@@ -1,4 +1,8 @@
 2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
+	* gst-libs/gst/audio/gstaudiofilter.c:
+	  Clean the local include
+
+2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/gst.sln:
 	* gst-libs/gst/audio/audio.def:
