@@ -31,7 +31,7 @@ plugin browser available, gst-inspect-gui.
     </qandaentry>
 
     <qandaentry>
-      <question id="using-bugs">
+      <question id="using-bugs-where">
         <para>Where should I report bugs ?</para>
       </question>
 
@@ -45,6 +45,16 @@ Bugzilla requires you to make an account here, which might seem cumbersome,
 but allows us to at least have a chance at contacting you for further
 information, as we will most likely have to.
         </para>
+      </answer>
+    </qandaentry>
+
+
+    <qandaentry>
+      <question id="using-bugs-how">
+        <para>How should I report bugs ?</para>
+      </question>
+
+      <answer>
         <para>
 When doing a bug report, you should at least describe
 <itemizedlist>
@@ -55,7 +65,7 @@ how you installed GStreamer (from cvs, source, packages, which ?)</listitem>
 </itemizedlist>
         </para>
         <para>
-If you're new to GStreamer, it also is useful for us if you attach output of
+It also is useful for us if you attach output of
 the gst-feedback command to your bug report.
 If you're having problem with a specific application (either one of ours,
 somebody else's, or your own), please also provide a log of gst-mask by
@@ -65,7 +75,12 @@ myapp --gst-mask=-1 > mask.log 2>&amp;1
 gzip mask.log
 </programlisting>
 (interrupting the program if it doesn't stop by itself)
-and attach mask.log.gz to your bug report
+and attach mask.log.gz to your bug report.
+        </para>
+        <para>
+If the application you are having problems with is segfaulting, then
+provide us with the necessary gdb output.  See
+<xref linkend="troubleshooting-segfault" endterm="troubleshooting-segfault"/>
         </para>
       </answer>
     </qandaentry>

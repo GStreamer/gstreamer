@@ -3,6 +3,74 @@
   <qandaset>
 
     <qandaentry>
+      <question id="troubleshooting-segfault">
+        <para>
+The GStreamer application I used stops with a segmentation fault.  What can
+I do ?
+        </para>
+      </question>
+
+      <answer>
+        <para>
+There are two things you can do.  If you compiled GStreamer with specific
+optimization compilation flags, you should try recompiling GStreamer,
+the application and the plug-ins without any optimization flags.  This allows
+you to verify if the problem is due to optimization or due to bad code.
+Second, it will also allow you to provide a reasonable backtrace in case
+the segmentation fault still occurs.
+        </para>
+        <para>
+The second thing you can do is look at the backtrace to get an idea of where
+things are going wrong, or give us an idea of what is going wrong.
+To provide a backtrace, you should
+<orderedlist>
+<listitem>
+  run the application in gdb by starting it with
+  <programlisting>
+    gdb (gst-application)
+  </programlisting>
+  (If the application is in a source tree instead of installed on the system,
+  you might want to put "libtool" before "gdb")
+</listitem>
+<listitem>
+  Pass on the command line arguments to the application by typing
+  <programlisting>
+    set args (the arguments to the application)
+  </programlisting>
+  at the (gdb) prompt
+</listitem>
+<listitem>
+  Type "run" at the (gdb) prompt and wait for the application to
+  segfault.  The application will run a lot slower, however.
+</listitem>
+<listitem>
+  After the segfault, type "bt" to get a backtrace.  This is a stack of
+  function calls detailing the path from main () to where the code is
+  currently at.
+</listitem>
+<listitem>
+  If the application you're trying to debug contains threads, it is also
+  useful to do
+  <programlisting>
+    info threads
+  </programlisting>
+  and get backtraces of all of the threads involved, by switching to
+  a different thread using "thread (number)" and then again requesting
+  a backtrace using "bt".
+</listitem>
+<listitem>
+  <para>
+  If you can't or don't want to work out the problem yourself, a copy and paste
+  of all this information should be included in your 
+  <link linkend="using-bugs-where">bug report</link>.
+  </para>
+</listitem>
+</orderedlist>
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
       <question id="troubleshooting-wiki">
         <para>
 I'm having problems building or installing GStreamer. What should I do ?
@@ -19,5 +87,6 @@ someone else.
         </para>
       </answer>
     </qandaentry>
+
   </qandaset>
 </sect1>
