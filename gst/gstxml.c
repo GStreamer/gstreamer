@@ -67,7 +67,7 @@ gst_xml_init(GstXML *xml)
  * gst_xml_write:
  * @element: The element to write out
  *
- * converts the given element into an XML presentation
+ * Converts the given element into an XML presentation.
  *
  * Returns: a pointer to an XML document
  */
@@ -149,7 +149,7 @@ gst_xml_new (const guchar *fname, const guchar *root)
  * gst_xml_get_topelements:
  * @xml: The GstXML to get the elements from
  *
- * retrive a list of toplevel elements
+ * Retrive a list of toplevel elements.
  *
  * Returns: a GList of elements
  */
