@@ -1,0 +1,101 @@
+1) Goal:
+========
+The goal of this document is to analyze current problems
+in media type detection as we currently handle it in
+GStreamer (as of 27/9/2003), and how these can be solved.
+This touches upon typefinding, autoplugging and (optionally)
+bytestream.
+
+2) Typefinding, bytestream & autoplugging:
+==========================================
+
+bytestream:
+-----------
+currently, bytestream collects incoming buffers and adds
+them up (gst_buffer_merge ()). From this, a subbuffer is
+created, which is inexpensive. In case of filesrc, the
+merging is not expensive, too (mmap ()). However, in any
+other source case, _merge () needs a new buffer plus copy
+of the data. This is plain wrong. Source elements need to
+be able to support a _read ()- instead of a _get ()-based
+way of providing data to the pipeline on their choice. To
+the rest of GStreamer, _get () and _read () are the same,
+the only difference is that _read () also requests a size
+of the buffer to be returned.
+
+Surely, this does not mean that bytestream will read any
+buffer size that is requested from it plainly, this would
+be ineffective. It is still allowed to cache (although the
+kernel will do this too...).
+
+typefinding:
+------------
+the typefind function type is currently defined as:
+
+typedef stuct _GstTypeDefinition {
+  gchar *name;
+  gchar *mimetype;
+  gchar *extension;
+  GstTypefindFunc func;
+} GstTypeDefinition;
+
+typedef (GstCaps *) (* GstTypefindFunc) (GstBuffer *buffer,
+					 gpointer   private);
+
+GstTypeFactory * gst_type_factory_new (GstTypeDefinition *def);
+
+Although is is unclear what private is and how to use it
+in a plugin. ;). The current approach has one large
+disadvantage: the plugin cannot control the input for type
+detection. Therefore, if the incoming buffer is not large
+enough, typefinding will inappropriately fail. This is
+unacceptable. The plugin needs to control input data flow
+itself, so that we will have less false negatives and/or
+will need only one cycle through the plugins to find the
+type of a data stream.
+
+Therefore, I propose the following change to the typefind
+system:
+
+typedef (GstCaps *) (* GstTypefindFunc) (GstBytestream *input,
+					 gpointer       private);
+
+and 
+
+GstTypeFactory * gst_type_factory_new (GstTypeDefinition *definition,
+				       gpointer           data);
+
+The data gpointer will be provided as second argument to the
+typefind function and is for private use to the plugin.
+
+There is one rule: at the end of typefinding, the plugin needs
+to take care that the state of the bytestream is exactly the
+same as before typefinding. It may cache data, but it may not
+skip (and therefore lose) data. If the bytestream supports
+seeking, this is easy: simply seek back to 0 (start of stream)
+after typefinding. If it does not, then you need to assure
+that you only used _peek (), not _read () or _flush ().
+
+The caller of the typefind function is responsible for creating
+the bytestream and for emptying the cache and reusing it in the
+data stream after the typefind function returns.
+
+spider:
+-------
+Imo, spider should use GstTypefind (a public element) for
+typefinding. Ideally, it would derive from it.
+
+GstTypefind emits a signal when a type is found, and furtherly
+only has a sink pad. the derived elements from this should
+implement anything needed to make a proper autoplugger.
+
+3) Status of this document
+==========================
+Proposal, pending to be implemented. Target release is 0.8.0 or
+any 0.7.x release.
+
+4) Copyright and blabla
+=======================
+(c) Ronald Bultje, 2003 <rbultje@ronald.bitfreak.net> under the
+terms of the GNU Free Documentation License. See http://www.gnu.org/
+for details.
