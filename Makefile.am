@@ -63,10 +63,3 @@ deb-maint:
 
 include $(top_srcdir)/idiottest.mak
 
-# Rules to generate autoconf scripts if configure.base is updated
-$(top_srcdir)/configure.in: $(top_srcdir)/configure.base
-	$(top_srcdir)/makeconfigure <$(top_srcdir)/configure.base >$(top_srcdir)/configure.in configure.in
-
-$(top_srcdir)/configure.ac: $(top_srcdir)/configure.base
-	$(top_srcdir)/makeconfigure <$(top_srcdir)/configure.base >$(top_srcdir)/configure.ac configure.ac
-

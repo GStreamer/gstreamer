@@ -1,10 +1,8 @@
 dnl Note: this file is generated from configure.base by autogen.sh
-SUBSTFOR configure.ac:AC_INIT
-SUBSTFOR configure.ac:AC_CONFIG_SRCDIR([gst/gstobject.h])
-SUBSTFOR configure.in:AC_INIT(gst/gstobject.h)
+AC_INIT
+AC_CONFIG_SRCDIR([gst/gstobject.h])
 
-SUBSTFOR configure.ac:AC_CANONICAL_TARGET([])
-SUBSTFOR configure.in:AC_CANONICAL_SYSTEM
+AC_CANONICAL_TARGET([])
 
 AM_CONFIG_HEADER(config.h)
 
@@ -44,11 +42,14 @@ AC_SUBST(GST_LIBVERSION)
 
 AM_MAINTAINER_MODE
 
-dnl you need automake 1.5 for AM_PROG_AS to work !
-dnl we moved AM_PROG_AS up before CC, maybe that helps the substition ?
-AM_PROG_AS
 AC_PROG_CC
 AM_PROG_CC_STDC
+dnl you need automake 1.5 for AM_PROG_AS to work !
+AM_PROG_AS
+dnl there's something wrong with AS being set to CC, so we set it explicitly
+AS=gcc
+AC_SUBST(AS)
+
 AC_PROG_CXX
 AC_PROG_CXXCPP
 AC_ISC_POSIX
@@ -59,8 +60,7 @@ AM_DISABLE_STATIC
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 
-SUBSTFOR configure.ac:AC_HEADER_STDC([])
-SUBSTFOR configure.in:AC_STDC_HEADERS
+AC_HEADER_STDC([])
 
 dnl This is used for the -config script...
 builddir=`pwd`
@@ -207,6 +207,7 @@ dnl Check for essential libraries first:
 dnl ====================================
 
 dnl Check for glib2
+translit(dnm, m, l) AM_CONDITIONAL(USE_GLIB2, true)
 GST_CHECK_FEATURE(GLIB2, [use of glib-2.0 and GObject], , [
   PKG_CHECK_MODULES(GLIB2, glib-2.0 gobject-2.0 gthread-2.0 gmodule-2.0,
     HAVE_GLIB2=yes,HAVE_GLIB2=no)
@@ -301,9 +302,7 @@ AC_SUBST(ARTS_CFLAGS)
 AC_SUBST(ARTS_MCOPFLAGS)
 
 dnl Now check if it exists
-SUBSTFOR configure.ac:AC_LANG_PUSH(C++)
-SUBSTFOR configure.in:AC_LANG_SAVE
-SUBSTFOR configure.in:AC_LANG_CPLUSPLUS
+AC_LANG_PUSH(C++)
 HAVE_ARTS=yes
 dnl FIXME: Can't get this test to pass, so commented it out.  Rely on header check.
 dnl AC_CHECK_LIB(artsflow, convert_stereo_2float_i16le, :, HAVE_ARTS=no, $LIBS)
@@ -312,8 +311,7 @@ dnl AC_CHECK_HEADER uses CPPFLAGS, but not CFLAGS.
 dnl FIXME: ensure only suitable flags result from artsc-config --cflags
 AC_CHECK_HEADER(artsflow.h, :, HAVE_ARTS=no)
 
-SUBSTFOR configure.ac:AC_LANG_POP(C++)
-SUBSTFOR configure.in:AC_LANG_RESTORE
+AC_LANG_POP(C++)
 dnl Check for the idl generator
 AC_CHECK_PROG(HAVE_MCOPIDL, mcopidl, yes, no)
 if test x$HAVE_MCOPIDL = xno; then
@@ -331,22 +329,27 @@ dnl =======================================
 
 
 dnl ***** ESound *****
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBESD, true)
 GST_CHECK_FEATURE(LIBESD, [esound plugins], esdsrc esdsink, [
   AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
 ])
 
 dnl Check for artsc
+translit(dnm, m, l) AM_CONDITIONAL(USE_ARTSC, true)
 GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [GST_CHECK_ARTSC()])
 
 dnl Check for artsc
+translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
 GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [GST_CHECK_ARTS()])
 
 dnl Check for xmms
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBXMMS, true)
 GST_CHECK_FEATURE(LIBXMMS, [xmms plugin], xmms, [
   AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
 ], disabled)
 
 dnl Check for alsa
+translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
 GST_CHECK_FEATURE(ALSA, [alsa plugins], gstalsa, [
   AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
 ])
@@ -357,14 +360,20 @@ if test x$HAVE_ALSA = xno; then
 fi
 
 dnl Check for libaudiofile
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBAUDIOFILE, true)
 GST_CHECK_FEATURE(LIBAUDIOFILE, [use gdk pixbuf], afsink afsrc, [
-  GST_CHECK_CONFIGPROG(LIBAUDIOFILE, audiofile-config)
+translit(dnm, m, l) AC_SUBST(LIBAUDIOFILE_LIBS)
+translit(dnm, m, l) AC_SUBST(LIBAUDIOFILE_CFLAGS)
+GST_CHECK_CONFIGPROG(LIBAUDIOFILE, audiofile-config)
 ])
 
 dnl Check for libgdk-pixbuf
 dnl FIXME: not sure that this is still used anywhere.
+translit(dnm, m, l) AM_CONDITIONAL(USE_GDK_PIXBUF, true)
 GST_CHECK_FEATURE(GDK_PIXBUF, [use gdk pixbuf], , [
-  GST_CHECK_CONFIGPROG(GDK_PIXBUF, gdk-pixbuf-config)
+translit(dnm, m, l) AC_SUBST(GDK_PIXBUF_LIBS)
+translit(dnm, m, l) AC_SUBST(GDK_PIXBUF_CFLAGS)
+GST_CHECK_CONFIGPROG(GDK_PIXBUF, gdk-pixbuf-config)
 ])
 
 if test x$USE_GLIB2 = xyes; then
@@ -375,10 +384,13 @@ if test x$USE_GLIB2 = xyes; then
   AC_MSG_WARN(gnome disabled for glib2.0)
 else
   dnl Check for libgnome
-  GST_CHECK_CONFIGPROG(GNOME, gnome-config, gnome gnomeui)
+translit(dnm, m, l) AC_SUBST(GNOME_LIBS)
+translit(dnm, m, l) AC_SUBST(GNOME_CFLAGS)
+GST_CHECK_CONFIGPROG(GNOME, gnome-config, gnome gnomeui)
 fi
 
 dnl Check for libghttp
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBGHTTP, true)
 GST_CHECK_FEATURE(LIBGHTTP, [libghttp plugins], gsthttpsrc, [
   dnl FIXME: need to check for header
   GHTTP_LIBS=
@@ -863,11 +875,17 @@ AC_SUBST(GST_DISABLE_[$1]_DEFINE)
 GST_SUBSYSTEM_DISABLE_DEFINES="$GST_SUBSYTEM_DISABLE_DEFINES $GST_DISABLE_[$1]_DEFINE"
 ])
 
+translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_LOADSAVE, true)
 GST_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
+translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_TYPEFIND, true)
 GST_SUBSYSTEM_DISABLE(TYPEFIND,[typefind plugin],)
+translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_AUTOPLUG, true)
 GST_SUBSYSTEM_DISABLE(AUTOPLUG,[autoplugger subsystem])
+translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_PARSE, true)
 GST_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
+translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_TRACE, true)
 GST_SUBSYSTEM_DISABLE(TRACE,[tracing subsystem])
+translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_REGISTRY, true)
 GST_SUBSYSTEM_DISABLE(REGISTRY,[plugin registry])
 
 GST_CFLAGS="$GST_CFLAGS $GST_SUBSYSTEM_DISABLE_DEFINES"
@@ -1114,9 +1132,8 @@ dnl #########################
 dnl until ffmpeg is handled by configure plugins/ffmpeg/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
 dnl someone should fix this test/misc/Makefile
-SUBSTFOR configure.ac:AC_OUTPUT(
-SUBSTFOR configure.ac:Makefile
-SUBSTFOR configure.in:AC_OUTPUT([Makefile
+AC_OUTPUT(
+Makefile
 include/Makefile
 gst/Makefile
 gst/gstversion.h
@@ -1285,10 +1302,7 @@ stamp.h
 gstreamer-config
 gstreamer.pc
 gstreamer-uninstalled.pc
-SUBSTFOR configure.in:gstreamer.spec])
-SUBSTFOR configure.in:AC_OUTPUT_COMMANDS([chmod +x gstreamer-config;
-SUBSTFOR configure.in:echo "$infomessages"], infomessages="$infomessages")
-SUBSTFOR configure.ac:gstreamer.spec,
-SUBSTFOR configure.ac:chmod +x gstreamer-config
-SUBSTFOR configure.ac:echo "$infomessages", infomessages="$infomessages"
-SUBSTFOR configure.ac:)
+gstreamer.spec,
+chmod +x gstreamer-config
+echo "$infomessages", infomessages="$infomessages"
+)
