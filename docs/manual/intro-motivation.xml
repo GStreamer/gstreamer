@@ -83,7 +83,8 @@
       </para> 
       <para> 
         No provisions have been made for emerging technologies such as
-	the GNOME object embedding using Bonobo.
+        the <ulink url="http://developer.gnome.org/arch/component/bonobo.html"
+          type="http">GNOME object embedding using Bonobo</ulink>.
       </para> 
       <para> 
         The GStreamer cores does not use network transparent technologies at the

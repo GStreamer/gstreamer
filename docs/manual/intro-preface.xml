@@ -22,14 +22,14 @@
     </para> 
 
     <para>
-      One of the the most obvious uses of GStreamer is using it to build a media player.
-      GStreamer already includes components for building a media player that can support a
-      very wide variety of formats including mp3, Ogg Vorbis, Mpeg1, Mpeg2, Avi, Quicktime, mod
-      and so on. 
-      GStreamer, however, is much more than just another media player. Its
-      main advantages are that the pluggable components can be mixed and matched into 
-      abitrary pipelines so that it's possible
-      to write a full fledged video or audio editing application. 
+      One of the the most obvious uses of GStreamer is using it to build
+      a media player.  GStreamer already includes components for building a
+      media player that can support a very wide variety of formats, including
+      mp3, Ogg Vorbis, MPEG1, MPEG2, AVI, Quicktime, mod and so on.  GStreamer,
+      however, is much more than just another media player. Its main advantages
+      are that the pluggable components can be mixed and matched into arbitrary
+      pipelines so that it's possible to write a full-fledged video or audio
+      editing application.
     </para> 
 
     <para>
