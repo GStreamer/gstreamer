@@ -1,0 +1,14 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
+gstcontrol_libs=-lgstcontrol-@GST_MAJORMINOR@
+
+Name: GStreamer control library, uninstalled
+Description: Dynamic parameters for plug-ins
+Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
+Version: @VERSION@
+
+Libs: ${libdir}/gst/libgstcontrol-@GST_MAJORMINOR@.la
+Cflags: -I${pc_top_builddir}/${pcfiledir}/@srcdir@/libs @GST_PKG_CFLAGS@
+
