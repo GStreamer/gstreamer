@@ -24,22 +24,27 @@
 #include <gst/gst.h>
 
 typedef struct GstMediaInfoPriv		GstMediaInfoPriv;
+typedef struct _GstMediaInfo            GstMediaInfo;
+typedef struct _GstMediaInfoClass       GstMediaInfoClass;
 
-typedef struct
+struct _GstMediaInfo
 {
   GObject parent;
 
   GstMediaInfoPriv *priv;
-} GstMediaInfo;
 
-typedef struct
+  GST_OBJECT_PADDING
+};
+
+struct _GstMediaInfoClass
 {
   GObjectClass parent_class;
 
   /* signals */
   void (*media_info_signal) 		(GstMediaInfo *gst_media_info);
 
-} GstMediaInfoClass;
+  GST_CLASS_PADDING
+};
 
 /* structure for "physical" stream,
  * which can contain multiple sequential ones */

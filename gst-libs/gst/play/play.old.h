@@ -132,6 +132,8 @@ struct _GstPlay
 
   GstPlayTimeoutAdd timeout_add_func;
   GstPlayIdleAdd idle_add_func;
+
+  GST_OBJECT_PADDING
 };
 
 struct _GstPlayClass
@@ -152,6 +154,8 @@ struct _GstPlayClass
   void (*have_vis_video_out) (GstPlay * play, gpointer video_out);
   void (*have_video_size) (GstPlay * play, gint width, gint height);
   void (*have_vis_size) (GstPlay * play, gint width, gint height);
+
+  GST_CLASS_PADDING
 };
 
 struct _GstPlayIdleData
