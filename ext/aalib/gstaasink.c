@@ -356,10 +356,8 @@ gst_aasink_chain (GstPad *pad, GstData *_data)
 
   GST_DEBUG ("videosink: clock wait: %" G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP(buf));
 
-  if (aasink->clock) {
-    GstClockID id = gst_clock_new_single_shot_id (aasink->clock, GST_BUFFER_TIMESTAMP(buf));
-    gst_element_clock_wait (GST_ELEMENT (aasink), id, NULL);
-    gst_clock_id_free (id);
+  if (aasink->clock && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    gst_element_wait (GST_ELEMENT (aasink), GST_BUFFER_TIMESTAMP (buf));
   }
 
   aa_render (aasink->context, &aasink->ascii_parms, 

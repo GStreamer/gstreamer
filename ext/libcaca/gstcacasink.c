@@ -335,19 +335,11 @@ gst_cacasink_chain (GstPad *pad, GstData *_data)
 
   cacasink = GST_CACASINK (gst_pad_get_parent (pad));
 
-  if (GST_VIDEOSINK_CLOCK (cacasink) && time != -1) {
-    GstClockReturn ret;
-
-    cacasink->id = gst_clock_new_single_shot_id (
-                       GST_VIDEOSINK_CLOCK (cacasink), time);
-
+  if (cacasink->clock && GST_CLOCK_TIME_IS_VALID (time)) {
     GST_DEBUG ("videosink: clock %s wait: %" G_GUINT64_FORMAT " %u", 
                GST_OBJECT_NAME (GST_VIDEOSINK_CLOCK (cacasink)),
                time, GST_BUFFER_SIZE (buf));
-
-    ret = gst_clock_id_wait (cacasink->id, &jitter);
-    gst_clock_id_free (cacasink->id);
-    cacasink->id = NULL;
+    gst_element_wait (GST_ELEMENT (cacasink), GST_BUFFER_TIMESTAMP (buf));
   }
 
   caca_clear ();

@@ -280,10 +280,7 @@ gst_esdsink_chain (GstPad *pad, GstData *_data)
 	gint64 value;
 
 	if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
-	  if (!gst_clock_handle_discont (esdsink->clock, value)){
-	    gst_audio_clock_set_active (GST_AUDIO_CLOCK (esdsink->provided_clock),
-		FALSE);
-	  }
+	  gst_element_set_time (GST_ELEMENT (esdsink), value);
 	  esdsink->handled = 0;
 	}
 	esdsink->resync = TRUE;
@@ -306,25 +303,13 @@ gst_esdsink_chain (GstPad *pad, GstData *_data)
       if (esdsink->clock){
 	gint delay = 0;
 	gint64 queued;
-	GstClockTimeDiff jitter;
 
 	delay = gst_esdsink_get_latency (esdsink);
 	queued = delay * GST_SECOND / esdsink->frequency;
 
 	if (esdsink->resync && esdsink->sync) {
-	  GstClockID id = gst_clock_new_single_shot_id (esdsink->clock,
-	      GST_BUFFER_TIMESTAMP (buf) - queued);
+	  gst_element_wait (GST_ELEMENT (esdsink), GST_BUFFER_TIMESTAMP (buf) - queued); 
 
-	  gst_element_clock_wait (GST_ELEMENT (esdsink), id, &jitter);
-	  gst_clock_id_free (id);
-
-	  if (jitter >= 0){
-	    gst_clock_handle_discont (esdsink->clock,
-		GST_BUFFER_TIMESTAMP (buf) - queued + jitter);
-	    to_write = size;
-	    gst_audio_clock_set_active ((GstAudioClock *)esdsink->provided_clock, TRUE);
-	    esdsink->resync = FALSE;
-	  }
 	}else{
 	  to_write = size;
 	}

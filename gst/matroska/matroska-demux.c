@@ -1225,7 +1225,6 @@ gst_matroska_demux_parse_index (GstMatroskaDemux *demux,
 
   if (prevent_eos) {
     length = gst_bytestream_length (ebml->bs);
-    gst_clock_set_active (demux->clock, FALSE);
   }
 
   while (res) {
@@ -1391,10 +1390,6 @@ gst_matroska_demux_parse_index (GstMatroskaDemux *demux,
     }
   }
 
-  if (prevent_eos) {
-    gst_clock_set_active (demux->clock, TRUE);
-  }
-
   return res;
 }
 
@@ -1496,7 +1491,6 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux *demux,
 
   if (prevent_eos) {
     length = gst_bytestream_length (ebml->bs);
-    gst_clock_set_active (demux->clock, FALSE);
   }
 
   while (res) {
@@ -1529,10 +1523,6 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux *demux,
       demux->level_up--;
       break;
     }
-  }
-
-  if (prevent_eos) {
-    gst_clock_set_active (demux->clock, TRUE);
   }
 
   return res;

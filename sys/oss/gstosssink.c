@@ -204,7 +204,6 @@ gst_osssink_init (GstOssSink *osssink)
 
   osssink->bufsize = 4096;
   osssink->chunk_size = 4096;
-  osssink->resync = FALSE;
   osssink->mute = FALSE;
   osssink->sync = TRUE;
   osssink->provided_clock = gst_audio_clock_new ("ossclock", gst_osssink_get_time, osssink);
@@ -339,20 +338,6 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
 	gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssink->provided_clock), FALSE);
 	gst_pad_event_default (pad, event);
         return;
-      case GST_EVENT_DISCONTINUOUS:
-      {
-	gint64 value;
-
-        ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_RESET);
-	if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
-          if (!gst_clock_handle_discont (osssink->clock, value))
-            gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssink->provided_clock), FALSE);
-	  osssink->handled = 0;
-	}
-        osssink->resync = TRUE;
-
-        break;
-      }
       default:
 	gst_pad_event_default (pad, event);
         return;
@@ -372,44 +357,7 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
   if (GST_OSSELEMENT (osssink)->fd >= 0) {
     if (!osssink->mute) {
       guchar *data = GST_BUFFER_DATA (buf);
-      gint size = GST_BUFFER_SIZE (buf);
-      gint to_write = 0;
-
-      if (osssink->clock) {
-        gint delay = 0;
-	gint64 queued;
-        GstClockTimeDiff jitter;
-    
-	delay = gst_osssink_get_delay (osssink);
-	queued = delay * GST_SECOND / GST_OSSELEMENT (osssink)->bps;
-
-	if  (osssink->resync && osssink->sync) {
-          GstClockID id = gst_clock_new_single_shot_id (osssink->clock, buftime - queued);
-
-          gst_element_clock_wait (GST_ELEMENT (osssink), id, &jitter);
-	  gst_clock_id_free (id);
-
-          if (jitter >= 0) {
-            gst_clock_handle_discont (osssink->clock, buftime - queued + jitter);
-	    to_write = size;
-            gst_audio_clock_set_active ((GstAudioClock*)osssink->provided_clock, TRUE);
-	    osssink->resync = FALSE;
-          }
-	}
-	else {
-	  to_write = size;
-        }
-      }
-      /* no clock, try to be as fast as possible */
-      else {
-        audio_buf_info ospace;
-
-        ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_GETOSPACE, &ospace);
-
-        if (ospace.bytes >= size) {
-	  to_write = size;
-	}
-      }
+      gint to_write = GST_BUFFER_SIZE (buf);
 
       while (to_write > 0) {
         gint done = write (GST_OSSELEMENT (osssink)->fd, data, 
@@ -425,6 +373,8 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
 	  osssink->handled += done;
 	}
       }
+    } else {
+      g_warning ("muting osssinks unimplemented wrt clocks!");
     }
   }
 
@@ -583,13 +533,11 @@ gst_osssink_change_state (GstElement *element)
     case GST_STATE_READY_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
-      osssink->resync = TRUE;
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN)) 
         ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_RESET, 0);
       gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssink->provided_clock), FALSE);
-      osssink->resync = TRUE;
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN))
