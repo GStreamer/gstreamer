@@ -275,43 +275,45 @@ _gst_unitconv_initialize (void)
 }
 
 gboolean
-gst_unitconv_register_unit(const gchar *domain_name, 
-                           gboolean is_domain_default, 
+gst_unitconv_register_unit(const gchar *domain_name,
+                           gboolean is_domain_default,
                            gboolean is_logarithmic,
                            GParamSpec *unit_spec)
 {
 	GstUnit* unit;
 	gchar *unit_name;
-	
+
 	g_return_val_if_fail (unit_spec != NULL, FALSE);
 	g_return_val_if_fail (G_IS_PARAM_SPEC(unit_spec), FALSE);
 	g_return_val_if_fail (domain_name != NULL, FALSE);
-	
-	unit_name = g_strdup(g_param_spec_get_name(unit_spec));
-	
-	/* check if this unit name already exists */
-	g_return_val_if_fail (
-		g_hash_table_lookup(_gst_units, unit_name) == NULL, FALSE);
 
+	unit_name = g_strdup(g_param_spec_get_name(unit_spec));
+
+	/* check if this unit name already exists */
+	if (g_hash_table_lookup (_gst_units, unit_name) != NULL)
+	{
+		g_free (unit_name);
+		return FALSE;
+	}
 	if (is_domain_default){
 		/* check if an default unit already exists for this domain */
 		g_return_val_if_fail (
 			g_hash_table_lookup(_gst_unit_domain_defaults, domain_name) == NULL, FALSE);
 	}
-	
+
 	GST_DEBUG (GST_CAT_PARAMS,"creating unit: %s", unit_name);
 
 	unit = g_new0(GstUnit,1);
-	
+
 	unit->unit_spec = unit_spec;
 	unit->domain_name = domain_name;
 	unit->domain_default = is_domain_default;
 	unit->logarithmic = is_logarithmic;
 	unit->convert_to_funcs = g_hash_table_new(NULL,NULL);
 	/* unit->convert_properties = g_hash_table_new(g_str_hash,g_str_equal); */
-	
-	g_hash_table_insert(_gst_units, g_strdup(unit_name), unit);
-	
+
+	g_hash_table_insert(_gst_units, unit_name, unit);
+
 	if (is_domain_default){
 		g_hash_table_insert(_gst_unit_domain_defaults, g_strdup(domain_name), unit);
 	}
