@@ -121,6 +121,6 @@ gboolean gst_caps2_structure_fixate_field_nearest_double (GstStructure
 
 G_END_DECLS
 
-#endif
+#endif /* __GST_CAPS2_H__ */
 
 

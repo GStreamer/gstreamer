@@ -1403,8 +1403,8 @@ gst_xml_registry_save_structure (GstXMLRegistry *xmlregistry, GstStructure *stru
 {
   CLASS (xmlregistry)->save_func (xmlregistry, "<structure>\n");
   PUT_ESCAPED ("name", g_quark_to_string(structure->name));
-  gst_structure_field_foreach (structure,
-      gst_xml_registry_save_structure_field, xmlregistry);
+  gst_structure_foreach ((GstStructure *) structure, 
+	  gst_xml_registry_save_structure_field, xmlregistry);
   CLASS (xmlregistry)->save_func (xmlregistry, "</structure>\n");
   return TRUE;
 }

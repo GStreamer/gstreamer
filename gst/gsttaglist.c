@@ -390,26 +390,26 @@ static void
 gst_tag_list_add_value_internal (GstStructure *list, GstTagMergeMode mode, GQuark tag, GValue *value)
 {
   GstTagInfo *info = gst_tag_lookup (tag);
-  GstStructureField *field;
+  const GValue *value2;
   
   g_assert (info != NULL);
 
-  if (info->merge_func && (field = gst_structure_id_get_field (list, tag)) != NULL) {
-    GValue value2 = { 0, };
+  if (info->merge_func && (value2 = gst_structure_id_get_value (list, tag)) != NULL) {
+    GValue dest = { 0, };
     switch (mode) {
       case GST_TAG_MERGE_REPLACE_ALL:
       case GST_TAG_MERGE_REPLACE:
 	gst_structure_id_set_value (list, tag, value);
 	break;
       case GST_TAG_MERGE_PREPEND:
-	gst_value_list_concat (&value2, value, &field->value);
-	gst_structure_id_set_value (list, tag, &value2);
-	g_value_unset (&value2);
+	gst_value_list_concat (&dest, value, value2);
+	gst_structure_id_set_value (list, tag, &dest);
+	g_value_unset (&dest);
 	break;
       case GST_TAG_MERGE_APPEND:
-	gst_value_list_concat (&value2, &field->value, value);
-	gst_structure_id_set_value (list, tag, &value2);
-	g_value_unset (&value2);
+	gst_value_list_concat (&dest, value2, value);
+	gst_structure_id_set_value (list, tag, &dest);
+	g_value_unset (&dest);
 	break;
       case GST_TAG_MERGE_KEEP:
       case GST_TAG_MERGE_KEEP_ALL:
@@ -422,7 +422,7 @@ gst_tag_list_add_value_internal (GstStructure *list, GstTagMergeMode mode, GQuar
     switch (mode) {
       case GST_TAG_MERGE_APPEND:
       case GST_TAG_MERGE_KEEP:
-	if (gst_structure_id_get_field (list, tag) != NULL)
+	if (gst_structure_id_get_value (list, tag) != NULL)
 	  break;
 	/* fall through */
       case GST_TAG_MERGE_REPLACE_ALL:
@@ -438,7 +438,7 @@ gst_tag_list_add_value_internal (GstStructure *list, GstTagMergeMode mode, GQuar
     }
   }
 }
-static int
+static gboolean
 gst_tag_list_copy_foreach (GQuark tag, GValue *value, gpointer user_data)
 {
   GstTagCopyData *copy = (GstTagCopyData *) user_data;
@@ -469,7 +469,7 @@ gst_tag_list_insert (GstTagList *into, const GstTagList *from, GstTagMergeMode m
   if (mode == GST_TAG_MERGE_REPLACE_ALL) {
     gst_structure_remove_all_fields (data.list);
   }
-  gst_structure_field_foreach ((GstStructure *) from, gst_tag_list_copy_foreach, &data);
+  gst_structure_foreach ((GstStructure *) from, gst_tag_list_copy_foreach, &data);
 }
 /**
  * gst_tag_list_copy:
@@ -664,7 +664,7 @@ gst_tag_list_foreach (GstTagList *list, GstTagForeachFunc func, gpointer user_da
   data.func = func;
   data.tag_list = list;
   data.data = user_data;
-  gst_structure_field_foreach ((GstStructure *) list, structure_foreach_wrapper, &data);
+  gst_structure_foreach ((GstStructure *) list, structure_foreach_wrapper, &data);
 }
 
 /***** tag events *****/

@@ -26,27 +26,17 @@
 G_BEGIN_DECLS
 
 typedef struct _GstStructure GstStructure;
-typedef struct _GstStructureField GstStructureField;
 
 typedef gboolean (*GstStructureForeachFunc) (GQuark field_id, GValue *value,
     gpointer user_data);
 
-struct _GstStructureField {
-    GQuark name;
-    GValue value;
-};
-
 struct _GstStructure {
   GType type;
-  int len;
 
   GQuark name;
 
   GArray *fields;
 };
-
-#define GST_STRUCTURE_FIELD(structure, index) \
-    &g_array_index((structure)->fields, GstStructureField, (index))
 
 GType gst_structure_get_type(void);
 void _gst_structure_initialize(void);
@@ -62,10 +52,6 @@ void gst_structure_free(GstStructure *structure);
 
 G_CONST_RETURN gchar *gst_structure_get_name(const GstStructure *structure);
 void gst_structure_set_name(GstStructure *structure, const gchar *name);
-void gst_structure_set_field_copy (GstStructure *structure,
-    const GstStructureField *field);
-void gst_structure_set_field (GstStructure *structure,
-    GstStructureField *field);
 
 void gst_structure_id_set_value(GstStructure *structure, GQuark field,
     const GValue *value);
@@ -74,18 +60,16 @@ void gst_structure_set_value(GstStructure *structure, const gchar *field,
 void gst_structure_set(GstStructure *structure, const gchar *field, ...);
 void gst_structure_set_valist(GstStructure *structure, const gchar *field,
     va_list varargs);
+G_CONST_RETURN GValue *gst_structure_id_get_value(const GstStructure *structure,
+    GQuark field);
 G_CONST_RETURN GValue *gst_structure_get_value(const GstStructure *structure,
     const gchar *field);
-GstStructureField *gst_structure_get_field(const GstStructure *structure,
-        const gchar *fieldname);
-GstStructureField *gst_structure_id_get_field(const GstStructure *structure,
-        GQuark fieldname);
 void gst_structure_remove_field(GstStructure *structure, const gchar *field);
 void gst_structure_remove_all_fields(GstStructure *structure);
 
 GType gst_structure_get_field_type(const GstStructure *structure,
     const gchar *field);
-void gst_structure_field_foreach (GstStructure *structure,
+gboolean gst_structure_foreach (GstStructure *structure,
     GstStructureForeachFunc func, gpointer user_data);
 gint gst_structure_n_fields(const GstStructure *structure);
 gboolean gst_structure_has_field(const GstStructure *structure, const gchar *field);

@@ -30,6 +30,22 @@
 
 static GType _gst_structure_type;
 
+typedef struct _GstStructureField GstStructureField;
+struct _GstStructureField {
+  GQuark name;
+  GValue value;
+};
+
+#define GST_STRUCTURE_FIELD(structure, index) \
+    &g_array_index((structure)->fields, GstStructureField, (index))
+
+static void gst_structure_set_field (GstStructure *structure,
+    GstStructureField *field);
+static GstStructureField *gst_structure_get_field(const GstStructure *structure,
+        const gchar *fieldname);
+static GstStructureField *gst_structure_id_get_field(const GstStructure *structure,
+        GQuark fieldname);
+
 static void _gst_structure_transform_to_string(const GValue *src_value,
     GValue *dest_value);
 
@@ -403,32 +419,6 @@ void gst_structure_set_valist(GstStructure *structure, const gchar *fieldname,
 }
 
 /**
- * gst_structure_set_field_copy:
- * @structure: a #GstStructure
- * @field: the #GstStructureField to set
- *
- * Sets a field in the structure.  If the structure currently contains
- * a field with the same name, it is replaced with the provided field.
- * Otherwise, the field is added to the structure.  The field's value
- * is deeply copied.
- *
- * This function is intended mainly for internal use.  The function
- * #gst_structure_set() is recommended instead of this one.
- */
-void gst_structure_set_field_copy (GstStructure *structure,
-    const GstStructureField *field)
-{
-  GstStructureField f = { 0 };
-  GType type = G_VALUE_TYPE (&field->value);
-
-  f.name = field->name;
-  g_value_init (&f.value, type);
-  g_value_copy (&field->value, &f.value);
-
-  gst_structure_set_field (structure, &f);
-}
-
-/**
  * gst_structure_set_field:
  * @structure: a #GstStructure
  * @field: the #GstStructureField to set
@@ -441,7 +431,7 @@ void gst_structure_set_field_copy (GstStructure *structure,
  * This function is intended mainly for internal use.  The function
  * #gst_structure_set() is recommended instead of this one.
  */
-void gst_structure_set_field(GstStructure *structure, GstStructureField *field)
+static void gst_structure_set_field(GstStructure *structure, GstStructureField *field)
 {
   GstStructureField *f;
   int i;
@@ -469,7 +459,7 @@ void gst_structure_set_field(GstStructure *structure, GstStructureField *field)
  *
  * Returns: the #GstStructureField with the given ID
  */
-GstStructureField *gst_structure_id_get_field(const GstStructure *structure,
+static GstStructureField *gst_structure_id_get_field(const GstStructure *structure,
     GQuark field_id)
 {
   GstStructureField *field;
@@ -496,7 +486,7 @@ GstStructureField *gst_structure_id_get_field(const GstStructure *structure,
  *
  * Returns: the #GstStructureField with the given name
  */
-GstStructureField *
+static GstStructureField *
 gst_structure_get_field(const GstStructure *structure, const gchar *fieldname)
 {
   g_return_val_if_fail(structure != NULL, NULL);
@@ -524,6 +514,29 @@ gst_structure_get_value(const GstStructure *structure, const gchar *fieldname)
   g_return_val_if_fail(fieldname != NULL, NULL);
 
   field = gst_structure_get_field(structure, fieldname);
+  if(field == NULL) return NULL;
+
+  return &field->value;
+}
+
+/**
+ * gst_structure_id_get_value:
+ * @structure: a #GstStructure
+ * @id: the #GQuark of the field to get
+ *
+ * Accessor function.
+ *
+ * Returns: the #GValue corresponding to the field with the given name 
+ *          identifier.
+ */
+const GValue *
+gst_structure_id_get_value(const GstStructure *structure, GQuark id)
+{
+  GstStructureField *field;
+
+  g_return_val_if_fail(structure != NULL, NULL);
+
+  field = gst_structure_id_get_field(structure, id);
   if(field == NULL) return NULL;
 
   return &field->value;
@@ -635,15 +648,15 @@ gst_structure_n_fields(const GstStructure *structure)
 }
 
 /**
- * gst_structure_field_foreach:
+ * gst_structure_foreach:
  * @structure: a #GstStructure
  * @func: a function to call for each field
  * @user_data: private data
  *
  * Calls the provided function once for each field in the #GstStructure.
  */
-void
-gst_structure_field_foreach (GstStructure *structure,
+gboolean
+gst_structure_foreach (GstStructure *structure,
     GstStructureForeachFunc func, gpointer user_data)
 {
   int i;
@@ -654,8 +667,10 @@ gst_structure_field_foreach (GstStructure *structure,
     field = GST_STRUCTURE_FIELD(structure, i);
 
     ret = func (field->name, &field->value, user_data);
-    if (!ret) return;
+    if (!ret) return FALSE;
   }
+
+  return TRUE;
 }
 
 /**

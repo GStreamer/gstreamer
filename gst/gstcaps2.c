@@ -316,12 +316,14 @@ gboolean gst_caps2_is_chained (const GstCaps2 *caps)
   return (caps->structs->len > 1);
 }
 
+static gboolean
+one_value_fixed (GQuark field_id, GValue *value, gpointer unused)
+{
+  return G_TYPE_IS_FUNDAMENTAL (G_VALUE_TYPE (value));
+}
 gboolean gst_caps2_is_fixed (const GstCaps2 *caps)
 {
   GstStructure *structure;
-  GstStructureField *field;
-  GType type;
-  int i;
 
   g_return_val_if_fail(caps != NULL, FALSE);
 
@@ -329,51 +331,40 @@ gboolean gst_caps2_is_fixed (const GstCaps2 *caps)
 
   structure = gst_caps2_get_nth_cap (caps, 0);
 
-  for(i=0;i<structure->fields->len;i++) {
-    field = GST_STRUCTURE_FIELD(structure, i);
-    type = G_VALUE_TYPE(&field->value);
-
-    if(type == GST_TYPE_INT_RANGE || type == GST_TYPE_DOUBLE_RANGE ||
-        type == GST_TYPE_LIST || !(G_TYPE_IS_FUNDAMENTAL(type))) {
-      return FALSE;
-    }
-  }
-
-  return TRUE;
+  return gst_structure_foreach (structure, one_value_fixed, NULL);
 }
 
+static gboolean
+_gst_structure_field_has_compatible (GQuark field_id, 
+    GValue *val2, gpointer data)
+{
+  GValue dest = { 0 };
+  GstStructure *struct1 = (GstStructure *) data;
+  const GValue *val1 = gst_structure_id_get_value (struct1, field_id);
+
+  if (val1 == NULL) return FALSE;
+
+  if (gst_value_compare (val1, val2) ==
+      GST_VALUE_EQUAL) {
+    return TRUE;
+  }
+  if (gst_value_intersect (&dest, val1, val2)){
+    g_value_unset (&dest);
+    return TRUE;
+  }
+
+  return FALSE;
+}
 static gboolean _gst_cap_is_always_compatible (const GstStructure *struct1,
     const GstStructure *struct2)
 {
-  int i;
-  const GstStructureField *field1;
-  const GstStructureField *field2;
-
   if(struct1->name != struct2->name){
     return FALSE;
   }
-  for(i=0;i<struct2->fields->len;i++){
-    GValue dest = { 0 };
 
-    /* the reversed order is important */
-    field2 = GST_STRUCTURE_FIELD (struct2, i);
-    field1 = gst_structure_id_get_field (struct1, field2->name);
-
-    if (field1 == NULL) return FALSE;
-
-    if (gst_value_compare (&field1->value, &field2->value) ==
-	GST_VALUE_EQUAL) {
-      break;
-    }
-    if (gst_value_intersect (&dest, &field1->value, &field2->value)){
-      g_value_unset (&dest);
-      break;
-    }
-
-    return FALSE;
-  }
-
-  return TRUE;
+  /* the reversed order is important */
+  return gst_structure_foreach ((GstStructure *) struct2, 
+      _gst_structure_field_has_compatible, (gpointer) struct1);
 }
 
 static gboolean _gst_caps2_cap_is_always_compatible (const GstStructure
@@ -409,57 +400,61 @@ gboolean gst_caps2_is_always_compatible (const GstCaps2 *caps1,
   return FALSE;
 }
 
+typedef struct {
+  GstStructure *dest;
+  const GstStructure *intersect;
+  gboolean first_run;
+} IntersectData;
+
+static gboolean
+gst_caps2_structure_intersect_field (GQuark id, GValue *val1, gpointer data)
+{
+  IntersectData *idata = (IntersectData *) data;
+  GValue dest_value = { 0 };
+  const GValue *val2 = gst_structure_id_get_value (idata->intersect, id);
+
+  if (val2 == NULL) {
+    gst_structure_id_set_value (idata->dest, id, val1);
+  } else if (idata->first_run) {
+    if (gst_value_intersect (&dest_value, val1, val2)) {
+      gst_structure_id_set_value (idata->dest, id, &dest_value);
+      g_value_unset (&dest_value);
+    } else {
+      return FALSE;
+    }
+  }
+  
+  return TRUE;
+}
+
 static GstStructure *gst_caps2_structure_intersect (const GstStructure *struct1,
     const GstStructure *struct2)
 {
-  int i;
-  GstStructure *dest;
-  const GstStructureField *field1;
-  const GstStructureField *field2;
-  int ret;
+  IntersectData data;
 
   g_return_val_if_fail(struct1 != NULL, NULL);
   g_return_val_if_fail(struct2 != NULL, NULL);
 
   if (struct1->name != struct2->name) return NULL;
 
-  dest = gst_structure_id_empty_new (struct1->name);
+  data.dest = gst_structure_id_empty_new (struct1->name);
+  data.intersect = struct2;
+  data.first_run = TRUE;
+  if (!gst_structure_foreach ((GstStructure *) struct1, 
+	gst_caps2_structure_intersect_field, &data))
+    goto error;
+  
+  data.intersect = struct1;
+  data.first_run = FALSE;
+  if (!gst_structure_foreach ((GstStructure *) struct2, 
+	gst_caps2_structure_intersect_field, &data))
+    goto error;
 
-  for(i=0;i<struct1->fields->len;i++){
-    GValue dest_field = { 0 };
+  return data.dest;
 
-    field1 = GST_STRUCTURE_FIELD (struct1, i);
-    field2 = gst_structure_id_get_field (struct2, field1->name);
-
-    if (field2 == NULL) {
-      gst_structure_set_field_copy (dest, field1);
-    } else {
-      if (gst_value_intersect (&dest_field, &field1->value, &field2->value)) {
-	gst_structure_set_value (dest, g_quark_to_string(field1->name),
-	    &dest_field);
-      } else {
-        ret = gst_value_compare(&field1->value, &field2->value);
-	if (ret == GST_VALUE_EQUAL){
-	  gst_structure_set_value (dest, g_quark_to_string(field1->name),
-	      &field1->value);
-	} else {
-	  gst_structure_free (dest);
-	  return NULL;
-	}
-      }
-    }
-  }
-
-  for(i=0;i<struct1->fields->len;i++){
-    field2 = GST_STRUCTURE_FIELD (struct2, i);
-    field1 = gst_structure_id_get_field (struct1, field2->name);
-
-    if (field1 == NULL) {
-      gst_structure_set_field_copy (dest, field2);
-    }
-  }
-
-  return dest;
+error:
+  gst_structure_free (data.dest);
+  return NULL;
 }
 
 #if 0
