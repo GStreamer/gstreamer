@@ -45,16 +45,6 @@ AC_ARG_WITH(pkg-config-path,
                   [colon-separated list of pkg-config(1) dirs]),
    [export PKG_CONFIG_PATH=${withval}])
 
-dnl Check for nasm
-AC_PATH_PROG(NASM_PATH, nasm, no)
-AC_SUBST(NASM_PATH)
-if test x$NASM_PATH = xno; then
-  AC_MSG_WARN(Couldn't find nasm)
-  HAVE_NASM="no"
-else AC_DEFINE(HAVE_NASM, 1, [Define if NASM, the netwide assembler, is available])
-  HAVE_NASM="yes"
-fi
-
 GST_DOC()
 GST_ARCH()
 
@@ -357,7 +347,6 @@ AM_CONDITIONAL(HAVE_ATOMIC_H,       test "x$USE_ATOMIC_H" = "xyes")
 AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
 AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
 
-AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
 AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
 
 

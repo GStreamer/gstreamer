@@ -18,7 +18,6 @@ Requires: 	libxml2 >= %_libxml2
 Requires:	popt > 1.6
 BuildRequires: 	glib2-devel >= %_glib2
 BuildRequires: 	libxml2-devel >= %_libxml2
-BuildRequires: 	nasm >= 0.90
 BuildRequires: 	bison
 BuildRequires: 	flex
 BuildRequires: 	gtk-doc >= 0.7
