@@ -50,7 +50,7 @@ WMV2		WMV2		video/x-wmv, wmvversion = (int) 2
 WMV3		WMV3		video/x-wmv, wmvversion = (int) 3
 WMA1		WMA1		audio/x-wma, wmaversion = (int) 1
 WMA2		WMA2		audio/x-wma, wmaversion = (int) 2
-				audio/x-wma, wmaversion = (int) 9
+				audio/x-wma, wmaversion = (int) 3
 
 These video stream headers is very similar to that used in the AVI
 format as are the audio stream headers. In addition the content types

@@ -1521,9 +1521,9 @@ gst_asf_demux_audio_caps (guint16 codec_id,
       break;
 
     case GST_RIFF_WAVE_FORMAT_WMAV9:
-      caps = gst_caps_from_string ("audio/x-wma, " "wmaversion = (int) 9");
+      caps = gst_caps_from_string ("audio/x-wma, " "wmaversion = (int) 3");
       if (codec_name)
-        *codec_name = g_strdup ("Microsoft WMA V9");
+        *codec_name = g_strdup ("Microsoft WMA V3");
       break;
 
     default:
