@@ -789,6 +789,7 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
   guint8 *data;
   guint tip = 0;
   guint64 offset = 0;
+  guint64 size;
 
   while ((data = gst_type_find_peek (tf, offset, 8)) != NULL) {
     if (strncmp (&data[4], "wide", 4) != 0 &&
@@ -807,9 +808,20 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
       tip = GST_TYPE_FIND_MAXIMUM;
       break;
     }
-    offset += GST_READ_UINT32_BE (data);
-    if (GST_READ_UINT32_BE (data) < 8)
-      break;
+    size = GST_READ_UINT32_BE (data);
+    if (size == 1) {
+      guint8 *sizedata;
+
+      sizedata = gst_type_find_peek (tf, offset + 8, 8);
+      if (sizedata == NULL)
+        break;
+
+      size = GST_READ_UINT64_BE (sizedata);
+    } else {
+      if (size < 8)
+        break;
+    }
+    offset += size;
   }
   if (tip > 0) {
     gst_type_find_suggest (tf, tip, QT_CAPS);
