@@ -15,12 +15,12 @@ int main(int argc,char *argv[])
 {
   GstElement *bin, *disksrc, *parse, *decoder, *audiosink;
 
+  gst_init(&argc,&argv);
+
   if (argc != 2) {
     g_print("usage: %s <filename>\n", argv[0]);
     exit(-1);
   }
-
-  gst_init(&argc,&argv);
 
   /* create a new bin to hold the elements */
   bin = gst_bin_new("bin");
