@@ -108,8 +108,16 @@ static void 		gst_vorbisfile_init 		(VorbisFile *vorbisfile);
 static GstElementStateReturn
 			gst_vorbisfile_change_state 	(GstElement *element);
 
+static const GstFormat* gst_vorbisfile_get_formats 	(GstPad *pad);
+static gboolean 	gst_vorbisfile_src_convert 	(GstPad *pad, GstFormat src_format, gint64 src_value,
+		           				 GstFormat *dest_format, gint64 *dest_value);
+static const GstPadQueryType*
+			gst_vorbisfile_get_query_types 	(GstPad *pad);
+
 static gboolean 	gst_vorbisfile_src_query 	(GstPad *pad, GstPadQueryType type,
 		        	 			 GstFormat *format, gint64 *value);
+static const GstEventMask*
+			gst_vorbisfile_get_event_masks 	(GstPad *pad);
 static gboolean 	gst_vorbisfile_src_event 	(GstPad *pad, GstEvent *event);
 
 static void 		gst_vorbisfile_get_property 	(GObject *object, guint prop_id, 
@@ -197,9 +205,12 @@ gst_vorbisfile_init (VorbisFile * vorbisfile)
   gst_element_set_loop_function (GST_ELEMENT (vorbisfile), gst_vorbisfile_loop);
   vorbisfile->srcpad = gst_pad_new_from_template (dec_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (vorbisfile), vorbisfile->srcpad);
+  gst_pad_set_formats_function (vorbisfile->srcpad, gst_vorbisfile_get_formats);
+  gst_pad_set_query_type_function (vorbisfile->srcpad, gst_vorbisfile_get_query_types);
   gst_pad_set_query_function (vorbisfile->srcpad, gst_vorbisfile_src_query);
+  gst_pad_set_event_mask_function (vorbisfile->srcpad, gst_vorbisfile_get_event_masks);
   gst_pad_set_event_function (vorbisfile->srcpad, gst_vorbisfile_src_event);
-  gst_pad_set_convert_function (vorbisfile->srcpad, NULL);
+  gst_pad_set_convert_function (vorbisfile->srcpad, gst_vorbisfile_src_convert);
 
   vorbisfile->convsize = 4096;
   vorbisfile->total_out = 0;
@@ -260,8 +271,6 @@ gst_vorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
 	got_bytes = 0;
     }
   }
-
-  //gst_util_dump_mem (data, got_bytes);
 
   memcpy (ptr, data, got_bytes);
   gst_bytestream_flush_fast (vorbisfile->bs, got_bytes);
@@ -475,6 +484,101 @@ gst_vorbisfile_loop (GstElement *element)
   }
 }
 
+static const GstFormat*
+gst_vorbisfile_get_formats (GstPad *pad)
+{
+  static const GstFormat formats[] = {
+    GST_FORMAT_TIME,
+    GST_FORMAT_BYTES,
+    GST_FORMAT_UNITS,
+    0
+  };
+  return formats;
+}
+
+static gboolean
+gst_vorbisfile_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
+		            GstFormat *dest_format, gint64 *dest_value)
+{
+  gboolean res = TRUE;
+  guint scale = 1;
+  gint bytes_per_sample;
+  VorbisFile *vorbisfile; 
+  vorbis_info *vi;
+  
+  vorbisfile = GST_VORBISFILE (gst_pad_get_parent (pad));
+
+  vi = ov_info (&vorbisfile->vf, -1);
+  bytes_per_sample = vi->channels * 2;
+
+  switch (src_format) {
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_UNITS:
+          *dest_value = src_value / (vi->channels * 2);
+          break;
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_TIME;
+        case GST_FORMAT_TIME:
+        {
+          gint byterate = bytes_per_sample * vi->rate;
+
+          if (byterate == 0)
+            return FALSE;
+          *dest_value = src_value * GST_SECOND / byterate;
+          break;
+        }
+        default:
+          res = FALSE;
+      }
+    case GST_FORMAT_UNITS:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+	  *dest_value = src_value * bytes_per_sample;
+          break;
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_TIME;
+        case GST_FORMAT_TIME:
+	  if (vi->rate == 0)
+	    return FALSE;
+	  *dest_value = src_value * GST_SECOND / vi->rate;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_BYTES;
+        case GST_FORMAT_BYTES:
+	  scale = bytes_per_sample;
+        case GST_FORMAT_UNITS:
+	  *dest_value = src_value * scale * vi->rate / GST_SECOND;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+
+  return res;
+}
+
+static const GstPadQueryType*
+gst_vorbisfile_get_query_types (GstPad *pad)
+{
+  static const GstPadQueryType types[] = {
+    GST_PAD_QUERY_TOTAL,
+    GST_PAD_QUERY_POSITION,
+    0
+  };
+  return types;
+}
+		    
 static gboolean
 gst_vorbisfile_src_query (GstPad *pad, GstPadQueryType type,
 		          GstFormat *format, gint64 *value)
@@ -553,6 +657,16 @@ gst_vorbisfile_src_query (GstPad *pad, GstPadQueryType type,
 
   return res;
 }
+
+static const GstEventMask*
+gst_vorbisfile_get_event_masks (GstPad *pad)
+{
+  static const GstEventMask masks[] = {
+    { GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_ACCURATE },
+    { 0, }
+  };
+  return masks;
+}
 		    
 static gboolean
 gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
@@ -564,21 +678,35 @@ gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
+    {
+      gint64 offset;
+      vorbis_info *vi;
+  
       if (!vorbisfile->vf.seekable) {
 	gst_event_unref (event);
         return FALSE;
       }
 
+      offset = GST_EVENT_SEEK_OFFSET (event);
+
       switch (GST_EVENT_SEEK_FORMAT (event)) {
 	case GST_FORMAT_TIME:
 	  vorbisfile->seek_pending = TRUE;
-	  vorbisfile->seek_value = GST_EVENT_SEEK_OFFSET (event);
+	  vorbisfile->seek_value = offset;
 	  vorbisfile->seek_format = GST_FORMAT_TIME;
 	  vorbisfile->seek_accurate = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_ACCURATE;
 	  break;
+	case GST_FORMAT_BYTES:
+          vi = ov_info (&vorbisfile->vf, -1);
+	  if (vi->channels * 2 == 0) {
+	    res = FALSE;
+	    goto done; 
+	  }
+          offset /= vi->channels * 2;
+	  /* fallthrough */
 	case GST_FORMAT_UNITS:
 	  vorbisfile->seek_pending = TRUE;
-	  vorbisfile->seek_value = GST_EVENT_SEEK_OFFSET (event);
+	  vorbisfile->seek_value = offset;
 	  vorbisfile->seek_format = GST_FORMAT_UNITS;
 	  vorbisfile->seek_accurate = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_ACCURATE;
 	  break;
@@ -587,11 +715,13 @@ gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
 	  break;
       }
       break;
+    }
     default:
       res = FALSE;
       break;
   }
-  
+
+done:
   gst_event_unref (event);
   return res;
 }
