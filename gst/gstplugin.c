@@ -790,8 +790,9 @@ gst_plugin_add_feature (GstPlugin * plugin, GstPluginFeature * feature)
 {
   GstPluginFeature *oldfeature;
 
-  /* FIXME 0.9: get reference counting somewhat right in here, GstPluginFeatures 
-   * should probably be GstObjects that are sinked when adding them to a plugin */
+  /* FIXME 0.9: get reference counting somewhat right in here,
+   * GstPluginFeatures should probably be GstObjects that are sinked when
+   * adding them to a plugin */
   g_return_if_fail (plugin != NULL);
   g_return_if_fail (GST_IS_PLUGIN_FEATURE (feature));
   g_return_if_fail (feature != NULL);
@@ -800,11 +801,11 @@ gst_plugin_add_feature (GstPlugin * plugin, GstPluginFeature * feature)
       GST_PLUGIN_FEATURE_NAME (feature), G_OBJECT_TYPE (feature));
 
   if (oldfeature == feature) {
-    GST_ERROR ("feature %s has already been added",
+    GST_WARNING ("feature %s has already been added",
         GST_PLUGIN_FEATURE_NAME (feature));
     /* g_object_unref (feature); */
   } else if (oldfeature) {
-    GST_ERROR ("feature %s already present in plugin",
+    GST_WARNING ("feature %s already present in plugin",
         GST_PLUGIN_FEATURE_NAME (feature));
     /* g_object_unref (feature); */
   } else {
