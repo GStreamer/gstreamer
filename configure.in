@@ -1000,7 +1000,7 @@ plugins/filters/passthrough/Makefile
 plugins/filters/adder/Makefile
 plugins/filters/colorspace/Makefile
 plugins/filters/volenv/Makefile
-plugins/filters/adder/Makefile
+plugins/filters/level/Makefile
 plugins/gnomevfs/Makefile
 plugins/icecast/Makefile
 plugins/icecast/icecastsend/Makefile
