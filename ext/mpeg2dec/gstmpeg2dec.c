@@ -42,11 +42,8 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_SEEK);
 static GstElementDetails gst_mpeg2dec_details = {
   "mpeg1 and mpeg2 video decoder",
   "Codec/Video/Decoder",
-  "GPL",
   "Uses libmpeg2 to decode MPEG video streams",
-  VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2002"
 };
 
 /* Mpeg2dec signals and args */
@@ -113,6 +110,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
   )
 );
 
+static void             gst_mpeg2dec_base_init          (gpointer g_class);
 static void		gst_mpeg2dec_class_init		(GstMpeg2decClass *klass);
 static void		gst_mpeg2dec_init		(GstMpeg2dec *mpeg2dec);
 
@@ -154,11 +152,11 @@ GType
 gst_mpeg2dec_get_type (void)
 {
   static GType mpeg2dec_type = 0;
-
+  
   if (!mpeg2dec_type) {
     static const GTypeInfo mpeg2dec_info = {
       sizeof(GstMpeg2decClass),      
-      NULL,
+      gst_mpeg2dec_base_init,
       NULL,
       (GClassInitFunc)gst_mpeg2dec_class_init,
       NULL,
@@ -170,6 +168,18 @@ gst_mpeg2dec_get_type (void)
     mpeg2dec_type = g_type_register_static(GST_TYPE_ELEMENT, "GstMpeg2dec", &mpeg2dec_info, 0);
   }
   return mpeg2dec_type;
+}
+
+static void
+gst_mpeg2dec_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_template_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_template_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (user_data_template_factory));
+
+  gst_element_class_set_details (element_class, &gst_mpeg2dec_details);
 }
 
 static void
@@ -1154,28 +1164,22 @@ gst_mpeg2dec_get_property (GObject *object, guint prop_id, GValue *value, GParam
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the mpeg2dec element */
-  factory = gst_element_factory_new("mpeg2dec",GST_TYPE_MPEG2DEC,
-                                   &gst_mpeg2dec_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_template_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_template_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (user_data_template_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "mpeg2dec", GST_RANK_PRIMARY, GST_TYPE_MPEG2DEC))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "mpeg2dec",
-  plugin_init
-};
+  "LibMpeg2 decoder",
+  plugin_init,
+  VERSION,
+  "GPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
