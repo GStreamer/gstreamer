@@ -170,6 +170,7 @@ gst_speex_dec_init (GstSpeexDec * dec)
       (&speex_dec_sink_factory), "sink");
   gst_pad_set_chain_function (dec->sinkpad, speex_dec_chain);
   gst_pad_set_formats_function (dec->sinkpad, speex_dec_get_formats);
+  gst_pad_set_convert_function (dec->sinkpad, speex_dec_convert);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
   dec->srcpad =
@@ -201,6 +202,10 @@ speex_dec_convert (GstPad * pad,
   dec = GST_SPEEXDEC (gst_pad_get_parent (pad));
 
   if (dec->packetno < 1)
+    return FALSE;
+
+  if (pad == dec->sinkpad &&
+      (src_format == GST_FORMAT_BYTES || *dest_format == GST_FORMAT_BYTES))
     return FALSE;
 
   switch (src_format) {
