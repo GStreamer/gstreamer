@@ -32,7 +32,7 @@
 static GstElementDetails gst_famedec_details = {
   "MPEG1 and MPEG4 video decoder using the famedec library",
   "Codec/Video/Encoder",
-  "GPL",
+  "LGPL",
   "Uses famedec to decode MPEG video streams",
   VERSION,
   "famedec: (C) 2000-2001, Vivien Chappelier\n"
