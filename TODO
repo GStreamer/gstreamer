@@ -26,4 +26,8 @@
 
 * fix ffmpeg
 
-* add ladspa header check stuff
+* add ladspa header check stuff and dir stuff
+
+* make sidplay stuff ok, the source is on the net ;)
+
+* fix xmms plugin, doesn't register atm

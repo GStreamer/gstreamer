@@ -585,10 +585,10 @@ GST_CHECK_FEATURE(VORBIS, [vorbis plugin], vorbisenc vorbisdec, [
   AM_PATH_VORBIS(HAVE_VORBIS=yes, HAVE_VORBIS=no)
 ])
 
-dnl *** xmms ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBXMMS, true)
-GST_CHECK_FEATURE(LIBXMMS, [xmms plugin], xmms, [
-  AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
+dnl *** XMMS ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_XMMS, true)
+GST_CHECK_FEATURE(XMMS, [xmms plugin], xmms, [
+  AM_PATH_XMMS(0.1.0, HAVE_XMMS=yes, HAVE_XMMS=no)
 ])
 
 dnl Check for libghttp
@@ -908,7 +908,6 @@ AM_CONDITIONAL(HAVE_FIG2DEV_PNG,    $HAVE_FIG2DEV_PNG)
 AM_CONDITIONAL(HAVE_FIG2DEV_PDF,    $HAVE_FIG2DEV_PDF)
 AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
 AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
-AM_CONDITIONAL(HAVE_XMMS,           test "x$HAVE_XMMS" = "xyes")
 AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
@@ -1078,6 +1077,7 @@ ext/openquicktime/Makefile
 ext/shout/Makefile
 ext/sdl/Makefile
 ext/vorbis/Makefile
+ext/xmms/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/audio/Makefile
