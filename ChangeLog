@@ -1,3 +1,7 @@
+2004-03-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac: AC_SUBST GLIB_ONLY CFLAGS and LIBS
+
 2004-03-03  Benjamin Otte  <otte@gnome.org>
 
 	* gst/schedulers/gstoptimalscheduler.c:

@@ -231,6 +231,8 @@ AC_SUBST(GST_PKG_DEPS)
 
 dnl Check for glib2 without extra fat, useful for the unversioned tool frontends
 PKG_CHECK_MODULES(GLIB_ONLY, glib-2.0 >= $GLIB2_REQ)
+AC_SUBST(GLIB_ONLY_CFLAGS)
+AC_SUBST(GLIB_ONLY_LIBS)
   
 dnl === libxml 2 ===
 if test "x$GST_DISABLE_LOADSAVE" = "xyes" && test "x$GST_DISABLE_REGISTRY" = "xyes"
