@@ -229,6 +229,8 @@ dnl ====================================
 
 GST_GLIB2_CHECK()
 
+dnl Check for additional libraries that we might use:
+dnl =================================================
 dnl GTK
 HAVE_GTK=NO
 PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= 2.2.0, HAVE_GTK_22=yes, HAVE_GTK_22=no)
@@ -251,7 +253,6 @@ AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(HAVE_GTK)
 AM_CONDITIONAL(HAVE_GDK_LOADERS, test "x$HAVE_GTK_22" = "xyes")
-
 
 dnl Check for X11 extensions
 AC_PATH_XTRA
@@ -473,6 +474,17 @@ dnl		;;
   fi
 ])
 
+dnl *** X check ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_XFREE, true)
+GST_CHECK_FEATURE(XFREE, [X11 XFree86],
+                  [ximagesink xvideosink], [
+   if test "$X_CFLAGS" = "-DX_DISPLAY_MISSING"; then
+     HAVE_XFREE=no
+   else
+     HAVE_XFREE=yes
+   fi
+])
+
 dnl *** XVideo ***
 dnl Look for the PIC library first, Debian requires it.
 dnl Check debian-devel archives for gory details.
@@ -487,18 +499,11 @@ dnl FIXME: add check if this platform can support linking to a
 dnl        non-PIC libXv, if not then don not use Xv.
 dnl FIXME: perhaps warn user if they have a shared libXv since
 dnl        this is an error until XFree86 starts shipping one
-translit(dnm, m, l) AM_CONDITIONAL(USE_XFREE, true)
-GST_CHECK_FEATURE(XFREE, [X11 XFree86], xvideosink-X, [
-   if test "-DX_DISPLAY_MISSING" = "$X_CFLAGS"; then
-     HAVE_XFREE=no
-   else
-     HAVE_XFREE=yes
-   fi
-])
    
 dnl Check for Xv extension
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
-GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink-Xv, [
+GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
+                  [xvimagesink xvideosink], [
   if test x$HAVE_XFREE = xyes; then
     AC_CHECK_LIB(Xv_pic, XvQueryExtension,
 		 HAVE_XVIDEO="yes", HAVE_XVIDEO="no",
@@ -523,11 +528,10 @@ GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink-Xv, [
   fi
 ])
 
-dnl check for XShm
-translit(dnm, m, l) AM_CONDITIONAL(USE_XSHM, true)
-GST_CHECK_FEATURE(XSHM, [X11 Shared Memory], ximage, [
-  AC_CHECK_HEADER(X11/extensions/XShm.h,
-                  HAVE_XSHM=yes, HAVE_XSHM=no)
+dnl check for Shm
+translit(dnm, m, l) AM_CONDITIONAL(USE_SHM, true)
+GST_CHECK_FEATURE(SHM, [Shared Memory], ximage with shm, [
+  AC_CHECK_HEADER(sys/shm.h, HAVE_SHM="yes", HAVE_SHM="no")
 ])
 
 dnl Next, check for the optional libraries:
