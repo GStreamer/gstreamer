@@ -30,13 +30,13 @@ G_BEGIN_DECLS
 #define GST_TYPE_COLOR_BALANCE \
   (gst_color_balance_get_type ())
 #define GST_COLOR_BALANCE(obj) \
-  (GST_INTERFACE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_COLOR_BALANCE, \
-				      GstColorBalance))
+  (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_COLOR_BALANCE, \
+						 GstColorBalance))
 #define GST_COLOR_BALANCE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_COLOR_BALANCE, \
 			    GstColorBalanceClass))
 #define GST_IS_COLOR_BALANCE(obj) \
-  (GST_INTERFACE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_COLOR_BALANCE))
+  (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_COLOR_BALANCE))
 #define GST_IS_COLOR_BALANCE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_COLOR_BALANCE))
 #define GST_COLOR_BALANCE_GET_CLASS(inst) \
@@ -55,6 +55,13 @@ typedef struct _GstColorBalanceClass {
 				   gint                    value);
   gint          (* get_value)     (GstColorBalance        *balance,
 				   GstColorBalanceChannel *channel);
+
+  /* signals */
+  void (* value_changed) (GstColorBalance        *balance,
+			  GstColorBalanceChannel *channel,
+			  gint                    value);
+
+  GST_CLASS_PADDING
 } GstColorBalanceClass;
 
 GType	gst_color_balance_get_type	(void);
@@ -67,6 +74,11 @@ void	gst_color_balance_set_value	(GstColorBalance        *balance,
 					 gint                    value);
 gint	gst_color_balance_get_value	(GstColorBalance        *balance,
 					 GstColorBalanceChannel *channel);
+
+/* trigger signal */
+void	gst_color_balance_value_changed (GstColorBalance        *balance,
+					 GstColorBalanceChannel *channel,
+					 gint                    value);
 
 G_END_DECLS
 

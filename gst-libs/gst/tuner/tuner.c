@@ -24,8 +24,19 @@
 #endif
 
 #include "tuner.h"
+#include "tunermarshal.h"
+
+enum {
+  NORM_CHANGED,
+  CHANNEL_CHANGED,
+  FREQUENCY_CHANGED,
+  SIGNAL_CHANGED,
+  LAST_SIGNAL
+};
 
 static void 	gst_tuner_class_init	(GstTunerClass *klass);
+
+static guint gst_tuner_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gst_tuner_get_type (void)
@@ -49,7 +60,7 @@ gst_tuner_get_type (void)
 					     "GstTuner",
 					     &gst_tuner_info, 0);
     g_type_interface_add_prerequisite (gst_tuner_type,
-				       GST_TYPE_INTERFACE);
+				       GST_TYPE_IMPLEMENTS_INTERFACE);
   }
 
   return gst_tuner_type;
@@ -58,6 +69,41 @@ gst_tuner_get_type (void)
 static void
 gst_tuner_class_init (GstTunerClass *klass)
 {
+  static gboolean initialized = FALSE;
+
+  if (!initialized) {
+    gst_tuner_signals[NORM_CHANGED] =
+      g_signal_new ("norm_changed",
+		    GST_TYPE_TUNER, G_SIGNAL_RUN_LAST,
+		    G_STRUCT_OFFSET (GstTunerClass, norm_changed),
+		    NULL, NULL,
+		    g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+		    GST_TYPE_TUNER_NORM);
+    gst_tuner_signals[CHANNEL_CHANGED] =
+      g_signal_new ("channel_changed",
+		    GST_TYPE_TUNER, G_SIGNAL_RUN_LAST,
+		    G_STRUCT_OFFSET (GstTunerClass, channel_changed),
+		    NULL, NULL,
+		    g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+		    GST_TYPE_TUNER_CHANNEL);
+    gst_tuner_signals[NORM_CHANGED] =
+      g_signal_new ("norm_changed",
+		    GST_TYPE_TUNER, G_SIGNAL_RUN_LAST,
+		    G_STRUCT_OFFSET (GstTunerClass, frequency_changed),
+		    NULL, NULL,
+		    gst_tuner_marshal_VOID__OBJECT_ULONG, G_TYPE_NONE, 2,
+		    GST_TYPE_TUNER_CHANNEL, G_TYPE_ULONG);
+    gst_tuner_signals[NORM_CHANGED] =
+      g_signal_new ("norm_changed",
+		    GST_TYPE_TUNER, G_SIGNAL_RUN_LAST,
+		    G_STRUCT_OFFSET (GstTunerClass, signal_changed),
+		    NULL, NULL,
+		    gst_tuner_marshal_VOID__OBJECT_INT, G_TYPE_NONE, 2,
+		    GST_TYPE_TUNER_CHANNEL, G_TYPE_INT);
+      
+    initialized = TRUE;
+  }
+
   /* default virtual functions */
   klass->list_channels = NULL;
   klass->set_channel = NULL;
@@ -187,4 +233,50 @@ gst_tuner_signal_strength (GstTuner        *tuner,
   }
 
   return 0;
+}
+
+void
+gst_tuner_channel_changed (GstTuner        *tuner,
+			   GstTunerChannel *channel)
+{
+  g_signal_emit (G_OBJECT (tuner),
+		 gst_tuner_signals[CHANNEL_CHANGED], 0,
+		 channel);
+}
+
+void
+gst_tuner_norm_changed (GstTuner        *tuner,
+			GstTunerNorm    *norm)
+{
+  g_signal_emit (G_OBJECT (tuner),
+		 gst_tuner_signals[NORM_CHANGED], 0,
+		 norm);
+}
+
+void
+gst_tuner_frequency_changed (GstTuner        *tuner,
+			     GstTunerChannel *channel,
+			     gulong           frequency)
+{
+  g_signal_emit (G_OBJECT (tuner),
+		 gst_tuner_signals[FREQUENCY_CHANGED], 0,
+		 channel, frequency);
+
+  g_signal_emit_by_name (G_OBJECT (channel),
+			 "frequency_changed",
+			 frequency);
+}
+
+void
+gst_tuner_signal_changed (GstTuner        *tuner,
+			  GstTunerChannel *channel,
+			  gint             signal)
+{
+  g_signal_emit (G_OBJECT (tuner),
+		 gst_tuner_signals[SIGNAL_CHANGED], 0,
+		 channel, signal);
+
+  g_signal_emit_by_name (G_OBJECT (channel),
+			 "signal_changed",
+			 signal);
 }

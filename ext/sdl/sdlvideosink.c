@@ -44,8 +44,8 @@ static void     gst_sdlvideosink_base_init    (gpointer g_class);
 static void     gst_sdlvideosink_class_init   (GstSDLVideoSinkClass *klass);
 static void     gst_sdlvideosink_init         (GstSDLVideoSink      *sdl);
 
-static void     gst_sdlvideosink_interface_init (GstInterfaceClass  *klass);
-static gboolean gst_sdlvideosink_interface_supported (GstInterface  *iface,
+static void     gst_sdlvideosink_interface_init (GstImplementsInterfaceClass *klass);
+static gboolean gst_sdlvideosink_supported    (GstImplementsInterface *iface,
 					       GType                 type);
 
 static void     gst_sdlvideosink_xoverlay_init (GstXOverlayClass    *klass);
@@ -116,7 +116,7 @@ gst_sdlvideosink_get_type (void)
     sdlvideosink_type = g_type_register_static(GST_TYPE_VIDEOSINK,
                                                "GstSDLVideoSink",
                                                &sdlvideosink_info, 0);
-    g_type_add_interface_static(sdlvideosink_type, GST_TYPE_INTERFACE,
+    g_type_add_interface_static(sdlvideosink_type, GST_TYPE_IMPLEMENTS_INTERFACE,
 				&iface_info);
     g_type_add_interface_static(sdlvideosink_type, GST_TYPE_X_OVERLAY,
 				&xoverlay_info);
@@ -296,14 +296,14 @@ gst_sdlvideosink_init (GstSDLVideoSink *sdlvideosink)
 }
 
 static void
-gst_sdlvideosink_interface_init (GstInterfaceClass *klass)
+gst_sdlvideosink_interface_init (GstImplementsInterfaceClass *klass)
 {
-  klass->supported = gst_sdlvideosink_interface_supported;
+  klass->supported = gst_sdlvideosink_supported;
 }
 
 static gboolean
-gst_sdlvideosink_interface_supported (GstInterface *interface,
-				      GType         iface_type)
+gst_sdlvideosink_supported (GstImplementsInterface *interface,
+			    GType                   iface_type)
 {
   g_assert (iface_type == GST_TYPE_X_OVERLAY);
 

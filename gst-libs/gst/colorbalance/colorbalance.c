@@ -25,8 +25,16 @@
 #endif
 
 #include "colorbalance.h"
+#include "colorbalancemarshal.h"
+
+enum {
+  VALUE_CHANGED,
+  LAST_SIGNAL
+};
 
 static void 	gst_color_balance_class_init	(GstColorBalanceClass *klass);
+
+static guint gst_color_balance_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gst_color_balance_get_type (void)
@@ -50,7 +58,7 @@ gst_color_balance_get_type (void)
 						     "GstColorBalance",
 						     &gst_color_balance_info, 0);
     g_type_interface_add_prerequisite (gst_color_balance_type,
-				       GST_TYPE_INTERFACE);
+				       GST_TYPE_IMPLEMENTS_INTERFACE);
   }
 
   return gst_color_balance_type;
@@ -59,6 +67,21 @@ gst_color_balance_get_type (void)
 static void
 gst_color_balance_class_init (GstColorBalanceClass *klass)
 {
+  static gboolean initialized = FALSE;
+  
+  if (!initialized) {
+    gst_color_balance_signals[VALUE_CHANGED] =
+      g_signal_new ("value_changed",
+		    GST_TYPE_COLOR_BALANCE, G_SIGNAL_RUN_LAST,
+		    G_STRUCT_OFFSET (GstColorBalanceClass, value_changed),
+		    NULL, NULL,
+		    gst_color_balance_marshal_VOID__OBJECT_INT,
+		    G_TYPE_NONE, 2,
+		    GST_TYPE_COLOR_BALANCE_CHANNEL, G_TYPE_INT);
+      
+    initialized = TRUE;
+  }
+
   /* default virtual functions */
   klass->list_channels = NULL;
   klass->set_value = NULL;
@@ -100,4 +123,16 @@ gst_color_balance_get_value (GstColorBalance        *balance,
   }
 
   return channel->min_value;
+}
+
+void
+gst_color_balance_value_changed (GstColorBalance        *balance,
+				 GstColorBalanceChannel *channel,
+				 gint                    value)
+{
+  g_signal_emit (G_OBJECT (balance),
+                 gst_color_balance_signals[VALUE_CHANGED],
+		 0, channel, value);
+
+  g_signal_emit_by_name (G_OBJECT (channel), "value_changed", value);
 }
