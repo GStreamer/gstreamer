@@ -154,7 +154,7 @@ main (int argc, char *argv[])
     </para>
     <programlisting>
   /* and an audio sink */
-  audiosink = gst_element_factory_make ("audiosink", "play_audio");
+  audiosink = gst_element_factory_make ("osssink", "play_audio");
     </programlisting>
 
     <para>
