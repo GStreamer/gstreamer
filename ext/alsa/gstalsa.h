@@ -38,6 +38,7 @@
 
 #define GST_ALSA(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_ALSA, GstAlsa)
 #define GST_ALSA_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_ALSA, GstAlsaClass)
+#define GST_ALSA_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_ALSA, GstAlsaClass))
 #define GST_IS_ALSA(obj) G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_ALSA)
 #define GST_IS_ALSA_CLASS(klass) G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_ALSA)
 #define GST_TYPE_ALSA gst_alsa_get_type()
@@ -65,10 +66,10 @@
 
 typedef struct _GstAlsa GstAlsa;
 typedef struct _GstAlsaClass GstAlsaClass;
-typedef GstAlsa GstAlsaSink;
-typedef GstAlsaClass GstAlsaSinkClass;
-typedef GstAlsa GstAlsaSrc;
-typedef GstAlsaClass GstAlsaSrcClass;
+typedef struct _GstAlsaSink GstAlsaSink;
+typedef struct _GstAlsaSinkClass GstAlsaSinkClass;
+typedef struct _GstAlsaSrc GstAlsaSrc;
+typedef struct _GstAlsaSrcClass GstAlsaSrcClass;
 
 typedef struct _GstAlsaClock GstAlsaClock;
 typedef struct _GstAlsaClockClass GstAlsaClockClass;
@@ -99,14 +100,6 @@ typedef enum {
 typedef int (*GstAlsaTransmitFunction) (GstAlsa *this, snd_pcm_sframes_t *avail);
 
 typedef struct {
-  GstPad *	pad;
-  guint8 *	data;		/* pointer into buffer */
-  guint		size;		/* sink: bytes left in buffer */
-  GstBuffer *	buf;		/* current buffer */
-  guint		behaviour; 	/* 0 = data points into buffer (so unref when size == 0), 
-				   1 = data should be freed, use buffer after that */
-} GstAlsaPad;
-typedef struct {
   snd_pcm_format_t	format;
   guint			rate;
   gint			channels;  
@@ -116,10 +109,9 @@ struct _GstAlsa {
   GstElement			parent;
 
   /* array of GstAlsaPads */
-  GstAlsaPad			pads[GST_ALSA_MAX_CHANNELS];
+  GstPad *			pad[GST_ALSA_MAX_CHANNELS];
 
   gchar *			device;
-  snd_pcm_stream_t		stream;
   snd_pcm_t *			handle;
   guint				pcm_caps;	/* capabilities of the pcm device, see GstAlsaPcmCaps */
   snd_output_t *		out;
@@ -146,9 +138,32 @@ struct _GstAlsa {
 						 */
 };
 struct _GstAlsaClass {
-  GstElementClass parent_class;
-};
+  GstElementClass		parent_class;
 
+  snd_pcm_stream_t		stream;
+
+  /* different transmit functions */
+  GstAlsaTransmitFunction	transmit_mmap;
+  GstAlsaTransmitFunction	transmit_rw;
+};
+struct _GstAlsaSink {
+  GstAlsa			parent;
+  /* array of the data on the channels */
+  guint8 *			data[GST_ALSA_MAX_CHANNELS];		/* pointer into buffer */
+  guint				size[GST_ALSA_MAX_CHANNELS];		/* sink: bytes left in buffer */
+  GstBuffer *			buf[GST_ALSA_MAX_CHANNELS];		/* current buffer */
+  guint				behaviour[GST_ALSA_MAX_CHANNELS]; 	/* 0 = data points into buffer (so unref when size == 0), 
+									   1 = data should be freed, use buffer after that */
+};
+struct _GstAlsaSinkClass {
+  GstAlsaClass			parent_class;
+};
+struct _GstAlsaSrc {
+  GstAlsa			parent;
+};
+struct _GstAlsaSrcClass {
+  GstAlsaClass			parent_class;
+};
 
 struct _GstAlsaClock {
   GstSystemClock		parent;
