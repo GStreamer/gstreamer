@@ -20,7 +20,7 @@
 #ifndef __GST_XVIMAGESINK_H__
 #define __GST_XVIMAGESINK_H__
 
-#include <gst/video/gstvideosink.h>
+#include <gst/video/videosink.h>
 
 #ifdef HAVE_XSHM
 #include <sys/ipc.h>
