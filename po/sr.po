@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-03-16 00:32+0100\n"
+"POT-Creation-Date: 2004-04-14 20:54+0200\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -36,17 +36,22 @@ msgid "Could not open CD device for reading."
 msgstr "Не могу да отворим ЦД уређај ради читања."
 
 # Виртуелни Систем Датотека
-#: ext/gnomevfs/gstgnomevfssrc.c:1054 ext/gnomevfs/gstgnomevfssrc.c:1077
+#: ext/gnomevfs/gstgnomevfssrc.c:1066 ext/gnomevfs/gstgnomevfssrc.c:1089
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
 msgstr "Не могу да отворим ВСД датотеку „%s“ ради читања."
 
-#: ext/gnomevfs/gstgnomevfssink.c:293
+#: ext/gnomevfs/gstgnomevfssink.c:343
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing."
 msgstr "Не могу да отворим ВСД датотеку „%s“ ради уписа."
 
-#: ext/gnomevfs/gstgnomevfssink.c:318
+#: ext/gnomevfs/gstgnomevfssink.c:350
+#, fuzzy
+msgid "No filename given"
+msgstr "Име датотеке није задато."
+
+#: ext/gnomevfs/gstgnomevfssink.c:375
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Не могу да затворим ВСД датотеку „%s“."
@@ -60,7 +65,7 @@ msgstr "Име датотеке није задато."
 msgid "Could not write to file \"%s\"."
 msgstr "Не могу да пишем у датотеку „%s“."
 
-#: gst/avi/gstavimux.c:1051
+#: gst/avi/gstavimux.c:1052
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити искварен."
 
@@ -133,6 +138,10 @@ msgstr "Не могу да отворим уређај „%s“ ради упи�
 #, c-format
 msgid "Could not open device \"%s\" for reading."
 msgstr "Не могу да отворим уређај „%s“ ради читања."
+
+#: sys/oss/gstosselement.c:1092
+msgid "Your oss device could not be probed correctly"
+msgstr ""
 
 #: sys/oss/gstossmixer.c:83
 msgid "Volume"
