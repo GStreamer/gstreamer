@@ -1,5 +1,10 @@
 2004-01-27  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_handle_sink_event):
+	  stop processing after EOS
+
+2004-01-27  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* gst/asfdemux/asfheaders.h:
 	* gst/asfdemux/gstasfdemux.c: 
 	* gst/asfdemux/gstasfmux.c: (gst_asfmux_put_guid),
