@@ -68,16 +68,16 @@ Record sound from your sound input and encode it into an ogg file:
 gst\-launch not only handles audio but video as well:
 For mpeg video files (here outputing to aasink) :
 
- gst\-launch filesrc location=JB_FF9_TheGravityOfLove.mpg ! mpegdemux video_00! { queue ! mpeg2dec ! aasink }
+ gst\-launch filesrc location=JB_FF9_TheGravityOfLove.mpg ! mpegdemux video_%02d! { queue ! mpeg2dec ! aasink }
 
 For vob files (here outputting image to sdlvideosink): 
- gst\-launch filesrc location=/flflfj.vob ! mpegdemux video_00! { queue ! mpeg2dec ! sdlvideosink }
+ gst\-launch filesrc location=/flflfj.vob ! mpegdemux video_%02d! { queue ! mpeg2dec ! sdlvideosink }
 
 Play a mpeg movie with sound using the sdlvideosink:
- gst\-launch filesrc location=movie.mpg ! mpegdemux video_00! { queue ! mpeg2dec ! sdlvideosink } mpegdemux0.audio_00! { queue ! mad ! osssink }
+ gst\-launch filesrc location=movie.mpg ! mpegdemux video_%02d! { queue ! mpeg2dec ! sdlvideosink } mpegdemux0.audio_%02d! { queue ! mad ! osssink }
 
 Playing a avi movie would be done with something like this:
-gst\-launch filesrc location=movie.avi ! avidemux video_00! { queue ! windec ! sdlvideosink }
+gst\-launch filesrc location=movie.avi ! avidemux video_%02d! { queue ! windec ! sdlvideosink }
 
 See other docs, examples, and the source for description on how to
 create a PIPELINE\-DESCRIPTION.

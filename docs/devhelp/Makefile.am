@@ -10,7 +10,7 @@ gstreamer.devhelp:
 	rm html.devhelp
 
 gstreamer-libs.devhelp:
-	cd ../gst && make
+	cd ../libs && make
 	./html2xml.py ../libs/html
 	sed 's/base=""/base="\/usr\/share\/doc\/gstreamer-devel-@VERSION@\/html\/gstreamer-libs"/g' html.devhelp > gstreamer-libs.devhelp
 	perl -i -p -e 's/name="html"/name="gstreamer-libs"/' gstreamer-libs.devhelp
