@@ -33,34 +33,36 @@ BuildRequires:	gstreamer-tools >= 0.7.4
 @USE_ESD_TRUE@
 @USE_ESD_TRUE@Provides:		gstreamer-audiosrc
 @USE_ESD_TRUE@Provides:		gstreamer-audiosink
+@USE_GCONF_TRUE@Requires: 	GConf2
+@USE_GCONF_TRUE@BuildRequires: 	GConf2-devel
 @USE_GNOME_VFS_TRUE@Requires:      gnome-vfs2 > 1.9.4.00
 @USE_GNOME_VFS_TRUE@BuildRequires: gnome-vfs2-devel > 1.9.4.00
 @USE_JPEG_TRUE@Requires:      libjpeg
 @USE_JPEG_TRUE@BuildRequires: libjpeg-devel
+@USE_LIBPNG_TRUE@Requires:      libpng >= 1.2.0
+@USE_LIBPNG_TRUE@BuildRequires: libpng-devel >= 1.2.0
 @USE_MIKMOD_TRUE@Requires:      mikmod
 @USE_MIKMOD_TRUE@BuildRequires: mikmod
+@USE_OSS_TRUE@BuildRequires: glibc-devel
+@USE_PANGO_TRUE@Requires:        pango
+@USE_PANGO_TRUE@BuildRequires:   pango-devel
+@USE_RAW1394_TRUE@Requires:      libraw1394
+@USE_RAW1394_TRUE@BuildRequires: libraw1394-devel
 @USE_SDL_TRUE@Requires:      SDL >= 1.2.0
 @USE_SDL_TRUE@BuildRequires: SDL-devel >= 1.2.0
 @USE_SDL_TRUE@#SDL-devel should require XFree86-devel because it links to it
 @USE_SDL_TRUE@#only it doesn't seem to do that currently
 @USE_SDL_TRUE@BuildRequires: 	XFree86-devel
+@USE_SPEEX_TRUE@Requires:	speex
+@USE_SPEEX_TRUE@BuildRequires:	speex-devel
 @USE_SMOOTHWAVE_TRUE@Requires:	gtk2
 @USE_SMOOTHWAVE_TRUE@BuildRequires:	gtk2-devel
 @USE_VORBIS_TRUE@Requires:      libogg >= 1.0
 @USE_VORBIS_TRUE@Requires:      libvorbis >= 1.0
 @USE_VORBIS_TRUE@BuildRequires: libogg-devel >= 1.0
 @USE_VORBIS_TRUE@BuildRequires: libvorbis-devel >= 1.0
-@USE_LIBPNG_TRUE@Requires:      libpng >= 1.2.0
-@USE_LIBPNG_TRUE@BuildRequires: libpng-devel >= 1.2.0
-@USE_OSS_TRUE@BuildRequires: glibc-devel
-@USE_PANGO_TRUE@Requires:        pango
-@USE_PANGO_TRUE@BuildRequires:   pango-devel
-@USE_RAW1394_TRUE@Requires:      libraw1394
-@USE_RAW1394_TRUE@BuildRequires: libraw1394-devel
 @USE_XVIDEO_TRUE@Requires: 	XFree86-libs
 @USE_XVIDEO_TRUE@BuildRequires: XFree86-devel
-@USE_GCONF_TRUE@Requires: 	GConf2
-@USE_GCONF_TRUE@BuildRequires: 	GConf2-devel
 # Snapshot plugin
 @USE_HERMES_TRUE@@USE_LIBPNG_TRUE@Requires:	libpng
 
@@ -294,15 +296,18 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixertrack.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixer-enumtypes.h
+%{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixer-marshal.h
 %{_includedir}/gstreamer-%{majorminor}/gst/navigation/navigation.h
 %{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalance.h
 %{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalancechannel.h
 %{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalance-enumtypes.h
+%{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalance-marshal.h
 %{_includedir}/gstreamer-%{majorminor}/gst/propertyprobe/propertyprobe.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tuner/tuner.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tuner/tunerchannel.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tuner/tunernorm.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tuner/tuner-enumtypes.h
+%{_includedir}/gstreamer-%{majorminor}/gst/tuner/tuner-marshal.h
 %{_includedir}/gstreamer-%{majorminor}/gst/xoverlay/xoverlay.h
 %{_includedir}/gstreamer-%{majorminor}/gst/xwindowlistener/xwindowlistener.h
 # library headers
@@ -811,6 +816,29 @@ GStreamer support libraries header files.
 @USE_SHOUT_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
 @USE_SHOUT_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
+### SPEEX ###
+@USE_SPEEX_TRUE@%package -n gstreamer-speex
+@USE_SPEEX_TRUE@Summary:       GStreamer plug-in for SPEEX audio.
+@USE_SPEEX_TRUE@Group:         Libraries/Multimedia
+@USE_SPEEX_TRUE@Requires:      gstreamer-plugins = %{version}
+@USE_SPEEX_TRUE@Requires:      speex >= 1.0.3
+@USE_SPEEX_TRUE@BuildRequires: speex-devel >= 1.0.3
+@USE_SPEEX_TRUE@
+@USE_SPEEX_TRUE@%description -n gstreamer-speex
+@USE_SPEEX_TRUE@Plug-in for the free SPEEX speech compression.
+@USE_SPEEX_TRUE@
+@USE_SPEEX_TRUE@%files -n gstreamer-speex
+@USE_SPEEX_TRUE@%defattr(-, root, root)
+@USE_SPEEX_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstspeex.so
+@USE_SPEEX_TRUE@
+@USE_SPEEX_TRUE@%post -n gstreamer-speex
+@USE_SPEEX_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+@USE_SPEEX_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_SPEEX_TRUE@
+@USE_SPEEX_TRUE@%postun -n gstreamer-speex
+@USE_SPEEX_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+@USE_SPEEX_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
 ### SWFDEC FLASH PLUGIN ###
 @USE_SWFDEC_TRUE@%package -n gstreamer-swfdec
 @USE_SWFDEC_TRUE@Summary:  GStreamer Flash redering plug-in.
@@ -877,6 +905,9 @@ GStreamer support libraries header files.
 
 
 %changelog
+* Tue Mar 02 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- added speex plugin.
+
 * Mon Mar 01 2004 Thomas Vander Stichele <thomas at apestaart dot org>
 - Cleaned up the mess.  Could we PLEASE keep this sort of organized and
 - alphabetic for easy lookup ?
@@ -899,9 +930,11 @@ GStreamer support libraries header files.
 * Wed Dec 18 2003 Christian Schaller <Uraeus@gnome.org>
 - remove gsttagediting.h as it is gone
 - replace it with gst/tag/tag.h
+
 * Sun Nov 23 2003 Christian Schaller <Uraeus@gnome.org>
 - Update spec file for latest changes
 - add faad plugin
+
 * Thu Oct 16 2003 Christian Schaller <Uraeus@gnome.org>
 - Add new colorbalance and tuner and xoverlay stuff
 - Change name of kde-audio-devel to arts-devel
