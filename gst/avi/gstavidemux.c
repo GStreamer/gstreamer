@@ -1239,8 +1239,8 @@ gst_avi_demux_loop (GstElement *element)
       else break;
     }
 
-    chunk.id = temp_chunk->id;
-    chunk.size = temp_chunk->size;
+    chunk.id = GUINT32_FROM_LE (temp_chunk->id);
+    chunk.size = GUINT32_FROM_LE (temp_chunk->size);
 
     switch (chunk.id) {
       case GST_RIFF_TAG_RIFF:
@@ -1254,7 +1254,7 @@ gst_avi_demux_loop (GstElement *element)
           }
           else break;
         }
-        chunk.type = temp_chunk->type;
+        chunk.type = GUINT32_FROM_LE (temp_chunk->type);
         skipsize = sizeof (gst_riff_list);
         break;
       default:
@@ -1271,8 +1271,8 @@ gst_avi_demux_loop (GstElement *element)
   switch (avi_demux->state) {
     case GST_AVI_DEMUX_START:
       if (chunk.id != GST_RIFF_TAG_RIFF && 
-          chunk.id != GST_RIFF_RIFF_AVI) {
-        gst_element_error (element, "This doesn't appear to be an AVI file");
+          chunk.type != GST_RIFF_RIFF_AVI) {
+        gst_element_error (element, "This doesn't appear to be an AVI file %08x %08x", chunk.id, chunk.type);
 	return;
       }
       avi_demux->state = GST_AVI_DEMUX_HEADER;
