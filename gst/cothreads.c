@@ -597,7 +597,8 @@ cothread_switch (cothread_state *cothread)
 	    ctx->current, cothread->cothreadnum);
   ctx->current = cothread->cothreadnum;
 
-  g_static_private_set (&_gst_debug_cothread_index, (void *)ctx->current, NULL);
+  g_static_private_set (&_gst_debug_cothread_index,
+                        GINT_TO_POINTER(ctx->current), NULL);
 
   /* save the current stack pointer, frame pointer, and pc */
 #ifdef GST_ARCH_PRESETJMP

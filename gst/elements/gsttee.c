@@ -301,7 +301,8 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
 
     if (!tee->silent) {
       g_free (tee->last_message);
-      tee->last_message = g_strdup_printf ("chain        ******* (%s:%s)t (%d bytes, %llu) %p",
+      tee->last_message = g_strdup_printf ("chain        ******* (%s:%s)t (%d bytes, %"
+					   G_GUINT64_FORMAT ") %p",
               GST_DEBUG_PAD_NAME (outpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
       g_object_notify (G_OBJECT (tee), "last_message");
     }

@@ -60,9 +60,9 @@ main (gint argc, gchar *argv[])
   format = GST_FORMAT_DEFAULT;
 
   gst_pad_query (pad, GST_QUERY_START, &format, &value);
-  g_print ("configured for start   %lld\n", value);
+  g_print ("configured for start   %" G_GINT64_FORMAT "\n", value);
   gst_pad_query (pad, GST_QUERY_SEGMENT_END, &format, &value);
-  g_print ("configured segment end %lld\n", value);
+  g_print ("configured segment end %" G_GINT64_FORMAT "\n", value);
 
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -83,9 +83,9 @@ main (gint argc, gchar *argv[])
   g_signal_connect (G_OBJECT (gst_element_get_pad (fakesink, "sink")), "event_received", G_CALLBACK (event_received), event);
 
   gst_pad_query (pad, GST_QUERY_START, &format, &value);
-  g_print ("configured for start   %lld\n", value);
+  g_print ("configured for start   %" G_GINT64_FORMAT "\n", value);
   gst_pad_query (pad, GST_QUERY_SEGMENT_END, &format, &value);
-  g_print ("configured segment end %lld\n", value);
+  g_print ("configured segment end %" G_GINT64_FORMAT "\n", value);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 

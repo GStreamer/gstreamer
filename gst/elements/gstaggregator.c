@@ -268,7 +268,8 @@ gst_aggregator_push (GstAggregator *aggregator, GstPad *pad, GstBuffer *buf, guc
   if (!aggregator->silent) {
     g_free (aggregator->last_message);
 
-    aggregator->last_message = g_strdup_printf ("%10.10s ******* (%s:%s)a (%d bytes, %llu)",
+    aggregator->last_message = g_strdup_printf ("%10.10s ******* (%s:%s)a (%d bytes, %"
+						G_GUINT64_FORMAT ")",
             debug, GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
 
     g_object_notify (G_OBJECT (aggregator), "last_message");

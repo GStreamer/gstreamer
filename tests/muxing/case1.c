@@ -5,7 +5,7 @@ gboolean playing = TRUE;
 static void
 handoff_signal (GstElement *element, GstBuffer *buf)
 {
-  g_print ("handoff \"%s\" %llu\n", gst_element_get_name (element), GST_BUFFER_TIMESTAMP (buf));
+  g_print ("handoff \"%s\" %" G_GINT64_FORMAT "\n", gst_element_get_name (element), GST_BUFFER_TIMESTAMP (buf));
 }
 
 static void

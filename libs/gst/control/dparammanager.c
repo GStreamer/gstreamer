@@ -810,7 +810,10 @@ gst_dpman_preprocess_asynchronous(GstDParamManager *dpman, guint frames, gint64 
 			dpwrap->next_update_frame = (guint)(current_time - timestamp) / dpman->rate_ratio;
 			updates_pending = TRUE;
 
-			GST_DEBUG(GST_CAT_PARAMS, "timestamp start: %lld end: %lld current: %lld", 
+			GST_DEBUG(GST_CAT_PARAMS, "timestamp start: %"
+				  G_GINT64_FORMAT " end: %"
+				  G_GINT64_FORMAT " current: %"
+				  G_GINT64_FORMAT, 
 			          timestamp, dpman->time_buffer_ends, current_time);
 
 		}

@@ -208,7 +208,9 @@ print_stats(gboolean first, const gchar *name, const gchar *type, stats *base, s
   delta.bytes = final->bytes - base->bytes;
   delta.events = final->events - base->events;
 
-  g_print("%s: (%s) %s: s:%g buffers:%lld bytes:%lld events:%lld\n",
+  g_print("%s: (%s) %s: s:%g buffers:%" G_GINT64_FORMAT 
+	  " bytes:%" G_GINT64_FORMAT
+	  " events:%" G_GINT64_FORMAT "\n",
     first ? header0 : headerN,
     name, type, time,
     final->buffers,

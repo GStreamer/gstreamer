@@ -28,7 +28,7 @@ void handoff_sink(GstElement *sink, GstBuffer *buf, gpointer user_data) {
   avg_ns = (guint)(1000.0*(double)avg/(double)mhz);
   
   if ((count % print_del) == 0) {
-    g_print("%07d:%08lld min:%08lld max:%08lld avg:%08lld avg-s:0.%09d\r",
+    g_print("%07d:%08" G_GUINT64_FORMAT " min:%08" G_GUINT64_FORMAT " max:%08" G_GUINT64_FORMAT " avg:%08" G_GUINT64_FORMAT " avg-s:0.%09d\r",
         count, d, min, max, avg, avg_ns);
   }
 }

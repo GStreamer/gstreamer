@@ -1,3 +1,8 @@
+2003-02-02  Thomas Vander Stichele <thomas at apestaart dot org>
+
+        * configure.ac:
+          - releasing 0.6.0
+          - update libtool version from 3.0.0 -> 
 2003-01-09  Thomas Vander Stichele <thomas at apestaart dot org>
 
         * first pass at changing _connect/_disconnect -> _link/_unlink

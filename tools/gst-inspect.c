@@ -311,7 +311,7 @@ print_element_properties (GstElement *element)
       {
 	GParamSpecUInt64 *puint64 = G_PARAM_SPEC_UINT64 (param);
 	g_print("%-23.23s Unsigned Integer64. ", ""); 
-	if (readable) g_print("Range: %llu - %llu (Default %llu)", 
+	if (readable) g_print("Range: %" G_GUINT64_FORMAT " - %" G_GUINT64_FORMAT " (Default %" G_GUINT64_FORMAT ")", 
 			puint64->minimum, puint64->maximum, g_value_get_uint64 (&value));
 	break;
       }
@@ -319,7 +319,7 @@ print_element_properties (GstElement *element)
       {
 	GParamSpecInt64 *pint64 = G_PARAM_SPEC_INT64 (param);
 	g_print("%-23.23s Integer64. ", ""); 
-	if (readable) g_print("Range: %lld - %lld (Default %lld)", 
+	if (readable) g_print("Range: %" G_GINT64_FORMAT " - %" G_GINT64_FORMAT " (Default %" G_GINT64_FORMAT ")", 
 			pint64->minimum, pint64->maximum, g_value_get_int64 (&value));
 	break;
       }
@@ -680,7 +680,7 @@ print_element_info (GstElementFactory *factory)
 
         switch (G_PARAM_SPEC_VALUE_TYPE (specs[x])) {
           case G_TYPE_INT64: 
-            g_print ("64 Bit Integer (Default %lld, Range %lld -> %lld)", 
+            g_print ("64 Bit Integer (Default %" G_GINT64_FORMAT ", Range %" G_GINT64_FORMAT " -> %" G_GINT64_FORMAT ")", 
             ((GParamSpecInt64 *) specs[x])->default_value,
             ((GParamSpecInt64 *) specs[x])->minimum, 
             ((GParamSpecInt64 *) specs[x])->maximum);

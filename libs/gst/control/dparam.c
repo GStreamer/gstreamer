@@ -184,7 +184,10 @@ gst_dparam_set_property (GObject *object, guint prop_id, const GValue *value, GP
 			break;
 			
 		case ARG_VALUE_INT64:
-			GST_DEBUG(GST_CAT_PARAMS, "setting value from %lld to %lld", dparam->value_int64, g_value_get_int64 (value));
+			GST_DEBUG(GST_CAT_PARAMS, "setting value from %"
+						  G_GINT64_FORMAT " to %"
+						  G_GINT64_FORMAT,
+				  dparam->value_int64, g_value_get_int64 (value));
 			dparam->value_int64 = g_value_get_int (value);
 			GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam);
 			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
