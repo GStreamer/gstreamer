@@ -40,6 +40,12 @@
 #define MAP_FAILED ( (caddr_t) -1 )
 #endif
 
+enum {
+  QUEUE_STATE_ERROR = -1,
+  QUEUE_STATE_READY_FOR_QUEUE,
+  QUEUE_STATE_QUEUED,
+  QUEUE_STATE_SYNCED,
+};
 
 /******************************************************
  * gst_v4l2src_fill_format_list():
@@ -113,20 +119,28 @@ gst_v4l2src_queue_frame (GstV4l2Src *v4l2src,
 {
 	DEBUG("queueing frame %d", num);
 
+	if (v4l2src->frame_queue_state[num] != QUEUE_STATE_READY_FOR_QUEUE) {
+		return FALSE;
+	}
+
 	v4l2src->bufsettings.index = num;
-	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_QBUF, &v4l2src->bufsettings) < 0) {
+	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd,
+		  VIDIOC_QBUF, &v4l2src->bufsettings) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2src),
 			"Error queueing buffer %d on device %s: %s",
 			num, GST_V4L2ELEMENT(v4l2src)->device, g_strerror(errno));
 		return FALSE;
 	}
 
+	v4l2src->frame_queue_state[num] = QUEUE_STATE_QUEUED;
+	v4l2src->num_queued++;
+
 	return TRUE;
 }
 
 
 /******************************************************
- * gst_v4lsrc_sync_frame():
+ * gst_v4l2src_sync_next_frame():
  *   sync on a frame for capturing
  * return value: TRUE on success, FALSE on error
  ******************************************************/
@@ -135,14 +149,27 @@ static gboolean
 gst_v4l2src_sync_next_frame (GstV4l2Src *v4l2src,
                              gint       *num)
 {
-	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_DQBUF, &v4l2src->bufsettings) < 0) {
-		gst_element_error(GST_ELEMENT(v4l2src),
-			"Error syncing on a buffer on device %s: %s",
-			GST_V4L2ELEMENT(v4l2src)->device, g_strerror(errno));
+	if (v4l2src->num_queued <= 0) {
 		return FALSE;
 	}
+
+	while (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd,
+		     VIDIOC_DQBUF, &v4l2src->bufsettings) < 0) {
+		/* if the sync() got interrupted, we can retry */
+		if (errno != EINTR) {
+			gst_element_error(GST_ELEMENT(v4l2src),
+				"Error syncing on a buffer on device %s: %s",
+				GST_V4L2ELEMENT(v4l2src)->device, g_strerror(errno));
+			return FALSE;
+		}
+		DEBUG("Sync got interrupted");
+	}
+
 	DEBUG("synced on frame %d", v4l2src->bufsettings.index);
 	*num = v4l2src->bufsettings.index;
+
+	v4l2src->frame_queue_state[*num] = QUEUE_STATE_SYNCED;
+	v4l2src->num_queued--;
 
 	return TRUE;
 }
@@ -205,7 +232,8 @@ gst_v4l2src_set_capture (GstV4l2Src          *v4l2src,
 		return FALSE;
 	}
 
-	return TRUE;
+	/* update internal info */
+	return gst_v4l2src_get_capture(v4l2src);;
 }
 
 
@@ -220,15 +248,28 @@ gst_v4l2src_capture_init (GstV4l2Src *v4l2src)
 {
 	gint n;
 	gchar *desc = NULL;
+	struct v4l2_buffer buf;
 
 	DEBUG("initting the capture system");
 
 	GST_V4L2_CHECK_OPEN(GST_V4L2ELEMENT(v4l2src));
 	GST_V4L2_CHECK_NOT_ACTIVE(GST_V4L2ELEMENT(v4l2src));
 
+	/* set num of buffers */
+	if (v4l2src->breq.count > MIN_BUFFERS_QUEUED) {
+		struct v4l2_streamparm p;
+		p.type = v4l2src->format.type;
+
+		/* only if supported */
+		if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd,
+			  VIDIOC_G_PARM, &p) == 0) {
+			p.parm.capture.readbuffers = v4l2src->breq.count;
+			ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd,
+			      VIDIOC_S_PARM, &p);
+		}
+	}
+
 	/* request buffer info */
-	if (v4l2src->breq.count < MIN_BUFFERS_QUEUED)
-		v4l2src->breq.count = MIN_BUFFERS_QUEUED;
 	v4l2src->breq.type = v4l2src->format.type;
 	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_REQBUFS, &v4l2src->breq) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2src),
@@ -255,24 +296,42 @@ gst_v4l2src_capture_init (GstV4l2Src *v4l2src)
 	gst_info("Got %d buffers (%s) of size %d KB\n",
 		v4l2src->breq.count, desc, v4l2src->format.fmt.pix.sizeimage/1024);
 
-	v4l2src->use_num_times = (gint *) malloc(sizeof(gint) * v4l2src->breq.count);
-	if (!v4l2src->use_num_times) {
-		gst_element_error(GST_ELEMENT(v4l2src),
-			"Error creating sync-use-time tracker: %s",
-			g_strerror(errno));
-		return FALSE;
-	}
+	/* keep track of queued buffers */
+	v4l2src->frame_queue_state = (gint8 *)
+		g_malloc(sizeof(gint8) * v4l2src->breq.count);
+
+	/* track how often to use each frame */
+	v4l2src->use_num_times = (gint *)
+		g_malloc(sizeof(gint) * v4l2src->breq.count);
+
+	/* lock for the frame_state */
+	v4l2src->mutex_queue_state = g_mutex_new();
+	v4l2src->cond_queue_state = g_cond_new();
 
 	/* Map the buffers */
-	GST_V4L2ELEMENT(v4l2src)->buffer = (guint8 **) g_malloc(sizeof(guint8*) * v4l2src->breq.count);
+	GST_V4L2ELEMENT(v4l2src)->buffer = (guint8 **)
+		g_malloc(sizeof(guint8 *) * v4l2src->breq.count);
 	for (n=0;n<v4l2src->breq.count;n++) {
-		GST_V4L2ELEMENT(v4l2src)->buffer[n] = mmap(0, v4l2src->format.fmt.pix.sizeimage, 
-			PROT_READ|PROT_WRITE, MAP_SHARED, GST_V4L2ELEMENT(v4l2src)->video_fd, v4l2src->format.fmt.pix.sizeimage*n);
+		buf.index = n;
+		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+		if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd,
+			  VIDIOC_QUERYBUF, &buf) < 0) {
+			gst_element_error(GST_ELEMENT(v4l2src),
+					  "Failed to get buffer (%d) properties: %s",
+					  n, g_strerror(errno));
+			gst_v4l2src_capture_deinit(v4l2src);
+			return FALSE;
+		}
+		GST_V4L2ELEMENT(v4l2src)->buffer[n] = mmap(0,
+			buf.length, PROT_READ|PROT_WRITE, MAP_SHARED,
+			GST_V4L2ELEMENT(v4l2src)->video_fd, buf.m.offset);
 		if (GST_V4L2ELEMENT(v4l2src)->buffer[n] == MAP_FAILED) {
 			gst_element_error(GST_ELEMENT(v4l2src),
-				"Error mapping video buffer %d on device %s: %s",
-				n, GST_V4L2ELEMENT(v4l2src)->device, g_strerror(errno));
+				"Error mapping video buffer (%d) on device %s: %s",
+				n, GST_V4L2ELEMENT(v4l2src)->device,
+				g_strerror(errno));
 			GST_V4L2ELEMENT(v4l2src)->buffer[n] = NULL;
+			gst_v4l2src_capture_deinit(v4l2src);
 			return FALSE;
 		}
 	}
@@ -296,10 +355,22 @@ gst_v4l2src_capture_start (GstV4l2Src *v4l2src)
 	GST_V4L2_CHECK_OPEN(GST_V4L2ELEMENT(v4l2src));
 	GST_V4L2_CHECK_ACTIVE(GST_V4L2ELEMENT(v4l2src));
 
-	/* queue all buffers, this starts streaming capture */
-	for (n=0;n<v4l2src->breq.count;n++)
-		if (!gst_v4l2src_queue_frame(v4l2src, n))
+	g_mutex_lock(v4l2src->mutex_queue_state);
+
+	v4l2src->quit = FALSE;
+	v4l2src->num_queued = 0;
+	v4l2src->queue_frame = 0;
+
+	/* set all buffers ready to queue , this starts streaming capture */
+	for (n=0;n<v4l2src->breq.count;n++) {
+		v4l2src->frame_queue_state[n] = QUEUE_STATE_READY_FOR_QUEUE;
+		if (!gst_v4l2src_queue_frame(v4l2src, n)) {
+			g_mutex_unlock(v4l2src->mutex_queue_state);
+			gst_v4l2src_capture_stop(v4l2src);
 			return FALSE;
+		}
+	}
+
 	n = 1;
 	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_STREAMON, &n) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2src),
@@ -307,6 +378,8 @@ gst_v4l2src_capture_start (GstV4l2Src *v4l2src)
 			GST_V4L2ELEMENT(v4l2src)->device, g_strerror(errno));
 		return FALSE;
 	}
+
+	g_mutex_unlock(v4l2src->mutex_queue_state);
 
 	return TRUE;
 }
@@ -327,11 +400,60 @@ gst_v4l2src_grab_frame (GstV4l2Src *v4l2src,
 	GST_V4L2_CHECK_OPEN(GST_V4L2ELEMENT(v4l2src));
 	GST_V4L2_CHECK_ACTIVE(GST_V4L2ELEMENT(v4l2src));
 
+	g_mutex_lock(v4l2src->mutex_queue_state);
+
+	/* do we have enough frames? */
+	while (v4l2src->num_queued < MIN_BUFFERS_QUEUED ||
+	       v4l2src->frame_queue_state[v4l2src->queue_frame] ==
+			QUEUE_STATE_READY_FOR_QUEUE) {
+		while (v4l2src->frame_queue_state[v4l2src->queue_frame] !=
+				QUEUE_STATE_READY_FOR_QUEUE &&
+		       !v4l2src->quit) {
+			GST_DEBUG(GST_CAT_PLUGIN_INFO,
+				  "Waiting for frames to become available (%d < %d)",
+				  v4l2src->num_queued, MIN_BUFFERS_QUEUED);
+			g_cond_wait(v4l2src->cond_queue_state,
+				    v4l2src->mutex_queue_state);
+		}
+		if (v4l2src->quit) {
+			g_mutex_unlock(v4l2src->mutex_queue_state);
+			return TRUE; /* it won't get through anyway */
+		}
+		if (!gst_v4l2src_queue_frame(v4l2src, v4l2src->queue_frame)) {
+			g_mutex_unlock(v4l2src->mutex_queue_state);
+			return FALSE;
+		}
+		v4l2src->queue_frame = (v4l2src->queue_frame + 1) % v4l2src->breq.count;
+	}
+
 	/* syncing on the buffer grabs it */
-	if (!gst_v4l2src_sync_next_frame(v4l2src, num))
+	if (!gst_v4l2src_sync_next_frame(v4l2src, num)) {
+		g_mutex_unlock(v4l2src->mutex_queue_state);
 		return FALSE;
+	}
+
+	g_mutex_unlock(v4l2src->mutex_queue_state);
 
 	return TRUE;
+}
+
+
+/******************************************************
+ *
+ ******************************************************/
+
+guint8 *
+gst_v4l2src_get_buffer (GstV4l2Src *v4l2src,
+		        gint        num)
+{
+	if (!GST_V4L2_IS_ACTIVE(GST_V4L2ELEMENT(v4l2src)) ||
+	    !GST_V4L2_IS_OPEN(GST_V4L2ELEMENT(v4l2src)))
+		return NULL;
+
+	if (num < 0 || num >= v4l2src->breq.count)
+		return NULL;
+
+	return GST_V4L2ELEMENT(v4l2src)->buffer[num];
 }
 
 
@@ -349,9 +471,23 @@ gst_v4l2src_requeue_frame (GstV4l2Src *v4l2src,
 	GST_V4L2_CHECK_OPEN(GST_V4L2ELEMENT(v4l2src));
 	GST_V4L2_CHECK_ACTIVE(GST_V4L2ELEMENT(v4l2src));
 
-	/* and let's queue the buffer */
-	if (!gst_v4l2src_queue_frame(v4l2src, num))
+	/* mark frame as 'ready to requeue' */
+	g_mutex_lock(v4l2src->mutex_queue_state);
+
+	if (v4l2src->frame_queue_state[num] != QUEUE_STATE_SYNCED) {
+		gst_element_error(GST_ELEMENT(v4l2src),
+				  "Invalid state %d (expected %d), can't requeue",
+				  v4l2src->frame_queue_state[num],
+				  QUEUE_STATE_SYNCED);
 		return FALSE;
+	}
+
+	v4l2src->frame_queue_state[num] = QUEUE_STATE_READY_FOR_QUEUE;
+
+	/* let an optional wait know */
+	g_cond_broadcast(v4l2src->cond_queue_state);
+
+	g_mutex_unlock(v4l2src->mutex_queue_state);
 
 	return TRUE;
 }
@@ -372,13 +508,27 @@ gst_v4l2src_capture_stop (GstV4l2Src *v4l2src)
 	GST_V4L2_CHECK_OPEN(GST_V4L2ELEMENT(v4l2src));
 	GST_V4L2_CHECK_ACTIVE(GST_V4L2ELEMENT(v4l2src));
 
-	/* we actually need to sync on all queued buffers but not on the non-queued ones */
+	g_mutex_lock(v4l2src->mutex_queue_state);
+
+	/* we actually need to sync on all queued buffers but not
+	 * on the non-queued ones */
 	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_STREAMOFF, &n) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2src),
 			"Error stopping streaming capture for %s: %s",
 			GST_V4L2ELEMENT(v4l2src)->device, g_strerror(errno));
 		return FALSE;
 	}
+
+	/* make an optional pending wait stop */
+	v4l2src->quit = TRUE;
+	g_cond_broadcast(v4l2src->cond_queue_state);
+                                                                                
+	/* sync on remaining frames */
+	while (v4l2src->num_queued > 0) {
+		gst_v4l2src_sync_next_frame(v4l2src, &n);
+	}
+
+	g_mutex_unlock(v4l2src->mutex_queue_state);
 
 	return TRUE;
 }
@@ -393,23 +543,29 @@ gst_v4l2src_capture_stop (GstV4l2Src *v4l2src)
 gboolean
 gst_v4l2src_capture_deinit (GstV4l2Src *v4l2src)
 {
-	gint n;
-
+	int n;
+	
 	DEBUG("deinitting capture system");
 	GST_V4L2_CHECK_OPEN(GST_V4L2ELEMENT(v4l2src));
 	GST_V4L2_CHECK_ACTIVE(GST_V4L2ELEMENT(v4l2src));
 
 	/* unmap the buffer */
 	for (n=0;n<v4l2src->breq.count;n++) {
-		if (!GST_V4L2ELEMENT(v4l2src)->buffer[n])
+		if (!GST_V4L2ELEMENT(v4l2src)->buffer[n]) {
 			break;
-		munmap(GST_V4L2ELEMENT(v4l2src)->buffer[n], v4l2src->format.fmt.pix.sizeimage);
+		}
+		munmap(GST_V4L2ELEMENT(v4l2src)->buffer[n],
+		       v4l2src->format.fmt.pix.sizeimage);
 		GST_V4L2ELEMENT(v4l2src)->buffer[n] = NULL;
 	}
+
+	/* free buffer tracker */
 	g_free(GST_V4L2ELEMENT(v4l2src)->buffer);
 	GST_V4L2ELEMENT(v4l2src)->buffer = NULL;
-
-	free(v4l2src->use_num_times);
+	g_mutex_free(v4l2src->mutex_queue_state);
+	g_cond_free(v4l2src->cond_queue_state);
+	g_free(v4l2src->frame_queue_state);
+	g_free(v4l2src->use_num_times);
 
 	return TRUE;
 }

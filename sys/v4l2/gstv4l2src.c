@@ -195,6 +195,8 @@ gst_v4l2src_class_init (GstV4l2SrcClass *klass)
 static void
 gst_v4l2src_init (GstV4l2Src *v4l2src)
 {
+	GST_FLAG_SET(GST_ELEMENT(v4l2src), GST_ELEMENT_THREAD_SUGGESTED);
+
 	v4l2src->srcpad = gst_pad_new_from_template(src_template, "src");
 	gst_element_add_pad(GST_ELEMENT(v4l2src), v4l2src->srcpad);
 
@@ -257,14 +259,14 @@ gst_v4l2src_get_fps (GstV4l2Src *v4l2src)
 	/* if that failed ... */
  
 	if (!GST_V4L2_IS_OPEN(GST_V4L2ELEMENT(v4l2src)))
-		return FALSE;
+		return 0.;
 
 	if (!gst_v4l2_get_norm(GST_V4L2ELEMENT(v4l2src), &norm))
-		return FALSE;
+		return 0.;
 
 	std = ((struct v4l2_standard *) g_list_nth_data(GST_V4L2ELEMENT(v4l2src)->norms, norm));
-	fps = std->frameperiod.numerator / std->frameperiod.denominator;
- 
+	fps = (1. * std->frameperiod.denominator) / std->frameperiod.numerator;
+
 	return fps;
 }
 
@@ -643,7 +645,7 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 				gst_caps_get_int(caps, "width", &w);
 			} else {
 				int max;
-				gst_caps_get_int_range(caps, "width", &w, &max);
+				gst_caps_get_int_range(caps, "width", &max, &w);
 			}
 		}
 		if (gst_caps_has_property(caps, "height")) {
@@ -651,7 +653,7 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 				gst_caps_get_int(caps, "height", &h);
 			} else {
 				int max;
-				gst_caps_get_int_range(caps, "height", &h, &max);
+				gst_caps_get_int_range(caps, "height", &max, &h);
 			}
 		}
 
@@ -790,14 +792,14 @@ gst_v4l2src_get (GstPad *pad)
 			 * timeframe. This means that if time - begin_time = X sec,
 			 * we want to have written X*fps frames. If we've written
 			 * more - drop, if we've written less - dup... */
-			if (v4l2src->handled * fps * GST_SECOND - time >
-			    1.5 * fps * GST_SECOND) {
+			if (v4l2src->handled * (GST_SECOND/fps) - time >
+			    1.5 * (GST_SECOND/fps)) {
 				/* yo dude, we've got too many frames here! Drop! DROP! */
 				v4l2src->need_writes--; /* -= (v4l2src->handled - (time / fps)); */
 				g_signal_emit(G_OBJECT(v4l2src),
 				              gst_v4l2src_signals[SIGNAL_FRAME_DROP], 0);
-			} else if (v4l2src->handled * fps * GST_SECOND - time <
-			             -1.5 * fps * GST_SECOND) {
+			} else if (v4l2src->handled * (GST_SECOND/fps) - time <
+			             -1.5 * (GST_SECOND/fps)) {
 				/* this means we're lagging far behind */
 				v4l2src->need_writes++; /* += ((time / fps) - v4l2src->handled); */
 				g_signal_emit(G_OBJECT(v4l2src),
@@ -820,7 +822,7 @@ gst_v4l2src_get (GstPad *pad)
 		v4l2src->use_num_times[num] = 1;
 	}
 
-	GST_BUFFER_DATA(buf) = GST_V4L2ELEMENT(v4l2src)->buffer[num];
+	GST_BUFFER_DATA(buf) = gst_v4l2src_get_buffer(v4l2src, num);
 	GST_BUFFER_SIZE(buf) = v4l2src->bufsettings.bytesused;
 	if (v4l2src->use_fixed_fps)
 		GST_BUFFER_TIMESTAMP(buf) = v4l2src->handled * GST_SECOND / fps;
@@ -831,6 +833,7 @@ gst_v4l2src_get (GstPad *pad)
 	v4l2src->handled++;
 	g_signal_emit(G_OBJECT(v4l2src),
 		      gst_v4l2src_signals[SIGNAL_FRAME_CAPTURE], 0);
+
 	return buf;
 }
 
@@ -1001,7 +1004,7 @@ gst_v4l2src_buffer_free (GstBufferPool *pool,
 		return; /* we've already cleaned up ourselves */
 
 	for (n=0;n<v4l2src->breq.count;n++)
-		if (GST_BUFFER_DATA(buf) == GST_V4L2ELEMENT(v4l2src)->buffer[n]) {
+		if (GST_BUFFER_DATA(buf) == gst_v4l2src_get_buffer(v4l2src, n)) {
 			v4l2src->use_num_times[n]--;
 			if (v4l2src->use_num_times[n] <= 0) {
 				gst_v4l2src_requeue_frame(v4l2src, n);
