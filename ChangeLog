@@ -1,5 +1,12 @@
 2005-01-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/elements/gstfilesrc.c: (gst_filesrc_getrange),
+	(gst_filesrc_open_file), (gst_filesrc_activate),
+	(filesrc_find_peek), (gst_filesrc_type_find):
+	Fix task creation again.
+
+2005-01-18  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-states.txt:
 	* gst/elements/gstfakesrc.c: (gst_fakesrc_loop),
 	(gst_fakesrc_activate):

@@ -929,18 +929,17 @@ gst_filesrc_activate (GstPad * pad, GstActivateMode mode)
 
   switch (mode) {
     case GST_ACTIVATE_PUSH:
-      /* try to start the task */
-      GST_STREAM_LOCK (pad);
-      filesrc->task = gst_element_create_task (GST_ELEMENT (filesrc),
-          (GstTaskFunction) gst_filesrc_loop, filesrc);
+      /* if we have a scheduler we can start the task */
+      if (GST_ELEMENT_SCHEDULER (filesrc)) {
+        GST_STREAM_LOCK (pad);
+        GST_RPAD_TASK (pad) =
+            gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (filesrc),
+            (GstTaskFunction) gst_filesrc_loop, pad);
 
-      if (filesrc->task) {
-        gst_task_start (filesrc->task);
+        gst_task_start (GST_RPAD_TASK (pad));
         result = TRUE;
-      } else {
-        result = FALSE;
+        GST_STREAM_UNLOCK (pad);
       }
-      GST_STREAM_UNLOCK (pad);
       break;
     case GST_ACTIVATE_PULL:
       result = TRUE;
