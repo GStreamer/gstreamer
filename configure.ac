@@ -702,11 +702,6 @@ libs/gst/bytestream/Makefile
 libs/gst/getbits/Makefile
 libs/gst/putbits/Makefile
 libs/gst/control/Makefile
-test/Makefile
-test/xml/Makefile
-test/bindings/Makefile
-test/memchunk/Makefile
-test/events/Makefile
 tests/Makefile
 tests/sched/Makefile
 tests/eos/Makefile
