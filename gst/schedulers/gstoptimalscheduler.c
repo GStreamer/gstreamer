@@ -219,7 +219,7 @@ static gboolean		gst_opt_scheduler_yield 		(GstScheduler *sched, GstElement *ele
 static gboolean		gst_opt_scheduler_interrupt 		(GstScheduler *sched, GstElement *element);
 static void 		gst_opt_scheduler_error	 		(GstScheduler *sched, GstElement *element);
 static void     	gst_opt_scheduler_pad_link		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
-static void     	gst_opt_scheduler_pad_unlink 	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
+static void     	gst_opt_scheduler_pad_unlink 		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 static GstPad*  	gst_opt_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
 static GstClockReturn   gst_opt_scheduler_clock_wait        	(GstScheduler *sched, GstElement *element,
 	                                                         GstClockID id, GstClockTimeDiff *jitter);
@@ -292,7 +292,7 @@ gst_opt_scheduler_class_init (GstOptSchedulerClass *klass)
   gstscheduler_class->yield	 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_yield);
   gstscheduler_class->interrupt 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_interrupt);
   gstscheduler_class->error	 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_error);
-  gstscheduler_class->pad_link 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_link);
+  gstscheduler_class->pad_link 		= GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_link);
   gstscheduler_class->pad_unlink 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_unlink);
   gstscheduler_class->pad_select	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_select);
   gstscheduler_class->clock_wait	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_clock_wait);
@@ -649,9 +649,16 @@ remove_from_group (GstOptSchedulerGroup *group, GstElement *element)
 
   g_assert (group != NULL);
   g_assert (element != NULL);
+  g_assert (GST_ELEMENT_SCHED_GROUP (element) == group);
 
   group->elements = g_slist_remove (group->elements, element);
   group->num_elements--;
+
+  /* if the element was an entry point in the group, clear the group's
+   * entry point */
+  if (group->entry == element) {
+    group->entry = NULL;
+  }
 
   GST_ELEMENT_SCHED_GROUP (element) = NULL;
   gst_object_unref (GST_OBJECT (element));
@@ -659,7 +666,6 @@ remove_from_group (GstOptSchedulerGroup *group, GstElement *element)
   if (group->num_elements == 0) {
     group = unref_group (group);
   }
-
   group = unref_group (group);
 
   return group;
@@ -675,9 +681,9 @@ merge_groups (GstOptSchedulerGroup *group1, GstOptSchedulerGroup *group2)
   if (group1 == group2 || group2 == NULL)
     return group1;
 
-  while (group2) {
+  while (group2 && group2->elements) {
     GstElement *element = (GstElement *)group2->elements->data;
-   
+
     group2 = remove_from_group (group2, element);
     add_to_group (group1, element);
   }
@@ -1683,6 +1689,15 @@ gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
   get_group (element1, &group1);
   get_group (element2, &group2);
 
+  /* for decoupled elements (that are never put into a group) we use the
+   * group of the peer element for the remainder of the algorithm */
+  if (GST_ELEMENT_IS_DECOUPLED (element1)) {
+    group1 = group2;
+  }
+  if (GST_ELEMENT_IS_DECOUPLED (element2)) {
+    group2 = group1;
+  }
+
   /* if one the elements has no group (anymore) we don't really care 
    * about the link */
   if (!group1 || !group2) {
@@ -1722,48 +1737,32 @@ gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
 
     /* now check which one of the elements we can remove from the group */
     if (!still_link1) {
-      gboolean need_remove = TRUE;
-
-      GST_INFO (GST_CAT_SCHEDULING, "element1 is separated from the group");
-
-      /* see if the element was an entry point for the group */
-      if (group->entry == element1) {
-	if (group->type == GST_OPT_SCHEDULER_GROUP_LOOP) {
-          /* for entry points of a loop based group we need to be
-	   * carefull as we assert that the loop based element always
-	   * has a group */
-          need_remove = FALSE;
-	}
-	else {
-	  /* we're going to remove the element so we need to clear it as the
-	   * entry point */
-          group->entry = NULL;
-	}
-      }
-      if (need_remove)
+      /* we only remove elements that are not the entry point of a loop based
+       * group and are not decoupled */
+      if (!(group->entry == element1 &&
+	   group->type == GST_OPT_SCHEDULER_GROUP_LOOP) &&
+	  !GST_ELEMENT_IS_DECOUPLED (element1)) 
+      {
+        GST_INFO (GST_CAT_SCHEDULING, "element1 is separated from the group");
         remove_from_group (group, element1);
+      }
+      else {
+        GST_INFO (GST_CAT_SCHEDULING, "element1 is decoupled or entry in loop based group");
+      }
     }
     if (!still_link2) {
-      gboolean need_remove = TRUE;
-
-      GST_INFO (GST_CAT_SCHEDULING, "element2 is separated from the group");
-
-      /* see if the element was an entry point for the group */
-      if (group->entry == element2) {
-	if (group->type == GST_OPT_SCHEDULER_GROUP_LOOP) {
-          /* for entry points of a loop based group we need to be
-	   * carefull as we assert that the loop based element always
-	   * has a group */
-          need_remove = FALSE;
-	}
-	else {
-	  /* we're going to remove the element so we need to clear it as the
-	   * entry point */
-          group->entry = NULL;
-	}
-      }
-      if (need_remove)
+      /* we only remove elements that are not the entry point of a loop based
+       * group and are not decoupled */
+      if (!(group->entry == element2 &&
+	   group->type == GST_OPT_SCHEDULER_GROUP_LOOP) &&
+	  !GST_ELEMENT_IS_DECOUPLED (element2)) 
+      {
+        GST_INFO (GST_CAT_SCHEDULING, "element2 is separated from the group");
         remove_from_group (group, element2);
+      }
+      else {
+        GST_INFO (GST_CAT_SCHEDULING, "element2 is decoupled or entry in loop based group");
+      }
     }
   }
 }
