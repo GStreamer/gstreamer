@@ -204,7 +204,7 @@ gst_error_get_message (GQuark domain, gint code)
   else
   {
     g_warning ("No error messages for domain %s", g_quark_to_string (domain));
-    return g_strdup_printf (_("No error message for domain %s"), g_quark_to_string (domain));
+    return g_strdup_printf (_("No error message for domain %s."), g_quark_to_string (domain));
   }
   if (message)
     return g_strdup (_(message));

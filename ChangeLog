@@ -1,5 +1,15 @@
 2004-01-31  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/elements/gstfilesrc.c: (gst_filesrc_open_file):
+	* gst/elements/gstmultidisksrc.c: (gst_multidisksrc_open_file):
+	* gst/gsterror.c: (gst_error_get_message):
+          Suffix with dots
+	* po/fr.po:
+	* po/nl.po:
+          Update translation files
+
+2004-01-31  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/autoplug/gstspideridentity.c:
 	(gst_spider_identity_sink_loop_type_finding):
 	* gst/elements/gstfakesink.c: (gst_fakesink_change_state):

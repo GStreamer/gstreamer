@@ -742,7 +742,7 @@ gst_filesrc_open_file (GstFileSrc *src)
       GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL), (NULL));
     else
       GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-	                 (_("Could not open file \"%s\" for reading"), src->filename),
+	                 (_("Could not open file \"%s\" for reading."), src->filename),
                          GST_ERROR_SYSTEM);
     return FALSE;
   } else {
