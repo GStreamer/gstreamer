@@ -913,7 +913,7 @@ GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
 
 dnl *** Hermes ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_HERMES, true)
-GST_CHECK_FEATURE(HERMES, [Hermes library], colorspace, [
+GST_CHECK_FEATURE(HERMES, [Hermes library], hermescolorspace, [
   GST_CHECK_LIBHEADER(HERMES, Hermes, Hermes_ConverterInstance, , Hermes/Hermes.h, HERMES_LIBS="-lHermes")
 ], AC_SUBST(HERMES_LIBS))
 
