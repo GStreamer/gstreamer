@@ -1057,12 +1057,14 @@ gst_mad_chain (GstPad *pad, GstData *_data)
       gst_mad_update_info (mad);
 
       if (mad->channels != nchannels || mad->rate != rate) {
+        GstPadLinkReturn ret;
+
         if (mad->stream.options & MAD_OPTION_HALFSAMPLERATE)
 	  rate >>=1;
 
 	/* we set the caps even when the pad is not connected so they
 	 * can be gotten for streaminfo */
-        if (gst_pad_try_set_caps (mad->srcpad,
+        ret = gst_pad_try_set_caps (mad->srcpad,
 	    gst_caps_new_simple ("audio/x-raw-int",
 	      "endianness",  G_TYPE_INT, G_BYTE_ORDER,
 	      "signed",      G_TYPE_BOOLEAN, TRUE,
@@ -1070,12 +1072,10 @@ gst_mad_chain (GstPad *pad, GstData *_data)
 	      "depth",       G_TYPE_INT, 16,
 	      "rate",        G_TYPE_INT, rate,
 	      "channels",    G_TYPE_INT, nchannels,
-	      NULL)) <= 0)
-	{
-	  if (!gst_pad_recover_caps_error (mad->srcpad, NULL)) {
-	    gst_buffer_unref (buffer);
-	    return;
-	  }
+	      NULL));
+        if (GST_PAD_LINK_FAILED (ret)) {
+          gst_element_error (GST_ELEMENT (mad), "Could not set caps on source pad");
+          return;
         }
 	mad->channels = nchannels;
 	mad->rate = rate;

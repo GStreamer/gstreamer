@@ -1,3 +1,32 @@
+2003-12-30  David Schleef  <ds@schleef.org>
+
+	* ext/ffmpeg/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_caps_remove_format_info), (gst_ffmpegcsp_getcaps),
+	(gst_ffmpegcsp_pad_link), (gst_ffmpegcsp_init),
+	(gst_ffmpegcsp_chain): Negotiation fixes
+	* ext/mad/gstmad.c: (gst_mad_chain): Negotiation fixes
+	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_chain),
+	(gst_audio_convert_link), (gst_audio_convert_channels):
+	* gst/audioscale/gstaudioscale.c: (gst_audioscale_getcaps),
+	(gst_audioscale_link), (gst_audioscale_get_buffer),
+	(gst_audioscale_chain): Negotiation fixes
+	* gst/audioscale/gstaudioscale.h:
+	* gst/videofilter/gstvideofilter.c:
+	(gst_videofilter_format_get_structure), (gst_videofilter_getcaps),
+	(gst_videofilter_link), (gst_videofilter_init),
+	(gst_videofilter_set_output_size), (gst_videofilter_setup),
+	(gst_videofilter_find_format_by_structure):
+	* gst/videofilter/gstvideofilter.h: Negotiation fixes
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_getcaps),
+	(gst_videoscale_link):
+	* gst/videoscale/videoscale.c: (videoscale_get_structure),
+	(videoscale_find_by_structure), (gst_videoscale_setup):
+	* gst/videoscale/videoscale.h: Negotiation fixes
+	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xevents),
+	(gst_ximagesink_fixate), (gst_ximagesink_init): Add a fixate
+	function, restrict resizing to a multiple of 4 (hack until
+	everyone supports odd sizes correctly).
+
 2003-12-29  Colin Walters  <walters@verbum.org>
 
 	* ext/esd/esdsink.c (gst_esdsink_link): Fix typo; get depth instead of
