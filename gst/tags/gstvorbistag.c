@@ -324,7 +324,7 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
 
       if (!g_utf8_validate (value, -1, (const gchar **) &valid)) {
         valid = g_strndup (value, valid - value);
-        g_warning ("Invalid vorbis comment tag, truncated it to %s\n", valid);
+        GST_DEBUG ("Invalid vorbis comment tag, truncated it to %s\n", valid);
       } else {
         valid = g_strdup (value);
       }
