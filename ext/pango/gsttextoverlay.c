@@ -188,7 +188,7 @@ resize_bitmap(GstTextOverlay *overlay, int width, int height)
     }
     if (!bitmap->buffer) {
 	/* initialize */
-	bitmap->pixel_mode = FT_PIXEL_MODE_GRAY;
+	bitmap->pixel_mode = ft_pixel_mode_grays;
 	bitmap->num_grays = 256;
     }
     if (bitmap->buffer)
