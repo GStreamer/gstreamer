@@ -496,6 +496,7 @@ Element for text-to-speech using the festival server.
 @USE_MPEG2DEC_TRUE@Group: Libraries/Multimedia
 @USE_MPEG2DEC_TRUE@Requires: gstreamer-plugins >= %{version}
 @USE_MPEG2DEC_TRUE@Requires: mpeg2dec => 0.2.1
+@USE_MPEG2DEC_TRUE@BuildRequires: mpeg2dec-devel => 0.2.1
 @USE_MPEG2DEC_TRUE@Obsoletes: gstreamer-mpeg1
 @USE_MPEG2DEC_TRUE@Obsoletes: gstreamer-mpeg2
 @USE_MPEG2DEC_TRUE@Obsoletes: gstreamer-mpeg2dec
@@ -744,6 +745,7 @@ Element for text-to-speech using the festival server.
 @USE_HTTP_TRUE@Group: Libraries/Multimedia
 @USE_HTTP_TRUE@Requires: gstreamer-plugins >= %{version}
 @USE_HTTP_TRUE@Requires: libghttp => 1.0.9
+@USE_HTTP_TRUE@BuildRequires: libghttp-devel => 1.0.9
 @USE_HTTP_TRUE@
 @USE_HTTP_TRUE@%description -n gstreamer-httpsrc
 @USE_HTTP_TRUE@Plugin supporting the http protocol based 
@@ -989,6 +991,9 @@ Plugin for playback of wav, au and mod audio files as well as mp3 type
 @USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
 
 %changelog
+* Thu Jun 06 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- various BuildRequires: additions
+
 * Tue Jun 04 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - added USE_LIBADSPA_TRUE bits to ladspa package
 
