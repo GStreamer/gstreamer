@@ -25,43 +25,6 @@ patches:
 
 SUBDIRS =
 
-EXTRA_DIST = \
-	$(PATCHES) \
-	Tag \
-	ffmpeg/CREDITS \
-	ffmpeg/INSTALL \
-	ffmpeg/README \
-	ffmpeg/config.mak \
-	ffmpeg/configure \
-	ffmpeg/cygwin_inttypes.h \
-	ffmpeg/ffserver.h \
-	ffmpeg/ffmpeg.c \
-	ffmpeg/ffserver.c \
-	ffmpeg/berrno.h \
-	ffmpeg/config.h \
-	ffmpeg/libavcodec/alpha/*.c \
-	ffmpeg/libavcodec/alpha/*.h \
-	ffmpeg/libavcodec/alpha/*.S \
-	ffmpeg/libavcodec/armv4l/*.c \
-	ffmpeg/libavcodec/armv4l/*.S \
-	ffmpeg/libavcodec/i386/*.c \
-	ffmpeg/libavcodec/i386/*.h \
-	ffmpeg/libavcodec/liba52/*.c \
-	ffmpeg/libavcodec/liba52/*.h \
-	ffmpeg/libavcodec/ppc/*.c \
-	ffmpeg/libavcodec/ppc/*.h \
-	ffmpeg/libavcodec/ps2/*.c \
-	ffmpeg/libavcodec/ps2/*.h \
-	ffmpeg/libavcodec/*.c \
-	ffmpeg/libavcodec/*.h \
-	ffmpeg/libavformat/*.c \
-	ffmpeg/libavformat/*.h \
-	ffmpeg/tests/*.c \
-	ffmpeg/tests/*.ref \
-	ffmpeg/tests/*.sh \
-	ffmpeg/tests/test.conf \
-	ffmpeg/vhook/*.c
-
 
 checkout:
 	cvs -d:pserver:anonymous@mplayerhq.hu:/cvsroot/ffmpeg co ffmpeg
@@ -164,9 +127,7 @@ libavformat_la_CFLAGS = $(defs) -Wall -I$(srcdir) -I$(srcdir)/ffmpeg \
 	-I$(top_srcdir)/gst-libs/ext/linux/ -DHAVE_AV_CONFIG_H \
 	-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE
 
-
-if HAVE_CPU_I386
-sources_i386 = \
+files_i386 = \
 	ffmpeg/libavcodec/i386/cputest.c \
 	ffmpeg/libavcodec/i386/dsputil_mmx.c \
 	ffmpeg/libavcodec/i386/fdct_mmx.c \
@@ -175,12 +136,13 @@ sources_i386 = \
 	ffmpeg/libavcodec/i386/motion_est_mmx.c \
 	ffmpeg/libavcodec/i386/mpegvideo_mmx.c \
 	ffmpeg/libavcodec/i386/simple_idct_mmx.c
+if HAVE_CPU_I386
+sources_i386 = $(files_i386)
 else
 sources_i386 = 
 endif
 
-if HAVE_CPU_PPC
-sources_powerpc = \
+files_powerpc = \
 	ffmpeg/libavcodec/ppc/dsputil_ppc.c \
 	ffmpeg/libavcodec/ppc/mpegvideo_ppc.c
 # disabled Altivec support for now until someone shows up that make them compile conditionally
@@ -189,6 +151,8 @@ sources_powerpc = \
 #	ffmpeg/libavcodec/ppc/gmc_altivec.c \
 #	ffmpeg/libavcodec/ppc/idct_altivec.c \
 #	ffmpeg/libavcodec/ppc/mpegvideo_altivec.c
+if HAVE_CPU_PPC
+sources_powerpc = $(files_powerpc)
 else
 sources_powerpc =
 endif
@@ -270,3 +234,86 @@ libavcodec_la_SOURCES = \
 	$(sources_i386) \
 	$(sources_powerpc)
 
+more_libavcodec_files = \
+	ffmpeg/libavcodec/mdec.c \
+	ffmpeg/libavcodec/motion_est_template.c \
+	ffmpeg/libavcodec/svq3.c \
+	ffmpeg/libavcodec/wmv2.c 
+
+
+all_headers = \
+	ffmpeg/berrno.h \
+	ffmpeg/cmdutils.h \
+	ffmpeg/cygwin_inttypes.h \
+	ffmpeg/ffserver.h \
+	ffmpeg/xvmc_render.h \
+	ffmpeg/libavcodec/ac3.h \
+	ffmpeg/libavcodec/ac3tab.h \
+	ffmpeg/libavcodec/avcodec.h \
+	ffmpeg/libavcodec/bswap.h \
+	ffmpeg/libavcodec/cabac.h \
+	ffmpeg/libavcodec/common.h \
+	ffmpeg/libavcodec/dsputil.h \
+	ffmpeg/libavcodec/dvdata.h \
+	ffmpeg/libavcodec/faandct.h \
+	ffmpeg/libavcodec/fastmemcpy.h \
+	ffmpeg/libavcodec/golomb.h \
+	ffmpeg/libavcodec/h263data.h \
+	ffmpeg/libavcodec/h264data.h \
+	ffmpeg/libavcodec/imgconvert_template.h \
+	ffmpeg/libavcodec/indeo3data.h \
+	ffmpeg/libavcodec/mpeg12data.h \
+	ffmpeg/libavcodec/mpeg4data.h \
+	ffmpeg/libavcodec/mpegaudio.h \
+	ffmpeg/libavcodec/mpegaudiodectab.h \
+	ffmpeg/libavcodec/mpegaudiotab.h \
+	ffmpeg/libavcodec/mpegvideo.h \
+	ffmpeg/libavcodec/msmpeg4data.h \
+	ffmpeg/libavcodec/oggvorbis.h \
+	ffmpeg/libavcodec/ra144.h \
+	ffmpeg/libavcodec/ra288.h \
+	ffmpeg/libavcodec/rational.h \
+	ffmpeg/libavcodec/simple_idct.h \
+	ffmpeg/libavcodec/sp5x.h \
+	ffmpeg/libavcodec/svq1_cb.h \
+	ffmpeg/libavcodec/svq1_vlc.h \
+	ffmpeg/libavcodec/vp3data.h \
+	ffmpeg/libavcodec/wmadata.h \
+	ffmpeg/libavcodec/i386/dsputil_mmx_avg.h \
+	ffmpeg/libavcodec/i386/dsputil_mmx_rnd.h \
+	ffmpeg/libavcodec/i386/mmx.h \
+	ffmpeg/libavcodec/ppc/dsputil_altivec.h \
+	ffmpeg/libavcodec/ppc/dsputil_ppc.h \
+	ffmpeg/libavcodec/ppc/gcc_fixes.h \
+	ffmpeg/libavformat/avformat.h \
+	ffmpeg/libavformat/avi.h \
+	ffmpeg/libavformat/avio.h \
+	ffmpeg/libavformat/barpainet.h \
+	ffmpeg/libavformat/dv.h \
+	ffmpeg/libavformat/dv1394.h \
+	ffmpeg/libavformat/framehook.h \
+	ffmpeg/libavformat/mpegts.h \
+	ffmpeg/libavformat/os_support.h \
+	ffmpeg/libavformat/rtp.h \
+	ffmpeg/libavformat/rtsp.h \
+	ffmpeg/libavformat/rtspcodes.h 
+
+DISTCLEANFILES = \
+	ffmpeg/config.h \
+	ffmpeg/config.mak 
+
+EXTRA_DIST = \
+	$(PATCHES) \
+	Tag \
+	ffmpeg/CREDITS \
+	ffmpeg/INSTALL \
+	ffmpeg/README \
+	ffmpeg/configure \
+	ffmpeg/ffmpeg.c \
+	ffmpeg/ffserver.c \
+	$(libavcodec_la_SOURCES) \
+	$(more_libavcodec_files) \
+	$(libavformat_la_SOURCES) \
+	$(files_i386) \
+	$(files_powerpc) \
+	$(all_headers) 

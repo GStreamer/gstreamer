@@ -13,6 +13,9 @@ built_headers =	dxr3marshal.h
 noinst_HEADERS = dxr3videosink.h dxr3audiosink.h dxr3spusink.h \
 		 dxr3common.h ac3_padder.h
 
+EXTRA_DIST = dxr3marshal.list
+	
+
 dxr3marshal.h: dxr3marshal.list
 	glib-genmarshal --header --prefix=dxr3_marshal $^ > dxr3marshal.h.tmp
 	mv dxr3marshal.h.tmp dxr3marshal.h

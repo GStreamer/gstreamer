@@ -196,6 +196,12 @@ else
 MPLEX_DIR=
 endif
 
+if USE_OGG
+OGG_DIR=ogg
+else
+OGG_DIR=
+endif
+
 if USE_PANGO
 PANGO_DIR=pango
 else
@@ -313,6 +319,7 @@ SUBDIRS=\
 	$(MIKMOD_DIR) \
 	$(MPEG2DEC_DIR) \
 	$(MPLEX_DIR) \
+	$(OGG_DIR) \
 	$(PANGO_DIR) \
 	$(RAW1394_DIR) \
 	$(SDL_DIR) \
@@ -361,6 +368,7 @@ DIST_SUBDIRS=\
 	mikmod \
 	mpeg2dec \
 	mplex \
+	ogg \
 	pango \
 	raw1394 \
 	sdl \

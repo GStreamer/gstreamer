@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 7, 1, 1, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 7, 2, 1, GST_CVS="no", GST_CVS="yes")
 
 dnl add a suffix to apps
 if test x$program_suffix = xNONE ; then
@@ -189,7 +189,6 @@ fi
 
 AC_SUBST(GST_CONTROL_LIBS)
 
-
 dnl Set up conditionals for (target) architecture:
 dnl ==============================================
 
@@ -241,6 +240,8 @@ if test "x$HAVE_GTK_22" = "xyes"; then
   AC_SUBST(GTK_VERSION)
   GTK_PREFIX=`$PKG_CONFIG --variable=prefix gdk-pixbuf-2.0`
   GTK_SYSCONFDIR=`$PKG_CONFIG --variable=prefix gdk-pixbuf-2.0`
+  GDK_PIXBUF_LIBDIR=`$PKG_CONFIG --variable=libdir gdk-pixbuf-2.0`
+  GDK_PIXBUF_PREFIXDIR=`$PKG_CONFIG --variable=prefix gdk-pixbuf-2.0`
   AC_SUBST(GTK_BASE_DIR)
 else
   PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK_20=yes, HAVE_GTK_20=no)
@@ -255,7 +256,7 @@ AC_SUBST(GTK_CFLAGS)
 AC_SUBST(HAVE_GTK)
 AM_CONDITIONAL(HAVE_GDK_LOADERS, test "x$HAVE_GTK_22" = "xyes")
 
-GDK_PIXBUF_LOADER_DIR="\$(libdir)/gtk-2.0/\$(GTK_VERSION)/\loaders"
+GDK_PIXBUF_LOADER_DIR="$GDK_PIXBUF_LIBDIR/gtk-2.0/\$(GTK_VERSION)/loaders"
 AC_ARG_WITH(gdk-pixbuf-loader-dir, 
    AC_HELP_STRING([--with-gdk-pixbuf-loader-dir],
    	[directory to install the gdk_pixbuf loader]),
@@ -265,7 +266,7 @@ AC_ARG_WITH(gdk-pixbuf-loader-dir,
 ])
 AC_SUBST(GDK_PIXBUF_LOADER_DIR)
 
-GDK_PIXBUF_CONFFILE="\$(sysconfdir)/gtk-2.0/gdk-pixbuf.loaders"
+GDK_PIXBUF_CONFFILE="$GDK_PIXBUF_PREFIXDIR/gtk-2.0/gdk-pixbuf.loaders"
 AC_ARG_WITH(gdk-pixbuf-conffile, 
    AC_HELP_STRING([--with-gdk-pixbuf-conffile],
    	[path to the gdk_pixbuf config file]),
@@ -334,6 +335,7 @@ GST_PLUGINS_ALL="\
 	speed \
 	stereo \
 	synaesthesia \
+	tags \
 	tcp \
 	typefind \
 	udp \
@@ -970,16 +972,15 @@ dnl FIXME: we could use header checks here as well IMO
 translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
 GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
   dnl check with pkg-config first
-  PKG_CHECK_MODULES(MAD, mad id3tag, HAVE_MAD="yes", HAVE_MAD="no")
+  PKG_CHECK_MODULES(MAD, mad >= 0.15 id3tag >= 0.15, HAVE_MAD="yes", HAVE_MAD="no")
   if test "x$HAVE_MAD" = "xno"; then
     dnl fall back to oldskool detection
     AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad")
     if test "x$HAVE_MAD" = "xyes"; then
-      # installed with mad >= 0.14
       HAVE_MAD="no"
       save_libs=$LIBS
       LIBS="-lz"
-      AC_CHECK_LIB(id3tag, id3_tag_query, HAVE_MAD="yes" MAD_LIBS="$MAD_LIBS -lid3tag")
+      AC_CHECK_LIB(id3tag, id3_tag_options, HAVE_MAD="yes" MAD_LIBS="-lmad -lid3tag -lz")
       LIBS=$save_LIBS
     fi
   fi    
@@ -1094,6 +1095,13 @@ dnl and should be moved to ext-libs/ perhaps
 translit(dnm, m, l) AM_CONDITIONAL(USE_TARKIN, true)
 GST_CHECK_FEATURE(TARKIN, [tarkinenc tarkindec], tarkin, [
   HAVE_TARKIN="yes"
+])
+
+dnl *** ogg ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OGG, true)
+GST_CHECK_FEATURE(OGG, [ogg de/encoder], oggdemux oggmux, [
+  XIPH_PATH_OGG(HAVE_OGG=yes, HAVE_OGG=no)
+  AS_SCRUB_INCLUDE(OGG_CFLAGS)
 ])
 
 dnl *** vorbis ***
@@ -1365,6 +1373,7 @@ gst/spectrum/Makefile
 gst/speed/Makefile
 gst/stereo/Makefile
 gst/synaesthesia/Makefile
+gst/tags/Makefile
 gst/tcp/Makefile
 gst/typefind/Makefile
 gst/udp/Makefile
@@ -1427,6 +1436,7 @@ ext/mas/Makefile
 ext/mikmod/Makefile
 ext/mpeg2dec/Makefile
 ext/mplex/Makefile
+ext/ogg/Makefile
 ext/pango/Makefile
 ext/raw1394/Makefile
 ext/sdl/Makefile
