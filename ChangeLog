@@ -1,3 +1,7 @@
+2003-02-10  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* TODO: add TODO list
+
 2003-02-08  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* gstreamer/Makefile.am: make distcheck fixification

@@ -1,0 +1,17 @@
+gst-python TODO
+===============
+
+- handle more of the functions that need manual wrapping code
+- add check that pygtk built with --enable-thread
+- improve Python gstreamer.Element creation
+  - perhaps make drop _set_foo_function() calls in favor of object methods
+  - sane buffer handling with buffer type or Numeric?
+- docs
+  - API ref
+  - manual
+  - tutorial
+- more examples
+- convert build system to distutils
+- wrap other GStreamer helper libs
+- add some standard widgets
+  - gtk video widget (similar to widget gst-player is using)
