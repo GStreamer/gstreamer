@@ -1,5 +1,10 @@
 2004-03-05  David Schleef  <ds@schleef.org>
 
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_get):  Check for unfixed
+	caps and throw an element error.  (bug #136334)
+
+2004-03-05  David Schleef  <ds@schleef.org>
+
 	* ext/faad/gstfaad.c: (gst_faad_init), (gst_faad_srcgetcaps),
 	(gst_faad_chain): Fix negotiation.
 	* ext/librfb/gstrfbsrc.c: (gst_rfbsrc_handle_src_event): Add
