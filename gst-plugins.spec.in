@@ -20,10 +20,10 @@ BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 
 Requires:       glib2 >= %_glib2
 BuildRequires:  glib2-devel >= %_glib2
-Requires: 	gstreamer = %{version}
+Requires: 	gstreamer >= 0.5.1
 BuildRequires: 	nasm => 0.90
-BuildRequires: 	gstreamer-devel = %{version} 
-BuildRequires:	gstreamer-tools >= %{version}
+BuildRequires: 	gstreamer-devel >= 0.5.1
+BuildRequires:	gstreamer-tools >= 0.5.1
 Obsoletes:	gstreamer-plugin-libs
 
 %description
@@ -130,6 +130,7 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/resample/resample.h
 %{_includedir}/gstreamer-%{majorminor}/gst/riff/riff.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video.h
+%{_libdir}/gstreamer-%{majorminor}/libgstffmpeg*
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
 %{_libdir}/pkgconfig/gstreamer-libs-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-play-%{majorminor}.pc
@@ -1191,6 +1192,7 @@ integer to float conversion, LAW conversion and level detection plug-ins.
 %{_libdir}/gstreamer-%{majorminor}/libgstcutter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfilter.so
 %{_libdir}/gstreamer-%{majorminor}/libmixmatrix.so
+%{_libdir}/gstreamer-%{majorminor}/libgstoneton.so
 
 %post -n gstreamer-audio-effects
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1353,6 +1355,7 @@ plug-ins.
 %{_libdir}/gstreamer-%{majorminor}/libgstvideocrop.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoscale.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsmpte.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvbidec.so
 
 %post -n gstreamer-video-effects
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
