@@ -1,42 +1,42 @@
 ### FIXME use HAVE_ stuff to decide on dirs
 if USE_OSS
-OSS_SUBDS=oss
+OSS_DIR=oss
 else
-OSS_SUBDS=
+OSS_DIR=
 endif
 
 if USE_QCAM
-QCAM_SUBDS=qcam
+QCAM_DIR=qcam
 else
-QCAM_SUBDS=
+QCAM_DIR=
 endif
 
 if USE_V4L
-V4L_SUBDS=v4l
+V4L_DIR=v4l
 else
-V4L_SUBDS=
+V4L_DIR=
 endif
 
 if USE_VCD
-VCD_SUBDS=vcd
+VCD_DIR=vcd
 else
-VCD_SUBDS=
+VCD_DIR=
 endif
 
 if USE_VGA
-VGA_SUBDS=vga
+VGA_DIR=vga
 else
-VGA_SUBDS=
+VGA_DIR=
 endif
 
 if USE_XVIDEO
-XVIDEO_SUBDS=xvideo
+XVIDEO_DIR=xvideo
 else
-XVIDEO_SUBDS=
+XVIDEO_DIR=
 endif
 
-SUBDIRS=$(OSS_SUBDS) $(QCAM_SUBDS) $(V4L_SUBDS) $(VCD_SUBDS) \
-	$(VGA_SUBDS) $(XVIDEO_SUBDS)
+SUBDIRS=$(OSS_DIR) $(QCAM_DIR) $(V4L_DIR) $(VCD_DIR) \
+	$(VGA_DIR) $(XVIDEO_DIR)
 
 DIST_SUBDIRS=oss qcam v4l vcd vga xvideo
 
