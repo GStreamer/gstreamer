@@ -1,3 +1,13 @@
+2004-06-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/elements/gstidentity.c: (gst_identity_class_init),
+	(gst_identity_init), (gst_identity_set_clock),
+	(gst_identity_chain), (gst_identity_set_property),
+	(gst_identity_get_property):
+	* gst/elements/gstidentity.h:
+	* gst/gstclock.c: (gst_clock_id_wait):
+          add a "sync" property to sync to the clock
+
 2004-06-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstelementfactory.c: (gst_element_factory_create):

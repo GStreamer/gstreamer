@@ -58,7 +58,8 @@ enum
   ARG_DROP_PROBABILITY,
   ARG_SILENT,
   ARG_LAST_MESSAGE,
-  ARG_DUMP
+  ARG_DUMP,
+  ARG_SYNC
 };
 
 
@@ -75,6 +76,8 @@ static void gst_identity_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static void gst_identity_chain (GstPad * pad, GstData * _data);
+static void gst_identity_set_clock (GstElement * element, GstClock * clock);
+
 
 static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
 
@@ -102,9 +105,10 @@ static void
 gst_identity_class_init (GstIdentityClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
-
+  gstelement_class = GST_ELEMENT_CLASS (klass);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOOP_BASED,
       g_param_spec_boolean ("loop-based", "Loop-based",
@@ -133,6 +137,9 @@ gst_identity_class_init (GstIdentityClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
       g_param_spec_boolean ("dump", "Dump", "Dump buffer contents", FALSE,
           G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
+      g_param_spec_boolean ("sync", "Synchronize",
+          "Synchronize to pipeline clock", FALSE, G_PARAM_READWRITE));
 
   gst_identity_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -142,6 +149,9 @@ gst_identity_class_init (GstIdentityClass * klass)
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_identity_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_identity_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_identity_get_property);
+
+  gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_identity_set_clock);
+
 }
 
 static void
@@ -165,12 +175,22 @@ gst_identity_init (GstIdentity * identity)
   identity->error_after = -1;
   identity->drop_probability = 0.0;
   identity->silent = FALSE;
+  identity->sync = FALSE;
   identity->dump = FALSE;
   identity->last_message = NULL;
   identity->srccaps = NULL;
 
   GST_FLAG_SET (identity, GST_ELEMENT_EVENT_AWARE);
 }
+
+static void
+gst_identity_set_clock (GstElement * element, GstClock * clock)
+{
+  GstIdentity *identity = GST_IDENTITY (element);
+
+  gst_object_replace ((GstObject **) & identity->clock, (GstObject *) clock);
+}
+
 
 static void
 gst_identity_chain (GstPad * pad, GstData * _data)
@@ -251,6 +271,11 @@ gst_identity_chain (GstPad * pad, GstData * _data)
     if (i > 1)
       gst_buffer_ref (buf);
 
+    if (identity->sync) {
+      if (identity->clock) {
+        gst_element_wait (GST_ELEMENT (identity), GST_BUFFER_TIMESTAMP (buf));
+      }
+    }
     gst_pad_push (identity->srcpad, GST_DATA (buf));
 
     if (identity->sleep_time)
@@ -324,6 +349,9 @@ gst_identity_set_property (GObject * object, guint prop_id,
     case ARG_DROP_PROBABILITY:
       identity->drop_probability = g_value_get_float (value);
       break;
+    case ARG_SYNC:
+      identity->sync = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -365,6 +393,9 @@ gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_LAST_MESSAGE:
       g_value_set_string (value, identity->last_message);
+      break;
+    case ARG_SYNC:
+      g_value_set_boolean (value, identity->sync);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

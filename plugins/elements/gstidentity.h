@@ -57,6 +57,8 @@ struct _GstIdentity {
   guint 	 sleep_time;
   gboolean 	 silent;
   gboolean 	 dump;
+  gboolean 	 sync;
+  GstClock	*clock;
   gchar 	*last_message;
   GstCaps	*srccaps;
 };
