@@ -194,10 +194,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
     case CODEC_ID_SVQ3:
       caps = GST_FF_VID_CAPS_NEW ("video/x-svq",
 	  "svqversion",        G_TYPE_INT,          3,
-	  "halfpel_flag",      GST_TYPE_INT_RANGE,  G_MININT, G_MAXINT,
-	  "thirdpel_flag",     GST_TYPE_INT_RANGE,  G_MININT, G_MAXINT,
-	  "low_delay",         GST_TYPE_INT_RANGE,  G_MININT, G_MAXINT,
-	  "unknown_svq3_flag", GST_TYPE_INT_RANGE,  G_MININT, G_MAXINT,
+	  "halfpel_flag",      GST_TYPE_INT_RANGE,  0, 1,
+	  "thirdpel_flag",     GST_TYPE_INT_RANGE,  0, 1,
+	  "low_delay",         GST_TYPE_INT_RANGE,  0, 1,
+	  "unknown_svq3_flag", GST_TYPE_INT_RANGE,  0, 1,
           NULL);
       break;
 
@@ -701,8 +701,7 @@ gst_ffmpeg_caps_to_extradata (const GstCaps *caps,
       flags |= thirdpel_flag;
       flags = flags << 3;
 
-      if (G_BYTE_ORDER == G_BIG_ENDIAN)
-	flags = (flags << 8) | (8 >> flags);
+      flags = GUINT16_FROM_LE (flags);
 	
       memcpy (context->extradata + 0x62, &flags, 2);
       context->extradata_size = 0x64;
