@@ -38,7 +38,10 @@ int main(int argc,char *argv[]) {
 
   GstElement *thread, *sinesrc, *osssink;
   GstDParamManager *dpman;
-  GstDParam *volume, *freq;
+  GstDParam *volume;
+  GstDParam *freq;
+  
+  GValue **vol_vals;
 
   gtk_init(&argc,&argv);
   gst_init(&argc,&argv);
@@ -69,9 +72,22 @@ int main(int argc,char *argv[]) {
   g_object_set(G_OBJECT(sinesrc),"buffersize",64,NULL);
  
   dpman = GST_ELEMENT_DPARAM_MANAGER(sinesrc);
-  volume = gst_dparam_new(G_TYPE_FLOAT);
+  
   freq = gst_dparam_new(G_TYPE_FLOAT);
+  //volume = gst_dparam_new(G_TYPE_FLOAT);
 
+  volume = gst_dparam_smooth_new(G_TYPE_FLOAT);
+  vol_vals = GST_DPARAM_GET_POINT(volume, 0LL);
+  
+  // this defines the maximum slope that this
+  // param can change.  This says that in 10ms
+  // the value can change by a maximum of 0.2
+  g_value_set_float(vol_vals[1], 0.2);
+  g_value_set_float(vol_vals[2], 10000000.0);
+  
+  // set the default update period to 0.5ms, or 2000Hz
+  GST_DPARAM_DEFAULT_UPDATE_PERIOD(volume) = 2000000LL;
+  
   g_assert(gst_dpman_attach_dparam (dpman, "volume", volume));
   g_assert(gst_dpman_attach_dparam (dpman, "freq", freq));
   
