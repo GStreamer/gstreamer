@@ -63,6 +63,16 @@ XML_CFLAGS=`xml-config --cflags`
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
 
+dnl Check for libgdb-pixbuf
+AC_PATH_PROG(GDK_PIXBUF_CONFIG, gdk-pixbuf-config, no)
+if test x$GDK_PIXBUF_CONFIG = xno; then
+  AC_MSG_ERROR(Couldn't find gdk-pixbuf-config)
+fi
+GDK_PIXBUF_LIBS=`gdk-pixbuf-config --libs`
+GDK_PIXBUF_CFLAGS=`gdk-pixbuf-config --cflags`
+AC_SUBST(GDK_PIXBUF_LIBS)
+AC_SUBST(GDK_PIXBUF_CFLAGS)
+
 
 dnl Next, check for the optional libraries:
 dnl =======================================
