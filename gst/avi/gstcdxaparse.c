@@ -74,7 +74,7 @@ GST_PADTEMPLATE_FACTORY (sink_templ,
   GST_CAPS_NEW (
     "cdxaparse_sink",
      "video/avi",
-      "RIFF", GST_PROPS_STRING ("CDXA")
+      "format", GST_PROPS_STRING ("CDXA")
   )
 )
 
