@@ -37,14 +37,14 @@ print_prop (GstPropsEntry *prop, gboolean showname, const gchar *pfx)
     {
       gfloat val;
       gst_props_entry_get_float (prop, &val);
-      g_print("Float: %f\n", val);
+      g_print("Float: %g\n", val);
       break;
     }
     case GST_PROPS_FLOAT_RANGE_TYPE:
     {
       gfloat min, max;
       gst_props_entry_get_float_range (prop, &min, &max);
-      g_print("Float range: %f - %f\n", min, max);
+      g_print("Float range: %g - %g\n", min, max);
       break;
     }
     case GST_PROPS_BOOLEAN_TYPE:
