@@ -1,3 +1,8 @@
+2004-04-08  David Schleef  <ds@schleef.org>
+
+	* gst/colorspace/gstcolorspace.c: Don't advertise a conversion
+	we don't support (bug #139532)
+
 2004-04-07  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/mad/gstmad.c: (gst_mad_handle_event),
