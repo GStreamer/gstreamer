@@ -491,21 +491,24 @@ gst_oggvorbisenc_get_tag_value (const GstTagList * list, const gchar * tag,
       || (strcmp (tag, GST_TAG_ALBUM_VOLUME_COUNT) == 0)) {
     guint track_no;
 
-    g_assert (gst_tag_list_get_uint_index (list, tag, index, &track_no));
+    if (!gst_tag_list_get_uint_index (list, tag, index, &track_no))
+      g_assert_not_reached ();
     vorbisvalue = g_strdup_printf ("%u", track_no);
   } else if (strcmp (tag, GST_TAG_DATE) == 0) {
     /* FIXME: how are dates represented in vorbis files? */
     GDate *date;
     guint u;
 
-    g_assert (gst_tag_list_get_uint_index (list, tag, index, &u));
+    if (!gst_tag_list_get_uint_index (list, tag, index, &u))
+      g_assert_not_reached ();
     date = g_date_new_julian (u);
     vorbisvalue =
         g_strdup_printf ("%04d-%02d-%02d", (gint) g_date_get_year (date),
         (gint) g_date_get_month (date), (gint) g_date_get_day (date));
     g_date_free (date);
   } else if (gst_tag_get_type (tag) == G_TYPE_STRING) {
-    g_assert (gst_tag_list_get_string_index (list, tag, index, &vorbisvalue));
+    if (!gst_tag_list_get_string_index (list, tag, index, &vorbisvalue))
+      g_assert_not_reached ();
   }
 
   return vorbisvalue;

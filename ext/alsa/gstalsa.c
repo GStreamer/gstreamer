@@ -515,8 +515,9 @@ gst_alsa_request_new_pad (GstElement * element, GstPadTemplate * templ,
   GstAlsa *this;
   gint track = 0;
 
-  g_return_val_if_fail ((this = GST_ALSA (element)), NULL);
+  g_return_val_if_fail (GST_IS_ALSA (element), NULL);
   g_return_val_if_fail (!GST_FLAG_IS_SET (element, GST_ALSA_RUNNING), NULL);
+  this = GST_ALSA (element);
 
   if (name) {
     /* locate the track number in the requested pad name. */

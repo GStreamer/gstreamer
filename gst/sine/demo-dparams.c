@@ -96,7 +96,8 @@ main (int argc, char *argv[])
   g_object_set (G_OBJECT (freq), "slope_time", 50000000LL, NULL);
 
   dpman = gst_dpman_get_manager (sinesrc);
-  g_assert (gst_dpman_attach_dparam (dpman, "freq", freq));
+  if (!gst_dpman_attach_dparam (dpman, "freq", freq))
+    g_assert_not_reached ();
   gst_dpman_set_mode (dpman, "asynchronous");
 
   spec = (GParamSpecDouble *) gst_dpman_get_param_spec (dpman, "freq");
@@ -119,7 +120,8 @@ main (int argc, char *argv[])
   g_object_set (G_OBJECT (volume), "slope_time", 50000000LL, NULL);
 
   dpman = gst_dpman_get_manager (volfilter);
-  g_assert (gst_dpman_attach_dparam (dpman, "volume", volume));
+  if (!gst_dpman_attach_dparam (dpman, "volume", volume))
+    g_assert_not_reached ();
   gst_dpman_set_mode (dpman, "asynchronous");
 
   g_object_set (G_OBJECT (volfilter), "mute", FALSE, NULL);

@@ -445,7 +445,8 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
           GDate *date;
           guint u;
 
-          g_assert (gst_tag_list_get_uint_index (list, tag, i, &u));
+          if (!gst_tag_list_get_uint_index (list, tag, i, &u))
+            g_assert_not_reached ();
           date = g_date_new_julian (u);
           /* vorbis suggests using ISO date formats */
           result =
@@ -456,21 +457,24 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
         } else {
           guint u;
 
-          g_assert (gst_tag_list_get_uint_index (list, tag, i, &u));
+          if (!gst_tag_list_get_uint_index (list, tag, i, &u))
+            g_assert_not_reached ();
           result = g_strdup_printf ("%s=%u", vorbis_tag, u);
         }
         break;
       case G_TYPE_STRING:{
         gchar *str;
 
-        g_assert (gst_tag_list_get_string_index (list, tag, i, &str));
+        if (!gst_tag_list_get_string_index (list, tag, i, &str))
+          g_assert_not_reached ();
         result = g_strdup_printf ("%s=%s", vorbis_tag, str);
         break;
       }
       case G_TYPE_DOUBLE:{
         gdouble value;
 
-        g_assert (gst_tag_list_get_double_index (list, tag, i, &value));
+        if (!gst_tag_list_get_double_index (list, tag, i, &value))
+          g_assert_not_reached ();
         result = g_strdup_printf ("%s=%f", vorbis_tag, value);
       }
       default:

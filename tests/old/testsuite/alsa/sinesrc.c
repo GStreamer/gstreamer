@@ -134,7 +134,8 @@ sinesrc_force_caps (SineSrc * src)
       "rate", G_TYPE_INT, src->rate,
       "channels", G_TYPE_INT, src->channels, NULL);
 
-  g_assert (gst_pad_try_set_caps (src->src, caps) == GST_PAD_LINK_OK);
+  if (gst_pad_try_set_caps (src->src, caps) != GST_PAD_LINK_OK)
+    g_assert_not_reached ();
 }
 
 /* always return 1 wave 
@@ -187,10 +188,11 @@ sinesrc_get (GstPad * pad)
   if (src->pre_get_func)
     src->pre_get_func (src);
 
-  g_assert ((buf =
-          gst_buffer_new_and_alloc ((src->width / 8) * src->channels *
-              SAMPLES_PER_WAVE)));
-  g_assert ((data = GST_BUFFER_DATA (buf)));
+  buf = gst_buffer_new_and_alloc ((src->width / 8) * src->channels *
+      SAMPLES_PER_WAVE);
+  g_assert (buf);
+  data = GST_BUFFER_DATA (buf);
+  g_assert (data);
 
   for (i = 0; i < SAMPLES_PER_WAVE; i++) {
     value = sin (i * 2 * M_PI / SAMPLES_PER_WAVE);

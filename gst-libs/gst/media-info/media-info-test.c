@@ -15,7 +15,8 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
     gchar *str;
 
     if (gst_tag_get_type (tag) == G_TYPE_STRING) {
-      g_assert (gst_tag_list_get_string_index (list, tag, i, &str));
+      if (!gst_tag_list_get_string_index (list, tag, i, &str))
+        g_assert_not_reached ();
     } else {
       str =
           g_strdup_value_contents (gst_tag_list_get_value_index (list, tag, i));

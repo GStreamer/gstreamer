@@ -139,10 +139,11 @@ create_pipeline (void)
     sinesrc->width = 16;
 
     if (temp == 0) {
-      g_assert ((law = gst_element_factory_make ("mulawenc", "mulaw")));
+      law = gst_element_factory_make ("mulawenc", "mulaw");
     } else {
-      g_assert ((law = gst_element_factory_make ("alawenc", "alaw")));
+      law = gst_element_factory_make ("alawenc", "alaw");
     }
+    g_assert (law);
     gst_element_unlink (src, alsasink);
     gst_bin_add (GST_BIN (pipeline), law);
     gst_element_link_many (src, law, alsasink, NULL);
