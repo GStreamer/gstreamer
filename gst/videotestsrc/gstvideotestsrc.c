@@ -21,6 +21,7 @@
 /*#define DEBUG_ENABLED */
 #include <gstvideotestsrc.h>
 
+#include <string.h>
 #include <stdlib.h>
 
 
