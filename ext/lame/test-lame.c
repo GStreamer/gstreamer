@@ -52,8 +52,14 @@ main (int argc, char *argv[])
       "input audio",
       "audio/raw",
       "format", GST_PROPS_STRING ("int"),
-      "rate", GST_PROPS_INT (44100)
+      "rate", GST_PROPS_INT (44100),
+      "width", GST_PROPS_INT (16),
+      "depth", GST_PROPS_INT (16),
+      "law", GST_PROPS_INT (1),
+      "signed", GST_PROPS_BOOLEAN (TRUE),
+      "channels", GST_PROPS_INT (1)
       );
+  caps->fixed = TRUE;
   g_assert (caps != NULL);
   g_print ("Setting caps on fakesrc's src pad\n");
   if (! (gst_pad_try_set_caps (gst_element_get_pad (src, "src"), caps)))
