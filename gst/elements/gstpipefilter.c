@@ -124,10 +124,54 @@ GstElement *gst_pipefilter_new(gchar *name) {
   return pipefilter;
 }
 
+
+static gboolean gst_pipefilter_read_and_push(GstPipefilter *pipefilter) {
+  GstBuffer *newbuf;
+  glong readbytes;
+
+  /* create the buffer */
+  // FIXME: should eventually use a bufferpool for this
+  newbuf = gst_buffer_new();
+  g_return_val_if_fail(newbuf, FALSE);
+
+  /* allocate the space for the buffer data */
+  GST_BUFFER_DATA(newbuf) = g_malloc(pipefilter->bytes_per_read);
+  g_return_val_if_fail(GST_BUFFER_DATA(newbuf) != NULL, FALSE);
+
+  /* read it in from the file */
+  DEBUG("attemting to read %d bytes\n", pipefilter->bytes_per_read);
+  readbytes = read(pipefilter->fdout[0],GST_BUFFER_DATA(newbuf),pipefilter->bytes_per_read);
+  DEBUG("read %d bytes\n", readbytes);
+  if (readbytes < 0) {
+    if (errno == EAGAIN) {
+      DEBUG("no input yet\n");
+      gst_buffer_unref(newbuf);
+      return FALSE;
+    }
+    else {
+      perror("read");
+      gst_element_error(GST_ELEMENT(pipefilter),"reading");
+      return FALSE;
+    }
+  }
+  if (readbytes == 0) {
+    gst_buffer_unref(newbuf);
+    return FALSE;
+  }
+  /* if we didn't get as many bytes as we asked for, we're at EOF */
+  if (readbytes < pipefilter->bytes_per_read)
+    GST_BUFFER_FLAG_SET(newbuf,GST_BUFFER_EOS);
+  GST_BUFFER_OFFSET(newbuf) = pipefilter->curoffset;
+  GST_BUFFER_SIZE(newbuf) = readbytes;
+  pipefilter->curoffset += readbytes;
+
+  /* we're done, push the buffer off now */
+  gst_pad_push(pipefilter->srcpad,newbuf);
+  return TRUE;
+}
 void gst_pipefilter_chain(GstPad *pad,GstBuffer *buf) {
   GstPipefilter *pipefilter;
-  GstBuffer *newbuf;
-  glong readbytes, writebytes;
+  glong writebytes;
   guchar *data;
   gulong size;
 
@@ -136,6 +180,8 @@ void gst_pipefilter_chain(GstPad *pad,GstBuffer *buf) {
   g_return_if_fail(buf != NULL);
 
   pipefilter = GST_PIPEFILTER(pad->parent);
+
+  while (gst_pipefilter_read_and_push(pipefilter));
 
   data = GST_BUFFER_DATA(buf);
   size = GST_BUFFER_SIZE(buf);
@@ -150,45 +196,7 @@ void gst_pipefilter_chain(GstPad *pad,GstBuffer *buf) {
   }
   gst_buffer_unref(buf);
 
-
-  /* create the buffer */
-  // FIXME: should eventually use a bufferpool for this
-  newbuf = gst_buffer_new();
-  g_return_if_fail(newbuf);
-
-  /* allocate the space for the buffer data */
-  GST_BUFFER_DATA(newbuf) = g_malloc(pipefilter->bytes_per_read);
-  g_return_if_fail(GST_BUFFER_DATA(newbuf) != NULL);
-
-  /* read it in from the file */
-  DEBUG("attemting to read %d bytes\n", pipefilter->bytes_per_read);
-  readbytes = read(pipefilter->fdout[0],GST_BUFFER_DATA(newbuf),pipefilter->bytes_per_read);
-  DEBUG("read %d bytes\n", readbytes);
-  if (readbytes < 0) {
-    if (errno == EAGAIN) {
-      DEBUG("no input yet\n");
-      gst_buffer_unref(newbuf);
-      return;
-    }
-    else {
-      perror("read");
-      gst_element_error(GST_ELEMENT(pipefilter),"reading");
-      return;
-    }
-  }
-  if (readbytes == 0) {
-    gst_buffer_unref(newbuf);
-    return;
-  }
-  /* if we didn't get as many bytes as we asked for, we're at EOF */
-  if (readbytes < pipefilter->bytes_per_read)
-    GST_BUFFER_FLAG_SET(newbuf,GST_BUFFER_EOS);
-  GST_BUFFER_OFFSET(newbuf) = pipefilter->curoffset;
-  GST_BUFFER_SIZE(newbuf) = readbytes;
-  pipefilter->curoffset += readbytes;
-
-  /* we're done, push the buffer off now */
-  gst_pad_push(pipefilter->srcpad,newbuf);
+  while (gst_pipefilter_read_and_push(pipefilter));
 }
 
 static void gst_pipefilter_set_arg(GtkObject *object,GtkArg *arg,guint id) {
@@ -250,7 +258,6 @@ static gboolean gst_pipefilter_open_file(GstPipefilter *src) {
     // child
     dup2(src->fdin[0], STDIN_FILENO);  /* set the childs input stream */
     dup2(src->fdout[1], STDOUT_FILENO);  /* set the childs output stream */
-    //execlp("lame", "lame", "-x", "-s", "48", "--resample", "44.1", "-", "-", NULL);
     execvp(src->command[0], &src->command[0]);
     // will only reach if error
     perror("exec");

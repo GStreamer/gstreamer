@@ -18,12 +18,15 @@
  */
 
 //#define DEBUG_ENABLED
+#include <math.h>
+
 #include <gst/gst.h>
 
 #include <gstvideoscale.h>
 #include <gst/meta/videoraw.h>
 
 static void gst_videoscale_scale_plane(unsigned char *src, unsigned char *dest, int sw, int sh, int dw, int dh);
+static void gst_videoscale_scale_plane_slow(unsigned char *src, unsigned char *dest, int sw, int sh, int dw, int dh);
 
 GstBuffer *gst_videoscale_scale(GstBuffer *src, int sw, int sh, int dw, int dh, int format) {
   GstBuffer *outbuf;
@@ -44,10 +47,10 @@ GstBuffer *gst_videoscale_scale(GstBuffer *src, int sw, int sh, int dw, int dh, 
     ((MetaVideoRaw *)meta)->width = dw;
     ((MetaVideoRaw *)meta)->height = dh;
 
-    gst_buffer_add_meta(outbuf, meta);
+   gst_buffer_add_meta(outbuf, meta);
   }
 
-  gst_videoscale_scale_plane(source, dest, sw, sh, dw, dh);
+  gst_videoscale_scale_plane_slow(source, dest, sw, sh, dw, dh);
 
   source += sw*sh;
   dest += dw*dh;
@@ -57,64 +60,94 @@ GstBuffer *gst_videoscale_scale(GstBuffer *src, int sw, int sh, int dw, int dh, 
   sh = sh>>1;
   sw = sw>>1;
 
-  gst_videoscale_scale_plane(source, dest, sw, sh, dw, dh);
+  gst_videoscale_scale_plane_slow(source, dest, sw, sh, dw, dh);
 
   source += sw*sh;
   dest += dw*dh;
 
-  gst_videoscale_scale_plane(source, dest, sw, sh, dw, dh);
+  gst_videoscale_scale_plane_slow(source, dest, sw, sh, dw, dh);
 
   gst_buffer_unref(src);
 
   return outbuf;
 }
 
-static char gst_videoscale_interp_simple(unsigned char *src, int x, int y, int dw, int dh, int sw, int sh, int ix, int iy) {
-  unsigned char *isourcep;
-  int interp;
-  int i,j;
+#define RC(x,y) *(src+(int)(x)+(int)((y)*sw))
 
-  //printf("scale: %d %d %p\n", ix, iy, src);
-  if (x>=ix) src-=(ix);
-  if (y>=iy) src-=(sw*iy);
+static unsigned char gst_videoscale_bilinear(unsigned char *src, double x, double y, int sw) {
+  int j=floor(x);
+  int k=floor(y);
+  double a=x-j;
+  double b=y-k;
+  double dest;
+  int color;
 
-  isourcep = src;
-  interp =0;
+  dest=(1-a)*(1-b)*RC(j,k)+
+       a*(1-b)*RC(j+1,k)+
+       b*(1-a)*RC(j,k+1)+
+       a*b*RC(j+1,k+1);
 
-  for (i =0; i<iy; i++) {
-    for (j =0; j<ix; j++) {
-      //printf("%d ", *isourcep);
-      interp += *isourcep++;
-    }
-    //printf("\n");
-    isourcep = isourcep-ix+sw;
-  }
-  return interp/(ix*iy);
+  color=rint(dest);
+  if (color<0) color=abs(color);  // cannot have negative values !
+  //if (color<0) color=0;  // cannot have negative values !
+  if (color>255) color=255;
+
+  return (unsigned char) color;
 }
 
-static char gst_videoscale_interp_other(unsigned char *src, int x, int y, int dw, int dh, int sw, int sh, int ix, int iy) {
-  unsigned char *isourcep;
-  int interp;
-  int i,j;
-  static int matrix[3][3] = {{1,2,1}, {2,3,2},{1,2,1}};
+static unsigned char gst_videoscale_bicubic(unsigned char *src, double x, double y, int sw, int sh) {
+  int j=floor(x);
+  int k=floor(y), k2;
+  double a=x-j;
+  double b=y-k;
+  double dest;
+  int color;
+  double t1, t2, t3, t4;
+  double a1, a2, a3, a4;
 
-  if (x>0) src--;
-  if (x>dw-1) src--;
-  if (y>0) src-=sw;
-  if (y>dh-1) src-=sw;
+  a1 = -a*(1-a)*(1-a);
+  a2 = (1-2*a*a+a*a*a);
+  a3 = a*(1+a-a*a);
+  a4 = a*a*(1-a);
 
-  isourcep = src;
-  interp =0;
+  k2 = MAX(0, k-1);
+  t1=a1*RC(j-1,k2)+  	a2*RC(j,k2)+ 	a3*RC(j+1,k2)- 	a4*RC(j+2,k2);
+  t2=a1*RC(j-1,k)+ 	a2*RC(j,k)+ 	a3*RC(j+1,k)- 	a4*RC(j+2,k); 
+  k2 = MIN(sh, k+1);
+  t3=a1*RC(j-1,k2)+ 	a2*RC(j,k2)+ 	a3*RC(j+1,k2)- 	a4*RC(j+2,k2);
+  k2 = MIN(sh, k+2);
+  t4=a1*RC(j-1,k2)+ 	a2*RC(j,k2)+ 	a3*RC(j+1,k2)- 	a4*RC(j+2,k2);
 
-  for (i =0; i<iy; i++) {
-    for (j =0; j<ix; j++) {
-      //printf("%d %d %d %d\n", i, j, *isourcep, matrix[i][j]);
-      interp += matrix[i][j]*(*isourcep++);
+  dest= -b*(1-b)*(1-b)*t1+ (1-2*b*b+b*b*b)*t2+ b*(1+b-b*b)*t3+ b*b*(b-1)*t4;
+
+  color=rint(dest);
+  if (color<0) color=abs(color);  // cannot have negative values !
+  if (color>255) color=255;
+
+  return (unsigned char) color;
+}
+
+static void gst_videoscale_scale_plane_slow(unsigned char *src, unsigned char *dest, int sw, int sh, int dw, int dh) {
+  double zoomx = ((double)dw)/(double)sw;
+  double zoomy = ((double)dh)/(double)sh;
+  double xr, yr;
+  int x, y;
+
+  for (y=0; y<dh; y++) {
+    yr = ((double)y)/zoomy;
+    for (x=0; x<dw; x++) {
+      xr = ((double)x)/zoomx;
+
+      if (floor(xr) == xr && floor(yr) == yr){
+	*dest++ = RC(xr, yr);
+      }
+      else {
+	//*dest++ = gst_videoscale_bilinear(src, xr, yr, sw);
+	*dest++ = gst_videoscale_bicubic(src, xr, yr, sw, sh);
+      }
     }
-    isourcep = isourcep-ix+sw;
   }
-  //printf("%d\n", interp/15);
-  return interp/15;
+  
 }
 
 static void gst_videoscale_scale_plane(unsigned char *src, unsigned char *dest, int sw, int sh, int dw, int dh) {
@@ -154,8 +187,7 @@ static void gst_videoscale_scale_plane(unsigned char *src, unsigned char *dest, 
       }
       sourcep += xinc;
 
-      *dest++ = gst_videoscale_interp_simple(sourcep, x, y, dw, dh, sw, sh, xinc+xskip, yinc+yskip);
-      //*dest++ = *sourcep;
+      *dest++ = *sourcep;
     }
     if (dy <= 0) {
       dy += incyE;
