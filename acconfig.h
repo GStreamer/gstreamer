@@ -2,6 +2,8 @@
 #undef PLUGINS_SRCDIR
 #undef PLUGINS_USE_SRCDIR
 
+#undef GST_CONFIG_DIR
+
 #undef HAVE_CPU_I386
 #undef HAVE_CPU_PPC
 

@@ -25,13 +25,10 @@
 #include <dirent.h>
 #include <unistd.h>
 
-//#define GST_DEBUG_ENABLED
 #include "gst_private.h"
-
 #include "gstplugin.h"
+#include "config.h"
 
-
-//#undef PLUGINS_USE_SRCDIR
 
 /* list of loaded modules and its sequence number */
 GList *_gst_modules;
@@ -77,12 +74,12 @@ _gst_plugin_initialize (void)
                                       PLUGINS_SRCDIR "/gst/elements");
   _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
                                       PLUGINS_SRCDIR "/gst/types");
-#else
+#else /* PLUGINS_USE_SRCDIR */
   /* add the main (installed) library path */
   _gst_plugin_paths = g_list_prepend (_gst_plugin_paths, PLUGINS_DIR);
 #endif /* PLUGINS_USE_SRCDIR */
 
-  doc = xmlParseFile ("/etc/gstreamer/reg.xml");
+  doc = xmlParseFile (GST_CONFIG_DIR"/reg.xml");
 
   if (!doc || strcmp (doc->root->name, "GST-PluginRegistry")) {
     g_warning ("gstplugin: registry needs rebuild\n");

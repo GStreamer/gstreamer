@@ -31,9 +31,11 @@
 #include <string.h>
 #include <errno.h>
 
-#define GST_CONFIG_DIR           "/etc/gstreamer"
-#define GLOBAL_REGISTRY_FILE     GST_CONFIG_DIR"/reg.xml"
-#define GLOBAL_REGISTRY_FILE_TMP GST_CONFIG_DIR"/.reg.xml.tmp"
+#include "config.h"
+
+#define GLOBAL_REGISTRY_DIR      GST_CONFIG_DIR
+#define GLOBAL_REGISTRY_FILE     GLOBAL_REGISTRY_DIR"/reg.xml"
+#define GLOBAL_REGISTRY_FILE_TMP GLOBAL_REGISTRY_DIR"/.reg.xml.tmp"
 
 extern gboolean _gst_plugin_spew;
 
@@ -102,7 +104,7 @@ int main(int argc,char *argv[])
     if (argc != 1) usage(argv[0]);
 
     // Check that directory for config exists
-    check_dir(GST_CONFIG_DIR);
+    check_dir(GLOBAL_REGISTRY_DIR);
     
     // Read the plugins
     _gst_plugin_spew = TRUE;

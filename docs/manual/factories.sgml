@@ -27,8 +27,8 @@
     </programlisting>
 
     <para>
-      While this mechanism is quite effective it also has one big problems:
-      The elements are created base on their name. Indeed, we create an 
+      While this mechanism is quite effective it also has some big problems:
+      The elements are created based on their name. Indeed, we create an 
       element mpg123 by explicitly stating the mpg123 elements name.
       Our little program therefore always uses the mpg123 decoder element
       to decode the MP3 audio stream, even if there are 3 other MP3 decoders
