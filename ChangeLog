@@ -1,3 +1,13 @@
+2004-12-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/faad/gstfaad.c: (gst_faad_chanpos_from_gst),
+	(gst_faad_chanpos_to_gst), (gst_faad_chain):
+	  Set DURATION even if source buffer didn't. Also use increasing
+	  timestamps.
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_audio_caps_with_data):
+	  Block_align can have larger values than 8192.
+
 2004-12-02  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/law/alaw-decode.c: (alawdec_getcaps), (alawdec_link):
