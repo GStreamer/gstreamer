@@ -1,3 +1,10 @@
+2004-06-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstelementfactory.c: (gst_element_factory_create):
+	  make the freakin "elementfactory bla has no type" message more
+	  useful. So we actually can do something when someone shows up
+	  complaining about it.
+
 2004-06-15  Johan Dahlin  <johan@gnome.org>
 
 	* tools/gst-inspect.c (main): Fallback to plugin if no element is
@@ -81,7 +88,7 @@
 2004-06-12  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/config.h:
-    * gst/gst-i18n-app.h:
+	* gst/gst-i18n-app.h:
           enable NLS under Windows
 
 2004-06-12  Jan Schmidt  <thaytan@mad.scientist.com>

@@ -27,6 +27,7 @@
 #include "gstregistrypool.h"
 #include "gstinfo.h"
 #include "gsturi.h"
+#include "registries/gstxmlregistry.h"  /* g_critical in gst_element_factory_create */
 
 GST_DEBUG_CATEGORY_STATIC (element_factory_debug);
 #define GST_CAT_DEFAULT element_factory_debug
@@ -283,8 +284,14 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
     GST_INFO ("creating \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
 
   if (factory->type == 0) {
-    g_critical ("Factory for `%s' has no type",
-        GST_PLUGIN_FEATURE_NAME (factory));
+    GstPlugin *plugin = GST_PLUGIN_FEATURE (factory)->manager;
+
+    g_critical
+        ("Factory for `%s' has no type. This probably means the plugin wasn't found because the registry is broken. The plugin GStreamer was looking for is named '%s' and is expected in file '%s'. The registry for this plugin is located at '%s'",
+        GST_PLUGIN_FEATURE_NAME (factory),
+        gst_plugin_get_name (plugin), gst_plugin_get_filename (plugin),
+        GST_IS_XML_REGISTRY (plugin->manager) ? GST_XML_REGISTRY (plugin->
+            manager)->location : "Unknown");
     return NULL;
   }
 
