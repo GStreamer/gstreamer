@@ -862,13 +862,12 @@ AC_DEFUN(GST_SUBSYSTEM_DISABLE,
 [dnl
 dnl Add a subsystem --disable flag and all the necessary symbols and substitions
 dnl
-lower=translit([$1], A-Z, a-z)
 AC_ARG_ENABLE(translit([$1], A-Z, a-z), 
-[  --disable-${lower}           disable $2],
+[  --disable-translit([$1], A-Z, a-z)           disable $2],
 [ case "${enableval}" in
     yes) GST_DISABLE_[$1]=no ;;
     no) GST_DISABLE_[$1]=yes ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --enable-${lower}) ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-translit([$1], A-Z, a-z)) ;;
   esac],
 [GST_DISABLE_[$1]=no]) dnl Default value
 if test x$GST_DISABLE_[$1] = xyes; then
