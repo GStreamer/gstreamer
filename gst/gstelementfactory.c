@@ -202,8 +202,15 @@ gst_elementfactory_make (const gchar *factoryname, const gchar *name)
 
   //gst_plugin_load_elementfactory(factoryname);
   factory = gst_elementfactory_find(factoryname);
-  if (factory == NULL) return NULL;
+  if (factory == NULL) {
+    GST_INFO (GST_CAT_ELEMENTFACTORY,"no such elementfactory \"%s\"!",factoryname);
+    return NULL;
+  }
   element = gst_elementfactory_create(factory,name);
+  if (element == NULL) {
+    GST_INFO (GST_CAT_ELEMENTFACTORY,"couldn't create instance of elementfactory \"%s\"!",factoryname);
+    return NULL;
+  }
   return element;
 }
 
