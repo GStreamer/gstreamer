@@ -62,7 +62,7 @@ struct _GstVideotestsrc {
   guint32 format;
   gint width;
   gint height;
-  GstVideoTestSrcMethod method;
+  gint forced_format;
   
   /* private */
   gint64 timestamp;
@@ -78,10 +78,9 @@ struct _GstVideotestsrcClass {
   GstElementClass parent_class;
 };
 
-GType gst_videotestsrc_get_type(void);
+static GType gst_videotestsrc_get_type(void);
 
-void gst_videotestsrc_setup(GstVideotestsrc *);
-#define gst_videotestsrc_scale(scale, src, dest) (scale)->scale_cc((scale), (src), (dest))
+static void gst_videotestsrc_setup(GstVideotestsrc *);
 
 #ifdef __cplusplus
 }
