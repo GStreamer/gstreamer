@@ -29,7 +29,7 @@ version_check "autoconf" "$AUTOCONF autoconf autoconf-2.54 autoconf-2.53 autocon
               "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 52 || DIE=1
 version_check "automake" "$AUTOMAKE automake automake-1.7 automake-1.6" \
               "ftp://ftp.gnu.org/pub/gnu/automake/" 1 6 || DIE=1
-version_check "libtool" "" \
+version_check "libtoolize" "libtoolize libtoolize14" \
               "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
 version_check "pkg-config" "" \
               "http://www.freedesktop.org/software/pkgconfig" 0 8 0 || DIE=1
@@ -56,7 +56,7 @@ toplevel_check $srcfile
 if test -f acinclude.m4; then rm acinclude.m4; fi
 tool_run "$aclocal" "-I common/m4 $ACLOCAL_FLAGS"
 
-tool_run "libtoolize" "--copy --force"
+tool_run "$libtoolize" "--copy --force"
 tool_run "$autoheader"
 
 # touch the stamp-h.in build stamp so we don't re-run autoheader in maintainer mode -- wingo
