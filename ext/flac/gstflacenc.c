@@ -214,7 +214,7 @@ gst_flacenc_base_init (gpointer g_class)
 
   raw_caps = raw_caps_factory ();
   flac_caps = flac_caps_factory ();
-  
+
   sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 					GST_PAD_ALWAYS, 
 					raw_caps, NULL);
@@ -369,7 +369,7 @@ gst_flacenc_sinkconnect (GstPad *pad, GstCaps *caps)
   gst_caps_get_int (caps, "rate", &flacenc->sample_rate);
   
   caps = GST_CAPS_NEW ("flacenc_srccaps",
-                       "application/x-flac",
+                       "audio/x-flac",
                          "channels", GST_PROPS_INT (flacenc->channels),
                          "rate", GST_PROPS_INT (flacenc->sample_rate));
   ret = gst_pad_try_set_caps (flacenc->srcpad, caps);
