@@ -707,15 +707,10 @@ gst_bin_change_state (GstElement * element)
 
 	gst_element_set_state (child, old_child_state);
 	if (GST_ELEMENT_SCHED (child) == GST_ELEMENT_SCHED (element)) {
-          /* reset to what is was */
+          /* try to reset it to what is was */
           GST_STATE_PENDING (element) = old_state;
-	  
           gst_bin_change_state (element);
-	  /* see if the old state was set */
-	  if (GST_STATE (element) == old_state) 
-	    return GST_STATE_SUCCESS;
 
-	  /* something wacky happened, we can't even go back */
 	  return GST_STATE_FAILURE;
 	}
 	break;
