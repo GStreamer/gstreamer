@@ -612,23 +612,32 @@ gst_object_set_name_default (GstObject * object)
  * This function makes a copy of the provided name, so the caller
  * retains ownership of the name it sent.
  *
- * MT safe.
+ * Returns: TRUE if the name could be set.
+ *
+ * MT safe.  This function grabs and releases the object's LOCK.
  */
-void
+gboolean
 gst_object_set_name (GstObject * object, const gchar * name)
 {
-  g_return_if_fail (GST_IS_OBJECT (object));
+  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
 
   GST_LOCK (object);
-  g_free (object->name);
+
+  /* parented objects cannot be renamed */
+  if (object->parent != NULL) {
+    GST_UNLOCK (object);
+    return FALSE;
+  }
 
   if (name != NULL) {
+    g_free (object->name);
     object->name = g_strdup (name);
     GST_UNLOCK (object);
   } else {
     GST_UNLOCK (object);
     gst_object_set_name_default (object);
   }
+  return TRUE;
 }
 
 /**

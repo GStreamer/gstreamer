@@ -133,7 +133,7 @@ struct _GstObjectClass {
 GType		gst_object_get_type		(void);
 
 /* name routines */
-void		gst_object_set_name		(GstObject *object, const gchar *name);
+gboolean	gst_object_set_name		(GstObject *object, const gchar *name);
 gchar* 		gst_object_get_name		(GstObject *object);
 
 /* parentage routines */

@@ -187,20 +187,26 @@ G_STMT_START {				\
 #define MAIN_START_THREAD_FUNCTIONS(count, function, data)	\
 G_STMT_START {							\
   int i;							\
-  GThread *thread = NULL;					\
   for (i = 0; i < count; ++i) {					\
+    MAIN_START_THREAD_FUNCTION (i, function, data);		\
+  }								\
+} G_STMT_END;
+
+#define MAIN_START_THREAD_FUNCTION(i, function, data)		\
+G_STMT_START {							\
+    GThread *thread = NULL;					\
     g_message ("MAIN: creating thread %d\n", i);		\
     g_mutex_lock (mutex);					\
     thread = g_thread_create ((GThreadFunc) function, data,	\
 	TRUE, NULL);						\
-    thread_list = g_list_append (thread_list, thread);		\
-								\
     /* wait for thread to signal us that it's ready */		\
     g_message ("MAIN: waiting for thread %d\n", i);		\
     g_cond_wait (start_cond, mutex);				\
     g_mutex_unlock (mutex);					\
-  }								\
+								\
+    thread_list = g_list_append (thread_list, thread);		\
 } G_STMT_END;
+
 
 #define MAIN_SYNCHRONIZE()		\
 G_STMT_START {				\
@@ -338,7 +344,74 @@ START_TEST (test_fake_object_name_threaded_right)
   }
   MAIN_STOP_THREADS ();
 }
-END_TEST Suite * gst_object_suite (void)
+
+END_TEST
+/*
+ * main thread creates lots of objects
+ * child threads sets default names on objects
+ * then main thread checks uniqueness of object names
+ */
+    GList * object_list = NULL;
+gint num_objects = 1000;
+gint num_threads = 5;
+
+/* thread function for threaded default name change test */
+gpointer
+thread_name_object_default (int *i)
+{
+  int j;
+
+  THREAD_START ();
+
+  for (j = *i; j < num_objects; j += num_threads) {
+    GstObject *o = GST_OBJECT (g_list_nth_data (object_list, j));
+
+    gst_object_set_name (o, NULL);
+    /* a minimal sleep invokes a thread switch */
+    g_usleep (1);
+  }
+
+  /* thread is done, so let's return */
+  g_message ("THREAD %p: set name\n", g_thread_self ());
+
+  return NULL;
+}
+
+
+START_TEST (test_fake_object_name_threaded_unique)
+{
+  GstObject *object;
+  gint i;
+
+  g_message ("\nTEST: uniqueness of default names\n");
+
+  for (i = 0; i < num_objects; ++i) {
+    object = g_object_new (gst_fake_object_get_type (), NULL);
+    object_list = g_list_append (object_list, object);
+  }
+
+  MAIN_INIT ();
+
+  mark_point ();
+  for (i = 0; i < num_threads; ++i) {
+    MAIN_START_THREAD_FUNCTION (i, thread_name_object_default, &i);
+  }
+
+  mark_point ();
+  MAIN_SYNCHRONIZE ();
+  mark_point ();
+  MAIN_STOP_THREADS ();
+
+  /* sort GList based on object name */
+  /* FIXME: sort and test */
+
+  /* free stuff */
+  g_list_foreach (object_list, (GFunc) g_object_unref, NULL);
+}
+
+END_TEST
+/* test: try renaming a parented object, make sure it fails */
+    Suite * gst_object_suite (void)
 {
   Suite *s = suite_create ("GstObject");
   TCase *tc_chain = tcase_create ("general");
@@ -349,6 +422,7 @@ END_TEST Suite * gst_object_suite (void)
   tcase_add_test (tc_chain, test_fake_object_name);
   tcase_add_test (tc_chain, test_fake_object_name_threaded_wrong);
   tcase_add_test (tc_chain, test_fake_object_name_threaded_right);
+  tcase_add_test (tc_chain, test_fake_object_name_threaded_unique);
   //tcase_add_checked_fixture (tc_chain, setup, teardown);
   return s;
 }

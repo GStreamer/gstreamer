@@ -1,5 +1,15 @@
 2004-12-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/design/part-conventions.txt:
+	* docs/design/part-gstobject.txt:
+	* gst/gstobject.c:
+	* gst/gstobject.h:
+	* check/gst/gstobject.c:
+	  make names only settable when unparented, so we can guarantee
+	  uniqueness inside a parent together with the _add checks
+
+2004-12-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* check/Makefile.am:
 	* check/gst/gstobject.c:
 	  add more unit tests for thread-safe naming
