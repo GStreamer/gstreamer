@@ -524,9 +524,14 @@ GST_CHECK_FEATURE(VCD, [Video CD], vcdsrc, [
   AC_CHECK_HEADER(linux/cdrom.h, HAVE_VCD="yes", HAVE_VCD="no")
 ])
 
+dnl *** OpenGL ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPENGL, true)
+GST_CHECK_FEATURE(OPENGL, [Open GL], glsink, [
+  AC_CHECK_HEADER(GL/gl.h, HAVE_OPENGL="yes", HAVE_OPENGL="no")
+])
+
 dnl *** CDROM Audio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDROM, true)
-
 GST_CHECK_FEATURE(CDROM, [CDROM Audio], cdrom, [
   AC_CHECK_HEADERS(linux/cdrom.h) dnl linux
   AC_CHECK_HEADERS(sys/cdio.h) dnl almost everything else
