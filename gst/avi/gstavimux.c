@@ -1061,11 +1061,11 @@ gst_avimux_stop_file (GstAviMux *avimux)
   header = gst_avimux_riff_get_avi_header(avimux);
   event = gst_event_new_seek (GST_FORMAT_BYTES | 
 		  	      GST_SEEK_METHOD_SET, 0);
-  gst_pad_send_event(GST_PAD_PEER(avimux->srcpad), event);
+  gst_pad_push(avimux->srcpad, GST_BUFFER(event));
   gst_pad_push(avimux->srcpad, header);
   event = gst_event_new_seek (GST_FORMAT_BYTES |
 		  	      GST_SEEK_METHOD_SET, avimux->total_data);
-  gst_pad_push(avimux->srcpad, header);
+  gst_pad_push(avimux->srcpad, GST_BUFFER(event));
 
   avimux->write_header = TRUE;
 }
