@@ -362,6 +362,8 @@ gst_siddec_loop (GstElement *element)
     g_assert (buf != NULL);
       
     if (GST_IS_EVENT (buf)) {
+      GstEvent *event = GST_EVENT (buf);
+
       switch (GST_EVENT_TYPE (buf)) {
 	case GST_EVENT_EOS:
           siddec->state = SID_STATE_LOAD_TUNE;
@@ -370,10 +372,12 @@ gst_siddec_loop (GstElement *element)
 	  break;
 	default:
 	  // bail out, we're not going to do anything
+          gst_event_unref (event);
 	  gst_pad_send_event (siddec->srcpad, gst_event_new (GST_EVENT_EOS));
 	  gst_element_set_eos (element);
-	  break;
+	  return;
       }
+      gst_event_unref (event);
     }
     else {
       memcpy (siddec->tune_buffer+siddec->tune_len, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
