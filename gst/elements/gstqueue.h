@@ -67,10 +67,9 @@ struct _GstQueue {
   gint size_buffers;	/* size of queue in buffers */
   gint size_bytes;	/* size of queue in bytes */
 
-  GMutex *emptylock;	/* used when the queue is empty */
   GCond *emptycond;
-  GMutex *fulllock;	/* used when the queue is full */
   GCond *fullcond;
+
   GTimeVal *timeval;	/* the timeout for the queue locking */
 };
 

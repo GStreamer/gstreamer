@@ -23,7 +23,7 @@
 //#define DEBUG_ENABLED
 //#define STATUS_ENABLED
 #ifdef STATUS_ENABLED
-#define STATUS(A) DEBUG(A, gst_element_get_name(GST_ELEMENT(queue)))
+#define STATUS(A) GST_DEBUG(0,A, gst_element_get_name(GST_ELEMENT(queue)))
 #else
 #define STATUS(A) 
 #endif
@@ -142,10 +142,7 @@ gst_queue_init (GstQueue *queue)
   queue->size_buffers = 0;
   queue->size_bytes = 0;
 
-  queue->emptylock = g_mutex_new ();
   queue->emptycond = g_cond_new ();
-
-  queue->fulllock = g_mutex_new ();
   queue->fullcond = g_cond_new ();
 }
 
@@ -199,11 +196,8 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
   while (queue->level_buffers >= queue->max_buffers) {
     GST_DEBUG (0,"queue: %s waiting %d\n", name, queue->level_buffers);
     STATUS("%s: O\n");
-    g_mutex_lock (queue->fulllock);
-    GST_UNLOCK (queue);
-    g_cond_timed_wait (queue->fullcond, queue->fulllock, queue->timeval);
-    GST_LOCK (queue);
-    g_mutex_unlock (queue->fulllock);
+    //g_cond_timed_wait (queue->fullcond, queue->fulllock, queue->timeval);
+    g_cond_wait (queue->fullcond, GST_OBJECT(queue)->lock);
     STATUS("%s: O+\n");
     GST_DEBUG (0,"queue: %s waiting done %d\n", name, queue->level_buffers);
   }
@@ -219,15 +213,13 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
 
   /* we can unlock now */
   GST_DEBUG (0,"queue: %s chain %d end signal(%d,%p)\n", name, queue->level_buffers, tosignal, queue->emptycond);
-  GST_UNLOCK (queue);
 
   if (tosignal) {
-    g_mutex_lock (queue->emptylock);
 //    STATUS("%s: >\n");
     g_cond_signal (queue->emptycond);
 //    STATUS("%s: >>\n");
-    g_mutex_unlock (queue->emptylock);
   }
+  GST_UNLOCK (queue);
 }
 
 static GstBuffer *
@@ -236,7 +228,6 @@ gst_queue_get (GstPad *pad)
   GstQueue *queue = GST_QUEUE (gst_pad_get_parent(pad));
   GstBuffer *buf = NULL;
   GSList *front;
-  gboolean tosignal = FALSE;
   const guchar *name;
 
   name = gst_element_get_name (GST_ELEMENT (queue));
@@ -255,11 +246,8 @@ gst_queue_get (GstPad *pad)
 
   while (!queue->level_buffers) {
     STATUS("queue: %s U released lock\n");
-    GST_UNLOCK (queue);
-    g_mutex_lock (queue->emptylock);
-    g_cond_timed_wait (queue->emptycond, queue->emptylock, queue->timeval);
-    g_mutex_unlock (queue->emptylock);
-    GST_LOCK (queue);
+    //g_cond_timed_wait (queue->emptycond, queue->emptylock, queue->timeval);
+    g_cond_wait (queue->emptycond, GST_OBJECT(queue)->lock);
 //    STATUS("queue: %s U- getting lock\n");
   }
 
@@ -272,16 +260,13 @@ gst_queue_get (GstPad *pad)
   queue->level_buffers--;
 //  STATUS("%s: -\n");
   GST_DEBUG (0,"(%s:%s)- ",GST_DEBUG_PAD_NAME(pad));
-  tosignal = queue->level_buffers < queue->max_buffers;
-  GST_UNLOCK(queue);
 
-  if (tosignal) {
-    g_mutex_lock (queue->fulllock);
+  if (queue->level_buffers < queue->max_buffers) {
 //    STATUS("%s: < \n");
     g_cond_signal (queue->fullcond);
 //    STATUS("%s: << \n");
-    g_mutex_unlock (queue->fulllock);
   }
+  GST_UNLOCK(queue);
 
 //  GST_DEBUG (0,"queue: %s pushing %d %p \n", name, queue->level_buffers, buf);
 //  gst_pad_push (queue->srcpad, buf);
