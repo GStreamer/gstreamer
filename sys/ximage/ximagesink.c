@@ -400,25 +400,29 @@ gst_ximagesink_xwindow_clear (GstXImageSink *ximagesink, GstXWindow *xwindow)
 }
 
 static void
-gst_ximagesink_renegotiate_size (GstXImageSink *ximagesink,
-                                 guint width, guint height)
+gst_ximagesink_renegotiate_size (GstXImageSink *ximagesink)
 {
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
   
   if (!ximagesink->xwindow)
     return;
   
+  if (ximagesink->xwindow->width <= 1 || ximagesink->xwindow->height <= 1)
+    return;
+  
+  if (GST_PAD_IS_NEGOTIATING (GST_VIDEOSINK_PAD (ximagesink)) ||
+      !gst_pad_is_negotiated (GST_VIDEOSINK_PAD (ximagesink)))
+    return;
+  
   /* Window got resized or moved. We do caps negotiation again to get video
      scaler to fit that new size only if size of the window differs from our
      size. */
   
-  if (GST_VIDEOSINK_WIDTH (ximagesink) != width ||
-      GST_VIDEOSINK_HEIGHT (ximagesink) != height)
+  if (GST_VIDEOSINK_WIDTH (ximagesink) != ximagesink->xwindow->width ||
+      GST_VIDEOSINK_HEIGHT (ximagesink) != ximagesink->xwindow->height)
     {
       GstPadLinkReturn r;
-      ximagesink->xwindow->width = width;
-      ximagesink->xwindow->height = height;
-                
+      
       r = gst_pad_try_set_caps (GST_VIDEOSINK_PAD (ximagesink),
             gst_caps_new_simple ("video/x-raw-rgb",
               "bpp",        G_TYPE_INT, ximagesink->xcontext->bpp,
@@ -427,15 +431,16 @@ gst_ximagesink_renegotiate_size (GstXImageSink *ximagesink,
               "red_mask",   G_TYPE_INT, ximagesink->xcontext->visual->red_mask,
               "green_mask", G_TYPE_INT, ximagesink->xcontext->visual->green_mask,
               "blue_mask",  G_TYPE_INT, ximagesink->xcontext->visual->blue_mask,
-              "width",      G_TYPE_INT, width,
-              "height",     G_TYPE_INT, height,
+              "width",      G_TYPE_INT, ximagesink->xwindow->width,
+              "height",     G_TYPE_INT, ximagesink->xwindow->height,
               "framerate",  G_TYPE_DOUBLE, ximagesink->framerate,
               NULL));
 
       if ( (r == GST_PAD_LINK_OK) || (r == GST_PAD_LINK_DONE) )
         {
-          GST_VIDEOSINK_WIDTH (ximagesink) = width;
-          GST_VIDEOSINK_HEIGHT (ximagesink) = height;
+          /* Renegotiation succeeded, we update our size and image */
+          GST_VIDEOSINK_WIDTH (ximagesink) = ximagesink->xwindow->width;
+          GST_VIDEOSINK_HEIGHT (ximagesink) = ximagesink->xwindow->height;
 
           if ( (ximagesink->ximage) &&
                ( (GST_VIDEOSINK_WIDTH (ximagesink) != ximagesink->ximage->width) ||
@@ -460,8 +465,8 @@ static void
 gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
 {
   XEvent e;
-  guint new_width = 0, new_height = 0, pointer_x = 0, pointer_y = 0;
-  gboolean pointer_moved = FALSE;
+  guint pointer_x = 0, pointer_y = 0;
+  gboolean pointer_moved = FALSE, window_configured = FALSE;
   
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
   
@@ -477,8 +482,15 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
       switch (e.type)
         {
           case ConfigureNotify:
-            new_width = e.xconfigure.width;
-            new_height = e.xconfigure.height;
+            /* We ignore configure events from external window. Renegotiation
+               will only happen if the application tell us to do so through
+               gst_x_overlay_expose */
+            if (ximagesink->xwindow->internal)
+              {
+                ximagesink->xwindow->width = e.xconfigure.width;
+                ximagesink->xwindow->height = e.xconfigure.height;
+                window_configured = TRUE;
+              }
             break;
           default:
             break;
@@ -487,12 +499,12 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
       g_mutex_lock (ximagesink->x_lock);
     }
   g_mutex_unlock (ximagesink->x_lock);
-    
-  if ( (new_width != 0) && (new_height != 0) )
+  
+  if (window_configured)
     {
       GST_DEBUG ("ximagesink window geometry is : %d,%d",
-                 new_width, new_height);
-      gst_ximagesink_renegotiate_size (ximagesink, new_width, new_height);
+                 ximagesink->xwindow->width, ximagesink->xwindow->height);
+      gst_ximagesink_renegotiate_size (ximagesink);
     }
   
   /* Then we get all pointer motion events, only the last position is
@@ -1243,25 +1255,26 @@ gst_ximagesink_expose (GstXOverlay *overlay)
   if (!ximagesink->xwindow)
     return;
   
+  /* We don't act on internal window from outside that could cause some thread
+     race with the video sink own thread checking for configure event */
+  if (ximagesink->xwindow->internal)
+    return;
+  
   /* Update the window geometry */
   g_mutex_lock (ximagesink->x_lock);
   XGetWindowAttributes (ximagesink->xcontext->disp,
                         ximagesink->xwindow->win, &attr);
   g_mutex_unlock (ximagesink->x_lock);
   
-  /* If window is 1x1 it's probably invisible */
-  if (attr.width == 1 && attr.height == 1)
-    return;
+  ximagesink->xwindow->width = attr.width;
+  ximagesink->xwindow->height = attr.height;
   
-  if (gst_pad_is_negotiated (GST_VIDEOSINK_PAD (ximagesink)) &&
-      !GST_PAD_IS_NEGOTIATING (GST_VIDEOSINK_PAD (ximagesink)))
-    gst_ximagesink_renegotiate_size (ximagesink, attr.width, attr.height);
+  gst_ximagesink_renegotiate_size (ximagesink);
   
   gst_ximagesink_xwindow_clear (ximagesink, ximagesink->xwindow);
   
-  if (ximagesink->cur_image) {
+  if (ximagesink->cur_image)
     gst_ximagesink_ximage_put (ximagesink, ximagesink->cur_image);
-  }
 }
 
 static void
