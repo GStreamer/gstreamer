@@ -162,13 +162,6 @@ gst_vorbisenc_setup (VorbisEnc * vorbisenc)
   vorbis_encode_init (&vorbisenc->vi, vorbisenc->channels, vorbisenc->frequency,
 		      -1, vorbisenc->bitrate, -1);
 
-  gst_element_send_event (GST_ELEMENT (vorbisenc),
-      gst_event_new_info ("channels", GST_PROPS_INT (vorbisenc->channels), NULL));
-  gst_element_send_event (GST_ELEMENT (vorbisenc),
-      gst_event_new_info ("rate", GST_PROPS_INT (vorbisenc->frequency), NULL));
-  gst_element_send_event (GST_ELEMENT (vorbisenc),
-      gst_event_new_info ("bitrate_nominal", GST_PROPS_INT (vorbisenc->bitrate), NULL));
-
   /* add a comment */
   vorbis_comment_init (&vorbisenc->vc);
   vorbis_comment_add (&vorbisenc->vc, (gchar *)comment);

@@ -47,10 +47,22 @@ enum
 enum
 {
   ARG_0,
+  ARG_COMMENT,
+  ARG_VENDOR,
+  ARG_VERSION,
+  ARG_CHANNELS,
+  ARG_RATE,
+  ARG_BITRATE_UPPER,
+  ARG_BITRATE_NOMINAL,
+  ARG_BITRATE_LOWER,
+  ARG_BITRATE_WINDOW,
 };
 
 static void 	gst_vorbisdec_class_init 	(VorbisDecClass *klass);
 static void 	gst_vorbisdec_init 		(VorbisDec *vorbisdec);
+
+static void 	gst_vorbisdec_get_property 	(GObject *object, guint prop_id, 
+						 GValue *value, GParamSpec *pspec);
 
 static void 	gst_vorbisdec_loop 		(GstElement *element);
 
@@ -83,11 +95,43 @@ vorbisdec_get_type (void)
 static void
 gst_vorbisdec_class_init (VorbisDecClass * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
+  gobject_class = (GObjectClass*) klass;
   gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+
+  g_object_class_install_property (gobject_class, ARG_COMMENT,
+    g_param_spec_string ("comment", "Comment", "The comment tags for this vorbis stream",
+                         "", G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_VENDOR,
+    g_param_spec_string ("vendor", "Vendor", "The vendor for this vorbis stream",
+                         "", G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_VERSION,
+    g_param_spec_int ("version", "Version", "The version",
+                       0, G_MAXINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_CHANNELS,
+    g_param_spec_int ("channels", "Channels", "The number of channels",
+                       0, G_MAXINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_RATE,
+    g_param_spec_int ("rate", "Rate", "The samplerate",
+                       0, G_MAXINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_BITRATE_UPPER,
+    g_param_spec_int ("bitrate_upper", "bitrate_upper", "bitrate_upper",
+                       0, G_MAXINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_BITRATE_NOMINAL,
+    g_param_spec_int ("bitrate_nominal", "bitrate_nominal", "bitrate_nominal",
+                       0, G_MAXINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_BITRATE_LOWER,
+    g_param_spec_int ("bitrate_lower", "bitrate_lower", "bitrate_lower",
+                       0, G_MAXINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_BITRATE_WINDOW,
+    g_param_spec_int ("bitrate_window", "bitrate_window", "bitrate_window",
+                       0, G_MAXINT, 0, G_PARAM_READABLE));
+
+  gobject_class->get_property = gst_vorbisdec_get_property;
 }
 
 static void
@@ -146,9 +190,6 @@ gst_vorbisdec_loop (GstElement * element)
   ogg_page og;			/* one Ogg bitstream page.  Vorbis packets are inside */
   ogg_packet op;		/* one raw packet of data for decode */
 
-  vorbis_info vi;		/* struct that stores all the static vorbis bitstream
-				   settings */
-  vorbis_comment vc;		/* struct that stores all the bitstream user comments */
   vorbis_dsp_state vd;		/* central working state for the packet->PCM decoder */
   vorbis_block vb;		/* local working space for packet->PCM decode */
 
@@ -201,8 +242,8 @@ gst_vorbisdec_loop (GstElement * element)
        header is an easy way to identify a Vorbis bitstream and it's
        useful to see that functionality seperated out. */
 
-    vorbis_info_init (&vi);
-    vorbis_comment_init (&vc);
+    vorbis_info_init (&vorbisdec->vi);
+    vorbis_comment_init (&vorbisdec->vc);
     if (ogg_stream_pagein (&os, &og) < 0) {
       /* error; stream version mismatch perhaps */
       g_warning ("Error reading first page of Ogg bitstream data.\n");
@@ -215,7 +256,7 @@ gst_vorbisdec_loop (GstElement * element)
       return;
     }
 
-    if (vorbis_synthesis_headerin (&vi, &vc, &op) < 0) {
+    if (vorbis_synthesis_headerin (&vorbisdec->vi, &vorbisdec->vc, &op) < 0) {
       /* error case; not a vorbis header */
       g_warning ("This Ogg bitstream does not contain Vorbis audio data.\n");
       return;
@@ -253,7 +294,7 @@ gst_vorbisdec_loop (GstElement * element)
 	         We can't tolerate that in a header.  Die. */
 	      g_warning ("Corrupt secondary header. expect trouble\n");
 	    }
-	    vorbis_synthesis_headerin (&vi, &vc, &op);
+	    vorbis_synthesis_headerin (&vorbisdec->vi, &vorbisdec->vc, &op);
 	    i++;
 	  }
 	}
@@ -275,30 +316,23 @@ gst_vorbisdec_loop (GstElement * element)
     /* Throw the comments plus a few lines about the bitstream we're
        decoding */
     {
-      char **ptr = vc.user_comments;
+      char **ptr = vorbisdec->vc.user_comments;
 
       while (*ptr) {
-	gst_element_send_event (GST_ELEMENT (vorbisdec), 
-			gst_event_new_info ("comment", GST_PROPS_STRING (*ptr), NULL));
+	/* FIXME parse comments */
 	++ptr;
       }
-      gst_element_send_event (GST_ELEMENT (vorbisdec), 
-		gst_event_new_info ("vendor", GST_PROPS_STRING (vc.vendor), NULL));
-
-      gst_element_send_event (GST_ELEMENT (vorbisdec), 
-		gst_event_new_info ("version", GST_PROPS_INT (vi.version), NULL));
-      gst_element_send_event (GST_ELEMENT (vorbisdec), 
-		gst_event_new_info ("channels", GST_PROPS_INT (vi.channels), NULL));
-      gst_element_send_event (GST_ELEMENT (vorbisdec), 
-		gst_event_new_info ("rate", GST_PROPS_INT (vi.rate), NULL));
-      gst_element_send_event (GST_ELEMENT (vorbisdec), 
-		gst_event_new_info ("bitrate_upper", GST_PROPS_INT (vi.bitrate_upper), NULL));
-      gst_element_send_event (GST_ELEMENT (vorbisdec), 
-		gst_event_new_info ("bitrate_nominal", GST_PROPS_INT (vi.bitrate_nominal), NULL));
-      gst_element_send_event (GST_ELEMENT (vorbisdec), 
-		gst_event_new_info ("bitrate_lower", GST_PROPS_INT (vi.bitrate_lower), NULL));
-      gst_element_send_event (GST_ELEMENT (vorbisdec), 
-		gst_event_new_info ("bitrate_window", GST_PROPS_INT (vi.bitrate_window), NULL));
+      g_object_freeze_notify (G_OBJECT (vorbisdec));
+      g_object_notify (G_OBJECT (vorbisdec), "comment");
+      g_object_notify (G_OBJECT (vorbisdec), "vendor");
+      g_object_notify (G_OBJECT (vorbisdec), "version");
+      g_object_notify (G_OBJECT (vorbisdec), "channels");
+      g_object_notify (G_OBJECT (vorbisdec), "rate");
+      g_object_notify (G_OBJECT (vorbisdec), "bitrate_upper");
+      g_object_notify (G_OBJECT (vorbisdec), "bitrate_nominal");
+      g_object_notify (G_OBJECT (vorbisdec), "bitrate_lower");
+      g_object_notify (G_OBJECT (vorbisdec), "bitrate_window");
+      g_object_thaw_notify (G_OBJECT (vorbisdec));
     }
 
     gst_pad_try_set_caps (vorbisdec->srcpad,
@@ -310,15 +344,15 @@ gst_vorbisdec_loop (GstElement * element)
 				      "signed",     GST_PROPS_BOOLEAN (TRUE),
 				      "width",      GST_PROPS_INT (16),
 				      "depth",      GST_PROPS_INT (16),
-				      "rate",       GST_PROPS_INT (vi.rate),
-				      "channels",   GST_PROPS_INT (vi.channels)
+				      "rate",       GST_PROPS_INT (vorbisdec->vi.rate),
+				      "channels",   GST_PROPS_INT (vorbisdec->vi.channels)
 				   ));
 
-    vorbisdec->convsize = 4096 / vi.channels;
+    vorbisdec->convsize = 4096 / vorbisdec->vi.channels;
 
     /* OK, got and parsed all three headers. Initialize the Vorbis
        packet->PCM decoder. */
-    vorbis_synthesis_init (&vd, &vi);	/* central decode state */
+    vorbis_synthesis_init (&vd, &vorbisdec->vi);	/* central decode state */
     vorbis_block_init (&vd, &vb);	/* local state for most of the decode
 					   so multiple block decodes can
 					   proceed in parallel.  We could init
@@ -366,15 +400,15 @@ gst_vorbisdec_loop (GstElement * element)
 
 
 		outbuf = gst_buffer_new ();
-		GST_BUFFER_DATA (outbuf) = g_malloc (2 * vi.channels * bout);
-		GST_BUFFER_SIZE (outbuf) = 2 * vi.channels * bout;
-		GST_BUFFER_TIMESTAMP (outbuf) = vorbisdec->total_out * 1000000LL / vi.rate;
+		GST_BUFFER_DATA (outbuf) = g_malloc (2 * vorbisdec->vi.channels * bout);
+		GST_BUFFER_SIZE (outbuf) = 2 * vorbisdec->vi.channels * bout;
+		GST_BUFFER_TIMESTAMP (outbuf) = vorbisdec->total_out * 1000000LL / vorbisdec->vi.rate;
 
 		vorbisdec->total_out += bout;
 
 		/* convert doubles to 16 bit signed ints (host order) and
 		   interleave */
-		for (i = 0; i < vi.channels; i++) {
+		for (i = 0; i < vorbisdec->vi.channels; i++) {
 		  int16_t *ptr = ((int16_t *) GST_BUFFER_DATA (outbuf)) + i;
 		  float *mono = pcm[i];
 
@@ -391,7 +425,7 @@ gst_vorbisdec_loop (GstElement * element)
 		      clipflag = 1;
 		    }
 		    *ptr = val;
-		    ptr += vi.channels;
+		    ptr += vorbisdec->vi.channels;
 		  }
 		}
 
@@ -435,9 +469,49 @@ gst_vorbisdec_loop (GstElement * element)
 
     vorbis_block_clear (&vb);
     vorbis_dsp_clear (&vd);
-    vorbis_info_clear (&vi);	/* must be called last */
+    vorbis_info_clear (&vorbisdec->vi);	/* must be called last */
   }
 
   /* OK, clean up the framer */
   ogg_sync_clear (&oy);
+}
+
+static void 
+gst_vorbisdec_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+  VorbisDec *vorbisdec;
+	      
+  g_return_if_fail (GST_IS_VORBISDEC (object));
+
+  vorbisdec = GST_VORBISDEC (object);
+
+  switch (prop_id) {
+    case ARG_COMMENT:
+      g_value_set_string (value, "comment");
+      break;
+    case ARG_VENDOR:
+      g_value_set_string (value, vorbisdec->vc.vendor);
+      break;
+    case ARG_VERSION:
+      g_value_set_int (value, vorbisdec->vi.version);
+      break;
+    case ARG_CHANNELS:
+      g_value_set_int (value, vorbisdec->vi.channels);
+      break;
+    case ARG_RATE:
+      g_value_set_int (value, vorbisdec->vi.rate);
+      break;
+    case ARG_BITRATE_UPPER:
+      g_value_set_int (value, vorbisdec->vi.bitrate_upper);
+      break;
+    case ARG_BITRATE_NOMINAL:
+      g_value_set_int (value, vorbisdec->vi.bitrate_nominal);
+      break;
+    case ARG_BITRATE_LOWER:
+      g_value_set_int (value, vorbisdec->vi.bitrate_lower);
+      break;
+    case ARG_BITRATE_WINDOW:
+      g_value_set_int (value, vorbisdec->vi.bitrate_window);
+      break;
+  }
 }
