@@ -94,8 +94,10 @@ gst_v4l_iface_supported (GstImplementsInterface * iface, GType iface_type)
   if (v4lelement->video_fd == -1)
     return FALSE;
 
+#ifdef HAVE_XVIDEO
   if (iface_type == GST_TYPE_X_OVERLAY && !GST_V4L_IS_OVERLAY (v4lelement))
     return FALSE;
+#endif
 
   return TRUE;
 }
