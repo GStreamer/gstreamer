@@ -8,7 +8,7 @@ gst/elements/gstfakesink.c
 gst/elements/gstfilesink.c
 gst/elements/gstfilesrc.c
 gst/elements/gstidentity.c
-gst/elements/gstmultidisksrc.c
+gst/elements/gstmultifilesrc.c
 gst/elements/gstpipefilter.c
 gst/elements/gsttypefind.c
 gst/parse/grammar.y

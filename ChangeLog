@@ -1,3 +1,8 @@
+2004-02-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* po/POTFILES.in:
+	  update to multidisksrc => multifilesrc file renaming (#134145)
+
 2004-02-11  David Schleef  <ds@schleef.org>
 
 	* docs/gst/tmpl/gstcaps.sgml:  Fix stuff that mentions GstProps
