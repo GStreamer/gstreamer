@@ -21,6 +21,8 @@
 #ifndef __GSTDEBUG_H__
 #define __GSTDEBUG_H__
 
+#include <stdio.h>
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif

@@ -1,11 +1,14 @@
 #include <gst/gst.h>
 
+extern gboolean _gst_plugin_spew;
+
 int main(int argc,char *argv[]) 
 {
   xmlDocPtr doc;
 
   unlink("/etc/gstreamer/reg.xml");
 
+  _gst_plugin_spew = TRUE;
   gst_init(&argc,&argv);
 
   doc = xmlNewDoc("1.0");

@@ -594,14 +594,6 @@ gst_bin_src_wrapper (int argc,char *argv[])
 
 /*
 static void 
-gst_bin_pullfunc_proxy (GstPad *pad) 
-{
-  DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
-  cothread_switch (GST_ELEMENT(pad->parent)->threadstate);
-}
-*/
-
-static void 
 gst_bin_pullregionfunc_proxy (GstPad *pad, 
 				gulong offset, 
 				gulong size) 
