@@ -1,7 +1,9 @@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-libdir=@libdir@
-includedir=@includedir@
+# the standard variables don't make sense for an uninstalled copy
+prefix=
+exec_prefix=
+libdir=
+includedir=
+toolsdir=${pcfiledir}/tools
 
 Name: GStreamer Uninstalled
 Description: Streaming-media framework, Not Installed

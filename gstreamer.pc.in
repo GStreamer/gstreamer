@@ -2,6 +2,7 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
+toolsdir=${exec_prefix}/bin
 
 Name: GStreamer
 Description: Streaming-media framework

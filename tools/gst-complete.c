@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include <gst/gstconfig.h>
 
@@ -58,7 +59,7 @@ int main(int argc,char *argv[]) {
 
   gchar *prev_word = argv[3];
   gchar *partial_word = argv[2];
-  int partial_len = strlen(partial_word);
+  int partial_len;
   GList *elements;
   GSList *pads;
   int num_pads;
@@ -66,9 +67,17 @@ int main(int argc,char *argv[]) {
   gchar *word;
   GSList *words = NULL;
 
+  struct stat stat_buf;
+  
+  partial_len = strlen(partial_word);
+
   /***** Loading the completion information from the registry *****/
 
-  doc = xmlParseFile (GST_CONFIG_DIR "/compreg.xml");
+  if (stat (GST_CONFIG_DIR"/compreg.xml", &stat_buf) == 0) {
+    doc = xmlParseFile (GST_CONFIG_DIR"/compreg.xml");
+  } else {
+    exit (1);
+  }
   rootnode = doc->xmlRootNode;
 
   elementnode = rootnode->xmlChildrenNode;
