@@ -329,11 +329,10 @@ gst_videofilter_chain (GstPad *pad, GstData *_data)
   	size, videofilter->from_buf_size);
   }
 
-  outbuf = gst_buffer_new();
-  /* FIXME: handle bufferpools */
-  GST_BUFFER_SIZE(outbuf) = videofilter->to_buf_size;
-  GST_BUFFER_DATA(outbuf) = g_malloc (videofilter->to_buf_size);
+  outbuf = gst_pad_alloc_buffer(videofilter->srcpad, GST_BUFFER_OFFSET_NONE,
+      videofilter->to_buf_size);
   GST_BUFFER_TIMESTAMP(outbuf) = GST_BUFFER_TIMESTAMP(buf);
+  GST_BUFFER_DURATION(outbuf) = GST_BUFFER_DURATION(buf);
 
   g_return_if_fail(videofilter->format);
   GST_DEBUG ("format %s",videofilter->format->fourcc);

@@ -738,9 +738,10 @@ gst_ximagesink_chain (GstPad *pad, GstData *data)
   
   /* If this buffer has been allocated using our buffer management we simply
      put the ximage which is in the PRIVATE pointer */
-  if (GST_BUFFER_BUFFERPOOL (buf) == ximagesink)
+  if (GST_BUFFER_PRIVATE (buf) == ximagesink)
     {
-      gst_ximagesink_ximage_put (ximagesink, GST_BUFFER_POOL_PRIVATE (buf));
+       GstXImage * image = buf->_gst_reserved[0];
+      gst_ximagesink_ximage_put (ximagesink, image);
     }
   else /* Else we have to copy the data into our private image, */
     {  /* if we have one... */
@@ -778,9 +779,9 @@ gst_ximagesink_buffer_free (GstData *data)
   GstXImage *ximage;
   GstBuffer *buffer;
   
-  ximagesink = GST_BUFFER_BUFFERPOOL (data);
-  ximage = GST_BUFFER_POOL_PRIVATE (data);
+  ximagesink = GST_BUFFER_PRIVATE (data);
   buffer = GST_BUFFER (data);
+  ximage = buffer->_gst_reserved[0];
   
   /* If our geometry changed we can't reuse that image. */
   if ( (ximage->width != GST_VIDEOSINK_WIDTH (ximagesink)) ||
@@ -848,9 +849,8 @@ gst_ximagesink_buffer_alloc (GstPad *pad, guint64 offset, guint size)
     {
       buffer = gst_buffer_new ();
       
-      /* Storing some pointers in the buffer (bit hackish) */
-      GST_BUFFER_BUFFERPOOL (buffer) = ximagesink;
-      GST_BUFFER_POOL_PRIVATE (buffer) = ximage;
+      GST_BUFFER_PRIVATE (buffer) = ximagesink;
+      buffer->_gst_reserved[0] = (void *)ximage;
       
       GST_BUFFER_DATA (buffer) = ximage->ximage->data;
       GST_DATA_FREE_FUNC (buffer) = gst_ximagesink_buffer_free;

@@ -579,7 +579,7 @@ gst_v4lmjpegsrc_get (GstPad *pad)
 
   buf = gst_buffer_new ();
   GST_DATA (buf)->free = gst_v4lmjpegsrc_buffer_free;
-  buf->pool = v4lmjpegsrc;
+  GST_BUFFER_PRIVATE (buf) = v4lmjpegsrc;
   GST_BUFFER_DATA(buf) = gst_v4lmjpegsrc_get_buffer(v4lmjpegsrc, num);
   GST_BUFFER_SIZE(buf) = v4lmjpegsrc->last_size;
   GST_BUFFER_MAXSIZE(buf) = v4lmjpegsrc->breq.size;
@@ -795,7 +795,7 @@ static void
 gst_v4lmjpegsrc_buffer_free (GstData *data)
 {
   GstBuffer *buf = GST_BUFFER (data);
-  GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC (buf->pool);
+  GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC (GST_BUFFER_PRIVATE (buf));
   int n;
 
   if (gst_element_get_state(GST_ELEMENT(v4lmjpegsrc)) != GST_STATE_PLAYING)

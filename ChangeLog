@@ -1,3 +1,25 @@
+2004-01-11  David Schleef  <ds@schleef.org>
+
+	* ext/divx/gstdivxenc.c: remove bogus gst_caps_is_fixed() test
+	* gst/debug/efence.c: (gst_efence_chain), (gst_fenced_buffer_new),
+	(gst_fenced_buffer_default_copy): Fix for rename of buffer private
+	structure members.
+	* gst/effectv/gstwarp.c: (gst_warptv_setup): Don't reset the time
+	value during a resize/renegotiation.
+	* gst/videofilter/gstvideofilter.c: (gst_videofilter_chain): use
+	gst_pad_alloc_buffer();
+	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_get),
+	(gst_v4lmjpegsrc_buffer_free): Fix for rename of buffer private
+	structure members.
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_get), (gst_v4lsrc_buffer_free):
+	Fix for rename of buffer private structure members.
+	* sys/ximage/ximagesink.c: (gst_ximagesink_chain),
+	(gst_ximagesink_buffer_free), (gst_ximagesink_buffer_alloc):
+	Fix for rename of buffer private structure members.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_chain),
+	(gst_xvimagesink_buffer_free), (gst_xvimagesink_buffer_alloc):
+	Fix for rename of buffer private structure members.
+
 2004-01-11  Arwed v. Merkatz <v.merkatz@gmx.net>
 
 	reviewed by: David Schleef <ds@schleef.org>

@@ -655,7 +655,7 @@ gst_v4lsrc_get (GstPad *pad)
 
   buf = gst_buffer_new ();
   GST_DATA (buf)->free = gst_v4lsrc_buffer_free;
-  buf->pool = v4lsrc; /* hack to re-queue buffer on free */
+  GST_BUFFER_PRIVATE (buf) = v4lsrc; /* hack to re-queue buffer on free */
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY | GST_BUFFER_DONTFREE);
   GST_BUFFER_DATA(buf) = gst_v4lsrc_get_buffer(v4lsrc, num);
   GST_BUFFER_MAXSIZE (buf) = v4lsrc->mbuf.size / v4lsrc->mbuf.frames;
@@ -814,7 +814,7 @@ static void
 gst_v4lsrc_buffer_free (GstData *data)
 {
   GstBuffer *buf = GST_BUFFER (data);
-  GstV4lSrc *v4lsrc = GST_V4LSRC (buf->pool);
+  GstV4lSrc *v4lsrc = GST_V4LSRC (GST_BUFFER_PRIVATE (buf));
   int n;
 
   if (gst_element_get_state(GST_ELEMENT(v4lsrc)) != GST_STATE_PLAYING)
