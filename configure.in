@@ -47,11 +47,13 @@ dnl ================
 
 dnl Check for nasm
 AC_PATH_PROG(NASM_PATH, nasm, no)
+AC_SUBST(NASM_PATH)
 if test x$NASM_PATH = xno; then
   AC_MSG_WARN(Couldn't find nasm)
+  HAVE_NASM="no"
 else
   AC_DEFINE(HAVE_NASM)
-  AC_SUBST(NASM_PATH)
+  HAVE_NASM="yes"
 fi
 
 dnl Check for essential libraries first:
@@ -318,6 +320,7 @@ AM_CONDITIONAL(HAVE_LIBMMX,     test "x$USE_LIBMMX" = "xyes")
 AM_CONDITIONAL(HAVE_ATOMIC_H,   test "x$USE_ATOMIC_H" = "xyes")
 AM_CONDITIONAL(HAVE_XAUDIO,     test "x$HAVE_XAUDIO" = "xyes")
 AM_CONDITIONAL(HAVE_CSSAUTH,    test "x$HAVE_CSSAUTH" = "xyes")
+AM_CONDITIONAL(HAVE_NASM,       test "x$HAVE_NASM" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,    $HAVE_GTK_DOC)
 
 
