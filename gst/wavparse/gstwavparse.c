@@ -554,6 +554,7 @@ gst_wavparse_fmt (GstWavParse * wav)
   wav->bps = header->av_bps;
 
   caps = gst_riff_create_audio_caps (header->format, NULL, header, NULL);
+  g_free (header);
 
   if (caps) {
     gst_wavparse_create_sourcepad (wav);
@@ -565,10 +566,6 @@ gst_wavparse_fmt (GstWavParse * wav)
     GST_ELEMENT_ERROR (wav, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
     return FALSE;
   }
-
-
-
-  g_free (header);
 
   return TRUE;
 }
