@@ -6,7 +6,7 @@
     provides some easy wrappers for this common operation.
   </para>
   <para> 
-    Instead of writing the following Gtk+ code to query the GTK_STRING value
+    Instead of writing the following glib code to query the GTK_STRING value
     of an object:
   </para>
   <programlisting>

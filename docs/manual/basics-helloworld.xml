@@ -22,7 +22,7 @@
 int 
 main (int argc, char *argv[]) 
 {
-  GstElement *pipeline, *filesrc, *parse, *decoder, *audiosink;
+  GstElement *pipeline, *filesrc, *decoder, *audiosink;
 
   gst_init(&amp;argc, &amp;argv);
 
@@ -38,23 +38,19 @@ main (int argc, char *argv[])
   filesrc = gst_elementfactory_make ("filesrc", "disk_source");
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
-  /* now it's time to get the parser */
-  parse = gst_elementfactory_make ("mp3parse", "parse");
-  decoder = gst_elementfactory_make ("mpg123", "decoder");
+  /* now it's time to get the decoder */
+  decoder = gst_elementfactory_make ("mad", "decoder");
   
   /* and an audio sink */
   audiosink = gst_elementfactory_make ("osssink", "play_audio");
 
   /* add objects to the main pipeline */
   gst_bin_add (GST_BIN (pipeline), filesrc);
-  gst_bin_add (GST_BIN (pipeline), parse);
   gst_bin_add (GST_BIN (pipeline), decoder);
   gst_bin_add (GST_BIN (pipeline), audiosink);
 
   /* connect src to sink */
   gst_pad_connect (gst_element_get_pad (filesrc, "src"),
-                   gst_element_get_pad (parse, "sink"));
-  gst_pad_connect (gst_element_get_pad (parse, "src"),
                    gst_element_get_pad (decoder, "sink"));
   gst_pad_connect (gst_element_get_pad (decoder, "src"),
                    gst_element_get_pad (audiosink, "sink"));
@@ -69,7 +65,6 @@ main (int argc, char *argv[])
 
   /* we don't need a reference to these objects anymore */
   gst_object_unref (GST_OBJECT (audiosink));
-  gst_object_unref (GST_OBJECT (parse));
   gst_object_unref (GST_OBJECT (decoder));
   gst_object_unref (GST_OBJECT (filesrc));
   gst_object_unref (GST_OBJECT (pipeline));
@@ -103,12 +98,12 @@ main (int argc, char *argv[])
     </programlisting>
 
     <para>
-      We are going to create 4 elements and one pipeline. Since all objects are
+      We are going to create 3 elements and one pipeline. Since all objects are
       in fact elements, we can define them as:
     </para>
     <programlisting>
   ...
-  GstElement *pipeline, *filesrc, *parse, *decoder, *audiosink;
+  GstElement *pipeline, *filesrc, *decoder, *audiosink;
   ...
     </programlisting>
 
@@ -143,16 +138,12 @@ main (int argc, char *argv[])
     </note>
 
     <para>
-      We now create the MP3 decoder element. <application>GStreamer</application> requires you
-      to put a parser in front of the decoder. This parser will
-      cut the raw data from the disk source into MP3 frames
-      suitable for the decoder. In the advanced concepts chapter we will
-      see how this can be avoided.
+      We now create the MP3 decoder element. This assumes that the 'mad' plugin
+      is installed on the system where this application is executed.
     </para>
     <programlisting>
   /* now it's time to get the parser */
-  parse = gst_elementfactory_make ("mp3parse", "parse");
-  decoder = gst_elementfactory_make ("mpg123", "decoder");
+  decoder = gst_elementfactory_make ("mad", "decoder");
     </programlisting>
     <para>
       gst_elementfactory_make() takes two arguments: a string that will
@@ -177,7 +168,6 @@ main (int argc, char *argv[])
     <programlisting>
   /* add objects to the main pipeline */
   gst_bin_add (GST_BIN (pipeline), filesrc);
-  gst_bin_add (GST_BIN (pipeline), parse);
   gst_bin_add (GST_BIN (pipeline), decoder);
   gst_bin_add (GST_BIN (pipeline), audiosink);
     </programlisting>
@@ -188,8 +178,6 @@ main (int argc, char *argv[])
     <programlisting>
   /* connect src to sink */
   gst_pad_connect (gst_element_get_pad (filesrc, "src"),
-                   gst_element_get_pad (parse, "sink"));
-  gst_pad_connect (gst_element_get_pad (parse, "src"),
                    gst_element_get_pad (decoder, "sink"));
   gst_pad_connect (gst_element_get_pad (decoder, "src"),
                    gst_element_get_pad (audiosink, "sink"));
@@ -220,8 +208,8 @@ main (int argc, char *argv[])
     </programlisting>
     <note>
       <para>
-        <application>GStreamer</application> will take care of the READY and PAUSED state for y
-	ou when going from NULL to PLAYING.
+        <application>GStreamer</application> will take care of the READY and PAUSED state for 
+	you when going from NULL to PLAYING.
       </para>
     </note>
 
@@ -263,16 +251,13 @@ main (int argc, char *argv[])
       To compile the helloworld example, use: 
     </para>
     <programlisting>
-       gcc -Wall `gstreamer-config --cflags --libs` helloworld.c \
+       gcc -Wall `pkg-config gstreamer --cflags --libs` helloworld.c \
              -o helloworld 
     </programlisting>
     <para>
-      This uses the program gstreamer-config, which comes with <application>GStreamer</application>. This program "knows" 
-      what compiler switches are needed to compile programs that use <application>GStreamer</application>. 
-      gstreamer-config --cflags will output a list of include
-      directories for the compiler to look in, and gstreamer-config --libs will output the 
-      list of libraries for the compiler to link with and the directories to find them 
-      in. 
+      We use pkg-config to get the compiler flags needed to compile this application.
+      make sure to have your PKG_CONFIG_PATH environment variable set to the correct
+      location if you are building this application against the uninstalled location.
     </para>
     <para>
       You can run the example with (substitute helloworld.mp3 with you favorite MP3 file):
@@ -301,7 +286,5 @@ main (int argc, char *argv[])
       into the pipeline is not that hard to do. The most important thing is
       that you can reuse allready existing elements.
     </para>
-    
-
   </sect1>
 </chapter>

@@ -25,10 +25,13 @@
     audiocard. We will use this simple graph to construct an mpeg player later
     in this manual.
   </para>
-  <para> 
-    You can connect two pads with:
-  </para>
-  <programlisting>
+
+  <sect1 id="sec-conn-basic">
+   <title>Making simple connections</title>
+   <para> 
+     You can connect two pads with:
+   </para>
+   <programlisting>
  GstPad *srcpad, *sinkpad;
 
  srcpad = gst_element_get_pad (element1, "src");
@@ -40,11 +43,11 @@
  // and disconnect them
  gst_pad_disconnect (srcpad, sinkpad);
 
- </programlisting>
-  <para> 
-    A convenient shortcut for the above code is done with the gst_element_connect ()
-    function:
-  </para>
+  </programlisting>
+   <para> 
+     A convenient shortcut for the above code is done with the gst_element_connect ()
+     function:
+   </para>
   <programlisting>
 
  // connect them
@@ -53,13 +56,22 @@
  // and disconnect them
  gst_element_disconnect (element1, "src", element2, "sink");
 
- </programlisting>
-  <para> 
-    You can query if a pad is connected with GST_PAD_IS_CONNECTED (pad). 
-  </para>
-  <para> 
-    To query for the <classname>GstPad</classname> this srcpad is connected to, use 
-    gst_pad_get_peer (srcpad).
-  </para>
+  </programlisting>
+   <para> 
+     You can query if a pad is connected with GST_PAD_IS_CONNECTED (pad). 
+   </para>
+   <para> 
+     To query for the <classname>GstPad</classname> this srcpad is connected to, use 
+     gst_pad_get_peer (srcpad).
+   </para>
+  </sect1>
+
+  <sect1 id="sec-conn-filtered">
+   <title>Making filtered connections</title>
+    <para>
+      You can also force a specific media type on the connection by using gst_pad_connect_filtered ()
+      and gst_element_connect_filtered ().
+    </para>
+  </sect1>
 
 </chapter>

@@ -82,6 +82,11 @@
         No provisions have been made for emerging technologies such as
 	the GNOME object embedding using BONOBO.
       </para> 
+      <para> 
+        While the GStreamer core does not use network transparent technologies
+	at the lowest level, it shouldn't be hard to create a wrapper around the
+	core components.
+      </para> 
     </sect2>
 
     <sect2 id="sec-motivation-catchup">

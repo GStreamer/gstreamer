@@ -24,6 +24,8 @@
 <!ENTITY THREADS SYSTEM "threads.xml">
 <!ENTITY QUEUES SYSTEM "queues.xml">
 <!ENTITY COTHREADS SYSTEM "cothreads.xml">
+<!ENTITY SCHEDULERS SYSTEM "schedulers.xml">
+<!ENTITY CLOCKS SYSTEM "clocks.xml">
 <!ENTITY DYNAMIC SYSTEM "dynamic.xml">
 <!ENTITY TYPEDETECTION SYSTEM "typedetection.xml">
 <!ENTITY UTILITY SYSTEM "utility.xml">
@@ -170,6 +172,10 @@
       &QUEUES;
 
       &COTHREADS;
+
+      &SCHEDULERS;
+
+      &CLOCKS;
 
       &DYNAMIC;
 
