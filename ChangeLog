@@ -1,3 +1,11 @@
+2004-06-06  David Moore  <dcm@acm.org>
+
+	reviewed by Benjamin Otte  <otte@gnome.org>
+
+	* gst/elements/gstfdsrc.c: (gst_fdsrc_class_init),
+	(gst_fdsrc_change_state):
+	  reset offset counter when going READY => PAUSED. (fixes #142903)
+
 2004-06-06  ed@catmur.co.uk
 
 	reviewed by Benjamin Otte  <otte@gnome.org>

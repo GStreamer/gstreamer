@@ -76,6 +76,8 @@ static void gst_fdsrc_set_property (GObject * object, guint prop_id,
 static void gst_fdsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstElementStateReturn gst_fdsrc_change_state (GstElement * element);
+
 static GstData *gst_fdsrc_get (GstPad * pad);
 
 
@@ -90,6 +92,7 @@ static void
 gst_fdsrc_class_init (GstFdSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -111,6 +114,8 @@ gst_fdsrc_class_init (GstFdSrcClass * klass)
 
   gobject_class->set_property = gst_fdsrc_set_property;
   gobject_class->get_property = gst_fdsrc_get_property;
+
+  gstelement_class->change_state = gst_fdsrc_change_state;
 }
 
 static void
@@ -126,6 +131,31 @@ gst_fdsrc_init (GstFdSrc * fdsrc)
   fdsrc->blocksize = DEFAULT_BLOCKSIZE;
   fdsrc->timeout = 0;
   fdsrc->seq = 0;
+}
+
+static GstElementStateReturn
+gst_fdsrc_change_state (GstElement * element)
+{
+  GstFdSrc *src = GST_FDSRC (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+      src->curoffset = 0;
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      break;
+    default:
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  return GST_STATE_SUCCESS;
 }
 
 
