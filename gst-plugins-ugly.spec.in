@@ -75,7 +75,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_MAD_TRUE@%package -n gstreamer-mad  
 @USE_MAD_TRUE@Summary: Plugin using MAD for mp3 decoding
 @USE_MAD_TRUE@Group: Libraries/Multimedia
-@USE_MAD_TRUE@Requires: gstreamer = %{ver}
+@USE_MAD_TRUE@Requires: gstreamer = %{ver},gstreamer-libs
 @USE_MAD_TRUE@Requires: mad >= 0.13.0
 @USE_MAD_TRUE@
 @USE_MAD_TRUE@%description -n gstreamer-mad
@@ -745,6 +745,21 @@ Various plugins for visual effects to use with audio. Included are Smoothwave, S
 @USE_HERMES_TRUE@%post -n gstreamer-colorspace
 @USE_HERMES_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
 
+%package -n gstreamer-libs
+Summary: GStreamer support libraries
+Group: Libraries/Multimedia
+Requires: gstreamer = %{ver}
+
+%description -n gstreamer-libs
+GStreamer support libraries
+
+%files -n gstreamer-libs
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstaudio*
+%{prefix}/lib/gst/libgstidct*
+%{prefix}/lib/gst/libgstriff*
+%{prefix}/lib/gst/libgstresample*
+
 %package -n gstreamer-misc
 Summary: GStreamer plugins for various effects
 Group: Libraries/Multimedia
@@ -757,9 +772,6 @@ Plugins for various effects
 %defattr(-, root, root)
 %{prefix}/lib/gst/libgstadder*
 %{prefix}/lib/gst/libgstalaw*
-%{prefix}/lib/gst/libgstaudio*
-%{prefix}/lib/gst/libgstidct*
-%{prefix}/lib/gst/libgstriff*
 %{prefix}/lib/gst/libgstjpeg*
 %{prefix}/lib/gst/libgstintfloat*
 %{prefix}/lib/gst/libgstlevel*
