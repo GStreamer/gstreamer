@@ -1,3 +1,10 @@
+2005-02-16  Wim Taymans  <wim@fluendo.com>
+
+	* gst/elements/gstfakesink.c: (gst_fakesink_activate),
+	(gst_fakesink_loop):
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_activate):
+	Fix fakesink.
+
 2005-02-16  Andy Wingo  <wingo@pobox.com>
 
 	* gst/elements/gstfakesink.c (gst_fakesink_loop)

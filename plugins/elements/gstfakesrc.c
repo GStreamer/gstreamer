@@ -892,6 +892,7 @@ gst_fakesrc_activate (GstPad * pad, GstActivateMode mode)
       /* step 3, stop the task */
       gst_task_stop (fakesrc->task);
       gst_object_unref (GST_OBJECT (fakesrc->task));
+      fakesrc->task = NULL;
       GST_STREAM_UNLOCK (pad);
 
       result = TRUE;

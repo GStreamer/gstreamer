@@ -328,6 +328,9 @@ gst_fakesink_activate (GstPad * pad, GstActivateMode mode)
 
   switch (mode) {
     case GST_ACTIVATE_PUSH:
+      result = TRUE;
+      break;
+    case GST_ACTIVATE_PULL:
       /* if we have a scheduler we can start the task */
       if (GST_ELEMENT_SCHEDULER (fakesink)) {
         GST_STREAM_LOCK (pad);
@@ -340,16 +343,17 @@ gst_fakesink_activate (GstPad * pad, GstActivateMode mode)
         result = TRUE;
       }
       break;
-    case GST_ACTIVATE_PULL:
-      break;
     case GST_ACTIVATE_NONE:
       /* step 1, unblock clock sync (if any) */
 
       /* step 2, make sure streaming finishes */
       GST_STREAM_LOCK (pad);
       /* step 3, stop the task */
-      gst_task_stop (GST_RPAD_TASK (pad));
-      gst_object_unref (GST_OBJECT (GST_RPAD_TASK (pad)));
+      if (GST_RPAD_TASK (pad)) {
+        gst_task_stop (GST_RPAD_TASK (pad));
+        gst_object_unref (GST_OBJECT (GST_RPAD_TASK (pad)));
+        GST_RPAD_TASK (pad) = NULL;
+      }
       GST_STREAM_UNLOCK (pad);
 
       result = TRUE;
@@ -470,15 +474,12 @@ gst_fakesink_loop (GstPad * pad)
   GST_STREAM_LOCK (pad);
 
   result = gst_pad_pull_range (pad, fakesink->offset, DEFAULT_SIZE, &buf);
-
   if (result != GST_FLOW_OK)
     goto paused;
 
   result = gst_fakesink_chain_unlocked (pad, buf);
-
   if (result != GST_FLOW_OK)
     goto paused;
-
 
 exit:
   GST_STREAM_UNLOCK (pad);
