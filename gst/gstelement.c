@@ -2002,7 +2002,7 @@ gst_element_wait_state_change (GstElement *element)
  * Returns: TRUE if the state was successfully set.
  * (using #GstElementStateReturn).
  */
-gint
+GstElementStateReturn
 gst_element_set_state (GstElement *element, GstElementState state)
 {
   GstElementClass *oclass;
