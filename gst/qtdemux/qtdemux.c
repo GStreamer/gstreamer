@@ -474,6 +474,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
 static gboolean
 gst_qtdemux_handle_sink_event (GstQTDemux * qtdemux)
 {
+  gboolean res = TRUE;
   guint32 remaining;
   GstEvent *event;
   GstEventType type;
@@ -495,12 +496,13 @@ gst_qtdemux_handle_sink_event (GstQTDemux * qtdemux)
       //gst_bytestream_flush_fast(qtdemux->bs, remaining);
       break;
     default:
+      res = FALSE;
       g_warning ("unhandled event %d", type);
       break;
   }
 
   gst_event_unref (event);
-  return TRUE;
+  return res;
 }
 
 static GstElementStateReturn
@@ -713,6 +715,7 @@ gst_qtdemux_loop_header (GstElement * element)
         if (!ret) {
           g_warning ("seek failed");
         }
+        qtdemux->offset = offset;
         GST_DEBUG ("seek returned %d", ret);
         return;
       }
@@ -780,7 +783,6 @@ gst_qtdemux_loop_header (GstElement * element)
       /* unreached */
       g_assert (0);
   }
-
 }
 
 void
@@ -2024,7 +2026,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4)),
         stream->caps);
   } else {
-    GST_INFO ("unknown subtype");
+    GST_INFO ("unknown subtype " GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (stream->subtype));
     return;
   }
 
@@ -2156,7 +2159,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               samples_per_chunk * stream->bytes_per_frame /
               stream->samples_per_packet / stream->compression;
         else
-          samples[j].size = 0;
+          samples[j].size = stream->bytes_per_frame;
         samples[j].duration =
             samples_per_chunk * GST_SECOND / (stream->rate / 2);
         samples[j].timestamp = timestamp;
@@ -2208,7 +2211,6 @@ done2:
       break;
   }
 #endif
-
   gst_qtdemux_add_stream (qtdemux, stream);
 }
 
@@ -2573,12 +2575,14 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, guint32 fourcc, const guint8 * data,
     case GST_MAKE_FOURCC ('a', 'g', 's', 'm'):
       /* GSM */
       return gst_caps_new_simple ("audio/x-gsm", NULL);
+    case GST_MAKE_FOURCC ('i', 'm', 'a', '4'):
+      /* IMA 4:1 */
+      return gst_caps_new_simple ("audio/x-adpcm",
+          "layout", G_TYPE_STRING, "quicktime", NULL);
     case GST_MAKE_FOURCC ('q', 't', 'v', 'r'):
       /* ? */
     case GST_MAKE_FOURCC ('Q', 'D', 'M', 'C'):
       /* QDesign music */
-    case GST_MAKE_FOURCC ('i', 'm', 'a', '4'):
-      /* IMA 4:1 */
     case GST_MAKE_FOURCC ('Q', 'c', 'l', 'p'):
       /* QUALCOMM PureVoice */
     default:

@@ -304,7 +304,7 @@ gst_riff_read_seek (GstRiffRead * riff, guint64 offset)
       GstEventType type = GST_EVENT_TYPE (event);
 
       gst_pad_event_default (riff->sinkpad, event);
-      if (type == GST_EVENT_EOS)
+      if (type == GST_EVENT_EOS || type == GST_EVENT_INTERRUPT)
         return NULL;
       event = NULL;
     }
@@ -890,8 +890,7 @@ gst_riff_read_info (GstRiffRead * riff)
 
       if (name && name[0] != '\0') {
         GValue src = { 0 }
-        , dest =
-        {
+        , dest = {
         0};
         GType dest_type = gst_tag_get_type (type);
 

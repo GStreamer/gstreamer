@@ -16,16 +16,14 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include "config.h"
 #endif
+
 #include <gst/gst.h>
 
-
-extern GType gst_diracdec_get_type (void);
-
-//extern GType gst_diracenc_get_type (void);
-
+#include "gstdiracdec.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -38,7 +36,7 @@ plugin_init (GstPlugin * plugin)
 #endif
 
   if (!gst_element_register (plugin, "diracdec", GST_RANK_PRIMARY,
-          gst_diracdec_get_type ())) {
+          GST_TYPE_DIRACDEC)) {
     return FALSE;
   }
 

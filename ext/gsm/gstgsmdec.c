@@ -173,6 +173,7 @@ gst_gsmdec_getcaps (GstPad * pad)
           0), "rate");
   gst_structure_set_value (gst_caps_get_structure (basecaps, 0), "rate",
       rate_value);
+  gst_caps_set_simple (basecaps, "channels", G_TYPE_INT, 1, NULL);
 
   return basecaps;
 }
