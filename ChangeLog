@@ -1,5 +1,13 @@
 2004-06-07  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstelement.c: (gst_element_set_time_delay):
+	  add failure check
+	* gst/gstinfo.h:
+	  put brackets around macro arguments of GST_TIME_ARGS, add note to
+	  move it to correct header in 0.9
+
+2004-06-07  Benjamin Otte  <otte@gnome.org>
+
 	* gst/indexers/gstfileindex.c: (gst_file_index_get_writer_id),
 	(gst_file_index_load), (_file_index_id_save_entries),
 	(gst_file_index_commit), (gst_file_index_add_association),

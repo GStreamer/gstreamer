@@ -919,6 +919,7 @@ gst_element_set_time_delay (GstElement * element, GstClockTime time,
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail (GST_IS_CLOCK (element->clock));
   g_return_if_fail (element->current_state >= GST_STATE_PAUSED);
+  g_return_if_fail (time >= delay);
 
   switch (element->current_state) {
     case GST_STATE_PAUSED:
