@@ -441,7 +441,7 @@ gst_avi_demux_handle_src_query (GstPad * pad,
       switch (*format) {
         case GST_FORMAT_TIME:
           if (stream->strh->type == GST_RIFF_FCC_auds) {
-            if (stream->strh->samplesize != 0 && stream->blockalign != 0) {
+            if (stream->strh->samplesize == 1 && stream->blockalign != 0) {
               *value = stream->current_byte * GST_SECOND /
                   (stream->blockalign * stream->strh->rate);
             } else if (stream->strh->rate != 0) {
@@ -453,8 +453,6 @@ gst_avi_demux_handle_src_query (GstPad * pad,
             } else {
               *value = 0;
             }
-//g_print ("Time: %" GST_TIME_FORMAT " (%d/%d/%d)\n", GST_TIME_ARGS (*value),
-//       stream->strh->rate, stream->bitrate, stream->strh->scale);
           } else {
             if (stream->strh->rate != 0) {
               *value = ((gfloat) stream->current_frame * stream->strh->scale *
@@ -1502,8 +1500,8 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         GST_BUFFER_TIMESTAMP (buf) = next_ts;
         gst_pad_query (stream->pad, GST_QUERY_POSITION, &format, &dur_ts);
         GST_BUFFER_DURATION (buf) = dur_ts - next_ts;
-//g_print ("TIME: %" GST_TIME_FORMAT " on pad %s\n",
-//       GST_TIME_ARGS (next_ts), gst_pad_get_name (stream->pad));
+        GST_DEBUG ("Pushing buffer with time=%" GST_TIME_FORMAT " over pad %s",
+            GST_TIME_ARGS (next_ts), gst_pad_get_name (stream->pad));
         gst_pad_push (stream->pad, GST_DATA (buf));
       }
     }

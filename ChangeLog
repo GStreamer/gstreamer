@@ -1,3 +1,9 @@
+2004-09-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query),
+	(gst_avi_demux_stream_data):
+	  Just hardcode for raw audio then. AVI audio sucks.
+
 2004-09-15  Arwed v. Merkatz  <v.merkatz@gmx.net>
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_audio_caps):
