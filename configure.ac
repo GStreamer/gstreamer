@@ -44,12 +44,10 @@ GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plugins],,
 [HAVE_EXPERIMENTAL=yes],disabled,
 [
   AC_MSG_WARN(building experimental plugins)
-  USE_SMOOTHWAVE="yes"
   USE_TARKIN="yes"
   USE_RTP="yes"
 ],[
   AC_MSG_NOTICE(not building experimental plugins)
-  USE_SMOOTHWAVE="no"
   USE_TARKIN="no"
   USE_RTP="no"
 ])
@@ -58,11 +56,12 @@ dnl broken plugins; stuff that doesn't seem to build at the moment
 GST_CHECK_FEATURE(BROKEN, [enable building of broken plugins],,
 HAVE_BROKEN=yes,disabled,
 [  
-  AC_MSG_WARN(building broken plugins)
+  AC_MSG_WARN([building broken plugins -- no bug reports on these, only patches :)])
+  USE_SMOOTHWAVE="yes"
   USE_VGA="yes"
   USE_XMMS="yes"
-  dnl AC_MSG_NOTICE(actually there are no broken plugins at the moment)
 ],[
+  USE_SMOOTHWAVE="no"
   USE_VGA="no"
   USE_XMMS="no"
   AC_MSG_NOTICE(not building broken plugins)
