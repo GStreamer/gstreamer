@@ -743,7 +743,8 @@ gst_dvdec_loop (GstElement *element)
 
     for (i=0; i < gst_caps_get_size(caps); i++) {
       GstStructure *to_try_struct = gst_caps_get_structure (caps, i);
-      GstCaps *try_caps = gst_caps_new_full (to_try_struct);
+      GstCaps *try_caps = 
+        gst_caps_new_full (gst_structure_copy(to_try_struct), NULL);
 
       /* try each format */
       if (gst_pad_try_set_caps (dvdec->videosrcpad, try_caps) > 0) {
