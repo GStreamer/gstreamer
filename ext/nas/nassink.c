@@ -32,6 +32,7 @@
 
 #define NAS_SOUND_PORT_DURATION	(2)
 
+GST_DEBUG_CATEGORY(NAS);
 /* Signals and args */
 enum {
   /* FILL ME */
@@ -130,6 +131,7 @@ gst_nassink_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
   gst_element_class_set_details (element_class, &nassink_details);
+  GST_DEBUG_CATEGORY_INIT(NAS, "NAS", 0, NULL);
 }
 
 static void
@@ -160,6 +162,7 @@ gst_nassink_class_init (GstNassinkClass *klass)
 static void
 gst_nassink_init(GstNassink *nassink)
 {
+  GST_CAT_DEBUG(NAS,"nassink: init");
   nassink->sinkpad = gst_pad_new_from_template (
       gst_static_pad_template_get (&sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(nassink), nassink->sinkpad);
@@ -191,8 +194,10 @@ gst_nassink_sync_parms (GstNassink *nassink)
 
   if (nassink->audio == NULL) return TRUE;
 
+  GST_CAT_DEBUG(NAS,"depth=%i rate=%i", nassink->depth, nassink->rate);
   if (nassink->flow != AuNone)
   {
+    GST_CAT_DEBUG(NAS,"flushing buffer");
     while (nassink->pos && nassink->buf)
       NAS_flush(nassink);
     AuStopFlow( nassink->audio, nassink->flow, NULL);
@@ -253,7 +258,6 @@ gst_nassink_chain (GstPad *pad, GstData *_data)
 
   if (GST_BUFFER_DATA (buf) != NULL) {
     if (!nassink->mute && nassink->audio != NULL) {
-      GST_DEBUG ("nassink: data=%p size=%d", GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
       remaining = GST_BUFFER_SIZE (buf);
       while ((nassink->flow != AuNone) && ( remaining > 0)) {
@@ -379,6 +383,7 @@ gst_nassink_open_audio (GstNassink *sink)
 
   GST_FLAG_SET (sink, GST_NASSINK_OPEN);
 
+  GST_CAT_DEBUG(NAS,"opened audio device");
   return TRUE;
 }
 
@@ -408,7 +413,7 @@ gst_nassink_close_audio (GstNassink *sink)
 
   GST_FLAG_UNSET (sink, GST_NASSINK_OPEN);
 
-  GST_DEBUG ("nassink: closed sound device");
+  GST_CAT_DEBUG (NAS,"closed audio device");
 }
 
 static GstElementStateReturn
@@ -582,17 +587,42 @@ NAS_createFlow(GstNassink *sink, unsigned char format, unsigned short rate, int 
   AuElement elements[2];
   AuUint32 buf_samples;
 
+  GST_CAT_DEBUG(NAS,"getting device");
   device = NAS_getDevice(sink->audio, numTracks);
   if (device == AuNone) {
+    GST_CAT_DEBUG(NAS,"no device found");
     return -1;
   }
 
   sink->flow = AuGetScratchFlow(sink->audio, NULL);
   if (sink->flow == 0) {
+    GST_CAT_DEBUG(NAS,"couldn't get flow");
     return -1;
   }
 
+  /* free old Elements and reconnet to server, needed to change samplerate */
+  {
+    AuBool clocked;
+    int num_elements;
+    AuStatus status;
+    AuElement *oldelems;
+    oldelems = AuGetElements(sink->audio, sink->flow, &clocked, &num_elements, &status);
+    if (num_elements > 0) {
+      GST_CAT_DEBUG(NAS,"GetElements status: %i", status);
+      if (oldelems)
+        AuFreeElements(sink->audio, num_elements, oldelems);
+      gst_nassink_close_audio(sink);
+      gst_nassink_open_audio(sink);
+      sink->flow = AuGetScratchFlow(sink->audio, NULL);
+      if (sink->flow == 0) {
+        GST_CAT_DEBUG(NAS,"couldn't get flow");
+        return -1;
+      }
+    }
+  }
+
   buf_samples = rate * NAS_SOUND_PORT_DURATION;
+
 
   AuMakeElementImportClient( &elements[0],		/* element */
                              rate,			/* rate */
