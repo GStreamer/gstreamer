@@ -1,3 +1,11 @@
+2004-12-01  Sebastien Cote  <sc5@hermes.usherb.ca>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/law/alaw-decode.c: (alawdec_getcaps):
+	* gst/law/mulaw-decode.c: (mulawdec_getcaps):
+	  Prevent warnings when negotiating caps (fixes #159338).
+
 2004-12-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
