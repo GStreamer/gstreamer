@@ -13,6 +13,9 @@ endif
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gstreamer-libs.pc
 
+aclocaldir = $(datadir)/aclocal
+aclocal_DATA = gst-element-check.m4
+
 SUBDIRS=gst-libs gst sys $(EXT_DIR) examples tools $(GCONF_DIR) testsuite
 
 DIST_SUBDIRS=gst-libs gst sys ext examples tools gconf testsuite
