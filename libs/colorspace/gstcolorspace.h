@@ -28,25 +28,27 @@
 #include "yuv2rgb.h"
 
 typedef enum {
-#define GST_COLORSPACE_RGB_FIRST GST_COLORSPACE_RGB555
   GST_COLORSPACE_RGB555,
   GST_COLORSPACE_BGR555,
   GST_COLORSPACE_RGB565,
   GST_COLORSPACE_BGR565,
-  GST_COLORSPACE_RGB24,                   // RGB
-  GST_COLORSPACE_BGR24,                   // RGB
+  GST_COLORSPACE_RGB24,                 
+  GST_COLORSPACE_BGR24,               
   GST_COLORSPACE_RGB32,
   GST_COLORSPACE_BGR32,
+
+  GST_COLORSPACE_YUV420,              
+  GST_COLORSPACE_YUV420P,           
+  GST_COLORSPACE_YUV422,
+  GST_COLORSPACE_YUV422P
+
+} GstColorSpaceType;
+
+#define GST_COLORSPACE_RGB_FIRST GST_COLORSPACE_RGB555
 #define GST_COLORSPACE_RGB_LAST GST_COLORSPACE_BGR32
 
 #define GST_COLORSPACE_YUV_FIRST GST_COLORSPACE_YUV420
-  GST_COLORSPACE_YUV420,                  // YUV 
-  GST_COLORSPACE_YUV420P,                 // YUV planar
-  GST_COLORSPACE_YUV422,
-  GST_COLORSPACE_YUV422P,
 #define GST_COLORSPACE_YUV_LAST GST_COLORSPACE_YUV422P
-
-} GstColorSpaceType;
 
 typedef struct _GstColorSpaceConverter GstColorSpaceConverter;
 typedef void (*GstColorSpaceConvertFunction) (GstColorSpaceConverter *space, guchar *src, guchar *dest);
@@ -67,12 +69,14 @@ struct _GstColorSpaceConverter {
 
 #define GST_COLORSPACE_IS_RGB_TYPE(type) ((type)>=GST_COLORSPACE_RGB_FIRST && \
 		                          (type)<=GST_COLORSPACE_RGB_LAST)
+
 #define GST_COLORSPACE_IS_YUV_TYPE(type) ((type)>=GST_COLORSPACE_YUV_FIRST && \
 		                          (type)<=GST_COLORSPACE_YUV_LAST)
 
 GstColorSpaceConverter *gst_colorspace_converter_new(gint width, gint height, GstColorSpaceType srcspace, 
 		GstColorSpaceType destspace, GdkVisual *destvisual);
-#define gst_colorspace_convert(converter, src, dest) (converter)->convert((converter), (src), (dest))
+#define gst_colorspace_convert(converter, src, dest) \
+			(converter)->convert((converter), (src), (dest))
 void gst_colorspace_destroy(GstColorSpaceConverter *space);
 
 #endif /* __GST_COLORSPACE_H__ */

@@ -42,6 +42,15 @@ GstBufferPool *gst_buffer_pool_new()
   return pool;
 }
 
+/**
+ * gst_buffer_pool_set_create_function:
+ * @pool: the pool to set the create function for
+ * @create: the create function
+ * @user_data: any user data to be passed in the create function
+ *
+ * Sets the function that will be called when a buffer is created 
+ * from this pool.
+ */
 void gst_buffer_pool_set_create_function(GstBufferPool *pool, GstBufferPoolCreateFunction create, gpointer user_data) 
 {
   g_return_if_fail(pool != NULL);
@@ -50,6 +59,15 @@ void gst_buffer_pool_set_create_function(GstBufferPool *pool, GstBufferPoolCreat
   pool->new_user_data = user_data;
 }
 
+/**
+ * gst_buffer_pool_set_destroy_function:
+ * @pool: the pool to set the destroy function for
+ * @destroy: the destroy function
+ * @user_data: any user data to be passed in the create function
+ *
+ * Sets the function that will be called when a buffer is destroyed 
+ * from this pool.
+ */
 void gst_buffer_pool_set_destroy_function(GstBufferPool *pool, GstBufferPoolDestroyFunction destroy, gpointer user_data) 
 {
   g_return_if_fail(pool != NULL);
@@ -58,6 +76,12 @@ void gst_buffer_pool_set_destroy_function(GstBufferPool *pool, GstBufferPoolDest
   pool->destroy_user_data = user_data;
 }
 
+/**
+ * gst_buffer_pool_destroy:
+ * @pool: the pool to destroy
+ *
+ * frees the memory for this bufferpool
+ */
 void gst_buffer_pool_destroy(GstBufferPool *pool) 
 {
   g_return_if_fail(pool != NULL);
@@ -65,6 +89,14 @@ void gst_buffer_pool_destroy(GstBufferPool *pool)
   g_free(pool);
 }
 
+/**
+ * gst_buffer_pool_new_buffer:
+ * @pool: the pool to create the buffer from
+ *
+ * uses the given pool to create a new buffer.
+ *
+ * Returns: The new buffer
+ */
 GstBuffer *gst_buffer_pool_new_buffer(GstBufferPool *pool) 
 {
   GstBuffer *buffer;
@@ -77,6 +109,13 @@ GstBuffer *gst_buffer_pool_new_buffer(GstBufferPool *pool)
   return buffer;
 }
 
+/**
+ * gst_buffer_pool_destroy_buffer:
+ * @pool: the pool to return the buffer to
+ * @buffer: the buffer to return to the pool
+ *
+ * Gives a buffer back to the given pool.
+ */
 void gst_buffer_pool_destroy_buffer(GstBufferPool *pool, GstBuffer *buffer) 
 {
   g_return_if_fail(pool != NULL);

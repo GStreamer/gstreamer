@@ -22,6 +22,14 @@
 #include <gst/gsttrace.h>
 
 
+/**
+ * gst_meta_new_size:
+ * @size: the size of the new meta data
+ *
+ * Create a new metadata object with a given size
+ *
+ * Returns: new meta object
+ */
 GstMeta *gst_meta_new_size(gint size) {
   GstMeta *meta;
 
@@ -31,6 +39,12 @@ GstMeta *gst_meta_new_size(gint size) {
   return meta;
 }
 
+/**
+ * gst_meta_ref:
+ * @meta: the meta object to ref
+ *
+ * increases the refcount of a meta object
+ */
 void gst_meta_ref(GstMeta *meta) {
   g_return_if_fail(meta != NULL);
 
@@ -38,6 +52,13 @@ void gst_meta_ref(GstMeta *meta) {
   meta->refcount++;
 }
 
+/**
+ * gst_meta_unref:
+ * @meta: the meta object to unref
+ *
+ * decreases the refcount of a meta object. if the refcount is zero, the
+ * meta object is freed.
+ */
 void gst_meta_unref(GstMeta *meta) {
   g_return_if_fail(meta != NULL);
 
@@ -52,6 +73,15 @@ void gst_meta_unref(GstMeta *meta) {
 }
 
 
+/**
+ * gst_meta_cow:
+ * @meta: the meta object prepare for write
+ *
+ * prepares a meta object for writing. A copy of the meta
+ * object is returned if needed.
+ *
+ * Returns: the meta object or a copy.
+ */
 GstMeta *gst_meta_cow(GstMeta *meta) {
   g_return_val_if_fail(meta != NULL, NULL);
 	return NULL;

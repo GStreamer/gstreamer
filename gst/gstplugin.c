@@ -348,6 +348,14 @@ GstElementFactory *gst_plugin_find_elementfactory(gchar *name) {
   return NULL;
 }
 
+/** 
+ * gst_plugin_load_elementfactory:
+ * @name: name of elementfactory to load
+ *
+ * Load a registered elementfactory by name.
+ *
+ * Returns: @GstElementFactory if loaded, NULL if not
+ */
 GstElementFactory *gst_plugin_load_elementfactory(gchar *name) {
   GList *plugins, *factories;
   GstElementFactory *factory = NULL;
@@ -380,6 +388,12 @@ GstElementFactory *gst_plugin_load_elementfactory(gchar *name) {
   return factory;
 }
 
+/** 
+ * gst_plugin_load_typefactory:
+ * @mime: name of typefactory to load
+ *
+ * Load a registered typefactory by mime type.
+ */
 void gst_plugin_load_typefactory(gchar *mime) {
   GList *plugins, *factories;
   GstTypeFactory *factory;
@@ -416,7 +430,7 @@ void gst_plugin_load_typefactory(gchar *mime) {
  * @plugin: plugin to add factory to
  * @factory: factory to add
  *
- * Add factory to the list of those provided by the element.
+ * Add factory to the list of those provided by the plugin.
  */
 void gst_plugin_add_factory(GstPlugin *plugin,GstElementFactory *factory) {
   g_return_if_fail(plugin != NULL);
@@ -426,6 +440,13 @@ void gst_plugin_add_factory(GstPlugin *plugin,GstElementFactory *factory) {
   plugin->elements = g_list_append(plugin->elements,factory);
 }
 
+/**
+ * gst_plugin_add_type:
+ * @plugin: plugin to add type to
+ * @factory: the typefactory to add
+ *
+ * Add a typefactory to the list of those provided by the plugin.
+ */
 void gst_plugin_add_type(GstPlugin *plugin,GstTypeFactory *factory) {
   g_return_if_fail(plugin != NULL);
   g_return_if_fail(factory != NULL);
@@ -445,6 +466,14 @@ GList *gst_plugin_get_list() {
   return _gst_plugins;
 }
 
+/**
+ * gst_plugin_save_thyself:
+ * @parent: the parent node to save the plugin to
+ *
+ * saves the plugin into an XML representation
+ *
+ * Returns: the new XML node
+ */
 xmlNodePtr gst_plugin_save_thyself(xmlNodePtr parent) {
   xmlNodePtr tree, subtree;
   GList *plugins = NULL, *elements = NULL, *types = NULL;
@@ -479,6 +508,12 @@ xmlNodePtr gst_plugin_save_thyself(xmlNodePtr parent) {
   return parent;
 }
 
+/**
+ * gst_plugin_load_thyself:
+ * @parent: the parent node to load the plugin from
+ *
+ * load the plugin from an XML representation
+ */
 void gst_plugin_load_thyself(xmlNodePtr parent) {
   xmlNodePtr kinderen;   
   gint elementcount = 0;

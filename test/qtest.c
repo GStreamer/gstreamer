@@ -93,7 +93,7 @@ int main(int argc,char *argv[]) {
 
   g_print("\niterating on %p and %p\n",decodethread,playthread);
   while (playing) {
-    gst_thread_main_loop(GST_THREAD(playthread));
+    gst_bin_iterate(GST_BIN(playthread));
     /* buffers got wedged in the queue, unstick them */
 //    while (((GstQueue *)queue)->buffers_queued)
 //      gst_connection_push(GST_CONNECTION(queue));

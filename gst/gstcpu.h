@@ -23,11 +23,13 @@
 
 #include <glib.h>
 
-#define  GST_CPU_FLAG_MMX 		(1 << 0)
-#define  GST_CPU_FLAG_SSE 		(1 << 1)
+typedef enum {
+  GST_CPU_FLAG_MMX      = (1<<0),
+  GST_CPU_FLAG_SSE      = (1<<1),
+} GstCPUFlags;
 
 void _gst_cpu_initialize();
 
-guint32 gst_cpu_get_flags();
+GstCPUFlags gst_cpu_get_flags();
 
 #endif /* __GST_CPU_H__ */

@@ -156,6 +156,13 @@ gchar *gst_pad_get_name(GstPad *pad) {
   return pad->name;
 }
 
+/**
+ * gst_pad_set_pull_function:
+ * @pad: the pad to set the pull function for
+ * @pull: the pull function
+ *
+ * Set the given pull function for the pad
+ */
 void gst_pad_set_pull_function(GstPad *pad,GstPadPullFunction pull) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -165,6 +172,13 @@ void gst_pad_set_pull_function(GstPad *pad,GstPadPullFunction pull) {
   pad->pullfunc = pull;
 }
 
+/**
+ * gst_pad_set_chain_function:
+ * @pad: the pad to set the chain function for
+ * @chain: the chain function
+ *
+ * Set the given chain function for the pad
+ */
 void gst_pad_set_chain_function(GstPad *pad,GstPadChainFunction chain) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -172,6 +186,13 @@ void gst_pad_set_chain_function(GstPad *pad,GstPadChainFunction chain) {
   pad->chainfunc = chain;
 }
 
+/**
+ * gst_pad_set_qos_function:
+ * @pad: the pad to set the qos function for
+ * @qos: the qos function
+ *
+ * Set the given qos function for the pad
+ */
 void gst_pad_set_qos_function(GstPad *pad,GstPadQoSFunction qos) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -179,7 +200,13 @@ void gst_pad_set_qos_function(GstPad *pad,GstPadQoSFunction qos) {
   pad->qosfunc = qos;
 }
 
-/* gst_pad_push is handed the src pad and the buffer to push */
+/**
+ * gst_pad_push:
+ * @pad: the pad to push
+ * @buffer: the buffer to push
+ *
+ * pushes a buffer along a src pad
+ */
 void gst_pad_push(GstPad *pad,GstBuffer *buffer) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -206,7 +233,14 @@ void gst_pad_push(GstPad *pad,GstBuffer *buffer) {
 
 }
 
-/* gst_pad_pull() is given the sink pad */
+/**
+ * gst_pad_pull:
+ * @pad: the pad to pull
+ *
+ * pulls a buffer along a sink pad
+ *
+ * Returns: the buffer that was pulled
+ */
 GstBuffer *gst_pad_pull(GstPad *pad) {
   GstBuffer *buf;
 //  GstElement *peerparent;
@@ -246,6 +280,12 @@ GstBuffer *gst_pad_pull(GstPad *pad) {
   return NULL;
 }
 
+/**
+ * gst_pad_chain:
+ * @pad: the pad to chain
+ *
+ * call the chain function of the given pad
+ */
 void gst_pad_chain(GstPad *pad) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -262,6 +302,7 @@ void gst_pad_chain(GstPad *pad) {
  * @pad: the pad to handle the QoS message
  * @qos_message: the QoS message to handle
  *
+ * pass the qos message downstream
  */
 void gst_pad_handle_qos(GstPad *pad,
 	               glong qos_message)
@@ -292,6 +333,13 @@ void gst_pad_handle_qos(GstPad *pad,
   return;
 }
 
+/**
+ * gst_pad_disconnect:
+ * @srcpad: the source pad to disconnect
+ * @sinkpad: the sink pad to disconnect
+ *
+ * disconnects the source pad from the sink pad
+ */
 void gst_pad_disconnect(GstPad *srcpad,GstPad *sinkpad) {
 
   /* generic checks */
@@ -313,6 +361,13 @@ void gst_pad_disconnect(GstPad *srcpad,GstPad *sinkpad) {
   srcpad->pullfunc = NULL;
 }
 
+/**
+ * gst_pad_connect:
+ * @srcpad: the source pad to connect
+ * @sinkpad: the sink pad to connect
+ *
+ * connects the source pad to the sink pad
+ */
 void gst_pad_connect(GstPad *srcpad,GstPad *sinkpad) {
   GstPad *temppad;
 
@@ -348,6 +403,13 @@ void gst_pad_connect(GstPad *srcpad,GstPad *sinkpad) {
   /* FIXME: set connected flag */
 }
 
+/**
+ * gst_pad_set_parent:
+ * @pad: the pad to set the parent 
+ * @parent: the object to set the parent to
+ *
+ * sets the parent object of a pad.
+ */
 void gst_pad_set_parent(GstPad *pad,GstObject *parent) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -361,6 +423,13 @@ void gst_pad_set_parent(GstPad *pad,GstObject *parent) {
   pad->parent = parent;
 }
 
+/**
+ * gst_pad_add_ghost_parent:
+ * @pad: the pad to set the ghost parent 
+ * @parent: the object to set the ghost parent to
+ *
+ * add a ghost parent object to a pad.
+ */
 void gst_pad_add_ghost_parent(GstPad *pad,GstObject *parent) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -371,6 +440,13 @@ void gst_pad_add_ghost_parent(GstPad *pad,GstObject *parent) {
 }
 
 
+/**
+ * gst_pad_remove_ghost_parent:
+ * @pad: the pad to remove the ghost parent 
+ * @parent: the object to remove the ghost parent from
+ *
+ * remove a ghost parent object from a pad.
+ */
 void gst_pad_remove_ghost_parent(GstPad *pad,GstObject *parent) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -380,6 +456,14 @@ void gst_pad_remove_ghost_parent(GstPad *pad,GstObject *parent) {
   pad->ghostparents = g_list_remove(pad->ghostparents,parent);
 }
 
+/**
+ * gst_pad_get_parent:
+ * @pad: the pad to get the parent from
+ *
+ * get the parent object of this pad
+ *
+ * Returns: the parent object
+ */
 GstObject *gst_pad_get_parent(GstPad *pad) {
   g_return_val_if_fail(pad != NULL, NULL);
   g_return_val_if_fail(GST_IS_PAD(pad), NULL);
@@ -387,6 +471,14 @@ GstObject *gst_pad_get_parent(GstPad *pad) {
   return pad->parent;
 }
 
+/**
+ * gst_pad_get_ghost_parents:
+ * @pad: the pad to get the ghost parents from
+ *
+ * get the ghost parents of this pad
+ *
+ * Returns: a list of ghost parent objects
+ */
 GList *gst_pad_get_ghost_parents(GstPad *pad) {
   g_return_val_if_fail(pad != NULL, NULL);
   g_return_val_if_fail(GST_IS_PAD(pad), NULL);
@@ -394,6 +486,14 @@ GList *gst_pad_get_ghost_parents(GstPad *pad) {
   return pad->ghostparents;
 }
 
+/**
+ * gst_pad_get_type_id:
+ * @pad: the pad to get the type id from
+ *
+ * get the type of this pad
+ *
+ * Returns: the type of this pad
+ */
 guint16 gst_pad_get_type_id(GstPad *pad) {
   g_return_val_if_fail(pad != NULL, 0);
   g_return_val_if_fail(GST_IS_PAD(pad), 0);
@@ -401,6 +501,13 @@ guint16 gst_pad_get_type_id(GstPad *pad) {
   return pad->type;
 }
 
+/**
+ * gst_pad_set_type_id:
+ * @pad: the pad to set the type id to
+ * @id: the type id to set this pad to
+ *
+ * set the type of this pad
+ */
 void gst_pad_set_type_id(GstPad *pad,guint16 id) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -409,6 +516,14 @@ void gst_pad_set_type_id(GstPad *pad,guint16 id) {
   pad->type = id;
 }
 
+/**
+ * gst_pad_get_peer:
+ * @pad: the pad to get the peer from
+ *
+ * Get the peer pad of this pad
+ *
+ * Returns: the peer pad
+ */
 GstPad *gst_pad_get_peer(GstPad *pad) {
   g_return_val_if_fail(pad != NULL, NULL);
   g_return_val_if_fail(GST_IS_PAD(pad), NULL);
@@ -428,15 +543,13 @@ static void gst_pad_real_destroy(GtkObject *object) {
 
 
 /**
- * gst_pad_handle_qos:
+ * gst_pad_load_and_connect:
  * @parent: the parent XML node to read the description from
  * @element: the element that has the source pad
  * @elements: a hashtable with elements
  *
  * Read the pad definition from the XML node and connect the given pad
  * in element to a pad of an element in the hashtable.
- *
- * Returns: the new Pad definition.
  */
 void gst_pad_load_and_connect(xmlNodePtr parent, GstObject *element, GHashTable *elements) {
   xmlNodePtr field = parent->childs;
@@ -477,6 +590,15 @@ cleanup:
 }
 
 
+/**
+ * gst_pad_save_thyself:
+ * @pad: the pad to save
+ * @parent: the parent XML node to save the description in
+ *
+ * Saves the pad into an xml representation
+ *
+ * Returns: the xml representation of the pad
+ */
 xmlNodePtr gst_pad_save_thyself(GstPad *pad,xmlNodePtr parent) {
   GstPad *peer;
 
@@ -494,6 +616,16 @@ xmlNodePtr gst_pad_save_thyself(GstPad *pad,xmlNodePtr parent) {
   return parent;
 }
 
+/**
+ * gst_pad_ghost_save_thyself:
+ * @pad: the pad to save
+ * @bin: the bin
+ * @parent: the parent XML node to save the description in
+ *
+ * Saves the ghost pad into an xml representation
+ *
+ * Returns: the xml representation of the pad
+ */
 xmlNodePtr gst_pad_ghost_save_thyself(GstPad *pad,GstElement *bin,xmlNodePtr parent) {
   xmlNodePtr self;
 

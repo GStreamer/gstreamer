@@ -523,6 +523,8 @@ xmlNodePtr gst_element_save_thyself(GstElement *element,xmlNodePtr parent) {
 /**
  * gst_element_load_thyself:
  * @parent: the xml parent node
+ * @elements: a hashtable to store the elements in. This is used
+ *    to resolve inter element dependecies during the loading.
  *
  * load the element based on the XML description
  *

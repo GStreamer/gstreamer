@@ -1,0 +1,86 @@
+<!-- ##### SECTION Title ##### -->
+GstV4lSrc
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstV4lSrc:width ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstV4lSrc:height ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstV4lSrc:format ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstV4lSrc:tune ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstV4lSrc:tuned ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstV4lSrc:input ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstV4lSrc:norm ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstV4lSrc:volume ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstV4lSrc:mute ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstV4lSrc:mode ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstV4lSrc:color ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstV4lSrc:bright ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstV4lSrc:hue ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstV4lSrc:contrast ##### -->
+<para>
+
+</para>
+

@@ -1,0 +1,24 @@
+<!-- ##### SECTION Title ##### -->
+GstMpeg_play
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SIGNAL GstMpeg_play::frame-decoded ##### -->
+<para>
+
+</para>
+
+@gstmpeg_play: the object which received the signal.
+@arg1: 
+

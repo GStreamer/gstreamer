@@ -33,8 +33,8 @@ extern "C" {
 #define GST_META(meta) ((GstMeta *)(meta))
 
 
-#define GST_META_FLAGS(buf) \
-  (GST_META(buf)->flags)
+#define GST_META_FLAGS(meta) \
+  (GST_META(meta)->flags)
 #define GST_META_FLAG_IS_SET(meta,flag) \
   (GST_META_FLAGS(meta) & (flag))
 #define GST_META_FLAG_SET(meta,flag) \

@@ -77,7 +77,7 @@ GstElementFactory *gst_elementfactory_find(gchar *name) {
  *
  * Get the global list of elementfactories.
  *
- * Returns: <type>GList</type> of type #GstElementFactory
+ * Returns: GList of type #GstElementFactory
  */
 GList *gst_elementfactory_get_list() {
   return _gst_elementfactories;

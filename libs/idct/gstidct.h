@@ -24,12 +24,12 @@
 #include <glib.h>
 
 typedef enum {
-  GST_IDCT_DEFAULT,         // default 
-  GST_IDCT_INT,				 // integer IDCT
-  GST_IDCT_FAST_INT,        // fastest integer
-  GST_IDCT_FLOAT,	          // accurate float version
-  GST_IDCT_MMX,			    // fast MMX (not accurate)
-  GST_IDCT_MMX32,           // accurate MMX
+  GST_IDCT_DEFAULT,    
+  GST_IDCT_INT,	
+  GST_IDCT_FAST_INT, 
+  GST_IDCT_FLOAT,   
+  GST_IDCT_MMX,	
+  GST_IDCT_MMX32
 } GstIDCTMethod;
 
 typedef struct _GstIDCT GstIDCT;

@@ -72,7 +72,7 @@ static inline char *_gst_print_statename(int state) {
   (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_ELEMENT,GstElementClass))
 #define GST_IS_ELEMENT(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_ELEMENT))
-#define GST_IS_ELEMENT_CLASS(obj) \
+#define GST_IS_ELEMENT_CLASS(klass) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT))
 
 typedef enum {

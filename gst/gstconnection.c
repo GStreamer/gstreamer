@@ -85,6 +85,12 @@ GstElement *gst_connection_new(gchar *name) {
   return connection;
 }
 
+/**
+ * gst_connection_push:
+ * @connection: the connection to push
+ *
+ * Push a buffer along a connection
+ */
 void gst_connection_push(GstConnection *connection) {
   GstConnectionClass *oclass;
 

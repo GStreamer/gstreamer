@@ -69,9 +69,6 @@ struct _GstThreadClass {
 GtkType gst_thread_get_type(void);
 GstElement *gst_thread_new(guchar *name);
 
-void *gst_thread_main_loop(void *arg);
-void gst_thread_iterate(GstThread *thread);
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

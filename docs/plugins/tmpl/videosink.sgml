@@ -1,0 +1,55 @@
+<!-- ##### SECTION Title ##### -->
+GstVideoSink
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SIGNAL GstVideoSink::frame-displayed ##### -->
+<para>
+
+</para>
+
+@gstvideosink: the object which received the signal.
+<!-- # Unused Parameters # -->
+@arg1: 
+
+<!-- ##### ARG GstVideoSink:width ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstVideoSink:height ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstVideoSink:widget ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstVideoSink:frames_displayed ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstVideoSink:frame_time ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstVideoSink:xv_enabled ##### -->
+<para>
+
+</para>
+

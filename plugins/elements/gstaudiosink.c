@@ -155,8 +155,7 @@ gst_audiosink_class_init(GstAudioSinkClass *klass) {
   gst_audiosink_signals[SIGNAL_HANDOFF] =
     gtk_signal_new("handoff",GTK_RUN_LAST,gtkobject_class->type,
                    GTK_SIGNAL_OFFSET(GstAudioSinkClass,handoff),
-                   gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
-                   GST_TYPE_AUDIOSINK);
+                   gtk_marshal_NONE__NONE,GTK_TYPE_NONE,0);
   gtk_object_class_add_signals(gtkobject_class,gst_audiosink_signals,
                                LAST_SIGNAL);
 

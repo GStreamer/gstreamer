@@ -1,0 +1,49 @@
+<!-- ##### SECTION Title ##### -->
+GstWinEnc
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SIGNAL GstWinEnc::frame-encoded ##### -->
+<para>
+
+</para>
+
+@gstwinenc: the object which received the signal.
+@arg1: 
+
+<!-- ##### ARG GstWinEnc:avi_header ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstWinEnc:bitrate ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstWinEnc:quality ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstWinEnc:compression ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstWinEnc:last_frame_size ##### -->
+<para>
+
+</para>
+

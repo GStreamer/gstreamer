@@ -124,7 +124,7 @@ GstXML *gst_xml_new(const guchar *fname, const guchar *root) {
  * @xml: The GstXML to get the element from
  * @name: The name of element to retreive
  *
- * This function is used to get a pointer to the GStElement corresponding 
+ * This function is used to get a pointer to the GstElement corresponding 
  * to name in the pipeline description. You would use this if you have 
  * to do anything to the element after loading.
  *

@@ -76,7 +76,7 @@ int main(int argc,char *argv[]) {
 //  sleep(1);
   g_print("about to enter loop\n");
   while (1) {
-    gst_thread_main_loop(GST_THREAD(playthread));
+    gst_bin_iterate(GST_BIN(playthread));
     g_print("using %d bytes\n",vmsize());
   }
 

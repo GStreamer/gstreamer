@@ -1,0 +1,46 @@
+<!-- ##### SECTION Title ##### -->
+GstVuMeter
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstVuMeter:volume ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstVuMeter:volumeptr ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstVuMeter:volume_left ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstVuMeter:volumeptr_left ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstVuMeter:volume_right ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstVuMeter:volumeptr_right ##### -->
+<para>
+
+</para>
+

@@ -1,0 +1,7999 @@
+<!-- ##### STRUCT Mpeg2Meta ##### -->
+<para>
+
+</para>
+
+@packet_length: 
+@PES_scrambling_control: 
+@PES_priority: 
+@data_alignment_indicator: 
+@copyright: 
+@original_or_copy: 
+@PTS_DTS_flags: 
+@ESCR_flag: 
+@ES_rate_flag: 
+@DSM_trick_mode_flag: 
+@additional_copy_info_flag: 
+@CRC_flag: 
+@PES_extension_flag: 
+@PES_header_data_length: 
+@PTS: 
+@DTS: 
+@ESCR_base: 
+@ESCR_extension: 
+@ES_rate: 
+@trick_mode_control: 
+
+<!-- ##### FUNCTION create_sector ##### -->
+<para>
+
+</para>
+
+@sector: 
+@pack: 
+@sys_header: 
+@packet_size: 
+@inputbuffer: 
+@type: 
+@buffer_scale: 
+@buffer_size: 
+@buffers: 
+@PTS: 
+@DTS: 
+@timestamps: 
+@which_streams: 
+
+<!-- ##### SECTION ./tmpl/qtables.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION MakeMask ##### -->
+<para>
+
+</para>
+
+@x: 
+@y: 
+@mask: 
+@XIob: 
+
+<!-- ##### FUNCTION SetMem ##### -->
+<para>
+
+</para>
+
+@value: 
+@m1: 
+
+<!-- ##### MACRO DECODE_MAGIC_NUMBER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO T_X11HIQ ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mrclose ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### FUNCTION gst_aviencoder_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO TIMESTAMPS_PTS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_cobin_iterate ##### -->
+<para>
+
+</para>
+
+@cobin: 
+
+<!-- ##### FUNCTION BoundIQuantizeMatrix ##### -->
+<para>
+
+</para>
+
+@matrix: 
+
+<!-- ##### SECTION ./tmpl/bit_allocate.sgml:Title ##### -->
+bit_allocate
+
+
+<!-- ##### FUNCTION gst_spindentity_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### MACRO GST_AVIENCODER_MAX_AUDIO_PADS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION MPEGNonIntraIQuantize ##### -->
+<para>
+
+</para>
+
+@matrix: 
+@qptr: 
+@qfact: 
+
+<!-- ##### MACRO GRAB_ATTR_VOLUME ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MAX_SECTOR_SIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MPEG2PLAY_WIDTH ##### -->
+<para>
+
+</para>
+
+@mp: 
+
+<!-- ##### SECTION ./tmpl/size.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/dct.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/stamp.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/getvlc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gdkxvimage.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION BellCoreHInterpolateMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO T_YUV ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_videosink_dga_init ##### -->
+<para>
+
+</para>
+
+@sink: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/dga.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION MakeMem ##### -->
+<para>
+
+</para>
+
+@width: 
+@height: 
+@Returns: 
+
+<!-- ##### MACRO STREAM_UNDERFLOW ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/itype.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/uncouple.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION zeroflush ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### FUNCTION stats_print_syncinfo ##### -->
+<para>
+
+</para>
+
+@syncinfo: 
+
+<!-- ##### FUNCTION YUVLoadMem ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO EXTENSION_START_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_riff_get_chunk_list ##### -->
+<para>
+
+</para>
+
+@riff: 
+@Returns: 
+
+<!-- ##### MACRO GTK_OVERLAY_IMAGE_MEM ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### SECTION Pads ##### -->
+<refsect1>
+ <title>pads</title>
+ <para>
+   test
+ </para>
+</refsect1>
+
+
+<!-- ##### SECTION ./tmpl/imdct.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO BufferContents ##### -->
+<para>
+
+</para>
+
+@vs: 
+
+<!-- ##### MACRO P ##### -->
+<para>
+
+</para>
+
+@s: 
+
+<!-- ##### SECTION ./tmpl/marker.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/parse.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO WHEREAMI ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO TOP_FIELD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION SetPointerBlock ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SEQ_END_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION CECASVInterpolateMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO MAX_FLIP_BUFFERS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION JVCVInterpolateMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/decoders.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION mpeg1encoder_new_encoder ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_parseau_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/globals.sgml:Title ##### -->
+globals
+
+
+<!-- ##### FUNCTION ReferenceDct ##### -->
+<para>
+
+</para>
+
+@matrix: 
+@newmatrix: 
+
+<!-- ##### MACRO MB_PATTERN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DHUFF ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_volume_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO IC_THREE_EIGHTHS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SYSTEM_START_CODE_MIN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO UDSC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/mpg123.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO BUFFER_TYPE_VIDEO ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SEEK_SET ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mwtell ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@Returns: 
+
+<!-- ##### FUNCTION mwopen ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@filename: 
+
+<!-- ##### SECTION ./tmpl/jdw.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/common.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/csize.sgml:Title ##### -->
+csize
+
+
+<!-- ##### SECTION ./tmpl/mem.sgml:Title ##### -->
+mem
+
+
+<!-- ##### FUNCTION dct64 ##### -->
+<para>
+
+</para>
+
+@dt: 
+@out0: 
+@out1: 
+@samples: 
+
+<!-- ##### MACRO ERROR_READ ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DCTSIZE2 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG VCDSrc:bytesperread ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION UDFReadLB ##### -->
+<para>
+
+</para>
+
+@fd: 
+@Returns: 
+
+<!-- ##### MACRO ERROR_PARAMETER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MPEG1MUX_BUFFER_TYPE ##### -->
+<para>
+
+</para>
+
+@mb: 
+
+<!-- ##### SECTION ./tmpl/RTjpeg.sgml:Title ##### -->
+RTjpeg
+
+
+<!-- ##### MACRO FSTORE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GRAB_ATTR_COLOR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/L3.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/mpeg2enc.sgml:Title ##### -->
+mpeg2enc
+
+
+<!-- ##### MACRO LN_TO_LOG10 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gtk_xvimage_new ##### -->
+<para>
+
+</para>
+
+@val: 
+@Returns: 
+
+<!-- ##### MACRO VSSC_LENGTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO L_BUFFERSIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO WHISPER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/proto.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mrseek ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@distance: 
+
+<!-- ##### MACRO IFF_ID_MPEG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/dvd_udf.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstriff.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION rematrix ##### -->
+<para>
+
+</para>
+
+@audblk: 
+@coeffs: 
+
+<!-- ##### FUNCTION WritePictureHeader ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### SECTION ./tmpl/buffer.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/bit_allocate.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/csize.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### ARG VCDSrc:location ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF ID[4] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SLICE_MIN_START_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO L_FVAR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO CB_FRACTION ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DISPLAY_LOCK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MEM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION BellCoreVInterpolateMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION CBPEncodeAC ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@index: 
+@matrix: 
+
+<!-- ##### MACRO GST_PARSEWAV_DATA ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_AVIENCODER_MAX_VIDEO_PADS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION imdct ##### -->
+<para>
+
+</para>
+
+@bsi: 
+@audblk_t: 
+@coeffs: 
+@samples: 
+
+<!-- ##### SECTION ./tmpl/tables.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### TYPEDEF sint_8 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO FLOAT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION MPEGIntraQuantize ##### -->
+<para>
+
+</para>
+
+@matrix: 
+@qptr: 
+@qfact: 
+
+<!-- ##### FUNCTION audio_decode8_info ##### -->
+<para>
+
+</para>
+
+@info: 
+
+<!-- ##### MACRO IFF_ID_SSND ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO IQUANT_SCALE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/bitstream.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION MakeStat ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO STATUS_AUDIO_TIME_OUT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO L_MTYPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/tableawd.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SEQUENCE_ERROR_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO FADE_STARS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/ring_buffer.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION ReadPictureHeader ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO SYS_HEADER_SIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_jpegdec_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### SECTION ./tmpl/putbits.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO ERROR_MEMORY ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION ClearMem ##### -->
+<para>
+
+</para>
+
+@m1: 
+
+<!-- ##### FUNCTION CopyBlock ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO LXMIN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/output.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO EHUFF ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO PANSCAN_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_mpegaudio_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION WriteStuff ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO ERROR_WRITE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION decode_sanity_check ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MARKER_PTS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO LITTLE_ENDIAN_ARCHITECTURE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/debug.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION aiff_seek_to_sound_data ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Returns: 
+
+<!-- ##### ARG GstSpindentity:control ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DCT_COEFF_FIRST ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PARSEWAV_CHUNK_DATA ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpg123_synth_1to1_mono ##### -->
+<para>
+
+</para>
+
+@fr: 
+@bandPtr: 
+@samples: 
+@pnt: 
+@Returns: 
+
+<!-- ##### MACRO FRAME ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MAX_U_32_NUM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO T_TGA ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpeg1mux_buffer_queue ##### -->
+<para>
+
+</para>
+
+@mb: 
+@buf: 
+
+<!-- ##### SECTION ./tmpl/size.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### TYPEDEF DFFT[FFT_SIZE] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpeg1mux_buffer_new ##### -->
+<para>
+
+</para>
+
+@type: 
+@id: 
+@Returns: 
+
+<!-- ##### MACRO MB_QUANT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION CBPDecodeAC ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@index: 
+@matrix: 
+
+<!-- ##### MACRO VIDEO_LUT2 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION BoundQuantizeMatrix ##### -->
+<para>
+
+</para>
+
+@matrix: 
+
+<!-- ##### FUNCTION gdk_xvimage_put ##### -->
+<para>
+
+</para>
+
+@window: 
+@gc: 
+@image: 
+@xsrc: 
+@ysrc: 
+@wsrc: 
+@hsrc: 
+@xdest: 
+@ydest: 
+@wdest: 
+@hdest: 
+
+<!-- ##### MACRO VIDEO_LUT4 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO IT_QCIF ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/core.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO UNPACK_CPL ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_median_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION rb_end_read ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION initme ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### SECTION ./tmpl/htable.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION rb_init ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_aviencoder_make_video_header ##### -->
+<para>
+
+</para>
+
+@codec: 
+@width: 
+@height: 
+@planes: 
+@bit_cnt: 
+@Returns: 
+
+<!-- ##### MACRO VIDEO_RGB16_LE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_mpegaudio_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### MACRO ERROR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SYSTEM_START_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION parser ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MakeStructure ##### -->
+<para>
+
+</para>
+
+@named_st: 
+
+<!-- ##### SECTION ./tmpl/mpg123.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/jdw.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PARSEWAV_OTHER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpg123_hsstell ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION HPFastBME ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@rx: 
+@ry: 
+@rm: 
+@cx: 
+@cy: 
+@cm: 
+@ox: 
+@oy: 
+
+<!-- ##### MACRO SEQUENCE_HEADER_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF IFFT[FFT_SIZE] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION SM0HInterpolateMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/l2tables.sgml:Title ##### -->
+l2tables
+
+
+<!-- ##### MACRO T_PPM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION audio_decode8_init ##### -->
+<para>
+
+</para>
+
+@h: 
+@framebytes_arg: 
+@reduction_code: 
+@transform_code: 
+@convert_code: 
+@freq_limit: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/grab.sgml:Title ##### -->
+grab
+
+
+<!-- ##### FUNCTION WriteMBHeader ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### FUNCTION ac3dec_imdct_init ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_spectrum_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_mpg123_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION RTjpeg_init_Q ##### -->
+<para>
+
+</para>
+
+@Q: 
+
+<!-- ##### MACRO CHROMA420 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/bitstream.sgml:Title ##### -->
+bitstream
+
+
+<!-- ##### MACRO CHROMA422 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/exponent.sgml:Title ##### -->
+exponent
+
+
+<!-- ##### MACRO GTK_OVERLAY_IMAGE_BYTE_ORDER ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### TYPEDEF UINT8 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO PICTURE_DISPLAY_EXTENSION_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gtk_overlay_image_resize ##### -->
+<para>
+
+</para>
+
+@widget: 
+@width: 
+@height: 
+
+<!-- ##### FUNCTION putbits_new_empty_buffer ##### -->
+<para>
+
+</para>
+
+@pb: 
+@len: 
+
+<!-- ##### MACRO GTK_OVERLAY_IMAGE_DEPTH ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION mpeg1encoder_new_picture ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@data: 
+@size: 
+@state: 
+@Returns: 
+
+<!-- ##### MACRO VIDEO_STR_0 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO L_IDBD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION debug_is_on ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO CLOCKS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mem_free ##### -->
+<para>
+
+</para>
+
+@Param1: 
+
+<!-- ##### SECTION ./tmpl/itype.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/uncouple.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/encoder.sgml:Title ##### -->
+encoder
+
+
+<!-- ##### FUNCTION XHInterpolateMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION readalign ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### FUNCTION mpg123_decode_frame ##### -->
+<para>
+
+</para>
+
+@de: 
+@inbuf: 
+@inlen: 
+@outbuf: 
+@outlen: 
+@Returns: 
+
+<!-- ##### MACRO PSC_LENGTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SC_SNR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GTK_OVERLAY_IMAGE_WIDTH ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### TYPEDEF DFFT2[FFT_SIZE/2] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF WINCOEF ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MACRO_BLOCK_ESCAPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/mpeg2dec.sgml:Title ##### -->
+mpeg2dec
+
+
+<!-- ##### FUNCTION RTjpeg_yuvrgb16 ##### -->
+<para>
+
+</para>
+
+@buf: 
+@rgb: 
+
+<!-- ##### SECTION ./tmpl/param.sgml:Title ##### -->
+param
+
+
+<!-- ##### SECTION ./tmpl/dither.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_parseavi_winloader_handle ##### -->
+<para>
+
+</para>
+
+@parseavi: 
+@buf: 
+
+<!-- ##### MACRO CONST_BITS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gtk_xvimage_redraw ##### -->
+<para>
+
+</para>
+
+@widget: 
+
+<!-- ##### MACRO ERROR_HUFFMAN_ENCODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/system.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/huffman.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO STAT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO FRAME_TYPE_AUDIO ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gdkxvimage.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_mpeg2enc_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### SECTION ./tmpl/parse.sgml:Title ##### -->
+parse
+
+
+<!-- ##### MACRO NOISY_MIN_MNR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/dga.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO IC_ONE_EIGHTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_synaesthesia_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO SPATSCAL_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION VerifyFiles ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### FUNCTION decode_sanity_check_init ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_mpeg_play_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### SECTION ./tmpl/util.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DecodeDCTDCSizeLum ##### -->
+<para>
+
+</para>
+
+@gb: 
+@macro_val: 
+
+<!-- ##### FUNCTION RTjpeg_yuvrgb24 ##### -->
+<para>
+
+</para>
+
+@buf: 
+@rgb: 
+
+<!-- ##### MACRO VIDEO_STREAMS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/stats.sgml:Title ##### -->
+stats
+
+
+<!-- ##### MACRO CHROMA444 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DecodeMBTypeB ##### -->
+<para>
+
+</para>
+
+@gb: 
+@quant: 
+@motion_fwd: 
+@motion_bwd: 
+@pat: 
+@intra: 
+
+<!-- ##### SECTION ./tmpl/gtkoverlayimage.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/globals.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO NUM_MASK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO ERROR_INIT_FILE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/getvlc.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/stamp.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO DecodeMBTypeI ##### -->
+<para>
+
+</para>
+
+@gb: 
+@quant: 
+@motion_fwd: 
+@motion_bwd: 
+@pat: 
+@intra: 
+
+<!-- ##### FUNCTION SM0VDecimateMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO M_DECODER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO BIG_ENDIAN_ARCHITECTURE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO FUTURE_LOCK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DecodeMBTypeP ##### -->
+<para>
+
+</para>
+
+@gb: 
+@quant: 
+@motion_fwd: 
+@motion_bwd: 
+@pat: 
+@intra: 
+
+<!-- ##### MACRO PACK_START_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DVDSRC_BASEOFFSET ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/htable.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_stereo_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO MPEG2PLAY_HEIGHT ##### -->
+<para>
+
+</para>
+
+@mp: 
+
+<!-- ##### MACRO IFF_ID_COMM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MB_BACKWARD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION parse_audblk ##### -->
+<para>
+
+</para>
+
+@bsi: 
+@audblk: 
+@gb: 
+
+<!-- ##### FUNCTION RTjpeg_yuvrgb32 ##### -->
+<para>
+
+</para>
+
+@buf: 
+@rgb: 
+
+<!-- ##### MACRO ESCAPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO L_BD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO srtell ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO sropen ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/prototypes.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION InterpolativeBME ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### SECTION ./tmpl/rematrix.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO UNIX ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MPG_MD_STEREO ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO TABLES_PATH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION Integer2TimeCode ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@fnum: 
+@Returns: 
+
+<!-- ##### FUNCTION SM0VInterpolateMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION Encode ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@val: 
+@huff: 
+@Returns: 
+
+<!-- ##### MACRO PADDING_STR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MAXIMUM_FGROUP ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/util.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION RTjpeg_decompress8 ##### -->
+<para>
+
+</para>
+
+@sp: 
+@bp: 
+
+<!-- ##### MACRO MACROBLOCK_LAYER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MACROBLOCK_PATTERN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION PrintDhuff ##### -->
+<para>
+
+</para>
+
+@huff: 
+
+<!-- ##### MACRO ISO_END_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION BoundIntegerMatrix ##### -->
+<para>
+
+</para>
+
+@matrix: 
+
+<!-- ##### MACRO FRAME_TYPE_IFRAME ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO PROTO_ARGS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO CODING_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GTK_OVERLAY_IMAGE_HEIGHT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION MpegDecodeSequence ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO MPG_MD_MONO ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO ILBOUND ##### -->
+<para>
+
+</para>
+
+@ptr: 
+@index: 
+@value: 
+
+<!-- ##### SECTION ./tmpl/gtkxvimage.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION mpeg2play_new_decoder ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/l2tables.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO MPG_MD_DUAL_CHANNEL ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpegaudio_encode_frame ##### -->
+<para>
+
+</para>
+
+@enc: 
+@inbuf: 
+@outbuf: 
+@outlen: 
+@Returns: 
+
+<!-- ##### FUNCTION mpg123_synth_ntom_set_step ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Param2: 
+
+<!-- ##### FUNCTION XVInterpolateMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION cvt_to_wave_init ##### -->
+<para>
+
+</para>
+
+@Varargs: 
+
+<!-- ##### FUNCTION ReadFS ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO sgetb ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION WriteBitAlloc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO sgetc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF WININT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/ac3.sgml:Title ##### -->
+ac3
+
+
+<!-- ##### SECTION ./tmpl/output.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DC_ONE_EIGHTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DFLT_PSY ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/ac3.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION output_play ##### -->
+<para>
+
+</para>
+
+@bsi: 
+@samples: 
+@Returns: 
+
+<!-- ##### MACRO VERSION ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/l2tables.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO sgetv ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SKIPPED_PICTURE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO ERROR_MARKER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION LoadPartialMem ##### -->
+<para>
+
+</para>
+
+@filename: 
+@pwidth: 
+@pheight: 
+@width: 
+@height: 
+@omem: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/musicin.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO IC_QUARTER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION bitstream_done ##### -->
+<para>
+
+</para>
+
+@bs: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/gtkoverlayimage.sgml:Title ##### -->
+GtkOverlayImage
+
+
+<!-- ##### VARIABLE mpg123_conv16to8 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION TransposeMatrix ##### -->
+<para>
+
+</para>
+
+@matrix: 
+@newmatrix: 
+
+<!-- ##### MACRO GST_PARSEWAV_CHUNK_FMT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO STREAMS_VIDEO ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO END_OF_BLOCK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF uint_8 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO FrameRate ##### -->
+<para>
+
+</para>
+
+@vs: 
+
+<!-- ##### MACRO VIDEO_BGR24 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DVDSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### FUNCTION gst_smoothwave_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION gst_median_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### MACRO IQUANT_SCALE_POW2 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION crc_validate ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### TYPEDEF mb_type_entry ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpg123_rewindNbits ##### -->
+<para>
+
+</para>
+
+@fr: 
+@bits: 
+
+<!-- ##### MACRO InBounds ##### -->
+<para>
+
+</para>
+
+@var: 
+@lo: 
+@hi: 
+@str: 
+
+<!-- ##### FUNCTION mpg123_init_decode_tables ##### -->
+<para>
+
+</para>
+
+@de: 
+@scale: 
+
+<!-- ##### FUNCTION stats_print_audblk ##### -->
+<para>
+
+</para>
+
+@audblk: 
+
+<!-- ##### FUNCTION mpg123_compute_bpf ##### -->
+<para>
+
+</para>
+
+@fr: 
+@Returns: 
+
+<!-- ##### FUNCTION head_info2 ##### -->
+<para>
+
+</para>
+
+@buf: 
+@n: 
+@h: 
+@br: 
+@Returns: 
+
+<!-- ##### FUNCTION head_info3 ##### -->
+<para>
+
+</para>
+
+@buf: 
+@n: 
+@h: 
+@br: 
+@searchForward: 
+@Returns: 
+
+<!-- ##### FUNCTION WriteScale ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/mem.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO CHARBOUND ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO TONE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO VIDEO_BGR32 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO PACKET_HEADER_SIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/downmix.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO MAC_WINDOW_SIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION MakeBlock ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO DEFAULT_QUANTIZATION ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/config.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION SaveMem ##### -->
+<para>
+
+</para>
+
+@filename: 
+@mem: 
+@Returns: 
+
+<!-- ##### FUNCTION gdk_xvimage_check_xvideo ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### ENUM DVDSrcFlags ##### -->
+<para>
+
+</para>
+
+@DVDSRC_OPEN: 
+
+<!-- ##### SECTION ./tmpl/mantissa.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION dprintf ##### -->
+<para>
+
+</para>
+
+@fmt: 
+@Varargs: 
+
+<!-- ##### SECTION ./tmpl/marker.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION mpeg2enc_new_encoder ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO SIXTYFOUR_BIT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION PrintEhuff ##### -->
+<para>
+
+</para>
+
+@huff: 
+
+<!-- ##### MACRO L_PTYPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF DCTELEM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/mpeg2enc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION ChenIDct ##### -->
+<para>
+
+</para>
+
+@x: 
+@y: 
+
+<!-- ##### SECTION ./tmpl/stream.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION gst_riff_id_to_fourcc ##### -->
+<para>
+
+</para>
+
+@id: 
+@Returns: 
+
+<!-- ##### MACRO BLOCKSIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/crc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MAX_LENGTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mputb ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@b: 
+
+<!-- ##### FUNCTION gst_windec_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### SECTION ./tmpl/decode.sgml:Title ##### -->
+decode
+
+
+<!-- ##### MACRO MPEG2_PACKHEAD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DFLT_EMP ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DCTBITS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/video.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/common.sgml:Title ##### -->
+common
+
+
+<!-- ##### MACRO UDSC_LENGTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PARSEAVI_UNKNOWN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/decoders.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION PrintFrame ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO FAR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO OK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SLICE_MAX_START_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mputv ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@n: 
+@b: 
+
+<!-- ##### MACRO PAST_LOCK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/mhead.sgml:Title ##### -->
+mhead
+
+
+<!-- ##### SECTION ./tmpl/param.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION bitcount ##### -->
+<para>
+
+</para>
+
+@pb: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/port.sgml:Title ##### -->
+port
+
+
+<!-- ##### MACRO P_INTRA ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/mantissa.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MACROBLOCK_MOTION_BACKWARD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO VSEC_LENGTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION create_pack ##### -->
+<para>
+
+</para>
+
+@pack: 
+@SCR: 
+@mux_rate: 
+
+<!-- ##### SECTION ./tmpl/tableawd.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_videosink_pull ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### MACRO MPEG1MUX_BUFFER_SPACE ##### -->
+<para>
+
+</para>
+
+@mb: 
+
+<!-- ##### MACRO PI ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/jdw.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/stats.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO BLOCKHEIGHT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_xing_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION ReadBlock ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@store: 
+
+<!-- ##### MACRO GOP_LENGTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/tables.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO AFTER_PACKET_LENGTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO FILETYPE_ENCODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO STEREO ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SCALE_RANGE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO IOBUF ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION MpegDecodeIPBDFrame ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### FUNCTION mpg123_huffman_count1 ##### -->
+<para>
+
+</para>
+
+@Varargs: 
+@Param2: 
+
+<!-- ##### MACRO L_BDBD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GRAB_ATTR_MODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION JP0VDecimateMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO ISO11172_END ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO NOISE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstParseWavFormat ##### -->
+<para>
+
+</para>
+
+@wFormatTag: 
+@wChannels: 
+@dwSamplesPerSec: 
+@dwAvgBytesPerSec: 
+@wBlockAlign: 
+@wBitsPerSample: 
+
+<!-- ##### MACRO VIDEO_YUV420P ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO L_MQUANT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/dvd_udf.sgml:Title ##### -->
+dvd_udf
+
+
+<!-- ##### MACRO DecodeDCTCoeff ##### -->
+<para>
+
+</para>
+
+@gb: 
+@dct_coeff_tbl: 
+@run: 
+@level: 
+
+<!-- ##### SECTION ./tmpl/RTjpeg.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF sint_16 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION ReadMBSHeader ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO ALL_LAYERS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO I_TYPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION Sub2Compensate ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@matrix: 
+@XIob: 
+@YIob: 
+
+<!-- ##### MACRO VSEC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/qtables.sgml:Title ##### -->
+qtables
+
+
+<!-- ##### FUNCTION gtk_overlay_image_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO NOISY ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gtk_xvimage_get ##### -->
+<para>
+
+</para>
+
+@image: 
+@val: 
+
+<!-- ##### MACRO SEQUENCE_DISPLAY_EXTENSION_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION ParityMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION SubCompensate ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@matrix: 
+@XIob: 
+
+<!-- ##### SECTION ./tmpl/musicin.sgml:Title ##### -->
+musicin
+
+
+<!-- ##### FUNCTION LoadMem ##### -->
+<para>
+
+</para>
+
+@filename: 
+@width: 
+@height: 
+@omem: 
+@Returns: 
+
+<!-- ##### MACRO SEQUENCE_EXTENSION_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MACRO_BLOCK_STUFFING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO CRC16_POLYNOMIAL ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO ASM_X86_OLD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO TEMPSCAL_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/acconfig.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO ASCII ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/size.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO L_QOFFS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO BUFFER_TYPE_AUDIO ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION InstallIob ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@index: 
+
+<!-- ##### MACRO SKIP_PICTURE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/dither.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION parse_bsi ##### -->
+<para>
+
+</para>
+
+@bsi: 
+@gb: 
+
+<!-- ##### MACRO BOTTOM_FIELD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION ChenDct ##### -->
+<para>
+
+</para>
+
+@x: 
+@y: 
+
+<!-- ##### MACRO MC_FRAME ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION audio_decode_info ##### -->
+<para>
+
+</para>
+
+@info: 
+
+<!-- ##### FUNCTION MPEGIntraIQuantize ##### -->
+<para>
+
+</para>
+
+@matrix: 
+@qptr: 
+@qfact: 
+
+<!-- ##### TYPEDEF sint_32 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO VIDEO_YUV422P ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO WRITE_IOB ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpg123_set_pointer ##### -->
+<para>
+
+</para>
+
+@fr: 
+@Param2: 
+
+<!-- ##### MACRO PICTURE_SPATIAL_SCALABLE_EXTENSION_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO TIMESTAMPS_PTS_DTS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DecodeMBAddrInc ##### -->
+<para>
+
+</para>
+
+@gb: 
+@val: 
+
+<!-- ##### MACRO DC_THREE_EIGHTHS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/parse.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_riff_next_buffer ##### -->
+<para>
+
+</para>
+
+@riff: 
+@buf: 
+@off: 
+@Returns: 
+
+<!-- ##### MACRO CONTINUE_BLOCK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_smooth_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO HAN_SIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION WriteMBSHeader ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO DELTA_BIT_NONE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SLICE_START_CODE_MAX ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/exponent.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/common.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION mpg123_decode_header ##### -->
+<para>
+
+</para>
+
+@fr: 
+@header: 
+@Returns: 
+
+<!-- ##### MACRO GST_PARSEAVI_MAX_AUDIO_PADS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION MakeDHUFF ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO REGULAR_PARSE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mwseek ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@distance: 
+
+<!-- ##### TYPEDEF TimeStamp ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION PrintTable ##### -->
+<para>
+
+</para>
+
+@table: 
+
+<!-- ##### MACRO IN_GOP_PARSE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION SonyHInterpolateMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO IN_SEQ_PARSE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM GstV4lSrcFlags ##### -->
+<para>
+
+</para>
+
+@GST_V4LSRC_OPEN: 
+
+<!-- ##### FUNCTION dither_gen ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO ERROR_NONE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mwclose ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO SCREAM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GdkXvImagePrivate ##### -->
+<para>
+
+</para>
+
+@image: 
+@x_shm_info: 
+@im_adaptor: 
+@im_port: 
+@im_format: 
+
+<!-- ##### MACRO BINARY ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/stats.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO STOP ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/musicin.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_mpeg1encoder_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### SECTION ./tmpl/ac3.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/dct.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF mb_addr_inc_entry ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SBLIMIT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION js_bound ##### -->
+<para>
+
+</para>
+
+@Varargs: 
+@Varargs: 
+@Returns: 
+
+<!-- ##### MACRO GROUP_START_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpg123_synth_1to1_486 ##### -->
+<para>
+
+</para>
+
+@fr: 
+@bandPtr: 
+@channel: 
+@out: 
+@nb_blocks: 
+@Returns: 
+
+<!-- ##### FUNCTION mpeg2enc_new_picture ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@inbuf: 
+@size: 
+@encoder_state: 
+@Returns: 
+
+<!-- ##### MACRO GRAB_ATTR_HUE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_parsewav_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### SECTION ./tmpl/huffman.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/system.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/debug.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO USER_DATA_START_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DefaultDct ##### -->
+<para>
+
+</para>
+
+@vs: 
+@o: 
+@i: 
+
+<!-- ##### MACRO GRAB_ATTR_CONTRAST ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO P_PREDICTED ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/stream.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PARSEWAV_UNKNOWN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION audio_decode_init ##### -->
+<para>
+
+</para>
+
+@h: 
+@framebytes_arg: 
+@reduction_code: 
+@transform_code: 
+@convert_code: 
+@freq_limit: 
+@Returns: 
+
+<!-- ##### FUNCTION InstallFSIob ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@fs: 
+@index: 
+
+<!-- ##### FUNCTION IZigzagMatrix ##### -->
+<para>
+
+</para>
+
+@imatrix: 
+@omatrix: 
+
+<!-- ##### MACRO GST_PARSEAVI_STRL ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MAXFRAMESIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF IFFT2[FFT_SIZE/2] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION WriteVEHeader ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO FADE_HEAT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM VCDSrcFlags ##### -->
+<para>
+
+</para>
+
+@VCDSRC_OPEN: 
+
+<!-- ##### FUNCTION WriteBlock ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@store: 
+
+<!-- ##### SECTION ./tmpl/mpeg2dec.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION stats_print_bsi ##### -->
+<para>
+
+</para>
+
+@bsi: 
+
+<!-- ##### SECTION ./tmpl/rematrix.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO VIDEO_RGB15_BE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO UMASK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_win_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO MARKER_SCR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION audio_decode8 ##### -->
+<para>
+
+</para>
+
+@bs: 
+@pcmbuf: 
+@Returns: 
+
+<!-- ##### FUNCTION ReadVSHeader ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/mem.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION MakeFStore ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO FIRST_BLOCK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PARSEAVI_STRH_AUDS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MONO ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PARSEAVI_REGULAR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpg123_do_layer1 ##### -->
+<para>
+
+</para>
+
+@fr: 
+@Returns: 
+
+<!-- ##### MACRO CAN_AUDIO_VOLUME ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpg123_do_layer2 ##### -->
+<para>
+
+</para>
+
+@fr: 
+@Returns: 
+
+<!-- ##### FUNCTION CopyMem ##### -->
+<para>
+
+</para>
+
+@m1: 
+@m2: 
+
+<!-- ##### SECTION ./tmpl/putbits.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpg123_do_layer3 ##### -->
+<para>
+
+</para>
+
+@fr: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/decode.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/globals.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO L_QDFACT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MPG_VER_1 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MPG_VER_2 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_stereo_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION CopyCFS2FS ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@fs: 
+
+<!-- ##### FUNCTION dvdsrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### TYPEDEF UINT16 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpg123_synth_1to1_pent ##### -->
+<para>
+
+</para>
+
+@bandPtr: 
+@channel: 
+@out: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/buffer.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION putbits ##### -->
+<para>
+
+</para>
+
+@pb: 
+@val: 
+@n: 
+
+<!-- ##### FUNCTION MakeEHUFF ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/ctables.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION RTjpeg_compress8 ##### -->
+<para>
+
+</para>
+
+@sp: 
+@bp: 
+@Returns: 
+
+<!-- ##### FUNCTION mpeg2play_new_buffer ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@inbuf: 
+@inlen: 
+@first: 
+@Returns: 
+
+<!-- ##### USER_FUNCTION Ifunc ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION RTjpeg_set_test ##### -->
+<para>
+
+</para>
+
+@i: 
+
+<!-- ##### MACRO MB_WEIGHT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DVD_UDF_VERSION ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION cvt_to_wave ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Param2: 
+@Returns: 
+
+<!-- ##### FUNCTION SonyVInterpolateMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO DVDSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO FRAME_PICTURE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DELTA_BIT_RESERVED ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_mpeg2enc_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION MakeSubMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION bitstream_get ##### -->
+<para>
+
+</para>
+
+@bs: 
+@num_bits: 
+@Returns: 
+
+<!-- ##### MACRO GST_PARSEAVI_MAX_VIDEO_PADS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SYNA_BITS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO PACK_START ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GRAB_ATTR_BRIGHT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO EXT_START_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DFLT_EXT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gdkxvimage.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO IMAGE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO LITTLE_SHORT16 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF UINT32 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/stats.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_volume_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### SECTION ./tmpl/imdct.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO STDC_HEADERS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/vlc.sgml:Title ##### -->
+vlc
+
+
+<!-- ##### FUNCTION seof ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@Returns: 
+
+<!-- ##### MACRO GST_PARSEAVI_AVIH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO ERROR_BOUNDS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/ctables.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF coded_block_pattern_entry ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MB_CLASS4 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO ZERO_STUFFING_BYTE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION new_ext ##### -->
+<para>
+
+</para>
+
+@filename: 
+@extname: 
+@Returns: 
+
+<!-- ##### MACRO STATUS_VIDEO_TIME_OUT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO PI64 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO IFF_LONG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MPEGVER1 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MPEGVER2 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DELTA_BIT_REUSE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SPATIAL_TEMPORAL_WEIGHT_CODE_FLAG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION extended_to_double ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Param2: 
+
+<!-- ##### MACRO GOP_START_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpg123_get_songlen ##### -->
+<para>
+
+</para>
+
+@fr: 
+@no: 
+@Returns: 
+
+<!-- ##### MACRO MPG_LAYER_1 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/putbits.sgml:Title ##### -->
+putbits
+
+
+<!-- ##### MACRO MPG_LAYER_2 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MPG_LAYER_3 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF vFunc() ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/system.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/huffman.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO AUDIO_STR_0 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/itype.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/uncouple.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SLICE_START_CODE_MIN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION RTjpeg_mcompress8 ##### -->
+<para>
+
+</para>
+
+@sp: 
+@bp: 
+@lmask: 
+@Returns: 
+
+<!-- ##### TYPEDEF VLCtab ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO CREATOR_ENCODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION putbits_init ##### -->
+<para>
+
+</para>
+
+@pb: 
+
+<!-- ##### MACRO UNPACK_FBW ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/marker.sgml:Title ##### -->
+marker
+
+
+<!-- ##### SECTION ./tmpl/mpg123.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO VIDEO_GRAY ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SC_TEMP ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gdk_xvimage_destroy ##### -->
+<para>
+
+</para>
+
+@image: 
+
+<!-- ##### MACRO L_BUFFERCONTENTS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION Bpos ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@hp: 
+@vp: 
+@h: 
+@v: 
+@Returns: 
+
+<!-- ##### MACRO READ_IOB ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/mhead.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/output.sgml:Title ##### -->
+output
+
+
+<!-- ##### FUNCTION RTjpeg_init_mcompress ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpeg1mux_buffer_update_queued ##### -->
+<para>
+
+</para>
+
+@mb: 
+@scr: 
+@Returns: 
+
+<!-- ##### MACRO SEQUENCE_SCALABLE_EXTENSION_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO swtell ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO L_FDBD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_riff_get_nextlikely ##### -->
+<para>
+
+</para>
+
+@riff: 
+@Returns: 
+
+<!-- ##### MACRO swopen ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gtkxvimage.sgml:Title ##### -->
+GtkXvImage
+
+
+<!-- ##### MACRO MPEG1MUX_BUFFER_FIRST_TIMECODE ##### -->
+<para>
+
+</para>
+
+@mb: 
+
+<!-- ##### MACRO PICTURE_TEMPORAL_SCALABLE_EXTENSION_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/L3.sgml:Title ##### -->
+L3
+
+
+<!-- ##### FUNCTION vcdsrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/gtkxvimage.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF uint_16 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT Mpeg1Stream ##### -->
+<para>
+
+</para>
+
+@stream_id: 
+@STD_buffer_bound_scale: 
+@STD_buffer_size_bound: 
+
+<!-- ##### FUNCTION MakeFrame ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO MPEG2_SYSHEAD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF D2SBL[2][SBLIMIT] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_parseavi_winloader_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### SECTION ./tmpl/dga.sgml:Title ##### -->
+dga
+
+
+<!-- ##### MACRO LAST ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO L_VAROR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO VOL_REF_NUM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO PATH_SEPARATOR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION ClearFS ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO GST_PARSEAVI_MOVI ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION seek_sync ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO NO_STARTCODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG VCDSrc:offset ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO USER_START_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GdkXvImageType ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SC_DP ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DC_QUARTER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO srseek ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO VIDEO_YUV422 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MC_FIELD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO VCD_BYTES_PER_SECTOR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO PERMITTED_SPATIAL_TEMPORAL_WEIGHT_CLASS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION create_sys_header ##### -->
+<para>
+
+</para>
+
+@sys_header: 
+@rate_bound: 
+@audio_bound: 
+@fixed: 
+@CSPS: 
+@audio_lock: 
+@video_lock: 
+@video_bound: 
+@stream1: 
+@buffer1_scale: 
+@buffer1_size: 
+@stream2: 
+@buffer2_scale: 
+@buffer2_size: 
+@which_streams: 
+
+<!-- ##### SECTION ./tmpl/RTjpeg.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION II_CRC_calc ##### -->
+<para>
+
+</para>
+
+@Param1: 
+
+<!-- ##### SECTION ./tmpl/vlc.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO HBLKSIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PARSEAVI_STRH_VIDS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_win_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION WriteSamples ##### -->
+<para>
+
+</para>
+
+@Varargs: 
+
+<!-- ##### SECTION ./tmpl/dct.sgml:Title ##### -->
+dct
+
+
+<!-- ##### FUNCTION rb_begin_write ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO NEW_DATA ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF uint_32 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SC_NONE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION downmix ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Param2: 
+
+<!-- ##### MACRO POWERNORM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DBMIN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstriff.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SLICE_LAYER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO UBOUND ##### -->
+<para>
+
+</para>
+
+@index: 
+@value: 
+
+<!-- ##### TYPEDEF frame_params ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO STREAMS_AUDIO ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/itype.sgml:Title ##### -->
+itype
+
+
+<!-- ##### SECTION ./tmpl/uncouple.sgml:Title ##### -->
+uncouple
+
+
+<!-- ##### MACRO RUN_SHIFT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION LoadFGroup ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@index: 
+
+<!-- ##### FUNCTION gst_mpeg_play_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO USER_BUF_SIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION set_mac_file_attr ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/encoder.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/marker.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_parseavi_get_video_srcpad ##### -->
+<para>
+
+</para>
+
+@parseavi: 
+@pad_nr: 
+@strf: 
+@Returns: 
+
+<!-- ##### MACRO srclose ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION memcheck ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Varargs: 
+@Varargs: 
+@Returns: 
+
+<!-- ##### STRUCT Mpeg1MuxTimecode ##### -->
+<para>
+
+</para>
+
+@length: 
+@original_length: 
+@frame_type: 
+@PTS: 
+@DTS: 
+
+<!-- ##### MACRO MB_ESCAPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO VSSC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION MPEGNonIntraQuantize ##### -->
+<para>
+
+</para>
+
+@matrix: 
+@qptr: 
+@qfact: 
+
+<!-- ##### FUNCTION Decode ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@huff: 
+@Returns: 
+
+<!-- ##### MACRO MPEG_AUDIO_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DFLT_MOD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/main.sgml:Title ##### -->
+main
+
+
+<!-- ##### FUNCTION MakeSuperMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/crc.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO BUFFERSIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION audio_decode ##### -->
+<para>
+
+</para>
+
+@bs: 
+@pcm: 
+@Returns: 
+
+<!-- ##### MACRO LOGBLKSIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/video.sgml:Title ##### -->
+video
+
+
+<!-- ##### SECTION ./tmpl/mpeg2dec.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/rematrix.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO MB_FORWARD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/video.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO VIDEO_RGB15_LE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION WriteHdr ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Param2: 
+
+<!-- ##### FUNCTION mpg123_init_conv16to8_table ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION crc_init ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO STATUS_AUDIO_END ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/encoder.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_RIFF_ENOTRIFF ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO STATUS_VIDEO_END ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION RTjpeg_init_decompress ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SYS_HEADER_START ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/mem.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/mantissa.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION MakeFS ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@flag: 
+
+<!-- ##### FUNCTION RTjpeg_decompressYUV420 ##### -->
+<para>
+
+</para>
+
+@sp: 
+@bp: 
+
+<!-- ##### MACRO FFT_SIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION hdr_to_frps ##### -->
+<para>
+
+</para>
+
+@Param1: 
+
+<!-- ##### FUNCTION RTjpeg_decompressYUV422 ##### -->
+<para>
+
+</para>
+
+@sp: 
+@bp: 
+
+<!-- ##### FUNCTION gst_riff_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION bitstream_close ##### -->
+<para>
+
+</para>
+
+@bs: 
+
+<!-- ##### MACRO READ_MODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION parse_auxdata ##### -->
+<para>
+
+</para>
+
+@syncinfo: 
+@gb: 
+
+<!-- ##### MACRO MBSC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MPEG1MUX_BUFFER_DATA ##### -->
+<para>
+
+</para>
+
+@mb: 
+
+<!-- ##### TYPEDEF uint_64 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO CBANDS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION I_CRC_calc ##### -->
+<para>
+
+</para>
+
+@Param1: 
+
+<!-- ##### MACRO EXSC_LENGTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_vumeter_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### MACRO VIDEO_ELEMENTARY_STREAM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GOPSC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/prototypes.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/imdct.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO LAST_SCR_BYTE_IN_PACK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/bitstream.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/qtables.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/ctables.sgml:Title ##### -->
+ctables
+
+
+<!-- ##### MACRO GTK_OVERLAY_IMAGE_PIXEL_SIZE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_v4lsrc_push ##### -->
+<para>
+
+</para>
+
+@src: 
+
+<!-- ##### MACRO STREAMS_BOTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO ZIG_ZAG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SC_SPAT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION RTjpeg_compressYUV420 ##### -->
+<para>
+
+</para>
+
+@sp: 
+@bp: 
+@Returns: 
+
+<!-- ##### FUNCTION RTjpeg_compressYUV422 ##### -->
+<para>
+
+</para>
+
+@sp: 
+@bp: 
+@Returns: 
+
+<!-- ##### MACRO DFLT_SFQ ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO T_SIF ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO QUANT_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/stream.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION cvt_to_wave_test ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_mpeg2play_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### SECTION ./tmpl/tables.sgml:Title ##### -->
+tables
+
+
+<!-- ##### FUNCTION bit_allocate ##### -->
+<para>
+
+</para>
+
+@fscod: 
+@bsi: 
+@audblk: 
+
+<!-- ##### FUNCTION WriteFS ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO RING_BUF_SIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO ERRC_LENGTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/crc.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION MakeFGroup ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### SECTION ./tmpl/stream.sgml:Title ##### -->
+stream
+
+
+<!-- ##### SECTION ./tmpl/parse.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION mpg123_synth_1to1 ##### -->
+<para>
+
+</para>
+
+@fr: 
+@bandPtr: 
+@channel: 
+@out: 
+@pnt: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/vlc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO BLKSIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/ctables.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO MPEG1MUX_BUFFER_QUEUED ##### -->
+<para>
+
+</para>
+
+@mb: 
+
+<!-- ##### SECTION ./tmpl/common.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION update_CRC ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Param2: 
+@Param3: 
+
+<!-- ##### SECTION ./tmpl/port.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/main.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MPEGVER25 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MARKER_JUST_PTS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstriff.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MARKER_NO_TIMESTAMPS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MACROBLOCK_MOTION_FORWARD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/mpeg2enc.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/output.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpg123_head_check ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Returns: 
+
+<!-- ##### MACRO PACKAGE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION CreateFrameSizes ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO MV_FRAME ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/l2tables.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION PrintImage ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### FUNCTION gst_mpg123_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/globals.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF JSBS[3][SCALE_BLOCK][SBLIMIT] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO TRAP ##### -->
+<para>
+
+</para>
+
+@txt: 
+
+<!-- ##### MACRO BITS_IN_A_BYTE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpeg1mux_buffer_shrink ##### -->
+<para>
+
+</para>
+
+@mb: 
+@size: 
+
+<!-- ##### FUNCTION bitstream_open ##### -->
+<para>
+
+</para>
+
+@file: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/size.sgml:Title ##### -->
+size
+
+
+<!-- ##### FUNCTION gst_example_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_smoothwave_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO KB_OK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO sputc ##### -->
+<para>
+
+</para>
+
+@b: 
+
+<!-- ##### SECTION ./tmpl/grab.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG VCDSrc:track ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO PARSE_OK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO FRAME_TYPE_BFRAME ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MPEG2PLAY_FORMAT ##### -->
+<para>
+
+</para>
+
+@mp: 
+
+<!-- ##### MACRO DCT_COEFF_NEXT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO ERROR_MARKER_STRUCTURE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_vumeter_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO WINBITS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO sputv ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DCTSATURATE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO VCDSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GTK_OVERLAY_IMAGE_TYPE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO TYPE_FORMAT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/mhead.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gtkxvimage.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/musicin.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO WRITE_MODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION ClearToHeader ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@Returns: 
+
+<!-- ##### MACRO IT_NTSC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO BoundValue ##### -->
+<para>
+
+</para>
+
+@var: 
+@lo: 
+@hi: 
+@str: 
+
+<!-- ##### MACRO DCTSIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/ring_buffer.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MACROBLOCK_INTRA ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/decode.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION ByteAlign ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO MAX_NAME_SIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DecodeMotionVectors ##### -->
+<para>
+
+</para>
+
+@gb: 
+@value: 
+
+<!-- ##### FUNCTION ZigzagMatrix ##### -->
+<para>
+
+</para>
+
+@imatrix: 
+@omatrix: 
+
+<!-- ##### FUNCTION mantissa_unpack ##### -->
+<para>
+
+</para>
+
+@bsi: 
+@audblk: 
+@gb: 
+
+<!-- ##### FUNCTION BitrateIndex ##### -->
+<para>
+
+</para>
+
+@Varargs: 
+@Varargs: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/mpeg2enc.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SEQUENCE_END_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/tableawd.sgml:Title ##### -->
+tableawd
+
+
+<!-- ##### SECTION ./tmpl/debug.sgml:Title ##### -->
+debug
+
+
+<!-- ##### FUNCTION pick_table ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_parseavi_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION rb_end_write ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MC_DMV ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO ERROR_PREMATURE_EOF ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/proto.sgml:Title ##### -->
+proto
+
+
+<!-- ##### MACRO MINIMUM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/decoders.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/acconfig.sgml:Title ##### -->
+acconfig
+
+
+<!-- ##### MACRO RUN_MASK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO IN_SLICE_PARSE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SKIP_TO_START_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gtkoverlayimage.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/RTjpeg.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION read_bit_alloc ##### -->
+<para>
+
+</para>
+
+@Varargs: 
+@Param2: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/config.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO BLOCK_LAYER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SCALE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SYS_HEADER_LENGTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION TimeCode2Integer ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@tc: 
+@Returns: 
+
+<!-- ##### TYPEDEF IN[2][HAN_SIZE] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO BLOCKWIDTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO ERRC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_v4lsrc_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/core.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO VIDEO_RGB08 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION OpenTableFile ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_example_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### MACRO MUTE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO L_IVAR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION initparser ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gtk_xvimage_set ##### -->
+<para>
+
+</para>
+
+@image: 
+@val: 
+
+<!-- ##### FUNCTION RTjpeg_yuvrgb8 ##### -->
+<para>
+
+</para>
+
+@buf: 
+@rgb: 
+
+<!-- ##### FUNCTION i_audio_decode_info ##### -->
+<para>
+
+</para>
+
+@info: 
+
+<!-- ##### FUNCTION gst_parseavi_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION ReadGOPHeader ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO MARKER_DTS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO PI4 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION ReadHeaderHeader ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@Returns: 
+
+<!-- ##### FUNCTION mrtell ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@Returns: 
+
+<!-- ##### MACRO SEQ_START_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mropen ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@filename: 
+
+<!-- ##### FUNCTION EncodeAC ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@index: 
+@matrix: 
+
+<!-- ##### FUNCTION ReferenceIDct ##### -->
+<para>
+
+</para>
+
+@matrix: 
+@newmatrix: 
+
+<!-- ##### SECTION ./tmpl/main.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_jpeg_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### SECTION ./tmpl/htable.sgml:Title ##### -->
+htable
+
+
+<!-- ##### SECTION ./tmpl/L3.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO PICTURE_CODING_EXTENSION_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION MoveTo ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@hp: 
+@vp: 
+@h: 
+@v: 
+
+<!-- ##### SECTION ./tmpl/bit_allocate.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstriff.sgml:Title ##### -->
+gstriff
+
+
+<!-- ##### FUNCTION WriteVSHeader ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO BS_FORMAT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SEEK_END ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/crc.sgml:Title ##### -->
+crc
+
+
+<!-- ##### MACRO PICTURE_START_CODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MS_DOS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SSLIMIT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/exponent.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/dct.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO NUM_ATTR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/downmix.sgml:Title ##### -->
+downmix
+
+
+<!-- ##### SECTION ./tmpl/config.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/video.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION UDFOpenDisc ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+<!-- ##### MACRO T_Y_U_V ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO VIDEO_RGB24 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO UNPACK_LFE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MB_QUANTUM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/config.sgml:Title ##### -->
+config
+
+
+<!-- ##### FUNCTION RTjpeg_yuv420rgb ##### -->
+<para>
+
+</para>
+
+@buf: 
+@rgb: 
+
+<!-- ##### FUNCTION gst_parseau_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### SECTION ./tmpl/bitstream.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO STARTCODE_FOUND ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MBSC_LENGTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION quant_weight_coeff_sum ##### -->
+<para>
+
+</para>
+
+@blk: 
+@i_quant_mat: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/param.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### TYPEDEF dct_dc_size_entry ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF motion_vectors_entry ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gdkxvimage.sgml:Title ##### -->
+gdkxvimage
+
+
+<!-- ##### TYPEDEF SAMPLEINT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstRiffChunk ##### -->
+<para>
+
+</para>
+
+@offset: 
+@id: 
+@size: 
+
+<!-- ##### TYPEDEF INT16 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION rb_begin_read ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### TYPEDEF SBS[2][3][SCALE_BLOCK][SBLIMIT] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO LEVEL_SHIFT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO VIDEO_RGB32 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION crc_process ##### -->
+<para>
+
+</para>
+
+@data: 
+
+<!-- ##### MACRO SEQSCAL_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION WriteGOPHeader ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO BOOLEAN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO AIX ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO TIMESTAMPS_NO ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF DCTBLOCK[DCTSIZE2] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF iFunc() ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO FRAME_TYPE_PFRAME ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION DecodeAC ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@index: 
+@matrix: 
+
+<!-- ##### MACRO ERROR_HUFFMAN_READ ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION aiff_read_headers ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Param2: 
+@Returns: 
+
+<!-- ##### FUNCTION putbits_new_buffer ##### -->
+<para>
+
+</para>
+
+@pb: 
+@buffer: 
+@len: 
+
+<!-- ##### MACRO GRAB_ATTR_MUTE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION i_audio_decode_init ##### -->
+<para>
+
+</para>
+
+@h: 
+@framebytes_arg: 
+@reduction_code: 
+@transform_code: 
+@convert_code: 
+@freq_limit: 
+@Returns: 
+
+<!-- ##### MACRO GLOBAL ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION get_number_of_input_bytes ##### -->
+<para>
+
+</para>
+
+@enc: 
+@Returns: 
+
+<!-- ##### MACRO DFLT_BRT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION SM0HDecimateMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION EncodeDC ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@coef: 
+@LocalEHuff: 
+
+<!-- ##### MACRO L_RATE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO NULL_CHAR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF DCTCOEF ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO START_BLOCK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GetFlag ##### -->
+<para>
+
+</para>
+
+@value: 
+@flag: 
+
+<!-- ##### MACRO MAIN_LEVEL ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION inithuff ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### FUNCTION head_info ##### -->
+<para>
+
+</para>
+
+@buf: 
+@n: 
+@h: 
+@Returns: 
+
+<!-- ##### MACRO SLICE_MIN_START ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO B_TYPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/exponent.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO IN_PICTURE_PARSE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO TALK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SKIP_JUNK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF INT32 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_windec_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### VARIABLE global_prefs ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SEEK_CUR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION MakeFileNames ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### FUNCTION mpg123_huffman_decoder ##### -->
+<para>
+
+</para>
+
+@Varargs: 
+@Param2: 
+
+<!-- ##### SECTION ./tmpl/grab.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO IFF_ID_AIFF ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/buffer.sgml:Title ##### -->
+buffer
+
+
+<!-- ##### MACRO gst_cobin_destroy ##### -->
+<para>
+
+</para>
+
+@cobin: 
+
+<!-- ##### FUNCTION gst_videosink_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### TYPEDEF INT8 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/dga.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO L_SQUANT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO ALIGNING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gdk_xvimage_new ##### -->
+<para>
+
+</para>
+
+@type: 
+@width: 
+@height: 
+@Returns: 
+
+<!-- ##### MACRO SCALE_BLOCK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO FADE_FLAME ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF D1408[1408] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO NO_LAYER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION SavePartialMem ##### -->
+<para>
+
+</para>
+
+@filename: 
+@pwidth: 
+@pheight: 
+@mem: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/vlc.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION i_audio_decode ##### -->
+<para>
+
+</para>
+
+@bs: 
+@pcm: 
+@Returns: 
+
+<!-- ##### FUNCTION FreeMem ##### -->
+<para>
+
+</para>
+
+@mem: 
+
+<!-- ##### FUNCTION Add2Compensate ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@matrix: 
+@XIob: 
+@YIob: 
+
+<!-- ##### FUNCTION Statistics ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@RefFS: 
+@NewFS: 
+
+<!-- ##### FUNCTION DecodeDC ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@LocalDHuff: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_riff_get_chunk ##### -->
+<para>
+
+</para>
+
+@riff: 
+@fourcc: 
+@Returns: 
+
+<!-- ##### MACRO RATE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF D9[9] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT Mpeg1MuxBuffer ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@length: 
+@base: 
+@scan_pos: 
+@last_pos: 
+@current_start: 
+@buffer_type: 
+@stream_id: 
+@new_frame: 
+@next_frame_time: 
+
+<!-- ##### MACRO DFLT_LAY ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION stats_print_banner ##### -->
+<para>
+
+</para>
+
+@syncinfo: 
+@bsi: 
+
+<!-- ##### MACRO EXP_REUSE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF DCTtab ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_parseavi_get_audio_srcpad ##### -->
+<para>
+
+</para>
+
+@parseavi: 
+@pad_nr: 
+@strf: 
+@Returns: 
+
+<!-- ##### MACRO GLOBAL_GAIN_SCALE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MAX_SNR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO STUFFING_BYTE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/qtables.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION ClearMatrix ##### -->
+<para>
+
+</para>
+
+@matrix: 
+
+<!-- ##### FUNCTION mpg123_compute_tpf ##### -->
+<para>
+
+</para>
+
+@fr: 
+@Returns: 
+
+<!-- ##### MACRO FADE_WAVE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION PrintMatrix ##### -->
+<para>
+
+</para>
+
+@matrix: 
+
+<!-- ##### MACRO NEW_PICTURE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO QUANT_MATRIX_EXTENSION_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MV_FIELD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE Clip ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_xa_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### MACRO VIDEO_MJPEG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/huffman.sgml:Title ##### -->
+huffman
+
+
+<!-- ##### SECTION ./tmpl/system.sgml:Title ##### -->
+system
+
+
+<!-- ##### SECTION ./tmpl/ring_buffer.sgml:Title ##### -->
+ring_buffer
+
+
+<!-- ##### TYPEDEF DSBL[SBLIMIT] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION ReadMBHeader ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@Returns: 
+
+<!-- ##### MACRO MB_STUFFING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SEQUENCE_LAYER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/mhead.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION AddCompensate ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@matrix: 
+@XIob: 
+
+<!-- ##### SECTION ./tmpl/tableawd.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION alignbits ##### -->
+<para>
+
+</para>
+
+@pb: 
+
+<!-- ##### MACRO COPYRIGHT_EXTENSION_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DecodeDCTCoeffNext ##### -->
+<para>
+
+</para>
+
+@gb: 
+@runval: 
+@levelval: 
+
+<!-- ##### MACRO SLICE_MAX_START ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION RTjpeg_yuv422rgb ##### -->
+<para>
+
+</para>
+
+@buf: 
+@rgb: 
+
+<!-- ##### SECTION ./tmpl/gtkoverlayimage.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION SetCCITT ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO LBOUND ##### -->
+<para>
+
+</para>
+
+@index: 
+@value: 
+
+<!-- ##### SECTION ./tmpl/util.sgml:Title ##### -->
+util
+
+
+<!-- ##### FUNCTION PrintIob ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### FUNCTION gst_jpegdec_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO NO_VID_STREAM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/getvlc.sgml:Title ##### -->
+getvlc
+
+
+<!-- ##### SECTION ./tmpl/proto.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/proto.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/stamp.sgml:Title ##### -->
+stamp
+
+
+<!-- ##### MACRO IT_CIF ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mgetb ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/prototypes.sgml:Title ##### -->
+prototypes
+
+
+<!-- ##### MACRO swseek ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/dvd_udf.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SYNA_SIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_AVIENCODER_INITIAL ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_videosink_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION gst_jpeg_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO DVD_VIDEO_LB_LEN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/mpg123.sgml:Title ##### -->
+mpg123
+
+
+<!-- ##### MACRO LEVEL_MASK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mgetv ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@n: 
+@Returns: 
+
+<!-- ##### MACRO MACROBLOCK_QUANT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_smooth_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION RTjpeg_init_compress ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF BLOCK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION uncouple ##### -->
+<para>
+
+</para>
+
+@bsi: 
+@audblk: 
+@coeffs: 
+
+<!-- ##### SECTION ./tmpl/core.sgml:Title ##### -->
+core
+
+
+<!-- ##### FUNCTION gst_xa_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO AUDIO_STREAMS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/util.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/encoder.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpg123_init_layer1 ##### -->
+<para>
+
+</para>
+
+@Param1: 
+
+<!-- ##### MACRO VCDSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO DISP_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION mpg123_init_layer3 ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Varargs: 
+
+<!-- ##### SECTION ./tmpl/port.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT putbits_t ##### -->
+<para>
+
+</para>
+
+@outbfr: 
+@outbase: 
+@temp: 
+@outcnt: 
+@bytecnt: 
+@len: 
+@newlen: 
+
+<!-- ##### SECTION ./tmpl/mpeg2dec.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION read_absthr ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Varargs: 
+
+<!-- ##### FUNCTION MpegEncodeIPBDFrame ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### FUNCTION MakeImage ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### FUNCTION gst_riff_fourcc_to_id ##### -->
+<para>
+
+</para>
+
+@fourcc: 
+@Returns: 
+
+<!-- ##### FUNCTION NumericQ ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Returns: 
+
+<!-- ##### MACRO BEGIN ##### -->
+<para>
+
+</para>
+
+@name: 
+
+<!-- ##### SECTION ./tmpl/mantissa.sgml:Title ##### -->
+mantissa
+
+
+<!-- ##### MACRO GST_AVIENCODER_MOVI ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO PROFILE_422 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/grab.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO T_X11 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/csize.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/dither.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF D640[640] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO P_TYPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PARSEAVI_HDRL ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/acconfig.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO L_BVAR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO ERROR_UNRECOVERABLE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/imdct.sgml:Title ##### -->
+imdct
+
+
+<!-- ##### MACRO P_INTERPOLATED ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO EVENT_LAYER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_synaesthesia_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### SECTION ./tmpl/param.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO PSC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MPG_MD_JOINT_STEREO ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION SuperSubCompensate ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@fmcmatrix: 
+@bmcmatrix: 
+@imcmatrix: 
+@XIob: 
+@YIob: 
+
+<!-- ##### FUNCTION Help ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### MACRO DecodeDCTCoeffFirst ##### -->
+<para>
+
+</para>
+
+@gb: 
+@runval: 
+@levelval: 
+
+<!-- ##### SECTION ./tmpl/L3.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_mpeg1encoder_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO DELTA_BIT_NEW ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION exponent_unpack ##### -->
+<para>
+
+</para>
+
+@bsi: 
+@audblk: 
+@coeffs: 
+
+<!-- ##### SECTION ./tmpl/decode.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION ReadHeaderTrailer ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### FUNCTION aiff_write_headers ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Param2: 
+@Returns: 
+
+<!-- ##### MACRO LITTLE_ENDIAN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/main.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/htable.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION RTjpeg_mcompress ##### -->
+<para>
+
+</para>
+
+@sp: 
+@bp: 
+@lmask: 
+@cmask: 
+@Returns: 
+
+<!-- ##### MACRO DCT_ERROR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_mpeg2play_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION JP0HDecimateMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO SYSTEM_START_CODE_MAX ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION SmpFrqIndex ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Returns: 
+
+<!-- ##### MACRO EXSC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO IFF_ID_FORM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO AUSHIFT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SEQ_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO HUFFMAN_ESCAPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/csize.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO EXP_D15 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gdk_xvimage_init ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/getvlc.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/stamp.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO COEFFSUM_SCALE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/ring_buffer.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### STRUCT Mpeg1Meta ##### -->
+<para>
+
+</para>
+
+@packet_length: 
+@PES_scrambling_control: 
+@PES_priority: 
+@data_alignment_indicator: 
+@copyright: 
+@original_or_copy: 
+@PTS_DTS_flags: 
+@ESCR_flag: 
+@ES_rate_flag: 
+@DSM_trick_mode_flag: 
+@additional_copy_info_flag: 
+@CRC_flag: 
+@PES_extension_flag: 
+@PES_header_data_length: 
+@PTS: 
+@DTS: 
+@ESCR_base: 
+@ESCR_extension: 
+@ES_rate: 
+@trick_mode_control: 
+
+<!-- ##### FUNCTION gst_spectrum_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### MACRO PACKET_START ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GdkXvImage ##### -->
+<para>
+
+</para>
+
+@type: 
+@byte_order: 
+@width: 
+@height: 
+@depth: 
+@bpp: 
+@bpl: 
+@mem: 
+
+<!-- ##### MACRO EXT_BUF_SIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION double_to_extended ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Param2: 
+
+<!-- ##### SECTION ./tmpl/rematrix.sgml:Title ##### -->
+rematrix
+
+
+<!-- ##### MACRO FINISHED_BLOCK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstRiff ##### -->
+<para>
+
+</para>
+
+@form: 
+@chunks: 
+@state: 
+@curoffset: 
+@nextlikely: 
+
+<!-- ##### TYPEDEF SUB[2][3][SCALE_BLOCK][SBLIMIT] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO IUBOUND ##### -->
+<para>
+
+</para>
+
+@ptr: 
+@index: 
+@value: 
+
+<!-- ##### MACRO EXP_D25 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO P_FORBIDDEN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_parsewav_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO inline ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/prototypes.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO MAXIMUM_SOURCES ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO D_TYPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION dct64_486 ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+@samples: 
+
+<!-- ##### MACRO DefaultIDct ##### -->
+<para>
+
+</para>
+
+@vs: 
+@o: 
+@i: 
+
+<!-- ##### MACRO MB_INTRA ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_xing_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION mpg123_bpf_from_header ##### -->
+<para>
+
+</para>
+
+@header: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/ac3.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/decoders.sgml:Title ##### -->
+decoders
+
+
+<!-- ##### MACRO WINMULT ##### -->
+<para>
+
+</para>
+
+@x: 
+@coef: 
+
+<!-- ##### FUNCTION YUVSaveMem ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO RESERVED_BYTE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_riff_get_chunk_number ##### -->
+<para>
+
+</para>
+
+@riff: 
+@number: 
+@Returns: 
+
+<!-- ##### MACRO P_DCINTRA ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/downmix.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/debug.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO PICTURE_LAYER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF D10[10] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO swclose ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/core.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO PACK_HEADER_SIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/putbits.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION parse_syncinfo ##### -->
+<para>
+
+</para>
+
+@syncinfo: 
+@gb: 
+
+<!-- ##### SECTION ./tmpl/dither.sgml:Title ##### -->
+dither
+
+
+<!-- ##### FUNCTION CECASHInterpolateMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION JVCHInterpolateMem ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO BUFFER_SIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/port.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO EXP_D45 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DecodeDCTDCSizeChrom ##### -->
+<para>
+
+</para>
+
+@gb: 
+@macro_val: 
+
+<!-- ##### SECTION ./tmpl/bit_allocate.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO WORD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO VIDEO_RGB16_BE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_cobin_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION convertRGBtoYUV ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@source: 
+@dest: 
+
+<!-- ##### MACRO MC_16X8 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MPEGTABENV ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/jdw.sgml:Title ##### -->
+jdw
+
+
+<!-- ##### FUNCTION InitFS ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+
+<!-- ##### FUNCTION gst_spindentity_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/buffer.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/acconfig.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/tables.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/dvd_udf.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION BruteMotionEstimation ##### -->
+<para>
+
+</para>
+
+@vid_stream: 
+@pmem: 
+@fmem: 
+
+<!-- ##### MACRO MPG_VER_25 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MPEGLAYER1 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO L_DVAR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO MPEGLAYER2 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DecodeCBP ##### -->
+<para>
+
+</para>
+
+@gb: 
+@coded_bp: 
+
+<!-- ##### MACRO MPEGLAYER3 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/downmix.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+

@@ -46,8 +46,8 @@ enum {
   ARG_0,
   ARG_LOCATION,
   ARG_BYTESPERREAD,
-  ARG_LENGTH,
   ARG_OFFSET,
+  ARG_SIZE,
 };
 
 
@@ -101,10 +101,10 @@ gst_asyncdisksrc_class_init(GstAsyncDiskSrcClass *klass) {
                           GTK_ARG_READWRITE, ARG_LOCATION);
   gtk_object_add_arg_type("GstAsyncDiskSrc::bytesperread", GTK_TYPE_INT,
                           GTK_ARG_READWRITE, ARG_BYTESPERREAD);
-  gtk_object_add_arg_type("GstAsyncDiskSrc::length", GTK_TYPE_LONG,
-                          GTK_ARG_READABLE, ARG_LENGTH);
   gtk_object_add_arg_type("GstAsyncDiskSrc::offset", GTK_TYPE_LONG,
                           GTK_ARG_READWRITE, ARG_OFFSET);
+  gtk_object_add_arg_type("GstAsyncDiskSrc::size", GTK_TYPE_LONG,
+                          GTK_ARG_READABLE, ARG_SIZE);
 
   gtkobject_class->set_arg = gst_asyncdisksrc_set_arg;
   gtkobject_class->get_arg = gst_asyncdisksrc_get_arg;
@@ -178,11 +178,11 @@ static void gst_asyncdisksrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
     case ARG_BYTESPERREAD:
       GTK_VALUE_INT(*arg) = src->bytes_per_read;
       break;
-    case ARG_LENGTH:
-      GTK_VALUE_LONG(*arg) = src->size;
-      break;
     case ARG_OFFSET:
       GTK_VALUE_LONG(*arg) = src->curoffset;
+      break;
+    case ARG_SIZE:
+      GTK_VALUE_LONG(*arg) = src->size;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;

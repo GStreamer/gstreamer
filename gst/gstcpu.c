@@ -55,7 +55,7 @@ void _gst_cpu_initialize(void)
 
 }
 
-guint32 gst_cpu_get_flags(void) 
+GstCPUFlags gst_cpu_get_flags(void) 
 {
   return _gst_cpu_flags;
 }

@@ -57,6 +57,7 @@ static void gst_thread_restore_thyself(GstElement *element,xmlNodePtr parent, GH
 static void gst_thread_signal_thread(GstThread *thread);
 static void gst_thread_create_plan_dummy(GstBin *bin);
 
+static void *gst_thread_main_loop(void *arg);
 
 static GstBin *parent_class = NULL;
 //static guint gst_thread_signals[LAST_SIGNAL] = { 0 };
@@ -253,7 +254,7 @@ static GstElementStateReturn gst_thread_change_state(GstElement *element) {
  * The main loop of the thread. The thread will iterate
  * while the state is GST_THREAD_STATE_SPINNING
  */
-void *gst_thread_main_loop(void *arg) {
+static void *gst_thread_main_loop(void *arg) {
   GstThread *thread = GST_THREAD(arg);
 
   gst_info("gstthread: thread \"%s\" is running with PID %d\n",
