@@ -52,7 +52,7 @@ static void	gst_stereo_get_property		(GObject *object, guint prop_id, GValue *va
 static void	gst_stereo_chain		(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_stereo_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_stereo_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_stereo_get_type(void) {
@@ -87,10 +87,10 @@ gst_stereo_class_init (GstStereoClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ACTIVE,
     g_param_spec_int("active","active","active",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_STEREO,
     g_param_spec_float("stereo","stereo","stereo",
-                       0.0,1.0,0.0,G_PARAM_READWRITE)); // CHECKME
+                       0.0,1.0,0.0,G_PARAM_READWRITE)); /* CHECKME */
 
   gobject_class->set_property = gst_stereo_set_property;
   gobject_class->get_property = gst_stereo_get_property;
@@ -126,13 +126,13 @@ gst_stereo_chain (GstPad *pad,GstBuffer *buf)
   g_return_if_fail(stereo != NULL);
   g_return_if_fail(GST_IS_STEREO(stereo));
 
-//  FIXME
-//  if (buf->meta)
-//    memcpy(&stereo->meta,buf->meta,sizeof(stereo->meta));
+/*  FIXME */
+/*  if (buf->meta) */
+/*    memcpy(&stereo->meta,buf->meta,sizeof(stereo->meta)); */
 
   if (stereo->active) {
 
-    //if (stereo->meta.channels == 2 && stereo->meta.format == AFMT_S16_LE) {
+    /*if (stereo->meta.channels == 2 && stereo->meta.format == AFMT_S16_LE) { */
       data = (gint16 *)GST_BUFFER_DATA(buf);
       samples = GST_BUFFER_SIZE(buf) / 2;
       mul = stereo->stereo;
@@ -155,7 +155,7 @@ gst_stereo_chain (GstPad *pad,GstBuffer *buf)
           tmp = 32767;
         data[i + 1] = tmp;
       }
-    //}
+    /*} */
   }
 
   gst_pad_push(stereo->srcpad,buf);
