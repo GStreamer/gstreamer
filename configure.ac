@@ -545,6 +545,7 @@ dnl *** raw1394 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_RAW1394, true)
 GST_CHECK_FEATURE(RAW1394, [raw1394 library], dv1394src, [
   GST_CHECK_LIBHEADER(RAW1394, raw1934, raw1934_get_handle,, libraw1394/raw1394.h, RAW1394_LIBS="-raw1394")
+  AC_SUBST(RAW1394_LIBS)
 ])
 
 dnl Check for librtp
@@ -1067,6 +1068,7 @@ ext/cdparanoia/Makefile
 ext/dvdread/Makefile
 ext/esd/Makefile
 ext/flac/Makefile
+ext/gnomevfs/Makefile
 ext/gsm/Makefile
 ext/hermes/Makefile
 ext/jpeg/Makefile
@@ -1074,6 +1076,8 @@ ext/lame/Makefile
 ext/mad/Makefile
 ext/mpeg2dec/Makefile
 ext/openquicktime/Makefile
+ext/raw1394/Makefile
+ext/rtp/Makefile
 ext/shout/Makefile
 ext/sdl/Makefile
 ext/vorbis/Makefile
