@@ -23,7 +23,7 @@ enum {
 };
 
 static GtkDrawingArea *parent_class = NULL;
-//static guint gst_status_area_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_status_area_signals[LAST_SIGNAL] = { 0 }; */
 
 GtkType 
 gst_status_area_get_type (void) 

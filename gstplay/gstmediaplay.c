@@ -58,7 +58,7 @@ static GtkTargetEntry target_table[] = {
 };
 
 static GtkObject *parent_class = NULL;
-//static guint gst_media_play_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_media_play_signals[LAST_SIGNAL] = { 0 }; */
 
 GtkType
 gst_media_play_get_type (void)
@@ -376,7 +376,7 @@ on_load_file_selected (GtkWidget *button,
 	gst_media_play_start_uri (play, file_name);
 	gdk_threads_enter ();
 
-	//gst_media_play_addto_playlist (play, file_name);
+	/* gst_media_play_addto_playlist (play, file_name); */
 	
 	g_free (data);
 }
@@ -661,7 +661,7 @@ gst_media_play_frame_displayed (GstPlay *play, GstMediaPlay *mplay)
 	size           = gst_play_get_media_size (play);
 	current_offset = gst_play_get_media_offset (play);
 
-	//g_print ("%lu %lu %lu %lu\n", current_time, total_time, size, current_offset);
+	/* g_print ("%lu %lu %lu %lu\n", current_time, total_time, size, current_offset); */
 
 	if (current_time != mplay->last_time) {
 		gdk_threads_enter ();

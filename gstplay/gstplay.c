@@ -171,7 +171,7 @@ gst_play_init (GstPlay *play)
   
 	priv->video_show = gst_elementfactory_make ("xvideosink", "show");
 	g_return_if_fail (priv->video_show != NULL);
-	//gtk_object_set (GTK_OBJECT (priv->video_element), "xv_enabled", FALSE, NULL);
+	/* gtk_object_set (GTK_OBJECT (priv->video_element), "xv_enabled", FALSE, NULL); */
 	g_signal_connect (G_OBJECT (priv->video_show), "frame_displayed",
 			  G_CALLBACK (gst_play_frame_displayed), play);
 	g_signal_connect (G_OBJECT (priv->video_show), "have_size",
@@ -329,7 +329,7 @@ gst_play_object_added (GstAutoplug* autoplug, GstObject *object, GstPlay *play)
 	if (GST_FLAG_IS_SET (object, GST_ELEMENT_NO_SEEK))
 		play->priv->can_seek = FALSE;
 
-	// first come first serve here...
+	/* first come first serve here... */
 	if (!play->priv->offset_element)
 		gst_play_object_introspect (object, "offset",
 					    &play->priv->offset_element);
@@ -390,7 +390,7 @@ gst_play_have_type (GstElement *sink, GstCaps *caps, GstPlay *play)
 						 NULL);
 
 	if (!new_element) {
-		// FIXME, signal a suitable error
+		/* FIXME, signal a suitable error */
 		return;
 	}
 
@@ -499,7 +499,7 @@ gst_play_realize (GtkWidget *widget)
 
 	g_return_if_fail (play != NULL);
 
-	//g_print ("realize\n");
+	/* g_print ("realize\n"); */
 
 	play->priv->video_widget = gtk_socket_new ();
 
@@ -508,12 +508,12 @@ gst_play_realize (GtkWidget *widget)
 	if (GTK_WIDGET_CLASS (parent_class)->realize)
 		GTK_WIDGET_CLASS (parent_class)->realize (widget);
 
-	//gtk_socket_steal (GTK_SOCKET (priv->video_widget),
-	//             gst_util_get_int_arg (GTK_OBJECT(priv->video_element), "xid"));
+	/* gtk_socket_steal (GTK_SOCKET (priv->video_widget), */
+	/*             gst_util_get_int_arg (GTK_OBJECT(priv->video_element), "xid")); */
 
-	//gtk_widget_realize (priv->video_widget);
-	//gtk_socket_steal (GTK_SOCKET (priv->video_widget),
-	//             gst_util_get_int_arg (GTK_OBJECT(priv->video_element), "xid"));
+	/* gtk_widget_realize (priv->video_widget); */
+	/* gtk_socket_steal (GTK_SOCKET (priv->video_widget), */
+	/*             gst_util_get_int_arg (GTK_OBJECT(priv->video_element), "xid")); */
 }
 
 void
