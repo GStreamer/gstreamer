@@ -90,3 +90,157 @@ check-recursive:
 	true
 installcheck-recursive:
 	true
+
+
+
+noinst_LTLIBRARIES = libavformat.la libavcodec.la
+
+if HAVE_CPU_I386
+defs_i386 = -DARCH_X86=1 -DHAVE_MMX=1
+else
+defs_i386 =
+endif
+
+if HAVE_CPU_PPC
+defs_powerpc = -DARCH_PPC=1
+else
+defs_powerpc = 
+endif
+
+defs = \
+ $(defs_i386) \
+ $(defs_powerpc) \
+ -DTUNECPU=generic \
+ -DHAVE_STRPTIME=1 \
+ -DHAVE_LRINTF=1 \
+ -DCONFIG_ENCODERS=1 \
+ -DCONFIG_DECODERS=1 \
+ -DCONFIG_PP=1 \
+ -DCONFIG_MPEGAUDIO_HP=1 \
+ -DCONFIG_HAVE_DLOPEN=1 \
+ -DCONFIG_HAVE_DLFCN=1 \
+ -DHAVE_MALLOC_H=1 \
+ -DHAVE_MEMALIGN=1 \
+ -DSIMPLE_IDCT=1 \
+ -DCONFIG_RISKY=1
+
+libavformat_la_SOURCES = \
+	ffmpeg/libavformat/utils.c \
+	ffmpeg/libavformat/cutils.c \
+	ffmpeg/libavformat/allformats.c \
+	ffmpeg/libavformat/mpeg.c \
+	ffmpeg/libavformat/mpegts.c \
+	ffmpeg/libavformat/mpegtsenc.c \
+	ffmpeg/libavformat/ffm.c \
+	ffmpeg/libavformat/crc.c \
+	ffmpeg/libavformat/img.c \
+	ffmpeg/libavformat/raw.c \
+	ffmpeg/libavformat/rm.c \
+	ffmpeg/libavformat/avienc.c \
+	ffmpeg/libavformat/avidec.c \
+	ffmpeg/libavformat/wav.c \
+	ffmpeg/libavformat/swf.c \
+	ffmpeg/libavformat/au.c \
+	ffmpeg/libavformat/gif.c \
+	ffmpeg/libavformat/mov.c \
+	ffmpeg/libavformat/mpjpeg.c \
+	ffmpeg/libavformat/dv.c \
+	ffmpeg/libavformat/yuv4mpeg.c \
+	ffmpeg/libavformat/4xm.c \
+	ffmpeg/libavformat/asf.c \
+	ffmpeg/libavformat/pnm.c \
+	ffmpeg/libavformat/yuv.c \
+	ffmpeg/libavformat/png.c \
+	ffmpeg/libavformat/jpeg.c \
+	ffmpeg/libavformat/gifdec.c \
+	ffmpeg/libavformat/avio.c \
+	ffmpeg/libavformat/aviobuf.c \
+	ffmpeg/libavformat/file.c  \
+	ffmpeg/libavformat/framehook.c 
+
+libavformat_la_LDFLAGS = -lm -lz
+libavformat_la_CFLAGS = $(defs) -Wall -I$(srcdir)/ffmpeg -I$(srcdir)/ffmpeg/libavformat \
+	-I$(srcdir)/ffmpeg/libavcodec -DHAVE_AV_CONFIG_H \
+	-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE
+
+
+if HAVE_CPU_I386
+sources_i386 = \
+	ffmpeg/libavcodec/i386/fdct_mmx.c \
+	ffmpeg/libavcodec/i386/cputest.c \
+	ffmpeg/libavcodec/i386/dsputil_mmx.c \
+	ffmpeg/libavcodec/i386/motion_est_mmx.c \
+	ffmpeg/libavcodec/i386/simple_idct_mmx.c \
+	ffmpeg/libavcodec/i386/idct_mmx.c \
+	ffmpeg/libavcodec/i386/mpegvideo_mmx.c \
+	ffmpeg/libavcodec/i386/fft_sse.c
+else
+sources_i386 = 
+endif
+
+if HAVE_CPU_PPC
+sources_powerpc = \
+	ffmpeg/libavcodec/ppc/dsputil_ppc.c \
+	ffmpeg/libavcodec/ppc/mpegvideo_ppc.c
+else
+sources_powerpc =
+endif
+
+libavcodec_la_DEFS = $(defs)
+libavcodec_la_CFLAGS = $(defs) -Wall -I$(srcdir)/ffmpeg -I$(srcdir)/ffmpeg/libavformat \
+	-I$(srcdir)/ffmpeg/libavcodec -DHAVE_AV_CONFIG_H \
+	-I$(srcdir)/ffmpeg/libavcodec/liba52 \
+	-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE
+libavcodec_la_LDFLAGS = -lm -lz
+libavcodec_la_SOURCES = \
+	ffmpeg/libavcodec/common.c \
+	ffmpeg/libavcodec/utils.c \
+	ffmpeg/libavcodec/mem.c \
+	ffmpeg/libavcodec/allcodecs.c \
+	ffmpeg/libavcodec/mpegvideo.c \
+	ffmpeg/libavcodec/jrevdct.c \
+	ffmpeg/libavcodec/jfdctfst.c \
+	ffmpeg/libavcodec/jfdctint.c \
+	ffmpeg/libavcodec/mpegaudio.c \
+	ffmpeg/libavcodec/ac3enc.c \
+	ffmpeg/libavcodec/mjpeg.c \
+	ffmpeg/libavcodec/resample.c \
+	ffmpeg/libavcodec/dsputil.c \
+	ffmpeg/libavcodec/motion_est.c \
+	ffmpeg/libavcodec/imgconvert.c \
+	ffmpeg/libavcodec/imgresample.c \
+	ffmpeg/libavcodec/mpeg12.c \
+	ffmpeg/libavcodec/mpegaudiodec.c \
+	ffmpeg/libavcodec/pcm.c \
+	ffmpeg/libavcodec/simple_idct.c \
+	ffmpeg/libavcodec/ratecontrol.c \
+	ffmpeg/libavcodec/adpcm.c \
+	ffmpeg/libavcodec/eval.c \
+	ffmpeg/libavcodec/dv.c \
+	ffmpeg/libavcodec/error_resilience.c \
+	ffmpeg/libavcodec/fft.c \
+	ffmpeg/libavcodec/mdct.c \
+	ffmpeg/libavcodec/mace.c \
+	ffmpeg/libavcodec/huffyuv.c \
+	ffmpeg/libavcodec/cyuv.c \
+	ffmpeg/libavcodec/opts.c \
+	ffmpeg/libavcodec/raw.c \
+	ffmpeg/libavcodec/h264.c \
+	ffmpeg/libavcodec/golomb.c \
+	ffmpeg/libavcodec/vp3.c \
+	ffmpeg/libavcodec/asv1.c \
+	ffmpeg/libavcodec/4xm.c \
+	ffmpeg/libavcodec/cabac.c \
+	ffmpeg/libavcodec/ffv1.c \
+	ffmpeg/libavcodec/ra144.c \
+	ffmpeg/libavcodec/ra288.c \
+	ffmpeg/libavcodec/h263.c \
+	ffmpeg/libavcodec/msmpeg4.c \
+	ffmpeg/libavcodec/h263dec.c \
+	ffmpeg/libavcodec/svq1.c \
+	ffmpeg/libavcodec/rv10.c \
+	ffmpeg/libavcodec/wmadec.c \
+	ffmpeg/libavcodec/indeo3.c \
+	$(sources_i386) \
+	$(sources_powerpc)
+
