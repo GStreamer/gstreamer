@@ -861,7 +861,7 @@ print_element_list (void)
 
         factory = GST_TYPE_FIND_FACTORY (feature);
         if (factory->extensions) {
-	  guint i;
+	  guint i = 0;
           g_print ("%s type: ", plugin->name);
 	  while (factory->extensions[i]) {
 	    g_print ("%s%s", i > 0 ? ", " : "", factory->extensions[i]);
@@ -954,7 +954,7 @@ print_plugin_info (GstPlugin *plugin)
 
       factory = GST_TYPE_FIND_FACTORY (feature);
       if (factory->extensions) {
-	guint i;
+	guint i = 0;
 	g_print ("%s type: ", plugin->name);
 	while (factory->extensions[i]) {
 	  g_print ("%s%s", i > 0 ? ", " : "", factory->extensions[i]);
