@@ -1,3 +1,7 @@
+2004-06-21  Johan Dahlin  <johan@gnome.org>
+
+	* gst/Makefile.am (EXTRA_DIST): Add ltihooks.py
+
 2004-06-18  Johan Dahlin  <johan@gnome.org>
 
 	* testsuite/runtests.py (dir): Change to srcdir before running the

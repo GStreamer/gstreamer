@@ -28,7 +28,7 @@ defsdir = $(pkgdatadir)/2.0/defs
 noinst_HEADERS = common.h
 
 INCLUDES = $(PYTHON_INCLUDES)
-EXTRA_DIST = $(defs_DATA) arg-types.py
+EXTRA_DIST = $(defs_DATA) common.h arg-types.py ltihooks.py
 PYGTK_DEFSDIR = @PYGTK_DEFSDIR@
 
 # GStreamer bindings
@@ -37,7 +37,10 @@ _gst_la_LIBADD = $(common_libadd)
 _gst_la_LDFLAGS = $(common_ldflags) -export-symbols-regex init_gst
 _gst_la_SOURCES = gst-argtypes.c gstmodule.c 
 nodist__gst_la_SOURCES = gst.c
-GST_OVERRIDES = gst.override gstbin.override gstbuffer.override gstpad-handlers.override
+GST_OVERRIDES = gst.override \
+		gstbin.override \
+		gstbuffer.override \
+                gstpad-handlers.override
 GST_DEFS = gst.defs gst-types.defs
 CLEANFILES = gst.c
 EXTRA_DIST += $(GST_DEFS) $(GST_OVERRIDES)
