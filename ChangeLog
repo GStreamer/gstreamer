@@ -1,3 +1,13 @@
+2004-02-09  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/gstdata.c: (gst_data_ref): Adding a categorized debug on data_ref
+	because data_unref has one and i prefer the debug to be symetric.
+	* gst/gstqueue.c: (gst_queue_locked_flush): Fix a huge memleak. Buffers
+	were refed when added to the queue and unrefed only once when the queue
+	was flushed. Now the flush handler unref the buffers two times : first
+	unref for the ref added when pushing in the queue's tail and second
+	unref to destroy the flushed buffer.
+
 2004-02-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/pwg/building-boiler.xml: fix cvs checkout documentation

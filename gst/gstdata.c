@@ -187,6 +187,9 @@ gst_data_ref (GstData *data)
   g_return_val_if_fail (data != NULL, NULL);
   g_return_val_if_fail (GST_DATA_REFCOUNT_VALUE(data) > 0, NULL);
 
+  GST_CAT_LOG (GST_CAT_BUFFER, "ref data %p, count before ref is %d", 
+               data, GST_DATA_REFCOUNT_VALUE (data));
+  
   gst_atomic_int_inc (&data->refcount);
 
   return data;
