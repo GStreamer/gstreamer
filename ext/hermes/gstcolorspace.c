@@ -404,7 +404,6 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
   goto done;
 
 success:
-  space->pool = gst_pad_get_bufferpool (space->srcpad);
 done:
 
   return res;
@@ -501,6 +500,9 @@ gst_colorspace_chain (GstPad *pad,GstBuffer *buf)
     size = space->width * space->height;
     dest_bytes = ((space->destbpp+7)/8);
     src_bytes = ((space->srcbpp+7)/8);
+
+    if (!space->pool)
+      space->pool = gst_pad_get_bufferpool (space->srcpad);
 
     if (space->pool) {
       outbuf = gst_buffer_new_from_pool (space->pool, 0, 0);
