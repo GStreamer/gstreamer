@@ -75,6 +75,7 @@ static GstStaticPadTemplate mikmod_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) { 8000, 11025, 22050, 44100 }, "
         "channels = (int) [ 1, 2 ]; "
         "audio/x-raw-int, "
+        "endianness = (int) BYTE_ORDER, "
         "signed = (boolean) FALSE, "
         "width = (int) 8, "
         "depth = (int) 8, "
