@@ -1,3 +1,8 @@
+2004-08-19  Jan Schmidt  <thaytan@mad.scientist.com>
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_init), (gst_udpsrc_get):
+	* gst/udp/gstudpsrc.h:
+	  Don't call gst_pad_push in a get function. Fixes #150449
+
 2004-08-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstfdset.c: (gst_fdset_free), (gst_fdset_set_mode),
