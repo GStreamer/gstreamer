@@ -21,7 +21,7 @@
 #ifndef __GST_SDLVIDEOSINK_H__
 #define __GST_SDLVIDEOSINK_H__
 
-#include <gst/gst.h>
+#include <gst/video/gstvideosink.h>
 
 #include <SDL.h>
 
@@ -51,19 +51,11 @@ typedef struct _GstSDLVideoSink GstSDLVideoSink;
 typedef struct _GstSDLVideoSinkClass GstSDLVideoSinkClass;
 
 struct _GstSDLVideoSink {
-  GstElement element;
-
-  GstPad *sinkpad;
+  GstVideoSink videosink;
 
   gulong format;
-  gint window_width, window_height; /* the size of the SDL window */
   gint image_width, image_height;   /* the size of the incoming YUV stream */
   gint window_id;
-
-  gint frames_displayed;
-  guint64 frame_time;
-
-  GstClock *clock;
 
   GstCaps *capslist;
 
@@ -74,11 +66,8 @@ struct _GstSDLVideoSink {
 };
 
 struct _GstSDLVideoSinkClass {
-  GstElementClass parent_class;
+  GstVideoSinkClass parent_class;
 
-  /* signals */
-  void (*frame_displayed) (GstElement *element);
-  void (*have_size) 	  (GstElement *element, guint width, guint height);
 };
 
 GType gst_sdlsink_get_type(void);

@@ -41,29 +41,8 @@ static GstElementDetails gst_sdlvideosink_details = {
   "(C) 2001",
 };
 
-
-/* sdlvideosink signals and args */
-enum {
-  SIGNAL_FRAME_DISPLAYED,
-  SIGNAL_HAVE_SIZE,
-  LAST_SIGNAL
-};
-
-
-enum {
-  ARG_0,
-  ARG_WIDTH,
-  ARG_HEIGHT,
-  ARG_XID,
-  ARG_FRAMES_DISPLAYED,
-  ARG_FRAME_TIME,
-};
-
-
 static void                  gst_sdlvideosink_class_init   (GstSDLVideoSinkClass *klass);
 static void                  gst_sdlvideosink_init         (GstSDLVideoSink      *sdlvideosink);
-
-static void 		     gst_sdlvideosink_set_clock    (GstElement *element, GstClock *clock);
 
 static gboolean              gst_sdlvideosink_create       (GstSDLVideoSink      *sdlvideosink,
                                                             gboolean              showlogo);
@@ -87,8 +66,6 @@ static GstCaps *capslist = NULL;
 static GstPadTemplate *sink_template;
 
 static GstElementClass *parent_class = NULL;
-static guint gst_sdlvideosink_signals[LAST_SIGNAL] = { 0 };
-
 
 GType
 gst_sdlvideosink_get_type (void)
@@ -97,17 +74,18 @@ gst_sdlvideosink_get_type (void)
 
   if (!sdlvideosink_type) {
     static const GTypeInfo sdlvideosink_info = {
-      sizeof(GstSDLVideoSinkClass),      NULL,
+      sizeof (GstSDLVideoSinkClass),      NULL,
       NULL,
-      (GClassInitFunc)gst_sdlvideosink_class_init,
+      (GClassInitFunc) gst_sdlvideosink_class_init,
       NULL,
       NULL,
-      sizeof(GstSDLVideoSink),
+      sizeof (GstSDLVideoSink),
       0,
-      (GInstanceInitFunc)gst_sdlvideosink_init,
+      (GInstanceInitFunc) gst_sdlvideosink_init,
     };
-    sdlvideosink_type = g_type_register_static(GST_TYPE_ELEMENT,
-      "GstSDLVideoSink", &sdlvideosink_info, 0);
+    sdlvideosink_type = g_type_register_static(GST_TYPE_VIDEOSINK,
+                                               "GstSDLVideoSink",
+                                               &sdlvideosink_info, 0);
   }
   return sdlvideosink_type;
 }
@@ -118,70 +96,36 @@ gst_sdlvideosink_class_init (GstSDLVideoSinkClass *klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstVideoSinkClass *gstvs_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
-
+  gobject_class = (GObjectClass*) klass;
+  gstelement_class = (GstElementClass*) klass;
+  gstvs_class = (GstVideoSinkClass*) klass;
+  
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_WIDTH,
-    g_param_spec_int("width","Width","Width of the video window",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HEIGHT,
-    g_param_spec_int("height","Height","Height of the video window",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_XID,
-    g_param_spec_int ("xid", "Xid", "The Xid of the window",
-                      G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAMES_DISPLAYED,
-    g_param_spec_int ("frames_displayed", "Frames Displayed", "The number of frames displayed so far",
-                      G_MININT,G_MAXINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAME_TIME,
-    g_param_spec_int ("frame_time", "Frame time", "The interval between frames",
-                      G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
 
   gobject_class->set_property = gst_sdlvideosink_set_property;
   gobject_class->get_property = gst_sdlvideosink_get_property;
 
-  gst_sdlvideosink_signals[SIGNAL_FRAME_DISPLAYED] =
-    g_signal_new ("frame_displayed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                   G_STRUCT_OFFSET (GstSDLVideoSinkClass, frame_displayed), NULL, NULL,
-                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-  gst_sdlvideosink_signals[SIGNAL_HAVE_SIZE] =
-    g_signal_new ("have_size", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                   G_STRUCT_OFFSET (GstSDLVideoSinkClass, have_size), NULL, NULL,
-                   gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2,
-		   G_TYPE_UINT, G_TYPE_UINT);
-
-
   gstelement_class->change_state = gst_sdlvideosink_change_state;
-  gstelement_class->set_clock    = gst_sdlvideosink_set_clock;
-}
-
-
-static void
-gst_sdlvideosink_set_clock (GstElement *element, GstClock *clock)
-{
-  GstSDLVideoSink *sdlvideosink;
-
-  sdlvideosink = GST_SDLVIDEOSINK (element);
   
-  sdlvideosink->clock = clock;
+  /*gstvs_class->set_video_out = gst_sdlvideosink_set_video_out;
+  gstvs_class->push_ui_event = gst_sdlvideosink_push_ui_event;
+  gstvs_class->set_geometry = gst_sdlvideosink_set_geometry;*/
 }
 
 static void
 gst_sdlvideosink_init (GstSDLVideoSink *sdlvideosink)
 {
-  sdlvideosink->sinkpad = gst_pad_new_from_template (sink_template, "sink");
-  gst_element_add_pad (GST_ELEMENT (sdlvideosink), sdlvideosink->sinkpad);
+  GST_VIDEOSINK_PAD (sdlvideosink) = gst_pad_new_from_template (sink_template,
+                                                               "sink");
+  gst_element_add_pad (GST_ELEMENT (sdlvideosink),
+                       GST_VIDEOSINK_PAD (sdlvideosink));
 
-  gst_pad_set_chain_function (sdlvideosink->sinkpad, gst_sdlvideosink_chain);
-  gst_pad_set_link_function (sdlvideosink->sinkpad, gst_sdlvideosink_sinkconnect);
-
-  sdlvideosink->window_width = -1;
-  sdlvideosink->window_height = -1;
+  gst_pad_set_chain_function (GST_VIDEOSINK_PAD (sdlvideosink),
+                              gst_sdlvideosink_chain);
+  gst_pad_set_link_function (GST_VIDEOSINK_PAD (sdlvideosink),
+                             gst_sdlvideosink_sinkconnect);
 
   sdlvideosink->image_width = -1;
   sdlvideosink->image_height = -1;
@@ -192,8 +136,6 @@ gst_sdlvideosink_init (GstSDLVideoSink *sdlvideosink)
   sdlvideosink->window_id = -1; /* means "don't use" */
 
   sdlvideosink->capslist = capslist;
-
-  sdlvideosink->clock = NULL;
 
   GST_FLAG_SET(sdlvideosink, GST_ELEMENT_THREAD_SUGGESTED);
   GST_FLAG_SET(sdlvideosink, GST_ELEMENT_EVENT_AWARE);
@@ -266,42 +208,42 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink, gboolean showlogo)
   guint8 *sbuffer;
   gint i;
 
-  if (sdlvideosink->window_height <= 0)
-    sdlvideosink->window_height = sdlvideosink->image_height;
-  if (sdlvideosink->window_width <= 0)
-    sdlvideosink->window_width = sdlvideosink->image_width;
+  if (GST_VIDEOSINK_HEIGHT (sdlvideosink) <= 0)
+    GST_VIDEOSINK_HEIGHT (sdlvideosink) = sdlvideosink->image_height;
+  if (GST_VIDEOSINK_WIDTH (sdlvideosink) <= 0)
+    GST_VIDEOSINK_WIDTH (sdlvideosink) = sdlvideosink->image_width;
 
   /* create a SDL window of the size requested by the user */
-  sdlvideosink->screen = SDL_SetVideoMode(sdlvideosink->window_width,
-    sdlvideosink->window_height, 0, SDL_SWSURFACE | SDL_RESIZABLE);
+  sdlvideosink->screen = SDL_SetVideoMode(GST_VIDEOSINK_WIDTH (sdlvideosink),
+    GST_VIDEOSINK_HEIGHT (sdlvideosink), 0, SDL_SWSURFACE | SDL_RESIZABLE);
   if (showlogo) /* workaround for SDL bug - do it twice */
-    sdlvideosink->screen = SDL_SetVideoMode(sdlvideosink->window_width,
-      sdlvideosink->window_height, 0, SDL_SWSURFACE | SDL_RESIZABLE);
+    sdlvideosink->screen = SDL_SetVideoMode(GST_VIDEOSINK_WIDTH (sdlvideosink),
+      GST_VIDEOSINK_HEIGHT (sdlvideosink), 0, SDL_SWSURFACE | SDL_RESIZABLE);
   if ( sdlvideosink->screen == NULL)
   {
     gst_element_error(GST_ELEMENT(sdlvideosink),
-      "SDL: Couldn't set %dx%d: %s", sdlvideosink->window_width,
-      sdlvideosink->window_height, SDL_GetError());
+      "SDL: Couldn't set %dx%d: %s", GST_VIDEOSINK_WIDTH (sdlvideosink),
+      GST_VIDEOSINK_HEIGHT (sdlvideosink), SDL_GetError());
     return FALSE;
   }
 
   /* clean possible old YUV overlays (...) and create a new one */
   if (sdlvideosink->yuv_overlay)
     SDL_FreeYUVOverlay(sdlvideosink->yuv_overlay);
-  sdlvideosink->yuv_overlay = SDL_CreateYUVOverlay(sdlvideosink->image_width,
-    sdlvideosink->image_height, sdlvideosink->format, sdlvideosink->screen);
+  sdlvideosink->yuv_overlay = SDL_CreateYUVOverlay(GST_VIDEOSINK_WIDTH (sdlvideosink),
+    GST_VIDEOSINK_WIDTH (sdlvideosink), sdlvideosink->format, sdlvideosink->screen);
   if ( sdlvideosink->yuv_overlay == NULL )
   {
     gst_element_error(GST_ELEMENT(sdlvideosink),
       "SDL: Couldn't create SDL_yuv_overlay (%dx%d \'" GST_FOURCC_FORMAT "\'): %s",
-      sdlvideosink->image_width, sdlvideosink->image_height,
+      GST_VIDEOSINK_WIDTH (sdlvideosink), GST_VIDEOSINK_HEIGHT (sdlvideosink),
       GST_FOURCC_ARGS(sdlvideosink->format), SDL_GetError());
     return FALSE;
   }
   else
   {
     g_message("Using a %dx%d %dbpp SDL screen with a %dx%d \'" GST_FOURCC_FORMAT "\' YUV overlay\n",
-      sdlvideosink->window_width, sdlvideosink->window_height,
+      GST_VIDEOSINK_WIDTH (sdlvideosink), GST_VIDEOSINK_HEIGHT (sdlvideosink),
       sdlvideosink->screen->format->BitsPerPixel,
       sdlvideosink->image_width, sdlvideosink->image_height,
       GST_FOURCC_ARGS(sdlvideosink->format));
@@ -309,8 +251,8 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink, gboolean showlogo)
 
   sdlvideosink->rect.x = 0;
   sdlvideosink->rect.y = 0;
-  sdlvideosink->rect.w = sdlvideosink->window_width;
-  sdlvideosink->rect.h = sdlvideosink->window_height;
+  sdlvideosink->rect.w = GST_VIDEOSINK_WIDTH (sdlvideosink);
+  sdlvideosink->rect.h = GST_VIDEOSINK_HEIGHT (sdlvideosink);
 
   /* make stupid SDL *not* react on SIGINT */
   signal(SIGINT, SIG_DFL);
@@ -345,11 +287,10 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink, gboolean showlogo)
     SDL_DisplayYUVOverlay(sdlvideosink->yuv_overlay, &(sdlvideosink->rect));
 
   GST_DEBUG ("sdlvideosink: setting %08lx (" GST_FOURCC_FORMAT ")", sdlvideosink->format, GST_FOURCC_ARGS(sdlvideosink->format));
-  
-  /* TODO: is this the width of the input image stream or of the widget? */
-  g_signal_emit (G_OBJECT (sdlvideosink), gst_sdlvideosink_signals[SIGNAL_HAVE_SIZE], 0,
-		  sdlvideosink->window_width, sdlvideosink->window_height);
 
+  gst_video_sink_got_video_size (GST_VIDEOSINK (sdlvideosink),
+                                 GST_VIDEOSINK_WIDTH (sdlvideosink),
+                                 GST_VIDEOSINK_HEIGHT (sdlvideosink));
   return TRUE;
 }
 
@@ -416,8 +357,8 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
     {
       case SDL_VIDEORESIZE:
         /* create a SDL window of the size requested by the user */
-        sdlvideosink->window_width = sdl_event.resize.w;
-        sdlvideosink->window_height = sdl_event.resize.h;
+        GST_VIDEOSINK_WIDTH (sdlvideosink) = sdl_event.resize.w;
+        GST_VIDEOSINK_HEIGHT (sdlvideosink) = sdl_event.resize.h;
         gst_sdlvideosink_create(sdlvideosink, FALSE);
         break;
     }
@@ -442,8 +383,10 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
   }
 
   GST_DEBUG ("videosink: clock wait: %" G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP(buf));
-  if (sdlvideosink->clock) {
-    GstClockID id = gst_clock_new_single_shot_id (sdlvideosink->clock, GST_BUFFER_TIMESTAMP (buf));
+  if (GST_VIDEOSINK_CLOCK (sdlvideosink)) {
+    GstClockID id = gst_clock_new_single_shot_id (
+                      GST_VIDEOSINK_CLOCK (sdlvideosink),
+                      GST_BUFFER_TIMESTAMP (buf));
 
     gst_element_clock_wait (GST_ELEMENT (sdlvideosink), id, NULL);
     gst_clock_id_free (id);
@@ -478,7 +421,7 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
     sdlvideosink->rect.x, sdlvideosink->rect.y,
     sdlvideosink->rect.w, sdlvideosink->rect.h);
 
-  g_signal_emit(G_OBJECT(sdlvideosink),gst_sdlvideosink_signals[SIGNAL_FRAME_DISPLAYED],0);
+  gst_video_sink_frame_displayed (GST_VIDEOSINK (sdlvideosink));
 
   gst_buffer_unref(buf);
 }
@@ -495,19 +438,6 @@ gst_sdlvideosink_set_property (GObject *object, guint prop_id, const GValue *val
 
   switch (prop_id)
   {
-    case ARG_WIDTH:
-      sdlvideosink->window_width = g_value_get_int(value);
-      if (sdlvideosink->yuv_overlay)
-        gst_sdlvideosink_create(sdlvideosink, FALSE);
-      break;
-    case ARG_HEIGHT:
-      sdlvideosink->window_height = g_value_get_int(value);
-      if (sdlvideosink->yuv_overlay)
-        gst_sdlvideosink_create(sdlvideosink, FALSE);
-      break;
-    case ARG_XID:
-      sdlvideosink->window_id = g_value_get_int(value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -525,18 +455,6 @@ gst_sdlvideosink_get_property (GObject *object, guint prop_id, GValue *value, GP
   sdlvideosink = GST_SDLVIDEOSINK(object);
 
   switch (prop_id) {
-    case ARG_WIDTH:
-      g_value_set_int(value, sdlvideosink->window_width);
-      break;
-    case ARG_HEIGHT:
-      g_value_set_int(value, sdlvideosink->window_height);
-      break;
-    case ARG_FRAMES_DISPLAYED:
-      g_value_set_int (value, sdlvideosink->frames_displayed);
-      break;
-    case ARG_FRAME_TIME:
-      g_value_set_int (value, sdlvideosink->frame_time/1000000);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -601,6 +519,10 @@ plugin_init (GModule *module, GstPlugin *plugin)
                        GST_MAKE_FOURCC('U','Y','V','Y')
                      };
 
+  /* Loading the library containing GstVideoSink, our parent object */
+  if (!gst_library_load ("gstvideo"))
+    return FALSE;
+                     
   /* create an elementfactory for the sdlvideosink element */
   factory = gst_element_factory_new("sdlvideosink",GST_TYPE_SDLVIDEOSINK,
                                    &gst_sdlvideosink_details);
