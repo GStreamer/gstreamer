@@ -1,3 +1,10 @@
+2004-06-14  Wim Taymans  <wim@fluendo.com>
+
+	* gst/ffmpegcolorspace/imgconvert.c: (img_convert):
+	Patch 1.3 broke the ordering of the colorspace info and
+	made the plugin basically work by coincidence, reodered
+	the info.
+
 2004-06-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/lame/gstlame.c:
