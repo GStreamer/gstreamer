@@ -27,19 +27,21 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_plugin_load("ac3parse");
     gst_plugin_load("ac3dec");
     gst_plugin_load("audioscale");
+    gst_plugin_load("mpegaudio");
     // construct internal pipeline elements
     parse_audio = gst_elementfactory_make("ac3parse","parse_audio");
     g_return_if_fail(parse_audio != NULL);
-    gtk_object_set(GTK_OBJECT(parse_audio),"skip", 0, NULL);
+    gtk_object_set(GTK_OBJECT(parse_audio),"skip", 20, NULL);
     decode = gst_elementfactory_make("ac3dec","decode_audio");
     g_return_if_fail(decode != NULL);
     audio_resample = gst_elementfactory_make("audioscale","audioscale");
     g_return_if_fail(audio_resample != NULL);
     gtk_object_set(GTK_OBJECT(audio_resample),"frequency", 44100, NULL);
-    audio_encode = gst_elementfactory_make("pipefilter","audio_encode");
+
+    audio_encode = gst_elementfactory_make("mpegaudio","audio_encode");
+    //audio_encode = gst_elementfactory_make("pipefilter","audio_encode");
     g_return_if_fail(audio_encode != NULL);
-    gtk_object_set(GTK_OBJECT(audio_encode),"command",
-         "lame -x - -", NULL);
+    //gtk_object_set(GTK_OBJECT(audio_encode),"command", "lame -x - -", NULL);
 
     // create the thread and pack stuff into it
     audio_thread = gst_thread_new("audio_thread");
@@ -139,7 +141,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     g_return_if_fail(decode_video != NULL);
     videoscale = gst_elementfactory_make("videoscale","videoscale");
     g_return_if_fail(videoscale != NULL);
-    gtk_object_set(GTK_OBJECT(videoscale),"width",352, "height", 240,NULL);
+    gtk_object_set(GTK_OBJECT(videoscale),"width",352, "height", 288,NULL);
     median = gst_elementfactory_make("median","median");
     g_return_if_fail(median != NULL);
     gtk_object_set(GTK_OBJECT(median),"filtersize",9,NULL);
@@ -149,7 +151,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gtk_object_set(GTK_OBJECT(smooth),"tolerance",9,NULL);
     encode = gst_elementfactory_make("mpeg2enc","encode");
     g_return_if_fail(encode != NULL);
-    gtk_object_set(GTK_OBJECT(encode),"frames_per_second",29.97,NULL);
+    gtk_object_set(GTK_OBJECT(encode),"frames_per_second",25.0,NULL);
     //encode = gst_elementfactory_make("mpeg1encoder","encode");
     //gtk_object_set(GTK_OBJECT(show),"width",640, "height", 480,NULL);
 

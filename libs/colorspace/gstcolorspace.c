@@ -42,6 +42,7 @@ GstColorSpace *gst_colorspace_new(int width, int height, GstColorSpaceType srcsp
   new->srcspace = srcspace;
   new->destspace = destspace;
   new->visual = destvisual;
+  new->color_tables = NULL;
   new->convert = NULL;
 
   DEBUG("gst_colorspace: new\n");
