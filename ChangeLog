@@ -1,3 +1,17 @@
+2004-03-10  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/divx/gstdivxdec.c:
+	  Downgrade priority. We prefer ffdec_mpeg4.
+	* ext/faad/gstfaad.c: (gst_faad_srcgetcaps), (gst_faad_srcconnect),
+	(gst_faad_chain), (gst_faad_change_state):
+	  Fix capsnego. Doesn't work for some sounds because we don't have
+	  a 5:1 to stereo element.
+	* ext/xvid/gstxvid.c: (plugin_init):
+	  Add priority.
+	* sys/oss/gstosssink.c: (gst_osssink_init), (gst_osssink_chain),
+	(gst_osssink_change_state):
+	  Add discont handling.
+
 2004-03-09  Colin Walters  <walters@verbum.org>
 
 	* gst/audioconvert/gstaudioconvert.c: Fix typo in width 8
