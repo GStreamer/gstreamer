@@ -58,7 +58,12 @@ struct _cothread_context
   int current;
   unsigned long stack_top;
   GHashTable *data;
+  int pid;
 };
+
+/* Disabling this define allows you to shut off a few checks in
+ * cothread_switch.  This likely will speed things up fractionally */
+#define COTHREAD_PARANOID
 
 
 /* this _cothread_ctx_key is used as a GThread key to the thread's context
@@ -68,9 +73,23 @@ struct _cothread_context
  */
 static GPrivate *_cothread_ctx_key;
 
-/* Disabling this define allows you to shut off a few checks in
- * cothread_switch.  This likely will speed things up fractionally */
-/* #define COTHREAD_PARANOID */
+/*
+ * This should only after context init, since we do checking.
+ */
+static cothread_context *
+cothread_get_current_context (void)
+{
+  cothread_context *ctx;
+
+  ctx = g_private_get (_cothread_ctx_key);
+  g_assert(ctx);
+
+#ifdef COTHREAD_PARANOID
+  g_assert (ctx->pid == getpid());
+#endif
+
+  return ctx;
+}
 
 /**
  * cothread_context_init:
@@ -103,6 +122,7 @@ cothread_context_init (void)
   ctx->ncothreads = 1;
   ctx->current = 0;
   ctx->data = g_hash_table_new (g_str_hash, g_str_equal);
+  ctx->pid = getpid();
 
   GST_INFO (GST_CAT_COTHREADS, "initializing cothreads");
 
@@ -443,7 +463,7 @@ cothread_main (cothread_context * ctx)
 cothread_state *
 cothread_current_main (void)
 {
-  cothread_context *ctx = g_private_get (_cothread_ctx_key);
+  cothread_context *ctx = cothread_get_current_context();
 
   return ctx->cothreads[0];
 }
@@ -458,7 +478,7 @@ cothread_current_main (void)
 cothread_state *
 cothread_current (void)
 {
-  cothread_context *ctx = g_private_get (_cothread_ctx_key);
+  cothread_context *ctx = cothread_get_current_context();
 
   return ctx->cothreads[ctx->current];
 }
@@ -466,7 +486,7 @@ cothread_current (void)
 static void
 cothread_stub (void)
 {
-  cothread_context *ctx = g_private_get (_cothread_ctx_key);
+  cothread_context *ctx = cothread_get_current_context();
   register cothread_state *thread = ctx->cothreads[ctx->current];
 
   GST_DEBUG_ENTER ("");
@@ -493,7 +513,7 @@ int cothread_getcurrent (void) G_GNUC_NO_INSTRUMENT;
 int
 cothread_getcurrent (void)
 {
-  cothread_context *ctx = g_private_get (_cothread_ctx_key);
+  cothread_context *ctx = cothread_get_current_context();
 
   if (!ctx)
     return -1;
@@ -524,7 +544,7 @@ cothread_set_private (cothread_state *thread, gpointer data)
 void
 cothread_context_set_data (cothread_state *thread, gchar *key, gpointer data)
 {
-  cothread_context *ctx = g_private_get (_cothread_ctx_key);
+  cothread_context *ctx = cothread_get_current_context();
 
   g_hash_table_insert (ctx->data, key, data);
 }
@@ -555,7 +575,7 @@ cothread_get_private (cothread_state *thread)
 gpointer
 cothread_context_get_data (cothread_state * thread, gchar * key)
 {
-  cothread_context *ctx = g_private_get (_cothread_ctx_key);
+  cothread_context *ctx = cothread_get_current_context();
 
   return g_hash_table_lookup (ctx->data, key);
 }
@@ -632,7 +652,7 @@ cothread_switch (cothread_state * thread)
   ctx = thread->ctx;
 
   /* paranoia check to make sure we're in the right thread */
-  current_ctx = g_private_get(_cothread_ctx_key);
+  current_ctx = cothread_get_current_context();
   g_assert (ctx == current_ctx);
 
 #ifdef COTHREAD_PARANOID
