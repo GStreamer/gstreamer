@@ -25,7 +25,11 @@
 #include <config.h>
 #include <gst/gst.h>
 
+#ifdef GSM_HEADER_IN_SUBDIR
+#include <gsm/gsm.h>
+#else
 #include <gsm.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
