@@ -30,11 +30,8 @@
 static GstElementDetails deinterlace_details = {
   "Deinterlace",
   "Filter/Video",
-  "LGPL",
   "Deinterlace video",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001",
+  "Wim Taymans <wim.taymans@chello.be>"
 };
 
 
@@ -82,6 +79,7 @@ GST_PAD_TEMPLATE_FACTORY (deinterlace_sink_factory,
 
 static GType 		gst_deinterlace_get_type		(void);
 
+static void             gst_deinterlace_base_init               (gpointer g_class);
 static void		gst_deinterlace_class_init		(GstDeInterlaceClass *klass);
 static void		gst_deinterlace_init			(GstDeInterlace *filter);
 
@@ -101,7 +99,8 @@ gst_deinterlace_get_type(void) {
 
   if (!deinterlace_type) {
     static const GTypeInfo deinterlace_info = {
-      sizeof(GstDeInterlaceClass),      NULL,
+      sizeof(GstDeInterlaceClass),      
+      gst_deinterlace_base_init,
       NULL,
       (GClassInitFunc)gst_deinterlace_class_init,
       NULL,
@@ -113,6 +112,19 @@ gst_deinterlace_get_type(void) {
     deinterlace_type = g_type_register_static(GST_TYPE_ELEMENT, "GstDeInterlace", &deinterlace_info, 0);
   }
   return deinterlace_type;
+}
+
+static void
+gst_deinterlace_base_init (gpointer g_class)
+{ 
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, 
+		  GST_PAD_TEMPLATE_GET (deinterlace_src_factory));
+  gst_element_class_add_pad_template (element_class, 
+		  GST_PAD_TEMPLATE_GET (deinterlace_sink_factory));
+
+  gst_element_class_set_details (element_class, &deinterlace_details);
 }
 
 static void
@@ -358,27 +370,23 @@ gst_deinterlace_get_property (GObject *object, guint prop_id, GValue *value, GPa
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("deinterlace",GST_TYPE_DEINTERLACE,
-                                   &deinterlace_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-  
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (deinterlace_src_factory));
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (deinterlace_sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "deinterlace", GST_RANK_NONE, gst_deinterlace_get_type()))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "deinterlace",
-  plugin_init
-};
+  "Deinterlace video",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN  
+);
