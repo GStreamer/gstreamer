@@ -1,5 +1,25 @@
 2004-01-08  David Schleef  <ds@schleef.org>
 
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_connect):
+	Fix pad_link function to handle formats that ffmpeg returns
+	as multiple caps structures.
+	* gst/videofilter/gstvideofilter.c: (gst_videofilter_chain):
+	Only complain if source buffer is _smaller_ than expected.
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_init),
+	(gst_videoscale_handle_src_event): Resize navigation events
+	when passing them upstream.
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/videotestsrc/gstvideotestsrc.h:
+	* gst/videotestsrc/videotestsrc.c:
+	* gst/videotestsrc/videotestsrc.h:
+	Rewrite many of the buffer painting functions to handle odd
+	sizes (for many formats, size%4!=0 or size%8!=0).  Most have
+	been verified to work with my video card.
+	* testsuite/gst-lint:  Add check for elements calling
+	gst_pad_get_caps() instead of gst_pad_get_allowed_caps().
+
+2004-01-08  David Schleef  <ds@schleef.org>
+
 	* gst/videodrop/gstvideodrop.c: (gst_videodrop_getcaps),
 	(gst_videodrop_link), (gst_videodrop_init): Fix negotiation.
 
