@@ -701,7 +701,7 @@ gst_sf_loop (GstElement *element)
             gst_element_error (GST_ELEMENT (this),
                                g_strdup_printf ("Opened file with sample rate %d, but could not set caps",
                                                 this->rate));
-            gst_sf_close_file (this->file);
+            gst_sf_close_file (this);
             return;
           }
           channel->caps_set = TRUE;
