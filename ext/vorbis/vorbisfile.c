@@ -935,8 +935,10 @@ gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
       vorbis_info *vi;
       GstFormat format;
   
+      GST_DEBUG (GST_CAT_EVENT, "vorbisfile: handling seek event");
       if (!vorbisfile->vf.seekable) {
 	gst_event_unref (event);
+	GST_DEBUG (GST_CAT_EVENT, "vorbis stream is not seekable");
         return FALSE;
       }
 
@@ -953,7 +955,8 @@ gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
 	  break;
 	case GST_FORMAT_BYTES:
           vi = ov_info (&vorbisfile->vf, -1);
-	  if (vi->channels * 2 == 0) {
+	  if (vi->channels == 0) {
+	    GST_DEBUG (GST_CAT_EVENT, "vorbis stream has 0 channels ?");
 	    res = FALSE;
 	    goto done; 
 	  }
@@ -975,7 +978,10 @@ gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
 		                      & GST_SEEK_FLAG_ACCURATE;
 	  }
 	  else
+	  {
+	    GST_DEBUG (GST_CAT_EVENT, "unhandled seek format");
 	    res = FALSE;
+	  }
 	  break;
       }
       break;
