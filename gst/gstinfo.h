@@ -457,7 +457,7 @@ extern GstErrorHandler _gst_error_handler;
 #endif
 
 /********** function pointer stuff **********/
-#if GST_DEBUG_ENABLED
+#ifdef GST_DEBUG_ENABLED
 void* 		_gst_debug_register_funcptr 	(void *ptr, gchar *ptrname);
 gchar*		_gst_debug_nameof_funcptr 	(void *ptr);
 
