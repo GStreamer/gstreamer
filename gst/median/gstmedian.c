@@ -1,4 +1,4 @@
-/* Gnome-Streamer
+/* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
@@ -78,7 +78,7 @@ static void	gst_median_set_property	(GObject *object, guint prop_id, const GValu
 static void	gst_median_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_median_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_median_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_median_get_type (void)
@@ -112,13 +112,13 @@ gst_median_class_init (GstMedianClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ACTIVE,
     g_param_spec_boolean("active","active","active",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FILTERSIZE,
     g_param_spec_int("filtersize","filtersize","filtersize",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LUM_ONLY,
     g_param_spec_boolean("lum_only","lum_only","lum_only",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
 
   gobject_class->set_property = gst_median_set_property;
   gobject_class->get_property = gst_median_get_property;
@@ -171,7 +171,7 @@ median_5 (unsigned char *src, unsigned char *dest, int width, int height)
   nLastCol = width - 1;
   nLastRow = height - 1;
 
-  //copy the top and bottom rows into the result array
+  /*copy the top and bottom rows into the result array */
   for (i=0; i<width; i++) {
     dest[i] = src[i];
     dest[nLastRow * width + i] = src[nLastRow * width + i];
@@ -212,7 +212,7 @@ median_9 (unsigned char *src, unsigned char *dest, int width, int height)
   nLastCol = width - 1;
   nLastRow = height - 1;
 
-  //copy the top and bottom rows into the result array
+  /*copy the top and bottom rows into the result array */
   for (i=0; i<width; i++) {
     dest[i] = src[i];
     dest[nLastRow * width + i] = src[nLastRow * width + i];
@@ -257,7 +257,7 @@ gst_median_chain (GstPad *pad, GstBuffer *buf)
   guchar *data;
   gulong size;
   GstBuffer *outbuf;
-//  GstMeta *meta;
+/*  GstMeta *meta; */
   int lumsize, chromsize;
 
   g_return_if_fail(pad != NULL);
