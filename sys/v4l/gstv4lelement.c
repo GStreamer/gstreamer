@@ -244,7 +244,7 @@ gst_v4lelement_init (GstV4lElement *v4lelement)
 
   v4lelement->frequency = 0;
 
-  v4lelement->mute = FALSE;
+  v4lelement->mute = -1;
   v4lelement->volume = -1;
   v4lelement->mode = -1;
 
@@ -555,22 +555,23 @@ gst_v4lelement_change_state (GstElement *element)
       if (!gst_v4l_open(v4lelement))
         return GST_STATE_FAILURE;
 
-      g_signal_emit(G_OBJECT(v4lelement),
-                    gst_v4lelement_signals[SIGNAL_OPEN], 0,
-                    v4lelement->videodev);
-
       /* now, sync options */
       if (v4lelement->norm >= VIDEO_MODE_PAL &&
           v4lelement->norm < VIDEO_MODE_AUTO &&
           v4lelement->channel >= 0)
       {
-        if (!gst_v4l_set_chan_norm(v4lelement, v4lelement->channel, v4lelement->norm))
+        if (!gst_v4l_set_chan_norm(v4lelement, v4lelement->channel,
+                                               v4lelement->norm)) {
+          gst_v4l_close(v4lelement);
           return GST_STATE_FAILURE;
+        }
       }
       if (v4lelement->frequency > 0 && gst_v4l_has_tuner(v4lelement))
       {
-        if (!gst_v4l_set_frequency(v4lelement, v4lelement->frequency))
+        if (!gst_v4l_set_frequency(v4lelement, v4lelement->frequency)) {
+          gst_v4l_close(v4lelement);
           return GST_STATE_FAILURE;
+        }
       }
       for (n=V4L_AUDIO_VOLUME;n<=V4L_AUDIO_MODE;n++)
       {
@@ -583,8 +584,10 @@ gst_v4lelement_change_state (GstElement *element)
         }
         if (temp >= 0 && gst_v4l_has_audio(v4lelement))
         {
-          if (!gst_v4l_set_audio(v4lelement, n, temp))
+          if (!gst_v4l_set_audio(v4lelement, n, temp)) {
+            gst_v4l_close(v4lelement);
             return GST_STATE_FAILURE;
+          }
         }
       }
       for (n=V4L_PICTURE_HUE;n<=V4L_PICTURE_SATURATION;n++)
@@ -599,10 +602,16 @@ gst_v4lelement_change_state (GstElement *element)
         }
         if (temp >= 0)
         {
-          if (!gst_v4l_set_picture(v4lelement, n, temp))
+          if (!gst_v4l_set_picture(v4lelement, n, temp)) {
+            gst_v4l_close(v4lelement);
             return GST_STATE_FAILURE;
+          }
         }
       }
+
+      g_signal_emit(G_OBJECT(v4lelement),
+                    gst_v4lelement_signals[SIGNAL_OPEN], 0,
+                    v4lelement->videodev);
     }
       break;
     case GST_STATE_READY_TO_NULL:

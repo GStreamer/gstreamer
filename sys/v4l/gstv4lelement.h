@@ -69,7 +69,7 @@ struct _GstV4lElement {
   gint channel;
   gint norm;
   gulong frequency;
-  gboolean mute;
+  gint8 mute;
   gint volume;
   gint mode;
   gint brightness;
