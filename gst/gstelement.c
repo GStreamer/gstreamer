@@ -1891,7 +1891,8 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
           GST_DEBUG_PAD_NAME (srcpad));
       if ((GST_PAD_DIRECTION (srcpad) == GST_PAD_SRC) &&
           (GST_PAD_PEER (srcpad) == NULL)) {
-        GstPad *temp = gst_element_get_compatible_pad_filtered (dest, srcpad,
+        GstPad *temp = destpadname ? destpad :
+            gst_element_get_compatible_pad_filtered (dest, srcpad,
             filtercaps);
 
         if (temp && gst_pad_link_filtered (srcpad, temp, filtercaps)) {
@@ -2753,6 +2754,8 @@ gst_element_set_state_func (GstElement * element, GstElementState state)
     return GST_STATE_SUCCESS;
   }
 
+  /* reentrancy issues with signals in change_state) */
+  gst_object_ref (GST_OBJECT (element));
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "setting state from %s to %s",
       gst_element_state_get_name (curpending),
       gst_element_state_get_name (state));
@@ -2817,6 +2820,7 @@ gst_element_set_state_func (GstElement * element, GstElementState state)
   }
 
 exit:
+  gst_object_unref (GST_OBJECT (element));
 
   return return_val;
 }
@@ -2945,6 +2949,9 @@ gst_element_change_state (GstElement * element)
     return GST_STATE_SUCCESS;
   }
 
+  /* we need to ref the object because of reentrancy issues with the signal
+   * handlers (including those in pads and gst_bin_child_state_change */
+  gst_object_ref (GST_OBJECT (element));
   GST_CAT_LOG_OBJECT (GST_CAT_STATES, element,
       "default handler tries setting state from %s to %s (%04x)",
       gst_element_state_get_name (old_state),
@@ -3036,12 +3043,14 @@ gst_element_change_state (GstElement * element)
   g_cond_signal (element->state_cond);
   g_mutex_unlock (element->state_mutex);
 
+  gst_object_unref (GST_OBJECT (element));
   return GST_STATE_SUCCESS;
 
 failure:
   /* undo the state change */
   GST_STATE (element) = old_state;
   GST_STATE_PENDING (element) = old_pending;
+  gst_object_unref (GST_OBJECT (element));
 
   return GST_STATE_FAILURE;
 }

@@ -1,3 +1,12 @@
+2004-07-20  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstelement.c: (gst_element_link_pads_filtered):
+	  use correct sinkpad, if only sinkpad is specified, but not srcpad
+	  (fixes #147889)
+	* gst/gstelement.c: (gst_element_set_state_func),
+	(gst_element_change_state): ref/unref the element, signal handlers
+	could get rid of the element otherwise
+
 2004-07-20  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/random/ds/0.9-suggested-changes:
