@@ -869,6 +869,7 @@ gst/stereomono/Makefile
 gst/synaesthesia/Makefile
 gst/udp/Makefile
 gst/videoscale/Makefile
+gst/videocrop/Makefile
 gst/volenv/Makefile
 gst/volume/Makefile
 gst/vumeter/Makefile
