@@ -93,7 +93,7 @@ GstCaps *                gst_caps_copy                                  (const G
 GstCaps * 		 gst_caps_copy_1 				(const GstCaps *caps);
 
 /* reference counting */
-GstCaps *                gst_caps_copy_on_write          		(GstCaps *caps);
+GstCaps *                gst_caps_get_writable          		(GstCaps *caps);
 GstCaps *                gst_caps_ref                    		(GstCaps* caps);
 GstCaps *                gst_caps_ref_by_count           		(GstCaps* caps, gint count);
 void                     gst_caps_unref                  		(GstCaps* caps);

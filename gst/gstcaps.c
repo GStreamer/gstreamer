@@ -242,7 +242,7 @@ _gst_caps_free (GstCaps * caps)
 }
 
 GstCaps *
-gst_caps_copy_on_write (GstCaps * caps)
+gst_caps_get_writable (GstCaps * caps)
 {
   GstCaps *copy;
 

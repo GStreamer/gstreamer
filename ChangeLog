@@ -1,5 +1,9 @@
 2005-02-10  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstcaps.h:
+	* gst/gstcaps.c (gst_caps_get_writable): Change from
+	copy_on_write.
+
 	* docs/gst/tmpl: Commit whatever automagic updates gtkdoc is
 	doing.
 
