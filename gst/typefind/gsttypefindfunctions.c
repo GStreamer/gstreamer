@@ -653,7 +653,7 @@ rm_type_find (GstTypeFind *tf, gpointer unused)
   if (data && memcmp (data, ".RMF", 4) == 0) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, RM_CAPS);
   }
-};
+}
 
 /*** audio/x-wav ****************************************************************/
 
@@ -840,7 +840,7 @@ swf_type_find (GstTypeFind *tf, gpointer unused)
       data[1] == 'W' && data[2] == 'S') {
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, SWF_CAPS);
   }
-};
+}
 
 /*** application/ogg **********************************************************/
 
@@ -853,7 +853,65 @@ ogg_type_find (GstTypeFind *tf, gpointer unused)
   if (data && memcmp (data, "OggS", 4) == 0) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, OGG_CAPS);
   }
-};
+}
+
+/*** video/x-matroska *********************************************************/
+
+#define MATROSKA_CAPS gst_caps_new ("matroska_type", "video/x-matroska", NULL)
+static void
+matroska_type_find (GstTypeFind *tf, gpointer priv)
+{
+  static guint8 header[16] = { 0x1A, 0x45, 0xDF, 0xA3, 0x93, 0x42, 0x82, 0x88,
+                          'm', 'a', 't', 'r', 'o', 's', 'k', 'a' };
+  guint8 *data = gst_type_find_peek (tf, 0, 16);
+
+  if (data && !memcmp(data, header, 16)) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MATROSKA_CAPS);
+  }
+}
+
+/*** video/x-dv ***************************************************************/
+
+#define DV_CAPS GST_CAPS_NEW ("dv_type_find", "video/x-dv", \
+          "systemstream", GST_PROPS_BOOLEAN (TRUE))
+#define DV_CAPS_FORMAT(format) GST_CAPS_NEW ("dv_type_find", "video/x-dv", \
+          "systemstream", GST_PROPS_BOOLEAN (TRUE), \
+          "format", GST_PROPS_STRING(format))
+static void
+dv_type_find (GstTypeFind *tf, gpointer private)
+{
+  guint8 *data;
+
+  data = gst_type_find_peek (tf, 0, 5);
+
+  /* check for DIF  and DV flag */
+  if (data && (data[0] == 0x1f) && (data[1] == 0x07) && (data[2] == 0x00) &&
+      ((data[4]&0x01) == 0)){
+    gchar *format;
+
+    if (data[3] & 0x80) {
+      format = "PAL";
+    } else {
+      format = "NTSC";
+    }
+
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, DV_CAPS_FORMAT(format));
+  }
+}
+
+/*** video/x-dv ***************************************************************/
+
+#define SID_CAPS GST_CAPS_NEW ("sid_typefind", "audio/x-sid", NULL)
+static void
+sid_type_find (GstTypeFind *tf, gpointer private)
+{
+  guint8 *data;
+
+  data = gst_type_find_peek (tf, 0, 4);
+  if (data && memcmp (data, "PSID", 4)==0) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, SID_CAPS);
+  }
+}
 
 /*** plugin initialization ****************************************************/
 
@@ -884,6 +942,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
   static gchar * aiff_exts[] = {"aiff", "aif", "aifc", NULL};
   static gchar * shn_exts[] = {"shn", NULL};
   static gchar * uri_exts[] = {"ram", NULL};
+  static gchar * matroska_exts[] = {"mkv", "mka", NULL};
+  static gchar * dv_exts[] = {"dv", NULL};
+  static gchar * sid_exts[] = {"sid", NULL};
 
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions", GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
 
@@ -925,9 +986,14 @@ plugin_init (GModule *module, GstPlugin *plugin)
 	  wav_type_find, wav_exts, WAV_CAPS, NULL);
   gst_type_find_factory_register (plugin, "audio/x-aiff", GST_ELEMENT_RANK_SECONDARY,
 	  aiff_type_find, aiff_exts, AIFF_CAPS, NULL);
-
   gst_type_find_factory_register (plugin, "audio/x-shorten", GST_ELEMENT_RANK_SECONDARY,
 	  shn_type_find, shn_exts, SHN_CAPS, NULL);
+  gst_type_find_factory_register (plugin, "video/x-matroska", GST_ELEMENT_RANK_SECONDARY,
+	  matroska_type_find, matroska_exts, MATROSKA_CAPS, NULL);
+  gst_type_find_factory_register (plugin, "video/x-dv", GST_ELEMENT_RANK_SECONDARY,
+	  dv_type_find, dv_exts, DV_CAPS, NULL);
+  gst_type_find_factory_register (plugin, "video/x-sid", GST_ELEMENT_RANK_MARGINAL,
+	  sid_type_find, sid_exts, SID_CAPS, NULL);
 
   return TRUE;
 }
