@@ -126,6 +126,64 @@ gst_xml_write (GstElement *element)
 }
 
 /**
+ * gst_xml_write_file:
+ * @element: The element to write out
+ * @out: an open file, like stdout
+ *
+ * Converts the given element into XML and writes the formatted XML to an open
+ * file.
+ *
+ * Returns: number of bytes written on success, -1 otherwise.
+ */
+gint
+gst_xml_write_file (GstElement *element, FILE *out)
+{
+  xmlDocPtr cur;
+  xmlOutputBufferPtr buf;
+  const char * encoding;
+  xmlCharEncodingHandlerPtr handler = NULL;
+  int indent;
+  gboolean ret;
+  
+  cur = gst_xml_write (element);
+  if (!cur) return -1;
+  
+#ifdef HAVE_LIBXML2
+  encoding = (const char *) cur->encoding;
+  
+  if (encoding != NULL) {
+    xmlCharEncoding enc;
+    
+    enc = xmlParseCharEncoding (encoding);
+    
+    if (cur->charset != XML_CHAR_ENCODING_UTF8) {
+      xmlGenericError (xmlGenericErrorContext,
+                       "xmlDocDump: document not in UTF8\n");
+      return -1;
+    }
+    if (enc != XML_CHAR_ENCODING_UTF8) {
+      handler = xmlFindCharEncodingHandler (encoding);
+      if (handler == NULL) {
+        xmlFree ((char *) cur->encoding);
+        cur->encoding = NULL;
+      }
+    }
+  }
+  
+  buf = xmlOutputBufferCreateFile (out, handler);
+  
+  indent = xmlIndentTreeOutput;
+  xmlIndentTreeOutput = 1;
+  ret = xmlSaveFormatFileTo(buf, cur, NULL, 1);
+  xmlIndentTreeOutput = indent;
+#else
+  ret = xmlDocDump (out, cur);
+#endif
+  
+  return ret;
+}
+
+/**
  * gst_xml_parse_doc:
  * @xml: a pointer to a GstXML object
  * @doc: a pointer to an xml document to parse

@@ -69,6 +69,9 @@ GType		gst_xml_get_type	(void);
 /* create an XML document out of a pipeline */
 xmlDocPtr	gst_xml_write		(GstElement *element);
 
+/* write a formatted representation of a pipeline to an open file */
+gint		gst_xml_write_file	(GstElement *element, FILE *out);
+
 GstXML*		gst_xml_new		(void);
 
 gboolean	gst_xml_parse_doc	(GstXML *xml, xmlDocPtr doc, const guchar *root);
