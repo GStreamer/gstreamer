@@ -55,12 +55,13 @@ main (int argc, char *argv[])
       "rate", GST_PROPS_INT (44100),
       "width", GST_PROPS_INT (16),
       "depth", GST_PROPS_INT (16),
-      "law", GST_PROPS_INT (1),
+      "law", GST_PROPS_INT (0),
       "signed", GST_PROPS_BOOLEAN (TRUE),
       "channels", GST_PROPS_INT (1)
       );
   caps->fixed = TRUE;
   g_assert (caps != NULL);
+  gst_element_set_state (pipeline, GST_STATE_READY);
   g_print ("Setting caps on fakesrc's src pad\n");
   if (! (gst_pad_try_set_caps (gst_element_get_pad (src, "src"), caps)))
      g_print ("Could not set caps !\n");
