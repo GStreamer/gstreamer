@@ -1,5 +1,9 @@
 2004-11-23  Johan Dahlin  <johan@gnome.org>
 
+	* testsuite/*: Put test_ prefix on all test filenames
+
+2004-11-23  Johan Dahlin  <johan@gnome.org>
+
 	* gst/gstmodule.c: sink GstObject, much like GtkObject
 
 2004-11-23  Johan Dahlin  <johan@gnome.org>

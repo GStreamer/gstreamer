@@ -18,19 +18,20 @@ testhelper.la: $(testhelper_la_OBJECTS) $(testhelper_la_DEPENDENCIES)
 	$(LINK) -rpath $(pkgpyexecdir) $(testhelper_la_LDFLAGS) $(testhelper_la_OBJECTS) $(testhelper_la_LIBADD) $(LIBS)
 
 tests =  \
-	buffer.py \
-        caps.py \
-	common.py \
-	element.py \
+	test_buffer.py \
+        test_caps.py \
+	test_element.py \
 	test_event.py \
-        interface.py \
-	pad.py \
-        pipeline.py \
+        test_interface.py \
+	test_pad.py \
+        test_pipeline.py \
+        test_registry.py \
+        test_struct.py \
 	test_xml.py
 
 check-local: testhelper.la
 	@PYTHONPATH=$(PYTHONPATH):$(top_builddir):$(top_builddir)/gst/.libs $(PYTHON) $(srcdir)/runtests.py
 	@rm -fr *.pyc
 
-EXTRA_DIST = $(tests) runtests.py test-object.h
+EXTRA_DIST = $(tests) common.py runtests.py test-object.h
 
