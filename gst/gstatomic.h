@@ -125,11 +125,7 @@ struct _GstAtomicSwap {
 
 #if defined (__i386__) && defined (__GNUC__) && __GNUC__ >= 2 
 
-# ifdef __SMP__
-#  define GST_ATOMIC_LOCK "lock ; "
-# else
-#  define GST_ATOMIC_LOCK ""
-# endif
+#define GST_ATOMIC_LOCK "lock ; "
 
 #define _GST_ATOMIC_SWAP_INIT(swap,val)		\
 G_STMT_START {						\
