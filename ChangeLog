@@ -1,3 +1,9 @@
+2004-08-03  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* docs/manual/win32.xml:
+	* win32/README.txt:
+	  update documentation with the clean version of dependencies
+
 2004-08-03  Benjamin Otte  <otte@gnome.org>
 
 	* gst/schedulers/entryscheduler.c:

@@ -16,24 +16,14 @@ available in your system PATH.
 
 The GStreamer project depends on other libraries, namely :
 - GLib
-- libpopt
-- libxml
+- popt
+- libxml2
 - gettext
 - libiconv
 
-The sources should be organised in folders as follow :
-$(PROJECT_DIR)\glib
-$(PROJECT_DIR)\gstreamer (this package)
-$(PROJECT_DIR)\libiconv
-$(PROJECT_DIR)\gettext
-$(PROJECT_DIR)\libxml2
-$(PROJECT_DIR)\popt
-
-NOTE : you can find Win32 versions of these libraries on http://gettext.sourceforge.net/ and
-http://gnuwin32.sourceforge.net/ (you will need the Binaries and Developer files for each package.)
-
-NOTE : GLib can be found on ftp://ftp.gtk.org/pub/gtk/v2.4/ and should be compiled from the 
-sources
+There is now an existing package that has all these dependencies built with MSVC7.1. It exists either
+a precompiled librairies and headers in both Release and Debug mode, or as the source package to build
+it yourself. You can find it on http://mukoli.free.fr/gstreamer/.
 
 NOTE : GNU tools needed that you can find on http://gnuwin32.sourceforge.net/
 - GNU flex      (tested with 2.5.4)
@@ -49,7 +39,9 @@ for convenience (people who don't want to install GNU tools).
 By default, GSTreamer needs a registry. You have to generate it using "gst-register.exe". It will create
 the file in c:\gstreamer\registry.xml that will hold all the plugins you can use.
 
-You should install the GSTreamer core in c:\gstreamer\bin and the plugins in c:\gstreamer\plugins.
+You should install the GSTreamer core in c:\gstreamer\bin and the plugins in c:\gstreamer\plugins. Both
+directories should be added to your system PATH. The library dependencies should be installed in c:\usr.
+
 For example, my current setup is :
 
 C:\gstreamer\registry.xml
@@ -60,14 +52,15 @@ C:\gstreamer\bin\gstbytestream.dll
 C:\gstreamer\bin\gstelements.dll
 C:\gstreamer\bin\gstoptimalscheduler.dll
 C:\gstreamer\bin\gstspider.dll
-C:\gstreamer\bin\iconv.dll
-C:\gstreamer\bin\intl.dll
-C:\gstreamer\bin\libglib-2.0-0.dll
-C:\gstreamer\bin\libgmodule-2.0-0.dll
-C:\gstreamer\bin\libgobject-2.0-0.dll
-C:\gstreamer\bin\libgthread-2.0-0.dll
 C:\gstreamer\bin\libgtreamer-0.8.dll
-C:\gstreamer\bin\libxml2.dll
-C:\gstreamer\bin\popt1.dll
 C:\gstreamer\plugins\gst-libs.dll
 C:\gstreamer\plugins\gstmatroska.dll
+
+C:\usr\bin\iconv.dll
+C:\usr\bin\intl.dll
+C:\usr\bin\libglib-2.0-0.dll
+C:\usr\bin\libgmodule-2.0-0.dll
+C:\usr\bin\libgobject-2.0-0.dll
+C:\usr\bin\libgthread-2.0-0.dll
+C:\usr\bin\libxml2.dll
+C:\usr\bin\popt.dll
