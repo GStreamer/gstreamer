@@ -1,3 +1,12 @@
+2005-04-02  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
+	(gst_ffmpegdec_handle_event):
+	  Fix breakage of testsuite by adding keyframe syncing; changed
+	  to sync only for some streamtypes (MPEG-2/-4, for now).
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_add):
+	  Add tags.
+
 2005-04-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),

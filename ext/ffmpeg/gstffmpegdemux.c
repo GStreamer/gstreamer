@@ -473,6 +473,7 @@ gst_ffmpegdemux_add (GstFFMpegDemux * demux, AVStream * stream)
   GstCaps *caps;
   gint num;
   gchar *padname;
+  const gchar *codec;
 
   switch (stream->codec.codec_type) {
     case CODEC_TYPE_VIDEO:
@@ -512,6 +513,16 @@ gst_ffmpegdemux_add (GstFFMpegDemux * demux, AVStream * stream)
   gst_pad_set_explicit_caps (pad, caps);
 
   gst_element_add_pad (GST_ELEMENT (demux), pad);
+
+  /* metadata */
+  if ((codec = gst_ffmpeg_get_codecid_longname (stream->codec.codec_id))) {
+    GstTagList *list = gst_tag_list_new ();
+
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        (stream->codec.codec_type == CODEC_TYPE_VIDEO) ?
+        GST_TAG_VIDEO_CODEC : GST_TAG_AUDIO_CODEC, codec, NULL);
+    gst_element_found_tags_for_pad (GST_ELEMENT (demux), pad, 0, list);
+  }
 
   return TRUE;
 }

@@ -415,7 +415,6 @@ gst_ffmpegdec_open (GstFFMpegDec *ffmpegdec)
     default:
       break;
   }
-  ffmpegdec->waiting_for_key = TRUE;
   ffmpegdec->next_ts = 0;
 
   return TRUE;
@@ -819,7 +818,11 @@ gst_ffmpegdec_handle_event (GstFFMpegDec * ffmpegdec, GstEvent * event)
       }
       if (ffmpegdec->opened) {
         avcodec_flush_buffers (ffmpegdec->context);
-        ffmpegdec->waiting_for_key = TRUE;
+
+        if (ffmpegdec->context->codec_id == CODEC_ID_MPEG2VIDEO ||
+            ffmpegdec->context->codec_id == CODEC_ID_MPEG4) {
+          ffmpegdec->waiting_for_key = TRUE;
+        }
       }
       /* fall-through */
     }
