@@ -1,3 +1,9 @@
+2004-07-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstelement.c: (gst_element_set_eos_recursive):
+	  various whitespace fixes.
+	  doc fix, fixes #148497
+
 2004-07-25  Benjamin Otte  <otte@gnome.org>
 
 	* gst/autoplug/gstspideridentity.c: (gst_spider_identity_link):

@@ -240,7 +240,7 @@ gst_element_real_get_property (GObject * object, guint prop_id, GValue * value,
     (oclass->get_property) (object, prop_id, value, pspec);
 }
 
-/** 
+/**
  * gst_element_default_error:
  * @object: a #GObject that signalled the error.
  * @orig: the #GstObject that initiated the error.
@@ -313,7 +313,7 @@ gst_element_threadsafe_properties_post_run (GstElement * element)
  * @element: a #GstElement to enable threadsafe properties on.
  *
  * Installs an asynchronous queue, a mutex and pre- and post-run functions on
- * this element so that properties on the element can be set in a 
+ * this element so that properties on the element can be set in a
  * threadsafe way.
  */
 void
@@ -396,7 +396,7 @@ gst_element_set (GstElement * element, const gchar * first_property_name, ...)
  * gst_element_get:
  * @element: a #GstElement to get properties of.
  * @first_property_name: the first property to get.
- * @...: pointer to a variable to store the first property in, as well as 
+ * @...: pointer to a variable to store the first property in, as well as
  * more properties to get, ending with NULL.
  *
  * Gets properties from an element. If the element uses threadsafe properties,
@@ -901,7 +901,7 @@ gst_element_wait (GstElement * element, GstClockTime timestamp)
  *
  * Sets the current time of the element. This function can be used when handling
  * discont events. You can only call this function on an element with a clock in
- * #GST_STATE_PAUSED or #GST_STATE_PLAYING. You might want to have a look at 
+ * #GST_STATE_PAUSED or #GST_STATE_PLAYING. You might want to have a look at
  * gst_element_adjust_time(), if you want to adjust by a difference as that is
  * more accurate.
  */
@@ -960,9 +960,9 @@ gst_element_set_time_delay (GstElement * element, GstClockTime time,
  * @element: element to adjust time on
  * @diff: difference to adjust
  *
- * Adjusts the current time of the element by the specified difference. This 
- * function can be used when handling discont events. You can only call this 
- * function on an element with a clock in #GST_STATE_PAUSED or 
+ * Adjusts the current time of the element by the specified difference. This
+ * function can be used when handling discont events. You can only call this
+ * function on an element with a clock in #GST_STATE_PAUSED or
  * #GST_STATE_PLAYING. It is more accurate than gst_element_set_time().
  */
 void
@@ -1152,7 +1152,7 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
  *
  * Creates a ghost pad from @pad, and adds it to @element via
  * gst_element_add_pad().
- * 
+ *
  * Returns: the added ghost #GstPad, or NULL on error.
  */
 GstPad *
@@ -1249,8 +1249,8 @@ gst_element_remove_ghost_pad (GstElement * element, GstPad * pad)
  *
  * Use this function to signal that the element does not expect any more pads
  * to show up in the current pipeline. This function should be called whenever
- * pads have been added by the element itself. Elements with GST_PAD_SOMETIMES 
- * pad templates use this in combination with autopluggers to figure out that 
+ * pads have been added by the element itself. Elements with GST_PAD_SOMETIMES
+ * pad templates use this in combination with autopluggers to figure out that
  * the element is done initializing its pads.
  */
 void
@@ -1466,7 +1466,7 @@ gst_element_class_set_details (GstElementClass * klass,
  * Retrieves a list of the pad templates associated with @element_class. The
  * list must not be modified by the calling code.
  * <note>If you use this function in the #GInstanceInitFunc of an object class
- * that has subclasses, make sure to pass the g_class parameter of the 
+ * that has subclasses, make sure to pass the g_class parameter of the
  * #GInstanceInitFunc here.</note>
  *
  * Returns: the #GList of padtemplates.
@@ -1487,10 +1487,10 @@ gst_element_class_get_pad_template_list (GstElementClass * element_class)
  *
  * Retrieves a padtemplate from @element_class with the given name.
  * <note>If you use this function in the #GInstanceInitFunc of an object class
- * that has subclasses, make sure to pass the g_class parameter of the 
+ * that has subclasses, make sure to pass the g_class parameter of the
  * #GInstanceInitFunc here.</note>
  *
- * Returns: the #GstPadTemplate with the given name, or NULL if none was found. 
+ * Returns: the #GstPadTemplate with the given name, or NULL if none was found.
  * No unreferencing is necessary.
  */
 GstPadTemplate *
@@ -1522,7 +1522,8 @@ gst_element_class_get_pad_template (GstElementClass * element_class,
  * @element: a #GstElement to get pad templates of.
  *
  * Retrieves a list of the pad templates associated with the element.
- * (FIXME: Should be deprecated in favor of gst_element_class_get_pad_template_list).
+ * (FIXME: Should be deprecated in favor of
+ *  gst_element_class_get_pad_template_list).
  *
  * Returns: the #GList of padtemplates.
  */
@@ -1544,7 +1545,7 @@ gst_element_get_pad_template_list (GstElement * element)
  * given name.
  * (FIXME: Should be deprecated in favor of gst_element_class_get_pad_template).
  *
- * Returns: the #GstPadTemplate with the given name, or NULL if none was found. 
+ * Returns: the #GstPadTemplate with the given name, or NULL if none was found.
  * No unreferencing is necessary.
  */
 GstPadTemplate *
@@ -2009,7 +2010,7 @@ gst_element_link_filtered (GstElement * src, GstElement * dest,
  * @element_1: the first #GstElement in the link chain.
  * @element_2: the second #GstElement in the link chain.
  * @...: the NULL-terminated list of elements to link in order.
- * 
+ *
  * Chain together a series of elements. Uses gst_element_link().
  *
  * Returns: TRUE on success, FALSE otherwise.
@@ -2120,7 +2121,7 @@ gst_element_unlink_pads (GstElement * src, const gchar * srcpadname,
  * @element_1: the first #GstElement in the link chain.
  * @element_2: the second #GstElement in the link chain.
  * @...: the NULL-terminated list of elements to unlink in order.
- * 
+ *
  * Unlinks a series of elements. Uses gst_element_unlink().
  */
 void
@@ -2240,10 +2241,9 @@ gst_element_get_random_pad (GstElement * element, GstPadDirection dir)
  * @element: a #GstElement to query
  *
  * Get an array of event masks from the element.
- * If the element doesn't 
- * implement an event masks function, the query will be forwarded
- * to a random linked sink pad.
- * 
+ * If the element doesn't implement an event masks function,
+ * the query will be forwarded to a random linked sink pad.
+ *
  * Returns: An array of #GstEventMask elements.
  */
 const GstEventMask *
@@ -2327,10 +2327,9 @@ gst_element_seek (GstElement * element, GstSeekType seek_type, guint64 offset)
  * @element: a #GstElement to query
  *
  * Get an array of query types from the element.
- * If the element doesn't 
- * implement a query types function, the query will be forwarded
- * to a random sink pad.
- * 
+ * If the element doesn't implement a query types function,
+ * the query will be forwarded to a random sink pad.
+ *
  * Returns: An array of #GstQueryType elements.
  */
 const GstQueryType *
@@ -2362,11 +2361,11 @@ gst_element_get_query_types (GstElement * element)
  * @value: the pointer to the value of the result.
  *
  * Performs a query on the given element. If the format is set
- * to GST_FORMAT_DEFAULT and this function returns TRUE, the 
+ * to GST_FORMAT_DEFAULT and this function returns TRUE, the
  * format pointer will hold the default format.
  * For element that don't implement a query handler, this function
  * forwards the query to a random usable sinkpad of this element.
- * 
+ *
  * Returns: TRUE if the query could be performed.
  */
 gboolean
@@ -2400,11 +2399,10 @@ gst_element_query (GstElement * element, GstQueryType type,
  * gst_element_get_formats:
  * @element: a #GstElement to query
  *
- * Get an array of formst from the element.
- * If the element doesn't 
- * implement a formats function, the query will be forwarded
- * to a random sink pad.
- * 
+ * Get an array of formats from the element.
+ * If the element doesn't implement a formats function,
+ * the query will be forwarded to a random sink pad.
+ *
  * Returns: An array of #GstFormat elements.
  */
 const GstFormat *
@@ -2437,9 +2435,8 @@ gst_element_get_formats (GstElement * element)
  * @dest_value: a pointer to the destination value.
  *
  * Invokes a conversion on the element.
- * If the element doesn't 
- * implement a convert function, the query will be forwarded
- * to a random sink pad.
+ * If the element doesn't implement a convert function,
+ * the query will be forwarded to a random sink pad.
  *
  * Returns: TRUE if the conversion could be performed.
  */
@@ -2604,7 +2601,7 @@ void gst_element_error_full
  * @element: a #GstElement.
  *
  * Checks if the state of an element is locked.
- * If the state of an element is locked, state changes of the parent don't 
+ * If the state of an element is locked, state changes of the parent don't
  * affect the element.
  * This way you can leave currently unused elements inside bins. Just lock their
  * state before changing the state from #GST_STATE_NULL.
@@ -2683,7 +2680,7 @@ gst_element_sync_state_with_parent (GstElement * element)
  * gst_element_get_state:
  * @element: a #GstElement to get the state of.
  *
- * Gets the state of the element. 
+ * Gets the state of the element.
  *
  * Returns: the #GstElementState of the element.
  */
@@ -3397,11 +3394,11 @@ gst_element_found_tags (GstElement * element, const GstTagList * tag_list)
  *
  * This is a convenience routine for tag finding. Most of the time you only
  * want to push the found tags down one pad, in that case this function is for
- * you. It takes ownership of the taglist, emits the found-tag signal and pushes 
- * a tag event down the pad.
- * <note>This function may not be used in a #GstPadGetFunction, because it calls 
- * gst_pad_push(). In those functions, call gst_element_found_tags(), create a 
- * tag event with gst_event_new_tag() and return that from your 
+ * you. It takes ownership of the taglist, emits the found-tag signal and
+ * pushes a tag event down the pad.
+ * <note>This function may not be used in a #GstPadGetFunction, because it calls
+ * gst_pad_push(). In those functions, call gst_element_found_tags(), create a
+ * tag event with gst_event_new_tag() and return that from your
  * #GstPadGetFunction.</note>
  */
 void
@@ -3429,7 +3426,7 @@ gst_element_found_tags_for_pad (GstElement * element, GstPad * pad,
 static inline void
 gst_element_set_eos_recursive (GstElement * element)
 {
-  /* this function is only called, when we were in PLAYING before. So every 
+  /* this function is only called, when we were in PLAYING before. So every
      parent that's PAUSED was PLAYING before. That means it has reached EOS. */
   GstElement *parent;
 
@@ -3609,7 +3606,7 @@ gst_element_populate_std_props (GObjectClass * klass, const gchar * prop_name,
  * in a NULL terminated
  * @...: the id and flags of the first property, followed by
  * further 'name', 'id', 'flags' triplets and terminated by NULL.
- * 
+ *
  * Adds a list of standardized properties with types to the @klass.
  * the id is for the property switch in your get_prop method, and
  * the flags determine readability / writeability.
@@ -3644,7 +3641,7 @@ gst_element_class_install_std_props (GstElementClass * klass,
 /**
  * gst_element_get_managing_bin:
  * @element: a #GstElement to get the managing bin of.
- * 
+ *
  * Gets the managing bin (a pipeline or a thread, for example) of an element.
  *
  * Returns: the #GstBin, or NULL on failure.
