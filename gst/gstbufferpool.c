@@ -250,7 +250,7 @@ gst_buffer_pool_destroy_buffer (GstBufferPool *pool,
 
 /**
  * gst_buffer_pool_get_default:
- * @pool: instance of GstBufferPool which is no longer required (or NULL if it doesn't exist)
+ * @oldpool: instance of GstBufferPool which is no longer required (or NULL if it doesn't exist)
  * @buffer_size: the number of bytes this buffer will store
  * @pool_size: the default number of buffers to be preallocated
  *
