@@ -384,6 +384,7 @@ gst_ogg_mux_next_buffer (GstOggPad * pad)
 
       switch (type) {
         case GST_EVENT_EOS:
+          gst_event_unref (event);
           return NULL;
         default:
           gst_pad_event_default (pad->pad, event);
@@ -415,8 +416,9 @@ gst_ogg_mux_push_page (GstOggMux * mux, ogg_page * page)
 
   if (GST_PAD_IS_USABLE (mux->srcpad))
     gst_pad_push (mux->srcpad, GST_DATA (buffer));
-  else
+  else {
     gst_buffer_unref (buffer);
+  }
 }
 
 /*
@@ -543,14 +545,13 @@ gst_ogg_mux_loop (GstElement * element)
     ogg_page page;
     GstBuffer *buf, *tmpbuf;
     GstOggPad *pad = ogg_mux->pulling;
-    gint ret;
     GstOggPadState newstate;
 
     /* now see if we have a buffer */
     buf = pad->buffer;
     if (buf == NULL) {
-      /* no buffer, get one */
-      buf = gst_ogg_mux_next_buffer (pad);
+      /* no buffer, get one, and store in the pad so we free it later on */
+      buf = pad->buffer = gst_ogg_mux_next_buffer (pad);
       /* data exhausted on this pad (EOS) */
       if (buf == NULL) {
         /* stop pulling from the pad */
@@ -601,9 +602,9 @@ gst_ogg_mux_loop (GstElement * element)
     /* store new readahead buffer */
     pad->buffer = tmpbuf;
 
-    /* create a page */
-    ret = ogg_stream_pageout (&pad->stream, &page);
-    if (ret > 0) {
+    /* flush out the pages now. The packet we got could end up in
+     * more than one page so we need to flush them all */
+    while (ogg_stream_pageout (&pad->stream, &page) > 0) {
       /* we have a complete page now, we can push the page 
        * and make sure to pull on a new pad the next time around */
       gst_ogg_mux_push_page (ogg_mux, &page);

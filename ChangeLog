@@ -1,3 +1,13 @@
+2004-05-18  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_get_type), (gst_ogg_mux_init),
+	(gst_ogg_mux_sinkconnect), (gst_ogg_mux_request_new_pad),
+	(gst_ogg_mux_next_buffer), (gst_ogg_mux_push_page),
+	(gst_ogg_mux_compare_pads), (gst_ogg_mux_queue_pads),
+	(gst_ogg_mux_loop):
+	Fix an ugly memleak where the muxer didn't flush enough ogg
+	pages. This also resulted in badly muxed ogg files.
+
 2004-05-18  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* gst/asfdemux/asfheaders.c :
