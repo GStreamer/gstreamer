@@ -1,14 +1,44 @@
 
-            GStreamer "GEPpiness is a warm gun" 0.4.1 released [1]
+                     GStreamer "Starfleet" 0.5.1 released
 
+   Send a message out accross the sky,
+   Alien raiders just passed Gemini,
+   Who will come and save us now?
+   Who can defend us from their power?
+   GStreamer! GStreamer! GStreamer!
+   
+   Tell the people back at Earth Control,
+   Send GStreamer legions to save our souls,
+   always daring and couragous,
+   ooh! only they can save us.
+   GStreamer! GStreamer! GStreamer!
    The  GStreamer  team  is  happy  to  announce  another  release of the
    GStreamer  streaming-media  framework. This release has mainly focused
    on  code  clean-up  and  rounding out of the features. Large chunks of
-   GStreamer  are  API  stable  at this point. In preparation of a stable
-   release,  we have also done a thorough license audit to make sure that
-   the licenses of all plug-ins are properly documented, and that as many
-   of  them  as  possible  are  available  under  the  LGPL  license that
-   GStreamer uses.
+   GStreamer are API stable at this point.
+
+   This  is  a development release, in which we test several new features
+   and  change  installs and break stuff ! Do not update unless you are a
+   developer  or  willing to deal with issues that will crop up. You have
+   been warned ;) 
+
+   From  now  on,  GStreamer  will  follow a versioning scheme similar to
+   kernel  and  GTK+/GLib  releases.  Odd  minor  numbers  (like for this
+   release)  will be development releases. While GStreamer itself is very
+   much  under development, during stable releases we will guarantee API-
+   and  ABI-stability.  The point of this development release cycle is to
+   support Gnome 2.1.x development.
+
+   GStreamer     major-minor     series     versions    will    now    be
+   parallel-installable.  Please  update  your  applications to check for
+   gstreamer-0.5,   gstreamer-libs-0.5   and   gstreamer-play-0.5   using
+   pkg-config.
+
+   Our development currently focuses on the following items:
+     * Increase stability and portability of scheduler
+     * Add more video editing specific plugins
+     * Improve plugins currently used by existing applications
+     * Create language bindings
 
    We are starting to have a really nice collection of applications under
    development using GStreamer. If you are looking for something specific
@@ -18,77 +48,29 @@ Updates and Enhancements
 
   General
 
-     * Further  work on the Graphical Pipeline Editor, getting to be very
-       stable and well working.
-     * KDE/Qt bindings created for easier creation of KDE applications on
-       top of GStreamer
-     * General  C++  bindings  for  use with gtkmm and other C++ projects
-       added to gst-bind module (in CVS)
-     * Effectv  and  virtualdub  based  plug-ins  relicensed  under  LGPL
-       (previously GPL)
-     * Some   manual   examples   updated   and  extracted  to  code  (in
-       examples/manual)
+     * More Solaris Forte fixes
+     * Updates to documentation
 
   Core
 
-     * Many memleaks plugged
-     * Lots of code cleaning
-     * Many documentation improvements
-     * Small change to [2]Plugin API
-     * Removed  use of -Wall and -Werror from release tarball for non-gcc
-       compilers, more permanent solution upcoming.
-     * Old  schedulers  renamed:  we  now  use  basicomega as the default
-       scheduler,   with  the  others  being  fastomega,  basicwingo  and
-       fastwingo.
+     * New non-cothread based scheduler
+     * API change: s/GST_PAD_QUERY/GST_QUERY/g
+     * API change: s/GstPadQuery/GstQuery/g
 
   Plug-ins
 
-     * BSD and Darwin cd playing
-     * New Mixermatrix plugin added
-     * New Flash plugin added
-     * RTP  plugin  moved  back to librtp and plugin now includes library
-       code (still experimental, check configure --help on how to enable)
-     * New v4l2 plugins
-     * Updated v4l plugins
-     * Improvements to dvdnav plugin
-     * iRadio support added to gnomevfs plugin
-     * Median video plugin updated and now working
-     * Fixed many major bugs in the gnome-vfs library
-     * Got rid of misleading warnings from plugins
-     * Avi muxer much improved
-     * Fix bug in mad plugin that caused loss of frames
-     * mp3 typefind fixed to properly handle id3v2 tags
-
-Known Issues
-
-   GStreamer  currently  ships  with  schedulers  based  on  two cothread
-   packages.  The  'omega'  cothread  package  is  the  one  we have been
-   shipping for a long time now and is still the default in this release.
-   There  are  however  some  limitations  and thread-related bugs in the
-   omega  scheduler.  These  limitations  are  not present in the 'wingo'
-   schedulers, but unfortunately it does not work with i686 glibc at this
-   time  due  to  differences  in the way threads are handled compared to
-   other  architectures,  including  i386.  A new (third) scheduler (that
-   doesn't use cothreads) is being developed.
-
-   As  for  the  bugs  in  the  'omega'  schedulers, we did not feel they
-   warranted not releasing 0.4.1 as they are rather obscure. For instance
-   if  you are using Rhythmbox you will need to be playing over 500 songs
-   nonstop to trigger it. You can choose a different scheduler by passing
-   --scheduler=(name) to any GStreamer application.
-
-   Wim  Taymans  has  started  work on a new scheduler. The first part is
-   already in CVS, but it will probably still be some months before it is
-   ready.
+     * New ffmpeg-based plugins supporting avi
+     * Improvements including PAL support for RAW1394 plugin
+     * lots of misc smaller fixes
 
 GStreamer Homepage
 
    More  details on these features can be found on the project's website,
-   [3]http://gstreamer.net/.
+   [2]http://gstreamer.net/.
 
 Support and Bugs
 
-   We  use  [4]Gnome's Bugzilla for bug reports and feature requests. The
+   We  use  [3]Gnome's Bugzilla for bug reports and feature requests. The
    "product  name"  is  GStreamer  (capital  G).  Please do the following
    before writing a bug report :
 gst-feedback &> feedback 2>&1
@@ -98,7 +80,7 @@ gst-feedback &> feedback 2>&1
 
 Developers
 
-   GStreamer  is  [5]hosted on SourceForge. All code is in CVS and can be
+   GStreamer  is  [4]hosted on SourceForge. All code is in CVS and can be
    checked  out  from  there.  Interested developers of the core library,
    plug-ins,  and  applications  should  subscribe to the gstreamer-devel
    list.  If  there  is  sufficient interest we will create more lists as
@@ -114,43 +96,27 @@ Contributors to this release
 
      * Wim Taymans <wim.taymans(AT)chello.be>
      * Thomas Vander Stichele <thomas(AT)apestaart.org>
-     * Andy Wingo <wingo(AT)pobox.com>
-     * Steve Baker <stevebaker_org(AT)yahoo.co.uk>
-     * Cameron Hutchison <camh(AT)xdna.net>
-     * Iain Holmes <iain(AT)prettypeople.org>
-     * Ronald Bultje <rbultje(AT)ronald.bitfreak.net>
+     * David I. Lehn <dlehn(AT)vt.edu>
+     * David Schleef <ds(AT)schleef.org>
+     * Leif Morgan Johnson <lmjohns3(AT)eos.ncsu.edu>
 
   Plugins and Sample Applications
 
-     * Richard Boulton <richard(AT)tartarus.org>
-     * David Lehn <dlehn(AT)vt.edu>
+     * Ronald Bultje <rbultje(AT)ronald.bitfreak.net>
+     * Steve Baker <stevebaker_org(AT)yahoo.co.uk>
+     * Iain Holmes <iain(AT)prettypeople.org>
      * Jérémy Simon <jsimon13(AT)yahoo.fr>
-     * Zeeshan Ali Khattak <zak147(AT)yahoo.com>
-     * David Schleef <ds(AT)schleef.org>
-     * Charles Schmidt <cbschmid(AT)users.sourceforge.net>
-     * Goraxe <goraxe@ntlworld.com>
-     * Colin Walters <walters(AT)gnu.org>
-     * Kristian Rietveld <kris(AT)gtk.org>
+     * Jan Schmidt <thaytan(AT)bigpond.net.au>
+     * Daniel Fischer <dan(AT)f3c.com>
 
   Misc
 
      * Christian Fredrik Kalager Schaller <Uraeus(AT)gnome.org>
-     * Tim Jansen <tim.jansen(AT)kde.org>
-     * Leif Morgan Johnson <lmjohns3(AT)eos.ncsu.edu>
-     * Christian Meyer <chrisime(AT)gnome.org>
-
-   [1]  It  is  a  little-known fact that the Beatles decided their track
-   listing  for their albums based on a process called the 'GEP' process.
-   After  some  initial  problems,  this worked very well. The only known
-   failure  of  this  process  happened when George Harrison commited the
-   out-of-place  'Within  You  Without  You'  to  Sergeant Pepper without
-   review  by  the  other  band members. This near split-up led to one of
-   their finest songs on the world-reknowned White Album. 
+     * Alp Toker <alp(AT)atoker.com>
 
 References
 
    1. http://www.gstreamer.net/status/?category=2
-   2. http://www.geocrawler.com/lists/3/SourceForge/1504/0/9557296/
-   3. http://gstreamer.net/
-   4. http://bugzilla.gnome.org/
-   5. http://gstreamer.sf.net/
+   2. http://gstreamer.net/
+   3. http://bugzilla.gnome.org/
+   4. http://gstreamer.sf.net/
