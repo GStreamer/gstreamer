@@ -1,3 +1,10 @@
+2004-02-02  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_renegotiate_size),
+	(gst_ximagesink_handle_xevents): Better X events handling, only take
+	the latest events for configure and motion.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_handle_xevents): same.
+
 2004-02-02  Jon Trowbridge  <trow@gnu.org>
 
 	reviewed by: David Schleef  <ds@schleef.org>
