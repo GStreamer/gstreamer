@@ -411,6 +411,9 @@ GstElement*		gst_element_factory_create		(GstElementFactory *factory,
 GstElement*		gst_element_factory_make		(const gchar *factoryname, const gchar *name);
 GstElement*		gst_element_factory_make_or_warn	(const gchar *factoryname, const gchar *name);
 
+#define			gst_element_factory_set_rank(factory, rank) \
+				gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank)
+
 G_END_DECLS
 
 

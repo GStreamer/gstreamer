@@ -74,6 +74,8 @@ void		gst_plugin_feature_unload_thyself 	(GstPluginFeature *feature);
 gboolean	gst_plugin_feature_type_name_filter	(GstPluginFeature *feature,
 							 GstTypeNameData *data);
 
+void		gst_plugin_feature_set_rank		(GstPluginFeature *feature, guint16 rank);
+
 G_END_DECLS
 
 

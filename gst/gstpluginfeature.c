@@ -136,3 +136,21 @@ gst_plugin_feature_type_name_filter (GstPluginFeature *feature,
   return ((data->type == 0    || data->type == G_OBJECT_TYPE (feature)) &&
           (data->name == NULL || !strcmp (data->name, GST_PLUGIN_FEATURE_NAME (feature))));
 }
+
+/**
+ * gst_plugin_feature_set_rank:
+ * @feature: feature to rank
+ * @rank: rank value - higher number means more priority rank
+ *
+ * Specifies a rank for a plugin feature, so that autoplugging uses
+ * the most appropriate feature.
+ */
+void
+gst_plugin_feature_set_rank (GstPluginFeature *feature, guint16 rank)
+{
+  g_return_if_fail (feature != NULL);
+  g_return_if_fail (GST_IS_PLUGIN_FEATURE (feature));
+
+  feature->rank = rank;
+}
+
