@@ -167,6 +167,7 @@ static GstTypeDefinition dv_definition = {
 /* A number of functon prototypes are given so we can refer to them later. */
 static void		gst_dvdec_class_init		(GstDVDecClass *klass);
 static void		gst_dvdec_init			(GstDVDec *dvdec);
+static void		gst_dvdec_destroy		(GObject *object);
 
 static gboolean 	gst_dvdec_src_query 		(GstPad *pad, GstPadQueryType type,
                     					 GstFormat *format, gint64 *value);
@@ -248,11 +249,20 @@ gst_dvdec_class_init (GstDVDecClass *klass)
 
   gobject_class->set_property = gst_dvdec_set_property;
   gobject_class->get_property = gst_dvdec_get_property;
-
+  gobject_class->dispose = gst_dvdec_destroy;
+  
   gstelement_class->change_state = gst_dvdec_change_state;
 
   /* table initialization, only do once */
   dv_init(0, 0);
+}
+
+static void
+gst_dvdec_destroy (GObject *object)
+{
+	GstDVDec *dvdec = GST_DVDEC(object);
+
+	dv_decoder_free(dvdec->decoder);
 }
 
 /* This function is responsible for initializing a specific instance of
