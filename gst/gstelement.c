@@ -963,7 +963,8 @@ gst_element_dispose (GObject *object)
     orig = pads = g_list_copy (element->pads);
     while (pads) {
       pad = GST_PAD (pads->data);
-      gst_object_unref (GST_OBJECT (pad));
+      // the gst_object_unparent will do the unreffing
+      gst_element_remove_pad(element, pad);
       pads = g_list_next (pads);
     }
     g_list_free (orig);
