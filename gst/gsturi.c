@@ -157,6 +157,16 @@ g_str_has_prefix_glib22 (gchar *haystack, gchar *needle)
   return FALSE;
 }
 
+/**
+ * gst_uri_handler_uri_filter:
+ * @feature: the feature to inspect
+ * @uri: the name of the uri to match
+ *
+ * Check if the given pluginfeature is a uri hanler and that
+ * it can handle the given uri.
+ *
+ * Returns: TRUE if the feature can handle the uri.
+ */
 gboolean
 gst_uri_handler_uri_filter (GstPluginFeature *feature, const gchar *uri)
 {
@@ -169,6 +179,7 @@ gst_uri_handler_uri_filter (GstPluginFeature *feature, const gchar *uri)
   }
   return FALSE;
 }
+
 /**
  * gst_uri_handler_find_by_uri:
  * @uri: the uri to find a handler for

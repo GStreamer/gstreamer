@@ -345,6 +345,19 @@ gst_plugin_is_loaded (GstPlugin *plugin)
   return (plugin->module != NULL);
 }
 
+/**
+ * gst_plugin_feature_list:
+ * @plugin: plugin to query
+ * @filter: the filter to use
+ * @first: only return first match
+ * @user_data: user data passed to the filter function
+ *
+ * Runs a filter against all plugin features and returns a GList with
+ * the results. If the first flag is set, only the first match is 
+ * returned (as a list with a single object).
+ *
+ * Returns: a GList of features, g_list_free after use.
+ */
 GList*
 gst_plugin_feature_filter (GstPlugin *plugin,
 		           GstPluginFeatureFilter filter,
@@ -362,7 +375,7 @@ typedef struct
   GList                 *result;
 } FeatureFilterData;
 
-gboolean
+static gboolean
 _feature_filter (GstPlugin *plugin, gpointer user_data)
 {
   GList *result;
@@ -376,6 +389,20 @@ _feature_filter (GstPlugin *plugin, gpointer user_data)
   return FALSE;
 }
 
+/**
+ * gst_plugin_list_feature_list:
+ * @list: a list of plugins to query
+ * @filter: the filter to use
+ * @first: only return first match
+ * @user_data: user data passed to the filter function
+ *
+ * Runs a filter against all plugin features of the plugins in the given
+ * list and returns a GList with the results. 
+ * If the first flag is set, only the first match is 
+ * returned (as a list with a single object).
+ *
+ * Returns: a GList of features, g_list_free after use.
+ */
 GList*
 gst_plugin_list_feature_filter  (GList *list, 
 		                 GstPluginFeatureFilter filter,
@@ -396,7 +423,16 @@ gst_plugin_list_feature_filter  (GList *list,
   return data.result;
 }
 
-
+/**
+ * gst_plugin_name_filter:
+ * @plugin: the plugin to check
+ * @name: the name of the plugin
+ *
+ * A standard filterthat returns TRUE when the plugin is of the
+ * given name.
+ *
+ * Returns: TRUE if the plugin is of the given name.
+ */
 gboolean
 gst_plugin_name_filter (GstPlugin *plugin, const gchar *name)
 {

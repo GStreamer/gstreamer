@@ -299,6 +299,19 @@ gst_registry_remove_plugin (GstRegistry *registry, GstPlugin *plugin)
   registry->plugins = g_list_remove (registry->plugins, plugin);
 }
 
+/**
+ * gst_registry_plugin_filter:
+ * @registry: registry to query
+ * @filter: the filter to use
+ * @first: only return first match
+ * @user_data: user data passed to the filter function
+ *
+ * Runs a filter against all plugins in the registry and returns a GList with
+ * the results. If the first flag is set, only the first match is 
+ * returned (as a list with a single object).
+ *
+ * Returns: a GList of plugins, g_list_free after use.
+ */
 GList*
 gst_registry_plugin_filter (GstRegistry *registry, 
 		            GstPluginFilter filter, 
@@ -310,6 +323,20 @@ gst_registry_plugin_filter (GstRegistry *registry,
   return gst_filter_run (registry->plugins, (GstFilterFunc) filter, first, user_data);
 }
 
+/**
+ * gst_registry_feature_filter:
+ * @registry: registry to query
+ * @filter: the filter to use
+ * @first: only return first match
+ * @user_data: user data passed to the filter function
+ *
+ * Runs a filter against all features of the plugins in the registry 
+ * and returns a GList with the results. 
+ * If the first flag is set, only the first match is 
+ * returned (as a list with a single object).
+ *
+ * Returns: a GList of plugin features, g_list_free after use.
+ */
 GList*
 gst_registry_feature_filter (GstRegistry *registry,
 		             GstPluginFeatureFilter filter,

@@ -27,7 +27,10 @@
 #include "gstlog.h"
 #include "gstfilter.h"
 
+/* list of registries in the pool */
 static GList *_gst_registry_pool = NULL;
+/* list of plugins without a registry, like statically linked
+ * plugins */
 static GList *_gst_registry_pool_plugins = NULL;
 
 /**
@@ -132,6 +135,18 @@ gst_registry_pool_plugin_list (void)
   return gst_registry_pool_plugin_filter (NULL, FALSE, NULL);
 }
 
+/**
+ * gst_registry_pool_plugin_filter:
+ * @filter: the filter to use
+ * @first: only return first match
+ * @user_data: user data passed to the filter function
+ *
+ * Runs a filter against all plugins in all registries and returns a GList with
+ * the results. If the first flag is set, only the first match is 
+ * returned (as a list with a single object).
+ *
+ * Returns: a GList of plugins, g_list_free after use.
+ */
 GList*
 gst_registry_pool_plugin_filter (GstPluginFilter filter, gboolean first, gpointer user_data)
 {
