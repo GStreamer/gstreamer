@@ -27,47 +27,37 @@
 typedef struct _GstMask GstMask;
 typedef struct _GstMaskDefinition GstMaskDefinition;
 
-typedef GstMask* 	(*GstMaskNewFunc)		(GstMaskDefinition *definition,
-							 gint bpp, gint width, gint height);
+typedef void	 	(*GstMaskDrawFunc)		(GstMask *mask);
 typedef void	 	(*GstMaskDestroyFunc)		(GstMask *mask);
-typedef void	 	(*GstMaskUpdateFunc)		(GstMask *mask, 
-		 					 GstClockTime position, 
-							 GstClockTime duration);
+
 struct _GstMaskDefinition {
   gint 			 type;
   gchar 		*short_name;
   gchar 		*long_name;
-  GstMaskNewFunc	 new_func;
+  GstMaskDrawFunc	 draw_func;
   GstMaskDestroyFunc	 destroy_func;
-  GstMaskUpdateFunc	 update_func;
+  gpointer		 user_data;
 };
 
 struct _GstMask {
   gint 			 type;
-  guint8 		*data;
+  guint32 		*data;
+  gpointer		 user_data;
 
   gint			 width;
   gint			 height;
   gint			 bpp;
 
-  GstMaskUpdateFunc 	 update_func;
   GstMaskDestroyFunc 	 destroy_func;
 };
 
 void			_gst_mask_init			(void);
 void			_gst_mask_register		(GstMaskDefinition *definition);
 
-GstMask*		_gst_mask_default_new 		(GstMaskDefinition *definition,
-		 					 gint bpp, gint width, gint height);
 void			_gst_mask_default_destroy	(GstMask *mask);
 
 const GList*		gst_mask_get_definitions	(void);
 GstMask*		gst_mask_factory_new 		(gint type, gint bpp, gint width, gint height);
 void			gst_mask_destroy		(GstMask *mask);
-
-void			gst_mask_update 		(GstMask *mask,
-							 GstClockTime position, 
-							 GstClockTime duration);
-
 
 #endif /* __GST_MASK_H__ */
