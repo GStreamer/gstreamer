@@ -316,8 +316,8 @@ gst_esdsink_chain (GstPad * pad, GstData * _data)
             goto done;
           }
           /* connection closed? */
-          GST_ELEMENT_ERROR (esdsink, RESOURCE, WRITE, (NULL),
-              ("communication with ESD failed"));
+          GST_ELEMENT_ERROR (esdsink, RESOURCE, WRITE,
+              ("Failed to write data to the esound daemon"), GST_ERROR_SYSTEM);
           return;
         }
 
