@@ -1,5 +1,11 @@
 2004-09-24  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstplaybasebin.c: (new_decoded_pad):
+	Only signal the no_more_pads signal when we have
+	added the stream to our list.
+
+2004-09-24  Wim Taymans  <wim@fluendo.com>
+
 	* gst/playback/gstplaybasebin.c: (remove_prerolls),
 	(new_decoded_pad):
 	* gst/playback/gstplaybasebin.h:
