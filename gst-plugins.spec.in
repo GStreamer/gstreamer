@@ -32,7 +32,7 @@ plugins.
 %doc AUTHORS COPYING README  
 %{_bindir}/gst-launch-ext
 %prep
-%setup -n gst-plugins
+%setup -n gst-plugins-%{ver}
 %build
 CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --sysconfdir=%{sysconfdir} --mandir=$RPM_BUILD_ROOT%{prefix}/share/man --enable-DEBUG 
 
