@@ -65,11 +65,11 @@ print_element_info (GstElementFactory *factory)
   GstElement *element;
   GstObjectClass *gstobject_class;
   GstElementClass *gstelement_class;
-  GList *pads, *caps;
+  GList *pads;
+  GstCaps *caps;
   GstPad *pad;
   GstRealPad *realpad;
   GstPadTemplate *padtemplate;
-  GstCaps *cap;
   GtkArg *args;
   guint32 *flags;
   gint num_args,i;
@@ -121,19 +121,18 @@ print_element_info (GstElementFactory *factory)
         while (caps) {
  	  GstType *type;
 
-          cap = (GstCaps*)(caps->data);
-          caps = g_list_next(caps);
+          printf("      '%s':\n",caps->name);
 
-          printf("      '%s':\n",cap->name);
-
-	  type = gst_type_find_by_id (cap->id);
+	  type = gst_type_find_by_id (caps->id);
 	  if (type) 
             printf("        MIME type: '%s':\n",type->mime);
 	  else
             printf("        MIME type: 'unknown/unknown':\n");
 
-	  if (cap->properties)
-            print_props(cap->properties,"        ");
+	  if (caps->properties)
+            print_props(caps->properties,"        ");
+
+	  caps = caps->next;
         }
       }
 
@@ -210,19 +209,18 @@ print_element_info (GstElementFactory *factory)
         while (caps) {
 	  GstType *type;
 
-          cap = (GstCaps*)(caps->data);
-          caps = g_list_next(caps);
+          printf("      '%s':\n",caps->name);
 
-          printf("      '%s':\n",cap->name);
-
-	  type = gst_type_find_by_id (cap->id);
+	  type = gst_type_find_by_id (caps->id);
 	  if (type) 
             printf("        MIME type: '%s':\n",type->mime);
 	  else
             printf("        MIME type: 'unknown/unknown':\n");
 
-	  if (cap->properties)
-            print_props(cap->properties,"        ");
+	  if (caps->properties)
+            print_props(caps->properties,"        ");
+
+	  caps = caps->next;
         }
       }
 
