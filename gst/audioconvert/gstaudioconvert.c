@@ -264,6 +264,7 @@ gst_audio_convert_dispose (GObject * obj)
     g_free (this->srccaps.pos);
     this->srccaps.pos = NULL;
   }
+  G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
 
 /*** GSTREAMER FUNCTIONS ******************************************************/
