@@ -110,8 +110,8 @@ GstElement *gst_elementfactory_create(GstElementFactory *factory,
   GstElement *element;
   GstElementClass *oclass;
 
-  g_return_if_fail(factory != NULL);
-  g_return_if_fail(factory->type != 0);
+  g_return_val_if_fail(factory != NULL, NULL);
+  g_return_val_if_fail(factory->type != 0, NULL);
 
   // create an instance of the element
   element = GST_ELEMENT(gtk_type_new(factory->type));

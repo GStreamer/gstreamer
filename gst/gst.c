@@ -31,7 +31,6 @@ extern gint _gst_trace_on;
  */
 void gst_init(int *argc,char **argv[]) {
   GstTrace *gst_trace;
-  GstElementFactory *factory;
 
   gtk_init(argc,argv);
 

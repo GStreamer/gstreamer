@@ -49,7 +49,7 @@ typedef GstPlugin * (*GstPluginInitFunc) (GModule *module);
 GstPlugin *gst_plugin_new(gchar *name);
 void gst_plugin_set_longname(GstPlugin *plugin,gchar *longname);
 
-void gst_plugin_init();
+void _gst_plugin_initialize();
 void gst_plugin_load_all();
 gboolean gst_plugin_load(gchar *name);
 gboolean gst_plugin_load_absolute(gchar *name);

@@ -8,23 +8,15 @@ gboolean idle_func(gpointer data);
 GstElement *videosink;
 GstElement *src;
 
-void eof(GstSrc *src) {
-  g_print("have eos, quitting\n");
-  exit(0);
-}
-
-void resize(GtkWidget *wid, GtkRequisition *req, gpointer sink) {
-  g_print("have resize %d %d\n", req->width, req->height);
-  gtk_object_set(GTK_OBJECT(videosink),"width",req->width,"height",req->height,NULL);
-}
-
-
 int main(int argc,char *argv[]) {
   GstElement *bin;
   GstElementFactory *srcfactory;
   GstElementFactory *videosinkfactory;
 
   GtkWidget *appwindow;
+  GtkWidget *vbox1;
+  GtkWidget *button;
+  GtkWidget *draw;
 
 
 	_gst_plugin_spew = TRUE;
@@ -51,16 +43,27 @@ int main(int argc,char *argv[]) {
   gst_pad_connect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(videosink,"sink"));
 
-	gtk_signal_connect(GTK_OBJECT(src),"eos",
-							         GTK_SIGNAL_FUNC(eof),NULL);
-
   appwindow = gnome_app_new("Videotest","Videotest");
-  gnome_app_set_contents(GNOME_APP(appwindow),
-									gst_util_get_widget_arg(GTK_OBJECT(videosink),"widget"));
+
+	vbox1 = gtk_vbox_new (FALSE, 0);
+	gtk_widget_show (vbox1);
+
+  button = gtk_button_new_with_label(_("test"));//_with_label (_("chup"));
+	gtk_widget_show (button);
+  gtk_box_pack_start (GTK_BOX (vbox1), button, FALSE, FALSE, 0);
+  //gtk_widget_set_usize (button, 50, 50);
+  //gtk_widget_set_usize (button, 0, 0);
+
+	draw = gst_util_get_widget_arg(GTK_OBJECT(videosink),"widget"),
+  gtk_box_pack_start (GTK_BOX (vbox1), 
+									draw,
+  								TRUE, TRUE, 0);
+	gtk_widget_show (draw);
+	
+  gnome_app_set_contents(GNOME_APP(appwindow), vbox1);
+								
   gtk_object_set(GTK_OBJECT(appwindow),"allow_grow",TRUE,NULL);
   gtk_object_set(GTK_OBJECT(appwindow),"allow_shrink",TRUE,NULL);
-//	gtk_signal_connect(GTK_OBJECT(appwindow),"size-request",
-//						         GTK_SIGNAL_FUNC(resize),videosink);
 
   gtk_widget_show_all(appwindow);
 

@@ -20,6 +20,7 @@
 
 #include <gtk/gtk.h>
 #include <gst/gst.h>
+#include <string.h>
 
 gint mp3_typefind(GstBuffer *buf,gpointer *private);
 gint wav_typefind(GstBuffer *buf,gpointer *private);
@@ -30,7 +31,8 @@ GstTypeFactory _factories[] = {
   { "audio/wav", ".wav", wav_typefind },
   { "audio/ac3", ".ac3", NULL },
   { "video/raw", ".raw", NULL },
-  { "video/mpeg video/mpeg1", ".mpg", NULL },
+  { "video/mpeg video/mpeg1 video/mpeg-system", ".mpg", NULL },
+  { "video/x-msvideo video/msvideo video/avi", ".avi", NULL },
   { NULL, NULL, NULL },
 };
 
@@ -58,8 +60,8 @@ gboolean mp3_typefind(GstBuffer *buf,gpointer *private) {
 gboolean wav_typefind(GstBuffer *buf,gpointer *private) {
   gulong *data = (gulong *)GST_BUFFER_DATA(buf);
 
-  if (data[0] != "RIFF") return FALSE;
-  if (data[2] != "WAVE") return FALSE;
+  if (strncmp((char *)data[0], "RIFF", 4)) return FALSE;
+  if (strncmp((char *)data[2], "WAVE", 4)) return FALSE;
 
   return TRUE;
 }

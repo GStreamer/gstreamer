@@ -99,6 +99,8 @@ struct _GstBuffer {
   GstBuffer *parent;
 };
 
+/* initialisation */
+void _gst_buffer_initialize();
 /* creating a new buffer from scratch */
 GstBuffer *gst_buffer_new();
 

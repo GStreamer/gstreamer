@@ -94,7 +94,7 @@ gst_thread_class_init(GstThreadClass *klass) {
                           GTK_ARG_READWRITE, ARG_CREATE_THREAD);
 
   gstelement_class->change_state = gst_thread_change_state;
-//  gstelement_class->save_thyself = gst_thread_save_thyself;
+  gstelement_class->save_thyself = gst_thread_save_thyself;
 
   gtkobject_class->set_arg = gst_thread_set_arg;
   gtkobject_class->get_arg = gst_thread_get_arg;

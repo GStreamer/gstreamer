@@ -58,11 +58,14 @@ struct _MetaOverlay {
 	// the position of the window
 	int wx, wy;
 	// a reference to the object sending overlay change events
-	GstObject *overlay_element;
+	GtkWidget *overlay_element;
 	// the number of overlay regions
 	int clip_count;
 	// the overlay regions of the display window
 	struct _OverlayClip overlay_clip[32];
+
+  gint width;
+  gint height;
 	
 	gboolean did_overlay;
 	gboolean fully_obscured;

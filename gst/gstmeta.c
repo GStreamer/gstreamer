@@ -25,7 +25,7 @@
 GstMeta *gst_meta_new_size(gint size) {
   GstMeta *meta;
 
-  meta = g_malloc(size);
+  meta = g_malloc0(size);
   gst_meta_ref(meta);
 
   return meta;

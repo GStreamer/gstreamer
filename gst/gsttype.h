@@ -52,7 +52,7 @@ struct _GstTypeFactory {
 
 
 /* initialize the subsystem */
-void gst_type_initialize();
+void _gst_type_initialize();
 
 /* create a new type, or find/merge an existing one */
 guint16 gst_type_register(GstTypeFactory *factory);
