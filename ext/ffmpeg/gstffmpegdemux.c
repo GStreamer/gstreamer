@@ -288,7 +288,7 @@ gst_ffmpegdemux_src_event (GstPad * pad, GstEvent * event)
   gint64 offset;
 
   if (!stream)
-    return;
+    return FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -358,7 +358,6 @@ gst_ffmpegdemux_src_query (GstPad * pad,
   GstFFMpegDemux *demux = (GstFFMpegDemux *) gst_pad_get_parent (pad);
   AVStream *stream = gst_ffmpegdemux_stream_from_pad (pad);
   gboolean res = TRUE;
-  gint n;
 
   if (!stream || (*fmt == GST_FORMAT_DEFAULT &&
           stream->codec.codec_type != CODEC_TYPE_VIDEO))
@@ -407,7 +406,7 @@ gst_ffmpegdemux_src_convert (GstPad * pad,
     GstFormat src_fmt,
     gint64 src_value, GstFormat * dest_fmt, gint64 * dest_value)
 {
-  GstFFMpegDemux *demux = (GstFFMpegDemux *) gst_pad_get_parent (pad);
+  /*GstFFMpegDemux *demux = (GstFFMpegDemux *) gst_pad_get_parent (pad);*/
   AVStream *stream = gst_ffmpegdemux_stream_from_pad (pad);
   gboolean res = TRUE;
 
@@ -513,6 +512,8 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   location = g_strdup_printf ("gstreamer://%p", demux->sinkpad);
   res = av_open_input_file (&demux->context, location,
       oclass->in_plugin, 0, NULL);
+  if (res >= 0)
+    res = av_find_stream_info (demux->context);
   g_free (location);
   if (res < 0) {
     GST_ELEMENT_ERROR (demux, LIBRARY, FAILED, (NULL),
@@ -574,13 +575,34 @@ gst_ffmpegdemux_loop (GstElement * element)
   /* read a package */
   res = av_read_packet (demux->context, &pkt);
   if (res < 0) {
+#if 0
+    /* This doesn't work - FIXME */
     if (url_feof (&demux->context->pb)) {
-      gst_pad_event_default (demux->sinkpad, gst_event_new (GST_EVENT_EOS));
       gst_ffmpegdemux_close (demux);
+      gst_pad_event_default (demux->sinkpad, gst_event_new (GST_EVENT_EOS));
     } else {
       GST_ELEMENT_ERROR (demux, LIBRARY, FAILED, (NULL),
           (gst_ffmpegdemux_averror (res)));
     }
+#endif
+
+    /* so, we do it the hacky way. */
+    GstData *data = NULL;
+
+    do {
+      data = gst_pad_pull (demux->sinkpad);
+
+      if (!GST_IS_EVENT (data) ||
+          GST_EVENT_TYPE (GST_EVENT (data)) != GST_EVENT_EOS) {
+        gst_data_unref (data);
+        data = NULL;
+        continue;
+      }
+    } while (!data);
+
+    gst_ffmpegdemux_close (demux);
+    gst_pad_event_default (demux->sinkpad, GST_EVENT (data));
+
     return;
   }
 

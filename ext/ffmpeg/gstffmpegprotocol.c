@@ -81,6 +81,9 @@ gst_ffmpegdata_open (URLContext * h, const char *filename, int flags)
   info->pad = pad;
 
   h->priv_data = (void *) info;
+  h->is_streamed = FALSE;
+  h->flags = 0;
+  h->max_packet_size = 0;
 
   return 0;
 }
@@ -104,15 +107,18 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
 
   do {
     /* prevent EOS */
-    if (gst_bytestream_tell (bs) + size > gst_bytestream_length (bs))
-      request = gst_bytestream_length (bs) - gst_bytestream_tell (bs);
-    else
+    if (gst_bytestream_tell (bs) + size > gst_bytestream_length (bs)) {
+      request = (int) (gst_bytestream_length (bs) - gst_bytestream_tell (bs));
+      info->eos = TRUE;
+    } else {
       request = size;
+    }
 
-    if (request)
+    if (request > 0) {
       total = gst_bytestream_peek_bytes (bs, &data, request);
-    else
+    } else {
       total = 0;
+    }
 
     if (total < request) {
       GstEvent *event;
@@ -131,6 +137,7 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
           gst_event_unref (event);
           break;
         case GST_EVENT_EOS:
+          g_warning ("Unexpected/unwanted eos in data function");
           info->eos = TRUE;
           gst_event_unref (event);
           break;
@@ -142,7 +149,7 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
   } while (!info->eos && total != request);
 
   memcpy (buf, data, total);
-  gst_bytestream_flush (bs, total);
+  gst_bytestream_flush_fast (bs, total);
 
   return total;
 }
@@ -164,7 +171,7 @@ gst_ffmpegdata_write (URLContext * h, unsigned char *buf, int size)
 
   gst_pad_push (info->pad, GST_DATA (outbuf));
 
-  return 0;
+  return size;
 }
 
 static offset_t
@@ -172,8 +179,18 @@ gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
 {
   GstSeekType seek_type = 0;
   GstProtocolInfo *info;
+  guint64 newpos;
 
   info = (GstProtocolInfo *) h->priv_data;
+
+  /* hack in ffmpeg to get filesize... */
+  if (whence == SEEK_END && pos == -1)
+    return gst_bytestream_length (info->bs) - 1;
+  /* another hack to get the current position... */
+  else if (whence == SEEK_CUR && pos == 0)
+    return gst_bytestream_tell (info->bs);
+  else
+    g_assert (pos >= 0);
 
   switch (whence) {
     case SEEK_SET:
@@ -191,12 +208,57 @@ gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
   }
 
   switch (info->flags) {
-    case URL_RDONLY:
+    case URL_RDONLY: {
+      GstEvent *event;
+      guint8 *data;
+      guint32 remaining;
+
+      /* handle discont */
       gst_bytestream_seek (info->bs, pos, seek_type);
+      /* prevent eos */
+      if (gst_bytestream_tell (info->bs) ==
+              gst_bytestream_length (info->bs)) {
+        info->eos = TRUE;
+        break;
+      }
+      info->eos = FALSE;
+      while (gst_bytestream_peek_bytes (info->bs, &data, 1) == 0) {
+        gst_bytestream_get_status (info->bs, &remaining, &event);
+
+        if (!event) {
+          g_warning ("no data, no event - panic!");
+          return -1;
+        }
+
+        switch (GST_EVENT_TYPE (event)) {
+          case GST_EVENT_EOS:
+            g_warning ("unexpected/unwanted EOS event after seek");
+            info->eos = TRUE;
+            gst_event_unref (event);
+            break;
+          case GST_EVENT_DISCONTINUOUS:
+            gst_bytestream_flush_fast (info->bs, remaining);
+            gst_event_unref (event); /* we expect this */
+            break;
+          default:
+            gst_pad_event_default (info->pad, event);
+            break;
+        }
+      }
+      newpos = gst_bytestream_tell (info->bs);
       break;
+    }
 
     case URL_WRONLY:
       gst_pad_push (info->pad, GST_DATA (gst_event_new_seek (seek_type, pos)));
+      /* this is screwy because there might be queues or scheduler-queued
+       * buffers... Argh! */
+      if (whence == SEEK_SET) {
+        newpos = pos;
+      } else {
+        g_warning ("Writer reposition: implement me\n");
+        newpos = 0;
+      }
       break;
 
     default:
@@ -204,7 +266,7 @@ gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
       break;
   }
 
-  return 0;
+  return newpos;
 }
 
 static int

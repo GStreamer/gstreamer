@@ -1,3 +1,18 @@
+2004-05-14  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_src_event),
+	(gst_ffmpegdemux_src_query), (gst_ffmpegdemux_src_convert),
+	(gst_ffmpegdemux_open), (gst_ffmpegdemux_loop):
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_open),
+	(gst_ffmpegdata_read), (gst_ffmpegdata_write),
+	(gst_ffmpegdata_seek):
+	  Fix up demuxer. Works now for all my files that I tried, even
+	  quicktime. I basically hack around the super-oversimplistic file
+	  I/O handling in ffmpeg in several ways together, and I also hack
+	  around the fairly annoying EOS-will-pause-the-source-element in
+	  GStreamer itself.
+	  This code is not pretty.
+
 2004-05-11  Jeremy Simon  <jesimon@libertysurf.fr>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
