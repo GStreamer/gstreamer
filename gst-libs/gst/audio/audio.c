@@ -40,7 +40,8 @@ gst_audio_frame_byte_size (GstPad* pad)
   if (caps == NULL)
   {
     /* ERROR: could not get caps of pad */
-    g_error ("gstaudio: warning: could not get caps of pad %p\n", pad);
+    g_warning ("gstaudio: warning: could not get caps of pad %p (%s)\n", 
+	       pad, GST_PAD_NAME (pad));
     return 0;
   }
 
