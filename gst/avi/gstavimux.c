@@ -233,6 +233,17 @@ gst_avimux_class_init (GstAviMuxClass *klass)
   gstelement_class->set_property = gst_avimux_set_property;
 }
 
+static const GstEventMask*
+gst_avimux_get_event_masks (GstPad *pad)
+{
+  static const GstEventMask gst_avimux_event_masks[] = {
+    { GST_EVENT_NEW_MEDIA, 0 },
+    { 0, }
+  };
+
+  return gst_avimux_event_masks;
+}
+
 static void 
 gst_avimux_init (GstAviMux *avimux) 
 {
@@ -243,6 +254,7 @@ gst_avimux_init (GstAviMux *avimux)
 
   GST_FLAG_SET (GST_ELEMENT(avimux), GST_ELEMENT_EVENT_AWARE);
   gst_pad_set_event_function(avimux->srcpad, gst_avimux_handle_event);
+  gst_pad_set_event_mask_function(avimux->srcpad, gst_avimux_get_event_masks);
 
   for (i=0;i<MAX_NUM_AUDIO_PADS;i++)
     avimux->audiosinkpad[i] = NULL;

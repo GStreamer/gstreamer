@@ -148,28 +148,33 @@ GST_PAD_TEMPLATE_FACTORY (src_audio_templ,
   )
 )
 
-static void 	gst_avi_demux_class_init	(GstAviDemuxClass *klass);
-static void 	gst_avi_demux_init		(GstAviDemux *avi_demux);
+static void 		gst_avi_demux_class_init		(GstAviDemuxClass *klass);
+static void 		gst_avi_demux_init			(GstAviDemux *avi_demux);
 
-static void 	gst_avi_demux_loop 		(GstElement *element);
+static void 		gst_avi_demux_loop 			(GstElement *element);
 
-static gboolean gst_avi_demux_process_chunk 	(GstAviDemux *avi_demux, guint64 *filepos,
-			    			 guint32 desired_tag,
-			    			 gint rec_depth, guint32 *chunksize);
+static gboolean 	gst_avi_demux_process_chunk 		(GstAviDemux *avi_demux, guint64 *filepos,
+				    				 guint32 desired_tag,
+				    				 gint rec_depth, guint32 *chunksize);
 
-static gboolean gst_avi_demux_send_event 	(GstElement *element, GstEvent *event);
+static gboolean 	gst_avi_demux_send_event 		(GstElement *element, GstEvent *event);
 
-static gboolean gst_avi_demux_handle_src_event 	(GstPad *pad, GstEvent *event);
-static gboolean gst_avi_demux_handle_src_query 	(GstPad *pad, GstPadQueryType type, 
-						 GstFormat *format, gint64 *value);
-static gboolean gst_avi_demux_src_convert 	(GstPad *pad, GstFormat src_format, gint64 src_value,
-	                  			 GstFormat *dest_format, gint64 *dest_value);
+static const GstEventMask*
+			gst_avi_demux_get_event_mask 		(GstPad *pad);
+static gboolean 	gst_avi_demux_handle_src_event 		(GstPad *pad, GstEvent *event);
+static const GstFormat* gst_avi_demux_get_src_formats 		(GstPad *pad); 
+static const GstPadQueryType*
+			gst_avi_demux_get_src_query_types 	(GstPad *pad);
+static gboolean 	gst_avi_demux_handle_src_query 		(GstPad *pad, GstPadQueryType type, 
+								 GstFormat *format, gint64 *value);
+static gboolean 	gst_avi_demux_src_convert 		(GstPad *pad, GstFormat src_format, gint64 src_value,
+	        	          				 GstFormat *dest_format, gint64 *dest_value);
 
 static GstElementStateReturn
-		gst_avi_demux_change_state 	(GstElement *element);
+			gst_avi_demux_change_state 		(GstElement *element);
 
-static void     gst_avi_demux_get_property      (GObject *object, guint prop_id, 	
-						 GValue *value, GParamSpec *pspec);
+static void     	gst_avi_demux_get_property      	(GObject *object, guint prop_id, 	
+								 GValue *value, GParamSpec *pspec);
 
 
 static GstElementClass *parent_class = NULL;
@@ -256,7 +261,6 @@ avi_type_find (GstBuffer *buf,
   new = GST_CAPS_NEW ("avi_type_find",
 		      "video/avi", 
 		        "format", GST_PROPS_STRING ("AVI"));
-
   return new;
 }
 
@@ -451,7 +455,10 @@ gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
   if (newcaps) capslist = gst_caps_append (capslist, newcaps);
 
   gst_pad_try_set_caps (srcpad, capslist);
+  gst_pad_set_formats_function (srcpad, gst_avi_demux_get_src_formats);
+  gst_pad_set_event_mask_function (srcpad, gst_avi_demux_get_event_mask);
   gst_pad_set_event_function (srcpad, gst_avi_demux_handle_src_event);
+  gst_pad_set_query_type_function (srcpad, gst_avi_demux_get_src_query_types);
   gst_pad_set_query_function (srcpad, gst_avi_demux_handle_src_query);
   gst_pad_set_convert_function (srcpad, gst_avi_demux_src_convert);
 
@@ -531,7 +538,10 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
 
 
   gst_pad_try_set_caps(srcpad, capslist);
+  gst_pad_set_formats_function (srcpad, gst_avi_demux_get_src_formats);
+  gst_pad_set_event_mask_function (srcpad, gst_avi_demux_get_event_mask);
   gst_pad_set_event_function (srcpad, gst_avi_demux_handle_src_event);
+  gst_pad_set_query_type_function (srcpad, gst_avi_demux_get_src_query_types);
   gst_pad_set_query_function (srcpad, gst_avi_demux_handle_src_query);
   gst_pad_set_convert_function (srcpad, gst_avi_demux_src_convert);
 
@@ -593,7 +603,10 @@ gst_avi_demux_strf_iavs (GstAviDemux *avi_demux)
   if (newcaps) capslist = gst_caps_append(capslist, newcaps);
 
   gst_pad_try_set_caps(srcpad, capslist);
+  gst_pad_set_formats_function (srcpad, gst_avi_demux_get_src_formats);
+  gst_pad_set_event_mask_function (srcpad, gst_avi_demux_get_event_mask);
   gst_pad_set_event_function (srcpad, gst_avi_demux_handle_src_event);
+  gst_pad_set_query_type_function (srcpad, gst_avi_demux_get_src_query_types);
   gst_pad_set_query_function (srcpad, gst_avi_demux_handle_src_query);
   gst_pad_set_convert_function (srcpad, gst_avi_demux_src_convert);
 
@@ -777,6 +790,26 @@ gst_avi_demux_index_entry_for_time (GstAviDemux *avi_demux, gint stream_nr, guin
   return last_entry;
 }
 
+static const GstFormat*
+gst_avi_demux_get_src_formats (GstPad *pad) 
+{
+  avi_stream_context *stream = gst_pad_get_element_private (pad);
+
+  static const GstFormat src_a_formats[] = {
+    GST_FORMAT_TIME,
+    GST_FORMAT_BYTES,
+    GST_FORMAT_UNITS,
+    0
+  };
+  static const GstFormat src_v_formats[] = {
+    GST_FORMAT_TIME,
+    GST_FORMAT_UNITS,
+    0
+  };
+
+  return (stream->strh.type == GST_RIFF_FCC_auds ? src_a_formats : src_v_formats);
+}
+
 static gboolean
 gst_avi_demux_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
 	                   GstFormat *dest_format, gint64 *dest_value)
@@ -784,14 +817,15 @@ gst_avi_demux_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
   gboolean res = TRUE;
   avi_stream_context *stream = gst_pad_get_element_private (pad);
 
+  if (stream->strh.type != GST_RIFF_FCC_auds && 
+		  (src_format == GST_FORMAT_BYTES || *dest_format == GST_FORMAT_BYTES))
+    return FALSE;
+
   switch (src_format) {
     case GST_FORMAT_TIME:
       switch (*dest_format) {
 	case GST_FORMAT_BYTES:
-          if (stream->strh.type == GST_RIFF_FCC_auds)
-            *dest_value = src_value * stream->strh.rate / (stream->strh.scale * GST_SECOND);
-	  else
-	    res = FALSE;
+          *dest_value = src_value * stream->strh.rate / (stream->strh.scale * GST_SECOND);
           break;
         case GST_FORMAT_DEFAULT:
           *dest_format = GST_FORMAT_UNITS;
@@ -806,10 +840,8 @@ gst_avi_demux_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
 	case GST_FORMAT_TIME:
-          if (stream->strh.type == GST_RIFF_FCC_auds)
-            *dest_value = src_value * GST_SECOND * stream->strh.scale  / stream->strh.rate;
-	  else
-	    res = FALSE;
+          *dest_value = src_value * GST_SECOND * stream->strh.scale  / stream->strh.rate;
+	  break;
 	default:
 	  res = FALSE;
 	  break;
@@ -832,6 +864,18 @@ gst_avi_demux_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
   return res;
 }
 
+static const GstPadQueryType*
+gst_avi_demux_get_src_query_types (GstPad *pad) 
+{
+  static const GstPadQueryType src_types[] = {
+    GST_PAD_QUERY_TOTAL,
+    GST_PAD_QUERY_POSITION,
+    0
+  };
+
+  return src_types;
+}
+
 static gboolean
 gst_avi_demux_handle_src_query (GstPad *pad, GstPadQueryType type, 
 				GstFormat *format, gint64 *value)
@@ -850,8 +894,9 @@ gst_avi_demux_handle_src_query (GstPad *pad, GstPadQueryType type,
           *value = GST_SECOND * stream->strh.scale * stream->strh.length / stream->strh.rate;
 	  break;
         case GST_FORMAT_BYTES:
-          if (stream->strh.type == GST_RIFF_FCC_auds)
-            *value = stream->strh.length;
+          if (stream->strh.type == GST_RIFF_FCC_auds) {
+            *value = stream->total_bytes;
+	  }
 	  else
 	    res = FALSE;
 	  break;
@@ -975,6 +1020,17 @@ gst_avi_demux_send_event (GstElement *element, GstEvent *event)
   return FALSE;
 }
 
+static const GstEventMask*
+gst_avi_demux_get_event_mask (GstPad *pad)
+{
+  static const GstEventMask masks[] = {
+    { GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_KEY_UNIT },
+    { 0, }
+  };
+
+  return masks;
+}
+	
 static gboolean
 gst_avi_demux_handle_src_event (GstPad *pad, GstEvent *event)
 {
