@@ -204,11 +204,11 @@ main (gint argc, gchar * argv[])
 
   g_print ("%d alloc+frees X %d threads\n", num_allocs, num_threads);
   time = run_test (gmemchunk_alloc, gmemchunk_free);
-  g_print ("%fs - GMemChunk\n", time);
+  g_print ("%fs (%fs/thread) - GMemChunk\n", time, time / num_threads);
   time = run_test (gstmemchunk_alloc, gstmemchunk_free);
-  g_print ("%fs - GstMemChunk\n", time);
+  g_print ("%fs (%fs/thread) - GstMemChunk\n", time, time / num_threads);
   time = run_test (normal_alloc, normal_free);
-  g_print ("%fs - g_malloc/g_free\n", time);
+  g_print ("%fs (%fs/thread) - g_malloc/g_free\n", time, time / num_threads);
 
   /* g_mem_chunk_info (); */
   return 0;
