@@ -25,17 +25,18 @@
 #include <gst/gst.h>
 
 
-G_BEGIN_DECLS typedef struct _GstVideofilter GstVideofilter;
+G_BEGIN_DECLS
+
+typedef struct _GstVideofilter GstVideofilter;
 typedef struct _GstVideofilterClass GstVideofilterClass;
 
-typedef void (*GstVideofilterFilterFunc) (GstVideofilter * filter,
+typedef void (*GstVideofilterFilterFunc)(GstVideofilter *filter,
     void *out_data, void *in_data);
 
-typedef void (*GstVideofilterSetupFunc) (GstVideofilter * filter);
+typedef void (*GstVideofilterSetupFunc)(GstVideofilter *filter);
 
 typedef struct _GstVideofilterFormat GstVideofilterFormat;
-struct _GstVideofilterFormat
-{
+struct _GstVideofilterFormat {
   char *fourcc;
   int bpp;
   GstVideofilterFilterFunc filter_func;
@@ -57,11 +58,10 @@ struct _GstVideofilterFormat
 #define GST_IS_VIDEOFILTER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEOFILTER))
 
-struct _GstVideofilter
-{
+struct _GstVideofilter {
   GstElement element;
 
-  GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad,*srcpad;
 
   /* video state */
   gboolean inited;
@@ -81,29 +81,28 @@ struct _GstVideofilter
   GstBuffer *out_buf;
 };
 
-struct _GstVideofilterClass
-{
+struct _GstVideofilterClass {
   GstElementClass parent_class;
 
   GPtrArray *formats;
   GstVideofilterSetupFunc setup;
 };
 
-GType gst_videofilter_get_type (void);
+GType gst_videofilter_get_type(void);
 
-int gst_videofilter_get_input_width (GstVideofilter * videofilter);
-int gst_videofilter_get_input_height (GstVideofilter * videofilter);
-void gst_videofilter_set_output_size (GstVideofilter * videofilter,
+int gst_videofilter_get_input_width(GstVideofilter *videofilter);
+int gst_videofilter_get_input_height(GstVideofilter *videofilter);
+void gst_videofilter_set_output_size(GstVideofilter *videofilter,
     int width, int height);
-GstVideofilterFormat *gst_videofilter_find_format_by_structure (GstVideofilter *
-    filter, const GstStructure * structure);
-GstCaps *gst_videofilter_class_get_capslist (GstVideofilterClass *
-    videofilterclass);
+GstVideofilterFormat *gst_videofilter_find_format_by_structure (GstVideofilter *filter,
+    const GstStructure *structure);
+GstCaps *gst_videofilter_class_get_capslist(GstVideofilterClass *videofilterclass);
 
-void gst_videofilter_class_add_format (GstVideofilterClass * videofilterclass,
-    GstVideofilterFormat * format);
-void gst_videofilter_class_add_pad_templates (GstVideofilterClass *
-    videofilterclass);
+void gst_videofilter_class_add_format(GstVideofilterClass *videofilterclass,
+    GstVideofilterFormat *format);
+void gst_videofilter_class_add_pad_templates (GstVideofilterClass *videofilterclass);
 
 G_END_DECLS
+
 #endif /* __GST_VIDEOFILTER_H__ */
+

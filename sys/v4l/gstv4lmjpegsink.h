@@ -26,6 +26,8 @@
 
 
 G_BEGIN_DECLS
+
+
 #define GST_TYPE_V4LMJPEGSINK \
   (gst_v4lmjpegsink_get_type())
 #define GST_V4LMJPEGSINK(obj) \
@@ -36,11 +38,11 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_V4LMJPEGSINK))
 #define GST_IS_V4LMJPEGSINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4LMJPEGSINK))
+
 typedef struct _GstV4lMjpegSink GstV4lMjpegSink;
 typedef struct _GstV4lMjpegSinkClass GstV4lMjpegSinkClass;
 
-struct _GstV4lMjpegSink
-{
+struct _GstV4lMjpegSink {
   GstV4lElement v4lelement;
 
   /* the sink pas */
@@ -58,7 +60,7 @@ struct _GstV4lMjpegSink
   struct mjpeg_requestbuffers breq;
 
   /* thread to keep track of synced frames */
-  gint8 *isqueued_queued_frames;	/* 1 = queued, 0 = unqueued, -1 = error */
+  gint8 *isqueued_queued_frames; /* 1 = queued, 0 = unqueued, -1 = error */
   GThread *thread_queued_frames;
   GMutex *mutex_queued_frames;
   GCond **cond_queued_frames;
@@ -74,19 +76,19 @@ struct _GstV4lMjpegSink
   gint y_offset;
 
   gint numbufs;
-  gint bufsize;			/* in KB */
+  gint bufsize; /* in KB */
 };
 
-struct _GstV4lMjpegSinkClass
-{
+struct _GstV4lMjpegSinkClass {
   GstV4lElementClass parent_class;
 
   /* signals */
-  void (*frame_displayed) (GstElement * element);
+  void (*frame_displayed) (GstElement *element);
 };
 
-GType gst_v4lmjpegsink_get_type (void);
+GType gst_v4lmjpegsink_get_type(void);
 
 
 G_END_DECLS
+
 #endif /* __GST_SDLVIDEOSINK_H__ */

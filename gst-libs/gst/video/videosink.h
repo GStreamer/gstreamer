@@ -17,17 +17,16 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
+ 
 #ifndef __GST_VIDEOSINK_H__
 #define __GST_VIDEOSINK_H__
 
 #include <gst/gst.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
-
+extern "C" {
+#endif /* __cplusplus */
+  
 #define GST_TYPE_VIDEOSINK (gst_videosink_get_type())
 #define GST_VIDEOSINK(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VIDEOSINK, GstVideoSink))
@@ -39,39 +38,37 @@ extern "C"
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VIDEOSINK))
 #define GST_VIDEOSINK_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VIDEOSINK, GstVideoSinkClass))
-
+  
 #define GST_VIDEOSINK_PAD(obj) (GST_VIDEOSINK (obj)->sinkpad)
 #define GST_VIDEOSINK_WIDTH(obj) (GST_VIDEOSINK (obj)->width)
 #define GST_VIDEOSINK_HEIGHT(obj) (GST_VIDEOSINK (obj)->height)
 #define GST_VIDEOSINK_CLOCK(obj) (GST_VIDEOSINK (obj)->clock)
+  
+typedef struct _GstVideoSink GstVideoSink;
+typedef struct _GstVideoSinkClass GstVideoSinkClass;
 
-  typedef struct _GstVideoSink GstVideoSink;
-  typedef struct _GstVideoSinkClass GstVideoSinkClass;
+struct _GstVideoSink {
+  GstElement element;
+  
+  GstPad *sinkpad;
+  
+  gint width, height;
+  
+  GstClock *clock;
+  
+  gpointer _gst_reserved[GST_PADDING];
+};
 
-  struct _GstVideoSink
-  {
-    GstElement element;
+struct _GstVideoSinkClass {
+  GstElementClass parent_class;
+      
+  gpointer _gst_reserved[GST_PADDING];
+};
 
-    GstPad *sinkpad;
-
-    gint width, height;
-
-    GstClock *clock;
-
-    gpointer _gst_reserved[GST_PADDING];
-  };
-
-  struct _GstVideoSinkClass
-  {
-    GstElementClass parent_class;
-
-    gpointer _gst_reserved[GST_PADDING];
-  };
-
-  GType gst_videosink_get_type (void);
+GType gst_videosink_get_type (void);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
-#endif				/* __GST_VIDEOSINK_H__ */
+#endif  /* __GST_VIDEOSINK_H__ */

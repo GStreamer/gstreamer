@@ -25,28 +25,29 @@
 #include "gstalsa.h"
 
 G_BEGIN_DECLS
+
 #define GST_ALSA_SRC(obj)            (G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_ALSA_SRC, GstAlsaSrc))
 #define GST_ALSA_SRC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_ALSA_SRC, GstAlsaSrcClass))
 #define GST_IS_ALSA_SRC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_ALSA_SRC))
 #define GST_IS_ALSA_SRC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_ALSA_SRC))
 #define GST_TYPE_ALSA_SRC            (gst_alsa_src_get_type())
+
 typedef struct _GstAlsaSrc GstAlsaSrc;
 typedef struct _GstAlsaSrcClass GstAlsaSrcClass;
 
-struct _GstAlsaSrc
-{
-  GstAlsa parent;
-  GstBuffer *buf[GST_ALSA_MAX_TRACKS];
+struct _GstAlsaSrc {
+  GstAlsa        parent;
+  GstBuffer     *buf[GST_ALSA_MAX_TRACKS];
 };
 
-struct _GstAlsaSrcClass
-{
+struct _GstAlsaSrcClass {
   GstAlsaClass parent_class;
 };
 
 GType gst_alsa_src_get_type (void);
 
-gboolean gst_alsa_src_factory_init (GstPlugin * plugin);
+gboolean gst_alsa_src_factory_init (GstPlugin *plugin);
 
 G_END_DECLS
+
 #endif /* __GST_ALSA_SRC_H__ */

@@ -26,6 +26,7 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_VIDEOTESTSRC \
   (gst_videotestsrc_get_type())
 #define GST_VIDEOTESTSRC(obj) \
@@ -36,8 +37,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEOTESTSRC))
 #define GST_IS_VIDEOTESTSRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEOTESTSRC))
-    typedef enum
-{
+
+typedef enum {
   GST_VIDEOTESTSRC_SMPTE,
   GST_VIDEOTESTSRC_SNOW,
   GST_VIDEOTESTSRC_BLACK,
@@ -46,11 +47,10 @@ G_BEGIN_DECLS
 typedef struct _GstVideotestsrc GstVideotestsrc;
 typedef struct _GstVideotestsrcClass GstVideotestsrcClass;
 
-struct _GstVideotestsrc
-{
+struct _GstVideotestsrc {
   GstElement element;
 
-  GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad,*srcpad;
 
   /* parameters */
   gboolean sync;
@@ -60,7 +60,7 @@ struct _GstVideotestsrc
   gint width;
   gint height;
   struct fourcc_list_struct *fourcc;
-
+  
   /* private */
   gint64 timestamp_offset;
   gint64 n_frames;
@@ -69,17 +69,15 @@ struct _GstVideotestsrc
   int type;
   GstClock *clock;
 
-  void (*make_image) (GstVideotestsrc * v, unsigned char *dest, int w, int h);
+  void (*make_image)(GstVideotestsrc *v, unsigned char *dest, int w, int h);
 };
 
-struct _GstVideotestsrcClass
-{
+struct _GstVideotestsrcClass {
   GstElementClass parent_class;
 };
 
-GType
-gst_videotestsrc_get_type (void)
-    G_GNUC_CONST;
+GType gst_videotestsrc_get_type(void) G_GNUC_CONST;
 
 G_END_DECLS
+
 #endif /* __GST_VIDEOTESTSRC_H__ */

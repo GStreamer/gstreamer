@@ -22,8 +22,8 @@
 #ifndef __GST_I18N_PLUGIN_H__
 #define __GST_I18N_PLUGIN_H__
 
-#include <locale.h>		/* some people need it and some people don't */
-#include "gettext.h"		/* included with gettext distribution and copied */
+#include <locale.h>  /* some people need it and some people don't */
+#include "gettext.h" /* included with gettext distribution and copied */
 
 #ifndef GETTEXT_PACKAGE
 #error You must define GETTEXT_PACKAGE before including this header.

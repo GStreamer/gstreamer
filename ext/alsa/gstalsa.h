@@ -72,8 +72,8 @@ GST_DEBUG_CATEGORY_EXTERN (alsa_debug);
 
 #define GST_ALSA_MIN_RATE	8000
 #define GST_ALSA_MAX_RATE	192000
-#define GST_ALSA_MAX_TRACKS	64	/* we don't support more than 64 tracks */
-#define GST_ALSA_MAX_CHANNELS	32	/* tracks can have up to 32 channels */
+#define GST_ALSA_MAX_TRACKS	64 /* we don't support more than 64 tracks */
+#define GST_ALSA_MAX_CHANNELS	32 /* tracks can have up to 32 channels */
 
 /* Mono is 1 channel ; the 5.1 standard is 6 channels. The value for
    GST_ALSA_MAX_CHANNELS comes from alsa/mixer.h. */
@@ -84,28 +84,27 @@ GST_DEBUG_CATEGORY_EXTERN (alsa_debug);
 #define GST_ALSA_DEFAULT_DISCONT (GST_SECOND / 10)
 
 G_BEGIN_DECLS
+
 #define GST_ALSA(obj)			(G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_ALSA, GstAlsa))
 #define GST_ALSA_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_ALSA, GstAlsaClass))
 #define GST_ALSA_GET_CLASS(obj)		(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_ALSA, GstAlsaClass))
 #define GST_IS_ALSA(obj)		(G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_ALSA))
 #define GST_IS_ALSA_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_ALSA))
 #define GST_TYPE_ALSA			(gst_alsa_get_type())
-    enum
-{
+
+enum {
   GST_ALSA_OPEN = GST_ELEMENT_FLAG_LAST,
   GST_ALSA_RUNNING,
   GST_ALSA_CAPS_NEGO,
   GST_ALSA_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 3,
 };
 
-typedef enum
-{
+typedef enum {
   GST_ALSA_CAPS_PAUSE = 0,
   GST_ALSA_CAPS_RESUME,
   GST_ALSA_CAPS_SYNC_START
-      /* add more */
-}
-GstAlsaPcmCaps;
+  /* add more */
+} GstAlsaPcmCaps;
 
 #define GST_ALSA_CAPS_IS_SET(obj, flag) (GST_ALSA (obj)->pcm_caps & (1<<(flag)))
 #define GST_ALSA_CAPS_SET(obj, flag, set) G_STMT_START{  \
@@ -119,62 +118,56 @@ typedef struct _GstAlsaClockClass GstAlsaClockClass;
 typedef struct _GstAlsa GstAlsa;
 typedef struct _GstAlsaClass GstAlsaClass;
 
-typedef int (*GstAlsaTransmitFunction) (GstAlsa * this,
-    snd_pcm_sframes_t * avail);
+typedef int (*GstAlsaTransmitFunction) (GstAlsa *this, snd_pcm_sframes_t *avail);
 
-typedef struct
-{
-  snd_pcm_format_t format;
-  guint rate;
-  gint channels;
-}
-GstAlsaFormat;
+typedef struct {
+  snd_pcm_format_t	format;
+  guint			rate;
+  gint			channels;
+} GstAlsaFormat;
 
-struct _GstAlsa
-{
-  GstElement parent;
+struct _GstAlsa {
+  GstElement			parent;
 
   /* array of GstAlsaPads */
-  GstPad *pad[GST_ALSA_MAX_TRACKS];
+  GstPad *			pad[GST_ALSA_MAX_TRACKS];
 
-  gchar *device;
-  gchar *cardname;
-  snd_pcm_t *handle;
-  snd_pcm_info_t *info;
-  guint pcm_caps;		/* capabilities of the pcm device, see GstAlsaPcmCaps */
-  snd_output_t *out;
+  gchar *			device;
+  snd_pcm_t *			handle;
+  snd_pcm_info_t *		info;
+  guint				pcm_caps;	/* capabilities of the pcm device, see GstAlsaPcmCaps */
+  snd_output_t *		out;
 
-  GstAlsaFormat *format;	/* NULL if undefined */
-  gboolean mmap;		/* use mmap transmit (fast) or read/write (sloooow) */
-  GstAlsaTransmitFunction transmit;
+  GstAlsaFormat *		format;		/* NULL if undefined */
+  gboolean			mmap; 		/* use mmap transmit (fast) or read/write (sloooow) */
+  GstAlsaTransmitFunction	transmit;
 
   /* latency / performance parameters */
-  snd_pcm_uframes_t period_size;
-  unsigned int period_count;
+  snd_pcm_uframes_t		period_size;
+  unsigned int			period_count;
 
-  gboolean autorecover;
+  gboolean			autorecover;
 
   /* clocking */
-  GstAlsaClock *clock;		/* our provided clock */
-  snd_pcm_uframes_t transmitted;	/* samples transmitted since last sync 
-					   This thing actually is our master clock.
-					   We will event insert silent samples or
-					   drop some to sync to incoming timestamps.
-					 */
-  GstClockTime max_discont;	/* max difference between current
-				   playback timestamp and buffers timestamps
-				 */
+  GstAlsaClock *		clock;		/* our provided clock */
+  snd_pcm_uframes_t		transmitted; 	/* samples transmitted since last sync 
+						   This thing actually is our master clock.
+						   We will event insert silent samples or
+						   drop some to sync to incoming timestamps.
+						 */
+  GstClockTime			max_discont;	/* max difference between current
+  						   playback timestamp and buffers timestamps
+						 */
 };
 
-struct _GstAlsaClass
-{
-  GstElementClass parent_class;
+struct _GstAlsaClass {
+  GstElementClass		parent_class;
 
-  snd_pcm_stream_t stream;
+  snd_pcm_stream_t		stream;
 
   /* different transmit functions */
-  GstAlsaTransmitFunction transmit_mmap;
-  GstAlsaTransmitFunction transmit_rw;
+  GstAlsaTransmitFunction	transmit_mmap;
+  GstAlsaTransmitFunction	transmit_rw;
 
   /* autodetected devices available */
   GList *devices;
@@ -182,29 +175,36 @@ struct _GstAlsaClass
 
 GType gst_alsa_get_type (void);
 
-void gst_alsa_set_eos (GstAlsa * this);
-GstPadLinkReturn gst_alsa_link (GstPad * pad, const GstCaps * caps);
-GstCaps *gst_alsa_get_caps (GstPad * pad);
-GstCaps *gst_alsa_fixate (GstPad * pad, const GstCaps * caps);
-GstCaps *gst_alsa_caps (snd_pcm_format_t format, gint rate, gint channels);
+void			gst_alsa_set_eos	(GstAlsa *		this);
+GstPadLinkReturn	gst_alsa_link		(GstPad *		pad,
+						 const GstCaps *	caps);
+GstCaps *		gst_alsa_get_caps	(GstPad *		pad);
+GstCaps *		gst_alsa_fixate 	(GstPad *		pad,
+                                                 const GstCaps *        caps);
+GstCaps *		gst_alsa_caps		(snd_pcm_format_t	format,
+						 gint			rate,
+						 gint			channels);
 
 /* audio processing functions */
-inline snd_pcm_sframes_t gst_alsa_update_avail (GstAlsa * this);
-inline gboolean gst_alsa_pcm_wait (GstAlsa * this);
-inline gboolean gst_alsa_start (GstAlsa * this);
-gboolean gst_alsa_xrun_recovery (GstAlsa * this);
+inline snd_pcm_sframes_t	gst_alsa_update_avail	(GstAlsa * this);
+inline gboolean			gst_alsa_pcm_wait	(GstAlsa * this);
+inline gboolean			gst_alsa_start		(GstAlsa * this);
+gboolean      			gst_alsa_xrun_recovery	(GstAlsa * this);
 
 /* format conversions */
-inline snd_pcm_uframes_t gst_alsa_timestamp_to_samples (GstAlsa * this,
-    GstClockTime time);
-inline GstClockTime gst_alsa_samples_to_timestamp (GstAlsa * this,
-    snd_pcm_uframes_t samples);
-inline snd_pcm_uframes_t gst_alsa_bytes_to_samples (GstAlsa * this,
-    guint bytes);
-inline guint gst_alsa_samples_to_bytes (GstAlsa * this,
-    snd_pcm_uframes_t samples);
-inline GstClockTime gst_alsa_bytes_to_timestamp (GstAlsa * this, guint bytes);
-inline guint gst_alsa_timestamp_to_bytes (GstAlsa * this, GstClockTime time);
+inline snd_pcm_uframes_t	gst_alsa_timestamp_to_samples 	(GstAlsa *		this,
+								 GstClockTime 		time);
+inline GstClockTime		gst_alsa_samples_to_timestamp 	(GstAlsa *		this,
+								 snd_pcm_uframes_t 	samples);
+inline snd_pcm_uframes_t	gst_alsa_bytes_to_samples 	(GstAlsa *		this,
+								 guint	 		bytes);
+inline guint			gst_alsa_samples_to_bytes 	(GstAlsa *		this,
+								 snd_pcm_uframes_t 	samples);
+inline GstClockTime		gst_alsa_bytes_to_timestamp 	(GstAlsa *		this,
+								 guint	 		bytes);
+inline guint			gst_alsa_timestamp_to_bytes 	(GstAlsa *		this,
+								 GstClockTime	 	time);
 
 G_END_DECLS
+
 #endif /* __GST_ALSA_H__ */

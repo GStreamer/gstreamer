@@ -25,36 +25,38 @@
 #include "gstalsa.h"
 
 G_BEGIN_DECLS
+
 #define GST_ALSA_CLOCK(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_CLOCK,GstAlsaClock))
 #define GST_ALSA_CLOCK_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_CLOCK,GstAlsaClockClass))
 #define GST_IS_ALSA_CLOCK(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_CLOCK))
 #define GST_IS_ALSA_CLOCK_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_CLOCK))
 #define GST_TYPE_ALSA_CLOCK		(gst_alsa_clock_get_type())
+
 typedef GstClockTime (*GstAlsaClockGetTimeFunc) (GstAlsa *);
 
-struct _GstAlsaClock
-{
-  GstSystemClock parent;
+struct _GstAlsaClock {
+  GstSystemClock		parent;
 
-  GstAlsaClockGetTimeFunc get_time;
-  GstAlsa *owner;
+  GstAlsaClockGetTimeFunc	get_time;
+  GstAlsa *			owner;
 
-  GstClockTimeDiff adjust;	/* adjustment to real clock (recalculated when stopping) */
-  GstClockTime start_time;	/* time when the stream started (NONE when stopped) */
-  GstClockTime last_unlock;	/* time of last unlock request */
+  GstClockTimeDiff		adjust; 	/* adjustment to real clock (recalculated when stopping) */
+  GstClockTime			start_time;	/* time when the stream started (NONE when stopped) */
+  GstClockTime			last_unlock;    /* time of last unlock request */
 };
 
-struct _GstAlsaClockClass
-{
+struct _GstAlsaClockClass {
   GstSystemClockClass parent_class;
 };
 
-GType gst_alsa_clock_get_type (void);
-GstAlsaClock *gst_alsa_clock_new (gchar * name,
-    GstAlsaClockGetTimeFunc func, GstAlsa * owner);
+GType		gst_alsa_clock_get_type	(void);
+GstAlsaClock *	gst_alsa_clock_new	(gchar *			name,
+					 GstAlsaClockGetTimeFunc	func,
+					 GstAlsa *			owner);
 
-void gst_alsa_clock_start (GstAlsaClock * clock);
-void gst_alsa_clock_stop (GstAlsaClock * clock);
+void	gst_alsa_clock_start	(GstAlsaClock *	clock);
+void	gst_alsa_clock_stop	(GstAlsaClock *	clock);
 
 G_END_DECLS
+
 #endif /* __GST_ALSA_CLOCK_H__ */

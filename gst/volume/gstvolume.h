@@ -28,9 +28,8 @@
 
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_VOLUME \
@@ -44,40 +43,37 @@ extern "C"
 #define GST_IS_VOLUME_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VOLUME))
 
-  typedef struct _GstVolume GstVolume;
-  typedef struct _GstVolumeClass GstVolumeClass;
-  typedef enum _GstVolumeFormat GstVolumeFormat;
+typedef struct _GstVolume GstVolume;
+typedef struct _GstVolumeClass GstVolumeClass;
+typedef enum _GstVolumeFormat GstVolumeFormat;
 
-  enum _GstVolumeFormat
-  {
-    GST_VOLUME_FORMAT_INT = 1,
-    GST_VOLUME_FORMAT_FLOAT
-  };
+enum _GstVolumeFormat {
+  GST_VOLUME_FORMAT_INT=1,
+  GST_VOLUME_FORMAT_FLOAT
+};
 
-  struct _GstVolume
-  {
-    GstElement element;
+struct _GstVolume {
+  GstElement element;
 
-    GstPad *sinkpad, *srcpad;
-    GstDParamManager *dpman;
+  GstPad *sinkpad, *srcpad;
+  GstDParamManager *dpman;
 
-    gboolean mute;
-    gint volume_i, real_vol_i;	/* the _i(nt) values get synchronized with the */
-    gfloat volume_f, real_vol_f;	/* _f(loat) values on each update */
+  gboolean mute;
+  gint   volume_i, real_vol_i; /* the _i(nt) values get synchronized with the */
+  gfloat volume_f, real_vol_f; /* _f(loat) values on each update */
+  
+  GList *tracklist;
+};
 
-    GList *tracklist;
-  };
+struct _GstVolumeClass {
+  GstElementClass parent_class;
+};
 
-  struct _GstVolumeClass
-  {
-    GstElementClass parent_class;
-  };
-
-  GType gst_volume_get_type (void);
+GType gst_volume_get_type(void);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_VOLUME_H__ */
+#endif /* __GST_VOLUME_H__ */

@@ -26,6 +26,7 @@
 #include <gst/tuner/tuner.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_V4L_TUNER_CHANNEL \
   (gst_v4l_tuner_channel_get_type ())
 #define GST_V4L_TUNER_CHANNEL(obj) \
@@ -38,17 +39,16 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_V4L_TUNER_CHANNEL))
 #define GST_IS_V4L_TUNER_CHANNEL_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_V4L_TUNER_CHANNEL))
-    typedef struct _GstV4lTunerChannel
-{
+
+typedef struct _GstV4lTunerChannel {
   GstTunerChannel parent;
 
-  gint index;
-  gint tuner;
-  gint audio;
+  gint            index;
+  gint            tuner;
+  gint            audio;
 } GstV4lTunerChannel;
 
-typedef struct _GstV4lTunerChannelClass
-{
+typedef struct _GstV4lTunerChannelClass {
   GstTunerChannelClass parent;
 } GstV4lTunerChannelClass;
 
@@ -65,21 +65,19 @@ typedef struct _GstV4lTunerChannelClass
 #define GST_IS_V4L_TUNER_NORM_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_V4L_TUNER_NORM))
 
-typedef struct _GstV4lTunerNorm
-{
+typedef struct _GstV4lTunerNorm {
   GstTunerNorm parent;
 
-  gint index;
+  gint         index;
 } GstV4lTunerNorm;
 
-typedef struct _GstV4lTunerNormClass
-{
+typedef struct _GstV4lTunerNormClass {
   GstTunerNormClass parent;
 } GstV4lTunerNormClass;
 
-GType gst_v4l_tuner_channel_get_type (void);
-GType gst_v4l_tuner_norm_get_type (void);
+GType	gst_v4l_tuner_channel_get_type	(void);
+GType	gst_v4l_tuner_norm_get_type	(void);
 
-void gst_v4l_tuner_interface_init (GstTunerClass * klass);
+void	gst_v4l_tuner_interface_init	(GstTunerClass *klass);
 
 #endif /* __GST_V4L_TUNER_H__ */

@@ -25,6 +25,7 @@
 #include <videodev_mjpeg.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_V4LMJPEGSRC \
   (gst_v4lmjpegsrc_get_type())
 #define GST_V4LMJPEGSRC(obj) \
@@ -35,11 +36,11 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_V4LMJPEGSRC))
 #define GST_IS_V4LMJPEGSRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4LMJPEGSRC))
+
 typedef struct _GstV4lMjpegSrc GstV4lMjpegSrc;
 typedef struct _GstV4lMjpegSrcClass GstV4lMjpegSrcClass;
 
-struct _GstV4lMjpegSrc
-{
+struct _GstV4lMjpegSrc {
   GstV4lElement v4lelement;
 
   /* pads */
@@ -94,18 +95,19 @@ struct _GstV4lMjpegSrc
   gint numbufs;
 };
 
-struct _GstV4lMjpegSrcClass
-{
+struct _GstV4lMjpegSrcClass {
   GstV4lElementClass parent_class;
 
-  void (*frame_capture) (GObject * object);
-  void (*frame_drop) (GObject * object);
-  void (*frame_insert) (GObject * object);
-  void (*frame_lost) (GObject * object, gint num_lost);
+  void (*frame_capture) (GObject *object);
+  void (*frame_drop)    (GObject *object);
+  void (*frame_insert)  (GObject *object);
+  void (*frame_lost)    (GObject *object,
+                         gint     num_lost);
 };
 
-GType gst_v4lmjpegsrc_get_type (void);
+GType gst_v4lmjpegsrc_get_type(void);
 
 
 G_END_DECLS
+
 #endif /* __GST_V4LMJPEGSRC_H__ */

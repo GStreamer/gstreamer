@@ -24,9 +24,8 @@
 #include <gst/gst.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 #include <errno.h>
 #include <string.h>
@@ -50,47 +49,44 @@ extern "C"
 #define GST_IS_TCPSRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TCPSRC))
 
-  typedef struct _GstTCPSrc GstTCPSrc;
-  typedef struct _GstTCPSrcClass GstTCPSrcClass;
+typedef struct _GstTCPSrc GstTCPSrc;
+typedef struct _GstTCPSrcClass GstTCPSrcClass;
 
-  typedef enum
-  {
-    GST_TCPSRC_OPEN = GST_ELEMENT_FLAG_LAST,
-    GST_TCPSRC_1ST_BUF,
-    GST_TCPSRC_CONNECTED,
+typedef enum {
+  GST_TCPSRC_OPEN       = GST_ELEMENT_FLAG_LAST,
+  GST_TCPSRC_1ST_BUF,
+  GST_TCPSRC_CONNECTED,
 
-    GST_TCPSRC_FLAG_LAST,
-  } GstTCPSrcFlags;
+  GST_TCPSRC_FLAG_LAST,
+} GstTCPSrcFlags;
 
-  struct _GstTCPSrc
-  {
-    GstElement element;
+struct _GstTCPSrc {
+  GstElement element;
 
-    /* pads */
-    GstPad *sinkpad, *srcpad;
+  /* pads */
+  GstPad *sinkpad,*srcpad;
 
-    int port;
-    int sock;
-    int client_sock;
-    int control_sock;
+  int port;
+  int sock;
+  int client_sock;
+  int control_sock;
 /*  gboolean socket_options;*/
-    Gst_TCP_Control control;
+  Gst_TCP_Control control;
 
-    struct sockaddr_in myaddr;
-    GstClock *clock;
-  };
+  struct sockaddr_in myaddr;
+  GstClock *clock;
+};
 
-  struct _GstTCPSrcClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstTCPSrcClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_tcpsrc_get_type (void);
+GType gst_tcpsrc_get_type(void);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_TCPSRC_H__ */
+#endif /* __GST_TCPSRC_H__ */

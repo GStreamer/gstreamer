@@ -23,9 +23,13 @@
 
 #include <glib-object.h>
 
-G_BEGIN_DECLS GType gst_gnomevfssink_get_type (void);
+G_BEGIN_DECLS
+  
+
+GType gst_gnomevfssink_get_type (void);
 GType gst_gnomevfssrc_get_type (void);
 
 
 G_END_DECLS
+
 #endif /* __GST_GNOME_VFS_H__ */

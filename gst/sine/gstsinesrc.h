@@ -27,7 +27,10 @@
 
 #include <gst/gst.h>
 
-G_BEGIN_DECLS GstElementDetails gst_sinesrc_details;
+G_BEGIN_DECLS
+
+
+GstElementDetails gst_sinesrc_details;
 
 
 #define GST_TYPE_SINESRC \
@@ -44,8 +47,7 @@ G_BEGIN_DECLS GstElementDetails gst_sinesrc_details;
 typedef struct _GstSineSrc GstSineSrc;
 typedef struct _GstSineSrcClass GstSineSrcClass;
 
-struct _GstSineSrc
-{
+struct _GstSineSrc {
   GstElement element;
 
   /* pads */
@@ -56,7 +58,7 @@ struct _GstSineSrc
   gdouble volume;
   gdouble freq;
   gboolean sync;
-
+  
   /* lookup table data */
   gdouble *table_data;
   gdouble table_pos;
@@ -65,13 +67,13 @@ struct _GstSineSrc
   gdouble table_interp;
   gint table_lookup;
   gint table_lookup_next;
-
+    
   /* audio parameters */
   gint samplerate;
 
   gint samples_per_buffer;
   gulong seq;
-
+  
   guint64 timestamp;
   guint64 offset;
 
@@ -82,13 +84,14 @@ struct _GstSineSrc
   GstClock *clock;
 };
 
-struct _GstSineSrcClass
-{
+struct _GstSineSrcClass {
   GstElementClass parent_class;
 };
 
-GType gst_sinesrc_get_type (void);
-gboolean gst_sinesrc_factory_init (GstElementFactory * factory);
+GType gst_sinesrc_get_type(void);
+gboolean gst_sinesrc_factory_init (GstElementFactory *factory);
 
 G_END_DECLS
+
+
 #endif /* __GST_SINESRC_H__ */

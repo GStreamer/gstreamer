@@ -28,6 +28,8 @@
 
 
 G_BEGIN_DECLS
+
+
 #define GST_TYPE_AUDIOSCALE \
   (audioscale_get_type())
 #define GST_AUDIOSCALE(obj) \
@@ -38,8 +40,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIOSCALE))
 #define GST_IS_AUDIOSCALE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOSCALE))
-    typedef enum
-{
+
+typedef enum {
   GST_AUDIOSCALE_NEAREST,
   GST_AUDIOSCALE_BILINEAR,
   GST_AUDIOSCALE_SINC,
@@ -48,11 +50,10 @@ G_BEGIN_DECLS
 typedef struct _Audioscale Audioscale;
 typedef struct _AudioscaleClass AudioscaleClass;
 
-struct _Audioscale
-{
+struct _Audioscale {
   GstElement element;
 
-  GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad,*srcpad;
 
   /* audio state */
   gboolean passthru;
@@ -63,13 +64,14 @@ struct _Audioscale
   GstBuffer *outbuf;
 };
 
-struct _AudioscaleClass
-{
+struct _AudioscaleClass {
   GstElementClass parent_class;
 };
 
-GType gst_audioscale_get_type (void);
+GType gst_audioscale_get_type(void);
 
 
 G_END_DECLS
+
+
 #endif /* __AUDIOSCALE_H__ */

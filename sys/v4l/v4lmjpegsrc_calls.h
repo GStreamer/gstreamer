@@ -24,34 +24,40 @@
 #include "v4l_calls.h"
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 /* frame grabbing/capture */
-  gboolean gst_v4lmjpegsrc_set_buffer (GstV4lMjpegSrc * v4lmjpegsrc,
-      gint numbufs, gint bufsize);
-  gboolean gst_v4lmjpegsrc_set_capture (GstV4lMjpegSrc * v4lmjpegsrc,
-      gint decimation, gint quality);
-  gboolean gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc * v4lmjpegsrc,
-      gint x_offset,
-      gint y_offset,
-      gint width,
-      gint height, gint h_decimation, gint v_decimation, gint quality);
-  gboolean gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc * v4lmjpegsrc);
-  gboolean gst_v4lmjpegsrc_capture_start (GstV4lMjpegSrc * v4lmjpegsrc);
-  gboolean gst_v4lmjpegsrc_grab_frame (GstV4lMjpegSrc * v4lmjpegsrc,
-      gint * num, gint * size);
-  guint8 *gst_v4lmjpegsrc_get_buffer (GstV4lMjpegSrc * v4lmjpegsrc, gint num);
-  gboolean gst_v4lmjpegsrc_requeue_frame (GstV4lMjpegSrc * v4lmjpegsrc,
-      gint num);
-  gboolean gst_v4lmjpegsrc_capture_stop (GstV4lMjpegSrc * v4lmjpegsrc);
-  gboolean gst_v4lmjpegsrc_capture_deinit (GstV4lMjpegSrc * v4lmjpegsrc);
+gboolean gst_v4lmjpegsrc_set_buffer     (GstV4lMjpegSrc *v4lmjpegsrc,
+                                         gint           numbufs,
+                                         gint           bufsize);
+gboolean gst_v4lmjpegsrc_set_capture    (GstV4lMjpegSrc *v4lmjpegsrc,
+                                         gint           decimation,
+                                         gint           quality);
+gboolean gst_v4lmjpegsrc_set_capture_m  (GstV4lMjpegSrc *v4lmjpegsrc,
+                                         gint           x_offset,
+                                         gint           y_offset,
+                                         gint           width,
+                                         gint           height,
+                                         gint           h_decimation,
+                                         gint           v_decimation,
+                                         gint           quality);
+gboolean gst_v4lmjpegsrc_capture_init   (GstV4lMjpegSrc *v4lmjpegsrc);
+gboolean gst_v4lmjpegsrc_capture_start  (GstV4lMjpegSrc *v4lmjpegsrc);
+gboolean gst_v4lmjpegsrc_grab_frame     (GstV4lMjpegSrc *v4lmjpegsrc,
+                                         gint           *num,
+                                         gint           *size);
+guint8 * gst_v4lmjpegsrc_get_buffer     (GstV4lMjpegSrc *v4lmjpegsrc,
+                                         gint           num);
+gboolean gst_v4lmjpegsrc_requeue_frame  (GstV4lMjpegSrc *v4lmjpegsrc,
+                                         gint           num);
+gboolean gst_v4lmjpegsrc_capture_stop   (GstV4lMjpegSrc *v4lmjpegsrc);
+gboolean gst_v4lmjpegsrc_capture_deinit (GstV4lMjpegSrc *v4lmjpegsrc);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
-#endif				/* __V4L_MJPEG_SRC_CALLS_H__ */
+#endif /* __V4L_MJPEG_SRC_CALLS_H__ */
