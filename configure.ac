@@ -105,12 +105,8 @@ HAVE_BROKEN=yes,disabled,
 [  
   AC_MSG_WARN([building broken plug-ins -- no bug reports on these, only patches :)])
   USE_SMOOTHWAVE="yes"
-  USE_VGA="yes"
-  USE_XMMS="yes"
 ],[
   USE_SMOOTHWAVE="no"
-  USE_VGA="no"
-  USE_XMMS="no"
   AC_MSG_NOTICE([not building broken plug-ins])
 ])
 
@@ -251,15 +247,17 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
-        ac3parse adder audioscale auparse avi asfdemux audioconvert cdxaparse chart\
-        cutter debug deinterlace effectv festival filter flx goom\
-        intfloat law level\
-        median mixmatrix mpeg1enc mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub\
-        mpegaudio mpegaudioparse mpegstream mpegtypes\
-        monoscope oneton passthrough playondemand qtdemux realmedia rtp rtjpeg silence sine\
-        smooth smpte spectrum speed stereo stereomono synaesthesia\
-        udp vbidec videocrop videoflip videoscale videotestsrc volenv volume\ 
-        vumeter wavenc wavparse y4m"
+	ac3parse adder audioscale auparse avi \
+	asfdemux audioconvert cdxaparse chart \
+	cutter debug deinterlace effectv festival \
+	filter flx goom law level median mixmatrix \
+	mpeg1enc mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub \
+	mpegaudio mpegaudioparse mpegstream mpegtypes \
+        monoscope oneton passthrough playondemand qtdemux \
+	realmedia rtp rtjpeg silence sine smooth smpte \
+	spectrum speed stereo synaesthesia udp vbidec \
+	videocrop videoflip videoscale videotestsrc \
+	volenv volume wavenc wavparse y4m"
 
 dnl see if we can build C++ plug-ins
 if test "x$HAVE_CXX" = "xyes"; then
@@ -361,12 +359,6 @@ dnl *** Video CD ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_VCD, true)
 GST_CHECK_FEATURE(VCD, [Video CD], vcdsrc, [
   AC_CHECK_HEADER(linux/cdrom.h, HAVE_VCD="yes", HAVE_VCD="no")
-])
-
-dnl *** VGA ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_VGA, true)
-GST_CHECK_FEATURE(VGA, [VGA], vgavideosink, [
-  AC_CHECK_HEADER(asm/vga.h, HAVE_VGA="yes", HAVE_VGA="no")
 ])
 
 dnl *** CDROM Audio ***
@@ -746,8 +738,19 @@ dnl *** jpeg ***
 dnl FIXME: we could use header checks here as well IMO
 translit(dnm, m, l) AM_CONDITIONAL(USE_JPEG, true)
 GST_CHECK_FEATURE(JPEG, [jpeg], jpegenc jpegdec, [
-  AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
-  JPEG_LIBS="-ljpeg"
+  AC_ARG_WITH(jpeg-mmx,
+    [  --with-jpeg-mmx, path to MMX'ified JPEG library])
+  OLD_LIBS="$LIBS"
+  if test x$with_jpeg_mmx != x; then
+    LIBS="$LIBS -L$with_jpeg_mmx"
+  fi
+  AC_CHECK_LIB(jpeg-mmx, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
+  JPEG_LIBS="$LIBS -ljpeg-mmx"
+  LIBS="$OLD_LIBS"
+  if test x$HAVE_JPEG != xyes; then
+    AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
+    JPEG_LIBS="-ljpeg"
+  fi
   AC_SUBST(JPEG_LIBS)
 ])
 
@@ -826,49 +829,6 @@ GST_CHECK_FEATURE(MIKMOD, [mikmod plug-in], mikmod, [
   AC_SUBST(MIKMOD_CFLAGS, "$LIBMIKMODCFLAGS")
 ])
 
-dnl *** mjpegtools ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_MJPEGTOOLS, true)
-GST_CHECK_FEATURE(MJPEGTOOLS, [mjpegtools], jpegmmxenc jpegmmxdec, [
-  PKG_CHECK_MODULES(MJPEGTOOLS, mjpegtools, HAVE_MJPEGTOOLS="yes", HAVE_MJPEGTOOLS="no")
-
-  if [ test x$HAVE_MJPEGTOOLS = x"yes" ]; then
-    dnl some headers we might want to need
-    AC_CHECK_HEADERS(stdint.h, HAVE_STDINT_H="yes", HAVE_STDINT_H="no")
-    if [ test x$HAVE_STDINT_H = x"no" ]; then
-      AC_CHECK_HEADERS(inttypes.h sys/types.h, HAVE_INTTYPES_H="yes", [
-        AC_MSG_WARN(No valid header files found, mjpegtools plugins disabled)
-        HAVE_INTTYPES_H="no" HAVE_MJPEGTOOLS="no"
-      ])
-    fi
-    AC_CHECK_HEADERS(stdbool.h, HAVE_STDBOOL_H="yes", HAVE_STDBOOL_H="no")
-
-    dnl sizeof PRId64 etc...
-    AC_CHECK_SIZEOF(int)
-    AC_CHECK_SIZEOF(long)
-    AC_CHECK_SIZEOF(long long)
-    case 8 in
-    $ac_cv_sizeof_int)
-      PRID64_STRING_FORMAT="d"
-      ;;
-    $ac_cv_sizeof_long)
-      PRID64_STRING_FORMAT="ld"
-      ;;
-    $ac_cv_sizeof_long_long)
-      PRID64_STRING_FORMAT="lld"
-      ;;
-    *)
-      AC_MSG_WARN(No suitable variant for 64bits integers found, mjpegtools plugins disabled)
-      HAVE_MJPEGTOOLS="no"
-      ;;
-    esac
-
-    AC_DEFINE_UNQUOTED(PRID64_STRING_FORMAT, "$PRID64_STRING_FORMAT",
-      [ A printf type definition for 64 bit integers ])
-    AC_SUBST(MJPEGTOOLS_LIBS)
-    AC_SUBST(MJPEGTOOLS_CFLAGS)
-  fi
-])
-
 dnl *** mpeg2dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
 GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
@@ -876,13 +836,6 @@ GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
       HAVE_MPEG2DEC="yes", HAVE_MPEG2DEC="no")
   AC_SUBST(MPEG2DEC_CFLAGS)
   AC_SUBST(MPEG2DEC_LIBS)
-])
-
-dnl *** openquicktime ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_OPENQUICKTIME, true)
-GST_CHECK_FEATURE(OPENQUICKTIME, [Open Quicktime], quicktime_parser quicktime_decoder quicktime_demux,[
-  GST_CHECK_LIBHEADER(OPENQUICKTIME, openquicktime, quicktime_init,, openquicktime/openquicktime.h, OPENQUICKTIME_LIBS="-lopenquicktime")
-  AC_SUBST(OPENQUICKTIME_LIBS)
 ])
 
 dnl *** raw1394 ***
@@ -963,12 +916,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_VORBIS, true)
 GST_CHECK_FEATURE(VORBIS, [vorbis plug-in], vorbisenc vorbisdec, [
   XIPH_PATH_VORBIS(HAVE_VORBIS=yes, HAVE_VORBIS=no)
   AS_SCRUB_INCLUDE(VORBIS_CFLAGS)
-])
-
-dnl *** XMMS ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_XMMS, true)
-GST_CHECK_FEATURE(XMMS, [xmms plug-in], xmms, [
-  AM_PATH_XMMS(0.1.0, HAVE_XMMS=yes, HAVE_XMMS=no)
 ])
 
 dnl *** XVID ***
@@ -1188,7 +1135,6 @@ gst/festival/Makefile
 gst/filter/Makefile
 gst/flx/Makefile
 gst/goom/Makefile
-gst/intfloat/Makefile
 gst/law/Makefile
 gst/level/Makefile
 gst/median/Makefile
@@ -1221,7 +1167,6 @@ gst/smpte/Makefile
 gst/spectrum/Makefile
 gst/speed/Makefile
 gst/stereo/Makefile
-gst/stereomono/Makefile
 gst/synaesthesia/Makefile
 gst/udp/Makefile
 gst/vbidec/Makefile
@@ -1231,7 +1176,6 @@ gst/videoscale/Makefile
 gst/videotestsrc/Makefile
 gst/volenv/Makefile
 gst/volume/Makefile
-gst/vumeter/Makefile
 gst/wavenc/Makefile
 gst/wavparse/Makefile
 gst/y4m/Makefile
@@ -1243,7 +1187,6 @@ sys/qcam/Makefile
 sys/v4l/Makefile
 sys/v4l2/Makefile
 sys/vcd/Makefile
-sys/vga/Makefile
 sys/xvideo/Makefile
 ext/Makefile
 ext/a52dec/Makefile
@@ -1276,9 +1219,7 @@ ext/libpng/Makefile
 ext/mad/Makefile
 ext/mas/Makefile
 ext/mikmod/Makefile
-ext/mjpegtools/Makefile
 ext/mpeg2dec/Makefile
-ext/openquicktime/Makefile
 ext/raw1394/Makefile
 ext/sdl/Makefile
 ext/shout/Makefile
@@ -1290,7 +1231,6 @@ ext/sndfile/Makefile
 ext/swfdec/Makefile
 ext/vorbis/Makefile
 ext/tarkin/Makefile
-ext/xmms/Makefile
 ext/xvid/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
