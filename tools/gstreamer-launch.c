@@ -144,7 +144,7 @@ gint parse_cmdline(int argc,char *argv[],GstBin *parent) {
         else DEBUG("have src pad %s:%s\n",GST_DEBUG_PAD_NAME(srcpad));
       }
 
-    // element, or beginning of bin or thread
+    // element or argument, or beginning of bin or thread
     } else {
       DEBUG("have element or bin/thread\n");
       // if we have a bin or thread starting
@@ -161,8 +161,18 @@ gint parse_cmdline(int argc,char *argv[],GstBin *parent) {
 
         i += parse_cmdline(argc - i, argv + i + 1, GST_BIN (element));
 
-      // else we have an element
+      } else if (strstr(arg, "=")) {
+	gchar * argname;
+	gchar * argval;
+	gchar * pos = strstr(arg, "=");
+        // we have an argument
+	argname = g_strndup(arg, pos - arg);
+	argval = pos+1;
+	DEBUG("attempting to set argument '%s'\n", arg);
+	gtk_object_set(GTK_OBJECT(previous),argname,argval,NULL);
+	g_free(argname);
       } else {
+	// we have an element
         DEBUG("attempting to create element '%s'\n",arg);
         element = gst_elementfactory_make(arg,unique_name(arg));
         VERBOSE("CREATED element %s\n",gst_element_get_name(element));
