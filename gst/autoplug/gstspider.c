@@ -711,6 +711,11 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
+  /* add spideridentity */
+  factory = gst_element_factory_new ("spideridentity", GST_TYPE_SPIDER_IDENTITY,
+                                     &gst_spider_identity_details);
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+
   return TRUE;
 }
 

@@ -211,9 +211,9 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
 GstSpiderIdentity*           
 gst_spider_identity_new_src (gchar *name)
 {
-  GstSpiderIdentity *ret = (GstSpiderIdentity *) g_object_new (gst_spider_identity_get_type (), NULL);
-  
-  GST_ELEMENT_NAME (ret) = name;
+  //GstSpiderIdentity *ret = (GstSpiderIdentity *) g_object_new (gst_spider_identity_get_type (), NULL);
+  //GST_ELEMENT_NAME (ret) = name;
+  GstSpiderIdentity *ret = (GstSpiderIdentity *) gst_element_factory_make ("spideridentity", name);
   /* set the right functions */
   gst_element_set_loop_function (GST_ELEMENT (ret), (GstElementLoopFunction) GST_DEBUG_FUNCPTR (gst_spider_identity_src_loop));
   
@@ -222,9 +222,10 @@ gst_spider_identity_new_src (gchar *name)
 GstSpiderIdentity*           
 gst_spider_identity_new_sink (gchar *name)
 {
-  GstSpiderIdentity *ret = (GstSpiderIdentity *) g_object_new (gst_spider_identity_get_type (), NULL);
+  //GstSpiderIdentity *ret = (GstSpiderIdentity *) g_object_new (gst_spider_identity_get_type (), NULL);
   
-  GST_ELEMENT_NAME (ret) = name;
+  //GST_ELEMENT_NAME (ret) = name;
+  GstSpiderIdentity *ret = (GstSpiderIdentity *) gst_element_factory_make ("spideridentity", name);
 
   /* set the right functions */
   gst_element_set_loop_function (GST_ELEMENT (ret), (GstElementLoopFunction) GST_DEBUG_FUNCPTR (gst_spider_identity_dumb_loop));
