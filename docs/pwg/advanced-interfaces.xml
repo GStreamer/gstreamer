@@ -457,8 +457,99 @@ gst_my_filter_probe_interface_init (GstPropertyProbeInterface *iface)
   <sect1 id="section-iface-xoverlay" xreflabel="X Overlay Interface">
     <title>X Overlay Interface</title>
     <para>
-      WRITEME
+      An X Overlay is basically a video output in a XFree86 drawable. Elements
+      implementing this interface will draw video in a X11 window. Through this
+      interface, applications will be proposed 2 different modes to work with
+      a plugin implemeting it. The first mode is a passive mode where the plugin
+      owns, creates and destroys the X11 window. The second mode is an active
+      mode where the application handles the X11 window creation and then tell
+      the plugin where it should output video. Let's get a bit deeper in those
+      modes...
     </para>
+    <para>
+      A plugin drawing video output in a X11 window will need to have that
+      window at one stage or another. Passive mode simply means that no window
+      has been given to the plugin before that stage, so the plugin created the
+      window by itself. In that case the plugin is responsible of destroying
+      that window when it's not needed anymore and it has to tell the 
+      applications that a window has been created so that the application can
+      use it. This is done using the <classname>have_xwindow_id</classname>
+      signal that can be emitted from the plugin with the
+      <function>gst_x_overlay_got_xwindow_id</function> method.
+    </para>
+    <para>
+      As you probably guessed already active mode just means sending a X11
+      window to the plugin so that video output goes there. This is done using
+      the <function>gst_x_overlay_set_xwindow_id</function> method.
+    </para>
+    <para>
+      It is possible to switch from one mode to another at any moment, so the
+      plugin implementing this interface has to handle all cases. There are only
+      2 methods that plugins writers have to implement and they most probably
+      look like that :
+    </para>
+    <programlisting><![CDATA[
+static void
+gst_myplugin_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
+{
+  GstMyPlugin *my_plugin = GST_MYPLUGIN (overlay);
+  
+  if (my_plugin->window)
+    gst_myplugin_destroy_window (myplugin->window);
+    
+  myplugin->window = xwindow_id;
+}
+
+static void
+gst_myplugin_get_desired_size (GstXOverlay *overlay,
+                             guint *width, guint *height)
+{
+  GstMyPlugin *my_plugin = GST_MYPLUGIN (overlay);
+
+  *width = my_plugin->width;
+  *height = my_plugin->height;
+}
+
+static void
+gst_myplugin_xoverlay_init (GstXOverlayClass *iface)
+{
+  iface->set_xwindow_id = gst_myplugin_set_xwindow_id;
+  iface->get_desired_size = gst_myplugin_get_desired_size;
+}
+    ]]></programlisting>
+    <para>
+      You will also need to use the interface methods to fire signals when 
+      needed such as in the pad link function where you will know the video
+      geometry and maybe create the window.
+    </para>
+    <programlisting><![CDATA[
+static MyPluginWindow *
+gst_myplugin_window_create (GstMyPlugin *my_plugin, gint width, gint height)
+{
+  MyPluginWindow *window = g_new (MyPluginWindow, 1);
+  ...
+  gst_x_overlay_got_xwindow_id (GST_X_OVERLAY (my_plugin), window->win);
+}
+
+static GstPadLinkReturn
+gst_myplugin_sinkconnect (GstPad *pad, const GstCaps *caps)
+{
+  GstMyPlugin *my_plugin = GST_MYPLUGIN (overlay);
+  gint width, height;
+  gboolean ret;
+  ...
+  ret = gst_structure_get_int (structure, "width", &width);
+  ret &= gst_structure_get_int (structure, "height", &height);
+  if (!ret) return GST_PAD_LINK_REFUSED;
+  
+  if (!my_plugin->window)
+    my_plugin->window = gst_myplugin_create_window (my_plugin, width, height);
+
+  gst_x_overlay_got_desired_size (GST_X_OVERLAY (my_plugin),
+                                  width, height);
+  ...
+}
+    ]]></programlisting>
   </sect1>
 
   <sect1 id="section-iface-navigation" xreflabel="Navigation Interface">
