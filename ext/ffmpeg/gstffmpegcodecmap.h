@@ -87,9 +87,20 @@ gst_ffmpeg_caps_with_codectype (enum CodecType  type,
 GstCaps *
 gst_ffmpeg_formatid_to_caps (const gchar *format_name);
 
+/*
+ * Since FFMpeg has such really cool and useful descriptions
+ * of its codecs, we use our own...
+ */
 
-/* FFMPEG debugging function; maybe move to a different file */
+G_CONST_RETURN gchar *
+gst_ffmpeg_get_codecid_longname (enum CodecID codec_id);
+
+/*
+ * FFMPEG debugging function; maybe move to a different file.
+ */
+
 GST_DEBUG_CATEGORY_EXTERN (ffmpeg_debug);
+
 static void
 gst_ffmpeg_log_callback (void * ptr, int level, const char * fmt, va_list vl);
 

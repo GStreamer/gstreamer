@@ -165,7 +165,7 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
 
   /* construct the element details struct */
   details.longname = g_strdup_printf ("FFMPEG %s encoder",
-      params->in_plugin->name);
+      gst_ffmpeg_get_codecid_longname (params->in_plugin->id));
   details.klass = g_strdup_printf ("Codec/Encoder/%s",
       (params->in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
   details.description = g_strdup_printf ("FFMPEG %s encoder",
@@ -628,6 +628,10 @@ gst_ffmpegenc_register (GstPlugin * plugin)
     if (!in_plugin->encode) {
       goto next;
     }
+
+    /* name */
+    if (!gst_ffmpeg_get_codecid_longname (in_plugin->id))
+      goto next;
 
     /* first make sure we've got a supported type */
     srccaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, TRUE);

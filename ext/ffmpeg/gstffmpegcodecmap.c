@@ -1685,3 +1685,267 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
 
   return id;
 }
+
+G_CONST_RETURN gchar *
+gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
+{
+  const gchar *name = NULL;
+
+  switch (codec_id) {
+    case CODEC_ID_MPEG1VIDEO:
+      name = "MPEG-1 video";
+      break;
+    case CODEC_ID_MPEG2VIDEO:
+      name = "MPEG-2 video";
+      break;
+    case CODEC_ID_H263:
+      name = "H.263 video";
+      break;
+    case CODEC_ID_RV10:
+      name = "Realvideo 1.0";
+      break;
+    case CODEC_ID_RV20:
+      name = "Realvideo 2.0";
+      break;
+    case CODEC_ID_MP2:
+      name = "MPEG-1 layer 2 audio";
+      break;
+    case CODEC_ID_MP3:
+      name = "MPEG-1 layer 3 audio";
+      break;
+    case CODEC_ID_VORBIS:
+      name = "Vorbis audio";
+      break;
+    case CODEC_ID_AC3:
+      name = "AC-3 audio";
+      break;
+    case CODEC_ID_MJPEG:
+      name = "Motion-JPEG";
+      break;
+    case CODEC_ID_MJPEGB:
+      name = "Quicktime Motion-JPEG B";
+      break;
+    case CODEC_ID_LJPEG:
+      name = "Lossless JPEG";
+      break;
+    case CODEC_ID_SP5X:
+      name = "Sp5x-like JPEG";
+      break;
+    case CODEC_ID_MPEG4:
+      name = "MPEG-4 compatible video";
+      break;
+    case CODEC_ID_MSMPEG4V1:
+      name = "Microsoft MPEG-4 v1";
+      break;
+    case CODEC_ID_MSMPEG4V2:
+      name = "Microsoft MPEG-4 v2";
+      break;
+    case CODEC_ID_MSMPEG4V3:
+      name = "Microsoft MPEG-4 v3";
+      break;
+    case CODEC_ID_WMV1:
+      name = "Windows Media Video v7";
+      break;
+    case CODEC_ID_WMV2:
+      name = "Windows Media Video v8";
+      break;
+    case CODEC_ID_H263P:
+      name = "H.263 (P) video";
+      break;
+    case CODEC_ID_H263I:
+      name = "H.263 (I) video";
+      break;
+    case CODEC_ID_FLV1:
+      name = "FLV video";
+      break;
+    case CODEC_ID_SVQ1:
+      name = "Sorensen-1 video";
+      break;
+    case CODEC_ID_SVQ3:
+      name = "Sorensen-3 video";
+      break;
+    case CODEC_ID_DVVIDEO:
+      name = "Digital video";
+      break;
+    case CODEC_ID_DVAUDIO:
+      name = "Digital audio";
+      break;
+    case CODEC_ID_WMAV1:
+      name = "Windows Media Audio v7";
+      break;
+    case CODEC_ID_WMAV2:
+      name = "Windows Media Audion v8/9";
+      break;
+    case CODEC_ID_MACE3:
+      name = "MACE-3 audio";
+      break;
+    case CODEC_ID_MACE6:
+      name = "MACE-6 audio";
+      break;
+    case CODEC_ID_HUFFYUV:
+      name = "Huffyuv lossless video";
+      break;
+    case CODEC_ID_CYUV:
+      name = "CYUV lossless video";
+      break;
+    case CODEC_ID_H264:
+      name = "H.264 video";
+      break;
+    case CODEC_ID_INDEO3:
+      name = "Indeo-3 video";
+      break;
+    case CODEC_ID_VP3:
+      name = "VP3 video";
+      break;
+    case CODEC_ID_THEORA:
+      name = "Theora video";
+      break;
+    case CODEC_ID_AAC:
+    case CODEC_ID_MPEG4AAC:
+      name = "MPEG-2/4 AAC audio";
+      break;
+    case CODEC_ID_ASV1:
+      name = "Asus video v1";
+      break;
+    case CODEC_ID_ASV2:
+      name = "Asus video v2";
+      break;
+    case CODEC_ID_FFV1:
+      name = "FFMpeg video v1";
+      break;
+    case CODEC_ID_4XM:
+      name = "4-XM video";
+      break;
+    case CODEC_ID_VCR1:
+      name = "ATI VCR-1 video";
+      break;
+    case CODEC_ID_CLJR:
+      name = "Cirrus Logipak AccuPak video";
+      break;
+    case CODEC_ID_MDEC:
+      name = "Playstation MDEC video";
+      break;
+    case CODEC_ID_ROQ:
+      name = "ID/RoQ video";
+      break;
+    case CODEC_ID_INTERPLAY_VIDEO:
+      name = "Interplay video";
+      break;
+    case CODEC_ID_XAN_WC3:
+      name = "XAN Wing Commander 3 video";
+      break;
+    case CODEC_ID_XAN_WC4:
+      name = "XAN Wing Commander 4 video";
+      break;
+    case CODEC_ID_RPZA:
+      name = "Apple RPZA video";
+      break;
+    case CODEC_ID_CINEPAK:
+      name = "Cinepak video";
+      break;
+    case CODEC_ID_WS_VQA:
+      name = "Westwood VQA video";
+      break;
+    case CODEC_ID_MSRLE:
+      name = "Microsoft RLE video";
+      break;
+    case CODEC_ID_MSVIDEO1:
+      name = "Microsoft video v1";
+      break;
+    case CODEC_ID_IDCIN:
+      name = "ID Quake II CIN video";
+      break;
+    case CODEC_ID_8BPS:
+      name = "Quicktime planar 8bps video";
+      break;
+    case CODEC_ID_SMC:
+      name = "Quicktime SMC graphics video";
+      break;
+    case CODEC_ID_FLIC:
+      name = "FLIC animation video";
+      break;
+    case CODEC_ID_TRUEMOTION1:
+      name = "Duck Truemotion video";
+      break;
+    case CODEC_ID_VMDVIDEO:
+      name = "Sierra VMD video";
+      break;
+    case CODEC_ID_VMDAUDIO:
+      name = "Sierra VMD audio";
+      break;
+    case CODEC_ID_MSZH:
+      name = "Lossless MSZH video";
+      break;
+    case CODEC_ID_ZLIB:
+      name = "Lossless zlib video";
+      break;
+    case CODEC_ID_QTRLE:
+      name = "Quicktime RLE animation video";
+      break;
+    case CODEC_ID_PCM_MULAW:
+      name = "Mu-law audio";
+      break;
+    case CODEC_ID_PCM_ALAW:
+      name = "A-law audio";
+      break;
+    case CODEC_ID_ADPCM_IMA_QT:
+      name = "IMA/Quicktime ADPCM audio";
+      break;
+    case CODEC_ID_ADPCM_IMA_WAV:
+      name = "IMA/DVI ADPCM audio";
+      break;
+    case CODEC_ID_ADPCM_IMA_DK3:
+      name = "IMA/DK3 ADPCM audio";
+      break;
+    case CODEC_ID_ADPCM_IMA_DK4:
+      name = "IMA/DK4 ADPCM";
+      break;
+    case CODEC_ID_ADPCM_IMA_WS:
+      name = "IMA/Westwood ADPCM audio";
+      break;
+    case CODEC_ID_ADPCM_IMA_SMJPEG:
+      name = "IMA/SMJPEG ADPCM audio";
+      break;
+    case CODEC_ID_ADPCM_MS:
+      name = "Microsoft ADPCM audio";
+      break;
+    case CODEC_ID_ADPCM_4XM:
+      name = "4-XM ADPCM audio";
+      break;
+    case CODEC_ID_ADPCM_XA:
+      name = "CD-ROM XA ADPCM";
+      break;
+    case CODEC_ID_ADPCM_ADX:
+      name = "ADX ADPCM";
+      break;
+    case CODEC_ID_ADPCM_EA:
+      name = "Electronic Arts ADPCM";
+      break;
+    case CODEC_ID_ADPCM_G726:
+      name = "G.726 ADPCM";
+      break;
+    case CODEC_ID_RA_144:
+      name = "Realaudio 14k4bps";
+      break;
+    case CODEC_ID_RA_288:
+      name = "Realaudio 28k8bps";
+      break;
+    case CODEC_ID_ROQ_DPCM:
+      name = "RoQ DPCM audio";
+      break;
+    case CODEC_ID_INTERPLAY_DPCM:
+      name = "Interplay DPCM audio";
+      break;
+    case CODEC_ID_XAN_DPCM:
+      name = "XAN DPCM audio";
+      break;
+    case CODEC_ID_FLAC:
+      name = "FLAC lossless audio";
+      break;
+    default:
+      GST_WARNING ("Unknown codecID 0x%x", codec_id);
+      break;
+  }
+
+  return name;
+}

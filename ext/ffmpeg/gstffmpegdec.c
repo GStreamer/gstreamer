@@ -135,7 +135,7 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
 
   /* construct the element details struct */
   details.longname = g_strdup_printf ("FFMPEG %s decoder",
-      params->in_plugin->name);
+      gst_ffmpeg_get_codecid_longname (params->in_plugin->id));
   details.klass = g_strdup_printf ("Codec/Decoder/%s",
       (params->in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
   details.description = g_strdup_printf ("FFMPEG %s decoder",
@@ -567,6 +567,10 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     if (!in_plugin->decode) {
       goto next;
     }
+
+    /* name */
+    if (!gst_ffmpeg_get_codecid_longname (in_plugin->id))
+      goto next;
 
     /* first make sure we've got a supported type */
     sinkcaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, FALSE);
