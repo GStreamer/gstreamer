@@ -1,3 +1,22 @@
+2005-01-06  Benjamin Otte  <otte@gnome.org>
+
+	* gst/games/gstpuzzle.c: (gst_puzzle_base_init):
+	  make RGB endianness work correctly
+	(gst_puzzle_show), (gst_puzzle_swap), (gst_puzzle_move):
+	  refactor and fix race with initial shuffling
+	(nav_event_handler):
+	  allow using the mouse to puzzle
+	(draw_puzzle):
+	  insist on tiles having width and height as multiples of 4 to get
+	  clean YUV image handling
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new),
+	(gst_xvimagesink_handle_xevents), (gst_xvimagesink_buffer_alloc):
+	  s/DEBUG/LOG/ for common messages
+	(gst_xvimagesink_navigation_send_event):
+	  fix mouse event translation to not include screen PAR
+	* sys/ximage/ximagesink.c: (gst_ximagesink_navigation_send_event):
+	  fix mouse event translation to actually work
+
 2005-01-06  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
 
 	* gst/asfdemux/gstasfdemux.c:
