@@ -182,7 +182,7 @@ gst_tee_srclink (GstPad *pad, const GstCaps2 *caps)
 }
 
 static GstCaps2* 
-gst_tee_getcaps (GstPad *pad, const GstCaps2 *filter) 
+gst_tee_getcaps (GstPad *pad)
 {
   GstCaps2 *caps = GST_CAPS2_ANY;
   GstTee *tee;

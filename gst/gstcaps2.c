@@ -188,6 +188,10 @@ const GstCaps2 *gst_static_caps2_get (GstStaticCaps2 *static_caps)
     caps->type = _gst_caps2_type;
     caps->structs = g_ptr_array_new();
     _gst_caps2_from_string_inplace (caps, static_caps->string);
+
+    if (caps->type == 0) {
+      g_critical ("Could not convert static caps \"%s\"", static_caps->string);
+    }
   }
 
   return caps;
@@ -223,6 +227,13 @@ GstCaps2 *gst_caps2_split_one (GstCaps2 *caps)
   /* FIXME */
 
   return NULL;
+}
+
+int gst_caps2_get_n_structures (const GstCaps2 *caps)
+{
+  g_return_val_if_fail (caps != NULL, 0);
+
+  return caps->structs->len;
 }
 
 GstStructure *gst_caps2_get_nth_cap (const GstCaps2 *caps, int index)
@@ -337,7 +348,7 @@ static gboolean _gst_cap_is_always_compatible (const GstStructure *struct1,
   return TRUE;
 }
 
-static gboolean _gst_caps_cap_is_always_compatible (const GstStructure
+static gboolean _gst_caps2_cap_is_always_compatible (const GstStructure
     *struct1, const GstCaps2 *caps2)
 {
   int i;
@@ -361,7 +372,7 @@ gboolean gst_caps2_is_always_compatible (const GstCaps2 *caps1,
   for(i=0;i<caps1->structs->len;i++) {
     GstStructure *struct1 = gst_caps2_get_nth_cap (caps1, i);
 
-    if (_gst_caps_cap_is_always_compatible(struct1, caps2) == FALSE){
+    if (_gst_caps2_cap_is_always_compatible(struct1, caps2) == FALSE){
       return FALSE;
     }
 
@@ -647,5 +658,102 @@ static void _gst_caps2_value_copy (const GValue *src, GValue *dest)
 static gpointer _gst_caps2_value_peek_pointer (const GValue *value)
 {
   return value->data[0].v_pointer;
+}
+
+/* fixate utility functions */
+
+gboolean gst_caps2_structure_fixate_field_nearest_int (GstStructure *structure,
+    const char *field_name, int target)
+{
+  const GValue *value;
+
+  g_return_val_if_fail(gst_structure_has_field (structure, field_name), FALSE);
+
+  value = gst_structure_get_value (structure, field_name);
+
+  if (G_VALUE_TYPE (value) == G_TYPE_INT) {
+    /* already fixed */
+    return FALSE;
+  } else if (G_VALUE_TYPE (value) == GST_TYPE_INT_RANGE) {
+    int x;
+    x = gst_value_get_int_range_min (value);
+    if (target < x) target = x;
+    x = gst_value_get_int_range_max (value);
+    if (target > x) target = x;
+    gst_structure_set (structure, field_name, G_TYPE_INT, target, NULL);
+    return TRUE;
+  } else if (G_VALUE_TYPE (value) == GST_TYPE_LIST) {
+    const GValue *list_value;
+    int i, n;
+    int best = 0;
+    int best_index = -1;
+
+    n = gst_value_list_get_size (value);
+    for(i=0;i<n;i++){
+      list_value = gst_value_list_get_value (value, i);
+      if (G_VALUE_TYPE (list_value) == G_TYPE_INT) {
+	int x = g_value_get_int (list_value);
+	if (best_index == -1 || (ABS(target-x) < ABS(best-x))) {
+	  best_index = i;
+	  best = x;
+	}
+      }
+    }
+    if(best_index != -1) {
+      gst_structure_set (structure, field_name, G_TYPE_INT, best, NULL);
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  return FALSE;
+}
+
+gboolean gst_caps2_structure_fixate_field_nearest_double (GstStructure
+    *structure, const char *field_name, double target)
+{
+  const GValue *value;
+
+  g_return_val_if_fail(gst_structure_has_field (structure, field_name), FALSE);
+
+  value = gst_structure_get_value (structure, field_name);
+
+  if (G_VALUE_TYPE (value) == G_TYPE_DOUBLE) {
+    /* already fixed */
+    return FALSE;
+  } else if (G_VALUE_TYPE (value) == GST_TYPE_DOUBLE_RANGE) {
+    double x;
+    x = gst_value_get_double_range_min (value);
+    if (target < x) target = x;
+    x = gst_value_get_double_range_max (value);
+    if (target > x) target = x;
+    gst_structure_set (structure, field_name, G_TYPE_DOUBLE, target, NULL);
+    return TRUE;
+  } else if (G_VALUE_TYPE (value) == GST_TYPE_LIST) {
+    const GValue *list_value;
+    int i, n;
+    double best = 0;
+    int best_index = -1;
+
+    n = gst_value_list_get_size (value);
+    for(i=0;i<n;i++){
+      list_value = gst_value_list_get_value (value, i);
+      if (G_VALUE_TYPE (list_value) == G_TYPE_DOUBLE) {
+	double x = g_value_get_double (list_value);
+	if (best_index == -1 || (ABS(target-x) < ABS(best-x))) {
+	  best_index = i;
+	  best = x;
+	}
+      }
+    }
+    if(best_index != -1) {
+      gst_structure_set (structure, field_name, G_TYPE_DOUBLE, best, NULL);
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  return FALSE;
+
 }
 

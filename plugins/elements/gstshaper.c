@@ -181,7 +181,7 @@ gst_shaper_get_bufferpool (GstPad *pad)
 }
 
 static GstCaps2*
-gst_shaper_getcaps (GstPad *pad, const GstCaps2 *caps)
+gst_shaper_getcaps (GstPad *pad)
 {
   GstPad *otherpad;
   GstShaperConnection *connection;

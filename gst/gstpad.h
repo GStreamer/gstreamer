@@ -149,7 +149,8 @@ typedef const GstQueryType*	(*GstPadQueryTypeFunction)	(GstPad *pad);
 
 typedef GstPadLinkReturn	(*GstPadLinkFunction) 		(GstPad *pad, const GstCaps2 *caps);
 typedef void			(*GstPadUnlinkFunction) 	(GstPad *pad);
-typedef GstCaps2*		(*GstPadGetCapsFunction) 	(GstPad *pad, const GstCaps2 *caps);
+typedef GstCaps2*		(*GstPadGetCapsFunction) 	(GstPad *pad);
+typedef GstCaps2*		(*GstPadFixateFunction) 	(GstPad *pad, const GstCaps2 *caps, gpointer user_data);
 typedef GstBufferPool*		(*GstPadBufferPoolFunction) 	(GstPad *pad);
 
 typedef gboolean 		(*GstPadDispatcherFunction) 	(GstPad *pad, gpointer data);
@@ -191,6 +192,7 @@ struct _GstRealPad {
   GstCaps2 			*filter;
   GstCaps2 			*appfilter;
   GstPadGetCapsFunction 	 getcapsfunc;
+  GstPadFixateFunction		 fixatefunc;
   
   GstPadDirection 		 direction;
 
@@ -479,6 +481,7 @@ GstPadLinkReturn	gst_pad_try_set_caps			(GstPad *pad, const GstCaps2 *caps);
 gboolean		gst_pad_check_compatibility		(GstPad *srcpad, GstPad *sinkpad);
 
 void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps);
+void			gst_pad_set_fixate_function		(GstPad *pad, GstPadFixateFunction fixate);
 GstPadLinkReturn	gst_pad_proxy_link          		(GstPad *pad, const GstCaps2 *caps);
 gboolean		gst_pad_relink_filtered			(GstPad *srcpad, GstPad *sinkpad, const GstCaps2 *filtercaps);
 gboolean		gst_pad_perform_negotiate		(GstPad *srcpad, GstPad *sinkpad);

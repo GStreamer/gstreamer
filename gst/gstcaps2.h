@@ -75,6 +75,7 @@ G_CONST_RETURN GstCaps2 *gst_static_caps2_get (GstStaticCaps2 *caps);
 void gst_caps2_append (GstCaps2 *caps1, GstCaps2 *caps2);
 void gst_caps2_append_cap (GstCaps2 *caps1, GstStructure *structure);
 GstCaps2 *gst_caps2_split_one (GstCaps2 *caps);
+int gst_caps2_get_n_structures (const GstCaps2 *caps);
 GstStructure *gst_caps2_get_nth_cap (const GstCaps2 *caps, int index);
 GstCaps2 *gst_caps2_copy_1 (const GstCaps2 *caps);
 
@@ -101,6 +102,11 @@ void gst_caps2_replace (GstCaps2 **caps, GstCaps2 *newcaps);
 gchar *gst_caps2_to_string (const GstCaps2 *caps);
 GstCaps2 *gst_caps2_from_string (const gchar *string);
 void gst_caps2_debug (const GstCaps2 *caps, const gchar *string);
+
+gboolean gst_caps2_structure_fixate_field_nearest_int (GstStructure *structure,
+    const char *field_name, int target);
+gboolean gst_caps2_structure_fixate_field_nearest_double (GstStructure
+    *structure, const char *field_name, double target);
 
 
 G_END_DECLS

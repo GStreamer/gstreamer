@@ -163,7 +163,7 @@ gst_identity_get_bufferpool (GstPad *pad)
 }
 
 static GstCaps2*
-gst_identity_getcaps (GstPad *pad, const GstCaps2 *caps)
+gst_identity_getcaps (GstPad *pad)
 {
   GstIdentity *identity;
   GstPad *otherpad;

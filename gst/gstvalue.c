@@ -469,7 +469,7 @@ gst_value_transform_fourcc_string (const GValue *src_value,
       g_ascii_isprint ((fourcc>>16) & 0xff) &&
       g_ascii_isprint ((fourcc>>24) & 0xff)){
     dest_value->data[0].v_pointer = g_strdup_printf(
-	"\"" GST_FOURCC_FORMAT "\"", GST_FOURCC_ARGS(fourcc));
+	GST_FOURCC_FORMAT, GST_FOURCC_ARGS(fourcc));
   } else {
     dest_value->data[0].v_pointer = g_strdup_printf("0x%08x", fourcc);
   }
@@ -503,7 +503,7 @@ gst_value_transform_list_string (const GValue *src_value,
 
   array = src_value->data[0].v_pointer;
 
-  s = g_string_new("(");
+  s = g_string_new("{ ");
   for(i=0;i<array->len;i++){
     list_value = &g_array_index(array, GValue, i);
 
@@ -514,7 +514,7 @@ gst_value_transform_list_string (const GValue *src_value,
     g_string_append (s, list_s);
     g_free (list_s);
   }
-  g_string_append (s, ")");
+  g_string_append (s, " }");
 
   dest_value->data[0].v_pointer = g_string_free (s, FALSE);
 }

@@ -74,7 +74,7 @@ static void			gst_spider_identity_init		(GstSpiderIdentity *spider_identity);
 static void			gst_spider_identity_chain		(GstPad *pad, GstBuffer *buf);
 static GstElementStateReturn	gst_spider_identity_change_state	(GstElement *element);
 static GstPadLinkReturn		gst_spider_identity_link		(GstPad *pad, const GstCaps2 *caps);
-static GstCaps2 *		gst_spider_identity_getcaps		(GstPad *pad, const GstCaps2 *caps);
+static GstCaps2 *		gst_spider_identity_getcaps		(GstPad *pad);
 /* loop functions */
 static void			gst_spider_identity_dumb_loop		(GstSpiderIdentity *ident);
 static void                     gst_spider_identity_src_loop		(GstSpiderIdentity *ident);
@@ -244,7 +244,7 @@ gst_spider_identity_link (GstPad *pad, const GstCaps2 *caps)
 }
 
 static GstCaps2*
-gst_spider_identity_getcaps (GstPad *pad, const GstCaps2 *caps)
+gst_spider_identity_getcaps (GstPad *pad)
 {
   GstSpiderIdentity *spider_identity = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
   GstPad *otherpad;

@@ -192,7 +192,7 @@ gst_queue_link (GstPad *pad, const GstCaps2 *caps)
 }
 
 static GstCaps2 *
-gst_queue_getcaps (GstPad *pad, const GstCaps2 *caps)
+gst_queue_getcaps (GstPad *pad)
 {
   GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
   GstPad *otherpad;
