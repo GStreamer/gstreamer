@@ -1,3 +1,14 @@
+2004-10-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstplaybasebin.c: (setup_source),
+	(gst_play_base_bin_change_state):
+	  Actually clean up streaminfo if output fails. This would trigger
+	  if, for example, there was no CD in the drive. No preroll, so
+	  a streaminfo structure is created, but the subsequent state change
+	  of the thread fails.
+	* gst/playback/gstplaybin.c: (gst_play_bin_change_state):
+	  Don't change state if parent failed.
+
 2004-10-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybin.c: (gst_play_bin_class_init),
