@@ -178,16 +178,17 @@ static const gchar *genres[] = {
 };
 
 static GstTagEntryMatch tag_matches[] = {
-  { GST_TAG_TITLE,		"TIT2"	},
-  { GST_TAG_ALBUM,		"TALB"	},
-  { GST_TAG_TRACK_NUMBER,	"TRCK"	},
-  { GST_TAG_ARTIST,		"TPE1"	},
-  { GST_TAG_COPYRIGHT,		"TCOP"  },
-  { GST_TAG_GENRE,		"TCON"  },
-  { GST_TAG_DATE,		"TDRC"  },
-  { GST_TAG_COMMENT,		"COMM"	},
-  { GST_TAG_ALBUM_VOLUME_NUMBER,  "TPOS"  },
-  { NULL,			NULL	}
+  { GST_TAG_TITLE,		 "TIT2"	},
+  { GST_TAG_ALBUM,		 "TALB"	},
+  { GST_TAG_TRACK_NUMBER,	 "TRCK"	},
+  { GST_TAG_ARTIST,		 "TPE1"	},
+  { GST_TAG_COPYRIGHT,		 "TCOP" },
+  { GST_TAG_GENRE,		 "TCON" },
+  { GST_TAG_DATE,		 "TDRC" },
+  { GST_TAG_COMMENT,		 "COMM"	},
+  { GST_TAG_ALBUM_VOLUME_NUMBER, "TPOS" },
+  { GST_TAG_DURATION,            "TLEN" },
+  { NULL,			 NULL	}
 };
 /**
 * gst_tag_from_id3_tag:
