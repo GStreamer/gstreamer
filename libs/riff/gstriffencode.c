@@ -30,7 +30,7 @@
   chunk = (gst_riff_chunk *)(riffenc->dataleft + riffenc->nextlikely);\
   chunk->id = chunkid; \
   chunk->size = chunksize; \
-  riffenc->nextlikely += sizeof(gst_riff_chunk) + (chunksize&1); \
+  riffenc->nextlikely += sizeof(gst_riff_chunk); \
 }
 
 #define ADD_LIST(riffenc, listsize, listtype) \

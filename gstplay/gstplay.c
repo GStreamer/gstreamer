@@ -4,7 +4,6 @@
 
 #include "gstplay.h"
 #include "gstplayprivate.h"
-#include "full-screen.h"
 
 static void gst_play_class_init		(GstPlayClass *klass);
 static void gst_play_init		(GstPlay *play);
@@ -165,6 +164,9 @@ gst_play_init (GstPlay *play)
 	priv->offset_element = NULL;
 	priv->bit_rate_element = NULL;
 	priv->media_time_element = NULL;
+
+	priv->source_width = 100;
+	priv->source_height = 100;
 }
 
 GstPlay *
@@ -374,6 +376,7 @@ GstPlayReturn
 gst_play_set_uri (GstPlay *play, const guchar *uri)
 {
 	GstPlayPrivate *priv;
+	FILE *file;
 	gchar* uriloc;
 
 	g_return_val_if_fail (play != NULL, GST_PLAY_ERROR);
@@ -384,7 +387,6 @@ gst_play_set_uri (GstPlay *play, const guchar *uri)
 
 	if (priv->uri)
 		g_free (priv->uri);
-
 
 	/* see if it looks like an URI */
 	if ((uriloc = strstr (uri, ":/"))) {
@@ -498,7 +500,7 @@ gst_play_pause (GstPlay *play)
 
 	if (play->state != GST_PLAY_PLAYING) return;
 
-	gst_element_set_state (GST_ELEMENT (priv->pipeline),GST_STATE_PAUSED);
+	gst_element_set_state (GST_ELEMENT (priv->pipeline), GST_STATE_PAUSED);
 
 	play->state = GST_PLAY_PAUSED;
 	g_idle_remove_by_data (priv->pipeline);
@@ -515,13 +517,13 @@ gst_play_stop (GstPlay *play)
 	g_return_if_fail (play != NULL);
 	g_return_if_fail (GST_IS_PLAY (play));
 
-	if (play->state == GST_PLAY_STOPPED) return;
-
 	priv = (GstPlayPrivate *)play->priv;
 
+	if (play->state == GST_PLAY_STOPPED) return;
+
 	// FIXME until state changes are handled properly
-	gst_element_set_state (GST_ELEMENT (priv->pipeline),GST_STATE_READY);
-	gtk_object_set (G_OBJECT (priv->src),"offset",0,NULL);
+	gst_element_set_state (GST_ELEMENT (priv->pipeline), GST_STATE_READY);
+	gtk_object_set (GTK_OBJECT (priv->src), "offset", 0, NULL);
 	//gst_element_set_state (GST_ELEMENT (priv->pipeline),GST_STATE_NULL);
 
 	play->state = GST_PLAY_STOPPED;
@@ -531,37 +533,43 @@ gst_play_stop (GstPlay *play)
 			 play->state);
 }
 
-void
-gst_play_set_display_size (GstPlay *play, gint display_preference)
+GtkWidget *
+gst_play_get_video_widget (GstPlay *play)
 {
 	GstPlayPrivate *priv;
 
-	g_return_if_fail (play != NULL);
-	g_return_if_fail (GST_IS_PLAY (play));
+	g_return_val_if_fail (play != NULL, 0);
+	g_return_val_if_fail (GST_IS_PLAY (play), 0);
 
 	priv = (GstPlayPrivate *)play->priv;
-  
-	if (display_preference == 0) {
-		gtk_widget_set_usize (GTK_WIDGET (priv->video_widget), priv->source_width, priv->source_height);
-	}
-	else if (display_preference == 1) {
-		gtk_widget_set_usize (GTK_WIDGET (priv->video_widget), priv->source_width * 2, priv->source_height * 2);
-	}
-	else if (display_preference == 2) {
-		GtkWidget *fs;
-		GstPlay *fs_play;
-	  
-		fs = full_screen_new ();
 
-		fs_play = full_screen_get_gst_play (FULL_SCREEN (fs));
+	return priv->video_widget;
+}
 
-		if (priv->uri != NULL) {
-			//gst_play_stop (play);
-			full_screen_set_uri (FULL_SCREEN (fs), fs_play, priv->uri);
+gint
+gst_play_get_source_width (GstPlay *play)
+{
+	GstPlayPrivate *priv;
 
-			gtk_widget_show (fs);
-		}
-	}
+	g_return_val_if_fail (play != NULL, 0);
+	g_return_val_if_fail (GST_IS_PLAY (play), 0);
+
+	priv = (GstPlayPrivate *)play->priv;
+
+	return priv->source_width;
+}
+
+gint
+gst_play_get_source_height (GstPlay *play)
+{
+	GstPlayPrivate *priv;
+
+	g_return_val_if_fail (play != NULL, 0);
+	g_return_val_if_fail (GST_IS_PLAY (play), 0);
+
+	priv = (GstPlayPrivate *)play->priv;
+
+	return priv->source_height;
 }
 
 gulong

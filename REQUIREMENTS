@@ -50,11 +50,11 @@ librtp		(for the rtp sink plugin, shipped with Gnome-O-Phone)
 aalib		(for the aa sink plugin)
 			http://aa-project.sourceforge.net/aalib/
 aRts		(for the arts plugin wrapper, and the artsd sink)
-			http://www.arts-project.org/
+			http://www.arts-project.org
 raw1394/linux1394	(for the dv plugin)
-			http://linux1394.sourceforge.net/
+			http://linux1394.sourceforge.net
 decss		(for the dvdsrc)
-			huh, I don't know, sorry (FIXME)
+			http://www.linuxrising.com/dvd-munitions_tar.gz
 libesound	(for the esd sink 
 			ftp.gnome.org/pub/GNOME/stable/sources/esound)
 gnome-vfs	(for the gnome-vfs src)
@@ -67,9 +67,10 @@ xmms		(for the xmms plugins wrapper)
 mpeg2dec/ac3dec	(for mpeg2 related plugins and dvd playback)
 			http://linuxvideo.org/mpeg2dec/
 			and http://linuxvideo.org/ac3dec/
-
-for AVI playback you might want to get the windows libraries from
-http://divx.euro.ru/ and put the .dll files in /usr/lib/win32/
+avifile		(for the avi windows decoder plugins
+			you might want to get the windows libraries 
+			from http://divx.euro.ru/ and put the .dll files 
+			in /usr/lib/win32/)
 
 An extra set of tools is required if you wish to build GStreamer out of
 CVS (using autogen.sh):

@@ -247,20 +247,40 @@ dnl Next, check for the optional libraries:
 dnl =======================================
 
 
-dnl Check for libesd
-esd_save_LIBS=$LIBS
-esd_save_CFLAGS=$CFLAGS 
-AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
-LIBS=$esd_save_LIBS
-CFLAGS=$esd_save_CFLAGS
-AC_ARG_ENABLE(esdsink,
-[  --enable-esdsink          enable the building of the esdsink],
-[case "${enableval}" in
-	yes) : ;;
-	no) HAVE_LIBESD=no ;;
-	*) AC_MSG_ERROR(bad value ${enableval} for --enable-esdsink) ;;
-	esac],
-[HAVE_LIBESD=$HAVE_LIBESD])
+
+dnl ***** ESound *****
+
+dnl *** First, the --enable-esd arg
+AC_ARG_ENABLE(esd,
+  [  --enable-esd             enable esound plugins: esdsrc, esdsink],
+  [ case "${enableval}" in
+      yes) USE_LIBESD=yes ;;
+      no) USE_LIBESD=no ;;
+      *) AC_MSG_ERROR(bad value ${enableval} for --enable-esd) ;;
+    esac],
+  [ USE_LIBESD=yes ])		dnl DEFAULT
+dnl *** If it's enabled
+if test x$USE_LIBESD = xyes; then
+  esd_save_LIBS=$LIBS
+  esd_save_CFLAGS=$CFLAGS
+  AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
+  LIBS=$esd_save_LIBS
+  CFLAGS=$esd_save_CFLAGS
+
+  dnl If it isn't found, unset USE_LIBESD
+  if test x$HAVE_LIBESD = xno; then
+    USE_LIBESD=yes
+  fi
+fi
+dnl *** Warn if it's disabled or not found
+if test x$USE_LIBESD = xno; then
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: esdsink
+)
+fi
+dnl *** Define the conditional as appropriate
+AM_CONDITIONAL(USE_LIBESD, test x$USE_LIBESD = xyes)
+
 
 dnl Check for artsc
 AC_PATH_PROG(ARTSC_CONFIG, artsc-config, no)
@@ -335,25 +355,34 @@ dnl AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
 
 
 dnl Check for libasound
-alsa_save_LIBS=$LIBS
-alsa_save_CFLAGS=$CFLAGS
+dnl alsa_save also used in ALSA macro, use our own namespace
+gst_alsa_save_LIBS=$LIBS
+gst_alsa_save_LDFLAGS=$LDFLAGS
+gst_alsa_save_CFLAGS=$CFLAGS
 AM_PATH_ALSA(0.5.0,
   HAVE_LIBASOUND=yes,
   HAVE_LIBASOUND=no
   AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: gstalsa
 ))
+LIBS=$gst_alsa_save_LIBS
+LDFLAGS=$gst_alsa_save_LDFLAGS
+CFLAGS=$gst_alsa_save_CFLAGS
 if test x$HAVE_LIBASOUND = xyes;then
+  gst_alsa_save_LIBS=$LIBS
+  gst_alsa_save_LDFLAGS=$LDFLAGS
+  gst_alsa_save_CFLAGS=$CFLAGS
   AM_PATH_ALSA(0.9.0,
     HAVE_LIBASOUND=no
     AC_MSG_WARN(Alsa 0.9.x not yet supported.
 ***** NOTE: These plugins won't be built: gstalsa
 )
     ,:)
+  LIBS=$gst_alsa_save_LIBS
+  LDFLAGS=$gst_alsa_save_LDFLAGS
+  CFLAGS=$gst_alsa_save_CFLAGS
 fi
 
-LIBS=$alsa_save_LIBS
-CFLAGS=$alsa_save_CFLAGS
 AC_ARG_ENABLE(alsasink,
 [  --enable-alsasink          enable the building of the alsasink],
 [case "${enableval}" in
@@ -644,7 +673,7 @@ AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
 dnl Check for liblame
 AC_MSG_CHECKING(LAME library)
-AC_CHECK_LIB(mp3lame, lame_init, HAVE_LIBLAME=yes, HAVE_LIBLAME=no, )
+AC_CHECK_LIB(mp3lame, lame_init, HAVE_LIBLAME=yes, HAVE_LIBLAME=no, -lm)
 AC_CHECK_HEADER(lame/lame.h, :, HAVE_LIBLAME=no)
 
 dnl Check for libshout
@@ -672,7 +701,10 @@ AC_CHECK_HEADER(libraw1394/raw1394.h, :, HAVE_RAW1394=no)
 dnl Check for libdv
 AC_MSG_CHECKING(libdv)
 AC_CHECK_LIB(dv, dv_init, HAVE_LIBDV=yes, HAVE_LIBDV=no, -lm $GLIB_LIBS $GLIB_CFLAGS)
+libdvcheck_save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $GLIB_CFLAGS"
 AC_CHECK_HEADER(libdv/dv.h, :, HAVE_LIBDV=no)
+CPPFLAGS="$libdvcheck_save_CPPFLAGS"
 
 dnl Check for aalib
 AC_MSG_CHECKING(aalib)
@@ -705,13 +737,12 @@ if sdl-config --libs > /dev/null 2>&1; then
   SDL_LIBS="`sdl-config --libs`"
   SDL_CFLAGS="`sdl-config --cflags`"
   AC_CHECK_LIB(SDL, SDL_Init, :, HAVE_LIBSDL=no, $SDL_LIBS)
-  dnl FIXME: CPPFLAGS should be set from SDL_CFLAGS for the next check
   dnl AC_CHECK_HEADER uses CPPFLAGS, but not CFLAGS.
   dnl Assume only suitable flags result from artsc-config --cflags
-  CPPFLAGS="$sdlcheck_save_CPPFLAGS"
+  sdlcheck_save_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $SDL_CFLAGS"
   AC_CHECK_HEADER(SDL.h, :, HAVE_LIBSDL=no)
-  sdlcheck_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$sdlcheck_save_CPPFLAGS"
   AC_CHECK_LIB(SDL, SDL_CreateYUVOverlay, :, HAVE_LIBSDL=no, $SDL_LIBS)
 else
   AC_MSG_RESULT(not found)
@@ -781,14 +812,14 @@ AC_ARG_ENABLE(atomic,
 esac], 
 [USE_ATOMIC_H=$HAVE_ATOMIC_H]) dnl Default value
 
-AC_ARG_ENABLE(plugin-srcdir,
-[  --enable-plugin-srcdir       allow tests/demos to use non-installed plugins ],
+AC_ARG_ENABLE(plugin-builddir,
+[  --enable-plugin-builddir     allow tests/demos to use non-installed plugins ],
 [case "${enableval}" in
-  yes) PLUGINS_USE_SRCDIR=yes ;;
-  no)  PLUGINS_USE_SRCDIR=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-plugin-srcdir) ;;
+  yes) PLUGINS_USE_BUILDDIR=yes ;;
+  no)  PLUGINS_USE_BUILDDIR=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-plugin-builddir) ;;
 esac], 
-[PLUGINS_USE_SRCDIR=no]) dnl Default value
+[PLUGINS_USE_BUILDDIR=no]) dnl Default value
 
 AC_ARG_ENABLE(debug,
 [  --enable-debug               compile with -g debugging info],
@@ -927,8 +958,8 @@ if test "x$USE_ATOMIC_H" = xyes; then
   AC_DEFINE(HAVE_ATOMIC_H, 1, [Define if atomic.h header file is available])
 fi
 
-if test "x$PLUGINS_USE_SRCDIR" = xyes; then
-  AC_DEFINE(PLUGINS_USE_SRCDIR, 1, [Define if plugins should be loaded from the build tree - only developers should use this])
+if test "x$PLUGINS_USE_BUILDDIR" = xyes; then
+  AC_DEFINE(PLUGINS_USE_BUILDDIR, 1, [Define if plugins should be loaded from the build tree - only developers should use this])
 fi
 
 if test "x$USE_DEBUG" = xyes; then
@@ -1056,7 +1087,7 @@ AM_CONDITIONAL(HAVE_FIG2DEV_EPS,    $HAVE_FIG2DEV_EPS)
 AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
-AM_CONDITIONAL(HAVE_LIBESD,         test "x$HAVE_LIBESD" = "xyes")
+dnl AM_CONDITIONAL(HAVE_LIBESD,         test "x$HAVE_LIBESD" = "xyes")
 AM_CONDITIONAL(HAVE_ARTSC,          test "x$HAVE_ARTSC" = "xyes")
 AM_CONDITIONAL(HAVE_LIBASOUND,      test "x$HAVE_LIBASOUND" = "xyes")
 AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
@@ -1070,7 +1101,7 @@ AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
 AM_CONDITIONAL(HAVE_AVIFILE,        test "x$HAVE_AVIFILE" = "xyes")
 AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME, test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGSM,         test "x$HAVE_LIBGSM" = "xyes")
-AM_CONDITIONAL(PLUGINS_USE_SRCDIR,  test "x$PLUGINS_USE_SRCDIR" = "xyes")
+AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
 
 
 dnl ############################
@@ -1095,9 +1126,9 @@ AC_DEFINE_UNQUOTED(PLUGINS_DIR,"$PLUGINS_DIR")
 AC_SUBST(PLUGINS_DIR)
 
 dnl Set location of uninstalled plugin directory
-PLUGINS_SRCDIR=`pwd`/$srcdir
-AC_DEFINE_UNQUOTED(PLUGINS_SRCDIR,"$PLUGINS_SRCDIR")
-AC_SUBST(PLUGINS_SRCDIR)
+PLUGINS_BUILDDIR=${builddir}
+AC_DEFINE_UNQUOTED(PLUGINS_BUILDDIR,"$PLUGINS_BUILDDIR")
+AC_SUBST(PLUGINS_BUILDDIR)
 
 
 
@@ -1201,6 +1232,7 @@ plugins/avi/wincodec/Makefile
 plugins/avi/winaudio/Makefile
 plugins/flx/Makefile
 plugins/festival/Makefile
+plugins/flac/Makefile
 plugins/jpeg/Makefile
 plugins/mp3decode/Makefile
 plugins/mp3decode/types/Makefile
@@ -1248,6 +1280,7 @@ plugins/filters/volenv/Makefile
 plugins/filters/level/Makefile
 plugins/filters/lav/Makefile
 plugins/filters/cutter/Makefile
+plugins/filters/deinterlace/Makefile
 plugins/gnomevfs/Makefile
 plugins/icecast/Makefile
 plugins/icecast/icecastsend/Makefile
@@ -1260,8 +1293,10 @@ plugins/visualization/spectrum/Makefile
 plugins/visualization/vumeter/Makefile
 plugins/visualization/synaesthesia/Makefile
 plugins/visualization/smoothwave/Makefile
+plugins/visualization/chart/Makefile
 plugins/videoscale/Makefile
 plugins/xvideosink/Makefile
+plugins/vgasink/Makefile
 plugins/wav/Makefile
 plugins/dvdsrc/Makefile
 plugins/vcdsrc/Makefile
@@ -1303,6 +1338,7 @@ examples/queue3/Makefile
 examples/queue4/Makefile
 examples/thread/Makefile
 examples/mixer/Makefile
+examples/cutter/Makefile
 examples/launch/Makefile
 examples/xml/Makefile
 examples/plugins/Makefile

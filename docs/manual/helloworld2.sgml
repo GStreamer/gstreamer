@@ -12,7 +12,7 @@
   </para>
 
   <sect1>
-    <title>Autoplugging helloworld</title>
+    <title>Autoplugging helloworld (outdated) </title>
     <para> 
       We will create a second version of the helloworld application using
       autoplugging. Its source code is considerably easier to write and

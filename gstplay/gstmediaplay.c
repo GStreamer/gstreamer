@@ -20,6 +20,8 @@ static void gst_media_play_slider_changed   (GtkAdjustment   *adj, GstMediaPlay 
 static void update_buttons		    (GstMediaPlay *mplay, GstPlayState state);
 static void update_slider		    (GstMediaPlay *mplay, GtkAdjustment *adjustment, gfloat value);
 
+gboolean fullscreen_active = FALSE;
+
 /* signals and args */
 enum {
 	LAST_SIGNAL
@@ -230,15 +232,19 @@ gst_media_play_start_uri (GstMediaPlay *play,
 
 	if (uri != NULL) {
 		ret = gst_play_set_uri (play->play, uri);
+		
+		if (ret == GST_PLAY_CANNOT_PLAY) {
+			printf ("*** Cannot load file: %s ***\n", uri);
+		} else {
+			if (!gst_play_media_can_seek (play->play)) {
+				gtk_widget_set_sensitive (play->slider, FALSE);
+			}
 
-		if (!gst_play_media_can_seek (play->play)) {
-			gtk_widget_set_sensitive (play->slider, FALSE);
+			gtk_window_set_title (GTK_WINDOW (play->window),
+					      g_strconcat ( "Gstplay - ", uri, NULL));
+			
+			gst_play_play (play->play);
 		}
-
-		gtk_window_set_title (GTK_WINDOW (play->window),
-				      g_strconcat ( "Gstplay - ", uri, NULL));
-
-		gst_play_play (play->play);
 	}
 }
 
@@ -385,6 +391,88 @@ on_extended1_activate (GtkCheckMenuItem *item, GstMediaPlay *mplay)
 	gdk_threads_leave ();
 	gst_status_area_show_extended (mplay->status, item->active);
 	gdk_threads_enter ();
+}
+
+void
+gst_media_play_set_original_size (GstMediaPlay *mplay)
+{
+	GstPlay *play;
+	GtkWidget *video_widget;
+	gint width, height;
+
+	play = mplay->play;
+
+	video_widget = gst_play_get_video_widget (play);
+	width = gst_play_get_source_width (play);
+	height = gst_play_get_source_height (play);
+
+	gtk_widget_set_usize (video_widget, width, height);
+}
+
+void
+gst_media_play_set_double_size (GstMediaPlay *mplay)
+{
+	GstPlay *play;
+	GtkWidget *video_widget;
+	gint width, height;
+
+	play = mplay->play;
+
+	video_widget = gst_play_get_video_widget (play);
+	width = gst_play_get_source_width (play);
+	height = gst_play_get_source_height (play);
+
+	gtk_widget_set_usize (video_widget, width * 1.5, height * 1.5);
+}
+
+void
+gst_media_play_set_fullscreen (GstMediaPlay *mplay)
+{
+	GdkWindow *gdk_window;
+	gint client_x, client_y, root_x, root_y;
+	gint width, height, source_width, source_height;
+	GstPlay *play;
+	GtkWidget *video_widget;
+
+	gdk_window = mplay->window->window;
+	play = mplay->play;
+
+	video_widget = gst_play_get_video_widget (play);
+	source_width = gst_play_get_source_width (play);
+	source_height = gst_play_get_source_height (play);
+
+	if (!fullscreen_active) {
+		gtk_widget_hide (glade_xml_get_widget (mplay->xml, "dockitem1"));
+		gtk_widget_hide (glade_xml_get_widget (mplay->xml, "dockitem2"));
+		gtk_widget_hide (glade_xml_get_widget (mplay->xml, "dockitem3"));
+		gtk_widget_hide (glade_xml_get_widget (mplay->xml, "dockitem4"));
+
+		gdk_window_get_origin (gdk_window, &root_x, &root_y);
+		gdk_window_get_geometry (gdk_window, &client_x, &client_y,
+					 &width, &height, NULL);
+		gdk_window_move (gdk_window, -client_x, -client_y);
+		gtk_widget_set_usize (video_widget, gdk_screen_width () + 1,
+				      gdk_screen_height () + 1);
+
+		mplay->x = root_x - client_x;
+		mplay->y = root_y - client_y;
+		mplay->width = width;
+		mplay->height = height;
+		
+		fullscreen_active = TRUE;
+	} else {
+		gtk_widget_show (glade_xml_get_widget (mplay->xml, "dockitem1"));
+		gtk_widget_show (glade_xml_get_widget (mplay->xml, "dockitem2"));
+		gtk_widget_show (glade_xml_get_widget (mplay->xml, "dockitem3"));
+		gtk_widget_show (glade_xml_get_widget (mplay->xml, "dockitem4"));
+		gtk_widget_queue_resize (glade_xml_get_widget (mplay->xml, "dock1"));
+
+		gdk_window_move (gdk_window, mplay->x, mplay->y);
+		gtk_widget_set_usize (video_widget,  source_width,
+				      source_height);
+
+		fullscreen_active = FALSE;
+	}
 }
 
 static void

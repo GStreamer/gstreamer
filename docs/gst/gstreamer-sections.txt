@@ -199,9 +199,13 @@ GstBufferPoolDestroyFunction
 gst_buffer_pool_new
 gst_buffer_pool_new_buffer
 gst_buffer_pool_destroy_buffer
+gst_buffer_pool_ref
+gst_buffer_pool_ref_by_count
+gst_buffer_pool_unref
 gst_buffer_pool_set_create_function
 gst_buffer_pool_set_destroy_function
 gst_buffer_pool_destroy
+gst_buffer_pool_get_default
 <SUBSECTION Standard>
 GST_BUFFER_POOL
 </SECTION>

@@ -98,8 +98,20 @@ main(int argc, char *argv[])
   char **argvn;
   gchar *cmdline;
   int i;
+  gboolean save_pipeline = FALSE;
+  gboolean run_pipeline = TRUE;
+  gchar *savefile = "";
 
   gst_init (&argc, &argv);
+
+  if (argc >= 3 && !strcmp(argv[1], "-o")) {
+    save_pipeline = TRUE;
+    run_pipeline = FALSE;
+    savefile = argv[2];
+    argv[2] = argv[0];
+    argv+=2;
+    argc-=2;
+  }
 
   launch_argc = argc;
   launch_argv = argv;
@@ -132,19 +144,22 @@ main(int argc, char *argv[])
 
   gst_parse_launch (cmdline, GST_BIN (pipeline));
 
-  arg_search(GST_BIN(pipeline),"xid",xid_handler,NULL);
+  if (save_pipeline) {
+    xmlSaveFile (savefile, gst_xml_write (pipeline));
+  }
+  if (run_pipeline) {
+    arg_search(GST_BIN(pipeline),"xid",xid_handler,NULL);
 
-//  xmlSaveFile("gstreamer-launch.gst",gst_xml_write(pipeline));
+    fprintf(stderr,"RUNNING pipeline\n");
+    gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  fprintf(stderr,"RUNNING pipeline\n");
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+//    g_idle_add(idle_func,pipeline);
+//    g_main_loop_run (g_main_loop_new (NULL, FALSE));
+    while (1)
+      gst_bin_iterate (GST_BIN (pipeline));
 
-  //g_idle_add(idle_func,pipeline);
- // g_main_loop_run (g_main_loop_new (NULL, FALSE));
-  while (1)
-    gst_bin_iterate (GST_BIN (pipeline));
-
-  gst_element_set_state (pipeline, GST_STATE_NULL);
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+  }
 
   return 0;
 }

@@ -356,4 +356,3 @@ gst_autoplugfactory_load_thyself (xmlNodePtr parent)
 
   return factory;
 }
-

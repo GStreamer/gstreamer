@@ -36,7 +36,7 @@ _gst_buffer_initialize (void)
   int buffersize = sizeof(GstBuffer);
 
   // round up to the nearest 32 bytes for cache-line and other efficiencies
-  buffersize = ((buffersize-1 / 32) + 1) * 32;
+  buffersize = (((buffersize-1) / 32) + 1) * 32;
 
   _gst_buffer_chunk = g_mem_chunk_new ("GstBuffer", buffersize,
     buffersize * 32, G_ALLOC_AND_FREE);

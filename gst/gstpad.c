@@ -34,7 +34,9 @@
 static void		gst_pad_class_init		(GstPadClass *klass);
 static void		gst_pad_init			(GstPad *pad);
 
+#ifndef GST_DISABLE_XML
 static xmlNodePtr	gst_pad_save_thyself		(GstObject *object, xmlNodePtr parent);
+#endif
 
 static GstObject *pad_parent_class = NULL;
 
@@ -176,7 +178,9 @@ gst_real_pad_class_init (GstRealPadClass *klass)
     g_param_spec_boolean("active","Active","Whether the pad is active.",
                          TRUE,G_PARAM_READWRITE));
 
+#ifndef GST_DISABLE_XML
   gstobject_class->save_thyself = GST_DEBUG_FUNCPTR(gst_pad_save_thyself);
+#endif
   gstobject_class->path_string_separator = ".";
 }
 
@@ -1087,6 +1091,7 @@ gst_real_pad_destroy (GObject *object)
 }
 
 
+#ifndef GST_DISABLE_XML
 /**
  * gst_pad_load_and_connect:
  * @self: the XML node to read the description from
@@ -1143,6 +1148,7 @@ gst_pad_load_and_connect (xmlNodePtr self,
 cleanup:
   g_strfreev (split);
 }
+#endif // GST_DISABLE_XML
 
 static gboolean
 gst_pad_renegotiate_func (GstPad *pad, gpointer *data1, GstPad *peerpad, gpointer *data2, GstCaps **newcaps)
@@ -1390,6 +1396,7 @@ gst_pad_negotiate_proxy (GstPad *srcpad, GstPad *destpad, GstCaps **caps)
   return GST_PAD_NEGOTIATE_AGREE;
 }
 
+#ifndef GST_DISABLE_XML
 /**
  * gst_pad_save_thyself:
  * @pad: the pad to save
@@ -1450,6 +1457,7 @@ gst_pad_ghost_save_thyself (GstPad *pad,
 
   return self;
 }
+#endif // GST_DISABLE_XML
 
 #ifndef gst_pad_push
 /**
@@ -1526,21 +1534,35 @@ gst_pad_pull (GstPad *pad)
 GstBuffer*
 gst_pad_pullregion (GstPad *pad, GstRegionType type, guint64 offset, guint64 len) 
 {
-  GstRealPad *peer = GST_RPAD_PEER(pad);
+  GstRealPad *peer;
+  GstBuffer *result = NULL;
   
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, NULL);
-  g_return_val_if_fail (peer != NULL, NULL);
 
-  GST_DEBUG_ENTER("(%s:%s,%d,%lld,%lld)",GST_DEBUG_PAD_NAME(pad),type,offset,len);
+  do {
+    peer = GST_RPAD_PEER(pad);
+    g_return_val_if_fail (peer != NULL, NULL);
 
-  if (peer->pullregionfunc) {
-    GST_DEBUG (GST_CAT_DATAFLOW,"calling pullregionfunc &%s of peer pad %s:%s\n",
+    if (result) 
+      gst_buffer_unref (result);
+
+    GST_DEBUG_ENTER("(%s:%s,%d,%lld,%lld)",GST_DEBUG_PAD_NAME(pad),type,offset,len);
+
+    if (peer->pullregionfunc) {
+      GST_DEBUG (GST_CAT_DATAFLOW,"calling pullregionfunc &%s of peer pad %s:%s\n",
           GST_DEBUG_FUNCPTR_NAME(peer->pullregionfunc),GST_DEBUG_PAD_NAME(((GstPad*)peer)));
-    return (peer->pullregionfunc)(((GstPad*)peer),type,offset,len);
-  } else {
-    GST_DEBUG (GST_CAT_DATAFLOW,"no pullregionfunc\n");
-    return NULL;
+      result = (peer->pullregionfunc)(((GstPad*)peer),type,offset,len);
+    } else {
+      GST_DEBUG (GST_CAT_DATAFLOW,"no pullregionfunc\n");
+      result = NULL;
+      break;
+    }
   }
+  while (result && ! GST_BUFFER_FLAG_IS_SET (result, GST_BUFFER_EOS) 
+	   && !(GST_BUFFER_OFFSET (result) == offset && 
+	   GST_BUFFER_SIZE (result) == len));
+
+  return result;
 }
 #endif
 

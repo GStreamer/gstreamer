@@ -28,7 +28,7 @@
       <listitem>
         <para>
           A pipeline (<classname>GstPipeline</classname>). Which is a generic container you will
-	  use most of the time.
+	  use most of the time. The toplevel bin has to be a pipeline.
         </para>
       </listitem>
       <listitem>
@@ -189,7 +189,7 @@
 
   gst_bin_add (GST_BIN (bin), element);
 
-  gst_element_add_ghost_pad (bin, gst_element_get_pad (element, "sink"));
+  gst_element_add_ghost_pad (bin, gst_element_get_pad (element, "sink"), "sink");
   
     </programlisting>
     <para>

@@ -187,7 +187,6 @@
 		<widget>
 		  <class>GtkMenuItem</class>
 		  <name>full_screen</name>
-		  <sensitive>False</sensitive>
 		  <accelerator>
 		    <modifiers>GDK_CONTROL_MASK</modifiers>
 		    <key>GDK_3</key>
@@ -469,7 +468,7 @@
   <modal>True</modal>
   <wmclass_name>about</wmclass_name>
   <wmclass_class>GstMediaPlay</wmclass_class>
-  <copyright>(C) 1999-2001 Erik Walthinsen</copyright>
+  <copyright>(C) 1999-2001 Erik Walthinsen, Arik Devens</copyright>
   <authors>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;
 Wim Taymans &lt;wim.taymans@tvd.be&gt;
 Richard Boulton &lt;richard@tartarus.org&gt;
@@ -529,6 +528,101 @@ Arik Devens &lt;arik@gnome.org&gt;
       <last_modification_time>Sun, 06 Aug 2000 15:53:48 GMT</last_modification_time>
     </signal>
     <stock_button>GNOME_STOCK_BUTTON_CANCEL</stock_button>
+  </widget>
+</widget>
+
+<widget>
+  <class>GtkWindow</class>
+  <name>preferences</name>
+  <title>GstMediaPlayer Preferences</title>
+  <type>GTK_WINDOW_TOPLEVEL</type>
+  <position>GTK_WIN_POS_NONE</position>
+  <modal>False</modal>
+  <allow_shrink>False</allow_shrink>
+  <allow_grow>True</allow_grow>
+  <auto_shrink>False</auto_shrink>
+
+  <widget>
+    <class>GtkNotebook</class>
+    <name>notebook1</name>
+    <can_focus>True</can_focus>
+    <show_tabs>True</show_tabs>
+    <show_border>True</show_border>
+    <tab_pos>GTK_POS_TOP</tab_pos>
+    <scrollable>False</scrollable>
+    <tab_hborder>2</tab_hborder>
+    <tab_vborder>2</tab_vborder>
+    <popup_enable>False</popup_enable>
+
+    <widget>
+      <class>GtkFrame</class>
+      <name>frame1</name>
+      <label>Full Screen</label>
+      <label_xalign>0</label_xalign>
+      <shadow_type>GTK_SHADOW_ETCHED_IN</shadow_type>
+
+      <widget>
+	<class>GtkVBox</class>
+	<name>vbox1</name>
+	<homogeneous>False</homogeneous>
+	<spacing>0</spacing>
+
+	<widget>
+	  <class>GtkCheckButton</class>
+	  <name>checkbutton1</name>
+	  <can_focus>True</can_focus>
+	  <label>Show file menu</label>
+	  <active>False</active>
+	  <draw_indicator>True</draw_indicator>
+	  <child>
+	    <padding>0</padding>
+	    <expand>False</expand>
+	    <fill>False</fill>
+	  </child>
+	</widget>
+
+	<widget>
+	  <class>GtkCheckButton</class>
+	  <name>checkbutton2</name>
+	  <can_focus>True</can_focus>
+	  <label>Show player controls</label>
+	  <active>False</active>
+	  <draw_indicator>True</draw_indicator>
+	  <child>
+	    <padding>0</padding>
+	    <expand>False</expand>
+	    <fill>False</fill>
+	  </child>
+	</widget>
+
+	<widget>
+	  <class>GtkCheckButton</class>
+	  <name>checkbutton3</name>
+	  <can_focus>True</can_focus>
+	  <label>Show status area</label>
+	  <active>False</active>
+	  <draw_indicator>True</draw_indicator>
+	  <child>
+	    <padding>0</padding>
+	    <expand>False</expand>
+	    <fill>False</fill>
+	  </child>
+	</widget>
+      </widget>
+    </widget>
+
+    <widget>
+      <class>GtkLabel</class>
+      <child_name>Notebook:tab</child_name>
+      <name>label1</name>
+      <label>Viewers</label>
+      <justify>GTK_JUSTIFY_CENTER</justify>
+      <wrap>False</wrap>
+      <xalign>0.5</xalign>
+      <yalign>0.5</yalign>
+      <xpad>0</xpad>
+      <ypad>0</ypad>
+    </widget>
   </widget>
 </widget>
 

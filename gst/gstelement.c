@@ -59,8 +59,10 @@ static void			gst_element_real_destroy	(GObject *object);
 
 static GstElementStateReturn	gst_element_change_state	(GstElement *element);
 
-GstElement* 			gst_element_restore_thyself 	(xmlNodePtr self, GstObject *parent);
+#ifndef GST_DISABLE_XML
 static xmlNodePtr		gst_element_save_thyself	(GstObject *object, xmlNodePtr parent);
+GstElement* 			gst_element_restore_thyself 	(xmlNodePtr self, GstObject *parent);
+#endif
 
 static GstObjectClass *parent_class = NULL;
 static guint gst_element_signals[LAST_SIGNAL] = { 0 };
@@ -139,8 +141,10 @@ gst_element_class_init (GstElementClass *klass)
 // FIXME!
 //  gobject_class->destroy =		GST_DEBUG_FUNCPTR(gst_element_real_destroy);
 
+#ifndef GST_DISABLE_XML
   gstobject_class->save_thyself =	GST_DEBUG_FUNCPTR(gst_element_save_thyself);
   gstobject_class->restore_thyself =	GST_DEBUG_FUNCPTR(gst_element_restore_thyself);
+#endif
 
   klass->change_state =			GST_DEBUG_FUNCPTR(gst_element_change_state);
   klass->elementfactory = NULL;
@@ -650,7 +654,8 @@ gst_element_request_pad_by_name (GstElement *element, const gchar *name)
   g_return_val_if_fail (name != NULL, NULL);
 
   templ = gst_element_get_padtemplate_by_name (element, name);
-  g_return_val_if_fail (templ != NULL, NULL);
+  if (templ == NULL)
+    return NULL;
 
   pad = gst_element_request_pad (element, templ);
 
@@ -948,6 +953,7 @@ static gchar *_gst_element_type_names[] = {
 };
 */
 
+#ifndef GST_DISABLE_XML
 /**
  * gst_element_save_thyself:
  * @element: GstElement to save
@@ -1149,6 +1155,7 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
 
   return element;
 }
+#endif // GST_DISABLE_XML
 
 /**
  * gst_element_set_sched:

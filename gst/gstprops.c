@@ -55,6 +55,9 @@ gst_props_debug_entry (GstPropsEntry *entry)
     case GST_PROPS_INT_ID:
       GST_DEBUG (GST_CAT_PROPERTIES, "%d\n", entry->data.int_data);
       break;
+    case GST_PROPS_FLOAT_ID:
+      GST_DEBUG (GST_CAT_PROPERTIES, "%f\n", entry->data.float_data);
+      break;
     case GST_PROPS_FOURCC_ID:
       GST_DEBUG (GST_CAT_PROPERTIES, "%4.4s\n", (gchar*)&entry->data.fourcc_data);
       break;
@@ -68,6 +71,12 @@ gst_props_debug_entry (GstPropsEntry *entry)
       GST_DEBUG (GST_CAT_PROPERTIES, "%d-%d\n", entry->data.int_range_data.min,
 		      entry->data.int_range_data.max);
       break;
+    case GST_PROPS_FLOAT_RANGE_ID:
+      GST_DEBUG (GST_CAT_PROPERTIES, "%f-%f\n", entry->data.float_range_data.min,
+		      entry->data.float_range_data.max);
+      break;
+    case GST_PROPS_LIST_ID:
+      GST_DEBUG (GST_CAT_PROPERTIES, "[list]\n");
     default:
       break;
   }
@@ -151,6 +160,129 @@ gst_props_new (const gchar *firstname, ...)
   va_end (var_args);
   
   return props;
+} 
+
+/**
+ * gst_props_add_to_list:
+ * @entries: the existing list of entries
+ * @entry: the new entry to add to the list
+ *
+ * Add a property to a list of properties.
+ *
+ * Returns: a pointer to a list with the new entry added.
+ */
+static GList *
+gst_props_add_to_list (GList * entries, GstPropsEntry *entry)
+{
+  return g_list_prepend (entries, entry);
+}
+
+/**
+ * gst_props_merge_int_entries:
+ * @newentry: the new entry
+ * @oldentry: an old entry
+ *
+ * Tries to merge oldentry into newentry, if there is a simpler single entry which represents
+ *
+ * Assumes that the entries are either ints or int ranges.
+ *
+ * Returns: TRUE if the entries were merged, FALSE otherwise.
+ */
+static gboolean
+gst_props_merge_int_entries(GstPropsEntry * newentry, GstPropsEntry * oldentry)
+{
+  gint new_min, new_max, old_min, old_max;
+  gboolean can_merge = FALSE;
+
+  if (newentry->propstype == GST_PROPS_INT_ID) {
+    new_min = newentry->data.int_data;
+    new_max = newentry->data.int_data;
+  } else {
+    new_min = newentry->data.int_range_data.min;
+    new_max = newentry->data.int_range_data.max;
+  }
+
+  if (oldentry->propstype == GST_PROPS_INT_ID) {
+    old_min = oldentry->data.int_data;
+    old_max = oldentry->data.int_data;
+  } else {
+    old_min = oldentry->data.int_range_data.min;
+    old_max = oldentry->data.int_range_data.max;
+  }
+
+  // Put range which starts lower into (new_min, new_max)
+  if (old_min < new_min) {
+    gint tmp;
+    tmp = old_min;
+    old_min = new_min;
+    new_min = tmp;
+    tmp = old_max;
+    old_max = new_max;
+    new_max = tmp;
+  }
+
+  // new_min is min of either entry - second half of the following conditional
+  // is to avoid overflow problems.
+  if (new_max >= old_min - 1 && old_min - 1 < old_min) {
+    // ranges overlap, or are adjacent.  Pick biggest maximum.
+    can_merge = TRUE;
+    if (old_max > new_max) new_max = old_max;
+  }
+
+  if (can_merge) {
+    if (new_min == new_max) {
+      newentry->propstype = GST_PROPS_INT_ID;
+      newentry->data.int_data = new_min;
+    } else {
+      newentry->propstype = GST_PROPS_INT_RANGE_ID;
+      newentry->data.int_range_data.min = new_min;
+      newentry->data.int_range_data.max = new_max;
+    }
+  }
+  return can_merge;
+}
+
+/**
+ * gst_props_add_to_int_list:
+ * @entries: the existing list of entries
+ * @entry: the new entry to add to the list
+ *
+ * Add an integer property to a list of properties, removing duplicates
+ * and merging ranges.
+ *
+ * Assumes that the existing list is in simplest form, contains
+ * only ints and int ranges, and that the new entry is an int or 
+ * an int range.
+ *
+ * Returns: a pointer to a list with the new entry added.
+ */
+static GList *
+gst_props_add_to_int_list (GList * entries, GstPropsEntry * newentry)
+{
+  GList * i;
+
+  i = entries;
+  while (i) {
+    GstPropsEntry * oldentry = (GstPropsEntry *)(i->data);
+    gboolean merged = gst_props_merge_int_entries(newentry, oldentry);
+
+    if (merged) {
+      // replace the existing one with the merged one
+      g_mutex_lock (_gst_props_entries_chunk_lock);
+      g_mem_chunk_free (_gst_props_entries_chunk, oldentry);
+      g_mutex_unlock (_gst_props_entries_chunk_lock);
+      entries = g_list_remove_link (entries, i);
+      g_list_free_1 (i);
+
+      // start again: it's possible that this change made an earlier entry
+      // mergeable, and the pointer is now invalid anyway.
+      i = entries;
+    }
+
+    i = g_list_next (i);
+  }
+
+  return gst_props_add_to_list (entries, newentry);
 }
 
 /**
@@ -169,6 +301,18 @@ gst_props_newv (const gchar *firstname, va_list var_args)
   gboolean inlist = FALSE;
   const gchar *prop_name;
   GstPropsEntry *list_entry = NULL;
+
+  typedef enum {
+      GST_PROPS_LIST_T_UNSET,
+      GST_PROPS_LIST_T_INTS,
+      GST_PROPS_LIST_T_FLOATS,
+      GST_PROPS_LIST_T_MISC,
+  } list_types;
+
+  // type of the list
+  list_types list_type = GST_PROPS_LIST_T_UNSET;
+  // type of current item
+  list_types entry_type = GST_PROPS_LIST_T_UNSET;
 
   if (firstname == NULL)
     return NULL;
@@ -196,20 +340,40 @@ gst_props_newv (const gchar *firstname, va_list var_args)
     switch (entry->propstype) {
       case GST_PROPS_INT_ID:
       case GST_PROPS_INT_RANGE_ID:
+	entry_type = GST_PROPS_LIST_T_INTS;
+	break;
       case GST_PROPS_FLOAT_ID:
       case GST_PROPS_FLOAT_RANGE_ID:
+	entry_type = GST_PROPS_LIST_T_FLOATS;
+	break;
       case GST_PROPS_FOURCC_ID:
       case GST_PROPS_BOOL_ID:
       case GST_PROPS_STRING_ID:
+	entry_type = GST_PROPS_LIST_T_MISC;
 	break;
       case GST_PROPS_LIST_ID:
 	g_return_val_if_fail (inlist == FALSE, NULL);
 	inlist = TRUE;
 	list_entry = entry;
+	list_type = GST_PROPS_LIST_T_UNSET;
 	list_entry->data.list_data.entries = NULL;
 	break;
       case GST_PROPS_END_ID:
 	g_return_val_if_fail (inlist == TRUE, NULL);
+
+	// if list was of size 1, replace the list by a the item it contains
+	if (g_list_length(list_entry->data.list_data.entries) == 1) {
+	  GstPropsEntry * subentry = (GstPropsEntry *)(list_entry->data.list_data.entries->data);
+	  list_entry->propstype = subentry->propstype;
+	  list_entry->data = subentry->data;
+	  g_mutex_lock (_gst_props_entries_chunk_lock);
+	  g_mem_chunk_free (_gst_props_entries_chunk, subentry);
+	  g_mutex_unlock (_gst_props_entries_chunk_lock);
+	}
+
+        g_mutex_lock (_gst_props_entries_chunk_lock);
+        g_mem_chunk_free (_gst_props_entries_chunk, entry);
+        g_mutex_unlock (_gst_props_entries_chunk_lock);
 	inlist = FALSE;
 	list_entry = NULL;
         prop_name = va_arg (var_args, gchar*);
@@ -223,7 +387,21 @@ gst_props_newv (const gchar *firstname, va_list var_args)
     }
 
     if (inlist && (list_entry != entry)) {
-      list_entry->data.list_data.entries = g_list_prepend (list_entry->data.list_data.entries, entry);
+      if (list_type == GST_PROPS_LIST_T_UNSET) list_type = entry_type;
+      if (list_type != entry_type) {
+	g_warning ("property list contained incompatible entry types\n");
+      } else {
+	switch (list_type) {
+	  case GST_PROPS_LIST_T_INTS:
+	    list_entry->data.list_data.entries =
+		    gst_props_add_to_int_list (list_entry->data.list_data.entries, entry);
+	    break;
+	  default:
+	    list_entry->data.list_data.entries =
+		    gst_props_add_to_list (list_entry->data.list_data.entries, entry);
+	    break;
+	}
+      }
     }
     else {
       props->properties = g_list_insert_sorted (props->properties, entry, props_compare_func);
@@ -621,6 +799,8 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
 {
   GST_DEBUG (GST_CAT_PROPERTIES,"compare: %s %s\n", g_quark_to_string (entry1->propid),
 	                     g_quark_to_string (entry2->propid));
+  gst_props_debug_entry (entry1);
+  gst_props_debug_entry (entry2);
   switch (entry1->propstype) {
     case GST_PROPS_LIST_ID:
     {
@@ -806,6 +986,7 @@ end:
   return compatible;
 }
 
+#ifndef GST_DISABLE_XML
 static xmlNodePtr
 gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
 {
@@ -1060,3 +1241,4 @@ gst_props_load_thyself (xmlNodePtr parent)
 
   return props;
 }
+#endif // GST_DISABLE_XML

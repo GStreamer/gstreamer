@@ -35,42 +35,43 @@ void
 on_original_size_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
 	GstMediaPlay *mplay;
-	GstPlay *play;
 
 	mplay = GST_MEDIA_PLAY (user_data);
-	play = mplay->play;
 
-	gst_play_set_display_size (play, 0);
+	gst_media_play_set_original_size (mplay);
 }
 
 void
 on_double_size_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
 	GstMediaPlay *mplay;
-	GstPlay *play;
 	
 	mplay = GST_MEDIA_PLAY (user_data);
-	play = mplay->play;
 
-	gst_play_set_display_size (play, 1);
+	gst_media_play_set_double_size (mplay);
 }
 
 void
 on_full_screen_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
 	GstMediaPlay *mplay;
-	GstPlay *play;
 
 	mplay = GST_MEDIA_PLAY (user_data);
-	play = mplay->play;
-	
-	gst_play_set_display_size (play, 2);
+
+	gst_media_play_set_fullscreen (mplay);
 }
 
 void
 on_preferences1_activate (GtkMenuItem *menuitem, gpointer user_data)
 {
-	printf ("file1 activate\n");
+	GladeXML *xml;
+	struct stat statbuf;
+
+	if (stat (DATADIR"gstmediaplay.glade", &statbuf) == 0) {
+		xml = glade_xml_new (DATADIR"gstmediaplay.glade", "preferences");
+	}
+	else
+		xml = glade_xml_new ("gstmediaplay.glade", "preferences");
 }
 
 void on_about_activate (GtkWidget *widget, gpointer data)

@@ -25,7 +25,21 @@
 
 #include <gst/gst.h>
 
-/* calculate length in seconds of audio buffer buf based on caps of pad */
+/* get byte size of audio frame (based on caps of pad */
+int		gst_audio_frame_byte_size 	(GstPad* pad);
 
-double 		gst_audio_length (GstPad* pad, GstBuffer* buf);
+/* get length in frames of buffer */
+long		gst_audio_frame_length 		(GstPad* pad, GstBuffer* buf);
+
+/* get frame rate based on caps */
+long		gst_audio_frame_rate		(GstPad *pad);
+
+/* calculate length in seconds of audio buffer buf based on caps of pad */
+double 		gst_audio_length 		(GstPad* pad, GstBuffer* buf);
+
+/* calculate highest possible sample value based on capabilities of pad */
+long 		gst_audio_highest_sample_value 	(GstPad* pad);
+
+/* check if the buffer size is a whole multiple of the frame size */
+gboolean	gst_audio_is_buffer_framed 	(GstPad* pad, GstBuffer* buf);
 
