@@ -69,7 +69,6 @@ init_gst (void)
      char **argv;
 
      init_pygobject ();
-     
      /* pull in arguments */
      av = PySys_GetObject ("argv");
      if (av != NULL) {
@@ -78,10 +77,11 @@ init_gst (void)
 	  for (i = 0; i < argc; i++)
 	       argv[i] = g_strdup (PyString_AsString (PyList_GetItem (av, i)));
      } else {
-	  argc = 0;
-	  argv = NULL;
+          /* gst_init_check does not like argc == 0 */
+	  argc = 1;
+	  argv = g_new (char *, argc);
+	  argv[0] = g_strdup("");
      }
-     
      if (!gst_init_check (&argc, &argv)) {
 	  if (argv != NULL) {
 	       for (i = 0; i < argc; i++)
@@ -96,7 +96,7 @@ init_gst (void)
 	       g_free (argv[i]);
 	  g_free (argv);
      }
-     
+
      m = Py_InitModule ("_gst", pygst_functions);
      d = PyModule_GetDict (m);
 

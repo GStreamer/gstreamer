@@ -1,3 +1,9 @@
+2004-10-10  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/gstmodule.c: (init_gst):
+	Make gst-python not hang on import when embedded.
+	Fixes bug #155041
+
 2004-10-04  Johan Dahlin  <johan@gnome.org>
 
 	* gst/interfaces.defs: Add proper fiels to GstTunerNorm. Also
