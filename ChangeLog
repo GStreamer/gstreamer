@@ -1,5 +1,14 @@
 2004-10-01  Wim Taymans  <wim@fluendo.com>
 
+	* ext/speex/gstspeexdec.c: (gst_speex_dec_class_init),
+	(speex_dec_get_formats), (speex_dec_convert),
+	(speex_dec_src_query), (speex_dec_src_event), (speex_dec_event),
+	(speex_dec_chain), (gst_speexdec_get_property),
+	(gst_speexdec_set_property):
+	Small cleanups.
+
+2004-10-01  Wim Taymans  <wim@fluendo.com>
+
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_class_init),
 	(gst_wavparse_stream_init), (gst_wavparse_fmt),
 	(gst_wavparse_other), (gst_wavparse_loop),
