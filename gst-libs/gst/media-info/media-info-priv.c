@@ -171,8 +171,7 @@ found_tag_callback (GObject *pipeline, GstElement *source, GstTagList *tags, Gst
 
   score.meta = 0;
   score.encoded = 0;
-  g_print ("FOUND TAG      : found by element \"%s\".\n",
-           GST_STR_NULL (GST_ELEMENT_NAME (source)));
+  GST_DEBUG ("element %s found tag", GST_STR_NULL (GST_ELEMENT_NAME (source)));
 
   /* decide if it's likely to be metadata or streaminfo */
   /* FIXME: this is a hack, there must be a better way,
@@ -193,46 +192,111 @@ found_tag_callback (GObject *pipeline, GstElement *source, GstTagList *tags, Gst
 }
 
 void
-error_callback (GObject *element, GstElement *source, GError *error, gchar *debug)
+error_callback (GObject *element, GstElement *source, GError *error, gchar *debug, GstMediaInfoPriv *priv)
 {
   g_print ("ERROR: %s\n", error->message);
+  g_error_free (error);
 }
 
 /* helpers */
 
-/* reset info to a state where it can be used to query for media info
- * clear caps, metadata, and so on */
-void
-gmi_reset (GstMediaInfo *info)
+/* General GError creation */
+static void
+gst_media_info_error_create (GError **error, const gchar *message)
 {
-  GstMediaInfoPriv *priv = info->priv;
-  /* clear out some stuff */
-  if (priv->format)
-  {
-    GMI_DEBUG ("unreffing priv->format, error before this ?\n");
-    gst_caps_free (priv->format);
-    priv->format = NULL;
-  }
-  if (priv->metadata)
-  {
-    GMI_DEBUG ("unreffing priv->metadata, error before this ?\n");
-    gst_tag_list_free (priv->metadata);
-    priv->metadata = NULL;
-  }
+  /* check if caller wanted an error reported */
+  if (error == NULL)
+    return;
+
+  *error = g_error_new (GST_MEDIA_INFO_ERROR, 0, message);
+  return;
+}
+
+/* GError creation when element is missing */
+static void
+gst_media_info_error_element (const gchar *element, GError **error)
+{
+  gchar *message;
+
+  message = g_strdup_printf ("The %s element could not be found. "
+                             "This element is essential for reading. "
+                             "Please install the right plug-in and verify "
+                             "that it works by running 'gst-inspect %s'",
+                             element, element);
+  gst_media_info_error_create (error, message);
+  g_free (message);
+  return;
+}
+
+/* initialise priv; done the first time */
+void
+gmip_init (GstMediaInfoPriv *priv, GError **error)
+{
+#define GST_MEDIA_INFO_MAKE_OR_ERROR(el, factory, name, error)  \
+G_STMT_START {                                                  \
+  el = gst_element_factory_make (factory, name);                \
+  if (!GST_IS_ELEMENT (el))                                     \
+  {                                                             \
+    gst_media_info_error_element (factory, error);              \
+    return;                                                     \
+  }                                                             \
+} G_STMT_END
+  /* create the typefind element and make sure it stays around by reffing */
+  GST_MEDIA_INFO_MAKE_OR_ERROR (priv->typefind, "typefind", "typefind", error);
+  gst_object_ref (GST_OBJECT (priv->typefind));
+
+  /* create the fakesink element and make sure it stays around by reffing */
+  GST_MEDIA_INFO_MAKE_OR_ERROR (priv->fakesink, "fakesink", "fakesink", error);
+  gst_object_ref (GST_OBJECT (priv->fakesink));
+  /* source element for media info reading */
+  priv->source = NULL;
+  priv->source_name = NULL;
+}
+
+/* called at the beginning of each use cycle */
+/* reset info to a state where it can be used to query for media info */
+void
+gmip_reset (GstMediaInfoPriv *priv)
+{
+
+#define STRING_RESET(string)	\
+G_STMT_START {			\
+  if (string) g_free (string);	\
+  string = NULL;		\
+} G_STMT_END
+
+  STRING_RESET(priv->pipeline_desc);
+  STRING_RESET(priv->location);
+#undef STRING_RESET
+
+#define CAPS_RESET(target)		\
+G_STMT_START {				\
+  if (target) gst_caps_free (target);	\
+  target = NULL;			\
+} G_STMT_END
+  CAPS_RESET(priv->type);
+  CAPS_RESET(priv->format);
+#undef CAPS_RESET
+
+#define TAGS_RESET(target)		\
+G_STMT_START {				\
+  if (target)				\
+    gst_tag_list_free (target);		\
+  target = NULL;			\
+} G_STMT_END
+  TAGS_RESET(priv->metadata);
+  TAGS_RESET(priv->streaminfo);
+#undef TAGS_RESET
+
   if (priv->stream)
   {
-    GMI_DEBUG ("freeing priv->stream, error before this ?\n");
-    g_free (priv->stream);
+    gmi_stream_free (priv->stream);
     priv->stream = NULL;
-  }
-  if (priv->location)
-  {
-    GMI_DEBUG ("freeing priv->location, error before this ?\n");
-    g_free (priv->location);
-    priv->location = NULL;
   }
   priv->flags = 0;
   priv->state = GST_MEDIA_INFO_STATE_NULL;
+
+  priv->error = NULL;
 }
 
 /* seek to a track and reset metadata and streaminfo structs */
@@ -277,101 +341,6 @@ gmi_seek_to_track (GstMediaInfo *info, long track)
   }
   return TRUE;
 }
-
-#ifdef REMOVEME
-/* create a good decoder for this mime type */
-/* FIXME: maybe make this more generic with a type, so it can be used
- * for taggers and other things as well */
-/* FIXME: deprecated, we work with pipelines now */
-GstElement *
-gmi_get_decoder (GstMediaInfo *info, const char *mime)
-{
-  GstElement *decoder;
-  gchar *factory = NULL;
-
-  /* check if we have an active codec element in the hash table for this */
-  decoder = g_hash_table_lookup (info->priv->decoders, mime);
-  if (decoder == NULL)
-  {
-    GST_DEBUG ("no decoder in table, inserting one");
-    /* FIXME: please figure out proper mp3 mimetypes */
-    if ((strcmp (mime, "application/x-ogg") == 0) ||
-        (strcmp (mime, "application/ogg") == 0))
-      factory = g_strdup ("vorbisfile");
-    else if ((strcmp (mime, "audio/mpeg") == 0) ||
-             (strcmp (mime, "audio/x-mp3") == 0) ||
-             (strcmp (mime, "audio/mp3") == 0) ||
-             (strcmp (mime, "application/x-id3") == 0) ||
-	     (strcmp (mime, "audio/x-id3") == 0))
-      factory = g_strdup ("mad");
-    else if (strcmp (mime, "application/x-flac") == 0)
-      factory = g_strdup ("flacdec");
-    else if (strcmp (mime, "audio/x-wav") == 0)
-      factory = g_strdup ("wavparse");
-    else if (strcmp (mime, "audio/x-mod") == 0 ||
-	     strcmp (mime, "audio/x-s3m") == 0 ||
-             strcmp (mime, "audio/x-xm") == 0 ||
-	     strcmp (mime, "audio/x-it") == 0)
-      factory = g_strdup ("modplug");
-
-    if (factory == NULL)
-      return NULL;
-
-    GST_DEBUG ("using factory %s", factory);
-    decoder = gst_element_factory_make (factory, "decoder");
-    g_free (factory);
-
-    if (decoder)
-    {
-      g_hash_table_insert (info->priv->decoders, g_strdup (mime), decoder);
-      /* ref it so we don't lose it when removing from bin */
-      g_object_ref (GST_OBJECT (decoder));
-    }
-  }
-  return decoder;
-}
-
-/* set the decoder to be used for decoding
- * install callback handlers
- */
-void
-gmi_set_decoder (GstMediaInfo *info, GstElement *decoder)
-{
-  GstMediaInfoPriv *priv = info->priv;
-
-  /* set up pipeline and connect signal handlers */
-  priv->decoder = decoder;
-  gst_bin_add (GST_BIN (priv->pipeline), decoder);
-  gst_bin_add (GST_BIN (priv->pipeline), priv->fakesink);
-  if (!gst_element_link (priv->source, decoder))
-    g_warning ("Couldn't connect source and decoder\n");
-  if (!gst_element_link (priv->decoder, priv->fakesink))
-    g_warning ("Couldn't connect decoder and fakesink\n");
-  /* FIXME: we should be connecting to ALL possible src pads */
-  if (!(priv->decoder_pad = gst_element_get_pad (decoder, "src")))
-    g_warning ("Couldn't get decoder pad\n");
-  if (!(priv->source_pad = gst_element_get_pad (priv->source, "src")))
-    g_warning ("Couldn't get source pad\n");
-}
-
-/* clear the decoder (if it was set)
- */
-void
-gmi_clear_decoder (GstMediaInfo *info)
-{
-  if (info->priv->decoder)
-  {
-    /* clear up decoder */
-	  /* FIXME: shouldn't need to set state here */
-    gst_element_set_state (info->priv->pipeline, GST_STATE_READY);
-    gst_element_unlink (info->priv->source, info->priv->decoder);
-    gst_element_unlink (info->priv->decoder, info->priv->fakesink);
-    gst_bin_remove (GST_BIN (info->priv->pipeline), info->priv->decoder);
-    gst_bin_remove (GST_BIN (info->priv->pipeline), info->priv->fakesink);
-    info->priv->decoder = NULL;
-  }
-}
-#endif
 
 /* set the mime type on the media info getter */
 gboolean
@@ -437,6 +406,17 @@ gmi_set_mime (GstMediaInfo *info, const char *mime)
   return TRUE;
 }
 
+/* clear the decoding pipeline */
+void
+gmi_clear_decoder (GstMediaInfo *info)
+{
+  if (info->priv->pipeline)
+  {
+    GST_DEBUG("Unreffing pipeline");
+    gst_object_unref (GST_OBJECT (info->priv->pipeline));
+  }
+  info->priv->pipeline = NULL;
+}
 
 /****
  *  typefind functions
@@ -446,25 +426,26 @@ gmi_set_mime (GstMediaInfo *info, const char *mime)
 
 /* prepare for typefind, move from NULL to TYPEFIND */
 gboolean
-gmip_find_type_pre (GstMediaInfoPriv *priv)
+gmip_find_type_pre (GstMediaInfoPriv *priv, GError **error)
 {
-  /* clear vars that need clearing */
-  if (priv->type)
-  {
-    gst_caps_free (priv->type);
-    priv->type = NULL;
-  }
-
-  g_assert (priv);
-  g_assert (priv->source);
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
   GST_DEBUG ("gmip_find_type_pre: start");
   /* find out type */
   /* FIXME: we could move caps for typefind out of struct and
    * just use it through this function only */
 
+  priv->pipeline = gst_pipeline_new ("pipeline-typefind");
+  if (!GST_IS_PIPELINE (priv->pipeline))
+  {
+    gst_media_info_error_create (error, "Internal GStreamer error.");
+    return FALSE;
+  }
   gst_bin_add (GST_BIN (priv->pipeline), priv->typefind);
+  GST_MEDIA_INFO_MAKE_OR_ERROR (priv->source, priv->source_name, "source",
+                             error);
   g_object_set (G_OBJECT (priv->source), "location", priv->location, NULL);
+  gst_bin_add (GST_BIN (priv->pipeline), priv->source);
   if (!gst_element_link (priv->source, priv->typefind))
     g_warning ("Couldn't connect source and typefind\n");
   g_signal_connect (G_OBJECT (priv->typefind), "have-type",
@@ -510,9 +491,9 @@ gmip_find_type_post (GstMediaInfoPriv *priv)
 
 /* complete version */
 gboolean
-gmip_find_type (GstMediaInfoPriv *priv)
+gmip_find_type (GstMediaInfoPriv *priv, GError ** error)
 {
-  if (!gmip_find_type_pre (priv))
+  if (!gmip_find_type_pre (priv, error))
     return FALSE;
   GST_DEBUG ("gmip_find_type: iterating");
   while ((priv->type == NULL) &&

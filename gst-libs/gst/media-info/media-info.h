@@ -44,6 +44,7 @@ struct _GstMediaInfoClass
 
   /* signals */
   void (*media_info_signal)		(GstMediaInfo *gst_media_info);
+  void (*error_signal)			(GstMediaInfo *gst_media_info, GError *error, const gchar *debug);
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -104,16 +105,21 @@ GType           gst_media_info_get_type		(void);
 
 GstMediaInfo *	gst_media_info_new		(GError **error);
 
-gboolean	gst_media_info_set_source	(GstMediaInfo *info, const char *source);
+gboolean	gst_media_info_set_source	(GstMediaInfo *info,
+						 const char *source,
+						 GError **error);
 void		gst_media_info_read_with_idler	(GstMediaInfo *media_info,
 						 const char *location,
-						 guint16 GST_MEDIA_INFO_FLAGS);
+						 guint16 GST_MEDIA_INFO_FLAGS,
+						 GError **error);
 gboolean	gst_media_info_read_idler	(GstMediaInfo *media_info,
-						 GstMediaInfoStream **streamp);
+						 GstMediaInfoStream **streamp,
+						 GError **error);
 GstMediaInfoStream *
 		gst_media_info_read		(GstMediaInfo *media_info,
 						 const char *location,
-						 guint16 GST_MEDIA_INFO_FLAGS);
+						 guint16 GST_MEDIA_INFO_FLAGS,
+						 GError **error);
 gboolean	gst_media_info_read_many	(GstMediaInfo *media_info,
 						 GList *locations,
 						 guint16 GST_MEDIA_INFO_FLAGS,
