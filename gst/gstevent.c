@@ -136,6 +136,7 @@ gst_event_new_seek (GstSeekType type, gint64 offset)
 
   GST_EVENT_SEEK_TYPE (event) = type;
   GST_EVENT_SEEK_OFFSET (event) = offset;
+  GST_EVENT_SEEK_ENDOFFSET (event) = -1;
 
   return event;
 }
@@ -246,6 +247,8 @@ GstEvent*
 gst_event_new_segment_seek (GstSeekType type, gint64 start, gint64 stop)
 {
   GstEvent *event;
+
+  g_return_val_if_fail (start < stop, NULL);
 
   event = gst_event_new (GST_EVENT_SEEK_SEGMENT);
 
