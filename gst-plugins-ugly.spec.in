@@ -256,7 +256,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttextoverlay.so
 %{_libdir}/gstreamer-%{majorminor}/libgstffmpeg.so
-%{_libdir}/gstreamer-%{majorminor}/libgstxwindowlistener.so.0.0.0
+%{_libdir}/gstreamer-%{majorminor}/libgstxwindowlistener.*
 %{_libdir}/libgstcolorbalance.so
 %{_libdir}/libgsttuner.so
 %{_libdir}/libgstxoverlay.so
