@@ -572,7 +572,7 @@ gst_alsa_sink_check_event (GstAlsaSink *sink, gint pad_nr)
 	    if (!gst_clock_handle_discont (GST_ELEMENT (this)->clock, value))
 	      g_printerr ("GstAlsa: clock couldn't handle discontinuity\n");
 	  }
-	  if (!gst_event_discont_get_value (event, GST_FORMAT_UNITS, &value)) {
+	  if (!gst_event_discont_get_value (event, GST_FORMAT_DEFAULT, &value)) {
 	    if (!gst_event_discont_get_value (event, GST_FORMAT_BYTES, &value)) {
 	      if (!gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
 	        g_warning ("GstAlsa: Could not acquire samplecount after seek, the clock might screw your pipeline now");

@@ -69,7 +69,7 @@ gst_vorbisenc_get_formats (GstPad *pad)
   };
   static const GstFormat sink_formats[] = {
     GST_FORMAT_BYTES,
-    GST_FORMAT_UNITS,
+    GST_FORMAT_DEFAULT,
     GST_FORMAT_TIME, 
     0
   };
@@ -209,8 +209,6 @@ gst_vorbisenc_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
           *dest_value = src_value * GST_SECOND / avg;
           break;
@@ -220,8 +218,6 @@ gst_vorbisenc_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_BYTES;
         case GST_FORMAT_BYTES:
           *dest_value = src_value * avg / GST_SECOND;
           break;
@@ -251,13 +247,11 @@ gst_vorbisenc_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
 	  if (bytes_per_sample == 0)
             return FALSE;
 	  *dest_value = src_value / bytes_per_sample;
           break;
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
 	{
           gint byterate = bytes_per_sample * vorbisenc->frequency;
@@ -271,13 +265,11 @@ gst_vorbisenc_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
           res = FALSE;
       }
       break;
-    case GST_FORMAT_UNITS:
+    case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
 	  *dest_value = src_value * bytes_per_sample;
 	  break;
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
 	  if (vorbisenc->frequency == 0)
             return FALSE;
@@ -289,12 +281,10 @@ gst_vorbisenc_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_BYTES;
         case GST_FORMAT_BYTES:
 	  scale = bytes_per_sample;
 	  /* fallthrough */
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
 	  *dest_value = src_value * scale * vorbisenc->frequency / GST_SECOND;
           break;
         default:
@@ -331,9 +321,6 @@ gst_vorbisenc_src_query (GstPad *pad, GstQueryType type,
     case GST_QUERY_TOTAL:
     {
       switch (*format) {
-	case GST_FORMAT_DEFAULT:
-          *format = GST_FORMAT_TIME;
-	  /* fallthrough */
 	case GST_FORMAT_BYTES:
 	case GST_FORMAT_TIME:
         {
@@ -375,9 +362,6 @@ gst_vorbisenc_src_query (GstPad *pad, GstQueryType type,
     }
     case GST_QUERY_POSITION:
       switch (*format) {
-	case GST_FORMAT_DEFAULT:
-          *format = GST_FORMAT_TIME;
-	  /* fall through */
 	default:
 	{
 	  /* we only know about our samples, convert to requested format */
