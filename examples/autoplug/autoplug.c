@@ -59,16 +59,14 @@ int main(int argc,char *argv[])
 
   /* add objects to the main pipeline */
   gst_pipeline_add_src(GST_PIPELINE(pipeline), disksrc);
-  gst_pipeline_add_sink(GST_PIPELINE(pipeline), audiosink);
   gst_pipeline_add_sink(GST_PIPELINE(pipeline), videosink);
+  gst_pipeline_add_sink(GST_PIPELINE(pipeline), audiosink);
 
   if (!gst_pipeline_autoplug(GST_PIPELINE(pipeline))) {
     g_print("unable to handle stream\n");
     exit(-1);
   }
 
-  /* make it ready */
-  gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_READY);
   /* start playing */
   gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
 

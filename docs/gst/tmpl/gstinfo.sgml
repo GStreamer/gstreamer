@@ -31,68 +31,6 @@ to your application.
 @args...: 
 
 
-<!-- ##### MACRO DEBUG ##### -->
-<para>
-Use this macro to show debugging info. This is only usefull when developing new
-plugin elements.
-If you #define DEBUG_ENABLED before including gst/gst.h, this macro will produce
-g_print messages.
-</para>
-
-@format: the format specification as in g_print
-@args...: arguments
-
-
-<!-- ##### MACRO DEBUG_NOPREFIX ##### -->
-<para>
-
-</para>
-
-@format: 
-@args...: 
-
-
-<!-- ##### MACRO DEBUG_ENTER ##### -->
-<para>
-
-</para>
-
-@format: 
-@args...: 
-
-
-<!-- ##### MACRO DEBUG_SET_STRING ##### -->
-<para>
-
-</para>
-
-@format: 
-@args...: 
-
-
-<!-- ##### MACRO DEBUG_ENTER_STRING ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO DEBUG_LEAVE ##### -->
-<para>
-
-</para>
-
-@format: 
-@args...: 
-
-
-<!-- ##### MACRO DEBUG_LEAVE_STRING ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### MACRO GST_DEBUG_PAD_NAME ##### -->
 <para>
 
@@ -145,27 +83,6 @@ g_print messages.
 @string: 
 
 
-<!-- ##### MACRO INFO ##### -->
-<para>
-
-</para>
-
-@cat: 
-@format: 
-@args...: 
-
-
-<!-- ##### MACRO INFO_ELEMENT ##### -->
-<para>
-
-</para>
-
-@cat: 
-@element: 
-@format: 
-@args...: 
-
-
 <!-- ##### USER_FUNCTION GstErrorHandler ##### -->
 <para>
 
@@ -192,26 +109,5 @@ g_print messages.
 @element: 
 @object: 
 @string: 
-
-
-<!-- ##### MACRO ERROR ##### -->
-<para>
-
-</para>
-
-@element: 
-@format: 
-@args...: 
-
-
-<!-- ##### MACRO ERROR_OBJECT ##### -->
-<para>
-
-</para>
-
-@element: 
-@object: 
-@format: 
-@args...: 
 
 

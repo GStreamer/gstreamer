@@ -24,7 +24,9 @@ GStreamer is extensible so <classname>GstElements</classname> can be loaded at r
 @longname: 
 @filename: 
 @types: 
+@numtypes: 
 @elements: 
+@numelements: 
 @loaded: 
 
 <!-- ##### STRUCT GstPluginElement ##### -->

@@ -438,7 +438,7 @@ AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 
 dnl CC="kgcc"
-CFLAGS="$CFLAGS -O6"
+CFLAGS="$CFLAGS -O6 -Wall"
 
 dnl FIXME: having to AC_SUBST these is messy.  Not sure if CPPFLAGS and LDFLAGS
 dnl need it, either.
