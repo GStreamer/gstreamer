@@ -65,9 +65,9 @@ GST_PADTEMPLATE_FACTORY (cdparanoia_src_factory,
 
 
 /********** Define useful types for non-programmatic interfaces **********/
-#define GST_TYPE_PARANOIA_MODE (gst_lame_paranoia_get_type())
+#define GST_TYPE_PARANOIA_MODE (gst_paranoia_mode_get_type())
 static GType
-gst_lame_paranoia_get_type (void)
+gst_paranoia_mode_get_type (void)
 {
   static GType paranoia_mode_type = 0;
   static GEnumValue paranoia_modes[] = {
@@ -340,7 +340,7 @@ cdparanoia_set_property (GObject *object, guint prop_id, const GValue *value, GP
       src->abort_on_skip = g_value_get_boolean (value);
       break;
     case ARG_PARANOIA_MODE:
-      src->paranoia_mode = g_value_get_int (value);
+      src->paranoia_mode = g_value_get_enum (value);
       break;
     default:
       break;
@@ -411,7 +411,7 @@ cdparanoia_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
       g_value_set_boolean (value, src->abort_on_skip);
       break;
     case ARG_PARANOIA_MODE:
-      g_value_set_int (value, src->paranoia_mode);
+      g_value_set_enum (value, src->paranoia_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
