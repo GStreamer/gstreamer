@@ -22,5 +22,8 @@
 
 import argtypes
 
-#arg = argtypes.PointerArg('GstEvent')
-#argtypes.matcher.register('GstEvent*', arg)
+arg = argtypes.UInt64Arg()
+argtypes.matcher.register('GstClockTime', arg)
+
+arg = argtypes.Int64Arg()
+argtypes.matcher.register('GstClockTimeDiff', arg)
