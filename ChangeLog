@@ -1,3 +1,9 @@
+2004-01-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/esd/esdsink.c: (gst_esdsink_open_audio):
+	* ext/esd/gstesd.c: (plugin_init):
+          private debugging, better error reporting
+
 2004-01-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_class_init),
