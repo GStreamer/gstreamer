@@ -83,7 +83,6 @@ well as the object hierarchy that defines elements and bins, along
 with some more specialized elements.</para>
 
     &Gst;
-    &GstAutoplug;
     &GstBin;
     &GstBuffer;
     &GstConfig;
