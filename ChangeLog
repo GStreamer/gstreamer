@@ -1,5 +1,13 @@
 2005-02-19  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst/gstelementfactory.c: (gst_element_factory_create):
+	* gst/gstobject.c: (gst_object_init),
+	(gst_object_set_name_default), (gst_object_set_name):
+	  name objects by default, not in gst_element_factory_create. Allows
+	  using elements created with g_object_new. (fixes #167283)
+
+2005-02-19  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* gst/gstinfo.c: (_gst_debug_init), (gst_debug_log_default):
 	  make the time that debugging functions print relative to when
 	  gst_init was called
