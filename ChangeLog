@@ -1,3 +1,10 @@
+2004-12-26  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
+
+	* ext/ogg/gstogg.c:
+	* ext/ogg/gstogmparse.c:
+	  fix ogm[audio/video]parse plugin registration
+	  (riff won't load if bytestream is already loaded)
+
 2004-12-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/audioconvert/gstchannelmix.c:
