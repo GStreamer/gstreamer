@@ -133,7 +133,7 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
                       1, G_MAXINT, 1, G_PARAM_READABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOOP_BASED,
     g_param_spec_boolean("loop_based","loop_based","loop_based",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         FALSE, G_PARAM_READWRITE)); // CHECKME
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OUTPUT,
     g_param_spec_enum("output","output","output",
                       GST_TYPE_FAKESRC_OUTPUT,FAKESRC_FIRST_LAST_LOOP,G_PARAM_READWRITE)); // CHECKME!
@@ -175,7 +175,7 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
   gst_element_add_pad (GST_ELEMENT (fakesrc), pad);
   fakesrc->srcpads = g_slist_append (NULL, pad);
 
-  fakesrc->loop_based = TRUE;
+  fakesrc->loop_based = FALSE;
 
   if (fakesrc->loop_based)
     gst_element_set_loop_function (GST_ELEMENT (fakesrc), GST_DEBUG_FUNCPTR (gst_fakesrc_loop));
@@ -347,7 +347,7 @@ gst_fakesrc_get(GstPad *pad)
   GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
 
   if (!src->silent)
-    g_print("fakesrc: get    ******* (%s:%s)> (%d bytes, %llu) \n",
+    g_print("fakesrc: get      ******* (%s:%s)> (%d bytes, %llu) \n",
                GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
 
   g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
@@ -400,7 +400,7 @@ gst_fakesrc_loop(GstElement *element)
       GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
 
       if (!src->silent)
-        g_print("fakesrc:  loop  ******* (%s:%s)  > (%d bytes, %llu) \n",
+        g_print("fakesrc:  loop    ******* (%s:%s)  > (%d bytes, %llu) \n",
                GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
 
       g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,

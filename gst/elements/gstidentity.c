@@ -45,6 +45,7 @@ enum {
   ARG_0,
   ARG_LOOP_BASED,
   ARG_SLEEP_TIME,
+  ARG_DUPLICATE,
   ARG_SILENT,
 };
 
@@ -90,15 +91,18 @@ gst_identity_class_init (GstIdentityClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOOP_BASED,
-    g_param_spec_boolean("loop_based","loop_based","loop_based",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SLEEP_TIME,
-    g_param_spec_uint("sleep_time","sleep_time","sleep_time",
-                     0,G_MAXUINT,0,G_PARAM_READWRITE)); // CHECKME
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SILENT,
-    g_param_spec_boolean("silent","silent","silent",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOOP_BASED,
+    g_param_spec_boolean ("loop_based", "loop_based", "loop_based",
+                          TRUE, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SLEEP_TIME,
+    g_param_spec_uint ("sleep_time", "sleep_time", "sleep_time",
+                       0, G_MAXUINT, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUPLICATE,
+    g_param_spec_uint ("duplicate", "duplicate", "duplicate",
+                       0, G_MAXUINT, 1, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
+    g_param_spec_boolean ("silent", "silent", "silent",
+                          TRUE,G_PARAM_READWRITE)); 
 
   gst_identity_signals[SIGNAL_HANDOFF] =
     g_signal_newc ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
@@ -155,6 +159,7 @@ gst_identity_init (GstIdentity *identity)
 
   identity->loop_based = FALSE;
   identity->sleep_time = 0;
+  identity->duplicate = 1;
   identity->silent = FALSE;
 }
 
@@ -162,6 +167,7 @@ static void
 gst_identity_chain (GstPad *pad, GstBuffer *buf) 
 {
   GstIdentity *identity;
+  guint i;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -169,17 +175,22 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
 
   identity = GST_IDENTITY (gst_pad_get_parent (pad));
 
-  if (!identity->silent)
-    g_print("identity: chain ******* (%s:%s)i (%d bytes, %llu) \n",
+  for (i=identity->duplicate; i; i--) {
+    if (!identity->silent)
+      g_print("identity: chain   ******* (%s:%s)i (%d bytes, %llu) \n",
 	      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
   
-  g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
+    g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
 	                       buf);
 
-  gst_pad_push (identity->srcpad, buf);
+    if (i>1) 
+      gst_buffer_ref (buf);
 
-  if (identity->sleep_time)
-    usleep (identity->sleep_time);
+    gst_pad_push (identity->srcpad, buf);
+
+    if (identity->sleep_time)
+      usleep (identity->sleep_time);
+  }
 }
 
 static void 
@@ -187,6 +198,7 @@ gst_identity_loop (GstElement *element)
 {
   GstIdentity *identity;
   GstBuffer *buf;
+  guint i;
 
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_IDENTITY (element));
@@ -195,17 +207,23 @@ gst_identity_loop (GstElement *element)
   
   do {
     buf = gst_pad_pull (identity->sinkpad);
-    if (!identity->silent)
-      g_print("identity: loop  ******* (%s:%s)i (%d bytes, %llu) \n",
+    
+    for (i=identity->duplicate; i; i--) {
+      if (!identity->silent)
+        g_print("identity: loop    ******* (%s:%s)i (%d bytes, %llu) \n",
 		      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
 
-    g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
+      g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
 	                       buf);
 
-    gst_pad_push (identity->srcpad, buf);
+      if (i>1) 
+	gst_buffer_ref (buf);
 
-    if (identity->sleep_time)
-      usleep (identity->sleep_time);
+      gst_pad_push (identity->srcpad, buf);
+
+      if (identity->sleep_time)
+        usleep (identity->sleep_time);
+    }
 
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
 }
@@ -238,6 +256,9 @@ gst_identity_set_property (GObject *object, guint prop_id, const GValue *value, 
     case ARG_SILENT:
       identity->silent = g_value_get_boolean (value);
       break;
+    case ARG_DUPLICATE:
+      identity->duplicate = g_value_get_uint (value);
+      break;
     default:
       break;
   }
@@ -257,6 +278,9 @@ static void gst_identity_get_property(GObject *object, guint prop_id, GValue *va
       break;
     case ARG_SLEEP_TIME:
       g_value_set_uint (value, identity->sleep_time);
+      break;
+    case ARG_DUPLICATE:
+      g_value_set_uint (value, identity->duplicate);
       break;
     case ARG_SILENT:
       g_value_set_boolean (value, identity->silent);

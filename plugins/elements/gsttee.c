@@ -41,6 +41,7 @@ enum {
 
 enum {
   ARG_0,
+  ARG_SILENT,
   ARG_NUM_PADS,
   /* FILL ME */
 };
@@ -101,6 +102,11 @@ gst_tee_class_init (GstTeeClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_PADS,
     g_param_spec_int ("num_pads", "num_pads", "num_pads",
                       0, G_MAXINT, 0, G_PARAM_READABLE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
+    g_param_spec_boolean ("silent", "silent", "silent",
+                      FALSE, G_PARAM_READWRITE));
+
+
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR(gst_tee_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR(gst_tee_get_property);
@@ -117,6 +123,7 @@ gst_tee_init (GstTee *tee)
 
   tee->numsrcpads = 0;
   tee->srcpads = NULL;
+  tee->silent = FALSE;
 }
 
 static GstPad*
@@ -157,9 +164,9 @@ gst_tee_set_property (GObject *object, guint prop_id, const GValue *value, GPara
   tee = GST_TEE (object);
 
   switch (prop_id) {
-//    case ARG_NUM_PADS:
-//      g_value_set_int (value, tee->numsrcpads);
-//      break;
+    case ARG_SILENT:
+      tee->silent = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -178,6 +185,9 @@ gst_tee_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec 
   switch (prop_id) {
     case ARG_NUM_PADS:
       g_value_set_int (value, tee->numsrcpads);
+      break;
+    case ARG_SILENT:
+      g_value_set_boolean (value, tee->silent);
       break;
     default:
       break;
@@ -210,8 +220,14 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
   
   srcpads = tee->srcpads;
   while (srcpads) {
-    gst_pad_push (GST_PAD (srcpads->data), buf);
+    GstPad *outpad = GST_PAD (srcpads->data);
     srcpads = g_slist_next (srcpads);
+
+    if (!tee->silent)
+      g_print("tee: chain        ******* (%s:%s)t (%d bytes, %llu) \n",
+              GST_DEBUG_PAD_NAME (outpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+
+    gst_pad_push (outpad, buf);
   }
 }
 

@@ -220,7 +220,7 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
 
   fakesink = GST_FAKESINK (gst_pad_get_parent (pad));
   if (!fakesink->silent)
-    g_print("fakesink: chain ******* (%s:%s)< (%d bytes, %llu) \n",
+    g_print("fakesink: chain   ******* (%s:%s)< (%d bytes, %llu) \n",
 		    GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
   
   g_signal_emit (G_OBJECT (fakesink), gst_fakesink_signals[SIGNAL_HANDOFF], 0,

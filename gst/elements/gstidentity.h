@@ -58,7 +58,7 @@ struct _GstIdentity {
   GstPad *srcpad;
 
   gboolean loop_based;
-
+  guint duplicate;
   guint sleep_time;
   gboolean silent;
 };
