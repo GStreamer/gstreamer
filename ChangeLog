@@ -1,3 +1,44 @@
+2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* gst-libs/gst/media-info/media-info.h:
+	  issue for a vararg macro with MSVC
+
+2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* gst/effectv/effectv.vcproj
+	* gst-libs/gst/idct/idct.vcproj:
+	* gst-libs/gst/media-info/media-info.vcproj:
+	* gst-libs/gst/navigation/navigation.vcproj:
+	* gst-libs/gst/propertyprobe/propertyprobe.vcproj:
+	* gst-libs/gst/video/video.vcproj:
+	* gst-libs/gst/xoverlay/xoverlay.vcproj:
+	  fixes for build problems
+
+2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* gst-libs/gst/audio/audio.def:
+	* gst-libs/gst/audio/riff.def:
+	  add some definitions needed by plugins
+
+2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* gst/asfdemux/gstasfmux.c
+	  Fix some 64 bits constants to be glib friendly
+
+2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* gst/ac3parse/gstac3parse.c
+	* gst/audioscale/gstaudioscale.c
+	* gst/auparse/gstauparse.c
+	* gst/colorspace/gstcolorspace.c
+	* gst/colorspace/yuv2rgb.h
+	  local include fixes
+
+2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* win32/gst.sln
+	  add more plugins to the build
+
 2004-07-26  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_check_xshm_calls),

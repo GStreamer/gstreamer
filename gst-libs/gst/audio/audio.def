@@ -1,2 +1,5 @@
 EXPORTS
     gst_plugin_desc
+    gst_audio_length
+    gst_audio_is_buffer_framed
+    gst_audio_highest_sample_value

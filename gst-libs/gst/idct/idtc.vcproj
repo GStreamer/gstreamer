@@ -37,7 +37,7 @@
 				OutputFile="$(OutDir)/gstidtc.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../../../gstreamer/win32/Debug;../../../../glib/glib;../../../../glib/gmodule;../../../../glib/gthread;../../../../glib/gobject;../../../../gettext/lib;../../../../libiconv/lib"
-				ModuleDefinitionFile="idtc.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/idtc.pdb"
 				SubSystem="2"
@@ -89,7 +89,7 @@
 				OutputFile="$(OutDir)/gstidtc.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../../gstreamer/win32/Debug;../../../../glib/glib;../../../../glib/gmodule;../../../../glib/gthread;../../../../glib/gobject;../../../../gettext/lib;../../../../libiconv/lib"
-				ModuleDefinitionFile="idtc.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="TRUE"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -127,13 +127,13 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath=".\idtc.c">
-			</File>
-			<File
 				RelativePath=".\fastintidct.c">
 			</File>
 			<File
 				RelativePath=".\floatidct.c">
+			</File>
+			<File
+				RelativePath=".\idct.c">
 			</File>
 			<File
 				RelativePath=".\intidct.c">
@@ -144,10 +144,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
-				RelativePath=".\idtc.h">
+				RelativePath=".\dct.h">
 			</File>
 			<File
-				RelativePath=".\dct.h">
+				RelativePath=".\idtc.h">
 			</File>
 		</Filter>
 	</Files>
