@@ -1402,78 +1402,141 @@ gst_element_get_compatible_pad (GstElement *element, GstPad *pad)
 }
 
 /**
- * gst_element_link_filtered:
+ * gst_element_link_pads_filtered:
  * @src: a #GstElement containing the source pad.
+ * @srcpadname: the name of the #GstPad in source element or NULL for any element.
  * @dest: the #GstElement containing the destination pad.
+ * @destpadname: the name of the #GstPad in destination element or NULL for any element.
  * @filtercaps: the #GstCaps to use as a filter.
  *
- * Links the source to the destination element using the filtercaps.
- * The link must be from source to destination, the other
- * direction will not be tried.
- * The functions looks for existing pads that aren't linked yet.
- * It will use request pads if possible. But both pads will not be requested.
- * If multiple links are possible, only one is established.
+ * Links the two named pads of the source and destination elements.
+ * Side effect is that if one of the pads has no parent, it becomes a
+ * child of the parent of the other element.  If they have different
+ * parents, the link fails.
  *
- * Returns: TRUE if the elements could be linked.
+ * Returns: TRUE if the pads could be linked.
  */
 gboolean
-gst_element_link_filtered (GstElement *src, GstElement *dest,
-			      GstCaps *filtercaps)
+gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
+                                GstElement *dest, const gchar *destpadname,
+                                GstCaps *filtercaps)
 {
   const GList *srcpads, *destpads, *srctempls, *desttempls, *l;
   GstPad *srcpad, *destpad;
   GstPadTemplate *srctempl, *desttempl;
 
   /* checks */
-  g_return_val_if_fail (src != NULL, FALSE);
   g_return_val_if_fail (GST_IS_ELEMENT (src), FALSE);
-  g_return_val_if_fail (dest != NULL, FALSE);
   g_return_val_if_fail (GST_IS_ELEMENT (dest), FALSE);
+  g_return_val_if_fail (GST_STATE (src) != GST_STATE_PLAYING, FALSE);
+  g_return_val_if_fail (GST_STATE (dest) != GST_STATE_PLAYING, FALSE);
 
-  GST_DEBUG (GST_CAT_ELEMENT_PADS, "trying to link element %s to element %s",
-             GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (dest));
-   
-  srcpads = gst_element_get_pad_list (src);
-  destpads = gst_element_get_pad_list (dest);
+  GST_INFO (GST_CAT_ELEMENT_PADS, "trying to link element %s:%s to element %s:%s",
+            GST_ELEMENT_NAME (src), srcpadname ? srcpadname : "(any)", 
+            GST_ELEMENT_NAME (dest), destpadname ? destpadname : "(any)");
 
-  if (srcpads || destpads) {
-    GST_DEBUG (GST_CAT_ELEMENT_PADS, "looping through src and dest pads");
-    /* loop through the existing pads in the source, trying to find a
+  /* now get the pads we're trying to link and a list of all remaining pads */
+  if (srcpadname) {
+    srcpad = gst_element_get_pad (src, srcpadname);
+    if (!srcpad) {
+      GST_DEBUG (GST_CAT_ELEMENT_PADS, "no pad %s:%s", GST_ELEMENT_NAME (src), srcpadname);    
+      return FALSE;
+    } else {
+      if (!(GST_RPAD_DIRECTION (srcpad) == GST_PAD_SRC)) {
+        GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is no src pad", GST_DEBUG_PAD_NAME (srcpad));    
+        return FALSE;
+      }
+      if (GST_PAD_PEER (srcpad) != NULL) {
+        GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is already linked", GST_DEBUG_PAD_NAME (srcpad));    
+        return FALSE;
+      }
+    }    
+    srcpads = NULL;
+  } else {
+    srcpads = gst_element_get_pad_list (src);
+    srcpad = srcpads ? (GstPad *) GST_PAD_REALIZE (srcpads->data) : NULL;
+  }
+  if (destpadname) {
+    destpad = gst_element_get_pad (dest, destpadname);
+    if (!destpad) {
+      GST_DEBUG (GST_CAT_ELEMENT_PADS, "no pad %s:%s", GST_ELEMENT_NAME (dest), destpadname);    
+      return FALSE;
+    } else {
+      if (!(GST_RPAD_DIRECTION (destpad) == GST_PAD_SINK)) {
+        GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is no sink pad", GST_DEBUG_PAD_NAME (destpad));    
+        return FALSE;
+      }
+      if (GST_PAD_PEER (destpad) != NULL) {
+        GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is already linked", GST_DEBUG_PAD_NAME (destpad));    
+        return FALSE;
+      }
+    }
+    destpads = NULL;
+  } else {
+    destpads = gst_element_get_pad_list (dest);
+    destpad = destpads ? (GstPad *) GST_PAD_REALIZE (destpads->data) : NULL;
+  }
+
+  if (srcpadname && destpadname) {
+    /* two explicitly specified pads */
+    return gst_pad_link_filtered (srcpad, destpad, filtercaps);  
+  }
+  if (srcpad) {
+    /* loop through the allowed pads in the source, trying to find a
      * compatible destination pad */
-    while (srcpads) {
-      srcpad = (GstPad *) GST_PAD_REALIZE (srcpads->data);
+    GST_DEBUG (GST_CAT_ELEMENT_PADS, "looping through allowed src and dest pads");
+    do {
       GST_DEBUG (GST_CAT_ELEMENT_PADS, "trying src pad %s:%s", 
 		 GST_DEBUG_PAD_NAME (srcpad));
       if ((GST_RPAD_DIRECTION (srcpad) == GST_PAD_SRC) &&
           (GST_PAD_PEER (srcpad) == NULL)) {
-        destpad = gst_element_get_compatible_pad_filtered (dest, srcpad, 
+        GstPad *temp = gst_element_get_compatible_pad_filtered (dest, srcpad, 
 	                                                   filtercaps);
-        if (destpad && gst_pad_link_filtered (srcpad, destpad, filtercaps)) {
+        if (temp && gst_pad_link_filtered (srcpad, temp, filtercaps)) {
           GST_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s", 
-	             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
+	             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (temp));
           return TRUE;
         }
       }
-      srcpads = g_list_next (srcpads);
-    }
-    
+      /* find a better way for this mess */
+      if (srcpads) {
+	srcpads = g_list_next (srcpads);
+        if (srcpads)
+	  srcpad = (GstPad *) GST_PAD_REALIZE (srcpads->data);
+      }
+    } while (srcpads);
+  }
+  if (srcpadname) {
+    GST_DEBUG (GST_CAT_ELEMENT_PADS, "no link possible from %s:%s to %s", 
+               GST_DEBUG_PAD_NAME (srcpad), GST_ELEMENT_NAME (dest));
+    return FALSE;
+  }
+  if (destpad) {    
     /* loop through the existing pads in the destination */
-    while (destpads) {
-      destpad = (GstPad *) GST_PAD_REALIZE (destpads->data);
+    do {
       GST_DEBUG (GST_CAT_ELEMENT_PADS, "trying dest pad %s:%s", 
 		 GST_DEBUG_PAD_NAME (destpad));
       if ((GST_RPAD_DIRECTION (destpad) == GST_PAD_SINK) &&
           (GST_PAD_PEER (destpad) == NULL)) {
-        srcpad = gst_element_get_compatible_pad_filtered (src, destpad, 
+        GstPad *temp = gst_element_get_compatible_pad_filtered (src, destpad, 
 	                                                  filtercaps);
-        if (srcpad && gst_pad_link_filtered (srcpad, destpad, filtercaps)) {
+        if (temp && gst_pad_link_filtered (temp, destpad, filtercaps)) {
           GST_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s", 
-	             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
+	             GST_DEBUG_PAD_NAME (temp), GST_DEBUG_PAD_NAME (destpad));
           return TRUE;
         }
       }
-      destpads = g_list_next (destpads);
-    }
+      if (destpads) {
+	destpads = g_list_next (destpads);
+        if (destpads)
+	  destpad = (GstPad *) GST_PAD_REALIZE (destpads->data);
+      }
+    } while (destpads);
+  }
+  if (destpadname) {
+    GST_DEBUG (GST_CAT_ELEMENT_PADS, "no link possible from %s to %s:%s", 
+               GST_ELEMENT_NAME (src), GST_DEBUG_PAD_NAME (destpad));
+    return FALSE;
   }
 
   GST_DEBUG (GST_CAT_ELEMENT_PADS, 
@@ -1514,6 +1577,27 @@ gst_element_link_filtered (GstElement *src, GstElement *dest,
   GST_DEBUG (GST_CAT_ELEMENT_PADS, "no link possible from %s to %s", 
              GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (dest));
   return FALSE;  
+}
+/**
+ * gst_element_link_filtered:
+ * @src: a #GstElement containing the source pad.
+ * @dest: the #GstElement containing the destination pad.
+ * @filtercaps: the #GstCaps to use as a filter.
+ *
+ * Links the source to the destination element using the filtercaps.
+ * The link must be from source to destination, the other
+ * direction will not be tried.
+ * The functions looks for existing pads that aren't linked yet.
+ * It will use request pads if possible. But both pads will not be requested.
+ * If multiple links are possible, only one is established.
+ *
+ * Returns: TRUE if the elements could be linked.
+ */
+gboolean
+gst_element_link_filtered (GstElement *src, GstElement *dest,
+			      GstCaps *filtercaps)
+{
+  return gst_element_link_pads_filtered (src, NULL, dest, NULL, filtercaps);
 }
 
 /**
@@ -1567,52 +1651,7 @@ gst_element_link_many (GstElement *element_1, GstElement *element_2, ...)
 gboolean
 gst_element_link (GstElement *src, GstElement *dest)
 {
-  return gst_element_link_filtered (src, dest, NULL);
-}
-
-/**
- * gst_element_link_pads_filtered:
- * @src: a #GstElement containing the source pad.
- * @srcpadname: the name of the #GstPad in source element.
- * @dest: the #GstElement containing the destination pad.
- * @destpadname: the name of the #GstPad in destination element.
- * @filtercaps: the #GstCaps to use as a filter.
- *
- * Links the two named pads of the source and destination elements.
- * Side effect is that if one of the pads has no parent, it becomes a
- * child of the parent of the other element.  If they have different
- * parents, the link fails.
- *
- * Returns: TRUE if the pads could be linked.
- */
-gboolean
-gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
-                                   GstElement *dest, const gchar *destpadname, 
-                                   GstCaps *filtercaps)
-{
-  GstPad *srcpad,*destpad;
-
-  g_return_val_if_fail (src != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_ELEMENT (src), FALSE);
-  g_return_val_if_fail (srcpadname != NULL, FALSE);
-  g_return_val_if_fail (dest != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_ELEMENT (dest), FALSE);
-  g_return_val_if_fail (destpadname != NULL, FALSE);
-
-  /* obtain the pads requested */
-  srcpad = gst_element_get_pad (src, srcpadname);
-  if (srcpad == NULL) {
-    GST_ERROR (src, "source element has no pad \"%s\"", srcpadname);
-    return FALSE;
-  }
-  destpad = gst_element_get_pad (dest, destpadname);
-  if (srcpad == NULL) {
-    GST_ERROR (dest, "destination element has no pad \"%s\"", destpadname);
-    return FALSE;
-  }
-
-  /* we're satisified they can be linked, let's do it */
-  return gst_pad_link_filtered (srcpad, destpad, filtercaps);
+  return gst_element_link_pads_filtered (src, NULL, dest, NULL, NULL);
 }
 
 /**
@@ -2049,6 +2088,73 @@ gst_element_error (GstElement *element, const gchar *error, ...)
   g_free (string);
 }
 
+/**
+ * gst_element_is_state_locked:
+ * @element: a #GstElement.
+ *
+ * Checks if the state of an element is locked.
+ * If the state of an element is locked, state changes of the parent don't 
+ * affect the element.
+ * This way you can leave currently unused elements inside bins. Just lock their
+ * state before changing the state from #GST_STATE_NULL.
+ *
+ * Returns: TRUE, if the element's state is locked.
+ */
+gboolean
+gst_element_is_state_locked (GstElement *element)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+
+  return GST_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE) ? TRUE : FALSE;
+}
+/**
+ * gst_element_lock_state:
+ * @element: a #GstElement.
+ *
+ * Locks the state of an element, so state changes of the parent don't affect
+ * this element anymore.
+ *
+ * Returns: TRUE, if the element's state could be locked.
+ */
+gboolean
+gst_element_lock_state (GstElement *element)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+
+  GST_INFO (GST_CAT_STATES, "locking state of element %s\n", GST_ELEMENT_NAME (element));
+  GST_FLAG_SET (element, GST_ELEMENT_LOCKED_STATE);
+  return TRUE;
+}
+/**
+ * gst_element_unlock_state:
+ * @element: a #GstElement.
+ *
+ * Unlocks the state of an element and synchronises the state with the parent.
+ * If this function succeeds, the state of this element is identical to the 
+ * state of it's bin.
+ * When this function fails, the state of the element is undefined.
+ *
+ * Returns: TRUE, if the element's state could be unlocked.
+ */
+gboolean 
+gst_element_unlock_state (GstElement *element)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+
+  GST_INFO (GST_CAT_STATES, "unlocking state of element %s\n", GST_ELEMENT_NAME (element));
+  GST_FLAG_UNSET (element, GST_ELEMENT_LOCKED_STATE);  
+  if (GST_ELEMENT_PARENT(element)) {
+    GST_DEBUG (GST_CAT_STATES, "setting state of unlocked element %s to %s\n", GST_ELEMENT_NAME (element), gst_element_state_get_name (GST_STATE (GST_ELEMENT_PARENT(element))));
+    GstElementState old_state = GST_STATE (element);
+    if (gst_element_set_state (element, GST_STATE (GST_ELEMENT_PARENT(element))) == GST_STATE_FAILURE) {
+      GST_DEBUG (GST_CAT_STATES, "state change of unlocked element %s to %s stopped at %s, resetting\n", GST_ELEMENT_NAME (element), 
+                 gst_element_state_get_name (GST_STATE (GST_ELEMENT_PARENT(element))), gst_element_state_get_name (GST_STATE (element)));      
+      gst_element_set_state (element, old_state);
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
 /**
  * gst_element_get_state:
  * @element: a #GstElement to get the state of.
