@@ -292,8 +292,15 @@ dnl ==========================================================================
 
 dnl *** DXR3 card ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DXR3, true)
-GST_CHECK_FEATURE(DXR3, [DXR3 hardware mpeg video decoder], dxr3videosink, [
-  AC_CHECK_HEADER(linux/em8300.h, HAVE_DXR3="yes", HAVE_DXR3="no")
+GST_CHECK_FEATURE(DXR3, [DXR3 hardware MPEG DVD decoder],
+  dxr3videosink dxr3audiosink dxr3spusink, [
+  HAVE_DXR3=yes
+  AC_CHECK_HEADER(linux/em8300.h, ,
+                  [ AC_MSG_WARN([DXR3/em8300 header file not found]) &&
+                    HAVE_DXR3=no ] )
+  AC_CHECK_HEADER(linux/soundcard.h, ,
+                  [ AC_MSG_WARN([Generic sound header file not found]) &&
+                    HAVE_DXR3=no ] )
 ])
 
 dnl *** OSS audio ***
