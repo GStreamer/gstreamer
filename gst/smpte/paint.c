@@ -248,22 +248,23 @@ draw_line (guint32* dest, gint stride, int x, int y, int x2, int y2, int col)
 
 void
 gst_smpte_paint_triangle_clock (guint32 *dest, gint stride,
-				 gint x0, gint y0, gint c0,
-				 gint x1, gint y1, gint c1, gint x2, gint y2, gint c2)
+				gint x0, gint y0, gint c0,
+				gint x1, gint y1, gint c1, 
+				gint x2, gint y2, gint c2)
 {
   gint i;
   gint sign;
   gfloat angle, angle_s, angle_e;
 
+  angle_s = 0.0;
+  angle_e = acos (((x1-x0) * (x2-x0) + (y1-y0) * (y2-y0))/
+		    (sqrt ((x1-x0) * (x1-x0) + (y1-y0) * (y1-y0)) * 
+		     sqrt ((x2-x0) * (x2-x0) + (y2-y0) * (y2-y0))));
+
   if (x1 == x2) {
     gfloat len1 = sqrt ((x1-x0) * (x1-x0) + (y1-y0) * (y1-y0));
 
     sign = SIGN (y2 - y1);
-
-    angle_s = 0.0;
-    angle_e = acos (((x1-x0) * (x2-x0) + (y1-y0) * (y2-y0))/
-		    (sqrt ((x1-x0) * (x1-x0) + (y1-y0) * (y1-y0)) * 
-		     sqrt ((x2-x0) * (x2-x0) + (y2-y0) * (y2-y0))));
 
     for (i=y1; i != y2+sign; i+=sign) {
       gfloat len2 = sqrt ((x1-x0) * (x1-x0) + (i-y0) * (i-y0));
@@ -271,9 +272,7 @@ gst_smpte_paint_triangle_clock (guint32 *dest, gint stride,
       if (y1==i)
 	angle = 0;
       else
-        angle = acos (((x1-x0) * (x2-x0) + (y1-y0) * (i-y0))/ (len1 * len2));
-
-      angle = angle / angle_e;
+        angle = acos (((x1-x0) * (x2-x0) + (y1-y0) * (i-y0))/ (len1 * len2)) / angle_e;
 
       draw_line (dest, stride,
 		    x0, y0, x1, i, 
@@ -285,20 +284,13 @@ gst_smpte_paint_triangle_clock (guint32 *dest, gint stride,
 
     sign = SIGN (x2 - x1);
 
-    angle_s = 0.0;
-    angle_e = acos (((x1-x0) * (x2-x0) + (y1-y0) * (y2-y0))/
-		    (sqrt ((x1-x0) * (x1-x0) + (y1-y0) * (y1-y0)) * 
-		     sqrt ((x2-x0) * (x2-x0) + (y2-y0) * (y2-y0))));
-
     for (i=x1; i != x2+sign; i+=sign) {
       gfloat len2 = sqrt ((i-x0) * (i-x0) + (y2-y0) * (y2-y0));
 
       if (x1==i)
 	angle = 0;
       else
-        angle = acos (((x1-x0) * (i-x0) + (y1-y0) * (y2-y0)) / (len1 * len2));
-
-      angle = angle / angle_e;
+        angle = acos (((x1-x0) * (i-x0) + (y1-y0) * (y2-y0)) / (len1 * len2)) / angle_e;
 
       draw_line (dest, stride,
 		    x0, y0, i, y1, 
@@ -306,3 +298,42 @@ gst_smpte_paint_triangle_clock (guint32 *dest, gint stride,
     }
   }
 }
+
+void
+gst_smpte_paint_box_clock (guint32 *dest, gint stride,
+			   gint x0, gint y0, gint c0,
+			   gint x1, gint y1, gint c1, 
+			   gint x2, gint y2, gint c2)
+{
+  gfloat angle_m;
+
+  if (x1 == x0) {
+    angle_m = 2* acos (((x1-x0) * (x2-x0) + (y1-y0) * (y1-y0))/
+		    (sqrt ((x1-x0) * (x1-x0) + (y1-y0) * (y1-y0)) * 
+		     sqrt ((x2-x0) * (x2-x0) + (y1-y0) * (y1-y0)))) / M_PI;
+    
+    gst_smpte_paint_triangle_clock (dest, stride,
+		                  x0, y0, c0,
+		                  x1, y1, c1,
+		                  x2, y1, (c2 * angle_m + c1 * (1.0-angle_m)));
+    gst_smpte_paint_triangle_clock (dest, stride,
+		                  x0, y0, c0,
+		                  x2, y1, (c2 * angle_m + c1 * (1.0-angle_m)),
+		                  x2, y2, c2);
+  }
+  else if (y1 == y0) {
+    angle_m = 2* acos (((x1-x0) * (x1-x0) + (y1-y0) * (y2-y0))/
+		    (sqrt ((x1-x0) * (x1-x0) + (y1-y0) * (y1-y0)) * 
+		     sqrt ((x1-x0) * (x1-x0) + (y2-y0) * (y2-y0)))) / M_PI;
+
+    gst_smpte_paint_triangle_clock (dest, stride,
+		                  x0, y0, c0,
+		                  x1, y1, c1,
+		                  x1, y2, (c2 * angle_m + c1 * (1.0-angle_m)));
+    gst_smpte_paint_triangle_clock (dest, stride,
+		                  x0, y0, c0,
+		                  x1, y2, (c2 * angle_m + c1 * (1.0-angle_m)),
+		                  x2, y2, c2);
+  }
+}
+
