@@ -1,0 +1,7 @@
+* check qcam plugin; it includes source of the qcam package that might
+  be librified
+
+* check xvideo; the flags need better handling but first try to understand
+  it better ;)
+
+* check SDL optimisation flags
