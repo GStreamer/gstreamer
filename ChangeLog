@@ -1,3 +1,18 @@
+2005-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/ogg/gstoggmux.c:
+	  eos/bos debugging
+	* gst/tcp/gstmultifdsink.c:
+	* gst/tcp/gstmultifdsink.h:
+	* gst/tcp/gsttcp.c:
+	* gst/tcp/gsttcp.h:
+	* gst/tcp/gsttcpclientsink.c:
+	* gst/tcp/gsttcpclientsrc.c:
+	* gst/tcp/gsttcpserversink.c:
+	* gst/tcp/gsttcpserversrc.c:
+	  improve reusability of elements after state changes and errors
+	  make multifdsink throw away streamheaders when receiving new ones
+
 2005-01-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_rates_probe):
