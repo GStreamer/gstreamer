@@ -81,19 +81,64 @@ For convenience, the fourcc codes used in the AVI container format will be
 listed along with the mimetype and optional properties. All video codecs
 share the properties 'width' and 'height', both INT, which define the size
 of the frame (in pixels).
+
 1a - Raw Video (YUV/YCbCr)
   mimetype: video/raw
   properties: 'format' = 'XXXX' (fourcc)
   known fourccs: YUY2, IYUV/I420, Y41P, etc.
+
+  Note: some raw video formats have implicit alignment rules.  We should
+  discuss this more.
+
 1b - Raw Video (RGB)
   mimetype: video/raw
   properties: 'format' = 'RGB ' (fourcc)
               'endianness' = 1234/4321 (INT) <- endianness
+              'depth' = 15/16/24 (INT) <- bits per pixel (depth)
+              'bpp' = 16/24/32 (INT) <- bits per pixel (in memory)
               'red_mask' = bitmask (0x..) (INT) <- red pixel mask
               'green_mask' = bitmask (0x..) (INT) <- green pixel mask
               'blue_mask' = bitmask (0x..) (INT) <- blue pixel mask
-              'depth' = 15/16/24/32 (INT) <- bits per pixel (depth)
-              'bpp' = 16/24/32 (INT) <- bits per pixel (in memory)
+
+  'bpp' is the number of bits of memory used for each pixel.  'depth'
+  is the color depth.
+
+  24 and 32 bit RGB should always be specified as big endian, since
+  any little endian format can be transformed into big endian by
+  rearranging the color masks.  15 and 16 bit formats should generally
+  have the same byte order as the cpu.
+
+  Color masks are interpreted by loading 'bpp' number of bits using
+  'endianness' rule, and masking and shifting by each color mask.
+  Loading a 24-bit value cannot be done directly, but one can perform
+  an equivalent operation.
+
+  Examples:
+             msb .. lsb
+    - memory: RRRRRRRR GGGGGGGG BBBBBBBB RRRRRRRR GGGGGGGG ...
+              'bpp'        = 24
+              'depth'      = 24
+              'endianness' = 4321 (G_BIG_ENDIAN)
+              'red_mask'   = 0xff0000
+              'green_mask' = 0x00ff00
+              'blue_mask'  = 0x0000ff
+
+    - memory: xRRRRRGG GGGBBBBB xRRRRRGG GGGBBBBB xRRRRRGG ...
+              'bpp'        = 16
+              'depth'      = 15
+              'endianness' = 4321 (G_BIG_ENDIAN)
+              'red_mask'   = 0x7c00
+              'green_mask' = 0x03e0
+              'blue_mask'  = 0x003f
+
+    - memory: GGGBBBBB xRRRRRGG GGGBBBBB xRRRRRGG GGGBBBBB ...
+              'bpp'        = 16
+              'depth'      = 15
+              'endianness' = 1234 (G_LITTLE_ENDIAN)
+              'red_mask'   = 0x7c00
+              'green_mask' = 0x03e0
+              'blue_mask'  = 0x003f
+
 2 - MPEG-1, -2 and -4 video (ISO/LA MPEG)
   mimetype: video/mpeg
   properties: 'systemstream' = FALSE (BOOLEAN)
