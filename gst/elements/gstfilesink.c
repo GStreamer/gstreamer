@@ -168,15 +168,15 @@ gst_filesink_set_property (GObject *object, guint prop_id, const GValue *value, 
   switch (prop_id) {
     case ARG_LOCATION:
       /* the element must be stopped or paused in order to do this */
-      g_return_if_fail (GST_STATE (sink) < GST_STATE_PLAYING);
+      g_return_if_fail (GST_STATE (sink) <= GST_STATE_PAUSED);
+      if (GST_STATE (sink) == GST_STATE_PAUSED)
+        g_return_if_fail (!GST_FLAG_IS_SET (sink, GST_FILESINK_OPEN));
+
       if (sink->filename)
 	g_free (sink->filename);
       sink->filename = g_strdup (g_value_get_string (value));
-      if ((GST_STATE (sink) == GST_STATE_PAUSED) && 
-          (sink->filename != NULL)) {
-        gst_filesink_close_file (sink);
+      if (GST_STATE (sink) == GST_STATE_PAUSED)
         gst_filesink_open_file (sink);   
-      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
