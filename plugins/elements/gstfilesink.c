@@ -380,7 +380,7 @@ gst_filesink_chain (GstPad *pad, GstBuffer *buf)
 
   if (GST_FLAG_IS_SET (filesink, GST_FILESINK_OPEN))
   {
-    size_t bytes_written = 0;
+    guint bytes_written = 0;
     do {
       size_t wrote = fwrite (GST_BUFFER_DATA (buf) + bytes_written, 1,
 			     GST_BUFFER_SIZE (buf) - bytes_written,
