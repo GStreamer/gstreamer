@@ -198,7 +198,8 @@ gst_pngdec_src_getcaps (GstPad * pad)
       case PNG_COLOR_TYPE_PALETTE:
       case PNG_COLOR_TYPE_GRAY_ALPHA:
       default:
-        g_warning ("unsupported colortype");
+        GST_ELEMENT_ERROR (pngdec, STREAM, NOT_IMPLEMENTED, (NULL),
+            ("pngdec does not support grayscale or paletted data yet"));
         break;
     }
     inter = gst_caps_intersect (caps, to_inter);
