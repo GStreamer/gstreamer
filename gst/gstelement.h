@@ -70,7 +70,7 @@ struct _GstElementDetails {
 #define GST_STATE_PAUSED_TO_READY	((GST_STATE_PAUSED<<8) | GST_STATE_READY)
 #define GST_STATE_READY_TO_NULL		((GST_STATE_READY<<8) | GST_STATE_NULL)
 
-GSTREAMER_EXPORT GType _gst_element_type;
+GST_EXPORT GType _gst_element_type;
 
 #define GST_TYPE_ELEMENT		(_gst_element_type)
 #define GST_IS_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_ELEMENT))

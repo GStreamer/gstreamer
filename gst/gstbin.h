@@ -28,7 +28,7 @@
 
 G_BEGIN_DECLS
 
-GSTREAMER_EXPORT GType _gst_bin_type;
+GST_EXPORT GType _gst_bin_type;
 
 #define GST_TYPE_BIN             (_gst_bin_type)
 #define GST_IS_BIN(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_BIN))

@@ -122,9 +122,9 @@ If this is defined, the <link linkend="gstreamer-gstinfo">debugging subsystem
 
 
 
-<!-- ##### MACRO GSTREAMER_EXPORT ##### -->
+<!-- ##### MACRO GST_EXPORT ##### -->
 <para>
-
+Under Windows it permits to export variables from a DLL, otherwise it just means extern.
 </para>
 
 

@@ -1,3 +1,19 @@
+2004-06-13  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* win32/gstconfig.h:
+	* win32/GSTreamer.vcproj:
+	* win32/Makefile:
+	* gst/gstconfig.h.in:
+	* gst/gst.h:
+	* gst/gstbin.h:
+	* gst/gstelement.h:
+	* gst/gstevent.h:
+	* gst/gstobject.h:
+	* gst/gstpad.h:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstconfig.sgml:
+          rename GSTREAMER_EXPORT(S) to GST_EXPORT(S)
+
 2004-06-13  Jan Schmidt  <thaytan@mad.scientist.com>
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/tmpl/gstconfig.sgml:

@@ -32,7 +32,7 @@ OBJ  = $(patsubst %.c,%.obj,$(SRC))
 INCS = /I. /I.. /I../libs /I../../popt/include /I../../libiconv/include /I../../libxml2/include/libxml2 /I$(GLIB_DIR) /I$(GLIB_DIR)\glib /I$(GLIB_DIR)\gmodule /I$(GLIB_DIR)\build\win32
 LDFLAGS = /NOLOGO /DLL /IMPLIB:gstreamer-0.8.lib /MAP:gstreamer.map /LIBPATH:$(GLIB_DIR)/glib /LIBPATH:$(GLIB_DIR)/gobject /LIBPATH:$(GLIB_DIR)/gmodule /LIBPATH:$(GLIB_DIR)/gthread /LIBPATH:../../popt/lib /LIBPATH:../../libxml2/lib
 OPTMIZ = /G6 /O2 /Oi /Wp64 /GL
-CXXFLAGS = $(INCS) /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H /D_USRDLL /DHAVE_WIN32 /nologo
+CXXFLAGS = $(INCS) /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H /D_USRDLL /DHAVE_WIN32 /DGST_EXPORTS /nologo
 
 
 HEADERS = $(SRC_DIR)\gstversion.h $(SRC_DIR)\gstconfig.h $(SRC_DIR)\gstenumtypes.h $(SRC_DIR)\gstenumtypes.c $(SRC_DIR)\gstmarshal.h

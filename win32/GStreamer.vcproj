@@ -22,7 +22,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="D:\Perso\Programmes\GStreamer\gstreamer\win32;.\;..\;..\libs;..\..\popt\include;..\..\glib\gmodule;..\..\gettext\include;..\..\libiconv\include;..\..\libxml2\include\libxml2;..\..\glib;..\..\glib\glib;..\..\glib\build\win32"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;HAVE_CONFIG_H;HAVE_WIN32;GSTREAMER_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;HAVE_CONFIG_H;HAVE_WIN32;GST_EXPORTS"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -99,7 +99,7 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories=".\;..\;..\libs;..\..\popt\include;..\..\glib\gmodule;..\..\gettext\include;..\..\libiconv\include;..\..\libxml2\include\libxml2;..\..\glib;..\..\glib\glib;..\..\glib\win32"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;HAVE_CONFIG_H;HAVE_WIN32;GST_DISABLE_GST_DEBUG;GSTREAMER_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;HAVE_CONFIG_H;HAVE_WIN32;GST_DISABLE_GST_DEBUG;GST_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="config.h"

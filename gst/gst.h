@@ -75,7 +75,7 @@ G_BEGIN_DECLS
 typedef struct poptOption GstPoptOption;
 
 #ifndef GST_DISABLE_REGISTRY
-GSTREAMER_EXPORT gboolean _gst_registry_auto_load;
+GST_EXPORT gboolean _gst_registry_auto_load;
 #endif
 
 /* initialize GST */

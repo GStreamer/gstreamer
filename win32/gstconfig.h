@@ -68,13 +68,13 @@
 #endif
 
 #ifdef WIN32
-#ifdef GSTREAMER_EXPORTS
-#define GSTREAMER_EXPORT __declspec(dllexport) extern
+#ifdef GST_EXPORTS
+#define GST_EXPORT __declspec(dllexport) extern
 #else
-#define GSTREAMER_EXPORT __declspec(dllimport) extern
+#define GST_EXPORT __declspec(dllimport) extern
 #endif
 #else
-#define GSTREAMER_EXPORT extern
+#define GST_EXPORT extern
 #endif
 
 #endif /* __GST_CONFIG_H__ */

@@ -32,7 +32,7 @@
 
 G_BEGIN_DECLS
 
-GSTREAMER_EXPORT GType _gst_object_type;
+GST_EXPORT GType _gst_object_type;
 
 #define GST_TYPE_OBJECT			(_gst_object_type)
 #define GST_IS_OBJECT(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_OBJECT))
