@@ -22,6 +22,8 @@
 
 #include "gstjpegdec.h"
 #include "gstjpegenc.h"
+#include "gstsmokeenc.h"
+#include "gstsmokedec.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -32,6 +34,14 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "jpegdec", GST_RANK_PRIMARY,
           GST_TYPE_JPEGDEC))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "smokeenc", GST_RANK_PRIMARY,
+          GST_TYPE_SMOKEENC))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "smokedec", GST_RANK_PRIMARY,
+          GST_TYPE_SMOKEDEC))
     return FALSE;
 
   return TRUE;
