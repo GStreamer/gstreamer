@@ -45,7 +45,6 @@ dnl # Super Duper options for plug-in building #
 dnl ############################################
 
 dnl ext plug-ins; plug-ins that have external dependencies
-translit(dnm, m, l) AM_CONDITIONAL(BUILD_EXTERNAL, true)
 GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
 [HAVE_EXTERNAL=yes],enabled,
 [
@@ -55,6 +54,8 @@ GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
   AC_MSG_WARN(all plug-ins with external dependencies will not be built)
   BUILD_EXTERNAL="no"
 ])
+# make BUILD_EXTERNAL available to Makefile.am
+AM_CONDITIONAL(BUILD_EXTERNAL, test "x$BUILD_EXTERNAL" = "xyes")
 
 dnl experimental plug-ins; stuff that hasn't had the dust settle yet
 dnl read 'builds, but might not work'UTO
