@@ -844,6 +844,7 @@ gst-libs/gst/resample/Makefile
 gst-libs/gst/riff/Makefile
 examples/capsfilter/Makefile
 examples/Makefile
+tools/Makefile
 )
 
 echo -e "configure: *** Plugins that will be built : $GST_PLUGINS_YES"

@@ -17,7 +17,7 @@ Prefix: %prefix
 Requires: libxml2 >= 2.4.0
 Requires: gstreamer >= %{ver}
 BuildRequires: nasm => 0.90
-BuildRequires: gstreamer-devel > 0.3.0 
+BuildRequires: gstreamer-devel >= %{ver} 
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -30,7 +30,7 @@ plugins.
 %files
 %defattr(-, root, root)
 %doc AUTHORS COPYING README  
-
+%{_bindir}/gst-launch-ext
 %prep
 %setup
 %build
