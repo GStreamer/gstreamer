@@ -196,7 +196,12 @@ noinst_HEADERS = 	\
 	gstarch.h	\
 	gstpropsprivate.h
 
-CFLAGS = $(LIBGST_CFLAGS) -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\"
+CFLAGS = \
+	$(LIBGST_CFLAGS) \
+	-D_GNU_SOURCE \
+	-DG_LOG_DOMAIN=g_log_domain_gstreamer \
+	-DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\"
+
 LIBS = $(LIBGST_LIBS)
 LDFLAGS = ""
 libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION)

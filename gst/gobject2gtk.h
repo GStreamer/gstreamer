@@ -70,7 +70,6 @@ typedef struct _GObjectClass GObjectClass;
 #define g_cclosure_marshal_STRING__OBJECT_POINTER	gtk_marshal_STRING__OBJECT_POINTER
 #define g_cclosure_marshal_VOID__UINT_POINTER	gtk_marshal_NONE__UINT_POINTER
 
-#define gst_marshal_VOID__OBJECT_POINTER	gtk_marshal_NONE__POINTER
 #define gst_marshal_VOID__INT_INT		gtk_marshal_NONE__INT_INT
 #define gst_marshal_VOID__INT			gtk_marshal_NONE__INT
 #define gst_marshal_VOID__STRING		gtk_marshal_NONE__STRING

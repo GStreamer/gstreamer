@@ -23,6 +23,8 @@
 #ifndef __GST_LOG_H__
 #define __GST_LOG_H__
 
+extern const gchar             *g_log_domain_gstreamer;
+
 /* information messages */
 #define GST_SHOW_INFO
 #ifdef GST_SHOW_INFO
