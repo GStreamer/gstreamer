@@ -106,6 +106,7 @@ static void gst_type_find_element_get_property (GObject * object,
 static const GstEventMask *gst_type_find_element_src_event_mask (GstPad * pad);
 static gboolean gst_type_find_element_src_event (GstPad * pad,
     GstEvent * event);
+static void push_buffer_store (GstTypeFindElement * typefind);
 
 static void gst_type_find_element_chain (GstPad * sinkpad, GstData * data);
 static GstElementStateReturn
@@ -366,7 +367,8 @@ stop_typefinding (GstTypeFindElement * typefind)
       GST_WARNING_OBJECT (typefind,
           "could not seek to required position %u, hope for the best", size);
       typefind->mode = MODE_NORMAL;
-      gst_buffer_store_clear (typefind->store);
+      /* push out our queued buffers here */
+      push_buffer_store (typefind);
     } else {
       typefind->waiting_for_discont_offset = size;
     }
