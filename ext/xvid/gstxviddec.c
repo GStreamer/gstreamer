@@ -385,13 +385,3 @@ gst_xviddec_connect (GstPad  *pad,
 
   return gst_xviddec_negotiate(xviddec);
 }
-
-
-gboolean
-gst_xviddec_plugin_init (GstPlugin *plugin)
-{
-  if (!gst_element_register (plugin, "xviddec", GST_RANK_PRIMARY, GST_TYPE_XVIDDEC))
-    return FALSE;
-
-  return TRUE;
-}

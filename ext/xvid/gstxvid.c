@@ -87,8 +87,10 @@ gst_xvid_error (int errorcode)
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
-  return (gst_xviddec_plugin_init(plugin) &&
-          gst_xvidenc_plugin_init(plugin));
+  return (gst_element_register (plugin, "xvidenc",
+				GST_RANK_NONE, GST_TYPE_XVIDENC) &&
+	  gst_element_register (plugin, "xviddec",
+				GST_RANK_NONE, GST_TYPE_XVIDDEC));
 }
 
 GST_PLUGIN_DEFINE (

@@ -64,8 +64,6 @@ struct _GstXvidDecClass {
 
 GType gst_xviddec_get_type(void);
 
-gboolean gst_xviddec_plugin_init (GstPlugin *plugin);
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

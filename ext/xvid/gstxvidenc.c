@@ -482,16 +482,3 @@ gst_xvidenc_get_property (GObject    *object,
       break;
   }
 }
-
-
-gboolean
-gst_xvidenc_plugin_init (GstPlugin *plugin)
-{
-  if (!gst_library_load("gstvideo"))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "xvidenc", GST_RANK_NONE, GST_TYPE_XVIDENC))
-    return FALSE;
-  
-  return TRUE;
-}

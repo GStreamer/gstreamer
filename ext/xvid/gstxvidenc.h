@@ -73,8 +73,6 @@ struct _GstXvidEncClass {
 
 GType gst_xvidenc_get_type(void);
 
-gboolean gst_xvidenc_plugin_init (GstPlugin *plugin);
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
