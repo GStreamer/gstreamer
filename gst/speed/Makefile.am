@@ -5,6 +5,7 @@ plugin_LTLIBRARIES = libgstspeed.la
 libgstspeed_la_SOURCES = gstspeed.c
 libgstspeed_la_CFLAGS = $(GST_CFLAGS)
 libgstspeed_la_LIBADD = $(GST_LIBS)
+libgstspeed_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
 
 noinst_HEADERS = gstspeed.h filter.func
 
