@@ -215,6 +215,8 @@ gst_avi_decoder_new_pad (GstElement *element, GstPad *pad, GstAviDecoder *avi_de
   type = gst_elementfactory_make ("avitypes", 
 		  g_strdup_printf ("typeconvert%d", avi_decoder->count));
 
+  gst_element_set_state (type, GST_STATE_READY);
+
   gst_pad_connect (pad, gst_element_get_pad (type, "sink"));
   type_found = gst_util_get_bool_arg (G_OBJECT (type), "type_found");
 
