@@ -528,16 +528,14 @@ AC_CHECK_LIB(mad, mad_decoder_finish,
 )
 
 dnl Check for libmikmod
-AM_PATH_LIBMIKMOD(, HAVE_LIBMIKMOD=yes,
-  AC_MSG_WARN(***** NOTE: These plugins won't be built: mikmod)
-  HAVE_LIBMIKMOD=no
-)
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMIKMOD, true)
+GST_CHECK_FEATURE(LIBMIKMOD, [mikmod plugin], mikmod, [
+    AM_PATH_LIBMIKMOD(, HAVE_LIBMIKMOD=yes, HAVE_LIBMIKMOD=no)])
 
 dnl Check for libvorbis
-AM_PATH_VORBIS(HAVE_VORBIS=yes,
-  AC_MSG_WARN(***** NOTE: These plugins won't be built: vorbisdec vorbisenc)
-  HAVE_VORBIS=no
-)
+translit(dnm, m, l) AM_CONDITIONAL(USE_VORBIS, true)
+GST_CHECK_FEATURE(VORBIS, [vorbis plugins], vorbisdec vorbisenc, [
+    AM_PATH_VORBIS(HAVE_VORBIS=yes, HAVE_VORBIS=no)])
 
 dnl Check for libjpeg
 AC_MSG_CHECKING(libjpeg library)
@@ -644,11 +642,9 @@ CPPFLAGS="$CPPFLAGS $GLIB_CFLAGS"
 AC_CHECK_HEADER(libdv/dv.h, :, HAVE_LIBDV=no)
 CPPFLAGS="$libdvcheck_save_CPPFLAGS"
 
-dnl Check for aalib
-AM_PATH_AALIB( , HAVE_AALIB=yes,
-  AC_MSG_WARN(***** NOTE: These plugins won't be built: aasink)
-  HAVE_AALIB=no
-)
+translit(dnm, m, l) AM_CONDITIONAL(USE_AALIB, true)
+GST_CHECK_FEATURE(AALIB, [aasink plugin], aasink, [
+    AM_PATH_AALIB(, HAVE_AALIB=yes, HAVE_AALIB=no)])
 
 dnl AC_MSG_CHECKING(aalib)
 dnl AC_CHECK_LIB(aa, aa_init, HAVE_AALIB=yes, HAVE_AALIB=no, )
