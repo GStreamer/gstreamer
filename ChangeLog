@@ -1,5 +1,10 @@
 2004-12-18  David Schleef  <ds@schleef.org>
 
+	* gst/tta/ttadec.h: Disable some header code that isn't used
+	and clearly isn't portable.
+
+2004-12-18  David Schleef  <ds@schleef.org>
+
 	* gst/ffmpegcolorspace/imgconvert.c: (get_pix_fmt_info),
 	(avcodec_get_chroma_sub_sample), (avcodec_get_pix_fmt_name),
 	(avcodec_get_pix_fmt), (avpicture_layout),
