@@ -1,3 +1,14 @@
+2004-05-10  Wim Taymans  <wim@fluendo.com>
+
+	* ext/theora/theoraenc.c: (gst_theora_enc_class_init),
+	(theora_enc_sink_link), (theora_push_packet), (theora_enc_chain),
+	(theora_enc_change_state), (theora_enc_set_property),
+	(theora_enc_get_property):
+	Mark the last packet with an EOS flag which is not really needed
+	in gstreamer.
+	Do some better video framerate initialisation.
+	Update the buffer timestamp.
+
 2004-05-10  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/dv/gstdvdec.c: (gst_dvdec_change_state):

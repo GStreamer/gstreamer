@@ -60,7 +60,6 @@ struct _GstTheoraEnc
   gint width, height;
 
   guint packetno;
-  guint64 granulepos;
 };
 
 struct _GstTheoraEncClass
@@ -193,9 +192,9 @@ theora_enc_sink_link (GstPad * pad, const GstCaps * caps)
   enc->info.offset_x = 0;
   enc->info.offset_y = 0;
 
-  /* fixme, not done correctly */
-  enc->info.fps_numerator = fps;
-  enc->info.fps_denominator = 1;
+  /* do some scaling, we really need fractions in structures... */
+  enc->info.fps_numerator = fps * 10000000;
+  enc->info.fps_denominator = 10000000;
   enc->info.aspect_numerator = 1;
   enc->info.aspect_denominator = 1;
   /* */
@@ -220,17 +219,6 @@ theora_enc_sink_link (GstPad * pad, const GstCaps * caps)
 }
 
 static void
-theora_enc_event (GstTheoraEnc * enc, GstEvent * event)
-{
-  GST_LOG_OBJECT (enc, "handling event");
-  switch (GST_EVENT_TYPE (event)) {
-    default:
-      break;
-  }
-  gst_pad_event_default (enc->sinkpad, event);
-}
-
-static void
 theora_push_packet (GstTheoraEnc * enc, ogg_packet * packet)
 {
   GstBuffer *buf;
@@ -239,6 +227,8 @@ theora_push_packet (GstTheoraEnc * enc, ogg_packet * packet)
       GST_BUFFER_OFFSET_NONE, packet->bytes);
   memcpy (GST_BUFFER_DATA (buf), packet->packet, packet->bytes);
   GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
+  GST_BUFFER_TIMESTAMP (buf) =
+      theora_granule_time (&enc->state, packet->granulepos) * GST_SECOND;
   if (GST_PAD_IS_USABLE (enc->srcpad))
     gst_pad_push (enc->srcpad, GST_DATA (buf));
 
@@ -253,8 +243,15 @@ theora_enc_chain (GstPad * pad, GstData * data)
 
   enc = GST_THEORA_ENC (gst_pad_get_parent (pad));
   if (GST_IS_EVENT (data)) {
-    theora_enc_event (enc, GST_EVENT (data));
-    return;
+    switch (GST_EVENT_TYPE (data)) {
+      case GST_EVENT_EOS:
+        /* push last packet with eos flag */
+        if (theora_encode_packetout (&enc->state, 1, &op))
+          theora_push_packet (enc, &op);
+      default:
+        gst_pad_event_default (pad, GST_EVENT (data));
+        return;
+    }
   }
 
   /* no packets written yet, setup headers */
@@ -277,31 +274,33 @@ theora_enc_chain (GstPad * pad, GstData * data)
     theora_push_packet (enc, &op);
   }
 
-  yuv_buffer yuv;
-  gint y_size;
-  guchar *pixels;
+  {
+    yuv_buffer yuv;
+    gint y_size;
+    guchar *pixels;
 
-  pixels = GST_BUFFER_DATA (GST_BUFFER (data));
+    pixels = GST_BUFFER_DATA (GST_BUFFER (data));
 
-  yuv.y_width = enc->width;
-  yuv.y_height = enc->height;
-  yuv.y_stride = enc->width;
+    yuv.y_width = enc->width;
+    yuv.y_height = enc->height;
+    yuv.y_stride = enc->width;
 
-  yuv.uv_width = enc->width / 2;
-  yuv.uv_height = enc->height / 2;
-  yuv.uv_stride = yuv.uv_width;
+    yuv.uv_width = enc->width / 2;
+    yuv.uv_height = enc->height / 2;
+    yuv.uv_stride = yuv.uv_width;
 
-  y_size = enc->width * enc->height;
+    y_size = enc->width * enc->height;
 
-  yuv.y = pixels;
-  yuv.u = pixels + y_size;
-  yuv.v = pixels + y_size * 5 / 4;
+    yuv.y = pixels;
+    yuv.u = pixels + y_size;
+    yuv.v = pixels + y_size * 5 / 4;
 
-  theora_encode_YUVin (&enc->state, &yuv);
-  theora_encode_packetout (&enc->state, 0, &op);
-  theora_push_packet (enc, &op);
+    theora_encode_YUVin (&enc->state, &yuv);
+    if (theora_encode_packetout (&enc->state, 0, &op))
+      theora_push_packet (enc, &op);
 
-  gst_data_unref (data);
+    gst_data_unref (data);
+  }
 }
 
 static GstElementStateReturn
@@ -316,7 +315,6 @@ theora_enc_change_state (GstElement * element)
       theora_info_init (&enc->info);
       theora_comment_init (&enc->comment);
       enc->packetno = 0;
-      enc->granulepos = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
