@@ -23,12 +23,11 @@
 
 
 #include <gst/gst.h>
-#include <gtk/gtk.h>
+#include <gst/bytestream/adapter.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
 
 #define GST_TYPE_SMOOTHWAVE \
   (gst_smoothwave_get_type())
@@ -48,12 +47,17 @@ struct _GstSmoothWave {
   GstElement element;
 
   GstPad *sinkpad,*srcpad;
+  GstAdapter *adapter;
 
-  gint width,height;
-
-  GdkRgbCmap *cmap;
-  GtkWidget *image;
   guchar *imagebuffer;
+  GstClockTime audio_basetime;
+  guint64 samples_consumed;
+
+  gint    sample_rate;
+  gint    width,height;
+  gdouble fps;
+  gint    channels;
+  guint32 palette[256];
 };
 
 struct _GstSmoothWaveClass {
