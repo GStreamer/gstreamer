@@ -58,7 +58,7 @@ static gboolean 		gst_osssink_query 		(GstElement *element, GstQueryType type,
 static gboolean 		gst_osssink_sink_query 		(GstPad *pad, GstQueryType type,
 								 GstFormat *format, gint64 *value);
 
-static GstCaps *                gst_osssink_sink_fixate         (GstPad *pad, const GstCaps *caps, gpointer user_data);
+static GstCaps *                gst_osssink_sink_fixate         (GstPad *pad, const GstCaps *caps);
 static GstPadLinkReturn		gst_osssink_sinkconnect		(GstPad *pad, const GstCaps *caps);
 
 static void 			gst_osssink_set_property	(GObject *object, guint prop_id, const GValue *value, 
@@ -216,7 +216,7 @@ gst_osssink_init (GstOssSink *osssink)
 }
 
 static GstCaps *
-gst_osssink_sink_fixate (GstPad *pad, const GstCaps *caps, gpointer user_data)
+gst_osssink_sink_fixate (GstPad *pad, const GstCaps *caps)
 {
   GstCaps *newcaps;
   GstStructure *structure;
