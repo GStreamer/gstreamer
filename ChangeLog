@@ -1,3 +1,8 @@
+2004-05-17  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
+	* configure.ac : fix compilation of v4l2src with "-Wall -Werror"
+	  fixes #142664
+
 2004-05-17  Benjamin Otte  <otte@gnome.org>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_chain):
