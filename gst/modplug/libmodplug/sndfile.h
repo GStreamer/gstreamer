@@ -16,10 +16,6 @@
 typedef const BYTE * LPCBYTE;
 #endif
 
-#ifndef __inline
-#define __inline
-#endif
-
 #define MOD_AMIGAC2			0x1AB
 #define MAX_SAMPLE_LENGTH	16000000
 #define MAX_SAMPLE_RATE		50000
@@ -944,7 +940,7 @@ int _muldivr(long a, long b, long c);
      ({ unsigned short int __bsx = (x);					      \
         ((((__bsx) >> 8) & 0xff) | (((__bsx) & 0xff) << 8)); }))
 #else
-static __inline unsigned short int
+static inline unsigned short int
 bswap_16 (unsigned short int __bsx)
 {
   return ((((__bsx) >> 8) & 0xff) | (((__bsx) & 0xff) << 8));
@@ -959,7 +955,7 @@ bswap_16 (unsigned short int __bsx)
         ((((__bsx) & 0xff000000) >> 24) | (((__bsx) & 0x00ff0000) >>  8) |    \
 	 (((__bsx) & 0x0000ff00) <<  8) | (((__bsx) & 0x000000ff) << 24)); }))
 #else
-static __inline unsigned int
+static inline unsigned int
 bswap_32 (unsigned int __bsx)
 {
   return ((((__bsx) & 0xff000000) >> 24) | (((__bsx) & 0x00ff0000) >>  8) |
