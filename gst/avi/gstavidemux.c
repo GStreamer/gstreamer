@@ -187,6 +187,7 @@ gst_avi_demux_reset (GstAviDemux * avi)
   for (i = 0; i < avi->num_streams; i++) {
     g_free (avi->stream[i].strh);
     gst_element_remove_pad (GST_ELEMENT (avi), avi->stream[i].pad);
+    gst_caps_free (avi->stream[i].caps);
   }
   memset (&avi->stream, 0, sizeof (avi->stream));
 
