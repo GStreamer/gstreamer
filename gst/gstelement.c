@@ -1245,11 +1245,11 @@ gst_element_error (GstElement *element, const gchar *error, ...)
 
 /**
  * gst_element_get_state:
- * @element: element to get state of
+ * @element: a #GstElement to get state of
  *
  * Gets the state of the element. 
  *
- * Returns: The element state
+ * Returns: The #GstElementState of the element
  */
 GstElementState
 gst_element_get_state (GstElement *element)
@@ -1261,9 +1261,9 @@ gst_element_get_state (GstElement *element)
 
 /**
  * gst_element_wait_state_change:
- * @element: element wait for
+ * @element: a #GstElement to wait for
  *
- * Wait and block until the element changed its state.
+ * Waits and blocks until the element changed its state.
  */
 void
 gst_element_wait_state_change (GstElement *element)
@@ -1275,13 +1275,15 @@ gst_element_wait_state_change (GstElement *element)
 
 /**
  * gst_element_set_state:
- * @element: element to change state of
- * @state: new element state
+ * @element: a #GstElement to change state of
+ * @state: the element's new #GstElementState
  *
- * Sets the state of the element. This function will only set
- * the element's pending state.
+ * Sets the state of the element. This function will try to set the
+ * requested state by going through all the intermediary states and calling
+ * the class's state change function for each.
  *
- * Returns: whether or not the state was successfully set.
+ * Returns: whether or not the state was successfully set 
+ * (using #GstElementStateReturn).
  */
 gint
 gst_element_set_state (GstElement *element, GstElementState state)
