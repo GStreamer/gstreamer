@@ -18,6 +18,9 @@
  */
  
 #include <gst/gst.h>
+#include "mikmod_types.h"
+#include <string.h>		/* memcmp */
+#include <ctype.h>		/* isdigit */
 
 #define MODULEHEADERSIZE 0x438
 
@@ -140,15 +143,15 @@ gchar *data;
 	data = GST_BUFFER_DATA( buf );
 		
 	if( ! memcmp( data, "IMPM", 4 )) 
-		return TRUE			;
+		return TRUE;
 		
 	return FALSE;
 }
 
 gboolean M15_CheckType( GstBuffer *buf )
 {
+	/* FIXME: M15 CheckType to do */
 	return FALSE;
-#warning M15 CheckType to do
 }
 
 gboolean Med_CheckType( GstBuffer *buf )

@@ -7,6 +7,7 @@ libgstmikmod_la_CFLAGS = $(GST_CFLAGS) $(MIKMOD_CFLAGS)
 libgstmikmod_la_LIBADD = $(MIKMOD_LIBS)
 libgstmikmod_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gstmikmod.h
+noinst_HEADERS = gstmikmod.h \
+		 mikmod_types.h
 
 EXTRA_DIST = README

@@ -18,6 +18,7 @@
  */
 
 #include "gstmikmod.h"
+#include "mikmod_types.h"
 
 #include <gst/audio/audio.h>
 #include <stdlib.h>
