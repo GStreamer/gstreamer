@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstutils.c: Utility functions: gtk_get_arg stuff, etc.
+ * gstutils.c: Utility functions: gtk_get_property stuff, etc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -37,13 +37,12 @@
  * Returns: the property of the object
  */
 gint
-gst_util_get_int_arg (GtkObject *object,guchar *argname) 
+gst_util_get_int_arg (GObject *object,gchar *argname) 
 {
-  GtkArg arg;
+  GValue value;
 
-  arg.name = argname;
-  gtk_object_getv(GTK_OBJECT(object),1,&arg);
-  return GTK_VALUE_INT(arg);
+  g_object_get_property(G_OBJECT(object),argname,&value);
+  return g_value_get_int(&value);
 }
 
 /**
@@ -56,13 +55,12 @@ gst_util_get_int_arg (GtkObject *object,guchar *argname)
  * Returns: the property of the object
  */
 gint
-gst_util_get_bool_arg (GtkObject *object,guchar *argname) 
+gst_util_get_bool_arg (GObject *object,gchar *argname) 
 {
-  GtkArg arg;
+  GValue value;
 
-  arg.name = argname;
-  gtk_object_getv(GTK_OBJECT(object),1,&arg);
-  return GTK_VALUE_BOOL(arg);
+  g_object_get_property(G_OBJECT(object),argname,&value);
+  return g_value_get_boolean(&value);
 }
 
 /**
@@ -75,13 +73,12 @@ gst_util_get_bool_arg (GtkObject *object,guchar *argname)
  * Returns: the property of the object
  */
 glong
-gst_util_get_long_arg (GtkObject *object,guchar *argname) 
+gst_util_get_long_arg (GObject *object,gchar *argname) 
 {
-  GtkArg arg;
+  GValue value;
 
-  arg.name = argname;
-  gtk_object_getv(GTK_OBJECT(object),1,&arg);
-  return GTK_VALUE_LONG(arg);
+  g_object_get_property(G_OBJECT(object),argname,&value);
+  return g_value_get_long(&value);
 }
 
 /**
@@ -94,13 +91,12 @@ gst_util_get_long_arg (GtkObject *object,guchar *argname)
  * Returns: the property of the object
  */
 gfloat
-gst_util_get_float_arg (GtkObject *object,guchar *argname) 
+gst_util_get_float_arg (GObject *object,gchar *argname) 
 {
-  GtkArg arg;
+  GValue value;
 
-  arg.name = argname;
-  gtk_object_getv(GTK_OBJECT(object),1,&arg);
-  return GTK_VALUE_FLOAT(arg);
+  g_object_get_property(G_OBJECT(object),argname,&value);
+  return g_value_get_float(&value);
 }
 
 /**
@@ -113,13 +109,12 @@ gst_util_get_float_arg (GtkObject *object,guchar *argname)
  * Returns: the property of the object
  */
 gdouble 
-gst_util_get_double_arg (GtkObject *object,guchar *argname) 
+gst_util_get_double_arg (GObject *object,gchar *argname) 
 {
-  GtkArg arg;
+  GValue value;
 
-  arg.name = argname;
-  gtk_object_getv(GTK_OBJECT(object),1,&arg);
-  return GTK_VALUE_DOUBLE(arg);
+  g_object_get_property(G_OBJECT(object),argname,&value);
+  return g_value_get_double(&value);
 }
 
 /**
@@ -131,14 +126,13 @@ gst_util_get_double_arg (GtkObject *object,guchar *argname)
  *
  * Returns: the property of the object
  */
-guchar*
-gst_util_get_string_arg (GtkObject *object,guchar *argname) 
+gchar*
+gst_util_get_string_arg (GObject *object,gchar *argname) 
 {
-  GtkArg arg;
+  GValue value;
 
-  arg.name = argname;
-  gtk_object_getv(GTK_OBJECT(object),1,&arg);
-  return GTK_VALUE_STRING(arg);
+  g_object_get_property(G_OBJECT(object),argname,&value);
+  return g_value_get_string(&value);
 }
 
 /**
@@ -151,18 +145,16 @@ gst_util_get_string_arg (GtkObject *object,guchar *argname)
  * Returns: the property of the object
  */
 gpointer
-gst_util_get_pointer_arg (GtkObject *object,guchar *argname) 
+gst_util_get_pointer_arg (GObject *object,gchar *argname) 
 {
-  GtkArg arg;
+  GValue value;
 
-  arg.name = argname;
-  gtk_object_getv(GTK_OBJECT(object),1,&arg);
-  
-  return GTK_VALUE_POINTER(arg);
+  g_object_get_property(G_OBJECT(object),argname,&value);
+  return g_value_get_pointer(&value);
 }
 
 /**
- * gst_util_get_widget_arg:
+ * gst_util_get_widget_property:
  * @object: the object to query
  * @argname: the name of the argument
  *
@@ -170,16 +162,18 @@ gst_util_get_pointer_arg (GtkObject *object,guchar *argname)
  *
  * Returns: the property of the object
  */
+/* COMMENTED OUT BECAUSE WE HAVE NO MORE gtk.h
 GtkWidget*
-gst_util_get_widget_arg (GtkObject *object,guchar *argname) 
+gst_util_get_widget_property (GObject *object,gchar *argname) 
 {
   GtkArg arg;
 
   arg.name = argname;
-  gtk_object_getv(GTK_OBJECT(object),1,&arg);
+  gtk_object_getv(G_OBJECT(object),1,&arg);
   
-  return GTK_WIDGET(GTK_VALUE_OBJECT(arg));
+  return GTK_WIDGET(G_VALUE_OBJECT(arg));
 }
+*/
 
 /**
  * gst_util_dump_mem:
@@ -218,80 +212,75 @@ gst_util_dump_mem (guchar *mem, guint size)
  * sets the argument with it.
  */
 void
-gst_util_set_object_arg (GtkObject *object, guchar *name, gchar *value) 
+gst_util_set_object_arg (GObject *object, gchar *name, gchar *value) 
 {
   if (name && value) {
-    GtkType type = GTK_OBJECT_TYPE (object);
-    GtkArgInfo *info;
-    gchar *result;
+    GParamSpec *paramspec;
 
-    result = gtk_object_arg_get_info (type, name, &info);
+    paramspec = g_object_class_find_property(G_OBJECT_GET_CLASS(object),name);
 
-    if (result) {
-      g_print("gstutil: %s\n", result);
-    }
-    else if (info->arg_flags & GTK_ARG_WRITABLE) {
-      switch (info->type) {
-        case GTK_TYPE_STRING:
-          gtk_object_set (GTK_OBJECT (object), name, value, NULL);
+    if (paramspec->flags & G_PARAM_WRITABLE) {
+      switch (paramspec->value_type) {
+        case G_TYPE_STRING:
+          g_object_set (G_OBJECT (object), name, value, NULL);
           break;
-        case GTK_TYPE_ENUM: 
-        case GTK_TYPE_INT: {
+        case G_TYPE_ENUM: 
+        case G_TYPE_INT: {
           gint i;
           sscanf (value, "%d", &i);
-          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+          g_object_set (G_OBJECT (object), name, i, NULL);
 	  break;
 	}
-        case GTK_TYPE_LONG: {
+        case G_TYPE_LONG: {
 	  glong i;
 	  sscanf (value, "%ld", &i);
-          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+          g_object_set (G_OBJECT (object), name, i, NULL);
 	  break;
 	}
-        case GTK_TYPE_ULONG: {
+        case G_TYPE_ULONG: {
 	  gulong i;
 	  sscanf (value, "%lu", &i);
-          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+          g_object_set (G_OBJECT (object), name, i, NULL);
 	  break;
 	}
-        case GTK_TYPE_BOOL: {
+        case G_TYPE_BOOLEAN: {
 	  gboolean i = FALSE;
 	  if (!strncmp ("true", value, 4)) i = TRUE;
-          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+          g_object_set (G_OBJECT (object), name, i, NULL);
 	  break;
 	}
-        case GTK_TYPE_CHAR: {
+        case G_TYPE_CHAR: {
 	  gchar i;
 	  sscanf (value, "%c", &i);
-          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+          g_object_set (G_OBJECT (object), name, i, NULL);
 	  break;
 	}
-        case GTK_TYPE_UCHAR: {
+        case G_TYPE_UCHAR: {
 	  guchar i;
 	  sscanf (value, "%c", &i);
-          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+          g_object_set (G_OBJECT (object), name, i, NULL);
 	  break;
 	}
-        case GTK_TYPE_FLOAT: {
+        case G_TYPE_FLOAT: {
 	  gfloat i;
 	  sscanf (value, "%f", &i);
-          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+          g_object_set (G_OBJECT (object), name, i, NULL);
 	  break;
 	}
-        case GTK_TYPE_DOUBLE: {
+        case G_TYPE_DOUBLE: {
 	  gfloat i;
 	  sscanf (value, "%g", &i);
-          gtk_object_set (GTK_OBJECT (object), name, (gdouble)i, NULL);
+          g_object_set (G_OBJECT (object), name, (gdouble)i, NULL);
 	  break;
 	}
         default:
-	  if (GTK_FUNDAMENTAL_TYPE(info->type) == GTK_TYPE_ENUM) {
+	  if (G_IS_PARAM_SPEC_ENUM(paramspec)) {
             gint i;
             sscanf (value, "%d", &i);
-            gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+            g_object_set (G_OBJECT (object), name, i, NULL);
 	  }
-	  else if (info->type == GST_TYPE_FILENAME) {
-            gtk_object_set (GTK_OBJECT (object), name, value, NULL);
+	  else if (paramspec->value_type == GST_TYPE_FILENAME) {
+            g_object_set (G_OBJECT (object), name, value, NULL);
 	  }
 	  break;
       }

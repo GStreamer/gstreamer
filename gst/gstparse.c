@@ -201,8 +201,8 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
       argval = pos+1;
       DEBUG("attempting to set argument '%s' to '%s' on element '%s'\n",
             argname,argval,GST_ELEMENT_NAME(previous));
-      //gtk_object_set(GTK_OBJECT(previous),argname,argval,NULL);
-      gst_util_set_object_arg (GTK_OBJECT(previous), argname, argval);
+      //gtk_object_set(G_OBJECT(previous),argname,argval,NULL);
+      gst_util_set_object_arg (G_OBJECT(previous), argname, argval);
       g_free(argname);
 
     // element or argument, or beginning of bin or thread
@@ -278,8 +278,8 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
           GST_DEBUG(0,"SETTING UP dynamic connection %s:%s and %s:%s\n",gst_element_get_name (previous),
 			  srcpadname,GST_DEBUG_PAD_NAME(sinkpad));
 
-	  gtk_signal_connect (GTK_OBJECT (previous), "new_pad", dynamic_connect, connect);
-	  gtk_signal_connect (GTK_OBJECT (previous), "new_ghost_pad", dynamic_connect, connect);
+	  gtk_signal_connect (G_OBJECT (previous), "new_pad", dynamic_connect, connect);
+	  gtk_signal_connect (G_OBJECT (previous), "new_ghost_pad", dynamic_connect, connect);
         }
         else {
           GST_DEBUG(0,"CONNECTING %s:%s and %s:%s\n",GST_DEBUG_PAD_NAME(srcpad),GST_DEBUG_PAD_NAME(sinkpad));
@@ -294,7 +294,7 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
       // thomas: if we're the first element, connect eos signal
       if (elementcount == 1) 
       {
-        gtk_signal_connect (GTK_OBJECT (element), "eos",
+        gtk_signal_connect (G_OBJECT (element), "eos",
                       GTK_SIGNAL_FUNC (have_eos), NULL);
 
       }

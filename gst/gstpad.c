@@ -38,22 +38,23 @@ static xmlNodePtr	gst_pad_save_thyself		(GstObject *object, xmlNodePtr parent);
 
 static GstObject *pad_parent_class = NULL;
 
-GtkType
+GType
 gst_pad_get_type(void) {
-  static GtkType pad_type = 0;
+  static GType pad_type = 0;
 
   if (!pad_type) {
-    static const GtkTypeInfo pad_info = {
-      "GstPad",
-      sizeof(GstPad),
+    static const GTypeInfo pad_info = {
       sizeof(GstPadClass),
-      (GtkClassInitFunc)gst_pad_class_init,
-      (GtkObjectInitFunc)gst_pad_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_pad_class_init,
+      NULL,
+      NULL,
+      sizeof(GstPad),
+      32,
+      (GInstanceInitFunc)gst_pad_init,
     };
-    pad_type = gtk_type_unique(GST_TYPE_OBJECT,&pad_info);
+    pad_type = g_type_register_static(GST_TYPE_OBJECT, "GstPad", &pad_info, 0);
   }
   return pad_type;
 }
@@ -61,7 +62,7 @@ gst_pad_get_type(void) {
 static void
 gst_pad_class_init (GstPadClass *klass)
 {
-  pad_parent_class = gtk_type_class(GST_TYPE_OBJECT);
+  pad_parent_class = g_type_class_ref(GST_TYPE_OBJECT);
 }
 
 static void
@@ -92,36 +93,37 @@ enum {
   /* FILL ME */
 };
 
-static void		gst_real_pad_class_init		(GstRealPadClass *klass);
-static void		gst_real_pad_init		(GstRealPad *pad);
+static void	gst_real_pad_class_init		(GstRealPadClass *klass);
+static void	gst_real_pad_init		(GstRealPad *pad);
 
-static void		gst_real_pad_set_arg		(GtkObject *object,GtkArg *arg,guint id);
-static void		gst_real_pad_get_arg		(GtkObject *object,GtkArg *arg,guint id);
+static void	gst_real_pad_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void	gst_real_pad_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void		gst_real_pad_destroy		(GtkObject *object);
+static void	gst_real_pad_destroy		(GObject *object);
 
-static void		gst_pad_push_func		(GstPad *pad, GstBuffer *buf);
+static void	gst_pad_push_func		(GstPad *pad, GstBuffer *buf);
 
 
 static GstPad *real_pad_parent_class = NULL;
 static guint gst_real_pad_signals[REAL_LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_real_pad_get_type(void) {
-  static GtkType pad_type = 0;
+  static GType pad_type = 0;
 
   if (!pad_type) {
-    static const GtkTypeInfo pad_info = {
-      "GstRealPad",
-      sizeof(GstRealPad),
+    static const GTypeInfo pad_info = {
       sizeof(GstRealPadClass),
-      (GtkClassInitFunc)gst_real_pad_class_init,
-      (GtkObjectInitFunc)gst_real_pad_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_real_pad_class_init,
+      NULL,
+      NULL,
+      sizeof(GstRealPad),
+      32,
+      (GInstanceInitFunc)gst_real_pad_init,
     };
-    pad_type = gtk_type_unique(GST_TYPE_PAD,&pad_info);
+    pad_type = g_type_register_static(GST_TYPE_PAD, "GstRealPad", &pad_info, 0);
   }
   return pad_type;
 }
@@ -129,47 +131,50 @@ gst_real_pad_get_type(void) {
 static void
 gst_real_pad_class_init (GstRealPadClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
   gstobject_class = (GstObjectClass*)klass;
 
-  real_pad_parent_class = gtk_type_class(GST_TYPE_PAD);
+  real_pad_parent_class = g_type_class_ref(GST_TYPE_PAD);
 
   gst_real_pad_signals[REAL_SET_ACTIVE] =
-    gtk_signal_new ("set_active", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstRealPadClass, set_active),
-                    gtk_marshal_NONE__BOOL, GTK_TYPE_NONE, 1,
-                    GTK_TYPE_BOOL);
+    g_signal_newc ("set_active", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstRealPadClass, set_active), NULL, NULL,
+                    g_cclosure_marshal_VOID__BOOLEAN, G_TYPE_NONE, 1,
+                    G_TYPE_BOOLEAN);
   gst_real_pad_signals[REAL_CAPS_CHANGED] =
-    gtk_signal_new ("caps_changed", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstRealPadClass, caps_changed),
-                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
-                    GTK_TYPE_POINTER);
+    g_signal_newc ("caps_changed", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstRealPadClass, caps_changed), NULL, NULL,
+                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    G_TYPE_POINTER);
   gst_real_pad_signals[REAL_CAPS_NEGO_FAILED] =
-    gtk_signal_new ("caps_nego_failed", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstRealPadClass, caps_nego_failed),
-                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
-                    GTK_TYPE_POINTER);
+    g_signal_newc ("caps_nego_failed", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstRealPadClass, caps_nego_failed), NULL, NULL,
+                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    G_TYPE_POINTER);
   gst_real_pad_signals[REAL_CONNECTED] =
-    gtk_signal_new ("connected", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstRealPadClass, connected),
-                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
-                    GTK_TYPE_POINTER);
+    g_signal_newc ("connected", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstRealPadClass, connected), NULL, NULL,
+                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    G_TYPE_POINTER);
   gst_real_pad_signals[REAL_DISCONNECTED] =
-    gtk_signal_new ("disconnected", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstRealPadClass, disconnected),
-                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
-                    GTK_TYPE_POINTER);
-  gtk_object_class_add_signals (gtkobject_class, gst_real_pad_signals, REAL_LAST_SIGNAL);
+    g_signal_newc ("disconnected", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstRealPadClass, disconnected), NULL, NULL,
+                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    G_TYPE_POINTER);
 
-  gtk_object_add_arg_type ("GstRealPad::active", GTK_TYPE_BOOL,
-                           GTK_ARG_READWRITE, REAL_ARG_ACTIVE);
+//  gtk_object_add_arg_type ("GstRealPad::active", G_TYPE_BOOLEAN,
+//                           GTK_ARG_READWRITE, REAL_ARG_ACTIVE);
+  g_object_class_install_property (G_OBJECT_CLASS(klass), REAL_ARG_ACTIVE,
+    g_param_spec_boolean("active","Active","Whether the pad is active.",
+                         TRUE,G_PARAM_READWRITE));
 
-  gtkobject_class->destroy  = GST_DEBUG_FUNCPTR(gst_real_pad_destroy);
-  gtkobject_class->set_arg  = GST_DEBUG_FUNCPTR(gst_real_pad_set_arg);
-  gtkobject_class->get_arg  = GST_DEBUG_FUNCPTR(gst_real_pad_get_arg);
+// FIXME!
+//  gobject_class->destroy  = GST_DEBUG_FUNCPTR(gst_real_pad_destroy);
+  gobject_class->set_property  = GST_DEBUG_FUNCPTR(gst_real_pad_set_property);
+  gobject_class->get_property  = GST_DEBUG_FUNCPTR(gst_real_pad_get_property);
 
   gstobject_class->save_thyself = GST_DEBUG_FUNCPTR(gst_pad_save_thyself);
   gstobject_class->path_string_separator = ".";
@@ -197,20 +202,20 @@ gst_real_pad_init (GstRealPad *pad)
 }
 
 static void
-gst_real_pad_set_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_real_pad_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   g_return_if_fail(GST_IS_PAD(object));
 
-  switch (id) {
+  switch (prop_id) {
     case REAL_ARG_ACTIVE:
-      if (GTK_VALUE_BOOL(*arg)) {
-        gst_info("gstpad: activating pad\n");
+      if (g_value_get_boolean(value)) {
+        GST_DEBUG(GST_CAT_PADS,"activating pad %s:%s\n",GST_DEBUG_PAD_NAME(object));
         GST_FLAG_UNSET(object,GST_PAD_DISABLED);
       } else {
-        gst_info("gstpad: de-activating pad\n");
+        GST_DEBUG(GST_CAT_PADS,"de-activating pad %s:%s\n",GST_DEBUG_PAD_NAME(object));
         GST_FLAG_SET(object,GST_PAD_DISABLED);
       }
-      gtk_signal_emit(GTK_OBJECT(object), gst_real_pad_signals[REAL_SET_ACTIVE],
+      g_signal_emit(G_OBJECT(object), gst_real_pad_signals[REAL_SET_ACTIVE], 0,
                       ! GST_FLAG_IS_SET(object,GST_PAD_DISABLED));
       break;
     default:
@@ -219,14 +224,14 @@ gst_real_pad_set_arg (GtkObject *object, GtkArg *arg, guint id)
 }
 
 static void
-gst_real_pad_get_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_real_pad_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_PAD (object));
 
-  switch (id) {
+  switch (prop_id) {
     case REAL_ARG_ACTIVE:
-      GTK_VALUE_BOOL (*arg) = ! GST_FLAG_IS_SET (object, GST_PAD_DISABLED);
+      g_value_set_boolean(value, ! GST_FLAG_IS_SET (object, GST_PAD_DISABLED) );
       break;
     default:
       break;
@@ -252,7 +257,7 @@ gst_pad_new (gchar *name,
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (direction != GST_PAD_UNKNOWN, NULL);
 
-  pad = gtk_type_new (gst_real_pad_get_type ());
+  pad = g_object_new (gst_real_pad_get_type (), NULL);
   gst_object_set_name (GST_OBJECT (pad), name);
   GST_RPAD_DIRECTION(pad) = direction;
 
@@ -581,8 +586,8 @@ gst_pad_disconnect (GstPad *srcpad,
   GST_RPAD_PEER(realsink) = NULL;
 
   /* fire off a signal to each of the pads telling them that they've been disconnected */
-  gtk_signal_emit(GTK_OBJECT(realsrc), gst_real_pad_signals[REAL_DISCONNECTED], realsink);
-  gtk_signal_emit(GTK_OBJECT(realsink), gst_real_pad_signals[REAL_DISCONNECTED], realsrc);
+  g_signal_emit(G_OBJECT(realsrc), gst_real_pad_signals[REAL_DISCONNECTED], 0, realsink);
+  g_signal_emit(G_OBJECT(realsink), gst_real_pad_signals[REAL_DISCONNECTED], 0, realsrc);
 
   // now tell the scheduler
   if (realsrc->sched)
@@ -668,8 +673,8 @@ gst_pad_connect (GstPad *srcpad,
   }
 
   /* fire off a signal to each of the pads telling them that they've been connected */
-  gtk_signal_emit(GTK_OBJECT(realsrc), gst_real_pad_signals[REAL_CONNECTED], realsink);
-  gtk_signal_emit(GTK_OBJECT(realsink), gst_real_pad_signals[REAL_CONNECTED], realsrc);
+  g_signal_emit(G_OBJECT(realsrc), gst_real_pad_signals[REAL_CONNECTED], 0, realsink);
+  g_signal_emit(G_OBJECT(realsink), gst_real_pad_signals[REAL_CONNECTED], 0, realsrc);
 
   // now tell the scheduler(s)
   if (realsrc->sched)
@@ -697,7 +702,7 @@ gst_pad_set_parent (GstPad *pad,
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (GST_PAD_PARENT (pad) == NULL);
   g_return_if_fail (parent != NULL);
-  g_return_if_fail (GTK_IS_OBJECT (parent));
+  g_return_if_fail (GST_IS_OBJECT (parent));
   g_return_if_fail ((gpointer)pad != (gpointer)parent);
 
   gst_object_set_parent (GST_OBJECT (pad), parent);
@@ -1043,7 +1048,7 @@ gst_pad_get_bufferpool (GstPad *pad)
 }
 
 static void
-gst_real_pad_destroy (GtkObject *object)
+gst_real_pad_destroy (GObject *object)
 {
   GstPad *pad = GST_PAD (object);
 
@@ -1076,8 +1081,9 @@ gst_real_pad_destroy (GtkObject *object)
     g_list_free (GST_REAL_PAD(pad)->ghostpads);
   }
 
-  if (GTK_OBJECT_CLASS (real_pad_parent_class)->destroy)
-    GTK_OBJECT_CLASS (real_pad_parent_class)->destroy (object);
+// FIXME !!
+//  if (G_OBJECT_CLASS (real_pad_parent_class)->destroy)
+//    G_OBJECT_CLASS (real_pad_parent_class)->destroy (object);
 }
 
 
@@ -1292,10 +1298,10 @@ gst_pad_renegotiate (GstPad *pad)
   if (!result) {
     GST_DEBUG (GST_CAT_NEGOTIATION, "firing caps_nego_failed signal on %s:%s and %s:%s to give it a chance to succeed\n",
                GST_DEBUG_PAD_NAME(currentpad),GST_DEBUG_PAD_NAME(otherpad));
-    gtk_signal_emit (GTK_OBJECT(currentpad), 
-                     gst_real_pad_signals[REAL_CAPS_NEGO_FAILED],&result);
-    gtk_signal_emit (GTK_OBJECT(otherpad), 
-                     gst_real_pad_signals[REAL_CAPS_NEGO_FAILED],&result);
+    g_signal_emit (G_OBJECT(currentpad), 
+                     gst_real_pad_signals[REAL_CAPS_NEGO_FAILED], 0, &result);
+    g_signal_emit (G_OBJECT(otherpad), 
+                     gst_real_pad_signals[REAL_CAPS_NEGO_FAILED], 0, &result);
     if (result)
       GST_DEBUG (GST_CAT_NEGOTIATION, "caps_nego_failed handler claims success at renego, believing\n");
   }
@@ -1317,10 +1323,10 @@ gst_pad_renegotiate (GstPad *pad)
 
     GST_DEBUG (GST_CAT_NEGOTIATION, "firing caps_changed signal on %s:%s and %s:%s\n",
                GST_DEBUG_PAD_NAME(currentpad),GST_DEBUG_PAD_NAME(otherpad));
-    gtk_signal_emit (GTK_OBJECT(currentpad), 
-                     gst_real_pad_signals[REAL_CAPS_CHANGED],GST_PAD_CAPS(currentpad));
-    gtk_signal_emit (GTK_OBJECT(otherpad), 
-                     gst_real_pad_signals[REAL_CAPS_CHANGED],GST_PAD_CAPS(otherpad));
+    g_signal_emit (G_OBJECT(currentpad), 
+                     gst_real_pad_signals[REAL_CAPS_CHANGED], 0, GST_PAD_CAPS(currentpad));
+    g_signal_emit (G_OBJECT(otherpad), 
+                     gst_real_pad_signals[REAL_CAPS_CHANGED], 0, GST_PAD_CAPS(otherpad));
   }
 
   return result;
@@ -1555,23 +1561,24 @@ enum {
 static GstObject *padtemplate_parent_class = NULL;
 static guint gst_padtemplate_signals[TEMPL_LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_padtemplate_get_type (void)
 {
-  static GtkType padtemplate_type = 0;
+  static GType padtemplate_type = 0;
 
   if (!padtemplate_type) {
-    static const GtkTypeInfo padtemplate_info = {
-      "GstPadTemplate",
-      sizeof(GstPadTemplate),
+    static const GTypeInfo padtemplate_info = {
       sizeof(GstPadTemplateClass),
-      (GtkClassInitFunc)gst_padtemplate_class_init,
-      (GtkObjectInitFunc)gst_padtemplate_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_padtemplate_class_init,
+      NULL,
+      NULL,
+      sizeof(GstPadTemplate),
+      32,
+      (GInstanceInitFunc)gst_padtemplate_init,
     };
-    padtemplate_type = gtk_type_unique(GST_TYPE_OBJECT,&padtemplate_info);
+    padtemplate_type = g_type_register_static(GST_TYPE_OBJECT, "GstPadTemplate", &padtemplate_info, 0);
   }
   return padtemplate_type;
 }
@@ -1579,21 +1586,20 @@ gst_padtemplate_get_type (void)
 static void
 gst_padtemplate_class_init (GstPadTemplateClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
   gstobject_class = (GstObjectClass*)klass;
 
-  padtemplate_parent_class = gtk_type_class(GST_TYPE_OBJECT);
+  padtemplate_parent_class = g_type_class_ref(GST_TYPE_OBJECT);
 
   gst_padtemplate_signals[TEMPL_PAD_CREATED] =
-    gtk_signal_new ("pad_created", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstPadTemplateClass, pad_created),
-                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+    g_signal_newc ("pad_created", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstPadTemplateClass, pad_created), NULL, NULL,
+                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     GST_TYPE_PAD);
 
-  gtk_object_class_add_signals (gtkobject_class, gst_padtemplate_signals, TEMPL_LAST_SIGNAL);
 
   gstobject_class->path_string_separator = "*";
 }
@@ -1626,7 +1632,7 @@ gst_padtemplate_new (gchar *name_template,
 
   g_return_val_if_fail (name_template != NULL, NULL);
 
-  new = gtk_type_new (gst_padtemplate_get_type ());
+  new = g_object_new(gst_padtemplate_get_type () ,NULL);
 
   GST_PADTEMPLATE_NAME_TEMPLATE (new) = name_template;
   GST_PADTEMPLATE_DIRECTION (new) = direction;
@@ -1872,22 +1878,23 @@ static void     gst_ghost_pad_init               (GstGhostPad *pad);
 static GstPad *ghost_pad_parent_class = NULL;
 //static guint gst_ghost_pad_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_ghost_pad_get_type(void) {
-  static GtkType pad_type = 0;
+  static GType pad_type = 0;
 
   if (!pad_type) {
-    static const GtkTypeInfo pad_info = {
-      "GstGhostPad",
-      sizeof(GstGhostPad),
+    static const GTypeInfo pad_info = {
       sizeof(GstGhostPadClass),
-      (GtkClassInitFunc)gst_ghost_pad_class_init,
-      (GtkObjectInitFunc)gst_ghost_pad_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_ghost_pad_class_init,
+      NULL,
+      NULL,
+      sizeof(GstGhostPad),
+      8,
+      (GInstanceInitFunc)gst_ghost_pad_init,
     };
-    pad_type = gtk_type_unique(GST_TYPE_PAD,&pad_info);
+    pad_type = g_type_register_static(GST_TYPE_PAD, "GstGhostPad", &pad_info, 0);
   }
   return pad_type;
 }
@@ -1895,11 +1902,11 @@ gst_ghost_pad_get_type(void) {
 static void
 gst_ghost_pad_class_init (GstGhostPadClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
 
-  ghost_pad_parent_class = gtk_type_class(GST_TYPE_PAD);
+  ghost_pad_parent_class = g_type_class_ref(GST_TYPE_PAD);
 }
 
 static void
@@ -1926,7 +1933,7 @@ gst_ghost_pad_new (gchar *name,
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD(pad), NULL);
 
-  ghostpad = gtk_type_new (gst_ghost_pad_get_type ());
+  ghostpad = g_object_new(gst_ghost_pad_get_type () ,NULL);
   gst_pad_set_name (GST_PAD (ghostpad), name);
   GST_GPAD_REALPAD(ghostpad) = GST_PAD_REALIZE(pad);
   GST_PAD_PADTEMPLATE(ghostpad) = GST_PAD_PADTEMPLATE(pad);

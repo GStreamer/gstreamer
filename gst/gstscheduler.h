@@ -36,13 +36,13 @@ extern "C" {
 #define GST_TYPE_SCHEDULE \
   (gst_schedule_get_type())
 #define GST_SCHEDULE(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_SCHEDULE,GstSchedule))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SCHEDULE,GstSchedule))
 #define GST_SCHEDULE_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_SCHEDULE,GstScheduleClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SCHEDULE,GstScheduleClass))
 #define GST_IS_SCHEDULE(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_SCHEDULE))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SCHEDULE))
 #define GST_IS_SCHEDULE_CLASS(klass) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_SCHEDULE))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SCHEDULE))
 
 
 #define GST_SCHED_PARENT(sched)		((sched)->parent)
@@ -126,7 +126,7 @@ struct _GstScheduleChain {
 };
 
 
-GtkType			gst_schedule_get_type		(void);
+GType			gst_schedule_get_type		(void);
 GstSchedule*		gst_schedule_new		(GstElement *parent);
 
 void			gst_schedule_add_element	(GstSchedule *sched, GstElement *element);

@@ -70,8 +70,8 @@ enum {
 static void			gst_queue_class_init	(GstQueueClass *klass);
 static void			gst_queue_init		(GstQueue *queue);
 
-static void			gst_queue_set_arg	(GtkObject *object, GtkArg *arg, guint id);
-static void			gst_queue_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void			gst_queue_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void			gst_queue_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static gboolean			gst_queue_handle_eos	(GstPad *pad);
 static GstPadNegotiateReturn 	gst_queue_handle_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data);
@@ -85,17 +85,17 @@ static void			gst_queue_flush		(GstQueue *queue);
 static GstElementStateReturn	gst_queue_change_state	(GstElement *element);
 
   
-static GtkType
+static GType
 queue_leaky_get_type(void) {
-  static GtkType queue_leaky_type = 0;
-  static GtkEnumValue queue_leaky[] = {
+  static GType queue_leaky_type = 0;
+  static GEnumValue queue_leaky[] = {
     { GST_QUEUE_NO_LEAK, "0", "Not Leaky" },
     { GST_QUEUE_LEAK_UPSTREAM, "1", "Leaky on Upstream" },
     { GST_QUEUE_LEAK_DOWNSTREAM, "2", "Leaky on Downstream" },
     { 0, NULL, NULL },
   };
   if (!queue_leaky_type) {
-    queue_leaky_type = gtk_type_register_enum("GstQueueLeaky", queue_leaky);
+    queue_leaky_type = g_enum_register_static("GstQueueLeaky", queue_leaky);
   }
   return queue_leaky_type;
 }
@@ -105,22 +105,23 @@ queue_leaky_get_type(void) {
 static GstElementClass *parent_class = NULL;
 //static guint gst_queue_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_queue_get_type(void) {
-  static GtkType queue_type = 0;
+  static GType queue_type = 0;
 
   if (!queue_type) {
-    static const GtkTypeInfo queue_info = {
-      "GstQueue",
-      sizeof(GstQueue),
+    static const GTypeInfo queue_info = {
       sizeof(GstQueueClass),
-      (GtkClassInitFunc)gst_queue_class_init,
-      (GtkObjectInitFunc)gst_queue_init,
-      (GtkArgSetFunc)gst_queue_set_arg,
-      (GtkArgGetFunc)gst_queue_get_arg,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_queue_class_init,
+      NULL,
+      NULL,
+      sizeof(GstQueue),
+      4,
+      (GInstanceInitFunc)gst_queue_init,
     };
-    queue_type = gtk_type_unique (GST_TYPE_ELEMENT, &queue_info);
+    queue_type = g_type_register_static (GST_TYPE_ELEMENT, "GstQueue", &queue_info, 0);
   }
   return queue_type;
 }
@@ -128,23 +129,34 @@ gst_queue_get_type(void) {
 static void
 gst_queue_class_init (GstQueueClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+/*
   gtk_object_add_arg_type ("GstQueue::leaky", GST_TYPE_QUEUE_LEAKY,
                            GTK_ARG_READWRITE, ARG_LEAKY);
-  gtk_object_add_arg_type ("GstQueue::level", GTK_TYPE_INT,
+  gtk_object_add_arg_type ("GstQueue::level", G_TYPE_INT,
                            GTK_ARG_READABLE, ARG_LEVEL);
-  gtk_object_add_arg_type ("GstQueue::max_level", GTK_TYPE_INT,
+  gtk_object_add_arg_type ("GstQueue::max_level", G_TYPE_INT,
                            GTK_ARG_READWRITE, ARG_MAX_LEVEL);
+*/
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LEAKY,
+    g_param_spec_enum("leaky","Leaky","Where the queue leaks, if at all.",
+                      GST_TYPE_QUEUE_LEAKY,GST_QUEUE_NO_LEAK,G_PARAM_READWRITE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LEVEL,
+    g_param_spec_int("level","Level","How many buffers are in the queue.",
+                     0,G_MAXINT,0,G_PARAM_READABLE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MAX_LEVEL,
+    g_param_spec_int("max_level","Maximum Level","How many buffers the queue holds.",
+                     0,G_MAXINT,100,G_PARAM_READWRITE));
 
-  gtkobject_class->set_arg = gst_queue_set_arg;
-  gtkobject_class->get_arg = gst_queue_get_arg;
+  gobject_class->set_property = gst_queue_set_property;
+  gobject_class->get_property = gst_queue_get_property;
 
   gstelement_class->change_state = gst_queue_change_state;
 }
@@ -306,16 +318,16 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
     while (queue->level_buffers >= queue->size_buffers) {
       // if there's a pending state change for this queue or its manager, switch
       // back to iterator so bottom half of state change executes
-      if (GST_STATE_PENDING(queue) != GST_STATE_NONE_PENDING ||
-//          GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_NONE_PENDING)
+      if (GST_STATE_PENDING(queue) != GST_STATE_VOID_PENDING ||
+//          GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_VOID_PENDING)
 GST_STATE_PENDING(GST_SCHED_PARENT(GST_ELEMENT_SCHED(GST_PAD_PARENT(GST_PAD_PEER(queue->sinkpad))))) != 
-GST_STATE_NONE_PENDING)
+GST_STATE_VOID_PENDING)
       {
         GST_DEBUG(GST_CAT_DATAFLOW,"interrupted!!\n");
-        if (GST_STATE_PENDING(queue) != GST_STATE_NONE_PENDING)
-          GST_DEBUG(GST_CAT_DATAFLOW,"GST_STATE_PENDING(queue) != GST_STATE_NONE_PENDING)\n");
-        if (GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_NONE_PENDING)
-          GST_DEBUG(GST_CAT_DATAFLOW,"GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_NONE_PENDING\n");
+        if (GST_STATE_PENDING(queue) != GST_STATE_VOID_PENDING)
+          GST_DEBUG(GST_CAT_DATAFLOW,"GST_STATE_PENDING(queue) != GST_STATE_VOID_PENDING)\n");
+        if (GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_VOID_PENDING)
+          GST_DEBUG(GST_CAT_DATAFLOW,"GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_VOID_PENDING\n");
         GST_UNLOCK(queue);
         cothread_switch(cothread_current_main());
       }
@@ -376,16 +388,16 @@ gst_queue_get (GstPad *pad)
 
     // if there's a pending state change for this queue or its manager, switch
     // back to iterator so bottom half of state change executes
-    if (GST_STATE_PENDING(queue) != GST_STATE_NONE_PENDING ||
-//        GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_NONE_PENDING)
+    if (GST_STATE_PENDING(queue) != GST_STATE_VOID_PENDING ||
+//        GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_VOID_PENDING)
 GST_STATE_PENDING(GST_SCHED_PARENT(GST_ELEMENT_SCHED(GST_PAD_PARENT(GST_PAD_PEER(queue->srcpad))))) != 
-GST_STATE_NONE_PENDING)
+GST_STATE_VOID_PENDING)
     {
       GST_DEBUG(GST_CAT_DATAFLOW,"interrupted!!\n");
-      if (GST_STATE_PENDING(queue) != GST_STATE_NONE_PENDING)
-        GST_DEBUG(GST_CAT_DATAFLOW,"GST_STATE_PENDING(queue) != GST_STATE_NONE_PENDING)\n");
-      if (GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_NONE_PENDING)
-        GST_DEBUG(GST_CAT_DATAFLOW,"GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_NONE_PENDING\n");
+      if (GST_STATE_PENDING(queue) != GST_STATE_VOID_PENDING)
+        GST_DEBUG(GST_CAT_DATAFLOW,"GST_STATE_PENDING(queue) != GST_STATE_VOID_PENDING)\n");
+      if (GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_VOID_PENDING)
+        GST_DEBUG(GST_CAT_DATAFLOW,"GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_VOID_PENDING\n");
       GST_UNLOCK(queue);
       cothread_switch(cothread_current_main());
     }
@@ -435,11 +447,12 @@ gst_queue_change_state (GstElement *element)
     gst_queue_flush (queue);
   }
 
-  /* if we haven't failed already, give the parent class a chance to ;-) */
+/* FIXME FIXME FIXME FIXME FIXME!!!!
+  // if we haven't failed already, give the parent class a chance to ;-)
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
   {
     gboolean valid_handler = FALSE;
-    guint state_change_id = gtk_signal_lookup("state_change", GTK_OBJECT_TYPE(element));
+    guint state_change_id = gtk_signal_lookup("state_change", G_OBJECT_TYPE(element));
 
     // determine whether we need to block the parent (element) class'
     // STATE_CHANGE signal so we can UNLOCK before returning.  we block
@@ -450,22 +463,23 @@ gst_queue_change_state (GstElement *element)
     // if element change_state() emits other signals, they need to be blocked
     // as well.
     if (state_change_id &&
-        gtk_signal_handler_pending(GTK_OBJECT(element), state_change_id, FALSE))
+        gtk_signal_handler_pending(G_OBJECT(element), state_change_id, FALSE))
       valid_handler = TRUE;
     if (valid_handler)
-      gtk_signal_handler_block(GTK_OBJECT(element), state_change_id);
+      gtk_signal_handler_block(G_OBJECT(element), state_change_id);
 
     ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
     if (valid_handler)
-      gtk_signal_handler_unblock(GTK_OBJECT(element), state_change_id);
+      gtk_signal_handler_unblock(G_OBJECT(element), state_change_id);
 
     // UNLOCK, *then* emit signal (if there's one there)
     GST_UNLOCK(queue);
     if (valid_handler)
-      gtk_signal_emit(GTK_OBJECT (element), state_change_id, GST_STATE(element));
+      gtk_signal_emit(G_OBJECT (element), state_change_id, GST_STATE(element));
   }
   else
+*/
   {
     ret = GST_STATE_SUCCESS;
     GST_UNLOCK(queue);
@@ -476,7 +490,7 @@ gst_queue_change_state (GstElement *element)
 
 
 static void
-gst_queue_set_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_queue_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstQueue *queue;
 
@@ -485,20 +499,21 @@ gst_queue_set_arg (GtkObject *object, GtkArg *arg, guint id)
 
   queue = GST_QUEUE (object);
 
-  switch(id) {
+  switch (prop_id) {
     case ARG_LEAKY:
-      queue->leaky = GTK_VALUE_INT (*arg);
+      queue->leaky = g_value_get_int(value);
       break;
     case ARG_MAX_LEVEL:
-      queue->size_buffers = GTK_VALUE_INT (*arg);
+      queue->size_buffers = g_value_get_int(value);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
 static void
-gst_queue_get_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_queue_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstQueue *queue;
 
@@ -507,18 +522,18 @@ gst_queue_get_arg (GtkObject *object, GtkArg *arg, guint id)
 
   queue = GST_QUEUE (object);
 
-  switch (id) {
+  switch (prop_id) {
     case ARG_LEAKY:
-      GTK_VALUE_INT (*arg) = queue->leaky;
+      g_value_set_int(value, queue->leaky);
       break;
     case ARG_LEVEL:
-      GTK_VALUE_INT (*arg) = queue->level_buffers;
+      g_value_set_int(value, queue->level_buffers);
       break;
     case ARG_MAX_LEVEL:
-      GTK_VALUE_INT (*arg) = queue->size_buffers;
+      g_value_set_int(value, queue->size_buffers);
       break;
     default:
-      arg->type = GTK_TYPE_INVALID;
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

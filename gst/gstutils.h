@@ -24,22 +24,22 @@
 #ifndef __GST_UTILS_H__
 #define __GST_UTILS_H__
 
-#include <gtk/gtk.h>
+#include <glib.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-gint 		gst_util_get_int_arg		(GtkObject *object, guchar *argname);
-gboolean	gst_util_get_bool_arg		(GtkObject *object, guchar *argname);
-glong 		gst_util_get_long_arg		(GtkObject *object, guchar *argname);
-gfloat 		gst_util_get_float_arg		(GtkObject *object, guchar *argname);
-gdouble 	gst_util_get_double_arg		(GtkObject *object, guchar *argname);
-guchar*		gst_util_get_string_arg		(GtkObject *object, guchar *argname);
-gpointer 	gst_util_get_pointer_arg	(GtkObject *object, guchar *argname);
-GtkWidget*	gst_util_get_widget_arg		(GtkObject *object, guchar *argname);
+gint 		gst_util_get_int_arg		(GObject *object, gchar *argname);
+gboolean	gst_util_get_bool_arg		(GObject *object, gchar *argname);
+glong 		gst_util_get_long_arg		(GObject *object, gchar *argname);
+gfloat 		gst_util_get_float_arg		(GObject *object, gchar *argname);
+gdouble 	gst_util_get_double_arg		(GObject *object, gchar *argname);
+gchar*		gst_util_get_string_arg		(GObject *object, gchar *argname);
+gpointer 	gst_util_get_pointer_arg	(GObject *object, gchar *argname);
+//GtkWidget*	gst_util_get_widget_property	(GObject *object, gchar *argname);
 
-void 		gst_util_set_object_arg 	(GtkObject *object, guchar *name, gchar *value);
+void 		gst_util_set_object_arg 	(GObject *object, gchar *name, gchar *value);
 	
 void 		gst_util_dump_mem		(guchar *mem, guint size);
 

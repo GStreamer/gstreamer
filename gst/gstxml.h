@@ -41,13 +41,13 @@ extern "C" {
 #define GST_TYPE_XML \
   (gst_xml_get_type())
 #define GST_XML(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_XML,GstXML))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_XML,GstXML))
 #define GST_XML_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_XML,GstXMLClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_XML,GstXMLClass))
 #define GST_IS_XML(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_XML))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_XML))
 #define GST_IS_XML_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_XML))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_XML))
 
 typedef struct _GstXML GstXML;
 typedef struct _GstXMLClass GstXMLClass;
@@ -68,7 +68,7 @@ struct _GstXMLClass {
   void (*object_saved)          (GstXML *xml, GstObject *object, xmlNodePtr self);
 };
 
-GtkType		gst_xml_get_type	(void);
+GType		gst_xml_get_type	(void);
 
 
 /* create an XML document out of a pipeline */

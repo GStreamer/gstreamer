@@ -61,10 +61,10 @@ enum {
 static void			gst_thread_class_init		(GstThreadClass *klass);
 static void			gst_thread_init			(GstThread *thread);
 
-static void 			gst_thread_real_destroy 	(GtkObject *gtk_object);
+static void 			gst_thread_real_destroy 	(GObject *gtk_object);
 
-static void			gst_thread_set_arg		(GtkObject *object, GtkArg *arg, guint id);
-static void			gst_thread_get_arg		(GtkObject *object, GtkArg *arg, guint id);
+static void			gst_thread_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void			gst_thread_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static GstElementStateReturn	gst_thread_change_state		(GstElement *element);
 
@@ -78,22 +78,23 @@ static void*			gst_thread_main_loop		(void *arg);
 static GstBinClass *parent_class = NULL;
 //static guint gst_thread_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_thread_get_type(void) {
-  static GtkType thread_type = 0;
+  static GType thread_type = 0;
 
   if (!thread_type) {
-    static const GtkTypeInfo thread_info = {
-      "GstThread",
-      sizeof(GstThread),
+    static const GTypeInfo thread_info = {
       sizeof(GstThreadClass),
-      (GtkClassInitFunc)gst_thread_class_init,
-      (GtkObjectInitFunc)gst_thread_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_thread_class_init,
+      NULL,
+      NULL,
+      sizeof(GstThread),
+      4,
+      (GInstanceInitFunc)gst_thread_init,
     };
-    thread_type = gtk_type_unique(GST_TYPE_BIN,&thread_info);
+    thread_type = g_type_register_static(GST_TYPE_BIN, "GstThread", &thread_info, 0);
   }
   return thread_type;
 }
@@ -101,22 +102,28 @@ gst_thread_get_type(void) {
 static void
 gst_thread_class_init (GstThreadClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
   GstElementClass *gstelement_class;
   GstBinClass *gstbin_class;
 
-  gtkobject_class =	(GtkObjectClass*)klass;
+  gobject_class =	(GObjectClass*)klass;
   gstobject_class =	(GstObjectClass*)klass;
   gstelement_class =	(GstElementClass*)klass;
   gstbin_class =	(GstBinClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_BIN);
+  parent_class = g_type_class_ref (GST_TYPE_BIN);
 
-  gtk_object_add_arg_type ("GstThread::create_thread", GTK_TYPE_BOOL,
+/*
+  gtk_object_add_arg_type ("GstThread::create_thread", G_TYPE_BOOL,
                            GTK_ARG_READWRITE, ARG_CREATE_THREAD);
+*/
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CREATE_THREAD,
+    g_param_spec_boolean("create_thread", "Create Thread", "Whether to create a thread.",
+                         TRUE,G_PARAM_READWRITE));
 
-  gtkobject_class->destroy =		gst_thread_real_destroy;
+// FIXME!
+//  gobject_class->destroy =		gst_thread_real_destroy;
 
   gstobject_class->save_thyself =	gst_thread_save_thyself;
   gstobject_class->restore_thyself =	gst_thread_restore_thyself;
@@ -125,8 +132,8 @@ gst_thread_class_init (GstThreadClass *klass)
 
 //  gstbin_class->schedule = gst_thread_schedule_dummy;
 
-  gtkobject_class->set_arg = gst_thread_set_arg;
-  gtkobject_class->get_arg = gst_thread_get_arg;
+  gobject_class->set_property = gst_thread_set_property;
+  gobject_class->get_property = gst_thread_get_property;
 
 }
 
@@ -154,7 +161,7 @@ gst_thread_init (GstThread *thread)
 }
 
 static void
-gst_thread_real_destroy (GtkObject *gtk_object)
+gst_thread_real_destroy (GObject *gtk_object)
 {
   GstThread *thread = GST_THREAD (gtk_object);
 
@@ -163,24 +170,23 @@ gst_thread_real_destroy (GtkObject *gtk_object)
   g_mutex_free (thread->lock);
   g_cond_free (thread->cond);
 
-  if (GTK_OBJECT_CLASS (parent_class)->destroy)
-    GTK_OBJECT_CLASS (parent_class)->destroy (gtk_object);
+// FIXME!
+//  if (G_OBJECT_CLASS (parent_class)->destroy)
+//    G_OBJECT_CLASS (parent_class)->destroy (gtk_object);
 
   gst_object_destroy (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
   gst_object_unref (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
 }
 
 static void
-gst_thread_set_arg (GtkObject *object,
-		    GtkArg *arg,
-		    guint id)
+gst_thread_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_THREAD (object));
 
-  switch(id) {
+  switch (prop_id) {
     case ARG_CREATE_THREAD:
-      if (GTK_VALUE_BOOL (*arg)) {
+      if (g_value_get_boolean(value)) {
         GST_INFO (GST_CAT_THREAD,"turning ON the creation of the thread");
         GST_FLAG_SET (object, GST_THREAD_CREATE);
 //        GST_DEBUG (GST_CAT_THREAD,"flags are 0x%08x\n", GST_FLAGS (object));
@@ -191,23 +197,23 @@ gst_thread_set_arg (GtkObject *object,
       }
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
 static void
-gst_thread_get_arg (GtkObject *object,
-		    GtkArg *arg,
-		    guint id)
+gst_thread_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_THREAD (object));
 
-  switch (id) {
+  switch (prop_id) {
     case ARG_CREATE_THREAD:
-      GTK_VALUE_BOOL (*arg) = GST_FLAG_IS_SET (object, GST_THREAD_CREATE);
+      g_value_set_boolean(value, GST_FLAG_IS_SET (object, GST_THREAD_CREATE));
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -464,7 +470,7 @@ gst_thread_change_state (GstElement *element)
 static void gst_thread_update_state (GstThread *thread)
 {
   // check for state change
-  if (GST_STATE_PENDING(thread) != GST_STATE_NONE_PENDING) {
+  if (GST_STATE_PENDING(thread) != GST_STATE_VOID_PENDING) {
     // punt and change state on all the children
     if (GST_ELEMENT_CLASS (parent_class)->change_state)
       GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT(thread));

@@ -24,9 +24,11 @@
 #ifndef __GST_OBJECT_H__
 #define __GST_OBJECT_H__
 
-#include <gtk/gtk.h>
+#include <glib-object.h>
 #include <gst/gsttrace.h>
 #include <parser.h>
+
+#include <gst/gstmarshal.h>
 
 #include <gst/gsttypes.h>
 
@@ -49,13 +51,13 @@ extern "C" {
 #define GST_TYPE_OBJECT \
   (gst_object_get_type())
 #define GST_OBJECT(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_OBJECT,GstObject))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OBJECT,GstObject))
 #define GST_OBJECT_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_OBJECT,GstObjectClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OBJECT,GstObjectClass))
 #define GST_IS_OBJECT(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_OBJECT))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OBJECT))
 #define GST_IS_OBJECT_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_OBJECT))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OBJECT))
 
 //typedef struct _GstObject GstObject;
 //typedef struct _GstObjectClass GstObjectClass;
@@ -69,7 +71,7 @@ typedef enum
 } GstObjectFlags;
 
 struct _GstObject {
-  GtkObject object;
+  GObject object;
 
   gchar *name;
   /* have to have a refcount for the object */
@@ -89,10 +91,10 @@ struct _GstObject {
 };
 
 struct _GstObjectClass {
-  GtkObjectClass	parent_class;
+  GObjectClass	parent_class;
 
   gchar			*path_string_separator;
-  GtkObject		*signal_object;
+  GObject		*signal_object;
 
   /* signals */
   void		(*parent_set)		(GstObject *object, GstObject *parent);
@@ -123,8 +125,8 @@ struct _GstObjectClass {
 #define GST_GET_LOCK(obj)	(GST_OBJECT(obj)->lock)
 
 
-/* normal GtkObject stuff */
-GtkType		gst_object_get_type		(void);
+/* normal GObject stuff */
+GType		gst_object_get_type		(void);
 GstObject*	gst_object_new			(void);
 
 /* name routines */
@@ -153,7 +155,7 @@ gchar *		gst_object_get_path_string	(GstObject *object);
 
 guint		gst_class_signal_connect	(GstObjectClass	*klass,
 						 const gchar	*name,
-						 GtkSignalFunc	func,
+						 gpointer	func,
 						 gpointer	func_data);
 
 void		gst_class_signal_emit_by_name	(GstObject	*object,

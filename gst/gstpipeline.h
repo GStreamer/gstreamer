@@ -37,13 +37,13 @@ extern GstElementDetails gst_pipeline_details;
 #define GST_TYPE_PIPELINE \
   (gst_pipeline_get_type())
 #define GST_PIPELINE(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_PIPELINE,GstPipeline))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PIPELINE,GstPipeline))
 #define GST_PIPELINE_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_PIPELINE,GstPipelineClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PIPELINE,GstPipelineClass))
 #define GST_IS_PIPELINE(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_PIPELINE))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PIPELINE))
 #define GST_IS_PIPELINE_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_PIPELINE))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PIPELINE))
 
 typedef struct _GstPipeline GstPipeline;
 typedef struct _GstPipelineClass GstPipelineClass;
@@ -56,7 +56,7 @@ struct _GstPipelineClass {
   GstBinClass parent_class;
 };
 
-GtkType		gst_pipeline_get_type		(void);
+GType		gst_pipeline_get_type		(void);
 GstElement*	gst_pipeline_new		(const guchar *name);
 #define		gst_pipeline_destroy(pipeline)	gst_object_destroy(GST_OBJECT(pipeline))
 

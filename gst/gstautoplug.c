@@ -44,22 +44,23 @@ static void     gst_autoplug_init       (GstAutoplug *autoplug);
 static GstObjectClass *parent_class = NULL;
 static guint gst_autoplug_signals[LAST_SIGNAL] = { 0 };
 
-GtkType gst_autoplug_get_type(void)
+GType gst_autoplug_get_type(void)
 {
-  static GtkType autoplug_type = 0;
+  static GType autoplug_type = 0;
 
   if (!autoplug_type) {
-    static const GtkTypeInfo autoplug_info = {
-      "GstAutoplug",
-      sizeof(GstAutoplug),
+    static const GTypeInfo autoplug_info = {
       sizeof(GstAutoplugClass),
-      (GtkClassInitFunc)gst_autoplug_class_init,
-      (GtkObjectInitFunc)gst_autoplug_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_autoplug_class_init,
+      NULL,
+      NULL,
+      sizeof(GstAutoplug),
+      4,
+      (GInstanceInitFunc)gst_autoplug_init,
     };
-    autoplug_type = gtk_type_unique (GST_TYPE_OBJECT, &autoplug_info);
+    autoplug_type = g_type_register_static (GST_TYPE_OBJECT, "GstAutoplug", &autoplug_info, 0);
   }
   return autoplug_type;
 }
@@ -67,21 +68,19 @@ GtkType gst_autoplug_get_type(void)
 static void
 gst_autoplug_class_init(GstAutoplugClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
 
-  gtkobject_class = (GtkObjectClass*) klass;
+  gobject_class = (GObjectClass*) klass;
   gstobject_class = (GstObjectClass*) klass;
 
-  parent_class = gtk_type_class(GST_TYPE_OBJECT);
+  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
   gst_autoplug_signals[NEW_OBJECT] =
-    gtk_signal_new ("new_object", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstAutoplugClass, new_object),
-                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+    g_signal_newc ("new_object", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstAutoplugClass, new_object), NULL, NULL,
+                    g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                     GST_TYPE_OBJECT);
-
-  gtk_object_class_add_signals (gtkobject_class, gst_autoplug_signals, LAST_SIGNAL);
 }
 
 static void gst_autoplug_init(GstAutoplug *autoplug)
@@ -107,7 +106,7 @@ _gst_autoplug_initialize (void)
 void
 gst_autoplug_signal_new_object (GstAutoplug *autoplug, GstObject *object)
 {
-  gtk_signal_emit (GTK_OBJECT (autoplug), gst_autoplug_signals[NEW_OBJECT], object);
+  g_signal_emit (G_OBJECT (autoplug), gst_autoplug_signals[NEW_OBJECT], 0, object);
 }
 
 
@@ -132,7 +131,7 @@ gst_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *sinkcaps
 
   va_start (args, sinkcaps);
 
-  oclass = GST_AUTOPLUG_CLASS (GTK_OBJECT (autoplug)->klass);
+  oclass = GST_AUTOPLUG_CLASS (G_OBJECT_GET_CLASS(autoplug));
   if (oclass->autoplug_to_caps)
     element = (oclass->autoplug_to_caps) (autoplug, srccaps, sinkcaps, args);
 
@@ -162,7 +161,7 @@ gst_autoplug_to_renderers (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *
 
   va_start (args, target);
 
-  oclass = GST_AUTOPLUG_CLASS (GTK_OBJECT (autoplug)->klass);
+  oclass = GST_AUTOPLUG_CLASS (G_OBJECT_GET_CLASS(autoplug));
   if (oclass->autoplug_to_renderers)
     element = (oclass->autoplug_to_renderers) (autoplug, srccaps, target, args);
 
@@ -183,7 +182,7 @@ gst_autoplug_to_renderers (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *
  * Returns: a new #GstAutoplugFactory.
  */
 GstAutoplugFactory*
-gst_autoplugfactory_new (const gchar *name, const gchar *longdesc, GtkType type)
+gst_autoplugfactory_new (const gchar *name, const gchar *longdesc, GType type)
 {
   GstAutoplugFactory *factory;
 
@@ -280,7 +279,7 @@ gst_autoplugfactory_create (GstAutoplugFactory *factory)
   g_return_val_if_fail (factory != NULL, NULL);
   g_return_val_if_fail (factory->type != 0, NULL);
 
-  new = GST_AUTOPLUG (gtk_type_new (factory->type));
+  new = GST_AUTOPLUG (g_object_new(factory->type,NULL));
 
   return new;
 }

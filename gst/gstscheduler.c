@@ -100,13 +100,13 @@ gst_schedule_src_wrapper (int argc,char *argv[])
       pads = g_list_next(pads);
       if (GST_RPAD_DIRECTION(realpad) == GST_PAD_SRC) {
         GST_DEBUG (GST_CAT_DATAFLOW,"calling _getfunc for %s:%s\n",GST_DEBUG_PAD_NAME(realpad));
-        if (realpad->regiontype != GST_REGION_NONE) {
+        if (realpad->regiontype != GST_REGION_VOID) {
           g_return_val_if_fail (GST_RPAD_GETREGIONFUNC(realpad) != NULL, 0);
 //          if (GST_RPAD_GETREGIONFUNC(realpad) == NULL)
 //            fprintf(stderr,"error, no getregionfunc in \"%s\"\n", name);
 //          else
           buf = (GST_RPAD_GETREGIONFUNC(realpad))((GstPad*)realpad,realpad->regiontype,realpad->offset,realpad->len);
-	  realpad->regiontype = GST_REGION_NONE;
+	  realpad->regiontype = GST_REGION_VOID;
         } else {
           g_return_val_if_fail (GST_RPAD_GETFUNC(realpad) != NULL, 0);
 //          if (GST_RPAD_GETFUNC(realpad) == NULL)
@@ -429,7 +429,7 @@ void gst_bin_schedule_func(GstBin *bin) {
       GST_DEBUG (GST_CAT_SCHEDULING,"adding '%s' to chain\n",GST_ELEMENT_NAME(element));
       chain->elements = g_list_prepend (chain->elements, element);
       chain->num_elements++;
-      gtk_signal_connect (GTK_OBJECT (element), "eos", gst_scheduler_handle_eos, chain);
+      gtk_signal_connect (G_OBJECT (element), "eos", gst_scheduler_handle_eos, chain);
       // set the cothreads flag as appropriate
       if (GST_FLAG_IS_SET (element, GST_ELEMENT_USE_COTHREAD))
         chain->need_cothreads = TRUE;
@@ -479,7 +479,7 @@ void gst_bin_schedule_func(GstBin *bin) {
             if ((GST_RPAD_DIRECTION(pad) == GST_PAD_SINK) &&
                 (GST_FLAG_IS_SET (peerparent, GST_ELEMENT_DECOUPLED))) {
               chain->entries = g_list_prepend (chain->entries, peerparent);
-              gtk_signal_connect (GTK_OBJECT (peerparent), "eos", gst_scheduler_handle_eos, chain);
+              gtk_signal_connect (G_OBJECT (peerparent), "eos", gst_scheduler_handle_eos, chain);
               GST_DEBUG (GST_CAT_SCHEDULING,"added '%s' as DECOUPLED entry into the chain\n",GST_ELEMENT_NAME(peerparent));
             }
           } else
@@ -798,21 +798,22 @@ static void	gst_schedule_init	(GstSchedule *schedule);
 
 static GstObjectClass *parent_class = NULL;
 
-GtkType gst_schedule_get_type(void) {
-  static GtkType schedule_type = 0;
+GType gst_schedule_get_type(void) {
+  static GType schedule_type = 0;
 
   if (!schedule_type) {
-    static const GtkTypeInfo schedule_info = {
-      "GstSchedule",
-      sizeof(GstSchedule),
+    static const GTypeInfo schedule_info = {
       sizeof(GstScheduleClass),
-      (GtkClassInitFunc)gst_schedule_class_init,
-      (GtkObjectInitFunc)gst_schedule_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_schedule_class_init,
+      NULL,
+      NULL,
+      sizeof(GstSchedule),
+      0,
+      (GInstanceInitFunc)gst_schedule_init,
     };
-    schedule_type = gtk_type_unique(GST_TYPE_OBJECT,&schedule_info);
+    schedule_type = g_type_register_static(GST_TYPE_OBJECT, "GstSchedule", &schedule_info, 0);
   }
   return schedule_type;
 }
@@ -820,7 +821,7 @@ GtkType gst_schedule_get_type(void) {
 static void
 gst_schedule_class_init (GstScheduleClass *klass)
 {
-  parent_class = gtk_type_class(GST_TYPE_OBJECT);
+  parent_class = g_type_class_ref(GST_TYPE_OBJECT);
 }
 
 static void
@@ -840,7 +841,7 @@ gst_schedule_init (GstSchedule *schedule)
 GstSchedule*
 gst_schedule_new(GstElement *parent)
 {
-  GstSchedule *sched = GST_SCHEDULE (gtk_type_new (GST_TYPE_SCHEDULE));
+  GstSchedule *sched = GST_SCHEDULE (g_object_new(GST_TYPE_SCHEDULE,NULL));
 
   sched->parent = parent;
 
@@ -1339,7 +1340,7 @@ GST_DEBUG(GST_CAT_SCHEDULING,"there are %d elements in this chain\n",chain->num_
           // if it was, return to gstthread.c::gst_thread_main_loop() to
           // execute the state change.
           GST_DEBUG (GST_CAT_DATAFLOW,"cothread switch ended or interrupted\n");
-          if (GST_STATE_PENDING(GST_SCHEDULE(sched)->parent) != GST_STATE_NONE_PENDING)
+          if (GST_STATE_PENDING(GST_SCHEDULE(sched)->parent) != GST_STATE_VOID_PENDING)
           {
             GST_DEBUG (GST_CAT_DATAFLOW,"handle pending state %d\n",
                        GST_STATE_PENDING(GST_SCHEDULE(sched)->parent));
