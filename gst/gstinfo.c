@@ -48,7 +48,7 @@ static gchar *_gst_info_category_strings[] = {
   "AUTOPLUG_ATTEMPT",
   "PARENTAGE",
   "STATES",
-  "PLANING",
+  "PLANNING",
   "SCHEDULING",
   "OPERATION",
   "BUFFER",
@@ -129,6 +129,10 @@ gst_default_info_handler (gint category, gchar *file, gchar *function,
 {
   gchar *empty = "";
   gchar *elementname = empty,*location = empty;
+  int cothread_id = cothread_getcurrent();
+#ifdef GST_DEBUG_COLOR
+  int cothread_color = (cothread_id < 0) ? 37 : (cothread_id%6 + 31);
+#endif
 
   if (debug_string == NULL) debug_string = "";
   if (category != GST_CAT_GST_INIT)
@@ -138,11 +142,12 @@ gst_default_info_handler (gint category, gchar *file, gchar *function,
 
 #ifdef GST_DEBUG_ENABLED
   #ifdef GST_DEBUG_COLOR
-    fprintf(stderr,"INFO(%d:%d):\033[" GST_DEBUG_CHAR_MODE ";%sm%s%s\033[00m %s\n",
-            getpid(),cothread_getcurrent(),_gst_category_colors[category],location,elementname,string);
+    fprintf(stderr,"INFO(%d:\033[00;%dm%d\033[00m):\033[" GST_DEBUG_CHAR_MODE ";%sm%s%s\033[00m %s\n",
+            getpid(),cothread_color,cothread_id,
+            _gst_category_colors[category],location,elementname,string);
   #else
     fprintf(stderr,"INFO(%d:%d):%s%s %s\n",
-            getpid(),cothread_getcurrent(),location,elementname,string);
+            getpid(),cothread_id,location,elementname,string);
   #endif /* GST_DEBUG_COLOR */
 #else
   #ifdef GST_DEBUG_COLOR

@@ -130,7 +130,7 @@ static void
 gst_thread_init (GstThread *thread)
 {
 
-  GST_DEBUG (0,"initializing thread '%s'\n",GST_ELEMENT_NAME (thread));
+  GST_DEBUG (GST_CAT_THREAD,"initializing thread '%s'\n",GST_ELEMENT_NAME (thread));
 
   // we're a manager by default
   GST_FLAG_SET (thread, GST_BIN_FLAG_MANAGER);
@@ -170,11 +170,11 @@ gst_thread_set_arg (GtkObject *object,
       if (GTK_VALUE_BOOL (*arg)) {
         GST_INFO (GST_CAT_THREAD,"turning ON the creation of the thread");
         GST_FLAG_SET (object, GST_THREAD_CREATE);
-//        GST_DEBUG (0,"flags are 0x%08x\n", GST_FLAGS (object));
+//        GST_DEBUG (GST_CAT_THREAD,"flags are 0x%08x\n", GST_FLAGS (object));
       } else {
         GST_INFO (GST_CAT_THREAD,"gstthread: turning OFF the creation of the thread");
         GST_FLAG_UNSET (object, GST_THREAD_CREATE);
-//        GST_DEBUG (0,"gstthread: flags are 0x%08x\n", GST_FLAGS (object));
+//        GST_DEBUG (GST_CAT_THREAD,"gstthread: flags are 0x%08x\n", GST_FLAGS (object));
       }
       break;
     default:
@@ -469,7 +469,7 @@ gst_thread_main_loop (void *arg)
     while (GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING)) {
       if (!gst_bin_iterate (GST_BIN (thread))) {
 	GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
-	GST_DEBUG(0,"sync: removed spinning state due to failed iteration\n");
+	GST_DEBUG(GST_CAT_THREAD,"sync: removed spinning state due to failed iteration\n");
       }
     }
     GST_DEBUG (GST_CAT_THREAD, "sync: waiting at bottom of while for signal from main process\n");
@@ -528,7 +528,7 @@ static void
 gst_thread_restore_thyself (GstObject *object,
 		            xmlNodePtr self)
 {
-  GST_DEBUG (0,"gstthread: restore\n");
+  GST_DEBUG (GST_CAT_THREAD,"gstthread: restore\n");
 
   if (GST_OBJECT_CLASS (parent_class)->restore_thyself)
     GST_OBJECT_CLASS (parent_class)->restore_thyself (object, self);

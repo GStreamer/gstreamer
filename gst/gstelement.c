@@ -280,7 +280,7 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
   g_return_if_fail (gst_object_check_uniqueness (element->pads, GST_PAD_NAME(pad)) == TRUE);
 
   /* set the pad's parent */
-  GST_DEBUG (0,"setting parent of pad '%s' to '%s'\n",
+  GST_DEBUG (GST_CAT_ELEMENT_PADS,"setting parent of pad '%s' to '%s'\n",
         GST_PAD_NAME (pad), GST_ELEMENT_NAME (element));
   gst_object_set_parent (GST_OBJECT (pad), GST_OBJECT (element));
 
@@ -318,17 +318,19 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name)
   // then check to see if there's already a pad by that name here
   g_return_if_fail (gst_object_check_uniqueness (element->pads, name) == TRUE);
 
-  GST_DEBUG(0,"creating new ghost pad called %s, from pad %s:%s\n",name,GST_DEBUG_PAD_NAME(pad));
+  GST_DEBUG(GST_CAT_ELEMENT_PADS,"creating new ghost pad called %s, from pad %s:%s\n",
+            name,GST_DEBUG_PAD_NAME(pad));
   ghostpad = gst_ghost_pad_new (name, pad);
 
   /* add it to the list */
-  GST_DEBUG(0,"adding ghost pad %s to element %s\n", name, GST_ELEMENT_NAME (element));
+  GST_DEBUG(GST_CAT_ELEMENT_PADS,"adding ghost pad %s to element %s\n",
+            name, GST_ELEMENT_NAME (element));
   element->pads = g_list_append (element->pads, ghostpad);
   element->numpads++;
   // set the parent of the ghostpad
   gst_object_set_parent (GST_OBJECT (ghostpad), GST_OBJECT (element));
 
-  GST_DEBUG(0,"added ghostpad %s:%s\n",GST_DEBUG_PAD_NAME(ghostpad));
+  GST_DEBUG(GST_CAT_ELEMENT_PADS,"added ghostpad %s:%s\n",GST_DEBUG_PAD_NAME(ghostpad));
 
   /* emit the NEW_GHOST_PAD signal */
   gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[NEW_GHOST_PAD], ghostpad);
@@ -485,7 +487,7 @@ gst_element_get_padtemplate_by_compatible (GstElement *element, GstPadTemplate *
   GstPadTemplate *newtempl = NULL;
   GList *padlist;
 
-  GST_DEBUG(0,"gst_element_get_padtemplate_by_compatible()\n");
+  GST_DEBUG(GST_CAT_ELEMENT_PADS,"gst_element_get_padtemplate_by_compatible()\n");
 
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
@@ -502,19 +504,19 @@ gst_element_get_padtemplate_by_compatible (GstElement *element, GstPadTemplate *
     // Check direction (must be opposite)
     // Check caps
 
-    GST_DEBUG(0,"checking direction and caps\n");
+    GST_DEBUG(GST_CAT_CAPS,"checking direction and caps\n");
     if (padtempl->direction == GST_PAD_SRC &&
       compattempl->direction == GST_PAD_SINK) {
-      GST_DEBUG(0,"compatible direction: found src pad template\n");
+      GST_DEBUG(GST_CAT_CAPS,"compatible direction: found src pad template\n");
       compat = gst_caps_check_compatibility(GST_PADTEMPLATE_CAPS (padtempl),
 					    GST_PADTEMPLATE_CAPS (compattempl));
-      GST_DEBUG(0,"caps are %scompatible\n", (compat?"":"not "));
+      GST_DEBUG(GST_CAT_CAPS,"caps are %scompatible\n", (compat?"":"not "));
     } else if (padtempl->direction == GST_PAD_SINK &&
 	       compattempl->direction == GST_PAD_SRC) {
-      GST_DEBUG(0,"compatible direction: found sink pad template\n");
+      GST_DEBUG(GST_CAT_CAPS,"compatible direction: found sink pad template\n");
       compat = gst_caps_check_compatibility(GST_PADTEMPLATE_CAPS (compattempl),
 					    GST_PADTEMPLATE_CAPS (padtempl));
-      GST_DEBUG(0,"caps are %scompatible\n", (compat?"":"not "));
+      GST_DEBUG(GST_CAT_CAPS,"caps are %scompatible\n", (compat?"":"not "));
     }
 
     if (compat) {

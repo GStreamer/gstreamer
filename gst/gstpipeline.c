@@ -123,7 +123,7 @@ gst_pipeline_new (const guchar *name)
 static void 
 gst_pipeline_prepare (GstPipeline *pipeline) 
 {
-  GST_DEBUG (0,"GstPipeline: preparing pipeline \"%s\" for playing\n", 
+  GST_DEBUG (GST_CAT_PIPELINE,"preparing pipeline \"%s\" for playing (DEPRACATED!!)\n", 
 		  GST_ELEMENT_NAME(GST_ELEMENT(pipeline)));
 }
 

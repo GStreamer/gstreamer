@@ -349,7 +349,7 @@ gst_bin_change_state (GstElement *element)
 
   bin = GST_BIN (element);
 
-//  GST_DEBUG (0,"currently %d(%s), %d(%s) pending\n",GST_STATE (element),
+//  GST_DEBUG (GST_CAT_STATES,"currently %d(%s), %d(%s) pending\n",GST_STATE (element),
 //          _gst_print_statename (GST_STATE (element)), GST_STATE_PENDING (element),
 //          _gst_print_statename (GST_STATE_PENDING (element)));
 
@@ -370,7 +370,7 @@ gst_bin_change_state (GstElement *element)
       if (!parent || !GST_IS_BIN (parent))
         gst_bin_create_plan (bin);
       else
-        GST_DEBUG (0,"not creating plan for '%s'\n",GST_ELEMENT_NAME  (bin));
+        GST_DEBUG (GST_CAT_STATES,"not creating plan for '%s'\n",GST_ELEMENT_NAME  (bin));
 
       break;
     }
@@ -385,16 +385,16 @@ gst_bin_change_state (GstElement *element)
   children = bin->children;
   while (children) {
     child = GST_ELEMENT (children->data);
-    GST_DEBUG (0,"setting state on '%s'\n",GST_ELEMENT_NAME  (child));
+    GST_DEBUG (GST_CAT_STATES,"setting state on '%s'\n",GST_ELEMENT_NAME  (child));
     switch (gst_element_set_state (child, GST_STATE_PENDING (element))) {
       case GST_STATE_FAILURE:
         GST_STATE_PENDING (element) = GST_STATE_NONE_PENDING;
-        GST_DEBUG (0,"child '%s' failed to go to state %d(%s)\n", GST_ELEMENT_NAME  (child),
+        GST_DEBUG (GST_CAT_STATES,"child '%s' failed to go to state %d(%s)\n", GST_ELEMENT_NAME (child),
               GST_STATE_PENDING (element), _gst_print_statename (GST_STATE_PENDING (element)));
         return GST_STATE_FAILURE;
         break;
       case GST_STATE_ASYNC:
-        GST_DEBUG (0,"child '%s' is changing state asynchronously\n", GST_ELEMENT_NAME  (child));
+        GST_DEBUG (GST_CAT_STATES,"child '%s' is changing state asynchronously\n", GST_ELEMENT_NAME (child));
         break;
     }
 //    g_print("\n");
@@ -471,7 +471,7 @@ gst_bin_set_state_type (GstBin *bin,
 {
   GstBinClass *oclass;
 
-  GST_DEBUG (0,"gst_bin_set_state_type(\"%s\",%d,%d)\n",
+  GST_DEBUG (GST_CAT_STATES,"gst_bin_set_state_type(\"%s\",%d,%d)\n",
           GST_ELEMENT_NAME (bin), state,type);
 
   g_return_val_if_fail (bin != NULL, FALSE);
