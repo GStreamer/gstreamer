@@ -63,7 +63,7 @@ gst_dv1394src_factory (void)
         GST_PAD_SRC,
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS ("dv1394src",
-            "video/dv",
+            "video/x-dv",
             gst_props_new ("format", GST_PROPS_LIST (G_TYPE_STRING ("NTSC"),
                     G_TYPE_STRING ("PAL")
                 ), NULL)
@@ -156,6 +156,7 @@ gst_dv1394src_init (GstDV1394Src * dv1394src)
 {
   dv1394src->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_get_function (dv1394src->srcpad, gst_dv1394src_get);
+  gst_pad_use_explicit_caps (dv1394src->srcpad);
   gst_element_add_pad (GST_ELEMENT (dv1394src), dv1394src->srcpad);
 
   dv1394src->card = 0;
@@ -252,9 +253,9 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
           // PAL
           dv1394src->frameSize = PAL_FRAMESIZE;
           GST_DEBUG ("PAL data");
-          if (gst_pad_try_set_caps (dv1394src->srcpad,
-                  gst_caps_new_simple ("video/dv",
-                      "format", G_TYPE_STRING, "PAL", NULL)) <= 0) {
+          if (!gst_pad_set_explicit_caps (dv1394src->srcpad,
+                  gst_caps_new_simple ("video/x-dv",
+                      "format", G_TYPE_STRING, "PAL", NULL))) {
             GST_ELEMENT_ERROR (dv1394src, CORE, NEGOTIATION, (NULL),
                 ("Could not set source caps for PAL"));
             return 0;
@@ -264,9 +265,9 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
           dv1394src->frameSize = NTSC_FRAMESIZE;
           GST_DEBUG
               ("NTSC data [untested] - please report success/failure to <dan@f3c.com>");
-          if (gst_pad_try_set_caps (dv1394src->srcpad,
-                  gst_caps_new_simple ("video/dv", "format", G_TYPE_STRING,
-                      "NTSC", NULL)) <= 0) {
+          if (!gst_pad_set_explicit_caps (dv1394src->srcpad,
+                  gst_caps_new_simple ("video/x-dv", "format", G_TYPE_STRING,
+                      "NTSC", NULL))) {
             GST_ELEMENT_ERROR (dv1394src, CORE, NEGOTIATION, (NULL),
                 ("Could not set source caps for NTSC"));
             return 0;

@@ -93,9 +93,9 @@ static GstStaticPadTemplate video_src_temp = GST_STATIC_PAD_TEMPLATE ("video",
         "bpp = (int) 32, "
         "depth = (int) 32, "
         "endianness = (int) " G_STRINGIFY (G_BIG_ENDIAN) ", "
-        "red_mask =   (int) 0x000000ff, "
+        "red_mask =   (int) 0x00ff0000, "
         "green_mask = (int) 0x0000ff00, "
-        "blue_mask =  (int) 0x00ff0000, "
+        "blue_mask =  (int) 0x000000ff, "
         "width = (int) 720, "
         "height = (int) { "
         G_STRINGIFY (NTSC_HEIGHT) ", " G_STRINGIFY (PAL_HEIGHT)
@@ -107,9 +107,9 @@ static GstStaticPadTemplate video_src_temp = GST_STATIC_PAD_TEMPLATE ("video",
         "bpp = (int) 24, "
         "depth = (int) 24, "
         "endianness = (int) " G_STRINGIFY (G_BIG_ENDIAN) ", "
-        "red_mask =   (int) 0x000000ff, "
+        "red_mask =   (int) 0x00ff0000, "
         "green_mask = (int) 0x0000ff00, "
-        "blue_mask =  (int) 0x00ff0000, "
+        "blue_mask =  (int) 0x000000ff, "
         "width = (int) 720, "
         "height = (int) { "
         G_STRINGIFY (NTSC_HEIGHT) ", " G_STRINGIFY (PAL_HEIGHT)
@@ -712,16 +712,14 @@ gst_dvdec_video_link (GstPad * pad, const GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  /* it worked, try to find what it was again */
-  if (!gst_structure_get_fourcc (structure, "format", &fourcc) ||
-      !gst_structure_get_int (structure, "height", &height) ||
+  if (!gst_structure_get_int (structure, "height", &height) ||
       !gst_structure_get_double (structure, "framerate", &framerate))
     return GST_PAD_LINK_REFUSED;
 
   if ((height != dvdec->height) || (framerate != dvdec->framerate))
     return GST_PAD_LINK_REFUSED;
 
-  if (fourcc == GST_STR_FOURCC ("RGB ")) {
+  if (strcmp (gst_structure_get_name (structure), "video/x-raw-rgb") == 0) {
     gint bpp;
 
     gst_structure_get_int (structure, "bpp", &bpp);
@@ -733,6 +731,9 @@ gst_dvdec_video_link (GstPad * pad, const GstCaps * caps)
       dvdec->bpp = 4;
     }
   } else {
+    if (!gst_structure_get_fourcc (structure, "format", &fourcc))
+      return GST_PAD_LINK_REFUSED;
+
     dvdec->space = e_dv_color_yuv;
     dvdec->bpp = 2;
   }
