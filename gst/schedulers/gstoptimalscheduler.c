@@ -2324,35 +2324,45 @@ group_migrate_connected (GstOptScheduler * osched, GstElement * element,
     return NULL;
   } else if (len == 1) {
     remove_from_group (group, GST_ELEMENT (connected->data));
-    GST_LOG ("not migrating to new group as the group is empty");
+    GST_LOG
+        ("not migrating to new group as the group would only contain 1 element");
     g_list_free (connected);
+    GST_LOG ("new group is old group now");
+    new_group = group;
+  } else {
+    /* we create a new chain to hold the new group */
+    chain = create_chain (osched);
+
+    for (c = connected; c; c = g_list_next (c)) {
+      GstElement *element = GST_ELEMENT (c->data);
+
+      group = remove_from_group (group, element);
+      if (new_group == NULL) {
+        new_group =
+            create_group (chain, element, GST_OPT_SCHEDULER_GROUP_UNKNOWN);
+      } else {
+        add_to_group (new_group, element);
+      }
+    }
+    g_list_free (connected);
+
+    /* remove last element from the group if any. Make sure not to remove
+     * the loop based entry point of a group as this always needs one group */
+    if (group != NULL) {
+      if (g_slist_length (group->elements) == 1 &&
+          group->type != GST_OPT_SCHEDULER_GROUP_LOOP) {
+        GST_LOG ("removing last element from old group");
+        group = remove_from_group (group, GST_ELEMENT (group->elements->data));
+      }
+    }
+  }
+
+  if (g_slist_length (new_group->elements) == 1 &&
+      new_group->type != GST_OPT_SCHEDULER_GROUP_LOOP) {
+    GST_LOG ("removing last element from new group");
+    new_group =
+        remove_from_group (new_group, GST_ELEMENT (new_group->elements->data));
     return NULL;
-  }
-
-  /* we create a new chain to hold the new group */
-  chain = create_chain (osched);
-
-  for (c = connected; c; c = g_list_next (c)) {
-    GstElement *element = GST_ELEMENT (c->data);
-
-    group = remove_from_group (group, element);
-    if (new_group == NULL) {
-      new_group =
-          create_group (chain, element, GST_OPT_SCHEDULER_GROUP_UNKNOWN);
-    } else {
-      add_to_group (new_group, element);
-    }
-  }
-  g_list_free (connected);
-
-  /* remove last element from the group if any. Make sure not to remove
-   * the loop based entry point of a group as this always needs one group */
-  if (group != NULL) {
-    if (g_slist_length (group->elements) == 1 &&
-        group->type != GST_OPT_SCHEDULER_GROUP_LOOP) {
-      GST_LOG ("removing last element from group");
-      group = remove_from_group (group, GST_ELEMENT (group->elements->data));
-    }
   }
 
   /* at this point the new group lives in its own chain but might
