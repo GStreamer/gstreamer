@@ -69,8 +69,8 @@ applications and plugins for GStreamer.
 %{_libdir}/libgstreamer.la
 %{_libdir}/libgstreamer.so
 %{_libdir}/pkgconfig/*
-%{_pkgdatadir}/html/gstreamer
-%{_pkgdatadir}/html/gstreamer-libs
+%{_datadir}/%{name}-%{version}/html/gstreamer
+%{_datadir}/%{name}-%{version}/html/gstreamer-libs
 
 %changelog
 * Sat Mar 2 2002 Christian Schaller <Uraeus@linuxrising.org>
