@@ -26,7 +26,7 @@
 #include <gst/audio/audio.h>
 
 /* TODO:
-   
+
    this element is still nonfunctional
 
    - work out the src side (caps setting, etc)
@@ -39,7 +39,7 @@
 */
 
 /* elementfactory information */
-static GstElementDetails gst_jack_bin_details = {  
+static GstElementDetails gst_jack_bin_details = {
     "Jack Bin",
     "Generic/Bin",
     "GPL",
@@ -171,7 +171,7 @@ gst_jack_src_request_pad_factory(void)
 	GstCaps *caps;
 	caps = gst_caps_new("src",
 			    "audio/x-raw-float",
-                            GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS);
+                            GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS);
         template = gst_pad_template_new("%s", GST_PAD_SRC,
 					GST_PAD_REQUEST, caps, NULL);
     }
@@ -188,7 +188,7 @@ gst_jack_sink_request_pad_factory(void)
 	GstCaps *caps;
 	caps = gst_caps_new ("sink",
 			     "audio/x-raw-float",
-                             GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS);
+                             GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS);
         template = gst_pad_template_new("%s", GST_PAD_SINK,
 					GST_PAD_REQUEST, caps, NULL);
     }

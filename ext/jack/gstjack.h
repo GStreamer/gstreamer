@@ -1,7 +1,7 @@
 /* -*- Mode: C; c-basic-offset: 4 -*- */
 /*
     Copyright (C) 2002 Andy Wingo <wingo@pobox.com>
-                            
+
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
     License as published by the Free Software Foundation; either
@@ -85,12 +85,12 @@ struct _GstJack {
 
     /* list of GstJackPads */
     GList *pads;
-    
+
     /* for convenience */
     GstPadDirection direction;
-    
+
     gchar *port_name_prefix;
-    
+
     GstJackBin *bin;
 };
 
