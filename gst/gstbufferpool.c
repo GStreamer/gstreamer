@@ -107,7 +107,7 @@ void
 gst_buffer_pool_ref_by_count (GstBufferPool *pool, int count) 
 {
   g_return_if_fail (pool != NULL);
-  g_return_if_fail (count > 0);
+  g_return_if_fail (count >= 0);
 
 #ifdef HAVE_ATOMIC_H
   g_return_if_fail (atomic_read (&(pool->refcount)) > 0);
