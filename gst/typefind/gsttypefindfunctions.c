@@ -625,6 +625,7 @@ qt_type_find (GstTypeFind *tf, gpointer unused)
     if (strncmp (&data[4], "wide", 4) != 0 &&
 	strncmp (&data[4], "moov", 4) != 0 &&
 	strncmp (&data[4], "mdat", 4) != 0 &&
+	strncmp (&data[4], "pnot", 4) != 0 &&
 	strncmp (&data[4], "free", 4) != 0) {
       tip = 0;
       break;
