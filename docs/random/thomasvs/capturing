@@ -1,0 +1,124 @@
+ELEMENTS (v4lsrc, alsasrc, osssrc)
+--------
+- capturing elements should not do fps/sample rate correction themselves
+  they should timestamp buffers according to "a clock", period.
+
+- if the element is the clock provider:
+  - timestamp buffers based on the internals of the clock it's providing,
+    without calling the exposed clock functions
+  - do this by getting a measure of elapsed time based on the internal clock
+    that is being wrapped.  Ie., count the number of samples the *device*
+    has processed/dropped/...
+    If there are no underruns, the produced buffers are a contiguous data
+    stream.  
+  - possibilities:
+    - the device has a method to query for the absolute time related to
+      a buffer you're about to capture or just have captured:
+      Use that time as the timestamp on the capture buffer
+      (it's important that this time is related to the capture buffer;
+       ie. it's a time that "stands still" if you're not capturing)
+    - since you're providing the clocking, but don't have the previous method,
+      you should open the device with a given rate and continuously read
+      samples from it, even in PAUSED.  This allows you to update an internal
+      clock.
+      You use this internal clock as well to timestamp the buffers going out,
+      so you again form a contiguous set of buffers.
+      The only acceptable way to continuously read samples then is in a private
+      thread.
+  - as long as no underruns happen, the flow being output is a perfect stream:
+    the flow is data-contiguous and time-contiguous.
+
+- if the element is not the clock provider
+  - the element should always respect the clock it is given.
+  - the element should timestamp outgoing buffers based on time given by
+    the provided clock, by querying for the time on that clock, and
+    comparing to the base time.
+  - the element should NOT drop/add frames.  Rather, it should just
+    - timestamp the buffers with the current time according to the provided
+      clock
+    - set the duration according to the *theoretical/nominal* framerate
+    - when underruns happen (the device has lost capture data because our
+      element is not handling them quickly enough), this should be detectable
+      by the element through the device.  On underrun, the offset of your
+      next buffer will not match the end_offset of your previous one
+      (ie, the data flow is no longer contiguous).
+      If the exact number of samples dropped is detectable, this is the
+      difference between new offset and old offset_end.
+      If it's not detectable, it should be guessed based on the elapsed time
+      between now and the last capture.
+
+- a second element can be responsible for making the stream time-contiguous.
+  (ie, T1 + D1 = T2 for all buffers).  This way they are made
+  acceptible for gapless presentation (which is useful for audio).
+  - The element treats the incoming stream as data-contiguous but not
+    necessarily time-contiguous.
+  - If the timestamps are contiguous as well, then everything is fine and
+    nothing needs to be done.  This is the case where a file is being read
+    from disk, or capturing was done by an element that provided the clock.
+  - If they are not contiguous, then this element must make them so.
+    Since it should respect the nominal framerate, it has to stretch or
+    shorten the incoming data to match the timestamps set on the data.
+    For audio and video, this means it could interpolate or add/drop samples.
+    For audio, resampling/interpolation is preferred.
+    For video, a simple mechanism that chooses the frame with a timestamp as
+    close as possible to the theoretical timestamp could be used.
+  - When it receives a new buffer that is not data-contiguous with the
+    previous one, the capture element dropped samples/frames.
+    The adjuster can correct this by sending out as much "no-signal" data
+    (for audio, e.g. silence or background noise; for video, sending out
+    black frames) as it wants, since a data discontinuity is unrepairable.
+    So it can use these to catch up more aggressively.
+    It should just make sure that the next buffer it gets again goes
+    back to respecting the nominal framerate.
+
+- To achieve the best possible long-time capture, the following can be done:
+  - audiosrc captures audio and provides the clock.  It does contiguous
+    timestamping by default.
+  - videosrc captures video timestamped with the audiosrc's clock.  This data
+    feed doesn't match the nominal framerate.  If there is an encoding format
+    that supports storing the actual timestamps instead of pretending the
+    data flow respects the nominal framerate, this can be corrected after
+    recording.
+  - at the end of recording, the absolute length in time of both streams,
+    measured against a common clock, is the same or can be made the same by
+    chopping off data.
+  - the nominal rate of both audio and video is also known.
+  - given the length and the nominal rate, we have an evenly spaced list
+    of theoretical sampling points.
+  - video frames can now be matched to these theoretical sampling points by
+    interpolating or reusing/dropping frames.  It can choose the best
+    possible algorithm for this to decrease the visible effects
+    (interpolating results in blur, add/drop frames results in jerkiness).
+  - with the video resampled at the theoretical framerate, and the audio
+    already correct, the recording can now be muxed correctly into a format
+    that implicitly assumes a data rate matching the nominal framerate.
+  - One possibility is to use the GDP to store the recording, because that
+    retains all of the timestamping information.
+  - The process is symmetrical; if you want to use the clock provided by
+    the video capturer, you can stretch/shrink the audio at the end of
+    recording to match.
+
+TERMINOLOGY
+-----------
+- nominal rate
+  the framerate/samplerate
+  exposed in the caps; ie. the theoretical framerate of the
+  data flow.  This is the fps reported by the device or set for the encoder,
+  or the sampling rate of the audio device.
+- contiguous data flow
+  offset_end of old buffer matches offset of new buffer
+  for audio, this is a more important requirement, since you configure
+  output devices for a contiguous data flow.
+- contiguous time flow
+  T1 + D1 = T2
+  for video, this is a more important requirement, because the sampling
+  period is bigger, so it is more important to match the presentation time
+- "perfect stream"
+  data and time are contiguous and match the nominal rate
+  videotestsrc, sinesrc, filesrc ! decoder produce this
+
+NETWORK
+-------
+- elements can be synchronized by writing a NTP clock subclass that listens
+  to an ntp server, and tries to match its own clock against the NTP server
+  by doing gradual rate adjustment, compared with the own system clock.
