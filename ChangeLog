@@ -1,5 +1,10 @@
 2004-02-05  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_info):
+	  use correct GST_TAG_ENCODER tag
+
+2004-02-05  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* ext/alsa/gstalsa.c: (gst_alsa_change_state):
 	  be sure to stop the clock when going to paused
 	* sys/oss/gstosssink.c: (gst_osssink_change_state):
