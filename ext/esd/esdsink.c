@@ -43,9 +43,6 @@ enum {
 enum {
   ARG_0,
   ARG_MUTE,
-  ARG_DEPTH,
-  ARG_CHANNELS,
-  ARG_RATE,
   ARG_HOST,
 };
 
@@ -86,8 +83,7 @@ static void			gst_esdsink_init		(GstEsdsink *esdsink);
 static gboolean			gst_esdsink_open_audio		(GstEsdsink *sink);
 static void			gst_esdsink_close_audio		(GstEsdsink *sink);
 static GstElementStateReturn	gst_esdsink_change_state	(GstElement *element);
-static gboolean			gst_esdsink_sync_parms		(GstEsdsink *esdsink);
-static GstPadLinkReturn	gst_esdsink_sinkconnect		(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn		gst_esdsink_sinkconnect		(GstPad *pad, GstCaps *caps);
 
 static void			gst_esdsink_chain		(GstPad *pad, GstBuffer *buf);
 
@@ -95,39 +91,6 @@ static void			gst_esdsink_set_property	(GObject *object, guint prop_id,
 								 const GValue *value, GParamSpec *pspec);
 static void			gst_esdsink_get_property	(GObject *object, guint prop_id, 
 								 GValue *value, GParamSpec *pspec);
-
-#define GST_TYPE_ESDSINK_DEPTHS (gst_esdsink_depths_get_type())
-static GType
-gst_esdsink_depths_get_type (void)
-{
-  static GType esdsink_depths_type = 0;
-  static GEnumValue esdsink_depths[] = {
-    {8, "8", "8 Bits"},
-    {16, "16", "16 Bits"},
-    {0, NULL, NULL},
-  };
-  if (!esdsink_depths_type) {
-    esdsink_depths_type = g_enum_register_static("GstEsdsinkDepths", esdsink_depths);
-  }
-  return esdsink_depths_type;
-}
-
-#define GST_TYPE_ESDSINK_CHANNELS (gst_esdsink_channels_get_type())
-static GType
-gst_esdsink_channels_get_type (void)
-{
-  static GType esdsink_channels_type = 0;
-  static GEnumValue esdsink_channels[] = {
-    {1, "1", "Mono"},
-    {2, "2", "Stereo"},
-    {0, NULL, NULL},
-  };
-  if (!esdsink_channels_type) {
-    esdsink_channels_type = g_enum_register_static("GstEsdsinkChannels", esdsink_channels);
-  }
-  return esdsink_channels_type;
-}
-
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_esdsink_signals[LAST_SIGNAL] = { 0 }; */
@@ -167,15 +130,6 @@ gst_esdsink_class_init (GstEsdsinkClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MUTE,
     g_param_spec_boolean("mute","mute","mute",
                          TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEPTH,
-    g_param_spec_enum("depth","depth","depth",
-                      GST_TYPE_ESDSINK_DEPTHS,16,G_PARAM_READWRITE)); /* CHECKME! */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNELS,
-    g_param_spec_enum("channels","channels","channels",
-                      GST_TYPE_ESDSINK_CHANNELS,2,G_PARAM_READWRITE)); /* CHECKME! */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_RATE,
-    g_param_spec_int("frequency","frequency","frequency",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HOST,
     g_param_spec_string("host","host","host",
                         NULL, G_PARAM_READWRITE)); /* CHECKME */
@@ -198,24 +152,12 @@ gst_esdsink_init(GstEsdsink *esdsink)
   esdsink->mute = FALSE;
   esdsink->fd = -1;
   /* FIXME: get default from somewhere better than just putting them inline. */
-  esdsink->format = 16;
-  esdsink->depth = 16;
-  esdsink->channels = 2;
-  esdsink->frequency = 44100;
-  esdsink->host = NULL;
-}
-
-static gboolean
-gst_esdsink_sync_parms (GstEsdsink *esdsink)
-{
-  g_return_val_if_fail (esdsink != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_ESDSINK (esdsink), FALSE);
-
-  if (esdsink->fd == -1) return TRUE;
-
-  /* Need to set fd to use new parameters: only way to do this is to reopen. */
-  gst_esdsink_close_audio (esdsink);
-  return gst_esdsink_open_audio (esdsink);
+  esdsink->negotiated = FALSE;
+  esdsink->format = -1;
+  esdsink->depth = -1;
+  esdsink->channels = -1;
+  esdsink->frequency = -1;
+  esdsink->host = getenv ("ESPEAKER");
 }
 
 static GstPadLinkReturn
@@ -232,8 +174,11 @@ gst_esdsink_sinkconnect (GstPad *pad, GstCaps *caps)
   gst_caps_get_int (caps, "channels", &esdsink->channels);
   gst_caps_get_int (caps, "rate", &esdsink->frequency);
 
-  if (gst_esdsink_sync_parms (esdsink))
+  gst_esdsink_close_audio (esdsink);
+  if (gst_esdsink_open_audio (esdsink)) {
+    esdsink->negotiated = TRUE;
     return GST_PAD_LINK_OK;
+  }
 
   return GST_PAD_LINK_REFUSED;
 }
@@ -243,11 +188,12 @@ gst_esdsink_chain (GstPad *pad, GstBuffer *buf)
 {
   GstEsdsink *esdsink;
 
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
-  g_return_if_fail(buf != NULL);
-
   esdsink = GST_ESDSINK (gst_pad_get_parent (pad));
+
+  if (!esdsink->negotiated) {
+    gst_element_error (GST_ELEMENT (esdsink), "not negotiated");
+    goto done;
+  }
 
   if (GST_BUFFER_DATA (buf) != NULL) {
     if (!esdsink->mute && esdsink->fd >= 0) {
@@ -256,6 +202,7 @@ gst_esdsink_chain (GstPad *pad, GstBuffer *buf)
       write (esdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
     }
   }
+done:
   gst_buffer_unref (buf);
 }
 
@@ -272,20 +219,8 @@ gst_esdsink_set_property (GObject *object, guint prop_id, const GValue *value, G
     case ARG_MUTE:
       esdsink->mute = g_value_get_boolean (value);
       break;
-    case ARG_DEPTH:
-      esdsink->depth = g_value_get_enum (value);
-      gst_esdsink_sync_parms (esdsink);
-      break;
-    case ARG_CHANNELS:
-      esdsink->channels = g_value_get_enum (value);
-      gst_esdsink_sync_parms (esdsink);
-      break;
-    case ARG_RATE:
-      esdsink->frequency = g_value_get_int (value);
-      gst_esdsink_sync_parms (esdsink);
-      break;
     case ARG_HOST:
-      if (esdsink->host != NULL) g_free(esdsink->host);
+      g_free(esdsink->host);
       if (g_value_get_string (value) == NULL)
 	  esdsink->host = NULL;
       else
@@ -301,22 +236,11 @@ gst_esdsink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 {
   GstEsdsink *esdsink;
 
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_ESDSINK(object));
   esdsink = GST_ESDSINK(object);
 
   switch (prop_id) {
     case ARG_MUTE:
       g_value_set_boolean (value, esdsink->mute);
-      break;
-    case ARG_DEPTH:
-      g_value_set_enum (value, esdsink->depth);
-      break;
-    case ARG_CHANNELS:
-      g_value_set_enum (value, esdsink->channels);
-      break;
-    case ARG_RATE:
-      g_value_set_int (value, esdsink->frequency);
       break;
     case ARG_HOST:
       g_value_set_string (value, esdsink->host);
@@ -382,20 +306,17 @@ gst_esdsink_open_audio (GstEsdsink *sink)
     return FALSE;
   }
 
-  GST_FLAG_SET (sink, GST_ESDSINK_OPEN);
-
   return TRUE;
 }
 
 static void
 gst_esdsink_close_audio (GstEsdsink *sink)
 {
-  if (sink->fd < 0) return;
+  if (sink->fd < 0) 
+    return;
 
   close(sink->fd);
   sink->fd = -1;
-
-  GST_FLAG_UNSET (sink, GST_ESDSINK_OPEN);
 
   GST_DEBUG (0, "esdsink: closed sound device");
 }
@@ -403,22 +324,32 @@ gst_esdsink_close_audio (GstEsdsink *sink)
 static GstElementStateReturn
 gst_esdsink_change_state (GstElement *element)
 {
-  g_return_val_if_fail (GST_IS_ESDSINK (element), FALSE);
+  GstEsdsink *esdsink;
 
-  /* if going down into NULL state, close the fd if it's open */
-  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET (element, GST_ESDSINK_OPEN))
+  esdsink = GST_ESDSINK (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_READY:
       gst_esdsink_close_audio (GST_ESDSINK (element));
-    /* otherwise (READY or higher) we need to open the fd */
-  } else {
-    if (!GST_FLAG_IS_SET (element, GST_ESDSINK_OPEN)) {
-      if (!gst_esdsink_open_audio (GST_ESDSINK (element)))
-	return GST_STATE_FAILURE;
-    }
+      esdsink->negotiated = FALSE;
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break;
+    default:
+      break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
   return GST_STATE_SUCCESS;
 }
 
