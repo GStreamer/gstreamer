@@ -639,6 +639,11 @@ gst_xml_registry_parse_element_factory (GMarkupParseContext *context, const gcha
   else if (!strcmp(tag, "copyright")) {
     factory->details->copyright = g_strndup (text, text_len);
   }
+  else if (!strcmp(tag, "rank")) {
+    gint value;
+    sscanf (text, "%d", &value);
+    factory->rank = value;
+  }
 
   return TRUE;
 }
@@ -806,6 +811,7 @@ gst_xml_registry_start_element (GMarkupParseContext *context, const gchar *eleme
 	    factory->details_dynamic = TRUE;
 	    factory->details = g_new0(GstElementDetails, 1);
 	    factory->padtemplates = NULL;
+	    factory->rank = 0;
 	    xmlregistry->parser = gst_xml_registry_parse_element_factory;
 	  }
 	  else if (GST_IS_TYPE_FACTORY (feature))
@@ -1295,6 +1301,12 @@ gst_xml_registry_save_feature (GstXMLRegistry *xmlregistry, GstPluginFeature *fe
     PUT_ESCAPED ("version", factory->details->version);
     PUT_ESCAPED ("author", factory->details->author);
     PUT_ESCAPED ("copyright", factory->details->copyright);
+    
+    /* only write the rank if it is greater than zero */
+    if (factory->rank > 0) {
+      gint rank = factory->rank;
+      CLASS (xmlregistry)->save_func (xmlregistry, "<rank>%d</rank>\n", rank);
+    }	
     
     templates = factory->padtemplates;
 
