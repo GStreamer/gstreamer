@@ -1,0 +1,15 @@
+Here's a list of features in GStreamer which plug-ins can make use of.
+For each feature we will try to find a few plug-ins that show a good way
+of implementing them.
+
+seeking
+caps negotiation
+timestamps
+clock interaction
+signals
+object argument handling
+chain-based
+loop-based
+request pads
+sometimes pads
+
