@@ -59,7 +59,7 @@ struct _VorbisFile {
   guint64 offset;
 
   GstCaps *metadata;
-  GstCaps *tags;
+  GstCaps *streaminfo;
 };
 
 struct _VorbisFileClass {
@@ -94,7 +94,7 @@ enum
 {
   ARG_0,
   ARG_METADATA,
-  ARG_TAGS
+  ARG_STREAMINFO
 };
 
 static void
@@ -175,11 +175,11 @@ gst_vorbisfile_class_init (VorbisFileClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (gobject_class, ARG_TAGS,
-    g_param_spec_boxed ("tags", "Tags", "(logical) Stream tags",
-                         GST_TYPE_CAPS, G_PARAM_READABLE));
   g_object_class_install_property (gobject_class, ARG_METADATA,
     g_param_spec_boxed ("metadata", "Metadata", "(logical) Stream metadata",
+                         GST_TYPE_CAPS, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_STREAMINFO,
+    g_param_spec_boxed ("streaminfo", "stream", "(logical) Stream information",
                          GST_TYPE_CAPS, G_PARAM_READABLE));
 
   gobject_class->get_property = gst_vorbisfile_get_property;
@@ -215,7 +215,7 @@ gst_vorbisfile_init (VorbisFile * vorbisfile)
   vorbisfile->seek_pending = 0;
   vorbisfile->need_discont = FALSE;
   vorbisfile->metadata = NULL;
-  vorbisfile->tags = NULL;
+  vorbisfile->streaminfo = NULL;
   vorbisfile->current_link = -1;
 }
 
@@ -351,11 +351,11 @@ ov_callbacks vorbisfile_ov_callbacks =
   gst_vorbisfile_tell,
 };
 
-/* retrieve the comment field (or tags) and put in tags GstCaps
+/* retrieve the comment field (or tags) and put in metadata GstCaps
  * returns TRUE if caps could be set,
  * FALSE if they couldn't be read somehow */
 static gboolean
-gst_vorbisfile_update_tags (VorbisFile *vorbisfile, gint link)
+gst_vorbisfile_update_metadata (VorbisFile *vorbisfile, gint link)
 {
   OggVorbis_File *vf = &vorbisfile->vf;
   gchar **ptr;
@@ -365,15 +365,14 @@ gst_vorbisfile_update_tags (VorbisFile *vorbisfile, gint link)
   gchar *name, *value;
 
   /* clear old one */
-  if (vorbisfile->tags) {
-    gst_caps_unref (vorbisfile->tags);
-    vorbisfile->tags = NULL;
+  if (vorbisfile->metadata) {
+    gst_caps_unref (vorbisfile->metadata);
+    vorbisfile->metadata = NULL;
   }
 
   /* create props to hold the key/value pairs */
   props = gst_props_empty_new ();
 
-  /* first, grab the comments */
   vc = ov_comment (vf, link);
   ptr = vc->user_comments;
   while (*ptr) {
@@ -385,20 +384,20 @@ gst_vorbisfile_update_tags (VorbisFile *vorbisfile, gint link)
     }
     ptr++;
   }
-  vorbisfile->tags = gst_caps_new ("vorbisfile_tags",
-		                   "application/x-gst-tags",
-		                   props);
+  vorbisfile->metadata = gst_caps_new ("vorbisfile_metadata",
+		                       "application/x-gst-metadata",
+		                       props);
 
-  g_object_notify (G_OBJECT (vorbisfile), "tags");
+  g_object_notify (G_OBJECT (vorbisfile), "metadata");
 
   return TRUE;
 }
 
-/* retrieve logical stream properties and put them in metadata GstCaps
+/* retrieve logical stream properties and put them in streaminfo GstCaps
  * returns TRUE if caps could be set,
  * FALSE if they couldn't be read somehow */
 static gboolean
-gst_vorbisfile_update_metadata (VorbisFile *vorbisfile, gint link)
+gst_vorbisfile_update_streaminfo (VorbisFile *vorbisfile, gint link)
 {
   OggVorbis_File *vf = &vorbisfile->vf;
   vorbis_info *vi;
@@ -406,9 +405,9 @@ gst_vorbisfile_update_metadata (VorbisFile *vorbisfile, gint link)
   GstPropsEntry *entry;
 
   /* clear old one */
-  if (vorbisfile->metadata) {
-    gst_caps_unref (vorbisfile->metadata);
-    vorbisfile->metadata = NULL;
+  if (vorbisfile->streaminfo) {
+    gst_caps_unref (vorbisfile->streaminfo);
+    vorbisfile->streaminfo = NULL;
   }
 
   /* create props to hold the key/value pairs */
@@ -426,7 +425,6 @@ gst_vorbisfile_update_metadata (VorbisFile *vorbisfile, gint link)
   entry = gst_props_entry_new ("bitrate_lower", GST_PROPS_INT_TYPE, 
 		               vi->bitrate_lower);
   gst_props_add_entry (props, (GstPropsEntry *) entry);
-
   entry = gst_props_entry_new ("serial", GST_PROPS_INT_TYPE, 
 		               ov_serialnumber (vf, link));
   gst_props_add_entry (props, (GstPropsEntry *) entry);
@@ -434,11 +432,11 @@ gst_vorbisfile_update_metadata (VorbisFile *vorbisfile, gint link)
 		               ov_bitrate (vf, link));
   gst_props_add_entry (props, (GstPropsEntry *) entry);
 
-  vorbisfile->metadata = gst_caps_new ("vorbisfile_metadata",
-		                       "application/x-gst-metadata",
-		                       props);
+  vorbisfile->streaminfo = gst_caps_new ("vorbisfile_streaminfo",
+		                         "application/x-gst-streaminfo",
+		                         props);
 
-  g_object_notify (G_OBJECT (vorbisfile), "metadata");
+  g_object_notify (G_OBJECT (vorbisfile), "streaminfo");
 
   return TRUE;
 }
@@ -452,7 +450,7 @@ gst_vorbisfile_new_link (VorbisFile *vorbisfile, gint link)
   vorbisfile->current_link = link;
 
   gst_vorbisfile_update_metadata (vorbisfile, link);
-  gst_vorbisfile_update_tags (vorbisfile, link);
+  gst_vorbisfile_update_streaminfo (vorbisfile, link);
       
   if (gst_pad_try_set_caps (vorbisfile->srcpad,
                    GST_CAPS_NEW ("vorbisdec_src",
@@ -1052,8 +1050,8 @@ gst_vorbisfile_get_property (GObject *object, guint prop_id,
     case ARG_METADATA:
       g_value_set_boxed (value, vorbisfile->metadata);
       break;
-    case ARG_TAGS:
-      g_value_set_boxed (value, vorbisfile->tags);
+    case ARG_STREAMINFO:
+      g_value_set_boxed (value, vorbisfile->streaminfo);
       break;
     default:
       g_warning ("Unknown property id\n");
