@@ -1,3 +1,15 @@
+2004-07-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_videotestsrc_class_init), (gst_videotestsrc_src_link),
+	(gst_videotestsrc_init), (gst_videotestsrc_get),
+	(gst_videotestsrc_set_pattern), (gst_videotestsrc_set_property),
+	(gst_videotestsrc_get_property):
+	* gst/videotestsrc/gstvideotestsrc.h:
+	* gst/videotestsrc/videotestsrc.c:
+	* gst/videotestsrc/videotestsrc.h:
+	  cleanup and commenting
+
 2004-07-21  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_init),
