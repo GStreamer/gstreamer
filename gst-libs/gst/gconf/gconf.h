@@ -38,6 +38,6 @@ GstElement *	gst_gconf_get_default_video_sink (void);
 GstElement *	gst_gconf_get_default_audio_sink (void);
 GstElement *	gst_gconf_get_default_video_src (void);
 GstElement *	gst_gconf_get_default_audio_src (void);
-GstElement *	gst_gconf_get_default_visualisation_element (void);
+GstElement *	gst_gconf_get_default_visualization_element (void);
 
 #endif /* GST_GCONF_H */

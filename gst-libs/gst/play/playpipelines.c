@@ -180,7 +180,7 @@ gst_play_audiot_set_audio (GstPlay * play, GstElement * audio_sink)
 							audio_sink,
 							GST_PLAY_SINK_TYPE_AUDIO);
 
-  play->visualisation_sink_element = gst_play_get_sink_element (play,
+  play->visualization_sink_element = gst_play_get_sink_element (play,
 								audio_sink,
 								GST_PLAY_SINK_TYPE_VIDEO);
 
@@ -326,7 +326,7 @@ gst_play_audioht_set_audio (GstPlay * play, GstElement * audio_sink)
 							audio_sink,
 							GST_PLAY_SINK_TYPE_AUDIO);
 
-  play->visualisation_sink_element = gst_play_get_sink_element (play,
+  play->visualization_sink_element = gst_play_get_sink_element (play,
 								audio_sink,
 								GST_PLAY_SINK_TYPE_VIDEO);
 
@@ -618,7 +618,7 @@ gst_play_video_set_audio (GstPlay * play, GstElement * audio_sink)
 							audio_sink,
 							GST_PLAY_SINK_TYPE_AUDIO);
 
-  play->visualisation_sink_element = gst_play_get_sink_element (play,
+  play->visualization_sink_element = gst_play_get_sink_element (play,
 								audio_sink,
 								GST_PLAY_SINK_TYPE_VIDEO);
 
@@ -734,8 +734,8 @@ gst_play_video_vis_setup (GstPlay * play, GError ** error)
 			     gst_element_get_pad (audio_queue, "sink"),
 			     "sink");
 
-  /* Creating video part of the visualisation bin
-     { queue ! (visualisation) ! colorspace ! (videosink) }
+  /* Creating video part of the visualization bin
+     { queue ! (visualization) ! colorspace ! (videosink) }
    */
 
   vis_video_thread = gst_thread_new ("vis_video_thread");
@@ -929,16 +929,16 @@ gst_play_video_vis_set_video (GstPlay * play, GstElement * video_sink)
 }
 
 /**
- * gst_play_set_visualisation_video_sink:
+ * gst_play_set_visualization_video_sink:
  * @play: a #GstPlay.
  * @video_sink: a #GstElement.
  *
- * Set @video_sink as the visualisation video sink element of @play.
+ * Set @video_sink as the visualization video sink element of @play.
  *
  * Returns: TRUE if call succeeded.
  */
 gboolean
-gst_play_set_visualisation_video_sink (GstPlay * play,
+gst_play_set_visualization_video_sink (GstPlay * play,
 				       GstElement * video_sink)
 {
   GstElement *video_mate, *video_bin, *vis_video_sink;
@@ -964,26 +964,26 @@ gst_play_set_visualisation_video_sink (GstPlay * play,
 
   g_hash_table_replace (play->other_elements, "vis_video_sink", video_sink);
 
-  play->visualisation_sink_element = gst_play_get_sink_element (play,
+  play->visualization_sink_element = gst_play_get_sink_element (play,
 								video_sink,
 								GST_PLAY_SINK_TYPE_VIDEO);
 
-  if (play->visualisation_sink_element != NULL)
+  if (play->visualization_sink_element != NULL)
     {
-      g_signal_connect (G_OBJECT (play->visualisation_sink_element),
+      g_signal_connect (G_OBJECT (play->visualization_sink_element),
 			"have_video_out",
 			G_CALLBACK (callback_video_have_vis_video_out), play);
-      g_signal_connect (G_OBJECT (play->visualisation_sink_element),
+      g_signal_connect (G_OBJECT (play->visualization_sink_element),
                         "have_size",
                         G_CALLBACK (callback_video_have_vis_size), play);
-      g_object_set (G_OBJECT (play->visualisation_sink_element),
+      g_object_set (G_OBJECT (play->visualization_sink_element),
 		    "need_new_window", TRUE, "toplevel", FALSE, NULL);
     }
   return TRUE;
 }
 
 /**
- * gst_play_set_visualisation_element:
+ * gst_play_set_visualization_element:
  * @play: a #GstPlay.
  * @element: a #GstElement.
  *
@@ -992,7 +992,7 @@ gst_play_set_visualisation_video_sink (GstPlay * play,
  * Returns: TRUE if call succeeded.
  */
 gboolean
-gst_play_set_visualisation_element (GstPlay * play, GstElement * element)
+gst_play_set_visualization_element (GstPlay * play, GstElement * element)
 {
   GstElement *video_queue, *video_colorspace;
   GstElement *vis_element, *vis_video_bin;
@@ -1024,17 +1024,17 @@ gst_play_set_visualisation_element (GstPlay * play, GstElement * element)
 }
 
 /**
- * gst_play_connect_visualisation:
+ * gst_play_connect_visualization:
  * @play: a #GstPlay.
  * @connect: a #gboolean indicating wether or not
- * visualisation should be connected.
+ * visualization should be connected.
  *
- * Connect or disconnect visualisation bin in @play.
+ * Connect or disconnect visualization bin in @play.
  *
  * Returns: TRUE if call succeeded.
  */
 gboolean
-gst_play_connect_visualisation (GstPlay * play, gboolean connect)
+gst_play_connect_visualization (GstPlay * play, gboolean connect)
 {
   GstPad *tee_vis_pad, *vis_video_thread_pad;
   GstElement *vis_video_thread;

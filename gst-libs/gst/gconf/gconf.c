@@ -290,26 +290,26 @@ gst_gconf_get_default_video_src (void)
 }
 
 /**
- * gst_gconf_get_default_visualisation_element:
+ * gst_gconf_get_default_visualization_element:
  *
- * Render visualisation bin from GStreamer GConf key : "default/visualisation".
- * If key is invalid goom is used as default visualisation element.
+ * Render visualization bin from GStreamer GConf key : "default/visualization".
+ * If key is invalid goom is used as default visualization element.
  *
- * Returns: a #GstElement containing the visualisation bin, or NULL if
+ * Returns: a #GstElement containing the visualization bin, or NULL if
  * everything failed.
  */
 GstElement *
-gst_gconf_get_default_visualisation_element (void)
+gst_gconf_get_default_visualization_element (void)
 {
-  GstElement *ret = gst_gconf_render_bin_from_key ("default/visualisation");
+  GstElement *ret = gst_gconf_render_bin_from_key ("default/visualization");
   
   if (!ret) {
     ret = gst_element_factory_make ("goom", NULL);
   
     if (!ret)
-      g_warning ("No GConf default visualisation plugin key and goom doesn't work");
+      g_warning ("No GConf default visualization plugin key and goom doesn't work");
     else
-      g_print ("GConf visualisation plugin not found, using goom");
+      g_print ("GConf visualization plugin not found, using goom");
   }
 
   return ret;
@@ -329,4 +329,3 @@ GstPluginDesc plugin_desc = {
         "gstgconf",
 	  plugin_init
 };
-
