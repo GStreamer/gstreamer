@@ -1,0 +1,227 @@
+
+the current capsnegotiation sucks and plainly doesn't work for queues.
+one of the reasons is that the core is trying to do too much, like
+being a mediator in the negotiation process. There is also way too much
+interaction between plugins. Plugins have to keep a lot of state too.
+
+The proposed method works by sending chains of caps instead, requiring 
+a worst case of 2 interactions between plugins. The drawback is that
+a negotiating plugin has to do a bit more work, but in pactice this is
+not a real argument against the proposed method, as the actions it has
+to perform cannot be avoided. We will provide sufficient APIs to 
+facilitate this.
+
+We are not going to send random chains of caps between plugins but we
+are going to filter them by using a new gst_caps_intersect() function
+that can find the common media types and properties between the plugins.
+The main idea is that the simple case should remain simple.
+
+We also introduce app specific filters that can be set while doing a
+pad connection.
+
+We proceed with a few use cases because they tend to explain the ideas
+better.
+
+
+use case 1
+----------
+
+v4lsrc -> xvideosink
+
+no pad restrictions set on pad_connect
+v4lsrc can do many formats, so can xvideosink
+
+- v4lsrc request caps:
+
+  width and height properties were set on v4lsrc so it provides them as hints.
+
+  GstCaps *peercaps = gst_pad_request_caps (v4lsrc->srcpad, 
+                        GST_CAPS_NEW (
+			  "v4lsrc_srccaps",
+			  "video/raw",
+			    "width",    GST_PROPS_INT (352),
+			    "height",   GST_PROPS_INT (288)));
+
+- core fetches xvideosink caps. if xvideosink has a request_caps function,
+  then the intersection of the hint, v4lsrcpad template caps and xvideosink
+  sinkpad template are sent as input. 
+  If xvideosink has no request_caps function, the padtemplate
+  caps of xvideosink are taken.
+- after intersect on both caps, peercaps equals:
+
+  peercaps == 
+    gst_caps_chain (
+      GST_CAPS_NEW (
+        "xvideosink_caps",
+	"video/raw",
+          "format",       GST_PROPS_FOURCC (GST_STR_FOURCC ("YV12")),
+          "width",        GST_PROPS_INT (352),
+          "height",       GST_PROPS_INT (288)
+      ),
+      GST_CAPS_NEW (
+        "xvideosink_caps",
+	"video/raw",
+          "format",       GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
+          "width",        GST_PROPS_INT (352),
+          "height",       GST_PROPS_INT (288)
+      ),
+      GST_CAPS_NEW (
+        "xvideosink_caps",
+	"video/raw",
+          "format",       GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2")),
+          "width",        GST_PROPS_INT (352),
+          "height",       GST_PROPS_INT (288)
+      ),
+      GST_CAPS_NEW (
+        "xvideosink_caps",
+	"video/raw",
+          "format",       GST_PROPS_FOURCC (GST_STR_FOURCC ("UYVY")),
+          "width",        GST_PROPS_INT (352),
+          "height",       GST_PROPS_INT (288)
+      ),
+      GST_CAPS_NEW (
+        "xvideosink_caps",
+	"video/raw",
+          "format",       GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
+          "bpp",          GST_PROPS_INT (16),
+          "depth",        GST_PROPS_INT (16),
+          "endianness",   GST_PROPS_INT (G_BYTE_ORDER),
+          "red_mask",     GST_PROPS_INT (0xf800),
+          "green_mask",   GST_PROPS_INT (0x07e0),
+          "blue_mask",    GST_PROPS_INT (0x001f),
+          "width",        GST_PROPS_INT (352),
+          "height",       GST_PROPS_INT (288)
+      )
+    )
+
+- v4lsrc does:
+
+   while (peercaps) {
+     /* check if the caps can be used */
+     if (caps_are_useful (peercaps)) {
+       break;
+     }
+     ...
+
+     peercaps = gst_caps_new (peercaps);
+   }
+
+   gst_pad_set_caps (v4lsrc->srcpad, peercaps);
+
+- core check compatibility with v4lsrc and xvideosink caps. if all goes well
+  caps are set on the pads.
+
+- negotiation was more effective if v4lsrc provided srcpad caps since maybe
+  YUY2 etc could be removed in the intersect (when v4lsrc doesn't support that
+  format).   
+
+   
+use case 2
+----------
+
+mpeg2dec -> colorspace -> xvideosink
+
+
+- mpeg2dec does:
+
+  gst_pad_set_caps (mpeg2dec->srcpad, 
+                     GST_CAPS_NEW (
+		       "mpeg2dec_srccaps",
+		       "video/raw",
+                         "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
+		         "width",    GST_PROPS_INT (720),
+		         "height",   GST_PROPS_INT (480)
+		      )
+	           );
+
+- core checks compatibility with mpeg2dec srcpad caps and colorspace caps.
+- newcaps function of colorspace is called.
+- colorspace requests peer pad caps with the hint.
+- xvideosink doesn't have a request_caps function, the hint is ignored and
+  the padtemplate caps are returned.
+- colorspace runs intersect on the two caps.
+- if the intersection is NULL, colorspace has to set up a conversion function.
+    - runs through the list of caps, picking the first one for which a 
+      converter exists between the received caps and the target caps. set up
+      the converter and set the target caps on the srcpad.
+- if the intersection is not NULL, set received caps on colorspace srcpad.
+
+
+use case 3
+----------
+
+mpeg2dec -> queue -> colorspace -> queue -> xvideosink
+
+
+Same as use case 2, really. the queue just forwards the caps and the
+request caps.
+
+can we use a default implementation for this proxying? probably. 
+for an element with no newcaps function or request_caps function, we can
+simply set the caps on all srcpads when a set_caps is performed, or we
+can request and intersect all srcpad caps when a peer element does 
+request_caps. This will actually work for tee too, to some degree.
+
+
+use case 4
+----------
+
+gst_pad_connect_caps (...),
+gst_element_connect_caps (v4lsrc, "src", xvideosink, "sink",
+                           GST_CAPS_NEW (
+		             "app_caps",
+		             "video/raw",
+                               "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
+		               "width",    GST_PROPS_INT (352),
+		               "height",   GST_PROPS_INT (288)
+			   )
+			 );
+
+- as long as the connection is not broken, the caps are set as a filter to the
+  to pads.
+
+- when v4lsrc requests pads, the intersection with the filter is also made.
+
+- v4lsrc has no other choise but to use I420.
+
+use case 5
+----------
+
+mad -> osssink
+
+in this case, mad can both send "int" audio samples and "float" samples.
+
+- mad request_caps from osssink, sending the fixed properties as hints (rate,
+  channels, ...)
+- osssink has a request_caps function, the core first makes the intersection
+  between the hint and mad srcpad template. the core then does the intersection
+  between osssink sinkpad template and sends this list to osssinks request_caps
+  function. osssink can try this list (or whatever remains of it) and whatever
+  works is sent back as the return value of the request_caps function.
+- mad receives the caps list, takes the top caps ans does a pad_set_caps
+- osssink recieves the final caps on its new_caps function and configures the
+  oss driver.
+
+
+use case 6
+----------
+
+gsm -> audioscaler -> osssink
+
+Somenody sets some crazy low rate on the gsm srcpad (1000Hz).
+
+- audioscalers newcaps function is called.
+- audioscaler does a request_caps on its srcpad with the provided 
+  caps as a hint.
+- osssink tries the caps in the request_caps function (by opening the 
+  device, seeing that it doesn't support this rate at all...)
+- osssink tries to comply as closely with the rate and sends the 
+  intersection between its padtemplate caps and the findings (rate 8000Hz
+  is possible).
+- audioscaler does the intersection between the caps list and the hint.
+- intersection == NULL, a converter is needed between the hint and
+  the first caps of the request_caps list.
+- intersection != NULL, set those caps (== the hint).
+
+
+
