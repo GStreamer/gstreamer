@@ -32,6 +32,8 @@ struct _GstMediaPlay {
 	GtkWidget *slider;
 	
 	gulong last_time;
+
+	gint x, y, width, height;
 };
 
 struct _GstMediaPlayClass {
@@ -42,8 +44,12 @@ struct _GstMediaPlayClass {
 GtkType 	gst_media_play_get_type		(void);
 
 /* setup the player */
-GstMediaPlay*	gst_media_play_new		(void);
+GstMediaPlay*	gst_media_play_new		  (void);
 
-void 		gst_media_play_start_uri	(GstMediaPlay *play, const guchar *uri);
+void 		gst_media_play_start_uri	  (GstMediaPlay *play, const guchar *uri);
+
+void            gst_media_play_set_original_size  (GstMediaPlay *mplay);
+void            gst_media_play_set_double_size    (GstMediaPlay *mplay);
+void            gst_media_play_set_fullscreen     (GstMediaPlay *mplay);
 
 #endif /* __GST_MEDIA_PLAY_H__ */

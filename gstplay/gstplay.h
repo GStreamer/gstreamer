@@ -76,7 +76,9 @@ gulong 		gst_play_get_media_total_time	(GstPlay *play);
 gulong 		gst_play_get_media_current_time	(GstPlay *play);
 
 /* set display stuff */
-void            gst_play_set_display_size       ();
+GtkWidget *     gst_play_get_video_widget       (GstPlay *play);
+gint            gst_play_get_source_width       (GstPlay *play);
+gint            gst_play_get_source_height      (GstPlay *play);
 
 /* the autoplugged pipeline */
 GstElement*	gst_play_get_pipeline		(GstPlay *play);

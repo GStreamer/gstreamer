@@ -1,3 +1,44 @@
+2001-06-12  Arik Devens  <adevens@antioch-college.edu>
+
+	* gstmediaplay.glade: Added a basic preferences dialog, not hooked
+	up yet.
+
+	* callbacks.c (on_preferences1_activate): Added loading the new
+	preferences dialog.
+
+	* Makefile.am: Removed full-screen.[c,h] from the build.
+
+	* full-screen.h: Removed this file, no longer needed.
+
+	* full-screen.c: Removed this file, no longer needed.
+
+	* gstplay.c (gst_play_get_video_widget): New function to return
+	the actual video_widget.
+	(gst_play_get_source_width): New function to get the width of the
+	source media.
+	(gst_play_get_source_height): New function to get the height of
+	the source media.
+	(gst_play_set_uri): Added check to make sure the file we are
+	trying to play actually exists. i wonder if this fails with
+	gnomevfs?
+
+	* callbacks.c (on_original_size_activate): Use the new function.
+	(on_double_size_activate): Use the new function.
+	(on_full_screen_activate): Use the new function.
+	
+	* gstmediaplay.h (gst_media_play_set_fullscreen): Added function
+	prototypes for the new functions.
+
+	* gstmediaplay.c (gst_media_play_start_uri): Added a check for the
+	return value of set_uri so that we don't crash on not being able
+	to load a file.
+	(gst_media_play_set_original_size): New function to size the
+	video_widget to its default size.
+	(gst_media_play_set_fullscreen): New function to do
+	full-screen. Still a hack but at least this one works.
+	(gst_media_play_set_double_size): New function to size the
+	video_widget to double its default size.
+
 2001-06-06  Arik Devens  <arik@gnome.org>
 
 	* gstmediaplay.glade: Dissabled full-screen for the moment till it

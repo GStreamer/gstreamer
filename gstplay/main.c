@@ -11,7 +11,7 @@ main (int argc, char *argv[])
 	gnome_init ("gstreamer", VERSION, argc, argv);
 	glade_init();
 	glade_gnome_init();
-	
+
 	play = gst_media_play_new ();
 	
 	if (argc > 1) {

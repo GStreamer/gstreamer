@@ -20,8 +20,7 @@ libgstmediaplay_la_SOURCES = \
 	gstplay.c \
 	gstmediaplay.c \
 	gststatusarea.c \
-	callbacks.c \
-	full-screen.c
+	callbacks.c
 
 gstmediaplay_SOURCES = \
 	main.c 
@@ -34,9 +33,7 @@ noinst_HEADERS = \
 	gstmediaplay.h \
 	gststatusarea.h \
 	callbacks.h \
-	gstplayprivate.h \
-	full-screen.h
-
+	gstplayprivate.h
 
 libgstmediaplay_la_LDFLAGS = -rdynamic
 
