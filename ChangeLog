@@ -1,5 +1,12 @@
 2004-01-20  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/mplex/gstmplex.cc:
+	* ext/mplex/gstmplexibitstream.cc:
+	  g++ doesn't like NULL in our i18n/error macros, should be
+	  either (NULL) or ("").
+
+2004-01-20  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* sys/dxr3/dxr3audiosink.c:
 	* sys/dxr3/dxr3init.c:
 	* sys/dxr3/dxr3spusink.c: (dxr3spusink_close):
