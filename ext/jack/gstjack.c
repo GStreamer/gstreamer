@@ -309,6 +309,7 @@ gst_jack_change_state (GstElement *element)
     GstJack *this;
     GList *l = NULL, **pads;
     GstJackPad *pad;
+    GstCaps *caps;
     
     g_return_val_if_fail (element != NULL, FALSE);
     this = GST_JACK (element);
@@ -316,10 +317,12 @@ gst_jack_change_state (GstElement *element)
     switch (GST_STATE_PENDING (element)) {
     case GST_STATE_NULL:
         g_message ("jack client %s: NULL", GST_OBJECT_NAME (GST_OBJECT (this)));
+
         break;
         
     case GST_STATE_READY:
         g_message ("jack client %s: READY", GST_OBJECT_NAME (GST_OBJECT (this)));
+
         if (!this->bin) {
             if (!(this->bin = (GstJackBin*)gst_element_get_managing_bin (element))
                 || !GST_IS_JACK_BIN (this->bin)) {
@@ -343,6 +346,20 @@ gst_jack_change_state (GstElement *element)
         
     case GST_STATE_PAUSED:
         g_message ("jack client %s: PAUSED", GST_OBJECT_NAME (GST_OBJECT (this)));
+
+        if (GST_STATE (element) == GST_STATE_READY) {
+            /* we're in READY->PAUSED */
+            l = this->pads;
+            while (l) {
+                pad = GST_JACK_PAD (l);
+                caps = gst_pad_get_caps (pad->pad);
+                gst_caps_set (caps, "rate", GST_PROPS_INT_TYPE, (gint) this->bin->rate, NULL);
+                caps->fixed = TRUE; /* we know this to be true */
+                if (!gst_pad_try_set_caps (pad->pad, caps))
+                    return GST_STATE_FAILURE;
+                l = g_list_next (l);
+            }
+        }
         break;
     case GST_STATE_PLAYING:
         g_message ("jack client %s: PLAYING", GST_OBJECT_NAME (GST_OBJECT (this)));
