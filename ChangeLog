@@ -1,3 +1,8 @@
+2004-04-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* everything: updated upstream source to 2004-04-11 23:00 GMT
+          and fixed up patches
+
 2004-04-11  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
