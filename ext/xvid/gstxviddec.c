@@ -362,5 +362,7 @@ gst_xviddec_plugin_init (GModule   *module,
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
+  gst_element_factory_set_rank(factory, GST_ELEMENT_RANK_PRIMARY);
+
   return TRUE;
 }
