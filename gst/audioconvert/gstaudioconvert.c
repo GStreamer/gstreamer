@@ -38,6 +38,7 @@
 
 #include <gst/gst.h>
 #include <string.h>
+#include "plugin.h"
 
 GST_DEBUG_CATEGORY_STATIC (audio_convert_debug);
 #define GST_CAT_DEFAULT (audio_convert_debug)
@@ -100,7 +101,6 @@ static GstElementDetails audio_convert_details = {
 };
 
 /* type functions */
-static GType gst_audio_convert_get_type (void);
 static void gst_audio_convert_base_init (gpointer g_class);
 static void gst_audio_convert_class_init (GstAudioConvertClass * klass);
 static void gst_audio_convert_init (GstAudioConvert * audio_convert);
@@ -421,7 +421,6 @@ gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
   }
 
   GST_DEBUG_OBJECT (this, "negotiated pad to %" GST_PTR_FORMAT, caps);
-  GST_DEBUG_OBJECT (this, "negotiated otherpad to %" GST_PTR_FORMAT, othercaps);
   return GST_PAD_LINK_OK;
 }
 
@@ -635,7 +634,6 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert * this,
 
     in = (gfloat *) GST_BUFFER_DATA (buf);
     out = (gint32 *) GST_BUFFER_DATA (ret);
-    /* increment `in' via the for, cause CLAMP duplicates the first arg */
     for (i = buf->size / sizeof (float); i > 0; i--) {
       *in *= 2147483647.0f + .5;
       *out = (gint32) CLAMP ((gint64) * in, -2147483648ll, 2147483647ll);
@@ -781,21 +779,3 @@ gst_audio_convert_channels (GstAudioConvert * this, GstBuffer * buf)
   gst_buffer_unref (buf);
   return ret;
 }
-
-/*** PLUGIN DETAILS ***********************************************************/
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "audioconvert", GST_RANK_PRIMARY,
-          GST_TYPE_AUDIO_CONVERT))
-    return FALSE;
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "gstaudioconvert",
-    "Convert audio to different formats",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
