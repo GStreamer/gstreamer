@@ -1,0 +1,3 @@
+The current win32 dll loader don't work with all versions availble
+out there. Make sure to get the windows dll where divxc32.dll has the date
+older than 24 january 2000. The 24 january one does currently not work.
