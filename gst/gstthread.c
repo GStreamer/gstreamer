@@ -160,11 +160,11 @@ gst_thread_real_destroy (GtkObject *gtk_object)
   g_mutex_free (thread->lock);
   g_cond_free (thread->cond);
 
-  gst_object_destroy (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
-  gst_object_unref (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
-
   if (GTK_OBJECT_CLASS (parent_class)->destroy)
     GTK_OBJECT_CLASS (parent_class)->destroy (gtk_object);
+
+  gst_object_destroy (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
+  gst_object_unref (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
 }
 
 static void

@@ -498,20 +498,23 @@ static void
 gst_bin_real_destroy (GtkObject *object)
 {
   GstBin *bin = GST_BIN (object);
-  GList *children;
+  GList *children, *orig;
   GstElement *child;
 
   GST_DEBUG (GST_CAT_REFCOUNTING,"destroy()\n");
 
-  children = bin->children;
-  while (children) {
-    child = GST_ELEMENT (children->data);
-    //gst_object_unref (GST_OBJECT (child));
-    gst_object_unparent (GST_OBJECT (child));
-    children = g_list_next (children);
+  if (bin->children) {
+    orig = children = g_list_copy (bin->children);
+    while (children) {
+      child = GST_ELEMENT (children->data);
+      //gst_object_unref (GST_OBJECT (child));
+      //gst_object_unparent (GST_OBJECT (child));
+      gst_bin_remove (bin, child);
+      children = g_list_next (children);
+    }
+    g_list_free (orig);
+    g_list_free (bin->children);
   }
-
-  g_list_free (bin->children);
   bin->children = NULL;
   bin->numchildren = 0;
 
