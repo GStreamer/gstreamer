@@ -385,8 +385,8 @@ no_difference:
 	  int samples = MIN (bytes, sample_diff) *
 	             (element->numpads == 1 ? this->format->channels : 1);
 	  int size = samples * snd_pcm_format_physical_width (this->format->format) / 8;
-	  g_printerr ("Allocating %d bytes (%ld samples) now to resync: sample %ld expected, but got %ld\n", 
-	              size, MIN (bytes, sample_diff), this->transmitted, samplestamp);
+	  GST_INFO_OBJECT (this, "Allocating %d bytes (%ld samples) now to resync: sample %ld expected, but got %ld\n", 
+			   size, MIN (bytes, sample_diff), this->transmitted, samplestamp);
 	  sink->data[i] = g_try_malloc (size);
 	  if (!sink->data[i]) {
 	    GST_WARNING_OBJECT (this, "error allocating %d bytes, buffers unsynced now.", size);
