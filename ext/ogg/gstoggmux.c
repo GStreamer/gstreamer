@@ -51,7 +51,9 @@ typedef struct
   ogg_stream_state stream;
   gint64 packetno;              /* number of next packet */
   gint64 pageno;                /* number of next page */
+  guint64 duration;             /* duration of current page */
   gboolean eos;
+  gint64 offset;
 
   guint state;                  /* state of the pad */
 
@@ -89,6 +91,7 @@ struct _GstOggMux
   gboolean need_headers;
 
   guint64 max_delay;
+  guint64 max_page_delay;
 };
 
 typedef enum
@@ -116,11 +119,14 @@ enum
   LAST_SIGNAL
 };
 
+/* set to 5 seconds by default */
 #define DEFAULT_MAX_DELAY	5000000000LL
+#define DEFAULT_MAX_PAGE_DELAY	5000000000LL
 enum
 {
   ARG_0,
   ARG_MAX_DELAY,
+  ARG_MAX_PAGE_DELAY,
 };
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -208,6 +214,10 @@ gst_ogg_mux_class_init (GstOggMuxClass * klass)
       g_param_spec_uint64 ("max-delay", "Max delay",
           "Maximum delay in multiplexing streams", 0, G_MAXUINT64,
           DEFAULT_MAX_DELAY, (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_MAX_PAGE_DELAY,
+      g_param_spec_uint64 ("max-page-delay", "Max page delay",
+          "Maximum delay for sending out a page", 0, G_MAXUINT64,
+          DEFAULT_MAX_PAGE_DELAY, (GParamFlags) G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_ogg_mux_change_state;
 
@@ -247,6 +257,7 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
   ogg_mux->pulling = NULL;
   ogg_mux->need_headers = TRUE;
   ogg_mux->max_delay = DEFAULT_MAX_DELAY;
+  ogg_mux->max_page_delay = DEFAULT_MAX_PAGE_DELAY;
 
   gst_element_set_loop_function (GST_ELEMENT (ogg_mux), gst_ogg_mux_loop);
 }
@@ -403,8 +414,18 @@ gst_ogg_mux_next_buffer (GstOggPad * pad)
           gst_event_unref (event);
           return NULL;
         case GST_EVENT_DISCONTINUOUS:
+        {
+          gint64 value = 0;
+
+          if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
+            GST_DEBUG_OBJECT (ogg_mux,
+                "got discont of %" G_GUINT64_FORMAT " on pad %s:%s",
+                value, GST_DEBUG_PAD_NAME (pad->pad));
+          }
+          pad->offset = value;
           gst_event_unref (event);
           break;
+        }
         default:
           gst_pad_event_default (pad->pad, event);
           break;
@@ -846,6 +867,7 @@ gst_ogg_mux_loop (GstElement * element)
     ogg_page page;
     GstBuffer *buf, *tmpbuf;
     GstOggPad *pad = ogg_mux->pulling;
+    gint64 duration;
 
     /* now see if we have a buffer */
     buf = pad->buffer;
@@ -859,6 +881,8 @@ gst_ogg_mux_loop (GstElement * element)
         return;
       }
     }
+
+    duration = GST_BUFFER_DURATION (buf);
 
     /* create a packet from the buffer */
     packet.packet = GST_BUFFER_DATA (buf);
@@ -886,6 +910,20 @@ gst_ogg_mux_loop (GstElement * element)
     /* store new readahead buffer */
     pad->buffer = tmpbuf;
 
+    if (duration != -1) {
+      pad->duration += duration;
+      /* if page duration exceeds max, flush page */
+      if (pad->duration > ogg_mux->max_page_delay) {
+        while (ogg_stream_flush (&pad->stream, &page)) {
+          gst_ogg_mux_push_page (ogg_mux, &page);
+          /* increment the page number counter */
+          pad->pageno++;
+        }
+        pad->duration = 0;
+        return;
+      }
+    }
+
     /* flush out the pages now. The packet we got could end up in
      * more than one page so we need to flush them all */
     while (ogg_stream_pageout (&pad->stream, &page) > 0) {
@@ -897,6 +935,7 @@ gst_ogg_mux_loop (GstElement * element)
       /* we're done pulling on this pad, make sure to choose a new 
        * pad for pulling in the next iteration */
       ogg_mux->pulling = NULL;
+      pad->duration = 0;
     }
   }
 }
@@ -912,6 +951,9 @@ gst_ogg_mux_get_property (GObject * object,
   switch (prop_id) {
     case ARG_MAX_DELAY:
       g_value_set_uint64 (value, ogg_mux->max_delay);
+      break;
+    case ARG_MAX_PAGE_DELAY:
+      g_value_set_uint64 (value, ogg_mux->max_page_delay);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -930,6 +972,9 @@ gst_ogg_mux_set_property (GObject * object,
   switch (prop_id) {
     case ARG_MAX_DELAY:
       ogg_mux->max_delay = g_value_get_uint64 (value);
+      break;
+    case ARG_MAX_PAGE_DELAY:
+      ogg_mux->max_page_delay = g_value_get_uint64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
