@@ -336,7 +336,6 @@ GST_PLUGINS_ALL="\
 	auparse \
 	avi \
 	cdxaparse \
-	cdaudio \
 	chart \
 	colorspace \
 	cutter \
@@ -366,6 +365,7 @@ GST_PLUGINS_ALL="\
 	overlay \
 	passthrough \
 	playback \
+	playlist \
 	playondemand \
 	qtdemux \
 	realmedia \
@@ -1828,6 +1828,7 @@ gst/multipart/Makefile
 gst/overlay/Makefile
 gst/passthrough/Makefile
 gst/playback/Makefile
+gst/playlist/Makefile
 gst/playondemand/Makefile
 gst/qtdemux/Makefile
 gst/realmedia/Makefile
