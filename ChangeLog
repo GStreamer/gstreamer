@@ -1,5 +1,11 @@
 2004-12-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/matroska/matroska-demux.c: (gst_matroska_ebmlnum_uint),
+	(gst_matroska_ebmlnum_sint), (gst_matroska_demux_parse_blockgroup):
+	  Lace sizes can be zero.
+
+2004-12-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/musepack/gstmusepackdec.cpp:
 	  Fetch error return values. Fixes #161624.
 	* gst/apetag/apedemux.c: (gst_ape_demux_stream_data):
