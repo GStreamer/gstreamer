@@ -380,7 +380,7 @@ gst_osssink_sync_parms (GstOssSink *osssink)
   g_object_thaw_notify (object);
 
   osssink->fragment_time = (1000000 * osssink->fragment) / osssink->bps;
-  GST_INFO (GST_CAT_PLUGIN_INFO, "fragment time %lu %llu\n", osssink->bps, osssink->fragment_time);
+  GST_INFO (GST_CAT_PLUGIN_INFO, "fragment time %u %llu\n", osssink->bps, osssink->fragment_time);
 
   if (target_format != osssink->format ||
       target_channels != osssink->channels ||
@@ -454,7 +454,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
           queued = (ospace.fragstotal * ospace.fragsize) - ospace.bytes;
           time = osssink->offset + (optr.bytes) * 1000000LL / osssink->bps;
 
-	  GST_DEBUG (GST_PLUGIN_INFO, "sync %llu %llu %d\n", buftime, time, queued);
+	  GST_DEBUG (GST_CAT_PLUGIN_INFO, "sync %llu %llu %d\n", buftime, time, queued);
 
           granularity = ospace.fragsize;
           /* granularity = size; */
