@@ -27,6 +27,7 @@
 #include "gstelement.h"
 #include "gsttype.h"
 #include "gstbin.h"
+#include "gstscheduler.h"
 
 
 /***** Start with the base GstPad class *****/
@@ -509,6 +510,9 @@ gst_pad_disconnect (GstPad *srcpad,
   gtk_signal_emit(GTK_OBJECT(realsrc), gst_real_pad_signals[REAL_DISCONNECTED], realsink);
   gtk_signal_emit(GTK_OBJECT(realsink), gst_real_pad_signals[REAL_DISCONNECTED], realsrc);
 
+  // now tell the scheduler
+  GST_SCHEDULE_PAD_DISCONNECT (realsrc->sched, realsrc, realsink);
+
   GST_INFO (GST_CAT_ELEMENT_PADS, "disconnected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
 }
@@ -570,6 +574,9 @@ gst_pad_connect (GstPad *srcpad,
   gtk_signal_emit(GTK_OBJECT(realsrc), gst_real_pad_signals[REAL_CONNECTED], realsink);
   gtk_signal_emit(GTK_OBJECT(realsink), gst_real_pad_signals[REAL_CONNECTED], realsrc);
 
+  // now tell the scheduler
+  GST_SCHEDULE_PAD_CONNECT (realsrc->sched, realsrc, realsink);
+
   GST_INFO (GST_CAT_ELEMENT_PADS, "connected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
 }
@@ -610,6 +617,24 @@ gst_pad_get_parent (GstPad *pad)
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   return GST_OBJECT_PARENT (pad);
+}
+
+void
+gst_pad_set_sched (GstPad *pad, GstSchedule *sched)
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  GST_RPAD_SCHED(pad) = sched;
+}
+
+GstSchedule*
+gst_pad_get_sched (GstPad *pad)
+{
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  return GST_RPAD_SCHED(pad);
 }
 
 /**

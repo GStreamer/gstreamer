@@ -123,9 +123,10 @@ typedef enum {
 #define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
 #define GST_ELEMENT_PARENT(obj)			(GST_OBJECT_PARENT(obj))
 #define GST_ELEMENT_MANAGER(obj)		(((GstElement*)(obj))->manager)
+#define GST_ELEMENT_SCHED(obj)			(((GstElement*)(obj))->sched)
 
-typedef struct _GstElement GstElement;
-typedef struct _GstElementClass GstElementClass;
+//typedef struct _GstElement GstElement;
+//typedef struct _GstElementClass GstElementClass;
 typedef struct _GstElementDetails GstElementDetails;
 typedef struct _GstElementFactory GstElementFactory;
 
@@ -146,6 +147,7 @@ struct _GstElement {
   GList *pads;
 
   GstElement *manager;
+  GstSchedule *sched;
 };
 
 struct _GstElementClass {
@@ -199,8 +201,8 @@ const gchar*            gst_element_get_name            (GstElement *element);
 void                    gst_element_set_parent          (GstElement *element, GstObject *parent);
 GstObject*              gst_element_get_parent          (GstElement *element);
 
-void			gst_element_set_manager		(GstElement *element, GstElement *manager);
-GstElement*		gst_element_get_manager		(GstElement *element);
+void			gst_element_set_sched		(GstElement *element, GstSchedule *sched);
+GstSchedule*		gst_element_get_sched		(GstElement *element);
 
 void			gst_element_add_pad		(GstElement *element, GstPad *pad);
 GstPad*			gst_element_get_pad		(GstElement *element, const gchar *name);

@@ -133,6 +133,7 @@ gst_element_init (GstElement *element)
   element->pads = NULL;
   element->loopfunc = NULL;
   element->threadstate = NULL;
+  element->sched = NULL;
 }
 
 /**
@@ -847,8 +848,8 @@ gst_element_save_thyself (GstObject *object,
     xmlNewChild (parent, NULL, "version", factory->details->version);
   }
 
-  if (element->manager)
-    xmlNewChild(parent, NULL, "manager", GST_ELEMENT_NAME(element->manager));
+//  if (element->manager)
+//    xmlNewChild(parent, NULL, "manager", GST_ELEMENT_NAME(element->manager));
 
   // output all args to the element
   type = GTK_OBJECT_TYPE (element);
@@ -1082,34 +1083,33 @@ gst_element_load_thyself (xmlNodePtr self, GstObject *parent)
 }
 
 /**
- * gst_element_set_manager:
+ * gst_element_set_sched:
  * @element: Element to set manager of.
- * @manager: Element to be the manager.
+ * @sched: @GstSchedule to set.
  *
- * Sets the manager of the element.  For internal use only, unless you're
+ * Sets the scheduler of the element.  For internal use only, unless you're
  * writing a new bin subclass.
  */
 void
-gst_element_set_manager (GstElement *element,
-		         GstElement *manager)
+gst_element_set_sched (GstElement *element,
+		         GstSchedule *sched)
 {
-  if (manager)
-    GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting manager to \"%s\"",GST_ELEMENT_NAME(manager));
-  element->manager = manager;
+  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting scheduler to %p",sched);
+  element->sched = sched;
 }
 
 /**
- * gst_element_get_manager:
+ * gst_element_get_sched:
  * @element: Element to get manager of.
  *
- * Returns the manager of the element.
+ * Returns the scheduler of the element.
  *
- * Returns: Element's manager
+ * Returns: Element's scheduler
  */
-GstElement*
-gst_element_get_manager (GstElement *element)
+GstSchedule*
+gst_element_get_sched (GstElement *element)
 {
-  return element->manager;
+  return element->sched;
 }
 
 /**

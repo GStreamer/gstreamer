@@ -135,7 +135,7 @@ gst_thread_init (GstThread *thread)
   thread->lock = g_mutex_new();
   thread->cond = g_cond_new();
 
-  gst_element_set_manager(GST_ELEMENT(thread),GST_ELEMENT(thread));
+//  gst_element_set_manager(GST_ELEMENT(thread),GST_ELEMENT(thread));
 }
 
 static void

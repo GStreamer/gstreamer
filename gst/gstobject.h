@@ -28,6 +28,8 @@
 #include <gst/gsttrace.h>
 #include <parser.h>
 
+#include <gst/gsttypes.h>
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -55,8 +57,8 @@ extern "C" {
 #define GST_IS_OBJECT_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_OBJECT))
 
-typedef struct _GstObject GstObject;
-typedef struct _GstObjectClass GstObjectClass;
+//typedef struct _GstObject GstObject;
+//typedef struct _GstObjectClass GstObjectClass;
 
 #define GST_OBJECT_FLAG_LAST 4
 

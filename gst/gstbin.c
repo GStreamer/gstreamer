@@ -156,81 +156,92 @@ gst_bin_new (const gchar *name)
 }
 
 static inline void
-gst_bin_reset_element_manager (GstElement *element, GstElement *manager)
+gst_bin_reset_element_sched (GstElement *element, GstSchedule *sched)
 {
-  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "resetting element's manager");
+  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "resetting element's scheduler");
 
-  // first remove the element from its current manager, if any
-  if (element->manager)
-    gst_bin_remove_managed_element (GST_BIN(element->manager), element);
+  // first remove the element from its current schedule, if any
+//  if (GST_ELEMENT_SCHED(element))
+//    GST_SCHEDULE_REMOVE_ELEMENT (GST_ELEMENT_SCHED(element), element);
   // then set the new manager
-  gst_element_set_manager (element,manager);
-  // and add it to the new manager's list
-  if (manager)
-    gst_bin_add_managed_element (GST_BIN(manager), element);
+  gst_element_set_sched (element,sched);
+
+  // and add it to the new scheduler
+//  if (sched)
+//    GST_SCHEDULE_ADD_ELEMENT (sched, element);
 }
 
 void
-gst_bin_set_element_manager (GstElement *element,GstElement *manager)
+gst_bin_set_element_sched (GstElement *element,GstSchedule *sched)
 {
-  GstElement *realmanager = NULL;
+  GstSchedule *realsched = NULL;
+  GList *children;
+  GstElement *child;
+
+  g_return_if_fail (element != NULL);
+  g_return_if_fail (GST_IS_ELEMENT(element));
+  g_return_if_fail (sched != NULL);
+  g_return_if_fail (GST_IS_SCHEDULE(sched));
+
+  GST_INFO (GST_CAT_SCHEDULING, "setting element \"%s\" sched to %p",GST_ELEMENT_NAME(element),
+            sched);
+
+  // if it's actually a Bin
+  if (GST_IS_BIN(element)) {
+
+    // figure out which element is the manager
+    if (GST_FLAG_IS_SET(element,GST_BIN_FLAG_MANAGER)) {
+      realsched = GST_ELEMENT_SCHED(element);
+      GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting children's schedule to own sched");
+    } else {
+      realsched = sched;
+      GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting children's schedule to parent's");
+      GST_SCHEDULE_ADD_ELEMENT (sched, element);
+    }
+
+    // set the children's schedule
+    children = GST_BIN(element)->children;
+    while (children) {
+      child = GST_ELEMENT (children->data);
+      children = g_list_next(children);
+
+      gst_bin_set_element_sched (child, realsched);
+    }
+
+  // otherwise, if it's just a regular old element
+  } else {
+g_print("calling schedule_add_element (%p, \"%s\")\n",sched, GST_ELEMENT_NAME(element));
+    GST_SCHEDULE_ADD_ELEMENT (sched, element);
+  }
+}
+
+
+void
+gst_bin_unset_element_sched (GstElement *element)
+{
   GList *children;
   GstElement *child;
 
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT(element));
 
-  // figure out which element is the manager
-  if (manager) {
-    if (GST_FLAG_IS_SET(element,GST_BIN_FLAG_MANAGER)) {
-      realmanager = element;
-      GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting children's manager to self");
-    } else {
-      realmanager = manager;
-      GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting children's manager to parent");
-    }
-  } else {
-    GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "unsetting children's manager");
-  }
-
   // if it's actually a Bin
   if (GST_IS_BIN(element)) {
-    // set the children's manager
+
+    // for each child, remove them from their schedule
     children = GST_BIN(element)->children;
     while (children) {
       child = GST_ELEMENT (children->data);
       children = g_list_next(children);
 
-      gst_bin_set_element_manager (child, realmanager);
+      gst_bin_unset_element_sched (child);
     }
 
   // otherwise, if it's just a regular old element
   } else {
-    // simply reset the element's manager
-    gst_bin_reset_element_manager (element, realmanager);
+    if (GST_ELEMENT_SCHED (element))
+      GST_SCHEDULE_REMOVE_ELEMENT (GST_ELEMENT_SCHED(element), element);
   }
-}
-
-void
-gst_bin_add_managed_element (GstBin *bin, GstElement *element)
-{
-  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "adding managed element \"%s\"", GST_ELEMENT_NAME(element));
-  bin->managed_elements = g_list_prepend (bin->managed_elements, element);
-  bin->num_managed_elements++;
-
-  gst_schedule_add_element (NULL, element);
-}
-
-void
-gst_bin_remove_managed_element (GstBin *bin, GstElement *element)
-{
-  if (g_list_find (bin->managed_elements, element)) {
-    GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "removing managed element %s", GST_ELEMENT_NAME(element));
-    bin->managed_elements = g_list_remove (bin->managed_elements, element);
-    bin->num_managed_elements--;
-  }
-
-  gst_schedule_remove_element (NULL, element);
 }
 
 
@@ -269,7 +280,10 @@ gst_bin_add (GstBin *bin,
   bin->numchildren++;
 
   ///// now we have to deal with manager stuff
-  gst_bin_set_element_manager (element, GST_ELEMENT(bin));
+  // we can only do this if there's a scheduler:
+  // if we're not a manager, and aren't attached to anything, we have no sched (yet)
+  if (GST_ELEMENT_SCHED(bin) != NULL)
+    gst_bin_set_element_sched (element, GST_ELEMENT_SCHED(bin));
 
   GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "added child \"%s\"", GST_ELEMENT_NAME (element));
 
@@ -312,7 +326,7 @@ gst_bin_remove (GstBin *bin,
   }
 
   // remove this element from the list of managed elements
-  gst_bin_set_element_manager (element, NULL);
+  gst_bin_unset_element_sched (element);
 
   // now remove the element from the list of elements
   gst_object_unparent (GST_OBJECT (element));

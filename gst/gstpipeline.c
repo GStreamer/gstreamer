@@ -105,7 +105,9 @@ gst_pipeline_init (GstPipeline *pipeline)
   pipeline->src = NULL;
   pipeline->sinks = NULL;
 
-  gst_element_set_manager(GST_ELEMENT(pipeline),GST_ELEMENT(pipeline));
+  GST_ELEMENT_SCHED(pipeline) = gst_schedule_new(GST_ELEMENT(pipeline));
+  g_print("pipeline's scheduler is %p\n",GST_ELEMENT_SCHED(pipeline));
+//  gst_element_set_manager(GST_ELEMENT(pipeline),GST_ELEMENT(pipeline));
 }
 
 

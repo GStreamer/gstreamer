@@ -71,6 +71,7 @@ libgstincludedir = $(includedir)/gst
 libgstinclude_HEADERS =		\
 	cothreads.h		\
 	gst.h			\
+	gsttypes.h		\
 	gstautoplug.h		\
 	gstbin.h		\
 	gstbuffer.h		\

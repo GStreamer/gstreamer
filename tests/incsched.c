@@ -3,7 +3,7 @@
 
 int main(int argc,char *argv[]) {
   GstBin *thread, *bin;
-  GstElement *src, *identity, *sink;
+  GstElement *src, *identity, *sink, *identity2;
 
   gst_init(&argc,&argv);
   gst_info_set_categories(-1);
@@ -15,47 +15,65 @@ int main(int argc,char *argv[]) {
   src = gst_elementfactory_make("fakesrc","src");
   identity = gst_elementfactory_make("identity","identity");
   sink = gst_elementfactory_make("fakesink","sink");
+  identity2 = gst_elementfactory_make("identity","identity2");
 
-  g_print("\n\nConnecting:\n");
+  g_print("\nAdding src to thread:\n");
+  gst_bin_add(thread,src);
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
+
+  g_print("\nAdding identity to thread:\n");
+  gst_bin_add(thread,identity);
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
+
+  g_print("\nRemoving identity from thread:\n");
+  gst_bin_remove(thread, identity);
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
+
+  g_print("\nAdding identity to thread:\n");
+  gst_bin_add(thread,identity);
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
+
+  g_print("\nConnecting src to identity:\n");
   gst_element_connect(src,"src",identity,"sink");
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
 
-  g_print("\n\nAssembling things:\n");
-  g_print("\nAdding src to bin:\n");
-  gst_bin_add(bin,src);
-  g_print("there are %d managed elements in bin\n",bin->num_managed_elements);
+  g_print("\nDisconnecting src from identity:\n");
+  gst_element_disconnect(src,"src",identity,"sink");
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
 
-  g_print("\nAdding identity to bin:\n");
-  gst_bin_add(bin,identity);
-  g_print("there are %d managed elements in bin\n",bin->num_managed_elements);
+  g_print("\nConnecting src to identity:\n");
+  gst_element_connect(src,"src",identity,"sink");
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
 
   g_print("\nAdding sink to bin:\n");
   gst_bin_add(bin,sink);
-  g_print("there are %d managed elements in bin\n",bin->num_managed_elements);
+  gst_schedule_show(GST_ELEMENT_SCHED(bin));
+
+  g_print("\nAdding bin to thread:\n");
+  gst_bin_add(thread, GST_ELEMENT(bin));
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
 
   g_print("\nConnecting identity to sink:\n");
   gst_element_connect(identity,"src",sink,"sink");
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
 
   g_print("\nDisconnecting sink:\n");
   gst_element_disconnect(identity,"src",sink,"sink");
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
 
-//  g_print("schedule has %d chains now\n",bin->sched->num_chains);
+  g_print("\nAdding identity2 to bin:\n");
+  gst_bin_add(bin, identity2);
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
 
-//  g_print("\nRemoving sink from bin:\n");
-//  gst_bin_remove(bin,sink);
-//  g_print("there are %d managed elements in bin\n",bin->num_managed_elements);
+  g_print("\nConnecting identity2 to sink\n");
+  gst_element_connect(identity2,"src",sink,"sink");
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
 
-//  g_print("\nAdding bin to thread:\n");
-//  gst_bin_add(thread,bin);
-//  g_print("there are %d managed elements in thread now\n",thread->num_managed_elements);
-//  g_print("there are %d managed elements in bin now\n",bin->num_managed_elements);
+  g_print("\nConnecting identity to identity2\n");
+  gst_element_connect(identity,"src",identity2,"sink");
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
 
-/*
-  g_print("\n\nSaving xml:\n");
-  xmlSaveFile("threadsync.gst", gst_xml_write(GST_ELEMENT(thread)));
-*/
-
-//  g_print("\n\nSetting state to READY:\n");
-//  gst_element_set_state(thread,GST_STATE_READY);
-
-  sleep(1);
+  g_print("\nDisconnecting identity to identity2\n");
+  gst_element_disconnect(identity,"src",identity2,"sink");
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
 }

@@ -56,14 +56,14 @@ extern "C" {
 #define GST_IS_GHOST_PAD_CLASS(obj)	(GTK_CHECK_CLASS_TYPE ((klass), GST_TYPE_GHOST_PAD))
 
 
-typedef struct _GstPad GstPad;
-typedef struct _GstPadClass GstPadClass;
+//typedef struct _GstPad GstPad;
+//typedef struct _GstPadClass GstPadClass;
 typedef struct _GstRealPad GstRealPad;
 typedef struct _GstRealPadClass GstRealPadClass;
 typedef struct _GstGhostPad GstGhostPad;
 typedef struct _GstGhostPadClass GstGhostPadClass;
-typedef struct _GstPadTemplate GstPadTemplate;
-typedef struct _GstPadTemplateClass GstPadTemplateClass;
+//typedef struct _GstPadTemplate GstPadTemplate;
+//typedef struct _GstPadTemplateClass GstPadTemplateClass;
 
 
 typedef enum {
@@ -137,6 +137,8 @@ struct _GstRealPad {
   GstPadPullRegionFunction pullregionfunc;
 
   GList *ghostpads;
+
+  GstSchedule *sched;
 };
 
 struct _GstRealPadClass {
@@ -174,6 +176,7 @@ struct _GstGhostPadClass {
 #define GST_RPAD_CAPS(pad)		(((GstRealPad *)(pad))->caps)
 #define GST_RPAD_PEER(pad)		(((GstRealPad *)(pad))->peer)
 #define GST_RPAD_BUFPEN(pad)		(((GstRealPad *)(pad))->bufpen)
+#define GST_RPAD_SCHED(pad)		(((GstRealPad *)(pad))->sched)
 #define GST_RPAD_CHAINFUNC(pad)		(((GstRealPad *)(pad))->chainfunc)
 #define GST_RPAD_GETFUNC(pad)		(((GstRealPad *)(pad))->getfunc)
 #define GST_RPAD_GETREGIONFUNC(pad)	(((GstRealPad *)(pad))->getregionfunc)
@@ -274,6 +277,9 @@ const gchar*		gst_pad_get_name		(GstPad *pad);
 
 void			gst_pad_set_parent		(GstPad *pad, GstObject *parent);
 GstObject*		gst_pad_get_parent		(GstPad *pad);
+
+void			gst_pad_set_sched		(GstPad *pad, GstSchedule *sched);
+GstSchedule*		gst_pad_get_sched		(GstPad *pad);
 
 void			gst_pad_add_ghost_pad		(GstPad *pad, GstPad *ghostpad);
 void			gst_pad_remove_ghost_pad	(GstPad *pad, GstPad *ghostpad);
