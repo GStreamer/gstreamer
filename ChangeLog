@@ -1,3 +1,7 @@
+2003-06-02  Colin Walters  <walters@verbum.org>
+
+	* Take over the world.
+
 2003-03-29  Martin Schulze  <MHL.Schulze@t-online.de>
 
 	* gst/gstelementfactory.c: Add "g_free (dp->license)" in
