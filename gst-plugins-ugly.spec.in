@@ -98,7 +98,7 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 
 %package -n gstreamer-plugins-devel
 Summary: 	GStreamer Plugin Library Headers.
-Group: 		Libraries/Multimedia
+Group: 		Development/Libraries
 Requires: 	gstreamer-plugins >= %{version}
 
 %description -n gstreamer-plugins-devel
@@ -1180,6 +1180,9 @@ processed with the lavtools from mjpegtools.
 @USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
 
 %changelog
+* Mon Jul 08 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- fixed -devel package group
+
 * Sun Jun 23 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - changed header location of plug-in libs
 
