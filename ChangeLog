@@ -1,5 +1,11 @@
 2004-04-04  Benjamin Otte  <otte@gnome.org>
 
+	* gst/schedulers/gstbasicscheduler.c:
+	(gst_basic_scheduler_pad_select):
+	  fix uninitialized variable warnings
+
+2004-04-04  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gstpad.c: (gst_pad_collect_valist):
 	  fix uninitialized variable warning
 	* gst/schedulers/entryscheduler.c: (schedule_forward):

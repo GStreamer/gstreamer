@@ -1320,23 +1320,23 @@ static GstData *
 gst_basic_scheduler_pad_select (GstScheduler * sched, GstPad ** selected,
     GstPad ** padlist)
 {
-  GstData *data;
-  GstPad *pad;
-  gint i;
+  GstData *data = NULL;
+  gint i = 0;
 
   GST_INFO ("performing select");
 
   while (padlist[i]) {
-    pad = padlist[i];
+    GstPad *pad = padlist[i];
 
     GST_RPAD_CHAINHANDLER (pad) =
         GST_DEBUG_FUNCPTR (gst_basic_scheduler_select_proxy);
   }
 
-  do_element_switch (GST_PAD_PARENT (GST_PAD_PEER (pad)));
+  do_element_switch (GST_PAD_PARENT (GST_PAD_PEER (padlist[0])));
 
+  i = 0;
   while (padlist[i]) {
-    pad = padlist[i];
+    GstPad *pad = padlist[i];
 
     if (GST_RPAD_BUFPEN (pad)) {
       *selected = pad;
@@ -1348,6 +1348,7 @@ gst_basic_scheduler_pad_select (GstScheduler * sched, GstPad ** selected,
         GST_DEBUG_FUNCPTR (gst_basic_scheduler_chainhandler_proxy);
   }
 
+  g_assert (data != NULL);
   return data;
 }
 
