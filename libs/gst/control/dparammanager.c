@@ -149,6 +149,8 @@ gst_dpman_init (GstDParamManager * dpman)
  * @name: name of the new #GstDParamManager instance to create
  * @parent: #GstElement which creates this instance
  *
+ * Creates a new instance of a dynamic parameter manager.
+ *
  * Returns: a new instance of #GstDParamManager.
  */
 GstDParamManager *
@@ -183,6 +185,9 @@ gst_dpman_dispose (GObject * object)
  * @unit_name: the unit name of the dparam
  * @update_func: callback to update the element with the new value
  * @update_data: will be included in the call to update_func
+ *
+ * Add a mandatory dynamic parameter to the manager, where the value can be
+ * updated by calling the supplied callback function.
  *
  * Returns: true if it was successfully added
  */
@@ -221,6 +226,9 @@ gst_dpman_add_required_dparam_callback (GstDParamManager * dpman,
  * @unit_name: the unit name of the dparam
  * @update_data: pointer to the member to be updated
  *
+ * Add a mandatory dynamic parameter to the manager, where the value can be
+ * updated by directly storing it into the provided memory location.
+ *
  * Returns: true if it was successfully added
  */
 gboolean
@@ -256,6 +264,9 @@ gst_dpman_add_required_dparam_direct (GstDParamManager * dpman,
  * @unit_name: the unit name of the dparam
  * @update_data: pointer to where the array will be stored
  *
+ * Add a mandatory dynamic parameter to the manager, where the values can be
+ * updated by storing them into the provided memory location.
+ *
  * Returns: true if it was successfully added
  */
 gboolean
@@ -289,6 +300,7 @@ gst_dpman_add_required_dparam_array (GstDParamManager * dpman,
  * @dpman: GstDParamManager instance
  * @dparam_name: the name of an existing parameter
  *
+ * Removes the named dynamic parameter from the manager.
  */
 void
 gst_dpman_remove_required_dparam (GstDParamManager * dpman,
@@ -320,6 +332,9 @@ gst_dpman_remove_required_dparam (GstDParamManager * dpman,
  * @dpman: GstDParamManager instance
  * @dparam_name: a name previously added with gst_dpman_add_required_dparam
  * @dparam: GstDParam instance to attach
+ *
+ * Adding a parameter controller to a dynamic parameter. Whenever the controller
+ * changes, the dynamic parameter of the GstElement will follow.
  *
  * Returns: true if it was successfully attached
  */
@@ -354,6 +369,7 @@ gst_dpman_attach_dparam (GstDParamManager * dpman, const gchar * dparam_name,
  * @dpman: GstDParamManager instance
  * @dparam_name: the name of a parameter with a previously attached GstDParam
  *
+ * Removing a parameter controller from a dynamic parameter.
  */
 void
 gst_dpman_detach_dparam (GstDParamManager * dpman, const gchar * dparam_name)
@@ -377,6 +393,8 @@ gst_dpman_detach_dparam (GstDParamManager * dpman, const gchar * dparam_name)
  * @dpman: GstDParamManager instance
  * @dparam_name: the name of an existing dparam instance
  *
+ * Fetches a dparam object that is registered by manager under the given name.
+ *
  * Returns: the dparam with the given name - or NULL otherwise
  */
 GstDParam *
@@ -399,6 +417,8 @@ gst_dpman_get_dparam (GstDParamManager * dpman, const gchar * dparam_name)
  * @dpman: GstDParamManager instance
  * @dparam_name: the name of dparam
  *
+ * Fetches the type of the supplied dynamic parameter.
+ *
  * Returns: the type that this dparam requires/uses
  */
 GType
@@ -420,7 +440,9 @@ gst_dpman_get_dparam_type (GstDParamManager * dpman, const gchar * dparam_name)
  * gst_dpman_list_dparam_specs:
  * @dpman: GstDParamManager instance
  *
- * Returns: the the parameter specifications this managers maintains as a NULL terminated array
+ * Fetches the list of parameter specifications, that this manager maintains.
+ *
+ * Returns: the the parameter specifications as a NULL terminated array
  */
 GParamSpec **
 gst_dpman_list_dparam_specs (GstDParamManager * dpman)
@@ -450,6 +472,8 @@ gst_dpman_list_dparam_specs (GstDParamManager * dpman)
  * @dpman: GstDParamManager instance
  * @dparam_name: the name of dparam
  *
+ * Fetches a single parameter specification by its dparam name.
+ *
  * Returns: the the parameter specifications for a given name
  */
 GParamSpec *
@@ -469,6 +493,9 @@ gst_dpman_get_param_spec (GstDParamManager * dpman, const gchar * dparam_name)
  * gst_dpman_set_rate:
  * @dpman: GstDParamManager instance
  * @rate: the new the frame/sample rate
+ *
+ * Sets the frame or sampling rate used by the machine.
+ *
  */
 void
 gst_dpman_set_rate (GstDParamManager * dpman, gint rate)
@@ -486,6 +513,10 @@ gst_dpman_set_rate (GstDParamManager * dpman, gint rate)
  * @setupfunc: the function which initialises the mode when activated
  * @teardownfunc: the function which frees any resources the mode uses
  *
+ * Registers a run-mode for the dparam manager. Each such mode has a defined
+ * run-time behaviour - that is, they differ in the way dynamic parameter
+ * changes are pushed into the underlying GstElements.
+ * 
  */
 void
 gst_dpman_register_mode (GstDParamManagerClass * klass,
@@ -514,6 +545,8 @@ gst_dpman_register_mode (GstDParamManagerClass * klass,
  * gst_dpman_set_mode
  * @dpman: GstDParamManager instance
  * @modename: the name of the mode to use
+ *
+ * Activate one of the registered modes.
  *
  * Returns: TRUE if the mode was set, FALSE otherwise
  */
@@ -556,6 +589,7 @@ gst_dpman_set_mode (GstDParamManager * dpman, gchar * modename)
  * @dpman: GstDParamManager instance
  * @parent: the element that this GstDParamManager belongs to
  *
+ * Set a GstElement that parameters this manager should handle.
  */
 void
 gst_dpman_set_parent (GstDParamManager * dpman, GstElement * parent)
@@ -574,6 +608,8 @@ gst_dpman_set_parent (GstDParamManager * dpman, GstElement * parent)
 /**
  * gst_dpman_get_manager
  * @parent: the element that the desired GstDParamManager belongs to
+ *
+ * Fetch the GstElement that parameters are handled by this manager.
  *
  * Returns: the GstDParamManager which belongs to this element or NULL
  * if it doesn't exist
@@ -618,6 +654,8 @@ gst_dpman_bypass_dparam (GstDParamManager * dpman, const gchar * dparam_name)
     gst_dpman_detach_dparam (dpman, dparam_name);
   }
 }
+
+// internal methods
 
 static GstDParamWrapper *
 gst_dpman_get_wrapper (GstDParamManager * dpman, const gchar * dparam_name)

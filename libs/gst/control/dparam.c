@@ -139,6 +139,8 @@ gst_dparam_init (GstDParam * dparam)
  * gst_dparam_new:
  * @type: the type that this dparam will store
  *
+ * Create a new dynamic parameter controller.
+ *
  * Returns: a new instance of GstDParam
  */
 GstDParam *
@@ -298,6 +300,8 @@ gst_dparam_dispose (GObject * object)
  * @dparam: GstDParam instance
  * @manager: the GstDParamManager that this dparam belongs to
  *
+ * Adding the parameter controller to the manager using the supplied specs and unit.
+ * See also gst_dpman_attach_dparam().
  */
 void
 gst_dparam_attach (GstDParam * dparam, GstDParamManager * manager,
@@ -328,6 +332,7 @@ gst_dparam_attach (GstDParam * dparam, GstDParamManager * manager,
  * @dparam: GstDParam instance
  * @manager: the GstDParamManager that this dparam belongs to
  *
+ * Removes a previousely added parameter controller.
  */
 void
 gst_dparam_detach (GstDParam * dparam)
