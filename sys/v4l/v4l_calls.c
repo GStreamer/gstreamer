@@ -76,7 +76,7 @@ static const char *norm_name[] = {
  * return value: TRUE on success, FALSE on error
  ******************************************************/
 
-static gboolean
+gboolean
 gst_v4l_get_capabilities (GstV4lElement * v4lelement)
 {
   GST_DEBUG_OBJECT (v4lelement, "getting capabilities");
@@ -194,7 +194,7 @@ gst_v4l_open (GstV4lElement * v4lelement)
     return FALSE;
   }
 
-  GST_INFO_OBJECT (v4lelement, "Opened device \'%s\' (\'%s\') successfully\n",
+  GST_INFO_OBJECT (v4lelement, "Opened device \'%s\' (\'%s\') successfully",
       v4lelement->vcap.name, v4lelement->videodev);
 
   /* norms + inputs, for the tuner interface */

@@ -31,6 +31,7 @@
 
 /* FIXME: small cheat */
 gboolean gst_v4l_set_window_properties (GstV4lElement * v4lelement);
+gboolean gst_v4l_get_capabilities (GstV4lElement * v4lelement);
 
 /* elementfactory information */
 static GstElementDetails gst_v4lsrc_details =
@@ -61,7 +62,8 @@ enum
   ARG_NUMBUFS,
   ARG_BUFSIZE,
   ARG_SYNC_MODE,
-  ARG_COPY_MODE
+  ARG_COPY_MODE,
+  ARG_AUTOPROBE
 };
 
 GST_FORMATS_FUNCTION (GstPad *, gst_v4lsrc_get_formats,
@@ -114,7 +116,7 @@ static gboolean gst_v4lsrc_src_query (GstPad * pad,
     GstQueryType type, GstFormat * format, gint64 * value);
 
 /* buffer functions */
-static GstPadLinkReturn gst_v4lsrc_srcconnect (GstPad * pad,
+static GstPadLinkReturn gst_v4lsrc_src_link (GstPad * pad,
     const GstCaps * caps);
 static GstCaps *gst_v4lsrc_fixate (GstPad * pad, const GstCaps * caps);
 static GstCaps *gst_v4lsrc_getcaps (GstPad * pad);
@@ -206,6 +208,10 @@ gst_v4lsrc_class_init (GstV4lSrcClass * klass)
       g_param_spec_boolean ("copy_mode", "Copy mode",
           "Don't send out HW buffers, send copy instead", DEFAULT_COPY_MODE,
           G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_AUTOPROBE,
+      g_param_spec_boolean ("autoprobe", "Autoprobe",
+          "Whether the device should be probed for all possible features",
+          TRUE, G_PARAM_READWRITE));
 
   /* signals */
   gst_v4lsrc_signals[SIGNAL_FRAME_CAPTURE] =
@@ -233,7 +239,6 @@ gst_v4lsrc_class_init (GstV4lSrcClass * klass)
   v4lelement_class->close = gst_v4lsrc_close;
 }
 
-
 static void
 gst_v4lsrc_init (GstV4lSrc * v4lsrc)
 {
@@ -249,7 +254,7 @@ gst_v4lsrc_init (GstV4lSrc * v4lsrc)
   gst_pad_set_get_function (v4lsrc->srcpad, gst_v4lsrc_get);
   gst_pad_set_getcaps_function (v4lsrc->srcpad, gst_v4lsrc_getcaps);
   gst_pad_set_fixate_function (v4lsrc->srcpad, gst_v4lsrc_fixate);
-  gst_pad_set_link_function (v4lsrc->srcpad, gst_v4lsrc_srcconnect);
+  gst_pad_set_link_function (v4lsrc->srcpad, gst_v4lsrc_src_link);
   gst_pad_set_convert_function (v4lsrc->srcpad, gst_v4lsrc_src_convert);
   gst_pad_set_formats_function (v4lsrc->srcpad, gst_v4lsrc_get_formats);
   gst_pad_set_query_function (v4lsrc->srcpad, gst_v4lsrc_src_query);
@@ -267,12 +272,17 @@ gst_v4lsrc_init (GstV4lSrc * v4lsrc)
   v4lsrc->copy_mode = DEFAULT_COPY_MODE;
 
   v4lsrc->is_capturing = FALSE;
+  v4lsrc->autoprobe = TRUE;
 }
 
 static void
 gst_v4lsrc_open (GstElement * element, const gchar * device)
 {
   GstV4lSrc *v4lsrc = GST_V4LSRC (element);
+  GstV4lElement *v4l = GST_V4LELEMENT (v4lsrc);
+  gint width = v4l->vcap.minwidth;
+  gint height = v4l->vcap.minheight;
+
   int palette[] = {
     VIDEO_PALETTE_YUV422,
     VIDEO_PALETTE_YUV420P,
@@ -290,7 +300,7 @@ gst_v4lsrc_open (GstElement * element, const gchar * device)
 
   for (i = 0; palette[i] != -1; i++) {
     /* try palette out */
-    if (!gst_v4lsrc_try_palette (v4lsrc, palette[i]))
+    if (!gst_v4lsrc_try_capture (v4lsrc, width, height, palette[i]))
       continue;
     v4lsrc->colourspaces = g_list_append (v4lsrc->colourspaces,
         GINT_TO_POINTER (palette[i]));
@@ -575,7 +585,7 @@ gst_v4lsrc_palette_to_caps (int palette)
 
 
 static GstPadLinkReturn
-gst_v4lsrc_srcconnect (GstPad * pad, const GstCaps * vscapslist)
+gst_v4lsrc_src_link (GstPad * pad, const GstCaps * vscapslist)
 {
   GstV4lSrc *v4lsrc;
   guint32 fourcc;
@@ -583,8 +593,10 @@ gst_v4lsrc_srcconnect (GstPad * pad, const GstCaps * vscapslist)
   gdouble fps;
   GstStructure *structure;
   gboolean was_capturing;
+  struct video_window *vwin;
 
   v4lsrc = GST_V4LSRC (gst_pad_get_parent (pad));
+  vwin = &GST_V4LELEMENT (v4lsrc)->vwin;
   was_capturing = v4lsrc->is_capturing;
 
   /* in case the buffers are active (which means that we already
@@ -614,7 +626,6 @@ gst_v4lsrc_srcconnect (GstPad * pad, const GstCaps * vscapslist)
   /* set framerate if it's not already correct */
   if (fps != gst_v4lsrc_get_fps (v4lsrc)) {
     int fps_index = fps / 15.0 * 16;
-    struct video_window *vwin = &GST_V4LELEMENT (v4lsrc)->vwin;
 
     GST_DEBUG_OBJECT (v4lsrc, "Trying to set fps index %d", fps_index);
     /* set bits 16 to 21 to 0 */
@@ -689,11 +700,46 @@ gst_v4lsrc_srcconnect (GstPad * pad, const GstCaps * vscapslist)
       break;
   }
 
-  if (palette == -1)
+  if (palette == -1) {
+    GST_WARN_OBJECT (v4lsrc, "palette is -1, refusing link");
     return GST_PAD_LINK_REFUSED;
+  }
 
-  if (!gst_v4lsrc_set_capture (v4lsrc, w, h, palette))
+  GST_DEBUG_OBJECT (v4lsrc, "trying to set_capture %dx%d, palette %d",
+      w, h, palette);
+  if (!gst_v4lsrc_set_capture (v4lsrc, w, h, palette)) {
+    GST_WARN_OBJECT (v4lsrc, "could not set_capture %dx%d, palette %d",
+        w, h, palette);
     return GST_PAD_LINK_REFUSED;
+  }
+
+  /* first try the negotiated settings using try_capture */
+  if (!gst_v4lsrc_try_capture (v4lsrc, w, h, palette)) {
+    GST_DEBUG_OBJECT (v4lsrc, "failed trying palette %d for w/h", palette);
+    return GST_PAD_LINK_REFUSED;
+  }
+  if (!gst_v4l_get_capabilities (GST_V4LELEMENT (v4lsrc)))
+    GST_DEBUG_OBJECT (v4lsrc, "failed getting capabilities");
+  GST_DEBUG_OBJECT (v4lsrc, "done checking, with w %d h %d palette %d\n",
+      vwin->width, vwin->height, palette);
+  if (vwin->width != v4lsrc->mmap.width) {
+    /* We consider this a device error since it was called with fixed
+     * caps that the device doesn't accept.  Still, there should be
+     * a way to handle this more gracefully, maybe provide a fixate
+     * function */
+    GST_ELEMENT_ERROR (v4lsrc, RESOURCE, SETTINGS, (NULL),
+        ("Tried setting %dx%d but got %dx%d back as suggestion",
+            v4lsrc->mmap.width, v4lsrc->mmap.height, vwin->width,
+            vwin->height));
+    return GST_PAD_LINK_REFUSED;
+  }
+  if (vwin->height != v4lsrc->mmap.height) {
+    GST_ELEMENT_ERROR (v4lsrc, RESOURCE, SETTINGS, (NULL),
+        ("Tried setting %dx%d but got %dx%d back as suggestion",
+            v4lsrc->mmap.width, v4lsrc->mmap.height, vwin->width,
+            vwin->height));
+    return GST_PAD_LINK_REFUSED;
+  }
 
   if (!gst_v4lsrc_capture_init (v4lsrc))
     return GST_PAD_LINK_REFUSED;
@@ -752,6 +798,11 @@ gst_v4lsrc_getcaps (GstPad * pad)
   if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lsrc))) {
     return gst_caps_new_any ();
   }
+  if (!v4lsrc->autoprobe) {
+    /* FIXME: query current caps and return those, with _any appended */
+    return gst_caps_new_any ();
+  }
+
   /* if not cached from last run, get it */
   if (!fps_list)
     fps_list = gst_v4lsrc_get_fps_list (v4lsrc);
@@ -907,7 +958,8 @@ gst_v4lsrc_get (GstPad * pad)
       if (v4lsrc->clock) {
         GstClockTime time = gst_element_get_time (GST_ELEMENT (v4lsrc));
 
-        GST_BUFFER_TIMESTAMP (buf) = time;
+        /* FIXME: figure out a way to add the capture latency here */
+        GST_BUFFER_TIMESTAMP (buf) = time /* + 0.5 * GST_SECOND / fps */ ;
       } else {
         GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
       }
@@ -990,6 +1042,12 @@ gst_v4lsrc_set_property (GObject * object,
       v4lsrc->copy_mode = g_value_get_boolean (value);
       break;
 
+    case ARG_AUTOPROBE:
+      if (!GST_V4L_IS_ACTIVE (GST_V4LELEMENT (v4lsrc))) {
+        v4lsrc->autoprobe = g_value_get_boolean (value);
+      }
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1025,6 +1083,10 @@ gst_v4lsrc_get_property (GObject * object,
 
     case ARG_COPY_MODE:
       g_value_set_boolean (value, v4lsrc->copy_mode);
+      break;
+
+    case ARG_AUTOPROBE:
+      g_value_set_boolean (value, v4lsrc->autoprobe);
       break;
 
     default:

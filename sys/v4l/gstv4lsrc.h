@@ -103,6 +103,7 @@ struct _GstV4lSrc
    GstV4lSrcSyncMode syncmode;
 
    gboolean copy_mode;
+   gboolean autoprobe; /* probe on startup ? */
 };
 
 struct _GstV4lSrcClass

@@ -274,7 +274,7 @@ gst_v4lsrc_capture_start (GstV4lSrc * v4lsrc)
 gboolean
 gst_v4lsrc_grab_frame (GstV4lSrc * v4lsrc, gint * num)
 {
-  GST_LOG_OBJECT (v4lsrc, "grabbing frame");
+  GST_LOG_OBJECT (v4lsrc, "grabbing frame %d", num);
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lsrc));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lsrc));
 
@@ -443,10 +443,9 @@ gst_v4lsrc_capture_deinit (GstV4lSrc * v4lsrc)
   return TRUE;
 }
 
-
 /******************************************************
- * gst_v4lsrc_try_palette():
- *   try out a palette on the device
+ * gst_v4lsrc_try_capture():
+ *   try out a capture on the device
  *   This has to be done before initializing the
  *   actual capture system, to make sure we don't
  *   mess up anything. So we need to mini-mmap()
@@ -461,7 +460,8 @@ gst_v4lsrc_capture_deinit (GstV4lSrc * v4lsrc)
  ******************************************************/
 
 gboolean
-gst_v4lsrc_try_palette (GstV4lSrc * v4lsrc, gint palette)
+gst_v4lsrc_try_capture (GstV4lSrc * v4lsrc, gint width, gint height,
+    gint palette)
 {
   /* so, we need a buffer and some more stuff */
   int frame = 0;
@@ -469,8 +469,8 @@ gst_v4lsrc_try_palette (GstV4lSrc * v4lsrc, gint palette)
   struct video_mbuf vmbuf;
   struct video_mmap vmmap;
 
-  GST_DEBUG_OBJECT (v4lsrc, "gonna try out palette format %d (%s)",
-      palette, palette_name[palette]);
+  GST_DEBUG_OBJECT (v4lsrc, "try out %dx%d, palette format %d (%s)",
+      width, height, palette, palette_name[palette]);
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lsrc));
   GST_V4L_CHECK_NOT_ACTIVE (GST_V4LELEMENT (v4lsrc));
 
@@ -490,8 +490,8 @@ gst_v4lsrc_try_palette (GstV4lSrc * v4lsrc, gint palette)
   }
 
   /* now that we have a buffer, let's try out our format */
-  vmmap.width = GST_V4LELEMENT (v4lsrc)->vcap.minwidth;
-  vmmap.height = GST_V4LELEMENT (v4lsrc)->vcap.minheight;
+  vmmap.width = width;
+  vmmap.height = height;
   vmmap.format = palette;
   vmmap.frame = frame;
   if (ioctl (GST_V4LELEMENT (v4lsrc)->video_fd, VIDIOCMCAPTURE, &vmmap) < 0) {
