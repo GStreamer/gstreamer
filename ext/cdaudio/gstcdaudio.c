@@ -178,7 +178,7 @@ gst_cdaudio_class_init (GstCDAudioClass * klass)
 	     	      0, 255, 255, G_PARAM_READWRITE));
 
   gst_cdaudio_signals[TRACK_CHANGE] =
-    g_signal_new ("track_change", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("track-change", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
 		  G_STRUCT_OFFSET (GstCDAudioClass, track_change), NULL, NULL, 
 		  gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 

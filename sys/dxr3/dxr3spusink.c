@@ -161,7 +161,7 @@ dxr3spusink_class_init (Dxr3SpuSinkClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   dxr3spusink_signals[SET_CLUT_SIGNAL] =
-    g_signal_new ("set_clut",
+    g_signal_new ("set-clut",
         G_TYPE_FROM_CLASS (klass),
         G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
         G_STRUCT_OFFSET (Dxr3SpuSinkClass, set_clut),
@@ -171,7 +171,7 @@ dxr3spusink_class_init (Dxr3SpuSinkClass *klass)
         G_TYPE_POINTER);
 
   dxr3spusink_signals[HIGHLIGHT_ON_SIGNAL] =
-    g_signal_new ("highlight_on",
+    g_signal_new ("highlight-on",
         G_TYPE_FROM_CLASS (klass),
         G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
         G_STRUCT_OFFSET (Dxr3SpuSinkClass, highlight_on),
@@ -182,7 +182,7 @@ dxr3spusink_class_init (Dxr3SpuSinkClass *klass)
         G_TYPE_UINT, G_TYPE_UINT);
 
   dxr3spusink_signals[HIGHLIGHT_OFF_SIGNAL] =
-    g_signal_new ("highlight_off",
+    g_signal_new ("highlight-off",
         G_TYPE_FROM_CLASS (klass),
         G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
         G_STRUCT_OFFSET (Dxr3SpuSinkClass, highlight_off),

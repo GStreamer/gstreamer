@@ -208,7 +208,7 @@ gst_divxenc_class_init (GstDivxEncClass *klass)
   gobject_class->dispose = gst_divxenc_dispose;
 
   gst_divxenc_signals[FRAME_ENCODED] =
-    g_signal_new ("frame_encoded", G_TYPE_FROM_CLASS(klass),
+    g_signal_new ("frame-encoded", G_TYPE_FROM_CLASS(klass),
                   G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstDivxEncClass, frame_encoded),
                   NULL, NULL,

@@ -221,7 +221,7 @@ gst_xvidenc_class_init (GstXvidEncClass *klass)
   gstelement_class->change_state = gst_xvidenc_change_state;
 
   gst_xvidenc_signals[FRAME_ENCODED] =
-    g_signal_new ("frame_encoded", G_TYPE_FROM_CLASS(klass),
+    g_signal_new ("frame-encoded", G_TYPE_FROM_CLASS(klass),
                   G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstXvidEncClass, frame_encoded),
                   NULL, NULL,

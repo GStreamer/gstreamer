@@ -145,7 +145,7 @@ cdplayer_class_init (CDPlayerClass * klass)
 		       0, G_MAXUINT, 1, G_PARAM_READABLE));
 
   cdplayer_signals[TRACK_CHANGE] =
-    g_signal_new ("track_change", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("track-change", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
 		  G_STRUCT_OFFSET (CDPlayerClass, track_change), NULL, NULL, 
 		  gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 

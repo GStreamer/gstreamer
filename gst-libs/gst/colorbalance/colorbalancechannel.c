@@ -74,7 +74,7 @@ gst_color_balance_channel_class_init (GstColorBalanceChannelClass *klass)
   parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
   signals[SIGNAL_VALUE_CHANGED] =
-    g_signal_new ("value_changed", G_TYPE_FROM_CLASS (klass),
+    g_signal_new ("value-changed", G_TYPE_FROM_CLASS (klass),
 		  G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstColorBalanceChannelClass,
 				   value_changed),
