@@ -326,7 +326,7 @@ gst_lame_class_init (GstLameClass *klass)
   gstelement_class->change_state = gst_lame_change_state;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstLame *lame;

@@ -130,7 +130,7 @@ static void		gst_synaesthesia_get_property	(GObject *object, guint prop_id,
 
 static void		gst_synaesthesia_chain		(GstPad *pad, GstBuffer *buf);
 
-static GstPadConnectReturn 
+static GstPadLinkReturn 
 			gst_synaesthesia_sinkconnect 	(GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
@@ -207,7 +207,7 @@ gst_synaesthesia_init (GstSynaesthesia *synaesthesia)
 
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_synaesthesia_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstSynaesthesia *synaesthesia;
