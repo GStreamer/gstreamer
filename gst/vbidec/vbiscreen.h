@@ -28,6 +28,7 @@ typedef struct vbiscreen_s vbiscreen_t;
 vbiscreen_t *vbiscreen_new( int video_width, int video_height, 
                             double video_aspect, int verbose, void *user_data );
 void vbiscreen_delete( vbiscreen_t *vs );
+void vbiscreen_set_verbose( vbiscreen_t *vs, int verbose );
 void vbiscreen_set_mode( vbiscreen_t *vs, int caption, int style);
 void vbiscreen_new_caption( vbiscreen_t *vs, int indent, int ital,
                             unsigned int colour, int row );

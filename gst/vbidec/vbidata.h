@@ -50,6 +50,7 @@ vbidata_t *vbidata_new_line( vbiscreen_t *vs, int verbose  );
 
 void vbidata_delete( vbidata_t *vbi );
 void vbidata_reset( vbidata_t *vbi );
+void vbidata_set_verbose( vbidata_t *vbi, int verbose );
 void vbidata_capture_mode( vbidata_t *vbi, int mode );
 void vbidata_process_frame( vbidata_t *vbi, int printdebug );
 void vbidata_process_line( vbidata_t *vbi, unsigned char *s, int bottom );

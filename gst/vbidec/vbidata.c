@@ -995,6 +995,11 @@ void vbidata_reset( vbidata_t *vbi )
     vbiscreen_reset( vbi->vs );
 }
 
+void vbidata_set_verbose( vbidata_t *vbi, int verbose )
+{
+    vbi->verbose = verbose;
+}
+
 void vbidata_capture_mode( vbidata_t *vbi, int mode )
 {
     if( !vbi ) return;

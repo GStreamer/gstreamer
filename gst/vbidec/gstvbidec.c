@@ -77,6 +77,7 @@ enum {
 
 enum {
   ARG_0,
+  ARG_VERBOSE,
   ARG_CAPTION_TYPE,
   ARG_DVD_INPUT
 };
@@ -176,6 +177,9 @@ gst_vbidec_class_init(GstVBIDecClass *klass)
   gobject_class->set_property 	= gst_vbidec_set_property;
   gobject_class->get_property 	= gst_vbidec_get_property;
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VERBOSE,
+      g_param_spec_boolean ("verbose", "verbose", "verbose",
+        FALSE, G_PARAM_WRITABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CAPTION_TYPE,
       g_param_spec_enum ("caption type", "caption type", "Closed Caption Type",
         GST_TYPE_VBIDEC_CAPTION_TYPE_TYPE, CAPTURE_OFF, G_PARAM_READWRITE));
@@ -312,6 +316,10 @@ gst_vbidec_set_property (GObject *object, guint prop_id, const GValue *value, GP
   vbidec = GST_VBIDEC (object);
 
   switch (prop_id) {
+    case ARG_VERBOSE:
+      vbidata_set_verbose(vbidec->vbidata, g_value_get_boolean (value));
+      vbiscreen_set_verbose(vbidec->vbiscreen, g_value_get_boolean (value));
+      break;
     case ARG_DVD_INPUT:
       vbidec->dvd_input = g_value_get_boolean(value);
       break;

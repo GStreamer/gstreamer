@@ -382,6 +382,11 @@ void scroll_screen( vbiscreen_t *vs )
     vs->scroll = 26;
 }
 
+void vbiscreen_set_verbose( vbiscreen_t *vs, int verbose )
+{
+    vs->verbose = verbose;
+}
+
 void vbiscreen_new_caption( vbiscreen_t *vs, int indent, int ital, 
                             unsigned int colour, int row )
 {
