@@ -318,17 +318,20 @@ gst_type_factory_unload_thyself (GstPluginFeature *feature)
 static GstCaps*
 gst_type_type_find_dummy (GstBuffer *buffer, gpointer priv)
 {
+  GstCaps *res = NULL;
   GstTypeFactory *factory = (GstTypeFactory *)priv;
 
   GST_DEBUG (GST_CAT_TYPES,"gsttype: need to load typefind function for %s", factory->mime);
 
   if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
-    if (factory->typefindfunc) {
-       GstCaps *res = factory->typefindfunc (buffer, factory);
-       if (res) 
-         return res;
+    if (factory->typefindfunc == gst_type_type_find_dummy) {
+      /* looks like we didn't get a real typefind function */
+      g_warning ("could not load valid typefind function for %s\n", factory->mime);
+    }
+    else if (factory->typefindfunc) {
+      res = factory->typefindfunc (buffer, factory);
     }
   }
 
-  return NULL;
+  return res;
 }
