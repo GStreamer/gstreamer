@@ -45,6 +45,7 @@ sub check_caps();
 sub check_lib_deprecated();
 sub check_typo();
 sub check_explicit_caps();
+sub check_signals();
 
 sub m_check_plugindir();
 sub m_check_interfaces();
@@ -72,6 +73,7 @@ foreach $filename (<FIND>) {
 	check_typo();
 	check_glibisms();
 	check_explicit_caps();
+	check_signals();
 
 	# less important stuff
 
@@ -505,6 +507,16 @@ sub check_explicit_caps()
 		}
 		$n--;
 		$lineno++;
+	}
+}
+
+#
+# Check for - in signal names
+#
+sub check_signals()
+{
+	if (grep { /g_signal_new.*\".*-.*\"/; } @lines) {
+		print "E: g_signal_new() with a signal name with a - in it (we prefer _)\n"
 	}
 }
 
