@@ -160,14 +160,14 @@ gst_jack_bin_change_state (GstElement *element)
             l = this->src_pads;
             while (l) {
                 pad = GST_JACK_PAD (l);
-                g_message ("jack: registering pad %s:%s", pad->name, pad->peer_name);
+                g_message ("jack: registering output port %s (peer %s)", pad->name, pad->peer_name);
                 pad->port = jack_port_register (this->client, pad->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput|JackPortIsTerminal, 0);
                 l = g_list_next (l);
             }
             l = this->sink_pads;
             while (l) {
                 pad = GST_JACK_PAD (l);
-                g_message ("jack: registering pad %s:%s", pad->name, pad->peer_name);
+                g_message ("jack: registering input port %s (peer %s)", pad->name, pad->peer_name);
                 pad->port = jack_port_register (this->client, pad->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput|JackPortIsTerminal, 0);
                 l = g_list_next (l);
             }
@@ -186,7 +186,7 @@ gst_jack_bin_change_state (GstElement *element)
                 pad = GST_JACK_PAD (l);
                 g_message ("connecting gst jack port %s to jack port %s", jack_port_name (pad->port), pad->peer_name);
                 if (jack_connect (this->client, jack_port_name (pad->port), pad->peer_name)) {
-                    g_warning ("could not connect %s and %s", pad->peer_name, jack_port_name (pad->port));
+                    g_warning ("jack: could not connect %s and %s", pad->peer_name, jack_port_name (pad->port));
                     return GST_STATE_FAILURE;
                 }
                 l = g_list_next (l);
@@ -196,7 +196,7 @@ gst_jack_bin_change_state (GstElement *element)
                 pad = GST_JACK_PAD (l);
                 g_message ("connecting gst jack port %s to jack port %s", jack_port_name (pad->port), pad->peer_name);
                 if (jack_connect (this->client, jack_port_name (pad->port), pad->peer_name)) {
-                    g_warning ("could not connect %s and %s", pad->peer_name, jack_port_name (pad->port));
+                    g_warning ("jack: could not connect %s and %s", pad->peer_name, jack_port_name (pad->port));
                     return GST_STATE_FAILURE;
                 }
                 l = g_list_next (l);

@@ -64,6 +64,7 @@ static GstElementDetails gst_jack_src_details = {
 };
 
 
+static GHashTable *port_name_counts = NULL;
 static GstElementClass *parent_class = NULL;
 
 static void gst_jack_init(GstJack *this);
@@ -188,6 +189,7 @@ gst_jack_class_init(GstJackClass *klass)
 {
     GObjectClass *object_class;
     GstElementClass *element_class;
+    gchar *prefix;
     
     object_class = (GObjectClass *)klass;
     element_class = (GstElementClass *)klass;
@@ -198,10 +200,15 @@ gst_jack_class_init(GstJackClass *klass)
     object_class->get_property = gst_jack_get_property;
     object_class->set_property = gst_jack_set_property;
     
+    if (GST_IS_JACK_SINK_CLASS (klass))
+        prefix = "gst-out-";
+    else
+        prefix = "gst-in-";
+    
     g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PORT_NAME_PREFIX,
                                     g_param_spec_string("port-name-prefix","Port name prefix",
                                                         "String to prepend to jack port names",
-                                                        "gst-",
+                                                        prefix,
                                                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
     element_class->change_state = gst_jack_change_state;
@@ -230,6 +237,7 @@ gst_jack_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
     gchar *newname;
     GList *l, **pad_list;
     GstJackPad *pad;
+    gint count;
     
     g_return_val_if_fail ((this = GST_JACK (element)), NULL);
     
@@ -238,7 +246,7 @@ gst_jack_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
     else if (this->direction == GST_PAD_SRC)
         pad_list = &this->bin->src_pads;
     else
-        pad_list = &this->bin->src_pads;
+        pad_list = &this->bin->sink_pads;
     
     if (name) {
         l = *pad_list;
@@ -251,12 +259,22 @@ gst_jack_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
         }
         newname = g_strdup (name);
     } else {
-        newname = g_strdup ("alsa_pcm:out_1");
+        if (this->direction == GST_PAD_SINK)
+            newname = g_strdup ("alsa_pcm:out_1");
+        else
+            newname = g_strdup ("alsa_pcm:in_1");
     }
     
     pad = g_new0(GstJackPad, 1);
     
-    pad->name = g_strdup_printf ("%s%d", this->port_name_prefix, 1); /* fixme :) */
+    if (!port_name_counts)
+        port_name_counts = g_hash_table_new (g_str_hash, g_str_equal);
+
+    count = GPOINTER_TO_INT (g_hash_table_lookup (port_name_counts, this->port_name_prefix));
+    g_hash_table_insert (port_name_counts, g_strdup (this->port_name_prefix), GINT_TO_POINTER (count+1));
+
+    pad->name = g_strdup_printf ("%s%d", this->port_name_prefix, count);
+
     pad->peer_name = newname;
     pad->pad = gst_pad_new_from_template (templ, newname);
     gst_element_add_pad (GST_ELEMENT (this), pad->pad);
