@@ -23,9 +23,13 @@
 #ifndef __GST_PARSE_H__
 #define __GST_PARSE_H__
 
-#ifndef GST_DISABLE_PARSE
-
 #include <gst/gstbin.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+#ifndef GST_DISABLE_PARSE
 
 gint	gst_parse_launch	(const gchar *cmdline, GstBin *parent);
 
@@ -34,5 +38,9 @@ gint	gst_parse_launch	(const gchar *cmdline, GstBin *parent);
 #pragma GCC poison gst_parse_launch
 
 #endif // GST_DISABLE_PARSE
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __GST_PARSE_H__ */
