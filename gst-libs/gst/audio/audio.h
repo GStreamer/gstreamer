@@ -20,15 +20,16 @@
 
 #include <gst/gst.h>
 
-/* for people that are looking at this source: the purpose of these defines is
+/* For people that are looking at this source: the purpose of these defines is
  * to make GstCaps a bit easier, in that you don't have to know all of the
  * properties that need to be defined. you can just use these macros. currently
  * (8/01) the only plugins that use these are the passthrough, speed, volume,
- * and [de]interleave plugins. so. these are for convenience only, and do not
- * specify the 'limits' of gstreamer. you might also use these definitions as a
+ * adder, and [de]interleave plugins. 
+ * These are for convenience only, and do not specify the 'limits' of 
+ * GStreamer. you might also use these definitions as a
  * base for making your own caps, if need be.
  *
- * for example, to make a source pad that can output mono streams of either
+ * For example, to make a source pad that can output mono streams of either
  * float or int:
 
     template = gst_pad_template_new 
@@ -41,7 +42,13 @@
 
     srcpad = gst_pad_new_from_template(template,"src");
 
- * Andy Wingo, 18 August 2001 */
+ * Andy Wingo, 18 August 2001 
+ * Thomas, 6 September 2002 */
+
+/* a few useful defines for arbitrary limits */
+#define GST_AUDIO_MIN_RATE	4000
+#define GST_AUDIO_MAX_RATE	96000
+#define GST_AUDIO_DEF_RATE	44100
 
 #define GST_AUDIO_INT_PAD_TEMPLATE_PROPS \
         gst_props_new (\
@@ -50,11 +57,14 @@
             "endianness",       GST_PROPS_INT (G_BYTE_ORDER),\
             "signed",           GST_PROPS_LIST (\
             					  GST_PROPS_BOOLEAN (TRUE),\
-            					  GST_PROPS_BOOLEAN(FALSE)\
+            					  GST_PROPS_BOOLEAN (FALSE)\
             					),\
-            "width",            GST_PROPS_LIST (GST_PROPS_INT(8), GST_PROPS_INT(16)),\
-            "depth",            GST_PROPS_LIST (GST_PROPS_INT(8), GST_PROPS_INT(16)),\
-            "rate",             GST_PROPS_INT_RANGE (4000, 96000),\
+            "width",            GST_PROPS_LIST (GST_PROPS_INT (8), \
+	                                        GST_PROPS_INT (16)), \
+            "depth",            GST_PROPS_LIST (GST_PROPS_INT (8), \
+	                                        GST_PROPS_INT (16)),\
+            "rate",             GST_PROPS_INT_RANGE (GST_AUDIO_MIN_RATE, \
+	                                             GST_AUDIO_MAX_RATE),\
             "channels",         GST_PROPS_INT_RANGE (1, G_MAXINT),\
           NULL)
 
@@ -65,11 +75,14 @@
             "endianness",       GST_PROPS_INT (G_BYTE_ORDER),\
             "signed",           GST_PROPS_LIST (\
             					  GST_PROPS_BOOLEAN (TRUE),\
-            					  GST_PROPS_BOOLEAN(FALSE)\
+            					  GST_PROPS_BOOLEAN (FALSE)\
             					),\
-            "width",            GST_PROPS_LIST (GST_PROPS_INT(8), GST_PROPS_INT(16)),\
-            "depth",            GST_PROPS_LIST (GST_PROPS_INT(8), GST_PROPS_INT(16)),\
-            "rate",             GST_PROPS_INT_RANGE (4000, 96000),\
+            "width",            GST_PROPS_LIST (GST_PROPS_INT (8), \
+	                                        GST_PROPS_INT (16)),\
+            "depth",            GST_PROPS_LIST (GST_PROPS_INT (8), \
+	                                        GST_PROPS_INT (16)),\
+            "rate",             GST_PROPS_INT_RANGE (GST_AUDIO_MIN_RATE, \
+	                                             GST_AUDIO_MAX_RATE),\
             "channels",         GST_PROPS_INT (1),\
           NULL)
 
@@ -79,7 +92,8 @@
             "layout",           GST_PROPS_STRING ("gfloat"),\
             "intercept",        GST_PROPS_FLOAT (0.0),\
             "slope",            GST_PROPS_FLOAT (1.0),\
-            "rate",             GST_PROPS_INT_RANGE (4000, 96000),\
+            "rate",             GST_PROPS_INT_RANGE (GST_AUDIO_MIN_RATE, \
+	                                             GST_AUDIO_MAX_RATE),\
             "channels",         GST_PROPS_INT (1),\
             NULL)
 
