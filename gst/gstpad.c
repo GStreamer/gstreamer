@@ -216,7 +216,6 @@ gst_real_pad_init (GstRealPad *pad)
   pad->linkfunc = NULL;
   pad->getcapsfunc = NULL;
 
-  pad->convertfunc 	= gst_pad_convert_default;
   pad->eventfunc 	= gst_pad_event_default;
   pad->convertfunc 	= gst_pad_convert_default;
   pad->queryfunc 	= gst_pad_query_default;
@@ -2908,7 +2907,7 @@ gst_pad_event_default_dispatch (GstPad *pad, GstElement *element,
   }
   gst_event_unref (event);
   g_list_free (orig);
-  return TRUE;
+  return (GST_PAD_DIRECTION (pad) == GST_PAD_SINK);
 }
 
 /**
