@@ -72,14 +72,14 @@ tool_run "$automake" "-a -c"
 # if enable exists, add an -enable option for each of the lines in that file
 if test -f enable; then
   for a in `cat enable`; do
-    CONFIGURE_OPT="$CONFIGURE_OPT --enable-$a"
+    CONFIGURE_FILE_OPT="--enable-$a"
   done
 fi
 
 # if disable exists, add an -disable option for each of the lines in that file
 if test -f disable; then
   for a in `cat disable`; do
-    CONFIGURE_OPT="$CONFIGURE_OPT --disable-$a"
+    CONFIGURE_FILE_OPT="$CONFIGURE_FILE_OPT --disable-$a"
   done
 fi
 
@@ -92,9 +92,10 @@ test -n "$NOCONFIGURE" && {
 echo "+ running configure ... "
 test ! -z "$CONFIGURE_DEF_OPT" && echo "  ./configure default flags: $CONFIGURE_DEF_OPT"
 test ! -z "$CONFIGURE_EXT_OPT" && echo "  ./configure external flags: $CONFIGURE_EXT_OPT"
+test ! -z "$CONFIGURE_FILE_OPT" && echo "  ./configure enable/disable flags: $CONFIGURE_FILE_OPT"
 echo
 
-./configure $CONFIGURE_DEF_OPT $CONFIGURE_EXT_OPT || {
+./configure $CONFIGURE_DEF_OPT $CONFIGURE_EXT_OPT $CONFIGURE_FILE_OPT || {
         echo "  configure failed"
         exit 1
 }
