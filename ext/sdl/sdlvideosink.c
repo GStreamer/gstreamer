@@ -447,8 +447,10 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
 
   GST_DEBUG (0,"videosink: clock wait: %llu", GST_BUFFER_TIMESTAMP(buf));
   if (sdlvideosink->clock) {
-    gst_element_clock_wait (GST_ELEMENT (sdlvideosink),
-		  sdlvideosink->clock, GST_BUFFER_TIMESTAMP (buf), NULL);
+    GstClockID id = gst_clock_new_single_shot_id (sdlvideosink->clock, GST_BUFFER_TIMESTAMP (buf));
+
+    gst_element_clock_wait (GST_ELEMENT (sdlvideosink), id, NULL);
+    gst_clock_id_free (id);
   }
 
   if (!gst_sdlvideosink_lock(sdlvideosink)) {
