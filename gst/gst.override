@@ -171,11 +171,11 @@ _wrap_gst_element_set_state(PyGObject *self, PyObject *args, PyObject *kwargs)
 	if (pyg_flags_get_value(GST_TYPE_ELEMENT_STATE, py_state, (gint *)&state))
 		return NULL;
 
-	Py_BEGIN_ALLOW_THREADS;
-
+	pyg_begin_allow_threads;
+    
 	ret = gst_element_set_state(GST_ELEMENT(self->obj), state);
-
-	Py_END_ALLOW_THREADS;
+    
+	pyg_end_allow_threads;
 
 	return PyInt_FromLong(ret);
 }
@@ -833,10 +833,11 @@ pygst_structure_foreach_marshal(GQuark field_id,
 	PyGstCustomNotify *cunote = user_data;
 	PyObject *py_field, *py_value, *retobj;
 	gboolean retval = TRUE;
-
+	PyGILState_STATE state;
+	
 	g_assert(cunote->func);
 
-	pyg_block_threads();
+	state = pyg_gil_state_ensure();
 
 	py_field = Py_BuildValue("s", g_quark_to_string(field_id));
 	py_value = pyg_value_as_pyobject(value, FALSE);
@@ -857,8 +858,8 @@ pygst_structure_foreach_marshal(GQuark field_id,
 
 	Py_XDECREF(retobj);
 
-	pyg_unblock_threads();
-
+	pyg_gil_state_release(state);
+	
 	return retval;
 }
 
@@ -936,10 +937,11 @@ pygst_tag_list_foreach_marshal(GstTagList *list,
 	PyObject *py_list;
 	PyObject *py_key, *retobj;
 	gboolean retval = TRUE;
-
+	PyGILState_STATE state;
+	
 	g_assert(cunote->func);
 
-	pyg_block_threads();
+	state = pyg_gil_state_ensure();
 
 	py_list = pyg_boxed_new(GST_TYPE_TAG_LIST, list, TRUE, TRUE);
 	py_key = Py_BuildValue("s", tag);
@@ -962,8 +964,8 @@ pygst_tag_list_foreach_marshal(GstTagList *list,
 
 	Py_XDECREF(retobj);
 
-	pyg_unblock_threads();
-
+	pyg_gil_state_release(state);
+	
 	return retval;
 }
 
@@ -1094,11 +1096,11 @@ override gst_main noargs
 static PyObject *
 _wrap_gst_main(PyObject *self)
 {
-	Py_BEGIN_ALLOW_THREADS;
+        pyg_begin_allow_threads;
 
 	_pygst_main();
 
-	Py_END_ALLOW_THREADS;
+        pyg_end_allow_threads;
 	
 	if (PyErr_Occurred())
 		return NULL;

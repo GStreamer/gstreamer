@@ -1,3 +1,7 @@
+2004-09-22  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gst.override: use new threading API
+
 2004-09-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/__init__.py:
