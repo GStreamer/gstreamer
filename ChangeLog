@@ -1,3 +1,16 @@
+2003-12-21  Julien MOUTTE  <julien@moutte.net>
+
+	* configure.ac: X_DISPLAY_MISSING is set to 1 if AC_PATH_XTRA fails to
+	find X development files. I don't understand the previous tests and
+	they fail on my debian/ppc unstable. This one works.
+	* examples/gstplay/player.c: (main): Set the pipeline to READY before
+	exiting.
+	* gst-libs/gst/play/gstplay.c: (gst_play_get_length_callback),
+	(gst_play_set_video_sink), (gst_play_set_audio_sink),
+	(gst_play_set_visualization): Add some safety checks in set_ methods
+	and state_change. This was throwing some ugly CRITICAL messages when
+	pipeline was getting disposed and casts were failing.
+
 2003-12-21  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
