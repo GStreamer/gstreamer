@@ -692,14 +692,13 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad)
   gboolean res;
 
   /* we found a sink for this stream, now try to install it */
-  gst_bin_add (GST_BIN (play_bin), sink);
+  sinkpad = gst_element_get_pad (sink, "sink");
+  res = gst_pad_link (srcpad, sinkpad);
   GST_DEBUG ("Adding sink with state %d (parent: %d, peer: %d)\n",
       GST_STATE (sink), GST_STATE (play_bin),
       GST_STATE (gst_pad_get_parent (srcpad)));
-  sinkpad = gst_element_get_pad (sink, "sink");
 
   /* try to link the pad of the sink to the stream */
-  res = gst_pad_link (srcpad, sinkpad);
   if (!res) {
     gchar *capsstr;
 
@@ -707,12 +706,11 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad)
     capsstr = gst_caps_to_string (gst_pad_get_caps (srcpad));
     g_warning ("could not link %s", capsstr);
     g_free (capsstr);
-    GST_LOG ("removing sink %p", sink);
-    gst_bin_remove (GST_BIN (play_bin), sink);
   } else {
     /* we got the sink succesfully linked, now keep the sink
      * in out internal list */
     play_bin->sinks = g_list_prepend (play_bin->sinks, sink);
+    gst_bin_add (GST_BIN (play_bin), sink);
   }
 
   return res;
