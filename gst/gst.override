@@ -1,5 +1,5 @@
 /* -*- Mode: C; c-basic-offset: 4 -*- */
-so/* gst-python
+/* gst-python
  * Copyright (C) 2002 David I. Lehn
  * Copyright (C) 2004 Johan Dahlin
  *
@@ -73,7 +73,7 @@ include
 init
 PyGstPipeline_Type.tp_new = PyType_GenericNew;
 PyGstThread_Type.tp_new = PyType_GenericNew;
-PyGstQueue_Type.tp_new = PyType_GenericNew;
+//PyGstQueue_Type.tp_new = PyType_GenericNew;
 PyGstBin_Type.tp_new = PyType_GenericNew; // Shouldn't this be enough?
 %%
 modulename gst
@@ -90,7 +90,6 @@ ignore-glob
   *_thyself
   *_valist
   gst_class_*
-  gst_debug_*
   gst_init*
   gst_interface_*
   gst_tag_list_get_*
@@ -487,7 +486,14 @@ override-slot GstCaps.tp_str
 static PyObject *
 _wrap_gst_caps_tp_str(PyGObject *self)
 {
-	return PyString_FromString(gst_caps_to_string((GstCaps*)self->obj));
+    gchar *tmp;
+    PyObject *retval;
+    
+    tmp = gst_caps_to_string((GstCaps*)self->obj);
+    retval = PyString_FromString(tmp);
+    g_free(tmp);
+
+    return retval;
 }
 %%
 define GstTagList.keys noargs
@@ -766,14 +772,28 @@ _wrap_gst_structure_ass_subscript(PyGObject *self,
 {
 	const char *key;
 	GstStructure* structure;
-	GValue value = { 0, };
 
 	structure = (GstStructure*)self->obj;
 	key = PyString_AsString(py_key);
 	if (py_value != NULL) {
-	    if (PyString_Check(py_value))
-		gst_structure_set(structure, key, G_TYPE_STRING, PyString_AsString(py_value), NULL);
-	    else if (PyInt_Check(py_value))
+	    if (PyString_Check(py_value)) {
+#if 0		
+		GValue *value = NULL;
+		gst_structure_field_from_string(PyString_AsString(py_value), value);
+		g_print ("gvalue: %s %s %s\n",
+			 PyString_AsString(py_value),
+			 gst_value_serialize(value),
+			 G_VALUE_TYPE_NAME(value));
+		gst_structure_set_value(structure, key, value);
+#else
+		GValue value = { 0, };
+		g_value_init (&value, G_TYPE_STRING);
+		gst_value_deserialize(&value, PyString_AsString(py_value));
+		gst_structure_set_value(structure, key, &value);
+		g_value_unset(&value);
+#endif		
+		// gst_structure_set(structure, key, G_TYPE_STRING, PyString_AsString(py_value), NULL);
+	    } else if (PyInt_Check(py_value))
 		gst_structure_set(structure, key, G_TYPE_INT, PyInt_AsLong(py_value), NULL);
 	    else if (PyFloat_Check(py_value))
 		gst_structure_set(structure, key, G_TYPE_DOUBLE, PyFloat_AsDouble(py_value), NULL);

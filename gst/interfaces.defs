@@ -484,6 +484,9 @@
    (in-module "Gst")
    (c-name "GstMixer")
    (gtype-id "GST_TYPE_MIXER")
+   (fields
+     '("GstMixerType" "mixer_type")
+    )
 )
 
 (define-object MixerTrack
@@ -491,6 +494,13 @@
    (parent "GstObject")
    (c-name "GstMixerTrack")
    (gtype-id "GST_TYPE_MIXER_TRACK")
+   (fields
+     '("gchar*" "label")
+     '("GstMixerTrackFlags" "flags")
+     '("gint" "num_channels")
+     '("gint" "min_volume")
+     '("gint" "max_volume")
+    )
 )
 
 (define-interface Navigation

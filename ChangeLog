@@ -1,3 +1,14 @@
+2004-08-30  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gst.override (_wrap_gst_structure_ass_subscript): Some more
+	fixes, doesn't quite work as it should yet though.x
+	(_wrap_gst_caps_tp_str): Plug leak
+
+	* gst/interfaces.defs (Mixer, MixerTrack): Add mixer fields here.
+
+	* testsuite/element.py (QueueTest.testConstruct): Some basic test,
+	one disabled for the moment
+
 2004-08-12  Johan Dahlin  <johan@gnome.org>
 
 	* gst/interfaces.defs (TunerNorm, TunerChannel): Add fields.

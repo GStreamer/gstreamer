@@ -37,6 +37,13 @@ class StructureTest(unittest.TestCase):
         assert isinstance(self.struct['integer'], int)
 	assert self.struct['integer'] == 5, self.struct['integer']
         
+    def testCreateFourCC(self):
+	self.struct['fourcc'] = "(fourcc)XVID"
+        #assert self.struct.has_key('fourcc')
+        #print self.struct.to_string()
+        #assert isinstance(self.struct['fourcc'], int)
+	#assert self.struct['integer'] == 5, self.struct['integer']
+        
     def testStructureChange(self):
         #assert structure['pixel-aspect-ratio'].numerator == 1
         #assert structure['pixel-aspect-ratio'].denominator == 2

@@ -158,5 +158,15 @@ class QueryTest(unittest.TestCase):
         assert self.element.query(gst.QUERY_POSITION, gst.FORMAT_BYTES) == 0
         assert self.element.query(gst.QUERY_POSITION, gst.FORMAT_TIME) == 0
 
+class QueueTest(unittest.TestCase):
+    def testConstruct(self):
+        queue = gst.element_factory_make('queue')
+        assert isinstance(queue, gst.Queue)
+        assert queue.get_name() == 'queue0'
+
+        #queue = gst.Element('queue')
+        #assert isinstance(queue, gst.Queue)
+        #assert queue.get_name() == 'queue0'
+
 if __name__ == "__main__":
     unittest.main()
