@@ -22,10 +22,10 @@ libgstcontrol_@GST_MAJORMINOR@_la_SOURCES = \
     unitconvert.c \
     dplinearinterp.c
 
-libgstcontrol_@GST_MAJORMINOR@_la_CFLAGS = $(GST_LIB_CFLAGS) -I$(top_srcdir)/libs
+libgstcontrol_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS) -I$(top_srcdir)/libs
 libgstcontrol_@GST_MAJORMINOR@_la_LDFLAGS = @GST_LIB_LDFLAGS@ $(as_libtool_LDFLAGS)
 # control uses log and exp, so we need -lm if xml is disabled
-libgstcontrol_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIB_LIBS) -lm
+libgstcontrol_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS) -lm
 
 install-data-local: as-libtool-install-data-local
 

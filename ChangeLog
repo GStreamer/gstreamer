@@ -1,3 +1,9 @@
+2004-07-29  Benjamin Otte  <otte@gnome.org>
+
+	* libs/gst/control/Makefile.am:
+	  link to libgstreamer (fixes Debian bug 262019, see
+	  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=262019 )
+
 2004-07-29  Wim Taymans  <wim@fluendo.com>
 
 	* testsuite/caps/fraction-convert.c: (check_from_double_convert),
