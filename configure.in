@@ -193,7 +193,7 @@ dnl =======================================
 dnl Check for libesd
 AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
 
-AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
+dnl AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
 
 dnl Check for libasound
 alsa_save_LIBS=$LIBS
