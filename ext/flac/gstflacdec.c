@@ -569,8 +569,7 @@ gst_flacdec_loop (GstElement *element)
     GstEvent *event;
 
     GST_DEBUG ("flacdec: sending EOS event");
-    FLAC__seekable_stream_decoder_finish(flacdec->decoder);
-    flacdec->init = TRUE;
+    FLAC__seekable_stream_decoder_reset(flacdec->decoder);
 
     if (GST_PAD_IS_USABLE (flacdec->srcpad)) {
       event = gst_event_new (GST_EVENT_EOS);
