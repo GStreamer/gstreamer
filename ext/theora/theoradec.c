@@ -574,6 +574,7 @@ theora_dec_chain (GstPad * pad, GstData * data)
       gst_data_unref (data);
       return;
     }
+
     if (packet.packetno == 0) {
       dec->packetno++;
     } else if (packet.packetno == 1) {
@@ -592,7 +593,8 @@ theora_dec_chain (GstPad * pad, GstData * data)
         g_free (encoder);
       }
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-          GST_TAG_ENCODER_VERSION, dec->info.version_major, NULL);
+          GST_TAG_ENCODER_VERSION, dec->info.version_major,
+          GST_TAG_NOMINAL_BITRATE, dec->info.target_bitrate, NULL);
       gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, 0, list);
 
       dec->packetno++;
@@ -647,6 +649,7 @@ theora_dec_chain (GstPad * pad, GstData * data)
 
       /* done */
       theora_decode_init (&dec->state, &dec->info);
+
       caps = gst_caps_new_simple ("video/x-raw-yuv",
           "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
           "framerate", G_TYPE_DOUBLE,

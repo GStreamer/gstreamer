@@ -1,5 +1,10 @@
 2004-10-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/theora/theoradec.c: (theora_dec_chain):
+	  Export bitrate as metadata.
+
+2004-10-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_build_list):
 	* ext/alsa/gstalsamixertrack.c: (gst_alsa_mixer_track_new):
 	* ext/alsa/gstalsamixertrack.h:
