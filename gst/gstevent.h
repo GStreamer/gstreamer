@@ -60,8 +60,10 @@ extern GType _gst_event_type;
 /* seek events */
 typedef enum {
   GST_SEEK_ANY,
-  GST_SEEK_TIMEOFFSET,
-  GST_SEEK_BYTEOFFSET
+  GST_SEEK_TIMEOFFSET_SET,
+  GST_SEEK_BYTEOFFSET_SET,
+  GST_SEEK_BYTEOFFSET_CUR,
+  GST_SEEK_BYTEOFFSET_END,
 } GstSeekType;
 
 #define GST_EVENT_SEEK_TYPE(event)	(GST_EVENT(event)->event_data.seek.type)
@@ -80,7 +82,7 @@ struct _GstEvent {
   union {
     struct {
       GstSeekType type;
-      guint64     offset;
+      gint64      offset;
       gboolean	  flush;
     } seek;
     struct {
@@ -99,7 +101,7 @@ GstEvent*	gst_event_new	        (GstEventType type);
 void		gst_event_free 		(GstEvent* event);
 
 /* seek events */
-GstEvent*	gst_event_new_seek	(GstSeekType type, guint64 offset, gboolean flush);
+GstEvent*	gst_event_new_seek	(GstSeekType type, gint64 offset, gboolean flush);
 
 /* flush events */
 #define		gst_event_new_flush()	gst_event_new(GST_EVENT_FLUSH)

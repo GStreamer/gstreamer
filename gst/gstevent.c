@@ -120,7 +120,7 @@ gst_event_free (GstEvent* event)
  * Returns: A new seek event.
  */
 GstEvent*       
-gst_event_new_seek (GstSeekType type, guint64 offset, gboolean flush)
+gst_event_new_seek (GstSeekType type, gint64 offset, gboolean flush)
 {
   GstEvent *event;
 
