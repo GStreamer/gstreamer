@@ -1,5 +1,13 @@
 2004-06-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/lame/gstlame.c:
+	* ext/mad/gstmad.c:
+	  sync caps.  Make sure mad can only output a list of rates, not
+	  a full range.  In the future, have three caps lists for each of the
+	  mpeg versions.  Change mpegversion to a double as well.
+
+2004-06-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/volume/.cvsignore:
 	* gst/volume/Makefile.am:
 	* gst/volume/demo.c: (value_changed_callback), (idler),

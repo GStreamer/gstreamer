@@ -126,15 +126,20 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "signed = (boolean) true, "
         "width = (int) 16, "
         "depth = (int) 16, "
-        "rate = (int) [ 11025, 48000 ], " "channels = (int) [ 1, 2 ]")
+        "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, "
+        "channels = (int) [ 1, 2 ]")
     );
 
+/* FIXME: make three caps, for mpegversion 1, 2 and 2.5 */
 static GstStaticPadTemplate mad_sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/mpeg, "
-        "mpegversion = (int) 1, " "layer = (int) [ 1, 3 ]")
+        "mpegversion = (int) 1, "
+        "layer = (int) [ 1, 3 ], "
+        "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, "
+        "channels = (int) [ 1, 2 ]")
     );
 
 static void gst_mad_base_init (gpointer g_class);
