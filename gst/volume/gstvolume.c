@@ -105,8 +105,8 @@ static void		volume_update_mute      (const GValue *value, gpointer data);
 
 static gboolean		volume_parse_caps          (GstVolume *filter, GstCaps *caps);
 
-static void		volume_chain_float         (GstPad *pad, GstBuffer *buf);
-static void		volume_chain_int16         (GstPad *pad, GstBuffer *buf);
+static void		volume_chain_float         (GstPad *pad, GstData *_data);
+static void		volume_chain_int16         (GstPad *pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
@@ -254,8 +254,9 @@ volume_init (GstVolume *filter)
 }
 
 static void
-volume_chain_float (GstPad *pad, GstBuffer *buf)
+volume_chain_float (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstVolume *filter;
   GstBuffer *out_buf;
   gfloat *data;
@@ -278,13 +279,14 @@ volume_chain_float (GstPad *pad, GstBuffer *buf)
     data[i++] *= filter->real_vol_f;
   }
   
-  gst_pad_push(filter->srcpad,out_buf);
+  gst_pad_push(filter->srcpad,GST_DATA (out_buf));
   
 }
 
 static void
-volume_chain_int16 (GstPad *pad, GstBuffer *buf)
+volume_chain_int16 (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstVolume *filter;
   GstBuffer *out_buf;
   gint16 *data;
@@ -320,7 +322,7 @@ volume_chain_int16 (GstPad *pad, GstBuffer *buf)
     }
   }
 
-  gst_pad_push(filter->srcpad,out_buf);   
+  gst_pad_push(filter->srcpad,GST_DATA (out_buf));   
   
 }
 

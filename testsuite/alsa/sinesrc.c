@@ -51,7 +51,7 @@ static GstElementClass *parent_class = NULL;
 static void             sinesrc_init (SineSrc *src);
 static void             sinesrc_class_init (SineSrcClass *klass);
 
-static GstBuffer *      sinesrc_get (GstPad *pad);
+static GstData *      sinesrc_get (GstPad *pad);
 static GstElementStateReturn sinesrc_change_state (GstElement *element);
 
 
@@ -171,7 +171,7 @@ static gint8 IDENTITY(gint8 x) { return x; };
   }\
   data = p;\
 }
-static GstBuffer *
+static GstData *
 sinesrc_get (GstPad *pad)
 {
   GstBuffer *buf;

@@ -112,7 +112,7 @@ static void	gst_gnomevfssink_get_property	(GObject *object, guint prop_id, GValu
 static gboolean gst_gnomevfssink_open_file 	(GstGnomeVFSSink *sink);
 static void 	gst_gnomevfssink_close_file (GstGnomeVFSSink *sink);
 
-static void	gst_gnomevfssink_chain	(GstPad *pad,GstBuffer *buf);
+static void	gst_gnomevfssink_chain	(GstPad *pad,GstData *_data);
 
 static GstElementStateReturn gst_gnomevfssink_change_state (GstElement *element);
 
@@ -306,8 +306,9 @@ gst_gnomevfssink_close_file (GstGnomeVFSSink *sink)
  * take the buffer from the pad and write to file if it's open
  */
 static void 
-gst_gnomevfssink_chain (GstPad *pad, GstBuffer *buf) 
+gst_gnomevfssink_chain (GstPad *pad, GstData *_data) 
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstGnomeVFSSink *sink;
   GnomeVFSResult result;
   GnomeVFSFileSize bytes_written;

@@ -700,7 +700,7 @@ sink_restart:
       g_assert (this->pad[i] != NULL);
       while (sink->size[i] == 0) {
         if (!sink->buf[i])
-          sink->buf[i] = gst_pad_pull (this->pad[i]);
+          sink->buf[i] = GST_BUFFER (gst_pad_pull (this->pad[i]));
         if (GST_IS_EVENT (sink->buf[i])) {
 	  if (gst_alsa_sink_check_event (sink, i))
 	    continue;
@@ -1125,7 +1125,7 @@ gst_alsa_src_loop (GstElement *element)
       GST_BUFFER_SIZE (src->buf[i]) = gst_alsa_samples_to_bytes (this, copied);
     GST_BUFFER_TIMESTAMP (src->buf[i]) = gst_alsa_samples_to_timestamp (this, this->transmitted);
     GST_BUFFER_DURATION (src->buf[i]) = gst_alsa_samples_to_timestamp (this, copied);
-    gst_pad_push (this->pad[i], src->buf[i]);
+    gst_pad_push (this->pad[i], GST_DATA (src->buf[i]));
     src->buf[i] = NULL;
   }
   this->transmitted += copied;

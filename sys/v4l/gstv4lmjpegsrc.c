@@ -77,7 +77,7 @@ static gboolean              gst_v4lmjpegsrc_srcconvert   (GstPad         *pad,
                                                            gint64         *dest_value);
 static GstPadLinkReturn      gst_v4lmjpegsrc_srcconnect   (GstPad         *pad,
                                                            GstCaps        *caps);
-static GstBuffer*            gst_v4lmjpegsrc_get          (GstPad         *pad);
+static GstData*            gst_v4lmjpegsrc_get          (GstPad         *pad);
 static GstCaps*              gst_v4lmjpegsrc_getcaps      (GstPad         *pad,
                                                            GstCaps        *caps);
 
@@ -483,7 +483,7 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
 }
 
 
-static GstBuffer*
+static GstData*
 gst_v4lmjpegsrc_get (GstPad *pad)
 {
   GstV4lMjpegSrc *v4lmjpegsrc;
@@ -588,7 +588,7 @@ gst_v4lmjpegsrc_get (GstPad *pad)
   g_signal_emit(G_OBJECT(v4lmjpegsrc),
                 gst_v4lmjpegsrc_signals[SIGNAL_FRAME_CAPTURE], 0);
 
-  return buf;
+  return GST_DATA (buf);
 }
 
 

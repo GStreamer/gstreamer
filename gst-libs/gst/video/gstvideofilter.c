@@ -56,7 +56,7 @@ static void	gst_videofilter_init		(GstVideofilter *videofilter);
 static void	gst_videofilter_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_videofilter_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void	gst_videofilter_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_videofilter_chain		(GstPad *pad, GstData *_data);
 GstCaps * gst_videofilter_class_get_capslist(GstVideofilterClass *klass);
 static void gst_videofilter_setup(GstVideofilter *videofilter);
 
@@ -366,8 +366,9 @@ gst_videofilter_postinit (GstVideofilter *videofilter)
 
 
 static void
-gst_videofilter_chain (GstPad *pad, GstBuffer *buf)
+gst_videofilter_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstVideofilter *videofilter;
   guchar *data;
   gulong size;
@@ -386,7 +387,7 @@ gst_videofilter_chain (GstPad *pad, GstBuffer *buf)
   size = GST_BUFFER_SIZE(buf);
 
   if(videofilter->passthru){
-    gst_pad_push(videofilter->srcpad, buf);
+    gst_pad_push(videofilter->srcpad, GST_DATA (buf));
     return;
   }
 
@@ -419,7 +420,7 @@ gst_videofilter_chain (GstPad *pad, GstBuffer *buf)
   GST_DEBUG ("gst_videofilter_chain: pushing buffer of %d bytes in '%s'",GST_BUFFER_SIZE(outbuf),
 	              GST_OBJECT_NAME (videofilter));
 
-  gst_pad_push(videofilter->srcpad, outbuf);
+  gst_pad_push(videofilter->srcpad, GST_DATA (outbuf));
 
   gst_buffer_unref(buf);
 }

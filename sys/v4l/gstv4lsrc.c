@@ -72,7 +72,7 @@ static GstPadLinkReturn      gst_v4lsrc_srcconnect   (GstPad         *pad,
                                                       GstCaps        *caps);
 static GstCaps*	             gst_v4lsrc_getcaps      (GstPad         *pad,
                                                       GstCaps        *caps);
-static GstBuffer*            gst_v4lsrc_get          (GstPad         *pad);
+static GstData*            gst_v4lsrc_get          (GstPad         *pad);
 
 /* get/set params */
 static void                  gst_v4lsrc_set_property (GObject        *object,
@@ -559,7 +559,7 @@ gst_v4lsrc_getcaps (GstPad  *pad,
 }
 
 
-static GstBuffer*
+static GstData*
 gst_v4lsrc_get (GstPad *pad)
 {
   GstV4lSrc *v4lsrc;
@@ -651,7 +651,7 @@ gst_v4lsrc_get (GstPad *pad)
   g_signal_emit(G_OBJECT(v4lsrc),
                 gst_v4lsrc_signals[SIGNAL_FRAME_CAPTURE], 0);
 
-  return buf;
+  return GST_DATA (buf);
 }
 
 

@@ -92,7 +92,7 @@ gst_audioscale_method_get_type (void)
 static void	gst_audioscale_class_init	(AudioscaleClass *klass);
 static void	gst_audioscale_init		(Audioscale *audioscale);
 
-static void	gst_audioscale_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_audioscale_chain		(GstPad *pad, GstData *_data);
 
 static void gst_audioscale_set_property (GObject * object, guint prop_id,
 					 const GValue * value, GParamSpec * pspec);
@@ -313,8 +313,9 @@ gst_audioscale_init (Audioscale *audioscale)
 }
 
 static void
-gst_audioscale_chain (GstPad *pad, GstBuffer *buf)
+gst_audioscale_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   Audioscale *audioscale;
   guchar *data;
   gulong size;
@@ -325,7 +326,7 @@ gst_audioscale_chain (GstPad *pad, GstBuffer *buf)
 
   audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
   if (audioscale->passthru){
-    gst_pad_push (audioscale->srcpad, buf);
+    gst_pad_push (audioscale->srcpad, GST_DATA (buf));
     return;
   }
 
@@ -339,7 +340,7 @@ gst_audioscale_chain (GstPad *pad, GstBuffer *buf)
 
   resample_scale (audioscale->resample, data, size);
 
-  gst_pad_push (audioscale->srcpad, audioscale->outbuf);
+  gst_pad_push (audioscale->srcpad, GST_DATA (audioscale->outbuf));
 
   gst_buffer_unref (buf);
 }

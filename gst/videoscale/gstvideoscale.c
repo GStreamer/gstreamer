@@ -74,7 +74,7 @@ static void	gst_videoscale_init		(GstVideoscale *videoscale);
 static void	gst_videoscale_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_videoscale_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void	gst_videoscale_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_videoscale_chain		(GstPad *pad, GstData *_data);
 static GstCaps * gst_videoscale_get_capslist(void);
 
 static GstElementClass *parent_class = NULL;
@@ -388,8 +388,9 @@ gst_videoscale_init (GstVideoscale *videoscale)
 
 
 static void
-gst_videoscale_chain (GstPad *pad, GstBuffer *buf)
+gst_videoscale_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstVideoscale *videoscale;
   guchar *data;
   gulong size;
@@ -408,7 +409,7 @@ gst_videoscale_chain (GstPad *pad, GstBuffer *buf)
   size = GST_BUFFER_SIZE(buf);
 
   if(videoscale->passthru){
-    gst_pad_push(videoscale->srcpad, buf);
+    gst_pad_push(videoscale->srcpad, GST_DATA (buf));
     return;
   }
 
@@ -439,7 +440,7 @@ gst_videoscale_chain (GstPad *pad, GstBuffer *buf)
   GST_DEBUG ("gst_videoscale_chain: pushing buffer of %d bytes in '%s'",GST_BUFFER_SIZE(outbuf),
 	              GST_OBJECT_NAME (videoscale));
 
-  gst_pad_push(videoscale->srcpad, outbuf);
+  gst_pad_push(videoscale->srcpad, GST_DATA (outbuf));
 
   gst_buffer_unref(buf);
 }

@@ -71,7 +71,7 @@ static void gst_videotestsrc_set_property (GObject * object, guint prop_id,
 static void gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value,
 					   GParamSpec * pspec);
 
-static GstBuffer *gst_videotestsrc_get (GstPad * pad);
+static GstData *gst_videotestsrc_get (GstPad * pad);
 
 static GstElementClass *parent_class = NULL;
 
@@ -405,7 +405,7 @@ gst_videotestsrc_init (GstVideotestsrc * videotestsrc)
 }
 
 
-static GstBuffer *
+static GstData *
 gst_videotestsrc_get (GstPad * pad)
 {
   GstVideotestsrc *videotestsrc;
@@ -466,7 +466,7 @@ gst_videotestsrc_get (GstPad * pad)
     videotestsrc->n_frames++;
   }
 
-  return buf;
+  return GST_DATA (buf);
 }
 
 static void

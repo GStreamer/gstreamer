@@ -592,7 +592,7 @@ gst_vorbisfile_loop (GstElement *element)
     /* if the pad is not usable, don't push it out */
     if (GST_PAD_IS_USABLE (vorbisfile->srcpad)) {
       gst_pad_push (vorbisfile->srcpad, 
-		    GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+		    GST_DATA (gst_event_new (GST_EVENT_EOS)));
     }
     gst_element_set_eos (element);
     return;
@@ -621,7 +621,7 @@ gst_vorbisfile_loop (GstElement *element)
         discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, 
 		    			     GST_FORMAT_DEFAULT, samples, NULL); 
 
-        gst_pad_push (vorbisfile->srcpad, GST_BUFFER (discont));
+        gst_pad_push (vorbisfile->srcpad, GST_DATA (discont));
       }
     }
 
@@ -646,7 +646,7 @@ gst_vorbisfile_loop (GstElement *element)
     }
   
     if (GST_PAD_IS_USABLE (vorbisfile->srcpad)) 
-      gst_pad_push (vorbisfile->srcpad, outbuf);
+      gst_pad_push (vorbisfile->srcpad, GST_DATA (outbuf));
     else
       gst_buffer_unref (outbuf);
   }

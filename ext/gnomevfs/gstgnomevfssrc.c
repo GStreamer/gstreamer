@@ -180,7 +180,7 @@ static void 		gst_gnomevfssrc_set_property	(GObject *object, guint prop_id,
 static void 		gst_gnomevfssrc_get_property	(GObject *object, guint prop_id,
 							 GValue *value, GParamSpec *pspec);
 
-static GstBuffer*	gst_gnomevfssrc_get		(GstPad *pad);
+static GstData*	gst_gnomevfssrc_get		(GstPad *pad);
 
 static GstElementStateReturn 
 			gst_gnomevfssrc_change_state	(GstElement *element);
@@ -919,7 +919,7 @@ gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc *src)
  *
  * Push a new buffer from the gnomevfssrc at the current offset.
  */
-static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
+static GstData *gst_gnomevfssrc_get(GstPad *pad)
 {
 	GstGnomeVFSSrc *src;
 	GnomeVFSResult result = 0;
@@ -936,7 +936,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 	if ((src->curoffset >= src->size) && (src->size != 0))
 	{
 		gst_element_set_eos (GST_ELEMENT (src));
-		return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+		return GST_DATA (gst_event_new (GST_EVENT_EOS));
 	}
 
 	/* create the buffer */
@@ -966,7 +966,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 				gst_buffer_unref (buf);
 				gst_element_set_eos (GST_ELEMENT (src));
 				src->in_first_get = FALSE;
-				return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+				return GST_DATA (gst_event_new (GST_EVENT_EOS));
 			}
 			
 			src->icy_count += readbytes;
@@ -1000,7 +1000,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 			event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset, NULL);
 			src->need_flush = FALSE;
 
-			return GST_BUFFER (event);
+			return GST_DATA (event);
 		}
 
 		result = gnome_vfs_read(src->handle, GST_BUFFER_DATA(buf),
@@ -1015,7 +1015,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 
 			gst_element_set_eos (GST_ELEMENT (src));
 
-			return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+			return GST_DATA (gst_event_new (GST_EVENT_EOS));
 		}
 		
 		GST_BUFFER_OFFSET(buf) = src->curoffset;
@@ -1026,7 +1026,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 	GST_BUFFER_TIMESTAMP (buf) = -1;
 
 	/* we're done, return the buffer */
-	return buf;
+	return GST_DATA (buf);
 }
 
 /* open the file, do stuff necessary to go to READY state */

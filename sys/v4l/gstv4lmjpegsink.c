@@ -64,7 +64,7 @@ static void                  gst_v4lmjpegsink_init         (GstV4lMjpegSink     
 static GstPadLinkReturn   gst_v4lmjpegsink_sinkconnect  (GstPad               *pad,
                                                             GstCaps              *vscapslist);
 static void                  gst_v4lmjpegsink_chain        (GstPad               *pad,
-                                                            GstBuffer            *buf);
+                                                            GstData              *_data);
 
 /* get/set gst object functions */
 static void                  gst_v4lmjpegsink_set_property (GObject              *object,
@@ -257,8 +257,9 @@ gst_v4lmjpegsink_set_clock (GstElement *element, GstClock *clock)
 
 static void
 gst_v4lmjpegsink_chain (GstPad    *pad,
-                        GstBuffer *buf)
+                        GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstV4lMjpegSink *v4lmjpegsink;
   GstClockTimeDiff jitter;
   gint num;

@@ -96,7 +96,7 @@ static void 	    gst_sinesrc_populate_sinetable  (GstSineSrc *src);
 static inline void  gst_sinesrc_update_table_inc    (GstSineSrc *src);
 static void 	    gst_sinesrc_force_caps	    (GstSineSrc *src);
 
-static GstBuffer*   gst_sinesrc_get		    (GstPad *pad);
+static GstData*   gst_sinesrc_get		    (GstPad *pad);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_sinesrc_signals[LAST_SIGNAL] = { 0 }; */
@@ -210,7 +210,7 @@ gst_sinesrc_init (GstSineSrc *src)
 
 }
 
-static GstBuffer *
+static GstData *
 gst_sinesrc_get (GstPad *pad)
 {
   GstSineSrc *src;
@@ -278,7 +278,7 @@ gst_sinesrc_get (GstPad *pad)
   if (src->newcaps) {
     gst_sinesrc_force_caps(src);
   }
-  return buf;
+  return GST_DATA (buf);
 }
 
 static void 

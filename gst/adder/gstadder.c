@@ -556,7 +556,7 @@ gst_adder_loop (GstElement *element)
   /* send it out */
 
   GST_DEBUG ("pushing buf_out");
-  gst_pad_push (adder->srcpad, buf_out);
+  gst_pad_push (adder->srcpad, GST_DATA (buf_out));
 }
 
 

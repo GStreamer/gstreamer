@@ -324,8 +324,9 @@ gst_text_overlay_blit_yuv420(GstTextOverlay *overlay, FT_Bitmap *bitmap,
 
 
 static void
-gst_textoverlay_video_chain(GstPad *pad, GstBuffer *buf)
+gst_textoverlay_video_chain(GstPad *pad, GstData *_data)
 {
+    GstBuffer *buf = GST_BUFFER (_data);
     GstTextOverlay *overlay;
     guchar         *pixbuf;
     gint            x0, y0;
@@ -368,7 +369,7 @@ gst_textoverlay_video_chain(GstPad *pad, GstBuffer *buf)
     if (overlay->bitmap.buffer)
 	gst_text_overlay_blit_yuv420(overlay, &overlay->bitmap, pixbuf, x0, y0);
 
-    gst_pad_push(overlay->srcpad, buf);
+    gst_pad_push(overlay->srcpad, GST_DATA (buf));
 }
 
 #define PAST_END(buffer, time) \
@@ -388,7 +389,7 @@ gst_textoverlay_loop(GstElement *element)
     g_return_if_fail(GST_IS_TEXTOVERLAY(element));
     overlay = GST_TEXTOVERLAY(element);
 
-    video_frame = gst_pad_pull(overlay->video_sinkpad);
+    video_frame = GST_BUFFER (gst_pad_pull(overlay->video_sinkpad));
     now = GST_BUFFER_TIMESTAMP(video_frame);
 
     /*
@@ -409,7 +410,7 @@ gst_textoverlay_loop(GstElement *element)
       if(!GST_PAD_IS_USABLE(overlay->text_sinkpad)){
         break;
       }
-      overlay->next_buffer = gst_pad_pull(overlay->text_sinkpad);
+      overlay->next_buffer = GST_BUFFER (gst_pad_pull(overlay->text_sinkpad));
       if (!overlay->next_buffer)
 	break;
 
@@ -458,7 +459,7 @@ gst_textoverlay_loop(GstElement *element)
       overlay->need_render = FALSE;
     }
 
-    gst_textoverlay_video_chain(overlay->srcpad, video_frame);
+    gst_textoverlay_video_chain(overlay->srcpad, GST_DATA (video_frame));
 }
 
 

@@ -70,7 +70,7 @@ gst_tcpsrc_control_get_type(void) {
 static void		gst_tcpsrc_class_init		(GstTCPSrc *klass);
 static void		gst_tcpsrc_init			(GstTCPSrc *tcpsrc);
 
-static GstBuffer*	gst_tcpsrc_get			(GstPad *pad);
+static GstData*	gst_tcpsrc_get			(GstPad *pad);
 static GstElementStateReturn
 			gst_tcpsrc_change_state 	(GstElement *element);
 
@@ -167,7 +167,7 @@ gst_tcpsrc_init (GstTCPSrc *tcpsrc)
   GST_FLAG_UNSET (tcpsrc, GST_TCPSRC_CONNECTED);
 }
 
-static GstBuffer*
+static GstData*
 gst_tcpsrc_get (GstPad *pad)
 {
   GstTCPSrc *tcpsrc;
@@ -264,7 +264,7 @@ gst_tcpsrc_get (GstPad *pad)
       	   discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
 				current_time, NULL);
 
-      	   gst_pad_push (tcpsrc->srcpad, GST_BUFFER (discont));
+      	   gst_pad_push (tcpsrc->srcpad, GST_DATA (discont));
 	}
   
 	GST_FLAG_UNSET (tcpsrc, GST_TCPSRC_1ST_BUF);
@@ -312,7 +312,7 @@ gst_tcpsrc_get (GstPad *pad)
     outbuf = NULL;
   }
   
-  return outbuf;
+  return GST_DATA (outbuf);
 }
 
 

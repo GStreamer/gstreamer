@@ -88,7 +88,7 @@ gst_vorbisenc_get_formats (GstPad *pad)
 static void 		gst_vorbisenc_class_init 	(VorbisEncClass *klass);
 static void 		gst_vorbisenc_init 		(VorbisEnc *vorbisenc);
 
-static void 		gst_vorbisenc_chain 		(GstPad *pad, GstBuffer *buf);
+static void 		gst_vorbisenc_chain 		(GstPad *pad, GstData *_data);
 static gboolean 	gst_vorbisenc_setup 		(VorbisEnc *vorbisenc);
 
 static void 		gst_vorbisenc_get_property 	(GObject *object, guint prop_id, 
@@ -656,7 +656,7 @@ gst_vorbisenc_write_page (VorbisEnc *vorbisenc, ogg_page *page)
   vorbisenc->bytes_out += GST_BUFFER_SIZE (outbuf);
 
   if (GST_PAD_IS_USABLE (vorbisenc->srcpad)) {
-    gst_pad_push (vorbisenc->srcpad, outbuf);
+    gst_pad_push (vorbisenc->srcpad, GST_DATA (outbuf));
   }
   else {
     gst_buffer_unref (outbuf);
@@ -664,8 +664,9 @@ gst_vorbisenc_write_page (VorbisEnc *vorbisenc, ogg_page *page)
 }
 
 static void
-gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
+gst_vorbisenc_chain (GstPad * pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   VorbisEnc *vorbisenc;
 
   g_return_if_fail (pad != NULL);
@@ -775,7 +776,7 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
     vorbis_block_clear (&vorbisenc->vb);
     vorbis_dsp_clear (&vorbisenc->vd);
     vorbis_info_clear (&vorbisenc->vi);
-    gst_pad_push (vorbisenc->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+    gst_pad_push (vorbisenc->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
     gst_element_set_eos (GST_ELEMENT (vorbisenc));
   }
 }

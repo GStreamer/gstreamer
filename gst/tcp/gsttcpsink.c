@@ -72,7 +72,7 @@ static void		gst_tcpsink_init		(GstTCPSink *tcpsink);
 
 static void 		gst_tcpsink_set_clock 		(GstElement *element, GstClock *clock);
 
-static void		gst_tcpsink_chain		(GstPad *pad,GstBuffer *buf);
+static void		gst_tcpsink_chain		(GstPad *pad,GstData *_data);
 static GstElementStateReturn gst_tcpsink_change_state 	(GstElement *element);
 
 static void 		gst_tcpsink_set_property 	(GObject *object, guint prop_id, 
@@ -246,8 +246,9 @@ gst_tcpsink_init (GstTCPSink *tcpsink)
 }
 
 static void
-gst_tcpsink_chain (GstPad *pad, GstBuffer *buf)
+gst_tcpsink_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstTCPSink *tcpsink;
  
   g_return_if_fail (pad != NULL);

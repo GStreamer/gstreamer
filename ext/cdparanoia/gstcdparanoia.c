@@ -145,7 +145,7 @@ static void 		cdparanoia_set_property 	(GObject *object, guint prop_id,
 static void 		cdparanoia_get_property 	(GObject *object, guint prop_id,
 							 GValue *value, GParamSpec *pspec);
 
-static GstBuffer*	cdparanoia_get 			(GstPad *pad);
+static GstData*	cdparanoia_get 			(GstPad *pad);
 static gboolean 	cdparanoia_event 		(GstPad *pad, GstEvent *event);
 static const GstEventMask*
 			cdparanoia_get_event_mask 	(GstPad *pad);
@@ -440,7 +440,7 @@ cdparanoia_callback (long inpos, int function)
 {
 }
 
-static GstBuffer *
+static GstData *
 cdparanoia_get (GstPad *pad)
 {
   CDParanoia *src;
@@ -483,7 +483,7 @@ cdparanoia_get (GstPad *pad)
   }
 
   /* we're done, push the buffer off now */
-  return buf;
+  return GST_DATA (buf);
 }
 
 /* need some stuff to get a discid (cdparanoia doesn't do cddb but lets

@@ -112,7 +112,7 @@ static void  gst_audio_convert_set_property (GObject *object, guint prop_id, con
 static void  gst_audio_convert_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 /* gstreamer functions */
-static void                  gst_audio_convert_chain        (GstPad *pad, GstBuffer *buf);
+static void                  gst_audio_convert_chain        (GstPad *pad, GstData *_data);
 static GstPadLinkReturn      gst_audio_convert_link         (GstPad *pad, GstCaps *caps);
 static GstElementStateReturn gst_audio_convert_change_state (GstElement *element);
 
@@ -317,8 +317,9 @@ gst_audio_convert_get_property (GObject *object, guint prop_id, GValue *value, G
 /*** GSTREAMER FUNCTIONS ******************************************************/
 
 static void
-gst_audio_convert_chain (GstPad *pad, GstBuffer *buf)
+gst_audio_convert_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstAudioConvert *this;
 
   g_return_if_fail(GST_IS_PAD(pad));
@@ -357,7 +358,7 @@ gst_audio_convert_chain (GstPad *pad, GstBuffer *buf)
 
   buf = gst_audio_convert_buffer_from_default_format (this, buf);
 
-  gst_pad_push (this->src, buf);
+  gst_pad_push (this->src, GST_DATA (buf));
 }
 
 static GstPadLinkReturn
