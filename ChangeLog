@@ -1,5 +1,13 @@
 2005-01-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/musepack/gstmusepackreader.cpp:
+	* gst/apetag/apedemux.c: (gst_ape_demux_stream_data):
+	  Some work on tags - still doesn't work in playbin...
+	* gst/audioscale/gstaudioscale.c: (gst_audioscale_chain):
+	  Handle events...
+
+2005-01-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_tree):
 	  Also shove tags on kid pads.
 
