@@ -23,6 +23,10 @@ EXTRA_libgstlevel_la_SOURCES = gstlevel-marshal.list
 BUILT_SOURCES = \
 	gstlevel-marshal.c \
 	gstlevel-marshal.h
+CLEANFILES = \
+	gstlevel-marshal.c \
+	gstlevel-marshal.h
+			     
 
 gstlevel-marshal.h: gstlevel-marshal.list
 	glib-genmarshal --header --prefix=gstlevel_cclosure_marshal $(srcdir)/gstlevel-marshal.list > gstlevel-marshal.h.tmp

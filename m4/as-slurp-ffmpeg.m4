@@ -22,7 +22,10 @@ AC_DEFUN(AS_SLURP_FFMPEG,
   DIRECTORY=`pwd`
   # get/update cvs
   if test ! -d $1; then mkdir -p $1; fi
-  cd $1
+  dnl we need to check $srcdir/$1 or it will always checkout ffmpeg even if it is there
+  dnl at least when top_srcdir != top_builddir.
+  dnl FIXME: unfortunately this makes the checkout go into top_srcdir
+  cd $srcdir/$1
 
   if test ! -e ffmpeg/README; then
     # check out cvs code

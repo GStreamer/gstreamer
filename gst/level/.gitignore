@@ -1,1 +1,5 @@
-gstlevel-marshal.*
+gstlevel-marshal.h
+gstlevel-marshal.c
+gstlevel-marshal.list
+demo
+plot
