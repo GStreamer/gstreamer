@@ -1,3 +1,26 @@
+2004-04-20  Daniel Gazard  <daniel.gazard@epita.fr>
+
+	reviewed by David Schleef
+
+	* ext/mad/gstid3tag.c: Add stdlib.h
+	* gst/rtp/gstrtpgsmenc.c: same
+	* gst/tags/gstid3tag.c: same
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_get): Fix GST_DISABLE_LOADSAVE
+	* gst/tcp/gsttcpsink.c: (gst_tcpsink_sink_link): Adjust
+	GST_DISABLE_LOADSAVE use.
+	* gst/udp/gstudpsink.c: (gst_udpsink_sink_link): Likewise.
+	* gst/tcp/gsttcpsrc.c: (gst_tcpsrc_get): Likewise.
+	* ext/gnomevfs/gstgnomevfssrc.c: Include <stdlib.h> (needed by
+	atol(3)).
+	* sys/oss/gstosselement.h: Include <sys/types.h> (needed for dev_t).
+	* gst/tags/gstvorbistag.c: Include <stdlib.h> (needed by
+	strtoul(3)).
+	* gst/rtp/gstrtpL16enc.c: Include <stdlib.h> (needed by random(3)).
+	* ext/mad/Makefile.am: (libgstmad_la_CFLAGS): Add $(MAD_CFLAGS)
+	$(ID3_CFLAGS).
+	* ext/libfame/Makefile.am: (libgstlibfame_la_CFLAGS): Add
+	$(LIBFAME_CFLAGS).
+
 2004-04-20  David Schleef  <ds@schleef.org>
 
 	* gst/realmedia/rmdemux.c:  This was supposed to part of the

@@ -188,7 +188,10 @@ gst_tcpsrc_get (GstPad * pad)
   gint numbytes;
   fd_set read_fds;
   guint max_sock;
+
+#ifndef GST_DISABLE_LOADSAVE
   int ret, client_sock;
+#endif
   struct sockaddr client_addr;
 
   g_return_val_if_fail (pad != NULL, NULL);
@@ -217,8 +220,12 @@ gst_tcpsrc_get (GstPad * pad)
     if ((tcpsrc->control_sock != -1)
         && FD_ISSET (tcpsrc->control_sock, &read_fds)) {
       guchar *buf = NULL;
+
+#ifndef GST_DISABLE_LOADSAVE
       xmlDocPtr doc;
       GstCaps *caps;
+#endif
+
 
       switch (tcpsrc->control) {
         case CONTROL_TCP:

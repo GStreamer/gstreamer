@@ -24,6 +24,7 @@
 #endif
 
 #include "gsttageditingprivate.h"
+#include <stdlib.h>
 #include <string.h>
 
 static const gchar *genres[] = {

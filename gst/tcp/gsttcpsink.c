@@ -155,18 +155,20 @@ static GstPadLinkReturn
 gst_tcpsink_sink_link (GstPad * pad, const GstCaps * caps)
 {
   GstTCPSink *tcpsink;
+
+#ifndef GST_DISABLE_LOADSAVE
   struct sockaddr_in serv_addr;
   struct in_addr addr;
   struct hostent *he;
   int fd;
   FILE *f;
-
-#ifndef GST_DISABLE_LOADSAVE
   xmlDocPtr doc;
+#endif
 
   tcpsink = GST_TCPSINK (gst_pad_get_parent (pad));
 
   switch (tcpsink->control) {
+#ifndef GST_DISABLE_LOADSAVE
     case CONTROL_TCP:
       memset (&serv_addr, 0, sizeof (serv_addr));
 
@@ -216,8 +218,9 @@ gst_tcpsink_sink_link (GstPad * pad, const GstCaps * caps)
       xmlDocDump (f, doc);
       fclose (f);
       close (fd);
-#endif
       break;
+
+#endif
     case CONTROL_NONE:
       return GST_PAD_LINK_OK;
       break;
