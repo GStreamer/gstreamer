@@ -23,6 +23,8 @@
 
 #include <gst/gst.h>
 
+G_BEGIN_DECLS
+
 typedef struct GstMediaInfoPriv		GstMediaInfoPriv;
 typedef struct _GstMediaInfo            GstMediaInfo;
 typedef struct _GstMediaInfoClass       GstMediaInfoClass;
@@ -122,5 +124,7 @@ gboolean	gst_media_info_write	(GstMediaInfo *media_info,
                                          const char *location,
 					 GstCaps *media_info);
 					 */
+
+G_END_DECLS
 
 #endif /* __GST_MEDIA_INFO_H__ */
