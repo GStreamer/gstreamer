@@ -1,6 +1,19 @@
 2004-07-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init),
+	(gst_multifdsink_init), (gst_multifdsink_add),
+	(gst_multifdsink_client_remove),
+	(gst_multifdsink_handle_client_write),
+	(gst_multifdsink_queue_buffer), (gst_multifdsink_chain),
+	(gst_multifdsink_set_property), (gst_multifdsink_get_property),
+	(gst_multifdsink_init_send):
+	* gst/tcp/gstmultifdsink.h:
+	Added more stats, added timeout for a client, fixed some typos
+	and added some comments.
+
+2004-07-20  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init),
 	(gst_multifdsink_add), (gst_multifdsink_get_stats),
 	(gst_multifdsink_client_remove),
 	(gst_multifdsink_handle_client_write):
