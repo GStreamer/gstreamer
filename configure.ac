@@ -1290,6 +1290,7 @@ gst-libs/gst/gconf/Makefile
 gst-libs/gst/idct/Makefile
 gst-libs/gst/media-info/Makefile
 gst-libs/gst/mixer/Makefile
+gst-libs/gst/navigation/Makefile
 gst-libs/gst/play/Makefile
 gst-libs/gst/resample/Makefile
 gst-libs/gst/riff/Makefile
