@@ -155,6 +155,7 @@ Preface - (optional) properties for all video formats:
   YVYU: packed, Y-V-Y-U order, U/V hor 2x subsampled (YUV-4:2:2, 16 bpp)
   UYVY: packed, U-Y-V-Y order, U/V hor 2x subsampled (YUV-4:2:2, 16 bpp)
   Y41P: packed, UYVYUYVYYYYY order, U/V hor 4x subsampled (YUV-4:1:1, 12 bpp)
+  IUY2: packed, U-Y-V order, not subsampled (YUV-1:1:1, 24 bpp)
 
   Y42B: planar, Y-U-V order, U/V hor 2x subsampled (YUV-4:2:2, 16 bpp)
   YV12: planar, Y-V-U order, U/V hor+ver 2x subsampled (YUV-4:2:0, 12 bpp)
