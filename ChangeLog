@@ -1,3 +1,14 @@
+2004-06-07  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
+
+	* configure.ac: OSS portability
+	* ext/arts/gst_arts.c: idem
+	* sys/oss/gstosselement.c: idem
+	* sys/oss/gstossmixer.c: idem
+	* sys/oss/gstosssink.c: idem
+	* sys/oss/gstosssrc.c: idem
+	* sys/oss/oss_probe.c: idem
+	  - check for soundcard.h in different places for some BSD
+
 2004-06-07  Jan Schmidt <thaytan@mad.scientist.com>
 	* AUTHORS:
 	Add me to the authors file
