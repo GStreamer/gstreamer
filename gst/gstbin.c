@@ -234,6 +234,7 @@ gst_bin_change_state (GstElement *element)
   GstBin *bin;
   GList *children;
   GstElement *child;
+  GstElementStateReturn ret;
 
   GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME  (element));
 
@@ -289,9 +290,9 @@ gst_bin_change_state (GstElement *element)
     children = g_list_next (children);
   }
 //  g_print("<-- \"%s\"\n",gst_object_get_name(GST_OBJECT(bin)));
+  ret =  gst_bin_change_state_norecurse (bin);
 
-
-  return gst_bin_change_state_norecurse (bin);
+  return ret;
 }
 
 
