@@ -40,18 +40,13 @@ struct _GstGOOM {
 
   // the timestamp of the next frame
   guint64 next_time;
+  gint16 datain[2][512];
 
   // video state
-  gint bpp;
-  gint depth;
+  gint fps;
   gint width;
   gint height;
   gboolean first_buffer;
-
-  gint samplerate;
-  gint framerate; // desired frame rate
-  gint samples_between_frames; // number of samples between start of successive frames
-  gint samples_since_last_frame; // number of samples between start of successive frames
 };
 
 struct _GstGOOMClass {
@@ -79,6 +74,9 @@ enum {
 
 enum {
   ARG_0,
+  ARG_WIDTH,
+  ARG_HEIGHT,
+  ARG_FPS,
   /* FILL ME */
 };
 
@@ -169,6 +167,16 @@ gst_goom_class_init(GstGOOMClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH,
+    g_param_spec_int ("width","Width","The Width",
+                       0, 2048, 320, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HEIGHT,
+    g_param_spec_int ("height","Height","The height",
+                       0, 2048, 320, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FPS,
+    g_param_spec_int ("fps","FPS","Frames per second",
+                       1, 100, 25, G_PARAM_READWRITE));
+
   gobject_class->set_property = gst_goom_set_property;
   gobject_class->get_property = gst_goom_get_property;
 }
@@ -191,18 +199,11 @@ gst_goom_init (GstGOOM *goom)
   goom->peerpool = NULL;
 
   // reset the initial video state
-  goom->bpp = 32;
-  goom->depth = 32;
   goom->first_buffer = TRUE;
   goom->width = 320;
   goom->height = 200;
+  goom->fps = 25; // desired frame rate
 
-  goom->samplerate = -1;
-  goom->framerate = 25; // desired frame rate
-  goom->samples_between_frames = 0; // number of samples between start of successive frames
-  goom->samples_since_last_frame = 0;
-
-  goom_init (goom->width, goom->height);
 }
 
 static GstPadConnectReturn
@@ -215,12 +216,6 @@ gst_goom_sinkconnect (GstPad *pad, GstCaps *caps)
     return GST_PAD_CONNECT_DELAYED;
   }
 
-  goom->samplerate = gst_caps_get_int (caps, "rate");
-  goom->samples_between_frames = goom->samplerate / goom->framerate;
-
-  GST_DEBUG (0, "GOOM: new sink caps: rate %d\n",
-	     goom->samplerate);
-
   return GST_PAD_CONNECT_OK;
 }
 
@@ -230,7 +225,8 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
   GstGOOM *goom;
   GstBuffer *bufout;
   guint32 samples_in;
-  gint16 datain[2][512];
+  gint16 *data;
+  gint i;
 
   goom = GST_GOOM (gst_pad_get_parent (pad));
 
@@ -240,12 +236,21 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
 
   GST_DEBUG (0, "input buffer has %d samples\n", samples_in);
 
-  if (goom->next_time <= GST_BUFFER_TIMESTAMP (bufin)) {
-    goom->next_time = GST_BUFFER_TIMESTAMP (bufin);
-    GST_DEBUG (0, "in:  %lld\n", GST_BUFFER_TIMESTAMP (bufin));
+  if (GST_BUFFER_TIMESTAMP (bufin) < goom->next_time || samples_in < 1024) {
+    gst_buffer_unref (bufin);
+    return;
   }
+
+  data = (gint16 *) GST_BUFFER_DATA (bufin);
+  for (i=0; i < 512; i++) {
+    goom->datain[0][i] = *data++;
+    goom->datain[1][i] = *data++;
+  }
+
   if (goom->first_buffer) {
     GstCaps *caps;
+
+    goom_init (goom->width, goom->height);
 	
     GST_DEBUG (0, "making new pad\n");
 
@@ -253,8 +258,8 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
 		     "goomsrc",
 		     "video/raw",
 		       "format", 	GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")), 
-		       "bpp", 		GST_PROPS_INT (goom->bpp), 
-		       "depth", 	GST_PROPS_INT (goom->depth), 
+		       "bpp", 		GST_PROPS_INT (32), 
+		       "depth", 	GST_PROPS_INT (32), 
 		       "endianness", 	GST_PROPS_INT (G_BYTE_ORDER), 
 		       "red_mask", 	GST_PROPS_INT (0xff0000), 
 		       "green_mask", 	GST_PROPS_INT (0x00ff00), 
@@ -270,19 +275,20 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
     goom->first_buffer = FALSE;
   }
 
-  memcpy (&datain[0][0], GST_BUFFER_DATA (bufin), 512);
-  memcpy (&datain[1][0], GST_BUFFER_DATA (bufin), 512);
-
   bufout = gst_buffer_new ();
-  GST_BUFFER_DATA (bufout) = (guchar *) goom_update (datain);
   GST_BUFFER_SIZE (bufout) = goom->width * goom->height * 4;
+  GST_BUFFER_DATA (bufout) = (guchar *) goom_update (goom->datain);
+  GST_BUFFER_TIMESTAMP (bufout) = goom->next_time;
   GST_BUFFER_FLAG_SET (bufout, GST_BUFFER_DONTFREE);
+
+  goom->next_time += 40000LL;
 
   gst_pad_push (goom->srcpad, bufout);
 
   gst_buffer_unref (bufin);
 
   GST_DEBUG (0, "GOOM: exiting chainfunc\n");
+
 }
 
 static void
@@ -295,6 +301,15 @@ gst_goom_set_property (GObject *object, guint prop_id, const GValue *value, GPar
   goom = GST_GOOM (object);
 
   switch (prop_id) {
+    case ARG_WIDTH:
+      goom->width = g_value_get_int (value);
+      break;
+    case ARG_HEIGHT:
+      goom->height = g_value_get_int (value);
+      break;
+    case ARG_FPS:
+      goom->fps = g_value_get_int (value);
+      break;
     default:
       break;
   }
@@ -310,6 +325,15 @@ gst_goom_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec
   goom = GST_GOOM (object);
 
   switch (prop_id) {
+    case ARG_WIDTH:
+      g_value_set_int (value, goom->width);
+      break;
+    case ARG_HEIGHT:
+      g_value_set_int (value, goom->height);
+      break;
+    case ARG_FPS:
+      g_value_set_int (value, goom->fps);
+      break;
     default:
       break;
   }
