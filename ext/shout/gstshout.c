@@ -26,11 +26,8 @@
 static GstElementDetails icecastsend_details = {
   "An Icecast plugin",
   "Sink/Network",
-  "GPL",
   "Sends data to an icecast server using libshout",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2000",
+  "Wim Taymans <wim.taymans@chello.be>"
 };
 
 static char *SHOUT_ERRORS[] = {
@@ -90,6 +87,7 @@ sink_template_factory (void)
 }
 
 static void		gst_icecastsend_class_init	(GstIcecastSendClass *klass);
+static void		gst_icecastsend_base_init	(GstIcecastSendClass *klass);
 static void		gst_icecastsend_init		(GstIcecastSend *icecastsend);
 
 static void		gst_icecastsend_chain		(GstPad *pad, GstData *_data);
@@ -110,7 +108,8 @@ gst_icecastsend_get_type (void)
 
   if (!icecastsend_type) {
     static const GTypeInfo icecastsend_info = {
-      sizeof (GstIcecastSendClass), NULL, NULL,
+      sizeof (GstIcecastSendClass),
+      (GBaseInitFunc gst_icecastsend_base_init, NULL,
       (GClassInitFunc) gst_icecastsend_class_init, NULL, NULL,
       sizeof (GstIcecastSend), 0,
       (GInstanceInitFunc) gst_icecastsend_init,
@@ -118,6 +117,15 @@ gst_icecastsend_get_type (void)
     icecastsend_type = g_type_register_static(GST_TYPE_ELEMENT, "GstIcecastSend", &icecastsend_info, 0);
   }
   return icecastsend_type;
+}
+
+static void
+gst_icecastsend_base_init (GstIcecastSendClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class, sink_template_factory());
+  gst_element_class_set_details (element_class, &icecastsend_details);
 }
 
 static void
@@ -451,24 +459,21 @@ gst_icecastsend_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("icecastsend", GST_TYPE_ICECASTSEND, &icecastsend_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, sink_template_factory ());
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "icecastsend",
+			       GST_RANK_NONE, GST_TYPE_ICECASTSEND);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "icecastsend",
-  plugin_init
-};
-
+  "Sends data to an icecast server using libshout",
+  plugin_init,
+  VERSION,
+  "GPL",
+  GST_COPYRIGHT,
+  "libshout",
+  "http://developer.icecast.org/libshout/"
+)
