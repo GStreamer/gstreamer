@@ -285,10 +285,12 @@ gst_basic_scheduler_chain_wrapper (int argc, char *argv[])
 	    GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function of element %s done", name);
 	  }
 	}
+	/* 
 	else {
           gst_element_error (element, "NULL buffer detected. Is \"%s:%s\" connected?",
 			  name, GST_PAD_NAME (pad), NULL);
 	}
+	*/
       }
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
@@ -1265,16 +1267,16 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
 		   GST_ELEMENT_NAME (entry), entry);
 	if (GST_ELEMENT_THREADSTATE (entry)) {
 	  do_cothread_switch (GST_ELEMENT_THREADSTATE (entry));
+	  state = GST_SCHEDULER_STATE (sched);
 	  /* if something changed, return - go on else */
-	  if (GST_FLAG_IS_SET(bsched, GST_BASIC_SCHEDULER_CHANGE))
+	  if (GST_FLAG_IS_SET(bsched, GST_BASIC_SCHEDULER_CHANGE) &&
+	      state != GST_SCHEDULER_STATE_ERROR)
 	    return GST_SCHEDULER_STATE_RUNNING;
 	}
 	else {
 	  GST_DEBUG (GST_CAT_DATAFLOW, "cothread switch not possible, element has no threadstate");
 	  return GST_SCHEDULER_STATE_ERROR;
 	}
-
-	state = GST_SCHEDULER_STATE (sched);
 
 	/* following is a check to see if the chain was interrupted due to a
 	 * top-half state_change().  (i.e., if there's a pending state.)
