@@ -1,3 +1,28 @@
+2004-03-27  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* gst/mpegstream/gstmpegdemux.c: 
+	* gst/mpegstream/gstmpegdemux.h: Complete overhaul. All DVD
+	specific functionality split to the new dvddemux element.
+	* gst/mpegstream/gstdvddemux.c:
+	* gst/mpegstream/gstdvddemux.h: New demultiplexer for DVD (VOB)
+	streams, derived from mpegdemux.
+	* gst/mpegstream/gstmpegparse.c: Discontinuity handling cleaned
+	up. SCR based timestamp rewriting can be turned off (will probably
+	completely disappear soon).
+	* ext/dvdnav/dvdnavsrc.c: Changes resulting from a few months
+	hacking. General cleanup. All printf statements replaced by
+	debugging messages. Almost complete libdvdnav support.
+	(dvdnavsrc_class_init): Got rid of unnecessary signals (replaced
+	by events. New properties for audio and subpicture languages.
+	(dvdnavsrc_update_highlight): Now uses events.
+	(dvdnavsrc_user_op): Cleaned up.
+	(dvdnavsrc_get): Renamed to dvdnavsrc_loop (element is now loop
+	based). Lots of cleanup, and propper support for most libdvdnav
+	events.
+	(dvdnavsrc_make_dvd_event): New function.
+	(dvdnavsrc_make_dvd_nav_packet_event): New function.
+	(dvdnavsrc_make_clut_change_event): New function.
+
 2004-03-26  Benjamin Otte  <otte@gnome.org>
 
 	* gst/typefind/gsttypefindfunctions.c: (theora_type_find):
