@@ -90,9 +90,10 @@ gst_shaper_policy_get_type (void)
   return shaper_policy_type;
 }
 
-static void	gst_shaper_base_init		(gpointer g_class);
-static void 	gst_shaper_class_init		(GstShaperClass *klass);
-static void 	gst_shaper_init			(GstShaper *shaper);
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_shaper_debug, "shaper", 0, "shaper element");
+
+GST_BOILERPLATE_FULL (GstShaper, gst_shaper, GstElement, GST_TYPE_ELEMENT, _do_init);
 
 static void 	gst_shaper_set_property		(GObject *object, guint prop_id, 
 						 const GValue *value, GParamSpec *pspec);
@@ -104,32 +105,6 @@ static GstPad* 	gst_shaper_request_new_pad 	(GstElement *element, GstPadTemplate
 
 static void 	gst_shaper_loop			(GstElement *element);
 
-static GstElementClass *parent_class = NULL;
-/* static guint gst_shaper_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_shaper_get_type (void) 
-{
-  static GType shaper_type = 0;
-
-  if (!shaper_type) {
-    static const GTypeInfo shaper_info = {
-      sizeof(GstShaperClass),
-      gst_shaper_base_init,
-      NULL,
-      (GClassInitFunc)gst_shaper_class_init,
-      NULL,
-      NULL,
-      sizeof(GstShaper),
-      0,
-      (GInstanceInitFunc)gst_shaper_init,
-    };
-    shaper_type = g_type_register_static (GST_TYPE_ELEMENT, "GstShaper", &shaper_info, 0);
-  
-    GST_DEBUG_CATEGORY_INIT (gst_shaper_debug, "shaper", 0, "shaper element");
-  }
-  return shaper_type;
-}
 
 static void
 gst_shaper_base_init (gpointer g_class)
@@ -152,7 +127,6 @@ gst_shaper_class_init (GstShaperClass *klass)
   gobject_class = (GObjectClass*) klass;
   gstelement_class = (GstElementClass*) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_POLICY,
     g_param_spec_enum ("policy", "Policy", "Shaper policy",

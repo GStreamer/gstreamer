@@ -66,9 +66,6 @@ GST_PAD_FORMATS_FUNCTION (gst_filesink_get_formats,
 )
 
 
-static void	gst_filesink_base_init		(gpointer g_class);
-static void	gst_filesink_class_init		(GstFileSinkClass *klass);
-static void	gst_filesink_init		(GstFileSink *filesink);
 static void	gst_filesink_dispose		(GObject *object);
 
 static void	gst_filesink_set_property	(GObject *object, guint prop_id, 
@@ -88,39 +85,22 @@ static void	gst_filesink_uri_handler_init	(gpointer g_iface, gpointer iface_data
   
 static GstElementStateReturn gst_filesink_change_state (GstElement *element);
 
-static GstElementClass *parent_class = NULL;
 static guint gst_filesink_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gst_filesink_get_type (void) 
+static void
+_do_init (GType filesink_type)
 {
-  static GType filesink_type = 0;
-
-  if (!filesink_type) {
-    static const GTypeInfo filesink_info = {
-      sizeof(GstFileSinkClass),
-      gst_filesink_base_init,
-      NULL,
-      (GClassInitFunc)gst_filesink_class_init,
-      NULL,
-      NULL,
-      sizeof(GstFileSink),
-      0,
-      (GInstanceInitFunc)gst_filesink_init,
-    };
-    static const GInterfaceInfo urihandler_info = {
-      gst_filesink_uri_handler_init,
-      NULL,
-      NULL
-    };
-    filesink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFileSink", &filesink_info, 0);
-    
-    g_type_add_interface_static (filesink_type, GST_TYPE_URI_HANDLER, &urihandler_info);
-  
-    GST_DEBUG_CATEGORY_INIT (gst_filesink_debug, "filesink", 0, "filesink element");
-  }
-  return filesink_type;
+  static const GInterfaceInfo urihandler_info = {
+    gst_filesink_uri_handler_init,
+    NULL,
+    NULL
+  };
+  g_type_add_interface_static (filesink_type, GST_TYPE_URI_HANDLER, &urihandler_info);
+  GST_DEBUG_CATEGORY_INIT (gst_filesink_debug, "filesink", 0, "filesink element");
 }
+
+GST_BOILERPLATE_FULL (GstFileSink, gst_filesink, GstElement, GST_TYPE_ELEMENT, _do_init);
+    
 
 static void
 gst_filesink_base_init (gpointer g_class)
@@ -135,7 +115,6 @@ gst_filesink_class_init (GstFileSinkClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATION,
     g_param_spec_string ("location", "File Location", "Location of the file to write",

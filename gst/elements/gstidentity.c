@@ -60,41 +60,17 @@ enum {
 };
 
 
-static void gst_identity_base_init	(gpointer g_class);
-static void gst_identity_class_init	(GstIdentityClass *klass);
-static void gst_identity_init		(GstIdentity *identity);
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_identity_debug, "identity", 0, "identity element");
+
+GST_BOILERPLATE_FULL (GstIdentity, gst_identity, GstElement, GST_TYPE_ELEMENT, _do_init);
 
 static void gst_identity_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_identity_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static void gst_identity_chain		(GstPad *pad, GstData *_data);
 
-static GstElementClass *parent_class = NULL;
 static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
-
-GType
-gst_identity_get_type (void) 
-{
-  static GType identity_type = 0;
-
-  if (!identity_type) {
-    static const GTypeInfo identity_info = {
-      sizeof(GstIdentityClass),
-      gst_identity_base_init,
-      NULL,
-      (GClassInitFunc)gst_identity_class_init,
-      NULL,
-      NULL,
-      sizeof(GstIdentity),
-      0,
-      (GInstanceInitFunc)gst_identity_init,
-    };
-    identity_type = g_type_register_static (GST_TYPE_ELEMENT, "GstIdentity", &identity_info, 0);
-  
-    GST_DEBUG_CATEGORY_INIT (gst_identity_debug, "identity", 0, "identity element");
-  }
-  return identity_type;
-}
 
 static void
 gst_identity_base_init (gpointer g_class)
@@ -110,7 +86,6 @@ gst_identity_class_init (GstIdentityClass *klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOOP_BASED,
     g_param_spec_boolean ("loop-based", "Loop-based", 

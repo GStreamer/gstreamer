@@ -98,8 +98,6 @@ gst_fakesrc_output_get_type (void)
   };
   if (!fakesrc_output_type) {
     fakesrc_output_type = g_enum_register_static ("GstFakeSrcOutput", fakesrc_output);
-  
-    GST_DEBUG_CATEGORY_INIT (gst_fakesrc_debug, "fakesrc", 0, "fakesrc element");
   }
   return fakesrc_output_type;
 }
@@ -156,9 +154,10 @@ gst_fakesrc_filltype_get_type (void)
   return fakesrc_filltype_type;
 }
 
-static void		gst_fakesrc_base_init		(gpointer g_class);
-static void		gst_fakesrc_class_init		(GstFakeSrcClass *klass);
-static void		gst_fakesrc_init		(GstFakeSrc *fakesrc);
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_fakesrc_debug, "fakesrc", 0, "fakesrc element");
+
+GST_BOILERPLATE_FULL (GstFakeSrc, gst_fakesrc, GstElement, GST_TYPE_ELEMENT, _do_init);
 
 static GstPad* 		gst_fakesrc_request_new_pad 	(GstElement *element, GstPadTemplate *templ,const gchar *unused);
 static void 		gst_fakesrc_update_functions 	(GstFakeSrc *src);
@@ -172,30 +171,7 @@ static GstElementStateReturn gst_fakesrc_change_state 	(GstElement *element);
 static GstData*	gst_fakesrc_get			(GstPad *pad);
 static void 		gst_fakesrc_loop		(GstElement *element);
 
-static GstElementClass *parent_class = NULL;
 static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
-
-GType
-gst_fakesrc_get_type (void) 
-{
-  static GType fakesrc_type = 0;
-
-  if (!fakesrc_type) {
-    static const GTypeInfo fakesrc_info = {
-      sizeof(GstFakeSrcClass),
-      gst_fakesrc_base_init,
-      NULL,
-      (GClassInitFunc)gst_fakesrc_class_init,
-      NULL,
-      NULL,
-      sizeof(GstFakeSrc),
-      0,
-      (GInstanceInitFunc)gst_fakesrc_init,
-    };
-    fakesrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFakeSrc", &fakesrc_info, 0);
-  }
-  return fakesrc_type;
-}
 
 static void
 gst_fakesrc_base_init (gpointer g_class)
@@ -216,7 +192,6 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_SOURCES,
     g_param_spec_int ("num-sources", "num-sources", "Number of sources",

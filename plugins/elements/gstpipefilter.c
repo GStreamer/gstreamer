@@ -59,9 +59,10 @@ enum {
 };
 
 
-static void			gst_pipefilter_base_init	(gpointer g_class);
-static void 			gst_pipefilter_class_init	(GstPipefilterClass *klass);
-static void 			gst_pipefilter_init		(GstPipefilter *pipefilter);
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_pipefilter_debug, "pipefilter", 0, "pipefilter element");
+
+GST_BOILERPLATE_FULL (GstPipefilter, gst_pipefilter, GstElement, GST_TYPE_ELEMENT, _do_init);
 
 static void 			gst_pipefilter_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void 			gst_pipefilter_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
@@ -71,33 +72,6 @@ static void 			gst_pipefilter_chain		(GstPad *pad, GstData *_data);
 static gboolean 		gst_pipefilter_handle_event 	(GstPad *pad, GstEvent *event);
 
 static GstElementStateReturn 	gst_pipefilter_change_state	(GstElement *element);
-
-static GstElementClass *parent_class = NULL;
-/*static guint gst_pipefilter_signals[LAST_SIGNAL] = { 0 };*/
-
-GType
-gst_pipefilter_get_type (void)
-{
-  static GType pipefilter_type = 0;
-
-  if (!pipefilter_type) {
-    static const GTypeInfo pipefilter_info = {
-      sizeof(GstPipefilterClass),
-      gst_pipefilter_base_init,
-      NULL,
-      (GClassInitFunc)gst_pipefilter_class_init,
-      NULL,
-      NULL,
-      sizeof(GstPipefilter),
-      0,
-      (GInstanceInitFunc)gst_pipefilter_init,
-    };
-    pipefilter_type = g_type_register_static(GST_TYPE_ELEMENT, "GstPipefilter", &pipefilter_info, 0);
-  
-    GST_DEBUG_CATEGORY_INIT (gst_pipefilter_debug, "pipefilter", 0, "pipefilter element");
-  }
-  return pipefilter_type;
-}
 
 static void
 gst_pipefilter_base_init (gpointer g_class)
@@ -115,7 +89,6 @@ gst_pipefilter_class_init (GstPipefilterClass *klass)
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
   gobject_class->set_property = gst_pipefilter_set_property;  
   gobject_class->get_property = gst_pipefilter_get_property;

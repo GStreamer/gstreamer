@@ -58,9 +58,10 @@ enum {
 };
 
 
-static void gst_statistics_base_init	(gpointer g_class);
-static void gst_statistics_class_init	(GstStatisticsClass *klass);
-static void gst_statistics_init		(GstStatistics *statistics);
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_statistics_debug, "statistics", 0, "statistics element");
+
+GST_BOILERPLATE_FULL (GstStatistics, gst_statistics, GstElement, GST_TYPE_ELEMENT, _do_init);
 
 static void gst_statistics_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_statistics_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
@@ -69,34 +70,10 @@ static void gst_statistics_chain		(GstPad *pad, GstData *_data);
 static void gst_statistics_reset		(GstStatistics *statistics);
 static void gst_statistics_print		(GstStatistics *statistics);
 
-static GstElementClass *parent_class = NULL;
 static guint gst_statistics_signals[LAST_SIGNAL] = { 0, };
 
 static stats zero_stats = { 0, };
 
-GType
-gst_statistics_get_type (void) 
-{
-  static GType statistics_type = 0;
-
-  if (!statistics_type) {
-    static const GTypeInfo statistics_info = {
-      sizeof(GstStatisticsClass), 
-      gst_statistics_base_init,
-      NULL,
-      (GClassInitFunc)gst_statistics_class_init,
-      NULL,
-      NULL,
-      sizeof(GstStatistics),
-      0,
-      (GInstanceInitFunc)gst_statistics_init,
-    };
-    statistics_type = g_type_register_static (GST_TYPE_ELEMENT, "GstStatistics", &statistics_info, 0);
-  
-    GST_DEBUG_CATEGORY_INIT (gst_statistics_debug, "statistics", 0, "statistics element");
-  }
-  return statistics_type;
-}
 
 static void
 gst_statistics_base_init (gpointer g_class)
@@ -112,7 +89,6 @@ gst_statistics_class_init (GstStatisticsClass *klass)
   
   gobject_class = G_OBJECT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFERS,
     g_param_spec_int64 ("buffers", "buffers", "total buffers count",

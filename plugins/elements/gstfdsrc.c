@@ -58,9 +58,10 @@ enum {
   ARG_BLOCKSIZE,
 };
 
-static void		gst_fdsrc_base_init	(gpointer g_class);
-static void		gst_fdsrc_class_init	(GstFdSrcClass *klass);
-static void		gst_fdsrc_init		(GstFdSrc *fdsrc);
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_fdsrc_debug, "fdsrc", 0, "fdsrc element");
+
+GST_BOILERPLATE_FULL (GstFdSrc, gst_fdsrc, GstElement, GST_TYPE_ELEMENT, _do_init);
 
 static void		gst_fdsrc_set_property	(GObject *object, guint prop_id, 
 						 const GValue *value, GParamSpec *pspec);
@@ -69,33 +70,6 @@ static void		gst_fdsrc_get_property	(GObject *object, guint prop_id,
 
 static GstData *	gst_fdsrc_get		(GstPad *pad);
 
-
-static GstElementClass *parent_class = NULL;
-/*static guint gst_fdsrc_signals[LAST_SIGNAL] = { 0 };*/
-
-GType
-gst_fdsrc_get_type (void) 
-{
-  static GType fdsrc_type = 0;
-
-  if (!fdsrc_type) {
-    static const GTypeInfo fdsrc_info = {
-      sizeof(GstFdSrcClass),      
-      gst_fdsrc_base_init,
-      NULL,
-      (GClassInitFunc)gst_fdsrc_class_init,
-      NULL,
-      NULL,
-      sizeof(GstFdSrc),
-      0,
-      (GInstanceInitFunc)gst_fdsrc_init,
-    };
-    fdsrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFdSrc", &fdsrc_info, 0);
-  
-    GST_DEBUG_CATEGORY_INIT (gst_fdsrc_debug, "fdsrc", 0, "fdsrc element");
-  }
-  return fdsrc_type;
-}
 
 static void
 gst_fdsrc_base_init (gpointer g_class)
@@ -111,7 +85,6 @@ gst_fdsrc_class_init (GstFdSrcClass *klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
   
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
     g_param_spec_int ("fd", "fd", "An open file descriptor to read from",

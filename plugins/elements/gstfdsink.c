@@ -50,9 +50,10 @@ enum {
 };
 
 
-static void	gst_fdsink_base_init	(gpointer g_class);
-static void 	gst_fdsink_class_init	(GstFdSinkClass *klass);
-static void 	gst_fdsink_init		(GstFdSink *fdsink);
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_fdsink_debug, "fdsink", 0, "fdsink element");
+
+GST_BOILERPLATE_FULL (GstFdSink, gst_fdsink, GstElement, GST_TYPE_ELEMENT, _do_init);
 
 static void 	gst_fdsink_set_property	(GObject *object, guint prop_id, 
 					 const GValue *value, GParamSpec *pspec);
@@ -61,32 +62,6 @@ static void 	gst_fdsink_get_property	(GObject *object, guint prop_id,
 
 static void 	gst_fdsink_chain	(GstPad *pad,GstData *_data);
 
-static GstElementClass *parent_class = NULL;
-/*static guint gst_fdsink_signals[LAST_SIGNAL] = { 0 };*/
-
-GType
-gst_fdsink_get_type (void) 
-{
-  static GType fdsink_type = 0;
-
-  if (!fdsink_type) {
-    static const GTypeInfo fdsink_info = {
-      sizeof(GstFdSinkClass),
-      gst_fdsink_base_init,
-      NULL,
-      (GClassInitFunc)gst_fdsink_class_init,
-      NULL,
-      NULL,
-      sizeof(GstFdSink),
-      0,
-      (GInstanceInitFunc)gst_fdsink_init,
-    };
-    fdsink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFdSink", &fdsink_info, 0);
-  
-    GST_DEBUG_CATEGORY_INIT (gst_fdsink_debug, "fdsink", 0, "fdsink element");
-  }
-  return fdsink_type;
-}
 
 static void
 gst_fdsink_base_init (gpointer g_class)
@@ -102,7 +77,6 @@ gst_fdsink_class_init (GstFdSinkClass *klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
     g_param_spec_int ("fd", "fd", "An open file descriptor to write to",

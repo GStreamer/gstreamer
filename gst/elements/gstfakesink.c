@@ -84,9 +84,10 @@ gst_fakesink_state_error_get_type (void)
   return fakesink_state_error_type;
 }
 
-static void	gst_fakesink_base_init		(gpointer g_class);
-static void	gst_fakesink_class_init		(GstFakeSinkClass *klass);
-static void	gst_fakesink_init		(GstFakeSink *fakesink);
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_fakesink_debug, "fakesink", 0, "fakesink element");
+
+GST_BOILERPLATE_FULL (GstFakeSink, gst_fakesink, GstElement, GST_TYPE_ELEMENT, _do_init);
 
 static void 	gst_fakesink_set_clock 		(GstElement *element, GstClock *clock);
 static GstPad* 	gst_fakesink_request_new_pad 	(GstElement *element, GstPadTemplate *templ, const
@@ -102,32 +103,7 @@ static GstElementStateReturn
 
 static void	gst_fakesink_chain		(GstPad *pad, GstData *_data);
 
-static GstElementClass *parent_class = NULL;
 static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
-
-GType
-gst_fakesink_get_type (void) 
-{
-  static GType fakesink_type = 0;
-
-  if (!fakesink_type) {
-    static const GTypeInfo fakesink_info = {
-      sizeof(GstFakeSinkClass),
-      gst_fakesink_base_init,
-      NULL,
-      (GClassInitFunc)gst_fakesink_class_init,
-      NULL,
-      NULL,
-      sizeof(GstFakeSink),
-      0,
-      (GInstanceInitFunc)gst_fakesink_init,
-    };
-    fakesink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFakeSink", &fakesink_info, 0);
-  
-    GST_DEBUG_CATEGORY_INIT (gst_fakesink_debug, "fakesink", 0, "fakesink element");
-  }
-  return fakesink_type;
-}
 
 static void
 gst_fakesink_base_init (gpointer g_class)
@@ -148,7 +124,6 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_SINKS,
     g_param_spec_int ("num_sinks", "Number of sinks", "The number of sinkpads",

@@ -54,9 +54,10 @@ enum {
   ARG_LOCATIONS,
 };
 
-static void		gst_multidiscsrc_base_init	(gpointer g_class);
-static void		gst_multidisksrc_class_init	(GstMultiDiskSrcClass *klass);
-static void		gst_multidisksrc_init		(GstMultiDiskSrc *disksrc);
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_multidisksrc_debug, "multidisksrc", 0, "multidisksrc element");
+
+GST_BOILERPLATE_FULL (GstMultiDiskSrc, gst_multidisksrc, GstElement, GST_TYPE_ELEMENT, _do_init);
 
 static void		gst_multidisksrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void		gst_multidisksrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
@@ -69,35 +70,10 @@ static GstElementStateReturn	gst_multidisksrc_change_state	(GstElement *element)
 static gboolean		gst_multidisksrc_open_file	(GstMultiDiskSrc *src, GstPad *srcpad);
 static void		gst_multidisksrc_close_file	(GstMultiDiskSrc *src);
 
-static GstElementClass *parent_class = NULL;
 static guint gst_multidisksrc_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gst_multidisksrc_get_type(void)
-{
-  static GType multidisksrc_type = 0;
-
-  if (!multidisksrc_type) {
-    static const GTypeInfo multidisksrc_info = {
-      sizeof(GstMultiDiskSrcClass),
-      gst_multidiscsrc_base_init,
-      NULL,
-      (GClassInitFunc)gst_multidisksrc_class_init,
-      NULL,
-      NULL,
-      sizeof(GstMultiDiskSrc),
-      0,
-      (GInstanceInitFunc)gst_multidisksrc_init,
-    };
-    multidisksrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstMultiDiskSrc", &multidisksrc_info, 0);
-  
-    GST_DEBUG_CATEGORY_INIT (gst_multidisksrc_debug, "multidisksrc", 0, "multidisksrc element");
-  }
-  return multidisksrc_type;
-}
-
 static void
-gst_multidiscsrc_base_init (gpointer g_class)
+gst_multidisksrc_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
   
@@ -112,7 +88,6 @@ gst_multidisksrc_class_init (GstMultiDiskSrcClass *klass)
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gst_multidisksrc_signals[NEW_FILE] =
     g_signal_new ("new_file", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,

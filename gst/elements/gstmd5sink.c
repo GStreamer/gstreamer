@@ -61,11 +61,12 @@ GstStaticPadTemplate md5_sink_template = GST_STATIC_PAD_TEMPLATE (
   GST_STATIC_CAPS_ANY
 );
 
-/* GObject stuff */
-static void			gst_md5sink_base_init		(gpointer g_class);
-static void			gst_md5sink_class_init		(GstMD5SinkClass *klass);
-static void			gst_md5sink_init		(GstMD5Sink *md5sink);
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_md5sink_debug, "md5sink", 0, "md5sink element");
 
+GST_BOILERPLATE_FULL (GstMD5Sink, gst_md5sink, GstElement, GST_TYPE_ELEMENT, _do_init);
+
+/* GObject stuff */
 /*static void			gst_md5sink_set_property	(GObject *object, guint prop_id, 
 							 const GValue *value, GParamSpec *pspec);*/
 static void			gst_md5sink_get_property	(GObject *object, guint prop_id, 
@@ -73,11 +74,6 @@ static void			gst_md5sink_get_property	(GObject *object, guint prop_id,
 
 static void			gst_md5sink_chain		(GstPad *pad, GstData *_data);
 static GstElementStateReturn	gst_md5sink_change_state	(GstElement *element);
-
-/* variables */
-static GstElementClass 		*parent_class = NULL;
-/* no signals 
-static guint 			gst_md5sink_signals[LAST_SIGNAL] = { 0 }; */
 
 
 /* MD5 stuff */
@@ -381,31 +377,6 @@ md5_process_block (const void *buffer, size_t len, GstMD5Sink *ctx)
   ctx->D = D;
 }
 
-GType
-gst_md5sink_get_type (void) 
-{
-  static GType md5sink_type = 0;
-
-  if (!md5sink_type) {
-    static const GTypeInfo md5sink_info = {
-      sizeof(GstMD5SinkClass),
-      gst_md5sink_base_init,
-      NULL,
-      (GClassInitFunc) gst_md5sink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstMD5Sink),
-      0,
-      (GInstanceInitFunc) gst_md5sink_init,
-    };
-    md5sink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstMD5Sink", 
-	                                   &md5sink_info, 0);
-  
-    GST_DEBUG_CATEGORY_INIT (gst_md5sink_debug, "md5sink", 0, "md5sink element");
-  }
-  return md5sink_type;
-}
-
 static void
 gst_md5sink_base_init (gpointer g_class)
 {
@@ -425,7 +396,6 @@ gst_md5sink_class_init (GstMD5SinkClass *klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_md5sink_get_property);
 

@@ -77,10 +77,6 @@ gst_aggregator_sched_get_type (void)
 
 #define AGGREGATOR_IS_LOOP_BASED(ag)	((ag)->sched != AGGREGATOR_CHAIN)
 
-static void 	gst_aggregator_base_init	(gpointer g_class);
-static void 	gst_aggregator_class_init	(GstAggregatorClass *klass);
-static void 	gst_aggregator_init		(GstAggregator *aggregator);
-
 static GstPad* 	gst_aggregator_request_new_pad	(GstElement *element, GstPadTemplate *temp, const
                                                  gchar *unused);
 static void 	gst_aggregator_update_functions	(GstAggregator *aggregator);
@@ -93,32 +89,10 @@ static void 	gst_aggregator_get_property 	(GObject *object, guint prop_id,
 static void  	gst_aggregator_chain 		(GstPad *pad, GstData *_data);
 static void 	gst_aggregator_loop 		(GstElement *element);
 
-static GstElementClass *parent_class = NULL;
-/*static guint gst_aggregator_signals[LAST_SIGNAL] = { 0 };*/
+#define _do_init(bla) \
+  GST_DEBUG_CATEGORY_INIT (gst_aggregator_debug, "aggregator", 0, "aggregator element");
 
-GType
-gst_aggregator_get_type (void) 
-{
-  static GType aggregator_type = 0;
-
-  if (!aggregator_type) {
-    static const GTypeInfo aggregator_info = {
-      sizeof(GstAggregatorClass),      
-      gst_aggregator_base_init,
-      NULL,
-      (GClassInitFunc)gst_aggregator_class_init,
-      NULL,
-      NULL,
-      sizeof(GstAggregator),
-      0,
-      (GInstanceInitFunc)gst_aggregator_init,
-    };
-    aggregator_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAggregator", &aggregator_info, 0);
-
-    GST_DEBUG_CATEGORY_INIT (gst_aggregator_debug, "aggregator", 0, "aggregator element");
-  }
-  return aggregator_type;
-}
+GST_BOILERPLATE_FULL (GstAggregator, gst_aggregator, GstElement, GST_TYPE_ELEMENT, _do_init);
 
 static void
 gst_aggregator_base_init (gpointer g_class)
@@ -137,7 +111,6 @@ gst_aggregator_class_init (GstAggregatorClass *klass)
   gobject_class = (GObjectClass*) klass;
   gstelement_class = (GstElementClass*) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_PADS,
     g_param_spec_int ("num_pads", "Num pads", "The number of source pads",

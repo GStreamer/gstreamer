@@ -42,6 +42,7 @@
 #include "gst/gst_private.h"
 
 #include <gst/gsttypefind.h>
+#include <gst/gstutils.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_type_find_element_debug);
 #define GST_CAT_DEFAULT gst_type_find_element_debug
@@ -85,11 +86,12 @@ enum {
 };
 
 
-static void	gst_type_find_element_base_init		(gpointer g_class);
-static void	gst_type_find_element_class_init	(gpointer	g_class,
-							 gpointer	class_data);
-static void	gst_type_find_element_init		(GTypeInstance *instance,
-							 gpointer	g_class);
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_type_find_element_debug, "typefind",	  	\
+	GST_DEBUG_BG_YELLOW | GST_DEBUG_FG_GREEN, "type finding element");
+
+GST_BOILERPLATE_FULL (GstTypeFindElement, gst_type_find_element, GstElement, GST_TYPE_ELEMENT, _do_init);
+
 static void	gst_type_find_element_dispose		(GObject *	object);
 static void	gst_type_find_element_set_property	(GObject *	object, 
 							 guint		prop_id,
@@ -110,36 +112,8 @@ static void	gst_type_find_element_chain		(GstPad *	sinkpad,
 static GstElementStateReturn
 		gst_type_find_element_change_state 	(GstElement *	element);
 
-static GstElementClass *parent_class = NULL;
 static guint gst_type_find_element_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gst_type_find_element_get_type (void)
-{
-  static GType typefind_type = 0;
-
-  if (!typefind_type) {
-    static const GTypeInfo typefind_info = {
-      sizeof (GstTypeFindElementClass),
-      gst_type_find_element_base_init,
-      NULL,
-      gst_type_find_element_class_init,
-      NULL,
-      NULL,
-      sizeof (GstTypeFindElement),
-      0,
-      gst_type_find_element_init,
-      NULL
-    };
-    typefind_type = g_type_register_static (GST_TYPE_ELEMENT,
-					    "GstTypeFindElement",
-					    &typefind_info, 0);
-
-    GST_DEBUG_CATEGORY_INIT (gst_type_find_element_debug, "typefind", 
-			     GST_DEBUG_BG_YELLOW | GST_DEBUG_FG_GREEN, "typefind element");
-  }
-  return typefind_type;
-}
 static void
 gst_type_find_element_have_type (GstTypeFindElement *typefind, guint probability, const GstCaps *caps)
 {
@@ -162,17 +136,10 @@ gst_type_find_element_base_init (gpointer g_class)
   gst_element_class_set_details (gstelement_class, &gst_type_find_element_details);
 }
 static void
-gst_type_find_element_class_init (gpointer g_class, gpointer class_data)
+gst_type_find_element_class_init (GstTypeFindElementClass *typefind_class)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstTypeFindElementClass *typefind_class;
-
-  gobject_class = G_OBJECT_CLASS (g_class);
-  gstelement_class = GST_ELEMENT_CLASS (g_class);
-  typefind_class = GST_TYPE_FIND_ELEMENT_CLASS (g_class);
-
-  parent_class = g_type_class_peek_parent (g_class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (typefind_class);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (typefind_class);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_type_find_element_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_type_find_element_get_property);
@@ -191,7 +158,7 @@ gst_type_find_element_class_init (gpointer g_class, gpointer class_data)
 	  GST_TYPE_FIND_MINIMUM, GST_TYPE_FIND_MAXIMUM, GST_TYPE_FIND_MAXIMUM, G_PARAM_READWRITE));
 
   gst_type_find_element_signals[HAVE_TYPE] = g_signal_new ("have_type", 
-	  G_TYPE_FROM_CLASS (g_class), G_SIGNAL_RUN_LAST,
+	  G_TYPE_FROM_CLASS (typefind_class), G_SIGNAL_RUN_LAST,
           G_STRUCT_OFFSET (GstTypeFindElementClass, have_type), NULL, NULL,
           gst_marshal_VOID__UINT_POINTER, G_TYPE_NONE, 2,
           G_TYPE_UINT, G_TYPE_POINTER);
@@ -199,10 +166,8 @@ gst_type_find_element_class_init (gpointer g_class, gpointer class_data)
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_type_find_element_change_state);
 }
 static void
-gst_type_find_element_init (GTypeInstance *instance, gpointer g_class)
+gst_type_find_element_init (GstTypeFindElement *typefind)
 {
-  GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (instance);
-  
   /* sinkpad */
   typefind->sink = gst_pad_new_from_template (
       gst_static_pad_template_get (&type_find_element_sink_template), "sink");

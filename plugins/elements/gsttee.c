@@ -60,9 +60,10 @@ GstStaticPadTemplate tee_src_template = GST_STATIC_PAD_TEMPLATE (
   GST_STATIC_CAPS_ANY
 );
 
-static void	gst_tee_base_init	(gpointer g_class);
-static void 	gst_tee_class_init	(GstTeeClass *klass);
-static void 	gst_tee_init		(GstTee *tee);
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_tee_debug, "tee", 0, "tee element");
+
+GST_BOILERPLATE_FULL (GstTee, gst_tee, GstElement, GST_TYPE_ELEMENT, _do_init);
 
 static GstPad* 	gst_tee_request_new_pad (GstElement *element, GstPadTemplate *temp, const gchar *unused);
 
@@ -73,32 +74,6 @@ static void 	gst_tee_get_property 	(GObject *object, guint prop_id,
 
 static void  	gst_tee_chain 		(GstPad *pad, GstData *_data);
 
-
-static GstElementClass *parent_class = NULL;
-/*static guint gst_tee_signals[LAST_SIGNAL] = { 0 };*/
-
-GType
-gst_tee_get_type(void) {
-  static GType tee_type = 0;
-
-  if (!tee_type) {
-    static const GTypeInfo tee_info = {
-      sizeof(GstTeeClass),
-      gst_tee_base_init,
-      NULL,
-      (GClassInitFunc)gst_tee_class_init,
-      NULL,
-      NULL,
-      sizeof(GstTee),
-      0,
-      (GInstanceInitFunc)gst_tee_init,
-    };
-    tee_type = g_type_register_static (GST_TYPE_ELEMENT, "GstTee", &tee_info, 0);
-  
-    GST_DEBUG_CATEGORY_INIT (gst_tee_debug, "tee", 0, "tee element");
-  }
-  return tee_type;
-}
 
 static void
 gst_tee_base_init (gpointer g_class)
@@ -118,7 +93,6 @@ gst_tee_class_init (GstTeeClass *klass)
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_PADS,
     g_param_spec_int ("num_pads", "num_pads", "num_pads",

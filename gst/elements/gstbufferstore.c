@@ -23,6 +23,7 @@
 #  include "config.h"
 #endif
 #include "gstbufferstore.h"
+#include <gst/gstutils.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_buffer_store_debug);
@@ -38,18 +39,16 @@ enum {
 };
 
 
-static void	gst_buffer_store_class_init	(gpointer		g_class,
-                                                 gpointer		class_data);
-static void	gst_buffer_store_init    	(GTypeInstance *	instance,
-						 gpointer		g_class);
 static void	gst_buffer_store_dispose	(GObject *		object);
 
 static gboolean	gst_buffer_store_add_buffer_func (GstBufferStore *	store, 
 						 GstBuffer *		buffer);
 static void	gst_buffer_store_cleared_func	(GstBufferStore *	store);
   
-static GObjectClass *parent_class = NULL;
 static guint gst_buffer_store_signals[LAST_SIGNAL] = { 0 };
+
+GST_BOILERPLATE (GstBufferStore, gst_buffer_store, GObject, G_TYPE_OBJECT);
+
 
 G_GNUC_UNUSED static void
 debug_buffers (GstBufferStore *store)
@@ -63,33 +62,6 @@ debug_buffers (GstBufferStore *store)
   }
   g_printerr ("\n");
 }
-GType
-gst_buffer_store_get_type (void)
-{
-  static GType store_type = 0;
-
-  if (!store_type) {
-    static const GTypeInfo store_info = {
-      sizeof (GstBufferStoreClass),
-      NULL,
-      NULL,
-      gst_buffer_store_class_init,
-      NULL,
-      NULL,
-      sizeof (GstBufferStore),
-      0,
-      gst_buffer_store_init,
-      NULL
-    };
-    store_type = g_type_register_static (G_TYPE_OBJECT,
-					    "GstBufferStore",
-					    &store_info, 0);
-  
-    /* FIXME: better description anyone? */
-    GST_DEBUG_CATEGORY_INIT (gst_buffer_store_debug, "bufferstore", 0, "store all data");
-  }
-  return store_type;
-}
 static gboolean
 continue_accu (GSignalInvocationHint *ihint, GValue *return_accu, 
 	       const GValue *handler_return, gpointer data)
@@ -100,24 +72,22 @@ continue_accu (GSignalInvocationHint *ihint, GValue *return_accu,
   return do_continue;
 }
 static void
-gst_buffer_store_class_init (gpointer g_class, gpointer class_data)
+gst_buffer_store_base_init (gpointer g_class)
 {
-  GObjectClass *gobject_class;
-  GstBufferStoreClass *store_class;
-
-  gobject_class = G_OBJECT_CLASS (g_class);
-  store_class = GST_BUFFER_STORE_CLASS (g_class);
-
-  parent_class = g_type_class_peek_parent (g_class);
+}
+static void
+gst_buffer_store_class_init (GstBufferStoreClass *store_class)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (store_class);
 
   gobject_class->dispose = gst_buffer_store_dispose;
   
   gst_buffer_store_signals[CLEARED] = g_signal_new ("cleared", 
-	  G_TYPE_FROM_CLASS (g_class), G_SIGNAL_RUN_LAST,
+	  G_TYPE_FROM_CLASS (store_class), G_SIGNAL_RUN_LAST,
           G_STRUCT_OFFSET (GstBufferStoreClass, cleared), NULL, NULL,
           gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
   gst_buffer_store_signals[BUFFER_ADDED] = g_signal_new ("buffer-added", 
-	  G_TYPE_FROM_CLASS (g_class), G_SIGNAL_RUN_LAST,
+	  G_TYPE_FROM_CLASS (store_class), G_SIGNAL_RUN_LAST,
           G_STRUCT_OFFSET (GstBufferStoreClass, buffer_added), continue_accu, NULL,
           gst_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1, GST_TYPE_BUFFER);
 
@@ -125,10 +95,8 @@ gst_buffer_store_class_init (gpointer g_class, gpointer class_data)
   store_class->buffer_added = gst_buffer_store_add_buffer_func;
 }
 static void
-gst_buffer_store_init (GTypeInstance *instance, gpointer g_class)
+gst_buffer_store_init (GstBufferStore *store)
 {
-  GstBufferStore *store = GST_BUFFER_STORE (instance);
-  
   store->buffers = NULL;
 }
 static void

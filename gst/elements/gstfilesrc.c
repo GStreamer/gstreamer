@@ -118,9 +118,6 @@ GST_PAD_FORMATS_FUNCTION (gst_filesrc_get_formats,
   GST_FORMAT_BYTES
 )
 
-static void		gst_filesrc_base_init		(gpointer g_class);
-static void		gst_filesrc_class_init		(GstFileSrcClass *klass);
-static void		gst_filesrc_init		(GstFileSrc *filesrc);
 static void 		gst_filesrc_dispose 		(GObject *object);
 
 static void		gst_filesrc_set_property	(GObject *object, guint prop_id, 
@@ -138,41 +135,20 @@ static GstElementStateReturn	gst_filesrc_change_state	(GstElement *element);
 
 static void		gst_filesrc_uri_handler_init	(gpointer g_iface, gpointer iface_data);
 
-
-static GstElementClass *parent_class = NULL;
-/*static guint gst_filesrc_signals[LAST_SIGNAL] = { 0 };*/
-
-GType
-gst_filesrc_get_type(void)
+static void
+_do_init (GType filesrc_type)
 {
-  static GType filesrc_type = 0;
-
-  if (!filesrc_type) {
-    static const GTypeInfo filesrc_info = {
-      sizeof(GstFileSrcClass), 
-      gst_filesrc_base_init,
-      NULL,
-      (GClassInitFunc)gst_filesrc_class_init,
-      NULL,
-      NULL,
-      sizeof(GstFileSrc),
-      0,
-      (GInstanceInitFunc)gst_filesrc_init,
-    };
-    static const GInterfaceInfo urihandler_info = {
-      gst_filesrc_uri_handler_init,
-      NULL,
-      NULL
-    };
-    filesrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFileSrc", &filesrc_info, 0);
-    
-    g_type_add_interface_static (filesrc_type, GST_TYPE_URI_HANDLER, &urihandler_info);
-    
-    GST_DEBUG_CATEGORY_INIT (gst_filesrc_debug, "filesrc", 0, "filesrc element");
-  }
-  return filesrc_type;
+  static const GInterfaceInfo urihandler_info = {
+    gst_filesrc_uri_handler_init,
+    NULL,
+    NULL
+  };
+  g_type_add_interface_static (filesrc_type, GST_TYPE_URI_HANDLER, &urihandler_info);
+  GST_DEBUG_CATEGORY_INIT (gst_filesrc_debug, "filesrc", 0, "filesrc element");
 }
 
+GST_BOILERPLATE_FULL (GstFileSrc, gst_filesrc, GstElement, GST_TYPE_ELEMENT, _do_init);
+    
 static void
 gst_filesrc_base_init (gpointer g_class)
 {
@@ -188,7 +164,6 @@ gst_filesrc_class_init (GstFileSrcClass *klass)
 
   gobject_class = (GObjectClass*)klass;
 
-  parent_class = g_type_class_peek_parent (klass);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
     g_param_spec_int ("fd", "File-descriptor", "File-descriptor for the file being mmap()d",

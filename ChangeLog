@@ -1,3 +1,26 @@
+2004-01-08  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstutils.h:
+	  Add GST_BOILERPLATE(_FULL), GST_PARENT_CALL and
+	  GST_PARENT_CALL_WITH_DEFAULT
+	* gst/elements/gstaggregator.c: 
+	* gst/elements/gstbufferstore.c: 
+	* gst/elements/gstfakesink.c: 
+	* gst/elements/gstfakesrc.c: 
+	* gst/elements/gstfdsink.c: 
+	* gst/elements/gstfdsrc.c: 
+	* gst/elements/gstfilesink.c: 
+	* gst/elements/gstfilesrc.c: 
+	* gst/elements/gstidentity.c: 
+	* gst/elements/gstmd5sink.c: 
+	* gst/elements/gstmultidisksrc.c:
+	* gst/elements/gstpipefilter.c: 
+	* gst/elements/gstshaper.c:
+	* gst/elements/gststatistics.c:
+	* gst/elements/gsttee.c:
+	* gst/elements/gsttypefindelement.c:
+	  use them.
+
 2004-01-07  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/gstreamer-docs.sgml: remove props
