@@ -1,7 +1,8 @@
 include ../Rules
 
-tests_pass = thread1 thread2 thread3 thread4 thread5 threade threadf
-tests_fail = 
+tests_pass = thread1 thread2 thread3 thread4 thread5 threade threadf 
+tests_fail = 159566
+
 # threadh
 
 tests_ignore = queue threadb threadc threadd staticrec threadg

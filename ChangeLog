@@ -1,3 +1,9 @@
+2004-11-26  Wim Taymans  <wim@fluendo.com>
+
+	* testsuite/threads/159566.c: (object_deep_notify), (main):
+	* testsuite/threads/Makefile.am:
+	Added testsuite to show bug #159566
+
 2004-11-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstthread.c: (gst_thread_dispose), (gst_thread_change_state),
