@@ -16,3 +16,5 @@ gst_compprep_check_SOURCES =
 gst-compprep-check$(EXEEXT):
 	true	
 	
+EXTRA_DIST = gst-inspect-check.in
+
