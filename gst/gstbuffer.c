@@ -395,3 +395,21 @@ gst_buffer_remove_meta (GstBuffer *buffer, GstMeta *meta)
   buffer->metas = g_slist_remove (buffer->metas, meta);
   gst_meta_unref (meta);
 }
+
+
+
+GstBuffer *
+gst_buffer_copy (GstBuffer *buf)
+{
+  GstBuffer *newbuf;
+
+/***** FIXME: this is not complete, it doesn't copy everything it should *****/
+  newbuf = gst_buffer_new();
+  GST_BUFFER_SIZE(newbuf) = GST_BUFFER_DATA(buf);
+  GST_BUFFER_DATA(newbuf) = malloc(GST_BUFFER_SIZE(buf));
+  memcpy(GST_BUFFER_DATA(newbuf),GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
+  GST_BUFFER_OFFSET(newbuf) = GST_BUFFER_OFFSET(buf);
+  GST_BUFFER_TIMESTAMP(newbuf) = GST_BUFFER_TIMESTAMP(buf);
+
+  return newbuf;
+}

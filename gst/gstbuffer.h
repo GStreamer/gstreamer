@@ -143,6 +143,9 @@ void 		gst_buffer_unref		(GstBuffer *buffer);
 /* destroying the buffer */
 void 		gst_buffer_destroy		(GstBuffer *buffer);
 
+/* copy buffer */
+GstBuffer*	gst_buffer_copy			(GstBuffer *buffer);
+
 /* add, retrieve, and remove metadata from the buffer */
 void 		gst_buffer_add_meta		(GstBuffer *buffer, GstMeta *meta);
 void 		gst_buffer_remove_meta		(GstBuffer *buffer, GstMeta *meta);
