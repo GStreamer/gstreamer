@@ -1,6 +1,7 @@
-This is a nifty visualization based on synaesthesia-2.0 (see README-syna).
-I've librarified the program to a fair degree, but don't have all the
-output stuff working yet.  I'll be looking at ALSAPlayer's modifications
-to synaesthesia to see what they did to merge it into another
-architecture.  It shouldn't be too hard to get this working, I just
-haven't had a need yet.
+This is a visualization based on on synaesthesia. (see README-syna).
+
+This implementation is taken from alsaplayer: http://www.alsaplayer.org/ It
+is based on synaesthesia version 1.3 (or maybe 1.4, I'm not entirely
+certain), with some modifications by Richard Boulton to try and ensure that
+something interesting is displayed for both very quiet and very loud music.
+

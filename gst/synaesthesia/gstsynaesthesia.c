@@ -1,5 +1,5 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* gstsynaesthesia.c: implementation of synaesthesia drawing element
+ * Copyright (C) <2001> Richard Boulton <richard@tartarus.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,28 +17,56 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "config.h"
+#include <config.h>
+#include <gst/gst.h>
 
-#include "gstsynaesthesia.h"
-#include "core.h"
+#include "synaescope.h"
 
-#warning hi, i'm synaesthesia. i'm severely broken. somebody please fix me.
+#define GST_TYPE_SYNAESTHESIA (gst_synaesthesia_get_type())
+#define GST_SYNAESTHESIA(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SYNAESTHESIA,GstSynaesthesia))
+#define GST_SYNAESTHESIA_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SYNAESTHESIA,GstSynaesthesia))
+#define GST_IS_SYNAESTHESIA(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SYNAESTHESIA))
+#define GST_IS_SYNAESTHESIA_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SYNAESTHESIA))
 
-static gboolean gst_synaesthesia_start(GstElement *element);
+typedef struct _GstSynaesthesia GstSynaesthesia;
+typedef struct _GstSynaesthesiaClass GstSynaesthesiaClass;
 
-GstElementDetails gst_synaesthesia_details = {
-  "Synaesthesia display",
-  "Sink/Visualization",
-  "Cool color display based on stereo info",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
+struct _GstSynaesthesia {
+  GstElement element;
+
+  /* pads */
+  GstPad *sinkpad,*srcpad;
+  GstBufferPool *peerpool;
+
+  // the timestamp of the next frame
+  guint64 next_time;
+  gint16 datain[2][512];
+
+  // video state
+  gint fps;
+  gint width;
+  gint height;
+  gboolean first_buffer;
 };
 
-static GstElementClass *parent_class = NULL;
-//static guint gst_synaesthesia_signals[LAST_SIGNAL] = { 0 };
+struct _GstSynaesthesiaClass {
+  GstElementClass parent_class;
+};
 
-/* Synaesthesia signals and args */
+GType gst_synaesthesia_get_type(void);
+
+
+/* elementfactory information */
+static GstElementDetails gst_synaesthesia_details = {
+  "Synaesthesia",
+  "Filter/Visualization",
+  "Creates video visualizations of audio input, using stereo and pitch information",
+  VERSION,
+  "Richard Boulton <richard@tartarus.org>",
+  "(C) 2002",
+};
+
+/* signals and args */
 enum {
   /* FILL ME */
   LAST_SIGNAL
@@ -48,61 +76,84 @@ enum {
   ARG_0,
   ARG_WIDTH,
   ARG_HEIGHT,
-  ARG_WIDGET,
+  ARG_FPS,
+  /* FILL ME */
 };
 
-static GstPadTemplate*
-sink_factory (void) 
-{
-  return 
-   gst_padtemplate_new (
-    	"sink",                                       /* the name of the pads */
-  	GST_PAD_SINK,                         /* type of the pad */
-  	GST_PAD_ALWAYS,                       /* ALWAYS/SOMETIMES */
-  	gst_caps_new (
-    	  "synaesthesia_sink16",                      /* the name of the caps */
-    	  "audio/raw",                                /* the mime type of the caps */
-	  gst_props_new (
-    	    /* Properties follow: */
-    	    "format",   GST_PROPS_INT (16),
-    	    "depth",    GST_PROPS_INT (16),
-	    NULL)),
-	NULL);
-    // These properties commented out so that autoplugging works for now:
-    // the autoplugging needs to be fixed (caps negotiation needed)
-    //,"rate",     GST_PROPS_INT (44100)
-    //,"channels", GST_PROPS_INT (2)
-}
+GST_PADTEMPLATE_FACTORY (src_template,
+  "src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+    "synaesthesiasrc",
+    "video/raw",
+      "format",		GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
+      "bpp",		GST_PROPS_INT (32),
+      "depth",		GST_PROPS_INT (32),
+      "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
+      "red_mask",   	GST_PROPS_INT (0xff0000),
+      "green_mask", 	GST_PROPS_INT (0xff00),
+      "blue_mask",  	GST_PROPS_INT (0xff),
+      "width",		GST_PROPS_INT_RANGE (16, 4096),
+      "height",		GST_PROPS_INT_RANGE (16, 4096)
+  )
+)
 
-static void gst_synaesthesia_class_init(GstSynaesthesiaClass *klass);
-static void gst_synaesthesia_init(GstSynaesthesia *synaesthesia);
+GST_PADTEMPLATE_FACTORY (sink_template,
+  "sink",					/* the name of the pads */
+  GST_PAD_SINK,				/* type of the pad */
+  GST_PAD_ALWAYS,				/* ALWAYS/SOMETIMES */
+  GST_CAPS_NEW (
+    "synaesthesiasink",				/* the name of the caps */
+    "audio/raw",				/* the mime type of the caps */
+       /* Properties follow: */
+      "format",     GST_PROPS_STRING ("int"),
+      "law",        GST_PROPS_INT (0),
+      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+      "signed",     GST_PROPS_BOOLEAN (TRUE),
+      "width",      GST_PROPS_INT (16),
+      "depth",      GST_PROPS_INT (16),
+      "rate",       GST_PROPS_INT_RANGE (8000, 96000),
+      "channels",   GST_PROPS_INT (1)
+  )
+)
 
-static void gst_synaesthesia_chain(GstPad *pad,GstBuffer *buf);
 
-static void gst_synaesthesia_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void gst_synaesthesia_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void		gst_synaesthesia_class_init	(GstSynaesthesiaClass *klass);
+static void		gst_synaesthesia_init		(GstSynaesthesia *synaesthesia);
 
+static void		gst_synaesthesia_set_property	(GObject *object, guint prop_id, 
+						 const GValue *value, GParamSpec *pspec);
+static void		gst_synaesthesia_get_property	(GObject *object, guint prop_id, 
+						 GValue *value, GParamSpec *pspec);
 
-static GstPadTemplate *sink_template;
+static void		gst_synaesthesia_chain		(GstPad *pad, GstBuffer *buf);
+
+static GstPadConnectReturn 
+			gst_synaesthesia_sinkconnect 	(GstPad *pad, GstCaps *caps);
+
+static GstElementClass *parent_class = NULL;
 
 GType
-gst_synaesthesia_get_type(void) {
-  static GType synaesthesia_type = 0;
+gst_synaesthesia_get_type (void)
+{
+  static GType type = 0;
 
-  if (!synaesthesia_type) {
-    static const GTypeInfo synaesthesia_info = {
-      sizeof(GstSynaesthesiaClass),      NULL,
+  if (!type) {
+    static const GTypeInfo info = {
+      sizeof (GstSynaesthesiaClass),      
+      NULL,      
+      NULL,      
+      (GClassInitFunc) gst_synaesthesia_class_init,
       NULL,
-      (GClassInitFunc)gst_synaesthesia_class_init,
       NULL,
-      NULL,
-      sizeof(GstSynaesthesia),
+      sizeof (GstSynaesthesia),
       0,
-      (GInstanceInitFunc)gst_synaesthesia_init,
+      (GInstanceInitFunc) gst_synaesthesia_init,
     };
-    synaesthesia_type = g_type_register_static(GST_TYPE_ELEMENT, "GstSynaesthesia", &synaesthesia_info, 0);
+    type = g_type_register_static (GST_TYPE_ELEMENT, "GstSynaesthesia", &info, 0);
   }
-  return synaesthesia_type;
+  return type;
 }
 
 static void
@@ -111,83 +162,143 @@ gst_synaesthesia_class_init(GstSynaesthesiaClass *klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  gobject_class = (GObjectClass*) klass;
+  gstelement_class = (GstElementClass*) klass;
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_WIDTH,
-    g_param_spec_int("width","width","width",
-                     G_MININT,G_MAXINT,0,G_PARAM_READABLE)); // CHECKME
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HEIGHT,
-    g_param_spec_int("height","height","height",
-                     G_MININT,G_MAXINT,0,G_PARAM_READABLE)); // CHECKME
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH,
+    g_param_spec_int ("width","Width","The Width",
+                       1, 2048, 320, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HEIGHT,
+    g_param_spec_int ("height","Height","The height",
+                       1, 2048, 320, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FPS,
+    g_param_spec_int ("fps","FPS","Frames per second",
+                       1, 100, 25, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_synaesthesia_set_property;
   gobject_class->get_property = gst_synaesthesia_get_property;
 }
 
 static void
-gst_synaesthesia_init(GstSynaesthesia *synaesthesia)
+gst_synaesthesia_init (GstSynaesthesia *synaesthesia)
 {
-  synaesthesia->sinkpad = gst_pad_new_from_template (sink_template, "sink");
-  gst_element_add_pad(GST_ELEMENT(synaesthesia), synaesthesia->sinkpad);
-  gst_pad_set_chain_function(synaesthesia->sinkpad, gst_synaesthesia_chain);
+  /* create the sink and src pads */
+  synaesthesia->sinkpad = gst_pad_new_from_template (
+		  GST_PADTEMPLATE_GET (sink_template ), "sink");
+  synaesthesia->srcpad = gst_pad_new_from_template (
+		  GST_PADTEMPLATE_GET (src_template ), "src");
+  gst_element_add_pad (GST_ELEMENT (synaesthesia), synaesthesia->sinkpad);
+  gst_element_add_pad (GST_ELEMENT (synaesthesia), synaesthesia->srcpad);
 
-  gst_synaesthesia_start(GST_ELEMENT(synaesthesia));
+  gst_pad_set_chain_function (synaesthesia->sinkpad, gst_synaesthesia_chain);
+  gst_pad_set_connect_function (synaesthesia->sinkpad, gst_synaesthesia_sinkconnect);
+
+  synaesthesia->next_time = 0;
+  synaesthesia->peerpool = NULL;
+
+  // reset the initial video state
+  synaesthesia->first_buffer = TRUE;
+  synaesthesia->width = 320;
+  synaesthesia->height = 200;
+  synaesthesia->fps = 25; // desired frame rate
+
 }
 
-static void gst_synaesthesia_chain(GstPad *pad,GstBuffer *buf) {
-  GstSynaesthesia *syna;
-  gint samplecount;
+static GstPadConnectReturn
+gst_synaesthesia_sinkconnect (GstPad *pad, GstCaps *caps)
+{
+  GstSynaesthesia *synaesthesia;
+  synaesthesia = GST_SYNAESTHESIA (gst_pad_get_parent (pad));
 
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
-  g_return_if_fail(buf != NULL);
+  if (!GST_CAPS_IS_FIXED (caps)) {
+    return GST_PAD_CONNECT_DELAYED;
+  }
 
-  syna = GST_SYNAESTHESIA(GST_OBJECT_PARENT (pad));
-  g_return_if_fail(syna != NULL);
-  g_return_if_fail(GST_IS_SYNAESTHESIA(syna));
-
-  samplecount = GST_BUFFER_SIZE(buf) /
-                (2 * sizeof(gint16));
-
-//  GST_DEBUG (0,"fading\n");
-//  fade(&syna->sp);
-  GST_DEBUG (0,"doing effect\n");
-  coreGo(&syna->sp,GST_BUFFER_DATA(buf),samplecount);
-
-//  GST_DEBUG (0,"drawing\n");
-/*  GST_DEBUG (0,"gdk_draw_indexed_image(%p,%p,%d,%d,%d,%d,%s,%p,%d,%p);\n",
-        syna->image->window,
-	syna->image->style->fg_gc[GTK_STATE_NORMAL],
-	0,0,syna->width,syna->height,
-	"GDK_RGB_DITHER_NORMAL",
-	syna->sp.output,syna->width,
-	&syna->cmap);*/
-/*  gdk_draw_indexed_image(syna->image->window,
-	syna->image->style->fg_gc[GTK_STATE_NORMAL],
-	0,0,syna->width,syna->height,
-	GDK_RGB_DITHER_NORMAL,
-	syna->sp.output,syna->width,
-	&syna->cmap);*/
-/*  gdk_draw_gray_image(syna->image->window,
-	syna->image->style->fg_gc[GTK_STATE_NORMAL],
-	0,0,syna->width,syna->height,
-	GDK_RGB_DITHER_NORMAL,
-	syna->sp.output,syna->width); */
-
-  gst_trace_add_entry(NULL,0,buf,"synaesthesia: calculated syna");
-
-  gst_buffer_unref(buf);
+  return GST_PAD_CONNECT_OK;
 }
 
-static void gst_synaesthesia_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec) {
+static void
+gst_synaesthesia_chain (GstPad *pad, GstBuffer *bufin)
+{
+  GstSynaesthesia *synaesthesia;
+  GstBuffer *bufout;
+  guint32 samples_in;
+  gint16 *data;
+  gint i;
+
+  synaesthesia = GST_SYNAESTHESIA (gst_pad_get_parent (pad));
+
+  GST_DEBUG (0, "Synaesthesia: chainfunc called\n");
+
+  samples_in = GST_BUFFER_SIZE (bufin) / sizeof (gint16);
+
+  GST_DEBUG (0, "input buffer has %d samples\n", samples_in);
+
+  if (GST_BUFFER_TIMESTAMP (bufin) < synaesthesia->next_time || samples_in < 1024) {
+    gst_buffer_unref (bufin);
+    return;
+  }
+
+  data = (gint16 *) GST_BUFFER_DATA (bufin);
+  for (i=0; i < 512; i++) {
+    synaesthesia->datain[0][i] = *data++;
+    synaesthesia->datain[1][i] = *data++;
+  }
+
+  if (synaesthesia->first_buffer) {
+    GstCaps *caps;
+
+    synaesthesia_init (synaesthesia->width, synaesthesia->height);
+	
+    GST_DEBUG (0, "making new pad\n");
+
+    caps = GST_CAPS_NEW (
+		     "synaesthesiasrc",
+		     "video/raw",
+		       "format", 	GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")), 
+		       "bpp", 		GST_PROPS_INT (32), 
+		       "depth", 	GST_PROPS_INT (32), 
+		       "endianness", 	GST_PROPS_INT (G_BYTE_ORDER), 
+		       "red_mask", 	GST_PROPS_INT (0xff0000), 
+		       "green_mask", 	GST_PROPS_INT (0x00ff00), 
+		       "blue_mask", 	GST_PROPS_INT (0x0000ff), 
+		       "width", 	GST_PROPS_INT (synaesthesia->width), 
+		       "height", 	GST_PROPS_INT (synaesthesia->height)
+		   );
+
+    if (!gst_pad_try_set_caps (synaesthesia->srcpad, caps)) {
+      gst_element_error (GST_ELEMENT (synaesthesia), "could not set caps");
+      return;
+    }
+    synaesthesia->first_buffer = FALSE;
+  }
+
+  bufout = gst_buffer_new ();
+  GST_BUFFER_SIZE (bufout) = synaesthesia->width * synaesthesia->height * 4;
+  GST_BUFFER_DATA (bufout) = (guchar *) synaesthesia_update (synaesthesia->datain);
+  GST_BUFFER_TIMESTAMP (bufout) = synaesthesia->next_time;
+  GST_BUFFER_FLAG_SET (bufout, GST_BUFFER_DONTFREE);
+
+  synaesthesia->next_time += 1000000LL / synaesthesia->fps;
+
+  gst_pad_push (synaesthesia->srcpad, bufout);
+
+  gst_buffer_unref (bufin);
+
+  GST_DEBUG (0, "Synaesthesia: exiting chainfunc\n");
+
+}
+
+static void
+gst_synaesthesia_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
   GstSynaesthesia *synaesthesia;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_SYNAESTHESIA(object));
-  synaesthesia = GST_SYNAESTHESIA(object);
+  g_return_if_fail (GST_IS_SYNAESTHESIA (object));
+  synaesthesia = GST_SYNAESTHESIA (object);
 
   switch (prop_id) {
     case ARG_WIDTH:
@@ -196,59 +307,50 @@ static void gst_synaesthesia_set_property(GObject *object, guint prop_id, const 
     case ARG_HEIGHT:
       synaesthesia->height = g_value_get_int (value);
       break;
+    case ARG_FPS:
+      synaesthesia->fps = g_value_get_int (value);
+      break;
     default:
       break;
   }
 }
 
 static void
-gst_synaesthesia_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_synaesthesia_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstSynaesthesia *synaesthesia;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_SYNAESTHESIA(object));
-  synaesthesia = GST_SYNAESTHESIA(object);
-
-  GST_DEBUG (0,"have synaesthesia get_property(%d), wanting %d\n",prop_id,ARG_WIDGET);
+  g_return_if_fail (GST_IS_SYNAESTHESIA (object));
+  synaesthesia = GST_SYNAESTHESIA (object);
 
   switch (prop_id) {
-    case ARG_WIDTH: {
+    case ARG_WIDTH:
       g_value_set_int (value, synaesthesia->width);
-      GST_DEBUG (0,"returning width value %d\n",g_value_get_int (value));
       break;
-    }
-    case ARG_HEIGHT: {
+    case ARG_HEIGHT:
       g_value_set_int (value, synaesthesia->height);
-      GST_DEBUG (0,"returning height value %d\n",g_value_get_int (value));
       break;
-    }
-/*    case ARG_WIDGET: {
-      g_value_set_object (value, G_OBJECT(synaesthesia->image));
-      GST_DEBUG (0,"returning widget value %p\n",g_value_get_object (value));
+    case ARG_FPS:
+      g_value_set_int (value, synaesthesia->fps);
       break;
-      }*/
-    default: {
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      GST_DEBUG (0,"returning invalid type\n");
+    default:
       break;
-    }
   }
 }
-
-
 
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new("synaesthesia", GST_TYPE_SYNAESTHESIA,
+  /* create an elementfactory for the synaesthesia element */
+  factory = gst_elementfactory_new("synaesthesia",GST_TYPE_SYNAESTHESIA,
                                    &gst_synaesthesia_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  sink_template = sink_factory ();
-  gst_elementfactory_add_padtemplate(factory, sink_template);
+  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_template));
+  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_template));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
@@ -261,33 +363,3 @@ GstPluginDesc plugin_desc = {
   "synaesthesia",
   plugin_init
 };
-
-static gboolean
-gst_synaesthesia_start(GstElement *element)
-{
-  GstSynaesthesia *syna;
-
-  g_return_val_if_fail(GST_IS_SYNAESTHESIA(element), FALSE);
-  syna = GST_SYNAESTHESIA(element);
-
-  syna->width = 255;
-  syna->height = 255;
-  syna->starsize = 2;
-
-  coreInit(&syna->sp, syna->width, syna->height);
-  setStarSize(&syna->sp, syna->starsize);
-
-/*  setupPalette(&syna->sp, syna->cmap.colors); */
-
-  gdk_rgb_init();
-/*  syna->image = gtk_drawing_area_new();
-  GST_DEBUG (0,"image is %p\n",syna->image);
-  gtk_drawing_area_size(GTK_DRAWING_AREA(syna->image),
-			syna->width,
-                        syna->height);
-                        gtk_widget_show(syna->image);*/
-
-  GST_DEBUG (0,"started synaesthesia\n");
-  return TRUE;
-}
-
