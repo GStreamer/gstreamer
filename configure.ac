@@ -279,7 +279,7 @@ GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
 dnl *** QuickCam ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_QCAM, true)
 GST_CHECK_FEATURE(QCAM, [QuickCam], qcamsrc, [
-  if test "x$HAVE_CPU_I386" = "xno";
+  if test "x$HAVE_CPU_I386" != "xyes";
   then
     HAVE_QCAM="no"
     AC_MSG_WARN([QuickCam only works on i386])
