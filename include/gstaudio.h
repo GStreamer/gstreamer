@@ -52,8 +52,8 @@
             					  GST_PROPS_BOOLEAN (TRUE),\
             					  GST_PROPS_BOOLEAN(FALSE)\
             					),\
-            "width",            GST_PROPS_INT_RANGE (8, 16),\
-            "depth",            GST_PROPS_INT_RANGE (8, 16),\
+            "width",            GST_PROPS_LIST (GST_PROPS_INT(8), GST_PROPS_INT(16)),\
+            "depth",            GST_PROPS_LIST (GST_PROPS_INT(8), GST_PROPS_INT(16)),\
             "rate",             GST_PROPS_INT_RANGE (4000, 96000),\
             "channels",         GST_PROPS_INT_RANGE (1, G_MAXINT),\
           NULL)
@@ -67,8 +67,8 @@
             					  GST_PROPS_BOOLEAN (TRUE),\
             					  GST_PROPS_BOOLEAN(FALSE)\
             					),\
-            "width",            GST_PROPS_INT_RANGE (8, 16),\
-            "depth",            GST_PROPS_INT_RANGE (8, 16),\
+            "width",            GST_PROPS_LIST (GST_PROPS_INT(8), GST_PROPS_INT(16)),\
+            "depth",            GST_PROPS_LIST (GST_PROPS_INT(8), GST_PROPS_INT(16)),\
             "rate",             GST_PROPS_INT_RANGE (4000, 96000),\
             "channels",         GST_PROPS_INT (1),\
           NULL)
