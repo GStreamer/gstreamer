@@ -131,7 +131,7 @@ static GstSchedulerClass *parent_class = NULL;
 
 #define do_element_switch(element) G_STMT_START{		\
   GstElement *from = SCHED (element)->current;			\
-  if (from->post_run_func)					\
+  if (from && from->post_run_func)				\
     from->post_run_func (from);					\
   SCHED (element)->current = element;				\
   if (element->pre_run_func)					\
@@ -141,7 +141,7 @@ static GstSchedulerClass *parent_class = NULL;
 
 #define do_switch_to_main(sched) G_STMT_START{			\
   GstElement *current = ((GstBasicScheduler*)sched)->current;	\
-  if (current->post_run_func)					\
+  if (current && current->post_run_func)			\
     current->post_run_func (current);				\
   SCHED (current)->current = NULL;				\
   do_cothread_switch						\
@@ -1114,8 +1114,12 @@ gst_basic_scheduler_yield (GstScheduler *sched, GstElement *element)
 static gboolean
 gst_basic_scheduler_interrupt (GstScheduler *sched, GstElement *element)
 {
-  GST_FLAG_SET (element, GST_ELEMENT_COTHREAD_STOPPING);
 
+  if (GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
+    g_warning ("interrupt decoupled element");
+  }
+
+  GST_FLAG_SET (element, GST_ELEMENT_COTHREAD_STOPPING);
   do_switch_to_main (sched);
 
   return FALSE;
