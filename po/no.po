@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer 0.7.0.1\n"
-"Report-Msgid-Bugs-To: \"http://bugzilla.gnome.org\"\n"
-"POT-Creation-Date: 2003-11-22 17:49+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2003-12-20 17:28+0100\n"
 "PO-Revision-Date: 2003-10-09 14:10-0700\n"
 "Last-Translator: David Schleef <ds@schleef.org>\n"
 "Language-Team: translators <translation@gnome.org>\n"
@@ -15,68 +15,72 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:112
+#: gst/gst.c:116
 msgid "Print the GStreamer version"
 msgstr ""
 
-#: gst/gst.c:113
+#: gst/gst.c:117
 msgid "Make all warnings fatal"
 msgstr ""
 
-#: gst/gst.c:115
+#: gst/gst.c:119
 msgid ""
 "default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 
-#: gst/gst.c:116
+#: gst/gst.c:120
 msgid ""
 "colon-seperated list of category_name=level pairs to set specific levels for "
 "the individual categories.\n"
 "Example:GST_AUTOPLUG=5:GST_ELEMENT_*=3"
 msgstr ""
 
-#: gst/gst.c:117
+#: gst/gst.c:121
 msgid "disable color debugging output"
 msgstr ""
 
-#: gst/gst.c:118
+#: gst/gst.c:122
 msgid "disable debugging"
 msgstr ""
 
-#: gst/gst.c:119
+#: gst/gst.c:123
 msgid "print available debug categories and exit"
 msgstr ""
 
-#: gst/gst.c:121
+#: gst/gst.c:125
 msgid "Disable accelerated CPU instructions"
 msgstr ""
 
-#: gst/gst.c:122
+#: gst/gst.c:126
 msgid "enable verbose plugin loading diagnostics"
 msgstr ""
 
-#: gst/gst.c:123
+#: gst/gst.c:127
 msgid "'"
 msgstr ""
 
-#: gst/gst.c:123
+#: gst/gst.c:127
 msgid "'--separated path list for loading plugins"
 msgstr ""
 
-#: gst/gst.c:124
+#: gst/gst.c:128
 msgid ""
 "comma-separated list of plugins to preload in addition to the list stored in "
 "env variable GST_PLUGIN_PATH"
 msgstr ""
 
-#: gst/gst.c:125
+#: gst/gst.c:129
+msgid "disable trapping of segmentation faults during plugin loading"
+msgstr ""
+
+#: gst/gst.c:130
 msgid "scheduler to use ('"
 msgstr ""
 
-#: gst/gst.c:125
+#: gst/gst.c:130
 msgid "' is the default)"
 msgstr ""
 
-#: gst/gst.c:126
+#: gst/gst.c:131
 msgid "registry to use"
 msgstr ""

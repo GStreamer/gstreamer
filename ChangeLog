@@ -1,3 +1,7 @@
+2003-12-21 Christian Schaller <Uraeus@gnome.org>
+
+	* Add a GStreamer and Midi document to docs/random/uraeus
+
 2003-12-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
         * gst/gst.c:
