@@ -55,7 +55,7 @@ gst_play_type_find (GstBin *bin, GstElement *element)
   typefind = gst_element_factory_make ("typefind", "typefind");
   g_return_val_if_fail (typefind != NULL, FALSE);
 
-  gst_pad_connect (gst_element_get_pad (element, "src"),
+  gst_pad_link (gst_element_get_pad (element, "src"),
                    gst_element_get_pad (typefind, "sink"));
   gst_bin_add (bin, typefind);
   gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (bin));
@@ -69,7 +69,7 @@ gst_play_type_find (GstBin *bin, GstElement *element)
 
   caps = gst_pad_get_caps (gst_element_get_pad (element, "src"));
 
-  gst_pad_disconnect (gst_element_get_pad (element, "src"),
+  gst_pad_unlink (gst_element_get_pad (element, "src"),
                       gst_element_get_pad (typefind, "sink"));
   gst_bin_remove (bin, typefind);
   gst_bin_remove (GST_BIN (pipeline), GST_ELEMENT (bin));
@@ -115,15 +115,15 @@ int main(int argc,char *argv[])
   /* create main bin */
   main_bin = gst_pipeline_new("bin");
 
-  /* connect adder and output to bin */
+  /* link adder and output to bin */
   GST_INFO (0, "main: adding adder to bin");
   gst_bin_add (GST_BIN(main_bin), adder);
   GST_INFO (0, "main: adding audiosink to bin");
   gst_bin_add (GST_BIN(main_bin), audiosink);
 
-  /* connect adder and audiosink */
+  /* link adder and audiosink */
 
-  gst_pad_connect(gst_element_get_pad(adder,"src"),
+  gst_pad_link(gst_element_get_pad(adder,"src"),
                   gst_element_get_pad(audiosink,"sink"));
   
   /* start looping */
@@ -138,12 +138,12 @@ int main(int argc,char *argv[])
     if (i > 1) gst_element_set_state (main_bin, GST_STATE_PAUSED);
     gst_bin_add (GST_BIN(main_bin), channel_in->pipe);
 
-    /* request pads and connect to adder */
+    /* request pads and link to adder */
     GST_INFO (0, "requesting pad\n");
     pad = gst_element_get_request_pad (adder, "sink%d");
     printf ("\tGot new adder sink pad %s\n", gst_pad_get_name (pad));
     sprintf (buffer, "channel%d", i);
-    gst_pad_connect (gst_element_get_pad (channel_in->pipe, buffer), pad);
+    gst_pad_link (gst_element_get_pad (channel_in->pipe, buffer), pad);
 
     /* register a volume envelope */
     printf ("\tregistering volume envelope...\n");
@@ -276,7 +276,7 @@ create_input_channel (int id, char* location)
   /* add filesrc to the bin before autoplug */
   gst_bin_add(GST_BIN(channel->pipe), channel->filesrc);
 
-  /* connect signal to eos of filesrc */
+  /* link signal to eos of filesrc */
   g_signal_connect (G_OBJECT(channel->filesrc),"eos",
                      G_CALLBACK(eos),NULL);
 
@@ -364,8 +364,8 @@ create_input_channel (int id, char* location)
   gst_bin_add (GST_BIN(channel->pipe), channel->volenv);
   gst_bin_add (GST_BIN (channel->pipe), new_element);
   
-  gst_element_connect_pads (channel->filesrc, "src", new_element, "sink");
-  gst_element_connect_pads (new_element, "src_00", channel->volenv, "sink");
+  gst_element_link_pads (channel->filesrc, "src", new_element, "sink");
+  gst_element_link_pads (new_element, "src_00", channel->volenv, "sink");
   
   /* add a ghost pad */
   sprintf (buffer, "channel%d", id);

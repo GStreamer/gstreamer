@@ -32,8 +32,8 @@ int main(int argc,char *argv[])
   gst_bin_add_many (GST_BIN(thread2), queue, fakesink, NULL);
 
   gst_element_add_ghost_pad (thread2, gst_element_get_pad (queue, "sink"), "sink");
-  gst_element_connect_many (queue, fakesink, NULL);
-  gst_element_connect_many (fakesrc, thread2, NULL);
+  gst_element_link_many (queue, fakesink, NULL);
+  gst_element_link_many (fakesrc, thread2, NULL);
 
   for (x = 0 ; x < 10 ; x++){
     g_print("playing %d\n", x);

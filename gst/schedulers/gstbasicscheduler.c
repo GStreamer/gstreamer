@@ -119,8 +119,8 @@ static void 		gst_basic_scheduler_unlock_element 	(GstScheduler *sched, GstEleme
 static void 		gst_basic_scheduler_yield 		(GstScheduler *sched, GstElement *element);
 static gboolean		gst_basic_scheduler_interrupt 		(GstScheduler *sched, GstElement *element);
 static void 		gst_basic_scheduler_error	 	(GstScheduler *sched, GstElement *element);
-static void     	gst_basic_scheduler_pad_connect		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
-static void     	gst_basic_scheduler_pad_disconnect 	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
+static void     	gst_basic_scheduler_pad_link		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
+static void     	gst_basic_scheduler_pad_unlink 	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 static GstPad*  	gst_basic_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
 static GstClockReturn	gst_basic_scheduler_clock_wait	 	(GstScheduler *sched, GstElement *element,
 								 GstClockID id, GstClockTimeDiff *jitter);
@@ -209,8 +209,8 @@ gst_basic_scheduler_class_init (GstBasicSchedulerClass * klass)
   gstscheduler_class->yield	 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_yield);
   gstscheduler_class->interrupt 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_interrupt);
   gstscheduler_class->error	 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_error);
-  gstscheduler_class->pad_connect 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_connect);
-  gstscheduler_class->pad_disconnect 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_disconnect);
+  gstscheduler_class->pad_link 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_link);
+  gstscheduler_class->pad_unlink 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_unlink);
   gstscheduler_class->pad_select	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_select);
   gstscheduler_class->clock_wait	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_clock_wait);
   gstscheduler_class->iterate 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_iterate);
@@ -505,7 +505,7 @@ gst_basic_scheduler_gethandler_proxy (GstPad * pad)
       GST_DEBUG (GST_CAT_DATAFLOW, "new pad in mid-switch!");
       pad = (GstPad *) GST_RPAD_PEER (peer);
       if (!pad) {
-	gst_element_error (parent, "pad unconnected");
+	gst_element_error (parent, "pad unlinked");
       }
       parent = GST_PAD_PARENT (pad);
       peer = GST_RPAD_PEER (pad);
@@ -1156,7 +1156,7 @@ gst_basic_scheduler_error (GstScheduler *sched, GstElement *element)
 }
 
 static void
-gst_basic_scheduler_pad_connect (GstScheduler * sched, GstPad *srcpad, GstPad *sinkpad)
+gst_basic_scheduler_pad_link (GstScheduler * sched, GstPad *srcpad, GstPad *sinkpad)
 {
   GstElement *srcelement, *sinkelement;
   GstBasicScheduler *bsched = GST_BASIC_SCHEDULER (sched);
@@ -1166,7 +1166,7 @@ gst_basic_scheduler_pad_connect (GstScheduler * sched, GstPad *srcpad, GstPad *s
   sinkelement = GST_PAD_PARENT (sinkpad);
   g_return_if_fail (sinkelement != NULL);
 
-  GST_INFO (GST_CAT_SCHEDULING, "have pad connected callback on %s:%s to %s:%s",
+  GST_INFO (GST_CAT_SCHEDULING, "have pad linked callback on %s:%s to %s:%s",
 	    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
   GST_DEBUG (GST_CAT_SCHEDULING, "srcpad sched is %p, sinkpad sched is %p",
 	     GST_ELEMENT_SCHED (srcelement), GST_ELEMENT_SCHED (sinkelement));
@@ -1179,13 +1179,13 @@ gst_basic_scheduler_pad_connect (GstScheduler * sched, GstPad *srcpad, GstPad *s
 }
 
 static void
-gst_basic_scheduler_pad_disconnect (GstScheduler * sched, GstPad * srcpad, GstPad * sinkpad)
+gst_basic_scheduler_pad_unlink (GstScheduler * sched, GstPad * srcpad, GstPad * sinkpad)
 {
   GstElement *element1, *element2;
   GstSchedulerChain *chain1, *chain2;
   GstBasicScheduler *bsched = GST_BASIC_SCHEDULER (sched);
 
-  GST_INFO (GST_CAT_SCHEDULING, "disconnecting pads %s:%s and %s:%s",
+  GST_INFO (GST_CAT_SCHEDULING, "unlinking pads %s:%s and %s:%s",
 	    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
   /* we need to have the parent elements of each pad */

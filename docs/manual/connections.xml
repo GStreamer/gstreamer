@@ -1,20 +1,20 @@
-<chapter id="cha-connections">
+<chapter id="cha-links">
   <title>Connecting elements</title>
   <para> 
-    You can connect the different pads of elements together so that the elements
+    You can link the different pads of elements together so that the elements
     form a chain.
   </para>
 
-  <figure float="1" id="sec-connection">
-    <title>Visualisation of three connected elements</title>
+  <figure float="1" id="sec-link">
+    <title>Visualisation of three linked elements</title>
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/connected-elements.&magic;" format="&MAGIC;" />
+          <imagedata fileref="images/linked-elements.&magic;" format="&MAGIC;" />
         </imageobject>
       </mediaobject>
   </figure>
   <para> 
-    By connecting these three elements, we have created a very simple
+    By linking these three elements, we have created a very simple
     chain. The effect of this will be that the output of the source element
     (element1) will be used as input for the filter element (element2). The
     filter element will do something with the data and send the result to
@@ -28,9 +28,9 @@
   </para>
 
   <sect1 id="sec-conn-basic">
-   <title>Making simple connections</title>
+   <title>Making simple links</title>
    <para> 
-     You can connect two pads with:
+     You can link two pads with:
    </para>
    <programlisting>
  GstPad *srcpad, *sinkpad;
@@ -38,66 +38,66 @@
  srcpad = gst_element_get_pad (element1, "src");
  sinpad = gst_element_get_pad (element2, "sink");
 
- // connect them
- gst_pad_connect (srcpad, sinkpad);
+ // link them
+ gst_pad_link (srcpad, sinkpad);
    ....
- // and disconnect them
- gst_pad_disconnect (srcpad, sinkpad);
+ // and unlink them
+ gst_pad_unlink (srcpad, sinkpad);
 
   </programlisting>
    <para> 
-     A convenient shortcut for the above code is done with the gst_element_connect_pads ()
+     A convenient shortcut for the above code is done with the gst_element_link_pads ()
      function:
    </para>
   <programlisting>
 
- // connect them
- gst_element_connect_pads (element1, "src", element2, "sink");
+ // link them
+ gst_element_link_pads (element1, "src", element2, "sink");
    ....
- // and disconnect them
- gst_element_disconnect_pads (element1, "src", element2, "sink");
+ // and unlink them
+ gst_element_unlink_pads (element1, "src", element2, "sink");
 
   </programlisting>
    <para>
      An even more convenient shortcut for single-source, single-sink elements is the
-     gst_element_connect () function:
+     gst_element_link () function:
    </para>
   <programlisting>
 
- // connect them
- gst_element_connect (element1, element2);
+ // link them
+ gst_element_link (element1, element2);
    ....
- // and disconnect them
- gst_element_disconnect (element1, element2);
+ // and unlink them
+ gst_element_unlink (element1, element2);
 
   </programlisting>
    <para>
-     If you have more than one element to connection, the gst_element_connect_many () function takes
+     If you have more than one element to link, the gst_element_link_many () function takes
      a NULL-terminated list of elements:
    </para>
   <programlisting>
 
- // connect them
- gst_element_connect_many (element1, element2, element3, element4, NULL);
+ // link them
+ gst_element_link_many (element1, element2, element3, element4, NULL);
    ....
- // and disconnect them
- gst_element_disconnect_many (element1, element2, element3, element4, NULL);
+ // and unlink them
+ gst_element_unlink_many (element1, element2, element3, element4, NULL);
 
   </programlisting>
    <para> 
-     You can query if a pad is connected with GST_PAD_IS_CONNECTED (pad). 
+     You can query if a pad is linked with GST_PAD_IS_CONNECTED (pad). 
    </para>
    <para> 
-     To query for the <classname>GstPad</classname> a pad is connected to, use 
+     To query for the <classname>GstPad</classname> a pad is linked to, use 
      gst_pad_get_peer (pad).
    </para>
   </sect1>
 
   <sect1 id="sec-conn-filtered">
-   <title>Making filtered connections</title>
+   <title>Making filtered links</title>
     <para>
-      You can also force a specific media type on the connection by using gst_pad_connect_filtered ()
-      and gst_element_connect_filtered (). FIXME link to caps documentation.
+      You can also force a specific media type on the link by using gst_pad_link_filtered ()
+      and gst_element_link_filtered (). FIXME link to caps documentation.
     </para>
   </sect1>
 

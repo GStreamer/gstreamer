@@ -46,10 +46,10 @@ _caps_double {_string}{_assign}{_caps_type_double}[[:space:]]+{_double}
 _caps_boolean {_string}{_assign}"boolean"[[:space:]]+{_boolean}
 _caps_pair {_caps_string}|{_caps_int}|{_caps_double}|{_caps_boolean}
 _caps {_string}({_comma}{_caps_pair})*
-_lconnection ({_identifier}\.)?{_identifier}!
-_rconnection !({_identifier}\.)?{_identifier}
-_bconnection ({_identifier}\.)?{_identifier}!({_identifier}\.)?{_identifier}
-_fconnection ({_identifier}\.)?{_identifier}!{_caps}!({_identifier}\.)?{_identifier}
+_llink ({_identifier}\.)?{_identifier}!
+_rlink !({_identifier}\.)?{_identifier}
+_blink ({_identifier}\.)?{_identifier}!({_identifier}\.)?{_identifier}
+_flink ({_identifier}\.)?{_identifier}!{_caps}!({_identifier}\.)?{_identifier}
 
 %x value
 %option noyywrap
@@ -101,10 +101,10 @@ _fconnection ({_identifier}\.)?{_identifier}!{_caps}!({_identifier}\.)?{_identif
     [[:space:]]+ { /* PRINT ("space: [%s]\n", yytext); */ }
 }
 
-{_lconnection} {
+{_llink} {
     gchar *d1, *q;
-    lvalp->c = g_new0 (connection_t, 1);
-    PRINT ("An connection: %s\n", yytext);
+    lvalp->c = g_new0 (link_t, 1);
+    PRINT ("An link: %s\n", yytext);
     q = strchr (yytext, '!');
     d1 = strchr (yytext, '.');
     if (d1) {
@@ -114,13 +114,13 @@ _fconnection ({_identifier}\.)?{_identifier}!{_caps}!({_identifier}\.)?{_identif
         lvalp->c->src_pads = g_list_append (lvalp->c->src_pads, g_strndup (yytext, q - yytext));
     }
     
-    return CONNECTION;
+    return LINK;
 }
 
-{_rconnection} {
+{_rlink} {
     gchar *d2;
-    lvalp->c = g_new0 (connection_t, 1);
-    PRINT ("An rconnection: %s\n", yytext);
+    lvalp->c = g_new0 (link_t, 1);
+    PRINT ("An rlink: %s\n", yytext);
     d2 = strchr (yytext, '.');
     if (d2) {
         lvalp->c->sink_name = g_strndup (yytext + 1, d2 - yytext - 1);
@@ -129,13 +129,13 @@ _fconnection ({_identifier}\.)?{_identifier}!{_caps}!({_identifier}\.)?{_identif
         lvalp->c->sink_pads = g_list_append (lvalp->c->sink_pads, g_strdup (yytext + 1));
     }
 
-    return CONNECTION;
+    return LINK;
 }
 
-{_bconnection} {
+{_blink} {
     gchar *d1, *d2, *q;
-    lvalp->c = g_new0 (connection_t, 1);
-    PRINT ("A bconnection: %s\n", yytext);
+    lvalp->c = g_new0 (link_t, 1);
+    PRINT ("A blink: %s\n", yytext);
     q = strchr (yytext, '!');
     d1 = strchr (yytext, '.');
     d2 = strchr (q, '.');
@@ -153,16 +153,16 @@ _fconnection ({_identifier}\.)?{_identifier}!{_caps}!({_identifier}\.)?{_identif
         lvalp->c->sink_pads = g_list_append (lvalp->c->sink_pads, g_strdup (q + 1));
     }
 
-    return BCONNECTION;
+    return BLINK;
 }
 
-{_fconnection} {
+{_flink} {
     gchar *d1, *d2, *q1, *q2, *a1, *m1;
     gchar *mime;
     GstProps *props;
 
-    lvalp->c = g_new0 (connection_t, 1);
-    PRINT ("An fconnection: %s\n", yytext);
+    lvalp->c = g_new0 (link_t, 1);
+    PRINT ("An flink: %s\n", yytext);
     q1 = strchr (yytext, '!');
     d1 = strchr (yytext, '.');
     q2 = strchr (q1+1, '!');
@@ -243,7 +243,7 @@ _fconnection ({_identifier}\.)?{_identifier}!{_caps}!({_identifier}\.)?{_identif
     }
     lvalp->c->caps = gst_caps_new ("parse_caps", mime, props);
 
-    return FCONNECTION;
+    return FLINK;
 }
 
 {_identifier} {

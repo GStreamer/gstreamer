@@ -44,8 +44,8 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
   autobin = gst_bin_get_by_name (GST_BIN (pipeline), "autobin");
   cache = gst_bin_get_by_name (GST_BIN (autobin), "cache");
 
-  /* disconnect the typefind from the pipeline and remove it */
-  gst_element_disconnect (cache, typefind);
+  /* unlink the typefind from the pipeline and remove it */
+  gst_element_unlink (cache, typefind);
   gst_bin_remove (GST_BIN (autobin), typefind);
       
   /* and an audio sink */
@@ -68,7 +68,7 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
 
   g_object_set (G_OBJECT (cache), "reset", TRUE, NULL);
 
-  gst_element_connect (cache, new_element);
+  gst_element_link (cache, new_element);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
@@ -90,10 +90,10 @@ gst_play_cache_empty (GstElement *element, GstElement *pipeline)
   cache = gst_bin_get_by_name (GST_BIN (autobin), "cache");
   new_element = gst_bin_get_by_name (GST_BIN (autobin), "new_element");
 
-  gst_element_disconnect (filesrc, cache);
-  gst_element_disconnect (cache, new_element);
+  gst_element_unlink (filesrc, cache);
+  gst_element_unlink (cache, new_element);
   gst_bin_remove (GST_BIN (autobin), cache);
-  gst_element_connect (filesrc, new_element);
+  gst_element_link (filesrc, new_element);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
@@ -137,12 +137,12 @@ main (int argc, char *argv[])
   gst_bin_add (GST_BIN (autobin), cache);
   gst_bin_add (GST_BIN (autobin), typefind);
 
-  gst_element_connect (cache, typefind);
+  gst_element_link (cache, typefind);
   gst_element_add_ghost_pad (autobin, 
                              gst_element_get_pad (cache, "sink"), "sink");
 
   gst_bin_add (GST_BIN( pipeline), autobin);
-  gst_element_connect (filesrc, autobin);
+  gst_element_link (filesrc, autobin);
 
   /* start playing */
   gst_element_set_state( GST_ELEMENT (pipeline), GST_STATE_PLAYING);
@@ -187,15 +187,15 @@ main (int argc, char *argv[])
       the pipeline: 
     </para>
     <programlisting>
-  /* disconnect the typefind from the pipeline and remove it */
-  gst_element_disconnect (cache, "src", typefind, "sink");
+  /* unlink the typefind from the pipeline and remove it */
+  gst_element_unlink (cache, "src", typefind, "sink");
   gst_bin_remove (GST_BIN (autobin), typefind);
     </programlisting>
 
     <para>
       Our next step is to construct an element that can play the type we just
       detected. We are going to use the autoplugger to create an element that
-      connects the type to an osssink. We add the new element to our 
+      links the type to an osssink. We add the new element to our 
       autobin.
     </para>
 
@@ -230,7 +230,7 @@ main (int argc, char *argv[])
     <programlisting>
   g_object_set (G_OBJECT (cache), "reset", TRUE, NULL);
 
-  gst_element_connect (cache, "src", new_element, "sink");
+  gst_element_link (cache, "src", new_element, "sink");
     </programlisting>
     <para>
      Finally we set the pipeline back to the playing state. At this point the
@@ -240,7 +240,7 @@ main (int argc, char *argv[])
 
     <para>
       The cache empty function simply removes the autoplugcache element from
-      the pipeline and reconnects the filesrc to the autoplugged element.
+      the pipeline and relinks the filesrc to the autoplugged element.
     </para>
 
     <para>

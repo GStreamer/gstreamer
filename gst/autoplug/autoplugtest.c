@@ -14,9 +14,9 @@ have_type (GstElement *element, GstCaps *caps, GstCaps **private_caps)
 
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
-  /* disconnect the typefind from the pipeline and remove it,
+  /* unlink the typefind from the pipeline and remove it,
    * since we now know what the type is */
-  gst_element_disconnect (cache, typefind);
+  gst_element_unlink (cache, typefind);
   gst_bin_remove (GST_BIN (autobin), typefind);
 
   gst_scheduler_show (GST_ELEMENT_SCHED (pipeline));
@@ -45,11 +45,11 @@ have_type (GstElement *element, GstCaps *caps, GstCaps **private_caps)
   sink = gst_element_factory_make ("osssink", "sink");
   gst_bin_add (GST_BIN (autobin), decoder);
   gst_bin_add (GST_BIN (autobin), sink);
-  gst_element_connect (decoder, sink);
+  gst_element_link (decoder, sink);
 
   g_object_set (G_OBJECT (cache), "reset", TRUE, NULL);
 
-  gst_element_connect (cache, decoder);
+  gst_element_link (cache, decoder);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fprintf (stderr, "done with have_type signal, playing\n");
@@ -60,13 +60,13 @@ void cache_empty (GstElement *element, gpointer private) {
 
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
-  gst_element_disconnect_pads (src,"src",cache,"sink");
+  gst_element_unlink_pads (src,"src",cache,"sink");
   gst_scheduler_show (GST_ELEMENT_SCHED(pipeline));
-  gst_element_disconnect_pads (cache,"src",decoder,"sink");
+  gst_element_unlink_pads (cache,"src",decoder,"sink");
   gst_scheduler_show (GST_ELEMENT_SCHED(pipeline));
   gst_bin_remove (GST_BIN(autobin), cache);
   gst_scheduler_show (GST_ELEMENT_SCHED(pipeline));
-  gst_element_connect_pads (src,"src",decoder,"sink");
+  gst_element_link_pads (src,"src",decoder,"sink");
   gst_scheduler_show (GST_ELEMENT_SCHED(pipeline));
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -104,12 +104,12 @@ int main (int argc,char *argv[]) {
 		    G_CALLBACK (have_type), &caps);
   gst_bin_add (GST_BIN (autobin), cache);
   gst_bin_add (GST_BIN (autobin), typefind);
-  gst_element_connect (cache, typefind);
+  gst_element_link (cache, typefind);
   gst_element_add_ghost_pad (autobin, 
 		             gst_element_get_pad (cache, "sink") ,"sink");
 
   gst_bin_add (GST_BIN (pipeline), autobin);
-  gst_element_connect (src, autobin);
+  gst_element_link (src, autobin);
 
   /* pipeline is now src ! autobin 
    * with autobin: cache ! typefind

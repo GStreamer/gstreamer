@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstpad.c: Pads for connecting elements together
+ * gstpad.c: Pads for linking elements together
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -47,7 +47,7 @@ GType _gst_pad_type = 0;
 static void		gst_pad_class_init		(GstPadClass *klass);
 static void		gst_pad_init			(GstPad *pad);
 
-static gboolean 	gst_pad_try_reconnect_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad, 
+static gboolean 	gst_pad_try_relink_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad, 
 							 GstCaps *caps, gboolean clear);
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -160,13 +160,13 @@ gst_real_pad_class_init (GstRealPadClass *klass)
                   gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                   G_TYPE_POINTER);
   gst_real_pad_signals[REAL_CONNECTED] =
-    g_signal_new ("connected", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstRealPadClass, connected), NULL, NULL,
+    g_signal_new ("linked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (GstRealPadClass, linked), NULL, NULL,
                   gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                   G_TYPE_POINTER);
   gst_real_pad_signals[REAL_DISCONNECTED] =
-    g_signal_new ("disconnected", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstRealPadClass, disconnected), NULL, NULL,
+    g_signal_new ("unlinked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (GstRealPadClass, unlinked), NULL, NULL,
                   gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                   G_TYPE_POINTER);
 
@@ -201,14 +201,14 @@ gst_real_pad_init (GstRealPad *pad)
   pad->ghostpads = NULL;
   pad->caps = NULL;
 
-  pad->connectfunc = NULL;
+  pad->linkfunc = NULL;
   pad->getcapsfunc = NULL;
 
   pad->convertfunc 	= gst_pad_convert_default;
   pad->eventfunc 	= gst_pad_event_default;
   pad->convertfunc 	= gst_pad_convert_default;
   pad->queryfunc 	= gst_pad_query_default;
-  pad->intconnfunc 	= gst_pad_get_internal_connections_default;
+  pad->intconnfunc 	= gst_pad_get_internal_links_default;
 
   pad->eventmaskfunc 	= gst_pad_get_event_masks_default;
   pad->formatsfunc 	= gst_pad_get_formats_default;
@@ -695,21 +695,21 @@ gst_pad_get_query_types_default (GstPad *pad)
 }
 
 /**
- * gst_pad_set_internal_connection_function:
- * @pad: a #GstPad to set the internal connection function for.
+ * gst_pad_set_internal_link_function:
+ * @pad: a #GstPad to set the internal link function for.
  * @intconn: the #GstPadIntConnFunction to set.
  *
- * Sets the given internal connection function for the pad.
+ * Sets the given internal link function for the pad.
  */
 void
-gst_pad_set_internal_connection_function (GstPad *pad, 
+gst_pad_set_internal_link_function (GstPad *pad, 
                                           GstPadIntConnFunction intconn)
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
   GST_RPAD_INTCONNFUNC (pad) = intconn;
-  GST_DEBUG (GST_CAT_PADS, "internal connection for %s:%s  set to %s",
+  GST_DEBUG (GST_CAT_PADS, "internal link for %s:%s  set to %s",
              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (intconn));
 }
 
@@ -732,23 +732,23 @@ gst_pad_set_formats_function (GstPad *pad, GstPadFormatsFunction formats)
 }
 
 /**
- * gst_pad_set_connect_function:
- * @pad: a #GstPad to set the connect function for.
- * @connect: the #GstPadConnectFunction to set.
+ * gst_pad_set_link_function:
+ * @pad: a #GstPad to set the link function for.
+ * @link: the #GstPadConnectFunction to set.
  *
- * Sets the given connect function for the pad. It will be called
- * when the pad is connected or reconnected with caps.
+ * Sets the given link function for the pad. It will be called
+ * when the pad is linked or relinked with caps.
  */
 void
-gst_pad_set_connect_function (GstPad *pad,
-		              GstPadConnectFunction connect)
+gst_pad_set_link_function (GstPad *pad,
+		              GstPadConnectFunction link)
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
-  GST_RPAD_CONNECTFUNC (pad) = connect;
-  GST_DEBUG (GST_CAT_PADS, "connectfunc for %s:%s set to %s",
-             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (connect));
+  GST_RPAD_CONNECTFUNC (pad) = link;
+  GST_DEBUG (GST_CAT_PADS, "linkfunc for %s:%s set to %s",
+             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (link));
 }
 
 /**
@@ -791,14 +791,14 @@ gst_pad_set_bufferpool_function (GstPad *pad,
 }
 
 /**
- * gst_pad_disconnect:
- * @srcpad: the source #GstPad to disconnect.
- * @sinkpad: the sink #GstPad to disconnect.
+ * gst_pad_unlink:
+ * @srcpad: the source #GstPad to unlink.
+ * @sinkpad: the sink #GstPad to unlink.
  *
- * Disconnects the source pad from the sink pad.
+ * Unlinks the source pad from the sink pad.
  */
 void
-gst_pad_disconnect (GstPad *srcpad,
+gst_pad_unlink (GstPad *srcpad,
 		    GstPad *sinkpad)
 {
   GstRealPad *realsrc, *realsink;
@@ -810,7 +810,7 @@ gst_pad_disconnect (GstPad *srcpad,
   g_return_if_fail (sinkpad != NULL);
   g_return_if_fail (GST_IS_PAD (sinkpad));
 
-  GST_INFO (GST_CAT_ELEMENT_PADS, "disconnecting %s:%s(%p) and %s:%s(%p)",
+  GST_INFO (GST_CAT_ELEMENT_PADS, "unlinking %s:%s(%p) and %s:%s(%p)",
             GST_DEBUG_PAD_NAME (srcpad), srcpad, 
 	    GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
 
@@ -832,7 +832,7 @@ gst_pad_disconnect (GstPad *srcpad,
   g_return_if_fail ((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC) &&
                     (GST_RPAD_DIRECTION (realsink) == GST_PAD_SINK));
 
-  /* get the schedulers before we disconnect */
+  /* get the schedulers before we unlink */
   src_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsrc));
   sink_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsink));
 
@@ -849,7 +849,7 @@ gst_pad_disconnect (GstPad *srcpad,
 
   /* now tell the scheduler */
   if (src_sched && src_sched == sink_sched) {
-    gst_scheduler_pad_disconnect (src_sched, 
+    gst_scheduler_pad_unlink (src_sched, 
 	                          GST_PAD_CAST (realsrc), GST_PAD_CAST (realsink));
   }
 
@@ -858,13 +858,13 @@ gst_pad_disconnect (GstPad *srcpad,
   gst_object_ref (GST_OBJECT (realsink));
 
   /* fire off a signal to each of the pads telling them 
-   * that they've been disconnected */
+   * that they've been unlinked */
   g_signal_emit (G_OBJECT (realsrc), gst_real_pad_signals[REAL_DISCONNECTED], 
                  0, realsink);
   g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_DISCONNECTED], 
                  0, realsrc);
 
-  GST_INFO (GST_CAT_ELEMENT_PADS, "disconnected %s:%s and %s:%s",
+  GST_INFO (GST_CAT_ELEMENT_PADS, "unlinked %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
   gst_object_unref (GST_OBJECT (realsrc));
@@ -879,7 +879,7 @@ gst_pad_check_schedulers (GstRealPad *realsrc, GstRealPad *realsink)
 
   src_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsrc));
   sink_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsink));
-  
+
   if (src_sched && sink_sched) {
     if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsrc), GST_ELEMENT_DECOUPLED))
       num_decoupled++;
@@ -894,18 +894,18 @@ gst_pad_check_schedulers (GstRealPad *realsrc, GstRealPad *realsink)
 }
 
 /**
- * gst_pad_can_connect_filtered:
- * @srcpad: the source #GstPad to connect.
- * @sinkpad: the sink #GstPad to connect.
+ * gst_pad_can_link_filtered:
+ * @srcpad: the source #GstPad to link.
+ * @sinkpad: the sink #GstPad to link.
  * @filtercaps: the filter #GstCaps.
  *
- * Checks if the source pad and the sink pad can be connected when constrained
- * by the given filter caps. 
+ * Checks if the source pad and the sink pad can be linked when constrained
+ * by the given filter caps.
  *
- * Returns: TRUE if the pads can be connected, FALSE otherwise.
+ * Returns: TRUE if the pads can be linked, FALSE otherwise.
  */
 gboolean
-gst_pad_can_connect_filtered (GstPad *srcpad, GstPad *sinkpad, 
+gst_pad_can_link_filtered (GstPad *srcpad, GstPad *sinkpad,
                               GstCaps *filtercaps)
 {
   GstRealPad *realsrc, *realsink;
@@ -926,48 +926,48 @@ gst_pad_can_connect_filtered (GstPad *srcpad, GstPad *sinkpad,
   g_return_val_if_fail (GST_PAD_PARENT (realsink) != NULL, FALSE);
 
   if (!gst_pad_check_schedulers (realsrc, realsink)) {
-    g_warning ("connecting pads with different scheds requires "
+    g_warning ("linking pads with different scheds requires "
                "exactly one decoupled element (queue)");
     return FALSE;
   }
-  
+
   /* check if the directions are compatible */
   if (!(((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SINK) &&
          (GST_RPAD_DIRECTION (realsink) == GST_PAD_SRC)) ||
         ((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC) &&
          (GST_RPAD_DIRECTION (realsink) == GST_PAD_SINK))))
     return FALSE;
-  
+
   return TRUE;
 }
 /**
- * gst_pad_can_connect:
- * @srcpad: the source #GstPad to connect.
- * @sinkpad: the sink #GstPad to connect.
+ * gst_pad_can_link:
+ * @srcpad: the source #GstPad to link.
+ * @sinkpad: the sink #GstPad to link.
  *
- * Checks if the source pad and the sink pad can be connected.
+ * Checks if the source pad and the sink pad can be link.
  *
- * Returns: TRUE if the pads can be connected, FALSE otherwise.
+ * Returns: TRUE if the pads can be linked, FALSE otherwise.
  */
 gboolean
-gst_pad_can_connect (GstPad *srcpad, GstPad *sinkpad)
+gst_pad_can_link (GstPad *srcpad, GstPad *sinkpad)
 {
-  return gst_pad_can_connect_filtered (srcpad, sinkpad, NULL);
+  return gst_pad_can_link_filtered (srcpad, sinkpad, NULL);
 }
 
 /**
- * gst_pad_connect_filtered:
- * @srcpad: the source #GstPad to connect.
- * @sinkpad: the sink #GstPad to connect.
+ * gst_pad_link_filtered:
+ * @srcpad: the source #GstPad to link.
+ * @sinkpad: the sink #GstPad to link.
  * @filtercaps: the filter #GstCaps.
  *
- * Connects the source pad and the sink pad can be connected, constrained
- * by the given filter caps. 
+ * Links the source pad and the sink pad, constrained
+ * by the given filter caps.
  *
- * Returns: TRUE if the pads have been connected, FALSE otherwise.
+ * Returns: TRUE if the pads have been linked, FALSE otherwise.
  */
 gboolean
-gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
+gst_pad_link_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
 {
   GstRealPad *realsrc, *realsink;
   GstScheduler *src_sched, *sink_sched;
@@ -978,7 +978,7 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
   g_return_val_if_fail (sinkpad != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
 
-  GST_INFO (GST_CAT_PADS, "trying to connect %s:%s and %s:%s",
+  GST_INFO (GST_CAT_PADS, "trying to link %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
   /* now we need to deal with the real/ghost stuff */
@@ -986,7 +986,7 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
   realsink = GST_PAD_REALIZE (sinkpad);
 
   if ((GST_PAD (realsrc) != srcpad) || (GST_PAD (realsink) != sinkpad)) {
-    GST_INFO (GST_CAT_PADS, "*actually* connecting %s:%s and %s:%s",
+    GST_INFO (GST_CAT_PADS, "*actually* linking %s:%s and %s:%s",
               GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
   }
   if (GST_RPAD_PEER (realsrc) != NULL) {
@@ -1011,7 +1011,7 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
   }
 
   if (!gst_pad_check_schedulers (realsrc, realsink)) {
-    g_warning ("connecting pads with different scheds requires "
+    g_warning ("linking pads with different scheds requires "
                "exactly one decoupled element (such as queue)");
     return FALSE;
   }
@@ -1040,9 +1040,9 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
   GST_RPAD_PEER (realsink) = realsrc;
 
   /* try to negotiate the pads, we don't need to clear the caps here */
-  if (!gst_pad_try_reconnect_filtered_func (realsrc, realsink, 
+  if (!gst_pad_try_relink_filtered_func (realsrc, realsink,
 	                                    filtercaps, FALSE)) {
-    GST_DEBUG (GST_CAT_CAPS, "reconnect_filtered_func failed, can't connect");
+    GST_DEBUG (GST_CAT_CAPS, "relink_filtered_func failed, can't link");
 
     GST_RPAD_PEER (realsrc) = NULL;
     GST_RPAD_PEER (realsink) = NULL;
@@ -1051,7 +1051,7 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
   }
 
   /* fire off a signal to each of the pads telling them 
-   * that they've been connected */
+   * that they've been linked */
   g_signal_emit (G_OBJECT (realsrc), gst_real_pad_signals[REAL_CONNECTED], 
                  0, realsink);
   g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_CONNECTED], 
@@ -1062,31 +1062,31 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
 
   /* now tell the scheduler */
   if (src_sched && src_sched == sink_sched) {
-    gst_scheduler_pad_connect (src_sched, 
+    gst_scheduler_pad_link (src_sched, 
 	                       GST_PAD_CAST (realsrc), GST_PAD_CAST (realsink));
   }
 
-  GST_INFO (GST_CAT_PADS, "connected %s:%s and %s:%s, successful",
+  GST_INFO (GST_CAT_PADS, "linked %s:%s and %s:%s, successful",
             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
   gst_caps_debug (gst_pad_get_caps (GST_PAD_CAST (realsrc)), 
-                  "caps of newly connected src pad");
+                  "caps of newly linked src pad");
 
   return TRUE;
 }
 
 /**
- * gst_pad_connect:
- * @srcpad: the source #GstPad to connect.
- * @sinkpad: the sink #GstPad to connect.
+ * gst_pad_link:
+ * @srcpad: the source #GstPad to link.
+ * @sinkpad: the sink #GstPad to link.
  *
  * Connects the source pad to the sink pad.
  *
- * Returns: TRUE if the pad could be connected, FALSE otherwise.
+ * Returns: TRUE if the pad could be linked, FALSE otherwise.
  */
 gboolean
-gst_pad_connect (GstPad *srcpad, GstPad *sinkpad)
+gst_pad_link (GstPad *srcpad, GstPad *sinkpad)
 {
-  return gst_pad_connect_filtered (srcpad, sinkpad, NULL);
+  return gst_pad_link_filtered (srcpad, sinkpad, NULL);
 }
 
 /**
@@ -1264,8 +1264,8 @@ gst_pad_get_ghost_pad_list (GstPad *pad)
 
 /* an internal caps negotiation helper function:
  * 
- * 1. optionally calls the pad connect function with the provided caps
- * 2. deals with the result code of the connect function
+ * 1. optionally calls the pad link function with the provided caps
+ * 2. deals with the result code of the link function
  * 3. sets fixed caps on the pad.
  */
 static GstPadConnectReturn
@@ -1320,13 +1320,13 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
      * padtemplate caps is the same as caps itself */
   }
 
-  /* we need to notify the connect function */
+  /* we need to notify the link function */
   if (notify && GST_RPAD_CONNECTFUNC (pad)) {
     GstPadConnectReturn res;
     gchar *debug_string;
     gboolean negotiating;
 
-    GST_INFO (GST_CAT_CAPS, "calling connect function on pad %s:%s",
+    GST_INFO (GST_CAT_CAPS, "calling link function on pad %s:%s",
             GST_DEBUG_PAD_NAME (pad));
 
     negotiating = GST_FLAG_IS_SET (pad, GST_PAD_NEGOTIATING);
@@ -1335,7 +1335,7 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
     if (!negotiating)
       GST_FLAG_SET (pad, GST_PAD_NEGOTIATING);
     
-    /* call the connect function */
+    /* call the link function */
     res = GST_RPAD_CONNECTFUNC (pad) (GST_PAD (pad), caps);
 
     /* unset again after negotiating only if we set it  */
@@ -1356,16 +1356,16 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
 	debug_string = "DELAYED";
 	break;
       default:
-	g_warning ("unknown return code from connect function of pad %s:%s %d",
+	g_warning ("unknown return code from link function of pad %s:%s %d",
                    GST_DEBUG_PAD_NAME (pad), res);
         return GST_PAD_CONNECT_REFUSED;
     }
 
     GST_INFO (GST_CAT_CAPS, 
-	      "got reply %s (%d) from connect function on pad %s:%s",
+	      "got reply %s (%d) from link function on pad %s:%s",
               debug_string, res, GST_DEBUG_PAD_NAME (pad));
 
-    /* done means the connect function called another caps negotiate function
+    /* done means the link function called another caps negotiate function
      * on this pad that succeeded, we dont need to continue */
     if (res == GST_PAD_CONNECT_DONE) {
       GST_INFO (GST_CAT_CAPS, "pad %s:%s is done", GST_DEBUG_PAD_NAME (pad));
@@ -1434,7 +1434,7 @@ gst_pad_try_set_caps (GstPad *pad, GstCaps *caps)
   }
 
   /* if we have a peer try to set the caps, notifying the peerpad
-   * if it has a connect function */
+   * if it has a link function */
   if (peer && ((set_retval = gst_pad_try_set_caps_func (peer, caps, TRUE)) <= 0))
   {
     GST_INFO (GST_CAT_CAPS, "tried to set caps on peerpad %s:%s but couldn't, return value %d",
@@ -1466,7 +1466,7 @@ gst_pad_try_set_caps (GstPad *pad, GstCaps *caps)
  * 6. starts the caps negotiation.
  */
 static gboolean
-gst_pad_try_reconnect_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad, 
+gst_pad_try_relink_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad, 
                                      GstCaps *filtercaps, gboolean clear)
 {
   GstCaps *srccaps, *sinkcaps;
@@ -1482,25 +1482,25 @@ gst_pad_try_reconnect_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad,
   /* optinally clear the caps */
   if (clear) {
     GST_INFO (GST_CAT_PADS, 
-	      "start reconnect filtered %s:%s and %s:%s, clearing caps",
+	      "start relink filtered %s:%s and %s:%s, clearing caps",
               GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
 
     GST_PAD_CAPS (GST_PAD (realsrc)) = NULL;
     GST_PAD_CAPS (GST_PAD (realsink)) = NULL;
   }
   else {
-    GST_INFO (GST_CAT_PADS, "start reconnect filtered %s:%s and %s:%s",
+    GST_INFO (GST_CAT_PADS, "start relink filtered %s:%s and %s:%s",
         GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
   }
 
   srccaps = gst_pad_get_caps (GST_PAD (realsrc));
   GST_DEBUG (GST_CAT_PADS, "dumping caps of pad %s:%s", 
              GST_DEBUG_PAD_NAME (realsrc));
-  gst_caps_debug (srccaps, "caps of src pad (pre-reconnect)");
+  gst_caps_debug (srccaps, "caps of src pad (pre-relink)");
   sinkcaps = gst_pad_get_caps (GST_PAD (realsink));
   GST_DEBUG (GST_CAT_PADS, "dumping caps of pad %s:%s", 
              GST_DEBUG_PAD_NAME (realsink));
-  gst_caps_debug (sinkcaps, "caps of sink pad (pre-reconnect)");
+  gst_caps_debug (sinkcaps, "caps of sink pad (pre-relink)");
 
   /* first take the intersection of the pad caps */
   intersection = gst_caps_intersect (srccaps, sinkcaps);
@@ -1528,7 +1528,7 @@ gst_pad_try_reconnect_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad,
 
       if (!filtered_intersection) {
         GST_INFO (GST_CAT_PADS, 
-	          "filtered connection between pads %s:%s and %s:%s is empty",
+	          "filtered link between pads %s:%s and %s:%s is empty",
                   GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
         return FALSE;
       }
@@ -1539,8 +1539,8 @@ gst_pad_try_reconnect_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad,
       GST_RPAD_APPFILTER (realsrc) = filtercaps;
     }
   }
-  GST_DEBUG (GST_CAT_CAPS, "setting filter for connection to:");
-  gst_caps_debug (intersection, "filter for connection");
+  GST_DEBUG (GST_CAT_CAPS, "setting filter for link to:");
+  gst_caps_debug (intersection, "filter for link");
 
   /* both the app filter and the filter, while stored on both peer pads, 
    * are equal to the same thing on both */
@@ -1577,9 +1577,9 @@ gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad)
 
   filter = GST_RPAD_APPFILTER (realsrc);
   if (filter) {
-    GST_INFO (GST_CAT_PADS, "dumping filter for connection %s:%s-%s:%s",
+    GST_INFO (GST_CAT_PADS, "dumping filter for link %s:%s-%s:%s",
               GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
-    gst_caps_debug (filter, "connection filter caps");
+    gst_caps_debug (filter, "link filter caps");
   }
 
   /* calculate the new caps here */
@@ -1620,18 +1620,18 @@ gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad)
 }
 
 /**
- * gst_pad_try_reconnect_filtered:
- * @srcpad: the source #GstPad to reconnect.
- * @sinkpad: the sink #GstPad to reconnect.
- * @filtercaps: the #GstPad to use as a filter in the reconnection.
+ * gst_pad_try_relink_filtered:
+ * @srcpad: the source #GstPad to relink.
+ * @sinkpad: the sink #GstPad to relink.
+ * @filtercaps: the #GstPad to use as a filter in the relink.
  *
- * Tries to reconnect the given source and sink pad, constrained by the given
+ * Tries to relink the given source and sink pad, constrained by the given
  * capabilities.
  *
  * Returns: TRUE if the pads were succesfully renegotiated, FALSE otherwise.
  */
 gboolean
-gst_pad_try_reconnect_filtered (GstPad *srcpad, GstPad *sinkpad, 
+gst_pad_try_relink_filtered (GstPad *srcpad, GstPad *sinkpad, 
                                 GstCaps *filtercaps)
 {
   GstRealPad *realsrc, *realsink;
@@ -1645,24 +1645,24 @@ gst_pad_try_reconnect_filtered (GstPad *srcpad, GstPad *sinkpad,
   g_return_val_if_fail (GST_RPAD_PEER (realsrc) != NULL, FALSE);
   g_return_val_if_fail (GST_RPAD_PEER (realsink) == realsrc, FALSE);
   
-  return gst_pad_try_reconnect_filtered_func (realsrc, realsink, 
+  return gst_pad_try_relink_filtered_func (realsrc, realsink, 
                                               filtercaps, TRUE);
 }
 
 /**
- * gst_pad_reconnect_filtered:
- * @srcpad: the source #GstPad to reconnect.
- * @sinkpad: the sink #GstPad to reconnect.
- * @filtercaps: the #GstPad to use as a filter in the reconnection.
+ * gst_pad_relink_filtered:
+ * @srcpad: the source #GstPad to relink.
+ * @sinkpad: the sink #GstPad to relink.
+ * @filtercaps: the #GstPad to use as a filter in the relink.
  *
- * Reconnects the given source and sink pad, constrained by the given
- * capabilities.  If the reconnection fails, the pads are disconnected
+ * Relinks the given source and sink pad, constrained by the given
+ * capabilities.  If the relink fails, the pads are unlinked
  * and FALSE is returned.
  *
- * Returns: TRUE if the pads were succesfully reconnected, FALSE otherwise.
+ * Returns: TRUE if the pads were succesfully relinked, FALSE otherwise.
  */
 gboolean
-gst_pad_reconnect_filtered (GstPad *srcpad, GstPad *sinkpad, 
+gst_pad_relink_filtered (GstPad *srcpad, GstPad *sinkpad, 
                             GstCaps *filtercaps)
 {
   GstRealPad *realsrc, *realsink;
@@ -1676,25 +1676,25 @@ gst_pad_reconnect_filtered (GstPad *srcpad, GstPad *sinkpad,
   g_return_val_if_fail (GST_RPAD_PEER (realsrc) != NULL, FALSE);
   g_return_val_if_fail (GST_RPAD_PEER (realsink) == realsrc, FALSE);
   
-  if (! gst_pad_try_reconnect_filtered_func (realsrc, realsink, 
+  if (! gst_pad_try_relink_filtered_func (realsrc, realsink, 
 	                                     filtercaps, TRUE)) {
-    gst_pad_disconnect (srcpad, GST_PAD (GST_PAD_PEER (srcpad)));
+    gst_pad_unlink (srcpad, GST_PAD (GST_PAD_PEER (srcpad)));
     return FALSE;
   }
   return TRUE;
 }
 
 /**
- * gst_pad_proxy_connect:
+ * gst_pad_proxy_link:
  * @pad: a #GstPad to proxy to.
  * @caps: the #GstCaps to use in proxying.
  *
- * Proxies the connect function to the specified pad.
+ * Proxies the link function to the specified pad.
  *
  * Returns: TRUE if the peer pad accepted the caps, FALSE otherwise.
  */
 GstPadConnectReturn
-gst_pad_proxy_connect (GstPad *pad, GstCaps *caps)
+gst_pad_proxy_link (GstPad *pad, GstCaps *caps)
 {
   GstRealPad *peer, *realpad;
 
@@ -1702,7 +1702,7 @@ gst_pad_proxy_connect (GstPad *pad, GstCaps *caps)
 
   peer = GST_RPAD_PEER (realpad);
 
-  GST_INFO (GST_CAT_CAPS, "proxy connect to pad %s:%s",
+  GST_INFO (GST_CAT_CAPS, "proxy link to pad %s:%s",
             GST_DEBUG_PAD_NAME (realpad));
 
   if (peer && gst_pad_try_set_caps_func (peer, caps, TRUE) < 0)
@@ -1874,8 +1874,8 @@ gst_pad_get_allowed_caps (GstPad *pad)
  * gst_pad_recalc_allowed_caps:
  * @pad: a #GstPad to recalculate the capablities of.
  *
- * Attempts to reconnect the pad to its peer through its filter, 
- * set with gst_pad_[re]connect_filtered. This function is useful when a
+ * Attempts to relink the pad to its peer through its filter, 
+ * set with gst_pad_[re]link_filtered. This function is useful when a
  * plug-in has new capabilities on a pad and wants to notify the peer.
  *
  * Returns: TRUE on success, FALSE otherwise.
@@ -1893,7 +1893,7 @@ gst_pad_recalc_allowed_caps (GstPad *pad)
 
   peer = GST_RPAD_PEER (pad);
   if (peer)
-    return gst_pad_try_reconnect_filtered (pad, GST_PAD (peer), 
+    return gst_pad_try_relink_filtered (pad, GST_PAD (peer), 
 	                                   GST_RPAD_APPFILTER (pad));
 
   return TRUE;
@@ -1942,8 +1942,8 @@ gst_real_pad_dispose (GObject *object)
 {
   GstPad *pad = GST_PAD (object);
   
-  /* No connected pad can ever be disposed.
-   * It has to have a parent to be connected 
+  /* No linked pad can ever be disposed.
+   * It has to have a parent to be linked 
    * and a parent would hold a reference */
   g_assert (GST_PAD_PEER (pad) == NULL);
 
@@ -1991,15 +1991,15 @@ gst_real_pad_dispose (GObject *object)
 #ifndef GST_DISABLE_LOADSAVE
 /* FIXME: why isn't this on a GstElement ? */
 /**
- * gst_pad_load_and_connect:
+ * gst_pad_load_and_link:
  * @self: an #xmlNodePtr to read the description from.
  * @parent: the #GstObject element that owns the pad.
  *
- * Reads the pad definition from the XML node and connects the given pad
+ * Reads the pad definition from the XML node and links the given pad
  * in the element to a pad of an element up in the hierarchy.
  */
 void
-gst_pad_load_and_connect (xmlNodePtr self, GstObject *parent)
+gst_pad_load_and_link (xmlNodePtr self, GstObject *parent)
 {
   xmlNodePtr field = self->xmlChildrenNode;
   GstPad *pad = NULL, *targetpad;
@@ -2026,7 +2026,7 @@ gst_pad_load_and_connect (xmlNodePtr self, GstObject *parent)
 
   if (split[0] == NULL || split[1] == NULL) {
     GST_DEBUG (GST_CAT_XML, 
-	       "Could not parse peer '%s' for pad %s:%s, leaving unconnected",
+	       "Could not parse peer '%s' for pad %s:%s, leaving unlinked",
                peer, GST_DEBUG_PAD_NAME (pad));
     return;
   }
@@ -2048,7 +2048,7 @@ gst_pad_load_and_connect (xmlNodePtr self, GstObject *parent)
 
   if (targetpad == NULL) goto cleanup;
 
-  gst_pad_connect (pad, targetpad);
+  gst_pad_link (pad, targetpad);
 
 cleanup:
   g_strfreev (split);
@@ -2141,7 +2141,7 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
   peer = GST_RPAD_PEER (pad);
 
   if (!peer) {
-    g_warning ("push on pad %s:%s but it is unconnected", 
+    g_warning ("push on pad %s:%s but it is unlinked", 
 	       GST_DEBUG_PAD_NAME (pad));
   }
   else {
@@ -2200,7 +2200,7 @@ gst_pad_pull (GstPad *pad)
 
   if (!peer) {
     gst_element_error (GST_PAD_PARENT (pad), 
-		       "pull on pad %s:%s but it was unconnected", 
+		       "pull on pad %s:%s but it was unlinked", 
 		       GST_ELEMENT_NAME (GST_PAD_PARENT (pad)), 
 		       GST_PAD_NAME (pad), NULL);
   }
@@ -2571,10 +2571,10 @@ gst_ghost_pad_new (const gchar *name,
 }
 
 /**
- * gst_pad_get_internal_connections_default:
- * @pad: the #GstPad to get the internal connections of.
+ * gst_pad_get_internal_links_default:
+ * @pad: the #GstPad to get the internal links of.
  *
- * Gets a list of pads to which the given pad is connected to
+ * Gets a list of pads to which the given pad is linked to
  * inside of the parent element.
  * This is the default handler, and thus returns a list of all of the
  * pads inside the parent element with opposite direction.
@@ -2583,7 +2583,7 @@ gst_ghost_pad_new (const gchar *name,
  * Returns: a newly allocated #GList of pads.
  */
 GList*
-gst_pad_get_internal_connections_default (GstPad *pad)
+gst_pad_get_internal_links_default (GstPad *pad)
 {
   GList *res = NULL;
   GstElement *parent;
@@ -2613,17 +2613,17 @@ gst_pad_get_internal_connections_default (GstPad *pad)
 }
 
 /**
- * gst_pad_get_internal_connections:
- * @pad: the #GstPad to get the internal connections of.
+ * gst_pad_get_internal_links:
+ * @pad: the #GstPad to get the internal links of.
  *
- * Gets a list of pads to which the given pad is connected to
+ * Gets a list of pads to which the given pad is linked to
  * inside of the parent element.
  * The caller must free this list after use.
  *
  * Returns: a newly allocated #GList of pads.
  */
 GList*
-gst_pad_get_internal_connections (GstPad *pad)
+gst_pad_get_internal_links (GstPad *pad)
 {
   GList *res = NULL;
   GstRealPad *rpad;
@@ -2649,7 +2649,7 @@ gst_pad_event_default_dispatch (GstPad *pad, GstElement *element,
     GstPad *eventpad = GST_PAD (pads->data);
     pads = g_list_next (pads);
 
-    /* for all pads in the opposite direction that are connected */
+    /* for all pads in the opposite direction that are linked */
     if (GST_PAD_DIRECTION (eventpad) != GST_PAD_DIRECTION (pad) 
      && GST_PAD_IS_CONNECTED (eventpad)) {
       if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
@@ -2721,7 +2721,7 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
  * @data: gpointer user data passed to the dispatcher function.
  *
  * Invokes the given dispatcher function on all pads that are 
- * internally connected to the given pad. 
+ * internally linked to the given pad. 
  * The GstPadDispatcherFunction should return TRUE when no further pads 
  * need to be processed.
  *
@@ -2737,7 +2737,7 @@ gst_pad_dispatcher (GstPad *pad, GstPadDispatcherFunction dispatch,
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (data, FALSE);
 
-  orig = int_pads = gst_pad_get_internal_connections (pad);
+  orig = int_pads = gst_pad_get_internal_links (pad);
 
   while (int_pads) {
     GstRealPad *int_rpad = GST_PAD_REALIZE (int_pads->data);
@@ -2818,7 +2818,7 @@ gst_pad_convert_dispatcher (GstPad *pad, GstPadConvertData *data)
  *
  * Invokes the default converter on a pad. 
  * This will forward the call to the pad obtained 
- * using the internal connection of
+ * using the internal link of
  * the element.
  *
  * Returns: TRUE if the conversion could be performed.

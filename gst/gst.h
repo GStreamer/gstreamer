@@ -59,6 +59,9 @@
 #include <gst/gstextratypes.h>
 #include <gst/gstenumtypes.h>
 
+/* API compatibility stuff */
+#include <gst/gstcompat.h>
+
 G_BEGIN_DECLS
 
 /* initialize GST */

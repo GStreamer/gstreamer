@@ -120,7 +120,7 @@ gst_tee_class_init (GstTeeClass *klass)
 }
 
 static GstPadConnectReturn 
-gst_tee_sinkconnect (GstPad *pad, GstCaps *caps) 
+gst_tee_sinklink (GstPad *pad, GstCaps *caps) 
 {
   GstTee *tee;
   const GList *pads;
@@ -155,7 +155,7 @@ gst_tee_init (GstTee *tee)
   tee->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (tee), tee->sinkpad);
   gst_pad_set_chain_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_chain));
-  gst_pad_set_connect_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_sinkconnect));
+  gst_pad_set_link_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_sinklink));
 
   tee->silent = FALSE;
   tee->last_message = NULL;

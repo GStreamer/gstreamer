@@ -33,7 +33,7 @@ int main(int argc,char *argv[])
 
   gst_bin_add(GST_BIN(thread2), fakesrc);
   gst_element_add_ghost_pad (thread2, gst_element_get_pad (fakesrc, "src"), "src");
-  gst_element_connect_many (thread2, queue, fakesink, NULL);
+  gst_element_link_many (thread2, queue, fakesink, NULL);
 
   for (x = 0 ; x < 10 ; x++){
     g_print("playing %d\n", x);

@@ -71,7 +71,7 @@ static void			gst_spider_identity_init		(GstSpiderIdentity *spider_identity);
 /* functions set in pads, elements and stuff */
 static void			gst_spider_identity_chain		(GstPad *pad, GstBuffer *buf);
 static GstElementStateReturn	gst_spider_identity_change_state	(GstElement *element);
-static GstPadConnectReturn	gst_spider_identity_connect		(GstPad *pad, GstCaps *caps);
+static GstPadConnectReturn	gst_spider_identity_link		(GstPad *pad, GstCaps *caps);
 static GstCaps *		gst_spider_identity_getcaps		(GstPad *pad, GstCaps *caps);
 /* loop functions */
 static void			gst_spider_identity_dumb_loop		(GstSpiderIdentity *ident);
@@ -139,13 +139,13 @@ gst_spider_identity_init (GstSpiderIdentity *ident)
   /* sink */
   ident->sink = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (spider_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (ident), ident->sink);
-  gst_pad_set_connect_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_connect));
+  gst_pad_set_link_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_link));
   gst_pad_set_getcaps_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_getcaps));
   gst_pad_set_bufferpool_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_get_bufferpool));
   /* src */
   ident->src = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (spider_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (ident), ident->src);
-  gst_pad_set_connect_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_connect));
+  gst_pad_set_link_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_link));
   gst_pad_set_getcaps_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_getcaps));
   gst_pad_set_event_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_handle_src_event));
 
@@ -169,11 +169,11 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
 
   if (GST_IS_EVENT (buf)) {
     /* start hack for current event stuff here */
-    /* check for unconnected elements and send them the EOS event, too */
+    /* check for unlinked elements and send them the EOS event, too */
     if (GST_EVENT_TYPE (GST_EVENT (buf)) == GST_EVENT_EOS)
     {
       GstSpider *spider = (GstSpider *) GST_OBJECT_PARENT (ident);
-      GList *list = spider->connections;
+      GList *list = spider->links;
       while (list)
       {
 	GstSpiderConnection *conn = (GstSpiderConnection *) list->data;
@@ -220,9 +220,9 @@ gst_spider_identity_new_sink (gchar *name)
   return ret;
 }
 
-/* shamelessly stolen from gstqueue.c to get proxy connections */
+/* shamelessly stolen from gstqueue.c to get proxy links */
 static GstPadConnectReturn
-gst_spider_identity_connect (GstPad *pad, GstCaps *caps)
+gst_spider_identity_link (GstPad *pad, GstCaps *caps)
 {
   GstSpiderIdentity *spider_identity = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
   GstPad *otherpad;
@@ -233,7 +233,7 @@ gst_spider_identity_connect (GstPad *pad, GstCaps *caps)
     otherpad = spider_identity->src;
 
   if (otherpad != NULL)
-    return gst_pad_proxy_connect (otherpad, caps);
+    return gst_pad_proxy_link (otherpad, caps);
   
   return GST_PAD_CONNECT_OK;
 }
@@ -274,7 +274,7 @@ gst_spider_identity_request_new_pad  (GstElement *element, GstPadTemplate *templ
       GST_DEBUG(0, "element %s requests new sink pad", GST_ELEMENT_NAME(ident));
       ident->sink = gst_pad_new ("sink", GST_PAD_SINK);
       gst_element_add_pad (GST_ELEMENT (ident), ident->sink);
-      gst_pad_set_connect_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_connect));
+      gst_pad_set_link_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_link));
       gst_pad_set_getcaps_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_getcaps));
       gst_pad_set_bufferpool_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_get_bufferpool));
       return ident->sink;
@@ -284,7 +284,7 @@ gst_spider_identity_request_new_pad  (GstElement *element, GstPadTemplate *templ
       GST_DEBUG(0, "element %s requests new src pad", GST_ELEMENT_NAME(ident));
       ident->src = gst_pad_new ("src", GST_PAD_SRC);
       gst_element_add_pad (GST_ELEMENT (ident), ident->src);
-      gst_pad_set_connect_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_connect));
+      gst_pad_set_link_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_link));
       gst_pad_set_getcaps_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_getcaps));
       gst_pad_set_event_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_handle_src_event));
       return ident->src;
@@ -384,7 +384,7 @@ gst_spider_identity_dumb_loop  (GstSpiderIdentity *ident)
 
   gst_spider_identity_chain (ident->sink, buf);
 }
-/* do nothing until we're connected - then disable yourself
+/* do nothing until we're linked - then disable yourself
  */
 static void
 gst_spider_identity_src_loop (GstSpiderIdentity *ident)

@@ -34,8 +34,8 @@ int main (int argc, char *argv[])
   /* add objects to the main pipeline */
   gst_bin_add_many (GST_BIN (bin), filesrc, decoder, osssink, NULL);
 
-  /* connect the elements */
-  gst_element_connect_many (filesrc, decoder, osssink, NULL);
+  /* link the elements */
+  gst_element_link_many (filesrc, decoder, osssink, NULL);
   
   /* start playing */
   gst_element_set_state (bin, GST_STATE_PLAYING);

@@ -188,7 +188,7 @@ struct _GstRealPad {
   
   GstPadDirection 		 direction;
 
-  GstPadConnectFunction 	 connectfunc;
+  GstPadConnectFunction 	 linkfunc;
   GstRealPad 			*peer;
 
   gpointer 			 sched_private;
@@ -221,8 +221,8 @@ struct _GstRealPadClass {
 
   /* signal callbacks */
   void (*caps_nego_failed)	(GstPad *pad);
-  void (*connected)		(GstPad *pad, GstPad *peer);
-  void (*disconnected)		(GstPad *pad, GstPad *peer);
+  void (*linked)		(GstPad *pad, GstPad *peer);
+  void (*unlinked)		(GstPad *pad, GstPad *peer);
 };
 
 struct _GstGhostPad {
@@ -262,7 +262,7 @@ struct _GstGhostPadClass {
 #define GST_RPAD_QUERYTYPEFUNC(pad)	(((GstRealPad *)(pad))->querytypefunc)
 #define GST_RPAD_EVENTMASKFUNC(pad)	(((GstRealPad *)(pad))->eventmaskfunc)
 
-#define GST_RPAD_CONNECTFUNC(pad)	(((GstRealPad *)(pad))->connectfunc)
+#define GST_RPAD_CONNECTFUNC(pad)	(((GstRealPad *)(pad))->linkfunc)
 #define GST_RPAD_GETCAPSFUNC(pad)	(((GstRealPad *)(pad))->getcapsfunc)
 #define GST_RPAD_BUFFERPOOLFUNC(pad)	(((GstRealPad *)(pad))->bufferpoolfunc)
 
@@ -418,14 +418,14 @@ void			gst_pad_set_event_mask_function		(GstPad *pad, GstPadEventMaskFunction ma
 const GstEventMask*	gst_pad_get_event_masks			(GstPad *pad);
 const GstEventMask*	gst_pad_get_event_masks_default		(GstPad *pad);
 
-/* pad connections */
-void			gst_pad_set_connect_function		(GstPad *pad, GstPadConnectFunction connect);
-gboolean                gst_pad_can_connect            		(GstPad *srcpad, GstPad *sinkpad);
-gboolean                gst_pad_can_connect_filtered   		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
+/* pad links */
+void			gst_pad_set_link_function		(GstPad *pad, GstPadConnectFunction link);
+gboolean                gst_pad_can_link            		(GstPad *srcpad, GstPad *sinkpad);
+gboolean                gst_pad_can_link_filtered   		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
 
-gboolean                gst_pad_connect             		(GstPad *srcpad, GstPad *sinkpad);
-gboolean                gst_pad_connect_filtered       		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
-void			gst_pad_disconnect			(GstPad *srcpad, GstPad *sinkpad);
+gboolean                gst_pad_link             		(GstPad *srcpad, GstPad *sinkpad);
+gboolean                gst_pad_link_filtered       		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
+void			gst_pad_unlink			(GstPad *srcpad, GstPad *sinkpad);
 
 GstPad*			gst_pad_get_peer			(GstPad *pad);
 
@@ -436,10 +436,10 @@ GstPadConnectReturn	gst_pad_try_set_caps			(GstPad *pad, GstCaps *caps);
 gboolean		gst_pad_check_compatibility		(GstPad *srcpad, GstPad *sinkpad);
 
 void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps);
-GstPadConnectReturn     gst_pad_proxy_connect          		(GstPad *pad, GstCaps *caps);
-gboolean		gst_pad_reconnect_filtered		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
+GstPadConnectReturn     gst_pad_proxy_link          		(GstPad *pad, GstCaps *caps);
+gboolean		gst_pad_relink_filtered		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
 gboolean		gst_pad_perform_negotiate		(GstPad *srcpad, GstPad *sinkpad);
-gboolean		gst_pad_try_reconnect_filtered		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
+gboolean		gst_pad_try_relink_filtered		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
 GstCaps*	     	gst_pad_get_allowed_caps       		(GstPad *pad);
 gboolean	     	gst_pad_recalc_allowed_caps    		(GstPad *pad);
 
@@ -475,9 +475,9 @@ gboolean		gst_pad_query				(GstPad *pad, GstQueryType type,
 gboolean 		gst_pad_query_default 			(GstPad *pad, GstQueryType type,
 		                      				 GstFormat *format, gint64 *value);
 
-void			gst_pad_set_internal_connection_function(GstPad *pad, GstPadIntConnFunction intconn);
-GList*			gst_pad_get_internal_connections	(GstPad *pad);
-GList*	 		gst_pad_get_internal_connections_default (GstPad *pad);
+void			gst_pad_set_internal_link_function(GstPad *pad, GstPadIntConnFunction intconn);
+GList*			gst_pad_get_internal_links	(GstPad *pad);
+GList*	 		gst_pad_get_internal_links_default (GstPad *pad);
 	
 /* misc helper functions */
 gboolean 		gst_pad_dispatcher 			(GstPad *pad, GstPadDispatcherFunction dispatch, 
@@ -489,7 +489,7 @@ gboolean 		gst_pad_dispatcher 			(GstPad *pad, GstPadDispatcherFunction dispatch
 			(gst_probe_dispatcher_remove_probe (&(GST_REAL_PAD (pad)-probedisp), probe))
 
 #ifndef GST_DISABLE_LOADSAVE
-void			gst_pad_load_and_connect		(xmlNodePtr self, GstObject *parent);
+void			gst_pad_load_and_link		(xmlNodePtr self, GstObject *parent);
 #endif
 
 

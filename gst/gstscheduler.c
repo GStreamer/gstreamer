@@ -116,15 +116,15 @@ gst_scheduler_reset (GstScheduler *sched)
 }
 
 /**
- * gst_scheduler_pad_connect:
+ * gst_scheduler_pad_link:
  * @sched: the scheduler
- * @srcpad: the srcpad to connect
- * @sinkpad: the sinkpad to connect to
+ * @srcpad: the srcpad to link
+ * @sinkpad: the sinkpad to link to
  *
- * Connect the srcpad to the given sinkpad.
+ * Links the srcpad to the given sinkpad.
  */
 void
-gst_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
+gst_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
 {
   GstSchedulerClass *sclass;
 
@@ -134,20 +134,20 @@ gst_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
 
   sclass = GST_SCHEDULER_GET_CLASS (sched);
 
-  if (sclass->pad_connect)
-    sclass->pad_connect (sched, srcpad, sinkpad);
+  if (sclass->pad_link)
+    sclass->pad_link (sched, srcpad, sinkpad);
 }
 
 /**
- * gst_scheduler_pad_disconnect:
+ * gst_scheduler_pad_unlink:
  * @sched: the scheduler
- * @srcpad: the srcpad to disconnect
- * @sinkpad: the sinkpad to disconnect from
+ * @srcpad: the srcpad to unlink
+ * @sinkpad: the sinkpad to unlink from
  *
- * Disconnect the srcpad to the given sinkpad.
+ * Unlinks the srcpad from the given sinkpad.
  */
 void
-gst_scheduler_pad_disconnect (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
+gst_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
 {
   GstSchedulerClass *sclass;
 
@@ -157,8 +157,8 @@ gst_scheduler_pad_disconnect (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
 
   sclass = GST_SCHEDULER_GET_CLASS (sched);
 
-  if (sclass->pad_disconnect)
-    sclass->pad_disconnect (sched, srcpad, sinkpad);
+  if (sclass->pad_unlink)
+    sclass->pad_unlink (sched, srcpad, sinkpad);
 }
 
 /**

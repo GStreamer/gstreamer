@@ -92,8 +92,8 @@ struct _GstSchedulerClass {
   void 			(*yield)		(GstScheduler *sched, GstElement *element);
   gboolean		(*interrupt)		(GstScheduler *sched, GstElement *element);
   void 			(*error)		(GstScheduler *sched, GstElement *element);
-  void 			(*pad_connect)		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
-  void 			(*pad_disconnect)	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
+  void 			(*pad_link)		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
+  void 			(*pad_unlink)		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
   void 			(*pad_select)		(GstScheduler *sched, GList *padlist);
   GstClockReturn	(*clock_wait)		(GstScheduler *sched, GstElement *element,
 		  				 GstClockID id, GstClockTimeDiff *jitter);
@@ -126,8 +126,8 @@ void			gst_scheduler_unlock_element	(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_yield		(GstScheduler *sched, GstElement *element);
 gboolean		gst_scheduler_interrupt		(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_error		(GstScheduler *sched, GstElement *element);
-void			gst_scheduler_pad_connect	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
-void			gst_scheduler_pad_disconnect	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
+void			gst_scheduler_pad_link		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
+void			gst_scheduler_pad_unlink	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 GstPad*                 gst_scheduler_pad_select 	(GstScheduler *sched, GList *padlist);
 GstClockReturn		gst_scheduler_clock_wait	(GstScheduler *sched, GstElement *element,
 							 GstClockID id, GstClockTimeDiff *jitter);

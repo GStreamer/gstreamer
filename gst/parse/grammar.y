@@ -17,20 +17,20 @@ static int yyerror (const char *s);
     gchar *s;
     GValue *v;
     graph_t *g;
-    connection_t *c;
+    link_t *c;
     property_t *p;
     element_t *e;
 }
 
 %token <s> IDENTIFIER
-%token <c> CONNECTION BCONNECTION FCONNECTION
+%token <c> LINK BLINK FLINK
 %token <v> VALUE
 
 %type <s> id
 %type <g> graph bin
 %type <e> element
 %type <p> property_value value
-%type <c> connection rconnection
+%type <c> link rlink
 
 %left '{' '}' '(' ')'
 %left '!' '='
@@ -57,21 +57,21 @@ element:        id                   { static int i = 0; $$ = g_new0 (element_t,
 
 graph:          /* empty */          { $$ = g_new0 (graph_t, 1); *((graph_t**) pgraph) = $$; }
         |       graph element        { GList *l;
-                                       $$ = $1; l = $$->connections_pending;
+                                       $$ = $1; l = $$->links_pending;
                                        $$->elements = g_list_append ($$->elements, $2);
                                        $$->current = $2;
                                        if (!$$->first)
                                            $$->first = $$->current;
                                        while (l) {
-                                           ((connection_t*) l->data)->sink_index = $$->current->index;
+                                           ((link_t*) l->data)->sink_index = $$->current->index;
                                            l = g_list_next (l);
                                        }
-                                       if ($$->connections_pending) {
-                                           g_list_free ($$->connections_pending);
-                                           $$->connections_pending = NULL;
+                                       if ($$->links_pending) {
+                                           g_list_free ($$->links_pending);
+                                           $$->links_pending = NULL;
                                        }
                                      }
-        |       graph bin            { GList *l; $$ = $1; l = $$->connections_pending;
+        |       graph bin            { GList *l; $$ = $1; l = $$->links_pending;
                                        *((graph_t**) pgraph) = $$;
                                        $$->bins = g_list_append ($$->bins, $2);
                                        $2->parent = $$;
@@ -79,21 +79,21 @@ graph:          /* empty */          { $$ = g_new0 (graph_t, 1); *((graph_t**) p
                                        if (!$$->first)
                                            $$->first = $$->current;
                                        while (l) {
-                                           ((connection_t*) l->data)->sink_index = $$->current->index;
+                                           ((link_t*) l->data)->sink_index = $$->current->index;
                                            l = g_list_next (l);
                                        }
-                                       if ($$->connections_pending) {
-                                           g_list_free ($$->connections_pending);
-                                           $$->connections_pending = NULL;
+                                       if ($$->links_pending) {
+                                           g_list_free ($$->links_pending);
+                                           $$->links_pending = NULL;
                                        }
                                        $$->current = $2->current;
                                      }
-        |       graph connection     { $$ = $1;
-                                       $$->connections = g_list_append ($$->connections, $2);
+        |       graph link     { $$ = $1;
+                                       $$->links = g_list_append ($$->links, $2);
 				       if ($$->current)
                                          $2->src_index = $$->current->index;
                                        if (!$2->sink_name)
-                                           $$->connections_pending = g_list_append ($$->connections_pending, $2);
+                                           $$->links_pending = g_list_append ($$->links_pending, $2);
                                      }
         |       graph property_value { $$ = $1;
                                        if (!$$->current) {
@@ -109,14 +109,14 @@ bin:            '{' graph '}'        { $$ = $2; $$->current_bin_type = "thread";
         |       id '.' '(' graph ')' { $$ = $4; $$->current_bin_type = $1; }
         ;
 
-connection:     CONNECTION
-        |       rconnection
+link:     LINK
+        |       rlink
         ;
 
-rconnection:   '!'                   { $$ = g_new0 (connection_t, 1); }
-        |       BCONNECTION          { $$ = $1; }
-        |       FCONNECTION          { $$ = $1; }
-        |       id ',' rconnection ',' id 
+rlink:   '!'                   { $$ = g_new0 (link_t, 1); }
+        |       BLINK          { $$ = $1; }
+        |       FLINK          { $$ = $1; }
+        |       id ',' rlink ',' id 
                                      { $$ = $3;
                                        $$->src_pads = g_list_prepend ($$->src_pads, $1);
                                        $$->sink_pads = g_list_append ($$->sink_pads, $5);

@@ -644,7 +644,7 @@ print_element_info (GstElementFactory *factory)
 	print_query_types (gst_pad_get_query_types (GST_PAD (realpad)));
       }
 
-      if (realpad->intconnfunc != gst_pad_get_internal_connections_default)
+      if (realpad->intconnfunc != gst_pad_get_internal_links_default)
         g_print ("      Has custom intconnfunc(): %s\n",
 	        GST_DEBUG_FUNCPTR_NAME(realpad->intconnfunc));
 

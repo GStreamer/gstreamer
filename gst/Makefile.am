@@ -116,6 +116,7 @@ gst_headers =			\
 	gstbufferpool-default.h \
 	gstcaps.h		\
 	gstclock.h		\
+	gstcompat.h		\
 	gstcpu.h		\
 	gstdata.h		\
 	gstelement.h		\

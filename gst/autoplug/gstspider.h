@@ -33,14 +33,14 @@ extern GstElementDetails gst_spider_details;
 /*
  * Theory of operation:
  * When connecting a sink to a source, GstSpiderConnections are used to keep track
- * of the current status of the connection. sink -> src is the path we intend to
+ * of the current status of the link. sink -> src is the path we intend to
  * plug. current is how far we've come. If current equals
  * - NULL, there is no possible path, 
- * - src, the connection is established.
- * - sink, it wasn't tried to establish a connection.
+ * - src, the link is established.
+ * - sink, it wasn't tried to establish a link.
  * - something else, we have come that far while plugging.
  * signal_id is used to remember the signal_id when we are waiting for a "new_pad"
- * callback during connection.
+ * callback during link.
  * When a path is established, the elements in the path (excluding sink and src)
  * are refcounted once for every path.
  * A GstSpider keeps a list of all GstSpiderConnections in it.
@@ -74,7 +74,7 @@ struct _GstSpider {
   GstSpiderIdentity *sink_ident;
   GList *     	factories; /* factories to use for plugging */
 
-  GList *	connections; /* GStSpiderConnection list of all connections */
+  GList *	links; /* GStSpiderConnection list of all links */
 };
 	
 struct _GstSpiderClass {
@@ -84,7 +84,7 @@ struct _GstSpiderClass {
 /* default initialization stuff */
 GType         	gst_spider_get_type             (void);
 
-/* private connection functions to be called by GstSpiderIdentity */
+/* private link functions to be called by GstSpiderIdentity */
 void		gst_spider_identity_plug	(GstSpiderIdentity *ident);
 void		gst_spider_identity_unplug	(GstSpiderIdentity *ident);
 

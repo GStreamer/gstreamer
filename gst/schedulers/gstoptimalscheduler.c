@@ -205,8 +205,8 @@ static void 		gst_opt_scheduler_unlock_element 	(GstScheduler *sched, GstElement
 static void 		gst_opt_scheduler_yield 		(GstScheduler *sched, GstElement *element);
 static gboolean		gst_opt_scheduler_interrupt 		(GstScheduler *sched, GstElement *element);
 static void 		gst_opt_scheduler_error	 		(GstScheduler *sched, GstElement *element);
-static void     	gst_opt_scheduler_pad_connect		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
-static void     	gst_opt_scheduler_pad_disconnect 	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
+static void     	gst_opt_scheduler_pad_link		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
+static void     	gst_opt_scheduler_pad_unlink 	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 static GstPad*  	gst_opt_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
 static GstClockReturn   gst_opt_scheduler_clock_wait        	(GstScheduler *sched, GstElement *element,
 	                                                         GstClockID id, GstClockTimeDiff *jitter);
@@ -279,8 +279,8 @@ gst_opt_scheduler_class_init (GstOptSchedulerClass *klass)
   gstscheduler_class->yield	 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_yield);
   gstscheduler_class->interrupt 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_interrupt);
   gstscheduler_class->error	 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_error);
-  gstscheduler_class->pad_connect 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_connect);
-  gstscheduler_class->pad_disconnect 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_disconnect);
+  gstscheduler_class->pad_link 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_link);
+  gstscheduler_class->pad_unlink 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_unlink);
   gstscheduler_class->pad_select	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_select);
   gstscheduler_class->clock_wait	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_clock_wait);
   gstscheduler_class->iterate 		= GST_DEBUG_FUNCPTR (gst_opt_scheduler_iterate);
@@ -821,7 +821,7 @@ unkown_group_schedule_function (int argc, char *argv[])
 }
 
 /* this function is called when the first element of a chain-loop or a loop-loop
- * connection performs a push to the loop element. We then schedule the
+ * link performs a push to the loop element. We then schedule the
  * group with the loop-based element until the bufpen is empty */
 static void
 gst_opt_scheduler_loop_wrapper (GstPad *sinkpad, GstBuffer *buffer)
@@ -991,7 +991,7 @@ gst_opt_scheduler_state_transition (GstScheduler *sched, GstElement *element, gi
 
   switch (transition) {
     case GST_STATE_PAUSED_TO_PLAYING:
-      /* an element withut a group has to be an unconnected src, sink
+      /* an element withut a group has to be an unlinked src, sink
        * filter element */
       if (!group)
 	res = GST_STATE_FAILURE;
@@ -1155,7 +1155,7 @@ gst_opt_scheduler_add_element (GstScheduler *sched, GstElement *element)
   GST_ELEMENT_SCHED_CONTEXT (element) = ctx;
 
   /* loop based elements *always* end up in their own group. It can eventually
-   * be merged with another group when a connection is made */
+   * be merged with another group when a link is made */
   if (element->loopfunc) {
     GstOptSchedulerGroup *group;
     GstOptSchedulerChain *chain;
@@ -1258,21 +1258,21 @@ gst_opt_scheduler_error (GstScheduler *sched, GstElement *element)
   osched->state = GST_OPT_SCHEDULER_STATE_ERROR;
 }
 
-/* connect pads, merge groups and chains */
+/* link pads, merge groups and chains */
 static void
-gst_opt_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
+gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
 {
   GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
   ConnectionType type = GST_OPT_INVALID;
   GstElement *element1, *element2;
 
-  GST_INFO (GST_CAT_SCHEDULING, "pad connect between \"%s:%s\" and \"%s:%s\"", 
+  GST_INFO (GST_CAT_SCHEDULING, "pad link between \"%s:%s\" and \"%s:%s\"", 
 		  GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
   element1 = GST_PAD_PARENT (srcpad);
   element2 = GST_PAD_PARENT (sinkpad);
 
-  /* first we need to figure out what type of connection we're dealing
+  /* first we need to figure out what type of link we're dealing
    * with */
   if (element1->loopfunc && element2->loopfunc)
     type = GST_OPT_LOOP_TO_LOOP;
@@ -1326,13 +1326,13 @@ gst_opt_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sink
     }
   }
   
-  /* for each connection type, perform specific actions */
+  /* for each link type, perform specific actions */
   switch (type) {
     case GST_OPT_GET_TO_CHAIN:
     {
       GstOptSchedulerGroup *group = NULL;
 
-      GST_INFO (GST_CAT_SCHEDULING, "get to chain based connection");
+      GST_INFO (GST_CAT_SCHEDULING, "get to chain based link");
 
       /* setup get/chain handlers */
       GST_RPAD_GETHANDLER (srcpad) = GST_RPAD_GETFUNC (srcpad);
@@ -1358,7 +1358,7 @@ gst_opt_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sink
     }
     case GST_OPT_LOOP_TO_CHAIN:
     case GST_OPT_CHAIN_TO_CHAIN:
-      GST_INFO (GST_CAT_SCHEDULING, "loop/chain to chain based connection");
+      GST_INFO (GST_CAT_SCHEDULING, "loop/chain to chain based link");
 
       if (GST_ELEMENT_IS_EVENT_AWARE (element2))
         GST_RPAD_CHAINHANDLER (sinkpad) = GST_RPAD_CHAINFUNC (sinkpad);
@@ -1372,7 +1372,7 @@ gst_opt_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sink
       group_elements (osched, element1, element2);
       break;
     case GST_OPT_GET_TO_LOOP:
-      GST_INFO (GST_CAT_SCHEDULING, "get to loop based connection");
+      GST_INFO (GST_CAT_SCHEDULING, "get to loop based link");
 
       GST_RPAD_GETHANDLER (srcpad) = GST_RPAD_GETFUNC (srcpad);
 
@@ -1387,7 +1387,7 @@ gst_opt_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sink
     {
       GstOptSchedulerGroup *group1, *group2;
 
-      GST_INFO (GST_CAT_SCHEDULING, "chain/loop to loop based connection");
+      GST_INFO (GST_CAT_SCHEDULING, "chain/loop to loop based link");
 
       GST_RPAD_CHAINHANDLER (sinkpad) = gst_opt_scheduler_loop_wrapper;
       GST_RPAD_GETHANDLER (srcpad) = gst_opt_scheduler_get_wrapper;
@@ -1398,7 +1398,7 @@ gst_opt_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sink
       g_assert (group2 != NULL);
 
       /* group2 is guaranteed to exist as it contains a loop-based element.
-       * group1 only exists if element1 is connected to some other element */
+       * group1 only exists if element1 is linked to some other element */
       if (!group1) {
 	/* create a new group for element1 as it cannot be merged into another group
 	 * here. we create the group in the same chain as the loop-based element. */
@@ -1413,24 +1413,24 @@ gst_opt_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sink
       break;
     }
     case GST_OPT_INVALID:
-      g_error ("(internal error) invalid element connection, what are you doing?");
+      g_error ("(internal error) invalid element link, what are you doing?");
       break;
   }
 }
 
 /* 
- * checks if an element is still connected to some other element in the group. 
+ * checks if an element is still linked to some other element in the group. 
  * no checking is done on the brokenpad arg 
  * */
 static gboolean
-element_has_connection_with_group (GstElement *element, GstOptSchedulerGroup *group, GstPad *brokenpad)
+element_has_link_with_group (GstElement *element, GstOptSchedulerGroup *group, GstPad *brokenpad)
 {
-  gboolean connected = FALSE;
+  gboolean linked = FALSE;
   const GList *pads;
 
-  /* see if the element has no more connections to the peer group */
+  /* see if the element has no more links to the peer group */
   pads = gst_element_get_pad_list (element);
-  while (pads && !connected) {
+  while (pads && !linked) {
     GstPad *pad = GST_PAD_CAST (pads->data);
     pads = g_list_next (pads);
 
@@ -1445,31 +1445,31 @@ element_has_connection_with_group (GstElement *element, GstOptSchedulerGroup *gr
       /* see in what group this element is */
       parent = GST_PAD_PARENT (GST_PAD_PEER (pad));
 
-      /* connections with decoupled elements are valid */
+      /* links with decoupled elements are valid */
       if (GST_ELEMENT_IS_DECOUPLED (parent)) {
-        connected = TRUE;
+        linked = TRUE;
       }
       else {
 	/* for non-decoupled elements we need to check the group */
         get_group (parent, &parentgroup);
 
-        /* if it's in the same group, we're still connected */
+        /* if it's in the same group, we're still linked */
         if (parentgroup == group)
-          connected = TRUE;
+          linked = TRUE;
       }
     } 
   }
-  return connected;
+  return linked;
 }
 
 static void
-gst_opt_scheduler_pad_disconnect (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
+gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
 {
   //GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
   GstElement *element1, *element2;
   GstOptSchedulerGroup *group1, *group2;
 
-  GST_INFO (GST_CAT_SCHEDULING, "pad disconnect between \"%s:%s\" and \"%s:%s\"", 
+  GST_INFO (GST_CAT_SCHEDULING, "pad unlink between \"%s:%s\" and \"%s:%s\"", 
 		  GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
   element1 = GST_PAD_PARENT (srcpad);
@@ -1479,7 +1479,7 @@ gst_opt_scheduler_pad_disconnect (GstScheduler *sched, GstPad *srcpad, GstPad *s
   get_group (element2, &group2);
 
   /* if one the elements has no group (anymore) we don't really care 
-   * about the connection */
+   * about the link */
   if (!group1 || !group2) {
     GST_INFO (GST_CAT_SCHEDULING, "one (or both) of the elements is not in a group, not interesting");
     return;
@@ -1490,11 +1490,11 @@ gst_opt_scheduler_pad_disconnect (GstScheduler *sched, GstPad *srcpad, GstPad *s
     GST_INFO (GST_CAT_SCHEDULING, "elements are in different groups");
 
     /* FIXME, need to eventually break the chain */
-    g_warning ("pad disconnect for different groups, implement me");
+    g_warning ("pad unlink for different groups, implement me");
   }
   /* hard part, groups are equal */
   else {
-    gboolean still_connect1, still_connect2;
+    gboolean still_link1, still_link2;
     GstOptSchedulerGroup *group;
     
     /* since group1 == group2, it doesn't matter which group we take */
@@ -1502,22 +1502,22 @@ gst_opt_scheduler_pad_disconnect (GstScheduler *sched, GstPad *srcpad, GstPad *s
 
     GST_INFO (GST_CAT_SCHEDULING, "elements are in the same group %p", group);
 
-    /* check if the element is still connected to some other element in the group,
-     * we pass the pad that is broken up as an arg because a connection on that pad
+    /* check if the element is still linked to some other element in the group,
+     * we pass the pad that is broken up as an arg because a link on that pad
      * is not valid anymore */
-    still_connect1 = element_has_connection_with_group (element1, group, srcpad);
-    still_connect2 = element_has_connection_with_group (element2, group, sinkpad);
+    still_link1 = element_has_link_with_group (element1, group, srcpad);
+    still_link2 = element_has_link_with_group (element2, group, sinkpad);
 
-    /* if there is still a connection, we don't need to break this group */
-    if (still_connect1 && still_connect2) {
-      GST_INFO (GST_CAT_SCHEDULING, "elements still have connections with other elements in the group");
+    /* if there is still a link, we don't need to break this group */
+    if (still_link1 && still_link2) {
+      GST_INFO (GST_CAT_SCHEDULING, "elements still have links with other elements in the group");
 
       /* FIXME, need to check for breaking up the group */
       return;
     }
 
     /* now check which one of the elements we can remove from the group */
-    if (!still_connect1) {
+    if (!still_link1) {
       GST_INFO (GST_CAT_SCHEDULING, "element1 is separated from the group");
       /* see if the element was an entry point for the group */
       if (group->entry == element1) {
@@ -1527,7 +1527,7 @@ gst_opt_scheduler_pad_disconnect (GstScheduler *sched, GstPad *srcpad, GstPad *s
       }
       remove_from_group (group, element1);
     }
-    if (!still_connect2) {
+    if (!still_link2) {
       GST_INFO (GST_CAT_SCHEDULING, "element2 is separated from the group");
 
       /* see if the element was an entry point for the group */

@@ -5,7 +5,7 @@
     an <classname>GstElement</classname> itself, it can also be added to another bin.
   </para>
   <para> 
-    Bins allow you to combine connected elements into one logical element. You do
+    Bins allow you to combine linked elements into one logical element. You do
     not deal with the individual elements anymore but with just one element, the bin.
     We will see that this is extremely powerful when you are going to construct
     complex pipelines since it allows you to break up the pipeline in smaller chunks.
@@ -231,7 +231,7 @@
       of the given element.
     </para>
     <para>
-      We can now, for example, connect the source pad of a filesrc element
+      We can now, for example, link the source pad of a filesrc element
       to the bin with:
     </para>
     <programlisting>
@@ -239,7 +239,7 @@
 
   filesrc = gst_element_factory_create ("filesrc", "disk_reader");
   
-  gst_element_connect_pads (filesrc, "src", bin, "sink");
+  gst_element_link_pads (filesrc, "src", bin, "sink");
     ...
     </programlisting>
   </sect1>

@@ -46,16 +46,16 @@ main(int argc,char *argv[])
 
   gst_bin_add_many (pipeline, src, tee, identity1, identity2, aggregator, sink, NULL);
 
-  gst_element_connect_pads (src, "src", tee, "sink");
-  gst_pad_connect (gst_element_get_request_pad (tee, "src%d"),
+  gst_element_link_pads (src, "src", tee, "sink");
+  gst_pad_link (gst_element_get_request_pad (tee, "src%d"),
 		   gst_element_get_pad (identity1, "sink"));
-  gst_pad_connect (gst_element_get_request_pad (tee, "src%d"),
+  gst_pad_link (gst_element_get_request_pad (tee, "src%d"),
 		   gst_element_get_pad (identity2, "sink"));
-  gst_pad_connect (gst_element_get_pad (identity1, "src"),
+  gst_pad_link (gst_element_get_pad (identity1, "src"),
   		   gst_element_get_request_pad (aggregator, "sink%d"));
-  gst_pad_connect (gst_element_get_pad (identity2, "src"),
+  gst_pad_link (gst_element_get_pad (identity2, "src"),
   		   gst_element_get_request_pad (aggregator, "sink%d"));
-  gst_element_connect_pads (aggregator, "src", sink, "sink");
+  gst_element_link_pads (aggregator, "src", sink, "sink");
 
   g_signal_connect (G_OBJECT (src), "eos",
 		    G_CALLBACK (eos_signal), NULL);

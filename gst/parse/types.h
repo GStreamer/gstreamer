@@ -14,9 +14,9 @@ typedef struct {
 } property_t;
 
 typedef struct {
-    /* if the names are present, upon connection we'll search out the pads of the
-       proper name and use those. otherwise, we'll search for elements of src_index
-       and sink_index. */
+    /* if the names are present, upon link we'll search out the pads of the
+       proper name and use those. otherwise, we'll search for elements of
+       src_index and sink_index. */
     char *src_name;
     char *sink_name;
     int src_index;
@@ -24,7 +24,7 @@ typedef struct {
     GList *src_pads;
     GList *sink_pads;
     GstCaps *caps;
-} connection_t;
+} link_t;
 
 typedef struct _graph_t graph_t;
 
@@ -34,8 +34,8 @@ struct _graph_t {
     graph_t *parent;
     gchar *current_bin_type;
     GList *elements;
-    GList *connections;
-    GList *connections_pending;
+    GList *links;
+    GList *links_pending;
     GList *bins;
     GstElement *bin;
 };

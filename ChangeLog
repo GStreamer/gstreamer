@@ -1,3 +1,8 @@
+2003-01-09  Thomas Vander Stichele <thomas at apestaart dot org>
+
+        * first pass at changing _connect/_disconnect -> _link/_unlink
+	* gst/gstcompat.h: created
+
 2002-11-27  Thomas Vander Stichele <thomas at apestaart dot org>
 
         * ChangeLog: added an entry

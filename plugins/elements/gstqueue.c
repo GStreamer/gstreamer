@@ -174,7 +174,7 @@ gst_queue_class_init (GstQueueClass *klass)
 }
 
 static GstPadConnectReturn
-gst_queue_connect (GstPad *pad, GstCaps *caps)
+gst_queue_link (GstPad *pad, GstCaps *caps)
 {
   GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
   GstPad *otherpad;
@@ -184,7 +184,7 @@ gst_queue_connect (GstPad *pad, GstCaps *caps)
   else
     otherpad = queue->srcpad;
 
-  return gst_pad_proxy_connect (otherpad, caps);
+  return gst_pad_proxy_link (otherpad, caps);
 }
 
 static GstCaps*
@@ -212,13 +212,13 @@ gst_queue_init (GstQueue *queue)
   gst_pad_set_chain_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_chain));
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
   gst_pad_set_bufferpool_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_get_bufferpool));
-  gst_pad_set_connect_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_connect));
+  gst_pad_set_link_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_link));
   gst_pad_set_getcaps_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_getcaps));
 
   queue->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_get_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_get));
   gst_element_add_pad (GST_ELEMENT (queue), queue->srcpad);
-  gst_pad_set_connect_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_connect));
+  gst_pad_set_link_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_link));
   gst_pad_set_getcaps_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_getcaps));
   gst_pad_set_event_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_handle_src_event));
 
@@ -645,7 +645,7 @@ gst_queue_change_state (GstElement *element)
   }
   else if (new_state == GST_STATE_PLAYING) {
     if (!GST_PAD_IS_CONNECTED (queue->sinkpad)) {
-      GST_DEBUG_ELEMENT (GST_CAT_STATES, queue, "queue %s is not connected", GST_ELEMENT_NAME (queue));
+      GST_DEBUG_ELEMENT (GST_CAT_STATES, queue, "queue %s is not linked", GST_ELEMENT_NAME (queue));
       /* FIXME can this be? */
       if (queue->reader)
         g_cond_signal (queue->not_empty);

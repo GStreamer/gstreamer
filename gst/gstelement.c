@@ -856,7 +856,7 @@ gst_element_release_locks (GstElement *element)
  * @element: a #GstElement to add the pad to.
  * @pad: the #GstPad to add to the element.
  *
- * Add a pad (connection point) to the element, setting the parent of the
+ * Add a pad (link point) to the element, setting the parent of the
  * pad to the element (and thus adding a reference).
  */
 void
@@ -895,7 +895,7 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
  * @element: a #GstElement to remove pad from.
  * @pad: the #GstPad to remove from the element.
  *
- * Remove a pad (connection point) from the element.
+ * Remove a pad (link point) from the element.
  */
 void
 gst_element_remove_pad (GstElement *element, GstPad *pad)
@@ -907,7 +907,7 @@ gst_element_remove_pad (GstElement *element, GstPad *pad)
 
   g_return_if_fail (GST_PAD_PARENT (pad) == element);
 
-  /* check to see if the pad is still connected */
+  /* check to see if the pad is still linked */
   /* FIXME: what if someone calls _remove_pad instead of 
     _remove_ghost_pad? */
   if (GST_IS_REAL_PAD (pad)) {
@@ -1226,14 +1226,14 @@ gst_element_get_pad_template (GstElement *element, const gchar *name)
  * @compattempl: the #GstPadTemplate to find a compatible template for.
  *
  * Generates a pad template for this element compatible with the given
- * template (meaning it is able to connect with it).
+ * template (meaning it is able to link with it).
  *
  * Returns: the #GstPadTemplate of the element that is compatible with
- * the given GstPadTemplate, or NULL if none was found. No unreferencing 
+ * the given GstPadTemplate, or NULL if none was found. No unreferencing
  * is necessary.
  */
 GstPadTemplate*
-gst_element_get_compatible_pad_template (GstElement *element, 
+gst_element_get_compatible_pad_template (GstElement *element,
                                          GstPadTemplate *compattempl)
 {
   GstPadTemplate *newtempl = NULL;
@@ -1285,7 +1285,7 @@ gst_element_get_compatible_pad_template (GstElement *element,
 /**
  * gst_element_request_compatible_pad:
  * @element: a #GstElement to request a new pad from.
- * @templ: the #GstPadTemplate to which the new pad should be able to connect.
+ * @templ: the #GstPadTemplate to which the new pad should be able to link.
  *
  * Requests a new pad from the element. The template will
  * be used to decide what type of pad to create. This function
@@ -1318,43 +1318,43 @@ gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ)
  * @pad: the #GstPad to find a compatible one for.
  * @filtercaps: the #GstCaps to use as a filter.
  *
- * Looks for an unconnected pad to which the given pad can connect to.
- * It is not guaranteed that connecting the pads will work, though
+ * Looks for an unlinked pad to which the given pad can link to.
+ * It is not guaranteed that linking the pads will work, though
  * it should work in most cases.
  *
- * Returns: the #GstPad to which a connection can be made.
+ * Returns: the #GstPad to which a link can be made.
  */
-GstPad*			
-gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, 
+GstPad*
+gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
                                          GstCaps *filtercaps)
 {
   const GList *pads;
   GstPadTemplate *templ;
   GstCaps *templcaps;
   GstPad *foundpad = NULL;
-  
+
   /* checks */
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-  
+
   /* let's use the real pad */
   pad = (GstPad *) GST_PAD_REALIZE (pad);
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_RPAD_PEER (pad) == NULL, NULL);
-  
-  /* try to get an existing unconnected pad */
+
+  /* try to get an existing unlinked pad */
   pads = gst_element_get_pad_list (element);
   while (pads) {
     GstPad *current = GST_PAD (pads->data);
     if ((GST_PAD_PEER (GST_PAD_REALIZE (current)) == NULL) &&
-        gst_pad_can_connect_filtered (pad, current, filtercaps)) {
+        gst_pad_can_link_filtered (pad, current, filtercaps)) {
       return current;
     }
     pads = g_list_next (pads);
   }
-  
+
   /* try to create a new one */
   /* requesting is a little crazy, we need a template. Let's create one */
   if (filtercaps != NULL) {
@@ -1364,14 +1364,14 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
   } else {
     templcaps = gst_caps_copy (gst_pad_get_caps (pad));
   }
-  
+
   templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad), GST_RPAD_DIRECTION (pad),
                                GST_PAD_ALWAYS, templcaps, NULL);
   foundpad = gst_element_request_compatible_pad (element, templ);
   gst_object_unref (GST_OBJECT (templ)); /* this will take care of the caps too */
-  
+
   /* FIXME: this is broken, but it's in here so autoplugging elements that don't
-     have caps on their source padtemplates (spider) can connect... */
+     have caps on their source padtemplates (spider) can link... */
   if (!foundpad && !filtercaps) {
     templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad), GST_RPAD_DIRECTION (pad),
                                  GST_PAD_ALWAYS, NULL, NULL);
@@ -1387,11 +1387,11 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
  * @element: a #GstElement in which the pad should be found.
  * @pad: the #GstPad to find a compatible one for.
  *
- * Looks for an unconnected pad to which the given pad can connect to.
- * It is not guaranteed that connecting the pads will work, though
+ * Looks for an unlinked pad to which the given pad can link to.
+ * It is not guaranteed that linking the pads will work, though
  * it should work in most cases.
  *
- * Returns: the #GstPad to which a connection can be made, or NULL if none
+ * Returns: the #GstPad to which a link can be made, or NULL if none
  * could be found.
  */
 GstPad*			
@@ -1401,22 +1401,22 @@ gst_element_get_compatible_pad (GstElement *element, GstPad *pad)
 }
 
 /**
- * gst_element_connect_filtered:
+ * gst_element_link_filtered:
  * @src: a #GstElement containing the source pad.
  * @dest: the #GstElement containing the destination pad.
  * @filtercaps: the #GstCaps to use as a filter.
  *
  * Connects the source to the destination element using the filtercaps.
- * The connection must be from source to destination, the other
+ * The link must be from source to destination, the other
  * direction will not be tried.
- * The functions looks for existing pads that aren't connected yet. 
+ * The functions looks for existing pads that aren't linked yet.
  * It will use request pads if possible. But both pads will not be requested.
- * If multiple connections are possible, only one is established.
+ * If multiple links are possible, only one is established.
  *
- * Returns: TRUE if the elements could be connected.
+ * Returns: TRUE if the elements could be linked.
  */
 gboolean
-gst_element_connect_filtered (GstElement *src, GstElement *dest, 
+gst_element_link_filtered (GstElement *src, GstElement *dest,
 			      GstCaps *filtercaps)
 {
   const GList *srcpads, *destpads, *srctempls, *desttempls, *l;
@@ -1429,7 +1429,7 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
   g_return_val_if_fail (dest != NULL, FALSE);
   g_return_val_if_fail (GST_IS_ELEMENT (dest), FALSE);
 
-  GST_DEBUG (GST_CAT_ELEMENT_PADS, "trying to connect element %s to element %s",
+  GST_DEBUG (GST_CAT_ELEMENT_PADS, "trying to link element %s to element %s",
              GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (dest));
    
   srcpads = gst_element_get_pad_list (src);
@@ -1447,8 +1447,8 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
           (GST_PAD_PEER (srcpad) == NULL)) {
         destpad = gst_element_get_compatible_pad_filtered (dest, srcpad, 
 	                                                   filtercaps);
-        if (destpad && gst_pad_connect_filtered (srcpad, destpad, filtercaps)) {
-          GST_DEBUG (GST_CAT_ELEMENT_PADS, "connected pad %s:%s to pad %s:%s", 
+        if (destpad && gst_pad_link_filtered (srcpad, destpad, filtercaps)) {
+          GST_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s", 
 	             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
           return TRUE;
         }
@@ -1465,8 +1465,8 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
           (GST_PAD_PEER (destpad) == NULL)) {
         srcpad = gst_element_get_compatible_pad_filtered (src, destpad, 
 	                                                  filtercaps);
-        if (srcpad && gst_pad_connect_filtered (srcpad, destpad, filtercaps)) {
-          GST_DEBUG (GST_CAT_ELEMENT_PADS, "connected pad %s:%s to pad %s:%s", 
+        if (srcpad && gst_pad_link_filtered (srcpad, destpad, filtercaps)) {
+          GST_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s", 
 	             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
           return TRUE;
         }
@@ -1494,9 +1494,9 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
 		                                    srctempl->name_template);
               destpad = gst_element_get_request_pad (dest, 
 		                                     desttempl->name_template);
-              if (gst_pad_connect_filtered (srcpad, destpad, filtercaps)) {
+              if (gst_pad_link_filtered (srcpad, destpad, filtercaps)) {
                 GST_DEBUG (GST_CAT_ELEMENT_PADS, 
-		           "connected pad %s:%s to pad %s:%s",
+		           "linked pad %s:%s to pad %s:%s",
                            GST_DEBUG_PAD_NAME (srcpad), 
 			   GST_DEBUG_PAD_NAME (destpad));
                 return TRUE;
@@ -1510,23 +1510,23 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
     }
   }
   
-  GST_DEBUG (GST_CAT_ELEMENT_PADS, "no connection possible from %s to %s", 
+  GST_DEBUG (GST_CAT_ELEMENT_PADS, "no link possible from %s to %s", 
              GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (dest));
   return FALSE;  
 }
 
 /**
- * gst_element_connect_many:
- * @element_1: the first #GstElement in the connection chain.
- * @element_2: the second #GstElement in the connection chain.
- * @...: the NULL-terminated list of elements to connect in order.
+ * gst_element_link_many:
+ * @element_1: the first #GstElement in the link chain.
+ * @element_2: the second #GstElement in the link chain.
+ * @...: the NULL-terminated list of elements to link in order.
  * 
- * Chain together a series of elements. Uses #gst_element_connect.
+ * Chain together a series of elements. Uses #gst_element_link.
  *
  * Returns: TRUE on success, FALSE otherwise.
  */
 gboolean
-gst_element_connect_many (GstElement *element_1, GstElement *element_2, ...)
+gst_element_link_many (GstElement *element_1, GstElement *element_2, ...)
 {
   va_list args;
 
@@ -1537,7 +1537,7 @@ gst_element_connect_many (GstElement *element_1, GstElement *element_2, ...)
   va_start (args, element_2);
 
   while (element_2) {
-    if (!gst_element_connect (element_1, element_2))
+    if (!gst_element_link (element_1, element_2))
       return FALSE;
     
     element_1 = element_2;
@@ -1550,27 +1550,27 @@ gst_element_connect_many (GstElement *element_1, GstElement *element_2, ...)
 }
 
 /**
- * gst_element_connect:
+ * gst_element_link:
  * @src: a #GstElement containing the source pad.
  * @dest: the #GstElement containing the destination pad.
  *
  * Connects the source to the destination element.
- * The connection must be from source to destination, the other
+ * The link must be from source to destination, the other
  * direction will not be tried.
  * The functions looks for existing pads and request pads that aren't
- * connected yet. If multiple connections are possible, only one is
+ * linked yet. If multiple links are possible, only one is
  * established.
  *
- * Returns: TRUE if the elements could be connected.
+ * Returns: TRUE if the elements could be linked.
  */
 gboolean
-gst_element_connect (GstElement *src, GstElement *dest)
+gst_element_link (GstElement *src, GstElement *dest)
 {
-  return gst_element_connect_filtered (src, dest, NULL);
+  return gst_element_link_filtered (src, dest, NULL);
 }
 
 /**
- * gst_element_connect_pads_filtered:
+ * gst_element_link_pads_filtered:
  * @src: a #GstElement containing the source pad.
  * @srcpadname: the name of the #GstPad in source element.
  * @dest: the #GstElement containing the destination pad.
@@ -1580,12 +1580,12 @@ gst_element_connect (GstElement *src, GstElement *dest)
  * Connects the two named pads of the source and destination elements.
  * Side effect is that if one of the pads has no parent, it becomes a
  * child of the parent of the other element.  If they have different
- * parents, the connection fails.
+ * parents, the link fails.
  *
- * Returns: TRUE if the pads could be connected.
+ * Returns: TRUE if the pads could be linked.
  */
 gboolean
-gst_element_connect_pads_filtered (GstElement *src, const gchar *srcpadname,
+gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
                                    GstElement *dest, const gchar *destpadname, 
                                    GstCaps *filtercaps)
 {
@@ -1610,12 +1610,12 @@ gst_element_connect_pads_filtered (GstElement *src, const gchar *srcpadname,
     return FALSE;
   }
 
-  /* we're satisified they can be connected, let's do it */
-  return gst_pad_connect_filtered (srcpad, destpad, filtercaps);
+  /* we're satisified they can be linked, let's do it */
+  return gst_pad_link_filtered (srcpad, destpad, filtercaps);
 }
 
 /**
- * gst_element_connect_pads:
+ * gst_element_link_pads:
  * @src: a #GstElement containing the source pad.
  * @srcpadname: the name of the #GstPad in the source element.
  * @dest: the #GstElement containing the destination pad.
@@ -1624,28 +1624,28 @@ gst_element_connect_pads_filtered (GstElement *src, const gchar *srcpadname,
  * Connects the two named pads of the source and destination elements.
  * Side effect is that if one of the pads has no parent, it becomes a
  * child of the parent of the other element.  If they have different
- * parents, the connection fails.
+ * parents, the link fails.
  *
- * Returns: TRUE if the pads could be connected.
+ * Returns: TRUE if the pads could be linked.
  */
 gboolean
-gst_element_connect_pads (GstElement *src, const gchar *srcpadname,
+gst_element_link_pads (GstElement *src, const gchar *srcpadname,
                           GstElement *dest, const gchar *destpadname)
 {
-  return gst_element_connect_pads_filtered (src, srcpadname, dest, destpadname, NULL);
+  return gst_element_link_pads_filtered (src, srcpadname, dest, destpadname, NULL);
 }
 
 /**
- * gst_element_disconnect_pads:
+ * gst_element_unlink_pads:
  * @src: a #GstElement containing the source pad.
  * @srcpadname: the name of the #GstPad in source element.
  * @dest: a #GstElement containing the destination pad.
  * @destpadname: the name of the #GstPad in destination element.
  *
- * Disconnects the two named pads of the source and destination elements.
+ * Unlinks the two named pads of the source and destination elements.
  */
 void
-gst_element_disconnect_pads (GstElement *src, const gchar *srcpadname,
+gst_element_unlink_pads (GstElement *src, const gchar *srcpadname,
                              GstElement *dest, const gchar *destpadname)
 {
   GstPad *srcpad,*destpad;
@@ -1669,20 +1669,20 @@ gst_element_disconnect_pads (GstElement *src, const gchar *srcpadname,
     return;
   }
 
-  /* we're satisified they can be disconnected, let's do it */
-  gst_pad_disconnect(srcpad,destpad);
+  /* we're satisified they can be unlinked, let's do it */
+  gst_pad_unlink (srcpad,destpad);
 }
 
 /**
- * gst_element_disconnect_many:
- * @element_1: the first #GstElement in the connection chain.
- * @element_2: the second #GstElement in the connection chain.
- * @...: the NULL-terminated list of elements to disconnect in order.
+ * gst_element_unlink_many:
+ * @element_1: the first #GstElement in the link chain.
+ * @element_2: the second #GstElement in the link chain.
+ * @...: the NULL-terminated list of elements to unlink in order.
  * 
- * Disconnects a series of elements. Uses #gst_element_disconnect.
+ * Unlinks a series of elements. Uses #gst_element_unlink.
  */
 void
-gst_element_disconnect_many (GstElement *element_1, GstElement *element_2, ...)
+gst_element_unlink_many (GstElement *element_1, GstElement *element_2, ...)
 {
   va_list args;
 
@@ -1692,7 +1692,7 @@ gst_element_disconnect_many (GstElement *element_1, GstElement *element_2, ...)
   va_start (args, element_2);
 
   while (element_2) {
-    gst_element_disconnect (element_1, element_2);
+    gst_element_unlink (element_1, element_2);
     
     element_1 = element_2;
     element_2 = va_arg (args, GstElement*);
@@ -1702,15 +1702,15 @@ gst_element_disconnect_many (GstElement *element_1, GstElement *element_2, ...)
 }
 
 /**
- * gst_element_disconnect:
- * @src: the source #GstElement to disconnect.
- * @dest: the sink #GstElement to disconnect.
+ * gst_element_unlink:
+ * @src: the source #GstElement to unlink.
+ * @dest: the sink #GstElement to unlink.
  *
- * Disconnects all source pads of the source element with all sink pads
- * of the sink element to which they are connected.
+ * Unlinks all source pads of the source element with all sink pads
+ * of the sink element to which they are linked.
  */
 void
-gst_element_disconnect (GstElement *src, GstElement *dest)
+gst_element_unlink (GstElement *src, GstElement *dest)
 {
   const GList *srcpads;
   GstPad *pad;
@@ -1718,20 +1718,20 @@ gst_element_disconnect (GstElement *src, GstElement *dest)
   g_return_if_fail (GST_IS_ELEMENT (src));
   g_return_if_fail (GST_IS_ELEMENT (dest));
 
-  GST_DEBUG (GST_CAT_ELEMENT_PADS, "disconnecting \"%s\" and \"%s\"", 
+  GST_DEBUG (GST_CAT_ELEMENT_PADS, "unlinking \"%s\" and \"%s\"",
              GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (dest));
 
   srcpads = gst_element_get_pad_list (src);
 
   while (srcpads) {
     pad = GST_PAD_CAST (srcpads->data);
-    
+
     if (GST_IS_REAL_PAD (pad) && GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
       GstPad *peerpad = GST_PAD_PEER (pad);
 
-      if (peerpad && 
+      if (peerpad &&
 	  (GST_OBJECT_PARENT (GST_PAD_PEER (peerpad)) == (GstObject*) src)) {
-        gst_pad_disconnect (pad, peerpad);
+        gst_pad_unlink (pad, peerpad);
       }
     }
 
@@ -1772,7 +1772,7 @@ gst_element_get_random_pad (GstElement *element, GstPadDirection dir)
 	return pad;
       }
       else {
-        GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is not connected",
+        GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is not linked",
 	           GST_DEBUG_PAD_NAME (pad));
       }
     }
@@ -1793,7 +1793,7 @@ gst_element_get_random_pad (GstElement *element, GstPadDirection dir)
  * Get an array of event masks from the element.
  * If the element doesn't 
  * implement an event masks function, the query will be forwarded
- * to a random connected sink pad.
+ * to a random linked sink pad.
  * 
  * Returns: An array of #GstEventMask elements.
  */
@@ -2177,7 +2177,7 @@ gst_element_negotiate_pads (GstElement *element)
 
     srcpad = GST_PAD_REALIZE (pad);
 
-    /* if we have a connection on this pad and it doesn't have caps
+    /* if we have a link on this pad and it doesn't have caps
      * allready, try to negotiate */
     if (GST_PAD_IS_CONNECTED (srcpad) && !GST_PAD_CAPS (srcpad)) {
       GstRealPad *sinkpad;
@@ -2373,12 +2373,12 @@ gst_element_dispose (GObject *object)
   GstElement *element = GST_ELEMENT (object);
   GList *pads;
   GstPad *pad;
-  
+
   GST_DEBUG_ELEMENT (GST_CAT_REFCOUNTING, element, "dispose");
 
   gst_element_set_state (element, GST_STATE_NULL);
 
-  /* first we break all our connections with the ouside */
+  /* first we break all our links with the ouside */
   if (element->pads) {
     GList *orig;
     orig = pads = g_list_copy (element->pads);
@@ -2386,9 +2386,9 @@ gst_element_dispose (GObject *object)
       pad = GST_PAD (pads->data);
 
       if (GST_PAD_PEER (pad)) {
-        GST_DEBUG (GST_CAT_REFCOUNTING, "disconnecting pad '%s'",
+        GST_DEBUG (GST_CAT_REFCOUNTING, "unlinking pad '%s'",
 	           GST_OBJECT_NAME (GST_OBJECT (GST_PAD (GST_PAD_PEER (pad)))));
-        gst_pad_disconnect (pad, GST_PAD (GST_PAD_PEER (pad)));
+        gst_pad_unlink (pad, GST_PAD (GST_PAD_PEER (pad)));
       }
       gst_element_remove_pad (element, pad);
 
@@ -2410,7 +2410,7 @@ gst_element_dispose (GObject *object)
   element->prop_value_queue = NULL;
   if (element->property_mutex)
     g_mutex_free (element->property_mutex);
-  
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -2537,7 +2537,7 @@ gst_element_restore_thyself (GstObject *object, xmlNodePtr self)
   children = self->xmlChildrenNode;
   while (children) {
     if (!strcmp (children->name, "pad")) {
-      gst_pad_load_and_connect (children, GST_OBJECT (element));
+      gst_pad_load_and_link (children, GST_OBJECT (element));
     }
     children = children->next;
   }

@@ -65,9 +65,9 @@ main (int argc, char *argv[])
     retval = 1;
   }
 
-  gst_pad_connect (gst_element_get_pad (src, "src"),
-      		   gst_element_get_pad (sink, "sink"));
-   
+  gst_pad_link (gst_element_get_pad (src, "src"),
+		gst_element_get_pad (sink, "sink"));
+
   /* set to play */
   g_print ("Doing 1 iteration\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);

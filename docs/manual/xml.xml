@@ -78,15 +78,15 @@ main (int argc, char *argv[])
 
   gst_bin_add (GST_BIN (thread2), osssink);
   
-  gst_pad_connect (gst_element_get_pad (filesrc,"src"),
+  gst_pad_link (gst_element_get_pad (filesrc,"src"),
                    gst_element_get_pad (queue,"sink"));
 
-  gst_pad_connect (gst_element_get_pad (queue,"src"),
+  gst_pad_link (gst_element_get_pad (queue,"src"),
                    gst_element_get_pad (decode,"sink"));
-  gst_pad_connect (gst_element_get_pad (decode,"src"),
+  gst_pad_link (gst_element_get_pad (decode,"src"),
                    gst_element_get_pad (queue2,"sink"));
 
-  gst_pad_connect (gst_element_get_pad (queue2,"src"),
+  gst_pad_link (gst_element_get_pad (queue2,"src"),
                    gst_element_get_pad (osssink,"sink"));
 
   gst_bin_add (GST_BIN (bin), thread);
@@ -115,7 +115,7 @@ main (int argc, char *argv[])
     </para>
     <para>
       The complete element hierarchy will be saved along with the inter element
-      pad connections and the element parameters. Future <application>GStreamer</application>
+      pad links and the element parameters. Future <application>GStreamer</application>
       versions will also allow you to store the signals in the XML file.
     </para>
   </sect1>
@@ -189,7 +189,7 @@ main(int argc, char *argv[])
       interfere with the core XML tags.
     </para>
     <para>
-      To insert a hook into the element saving procedure you can connect
+      To insert a hook into the element saving procedure you can link
       a signal to the GstElement using the following piece of code:
     </para>
     <programlisting>

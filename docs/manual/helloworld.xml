@@ -47,8 +47,8 @@ main (int argc, char *argv[])
   /* add objects to the main pipeline */
   gst_bin_add_many (GST_BIN (pipeline), filesrc, decoder, audiosink, NULL);
 
-  /* connect src to sink */
-  gst_element_connect_many (filesrc, decoder, audiosink, NULL);
+  /* link src to sink */
+  gst_element_link_many (filesrc, decoder, audiosink, NULL);
 
   /* start playing */
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -166,11 +166,11 @@ main (int argc, char *argv[])
     </programlisting>
 
     <para>
-      We connect the different pads of the elements together like this:
+      We link the different pads of the elements together like this:
     </para>
     <programlisting>
-  /* connect src to sink */
-  gst_element_connect_many (filesrc, decoder, audiosink, NULL);
+  /* link src to sink */
+  gst_element_link_many (filesrc, decoder, audiosink, NULL);
     </programlisting>
     
     <para>

@@ -80,16 +80,16 @@ main (gint argc, gchar *argv[])
   gst_bin_add (GST_BIN (pipeline), aggregator);
   gst_bin_add (GST_BIN (pipeline), sink);
 
-  gst_element_connect_pads (aggregator, "src", sink, "sink");
+  gst_element_link_pads (aggregator, "src", sink, "sink");
 
   bin1 = make_bin (1);
   pad1 = gst_element_get_request_pad (aggregator, "sink%d");
-  gst_pad_connect (gst_element_get_pad (bin1, "src"), pad1);
+  gst_pad_link (gst_element_get_pad (bin1, "src"), pad1);
   gst_bin_add (GST_BIN (pipeline), bin1);
 
   bin2 = make_bin (2);
   pad2 = gst_element_get_request_pad (aggregator, "sink%d");
-  gst_pad_connect (gst_element_get_pad (bin2, "src"), pad2);
+  gst_pad_link (gst_element_get_pad (bin2, "src"), pad2);
   gst_bin_add (GST_BIN (pipeline), bin2);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);

@@ -42,7 +42,7 @@ typedef struct
   GstElement *target_element;
   GstElement *pipeline;
 }
-dynamic_connection_t;
+dynamic_link_t;
 
 
 GQuark 
@@ -55,9 +55,9 @@ gst_parse_error_quark (void)
 }
 
 G_GNUC_UNUSED static void
-dynamic_connect (GstElement * element, GstPad * newpad, gpointer data)
+dynamic_link (GstElement * element, GstPad * newpad, gpointer data)
 {
-  dynamic_connection_t *dc = (dynamic_connection_t *) data;
+  dynamic_link_t *dc = (dynamic_link_t *) data;
   gboolean warn = TRUE;
 
   /* do we know the exact srcpadname? */
@@ -83,8 +83,8 @@ dynamic_connect (GstElement * element, GstPad * newpad, gpointer data)
   }
   if (!GST_PAD_IS_CONNECTED (dc->target_pad) && !GST_PAD_IS_CONNECTED (newpad)) {
     gst_element_set_state (dc->pipeline, GST_STATE_PAUSED);
-    if (!gst_pad_connect (newpad, dc->target_pad) && warn) {
-      g_warning ("could not connect %s:%s to %s:%s", GST_DEBUG_PAD_NAME (newpad), 
+    if (!gst_pad_link (newpad, dc->target_pad) && warn) {
+      g_warning ("could not link %s:%s to %s:%s", GST_DEBUG_PAD_NAME (newpad), 
                  GST_DEBUG_PAD_NAME (dc->target_pad));
     }
     gst_element_set_state (dc->pipeline, GST_STATE_PLAYING);
@@ -219,19 +219,19 @@ find_element_by_index (graph_t *g, gint i)
 }
 
 static gboolean
-make_connections (graph_t *g, GError **error)
+make_links (graph_t *g, GError **error)
 {
   GList *l, *a, *b;
-  connection_t *c;
-  dynamic_connection_t *dc;
+  link_t *c;
+  dynamic_link_t *dc;
   GstElement *src, *sink;
   GstPad *p1, *p2;
   GstPadTemplate *pt1, *pt2;
   GstCaps *caps;
   
-  l = g->connections;
+  l = g->links;
   while (l) {
-    c = (connection_t*)l->data;
+    c = (link_t*)l->data;
     if (c->src_name) {
       if (!(src = gst_bin_get_by_name (GST_BIN (g->bin), c->src_name))) {
         g_set_error (error,
@@ -265,7 +265,7 @@ make_connections (graph_t *g, GError **error)
     gst_caps_debug (caps, "foo");
     /* g_print ("a: %p, b: %p\n", a, b); */
     if (a && b) {
-      /* balanced multipad connection */
+      /* balanced multipad link */
       while (a && b) {
         p1 = gst_element_get_pad (src, (gchar*)a->data);
         p2 = gst_element_get_pad (sink, (gchar*)b->data);
@@ -275,21 +275,21 @@ make_connections (graph_t *g, GError **error)
         
         if (!p1 && p2 && (pt1 = gst_element_get_pad_template (src, (gchar*)a->data)) &&
             pt1->presence == GST_PAD_SOMETIMES) {
-          dc = g_new0 (dynamic_connection_t, 1);
+          dc = g_new0 (dynamic_link_t, 1);
           dc->srcpadname = (gchar*)a->data;
           dc->target_pad = p2;
           dc->target_element = sink;
           dc->pipeline = g->bin;
           
-          GST_DEBUG (GST_CAT_PIPELINE, "setting up dynamic connection %s:%s and %s:%s",
+          GST_DEBUG (GST_CAT_PIPELINE, "setting up dynamic link %s:%s and %s:%s",
                      GST_OBJECT_NAME (GST_OBJECT (src)),
                      (gchar*)a->data, GST_DEBUG_PAD_NAME (p2));
           
-          g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_connect), dc);
+          g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_link), dc);
         } else if (!p1) {
           goto could_not_get_pad_a;
-        } else if (!gst_pad_connect_filtered (p1, p2, caps)) {
-          goto could_not_connect_pads;
+        } else if (!gst_pad_link_filtered (p1, p2, caps)) {
+          goto could_not_link_pads;
         }
         a = g_list_next (a);
         b = g_list_next (b);
@@ -301,17 +301,17 @@ make_connections (graph_t *g, GError **error)
             /* sigh, a hack until i fix the gstelement api... */
             if ((pt2 = gst_element_get_compatible_pad_template (sink, pt1))) {
               if ((p2 = gst_element_get_pad (sink, pt2->name_template))) {
-                dc = g_new0 (dynamic_connection_t, 1);
+                dc = g_new0 (dynamic_link_t, 1);
                 dc->srcpadname = (gchar*)a->data;
                 dc->target_pad = p2;
                 dc->target_element = NULL;
                 dc->pipeline = g->bin;
               
-                GST_DEBUG (GST_CAT_PIPELINE, "setting up dynamic connection %s:%s and %s:%s",
+                GST_DEBUG (GST_CAT_PIPELINE, "setting up dynamic link %s:%s and %s:%s",
                            GST_OBJECT_NAME (GST_OBJECT (src)),
                            (gchar*)a->data, GST_DEBUG_PAD_NAME (p2));
               
-                g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_connect), dc);
+                g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_link), dc);
 		goto next;
               } else {
                 /* both pt1 and pt2 are sometimes templates. sheesh. */
@@ -320,17 +320,17 @@ make_connections (graph_t *g, GError **error)
             } else {
 	      /* if the target pad has no padtemplate we will figure out a target 
 	       * pad later on */
-              dc = g_new0 (dynamic_connection_t, 1);
+              dc = g_new0 (dynamic_link_t, 1);
               dc->srcpadname = (gchar*)a->data;
               dc->target_pad = NULL;
               dc->target_element = sink;
               dc->pipeline = g->bin;
               
-              GST_DEBUG (GST_CAT_PIPELINE, "setting up dynamic connection %s:%s, and some pad in %s",
+              GST_DEBUG (GST_CAT_PIPELINE, "setting up dynamic link %s:%s, and some pad in %s",
                            GST_OBJECT_NAME (GST_OBJECT (src)),
                            (gchar*)a->data, GST_OBJECT_NAME (sink));
               
-              g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_connect), dc);
+              g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_link), dc);
    	      goto next;
             }
           } else {
@@ -343,23 +343,23 @@ make_connections (graph_t *g, GError **error)
         goto could_not_get_pad_a;
       }
       
-      if (!gst_pad_connect_filtered (p1, p2, caps)) {
-        goto could_not_connect_pads;
+      if (!gst_pad_link_filtered (p1, p2, caps)) {
+        goto could_not_link_pads;
       }
     } else if (b) {
-      /* we don't support dynamic connections on this side yet, if ever */
+      /* we don't support dynamic links on this side yet, if ever */
       if (!(p2 = gst_element_get_pad (sink, (gchar*)b->data))) {
         goto could_not_get_pad_b;
       }
       if (!(p1 = gst_element_get_compatible_pad (src, p2))) {
         goto could_not_get_compatible_to_b;
       }
-      if (!gst_pad_connect_filtered (p1, p2, caps)) {
-        goto could_not_connect_pads;
+      if (!gst_pad_link_filtered (p1, p2, caps)) {
+        goto could_not_link_pads;
       }
     } else {
-      if (!gst_element_connect_filtered (src, sink, caps)) {
-        goto could_not_connect_elements;
+      if (!gst_element_link_filtered (src, sink, caps)) {
+        goto could_not_link_elements;
       }
     }
 next:
@@ -368,7 +368,7 @@ next:
   
   l = g->bins;
   while (l) {
-    if (!make_connections ((graph_t*)l->data, error))
+    if (!make_links ((graph_t*)l->data, error))
       return FALSE;
     l = g_list_next (l);
   }
@@ -410,19 +410,19 @@ both_templates_have_sometimes_presence:
                "Both %s:%s and %s:%s have GST_PAD_SOMETIMES presence, operation not supported",
                GST_OBJECT_NAME (src), pt1->name_template, GST_OBJECT_NAME (sink), pt2->name_template);
   return FALSE;
-could_not_connect_pads:
+could_not_link_pads:
   g_set_error (error,
                GST_PARSE_ERROR,
                GST_PARSE_ERROR_CONNECT,
-               "Could not connect %s:%s to %s:%s",
+               "Could not link %s:%s to %s:%s",
                GST_DEBUG_PAD_NAME (p1),
                GST_DEBUG_PAD_NAME (p2));
   return FALSE;
-could_not_connect_elements:
+could_not_link_elements:
   g_set_error (error,
                GST_PARSE_ERROR,
                GST_PARSE_ERROR_CONNECT,
-               "Could not connect element %s to %s",
+               "Could not link element %s to %s",
                GST_OBJECT_NAME (src),
                GST_OBJECT_NAME (sink));
   return FALSE;
@@ -437,7 +437,7 @@ pipeline_from_graph (graph_t *g, GError **error)
   if (!set_properties (g, error))
     return NULL;
   
-  if (!make_connections (g, error))
+  if (!make_links (g, error))
     return NULL;
   
   return (GstBin*)g->bin;

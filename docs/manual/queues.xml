@@ -2,17 +2,17 @@
   <title>Queues</title>
   <para> 
     A <classname>GstQueue</classname> is a filter element.
-    Queues can be used to connect two elements in such way that the data can 
+    Queues can be used to link two elements in such way that the data can 
     be buffered.
   </para>
   <para> 
     A buffer that is sinked to a Queue will not automatically be pushed to the
-    next connected element but will be buffered. It will be pushed to the next
+    next linked element but will be buffered. It will be pushed to the next
     element as soon as a gst_pad_pull () is called on the queue's source pad.
   </para>
   <para> 
     Queues are mostly used in conjunction with a <classname>GstThread</classname> to
-    provide an external connection for the thread elements. You could have one
+    provide an external link for the thread elements. You could have one
     thread feeding buffers into a <classname>GstQueue</classname> and another
     thread repeadedly calling gst_pad_pull () on the queue to feed its 
     internal elements.
@@ -105,8 +105,8 @@ main (int argc, char *argv[])
   gst_bin_add_many (GST_BIN (bin), filesrc, queue, thread, NULL);
 
   
-  gst_element_connect (filesrc, queue);
-  gst_element_connect_many (queue, decode, audiosink, NULL);
+  gst_element_link (filesrc, queue);
+  gst_element_link_many (queue, decode, audiosink, NULL);
 
   /* start playing */
   gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);

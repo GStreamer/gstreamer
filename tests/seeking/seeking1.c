@@ -44,7 +44,7 @@ main (gint argc, gchar *argv[])
   gst_bin_add (GST_BIN (pipeline), fakesrc);
   gst_bin_add (GST_BIN (pipeline), fakesink);
 
-  gst_element_connect_pads (fakesrc, "src", fakesink, "sink");
+  gst_element_link_pads (fakesrc, "src", fakesink, "sink");
 
   gst_element_set_state (pipeline, GST_STATE_READY);
 

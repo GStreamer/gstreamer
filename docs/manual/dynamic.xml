@@ -49,7 +49,7 @@ new_pad_created (GstElement *parse, GstPad *pad, GstElement *pipeline)
   
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
 
-  /* connect to audio pad */
+  /* link to audio pad */
   if (strncmp (gst_pad_get_name (pad), "audio_", 6) == 0) {
 
     /* construct internal pipeline elements */
@@ -62,23 +62,23 @@ new_pad_created (GstElement *parse, GstPad *pad, GstElement *pipeline)
     audio_thread = gst_thread_new ("audio_thread");
     g_return_if_fail (audio_thread != NULL);
 
-    /* construct queue and connect everything in the main pipeline */
+    /* construct queue and link everything in the main pipeline */
     audio_queue = gst_element_factory_make ("queue", "audio_queue");
     g_return_if_fail (audio_queue != NULL);
 
     gst_bin_add_many (GST_BIN (audio_thread), 
                       audio_queue, decode_audio, play, NULL);
 
-    /* set up pad connections */
+    /* set up pad links */
     gst_element_add_ghost_pad (audio_thread,
                                gst_element_get_pad (audio_queue, "sink"),
                                "sink");
-    gst_element_connect (audio_queue, decode_audio);
-    gst_element_connect (decode_audio, play);
+    gst_element_link (audio_queue, decode_audio);
+    gst_element_link (decode_audio, play);
 
     gst_bin_add (GST_BIN (pipeline), audio_thread);
 
-    gst_pad_connect (pad, gst_element_get_pad (audio_thread, "sink"));
+    gst_pad_link (pad, gst_element_get_pad (audio_thread, "sink"));
 
     /* set up thread state and kick things off */
     g_print ("setting to READY state\n");
@@ -98,7 +98,7 @@ new_pad_created (GstElement *parse, GstPad *pad, GstElement *pipeline)
     show = gst_element_factory_make ("xvideosink", "show");
     g_return_if_fail (show != NULL);
 
-    /* construct queue and connect everything in the main pipeline */
+    /* construct queue and link everything in the main pipeline */
     video_queue = gst_element_factory_make ("queue", "video_queue");
     g_return_if_fail (video_queue != NULL);
 
@@ -108,16 +108,16 @@ new_pad_created (GstElement *parse, GstPad *pad, GstElement *pipeline)
     gst_bin_add_many (GST_BIN (video_thread), video_queue, 
                       decode_video, color, show, NULL);
 
-    /* set up pad connections */
+    /* set up pad links */
     gst_element_add_ghost_pad (video_thread,
                                gst_element_get_pad (video_queue, "sink"),
                                "sink");
-    gst_element_connect (video_queue, decode_video);
-    gst_element_connect_many (decode_video, color, show, NULL);
+    gst_element_link (video_queue, decode_video);
+    gst_element_link_many (decode_video, color, show, NULL);
 
     gst_bin_add (GST_BIN (pipeline), video_thread);
 
-    gst_pad_connect (pad, gst_element_get_pad (video_thread, "sink"));
+    gst_pad_link (pad, gst_element_get_pad (video_thread, "sink"));
 
     /* set up thread state and kick things off */
     g_print ("setting to READY state\n");
@@ -154,7 +154,7 @@ main (int argc, char *argv[])
   g_signal_connect (G_OBJECT (src), "eos",
                      G_CALLBACK (eof), NULL);
 
-  gst_element_connect (src, demux);
+  gst_element_link (src, demux);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
@@ -169,7 +169,7 @@ main (int argc, char *argv[])
   <para>
     We create two elements: a file source and an MPEG demuxer. 
     There's nothing special about this piece of code except for 
-    the signal 'new_pad' that we connected to the mpegdemux 
+    the signal 'new_pad' that we linked to the mpegdemux 
     element using:
   </para>
   <programlisting>
