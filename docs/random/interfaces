@@ -1,0 +1,240 @@
+INTERFACES & ELEMENTS
+---------------------
+
+1) Introduction
+===============
+Interfaces are descriptions on how to handle an object, without actually
+implementing the object. This allows for multiple objects to be instantiated
+based on this interface. Each of them can then be handled equally by an
+application.
+Glib, apparently (unchecked), has a way of creating interfaces, probably
+by means of a class struct without actually defining the object. The object,
+then, does not define a class and these two add up. Benjamin knows more
+about interfaces, I didn't study interfaces & glib too deeply, yet. I know
+them just from Java.
+Interfaces are cool! It allows for some sort of random element creation
+without needing to link to the implementation. This is similar to how
+GStreamer currently handles media plugins. GStreamer itself could be seen
+as an interface too, in that respect.
+
+2) So why do we need interfaces?
+================================
+Because GStreamer doesn't handle it all. GStreamer in itself is a media
+framework for streams of data from one element to the next. There's lots
+of things that's media-related, but not handled in this description.
+Several examples will probably clarify this: think of the Xvideo output
+plugin. We can create an overlay here (Xv-based), and we currently control
+this X-connection using glib properties. However, what property name is
+associated with what control? And does it work the same as v4lsrc's
+overlay image control?
+The same goes for a mixer, for image control, audio control, and probably
+a lot more. The general idea is simple: *this needs to be documented*.
+But properties aren't all - they simply cannot do this all. Some things
+cannot be described in a simple one-argument property thing. Of course,
+we could give a pointer to a struct as argument, but that's merely a hack
+and requires both plugin and app to know the ABI of the struct. This
+kills the whole idea of making the plugin independent of the app.
+In short: we want interfaces for this.
+
+3) How to integrate an interface in GStreamer
+=============================================
+Let us start with some starting point: an interface is associated
+with an element. It is a feature exported by that specific element,
+not by a pipeline or anything more complex. Pipelines are already
+handled just fine by GStreamer (or you wouldn't be reading all
+this).
+Obviously, a pipeline can be a fallback for an interface. Imagine
+that we're looking for an audio sink that exposes a mixer, but our
+fakesink audio output doesn't ("I wonder why"). We could then create
+a pipeline with the volume element in it to "fake" a mixer. Ideally,
+the volume element would implement a mixer itself.
+
+How are we going to do that in programmatic way? We currently use
+properties. Their huge advantage is that we do not need to care
+about adding new functions or whatever. Their disadvantage is that
+they're limited to one argument. Anything more complex requires
+app/plugin knowledge about the shared data, and that defeats the
+point of them: to have no dependency on each other. This could be
+solved partially by using action signals, but that makes the whole
+picture quite complex (since you use multiple methods for doing one
+simple thing). Also, they are quite slow compared to functions
+because of the table lookups. In short: it'd work, but I'm not in
+facour of it...
+OK, so an element exposes interfaces. This allows us to think of
+the idea of embedding interfaces (dynamically, of course) in the
+GstElement object. Think of an object being able to register an
+indefinate number of interfaces per object instance, and a client
+application could then enumerate interfaces and instantiate one.
+The API would then look like this:
+
+void gst_element_register_interface (GstElement       *element,
+				     const gchar      *name,
+				     GstInterfaceFunc  func);
+
+const GList *gst_element_list_interfaces (GstElement *element);
+
+GstInterface *gst_element_get_interface (GstElement  *element,
+					 const gchar *name);
+
+GstInterface is then a generic thing that is inherited by specific
+interfaces (see examples). Obviously, the client will need to know
+about the ABI/API of this struct, but that'll happen either way.
+Surely, there needs to binary linkage, but I don't consider that a
+bad thing. It does improve performance compared to action signals!
+
+So an element contains interfaces. But where are these interfaces
+described? And who creates them? I suggest that we do that just as
+we handle gstvideo and gstaudio right now (these libs do *nothing*
+useful currently, so this'd make them a lot more interesting).
+These interfaces inherit from GstInterface. The functions that
+are needed, can be provided through a class object. The element is
+then responsible for storing variables and so on. gstvideo/audio
+provides wrapper functions for the class functions.
+
+For the plugin, it's then as simple as can be. The class_init
+function sets the virtual functions in the interface class object,
+and the instance_init function registers the object per created
+element. The get_interface() handler refs this interface and
+returns it. The application unrefs it when it's done. The
+appropriate functions will be called by the application when it
+thinks it needs to. Perfectly simple!
+
+For applictions, it's even simpler. Request an interface and use
+it as documented. When you're done, unref it. It's just like
+elements: simple!
+
+So the most important part left is to document the interfaces
+and make sure all elements exporting them work equally. For this,
+I'll give two examples.
+
+4) Examples
+===========
+
+typedef struct _GstInterface {
+  GObject object;
+} GstInterface;
+
+typedef struct _GstInterfaceClass {
+  GObjectClass klass;
+} GstInterfaceClass; 
+
+4a) mixer
+---------
+A mixer is a way of controlling volume and input/output channels.
+This doesn't mean that you control which channel is the subwoofer,
+all that is supposed to be done automatically. It is really meant
+as a way of representing system-level volumes and such. It could
+also be used to turn on/off certain outputs or inputs.
+As you've noticed, I'm not only talking about output, but also
+input. Indeed, I want both osssrc *and* osssink to export the
+same mixer interface! Or at least a very similar one. Volume
+control works the same for both. You could say that osssrc should
+enumerate the input channels (such as microphone, line-in). Of
+course, osssink should not. Or maybe it should, not sure...
+And alsasink would surely implement the same interface.
+
+/* This is confusing naming... (i.e. FIXME)
+ * A channel is referred to both as the number of simultaneous
+ * sounds the input can handle as well as the in-/output itself
+ */
+
+typedef struct _GstMixerChannel {
+  gchar *label;
+  gint   current_num_channels,
+         max_num_channels;
+} GstMixerChannel;
+
+typedef struct _GstMixer {
+  GstInterface interface;
+} GstMixer;
+
+typedef struct _GstMixerClass {
+  GstInterfaceClass klass;
+
+  /* virtual functions */
+  GList *  (* list_channels) (GstMixer        *mixer);
+  void     (* set_volume)    (GstMixer        *mixer,
+			      GstMixerChannel *channel,
+			      gint            *volumes);
+  void     (* get_volume)    (GstMixer        *mixer,
+			      GstMixerChannel *channel,
+			      gint            *volumes);
+  void     (* set_mute)      (GstMixer        *mixer,
+			      GstMixerChannel *channel,
+			      gboolean         mute);
+  gboolean (* get_mute)      (GstMixer        *mixer,
+			      GstMixerChannel *channel);
+} GstMixerClass;
+
+Name for in the element list: "mixer". Gstaudio provides wrapper
+functions for each of the class' virtual functions. Possibly also
+some macros for GST_MIXER_CHANNEL_HAS_FLAG () or _get_channel ().
+
+4b) overlay
+-----------
+Overlay is used in both in- and output, too. Think of v4lsrc,
+v4l2src, v4lmjpegsrc, xvideosink - all overlays. But where do
+we position the overlay window? Control of this can be done at
+various levels: locational control (over the server, asynchronous)
+or XID control (but that makes you depend on X and limits the
+ability to broaden it over to non-X elements such as fbsink).
+
+However, simplicity *is* an issue here. Do we really care about
+overlay? In the end, users will have to link against either FB
+or X anyway, so we might want to create separate interfaces for
+both. On the other hand, we want to be general too... This is a
+decision that we need to make as early as possible in this process.
+
+Let's assume that we take X as a basis. Then, overlay becomes as
+simple as one function. Possible extendible by providing inputs
+(like in the mixer) and norms, although that only applies to
+input-to-analog, not to-digital... Discussion needed here!
+
+typedef struct _GstOverlayChannel {
+  gchar *label;
+} GstOverlayChannel;
+
+typedef struct _GstOverlayNorm {
+  gchar *label;
+} GstOverlayNorm;
+
+typedef struct _GstOverlay {
+  GstInterface interface;
+} GstOverlay;
+
+typedef struct _GstOverlayClass {
+  GstInterfaceClass klass;
+
+  /* virtual functions */
+  GList *       (* list_channels) (GstOverlay        *overlay);
+  void          (* set_channel)   (GstOverlay        *overlay,
+				   GstOverlayChannel *channel);
+  const gchar * (* get_channel)   (GstOverlay        *overlay);
+  GList *       (* list_norms)    (GstOverlay        *overlay);
+  void          (* set_norm)      (GstOverlay        *overlay,
+				   GstOverlayNorm    *norm);
+  const gchar * (* get_norm)      (GstOverlay        *overlay);
+  void          (* set_xwindowid) (GstOverlay        *overlay,
+			           XWindowID          xid);
+} GstOverlayClass;
+
+4c) user input
+--------------
+And yes, user input could be an interface too. Even better, it
+should definately be. And wasn't this one of our key issues for
+0.8.0?
+
+No code here. Go implement it, lazy ass!
+
+5) Status of this document
+==========================
+This is a proposal, nothing more. Nothing is implemented. Target
+release is 0.8.0 or any 0.7.x version.
+
+6) Copyright and blabla
+=======================
+(c) Ronald Bultje, 2003 <rbultje@ronald.bitfreak.net> under the
+terms of the GNU Free Documentation License. See http://www.gnu.org/
+for details.
+
+And no, I'm not for hire. ;).
