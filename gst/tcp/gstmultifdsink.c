@@ -560,9 +560,13 @@ gst_multifdsink_handle_client_write (GstMultiFdSink * sink,
       maxsize = GST_BUFFER_SIZE (head) - client->bufoffset;
 
       /* try to write the complete buffer */
+#ifdef MSG_NOSIGNAL
+#define FLAGS MSG_NOSIGNAL
+#else
+#define FLAGS 0
+#endif
       wrote =
-          send (fd, GST_BUFFER_DATA (head) + client->bufoffset, maxsize,
-          MSG_NOSIGNAL);
+          send (fd, GST_BUFFER_DATA (head) + client->bufoffset, maxsize, FLAGS);
       if (wrote < 0) {
         /* hmm error.. */
         if (errno == EAGAIN) {
