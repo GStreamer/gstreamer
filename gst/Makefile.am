@@ -127,14 +127,23 @@ cothreads.o: $(srcdir)/cothreads.c $(srcdir)/cothreads.h $(srcdir)/gst_private.h
 
 ##### Other built sources #####
 
+# Generate both marshal files together.  Makes dependency work easier.
 gstmarshal.h: gstmarshal.list
 	glib-genmarshal --header --prefix=gst gstmarshal.list > gstmarshal.h
+	glib-genmarshal --body --prefix=gst gstmarshal.list > gstmarshal.c
 
 gstmarshal.c: gstmarshal.list
+	glib-genmarshal --header --prefix=gst gstmarshal.list > gstmarshal.h
 	glib-genmarshal --body --prefix=gst gstmarshal.list > gstmarshal.c
 
 ##### end built sources #####
 
+# Don't want the generated marshal files in the dist
+dist-hook:
+	rm -f $(distdir)/gstmarshal.c $(distdir)/gstmarshal.h
+# Clean generated files
+distclean-local:
+	rm -f $(builddir)/gstmarshal.c $(builddir)/gstmarshal.h
 
 libgstincludedir = $(includedir)/gst
 libgstinclude_HEADERS =		\
