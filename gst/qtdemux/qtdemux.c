@@ -25,7 +25,7 @@ static GstElementDetails
 gst_qtdemux_details = 
 {
   "quicktime parser",
-  "Parser/Video",
+  "Codec/Parser",
   "Parses a quicktime stream into audio and video substreams",
   VERSION,
   "A.Baguinski <artm@v2.nl>",
