@@ -59,6 +59,7 @@ enum {
 };
 
 static GstVideoSinkClass *parent_class = NULL;
+static gboolean error_catched = FALSE;
 
 /* ============================================================= */
 /*                                                               */
@@ -67,6 +68,71 @@ static GstVideoSinkClass *parent_class = NULL;
 /* ============================================================= */
 
 /* X11 stuff */
+
+static int
+gst_ximagesink_handle_xerror (Display *display, XErrorEvent *xevent)
+{
+  char error_msg [1024];
+  XGetErrorText (display, xevent->error_code, error_msg, 1024);
+  GST_DEBUG ("ximagesink failed to use XShm calls. error: %s",
+             error_msg);
+  error_catched = TRUE;
+  return 0;
+}
+
+/* This function checks that it is actually really possible to create an image
+   using XShm */
+static gboolean
+gst_ximagesink_check_xshm_calls (GstXContext *xcontext)
+{
+  GstXImage *ximage = NULL;
+  int (*handler)(Display *, XErrorEvent *);
+  
+  g_return_val_if_fail (xcontext != NULL, FALSE);
+  
+#ifdef HAVE_XSHM
+  ximage = g_new0 (GstXImage, 1);
+  
+  /* Setting an error handler to catch failure */
+  handler = XSetErrorHandler (gst_ximagesink_handle_xerror);
+  
+  ximage->size =  (xcontext->bpp / 8);
+
+  /* Trying to create a 1x1 picture */
+  ximage->ximage = XShmCreateImage (xcontext->disp, xcontext->visual,
+                                    xcontext->depth, ZPixmap, NULL,
+                                    &ximage->SHMInfo, 1, 1);
+
+  ximage->SHMInfo.shmid = shmget (IPC_PRIVATE, ximage->size, IPC_CREAT | 0777);
+  ximage->SHMInfo.shmaddr = shmat (ximage->SHMInfo.shmid, 0, 0);
+  ximage->ximage->data = ximage->SHMInfo.shmaddr;
+  ximage->SHMInfo.readOnly = FALSE;
+  
+  XShmAttach (xcontext->disp, &ximage->SHMInfo);
+
+  error_catched = FALSE;
+
+  XSync(xcontext->disp, 0);
+    
+  XSetErrorHandler (handler);
+  
+  if (error_catched)
+    { /* Failed, detaching shared memory, destroying image and telling we can't
+         use XShm */
+      error_catched = FALSE;
+      XDestroyImage (ximage->ximage);
+      shmdt (ximage->SHMInfo.shmaddr);
+      shmctl (ximage->SHMInfo.shmid, IPC_RMID, 0);
+      g_free (ximage);
+      XSync(xcontext->disp, 0);
+      return FALSE;
+    }
+  else
+#endif /* HAVE_XSHM */
+    {
+      return TRUE;
+    }
+}
 
 /* This function handles GstXImage creation depending on XShm availability */
 static GstXImage *
@@ -171,7 +237,9 @@ gst_ximagesink_ximage_destroy (GstXImageSink *ximagesink, GstXImage *ximage)
       if (ximage->ximage)
         XDestroyImage (ximage->ximage);
     }
-
+    
+  XSync(ximagesink->xcontext->disp, 0);
+    
   g_mutex_unlock (ximagesink->x_lock);
   
   g_free (ximage);
@@ -486,7 +554,8 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
   
 #ifdef HAVE_XSHM
   /* Search for XShm extension support */
-  if (XQueryExtension (xcontext->disp, "MIT-SHM", &i, &i, &i))
+  if (XShmQueryExtension (xcontext->disp) &&
+      gst_ximagesink_check_xshm_calls (xcontext))
     {
       xcontext->use_xshm = TRUE;
       GST_DEBUG ("ximagesink is using XShm extension");
@@ -1216,7 +1285,7 @@ gst_ximagesink_class_init (GstXImageSinkClass *klass)
   gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_VIDEOSINK);
-
+  
   g_object_class_install_property (gobject_class, ARG_DISPLAY,
     g_param_spec_string ("display", "Display", "X Display name",
                          NULL, G_PARAM_READWRITE));

@@ -70,6 +70,7 @@ enum {
 };
 
 static GstVideoSinkClass *parent_class = NULL;
+static gboolean error_catched = FALSE;
 
 /* ============================================================= */
 /*                                                               */
@@ -78,6 +79,72 @@ static GstVideoSinkClass *parent_class = NULL;
 /* ============================================================= */
 
 /* X11 stuff */
+
+static int
+gst_xvimagesink_handle_xerror (Display *display, XErrorEvent *xevent)
+{
+  char error_msg [1024];
+  XGetErrorText (display, xevent->error_code, error_msg, 1024);
+  GST_DEBUG ("xvimagesink failed to use XShm calls. error: %s",
+             error_msg);
+  error_catched = TRUE;
+  return 0;
+}
+
+/* This function checks that it is actually really possible to create an image
+   using XShm */
+static gboolean
+gst_xvimagesink_check_xshm_calls (GstXContext *xcontext)
+{
+  GstXvImage *xvimage = NULL;
+  int (*handler)(Display *, XErrorEvent *);
+  
+  g_return_val_if_fail (xcontext != NULL, FALSE);
+  
+#ifdef HAVE_XSHM
+  xvimage = g_new0 (GstXvImage, 1);
+  
+  /* Setting an error handler to catch failure */
+  handler = XSetErrorHandler (gst_xvimagesink_handle_xerror);
+  
+  xvimage->size =  (xcontext->bpp / 8);
+
+  /* Trying to create a 1x1 picture */
+  xvimage->xvimage = XvShmCreateImage (xcontext->disp, xcontext->xv_port_id,
+                                       xcontext->im_format, NULL, 1, 1,
+                                       &xvimage->SHMInfo);
+
+  xvimage->SHMInfo.shmid = shmget (IPC_PRIVATE, xvimage->size,
+                                   IPC_CREAT | 0777);
+  xvimage->SHMInfo.shmaddr = shmat (xvimage->SHMInfo.shmid, 0, 0);
+  xvimage->xvimage->data = xvimage->SHMInfo.shmaddr;
+  xvimage->SHMInfo.readOnly = FALSE;
+  
+  XShmAttach (xcontext->disp, &xvimage->SHMInfo);
+
+  error_catched = FALSE;
+
+  XSync(xcontext->disp, 0);
+    
+  XSetErrorHandler (handler);
+  
+  if (error_catched)
+    { /* Failed, detaching shared memory, destroying image and telling we can't
+         use XShm */
+      error_catched = FALSE;
+      XFree (xvimage->xvimage);
+      shmdt (xvimage->SHMInfo.shmaddr);
+      shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
+      g_free (xvimage);
+      XSync(xcontext->disp, 0);
+      return FALSE;
+    }
+  else
+#endif /* HAVE_XSHM */
+    {
+      return TRUE;
+    }
+}
 
 /* This function handles GstXvImage creation depending on XShm availability */
 static GstXvImage *
@@ -183,6 +250,8 @@ gst_xvimagesink_xvimage_destroy (GstXvImageSink *xvimagesink,
         XFree (xvimage->xvimage);
     }
 
+  XSync(xvimagesink->xcontext->disp, 0);
+    
   g_mutex_unlock (xvimagesink->x_lock);
   
   g_free (xvimage);
@@ -669,20 +738,6 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
     
   xcontext->endianness = (ImageByteOrder (xcontext->disp) == LSBFirst) ? G_LITTLE_ENDIAN:G_BIG_ENDIAN;
   
-#ifdef HAVE_XSHM
-  /* Search for XShm extension support */
-  if (XQueryExtension (xcontext->disp, "MIT-SHM", &i, &i, &i))
-    {
-      xcontext->use_xshm = TRUE;
-      GST_DEBUG ("xvimagesink is using XShm extension");
-    }
-  else
-    {
-      xcontext->use_xshm = FALSE;
-      GST_DEBUG ("xvimagesink is not using XShm extension");
-    }
-#endif /* HAVE_XSHM */
-  
   /* our caps system handles 24/32bpp RGB as big-endian. */
   if ((xcontext->bpp == 24 || xcontext->bpp == 32) &&
       xcontext->endianness == G_LITTLE_ENDIAN) {
@@ -707,6 +762,23 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
       return NULL;
     }
 
+#ifdef HAVE_XSHM
+  /* Search for XShm extension support */
+  if (XShmQueryExtension (xcontext->disp) &&
+      gst_xvimagesink_check_xshm_calls (xcontext))
+    {
+      xcontext->use_xshm = TRUE;
+      GST_DEBUG ("xvimagesink is using XShm extension");
+      g_message ("using XShm");
+    }
+  else
+    {
+      xcontext->use_xshm = FALSE;
+      GST_DEBUG ("xvimagesink is not using XShm extension");
+      g_message ("not using XShm");
+    }
+#endif /* HAVE_XSHM */
+    
   xv_attr = XvQueryPortAttributes (xcontext->disp,
                                    xcontext->xv_port_id,
                                    &N_attr);
