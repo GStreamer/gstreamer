@@ -12,8 +12,8 @@ gchar *		gst_gconf_get_string 		(const gchar *key);
 void		gst_gconf_set_string 		(const gchar *key, 
                                                  const gchar *value);
 
-gboolean	gst_gconf_render_bin		(const gchar *key,
-    						 GstElement **element);
+GstElement *	gst_gconf_render_bin_from_key		(const gchar *key);
+GstElement *	gst_gconf_render_bin_from_description	(const gchar *description);
 
 /*
 guint		gst_gconf_notify_add		(const gchar *key,

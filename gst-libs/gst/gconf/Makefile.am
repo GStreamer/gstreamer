@@ -1,4 +1,4 @@
-librarydir = $(prefix)/lib/gst
+librarydir = $(prefix)/lib
 
 library_LTLIBRARIES = libgstgconf.la
 
