@@ -1,3 +1,9 @@
+2005-01-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/videobox/gstvideobox.c: (gst_video_box_copy_plane_i420),
+	(gst_video_box_i420), (gst_video_box_chain):
+	  Fix row strides for I420 (fixes #163159)
+	  
 2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_parse_packhead):
