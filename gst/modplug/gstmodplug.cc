@@ -76,7 +76,7 @@ static GstStaticPadTemplate modplug_src_template_factory =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, " "endianness = (int) BYTE_ORDER, " "signed = (boolean) TRUE, " "width = (int) 16, " "depth = (int) 16, " "rate = (int) { 8000, 11025, 22050, 44100 }, " /* FIXME? */
-        "channels = (int) [ 1, 2 ]; " "audio/x-raw-int, " "signed = (boolean) FALSE, " "width = (int) 8, " "depth = (int) 8, " "rate = (int) { 8000, 11025, 22050, 44100 }, "   /* FIXME? */
+        "channels = (int) [ 1, 2 ]; " "audio/x-raw-int, " "endianness = (int) BYTE_ORDER, " "signed = (boolean) FALSE, " "width = (int) 8, " "depth = (int) 8, " "rate = (int) { 8000, 11025, 22050, 44100 }, " /* FIXME? */
         "channels = (int) [ 1, 2 ]")
     );
 

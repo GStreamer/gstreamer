@@ -1,5 +1,11 @@
 2005-02-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/mikmod/gstmikmod.c:
+	* gst/modplug/gstmodplug.cc:
+	  Add missing endianness to template (fixes #165509).
+
+2005-02-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_handle_data):
 	  Fix wrong order of reading of optional bytes (#165290).
 
