@@ -567,10 +567,25 @@ paint_rect_s4 (unsigned char *dest, int stride, int x, int y, int w, int h, unsi
   }
 }
 
-/*                        wht  yel  cya  grn  mag  red  blu  blk   -I    Q */
-static int y_colors[] = { 255, 226, 179, 150, 105, 76, 29, 16, 16, 16 };
-static int u_colors[] = { 128, 0, 170, 46, 212, 85, 255, 128, 198, 235 };
-static int v_colors[] = { 128, 155, 0, 21, 235, 255, 107, 128, 21, 198 };
+enum {
+	COLOR_WHITE = 0,
+	COLOR_YELLOW,
+	COLOR_CYAN,
+	COLOR_GREEN,
+	COLOR_MAGENTA,
+	COLOR_RED,
+	COLOR_BLUE,
+	COLOR_BLACK,
+	COLOR_NEG_I,
+	COLOR_POS_Q,
+	COLOR_SUPER_BLACK,
+	COLOR_DARK_GREY,
+};
+
+/*                        wht  yel  cya  grn  mag  red  blu  blk   -I    Q, superblack, dark grey */
+static int y_colors[] = { 255, 226, 179, 150, 105, 76, 29, 16, 16, 16, 0, 32 };
+static int u_colors[] = { 128, 0, 170, 46, 212, 85, 255, 128, 198, 235, 128, 128 };
+static int v_colors[] = { 128, 155, 0, 21, 235, 255, 107, 128, 21, 198, 128, 128 };
 
 static void paint_setup_I420 (paintinfo * p, char *dest);
 static void paint_setup_YV12 (paintinfo * p, char *dest);
@@ -741,8 +756,30 @@ gst_videotestsrc_smpte_yuv (GstVideotestsrc * v, unsigned char *dest, int w, int
     }
   }
 
+  /* superblack, black, dark grey */
+  for (i = 0; i < 3; i++) {
+    int x1 = w/2 + i * w / 12;
+    int x2 = w/2 + (i + 1) * w / 12;
+    int k;
+
+    if (i == 0) {
+      k = COLOR_SUPER_BLACK;
+    } else if (i == 1) {
+      k = COLOR_BLACK;
+    } else
+      k = COLOR_DARK_GREY;
+
+    p->Y = y_colors[k];
+    p->U = u_colors[k];
+    p->V = v_colors[k];
+
+    for (j = y2; j < h; j++) {
+      p->paint_hline (p, x1, j, (x2 - x1));
+    }
+  }
+
   {
-    int x1 = w / 2;
+    int x1 = w*3 / 4;
 
     p->U = u_colors[0];
     p->V = v_colors[0];
