@@ -19,7 +19,7 @@
 
 #include "gstmikmod.h"
 
-#include <libs/audio/gstaudio.h>
+#include <gst/audio/audio.h>
 #include <stdlib.h>
 
 GstElementDetails mikmod_details = {
