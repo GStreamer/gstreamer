@@ -597,7 +597,7 @@ gst_audioscale_chain (GstPad * pad, GstData * _data)
         break;
     }
     return;
-  } else if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+  } else if (GST_BUFFER_TIMESTAMP_IS_VALID (buf) && audioscale->gst_resample) {
     /* update time for out-sample */
     audioscale->gst_resample_offset = GST_BUFFER_TIMESTAMP (buf) *
         audioscale->gst_resample->o_rate / GST_SECOND;
