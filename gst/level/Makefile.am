@@ -31,4 +31,4 @@ endif
 
 CLEANFILES = $(BUILT_SOURCES)
                                                                         
-EXTRA_DIST = README gst-level-marshal.list
+EXTRA_DIST = README gstlevel-marshal.list
