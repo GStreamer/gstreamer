@@ -465,18 +465,6 @@ GST_CHECK_FEATURE(AUDIOFILE, [audiofile], afsink afsrc, [
   AC_CHECK_LIB(audiofile, afOpenVirtualFile, , HAVE_AUDIOFILE="no")
 ])
 
-dnl *** avifile ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_AVIFILE, true)
-GST_CHECK_FEATURE(AVIFILE, [avifile], winenc windec, [
-  if test "x$no_x" = "xyes"; then
-    AC_MSG_WARN([No X libraries found, avifile test might fail compilation])
-  fi
-  if test "x$HAVE_CXX" != "xyes"; then
-    AC_MSG_WARN([No C++ compiler found, avifile test will fail compilation])
-  fi
-  AS_AVIFILE(0.7.0)
-])
-
 dnl *** CDParanoia ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDPARANOIA, true)
 GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
@@ -1171,7 +1159,6 @@ ext/alsa/Makefile
 ext/arts/Makefile
 ext/artsd/Makefile
 ext/audiofile/Makefile
-ext/avifile/Makefile
 ext/cdparanoia/Makefile
 ext/divx/Makefile
 ext/dv/Makefile
