@@ -1,6 +1,11 @@
 2005-01-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstpad.c: (gst_pad_push):
+	  Oops, revert previous commit, broke testsuite...
+
+2005-01-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstpad.c: (gst_pad_push):
 	  Add check that the pad on which the push is performed is not a
 	  get-based pad (#150546).
 
