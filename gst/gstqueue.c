@@ -205,7 +205,7 @@ gst_queue_getcaps (GstPad *pad, const GstCaps2 *caps)
   if (otherpad)
     return gst_pad_get_allowed_caps (otherpad);
 
-  return NULL;
+  return gst_caps2_new_any ();
 }
 
 static void
