@@ -1,3 +1,9 @@
+2005-02-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	submitted by: Clytie Siddall
+
+	* po/vi.po: Added Vietnamese translation
+
 2005-02-07  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch by: Tim Philipp-Müller
@@ -184,7 +190,7 @@
 	(gst_dpman_remove_required_dparam), (gst_dpman_attach_dparam),
 	(gst_dpman_get_dparam), (gst_dpman_get_dparam_type),
 	(gst_dpman_get_manager)
-    restructured DParam docs
+	  restructured DParam docs
 
 2005-01-25  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -196,13 +202,13 @@
 
 	* docs/gst/Makefile.am:
 	* docs/libs/Makefile.am:
-    fixed install rules to treat style.css as optional
+	  fixed install rules to treat style.css as optional
 
 2005-01-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/Makefile.am:
 	* docs/libs/Makefile.am:
-    install style.css along with docs
+	  install style.css along with docs
 	* docs/gst/tmpl/gstbin.sgml:
 	* docs/gst/tmpl/gstclock.sgml:
 	* docs/gst/tmpl/gstdata.sgml:
@@ -210,7 +216,7 @@
 	* gst/gstbin.h:
 	* gst/gstelement.c: (gst_element_class_init):
 	* gst/gstelement.h:
-    fixing incomplete docs
+	  fixing incomplete docs
 
 2005-01-24  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -225,13 +231,13 @@
 
 	* docs/gst/Makefile.am:
 	* docs/libs/Makefile.am:
-      added params for deprecation guards
+	  added params for deprecation guards
 	* gst/gst.c:
 	* gst/gst.h:
 	* gst/gsterror.c: (_gst_resource_errors_init),
 	(_gst_stream_errors_init):
 	* gst/gsterror.h:
-      documented some more enums
+	  documented some more enums
 
 2005-01-19  Jan Schmidt  <thaytan@mad.scientist.com>
 	* gst/autoplug/gstspideridentity.c:
@@ -248,7 +254,7 @@
 	* gst/gstbuffer.h:
 	* gst/gsttag.h:
 	* gst/gstvalue.c:
-      added docs for the TAG defines
+	  added docs for the TAG defines
 
 2005-01-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
@@ -292,7 +298,7 @@
 2005-01-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/elements/gsttee.c: (gst_tee_getcaps), (gst_tee_link):
-	  I think this is actually moer correct...
+	  I think this is actually more correct...
 
 2005-01-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
@@ -445,11 +451,11 @@
 2005-01-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/README:
-    another shell oneliner for empty return value docs
+	  another shell oneliner for empty return value docs
 	* gst/gstcaps.c:
 	* gst/gstvalue.c:
 	* libs/gst/control/dparam.c:
-    more doc fixes (parameters and return values)
+	  more doc fixes (parameters and return values)
 
 2005-01-05  Vincent Torri  <torri@iecn.u-nancy.fr>
 
