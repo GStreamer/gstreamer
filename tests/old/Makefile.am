@@ -1,5 +1,5 @@
 SUBDIRS=
-DIST_SUBDIRS=
+DIST_SUBDIRS=autoplug
 
 GST_PLUGIN_PATH=$(shell cd $(top_builddir) && pwd)
 
