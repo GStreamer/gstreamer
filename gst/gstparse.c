@@ -289,14 +289,11 @@ make_connections (graph_t *g, GError **error)
       }
     } else if (a) {
       if ((pt1 = gst_element_get_pad_template (src, (gchar*)a->data))) {
-      /* g_print ("have padtemplate %s, SOMETIMES=%s\n", pt1->name_template, pt1->presence == GST_PAD_SOMETIMES ? "TRUE" : "FALSE"); */
         if ((p1 = gst_element_get_pad (src, (gchar*)a->data)) || pt1->presence == GST_PAD_SOMETIMES) {
           if (!p1) {
             /* sigh, a hack until i fix the gstelement api... */
             if ((pt2 = gst_element_get_compatible_pad_template (sink, pt1))) {
-              /* g_print ("have compatible pad template %s\n", pt2->name_template); */
               if ((p2 = gst_element_get_pad (sink, pt2->name_template))) {
-		/*  g_print ("got the pad\n"); */
                 dc = g_new0 (dynamic_connection_t, 1);
                 dc->srcpadname = (gchar*)a->data;
                 dc->target_pad = p2;

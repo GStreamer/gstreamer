@@ -125,16 +125,16 @@ gst_aggregator_class_init (GstAggregatorClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_PADS,
-    g_param_spec_int ("num_pads", "num_pads", "num_pads",
+    g_param_spec_int ("num_pads", "Num pads", "The number of source pads",
                       0, G_MAXINT, 0, G_PARAM_READABLE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
-    g_param_spec_boolean ("silent", "silent", "silent",
+    g_param_spec_boolean ("silent", "Silent", "Don't produce messages",
                       FALSE, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCHED,
-    g_param_spec_enum ("sched", "sched", "sched",
+    g_param_spec_enum ("sched", "Scheduling", "The type of scheduling this element should use",
                       GST_TYPE_AGGREGATOR_SCHED, AGGREGATOR_CHAIN, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
-    g_param_spec_string ("last_message", "last_message", "last_message",
+    g_param_spec_string ("last_message", "Last message", "The current state of the element",
                          NULL, G_PARAM_READABLE));
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR(gst_aggregator_set_property);

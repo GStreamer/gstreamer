@@ -111,7 +111,7 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
     g_param_spec_int ("num_sinks", "Number of sinks", "The number of sinkpads",
                       1, G_MAXINT, 1, G_PARAM_READABLE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
-    g_param_spec_string ("last_message", "last_message", "last_message",
+    g_param_spec_string ("last_message", "Last Message", "The message describing current status",
                          NULL, G_PARAM_READABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SYNC,
     g_param_spec_boolean("sync","Sync","Sync on the clock",

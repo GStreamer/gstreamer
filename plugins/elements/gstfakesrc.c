@@ -244,9 +244,9 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
 
   gst_fakesrc_signals[SIGNAL_HANDOFF] =
     g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                    G_STRUCT_OFFSET (GstFakeSrcClass, handoff), NULL, NULL,
-                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                    G_TYPE_POINTER);
+                  G_STRUCT_OFFSET (GstFakeSrcClass, handoff), NULL, NULL,
+                  g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                  G_TYPE_POINTER);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fakesrc_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesrc_get_property);

@@ -106,12 +106,12 @@ gst_disksink_class_init (GstDiskSinkClass *klass)
 	  "location", ARG_LOCATION, G_PARAM_READWRITE,
 	  NULL);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MAXFILESIZE,
-    g_param_spec_int("maxfilesize","MaxFileSize","Maximum Size Per File",
-    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAXFILESIZE,
+    g_param_spec_int ("maxfilesize", "MaxFileSize", "Maximum Size Per File",
+    		      G_MININT,G_MAXINT, 0, G_PARAM_READWRITE));
 
   gst_disksink_signals[SIGNAL_HANDOFF] =
-    g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstDiskSinkClass, handoff), NULL, NULL,
                     g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 

@@ -88,7 +88,8 @@ GType gst_element_get_type (void)
       (GInstanceInitFunc)gst_element_init,
       NULL
     };
-    _gst_element_type = g_type_register_static(GST_TYPE_OBJECT, "GstElement", &element_info, G_TYPE_FLAG_ABSTRACT);
+    _gst_element_type = g_type_register_static(GST_TYPE_OBJECT, "GstElement", 
+		          &element_info, G_TYPE_FLAG_ABSTRACT);
   }
   return _gst_element_type;
 }
@@ -1893,13 +1894,13 @@ gst_element_populate_std_props (GObjectClass * klass,
 
   }
   else if (prop_id == bytesperread_id) {
-    pspec = g_param_spec_int ("bytesperread", "bytesperread",
-			      "bytesperread",
+    pspec = g_param_spec_int ("bytesperread", "Bytes per read",
+			      "Number of bytes to read per buffer",
 			      G_MININT, G_MAXINT, 0, flags);
 
   }
   else if (prop_id == dump_id) {
-    pspec = g_param_spec_boolean ("dump", "dump", "dump", FALSE, flags);
+    pspec = g_param_spec_boolean ("dump", "Dump", "Dump bytes to stdout", FALSE, flags);
 
   }
   else if (prop_id == filesize_id) {
@@ -1927,7 +1928,7 @@ gst_element_populate_std_props (GObjectClass * klass,
 
   }
   else if (prop_id == silent_id) {
-    pspec = g_param_spec_boolean ("silent", "silent", "silent",
+    pspec = g_param_spec_boolean ("silent", "Silent", "Don't produce events",
 				  FALSE, flags);
 
   }

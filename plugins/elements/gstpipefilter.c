@@ -36,7 +36,7 @@
 GstElementDetails gst_pipefilter_details = {
   "Pipefilter",
   "Filter",
-  "Pass data without modification",
+  "Interoperate with an external program using stdin and stdout",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>\n"
   "Wim Taymans <wim.taymans@chello.be>",
