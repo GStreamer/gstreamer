@@ -30,7 +30,7 @@ static void gst_dpman_init (GstDParamManager *dpman);
 static void gst_dpman_dispose (GObject *object);
 static GstDParamWrapper* gst_dpman_new_wrapper(GstDParamManager *dpman, gchar *dparam_name, GType type, GstDPMUpdateMethod update_method);
 static GstDParamWrapper* gst_dpman_get_wrapper(GstDParamManager *dpman, gchar *dparam_name);
-static void gst_dpman_state_change (GstElement *element, gint state, GstDParamManager *dpman);
+static void gst_dpman_state_change (GstElement *element, gint old_state, gint new_state, GstDParamManager *dpman);
 static void gst_dpman_caps_changed (GstPad *pad, GstCaps *caps, GstDParamManager *dpman);
 static guint gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 timestamp);
 static guint gst_dpman_preprocess_noop(GstDParamManager *dpman, guint frames, gint64 timestamp);
@@ -578,7 +578,7 @@ gst_dpman_new_wrapper(GstDParamManager *dpman, gchar *dparam_name, GType type, G
 
 
 static void 
-gst_dpman_state_change (GstElement *element, gint state, GstDParamManager *dpman)
+gst_dpman_state_change (GstElement *element, gint old_state, gint new_state, GstDParamManager *dpman)
 {
 	GSList *dwraps;
 	GstDParam *dparam;
@@ -587,7 +587,7 @@ gst_dpman_state_change (GstElement *element, gint state, GstDParamManager *dpman
 	g_return_if_fail (dpman != NULL);
 	g_return_if_fail (GST_IS_DPMAN (dpman));
 	
-	if (state == GST_STATE_PLAYING){
+	if (new_state == GST_STATE_PLAYING){
 		GST_DEBUG(GST_CAT_PARAMS, "initialising params\n");
 			
 		// force all params to be updated
