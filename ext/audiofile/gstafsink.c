@@ -456,16 +456,16 @@ gst_afsink_change_state (GstElement *element)
 /*
 
   else
-/* this has been moved to the chain function, since it's only then that */
-/* the caps are set and can be known */
+  this has been moved to the chain function, since it's only then that 
+ the caps are set and can be known 
  {
-/*    g_print ("DEBUG: it's not going to null\n"); */
+    g_print ("DEBUG: it's not going to null\n"); 
     if (!GST_FLAG_IS_SET (element, GST_AFSINK_OPEN)) 
     {
-/*      g_print ("DEBUG: GST_AFSINK_OPEN not set\n"); */
+      g_print ("DEBUG: GST_AFSINK_OPEN not set\n"); 
       if (!gst_afsink_open_file (GST_AFSINK (element)))
       {
-/*        g_print ("DEBUG: element tries to open file\n"); */
+        g_print ("DEBUG: element tries to open file\n"); 
         return GST_STATE_FAILURE;
       }
     }
