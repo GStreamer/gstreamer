@@ -323,7 +323,7 @@ AC_ARG_ENABLE(profiling,
 AC_HELP_STRING([--enable-profiling],[adds -pg to compiler commandline, for profiling]),
 [case "${enableval}" in
   yes) USE_PROFILING=yes ;;
-  no)  UES_PROFILING=no ;;
+  no)  USE_PROFILING=no ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-profiling) ;;
 esac], 
 [USE_PROFILING=no]) dnl Default value
