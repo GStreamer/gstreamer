@@ -73,6 +73,7 @@ typedef enum {
 #define GST_RIFF_FCC_pads MAKE_FOUR_CC('p','a','d','s')
 #define GST_RIFF_FCC_txts MAKE_FOUR_CC('t','x','t','s')
 #define GST_RIFF_FCC_vidc MAKE_FOUR_CC('v','i','d','c')
+#define GST_RIFF_FCC_iavs MAKE_FOUR_CC('i','a','v','s')
 /* fcc handlers */
 #define GST_RIFF_FCCH_RLE  MAKE_FOUR_CC('R','L','E',' ')
 #define GST_RIFF_FCCH_msvc MAKE_FOUR_CC('m','s','v','c')
@@ -104,6 +105,7 @@ typedef enum {
 #define GST_RIFF_00xm MAKE_FOUR_CC( '0', '0', 'x', 'm')
 #define GST_RIFF_01wb MAKE_FOUR_CC( '0', '1', 'w', 'b')
 #define GST_RIFF_01dc MAKE_FOUR_CC( '0', '1', 'd', 'c')
+#define GST_RIFF_00__ MAKE_FOUR_CC( '0', '0', '_', '_')
 
 /*********VIDEO CODECS**************/
 #define GST_RIFF_cram MAKE_FOUR_CC( 'c', 'r', 'a', 'm')
@@ -292,6 +294,17 @@ struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
   guint16 size;
 };
 
+struct _gst_riff_strf_iavs {    
+  guint32 DVAAuxSrc;
+  guint32 DVAAuxCtl;
+  guint32 DVAAuxSrc1;
+  guint32 DVAAuxCtl1;
+  guint32 DVVAuxSrc;
+  guint32 DVVAuxCtl;
+  guint32 DVReserved1;
+  guint32 DVReserved2;
+};
+
 struct _gst_riff_riff {  
   guint32 id;
   guint32 size;
@@ -329,6 +342,7 @@ typedef struct _gst_riff_avih 		gst_riff_avih;
 typedef struct _gst_riff_strh 		gst_riff_strh;
 typedef struct _gst_riff_strf_vids 	gst_riff_strf_vids;
 typedef struct _gst_riff_strf_auds 	gst_riff_strf_auds;
+typedef struct _gst_riff_strf_iavs 	gst_riff_strf_iavs;
 typedef struct _GstRiff 		GstRiff;
 typedef struct _GstRiffChunk 		GstRiffChunk;
 
