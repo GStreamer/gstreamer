@@ -2511,10 +2511,10 @@ gst_pad_get_caps (GstPad *pad)
     GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (realpad);
     const GstCaps *caps;
 
-    GST_CAT_DEBUG (GST_CAT_CAPS, "using pad template %p with caps %p", 
-	       templ, GST_PAD_TEMPLATE_CAPS (templ));
-
     caps = GST_PAD_TEMPLATE_CAPS (templ);
+    GST_CAT_DEBUG (GST_CAT_CAPS, "using pad template %p with caps %"GST_PTR_FORMAT,
+	       templ, caps);
+
 #if 0
     /* FIXME we should enable something like this someday, but this is
      * a bit buggy */
