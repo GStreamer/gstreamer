@@ -1,3 +1,11 @@
+2004-05-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/switch/gstswitch.c: (gst_switch_release_pad),
+	(gst_switch_request_new_pad), (gst_switch_poll_sinkpads),
+	(gst_switch_loop), (gst_switch_get_type):
+	  whoever that was: DO NOT IMPORT PRIVATE SYMBOLS THAT ARE NOT IN
+	  HEADERS. Had to be said.
+
 2004-05-10  David Schleef  <ds@schleef.org>
 
 	* configure.ac: Add prototype Dirac support.

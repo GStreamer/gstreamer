@@ -31,8 +31,7 @@ enum
   ARG_ACTIVE_SOURCE
 };
 
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_ELEMENT_PADS);
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DATAFLOW);
+GST_DEBUG_CATEGORY_STATIC (switch_debug);
 
 /* ElementFactory information */
 static GstElementDetails gst_switch_details = GST_ELEMENT_DETAILS ("Switch",
@@ -65,8 +64,7 @@ gst_switch_release_pad (GstElement * element, GstPad * pad)
 
   gstswitch = GST_SWITCH (element);
 
-  GST_CAT_LOG_OBJECT (GST_CAT_ELEMENT_PADS, gstswitch,
-      "releasing requested pad %p", pad);
+  GST_LOG_OBJECT (gstswitch, "releasing requested pad %p", pad);
 
   sinkpads = gstswitch->sinkpads;
 
@@ -114,8 +112,7 @@ gst_switch_request_new_pad (GstElement * element,
 
   /* We only provide requested sink pads */
   if (templ->direction != GST_PAD_SINK) {
-    GST_CAT_LOG_OBJECT (GST_CAT_ELEMENT_PADS, gstswitch,
-        "requested a non sink pad");
+    GST_LOG_OBJECT (gstswitch, "requested a non sink pad");
     return NULL;
   }
 
@@ -170,8 +167,7 @@ gst_switch_poll_sinkpads (GstSwitch * gstswitch)
     /* We only pull from usable pads and non EOS pads */
     if (GST_PAD_IS_USABLE (switchpad->sinkpad) && !switchpad->eos) {
 
-      GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
-          "polling pad %p", switchpad->sinkpad);
+      GST_LOG_OBJECT (gstswitch, "polling pad %p", switchpad->sinkpad);
 
       /* We loose the reference to the data we stored */
       if (switchpad->data) {
@@ -187,7 +183,7 @@ gst_switch_poll_sinkpads (GstSwitch * gstswitch)
       switchpad->data = gst_pad_pull (switchpad->sinkpad);
 
       if (!switchpad->data) {
-        GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
+        GST_LOG_OBJECT (gstswitch,
             "received NULL data from pad %p", switchpad->sinkpad);
       } else {
         gst_data_ref (switchpad->data);
@@ -197,13 +193,13 @@ gst_switch_poll_sinkpads (GstSwitch * gstswitch)
            means we won't try to pull more data from that pad */
         if (GST_IS_EVENT (switchpad->data) &&
             (GST_EVENT_TYPE (GST_EVENT (switchpad->data)) == GST_EVENT_EOS)) {
-          GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
+          GST_LOG_OBJECT (gstswitch,
               "received EOS event on pad %p", switchpad->sinkpad);
           switchpad->eos = TRUE;
         }
       }
     } else {
-      GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
+      GST_LOG_OBJECT (gstswitch,
           "not pulling from pad %s (eos is %d)",
           gst_pad_get_name (switchpad->sinkpad), switchpad->eos);
     }
@@ -237,19 +233,19 @@ gst_switch_loop (GstElement * element)
     gst_data_unref (switchpad->data);
     switchpad->data = NULL;
 
-    GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
+    GST_LOG_OBJECT (gstswitch,
         "using data from active pad %p", switchpad->sinkpad);
 
     if (GST_IS_EVENT (data)) {
       GstEvent *event = GST_EVENT (data);
 
-      GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
+      GST_LOG_OBJECT (gstswitch,
           "handling event from active pad %p", switchpad->sinkpad);
       /* Handling event */
       gst_pad_event_default (switchpad->sinkpad, event);
     } else {
       /* Pushing active sinkpad data to srcpad */
-      GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
+      GST_LOG_OBJECT (gstswitch,
           "pushing data from active pad %p to %p",
           switchpad->sinkpad, gstswitch->srcpad);
       gst_pad_push (gstswitch->srcpad, data);
@@ -481,6 +477,8 @@ gst_switch_get_type (void)
 
     switch_type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstSwitch", &switch_info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (switch_debug, "switch", 0, "the switch element");
   }
 
   return switch_type;
