@@ -1,5 +1,12 @@
 2005-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am:
+	  merge from HEAD: add popt to gtk-doc build
+
+2005-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gsterror.c:
 	* gst/gsterror.h:
 	  merge docs from HEAD
