@@ -199,7 +199,6 @@ cothread_create (cothread_context *ctx)
   GST_DEBUG (GST_CAT_COTHREADS, "Found free cothread slot %d", slot);
 
   sp = CURRENT_STACK_FRAME;
-printf("stack pointer %p\n",sp);
   /* FIXME this may not be 64bit clean
    *       could use casts to uintptr_t from inttypes.h
    *       if only all platforms had inttypes.h
