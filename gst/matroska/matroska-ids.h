@@ -239,6 +239,11 @@ typedef struct _GstMatroskaTrackAudioContext {
   GstMatroskaTrackContext parent;
 
   guint         samplerate, channels, bitdepth;
+  
+  /* Special flag for Vorbis, we need to send codec_priv first before
+   * sending any data, and just testing for time == 0 is not enough
+   * to detect that */
+  gboolean 	first_frame;
 } GstMatroskaTrackAudioContext;
 
 typedef struct _GstMatroskaTrackComplexContext {
