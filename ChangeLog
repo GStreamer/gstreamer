@@ -1,3 +1,9 @@
+2004-04-22  Benjamin Otte  <otte@gnome.org>
+
+	* ext/ffmpeg/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_caps_remove_format_info):
+	  use gst_caps_do_simplify
+
 2004-04-19  Benjamin Otte  <otte@gnome.org>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_type_find):
