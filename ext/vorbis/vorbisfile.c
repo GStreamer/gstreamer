@@ -355,6 +355,8 @@ gst_vorbisfile_loop (GstElement *element)
   VorbisFile *vorbisfile = GST_VORBISFILE (element);
   GstBuffer *outbuf;
   long ret;
+  GstClockTime time;
+  gint64 samples;
 
   if (vorbisfile->restart) {
     vorbisfile->current_section = 0;
@@ -403,13 +405,20 @@ gst_vorbisfile_loop (GstElement *element)
     vorbisfile->seek_pending = FALSE;
   }
 
+  outbuf = gst_buffer_new ();
+  GST_BUFFER_DATA (outbuf) = g_malloc (4096);
+  GST_BUFFER_SIZE (outbuf) = 4096;
+
+  /* get current time for discont and buffer timestamp */
+  time = (GstClockTime) (ov_time_tell (&vorbisfile->vf) * GST_SECOND);
+
+  ret = ov_read (&vorbisfile->vf, GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf), 
+		  0, 2, 1, &vorbisfile->current_section);
+
   if (vorbisfile->need_discont) {
     GstEvent *discont;
-    GstClockTime time;
-    gint64 samples;
 
     /* get stream stats */
-    time = (gint64) (ov_time_tell (&vorbisfile->vf) * GST_SECOND);
     samples = (gint64) (ov_pcm_tell (&vorbisfile->vf));
 
     discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, 
@@ -418,13 +427,6 @@ gst_vorbisfile_loop (GstElement *element)
     vorbisfile->need_discont = FALSE;
     gst_pad_push (vorbisfile->srcpad, GST_BUFFER (discont));
   }
-
-  outbuf = gst_buffer_new ();
-  GST_BUFFER_DATA (outbuf) = g_malloc (4096);
-  GST_BUFFER_SIZE (outbuf) = 4096;
-
-  ret = ov_read (&vorbisfile->vf, GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf), 
-		  0, 2, 1, &vorbisfile->current_section);
 
   if (ret == 0) {
     GST_DEBUG (0, "eos");
@@ -461,21 +463,13 @@ gst_vorbisfile_loop (GstElement *element)
 
     vorbisfile->may_eos = TRUE;
 
-    {
-      GstFormat format;
-      gint64 value;
-
-      format = GST_FORMAT_TIME;
-      gst_vorbisfile_src_query (vorbisfile->srcpad, GST_PAD_QUERY_POSITION, &format, &value);
-
-      GST_BUFFER_TIMESTAMP (outbuf) = value;
-    }
+    GST_BUFFER_TIMESTAMP (outbuf) = time;
 
     if (!vorbisfile->vf.seekable) {
       vorbisfile->total_bytes += GST_BUFFER_SIZE (outbuf);
     }
   
-    if (GST_PAD_IS_CONNECTED (vorbisfile->srcpad)) {
+    if (GST_PAD_IS_USABLE (vorbisfile->srcpad)) {
       gst_pad_push (vorbisfile->srcpad, outbuf);
     }
     else {
