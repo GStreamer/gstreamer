@@ -1,3 +1,17 @@
+2004-06-24  Benjamin Otte  <otte@gnome.org>
+
+	* gst-libs/gst/colorbalance/Makefile.am:
+	* gst-libs/gst/mixer/Makefile.am:
+	* gst-libs/gst/play/Makefile.am:
+	* gst-libs/gst/tuner/Makefile.am:
+	* gst/tcp/Makefile.am:
+	* sys/dxr3/Makefile.am:
+	  don't include -enumtypes.[ch] or -marshal.[ch] files in the disted
+	  tarball.
+	  Also add all *.list files that were missing.
+	* Makefile.am:
+	  add a distcheck hook to ensure the above doesn't happen again.
+
 2004-06-23  David I. Lehn  <dlehn@users.sourceforge.net>
 
 	* ext/Makefile.am: s/DTS_DIR=dvdread/DTS_DIR=dts/

@@ -20,7 +20,10 @@ built_headers =	\
 	tuner-enumtypes.h
 
 libgsttunerinclude_HEADERS = \
-	$(tuner_headers) \
+	$(tuner_headers)
+
+# FIXME 0.9: don't install
+nodist_libgsttunerinclude_HEADERS = \
 	tuner-enumtypes.h
 
 noinst_LTLIBRARIES = libgsttuner.la
@@ -29,6 +32,7 @@ libgsttuner_la_SOURCES = \
 	tuner.c \
 	tunernorm.c \
 	tunerchannel.c
+
 nodist_libgsttuner_la_SOURCES = \
 	$(built_sources) \
 	tuner-marshal.h
