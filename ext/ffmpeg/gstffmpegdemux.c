@@ -94,7 +94,6 @@ static GHashTable *global_plugins;
 static void	gst_ffmpegdemux_class_init	(GstFFMpegDemuxClass *klass);
 static void	gst_ffmpegdemux_base_init	(GstFFMpegDemuxClass *klass);
 static void	gst_ffmpegdemux_init		(GstFFMpegDemux *demux);
-static void	gst_ffmpegdemux_dispose		(GObject    *object);
 
 static void	gst_ffmpegdemux_loop		(GstElement *element);
 
@@ -202,13 +201,13 @@ gst_ffmpegdemux_class_init (GstFFMpegDemuxClass *klass)
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
   gstelement_class->change_state = gst_ffmpegdemux_change_state;
-  gobject_class->dispose = gst_ffmpegdemux_dispose;
 }
 
 static void
 gst_ffmpegdemux_init (GstFFMpegDemux *demux)
 {
   GstFFMpegDemuxClass *oclass = (GstFFMpegDemuxClass *) (G_OBJECT_GET_CLASS (demux));
+  gint n;
 
   demux->sinkpad = gst_pad_new_from_template (oclass->sinktempl,
 						    "sink");
@@ -217,10 +216,13 @@ gst_ffmpegdemux_init (GstFFMpegDemux *demux)
 				 gst_ffmpegdemux_loop);
 
   demux->opened = FALSE;
+  demux->context = NULL;
 
-  memset (demux->srcpads, 0, sizeof (demux->srcpads));
-  memset (demux->handled, FALSE, sizeof (demux->handled));
-  memset (demux->last_ts, 0, sizeof (demux->last_ts));
+  for (n = 0; n < MAX_STREAMS; n++) {
+    demux->srcpads[n] = NULL;
+    demux->handled[n] = FALSE;
+    demux->last_ts[n] = 0;
+  }
   demux->videopads = 0;
   demux->audiopads = 0;
 }
@@ -247,16 +249,9 @@ gst_ffmpegdemux_close (GstFFMpegDemux *demux)
 
   /* close demuxer context from ffmpeg */
   av_close_input_file (demux->context);
+  demux->context = NULL;
 
   demux->opened = FALSE;
-}
-
-static void
-gst_ffmpegdemux_dispose (GObject *object)
-{
-  GstFFMpegDemux *demux = (GstFFMpegDemux *) demux;
-
-  gst_ffmpegdemux_close (demux);
 }
 
 static AVStream *
