@@ -49,7 +49,8 @@ typedef struct _GstFaac {
        bps,
        bitrate,
        profile,
-       shortctl;
+       shortctl,
+       outputformat;
   gboolean tns,
 	   midside;
   gulong bytes,

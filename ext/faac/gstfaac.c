@@ -41,6 +41,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 enum
 {
   ARG_0,
+  ARG_OUTPUTFORMAT,
   ARG_BITRATE,
   ARG_PROFILE,
   ARG_TNS,
@@ -156,6 +157,26 @@ gst_faac_shortctl_get_type (void)
   return gst_faac_shortctl_type;
 }
 
+#define GST_TYPE_FAAC_OUTPUTFORMAT (gst_faac_outputformat_get_type ())
+static GType
+gst_faac_outputformat_get_type (void)
+{
+  static GType gst_faac_outputformat_type = 0;
+
+  if (!gst_faac_outputformat_type) {
+    static GEnumValue gst_faac_outputformat[] = {
+      {0, "OUTPUTFORMAT_RAW", "Raw AAC"},
+      {1, "OUTPUTFORMAT_ADTS", "ADTS headers"},
+      {0, NULL, NULL},
+    };
+
+    gst_faac_outputformat_type = g_enum_register_static ("GstFaacOutputFormat",
+        gst_faac_outputformat);
+  }
+
+  return gst_faac_outputformat_type;
+}
+
 static void
 gst_faac_class_init (GstFaacClass * klass)
 {
@@ -181,6 +202,10 @@ gst_faac_class_init (GstFaacClass * klass)
       g_param_spec_enum ("shortctl", "Block type",
           "Block type encorcing",
           GST_TYPE_FAAC_SHORTCTL, MAIN, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_OUTPUTFORMAT,
+      g_param_spec_enum ("outputformat", "Output format",
+          "Format of output frames",
+          GST_TYPE_FAAC_OUTPUTFORMAT, MAIN, G_PARAM_READWRITE));
 
   /* virtual functions */
   gstelement_class->change_state = gst_faac_change_state;
@@ -218,6 +243,7 @@ gst_faac_init (GstFaac * faac)
   faac->bitrate = 1024 * 128;
   faac->profile = MAIN;
   faac->shortctl = SHORTCTL_NORMAL;
+  faac->outputformat = 0;
   faac->tns = FALSE;
   faac->midside = TRUE;
 }
@@ -326,16 +352,7 @@ gst_faac_srcconnect (GstPad * pad, const GstCaps * caps)
     conf->useTns = faac->tns;
     conf->bitRate = faac->bitrate;
     conf->inputFormat = faac->format;
-
-    /* FIXME: this one here means that we do not support direct
-     * "MPEG audio file" output (like mp3). This means we can
-     * only mux this into mov/qt (mp4a) or matroska or so. If
-     * we want to support direct AAC file output, we need ADTS
-     * headers, and we need to find a way in the caps to detect
-     * that (that the next element is filesink or any element
-     * that does want ADTS headers). */
-
-    conf->outputFormat = 0;     /* raw, no ADTS headers */
+    conf->outputFormat = faac->outputformat;
     conf->shortctl = faac->shortctl;
     if (!faacEncSetConfiguration (faac->handle, conf)) {
       GST_WARNING ("Faac doesn't support the current conf");
@@ -547,6 +564,9 @@ gst_faac_set_property (GObject * object,
     case ARG_SHORTCTL:
       faac->shortctl = g_value_get_enum (value);
       break;
+    case ARG_OUTPUTFORMAT:
+      faac->outputformat = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -574,6 +594,9 @@ gst_faac_get_property (GObject * object,
       break;
     case ARG_SHORTCTL:
       g_value_set_enum (value, faac->shortctl);
+      break;
+    case ARG_OUTPUTFORMAT:
+      g_value_set_enum (value, faac->outputformat);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
