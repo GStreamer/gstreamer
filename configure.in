@@ -337,6 +337,21 @@ fi
 AC_SUBST(LIBGLADE_GNOME_LIBS)
 AC_SUBST(LIBGLADE_GNOME_CFLAGS)
 
+dnl Check for Gnome VFS
+HAVE_GNOME_VFS="no"
+AC_MSG_CHECKING(for Gnome VFS)
+if gnome-config --libs vfs > /dev/null 2>&1; then
+	HAVE_GNOME_VFS="yes"
+	AC_MSG_RESULT(found)
+else
+	AC_MSG_WARN(Did not find Gnome-VFS installed)
+fi
+
+VFS_LIBS="`gnome-config --libs vfs`"
+VFS_CFLAGS="`gnome-config --cflags vfs`"
+
+AC_SUBST(VFS_LIBS)
+AC_SUBST(VFS_CFLAGS)
 
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
@@ -779,6 +794,7 @@ AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
 AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
 AM_CONDITIONAL(HAVE_LIBAA,          test "x$HAVE_LIBAA" = "xyes")
+AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
 
 
 
@@ -925,6 +941,7 @@ plugins/filters/adder/Makefile
 plugins/filters/colorspace/Makefile
 plugins/filters/volenv/Makefile
 plugins/filters/adder/Makefile
+plugins/gnomevfs/Makefile
 plugins/icecast/Makefile
 plugins/icecast/icecastsend/Makefile
 plugins/effects/Makefile
