@@ -1,3 +1,10 @@
+2004-11-02  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstscheduler.c: (gst_scheduler_add_element),
+	(gst_scheduler_remove_element), (gst_scheduler_state_transition):
+	Aplied clock distribution patch, this should fix bug
+	#148787.
+
 2004-10-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	Submitted by: Kjartan Maraas <kmaraas@broadpark.no>
