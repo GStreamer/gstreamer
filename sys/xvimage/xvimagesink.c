@@ -71,7 +71,7 @@ enum
 };
 
 static GstVideoSinkClass *parent_class = NULL;
-static gboolean error_catched = FALSE;
+static gboolean error_caught = FALSE;
 
 /* ============================================================= */
 /*                                                               */
@@ -88,7 +88,7 @@ gst_xvimagesink_handle_xerror (Display * display, XErrorEvent * xevent)
 
   XGetErrorText (display, xevent->error_code, error_msg, 1024);
   GST_DEBUG ("xvimagesink failed to use XShm calls. error: %s", error_msg);
-  error_catched = TRUE;
+  error_caught = TRUE;
   return 0;
 }
 
@@ -122,15 +122,15 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
 
   XShmAttach (xcontext->disp, &xvimage->SHMInfo);
 
-  error_catched = FALSE;
+  error_caught = FALSE;
 
   XSync (xcontext->disp, 0);
 
   XSetErrorHandler (handler);
 
-  if (error_catched) {          /* Failed, detaching shared memory, destroying image and telling we can't
+  if (error_caught) {           /* Failed, detaching shared memory, destroying image and telling we can't
                                    use XShm */
-    error_catched = FALSE;
+    error_caught = FALSE;
     XFree (xvimage->xvimage);
     shmdt (xvimage->SHMInfo.shmaddr);
     shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
