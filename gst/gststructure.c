@@ -1044,7 +1044,8 @@ gst_structure_to_abbr (GType type)
 static GType
 gst_structure_value_get_generic_type (GValue * val)
 {
-  if (G_VALUE_TYPE (val) == GST_TYPE_LIST) {
+  if (G_VALUE_TYPE (val) == GST_TYPE_LIST
+      || G_VALUE_TYPE (val) == GST_TYPE_FIXED_LIST) {
     GArray *array = g_value_peek_pointer (val);
 
     if (array->len > 0) {
@@ -1218,22 +1219,23 @@ gst_structure_parse_range (gchar * s, gchar ** after, GValue * value,
 }
 
 static gboolean
-gst_structure_parse_list (gchar * s, gchar ** after, GValue * value, GType type)
+gst_structure_parse_any_list (gchar * s, gchar ** after, GValue * value,
+    GType type, GType list_type, char begin, char end)
 {
   GValue list_value = { 0 };
   gboolean ret;
   GArray *array;
 
-  g_value_init (value, GST_TYPE_LIST);
+  g_value_init (value, list_type);
   array = g_value_peek_pointer (value);
 
-  if (*s != '{')
+  if (*s != begin)
     return FALSE;
   s++;
 
   while (g_ascii_isspace (*s))
     s++;
-  if (*s == '}') {
+  if (*s == end) {
     s++;
     *after = s;
     return TRUE;
@@ -1248,7 +1250,7 @@ gst_structure_parse_list (gchar * s, gchar ** after, GValue * value, GType type)
   while (g_ascii_isspace (*s))
     s++;
 
-  while (*s != '}') {
+  while (*s != end) {
     if (*s != ',')
       return FALSE;
     s++;
@@ -1270,6 +1272,21 @@ gst_structure_parse_list (gchar * s, gchar ** after, GValue * value, GType type)
 
   *after = s;
   return TRUE;
+}
+
+static gboolean
+gst_structure_parse_list (gchar * s, gchar ** after, GValue * value, GType type)
+{
+  return gst_structure_parse_any_list (s, after, value, type, GST_TYPE_LIST,
+      '{', '}');
+}
+
+static gboolean
+gst_structure_parse_fixed_list (gchar * s, gchar ** after, GValue * value,
+    GType type)
+{
+  return gst_structure_parse_any_list (s, after, value, type,
+      GST_TYPE_FIXED_LIST, '<', '>');
 }
 
 static gboolean
@@ -1375,6 +1392,8 @@ gst_structure_parse_value (gchar * str,
     ret = gst_structure_parse_range (s, &s, value, type);
   } else if (*s == '{') {
     ret = gst_structure_parse_list (s, &s, value, type);
+  } else if (*s == '<') {
+    ret = gst_structure_parse_fixed_list (s, &s, value, type);
   } else {
     value_s = s;
     if (!gst_structure_parse_string (s, &value_end, &s))

@@ -57,15 +57,73 @@ GType gst_type_fourcc;
 GType gst_type_int_range;
 GType gst_type_double_range;
 GType gst_type_list;
+GType gst_type_fixed_list;
 
 static GArray *gst_value_table;
 static GArray *gst_value_union_funcs;
 static GArray *gst_value_intersect_funcs;
 static GArray *gst_value_subtract_funcs;
 
-/*************************************/
+/********/
 /* list */
+/********/
 
+/* two helper functions to serialize/stringify any type of list
+ * regular lists are done with { }, fixed lists with < >
+ */
+static char *
+gst_value_serialize_any_list (const GValue * value, const char *begin,
+    const char *end)
+{
+  int i;
+  GArray *array = value->data[0].v_pointer;
+  GString *s;
+  GValue *v;
+  gchar *s_val;
+
+  s = g_string_new (begin);
+  for (i = 0; i < array->len; i++) {
+    v = &g_array_index (array, GValue, i);
+    s_val = gst_value_serialize (v);
+    g_string_append (s, s_val);
+    g_free (s_val);
+    if (i < array->len - 1) {
+      g_string_append (s, ", ");
+    }
+  }
+  g_string_append (s, end);
+  return g_string_free (s, FALSE);
+}
+
+static void
+gst_value_transform_any_list_string (const GValue * src_value,
+    GValue * dest_value, const char *begin, const char *end)
+{
+  GValue *list_value;
+  GArray *array;
+  GString *s;
+  int i;
+  char *list_s;
+
+  array = src_value->data[0].v_pointer;
+
+  s = g_string_new (begin);
+  for (i = 0; i < array->len; i++) {
+    list_value = &g_array_index (array, GValue, i);
+
+    if (i != 0) {
+      g_string_append (s, ", ");
+    }
+    list_s = g_strdup_value_contents (list_value);
+    g_string_append (s, list_s);
+    g_free (list_s);
+  }
+  g_string_append (s, end);
+
+  dest_value->data[0].v_pointer = g_string_free (s, FALSE);
+}
+
+/* GValue functions usable for both regular lists and fixed lists */
 static void
 gst_value_init_list (GValue * value)
 {
@@ -162,7 +220,8 @@ gst_value_list_prepend_value (GValue * value, const GValue * prepend_value)
 {
   GValue val = { 0, };
 
-  g_return_if_fail (GST_VALUE_HOLDS_LIST (value));
+  g_return_if_fail (GST_VALUE_HOLDS_LIST (value)
+      || GST_VALUE_HOLDS_FIXED_LIST (value));
 
   gst_value_init_and_copy (&val, prepend_value);
   g_array_prepend_vals ((GArray *) value->data[0].v_pointer, &val, 1);
@@ -180,7 +239,8 @@ gst_value_list_append_value (GValue * value, const GValue * append_value)
 {
   GValue val = { 0, };
 
-  g_return_if_fail (GST_VALUE_HOLDS_LIST (value));
+  g_return_if_fail (GST_VALUE_HOLDS_LIST (value)
+      || GST_VALUE_HOLDS_FIXED_LIST (value));
 
   gst_value_init_and_copy (&val, append_value);
   g_array_append_vals ((GArray *) value->data[0].v_pointer, &val, 1);
@@ -197,7 +257,8 @@ gst_value_list_append_value (GValue * value, const GValue * append_value)
 guint
 gst_value_list_get_size (const GValue * value)
 {
-  g_return_val_if_fail (GST_VALUE_HOLDS_LIST (value), 0);
+  g_return_val_if_fail (GST_VALUE_HOLDS_LIST (value)
+      || GST_VALUE_HOLDS_FIXED_LIST (value), 0);
 
   return ((GArray *) value->data[0].v_pointer)->len;
 }
@@ -215,7 +276,8 @@ gst_value_list_get_size (const GValue * value)
 const GValue *
 gst_value_list_get_value (const GValue * value, guint index)
 {
-  g_return_val_if_fail (GST_VALUE_HOLDS_LIST (value), NULL);
+  g_return_val_if_fail (GST_VALUE_HOLDS_LIST (value)
+      || GST_VALUE_HOLDS_FIXED_LIST (value), NULL);
   g_return_val_if_fail (index < gst_value_list_get_size (value), NULL);
 
   return (const GValue *) &g_array_index ((GArray *) value->data[0].v_pointer,
@@ -274,28 +336,14 @@ gst_value_list_concat (GValue * dest, const GValue * value1,
 static void
 gst_value_transform_list_string (const GValue * src_value, GValue * dest_value)
 {
-  GValue *list_value;
-  GArray *array;
-  GString *s;
-  int i;
-  char *list_s;
+  gst_value_transform_any_list_string (src_value, dest_value, "{ ", " }");
+}
 
-  array = src_value->data[0].v_pointer;
-
-  s = g_string_new ("{ ");
-  for (i = 0; i < array->len; i++) {
-    list_value = &g_array_index (array, GValue, i);
-
-    if (i != 0) {
-      g_string_append (s, ", ");
-    }
-    list_s = g_strdup_value_contents (list_value);
-    g_string_append (s, list_s);
-    g_free (list_s);
-  }
-  g_string_append (s, " }");
-
-  dest_value->data[0].v_pointer = g_string_free (s, FALSE);
+static void
+gst_value_transform_fixed_list_string (const GValue * src_value,
+    GValue * dest_value)
+{
+  gst_value_transform_any_list_string (src_value, dest_value, "< ", " >");
 }
 
 static int
@@ -328,28 +376,24 @@ gst_value_compare_list (const GValue * value1, const GValue * value2)
 static char *
 gst_value_serialize_list (const GValue * value)
 {
-  int i;
-  GArray *array = value->data[0].v_pointer;
-  GString *s;
-  GValue *v;
-  gchar *s_val;
-
-  s = g_string_new ("{ ");
-  for (i = 0; i < array->len; i++) {
-    v = &g_array_index (array, GValue, i);
-    s_val = gst_value_serialize (v);
-    g_string_append (s, s_val);
-    g_free (s_val);
-    if (i < array->len - 1) {
-      g_string_append (s, ", ");
-    }
-  }
-  g_string_append (s, " }");
-  return g_string_free (s, FALSE);
+  return gst_value_serialize_any_list (value, "{ ", " }");
 }
 
 static gboolean
 gst_value_deserialize_list (GValue * dest, const char *s)
+{
+  g_warning ("unimplemented");
+  return FALSE;
+}
+
+static char *
+gst_value_serialize_fixed_list (const GValue * value)
+{
+  return gst_value_serialize_any_list (value, "< ", " >");
+}
+
+static gboolean
+gst_value_deserialize_fixed_list (GValue * dest, const char *s)
 {
   g_warning ("unimplemented");
   return FALSE;
@@ -2209,9 +2253,11 @@ gst_type_is_fixed (GType type)
       type < G_TYPE_MAKE_FUNDAMENTAL (G_TYPE_RESERVED_GLIB_LAST)) {
     return TRUE;
   }
-  if (type == GST_TYPE_BUFFER || type == GST_TYPE_FOURCC) {
+  if (type == GST_TYPE_BUFFER || type == GST_TYPE_FOURCC
+      || type == GST_TYPE_FIXED_LIST) {
     return TRUE;
   }
+
   return FALSE;
 }
 
@@ -2347,6 +2393,32 @@ _gst_value_initialize (void)
   }
 
   {
+    static const GTypeValueTable value_table = {
+      gst_value_init_list,
+      gst_value_free_list,
+      gst_value_copy_list,
+      gst_value_list_peek_pointer,
+      "p",
+      gst_value_collect_list,
+      "p",
+      gst_value_lcopy_list
+    };
+    static GstValueTable gst_value = {
+      0,
+      gst_value_compare_list,
+      gst_value_serialize_fixed_list,
+      gst_value_deserialize_fixed_list,
+    };
+
+    info.value_table = &value_table;
+    gst_type_fixed_list =
+        g_type_register_fundamental (g_type_fundamental_next (),
+        "GstValueFixedList", &info, &finfo, 0);
+    gst_value.type = gst_type_fixed_list;
+    gst_value_register (&gst_value);
+  }
+
+  {
 #if 0
     static const GTypeValueTable value_table = {
       gst_value_init_buffer,
@@ -2399,6 +2471,8 @@ _gst_value_initialize (void)
       gst_value_transform_double_range_string);
   g_value_register_transform_func (GST_TYPE_LIST, G_TYPE_STRING,
       gst_value_transform_list_string);
+  g_value_register_transform_func (GST_TYPE_FIXED_LIST, G_TYPE_STRING,
+      gst_value_transform_fixed_list_string);
 
   gst_value_register_intersect_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
       gst_value_intersect_int_int_range);

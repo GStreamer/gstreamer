@@ -39,12 +39,14 @@ G_BEGIN_DECLS
 #define GST_VALUE_HOLDS_INT_RANGE(x)    (G_VALUE_HOLDS(x, gst_type_int_range))
 #define GST_VALUE_HOLDS_DOUBLE_RANGE(x) (G_VALUE_HOLDS(x, gst_type_double_range))
 #define GST_VALUE_HOLDS_LIST(x)         (G_VALUE_HOLDS(x, gst_type_list))
+#define GST_VALUE_HOLDS_FIXED_LIST(x)   (G_VALUE_HOLDS(x, gst_type_fixed_list))
 #define GST_VALUE_HOLDS_CAPS(x)		(G_VALUE_HOLDS(x, GST_TYPE_CAPS))
 
 #define GST_TYPE_FOURCC                  gst_type_fourcc
 #define GST_TYPE_INT_RANGE               gst_type_int_range
 #define GST_TYPE_DOUBLE_RANGE            gst_type_double_range
 #define GST_TYPE_LIST                    gst_type_list
+#define GST_TYPE_FIXED_LIST              gst_type_fixed_list
 
 #define GST_VALUE_LESS_THAN              (-1)
 #define GST_VALUE_EQUAL                   0
@@ -80,6 +82,7 @@ extern GType gst_type_fourcc;
 extern GType gst_type_int_range;
 extern GType gst_type_double_range;
 extern GType gst_type_list;
+extern GType gst_type_fixed_list;
 
 void                     gst_value_register                (const GstValueTable   *table);
 void                     gst_value_init_and_copy           (GValue                *dest,

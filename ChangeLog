@@ -1,3 +1,27 @@
+2004-05-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	reviewed by: Wim Taymans <wim at fluendo dot com>
+
+	* gst/gstbuffer.h:
+          add GST_BUFFER_IN_CAPS buffer flag
+	* gst/gststructure.c: (gst_structure_value_get_generic_type),
+	(gst_structure_parse_any_list), (gst_structure_parse_list),
+	(gst_structure_parse_fixed_list), (gst_structure_parse_value):
+	* gst/gstvalue.c: (gst_value_serialize_any_list),
+	(gst_value_transform_any_list_string),
+	(gst_value_list_prepend_value), (gst_value_list_append_value),
+	(gst_value_list_get_size), (gst_value_list_get_value),
+	(gst_value_transform_list_string),
+	(gst_value_transform_fixed_list_string),
+	(gst_value_serialize_list), (gst_value_serialize_fixed_list),
+	(gst_value_deserialize_fixed_list), (gst_type_is_fixed),
+	(_gst_value_initialize):
+	* gst/gstvalue.h:
+          add a GST_TYPE_FIXED_LIST which is fixed by definition and uses
+          < , > as a format.
+	* testsuite/caps/string-conversions.c: (main):
+          add regression tests for < >
+
 2004-05-20  Johan Dahlin  <johan@gnome.org>
 
 	* docs/gst/Makefile.am (all-local): Re-add

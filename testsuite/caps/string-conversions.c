@@ -135,9 +135,11 @@ bla:
   test_string ("audio/raw  ,test =(bool) trUE");
   test_string ("audio/raw  ,test=(b ) yes");
   test_string ("audio/raw  ,test =( boolean)no");
+  test_string ("audio/raw  ,test = < 1, 2, 3 >");
 
   /* buffers */
   test_string ("audio/raw  ,test=(buffer)0123456789abcdef");
+  test_string ("audio/raw  ,test= < (buffer)0123, (buffer)4567 >");
 
   /* unfixed props entries */
   test_string ("audio/raw, test= [ 1, 2 ]");
@@ -184,9 +186,11 @@ bla:
   test_string_fail ("audio/raw, test=(int) [1.0,2]");
   test_string_fail ("audio/raw, test=(int) [1 ,0.2]");
   test_string_fail ("audio/raw, test=(int) [1.0, 2.000]");
+  test_string_fail ("audio/raw, test=(int) <1.0, 2.000>");
   /* unmatched */
   test_string_fail ("audio/raw, test=(int = [");
   test_string_fail ("audio/raw, test= {");
+  test_string_fail ("audio/raw, test= <");
   test_string_fail ("audio/raw, test = \"dood'");
   test_string_fail ("audio/raw, test= '");
 
