@@ -29,11 +29,8 @@
 static GstElementDetails level_details = {
   "Level",
   "Filter/Audio/Analysis",
-  "LGPL",
   "RMS/Peak/Decaying Peak Level signaller for audio/raw",
-  VERSION,
-  "Thomas <thomas@apestaart.org>",
-  "(C) 2001, 2003, 2003",
+  "Thomas <thomas@apestaart.org>"
 };
 
 /* pad templates */
@@ -96,6 +93,7 @@ enum {
 };
 
 static void		gst_level_class_init		(GstLevelClass *klass);
+static void		gst_level_base_init		(GstLevelClass *klass);
 static void		gst_level_init			(GstLevel *filter);
 
 static void		gst_level_set_property			(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -115,7 +113,8 @@ gst_level_get_type (void)
   {
     static const GTypeInfo level_info = 
     {
-      sizeof (GstLevelClass), NULL, NULL,
+      sizeof (GstLevelClass),
+      (GBaseInitFunc) gst_level_base_init, NULL,
       (GClassInitFunc) gst_level_class_init, NULL, NULL,
       sizeof (GstLevel), 0,
       (GInstanceInitFunc) gst_level_init
@@ -370,6 +369,18 @@ gst_level_get_property (GObject *object, guint prop_id,
 }
 
 static void
+gst_level_base_init (GstLevelClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (sink_template_factory));
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (src_template_factory));
+  gst_element_class_set_details (element_class, &level_details);
+}
+
+static void
 gst_level_class_init (GstLevelClass *klass)
 {
   GObjectClass *gobject_class;
@@ -436,25 +447,21 @@ gst_level_init (GstLevel *filter)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new ("level", GST_TYPE_LEVEL,
-                                     &level_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_template_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_template_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "level",
+			       GST_RANK_NONE, GST_TYPE_LEVEL);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "level",
-  plugin_init
-};
+  "Audio level plugin",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
