@@ -285,6 +285,7 @@ gint print_element_info(GstElementFactory *factory) {
     }
     printf("\n");
   }
+  g_free (args);
   if (num_args == 0) g_print ("  none");
   printf("\n");
 

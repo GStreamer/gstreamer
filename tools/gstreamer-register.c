@@ -134,6 +134,7 @@ int main(int argc,char *argv[])
     _gst_plugin_spew = TRUE;
     _gst_warn_old_registry = FALSE;
     gst_init(&argc,&argv);
+    gst_info_enable_category(GST_CAT_PLUGIN_LOADING);
 
     // Check args
     if (argc != 1) usage(argv[0]);
