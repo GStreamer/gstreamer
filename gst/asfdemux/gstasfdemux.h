@@ -56,6 +56,12 @@ typedef struct
   GstBuffer *payload;
 } asf_stream_context;
 
+typedef enum {
+  GST_ASF_DEMUX_STATE_HEADER,
+  GST_ASF_DEMUX_STATE_DATA,
+  GST_ASF_DEMUX_STATE_EOS
+} GstAsfDemuxState;
+
 struct _GstASFDemux {
   GstElement 	 element;
 
@@ -63,6 +69,11 @@ struct _GstASFDemux {
   GstPad 	*sinkpad;
 
   GstByteStream *bs;
+
+  GstAsfDemuxState state;
+  guint64 data_offset, num_packets, packet, data_size;
+  guint64 seek_pending;
+  gboolean seek_flush, seek_discont;
 
 #define GST_ASF_DEMUX_NUM_VIDEO_PADS 16
 #define GST_ASF_DEMUX_NUM_AUDIO_PADS 32
@@ -89,7 +100,7 @@ struct _GstASFDemux {
 
   guint32 packet_size;
   guint32 timestamp;
-  guint32 play_time;
+  guint64 play_time;
 
   guint64 preroll;
   guint64 pts;
