@@ -31,7 +31,7 @@
 /* elementfactory information */
 static GstElementDetails snapshot_details = {
   "snapshot",
-  "Filter/Effect",
+  "Filter/Video",
   "LGPL",
   "Dump a frame to a png file",
   VERSION,

@@ -30,7 +30,7 @@
 
 static GstElementDetails colorspace_details = {
   "Colorspace converter",
-  "Filter/Video",
+  "Filter/Convert",
   "LGPL",
   "Converts video from one colorspace to another using libhermes",
   VERSION,
