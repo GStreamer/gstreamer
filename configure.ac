@@ -3,7 +3,7 @@ AC_CANONICAL_TARGET([])
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gstreamer, GST_VERSION, 0, 7, 3, 2, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gstreamer, GST_VERSION, 0, 7, 4, 1, GST_CVS="no", GST_CVS="yes")
 
 #if test x$program_suffix = xNONE ; then
 #  program_suffix=-$GST_VERSION_MAJOR.$GST_VERSION_MINOR

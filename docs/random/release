@@ -41,12 +41,11 @@ TODO :
   - Set the nano to 2 (in configure.ac, AS_VERSION)
   - Do all updates/patches/changes for the release tarball in this branch
   - Think of a good codename for the release
-  - create a new version dir in www/releases and add that to cvs
-  - copy files from the last one to this new release dir
+  - create a new $(version).xml file in www/src/htdocs/releases/$(module)
+    and add that to cvs
   - Start updating the release notes on the www cvs tree
     - grepping ChangeLog for contributors:
  grep "<.*>" ChangeLog | perl -i -p -e 's@\d*-\d*-\d*\s*(.*)\s*<.*$@$1@' | sort | uniq
-  - Log in to sourceforge and run www-update.sh in the gstreamer root dir
   - depending on how the API has changed update the libtool versioning
     in configure.ac, AS_LIBTOOL 
     (Look at the libtool info page about versioning for guidelines)
@@ -54,8 +53,6 @@ TODO :
            This is needed in order to support newer platforms.
            On Debian install the autotools-dev package to get these.
            Someone please add some more useful info here on how to do this
-  - copy new supporting RPMS to the htdocs/redhat dir in various places,
-    update README, and update symlinks to these packages in the release dir
   - while (IS_PRERELEASE)
     {
       - increase the nano number (starting with 2)
@@ -80,15 +77,11 @@ with the same name.
 
 TODO :
   - give the latest prerelease another good testing
-  - proofread the release notes (notice.php) and the index (index.php)
-  - change the symlinks on the website :
-    - change the releases/current symbolic link to point to the new release dir
-    - change the releases/cvs symlink to point to the next release dir
-  - run www-update.sh on sourceforge
+  - proofread the release notes
   - make a text copy of the release notes to be included in the tarball :
-    lynx -dump http://gstreamer.net/releases/current/notice.php?clean=1 > RELEASE
+    lynx -dump http://gstreamer.net/releases/$(module)/$(version) > NEWS
     or
-    links -dump "http://gstreamer.net/releases/current/notice.php?clean=1" > RELEASE
+    links -dump "http://gstreamer.net/releases/$(module)/$(version)" > NEWS
 
   - update web site docs
     - release-specific docs should go in CVS

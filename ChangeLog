@@ -1,3 +1,9 @@
+2004-02-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am: add release target
+	* configure.ac: bump nano to 1
+	* docs/random/release:
+
 2004-02-06  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstcaps.h:
@@ -20,6 +26,13 @@
 	* gst/gstpad.c: (gst_real_pad_class_init),
 	(_gst_real_pad_fixate_accumulator):
 	Revert POINTER->BOXED change in signal marshaller.
+
+=== gstreamer 0.7.4 ===
+                                                                                
+2004-02-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+                                                                                
+        * NEWS: GStreamer 0.7.4 "Wooden Eels" released
+        * configure.ac: changed for release
 
 2004-02-05  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
