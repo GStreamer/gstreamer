@@ -1,6 +1,10 @@
-AC_INIT(gst/gstobject.h)
+dnl Note: this file is generated from configure.base by autogen.sh
+SUBSTFOR configure.ac:AC_INIT
+SUBSTFOR configure.ac:AC_CONFIG_SRCDIR([gst/gstobject.h])
+SUBSTFOR configure.in:AC_INIT(gst/gstobject.h)
 
-AC_CANONICAL_SYSTEM
+SUBSTFOR configure.ac:AC_CANONICAL_TARGET([])
+SUBSTFOR configure.in:AC_CANONICAL_SYSTEM
 
 AM_CONFIG_HEADER(config.h)
 
@@ -45,7 +49,8 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_CXXCPP
 AC_ISC_POSIX
-AC_STDC_HEADERS
+SUBSTFOR configure.ac:AC_HEADER_STDC([])
+SUBSTFOR configure.in:AC_STDC_HEADERS
 AC_ARG_PROGRAM
 
 dnl We disable static building for development, for time savings
@@ -522,12 +527,17 @@ AC_CHECK_HEADER(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
 AC_CHECK_HEADER(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
 
 dnl Check for arts
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
+SUBSTFOR configure.ac:AC_DIAGNOSE([obsolete],[instead of using `AC_LANG', `AC_LANG_SAVE',
+SUBSTFOR configure.ac:and `AC_LANG_RESTORE', you should use `AC_LANG_PUSH' and `AC_LANG_POP'.])
+SUBSTFOR configure.ac:
+SUBSTFOR configure.ac:AC_LANG_PUSH(C++)
+SUBSTFOR configure.in:AC_LANG_SAVE
+SUBSTFOR configure.in:AC_LANG_CPLUSPLUS
 AC_MSG_CHECKING(arts library)
 dnl AC_CHECK_LIB(artsflow, convert_stereo_ifloat_2float, HAVE_ARTS=yes, HAVE_ARTS=no, -lmcop -lartsflow_idl)
 dnl AC_CHECK_HEADER(arts/artsflow.h, HAVE_ARTS=yes, HAVE_ARTS=no)
-AC_LANG_RESTORE
+SUBSTFOR configure.ac:AC_LANG_POP(C++)
+SUBSTFOR configure.in:AC_LANG_RESTORE
 
 dnl Check for libraw1394
 AC_MSG_CHECKING(raw1394 library)
@@ -988,7 +998,9 @@ dnl #########################
 dnl # Make the output files #
 dnl #########################
 
-AC_OUTPUT([Makefile
+SUBSTFOR configure.ac:AC_OUTPUT(
+SUBSTFOR configure.ac:Makefile
+SUBSTFOR configure.in:AC_OUTPUT([Makefile
 include/Makefile
 include/wine/Makefile
 gst/Makefile
@@ -1133,5 +1145,8 @@ stamp.h
 gstreamer-config
 gstreamer.pc
 gstreamer-uninstalled.pc
-gstreamer.spec])
-AC_OUTPUT_COMMANDS([chmod +x gstreamer-config])
+SUBSTFOR configure.in:gstreamer.spec])
+SUBSTFOR configure.in:AC_OUTPUT_COMMANDS([chmod +x gstreamer-config])
+SUBSTFOR configure.ac:gstreamer.spec,
+SUBSTFOR configure.ac:chmod +x gstreamer-config
+SUBSTFOR configure.ac:)
