@@ -1,3 +1,7 @@
+2004-04-30  Colin Walters  <walters@verbum.org>
+
+	* ext/alsa/gstalsasink.c (gst_alsa_sink_mmap): Plug a memleak.
+
 2004-04-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
