@@ -1,3 +1,9 @@
+2005-02-11  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstevent.c: (gst_event_new_discontinuous_valist),
+	(gst_event_discont_get_value), (gst_event_new_segment_seek):
+	stop time can be -1.
+
 2005-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/gstreamer-sections.txt:

@@ -352,7 +352,7 @@ gst_event_new_segment_seek (GstSeekType type, gint64 start, gint64 stop)
 {
   GstEvent *event;
 
-  g_return_val_if_fail (start < stop, NULL);
+  g_return_val_if_fail (start < stop || stop == -1, NULL);
 
   event = gst_event_new (GST_EVENT_SEEK);
 
