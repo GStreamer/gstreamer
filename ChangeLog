@@ -1,3 +1,10 @@
+2004-01-12  Julien MOUTTE <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_chain):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_chain): Fixing the
+	direct put buffers detection. I prefer checking GST_BUFFER_PRIVATE
+	than the free_func.
+
 2004-01-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/oss/gstossaudio.c: (plugin_init):

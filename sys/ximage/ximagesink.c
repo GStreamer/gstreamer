@@ -49,8 +49,6 @@ GST_STATIC_PAD_TEMPLATE (
     "height = (int) [ 0, MAX ]")
 );
 
-static void gst_ximagesink_buffer_free (GstBuffer *buffer);
-
 static GstVideoSinkClass *parent_class = NULL;
 
 /* ============================================================= */
@@ -741,8 +739,7 @@ gst_ximagesink_chain (GstPad *pad, GstData *data)
   
   /* If this buffer has been allocated using our buffer management we simply
      put the ximage which is in the PRIVATE pointer */
-  /* FIXME: need to check for correct xvimagesink here? */
-  if (GST_BUFFER_FREE_DATA_FUNC (buf) == gst_ximagesink_buffer_free)
+  if (GST_BUFFER_PRIVATE (buf))
     {
       gst_ximagesink_ximage_put (ximagesink, GST_BUFFER_PRIVATE (buf));
     }
