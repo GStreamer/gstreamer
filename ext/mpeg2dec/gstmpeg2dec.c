@@ -74,7 +74,7 @@ GST_STATIC_PAD_TEMPLATE (
         "25.0, 29.970030, 30.0, 50.0, 59.940060, 60.0 }")
 );
 
-/*
+#ifdef enable_user_data
 static GstStaticPadTemplate user_data_template_factory =
 GST_STATIC_PAD_TEMPLATE (
   "user_data",
@@ -82,7 +82,7 @@ GST_STATIC_PAD_TEMPLATE (
   GST_PAD_ALWAYS,
   GST_STATIC_CAPS_ANY
 );
-*/
+#endif
 
 static GstStaticPadTemplate sink_template_factory =
 GST_STATIC_PAD_TEMPLATE (
@@ -162,9 +162,9 @@ gst_mpeg2dec_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&src_template_factory));
   gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&sink_template_factory));
-/*
+#ifdef enable_user_data
   gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&user_data_template_factory));
-*/
+#endif
   gst_element_class_set_details (element_class, &gst_mpeg2dec_details);
 }
 
@@ -210,11 +210,11 @@ gst_mpeg2dec_init (GstMpeg2dec *mpeg2dec)
   gst_pad_set_query_function (mpeg2dec->srcpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_src_query));
   gst_pad_set_convert_function (mpeg2dec->srcpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_convert_src));
 
-/*
+#ifdef enable_user_data
   mpeg2dec->userdatapad = gst_pad_new_from_template (
 		  gst_static_pad_template_get (&user_data_template_factory), "user_data");
   gst_element_add_pad (GST_ELEMENT (mpeg2dec), mpeg2dec->userdatapad);
-*/
+#endif
 
   /* initialize the mpeg2dec acceleration */
   mpeg2_accel (MPEG2_ACCEL_DETECT);
@@ -642,7 +642,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstData *_data)
     /*
      * FIXME: should pass more information such as state the user data is from
      */
-/*
+#ifdef enable_user_data
     if (info->user_data_len > 0) {
       if (GST_PAD_IS_USABLE (mpeg2dec->userdatapad)) {
         GstBuffer *udbuf = gst_buffer_new_and_alloc (info->user_data_len);
@@ -652,7 +652,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstData *_data)
         gst_pad_push (mpeg2dec->userdatapad, GST_DATA (udbuf));
       }
     }
-*/
+#endif
   }
 exit:
   gst_buffer_unref(buf);
