@@ -404,6 +404,9 @@ NULL )
 #endif
 
 gboolean		gst_pad_send_event		(GstPad *pad, GstEvent *event);
+void 			gst_pad_event_default		(GstPad *pad, GstEvent *event);
+
+
 
 GstBuffer*		gst_pad_peek			(GstPad *pad);
 GstPad*			gst_pad_select			(GList *padlist);

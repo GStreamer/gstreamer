@@ -1455,10 +1455,10 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
     GST_DEBUG (GST_CAT_DATAFLOW, "calling chainhandler &%s of peer pad %s:%s\n",
           GST_DEBUG_FUNCPTR_NAME (peer->chainhandler), GST_DEBUG_PAD_NAME (((GstPad*)peer)));
     (peer->chainhandler) (((GstPad*)peer), buf);
-  } else
-    {
-      GST_DEBUG (GST_CAT_DATAFLOW, "no chainhandler\n");
-    }
+  } 
+  else {
+    GST_DEBUG (GST_CAT_DATAFLOW, "no chainhandler\n");
+  }
 }
 #endif
 
@@ -1958,21 +1958,31 @@ gst_ghost_pad_new (gchar *name,
 }
 
 
-
-/* pad is the receiving pad */
-static void 
-gst_pad_event_default(GstPad *pad, GstEventType event, guint64 timestamp, guint32 data)
+void 
+gst_pad_event_default (GstPad *pad, GstEvent *event)
 {
-  GST_DEBUG(GST_CAT_EVENT, "default event handler for pad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-  switch (event) {
+  GstElement *element = GST_PAD_PARENT (pad);
+ 
+  switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      if (GST_PAD_PARENT(pad)->numsinkpads == 1)
-        gst_element_signal_eos(GST_PAD_PARENT(pad));
-      else
-        GST_DEBUG(GST_CAT_EVENT, "WARNING: no default behavior for EOS with multiple sinkpads\n");
+//      gst_element_signal_eos (element);
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      {
+	GList *pads = element->pads;
+
+	while (pads) {
+          if (GST_PAD_DIRECTION (pads->data) == GST_PAD_SRC) {
+            gst_pad_push (GST_PAD (pads->data), GST_BUFFER (gst_event_new (GST_EVENT_TYPE (event))));
+	  }
+          pads = g_list_next (pads);
+	}
+      }
+      break;
     default:
+      g_warning ("no default handler for event\n");
       break;
   }
+  gst_event_free (event);
 }
 
 /**
