@@ -21,11 +21,14 @@
 # Author: David I. Lehn <dlehn@users.sourceforge.net>
 #
 
+import pygtk
+pygtk.require('2.0')
+
 import sys
 import time
 import gobject
-import gst
 import gtk
+import gst
 
 class BPS(object):
     def __init__(self):
@@ -87,15 +90,12 @@ class BPS(object):
                 pass
         elif method == 'c':
             self.start = time.time()
-            self.iter_id = gst.add_iterate_bin(self.pipeline)
+            gobject.idle_add(self.pipeline.iterate)
             gst.main()
         #elif method == 'gst':
         #    self.start = time.time()
         #    gtk.idle_add(self.idle, self.pipeline)
         #    gtk.main()
-        elif method == 'all':
-            self.start = time.time()
-            iterate_bin_all(self.pipeline)
 
         self.pipeline.set_state(gst.STATE_NULL)
 
