@@ -51,6 +51,7 @@ static void		gst_wavparse_chain		(GstPad *pad, GstData *_data);
 static const GstEventMask*
 			gst_wavparse_get_event_masks 	(GstPad *pad);
 static gboolean 	gst_wavparse_srcpad_event 	(GstPad *pad, GstEvent *event);
+static void             gst_wavparse_get_property       (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 /* elementfactory information */
 static GstElementDetails gst_wavparse_details = {
@@ -136,8 +137,8 @@ enum {
 };
 
 enum {
-  ARG_0,
-  /* FILL ME */
+  PROP_0,
+  PROP_METADATA
 };
 
 static GstElementClass *parent_class = NULL;
@@ -168,12 +169,21 @@ static void
 gst_wavparse_class_init (GstWavParseClass *klass) 
 {
   GstElementClass *gstelement_class;
-
+  GObjectClass *object_class;
+  
   gstelement_class = (GstElementClass*) klass;
-
+  object_class = (GObjectClass *) klass;
+  
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  object_class->get_property = gst_wavparse_get_property;
   gstelement_class->change_state = gst_wavparse_change_state;
+
+  g_object_class_install_property (object_class, PROP_METADATA,
+				   g_param_spec_boxed ("metadata",
+						       "Metadata", "Metadata",
+						       GST_TYPE_CAPS,
+						       G_PARAM_READABLE));
 }
 
 static void 
@@ -213,6 +223,26 @@ gst_wavparse_init (GstWavParse *wavparse)
   wavparse->need_discont = FALSE;
 }
 
+static void
+gst_wavparse_get_property (GObject *object,
+			   guint prop_id,
+			   GValue *value,
+			   GParamSpec *pspec)
+{
+  GstWavParse *wavparse;
+
+  wavparse = GST_WAVPARSE (object);
+
+  switch (prop_id) {
+  case PROP_METADATA:
+    g_value_set_boxed (value, wavparse->metadata);
+    break;
+
+  default:
+    break;
+  }
+}
+
 static GstCaps*
 wav_type_find (GstByteStream *bs, gpointer private)
 {
@@ -237,90 +267,212 @@ wav_type_find (GstByteStream *bs, gpointer private)
   return new;
 }
 
+static void
+demux_metadata (GstWavParse *wavparse,
+		const char *data,
+		int len)
+{
+  gst_riff_chunk *temp_chunk, chunk;
+  char *name, *type;
+  GstPropsEntry *entry;
+  GstProps *props;
+
+  props = gst_props_empty_new ();
+  
+  while (len > 0) {
+    temp_chunk = (gst_riff_chunk *) data;
+    chunk.id = GUINT32_FROM_LE (temp_chunk->id);
+    chunk.size = GUINT32_FROM_LE (temp_chunk->size);
+
+    /* move our pointer on past the header */
+    len -= sizeof (gst_riff_chunk);
+    data += sizeof (gst_riff_chunk);
+    
+    if (chunk.size == 0) {
+      continue;
+    }
+
+    name = g_strndup (data, chunk.size);
+
+    /* move our pointer on past the data ... on an even boundary */
+    len -= ((chunk.size + 1) & ~1);
+    data += ((chunk.size + 1) & ~1);
+
+    /* We now have an info string in 'name' of type chunk.id
+       - find type */
+
+    switch (chunk.id) {
+    case GST_RIFF_INFO_IARL:
+      type = "Location";
+      break;
+      
+    case GST_RIFF_INFO_IART:
+      type = "Artist";
+      break;
+      
+    case GST_RIFF_INFO_ICMS:
+      type = "Commissioner";
+      break;
+      
+    case GST_RIFF_INFO_ICMT:
+      type = "Comment";
+      break;
+      
+    case GST_RIFF_INFO_ICOP:
+      type = "Copyright";
+      break;
+      
+    case GST_RIFF_INFO_ICRD:
+      type = "Creation Date";
+      break;
+      
+    case GST_RIFF_INFO_IENG:
+      type = "Engineer";
+      break;
+      
+    case GST_RIFF_INFO_IGNR:
+      type = "Genre";
+      break;
+      
+    case GST_RIFF_INFO_IKEY:
+      type = "Keywords";
+      break;
+      
+    case GST_RIFF_INFO_INAM:
+      type = "Title"; /* name */
+      break;
+      
+    case GST_RIFF_INFO_IPRD:
+      type = "Product";
+      break;
+      
+    case GST_RIFF_INFO_ISBJ:
+      type = "Subject";
+      break;
+      
+    case GST_RIFF_INFO_ISFT:
+      type = "Software";
+      break;
+      
+    case GST_RIFF_INFO_ITCH:
+      type = "Technician";
+      break;
+      
+    default:
+      type = NULL;
+      break;
+    }
+    
+    if (type) {
+      entry = gst_props_entry_new (type, GST_PROPS_STRING (name));
+      gst_props_add_entry (props, entry);
+    }
+
+    g_free (name);
+  }
+
+  gst_caps_replace_sink (&wavparse->metadata,
+			 gst_caps_new ("wav_metadata",
+				       "application/x-gst-metadata",
+				       props));
+  g_object_notify (G_OBJECT (wavparse), "metadata");
+}
+
 static void wav_new_chunk_callback(GstRiffChunk *chunk, gpointer data)
 {
   GstWavParse *wavparse;
-
+  GstWavParseFormat *format;
+  GstCaps *caps = NULL;
+  
   wavparse = GST_WAVPARSE (data);
 
   GST_DEBUG("new tag " GST_FOURCC_FORMAT "\n", GST_FOURCC_ARGS(chunk->id));
 
-  if(chunk->id == GST_RIFF_TAG_fmt){
-    GstWavParseFormat *format;
-    GstCaps *caps = NULL;
-
+  switch (chunk->id) {
+  case GST_RIFF_TAG_fmt:
+    
     /* we can gather format information now */
     format = (GstWavParseFormat *)((guchar *) GST_BUFFER_DATA (wavparse->buf) + chunk->offset);
-
+    
     wavparse->bps      = GUINT16_FROM_LE(format->wBlockAlign);
     wavparse->rate     = GUINT32_FROM_LE(format->dwSamplesPerSec);
     wavparse->channels = GUINT16_FROM_LE(format->wChannels);
     wavparse->width    = GUINT16_FROM_LE(format->wBitsPerSample);
     wavparse->format	 = GINT16_FROM_LE(format->wFormatTag);
-
+    
     /* set the caps on the src pad */
     /* FIXME: handle all of the other formats as well */
-    switch (wavparse->format)
-    {
-      case GST_RIFF_WAVE_FORMAT_ALAW:
-      case GST_RIFF_WAVE_FORMAT_MULAW: {
-	gchar *mime = (wavparse->format == GST_RIFF_WAVE_FORMAT_ALAW) ?
-			      "audio/x-alaw" : "audio/x-mulaw";
-	if (!(wavparse->width == 8)) {
-	  g_warning("Ignoring invalid width %d",
-		    wavparse->width);
-	  return;
-	}
-	caps = GST_CAPS_NEW (
-		      "parsewav_src",
-		      mime,
-			"rate",	GST_PROPS_INT (wavparse->rate),
-			"channels",	GST_PROPS_INT (wavparse->channels)
-	      );
-      }
-	break;
-      case GST_RIFF_WAVE_FORMAT_PCM:
-	caps = GST_CAPS_NEW (
-		      "parsewav_src",
-		      "audio/x-raw-int",
-			"endianness",	GST_PROPS_INT (G_LITTLE_ENDIAN),
-			"signed",     GST_PROPS_BOOLEAN ((wavparse->width > 8) ? TRUE : FALSE),
-			"width",	GST_PROPS_INT (wavparse->width),
-			"depth",	GST_PROPS_INT (wavparse->width),
-			"rate",	GST_PROPS_INT (wavparse->rate),
-			"channels",	GST_PROPS_INT (wavparse->channels)
-	      );
-	break;
-      case GST_RIFF_WAVE_FORMAT_MPEGL12:
-      case GST_RIFF_WAVE_FORMAT_MPEGL3: {
-	gint layer = (wavparse->format == GST_RIFF_WAVE_FORMAT_MPEGL12) ? 2 : 3;
-	caps = GST_CAPS_NEW (
-		      "parsewav_src",
-		      "audio/mpeg",
-			"layer",	GST_PROPS_INT (layer),
-			"rate",	GST_PROPS_INT (wavparse->rate),
-			"channels",	GST_PROPS_INT (wavparse->channels)
-	      );
-      }
-	break;
-
-      default:
-	gst_element_error (GST_ELEMENT (wavparse), "wavparse: format %d not handled", wavparse->format);
+    switch (wavparse->format) {
+    case GST_RIFF_WAVE_FORMAT_ALAW:
+    case GST_RIFF_WAVE_FORMAT_MULAW: {
+      gchar *mime = (wavparse->format == GST_RIFF_WAVE_FORMAT_ALAW) ?
+	"audio/x-alaw" : "audio/x-mulaw";
+      if (!(wavparse->width == 8)) {
+	g_warning("Ignoring invalid width %d",
+		  wavparse->width);
 	return;
+      }
+      caps = GST_CAPS_NEW (
+	"parsewav_src",
+	mime,
+	"rate",	GST_PROPS_INT (wavparse->rate),
+	"channels",	GST_PROPS_INT (wavparse->channels)
+	);
     }
-
+      break;
+      
+    case GST_RIFF_WAVE_FORMAT_PCM:
+      caps = GST_CAPS_NEW (
+	"parsewav_src",
+	"audio/x-raw-int",
+	"endianness",	GST_PROPS_INT (G_LITTLE_ENDIAN),
+	"signed",     GST_PROPS_BOOLEAN ((wavparse->width > 8) ? TRUE : FALSE),
+	"width",	GST_PROPS_INT (wavparse->width),
+	"depth",	GST_PROPS_INT (wavparse->width),
+	"rate",	GST_PROPS_INT (wavparse->rate),
+	"channels",	GST_PROPS_INT (wavparse->channels)
+	);
+      break;
+    case GST_RIFF_WAVE_FORMAT_MPEGL12:
+    case GST_RIFF_WAVE_FORMAT_MPEGL3: {
+      gint layer = (wavparse->format == GST_RIFF_WAVE_FORMAT_MPEGL12) ? 2 : 3;
+      caps = GST_CAPS_NEW (
+	"parsewav_src",
+	"audio/mpeg",
+	"layer",	GST_PROPS_INT (layer),
+	"rate",	GST_PROPS_INT (wavparse->rate),
+	"channels",	GST_PROPS_INT (wavparse->channels)
+	);
+    }
+      break;
+      
+    default:
+      gst_element_error (GST_ELEMENT (wavparse), "wavparse: format %d not handled", wavparse->format);
+      return;
+    }
+    
     if (gst_pad_try_set_caps (wavparse->srcpad, caps) <= 0) {
       gst_element_error (GST_ELEMENT (wavparse), "Could not set caps");
       return;
     }
-
+    
     GST_DEBUG ("frequency %d, channels %d",
 	       wavparse->rate, wavparse->channels);
-
+    
     /* we're now looking for the data chunk */
     wavparse->state = GST_WAVPARSE_CHUNK_DATA;
-  }
+    break;
 
+  case GST_RIFF_TAG_LIST:
+    if (strncmp (chunk->data, "INFO", 4) == 0) {
+      /* We got metadata */
+      demux_metadata (wavparse, chunk->data + 4, chunk->size - 4);
+    }
+    break;
+
+  default:
+    break;
+  }
 }
 
 static void
@@ -405,10 +557,10 @@ gst_wavparse_chain (GstPad *pad, GstData *_data)
 
   if (wavparse->state == GST_WAVPARSE_OTHER) {
     GST_DEBUG ("we're in unknown territory here, not passing on");
+
     gst_buffer_unref(buf);
     return;
   }
-
 
   /* here we deal with parsing out the primary state */
   /* these are sequenced such that in the normal case each (RIFF/WAVE,

@@ -49,7 +49,7 @@ extern "C" {
 #define GST_WAVPARSE_CHUNK_DATA	2	/* searching for data */
 #define GST_WAVPARSE_DATA	3	/* in data region */
 #define GST_WAVPARSE_OTHER	4	/* in unknown region */
-
+  
 typedef struct _GstWavParse GstWavParse;
 typedef struct _GstWavParseClass GstWavParseClass;
 
@@ -83,6 +83,8 @@ struct _GstWavParse {
   gboolean need_discont;
 
   GstBuffer *buf;
+
+  GstCaps *metadata;
 };
 
 struct _GstWavParseClass {
@@ -101,7 +103,8 @@ struct _GstWavParseFormat {
   guint16 wBlockAlign;
   guint16 wBitsPerSample;
 };
-
+  
+  
 /**** from public Microsoft RIFF docs ******/
 #define GST_RIFF_WAVE_FORMAT_UNKNOWN        (0x0000)
 #define GST_RIFF_WAVE_FORMAT_PCM            (0x0001)
