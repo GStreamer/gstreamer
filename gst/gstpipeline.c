@@ -158,7 +158,6 @@ gst_pipeline_typefind (GstPipeline *pipeline, GstElement *element)
   gst_bin_add (GST_BIN (pipeline), typefind);
 
   //gst_bin_create_plan (GST_BIN (pipeline));
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
   // keep pushing buffers... the have_type signal handler will set the found flag

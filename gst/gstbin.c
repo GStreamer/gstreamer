@@ -260,6 +260,8 @@ gst_bin_change_state (GstElement *element)
 
       if (!parent || !GST_IS_BIN (parent))
         gst_bin_create_plan (bin);
+      else
+        GST_DEBUG (0,"not creating plan for '%s'\n",GST_ELEMENT_NAME  (bin));
 
       break;
     }

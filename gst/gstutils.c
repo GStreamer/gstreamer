@@ -247,9 +247,9 @@ void gst_util_set_object_arg (GtkObject *object, guchar *name, gchar *value)
 	  break;
 	}
         case GTK_TYPE_DOUBLE: {
-	  gdouble i;
-	  sscanf (value, "%g", (float *)&i);
-          gtk_object_set (GTK_OBJECT (object), name, i, NULL);
+	  gfloat i;
+	  sscanf (value, "%g", &i);
+          gtk_object_set (GTK_OBJECT (object), name, (gdouble)i, NULL);
 	  break;
 	}
         default:

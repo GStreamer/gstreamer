@@ -5,11 +5,12 @@ extern gboolean _gst_plugin_spew;
 
 gboolean idle_func(gpointer data);
 
+GstElement *src;
+
 int 
 main (int argc,char *argv[]) 
 {
   GstElement *bin;
-  GstElement *src;
   GstElement *effect;
   GstElement *audiosink;
 
@@ -17,9 +18,9 @@ main (int argc,char *argv[])
 
   bin = gst_bin_new("bin");
 
-  src = gst_elementfactory_make("XMMS_INPUT_mpeg_layer_1/2/3_player_1.2.4", "xmms_plugin");
+  //src = gst_elementfactory_make("XMMS_INPUT_mpeg_layer_1/2/3_player_1.2.4", "xmms_plugin");
   //src = gst_elementfactory_make("XMMS_INPUT_oggvorbis_player_0.1", "xmms_plugin");
-  //src = gst_elementfactory_make("XMMS_INPUT_mikmod_player_1.2.4", "xmms_plugin");
+  src = gst_elementfactory_make("XMMS_INPUT_mikmod_player_1.2.4", "xmms_plugin");
   //src = gst_elementfactory_make("XMMS_INPUT_tone_generator_1.2.4", "xmms_plugin");
   g_return_val_if_fail(src != NULL, -1);
 
@@ -30,6 +31,11 @@ main (int argc,char *argv[])
 
   gtk_object_set (GTK_OBJECT (src), "location", argv[1], NULL);
   //gtk_object_set (GTK_OBJECT (src), "filename", "tone://1000", NULL);
+
+  g_print ("Song Info (text:length): %s\n",gst_util_get_string_arg (GTK_OBJECT (src), "song_info"));
+  //gtk_object_set (GTK_OBJECT (src), "show_about", TRUE, NULL);
+  //gtk_object_set (GTK_OBJECT (src), "configure", TRUE, NULL);
+  //gtk_object_set (GTK_OBJECT (src), "show_file_info", TRUE, NULL);
 
   audiosink = gst_elementfactory_make("audiosink", "audiosink");
   g_return_val_if_fail(audiosink != NULL, -1);
