@@ -26,7 +26,6 @@
 #include "gstregistry.h"
 #include "gstlog.h"
 
-
 static void 		gst_uri_handler_class_init 	(GstURIHandlerClass *klass);
 static void 		gst_uri_handler_init 		(GstURIHandler *factory);
 
