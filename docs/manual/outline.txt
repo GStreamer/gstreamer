@@ -31,8 +31,8 @@ Basic concepts
   connecting elements
   bin
    (can contain elements)
-  pipeline 
-   (a complete graph)
+   pipeline (a complete graph)
+   thread (theaded operation)
   buffers
    (pass between elements)
    (contains data)
@@ -48,6 +48,7 @@ Building apps
  helloworld
    (fdsrc->mp3decoder->audiosink)
    (step by step explanation)
+ More on factories
   
 advanced concepts
   threads

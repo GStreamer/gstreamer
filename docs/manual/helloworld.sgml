@@ -354,7 +354,7 @@ void eos(GstSrc *src)
       We could use a disksink to write the raw samples to a file, for example.
       It should also be clear that inserting filters, like a stereo effect,
       into the pipeline is not that hard to do. The most important thing is
-      that you can reuse allready existing codecs.
+      that you can reuse allready existing elements.
     </para>
     
 

@@ -10,6 +10,7 @@
 <!ENTITY STATES SYSTEM "states.sgml">
 
 <!ENTITY HELLOWORLD SYSTEM "helloworld.sgml">
+<!ENTITY FACTORIES SYSTEM "factories.sgml">
 ]>
 
 
@@ -106,6 +107,8 @@
     </partintro>
 
       &HELLOWORLD;
+
+      &FACTORIES;
 
   </part>
 
