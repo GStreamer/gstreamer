@@ -94,6 +94,7 @@ mulawenc_link (GstPad * pad, const GstCaps * caps)
   GstStructure *structure;
   const GValue *rate, *chans;
   GstCaps *base_caps;
+  GstPadLinkReturn link_return;
 
   structure = gst_caps_get_structure (caps, 0);
   rate = gst_structure_get_value (structure, "rate");
@@ -116,7 +117,11 @@ mulawenc_link (GstPad * pad, const GstCaps * caps)
   gst_structure_set_value (structure, "rate", rate);
   gst_structure_set_value (structure, "channels", chans);
 
-  return gst_pad_try_set_caps (otherpad, base_caps);
+  link_return = gst_pad_try_set_caps (otherpad, base_caps);
+
+  gst_caps_free (base_caps);
+
+  return link_return;
 }
 
 GType
