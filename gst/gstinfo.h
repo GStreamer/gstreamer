@@ -310,7 +310,7 @@ enum {
 };
 
 
-extern const gchar *_gst_category_colors[GST_CAT_MAX_CATEGORY];
+extern const gchar *_gst_category_colors[32];
 
 
 

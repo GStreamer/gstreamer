@@ -68,7 +68,7 @@ static gchar *_gst_info_category_strings[] = {
   "NEGOTIATION",
 };
 
-const gchar *_gst_category_colors[] = {
+const gchar *_gst_category_colors[32] = {
   [GST_CAT_GST_INIT] = "00;37",
   [GST_CAT_COTHREADS] = "00;32",
   [GST_CAT_COTHREAD_SWITCH] = "00;32",
@@ -101,7 +101,7 @@ const gchar *_gst_category_colors[] = {
 
 /* colorization hash */
 inline gint _gst_debug_stringhash_color(gchar *file) {
-  int filecolor;
+  int filecolor = 0;
   while (file[0]) filecolor += *(char *)(file++);
   filecolor = (filecolor % 6) + 31;
   return filecolor;
