@@ -62,13 +62,14 @@ functionname (GstPad *pad)                           \
 void		_gst_format_initialize		(void);
 
 /* register a new format */
-GstFormat	gst_format_register		(const gchar *nick, const gchar *description);
-
+GstFormat	gst_format_register		(const gchar *nick, 
+						 const gchar *description);
 GstFormat	gst_format_get_by_nick		(const gchar *nick);
 
 /* query for format details */
-const GstFormatDefinition *	gst_format_get_details		(GstFormat format);
-const GList * gst_format_get_definitions (void);
+const GstFormatDefinition*	
+		gst_format_get_details		(GstFormat format);
+const GList* 	gst_format_get_definitions 	(void);
 
 G_END_DECLS
 

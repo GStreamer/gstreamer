@@ -44,7 +44,8 @@ typedef enum {
   GST_EVENT_SEGMENT_DONE,
   GST_EVENT_SIZE,
   GST_EVENT_RATE,
-  GST_EVENT_FILLER
+  GST_EVENT_FILLER,
+  GST_EVENT_TS_OFFSET
 } GstEventType;
 
 extern GType _gst_event_type;

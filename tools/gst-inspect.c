@@ -418,9 +418,13 @@ print_element_properties (GstElement *element)
 	  if (flags)
 	    g_string_free (flags, TRUE);
 	}
-        else {
-          g_print ("%-23.23s Unknown type %ld \"%s\"", "",param->value_type, 
+	else if (G_IS_PARAM_SPEC_OBJECT (param)) {
+	  g_print("%-23.23s Object of type \"%s\"", "",
 			  g_type_name(param->value_type));
+        }
+	else {
+          g_print ("%-23.23s Unknown type %ld \"%s\"", "",param->value_type, 
+		  	g_type_name(param->value_type));
 	}
         break;
     }
@@ -730,14 +734,17 @@ print_element_info (GstElementFactory *factory)
           return_type = query->return_type;
           param_types = query->param_types;
 
-          g_print ("  \"%s\" :\t %s user_function (%s* object, \n", 
+          g_print ("  \"%s\" :\t %s user_function (%s* object", 
 	          query->signal_name, g_type_name (return_type),
 		  g_type_name (G_OBJECT_TYPE (element)));
 
           for (j = 0; j < n_params; j++) {
-            g_print ("    \t\t\t\t%s arg%d,\n", g_type_name (param_types[j]), j);
+            g_print (",\n    \t\t\t\t%s arg%d", g_type_name (param_types[j]), j);
           }
-          g_print ("    \t\t\t\tgpointer user_data);\n");
+	  if (k == 0)
+            g_print (",\n    \t\t\t\tgpointer user_data);\n");
+	  else
+            g_print (");\n");
 
 	  counted++;
 	}
