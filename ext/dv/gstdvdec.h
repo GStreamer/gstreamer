@@ -53,8 +53,12 @@ struct _GstDVDec {
   GstBufferPool *pool;
   dv_color_space_t space;
   gint 		 bpp;
+  gboolean	 PAL;
+  gint		 framerate;
+  gint		 height;
   gint 		 length;
   guint64	 next_ts;
+  gboolean	 need_discont;
 
   gint16 	*audio_buffers[4];
 };
