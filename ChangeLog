@@ -1,5 +1,13 @@
 2004-08-16  Wim Taymans  <wim@fluendo.com>
 
+	* gst/tcp/gstfdset.c: (ensure_size), (gst_fdset_new),
+	(gst_fdset_add_fd), (gst_fdset_remove_fd),
+	(gst_fdset_fd_has_closed), (gst_fdset_fd_has_error),
+	(gst_fdset_fd_can_read), (gst_fdset_fd_can_write),
+	(gst_fdset_wait):
+
+2004-08-16  Wim Taymans  <wim@fluendo.com>
+
 	* ext/theora/theoraenc.c: (gst_border_mode_get_type),
 	(gst_theora_enc_class_init), (theora_enc_sink_link),
 	(theora_buffer_from_packet), (theora_enc_chain):
