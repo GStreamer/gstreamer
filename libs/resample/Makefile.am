@@ -9,10 +9,10 @@ libresample_la_SOURCES = dtos.c functable.c resample.c resample.h
 
 noinst_HEADERS = resample.h
 
-check_PROGRAMS = test
+#check_PROGRAMS = test
 
-test_SOURCES = test.c
-test_LDADD = libresample.la
+#test_SOURCES = test.c
+#test_LDADD = libresample.la
 
 
 if HAVE_CPU_I386
