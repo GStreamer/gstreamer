@@ -276,19 +276,6 @@ unsigned long a;
 }
 
 /*
- * Shift the 0s in the least significant end out of the longword.
- * Low performance, do not call often.
- */
-static unsigned long
-shifted_down(a)
-unsigned long a;
-{
-    if(!a) return 0;
-    if(a & 1) return a;
-    return a >> 1;
-}
-
-/*
  * How many 0 bits are there at most significant end of longword.
  * Low performance, do not call often.
  */

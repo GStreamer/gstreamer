@@ -76,7 +76,7 @@ GST_PADTEMPLATE_FACTORY (afsrc_src_factory,
 #define GST_TYPE_AFSRC_TYPES (gst_afsrc_types_get_type())
 
 /* FIXME: fix the string ints to be string-converted from the audiofile.h types */
- 
+/* defined but not used
 static GType
 gst_afsrc_types_get_type (void) 
 {
@@ -96,7 +96,7 @@ gst_afsrc_types_get_type (void)
   }
   return afsrc_types_type;
 }
-
+*/
 static void		gst_afsrc_class_init		(GstAFSrcClass *klass);
 static void		gst_afsrc_init			(GstAFSrc *afsrc);
 
