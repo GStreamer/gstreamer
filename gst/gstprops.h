@@ -37,6 +37,7 @@ extern GType _gst_props_type;
 
 #define GST_TYPE_PROPS	(_gst_props_type)
 
+#if 0
 typedef enum {
    GST_PROPS_END_TYPE = 0,
 
@@ -57,6 +58,7 @@ typedef enum {
 
    GST_PROPS_LAST_TYPE = GST_PROPS_END_TYPE + 16
 } GstPropsType;
+#endif
 
 #define GST_MAKE_FOURCC(a,b,c,d) 	(guint32)((a)|(b)<<8|(c)<<16|(d)<<24)
 #define GST_STR_FOURCC(f)		(guint32)(((f)[0])|((f)[1]<<8)|((f)[2]<<16)|((f)[3]<<24))

@@ -15,15 +15,15 @@ gboolean FOUND = FALSE;
 gchar *filename = NULL;
 
 void
-gst_caps_print (const char *filename, GstCaps *caps)
+gst_caps_print (const char *filename, const GstCaps2 *caps)
 {
-  gchar *caps_str = gst_caps_to_string (caps);
+  gchar *caps_str = gst_caps2_to_string (caps);
   g_print ("%s - %s\n", filename, caps_str);
   g_free (caps_str);
 }
 
 void
-have_type_handler (GstElement *typefind, guint probability, GstCaps *caps, gpointer unused)
+have_type_handler (GstElement *typefind, guint probability, const GstCaps2 *caps, gpointer unused)
 {
   gst_caps_print (filename, caps);
   FOUND = TRUE;

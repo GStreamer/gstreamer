@@ -58,9 +58,9 @@ struct _GstAutoplugger {
   GstPad *typefind_sinkpad;
 
   GstPad *sinkpadpeer, *srcpadpeer;
-  GstCaps *sinkcaps, *srccaps;
+  GstCaps2 *sinkcaps, *srccaps;
 
-  GstCaps *sinktemplatecaps;
+  GstCaps2 *sinktemplatecaps;
 
   GstAutoplug *autoplug;
   GstElement *autobin;
@@ -93,8 +93,8 @@ static void			gst_autoplugger_get_property		(GObject *object, guint prop_id, GVa
 
 
 /*
-static void	gst_autoplugger_external_sink_caps_changed	(GstPad *pad, GstCaps *caps, GstAutoplugger *autoplugger);
-static void	gst_autoplugger_external_src_caps_changed	(GstPad *pad, GstCaps *caps, GstAutoplugger *autoplugger);
+static void	gst_autoplugger_external_sink_caps_changed	(GstPad *pad, GstCaps2 *caps, GstAutoplugger *autoplugger);
+static void	gst_autoplugger_external_src_caps_changed	(GstPad *pad, GstCaps2 *caps, GstAutoplugger *autoplugger);
 */
 static void	gst_autoplugger_external_sink_caps_nego_failed	(GstPad *pad, gboolean *result, GstAutoplugger *autoplugger);
 static void	gst_autoplugger_external_src_caps_nego_failed	(GstPad *pad, gboolean *result, GstAutoplugger *autoplugger);
@@ -104,7 +104,7 @@ static void	gst_autoplugger_external_src_linked		(GstPad *pad, GstPad *peerpad, 
 */
 static void	gst_autoplugger_cache_first_buffer		(GstElement *element,GstBuffer *buf,GstAutoplugger *autoplugger);
 static void	gst_autoplugger_cache_empty			(GstElement *element, GstAutoplugger *autoplugger);
-static void	gst_autoplugger_type_find_have_type		(GstElement *element, GstCaps *caps, GstAutoplugger *autoplugger);
+static void	gst_autoplugger_type_find_have_type		(GstElement *element, GstCaps2 *caps, GstAutoplugger *autoplugger);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_autoplugger_signals[LAST_SIGNAL] = { 0 };*/
@@ -213,7 +213,7 @@ G_GNUC_UNUSED static void
 gst_autoplugger_external_sink_linked(GstPad *pad, GstPad *peerpad, GstAutoplugger *autoplugger)
 {
   GstPadTemplate *peertemplate;
-  GstCaps *peercaps, *peertemplatecaps;
+  GstCaps2 *peercaps, *peertemplatecaps;
 
   GST_INFO ("have cache:sink linked");*/
 /*  autoplugger->sinkpadpeer = peerpad; */
@@ -222,13 +222,13 @@ gst_autoplugger_external_sink_linked(GstPad *pad, GstPad *peerpad, GstAutoplugge
     peercaps = GST_PAD_CAPS(autoplugger->sinkpadpeer);
     if (peercaps)
       GST_INFO ("there are some caps on this pad's peer: %s",
-               gst_caps_get_mime(peercaps));
+               gst_caps2_get_mime(peercaps));
     peertemplate = GST_PAD_PAD_TEMPLATE(autoplugger->sinkpadpeer);
     if (peertemplate) {
       peertemplatecaps = GST_PAD_TEMPLATE_CAPS(peertemplate);
       if (peertemplatecaps) {
         GST_INFO ("there are some caps on this pad's peer's padtemplate %s",
-                 gst_caps_get_mime(peertemplatecaps));
+                 gst_caps2_get_mime(peertemplatecaps));
       }
     }
   }
@@ -238,7 +238,7 @@ G_GNUC_UNUSED static void
 gst_autoplugger_external_src_linked(GstPad *pad, GstPad *peerpad, GstAutoplugger *autoplugger)
 {
   GstPadTemplate *peertemplate;
-  GstCaps *peercaps, *peertemplatecaps;
+  GstCaps2 *peercaps, *peertemplatecaps;
 
   GST_INFO ("have cache:src linked");*/
 /*  autoplugger->srcpadpeer = peerpad; */
@@ -247,13 +247,13 @@ gst_autoplugger_external_src_linked(GstPad *pad, GstPad *peerpad, GstAutoplugger
     peercaps = GST_PAD_CAPS(autoplugger->srcpadpeer);
     if (peercaps)
       GST_INFO ("there are some caps on this pad's peer: %s",
-               gst_caps_get_mime(peercaps));
+               gst_caps2_get_mime(peercaps));
     peertemplate = GST_PAD_PAD_TEMPLATE(autoplugger->srcpadpeer);
     if (peertemplate) {
       peertemplatecaps = GST_PAD_TEMPLATE_CAPS(peertemplate);
       if (peertemplatecaps) {
         GST_INFO ("there are some caps on this pad's peer's padtemplate %s",
-                 gst_caps_get_mime(peertemplatecaps));
+                 gst_caps2_get_mime(peertemplatecaps));
         autoplugger->sinktemplatecaps = peertemplatecaps;*/
 /*        GST_DEBUG ("turning on caps nego proxying in cache"); */
 /*        gtk_object_set(G_OBJECT(autoplugger->cache),"caps_proxy",TRUE,NULL);*/
@@ -265,31 +265,31 @@ gst_autoplugger_external_src_linked(GstPad *pad, GstPad *peerpad, GstAutoplugger
 
 /*
 static void
-gst_autoplugger_external_sink_caps_changed(GstPad *pad, GstCaps *caps, GstAutoplugger *autoplugger)
+gst_autoplugger_external_sink_caps_changed(GstPad *pad, GstCaps2 *caps, GstAutoplugger *autoplugger)
 {
-  GST_INFO ("have cache:sink caps of %s\n",gst_caps_get_mime(caps));
+  GST_INFO ("have cache:sink caps of %s\n",gst_caps2_get_mime(caps));
   autoplugger->sinkcaps = caps;
 }
 
 static void
-gst_autoplugger_external_src_caps_changed(GstPad *pad, GstCaps *caps, GstAutoplugger *autoplugger)
+gst_autoplugger_external_src_caps_changed(GstPad *pad, GstCaps2 *caps, GstAutoplugger *autoplugger)
 {
-  GST_INFO ("have cache:src caps of %s\n",gst_caps_get_mime(caps));
+  GST_INFO ("have cache:src caps of %s\n",gst_caps2_get_mime(caps));
   autoplugger->srccaps = caps;
 }
 */
 
 
 static gboolean
-gst_autoplugger_autoplug(GstAutoplugger *autoplugger,GstPad *srcpad,GstCaps *srccaps,GstCaps *sinkcaps)
+gst_autoplugger_autoplug(GstAutoplugger *autoplugger,GstPad *srcpad,GstCaps2 *srccaps,GstCaps2 *sinkcaps)
 {
   GstPad *sinkpad;
 
   sinkpad = GST_PAD(GST_PAD_PEER(srcpad));
   GST_DEBUG ("unlinking %s:%s and %s:%s to autoplug between them",
             GST_DEBUG_PAD_NAME(srcpad),GST_DEBUG_PAD_NAME(sinkpad));
-  GST_DEBUG ("srcpadcaps are of type %s",gst_caps_get_mime(srccaps));
-  GST_DEBUG ("sinkpadcaps are of type %s",gst_caps_get_mime(sinkcaps));
+  GST_DEBUG ("srcpadcaps are of type %s",gst_caps2_get_mime(srccaps));
+  GST_DEBUG ("sinkpadcaps are of type %s",gst_caps2_get_mime(sinkcaps));
 
   /* unlink the pads */
   GST_DEBUG ("unlinking the pads that will be joined by an autobin");
@@ -333,9 +333,9 @@ gst_autoplugger_external_sink_caps_nego_failed(GstPad *pad, gboolean *result, Gs
 {
   GstPad *srcpad_peer;
   GstPadTemplate *srcpad_peer_template;
-  GstCaps *srcpad_peer_caps;
+  GstCaps2 *srcpad_peer_caps;
   GstPad *sinkpad_peer;
-  GstCaps *sinkpad_peer_caps;
+  GstCaps2 *sinkpad_peer_caps;
 
   GST_INFO ("have caps nego failure on sinkpad %s:%s!!!",GST_DEBUG_PAD_NAME(pad));
 
@@ -370,10 +370,10 @@ gst_autoplugger_external_sink_caps_nego_failed(GstPad *pad, gboolean *result, Gs
 static void
 gst_autoplugger_external_src_caps_nego_failed(GstPad *pad, gboolean *result, GstAutoplugger *autoplugger)
 {
-  GstCaps *srcpad_caps;
+  GstCaps2 *srcpad_caps;
   GstPad *srcpad_peer;
   GstPadTemplate *srcpad_peer_template;
-  GstCaps *srcpad_peer_caps;
+  GstCaps2 *srcpad_peer_caps;
 
   GST_INFO ("have caps nego failure on srcpad %s:%s!!!",GST_DEBUG_PAD_NAME(pad));
 
@@ -443,9 +443,9 @@ gst_autoplugger_cache_empty(GstElement *element, GstAutoplugger *autoplugger)
 }
 
 static void
-gst_autoplugger_type_find_have_type(GstElement *element, GstCaps *caps, GstAutoplugger *autoplugger) 
+gst_autoplugger_type_find_have_type(GstElement *element, GstCaps2 *caps, GstAutoplugger *autoplugger) 
 {
-  GST_INFO ("typefind claims to have a type: %s",gst_caps_get_mime(caps));
+  GST_INFO ("typefind claims to have a type: %s",gst_caps2_get_mime(caps));
 
 gst_scheduler_show(GST_ELEMENT_SCHED(autoplugger));
 

@@ -1844,7 +1844,7 @@ gst_pad_proxy_link (GstPad *pad, const GstCaps2 *caps)
  * returns a floating caps, so use gst_caps2_free to get rid of
  * it.
  */
-const GstCaps2*
+GstCaps2*
 gst_pad_get_caps (GstPad *pad)
 {
   GstRealPad *realpad;
@@ -1857,11 +1857,9 @@ gst_pad_get_caps (GstPad *pad)
   GST_CAT_DEBUG (GST_CAT_CAPS, "get pad caps of %s:%s (%p)",
             GST_DEBUG_PAD_NAME (realpad), realpad);
 
-  /* note that we will not _ref the caps here as this function might be 
-   * called recursively */
   if (GST_PAD_CAPS (realpad)) {
     GST_CAT_DEBUG (GST_CAT_CAPS, "using pad real caps %p", GST_PAD_CAPS (realpad));
-    return GST_PAD_CAPS (realpad);
+    return gst_caps2_copy (GST_PAD_CAPS (realpad));
   }
   else if GST_RPAD_GETCAPSFUNC (realpad) {
     GstCaps2 *caps;
@@ -1875,7 +1873,7 @@ gst_pad_get_caps (GstPad *pad)
     GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (realpad);
     GST_CAT_DEBUG (GST_CAT_CAPS, "using pad template %p with caps %p", 
 	       templ, GST_PAD_TEMPLATE_CAPS (templ));
-    return GST_PAD_TEMPLATE_CAPS (templ);
+    return gst_caps2_copy (GST_PAD_TEMPLATE_CAPS (templ));
   }
   GST_CAT_DEBUG (GST_CAT_CAPS, "pad has no caps");
 

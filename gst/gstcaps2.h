@@ -91,6 +91,7 @@ GstCaps2 *gst_caps2_load_thyself (xmlNodePtr parent);
 void gst_caps2_replace (GstCaps2 **caps, const GstCaps2 *newcaps);
 gchar *gst_caps2_to_string (const GstCaps2 *caps);
 GstCaps2 *gst_caps2_from_string (const gchar *string);
+void gst_caps2_debug (const GstCaps2 *caps, const gchar *string);
 
 
 G_END_DECLS

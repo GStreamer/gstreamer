@@ -31,7 +31,20 @@ typedef int (* GstValueUnionFunc) (GValue *dest, const GValue *value1,
 typedef int (* GstValueIntersectFunc) (GValue *dest, const GValue *value1,
     const GValue *value2);
 
-#define GST_VALUE_HOLDS_FOURCC(x) TRUE
+#define GST_MAKE_FOURCC(a,b,c,d)        (guint32)((a)|(b)<<8|(c)<<16|(d)<<24)
+#define GST_STR_FOURCC(f)               (guint32)(((f)[0])|((f)[1]<<8)|((f)[2]<<16)|((f)[3]<<24))
+
+#define GST_FOURCC_FORMAT "%c%c%c%c"
+#define GST_FOURCC_ARGS(fourcc) \
+        ((gchar) ((fourcc)     &0xff)), \
+        ((gchar) (((fourcc)>>8 )&0xff)), \
+        ((gchar) (((fourcc)>>16)&0xff)), \
+        ((gchar) (((fourcc)>>24)&0xff))
+
+#define GST_VALUE_HOLDS_FOURCC(x) (G_VALUE_TYPE(x) == gst_type_fourcc)
+#define GST_VALUE_HOLDS_INT_RANGE(x) (G_VALUE_TYPE(x) == gst_type_int_range)
+#define GST_VALUE_HOLDS_DOUBLE_RANGE(x) (G_VALUE_TYPE(x) == gst_type_double_range)
+#define GST_VALUE_HOLDS_CAPS(x) TRUE /* FIXME */
 
 #define GST_TYPE_FOURCC gst_type_fourcc
 #define GST_TYPE_INT_RANGE gst_type_int_range
@@ -54,8 +67,11 @@ int gst_value_get_int_range_min (const GValue *value);
 int gst_value_get_int_range_max (const GValue *value);
 
 void gst_value_set_double_range (GValue *value, double start, double end);
-double gst_value_get_double_range_start (const GValue *value);
-double gst_value_get_double_range_end (const GValue *value);
+double gst_value_get_double_range_min (const GValue *value);
+double gst_value_get_double_range_max (const GValue *value);
+
+const GstCaps2 *gst_value_get_caps (const GValue *value);
+void gst_value_set_caps (GValue *calue, const GstCaps2 *caps);
 
 void _gst_value_initialize (void);
 

@@ -265,7 +265,6 @@ gst_util_set_object_arg (GObject * object, const gchar * name, const gchar * val
  */
 
 #include "gstpad.h"
-#include "gstprops.h"
 
 static void
 string_append_indent (GString * str, gint count)
@@ -276,6 +275,7 @@ string_append_indent (GString * str, gint count)
     g_string_append_c (str, ' ');
 }
 
+#if 0
 static void
 gst_print_props (GString *buf, gint indent, GList *props, gboolean showname)
 {
@@ -371,6 +371,7 @@ gst_print_props (GString *buf, gint indent, GList *props, gboolean showname)
     }
   }
 }
+#endif
 
 /**
  * gst_print_pad_caps:

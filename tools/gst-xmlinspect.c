@@ -46,124 +46,13 @@ G_STMT_START{                                                   \
 #endif
 
 static void
-print_prop (GstPropsEntry *prop, gint pfx)
-{
-  GstPropsType type;
-
-  type = gst_props_entry_get_props_type (prop);
-
-  switch (type) {
-    case GST_PROPS_INT_TYPE:
-    {
-      gint val;
-      gst_props_entry_get_int (prop, &val);
-      PUT_STRING (pfx, "<int name=\"%s\" value=\"%d\"/>",
-                      gst_props_entry_get_name (prop), val);
-      break;
-    }
-    case GST_PROPS_INT_RANGE_TYPE:
-    {
-      gint min, max;
-      gst_props_entry_get_int_range (prop, &min, &max);
-      PUT_STRING (pfx, "<range name=\"%s\" min=\"%d\" max=\"%d\"/>",
-                      gst_props_entry_get_name (prop), min, max);
-      break;
-    }
-    case GST_PROPS_FLOAT_TYPE:
-    {
-      gfloat val;
-      gst_props_entry_get_float (prop, &val);
-      PUT_STRING (pfx, "<float name=\"%s\" value=\"%f\"/>",
-                      gst_props_entry_get_name (prop), val);
-      break;
-    }
-    case GST_PROPS_FLOAT_RANGE_TYPE:
-    {
-      gfloat min, max;
-      gst_props_entry_get_float_range (prop, &min, &max);
-      PUT_STRING (pfx, "<floatrange name=\"%s\" min=\"%f\" max=\"%f\"/>",
-                      gst_props_entry_get_name (prop), min, max);
-      break;
-    }
-    case GST_PROPS_BOOLEAN_TYPE:
-    {
-      gboolean val;
-      gst_props_entry_get_boolean (prop, &val);
-      PUT_STRING (pfx, "<boolean name=\"%s\" value=\"%s\"/>",
-                      gst_props_entry_get_name (prop), val ? "true" : "false");
-      break;
-    }
-    case GST_PROPS_STRING_TYPE:
-    {
-      const gchar *val;
-      gst_props_entry_get_string (prop, &val);
-      PUT_STRING (pfx, "<string name=\"%s\" value=\"%s\"/>",
-                      gst_props_entry_get_name (prop), val);
-      break;
-    }
-    case GST_PROPS_FOURCC_TYPE:
-    {
-      guint32 val;
-      gst_props_entry_get_fourcc_int (prop, &val);
-      PUT_STRING (pfx, "<!--%c%c%c%c-->",
-             (gchar)( val        & 0xff),
-             (gchar)((val >> 8)  & 0xff),
-             (gchar)((val >> 16) & 0xff),
-             (gchar)((val >> 24) & 0xff));
-      PUT_STRING (pfx, "<fourcc name=\"%s\" hexvalue=\"%08x\"/>",
-                      gst_props_entry_get_name (prop), val);
-      break;
-    }
-    case GST_PROPS_LIST_TYPE:
-    {
-      const GList *list;
-
-      gst_props_entry_get_list (prop, &list);
-      PUT_STRING (pfx, "<list name=\"%s\">", gst_props_entry_get_name (prop));
-      while (list) {
-        GstPropsEntry *listentry;
-
-        listentry = (GstPropsEntry*) (list->data);
-        print_prop (listentry, pfx + 1);
-
-        list = g_list_next (list);
-      }
-      PUT_END_TAG (pfx, "list");
-      break;
-    }
-    default:
-      break;
-  }
-}
-
-static void
-print_props (GstProps *properties, gint pfx)
-{
-  GList *props;
-  GstPropsEntry *prop;
-
-  props = properties->properties;
-
-  if (!props)
-    return;
-
-  PUT_START_TAG (pfx, "properties");
-
-  while (props) {
-    prop = (GstPropsEntry*) (props->data);
-    props = g_list_next (props);
-
-    print_prop (prop, pfx + 1);
-  }
-  PUT_END_TAG (pfx, "properties");
-}
-
-static void
-print_caps (GstCaps *caps, gint pfx)
+print_caps (const GstCaps2 *caps, gint pfx)
 {
   if (!caps)
     return;
 
+  /* FIXME */
+#if 0
   PUT_START_TAG (pfx, "capscomp");
 
   while (caps) {
@@ -180,6 +69,7 @@ print_caps (GstCaps *caps, gint pfx)
     caps = caps->next;
   }
   PUT_END_TAG (pfx, "capscomp");
+#endif
 }
 
 static void
@@ -393,8 +283,10 @@ print_element_properties (GstElement *element, gint pfx)
         break;
       }
       default:
+#if 0
+      /* FIXME */
         if (param->value_type == GST_TYPE_CAPS) {
-          GstCaps *caps = g_value_peek_pointer (&value);
+          GstCaps2 *caps = g_value_peek_pointer (&value);
 
           if (!caps)
             PUT_ESCAPED (pfx + 2, "default", "NULL");
@@ -402,6 +294,9 @@ print_element_properties (GstElement *element, gint pfx)
             print_caps (caps, 2);
           }
         }
+#else
+        if (0) { }
+#endif
         else if (G_IS_PARAM_SPEC_ENUM (param)) {
           GEnumValue *values;
           guint j = 0;
@@ -828,15 +723,6 @@ print_element_list (void)
         g_print ("%s:  %s: %s\n", plugin->desc.name,
                 GST_PLUGIN_FEATURE_NAME (factory) ,factory->details.longname);
       }
-#ifndef GST_DISABLE_AUTOPLUG
-      else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
-        GstAutoplugFactory *factory;
-
-        factory = GST_AUTOPLUG_FACTORY (feature);
-        g_print ("%s:  %s: %s\n", plugin->desc.name,
-                GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
-      }
-#endif
 #ifndef GST_DISABLE_INDEX
       else if (GST_IS_INDEX_FACTORY (feature)) {
         GstIndexFactory *factory;
@@ -926,15 +812,6 @@ print_plugin_info (GstPlugin *plugin)
               factory->details.longname);
       num_elements++;
     }
-#ifndef GST_DISABLE_AUTOPLUG
-    else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
-      GstAutoplugFactory *factory;
-
-      factory = GST_AUTOPLUG_FACTORY (feature);
-      g_print ("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
-      num_autoplug++;
-    }
-#endif
 #ifndef GST_DISABLE_INDEX
     else if (GST_IS_INDEX_FACTORY (feature)) {
       GstIndexFactory *factory;
@@ -1050,14 +927,6 @@ main (int argc, char *argv[])
                                                    GST_TYPE_INDEX_FACTORY);
          if (feature) {
            g_print ("%s: an index\n", argv[1]);
-           return 0;
-         }
-#endif
-#ifndef GST_DISABLE_AUTOPLUG
-         feature = gst_registry_pool_find_feature (argv[1],
-                                                   GST_TYPE_AUTOPLUG_FACTORY);
-         if (feature) {
-           g_print ("%s: an autoplugger\n", argv[1]);
            return 0;
          }
 #endif

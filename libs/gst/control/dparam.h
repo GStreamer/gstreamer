@@ -23,7 +23,6 @@
 #define __GST_DPARAM_H__
 
 #include <gst/gstobject.h>
-#include <gst/gstprops.h>
 #include "dparamcommon.h"
 
 G_BEGIN_DECLS

@@ -36,7 +36,6 @@
 #include <gst/gstelement.h>
 #include <gst/gsttypefind.h>
 #include <gst/gstscheduler.h>
-#include <gst/gstautoplug.h>
 #include <gst/gsturi.h>
 #include <gst/gstinfo.h>
 
@@ -775,6 +774,7 @@ gst_xml_registry_parse_scheduler_factory (GMarkupParseContext *context, const gc
   return TRUE;
 }
 
+#if 0
 static gboolean
 gst_xml_registry_parse_autoplug_factory (GMarkupParseContext *context, const gchar *tag, const gchar *text,
                                          gsize text_len, GstXMLRegistry *registry, GError **error)
@@ -789,6 +789,7 @@ gst_xml_registry_parse_autoplug_factory (GMarkupParseContext *context, const gch
   }
   return TRUE;
 }
+#endif
 
 static gboolean
 gst_xml_registry_parse_index_factory (GMarkupParseContext *context, const gchar *tag, const gchar *text,
@@ -942,9 +943,11 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
 	    xmlregistry->parser = gst_xml_registry_parse_scheduler_factory;
             GST_SCHEDULER_FACTORY (feature)->type = 0;
 	  }
+#if 0
 	  else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
 	    xmlregistry->parser = gst_xml_registry_parse_autoplug_factory;
 	  }
+#endif
 	  else if (GST_IS_INDEX_FACTORY (feature)) {
 	    xmlregistry->parser = gst_xml_registry_parse_index_factory;
 	  }
@@ -1530,9 +1533,11 @@ gst_xml_registry_save_feature (GstXMLRegistry *xmlregistry, GstPluginFeature *fe
   else if (GST_IS_SCHEDULER_FACTORY (feature)) {
     PUT_ESCAPED ("longdesc", GST_SCHEDULER_FACTORY (feature)->longdesc);
   }
+#if 0
   else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
     PUT_ESCAPED ("longdesc", GST_AUTOPLUG_FACTORY (feature)->longdesc);
   }
+#endif
   else if (GST_IS_INDEX_FACTORY (feature)) {
     PUT_ESCAPED ("longdesc", GST_INDEX_FACTORY (feature)->longdesc);
   }

@@ -507,9 +507,6 @@ init_post (void)
   gst_scheduler_factory_get_type ();
   gst_type_find_factory_get_type ();
   gst_bin_get_type ();
-#ifndef GST_DISABLE_AUTOPLUG
-  gst_autoplug_factory_get_type ();
-#endif /* GST_DISABLE_AUTOPLUG */
 #ifndef GST_DISABLE_INDEX
   gst_index_factory_get_type ();
 #endif /* GST_DISABLE_INDEX */
@@ -528,8 +525,6 @@ init_post (void)
   _gst_cpu_initialize (_gst_enable_cpu_opt);
   _gst_structure_initialize ();
   _gst_value_initialize ();
-  _gst_props_initialize ();
-  _gst_caps_initialize ();
   _gst_caps2_initialize ();
   _gst_plugin_initialize ();
   _gst_event_initialize ();

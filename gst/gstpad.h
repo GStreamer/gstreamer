@@ -454,7 +454,7 @@ void			gst_pad_unlink				(GstPad *srcpad, GstPad *sinkpad);
 GstPad*			gst_pad_get_peer			(GstPad *pad);
 
 /* capsnego functions */
-const GstCaps2*		gst_pad_get_caps			(GstPad *pad);
+GstCaps2*		gst_pad_get_caps			(GstPad *pad);
 const GstCaps2*		gst_pad_get_pad_template_caps		(GstPad *pad);
 GstPadLinkReturn	gst_pad_try_set_caps			(GstPad *pad, const GstCaps2 *caps);
 gboolean		gst_pad_check_compatibility		(GstPad *srcpad, GstPad *sinkpad);

@@ -19,7 +19,7 @@ then
 fi
 . common/gst-autogen.sh
 
-CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-plugin-builddir --enable-failing-tests --enable-poisoning'
+CONFIGURE_DEF_OPT='--disable-static --enable-maintainer-mode --enable-plugin-builddir --enable-failing-tests --enable-poisoning'
 
 autogen_options $@
 

@@ -73,8 +73,8 @@ static void			gst_spider_identity_init		(GstSpiderIdentity *spider_identity);
 /* functions set in pads, elements and stuff */
 static void			gst_spider_identity_chain		(GstPad *pad, GstBuffer *buf);
 static GstElementStateReturn	gst_spider_identity_change_state	(GstElement *element);
-static GstPadLinkReturn		gst_spider_identity_link		(GstPad *pad, GstCaps *caps);
-static GstCaps *		gst_spider_identity_getcaps		(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn		gst_spider_identity_link		(GstPad *pad, const GstCaps2 *caps);
+static GstCaps2 *		gst_spider_identity_getcaps		(GstPad *pad, const GstCaps2 *caps);
 /* loop functions */
 static void			gst_spider_identity_dumb_loop		(GstSpiderIdentity *ident);
 static void                     gst_spider_identity_src_loop		(GstSpiderIdentity *ident);
@@ -227,7 +227,7 @@ gst_spider_identity_new_sink (gchar *name)
 
 /* shamelessly stolen from gstqueue.c to get proxy links */
 static GstPadLinkReturn
-gst_spider_identity_link (GstPad *pad, GstCaps *caps)
+gst_spider_identity_link (GstPad *pad, const GstCaps2 *caps)
 {
   GstSpiderIdentity *spider_identity = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
   GstPad *otherpad;
@@ -243,8 +243,8 @@ gst_spider_identity_link (GstPad *pad, GstCaps *caps)
   return GST_PAD_LINK_OK;
 }
 
-static GstCaps*
-gst_spider_identity_getcaps (GstPad *pad, GstCaps *caps)
+static GstCaps2*
+gst_spider_identity_getcaps (GstPad *pad, const GstCaps2 *caps)
 {
   GstSpiderIdentity *spider_identity = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
   GstPad *otherpad;
@@ -413,7 +413,7 @@ gst_spider_identity_src_loop (GstSpiderIdentity *ident)
 typedef struct {
   GstBuffer *buffer;
   guint best_probability;
-  GstCaps *caps;
+  GstCaps2 *caps;
 } SpiderTypeFind;
 guint8 *
 spider_find_peek (gpointer data, gint64 offset, guint size)
@@ -431,16 +431,16 @@ spider_find_peek (gpointer data, gint64 offset, guint size)
   }
 }
 static void
-spider_find_suggest (gpointer data, guint probability, GstCaps *caps)
+spider_find_suggest (gpointer data, guint probability, const GstCaps2 *caps)
 {
   SpiderTypeFind *find = (SpiderTypeFind *) data;
   G_GNUC_UNUSED gchar *caps_str;
 
-  caps_str = gst_caps_to_string (caps);
+  caps_str = gst_caps2_to_string (caps);
   GST_INFO ("suggest %u, %s", probability, caps_str);
   g_free (caps_str);
   if (probability > find->best_probability) {
-    gst_caps_replace (&find->caps, caps);
+    gst_caps2_replace (&find->caps, caps);
     find->best_probability = probability;
   }
 }
@@ -462,8 +462,8 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
   
   find.buffer = GST_BUFFER (data);
   /* maybe there are already valid caps now? */
-  if ((find.caps = gst_pad_get_caps (ident->sink)) != NULL) {
-    gst_caps_ref (find.caps); /* it's unrefed later below */
+  find.caps = gst_pad_get_caps (ident->sink);
+  if (find.caps != NULL) {
     goto plug;
   }
   
@@ -502,8 +502,8 @@ end:
 plug:
   GST_INFO ("typefind function found caps"); 
   g_assert (gst_pad_try_set_caps (ident->src, find.caps) > 0);
-  gst_caps_debug (find.caps, "spider starting caps");
-  gst_caps_unref (find.caps);
+  gst_caps2_debug (find.caps, "spider starting caps");
+  gst_caps2_free (find.caps);
   if (type_list)
     g_list_free (type_list);
 

@@ -147,7 +147,7 @@ gst_value_lcopy_int_range (const GValue *value, guint n_collect_values,
 void
 gst_value_set_int_range (GValue *value, int start, int end)
 {
-  g_return_if_fail (GST_VALUE_HOLDS_FOURCC (value));
+  g_return_if_fail (GST_VALUE_HOLDS_INT_RANGE (value));
 
   value->data[0].v_long = start;
   value->data[1].v_long = end;
@@ -156,7 +156,7 @@ gst_value_set_int_range (GValue *value, int start, int end)
 int
 gst_value_get_int_range_min (const GValue *value)
 {
-  g_return_val_if_fail (GST_VALUE_HOLDS_FOURCC (value), 0);
+  g_return_val_if_fail (GST_VALUE_HOLDS_INT_RANGE (value), 0);
 
   return value->data[0].v_long;
 }
@@ -164,10 +164,99 @@ gst_value_get_int_range_min (const GValue *value)
 int
 gst_value_get_int_range_max (const GValue *value)
 {
-  g_return_val_if_fail (GST_VALUE_HOLDS_FOURCC (value), 0);
+  g_return_val_if_fail (GST_VALUE_HOLDS_INT_RANGE (value), 0);
 
   return value->data[1].v_long;
 }
+
+/* double range */
+
+static void 
+gst_value_init_double_range (GValue *value)
+{
+  value->data[0].v_double = 0;
+  value->data[1].v_double = 0;
+}
+
+static void
+gst_value_copy_double_range (const GValue *src_value, GValue *dest_value)
+{
+  dest_value->data[0].v_double = src_value->data[0].v_double;
+  dest_value->data[1].v_double = src_value->data[1].v_double;
+}
+
+static gchar *
+gst_value_collect_double_range (GValue *value, guint n_collect_values,
+    GTypeCValue *collect_values, guint collect_flags)
+{
+  /* FIXME */
+  value->data[0].v_double = collect_values[0].v_double;
+  value->data[1].v_double = collect_values[1].v_double;
+
+  return NULL;
+}
+
+static gchar *
+gst_value_lcopy_double_range (const GValue *value, guint n_collect_values,
+    GTypeCValue *collect_values, guint collect_flags)
+{
+  guint32 *double_range_p = collect_values[0].v_pointer;
+
+  /* FIXME */
+
+  if (!double_range_p)
+    return g_strdup_printf ("value location for `%s' passed as NULL",
+	G_VALUE_TYPE_NAME (value));
+
+  *double_range_p = value->data[0].v_double;
+
+  return NULL;
+}
+
+void
+gst_value_set_double_range (GValue *value, double start, double end)
+{
+  g_return_if_fail (GST_VALUE_HOLDS_DOUBLE_RANGE (value));
+
+  value->data[0].v_double = start;
+  value->data[1].v_double = end;
+}
+
+double
+gst_value_get_double_range_min (const GValue *value)
+{
+  g_return_val_if_fail (GST_VALUE_HOLDS_DOUBLE_RANGE (value), 0);
+
+  return value->data[0].v_double;
+}
+
+double
+gst_value_get_double_range_max (const GValue *value)
+{
+  g_return_val_if_fail (GST_VALUE_HOLDS_DOUBLE_RANGE (value), 0);
+
+  return value->data[1].v_double;
+}
+
+/* GstCaps */
+
+void
+gst_value_set_caps (GValue *value, const GstCaps2 *caps)
+{
+  g_return_if_fail (GST_VALUE_HOLDS_CAPS (value));
+
+  value->data[0].v_pointer = gst_caps2_copy (caps);
+}
+
+const GstCaps2 *
+gst_value_get_caps (const GValue *value)
+{
+  g_return_val_if_fail (GST_VALUE_HOLDS_CAPS (value), 0);
+
+  return value->data[0].v_pointer;
+}
+
+/* fourcc */
 
 static void
 gst_value_transform_fourcc_string (const GValue *src_value,
@@ -459,6 +548,21 @@ _gst_value_initialize (void)
     };
     info.value_table = &value_table;
     gst_type_int_range = g_type_register_static (G_TYPE_BOXED, "GstIntRange", &info, 0);
+  }
+
+  {
+    static const GTypeValueTable value_table = {
+      gst_value_init_double_range,
+      NULL,
+      gst_value_copy_double_range,
+      NULL,
+      "i",
+      gst_value_collect_double_range,
+      "p",
+      gst_value_lcopy_double_range
+    };
+    info.value_table = &value_table;
+    gst_type_double_range = g_type_register_static (G_TYPE_BOXED, "GstIntRange", &info, 0);
   }
 
   g_value_register_transform_func (GST_TYPE_FOURCC, G_TYPE_STRING,

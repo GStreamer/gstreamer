@@ -58,23 +58,23 @@ g_list_free_list_and_elements (GList *list)
  * Returns: TRUE, if both caps intersect.
  */
 gboolean
-gst_autoplug_caps_intersect (GstCaps *src, GstCaps *sink)
+gst_autoplug_caps_intersect (const GstCaps2 *src, const GstCaps2 *sink)
 {
-  GstCaps *caps;
+  GstCaps2 *caps;
 
   /* if there are no caps, we can link */
   if ((src == NULL) && (sink == NULL))
     return TRUE;
 
   /* get an intersection */
-  caps = gst_caps_intersect (src, sink);
+  caps = gst_caps2_intersect (src, sink);
   
   /* if the caps can't link, there is no intersection */
   if (caps == NULL)
     return FALSE;
   
   /* hurrah, we can link, now remove the intersection */
-  gst_caps_unref (caps);
+  gst_caps2_free (caps);
   return TRUE;
 }
 
@@ -88,7 +88,7 @@ gst_autoplug_caps_intersect (GstCaps *src, GstCaps *sink)
  * Returns: #GstPadTemplate that can connect to the given caps
  */
 GstPadTemplate *
-gst_autoplug_can_connect_src (GstElementFactory *fac, GstCaps *src)
+gst_autoplug_can_connect_src (GstElementFactory *fac, const GstCaps2 *src)
 {
   GList *templs;
   
@@ -117,7 +117,7 @@ gst_autoplug_can_connect_src (GstElementFactory *fac, GstCaps *src)
  * Returns: #GstPadTemplate that can connect to the given caps
  */
 GstPadTemplate *
-gst_autoplug_can_connect_sink (GstElementFactory *fac, GstCaps *sink)
+gst_autoplug_can_connect_sink (GstElementFactory *fac, const GstCaps2 *sink)
 {
   GList *templs;
   
@@ -125,7 +125,7 @@ gst_autoplug_can_connect_sink (GstElementFactory *fac, GstCaps *sink)
   
   while (templs)
   {
-    GstCaps *caps = GST_PAD_TEMPLATE_CAPS (templs->data);
+    GstCaps2 *caps = GST_PAD_TEMPLATE_CAPS (templs->data);
     if ((GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC) &&
 	gst_autoplug_caps_intersect (caps, sink))
     {
@@ -320,8 +320,8 @@ gst_autoplug_factories_at_most_templates(GList *factories, GstPadDirection dir, 
  */
 /**
  * gst_autoplug_sp:
- * @src_caps: a #GstCaps to plug from.
- * @sink_caps: the #GstCaps to plug to.
+ * @src_caps: a #GstCaps2 to plug from.
+ * @sink_caps: the #GstCaps2 to plug to.
  * @factories: a #GList containing all allowed #GstElementFactory entries.
  *
  * Finds the shortest path of elements that together make up a possible
@@ -331,7 +331,7 @@ gst_autoplug_factories_at_most_templates(GList *factories, GstPadDirection dir, 
  * to get the shortest path.
  */
 GList *
-gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
+gst_autoplug_sp (const GstCaps2 *srccaps, const GstCaps2 *sinkcaps, GList *factories)
 {
   GList *factory_nodes = NULL;
   guint curcost = GST_AUTOPLUG_MAX_COST; /* below this cost, there is no path */
@@ -340,11 +340,9 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
   g_return_val_if_fail (srccaps != NULL, NULL);
   g_return_val_if_fail (sinkcaps != NULL, NULL);
   
-  GST_INFO ("attempting to autoplug via shortest path from %s to %s", 
-	    gst_caps_get_mime (srccaps), gst_caps_get_mime (sinkcaps));
+  GST_INFO ("attempting to autoplug via shortest path from %s to %s",
+		  gst_caps2_to_string(srccaps), gst_caps2_to_string(sinkcaps));
 
-  gst_caps_debug (srccaps, "source caps");
-  gst_caps_debug (sinkcaps, "sink caps");
   /* wrap all factories as GstAutoplugNode 
    * initialize the cost */
   while (factories)

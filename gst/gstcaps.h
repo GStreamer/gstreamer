@@ -36,10 +36,12 @@ extern GType _gst_caps_type;
 
 #define GST_TYPE_CAPS  (_gst_caps_type)
 
+#if 0
 typedef enum {
   GST_CAPS_UNUSED 	= (1 << 0),	/* unused flag */
   GST_CAPS_FLOATING 	= (1 << 1)	/* caps is floating */
 } GstCapsFlags;
+#endif
 
 #define GST_CAPS(caps)  	((GstCaps *)(caps))
 
