@@ -36,79 +36,48 @@ extern "C" {
 #define GST_IS_DPARAM(obj)			(G_TYPE_CHECK_INSTANCE_TYPE	((obj), GST_TYPE_DPARAM))
 #define GST_IS_DPARAM_CLASS(obj)		(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DPARAM))
 
-#define GST_DPARAM_NAME(dparam)				 (GST_OBJECT_NAME(dparam))
-#define GST_DPARAM_PARENT(dparam)			 (GST_OBJECT_PARENT(dparam))
-#define GST_DPARAM_VALUE(dparam)				 ((dparam)->value)
-#define GST_DPARAM_SPEC(dparam)				 ((dparam)->spec)
-#define GST_DPARAM_MANAGER(dparam)				 ((dparam)->manager)
-#define GST_DPARAM_TYPE(dparam)				 ((dparam)->type)
+#define GST_DPARAM_NAME(dparam)				(GST_OBJECT_NAME(dparam))
+#define GST_DPARAM_PARENT(dparam)			(GST_OBJECT_PARENT(dparam))
+#define GST_DPARAM_CHANGE_VALUE(dparam)		((dparam)->change_value)
+#define GST_DPARAM_PARAM_SPEC(dparam)		((dparam)->param_spec)
+#define GST_DPARAM_MANAGER(dparam)			((dparam)->manager)
+#define GST_DPARAM_TYPE(dparam)				((dparam)->type)
+#define GST_DPARAM_IS_LOG(dparam)			((dparam)->is_log)
+#define GST_DPARAM_IS_RATE(dparam)			((dparam)->is_rate)
+#define GST_DPARAM_META_VALUES(dparam)		((dparam)->meta_values)
+#define GST_DPARAM_META_PARAM_SPECS(dparam)	((dparam)->meta_param_specs)
+#define GST_DPARAM_LOCK(dparam)				(g_mutex_lock((dparam)->lock))
+#define GST_DPARAM_UNLOCK(dparam)			(g_mutex_unlock((dparam)->lock))
 
-#define GST_DPARAM_LOCK(dparam)		(g_mutex_lock((dparam)->lock))
-#define GST_DPARAM_UNLOCK(dparam)		(g_mutex_unlock((dparam)->lock))
-
-#define GST_DPARAM_READY_FOR_UPDATE(dparam)		((dparam)->ready_for_update)
-#define GST_DPARAM_DEFAULT_UPDATE_PERIOD(dparam)	((dparam)->default_update_period)
+#define GST_DPARAM_READY_FOR_UPDATE(dparam)	((dparam)->ready_for_update)
 #define GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam)	((dparam)->next_update_timestamp)
-#define GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam)	((dparam)->last_update_timestamp)
 
-#define GST_DPARAM_GET_POINT(dparam, timestamp) \
-	((dparam->get_point_func)(dparam, timestamp))
-
-#define GST_DPARAM_FIND_POINT(dparam, timestamp, search_flag) \
-	((dparam->find_point_func)(dparam, data, search_flag))
-
-#define GST_DPARAM_DO_UPDATE(dparam, timestamp) \
-	((dparam->do_update_func)(dparam, timestamp))
-		
-#define GST_DPARAM_INSERT_POINT(dparam, timestamp) \
-	((dparam->insert_point_func)(dparam, timestamp))
-
-#define GST_DPARAM_REMOVE_POINT(dparam, data) \
-	((dparam->remove_point_func)(dparam, data))
-	
-typedef enum {
-  GST_DPARAM_CLOSEST,
-  GST_DPARAM_CLOSEST_AFTER,
-  GST_DPARAM_CLOSEST_BEFORE,
-  GST_DPARAM_EXACT,
-} GstDParamSearchFlag;
-
-typedef enum {
-  GST_DPARAM_NOT_FOUND = 0,
-  GST_DPARAM_FOUND_EXACT,
-  GST_DPARAM_FOUND_CLOSEST,
-} GstDParamSearchResult;
+#define GST_DPARAM_DO_UPDATE(dparam, timestamp, value) \
+	((dparam->do_update_func)(dparam, timestamp, value))
 
 typedef struct _GstDParamClass GstDParamClass;
 
-typedef GValue** (*GstDParamInsertPointFunction) (GstDParam *dparam, guint64 timestamp);
-typedef void (*GstDParamRemovePointFunction) (GstDParam *dparam, GValue** point);
-typedef GValue** (*GstDParamGetPointFunction) (GstDParam *dparam, gint64 timestamp);
-typedef GstDParamSearchResult (*GstDParamFindPointFunction) (GstDParam *dparam, gint64 *timestamp, GstDParamSearchFlag search_flag);
-
-typedef void (*GstDParamDoUpdateFunction) (GstDParam *dparam, gint64 timestamp);
+typedef void (*GstDParamDoUpdateFunction) (GstDParam *dparam, gint64 timestamp, GValue *value);
 
 struct _GstDParam {
 	GstObject		object;
 
-	GstDParamGetPointFunction get_point_func;
-	GstDParamFindPointFunction find_point_func;
-
 	GstDParamDoUpdateFunction do_update_func;
 	
-	GstDParamInsertPointFunction insert_point_func;
-	GstDParamRemovePointFunction remove_point_func;	
-	
 	GMutex *lock;
-	GValue *value;
+
+	gfloat value_float;
+	gint value_int;
+	gint64 value_int64;
+	
 	GstDParamManager *manager;
-	GstDParamSpec *spec;
-	GValue **point;
+	GParamSpec *param_spec;
 	GType type;
-	gint64 last_update_timestamp;
-	gint64 next_update_timestamp;
-	gint64 default_update_period;
 	gboolean ready_for_update;
+
+	gint64 next_update_timestamp;
+	gboolean is_log;
+	gboolean is_rate;
 };
 
 struct _GstDParamClass {
@@ -117,28 +86,12 @@ struct _GstDParamClass {
 	/* signal callbacks */
 };
 
-struct _GstDParamSpec {
-	gchar *dparam_name;
-	gchar *unit_name;
-	GValue *min_val;
-	GValue *max_val;
-	GValue *default_val;
-	gboolean is_log;
-	gboolean is_rate;
-};
 
 GType gst_dparam_get_type (void);
 GstDParam* gst_dparam_new (GType type);
-void gst_dparam_attach (GstDParam *dparam, GstDParamManager *manager, GValue *value, GstDParamSpec *spec);
+void gst_dparam_attach (GstDParam *dparam, GstDParamManager *manager, GParamSpec *param_spec, gboolean is_log, gboolean is_rate);
 void gst_dparam_detach (GstDParam *dparam);
-GValue** gst_dparam_new_value_array(GType type, ...);
-void gst_dparam_set_value_from_string(GValue *value, const gchar *value_str);
-
-/**********************
- * GstDParamSmooth
- **********************/
-
-GstDParam* gst_dparam_smooth_new (GType type);
+void gst_dparam_do_update_default (GstDParam *dparam, gint64 timestamp, GValue *value);
 
 #ifdef __cplusplus
 }

@@ -27,7 +27,6 @@ extern "C" {
 #endif /* __cplusplus */
 
 typedef struct _GstDParam GstDParam;
-typedef struct _GstDParamSpec GstDParamSpec;
 typedef struct _GstDParamManager GstDParamManager;
 
 #ifdef __cplusplus
