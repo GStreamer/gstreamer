@@ -18,8 +18,8 @@
  */
 
 #include <gst/gst.h>
-#include <libs/audio/gstaudio.h>
-#include "cutter.h"
+#include <gst/audio/audio.h>
+#include "gstcutter.h"
 #include "math.h"
 
 

@@ -1,8 +1,8 @@
-if USE_A52
-A52_DIR=a52
-else
-A52_DIR=
-endif
+#if USE_A52
+#A52_DIR=a52
+#else
+#A52_DIR=
+#endif
 
 if USE_AALIB
 AALIB_DIR=aalib
@@ -52,9 +52,10 @@ else
 VORBIS_DIR=
 endif
 
-
-SUBDIRS=$(A52_DIR) $(AALIB_DIR) $(ALSA_DIR) $(AUDIOFILE_DIR) $(ESD_DIR) \
+#$A52_DIR
+SUBDIRS=$(AALIB_DIR) $(ALSA_DIR) $(AUDIOFILE_DIR) $(ESD_DIR) \
         $(LAME_DIR) $(MAD_DIR) \
 	$(SDL_DIR) $(VORBIS_DIR)
 
-DIST_SUBDIRS=a52 aalib alsa audiofile esd lame mad sdl vorbis
+#a52
+DIST_SUBDIRS=aalib alsa audiofile esd lame mad sdl vorbis
