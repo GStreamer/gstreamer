@@ -87,8 +87,8 @@ main (gint argc, gchar * argv[])
   yes = g_value_get_enum (gst_structure_get_value (strc, "yes"));
   no = g_value_get_enum (gst_structure_get_value (strc, "no"));
   g_assert (yes == TEST_YES && no == TEST_NO);
-  gst_caps_free (caps);
-  gst_caps_free (res_caps);
+  gst_caps_unref (caps);
+  gst_caps_unref (res_caps);
 
   /* yes */
   return 0;

@@ -146,8 +146,8 @@ test_caps (const char *s)
   g_print ("original: %s\nfiltered: %s\n\n", s, s2);
 
   g_free (s2);
-  gst_caps_free (caps);
-  gst_caps_free (caps2);
+  gst_caps_unref (caps);
+  gst_caps_unref (caps2);
 }
 
 

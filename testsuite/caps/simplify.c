@@ -61,7 +61,7 @@ check_caps (GstCaps * caps)
 
   g_free (before);
   g_free (after);
-  gst_caps_free (old);
+  gst_caps_unref (old);
 }
 
 gint
@@ -86,7 +86,7 @@ main (gint argc, gchar ** argv)
 
         g_print ("%2u - %2u ", i, j);
         check_caps (temp);
-        gst_caps_free (temp);
+        gst_caps_unref (temp);
         /* union */
         temp = gst_caps_union (caps, caps2);
         g_print ("%2u + %2u ", i, j);
@@ -99,11 +99,11 @@ main (gint argc, gchar ** argv)
         temp2 = gst_caps_copy (caps);
         gst_caps_append (temp2, caps2);
         g_assert (gst_caps_is_equal (temp, temp2));
-        gst_caps_free (temp2);
-        gst_caps_free (temp);
+        gst_caps_unref (temp2);
+        gst_caps_unref (temp);
       }
     }
-    gst_caps_free (caps);
+    gst_caps_unref (caps);
   }
   g_print ("\n\nSTATISTICS:\n");
   g_print ("\nOf all caps tried\n");

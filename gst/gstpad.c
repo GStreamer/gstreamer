@@ -2255,11 +2255,6 @@ gst_pad_get_allowed_caps (GstPad * srcpad)
 
   GST_PAD_REALIZE_AND_LOCK (srcpad, realpad, lost_ghostpad);
 
-  /* FIXME, allow sinkpads too? need to use the nexted locking 
-   * with retry algorithm, see design docs */
-  if (G_UNLIKELY (!GST_PAD_IS_SRC (realpad)))
-    goto not_src;
-
   if (G_UNLIKELY ((peer = GST_RPAD_PEER (realpad)) == NULL))
     goto no_peer;
 
@@ -2284,14 +2279,6 @@ gst_pad_get_allowed_caps (GstPad * srcpad)
 lost_ghostpad:
   {
     GST_UNLOCK (srcpad);
-    return NULL;
-  }
-not_src:
-  {
-    GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%s:%s: not a source pad",
-        GST_DEBUG_PAD_NAME (realpad));
-    GST_UNLOCK (realpad);
-
     return NULL;
   }
 no_peer:

@@ -30,23 +30,23 @@ check_caps (const gchar * set, const gchar * subset)
   /* basics */
   test = gst_caps_subtract (one, one);
   g_assert (gst_caps_is_empty (test));
-  gst_caps_free (test);
+  gst_caps_unref (test);
   test = gst_caps_subtract (two, two);
   g_assert (gst_caps_is_empty (test));
-  gst_caps_free (test);
+  gst_caps_unref (test);
   test = gst_caps_subtract (two, one);
   g_assert (gst_caps_is_empty (test));
-  gst_caps_free (test);
+  gst_caps_unref (test);
   /* now the nice part */
   test = gst_caps_subtract (one, two);
   g_assert (!gst_caps_is_empty (test));
   g_print ("    A - B  =  %s\n", gst_caps_to_string (test));
   test2 = gst_caps_union (test, two);
   g_print ("A - B + B  =  %s\n", gst_caps_to_string (test2));
-  gst_caps_free (test);
+  gst_caps_unref (test);
   test = gst_caps_subtract (test2, one);
   g_assert (gst_caps_is_empty (test));
-  gst_caps_free (test);
+  gst_caps_unref (test);
 }
 
 gint

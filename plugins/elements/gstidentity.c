@@ -105,6 +105,7 @@ static GstFlowReturn gst_identity_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_identity_getrange (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buffer);
 static void gst_identity_set_clock (GstElement * element, GstClock * clock);
+static GstCaps *gst_identity_proxy_getcaps (GstPad * pad);
 
 
 static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
@@ -208,12 +209,16 @@ gst_identity_init (GstIdentity * identity)
   gst_element_add_pad (GST_ELEMENT (identity), identity->sinkpad);
   gst_pad_set_chain_function (identity->sinkpad,
       GST_DEBUG_FUNCPTR (gst_identity_chain));
+  gst_pad_set_getcaps_function (identity->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_identity_proxy_getcaps));
   gst_pad_set_event_function (identity->sinkpad,
       GST_DEBUG_FUNCPTR (gst_identity_event));
 
   identity->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
       "src");
+  gst_pad_set_getcaps_function (identity->srcpad,
+      GST_DEBUG_FUNCPTR (gst_identity_proxy_getcaps));
   gst_pad_set_getrange_function (identity->srcpad,
       GST_DEBUG_FUNCPTR (gst_identity_getrange));
   gst_element_add_pad (GST_ELEMENT (identity), identity->srcpad);
@@ -238,6 +243,17 @@ gst_identity_set_clock (GstElement * element, GstClock * clock)
   GstIdentity *identity = GST_IDENTITY (element);
 
   gst_object_replace ((GstObject **) & identity->clock, (GstObject *) clock);
+}
+
+static GstCaps *
+gst_identity_proxy_getcaps (GstPad * pad)
+{
+  GstPad *otherpad;
+  GstIdentity *identity = GST_IDENTITY (GST_OBJECT_PARENT (pad));
+
+  otherpad = pad == identity->srcpad ? identity->sinkpad : identity->srcpad;
+
+  return gst_pad_peer_get_caps (otherpad);
 }
 
 static gboolean

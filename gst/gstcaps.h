@@ -89,13 +89,11 @@ GstCaps *                gst_caps_new_full                              (GstStru
 									                 ...);
 GstCaps *                gst_caps_new_full_valist                       (GstStructure  *structure,
 									 va_list        var_args);
-GstCaps *                gst_caps_copy                                  (const GstCaps *caps);
-GstCaps * 		 gst_caps_copy_1 				(const GstCaps *caps);
 
 /* reference counting */
-GstCaps *                gst_caps_get_writable          		(GstCaps *caps);
 GstCaps *                gst_caps_ref                    		(GstCaps* caps);
-GstCaps *                gst_caps_ref_by_count           		(GstCaps* caps, gint count);
+GstCaps *                gst_caps_copy					(const GstCaps * caps);
+GstCaps *                gst_caps_make_writable          		(GstCaps *caps);
 void                     gst_caps_unref                  		(GstCaps* caps);
 
 G_CONST_RETURN GstCaps * gst_static_caps_get                            (GstStaticCaps *static_caps);
@@ -147,12 +145,6 @@ void                     gst_caps_replace                               (GstCaps
 gchar *                  gst_caps_to_string                             (const GstCaps *caps);
 GstCaps *                gst_caps_from_string                           (const gchar   *string);
 
-gboolean                 gst_caps_structure_fixate_field_nearest_int    (GstStructure *structure,
-									 const char   *field_name,
-									 int           target);
-gboolean                 gst_caps_structure_fixate_field_nearest_double (GstStructure *structure,
-									 const char   *field_name,
-									 double        target);
 
 G_END_DECLS
 

@@ -66,14 +66,14 @@ main (int argc, char *argv[])
           abort ();
         }
 
-        gst_caps_free (caps);
+        gst_caps_unref (caps);
       }
 
       g_print ("parsed each structure individually\n");
       abort ();
     }
 
-    gst_caps_free (caps);
+    gst_caps_unref (caps);
     g_free (list[i]);
   }
 

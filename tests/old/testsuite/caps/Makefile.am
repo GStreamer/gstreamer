@@ -1,7 +1,6 @@
 include ../Rules
 
 tests_pass = \
-	app_fixate \
 	enumcaps \
 	intersection \
 	compatibility \

@@ -12,6 +12,83 @@
 
 2005-02-10  Andy Wingo  <wingo@pobox.com>
 
+	* testsuite/caps/value_serialize.c: merge from HEAD.
+
+	* testsuite/caps/subtract.c: 
+	* testsuite/caps/filtercaps.c: 
+	* testsuite/caps/enumcaps.c: 
+	* testsuite/caps/deserialize.c:
+	* testsuite/caps/caps.c: 
+	* testsuite/caps/audioscale.c: Unref caps, not free.
+
+	* testsuite/caps/caps_strings: Merged from HEAD.
+	
+	* gst/elements/gstidentity.c (gst_identity_proxy_getcaps): Getcaps
+	implementation for identity.
+
+	* gst/gststructure.h
+	* gst/gststructure.c
+	(gst_caps_structure_fixate_field_nearest_double):
+	(gst_caps_structure_fixate_field_nearest_int): Moved from
+	gstcaps.c because we need the private IS_MUTABLE macro.
+	(IS_MUTABLE): New macro, determines if a
+	structure is mutable or not.
+	(gst_structure_free): Don't allow free while holding a pointer to
+	a parent's refcount.
+	(gst_structure_set_name): Check for writability.
+	(gst_structure_id_set_value): Same.
+	(gst_structure_set_value): Same.
+	(gst_structure_set_valist): Same.
+	(gst_structure_remove_field): Same.
+	(gst_structure_remove_all_fields): Same.
+	(gst_structure_map_in_place): New routine, like _foreach but
+	allows the function to mutate the value (via a non-const
+	prototype). Check for writability.
+	(gst_structure_foreach): Redefine to only take non-mutating
+	functions.
+
+	* gst/gstcaps.c (IS_WRITABLE): New macro, returns TRUE if the caps
+	are writable.
+	(gst_caps_copy): Add some docs about mutability, etc.
+	(_gst_caps_free): Set the parent refcount pointer on structures to
+	NULL before freeing them.
+	(gst_caps_ref): Document.
+	(gst_caps_make_writable): Doc.
+	(gst_caps_make_writable): Changed to make_writable, get_writable
+	sounds too much like retrieving a property.
+	(gst_caps_copy_1): Removed, not very useful.
+	(gst_caps_ref_by_count): Removed, no need to have something GLib
+	doesn't.
+	(gst_caps_copy_conditional): Ref instead of copying.
+	(gst_static_caps_get): Retain a reference to the returned caps, so
+	that the static caps will remain immutable.
+	(gst_caps_remove_and_get_structure): Set the parent refcount to
+	NULL when removing the structure.
+	(gst_caps_append): Fix to work with structure parent refcounts.
+	Check for writability.
+	(gst_caps_append_structure): Check for writability, work with
+	parent refcounts.
+	(gst_caps_remove_structure): Check for writability.
+	(gst_caps_set_simple): Check for writability.
+	(gst_caps_set_simple_valist): Check for writability.
+	(gst_caps_is_fixed_foreach): Update for non-mutating foreach.
+	(gst_structure_is_equal_foreach): Same.
+	(gst_caps_structure_intersect_field): Same.
+	(gst_caps_structure_subtract_field): Same. Make static.
+	(gst_caps_normalize_foreach): Same.
+	(gst_caps_structure_figure_out_union): Same.
+	(gst_caps_switch_structures): New static function, switches out
+	structures inside a caps, taking care of parent_refcount setting.
+
+	* gst/gstpad.c (gst_pad_get_allowed_caps): Remove the restriction
+	on only src pads, wim von masterhack claims it was bogus.
+
+	* testsuite/caps/Makefile.am
+	* testsuite/caps/app_fixate.c: Removed app_fixate test, things are
+	done a bit differently in THREADED.
+
+2005-02-10  Andy Wingo  <wingo@pobox.com>
+
 	* docs/design/part-MT-refcounting.txt (Refcounting): Some
 	grammar/clarity fixes, and added a section on child structures of
 	shared refcounted objects.

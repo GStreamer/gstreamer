@@ -40,6 +40,10 @@ struct _GstStructureField
 #define GST_STRUCTURE_FIELD(structure, index) \
     &g_array_index((structure)->fields, GstStructureField, (index))
 
+#define IS_MUTABLE(structure) \
+    (!(structure)->parent_refcount || \
+     gst_atomic_int_read ((structure)->parent_refcount) == 1)
+
 static void gst_structure_set_field (GstStructure * structure,
     GstStructureField * field);
 static GstStructureField *gst_structure_get_field (const GstStructure *
@@ -174,6 +178,30 @@ gst_structure_new_valist (const gchar * name,
 }
 
 /**
+ * gst_structure_set_parent_refcount:
+ * @structure: a #GstStructure
+ * @refcount: a pointer to the parent's #GstAtomicInt refcount
+ *
+ * Sets the parent_refcount field of #GstStructure. This field is used to
+ * determine whether a structure is mutable or not. This function should only be
+ * called by code implementing parent objects of GstStructure, as described in
+ * the MT Refcounting section of the design documents.
+ *
+ * Returns: a new #GstStructure.
+ */
+void
+gst_structure_set_parent_refcount (GstStructure * structure,
+    GstAtomicInt * refcount)
+{
+  if (structure->parent_refcount)
+    g_return_if_fail (refcount == NULL);
+  else
+    g_return_if_fail (refcount != NULL);
+
+  structure->parent_refcount = refcount;
+}
+
+/**
  * gst_structure_copy:
  * @structure: a #GstStructure to duplicate
  *
@@ -211,7 +239,8 @@ gst_structure_copy (const GstStructure * structure)
  * gst_structure_free: 
  * @structure: the #GstStructure to free
  *
- * Frees a #GstStructure and all its fields and values.
+ * Frees a #GstStructure and all its fields and values. The structure must not
+ * parent when this function is called.
  */
 void
 gst_structure_free (GstStructure * structure)
@@ -220,6 +249,7 @@ gst_structure_free (GstStructure * structure)
   int i;
 
   g_return_if_fail (structure != NULL);
+  g_return_if_fail (structure->parent_refcount == NULL);
 
   for (i = 0; i < structure->fields->len; i++) {
     field = GST_STRUCTURE_FIELD (structure, i);
@@ -280,6 +310,7 @@ gst_structure_set_name (GstStructure * structure, const gchar * name)
 {
   g_return_if_fail (structure != NULL);
   g_return_if_fail (name != NULL);
+  g_return_if_fail (IS_MUTABLE (structure));
 
   structure->name = g_quark_from_string (name);
 }
@@ -302,6 +333,7 @@ gst_structure_id_set_value (GstStructure * structure,
 
   g_return_if_fail (structure != NULL);
   g_return_if_fail (G_IS_VALUE (value));
+  g_return_if_fail (IS_MUTABLE (structure));
 
   gsfield.name = field;
   gst_value_init_and_copy (&gsfield.value, value);
@@ -326,6 +358,7 @@ gst_structure_set_value (GstStructure * structure,
   g_return_if_fail (structure != NULL);
   g_return_if_fail (fieldname != NULL);
   g_return_if_fail (G_IS_VALUE (value));
+  g_return_if_fail (IS_MUTABLE (structure));
 
   gst_structure_id_set_value (structure, g_quark_from_string (fieldname),
       value);
@@ -373,6 +406,7 @@ gst_structure_set_valist (GstStructure * structure,
   char *s;
 
   g_return_if_fail (structure != NULL);
+  g_return_if_fail (IS_MUTABLE (structure));
 
   while (fieldname) {
     GstStructureField field = { 0 };
@@ -451,18 +485,9 @@ gst_structure_set_valist (GstStructure * structure,
   }
 }
 
-/**
- * gst_structure_set_field:
- * @structure: a #GstStructure
- * @field: the #GstStructureField to set
- *
- * Sets a field in the structure.  If the structure currently contains
- * a field with the same name, it is replaced with the provided field.
- * Otherwise, the field is added to the structure.  The field's value
- * is not deeply copied.
- *
- * This function is intended mainly for internal use.  The function
- * #gst_structure_set() is recommended instead of this one.
+/* If the structure currently contains a field with the same name, it is
+ * replaced with the provided field. Otherwise, the field is added to the
+ * structure. The field's value is not deeply copied.
  */
 static void
 gst_structure_set_field (GstStructure * structure, GstStructureField * field)
@@ -483,15 +508,7 @@ gst_structure_set_field (GstStructure * structure, GstStructureField * field)
   g_array_append_val (structure->fields, *field);
 }
 
-/* FIXME: is this private ? if so remove gtk-doc
- * gst_structure_id_get_field:
- * @structure: a #GstStructure
- * @field_id: the GQuark of the field to get
- *
- * Gets the specified field from the structure.  If there is no
- * field with the given ID, NULL is returned.
- *
- * Returns: the #GstStructureField with the given ID
+/* If there is no field with the given ID, NULL is returned.
  */
 static GstStructureField *
 gst_structure_id_get_field (const GstStructure * structure, GQuark field_id)
@@ -511,15 +528,7 @@ gst_structure_id_get_field (const GstStructure * structure, GQuark field_id)
   return NULL;
 }
 
-/**
- * gst_structure_get_field:
- * @structure: a #GstStructure
- * @fieldname: the name of the field to get
- *
- * Gets the specified field from the structure.  If there is no
- * field with the given ID, NULL is returned.
- *
- * Returns: the #GstStructureField with the given name
+/* If there is no field with the given ID, NULL is returned.
  */
 static GstStructureField *
 gst_structure_get_field (const GstStructure * structure,
@@ -598,6 +607,7 @@ gst_structure_remove_field (GstStructure * structure, const gchar * fieldname)
 
   g_return_if_fail (structure != NULL);
   g_return_if_fail (fieldname != NULL);
+  g_return_if_fail (IS_MUTABLE (structure));
 
   id = g_quark_from_string (fieldname);
 
@@ -631,6 +641,7 @@ gst_structure_remove_fields (GstStructure * structure,
 
   g_return_if_fail (structure != NULL);
   g_return_if_fail (fieldname != NULL);
+  /* mutability checked in remove_field */
 
   va_start (varargs, fieldname);
 
@@ -656,6 +667,7 @@ gst_structure_remove_fields_valist (GstStructure * structure,
 
   g_return_if_fail (structure != NULL);
   g_return_if_fail (fieldname != NULL);
+  /* mutability checked in remove_field */
 
   while (field) {
     gst_structure_remove_field (structure, field);
@@ -676,6 +688,7 @@ gst_structure_remove_all_fields (GstStructure * structure)
   int i;
 
   g_return_if_fail (structure != NULL);
+  g_return_if_fail (IS_MUTABLE (structure));
 
   for (i = structure->fields->len - 1; i >= 0; i--) {
     field = GST_STRUCTURE_FIELD (structure, i);
@@ -736,18 +749,56 @@ gst_structure_n_fields (const GstStructure * structure)
  * @func: a function to call for each field
  * @user_data: private data
  *
- * Calls the provided function once for each field in the #GstStructure.
+ * Calls the provided function once for each field in the #GstStructure. The
+ * function must not modify the fields. Also see gst_structure_map_in_place().
  *
  * Returns: TRUE if the supplied function returns TRUE For each of the fields,
  * FALSE otherwise.
  */
 gboolean
-gst_structure_foreach (GstStructure * structure,
+gst_structure_foreach (const GstStructure * structure,
     GstStructureForeachFunc func, gpointer user_data)
 {
   int i;
   GstStructureField *field;
   gboolean ret;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+
+  for (i = 0; i < structure->fields->len; i++) {
+    field = GST_STRUCTURE_FIELD (structure, i);
+
+    ret = func (field->name, &field->value, user_data);
+    if (!ret)
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_structure_map_in_place:
+ * @structure: a #GstStructure
+ * @func: a function to call for each field
+ * @user_data: private data
+ *
+ * Calls the provided function once for each field in the #GstStructure. In
+ * contrast to gst_structure_foreach(), the function may modify the fields. The
+ * structure must be mutable.
+ *
+ * Returns: TRUE if the supplied function returns TRUE For each of the fields,
+ * FALSE otherwise.
+ */
+gboolean
+gst_structure_map_in_place (GstStructure * structure,
+    GstStructureMapFunc func, gpointer user_data)
+{
+  int i;
+  GstStructureField *field;
+  gboolean ret;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (IS_MUTABLE (structure), FALSE);
 
   for (i = 0; i < structure->fields->len; i++) {
     field = GST_STRUCTURE_FIELD (structure, i);
@@ -1547,4 +1598,135 @@ gst_structure_copy_conditional (const GstStructure * structure)
   if (structure)
     return gst_structure_copy (structure);
   return NULL;
+}
+
+/* fixate utility functions */
+
+/**
+ * gst_caps_structure_fixate_field_nearest_int:
+ * @structure: a #GstStructure
+ * @field_name: a field in @structure
+ * @target: the target value of the fixation
+ *
+ * Fixates a #GstStructure by changing the given field to the nearest
+ * integer to @target that is a subset of the existing field.
+ *
+ * Returns: TRUE if the structure could be fixated
+ */
+gboolean
+gst_caps_structure_fixate_field_nearest_int (GstStructure * structure,
+    const char *field_name, int target)
+{
+  const GValue *value;
+
+  g_return_val_if_fail (gst_structure_has_field (structure, field_name), FALSE);
+  g_return_val_if_fail (IS_MUTABLE (structure), FALSE);
+
+  value = gst_structure_get_value (structure, field_name);
+
+  if (G_VALUE_TYPE (value) == G_TYPE_INT) {
+    /* already fixed */
+    return FALSE;
+  } else if (G_VALUE_TYPE (value) == GST_TYPE_INT_RANGE) {
+    int x;
+
+    x = gst_value_get_int_range_min (value);
+    if (target < x)
+      target = x;
+    x = gst_value_get_int_range_max (value);
+    if (target > x)
+      target = x;
+    gst_structure_set (structure, field_name, G_TYPE_INT, target, NULL);
+    return TRUE;
+  } else if (G_VALUE_TYPE (value) == GST_TYPE_LIST) {
+    const GValue *list_value;
+    int i, n;
+    int best = 0;
+    int best_index = -1;
+
+    n = gst_value_list_get_size (value);
+    for (i = 0; i < n; i++) {
+      list_value = gst_value_list_get_value (value, i);
+      if (G_VALUE_TYPE (list_value) == G_TYPE_INT) {
+        int x = g_value_get_int (list_value);
+
+        if (best_index == -1 || (ABS (target - x) < ABS (target - best))) {
+          best_index = i;
+          best = x;
+        }
+      }
+    }
+    if (best_index != -1) {
+      gst_structure_set (structure, field_name, G_TYPE_INT, best, NULL);
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_caps_structure_fixate_field_nearest_double:
+ * @structure: a #GstStructure
+ * @field_name: a field in @structure
+ * @target: the target value of the fixation
+ *
+ * Fixates a #GstStructure by changing the given field to the nearest
+ * double to @target that is a subset of the existing field.
+ *
+ * Returns: TRUE if the structure could be fixated
+ */
+gboolean
+gst_caps_structure_fixate_field_nearest_double (GstStructure * structure,
+    const char *field_name, double target)
+{
+  const GValue *value;
+
+  g_return_val_if_fail (gst_structure_has_field (structure, field_name), FALSE);
+  g_return_val_if_fail (IS_MUTABLE (structure), FALSE);
+
+  value = gst_structure_get_value (structure, field_name);
+
+  if (G_VALUE_TYPE (value) == G_TYPE_DOUBLE) {
+    /* already fixed */
+    return FALSE;
+  } else if (G_VALUE_TYPE (value) == GST_TYPE_DOUBLE_RANGE) {
+    double x;
+
+    x = gst_value_get_double_range_min (value);
+    if (target < x)
+      target = x;
+    x = gst_value_get_double_range_max (value);
+    if (target > x)
+      target = x;
+    gst_structure_set (structure, field_name, G_TYPE_DOUBLE, target, NULL);
+    return TRUE;
+  } else if (G_VALUE_TYPE (value) == GST_TYPE_LIST) {
+    const GValue *list_value;
+    int i, n;
+    double best = 0;
+    int best_index = -1;
+
+    n = gst_value_list_get_size (value);
+    for (i = 0; i < n; i++) {
+      list_value = gst_value_list_get_value (value, i);
+      if (G_VALUE_TYPE (list_value) == G_TYPE_DOUBLE) {
+        double x = g_value_get_double (list_value);
+
+        if (best_index == -1 || (ABS (target - x) < ABS (target - best))) {
+          best_index = i;
+          best = x;
+        }
+      }
+    }
+    if (best_index != -1) {
+      gst_structure_set (structure, field_name, G_TYPE_DOUBLE, best, NULL);
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  return FALSE;
+
 }
