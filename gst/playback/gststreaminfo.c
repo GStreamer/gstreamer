@@ -212,18 +212,18 @@ stream_info_mute_pad (GstStreamInfo * stream_info, GstPad * pad, gboolean mute)
       int_links; int_links = g_list_next (int_links)) {
     GstPad *pad = GST_PAD (int_links->data);
     GstPad *peer = gst_pad_get_peer (pad);
-    GstElement *peer_elem = gst_pad_get_parent (peer);
+    GstElement *peer_elem = peer ? gst_pad_get_parent (peer) : NULL;
 
     GST_DEBUG_OBJECT (stream_info, "%s internal pad %s:%s",
         debug_str, GST_DEBUG_PAD_NAME (pad));
 
     gst_pad_set_active (pad, activate);
 
-    if (peer_elem->numsrcpads == 1) {
+    if (peer_elem && peer_elem->numsrcpads == 1) {
       GST_DEBUG_OBJECT (stream_info, "recursing element %s on pad %s:%s",
           gst_element_get_name (peer_elem), GST_DEBUG_PAD_NAME (peer));
       stream_info_mute_pad (stream_info, peer, mute);
-    } else {
+    } else if (peer) {
       GST_DEBUG_OBJECT (stream_info, "%s final pad %s:%s",
           debug_str, GST_DEBUG_PAD_NAME (peer));
       gst_pad_set_active (peer, activate);
