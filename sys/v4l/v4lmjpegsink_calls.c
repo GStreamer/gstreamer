@@ -76,7 +76,7 @@ gst_v4lmjpegsink_sync_thread (void *arg)
     {
       gst_element_error(GST_ELEMENT(v4lmjpegsink),
         "Failed to sync on frame %d: %s",
-         frame, strerror(errno));
+         frame, g_strerror(errno));
       pthread_mutex_lock(&(v4lmjpegsink->mutex_queued_frames));
       v4lmjpegsink->isqueued_queued_frames[frame] = -1;
       pthread_cond_broadcast(&(v4lmjpegsink->cond_queued_frames[frame]));
@@ -124,7 +124,7 @@ gst_v4lmjpegsink_queue_frame (GstV4lMjpegSink *v4lmjpegsink,
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsink),
       "Failed to queue frame %d: %s",
-      num, strerror(errno));
+      num, g_strerror(errno));
     return FALSE;
   }
 
@@ -221,7 +221,7 @@ gst_v4lmjpegsink_set_playback (GstV4lMjpegSink *v4lmjpegsink,
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsink),
       "Error getting playback parameters: %s",
-      strerror(errno));
+      g_strerror(errno));
     return FALSE;
   }
 
@@ -316,7 +316,7 @@ gst_v4lmjpegsink_set_playback (GstV4lMjpegSink *v4lmjpegsink,
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsink),
       "Error setting playback parameters: %s",
-      strerror(errno));
+      g_strerror(errno));
     return FALSE;
   }
 
@@ -344,7 +344,7 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink *v4lmjpegsink)
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsink),
       "Error requesting video buffers: %s",
-      strerror(errno));
+      g_strerror(errno));
     return FALSE;
   }
 
@@ -359,7 +359,7 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink *v4lmjpegsink)
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsink),
       "Error mapping video buffers: %s",
-      strerror(errno));
+      g_strerror(errno));
     GST_V4LELEMENT(v4lmjpegsink)->buffer = NULL;
     return FALSE;
   }
@@ -372,7 +372,7 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink *v4lmjpegsink)
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsink),
       "Failed to create queue tracker: %s",
-      strerror(errno));
+      g_strerror(errno));
     return FALSE;
   }
   v4lmjpegsink->cond_queued_frames = (pthread_cond_t *)
@@ -381,7 +381,7 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink *v4lmjpegsink)
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsink),
       "Failed to create queue condition holders: %s",
-      strerror(errno));
+      g_strerror(errno));
     return FALSE;
   }
   for (n=0;n<v4lmjpegsink->breq.count;n++)
@@ -418,7 +418,7 @@ gst_v4lmjpegsink_playback_start (GstV4lMjpegSink *v4lmjpegsink)
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsink),
       "Failed to create sync thread: %s",
-      strerror(errno));
+      g_strerror(errno));
     return FALSE;
   }
 

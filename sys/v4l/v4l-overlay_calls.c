@@ -56,14 +56,14 @@ gst_v4l_set_overlay (GstV4lElement *v4lelement,
   {
     case -1:
       gst_element_error(GST_ELEMENT(v4lelement),
-        "Could not start v4l-conf: %s", strerror(errno));
+        "Could not start v4l-conf: %s", g_strerror(errno));
       g_free(buff);
       return FALSE;
     case 0:
       break;
     default:
       gst_element_error(GST_ELEMENT(v4lelement),
-        "v4l-conf failed to run correctly: %s", strerror(errno));
+        "v4l-conf failed to run correctly: %s", g_strerror(errno));
       g_free(buff);
       return FALSE;
   }
@@ -117,7 +117,7 @@ gst_v4l_set_window (GstV4lElement     *v4lelement,
   {
     gst_element_error(GST_ELEMENT(v4lelement),
       "Failed to set the video window: %s",
-      strerror(errno));
+      g_strerror(errno));
     return FALSE;
   }
 
@@ -145,7 +145,7 @@ gst_v4l_enable_overlay (GstV4lElement *v4lelement,
   {
     gst_element_error(GST_ELEMENT(v4lelement),
       "Failed to %s overlay display: %s",
-      enable?"enable":"disable", strerror(errno));
+      enable?"enable":"disable", g_strerror(errno));
     return FALSE;
   }
 
