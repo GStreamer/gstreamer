@@ -434,7 +434,8 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
     {
       gint layer = 3;
 
-      if (gst_caps_has_property(caps, "layer"))
+      if (GST_CAPS_PROPERTIES(caps) != NULL &&
+	  gst_caps_has_property(caps, "layer"))
         gst_caps_get_int(caps, "layer", &layer);
       else
         GST_DEBUG(GST_CAT_PLUGIN_INFO,
