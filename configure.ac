@@ -2,14 +2,11 @@ AC_INIT
 AC_CANONICAL_TARGET([])
 
 dnl when going to/from release please set the nano (fourth number) right !
-AS_VERSION(gstreamer, GST_VERSION, 0, 3, 4, 1)
+dnl releases only do Wall, cvs and prerelease does Werror too
+AS_VERSION(gstreamer, GST_VERSION, 0, 3, 4, 1, GST_ERROR="-Wall", GST_ERROR="-Wall -Werror")
+
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(GST, 0, 0, 0, yes)
-
-dnl we'll move this to a configure option later on which will be turned on
-dnl by autogen
-dnl GST_ERROR="-Wall -Werror"
-GST_ERROR="-Wall"
 
 AC_CONFIG_SRCDIR([gst/gst.c])
 AM_CONFIG_HEADER(config.h)
