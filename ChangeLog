@@ -1,3 +1,11 @@
+2004-02-06  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_init), (gst_dvdec_video_getcaps),
+	(gst_dvdec_video_link), (gst_dvdec_loop):
+	* ext/dv/gstdvdec.h:
+	  rework the caps negotiation so that dvdec works again instead
+	  of just segfaulting.
+
 2004-02-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/gconf/gstreamer-gconf-uninstalled.pc.in:
