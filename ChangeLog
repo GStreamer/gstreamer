@@ -1,3 +1,17 @@
+2002-11-07  David I. Lehn <dlehn@vt.edu>
+
+	* configure.ac: bump gstreamer version to 0.4.2, bump pygtk version to
+	1.99.13
+	* gstreamer/__init__.py: add "import pygtk; pygtk.require('2.0')"
+	* examples/gstreamer/dvdplay.py: updated to maybe work with threads
+	* pygtk.diff: add work-in-progress PyGTK threading improvements diff 
+
+2002-10-23  David I. Lehn <dlehn@vt.edu>
+
+	* gstreamer/gstreamer.override: override gst_bin_iterate() to unblock
+	threads since this call can cause exacution to re-enter the
+	interpreter.
+
 2002-10-04  David I. Lehn <dlehn@vt.edu>
 
 	* gstreamer/gstreamer.override, gstreamer/gstreamer-fixes.h: add
