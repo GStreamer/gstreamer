@@ -419,11 +419,16 @@ dnl *** Video 4 Linux ***
 dnl for information about the header/define, see sys/v4l/gstv4lelement.h
 translit(dnm, m, l) AM_CONDITIONAL(USE_V4L, true)
 GST_CHECK_FEATURE(V4L, [Video 4 Linux], v4lsrc v4lmjpegsrc v4lmjpegsink, [
-  AC_CHECK_DECL(VID_TYPE_MPEG_ENCODER, HAVE_V4L="yes", HAVE_V4L="no", [
+  # first check X
+  HAVE_V4L="no"
+  if test "$HAVE_X" == "yes"
+  then
+    AC_CHECK_DECL(VID_TYPE_MPEG_ENCODER, HAVE_V4L="yes", HAVE_V4L="no", [
 #include <sys/types.h>
 #define _LINUX_TIME_H
 #include <linux/videodev.h>
-  ])
+    ])
+  fi
 ])
 
 dnl *** Video 4 Linux 2***
