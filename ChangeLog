@@ -1,5 +1,10 @@
 2004-01-16  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst-libs/gst/Makefile.am:
+	  restructure so having local patches works easier.
+
+2004-01-16  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/mpeg2enc/Makefile.am:
 	* ext/mpeg2enc/gstmpeg2enc.cc:
 	* ext/mpeg2enc/gstmpeg2encpicturereader.cc:
