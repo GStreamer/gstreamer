@@ -322,30 +322,28 @@ AC_SUBST(GST_PKG_DEPS)
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_CFLAGS)
 
+dnl Check for libxml
 if test x$USE_GLIB2 = xno; then
   LIBXML_PKG='libxml >= 1.8.1'
+  AC_PATH_PROG(XML_CONFIG, xml-config, no)
+  if test x$XML_CONFIG = xno; then
+    AC_MSG_ERROR(Couldn't find $LIBXML_PKG)
+  fi
+  XML_LIBS="`xml-config --libs`"
+  XML_CFLAGS="`xml-config --cflags`"
+  AC_CHECK_LIB(xml, xmlDocGetRootElement, :,
+    [ AC_MSG_ERROR(Need version 1.8.1 or better of libxml) ],
+    $XML_LIBS)
 else
   LIBXML_PKG='libxml-2.0'
+  PKG_CHECK_MODULES(XML, $LIBXML_PKG, XML_CONFIG=yes, XML_CONFIG=no)
+  AC_PATH_PROG(XML_CONFIG, xml-config, no)
   AC_DEFINE(HAVE_LIBXML2)
+  GST_CFLAGS="$GST_CFLAGS -DHAVE_LIBXML2"
 fi
 AC_SUBST(LIBXML_PKG)
-
-dnl Check for libxml
-AC_PATH_PROG(XML_CONFIG, xml-config, no)
-dnl Thomas tries to convert this to pkg-config
-dnl PKG_CHECK_MODULES(XML, $LIBXML_PKG, XML_CONFIG=yes, XML_CONFIG=no)
-dnl AC_PATH_PROG(XML_CONFIG, xml-config, no)
-if test x$XML_CONFIG = xno; then
-  AC_MSG_ERROR(Couldn't find $LIBXML_PKG)
-fi
-XML_LIBS="`xml-config --libs`"
-XML_CFLAGS="`xml-config --cflags`"
-AC_CHECK_LIB(xml, xmlDocGetRootElement, :,
-  [ AC_MSG_ERROR(Need version 1.8.1 or better of libxml) ],
-  $XML_LIBS)
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
-
 
 dnl ==========================================================================
 dnl ========================= Macro definitions ==============================
