@@ -79,6 +79,7 @@ GstStructureField *gst_structure_get_field(const GstStructure *structure,
 GstStructureField *gst_structure_id_get_field(const GstStructure *structure,
         GQuark fieldname);
 void gst_structure_remove_field(GstStructure *structure, const gchar *field);
+void gst_structure_remove_all_fields(GstStructure *structure);
 
 GType gst_structure_get_field_type(const GstStructure *structure,
     const gchar *field);

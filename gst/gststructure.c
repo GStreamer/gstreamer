@@ -285,13 +285,13 @@ void gst_structure_set_name(GstStructure *structure, const gchar *name)
 void gst_structure_id_set_value(GstStructure *structure, GQuark fieldname,
     const GValue *value)
 {
-  GstStructureField field = { 0 };
+  GstStructureField field = { 0, { 0, } };
 
   g_return_if_fail(structure != NULL);
   g_return_if_fail(G_IS_VALUE(value));
 
   field.name = fieldname;
-  g_value_init(&field.value, G_TYPE_INT);
+  g_value_init(&field.value, G_VALUE_TYPE (value));
   g_value_copy(value, &field.value);
 
   gst_structure_set_field(structure, &field);
@@ -568,6 +568,30 @@ gst_structure_remove_field(GstStructure *structure, const gchar *fieldname)
       structure->fields = g_array_remove_index(structure->fields, i);
       return;
     }
+  }
+}
+
+/**
+ * gst_structure_remove_all_fields:
+ * @structure: a #GstStructure
+ *
+ * Removes all fields in a GstStructure. 
+ */
+void
+gst_structure_remove_all_fields(GstStructure *structure)
+{
+  GstStructureField *field;
+  int i;
+
+  g_return_if_fail(structure != NULL);
+
+  for (i = structure->fields->len - 1; i >= 0; i++ ) {
+    field = GST_STRUCTURE_FIELD(structure, i);
+
+    if (G_IS_VALUE (&field->value)) {
+      g_value_unset(&field->value);
+    }
+    structure->fields = g_array_remove_index (structure->fields, i);
   }
 }
 
