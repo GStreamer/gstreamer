@@ -254,6 +254,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %{_libdir}/gstreamer-%{majorminor}/libgstsmoothwave.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttextoverlay.so
+%{_libdir}/gstreamer-%{majorminor}/libgstffmpeg.so
 
 # non-core plugins with external dependencies
 @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
@@ -694,6 +695,8 @@ Plug-ins for playback of AVI format media files.
 @USE_MAD_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_MAD_TRUE@Requires:      libmad >= 0.13.0
 @USE_MAD_TRUE@BuildRequires: libmad-devel >= 0.13.0
+@USE_MAD_TRUE@Requires:	     libid3tag >= 0.15.0
+@USE_MAD_TRUE@BuildRequires: libid3tag-devel => 0.15.0
 @USE_MAD_TRUE@
 @USE_MAD_TRUE@%description -n gstreamer-mad
 @USE_MAD_TRUE@Plug-in for playback of mp3 songs using the very good MAD library.
