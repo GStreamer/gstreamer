@@ -1,3 +1,8 @@
+2004-03-14  Jan Schmidt  <thaytan@mad.scientist.com>
+	* gst/typefind/gsttypefindfunctions.c: (speex_type_find),
+	(plugin_init):
+	Add a typefind function for speex format
+
 2004-03-13  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_video_caps),
