@@ -29,13 +29,11 @@ gst_bin_find_unconnected_pad (GstBin *bin, GstPadDirection direction)
   GList *pads = NULL;
   GstElement *element = NULL;
 
-  g_print ("DEBUG: find_unconnected start\n");
   elements = (GList *) gst_bin_get_list (bin);
   /* traverse all elements looking for unconnected pads */
   while (elements && pad == NULL)
   {
     element = GST_ELEMENT (elements->data);
-    g_print ("DEBUG: looking in element %s\n", gst_element_get_name (element));
     pads = gst_element_get_pad_list (element);
     while (pads)
     {
@@ -45,7 +43,6 @@ gst_bin_find_unconnected_pad (GstBin *bin, GstPadDirection direction)
         if (GST_PAD_PEER (GST_PAD (pads->data)) == NULL)
         {
           /* found it ! */
-	  g_print ("DEBUG: found an unconnected pad !\n");
 	  pad = GST_PAD (pads->data);
 	}
       }
@@ -54,7 +51,6 @@ gst_bin_find_unconnected_pad (GstBin *bin, GstPadDirection direction)
     }
     elements = g_list_next (elements);
   }
-  g_print ("DEBUG: find_unconnected stop\n");
   return pad;
 }
 
@@ -67,7 +63,6 @@ gst_gconf_get_string (const gchar *key)
   gchar *value = NULL;
   gchar *full_key = g_strdup_printf ("%s/%s", GST_GCONF_DIR, key); 
 
-  g_print ("DEBUG: full key: %s\n", full_key);
 
   value = gconf_client_get_string (gst_gconf_get_client (), full_key, &error);
   g_free (full_key);
