@@ -220,7 +220,6 @@
           revert patch that breaks applications, reapply after release
           to get this fixed properly
 
->>>>>>> 1.222
 2004-02-05  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gsttag.c: (_gst_tag_initialize):
