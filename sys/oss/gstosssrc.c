@@ -223,6 +223,11 @@ gst_osssrc_get (GstPad *pad)
       return NULL;
     }
   }
+  else
+  {
+    /* where did they come from ? */
+    gst_caps_debug (gst_pad_get_caps (src->srcpad), "caps were already set on oss");
+  }
 
   GST_BUFFER_SIZE (buf) = readbytes;
   GST_BUFFER_OFFSET (buf) = src->curoffset;
