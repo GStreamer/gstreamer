@@ -28,3 +28,5 @@ html-build.stamp
 *.aux
 *.dvi
 *.ps
+gtkdoc-fixxref
+xml
