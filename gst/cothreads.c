@@ -56,6 +56,7 @@ struct _cothread_context
   cothread_state *cothreads[COTHREAD_MAXTHREADS]; /* array of cothread states */
   int ncothreads;
   int current;
+  unsigned long stack_top;
   GHashTable *data;
 };
 
@@ -82,6 +83,7 @@ cothread_context *
 cothread_context_init (void)
 {
   cothread_context *ctx;
+  void *sp;
 
   /* if there already is a cotread context for this thread,
    * just return it */
@@ -117,6 +119,17 @@ cothread_context_init (void)
   /* clear the cothread data */
 
   memset (ctx->cothreads, 0, sizeof (ctx->cothreads));
+
+  sp = CURRENT_STACK_FRAME;
+  /* FIXME this may not be 64bit clean
+   *       could use casts to uintptr_t from inttypes.h
+   *       if only all platforms had inttypes.h
+   */
+  /* stack_top is the address of the first byte past our stack segment. */
+  /* FIXME: an assumption is made that the stack segment is STACK_SIZE
+   * aligned. */
+  ctx->stack_top = ((gulong) sp | (STACK_SIZE - 1)) + 1;
+  GST_DEBUG (GST_CAT_COTHREADS, "stack top is %lu", ctx->stack_top);
 
   /*
    * initialize the 0th cothread
@@ -174,8 +187,8 @@ cothread_state*
 cothread_create (cothread_context *ctx)
 {
   cothread_state *cothread;
-  void *sp;
-  unsigned long stack_top;
+  //void *sp;
+  //unsigned long stack_top;
   void *mmaped = 0;
 
   gint slot = 0;
@@ -200,6 +213,7 @@ cothread_create (cothread_context *ctx)
 
   GST_DEBUG (GST_CAT_COTHREADS, "Found free cothread slot %d", slot);
 
+#if 0
   sp = CURRENT_STACK_FRAME;
   /* FIXME this may not be 64bit clean
    *       could use casts to uintptr_t from inttypes.h
@@ -210,10 +224,11 @@ cothread_create (cothread_context *ctx)
    * aligned. */
   stack_top = ((gulong) sp | (STACK_SIZE - 1)) + 1;
   GST_DEBUG (GST_CAT_COTHREADS, "stack top is %lu", stack_top);
+#endif
 
   /* cothread stack space of the thread is mapped in reverse, with cothread 0
    * stack space at the top */
-  cothread = (cothread_state *) (stack_top - (slot + 1) * COTHREAD_STACKSIZE);
+  cothread = (cothread_state *) (ctx->stack_top - (slot + 1) * COTHREAD_STACKSIZE);
 
   GST_DEBUG (GST_CAT_COTHREADS,
              "mmap   cothread slot stack from %p to 0x%lx (size 0x%lx)",
