@@ -62,23 +62,34 @@ gst_gconf_get_string (const gchar *key)
 {
   GError *error = NULL;
   gchar *value = NULL;
-  gchar *full_key = g_strdup_printf ("%s/%s", GST_GCONF_DIR, key); 
+  gchar *full_key = g_strdup_printf ("%s/%s", GST_GCONF_DIR, key);
 
 
   value = gconf_client_get_string (gst_gconf_get_client (), full_key, &error);
   g_free (full_key);
 
-  if (value) 
-    return value;
-  else
-    return NULL;
-  // this is a good idea: return g_strdup (default_val);
+  if (error)
+  {
+    g_warning ("gst_gconf_get_string: error: %s\n", error->message);
+    g_error_free (error);
+  }
+  /* FIXME: decide if we want to strdup this value; if we do, check for NULL */
+  return value;
 }
 
 void
 gst_gconf_set_string (const gchar *key, const gchar *value)
 {
-  gconf_client_set_string (gst_gconf_get_client (), key, value, NULL);
+  GError *error = NULL;
+  gchar *full_key = g_strdup_printf ("%s/%s", GST_GCONF_DIR, key);
+
+  gconf_client_set_string (gst_gconf_get_client (), full_key, value, &error);
+  if (error)
+  {
+    g_warning ("gst_gconf_set_string: error: %s\n", error->message);
+    g_error_free (error);
+  }
+  g_free (full_key);
 }
 
 /* this function renders the given description to a bin,
