@@ -406,18 +406,6 @@ gst_jpegdec_chain (GstPad * pad, GstData * _data)
   width = jpegdec->cinfo.output_width;
   height = jpegdec->cinfo.output_height;
 
-  /* FIXME: someone needs to do the work to figure out how to correctly
-   * calculate an output size that takes into account everything libjpeg
-   * needs, like padding for DCT size and so on.  */
-  outsize = width * height + width * height / 2;
-  outbuf = gst_pad_alloc_buffer (jpegdec->srcpad, GST_BUFFER_OFFSET_NONE,
-      outsize);
-  outdata = GST_BUFFER_DATA (outbuf);
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
-  GST_LOG_OBJECT (jpegdec, "width %d, height %d, buffer size %d", width,
-      height, outsize);
-
   if (jpegdec->height != height || jpegdec->line[0] == NULL) {
     GstCaps *caps;
 
@@ -436,6 +424,18 @@ gst_jpegdec_chain (GstPad * pad, GstData * _data)
     gst_pad_set_explicit_caps (jpegdec->srcpad, caps);
     gst_caps_free (caps);
   }
+
+  /* FIXME: someone needs to do the work to figure out how to correctly
+   * calculate an output size that takes into account everything libjpeg
+   * needs, like padding for DCT size and so on.  */
+  outsize = width * height + width * height / 2;
+  outbuf = gst_pad_alloc_buffer (jpegdec->srcpad, GST_BUFFER_OFFSET_NONE,
+      outsize);
+  outdata = GST_BUFFER_DATA (outbuf);
+  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
+  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
+  GST_LOG_OBJECT (jpegdec, "width %d, height %d, buffer size %d", width,
+      height, outsize);
 
   /* mind the swap, jpeglib outputs blue chroma first */
   /* FIXME: this needs stride love */
