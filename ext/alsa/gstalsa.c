@@ -800,8 +800,10 @@ gst_alsa_pcm_wait (GstAlsa *this)
           return FALSE;
         }
       }
-      GST_ERROR_OBJECT (this, "error waiting for alsa pcm: (%d: %s)", err, snd_strerror (err));
-      return FALSE;
+      if (!gst_alsa_xrun_recovery (this)) {
+	GST_ERROR_OBJECT (this, "error waiting for alsa pcm: (%d: %s)", err, snd_strerror (err));
+	return FALSE;
+      }
     }
   }
   return TRUE;
@@ -843,7 +845,8 @@ gst_alsa_start (GstAlsa *this)
   }
   return TRUE;
 }
-void
+
+gboolean
 gst_alsa_xrun_recovery (GstAlsa *this)
 {
   snd_pcm_status_t *status;
@@ -879,7 +882,10 @@ gst_alsa_xrun_recovery (GstAlsa *this)
   if (!(gst_alsa_stop_audio (this) && gst_alsa_start_audio (this))) {
     GST_ELEMENT_ERROR (this, RESOURCE, FAILED, (NULL),
                        ("Error restarting audio after xrun"));
+    return FALSE;
   }
+
+  return TRUE;
 }
 
 /*** AUDIO SETUP / START / STOP ***********************************************/

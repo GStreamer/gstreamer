@@ -183,7 +183,7 @@ GstCaps *		gst_alsa_caps		(snd_pcm_format_t	format,
 inline snd_pcm_sframes_t	gst_alsa_update_avail	(GstAlsa * this);
 inline gboolean			gst_alsa_pcm_wait	(GstAlsa * this);
 inline gboolean			gst_alsa_start		(GstAlsa * this);
-void				gst_alsa_xrun_recovery	(GstAlsa * this);
+gboolean      			gst_alsa_xrun_recovery	(GstAlsa * this);
 
 /* format conversions */
 inline snd_pcm_uframes_t	gst_alsa_timestamp_to_samples 	(GstAlsa *		this,
