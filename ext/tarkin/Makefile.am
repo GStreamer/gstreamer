@@ -12,4 +12,4 @@ libgsttarkin_la_CFLAGS = $(GST_CFLAGS) $(VORBIS_CFLAGS) -DTYPE_BITS=10 -DTYPE=in
 libgsttarkin_la_LIBADD = $(GST_LIBS) $(VORBIS_LIBS) $(VORBISENC_LIBS)
 libgsttarkin_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
 
-noinst_HEADERS = gsttarkinenc.h 
+noinst_HEADERS = gsttarkinenc.h mem.h tarkin.h yuv.h wavelet.h
