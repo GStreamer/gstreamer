@@ -43,7 +43,7 @@ typedef unsigned long __u32;
 typedef signed long __s32;
 typedef unsigned long long __u64;
 
-//#define MMX_TRACE
+/*#define MMX_TRACE */
 
 
 #ifdef HAVE_LIBMMX
@@ -412,7 +412,7 @@ void RTjpeg_dctY(__u8 *idata, __s16 *odata, int rskip)
   register mmx_t *dataptr = (mmx_t *)odata;
   mmx_t *idata2 = (mmx_t *)idata;
 
-   // first copy the input 8 bit to the destination 16 bits
+   /* first copy the input 8 bit to the destination 16 bits */
 
    movq_m2r(RTjpeg_zero, mm2);
 
@@ -505,102 +505,102 @@ void RTjpeg_dctY(__u8 *idata, __s16 *odata, int rskip)
 
 /*  Start Transpose to do calculations on rows */
 
-	movq_m2r(*(dataptr+9), mm7);		 	// m03:m02|m01:m00 - first line (line 4)and copy into m5
+	movq_m2r(*(dataptr+9), mm7);		 	/* m03:m02|m01:m00 - first line (line 4)and copy into m5 */
 
-	movq_m2r(*(dataptr+13), mm6);	    	// m23:m22|m21:m20 - third line (line 6)and copy into m2
+	movq_m2r(*(dataptr+13), mm6);	    	/* m23:m22|m21:m20 - third line (line 6)and copy into m2 */
 	movq_r2r(mm7, mm5);		 			
 
-	punpcklwd_m2r(*(dataptr+11), mm7); 	// m11:m01|m10:m00 - interleave first and second lines
+	punpcklwd_m2r(*(dataptr+11), mm7); 	/* m11:m01|m10:m00 - interleave first and second lines */
 	movq_r2r(mm6, mm2);						 
 
-	punpcklwd_m2r(*(dataptr+15), mm6);  // m31:m21|m30:m20 - interleave third and fourth lines
+	punpcklwd_m2r(*(dataptr+15), mm6);  /* m31:m21|m30:m20 - interleave third and fourth lines */
 	movq_r2r(mm7, mm1);
 
-	movq_m2r(*(dataptr+11), mm3);	      // m13:m13|m11:m10 - second line	 
-	punpckldq_r2r(mm6, mm7);				// m30:m20|m10:m00 - interleave to produce result 1
+	movq_m2r(*(dataptr+11), mm3);	      /* m13:m13|m11:m10 - second line	 */
+	punpckldq_r2r(mm6, mm7);				/* m30:m20|m10:m00 - interleave to produce result 1 */
 
-	movq_m2r(*(dataptr+15), mm0);	      // m13:m13|m11:m10 - fourth line
-	punpckhdq_r2r(mm6, mm1);				// m31:m21|m11:m01 - interleave to produce result 2
+	movq_m2r(*(dataptr+15), mm0);	      /* m13:m13|m11:m10 - fourth line */
+	punpckhdq_r2r(mm6, mm1);				/* m31:m21|m11:m01 - interleave to produce result 2 */
 
-	movq_r2m(mm7,*(dataptr+9));			// write result 1
-	punpckhwd_r2r(mm3, mm5);				// m13:m03|m12:m02 - interleave first and second lines
+	movq_r2m(mm7,*(dataptr+9));			/* write result 1 */
+	punpckhwd_r2r(mm3, mm5);				/* m13:m03|m12:m02 - interleave first and second lines */
 	
-	movq_r2m(mm1,*(dataptr+11));			// write result 2
-	punpckhwd_r2r(mm0, mm2);				// m33:m23|m32:m22 - interleave third and fourth lines
+	movq_r2m(mm1,*(dataptr+11));			/* write result 2 */
+	punpckhwd_r2r(mm0, mm2);				/* m33:m23|m32:m22 - interleave third and fourth lines */
 
 	movq_r2r(mm5, mm1);
-	punpckldq_r2r(mm2, mm5);				// m32:m22|m12:m02 - interleave to produce result 3
+	punpckldq_r2r(mm2, mm5);				/* m32:m22|m12:m02 - interleave to produce result 3 */
 
-	movq_m2r(*(dataptr+1), mm0);			// m03:m02|m01:m00 - first line, 4x4
-	punpckhdq_r2r(mm2, mm1);				// m33:m23|m13:m03 - interleave to produce result 4
+	movq_m2r(*(dataptr+1), mm0);			/* m03:m02|m01:m00 - first line, 4x4 */
+	punpckhdq_r2r(mm2, mm1);				/* m33:m23|m13:m03 - interleave to produce result 4 */
 
-	movq_r2m(mm5,*(dataptr+13));			// write result 3
+	movq_r2m(mm5,*(dataptr+13));			/* write result 3 */
 
-	// last 4x4 done
+	/* last 4x4 done */
 
-	movq_r2m(mm1, *(dataptr+15));			// write result 4, last 4x4
+	movq_r2m(mm1, *(dataptr+15));			/* write result 4, last 4x4 */
 
-	movq_m2r(*(dataptr+5), mm2);			// m23:m22|m21:m20 - third line
+	movq_m2r(*(dataptr+5), mm2);			/* m23:m22|m21:m20 - third line */
 	movq_r2r(mm0, mm6);
 
-	punpcklwd_m2r(*(dataptr+3), mm0);  	// m11:m01|m10:m00 - interleave first and second lines
+	punpcklwd_m2r(*(dataptr+3), mm0);  	/* m11:m01|m10:m00 - interleave first and second lines */
 	movq_r2r(mm2, mm7);
 
-	punpcklwd_m2r(*(dataptr+7), mm2);  	// m31:m21|m30:m20 - interleave third and fourth lines
+	punpcklwd_m2r(*(dataptr+7), mm2);  	/* m31:m21|m30:m20 - interleave third and fourth lines */
 	movq_r2r(mm0, mm4);
 
-	//
-	movq_m2r(*(dataptr+8), mm1);			// n03:n02|n01:n00 - first line 
-	punpckldq_r2r(mm2, mm0);				// m30:m20|m10:m00 - interleave to produce first result
+	
+	movq_m2r(*(dataptr+8), mm1);			/* n03:n02|n01:n00 - first line  */
+	punpckldq_r2r(mm2, mm0);				/* m30:m20|m10:m00 - interleave to produce first result */
 
-	movq_m2r(*(dataptr+12), mm3);			// n23:n22|n21:n20 - third line
-	punpckhdq_r2r(mm2, mm4);				// m31:m21|m11:m01 - interleave to produce second result
+	movq_m2r(*(dataptr+12), mm3);			/* n23:n22|n21:n20 - third line */
+	punpckhdq_r2r(mm2, mm4);				/* m31:m21|m11:m01 - interleave to produce second result */
 
-	punpckhwd_m2r(*(dataptr+3), mm6);  	// m13:m03|m12:m02 - interleave first and second lines
-	movq_r2r(mm1, mm2);               	// copy first line
+	punpckhwd_m2r(*(dataptr+3), mm6);  	/* m13:m03|m12:m02 - interleave first and second lines */
+	movq_r2r(mm1, mm2);               	/* copy first line */
 
-	punpckhwd_m2r(*(dataptr+7), mm7);  	// m33:m23|m32:m22 - interleave third and fourth lines
-	movq_r2r(mm6, mm5);						// copy first intermediate result
+	punpckhwd_m2r(*(dataptr+7), mm7);  	/* m33:m23|m32:m22 - interleave third and fourth lines */
+	movq_r2r(mm6, mm5);						/* copy first intermediate result */
 
-	movq_r2m(mm0, *(dataptr+8));			// write result 1
-	punpckhdq_r2r(mm7, mm5);				// m33:m23|m13:m03 - produce third result
+	movq_r2m(mm0, *(dataptr+8));			/* write result 1 */
+	punpckhdq_r2r(mm7, mm5);				/* m33:m23|m13:m03 - produce third result */
 
-	punpcklwd_m2r(*(dataptr+10), mm1);  // n11:n01|n10:n00 - interleave first and second lines
-	movq_r2r(mm3, mm0);						// copy third line
+	punpcklwd_m2r(*(dataptr+10), mm1);  /* n11:n01|n10:n00 - interleave first and second lines */
+	movq_r2r(mm3, mm0);						/* copy third line */
 
-	punpckhwd_m2r(*(dataptr+10), mm2);  // n13:n03|n12:n02 - interleave first and second lines
+	punpckhwd_m2r(*(dataptr+10), mm2);  /* n13:n03|n12:n02 - interleave first and second lines */
 
-	movq_r2m(mm4, *(dataptr+10));			// write result 2 out
-	punpckldq_r2r(mm7, mm6);				// m32:m22|m12:m02 - produce fourth result
+	movq_r2m(mm4, *(dataptr+10));			/* write result 2 out */
+	punpckldq_r2r(mm7, mm6);				/* m32:m22|m12:m02 - produce fourth result */
 
-	punpcklwd_m2r(*(dataptr+14), mm3);  // n31:n21|n30:n20 - interleave third and fourth lines
+	punpcklwd_m2r(*(dataptr+14), mm3);  /* n31:n21|n30:n20 - interleave third and fourth lines */
 	movq_r2r(mm1, mm4);
 
-	movq_r2m(mm6, *(dataptr+12));			// write result 3 out
-	punpckldq_r2r(mm3, mm1);				// n30:n20|n10:n00 - produce first result
+	movq_r2m(mm6, *(dataptr+12));			/* write result 3 out */
+	punpckldq_r2r(mm3, mm1);				/* n30:n20|n10:n00 - produce first result */
 
-	punpckhwd_m2r(*(dataptr+14), mm0);  // n33:n23|n32:n22 - interleave third and fourth lines
+	punpckhwd_m2r(*(dataptr+14), mm0);  /* n33:n23|n32:n22 - interleave third and fourth lines */
 	movq_r2r(mm2, mm6);
 
-	movq_r2m(mm5, *(dataptr+14));			// write result 4 out
-	punpckhdq_r2r(mm3, mm4);				// n31:n21|n11:n01- produce second result
+	movq_r2m(mm5, *(dataptr+14));			/* write result 4 out */
+	punpckhdq_r2r(mm3, mm4);				/* n31:n21|n11:n01- produce second result */
 
-	movq_r2m(mm1, *(dataptr+1));			// write result 5 out - (first result for other 4 x 4 block)
-	punpckldq_r2r(mm0, mm2);				// n32:n22|n12:n02- produce third result
+	movq_r2m(mm1, *(dataptr+1));			/* write result 5 out - (first result for other 4 x 4 block) */
+	punpckldq_r2r(mm0, mm2);				/* n32:n22|n12:n02- produce third result */
 
-	movq_r2m(mm4, *(dataptr+3));			// write result 6 out
-	punpckhdq_r2r(mm0, mm6);				// n33:n23|n13:n03 - produce fourth result
+	movq_r2m(mm4, *(dataptr+3));			/* write result 6 out */
+	punpckhdq_r2r(mm0, mm6);				/* n33:n23|n13:n03 - produce fourth result */
 
-	movq_r2m(mm2, *(dataptr+5));			// write result 7 out
+	movq_r2m(mm2, *(dataptr+5));			/* write result 7 out*/
 
-	movq_m2r(*dataptr, mm0);				// m03:m02|m01:m00 - first line, first 4x4
+	movq_m2r(*dataptr, mm0);				/* m03:m02|m01:m00 - first line, first 4x4 */
 
-	movq_r2m(mm6, *(dataptr+7));			// write result 8 out
+	movq_r2m(mm6, *(dataptr+7));			/* write result 8 out */
 
 
-// Do first 4x4 quadrant, which is used in the beginning of the DCT:
+/* Do first 4x4 quadrant, which is used in the beginning of the DCT: */
 
-	movq_m2r(*(dataptr+4), mm7);			// m23:m22|m21:m20 - third line
+	movq_m2r(*(dataptr+4), mm7);			/* m23:m22|m21:m20 - third line */
 	movq_r2r(mm0, mm2);
 
 	punpcklwd_m2r(*(dataptr+2), mm0);  	// m11:m01|m10:m00 - interleave first and second lines
