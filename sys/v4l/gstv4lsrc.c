@@ -29,11 +29,6 @@
 #include "v4lsrc_calls.h"
 #include <sys/ioctl.h>
 
-/* FIXME: small cheat */
-gboolean gst_v4l_set_window_properties (GstV4lElement * v4lelement);
-gboolean gst_v4l_get_capabilities (GstV4lElement * v4lelement);
-extern const char *v4l_palette_name[];
-
 /* elementfactory information */
 static GstElementDetails gst_v4lsrc_details =
 GST_ELEMENT_DETAILS ("Video (video4linux/raw) Source",
@@ -320,7 +315,7 @@ gst_v4lsrc_open (GstElement * element, const gchar * device)
     if (!gst_v4lsrc_try_capture (v4lsrc, width, height, palette[i]))
       continue;
     GST_DEBUG_OBJECT (v4lsrc, "Added palette %d (%s) to supported list",
-        palette[i], v4l_palette_name[palette[i]]);
+        palette[i], gst_v4lsrc_palette_name (palette[i]));
     v4lsrc->colourspaces = g_list_append (v4lsrc->colourspaces,
         GINT_TO_POINTER (palette[i]));
   }
@@ -398,54 +393,6 @@ gst_v4lsrc_get_fps_list (GstV4lSrc * v4lsrc)
     return list;
   }
   return NULL;
-}
-
-static gfloat
-gst_v4lsrc_get_fps (GstV4lSrc * v4lsrc)
-{
-  gint norm;
-  gint fps_index;
-  gfloat fps;
-  struct video_window *vwin = &GST_V4LELEMENT (v4lsrc)->vwin;
-
-  /* check if we have vwin window properties giving a framerate,
-   * as is done for webcams
-   * See http://www.smcc.demon.nl/webcam/api.html
-   * which is used for the Philips and qce-ga drivers */
-  fps_index = (vwin->flags >> 16) & 0x3F;       /* 6 bit index for framerate */
-
-  /* webcams have a non-zero fps_index */
-  if (fps_index != 0) {
-    gfloat current_fps;
-
-    /* index of 16 corresponds to 15 fps */
-    current_fps = fps_index * 15.0 / 16;
-    GST_LOG_OBJECT (v4lsrc, "device reports fps of %.4f", current_fps);
-    return current_fps;
-  }
-
-  if (!(v4lsrc->syncmode == GST_V4LSRC_SYNC_MODE_FIXED_FPS) &&
-      v4lsrc->clock != NULL && v4lsrc->handled > 0) {
-    /* try to get time from clock master and calculate fps */
-    GstClockTime time =
-        gst_clock_get_time (v4lsrc->clock) - v4lsrc->substract_time;
-    return v4lsrc->handled * GST_SECOND / time;
-  }
-
-  /* if that failed ... */
-
-  if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lsrc)))
-    return 0.;
-
-  if (!gst_v4l_get_chan_norm (GST_V4LELEMENT (v4lsrc), NULL, &norm))
-    return 0.;
-
-  if (norm == VIDEO_MODE_NTSC)
-    fps = 30000 / 1001;
-  else
-    fps = 25.;
-
-  return fps;
 }
 
 static gboolean
@@ -659,8 +606,7 @@ gst_v4lsrc_src_link (GstPad * pad, const GstCaps * vscapslist)
     /* set bits 16 to 21 to the index */
     vwin->flags |= fps_index << 16;
     if (!gst_v4l_set_window_properties (GST_V4LELEMENT (v4lsrc))) {
-      GST_ELEMENT_ERROR (v4lsrc, RESOURCE, SETTINGS, (NULL),
-          ("Could not set framerate of %f fps", fps));
+      return GST_PAD_LINK_REFUSED;
     }
   }
 

@@ -144,6 +144,10 @@ gboolean gst_v4l_set_audio      (GstV4lElement *v4lelement,
 				 GstV4lAudioType type,
 				 gint           value);
 
+/* functions that v4lsrc needs */
+gboolean gst_v4l_set_window_properties (GstV4lElement * v4lelement);
+gboolean gst_v4l_get_capabilities (GstV4lElement * v4lelement);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

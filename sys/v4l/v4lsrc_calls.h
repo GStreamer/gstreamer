@@ -40,10 +40,13 @@ guint8 * gst_v4lsrc_get_buffer     (GstV4lSrc *v4lsrc, gint  num);
 gboolean gst_v4lsrc_requeue_frame  (GstV4lSrc *v4lsrc, gint  num);
 gboolean gst_v4lsrc_capture_stop   (GstV4lSrc *v4lsrc);
 gboolean gst_v4lsrc_capture_deinit (GstV4lSrc *v4lsrc);
+gfloat   gst_v4lsrc_get_fps        (GstV4lSrc * v4lsrc);
 
 /* "the ugliest hack ever, now available at your local mirror" */
 gboolean gst_v4lsrc_try_capture    (GstV4lSrc *v4lsrc, gint width, gint height, gint palette);
 
+/* For debug purposes, share the palette names */
+const char *gst_v4lsrc_palette_name (int i);
 
 #ifdef __cplusplus
 }

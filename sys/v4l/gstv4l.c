@@ -30,6 +30,7 @@
 
 #include "gstv4lelement.h"
 #include "gstv4lsrc.h"
+#include "gstv4ljpegsrc.h"
 #include "gstv4lmjpegsrc.h"
 #include "gstv4lmjpegsink.h"
 
@@ -44,6 +45,8 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_V4LELEMENT) ||
       !gst_element_register (plugin, "v4lsrc",
           GST_RANK_NONE, GST_TYPE_V4LSRC) ||
+      !gst_element_register (plugin, "v4ljpegsrc",
+          GST_RANK_NONE, GST_TYPE_V4LJPEGSRC) ||
       !gst_element_register (plugin, "v4lmjpegsrc",
           GST_RANK_NONE, GST_TYPE_V4LMJPEGSRC) ||
       !gst_element_register (plugin, "v4lmjpegsink",
