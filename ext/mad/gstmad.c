@@ -344,6 +344,8 @@ gst_mad_output (void *data,
   }
   if (GST_PAD_CONNECTED (mad->srcpad))
     gst_pad_push (mad->srcpad, buffer);
+  else
+    gst_buffer_unref (buffer);
 
   return MAD_FLOW_CONTINUE;
 }
