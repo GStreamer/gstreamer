@@ -115,7 +115,7 @@ struct _GstGnomeVFSSrc {
 	GThread *audiocast_thread;
 	GList *audiocast_notify_queue;
 	GMutex *audiocast_queue_mutex;
-	GMutex *audiocast_title_mutex;
+	GMutex *audiocast_udpdata_mutex;
 	gint audiocast_thread_die_infd;
 	gint audiocast_thread_die_outfd;
 	gint audiocast_port;
@@ -326,7 +326,7 @@ static void gst_gnomevfssrc_init(GstGnomeVFSSrc *gnomevfssrc)
 	gnomevfssrc->iradio_url = NULL;
 	gnomevfssrc->iradio_title = NULL;
 
-	gnomevfssrc->audiocast_title_mutex = g_mutex_new(); 
+	gnomevfssrc->audiocast_udpdata_mutex = g_mutex_new(); 
 	gnomevfssrc->audiocast_queue_mutex = g_mutex_new(); 
 	gnomevfssrc->audiocast_notify_queue = NULL;
 	gnomevfssrc->audiocast_thread = NULL;
@@ -457,16 +457,15 @@ static void gst_gnomevfssrc_get_property(GObject *object, guint prop_id, GValue 
 		g_value_set_string (value, src->iradio_url);
 		break;
 	case ARG_IRADIO_TITLE:
-		g_mutex_lock(src->audiocast_title_mutex);
+		g_mutex_lock(src->audiocast_udpdata_mutex);
 		g_value_set_string (value, src->iradio_title);
-		g_mutex_unlock(src->audiocast_title_mutex);
+		g_mutex_unlock(src->audiocast_udpdata_mutex);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
 	}
 }
-
 
 /*
  * icecast/audiocast metadata extraction support code
@@ -618,14 +617,24 @@ static gpointer audiocast_thread_run(GstGnomeVFSSrc *src)
 					continue;
 		
 				if (!strncmp(lines[i], "x-audiocast-streamtitle", 23)) {
-					g_mutex_lock(src->audiocast_title_mutex);
+					g_mutex_lock(src->audiocast_udpdata_mutex);
 					if (src->iradio_title)
 						g_free(src->iradio_title);
 					src->iradio_title = g_strdup(valptr);
-					g_mutex_unlock(src->audiocast_title_mutex);
+					g_mutex_unlock(src->audiocast_udpdata_mutex);
 					g_mutex_lock(src->audiocast_queue_mutex);
 					src->audiocast_notify_queue = g_list_append(src->audiocast_notify_queue, "iradio-title");
 					GST_DEBUG(0,"audiocast title: %s\n", src->iradio_title);
+					g_mutex_unlock(src->audiocast_queue_mutex);
+				} else if (!strncmp(lines[i], "x-audiocast-streamurl", 21)) {
+					g_mutex_lock(src->audiocast_udpdata_mutex);
+					if (src->iradio_url)
+						g_free(src->iradio_url);
+					src->iradio_url = g_strdup(valptr);
+					g_mutex_unlock(src->audiocast_udpdata_mutex);
+					g_mutex_lock(src->audiocast_queue_mutex);
+					src->audiocast_notify_queue = g_list_append(src->audiocast_notify_queue, "iradio-url");
+					GST_DEBUG(0,"audiocast url: %s\n", src->iradio_title);
 					g_mutex_unlock(src->audiocast_queue_mutex);
 				} else if (!strncmp(lines[i], "x-audiocast-udpseqnr", 20)) {
 					gchar outbuf[120];
@@ -728,6 +737,7 @@ gst_gnomevfssrc_received_headers_callback (gconstpointer in,
 		else
 			continue;
 
+		GST_DEBUG (0,"key: %s", key);
                 if (!strncmp (key, "name", 4)) {
 			if (src->iradio_name)
 				g_free (src->iradio_name);
@@ -831,7 +841,14 @@ gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc *src)
 			GST_DEBUG(0, "sending notification on icecast title");
 			g_object_notify (G_OBJECT (src), "iradio-title");
 		}
-		
+		if (!g_strncasecmp(tags[i], "StreamUrl=", 10))
+		{
+			if (src->iradio_url)
+				g_free (src->iradio_url);
+			src->iradio_url = g_strdup(tags[i]+11);
+			GST_DEBUG(0, "sending notification on icecast url");
+			g_object_notify (G_OBJECT (src), "iradio-url");
+		}
 	}
 
 	g_strfreev(tags);
