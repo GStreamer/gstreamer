@@ -16,8 +16,8 @@ BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 
 Requires:       glib2 >= %_glib2
 BuildRequires:  glib2-devel >= %_glib2
-Requires: 	gstreamer07 >= 0.7.4
-BuildRequires: 	gstreamer07-devel >= 0.7.4
+Requires: 	gstreamer >= 0.7.4
+BuildRequires: 	gstreamer-devel >= 0.7.4
 BuildRequires:	gstreamer-tools >= 0.7.4
 
 @USE_ARTS_TRUE@Requires:      arts >= 1.1.4
@@ -145,6 +145,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstchart.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcolorspace.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcutter.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdebug.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdeinterlace.so
 %{_libdir}/gstreamer-%{majorminor}/libgstefence.so
 %{_libdir}/gstreamer-%{majorminor}/libgsteffectv.so
@@ -154,7 +155,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstflxdec.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgamma.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgoom.so
-%{_libdir}/gstreamer-%{majorminor}/libgstid3types.so
 %{_libdir}/gstreamer-%{majorminor}/libgstinterleave.so
 %{_libdir}/gstreamer-%{majorminor}/libgstlevel.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmatroska.so
@@ -228,7 +228,6 @@ rm -rf $RPM_BUILD_ROOT
 @USE_OSS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstossaudio.so
 @USE_V4L_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux.so
 @USE_RAW1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
-@USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvideosink.so
 # Snapshot plugin uses libpng
 @USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsnapshot.so
 @USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttextoverlay.so
@@ -241,7 +240,9 @@ rm -rf $RPM_BUILD_ROOT
 # Docs
 %{_datadir}/locale
 
-%post 
+%post
+@USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
+@USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer-%{majorminor}.schemas > /dev/null
 %{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
 
 %package -n gstreamer-plugins-devel
@@ -297,7 +298,7 @@ GStreamer support libraries header files.
 %{_libdir}/pkgconfig/gstreamer-plugins-%{majorminor}.pc
 # .so files
 @USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so
-%{_libdir}/libgstmedia-info-%{majorminor}.so
+%{_libdir}/libgstmedia-info-%{majorminor}.so*
 %{_libdir}/libgstplay-%{majorminor}.so
 
 # Here are packages not in the base plugins package but not dependant
@@ -445,6 +446,28 @@ GStreamer support libraries header files.
 @USE_DXR3_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
 @USE_DXR3_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
+### FAAC ###
+@USE_FAAC_TRUE@%package -n gstreamer-faac
+@USE_FAAC_TRUE@Summary:GStreamer plug-ins for AAC audio playback.
+@USE_FAAC_TRUE@Group:         Applications/Multimedia
+@USE_FAAC_TRUE@Requires:      gstreamer-plugins = %{version}
+@USE_FAAC_TRUE@Requires:      faac >= 1.23
+@USE_FAAC_TRUE@BuildRequires: faac-devel >= 1.23
+@USE_FAAC_TRUE@
+@USE_FAAC_TRUE@%description -n gstreamer-faac
+@USE_FAAC_TRUE@Plug-ins for playing AAC audio
+@USE_FAAC_TRUE@
+@USE_FAAC_TRUE@%files -n gstreamer-faac
+@USE_FAAC_TRUE@%defattr(-, root, root)
+@USE_FAAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaac.so
+@USE_FAAC_TRUE@%post -n  gstreamer-faac
+@USE_FAAC_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+@USE_FAAC_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_FAAC_TRUE@
+@USE_FAAC_TRUE@%postun -n  gstreamer-faac
+@USE_FAAC_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+@USE_FAAC_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
 ### FAAD ###
 @USE_FAAD_TRUE@%package -n gstreamer-faad
 @USE_FAAD_TRUE@Summary:GStreamer plug-ins for AAC audio playback.
@@ -458,7 +481,7 @@ GStreamer support libraries header files.
 @USE_FAAD_TRUE@
 @USE_FAAD_TRUE@%files -n gstreamer-faad
 @USE_FAAD_TRUE@%defattr(-, root, root)
-@USE_FAAD_TRUE@/usr/lib/gstreamer-%{majorminor}/libgstfaad.so
+@USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
 @USE_FAAD_TRUE@%post -n  gstreamer-faad
 @USE_FAAD_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
 @USE_FAAD_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
@@ -666,7 +689,7 @@ GStreamer support libraries header files.
 @USE_MPEG2DEC_TRUE@
 @USE_MPEG2DEC_TRUE@%files -n gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@%defattr(-, root, root)
-@USE_MPEG2DEC_TRUE@/usr/lib/gstreamer-%{majorminor}/libgstmpeg2dec.so
+@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2dec.so
 @USE_MPEG2DEC_TRUE@%post -n  gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
 @USE_MPEG2DEC_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
@@ -811,6 +834,13 @@ GStreamer support libraries header files.
 * Mon Mar 15 2004 Thomas Vander Stichele <thomas at apestaart dot org>
 - put back media-info
 - add ffmpegcolorspace plugin
+
+* Sun Mar 07 2004 Christian Schaller <Uraeus@gnome.org>
+- Remove rm commands for media-info stuff
+- Add libdir/*
+                                                                                
+* Thu Mar 04 2004 Christian Schaller <Uraeus@gnome.org>
+- Add missing gconf schema install in %post
 
 * Tue Mar 02 2004 Thomas Vander Stichele <thomas at apestaart dot org>
 - Libraries/Multimedia doesn't exist, remove it
