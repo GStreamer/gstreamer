@@ -28,6 +28,37 @@
 
 #include <gst/gst.h>
 
+
+/* FIXME: externalize */
+/* logging function for tests
+ * a test uses g_message() to log a debug line
+ * a gst unit test can be run with GST_TEST_DEBUG env var set to see the
+ * messages
+ */
+gboolean _gst_test_debug = FALSE;
+
+gboolean _gst_test_threads_running = FALSE;
+
+void gst_test_log_func
+    (const gchar * log_domain, GLogLevelFlags log_level,
+    const gchar * message, gpointer user_data)
+{
+  // g_print ("HANDLER CALLED\n");
+  if (_gst_test_debug) {
+    g_print (message);
+  }
+}
+
+/* initialize GStreamer testing */
+void
+gst_test_init (void)
+{
+  if (g_getenv ("GST_TEST_DEBUG"))
+    _gst_test_debug = TRUE;
+
+  g_log_set_handler (NULL, G_LOG_LEVEL_MESSAGE, gst_test_log_func, NULL);
+}
+
 /*
   Create a fake subclass
  */
@@ -130,8 +161,184 @@ START_TEST (test_fake_object_name)
   g_free (name2);
 }
 
-END_TEST Suite *
-gst_object_suite (void)
+END_TEST
+/***
+ * thread test macros and variables
+ */
+    GList * thread_list = NULL;
+GMutex *mutex;
+GCond *start_cond;              /* used to notify main thread of thread startups */
+GCond *sync_cond;               /* used to synchronize all threads and main thread */
+
+#define MAIN_START_THREADS(count, function, data)		\
+MAIN_INIT();							\
+MAIN_START_THREAD_FUNCTIONS(count, function, data);		\
+MAIN_SYNCHRONIZE();
+
+#define MAIN_INIT()			\
+G_STMT_START {				\
+  _gst_test_threads_running = TRUE;	\
+					\
+  mutex = g_mutex_new ();		\
+  start_cond = g_cond_new ();		\
+  sync_cond = g_cond_new ();		\
+} G_STMT_END;
+
+#define MAIN_START_THREAD_FUNCTIONS(count, function, data)	\
+G_STMT_START {							\
+  int i;							\
+  GThread *thread = NULL;					\
+  for (i = 0; i < count; ++i) {					\
+    g_message ("MAIN: creating thread %d\n", i);		\
+    g_mutex_lock (mutex);					\
+    thread = g_thread_create ((GThreadFunc) function, data,	\
+	TRUE, NULL);						\
+    thread_list = g_list_append (thread_list, thread);		\
+								\
+    /* wait for thread to signal us that it's ready */		\
+    g_message ("MAIN: waiting for thread %d\n", i);		\
+    g_cond_wait (start_cond, mutex);				\
+    g_mutex_unlock (mutex);					\
+  }								\
+} G_STMT_END;
+
+#define MAIN_SYNCHRONIZE()		\
+G_STMT_START {				\
+  g_message ("MAIN: synchronizing\n");	\
+  g_cond_broadcast (sync_cond);		\
+  g_message ("MAIN: synchronized\n");	\
+} G_STMT_END;
+
+#define MAIN_STOP_THREADS()					\
+G_STMT_START {							\
+  _gst_test_threads_running = FALSE;				\
+								\
+  /* join all threads */					\
+  g_message ("MAIN: joining\n");				\
+  g_list_foreach (thread_list, (GFunc) g_thread_join, NULL);	\
+  g_message ("MAIN: joined\n");					\
+} G_STMT_END;
+
+#define THREAD_START()						\
+THREAD_STARTED();						\
+THREAD_SYNCHRONIZE();
+
+#define THREAD_STARTED()					\
+G_STMT_START {							\
+  /* signal main thread that we started */			\
+  g_message ("THREAD %p: started\n", g_thread_self ());		\
+  g_mutex_lock (mutex);						\
+  g_cond_signal (start_cond);					\
+} G_STMT_END;
+
+#define THREAD_SYNCHRONIZE()					\
+G_STMT_START {							\
+  /* synchronize everyone */					\
+  g_message ("THREAD %p: syncing\n", g_thread_self ());		\
+  g_cond_wait (sync_cond, mutex);				\
+  g_message ("THREAD %p: synced\n", g_thread_self ());		\
+  g_mutex_unlock (mutex);					\
+} G_STMT_END;
+
+#define THREAD_TEST_RUNNING()	(_gst_test_threads_running == TRUE)
+
+/* thread function for threaded name change test */
+gpointer
+thread_name_object (GstObject * object)
+{
+  gchar *thread_id = g_strdup_printf ("%p", g_thread_self ());
+
+  THREAD_START ();
+
+  /* give main thread a head start */
+  g_usleep (100000);
+
+  /* write our name repeatedly */
+  g_message ("THREAD %s: starting loop\n", thread_id);
+  while (THREAD_TEST_RUNNING ()) {
+    gst_object_set_name (object, thread_id);
+    /* a minimal sleep invokes a thread switch */
+    g_usleep (1);
+  }
+
+  /* thread is done, so let's return */
+  g_message ("THREAD %s: set name\n", thread_id);
+  g_free (thread_id);
+
+  return NULL;
+}
+
+/*
+ * main thread sets and gets name while other threads set the name
+ * constantly; fails because lock is released inbetween set and get
+ */
+
+START_TEST (test_fake_object_name_threaded_wrong)
+{
+  GstObject *object;
+  gchar *name;
+  gint i;
+  gboolean expected_failure = FALSE;
+
+  g_message ("\nTEST: set/get without lock\n");
+
+  object = g_object_new (gst_fake_object_get_type (), NULL);
+  gst_object_set_name (object, "main");
+
+  MAIN_START_THREADS (5, thread_name_object, object);
+
+  /* start looping and set/get name repeatedly */
+  for (i = 0; i < 1000; ++i) {
+    gst_object_set_name (object, "main");
+    g_usleep (1);               /* switch */
+    name = gst_object_get_name (object);
+    if (strcmp (name, "main") != 0) {
+      g_message ("MAIN: expected failure during run %d\n", i);
+      expected_failure = TRUE;
+      g_free (name);
+      break;
+    }
+    g_free (name);
+  }
+  MAIN_STOP_THREADS ();
+
+  fail_unless (expected_failure, "name did not get changed");
+}
+
+END_TEST
+/*
+ * main thread sets and gets name directly on struct inside the object lock
+ * succeed because lock is held during set/get, and threads are locked out
+ */
+START_TEST (test_fake_object_name_threaded_right)
+{
+  GstObject *object;
+  gchar *name;
+  gint i;
+
+  g_message ("\nTEST: set/get inside lock\n");
+
+  object = g_object_new (gst_fake_object_get_type (), NULL);
+  gst_object_set_name (object, "main");
+
+  MAIN_START_THREADS (5, thread_name_object, object);
+
+  /* start looping and set/get name repeatedly */
+  for (i = 0; i < 1000; ++i) {
+    GST_LOCK (object);
+    g_free (GST_OBJECT_NAME (object));
+    GST_OBJECT_NAME (object) = g_strdup ("main");
+    g_usleep (1);               /* switch */
+    name = g_strdup (GST_OBJECT_NAME (object));
+    GST_UNLOCK (object);
+
+    fail_unless (strcmp (name, "main") == 0,
+        "Name got changed while lock held during run %d", i);
+    g_free (name);
+  }
+  MAIN_STOP_THREADS ();
+}
+END_TEST Suite * gst_object_suite (void)
 {
   Suite *s = suite_create ("GstObject");
   TCase *tc_chain = tcase_create ("general");
@@ -140,6 +347,8 @@ gst_object_suite (void)
   tcase_add_test_raise_signal (tc_chain, test_fail_abstract_new, SIGSEGV);
   tcase_add_test (tc_chain, test_fake_object_new);
   tcase_add_test (tc_chain, test_fake_object_name);
+  tcase_add_test (tc_chain, test_fake_object_name_threaded_wrong);
+  tcase_add_test (tc_chain, test_fake_object_name_threaded_right);
   //tcase_add_checked_fixture (tc_chain, setup, teardown);
   return s;
 }
@@ -153,6 +362,7 @@ main (int argc, char **argv)
   SRunner *sr = srunner_create (s);
 
   gst_init (&argc, &argv);
+  gst_test_init ();
 
   srunner_run_all (sr, CK_NORMAL);
   nf = srunner_ntests_failed (sr);

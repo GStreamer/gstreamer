@@ -1,5 +1,11 @@
 2004-12-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/Makefile.am:
+	* check/gst/gstobject.c:
+	  add more unit tests for thread-safe naming
+
+2004-12-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* Makefile.am:
 	* check/Makefile.am:
 	* check/gst/.cvsignore:
