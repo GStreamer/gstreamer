@@ -136,7 +136,7 @@ gst_afparse_class_init (GstAFParseClass *klass)
   gobject_class->set_property = gst_afparse_set_property;
   gobject_class->get_property = gst_afparse_get_property;
 
-  gstelement_class->change_state = gst_afparse_change_state;
+  /* gstelement_class->change_state = gst_afparse_change_state;*/
 }
 
 static void 
@@ -186,36 +186,39 @@ gst_afparse_loop(GstElement *element)
 
   afparse = GST_AFPARSE(element);
 
-  frames_to_bytes = afparse->channels * afparse->width / 8;
-  frames_per_read = afparse->frames_per_read;
-  bytes_per_read = frames_per_read * frames_to_bytes;
+  afparse->vfile->closure = gst_bytestream_new(afparse->sinkpad);
+  if (gst_afparse_open_file (afparse)){
+    frames_to_bytes = afparse->channels * afparse->width / 8;
+    frames_per_read = afparse->frames_per_read;
+    bytes_per_read = frames_per_read * frames_to_bytes;
   
-  bufpool = gst_buffer_pool_get_default (bytes_per_read, 8);
-  
-  do {
-    buf = gst_buffer_new_from_pool (bufpool, 0, 0);
-    GST_BUFFER_TIMESTAMP(buf) = afparse->timestamp;
-    data = GST_BUFFER_DATA(buf); 
-    numframes = afReadFrames (afparse->file, AF_DEFAULT_TRACK, data, frames_per_read);
+    bufpool = gst_buffer_pool_get_default (bytes_per_read, 8);
+    do {
+      buf = gst_buffer_new_from_pool (bufpool, 0, 0);
+      GST_BUFFER_TIMESTAMP(buf) = afparse->timestamp;
+      data = GST_BUFFER_DATA(buf); 
+      numframes = afReadFrames (afparse->file, AF_DEFAULT_TRACK, data, frames_per_read);
 
-    /* events are handled in gst_afparse_vf_read so if there are no
-     * frames it must be EOS */
-    if (numframes < 1){
-      gst_buffer_unref(buf);
+      /* events are handled in gst_afparse_vf_read so if there are no
+       * frames it must be EOS */
+      if (numframes < 1){
+        gst_buffer_unref(buf);
 
-      gst_pad_push (afparse->srcpad, GST_BUFFER(gst_event_new (GST_EVENT_EOS)));  
-      gst_element_set_eos (GST_ELEMENT (afparse));
-      break;
+        gst_pad_push (afparse->srcpad, GST_BUFFER(gst_event_new (GST_EVENT_EOS)));  
+        gst_element_set_eos (GST_ELEMENT (afparse));
+        break;
+      }
+
+      GST_BUFFER_SIZE(buf) = numframes * frames_to_bytes;
+      gst_pad_push (afparse->srcpad, buf);
+      afparse->timestamp += numframes * 1E9 / afparse->rate;
     }
-
-    GST_BUFFER_SIZE(buf) = numframes * frames_to_bytes;
-    gst_pad_push (afparse->srcpad, buf);
-    afparse->timestamp += numframes * 1E9 / afparse->rate;
+    while (TRUE);
+    gst_afparse_close_file (afparse);
+    gst_buffer_pool_unref(bufpool);
   }
-  while (TRUE);
   
   gst_bytestream_destroy((GstByteStream*)afparse->vfile->closure);
-  gst_buffer_pool_unref(bufpool);
 
 }
 
@@ -340,7 +343,6 @@ gst_afparse_open_file (GstAFParse *afparse)
 {
   g_return_val_if_fail (!GST_FLAG_IS_SET (afparse, GST_AFPARSE_OPEN), FALSE);
 
-  afparse->vfile->closure = gst_bytestream_new(afparse->srcpad);
 
   /* open the file */
   g_print("opening vfile %p\n", afparse->vfile);
@@ -454,16 +456,28 @@ gst_afparse_vf_read (AFvirtualfile *vfile, void *data, size_t nbytes)
 {
   GstByteStream *bs = (GstByteStream*)vfile->closure;
   guint8 *bytes;
-  g_print("doing read\n");
-  bytes = gst_bytestream_peek_bytes(bs, nbytes);
-  if (!bytes){
+  GstEvent     *event = NULL;
+  guint32       waiting; 
+  gchar *debug_bytes;
+  
+  while (!(bytes = gst_bytestream_peek_bytes(bs, nbytes))){
     /* handle events */
+    gst_bytestream_get_status (bs, &waiting, &event);
 
-    return 0;
+    if (!event) return 0;
+    if (event){
+      if (GST_EVENT_TYPE(event) == GST_EVENT_EOS) return 0;
+      if (GST_EVENT_TYPE(event) == GST_EVENT_DISCONTINUOUS){
+        g_print("seek done\n");
+      }
+    }
   }
   
+  memcpy(data, bytes, nbytes);
   gst_bytestream_flush_fast(bs, nbytes);
-  data = bytes;
+  
+  /*g_print("read %d bytes\n", nbytes);*/
+
   return nbytes;
 }
 
@@ -472,10 +486,23 @@ gst_afparse_vf_seek   (AFvirtualfile *vfile, long offset, int is_relative)
 {
   GstByteStream *bs = (GstByteStream*)vfile->closure;
   GstSeekType type;
+  guint64 current_offset = gst_bytestream_tell(bs);
+
+  if (!is_relative){
+    if ((guint64)offset == current_offset) {
+      /* this seems to happen before every read - bad audiofile */
+      return offset;
+    }
+
+    type = GST_SEEK_BYTEOFFSET_SET;
+  }
+  else {
+    if (offset == 0) return current_offset;
+    type = GST_SEEK_BYTEOFFSET_CUR; 
+  }
   
-  g_print("doing seek\n");
-  type = is_relative ? GST_SEEK_BYTEOFFSET_CUR : GST_SEEK_BYTEOFFSET_SET;
   if (gst_bytestream_seek(bs, type, (gint64)offset)){
+    g_print("doing seek to %d\n", (gint)offset);
     return offset;
   }
   return 0;
@@ -510,10 +537,12 @@ gst_afparse_vf_destroy(AFvirtualfile *vfile)
 static long 
 gst_afparse_vf_tell   (AFvirtualfile *vfile)
 {
-  /*GstByteStream *bs = (GstByteStream*)vfile->closure;*/
-  g_print("doing tell\n");
-  /* return gst_bytestream_tell(bs);*/
-  return 0;
+  GstByteStream *bs = (GstByteStream*)vfile->closure;
+  guint64 offset;
+
+  offset = gst_bytestream_tell(bs);
+  g_print("doing tell: %llu\n", offset);
+  return offset;
 }
 
 static GstCaps* 
