@@ -1,3 +1,12 @@
+2004-11-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/manual/quotes.xml:
+	  add a quote
+	* configure.ac:
+	* gst/gst.c:
+	* gst/gstinfo.c:
+	  add LIBDIR and move init message higher up so it's at the start
+
 2004-11-08  Christian Fredrik Kalager Schaller  <christian@fluendo.com>
 
 	* gst/schedulers/Makefile.am: fix disted build fair by including .h file

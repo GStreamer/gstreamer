@@ -800,8 +800,8 @@ for_each_threshold_by_entry (gpointer data, gpointer user_data)
  * gst_debug_set_threshold_for_name:
  * @name: name of the categories to set
  * @level: level to set them to
- * 
- * Sets all categories which match the gven glob style pattern to the given 
+ *
+ * Sets all categories which match the given glob style pattern to the given
  * level.
  */
 void
@@ -827,7 +827,7 @@ gst_debug_set_threshold_for_name (const gchar * name, GstDebugLevel level)
 /**
  * gst_debug_unset_threshold_for_name:
  * @name: name of the categories to set
- * 
+ *
  * Resets all categories with the given name back to the default level.
  */
 void

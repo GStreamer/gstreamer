@@ -337,7 +337,6 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
     GST_DEBUG ("already initialized gst");
     return TRUE;
   }
-
   if (!argc || !argv) {
     if (argc || argv)
       g_warning ("gst_init: Only one of argc or argv was NULL");
@@ -486,6 +485,11 @@ init_pre (void)
     }
   }
 #endif
+  /* This is the earliest we can make stuff show up in the logs.
+   * So give some useful info about GStreamer here */
+  GST_INFO ("Initializing GStreamer Core Library version %s", VERSION);
+  GST_INFO ("Using library from %s", LIBDIR);
+
 #ifndef GST_DISABLE_REGISTRY
   {
     gchar *user_reg;
@@ -577,8 +581,6 @@ init_post (void)
 
   llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
   g_log_set_handler (g_log_domain_gstreamer, llf, debug_log_handler, NULL);
-
-  GST_INFO ("Initializing GStreamer Core Library version %s", VERSION);
 
   _gst_format_initialize ();
   _gst_query_type_initialize ();

@@ -51,6 +51,10 @@ AS_AC_EXPAND(LOCALEDIR, $datadir/locale)
 AC_DEFINE_UNQUOTED([LOCALEDIR], "$LOCALEDIR",
                    [gettext locale dir])
 
+dnl define LIBDIR so we can inform people where we live
+AS_AC_EXPAND(LIBDIR, $libdir)
+AC_DEFINE_UNQUOTED([LIBDIR], "$LIBDIR",
+                   [library dir])
 
 dnl decide on error flags
 dnl if we support -Wall, set it unconditionally
