@@ -158,8 +158,9 @@ struct _GstOptSchedulerGroup {
 
 #ifdef USE_COTHREADS
   cothread 			*cothread;		/* the cothread of this group */
-#endif
+#else
   GroupScheduleFunction 	 schedulefunc;
+#endif
   int				 argc;
   char			       **argv;
 };
@@ -738,8 +739,10 @@ group_element_set_enabled (GstOptSchedulerGroup *group, GstElement *element, gbo
 static gboolean 
 schedule_group (GstOptSchedulerGroup *group) 
 {
-  if (!group->entry || group->schedulefunc == NULL)
+  if (!group->entry) {
+    GST_INFO (GST_CAT_SCHEDULING, "not scheduling group %p without entry", group);
     return FALSE;
+  }
 
 #ifdef USE_COTHREADS
   if (group->cothread)
@@ -748,6 +751,11 @@ schedule_group (GstOptSchedulerGroup *group)
     g_warning ("(internal error): trying to schedule group without cothread");
   return TRUE;
 #else
+  if (group->schedulefunc == NULL) {
+    GST_INFO (GST_CAT_SCHEDULING, "not scheduling group %p without schedulefunc", 
+		    group);
+    return FALSE;
+  }
   group->schedulefunc (group->argc, group->argv);
   return TRUE;
 #endif
