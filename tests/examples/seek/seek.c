@@ -688,7 +688,7 @@ main (int argc, char **argv)
   gtk_init (&argc, &argv);
 
   if (argc != 3) {
-    g_print ("usage: %s <type 0=mp3 1=avi 2=mpeg1 3=mpegparse 4=vorbis 5=sid 6=flac 7=wav> <filename>\n", argv[0]);
+    g_print ("usage: %s <type 0=mp3 1=avi 2=mpeg1 3=mpegparse 4=vorbis 5=sid 6=flac 7=wav 8=mod> <filename>\n", argv[0]);
     exit (-1);
   }
 
