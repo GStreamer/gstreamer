@@ -573,12 +573,15 @@ gst_filesrc_close_file (GstFileSrc *src)
 static GstElementStateReturn
 gst_filesrc_change_state (GstElement *element)
 {
-  g_return_val_if_fail (GST_IS_FILESRC (element), GST_STATE_FAILURE);
+  GstFileSrc *src = GST_FILESRC(element);
 
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
     if (GST_FLAG_IS_SET (element, GST_FILESRC_OPEN))
       gst_filesrc_close_file (GST_FILESRC (element));
+  } if (GST_STATE_PENDING (element) == GST_STATE_READY) {
+    src->curoffset = 0;
   } else {
+
     if (!GST_FLAG_IS_SET (element, GST_FILESRC_OPEN)) {
       if (!gst_filesrc_open_file (GST_FILESRC (element)))
         return GST_STATE_FAILURE;
