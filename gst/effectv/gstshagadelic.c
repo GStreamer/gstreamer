@@ -67,15 +67,12 @@ struct _GstShagadelicTVClass
 };
 
 /* elementfactory information */
-GstElementDetails gst_shagadelictv_details = {
+static GstElementDetails gst_shagadelictv_details = GST_ELEMENT_DETAILS (
   "ShagadelicTV",
   "Filter/Video/Effect",
-  "LGPL",
   "Oh behave, ShagedelicTV makes images shagadelic!",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001 FUKUCHI Kentarou",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 
 /* Filter signals and args */
@@ -90,6 +87,7 @@ enum
   ARG_0,
 };
 
+static void	gst_shagadelictv_base_init	(gpointer g_class);
 static void 	gst_shagadelictv_class_init 	(GstShagadelicTVClass * klass);
 static void 	gst_shagadelictv_init 		(GstShagadelicTV * filter);
 
@@ -111,7 +109,8 @@ GType gst_shagadelictv_get_type (void)
 
   if (!shagadelictv_type) {
     static const GTypeInfo shagadelictv_info = {
-      sizeof (GstShagadelicTVClass), NULL,
+      sizeof (GstShagadelicTVClass), 
+      gst_shagadelictv_base_init,
       NULL,
       (GClassInitFunc) gst_shagadelictv_class_init,
       NULL,
@@ -124,6 +123,17 @@ GType gst_shagadelictv_get_type (void)
     shagadelictv_type = g_type_register_static (GST_TYPE_ELEMENT, "GstShagadelicTV", &shagadelictv_info, 0);
   }
   return shagadelictv_type;
+}
+
+static void
+gst_shagadelictv_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, gst_effectv_src_factory ());
+  gst_element_class_add_pad_template (element_class, gst_effectv_sink_factory ());
+ 
+  gst_element_class_set_details (element_class, &gst_shagadelictv_details);
 }
 
 static void

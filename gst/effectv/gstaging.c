@@ -25,6 +25,7 @@
 #include "config.h"
 #endif
 #include <string.h>
+
 #include "gsteffectv.h"
 
 #define GST_TYPE_AGINGTV \
@@ -78,15 +79,12 @@ struct _GstAgingTVClass
 };
 
 /* elementfactory information */
-GstElementDetails gst_agingtv_details = {
+static GstElementDetails gst_agingtv_details = GST_ELEMENT_DETAILS (
   "AgingTV",
   "Filter/Video/Effect",
-  "LGPL",
-  "Aply aging effect on video",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001 FUKUCHI Kentarou",
-};
+  "Apply aging effect on video",
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 
 /* Filter signals and args */
@@ -101,6 +99,7 @@ enum
   ARG_0,
 };
 
+static void 	gst_agingtv_base_init 		(gpointer g_class);
 static void 	gst_agingtv_class_init 		(GstAgingTVClass * klass);
 static void 	gst_agingtv_init 		(GstAgingTV * filter);
 
@@ -122,7 +121,8 @@ GType gst_agingtv_get_type (void)
 
   if (!agingtv_type) {
     static const GTypeInfo agingtv_info = {
-      sizeof (GstAgingTVClass), NULL,
+      sizeof (GstAgingTVClass),
+      gst_agingtv_base_init,
       NULL,
       (GClassInitFunc) gst_agingtv_class_init,
       NULL,
@@ -135,6 +135,17 @@ GType gst_agingtv_get_type (void)
     agingtv_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAgingTV", &agingtv_info, 0);
   }
   return agingtv_type;
+}
+
+static void
+gst_agingtv_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, gst_effectv_src_factory ());
+  gst_element_class_add_pad_template (element_class, gst_effectv_sink_factory ());
+ 
+  gst_element_class_set_details (element_class, &gst_agingtv_details);
 }
 
 static void

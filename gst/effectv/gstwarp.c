@@ -73,16 +73,12 @@ struct _GstWarpTVClass
 };
 
 /* elementfactory information */
-GstElementDetails gst_warptv_details = {
+static GstElementDetails gst_warptv_details = GST_ELEMENT_DETAILS (
   "WarpTV",
   "Filter/Video/Effect",
-  "LGPL",
   "WarpTV does realtime goo'ing of the video input",
-  VERSION,
-  "Sam Lantinga <slouken@devolution.com>",
-  "Wim Taymans <wim.taymans@chello.be>, "
-  "(C) 2001 FUKUCHI Kentarou",
-};
+  "Sam Lantinga <slouken@devolution.com>"
+);
 
 
 /* Filter signals and args */
@@ -97,6 +93,7 @@ enum
   ARG_0,
 };
 
+static void	gst_warptv_base_init		(gpointer g_class);
 static void 	gst_warptv_class_init 		(GstWarpTVClass * klass);
 static void 	gst_warptv_init 		(GstWarpTV * filter);
 
@@ -118,7 +115,8 @@ GType gst_warptv_get_type (void)
 
   if (!warptv_type) {
     static const GTypeInfo warptv_info = {
-      sizeof (GstWarpTVClass), NULL,
+      sizeof (GstWarpTVClass), 
+      gst_warptv_base_init,
       NULL,
       (GClassInitFunc) gst_warptv_class_init,
       NULL,
@@ -131,6 +129,17 @@ GType gst_warptv_get_type (void)
     warptv_type = g_type_register_static (GST_TYPE_ELEMENT, "GstWarpTV", &warptv_info, 0);
   }
   return warptv_type;
+}
+
+static void
+gst_warptv_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, gst_effectv_src_factory ());
+  gst_element_class_add_pad_template (element_class, gst_effectv_sink_factory ());
+ 
+  gst_element_class_set_details (element_class, &gst_warptv_details);
 }
 
 static void

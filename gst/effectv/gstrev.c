@@ -85,16 +85,12 @@ struct _GstRevTVClass
 };
 
 /* elementfactory information */
-GstElementDetails gst_revtv_details = {
+static GstElementDetails gst_revtv_details = GST_ELEMENT_DETAILS (
   "RevTV",
   "Filter/Video/Effect",
-  "LGPL",
   "A video waveform monitor for each line of video processed",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001 FUKUCHI Kentarou,"
-  "(c) 2002 Ed Tannenbaum",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 
 /* Filter signals and args */
@@ -112,6 +108,7 @@ enum
   ARG_GAIN,
 };
 
+static void 	gst_revtv_base_init 		(gpointer g_class);
 static void 	gst_revtv_class_init 		(GstRevTVClass * klass);
 static void 	gst_revtv_init 			(GstRevTV * filter);
 
@@ -131,7 +128,8 @@ GType gst_revtv_get_type (void)
 
   if (!revtv_type) {
     static const GTypeInfo revtv_info = {
-      sizeof (GstRevTVClass), NULL,
+      sizeof (GstRevTVClass), 
+      gst_revtv_base_init,
       NULL,
       (GClassInitFunc) gst_revtv_class_init,
       NULL,
@@ -144,6 +142,17 @@ GType gst_revtv_get_type (void)
     revtv_type = g_type_register_static (GST_TYPE_ELEMENT, "GstRevTV", &revtv_info, 0);
   }
   return revtv_type;
+}
+
+static void
+gst_revtv_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, gst_effectv_src_factory ());
+  gst_element_class_add_pad_template (element_class, gst_effectv_sink_factory ());
+ 
+  gst_element_class_set_details (element_class, &gst_revtv_details);
 }
 
 static void

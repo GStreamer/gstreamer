@@ -69,15 +69,12 @@ struct _GstVertigoTVClass
 };
 
 /* elementfactory information */
-GstElementDetails gst_vertigotv_details = {
+static GstElementDetails gst_vertigotv_details = GST_ELEMENT_DETAILS (
   "VertigoTV",
   "Filter/Video/Effect",
-  "LGPL",
   "A loopback alpha blending effector with rotating and scaling",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001 FUKUCHI Kentarou",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 
 /* Filter signals and args */
@@ -95,6 +92,7 @@ enum
   ARG_ZOOM_SPEED,
 };
 
+static void	gst_vertigotv_base_init		(gpointer g_class);
 static void 	gst_vertigotv_class_init 	(GstVertigoTVClass * klass);
 static void 	gst_vertigotv_init 		(GstVertigoTV * filter);
 
@@ -116,7 +114,8 @@ GType gst_vertigotv_get_type (void)
 
   if (!vertigotv_type) {
     static const GTypeInfo vertigotv_info = {
-      sizeof (GstVertigoTVClass), NULL,
+      sizeof (GstVertigoTVClass), 
+      gst_vertigotv_base_init,
       NULL,
       (GClassInitFunc) gst_vertigotv_class_init,
       NULL,
@@ -129,6 +128,17 @@ GType gst_vertigotv_get_type (void)
     vertigotv_type = g_type_register_static (GST_TYPE_ELEMENT, "GstVertigoTV", &vertigotv_info, 0);
   }
   return vertigotv_type;
+}
+
+static void
+gst_vertigotv_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, gst_effectv_src_factory ());
+  gst_element_class_add_pad_template (element_class, gst_effectv_sink_factory ());
+ 
+  gst_element_class_set_details (element_class, &gst_vertigotv_details);
 }
 
 static void

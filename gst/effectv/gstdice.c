@@ -66,15 +66,12 @@ struct _GstDiceTVClass
 };
 
 /* elementfactory information */
-GstElementDetails gst_dicetv_details = {
+static GstElementDetails gst_dicetv_details = GST_ELEMENT_DETAILS (
   "DiceTV",
   "Filter/Video/Effect",
-  "LGPL",
   "'Dices' the screen up into many small squares",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(c) 2001 Sam Mertens",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 
 /* Filter signals and args */
@@ -91,6 +88,7 @@ enum
   ARG_CUBE_BITS,
 };
 
+static void     gst_dicetv_base_init		(gpointer g_class);   
 static void 	gst_dicetv_class_init 		(GstDiceTVClass * klass);
 static void 	gst_dicetv_init 		(GstDiceTV * filter);
 
@@ -113,7 +111,8 @@ GType gst_dicetv_get_type (void)
 
   if (!dicetv_type) {
     static const GTypeInfo dicetv_info = {
-      sizeof (GstDiceTVClass), NULL,
+      sizeof (GstDiceTVClass), 
+      gst_dicetv_base_init,
       NULL,
       (GClassInitFunc) gst_dicetv_class_init,
       NULL,
@@ -126,6 +125,17 @@ GType gst_dicetv_get_type (void)
     dicetv_type = g_type_register_static (GST_TYPE_ELEMENT, "GstDiceTV", &dicetv_info, 0);
   }
   return dicetv_type;
+}
+
+static void
+gst_dicetv_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, gst_effectv_src_factory ());
+  gst_element_class_add_pad_template (element_class, gst_effectv_sink_factory ());
+ 
+  gst_element_class_set_details (element_class, &gst_dicetv_details);
 }
 
 static void

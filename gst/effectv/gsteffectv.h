@@ -24,28 +24,13 @@
 #include <gst/gst.h>
 
 GType gst_edgetv_get_type (void);
-extern GstElementDetails gst_edgetv_details;
-
 GType gst_agingtv_get_type (void);
-extern GstElementDetails gst_agingtv_details;
-
 GType gst_dicetv_get_type (void);
-extern GstElementDetails gst_dicetv_details;
-
 GType gst_warptv_get_type (void);
-extern GstElementDetails gst_warptv_details;
-
 GType gst_shagadelictv_get_type (void);
-extern GstElementDetails gst_shagadelictv_details;
-
 GType gst_vertigotv_get_type (void);
-extern GstElementDetails gst_vertigotv_details;
-
 GType gst_revtv_get_type (void);
-extern GstElementDetails gst_revtv_details;
-
 GType gst_quarktv_get_type (void);
-extern GstElementDetails gst_quarktv_details;
 
 extern GstPadTemplate *gst_effectv_sink_factory ();
 extern GstPadTemplate *gst_effectv_src_factory ();

@@ -60,15 +60,12 @@ struct _GstEdgeTVClass
 };
 
 /* elementfactory information */
-GstElementDetails gst_edgetv_details = {
+static GstElementDetails gst_edgetv_details = GST_ELEMENT_DETAILS (
   "EdgeTV",
   "Filter/Video/Effect",
-  "LGPL",
-  "Aply edge detect on video",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001 FUKUCHI Kentarou",
-};
+  "Apply edge detect on video",
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 
 /* Filter signals and args */
@@ -83,6 +80,7 @@ enum
   ARG_0,
 };
 
+static void 	gst_edgetv_base_init 		(gpointer g_class);
 static void 	gst_edgetv_class_init 		(GstEdgeTVClass * klass);
 static void 	gst_edgetv_init 		(GstEdgeTV * filter);
 
@@ -102,7 +100,8 @@ GType gst_edgetv_get_type (void)
 
   if (!edgetv_type) {
     static const GTypeInfo edgetv_info = {
-      sizeof (GstEdgeTVClass), NULL,
+      sizeof (GstEdgeTVClass), 
+      gst_edgetv_base_init,
       NULL,
       (GClassInitFunc) gst_edgetv_class_init,
       NULL,
@@ -115,6 +114,17 @@ GType gst_edgetv_get_type (void)
     edgetv_type = g_type_register_static (GST_TYPE_ELEMENT, "GstEdgeTV", &edgetv_info, 0);
   }
   return edgetv_type;
+}
+
+static void
+gst_edgetv_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, gst_effectv_src_factory ());
+  gst_element_class_add_pad_template (element_class, gst_effectv_sink_factory ());
+ 
+  gst_element_class_set_details (element_class, &gst_edgetv_details);
 }
 
 static void

@@ -66,16 +66,12 @@ struct _GstQuarkTVClass
 };
 
 /* elementfactory information */
-GstElementDetails gst_quarktv_details = {
+static GstElementDetails gst_quarktv_details = GST_ELEMENT_DETAILS (
   "QuarkTV",
   "Filter/Video/Effect",
-  "LGPL",
-  "Motion disolver",
-  VERSION,
-  "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>",
-  "(C) 2001 FUKUCHI Kentarou",
-};
-
+  "Motion dissolver",
+  "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>"
+);
 
 /* Filter signals and args */
 enum
@@ -90,6 +86,7 @@ enum
   ARG_PLANES,
 };
 
+static void	gst_quarktv_base_init		(gpointer g_class);
 static void 	gst_quarktv_class_init 		(GstQuarkTVClass * klass);
 static void 	gst_quarktv_init 		(GstQuarkTV * filter);
 
@@ -121,7 +118,7 @@ GType gst_quarktv_get_type (void)
   if (!quarktv_type) {
     static const GTypeInfo quarktv_info = {
       sizeof (GstQuarkTVClass), 
-      NULL,
+      gst_quarktv_base_init,
       NULL,
       (GClassInitFunc) gst_quarktv_class_init,
       NULL,
@@ -134,6 +131,17 @@ GType gst_quarktv_get_type (void)
     quarktv_type = g_type_register_static (GST_TYPE_ELEMENT, "GstQuarkTV", &quarktv_info, 0);
   }
   return quarktv_type;
+}
+
+static void
+gst_quarktv_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, gst_effectv_src_factory ());
+  gst_element_class_add_pad_template (element_class, gst_effectv_sink_factory ());
+ 
+  gst_element_class_set_details (element_class, &gst_quarktv_details);
 }
 
 static void
