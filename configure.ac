@@ -45,11 +45,9 @@ GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plugins],,
 [
   AC_MSG_WARN(building experimental plugins)
   USE_TARKIN="yes"
-  USE_RTP="yes"
 ],[
   AC_MSG_NOTICE(not building experimental plugins)
   USE_TARKIN="no"
-  USE_RTP="no"
 ])
 
 dnl broken plugins; stuff that doesn't seem to build at the moment
