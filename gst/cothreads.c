@@ -221,7 +221,9 @@ cothread_create (cothread_context *ctx)
   unsigned long page_size;
 
   g_return_val_if_fail (ctx != NULL, NULL);
-  g_assert (ctx->thread == g_thread_self());
+
+  GST_DEBUG (GST_CAT_COTHREADS, "manager sef %p, cothread self %p", 
+		    ctx->thread, g_thread_self());
 
   if (ctx->ncothreads == COTHREAD_MAXTHREADS) {
     /* this is pretty fatal */
