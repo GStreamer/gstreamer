@@ -117,8 +117,7 @@ gst_autoplug_can_connect_sink (GstElementFactory *fac, GstCaps *sink)
   {
     GstCaps *caps = GST_PAD_TEMPLATE_CAPS (templs->data);
     if ((GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC) &&
-	gst_autoplug_caps_intersect (GST_PAD_TEMPLATE_CAPS (templs->data), 
-		                     sink))
+	gst_autoplug_caps_intersect (caps, sink))
     {
       return GST_PAD_TEMPLATE (templs->data);
     }
