@@ -190,9 +190,9 @@ id3_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
-/*** audio/x-tta *************************************************************/
+/*** audio/x-ttafile *********************************************************/
 
-static GstStaticCaps tta_caps = GST_STATIC_CAPS ("audio/x-tta");
+static GstStaticCaps tta_caps = GST_STATIC_CAPS ("audio/x-ttafile");
 
 #define TTA_CAPS gst_static_caps_get(&tta_caps)
 static void
@@ -1385,7 +1385,7 @@ plugin_init (GstPlugin * plugin)
       flx_exts, FLX_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-id3", GST_RANK_PRIMARY,
       id3_type_find, id3_exts, ID3_CAPS, NULL);
-  TYPE_FIND_REGISTER (plugin, "audio/x-tta", GST_RANK_PRIMARY,
+  TYPE_FIND_REGISTER (plugin, "audio/x-ttafile", GST_RANK_PRIMARY,
       tta_type_find, tta_exts, TTA_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-mod", GST_RANK_SECONDARY, mod_type_find,
       mod_exts, MOD_CAPS, NULL);
