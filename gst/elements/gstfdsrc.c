@@ -199,15 +199,12 @@ gst_fdsrc_get(GstPad *pad)
 
   /* read it in from the file */
   readbytes = read(src->fd,GST_BUFFER_DATA(buf),src->bytes_per_read);
+  /* if nothing was read, we're in eos */
   if (readbytes == 0) {
-    return NULL;
+    gst_element_set_eos (GST_ELEMENT (src));
+    return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
   }
 
-  /* if we didn't get as many bytes as we asked for, we're at EOF */
-  if (readbytes < src->bytes_per_read) {
-    /* set the buffer's EOF bit here */
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_EOS);
-  }
   GST_BUFFER_OFFSET(buf) = src->curoffset;
   GST_BUFFER_SIZE(buf) = readbytes;
   src->curoffset += readbytes;

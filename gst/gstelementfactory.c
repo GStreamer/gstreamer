@@ -251,7 +251,7 @@ gst_elementfactory_create (GstElementFactory *factory,
     GST_DEBUG (GST_CAT_ELEMENTFACTORY,"class %s\n", GST_OBJECT_NAME (factory));
     oclass->elementfactory = factory;
 
-    // copy pad template pointers to the element class
+    /* copy pad template pointers to the element class */
     oclass->padtemplates = g_list_copy(factory->padtemplates);
     oclass->numpadtemplates = factory->numpadtemplates;
   }

@@ -228,7 +228,7 @@ gst_multidisksrc_get (GstPad *pad)
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
 
   if (src->new_seek) {
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
+    /* fixme, do something here */
     src->new_seek = FALSE;
   }
 

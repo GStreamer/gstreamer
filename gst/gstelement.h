@@ -205,7 +205,7 @@ void			gst_element_connect		(GstElement *src, const gchar *srcpadname,
 void			gst_element_disconnect		(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
 
-void			gst_element_signal_eos		(GstElement *element);
+void			gst_element_set_eos		(GstElement *element);
 
 void			gst_element_send_event		(GstElement *element, GstEvent *event);
 

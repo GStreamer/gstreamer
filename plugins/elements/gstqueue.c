@@ -488,7 +488,7 @@ restart:
     switch (GST_EVENT_TYPE(event)) {
       case GST_EVENT_EOS:
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue \"%s\" eos\n", GST_ELEMENT_NAME (queue));
-        gst_element_set_state (GST_ELEMENT (queue), GST_STATE_PAUSED);
+        gst_element_set_eos (GST_ELEMENT (queue));
         break;
       default:
         break;

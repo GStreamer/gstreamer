@@ -284,7 +284,7 @@ gst_statistics_chain (GstPad *pad, GstBuffer *buf)
     GstEvent *event = GST_EVENT (buf);
     statistics->stats.events += 1;
     if (GST_EVENT_TYPE(event) == GST_EVENT_EOS) {
-      gst_element_set_state (GST_ELEMENT (statistics), GST_STATE_PAUSED);
+      gst_element_set_eos (GST_ELEMENT (statistics));
       if (statistics->update_on_eos) {
         update = TRUE;
       }

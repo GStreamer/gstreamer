@@ -790,7 +790,8 @@ gst_element_message (GstElement *element, const gchar *type, const gchar *info, 
 /**
  * gst_element_error:
  * @element: Element with the error
- * @error: String describing the error
+ * @error: A printf-like string describing the error
+ * @...: optional arguments for the string 
  *
  * This function is used internally by elements to signal an error
  * condition.  It results in the "error" signal.
@@ -930,7 +931,6 @@ gst_element_set_state (GstElement *element, GstElementState state)
 /*  g_print("gst_element_set_state(\"%s\",%08lx)\n", */
 /*          element->name,state); */
 
-  g_return_val_if_fail (element != NULL, GST_STATE_FAILURE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
   GST_DEBUG_ELEMENT (GST_CAT_STATES,element, "setting state from %s to %s\n",
@@ -985,7 +985,6 @@ gst_element_change_state (GstElement *element)
   GstElementState old_state;
   GstObject *parent;
 
-  g_return_val_if_fail (element != NULL, GST_STATE_FAILURE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
   old_state = GST_STATE (element);
@@ -1038,7 +1037,6 @@ gst_element_get_factory (GstElement *element)
 {
   GstElementClass *oclass;
 
-  g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
   oclass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS(element));
@@ -1313,7 +1311,10 @@ void
 gst_element_set_sched (GstElement *element,
 		         GstScheduler *sched)
 {
-  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting scheduler to %p",sched);
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  
+  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting scheduler to %p", sched);
+
   element->sched = sched;
 }
 
@@ -1328,6 +1329,8 @@ gst_element_set_sched (GstElement *element,
 GstScheduler*
 gst_element_get_sched (GstElement *element)
 {
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+
   return element->sched;
 }
 
@@ -1348,26 +1351,30 @@ void
 gst_element_set_loop_function(GstElement *element,
                               GstElementLoopFunction loop)
 {
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
   /* set the loop function */
   element->loopfunc = loop;
 
   /* set the NEW_LOOPFUNC flag so everyone knows to go try again */
-  GST_FLAG_SET(element,GST_ELEMENT_NEW_LOOPFUNC);
+  GST_FLAG_SET (element, GST_ELEMENT_NEW_LOOPFUNC);
 }
 
 /**
- * gst_element_signal_eos:
- * @element: element to trigger the eos signal of
+ * gst_element_set_eos:
+ * @element: element to set to the EOS state
  *
- * Throws the eos signal to indicate that the end of the stream is reached.
+ * Perform the actions needed to bring the element in the EOS state.
  */
 void
-gst_element_signal_eos (GstElement *element)
+gst_element_set_eos (GstElement *element)
 {
-  g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
 
-  GST_DEBUG(GST_CAT_EVENT, "signaling EOS on element %s\n",GST_OBJECT_NAME(element));
+  GST_DEBUG (GST_CAT_EVENT, "setting EOS on element %s\n", GST_OBJECT_NAME (element));
+
+  gst_element_set_state (element, GST_STATE_PAUSED);
+
   g_signal_emit (G_OBJECT (element), gst_element_signals[EOS], 0);
 }
 

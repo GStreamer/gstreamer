@@ -180,6 +180,9 @@ gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
  * @transition: the state transition
  *
  * Tell the scheduler that an element changed its state.
+ *
+ * Returns: a GstElementStateReturn indicating success or failure
+ * of the state transition.
  */
 GstElementStateReturn
 gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint transition)
@@ -285,7 +288,7 @@ gst_scheduler_yield (GstScheduler *sched, GstElement *element)
  *
  * Tell the scheduler to interrupt execution of this element.
  *
- * Retruns: TRUE if the element should return NULL from the chain/get
+ * Returns: TRUE if the element should return NULL from the chain/get
  * function.
  */
 gboolean

@@ -649,7 +649,7 @@ gst_fakesrc_get(GstPad *pad)
   }
 
   if (src->rt_num_buffers == 0) {
-    gst_element_set_state (GST_ELEMENT (src), GST_STATE_PAUSED);
+    gst_element_set_eos (GST_ELEMENT (src));
     return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
   }
   else {

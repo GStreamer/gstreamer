@@ -110,6 +110,7 @@ cothread_context_init (void)
 
 /**
  * cothread_context_free:
+ * @ctx: the cothread context to free
  *
  * Free the cothread context.
  */
@@ -270,6 +271,12 @@ cothread_setfunc (cothread_state * thread, cothread_func func, int argc, char **
   thread->pc = (void *) func;
 }
 
+/**
+ * cothread_stop:
+ * @thread: the cothread to stop
+ *
+ * Stop the cothread and reset the stack and program counter.
+ */
 void
 cothread_stop (cothread_state * thread)
 {

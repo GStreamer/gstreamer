@@ -726,7 +726,7 @@ gst_pad_get_padtemplate (GstPad *pad)
 }
 
 
-/*
+/**
  * gst_pad_set_sched:
  * @pad: the pad to set the scheduler for
  * @sched: The scheduler to set
@@ -1583,8 +1583,7 @@ gst_pad_pullregion (GstPad *pad, GstRegionType type, guint64 offset, guint64 len
     }
   }
   /* FIXME */
-  while (result && ! GST_BUFFER_FLAG_IS_SET (result, GST_BUFFER_EOS) 
-	   && !(GST_BUFFER_OFFSET (result) == offset && 
+  while (result && !(GST_BUFFER_OFFSET (result) == offset && 
 	   GST_BUFFER_SIZE (result) == len));
 
   return result;
@@ -2038,7 +2037,7 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
  
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_eos (element);
       gst_pad_event_default_dispatch (pad, element, event);
       gst_event_free (event);
       /* we have to try to schedule another element because this one is disabled */

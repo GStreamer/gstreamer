@@ -444,7 +444,7 @@ gst_filesrc_get (GstPad *pad)
 
   /* check for EOF */
   if (src->curoffset == src->filelen) {
-    gst_element_set_state (GST_ELEMENT (src), GST_STATE_PAUSED);
+    gst_element_set_eos (GST_ELEMENT (src));
     return GST_BUFFER (gst_event_new(GST_EVENT_EOS));
   }
 
@@ -498,7 +498,7 @@ gst_filesrc_get (GstPad *pad)
     region.size = readsize;
     map = g_tree_search (src->map_regions,
 			 (GCompareFunc) gst_filesrc_search_region_match,
-			 &region);
+			 (gpointer)&region);
 
     /* if we found an exact match, subbuffer it */
     if (map != NULL) {

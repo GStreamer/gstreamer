@@ -310,8 +310,7 @@ gst_thread_change_state (GstElement * element)
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
     {
-      //GList *elements = (element->sched)->elements;
-      GList *elements = gst_bin_get_list(GST_BIN (thread));
+      GList *elements = gst_bin_get_list (GST_BIN (thread));
 
       THR_INFO ("pausing thread");
 
