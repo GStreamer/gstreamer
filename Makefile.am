@@ -11,7 +11,7 @@ EXT_DIR=
 endif
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = gstreamer-libs.pc
+pkgconfig_DATA = gstreamer-libs.pc gstreamer-play.pc
 
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = gst-element-check.m4
@@ -22,6 +22,7 @@ DIST_SUBDIRS=gst-libs gst sys ext examples tools gconf testsuite
 
 EXTRA_DIST=gst-plugins.spec depcomp gst-element-check.m4 \
            gstreamer-libs.pc.in gstreamer-libs-uninstalled.pc.in \
+           gstreamer-play.pc.in gstreamer-play-uninstalled.pc.in \
 	   AUTHORS COPYING README RELEASE \
 	   ChangeLog autogen.sh common m4
 
