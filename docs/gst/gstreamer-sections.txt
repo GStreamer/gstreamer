@@ -691,21 +691,6 @@ gst_cpu_get_flags
 </SECTION>
 
 <SECTION>
-<FILE>gstasyncdisksrc</FILE>
-<TITLE>GstAsyncDiskSrc</TITLE>
-GstAsyncDiskSrcFlags
-<SUBSECTION Standard>
-GstAsyncDiskSrc
-GstAsyncDiskSrcClass
-gst_asyncdisksrc_get_type
-GST_TYPE_ASYNCDISKSRC
-GST_ASYNCDISKSRC
-GST_ASYNCDISKSRC_CLASS
-GST_IS_ASYNCDISKSRC
-GST_IS_ASYNCDISKSRC_CLASS
-</SECTION>
-
-<SECTION>
 <FILE>gstaudiosink</FILE>
 <TITLE>GstAudioSink</TITLE>
 <SUBSECTION Standard>
