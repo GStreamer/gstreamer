@@ -54,12 +54,12 @@ gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *context, int codec_id)
       break;
     case CODEC_ID_MP2:
       return GST_CAPS_NEW ("ffmpeg_mp2",
-		           "audio/mp3",
+		           "audio/x-mp3",
 			   NULL);
       break;
     case CODEC_ID_MP3LAME:
       return GST_CAPS_NEW ("ffmpeg_mp3",
-		           "audio/mp3",
+		           "audio/x-mp3",
 			   NULL);
       break;
     case CODEC_ID_VORBIS:
