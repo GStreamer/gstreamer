@@ -59,6 +59,9 @@ GST_PAD_TEMPLATE_FACTORY (gst_lame_sink_factory,
       "width",      GST_PROPS_INT (16),
       "depth",      GST_PROPS_INT (16),
       "rate",       GST_PROPS_LIST (
+	              GST_PROPS_INT (8000), 
+	              GST_PROPS_INT (11025), 
+	              GST_PROPS_INT (12000), 
 	              GST_PROPS_INT (16000), 
 	              GST_PROPS_INT (22050),
 	              GST_PROPS_INT (24000),
@@ -233,15 +236,15 @@ gst_lame_class_init (GstLameClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BITRATE,
-    g_param_spec_int("bitrate","bitrate","bitrate",
-                     G_MININT,G_MAXINT,128,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQUENCY,
-    g_param_spec_int("frequency","frequency","frequency",
-                     0,G_MAXINT, 44100 ,G_PARAM_READABLE)); 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNELS,
-    g_param_spec_int("channels","channels","channels",
-                     0, 2, 2 ,G_PARAM_READABLE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
+    g_param_spec_int("bitrate", "Bitrate (kb/s)", "Bitrate in kbit/sec",
+                     8, 320, 128, G_PARAM_READWRITE)); /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREQUENCY,
+    g_param_spec_int("frequency", "frequency", "frequency",
+                     8000, 48000, 44100, G_PARAM_READABLE)); 
+  g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_CHANNELS,
+    g_param_spec_int("channels", "channels", "channels",
+                     0, 2, 2, G_PARAM_READABLE)); 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_COMPRESSION_RATIO,
     g_param_spec_float("compression_ratio","compression_ratio","compression_ratio",
                        0.0,200.0,11.0,G_PARAM_READWRITE)); /* CHECKME */
@@ -360,7 +363,8 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
   /* check if the supplied caps of the peer element are compatible with our own      use gst_pad_get_caps because if caps aren't set yet we need the template */
   if (!gst_caps_check_compatibility (caps, gst_pad_get_caps (pad)))
   {
-    GST_DEBUG (GST_CAT_CAPS, "peer caps (%p) not compatible with caps of pad %s:%s!",
+    GST_DEBUG (GST_CAT_CAPS, 
+	       "peer caps (%p) not compatible with caps of pad %s:%s!",
 	       caps, GST_DEBUG_PAD_NAME (pad));
     return GST_PAD_CONNECT_REFUSED;
   }
@@ -378,7 +382,8 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
   }
   else {
     lame->initialized = FALSE;
-    gst_element_error (GST_ELEMENT (lame), "could not initialize encoder (wrong parameters?)");
+    gst_element_error (GST_ELEMENT (lame), 
+	               "could not initialize encoder (wrong parameters?)");
   }
   if (lame->initialized)
     return GST_PAD_CONNECT_OK;
@@ -794,13 +799,16 @@ gst_lame_setup (GstLame *lame)
 
   /* initialize the lame encoder */
   if (lame_init_params (lame->lgf) < 0) {
-    gst_element_error (GST_ELEMENT (lame), "could not initialize encoder (wrong parameters?)");
+    gst_element_error (GST_ELEMENT (lame), 
+	               "could not initialize encoder (wrong parameters?)");
     lame->initialized = FALSE;
   }
   else {
     lame->initialized = TRUE;
     /* FIXME: it would be nice to print out the mode here */
-    GST_INFO (GST_CAT_PLUGIN_INFO, "lame encoder initialized (%d kbit/s, %d Hz, %d channels)", lame->bitrate, lame->samplerate, lame->num_channels);
+    GST_INFO (GST_CAT_PLUGIN_INFO, 
+	      "lame encoder initialized (%d kbit/s, %d Hz, %d channels)", 
+	      lame->bitrate, lame->samplerate, lame->num_channels);
   }
 
   GST_DEBUG_LEAVE ("");
