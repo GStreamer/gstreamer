@@ -197,6 +197,8 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
     GST_DEBUG (0,"queue: %s waiting %d\n", name, queue->level_buffers);
     STATUS("%s: O\n");
     //g_cond_timed_wait (queue->fullcond, queue->fulllock, queue->timeval);
+    //FIXME need to signal other thread in case signals got lost?
+    g_cond_signal (queue->emptycond);
     g_cond_wait (queue->fullcond, GST_OBJECT(queue)->lock);
     STATUS("%s: O+\n");
     GST_DEBUG (0,"queue: %s waiting done %d\n", name, queue->level_buffers);
@@ -247,6 +249,8 @@ gst_queue_get (GstPad *pad)
   while (!queue->level_buffers) {
     STATUS("queue: %s U released lock\n");
     //g_cond_timed_wait (queue->emptycond, queue->emptylock, queue->timeval);
+    //FIXME need to signal other thread in case signals got lost?
+    g_cond_signal (queue->fullcond);
     g_cond_wait (queue->emptycond, GST_OBJECT(queue)->lock);
 //    STATUS("queue: %s U- getting lock\n");
   }

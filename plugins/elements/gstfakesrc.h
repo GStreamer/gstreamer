@@ -42,8 +42,8 @@ typedef enum {
   FAKESRC_PING_PONG,
   FAKESRC_ORDERED_RANDOM,
   FAKESRC_RANDOM,
-  FAKESRC_PATERN_LOOP,
-  FAKESRC_PING_PONG_PATERN,
+  FAKESRC_PATTERN_LOOP,
+  FAKESRC_PING_PONG_PATTERN,
   FAKESRC_GET_ALWAYS_SUCEEDS,
 } GstFakeSrcOutputType;
 
@@ -68,8 +68,8 @@ struct _GstFakeSrc {
   gint numsrcpads;
   GSList *srcpads;
   GstFakeSrcOutputType output;
-  gchar *patern;
-  GList *paternlist;
+  gchar *pattern;
+  GList *patternlist;
   gint num_buffers;
 };
 

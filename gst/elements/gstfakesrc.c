@@ -29,7 +29,8 @@ GstElementDetails gst_fakesrc_details = {
   "Source",
   "Push empty (no data) buffers around",
   VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
+  "Erik Walthinsen <omega@cse.ogi.edu>\n"
+  "Wim Taymans <wim.taymans@chello.be>"
   "(C) 1999",
 };
 
@@ -46,7 +47,7 @@ enum {
   ARG_NUM_SOURCES,
   ARG_LOOP_BASED,
   ARG_OUTPUT,
-  ARG_PATERN,
+  ARG_PATTERN,
   ARG_NUM_BUFFERS,
 };
 
@@ -60,8 +61,8 @@ gst_fakesrc_output_get_type(void) {
     { FAKESRC_PING_PONG, 		"3", "Ping-Pong"},
     { FAKESRC_ORDERED_RANDOM, 		"4", "Ordered Random"},
     { FAKESRC_RANDOM, 			"5", "Random"},
-    { FAKESRC_PATERN_LOOP, 		"6", "Patern loop"},
-    { FAKESRC_PING_PONG_PATERN, 	"7", "Ping-Pong Patern"},
+    { FAKESRC_PATTERN_LOOP, 		"6", "Patttern loop"},
+    { FAKESRC_PING_PONG_PATTERN, 	"7", "Ping-Pong Pattern"},
     { FAKESRC_GET_ALWAYS_SUCEEDS, 	"8", "'_get' Always succeeds"},
     {0, NULL, NULL},
   };
@@ -119,8 +120,8 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
                            GTK_ARG_READWRITE, ARG_LOOP_BASED);
   gtk_object_add_arg_type ("GstFakeSrc::output", GST_TYPE_FAKESRC_OUTPUT,
                            GTK_ARG_READWRITE, ARG_OUTPUT);
-  gtk_object_add_arg_type ("GstFakeSrc::patern", GTK_TYPE_STRING,
-                           GTK_ARG_READWRITE, ARG_PATERN);
+  gtk_object_add_arg_type ("GstFakeSrc::pattern", GTK_TYPE_STRING,
+                           GTK_ARG_READWRITE, ARG_PATTERN);
   gtk_object_add_arg_type ("GstFakeSrc::num_buffers", GTK_TYPE_INT,
                            GTK_ARG_READWRITE, ARG_NUM_BUFFERS);
 
@@ -146,11 +147,16 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
 
   // create our first output pad
   pad = gst_pad_new("src",GST_PAD_SRC);
-  gst_pad_set_get_function(pad,gst_fakesrc_get);
   gst_element_add_pad(GST_ELEMENT(fakesrc),pad);
   fakesrc->srcpads = g_slist_append(NULL,pad);
 
-  fakesrc->loop_based = FALSE;
+  fakesrc->loop_based = TRUE;
+
+  if (fakesrc->loop_based)
+    gst_element_set_loop_function (GST_ELEMENT (fakesrc), gst_fakesrc_loop);
+  else
+    gst_pad_set_get_function(pad,gst_fakesrc_get);
+
   fakesrc->num_buffers = -1;
   // we're ready right away, since we don't have any args...
 //  gst_element_set_state(GST_ELEMENT(fakesrc),GST_STATE_READY);
@@ -206,7 +212,7 @@ gst_fakesrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
       break;
     case ARG_OUTPUT:
       break;
-    case ARG_PATERN:
+    case ARG_PATTERN:
       break;
     case ARG_NUM_BUFFERS:
       src->num_buffers = GTK_VALUE_INT (*arg);
@@ -236,8 +242,8 @@ gst_fakesrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
     case ARG_OUTPUT:
       GTK_VALUE_INT (*arg) = src->output;
       break;
-    case ARG_PATERN:
-      GTK_VALUE_STRING (*arg) = src->patern;
+    case ARG_PATTERN:
+      GTK_VALUE_STRING (*arg) = src->pattern;
       break;
     case ARG_NUM_BUFFERS:
       GTK_VALUE_INT (*arg) = src->num_buffers;
@@ -276,7 +282,7 @@ gst_fakesrc_get(GstPad *pad)
       src->num_buffers--;
   }
 
-  g_print("(%s:%s)> ",GST_DEBUG_PAD_NAME(pad));
+  g_print("fakesrc: ******* (%s:%s)> \n",GST_DEBUG_PAD_NAME(pad));
   buf = gst_buffer_new();
 
   gtk_signal_emit (GTK_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF],
@@ -310,15 +316,23 @@ gst_fakesrc_loop(GstElement *element)
       GstPad *pad = GST_PAD (pads->data);
       GstBuffer *buf;
 
+      if (src->num_buffers == 0) {
+        gst_pad_set_eos (pad);
+        return NULL;
+      }
+      else {
+      if (src->num_buffers > 0)
+         src->num_buffers--;
+      }
+
       buf = gst_buffer_new();
-      g_print("(%s:%s)> ",GST_DEBUG_PAD_NAME(pad));
+      g_print("fakesrc: ******* (%s:%s)> \n",GST_DEBUG_PAD_NAME(pad));
 
       gtk_signal_emit (GTK_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF],
                                   src);
       gst_pad_push (pad, buf);
 
-      if (!GST_ELEMENT_IS_COTHREAD_STOPPING (element)) break;
-
+      pads = g_slist_next (pads);
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
 }
