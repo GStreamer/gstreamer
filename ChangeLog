@@ -1,3 +1,8 @@
+2004-04-05  Colin Walters  <walters@redhat.com>
+
+	* configure.ac (VALGRIND_CFLAGS, VALGRIND_LIBS): Remove spurious
+	space.
+
 2004-04-05  Benjamin Otte  <otte@gnome.org>
 
 	* configure.ac:

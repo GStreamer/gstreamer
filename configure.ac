@@ -418,8 +418,8 @@ if test "x$USE_VALGRIND" = xyes; then
   AC_DEFINE(HAVE_VALGRIND, 1, [Define if valgrind should be used])
   AC_MSG_NOTICE(Using extra code paths for valgrind)
 fi
-AC_SUBST (VALGRIND_CFLAGS)
-AC_SUBST (VALGRIND_LIBS)
+AC_SUBST(VALGRIND_CFLAGS)
+AC_SUBST(VALGRIND_LIBS)
 
 dnl ################################################
 dnl # Set defines according to variables set above #
