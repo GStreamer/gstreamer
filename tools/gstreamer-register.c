@@ -167,7 +167,12 @@ static void save_registry(const char *destfile,
     }
 
 #else
+#ifdef HAVE_LIBXML2
+    /* indent the document */
+    if (xmlSaveFormatFile(destfile, *doc, 1) <= 0) {
+#else
     if (xmlSaveFile(destfile, *doc) <= 0) {
+#endif
 	g_print("Cannot save new registry to `%s'", destfile);
 	error_perm();
     }
