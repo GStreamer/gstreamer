@@ -1,3 +1,9 @@
+2005-02-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	* check/gst/gstpad.c:
+	  add pad tests
+
 2005-02-16  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-TODO.txt:
