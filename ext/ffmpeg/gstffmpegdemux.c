@@ -617,15 +617,16 @@ gst_ffmpegdemux_loop (GstElement * element)
 
   /* and handle the data by pushing it forward... */
   if (pad && GST_PAD_IS_USABLE (pad)) {
+    AVStream *stream = gst_ffmpegdemux_stream_from_pad (pad);
     GstBuffer *outbuf;
 
     outbuf = gst_buffer_new_and_alloc (pkt.size);
     memcpy (GST_BUFFER_DATA (outbuf), pkt.data, pkt.size);
     GST_BUFFER_SIZE (outbuf) = pkt.size;
 
-    if (pkt.pts != AV_NOPTS_VALUE && demux->context->pts_den) {
-      GST_BUFFER_TIMESTAMP (outbuf) = (double) pkt.pts * GST_SECOND *
-          demux->context->pts_num / demux->context->pts_den;
+    if (pkt.pts != AV_NOPTS_VALUE) {
+      GST_BUFFER_TIMESTAMP (outbuf) = (gdouble) (pkt.pts +
+          stream->start_time) * GST_SECOND / AV_TIME_BASE;
     }
 
     if (pkt.flags & PKT_FLAG_KEY) {
