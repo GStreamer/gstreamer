@@ -254,12 +254,12 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
       {
 	gst_scheduler_set_clock (sched, sched->current_clock);
         if (sched->current_clock)
-          gst_clock_activate (sched->current_clock, TRUE);
+          gst_clock_set_active (sched->current_clock, TRUE);
         break;
       }
       case GST_STATE_PLAYING_TO_PAUSED:
         if (sched->current_clock)
-          gst_clock_activate (sched->current_clock, FALSE);
+          gst_clock_set_active (sched->current_clock, FALSE);
         break;
     }
   }
@@ -272,10 +272,10 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
 
 /**
  * gst_scheduler_add_scheduler:
- * @sched: the schedulerr
- * @sched2: the scheduler to add
+ * @sched: a  #GstScheduler to add to
+ * @sched2: the #GstScheduler to add
  *
- a Notifies the scheduler that it has to monitor this scheduler.
+ * Notifies the scheduler that it has to monitor this scheduler.
  */
 void
 gst_scheduler_add_scheduler (GstScheduler *sched, GstScheduler *sched2)
