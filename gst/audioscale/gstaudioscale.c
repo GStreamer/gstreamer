@@ -561,10 +561,6 @@ gst_audioscale_chain (GstPad * pad, GstData * _data)
   g_return_if_fail (buf != NULL);
 
   audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
-  if (audioscale->passthru && audioscale->num_iterations == 0) {
-    gst_pad_push (audioscale->srcpad, GST_DATA (buf));
-    return;
-  }
 
   if (GST_IS_EVENT (_data)) {
     GstEvent *e = GST_EVENT (_data);
@@ -605,6 +601,11 @@ gst_audioscale_chain (GstPad * pad, GstData * _data)
     /* update time for out-sample */
     audioscale->gst_resample_offset = GST_BUFFER_TIMESTAMP (buf) *
         audioscale->gst_resample->o_rate / GST_SECOND;
+  }
+
+  if (audioscale->passthru && audioscale->num_iterations == 0) {
+    gst_pad_push (audioscale->srcpad, GST_DATA (buf));
+    return;
   }
 
   data = GST_BUFFER_DATA (buf);
