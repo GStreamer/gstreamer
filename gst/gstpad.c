@@ -1144,10 +1144,10 @@ gst_pad_try_reconnect_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad, Gs
   }
 
   srccaps = gst_pad_get_caps (GST_PAD (realsrc));
-  GST_INFO (GST_CAT_PADS, "dumping caps of pad %s:%s", GST_DEBUG_PAD_NAME (realsrc));
+  GST_DEBUG (GST_CAT_PADS, "dumping caps of pad %s:%s", GST_DEBUG_PAD_NAME (realsrc));
   gst_caps_debug (srccaps, "caps of src pad (pre-reconnect)");
   sinkcaps = gst_pad_get_caps (GST_PAD (realsink));
-  GST_INFO (GST_CAT_PADS, "dumping caps of pad %s:%s", GST_DEBUG_PAD_NAME (realsink));
+  GST_DEBUG (GST_CAT_PADS, "dumping caps of pad %s:%s", GST_DEBUG_PAD_NAME (realsink));
   gst_caps_debug (sinkcaps, "caps of sink pad (pre-reconnect)");
 
   /* first take the intersection of the pad caps */
@@ -1229,10 +1229,10 @@ gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad)
 
   /* calculate the new caps here */
   srccaps = gst_pad_get_caps (GST_PAD (realsrc));
-  GST_INFO (GST_CAT_PADS, "dumping caps of pad %s:%s", GST_DEBUG_PAD_NAME (realsrc));
+  GST_DEBUG (GST_CAT_PADS, "dumping caps of pad %s:%s", GST_DEBUG_PAD_NAME (realsrc));
   gst_caps_debug (srccaps, "src caps, awaiting negotiation, after applying filter");
   sinkcaps = gst_pad_get_caps (GST_PAD (realsink));
-  GST_INFO (GST_CAT_PADS, "dumping caps of pad %s:%s", GST_DEBUG_PAD_NAME (realsink));
+  GST_DEBUG (GST_CAT_PADS, "dumping caps of pad %s:%s", GST_DEBUG_PAD_NAME (realsink));
   gst_caps_debug (sinkcaps, "sink caps, awaiting negotiation, after applying filter");
   intersection = gst_caps_intersect (srccaps, sinkcaps);
   filtered_intersection = gst_caps_intersect (intersection, filter);
