@@ -56,7 +56,7 @@ sub read_config
     print "This is not an error, just a friendly reminder... Check the man page.\n\n";
   }
   if (!defined $cfg{AUDIOSINK})  { $cfg{AUDIOSINK} = "osssink"; }
-  if (!defined $cfg{VIDEOSINK})  { $cfg{VIDEOSINK} = "colorspace ! xvideosink"; }
+  if (!defined $cfg{VIDEOSINK})  { $cfg{VIDEOSINK} = "colorspace ! ximagesink"; }
   if (!defined $cfg{CVS_PATH})   { $cfg{CVS_PATH} =  `echo -n ~`."/gst/cvs"; }
 
   if ($command =~ /(.+)\/gst-launch-ext$/)
