@@ -49,13 +49,6 @@ if test "x$GST_WALL" = "xyes"; then
    if test "x$GST_CVS" = "xyes"; then
      AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",GST_ERROR="$GST_ERROR")
    fi
-
-   dnl set gcc-style optimization flags if using the gnu compiler.
-   GST_FUNROLL_CFLAGS="$GST_FUNROLL_CFLAGS -funroll-all-loops"
-   GST_FINLINE_CFLAGS="$GST_FINLINE_CFLAGS -finline-functions"
-   GST_FFASTMATH_CFLAGS="$GST_FFASTMATH_CFLAGS -ffast-math"
-   GST_FSCHEDULE_CFLAGS="$GST_FSCHEDULE_CFLAGS -fschedule-insns2"
-   GST_FNOEXCEPTIONS_CFLAGS="$GST_FNOEXCEPTIONS_CFLAGS -fno-exceptions"
 fi
 
 dnl determine c++ compiler
@@ -1107,17 +1100,6 @@ if test "x$USE_DEBUG" = xyes; then
   GST_CFLAGS="$GST_CFLAGS -g"
 fi
 
-if test "x$USE_PROFILING" = xyes; then
-dnl  CFLAGS="$CFLAGS -pg -fprofile-arcs"
-  FOMIT_FRAME_POINTER=""
-else
-  FOMIT_FRAME_POINTER="-fomit-frame-pointer"
-fi
-
-dnl
-dnl AC_SUBST(FOMIT_FRAME_POINTER)
-dnl
-
 dnl #############################
 dnl # Set automake conditionals #
 dnl #############################
@@ -1149,16 +1131,9 @@ AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 
 dnl prefer internal headers to already installed ones
 GST_CFLAGS="-I\$(top_srcdir)/gst-libs $GST_CFLAGS $GST_ERROR"
-GST_OPT_CFLAGS="$GST_FINLINE_CFLAGS $GST_FFASTMATH_CFLAGS"
 
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
-AC_SUBST(GST_FUNROLL_CFLAGS)
-AC_SUBST(GST_FINLINE_CFLAGS)
-AC_SUBST(GST_FFASTMATH_CFLAGS)
-AC_SUBST(GST_FSCHEDULE_CFLAGS)
-AC_SUBST(GST_FNOEXCEPTIONS_CFLAGS)
-AC_SUBST(GST_OPT_CFLAGS)
 
 dnl ###########################
 dnl # Configure external libs #

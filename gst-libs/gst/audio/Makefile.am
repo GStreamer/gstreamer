@@ -8,5 +8,5 @@ libgstaudioincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/audio
 libgstaudioinclude_HEADERS = audio.h audioclock.h
 
 libgstaudio_la_LIBADD =
-libgstaudio_la_CFLAGS = $(GST_CFLAGS) $(GST_OPT_CFLAGS)
+libgstaudio_la_CFLAGS = $(GST_CFLAGS)
 libgstaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
