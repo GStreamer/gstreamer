@@ -36,7 +36,7 @@
 				OutputFile="$(OutDir)/gstmatroska.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../../gstreamer/win32/Debug;../../../glib/glib;../../../glib/gmodule;../../../glib/gthread;../../../glib/gobject;../../../gettext/lib;../../../libiconv/lib"
-				ModuleDefinitionFile="matroska.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/matroska.pdb"
 				SubSystem="2"
@@ -88,7 +88,7 @@
 				OutputFile="$(OutDir)/gstmatroska.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../gstreamer/win32/Debug;../../../glib/glib;../../../glib/gmodule;../../../glib/gthread;../../../glib/gobject;../../../gettext/lib;../../../libiconv/lib"
-				ModuleDefinitionFile="matroska.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="TRUE"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -139,9 +139,6 @@
 			</File>
 			<File
 				RelativePath=".\matroska.c">
-			</File>
-			<File
-				RelativePath=".\matroska.def">
 			</File>
 		</Filter>
 		<Filter

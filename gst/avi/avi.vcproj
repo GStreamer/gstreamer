@@ -36,7 +36,7 @@
 				OutputFile="$(OutDir)/gstavi.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../../gstreamer/win32/Debug;../../../glib/glib;../../../glib/gmodule;../../../glib/gthread;../../../glib/gobject;../../../gettext/lib;../../../libiconv/lib"
-				ModuleDefinitionFile="avi.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/avi.pdb"
 				SubSystem="2"
@@ -88,7 +88,7 @@
 				OutputFile="$(OutDir)/gstavi.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../gstreamer/win32/Debug;../../../glib/glib;../../../glib/gmodule;../../../glib/gthread;../../../glib/gobject;../../../gettext/lib;../../../libiconv/lib"
-				ModuleDefinitionFile="avi.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="TRUE"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -125,9 +125,6 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
-			<File
-				RelativePath=".\avi.def">
-			</File>
 			<File
 				RelativePath=".\gstavi.c">
 			</File>
