@@ -111,7 +111,7 @@ do_cothread_context_destroy (cothread_context *context)
   g_assert (g_thread_self() != context->main->thread);
   
   while (context->cothreads) {
-    do_cothread_destroy (context->cothreads->data);
+    do_cothread_destroy ((cothread *) context->cothreads->data);
   }
   
   g_free (context);
@@ -122,6 +122,7 @@ die (cothread *to_die) {
   g_slist_remove (to_die->context->cothreads, to_die);
   g_free (to_die);
   g_thread_exit (to_die);
+  /* don't unlock the mutex here, the thread waiting for us to die is gonna take it */
 }
 static gpointer
 run_new_thread (gpointer data)
@@ -195,14 +196,18 @@ do_cothread_setfunc (cothread *thread, cothread_context *context,
 static void
 do_cothread_destroy (cothread *thread)
 {
+  GThread *join;
+  cothread_context *context;
   g_return_if_fail (thread != thread->context->main);
+  g_return_if_fail (thread != thread->context->current);
   
   thread->die = TRUE;
+  join = thread->thread;
+  context = thread->context;
   g_cond_signal (thread->cond);
   g_mutex_unlock (thread->context->mutex);
-  if (thread != g_thread_join (thread->thread)) {
-    g_warning ("error destroying thread %p", thread);
-  }
+  g_thread_join (join);
+  /* the mutex was locked by the thread that we joined, no need to lock again */
 }
   
 #define do_cothread_lock(cothread)		/* FIXME */
