@@ -153,12 +153,13 @@ dnl
 dnl
 AC_DEFUN(GST_CHECK_FEATURE,
 [
-AC_ARG_ENABLE(translit($1, `A-Z', `a-z'),
-  [  --enable-translit($1, `A-Z', `a-z')             enable [$2]: [$3]],
+lower=translit([$1], A-Z, a-z)
+AC_ARG_ENABLE(translit([$1], A-Z, a-z),
+  [  ]--enable-translit([$1], A-Z, a-z)             enable [$2]: [$3],
   [ case "${enableval}" in
       yes) USE_[$1]=yes ;;
       no) USE_[$1]=no ;;
-      *) AC_MSG_ERROR(bad value ${enableval} for --enable-translit($1, `A-Z', `a-z')) ;;
+      *) AC_MSG_ERROR(bad value ${enableval} for --enable-${lower}) ;;
     esac],
   [ USE_$1=yes ])           dnl DEFAULT
 
