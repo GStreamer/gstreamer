@@ -113,9 +113,9 @@ G_STMT_START { 						\
   }							\
 } G_STMT_END
 
-#define SWAP(a,b) 		\
+#define SWAP_INT(a,b) 		\
 G_STMT_START { 			\
-  typeof (a) tmp;		\
+  gint tmp;			\
   tmp = (a);			\
   (a) = (b);			\
   (b) = (tmp);			\
@@ -125,7 +125,7 @@ G_STMT_START { 			\
 
 #define PREPARE_3D_LINE(x0,y0,z0,x1,y1,z1,dxabs,dyabs,dzabs,sdx,sdy,sdz,xr,yr,zr,px,py,pz)\
 G_STMT_START { 			\
-  typeof (x0) dx, dy, dz;	\
+  gint dx, dy, dz;		\
   dx = x1 - x0;			\
   dy = y1 - y0;			\
   dz = z1 - z0;			\
@@ -152,9 +152,9 @@ gst_smpte_paint_triangle_linear (guint32 *dest, gint stride,
   gint sdxr, sdyr, sdcr, dxrabs, dyrabs, dcrabs, xrr, yrr, crr, pxr, pyr, pcr;
   gint i, j, k, seg_start, seg_end;
 
-  if (y0 > y1) { SWAP (x0, x1); SWAP (y0, y1); SWAP (c0, c1); }
-  if (y0 > y2) { SWAP (x0, x2); SWAP (y0, y2); SWAP (c0, c2); }
-  if (y1 > y2) { SWAP (x1, x2); SWAP (y1, y2); SWAP (c1, c2); }
+  if (y0 > y1) { SWAP_INT (x0, x1); SWAP_INT (y0, y1); SWAP_INT (c0, c1); }
+  if (y0 > y2) { SWAP_INT (x0, x2); SWAP_INT (y0, y2); SWAP_INT (c0, c2); }
+  if (y1 > y2) { SWAP_INT (x1, x2); SWAP_INT (y1, y2); SWAP_INT (c1, c2); }
   
   PREPARE_3D_LINE (x0,y0,c0,x2,y2,c2,
 		   dxlabs,dylabs,dclabs,
