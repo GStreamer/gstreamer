@@ -1,5 +1,17 @@
 2004-10-01  Wim Taymans  <wim@fluendo.com>
 
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_class_init),
+	(gst_wavparse_stream_init), (gst_wavparse_fmt),
+	(gst_wavparse_other), (gst_wavparse_loop),
+	(gst_wavparse_pad_convert), (gst_wavparse_pad_query),
+	(gst_wavparse_srcpad_event):
+	* gst/wavparse/gstwavparse.h:
+	Added some more debugging info.
+	Fix the case where the length of the file is 0.
+	Make sure we seek to sample borders.
+
+2004-10-01  Wim Taymans  <wim@fluendo.com>
+
 	* gst/playback/README:
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_factory_filter),
 	(gst_decode_bin_init), (find_compatibles), (close_pad_link),
