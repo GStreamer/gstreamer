@@ -1,3 +1,12 @@
+2004-10-01  Balamurali Viswanathan  <balamurali.viswanathan@wipro.com>
+
+	Reviewed by: Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/sunaudio/gstsunaudio.c: (gst_sunaudiosink_setparams):
+	  Solve #152805.
+	* sys/sunaudio/gstsunmixer.c: (gst_sunaudiomixer_set_mute):
+	  Solve 152806.
+
 2004-10-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst-libs/gst/riff/riff-media.c:
