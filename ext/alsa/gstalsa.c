@@ -79,6 +79,7 @@ static GstElementDetails gst_alsa_src_details = {
 /* GObject functions */
 static void gst_alsa_class_init (GstAlsaClass *klass);
 static void gst_alsa_init (GstAlsa *this);
+static void gst_alsa_dispose (GObject *object);
 static void gst_alsa_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_alsa_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
@@ -240,6 +241,7 @@ gst_alsa_class_init (GstAlsaClass *klass)
   if (parent_class == NULL)
     parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  object_class->dispose = gst_alsa_dispose;
   object_class->get_property = gst_alsa_get_property;
   object_class->set_property = gst_alsa_set_property;
 
@@ -286,6 +288,7 @@ gst_alsa_init (GstAlsa *this)
     this->stream = SND_PCM_STREAM_CAPTURE;
     gst_element_set_loop_function (GST_ELEMENT (this), gst_alsa_src_loop);
     this->pads[0].pad = gst_pad_new_from_template (gst_alsa_src_pad_factory (), "src");
+    this->pads[0].bs = NULL;
     gst_pad_set_bufferpool_function(this->pads[0].pad, gst_alsa_src_get_buffer_pool);
 
     /* set the rate to a sensible value. we can't have gobject construct this
@@ -306,6 +309,19 @@ gst_alsa_init (GstAlsa *this)
   gst_pad_set_link_function (this->pads[0].pad, gst_alsa_link);
 }
 
+static void
+gst_alsa_dispose (GObject *object)
+{
+  gint i;
+  GstAlsa *this = GST_ALSA (object);
+
+  for (i = 0; i < ((GstElement *) this)->numpads; i++) {
+    if (this->pads[i].bs)
+      gst_bytestream_destroy (this->pads[i].bs);
+  }
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
 static void
 gst_alsa_set_property (GObject *object, guint prop_id, const GValue *value,
                        GParamSpec *pspec)
@@ -811,6 +827,7 @@ static GstElementStateReturn
 gst_alsa_change_state (GstElement *element)
 {
   GstAlsa *this;
+  gint i;
 
   g_return_val_if_fail (element != NULL, FALSE);
   this = GST_ALSA (element);
@@ -832,14 +849,21 @@ gst_alsa_change_state (GstElement *element)
     break;
   case GST_STATE_PLAYING_TO_PAUSED:
     if (GST_ALSA_CAPS_IS_SET(this, GST_ALSA_CAPS_PAUSE)) {
-    if (snd_pcm_state (this->handle) == SND_PCM_STATE_RUNNING)
-      snd_pcm_pause (this->handle, 1);
+      if (snd_pcm_state (this->handle) == SND_PCM_STATE_RUNNING)
+        snd_pcm_pause (this->handle, 1);
       break;
     }
     /* if device doesn't know how to pause, we just stop */
   case GST_STATE_PAUSED_TO_READY:
     if (GST_FLAG_IS_SET (element, GST_ALSA_RUNNING))
       gst_alsa_drain_audio (this);
+    /* clear format and pads */
+    g_free (this->format);
+    this->format = NULL;
+    for (i = 0; i < element->numpads; i++) {
+      if (this->pads[i].bs)
+	gst_bytestream_reset (this->pads[i].bs);
+    }
     break;
   case GST_STATE_READY_TO_NULL:
     if (GST_FLAG_IS_SET (element, GST_ALSA_OPEN))
