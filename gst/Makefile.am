@@ -39,6 +39,7 @@ libgst_la_SOURCES =		\
 	gsttype.c		\
 	gstutils.c		\
 	gstxml.c		\
+	gstparse.c		\
 	$(GSTARCH_SRCS)
 
 # the compiler shoots cothreads.c in the head at -O6
@@ -74,6 +75,7 @@ libgstinclude_HEADERS =		\
 	gsttrace.h		\
 	gsttype.h		\
 	gstutils.h		\
+	gstparse.h		\
 	gstxml.h
 
 

@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gst.h: Main header for GStreamer, apps should include this
+ * filename:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,40 +20,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifndef __GST_PARSE_H__
+#define __GST_PARSE_H__
 
-#ifndef __GST_H__
-#define __GST_H__
+#include "gst.h"
 
-#include <gst/gstinfo.h>
-#include <gst/gstobject.h>
-#include <gst/gstpad.h>
-#include <gst/gstbuffer.h>
-#include <gst/gstcpu.h>
-#include <gst/gstclock.h>
-#include <gst/gstelement.h>
-#include <gst/gstextratypes.h>
-#include <gst/gstbin.h>
-#include <gst/gstpipeline.h>
-#include <gst/gstthread.h>
-#include <gst/gsttype.h>
-#include <gst/gstautoplug.h>
-#include <gst/gstcaps.h>
-#include <gst/gstprops.h>
-#include <gst/gstplugin.h>
-#include <gst/gstutils.h>
-#include <gst/gsttrace.h>
-#include <gst/gstxml.h>
-#include <gst/gsttee.h>
-#include <gst/cothreads.h>
+gint gst_parse_launch(const gchar *cmdline,GstBin *parent);
 
-#include <gst/gstparse.h>
-
-/* initialize GST */
-void gst_init(int *argc,char **argv[]);
-
-void gst_main		(void);
-void gst_main_quit	(void);
-
-#include <gst/gstlog.h>
-
-#endif /* __GST_H__ */
+#endif __GST_PARSE_H__
