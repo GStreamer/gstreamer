@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __GST_OGG_PLUGINS_H__
-#define __GST_OGG_PLUGINS_H__
+#ifndef __GST_TAG_EDIT_PRIVATE_H__
+#define __GST_TAG_EDIT_PRIVATE_H__
 
 #include <gst/tag/tag.h>
 
@@ -38,4 +38,4 @@ GType gst_vorbis_tag_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_OGG_PLUGINS_H__ */
+#endif /* __GST_TAG_EDIT_PRIVATE_H__ */
