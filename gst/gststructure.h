@@ -28,8 +28,8 @@ G_BEGIN_DECLS
 typedef struct _GstStructure GstStructure;
 typedef struct _GstStructureField GstStructureField;
 
-typedef void (*GstStructureForeachFunc) (GstStructure *structure,
-    GQuark field_id, GValue *value, gpointer user_data);
+typedef gboolean (*GstStructureForeachFunc) (GQuark field_id, GValue *value,
+    gpointer user_data);
 
 struct _GstStructure {
   GType type;
@@ -38,11 +38,6 @@ struct _GstStructure {
   GQuark name;
 
   GArray *fields;
-};
-
-struct _GstStructureField {
-  GQuark name;
-  GValue value;
 };
 
 #define GST_STRUCTURE_FIELD(structure, index) \

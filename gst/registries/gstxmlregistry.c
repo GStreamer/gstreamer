@@ -1384,20 +1384,27 @@ gst_xml_registry_save_props (GstXMLRegistry *xmlregistry, GstProps *props)
 #endif
 
 static gboolean
-gst_xml_registry_save_structure (GstXMLRegistry *xmlregistry, const GstStructure *structure)
+gst_xml_registry_save_structure_field (GQuark field_id, GValue *value,
+    gpointer user_data)
 {
-  int i;
+  GstXMLRegistry *xmlregistry = GST_XML_REGISTRY(user_data);
 
+  CLASS (xmlregistry)->save_func (xmlregistry, "<field>\n");
+  PUT_ESCAPED ("name", g_quark_to_string(field_id));
+  PUT_ESCAPED ("type", G_VALUE_TYPE_NAME(value));
+  PUT_ESCAPED ("value", g_strdup_value_contents(value));
+  CLASS (xmlregistry)->save_func (xmlregistry, "</field>\n");
+
+  return TRUE;
+}
+
+static gboolean
+gst_xml_registry_save_structure (GstXMLRegistry *xmlregistry, GstStructure *structure)
+{
   CLASS (xmlregistry)->save_func (xmlregistry, "<structure>\n");
   PUT_ESCAPED ("name", g_quark_to_string(structure->name));
-  for (i=0;i<structure->fields->len;i++) {
-    GstStructureField *field = GST_STRUCTURE_FIELD(structure, i);
-    CLASS (xmlregistry)->save_func (xmlregistry, "<field>\n");
-    PUT_ESCAPED ("name", g_quark_to_string(field->name));
-    PUT_ESCAPED ("type", G_VALUE_TYPE_NAME(&field->value));
-    PUT_ESCAPED ("value", g_strdup_value_contents(&field->value));
-    CLASS (xmlregistry)->save_func (xmlregistry, "</field>\n");
-  }
+  gst_structure_field_foreach (structure,
+      gst_xml_registry_save_structure_field, xmlregistry);
   CLASS (xmlregistry)->save_func (xmlregistry, "</structure>\n");
   return TRUE;
 }

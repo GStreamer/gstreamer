@@ -30,6 +30,11 @@
 
 //#define G_TYPE_FOURCC G_TYPE_FLOAT
 
+struct _GstStructureField {
+    GQuark name;
+      GValue value;
+};
+
 static GType _gst_structure_type;
 
 static void _gst_structure_transform_to_string(const GValue *src_value,
@@ -650,11 +655,13 @@ gst_structure_field_foreach (GstStructure *structure,
 {
   int i;
   GstStructureField *field;
+  gboolean ret;
 
   for(i=0;i<structure->fields->len;i++){
     field = GST_STRUCTURE_FIELD(structure, i);
 
-    func (structure, field->name, &field->value, user_data);
+    ret = func (structure, field->name, &field->value, user_data);
+    if (!ret) return;
   }
 }
 
