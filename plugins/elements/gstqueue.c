@@ -821,7 +821,7 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
       if (!g_cond_timed_wait (queue->event_done, queue->qlock, &timeout) &&
           !er.handled) {
         GST_CAT_WARNING_OBJECT (queue_dataflow, queue,
-            "timeout in upstream event handling, dropping event %p (%s)",
+            "timeout in upstream event handling, dropping event %p (%d)",
             er.event, GST_EVENT_TYPE (er.event));
         g_mutex_lock (queue->event_lock);
         /* since this queue is for src events (ie upstream), this thread is

@@ -4074,7 +4074,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   if (GST_EVENT_SRC (event) == NULL)
     GST_EVENT_SRC (event) = gst_object_ref (GST_OBJECT (rpad));
 
-  GST_CAT_DEBUG (GST_CAT_EVENT, "have event %d on pad %s:%s",
+  GST_CAT_DEBUG (GST_CAT_EVENT, "have event type %d on pad %s:%s",
       GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (rpad));
 
   if (GST_RPAD_EVENTHANDLER (rpad))

@@ -1448,7 +1448,7 @@ gst_opt_scheduler_event_wrapper (GstPad * srcpad, GstEvent * event)
 {
   gboolean flush;
 
-  GST_DEBUG ("intercepting event %d on pad %s:%s",
+  GST_DEBUG ("intercepting event type %d on pad %s:%s",
       GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (srcpad));
 
   /* figure out if this is a flush event */
@@ -1466,7 +1466,7 @@ gst_opt_scheduler_event_wrapper (GstPad * srcpad, GstEvent * event)
   }
 
   if (flush) {
-    GST_LOG ("event is flush");
+    GST_LOG ("event triggers a flush");
 
     pad_clear_queued (srcpad, NULL);
   }

@@ -168,7 +168,7 @@ gst_event_new (GstEventType type)
   gst_alloc_trace_new (_event_trace, event);
 #endif
 
-  GST_CAT_INFO (GST_CAT_EVENT, "creating new event %p %d", event, type);
+  GST_CAT_INFO (GST_CAT_EVENT, "creating new event type %d: %p", type, event);
 
   _GST_DATA_INIT (GST_DATA (event),
       _gst_event_type,

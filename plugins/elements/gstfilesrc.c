@@ -912,7 +912,7 @@ gst_filesrc_srcpad_event (GstPad * pad, GstEvent * event)
 {
   GstFileSrc *src = GST_FILESRC (GST_PAD_PARENT (pad));
 
-  GST_DEBUG_OBJECT (src, "event %d", GST_EVENT_TYPE (event));
+  GST_DEBUG_OBJECT (src, "received event type %d", GST_EVENT_TYPE (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
