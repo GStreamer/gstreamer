@@ -60,7 +60,7 @@ G_STMT_START { 						\
 #define GST_TIME_TO_TIMESPEC(t,ts)			\
 G_STMT_START { 						\
   (ts).tv_sec  =  (t) / GST_SECOND;			\
-  (ts).tv_usec = ((t) - (ts).tv_sec * GST_SECOND) / GST_NSECOND;	\
+  (ts).tv_nsec = ((t) - (ts).tv_sec * GST_SECOND) / GST_NSECOND;	\
 } G_STMT_END
 
 /* timestamp debugging macros */

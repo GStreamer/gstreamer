@@ -2867,19 +2867,22 @@ not_linked:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but it was not linked");
-    GST_UNLOCK_RETURN (pad, GST_FLOW_NOT_CONNECTED);
+    GST_UNLOCK (pad);
+    return GST_FLOW_NOT_CONNECTED;
   }
 not_active:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but it was inactive");
-    GST_UNLOCK_RETURN (pad, GST_FLOW_WRONG_STATE);
+    GST_UNLOCK (pad);
+    return GST_FLOW_WRONG_STATE;
   }
 flushing:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but pad was flushing");
-    GST_UNLOCK_RETURN (pad, GST_FLOW_UNEXPECTED);
+    GST_UNLOCK (pad);
+    return GST_FLOW_UNEXPECTED;
   }
 not_negotiated:
   {
@@ -2955,7 +2958,8 @@ not_connected:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pulling range, but it was not linked");
-    GST_UNLOCK_RETURN (pad, GST_FLOW_NOT_CONNECTED);
+    GST_UNLOCK (pad);
+    return GST_FLOW_NOT_CONNECTED;
   }
 no_function:
   {
@@ -3789,7 +3793,7 @@ gst_pad_query (GstPad * pad, GstQueryType type,
   g_return_val_if_fail (rpad, FALSE);
 
   if (GST_RPAD_QUERYFUNC (rpad))
-    return GST_RPAD_QUERYFUNC (rpad) (GST_PAD (pad), type, format, value);
+    return GST_RPAD_QUERYFUNC (rpad) (GST_PAD_CAST (rpad), type, format, value);
 
   return FALSE;
 }

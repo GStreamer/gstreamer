@@ -37,12 +37,6 @@ extern const char             *g_log_domain_gstreamer;
 #include <stdlib.h>
 #include <string.h>
 
-#define GST_UNLOCK_RETURN(obj,val)  	\
-G_STMT_START {                  	\
-  GST_UNLOCK(obj);              	\
-  return val;                   	\
-} G_STMT_END
-
 gboolean __gst_in_valgrind (void);
 
 /*** debugging categories *****************************************************/

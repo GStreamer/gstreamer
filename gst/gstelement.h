@@ -1,7 +1,6 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
- *                    2004 Wim Taymans <wim@fluendo.com>
+ *               2000,2004 Wim Taymans <wim@fluendo.com>
  *
  * gstelement.h: Header for GstElement
  *
@@ -37,7 +36,9 @@
 #include <gst/gstmessage.h>
 #include <gst/gsttag.h>
 
-G_BEGIN_DECLS typedef struct _GstElementDetails GstElementDetails;
+G_BEGIN_DECLS
+
+typedef struct _GstElementDetails GstElementDetails;
 
 /* FIXME: need translatable stuff in here (how handle in registry)? */
 struct _GstElementDetails
@@ -52,7 +53,7 @@ struct _GstElementDetails
   gpointer _gst_reserved[GST_PADDING];
 };
 
-#define GST_ELEMENT_DETAILS(longname,klass,description,author)			\
+#define GST_ELEMENT_DETAILS(longname,klass,description,author)		\
   { longname, klass, description, author, GST_PADDING_INIT }
 #define GST_IS_ELEMENT_DETAILS(details) (					\
   (details) && ((details)->longname != NULL) && ((details)->klass != NULL)	\
@@ -113,8 +114,10 @@ typedef enum
   GST_ELEMENT_LOCKED_STATE,
 
   /* use some padding for future expansion */
-  GST_ELEMENT_FLAG_LAST = GST_OBJECT_FLAG_LAST + 16
+  GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 16
 } GstElementFlags;
+
+#define GST_ELEMENT_IS_LOCKED_STATE(obj)        (GST_FLAG_IS_SET(obj,GST_ELEMENT_LOCKED_STATE))
 
 #define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
 #define GST_ELEMENT_PARENT(obj)			(GST_ELEMENT_CAST(GST_OBJECT_PARENT(obj)))
@@ -124,7 +127,18 @@ typedef enum
 #define GST_ELEMENT_CLOCK(obj)			(GST_ELEMENT_CAST(obj)->clock)
 #define GST_ELEMENT_PADS(obj)			(GST_ELEMENT_CAST(obj)->pads)
 
-/* log a (fatal) error message and post it on the bus */
+/**
+ * GST_ELEMENT_ERROR:
+ * @el: the element that throws the error
+ * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #GstError)
+ * @code: error code defined for that domain (see #GstError)
+ * @message: the message to display (format string and args enclosed in round brackets)
+ * @debug: debugging information for the message (format string and args enclosed in round brackets)
+ *
+ * Utility function that elements can use in case they encountered a fatal
+ * data processing error. The pipeline will throw an error signal and the
+ * application will be requested to stop further media processing.
+ */
 #define GST_ELEMENT_ERROR(el, domain, code, text, debug)		\
 G_STMT_START {								\
   gchar *__txt = _gst_element_error_printf text;			\
@@ -135,7 +149,7 @@ G_STMT_START {								\
     GST_ERROR_OBJECT (el, "%s", __dbg);					\
   gst_element_message_full (GST_ELEMENT(el), GST_MESSAGE_ERROR,		\
     GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code,	\
-  __txt, __dbg, __FILE__, GST_FUNCTION, __LINE__);			\
+    __txt, __dbg, __FILE__, GST_FUNCTION, __LINE__);			\
 } G_STMT_END
 
 /* log a (non-fatal) warning message and post it on the bus */
@@ -160,7 +174,7 @@ G_STMT_START {								\
 #define GST_STATE_GET_COND(elem)               (GST_ELEMENT_CAST(elem)->state_cond)
 #define GST_STATE_WAIT(elem)                   g_cond_wait (GST_STATE_GET_COND (elem), GST_STATE_GET_LOCK (elem))
 #define GST_STATE_TIMED_WAIT(elem, timeval)    g_cond_timed_wait (GST_STATE_GET_COND (elem), GST_STATE_GET_LOCK (elem),\
-						timeval)
+		                                                timeval)
 #define GST_STATE_SIGNAL(elem)                 g_cond_signal (GST_STATE_GET_COND (elem));
 #define GST_STATE_BROADCAST(elem)              g_cond_broadcast (GST_STATE_GET_COND (elem));
 
@@ -267,7 +281,7 @@ struct _GstElementClass
       GstFormat * format, gint64 * value);
 
   /*< private > */
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* class stuff */

@@ -81,11 +81,9 @@ extern GType _gst_buffer_type;
  * @GST_BUFFER_ORIGINAL: buffer is not a copy of another buffer.
  * @GST_BUFFER_DONTFREE: do not try to free the data when this buffer is
  * unreferenced.
- * @GST_BUFFER_KEY_UNIT: the buffer holds a key unit, a unit that can be
- * decoded independently of other buffers.
- * This flag has been deprecated, see #GST_BUFFER_DELTA_UNIT.
- * @GST_BUFFER_DONTKEEP: the buffer should not be ref()ed, but copied instead
- * before doing anything with it (for specially allocated hw buffers and such)
+ * @GST_BUFFER_PREROLL: the buffer is part of a preroll and should not be 
+ * displayed.
+ * @GST_BUFFER_DISCONT: the buffer marks a discontinuity in the stream.
  * @GST_BUFFER_IN_CAPS: the buffer has been added as a field in a #GstCaps.
  * @GST_BUFFER_GAP: the buffer has been created to fill a gap in the stream.
  * @GST_BUFFER_DELTA_UNIT: this unit cannot be decoded independently.

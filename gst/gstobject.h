@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
- *                    2004 Wim Taymans <wim@fluendo.com>
+ *                    2005 Wim Taymans <wim@fluendo.com>
  *
  * gstobject.h: Header for base GstObject
  *
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
 
 #ifndef __GST_OBJECT_H__
 #define __GST_OBJECT_H__
@@ -42,8 +41,8 @@ GST_EXPORT GType _gst_object_type;
 #define GST_OBJECT_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_OBJECT, GstObjectClass))
 #define GST_OBJECT(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_OBJECT, GstObject))
 #define GST_OBJECT_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_OBJECT, GstObjectClass))
-#define GST_OBJECT_CAST(obj)		((GstObject*)(obj))
-#define GST_OBJECT_CLASS_CAST(klass)	((GstObjectClass*)(klass))
+#define GST_OBJECT_CAST(obj)            ((GstObject*)(obj))
+#define GST_OBJECT_CLASS_CAST(klass)    ((GstObjectClass*)(klass))
 
 /* make sure we don't change the object size but stil make it compile
  * without libxml */
@@ -65,47 +64,45 @@ typedef enum
 
 /* we do a GST_OBJECT_CAST to avoid type checking, better call these
  * function with a valid object! */
-#define GST_LOCK(obj)			(g_mutex_lock(GST_OBJECT_CAST(obj)->lock))
-#define GST_TRYLOCK(obj)		(g_mutex_trylock(GST_OBJECT_CAST(obj)->lock))
-#define GST_UNLOCK(obj)			(g_mutex_unlock(GST_OBJECT_CAST(obj)->lock))
-#define GST_GET_LOCK(obj)		(GST_OBJECT_CAST(obj)->lock)
+#define GST_LOCK(obj)                   (g_mutex_lock(GST_OBJECT_CAST(obj)->lock))
+#define GST_TRYLOCK(obj)                (g_mutex_trylock(GST_OBJECT_CAST(obj)->lock))
+#define GST_UNLOCK(obj)                 (g_mutex_unlock(GST_OBJECT_CAST(obj)->lock))
+#define GST_GET_LOCK(obj)               (GST_OBJECT_CAST(obj)->lock)
 
-#define GST_OBJECT_NAME(obj)		(GST_OBJECT_CAST(obj)->name)
-#define GST_OBJECT_PARENT(obj)		(GST_OBJECT_CAST(obj)->parent)
+#define GST_OBJECT_NAME(obj)            (GST_OBJECT_CAST(obj)->name)
+#define GST_OBJECT_PARENT(obj)          (GST_OBJECT_CAST(obj)->parent)
 
 /* for the flags we double-not to make them comparable to TRUE and FALSE */
-#define GST_FLAGS(obj)			(GST_OBJECT_CAST (obj)->flags)
-#define GST_FLAG_IS_SET(obj,flag)	(!!(GST_FLAGS (obj) & (1<<(flag))))
-#define GST_FLAG_SET(obj,flag)		G_STMT_START{ (GST_FLAGS (obj) |= (1<<(flag))); }G_STMT_END
-#define GST_FLAG_UNSET(obj,flag)	G_STMT_START{ (GST_FLAGS (obj) &= ~(1<<(flag))); }G_STMT_END
+#define GST_FLAGS(obj)                  (GST_OBJECT_CAST (obj)->flags)
+#define GST_FLAG_IS_SET(obj,flag)       (!!(GST_FLAGS (obj) & (1<<(flag))))
+#define GST_FLAG_SET(obj,flag)          G_STMT_START{ (GST_FLAGS (obj) |= (1<<(flag))); }G_STMT_END
+#define GST_FLAG_UNSET(obj,flag)        G_STMT_START{ (GST_FLAGS (obj) &= ~(1<<(flag))); }G_STMT_END
 
-#define GST_OBJECT_IS_DESTROYED(obj)	(GST_FLAG_IS_SET (obj, GST_OBJECT_DESTROYED))
-#define GST_OBJECT_IS_FLOATING(obj)	(GST_FLAG_IS_SET (obj, GST_OBJECT_FLOATING))
+#define GST_OBJECT_IS_DISPOSING(obj)    (GST_FLAG_IS_SET (obj, GST_OBJECT_DISPOSING))
+#define GST_OBJECT_IS_DESTROYED(obj)    (GST_FLAG_IS_SET (obj, GST_OBJECT_DESTROYED))
+#define GST_OBJECT_IS_FLOATING(obj)     (GST_FLAG_IS_SET (obj, GST_OBJECT_FLOATING))
 
 struct _GstObject {
-  GObject	 object;
+  GObject 	 object;
 
   /*< public >*/
-  GstAtomicInt	 refcount;
+  GstAtomicInt   refcount;
 
   /*< public >*/ /* with LOCK */
-  GMutex    *lock;        /* object LOCK */
-  gchar	    *name;        /* object name */
-  GstObject *parent;      /* this object's parent, weak ref */
-  guint32   flags;
-
-  /* FIXME: in padding, move on up */
-  gchar     *name_prefix; /* used for debugging */
+  GMutex        *lock;        /* object LOCK */
+  gchar         *name;        /* object name */
+  gchar         *name_prefix; /* used for debugging */
+  GstObject     *parent;      /* this object's parent, weak ref */
+  guint32        flags;
 
   /*< private >*/
-  gpointer  _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
-
-#define GST_CLASS_LOCK(obj)		(g_mutex_lock(GST_OBJECT_CLASS_CAST(obj)->lock))
-#define GST_CLASS_TRYLOCK(obj)		(g_mutex_trylock(GST_OBJECT_CLASS_CAST(obj)->lock))
-#define GST_CLASS_UNLOCK(obj)		(g_mutex_unlock(GST_OBJECT_CLASS_CAST(obj)->lock))
-#define GST_CLASS_GET_LOCK(obj)		(GST_OBJECT_CLASS_CAST(obj)->lock)
+#define GST_CLASS_LOCK(obj)             (g_mutex_lock(GST_OBJECT_CLASS_CAST(obj)->lock))
+#define GST_CLASS_TRYLOCK(obj)          (g_mutex_trylock(GST_OBJECT_CLASS_CAST(obj)->lock))
+#define GST_CLASS_UNLOCK(obj)           (g_mutex_unlock(GST_OBJECT_CLASS_CAST(obj)->lock))
+#define GST_CLASS_GET_LOCK(obj)         (GST_OBJECT_CLASS_CAST(obj)->lock)
 
 /* signal_object is used to signal to the whole class */
 struct _GstObjectClass {
@@ -114,7 +111,7 @@ struct _GstObjectClass {
   gchar		*path_string_separator;
   GObject	*signal_object;
 
-  GMutex	*lock;
+  GMutex        *lock;
 
   /* signals */
   void		(*parent_set)		(GstObject *object, GstObject *parent);

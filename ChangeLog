@@ -1,3 +1,31 @@
+2005-03-09  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gst_private.h:
+	* gst/gstbin.c: (gst_bin_get_by_name_recurse_up):
+	* gst/gstbuffer.h:
+	* gst/gstclock.c: (gst_clock_id_ref), (gst_clock_id_unref),
+	(gst_clock_id_compare_func), (gst_clock_id_wait),
+	(gst_clock_id_wait_async), (gst_clock_init),
+	(gst_clock_adjust_unlocked), (gst_clock_get_time):
+	* gst/gstclock.h:
+	* gst/gstelement.c: (gst_element_class_init),
+	(gst_element_get_random_pad), (gst_element_get_state_func),
+	(gst_element_lost_state):
+	* gst/gstelement.h:
+	* gst/gstelementfactory.c: (gst_element_register):
+	* gst/gstiterator.c:
+	* gst/gstobject.c: (gst_object_set_parent):
+	* gst/gstobject.h:
+	* gst/gstpad.c: (gst_pad_push), (gst_pad_pull_range),
+	(gst_pad_query):
+	* gst/gstpad.h:
+	* gst/gstplugin.h:
+	* gst/gstprobe.h:
+	* gst/parse/parse.l:
+	* gst/registries/gstxmlregistry.c: (gst_xml_registry_load):
+	Backport HEAD changes, mostly docs.
+	Fix possible deadlock in _get_random_pad.
+
 2005-03-08  Wim Taymans  <wim@fluendo.com>
 
 	* MAINTAINERS:

@@ -344,9 +344,7 @@ gst_object_unref (GstObject * object)
  * creating a new object to symbolically 'take ownership' of the object.
  * Use #gst_object_set_parent to have this done for you.
  *
- * This function takes the object lock.
- *
- * MT safe.
+ * MT safe. This function grabs and releases the object lock.
  */
 void
 gst_object_sink (GstObject * object)
@@ -375,6 +373,9 @@ gst_object_sink (GstObject * object)
  * function, it does not take any locks. You might want to lock
  * the object owning the oldobj pointer before calling this
  * function.
+ *
+ * Make sure not to LOCK the oldobj because it might be unreffed
+ * which could cause a deadlock when it is disposed.
  */
 void
 gst_object_replace (GstObject ** oldobj, GstObject * newobj)
@@ -530,13 +531,13 @@ gst_object_dispatch_properties_changed (GObject * object,
  * @excluded_props: a set of user-specified properties to exclude or
  *  NULL to show all changes.
  *
- * Adds a default deep_notify signal callback to an
- * element. The user data should contain a pointer to an array of
- * strings that should be excluded from the notify.
- * The default handler will print the new value of the property 
+ * A default deep_notify signal callback for an element. The user data 
+ * should contain a pointer to an array of strings that should be excluded 
+ * from the notify. The default handler will print the new value of the property 
  * using g_print.
  *
- * MT safe.
+ * MT safe. This function grabs and releases the object's LOCK or getting the
+ *          path string of the object.
  */
 void
 gst_object_default_deep_notify (GObject * object, GstObject * orig,
@@ -673,7 +674,7 @@ had_parent:
  *
  * Returns: the name of the object. g_free() after usage.
  *
- * MT safe.
+ * MT safe. This function grabs and releases the object's LOCK.
  */
 gchar *
 gst_object_get_name (GstObject * object)
@@ -722,7 +723,7 @@ gst_object_set_name_prefix (GstObject * object, const gchar * name_prefix)
  *
  * Returns: the name prefix of the object. g_free() after usage.
  *
- * MT safe.
+ * MT safe. This function grabs and releases the object's LOCK.
  */
 gchar *
 gst_object_get_name_prefix (GstObject * object)
@@ -746,15 +747,13 @@ gst_object_get_name_prefix (GstObject * object)
  * Sets the parent of @object. The object's reference count will be incremented,
  * and any floating reference will be removed (see gst_object_sink()).
  *
- * This function takes the object lock.
- *
  * Causes the parent-set signal to be emitted.
  *
  * Returns: TRUE if the parent could be set or FALSE when the object
  * already had a parent, the object and parent are the same or wrong
  * parameters were provided.
  *
- * MT safe.
+ * MT safe. Grabs and releases the object's LOCK.
  */
 gboolean
 gst_object_set_parent (GstObject * object, GstObject * parent)
@@ -782,9 +781,10 @@ gst_object_set_parent (GstObject * object, GstObject * parent)
   }
 
   g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_SET], 0, parent);
+
   return TRUE;
 
-  /* ERROR */
+  /* ERROR handling */
 had_parent:
   {
     GST_UNLOCK (object);
@@ -802,7 +802,7 @@ had_parent:
  * Returns: parent of the object, this can be NULL if the object has no
  *   parent. unref after usage.
  *
- * MT safe.
+ * MT safe. Grabs and releases the object's LOCK.
  */
 GstObject *
 gst_object_get_parent (GstObject * object)
@@ -828,7 +828,7 @@ gst_object_get_parent (GstObject * object)
  * This function decreases the refcount of the object so the object
  * might not point to valid memory anymore after calling this function.
  *
- * MT safe.
+ * MT safe. Grabs and releases the object's lock.
  */
 void
 gst_object_unparent (GstObject * object)
@@ -867,7 +867,7 @@ gst_object_unparent (GstObject * object)
  *
  * Returns: TRUE if the name does not appear in the list, FALSE if it does.
  *
- * MT safe.
+ * MT safe. Grabs and releases the LOCK of each object in the list.
  */
 gboolean
 gst_object_check_uniqueness (GList * list, const gchar * name)
@@ -1001,7 +1001,8 @@ gst_object_get_property (GObject * object, guint prop_id,
  * Returns: a string describing the path of the object. You must
  *          g_free() the string after usage. 
  *
- * MT safe.
+ * MT safe. Grabs and releases the object's LOCK for all objects
+ *          in the hierarchy.
  */
 gchar *
 gst_object_get_path_string (GstObject * object)

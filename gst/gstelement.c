@@ -119,18 +119,46 @@ gst_element_class_init (GstElementClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
+  /**
+   * GstElement::state-change:
+   * @gstelement: the object which received the signal
+   * @int:
+   * @int:
+   *
+   * the #GstElementState of the element has been changed
+   */
   gst_element_signals[STATE_CHANGE] =
       g_signal_new ("state-change", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstElementClass, state_change), NULL,
       NULL, gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);
+  /**
+   * GstElement::new-pad:
+   * @gstelement: the object which received the signal
+   * @object:
+   *
+   * a new #GstPad has been added to the element
+   */
   gst_element_signals[NEW_PAD] =
       g_signal_new ("new-pad", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstElementClass, new_pad), NULL, NULL,
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
+  /**
+   * GstElement::pad-removed:
+   * @gstelement: the object which received the signal
+   * @object:
+   *
+   * a #GstPad has been removed from the element
+   */
   gst_element_signals[PAD_REMOVED] =
       g_signal_new ("pad-removed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstElementClass, pad_removed), NULL, NULL,
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
+  /**
+   * GstElement::no-more-pads:
+   * @gstelement: the object which received the signal
+   *
+   * ?
+   */
   gst_element_signals[NO_MORE_PADS] =
       g_signal_new ("no-more-pads", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstElementClass, no_more_pads), NULL,
@@ -975,17 +1003,17 @@ gst_element_get_random_pad (GstElement * element, GstPadDirection dir)
 
   GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "getting a random pad");
 
-  GST_LOCK (element);
   switch (dir) {
     case GST_PAD_SRC:
+      GST_LOCK (element);
       pads = element->srcpads;
       break;
     case GST_PAD_SINK:
+      GST_LOCK (element);
       pads = element->sinkpads;
       break;
     default:
-      g_warning ("unknown pad direction");
-      return NULL;
+      goto wrong_direction;
   }
   for (; pads; pads = g_list_next (pads)) {
     GstPad *pad = GST_PAD (pads->data);
@@ -1010,6 +1038,13 @@ gst_element_get_random_pad (GstElement * element, GstPadDirection dir)
   GST_UNLOCK (element);
 
   return result;
+
+  /* ERROR handling */
+wrong_direction:
+  {
+    g_warning ("unknown pad direction");
+    return NULL;
+  }
 }
 
 /**
