@@ -337,9 +337,17 @@ static void
 gst_thread_catch (GstThread *thread)
 {
   gboolean wait;
-  g_mutex_lock (thread->lock);
-  if (thread != gst_thread_get_current()) {
+  if (thread == gst_thread_get_current()) {
+    /* we're trying to catch ourself */
+    if (!GST_FLAG_IS_SET (thread, GST_THREAD_MUTEX_LOCKED)) {
+      g_mutex_lock (thread->lock);
+      GST_FLAG_SET (thread, GST_THREAD_MUTEX_LOCKED);
+    }
+    GST_DEBUG (GST_CAT_THREAD, "%s is catching itself", GST_ELEMENT_NAME (thread));
+    GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
+  } else {
     /* another thread is trying to catch us */
+    g_mutex_lock (thread->lock);
     wait = !GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING);
     while (!wait) {
       GTimeVal tv;
@@ -358,16 +366,20 @@ gst_thread_catch (GstThread *thread)
 static void
 gst_thread_release (GstThread *thread)
 {
-  g_cond_signal (thread->cond);
-  g_mutex_unlock (thread->lock);
+  if (thread != gst_thread_get_current()) {
+    g_cond_signal (thread->cond);
+    g_mutex_unlock (thread->lock);
+  }
 }
 static GstElementStateReturn
 gst_thread_change_state (GstElement *element)
 {
   GstThread *thread;
   GstElementStateReturn ret;
+  gint transition;
 
   g_return_val_if_fail (GST_IS_THREAD (element), GST_STATE_FAILURE);
+  transition = GST_STATE_TRANSITION (element);
 
   thread = GST_THREAD (element);
 
@@ -377,7 +389,14 @@ gst_thread_change_state (GstElement *element)
 
   gst_thread_catch (thread);
 
-  switch (GST_STATE_TRANSITION (element)) {
+  /* FIXME: (or GStreamers ideas about "threading"): the element variables are
+     commonly accessed by multiple threads at the same time (see bug #111146
+     for an example) */
+  if (transition != GST_STATE_TRANSITION (element)) {
+    g_warning ("inconsistent state information, fix threading please");
+  }
+
+  switch (transition) {
     case GST_STATE_NULL_TO_READY:
       /* create the thread */
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_REAPING);
@@ -474,7 +493,11 @@ static void
 gst_thread_child_state_change (GstBin *bin, GstElementState oldstate, 
 			       GstElementState newstate, GstElement *element)
 {
-  parent_class->child_state_change (bin, oldstate, newstate, element);
+  GST_DEBUG (GST_CAT_THREAD, "%s (from thread %s) child %s changed state from %s to %s\n",
+              GST_ELEMENT_NAME (bin), GST_ELEMENT_NAME (gst_thread_get_current()), GST_ELEMENT_NAME (element), 
+              gst_element_state_get_name (oldstate), gst_element_state_get_name (newstate));
+  if (parent_class->child_state_change)
+    parent_class->child_state_change (bin, oldstate, newstate, element);
   /* We'll wake up the main thread now. Note that we can't lock the thread here, 
      because we might be called from inside gst_thread_change_state when holding
      the lock. But this doesn't cause any problems. */
@@ -514,7 +537,11 @@ gst_thread_main_loop (void *arg)
       while (status && GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING)) {
         g_mutex_unlock (thread->lock);
         status = gst_bin_iterate (GST_BIN (thread));
-        g_mutex_lock (thread->lock);
+        if (GST_FLAG_IS_SET (thread, GST_THREAD_MUTEX_LOCKED)) {
+	  GST_FLAG_UNSET (thread, GST_THREAD_MUTEX_LOCKED);
+	} else {
+          g_mutex_lock (thread->lock);
+	}
       }
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
     }
@@ -529,14 +556,15 @@ gst_thread_main_loop (void *arg)
    * stack into the threads stack space */
   gst_scheduler_reset (GST_ELEMENT_SCHED (thread));
 
+  /* must do that before releasing the lock - we might get disposed before being done */
+  g_signal_emit (G_OBJECT (thread), gst_thread_signals[SHUTDOWN], 0);
+
   /* unlock and signal - we are out */
   g_cond_signal (thread->cond);
   g_mutex_unlock (thread->lock);
 
   GST_INFO (GST_CAT_THREAD, "gstthread: thread \"%s\" is stopped",
 	    GST_ELEMENT_NAME (thread));
-
-  g_signal_emit (G_OBJECT (thread), gst_thread_signals[SHUTDOWN], 0);
 
   return NULL;
 }
