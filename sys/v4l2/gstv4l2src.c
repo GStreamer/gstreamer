@@ -1061,9 +1061,8 @@ gst_v4l2src_buffer_free (GstBufferPool *pool,
 }
 
 
-static gboolean
-plugin_init (GModule   *module,
-             GstPlugin *plugin)
+gboolean
+gst_v4l2src_factory_init (GstPlugin *plugin)
 {
 	GstElementFactory *factory;
 
@@ -1083,11 +1082,3 @@ plugin_init (GModule   *module,
 
 	return TRUE;
 }
-
-
-GstPluginDesc plugin_desc = {
-	GST_VERSION_MAJOR,
-	GST_VERSION_MINOR,
-	"v4l2src",
-	plugin_init
-};
