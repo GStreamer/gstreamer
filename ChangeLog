@@ -1,3 +1,13 @@
+2005-01-07  Sebastien Cote  <sc5@hermes.usherb.ca>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/faac/gstfaac.c: (gst_faac_outputformat_get_type),
+	(gst_faac_class_init), (gst_faac_init), (gst_faac_srcconnect),
+	(gst_faac_set_property), (gst_faac_get_property):
+	* ext/faac/gstfaac.h:
+	  Allow for ADTS output (#153434).
+
 2005-01-07  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_getcaps):
