@@ -211,11 +211,14 @@ gst_qtdemux_init (GstQTDemux *qtdemux)
 }
 
 static GstCaps*
-quicktime_type_find (GstBuffer *buf,
-	      gpointer private)
+quicktime_type_find (GstBuffer *buf, gpointer private)
 {
   gchar *data = GST_BUFFER_DATA (buf);
 
+  /* we could get a NULL buffer, for example when the input could not be
+   * mmap'd */
+  g_return_val_if_fail (data != NULL, NULL);
+  
   /* exactly like in the old version */
   if (!strncmp (&data[4], "wide", 4) ||
       !strncmp (&data[4], "moov", 4) ||
