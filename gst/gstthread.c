@@ -474,7 +474,7 @@ gst_thread_main_loop (void *arg)
   GstThread *thread = NULL;
   gint stateset;
 
-  THR_DEBUG ("gst_thread_main_loop started");
+  GST_DEBUG (GST_CAT_THREAD, "gst_thread_main_loop started");
   thread = GST_THREAD (arg);
   g_mutex_lock (thread->lock);
 
