@@ -8,15 +8,18 @@
 use File::Basename;
 
 my $num_warnings = 0;
+my $path = `dirname $0`;
+chomp $path;
+$path .= "/../tools";
 
 sub check_all_elements
 {
 	#send stderr to /dev/null
-	my $command = "gst-inspect 2>/dev/null";
+	my $command = "$path/gst-inspect 2>/dev/null";
 	my @lines = `$command`;
 
 	while ($_ = shift(@lines)){
-		my @matches = m/^\w+\s+element:\s+(\w+):/g;
+		my @matches = m/^\w+:\s+(\w+):/;
 		if(@matches){
 			check_element($matches[0]);
 		}
@@ -34,7 +37,7 @@ sub check_element($)
 	print "running inspect on $element\n";
 
 	# capture stderr, send stdout to /dev/null
-	my $command = "gst-inspect $element 2>&1 1>/dev/null";
+	my $command = "$path/gst-inspect $element 2>&1 1>/dev/null";
 	
 	my @lines = `$command`;
 
