@@ -71,6 +71,15 @@ by the loader at statup.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_plugin_add_type ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@factory: 
+
+
 <!-- ##### FUNCTION gst_library_load ##### -->
 <para>
 
@@ -121,6 +130,40 @@ by the loader at statup.
 </para>
 
 @name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_load_elementfactory ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_load_typefactory ##### -->
+<para>
+
+</para>
+
+@mime: 
+
+
+<!-- ##### FUNCTION gst_plugin_load_thyself ##### -->
+<para>
+
+</para>
+
+@parent: 
+
+
+<!-- ##### FUNCTION gst_plugin_save_thyself ##### -->
+<para>
+
+</para>
+
+@parent: 
 @Returns: 
 
 

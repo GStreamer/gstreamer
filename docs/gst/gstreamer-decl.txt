@@ -83,14 +83,28 @@ cothread_context *ctx
 <RETURNS>void  </RETURNS>
 int *argc,char **argv[]
 </FUNCTION>
+<FUNCTION>
+<NAME>gst_main</NAME>
+<RETURNS>void  </RETURNS>
+
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_main_quit</NAME>
+<RETURNS>void  </RETURNS>
+
+</FUNCTION>
 <MACRO>
 <NAME>DEBUG</NAME>
-#define DEBUG(format,args...) g_print("DEBUG: " format, ##args)
+#define DEBUG(format, args...) g_print("DEBUG:(%d) " format, getpid() , ##args)
 </MACRO>
 <MACRO>
 <NAME>DEBUG</NAME>
-#define DEBUG(format,args...)
+#define DEBUG(format, args...)
 </MACRO>
+<VARIABLE>
+<NAME>gst_bin_details</NAME>
+extern GstElementDetails gst_bin_details;
+</VARIABLE>
 <MACRO>
 <NAME>GST_TYPE_BIN</NAME>
 #define GST_TYPE_BIN \
@@ -114,7 +128,7 @@ int *argc,char **argv[]
 <MACRO>
 <NAME>GST_IS_BIN_CLASS</NAME>
 #define GST_IS_BIN_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_BIN)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_BIN))
 </MACRO>
 <STRUCT>
 <NAME>GstBin</NAME>
@@ -127,13 +141,36 @@ int *argc,char **argv[]
 struct GstBin {
   GstElement element;
 
+  // our children
   gint numchildren;
   GList *children;
 
+  // iteration state
+  gboolean need_cothreads;
   GList *entries;
   gint numentries;
 
   cothread_context *threadcontext;
+  gboolean use_cothreads;
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstBinClass</NAME>
+struct GstBinClass {
+  GstElementClass parent_class;
+
+  void (*object_added) (GstObject *object,GstObject *child);
+
+  /* change the state of elements of the given type */
+  gboolean (*change_state_type) (GstBin *bin,
+                                 GstElementState state,
+                                 GtkType type);
+
+  /* create a plan for the execution of the bin */
+  void (*create_plan) (GstBin *bin);
+
+  /* run a full iteration of operation */
+  void (*iterate) (GstBin *bin);
 };
 </STRUCT>
 <FUNCTION>
@@ -146,6 +183,10 @@ void
 <RETURNS>GstElement  *</RETURNS>
 gchar *name
 </FUNCTION>
+<MACRO>
+<NAME>gst_bin_destroy</NAME>
+#define gst_bin_destroy(bin) gst_object_destroy(GST_OBJECT(bin))
+</MACRO>
 <FUNCTION>
 <NAME>gst_bin_add</NAME>
 <RETURNS>void  </RETURNS>
@@ -181,10 +222,15 @@ GstBin *bin
 <RETURNS>void  </RETURNS>
 GstBin *bin
 </FUNCTION>
+<FUNCTION>
+<NAME>gst_bin_use_cothreads</NAME>
+<RETURNS>void  </RETURNS>
+GstBin *bin, gboolean enabled
+</FUNCTION>
 <MACRO>
 <NAME>GST_BUFFER</NAME>
 #define GST_BUFFER(buf) \
-	((GstBuffer *)(buf))
+  ((GstBuffer *)(buf))
 </MACRO>
 <MACRO>
 <NAME>GST_BUFFER_FLAGS</NAME>
@@ -249,6 +295,7 @@ typedef enum {
   GST_BUFFER_EOS		= (1 << 1),
   GST_BUFFER_ORIGINAL		= (1 << 2),
   GST_BUFFER_DONTFREE		= (1 << 3),
+  GST_BUFFER_FLUSH		= (1 << 4),
 } GstBufferFlags;
 </ENUM>
 <STRUCT>
@@ -263,8 +310,10 @@ struct GstBuffer {
   /* refcounting */
 #ifdef HAVE_ATOMIC_H
   atomic_t refcount;
+#define GST_BUFFER_REFCOUNT(buf)	(atomic_read(&(GST_BUFFER((buf))->refcount)))
 #else
   int refcount;
+#define GST_BUFFER_REFCOUNT(buf)	(GST_BUFFER(buf)->refcount)
 #endif
 
   /* data type of this buffer */
@@ -288,6 +337,9 @@ struct GstBuffer {
 
   /* subbuffer support, who's my parent? */
   GstBuffer *parent;
+
+  /* this is a pointer to the buffer pool (if any) */
+  GstBufferPool *pool;
 };
 </STRUCT>
 <FUNCTION>
@@ -296,9 +348,19 @@ struct GstBuffer {
 
 </FUNCTION>
 <FUNCTION>
+<NAME>gst_buffer_new_from_pool</NAME>
+<RETURNS>GstBuffer  *</RETURNS>
+GstBufferPool *pool
+</FUNCTION>
+<FUNCTION>
 <NAME>gst_buffer_create_sub</NAME>
 <RETURNS>GstBuffer  *</RETURNS>
 GstBuffer *parent,guint32 offset,guint32 size
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_buffer_append</NAME>
+<RETURNS>GstBuffer  *</RETURNS>
+GstBuffer *buffer, GstBuffer *append
 </FUNCTION>
 <FUNCTION>
 <NAME>gst_buffer_ref</NAME>
@@ -340,6 +402,70 @@ GstBuffer *buffer
 <RETURNS>void  </RETURNS>
 GstBuffer *buffer,GstMeta *meta
 </FUNCTION>
+<TYPEDEF>
+<NAME>GstClockTime</NAME>
+typedef guint64 GstClockTime;
+</TYPEDEF>
+<TYPEDEF>
+<NAME>GstClockTimeDiff</NAME>
+typedef gint64 GstClockTimeDiff;
+</TYPEDEF>
+<MACRO>
+<NAME>GST_CLOCK_DIFF</NAME>
+#define GST_CLOCK_DIFF(s, e) (GstClockTimeDiff)((s)-(e))
+</MACRO>
+<STRUCT>
+<NAME>GstClock</NAME>
+</STRUCT>
+<STRUCT>
+<NAME>GstClock</NAME>
+struct GstClock {
+  gchar *name;
+  GstClockTime start_time;
+  GstClockTime current_time;
+  GstClockTimeDiff adjust;
+  gboolean locking;
+  GList *sinkobjects;
+  gint num, num_locked;
+  GMutex *sinkmutex;
+  GMutex *lock;
+};
+</STRUCT>
+<FUNCTION>
+<NAME>gst_clock_new</NAME>
+<RETURNS>GstClock  *</RETURNS>
+gchar *name
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_clock_get_system</NAME>
+<RETURNS>GstClock  *</RETURNS>
+void
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_clock_register</NAME>
+<RETURNS>void  </RETURNS>
+GstClock *clock, GstObject *obj
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_clock_set</NAME>
+<RETURNS>void  </RETURNS>
+GstClock *clock, GstClockTime time
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_clock_reset</NAME>
+<RETURNS>void  </RETURNS>
+GstClock *clock
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_clock_wait</NAME>
+<RETURNS>void  </RETURNS>
+GstClock *clock, GstClockTime time, GstObject *obj
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_clock_current_diff</NAME>
+<RETURNS>GstClockTimeDiff  </RETURNS>
+GstClock *clock, GstClockTime time
+</FUNCTION>
 <MACRO>
 <NAME>GST_TYPE_CONNECTION</NAME>
 #define GST_TYPE_CONNECTION \
@@ -377,6 +503,15 @@ struct GstConnection {
   GstElement element;
 };
 </STRUCT>
+<STRUCT>
+<NAME>GstConnectionClass</NAME>
+struct GstConnectionClass {
+  GstElementClass parent_class;
+
+  /* push function */
+  void (*push) (GstConnection *connection);
+};
+</STRUCT>
 <FUNCTION>
 <NAME>gst_connection_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -395,40 +530,28 @@ GstConnection *connection
 <ENUM>
 <NAME>GstElementState</NAME>
 typedef enum {
-  GST_STATE_COMPLETE    = (1 << 0),
-  GST_STATE_RUNNING     = (1 << 1),
-  GST_STATE_DISCOVERY   = (1 << 2),
-  GST_STATE_PREROLL     = (1 << 3),
-
-  GST_STATE_PLAYING	= (1 << 4),
-  GST_STATE_PAUSED	= (1 << 5),
-
-  GST_STATE_MAX		= (1 << 15),
+  GST_STATE_NONE_PENDING	= -1,
+  GST_STATE_NULL	= 0,
+  GST_STATE_READY	= 1,
+  GST_STATE_PLAYING	= 2,
+  GST_STATE_PAUSED	= 3,
 } GstElementState;
+</ENUM>
+<ENUM>
+<NAME>GstElementStateReturn</NAME>
+typedef enum {
+  GST_STATE_FAILURE	= 0,
+  GST_STATE_SUCCESS	= 1,
+  GST_STATE_ASYNC	= 2,
+} GstElementStateReturn;
 </ENUM>
 <MACRO>
 <NAME>GST_STATE</NAME>
-#define GST_STATE(obj)			(GST_ELEMENT(obj)->state)
+#define GST_STATE(obj)			(GST_ELEMENT(obj)->current_state)
 </MACRO>
 <MACRO>
-<NAME>GST_STATE_IS_SET</NAME>
-#define GST_STATE_IS_SET(obj,flag)	(GST_STATE (obj) & (flag))
-</MACRO>
-<MACRO>
-<NAME>GST_STATE_SET</NAME>
-#define GST_STATE_SET(obj,flag) \
-G_STMT_START{ (GST_STATE (obj) |= (flag)); \
-gst_info("set '%s' state %d(%s)\n",gst_element_get_name(obj),flag, \
-_gst_print_statename(flag)); \
-}G_STMT_END
-</MACRO>
-<MACRO>
-<NAME>GST_STATE_UNSET</NAME>
-#define GST_STATE_UNSET(obj,flag) \
-G_STMT_START{ (GST_STATE (obj) &= ~(flag)); \
-gst_info("unset '%s' state %d(%s)\n",gst_element_get_name(obj),flag, \
-_gst_print_statename(flag)); \
-}G_STMT_END
+<NAME>GST_STATE_PENDING</NAME>
+#define GST_STATE_PENDING(obj)		(GST_ELEMENT(obj)->pending_state)
 </MACRO>
 <MACRO>
 <NAME>GST_TYPE_ELEMENT</NAME>
@@ -458,12 +581,12 @@ _gst_print_statename(flag)); \
 <ENUM>
 <NAME>GstElementFlags</NAME>
 typedef enum {
-  GST_ELEMENT_MULTI_OUT		= (1 << 16),
+  GST_ELEMENT_MULTI_IN		= (1 << 0),
 } GstElementFlags;
 </ENUM>
 <MACRO>
-<NAME>GST_ELEMENT_IS_MULTI_OUT</NAME>
-#define GST_ELEMENT_IS_MULTI_OUT(obj)	((GST_FLAGS(obj) & GST_ELEMENT_MULTI_OUT)
+<NAME>GST_ELEMENT_IS_MULTI_IN</NAME>
+#define GST_ELEMENT_IS_MULTI_IN(obj)	(GST_FLAGS(obj) & GST_ELEMENT_MULTI_IN)
 </MACRO>
 <STRUCT>
 <NAME>GstElement</NAME>
@@ -489,7 +612,8 @@ struct GstElement {
 
   gchar *name;
 
-  guint16 state;
+  guint8 current_state;
+  guint8 pending_state;
 
   GstElementLoopFunction loopfunc;
   cothread_state *threadstate;
@@ -498,6 +622,32 @@ struct GstElement {
   GList *pads;
 
   GstElement *manager;
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstElementClass</NAME>
+struct GstElementClass {
+  GstObjectClass parent_class;
+
+  /* the elementfactory that created us */
+  GstElementFactory *elementfactory;
+
+  /* signal callbacks */
+  void (*state_change) (GstElement *element,GstElementState state);
+  void (*new_pad) (GstElement *element,GstPad *pad);
+  void (*new_ghost_pad) (GstElement *element,GstPad *pad);
+  void (*error) (GstElement *element,gchar *error);
+
+  /* events */
+//  gboolean (*start) (GstElement *element,GstElementState state);
+//  gboolean (*stop) (GstElement *element);
+
+  /* change the element state */
+  GstElementStateReturn (*change_state) (GstElement *element);
+
+  /* create or read XML representation of self */
+  xmlNodePtr (*save_thyself)(GstElement *element,xmlNodePtr parent);
+  void (*restore_thyself)(GstElement *element,xmlNodePtr *self);
 };
 </STRUCT>
 <STRUCT>
@@ -518,6 +668,9 @@ struct GstElementFactory {
   GtkType type;			/* unique GtkType of element */
 
   GstElementDetails *details;	/* pointer to details struct */
+
+  GList *src_types;
+  GList *sink_types;
 };
 </STRUCT>
 <FUNCTION>
@@ -582,7 +735,7 @@ GstElement *src,gchar *srcpadname,GstElement *dest,gchar *destpadname
 </FUNCTION>
 <FUNCTION>
 <NAME>gst_element_set_state</NAME>
-<RETURNS>gboolean  </RETURNS>
+<RETURNS>gint  </RETURNS>
 GstElement *element,GstElementState state
 </FUNCTION>
 <FUNCTION>
@@ -591,9 +744,9 @@ GstElement *element,GstElementState state
 GstElement *element,gchar *error
 </FUNCTION>
 <FUNCTION>
-<NAME>gst_element_change_state</NAME>
-<RETURNS>gboolean  </RETURNS>
-GstElement *element,GstElementState state
+<NAME>gst_element_get_factory</NAME>
+<RETURNS>GstElementFactory  *</RETURNS>
+GstElement *element
 </FUNCTION>
 <MACRO>
 <NAME>gst_element_destroy</NAME>
@@ -615,6 +768,16 @@ gchar *name,GtkType type,GstElementDetails *details
 GstElementFactory *elementfactory
 </FUNCTION>
 <FUNCTION>
+<NAME>gst_elementfactory_add_src</NAME>
+<RETURNS>void  </RETURNS>
+GstElementFactory *elementfactory, guint16 id
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_elementfactory_add_sink</NAME>
+<RETURNS>void  </RETURNS>
+GstElementFactory *elementfactory, guint16 id
+</FUNCTION>
+<FUNCTION>
 <NAME>gst_elementfactory_find</NAME>
 <RETURNS>GstElementFactory  *</RETURNS>
 gchar *name
@@ -633,6 +796,16 @@ GstElementFactory *factory,gchar *name
 <NAME>gst_elementfactory_make</NAME>
 <RETURNS>GstElement  *</RETURNS>
 gchar *factoryname,gchar *name
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_elementfactory_save_thyself</NAME>
+<RETURNS>xmlNodePtr  </RETURNS>
+GstElementFactory *factory, xmlNodePtr parent
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_elementfactory_load_thyself</NAME>
+<RETURNS>GstElementFactory  *</RETURNS>
+xmlNodePtr parent
 </FUNCTION>
 <FUNCTION>
 <NAME>gst_element_loopfunc_wrapper</NAME>
@@ -674,6 +847,12 @@ int argc,char **argv
 <NAME>GstFilter</NAME>
 struct GstFilter {
   GstElement element;
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstFilterClass</NAME>
+struct GstFilterClass {
+  GstElementClass parent_class;
 };
 </STRUCT>
 <FUNCTION>
@@ -820,6 +999,17 @@ struct GstObject {
   GstObject *parent;
 };
 </STRUCT>
+<STRUCT>
+<NAME>GstObjectClass</NAME>
+struct GstObjectClass {
+  GtkObjectClass parent_class;
+
+  /* signals */
+  void (*parent_set) (GstObject *object,GstObject *parent);
+
+  /* functions go here */
+};
+</STRUCT>
 <MACRO>
 <NAME>GST_FLAGS</NAME>
 #define GST_FLAGS(obj)			GTK_OBJECT_FLAGS(obj)
@@ -938,6 +1128,11 @@ GstPad *pad
 <RETURNS>void </RETURNS>
 GstPad *pad
 </USER_FUNCTION>
+<USER_FUNCTION>
+<NAME>GstPadQoSFunction</NAME>
+<RETURNS>void </RETURNS>
+GstPad *pad, glong qos_message
+</USER_FUNCTION>
 <ENUM>
 <NAME>GstPadDirection</NAME>
 typedef enum {
@@ -963,9 +1158,16 @@ struct GstPad {
   GstPadChainFunction chainfunc;
   GstPadPullFunction pullfunc;
   GstPadPushFunction pushfunc;
+  GstPadQoSFunction qosfunc;
 
   GstObject *parent;
   GList *ghostparents;
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstPadClass</NAME>
+struct GstPadClass {
+  GstObjectClass parent_class;
 };
 </STRUCT>
 <FUNCTION>
@@ -997,6 +1199,11 @@ GstPad *pad,GstPadChainFunction chain
 <NAME>gst_pad_set_pull_function</NAME>
 <RETURNS>void  </RETURNS>
 GstPad *pad, GstPadPullFunction pull
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_pad_set_qos_function</NAME>
+<RETURNS>void  </RETURNS>
+GstPad *pad, GstPadQoSFunction qos
 </FUNCTION>
 <FUNCTION>
 <NAME>gst_pad_get_type_id</NAME>
@@ -1058,6 +1265,11 @@ GstPad *pad
 GstPad *srcpad,GstPad *sinkpad
 </FUNCTION>
 <FUNCTION>
+<NAME>gst_pad_disconnect</NAME>
+<RETURNS>void  </RETURNS>
+GstPad *srcpad,GstPad *sinkpad
+</FUNCTION>
+<FUNCTION>
 <NAME>gst_pad_push</NAME>
 <RETURNS>void  </RETURNS>
 GstPad *pad,GstBuffer *buffer
@@ -1068,10 +1280,19 @@ GstPad *pad,GstBuffer *buffer
 GstPad *pad
 </FUNCTION>
 <FUNCTION>
+<NAME>gst_pad_handle_qos</NAME>
+<RETURNS>void  </RETURNS>
+GstPad *pad, glong qos_message
+</FUNCTION>
+<FUNCTION>
 <NAME>gst_pad_save_thyself</NAME>
 <RETURNS>xmlNodePtr  </RETURNS>
 GstPad *pad,xmlNodePtr parent
 </FUNCTION>
+<VARIABLE>
+<NAME>gst_pipeline_details</NAME>
+extern GstElementDetails gst_pipeline_details;
+</VARIABLE>
 <MACRO>
 <NAME>GST_TYPE_PIPELINE</NAME>
 #define GST_TYPE_PIPELINE \
@@ -1095,7 +1316,7 @@ GstPad *pad,xmlNodePtr parent
 <MACRO>
 <NAME>GST_IS_PIPELINE_CLASS</NAME>
 #define GST_IS_PIPELINE_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_PIPELINE)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_PIPELINE))
 </MACRO>
 <STRUCT>
 <NAME>GstPipeline</NAME>
@@ -1109,6 +1330,12 @@ struct GstPipeline {
   GstBin bin;
 };
 </STRUCT>
+<STRUCT>
+<NAME>GstPipelineClass</NAME>
+struct GstPipelineClass {
+  GstBinClass parent_class;
+};
+</STRUCT>
 <FUNCTION>
 <NAME>gst_pipeline_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -1116,13 +1343,18 @@ void
 </FUNCTION>
 <FUNCTION>
 <NAME>gst_pipeline_new</NAME>
-<RETURNS>GstPipeline  *</RETURNS>
+<RETURNS>GstElement  *</RETURNS>
 guchar *name
 </FUNCTION>
 <MACRO>
 <NAME>gst_pipeline_destroy</NAME>
 #define gst_pipeline_destroy(pipeline) gst_object_destroy(GST_OBJECT(pipeline))
 </MACRO>
+<FUNCTION>
+<NAME>gst_pipeline_autoplug</NAME>
+<RETURNS>gboolean  </RETURNS>
+GstPipeline *pipeline
+</FUNCTION>
 <FUNCTION>
 <NAME>gst_pipeline_iterate</NAME>
 <RETURNS>void  </RETURNS>
@@ -1143,7 +1375,8 @@ struct GstPlugin {
 
   GList *types;			/* list of types provided */
   GList *elements;		/* list of elements provided */
-  GList *identifiers;		/* list of identifiers */
+
+  gboolean loaded;              /* if the plugin is in memory */
 };
 </STRUCT>
 <USER_FUNCTION>
@@ -1187,9 +1420,14 @@ gchar *name
 GstPlugin *plugin,GstElementFactory *factory
 </FUNCTION>
 <FUNCTION>
+<NAME>gst_plugin_add_type</NAME>
+<RETURNS>void  </RETURNS>
+GstPlugin *plugin,GstTypeFactory *factory
+</FUNCTION>
+<FUNCTION>
 <NAME>gst_plugin_find</NAME>
 <RETURNS>GstPlugin  *</RETURNS>
-gchar *name
+const gchar *name
 </FUNCTION>
 <FUNCTION>
 <NAME>gst_plugin_get_list</NAME>
@@ -1200,6 +1438,26 @@ gchar *name
 <NAME>gst_plugin_find_elementfactory</NAME>
 <RETURNS>GstElementFactory  *</RETURNS>
 gchar *name
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_plugin_load_elementfactory</NAME>
+<RETURNS>GstElementFactory  *</RETURNS>
+gchar *name
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_plugin_load_typefactory</NAME>
+<RETURNS>void  </RETURNS>
+gchar *mime
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_plugin_save_thyself</NAME>
+<RETURNS>xmlNodePtr  </RETURNS>
+xmlNodePtr parent
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_plugin_load_thyself</NAME>
+<RETURNS>void  </RETURNS>
+xmlNodePtr parent
 </FUNCTION>
 <MACRO>
 <NAME>GST_TYPE_SINK</NAME>
@@ -1236,6 +1494,12 @@ gchar *name
 <NAME>GstSink</NAME>
 struct GstSink {
   GstElement element;
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstSinkClass</NAME>
+struct GstSinkClass {
+  GstElementClass parent_class;
 };
 </STRUCT>
 <FUNCTION>
@@ -1300,6 +1564,19 @@ typedef enum {
 struct GstSrc {
   GstElement element;
   gint32 flags;
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstSrcClass</NAME>
+struct GstSrcClass {
+  GstElementClass parent_class;
+
+  /* subclass functions */
+  void (*push) (GstSrc *src);
+  void (*push_region) (GstSrc *src,gulong offset,gulong size);
+
+  /* signals */
+  void (*eos) (GstSrc *src);
 };
 </STRUCT>
 <MACRO>
@@ -1374,6 +1651,12 @@ struct GstTee {
   GSList *srcpads;
 };
 </STRUCT>
+<STRUCT>
+<NAME>GstTeeClass</NAME>
+struct GstTeeClass {
+  GstFilterClass parent_class;
+};
+</STRUCT>
 <FUNCTION>
 <NAME>gst_tee_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -1394,6 +1677,10 @@ GstPad *pad,GstBuffer *buf
 <RETURNS>gchar  *</RETURNS>
 GstTee *tee
 </FUNCTION>
+<VARIABLE>
+<NAME>gst_thread_details</NAME>
+extern GstElementDetails gst_thread_details;
+</VARIABLE>
 <ENUM>
 <NAME>GstThreadState</NAME>
 typedef enum {
@@ -1441,6 +1728,12 @@ struct GstThread {
   pthread_t thread_id;		/* id of the thread, if any */
   GMutex *lock;			/* thread lock/condititon pair... */
   GCond *cond;			/* used to control the thread */
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstThreadClass</NAME>
+struct GstThreadClass {
+  GstBinClass parent_class;
 };
 </STRUCT>
 <FUNCTION>
@@ -1546,7 +1839,7 @@ GstTrace *trace
 <USER_FUNCTION>
 <NAME>GstTypeFindFunc</NAME>
 <RETURNS>gboolean </RETURNS>
-GstBuffer *buf,gpointer *private
+GstBuffer *buf,gpointer priv
 </USER_FUNCTION>
 <STRUCT>
 <NAME>GstType</NAME>
@@ -1566,6 +1859,10 @@ struct GstType {
 
   GList *srcs;			/* list of src objects for this type */
   GList *sinks;			/* list of sink objects for type */
+
+  GHashTable *converters;       /* a hashtable of factories that can convert
+				   from this type to destination type. The
+				   factories are indexed by destination type */
 };
 </STRUCT>
 <STRUCT>
@@ -1617,9 +1914,39 @@ guint16 id
 guint16 id
 </FUNCTION>
 <FUNCTION>
+<NAME>gst_type_get_sink_to_src</NAME>
+<RETURNS>GList  *</RETURNS>
+guint16 sinkid, guint16 srcid
+</FUNCTION>
+<FUNCTION>
 <NAME>gst_type_get_list</NAME>
 <RETURNS>GList  *</RETURNS>
 
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_type_dump</NAME>
+<RETURNS>void  </RETURNS>
+
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_type_save_thyself</NAME>
+<RETURNS>xmlNodePtr  </RETURNS>
+GstType *type, xmlNodePtr parent
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_type_load_thyself</NAME>
+<RETURNS>guint16  </RETURNS>
+xmlNodePtr parent
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_typefactory_save_thyself</NAME>
+<RETURNS>xmlNodePtr  </RETURNS>
+GstTypeFactory *factory, xmlNodePtr parent
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_typefactory_load_thyself</NAME>
+<RETURNS>GstTypeFactory  *</RETURNS>
+xmlNodePtr parent
 </FUNCTION>
 <FUNCTION>
 <NAME>gst_util_get_int_arg</NAME>
@@ -1657,67 +1984,87 @@ GtkObject *object,guchar *argname
 GtkObject *object,guchar *argname
 </FUNCTION>
 <FUNCTION>
+<NAME>gst_util_dump_mem</NAME>
+<RETURNS>void  </RETURNS>
+guchar *mem, guint size
+</FUNCTION>
+<FUNCTION>
 <NAME>gst_xml_write</NAME>
 <RETURNS>xmlDocPtr  </RETURNS>
 GstElement *element
 </FUNCTION>
-<TYPEDEF>
-<NAME>GstClockTime</NAME>
-typedef guint64 GstClockTime;
-</TYPEDEF>
-<TYPEDEF>
-<NAME>GstClockTimeDiff</NAME>
-typedef gint64 GstClockTimeDiff;
-</TYPEDEF>
 <MACRO>
-<NAME>GST_CLOCK_DIFF</NAME>
-#define GST_CLOCK_DIFF(s, e) (GstClockTimeDiff)((s)-(e))
+<NAME>GST_BUFFER_POOL</NAME>
+#define GST_BUFFER_POOL(buf) \
+  ((GstBufferPool *)(buf))
 </MACRO>
 <STRUCT>
-<NAME>GstClock</NAME>
+<NAME>GstBufferPool</NAME>
 </STRUCT>
+<USER_FUNCTION>
+<NAME>GstBufferPoolCreateFunction</NAME>
+<RETURNS>GstBuffer *</RETURNS>
+GstBufferPool *pool, gpointer user_data
+</USER_FUNCTION>
+<USER_FUNCTION>
+<NAME>GstBufferPoolDestroyFunction</NAME>
+<RETURNS>void </RETURNS>
+GstBufferPool *pool, GstBuffer *buffer, gpointer user_data
+</USER_FUNCTION>
 <STRUCT>
-<NAME>GstClock</NAME>
-struct GstClock {
-  gchar *name;
-  GstClockTime start_time;
-  GstClockTime current_time;
-  GstClockTimeDiff adjust;
-  gboolean locking;
-  GList *sinkobjects;
-  GMutex *sinkmutex;
-  GMutex *lock;
+<NAME>GstBufferPool</NAME>
+struct GstBufferPool {
+  /* will be called when a new buffer is to be created */
+  GstBufferPoolCreateFunction new_buffer;
+  /* user data to pass with the new_buffer function */
+  gpointer new_user_data;
+
+  gpointer destroy_user_data;
+  GstBufferPoolDestroyFunction destroy_buffer;
 };
 </STRUCT>
 <FUNCTION>
-<NAME>gst_clock_new</NAME>
-<RETURNS>GstClock  *</RETURNS>
-gchar *name
+<NAME>gst_buffer_pool_new</NAME>
+<RETURNS>GstBufferPool  *</RETURNS>
+
 </FUNCTION>
 <FUNCTION>
-<NAME>gst_clock_get_system</NAME>
-<RETURNS>GstClock  *</RETURNS>
-void
+<NAME>gst_buffer_pool_new_buffer</NAME>
+<RETURNS>GstBuffer  *</RETURNS>
+GstBufferPool *pool
 </FUNCTION>
 <FUNCTION>
-<NAME>gst_clock_register</NAME>
+<NAME>gst_buffer_pool_destroy_buffer</NAME>
 <RETURNS>void  </RETURNS>
-GstClock *clock, GstObject *obj
+GstBufferPool *pool, GstBuffer *buffer
 </FUNCTION>
 <FUNCTION>
-<NAME>gst_clock_set</NAME>
+<NAME>gst_buffer_pool_set_create_function</NAME>
 <RETURNS>void  </RETURNS>
-GstClock *clock, GstClockTime time
+GstBufferPool *pool, GstBufferPoolCreateFunction create, gpointer user_data
 </FUNCTION>
 <FUNCTION>
-<NAME>gst_clock_reset</NAME>
+<NAME>gst_buffer_pool_set_destroy_function</NAME>
 <RETURNS>void  </RETURNS>
-GstClock *clock
+GstBufferPool *pool, GstBufferPoolDestroyFunction destroy, gpointer user_data
 </FUNCTION>
 <FUNCTION>
-<NAME>gst_clock_wait</NAME>
+<NAME>gst_buffer_pool_destroy</NAME>
 <RETURNS>void  </RETURNS>
-GstClock *clock, GstClockTime time, GstObject *obj
+GstBufferPool *pool
+</FUNCTION>
+<MACRO>
+<NAME>GST_CPU_FLAG_MMX</NAME>
+#define  GST_CPU_FLAG_MMX 		(1 << 0)
+</MACRO>
+<MACRO>
+<NAME>GST_CPU_FLAG_SSE</NAME>
+#define  GST_CPU_FLAG_SSE 		(1 << 1)
+</MACRO>
+<FUNCTION>
+<NAME>gst_cpu_get_flags</NAME>
+<RETURNS>guint32  </RETURNS>
+
 </FUNCTION>
 <MACRO>
 <NAME>GST_TYPE_ASYNCDISKSRC</NAME>
@@ -1779,6 +2126,12 @@ struct GstAsyncDiskSrc {
   gulong seq;				/* buffer sequence number */
 };
 </STRUCT>
+<STRUCT>
+<NAME>GstAsyncDiskSrcClass</NAME>
+struct GstAsyncDiskSrcClass {
+  GstSrcClass parent_class;
+};
+</STRUCT>
 <FUNCTION>
 <NAME>gst_asyncdisksrc_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -1807,8 +2160,14 @@ void
 <MACRO>
 <NAME>GST_IS_AUDIOSINK_CLASS</NAME>
 #define GST_IS_AUDIOSINK_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOSINK)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOSINK))
 </MACRO>
+<ENUM>
+<NAME>GstAudioSinkFlags</NAME>
+typedef enum {
+  GST_AUDIOSINK_OPEN		= (1 << 16),
+} GstAudioSinkFlags;
+</ENUM>
 <STRUCT>
 <NAME>GstAudioSink</NAME>
 </STRUCT>
@@ -1822,7 +2181,7 @@ struct GstAudioSink {
 
   GstPad *sinkpad;
 
-  GstClockTime clocktime;
+  //GstClockTime clocktime;
   GstClock *clock;
   /* soundcard state */
   int fd;
@@ -1830,12 +2189,27 @@ struct GstAudioSink {
   gint format;
   gint channels;
   gint frequency;
+  gboolean mute;
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstAudioSinkClass</NAME>
+struct GstAudioSinkClass {
+  GstSinkClass parent_class;
+
+  /* signals */
+  void (*handoff) (GstElement *element,GstPad *pad);
 };
 </STRUCT>
 <FUNCTION>
 <NAME>gst_audiosink_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
 void
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_audiosink_factory_init</NAME>
+<RETURNS>gboolean  </RETURNS>
+GstElementFactory *factory
 </FUNCTION>
 <MACRO>
 <NAME>GST_TYPE_AUDIOSRC</NAME>
@@ -1862,6 +2236,12 @@ void
 #define GST_IS_AUDIOSRC_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOSRC)))
 </MACRO>
+<ENUM>
+<NAME>GstAudioSrcFlags</NAME>
+typedef enum {
+  GST_AUDIOSRC_OPEN		= (1 < 16),
+} GstAudioSrcFlags;
+</ENUM>
 <STRUCT>
 <NAME>GstAudioSrc</NAME>
 </STRUCT>
@@ -1893,11 +2273,21 @@ struct GstAudioSrc {
   MetaAudioRaw *meta;
 };
 </STRUCT>
+<STRUCT>
+<NAME>GstAudioSrcClass</NAME>
+struct GstAudioSrcClass {
+  GstSrcClass parent_class;
+};
+</STRUCT>
 <FUNCTION>
 <NAME>gst_audiosrc_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
 void
 </FUNCTION>
+<VARIABLE>
+<NAME>gst_disksrc_details</NAME>
+extern GstElementDetails gst_disksrc_details;
+</VARIABLE>
 <MACRO>
 <NAME>GST_TYPE_DISKSRC</NAME>
 #define GST_TYPE_DISKSRC \
@@ -1921,7 +2311,7 @@ void
 <MACRO>
 <NAME>GST_IS_DISKSRC_CLASS</NAME>
 #define GST_IS_DISKSRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_DISKSRC)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_DISKSRC))
 </MACRO>
 <ENUM>
 <NAME>GstDiskSrcFlags</NAME>
@@ -1942,15 +2332,22 @@ struct GstDiskSrc {
   /* pads */
   GstPad *srcpad;
 
-  /* filename */
+  /* file state */
   gchar *filename;
-  /* fd */
   gint fd;
 
   gulong curoffset;			/* current offset in file */
   gulong bytes_per_read;		/* bytes per read */
+  gboolean new_seek;
 
   gulong seq;				/* buffer sequence number */
+  gulong size;				
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstDiskSrcClass</NAME>
+struct GstDiskSrcClass {
+  GstSrcClass parent_class;
 };
 </STRUCT>
 <FUNCTION>
@@ -2004,6 +2401,15 @@ struct GstEsdSink {
   gint frequency;
 };
 </STRUCT>
+<STRUCT>
+<NAME>GstEsdSinkClass</NAME>
+struct GstEsdSinkClass {
+  GstFilterClass parent_class;
+
+  /* signals */
+  void (*handoff) (GstElement *element,GstPad *pad);
+};
+</STRUCT>
 <FUNCTION>
 <NAME>gst_esdsink_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -2046,6 +2452,12 @@ struct GstFakeSink {
   GstSink sink;
 
   GstPad *sinkpad;
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstFakeSinkClass</NAME>
+struct GstFakeSinkClass {
+  GstSinkClass parent_class;
 };
 </STRUCT>
 <FUNCTION>
@@ -2092,6 +2504,12 @@ struct GstFakeSrc {
   GstPad *srcpad;
 };
 </STRUCT>
+<STRUCT>
+<NAME>GstFakeSrcClass</NAME>
+struct GstFakeSrcClass {
+  GstSrcClass parent_class;
+};
+</STRUCT>
 <FUNCTION>
 <NAME>gst_fakesrc_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -2136,6 +2554,12 @@ struct GstFdSink {
   GstPad *sinkpad;
 
   int fd;
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstFdSinkClass</NAME>
+struct GstFdSinkClass {
+  GstSinkClass parent_class;
 };
 </STRUCT>
 <FUNCTION>
@@ -2190,6 +2614,12 @@ struct GstFdSrc {
   gulong seq;				/* buffer sequence number */
 };
 </STRUCT>
+<STRUCT>
+<NAME>GstFdSrcClass</NAME>
+struct GstFdSrcClass {
+  GstSrcClass parent_class;
+};
+</STRUCT>
 <FUNCTION>
 <NAME>gst_fdsrc_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -2220,6 +2650,12 @@ void
 #define GST_IS_HTTPSRC_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_HTTPSRC)))
 </MACRO>
+<ENUM>
+<NAME>GstHttpSrcFlags</NAME>
+typedef enum {
+  GST_HTTPSRC_OPEN		= (1 << 16),
+} GstHttpSrcFlags;
+</ENUM>
 <STRUCT>
 <NAME>GstHttpSrc</NAME>
 </STRUCT>
@@ -2239,6 +2675,12 @@ struct GstHttpSrc {
 
   gulong curoffset;			/* current offset in file */
   gulong bytes_per_read;		/* bytes per read */
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstHttpSrcClass</NAME>
+struct GstHttpSrcClass {
+  GstSrcClass parent_class;
 };
 </STRUCT>
 <FUNCTION>
@@ -2288,6 +2730,12 @@ struct GstIdentity {
   gint control;
 };
 </STRUCT>
+<STRUCT>
+<NAME>GstIdentityClass</NAME>
+struct GstIdentityClass {
+  GstFilterClass parent_class;
+};
+</STRUCT>
 <FUNCTION>
 <NAME>gst_identity_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
@@ -2316,7 +2764,7 @@ void
 <MACRO>
 <NAME>GST_IS_QUEUE_CLASS</NAME>
 #define GST_IS_QUEUE_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_QUEUE)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_QUEUE))
 </MACRO>
 <STRUCT>
 <NAME>GstQueue</NAME>
@@ -2346,6 +2794,12 @@ struct GstQueue {
   GCond *emptycond;
   GMutex *fulllock;	/* used when the queue is full */
   GCond *fullcond;
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstQueueClass</NAME>
+struct GstQueueClass {
+  GstConnectionClass parent_class;
 };
 </STRUCT>
 <FUNCTION>
@@ -2401,17 +2855,90 @@ struct GstSineSrc {
   gint channels;
   gint frequency;
 
-  /* state */
-  double mTheta;
-
   gulong seq;
 
   MetaAudioRaw meta;
   gboolean sentmeta;
 };
 </STRUCT>
+<STRUCT>
+<NAME>GstSineSrcClass</NAME>
+struct GstSineSrcClass {
+  GstSrcClass parent_class;
+};
+</STRUCT>
 <FUNCTION>
 <NAME>gst_sinesrc_get_type</NAME>
+<RETURNS>GtkType  </RETURNS>
+void
+</FUNCTION>
+<MACRO>
+<NAME>GST_TYPE_PIPEFILTER</NAME>
+#define GST_TYPE_PIPEFILTER \
+  (gst_pipefilter_get_type())
+</MACRO>
+<MACRO>
+<NAME>GST_PIPEFILTER</NAME>
+#define GST_PIPEFILTER(obj) \
+  (GTK_CHECK_CAST((obj),GST_TYPE_PIPEFILTER,GstPipefilter))
+</MACRO>
+<MACRO>
+<NAME>GST_PIPEFILTER_CLASS</NAME>
+#define GST_PIPEFILTER_CLASS(klass) \
+  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_PIPEFILTER,GstPipefilterClass))
+</MACRO>
+<MACRO>
+<NAME>GST_IS_PIPEFILTER</NAME>
+#define GST_IS_PIPEFILTER(obj) \
+  (GTK_CHECK_TYPE((obj),GST_TYPE_PIPEFILTER))
+</MACRO>
+<MACRO>
+<NAME>GST_IS_PIPEFILTER_CLASS</NAME>
+#define GST_IS_PIPEFILTER_CLASS(obj) \
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_PIPEFILTER))
+</MACRO>
+<ENUM>
+<NAME>GstPipeFilterFlags</NAME>
+typedef enum {
+  GST_PIPEFILTER_OPEN		= (1 << 16 ),
+} GstPipeFilterFlags;
+</ENUM>
+<STRUCT>
+<NAME>GstPipefilter</NAME>
+</STRUCT>
+<STRUCT>
+<NAME>GstPipefilterClass</NAME>
+</STRUCT>
+<STRUCT>
+<NAME>GstPipefilter</NAME>
+struct GstPipefilter {
+  GstFilter filter;
+
+  GstPad *sinkpad;
+  GstPad *srcpad;
+
+  /* command */
+  gchar **command;
+  gchar *orig_command;
+  /* fd */
+  gint fdout[2];
+  gint fdin[2];
+  pid_t   childpid;
+
+  gulong curoffset;                     /* current offset in file */
+  gulong bytes_per_read;                /* bytes per read */
+
+  gulong seq;                           /* buffer sequence number */
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstPipefilterClass</NAME>
+struct GstPipefilterClass {
+  GstFilterClass parent_class;
+};
+</STRUCT>
+<FUNCTION>
+<NAME>gst_pipefilter_get_type</NAME>
 <RETURNS>GtkType  </RETURNS>
 void
 </FUNCTION>
@@ -2503,7 +3030,7 @@ struct MetaVideoRaw {
   GstMeta meta;
 
   /* formatting information */
-  gint format;
+  GstColorSpaceType format;
   GdkVisual *visual;
   // dimensions of the video buffer
   gint width;

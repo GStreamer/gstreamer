@@ -84,3 +84,12 @@ Utility functions
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_util_dump_mem ##### -->
+<para>
+
+</para>
+
+@mem: 
+@size: 
+
+

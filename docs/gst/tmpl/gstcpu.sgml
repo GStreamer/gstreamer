@@ -1,0 +1,42 @@
+<!-- ##### SECTION Title ##### -->
+GstCpu
+
+<!-- ##### SECTION Short_Description ##### -->
+
+Request the features of the CPU.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+This module can be used when developing plugins. It is
+typically used to enable special optimisations based on the
+features of the CPU.
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_CPU_FLAG_MMX ##### -->
+<para>
+A flag indicating that MMX instructions are supported.
+</para>
+
+
+
+<!-- ##### MACRO GST_CPU_FLAG_SSE ##### -->
+<para>
+A flag indicating that SSE instructions are supported.
+</para>
+
+
+
+<!-- ##### FUNCTION gst_cpu_get_flags ##### -->
+<para>
+Request a set of bits specifiying the features of the CPU.
+</para>
+
+@Returns: the features of the CPU
+
+

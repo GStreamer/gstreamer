@@ -22,3 +22,23 @@ The buffer is sent to the sound card.
 @gstaudiosink: the object which received the signal.
 @arg1: the audiosink.
 
+<!-- ##### ARG GstAudioSink:mute ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstAudioSink:format ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstAudioSink:channels ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstAudioSink:frequency ##### -->
+<para>
+
+</para>
+

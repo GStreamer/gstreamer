@@ -58,8 +58,10 @@ valid mp3 decoder, and thus the whole point of the type system.
 </para>
 
 @buf: 
-@private: 
+@priv: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@private: 
 
 
 <!-- ##### STRUCT GstType ##### -->
@@ -151,6 +153,61 @@ valid mp3 decoder, and thus the whole point of the type system.
 
 </para>
 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_save_thyself ##### -->
+<para>
+
+</para>
+
+@type: 
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_get_sink_to_src ##### -->
+<para>
+
+</para>
+
+@sinkid: 
+@srcid: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_dump ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_type_load_thyself ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_typefactory_load_thyself ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_typefactory_save_thyself ##### -->
+<para>
+
+</para>
+
+@factory: 
+@parent: 
 @Returns: 
 
 

@@ -39,6 +39,20 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 @argv: 
 
 
+<!-- ##### FUNCTION gst_main ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_main_quit ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### MACRO DEBUG ##### -->
 <para>
 Use this macro to show debugging info. This is only usefull when developing new

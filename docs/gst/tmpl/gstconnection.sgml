@@ -2,11 +2,12 @@
 GstConnection
 
 <!-- ##### SECTION Short_Description ##### -->
-Passes buffers between elements.
+Generic connection between elements.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Passes buffers between elements.
+A connection is a bas class for a generic connection between
+elements. A connection is typically a bas class for queues.
 
 </para>
 

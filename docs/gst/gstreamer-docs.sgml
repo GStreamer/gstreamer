@@ -5,6 +5,7 @@
 <!entity GstBin SYSTEM "sgml/gstbin.sgml">
 <!entity GstBuffer SYSTEM "sgml/gstbuffer.sgml">
 <!entity GstConnection SYSTEM "sgml/gstconnection.sgml">
+<!entity GstCpu SYSTEM "sgml/gstcpu.sgml">
 <!entity GstElement SYSTEM "sgml/gstelement.sgml">
 <!entity GstFilter SYSTEM "sgml/gstfilter.sgml">
 <!entity GstLog SYSTEM "sgml/gstlog.sgml">
@@ -37,6 +38,7 @@
 <!entity GstFdSink SYSTEM "sgml/gstfdsink.sgml">
 
 <!entity GstIdentity SYSTEM "sgml/gstidentity.sgml">
+<!entity GstPipefilter SYSTEM "sgml/gstpipefilter.sgml">
 <!entity GstQueue SYSTEM "sgml/gstqueue.sgml">
 
 <!entity audioraw SYSTEM "sgml/audioraw.sgml">
@@ -77,6 +79,7 @@ with some more specialized elements.</para>
     &GstType;
     &GstMeta;
     &GstUtils;
+    &GstCpu;
     &GstTrace;
     &GstXml;
   </chapter>
@@ -127,6 +130,7 @@ with some more specialized elements.</para>
     &GstAudioSink;
     &GstFdSink;
 
+    &GstPipefilter;
     &GstIdentity;
     &GstQueue;
   </chapter>

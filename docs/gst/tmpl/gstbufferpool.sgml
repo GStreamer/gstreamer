@@ -1,0 +1,104 @@
+<!-- ##### SECTION Title ##### -->
+gstbufferpool
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_BUFFER_POOL ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### STRUCT GstBufferPool ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### USER_FUNCTION GstBufferPoolCreateFunction ##### -->
+<para>
+
+</para>
+
+@pool: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GstBufferPoolDestroyFunction ##### -->
+<para>
+
+</para>
+
+@pool: 
+@buffer: 
+@user_data: 
+
+
+<!-- ##### FUNCTION gst_buffer_pool_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_pool_new_buffer ##### -->
+<para>
+
+</para>
+
+@pool: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_pool_destroy_buffer ##### -->
+<para>
+
+</para>
+
+@pool: 
+@buffer: 
+
+
+<!-- ##### FUNCTION gst_buffer_pool_set_create_function ##### -->
+<para>
+
+</para>
+
+@pool: 
+@create: 
+@user_data: 
+
+
+<!-- ##### FUNCTION gst_buffer_pool_set_destroy_function ##### -->
+<para>
+
+</para>
+
+@pool: 
+@destroy: 
+@user_data: 
+
+
+<!-- ##### FUNCTION gst_buffer_pool_destroy ##### -->
+<para>
+
+</para>
+
+@pool: 
+
+

@@ -24,6 +24,7 @@
 <!ENTITY XML SYSTEM "xml.sgml">
 <!ENTITY PLUGINS SYSTEM "plugins.sgml">
 <!ENTITY PROGRAMS SYSTEM "programs.sgml">
+<!ENTITY COMPONENTS SYSTEM "components.sgml">
 ]>
 
 <book id="GStreamer">
@@ -195,6 +196,8 @@
     </partintro>
 
       &PROGRAMS;
+
+      &COMPONENTS;
 
   </part>
 </book>

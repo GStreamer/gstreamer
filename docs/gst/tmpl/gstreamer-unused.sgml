@@ -595,6 +595,14 @@ The frequency.
 
 @obj: 
 
+<!-- ##### MACRO GST_STATE_UNSET ##### -->
+<para>
+This macro unsets the given state on the element.
+</para>
+
+@obj: Element to unset state of.
+@flag: State to unset, can be any number of bits in guint32.
+
 <!-- ##### STRUCT GstDiskSrc ##### -->
 <para>
 
@@ -712,6 +720,14 @@ The frequency.
 
 </para>
 
+
+<!-- ##### MACRO GST_STATE_SET ##### -->
+<para>
+This macro sets the given state on the element.
+</para>
+
+@obj: Element to set state of.
+@flag: State to set, can be any number of bits in guint32.
 
 <!-- ##### MACRO GST_AUDIOSRC_CLASS ##### -->
 <para>
@@ -955,6 +971,14 @@ plugin
 
 @obj: 
 
+<!-- ##### MACRO GST_STATE_IS_SET ##### -->
+<para>
+This macro checks to see if the given state is set.
+</para>
+
+@obj: Element to check for state.
+@flag: State to check for, must be a single bit in guint32.
+
 <!-- ##### MACRO GST_IS_SINESRC ##### -->
 <para>
 
@@ -1068,6 +1092,15 @@ plugin
 
 </para>
 
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_change_state ##### -->
+<para>
+
+</para>
+
+@element: 
+@state: 
 @Returns: 
 
 <!-- ##### MACRO GST_FAKESRC_CLASS ##### -->
