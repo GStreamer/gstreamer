@@ -81,7 +81,7 @@ else
 fi
 
 dnl fix pkg-config's broken default search path
-if test -z $PKG_CONFIG_PATH; then
+if test -z "$PKG_CONFIG_PATH"; then
   PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig
 fi
 export PKG_CONFIG_PATH
