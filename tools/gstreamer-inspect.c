@@ -69,6 +69,31 @@ void print_props(GstProps *properties,gchar *pfx) {
   }
 }
 
+static void
+output_hierarchy (GType type, gint level, gint *maxlevel)
+{
+  GType parent;
+  gint i;
+
+  parent = g_type_parent (type);
+
+  *maxlevel = *maxlevel + 1;
+  level++;
+
+  if (parent)
+    output_hierarchy (parent, level, maxlevel);
+  
+  for (i=1; i<*maxlevel-level; i++)
+   g_print ("      ");
+  if (*maxlevel-level)
+    g_print (" +----");
+
+  g_print ("%s\n", g_type_name (type));
+	  
+  if (level == 1)
+    g_print ("\n");
+}
+
 gint
 print_element_info (GstElementFactory *factory)
 {
@@ -85,6 +110,7 @@ print_element_info (GstElementFactory *factory)
   GList *children;
   GstElement *child;
   gboolean have_flags;
+  gint maxlevel = 0;
 
   element = gst_elementfactory_create(factory,"element");
   if (!element) {
@@ -103,6 +129,8 @@ print_element_info (GstElementFactory *factory)
   printf("  Author(s):\t%s\n",factory->details->author);
   printf("  Copyright:\t%s\n",factory->details->copyright);
   printf("\n");
+
+  output_hierarchy (G_OBJECT_TYPE (element), 0, &maxlevel);
 
   printf("Pad Templates:\n");
   if (factory->numpadtemplates) {
@@ -305,19 +333,65 @@ print_element_info (GstElementFactory *factory)
     /*
   g_free (args);
   */
-  if (num_properties == 0) g_print ("  none");
-  printf("\n");
+  if (num_properties == 0) g_print ("  none\n");
 
+  {
+    guint *signals;
+    guint nsignals;
+    gint i;
+#ifdef USE_GLIB2
+    GSignalQuery query;
+#else
+    GtkSignalQuery *query;
+#endif
+
+    printf("\nElement Signals:\n");
+    
+    signals = g_signal_list_ids (G_OBJECT_TYPE (element), &nsignals);
+
+    for (i=0; i<nsignals; i++) {
+      gint n_params;
+      GType return_type;
+      const GType *param_types;
+      gint j;
+      
+#ifdef USE_GLIB2
+      g_signal_query (signals[i], &query);
+      n_params = query->n_params;
+      return_type = query->return_type;
+      param_types = query->param_types;
+#else
+      query = gtk_signal_query (signals[i]);
+      n_params = query->nparams;
+      return_type = query->return_val;
+      param_types = query->params;
+#endif
+
+      printf ("  \"%s\" :\t %s user_function (%s* object, \n", query->signal_name, g_type_name (return_type),
+		      g_type_name (G_OBJECT_TYPE (element)));
+
+      for (j=0; j<n_params; j++) {
+        printf ("    \t\t\t\t%s arg%d,\n", g_type_name (param_types[j]), j);
+      }
+      printf ("    \t\t\t\tgpointer user_data);\n");
+    }
+    if (nsignals == 0) g_print ("  none\n");
+  }
+  
 
   // for compound elements
   if (GST_IS_BIN(element)) {
     printf("\nChildren:\n");
     children = gst_bin_get_list(GST_BIN(element));
-    while (children) {
-      child = GST_ELEMENT (children->data);
-      children = g_list_next (children);
+    if (!children) 
+      g_print ("  none\n");
+    else {
+      while (children) {
+        child = GST_ELEMENT (children->data);
+        children = g_list_next (children);
 
-      g_print("  %s\n",GST_ELEMENT_NAME(child));
+        g_print("  %s\n",GST_ELEMENT_NAME(child));
+      }
     }
   }
 
