@@ -1,9 +1,5 @@
 2004-07-24  Steve Lhomme  <steve.lhomme at free dot fr>
 
-	* docs/gst/sgml/gstinfo.sgml:
-	Try to remove the need for GST_CAT_DEFAULT (text moved)
-
-2004-07-24  Steve Lhomme  <steve.lhomme at free dot fr>
 
 	* win32/gstreamer.def:
 	More exports for the plugins
