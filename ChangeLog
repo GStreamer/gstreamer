@@ -1,3 +1,8 @@
+2004-02-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.c: (init_pre):
+          remove textdomain
+
 2004-02-02  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/advanced-events.xml:

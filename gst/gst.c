@@ -403,7 +403,6 @@ init_pre (void)
 #ifdef ENABLE_NLS
   setlocale (LC_ALL, "");
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
-  textdomain (GETTEXT_PACKAGE);
 #endif /* ENABLE_NLS */
 
 #ifndef GST_DISABLE_REGISTRY
