@@ -1,3 +1,8 @@
+2004-10-30  David Schleef  <ds@schleef.org>
+
+	* gst/typefind/gsttypefindfunctions.c: (qt_type_find): Make
+	  quicktime typefinding work with 64-bit offsets.
+
 2004-10-30  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/dv/gstdvdec.c: (gst_dvdec_handle_sink_event):
