@@ -862,6 +862,7 @@ gst_mpeg2dec_get_src_event_masks (GstPad *pad)
 {
   static const GstEventMask masks[] = {
     { GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH },
+    { GST_EVENT_NAVIGATION, GST_EVENT_FLAG_NONE },
     { 0, }
   };
   return masks;
@@ -1012,6 +1013,9 @@ gst_mpeg2dec_src_event (GstPad *pad, GstEvent *event)
           mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
       }
       break;
+    case GST_EVENT_NAVIGATION:
+      /* Forward a navigation event unchanged */
+      return gst_pad_send_event (GST_PAD_PEER (mpeg2dec->sinkpad), event);
     default:
       res = FALSE;
       break;

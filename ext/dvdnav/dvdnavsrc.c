@@ -260,7 +260,7 @@ dvdnavsrc_class_init (DVDNavSrcClass *klass)
                      0,99,1,G_PARAM_READWRITE));
   g_object_class_install_property(gobject_class, ARG_CHAPTER,
     g_param_spec_int("chapter", "chapter", "chapter",
-                     1,99,1,G_PARAM_READWRITE));
+                     0,99,1,G_PARAM_READWRITE));
   g_object_class_install_property(gobject_class, ARG_ANGLE,
     g_param_spec_int("angle", "angle", "angle",
                      1,9,1,G_PARAM_READWRITE));
@@ -546,14 +546,27 @@ dvdnavsrc_update_buttoninfo (DVDNavSrc *src)
   pci_t *pci;
 
   pci = dvdnav_get_current_nav_pci(src->dvdnav);
-  fprintf(stderr, "update button info total:%d\n", pci->hli.hl_gi.btn_ns);
 
-  caps = gst_caps_new_simple ("dvdnavsrc_buttoninfo",
-      "application/x-gst-dvdnavsrc-buttoninfo",
-      "total", G_TYPE_INT, pci->hli.hl_gi.btn_ns, NULL);
   if (src->buttoninfo) {
-    gst_caps_free (src->buttoninfo);
+    gint btn_ns;
+
+    /* Don't notify if there is no actual change */
+    if (gst_structure_get_int (gst_caps_get_structure (src->buttoninfo, 0),
+			       "total", &btn_ns) 
+        && (btn_ns == pci->hli.hl_gi.btn_ns))
+    {
+      return;
+    }
   }
+
+  caps = gst_caps_new_simple (
+      "application/x-gst-dvdnavsrc-buttoninfo",
+      "total", G_TYPE_INT, (gint) pci->hli.hl_gi.btn_ns, 
+      NULL);
+
+  if (src->buttoninfo)
+    gst_caps_free (src->buttoninfo);
+
   src->buttoninfo = caps;
   g_object_notify (G_OBJECT (src), "buttoninfo");
 }
@@ -879,19 +892,38 @@ dvdnavsrc_get (GstPad *pad)
         dvdnavsrc_update_streaminfo (src);
         break;
       case DVDNAV_NAV_PACKET:
-        if (0) dvdnavsrc_update_buttoninfo (src);
+        dvdnavsrc_update_buttoninfo (src);
         break;
       case DVDNAV_WAIT:
 	/* FIXME: supposed to make sure all the data has made 
 	 * it to the sinks before skipping the wait
 	 */
+        dvdnavsrc_print_event (src, data, event, len);
         dvdnav_wait_skip(src->dvdnav);
-      case DVDNAV_VTS_CHANGE:
-      case DVDNAV_SPU_STREAM_CHANGE:
-      case DVDNAV_AUDIO_STREAM_CHANGE:
-      case DVDNAV_HIGHLIGHT:
-      case DVDNAV_SPU_CLUT_CHANGE:
+	break;
       case DVDNAV_HOP_CHANNEL:
+	/* Indicates a time discontinuity, and the downstream should
+	 * flush
+	 */
+        dvdnavsrc_print_event (src, data, event, len);
+        buf = GST_BUFFER (gst_event_new (GST_EVENT_DISCONTINUOUS));
+        have_buf = TRUE;
+	break;
+      case DVDNAV_HIGHLIGHT:
+        dvdnavsrc_print_event (src, data, event, len);
+	break;
+
+	/* SPU_STREAM_CHANGE provides MPEG stream numbers for different
+	 * formats of the video, eg letterbox/pan&scan
+	 */
+      case DVDNAV_SPU_STREAM_CHANGE:
+	/* AUDIO_STREAM_CHANGE indicates that the user selected an alternate
+	 * audio stream (from a menu)
+	 */
+      case DVDNAV_AUDIO_STREAM_CHANGE:
+	/* VTS_CHANGE Indicates a change in VTS (Video Title Set) */ 
+      case DVDNAV_VTS_CHANGE:
+      case DVDNAV_SPU_CLUT_CHANGE:
       default:
         dvdnavsrc_print_event (src, data, event, len);
         break;
@@ -1036,10 +1068,48 @@ dvdnavsrc_get_event_mask (GstPad *pad)
 	                     GST_SEEK_METHOD_END | 
 		             GST_SEEK_FLAG_FLUSH },
                              */
+    {GST_EVENT_NAVIGATION, GST_EVENT_FLAG_NONE },
     {0,}
   };
 
   return masks;
+}
+
+static gboolean
+dvdnav_handle_navigation_event (DVDNavSrc *src, GstEvent *event)
+{
+  GstStructure *structure = event->event_data.structure.structure;
+  const char *event_type = gst_structure_get_string (structure, "event");
+
+  g_return_val_if_fail (event != NULL, FALSE);
+	
+  if (strcmp (event_type, "key-press") == 0) 
+  {
+    const char *key = gst_structure_get_string(structure, "key");
+
+    g_assert (key != NULL);
+    g_print ("dvdnavsrc got a keypress: %s\n", key);
+  }
+  else if (strcmp (event_type, "mouse-move") == 0) 
+  {
+    double x, y;
+
+    gst_structure_get_double(structure, "pointer_x", &x);
+    gst_structure_get_double(structure, "pointer_y", &y);
+
+    dvdnavsrc_pointer_select (src, (int) x, (int) y);	
+  }
+  else if (strcmp (event_type, "mouse-button-release") == 0) 
+  {
+    double x, y;
+
+    gst_structure_get_double(structure, "pointer_x", &x);
+    gst_structure_get_double(structure, "pointer_y", &y);
+
+    dvdnavsrc_pointer_activate (src, (int) x, (int) y);	
+  }
+
+  return TRUE;
 }
 
 static gboolean
@@ -1169,6 +1239,8 @@ dvdnavsrc_event (GstPad *pad, GstEvent *event)
       src->need_flush = GST_EVENT_SEEK_FLAGS(event) & GST_SEEK_FLAG_FLUSH;
       break;
     }
+    case GST_EVENT_NAVIGATION:
+      res = dvdnav_handle_navigation_event (src, event);
     case GST_EVENT_FLUSH:
       src->need_flush = TRUE;
       break;

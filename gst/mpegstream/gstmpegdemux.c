@@ -1141,12 +1141,17 @@ gst_mpeg_demux_handle_src_event (GstPad *pad, GstEvent *event)
         GstEvent *new_event;
 
         new_event = gst_event_new_seek (GST_EVENT_SEEK_TYPE (event), desired_offset);
-        gst_event_unref (event);
         res = gst_mpeg_parse_handle_src_event (pad, new_event);
       }
+      gst_event_unref (event);
       break;
     }
+    case GST_EVENT_NAVIGATION:
+      return gst_pad_send_event (GST_PAD_PEER (GST_MPEG_PARSE (mpeg_demux)->sinkpad),  
+	 	                 event);
+      break; 
     default:
+      gst_event_unref (event);
       break;
   } 
   return res;
