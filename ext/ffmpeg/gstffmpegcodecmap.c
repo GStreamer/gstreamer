@@ -168,6 +168,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = GST_FF_VID_CAPS_NEW ("video/x-h263", NULL);
       break;
 
+    case CODEC_ID_H261:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-h261", NULL);
+      break;
+
     case CODEC_ID_RV10:
     case CODEC_ID_RV20:
       do {
@@ -237,7 +241,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_MJPEGB:
     case CODEC_ID_LJPEG:
     case CODEC_ID_SP5X:
-      caps = GST_FF_VID_CAPS_NEW ("video/x-jpeg", NULL);
+      caps = GST_FF_VID_CAPS_NEW ("image/jpeg", NULL);
       break;
 
     case CODEC_ID_MPEG4:
@@ -456,6 +460,22 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_MSZH:
     case CODEC_ID_ZLIB:
     case CODEC_ID_QTRLE:
+    case CODEC_ID_SONIC:
+    case CODEC_ID_SONIC_LS:
+    case CODEC_ID_SNOW:
+    case CODEC_ID_TSCC:
+    case CODEC_ID_ULTI:
+    case CODEC_ID_QDRAW:
+    case CODEC_ID_VIXL:
+    case CODEC_ID_QPEG:
+    case CODEC_ID_XVID:
+    case CODEC_ID_PNG:
+    case CODEC_ID_PPM:
+    case CODEC_ID_PBM:
+    case CODEC_ID_PGM:
+    case CODEC_ID_PGMYUV:
+    case CODEC_ID_PAM:
+    case CODEC_ID_FFVHUFF:
       buildcaps = TRUE;
       break;
 
@@ -540,6 +560,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_ADPCM_ADX:
     case CODEC_ID_ADPCM_EA:
     case CODEC_ID_ADPCM_G726:
+    case CODEC_ID_ADPCM_CT:
       do {
         gchar *layout = NULL;
 
@@ -580,6 +601,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           case CODEC_ID_ADPCM_G726:
             layout = "g726";
             break;
+          case CODEC_ID_ADPCM_CT:
+            layout = "ct";
+            break;
           default:
             g_assert (0);       /* don't worry, we never get here */
             break;
@@ -617,6 +641,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_ROQ_DPCM:
     case CODEC_ID_INTERPLAY_DPCM:
     case CODEC_ID_XAN_DPCM:
+    case CODEC_ID_SOL_DPCM:
       do {
         gchar *layout = NULL;
 
@@ -629,6 +654,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
             break;
           case CODEC_ID_XAN_DPCM:
             layout = "xan";
+            break;
+          case CODEC_ID_SOL_DPCM:
+            layout = "sol";
             break;
           default:
             g_assert (0);       /* don't worry, we never get here */
@@ -1353,6 +1381,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "video/x-h263")) {
     id = CODEC_ID_H263;         /* or H263[IP] */
     video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-h261")) {
+    id = CODEC_ID_H261;
+    video = TRUE;
   } else if (!strcmp (mimetype, "video/mpeg")) {
     gboolean sys_strm;
     gint mpegversion;
@@ -1374,7 +1405,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     }
     if (id != CODEC_ID_NONE)
       video = TRUE;
-  } else if (!strcmp (mimetype, "video/x-jpeg")) {
+  } else if (!strcmp (mimetype, "image/jpeg")) {
     id = CODEC_ID_MJPEG;        /* A... B... */
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-wmv")) {
@@ -1564,6 +1595,8 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       id = CODEC_ID_ADPCM_EA;
     } else if (!strcmp (layout, "g726")) {
       id = CODEC_ID_ADPCM_G726;
+    } else if (!strcmp (layout, "ct")) {
+      id = CODEC_ID_ADPCM_CT;
     }
     if (id != CODEC_ID_NONE)
       audio = TRUE;
@@ -1582,6 +1615,8 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       id = CODEC_ID_INTERPLAY_DPCM;
     } else if (!strcmp (layout, "xan")) {
       id = CODEC_ID_XAN_DPCM;
+    } else if (!strcmp (layout, "sol")) {
+      id = CODEC_ID_SOL_DPCM;
     }
     if (id != CODEC_ID_NONE)
       audio = TRUE;
@@ -1656,9 +1691,6 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
         sscanf (mimetype, "%*s/x-gst_ff-%s", ext) == 1) {
       if ((codec = avcodec_find_decoder_by_name (ext)) ||
           (codec = avcodec_find_encoder_by_name (ext))) {
-        const GValue *data_v;
-        const GstBuffer *data;
-
         id = codec->id;
         if (mimetype[0] == 'v')
           video = TRUE;
@@ -1704,6 +1736,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_H263:
       name = "H.263 video";
+      break;
+    case CODEC_ID_H261:
+      name = "H.261 video";
       break;
     case CODEC_ID_RV10:
       name = "Realvideo 1.0";
@@ -1886,6 +1921,54 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
     case CODEC_ID_QTRLE:
       name = "Quicktime RLE animation video";
       break;
+    case CODEC_ID_SONIC:
+      name = "Sonic audio";
+      break;
+    case CODEC_ID_SONIC_LS:
+      name = "Sonic lossless audio";
+      break;
+    case CODEC_ID_SNOW:
+      name = "Snow wave video";
+      break;
+    case CODEC_ID_TSCC:
+      name = "Techsmith Camtasia video";
+      break;
+    case CODEC_ID_ULTI:
+      name = "Ultimotion video";
+      break;
+    case CODEC_ID_QDRAW:
+      name = "Applet Quickdraw video";
+      break;
+    case CODEC_ID_VIXL:
+      name = "Miro VideoXL";
+      break;
+    case CODEC_ID_QPEG:
+      name = "QPEG video";
+      break;
+    case CODEC_ID_XVID:
+      name = "XviD video";
+      break;
+    case CODEC_ID_PNG:
+      name = "PNG image";
+      break;
+    case CODEC_ID_PPM:
+      name = "PPM image";
+      break;
+    case CODEC_ID_PBM:
+      name = "PBM image";
+      break;
+    case CODEC_ID_PGM:
+      name = "PGM image";
+      break;
+    case CODEC_ID_PGMYUV:
+      name = "PGM-YUV image";
+      break;
+    case CODEC_ID_PAM:
+      name = "PAM image";
+      break;
+    case CODEC_ID_FFVHUFF:
+      name = "FFMPEG non-compliant Huffyuv video";
+      break;
     case CODEC_ID_PCM_MULAW:
       name = "Mu-law audio";
       break;
@@ -1928,6 +2011,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
     case CODEC_ID_ADPCM_G726:
       name = "G.726 ADPCM";
       break;
+    case CODEC_ID_ADPCM_CT:
+      name = "CT ADPCM";
+      break;
     case CODEC_ID_RA_144:
       name = "Realaudio 14k4bps";
       break;
@@ -1942,6 +2028,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_XAN_DPCM:
       name = "XAN DPCM audio";
+      break;
+    case CODEC_ID_SOL_DPCM:
+      name = "SOL DPCM audio";
       break;
     case CODEC_ID_FLAC:
       name = "FLAC lossless audio";
@@ -2158,6 +2247,7 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
   PixFmtInfo *pinfo;
 
   pinfo = &pix_fmt_info[pix_fmt];
+
   switch (pix_fmt) {
     case PIX_FMT_YUV420P:
     case PIX_FMT_YUV422P:
@@ -2190,6 +2280,8 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
       picture->data[2] = NULL;
       picture->linesize[0] = stride;
       return size;
+    /*case PIX_FMT_AYUV4444:
+    case PIX_FMT_RGB32:*/
     case PIX_FMT_RGBA32:
       stride = width * 4;
       size = stride * height;
@@ -2201,6 +2293,7 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
     case PIX_FMT_RGB555:
     case PIX_FMT_RGB565:
     case PIX_FMT_YUV422:
+    case PIX_FMT_UYVY422:
       stride = ROUND_UP_4 (width * 2);
       size = stride * height;
       picture->data[0] = ptr;
@@ -2208,6 +2301,15 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
       picture->data[2] = NULL;
       picture->linesize[0] = stride;
       return size;
+    case PIX_FMT_UYVY411:
+      /* FIXME, probably not the right stride */
+      stride = ROUND_UP_4 (width);
+      size = stride * height;
+      picture->data[0] = ptr;
+      picture->data[1] = NULL;
+      picture->data[2] = NULL;
+      picture->linesize[0] = width + width / 2;
+      return size + size / 2;
     case PIX_FMT_GRAY8:
       stride = ROUND_UP_4 (width);
       size = stride * height;

@@ -390,6 +390,7 @@ gst_ffmpegmux_loop (GstElement * element)
    * no buffers left */
   if (bufnum >= 0) {
     GstBuffer *buf;
+    AVPacket pkt;
 
     /* push out current buffer */
     buf = ffmpegmux->bufferqueue[bufnum];
@@ -398,11 +399,18 @@ gst_ffmpegmux_loop (GstElement * element)
     ffmpegmux->context->streams[bufnum]->codec.frame_number++;
 
     /* set time */
-    ffmpegmux->context->streams[bufnum]->pts.val =
-        (GST_BUFFER_TIMESTAMP (buf) * 90) / 1000000;
-    av_write_frame (ffmpegmux->context, bufnum, GST_BUFFER_DATA (buf),
-        GST_BUFFER_SIZE (buf));
-    //ffmpegmux->context->streams[bufnum]->codec.real_pict_num++;
+    pkt.pts = GST_BUFFER_TIMESTAMP (buf) * AV_TIME_BASE / GST_SECOND;
+    pkt.data = GST_BUFFER_DATA (buf);
+    pkt.size = GST_BUFFER_SIZE (buf);
+    pkt.stream_index = bufnum;
+    pkt.flags = 0;
+    if (GST_BUFFER_FLAGS (buf) & GST_BUFFER_KEY_UNIT)
+       pkt.flags |= PKT_FLAG_KEY;
+    if (GST_BUFFER_DURATION_IS_VALID (buf))
+      pkt.duration = GST_BUFFER_DURATION (buf) * AV_TIME_BASE / GST_SECOND;
+    else
+      pkt.duration = 0;
+    av_write_frame (ffmpegmux->context, &pkt);
     gst_buffer_unref (buf);
   } else {
     /* close down */

@@ -133,23 +133,21 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
         g_warning ("gstffmpegprotocol: no bytestream event");
         return total;
       }
-      have_event = TRUE;
       switch (GST_EVENT_TYPE (event)) {
         case GST_EVENT_DISCONTINUOUS:
-          gst_bytestream_flush_fast (bs, remaining);
           gst_event_unref (event);
           break;
         case GST_EVENT_EOS:
           g_warning ("Unexpected/unwanted eos in data function");
           info->eos = TRUE;
-          have_event = FALSE;
+          have_event = TRUE;
           gst_event_unref (event);
           break;
         case GST_EVENT_FLUSH:
           gst_event_unref (event);
           break;
         case GST_EVENT_INTERRUPT:
-          have_event = FALSE;
+          have_event = TRUE;
           gst_event_unref (event);
           break;
         default:
@@ -194,14 +192,21 @@ gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
 
   info = (GstProtocolInfo *) h->priv_data;
 
+  /* get data (typefind hack) */
+  if (gst_bytestream_tell (info->bs) != gst_bytestream_length (info->bs)) {
+    //gchar buf;
+    //gst_ffmpegdata_read (h, &buf, 1);
+    //peek!!!!! not read = data loss if not seekable
+  }
+
   /* hack in ffmpeg to get filesize... */
   if (whence == SEEK_END && pos == -1)
     return gst_bytestream_length (info->bs) - 1;
   /* another hack to get the current position... */
   else if (whence == SEEK_CUR && pos == 0)
     return gst_bytestream_tell (info->bs);
-  else
-    g_assert (pos >= 0);
+  //else
+    //g_assert (pos >= 0);
 
   switch (whence) {
     case SEEK_SET:

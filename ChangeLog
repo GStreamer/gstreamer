@@ -1,5 +1,20 @@
 2004-12-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_to_codecid), (gst_ffmpeg_get_codecid_longname),
+	(gst_ffmpeg_avpicture_fill):
+	  Add new codecIDs from new snapshot (Thu Dec 16 11:27:18 2004).
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_src_event),
+	(gst_ffmpegdemux_type_find), (gst_ffmpegdemux_loop):
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_loop):
+	  API updates.
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_read),
+	(gst_ffmpegdata_seek):
+	  A slightly smarter approach, but it still needs lost of work to
+	  be reliable in any way...
+
+2004-12-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),
 	(gst_ffmpegdec_close), (gst_ffmpegdec_connect),
 	(gst_ffmpegdec_negotiate), (gst_ffmpegdec_chain):

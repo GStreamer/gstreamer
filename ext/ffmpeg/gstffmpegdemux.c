@@ -308,7 +308,7 @@ gst_ffmpegdemux_src_event (GstPad * pad, GstEvent * event)
           /* fall-through */
         case GST_FORMAT_TIME:
           if (av_seek_frame (demux->context, stream->index,
-                  offset / (GST_SECOND / AV_TIME_BASE)))
+                  offset / (GST_SECOND / AV_TIME_BASE) , 0))
             res = FALSE;
           break;
         default:
@@ -552,7 +552,7 @@ gst_ffmpegdemux_type_find (GstTypeFind * tf, gpointer priv)
 
     res = in_plugin->read_probe (&probe_data);
     if (res > 0) {
-      res = MAX (1, res * GST_TYPE_FIND_POSSIBLE / AVPROBE_SCORE_MAX);
+      res = MAX (1, res * GST_TYPE_FIND_MAXIMUM / AVPROBE_SCORE_MAX);
       gst_type_find_suggest (tf, res, params->sinkcaps);
     }
   }
@@ -571,6 +571,7 @@ gst_ffmpegdemux_loop (GstElement * element)
     if (!gst_ffmpegdemux_open (demux))
       return;
     gst_element_no_more_pads (element);
+    return;
   }
 
   /* read a package */
@@ -600,8 +601,8 @@ gst_ffmpegdemux_loop (GstElement * element)
       }
     } while (!data);
 
-    gst_ffmpegdemux_close (demux);
     gst_pad_event_default (demux->sinkpad, GST_EVENT (data));
+    //gst_ffmpegdemux_close (demux);
 
     return;
   }
