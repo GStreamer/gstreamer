@@ -364,17 +364,11 @@ sink_restart:
     goto sink_restart;
   if (avail < 0)
     return;
-  if (avail > 0) {
 
-    /* Not enough space. We grab data nonetheless and sleep afterwards */
-    if (avail < this->period_size) {
-      avail = this->period_size;
-    }
+  if (avail > 0 || (avail == 0 && !this->format)) {
 
-    /* check how many bytes we still have in all our bytestreams */
-    /* initialize this value to a somewhat sane state, we might alloc
-     * this much data below (which would be a bug, but who knows)... */
-    bytes = this->period_size * this->period_count * element->numpads * 8;      /* must be > max sample size in bytes */
+    bytes = G_MAXINT;
+
     for (i = 0; i < element->numpads; i++) {
       GstBuffer *buf;
 
@@ -492,6 +486,16 @@ sink_restart:
       bytes = MIN (bytes, sink->size[i]);
     }
 
+    /* check how many bytes we still have in all our bytestreams */
+    /* initialize this value to a somewhat sane state, we might alloc
+     * this much data below (which would be a bug, but who knows)... */
+    bytes = MIN (bytes,
+        this->period_size * this->period_count * element->numpads * 8);
+    /* must be > max sample size in bytes */
+
+    /* Not enough space. We grab data nonetheless and sleep afterwards */
+    if (avail < this->period_size)
+      avail = this->period_size;
     avail = MIN (avail, gst_alsa_bytes_to_samples (this, bytes));
 
     /* wait until the hw buffer has enough space */

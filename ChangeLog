@@ -1,3 +1,11 @@
+2004-11-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_loop):
+	  Fix for negotiation order problem. This would show when the
+	  ALSA loopfuction was called before any other function. ALSA
+	  wouldn't do anything because we're not negotiated yet, leading
+	  to an infinite loop. Showed in e.g. Rhythmbox. Fixes #158006.
+
 2004-11-11  Tim-Philipp Müller  <t.i.m@zen.co.uk>
 
 	reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
