@@ -1,3 +1,17 @@
+2004-05-13  Jan Schmidt  <thaytan@mad.scientist.com>
+	* ext/audiofile/gstafsrc.c: (gst_afsrc_get):
+	Remove old debug output
+	* ext/dv/gstdvdec.c: (gst_dvdec_quality_get_type),
+	(gst_dvdec_class_init), (gst_dvdec_loop), (gst_dvdec_change_state),
+	(gst_dvdec_set_property), (gst_dvdec_get_property):
+	Change the quality setting to an enum, so it works from gst-launch
+	Don't renegotiate a non-linked pad. Allows audio only decoding.
+	* gst/deinterlace/gstdeinterlace.c: (gst_deinterlace_getcaps),
+	(gst_deinterlace_link), (gst_deinterlace_init):
+	* gst/videodrop/gstvideodrop.c: (gst_videodrop_getcaps),
+	(gst_videodrop_link):
+	Some caps negotiation fixes
+
 2004-05-12  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* ext/tarkin/gsttarkin.c :
