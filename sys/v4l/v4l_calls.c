@@ -38,6 +38,10 @@
 #include "gstv4ltuner.h"
 #include "gstv4lcolorbalance.h"
 
+#include "gstv4lsrc.h"
+#include "gstv4lmjpegsrc.h"
+#include "gstv4lmjpegsink.h"
+
 #define DEBUG(format, args...) \
 	GST_DEBUG_OBJECT (\
 		GST_ELEMENT(v4lelement), \
@@ -125,6 +129,21 @@ gst_v4l_open (GstV4lElement *v4lelement)
   /* get capabilities */
   if (!gst_v4l_get_capabilities(v4lelement))
   {
+    close(v4lelement->video_fd);
+    v4lelement->video_fd = -1;
+    return FALSE;
+  }
+
+  /* device type check */
+  if ((GST_IS_V4LSRC(v4lelement) &&
+       !(v4lelement->vcap.type & VID_TYPE_CAPTURE)) ||
+      (GST_IS_V4LMJPEGSRC(v4lelement) &&
+       !(v4lelement->vcap.type & VID_TYPE_MJPEG_ENCODER)) ||
+      (GST_IS_V4LMJPEGSINK(v4lelement) &&
+       !(v4lelement->vcap.type & VID_TYPE_MJPEG_DECODER))) {
+    gst_element_error(GST_ELEMENT(v4lelement),
+		      "Device opened, but wrong type (0x%x)",
+		      v4lelement->vcap.type);
     close(v4lelement->video_fd);
     v4lelement->video_fd = -1;
     return FALSE;
