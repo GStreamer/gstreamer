@@ -482,6 +482,7 @@ gst_ffmpegenc_chain_audio (GstPad  *pad,
       g_warning("ffenc_%s: failed to encode buffer",
 		oclass->in_plugin->name);
       gst_buffer_unref (inbuf);
+      gst_buffer_unref (subbuf);
       return;
     }
 
@@ -491,6 +492,7 @@ gst_ffmpegenc_chain_audio (GstPad  *pad,
     gst_pad_push (ffmpegenc->srcpad, GST_DATA (outbuf));
 
     in_size -= frame_size;
+    gst_buffer_unref (subbuf);
   }
 }
 
