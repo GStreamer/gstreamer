@@ -468,8 +468,11 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
           GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
               ("Failed to link ffmpeg decoder (%s) to next element",
                   oclass->in_plugin->name));
+	  if (caps != NULL)
+	    gst_caps_free (caps);
           return;
         }
+	gst_caps_free (caps);
       }
 
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
