@@ -15,8 +15,8 @@ void mp1parse_info_chain(GstPad *pad,GstBuffer *buf) {
 
 void new_pad_created(GstElement *parse, GstPad *pad) {
   GstElementFactory *parsefactory, *decodefactory, *playfactory;
-  GstElement *parse_audio, *decode, *play;
-  GstPipeline *audio_pipeline;
+  GstElement *parse_audio, *parse_video, *decode, *play;
+  GstPipeline *audio_pipeline, *video_pipeline;
 
   g_print("a new pad %s was created\n", gst_pad_get_name(pad));
 
@@ -30,7 +30,7 @@ void new_pad_created(GstElement *parse, GstPad *pad) {
 	 playfactory = gst_elementfactory_find("audiosink");
 	 g_return_if_fail(playfactory != NULL);
 
-	 parse_audio = gst_elementfactory_create(parsefactory,"parse");
+	 parse_audio = gst_elementfactory_create(parsefactory,"parse_audio");
 	 g_return_if_fail(parse_audio != NULL);
 	 decode = gst_elementfactory_create(decodefactory,"decode");
 	 g_return_if_fail(decode != NULL);
@@ -55,6 +55,23 @@ void new_pad_created(GstElement *parse, GstPad *pad) {
 	 g_print("setting to RUNNING state\n");
 	 gst_element_set_state(GST_ELEMENT(audio_pipeline),GST_STATE_RUNNING);
 
+  }
+  else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
+	 parsefactory = gst_elementfactory_find("mp1videoparse");
+	 g_return_if_fail(parsefactory != NULL);
+	 parse_video = gst_elementfactory_create(parsefactory,"parse_video");
+	 g_return_if_fail(parse_video != NULL);
+
+    video_pipeline = gst_pipeline_new("video_pipeline");
+    g_return_if_fail(video_pipeline != NULL);
+
+	 gst_bin_add(GST_BIN(video_pipeline),GST_ELEMENT(parse_video));
+
+    gst_pad_connect(gst_element_get_pad(parse,gst_pad_get_name(pad)),
+	                  gst_element_get_pad(parse_video,"sink"));
+
+	 g_print("setting to RUNNING state\n");
+	 gst_element_set_state(GST_ELEMENT(video_pipeline),GST_STATE_RUNNING);
   }
 }
 

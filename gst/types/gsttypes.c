@@ -29,6 +29,7 @@ GstTypeFactory _factories[] = {
   { "audio/mpeg audio/mp3", ".mp2 .mp3 .mpa .mpega", mp3_typefind },
   { "audio/wav", ".wav", wav_typefind },
   { "audio/ac3", ".ac3", NULL },
+  { "video/mpeg video/mpeg1", ".mpg", NULL },
   { NULL, NULL, NULL },
 };
 
