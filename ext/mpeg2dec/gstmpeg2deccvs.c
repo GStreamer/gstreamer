@@ -633,7 +633,6 @@ gst_mpeg2dec_src_event (GstPad *pad, GstEvent *event)
             /* seek worked, we're done, loop will exit */
             res = TRUE;
           }
-          gst_event_free (seek_event);
         }
         /* at this point, either the seek worked or res == FALSE */
       }
@@ -643,6 +642,7 @@ gst_mpeg2dec_src_event (GstPad *pad, GstEvent *event)
       res = FALSE;
       break;
   }
+  gst_event_unref (event);
   return res;
 }
 
@@ -680,6 +680,7 @@ gst_mpeg2dec_change_state (GstElement *element)
     case GST_STATE_PLAYING_TO_PAUSED:
       /* need to clear things we get from other plugins, since we could be reconnected */
       if (mpeg2dec->peerpool) {
+	gst_buffer_pool_unref (mpeg2dec->peerpool);
 	mpeg2dec->peerpool = NULL;
       }
       break;

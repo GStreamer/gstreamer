@@ -520,7 +520,6 @@ gst_mad_src_event (GstPad *pad, GstEvent *event)
 	    /* seek worked, we're done, loop will exit */
 	    res = TRUE;
 	  }
-          gst_event_free (seek_event);
         }
 	/* at this point, either the seek worked or res == FALSE */
 	if (res)
@@ -534,6 +533,7 @@ gst_mad_src_event (GstPad *pad, GstEvent *event)
       break;
   }
 
+  gst_event_unref (event);
   return res;
 }
 
@@ -692,7 +692,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 
 	    mad->base_time = time;
 
-            gst_event_free (event);
+            gst_event_unref (event);
 	    discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, NULL);
             gst_pad_push (mad->srcpad, GST_BUFFER (discont));
 	    break;
