@@ -1,3 +1,10 @@
+2004-05-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/ext/ffmpeg/autogen.sh:
+	* gst-libs/ext/ffmpeg/patches/autotools.patch:
+          require am17 since AM_CONDITIONAL's are being done using variables
+          which doesn't work with am16
+
 2004-04-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_getcaps):
