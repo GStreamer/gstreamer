@@ -131,7 +131,11 @@ gst_props_debug_entry (GstPropsEntry *entry)
       GST_DEBUG (GST_CAT_PROPERTIES, "%s: float %f", name, entry->data.float_data);
       break;
     case GST_PROPS_FOURCC_TYPE:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%s: fourcc %4.4s", name, (gchar*)&entry->data.fourcc_data);
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s: fourcc %c%c%c%c", name,
+	(entry->data.fourcc_data>>0)&0xff,
+	(entry->data.fourcc_data>>8)&0xff,
+	(entry->data.fourcc_data>>16)&0xff,
+	(entry->data.fourcc_data>>24)&0xff);
       break;
     case GST_PROPS_BOOL_TYPE:
       GST_DEBUG (GST_CAT_PROPERTIES, "%s: bool %d", name, entry->data.bool_data);
@@ -1334,8 +1338,15 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
       switch (entry2->propstype) {
 	/* b   <--->   a */
         case GST_PROPS_FOURCC_TYPE:
-          GST_DEBUG(GST_CAT_PROPERTIES,"\"%4.4s\" <--> \"%4.4s\" ?",
-			  (char*) &entry2->data.fourcc_data, (char*) &entry1->data.fourcc_data);
+          GST_DEBUG(GST_CAT_PROPERTIES,"\"%c%c%c%c\" <--> \"%c%c%c%c\" ?",
+	    (entry2->data.fourcc_data>>0)&0xff,
+	    (entry2->data.fourcc_data>>8)&0xff,
+	    (entry2->data.fourcc_data>>16)&0xff,
+	    (entry2->data.fourcc_data>>24)&0xff,
+	    (entry1->data.fourcc_data>>0)&0xff,
+	    (entry1->data.fourcc_data>>8)&0xff,
+	    (entry1->data.fourcc_data>>16)&0xff,
+	    (entry1->data.fourcc_data>>24)&0xff);
 	  return (entry2->data.fourcc_data == entry1->data.fourcc_data);
         default:
 	  break;
@@ -1891,7 +1902,11 @@ gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
       g_free(str);
       break;
     case GST_PROPS_FOURCC_TYPE: 
-      str = g_strdup_printf ("%4.4s", (gchar *)&entry->data.fourcc_data);
+      str = g_strdup_printf ("%c%c%c%c",
+	(entry->data.fourcc_data>>0)&0xff,
+	(entry->data.fourcc_data>>8)&0xff,
+	(entry->data.fourcc_data>>16)&0xff,
+	(entry->data.fourcc_data>>24)&0xff);
       xmlAddChild (parent, xmlNewComment (str));
       g_free(str);
       subtree = xmlNewChild (parent, NULL, "fourcc", NULL);
