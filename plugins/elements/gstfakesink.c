@@ -26,6 +26,7 @@
 #endif
 
 #include "gstfakesink.h"
+#include <gst/gstmarshal.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_fakesink_debug);
 #define GST_CAT_DEFAULT gst_fakesink_debug

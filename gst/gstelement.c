@@ -27,6 +27,7 @@
 
 #include "gstelement.h"
 #include "gstbin.h"
+#include "gstmarshal.h"
 #include "gsterror.h"
 #include "gstscheduler.h"
 #include "gstevent.h"

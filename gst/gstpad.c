@@ -23,6 +23,7 @@
 #include "gst_private.h"
 
 #include "gstpad.h"
+#include "gstmarshal.h"
 #include "gstutils.h"
 #include "gstelement.h"
 #include "gstbin.h"

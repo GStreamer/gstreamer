@@ -27,7 +27,6 @@
 #include <gst/gstconfig.h>
 
 #include <glib-object.h>	/* note that this gets wrapped in __GST_OBJECT_H__ */
-#include <gst/gstmarshal.h>
 
 #include <gst/gsttypes.h>
 

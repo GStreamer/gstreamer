@@ -26,6 +26,7 @@
 #include "gstregistrypool.h"
 #include "gstpad.h"
 #include "gstindex.h"
+#include "gstmarshal.h"
 
 /* Index signals and args */
 enum {

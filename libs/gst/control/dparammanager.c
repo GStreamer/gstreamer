@@ -21,6 +21,7 @@
 
 #include "dparammanager.h"
 #include <gst/gstelement.h>
+#include <gst/gstmarshal.h>
 #include <gst/gstinfo.h>
 
 GST_DEBUG_CATEGORY_EXTERN(_gst_control_debug);

@@ -24,6 +24,7 @@
 #include "gst_private.h"
 
 #include "gstthread.h"
+#include "gstmarshal.h"
 #include "gstscheduler.h"
 #include "gstinfo.h"
 #include "gstlog.h"

@@ -29,6 +29,7 @@
 #endif
 
 #include "gstfakesrc.h"
+#include <gst/gstmarshal.h>
 
 #define DEFAULT_SIZEMIN		0
 #define DEFAULT_SIZEMAX		4096

@@ -25,6 +25,7 @@
 
 #include "gstevent.h"
 #include "gstbin.h"
+#include "gstmarshal.h"
 #include "gstxml.h"
 #include "gstinfo.h"
 

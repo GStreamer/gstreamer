@@ -29,6 +29,7 @@
 
 #include "dparam.h"
 #include "dparammanager.h"
+#include <gst/gstmarshal.h>
 
 GST_DEBUG_CATEGORY_EXTERN(_gst_control_debug);
 

@@ -23,6 +23,7 @@
 #include "gst_private.h"
 
 #include "gstobject.h"
+#include "gstmarshal.h"
 #include "gstinfo.h"
 
 #ifndef GST_DISABLE_TRACE

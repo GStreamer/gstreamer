@@ -29,6 +29,7 @@
 
 #include "../gst-i18n-lib.h"
 #include "gstidentity.h"
+#include <gst/gstmarshal.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_identity_debug);
 #define GST_CAT_DEFAULT gst_identity_debug
