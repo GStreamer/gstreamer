@@ -304,7 +304,7 @@ gst_videoscale_set_property (GObject *object, guint prop_id, const GValue *value
       src->targetheight = g_value_get_int (value);
       break;
     case ARG_METHOD:
-      src->method = g_value_get_int (value);
+      src->method = g_value_get_enum (value);
       break;
     default:
       break;
@@ -328,7 +328,7 @@ gst_videoscale_get_property (GObject *object, guint prop_id, GValue *value, GPar
       g_value_set_int (value, src->targetheight);
       break;
     case ARG_METHOD:
-      g_value_set_int (value, src->method);
+      g_value_set_enum (value, src->method);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
