@@ -146,7 +146,7 @@ cothread_state*
 cothread_create (cothread_context *ctx)
 {
   cothread_state *thread;
-  void *sp;
+  void *sp, *mmaped = 0;
   guchar *stack_end;
   gint slot = 0;
 
@@ -178,9 +178,14 @@ cothread_create (cothread_context *ctx)
   thread = (cothread_state *) (stack_end + ((slot - 1) * COTHREAD_STACKSIZE));
   GST_DEBUG (0, "new stack at %p", thread);
 
-  if (mmap ((void *) thread, COTHREAD_STACKSIZE,
-	    PROT_READ | PROT_WRITE | PROT_EXEC, MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1, 0) == MAP_FAILED) {
+  mmaped = mmap ((void *) thread, COTHREAD_STACKSIZE,
+	    PROT_READ | PROT_WRITE | PROT_EXEC, MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1, 0);
+  if (mmaped == MAP_FAILED) {
     perror ("mmap'ing cothread stack space");
+    return NULL;
+  }
+  if (mmaped != thread) {
+    g_warning ("could not mmap requested memory");
     return NULL;
   }
 
