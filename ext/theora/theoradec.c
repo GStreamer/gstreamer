@@ -657,6 +657,7 @@ theora_dec_chain (GstPad * pad, GstData * data)
     if (keyframe) {
       dec->need_keyframe = FALSE;
     } else if (dec->need_keyframe) {
+      GST_WARNING_OBJECT (dec, "dropping frame because we need a keyframe");
       /* drop frames if we're looking for a keyframe */
       gst_data_unref (data);
       return;
