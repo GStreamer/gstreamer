@@ -1,5 +1,14 @@
 2004-12-13  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
 
+	* gst/wavenc/riff.h:
+	* gst-libs/gst/riff/riff-media.c:
+	* gst-libs/gst/riff/riff-ids.h:
+	add 4CC code for VideoSoft h264 in AVI (VSSH)
+	  fixes bug #160655
+	remove s323 from riff, it's quicktime specific :(
+
+2004-12-13  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
+
 	* gst/asfdemux/README
 	* gst/wavenc/riff.h
 	* gst-libs/gst/riff/riff-ids.h
