@@ -33,7 +33,6 @@ plugin_init (GstPlugin *plugin)
   gst_afsink_plugin_init (plugin);
   gst_afsrc_plugin_init (plugin);
   gst_afparse_plugin_init (plugin);
-  gst_aftypes_plugin_init (plugin);
 
   return TRUE;
 }
