@@ -1,5 +1,9 @@
 2004-03-31  Johan Dahlin  <johan@gnome.org>
 
+	* gst/ltihooks.py: New file
+
+	* gst/__init__.py: try to import ltihooks.py
+
 	* gst/Makefile.am: Only install gst-types.defs
 
 	* Makefile.am (EXTRA_DIST): Add codegen/* Can't believe distcheck passed

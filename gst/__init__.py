@@ -23,16 +23,14 @@
 import pygtk
 pygtk.require('2.0')
 import sys
-import os
 import dl
 
-"libtool lib location"
-devloc = os.path.join(__path__[0],'.libs')
-
-if os.path.exists(devloc):
-   sys.path.append(devloc)
+try:
+   import ltihooks
+except:
+   pass
 
 sys.setdlopenflags(dl.RTLD_LAZY | dl.RTLD_GLOBAL)
-del devloc, sys, os, dl
+del sys, dl
 
 from _gst import *
