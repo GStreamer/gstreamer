@@ -19,12 +19,16 @@
 
 #include "gstrtpL16enc.h"
 #include "gstrtpL16parse.h"
+#include "gstrtpgsmenc.h"
+#include "gstrtpgsmparse.h"
 
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   gst_rtpL16enc_plugin_init (module, plugin);
   gst_rtpL16parse_plugin_init (module, plugin);
+  gst_rtpgsmenc_plugin_init (module, plugin);
+  gst_rtpgsmparse_plugin_init (module, plugin);
 
   return TRUE;
 }

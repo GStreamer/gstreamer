@@ -22,9 +22,7 @@
 #ifndef _RTP_PACKET_H
 #define _RTP_PACKET_H 1
 
-#include <netinet/in.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <glib.h>
 
 #ifdef __sun
@@ -35,11 +33,9 @@
 extern "C" {
 #endif
 
-enum {
-  RTP_VERSION = 2,
-  RTP_HEADER_LEN = 12,
-  RTP_MTU = 2048
-};
+#define RTP_VERSION 2
+#define RTP_HEADER_LEN 12
+#define RTP_MTU 2048
 
 typedef struct Rtp_Header *Rtp_Header;
 
@@ -79,8 +75,8 @@ Rtp_Packet rtp_packet_new_copy_data(gpointer data, guint data_len);
 Rtp_Packet rtp_packet_new_allocate(guint payload_len,
                                    guint pad_len, guint csrc_count);
 void rtp_packet_free(Rtp_Packet packet);
-Rtp_Packet rtp_packet_read(int fd, struct sockaddr *fromaddr, socklen_t *fromlen);
-void rtp_packet_send(Rtp_Packet packet, int fd, struct sockaddr *toaddr, socklen_t tolen);
+//Rtp_Packet rtp_packet_read(int fd, struct sockaddr *fromaddr, socklen_t *fromlen);
+//void rtp_packet_send(Rtp_Packet packet, int fd, struct sockaddr *toaddr, socklen_t tolen);
 guint8 rtp_packet_get_version(Rtp_Packet packet);
 void rtp_packet_set_version(Rtp_Packet packet, guint8 version);
 guint8 rtp_packet_get_padding(Rtp_Packet packet);

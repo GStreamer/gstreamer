@@ -164,11 +164,11 @@ gst_rtpL16enc_sinkconnect (GstPad * pad, GstCaps * caps)
 void
 gst_rtpL16enc_htons (GstBuffer *buf)
 {
-  guint16 *i, *len;
+  gint16 *i, *len;
 
   /* FIXME: is this code correct or even sane at all? */
-  i = (guint16 *) GST_BUFFER_DATA(buf); 
-  len = i + GST_BUFFER_SIZE (buf) / sizeof (guint16 *);
+  i = (gint16 *) GST_BUFFER_DATA(buf); 
+  len = i + GST_BUFFER_SIZE (buf) / sizeof (gint16 *);
 
   for (; i<len; i++) {
       *i = g_htons (*i);

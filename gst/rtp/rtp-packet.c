@@ -93,7 +93,7 @@ rtp_packet_free(Rtp_Packet packet)
   g_free(packet);
 }
 
-Rtp_Packet
+/*Rtp_Packet
 rtp_packet_read(int fd, struct sockaddr *fromaddr, socklen_t *fromlen)
 {
   int packlen;
@@ -105,14 +105,14 @@ rtp_packet_read(int fd, struct sockaddr *fromaddr, socklen_t *fromlen)
 
   if (packlen < 0) {
     g_error("rtp_packet_read: recvfrom: %d %s", errno, strerror(errno));
-    /*exit(1);*/
+    //exit(1);
     return NULL;
   }
 
   return rtp_packet_new_take_data(buf, packlen);
-}
+}*/
 
-void
+/*void
 rtp_packet_send(Rtp_Packet packet, int fd, struct sockaddr *toaddr, socklen_t tolen)
 {
   g_return_if_fail(packet != NULL);
@@ -120,7 +120,7 @@ rtp_packet_send(Rtp_Packet packet, int fd, struct sockaddr *toaddr, socklen_t to
   sendto(fd, (void *) packet -> data,
          packet -> data_len, 0,
 	 toaddr, tolen);
-}
+}*/
 
 guint8
 rtp_packet_get_version(Rtp_Packet packet)
