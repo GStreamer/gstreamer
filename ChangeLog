@@ -1,5 +1,13 @@
 2004-03-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_base_init),
+	(gst_mpeg2dec_init):
+        remove the user_data pad for now, because it is being used in
+        fixating causing MPEG playback to fixate on 1000 Hz for playback.
+        If someone knows how to fix this properly, please do.
+
+2004-03-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* sys/oss/gstosssink.c: (gst_osssink_get_delay),
 	(gst_osssink_get_time):
         add a warning, IMO this won't get triggered anymore, remove later
