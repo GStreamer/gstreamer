@@ -207,6 +207,7 @@ AC_SUBST(X_LIBS)
 dnl ===========================================================================
 dnl ============================= gst plug-ins ================================
 dnl ===========================================================================
+
 GST_PLUGIN_LDFLAGS='-module -avoid-version'
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
@@ -227,7 +228,7 @@ if test "x$HAVE_CXX" = "xyes"; then
   GST_PLUGINS_ALL="$GST_PLUGINS_ALL \
                   modplug"
 else
-  echo "Not compiling plug-ins requiring C++ compiler"
+  AC_MSG_WARN([Not compiling plug-ins requiring C++ compiler])
 fi
 
 AC_SUBST(GST_PLUGINS_ALL)
@@ -409,15 +410,9 @@ GST_CHECK_FEATURE(AUDIOFILE, [audiofile], afsink afsrc, [
 ])
 
 dnl *** avifile ***
-dnl this check uses the GST_CHECK_CONFIGPROG macro
-dnl this check needs more fixing
-dnl translit(dnm, m, l) AC_SUBST(AVIFILE_LIBS)
 translit(dnm, m, l) AM_CONDITIONAL(USE_AVIFILE, true)
-GST_CHECK_FEATURE(AVIFILE, [avifile], windec winenc, [
-  translit(dnm, m, l) AC_SUBST(AVIFILE_CFLAGS)
-  GST_CHECK_CONFIGPROG(AVIFILE, avifile-config)
-  AVIFILE_LIBS="$AVIFILE_LIBS -lstdc++"
-  AC_SUBST(AVIFILE_LIBS)
+GST_CHECK_FEATURE(AVIFILE, [avifile], winenc windec, [
+  AS_AVIFILE(0.7.0)
 ])
 
 dnl *** CDParanoia ***
