@@ -26,6 +26,8 @@ sub extension
 
 sub read_config
 {
+  my $command = shift;
+
   my $config_file = `echo -n ~`."/.gst";
   if (-e $config_file)
   {
@@ -56,6 +58,11 @@ sub read_config
   if (!defined $cfg{AUDIOSINK})  { $cfg{AUDIOSINK} = "osssink"; }
   if (!defined $cfg{VIDEOSINK})  { $cfg{VIDEOSINK} = "colorspace ! xvideosink"; }
   if (!defined $cfg{CVS_PATH})   { $cfg{CVS_PATH} =  `echo -n ~`."/gst/cvs"; }
+
+  if ($command =~ /(.+)\/gst-launch-ext$/)
+  { $cfg{COMMAND_PATH} = "$1"; }
+  else
+  { $cfg{COMMAND_PATH} = ""; }
 }
 
 sub playfile($$)
@@ -63,6 +70,11 @@ sub playfile($$)
     my ($file, $ext) = @_;
     my $command;
     my $pipe;
+    my $path = "\$PATH:".$cfg{CVS_PATH}."/gstreamer/tools";
+
+    if ($cfg{COMMAND_PATH} ne "") {
+      $path = $cfg{COMMAND_PATH}.":$path";
+    }
 
     $ext = lc $ext;
 
@@ -70,13 +82,13 @@ sub playfile($$)
     {
 	$command = "gst-launch filesrc location=\"$file\" ! $pipe";
 	print "Running command-line\n$command\n\n";
-	system ("PATH=\$PATH:".$cfg{CVS_PATH}."/gstreamer/tools $command");
+	system ("PATH=$path $command");
     }
     elsif ($pipe = $pipes{$ext})
     {
 	$command = "gst-launch filesrc location=\"$file\" ! $pipe";
 	print "Running command-line\n$command\n\n";
-	system ("PATH=\$PATH:".$cfg{CVS_PATH}."/gstreamer/tools $command");
+	system ("PATH=$path $command");
     }
     else
     {
@@ -86,7 +98,7 @@ sub playfile($$)
 
 ### main
 
-read_config ();
+read_config ($0);
 
 %pipes = ( 
   "ac3", "a52dec ! $cfg{AUDIOSINK}",
