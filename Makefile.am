@@ -86,6 +86,7 @@ GCOV_DIRS=gst libs
 
 ## .PHONY so it always rebuilds it
 .PHONY: coverage-report.txt
+
 coverage-report.txt:
 	BBG_FILES=`find $(GCOV_DIRS) -name "*.bbg"` ;			  \
 	C_FILES= ;							  \
