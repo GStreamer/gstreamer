@@ -738,7 +738,7 @@ gst_entry_scheduler_pad_select (GstScheduler * scheduler, GstPad ** pulled_from,
     GstPad ** pads)
 {
   GstData *data;
-  GstRealPad *pad;
+  GstRealPad *pad = NULL;
   GstElement *element = NULL;
   GstEntryScheduler *sched = GST_ENTRY_SCHEDULER (scheduler);
   gint i = 0;
