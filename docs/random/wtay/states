@@ -1,0 +1,66 @@
+1) transitions
+--------------
+
+There are four states, NULL, READY, PAUSED, PLAYING. state transitions only
+happen from once neighbouring state to another.
+
+NULL:  the element is just being created, the initial state.
+  !
+  !    the element creates all of its resources (a thread will create
+  !      its pthread etc..)
+  !    - most used by bins to set up thread context for its children
+  v
+READY: the element is ready to start processing.
+  !
+  !    the element sets up its state so it can start processing buffers.
+  !    - open devices
+  v
+PAUSED: the element is paused
+  !
+  !    the element starts spinning
+  !      
+  v
+PLAYING: the element is playing
+  !
+  !    the element stops spinning
+  !    the element frees resources from other plugins (bufferpools)
+  !
+  v
+PAUSED
+  !    element removes caps from pads
+  !    reset internal state
+  !    - close devices
+  !
+  v
+READY
+  !
+  !   the element frees all of its resources (eg: pthread_join)
+  !
+  v
+NULL
+
+
+2) bin transition
+-----------------
+
+the state of a bin is equal to the maximum state of its children.
+
+
+3) interaction with the scheduler
+---------------------------------
+
+elements in the !PLAYING state are disabled in the scheduler.
+
+
+4) action that can be performed by the app in the different states
+------------------------------------------------------------------
+
+PLAYING:  nothing, only iterate on the pipeline, some properties can
+          be changed.
+
+PAUSED:   elements can be connected, removed, disconnected. some
+          properties can be changed
+
+READY:    as in PAUSED but *all* properties can be changed.
+
+NULL:     everything.
