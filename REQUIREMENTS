@@ -71,6 +71,8 @@ avifile		(for the avi windows decoder plugins
 			you might want to get the windows libraries 
 			from http://divx.euro.ru/ and put the .dll files 
 			in /usr/lib/win32/)
+flac		(for the FLAC lossless audio format)
+			http://flac.sourceforge.net
 
 An extra set of tools is required if you wish to build GStreamer out of
 CVS (using autogen.sh):
