@@ -142,7 +142,7 @@ static GstStaticPadTemplate id3_tag_sink_any_template_factory =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     /* FIXME: find a way to extend this generically */
-    GST_STATIC_CAPS ("audio/mpeg; audio/x-flac")
+    GST_STATIC_CAPS ("audio/mpeg, mpegversion=(int)1; audio/x-flac")
     );
 
 static GstStaticPadTemplate id3_tag_sink_id3_template_factory =
@@ -1233,7 +1233,7 @@ plugin_init (GstPlugin * plugin)
           gst_mad_get_type ())
       || !gst_element_register (plugin, "id3demux", GST_RANK_PRIMARY,
           gst_id3_tag_get_type (GST_ID3_TAG_PARSE_DEMUX))
-      || !gst_element_register (plugin, "id3mux", GST_RANK_PRIMARY,
+      || !gst_element_register (plugin, "id3mux", GST_RANK_NONE,        /* removed for spider */
           gst_id3_tag_get_type (GST_ID3_TAG_PARSE_MUX))
       /* FIXME 0.9: remove this element */
       || !gst_element_register (plugin, "id3tag", GST_RANK_NONE,
