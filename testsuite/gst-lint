@@ -44,6 +44,7 @@ sub check_gnuc_const();
 sub check_caps();
 sub check_lib_deprecated();
 sub check_typo();
+sub check_explicit_caps();
 
 sub m_check_plugindir();
 sub m_check_interfaces();
@@ -69,6 +70,8 @@ foreach $filename (<FIND>) {
 	check_caps();
 	check_lib_deprecated();
 	check_typo();
+	check_glibisms();
+	check_explicit_caps();
 
 	# less important stuff
 
@@ -81,7 +84,6 @@ if (0) {
 	check_buffer_alloc();
 	check_c99_comments();
 	check_carriage_returns();
-	check_glibisms();
 	#check_indentation();
 	check_varargs_functions();
 	check_debugging();
@@ -225,6 +227,9 @@ sub check_glibisms()
 	}
 	if (grep { /\brealloc\s*\(/; } @lines) {
 		print "E: use g_realloc() instead of realloc()\n"
+	}
+	if (grep { /^#include\s+<ctype.h>/; } @lines) {
+		print "E: ctype.h functions are not locale-independent and don't work in UTF-8 locales.  Use g_ascii_is*()\n"
 	}
 }
 
@@ -479,6 +484,27 @@ sub check_typo()
 {
 	if (grep { /;\s*;\s*$/ } @lines) {
 		print "W: typo? \";;\"\n";
+	}
+}
+
+#
+# set_explicit_caps() should preceed pad_add()
+#
+sub check_explicit_caps()
+{
+	my $n = 0;
+	my $lineno = 1;
+
+	foreach $line (@lines){
+		if($line =~ /gst_element_add_pad/){
+			$n=10;
+		}
+		if($n>0 && $line =~ /gst_pad_set_explicit_caps/){
+			print "W: ($lineno) explicit caps should be set before adding pad\n";
+			return;
+		}
+		$n--;
+		$lineno++;
 	}
 }
 

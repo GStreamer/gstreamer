@@ -721,7 +721,7 @@ gst_xvimagesink_get_xv_support (GstXContext *xcontext)
       if (formats)
         XFree (formats);
       
-      GST_DEBUG_CAPS ("Generated the following caps", caps);
+      GST_DEBUG ("Generated the following caps: " GST_PTR_FORMAT, caps);
 
       return caps;
     }

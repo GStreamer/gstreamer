@@ -176,7 +176,7 @@ gst_videoscale_getcaps (GstPad *pad)
     videoscale->srcpad;
   othercaps = gst_pad_get_allowed_caps (otherpad);
 
-  GST_DEBUG_CAPS("othercaps are", othercaps);
+  GST_DEBUG ("othercaps are: " GST_PTR_FORMAT, othercaps);
 
   caps = gst_caps_copy (othercaps);
   for(i=0;i<gst_caps_get_size(caps);i++) {
@@ -188,7 +188,7 @@ gst_videoscale_getcaps (GstPad *pad)
 	NULL);
   }
 
-  GST_DEBUG_CAPS ("returning caps", caps);
+  GST_DEBUG ("returning caps: " GST_PTR_FORMAT, caps);
 
   return caps;
 }
