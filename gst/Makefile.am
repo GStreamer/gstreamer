@@ -86,17 +86,16 @@ libgstreamer_la_SOURCES =		\
 
 BUILT_SOURCES = gstmarshal.h gstmarshal.c
 
-# Generate both marshal files together.  Makes dependency work easier.
 gstmarshal.h: gstmarshal.list
-	glib-genmarshal --header --prefix=gst_marshal $(srcdir)/gstmarshal.list > gstmarshal.h
+	glib-genmarshal --header --prefix=gst_marshal $(srcdir)/gstmarshal.list > gstmarshal.h.tmp
+	mv gstmarshal.h.tmp gstmarshal.h
 
 gstmarshal.c: gstmarshal.list
-	echo "#include \"glib-object.h\"" >gstmarshal.c
-	echo "#include \"gstlog.h\"" >> gstmarshal.c
-	echo "#include \"gstmarshal.h\"" >> gstmarshal.c
-	glib-genmarshal --body --prefix=gst_marshal $(srcdir)/gstmarshal.list >> gstmarshal.c
-
-##### end built sources #####
+	echo "#include \"glib-object.h\"" >gstmarshal.c.tmp
+	echo "#include \"gstlog.h\"" >> gstmarshal.c.tmp
+	echo "#include \"gstmarshal.h\"" >> gstmarshal.c.tmp
+	glib-genmarshal --body --prefix=gst_marshal $(srcdir)/gstmarshal.list >> gstmarshal.c.tmp
+	mv gstmarshal.c.tmp gstmarshal.c
 
 # Don't want the generated marshal files in the dist
 dist-hook:
