@@ -669,6 +669,14 @@ gst_gnomevfssrc_srcpad_event (GstPad *pad, GstEvent *event)
 		g_object_notify (G_OBJECT (src), "offset");
 		break;
 	}
+	case GST_EVENT_SIZE:
+		if (GST_EVENT_SIZE_FORMAT (event) != GST_FORMAT_BYTES) {
+			return FALSE;
+		}
+		src->bytes_per_read = GST_EVENT_SIZE_VALUE (event);
+		g_object_notify (G_OBJECT (src), "bytesperread");
+		break;
+
 	case GST_EVENT_FLUSH:
 		src->need_flush = TRUE;
 		break;
