@@ -594,14 +594,14 @@ gst_mpeg2dec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
 	  *dest_value = src_value * 6 * (mpeg2dec->width * mpeg2dec->height >> 2) *  
 		  video_rates[mpeg2dec->decoder->frame_rate_code] / GST_SECOND;
 	  break;
-        case GST_FORMAT_UNIT:
+        case GST_FORMAT_UNITS:
 	  *dest_value = src_value * video_rates[mpeg2dec->decoder->frame_rate_code] / GST_SECOND;
 	  break;
         default:
           res = FALSE;
       }
       break;
-    case GST_FORMAT_UNIT:
+    case GST_FORMAT_UNITS:
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
           *dest_format = GST_FORMAT_TIME;
@@ -616,7 +616,7 @@ gst_mpeg2dec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_BYTES:
 	  *dest_value = src_value * 6 * (mpeg2dec->width * mpeg2dec->height >> 2);
 	  break;
-        case GST_FORMAT_UNIT:
+        case GST_FORMAT_UNITS:
 	  *dest_value = src_value;
 	  break;
         default:
@@ -650,7 +650,7 @@ gst_mpeg2dec_src_query (GstPad *pad, GstPadQueryType type,
           /* fallthrough */
         case GST_FORMAT_TIME:
         case GST_FORMAT_BYTES:
-        case GST_FORMAT_UNIT:
+        case GST_FORMAT_UNITS:
 	{
           res = FALSE;
 
