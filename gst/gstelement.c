@@ -2183,20 +2183,22 @@ static void
 gst_element_error_func (GstElement * element, GstElement * source,
     GError * error, gchar * debug)
 {
+  GstObject *parent = GST_OBJECT_PARENT (element);
+
   /* tell the parent */
-  if (GST_OBJECT_PARENT (element)) {
+  if (parent) {
+    gst_object_ref (GST_OBJECT (element));
+    gst_object_ref (parent);
     GST_CAT_DEBUG (GST_CAT_ERROR_SYSTEM,
         "forwarding error \"%s\" from %s to %s", error->message,
-        GST_ELEMENT_NAME (element),
-        GST_OBJECT_NAME (GST_OBJECT_PARENT (element)));
+        GST_ELEMENT_NAME (element), GST_OBJECT_NAME (parent));
 
-    gst_object_ref (GST_OBJECT (element));
-    g_signal_emit (G_OBJECT (GST_OBJECT_PARENT (element)),
+    g_signal_emit (G_OBJECT (parent),
         gst_element_signals[ERROR], 0, source, error, debug);
-    gst_object_unref (GST_OBJECT (element));
     GST_CAT_DEBUG (GST_CAT_ERROR_SYSTEM, "forwarded error \"%s\" from %s to %s",
-        error->message, GST_ELEMENT_NAME (element),
-        GST_OBJECT_NAME (GST_OBJECT_PARENT (element)));
+        error->message, GST_ELEMENT_NAME (element), GST_OBJECT_NAME (parent));
+    gst_object_unref (GST_OBJECT (element));
+    gst_object_unref (GST_OBJECT (parent));
   }
 }
 

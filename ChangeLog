@@ -1,3 +1,8 @@
+2004-07-08  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstelement.c: (gst_element_error_func):
+	  make reentrant (= allow removing elements in error handler)
+
 2004-07-08  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* gst/gstpad.c: (gst_pad_event_default_dispatch),
