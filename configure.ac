@@ -1754,6 +1754,9 @@ pkgconfig/gstreamer-play-uninstalled.pc
 pkgconfig/gstreamer-plugins.pc
 pkgconfig/gstreamer-plugins-uninstalled.pc
 po/Makefile.in
+common/Makefile
+common/m4/Makefile
+m4/Makefile
 )
 AC_OUTPUT
 

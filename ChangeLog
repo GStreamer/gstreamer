@@ -1,3 +1,10 @@
+2004-03-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* configure.ac:
+          dist common and m4 correctly
+	* po/sv.po:
+
 2004-03-17  David Schleef  <ds@schleef.org>
 
 	* pkgconfig/gstreamer-media-info.pc.in:  Add Version.
