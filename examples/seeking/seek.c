@@ -899,6 +899,7 @@ stop_cb (GtkButton * button, gpointer data)
 {
   if (gst_element_get_state (pipeline) != GST_STATE_READY) {
     gst_element_set_state (pipeline, GST_STATE_READY);
+    gtk_adjustment_set_value (adjustment, 0.0);
     gtk_timeout_remove (update_id);
   }
 }
