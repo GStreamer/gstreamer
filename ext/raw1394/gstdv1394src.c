@@ -364,22 +364,26 @@ gst_dv1394src_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       if ((dv1394src->handle = raw1394_new_handle ()) == NULL) {
-        GST_INFO_OBJECT (dv1394src, "can't get raw1394 handle");
+        GST_ELEMENT_ERROR (dv1394src, RESOURCE, NOT_FOUND, (NULL),
+            ("can't get raw1394 handle"));
         return GST_STATE_FAILURE;
       }
       raw1394_set_userdata (dv1394src->handle, dv1394src);
       dv1394src->numcards =
           raw1394_get_port_info (dv1394src->handle, dv1394src->pinfo, 16);
       if (dv1394src->numcards == 0) {
-        GST_INFO_OBJECT (dv1394src, "no cards available for raw1394");
+        GST_ELEMENT_ERROR (dv1394src, RESOURCE, NOT_FOUND, (NULL),
+            ("no cards available for raw1394"));
         return GST_STATE_FAILURE;
       }
       if (dv1394src->pinfo[dv1394src->card].nodes <= 1) {
-        GST_INFO_OBJECT (dv1394src, "there are no nodes on the 1394 bus");
+        GST_ELEMENT_ERROR (dv1394src, RESOURCE, NOT_FOUND, (NULL),
+            ("there are no nodes on the 1394 bus"));
         return GST_STATE_FAILURE;
       }
       if (raw1394_set_port (dv1394src->handle, dv1394src->port) < 0) {
-        GST_INFO_OBJECT (dv1394src, "can't set 1394 port %d", dv1394src->port);
+        GST_ELEMENT_ERROR (dv1394src, RESOURCE, SETTINGS, (NULL),
+            ("can't set 1394 port %d", dv1394src->port));
         return GST_STATE_FAILURE;
       }
       raw1394_set_iso_handler (dv1394src->handle, dv1394src->channel,
@@ -387,11 +391,12 @@ gst_dv1394src_change_state (GstElement * element)
       raw1394_set_bus_reset_handler (dv1394src->handle,
           gst_dv1394src_bus_reset);
       dv1394src->started = FALSE;
-      GST_DEBUG ("successfully opened up 1394 connection");
+      GST_DEBUG_OBJECT (dv1394src, "successfully opened up 1394 connection");
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       if (raw1394_start_iso_rcv (dv1394src->handle, dv1394src->channel) < 0) {
-        GST_INFO_OBJECT (dv1394src, "can't start 1394 iso receive");
+        GST_ELEMENT_ERROR (dv1394src, RESOURCE, READ, (NULL),
+            ("can't start 1394 iso receive"));
         return GST_STATE_FAILURE;
       }
       break;
