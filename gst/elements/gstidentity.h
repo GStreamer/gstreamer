@@ -58,7 +58,6 @@ struct _GstIdentity {
   gboolean 	 silent;
   gboolean 	 dump;
   gchar 	*last_message;
-  gboolean 	 delay_capsnego;
   GstCaps	*srccaps;
 };
 

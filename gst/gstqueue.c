@@ -83,9 +83,6 @@ static void	gst_queue_get_property		(GObject       *object,
 						 GValue        *value,
 						 GParamSpec    *pspec);
 
-static GstPadLinkReturn
-		gst_queue_link			(GstPad        *pad,
-						 const GstCaps *caps);
 static void	gst_queue_chain			(GstPad        *pad,
 						 GstData       *data);
 static GstData *gst_queue_get			(GstPad        *pad);
@@ -250,14 +247,14 @@ gst_queue_init (GstQueue *queue)
   queue->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_pad_set_chain_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_chain));
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
-  gst_pad_set_link_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_link));
+  gst_pad_set_link_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
   gst_pad_set_getcaps_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_active (queue->sinkpad, TRUE);
 
   queue->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_get_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_get));
   gst_element_add_pad (GST_ELEMENT (queue), queue->srcpad);
-  gst_pad_set_link_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_link));
+  gst_pad_set_link_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
   gst_pad_set_getcaps_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_event_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_handle_src_event));
   gst_pad_set_active (queue->srcpad, TRUE);
@@ -312,26 +309,6 @@ gst_queue_dispose (GObject *object)
 
   if (G_OBJECT_CLASS (parent_class)->dispose)
     G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static GstPad *
-gst_queue_otherpad (GstPad *pad)
-{
-  GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
-  GstPad *otherpad;
-
-  if (pad == queue->srcpad) 
-    otherpad = queue->sinkpad;
-  else
-    otherpad = queue->srcpad;
-
-  return otherpad;
-}
-
-static GstPadLinkReturn
-gst_queue_link (GstPad  *pad, const GstCaps *caps)
-{
-  return gst_pad_try_set_caps (gst_queue_otherpad (pad), caps);
 }
 
 static void

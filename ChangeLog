@@ -1,5 +1,14 @@
 2003-12-31  David Schleef  <ds@schleef.org>
 
+	* gst/elements/gstidentity.c: (gst_identity_class_init),
+	(gst_identity_init), (gst_identity_chain),
+	(gst_identity_set_property), (gst_identity_get_property):
+	* gst/elements/gstidentity.h:
+	* gst/gstqueue.c: (gst_queue_init):
+	  Negotiation fixes.
+
+2003-12-31  David Schleef  <ds@schleef.org>
+
 	* gst/gstcaps.c: (gst_caps_intersect),
 	(_gst_caps_normalize_foreach), (gst_caps_normalize):
 	  Implement gst_caps_normalize().
