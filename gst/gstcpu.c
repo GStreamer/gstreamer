@@ -69,7 +69,7 @@ _gst_cpu_initialize (void)
     featurelist = stringcat(featurelist,"NONE");
   }
 
-  INFO(GST_INFO_GST_INIT, "CPU features: %s",featurelist);
+  GST_INFO (GST_INFO_GST_INIT, "CPU features: %s",featurelist);
 }
 
 GstCPUFlags 
