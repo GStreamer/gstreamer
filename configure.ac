@@ -233,7 +233,7 @@ GST_PLUGINS_ALL="\
         mpegaudio mpegaudioparse mpegstream mpegtypes\
         monoscope passthrough playondemand qtdemux rtjpeg silence sine\
         smooth smpte spectrum speed stereo stereomono synaesthesia\
-        udp videocrop videoscale videotestsrc volenv volume\ 
+        udp vbidec videocrop videoscale videotestsrc volenv volume\ 
         vumeter wavenc wavparse y4m"
 
 dnl see if we can build C++ plug-ins
@@ -1014,6 +1014,7 @@ gst/stereo/Makefile
 gst/stereomono/Makefile
 gst/synaesthesia/Makefile
 gst/udp/Makefile
+gst/vbidec/Makefile
 gst/videoscale/Makefile
 gst/videotestsrc/Makefile
 gst/videocrop/Makefile
