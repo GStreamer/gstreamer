@@ -1024,6 +1024,7 @@ ext/sdl/Makefile
 ext/shout/Makefile
 ext/sidplay/Makefile
 ext/smoothwave/Makefile
+ext/snapshot/Makefile
 ext/swfdec/Makefile
 ext/vorbis/Makefile
 ext/tarkin/Makefile
