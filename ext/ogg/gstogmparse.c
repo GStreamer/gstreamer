@@ -151,7 +151,7 @@ static void gst_ogm_parse_chain (GstPad * pad, GstData * data);
 
 static GstElementStateReturn gst_ogm_parse_change_state (GstElement * element);
 
-GstElementClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 
 static GType
 gst_ogm_parse_get_type (void)
