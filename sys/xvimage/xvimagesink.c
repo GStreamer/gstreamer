@@ -49,7 +49,8 @@ MotifWmHints, MwmHints;
 static void gst_xvimagesink_buffer_free (GstBuffer * buffer);
 static void gst_xvimagesink_xvimage_destroy (GstXvImageSink * xvimagesink,
     GstXvImage * xvimage);
-
+static void
+gst_xvimagesink_send_pending_navigation (GstXvImageSink * xvimagesink);
 
 /* ElementFactory information */
 static GstElementDetails gst_xvimagesink_details =
@@ -1466,6 +1467,7 @@ gst_xvimagesink_chain (GstPad * pad, GstData * data)
   gst_buffer_unref (buf);
 
   gst_xvimagesink_handle_xevents (xvimagesink, pad);
+  gst_xvimagesink_send_pending_navigation (xvimagesink);
 
   g_mutex_unlock (xvimagesink->stream_lock);
 }
@@ -1571,34 +1573,70 @@ gst_xvimagesink_interface_init (GstImplementsInterfaceClass * klass)
   klass->supported = gst_xvimagesink_interface_supported;
 }
 
+/*
+ * This function is called with the stream-lock held
+ */
+static void
+gst_xvimagesink_send_pending_navigation (GstXvImageSink * xvimagesink)
+{
+  GSList *cur;
+  GSList *pend_events;
+
+  g_mutex_lock (xvimagesink->nav_lock);
+  pend_events = xvimagesink->pend_nav_events;
+  xvimagesink->pend_nav_events = NULL;
+  g_mutex_unlock (xvimagesink->nav_lock);
+
+  cur = pend_events;
+  while (cur) {
+    GstEvent *event = cur->data;
+    GstStructure *structure;
+    double x, y;
+
+    if (event) {
+      structure = event->event_data.structure.structure;
+
+      if (!GST_PAD_PEER (GST_VIDEOSINK_PAD (xvimagesink))) {
+        gst_event_unref (event);
+        cur = g_slist_next (cur);
+        continue;
+      }
+
+      /* Converting pointer coordinates to the non scaled geometry */
+      if (gst_structure_get_double (structure, "pointer_x", &x)) {
+        x *= xvimagesink->video_width;
+        x /= xvimagesink->xwindow->width;
+        gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
+      }
+      if (gst_structure_get_double (structure, "pointer_y", &y)) {
+        y *= xvimagesink->video_height;
+        y /= xvimagesink->xwindow->height;
+        gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
+      }
+
+      gst_pad_send_event (gst_pad_get_peer (GST_VIDEOSINK_PAD (xvimagesink)),
+          event);
+    }
+    cur = g_slist_next (cur);
+  }
+
+  g_slist_free (pend_events);
+}
+
 static void
 gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
     GstStructure * structure)
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (navigation);
   GstEvent *event;
-  double x, y;
-
-  if (!GST_PAD_PEER (GST_VIDEOSINK_PAD (xvimagesink)))
-    return;
 
   event = gst_event_new (GST_EVENT_NAVIGATION);
   event->event_data.structure.structure = structure;
 
-  /* Converting pointer coordinates to the non scaled geometry */
-  if (gst_structure_get_double (structure, "pointer_x", &x)) {
-    x *= xvimagesink->video_width;
-    x /= xvimagesink->xwindow->width;
-    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
-  }
-  if (gst_structure_get_double (structure, "pointer_y", &y)) {
-    y *= xvimagesink->video_height;
-    y /= xvimagesink->xwindow->height;
-    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
-  }
-
-  gst_pad_send_event (gst_pad_get_peer (GST_VIDEOSINK_PAD (xvimagesink)),
-      event);
+  g_mutex_lock (xvimagesink->nav_lock);
+  xvimagesink->pend_nav_events =
+      g_slist_prepend (xvimagesink->pend_nav_events, event);
+  g_mutex_unlock (xvimagesink->nav_lock);
 }
 
 static void
@@ -1951,6 +1989,19 @@ gst_xvimagesink_finalize (GObject * object)
     g_mutex_free (xvimagesink->pool_lock);
     xvimagesink->pool_lock = NULL;
   }
+  if (xvimagesink->nav_lock) {
+    g_mutex_free (xvimagesink->nav_lock);
+    xvimagesink->nav_lock = NULL;
+  }
+
+  while (xvimagesink->pend_nav_events) {
+    GstEvent *event = xvimagesink->pend_nav_events->data;
+
+    xvimagesink->pend_nav_events =
+        g_slist_delete_link (xvimagesink->pend_nav_events,
+        xvimagesink->pend_nav_events);
+    gst_event_unref (event);
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2001,6 +2052,9 @@ gst_xvimagesink_init (GstXvImageSink * xvimagesink)
 
   GST_FLAG_SET (xvimagesink, GST_ELEMENT_THREAD_SUGGESTED);
   GST_FLAG_SET (xvimagesink, GST_ELEMENT_EVENT_AWARE);
+
+  xvimagesink->nav_lock = g_mutex_new ();
+  xvimagesink->pend_nav_events = NULL;
 }
 
 static void

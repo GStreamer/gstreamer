@@ -48,6 +48,7 @@ MotifWmHints, MwmHints;
 static void gst_ximagesink_buffer_free (GstBuffer * buffer);
 static void gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink,
     GstXImage * ximage);
+static void gst_ximagesink_send_pending_navigation (GstXImageSink * ximagesink);
 
 /* ElementFactory information */
 static GstElementDetails gst_ximagesink_details =
@@ -1156,6 +1157,7 @@ gst_ximagesink_chain (GstPad * pad, GstData * data)
   gst_buffer_unref (buf);
 
   gst_ximagesink_handle_xevents (ximagesink, pad);
+  gst_ximagesink_send_pending_navigation (ximagesink);
 
   g_mutex_unlock (ximagesink->stream_lock);
 }
@@ -1257,40 +1259,78 @@ gst_ximagesink_interface_init (GstImplementsInterfaceClass * klass)
   klass->supported = gst_ximagesink_interface_supported;
 }
 
+/*
+ * This function is called with the stream-lock held
+ */
+static void
+gst_ximagesink_send_pending_navigation (GstXImageSink * ximagesink)
+{
+  GSList *cur;
+  GSList *pend_events;
+
+  g_mutex_lock (ximagesink->nav_lock);
+  pend_events = ximagesink->pend_nav_events;
+  ximagesink->pend_nav_events = NULL;
+  g_mutex_unlock (ximagesink->nav_lock);
+
+  cur = pend_events;
+  while (cur) {
+    GstEvent *event = cur->data;
+    GstStructure *structure;
+    double x, y;
+    gint x_offset, y_offset;
+
+    if (event) {
+      structure = event->event_data.structure.structure;
+
+      if (!GST_PAD_PEER (GST_VIDEOSINK_PAD (ximagesink))) {
+        gst_event_unref (event);
+        cur = g_slist_next (cur);
+        continue;
+      }
+
+      /* We are not converting the pointer coordinates as there's no hardware
+         scaling done here. The only possible scaling is done by videoscale and
+         videoscale will have to catch those events and tranform the coordinates
+         to match the applied scaling. So here we just add the offset if the image
+         is centered in the window.  */
+
+      x_offset = ximagesink->xwindow->width - GST_VIDEOSINK_WIDTH (ximagesink);
+      y_offset =
+          ximagesink->xwindow->height - GST_VIDEOSINK_HEIGHT (ximagesink);
+
+      if (gst_structure_get_double (structure, "pointer_x", &x)) {
+        x -= x_offset / 2;
+        gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
+      }
+      if (gst_structure_get_double (structure, "pointer_y", &y)) {
+        y -= y_offset / 2;
+        gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
+      }
+
+      gst_pad_send_event (gst_pad_get_peer (GST_VIDEOSINK_PAD (ximagesink)),
+          event);
+    }
+    cur = g_slist_next (cur);
+  }
+
+  g_slist_free (pend_events);
+}
+
 static void
 gst_ximagesink_navigation_send_event (GstNavigation * navigation,
     GstStructure * structure)
 {
   GstXImageSink *ximagesink = GST_XIMAGESINK (navigation);
   GstEvent *event;
-  gint x_offset, y_offset;
-  double x, y;
-
-  if (!GST_PAD_PEER (GST_VIDEOSINK_PAD (ximagesink)))
-    return;
 
   event = gst_event_new (GST_EVENT_NAVIGATION);
   event->event_data.structure.structure = structure;
 
-  /* We are not converting the pointer coordinates as there's no hardware
-     scaling done here. The only possible scaling is done by videoscale and
-     videoscale will have to catch those events and tranform the coordinates
-     to match the applied scaling. So here we just add the offset if the image
-     is centered in the window.  */
-
-  x_offset = ximagesink->xwindow->width - GST_VIDEOSINK_WIDTH (ximagesink);
-  y_offset = ximagesink->xwindow->height - GST_VIDEOSINK_HEIGHT (ximagesink);
-
-  if (gst_structure_get_double (structure, "pointer_x", &x)) {
-    x -= x_offset / 2;
-    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
-  }
-  if (gst_structure_get_double (structure, "pointer_y", &y)) {
-    y -= y_offset / 2;
-    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
-  }
-
-  gst_pad_send_event (gst_pad_get_peer (GST_VIDEOSINK_PAD (ximagesink)), event);
+  g_mutex_lock (ximagesink->nav_lock);
+  ximagesink->pend_nav_events =
+      g_slist_prepend (ximagesink->pend_nav_events, event);
+  g_mutex_unlock (ximagesink->nav_lock);
 }
 
 static void
@@ -1561,6 +1601,19 @@ gst_ximagesink_finalize (GObject * object)
     g_mutex_free (ximagesink->pool_lock);
     ximagesink->pool_lock = NULL;
   }
+  if (ximagesink->nav_lock) {
+    g_mutex_free (ximagesink->nav_lock);
+    ximagesink->nav_lock = NULL;
+  }
+
+  while (ximagesink->pend_nav_events) {
+    GstEvent *event = ximagesink->pend_nav_events->data;
+
+    ximagesink->pend_nav_events =
+        g_slist_delete_link (ximagesink->pend_nav_events,
+        ximagesink->pend_nav_events);
+    gst_event_unref (event);
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1604,6 +1657,9 @@ gst_ximagesink_init (GstXImageSink * ximagesink)
   ximagesink->synchronous = FALSE;
 
   ximagesink->par = NULL;
+
+  ximagesink->nav_lock = g_mutex_new ();
+  ximagesink->pend_nav_events = NULL;
 
   GST_FLAG_SET (ximagesink, GST_ELEMENT_THREAD_SUGGESTED);
   GST_FLAG_SET (ximagesink, GST_ELEMENT_EVENT_AWARE);

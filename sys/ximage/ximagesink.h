@@ -132,6 +132,9 @@ struct _GstXImageSink {
 
   gboolean synchronous;
   gboolean sw_scaling_failed;
+
+  GMutex *nav_lock;
+  GSList *pend_nav_events;
 };
 
 struct _GstXImageSinkClass {

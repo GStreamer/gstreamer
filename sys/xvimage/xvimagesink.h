@@ -154,6 +154,9 @@ struct _GstXvImageSink {
   GSList *image_pool;
 
   gboolean synchronous;
+
+  GMutex *nav_lock;
+  GSList *pend_nav_events;
 };
 
 struct _GstXvImageSinkClass {
