@@ -98,7 +98,8 @@ GstMpeg2EncPictureReader::LoadFrame ()
     if ((data = (GstData *) gst_pad_get_element_private (pad))) {
       gst_pad_set_element_private (pad, NULL);
     } else if (!(data = gst_pad_pull (pad))) {
-      gst_element_error (gst_pad_get_parent (pad), RESOURCE, READ, NULL, NULL);
+      gst_element_error (gst_pad_get_parent (pad), RESOURCE, READ,
+			 (NULL), (NULL));
       return true;
     }
 
