@@ -128,6 +128,8 @@ gst_fdset_new (GstFDSetMode mode)
 void
 gst_fdset_free (GstFDSet * set)
 {
+  g_return_if_fail (set != NULL);
+
   switch (set->mode) {
     case GST_FDSET_MODE_SELECT:
       break;
@@ -147,21 +149,30 @@ gst_fdset_free (GstFDSet * set)
 void
 gst_fdset_set_mode (GstFDSet * set, GstFDSetMode mode)
 {
+  g_return_if_fail (set != NULL);
+
   g_warning ("implement me");
 }
 
 GstFDSetMode
 gst_fdset_get_mode (GstFDSet * set)
 {
+  g_return_val_if_fail (set != NULL, FALSE);
+
   return set->mode;
 }
 
-void
+gboolean
 gst_fdset_add_fd (GstFDSet * set, GstFD * fd)
 {
+  gboolean res = FALSE;
+
+  g_return_val_if_fail (set != NULL, FALSE);
+  g_return_val_if_fail (fd != NULL, FALSE);
+
   switch (set->mode) {
     case GST_FDSET_MODE_SELECT:
-      /* nothing */
+      res = TRUE;
       break;
     case GST_FDSET_MODE_POLL:
     {
@@ -193,26 +204,36 @@ gst_fdset_add_fd (GstFDSet * set, GstFD * fd)
       set->free = -1;
       g_mutex_unlock (set->poll_lock);
 
+      res = TRUE;
       break;
     }
     case GST_FDSET_MODE_EPOLL:
       break;
   }
+  return res;
 }
 
-void
+gboolean
 gst_fdset_remove_fd (GstFDSet * set, GstFD * fd)
 {
+  gboolean res = FALSE;
+
+  g_return_val_if_fail (set != NULL, FALSE);
+  g_return_val_if_fail (fd != NULL, FALSE);
+
   switch (set->mode) {
     case GST_FDSET_MODE_SELECT:
       /* nothing */
       FD_CLR (fd->fd, &set->writefds);
       FD_CLR (fd->fd, &set->readfds);
+      res = TRUE;
       break;
     case GST_FDSET_MODE_POLL:
     {
       g_mutex_lock (set->poll_lock);
 
+      /* FIXME on some platforms poll doesn't ignore the fd
+       * when set to -1 */
       set->pollfds[fd->idx].fd = -1;
       set->pollfds[fd->idx].events = 0;
       set->pollfds[fd->idx].revents = 0;
@@ -229,16 +250,21 @@ gst_fdset_remove_fd (GstFDSet * set, GstFD * fd)
         set->free = MIN (set->free, fd->idx);
       }
       g_mutex_unlock (set->poll_lock);
+      res = TRUE;
       break;
     }
     case GST_FDSET_MODE_EPOLL:
       break;
   }
+  return res;
 }
 
 void
 gst_fdset_fd_ctl_write (GstFDSet * set, GstFD * fd, gboolean active)
 {
+  g_return_if_fail (set != NULL);
+  g_return_if_fail (fd != NULL);
+
   switch (set->mode) {
     case GST_FDSET_MODE_SELECT:
       if (active)
@@ -266,6 +292,9 @@ gst_fdset_fd_ctl_write (GstFDSet * set, GstFD * fd, gboolean active)
 void
 gst_fdset_fd_ctl_read (GstFDSet * set, GstFD * fd, gboolean active)
 {
+  g_return_if_fail (set != NULL);
+  g_return_if_fail (fd != NULL);
+
   switch (set->mode) {
     case GST_FDSET_MODE_SELECT:
       if (active)
@@ -295,6 +324,9 @@ gst_fdset_fd_has_closed (GstFDSet * set, GstFD * fd)
 {
   gboolean res = FALSE;
 
+  g_return_val_if_fail (set != NULL, FALSE);
+  g_return_val_if_fail (fd != NULL, FALSE);
+
   switch (set->mode) {
     case GST_FDSET_MODE_SELECT:
       res = FALSE;
@@ -319,6 +351,9 @@ gboolean
 gst_fdset_fd_has_error (GstFDSet * set, GstFD * fd)
 {
   gboolean res = FALSE;
+
+  g_return_val_if_fail (set != NULL, FALSE);
+  g_return_val_if_fail (fd != NULL, FALSE);
 
   switch (set->mode) {
     case GST_FDSET_MODE_SELECT:
@@ -345,6 +380,9 @@ gst_fdset_fd_can_read (GstFDSet * set, GstFD * fd)
 {
   gboolean res = FALSE;
 
+  g_return_val_if_fail (set != NULL, FALSE);
+  g_return_val_if_fail (fd != NULL, FALSE);
+
   switch (set->mode) {
     case GST_FDSET_MODE_SELECT:
       res = FD_ISSET (fd->fd, &set->testreadfds);
@@ -370,6 +408,9 @@ gst_fdset_fd_can_write (GstFDSet * set, GstFD * fd)
 {
   gboolean res = FALSE;
 
+  g_return_val_if_fail (set != NULL, FALSE);
+  g_return_val_if_fail (fd != NULL, FALSE);
+
   switch (set->mode) {
     case GST_FDSET_MODE_SELECT:
       res = FD_ISSET (fd->fd, &set->testwritefds);
@@ -390,10 +431,12 @@ gst_fdset_fd_can_write (GstFDSet * set, GstFD * fd)
   return res;
 }
 
-int
+gint
 gst_fdset_wait (GstFDSet * set, int timeout)
 {
   int res = -1;
+
+  g_return_val_if_fail (set != NULL, -1);
 
   switch (set->mode) {
     case GST_FDSET_MODE_SELECT:

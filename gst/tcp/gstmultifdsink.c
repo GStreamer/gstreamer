@@ -28,6 +28,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 
 #ifdef HAVE_FIONREAD_IN_SYS_FILIO
 #include <sys/filio.h>
@@ -391,6 +392,8 @@ gst_multifdsink_add (GstMultiFdSink * sink, int fd)
 {
   GstTCPClient *client;
   GTimeVal now;
+  gint flags, res;
+  struct stat statbuf;
 
   GST_DEBUG_OBJECT (sink, "adding client on fd %d", fd);
 
@@ -418,10 +421,20 @@ gst_multifdsink_add (GstMultiFdSink * sink, int fd)
   sink->clients = g_list_prepend (sink->clients, client);
 
   /* set the socket to non blocking */
-  fcntl (fd, F_SETFL, O_NONBLOCK);
+  res = fcntl (fd, F_SETFL, O_NONBLOCK);
   /* we always read from a client */
   gst_fdset_add_fd (sink->fdset, &client->fd);
-  gst_fdset_fd_ctl_read (sink->fdset, &client->fd, TRUE);
+
+  /* we don't try to read from write only fds */
+  flags = fcntl (fd, F_GETFL, 0);
+  if ((flags & O_ACCMODE) != O_WRONLY) {
+    gst_fdset_fd_ctl_read (sink->fdset, &client->fd, TRUE);
+  }
+  /* figure out the mode, can't use send() for non sockets */
+  res = fstat (fd, &statbuf);
+  if (S_ISSOCK (statbuf.st_mode)) {
+    client->is_socket = TRUE;
+  }
 
   SEND_COMMAND (sink, CONTROL_RESTART);
 
@@ -858,16 +871,23 @@ gst_multifdsink_handle_client_write (GstMultiFdSink * sink,
 #else
 #define FLAGS 0
 #endif
-      wrote =
-          send (fd, GST_BUFFER_DATA (head) + client->bufoffset, maxsize, FLAGS);
+      if (client->is_socket) {
+        wrote =
+            send (fd, GST_BUFFER_DATA (head) + client->bufoffset, maxsize,
+            FLAGS);
+      } else {
+        wrote = write (fd, GST_BUFFER_DATA (head) + client->bufoffset, maxsize);
+      }
+
       if (wrote < 0) {
         /* hmm error.. */
         if (errno == EAGAIN) {
           /* nothing serious, resource was unavailable, try again later */
           more = FALSE;
         } else {
-          GST_WARNING_OBJECT (sink, "could not write, removing client on fd %d",
-              fd);
+          GST_WARNING_OBJECT (sink,
+              "could not write, removing client on fd %d: %s", fd,
+              g_strerror (errno));
           client->status = GST_CLIENT_STATUS_ERROR;
           return FALSE;
         }

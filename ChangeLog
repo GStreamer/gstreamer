@@ -1,5 +1,22 @@
 2004-08-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/tcp/gstfdset.c: (gst_fdset_free), (gst_fdset_set_mode),
+	(gst_fdset_get_mode), (gst_fdset_add_fd), (gst_fdset_remove_fd),
+	(gst_fdset_fd_ctl_write), (gst_fdset_fd_ctl_read),
+	(gst_fdset_fd_has_closed), (gst_fdset_fd_has_error),
+	(gst_fdset_fd_can_read), (gst_fdset_fd_can_write),
+	(gst_fdset_wait):
+	* gst/tcp/gstfdset.h:
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_add),
+	(gst_multifdsink_client_queue_buffer),
+	(gst_multifdsink_handle_client_write):
+	* gst/tcp/gstmultifdsink.h:
+	Some extra checks in gstfdset.
+	Only use send() when the fd is a socket. Don't try to
+	read from write only fds.
+
+2004-08-18  Wim Taymans  <wim@fluendo.com>
+
 	* gst/tcp/gstfdset.c: (gst_fdset_add_fd), (gst_fdset_remove_fd),
 	(gst_fdset_fd_ctl_write), (gst_fdset_fd_ctl_read),
 	(gst_fdset_fd_has_closed), (gst_fdset_fd_has_error),
