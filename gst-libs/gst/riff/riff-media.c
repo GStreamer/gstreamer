@@ -136,9 +136,16 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
       break;
 
     case GST_MAKE_FOURCC ('M', '2', '6', '3'):
+    case GST_MAKE_FOURCC ('m', '2', '6', '3'):
       caps = gst_caps_new_simple ("video/x-h263", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Microsoft H.263");
+      break;
+
+    case GST_MAKE_FOURCC ('s', '2', '6', '3'):
+      caps = gst_caps_new_simple ("video/x-h263", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("3GPP H.263");
       break;
 
     case GST_MAKE_FOURCC ('V', 'D', 'O', 'W'):
