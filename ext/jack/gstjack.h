@@ -42,11 +42,19 @@
 #define GST_IS_JACK_SRC_CLASS(klass) G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_JACK_SRC)
 #define GST_TYPE_JACK_SRC gst_jack_src_get_type()
 
+#define GST_JACK_BIN(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_JACK_BIN, GstJackBin)
+#define GST_JACK_BIN_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_JACK_BIN, GstJackClass)
+#define GST_IS_JACK_BIN(obj) G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_JACK_BIN)
+#define GST_IS_JACK_BIN_CLASS(klass) G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_JACK_BIN)
+#define GST_TYPE_JACK_BIN gst_jack_bin_get_type()
+
 #define GST_JACK_PAD(l) ((GstJackPad*)l->data) /* l is a GList */
 
 
 typedef struct _GstJack GstJack;
 typedef struct _GstJackClass GstJackClass;
+typedef struct _GstJackBin GstJackBin;
+typedef struct _GstJackBinClass GstJackBinClass;
 typedef GstJack GstJackSink;
 typedef GstJackClass GstJackSinkClass;
 typedef GstJack GstJackSrc;
@@ -54,9 +62,9 @@ typedef GstJackClass GstJackSrcClass;
 
 
 enum {
-    GST_JACK_OPEN = GST_ELEMENT_FLAG_LAST,
+    GST_JACK_OPEN = GST_BIN_FLAG_LAST,
     GST_JACK_ACTIVE,
-    GST_JACK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 3,
+    GST_JACK_FLAG_LAST = GST_BIN_FLAG_LAST + 3,
 };
 
 
@@ -69,24 +77,6 @@ typedef struct {
     jack_port_t *port;
 } GstJackPad;
 
-typedef struct {
-    GstBin *manager;
-    
-    jack_client_t *client;
-    gint default_new_port_number;
-
-    /* lists of GstJackPads */
-    GList *sink_pads;
-    GList *src_pads;
-
-    gchar *client_name;
-
-    guint rate;
-    nframes_t nframes;
-
-    guint refcount;
-} GstJackClient;
-
 struct _GstJack {
     GstElement element;
 
@@ -98,16 +88,36 @@ struct _GstJack {
     
     gchar *port_name_prefix;
     
-    /* there is exactly one client per managing bin */
-    GstJackClient *client;
+    GstJackBin *bin;
 };
 
 struct _GstJackClass {
     GstElementClass parent_class;
 };
 
+struct _GstJackBin {
+    GstBin bin;
+
+    jack_client_t *client;
+    gint default_new_port_number;
+
+    /* lists of GstJackPads */
+    GList *sink_pads;
+    GList *src_pads;
+
+    gchar *client_name;
+
+    guint rate;
+    nframes_t nframes;
+};
+
+struct _GstJackBinClass {
+    GstBinClass parent_class;
+};
+
 
 GType gst_jack_get_type (void);
+GType gst_jack_bin_get_type (void);
 GType gst_jack_sink_get_type (void);
 GType gst_jack_src_get_type (void);
 

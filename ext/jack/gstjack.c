@@ -35,6 +35,15 @@
 */
 
 
+static GstElementDetails gst_jack_bin_details = {  
+    "Jack Bin",
+    "Bin/Audio",
+    "Jack processing bin: see README for more info",
+    VERSION,
+    "Andy Wingo <wingo@pobox.com>",
+    "(C) 2002 "
+};
+
 static GstElementDetails gst_jack_sink_details = {  
     "Jack Sink",
     "Sink/Audio",
@@ -54,7 +63,7 @@ static GstElementDetails gst_jack_src_details = {
 };
 
 
-static GstElement *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 
 static void gst_jack_init(GstJack *this);
 static void gst_jack_class_init(GstJackClass *klass);
@@ -71,12 +80,6 @@ static GstElementStateReturn gst_jack_change_state(GstElement *element);
 static GstPadConnectReturn gst_jack_connect (GstPad *pad, GstCaps *caps);
 
 static void gst_jack_loop (GstElement *element);
-
-/* jack callbacks */
-static int process (nframes_t nframes, void *arg);
-static int buffer_size (nframes_t nframes, void *arg);
-static int sample_rate (nframes_t nframes, void *arg);
-static void shutdown (void *arg);
 
 
 enum {
@@ -229,12 +232,12 @@ gst_jack_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
     
     g_return_val_if_fail ((this = GST_JACK (element)), NULL);
     
-    if (!this->client)
+    if (!this->bin)
         pad_list = &this->pads;
     else if (this->direction == GST_PAD_SRC)
-        pad_list = &this->client->src_pads;
+        pad_list = &this->bin->src_pads;
     else
-        pad_list = &this->client->src_pads;
+        pad_list = &this->bin->src_pads;
     
     if (name) {
         l = *pad_list;
@@ -303,63 +306,31 @@ static GstElementStateReturn
 gst_jack_change_state (GstElement *element)
 {
     GstJack *this;
-    GstJackClient *client;
-    GstBin *bin;
     GList *l = NULL, **pads;
-    enum JackPortFlags flags;
     GstJackPad *pad;
     
     g_return_val_if_fail (element != NULL, FALSE);
     this = GST_JACK (element);
-    client = this->client;
     
     switch (GST_STATE_PENDING (element)) {
     case GST_STATE_NULL:
-        g_message ("jack: NULL state");
-        if (client) {
-            g_message ("jack: closing client");
-            jack_client_close (client->client);
-        }
-            
+        g_message ("jack client %s: NULL", GST_OBJECT_NAME (GST_OBJECT (this)));
         break;
         
     case GST_STATE_READY:
-        g_message ("jack: READY");
-        if (!this->client) {
-            if (!(bin = gst_element_get_managing_bin (element))) {
-                g_warning ("jack element %s cannot be brought to READY state without a managing bin",
+        g_message ("jack client %s: READY", GST_OBJECT_NAME (GST_OBJECT (this)));
+        if (!this->bin) {
+            if (!(this->bin = (GstJackBin*)gst_element_get_managing_bin (element))
+                || !GST_IS_JACK_BIN (this->bin)) {
+                this->bin = NULL;
+                g_warning ("jack element %s needs to be contained in a jack bin.",
                            GST_OBJECT_NAME (GST_OBJECT (element)));
                 return GST_STATE_FAILURE;
             }
 
-            client = g_object_get_data (G_OBJECT (bin), "gst-jack-client");
-
-            if (!client) {
-                g_message ("jack: making new client");
-                client = g_new0 (GstJackClient, 1);
-                if (!(client->client = jack_client_new ("gst-jack"))) {
-                    g_warning ("jack server not running?");
-                    return GST_STATE_FAILURE;
-                }
-                
-                jack_set_process_callback (client->client, process, client);
-                jack_set_buffer_size_callback (client->client, buffer_size, client);
-                jack_set_sample_rate_callback (client->client, sample_rate, client);
-                jack_on_shutdown (client->client, shutdown, client);
-                
-                client->refcount = 1;
-                g_object_set_data (G_OBJECT (bin), "gst-jack-client", client);
-                client->manager = bin;
-                GST_FLAG_SET (GST_OBJECT (bin), GST_BIN_SELF_SCHEDULABLE);
-            } else {
-                g_message ("jack: refcounting existing client");
-                client->refcount++;
-            }
-            this->client = client;
-            
             /* fixme: verify that all names are unique */
             l = this->pads;
-            pads = (this->direction == GST_PAD_SRC) ? &client->src_pads : &client->sink_pads;
+            pads = (this->direction == GST_PAD_SRC) ? &this->bin->src_pads : &this->bin->sink_pads;
             while (l) {
                 pad = GST_JACK_PAD (l);
                 g_message ("jack: appending pad %s:%s to list", pad->name, pad->peer_name);
@@ -367,60 +338,13 @@ gst_jack_change_state (GstElement *element)
                 l = g_list_next (l);
             }
         }
-        
-        /* fixme: there are a *lot* of problems here */
-        if (GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_OPEN)) {
-            l = this->pads;
-            while (l) {
-                g_message ("jack: unregistering pad %s:%s", GST_JACK_PAD (l)->name, GST_JACK_PAD (l)->peer_name);
-                jack_port_unregister (client->client, GST_JACK_PAD (l)->port);
-                l = g_list_next (l);
-            }
-            GST_FLAG_UNSET (GST_OBJECT (this), GST_JACK_OPEN);
-        }
         break;
         
     case GST_STATE_PAUSED:
-        g_message ("jack: PAUSED");
-        g_assert (client);
-        
-        if (!GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_OPEN)) {
-            l = this->pads;
-            while (l) {
-                pad = GST_JACK_PAD (l);
-                
-                if (this->direction == GST_PAD_SINK)
-                    flags = JackPortIsOutput;
-                else
-                    flags = JackPortIsInput;
-                
-                g_message ("jack: registering pad %s:%s", pad->name, pad->peer_name);
-                pad->port = jack_port_register (client->client, pad->name, JACK_DEFAULT_AUDIO_TYPE, flags, 0);
-                g_message ("connecting gst jack port %s to jack port %s", jack_port_name (pad->port), pad->peer_name);
-                if (jack_connect (client->client, jack_port_name (pad->port), pad->peer_name)) {
-                    g_warning ("could not connect %s and %s", pad->peer_name, jack_port_name (pad->port));
-                    return GST_STATE_FAILURE;
-                }
-                
-                l = g_list_next (l);
-            }
-            g_message ("jack: setting OPEN flag");
-            GST_FLAG_SET (GST_OBJECT (this), GST_JACK_OPEN);
-        }
-
-        if (GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_ACTIVE)) {
-            g_message ("jack: deactivating client");
-            jack_deactivate (client->client);
-            GST_FLAG_UNSET (GST_OBJECT (this), GST_JACK_ACTIVE);
-        }
+        g_message ("jack client %s: PAUSED", GST_OBJECT_NAME (GST_OBJECT (this)));
         break;
     case GST_STATE_PLAYING:
-        g_message ("jack: PLAYING");
-        if (!GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_ACTIVE)) {
-            g_message ("jack: activating client");
-            jack_activate (client->client);
-            GST_FLAG_SET (GST_OBJECT (this), GST_JACK_ACTIVE);
-        }
+        g_message ("jack client %s: PLAYING", GST_OBJECT_NAME (GST_OBJECT (this)));
         break;
     }
     
@@ -444,7 +368,7 @@ gst_jack_connect (GstPad *pad, GstCaps *caps)
   
   if (GST_CAPS_IS_FIXED (caps)) {
       gst_caps_get_int (caps, "rate", &rate);
-      if (this->client && rate != this->client->rate)
+      if (this->bin && rate != this->bin->rate)
           return GST_PAD_CONNECT_REFUSED;
       
       return GST_PAD_CONNECT_OK;
@@ -468,7 +392,7 @@ gst_jack_loop (GstElement *element)
     this = GST_JACK (element);
     
     g_return_if_fail(this != NULL);
-    len = this->client->nframes * sizeof (sample_t);
+    len = this->bin->nframes * sizeof (sample_t);
     
     do {
         pads = this->pads;
@@ -515,69 +439,6 @@ gst_jack_loop (GstElement *element)
     } while (TRUE);
 }
 
-/* jack callbacks */
-
-static int
-process (nframes_t nframes, void *arg)
-{
-    GstJackClient *client = (GstJackClient*) arg;
-    GstJackPad *pad;
-    GList *l;
-    
-    g_assert (client);
-    
-    g_message ("jack: process()");
-
-    l = client->src_pads;
-    while (l) {
-        pad = GST_JACK_PAD (l);
-        pad->data = jack_port_get_buffer (pad->port, nframes);
-        l = g_list_next (l);
-    }
-    
-    l = client->sink_pads;
-    while (l) {
-        pad = GST_JACK_PAD (l);
-        pad->data = jack_port_get_buffer (pad->port, nframes);
-        l = g_list_next (l);
-    }
-    
-    client->nframes = nframes;
-    
-    if (!gst_bin_iterate (client->manager)) {
-        g_warning ("bin failed to iterate");
-        return -1;
-    }
-    
-    /* that's all folks */
-    
-    return 0;      
-}
-
-static int
-buffer_size (nframes_t nframes, void *arg)
-{
-    printf ("the maximum buffer size is now %lu\n", nframes);
-    return 0;
-}
-
-static int
-sample_rate (nframes_t nframes, void *arg)
-{
-    GstJackClient *client = (GstJackClient*) arg;
-    printf ("the sample rate is now %lu/sec\n", nframes);
-    client->rate = nframes;
-    return 0;
-}
-
-static void
-shutdown (void *arg)
-{
-    GstJackClient *client = (GstJackClient*) arg;
-    printf ("shutdown %p\n", client);
-/*    gst_element_set_state (GST_ELEMENT (client->manager), GST_STATE_READY); */
-}
-
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
@@ -587,6 +448,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
         gst_info("jack: could not load support library: 'gstbytestream'\n");
         return FALSE;
     }
+    
+    factory = gst_element_factory_new ("jackbin", GST_TYPE_JACK_BIN, &gst_jack_bin_details);
+    g_return_val_if_fail (factory != NULL, FALSE);
     
     factory = gst_element_factory_new ("jacksrc", GST_TYPE_JACK_SRC, &gst_jack_src_details);
     g_return_val_if_fail (factory != NULL, FALSE);
