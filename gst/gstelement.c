@@ -1145,12 +1145,9 @@ gst_element_remove_pad (GstElement *element, GstPad *pad)
     if (GST_RPAD_PEER (pad) != NULL) {
       gst_pad_unlink (pad, GST_PAD (GST_RPAD_PEER (pad)));
     }
-<<<<<<< gstelement.c
     gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), NULL);
-=======
   } else if (GST_IS_GHOST_PAD (pad)) {
     g_object_set (pad, "real-pad", NULL, NULL);
->>>>>>> 1.250
   }
   
   /* remove it from the list */
