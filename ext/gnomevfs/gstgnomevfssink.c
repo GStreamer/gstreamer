@@ -347,7 +347,8 @@ gst_gnomevfssink_open_file (GstGnomeVFSSink * sink)
     }
     sink->own_handle = TRUE;
   } else if (!sink->handle) {
-    GST_ELEMENT_ERROR (sink, RESOURCE, FAILED, (_("No filename given")), NULL);
+    GST_ELEMENT_ERROR (sink, RESOURCE, FAILED, (_("No filename given")),
+        (NULL));
     return FALSE;
   }
 
