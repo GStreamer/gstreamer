@@ -421,11 +421,14 @@ GST_CHECK_FEATURE(AUDIOFILE, [audiofile], afsink afsrc, [
 
 dnl *** avifile ***
 dnl this check uses the GST_CHECK_CONFIGPROG macro
+dnl this check needs more fixing
+dnl translit(dnm, m, l) AC_SUBST(AVIFILE_LIBS)
 translit(dnm, m, l) AM_CONDITIONAL(USE_AVIFILE, true)
 GST_CHECK_FEATURE(AVIFILE, [avifile], windec winenc, [
-  translit(dnm, m, l) AC_SUBST(AVIFILE_LIBS)
   translit(dnm, m, l) AC_SUBST(AVIFILE_CFLAGS)
   GST_CHECK_CONFIGPROG(AVIFILE, avifile-config)
+  AVIFILE_LIBS="$AVIFILE_LIBS -lstdc++"
+  AC_SUBST(AVIFILE_LIBS)
 ])
 
 dnl *** CDParanoia ***
@@ -439,7 +442,7 @@ dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
 dnl *** dvdread ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVDREAD, true)
-GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdread, [
+GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdsrc, [
   GST_CHECK_LIBHEADER(DVDREAD, dvdread, DVDOpen, , dvdread/dvd_reader.h, DVDREAD_LIBS="-ldvdread")
   AC_SUBST(DVDREAD_LIBS)
 ])
@@ -1064,10 +1067,10 @@ gst/volume/Makefile \
 gst/vumeter/Makefile \
 gst/wavparse/Makefile"
 
+dnl $PLUGIN_GST_MAKEFILES
 AC_OUTPUT(
 Makefile
 gst/Makefile
-$PLUGIN_GST_MAKEFILES
 sys/Makefile
 sys/oss/Makefile
 sys/qcam/Makefile
@@ -1079,6 +1082,7 @@ ext/Makefile
 ext/aalib/Makefile
 ext/alsa/Makefile
 ext/audiofile/Makefile
+ext/avifile/Makefile
 ext/dvdread/Makefile
 ext/esd/Makefile
 ext/lame/Makefile

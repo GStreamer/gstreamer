@@ -116,5 +116,6 @@ do {
   if (! filter->eos) {
     in = gst_pad_pull(filter->sinkpad);
   }
+  gst_element_yield (GST_ELEMENT (filter));
 
-} while (! GST_ELEMENT_IS_COTHREAD_STOPPING(elem));
+} while (TRUE);
