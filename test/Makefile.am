@@ -2,7 +2,7 @@
 noinst_PROGRAMS = qtest spectrum record wave mp3 teardown buffer mp3parse \
 		  mpeg2parse mp1parse mp3play ac3parse ac3play dvdcat fake cobin videotest \
 		  aviparse vidcapture avi2mpg mp2tomp1 mp1tomp1 pipetest \
-		  vidcapture2 mp2toavi
+		  vidcapture2 mp2toavi mp3tovorbis
 
 SUBDIRS = xml cothreads bindings
 

@@ -50,9 +50,12 @@ void gst_elementfactory_register(GstElementFactory *elementfactory) {
  * Returns: #GstElementFactory if found, NULL otherwise
  */
 GstElementFactory *gst_elementfactory_find(gchar *name) {
-  GList *walk = _gst_elementfactories;
+  GList *walk;
   GstElementFactory *factory;
 
+  gst_plugin_load_elementfactory(name);
+
+  walk = _gst_elementfactories;
   while (walk) {
     factory = (GstElementFactory *)(walk->data);
     if (!strcmp(name,factory->name))
@@ -149,7 +152,7 @@ GstElement *gst_elementfactory_make(gchar *factoryname,gchar *name) {
   GstElementFactory *factory;
   GstElement *element;
 
-  gst_plugin_load_elementfactory(factoryname);
+  //gst_plugin_load_elementfactory(factoryname);
   factory = gst_elementfactory_find(factoryname);
   if (factory == NULL) return NULL;
   element = gst_elementfactory_create(factory,name);
