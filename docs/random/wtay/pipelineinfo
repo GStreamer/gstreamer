@@ -1,0 +1,262 @@
+In this document we describe how we can obtain various properties
+of the pipeline we are running.
+
+we have 5 possible ways to get information, each one of these
+methods focus on one particular property of the pipeline.
+
+ - caps: this is a description of the media type that flows between
+         2 pads.
+ - metadata: non essential extra (human readable) information about
+         the stream, like author, copyright, name etc..
+ - streaminfo: information about the stream as encoded into the
+         stream itself.
+ - pad/element queries: information about the stream as it is being
+         processed.
+ - pad/element convert: information about the relation between formats
+         in a streams as it is being processed.
+
+note that element properties are not included in this list. Element
+properties are only used to configure the codec/element.
+
+caps, metadata, streaminfo are supposed to remain fairly static during
+the stream. The queries/converts can be done on demand.  The reason
+for this is that caps/metadata/streaminfo is quite expensive and 
+could degrade pipeline performance.
+
+
+Caps.
+-----
+
+Caps are automatically set on pads by the core when two pads agree
+on a media type. This automatically means that the caps are fixed.
+
+Since caps is a property of the pad and the g_object_notify() mechanism
+is used to signal a change, the user can either connect a "notify" 
+signal handler to the pad or connect to the "deep_notify" signal on
+a parent pipeline.
+
+The caps notifications are useful if you want to know what kind of
+media is passing through pads. You can, for example, report to the
+user how the video or audiosink is configured or what kind of
+media some plugin is producing/accepting.
+
+So, always use the caps to find out the channels/samplerate/size
+of the media.
+
+
+Metadata
+--------
+
+Metadata is a GstCaps element property (named "metadata") that contains
+additional information encoded into the stream that doesn't say anything
+about the media type of the stream itself.
+
+Metadata are typically human readable information like author, copyright,
+title, ... and can be displayed by the application as-is.
+
+An element with a "metadata" property is supposed to g_object_notify that
+property when the metadata changes so that the app can connect a signal
+handler to the property or use the "deep_notify" signal to get the 
+notification.
+
+
+Streaminfo
+----------
+
+Streaminfo is a GstCaps element property (named "streaminfo") that contains
+additional information about the stream that is not stricly required to
+specify the media type of the stream.
+
+Streaminfo is typically the length, bitrate, framerate, flags, ... of the
+stream. 
+
+It is important to note that this information should be derived from the 
+stream itself and might not be correct for the pipeline being processed.
+Let's illustrate this with an example:
+
+ - an mp3 stream has an id3 tags that contains the length of the stream 
+   (TLEN).
+ - we cut the mp3 stream in half
+
+ The actual length doesn't match the stated length as encoded in the id3
+ tags, so the TLEN tag should be put in the streaminfo and the actual
+ length should be queried with a pad_query.
+
+So, be careful when showing streaminfo as-is in an app.
+
+Queries
+-------
+
+Queries can be performed on pads and elements and are used to get 
+information about the current stream. The value is a single gint64
+in a specific format. 
+
+example:
+
+ - the query (GST_QUERY_TOTAL, GST_FORMAT_TIME) will return the total
+   amount of time this pad/element will run.
+
+ - the query (GST_QUERY_POSITION, GST_FORMAT_UNITS) will return the 
+   current position of the stream expressed in units (units are samples,
+   frames, bytes, ... depending on the media type of the stream)
+
+two methods exist to perform a query:
+
+ - gboolean gst_pad_query (GstPad *pad, GstQueryType type, 
+                           GstFormat *format, gint64 *value);
+
+and:
+
+ - gboolean gst_element_query (GstElement *element, GstQueryType type, 
+                               GstFormat *format, gint64 *value);
+
+if you want to get the total duration of a stream or the current position,
+you need to use a pad query. A pad query can fail (method returns FALSE),
+this usually means that the duration is not known or that not enough data
+has been processed to report the correct value.
+
+the possible queries that can be performed on a pad/element can be obtained
+with
+
+ - const GstQueryType* gst_pad_get_query_types (GstPad *pad);
+ 
+and
+
+ - const GstQueryType* gst_element_get_query_types (GstElement *element);
+
+These functions return an array of GstQueryTypes (last element == 0). you
+can loop over the array to see what is supported or do 
+
+ - gboolean gst_queries_contains (const GstQueryType *types, GstQueryType type);
+
+to see if a specific format is contained in the list.
+
+
+Convert
+-------
+
+The convert functions are used to query an element/pad for the relationship
+between two formats that it supports. For example:
+
+suppose we want to know how many frames a particular video decoder will
+produce in one second, we ask it to convert its concept of 1 SECOND into
+1 UNIT (frames in the context of video). so,
+
+ GstFormat format = GST_FORMAT_UNITS;
+ 
+ res = gst_pad_convert (pad, GST_FORMAT_TIME, GST_SECOND,
+                        &format, &value);
+
+if res == TRUE, value will contain the framerate of the video, of course 
+this framerate will only contain the integral part. If you want more
+accuracy, use 1000 * GST_SECOND and divide the result by 1000 to get
+a fractional part.
+
+All other neat things can be done too, look at the typical cdplayer
+plugin for example. It defines a new format "track". Now you can
+ask it to convert a TRACK to TIME like this:
+
+
+ GstFormat format = GST_FORMAT_TIME;
+ track_format = gst_format_get_by_nick ("track");
+ res = gst_pad_convert (pad, track_format, 1,
+                        &format, &value);
+
+
+This will convert 1 track to a time. of course we didn't (couldn't) specify
+which track, but that's not a problem if you understand how the stream is
+divided into different formats:
+
+Take the total stream as containing bytes (indicated with + in figure) we 
+can subdivide the (byte)stream in different formats.
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ... bytes
+!   !   !   !   !   !   !   !   !   !   !   !   !   !   !   !   !    ... samples (units)
+!                   !               !                   !            ... buffers
+!                            !                                !      ... time
+!                                                              !     ... track
+
+The raw bytestream can be grouped in samples for example (for 16 bit stereo
+int audio, 4 bytes == 1 sample) or we can divide it into time 
+(44100 samples == 176400 bytes == 1 second) or into tracks 
+(1 track could be 17640000 bytes or 100 seconds or 4410000 samples)
+
+It is important to know that the stream starts at position 0 (for all formats)
+and ends at position X (expressed in a specific format). now take this stream
+divided into the track format:
+
+0        200         500       700          1000
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ .. bytes
+! track0  ! track1    ! track2  ! track3     ! ...
+
+if we now perform a pad convert from 100 bytes to the track format, we
+get the value 0, as the region 0-100 bytes is contained in track0.
+if we perform a pad convert from 600 bytes to track, we get the value
+2, as track0->track2 contains the bytes 0-500.
+
+We can also do: convert track1 to bytes, then we get 200. If we do
+convert track2 to bytes, we get 500. Note that the conversions are
+always performed relative to 0, so if we convert track2 to bytes, we
+always get the number of bytes from track0->track2.
+
+If we want to get the number of bytes of one particular track, we have
+to substract two convert values. Look at the folowing figure to understand
+this. The --- defines the region we want to convert.
+
+
+0        200         500       700          1000
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ .. bytes
+! track0  ! track1    ! track2  ! track3     ! ...
+
+-----------             track1 -> bytes (1) (size of track0)
+
+----------------------  track2 -> bytes (2) (size of track0 and track1)
+
+           -----------  (2) - (1) = total bytes for track 1
+
+Another example would be to get the bitrate of a decoder plugin, consider the
+following example:
+
+     (------------)
+     ! mad        !
+  - sink         src -
+     (------------)
+
+The element has a sinkpad that will take N bytes as input to produce M
+samples (units) on its srcpad.
+The rate at which it takes bytes is defined as the byterate of the 
+stream (bitrate == byterate * 8). So, we do:
+
+ GstFormat format = GST_FORMAT_BYTES;
+ gint64 value;
+ 
+ gst_pad_convert (mad->sinkpad, GST_FORMAT_TIME, GST_SECOND,
+                  &format, &value);
+
+..and we get the number of bytes this plugin takes in each second.
+Again, note that this value is relative to 0, you can get an average
+of a specific period by using the same substract trick as above.
+
+
+Element Properties
+------------------
+
+Element properties are used to configure an element. They should not be
+used to describe media info, metadata fields, streaminfo fields or anything
+other that doesn't involve codec configuration.
+
+Several reasons:
+
+ - metadata requires dynamic properties (one for each tag). This cannot be done
+   with GObject properties.
+ - you cannot signal a logical group of related properties (exposing stuff like
+   samplerate/channels/encoding/... in different element properties is not a
+   good idea.
+ - stuff like length an position depend on the pads of the element, you cannot
+   sanely expose a property for each pad to describe this.
+ - element properties can only report stuff with one type. If your property
+   exposes somthing like "total_length", you cannot make it both report this
+   in time/bytes/samples/frames...
+ - impossible to sanely implement convert with element properties.
+
