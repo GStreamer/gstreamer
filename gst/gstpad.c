@@ -31,6 +31,8 @@
 #include "gstinfo.h"
 #include "gstvalue.h"
 
+#define GST_CAT_DEFAULT GST_CAT_PADS
+
 /* FIXME */
 #define gst_caps_debug(a,b) GST_DEBUG_CAPS(b,a)
 
@@ -51,10 +53,7 @@ static void		gst_pad_class_init		(GstPadClass *klass);
 static void		gst_pad_init			(GstPad *pad);
 static void		gst_pad_dispose			(GObject *object);
 
-static gboolean 	gst_pad_try_relink_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad, 
-							 const GstCaps *caps, gboolean clear);
 static void		gst_pad_set_pad_template	(GstPad *pad, GstPadTemplate *templ);
-static GstCaps *       _gst_pad_try_fixate_caps        (GstRealPad *pad, GstCaps *caps);
 static GstCaps *       _gst_pad_default_fixate_func    (GstPad *pad, GstCaps *caps, gpointer unused);
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -927,6 +926,24 @@ gst_pad_unlink (GstPad *srcpad,
   gst_object_unref (GST_OBJECT (realsink));
 }
 
+struct _GstPadLink {
+  GType type;
+
+  gboolean negotiated;
+  gboolean srcnotify;
+  gboolean sinknotify;
+
+  GstPad *srcpad;
+  GstPad *sinkpad;
+
+  GstCaps *srccaps;
+  GstCaps *sinkcaps;
+  GstCaps *filtercaps;
+  GstCaps *caps;
+
+  GstPadFixateFunction app_fixate;
+};
+
 static gboolean
 gst_pad_check_schedulers (GstRealPad *realsrc, GstRealPad *realsink)
 {
@@ -949,6 +966,301 @@ gst_pad_check_schedulers (GstRealPad *realsrc, GstRealPad *realsink)
   return TRUE;
 }
 
+#define GST_PAD_LINK_SRC(pad) ((GST_PAD_IS_SRC (pad)) ? (pad) : GST_PAD_PEER (pad))
+#define GST_PAD_LINK_SINK(pad) ((GST_PAD_IS_SINK (pad)) ? (pad) : GST_PAD_PEER (pad))
+
+static GstPadLink *
+gst_pad_link_new (void)
+{
+  GstPadLink *link;
+  link = g_new0 (GstPadLink, 1);
+  link->sinknotify = TRUE;
+  link->srcnotify = TRUE;
+  return link;
+}
+
+static void
+gst_pad_link_free (GstPadLink *link)
+{
+  if (link->srccaps) gst_caps_free (link->srccaps);
+  if (link->sinkcaps) gst_caps_free (link->sinkcaps);
+  if (link->filtercaps) gst_caps_free (link->filtercaps);
+  if (link->caps) gst_caps_free (link->caps);
+  g_free (link);
+}
+
+static void gst_pad_link_intersect (GstPadLink *link)
+{
+  GstCaps *pad_intersection;
+
+  if (link->caps) gst_caps_free (link->caps);
+
+  GST_DEBUG ("intersecting link from %s:%s to %s:%s",
+      GST_DEBUG_PAD_NAME (link->srcpad), GST_DEBUG_PAD_NAME (link->sinkpad));
+  GST_DEBUG_CAPS ("srccaps", link->srccaps);
+  GST_DEBUG_CAPS ("sinkcaps", link->sinkcaps);
+  GST_DEBUG_CAPS ("filtercaps", link->filtercaps);
+
+  pad_intersection = gst_caps_intersect (link->srccaps, link->sinkcaps);
+
+  if (link->filtercaps) {
+    GST_DEBUG_CAPS ("unfiltered intersection", pad_intersection);
+    link->caps = gst_caps_intersect (pad_intersection, link->filtercaps);
+    gst_caps_free (pad_intersection);
+  } else {
+    link->caps = pad_intersection;
+  }
+
+  GST_DEBUG_CAPS ("intersection", link->caps);
+}
+
+static gboolean
+gst_pad_link_ready_for_negotiation (GstPadLink *link)
+{
+  GstElement *parent;
+
+  parent = GST_PAD_PARENT (link->srcpad);
+  if (!parent || GST_STATE (parent) < GST_STATE_READY) {
+    GST_DEBUG ("parent %s of pad %s:%s is not READY",
+        GST_ELEMENT_NAME (parent), GST_DEBUG_PAD_NAME (link->srcpad));
+    return FALSE;
+  }
+  parent = GST_PAD_PARENT (link->sinkpad);
+  if (!parent || GST_STATE (parent) < GST_STATE_READY) {
+    GST_DEBUG ("parent %s of pad %s:%s is not READY",
+        GST_ELEMENT_NAME (parent), GST_DEBUG_PAD_NAME (link->sinkpad));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static void
+gst_pad_link_fixate (GstPadLink *link)
+{
+  GstCaps *caps;
+  GstCaps *newcaps;
+
+  caps = link->caps;
+
+  g_return_if_fail (caps != NULL);
+  g_return_if_fail (!gst_caps_is_empty(caps));
+
+  while (!gst_caps_is_fixed (caps)) {
+    if (link->app_fixate) {
+      newcaps = (link->app_fixate) (GST_PAD (link->srcpad), caps, NULL);
+      if (newcaps) {
+        caps = newcaps;
+        continue;
+      }
+    }
+    if (GST_RPAD_FIXATEFUNC(link->srcpad)) {
+      newcaps = GST_RPAD_FIXATEFUNC(link->srcpad) (GST_PAD (link->srcpad),
+          caps, NULL);
+      if (newcaps) {
+        caps = newcaps;
+        continue;
+      }
+    }
+    if (GST_RPAD_FIXATEFUNC(link->sinkpad)) {
+      newcaps = GST_RPAD_FIXATEFUNC(link->sinkpad) (GST_PAD (link->sinkpad),
+          caps, NULL);
+      if (newcaps) {
+        caps = newcaps;
+        continue;
+      }
+    }
+    caps = _gst_pad_default_fixate_func (GST_PAD(link->srcpad), caps, NULL);
+  }
+
+  GST_DEBUG_CAPS ("fixate decided on", caps);
+
+  link->caps = caps;
+}
+
+static gboolean
+gst_pad_link_call_link_functions (GstPadLink *link)
+{
+  gboolean negotiating;
+  GstPadLinkReturn res;
+
+  if (link->srcnotify && GST_RPAD_LINKFUNC (link->srcpad)){
+    GST_DEBUG ("calling link function on pad %s:%s",
+        GST_DEBUG_PAD_NAME (link->srcpad));
+
+    negotiating = GST_FLAG_IS_SET (link->srcpad, GST_PAD_NEGOTIATING);
+
+    /* set the NEGOTIATING flag if not already done */
+    if (!negotiating) GST_FLAG_SET (link->srcpad, GST_PAD_NEGOTIATING);
+    
+    /* call the link function */
+    res = GST_RPAD_LINKFUNC (link->srcpad) (GST_PAD (link->srcpad),
+        link->caps);
+
+    /* unset again after negotiating only if we set it  */
+    if (!negotiating) GST_FLAG_UNSET (link->srcpad, GST_PAD_NEGOTIATING);
+
+    GST_DEBUG ("got reply %d from link function on pad %s:%s",
+        res, GST_DEBUG_PAD_NAME (link->srcpad));
+
+    if (res == GST_PAD_LINK_REFUSED) {
+      GST_CAT_INFO (GST_CAT_CAPS, "pad %s:%s doesn't accept caps",
+		GST_DEBUG_PAD_NAME (link->srcpad));
+      return FALSE;
+    }
+  }
+
+  if (link->sinknotify && GST_RPAD_LINKFUNC (link->sinkpad)){
+    GST_DEBUG ("calling link function on pad %s:%s",
+        GST_DEBUG_PAD_NAME (link->sinkpad));
+
+    negotiating = GST_FLAG_IS_SET (link->sinkpad, GST_PAD_NEGOTIATING);
+
+    /* set the NEGOTIATING flag if not already done */
+    if (!negotiating) GST_FLAG_SET (link->sinkpad, GST_PAD_NEGOTIATING);
+    
+    /* call the link function */
+    res = GST_RPAD_LINKFUNC (link->sinkpad) (GST_PAD (link->sinkpad),
+        link->caps);
+
+    /* unset again after negotiating only if we set it  */
+    if (!negotiating) GST_FLAG_UNSET (link->sinkpad, GST_PAD_NEGOTIATING);
+
+    GST_DEBUG ("got reply %d from link function on pad %s:%s",
+        res, GST_DEBUG_PAD_NAME (link->sinkpad));
+
+    if (res == GST_PAD_LINK_REFUSED) {
+      GST_CAT_INFO (GST_CAT_CAPS, "pad %s:%s doesn't accept caps",
+		GST_DEBUG_PAD_NAME (link->sinkpad));
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+static GstPadLinkReturn
+gst_pad_link_negotiate (GstPadLink *link)
+{
+  GST_DEBUG ("negotiating link from pad %s:%s to pad %s:%s",
+      GST_DEBUG_PAD_NAME (link->srcpad), GST_DEBUG_PAD_NAME (link->sinkpad));
+
+  if (!gst_pad_link_ready_for_negotiation (link)) {
+    return GST_PAD_LINK_DELAYED;
+  }
+
+  gst_pad_link_intersect (link);
+  if (gst_caps_is_empty (link->caps))
+    return GST_PAD_LINK_REFUSED;
+
+  gst_pad_link_fixate (link);
+  if (gst_caps_is_empty (link->caps))
+    return GST_PAD_LINK_REFUSED;
+
+  if (!gst_pad_link_call_link_functions (link)) {
+    return GST_PAD_LINK_REFUSED;
+  }
+
+  return GST_PAD_LINK_OK;
+}
+
+GstPadLinkReturn
+gst_pad_renegotiate (GstPad *pad)
+{
+  GstPadLink *link;
+  GstPadLinkReturn ret;
+
+  g_return_val_if_fail (pad != NULL, GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_LINK_REFUSED);
+
+  link = gst_pad_link_new ();
+
+  link->srcpad = GST_PAD_LINK_SRC (pad);
+  link->sinkpad = GST_PAD_LINK_SINK (pad);
+
+  if (!gst_pad_link_ready_for_negotiation (link)) {
+    gst_pad_link_free (link);
+    return GST_PAD_LINK_DELAYED;
+  }
+
+  if (GST_REAL_PAD(pad)->link->filtercaps) {
+    link->filtercaps = gst_caps_copy (GST_REAL_PAD(pad)->link->filtercaps);
+  }
+  link->srccaps = gst_pad_get_caps (link->srcpad);
+  link->sinkcaps = gst_pad_get_caps (link->sinkpad);
+
+  ret = gst_pad_link_negotiate (link);
+
+  if (GST_PAD_LINK_FAILED (ret)) {
+    gst_pad_link_free (link);
+  }
+
+  return ret;
+}
+
+GstPadLinkReturn
+gst_pad_try_set_caps (GstPad *pad, const GstCaps *caps)
+{
+  GstPadLink *link;
+  GstPadLinkReturn ret;
+
+  g_return_val_if_fail (pad != NULL, GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (!GST_FLAG_IS_SET (pad, GST_PAD_NEGOTIATING),
+      GST_PAD_LINK_REFUSED);
+
+  /* setting non-fixed caps on a pad is not allowed */
+  if (!gst_caps_is_fixed (caps)) {
+    GST_CAT_INFO (GST_CAT_CAPS, 
+              "trying to set unfixed caps on pad %s:%s, not allowed",
+	      GST_DEBUG_PAD_NAME (pad));
+    g_warning ("trying to set non fixed caps on pad %s:%s, not allowed",
+               GST_DEBUG_PAD_NAME (pad));
+
+    gst_caps_debug (caps, "unfixed caps");
+    return GST_PAD_LINK_REFUSED;
+  }
+
+  link = gst_pad_link_new ();
+
+  link->srcpad = GST_PAD_LINK_SRC (pad);
+  link->sinkpad = GST_PAD_LINK_SINK (pad);
+
+  if (!gst_pad_link_ready_for_negotiation (link)) {
+    gst_pad_link_free (link);
+    return GST_PAD_LINK_DELAYED;
+  }
+
+  if (GST_REAL_PAD(pad)->link->filtercaps) {
+    link->filtercaps = gst_caps_copy (GST_REAL_PAD(pad)->link->filtercaps);
+  }
+  if (link->srcpad == pad) {
+    link->srccaps = gst_caps_copy(caps);
+    link->sinkcaps = gst_pad_get_allowed_caps (link->sinkpad);
+    link->srcnotify = FALSE;
+  } else {
+    link->srccaps = gst_pad_get_allowed_caps (link->srcpad);
+    link->sinkcaps = gst_caps_copy(caps);
+    link->sinknotify = FALSE;
+  }
+
+  ret = gst_pad_link_negotiate (link);
+
+  if (GST_PAD_LINK_FAILED (ret)) {
+    gst_pad_link_free (link);
+  }
+
+  return ret;
+}
+
+
+
+
+
+
+
+
+
 /**
  * gst_pad_can_link_filtered:
  * @srcpad: the source #GstPad to link.
@@ -964,38 +1276,14 @@ gboolean
 gst_pad_can_link_filtered (GstPad *srcpad, GstPad *sinkpad,
                            const GstCaps *filtercaps)
 {
-  GstRealPad *realsrc, *realsink;
-
-  /* generic checks */
-  g_return_val_if_fail (srcpad != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_PAD (srcpad), FALSE);
-  g_return_val_if_fail (sinkpad != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
-
-  /* now we need to deal with the real/ghost stuff */
-  realsrc = GST_PAD_REALIZE (srcpad);
-  realsink = GST_PAD_REALIZE (sinkpad);
-
-  g_return_val_if_fail (GST_RPAD_PEER (realsrc) == NULL, FALSE);
-  g_return_val_if_fail (GST_RPAD_PEER (realsink) == NULL, FALSE);
-  g_return_val_if_fail (GST_PAD_PARENT (realsrc) != NULL, FALSE);
-  g_return_val_if_fail (GST_PAD_PARENT (realsink) != NULL, FALSE);
-
-  if (!gst_pad_check_schedulers (realsrc, realsink)) {
-    g_warning ("linking pads with different scheds requires "
-               "exactly one decoupled element (queue)");
-    return FALSE;
-  }
-
-  /* check if the directions are compatible */
-  if (!(((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SINK) &&
-         (GST_RPAD_DIRECTION (realsink) == GST_PAD_SRC)) ||
-        ((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC) &&
-         (GST_RPAD_DIRECTION (realsink) == GST_PAD_SINK))))
-    return FALSE;
+  /* FIXME */
+#if 0
+  g_warning("unimplemented");
+#endif
 
   return TRUE;
 }
+
 /**
  * gst_pad_can_link:
  * @srcpad: the source #GstPad to link.
@@ -1028,6 +1316,8 @@ gst_pad_link_filtered (GstPad *srcpad, GstPad *sinkpad,
 {
   GstRealPad *realsrc, *realsink;
   GstScheduler *src_sched, *sink_sched;
+  GstPadLink *link;
+  GstPadLinkReturn ret;
 
   /* generic checks */
   g_return_val_if_fail (srcpad != NULL, FALSE);
@@ -1074,63 +1364,68 @@ gst_pad_link_filtered (GstPad *srcpad, GstPad *sinkpad,
     return FALSE;
   }
   
-  /* check for reversed directions and swap if necessary */
-  if ((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SINK) &&
-      (GST_RPAD_DIRECTION (realsink) == GST_PAD_SRC)) {
-    GstRealPad *temppad;
+  link = gst_pad_link_new ();
 
-    temppad = realsrc;
-    realsrc = realsink;
-    realsink = temppad;
+  if (GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC) {
+    link->srcpad = GST_PAD (realsrc);
+    link->sinkpad = GST_PAD (realsink);
+  } else {
+    link->srcpad = GST_PAD (realsink);
+    link->sinkpad = GST_PAD (realsrc);
   }
-  if (GST_RPAD_DIRECTION (realsrc) != GST_PAD_SRC) {
+
+  if (GST_RPAD_DIRECTION (link->srcpad) != GST_PAD_SRC) {
     GST_CAT_INFO (GST_CAT_PADS, "Real src pad %s:%s is not a source pad, failed",
-	      GST_DEBUG_PAD_NAME (realsrc));
+	      GST_DEBUG_PAD_NAME (link->srcpad));
+    gst_pad_link_free (link);
     return FALSE;
   }    
-  if (GST_RPAD_DIRECTION (realsink) != GST_PAD_SINK) {
+  if (GST_RPAD_DIRECTION (link->sinkpad) != GST_PAD_SINK) {
     GST_CAT_INFO (GST_CAT_PADS, "Real sink pad %s:%s is not a sink pad, failed",
-	      GST_DEBUG_PAD_NAME (realsink));
-    return FALSE;
-  }    
-  /* first set peers */
-  GST_RPAD_PEER (realsrc) = realsink;
-  GST_RPAD_PEER (realsink) = realsrc;
-
-  /* try to negotiate the pads, we don't need to clear the caps here */
-  if (!gst_pad_try_relink_filtered_func (realsrc, realsink,
-	                                 filtercaps, FALSE)) {
-    GST_CAT_DEBUG (GST_CAT_CAPS, "relink_filtered_func failed, can't link");
-
-    GST_RPAD_PEER (realsrc) = NULL;
-    GST_RPAD_PEER (realsink) = NULL;
-
+	      GST_DEBUG_PAD_NAME (link->sinkpad));
+    gst_pad_link_free (link);
     return FALSE;
   }
+
+  link->srccaps = gst_pad_get_caps (link->srcpad);
+  link->sinkcaps = gst_pad_get_caps (link->sinkpad);
+  if (filtercaps) link->filtercaps = gst_caps_copy (filtercaps);
+  ret = gst_pad_link_negotiate (link);
+  if (ret == GST_PAD_LINK_REFUSED) {
+    gst_pad_link_free (link);
+    return FALSE;
+  }
+
+  GST_RPAD_PEER (link->srcpad) = GST_REAL_PAD(link->sinkpad);
+  GST_RPAD_PEER (link->sinkpad) = GST_REAL_PAD(link->srcpad);
+  GST_RPAD_LINK (link->srcpad) = link;
+  GST_RPAD_LINK (link->sinkpad) = link;
 
   /* fire off a signal to each of the pads telling them 
    * that they've been linked */
-  g_signal_emit (G_OBJECT (realsrc), gst_real_pad_signals[REAL_LINKED], 
-                 0, realsink);
-  g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_LINKED], 
-                 0, realsrc);
+  g_signal_emit (G_OBJECT (link->srcpad), gst_real_pad_signals[REAL_LINKED], 
+                 0, link->sinkpad);
+  g_signal_emit (G_OBJECT (link->sinkpad), gst_real_pad_signals[REAL_LINKED], 
+                 0, link->srcpad);
 
-  src_sched = gst_pad_get_scheduler (GST_PAD (realsrc));
-  sink_sched = gst_pad_get_scheduler (GST_PAD (realsink));
+  src_sched = gst_pad_get_scheduler (GST_PAD (link->srcpad));
+  sink_sched = gst_pad_get_scheduler (GST_PAD (link->sinkpad));
 
   /* now tell the scheduler */
   if (src_sched && src_sched == sink_sched) {
     gst_scheduler_pad_link (src_sched, 
-	                    GST_PAD (realsrc), GST_PAD (realsink));
+	                    GST_PAD (link->srcpad), GST_PAD (link->sinkpad));
   }
   else {
     GST_CAT_INFO (GST_CAT_PADS, "not telling link to scheduler %s:%s and %s:%s, %p %p",
-            GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad),
+            GST_DEBUG_PAD_NAME (link->srcpad),
+            GST_DEBUG_PAD_NAME (link->sinkpad),
 	    src_sched, sink_sched);
   }
 
   GST_CAT_INFO (GST_CAT_PADS, "linked %s:%s and %s:%s, successful",
-            GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+            GST_DEBUG_PAD_NAME (link->srcpad),
+            GST_DEBUG_PAD_NAME (link->sinkpad));
 
   return TRUE;
 }
@@ -1332,188 +1627,6 @@ gst_pad_get_ghost_pad_list (GstPad *pad)
   return GST_PAD_REALIZE(pad)->ghostpads;
 }
 
-/* an internal caps negotiation helper function:
- * 
- * 1. optionally calls the pad link function with the provided caps
- * 2. deals with the result code of the link function
- * 3. sets fixed caps on the pad.
- */
-static GstPadLinkReturn
-gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
-{
-  GstCaps *allowed = NULL;
-  GstElement *parent = GST_PAD_PARENT (pad);
-
-  g_return_val_if_fail (pad != NULL, GST_PAD_LINK_REFUSED);
-  g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_LINK_REFUSED);
-
-  /* if this pad has a parent and the parent is not READY, delay the
-   * negotiation */
-  if (parent && GST_STATE (parent) < GST_STATE_READY)
-  {
-    GST_CAT_DEBUG (GST_CAT_CAPS, "parent %s of pad %s:%s is not READY",
-	       GST_ELEMENT_NAME (parent), GST_DEBUG_PAD_NAME (pad));
-    return GST_PAD_LINK_DELAYED;
-  }
-	  
-  GST_CAT_INFO (GST_CAT_CAPS, "trying to set caps %p on pad %s:%s",
-            caps, GST_DEBUG_PAD_NAME (pad));
-
-  /* FIXME: check against allowed caps */
-
-  /* do we have to check the caps against something? */
-  if (allowed) {
-    GstCaps *intersection;
-
-    /* check against calculated caps */
-    intersection = gst_caps_intersect (caps, allowed);
-
-    /* oops, empty intersection, caps don't have anything in common */
-    if (gst_caps_is_empty (intersection)) {
-      GST_CAT_INFO (GST_CAT_CAPS, "caps did not intersect with %s:%s's allowed caps",
-                GST_DEBUG_PAD_NAME (pad));
-      gst_caps_debug (caps, "caps themselves (attemped to set)");
-      gst_caps_debug (allowed,
-                      "allowed caps that did not agree with caps");
-      gst_caps_free (allowed);
-      return GST_PAD_LINK_REFUSED;
-    }
-    /* caps checks out fine, we can unref the intersection now */
-    gst_caps_free (intersection);
-    gst_caps_free (allowed);
-    /* given that the caps are fixed, we know that their intersection with the
-     * padtemplate caps is the same as caps itself */
-  }
-
-  /* we need to notify the link function */
-  if (notify && GST_RPAD_LINKFUNC (pad)) {
-    GstPadLinkReturn res;
-    gchar *debug_string;
-    gboolean negotiating;
-    gchar *s;
-
-    s = gst_caps_to_string (caps);
-    GST_CAT_INFO (GST_CAT_CAPS, "calling link function on pad %s:%s with caps %s",
-            GST_DEBUG_PAD_NAME (pad), s);
-    g_free (s);
-
-    negotiating = GST_FLAG_IS_SET (pad, GST_PAD_NEGOTIATING);
-
-    /* set the NEGOTIATING flag if not already done */
-    if (!negotiating)
-      GST_FLAG_SET (pad, GST_PAD_NEGOTIATING);
-    
-    /* call the link function */
-    res = GST_RPAD_LINKFUNC (pad) (GST_PAD (pad), caps);
-
-    /* unset again after negotiating only if we set it  */
-    if (!negotiating)
-      GST_FLAG_UNSET (pad, GST_PAD_NEGOTIATING);
-
-    switch (res) {
-      case GST_PAD_LINK_REFUSED:
-	debug_string = "REFUSED";
-	break;
-      case GST_PAD_LINK_OK:
-	debug_string = "OK";
-	break;
-      case GST_PAD_LINK_DONE:
-	debug_string = "DONE";
-	break;
-      case GST_PAD_LINK_DELAYED:
-	debug_string = "DELAYED";
-	break;
-      default:
-	g_warning ("unknown return code from link function of pad %s:%s %d",
-                   GST_DEBUG_PAD_NAME (pad), res);
-        return GST_PAD_LINK_REFUSED;
-    }
-
-    GST_CAT_INFO (GST_CAT_CAPS, 
-	      "got reply %s (%d) from link function on pad %s:%s",
-              debug_string, res, GST_DEBUG_PAD_NAME (pad));
-
-    /* done means the link function called another caps negotiate function
-     * on this pad that succeeded, we dont need to continue */
-    if (res == GST_PAD_LINK_DONE) {
-      GST_CAT_INFO (GST_CAT_CAPS, "pad %s:%s is done", GST_DEBUG_PAD_NAME (pad));
-      return GST_PAD_LINK_DONE;
-    }
-    if (res == GST_PAD_LINK_REFUSED) {
-      GST_CAT_INFO (GST_CAT_CAPS, "pad %s:%s doesn't accept caps",
-		GST_DEBUG_PAD_NAME (pad));
-      return GST_PAD_LINK_REFUSED;
-    }
-  }
-  /* we can only set caps on the pad if they are fixed */
-  if (gst_caps_is_fixed (caps)) {
-
-    GST_CAT_INFO (GST_CAT_CAPS, "setting caps on pad %s:%s",
-              GST_DEBUG_PAD_NAME (pad));
-    /* if we got this far all is ok, remove the old caps, set the new one */
-    gst_caps_replace (&GST_PAD_CAPS (pad), gst_caps_copy (caps));
-
-    g_object_notify (G_OBJECT (pad), "caps");
-  }
-  else {
-    GST_CAT_INFO (GST_CAT_CAPS, 
-	      "caps are not fixed on pad %s:%s, not setting them yet",
-              GST_DEBUG_PAD_NAME (pad));
-
-    return GST_PAD_LINK_DELAYED;
-  }
-  return GST_PAD_LINK_OK;
-}
-
-static GstCaps *
-_gst_pad_try_fixate_caps (GstRealPad *pad, GstCaps *caps)
-{
-  GstRealPad *srcpad;
-  GstRealPad *sinkpad;
-  GstPadFixateFunction app_fixate = NULL;
-  GstCaps *newcaps;
-
-  g_return_val_if_fail (caps != NULL, NULL);
-  g_return_val_if_fail (!gst_caps_is_empty(caps), NULL);
-
-  if (GST_PAD_IS_SRC (pad)) {
-    srcpad = pad;
-    sinkpad = GST_RPAD_PEER (pad);
-  } else {
-    sinkpad = pad;
-    srcpad = GST_RPAD_PEER (pad);
-  }
-
-  while (!gst_caps_is_fixed (caps)) {
-    if (app_fixate) {
-      newcaps = (app_fixate) (GST_PAD (srcpad), caps, NULL);
-      if (newcaps) {
-        caps = newcaps;
-        continue;
-      }
-    }
-    if (GST_RPAD_FIXATEFUNC(srcpad)) {
-      newcaps = GST_RPAD_FIXATEFUNC(srcpad) (GST_PAD (srcpad), caps, NULL);
-      if (newcaps) {
-        caps = newcaps;
-        continue;
-      }
-    }
-    if (GST_RPAD_FIXATEFUNC(sinkpad)) {
-      newcaps = GST_RPAD_FIXATEFUNC(sinkpad) (GST_PAD (sinkpad), caps, NULL);
-      if (newcaps) {
-        caps = newcaps;
-        continue;
-      }
-    }
-    caps = _gst_pad_default_fixate_func (GST_PAD(srcpad), caps, NULL);
-  }
-
-  GST_DEBUG_CAPS ("fixate decided on", caps);
-
-  return caps;
-}
-
 static gboolean
 _gst_pad_default_fixate_foreach (GQuark field_id, GValue *value,
     gpointer s)
@@ -1573,177 +1686,6 @@ _gst_pad_default_fixate_func (GstPad *pad, GstCaps *caps, gpointer unused)
 }
 
 /**
- * gst_pad_try_set_caps:
- * @pad: a #GstPad to try to set the caps on.
- * @caps: the #GstCaps to set.
- *
- * Tries to set the caps on the given pad. Ownership is always taken 
- * of the caps, so you will need to unref non-floating caps.
- *
- * Returns: A #GstPadLinkReturn value indicating whether the caps
- * 		could be set.
- */
-GstPadLinkReturn
-gst_pad_try_set_caps (GstPad *pad, const GstCaps *caps)
-{
-  GstRealPad *peer, *realpad;
-  GstCaps *mycaps;
-  GstPadLinkReturn set_retval;
-
-  realpad = GST_PAD_REALIZE (pad);
-  peer = GST_RPAD_PEER (realpad);
-
-  GST_CAT_INFO (GST_CAT_CAPS, "trying to set caps %p on pad %s:%s",
-            caps, GST_DEBUG_PAD_NAME (realpad));
-
-  gst_caps_debug (caps, "caps that we are trying to set");
-
-  /* try to take ownership */
-  mycaps = gst_caps_copy (caps);
-
-  /* setting non fixed caps on a pad is not allowed */
-  if (!gst_caps_is_fixed (mycaps)) {
-    GST_CAT_INFO (GST_CAT_CAPS, 
-              "trying to set unfixed caps on pad %s:%s, not allowed",
-	      GST_DEBUG_PAD_NAME (realpad));
-    g_warning ("trying to set non fixed caps on pad %s:%s, not allowed",
-               GST_DEBUG_PAD_NAME (realpad));
-
-    gst_caps_debug (mycaps, "unfixed caps");
-    set_retval = GST_PAD_LINK_DELAYED;
-    goto done;
-  }
-
-  /* if we have a peer, try to set the caps, notifying the peerpad
-   * if it has a link function */
-  if (peer && ((set_retval = gst_pad_try_set_caps_func (peer, mycaps, TRUE)) <= 0))
-  {
-    GST_CAT_INFO (GST_CAT_CAPS, "tried to set caps on peerpad %s:%s but couldn't, return value %d",
-	      GST_DEBUG_PAD_NAME (peer), set_retval);
-    goto done;
-  }
-
-  /* then try to set our own caps, we don't need to be notified */
-  if ((set_retval = gst_pad_try_set_caps_func (realpad, mycaps, FALSE)) <= 0)
-  {
-    GST_CAT_INFO (GST_CAT_CAPS, "tried to set own caps on pad %s:%s but couldn't, return value %d",
-	      GST_DEBUG_PAD_NAME (realpad), set_retval);
-    goto done;
-  }
-  GST_CAT_INFO (GST_CAT_CAPS, "succeeded setting caps %p on pad %s:%s, return value %d",
-	    mycaps, GST_DEBUG_PAD_NAME (realpad), set_retval);
-  g_assert (GST_PAD_CAPS (pad));
-
-done:			  
-  /* if we took ownership, the caps will be freed */
-  //gst_caps_free (caps);
-
-  return set_retval;
-}
-
-/* this is a caps negotiation convenience routine, it:
- *
- * 1. optionally clears any pad caps.
- * 2. calculates the intersection between the two pad tamplate/getcaps caps.
- * 3. calculates the intersection with the (optional) filtercaps.
- * 4. stores the intersection in the pad filter.
- * 5. stores the app filtercaps in the pad appfilter.
- * 6. starts the caps negotiation.
- */
-static gboolean
-gst_pad_try_relink_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad, 
-                                  const GstCaps *filtercaps, gboolean clear)
-{
-  GstCaps *srccaps, *sinkcaps;
-  GstCaps *intersection = NULL;
-  GstRealPad *realsrc, *realsink;
-
-  realsrc = GST_PAD_REALIZE (srcpad);
-  realsink = GST_PAD_REALIZE (sinkpad);
-
-  g_return_val_if_fail (GST_RPAD_PEER (realsrc) != NULL, FALSE);
-  g_return_val_if_fail (GST_RPAD_PEER (realsink) == realsrc, FALSE);
-
-  /* optinally clear the caps */
-  if (clear) {
-    GST_CAT_INFO (GST_CAT_PADS, 
-	      "start relink filtered %s:%s and %s:%s, clearing caps",
-              GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
-
-    gst_caps_replace (&GST_PAD_CAPS (GST_PAD (realsrc)), NULL);
-    gst_caps_replace (&GST_PAD_CAPS (GST_PAD (realsink)), NULL);
-  }
-  else {
-    GST_CAT_INFO (GST_CAT_PADS, "start relink filtered %s:%s and %s:%s",
-        GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
-  }
-
-  srccaps = gst_caps_copy(gst_pad_get_caps (GST_PAD (realsrc)));
-  GST_CAT_DEBUG (GST_CAT_PADS, "dumping caps of pad %s:%s", 
-             GST_DEBUG_PAD_NAME (realsrc));
-  gst_caps_debug (srccaps, "caps of src pad (pre-relink)");
-  sinkcaps = gst_caps_copy(gst_pad_get_caps (GST_PAD (realsink)));
-  GST_CAT_DEBUG (GST_CAT_PADS, "dumping caps of pad %s:%s", 
-             GST_DEBUG_PAD_NAME (realsink));
-  gst_caps_debug (sinkcaps, "caps of sink pad (pre-relink)");
-
-  /* first take the intersection of the pad caps */
-  intersection = gst_caps_intersect (srccaps, sinkcaps);
-  gst_caps_debug (intersection, "caps of intersection");
-
-  /* if we have no intersection but one of the caps was not NULL.. */
-  if (gst_caps_is_empty(intersection)) {
-    /* the intersection is EMPTY, they have no common format */
-    GST_CAT_INFO (GST_CAT_PADS, "pads %s:%s and %s:%s have no common type",
-              GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
-    /* make sure any floating caps from gst_pad_get_caps are freed here */
-    gst_caps_free (srccaps);
-    gst_caps_free (sinkcaps);
-    return FALSE;
-  } else  {
-    GST_CAT_INFO (GST_CAT_PADS, "pads %s:%s and %s:%s intersected to %s caps",
-       GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink), 
-       (intersection ?
-	   (gst_caps_is_fixed (intersection) ? "fixed" : "variable") :
-	   "NULL"));
-
-    /* we don't need those anymore, as the caps can be floating */
-    gst_caps_free (srccaps);
-    gst_caps_free (sinkcaps);
-
-    /* then filter this against the app filter */
-    if (filtercaps) {
-      GstCaps *filtered_intersection;
-      
-      GST_DEBUG_CAPS ("filter caps are ", filtercaps);
-      filtered_intersection = gst_caps_intersect (intersection, filtercaps);
-
-      gst_caps_free (intersection);
-
-      if (gst_caps_is_empty(filtered_intersection)) {
-        GST_CAT_INFO (GST_CAT_PADS, 
-	          "filtered link between pads %s:%s and %s:%s is empty",
-                  GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
-        return FALSE;
-      }
-      intersection = filtered_intersection;
-
-      /* keep a reference to the app caps */
-      gst_caps_replace (&GST_RPAD_APPFILTER (realsink),
-	  gst_caps_copy (filtercaps));
-      gst_caps_replace (&GST_RPAD_APPFILTER (realsrc),
-	  gst_caps_copy (filtercaps));
-    }
-  }
-  GST_CAT_DEBUG (GST_CAT_CAPS, "setting filter for link to:");
-  gst_caps_debug (intersection, "filter for link");
-
-  gst_caps_free (intersection);
-
-  return gst_pad_perform_negotiate (GST_PAD (realsrc), GST_PAD (realsink));
-}
-
-/**
  * gst_pad_perform_negotiate:
  * @srcpad: the source #GstPad.
  * @sinkpad: the sink #GstPad.
@@ -1755,108 +1697,7 @@ gst_pad_try_relink_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad,
 gboolean
 gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad) 
 {
-  GstCaps *intersection, *filtered_intersection;
-  GstRealPad *realsrc, *realsink;
-  GstCaps *srccaps, *sinkcaps, *filter;
-  gboolean res = TRUE;
-  GstElement *parent;
-  
-
-  g_return_val_if_fail (srcpad != NULL, FALSE);
-  g_return_val_if_fail (sinkpad != NULL, FALSE);
-  
-  realsrc = GST_PAD_REALIZE (srcpad);
-  realsink = GST_PAD_REALIZE (sinkpad);
-    
-  g_return_val_if_fail (GST_RPAD_PEER (realsrc) != NULL, FALSE);
-  g_return_val_if_fail (GST_RPAD_PEER (realsink) == realsrc, FALSE);
-
-  /* shortcut negotiation */
-  parent = GST_PAD_PARENT (realsrc);
-  if (parent && GST_STATE (parent) < GST_STATE_READY) {
-    GST_CAT_DEBUG (GST_CAT_CAPS, "parent %s of pad %s:%s is not READY",
-	       GST_ELEMENT_NAME (parent), GST_DEBUG_PAD_NAME (realsrc));
-    return TRUE;
-  }
-  parent = GST_PAD_PARENT (realsink);
-  if (parent && GST_STATE (parent) < GST_STATE_READY) {
-    GST_CAT_DEBUG (GST_CAT_CAPS, "parent %s of pad %s:%s is not READY",
-	       GST_ELEMENT_NAME (parent), GST_DEBUG_PAD_NAME (realsink));
-    return TRUE;
-  }
-
-  GST_CAT_INFO (GST_CAT_PADS, "perform negotiate for link %s:%s-%s:%s",
-              GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
-
-  filter = GST_RPAD_APPFILTER (realsrc);
-  if (filter == NULL) filter = gst_caps_new_any ();
-  if (filter) {
-    GST_CAT_INFO (GST_CAT_PADS, "dumping filter for link %s:%s-%s:%s",
-              GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
-    gst_caps_debug (filter, "link filter caps");
-  }
-
-  /* calculate the new caps here */
-  srccaps = gst_pad_get_caps (GST_PAD (realsrc));
-  GST_CAT_DEBUG (GST_CAT_PADS, "dumping caps of pad %s:%s", 
-             GST_DEBUG_PAD_NAME (realsrc));
-  gst_caps_debug (srccaps, 
-                  "src caps, awaiting negotiation, before applying filter");
-  sinkcaps = gst_pad_get_caps (GST_PAD (realsink));
-  GST_CAT_DEBUG (GST_CAT_PADS, "dumping caps of pad %s:%s", 
-             GST_DEBUG_PAD_NAME (realsink));
-  gst_caps_debug (sinkcaps, 
-                  "sink caps, awaiting negotiation, before applying filter");
-  intersection = gst_caps_intersect (srccaps, sinkcaps);
-  gst_caps_debug (intersection, "intersection of srccaps and sinkcaps");
-  filtered_intersection = gst_caps_intersect (intersection, filter);
-  gst_caps_free (intersection);
-
-  gst_caps_debug (filtered_intersection, 
-                  "intersection of srccaps, sinkcaps, and filter");
-
-  if (!gst_caps_is_fixed (filtered_intersection)) {
-    GstCaps *newcaps = _gst_pad_try_fixate_caps (realsrc, filtered_intersection);
-    if (newcaps == NULL) {
-      gst_caps_free (filtered_intersection);
-      g_critical("caps are not fixed, refusing");
-      GST_CAT_INFO (GST_CAT_CAPS, "caps are not fixed, refusing");
-      return GST_PAD_LINK_REFUSED;
-    }
-    filtered_intersection = newcaps;
-  }
-
-  /* no negotiation is performed if the pads have filtercaps */
-  if (!gst_caps_is_empty(filtered_intersection)) {
-    GstPadLinkReturn link_res;
-
-    link_res = gst_pad_try_set_caps_func (realsrc, filtered_intersection, TRUE);
-    if (link_res == GST_PAD_LINK_REFUSED) 
-      goto error;
-    if (link_res == GST_PAD_LINK_DONE) 
-      goto success;
-
-    link_res = gst_pad_try_set_caps_func (realsink, filtered_intersection, TRUE);
-    if (link_res == GST_PAD_LINK_REFUSED) 
-      goto error;
-    if (link_res == GST_PAD_LINK_DONE) 
-      goto success;
-  }
-  /* no filtered_intersection, some pads had caps and ther was a filter */
-  else if ((srccaps || sinkcaps) && filter) {
-    goto error;
-  }
-
-success:
-cleanup:
-  gst_caps_free (srccaps);
-  gst_caps_free (sinkcaps);
-  gst_caps_free (filtered_intersection);
-  return res;
-
-error:
-  res = FALSE;
-  goto cleanup;
+  return gst_pad_renegotiate (srcpad);
 }
 
 /**
@@ -1874,19 +1715,8 @@ gboolean
 gst_pad_try_relink_filtered (GstPad *srcpad, GstPad *sinkpad, 
                                 const GstCaps *filtercaps)
 {
-  GstRealPad *realsrc, *realsink;
-
-  g_return_val_if_fail (srcpad != NULL, FALSE);
-  g_return_val_if_fail (sinkpad != NULL, FALSE);
-
-  realsrc = GST_PAD_REALIZE (srcpad);
-  realsink = GST_PAD_REALIZE (sinkpad);
-
-  g_return_val_if_fail (GST_RPAD_PEER (realsrc) != NULL, FALSE);
-  g_return_val_if_fail (GST_RPAD_PEER (realsink) == realsrc, FALSE);
-  
-  return gst_pad_try_relink_filtered_func (realsrc, realsink, 
-                                           filtercaps, TRUE);
+  g_warning ("unimplemented");
+  return FALSE;
 }
 
 /**
@@ -1905,24 +1735,8 @@ gboolean
 gst_pad_relink_filtered (GstPad *srcpad, GstPad *sinkpad, 
                             const GstCaps *filtercaps)
 {
-  GstRealPad *realsrc, *realsink;
-
-  g_return_val_if_fail (srcpad != NULL, FALSE);
-  g_return_val_if_fail (sinkpad != NULL, FALSE);
-
-  realsrc = GST_PAD_REALIZE (srcpad);
-  realsink = GST_PAD_REALIZE (sinkpad);
-
-  g_return_val_if_fail (GST_RPAD_PEER (realsrc) != NULL, FALSE);
-  g_return_val_if_fail (GST_RPAD_PEER (realsink) == realsrc, FALSE);
-  
-  if (!gst_pad_try_relink_filtered_func (realsrc, realsink, 
-	                                 filtercaps, TRUE)) 
-  {
-    gst_pad_unlink (srcpad, GST_PAD (GST_PAD_PEER (srcpad)));
-    return FALSE;
-  }
-  return TRUE;
+  g_warning ("unimplemented");
+  return FALSE;
 }
 
 /**
@@ -1937,24 +1751,7 @@ gst_pad_relink_filtered (GstPad *srcpad, GstPad *sinkpad,
 GstPadLinkReturn
 gst_pad_proxy_link (GstPad *pad, const GstCaps *caps)
 {
-  GstRealPad *peer, *realpad;
-  GstCaps *mycaps;
-
-  realpad = GST_PAD_REALIZE (pad);
-
-  peer = GST_RPAD_PEER (realpad);
-
-  GST_CAT_INFO (GST_CAT_CAPS, "proxy link to pad %s:%s",
-            GST_DEBUG_PAD_NAME (realpad));
-
-  mycaps = gst_caps_copy(caps);
-
-  if (peer && gst_pad_try_set_caps_func (peer, mycaps, TRUE) < 0)
-    return GST_PAD_LINK_REFUSED;
-  if (gst_pad_try_set_caps_func (realpad, mycaps, FALSE) < 0)
-    return GST_PAD_LINK_REFUSED;
-
-  return GST_PAD_LINK_OK;
+  return gst_pad_try_set_caps (pad, caps);
 }
 
 /**
@@ -2442,6 +2239,7 @@ gst_pad_push (GstPad *pad, GstData *data)
 
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
+  g_return_if_fail (data != NULL);
 
   if (!gst_probe_dispatcher_dispatch (&(GST_REAL_PAD (pad)->probedisp), &data))
     return;

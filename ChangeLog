@@ -1,5 +1,22 @@
 2003-12-23  David Schleef  <ds@schleef.org>
 
+	* gst/gstpad.c:
+	  Rearrange/rewrite much of the pad negotiation code, since it
+	  resembled pasta.  This actually changes the way some
+	  negotiation works, since the previous code was inconsistent
+	  depending on how it was invoked.  Add (internal) structure
+	  GstPadLink, which is used to hold some information (more in
+	  the future) about the link between two pads.  Fixes a number
+	  of bugs, including random lossage of filter caps when the
+	  initial negotiation is delayed.  A few functions are still
+	  unimplemented.
+	* gst/gstpad.h:
+	  Add GST_PAD_LINK_{SUCESSFUL|FAILED}() macros.  Please use
+	  these when testing GstPadLinkReturn values instead of comparing
+	  directly.
+
+2003-12-23  David Schleef  <ds@schleef.org>
+
 	* gst/gstvalue.c: 
 	* gst/gstvalue.h:
 	  Rearrange lots of code.  Change registration of compare function

@@ -81,7 +81,7 @@ typedef struct _GstGhostPadClass GstGhostPadClass;
 /*typedef struct _GstPadTemplate GstPadTemplate;*/
 /*typedef struct _GstPadTemplateClass GstPadTemplateClass;*/
 typedef struct _GstStaticPadTemplate GstStaticPadTemplate;
-
+typedef struct _GstPadLink GstPadLink;
 
 typedef enum {
   GST_PAD_LINK_REFUSED = -1,
@@ -89,6 +89,9 @@ typedef enum {
   GST_PAD_LINK_OK      =  1,
   GST_PAD_LINK_DONE    =  2
 } GstPadLinkReturn;
+
+#define GST_PAD_LINK_FAILED(ret) (ret < GST_PAD_LINK_OK)
+#define GST_PAD_LINK_SUCCESSFUL(ret) (ret >= GST_PAD_LINK_OK)
 
 /* convenience functions */
 #ifdef G_HAVE_ISO_VARARGS
@@ -195,7 +198,9 @@ struct _GstRealPad {
 
   GstProbeDispatcher 		 probedisp;
 
-  gpointer _gst_reserved[GST_PADDING];
+  GstPadLink                    *link;
+
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 struct _GstRealPadClass {
@@ -255,6 +260,7 @@ struct _GstGhostPadClass {
 #define GST_RPAD_GETCAPSFUNC(pad)	(((GstRealPad *)(pad))->getcapsfunc)
 #define GST_RPAD_FIXATEFUNC(pad)	(((GstRealPad *)(pad))->fixatefunc)
 #define GST_RPAD_BUFFERALLOCFUNC(pad)	(((GstRealPad *)(pad))->bufferallocfunc)
+#define GST_RPAD_LINK(pad)	        (((GstRealPad *)(pad))->link)
 
 /* GstGhostPad */
 #define GST_GPAD_REALPAD(pad)		(((GstGhostPad *)(pad))->realpad)
