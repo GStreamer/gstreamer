@@ -118,6 +118,7 @@ g2g_object_class_list_properties(GtkObjectClass *oclass,guint *n_properties) {
   int i;
 
   args = gtk_object_query_args (type, &flags, &num_args);
+  // FIXME: args and flags need to be freed. 
 
   params = g_new0(GParamSpec *,num_args);
   for (i=0;i<num_args;i++) {
@@ -126,6 +127,8 @@ g2g_object_class_list_properties(GtkObjectClass *oclass,guint *n_properties) {
     params[i]->value_type = args[i].type;
     params[i]->flags = flags[i];
   }
+
+  *n_properties = num_args;
 
   return params;
 }
