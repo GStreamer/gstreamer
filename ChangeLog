@@ -1,3 +1,8 @@
+2005-02-11  Andy Wingo  <wingo@pobox.com>
+
+	* tools/gst-launch.c (check_intr): New timeout to check the
+	interrupt flag and stop the pipeline properly. Bling!
+
 2005-02-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstevent.c: (gst_event_new_discontinuous_valist),

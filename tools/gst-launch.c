@@ -264,11 +264,24 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
 static void
 sigint_handler_sighandler (int signum)
 {
-  g_print ("Caught interrupt.\n");
+  g_print ("Caught interrupt -- ");
 
   sigint_restore ();
 
   caught_intr = TRUE;
+}
+
+static gboolean
+check_intr (user_data)
+{
+  if (!caught_intr) {
+    return TRUE;
+  } else {
+    g_print ("Pausing pipeline.\n");
+    gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    g_main_loop_quit (loop);
+    return FALSE;
+  }
 }
 
 static void
@@ -518,6 +531,8 @@ main (int argc, char *argv[])
         res = -1;
         goto end;
       }
+
+      g_timeout_add (50, check_intr, NULL);
 
       g_get_current_time (&tfthen);
       g_main_loop_run (loop);
