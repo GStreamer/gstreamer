@@ -777,7 +777,7 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, void *data, int length)
 
   stream->subtype = stream_type;
   switch (stream_type) {
-      int audio_fourcc_offset;
+      int audio_fourcc_offset = 0;
 
     case GST_RMDEMUX_STREAM_VIDEO:
       /* RV10/RV20/RV30/RV40 => video/x-pn-realvideo, version=1,2,3,4 */
