@@ -25,7 +25,8 @@ gst_audio_frame_byte_size (GstPad* pad)
 /* calculate byte size of an audio frame
  * this should be moved closer to the gstreamer core
  * and be implemented for every mime type IMO
- * returns 0 if there's an error, or the byte size if everything's ok
+ * returns -1 if there's an error (to avoid division by zero), 
+ * or the byte size if everything's ok
  */
 
   int width = 0;
@@ -37,8 +38,11 @@ gst_audio_frame_byte_size (GstPad* pad)
   caps = GST_PAD_CAPS (pad);
 
   if (caps == NULL)
+  {
     /* ERROR: could not get caps of pad */
+    g_error ("gstaudio: warning: could not get caps of pad %p\n", pad);
     return 0;
+  }
 
   gst_caps_get_int (caps, "width",    &width);
   gst_caps_get_int (caps, "channels", &channels);
