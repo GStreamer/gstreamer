@@ -186,6 +186,7 @@ gst_play_base_bin_dispose (GObject * object)
 
   play_base_bin = GST_PLAY_BASE_BIN (object);
   g_free (play_base_bin->uri);
+  play_base_bin->uri = NULL;
 
   if (G_OBJECT_CLASS (parent_class)->dispose) {
     G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -415,7 +416,7 @@ gst_play_base_bin_set_property (GObject * object, guint prop_id,
         g_warning ("cannot set NULL uri");
         return;
       }
-      if (!play_base_bin->uri || !strcmp (play_base_bin->uri, uri)) {
+      if (!play_base_bin->uri || strcmp (play_base_bin->uri, uri) != 0) {
         g_free (play_base_bin->uri);
         play_base_bin->uri = g_strdup (uri);
 
