@@ -45,14 +45,13 @@
 /***** PowerPC *****/
 #elif defined (HAVE_CPU_PPC) && defined(__GNUC__)
 
-/* should bring this in line with others and use an "r" */
 #define GST_ARCH_SET_SP(stackpointer) \
-    __asm__("lwz %%r1,%0" : : "m"(stackpointer))
+    __asm__("lwz r1,%0" : : "m"(stackpointer) )
   
 #define GST_ARCH_CALL(target) \
-    __asm__( "mr %%r0,%0\n\t" \
-             "mtlr %%r0\n\t" \
-             "blrl" : : "r"(target) );
+    __asm__( "mr r0,%0\n\t" \
+             "mtlr r0\n\t" \
+             "blrl" : : "r"(target) : "r0" );
   
 struct minimal_ppc_stackframe {
     unsigned long back_chain;
