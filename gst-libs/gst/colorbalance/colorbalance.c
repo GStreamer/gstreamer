@@ -82,6 +82,8 @@ gst_color_balance_class_init (GstColorBalanceClass *klass)
     initialized = TRUE;
   }
 
+  klass->balance_type = GST_COLOR_BALANCE_SOFTWARE;
+  
   /* default virtual functions */
   klass->list_channels = NULL;
   klass->set_value = NULL;
