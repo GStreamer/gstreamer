@@ -1,3 +1,14 @@
+2005-01-12  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/gdk_pixbuf/pixbufscale.c: (gst_pixbufscale_link),
+	(pixbufscale_scale), (gst_pixbufscale_chain):
+	* ext/gdk_pixbuf/pixbufscale.h:
+	  Incorporate changes from Tim-Philipp Mueller <t.i.m@orange.net>
+	  to ensure rowstrides are calculated the same way as 
+	  ffmpegcolorspace
+	  Use gst_buffer_stamp instead of copying TIMESTAMP manually, so
+	  that we pick up duration and offset also.
+
 2005-01-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/avi/gstavimux.c: (gst_avimux_class_init),

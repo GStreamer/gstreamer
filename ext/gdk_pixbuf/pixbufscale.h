@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2004> Jan Schmidt <thaytan@mad.scientist.com>
+ * Copyright (C) <2004> Tim-Philipp Mueller <t.i.m@orange.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -66,7 +67,9 @@ struct _GstPixbufScale {
   
   /* private */
   gint from_buf_size;
+  gint from_stride;
   gint to_buf_size;
+  gint to_stride;  
 };
 
 struct _GstPixbufScaleClass {

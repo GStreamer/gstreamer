@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2004> Jan Schmidt <thaytan@mad.scientist.com>
+ * Copyright (C) <2004> Tim-Philipp Mueller <t.i.m@orange.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,6 +26,15 @@
 #include <pixbufscale.h>
 #include <gst/video/video.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+
+#define ROUND_UP_2(x)  (((x)+1)&~1)
+#define ROUND_UP_4(x)  (((x)+3)&~3)
+#define ROUND_UP_8(x)  (((x)+7)&~7)
+
+/* These match the ones gstffmpegcolorspace uses (Tim) */
+#define GST_RGB24_ROWSTRIDE(width)    (ROUND_UP_4 ((width)*3))
+#define GST_RGB24_SIZE(width,height)  ((height)*GST_RGB24_ROWSTRIDE(width))
+
 
 /* debug variable definition */
 GST_DEBUG_CATEGORY (pixbufscale_debug);
@@ -216,8 +226,10 @@ gst_pixbufscale_link (GstPad * pad, const GstCaps * caps)
     pixbufscale->from_width = width;
     pixbufscale->from_height = height;
 
-    pixbufscale->from_buf_size = width * height * 3;
-    pixbufscale->to_buf_size = width * height * 3;
+    pixbufscale->from_buf_size = GST_RGB24_SIZE (width, height);
+    pixbufscale->to_buf_size = GST_RGB24_SIZE (width, height);
+    pixbufscale->from_stride = GST_RGB24_ROWSTRIDE (width);
+    pixbufscale->to_stride = GST_RGB24_ROWSTRIDE (width);
 
     pixbufscale->inited = TRUE;
 
@@ -253,10 +265,12 @@ gst_pixbufscale_link (GstPad * pad, const GstCaps * caps)
   }
 
   if (gst_pad_is_negotiated (otherpad)) {
-    pixbufscale->from_buf_size = pixbufscale->from_width *
-        pixbufscale->from_height * 3;
-    pixbufscale->to_buf_size = pixbufscale->to_width *
-        pixbufscale->to_height * 3;
+    pixbufscale->from_buf_size =
+        GST_RGB24_SIZE (pixbufscale->from_width, pixbufscale->from_height);
+    pixbufscale->to_buf_size =
+        GST_RGB24_SIZE (pixbufscale->to_width, pixbufscale->to_height);
+    pixbufscale->from_stride = GST_RGB24_ROWSTRIDE (pixbufscale->from_width);
+    pixbufscale->to_stride = GST_RGB24_ROWSTRIDE (pixbufscale->to_width);
     pixbufscale->inited = TRUE;
   }
 
@@ -333,10 +347,11 @@ pixbufscale_scale (GstPixbufScale * scale, unsigned char *dest,
   src_pixbuf = gdk_pixbuf_new_from_data
       (src, GDK_COLORSPACE_RGB, FALSE,
       8, scale->from_width, scale->from_height,
-      3 * scale->from_width, NULL, NULL);
+      GST_RGB24_ROWSTRIDE (scale->from_width), NULL, NULL);
   dest_pixbuf = gdk_pixbuf_new_from_data
       (dest, GDK_COLORSPACE_RGB, FALSE,
-      8, scale->to_width, scale->to_height, 3 * scale->to_width, NULL, NULL);
+      8, scale->to_width, scale->to_height,
+      GST_RGB24_ROWSTRIDE (scale->to_width), NULL, NULL);
   gdk_pixbuf_scale (src_pixbuf, dest_pixbuf, 0, 0, scale->to_width,
       scale->to_height, 0, 0,
       (double) scale->to_width / scale->from_width,
@@ -383,12 +398,17 @@ gst_pixbufscale_chain (GstPad * pad, GstData * _data)
       pixbufscale->to_width, pixbufscale->to_height, size,
       pixbufscale->from_buf_size, pixbufscale->to_buf_size);
 
-  g_return_if_fail (size == pixbufscale->from_buf_size);
+  if (size != pixbufscale->from_buf_size) {
+    GST_ERROR ("Incoming RGB data is %d bytes (expected: %d bytes) (%dx%d)\n",
+        size, pixbufscale->from_buf_size, pixbufscale->from_width,
+        pixbufscale->from_height);
+    return;
+  }
 
   outbuf = gst_pad_alloc_buffer (pixbufscale->srcpad,
       GST_BUFFER_OFFSET_NONE, pixbufscale->to_buf_size);
 
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
+  gst_buffer_stamp (outbuf, buf);
 
   pixbufscale_scale (pixbufscale, GST_BUFFER_DATA (outbuf), data);
 
