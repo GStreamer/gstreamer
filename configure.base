@@ -169,7 +169,7 @@ dnl Check for essential libraries first:
 dnl ====================================
 
 
-PKG_CHECK_MODULES(GLIB, glib-2.0 gobject-2.0 gthread-2.0, , AC_MSG_ERROR(Cannot find glib-2.0))
+PKG_CHECK_MODULES(GLIB, glib-2.0 gobject-2.0 gthread-2.0 gmodule-2.0, , AC_MSG_ERROR(Cannot find glib-2.0))
 CORE_LIBS="$GLIB_LIBS"
 CORE_CFLAGS="$GLIB_CFLAGS"
 AC_SUBST(GLIB_LIBS)
