@@ -11,6 +11,7 @@ AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
 dnl our libraries and install dirs use major.minor as a version
 GST_MAJORMINOR=$GST_VERSION_MAJOR.$GST_VERSION_MINOR
+GST_MAJORMINOR=0.6
 AC_SUBST(GST_MAJORMINOR)
 
 AC_PROG_CC
@@ -544,9 +545,12 @@ docs/pwg/Makefile
 docs/plugins/Makefile
 docs/plugins/gstreamer-plugins.types
 docs/xsl/Makefile
+pkgconfig/Makefile
+pkgconfig/gstreamer.pc
+pkgconfig/gstreamer-uninstalled.pc
+pkgconfig/gstreamer-control.pc
+pkgconfig/gstreamer-control-uninstalled.pc
 stamp.h
-gstreamer.pc
-gstreamer-uninstalled.pc
 gstreamer.spec,
 echo "$infomessages", infomessages="$infomessages"
 )
