@@ -578,6 +578,7 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
     if (wrapper_function != NULL) {
       if (GST_ELEMENT_THREADSTATE (element) == NULL) {
 	GST_ELEMENT_THREADSTATE (element) = cothread_create (GST_BIN_THREADCONTEXT (bin));
+	cothread_set_private (GST_ELEMENT_THREADSTATE (element), element);
 	if (GST_ELEMENT_THREADSTATE (element) == NULL) {
           gst_element_error (element, "could not create cothread for \"%s\"", 
 			  GST_ELEMENT_NAME (element), NULL);
@@ -1004,6 +1005,19 @@ gst_basic_scheduler_remove_element (GstScheduler * sched, GstElement * element)
     /* find what chain the element is in */
     chain = gst_basic_scheduler_find_chain (bsched, element);
 
+    if (GST_ELEMENT_IS_COTHREAD_STOPPING (element)) {
+      GstElement *entry = GST_ELEMENT (cothread_get_private (cothread_current ()));
+
+      if (entry == element) {
+        g_warning ("removing currently running element! %s", GST_ELEMENT_NAME (entry));
+      }
+      else if (entry) {
+        GST_INFO (GST_CAT_SCHEDULING, "moving stopping to element \"%s\"",
+	      GST_ELEMENT_NAME (entry));
+	GST_FLAG_SET (entry, GST_ELEMENT_COTHREAD_STOPPING);
+      }
+    }
+    
     /* remove it from its chain */
     gst_basic_scheduler_chain_remove_element (chain, element);
 
