@@ -179,12 +179,13 @@ gst_thread_init (GstThread *thread)
   GST_FLAG_SET (thread, GST_BIN_SELF_SCHEDULABLE);
 
   scheduler = gst_scheduler_factory_make (NULL, GST_ELEMENT (thread));
+  g_assert (scheduler);
 
   thread->lock = g_mutex_new ();
   thread->cond = g_cond_new ();
 
   thread->ppid = getpid ();
-  thread->thread_id = (GThread *) NULL; /* set in NULL -> READLY */
+  thread->thread_id = (GThread *) NULL; /* set in NULL -> READY */
   thread->sched_policy = G_THREAD_PRIORITY_NORMAL;
   thread->priority = 0;
   thread->stack = NULL;
@@ -281,7 +282,7 @@ gst_thread_new (const gchar *name)
 #define THR_INFO(format,args...) \
   GST_INFO_ELEMENT(GST_CAT_THREAD, thread, "sync(" GST_DEBUG_THREAD_FORMAT "): " format , \
   GST_DEBUG_THREAD_ARGS(thread->pid) , ## args )
-  
+
 #define THR_DEBUG(format,args...) \
   GST_DEBUG_ELEMENT(GST_CAT_THREAD, thread, "sync(" GST_DEBUG_THREAD_FORMAT "): " format , \
   GST_DEBUG_THREAD_ARGS(thread->pid) , ## args )
@@ -401,7 +402,7 @@ gst_thread_change_state (GstElement *element)
         gst_element_enable_threadsafe_properties ((GstElement*)elements->data);
         elements = g_list_next (elements);
       }
-      
+
       THR_DEBUG ("telling thread to start spinning");
       g_mutex_lock (thread->lock);
       THR_DEBUG ("signaling");
@@ -428,7 +429,7 @@ gst_thread_change_state (GstElement *element)
        * change_state()).
        * + the pending state was already set by gstelement.c::set_state()
        * + unlock all elements so the bottom half can start the state change.
-       */ 
+       */
       g_mutex_lock (thread->lock);
 
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
@@ -436,14 +437,14 @@ gst_thread_change_state (GstElement *element)
       while (elements) {
 	GstElement *element = GST_ELEMENT (elements->data);
 	GList *pads;
-	
 
 	g_assert (element);
 	THR_DEBUG ("  waking element \"%s\"", GST_ELEMENT_NAME (element));
 	elements = g_list_next (elements);
 
 	if (!gst_element_release_locks (element)) {
-          g_warning ("element %s could not release locks", GST_ELEMENT_NAME (element));
+          g_warning ("element %s could not release locks",
+		     GST_ELEMENT_NAME (element));
 	}
 
 	pads = GST_ELEMENT_PADS (element);
@@ -616,7 +617,7 @@ gst_thread_main_loop (void *arg)
                         gst_element_state_get_name (GST_STATE_NULL),
                         gst_element_state_get_name (GST_STATE_PAUSED));
         g_cond_wait (thread->cond, thread->lock);
-	
+
 	/* this must have happened by a state change in the thread context */
 	if (GST_STATE_PENDING (thread) != GST_STATE_NULL &&
 	    GST_STATE_PENDING (thread) != GST_STATE_PAUSED) {
