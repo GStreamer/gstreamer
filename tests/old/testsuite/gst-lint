@@ -36,6 +36,8 @@ sub check_config_h();
 sub check_varargs_functions();
 sub check_debugging();
 sub check_old_typefind();
+sub check_bad_casts();
+sub check_old_plugin();
 
 sub m_check_plugindir();
 
@@ -64,8 +66,9 @@ foreach $filename (<FIND>) {
 	check_config_h();
 	check_varargs_functions();
 	check_debugging();
-	check_bad_includes();
 	check_old_typefind();
+	check_bad_casts();
+	check_old_plugin();
 }
 
 open FIND, "find . -name \"Makefile.am\" -print|";
@@ -258,6 +261,9 @@ sub check_deprecated()
 	if (grep { /GstEventFlags/; } @lines) {
 		print "W: who uses GstEventFlags\n";
 	}
+	if (grep { /gst_type_class_ref/; } @lines) {
+		print "W: gst_type_class_ref should be changed to gst_type_class_peek_parent\n";
+	}
 
 }
 
@@ -338,6 +344,32 @@ sub check_old_typefind()
 {
 	if (grep { /GstTypeDefinition/ || /GstTypeFactory/ } @lines) {
 		print "E: old typefind interface has been removed\n"
+	}
+}
+
+#
+# check for casts that we've deemed incorrect (fix the prototype)
+#
+sub check_bad_casts()
+{
+	if (grep { /GBaseInitFunc/ || /GBaseFinalizeFunc/ ||
+			/GClassInitFunc/ || /GClassFinalizeFunc/ ||
+			/GInstanceInitFunc/ || /GInterfaceInitFunc/ ||
+			/GInterfaceFinalizeFunc/ } @lines) {
+		print "W: bad casts (fix prototype)\n"
+	}
+}
+
+#
+# check for old plugin code
+#
+sub check_old_plugin()
+{
+	if (grep { /plugin_init.*GModule.*GstPlugin/ } @lines) {
+		print "E: old plugin interface detected\n"
+	}
+	if (grep { /GstPluginDesc.*plugin_desc/ } @lines) {
+		print "W: should use GST_PLUGIN_DEFINE() instead of GstPluginDesc\n"
 	}
 }
 
