@@ -287,8 +287,7 @@ gst_pad_new_from_template (GstPadTemplate *templ,
   g_return_val_if_fail (templ != NULL, NULL);
 
   pad = gst_pad_new (name, templ->direction);
-  gst_object_ref (GST_OBJECT (templ));
-  gst_object_sink (GST_OBJECT (templ));
+
   GST_PAD_PADTEMPLATE(pad) = templ;
 
   return pad;
@@ -1061,7 +1060,7 @@ gst_real_pad_dispose (GObject *object)
     g_list_free (orig);
     g_list_free (GST_REAL_PAD(pad)->ghostpads);
   }
-  
+
   G_OBJECT_CLASS (real_pad_parent_class)->dispose (object);
 }
 
