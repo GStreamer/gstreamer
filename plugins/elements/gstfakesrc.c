@@ -260,7 +260,7 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstFakeSrcClass, handoff), NULL, NULL,
       gst_marshal_VOID__POINTER_OBJECT, G_TYPE_NONE, 2,
-      GST_TYPE_BUFFER, GST_TYPE_PAD);
+      GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE, GST_TYPE_PAD);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fakesrc_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesrc_get_property);

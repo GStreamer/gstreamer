@@ -40,6 +40,9 @@ API:
  - deprecate gst_buffer_merge() and replace with a function that takes
    ownership of the buffers.  (bug #136408)
 
+ - fakesrc handoff should be changed to return a GstData * or carry a
+    GstData **, wo the user can provide own buffers and events.
+
 caps:
 
   (Company:)

@@ -1,5 +1,14 @@
 2004-04-01  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/random/ds/0.9-suggested-changes:
+	  Add a note to change handoff use in fakesrc to be usable in
+	  a more generic way (fakesrc should be renamed to appsrc or so).
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_class_init):
+	  Change signal type to scope, so we can fill the buffer in the
+	  handoff handler (that's the whole use of this signal...).
+
+2004-04-01  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/pwg/other-ntoone.xml:
 	  Document muxers and n-to-1 elements.
 
