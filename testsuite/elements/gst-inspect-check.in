@@ -7,7 +7,13 @@
 
 use File::Basename;
 
-print "moo\n";
+print "                  _______\n";
+print "         (__)    /       \\\n";
+print "         (oo)   (  M O O  )\n";
+print "  /-------\\/  --'\\_______/\n";
+print " / |     ||\n";
+print "*  ||----||\n";
+print "   ^^    ^^\n";
 
 my $num_warnings = 0;
 my $path = `dirname $0`;

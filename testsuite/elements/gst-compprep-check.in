@@ -1,0 +1,3 @@
+#!/bin/sh
+
+../../tools/gst-compprep --gst-fatal-warnings
