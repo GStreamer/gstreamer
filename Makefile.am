@@ -37,7 +37,7 @@ SUBDIRS = include gst libs plugins tools $(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) \
 $(SUBDIRS_LGG) $(SUBDIRS_DOCS)
 
 # These are all the possible subdirs
-DIST_SUBDIRS = include gst libs plugins tools test tests testsuite examples gstplay editor docs debian
+DIST_SUBDIRS = include gst libs plugins tools test tests testsuite examples gstplay editor docs
 
 
 pkgconfigdir = $(libdir)/pkgconfig
@@ -54,12 +54,6 @@ dist-hook:
 
 rpm: dist
 	rpm -ta $(distdir).tar.gz
-
-deb:
-	dpkg-buildpacakge -rfakeroot -us -uc
-
-deb-maint:
-	debuild
 
 include $(top_srcdir)/idiottest.mak
 
