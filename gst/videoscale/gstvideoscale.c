@@ -46,8 +46,6 @@ enum {
 
 enum {
   ARG_0,
-  ARG_WIDTH,
-  ARG_HEIGHT,
   ARG_METHOD,
   /* FILL ME */
 };
@@ -112,12 +110,6 @@ gst_videoscale_class_init (GstVideoscaleClass *klass)
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_WIDTH,
-    g_param_spec_int("width","width","width",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HEIGHT,
-    g_param_spec_int("height","height","height",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_METHOD,
     g_param_spec_enum("method","method","method",
                       GST_TYPE_VIDEOSCALE_METHOD,0,G_PARAM_READWRITE)); /* CHECKME! */
@@ -290,6 +282,8 @@ gst_videoscale_src_link (GstPad *pad, GstCaps *caps)
   gst_caps_set(peercaps, "width", GST_PROPS_INT_RANGE (0, G_MAXINT));
   gst_caps_set(peercaps, "height", GST_PROPS_INT_RANGE (0, G_MAXINT));
 
+  g_print("setting caps to %s\n", gst_caps_to_string(peercaps));
+
   ret = gst_pad_try_set_caps (videoscale->srcpad, peercaps);
 
   gst_caps_unref(peercaps);
@@ -311,43 +305,57 @@ gst_videoscale_sink_link (GstPad *pad, GstCaps *caps)
   GstVideoscale *videoscale;
   GstPadLinkReturn ret;
   GstCaps *peercaps;
+  GstCaps *srccaps;
+  GstCaps *caps1;
 
-  GST_DEBUG ("gst_videoscale_src_link");
+  GST_DEBUG ("gst_videoscale_sink_link");
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps)) {
     return GST_PAD_LINK_DELAYED;
   }
 
-
   videoscale->format = videoscale_find_by_caps (caps);
-  gst_caps_debug(caps,"ack");
   g_return_val_if_fail(videoscale->format, GST_PAD_LINK_REFUSED);
+
+  ret = gst_pad_try_set_caps (videoscale->srcpad, gst_caps_copy(caps));
+  if (ret == GST_PAD_LINK_OK || ret == GST_PAD_LINK_DONE) {
+    videoscale->passthru = TRUE;
+    return ret;
+  }
+
+  videoscale->passthru = FALSE;
+
+  srccaps = gst_caps_copy(caps);
+  gst_caps_set(srccaps, "width", GST_PROPS_INT_RANGE (0, G_MAXINT));
+  gst_caps_set(srccaps, "height", GST_PROPS_INT_RANGE (0, G_MAXINT));
+
+  peercaps = gst_pad_get_allowed_caps(videoscale->srcpad);
+
+  caps1 = gst_caps_intersect(peercaps, srccaps);
+
+  if (!GST_CAPS_IS_FIXED (caps1)) {
+    /* FIXME */
+    return GST_PAD_LINK_DELAYED;
+  }
+
+  g_print("setting caps to %s\n", gst_caps_to_string(caps1));
+
+  ret = gst_pad_try_set_caps (videoscale->srcpad, caps1);
+  if (ret != GST_PAD_LINK_OK && ret != GST_PAD_LINK_DONE) {
+    return ret;
+  }
+
+  gst_caps_get_int (caps1, "width", &videoscale->to_width);
+  gst_caps_get_int (caps1, "height", &videoscale->to_height);
 
   gst_caps_get_int (caps, "width", &videoscale->from_width);
   gst_caps_get_int (caps, "height", &videoscale->from_height);
+  gst_caps_get_float (caps, "framerate", &videoscale->framerate);
 
-  peercaps = gst_caps_copy(caps);
+  caps = gst_pad_get_caps (videoscale->srcpad);
 
-  if(videoscale->force_size){
-    gst_caps_set(peercaps, "width", GST_PROPS_INT (videoscale->forced_width));
-    gst_caps_set(peercaps, "height", GST_PROPS_INT (videoscale->forced_height));
-  }else{
-    gst_caps_set(peercaps, "width", GST_PROPS_INT_RANGE (0, G_MAXINT));
-    gst_caps_set(peercaps, "height", GST_PROPS_INT_RANGE (0, G_MAXINT));
-  }
-
-  ret = gst_pad_try_set_caps (videoscale->srcpad, peercaps);
-
-  gst_caps_unref(peercaps);
-
-  if(ret==GST_PAD_LINK_OK){
-    caps = gst_pad_get_caps (videoscale->srcpad);
-
-    gst_caps_get_int (caps, "width", &videoscale->to_width);
-    gst_caps_get_int (caps, "height", &videoscale->to_height);
-    gst_videoscale_setup(videoscale);
-  }
+  gst_videoscale_setup(videoscale);
 
   return ret;
 }
@@ -372,7 +380,6 @@ gst_videoscale_init (GstVideoscale *videoscale)
   gst_pad_set_getcaps_function(videoscale->srcpad,gst_videoscale_getcaps);
 
   videoscale->inited = FALSE;
-  videoscale->force_size = FALSE;
 
   videoscale->method = GST_VIDEOSCALE_NEAREST;
   /*videoscale->method = GST_VIDEOSCALE_BILINEAR; */
@@ -448,14 +455,6 @@ gst_videoscale_set_property (GObject *object, guint prop_id, const GValue *value
 
   GST_DEBUG ("gst_videoscale_set_property");
   switch (prop_id) {
-    case ARG_WIDTH:
-      src->forced_width = g_value_get_int (value);
-      src->force_size = TRUE;
-      break;
-    case ARG_HEIGHT:
-      src->forced_height = g_value_get_int (value);
-      src->force_size = TRUE;
-      break;
     case ARG_METHOD:
       src->method = g_value_get_enum (value);
       break;
@@ -474,12 +473,6 @@ gst_videoscale_get_property (GObject *object, guint prop_id, GValue *value, GPar
   src = GST_VIDEOSCALE(object);
 
   switch (prop_id) {
-    case ARG_WIDTH:
-      g_value_set_int (value, src->forced_width);
-      break;
-    case ARG_HEIGHT:
-      g_value_set_int (value, src->forced_height);
-      break;
     case ARG_METHOD:
       g_value_set_enum (value, src->method);
       break;

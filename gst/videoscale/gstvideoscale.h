@@ -57,10 +57,6 @@ struct _GstVideoscale {
 
   GstPad *sinkpad,*srcpad;
 
-  gboolean force_size;
-  gint forced_width;
-  gint forced_height;
-
   /* video state */
   gboolean inited;
   struct videoscale_format_struct *format;
@@ -69,6 +65,7 @@ struct _GstVideoscale {
   gint from_width;
   gint from_height;
   gboolean passthru;
+  float framerate;
 
   GstVideoScaleMethod method;
   
