@@ -40,8 +40,8 @@ gst_audio_frame_byte_size (GstPad* pad)
   if (caps == NULL)
   {
     /* ERROR: could not get caps of pad */
-    g_warning ("gstaudio: warning: could not get caps of pad %p (%s)\n", 
-	       pad, GST_PAD_NAME (pad));
+    g_warning ("gstaudio: could not get caps of pad %s:%s\n", 
+	       GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
     return 0;
   }
 
@@ -83,9 +83,12 @@ gst_audio_frame_rate (GstPad *pad)
   /* get caps of pad */
   caps = GST_PAD_CAPS (pad);
 
-  if (caps == NULL)
+  if (caps == NULL) {
     /* ERROR: could not get caps of pad */
+    g_warning ("gstaudio: could not get caps of pad %s:%s\n", 
+	       GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
     return 0;
+  }
   else {
     gst_caps_get_int (caps, "rate", &rate);
     return rate;
@@ -115,8 +118,8 @@ gst_audio_length (GstPad* pad, GstBuffer* buf)
   if (caps == NULL)
   {
     /* ERROR: could not get caps of pad */
-    g_warning ("gstaudio: warning: could not get caps of pad %p (%s)\n", 
-	       pad, GST_PAD_NAME (pad));
+    g_warning ("gstaudio: could not get caps of pad %s:%s\n", 
+	       GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
     length = 0.0;
   }
   else
@@ -147,9 +150,11 @@ gst_audio_highest_sample_value (GstPad* pad)
   GstCaps *caps = NULL;
   
   caps = GST_PAD_CAPS (pad);
-    /* FIXME : Please change this to a better warning method ! */
   if (caps == NULL)
-    printf ("WARNING: gstaudio: could not get caps of pad !\n");
+  {
+    g_warning ("gstaudio: could not get caps of pad %s:%s\n", 
+	       GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
+  }
   
   gst_caps_get_int (caps, "width", &width);
   gst_caps_get_boolean (caps, "signed", &is_signed);
