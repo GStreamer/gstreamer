@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 # Johan Dahlin <johan@gnome.org>, 2004
-# $Id: sv.po,v 1.4 2004/03/29 08:51:29 thomasvs Exp $
+# $Id: sv.po,v 1.5 2004/04/05 10:12:55 jdahlin Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-04-05 12:08+0200\n"
+"POT-Creation-Date: 2004-04-14 18:56+0200\n"
 "PO-Revision-Date: 2004-04-05 12:10+0200\n"
 "Last-Translator: Johan Dahlin <johan@gnome.org>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -75,7 +75,9 @@ msgstr "SÖKVÄGAR"
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "envronment variable GST_PLUGIN_PATH"
-msgstr "Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan som lagras i miljövariabeln GST_PLUGIN_PATH"
+msgstr ""
+"Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan "
+"som lagras i miljövariabeln GST_PLUGIN_PATH"
 
 #: gst/gst.c:164
 msgid "PLUGINS"
@@ -558,42 +560,42 @@ msgstr "toppen för albumet"
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:449
+#: gst/autoplug/gstspider.c:447
 #, c-format
 msgid "There is no element present to handle the stream's mime type %s."
 msgstr ""
 "Det finns inget element tillgängligt för att hantera flödets mime-typ %s."
 
-#: gst/elements/gstfilesink.c:257
+#: gst/elements/gstfilesink.c:254
 msgid "No file name specified for writing."
 msgstr "Inget filnamn angivet för skrivning."
 
-#: gst/elements/gstfilesink.c:264
+#: gst/elements/gstfilesink.c:261
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kunde inte öppna filen \"%s\" för skrivning."
 
-#: gst/elements/gstfilesink.c:283
+#: gst/elements/gstfilesink.c:280
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Fel vid stängning av filen \"%s\"."
 
-#: gst/elements/gstfilesink.c:349 gst/elements/gstfilesink.c:380
-#: gst/elements/gstfilesink.c:432
+#: gst/elements/gstfilesink.c:345 gst/elements/gstfilesink.c:376
+#: gst/elements/gstfilesink.c:428
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Fel vid skrivning till filen \"%s\"."
 
-#: gst/elements/gstfilesrc.c:706 gst/elements/gstmultifilesrc.c:247
+#: gst/elements/gstfilesrc.c:721 gst/elements/gstmultifilesrc.c:247
 msgid "No file name specified for reading."
 msgstr "Inget filnamn angivet för läsning."
 
-#: gst/elements/gstfilesrc.c:720 gst/elements/gstmultifilesrc.c:255
+#: gst/elements/gstfilesrc.c:735 gst/elements/gstmultifilesrc.c:255
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunde inte öppna filen \"%s\" för läsning."
 
-#: gst/elements/gstfilesrc.c:731
+#: gst/elements/gstfilesrc.c:746
 #, c-format
 msgid "File \"%s\" isn't a regular file."
 msgstr "Filen \"%s\" är ingen vanlig fil."
@@ -697,11 +699,11 @@ msgstr "kunde inte länka utgångselementet för URI:n \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "tom rörledning är inte tillåtet"
 
-#: tools/gst-inspect.c:928
+#: tools/gst-inspect.c:929
 msgid "Show plugin details"
 msgstr "Visa detaljer för insticksmodul"
 
-#: tools/gst-inspect.c:931
+#: tools/gst-inspect.c:932
 msgid "Show scheduler details"
 msgstr "Visa detaljer för schemaläggare"
 
@@ -750,7 +752,6 @@ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "FEL: inget rörledningselement på översta nivån i filen \"%s\".\n"
 
 #: tools/gst-launch.c:123
-#, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "VARNING: endast ett element på översta nivån stöds just nu."
 
@@ -811,7 +812,6 @@ msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FEL: rörledningen kunde inte konstrueras: %s.\n"
 
 #: tools/gst-launch.c:442
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FEL: rörledningen kunde inte konstrueras.\n"
 
@@ -823,22 +823,18 @@ msgstr "VARNING: felaktig rörledning: %s\n"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
 #: tools/gst-launch.c:447
-#, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Försöker köra ändå.\n"
 
 #: tools/gst-launch.c:475
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FEL: \"pipeline\"-elementet hittades inte.\n"
 
 #: tools/gst-launch.c:482
-#, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "KÖR rörledning...\n"
 
 #: tools/gst-launch.c:485
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FEL: rörledningen vill inte spela.\n"
 
