@@ -6,6 +6,7 @@ sgml_files = gstreamer-manual.sgml \
              bins.sgml \
              buffers.sgml \
              components.sgml \
+             quotes.sgml \
              pads.sgml \
              connections.sgml \
              cothreads.sgml \

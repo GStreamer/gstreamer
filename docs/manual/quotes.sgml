@@ -1,0 +1,48 @@
+<chapter id="cha-quotes">
+  <title>Quotes from the Developers</title>
+  <para>
+    As well as being a cool piece of software,
+    <application>GStreamer</application> is a lively project, with
+    developers from around the globe very actively contributing.
+    We often hang out on the #gstreamer IRC channel on
+    irc.openprojects.net: the following are a selection of amusing<footnote>
+    <para>No guarantee of sense of humour compatibility is given.</para>
+    </footnote>quotes
+    from our conversations.
+  </para>
+
+  <variablelist>
+    <varlistentry>
+      <term>7 Jan 2001</term>
+      <listitem>
+	<para>
+	<emphasis>Omega:</emphasis>
+	that means probably building an agreggating, cache-massaging
+	queue to shove N buffers across all at once, forcing cache
+	transfer.
+	</>
+	<para>
+	<emphasis>wtay:</emphasis>
+        never done that before...
+	</>
+	<para>
+	<emphasis>Omega:</emphasis>
+	nope, but it's easy to do in gstreamer &lt;g&gt;
+        </>
+        <para>
+	<emphasis>wtay:</emphasis>
+	sure, I need to rewrite cp with gstreamer too, someday :-)
+        </>
+      </listitem>
+    </varlistentry>
+    <varlistentry>
+      <term>7 Jan 2001</term>
+      <listitem>
+        <para>
+        <emphasis>wtay:</emphasis>
+	GStreamer; always at least one developer is awake...
+	</para>
+      </listitem>
+    </varlistentry>
+  </variablelist>
+</chapter>
