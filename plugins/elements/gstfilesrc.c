@@ -78,13 +78,13 @@ GstElementDetails gst_filesrc_details = {
 #define GST_TYPE_FILESRC \
   (gst_filesrc_get_type())
 #define GST_FILESRC(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_FILESRC,GstFileSrc))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FILESRC,GstFileSrc))
 #define GST_FILESRC_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_FILESRC,GstFileSrcClass)) 
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FILESRC,GstFileSrcClass)) 
 #define GST_IS_FILESRC(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_FILESRC))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FILESRC))
 #define GST_IS_FILESRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FILESRC))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FILESRC))
 
 typedef enum {
   GST_FILESRC_OPEN              = GST_ELEMENT_FLAG_LAST,
@@ -97,7 +97,9 @@ typedef struct _GstFileSrcClass GstFileSrcClass;
 
 struct _GstFileSrc {
   GstElement element;
-  GstPad *srcpad; 
+  GstPad *srcpad;
+
+  guint pagesize;			// system page size
  
   gchar *filename;			// filename
   gint fd;				// open file descriptor
@@ -105,6 +107,7 @@ struct _GstFileSrc {
 
   off_t curoffset;			// current offset in file
   off_t block_size;			// bytes per read
+  gboolean touch;			// whether to touch every page
 
   GstBuffer *mapbuf;
   off_t mapsize;
@@ -127,17 +130,19 @@ enum {
 enum {
   ARG_0,
   ARG_LOCATION,
+  ARG_FILESIZE,
+  ARG_FD,
   ARG_BLOCKSIZE,
   ARG_OFFSET,
-  ARG_SIZE,
+  ARG_MAPSIZE,
 };
 
 
 static void		gst_filesrc_class_init	(GstFileSrcClass *klass);
 static void		gst_filesrc_init	(GstFileSrc *filesrc);
 
-static void		gst_filesrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
-static void		gst_filesrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void		gst_filesrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void		gst_filesrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static GstBuffer *	gst_filesrc_get		(GstPad *pad);
 
@@ -147,23 +152,23 @@ static GstElementStateReturn	gst_filesrc_change_state	(GstElement *element);
 static GstElementClass *parent_class = NULL;
 //static guint gst_filesrc_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_filesrc_get_type(void)
 {
-  static GtkType filesrc_type = 0;
+  static GType filesrc_type = 0;
 
   if (!filesrc_type) {
-    static const GtkTypeInfo filesrc_info = {
-      "GstFileSrc",
+    static const GTypeInfo filesrc_info = {
+      sizeof(GstFileSrcClass),      NULL,
+      NULL,
+      (GClassInitFunc)gst_filesrc_class_init,
+      NULL,
+      NULL,
       sizeof(GstFileSrc),
-      sizeof(GstFileSrcClass),
-      (GtkClassInitFunc)gst_filesrc_class_init,
-      (GtkObjectInitFunc)gst_filesrc_init,
-      (GtkArgSetFunc)gst_filesrc_set_arg,
-      (GtkArgGetFunc)gst_filesrc_get_arg,
-      (GtkClassInitFunc)NULL,
+      0,
+      (GInstanceInitFunc)gst_filesrc_init,
     };
-    filesrc_type = gtk_type_unique (GST_TYPE_ELEMENT, &filesrc_info);
+    filesrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFileSrc", &filesrc_info, 0);
   }
   return filesrc_type;
 }
@@ -171,25 +176,35 @@ gst_filesrc_get_type(void)
 static void
 gst_filesrc_class_init (GstFileSrcClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gtk_object_add_arg_type ("GstFileSrc::location", GST_TYPE_FILENAME,
-                           GTK_ARG_READWRITE, ARG_LOCATION);
-  gtk_object_add_arg_type ("GstFileSrc::blocksize", GTK_TYPE_INT,
-                           GTK_ARG_READWRITE, ARG_BLOCKSIZE);
-  gtk_object_add_arg_type ("GstFileSrc::offset", GTK_TYPE_LONG,
-                           GTK_ARG_READWRITE, ARG_OFFSET);
-  gtk_object_add_arg_type ("GstFileSrc::size", GTK_TYPE_LONG,
-                           GTK_ARG_READABLE, ARG_SIZE);
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATION,
+    g_param_spec_string("location","File Location","Location of the file to read",
+                        NULL,G_PARAM_READWRITE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FILESIZE,
+    g_param_spec_ulong("filesize","File Size","Size of the file being read",
+                       0,G_MAXULONG,0,G_PARAM_READABLE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FD,
+    g_param_spec_int("fd","File-descriptor","File-descriptor for the file being read",
+                     0,G_MAXINT,0,G_PARAM_READABLE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BLOCKSIZE,
+    g_param_spec_ulong("blocksize","Block Size","Block size to read per buffer",
+                       0,G_MAXULONG,4096,G_PARAM_READWRITE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OFFSET,
+    g_param_spec_ulong("offset","File Offset","Byte offset of current read pointer",
+                       0,G_MAXULONG,0,G_PARAM_READWRITE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MAPSIZE,
+    g_param_spec_ulong("mmapsize","mmap() Block Size","Size in bytes of mmap()d regions",
+                       0,G_MAXULONG,4*1048576,G_PARAM_READWRITE));
 
-  gtkobject_class->set_arg = gst_filesrc_set_arg;
-  gtkobject_class->get_arg = gst_filesrc_get_arg;
+  gobject_class->set_property = gst_filesrc_set_property;
+  gobject_class->get_property = gst_filesrc_get_property;
 
   gstelement_class->change_state = gst_filesrc_change_state;
 }
@@ -214,15 +229,18 @@ gst_filesrc_init (GstFileSrc *src)
   gst_pad_set_get_function (src->srcpad,gst_filesrc_get);
   gst_element_add_pad (GST_ELEMENT (src), src->srcpad);
 
+  src->pagesize = getpagesize();
+
   src->filename = NULL;
   src->fd = 0;
   src->filelen = 0;
 
   src->curoffset = 0;
-  src->block_size = 9216;
+  src->block_size = 4096;
+  src->touch = TRUE;
 
   src->mapbuf = NULL;
-  src->mapsize = 1 * 1024 * 1024;		// default is 1MB
+  src->mapsize = 4 * 1024 * 1024;		// default is 4MB
 
   src->map_regions = g_tree_new(gst_filesrc_bufcmp);
   src->map_regions_lock = g_mutex_new();
@@ -230,7 +248,7 @@ gst_filesrc_init (GstFileSrc *src)
 
 
 static void
-gst_filesrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_filesrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstFileSrc *src;
 
@@ -239,26 +257,29 @@ gst_filesrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
 
   src = GST_FILESRC (object);
 
-  switch(id) {
+  switch (prop_id) {
     case ARG_LOCATION:
       /* the element must be stopped in order to do this */
       g_return_if_fail (GST_STATE (src) < GST_STATE_PLAYING);
 
       if (src->filename) g_free (src->filename);
       /* clear the filename if we get a NULL (is that possible?) */
-      if (GTK_VALUE_STRING (*arg) == NULL) {
+      if (g_value_get_string (value) == NULL) {
         gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
         src->filename = NULL;
       /* otherwise set the new filename */
       } else {
-        src->filename = g_strdup (GTK_VALUE_STRING (*arg));
+        src->filename = g_strdup (g_value_get_string (value));
       }
       break;
     case ARG_BLOCKSIZE:
-      src->block_size = GTK_VALUE_INT (*arg);
+      src->block_size = g_value_get_ulong (value);
       break;
     case ARG_OFFSET:
-      src->curoffset = GTK_VALUE_LONG (*arg);
+      src->curoffset = g_value_get_ulong (value);
+      break;
+    case ARG_MAPSIZE:
+      src->mapsize = g_value_get_ulong (value);
       break;
     default:
       break;
@@ -266,7 +287,7 @@ gst_filesrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
 }
 
 static void
-gst_filesrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_filesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstFileSrc *src;
 
@@ -275,21 +296,27 @@ gst_filesrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
 
   src = GST_FILESRC (object);
 
-  switch (id) {
+  switch (prop_id) {
     case ARG_LOCATION:
-      GTK_VALUE_STRING (*arg) = src->filename;
+      g_value_set_string (value, src->filename);
+      break;
+    case ARG_FILESIZE:
+      g_value_set_ulong (value, src->filelen);
+      break;
+    case ARG_FD:
+      g_value_set_int (value, src->fd);
       break;
     case ARG_BLOCKSIZE:
-      GTK_VALUE_INT (*arg) = src->block_size;
+      g_value_set_ulong (value, src->block_size);
       break;
     case ARG_OFFSET:
-      GTK_VALUE_LONG (*arg) = src->curoffset;
+      g_value_set_ulong (value, src->curoffset);
       break;
-    case ARG_SIZE:
-      GTK_VALUE_LONG (*arg) = src->filelen;
+    case ARG_MAPSIZE:
+      g_value_set_ulong (value, src->mapsize);
       break;
     default:
-      arg->type = GTK_TYPE_INVALID;
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -298,6 +325,8 @@ static void
 gst_filesrc_free_parent_mmap (GstBuffer *buf)
 {
   GstFileSrc *src = GST_FILESRC(GST_BUFFER_POOL_PRIVATE(buf));
+
+  fprintf(stderr,"freeing mmap()d buffer at %d+%d\n",GST_BUFFER_OFFSET(buf),GST_BUFFER_SIZE(buf));
 
   // remove the buffer from the list of available mmap'd regions
   g_mutex_lock(src->map_regions_lock);
@@ -317,7 +346,7 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, off_t size)
 {
   GstBuffer *buf;
 
-  GST_DEBUG(0, "mapping region %d+%d from file into memory\n",offset,size);
+  fprintf(stderr,"mapping region %d+%d from file into memory\n",offset,size);
 
   // time to allocate a new mapbuf
   buf = gst_buffer_new();
@@ -347,16 +376,15 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, off_t size)
 static GstBuffer *
 gst_filesrc_map_small_region (GstFileSrc *src, off_t offset, off_t size)
 {
-  gint pagesize = getpagesize();
   int mod, mapbase, mapsize;
   GstBuffer *map;
 
 //  printf("attempting to map a small buffer at %d+%d\n",offset,size);
 
   // if the offset starts at a non-page boundary, we have to special case
-  if ((mod = offset % pagesize)) {
+  if ((mod = offset % src->pagesize)) {
     mapbase = offset - mod;
-    mapsize = (((mapbase + size + mod) + (pagesize - 1)) / pagesize) * pagesize - mapbase;
+    mapsize = ((size + mod + src->pagesize - 1) / src->pagesize) * src->pagesize;
 //    printf("not on page boundaries, resizing map to %d+%d\n",mapbase,mapsize);
     map = gst_filesrc_map_region(src, mapbase, mapsize);
     return gst_buffer_create_sub (map, offset - mapbase, size);
@@ -397,6 +425,7 @@ gst_filesrc_get (GstPad *pad)
   GstBuffer *buf = NULL, *map;
   off_t readend,mapstart,mapend;
   GstFileSrcRegion region;
+  int i;
 
   g_return_val_if_fail (pad != NULL, NULL);
   src = GST_FILESRC (gst_pad_get_parent (pad));
@@ -471,6 +500,12 @@ gst_filesrc_get (GstPad *pad)
         buf = gst_buffer_create_sub (src->mapbuf, src->curoffset - GST_BUFFER_OFFSET(src->mapbuf), src->block_size);
       }
     }
+  }
+
+  /* if we need to touch the buffer (to bring it into memory), do so */
+  if (src->touch) {
+    for (i=0;i<GST_BUFFER_SIZE(buf);i+=src->pagesize)
+      *(GST_BUFFER_DATA(buf)+i) = *(GST_BUFFER_DATA(buf)+i);
   }
 
   /* we're done, return the buffer */
