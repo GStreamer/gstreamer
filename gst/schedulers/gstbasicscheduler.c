@@ -330,8 +330,8 @@ gst_basic_scheduler_chain_wrapper (int argc, char *argv[])
 	    gst_pad_send_event (pad, GST_EVENT (buf));
 	  }
 	  else {
-	    GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function of %s:%s", name,
-		       GST_PAD_NAME (pad));
+	    GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function of %s:%s %p", name,
+		       GST_PAD_NAME (pad), buf);
 	    GST_RPAD_CHAINFUNC (realpad) (pad, buf);
 	    GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function of element %s done", name);
 	  }
@@ -381,8 +381,8 @@ gst_basic_scheduler_src_wrapper (int argc, char *argv[])
 	g_return_val_if_fail (GST_RPAD_GETFUNC (realpad) != NULL, 0);
 	buf = GST_RPAD_GETFUNC (realpad) (GST_PAD_CAST (realpad));
 	if (buf) {
-	  GST_DEBUG (GST_CAT_DATAFLOW, "calling gst_pad_push on pad %s:%s",
-		     GST_DEBUG_PAD_NAME (realpad));
+	  GST_DEBUG (GST_CAT_DATAFLOW, "calling gst_pad_push on pad %s:%s %p",
+		     GST_DEBUG_PAD_NAME (realpad), buf);
 	  gst_pad_push (GST_PAD_CAST (realpad), buf);
 	}
       }
@@ -443,8 +443,8 @@ gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
 
   /* now fill the bufferpen and switch so it can be consumed */
   GST_RPAD_BUFPEN (GST_RPAD_PEER (pad)) = buf;
-  GST_DEBUG (GST_CAT_DATAFLOW, "switching to %p",
-	     GST_ELEMENT_THREADSTATE (GST_PAD_PARENT (pad)));
+  GST_DEBUG (GST_CAT_DATAFLOW, "switching to %p to consume buffer %p",
+	     GST_ELEMENT_THREADSTATE (GST_PAD_PARENT (pad)), buf);
 
   do_element_switch (parent);
 
@@ -1000,14 +1000,15 @@ gst_basic_scheduler_add_element (GstScheduler * sched, GstElement * element)
     GST_ERROR (element, "grave error");
     return;
   }
-  
+
   /* set the sched pointer in the element itself */
   GST_ELEMENT_SCHED (element) = sched;
-
+  
   /* only deal with elements after this point, not bins */
   /* exception is made for Bin's that are schedulable, like the autoplugger */
   if (GST_IS_BIN (element) && !GST_FLAG_IS_SET (element, GST_BIN_SELF_SCHEDULABLE))
     return;
+
 
   /* first add it to the list of elements that are to be scheduled */
   bsched->elements = g_list_prepend (bsched->elements, element);
@@ -1070,8 +1071,8 @@ gst_basic_scheduler_remove_element (GstScheduler * sched, GstElement * element)
     bsched->num_elements--;
 
     /* unset the scheduler pointer in the element */
-    GST_ELEMENT_SCHED (element) = NULL;
   }
+  GST_ELEMENT_SCHED (element) = NULL;
 }
 
 static GstElementStateReturn
