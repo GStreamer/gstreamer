@@ -1,0 +1,10 @@
+Makefile
+Makefile.in
+*.o
+*.lo
+*.la
+.deps
+.libs
+*.xml
+*.gst
+case1

@@ -1,0 +1,74 @@
+#include <gst/gst.h>
+
+gboolean playing = TRUE;
+
+static void
+handoff_signal (GstElement *element, GstBuffer *buf)
+{
+  g_print ("handoff \"%s\" %llu\n", gst_element_get_name (element), GST_BUFFER_TIMESTAMP (buf));
+}
+
+static void
+eos_signal (GstElement *element)
+{
+  g_print ("eos received from \"%s\"\n", gst_element_get_name (element));
+
+  playing = FALSE;
+}
+
+int 
+main(int argc,char *argv[]) 
+{
+  GstBin *pipeline;
+  GstElement *src, *tee, *identity1, *identity2, *aggregator, *sink;
+
+  gst_init (&argc, &argv);
+
+  pipeline = GST_BIN (gst_pipeline_new ("pipeline"));
+  g_return_val_if_fail (pipeline != NULL, 1);
+
+  src = gst_elementfactory_make ("fakesrc", "src");
+  g_object_set (G_OBJECT (src), "num_buffers", 4, NULL);
+  g_return_val_if_fail (src != NULL, 2);
+  tee = gst_elementfactory_make ("tee", "tee");
+  g_return_val_if_fail (tee != NULL, 3);
+  identity1 = gst_elementfactory_make ("identity", "identity1");
+  g_return_val_if_fail (identity1 != NULL, 3);
+  identity2 = gst_elementfactory_make ("identity", "identity2");
+  g_object_set (G_OBJECT (identity2), "duplicate", 2, NULL);
+  g_return_val_if_fail (identity2 != NULL, 3);
+  aggregator = gst_elementfactory_make ("aggregator", "aggregator");
+  g_return_val_if_fail (aggregator != NULL, 3);
+  sink = gst_elementfactory_make ("fakesink", "sink");
+  g_return_val_if_fail (sink != NULL, 4);
+
+  gst_bin_add (pipeline, GST_ELEMENT (src));
+  gst_bin_add (pipeline, GST_ELEMENT (tee));
+  gst_bin_add (pipeline, GST_ELEMENT (identity1));
+  gst_bin_add (pipeline, GST_ELEMENT (identity2));
+  gst_bin_add (pipeline, GST_ELEMENT (aggregator));
+  gst_bin_add (pipeline, GST_ELEMENT (sink));
+
+  gst_element_connect (src, "src", tee, "sink");
+  gst_pad_connect (gst_element_request_pad_by_name (tee, "src%d"),
+		   gst_element_get_pad (identity1, "sink"));
+  gst_pad_connect (gst_element_request_pad_by_name (tee, "src%d"),
+		   gst_element_get_pad (identity2, "sink"));
+  gst_pad_connect (gst_element_get_pad (identity1, "src"),
+  		   gst_element_request_pad_by_name (aggregator, "sink%d"));
+  gst_pad_connect (gst_element_get_pad (identity2, "src"),
+  		   gst_element_request_pad_by_name (aggregator, "sink%d"));
+  gst_element_connect (aggregator, "src", sink, "sink");
+
+  g_signal_connectc (G_OBJECT (src), "eos", eos_signal, NULL, FALSE);
+  g_signal_connectc (G_OBJECT (sink), "handoff", handoff_signal, NULL, FALSE);
+
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+
+  while (playing)
+    gst_bin_iterate (pipeline);
+
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+
+  exit (0);
+}
