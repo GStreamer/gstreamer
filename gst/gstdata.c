@@ -27,6 +27,18 @@
 #include "gstdata_private.h"
 #include "gstinfo.h"
 
+GType
+gst_data_get_type (void)
+{
+  static GType type = 0;
+  
+  if (!type)
+    type = g_boxed_type_register_static ("GstData",
+					 (GBoxedCopyFunc) gst_data_copy,
+					 (GBoxedFreeFunc) gst_data_free);
+    return type;
+}
+
 /**
  * gst_data_init:
  * @data: a #GstData to initialize

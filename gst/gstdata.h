@@ -41,6 +41,9 @@ G_BEGIN_DECLS
 #define GST_DATA_FLAG_SET(data,flag)	G_STMT_START{ (GST_DATA_FLAGS(data) |= (1<<(flag))); }G_STMT_END
 #define GST_DATA_FLAG_UNSET(data,flag) 	G_STMT_START{ (GST_DATA_FLAGS(data) &= ~(1<<(flag))); }G_STMT_END
 
+/* Macros for the GType */
+#define GST_TYPE_DATA                   (gst_data_get_type ())
+
 typedef struct _GstData GstData;
 
 typedef void       	(*GstDataFreeFunction)		(GstData *data);
@@ -95,6 +98,9 @@ void 			gst_data_free	 		(GstData *data);
 GstData*		gst_data_ref			(GstData* data);
 GstData*		gst_data_ref_by_count		(GstData* data, gint count);
 void			gst_data_unref			(GstData* data);
+
+/* GType for GstData */
+GType                   gst_data_get_type               (void) G_GNUC_CONST;
 
 G_END_DECLS
 

@@ -1,3 +1,10 @@
+2004-02-27  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gstdata.c (gst_data_get_type): New function, register
+	GstData as a GBoxed type.
+
+	* gst/gstdata.h (GST_TYPE_DATA): New macro
+
 2004-02-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:
