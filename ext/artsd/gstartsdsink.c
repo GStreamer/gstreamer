@@ -171,7 +171,7 @@ gst_artsdsink_link (GstPad *pad, GstCaps *caps)
 {
   GstArtsdsink *artsdsink = GST_ARTSDSINK (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_FIXED (caps))
+  if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_LINK_DELAYED;
 
   gst_caps_get (caps,
