@@ -50,7 +50,8 @@ typedef struct _GstInterfaceClass {
   GTypeInterface parent;
 
   /* virtual functions */
-  gboolean (* supported) (GstInterface *iface);
+  gboolean (* supported) (GstInterface *iface,
+			  GType         iface_type);
 } GstInterfaceClass;
 
 #define GST_INTERFACE_CHECK_INSTANCE_CAST(obj, type, cast_t) \

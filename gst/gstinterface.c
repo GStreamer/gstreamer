@@ -29,7 +29,8 @@
 #include "gstlog.h"
 
 static void 	gst_interface_class_init 	(GstInterfaceClass *ifklass);
-static gboolean	gst_interface_supported_default (GstInterface *iface);
+static gboolean	gst_interface_supported_default (GstInterface *iface,
+						 GType         iface_type);
 
 GType
 gst_interface_get_type (void)
@@ -65,7 +66,8 @@ gst_interface_class_init (GstInterfaceClass *klass)
 }
 
 static gboolean
-gst_interface_supported_default (GstInterface *interface)
+gst_interface_supported_default (GstInterface *interface,
+				 GType         iface_type)
 {
   /* Well, if someone didn't set the virtual function,
    * then something is clearly wrong. So big no-no here */
@@ -96,7 +98,7 @@ gst_element_implements_interface (GstElement *element,
     ifclass = GST_INTERFACE_GET_CLASS (iface);
 
     if (ifclass->supported != NULL &&
-        ifclass->supported (iface) == TRUE) {
+        ifclass->supported (iface, iface_type) == TRUE) {
       return TRUE;
     }
   }
