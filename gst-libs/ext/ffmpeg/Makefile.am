@@ -31,7 +31,6 @@ EXTRA_DIST = \
 	ffmpeg/CREDITS \
 	ffmpeg/INSTALL \
 	ffmpeg/README \
-	ffmpeg/VERSION \
 	ffmpeg/config.mak \
 	ffmpeg/configure \
 	ffmpeg/cygwin_inttypes.h \
