@@ -398,6 +398,12 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
     }
 #endif /* USE_SHM */
   
+  if (xcontext->endianness == G_LITTLE_ENDIAN && xcontext->depth == 24) {
+    xcontext->endianness = G_BIG_ENDIAN;
+    xcontext->visual->red_mask = GUINT32_SWAP_LE_BE (xcontext->visual->red_mask);
+    xcontext->visual->green_mask = GUINT32_SWAP_LE_BE (xcontext->visual->green_mask);
+    xcontext->visual->blue_mask = GUINT32_SWAP_LE_BE (xcontext->visual->blue_mask);
+  }
   xcontext->caps = GST_CAPS_NEW ("ximagesink_ximage_caps", "video/x-raw-rgb",
       "bpp",        GST_PROPS_INT (xcontext->bpp),
       "depth",      GST_PROPS_INT (xcontext->depth),
@@ -447,16 +453,18 @@ gst_ximagesink_getcaps (GstPad *pad, GstCaps *caps)
   ximagesink = GST_XIMAGESINK (gst_pad_get_parent (pad));
   
   if (ximagesink->xcontext)
-    caps = gst_caps_append(caps, gst_caps_copy (ximagesink->xcontext->caps));
-  
-  return caps;
+    return gst_caps_copy (ximagesink->xcontext->caps);
+
+  return GST_CAPS_NEW ("ximagesink_rgbsink", "video/x-raw-rgb",
+                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+                "width", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                "height", GST_PROPS_INT_RANGE (0, G_MAXINT));
 }
 
 static GstPadLinkReturn
 gst_ximagesink_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstXImageSink *ximagesink;
-  GstCaps *icaps;
 
   ximagesink = GST_XIMAGESINK (gst_pad_get_parent (pad));
 
@@ -468,19 +476,10 @@ gst_ximagesink_sinkconnect (GstPad *pad, GstCaps *caps)
   
   GST_DEBUG ("sinkconnect %s with %s", gst_caps_to_string(caps), gst_caps_to_string(ximagesink->xcontext->caps));
   
-  /* Trying caps intersection */
-  icaps = gst_caps_intersect (caps, ximagesink->xcontext->caps);
- 
-  if (!icaps)
-    {
-      GST_DEBUG ("no format found");
-      return GST_PAD_LINK_REFUSED;
-    }
-    
-  gst_caps_unref(icaps);
-    
-  gst_caps_get_int (caps, "width", &ximagesink->width);
-  gst_caps_get_int (caps, "height", &ximagesink->height);
+  if (!gst_caps_get_int (caps, "width", &ximagesink->width))
+    return GST_PAD_LINK_REFUSED;
+  if (!gst_caps_get_int (caps, "height", &ximagesink->height))
+    return GST_PAD_LINK_REFUSED;
   
   if (gst_caps_has_fixed_property (caps, "pixel_width"))
     gst_caps_get_int (caps, "pixel_width", &ximagesink->pixel_width);
