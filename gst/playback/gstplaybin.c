@@ -307,7 +307,7 @@ gen_video_element (GstPlayBin * play_bin)
   element = g_hash_table_lookup (play_bin->cache, "vbin");
   if (element != NULL) {
     g_object_ref (G_OBJECT (element));
-    sink = gst_bin_get_by_name (GST_BIN (element), "sink");
+    sink = g_hash_table_lookup (play_bin->cache, "video_sink");
     goto done;
   }
 
@@ -320,6 +320,7 @@ gen_video_element (GstPlayBin * play_bin)
   } else {
     sink = gst_element_factory_make ("ximagesink", "sink");
   }
+  g_hash_table_insert (play_bin->cache, "video_sink", sink);
 
   gst_bin_add (GST_BIN (element), conv);
   gst_bin_add (GST_BIN (element), scale);
@@ -354,7 +355,7 @@ gen_audio_element (GstPlayBin * play_bin)
   element = g_hash_table_lookup (play_bin->cache, "abin");
   if (element != NULL) {
     g_object_ref (G_OBJECT (element));
-    sink = gst_bin_get_by_name (GST_BIN (element), "sink");
+    sink = g_hash_table_lookup (play_bin->cache, "audio_sink");
     goto done;
   }
   element = gst_bin_new ("abin");
@@ -371,6 +372,7 @@ gen_audio_element (GstPlayBin * play_bin)
   } else {
     sink = gst_element_factory_make ("osssink", "sink");
   }
+  g_hash_table_insert (play_bin->cache, "audio_sink", sink);
 
   gst_bin_add (GST_BIN (element), conv);
   gst_bin_add (GST_BIN (element), scale);
