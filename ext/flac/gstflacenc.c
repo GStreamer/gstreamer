@@ -329,7 +329,7 @@ gst_flacenc_update_quality (FlacEnc *flacenc, gint quality)
 {
   flacenc->quality = quality;
 
-#define DO_UPDATE (name, val, str) 	                    	\
+#define DO_UPDATE(name, val, str) 	                    	\
   G_STMT_START {                                                \
     if (FLAC__stream_encoder_get_##name (flacenc->encoder) != 	\
         flacenc_params[quality].val) {        			\
