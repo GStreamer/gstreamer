@@ -36,17 +36,17 @@ to bring the plugin into memory.
 
 <!-- ##### MACRO GST_PLUGIN_ERROR ##### -->
 <para>
-
+The error quark
 </para>
 
 
 
 <!-- ##### FUNCTION gst_plugin_error_quark ##### -->
 <para>
-
+Get the error quark
 </para>
 
-@Returns: 
+@Returns: The error quark used in GError messages
 
 
 <!-- ##### ENUM GstPluginError ##### -->

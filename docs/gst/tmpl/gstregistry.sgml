@@ -35,6 +35,20 @@ The registry holds the available plugins in the system.
 @GST_REGISTRY_REMOTE: 
 @GST_REGISTRY_DELAYED_LOADING: 
 
+<!-- ##### STRUCT GstRegistry ##### -->
+<para>
+
+</para>
+
+@object: 
+@priority: 
+@flags: 
+@name: 
+@details: 
+@loaded: 
+@plugins: 
+@paths: 
+
 <!-- ##### FUNCTION gst_registry_load ##### -->
 <para>
 

@@ -56,17 +56,17 @@ can be made with <option>{}</option>.
 
 <!-- ##### MACRO GST_PARSE_ERROR ##### -->
 <para>
-
+The error querk
 </para>
 
 
 
 <!-- ##### FUNCTION gst_parse_error_quark ##### -->
 <para>
-
+Get the error quark passed in the GError messages.
 </para>
 
-@Returns: 
+@Returns: The parse error quark
 
 
 <!-- ##### FUNCTION gst_parse_launch ##### -->

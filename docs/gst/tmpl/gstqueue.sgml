@@ -14,7 +14,7 @@ The queue is typically used in conjunction with a thread.
 You can query how many buffers are queued with the level argument.
 </para>
 <para>
-The default queue length is set to 10.
+The default queue length is set to 100.
 </para>
 <para>
 The queue blocks by default.

@@ -2,7 +2,7 @@
 GstBuffer
 
 <!-- ##### SECTION Short_Description ##### -->
-Data-passing buffer type, supporting sub-buffers and metadata
+Data-passing buffer type, supporting sub-buffers.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -10,8 +10,7 @@ Buffers are the basic unit of data transfer in GStreamer.  The GstBuffer type
 provides all the state necessary to define a region of memory as part of a
 stream.  Sub-buffers are also supported, allowing a smaller region of a
 buffer to become its own buffer, with mechanisms in place to ensure that
-neither memory space goes away.  Metadata is supported as a list of
-pointers to arbitrary metadata.
+neither memory space goes away. 
 </para>
 <para>
 Buffers are usually created with gst_buffer_new(). After a buffer has been 
@@ -30,7 +29,11 @@ buffer data.
 </programlisting>
 </para>
 <para>
-GstBuffers can also be created from a GstBufferPool with 
+Alternatively, use gst_buffer_new_and_alloc() to create a buffer with preallocated
+data of a given size.
+</para>
+<para>
+GstBuffers can also be created from a #GstBufferPool with 
 gst_buffer_new_from_pool(). The bufferpool can be obtained from a
 peer element with gst_pad_get_bufferpool().
 </para>
@@ -49,8 +52,12 @@ and GST_BUFFER_FLAG_UNSET() macros. Use GST_BUFFER_FLAG_IS_SET() to test it
 a certain flag is set.
 </para>
 <para>
+Buffers can be efficiently merged into a larger buffer with gst_buffer_merge() and
+gst_buffer_span() if the gst_buffer_is_span_fast() function returns TRUE.
+</para>
+<para>
 Buffers usually are freed by unreffing them with gst_buffer_unref().
-gst_buffer_destroy() can also be used to effectively destroy the buffer
+gst_buffer_free() can also be used to effectively free the buffer
 regardless of the refcount (dangerous).
 </para>
 
@@ -59,20 +66,52 @@ regardless of the refcount (dangerous).
 #GstBufferPool, #GstPad, #GstData
 </para>
 
-<!-- ##### MACRO GST_IS_BUFFER ##### -->
-<para>
-Checks if the object is a buffer.
-</para>
-
-@buf: object to check
-
-
 <!-- ##### MACRO GST_BUFFER ##### -->
 <para>
 Casts an object to a GstBuffer.
 </para>
 
 @buf: object to cast
+
+
+<!-- ##### MACRO GST_IS_BUFFER ##### -->
+<para>
+Checks if the pointer is a GstBuffer
+</para>
+
+@buf: The buffer to query
+
+
+<!-- ##### MACRO GST_BUFFER_REFCOUNT ##### -->
+<para>
+Get a handle to the refcount structure of the buffer
+</para>
+
+@buf: The buffer to query
+
+
+<!-- ##### MACRO GST_BUFFER_REFCOUNT_VALUE ##### -->
+<para>
+Get the current refcount value of the buffer
+</para>
+
+@buf: The buffer to query
+
+
+<!-- ##### MACRO GST_BUFFER_COPY_FUNC ##### -->
+<para>
+Calls the buffer-specific copy function on the given buffer.
+</para>
+
+@buf: a #GstBuffer to copy
+
+
+<!-- ##### MACRO GST_BUFFER_FREE_FUNC ##### -->
+<para>
+Calls the buffer-specific free function on the given buffer.
+</para>
+
+@buf: a #GstBuffer to free
 
 
 <!-- ##### MACRO GST_BUFFER_FLAGS ##### -->
@@ -126,14 +165,6 @@ Gets the size of the data in this buffer.
 @buf: a #GstBuffer to get data size of
 
 
-<!-- ##### MACRO GST_BUFFER_OFFSET ##### -->
-<para>
-Gets the offset in the source file of this buffer.
-</para>
-
-@buf: a #GstBuffer to get offset of
-
-
 <!-- ##### MACRO GST_BUFFER_MAXSIZE ##### -->
 <para>
 Gets the maximum size of this buffer.
@@ -148,6 +179,14 @@ Gets the timestamp for this buffer.
 </para>
 
 @buf: a #GstBuffer to get timestamp of
+
+
+<!-- ##### MACRO GST_BUFFER_OFFSET ##### -->
+<para>
+Gets the offset in the source file of this buffer.
+</para>
+
+@buf: a #GstBuffer to get offset of
 
 
 <!-- ##### MACRO GST_BUFFER_BUFFERPOOL ##### -->
@@ -166,25 +205,31 @@ Gets the bufferpool private data.
 @buf: a #GstBuffer to get bufferpool's private data of
 
 
-<!-- ##### MACRO GST_BUFFER_COPY_FUNC ##### -->
+<<<<<<< gstbuffer.sgml
+
+
+<!-- ##### ENUM GstBufferFlag ##### -->
 <para>
-Calls the buffer-specific copy function on the given buffer.
+This enumeration type describes the flags that can be used for a buffer.
 </para>
 
-@buf: a #GstBuffer to copy
+@GST_BUFFER_READONLY: buffer is read-only
+@GST_BUFFER_SUBBUFFER: This buffer is a subbuffer, the parent buffer can be found with the
+                       GST_BUFFER_POOL_PRIVATE() macro.
+@GST_BUFFER_ORIGINAL: buffer is not a copy of another buffer
+@GST_BUFFER_DONTFREE: do not try to free the data when this buffer is unreferenced
+@GST_BUFFER_DISCONTINOUS: This buffer is the first one after a discontinuity in the stream
+@GST_BUFFER_KEY_UNIT: This buffer holds a key unit, a unit that can be decoded independently
+                      of other buffers
+@GST_BUFFER_PREROLL: This buffer should be decoded but not rendered, it is mainly used
+                     to resynchronise the stream
+@GST_BUFFER_FLAG_LAST: Additional flags can be added starting from this flag.
 
-
-<!-- ##### MACRO GST_BUFFER_FREE_FUNC ##### -->
-<para>
-Calls the buffer-specific free function on the given buffer.
-</para>
-
-@buf: a #GstBuffer to free
-
+=======
 
 <!-- ##### STRUCT GstBuffer ##### -->
 <para>
-
+The basic structure of a buffer
 </para>
 
 @data_type: 
@@ -204,6 +249,15 @@ Calls the buffer-specific free function on the given buffer.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_buffer_new_and_alloc ##### -->
+<para>
+
+</para>
+
+@size: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_buffer_new_from_pool ##### -->
 <para>
 
@@ -213,17 +267,76 @@ Calls the buffer-specific free function on the given buffer.
 @offset: 
 @size: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@location: 
 
 
-<!-- ##### MACRO gst_buffer_copy ##### -->
+<!-- ##### FUNCTION gst_buffer_default_free ##### -->
+<para>
+
+</para>
+
+@buffer: 
+
+
+<!-- ##### FUNCTION gst_buffer_default_copy ##### -->
 <para>
 
 </para>
 
 @buffer: 
 @Returns: 
+
+
+<!-- ##### MACRO gst_buffer_ref ##### -->
+<para>
+Increase the refcount of the given buffer
+</para>
+
+@buf: The buffer to refcount
+
+
+<!-- ##### MACRO gst_buffer_ref_by_count ##### -->
+<para>
+Increase the refcount of the buffer with the given value. 
+</para>
+
+@buf: The buffer to refcount
+@c: The value to add to the refcount.
+
+
+<!-- ##### MACRO gst_buffer_unref ##### -->
+<para>
+Decrease the refcount of the buffer. If the refcount reaches 0, the buffer
+will be freed.
+</para>
+
+@buf: The buffer to unref
+
+
+<!-- ##### MACRO gst_buffer_copy ##### -->
+<para>
+Copy the given buffer using the copy function of the parent GstData structure.
+</para>
+
+@buffer: The buffer to copy
+@Returns: A new copy of the buffer
+
+
+<!-- ##### MACRO gst_buffer_copy_on_write ##### -->
+<para>
+Copy the buffer if the refcount > 1 so that the newly created buffer can be safely
+written to. If the refcount is 1, this function just returns the original buffer.
+</para>
+
+@buffer: The buffer to copy.
+
+
+<!-- ##### MACRO gst_buffer_free ##### -->
+<para>
+Free the given buffer. It is dangerous to use this function, use gst_buffer_unref()
+instead.
+</para>
+
+@buffer: The buffer to free.
 
 
 <!-- ##### FUNCTION gst_buffer_create_sub ##### -->
@@ -237,39 +350,7 @@ Calls the buffer-specific free function on the given buffer.
 @Returns: 
 
 
-<!-- ##### MACRO gst_buffer_ref ##### -->
-<para>
-
-</para>
-
-@buf: 
-<!-- # Unused Parameters # -->
-@buffer: 
-
-
-<!-- ##### MACRO gst_buffer_ref_by_count ##### -->
-<para>
-
-</para>
-
-@buf: 
-@c: 
-<!-- # Unused Parameters # -->
-@buffer: 
-@count: 
-
-
-<!-- ##### MACRO gst_buffer_unref ##### -->
-<para>
-
-</para>
-
-@buf: 
-<!-- # Unused Parameters # -->
-@buffer: 
-
-
-<!-- ##### FUNCTION gst_buffer_is_span_fast ##### -->
+<!-- ##### FUNCTION gst_buffer_merge ##### -->
 <para>
 
 </para>
@@ -279,7 +360,7 @@ Calls the buffer-specific free function on the given buffer.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_buffer_merge ##### -->
+<!-- ##### FUNCTION gst_buffer_is_span_fast ##### -->
 <para>
 
 </para>

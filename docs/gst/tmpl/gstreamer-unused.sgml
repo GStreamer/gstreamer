@@ -467,7 +467,8 @@ GstIdentity
 
 <!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Long_Description ##### -->
 <para>
-
+MD5 Sink can be used to automate regression tests on media pipelines by
+computing a hash on the resulting buffers.
 </para>
 
 
@@ -478,7 +479,7 @@ GstIdentity
 
 
 <!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Short_Description ##### -->
-
+Compute a hash on buffer data.
 
 
 <!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Title ##### -->
@@ -649,7 +650,7 @@ The queue is typically used in conjunction with a thread.
 You can query how many buffers are queued with the level argument.
 </para>
 <para>
-The default queue length is set to 10.
+The default queue length is set to 100.
 </para>
 <para>
 The queue blocks by default.
@@ -1051,13 +1052,6 @@ Gets the parent of this buffer. The parent is set on sub-buffers.
 
 @buf: a #GstBuffer to get parent of
 
-<!-- ##### MACRO GST_BUFFER_POOL ##### -->
-<para>
-
-</para>
-
-@buf: 
-
 <!-- ##### MACRO GST_BUFFER_POOL_LOCK ##### -->
 <para>
 Unlock the given bufferpool.
@@ -1141,20 +1135,6 @@ A flag indicating that MMX instructions are supported.
 A flag indicating that SSE instructions are supported.
 </para>
 
-
-<!-- ##### MACRO GST_DATA ##### -->
-<para>
-
-</para>
-
-@data: 
-
-<!-- ##### MACRO GST_DATA_TYPE ##### -->
-<para>
-
-</para>
-
-@data: 
 
 <!-- ##### MACRO GST_DEBUG_CHAR_MODE ##### -->
 <para>
@@ -3014,6 +2994,9 @@ The frequency.
 </para>
 
 
+<<<<<<< gstreamer-unused.sgml
+
+
 <!-- ##### USER_FUNCTION GstBufferCopyFunc ##### -->
 <para>
 This supplied function is used to copy the buffer contents.
@@ -3022,26 +3005,14 @@ This supplied function is used to copy the buffer contents.
 @srcbuf: a #GstBuffer to copy from
 @Returns: a newly allocated #GstBuffer copy of srcbuf
 
-<!-- ##### ENUM GstBufferFlag ##### -->
-<para>
-This enumeration type describes the flags that can be used for a buffer.
-</para>
-
-@GST_BUFFER_READONLY: buffer is read-only
-@GST_BUFFER_ORIGINAL: buffer is not a copy of another buffer
-@GST_BUFFER_DONTFREE: do not try to free the data when this buffer is unreferenced
-@GST_BUFFER_DISCONTINOUS: This buffer is the first one after a discontinuity in the stream
-@GST_BUFFER_KEY_UNIT: This buffer holds a key unit, a unit that can be decoded independently
-                      of other buffers
-@GST_BUFFER_PREROLL: This buffer should be decoded but not rendered, it is mainly used
-                     to resynchronise the stream
-
 <!-- ##### USER_FUNCTION GstBufferFreeFunc ##### -->
 <para>
 This supplied function is called when the buffer data has to be freed.
 </para>
 
 @buf: a #GstBuffer to clear the buffer data of
+
+>>>>>>> 1.63
 
 <!-- ##### USER_FUNCTION GstBufferPoolCreateFunction ##### -->
 <para>
@@ -5552,6 +5523,21 @@ must be defined to activate the tracing functionality.
 </para>
 
 @connection: 
+
+<!-- ##### FUNCTION gst_data_default_copy ##### -->
+<para>
+
+</para>
+
+@data: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_data_default_free ##### -->
+<para>
+
+</para>
+
+@data: 
 
 <!-- ##### FUNCTION gst_debug_print_stack_trace ##### -->
 <para>

@@ -49,9 +49,7 @@ Each element has a state (see #GstElementState).  You can get and set the state
 of an element with gst_element_get_state() and gst_element_set_state().  
 You can wait for an element to change it's state with gst_element_wait_state_change().
 To get a string representation of a #GstElementState, use 
-gst_element_statename(), which is a really bad name for what it does 
-and should probably be renamed
-to gst_element_state_get_name if we can be bothered to do that.
+gst_element_state_get_name().
 </para>
 
 <para>
@@ -558,18 +556,20 @@ circumstances.
 
 <!-- ##### USER_FUNCTION GstElementPostRunFunction ##### -->
 <para>
-
+The signature of the function to execute before this element
+is scheduled.
 </para>
 
-@element: 
+@element: The element
 
 
 <!-- ##### USER_FUNCTION GstElementPreRunFunction ##### -->
 <para>
-
+The signature of the function to execute after this element
+is scheduled.
 </para>
 
-@element: 
+@element: The element
 
 
 <!-- ##### FUNCTION gst_element_disable_threadsafe_properties ##### -->

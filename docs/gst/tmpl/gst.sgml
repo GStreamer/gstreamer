@@ -9,8 +9,8 @@ Media library supporting arbitrary formats and filter graphs.
 GStreamer is a framework for constructing graphs of various filters
 (termed elements here) that will handle streaming media.  Any discreet
 (packetizable) media type is supported, with provisions for automatically
-determining source type.  Metadata can be passed with all data to provide
-formatting/framing information.  Plugins are heavily used to provide for
+determining source type.  Formatting/framing information is provided with
+a powerful negotiation framework.  Plugins are heavily used to provide for
 all elements, allowing one to construct plugins outside of the GST
 library, even released binary-only if license require (please don't).
 </para>
@@ -19,9 +19,8 @@ library, even released binary-only if license require (please don't).
 GStreamer borrows heavily from both the <ulink 
 url="http://www.cse.ogi.edu/sysl/">OGI media pipeline</ulink> and
 Microsoft's DirectShow, hopefully taking the best of both and leaving the
-cruft behind.  Its interface is still very fluid (I've redesigned the
-metadata handling twice already), and thus can be changed to increase the
-sanity/noise ratio.
+cruft behind.  Its interface is still very fluid and thus can be changed 
+to increase the sanity/noise ratio.
 </para>
 
 <para>
@@ -38,6 +37,10 @@ process its own command line options, as shown in the following example.
     ...
   }
   </programlisting>
+</para>
+<para>
+It's allowed to pass two NULL pointers to gst_init() in case you don't want to pass the command
+line args to GStreamer.
 </para>
 
 <para>
@@ -68,7 +71,7 @@ fragment:
   to find the version at compile time.
 </para>
 <para>
-gst_main() and gst_main_quit() enter and exit the main loop.
+gst_main() and gst_main_quit() enter and exit the main loop. 
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -118,6 +121,22 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 
 </para>
 
+
+
+<!-- ##### FUNCTION gst_has_threads ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_use_threads ##### -->
+<para>
+
+</para>
+
+@use_threads: 
 
 
 <!-- ##### VARIABLE g_log_domain_gstreamer ##### -->

@@ -8,8 +8,7 @@ Basis for the GST object hierarchy.
 <para>
 GstObject provides a root for the object hierarchy tree filed in by the
 GST library.  It is currently a thin wrapper on top of
-<classname>GObject</classname> but it can be compiled against GTK+ with
-a shim provided by the GStreamer library. It is an abstract class that is not
+<classname>GObject</classname>. It is an abstract class that is not
 very usable on its own.
 </para>
 
@@ -31,9 +30,9 @@ object.
 
 </para>
 
-@GST_DESTROYED: 
-@GST_FLOATING: 
-@GST_OBJECT_FLAG_LAST: 
+@GST_DESTROYED: The object is flagged for destruction
+@GST_FLOATING: The object is created but has no parent yet to manage it
+@GST_OBJECT_FLAG_LAST: subclasses can add additional flags starting from this flag
 
 <!-- ##### STRUCT GstObject ##### -->
 <para>
@@ -300,6 +299,6 @@ this signal to insert custom XML tags into the core XML.
 
 <!-- ##### ARG GstObject:name ##### -->
 <para>
-
+The name of the object
 </para>
 

@@ -40,8 +40,11 @@ The different major types of events.
 @GST_EVENT_NEW_MEDIA: a new media stream is started
 @GST_EVENT_QOS: a quality of service event
 @GST_EVENT_SEEK: a seek event.
+@GST_EVENT_SEEK_SEGMENT: a segment seek with start and stop position
+@GST_EVENT_SEGMENT_DONE: the event that will be emited when the segment seek has ended
+@GST_EVENT_SIZE: a size suggestion for a peer element
+@GST_EVENT_RATE: adjust the output rate of an element
 @GST_EVENT_FILLER: a dummy element that should be ignored by plugins
-@GST_EVENT_SIZE: 
 
 <!-- ##### MACRO GST_EVENT_TYPE ##### -->
 <para>
@@ -78,6 +81,7 @@ The different types of seek events.
 @GST_SEEK_FLAG_FLUSH: Flush any pending data while seeking
 @GST_SEEK_FLAG_ACCURATE: Seek as accuratly as possible
 @GST_SEEK_FLAG_KEY_UNIT: Seek to a nearby key unit
+@GST_SEEK_FLAG_SEGMENT_LOOP: Loop between start and stop in a segmented seek
 
 <!-- ##### ENUM GstSeekAccuracy ##### -->
 <para>
@@ -85,8 +89,8 @@ The seekaccuracy gives more information of how the seek was performed,
 if the seek was accurate or fuzzy.
 </para>
 
-@GST_SEEK_CERTAIN: 
-@GST_SEEK_FUZZY: 
+@GST_SEEK_CERTAIN: The seek was exact
+@GST_SEEK_FUZZY: The seek was fuzzy, exact position can not be guaranteed
 
 <!-- ##### MACRO GST_EVENT_SEEK_TYPE ##### -->
 <para>
@@ -138,42 +142,42 @@ Indicates how accurate the event was performed.
 
 <!-- ##### MACRO GST_SEEK_FLAGS_MASK ##### -->
 <para>
-
+Mask for the flags in the GstSeekType
 </para>
 
 
 
 <!-- ##### MACRO GST_SEEK_FLAGS_SHIFT ##### -->
 <para>
-
+Shift for the flags in the GstSeekType
 </para>
 
 
 
 <!-- ##### MACRO GST_SEEK_FORMAT_MASK ##### -->
 <para>
-
+Mask for the format in the GstSeekType
 </para>
 
 
 
 <!-- ##### MACRO GST_SEEK_FORMAT_SHIFT ##### -->
 <para>
-
+Shift for the format in the GstSeekType
 </para>
 
 
 
 <!-- ##### MACRO GST_SEEK_METHOD_MASK ##### -->
 <para>
-
+Mask for the method in the GstSeekType
 </para>
 
 
 
 <!-- ##### MACRO GST_SEEK_METHOD_SHIFT ##### -->
 <para>
-
+Shift for the method in the GstSeekType
 </para>
 
 
@@ -205,6 +209,38 @@ Get the number of offset/value pairs this event has.
 @event: The event to query.
 
 
+<!-- ##### MACRO GST_EVENT_RATE_VALUE ##### -->
+<para>
+Get access to the rate vale field
+</para>
+
+@event: The event to query
+
+
+<!-- ##### MACRO GST_EVENT_SEEK_ENDOFFSET ##### -->
+<para>
+The event stop position for a segment seek
+</para>
+
+@event: The event to query
+
+
+<!-- ##### MACRO GST_EVENT_SIZE_FORMAT ##### -->
+<para>
+The format of the size event.
+</para>
+
+@event: The event to query
+
+
+<!-- ##### MACRO GST_EVENT_SIZE_VALUE ##### -->
+<para>
+The value of the size event
+</para>
+
+@event: The event to query
+
+
 <!-- ##### STRUCT GstEvent ##### -->
 <para>
 The event data structure.
@@ -226,13 +262,36 @@ The event data structure.
 
 <!-- ##### MACRO gst_event_copy ##### -->
 <para>
-
+Copy the event using the event specific copy function
 </para>
 
-@ev: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@event: 
+@ev: The event to copy
+@Returns: A new event that is a copy of the given input event
+
+
+<!-- ##### MACRO gst_event_ref ##### -->
+<para>
+Increase the refcount of this event
+</para>
+
+@ev: The event to refcount
+
+
+<!-- ##### MACRO gst_event_ref_by_count ##### -->
+<para>
+Increase the refcount of the event with the given value
+</para>
+
+@ev: The event to refcount
+@c: The value to add to the refcount
+
+
+<!-- ##### MACRO gst_event_unref ##### -->
+<para>
+Decrease the refcount of an event, freeing it if the refcount reaches 0
+</para>
+
+@ev: The event to unref
 
 
 <!-- ##### FUNCTION gst_event_new_seek ##### -->
@@ -242,6 +301,27 @@ The event data structure.
 
 @type: 
 @offset: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_event_new_segment_seek ##### -->
+<para>
+
+</para>
+
+@type: 
+@start: 
+@stop: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_event_new_size ##### -->
+<para>
+
+</para>
+
+@format: 
+@value: 
 @Returns: 
 
 
@@ -277,6 +357,13 @@ Create a new dummy event that should be ignored
 <!-- ##### MACRO gst_event_new_flush ##### -->
 <para>
 Create a new flush event.
+</para>
+
+
+
+<!-- ##### FUNCTION gst_event_print_stats ##### -->
+<para>
+
 </para>
 
 

@@ -24,7 +24,7 @@ to create element instances or use gst_element_factory_make() as a convenient
 shortcut.
 </para>
 <para>
-The following code example shows you how to create a GstDiskSrc element.
+The following code example shows you how to create a GstFileSrc element.
 </para>
 
 <para>
@@ -147,28 +147,29 @@ describes the element, mostly for the benefit of editors.
 
 <!-- ##### MACRO GST_ELEMENT_RANK_MARGINAL ##### -->
 <para>
-
+The element is only marginally usefull for autoplugging
 </para>
 
 
 
 <!-- ##### MACRO GST_ELEMENT_RANK_NONE ##### -->
 <para>
-
+The plugin may not be used in autoplugging
 </para>
 
 
 
 <!-- ##### MACRO GST_ELEMENT_RANK_PRIMARY ##### -->
 <para>
-
+The plugin is well suited for autoplugging
 </para>
 
 
 
 <!-- ##### MACRO GST_ELEMENT_RANK_SECONDARY ##### -->
 <para>
-
+The plugin is suited for autoplugging but only as a second
+candidate.
 </para>
 
 
