@@ -1762,14 +1762,30 @@ static GstPad*
 gst_element_get_random_pad (GstElement *element, GstPadDirection dir)
 {
   GList *pads = element->pads;
+  GST_DEBUG (GST_CAT_ELEMENT_PADS, "getting a random pad");
   while (pads) {
     GstPad *pad = GST_PAD_CAST (pads->data);
-    
+
+    GST_DEBUG (GST_CAT_ELEMENT_PADS, "checking pad %s:%s",
+	       GST_DEBUG_PAD_NAME (pad));
+
     if (GST_PAD_DIRECTION (pad) == dir) {
+	    /*
+	     * FIXME: for some reason a ghosted pad doesn't get it's flag
+	     * set, which makes this check fail for them.
       if (GST_PAD_IS_USABLE (pad)) {
+      */
 	return pad;
+	/*
       }
+      else
+        GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is not usable",
+	           GST_DEBUG_PAD_NAME (pad));
+		   */
     }
+    else
+      GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is in wrong direction",
+                 GST_DEBUG_PAD_NAME (pad));
     pads = g_list_next (pads);
   }
   return NULL;
