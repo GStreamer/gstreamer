@@ -72,21 +72,23 @@ with the same name.
 
 TODO :
   - give the latest prerelease another good testing
-  - proofread the release notes
+  - proofread the release notes (notice.php) and the index (index.php)
   - change the symlinks on the website :
     - change the releases/current symbolic link to point to the new release dir
     - change the releases/cvs symlink to point to the next release dir
+  - run www-update.sh on sourceforge
   - make a text copy of the release notes to be included in the tarball :
     lynx -dump http://gstreamer.net/releases/current/notice.php?clean=1 > RELEASE
   - update web site docs
     - release-specific docs should go in CVS
     - change docs/current symlink
   - remove the nano version number in configure.ac, AS_VERSION
+  - FIXME: run a build and generate devhelp stuff
   - tag tree
     - policy is at http://gstreamer.net/dev/cvs.php
     - decide on a tag name : RELEASE_(VERSION)_(CODE)
     - tag; for example for 0.3.3 :
-      FIXME: add commands
+           cvs tag RELEASE-0_3_3-GUADECBYFOOT
   - add tag codename in www/dev/cvs.php
   - roll the tarball, build rpms
   - FIXME: update status table cvs status and then click on the release link
