@@ -26,10 +26,7 @@
 
 #include <gst/gstsystemclock.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_AUDIO_CLOCK \
   (gst_audio_clock_get_type())
@@ -79,9 +76,6 @@ void		gst_audio_clock_set_active 	(GstAudioClock *aclock, gboolean active);
 
 void		gst_audio_clock_update_time	(GstAudioClock *aclock, GstClockTime time);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_AUDIO_CLOCK_H__ */
