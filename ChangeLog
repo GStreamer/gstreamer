@@ -1,3 +1,10 @@
+2004-05-01  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_parse_metadata):
+	* gst/matroska/matroska-ids.h:	
+	  Basic tag reading support.
+
 2004-04-30  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_audio_caps):
