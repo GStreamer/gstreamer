@@ -505,7 +505,7 @@ static GstBuffer*
 gst_audio_convert_get_buffer (GstBuffer *buf, guint size)
 {
   GstBuffer *ret;
-  if (buf->maxsize >= size && !(GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_READONLY))) {
+  if (buf->maxsize >= size && !gst_buffer_is_readonly (buf)) {
     gst_buffer_ref (buf);
     buf->size = size;
     return buf;
@@ -524,7 +524,7 @@ static inline guint8 GINT8_IDENTITY (gint8 x) { return x; }
 #define CONVERT_TO(to, from, type, sign, endianness, LE_FUNC, BE_FUNC) G_STMT_START{\
   type value;									\
   memcpy (&value, from, sizeof (type));						\
-  from += sizeof (type);							\
+  from -= sizeof (type);							\
   value = (endianness == G_LITTLE_ENDIAN) ? LE_FUNC (value) : BE_FUNC (value);	\
   if (sign) {									\
     to = value;									\
@@ -539,7 +539,8 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert *this, GstBuffer *bu
   gint i, count;
   gint64 cur = 0;
   gint32 write;
-  guint8 *src, *dest;
+  gint32 *dest;
+  guint8 *src;
 
   if (this->width[0] == 4 && this->depth[0] == 32 && 
       this->endian[0] == G_BYTE_ORDER && this->sign[0] == TRUE)
@@ -548,9 +549,9 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert *this, GstBuffer *bu
   ret = gst_audio_convert_get_buffer (buf, buf->size * 4 / this->width[0]);
   
   count = ret->size / 4;
-  src = buf->data;
-  dest = ret->data;
-  for (i = 0; i < count; i++) {
+  src = buf->data + (count - 1) * this->width[0];
+  dest = (gint32 *) ret->data;
+  for (i = count - 1; i >= 0; i--) {
     switch (this->width[0]) {
       case 1:
 	if (this->sign[0]) {
@@ -596,7 +597,7 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert *this, GstBuffer *bu
 	  }
 	  cur = (gint64) value - (1 << 23);
 	}
-        src += 3;
+        src -= 3;
         break;      
       case 4:
 	if (this->sign[0]) {
@@ -611,8 +612,7 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert *this, GstBuffer *bu
     cur = cur * ((gint64) 1 << (32 - this->depth[0]));
     cur = CLAMP (cur, -((gint64)1 << 32), (gint64) 0x7FFFFFFF);
     write = cur;
-    memcpy (dest, &write, 4);
-    dest += 4;
+    memcpy (&dest[i], &write, 4);
   }
 
   gst_buffer_unref (buf);
@@ -745,19 +745,15 @@ gst_audio_convert_channels (GstAudioConvert *this, GstBuffer *buf)
   
   if (this->channels[0] > this->channels[1]) {
     for (i = 0; i < count; i++) {
-      *dest = *src / 2;
+      *dest = *src >> 1;
       src++;
-      *dest += (*src + 1) / 2;
+      *dest += (*src + 1) >> 1;
       src++;
       dest++;
     }
   } else {
-    for (i = 0; i < count; i++) {
-      *dest = *src;
-      dest++;
-      *dest = *src;
-      dest++;
-      src++;
+    for (i = count - 1; i >= 0; i--) {
+      dest[2 * i] = dest[2 * i + 1] = src[i];
     }
   }
 
@@ -802,4 +798,3 @@ GstPluginDesc plugin_desc = {
   "gstaudioconvert",
   plugin_init
 };
-
