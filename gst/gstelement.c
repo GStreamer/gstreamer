@@ -2547,7 +2547,7 @@ void gst_element_error_full
   /* create error message */
   GST_CAT_INFO (GST_CAT_ERROR_SYSTEM, "signaling error in %s: %s",
       GST_ELEMENT_NAME (element), sent_message);
-  error = g_error_new (domain, code, sent_message);
+  error = g_error_new_literal (domain, code, sent_message);
 
   /* if the element was already in error, stop now */
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_IN_ERROR)) {
