@@ -1471,9 +1471,11 @@ This package contains a basic audio and video playback library.
 %{_sysconfdir}/gconf/schemas/gstreamer.schemas
 %{_libdir}/libgstplay-%{version}.so.*
 
-%post -n gstreamer-GConf
-export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
-gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
+%post -n gstreamer-play
+/sbin/ldconfig
+
+%postun -n gstreamer-play
+/sbin/ldconfig
 
 #
 %changelog

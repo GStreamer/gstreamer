@@ -1,0 +1,13 @@
+# the standard variables don't make sense for an uninstalled copy
+prefix=
+exec_prefix=
+libdir=${pcfiledir}
+includedir=${pcfiledir}
+
+Name: GStreamer Play Library, uninstalled
+Description: Streaming-media framework, play libraries, not installed
+Requires: gstreamer >= @GSTREAMER_REQ@
+Version: @VERSION@
+
+Libs: ${pcfiledir}/libs/gst/play/libgstplay.la -lgstcontrol
+Cflags: -I${pcfiledir}/libs
