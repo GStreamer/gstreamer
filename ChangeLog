@@ -1,3 +1,11 @@
+2005-02-02  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_to_codecid):
+	  Change caps of MJPEGB to not interfere with MJPEG/JPEG.
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
+	  Remove rank for SP5X, no clue what that is...
+
 2005-02-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):

@@ -242,10 +242,13 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
        * between those in GStreamer. Should we (at least between MJPEG,
        * MJPEG-B and sp5x decoding...)? */
     case CODEC_ID_MJPEG:
-    case CODEC_ID_MJPEGB:
     case CODEC_ID_LJPEG:
     case CODEC_ID_SP5X:
       caps = GST_FF_VID_CAPS_NEW ("image/jpeg", NULL);
+      break;
+
+    case CODEC_ID_MJPEGB:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-mjpeg-b", NULL);
       break;
 
     case CODEC_ID_MPEG4:
@@ -1436,6 +1439,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       video = TRUE;
   } else if (!strcmp (mimetype, "image/jpeg")) {
     id = CODEC_ID_MJPEG;        /* A... B... */
+    video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-jpeg-b")) {
+    id = CODEC_ID_MJPEGB;
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-wmv")) {
     gint wmvversion = 0;

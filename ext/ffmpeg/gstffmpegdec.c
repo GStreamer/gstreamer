@@ -1058,6 +1058,10 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       default:
         rank = GST_RANK_MARGINAL;
         break;
+      /* what's that? */
+      case CODEC_ID_SP5X:
+        rank = GST_RANK_NONE;
+        break;
     }
     if (!gst_element_register (plugin, type_name, rank, type)) {
       g_free (type_name);
