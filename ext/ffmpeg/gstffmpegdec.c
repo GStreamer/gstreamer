@@ -425,12 +425,15 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
               ffmpegdec->context->width, ffmpegdec->context->height);
 
           /* note that ffmpeg sometimes gets the FPS wrong */
-          if (GST_CLOCK_TIME_IS_VALID (expected_ts)) {
+          if (GST_CLOCK_TIME_IS_VALID (expected_ts) &&
+              ffmpegdec->context->frame_rate > 0) {
             GST_BUFFER_TIMESTAMP (outbuf) = expected_ts;
             GST_BUFFER_DURATION (outbuf) = GST_SECOND *
                 ffmpegdec->context->frame_rate_base /
                 ffmpegdec->context->frame_rate;
             expected_ts += GST_BUFFER_DURATION (outbuf);
+          } else {
+            GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
           }
         }
         break;

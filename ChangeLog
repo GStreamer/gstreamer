@@ -1,3 +1,10 @@
+2004-10-29  Sebastien Cote  <sc5@hermes.usherb.ca>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
+	  Prevent division by zero (#155212).
+
 2004-10-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_avpicture_fill):
