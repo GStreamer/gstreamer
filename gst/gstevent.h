@@ -25,6 +25,7 @@
 #define __GST_EVENT_H__
 
 #include <gst/gstobject.h>
+#include <gst/gstdata.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,11 +39,23 @@ typedef enum {
   GST_EVENT_SEEK,
 } GstEventType;
 
+#define GST_EVENT(event)	((GstEvent*)(event))
+#define GST_IS_EVENT(event)	(GST_DATA_TYPE(event) == gst_event_get_type())
+
+#define GST_EVENT_TYPE(event)	(GST_EVENT(event)->type)
+
 typedef struct _GstEvent GstEvent;
 
 struct _GstEvent {
+  GstData data;
+
   GstEventType type;
 };
+
+GType		gst_event_get_type	(void);
+
+GstEvent*	gst_event_empty_new	(GstEventType type);
+void		gst_event_free 		(GstEvent* event);
 
 #ifdef __cplusplus
 }
