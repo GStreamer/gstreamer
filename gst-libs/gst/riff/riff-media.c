@@ -257,7 +257,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
         *codec_name = g_strdup ("MPEG 1 layer 2");
       break;
 
-    case GST_RIFF_WAVE_FORMAT_PCM:     /* PCM/wav */
+    case GST_RIFF_WAVE_FORMAT_PCM:     /* PCM */
       if (strf != NULL) {
         gint ba = GUINT16_FROM_LE (strf->blockalign);
         gint ch = GUINT16_FROM_LE (strf->channels);
@@ -274,7 +274,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
             "width = (int) { 8, 16 }, " "height = (int) { 8, 16 }");
       }
       if (codec_name)
-        *codec_name = g_strdup ("PCM WAV");
+        *codec_name = g_strdup ("Uncompressed PCM audio");
       break;
 
     case GST_RIFF_WAVE_FORMAT_MULAW:
