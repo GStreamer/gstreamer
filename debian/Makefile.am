@@ -15,37 +15,39 @@ EXTRA_DIST = \
 	gstreamer-arts.files \
 	gstreamer-artsd.files \
 	gstreamer-audiofile.files \
+	gstreamer-avifile.files \
 	gstreamer-cdparanoia.files \
 	gstreamer-colorspace.files \
 	gstreamer-common.files \
 	gstreamer-doc.files \
 	gstreamer-elements.files \
 	gstreamer-esd.files \
+	gstreamer-festival.files \
+	gstreamer-flac.files \
 	gstreamer-gnomevfs.files \
 	gstreamer-gsm.files \
-	gstreamer-lame.files \
 	gstreamer-jpeg.files \
+	gstreamer-lame.files \
 	gstreamer-mad.files \
 	gstreamer-mpeg2dec.files \
 	gstreamer-mpg123.files \
 	gstreamer-oss.files \
 	gstreamer-plugin-template.postinst \
-	gstreamer-plugin-template.prerm \
+	gstreamer-plugin-template.postrm \
 	gstreamer-runtime.files \
 	gstreamer-runtime.manpages \
 	gstreamer-runtime.postinst \
+	gstreamer-runtime.postrm \
 	gstreamer-sdl.files \
 	gstreamer-tools.files \
 	gstreamer-tools.manpages \
 	gstreamer-vorbis.files \
+	gstreamer-x.files \
 	libgst-dev.files \
 	libgst-dev.manpages \
 	libgst0.files \
-	libgst0.postinst \
 	libgsteditor-dev.files \
 	libgsteditor0.files \
-	libgsteditor0.postinst \
 	libgstmediaplay-dev.files \
 	libgstmediaplay0.files \
-	libgstmediaplay0.postinst \
 	rules

@@ -7,8 +7,11 @@ usr/lib/gst/libaviaudiodecoder.*
 usr/lib/gst/libavidecoder.*
 usr/lib/gst/libavidemux.*
 usr/lib/gst/libaviencoder.*
+usr/lib/gst/libavimux.*
 usr/lib/gst/libavitypes.*
+usr/lib/gst/libchart.*
 usr/lib/gst/libcutter.*
+usr/lib/gst/libdeinterlace.*
 usr/lib/gst/libdvdsrc.*
 usr/lib/gst/libflxdec.*
 usr/lib/gst/libgstaudio.*
@@ -18,7 +21,6 @@ usr/lib/gst/libgstcolorspace.*
 usr/lib/gst/libgstgetbits.*
 usr/lib/gst/libgstidct.*
 usr/lib/gst/libgstladspa.*
-usr/lib/gst/libgstossaudio.*
 usr/lib/gst/libgstparseau.*
 usr/lib/gst/libgstparsewav.*
 usr/lib/gst/libgstputbits.*
@@ -26,6 +28,7 @@ usr/lib/gst/libgstriff.*
 usr/lib/gst/libgstspectrum.*
 usr/lib/gst/libgsttypes.*
 usr/lib/gst/libgstvideoscale.*
+usr/lib/gst/libgstudp.*
 usr/lib/gst/libintfloatconvert.*
 usr/lib/gst/libjpeg.*
 usr/lib/gst/liblavencode.*
@@ -58,10 +61,6 @@ usr/lib/gst/libsystem_encode.*
 usr/lib/gst/libv4lsrc.*
 usr/lib/gst/libvcdsrc.*
 usr/lib/gst/libvideoscale.*
-usr/lib/gst/libvideosink.*
 usr/lib/gst/libvolenv.*
 usr/lib/gst/libvolume.*
 usr/lib/gst/libvumeter.*
-usr/lib/gst/libwincodec.*
-usr/lib/gst/libwinloader.*
-usr/lib/gst/libxvideosink.*

@@ -1,3 +1,59 @@
+gstreamer (0.2.1-2) unstable; urgency=low
+
+  * Fix lib deps: run debhelper tools in the right order
+  * Added arts dir to Makefile.am SUBDIRS so it builds again
+  * Changed libmpeg2dec to libgstmpeg2dec to avoid naming issues
+    when using -lmpeg2dec
+  * Updated system_encode/ with CVS segfaulter bug fix
+
+ -- David I. Lehn <dlehn@vt.edu>  Thu, 19 Jul 2001 15:47:24 -0400
+
+gstreamer (0.2.1-1) unstable; urgency=low
+
+  * New upstream 0.2.1: "Return of the Sedi Master"
+  * New plugin packages: -festival, -flac, -avifile, -x
+  * New plugins in -common: chart, deinterlace, udp
+  * Added some post-0.2.1 fixes for FLAC, build system, ALSA
+
+ -- David I. Lehn <dlehn@vt.edu>  Thu, 28 Jun 2001 20:15:15 -0400
+
+gstreamer (0.2.0-6) unstable; urgency=low
+
+  * Move -compprep to -runtime and call it same places as -register
+  * Do -register and -compprep in postrm instead of prerm
+  * Make -arts plugin actually build all the source (sent upstream)
+  * Purge of -runtime removes /etc/gstreamer
+
+ -- David I. Lehn <dlehn@vt.edu>  Tue, 19 Jun 2001 13:09:32 -0400
+
+gstreamer (0.2.0-5) unstable; urgency=low
+
+  * Added element package dependencies to libgstmediaplay0
+
+ -- David I. Lehn <dlehn@vt.edu>  Mon, 18 Jun 2001 11:18:53 -0400
+
+gstreamer (0.2.0-4) unstable; urgency=low
+
+  * Add --gst-mask=0 to -runtime.postinst
+
+ -- David I. Lehn <dlehn@vt.edu>  Fri, 15 Jun 2001 11:47:24 -0400
+
+gstreamer (0.2.0-3) unstable; urgency=low
+
+  * Fix the plugin control file symlink creation
+  * Add audiofile to Build-Depends
+
+ -- David I. Lehn <dlehn@vt.edu>  Fri, 15 Jun 2001 05:22:28 -0400
+
+gstreamer (0.2.0-2) unstable; urgency=low
+
+  * Fixed ALSA checks to not include -lasound in -every- link
+  * Update LAME plugin to use latest CVS API
+  * Removed OSS src/sink from -common.files (was in -oss too)
+  * Swapped -arts.files and -artsd.files contents
+
+ -- David I. Lehn <dlehn@vt.edu>  Fri, 15 Jun 2001 04:02:21 -0400
+
 gstreamer (0.2.0-1) unstable; urgency=low
 
   * Added gstreamer-compprep manpage

@@ -16,14 +16,16 @@ export DH_OPTIONS
 # Link special names to a template file.
 # still need "*.files" to be done by hand
 
-PLUGINS=aa alsa arts artsd audiofile cdparanoia colorspace common elements esd gnomevfs gsm jpeg lame mad mpeg2dec mpg123 oss sdl vorbis
+PLUGINS=aa alsa arts artsd audiofile avifile cdparanoia colorspace common elements esd festival flac gnomevfs gsm jpeg lame mad mpeg2dec mpg123 oss sdl vorbis x
 
 setup-links:
 	for i in $(PLUGINS); do \
-		ln -fs debian/gstreamer-plugin-template.postinst \
-			debian/gstreamer-$$i.postinst; \
-		ln -fs debian/gstreamer-plugin-template.prerm \
-			debian/gstreamer-$$i.prerm; \
+		(cd debian; \
+		ln -fs gstreamer-plugin-template.postinst \
+			gstreamer-$$i.postinst; \
+		ln -fs gstreamer-plugin-template.postrm \
+			gstreamer-$$i.postrm; \
+		) \
 	done
 
 configure: configure-stamp
@@ -31,11 +33,14 @@ configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
 	./configure \
+		--host=$(shell dpkg-architecture -qDEB_HOST_GNU_TYPE) \
 		--prefix=/usr \
 		--mandir=\$${prefix}/share/man \
 		--infodir=\$${prefix}/share/info \
+		--sysconfdir=/etc \
 		--with-configdir=/etc/gstreamer \
-		--disable-plugin-srcdir \
+		--with-win32-libdir=/usr/lib/win32 \
+		--disable-plugin-builddir \
 		--disable-tests \
 		--disable-examples \
 		--enable-docs-build \
@@ -65,8 +70,17 @@ clean:
 	rm -rf debian/gstreamer
 	for i in $(PLUGINS); do \
 		rm -f debian/gstreamer-$$i.postinst; \
-		rm -f debian/gstreamer-$$i.prerm; \
+		rm -f debian/gstreamer-$$i.postrm; \
 	done
+
+	# FIXME
+	rm -rf \
+		docs/gst/gstreamer-decl-list.txt \
+		docs/gst/gstreamer-decl.txt \
+		docs/gst/gstreamer.html \
+		docs/libs/tmpl \
+		docs/plugins/gstreamer-plugins.types
+	find . -name Makefile | grep -v omega | xargs rm || true
 
 install: DH_OPTIONS=
 install: build
@@ -105,8 +119,8 @@ binary-indep: build install
 	dh_fixperms
 # You may want to make some executables suid here.
 #	dh_suidregister
-	dh_installdeb
 #	dh_makeshlibs
+	dh_installdeb
 #	dh_perl
 #	dh_shlibdeps
 	dh_gencontrol
@@ -138,8 +152,8 @@ binary-arch: build install setup-links
 	dh_fixperms
 # You may want to make some executables suid here.
 #	dh_suidregister
-	dh_installdeb
 	dh_makeshlibs
+	dh_installdeb
 #	dh_perl
 	dh_shlibdeps -l`pwd`/debian/libgst0/usr/lib:`pwd`/debian/libgstmediaplay0/usr/lib:`pwd`/debian/libgsteditor0/usr/lib
 	dh_gencontrol

@@ -8,7 +8,7 @@ GStreamer is split into a number of base packages:
 
    libgst0              shared core libs
    libgst-dev           development libs and headers
-   libgst-runtime       tools required by the libs (gstreamer-register)
+   gstreamer-runtime    tools required by the libs (gstreamer-register)
    gstreamer-doc        documentation
    gstreamer-tools      useful tools
 
@@ -19,11 +19,28 @@ recommended plugins:
 
 optional plugins:
 
-   gstreamer-cdparanoia cdparanoia plugin
-   gstreamer-esd        ESD plugin
-   gstreamer-lame       LAME plugin
-   gstreamer-mpg123     mpg123 plugin
-   gstreamer-vorbis     Vorbis plugin
+   gstreamer-aa
+   gstreamer-alsa
+   gstreamer-arts
+   gstreamer-artsd
+   gstreamer-audiofile
+   gstreamer-avifile
+   gstreamer-cdparanoia
+   gstreamer-colorspace
+   gstreamer-esd
+   gstreamer-festival
+   gstreamer-flac
+   gstreamer-gnomevfs
+   gstreamer-gsm
+   gstreamer-jpeg
+   gstreamer-lame
+   gstreamer-mad
+   gstreamer-mpeg2dec
+   gstreamer-mpg123
+   gstreamer-oss
+   gstreamer-sdl
+   gstreamer-vorbis
+   gstreamer-x
 
 and applications and their supporting libs:
 
