@@ -1,5 +1,12 @@
 2004-01-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_src_getcaps),
+	(gst_matroska_demux_add_stream):
+	* gst/matroska/matroska-ids.h:
+	  Add getcaps() function to fix capsnego...
+
+2004-01-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_parse_syshead),
 	(gst_mpeg_demux_parse_packet), (gst_mpeg_demux_parse_pes):
 	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_parse_packhead):
