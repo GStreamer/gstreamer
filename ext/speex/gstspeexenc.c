@@ -31,6 +31,7 @@ extern GstPadTemplate *speexenc_src_template, *speexenc_sink_template;
 GstElementDetails gst_speexenc_details = {
   "speex audio encoder",
   "Codec/Audio/Encoder",
+  "LGPL",
   ".speex",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
