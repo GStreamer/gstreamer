@@ -142,6 +142,12 @@ else
 LIBFAME_DIR=
 endif
 
+if USE_LIBPNG
+LIBPNG_DIR=libpng
+else
+LIBPNG_DIR=
+endif
+
 if USE_MAD
 MAD_DIR=mad
 else
@@ -202,22 +208,10 @@ else
 SHOUT_DIR=
 endif
 
-if USE_SHOUT2
-SHOUT2_DIR=shout2
-else
-SHOUT2_DIR=
-endif
-
 if USE_SMOOTHWAVE
 SMOOTHWAVE_DIR=smoothwave
 else
 SMOOTHWAVE_DIR=
-endif
-
-if USE_LIBPNG
-SNAPSHOT_DIR=snapshot
-else
-SNAPSHOT_DIR=
 endif
 
 if USE_SWFDEC
@@ -254,8 +248,8 @@ SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
 	$(MAD_DIR) $(MIKMOD_DIR) $(MJPEGTOOLS_DIR) $(MPEG2DEC_DIR) \
 	$(OPENQUICKTIME_DIR) $(RAW1394_DIR) $(RTP_DIR) \
 	$(SDL_DIR) $(SHOUT_DIR) $(SIDPLAY_DIR) \
-	$(SMOOTHWAVE_DIR) $(SNAPSHOT_DIR) $(SWFDEC_DIR) $(TARKIN_DIR) \
-	$(VORBIS_DIR) $(XMMS_DIR) $(SHOUT2_DIR)
+	$(SMOOTHWAVE_DIR) $(SWFDEC_DIR) $(TARKIN_DIR) \
+	$(VORBIS_DIR) $(XMMS_DIR)
 
 DIST_SUBDIRS=\
 	a52dec aalib alsa \
@@ -267,5 +261,5 @@ DIST_SUBDIRS=\
 	ladspa lame lcs libfame \
 	mad mikmod mjpegtools mpeg2dec \
 	openquicktime raw1394 rtp \
-	sdl shout shout2 sidplay \
-	smoothwave snapshot swfdec tarkin vorbis xmms
+	sdl shout sidplay \
+	smoothwave swfdec tarkin vorbis xmms
