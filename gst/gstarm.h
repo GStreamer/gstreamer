@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstppc.h: Header for PPC-specific architecture issues
+ * gstarm.h: Header for ARM-specific architecture issues
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,10 +24,10 @@
 #define __GST_GSTARM_H__
 
 #define GST_ARCH_SET_SP(stackpointer) \
-    __asm__( "mov%?\t%!sp, %0" : : "r"(stackpointer));
+    __asm__( "mov sp, %0" : : "r"(stackpointer));
 
 #define GST_ARCH_CALL(target) \
-    __asm__( "mov%?\t%!pc, %1" : : "r"(target) );
+    __asm__( "mov pc, %0" : : "r"(target) );
 
 // Need to get more information about the stackframe format
 // and get the fields more correct.  Check GDB sources maybe?

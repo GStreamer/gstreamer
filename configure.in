@@ -117,6 +117,10 @@ case "x${target_cpu}" in
              AC_DEFINE(HAVE_CPU_I386) ;;
   xpowerpc)  HAVE_CPU_PPC=yes ;
              AC_DEFINE(HAVE_CPU_PPC) ;;
+  xalpha)    HAVE_CPU_ALPHA=yes ;
+             AC_DEFINE(HAVE_CPU_ALPHA) ;;
+  xarm)      HAVE_CPU_ARM=yes ;
+             AC_DEFINE(HAVE_CPU_ARM) ;;
 esac
 
 dnl Determine endianness
