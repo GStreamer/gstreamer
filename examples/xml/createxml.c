@@ -2,12 +2,24 @@
 #include <gst/gst.h>
 
 gboolean playing;
+xmlNsPtr ns;
 
-int main(int argc,char *argv[]) 
+static void
+object_saved (GstObject *object, xmlNodePtr parent, gpointer data)
+{
+  xmlNodePtr child;
+
+  child = xmlNewChild(parent, ns, "comment", NULL);
+  xmlNewChild(child, ns, "text", (gchar *)data);
+}
+
+int main(int argc,char *argv[])
 {
   GstElement *disksrc, *audiosink, *queue, *queue2, *parse, *decode;
   GstElement *bin;
   GstElement *thread, *thread2;
+
+  ns = xmlNewNs (NULL, "http://gstreamer.net/gst-test/1.0/", "test");
 
   gst_init(&argc,&argv);
 
@@ -20,9 +32,12 @@ int main(int argc,char *argv[])
   //thread = gst_thread_new("thread");
   thread = gst_elementfactory_make("thread", "thread");
   g_assert(thread != NULL);
+  gtk_signal_connect (GTK_OBJECT (thread), "object_saved", object_saved, g_strdup ("decoder thread"));
+
   thread2 = gst_elementfactory_make("thread", "thread2");
   //thread2 = gst_thread_new("thread2");
   g_assert(thread2 != NULL);
+  gtk_signal_connect (GTK_OBJECT (thread2), "object_saved", object_saved, g_strdup ("render thread"));
 
   /* create a new bin to hold the elements */
   bin = gst_bin_new("bin");

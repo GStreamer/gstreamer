@@ -27,13 +27,13 @@
 
 enum {
   OBJECT_LOADED,
-  OBJECT_SAVED,
   LAST_SIGNAL
 };
 
-
 static void	gst_xml_class_init		(GstXMLClass *klass);
 static void	gst_xml_init			(GstXML *xml);
+
+static void	gst_xml_object_loaded		(GstObject *private, GstObject *object, xmlNodePtr self, gpointer data);
 
 static GstObjectClass *parent_class = NULL;
 static guint gst_xml_signals[LAST_SIGNAL] = { 0 };
@@ -71,12 +71,6 @@ gst_xml_class_init (GstXMLClass *klass)
   gst_xml_signals[OBJECT_LOADED] =
     gtk_signal_new ("object_loaded", GTK_RUN_LAST, gtkobject_class->type,
                     GTK_SIGNAL_OFFSET (GstXMLClass, object_loaded),
-                    gtk_marshal_NONE__POINTER_POINTER, GTK_TYPE_NONE, 2,
-                    GST_TYPE_OBJECT, GTK_TYPE_POINTER);
-
-  gst_xml_signals[OBJECT_SAVED] =
-    gtk_signal_new ("object_saved", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstXMLClass, object_saved),
                     gtk_marshal_NONE__POINTER_POINTER, GTK_TYPE_NONE, 2,
                     GST_TYPE_OBJECT, GTK_TYPE_POINTER);
 
@@ -123,15 +117,15 @@ gst_xml_write (GstElement *element)
 
   doc->xmlRootNode = xmlNewDocNode (doc, ns, "gstreamer", NULL);
 
-  elementnode = xmlNewChild (doc->xmlRootNode, NULL, "element", NULL);
+  elementnode = xmlNewChild (doc->xmlRootNode, ns, "element", NULL);
 
   gst_object_save_thyself (GST_OBJECT (element), elementnode);
 
   return doc;
 }
 
-static gboolean
-gst_xml_real_parse (GstXML *xml, xmlDocPtr doc, const guchar *root)
+gboolean
+gst_xml_parse_doc (GstXML *xml, xmlDocPtr doc, const guchar *root)
 {
   xmlNodePtr field, cur;
   xmlNsPtr ns;
@@ -150,6 +144,9 @@ gst_xml_real_parse (GstXML *xml, xmlDocPtr doc, const guchar *root)
     g_warning("gstxml: XML file is in wrong format\n");
     return FALSE;
   }
+
+  gst_class_signal_connect (GST_OBJECT_CLASS (GTK_OBJECT (xml)->klass),
+		  "object_loaded", gst_xml_object_loaded, xml);
 
   xml->ns = ns;
 
@@ -200,7 +197,7 @@ gst_xml_parse_file (GstXML *xml, const guchar *fname, const guchar *root)
     return FALSE;
   }
 
-  return gst_xml_real_parse (xml, doc, root);
+  return gst_xml_parse_doc (xml, doc, root);
 }
 
 /**
@@ -223,20 +220,18 @@ gst_xml_parse_memory (GstXML *xml, guchar *buffer, guint size, const gchar *root
 
   doc = xmlParseMemory (buffer, size);
 
-  return gst_xml_real_parse (xml, doc, root);
+  return gst_xml_parse_doc (xml, doc, root);
 }
 
-void
-gst_xml_object_loaded (GstXML *xml, GstObject *object, xmlNodePtr self)
+static void
+gst_xml_object_loaded (GstObject *private, GstObject *object, xmlNodePtr self, gpointer data)
 {
+  GstXML *xml = GST_XML (data);
+
+  // FIXME check that this element was created from the same xmlDocPtr...
   gtk_signal_emit (GTK_OBJECT (xml), gst_xml_signals[OBJECT_LOADED], object, self);
 }
 
-void
-gst_xml_object_saved (GstXML *xml, GstObject *object, xmlNodePtr self)
-{
-  gtk_signal_emit (GTK_OBJECT (xml), gst_xml_signals[OBJECT_SAVED], object, self);
-}
 /**
  * gst_xml_get_topelements:
  * @xml: The GstXML to get the elements from

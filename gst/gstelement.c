@@ -1065,6 +1065,8 @@ gst_element_load_thyself (xmlNodePtr self, GstObject *parent)
   if (parent)
     gst_object_unparent (GST_OBJECT (element));
 
+  gst_class_signal_emit_by_name (GST_OBJECT (element), "object_loaded", self);
+
   return element;
 }
 

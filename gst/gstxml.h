@@ -52,6 +52,9 @@ extern "C" {
 typedef struct _GstXML GstXML;
 typedef struct _GstXMLClass GstXMLClass;
 
+typedef void (*GstXMLObjectLoadedCallback)	(GstXML *xml, GstObject *object, xmlNodePtr self);
+typedef void (*GstXMLObjectSavedCallback)	(GstXML *xml, GstObject *object, xmlNodePtr self);
+
 struct _GstXML {
   GstObject object;
 
@@ -64,8 +67,8 @@ struct _GstXMLClass {
   GstObjectClass parent_class;
 
   /* signal callbacks */
-  void (*object_loaded)		(GstXML *xml, GstObject *object, xmlNodePtr self);
-  void (*object_saved)		(GstXML *xml, GstObject *object, xmlNodePtr self);
+  void (*object_loaded)         (GstXML *xml, GstObject *object, xmlNodePtr self);
+  void (*object_saved)          (GstXML *xml, GstObject *object, xmlNodePtr self);
 };
 
 GtkType		gst_xml_get_type	(void);
@@ -76,6 +79,7 @@ xmlDocPtr	gst_xml_write		(GstElement *element);
 
 GstXML*		gst_xml_new		(void);
 
+gboolean	gst_xml_parse_doc	(GstXML *xml, xmlDocPtr doc, const guchar *root);
 gboolean	gst_xml_parse_file	(GstXML *xml, const guchar *fname, const guchar *root);
 gboolean	gst_xml_parse_memory	(GstXML *xml, guchar *buffer, guint size, const gchar *root);
 
@@ -83,8 +87,8 @@ gboolean	gst_xml_parse_memory	(GstXML *xml, guchar *buffer, guint size, const gc
 GstElement*	gst_xml_get_element	(GstXML *xml, const guchar *name);
 GList*		gst_xml_get_topelements (GstXML *xml);
 
-void		gst_xml_object_loaded	(GstXML *xml, GstObject *object, xmlNodePtr self);
-void		gst_xml_object_saved	(GstXML *xml, GstObject *object, xmlNodePtr self);
+void		gst_xml_connect_object_loaded	(GstXML *xml, GstXMLObjectLoadedCallback *callback, gpointer data);
+void		gst_xml_connect_object_saved	(GstXML *xml, GstXMLObjectSavedCallback *callback, gpointer data);
 
 #ifdef __cplusplus
 }

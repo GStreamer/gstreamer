@@ -79,12 +79,14 @@ struct _GstObject {
 };
 
 struct _GstObjectClass {
-  GtkObjectClass parent_class;
+  GtkObjectClass	parent_class;
 
-  gchar *path_string_separator;
+  gchar			*path_string_separator;
+  GtkObject		*signal_object;
 
   /* signals */
   void		(*parent_set)		(GstObject *object, GstObject *parent);
+  void		(*object_saved)		(GstObject *object, xmlNodePtr parent);
 
   /* functions go here */
   xmlNodePtr	(*save_thyself)		(GstObject *object, xmlNodePtr parent);
@@ -132,6 +134,15 @@ xmlNodePtr	gst_object_save_thyself		(GstObject *object, xmlNodePtr parent);
 
 /* printing out the 'path' of the object */
 gchar *		gst_object_get_path_string	(GstObject *object);
+
+guint		gst_class_signal_connect	(GstObjectClass	*klass,
+						 const gchar	*name,
+						 GtkSignalFunc	func,
+						 gpointer	func_data);
+
+void		gst_class_signal_emit_by_name	(GstObject	*object,
+		                                 const gchar	*name,
+						 xmlNodePtr self);
 
 
 #ifdef __cplusplus

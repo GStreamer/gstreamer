@@ -27,6 +27,7 @@
 /* Object signals and args */
 enum {
   PARENT_SET,
+  OBJECT_SAVED,
   LAST_SIGNAL
 };
 
@@ -35,12 +36,30 @@ enum {
   /* FILL ME */
 };
 
+enum {
+  SO_OBJECT_LOADED,
+  SO_LAST_SIGNAL
+};
+
+typedef struct _GstSignalObject GstSignalObject;
+typedef struct _GstSignalObjectClass GstSignalObjectClass;
+
+static GtkType		gst_signal_object_get_type	(void);
+static void		gst_signal_object_class_init	(GstSignalObjectClass *klass);
+static void		gst_signal_object_init		(GstSignalObject *object);
+
+static guint gst_signal_object_signals[SO_LAST_SIGNAL] = { 0 };
 
 static void		gst_object_class_init		(GstObjectClass *klass);
 static void		gst_object_init			(GstObject *object);
 
 static GtkObjectClass *parent_class = NULL;
 static guint gst_object_signals[LAST_SIGNAL] = { 0 };
+
+void
+gst_object_inititialize (void)
+{
+}
 
 GtkType
 gst_object_get_type (void)
@@ -77,14 +96,24 @@ gst_object_class_init (GstObjectClass *klass)
                     GTK_SIGNAL_OFFSET (GstObjectClass, parent_set),
                     gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
                     GST_TYPE_OBJECT);
+  gst_object_signals[OBJECT_SAVED] =
+    gtk_signal_new ("object_saved", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstObjectClass, object_saved),
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GTK_TYPE_POINTER);
   gtk_object_class_add_signals (gtkobject_class, gst_object_signals, LAST_SIGNAL);
 
   klass->path_string_separator = "/";
+  klass->signal_object = gtk_type_new (gst_signal_object_get_type ());
 }
 
 static void
 gst_object_init (GstObject *object)
 {
+  GstObjectClass *oclass;
+
+  oclass = GST_OBJECT_CLASS (GTK_OBJECT (object)->klass);
+
   object->lock = g_mutex_new();
 #ifdef HAVE_ATOMIC_H
   atomic_set(&(object->refcount),1);
@@ -321,13 +350,9 @@ gst_object_save_thyself (GstObject *object, xmlNodePtr parent)
   if (oclass->save_thyself)
     oclass->save_thyself (object, parent);
 
-  return parent;
-}
+  gtk_signal_emit (GTK_OBJECT (object), gst_object_signals[OBJECT_SAVED], parent);
 
-void
-gst_object_load_thyself (xmlNodePtr self, GstObject *parent)
-{
-  g_print ("gstobject: load thyself\n");
+  return parent;
 }
 
 /**
@@ -396,4 +421,83 @@ gst_object_get_path_string (GstObject *object)
 
   return path;
 }
+
+
+
+struct _GstSignalObject {
+  GtkObject object;
+};
+
+struct _GstSignalObjectClass {
+  GtkObjectClass        parent_class;
+
+  /* signals */
+  void          (*object_loaded)           (GstSignalObject *object, GstObject *new, xmlNodePtr self);
+};
+
+static GtkType
+gst_signal_object_get_type (void)
+{
+  static GtkType signal_object_type = 0;
+
+  if (!signal_object_type) {
+    static const GtkTypeInfo signal_object_info = {
+      "GstSignalObject",
+      sizeof(GstSignalObject),
+      sizeof(GstSignalObjectClass),
+      (GtkClassInitFunc)gst_signal_object_class_init,
+      (GtkObjectInitFunc)gst_signal_object_init,
+      (GtkArgSetFunc)NULL,
+      (GtkArgGetFunc)NULL,
+      (GtkClassInitFunc)NULL,
+    };
+    signal_object_type = gtk_type_unique(gtk_object_get_type(),&signal_object_info);
+  }
+  return signal_object_type;
+}
+
+static void
+gst_signal_object_class_init (GstSignalObjectClass *klass)
+{
+  GtkObjectClass *gtkobject_class;
+
+  gtkobject_class = (GtkObjectClass*) klass;
+
+  parent_class = gtk_type_class (gtk_object_get_type ());
+
+  gst_signal_object_signals[SO_OBJECT_LOADED] =
+    gtk_signal_new ("object_loaded", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstSignalObjectClass, object_loaded),
+                    gtk_marshal_NONE__POINTER_POINTER, GTK_TYPE_NONE, 2,
+                    GST_TYPE_OBJECT, GTK_TYPE_POINTER);
+  gtk_object_class_add_signals (gtkobject_class, gst_signal_object_signals, LAST_SIGNAL);
+}
+
+static void
+gst_signal_object_init (GstSignalObject *object)
+{
+}
+
+guint
+gst_class_signal_connect (GstObjectClass *klass,
+			  const gchar    *name,
+			  GtkSignalFunc  func,
+		          gpointer       func_data)
+{
+  return gtk_signal_connect (klass->signal_object, name, func, func_data);
+}
+
+void
+gst_class_signal_emit_by_name (GstObject *object,
+	                       const gchar *name,
+	                       xmlNodePtr self)
+{
+  GstObjectClass *oclass;
+
+  oclass = GST_OBJECT_CLASS (GTK_OBJECT (object)->klass);
+
+  gtk_signal_emit_by_name (oclass->signal_object, name, object, self);
+}
+
+
 
