@@ -135,9 +135,9 @@ gst_implements_interface_cast (gpointer from,
   /* if we're an element, take care that this interface
    * is actually implemented */
   if (GST_IS_ELEMENT (from)) {
-    gboolean interface_is_implemented =
-	gst_element_implements_interface (GST_ELEMENT (from), iface_type);
-    g_return_val_if_fail (interface_is_implemented == TRUE, NULL);
+    g_return_val_if_fail (
+	gst_element_implements_interface (GST_ELEMENT (from), iface_type),
+	NULL);
   }
 
   return iface;

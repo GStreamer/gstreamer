@@ -179,8 +179,8 @@ gst_system_clock_wait (GstClock *clock, GstClockEntry *entry)
   diff = GST_CLOCK_ENTRY_TIME (entry) - current;
 
   if (diff + clock->max_diff < 0) {
-    g_warning ("clock is way behind: %" G_GINT64_FORMAT
-               "s (max allowed is %" G_GINT64_FORMAT "s", -diff, clock->max_diff);
+    GST_WARNING_OBJECT (clock, "clock is way behind: %" G_GINT64_FORMAT
+	"s (max allowed is %" G_GINT64_FORMAT "s", -diff, clock->max_diff);
     return GST_CLOCK_ENTRY_EARLY;
   }
   

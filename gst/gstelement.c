@@ -261,7 +261,7 @@ element_get_property (GstElement *element, const GParamSpec *pspec, GValue *valu
 static void
 gst_element_threadsafe_properties_pre_run (GstElement *element)
 {
-  GST_CAT_DEBUG (GST_CAT_THREAD, "locking element %s", GST_OBJECT_NAME (element));
+  GST_DEBUG ("locking element %s", GST_OBJECT_NAME (element));
   g_mutex_lock (element->property_mutex);
   gst_element_set_pending_properties (element);
 }
@@ -269,7 +269,7 @@ gst_element_threadsafe_properties_pre_run (GstElement *element)
 static void
 gst_element_threadsafe_properties_post_run (GstElement *element)
 {
-  GST_CAT_DEBUG (GST_CAT_THREAD, "unlocking element %s", GST_OBJECT_NAME (element));
+  GST_DEBUG ("unlocking element %s", GST_OBJECT_NAME (element));
   g_mutex_unlock (element->property_mutex);
 }
 
@@ -2495,7 +2495,7 @@ gst_element_negotiate_pads (GstElement *element)
 	                   "perform negotiate for %s:%s and %s:%s",
 		           GST_DEBUG_PAD_NAME (srcpad), 
 			   GST_DEBUG_PAD_NAME (sinkpad));
-        if (!gst_pad_perform_negotiate (GST_PAD (srcpad), GST_PAD (sinkpad)))
+        if (!gst_pad_renegotiate (pad))
 	  return FALSE;
       }
       else {
@@ -2518,9 +2518,9 @@ gst_element_clear_pad_caps (GstElement *element)
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, element, "clearing pad caps");
 
   while (pads) {
-    GstRealPad *pad = GST_PAD_REALIZE (pads->data);
+    GstPad *pad = GST_PAD (pads->data);
 
-    gst_caps_replace (&GST_PAD_CAPS (pad), NULL);
+    gst_pad_unnegotiate (pad);
 
     pads = g_list_next (pads);
   }
@@ -2586,6 +2586,7 @@ gst_element_change_state (GstElement *element)
         goto failure;
       break;
     /* going to the READY state clears all pad caps */
+    /* FIXME: Why doesn't this happen on READY => NULL? -- Company */
     case GST_STATE_PAUSED_TO_READY:
       gst_element_clear_pad_caps (element);
       break;

@@ -268,7 +268,7 @@ struct _GstGhostPadClass {
 /* Generic */
 #define GST_PAD_REALIZE(pad)		(GST_IS_REAL_PAD(pad) ? ((GstRealPad *)(pad)) : GST_GPAD_REALPAD(pad))
 #define GST_PAD_DIRECTION(pad)		GST_RPAD_DIRECTION(GST_PAD_REALIZE(pad))
-#define GST_PAD_CAPS(pad)		GST_RPAD_CAPS(GST_PAD_REALIZE(pad))
+#define GST_PAD_CAPS(pad)		(gst_pad_get_negotiated_caps(GST_PAD (pad)))
 #define GST_PAD_PEER(pad)		GST_PAD(GST_RPAD_PEER(GST_PAD_REALIZE(pad)))
 
 /* Some check functions (unused?) */
@@ -401,8 +401,9 @@ void			gst_pad_unlink				(GstPad *srcpad, GstPad *sinkpad);
 GstPad*			gst_pad_get_peer			(GstPad *pad);
 
 /* capsnego functions */
+G_CONST_RETURN GstCaps*	gst_pad_get_negotiated_caps		(GstPad *pad);
 GstCaps*		gst_pad_get_caps			(GstPad *pad);
-const GstCaps*		gst_pad_get_pad_template_caps		(GstPad *pad);
+G_CONST_RETURN GstCaps*	gst_pad_get_pad_template_caps		(GstPad *pad);
 GstPadLinkReturn	gst_pad_try_set_caps			(GstPad *pad, const GstCaps *caps);
 gboolean		gst_pad_check_compatibility		(GstPad *srcpad, GstPad *sinkpad);
 
@@ -411,7 +412,11 @@ void			gst_pad_set_fixate_function		(GstPad *pad, GstPadFixateFunction fixate);
 GstCaps *	        gst_pad_proxy_getcaps          		(GstPad *pad);
 GstPadLinkReturn	gst_pad_proxy_link          		(GstPad *pad, const GstCaps *caps);
 gboolean		gst_pad_relink_filtered			(GstPad *srcpad, GstPad *sinkpad, const GstCaps *filtercaps);
+#ifndef GST_DISABLE_DEPRECATED
 gboolean		gst_pad_perform_negotiate		(GstPad *srcpad, GstPad *sinkpad);
+#endif
+GstPadLinkReturn	gst_pad_renegotiate			(GstPad *pad);
+void			gst_pad_unnegotiate			(GstPad *pad);
 gboolean		gst_pad_try_relink_filtered		(GstPad *srcpad, GstPad *sinkpad, const GstCaps *filtercaps);
 GstCaps*	     	gst_pad_get_allowed_caps       		(GstPad *pad);
 void                    gst_pad_caps_change_notify              (GstPad *pad);

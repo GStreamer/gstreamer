@@ -206,7 +206,10 @@ void gst_caps_append (GstCaps *caps1, GstCaps *caps2)
 {
   GstStructure *structure;
   int i;
-  
+
+  g_return_if_fail (caps1 != NULL);
+  g_return_if_fail (caps2 != NULL);
+
   for(i=0;i<caps2->structs->len;i++){
     structure = gst_caps_get_structure (caps2, i);
     gst_caps_append_structure (caps1, structure);

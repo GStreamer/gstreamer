@@ -392,8 +392,8 @@ gst_thread_change_state (GstElement *element)
 
   thread = GST_THREAD (element);
 
-  GST_CAT_DEBUG (GST_CAT_STATES, "%s is changing state from %s to %s",
-	     GST_ELEMENT_NAME (element), gst_element_state_get_name (GST_STATE (element)),
+  GST_DEBUG_OBJECT (element, "changing state from %s to %s",
+	     gst_element_state_get_name (GST_STATE (element)),
 	     gst_element_state_get_name (GST_STATE_PENDING (element)));
 
   gst_thread_catch (thread);
