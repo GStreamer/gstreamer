@@ -6,7 +6,7 @@ Overview
 
 This plugin is a demuxer for Microsoft's ASF Advanced Streaming Format
 or ASF [1]. This demuxer only supports ASF v1.0 since the vast
-majority of existing ASF files use that version. The spcification
+majority of existing ASF files use that version. The specification
 has been derived from a third party source [2] without reference to
 the original.
 
@@ -26,7 +26,7 @@ headers have been parsed.
     !                    (video/raw...
   --- src                     !
     !                    (audio/raw0)---
-    !                    (audio/raw0)---
+    !                    (audio/raw1)---
     !                    (audio/raw...
     !                         !
     (-------------------------)
@@ -45,7 +45,12 @@ MPEG4		DIVX divx DX50	video/mpeg
 MSMPEG4V1	MPG4		video/mpeg
 MSMPEG4V2	MP42		video/mpeg
 MSMPEG4V3	MP43 DIV3	video/mpeg
-WMV1		WMV1
+WMV1		WMV1		video/x-wmv, wmvversion = (int) 1
+WMV2		WMV2		video/x-wmv, wmvversion = (int) 2
+WMV3		WMV3		video/x-wmv, wmvversion = (int) 3
+WMA1		WMA1		audio/x-wma, wmaversion = (int) 1
+WMA2		WMA2		audio/x-wma, wmaversion = (int) 2
+				audio/x-wma, wmaversion = (int) 9
 
 These video stream headers is very similar to that used in the AVI
 format as are the audio stream headers. In addition the content types
@@ -77,7 +82,7 @@ References
 ----------
 
 [1] Microsoft. ASF Specification - Windows Media Technologies. 
-http://www.microsoft.com/windows/windowsmedia/WM7/format/asfspec11300e.asp
+http://www.microsoft.com/windows/windowsmedia/format/asfspec.aspx (v01.20.01e, September 2003)
 
 [2] divx at euro.ru. ASF format version 1.0,
 reconstruction. http://avifile.sourceforge.net/asf-1.0.htm
