@@ -16,7 +16,7 @@
     <title><command>gst-launch</command></title>
     <para> 
       This is a tool that will construct pipelines based on a command-line
-      syntax. FIXME: need a more extensive grammar reference
+      syntax.
     </para> 
     <para> 
       A simple commandline looks like:
@@ -79,6 +79,73 @@ main (int argc, char *argv[])
       Note how we can retrieve the filesrc element from the constructed bin using the
       element name.
     </para>
+    <sect2>
+      <title>Grammar Reference</title>
+      <para>
+        The <command>gst-launch</command> syntax is processed by a flex/bison parser. This section
+        is intended to provide a full specification of the grammar; any deviations from this
+        specification is considered a bug.
+      </para>
+      <sect3>
+        <title>Elements</title>
+        <screen>
+          ... mad ...
+        </screen>
+        <para>
+          A bare identifier (a string beginning with a letter and containing only letters,
+          numbers, dashes, underscores, percent signs, or colons) will create an element from a
+          given elementfactory. In this example, an instance of the "mad" mp3 decoding plugin will
+          be created.
+        </para>
+      </sect3>          
+      <sect3>
+        <title>Connections</title>
+        <screen>
+          ... !sink ...
+        </screen>
+        <para>
+          An exclamation point, optionally having a qualified pad name (an the name of the pad,
+          optionally preceded by the name of the element) on both sides, will connect two pads. If
+          the source pad is not specified, a source pad from the immediately preceding element
+          will be automatically chosen. If the sink pad is not specified, a sink pad from the next
+          element to be constructed will be chosen. An attempt will be made to find compatible
+          pads. Pad names may be preceded by an element name, as in
+          <computeroutput>my_element_name.sink_pad</computeroutput>.
+        </para>
+      </sect3>          
+      <sect3>
+        <title>Properties</title>
+        <screen>
+          ... location="http://gstreamer.net" ...
+        </screen>
+        <para>
+          The name of a property, optionally qualified with an element name, and a value,
+          separated by an equals sign, will set a property on an element. If the element is not
+          specified, the previous element is assumed. Strings can optionally be enclosed in
+          quotation marks. Characters in strings may be escaped with the backtick
+          (<literal>\</literal>). If the right-hand side is all digits, it is considered to be an
+          integer. If it is all digits and a decimal point, it is a double. If it is "true",
+          "false", "TRUE", or "FALSE" it is considered to be boolean. Otherwise, it is parsed as a
+          string. The type of the property is determined later on in the parsing, and the value is
+          converted to the target type. This conversion is not guaranteed to work, it relies on
+          the g_value_convert routines. No error message will be displayed on an invalid
+          conversion, due to limitations in the value convert API.
+        </para>
+      </sect3>          
+      <sect3>
+        <title>Bins, Threads, and Pipelines</title>
+        <screen>
+          ( ... )
+        </screen>
+        <para>
+          A pipeline description between parentheses is placed into a bin. The open paren may be
+          preceded by a type name, as in <computeroutput>jackbin.( ... )</computeroutput> to make
+          a bin of a specified type. Square brackets make pipelines, and curly braces make
+          threads. The default toplevel bin type is a pipeline, although putting the whole
+          description within parentheses or braces can override this default.
+        </para>
+      </sect3>          
+    </sect2>
   </sect1>
 
   <sect1>
