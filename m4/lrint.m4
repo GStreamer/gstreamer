@@ -13,7 +13,7 @@ dnl
 AC_DEFUN([AC_C99_FUNC_LRINT],
 [AC_CACHE_CHECK(for lrint,
   ac_cv_c99_lrint,
-[AC_TRY_COMPILE([
+[AC_TRY_LINK([
 #define		_ISOC9X_SOURCE	1
 #define 	_ISOC99_SOURCE	1
 #define		__USE_ISOC99	1

@@ -10,7 +10,7 @@ gst_artsio_impl.lo: gst_artsio.cc
 if USE_ARTS
 SUFFIXES = .idl
 .idl.cc:
-	mcopidl -t $< $(ARTS_CXXFLAGS)
+	mcopidl -t $(ARTS_CXXFLAGS) $<
 
 # mcopidl Extension Expansion Technology clean up
 CLEANFILES = gst_artsio.h gst_artsio.cc gst_artsio.mcopclass gst_artsio.mcoptype
