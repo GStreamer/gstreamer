@@ -165,6 +165,7 @@ AC_OUTPUT([
   Makefile
   examples/Makefile
   examples/gst/Makefile
+  examples/gstplay/Makefile
   gst/Makefile
   pkgconfig/Makefile
   pkgconfig/gst-python.pc
