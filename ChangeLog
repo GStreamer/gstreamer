@@ -1,3 +1,12 @@
+2004-11-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/tcp/gsttcp.h:
+	* gst/tcp/gsttcpclientsink.c:
+	* gst/tcp/gsttcpclientsrc.c:
+	* gst/tcp/gsttcpserversink.c:
+	* gst/tcp/gsttcpserversrc.c:
+	  ports can go up to 65535.  Move common defines to gsttcp.h
+
 2004-11-05  Wim Taymans  <wim@fluendo.com>
 
 	* gst/videotestsrc/videotestsrc.c: (paint_setup_Y41B),
