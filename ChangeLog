@@ -1,3 +1,9 @@
+2004-06-26  set REAL_NAME environment variable  <set EMAIL_ADDRESS environment variable>
+
+	* gst/videorate/gstvideorate.c: (gst_videorate_chain),
+	(plugin_init):
+	  fix debugging. add category.
+
 2004-06-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/sine/gstsinesrc.c: (gst_sinesrc_get):
