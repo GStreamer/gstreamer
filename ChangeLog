@@ -1,5 +1,10 @@
 2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_loop):
+	  Safety guard.
+
+2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/avi/gstavimux.c: (gst_avimux_write_tag):
 	  Fix padding...
 
