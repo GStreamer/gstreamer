@@ -108,7 +108,7 @@ GST_PAD_TEMPLATE_FACTORY (private_2_sink_factory,
   GST_PAD_REQUEST,
   GST_CAPS_NEW (
     "sink_private2",
-    "unkown/unkown",
+    "unknown/unknown",
        NULL
   )
 )
