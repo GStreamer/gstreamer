@@ -415,12 +415,15 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
        */
       if (outstream && *outstream == NULL) {
 	GstPad **outpad;
+	GstCaps *caps;
 
 	*outstream = gst_mpeg_demux_new_stream ();
         outpad = &((*outstream)->pad);
 			
 	*outpad = gst_pad_new_from_template (newtemp, name);
-	gst_pad_try_set_caps (*outpad, gst_pad_get_pad_template_caps (*outpad));
+	caps = gst_pad_template_get_caps (newtemp);
+	gst_pad_try_set_caps (*outpad, caps);
+	gst_caps_unref (caps);
 
 	gst_pad_set_formats_function (*outpad, gst_mpeg_demux_get_src_formats);
 	gst_pad_set_convert_function (*outpad, gst_mpeg_parse_convert_src);
@@ -853,12 +856,16 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     }
     
     if (newtemp) {
+      GstCaps *caps;
+
       *outstream = gst_mpeg_demux_new_stream ();
       outpad = &((*outstream)->pad);
 
       /* create the pad and add it to self */
       *outpad = gst_pad_new_from_template (newtemp, name);
-      gst_pad_try_set_caps (*outpad, gst_pad_get_pad_template_caps (*outpad));
+      caps = gst_pad_template_get_caps (newtemp);
+      gst_pad_try_set_caps (*outpad, caps);
+      gst_caps_unref (caps);
 
       gst_pad_set_formats_function (*outpad, gst_mpeg_demux_get_src_formats);
       gst_pad_set_convert_function (*outpad, gst_mpeg_parse_convert_src);
