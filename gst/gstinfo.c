@@ -208,7 +208,7 @@ gst_default_debug_handler (gint category, gboolean incore,
   if (element && GST_IS_ELEMENT (element))
 #ifdef GST_DEBUG_COLOR
     elementname = g_strdup_printf (" \033[04m[%s]\033[00m",
-		                   GST_OBJECT_NAME (element));
+		                   GST_STR_NULL (GST_OBJECT_NAME (element)));
 #else
     elementname = g_strdup_printf (" [%s]", GST_OBJECT_NAME (element));
 #endif
@@ -490,6 +490,7 @@ GHashTable *__gst_function_pointers = NULL;
 
 gchar *_gst_debug_nameof_funcptr (void *ptr) G_GNUC_NO_INSTRUMENT;
 
+/* This function MUST NOT return NULL */
 gchar *
 _gst_debug_nameof_funcptr (void *ptr)
 {
@@ -502,7 +503,6 @@ _gst_debug_nameof_funcptr (void *ptr)
   } else {
     return g_strdup_printf("%p",ptr);
   }
-  return NULL;
 }
 
 void *

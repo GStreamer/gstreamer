@@ -214,7 +214,7 @@ gst_element_factory_create (GstElementFactory *factory,
 
   GST_DEBUG (GST_CAT_ELEMENT_FACTORY,
              "creating element from factory \"%s\" (name \"%s\", type %d)", 
-             GST_PLUGIN_FEATURE_NAME (factory), name, (gint) factory->type);
+             GST_PLUGIN_FEATURE_NAME (factory), GST_STR_NULL (name), (gint) factory->type);
 
   if (factory->type == 0) {
       g_critical ("Factory for `%s' has no type",
@@ -265,7 +265,7 @@ gst_element_factory_make (const gchar *factoryname, const gchar *name)
   g_return_val_if_fail (factoryname != NULL, NULL);
 
   GST_DEBUG (GST_CAT_ELEMENT_FACTORY, "gstelementfactory: make \"%s\" \"%s\"", 
-             factoryname, name);
+             factoryname, GST_STR_NULL (name));
 
   /* gst_plugin_load_element_factory (factoryname); */
   factory = gst_element_factory_find (factoryname);

@@ -204,7 +204,7 @@ G_GNUC_UNUSED static gchar *_debug_string = NULL;
 /********** some convenience macros for debugging **********/
 #define GST_DEBUG_PAD_NAME(pad) \
   (GST_OBJECT_PARENT(pad) != NULL) ? \
-  GST_OBJECT_NAME (GST_OBJECT_PARENT(pad)) : \
+  GST_STR_NULL (GST_OBJECT_NAME (GST_OBJECT_PARENT(pad))) : \
   "''", GST_OBJECT_NAME (pad)
 
 #ifdef G_HAVE_ISO_VARARGS

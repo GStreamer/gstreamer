@@ -864,9 +864,7 @@ gst_element_release_locks (GstElement *element)
 void
 gst_element_add_pad (GstElement *element, GstPad *pad)
 {
-  g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
 
   /* first check to make sure the pad's parent is already set */
@@ -877,7 +875,7 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
 
   /* set the pad's parent */
   GST_DEBUG (GST_CAT_ELEMENT_PADS,"setting parent of pad '%s' to '%s'",
-        GST_PAD_NAME (pad), GST_ELEMENT_NAME (element));
+        GST_PAD_NAME (pad), GST_STR_NULL (GST_ELEMENT_NAME (element)));
   gst_object_set_parent (GST_OBJECT (pad), GST_OBJECT (element));
 
   /* add it to the list */
