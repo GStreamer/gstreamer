@@ -65,6 +65,7 @@ static void     gst_sdlvideosink_destroy      (GstSDLVideoSink      *sdl);
 static GstPadLinkReturn
                 gst_sdlvideosink_sinkconnect  (GstPad               *pad,
                                                const GstCaps       *caps);
+static GstCaps * gst_sdlvideosink_fixate (GstPad *pad, const GstCaps *caps);
 static void     gst_sdlvideosink_chain        (GstPad               *pad,
                                                GstData              *data);
 
@@ -266,6 +267,8 @@ gst_sdlvideosink_init (GstSDLVideoSink *sdlvideosink)
                               gst_sdlvideosink_chain);
   gst_pad_set_link_function (GST_VIDEOSINK_PAD (sdlvideosink),
                              gst_sdlvideosink_sinkconnect);
+  gst_pad_set_fixate_function (GST_VIDEOSINK_PAD (sdlvideosink),
+                             gst_sdlvideosink_fixate);
 
   sdlvideosink->width = -1;
   sdlvideosink->height = -1;
@@ -504,6 +507,32 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink)
                                   GST_VIDEOSINK_WIDTH (sdlvideosink),
                                   GST_VIDEOSINK_HEIGHT (sdlvideosink));
   return TRUE;
+}
+
+static GstCaps *
+gst_sdlvideosink_fixate (GstPad *pad, const GstCaps *caps)
+{
+  GstStructure *structure;
+  GstCaps *newcaps;
+
+  if (gst_caps_get_size (caps) > 1) return NULL;
+
+  newcaps = gst_caps_copy (caps);
+  structure = gst_caps_get_structure (newcaps, 0);
+
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 320)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "height", 240)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
+                                                      30.0)) {
+    return newcaps;
+  }
+
+  gst_caps_free (newcaps);
+  return NULL;
 }
 
 static GstPadLinkReturn
