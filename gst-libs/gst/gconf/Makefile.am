@@ -1,4 +1,4 @@
-librarydir = $(prefix)/lib
+librarydir = $(libdir)
 
 library_LTLIBRARIES = libgstgconf.la
 
@@ -14,4 +14,4 @@ test_gconf_LDADD = $(GST_LIBS) $(GCONF_LIBS) libgstgconf.la
 
 libgstgconf_la_LIBADD = $(GCONF_LIBS)
 libgstgconf_la_CFLAGS = $(GST_CFLAGS) $(GCONF_CFLAGS)
-libgstgconf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstgconf_la_LDFLAGS = @GST_PLUGINS_LT_LDFLAGS@ -version-info @GST_PLUGINS_LIBVERSION@
