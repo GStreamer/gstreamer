@@ -39,7 +39,7 @@ struct _GstVideoScale {
   guint format;
   GstVideoScaleMethod method;
   /* private */
-  guchar copy_row[4096];
+  guchar copy_row[8192];
   guchar *temp;
   void (*scale) (GstVideoScale *scale, unsigned char *src, unsigned char *dest);
   void (*scaler) (GstVideoScale *scale, unsigned char *src, unsigned char *dest, int sw, int sh, int dw, int dh);

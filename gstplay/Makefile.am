@@ -8,7 +8,7 @@ bin_PROGRAMS = gstplay
 
 gstplay_SOURCES = \
 	main.c \
-	mpeg1.c avi.c\
+	mpeg1.c mpeg2.c avi.c\
 	support.c support.h \
 	interface.c interface.h \
 	callbacks.c callbacks.h

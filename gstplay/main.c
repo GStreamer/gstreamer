@@ -41,10 +41,15 @@ void have_type(GstSink *sink) {
   gst_pad_disconnect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(GST_ELEMENT(sink),"sink"));
    
-  if (strstr(gsttype->mime, "mpeg-system")) {
+  if (strstr(gsttype->mime, "mpeg1-system")) {
     parse = gst_elementfactory_make("mpeg1parse","parse");
     gtk_signal_connect(GTK_OBJECT(parse),"new_pad",
                        GTK_SIGNAL_FUNC(mpeg1_new_pad_created),pipeline);
+  }
+  else if (strstr(gsttype->mime, "mpeg2-system")) {
+    parse = gst_elementfactory_make("mpeg2parse","parse");
+    gtk_signal_connect(GTK_OBJECT(parse),"new_pad",
+                       GTK_SIGNAL_FUNC(mpeg2_new_pad_created),pipeline);
   }
   else if (strstr(gsttype->mime, "avi")) {
     parse = gst_elementfactory_make("parseavi","parse");
@@ -80,6 +85,7 @@ main (int argc, char *argv[])
   gnome_init ("gstreamer", VERSION, argc, argv);
   gst_init(&argc,&argv);
   gst_plugin_load("mpeg1parse");
+  gst_plugin_load("mpeg2parse");
   gst_plugin_load("mp1videoparse");
   gst_plugin_load("mp3parse");
   gst_plugin_load("parsewav");

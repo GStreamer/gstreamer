@@ -270,7 +270,7 @@ static void generate_rowbytes(unsigned char *copy_row, int src_w, int dst_w, int
     pos += inc;
   }
   *eip++ = RETURN;
-  DEBUG("scaler start/end %p %p %p\n", copy_row, eip, eip-copy_row);
+  g_print("scaler start/end %p %p %p\n", copy_row, eip, eip-copy_row);
 }
 
 
