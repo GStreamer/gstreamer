@@ -661,7 +661,13 @@ GST_CHECK_FEATURE(AALIB, [aasink plug-in], aasink, [
 dnl *** alsa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
 GST_CHECK_FEATURE(ALSA, [alsa plug-ins], gstalsa, [
-   AM_PATH_ALSA(0.9.1, HAVE_ALSA=yes, HAVE_ALSA=no)
+  PKG_CHECK_MODULES(ALSA, alsa >= 0.9.1, [
+    HAVE_ALSA="yes"
+    AC_SUBST(ALSA_CFLAGS)
+    AC_SUBST(ALSA_LIBS)
+  ], [
+    AM_PATH_ALSA(0.9.1, HAVE_ALSA="yes", HAVE_ALSA="no")
+  ])
 ])
 
 dnl *** arts ***
@@ -819,8 +825,14 @@ GST_CHECK_FEATURE(DVDNAV, [dvdnav library], dvdnavsrc, [
 dnl **** ESound ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
 GST_CHECK_FEATURE(ESD, [esound plug-ins], esdsink esdmon, [
-  AM_PATH_ESD(0.2.12, HAVE_ESD=yes, HAVE_ESD=no)
-  AS_SCRUB_INCLUDE(ESD_CFLAGS)
+  PKG_CHECK_MODULES(ESD, esound >= 0.2.12, [
+    HAVE_ESD="yes"
+    AC_SUBST(ESD_CFLAGS)
+    AC_SUBST(ESD_LIBS)
+  ], [
+    AM_PATH_ESD(0.2.12, HAVE_ESD="yes", HAVE_ESD="no")
+    AS_SCRUB_INCLUDE(ESD_CFLAGS)
+  ])
 ])
 
 dnl **** Free AAC Encoder (FAAC) ****
@@ -1228,9 +1240,15 @@ GST_CHECK_FEATURE(SHOUT, [shout plug-in], icecastsend, [
 dnl *** shout2 *** 
 translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT2, true)
 GST_CHECK_FEATURE(SHOUT2, [shout2 plug-in], shout2send, [
-  AM_PATH_SHOUT2(HAVE_SHOUT2=yes, HAVE_SHOUT2=no)
-  AC_SUBST(SHOUT2_CFLAGS)
-  AC_SUBST(SHOUT2_LIBS)
+  PKG_CHECK_MODULES(SHOUT2, shout >= 2.0, [
+    HAVE_SHOUT2="yes"
+    AC_SUBST(SHOUT2_CFLAGS)
+    AC_SUBST(SHOUT2_LIBS)
+  ], [
+    AM_PATH_SHOUT2(HAVE_SHOUT2="yes", HAVE_SHOUT2="no")
+    AC_SUBST(SHOUT2_CFLAGS)
+    AC_SUBST(SHOUT2_LIBS)
+  ])
 ])
 
 dnl *** sidplay ***
@@ -1256,9 +1274,15 @@ GST_CHECK_FEATURE(LIBPNG, [snapshot plug-in], snapshot, [
 dnl *** speex ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SPEEX, true)
 GST_CHECK_FEATURE(SPEEX, [speex plug-in], speex, [
-  GST_CHECK_LIBHEADER(SPEEX, speex, speex_bits_init, , speex.h, HAVE_SPEEX="yes" SPEEX_LIBS="-lspeex")
-  AC_SUBST(SPEEX_CFLAGS)
-  AC_SUBST(SPEEX_LIBS)
+  PKG_CHECK_MODULES(SPEEX, speex >= 1.0 speex < 1.1, [
+    HAVE_SPEEX="yes"
+    AC_SUBST(SPEEX_CFLAGS)
+    AC_SUBST(SPEEX_LIBS)
+  ], [
+    GST_CHECK_LIBHEADER(SPEEX, speex, speex_bits_init, , speex.h, HAVE_SPEEX="yes" SPEEX_LIBS="-lspeex")
+    AC_SUBST(SPEEX_CFLAGS)
+    AC_SUBST(SPEEX_LIBS)
+  ])
 ])
 
 dnl *** sndfile ***
@@ -1288,8 +1312,14 @@ GST_CHECK_FEATURE(TARKIN, [tarkinenc tarkindec], tarkin, [
 dnl *** ogg ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OGG, true)
 GST_CHECK_FEATURE(OGG, [ogg de/encoder], oggdemux oggmux, [
-  XIPH_PATH_OGG(HAVE_OGG=yes, HAVE_OGG=no)
-  AS_SCRUB_INCLUDE(OGG_CFLAGS)
+  PKG_CHECK_MODULES(OGG, ogg >= 1.0, [
+    HAVE_OGG="yes"
+    AC_SUBST(OGG_CFLAGS)
+    AC_SUBST(OGG_LIBS)
+  ], [
+    XIPH_PATH_OGG(HAVE_OGG="yes", HAVE_OGG="no")
+    AS_SCRUB_INCLUDE(OGG_CFLAGS)
+  ])
 ])
 
 dnl *** theora ***
@@ -1440,7 +1470,9 @@ esac],
 [BUILD_EXAMPLES=yes]) dnl Default value
 
 dnl seeking needs freetype, so check for it here
-AC_CHECK_FT2(2.0.9,HAVE_FT2=yes,HAVE_FT2=no)
+PKG_CHECK_MODULES(FT2, freetype2 >= 2.0.9, HAVE_FT2="yes", [
+  AC_CHECK_FT2(2.0.9, HAVE_FT2="yes", HAVE_FT2="no")
+])
 dnl make the HAVE_FT2 variable available to automake and Makefile.am
 AM_CONDITIONAL(HAVE_FT2, test "x$HAVE_FT2" = "xyes")
 AC_SUBST(FT2_CFLAGS)
