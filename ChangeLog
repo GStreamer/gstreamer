@@ -1,3 +1,11 @@
+2004-02-29  Christophe Fergeau  <teuf@gnome.org>
+
+	* sys/oss/gstosselement.c: (gst_osselement_probe),
+	(device_combination_append), (gst_osselement_class_probe_devices):
+	* sys/oss/gstosselement.h: 
+	  Reworked enumeration of oss dsps and mixers so that gst-mixer works
+	  on my system using alsa oss emulation, fixes bug #135597
+
 2004-02-29  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/videodrop/gstvideodrop.c: (gst_videodrop_init),
