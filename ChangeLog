@@ -1,3 +1,10 @@
+2004-03-04  <kost@imn.htwk-leipzig.de>
+
+	reviewed by David Schleef
+
+	* gst/videofilter/gstgamma.c: (gst_gamma_rgb32): Fix typo that
+	modified the alpha channel and caused a warning. (bug #136192)
+
 2004-04-03  Christian Schaller <Uraeus@gnome.org>
 
 	* gst-plugins.spec.in:
