@@ -71,3 +71,175 @@ _wrap_gst_structure_set_value(PyObject *self, PyObject *args, PyObject *kwargs)
     Py_INCREF(Py_None);
     return Py_None;
 }
+%%
+override gst_structure_foreach kwargs
+
+static gboolean
+pygst_structure_foreach_marshal(GQuark field_id,
+		GValue *value,
+		gpointer user_data)
+{
+	PyGstCustomNotify *cunote = user_data;
+	PyObject *py_field, *py_value, *retobj;
+	gboolean retval = TRUE;
+
+	g_assert(cunote->func);
+
+	pyg_block_threads();
+
+	//py_model = pygobject_new((GObject *)model);
+	//py_path = pygtk_tree_path_to_pyobject(path);
+	//py_iter = pyg_boxed_new(GTK_TYPE_TREE_ITER, iter, TRUE, TRUE);
+	py_field = Py_BuildValue("s", g_quark_to_string(field_id));
+	py_value = pyg_value_as_pyobject(value, FALSE);
+	if (cunote->data)
+		retobj = PyEval_CallFunction(cunote->func, "(NNO)",
+				py_field, py_value,
+				cunote->data);
+	else
+		retobj = PyEval_CallFunction(cunote->func, "(NN)",
+				py_field, py_value);
+
+	if (PyErr_Occurred () || (retobj == NULL) || (retobj == Py_None)) {
+		PyErr_Print ();
+		retval = FALSE;
+	} else if (retobj != Py_None) {
+		retval = PyInt_AsLong(retobj);
+	}
+
+	Py_XDECREF(retobj);
+
+	pyg_unblock_threads();
+
+	return retval;
+}
+
+static PyObject *
+_wrap_gst_structure_foreach (PyGObject *self,
+		PyObject *args,
+		PyObject *kwargs)
+{
+	static char *kwlist[] = { "foreach_function", "args", NULL };
+	PyObject *pyfunc, *pyarg = NULL;
+	PyGstCustomNotify cunote;
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+				"O|O:GstStructure.foreach",
+				kwlist,
+				&pyfunc, &pyarg)) {
+		return NULL;
+	}
+
+	if (!PyCallable_Check(pyfunc)) {
+		PyErr_SetString(PyExc_TypeError, "foreach_function not callable");
+		return NULL;
+	}
+
+	cunote.func = pyfunc;
+	cunote.data = pyarg;
+	gst_structure_foreach(pyg_boxed_get(self, GstStructure),
+			pygst_structure_foreach_marshal,
+			&cunote);
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+%%
+override gst_tag_list_foreach kwargs
+
+static gboolean
+pygst_tag_list_foreach_marshal(GstTagList *list,
+		const gchar *tag,
+		gpointer user_data)
+{
+	PyGstCustomNotify *cunote = user_data;
+	PyGObject *py_list;
+	PyObject *py_key, *retobj;
+	gboolean retval = TRUE;
+
+	g_assert(cunote->func);
+
+	pyg_block_threads();
+
+	py_list = pyg_boxed_new(GST_TYPE_TAG_LIST, list, TRUE, TRUE);
+	py_key = Py_BuildValue("s", tag);
+	if (cunote->data)
+		retobj = PyEval_CallFunction(cunote->func, "(NNO)",
+				py_list,
+				py_key,
+				cunote->data);
+	else
+		retobj = PyEval_CallFunction(cunote->func, "(NN)",
+				py_list,
+				py_key);
+
+	if (PyErr_Occurred () || (retobj == NULL) || (retobj == Py_None)) {
+		PyErr_Print ();
+		retval = FALSE;
+	} else if (retobj != Py_None) {
+		retval = PyInt_AsLong(retobj);
+	}
+
+	Py_XDECREF(retobj);
+
+	pyg_unblock_threads();
+
+	return retval;
+}
+
+static PyObject *
+_wrap_gst_tag_list_foreach (PyGObject *self,
+		PyObject *args,
+		PyObject *kwargs)
+{
+	static char *kwlist[] = { "foreach_function", "args", NULL };
+	PyObject *pyfunc, *pyarg = NULL;
+	PyGstCustomNotify cunote;
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+				"O|O:GstTagList.foreach",
+				kwlist,
+				&pyfunc, &pyarg)) {
+		return NULL;
+	}
+
+	if (!PyCallable_Check(pyfunc)) {
+		PyErr_SetString(PyExc_TypeError, "foreach_function not callable");
+		return NULL;
+	}
+
+	cunote.func = pyfunc;
+	cunote.data = pyarg;
+	gst_tag_list_foreach(pyg_boxed_get(self, GstTagList),
+			pygst_tag_list_foreach_marshal,
+			&cunote);
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+%%
+override gst_tag_list_get_value_index kwargs
+
+static PyObject *
+_wrap_gst_tag_list_get_value_index (PyGObject *self,
+		PyObject *args,
+		PyObject *kwargs)
+{
+	static char *kwlist[] = { "tag", "index", NULL };
+	char *tag;
+	int index;
+	GValue *gvalue;
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+				"si:GstTagList.get_value_index",
+				kwlist,
+				&tag, &index)) {
+		return NULL;
+	}
+
+	gvalue = gst_tag_list_get_value_index(pyg_boxed_get(self, GstTagList),
+			tag,
+			index);
+
+	return pyg_value_as_pyobject(gvalue, FALSE);
+}

@@ -30,7 +30,10 @@ import gobject
 from gstreamer import *
 from gstplay import Play
 
-#threads_init()
+try:
+    threads_init()
+except Exception, e:
+    print e
 
 def nano_time_string(nanos):
     ts = nanos / 1000000000
@@ -50,10 +53,23 @@ def got_have_video_size(sender, w, h):
     print 'video size %d %d' % (w, h)
 
 def got_found_tag(sender, src, tags, *args):
+    def fe(tl, tag):
+        c = tl.get_tag_size(tag)
+        #print tl, tag, c
+        for i in range(c):
+            v = tl.get_value_index(tag, i)
+            #print tag, type(v)
+            if i == 0:
+                s = gst_tag_get_nick(tag)
+            else:
+                s = ' '
+            print "%15s: %s" % (s, v)
     print 'found tag', src, tags, args
+    tags.foreach(fe)
 
-def got_eos(sender, *args):
+def got_eos(sender, loop):
     print 'eos', args
+    loop.quit()
 
 def idle_iterate(sender):
     #threads_enter()
@@ -79,7 +95,7 @@ def main():
     play.connect('stream_length', got_stream_length)
     play.connect('have_video_size', got_have_video_size)
     play.connect('found_tag', got_found_tag)
-    play.connect('eos', got_eos)
+    play.connect('eos', got_eos, loop)
 
     data_src = Element ('gnomevfssrc', 'data_src')
     #audio_sink = Element ('osssink', 'audio_sink')
@@ -102,7 +118,12 @@ def main():
     #while play.iterate(): pass
     #while play.iterate(): print '.'
     gobject.idle_add(idle_iterate, play)
+    #iterid = add_iterate_bin(play)
+
+    #import gtk
+    #gtk.threads_enter()
     loop.run()
+    #gtk.threads_leave()
 
     #threads_leave()
 

@@ -1,7 +1,15 @@
 2004-02-24  David I. Lehn  <dlehn@users.sourceforge.net>
 
+	* gstreamer/0.7.override:
+	* gstreamer/common.h:
+	GstStructure and GstTagList foreach() support.
+	* examples/gstplay/player.py:
+	Use TagList.foreach() to print tags.
+
+2004-02-24  David I. Lehn  <dlehn@users.sourceforge.net>
+
 	* gstreamer/common.override:
-	Attempt to handle GstBuffer vs GstData better
+	Attempt to handle GstBuffer vs GstData better.
 
 2004-02-24  Johan Dahlin  <johan@gnome.org>
 

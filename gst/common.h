@@ -25,6 +25,10 @@
 #include <gst/gstqueue.h>
 #include <gst/gsttypefind.h>
 
+typedef struct {
+    PyObject *func, *data;
+} PyGstCustomNotify;
+
 void iterate_bin_all(GstBin *bin);
 guint add_iterate_bin(GstBin *bin);
 void remove_iterate_bin(guint id);
