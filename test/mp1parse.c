@@ -15,8 +15,9 @@ void mp1parse_info_chain(GstPad *pad,GstBuffer *buf) {
 
 void new_pad_created(GstElement *parse, GstPad *pad) {
   GstElementFactory *parsefactory, *decodefactory, *playfactory;
-  GstElement *parse_audio, *parse_video, *decode, *play;
+  GstElement *parse_audio, *parse_video, *decode, *decode_video, *play;
   GstPipeline *audio_pipeline, *video_pipeline;
+  GstPad *infopad;
 
   g_print("a new pad %s was created\n", gst_pad_get_name(pad));
 
@@ -32,9 +33,9 @@ void new_pad_created(GstElement *parse, GstPad *pad) {
 
 	 parse_audio = gst_elementfactory_create(parsefactory,"parse_audio");
 	 g_return_if_fail(parse_audio != NULL);
-	 decode = gst_elementfactory_create(decodefactory,"decode");
+	 decode = gst_elementfactory_create(decodefactory,"decode_audio");
 	 g_return_if_fail(decode != NULL);
-	 play = gst_elementfactory_create(playfactory,"play");
+	 play = gst_elementfactory_create(playfactory,"play_audio");
 	 g_return_if_fail(play != NULL);
 
     audio_pipeline = gst_pipeline_new("audio_pipeline");
@@ -57,18 +58,33 @@ void new_pad_created(GstElement *parse, GstPad *pad) {
 
   }
   else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
+
 	 parsefactory = gst_elementfactory_find("mp1videoparse");
 	 g_return_if_fail(parsefactory != NULL);
+	 decodefactory = gst_elementfactory_find("mpeg_play");
+	 g_return_if_fail(parsefactory != NULL);
+
 	 parse_video = gst_elementfactory_create(parsefactory,"parse_video");
 	 g_return_if_fail(parse_video != NULL);
+	 decode = gst_elementfactory_create(decodefactory,"decode_video");
+	 g_return_if_fail(decode_video != NULL);
 
     video_pipeline = gst_pipeline_new("video_pipeline");
     g_return_if_fail(video_pipeline != NULL);
 
+	 infopad = gst_pad_new("sink",GST_PAD_SINK);
+	 gst_pad_set_chain_function(infopad,mp1parse_info_chain);
+
 	 gst_bin_add(GST_BIN(video_pipeline),GST_ELEMENT(parse_video));
+	 gst_bin_add(GST_BIN(video_pipeline),GST_ELEMENT(decode));
 
     gst_pad_connect(gst_element_get_pad(parse,gst_pad_get_name(pad)),
 	                  gst_element_get_pad(parse_video,"sink"));
+    gst_pad_connect(gst_element_get_pad(parse_video,"src"),
+	                  gst_element_get_pad(decode,"sink"));
+	 gst_pad_connect(gst_element_get_pad(decode,"src"),
+	                   infopad);
+
 
 	 g_print("setting to RUNNING state\n");
 	 gst_element_set_state(GST_ELEMENT(video_pipeline),GST_STATE_RUNNING);
