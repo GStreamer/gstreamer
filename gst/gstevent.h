@@ -45,7 +45,6 @@ typedef enum {
   /* vertical events */
   GST_EVENT_INFO,
   GST_EVENT_ERROR,
-  GST_EVENT_STATE_CHANGE,
 } GstEventType;
 
 extern GType _gst_event_type;
@@ -70,10 +69,6 @@ typedef enum {
 #define GST_EVENT_SEEK_FLUSH(event)	(GST_EVENT(event)->event_data.seek.flush)
 
 #define GST_EVENT_INFO_PROPS(event)	(GST_EVENT(event)->event_data.info.props)
-
-#define GST_EVENT_STATE_OLD(event)	(GST_EVENT(event)->event_data.state.old_state)
-#define GST_EVENT_STATE_NEW(event)	(GST_EVENT(event)->event_data.state.new_state)
-
 
 struct _GstEvent {
   GstData data;
@@ -111,9 +106,6 @@ GstEvent*	gst_event_new_seek	(GstSeekType type, guint64 offset, gboolean flush);
 
 /* info events */
 GstEvent*	gst_event_new_info	(const gchar *firstname, ...);
-
-/* state change events */
-GstEvent*	gst_event_new_state_change (GstElementState old, GstElementState state);
 
 #ifdef __cplusplus
 }

@@ -110,6 +110,10 @@ gboolean	gst_bin_set_state_type		(GstBin *bin, GstElementState state, GType type
 
 gboolean	gst_bin_iterate			(GstBin *bin);
 
+/* internal */
+void 		gst_bin_child_state_change 	(GstBin *bin, GstElementState oldstate, 
+						 GstElementState newstate, GstElement *child);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

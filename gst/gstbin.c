@@ -46,8 +46,6 @@ static GstElementStateReturn	gst_bin_change_state_norecurse	(GstBin *bin);
 static gboolean			gst_bin_change_state_type	(GstBin *bin,
 								 GstElementState state,
 								 GType type);
-static void 			gst_bin_child_state_change 	(GstBin *bin, GstElementState old, 
-								 GstElementState new, GstElement *child);
 static void 			gst_bin_send_event 		(GstElement *element, GstEvent *event);
 
 static gboolean 		gst_bin_iterate_func 		(GstBin * bin);
@@ -359,11 +357,13 @@ gst_bin_remove (GstBin * bin, GstElement * element)
   gst_object_unparent (GST_OBJECT (element));
 
   /* if we're down to zero children, force state to NULL */
-  if (bin->numchildren == 0 && GST_ELEMENT_SCHED (bin) != NULL)
-    gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
+  if (bin->numchildren == 0 && GST_ELEMENT_SCHED (bin) != NULL) {
+    GST_STATE_PENDING (bin) = GST_STATE_NULL;
+    gst_bin_change_state_norecurse (bin);
+  }
 }
 
-static void
+void
 gst_bin_child_state_change (GstBin * bin, GstElementState old, GstElementState new,
 			    GstElement * child)
 {
@@ -401,21 +401,7 @@ gst_bin_send_event (GstElement *element, GstEvent *event)
 	   gst_element_get_name (GST_ELEMENT (GST_EVENT_SRC (event))),
   	   gst_element_get_name (element));
 
-  if (GST_ELEMENT (GST_EVENT_SRC (event)) == element) {
-    GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
-    return;
-  }
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_STATE_CHANGE:
-      gst_bin_child_state_change (GST_BIN (element), GST_EVENT_STATE_OLD (event),
-		      		  GST_EVENT_STATE_NEW (event), GST_ELEMENT (GST_EVENT_SRC (event)));
-      gst_event_free (event);
-      break;
-    default:
-      GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
-      break;
-  }
+  GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
 }
 
 static GstElementStateReturn

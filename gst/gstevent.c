@@ -153,25 +153,5 @@ gst_event_new_info (const gchar *firstname, ...)
 
   return event;
 }
-/**
- * gst_event_new_state_change:
- * @old: The old state
- * @state: The new state
- *
- * Allocate a new state change event with the given props.
- *
- * Returns: A new state change event.
- */
-GstEvent*       
-gst_event_new_state_change (GstElementState old, GstElementState state)
-{
-  GstEvent *event;
-
-  event = gst_event_new (GST_EVENT_STATE_CHANGE);
-  GST_EVENT_STATE_OLD (event) = old;
-  GST_EVENT_STATE_NEW (event) = state;
-
-  return event;
-}
 
 

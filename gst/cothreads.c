@@ -40,6 +40,8 @@
 #define COTHREAD_MAXTHREADS 16
 #define COTHREAD_STACKSIZE (STACK_SIZE/COTHREAD_MAXTHREADS)
 
+static void 	cothread_destroy 	(cothread_state *thread);
+
 struct _cothread_context
 {
   cothread_state *threads[COTHREAD_MAXTHREADS];
@@ -116,6 +118,8 @@ cothread_context_free (cothread_context *ctx)
 {
   gint i;
 
+  GST_INFO (GST_CAT_COTHREADS, "free cothread context");
+
   for (i = 0; i < ctx->nthreads; i++) {
 #ifndef COTHREAD_ATOMIC
     if (ctx->threads[i]) {
@@ -158,6 +162,11 @@ cothread_create (cothread_context *ctx)
   for (slot = 1; slot < ctx->nthreads; slot++) {
     if (ctx->threads[slot] == NULL)
       break;
+    else if (ctx->threads[slot]->flags & COTHREAD_DESTROYED) {
+      cothread_destroy (ctx->threads[slot]);
+      break;
+    }
+	    
   }
 
   sp = CURRENT_STACK_FRAME;
@@ -209,6 +218,8 @@ cothread_free (cothread_state *thread)
 {
   g_return_if_fail (thread != NULL);
 
+  GST_INFO (GST_CAT_COTHREADS, "flag cothread for destruction");
+
   /* we simply flag the cothread for destruction here */
   thread->flags |= COTHREAD_DESTROYED;
 }
@@ -219,6 +230,8 @@ cothread_destroy (cothread_state *thread)
   cothread_context *ctx;
 
   g_return_if_fail (thread != NULL);
+
+  GST_INFO (GST_CAT_COTHREADS, "destroy cothread");
 
   ctx = thread->ctx;
 #ifndef COTHREAD_ATOMIC

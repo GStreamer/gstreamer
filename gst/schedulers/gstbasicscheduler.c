@@ -50,8 +50,7 @@ static void 	gst_basic_scheduler_setup 		(GstScheduler *sched);
 static void 	gst_basic_scheduler_reset 		(GstScheduler *sched);
 static void	gst_basic_scheduler_add_element		(GstScheduler *sched, GstElement *element);
 static void     gst_basic_scheduler_remove_element	(GstScheduler *sched, GstElement *element);
-static void     gst_basic_scheduler_enable_element	(GstScheduler *sched, GstElement *element);
-static void     gst_basic_scheduler_disable_element	(GstScheduler *sched, GstElement *element);
+static void     gst_basic_scheduler_state_transition	(GstScheduler *sched, GstElement *element, gint transition);
 static void 	gst_basic_scheduler_lock_element 	(GstScheduler *sched, GstElement *element);
 static void 	gst_basic_scheduler_unlock_element 	(GstScheduler *sched, GstElement *element);
 static void     gst_basic_scheduler_pad_connect		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
@@ -102,8 +101,7 @@ gst_basic_scheduler_class_init (GstSchedulerClass * klass)
   klass->reset	 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_reset);
   klass->add_element 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_add_element);
   klass->remove_element 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_remove_element);
-  klass->enable_element 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_enable_element);
-  klass->disable_element 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_disable_element);
+  klass->state_transition 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_state_transition);
   klass->lock_element 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_lock_element);
   klass->unlock_element 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_unlock_element);
   klass->pad_connect 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_connect);
@@ -622,12 +620,6 @@ gst_basic_scheduler_chain_disable_element (GstSchedulerChain * chain, GstElement
   /* reschedule the chain */
 /* FIXME this should be done only if manager state != NULL */
 /*  gst_basic_scheduler_cothreaded_chain(GST_BIN(chain->sched->parent),chain); */
-  /* FIXME is this right? */
-  /* we have to check for a threadstate here because a queue doesn't have one */
-  if (element->threadstate) {
-    cothread_free (element->threadstate);
-    element->threadstate = NULL;
-  }
 }
 
 static void
@@ -639,6 +631,11 @@ gst_basic_scheduler_chain_remove_element (GstSchedulerChain * chain, GstElement 
   /* if it's active, deactivate it */
   if (g_list_find (chain->elements, element)) {
     gst_basic_scheduler_chain_disable_element (chain, element);
+  }
+  /* we have to check for a threadstate here because a queue doesn't have one */
+  if (element->threadstate) {
+    cothread_free (element->threadstate);
+    element->threadstate = NULL;
   }
 
   /* remove the element from the list of elements */
@@ -907,23 +904,7 @@ gst_basic_scheduler_remove_element (GstScheduler * sched, GstElement * element)
 }
 
 static void
-gst_basic_scheduler_enable_element (GstScheduler *sched, GstElement *element)
-{
-  GstSchedulerChain *chain;
-
-  /* find the chain the element's in */
-  chain = gst_basic_scheduler_find_chain (sched, element);
-
-  if (chain) {
-    gst_basic_scheduler_chain_enable_element (chain, element);
-  }
-  else {
-    GST_INFO (GST_CAT_SCHEDULING, "element \"%s\" not found in any chain, not enabling", GST_ELEMENT_NAME (element));
-  }
-}
-
-static void
-gst_basic_scheduler_disable_element (GstScheduler *sched, GstElement *element)
+gst_basic_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint transition)
 {
   GstSchedulerChain *chain;
 
@@ -932,10 +913,13 @@ gst_basic_scheduler_disable_element (GstScheduler *sched, GstElement *element)
 
   /* remove it from the chain */
   if (chain) {
-    gst_basic_scheduler_chain_disable_element (chain, element);
+    if (transition == GST_STATE_PLAYING_TO_PAUSED) 
+      gst_basic_scheduler_chain_disable_element (chain, element);
+    if (transition == GST_STATE_PAUSED_TO_PLAYING) 
+      gst_basic_scheduler_chain_enable_element (chain, element);
   }
   else {
-    GST_INFO (GST_CAT_SCHEDULING, "element \"%s\" not found in any chain, not disabling", GST_ELEMENT_NAME (element));
+    GST_INFO (GST_CAT_SCHEDULING, "element \"%s\" not found in any chain, no state change", GST_ELEMENT_NAME (element));
   }
 }
 

@@ -324,13 +324,18 @@ gst_thread_change_state (GstElement * element)
 	THR_DEBUG ("  element \"%s\"\n", GST_ELEMENT_NAME (element));
 	elements = g_list_next (elements);
 	if (GST_IS_QUEUE (element)) {
+          GstQueue *queue = GST_QUEUE (element);
   /* FIXME make this more efficient by only waking queues that are asleep
    *  FIXME and only waking the appropriate condition (depending on if it's
    *  FIXME on up- or down-stream side)
    * FIXME also make this more efficient by keeping list of managed queues
    */
 	  THR_DEBUG ("waking queue \"%s\"\n", GST_ELEMENT_NAME (element));
-	  gst_element_set_state (element, GST_STATE_PAUSED);
+	  g_mutex_lock (queue->qlock);
+	  GST_STATE_PENDING (element) = GST_STATE_PAUSED;
+	  g_cond_signal (queue->not_full);
+	  g_cond_signal (queue->not_empty);
+	  g_mutex_unlock (queue->qlock);
 	}
 	else {
 	  GList *pads = GST_ELEMENT_PADS (element);

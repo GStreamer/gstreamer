@@ -831,9 +831,6 @@ gst_element_send_event_func (GstElement *element, GstEvent *event)
   }
   else {
     switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_STATE_CHANGE:
-        g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE], 0, 
-			GST_EVENT_STATE_OLD (event), GST_EVENT_STATE_NEW (event));
       default:
         g_signal_emit (G_OBJECT (element), gst_element_signals[EVENT], 0, event);
     }
@@ -968,6 +965,7 @@ static GstElementStateReturn
 gst_element_change_state (GstElement *element)
 {
   GstElementState old_state;
+  //GstEvent *event;
 
   g_return_val_if_fail (element != NULL, GST_STATE_FAILURE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
@@ -984,24 +982,9 @@ gst_element_change_state (GstElement *element)
                      gst_element_statename (GST_STATE_PENDING (element)),
 		     GST_STATE_TRANSITION (element));
 
-  if (GST_STATE_TRANSITION (element) == GST_STATE_PAUSED_TO_PLAYING) {
-    g_return_val_if_fail (GST_ELEMENT_SCHED (element), GST_STATE_FAILURE);
-    
-    if (GST_ELEMENT_PARENT (element)) {
-      GST_DEBUG (GST_CAT_STATES, "PAUSED->PLAYING: element \"%s\" has parent \"%s\" and sched %p\n",
-                 GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (GST_ELEMENT_PARENT (element)), 
-		 GST_ELEMENT_SCHED (element));
-    }
-    gst_scheduler_enable_element (element->sched, element);
-  }
-  else if (GST_STATE_TRANSITION (element) == GST_STATE_PLAYING_TO_PAUSED) {
-    if (GST_ELEMENT_PARENT (element)) {
-      GST_DEBUG (GST_CAT_STATES, "PLAYING->PAUSED: element \"%s\" has parent \"%s\" and sched %p\n",
-                 GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (GST_ELEMENT_PARENT (element)),
-		 GST_ELEMENT_SCHED (element));
-    }
-    gst_scheduler_disable_element (element->sched, element);
-  }
+  /* tell the scheduler if we have one */
+  if (element->sched)
+    gst_scheduler_state_transition (element->sched, element, GST_STATE_TRANSITION (element));
 
   GST_STATE (element) = GST_STATE_PENDING (element);
   GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
@@ -1010,11 +993,11 @@ gst_element_change_state (GstElement *element)
   g_cond_signal (element->state_cond);
   g_mutex_unlock (element->state_mutex);
 
-  {
-    GstEvent *event = gst_event_new_state_change (old_state, GST_STATE (element));
-
-    gst_element_send_event (element, event);
+  if (GST_ELEMENT_PARENT (element)) {
+    gst_bin_child_state_change (GST_BIN (GST_ELEMENT_PARENT (element)), old_state, GST_STATE (element), element);
   }
+  //event = gst_event_new_state_change (old_state, GST_STATE (element));
+  //gst_element_send_event (element, event);
 
   return GST_STATE_SUCCESS;
 }

@@ -154,31 +154,18 @@ gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
 }
 
 /**
- * gst_scheduler_enable_element:
+ * gst_scheduler_state_transition:
  * @sched: the schedulerr
- * @element: the element to enable
+ * @element: the element with the state transition
+ * @transition: the state transition
  *
- * Enable an element for scheduling.
+ * Tell the scheduler that an element changed its state.
  */
 void
-gst_scheduler_enable_element (GstScheduler *sched, GstElement *element)
+gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint transition)
 {
-  if (CLASS (sched)->enable_element)
-    CLASS (sched)->enable_element (sched, element);
-}
-
-/**
- * gst_scheduler_disable_element:
- * @sched: the schedulerr
- * @element: the element to disable
- *
- * Disable an element for scheduling.
- */
-void
-gst_scheduler_disable_element (GstScheduler *sched, GstElement *element)
-{
-  if (CLASS (sched)->disable_element)
-    CLASS (sched)->disable_element (sched, element);
+  if (CLASS (sched)->state_transition)
+    CLASS (sched)->state_transition (sched, element, transition);
 }
 
 /**
