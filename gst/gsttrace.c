@@ -219,6 +219,28 @@ gst_alloc_trace_list (void)
 }
 
 /**
+ * gst_alloc_trace_live_all:
+ *
+ * Returns the total number of live registered alloc trace objects.
+ */
+int
+gst_alloc_trace_live_all (void)
+{
+  GList *walk = _gst_alloc_tracers;
+  int num = 0;
+  
+  while (walk) {
+    GstAllocTrace *trace = (GstAllocTrace *) walk->data;
+
+    num += trace->live;
+
+    walk = g_list_next (walk);
+  }
+
+  return num;
+}
+
+/**
  * gst_alloc_trace_print_all:
  *
  * Print the status of all registered alloc trace objectes.
