@@ -1,3 +1,10 @@
+2004-03-05  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstelement.c: (gst_element_get_compatible_pad_template):
+	  check for empty intersection instead of NULL caps
+	(gst_element_get_compatible_pad_filtered):
+	  remove old workaround that is only a bug nowadays
+
 2004-03-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstelement.c: (gst_element_error_full):

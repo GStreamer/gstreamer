@@ -1521,7 +1521,7 @@ gst_element_get_compatible_pad_template (GstElement *element,
 
       GST_CAT_DEBUG (GST_CAT_CAPS, "caps are %scompatible", (intersection ? "" : "not "));
 
-      if (intersection)
+      if (!gst_caps_is_empty (intersection))
         newtempl = padtempl;
       gst_caps_free (intersection);
       if (newtempl) break;
@@ -1666,19 +1666,6 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
 
   if (foundpad) return foundpad;
 
-  /* FIXME: this is broken, but it's in here so autoplugging elements
-   * that don't have caps on their source padtemplates (spider) can
-   * link... */
-  //g_warning("got here");
-  //if (filtercaps == NULL) {
-    templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad),
-        GST_PAD_DIRECTION (pad), GST_PAD_ALWAYS, gst_caps_new_any());
-    foundpad = gst_element_request_compatible_pad (element, templ);
-    gst_object_unref (GST_OBJECT (templ));
-
-    if (foundpad) return foundpad;
-  //}
-  
   GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element,
                        "Could not find a compatible pad to link to %s:%s",
                        GST_DEBUG_PAD_NAME (pad));
