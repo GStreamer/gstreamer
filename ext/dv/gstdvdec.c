@@ -697,9 +697,9 @@ gst_dvdec_push (GstDVDec *dvdec, GstBuffer *outbuf, GstPad *pad, GstClockTime ts
   if ((dvdec->end_position != -1) &&
       (dvdec->next_ts >= dvdec->end_position)) {
     if (dvdec->loop) 
-      gst_pad_push (pad, GST_DATA(gst_event_new (GST_EVENT_SEGMENT_DONE))));
+      gst_pad_push (pad, GST_DATA(gst_event_new (GST_EVENT_SEGMENT_DONE)));
     else
-      gst_pad_push (pad, GST_DATA(gst_event_new (GST_EVENT_EOS))));
+      gst_pad_push (pad, GST_DATA(gst_event_new (GST_EVENT_EOS)));
   }
 }
 

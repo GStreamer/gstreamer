@@ -323,7 +323,7 @@ gst_dv1394src_get (GstPad *pad)
   while (dv1394src->buf == NULL)
     raw1394_loop_iterate(dv1394src->handle);
 
-  return dv1394src->buf;
+  return GST_DATA(dv1394src->buf);
 }  
 
 static GstElementStateReturn
