@@ -1205,10 +1205,13 @@ gst_pad_link_try (GstPadLink *link)
   
   ret = gst_pad_link_negotiate (link); 
   if (ret == GST_PAD_LINK_REFUSED) {
-    oldlink->srcnotify = link->srcnotify;
-    oldlink->sinknotify = link->sinknotify;
-    if (oldlink && oldlink->caps && !gst_pad_link_call_link_functions (oldlink))
-      g_warning ("pads don't accept old caps. We assume they did though");
+    if (oldlink && oldlink->caps) {
+      oldlink->srcnotify = link->srcnotify;
+      oldlink->sinknotify = link->sinknotify;
+      if (!gst_pad_link_call_link_functions (oldlink)) {
+        g_warning ("pads don't accept old caps. We assume they did though");
+      }
+    }
     gst_pad_link_free (link);
     return ret;
   }

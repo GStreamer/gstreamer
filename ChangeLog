@@ -1,3 +1,8 @@
+2003-12-30  David Schleef  <ds@schleef.org>
+
+	* gst/gstpad.c: (gst_pad_link_try):
+	  Fix segfault when attempting to return to old caps
+
 2003-12-29  David Schleef  <ds@schleef.org>
 
 	* gst/gstcaps.c: (gst_caps_normalize), (simplify_foreach),
