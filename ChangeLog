@@ -1,3 +1,8 @@
+2004-02-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_chain):
+          throw error when not negotiated instead of asserting
+
 2004-02-15  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/switch/gstswitch.c: (gst_switch_loop): More fixes for 
