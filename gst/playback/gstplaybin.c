@@ -54,6 +54,8 @@ struct _GstPlayBin
 
   GList *seekables;
 
+  GstBuffer *frame;
+
   GHashTable *cache;
 };
 
@@ -69,7 +71,8 @@ enum
   ARG_AUDIO_SINK,
   ARG_VIDEO_SINK,
   ARG_VIS_PLUGIN,
-  ARG_VOLUME
+  ARG_VOLUME,
+  ARG_FRAME
 };
 
 /* signals */
@@ -169,6 +172,10 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (gobject_klass), ARG_VOLUME,
       g_param_spec_double ("volume", "volume", "volume",
           0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (gobject_klass), ARG_FRAME,
+      g_param_spec_boxed ("frame", "Frame",
+          "The last frame (NULL = no video available)",
+          GST_TYPE_BUFFER, G_PARAM_READABLE));
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_bin_dispose);
 
@@ -196,6 +203,7 @@ gst_play_bin_init (GstPlayBin * play_bin)
   play_bin->volume = 1.0;
   play_bin->seekables = NULL;
   play_bin->sinks = NULL;
+  play_bin->frame = NULL;
   play_bin->cache = g_hash_table_new (g_str_hash, g_str_equal);
 
   GST_FLAG_SET (play_bin, GST_BIN_SELF_SCHEDULABLE);
@@ -289,12 +297,25 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_VOLUME:
       g_value_set_double (value, play_bin->volume);
       break;
+    case ARG_FRAME:
+      g_value_set_boxed (value, play_bin->frame);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
+static void
+handoff (GstElement * identity, GstBuffer * frame, gpointer data)
+{
+  GstPlayBin *play_bin = GST_PLAY_BIN (data);
+
+  if (play_bin->frame) {
+    gst_buffer_unref (play_bin->frame);
+  }
+  play_bin->frame = gst_buffer_ref (frame);
+}
 
 static GstElement *
 gen_video_element (GstPlayBin * play_bin)
@@ -303,6 +324,7 @@ gen_video_element (GstPlayBin * play_bin)
   GstElement *conv;
   GstElement *scale;
   GstElement *sink;
+  GstElement *identity;
 
   element = g_hash_table_lookup (play_bin->cache, "vbin");
   if (element != NULL) {
@@ -312,6 +334,8 @@ gen_video_element (GstPlayBin * play_bin)
   }
 
   element = gst_bin_new ("vbin");
+  identity = gst_element_factory_make ("identity", "id");
+  g_signal_connect (identity, "handoff", G_CALLBACK (handoff), play_bin);
   conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
   scale = gst_element_factory_make ("videoscale", "vscale");
   if (play_bin->video_sink) {
@@ -322,13 +346,15 @@ gen_video_element (GstPlayBin * play_bin)
   }
   g_hash_table_insert (play_bin->cache, "video_sink", sink);
 
+  gst_bin_add (GST_BIN (element), identity);
   gst_bin_add (GST_BIN (element), conv);
   gst_bin_add (GST_BIN (element), scale);
   gst_bin_add (GST_BIN (element), sink);
+  gst_element_link_pads (identity, "src", conv, "sink");
   gst_element_link_pads (conv, "src", scale, "sink");
   gst_element_link_pads (scale, "src", sink, "sink");
 
-  gst_element_add_ghost_pad (element, gst_element_get_pad (conv, "sink"),
+  gst_element_add_ghost_pad (element, gst_element_get_pad (identity, "sink"),
       "sink");
 
   gst_element_set_state (element, GST_STATE_READY);
@@ -413,6 +439,11 @@ remove_sinks (GstPlayBin * play_bin)
   g_list_free (play_bin->seekables);
   play_bin->sinks = NULL;
   play_bin->seekables = NULL;
+
+  if (play_bin->frame) {
+    gst_buffer_unref (play_bin->frame);
+    play_bin->frame = NULL;
+  }
 }
 
 static void
