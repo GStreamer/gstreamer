@@ -114,7 +114,7 @@ static const struct poptOption gstreamer_options[] = {
   {"gst-fatal-warnings", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_FATAL_WARNINGS, N_("Make all warnings fatal"), NULL},
 #ifndef GST_DISABLE_GST_DEBUG 
   {"gst-debug-level",    NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_DEBUG_LEVEL,  N_("default debug level from 1 (only error) to 5 (anything) or 0 for no output"), "LEVEL"},
-  {"gst-debug",          NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_DEBUG,          N_("colon-seperated list of category=name pairs to use specific levels"), "CATEGORIES"},
+  {"gst-debug",          NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_DEBUG,          N_("colon-seperated list of category_name=level pairs to set specific levels for the individual categories.\nExample:GST_AUTOPLUG=5:GST_ELEMENT_*=3"), "CATEGORIES"},
   {"gst-debug-no-color", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_NO_COLOR, N_("disable color debugging output"), NULL},
   {"gst-disable-debug",  NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_DISABLE,  N_("disable debugging")},
   {"gst-debug-help",     NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_HELP,     N_("print available debug categories and exit"), NULL},
