@@ -33,6 +33,8 @@
 GList *_gst_types;
 guint16 _gst_maxtype;
 
+#define MAX_COST 999999
+
 struct _gst_type_node
 {
   int iNode;
@@ -302,7 +304,7 @@ static GList *construct_path (gst_type_node *rgnNodes, gint chNode)
   GstType *type;
   GList *converters;
 
-  while (current != 999)
+  while (current != MAX_COST)
   {
     type = gst_type_find_by_id(current);
     converters = (GList *)g_hash_table_lookup(type->converters, GUINT_TO_POINTER(src));
@@ -322,7 +324,7 @@ static guint gst_type_find_cost(gint src, gint dest) {
   GList *converters = (GList *)g_hash_table_lookup(type->converters, GUINT_TO_POINTER(dest));
 
   if (converters) return 1;
-  return 999;
+  return MAX_COST;
 }
 
 GList *gst_type_get_sink_to_src(guint16 sinkid, guint16 srcid) { 
@@ -339,13 +341,13 @@ GList *gst_type_get_sink_to_src(guint16 sinkid, guint16 srcid) {
 
     for (i=0; i< _gst_maxtype; i++) {
       rgnNodes[i].iNode = i;
-      rgnNodes[i].iDist = 999;
-      rgnNodes[i].iPrev = 999;
+      rgnNodes[i].iDist = MAX_COST;
+      rgnNodes[i].iPrev = MAX_COST;
     }
     rgnNodes[sinkid].iDist = 0;
-    rgnNodes[sinkid].iPrev = 999;
+    rgnNodes[sinkid].iPrev = MAX_COST;
 
-    queue = gst_type_enqueue(queue, sinkid, 0, 999);
+    queue = gst_type_enqueue(queue, sinkid, 0, MAX_COST);
 
     while (g_list_length(queue) > 0) {
 
@@ -353,8 +355,8 @@ GList *gst_type_get_sink_to_src(guint16 sinkid, guint16 srcid) {
       
       for (i=0; i< _gst_maxtype; i++) {
 	iCost = gst_type_find_cost(iNode, i);
-        if (iCost != 999) {
-          if((999 == rgnNodes[i].iDist) ||
+        if (iCost != MAX_COST) {
+          if((MAX_COST == rgnNodes[i].iDist) ||
 	     (rgnNodes[i].iDist > (iCost + iDist))) {
             rgnNodes[i].iDist = iDist + iCost;
             rgnNodes[i].iPrev = iNode;

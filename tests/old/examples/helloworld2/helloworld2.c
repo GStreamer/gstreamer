@@ -24,8 +24,6 @@ int main(int argc,char *argv[])
   gst_plugin_load_all();
   g_print("\n");
 
-  gst_type_dump();
-
   /* create a new bin to hold the elements */
   pipeline = gst_pipeline_new("pipeline");
 

@@ -1,16 +1,11 @@
-<chapter id="cha-factories">
-  <title>More on factories</title>
+<chapter id="cha-advanced">
+  <title>Threads</title>
   <para> 
     The small application we created in the previous chapter used the
     concept of a factory to create the elements. In this chapter we will
-    show you how to use the factory concepts to create elements based
-    on what they do instead of how they are called.
+    show you how to use the factory concepts.
   </para>
 
-  <para> 
-    We will first explain the concepts involved before we move on
-    to the reworked helloworld example using autoplugging.
-  </para>
   <sect1>
     <title>The problems with the helloworld example</title>
     <para> 
@@ -82,10 +77,6 @@
       In our helloworld example the elements we constructed would have the
       following MIME types associated with their source and sink pads:
     </para>
-    <figure float="1" id="sec-mime-img">
-      <title>The Hello world pipeline with MIME types</title>
-      <graphic fileref="images/mime-world" format="png"></graphic>
-    </figure>
     <para>
       We will see how you can create an element based on the MIME types
       of its source and sink pads. This way the end-user will have the

@@ -54,6 +54,7 @@ static GstElementStateReturn gst_pipeline_change_state(GstElement *element);
 static void gst_pipeline_prepare(GstPipeline *pipeline);
 
 static void gst_pipeline_have_type(GstSink *sink, GstSink *sink2, gpointer data);
+static void gst_pipeline_pads_autoplug(GstElement *src, GstElement *sink);
 
 static GstBin *parent_class = NULL;
 //static guint gst_pipeline_signals[LAST_SIGNAL] = { 0 };
@@ -160,6 +161,66 @@ static guint16 gst_pipeline_typefind(GstPipeline *pipeline, GstElement *element)
   return type_id;
 }
 
+static void gst_pipeline_pads_autoplug_func(GstElement *src, GstPad *pad, GstElement *sink) {
+  GList *sinkpads;
+  GstPad *sinkpad;
+
+  g_print("gstpipeline: autoplug pad connect function type %d\n", pad->type);
+
+  sinkpads = gst_element_get_pad_list(sink);
+  while (sinkpads) {
+    sinkpad = (GstPad *)sinkpads->data;
+
+    // if we have a match, connect the pads
+    if (sinkpad->type == pad->type && sinkpad->direction == GST_PAD_SINK && !GST_PAD_CONNECTED(sinkpad)) {
+      gst_pad_connect(pad, sinkpad);
+      g_print("gstpipeline: autoconnect pad \"%s\" (%d) in element %s <-> ", pad->name, pad->type, gst_element_get_name(src));
+      g_print("pad \"%s\" (%d) in element %s\n", sinkpad->name, sinkpad->type, gst_element_get_name(sink));
+      break;
+    }
+    sinkpads = g_list_next(sinkpads);
+  }
+}
+
+static void gst_pipeline_pads_autoplug(GstElement *src, GstElement *sink) {
+  GList *srcpads, *sinkpads;
+  gboolean connected = FALSE;
+
+  srcpads = gst_element_get_pad_list(src);
+
+  while (srcpads) {
+    GstPad *srcpad = (GstPad *)srcpads->data;
+    GstPad *sinkpad;
+
+    if (srcpad->direction == GST_PAD_SRC && !GST_PAD_CONNECTED(srcpad)) {
+
+      sinkpads = gst_element_get_pad_list(sink);
+      // FIXME could O(n) if the types were sorted...
+      while (sinkpads) {
+        sinkpad = (GstPad *)sinkpads->data;
+
+	// if we have a match, connect the pads
+	if (sinkpad->type == srcpad->type && sinkpad->direction == GST_PAD_SINK && !GST_PAD_CONNECTED(sinkpad)) {
+          gst_pad_connect(srcpad, sinkpad);
+          g_print("gstpipeline: autoconnect pad \"%s\" (%d) in element %s <-> ", srcpad->name, srcpad->type, gst_element_get_name(src));
+          g_print("pad \"%s\" (%d) in element %s\n", sinkpad->name, sinkpad->type, gst_element_get_name(sink));
+	  connected = TRUE;
+	  goto end;
+	}
+        sinkpads = g_list_next(sinkpads);
+      }
+    }
+    srcpads = g_list_next(srcpads);
+  }
+  
+end:
+  if (!connected) {
+    g_print("gstpipeline: delaying pad connections\n");
+    gtk_signal_connect(GTK_OBJECT(src),"new_pad",
+                 GTK_SIGNAL_FUNC(gst_pipeline_pads_autoplug_func), sink);
+  }
+}
+
 gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
   GList *elements;
   GstElement *element, *srcelement, *sinkelement;
@@ -175,7 +236,7 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
 
   elements = gst_bin_get_list(GST_BIN(pipeline));
 
-  // fase 1, find all the sinks and sources...
+  // fase 1, find all the sinks and sources... FIXME need better way to do this...
   while (elements) {
     element = GST_ELEMENT(elements->data);
 
@@ -250,10 +311,7 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
     element = gst_elementfactory_create(factory, factory->name);
     gst_bin_add(GST_BIN(pipeline), element);
 
-    // FIXME match paths to connect with MIME types instead
-    // of names.
-    gst_pad_connect(gst_element_get_pad(srcelement,"src"),
-                    gst_element_get_pad(element,"sink"));
+    gst_pipeline_pads_autoplug(srcelement, element);
 
     srcelement = element;
 
@@ -263,8 +321,7 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
   }
 
   if (complete) {
-    gst_pad_connect(gst_element_get_pad(srcelement,"src"),
-                    gst_element_get_pad(sinkelement,"sink"));
+    gst_pipeline_pads_autoplug(srcelement, sinkelement);
     return TRUE;
   }
   
@@ -282,8 +339,6 @@ static GstElementStateReturn gst_pipeline_change_state(GstElement *element) {
   switch (GST_STATE_PENDING(pipeline)) {
     case GST_STATE_READY:
       // we need to set up internal state
-      g_print("preparing pipeline \"%s\" for iterations:\n",
-              gst_element_get_name(GST_ELEMENT(element)));
       gst_pipeline_prepare(pipeline);
       break;
     default:

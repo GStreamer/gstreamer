@@ -53,6 +53,8 @@ Building apps
    MIME types
    GStreamer types
    Basic types
+ Your second application
+   
    
   
 advanced concepts
@@ -61,24 +63,27 @@ advanced concepts
   cothreads
   dynamic pipeline construction
   ghost pads
-  types
   type detection
-  plugin registry
-  bufferpools
-  Quality of service
   utility functions
-  
   
 XML in GStreamer
   (saving)
   (loading a pipeline)
 
 Plugin development
+  plugin types
+    chain based
+    loop based
   buffers
   metadata
   subbufers
   adding pads
   libraries
+  plugin registry
+  types
+  type detection
+  QoS messages
+  clocks
   
 GStreamer programs
   editor

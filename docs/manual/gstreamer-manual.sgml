@@ -11,8 +11,20 @@
 
 <!ENTITY HELLOWORLD SYSTEM "helloworld.sgml">
 <!ENTITY FACTORIES SYSTEM "factories.sgml">
-]>
+<!ENTITY HELLOWORLD2 SYSTEM "helloworld2.sgml">
 
+<!ENTITY THREADS SYSTEM "threads.sgml">
+<!ENTITY QUEUES SYSTEM "queues.sgml">
+<!ENTITY COTHREADS SYSTEM "cothreads.sgml">
+<!ENTITY DYNAMIC SYSTEM "dynamic.sgml">
+<!ENTITY GHOSTPADS SYSTEM "ghostpads.sgml">
+<!ENTITY TYPEDETECTION SYSTEM "typedetection.sgml">
+<!ENTITY UTILITY SYSTEM "utility.sgml">
+
+<!ENTITY XML SYSTEM "xml.sgml">
+<!ENTITY PLUGINS SYSTEM "plugins.sgml">
+<!ENTITY PROGRAMS SYSTEM "programs.sgml">
+]>
 
 <book id="GStreamer">
   <bookinfo>
@@ -110,6 +122,7 @@
 
       &FACTORIES;
 
+      &HELLOWORLD2;
   </part>
 
 <!-- ############ Advanced GStreamer - part ############# -->
@@ -118,10 +131,27 @@
 
     <partintro>
       <para>
-        Wanna know more?
+        In this part we will cover the more advanced features of GStreamer.
+	With the basics you learned in the prevous part you should be 
+	able to create a 'simple' pipeline. If you want more control over
+	the media types and the pipeline you should use the more
+	low-level features of GStreamer.
       </para>      
     </partintro>
 
+      &THREADS;
+
+      &QUEUES;
+
+      &COTHREADS;
+
+      &DYNAMIC;
+
+      &GHOSTPADS;
+
+      &TYPEDETECTION;
+
+      &UTILITY;
   </part>
 
 <!-- ############ XML in GStreamer - part ############# -->
@@ -130,10 +160,13 @@
 
     <partintro>
       <para>
-        Just say how we use it...
+        GStreamer has the posibility to externalize the pipelines
+	you create using an XML format. You can load a previously
+	created pipeline by loading the XML file.
       </para>      
     </partintro>
 
+      &XML;
   </part>
 
 <!-- ############ XML in GStreamer - part ############# -->
@@ -142,10 +175,12 @@
 
     <partintro>
       <para>
-        A lot of text will follow...
+        In this part we will describe how you create a new plugin
+	to be used in GStreamer.
       </para>      
     </partintro>
 
+      &PLUGINS;
   </part>
 
 <!-- ############ Appendices - part ############# -->
@@ -155,8 +190,12 @@
 
     <partintro>
       <para>
+        GStreamer comes prepackaged with a few programs.
       </para>
     </partintro>
+
+      &PROGRAMS;
+
   </part>
 </book>
 
