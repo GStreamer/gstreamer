@@ -26,6 +26,7 @@
 #include <sys/time.h>
 
 #include "gst/gst-i18n-plugin.h"
+#include "gst/propertyprobe/propertyprobe.h"
 #include "gstalsa.h"
 #include "gstalsaclock.h"
 #include "gstalsamixer.h"
@@ -43,6 +44,9 @@ static void			gst_alsa_get_property		(GObject *		object,
 								 guint			prop_id,
 								 GValue *		value,
 								 GParamSpec *		pspec);
+
+/* interface */
+static void			gst_alsa_probe_interface_init	(GstPropertyProbeInterface *iface);
 
 /* GStreamer functions for pads and state changing */
 static GstPad *			gst_alsa_request_new_pad	(GstElement *		element,
@@ -109,8 +113,17 @@ gst_alsa_get_type (void)
       0,
       (GInstanceInitFunc) gst_alsa_init,
     };
+    static const GInterfaceInfo alsa_probe_info = {
+      (GInterfaceInitFunc) gst_alsa_probe_interface_init,
+      NULL,
+      NULL
+    };
 
     alsa_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAlsa", &alsa_info, 0);
+
+    g_type_add_interface_static (alsa_type,
+				 GST_TYPE_PROPERTY_PROBE,
+				 &alsa_probe_info);
   }
 
   return alsa_type;
@@ -122,6 +135,7 @@ enum
 {
   ARG_0,
   ARG_DEVICE,
+  ARG_DEVICE_NAME,
   ARG_PERIODCOUNT,
   ARG_PERIODSIZE,
   ARG_BUFFERSIZE,
@@ -154,6 +168,10 @@ gst_alsa_class_init (gpointer g_class, gpointer class_data)
     g_param_spec_string ("device", "Device",
                          "ALSA device, as defined in an asoundrc",
                          "default", G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, ARG_DEVICE_NAME,
+    g_param_spec_string ("device_name", "Device name",
+			 "Name of the device",
+			 NULL, G_PARAM_READABLE));
   g_object_class_install_property (object_class, ARG_PERIODCOUNT,
     g_param_spec_int ("period-count", "Period count",
                       "Number of hardware buffers to use",
@@ -268,6 +286,13 @@ gst_alsa_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec
   case ARG_DEVICE:
     g_value_set_string (value, this->device);
     break;
+  case ARG_DEVICE_NAME:
+    if (GST_STATE (this) != GST_STATE_NULL) {
+      g_value_set_string (value, snd_pcm_info_get_name (this->info));
+    } else {
+      g_value_set_string (value, NULL);
+    }
+    break;
   case ARG_PERIODCOUNT:
     g_value_set_int (value, this->period_count);
     break;
@@ -290,6 +315,141 @@ gst_alsa_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     break;
   }
+}
+
+static const GList *
+gst_alsa_probe_get_properties (GstPropertyProbe *probe)
+{
+  GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
+  static GList *list = NULL;
+
+  if (!list) {
+    list = g_list_append (NULL, g_object_class_find_property (klass, "device"));  }
+
+  return list;
+}
+
+static gboolean
+gst_alsa_class_probe_devices (GstAlsaClass *klass,
+			      gboolean      check)
+{
+  static gboolean init = FALSE;
+
+  /* I'm pretty sure ALSA has a good way to do this. However, their cool
+   * auto-generated documentation is pretty much useless if you try to
+   * do function-wise look-ups. */
+
+  if (!init && !check) {
+#define MAX_DEVICES 16 /* random number */
+    gint num, res;
+    gchar *dev;
+    snd_pcm_t *pcm;
+
+    for (num = 0; num < MAX_DEVICES; num++) {
+      dev = g_strdup_printf ("hw:%d", num);
+printf ("Trying to open %s\n", dev);
+      if (!(res = snd_pcm_open (&pcm, dev, 0, 0))) {
+        klass->devices = g_list_append (klass->devices, dev);
+printf ("success\n");
+        snd_pcm_close (pcm);
+      } else {
+printf ("failure=%d (%s)\n", res, snd_strerror (res));
+        g_free (dev);
+      }
+    }
+
+    init = TRUE;
+  }
+
+  return init;
+}
+
+static GValueArray *
+gst_alsa_class_list_devices (GstAlsaClass *klass)
+{
+  GValueArray *array;
+  GValue value = { 0 };
+  GList *item;
+
+  if (!klass->devices)
+    return NULL;
+
+  array = g_value_array_new (g_list_length (klass->devices));
+  g_value_init (&value, G_TYPE_STRING);
+  for (item = klass->devices; item != NULL; item = item->next) {
+    g_value_set_string (&value, item->data);
+    g_value_array_append (array, &value);
+  }
+  g_value_unset (&value);
+                                                                                
+  return array;
+
+}
+
+static void
+gst_alsa_probe_probe_property (GstPropertyProbe *probe,
+			       guint             prop_id,
+			       const GParamSpec *pspec)
+{
+  GstAlsaClass *klass = GST_ALSA_GET_CLASS (probe);
+
+  switch (prop_id) {
+    case ARG_DEVICE:
+      gst_alsa_class_probe_devices (klass, FALSE);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+}
+
+static gboolean
+gst_alsa_probe_needs_probe (GstPropertyProbe *probe,
+			    guint             prop_id,
+			    const GParamSpec *pspec)
+{
+  GstAlsaClass *klass = GST_ALSA_GET_CLASS (probe);
+  gboolean ret = FALSE;
+
+  switch (prop_id) {
+    case ARG_DEVICE:
+      ret = !gst_alsa_class_probe_devices (klass, TRUE);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+
+  return ret;
+}
+
+static GValueArray *
+gst_alsa_probe_get_values (GstPropertyProbe *probe,
+			   guint             prop_id,
+			   const GParamSpec *pspec)
+{
+  GstAlsaClass *klass = GST_ALSA_GET_CLASS (probe);
+  GValueArray *array = NULL;
+
+  switch (prop_id) {
+    case ARG_DEVICE:
+      array = gst_alsa_class_list_devices (klass);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+
+  return array;
+}
+
+static void
+gst_alsa_probe_interface_init (GstPropertyProbeInterface *iface)
+{
+  iface->get_properties = gst_alsa_probe_get_properties;
+  iface->probe_property = gst_alsa_probe_probe_property;
+  iface->needs_probe    = gst_alsa_probe_needs_probe;
+  iface->get_values     = gst_alsa_probe_get_values;
 }
 
 /*** GSTREAMER PAD / QUERY / CONVERSION / STATE FUNCTIONS *********************/
@@ -947,6 +1107,9 @@ gst_alsa_open_audio (GstAlsa *this)
     return FALSE;
   }
 
+  snd_pcm_info_malloc (&this->info);
+  snd_pcm_info (this->handle, this->info);
+
   GST_FLAG_SET (this, GST_ALSA_OPEN);
   return TRUE;
 }
@@ -1159,9 +1322,11 @@ gst_alsa_close_audio (GstAlsa *this)
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (this->handle != NULL, FALSE);
 
+  snd_pcm_info_free (this->info);
   ERROR_CHECK (snd_pcm_close (this->handle), "Error closing device: %s");
 
   this->handle = NULL;
+  this->info = NULL;
   GST_FLAG_UNSET (this, GST_ALSA_OPEN);
 
   return TRUE;

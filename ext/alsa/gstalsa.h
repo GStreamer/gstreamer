@@ -134,6 +134,7 @@ struct _GstAlsa {
 
   gchar *			device;
   snd_pcm_t *			handle;
+  snd_pcm_info_t *		info;
   guint				pcm_caps;	/* capabilities of the pcm device, see GstAlsaPcmCaps */
   snd_output_t *		out;
 
@@ -167,6 +168,9 @@ struct _GstAlsaClass {
   /* different transmit functions */
   GstAlsaTransmitFunction	transmit_mmap;
   GstAlsaTransmitFunction	transmit_rw;
+
+  /* autodetected devices available */
+  GList *devices;
 };
 
 GType gst_alsa_get_type (void);

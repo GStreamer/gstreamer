@@ -1,3 +1,15 @@
+2004-03-12  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_get_type), (gst_alsa_class_init),
+	(gst_alsa_get_property), (gst_alsa_probe_get_properties),
+	(gst_alsa_class_probe_devices), (gst_alsa_class_list_devices),
+	(gst_alsa_probe_probe_property), (gst_alsa_probe_needs_probe),
+	(gst_alsa_probe_get_values), (gst_alsa_probe_interface_init),
+	(gst_alsa_open_audio), (gst_alsa_close_audio):
+	* ext/alsa/gstalsa.h:
+	  Add propertyprobe interface implementation, add some device-name
+	  property, all this so that it looks good in gnome-volume-control.
+
 2004-03-12  David Schleef  <ds@schleef.org>
 
 	* configure.ac: the Hermes library controls hermescolorspace, not
