@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <gst/gst.h>
