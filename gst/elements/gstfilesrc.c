@@ -638,7 +638,6 @@ gst_filesrc_get_mmap (GstFileSrc *src)
 
   /* we're done, return the buffer */
   g_assert (src->curoffset == GST_BUFFER_OFFSET (buf));
-  g_print ("offset %u %u\n", (guint) src->curoffset, (guint) GST_BUFFER_OFFSET (buf));
   src->curoffset += GST_BUFFER_SIZE(buf);
   return buf;
 }
