@@ -1,6 +1,6 @@
 %define name    gstreamer
 %define ver     @VERSION@
-%define rel     0.2.0
+%define rel     1
 %define prefix  /usr
 
 Summary: GStreamer Streaming-media framework runtime
@@ -38,11 +38,102 @@ plugins.
 This package contains the libraries and includes files necessary to develop
 applications and plugins for GStreamer.
 
+
+%package -n gstreamer-esd
+Summary: Gstreamer plugin for ESD sound output
+Group: Libraries/Multimedia
+Requires: esound >= 0.2.8
+
+%description -n gstreamer-esd
+Output plugin for GStreamer for use with the esound package
+
+%package -n gstreamer-gsm
+Summary: Gstreamer plugin for GSM lossy audio format
+Group: Libraries/Multimedia
+Requires: gsm >= 1.0.10
+
+%description -n gstreamer-gsm
+Output plugin for GStreamer to convert to GSM lossy audio format.
+
+%package -n gstreamer-cdparanoia
+Summary: Gstreamer plugin for CD audio input using CDParanoia IV
+Group: Libraries/Multimedia
+Requires: cdparanoia >= alpha9.7
+
+%description -n gstreamer-cdparanoia
+Plugin for ripping audio tracks using cdparania under GStreamer
+
+%package -n gstreamer-aalib
+Summary: Gstreamer plugin for Ascii-art output
+Group: Libraries/Multimedia
+Requires: aalib >= 1.3
+
+%description -n gstreamer-aalib
+Plugin for viewing movies in Ascii-art using aalib library.
+
+%package -n gstreamer-gnomevfs
+Summary: Gstreamer plugins for GNOME VFS input and output
+Group: Libraries/Multimedia
+Requires: gnome-vfs > 1.0
+
+%description -n gstreamer-gnomevfs
+Plugins for reading and writing through GNOME VFS.
+
+%package -n gstreamer-flx
+Summary: Gstreamer plugin for FLI/FLX animation format
+Group: Libraries/Multimedia
+
+%description -n gstreamer-flx
+Plugin for playing FLI/FLX animations under GStreamer
+
+%package -n gstreamer-avi
+Summary: Gstreamer plugin for AVI format movie playback
+Group: Libraries/Multimedia
+
+%description -n gstreamer-avi
+Plugins for playback of AVI format media files.
+
+%package -n gstreamer-vorbis
+Summary: Gstreamer plugin for encoding and decoding Ogg Vorbis audio files
+Group: Libraries/Multimedia
+Requires: libogg >= 1.0beta4
+Requires: libvorbis >= 1.0beta4
+
+%description -n gstreamer-vorbis
+Plugins for creating end playing Ogg Vorbis audio files.
+
+%package -n gstreamer-sdl
+Summary: Gstreamer plugin for outputing to SDL
+Group: Libraries/Multimedia
+Requires: SDL >= 1.1.7
+
+%description -n gstreamer-sdl
+Plugin for sending output to the Simple Direct Media architecture.
+(http://www.libsdl.org). Usefull for fullscreen playback.
+
+%package -n gstreamer-oss
+Summary: Gstreamer plugins for input and output using OSS
+Group: Libraries/Multimedia
+
+%description -n gstreamer-oss
+Plugins for output and input to the OpenSoundSytem audio
+drivers found in the Linux kernels or comercially available 
+from OpenSound.
+
+%package -n gstreamer-ac3dec
+Summary: Gstreamer plugin for VOB playback
+Group: Libraries/Multimedia
+
+%description -n gstreamer-ac3dec
+Plugin for the free AC-3 stream decoder from Linuxvideo.
+(http://linuxvideo.org/ac3dec/)
+
 %changelog
 * Sat Jun 02 2001 Christian Schaller <Uraeus@linuxrising.org>
-* Small fix to RPM group statement
+- Split the plugins into separate RPMS
+
 * Fri Jun 01 2001 Christian Schaller <Uraeus@linuxrising.org>
-- Included fix suggestions from Dennis Bjorklund
+- Updated with change suggestions from Dennis Bjorklund
 * Tue Jan 09 2001 Erik Walthinsen <omega@cse.ogi.edu>
 - updated to build -devel package as well
 
@@ -88,7 +179,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %{prefix}/bin/gstreamer-launch
 %{prefix}/bin/gstreamer-register
 %{prefix}/lib/lib*.so.*
-%{prefix}/lib/gst/*
+%{prefix}/lib/gst/
 %{prefix}/share/*
 %{prefix}/man/man1/*
 
@@ -99,3 +190,47 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %{prefix}/lib/lib*.la
 %{prefix}/lib/lib*.so
 %{prefix}/lib/pkgconfig/*
+
+%files -n gstreamer-esd
+%defattr(-, root, root)
+%{prefix}/lib/gst/libesd*
+
+%files -n gstreamer-gsm
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstgsm*
+
+%files -n gstreamer-cdparanoia
+%defattr(-, root, root)
+%{prefix}/lib/gst/libcdparanoia*
+
+%files -n gstreamer-aalib
+%defattr(-, root, root)
+%{prefix}/lib/gst/libaa*
+
+%files -n gstreamer-gnomevfs
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgnomevfs*
+
+%files -n gstreamer-flx
+%defattr(-, root, root)
+%{prefix}/lib/gst/libflx*
+
+%files -n gstreamer-avi
+%defattr(-, root, root)
+%{prefix}/lib/gst/libavi*
+
+%files -n gstreamer-vorbis
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstvorbis*
+
+%files -n gstreamer-sdl
+%defattr(-, root, root)
+%{prefix}/lib/gst/libsdl*
+
+%files -n gstreamer-oss
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstoss*
+
+%files -n gstreamer-ac3dec
+%defattr(-, root, root)
+%{prefix}/lib/gst/libac3dec*
