@@ -1626,12 +1626,12 @@ gst_asf_demux_video_caps (guint32 codec_fcc,
     gst_caps_set_simple (caps,
 	"width", G_TYPE_INT, video->width,
 	"height", G_TYPE_INT, video->height,
-        "framerate", G_TYPE_DOUBLE, (double) 0, NULL);
+        "framerate", G_TYPE_DOUBLE, (double) 25, NULL);
   } else {
     gst_caps_set_simple (caps,
 	"width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
 	"height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,
+        "framerate", GST_TYPE_DOUBLE_RANGE, 25.0, G_MAXDOUBLE,
 	NULL);
   }
 
@@ -1679,6 +1679,7 @@ gst_asf_demux_setup_pad (GstASFDemux *asf_demux,
 {
   asf_stream_context *stream;
 
+  gst_pad_use_explicit_caps (src_pad);
   gst_pad_set_explicit_caps (src_pad, caps);
   gst_pad_set_formats_function (src_pad, gst_asf_demux_get_src_formats);
   gst_pad_set_event_mask_function (src_pad, gst_asf_demux_get_src_event_mask);
