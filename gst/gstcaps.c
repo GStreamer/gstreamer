@@ -49,7 +49,7 @@ static GstCaps * gst_caps_copy_conditional    (const GstCaps *src);
 GType
 gst_caps_get_type (void)
 {
-  static Gtype gst_caps_type = 0;
+  static GType gst_caps_type = 0;
   
   if (!gst_caps_type) {
     gst_caps_type = g_boxed_type_register_static ("GstCaps",
