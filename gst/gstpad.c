@@ -287,9 +287,10 @@ gst_pad_new_from_template (GstPadTemplate *templ,
   g_return_val_if_fail (templ != NULL, NULL);
 
   pad = gst_pad_new (name, templ->direction);
-
+  
+  gst_object_ref (GST_OBJECT (templ));
   GST_PAD_PADTEMPLATE(pad) = templ;
-
+  
   return pad;
 }
 
