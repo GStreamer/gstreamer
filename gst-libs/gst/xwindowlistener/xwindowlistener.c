@@ -155,11 +155,8 @@ gst_x_window_listener_set_xid (GstXWindowListener *xwin,
  *  - next, we call the per-instance virtual functions set by the client
  *  - and we do all this in an endless cycle
  *
- * Unfortunately, part of this code is inspired by XawTV, so the
- * runtime license for this code as a whole will be GPL unless
- * someone can rewrite this or ask permission to the original
- * author (Gerd Knorr <kraxel@bytesex.org>) to let us re-license
- * this piece of code to LGPL.
+ * This code originates largely from xawtv. By permission of Gerd Knorr
+ * <kraxel@bytesex.org>, it was relicensed to LGPL.
  */
 
 #define DEBUG(format, args...) \
