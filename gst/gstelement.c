@@ -1147,7 +1147,7 @@ gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *co
   GstPadTemplate *newtempl = NULL;
   GList *padlist;
 
-  GST_DEBUG(GST_CAT_ELEMENT_PADS,"gst_element_get_pad_template_by_compatible()");
+  GST_DEBUG(GST_CAT_ELEMENT_PADS,"gst_element_get_compatible_pad_template()");
 
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);

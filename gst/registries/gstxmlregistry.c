@@ -467,16 +467,20 @@ gst_xml_registry_open_func (GstXMLRegistry *registry, GstXMLRegistryMode mode)
     g_return_val_if_fail (gst_registry->flags & GST_REGISTRY_READABLE, FALSE);
 
     if (!plugin_times_older_than (paths, get_time (registry->location))) {
-      GST_INFO (GST_CAT_GST_INIT, "Registry out of date, rebuilding...");
-      
-      gst_registry_rebuild (gst_registry);
-
       if (gst_registry->flags & GST_REGISTRY_WRITABLE) {
+        GST_INFO (GST_CAT_GST_INIT, "Registry out of date, rebuilding...");
+      
+        gst_registry_rebuild (gst_registry);
+
         gst_registry_save (gst_registry);
+
         if (!plugin_times_older_than (paths, get_time (registry->location))) {
           GST_INFO (GST_CAT_GST_INIT, "Registry still out of date, something is wrong...");
           return FALSE;
         }
+      } else {
+        GST_INFO (GST_CAT_PLUGIN_LOADING, "Can't write to this registry and it's out of date, ignoring it");
+        return FALSE;
       }
     }
     

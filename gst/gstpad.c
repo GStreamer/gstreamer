@@ -312,6 +312,7 @@ gst_pad_new (const gchar *name,
 {
   return gst_pad_custom_new (gst_real_pad_get_type (), name, direction);
 }
+
 /**
  * gst_pad_custom_new_from_template:
  * @type: the custom GType for this pad
