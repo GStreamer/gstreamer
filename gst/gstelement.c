@@ -2093,7 +2093,7 @@ gst_element_error_detailed (GstElement *element, const gchar *file, const gchar 
 			    const gchar *error_message, const gchar *detailed)
 {
   gchar *really_detailed;
-  GError *error;
+  GError *error = NULL;
   
   /* checks */
   g_return_if_fail (GST_IS_ELEMENT (element));
