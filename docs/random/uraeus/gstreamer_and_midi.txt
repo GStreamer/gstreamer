@@ -1,187 +1,313 @@
-GStreamer and Midi
----------------------------------------------
-This document was created by editing togheter a series of emails and IRC logs. This means that
-the language might seem a little weird at places, but it should outline most of the thinking
-and design adding Midi support to GStreamer so far.
+This document was created by editing together a series of emails and IRC logs.
+This means that the language might seem a little weird at places, but it should
+outline most of the thinking and design adding MIDI support to GStreamer so far.
 
 Authors of this document include:
+
 Steve Baker 		<steve@stevebaker.org>
 Leif Johnson 		<leif@ambient.2y.net>
 Andy Wingo 		<wingo@pobox.com>
 Christian Schaller 	<Uraeus@gnome.org>
 
 About MIDI
-----------------------------
-Midi could be thought of in terms of dataflow as a sparse non-constant flow
-of bytes. GStreamer works best with near-constant data flow so a midi stream
-would probably have to consist mostly of filler events, sent at a constant
-tick-rate.
+----------
 
-As I understand it, on-the-wire hardware midi connections run at a fixed
-data rate: 
+MIDI (Musical Instrument Digital Interface) is used mainly as a communications
+protocol for devices in a music studio. These devices could be physical entities
+(e.g. synthesizers, sequencers, etc.) or purely logical (e.g. sequencers or
+filter banks implemented as software applications).
 
- The MIDI data stream is a unidirectional asynchronous bit stream at
- 31.25 Kbits/sec. with 10 bits transmitted per byte (a start bit, 8
- data bits, and one stop bit).
+The MIDI specification essentially consists of a list of MIDI messages that can
+be passed among devices ; these messages (also referred to as "events") are
+usually things like NoteOn (start playing a sound), NoteOff (stop playing a
+sound), Clock (for synchronization), ProgramChange (for signaling an instrument
+or program change), etc.
 
-Which is to say, 3125 bytes/sec. I would assume that the rawmidi
-interface would already filter out the stop and start bits? dunno. How
-about the diagram on http://www.philrees.co.uk/#midi, I found that to be
-useful.
+MIDI is different from other cross-device or inter-process streaming methods
+(e.g. JACK and possibly some CORBA implementations) because MIDI messages are
+discrete and usually only exchanged a few times per second ; the devices
+involved are supposed to interpret the MIDI messages and produce sounds or
+signals. The devices in a MIDI chain typically send their audio signals out on
+separate (physical) cables or (logical) channels that have nothing to do with
+the MIDI chain itself.
 
-Now, there's another form of MIDI (the common usage?), "Standard MIDI
-files". We'll talk about that in a bit.
+We want to have MIDI messages available in GStreamer pipelines because MIDI is a
+common protocol in many existing studios, and MIDI is more or less a standard
+for inter-device communications. With MIDI support in GStreamer we can look
+forward to (a) controlling and being controlled by external devices like
+keyboards and sequencers, and (b) synchronizing and communicating among multiple
+applications on a studio computer.
+
+GStreamer and MIDI
+------------------
+
+MIDI could be thought of in terms of dataflow as a sparse, non-constant flow of
+bytes. GStreamer works best with near-constant data flow, so a MIDI stream would
+probably have to consist mostly of filler events, sent at a constant tick rate.
+It makes the most sense at this point to distribute MIDI events in a GStreamer
+pipeline as a sequence of subclasses of GstEvent (GstMidiEvent or suchlike).
+
+On-the-wire hardware MIDI connections run at a fixed data rate:
+
+  The MIDI data stream is a unidirectional asynchronous bit stream at 31.25
+  Kbits/sec. with 10 bits transmitted per message (a start bit, 8 data bits, and
+  one stop bit).
+
+Which is to say, 3125 bytes/sec. I would assume that the rawmidi interface would
+already filter out the stop and start bits? dunno. How about the diagram on[1],
+I found that to be useful. The MIDI specification is also available (though I
+can't find it online at the moment ... might have to buy a copy), and there are
+several tutorial and help pages (just google for MIDI tutorial).
+
+There's another form of MIDI (the common usage?), "Standard MIDI files," which
+essentially specify how to save and restore MIDI events in a file. We'll talk
+about that in a bit.
+
+[1] http://www.philrees.co.uk/#midi
 
 MIDI and current Linux/Unix audio systems
-------------------------------------------------
+-----------------------------------------
 
-We don't know very much about the OSS MIDI interface; apparently there
-exists an evil /dev/sequencer interface, and maybe a better /dev/midi*
-one. I only know this from overhearing it from people.
+We don't know very much about the OSS MIDI interface; apparently there exists an
+evil /dev/sequencer interface, and maybe a better /dev/midi* one. I only know
+this from overhearing it from people. For latency reasons, the ALSA MIDI
+interface will be much more solid than using these devices ; however, the
+/dev/midi* devices might be more of a cross-platform standard.
 
-ALSA has a couple ways to access MIDI devices. One way is the sequencer
-api. There's a tutorial,
- http://www.suse.de/~mana/alsa090_howto.html#sect04, and some example
- code, http://www.suse.de/~mana/seqdemo.c -- the paradigm is 'wait on
-some event fd's until you get an event, then process the event'. Not
-very GStreamer-like. This api timestamps the events, much like Standard
-MIDI files.
+ALSA has a couple ways to access MIDI devices. One way is the sequencer API.
+There's a tutorial[1], and some example code[2] -- the paradigm is 'wait on some
+event fd's until you get an event, then process the event'. Not very
+GStreamer-like. This API timestamps the events, much like Standard MIDI files.
 
-The other way to use MIDI with alsa is by the rawmidi interface. Here's
-the canonical reference:
-http://www.alsa-project.org/alsa-doc/alsa-lib/rawmidi.html#rawmidi
-It seems there is example code, too:
-http://www.alsa-project.org/alsa-doc/alsa-lib/_2test_2rawmidi_8c-example.html#example_test_rawmidi
+The other way to use MIDI with alsa is with the rawmidi interface. There is a
+canonical reference[3] and example code, too[4]. This is much more like
+GStreamer. I do wonder about the ability to connect to other sequencer clients,
+though...
 
-This is much more like GStreamer. I do wonder about the ability to
-connect to other sequencer clients, though...
+[1] http://www.suse.de/~mana/alsa090_howto.html#sect04
+[2] http://www.suse.de/~mana/seqdemo.c
+[3] http://www.alsa-project.org/alsa-doc/alsa-lib/rawmidi.html#rawmidi
+[4] http://www.alsa-project.org/alsa-doc/alsa-lib/_2test_2rawmidi_8c-example.html#example_test_rawmidi
 
-The basics of getting MIDI into GStreamer
-------------------------------------------------------------------------
-All buffers are timestamped and MIDI buffers should be no exception. A buffer with MIDI data will have a timestamp which says exactly when the data should be played. In some cases this would mean a buffer contains just a couple of bytes (eg, note-on). So be it - if this turns out to be inefficient we can deal with that later. 
+Getting MIDI into GStreamer
+---------------------------
 
-- midifileparse
-	takes midi file format data on sink pad, and produces timestamped midi data
-	on output. A property will specify what the tick rate would be (default to
-	96 ticks per beat or something). If no data exists for a given tick, it can
-	just send a filler event. Timestamp would be derived from the bpm property,
-	and the time deltas of the midi file data.
+All buffers are timestamped, and MIDI buffers should be no exception. A buffer
+with MIDI data will have a timestamp which says exactly when the data should be
+played. In some cases this would mean a buffer contains just a couple of bytes
+(eg, NoteOn). If this turns out to be inefficient we can deal with that later.
 
-	The plugin should support both globbing and streaming the file. Streaming it is
-	the most GStreamerish way of handling it, but there are midi file formats which are
-	by definition unstreamable, therefore a midi plugin needs to support
-	streaming and globbing - and globbing might be easiest to implement
-	first. The modplug plugin also reads an entire file before playing so
-	its a valid technique. This would parse so-called Standard MIDI files. 
+In addition to integrating more tightly with GStreamer audio pipelines (see the
+dparams and midi2pcm sections below), there are several elements that we will
+need for basic MIDI interaction in GStreamer. These basics include file parsing
+and encoding (is that the opposite of parsing ?), and direct hardware input and
+output. We'll also probably need a more generic sequencer interface for defining
+elements that are capable of sending and receiving this type of nonlinear stream
+information.
 
+For these tasks, we need to define some MIME types, some general properties, and
+some MIDI elements for GStreamer.
 
-Standard MIDI files are just timestamped MIDI data; they don't
-run at a constant bitrate, and for that reason you need this element.
+Types :
 
-- ossmidisink
- 	could be added to the existing oss plugin dir, sends midi data to oss midi
- 	sequencer. Makes extensive use of GstClock to only send out data when the
- 	buffer/event timestamp says it should. Or the raw midi device, doesn't matter which.
+- MIDI being passed to/from a text file : audio/midi (This is in my midi.types
+  file, associated with a .midi or .mid extension. It seems analogous to a .wav
+  file, which contains audio/wav-type information.)
 
-- alsamidisink
-  	guess what this does. don't know whether alsa's sequencer interface would be
- 	better than its raw midi one. Probably raw midi?
+- MIDI in a pipeline : audio/x-gst-midi ?
 
-- ossmidisrc, alsamidisrc
-  	real time midi input. This needs to be from the raw api
+Properties :
 
-Longer term we probably want to extend this to be:
-midisrc (hardware), midiparse, midi2ctrl, ctrl2midi, midihardwaresink,
-midisoftsink
+- tick rate : (default to 96.0, or something like that) This is measured in
+  ticks per quarter note (or "pulses per quarter note" (ppqn) to be picky). We
+  should use float for this so we can support nonstandard (fractional)
+  tempos.
 
-Goals of Midi in GStreamer
--------------------------------------------
-It would be nice to be able to transform midi to audio which can be further
-processed in a gstreamer pipeline. Which means using GStreamer as some kind of softsynth. 
+- tempo : (default to 120 bpm) This can be measured in bpm (beats per minute,
+  the musician's viewpoint), or mpq (microseconds per quarter note, the unit
+  used in a MIDI file[1]). Seems like we might want a query format for these
+  different units ? Or maybe we should just use MPQ and leave it to apps to do
+  conversions ?
 
-The first is sending MIDI data to softsynths and getting audio data out.
-There's a very, very nice way of doing this in ALSA, and that's the
-sequencer api. Timidity can already register itself as a sequencer
-client, as can amSynth, AlsaModularSynth, SpiralSynth, etc... and these
-latter ones are *much* more interesting. This is the proper, imho, way
-of doing things.
+Elements :
 
-But, the other question is getting that data back for use by GStreamer.
-In that sense a librafied timidity would be useful, I guess... see the
-thing is that all of these sequencer clients probably want to output to
-the sound card directly, although they are configurable. In this, the
-musician's only hope is Jack. If the synth is jacked up, we can get its
-output back into gstreamer. If not, oh well, it's gone...
+- midiparse : audio/midi -> audio/x-gst-midi
 
-Once we have midi streams, we can start doing fun things like writing a
-midi2dparams element which would map midi data to control the dynamic
-parameters of other elements, but lets not get ahead of ourselves.
- 
+  This element converts MIDI information from a file into MIDI signals that can
+  be passed around in GStreamer pipelines. This would parse so-called Standard
+  MIDI files (and XML format MIDI files ?). Standard MIDI files are just
+  timestamped MIDI data; they don't run at a constant bitrate, and for that
+  reason you need this element.
 
-Which gets back to MIDI. MIDI is a representation of control
-signals. So all you need are elements to convert that representation to
-control signals. In addition, you'd probably want something like
-SuperCollider's Voicer element -- see
-http://www.audiosynth.com/schtmldocs/Help/Unit_Generators/Spawners/Voicer.help.html
-for more information on that.
- 
-All of this is pretty specific to a synthesizer system, and rightly so
-multiple projects use it it could go in some kind of library or
-what-what but otherwise it can stay in individial projects.
- 
-On using dparams for Midi
-----------------------------------------------------------------
+  The timestamps that this element produces would be based on the tempo
+  property, and the time deltas of the MIDI file data. If no data exists for a
+  given tick, the element can just send a filler event.
+
+  The element should support both globbing and streaming the file. Streaming it
+  is the most GStreamerish way of handling it, but there are MIDI file formats
+  which are by definition unstreamable, therefore a MIDI plugin needs to support
+  streaming and globbing - and globbing might be easiest to implement first. The
+  modplug plugin also reads an entire file before playing so its a valid
+  technique.
+
+- ossmidisink : audio/x-gst-midi -> hardware
+
+  Could be added to the existing OSS plugin dir, sends MIDI data to the OSS MIDI
+  sequencer device (/dev/midi). Makes extensive use of GstClock to send out data
+  only when the buffer/event timestamp says it should. (Could instead use the
+  raw MIDI device for clocking, doesn't matter which.)
+
+- alsamidisink : audio/x-gst-midi -> ALSA rawmidi API
+
+  Guess what this does. Don't know whether alsa's sequencer interface would be
+  better than its rawmidi one. Probably rawmidi?
+
+- ossmidisrc, alsamidisrc : hardware -> audio/x-gst-midi
+
+  Real time midi input. This needs to be from the rawmidi APIs.
+
+It seems like we could implement a class hierarchy around these elements. We
+could use a GstMidiElement superclass, which would include the above properties
+and contain utility functions for things like reading from the clock and
+converting between different time measurement units. From this element we ought
+to have GstMidiSource, GstMidiFilter, and GstMidiSink parent classes. (Maybe
+that's overkill ?) Each of these MIDI elements listed above could then inherit
+from an appropriate superclass.
+
+We also need an interface (GstSequencer) to allow multiple implementations for
+one of the most common MIDI tasks (duh, sequencing). The midisinks could
+implement this interface, as could other soft-sequencer elements like
+playondemand. The sequencer interface needs to be able to support MIDI
+sequencing tasks, but it should support more generic sequencing concepts.
+
+As you might have guessed, getting MIDI support into GStreamer is thus a matter
+of (a) creating a series of elements that handle MIDI data, and (b) creating a
+sort of MIDI library (like Timidity ?) that basically includes #defines for MIDI
+message codes and stuff like that. This stuff should be coded in the gst-plugins
+module, under gst-libs/gst/sequencer (for the interface) and
+gst-libs/gst/audio/midi/ (for the defines and superclasses).
+
+Of course, this is just the basics ... read on for the really gory future stuff.
+:)
+
+[1] http://www.borg.com/~jglatt/tech/midifile/ppqn.htm
+
+Looking ahead
+-------------
+
+- MIDI to PCM
+
+It would be nice to be able to transform MIDI (audio/midi) to audio
+(audio/x-raw-{int|float}), which could be further processed in a GStreamer
+pipeline. In effect this would be using GStreamer as some kind of softsynth.
+
+The first way to do this would be to send MIDI data to softsynths and get audio
+data out. There's a very, very nice way of doing this in ALSA (the sequencer
+API). Timidity can already register itself as a sequencer client, as can
+amSynth, AlsaModularSynth, SpiralSynth, etc... and these latter ones are *much*
+more interesting. This is the proper, IMHO, way of doing things.
+
+But, the other question is getting that data back for use by GStreamer. In that
+sense a librafied Timidity would be useful, I guess... see the thing is that all
+of these sequencer clients probably want to output to the sound card directly,
+although they are configurable. In this, the musician's only hope is Jack. If
+the synth is jacked up, we can get its output back into GStreamer. If not, oh
+well, it's gone ...
+
+- MIDI to dparams
+
+Once we have MIDI streams, we can start doing fun things like writing a
+midi2dparams element which would map midi data to control the dynamic parameters
+of other elements, but lets not get ahead of ourselves.
+
+Which gets back to MIDI. MIDI is a representation of control signals. So all you
+need are elements to convert that representation to control signals. In
+addition, you'd probably want something like SuperCollider's Voicer element --
+see [1] for more information on that.
+
+All of this is pretty specific to a synthesizer system, and rightly so :
+multiple projects use it it could go in some kind of library or what-what but
+otherwise it can stay in individial projects.
+
+[1] http://www.audiosynth.com/schtmldocs/Help/Unit_Generators/Spawners/Voicer.help.html
+
+On using dparams for MIDI
+-------------------------
+
 You might might want to look into using dparams if:
-	- you wanted your control parameters to change at a higher rate thanyour buffer rate 		(think zipper noise and sample-granularity-interpolation)
-	- you wanted a better way to store and represent control data than midifiles
-	- We wrote a linear interpolation time-aware dparam so that we could really demonstrate 	what they're good for.
 
-It seems like GStreamer could benefit greatly from a different subclass of
-GstPad, something like GstControlPad. Pads of this type could contain
-control data like parameters for oscillators/filters, MIDI events, text
-information for subtitles, etc. The defining characteristic of this type of
-data is that it operates at a much lower sample rate than the multimedia
-data that GStreamer currently handles.I think that control data can be sent down existing pads without makingany changes.
+- you wanted your control parameters to change at a higher rate thanyour buffer
+  rate (think zipper noise and sample-granularity-interpolation)
+- you wanted a better way to store and represent control data than midifiles
+- We wrote a linear interpolation time-aware dparam so that we could really
+  demonstrate what they're good for.
 
-GstControlPad instances could also contain a default value like Wingo has
-been pondering, so apps wouldn't need to connect actual data to the pads if
-the default value sufficed. There could also be some sweet integration with
-dparams, it seems like.If you want a default value on a control pad, just make the sourceelement send the value when the state changes.
-Elements that have control pads could also have standard GstPads, and I'd
-imagine there would need to be some scheduler modifications to enable the
-lower processing demands of control pads.
+It was always the intention for dparams to be able to send values to and get
+values from pads. All we need is some simple elements to do the forwarding.
 
-It was always the intention for dparams to be able to send values to and get values from pads. All we need is some simple elements to do the forwarding.
+Possible inefficiency remedy : GstControlPad
+--------------------------------------------
 
-An example - Integrating amSynth (http://amsynthe.sourceforge.net/amSynth/index.html)
--------------------------------------------------------------------------------------
+If it turns out that sending MIDI events spaced out with filler (blank) events
+isn't efficient enough, we'll need to look into implementing something new ; for
+now, though, we'll just try the simple approach and hope our CPUs are fast
+enough. But read on for a little brainstorming.
 
-We would want to be able to write amSynth as a plugin - this
-would require that when the process function is called, we have a midi
-buffer as input, containing how ever many midi events occurred in, say,
-1/100 sec for example, and then we generate an audio buffer of the same
-time duration...)
+It seems like GStreamer could benefit from a different subclass of GstPad,
+something like GstControlPad. Pads of this type could contain control data like
+parameters for oscillators/filters, MIDI events, text information for subtitles,
+etc. The defining characteristic of this type of data is that it operates at a
+much lower sample rate than the multimedia data that GStreamer currently
+handles.I think that control data can be sent down existing pads without making
+any changes.
 
-Maybe this will indicate the kind of problems to be faced. GStreamer has solved 
+GstControlPad instances could also contain a default value like Wingo has been
+pondering, so apps wouldn't need to connect actual data to the pads if the
+default value sufficed. There could also be some sweet integration with dparams,
+it seems like.If you want a default value on a control pad, just make the source
+element send the value when the state changes. Elements that have control pads
+could also have standard GstPads, and I'd imagine there would need to be some
+scheduler modifications to enable the lower processing demands of control pads.
+
+An example : integrating amSynth[1]
+-----------------------------------
+
+We would want to be able to write amSynth as a plugin. This would require that
+when the process function is called, we have a MIDI buffer as input, containing
+how ever many MIDI events occurred in, say, 1/100 sec for example, and then we
+generate an audio buffer of the same time duration...)
+
+Maybe this will indicate the kind of problems to be faced. GStreamer has solved
 this problem for audio/video syncing, so you should probably do it the same way.
-The first task would be to make this pipeline work: 
+The first task would be to make this pipeline work:
 
-filesrc location=foo.mid ! midifileparse ! amSynth ! osssink            
+  filesrc location=foo.mid ! midiparse ! amSynth ! osssink
 
-midifileparse will take midi file data as an input, and producetimestamped MIDI buffers as output. It could have a beats-per-minuteproperty to specify how the midi beat offsets are converted totimestamps.
+midiparse will take MIDI file data as an input, and produce timestamped MIDI
+buffers as output. It could have a beats-per-minute property as mentioned above
+to specify how the MIDI beat offsets are converted to timestamps.
 
-An amSynth element should be a loop element. It would read MIDI buffersuntil it has more than 
-enough to produce audio for the duration of 1audio buffer. It knows it has enough 
-MIDI buffers by looking at thetimestamp.  Because amSynth is setting the 
-timestamps on the audiobuffers going out, osssink knows when to play them.
-Once this is working, a more challenging pipeline might be: 
-alsamidisrc ! midiparse ! amSynth ! alsasink 
+An amSynth element should be a loop element. It would read MIDI buffers until it
+has more than enough to produce audio for the duration of one audio buffer. It
+knows it has enough MIDI buffers by looking at the timestamp. Because amSynth is
+setting the timestamps on the audio buffers going out, a MIDI sink element would
+know when to play them. Once this is working, a more challenging pipeline might
+be :
 
-This would be a real-time pipeline - any MIDI input should instantly betransformed into audio.
-You would have small audio buffers for lowlatency (64 samples seems to be typical).
- 
-This is a problem for amSynth because it can't sit there waiting for more MIDI just in case there is more than one MIDI event per audio buffer. In this case you could either:
+  alsamidisrc ! amSynth ! alsasink
+
+This would be a real-time pipeline : any MIDI input should instantly be
+transformed into audio. You would have small audio buffers for lowlatency (64
+samples seems to be typical).
+
+This is a problem for amSynth because it can't sit there waiting for more MIDI
+just in case there is more than one MIDI event per audio buffer. In this case
+you could either :
+
 - listen to the clock so you know when its time to output the buffer
-- have some kind of real-time mode for amSynth which doesn't wait forMIDI events which may never come
-- have alsamidisrc produce empty timestamped MIDI buffers so thatamSynth knows that is time to spit out some audio.
+- have some kind of real-time mode for amSynth which doesn't wait forMIDI events
+  which may never come
+- have alsamidisrc produce empty timestamped MIDI buffers so that amSynth knows
+  that is time to spit out some audio.
 
+[1] http://amsynthe.sourceforge.net/amSynth/index.html

@@ -1,3 +1,8 @@
+2004-01-15  Leif Johnson <leif@ambient.2y.net>
+
+	* docs/random/uraeus/gstreamer_and_midi.txt: Rather large edits
+	and additions to the MIDI document.
+
 2004-01-15  David Schleef  <ds@schleef.org>
 
 	* gst/gstelement.c: (gst_element_get_compatible_pad_filtered),
