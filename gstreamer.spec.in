@@ -21,7 +21,7 @@ plugins.
 
 %files
 %defattr(-, root, root)
-%doc AUTHORS COPYING README
+%doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS 
 %{_bindir}/gst-complete
 %{_bindir}/gst-compprep
 %{_bindir}/gst-inspect
