@@ -1,5 +1,11 @@
 2004-12-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_change_state):
+	  Don't crash on EMPTY caps (e.g. when the demuxer didn't recognize
+	  the contained stream).
+
+2004-12-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/faad/gstfaad.c: (gst_faad_srcconnect), (gst_faad_chain):
 	  Oops, remove debug.
 
