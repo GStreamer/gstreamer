@@ -279,13 +279,13 @@ extern GstDebugCategory *	GST_CAT_DEFAULT;
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_CAT_LEVEL_LOG(cat,level,object,...) G_STMT_START{			\
   if (gst_debug_is_active ()) {				\
-    gst_debug_log (cat, level, __FILE__, GST_FUNCTION, __LINE__, G_OBJECT (object), __VA_ARGS__); \
+    gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__, (GObject *) (object), __VA_ARGS__); \
   }										\
 }G_STMT_END
 #else /* G_HAVE_GNUC_VARARGS */
 #define GST_CAT_LEVEL_LOG(cat,level,object,args...) G_STMT_START{			\
   if (gst_debug_is_active ()) {				\
-    gst_debug_log (cat, level, __FILE__, GST_FUNCTION, __LINE__, G_OBJECT (object), ##args ); \
+    gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__, (GObject *) (object), ##args ); \
   }										\
 }G_STMT_END
 #endif /* G_HAVE_ISO_VARARGS */
