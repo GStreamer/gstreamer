@@ -57,9 +57,9 @@ audio stream, even when it is compressed.
 
 Another problem is that many media types can be defined in multiple ways. For
 example, MJPEG video can be defined as 'video/jpeg', 'video/mjpeg',
-'image/jpeg', 'video/avi' with a compression of (fourcc) MJPG, etc. None of
-these is really official, since there isn't an official mimetype for encoded
-MJPEG video.
+'image/jpeg', 'video/x-msvideo' with a compression of (fourcc) MJPG, etc.
+None of these is really official, since there isn't an official mimetype
+for encoded MJPEG video.
 
 The main focus of this document is to propose a standardized set of MIME types
 and properties that will be used by the GStreamer plugins.
@@ -86,7 +86,7 @@ Container formats
 -----------------
 
 1 - AVI (Microsoft RIFF/AVI)
-    MIME type: video/avi
+    MIME type: video/x-msvideo
     Properties:
     Parser: avidemux
     Formatter: avimux
@@ -104,7 +104,7 @@ Container formats
     Formatter:
 
 4 - ASF (Microsoft)
-    MIME type: video/x-asf
+    MIME type: video/x-ms-asf
     Properties:
     Parser: asfdemux
     Formatter:

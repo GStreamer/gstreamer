@@ -460,7 +460,7 @@
           <!-- ############ type ############# -->
 
           <row>
-            <entry morerows="0">video/avi</entry>
+            <entry morerows="0">video/x-msvideo</entry>
             <entry morerows="0">
               Video data compressed using the AVI encoding scheme.
             </entry>
