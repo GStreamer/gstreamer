@@ -1,3 +1,9 @@
+2004-04-30  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
+	* docs/random/uraeus/gstreamer_and_midi.txt :
+	  add .kar (midi + karaoke/lyrics 'track') doc to midi doc.
+	  (fixes #132288)
+
 2004-04-30  Sebastien Cote  <sc5@hermes.usherb.ca>
 
 	reviewed by Benjamin Otte  <otte@gnome.org>

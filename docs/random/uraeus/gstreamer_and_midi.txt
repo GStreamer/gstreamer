@@ -311,3 +311,41 @@ you could either :
   that is time to spit out some audio.
 
 [1] http://amsynthe.sourceforge.net/amSynth/index.html
+
+Extended midi files : .kar and karaoke
+-----------------------------------
+
+KAR files are standard MIDI files that also contain a stream with lyrics, for karaoke, 
+synchronised on music. MIDI players play them without any problem, ignoring the
+additional data.
+
+It is the more widespread karaoke file format. (one other beeing .kok files, for mp3)
+
+KAR files are based on standard MIDI files with the following additional events:
+ 
+The KAR text meta events start with an @ followed by a character indicating
+the type of KAR text meta event, then followed by text for that event.  The
+following text meta events occur embedded in regular MIDI text events:
+ 
+FileType:     @KMIDI KARAOKE FILE
+Version:      @V0100
+Information:  @I<text>
+Language:     @LENGL
+Title 1:      @T<title>
+Title 2:      @T<author>
+Title 3:      @T<copyright>
+ 
+The following lyric text indicators are defined.  A \ (backslash) in the
+text is to clear the screen. A / (forwardslash) in the text is a line feed
+(next line).
+
+Some more info on the data format could be found at those locations :
+
+http://www.krazykats-karaoke.co.uk/file_formats.html
+http://www.wotsit.org/download.asp?f=kar
+http://filext.com/detaillist.php?extdetail=KAR
+
+Some Linux players that handle this format :
+ 
+http://lmuse.sourceforge.net/files.php
+http://sourceforge.net/projects/gkaraoke/
