@@ -2,9 +2,6 @@
 
 <SECTION>
 <FILE>cothreads</FILE>
-COTHREAD_STACKSIZE
-COTHREAD_MAXTHREADS
-STACK_SIZE
 CURRENT_STACK_FRAME
 cothread_state
 cothread_context
