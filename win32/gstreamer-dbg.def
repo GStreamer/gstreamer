@@ -1,0 +1,5 @@
+        GST_CAT_DEFAULT
+        _gst_debug_register_funcptr
+        _gst_debug_nameof_funcptr
+        _gst_debug_category_new
+        gst_debug_log_valist

@@ -67,4 +67,14 @@
 # define GST_DISABLE_LOADSAVE_REGISTRY
 #endif
 
+#ifdef WIN32
+#ifdef GSTREAMER_EXPORTS
+#define GSTREAMER_EXPORT __declspec(dllexport)
+#else
+#define GSTREAMER_EXPORT __declspec(dllimport)
+#endif
+#else
+#define GSTREAMER_EXPORT 
+#endif
+
 #endif /* __GST_CONFIG_H__ */

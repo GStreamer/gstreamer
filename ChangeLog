@@ -13,6 +13,7 @@
 
 	* gst/gst.c:
 	* gst/gstbin.*:
+	* gst/config.h.in:
 	* gst/gstelement.*:
 	* gst/gstevent.h:
 	* gst/gstobject.*:

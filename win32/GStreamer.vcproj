@@ -21,8 +21,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="D:\Perso\Programmes\GStreamer\gstreamer\win32;.\;..\;..\libs;..\..\popt\include;..\..\glib\gmodule;..\..\libiconv\include;..\..\libxml2\include\libxml2;..\..\glib;..\..\glib\glib;..\..\glib\build\win32"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;HAVE_CONFIG_H;HAVE_WIN32;GST_DISABLE_GST_DEBUG"
+				AdditionalIncludeDirectories="D:\Perso\Programmes\GStreamer\gstreamer\win32;.\;..\;..\libs;..\..\popt\include;..\..\glib\gmodule;..\..\gettext\include;..\..\libiconv\include;..\..\libxml2\include\libxml2;..\..\glib;..\..\glib\glib;..\..\glib\build\win32"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;HAVE_CONFIG_H;HAVE_WIN32;GSTREAMER_EXPORTS"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -36,13 +36,13 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libpopt.lib glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib"
+				AdditionalDependencies="libpopt.lib glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib"
 				OutputFile="$(OutDir)/libgtreamer-0.8.dll"
 				LinkIncremental="0"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject;..\..\glib\gthread;..\..\glib\gmodule;..\..\popt\lib;..\..\libxml2\lib"
+				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject;..\..\glib\gthread;..\..\glib\gmodule;..\..\popt\lib;..\..\gettext\lib;..\..\libxml2\lib"
 				IgnoreAllDefaultLibraries="FALSE"
-				ModuleDefinitionFile="gstreamer.def"
+				ModuleDefinitionFile="gst.def"
 				DelayLoadDLLs=""
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/GStreamer.pdb"
@@ -54,7 +54,8 @@
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+				CommandLine="del gst.def"/>
 			<Tool
 				Name="VCPreBuildEventTool"
 				CommandLine="copy $(ProjectDir)\gstconfig.h $(ProjectDir)\..\gst\gstconfig.h
@@ -71,6 +72,8 @@ move gstmarshal.c.tmp $(ProjectDir)..\gst\gstmarshal.c
 bison -d -v -p_gst_parse__yy $(ProjectDir)..\gst\parse\grammar.y -o $(ProjectDir)..\gst\parse\grammar.tab.c
 flex -P_gst_parse_yy $(ProjectDir)..\gst\parse\parse.l
 move lex._gst_parse_yy.c $(ProjectDir)..\gst\parse\lex._gst_parse_yy.c
+type gstreamer.def &gt; gst.def
+type gstreamer-dbg.def &gt;&gt; gst.def
 "/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
@@ -95,8 +98,8 @@ move lex._gst_parse_yy.c $(ProjectDir)..\gst\parse\lex._gst_parse_yy.c
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories=".\;..\;..\libs;..\..\popt\include;..\..\glib\gmodule;..\..\libiconv\include;..\..\libxml2\include\libxml2;..\..\glib;..\..\glib\glib;..\..\glib\win32"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;HAVE_CONFIG_H;HAVE_WIN32;GST_DISABLE_GST_DEBUG"
+				AdditionalIncludeDirectories=".\;..\;..\libs;..\..\popt\include;..\..\glib\gmodule;..\..\gettext\include;..\..\libiconv\include;..\..\libxml2\include\libxml2;..\..\glib;..\..\glib\glib;..\..\glib\win32"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;HAVE_CONFIG_H;HAVE_WIN32;GST_DISABLE_GST_DEBUG;GSTREAMER_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="config.h"
@@ -108,13 +111,13 @@ move lex._gst_parse_yy.c $(ProjectDir)..\gst\parse\lex._gst_parse_yy.c
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libpopt.lib glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib"
+				AdditionalDependencies="libpopt.lib glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib"
 				OutputFile="$(OutDir)/libgtreamer-0.8.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject;..\..\glib\gthread;..\..\glib\gmodule;..\..\popt\lib;..\..\libxml2\lib"
-				IgnoreAllDefaultLibraries="TRUE"
-				ModuleDefinitionFile="gstreamer.def"
+				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject;..\..\glib\gthread;..\..\glib\gmodule;..\..\popt\lib;..\..\gettext\lib;..\..\libxml2\lib"
+				IgnoreAllDefaultLibraries="FALSE"
+				ModuleDefinitionFile="gst.def"
 				GenerateDebugInformation="TRUE"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -124,7 +127,8 @@ move lex._gst_parse_yy.c $(ProjectDir)..\gst\parse\lex._gst_parse_yy.c
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+				CommandLine="del gst.def"/>
 			<Tool
 				Name="VCPreBuildEventTool"
 				CommandLine="copy $(ProjectDir)\gstconfig.h $(ProjectDir)\..\gst\gstconfig.h
@@ -141,6 +145,7 @@ move gstmarshal.c.tmp $(ProjectDir)..\gst\gstmarshal.c
 bison -d -v -p_gst_parse__yy $(ProjectDir)..\gst\parse\grammar.y -o $(ProjectDir)..\gst\parse\grammar.tab.c
 flex -P_gst_parse_yy $(ProjectDir)..\gst\parse\parse.l
 move lex._gst_parse_yy.c $(ProjectDir)..\gst\parse\lex._gst_parse_yy.c
+type gstreamer.def &gt; gst.def
 "/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
@@ -254,6 +259,9 @@ move lex._gst_parse_yy.c $(ProjectDir)..\gst\parse\lex._gst_parse_yy.c
 			</File>
 			<File
 				RelativePath="..\gst\gstqueue.c">
+			</File>
+			<File
+				RelativePath=".\gstreamer.def">
 			</File>
 			<File
 				RelativePath="..\gst\gstregistry.c">

@@ -79,11 +79,20 @@ clean:
 	make -f Makefile.inspect  clean
 	make -f Makefile.launch   clean
 	make -f Makefile.register clean
-	$(RM) $(OBJ) $(HEADERS) gstreamer-0.8.lib libgstreamer-0.8.dll gstreamer.map gstreamer-0.8.exp lex._gst_parse_yy.c
+	$(RM) $(OBJ) $(HEADERS) gstreamer-0.8.lib libgstreamer-0.8.dll gstreamer.map gstreamer-0.8.exp lex._gst_parse_yy.c gst.def
 
-libgstreamer-0.8.dll: $(HEADERS) $(OBJ)
-	link $(LDFLAGS) /OUT:$@ $(OBJ) /DEF:gstreamer.def glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib libpopt.lib wsock32.lib
+libgstreamer-0.8.dll: gst.def $(HEADERS) $(OBJ)
+	link $(LDFLAGS) /OUT:$@ $(OBJ) /DEF:gst.def glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib libpopt.lib wsock32.lib
 
+
+ifeq (yes,$(DEBUG))
+gst.def:
+	type gstreamer.def > gst.def
+	type gstreamer-dbg.def >> gst.def
+else
+gst.def:
+	type gstreamer.def > gst.def
+endif
 
 $(SRC_DIR)\gstversion.h: gstversion.h
 	copy $< $@
