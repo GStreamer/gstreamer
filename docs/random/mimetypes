@@ -252,7 +252,7 @@ framerate = 0 - MAXFLOAT (FLOAT)
 8 - Digital Video (DV)
     MIME type: video/x-dv
     Properties: systemstream = FALSE (BOOLEAN)
-    Known fourccs: DVSD, dvsd
+    Known fourccs: DVSD/dvsd (SDTV), dvhd (HDTV), dvsl (SDTV LongPlay)
     Encoder: ffenc_dvvideo
     Decoder: dvdec, ffdec_dvvideo
 

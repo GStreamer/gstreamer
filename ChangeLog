@@ -1,3 +1,9 @@
+2005-01-08  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
+
+	* docs/random/mimetypes:
+	  add 2 more 4CC code for DV (HDTV and SDTV-LongPlay profiles)
+	  do not add them to riff-lib as they are not common
+
 2005-01-07  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstprobe.c: (gst_probe_dispatcher_dispatch):
