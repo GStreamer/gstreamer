@@ -1264,11 +1264,11 @@ gst_alsa_xrun_recovery (GstAlsa * this)
         this->period_count *= 2;
       }
     }
-  }
-  if (!(gst_alsa_stop_audio (this) && gst_alsa_start_audio (this))) {
-    GST_ELEMENT_ERROR (this, RESOURCE, FAILED, (NULL),
-        ("Error restarting audio after xrun"));
-    return FALSE;
+    if (!(gst_alsa_stop_audio (this) && gst_alsa_start_audio (this))) {
+      GST_ELEMENT_ERROR (this, RESOURCE, FAILED, (NULL),
+          ("Error restarting audio after xrun"));
+      return FALSE;
+    }
   }
 
   return TRUE;
