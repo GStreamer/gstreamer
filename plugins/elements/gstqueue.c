@@ -657,7 +657,6 @@ restart:
             GstScheduler *sched;
 
             GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "interrupted");
-            queue->interrupt = FALSE;
             GST_QUEUE_MUTEX_UNLOCK;
             sched = gst_pad_get_scheduler (queue->sinkpad);
             if (!sched || gst_scheduler_interrupt (sched, GST_ELEMENT (queue))) {
@@ -784,7 +783,6 @@ restart:
         GstScheduler *sched;
 
         GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "interrupted");
-        queue->interrupt = FALSE;
         GST_QUEUE_MUTEX_UNLOCK;
         sched = gst_pad_get_scheduler (queue->srcpad);
         if (!sched || gst_scheduler_interrupt (sched, GST_ELEMENT (queue)))

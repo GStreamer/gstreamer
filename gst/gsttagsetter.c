@@ -132,7 +132,7 @@ gst_tag_setter_merge (GstTagSetter * setter, const GstTagList * list,
  * @...: more tag / value pairs to set
  *
  * Adds the given tag / value pairs on the setter using the given merge mode. 
- * The list must be terminated with %NULL.
+ * The list must be terminated with GST_TAG_INVALID.
  */
 void
 gst_tag_setter_add (GstTagSetter * setter, GstTagMergeMode mode,
@@ -156,7 +156,7 @@ gst_tag_setter_add (GstTagSetter * setter, GstTagMergeMode mode,
  * @...: more tag / GValue pairs to set
  *
  * Adds the given tag / GValue pairs on the setter using the given merge mode. 
- * The list must be terminated with %NULL.
+ * The list must be terminated with GST_TAG_INVALID.
  */
 void
 gst_tag_setter_add_values (GstTagSetter * setter, GstTagMergeMode mode,
@@ -180,7 +180,7 @@ gst_tag_setter_add_values (GstTagSetter * setter, GstTagMergeMode mode,
  * @var_args: tag / value pairs to set
  *
  * Adds the given tag / value pairs on the setter using the given merge mode. 
- * The list must be terminated with %NULL.
+ * The list must be terminated with GST_TAG_INVALID.
  */
 void
 gst_tag_setter_add_valist (GstTagSetter * setter, GstTagMergeMode mode,
@@ -206,7 +206,7 @@ gst_tag_setter_add_valist (GstTagSetter * setter, GstTagMergeMode mode,
  * @var_args: tag / GValue pairs to set
  *
  * Adds the given tag / GValue pairs on the setter using the given merge mode. 
- * The list must be terminated with %NULL.
+ * The list must be terminated with GST_TAG_INVALID.
  */
 void
 gst_tag_setter_add_valist_values (GstTagSetter * setter, GstTagMergeMode mode,

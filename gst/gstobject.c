@@ -72,7 +72,7 @@ static guint gst_signal_object_signals[SO_LAST_SIGNAL] = { 0 };
 #endif
 
 static void gst_object_class_init (GstObjectClass * klass);
-static void gst_object_init (GTypeInstance * instance, gpointer g_class);
+static void gst_object_init (GstObject * object);
 
 #ifndef GST_DISABLE_TRACE
 static GObject *gst_object_constructor (GType type,
@@ -88,9 +88,6 @@ static void gst_object_dispatch_properties_changed (GObject * object,
 
 static void gst_object_dispose (GObject * object);
 static void gst_object_finalize (GObject * object);
-
-static void gst_object_set_name_default (GstObject * object,
-    const gchar * type_name);
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
 static void gst_object_real_restore_thyself (GstObject * object,
@@ -113,7 +110,7 @@ gst_object_get_type (void)
       NULL,
       sizeof (GstObject),
       0,
-      gst_object_init,
+      (GInstanceInitFunc) gst_object_init,
       NULL
     };
 
@@ -180,14 +177,11 @@ gst_object_class_init (GstObjectClass * klass)
 }
 
 static void
-gst_object_init (GTypeInstance * instance, gpointer g_class)
+gst_object_init (GstObject * object)
 {
-  GstObject *object = GST_OBJECT (instance);
-
   object->lock = g_mutex_new ();
   object->parent = NULL;
   object->name = NULL;
-  gst_object_set_name_default (object, G_OBJECT_CLASS_NAME (g_class));
 
   object->flags = 0;
   GST_FLAG_SET (object, GST_FLOATING);
@@ -439,10 +433,13 @@ gst_object_default_deep_notify (GObject * object, GstObject * orig,
 }
 
 static void
-gst_object_set_name_default (GstObject * object, const gchar * type_name)
+gst_object_set_name_default (GstObject * object)
 {
   gint count;
   gchar *name, *tmp;
+  const gchar *type_name;
+
+  type_name = G_OBJECT_TYPE_NAME (object);
 
   /* to ensure guaranteed uniqueness across threads, only one thread
    * may ever assign a name */
@@ -490,7 +487,7 @@ gst_object_set_name (GstObject * object, const gchar * name)
   if (name != NULL)
     object->name = g_strdup (name);
   else
-    gst_object_set_name_default (object, G_OBJECT_TYPE_NAME (object));
+    gst_object_set_name_default (object);
 }
 
 /**

@@ -419,7 +419,7 @@ gst_thread_change_state (GstElement * element)
   GstThread *thread;
   GstElementStateReturn ret;
   gint transition;
-  gboolean is_self, reverting = FALSE;
+  gboolean is_self;
 
   g_return_val_if_fail (GST_IS_THREAD (element), GST_STATE_FAILURE);
 
@@ -432,9 +432,7 @@ gst_thread_change_state (GstElement * element)
   /* boolean to check if we called the state change in the same thread as
    * the iterate thread */
   is_self = (thread == gst_thread_get_current ());
-  transition = GST_STATE_TRANSITION (element);
 
-revert:
   GST_LOG_OBJECT (thread, "grabbing lock");
   g_mutex_lock (thread->lock);
 
@@ -445,22 +443,20 @@ revert:
   /* do not try to grab the lock if this method is called from the
    * same thread as the iterate thread, the lock might be held and we 
    * might deadlock */
-  if (!is_self && !reverting)
+  if (!is_self)
     g_mutex_lock (thread->iterate_lock);
 
-  switch (transition) {
-    case GST_STATE_NULL_TO_READY:{
-      GError *err = NULL;
+  transition = GST_STATE_TRANSITION (element);
 
+  switch (transition) {
+    case GST_STATE_NULL_TO_READY:
       /* create the thread */
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_REAPING);
       GST_LOG_OBJECT (element, "grabbing lock");
       thread->thread_id = g_thread_create_full (gst_thread_main_loop,
-          thread, STACK_SIZE, FALSE, TRUE, thread->priority, &err);
+          thread, STACK_SIZE, FALSE, TRUE, thread->priority, NULL);
       if (!thread->thread_id) {
-        GST_ERROR_OBJECT (element, "g_thread_create_full failed: %s",
-            err->message);
-        g_error_free (err);
+        GST_ERROR_OBJECT (element, "g_thread_create_full failed");
         goto error_out;
       }
       GST_LOG_OBJECT (element, "GThread created");
@@ -468,7 +464,6 @@ revert:
       /* wait for it to 'spin up' */
       g_cond_wait (thread->cond, thread->lock);
       break;
-    }
     case GST_STATE_READY_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
@@ -534,15 +529,8 @@ revert:
   GST_LOG_OBJECT (thread, "unlocking lock");
   g_mutex_unlock (thread->lock);
 
-  if (reverting) {
-    goto error_out_unlocked;
-  } else if (GST_ELEMENT_CLASS (parent_class)->change_state) {
+  if (GST_ELEMENT_CLASS (parent_class)->change_state) {
     ret = GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT (thread));
-    if (ret == GST_STATE_FAILURE) {
-      reverting = TRUE;
-      transition = ((transition & 0xff) << 8) | (transition >> 8);
-      goto revert;
-    }
   } else {
     ret = GST_STATE_SUCCESS;
   }
@@ -570,7 +558,6 @@ error_out:
 
   g_mutex_unlock (thread->lock);
 
-error_out_unlocked:
   if (!is_self)
     g_mutex_unlock (thread->iterate_lock);
 

@@ -324,8 +324,7 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
 
   g_type_class_unref (oclass);
 
-  if (name)
-    gst_object_set_name (GST_OBJECT (element), name);
+  gst_object_set_name (GST_OBJECT (element), name);
 
   return element;
 }
