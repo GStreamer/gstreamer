@@ -45,8 +45,6 @@ int main(int argc,char *argv[])
     sleep(1);
   }
 
-  gst_main();
-
   exit(0);
 }
 
