@@ -473,9 +473,10 @@ GST_CHECK_CONFIGPROG(GNOME_VFS, gnome-config vfs)
 ])
 
 dnl *** gsm ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBGSM, true)
-GST_CHECK_FEATURE(LIBGSM, [GSM library], gsmenc gsmdec, [
-GST_CHECK_LIBHEADER(LIBGSM, gsm, gsm_create, , gsm/gsm.h, LIBGSM_LIBS="-lgsm")
+translit(dnm, m, l) AM_CONDITIONAL(USE_GSM, true)
+GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
+  GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm/gsm.h, GSM_LIBS="-lgsm")
+  AC_SUBST(GSM_LIBS)
 ])
 
 dnl *** Hermes ***
@@ -1076,6 +1077,8 @@ ext/cdparanoia/Makefile
 ext/dvdread/Makefile
 ext/esd/Makefile
 ext/flac/Makefile
+ext/gsm/Makefile
+ext/hermes/Makefile
 ext/lame/Makefile
 ext/mad/Makefile
 ext/mpeg2dec/Makefile

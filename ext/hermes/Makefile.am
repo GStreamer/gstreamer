@@ -8,10 +8,10 @@ else
 ARCHSRCS =
 endif
 
-libcolorspace_la_SOURCES = gstcolorspace.c yuv2yuv.c yuv2rgb.c $(ARCHSRCS)
-libcolorspace_la_CFLAGS = $(GST_CFLAGS)
-if HAVE_LIBHERMES
-libcolorspace_la_LIBADD = $(HERMES_LIBS)
+libgstcolorspace_la_SOURCES = gstcolorspace.c yuv2yuv.c yuv2rgb.c $(ARCHSRCS)
+libgstcolorspace_la_CFLAGS = $(GST_CFLAGS)
+if USE_HERMES
+libgstcolorspace_la_LIBADD = $(HERMES_LIBS)
 endif
 
 noinst_HEADERS = gstcolorspace.h yuv2rgb.h
