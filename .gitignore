@@ -6,6 +6,7 @@ config.log
 config.status
 config.guess
 config.sub
+config.rpath
 configure
 gst-plugins.spec
 gstreamer-libs-uninstalled*.pc
@@ -24,3 +25,4 @@ compile
 install-sh
 depcomp
 autoregen.sh
+ABOUT-NLS
