@@ -3504,6 +3504,22 @@
   )
 )
 
+(define-method add_probe
+  (of-object "GstPad")
+  (c-name "gst_pad_add_probe")
+  (parameters
+    '("GstProbe" "probe")
+  )
+)
+
+(define-method remove_probe
+  (of-object "GstPad")
+  (c-name "gst_pad_remove_probe")
+  (parameters
+    '("GstProbe" "probe")
+  )
+)
+
 (define-function pad_load_and_link
   (c-name "gst_pad_load_and_link")
   (return-type "none")
