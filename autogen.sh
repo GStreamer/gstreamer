@@ -192,7 +192,7 @@ automake --add-missing || {
 rm -f config.cache
 
 # The new configure options for busy application developers (Hadess)
-#./configure --enable-maintainer-mode --enable-debug --enable-debug-verbose 
+#./configure --enable-maintainer-mode --enable-debug --enable-DEBUG "$@" || {
 
 ./configure --enable-maintainer-mode --enable-plugin-builddir --enable-debug --enable-DEBUG "$@" || {
 	echo
