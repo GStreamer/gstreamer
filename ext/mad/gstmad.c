@@ -294,7 +294,7 @@ gst_mad_class_init (GstMadClass * klass)
           FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_IGNORE_CRC,
       g_param_spec_boolean ("ignore_crc", "Ignore CRC", "Ignore CRC errors",
-          FALSE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE));
 
   /* register tags */
 #define GST_TAG_LAYER    "layer"
@@ -357,7 +357,7 @@ gst_mad_init (GstMad * mad)
   mad->tags = NULL;
 
   mad->half = FALSE;
-  mad->ignore_crc = FALSE;
+  mad->ignore_crc = TRUE;
   mad->check_for_xing = TRUE;
   GST_FLAG_SET (mad, GST_ELEMENT_EVENT_AWARE);
 }
