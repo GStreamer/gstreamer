@@ -8,7 +8,7 @@ Name: 		gstreamer-plugins
 Version: 	@VERSION@
 Release: 	@GST_PLUGINS_RELEASE@
 
-Copyright: 	LGPL
+License: 	LGPL
 Group: 		Libraries/Multimedia
 Source: 	gst-plugins-%{version}.tar.gz
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
@@ -379,6 +379,23 @@ Element for text-to-speech using the festival server.
 @USE_JPEG_TRUE@
 @USE_JPEG_TRUE@%post -n gstreamer-jpeg
 @USE_JPEG_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
+
+### LADSPA ###
+@USE_LADSPA_TRUE@%package -n gstreamer-ladspa
+@USE_LADSPA_TRUE@Summary: GStreamer wrapper for LADSPA plugins
+@USE_LADSPA_TRUE@Group: Libraries/Multimedia
+@USE_LADSPA_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_LADSPA_TRUE@BuildRequires: ladspa-devel
+@USE_LADSPA_TRUE@
+@USE_LADSPA_TRUE@%files -n gstreamer-ladspa
+@USE_LADSPA_TRUE@%defattr(-, root, root)
+@USE_LADSPA_TRUE@%{_libdir}/gst/libgstladspa*
+@USE_LADSPA_TRUE@
+@USE_LADSPA_TRUE@%description -n gstreamer-ladspa
+@USE_LADSPA_TRUE@Plugin which wraps LADSPA plugins for use by GStreamer applications.
+@USE_LADSPA_TRUE@
+@USE_LADSPA_TRUE@%post -n gstreamer-ladspa
+@USE_LADSPA_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### LAME ###
 @USE_LAME_TRUE@%package -n gstreamer-lame
@@ -824,21 +841,6 @@ Video CD parsing and playback
 %{_libdir}/gst/libgstvcd*
 %{_libdir}/gst/libgstcdxa*
 
-%package -n gstreamer-ladspa
-Summary: GStreamer wrapper for LADSPA plugins
-Group: Libraries/Multimedia
-Requires: gstreamer-plugins >= %{version}
-
-%files -n gstreamer-ladspa
-%defattr(-, root, root)
-%{_libdir}/gst/libgstladspa*
-
-%description -n gstreamer-ladspa
-Plugin which wraps LADSPA plugins for use by GStreamer applications.
-
-%post -n gstreamer-ladspa
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
 %package -n gstreamer-udp
 Summary: GStreamer plugins for UDP tranport
 Group: Libraries/Multimedia
@@ -985,6 +987,9 @@ Plugin for playback of wav, au and mod audio files as well as mp3 type
 @USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
 
 %changelog
+* Tue Jun 04 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- added USE_LIBADSPA_TRUE bits to ladspa package
+
 * Mon Jun 03 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - Added libfame package
 
