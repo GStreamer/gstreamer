@@ -30,7 +30,7 @@ Scheduling:
 
 
 
-Example:
+Example #1:
 
  Pipeline: sinesrc ! osssink
 
@@ -104,6 +104,51 @@ Example:
    at time X".  This information can be passed upstream, and be used
    in filters -- filter.sinkpad says "I need a buffer at time X-N",
    where N is the latency of the filter.
+
+
+Example #2:
+
+ Pipeline: osssrc ! osssink
+ 
+ - The application creates the pipeline and sets it to "playing".
+
+ - The clock is created and set to "paused".
+
+ - negotiation happens roughly as in example #1, although osssrc
+   additionally opens and prepares the device.
+
+ - osssrc.iterate() sets the "ready" flag (because it needs no more
+   preparation to stream) and waits for "time 0", since it presumably
+   can't wait for the file descriptor (audio input hasn't been
+   enabled on the device yet.)
+
+ - osssink.iterate() decides to watch for the event "sink pad has
+   available buffer".
+
+ - The scheduler realizes the deadlock and (somehow) tells osssink
+   that it can't pre-roll.  (This needs more work)  In other words,
+   osssink can't be the clock master, but only a clock slave.
+
+ - osssink.iterates() agrees to start at time SOME_LATENCY, sets the
+   "ready" flag, and waits for a buffer on its sink pad.
+
+ - The pipeline is now completely ready, so the clock may be
+   started.  A signal is fired to let the application know this
+   (and possibly change the default behavior).
+
+ - The clock starting causes two things to happen: osssrc starts
+   the recording of data, and osssink starts the outputting of data.
+   The data being output is a chunk of silence equal to SOME_LATENCY.
+
+ - osssrc.iterate() is called for "time 0", does nothing, and waits
+   on the file descriptor (via the scheduler, of course).  All waiting
+   on file descriptors should have an associated timeout.
+
+ - osssrc.iterate() is called when the file descriptor is ready,
+   reads a chunk of data, and pushes the buffer.  It then waits for
+   its file descriptor to be ready.
+
+ - osssink.iterate() is called
 
 
 
