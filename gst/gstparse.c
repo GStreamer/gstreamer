@@ -100,15 +100,16 @@ gst_parse_unique_name(gchar *type,gst_parse_priv *priv)
 static gint
 gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *priv)
 {
-  gint i = 0;
+  gint i = 0, j = 0;
   gchar *arg;
   GstElement *element = NULL, *previous = NULL, *prevelement = NULL;
   gchar closingchar = '\0';
   gint len;
   gchar *ptr;
-  gchar *sinkpadname = NULL, *srcpadname = NULL;
+  gchar *sinkpadname = NULL, *srcpadname = NULL, *tempname;
   GstPad *temppad;
   GSList *sinkpads = NULL, *srcpads = NULL;
+  gint numsrcpads = 0, numsinkpads = 0;
   GList *pads;
   gint elementcount = 0;
   gint retval = 0;
@@ -166,37 +167,59 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
 
       g_slist_free(srcpads);
       srcpads = NULL;
+      numsrcpads=0;
+      tempname=NULL;
 
-      // if the srcpadname doesn't have any commas in it, find an actual pad
-      if (!srcpadname || !strchr(srcpadname,',')) {
-        if (srcpadname != NULL) {
-          if ((temppad = gst_element_get_pad(previous,srcpadname))){
+      // find src pads
+      if (srcpadname != NULL) {
+        while (1){
+          // split name at commas
+          if ((ptr = strchr(srcpadname,','))){
+            tempname = g_strndup(srcpadname,(ptr-srcpadname));
+            srcpadname = &ptr[1];
+          } else {
+            tempname = srcpadname;
+          }
+          
+          // look for pad with that name
+          if ((temppad = gst_element_get_pad(previous,tempname))){
             srcpads = g_slist_append(srcpads,temppad);
+            numsrcpads++;
           }
-          else if ((temppad = gst_element_request_pad_by_name(previous,srcpadname))) {
+          
+          // try to create a pad using that padtemplate name
+          else if ((temppad = gst_element_request_pad_by_name(previous,tempname))) {
             srcpads = g_slist_append(srcpads,temppad);
+            numsrcpads++;
           }
-          if (!srcpads) {
-            GST_DEBUG(0,"NO SUCH pad %s in element %s\n",srcpadname,GST_ELEMENT_NAME(previous));
+          if (!temppad) {
+            GST_DEBUG(0,"NO SUCH pad %s in element %s\n",tempname,GST_ELEMENT_NAME(previous));
+          } else {
+            GST_DEBUG(0,"have src pad %s:%s\n",GST_DEBUG_PAD_NAME(temppad));
           }
+          
+          // if there is no more commas in srcpadname then we're done
+          if (tempname == srcpadname) break;
+          g_free(tempname);
         }
-        else {
-          // check through the list to find the first sink pad
-          GST_DEBUG(0,"CHECKING through element %s for pad named %s\n",GST_ELEMENT_NAME(previous),srcpadname);
-          pads = gst_element_get_pad_list(previous);
-          while (pads) {
-            temppad = GST_PARSE_LISTPAD(pads);
-            GST_DEBUG(0,"have pad %s:%s\n",GST_DEBUG_PAD_NAME(temppad));
-            if (GST_IS_GHOST_PAD(temppad)) GST_DEBUG(0,"it's a ghost pad\n");
-            if (gst_pad_get_direction (temppad) == GST_PAD_SRC){
-              srcpads = g_slist_append(srcpads,temppad);
-              break;
-            }
-            pads = g_list_next (pads);
+      }
+      else {
+        // check through the list to find the first sink pad
+        GST_DEBUG(0,"CHECKING through element %s for pad named %s\n",GST_ELEMENT_NAME(previous),srcpadname);
+        pads = gst_element_get_pad_list(previous);
+        while (pads) {
+          temppad = GST_PARSE_LISTPAD(pads);
+          GST_DEBUG(0,"have pad %s:%s\n",GST_DEBUG_PAD_NAME(temppad));
+          if (GST_IS_GHOST_PAD(temppad)) GST_DEBUG(0,"it's a ghost pad\n");
+          if (gst_pad_get_direction (temppad) == GST_PAD_SRC){
+            srcpads = g_slist_append(srcpads,temppad);
+            numsrcpads++;
+            break;
           }
-          if (!srcpads) GST_DEBUG(0,"error, can't find a src pad!!!\n");
-          else GST_DEBUG(0,"have src pad %s:%s\n",GST_DEBUG_PAD_NAME(GST_PARSE_LISTPAD(srcpads)));
+          pads = g_list_next (pads);
         }
+        if (!srcpads) GST_DEBUG(0,"error, can't find a src pad!!!\n");
+        else GST_DEBUG(0,"have src pad %s:%s\n",GST_DEBUG_PAD_NAME(GST_PARSE_LISTPAD(srcpads)));
       }
 
     // argument with = in it
@@ -255,19 +278,44 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
       gst_bin_add (GST_BIN (parent), element);
       elementcount++;
 
-      if (srcpads != NULL || srcpadname != NULL) {
-        if (srcpads)
-          GST_DEBUG(0, "need to connect to srcpad %s:%s\n",GST_DEBUG_PAD_NAME(GST_PARSE_LISTPAD(srcpads)));
+      if (srcpads != NULL) {
 
         g_slist_free(sinkpads);
         sinkpads = NULL;
+        numsinkpads=0;
+        tempname=NULL;
 
-        if (sinkpadname != NULL){
-          if ((temppad = gst_element_get_pad(element,sinkpadname))){
-            sinkpads = g_slist_append(sinkpads,temppad);
-          }          
-          else if ((temppad = gst_element_request_pad_by_name(element,sinkpadname))) {
-            sinkpads = g_slist_append(sinkpads,temppad);
+        // find sink pads
+        if (sinkpadname != NULL) {
+          while (1){
+            // split name at commas
+            if ((ptr = strchr(sinkpadname,','))){
+              tempname = g_strndup(sinkpadname,(ptr-sinkpadname));
+              sinkpadname = &ptr[1];
+            } else {
+              tempname = sinkpadname;
+            }
+            
+            // look for pad with that name
+            if ((temppad = gst_element_get_pad(element,tempname))){
+              sinkpads = g_slist_append(sinkpads,temppad);
+              numsinkpads++;
+            }
+            
+            // try to create a pad using that padtemplate name
+            else if ((temppad = gst_element_request_pad_by_name(element,tempname))) {
+              sinkpads = g_slist_append(sinkpads,temppad);
+              numsinkpads++;
+            }
+            if (!temppad) {
+              GST_DEBUG(0,"NO SUCH pad %s in element %s\n",tempname,GST_ELEMENT_NAME(element));
+            } else {
+              GST_DEBUG(0,"have sink pad %s:%s\n",GST_DEBUG_PAD_NAME(temppad));
+            }
+            
+            // if there is no more commas in sinkpadname then we're done
+            if (tempname == sinkpadname) break;
+            g_free(tempname);
           }
         }
         else {
@@ -278,6 +326,7 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
             pads = g_list_next (pads);
             if (gst_pad_get_direction (temppad) == GST_PAD_SINK){
               sinkpads = g_slist_append(sinkpads,temppad);
+              numsinkpads++;
               break;
             }
           }
@@ -292,16 +341,23 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
           connect->srcpadname = srcpadname;
           connect->target = GST_PARSE_LISTPAD(sinkpads);
 
-          GST_DEBUG(0,"SETTING UP dynamic connection %s:%s and %s:%s\n",gst_element_get_name (previous),
-            srcpadname,GST_DEBUG_PAD_NAME(GST_PARSE_LISTPAD(sinkpads)));
+          GST_DEBUG(0,"SETTING UP dynamic connection %s:%s and %s:%s\n",
+            gst_element_get_name (previous),
+            srcpadname,
+            GST_DEBUG_PAD_NAME(GST_PARSE_LISTPAD(sinkpads)));
 
-         gtk_signal_connect (GTK_OBJECT (previous), "new_pad", dynamic_connect, connect);
-         gtk_signal_connect (GTK_OBJECT (previous), "new_ghost_pad", dynamic_connect, connect);
+          gtk_signal_connect (GTK_OBJECT (previous), "new_pad", dynamic_connect, connect);
+          gtk_signal_connect (GTK_OBJECT (previous), "new_ghost_pad", dynamic_connect, connect);
         }
         else {
-          GST_DEBUG(0,"CONNECTING %s:%s and %s:%s\n",GST_DEBUG_PAD_NAME(GST_PARSE_LISTPAD(srcpads)),
-            GST_DEBUG_PAD_NAME(GST_PARSE_LISTPAD(sinkpads)));
-          gst_pad_connect(GST_PARSE_LISTPAD(srcpads),GST_PARSE_LISTPAD(sinkpads));
+          for (j=0; (j<numsrcpads) && (j<numsinkpads); j++){
+            GST_DEBUG(0,"CONNECTING %s:%s and %s:%s\n",
+              GST_DEBUG_PAD_NAME(GST_PARSE_LISTPAD(g_slist_nth(srcpads,j))),
+              GST_DEBUG_PAD_NAME(GST_PARSE_LISTPAD(g_slist_nth(sinkpads,j))));
+            gst_pad_connect(
+              GST_PARSE_LISTPAD(g_slist_nth(srcpads,j)),
+              GST_PARSE_LISTPAD(g_slist_nth(sinkpads,j)));
+          }
         }
                 
         g_slist_free(srcpads);
