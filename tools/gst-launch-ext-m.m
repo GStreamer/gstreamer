@@ -28,7 +28,7 @@ sub read_config
 {
   my $command = shift;
 
-  my $config_file = `echo -n ~`."/.gst";
+  my $config_file = $ENV{HOME}."/.gst";
   if (-e $config_file)
   {
     open CONFIG, $config_file;
@@ -57,7 +57,7 @@ sub read_config
   }
   if (!defined $cfg{AUDIOSINK})  { $cfg{AUDIOSINK} = "osssink"; }
   if (!defined $cfg{VIDEOSINK})  { $cfg{VIDEOSINK} = "ffmpegcolorspace ! xvimagesink"; }
-  if (!defined $cfg{CVS_PATH})   { $cfg{CVS_PATH} =  `echo -n ~`."/gst/cvs"; }
+  if (!defined $cfg{CVS_PATH})   { $cfg{CVS_PATH} =  $ENV{HOME}."/gst/cvs"; }
 
   if ($command =~ /(.+)\/gst-launch-ext-@GST_MAJORMINOR@$/)
   { $cfg{COMMAND_PATH} = "$1"; }
