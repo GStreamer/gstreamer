@@ -611,6 +611,7 @@ index_seek (GstMad *mad, GstPad *pad, GstEvent *event)
 
   while (gst_formats_contains (peer_formats, *try_formats)) {
     gint64 value;
+    GstEvent *seek_event;
     
     if (gst_index_entry_assoc_map (entry, *try_formats, &value)) {
       /* lookup succeeded, create the seek */
@@ -622,10 +623,9 @@ index_seek (GstMad *mad, GstPad *pad, GstEvent *event)
 		     gst_format_get_details (*try_formats)->nick,
 		     value);
 
-      GstEvent *seek_event =
-	gst_event_new_seek (*try_formats |
-			    GST_SEEK_METHOD_SET |
-			    GST_SEEK_FLAG_FLUSH, value);
+      seek_event = gst_event_new_seek (*try_formats |
+				       GST_SEEK_METHOD_SET |
+				       GST_SEEK_FLAG_FLUSH, value);
 
       if (gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), seek_event)) {
 	/* seek worked, we're done, loop will exit */
