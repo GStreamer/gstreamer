@@ -497,6 +497,15 @@ GST_CHECK_FEATURE(DVDNAV, [dvdnav library], dvdnavsrc, [
   AS_SCRUB_INCLUDE(DVDNAV_CFLAGS)
 ])
 
+dnl *** MAS ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MAS, true)
+GST_CHECK_FEATURE(MAS, [mas library], massink, [
+  translit(dnm, m, l) AC_SUBST(MAS_LIBS)
+  translit(dnm, m, l) AC_SUBST(MAS_CFLAGS)
+  GST_CHECK_CONFIGPROG(MAS, mas-config)
+  AS_SCRUB_INCLUDE(MAS_CFLAGS)
+])
+
 dnl **** ESound ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
 GST_CHECK_FEATURE(ESD, [esound plug-ins], esdsink esdmon, [
@@ -1097,6 +1106,7 @@ ext/lcs/Makefile
 ext/libfame/Makefile
 ext/libpng/Makefile
 ext/mad/Makefile
+ext/mas/Makefile
 ext/mikmod/Makefile
 ext/mjpegtools/Makefile
 ext/mpeg2dec/Makefile
