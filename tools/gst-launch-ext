@@ -111,6 +111,7 @@ read_config ($0);
   "mod", "modplug !  $cfg{AUDIOSINK}",
   "mp2", "mad ! $cfg{AUDIOSINK}",
   "mp3", "mad ! $cfg{AUDIOSINK}",
+  "mpeg", "mpegdemux video_%02d! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_%02d! { queue ! mad ! $cfg{AUDIOSINK} }",
   "mpg", "mpegdemux video_%02d! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_%02d! { queue ! mad ! $cfg{AUDIOSINK} }",
   "ogg", "vorbisfile ! $cfg{AUDIOSINK}",
   "sid", "siddec ! $cfg{AUDIOSINK}",
