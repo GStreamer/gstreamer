@@ -55,7 +55,7 @@ enum
   ARG_0,
   ARG_DEVICE,
   ARG_DEVICE_NAME,
-  ARG_FLAGS,
+  ARG_FLAGS
 };
 
 
