@@ -75,13 +75,23 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
   
 %files
 %defattr(-, root, root)
-%{prefix}/bin/*
+%doc AUTHORS COPYING README
+%{prefix}/bin/gsteditor
+%{prefix}/bin/gstmediaplay
+%{prefix}/bin/gstreamer-complete
+%{prefix}/bin/gstreamer-compprep
+%{prefix}/bin/gstreamer-inspect
+%{prefix}/bin/gstreamer-launch
+%{prefix}/bin/gstreamer-register
 %{prefix}/lib/lib*.so.*
 %{prefix}/lib/gst/*
 %{prefix}/share/*
+%{prefix}/man/man1/*
 
 %files devel
+%defattr(-, root, root)
+%{prefix}/bin/gstreamer-config
 %{prefix}/include/*
-%{prefix}/lib/lib*.a
+%{prefix}/lib/lib*.la
 %{prefix}/lib/lib*.so
 %{prefix}/lib/pkgconfig/*
