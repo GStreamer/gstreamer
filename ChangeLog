@@ -1,3 +1,10 @@
+2004-06-24  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* libs/gst/bytestream/filepad.c: (gst_file_pad_available),
+	(gst_file_pad_get_length):
+	* libs/gst/bytestream/filepad.h:
+	  add 2 new functions
+
 2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali.org>
 
 	* docs/gst/gstreamer-sections.txt:

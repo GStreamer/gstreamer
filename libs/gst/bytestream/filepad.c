@@ -412,7 +412,7 @@ gst_file_pad_error (GstFilePad * pad)
 
 /**
  * gst_file_pad_eof:
- * @pad: ia #GstFilePad
+ * @pad: a #GstFilePad
  *
  * Checks if the EOS has been reached. This function is modeled after the 
  * function feof() from libc.
@@ -432,4 +432,51 @@ gst_file_pad_eof (GstFilePad * pad)
     return 0;
 
   return 1;
+}
+
+/**
+ * gst_file_pad_available:
+ * @pad: a #GstFilePad
+ *
+ * Use this function to figure out the maximum number of bytes that can be read
+ * via gst_file_pad_read() without that function returning -EAGAIN.
+ * 
+ * Returns: the number of bytes available in the file pad.
+ */
+guint
+gst_file_pad_available (GstFilePad * pad)
+{
+  g_return_val_if_fail (GST_IS_FILE_PAD (pad), 0);
+
+  return gst_adapter_available (pad->adapter);
+}
+
+/**
+ * gst_file_pad_get_length:
+ * @pad: a #GstFilePad
+ *
+ * Gets the length in bytes of the @pad.
+ *
+ * Returns: length in bytes or -1 if not available
+ */
+gint64
+gst_file_pad_get_length (GstFilePad * pad)
+{
+  GstFormat format = GST_FORMAT_BYTES;
+  gint64 length;
+  GstPad *peer;
+
+  g_return_val_if_fail (GST_IS_FILE_PAD (pad), -1);
+
+  /* we query the length every time to avoid issues with changing lengths */
+  peer = GST_PAD_PEER (pad);
+  if (!peer)
+    return -1;
+  if (gst_pad_query (peer, GST_QUERY_TOTAL, &format, &length))
+    return length;
+  format = GST_FORMAT_DEFAULT;
+  if (gst_pad_query (peer, GST_QUERY_TOTAL, &format, &length))
+    return length;
+
+  return -1;
 }

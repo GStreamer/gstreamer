@@ -74,6 +74,8 @@ void			gst_file_pad_set_event_function	(GstFilePad *file_pad,
 void			gst_file_pad_set_iterate_function (GstFilePad *file_pad,
 							 GstFilePadIterateFunction iterate);
 
+guint			gst_file_pad_available		(GstFilePad *pad);
+gint64			gst_file_pad_get_length		(GstFilePad *pad);
 /* this is a file like interface */
 /* FIXME: is gint64 the correct type? (it must be signed to get error return vals */
 gint64			gst_file_pad_read		(GstFilePad *pad, 
