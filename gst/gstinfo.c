@@ -486,8 +486,7 @@ gst_debug_remove_with_compare_func (GCompareFunc func, gpointer data)
       continue;
     }
     g_free (found->data);
-    new = g_slist_remove_link (new, found);
-    g_slist_free_1 (found);
+    new = g_slist_delete_link (new, found);
     removals++;
   }
   /* FIXME: We leak the old list here. See _add_log_function for why. */
