@@ -120,7 +120,7 @@ videoscale_get_structure (struct videoscale_format_struct *format)
 	NULL);
   }else{
     structure = gst_structure_new ("video/x-raw-yuv",
-	"fourcc", GST_TYPE_FOURCC, format->fourcc, NULL);
+	"format", GST_TYPE_FOURCC, format->fourcc, NULL);
   }
 
   gst_structure_set(structure,
