@@ -97,7 +97,7 @@ void			gst_alloc_trace_print		(const GstAllocTrace *trace);
 void			gst_alloc_trace_set_flags	(GstAllocTrace *trace, GstAllocTraceFlags flags);
 
 
-#ifdef GST_WITH_ALLOC_TRACE
+#ifndef GST_DISABLE_ALLOC_TRACE
 #define	gst_alloc_trace_register(name) _gst_alloc_trace_register (name);
 #define	gst_alloc_trace_new(trace, mem) 		\
 G_STMT_START {						\
@@ -118,7 +118,7 @@ G_STMT_START {						\
 } G_STMT_END
 
 #else
-#define	gst_alloc_trace_register(name) NULL
+#define	gst_alloc_trace_register(name) (NULL)
 #define	gst_alloc_trace_new(trace, mem)
 #define	gst_alloc_trace_free(trace, mem)
 #endif
@@ -152,14 +152,14 @@ extern gint _gst_trace_on;
 #define		gst_alloc_trace_new(trace, mem) 
 #define		gst_alloc_trace_free(trace, mem)
 
-#define		gst_alloc_trace_available()	FALSE
-#define		gst_alloc_trace_list()		NULL
-#define		_gst_alloc_trace_register(name)	NULL
+#define		gst_alloc_trace_available()	(FALSE)
+#define		gst_alloc_trace_list()		(NULL)
+#define		_gst_alloc_trace_register(name)	(NULL)
                                                                                                                      
 #define		gst_alloc_trace_print_all()	
 #define		gst_alloc_trace_set_flags_all(flags)
                                                                                                                     
-#define		gst_alloc_trace_get(name)	NULL
+#define		gst_alloc_trace_get(name)	(NULL)
 #define		gst_alloc_trace_print(trace)
 #define		gst_alloc_trace_set_flags(trace,flags)
 

@@ -24,6 +24,9 @@
 
 #include "gstobject.h"
 #include "gstlog.h"
+#ifndef GST_DISABLE_TRACE
+#include "gsttrace.h"
+#endif
 
 /* Object signals and args */
 enum {
@@ -64,6 +67,10 @@ static guint gst_signal_object_signals[SO_LAST_SIGNAL] = { 0 };
 
 static void		gst_object_class_init		(GstObjectClass *klass);
 static void		gst_object_init			(GstObject *object);
+#ifndef GST_DISABLE_TRACE
+static GObject *	gst_object_constructor 		(GType type, guint n_construct_properties, 
+							 GObjectConstructParam *construct_params);
+#endif
 
 static void 		gst_object_set_property 	(GObject * object, guint prop_id, const GValue * value,
 		                                    	 GParamSpec * pspec);
@@ -156,6 +163,9 @@ gst_object_class_init (GstObjectClass *klass)
 
   gobject_class->dispose = gst_object_dispose;
   gobject_class->finalize = gst_object_finalize;
+#ifndef GST_DISABLE_TRACE
+  gobject_class->constructor = gst_object_constructor;
+#endif
 }
 
 static void
@@ -169,6 +179,25 @@ gst_object_init (GstObject *object)
   GST_FLAG_SET (object, GST_FLOATING);
 }
 
+#ifndef GST_DISABLE_TRACE
+static GObject *
+gst_object_constructor (GType type, guint n_construct_properties, GObjectConstructParam *construct_params)
+{
+  const gchar *name;
+  GstAllocTrace *trace;
+  GObject *obj = G_OBJECT_CLASS (parent_class)->constructor (type, n_construct_properties, construct_params);  
+
+  name = g_type_name (type);
+
+  trace = gst_alloc_trace_get (name);
+  if (!trace) {
+    trace = gst_alloc_trace_register (name);
+  }
+  gst_alloc_trace_new (trace, obj);
+  
+  return obj;
+}
+#endif
 /**
  * gst_object_ref:
  * @object: GstObject to reference
@@ -280,6 +309,18 @@ gst_object_finalize (GObject *object)
   g_free (gstobject->name);
 
   g_mutex_free (gstobject->lock);
+
+#ifndef GST_DISABLE_TRACE
+  {
+    const gchar *name;
+    GstAllocTrace *trace;
+  
+    name = g_type_name (G_OBJECT_TYPE (object));
+    trace = gst_alloc_trace_get (name);
+    g_assert (trace);
+    gst_alloc_trace_free (trace, object);
+  }
+#endif
 
   parent_class->finalize (object);
 }

@@ -171,10 +171,10 @@ static GList *_gst_alloc_tracers = NULL;
 gboolean
 gst_alloc_trace_available (void)
 {
-#ifdef GST_WITH_ALLOC_TRACE
-  return TRUE;
-#else
+#ifdef GST_DISABLE_ALLOC_TRACE
   return FALSE;
+#else
+  return TRUE;
 #endif
 }
 
@@ -227,7 +227,7 @@ void
 gst_alloc_trace_print_all (void)
 {
   GList *walk = _gst_alloc_tracers;
-
+  
   while (walk) {
     GstAllocTrace *trace = (GstAllocTrace *) walk->data;
 
@@ -338,5 +338,3 @@ gst_alloc_trace_set_flags (GstAllocTrace *trace, GstAllocTraceFlags flags)
 
   trace->flags = flags;
 }
-
-
