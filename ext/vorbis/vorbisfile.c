@@ -243,6 +243,7 @@ gst_vorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
 	  GST_DEBUG (0, "eos");
           vorbisfile->eos = TRUE;
           if (avail == 0) {
+            gst_event_unref (event);
             return 0;
 	  }
 	  break;
@@ -252,6 +253,7 @@ gst_vorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
 	default:
           break;
       }
+      gst_event_unref (event);
       if (avail > 0) 
         got_bytes = gst_bytestream_peek_bytes (vorbisfile->bs, &data, avail);
       else
@@ -419,6 +421,7 @@ gst_vorbisfile_loop (GstElement *element)
     GST_DEBUG (0, "eos");
     //ov_clear (&vorbisfile->vf);
     vorbisfile->restart = TRUE;
+    gst_buffer_unref (outbuf);
     gst_pad_push (vorbisfile->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
     gst_element_set_eos (element);
     return;
@@ -463,7 +466,12 @@ gst_vorbisfile_loop (GstElement *element)
       vorbisfile->total_bytes += GST_BUFFER_SIZE (outbuf);
     }
   
-    gst_pad_push (vorbisfile->srcpad, outbuf);
+    if (GST_PAD_IS_CONNECTED (vorbisfile->srcpad)) {
+      gst_pad_push (vorbisfile->srcpad, outbuf);
+    }
+    else {
+      gst_buffer_unref (outbuf);
+    }
   }
 }
 
@@ -556,8 +564,10 @@ gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      if (!vorbisfile->vf.seekable)
+      if (!vorbisfile->vf.seekable) {
+	gst_event_unref (event);
         return FALSE;
+      }
 
       switch (GST_EVENT_SEEK_FORMAT (event)) {
 	case GST_FORMAT_TIME:
@@ -581,6 +591,8 @@ gst_vorbisfile_src_event (GstPad *pad, GstEvent *event)
       res = FALSE;
       break;
   }
+  
+  gst_event_unref (event);
   return res;
 }
 
