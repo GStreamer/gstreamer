@@ -23,6 +23,7 @@
 #include <gst/video/videosink.h>
 
 #ifdef HAVE_XSHM
+#include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #endif /* HAVE_XSHM */
