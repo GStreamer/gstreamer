@@ -1139,6 +1139,12 @@ gst_mad_check_caps_reset (GstMad * mad)
 #else
   rate = mad->frame.header.samplerate;
 #endif
+  if (mad->stream.options & MAD_OPTION_HALFSAMPLERATE) {
+    GST_INFO_OBJECT (mad,
+        "MAD_OPTION_HALFSAMPLERATE is set, adapting rate from %u to %u", rate,
+        rate >> 1);
+    rate >>= 1;
+  }
 
   /* rate and channels are not supposed to change in a continuous stream,
    * so check this first before doing anything */
@@ -1167,9 +1173,6 @@ gst_mad_check_caps_reset (GstMad * mad)
 
   if (mad->channels != nchannels || mad->rate != rate) {
     GstCaps *caps;
-
-    if (mad->stream.options & MAD_OPTION_HALFSAMPLERATE)
-      rate >>= 1;
 
     /* we set the caps even when the pad is not connected so they
      * can be gotten for streaminfo */
@@ -1277,7 +1280,6 @@ gst_mad_chain (GstPad * pad, GstData * _data)
       guint nsamples;
       guint64 time_offset;
       guint64 time_duration;
-      unsigned char const *before_sync, *after_sync;
       gboolean resync = TRUE;
 
       mad->in_error = FALSE;
@@ -1286,12 +1288,6 @@ gst_mad_chain (GstPad * pad, GstData * _data)
 
       /* added separate header decoding to catch errors earlier, also fixes
        * some weird decoding errors... */
-      GST_LOG ("decoding the header now");
-      if (mad_header_decode (&mad->frame.header, &mad->stream) == -1) {
-        GST_DEBUG ("mad_frame_decode had an error: %s",
-            mad_stream_errorstr (&mad->stream));
-      }
-
       GST_LOG ("decoding one frame now");
 
       if (mad_frame_decode (&mad->frame, &mad->stream) == -1) {
@@ -1365,21 +1361,28 @@ gst_mad_chain (GstPad * pad, GstData * _data)
         //Should not sync here if mad_skip has been used before, the offset
         //is "pending" inside mad and will be applied on next call to decode.
         if (resync) {
-          mad_frame_mute (&mad->frame);
-          mad_synth_mute (&mad->synth);
-          before_sync = mad->stream.ptr.byte;
-          if (mad_stream_sync (&mad->stream) != 0)
-            GST_WARNING ("mad_stream_sync failed");
-          after_sync = mad->stream.ptr.byte;
-          /* a succesful resync should make us drop bytes as consumed, so
-             calculate from the byte pointers before and after resync */
-          consumed = after_sync - before_sync;
-          GST_DEBUG ("resynchronization consumes %d bytes", consumed);
-          GST_DEBUG ("synced to data: 0x%0x 0x%0x", *mad->stream.ptr.byte,
-              *(mad->stream.ptr.byte + 1));
+          unsigned char const *before_sync, *after_sync;
 
-          mad_stream_sync (&mad->stream);
-          /* recoverable errors pass */
+          before_sync = mad->stream.ptr.byte;
+          if (mad_stream_sync (&mad->stream) != 0) {
+            consumed = MAD_BUFFER_GUARD < mad->tempsize ?
+                mad->tempsize - MAD_BUFFER_GUARD : 0;
+            GST_DEBUG_OBJECT (mad,
+                "mad_stream_sync failed, skipping all %u bytes we have",
+                consumed);
+          } else {
+            after_sync = mad->stream.ptr.byte;
+            /* a succesful resync should make us drop bytes as consumed, so
+               calculate from the byte pointers before and after resync */
+            consumed = after_sync - before_sync;
+            GST_DEBUG_OBJECT (mad, "resynchronization consumes %d bytes",
+                consumed);
+            GST_DEBUG_OBJECT (mad, "synced to data: 0x%0x 0x%0x",
+                *mad->stream.ptr.byte, *(mad->stream.ptr.byte + 1));
+
+            /* recoverable errors pass */
+          }
+          resync = FALSE;
         }
 
         goto next;
@@ -1506,11 +1509,14 @@ gst_mad_chain (GstPad * pad, GstData * _data)
       if (consumed == 0)
         consumed = mad->stream.next_frame - mad_input_buffer;
 
+      if (mad->stream.skiplen > consumed)
+        consumed = mad->stream.skiplen;
       GST_LOG ("mad consumed %d bytes", consumed);
       /* move out pointer to where mad want the next data */
       mad_input_buffer += consumed;
       mad->tempsize -= consumed;
       mad->bytes_consumed += consumed;
+      mad->stream.skiplen = 0;
     }
     /* we only get here from breaks, tempsize never actually drops below 0 */
     memmove (mad->tempbuffer, mad_input_buffer, mad->tempsize);
