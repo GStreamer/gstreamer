@@ -19,6 +19,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include "gstjack.h"
 
 
@@ -31,17 +32,21 @@ static GstElementStateReturn gst_jack_bin_change_state(GstElement *element);
 
 /* jack callbacks */
 static int process (jack_nframes_t nframes, void *arg);
-static int buffer_size (jack_nframes_t nframes, void *arg);
 static int sample_rate (jack_nframes_t nframes, void *arg);
 static void shutdown (void *arg);
 
+static void sighup_handler (int sig);
+static GstJackBin *_jackbin = NULL;
+static gboolean watchdog_please_set_the_jackbin_to_ready = FALSE;
+
+/* fixme: we need a watchdog thread to see if we have received a SIGHUP, and if
+ * so set the state of the bin to READY. */
 
 GType
 gst_jack_bin_get_type (void) 
 {
     static GType jack_bin_type = 0;
-
-    if (!jack_bin_type) {
+if (!jack_bin_type) {
         static const GTypeInfo jack_bin_info = {
             sizeof(GstJackBinClass),
             NULL,
@@ -83,11 +88,6 @@ gst_jack_bin_init(GstJackBin *this)
     
     /* make a new scheduler and associate it with the bin */
     gst_scheduler_factory_make (NULL, GST_ELEMENT (this));
-
-    this->cond = g_cond_new ();
-    this->lock = g_mutex_new ();
-    g_mutex_lock (this->lock);
-    this->sched_setup = FALSE;
 }
 
 static GstElementStateReturn
@@ -102,27 +102,36 @@ gst_jack_bin_change_state (GstElement *element)
     
     switch (GST_STATE_PENDING (element)) {
     case GST_STATE_NULL:
-        g_message ("jackbin: NULL state");
+        JACK_DEBUG ("jackbin: NULL state");
         if (this->client) {
-            g_message ("jack: closing client");
+            JACK_DEBUG ("jackbin: closing client");
             jack_client_close (this->client);
             this->client = NULL;
         }
         
+        if (_jackbin)
+            signal (SIGHUP, SIG_DFL);
+        _jackbin = NULL;
+
         if (GST_ELEMENT_CLASS (parent_class)->change_state)
             return GST_ELEMENT_CLASS (parent_class)->change_state (element);
         break;
         
     case GST_STATE_READY:
-        g_message ("jackbin: READY");
+        JACK_DEBUG ("jackbin: READY");
+
+        _jackbin = this;
+        signal (SIGHUP, sighup_handler);
+
         if (!this->client) {
           if (!(this->client = jack_client_new ("gst-jack"))) {
             g_warning ("jack server not running?");
             return GST_STATE_FAILURE;
           }
                 
+          gst_scheduler_setup (GST_ELEMENT_SCHED (this));
+
           jack_set_process_callback (this->client, process, this);
-          jack_set_buffer_size_callback (this->client, buffer_size, this);
           jack_set_sample_rate_callback (this->client, sample_rate, this);
           jack_on_shutdown (this->client, shutdown, this);
         }
@@ -130,20 +139,20 @@ gst_jack_bin_change_state (GstElement *element)
         if (GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_OPEN)) {
             l = this->src_pads;
             while (l) {
-                g_message ("jack: unregistering pad %s:%s", GST_JACK_PAD (l)->name, GST_JACK_PAD (l)->peer_name);
+                JACK_DEBUG ("jackbin: unregistering pad %s:%s", GST_JACK_PAD (l)->name, GST_JACK_PAD (l)->peer_name);
                 jack_port_unregister (this->client, GST_JACK_PAD (l)->port);
                 l = g_list_next (l);
             }
             l = this->sink_pads;
             while (l) {
-                g_message ("jack: unregistering pad %s:%s", GST_JACK_PAD (l)->name, GST_JACK_PAD (l)->peer_name);
+                JACK_DEBUG ("jackbin: unregistering pad %s:%s", GST_JACK_PAD (l)->name, GST_JACK_PAD (l)->peer_name);
                 jack_port_unregister (this->client, GST_JACK_PAD (l)->port);
                 l = g_list_next (l);
             }
             GST_FLAG_UNSET (GST_OBJECT (this), GST_JACK_OPEN);
 
             if (GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_ACTIVE)) {
-                g_message ("jack: deactivating client");
+                JACK_DEBUG ("jackbin: deactivating client");
                 jack_deactivate (this->client);
                 GST_FLAG_UNSET (GST_OBJECT (this), GST_JACK_ACTIVE);
             }
@@ -154,39 +163,37 @@ gst_jack_bin_change_state (GstElement *element)
         break;
         
     case GST_STATE_PAUSED:
-        g_message ("jackbin: PAUSED");
+        JACK_DEBUG ("jackbin: PAUSED");
         
         if (!GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_OPEN)) {
             l = this->src_pads;
             while (l) {
                 pad = GST_JACK_PAD (l);
-                g_message ("jack: registering input port %s (peer %s)", pad->name, pad->peer_name);
+                JACK_DEBUG ("jackbin: registering input port %s (peer %s)", pad->name, pad->peer_name);
                 pad->port = jack_port_register (this->client, pad->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput|JackPortIsTerminal, 0);
                 l = g_list_next (l);
             }
             l = this->sink_pads;
             while (l) {
                 pad = GST_JACK_PAD (l);
-                g_message ("jack: registering output port %s (peer %s)", pad->name, pad->peer_name);
+                JACK_DEBUG ("jackbin: registering output port %s (peer %s)", pad->name, pad->peer_name);
                 pad->port = jack_port_register (this->client, pad->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput|JackPortIsTerminal, 0);
                 l = g_list_next (l);
             }
 
             /* must activate before connecting */
             if (!GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_ACTIVE)) {
-                g_message ("jack: activating client");
+                JACK_DEBUG ("jackbin: activating client");
                 jack_activate (this->client);
                 GST_FLAG_SET (GST_OBJECT (this), GST_JACK_ACTIVE);
             }
 
-            g_cond_wait (this->cond, this->lock);
-
             l = this->src_pads;
             while (l) {
                 pad = GST_JACK_PAD (l);
-                g_message ("connecting jack port %s to gst jack port %s", pad->peer_name, jack_port_name (pad->port));
+                JACK_DEBUG ("connecting jack port %s to gst jack port %s", pad->peer_name, jack_port_name (pad->port));
                 if (jack_connect (this->client, pad->peer_name, jack_port_name (pad->port))) {
-                    g_warning ("jack: could not connect %s and %s", pad->peer_name, jack_port_name (pad->port));
+                    g_warning ("jackbin: could not connect %s and %s", pad->peer_name, jack_port_name (pad->port));
                     return GST_STATE_FAILURE;
                 }
                 l = g_list_next (l);
@@ -194,29 +201,34 @@ gst_jack_bin_change_state (GstElement *element)
             l = this->sink_pads;
             while (l) {
                 pad = GST_JACK_PAD (l);
-                g_message ("connecting gst jack port %s to jack port %s", jack_port_name (pad->port), pad->peer_name);
+                JACK_DEBUG ("connecting gst jack port %s to jack port %s", jack_port_name (pad->port), pad->peer_name);
                 if (jack_connect (this->client, jack_port_name (pad->port), pad->peer_name)) {
-                    g_warning ("jack: could not connect %s and %s", pad->peer_name, jack_port_name (pad->port));
+                    g_warning ("jackbin: could not connect %s and %s", pad->peer_name, jack_port_name (pad->port));
                     return GST_STATE_FAILURE;
                 }
                 l = g_list_next (l);
             }
 
-            g_message ("jackbin: setting OPEN flag");
+            JACK_DEBUG ("jackbin: setting OPEN flag");
             GST_FLAG_SET (GST_OBJECT (this), GST_JACK_OPEN);
+
+            if (GST_ELEMENT_CLASS (parent_class)->change_state)
+                return GST_ELEMENT_CLASS (parent_class)->change_state (element);
         } else {
-            g_cond_wait (this->cond, this->lock);
+            if (GST_ELEMENT_CLASS (parent_class)->change_state)
+                return GST_ELEMENT_CLASS (parent_class)->change_state (element);
         }
 
         break;
     case GST_STATE_PLAYING:
-        g_message ("jack: PLAYING");
+        JACK_DEBUG ("jackbin: PLAYING");
 
-        g_cond_wait (this->cond, this->lock);
+        if (GST_ELEMENT_CLASS (parent_class)->change_state)
+            return GST_ELEMENT_CLASS (parent_class)->change_state (element);
         break;
     }
     
-    g_message ("jack: state change finished");
+    JACK_DEBUG ("jackbin: state change finished");
     
     return GST_STATE_SUCCESS;
 }
@@ -234,37 +246,13 @@ process (jack_nframes_t nframes, void *arg)
     
     g_assert (bin);
     
-    g_message ("jack: process()");
-
-    if (GST_STATE_PENDING (bin) != GST_STATE_VOID_PENDING) {
-        g_message ("jackbin: doing state change from %s to %s",
-                   gst_element_state_get_name (GST_STATE (bin)), 
-                   gst_element_state_get_name (GST_STATE_PENDING (bin)));
-
-        /* FIXME: this breaks ultra-low latency... */
-        g_mutex_lock (bin->lock);
-            
-        switch (GST_STATE_TRANSITION (bin)) {
-        case GST_STATE_READY_TO_PAUSED:
-            if (!bin->sched_setup) {
-                gst_scheduler_setup (GST_ELEMENT_SCHED (bin));
-                bin->sched_setup = TRUE;
-            }
-            break;
-        }
-        
-        /* do the chaining up from within the jack thread, so that child
-           elements are initialized from within the proper thread */
-        if (GST_ELEMENT_CLASS (parent_class)->change_state)
-            GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT_CAST (bin));
-        
-        g_cond_signal (bin->cond);
-        g_mutex_unlock (bin->lock);
-    }
+    JACK_DEBUG ("jackbin: process()");
 
     if (GST_STATE (bin) != GST_STATE_PLAYING) {
-        g_message ("jackbin: bin is not PLAYING yet, returning");
+        JACK_DEBUG ("jackbin: bin is not PLAYING yet, returning");
         return 0;
+    } else {
+        JACK_DEBUG ("jackbin: we are PLAYING, let's process()");
     }
 
     l = bin->src_pads;
@@ -283,6 +271,7 @@ process (jack_nframes_t nframes, void *arg)
     
     bin->nframes = nframes;
     
+    JACK_DEBUG ("jackbin: iterating to process %ld frames of audio...", nframes);
     if (!gst_bin_iterate (GST_BIN_CAST (bin))) {
         g_warning ("bin failed to iterate");
         return -1;
@@ -294,17 +283,10 @@ process (jack_nframes_t nframes, void *arg)
 }
 
 static int
-buffer_size (jack_nframes_t nframes, void *arg)
-{
-    printf ("the maximum buffer size is now %lu\n", nframes);
-    return 0;
-}
-
-static int
 sample_rate (jack_nframes_t nframes, void *arg)
 {
     GstJackBin *bin = (GstJackBin*) arg;
-    printf ("the sample rate is now %lu/sec\n", nframes);
+    JACK_DEBUG ("the sample rate is now %lu/sec\n", nframes);
     bin->rate = nframes;
     return 0;
 }
@@ -317,3 +299,8 @@ shutdown (void *arg)
 /*    gst_element_set_state (GST_ELEMENT (client->manager), GST_STATE_READY); */
 }
 
+static void sighup_handler (int sig)
+{
+    g_message ("got sighup, setting state to READY");
+    watchdog_please_set_the_jackbin_to_ready = TRUE;
+}

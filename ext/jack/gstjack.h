@@ -24,6 +24,8 @@
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
 
+//#define JACK_DEBUG(str, a...) g_message (str, ##a)
+#define JACK_DEBUG(str, a...)
 
 #define GST_JACK(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_JACK, GstJack)
 #define GST_JACK_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_JACK, GstJackClass)
@@ -110,12 +112,6 @@ struct _GstJackBin {
 
     guint rate;
     jack_nframes_t nframes;
-
-    /* the scheduler needs to be setup from within the jack client thread; this
-       variable is to keep track of whether or not we have been set up yet */
-    gboolean sched_setup;
-    GCond *cond;
-    GMutex *lock;
 };
 
 struct _GstJackBinClass {

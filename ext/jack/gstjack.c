@@ -263,9 +263,9 @@ gst_jack_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
         newname = g_strdup (name);
     } else {
         if (this->direction == GST_PAD_SINK)
-            newname = g_strdup ("alsa_pcm:out_1");
+            newname = g_strdup ("alsa_pcm:playback_1");
         else
-            newname = g_strdup ("alsa_pcm:in_1");
+            newname = g_strdup ("alsa_pcm:capture_1");
     }
     
     pad = g_new0(GstJackPad, 1);
@@ -337,12 +337,12 @@ gst_jack_change_state (GstElement *element)
     
     switch (GST_STATE_PENDING (element)) {
     case GST_STATE_NULL:
-        g_message ("jack client %s: NULL", GST_OBJECT_NAME (GST_OBJECT (this)));
+        JACK_DEBUG ("%s: NULL", GST_OBJECT_NAME (GST_OBJECT (this)));
 
         break;
         
     case GST_STATE_READY:
-        g_message ("jack client %s: READY", GST_OBJECT_NAME (GST_OBJECT (this)));
+        JACK_DEBUG ("%s: READY", GST_OBJECT_NAME (GST_OBJECT (this)));
 
         if (!this->bin) {
             if (!(this->bin = (GstJackBin*)gst_element_get_managing_bin (element))
@@ -358,7 +358,7 @@ gst_jack_change_state (GstElement *element)
             pads = (this->direction == GST_PAD_SRC) ? &this->bin->src_pads : &this->bin->sink_pads;
             while (l) {
                 pad = GST_JACK_PAD (l);
-                g_message ("jack: appending pad %s:%s to list", pad->name, pad->peer_name);
+                JACK_DEBUG ("%s: appending pad %s:%s to list", GST_OBJECT_NAME (this), pad->name, pad->peer_name);
                 *pads = g_list_append (*pads, pad);
                 l = g_list_next (l);
             }
@@ -366,7 +366,7 @@ gst_jack_change_state (GstElement *element)
         break;
         
     case GST_STATE_PAUSED:
-        g_message ("jack client %s: PAUSED", GST_OBJECT_NAME (GST_OBJECT (this)));
+        JACK_DEBUG ("%s: PAUSED", GST_OBJECT_NAME (GST_OBJECT (this)));
 
         if (GST_STATE (element) == GST_STATE_READY) {
             /* we're in READY->PAUSED */
@@ -383,11 +383,11 @@ gst_jack_change_state (GstElement *element)
         }
         break;
     case GST_STATE_PLAYING:
-        g_message ("jack client %s: PLAYING", GST_OBJECT_NAME (GST_OBJECT (this)));
+        JACK_DEBUG ("%s: PLAYING", GST_OBJECT_NAME (GST_OBJECT (this)));
         break;
     }
     
-    g_message ("jack: state change finished");
+    JACK_DEBUG ("%s: state change finished", GST_OBJECT_NAME (this));
     
     if (GST_ELEMENT_CLASS (parent_class)->change_state)
         return GST_ELEMENT_CLASS (parent_class)->change_state (element);
@@ -455,7 +455,7 @@ gst_jack_loop (GstElement *element)
                              * bytes, but hey. */
                             gst_element_set_eos (element);
                             gst_event_unref (event);
-                            gst_element_yield (element); /* shouldn't return */
+//                            gst_element_yield (element); /* shouldn't return */
                             return;
                         }
                         goto read;
@@ -481,7 +481,8 @@ gst_jack_loop (GstElement *element)
             pads = g_list_next (pads);
         }
         
-	gst_element_yield (element);
+        return;
+//	gst_element_yield (element);
     } while (TRUE);
 }
 
