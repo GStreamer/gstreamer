@@ -65,6 +65,7 @@ struct _GstOssSink {
   GstClock 	*clock;
   gboolean	 resync;
   gboolean	 sync;
+  guint64	 handled;
 
   /* device */
   gchar 	*device;

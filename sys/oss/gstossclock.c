@@ -92,34 +92,48 @@ gst_oss_clock_new (gchar *name, GstOssClockGetTimeFunc func, gpointer user_data)
   return oss_clock;
 }
 
+void
+gst_oss_clock_set_active (GstClock *clock, gboolean active)
+{
+  GstOssClock *oss_clock = GST_OSS_CLOCK (clock);
+  GTimeVal timeval;
+  GstClockTime time;
+  GstClockTime osstime;
+
+  g_get_current_time (&timeval);
+  time = GST_TIMEVAL_TO_TIME (timeval);
+  osstime = oss_clock->func (clock, oss_clock->user_data);
+
+  if (active) {
+    oss_clock->adjust = time - osstime;
+  }
+  else {
+    oss_clock->adjust = osstime - time;
+  }
+
+  oss_clock->active = active;
+}
+
 static GstClockTime
 gst_oss_clock_get_internal_time (GstClock *clock)
 {
-  GTimeVal timeval;
-  GstClockTime time1;
-  GstClockTime time2;
-  GstClockTimeDiff diff1, diff2;
   GstOssClock *oss_clock = GST_OSS_CLOCK (clock);
   
-  g_get_current_time (&timeval);
-  time1 = oss_clock->func (clock, oss_clock->user_data);
-  time2 = GST_TIMEVAL_TO_TIME (timeval);
-  if (!oss_clock->prev1) {
-    oss_clock->prev1 = time1;
-  }
-  diff1 = time1 - oss_clock->prev1;
-  diff2 = time2 - oss_clock->prev2;
+  if (oss_clock->active) {
+    GstClockTime osstime;
+    
+    osstime = oss_clock->func (clock, oss_clock->user_data) + oss_clock->adjust;
 
-  oss_clock->prev1 = time1;
-  oss_clock->prev2 = time2;
-
-  if (diff1) {
-    oss_clock->adjust -= diff2 - diff1;
+    return osstime;
   }
-  /*
-  g_print ("diff %lld %lld %lld %lld %lld %lld\n", 
-   	     diff1, diff2, time1, time2, diff2 - diff1, oss_clock->adjust);
-	     */
-  return time2 + oss_clock->adjust;
+  else {
+    GstClockTime time;
+    GTimeVal timeval;
+    
+    g_get_current_time (&timeval);
+    time = GST_TIMEVAL_TO_TIME (timeval);
+
+    return time;
+  }
 }
 

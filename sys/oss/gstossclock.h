@@ -56,6 +56,8 @@ struct _GstOssClock {
 
   GstClockTime prev1, prev2;
   GstClockTimeDiff adjust;
+
+  gboolean active;
 };
 
 struct _GstOssClockClass {
@@ -65,6 +67,7 @@ struct _GstOssClockClass {
 GType                   gst_oss_clock_get_type 		(void);
 GstOssClock*		gst_oss_clock_new		(gchar *name, GstOssClockGetTimeFunc func,
 							 gpointer user_data);
+void			gst_oss_clock_set_active 	(GstClock *clock, gboolean active);
 
 #ifdef __cplusplus
 }
