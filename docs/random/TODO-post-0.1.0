@@ -5,3 +5,7 @@
 - Convert to GObject
 
 - Get editor working better
+
+- make autoplugging algorithms pluggable
+
+- make scheduling algorithms pluggable
