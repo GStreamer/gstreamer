@@ -1,5 +1,9 @@
 2005-01-05  David Schleef  <ds@schleef.org>
 
+	* gst/gstvalue.h: Mark _gst_reserved[] as private
+
+2005-01-05  David Schleef  <ds@schleef.org>
+
 	* gst/gstvalue.c: Fix doc build problem.
 
 2005-01-05  David Schleef  <ds@schleef.org>
