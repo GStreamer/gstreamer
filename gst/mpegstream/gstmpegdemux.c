@@ -235,7 +235,6 @@ gst_mpeg_demux_send_data (GstMPEGParse *mpeg_parse, GstData *data, GstClockTime 
 
     switch (GST_EVENT_TYPE (event)) {
       default:
-        //g_print ("demux: default event %d\n", GST_EVENT_TYPE (event));
         gst_pad_event_default (mpeg_parse->sinkpad, event);
 	break;
     }
@@ -726,6 +725,10 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       outpad = &mpeg_demux->subtitle_pad[ps_id_code - 0x20];
       headerlen += 1;
       datalen -= 1;
+    }
+    else {
+      GST_DEBUG (0,"mpeg_demux::parse_packet: 0x%02X: unkonwn id %x",
+            id, ps_id_code);
     }
   /* private_stream_1 */
   } else if (id == 0xBF) {

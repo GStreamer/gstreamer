@@ -306,6 +306,8 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 		  MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr));
 
   if (mpeg_parse->previous_scr > mpeg_parse->current_scr) {
+    GST_DEBUG (0, "mpeg_parse: discontinuity detected %llu (%llu)", 
+           mpeg_parse->previous_scr, mpeg_parse->current_scr);
     mpeg_parse->discont_pending = TRUE;
   }
 		  
