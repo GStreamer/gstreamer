@@ -21,14 +21,14 @@ main (int argc, char *argv[])
   GstElement *bin, *filesrc, *tag_changer, *filesink;
   gchar *artist, *title, *ext, *filename;
   
+  /* initialize GStreamer */
+  gst_init (&argc, &argv);
+
   /* check that the argument is there */
   if (argc != 2) {
     g_print ("usage: %s <mp3 file>\n", argv[0]);
     return 1;
   }
-
-  /* initialize GStreamer */
-  gst_init (&argc, &argv);
 
   /* parse the mp3 name */
   artist = strrchr (argv[1], '/');
@@ -83,7 +83,7 @@ main (int argc, char *argv[])
   gst_bin_add_many (GST_BIN (bin), filesrc, tag_changer, filesink, NULL);
 
   /* link the elements */
-  gst_element_link_many (filesrc, tag_changer, filesink, NULL);
+  g_assert (gst_element_link_many (filesrc, tag_changer, filesink));
   
   /* start playing */
   gst_element_set_state (bin, GST_STATE_PLAYING);

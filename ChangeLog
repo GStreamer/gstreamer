@@ -1,3 +1,8 @@
+2004-01-18  Colin Walters  <walters@verbum.org>
+
+	* examples/retag/retag.c: Call gst_init before processing
+	program args.  Add g_assert to _link_many call.
+
 2004-01-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstpad.c: (gst_pad_alloc_buffer):
