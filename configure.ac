@@ -1,3 +1,4 @@
+dnl Note: this file is generated from configure.base by autogen.sh
 AC_INIT
 AC_CONFIG_SRCDIR([gst/gstobject.h])
 
@@ -7,7 +8,7 @@ AM_CONFIG_HEADER(config.h)
 
 GST_VERSION_MAJOR=0
 GST_VERSION_MINOR=2
-GST_VERSION_MICRO=99
+GST_VERSION_MICRO=1
 GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
 
 PACKAGE=gstreamer
@@ -45,10 +46,6 @@ AC_PROG_CC
 AM_PROG_CC_STDC
 dnl you need automake 1.5 for AM_PROG_AS to work !
 AM_PROG_AS
-dnl there's something wrong with AS being set to CC, so we set it explicitly
-AS="${CC}"
-AC_SUBST(AS)
-
 AC_PROG_CXX
 AC_PROG_CXXCPP
 AC_ISC_POSIX
@@ -92,37 +89,14 @@ export PKG_CONFIG_PATH
 dnl Check for pkgconfig
 AC_CHECK_PROG(HAVE_PKGCONFIG, pkg-config, true, false)
 
-dnl from the gtk-doc debian package
-##################################################
-# Check for gtk-doc.
-##################################################
-
-AC_ARG_WITH(html-dir, [  --with-html-dir=PATH path to installed docs ])
-
-if test "x$with_html_dir" = "x" ; then
-  HTML_DIR='${datadir}/gtk-doc/html'
-else
-  HTML_DIR=$with_html_dir
-fi
-
-AC_SUBST(HTML_DIR)
-
-AC_CHECK_PROG(HAVE_GTKDOC, gtkdoc-mkdb, true, false)
-
-gtk_doc_min_version=0.6
-if $HAVE_GTKDOC ; then 
-    gtk_doc_version=`gtkdoc-mkdb --version`
-    AC_MSG_CHECKING([gtk-doc version ($gtk_doc_version) >= $gtk_doc_min_version])
-    if perl <<EOF ; then
-      exit (("$gtk_doc_version" =~ /^[[0-9]]+\.[[0-9]]+$/) &&
-            ("$gtk_doc_version" >= "$gtk_doc_min_version") ? 0 : 1);
-EOF
-      AC_MSG_RESULT(yes)
-   else
-      AC_MSG_RESULT(no)
-      HAVE_GTKDOC=false
-   fi
-fi
+dnl check for gtkdoc
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, true, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scanobj, :, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scan, :, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mktmpl, :, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, :, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkhtml, :, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-fixxref, :, false)
 
 dnl check for docbook tools
 AC_CHECK_PROG(HAVE_DB2HTML, db2html, true, false)
@@ -668,11 +642,9 @@ AC_CHECK_HEADER(FLAC/all.h, :, HAVE_FLACLIB=no)
 dnl Check for librtp
 AC_MSG_CHECKING(rtp library)
 AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
-
-dnl FIXME can somebody add $GLIB_CFLAGS to the CFLAGS for these next checks?
-dnl AC_CHECK_HEADER(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
-dnl AC_CHECK_HEADER(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
-dnl AC_CHECK_HEADER(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
+AC_CHECK_HEADER(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
+AC_CHECK_HEADER(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
+AC_CHECK_HEADER(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
 
 dnl Check for libraw1394
 AC_MSG_CHECKING(raw1394 library)
@@ -703,7 +675,26 @@ AC_CHECK_LIB(dvdread, DVDOpen, HAVE_LIBDVDREAD=yes, HAVE_LIBDVDREAD=no, )
 AC_CHECK_HEADER(dvdread/dvd_reader.h, :, HAVE_LIBDVDREAD=no)
 
 dnl Check for SDL library
-AM_PATH_SDL( ,HAVE_LIBSDL=yes, HAVE_LIBSDL=no)
+dnl this bit is taken from vlc's configure.in and modified accordingly
+
+SDL_PATH=$PATH
+AC_PATH_PROG(SDL_CONFIG, sdl-config, no, $SDL_PATH)
+SDL_CONFIG=${SDL_CONFIG}
+if test "x${SDL_CONFIG}" = "xno"
+then
+  AC_PATH_PROG(SDL11_CONFIG, sdl11-config, no, $SDL_PATH)
+  SDL_CONFIG=${SDL11_CONFIG}
+fi
+if test "x${SDL_CONFIG}" = "xno"
+then
+  AC_PATH_PROG(SDL12_CONFIG, sdl11-config, no, $SDL_PATH)
+  SDL_CONFIG=${SDL12_CONFIG}
+fi
+
+if test "x${SDL_CONFIG}" = "xyes"
+then
+  AM_PATH_SDL( , , HAVE_LIBSDL=no)
+fi
 
 if test "x$HAVE_LIBSDL" = "xno"; then
   AC_MSG_WARN(
@@ -1015,10 +1006,6 @@ if test "x$HAVE_LIBGSM" = xyes; then
   AC_DEFINE(HAVE_LIBGSM)
 fi
 
-if test "x$HAVE_LIBRTP" = xyes; then
-  AC_DEFINE(HAVE_LIBRTP)
-fi
-
 dnl #############################
 dnl # Set automake conditionals #
 dnl #############################
@@ -1154,7 +1141,7 @@ dnl #########################
 dnl until ffmpeg is handled by configure plugins/ffmpeg/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
 dnl someone should fix this test/misc/Makefile
-dnl this needs fixing testsuite/refcounting/Makefile
+dnl wtay fix this: testsuite/threads/Makefile
 AC_OUTPUT(
 Makefile
 include/Makefile
@@ -1288,8 +1275,8 @@ tests/muxing/Makefile
 testsuite/Makefile
 testsuite/bytestream/Makefile
 testsuite/capsnego/Makefile
+testsuite/refcounting/Makefile
 testsuite/plugin/Makefile
-testsuite/threads/Makefile
 tests/nego/Makefile
 examples/Makefile
 examples/autoplug/Makefile
