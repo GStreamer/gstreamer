@@ -101,21 +101,6 @@ void *gst_fenced_buffer_alloc(GstBuffer *buffer, unsigned int length,
 
 GstBuffer *gst_fenced_buffer_new(void);
 
-static GstPadLinkReturn
-gst_efence_link (GstPad *pad, const GstCaps *caps)
-{
-  GstEFence *filter;
-  GstPad *otherpad;
-
-  filter = GST_EFENCE (gst_pad_get_parent (pad));
-  g_return_val_if_fail (filter != NULL, GST_PAD_LINK_REFUSED);
-  g_return_val_if_fail (GST_IS_EFENCE (filter),
-                        GST_PAD_LINK_REFUSED);
-  otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
-
-  return gst_pad_try_set_caps (otherpad, caps);
-}
-
 GType
 gst_gst_efence_get_type (void)
 {
@@ -184,10 +169,10 @@ gst_efence_init (GstEFence *filter)
 {
   filter->sinkpad = gst_pad_new_from_template (
       gst_static_pad_template_get(&gst_efence_sink_factory), "sink");
-  gst_pad_set_link_function (filter->sinkpad, gst_efence_link);
+  gst_pad_set_link_function (filter->sinkpad, gst_pad_proxy_pad_link);
   filter->srcpad = gst_pad_new_from_template (
       gst_static_pad_template_get(&gst_efence_src_factory), "src");
-  gst_pad_set_link_function (filter->srcpad, gst_efence_link);
+  gst_pad_set_link_function (filter->srcpad, gst_pad_proxy_pad_link);
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
