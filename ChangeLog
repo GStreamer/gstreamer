@@ -1,3 +1,8 @@
+2004-04-25  Benjamin Otte  <otte@gnome.org>
+
+	* gst/audioconvert/gstaudioconvert.c: (_fixate_caps_to_int):
+	  fix memleak
+
 2004-04-23  Benjamin Otte  <otte@gnome.org>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
