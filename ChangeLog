@@ -6,8 +6,13 @@
 2004-05-11  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* gst/cdxaparse/gstcdxaparse.c :
-	  Add mpegversion to CAPS to make it link
-	  Rank is as GST_RANK_SECONDARY instead of NONE
+	  - Add mpegversion to CAPS to make it link
+	  - Rank is as GST_RANK_SECONDARY instead of NONE
+	* gst/auparse/gstauparse.c :
+	  - Document all audio encoding we can encounter from Solaris 9
+	    headers and libsndfile information.
+	  - Increase max. rate from 48000 to 192000 (to match other elements)
+	  - Don't try to play junk data between header and samples
 
 2004-05-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
