@@ -1,5 +1,12 @@
 2004-03-14  Benjamin Otte  <otte@gnome.org>
 
+	* gst/modplug/gstmodplug.cc:
+	  handle events - don't do crap when a discont arrives that's not
+	  necessary
+	  This allows correct loading and playback of mods in Rhythmbox
+
+2004-03-14  Benjamin Otte  <otte@gnome.org>
+
 	* configure.ac:
 	* gst-libs/gst/gconf/Makefile.am:
 	* pkgconfig/Makefile.am:
