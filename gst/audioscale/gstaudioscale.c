@@ -183,10 +183,7 @@ gst_audioscale_sinkconnect (GstPad * pad, GstCaps * caps)
   gst_caps_set (newcaps, "rate", GST_PROPS_INT_TYPE, audioscale->targetfrequency, NULL);
 
   if (GST_CAPS_IS_FIXED (caps))
-    if (gst_pad_try_set_caps (audioscale->srcpad, newcaps))
-      return GST_PAD_CONNECT_OK;
-    else
-      return GST_PAD_CONNECT_REFUSED;
+    return gst_pad_try_set_caps (audioscale->srcpad, newcaps);
   else
     return GST_PAD_CONNECT_DELAYED;
 }

@@ -201,7 +201,7 @@ gst_videoscale_sinkconnect (GstPad *pad, GstCaps *caps)
 		videoscale->targetheight);
 
   GST_DEBUG(0,"width %d",videoscale->targetwidth);
-  gst_pad_try_set_caps (videoscale->srcpad, 
+  return gst_pad_try_set_caps (videoscale->srcpad, 
 		    GST_CAPS_NEW (
 		      "videoscale_src",
 		      "video/raw",
@@ -209,8 +209,6 @@ gst_videoscale_sinkconnect (GstPad *pad, GstCaps *caps)
 			"width",	GST_PROPS_INT (videoscale->targetwidth),
 			"height",	GST_PROPS_INT (videoscale->targetheight)
 		    ));
-
-  return GST_PAD_CONNECT_OK;
 }
 
 static void

@@ -273,12 +273,12 @@ gst_adder_connect (GstPad *pad, GstCaps *caps)
     if (!gst_adder_parse_caps (adder, caps))
       return GST_PAD_CONNECT_REFUSED;
   
-    if (pad == adder->srcpad || gst_pad_try_set_caps (adder->srcpad, caps)) {
+    if (pad == adder->srcpad || gst_pad_try_set_caps (adder->srcpad, caps) > 0) {
       sinkpads = gst_element_get_pad_list ((GstElement*) adder);
       while (sinkpads) {
         p = (GstPad*) sinkpads->data;
         if (p != pad && p != adder->srcpad) {
-          if (!gst_pad_try_set_caps (p, caps)) {
+          if (gst_pad_try_set_caps (p, caps) <= 0) {
             GST_DEBUG (GST_CAT_PLUGIN_INFO, 
 		       "caps mismatch; disconnecting and removing pad %s:%s "
 		       "(peer %s:%s)",

@@ -144,13 +144,15 @@ volume_connect (GstPad *pad, GstCaps *caps)
   otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
   
   if (GST_CAPS_IS_FIXED (caps)) {
-    if (!volume_parse_caps (filter, caps) || !gst_pad_try_set_caps (otherpad, caps))
+    GstPadConnectReturn set_retval;
+    if (!volume_parse_caps (filter, caps))
       return GST_PAD_CONNECT_REFUSED;
-    
-    if (gst_caps_get_int (caps, "rate", &rate)){
-      gst_dpman_set_rate(filter->dpman, rate);
-    }
-    return GST_PAD_CONNECT_OK;
+
+    if ((set_retval = gst_pad_try_set_caps(otherpad, caps)) > 0)
+      if (gst_caps_get_int (caps, "rate", &rate)){
+        gst_dpman_set_rate(filter->dpman, rate);
+      }
+    return set_retval;
   }
   
   return GST_PAD_CONNECT_DELAYED;

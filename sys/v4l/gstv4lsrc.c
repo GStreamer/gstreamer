@@ -350,7 +350,7 @@ gst_v4lsrc_srcconnect (GstPad  *pad,
 
     gst_caps_debug (newcaps, "new caps to set on v4lsrc's src pad");
 
-    if (!gst_pad_try_set_caps(v4lsrc->srcpad, newcaps))
+    if (gst_pad_try_set_caps(v4lsrc->srcpad, newcaps) <= 0)
       continue;
 
     if (!gst_v4lsrc_capture_init(v4lsrc))

@@ -907,7 +907,7 @@ gst_alsa_src_process (GstAlsa *this, snd_pcm_uframes_t frames)
         caps = gst_alsa_caps(this);
         l = this->pads;
         while (l) {
-            if (!gst_pad_try_set_caps (GST_ALSA_PAD(l)->pad, caps)) {
+            if (gst_pad_try_set_caps (GST_ALSA_PAD(l)->pad, caps) <= 0) {
                 g_print ("DANGER WILL ROBINSON!\n");
                 sleep(1);
                 return FALSE;

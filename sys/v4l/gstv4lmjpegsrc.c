@@ -258,7 +258,7 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
                         "width",  GST_PROPS_INT(v4lmjpegsrc->end_width),
                         "height", GST_PROPS_INT(v4lmjpegsrc->end_height),
                         NULL       ) );
-  if (!gst_pad_try_set_caps(v4lmjpegsrc->srcpad, caps))
+  if (gst_pad_try_set_caps(v4lmjpegsrc->srcpad, caps) <= 0)
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsrc),
       "Failed to set new caps");
