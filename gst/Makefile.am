@@ -142,13 +142,13 @@ endif
 
 # Generate both marshal files together.  Makes dependency work easier.
 gstmarshal.h: gstmarshal.list
-	glib-genmarshal --header --prefix=gst_marshal gstmarshal.list > gstmarshal.h
+	glib-genmarshal --header --prefix=gst_marshal $(srcdir)/gstmarshal.list > gstmarshal.h
 
 gstmarshal.c: gstmarshal.list
 	echo "#include \"glib-object.h\"" >gstmarshal.c
 	echo "#include \"gstlog.h\"" >> gstmarshal.c
 	echo "#include \"gstmarshal.h\"" >> gstmarshal.c
-	glib-genmarshal --body --prefix=gst_marshal gstmarshal.list >> gstmarshal.c
+	glib-genmarshal --body --prefix=gst_marshal $(srcdir)/gstmarshal.list >> gstmarshal.c
 
 ##### end built sources #####
 
