@@ -1,11 +1,28 @@
 
-#include <sys/soundcard.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <glib.h>
+
+#ifdef HAVE_OSS_INCLUDE_IN_SYS
+#include <sys/soundcard.h>
+#else
+
+#ifdef HAVE_OSS_INCLUDE_IN_ROOT
+#include <soundcard.h>
+#else
+
+#include <machine/soundcard.h>
+
+#endif /* HAVE_OSS_INCLUDE_IN_ROOT */
+
+#endif /* HAVE_OSS_INCLUDE_IN_SYS */
 
 typedef struct _Probe Probe;
 struct _Probe

@@ -30,7 +30,20 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/ioctl.h>
+
+#ifdef HAVE_OSS_INCLUDE_IN_SYS
 #include <sys/soundcard.h>
+#else
+
+#ifdef HAVE_OSS_INCLUDE_IN_ROOT
+#include <soundcard.h>
+#else
+
+#include <machine/soundcard.h>
+
+#endif /* HAVE_OSS_INCLUDE_IN_ROOT */
+
+#endif /* HAVE_OSS_INCLUDE_IN_SYS */
 
 #include "gstossmixer.h"
 

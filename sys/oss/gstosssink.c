@@ -24,10 +24,23 @@
 #include "config.h"
 #endif
 #include <sys/ioctl.h>
-#include <sys/soundcard.h>
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
+
+#ifdef HAVE_OSS_INCLUDE_IN_SYS
+#include <sys/soundcard.h>
+#else
+
+#ifdef HAVE_OSS_INCLUDE_IN_ROOT
+#include <soundcard.h>
+#else
+
+#include <machine/soundcard.h>
+
+#endif /* HAVE_OSS_INCLUDE_IN_ROOT */
+
+#endif /* HAVE_OSS_INCLUDE_IN_SYS */
 
 #include "gstosssink.h"
 

@@ -446,10 +446,26 @@ GST_CHECK_FEATURE(DXR3, [DXR3 hardware MPEG DVD decoder],
                     HAVE_DXR3=no ] )
 ])
 
-dnl *** OSS audio ***
+dnl *** OSS audio *** (Linux, *BSD)
 translit(dnm, m, l) AM_CONDITIONAL(USE_OSS, true)
 GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
-  AC_CHECK_HEADER(sys/soundcard.h, HAVE_OSS="yes", HAVE_OSS="no")
+  HAVE_OSS="yes"
+  dnl Linux and newer BSD versions :
+  AC_CHECK_HEADER(sys/soundcard.h, [
+    AC_DEFINE(HAVE_OSS_INCLUDE_IN_SYS,, [Define if OSS includes are in /sys/])
+    ] , [
+    dnl Some old BSD versions :
+    AC_CHECK_HEADER(soundcard.h, [
+      AC_DEFINE(HAVE_OSS_INCLUDE_IN_ROOT,, [Define if OSS includes are in /])
+      ], [
+      dnl Some old BSD versions :
+      AC_CHECK_HEADER(machine/soundcard.h, [
+        AC_DEFINE(HAVE_OSS_INCLUDE_IN_MACHINE,, [Define if OSS includes are in /machine/])
+        ], [
+        HAVE_OSS="no"
+      ])
+    ])
+  ])
 ])
 
 dnl *** OS X audio ***

@@ -26,11 +26,24 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/soundcard.h>
 #include <sys/ioctl.h>
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
+
+#ifdef HAVE_OSS_INCLUDE_IN_SYS
+#include <sys/soundcard.h>
+#else
+
+#ifdef HAVE_OSS_INCLUDE_IN_ROOT
+#include <soundcard.h>
+#else
+
+#include <machine/soundcard.h>
+
+#endif /* HAVE_OSS_INCLUDE_IN_ROOT */
+
+#endif /* HAVE_OSS_INCLUDE_IN_SYS */
 
 #include <gstosssrc.h>
 #include <gstosselement.h>

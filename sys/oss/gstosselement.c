@@ -29,10 +29,23 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
-#include <sys/soundcard.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+
+#ifdef HAVE_OSS_INCLUDE_IN_SYS
+#include <sys/soundcard.h>
+#else
+
+#ifdef HAVE_OSS_INCLUDE_IN_ROOT
+#include <soundcard.h>
+#else
+
+#include <machine/soundcard.h>
+
+#endif /* HAVE_OSS_INCLUDE_IN_ROOT */
+
+#endif /* HAVE_OSS_INCLUDE_IN_SYS */
 
 #include <gst/propertyprobe/propertyprobe.h>
 
@@ -987,7 +1000,21 @@ gst_osselement_change_state (GstElement * element)
 
 
 #if 0
+
+#ifdef HAVE_OSS_INCLUDE_IN_SYS
 #include <sys/soundcard.h>
+#else
+
+#ifdef HAVE_OSS_INCLUDE_IN_ROOT
+#include <soundcard.h>
+#else
+
+#include <machine/soundcard.h>
+
+#endif /* HAVE_OSS_INCLUDE_IN_ROOT */
+
+#endif /* HAVE_OSS_INCLUDE_IN_SYS */
+
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
