@@ -55,7 +55,7 @@ struct _GstFFMpegCsp
   gint width, height;
   gfloat fps;
   enum PixelFormat from_pixfmt, to_pixfmt;
-  AVFrame *from_frame, *to_frame;
+  AVPicture from_frame, to_frame;
   AVPaletteControl *palette;
   GstCaps *sinkcaps;
 };
@@ -246,16 +246,9 @@ gst_ffmpegcsp_pad_link (GstPad * pad, const GstCaps * caps)
     space->palette = ctx->palctrl;
   }
   av_free (ctx);
-  if (space->from_frame)
-    av_free (space->from_frame);
-  if (space->to_frame)
-    av_free (space->to_frame);
 
   space->width = width;
   space->height = height;
-
-  space->from_frame = avcodec_alloc_frame ();
-  space->to_frame = avcodec_alloc_frame ();
 
   return GST_PAD_LINK_OK;
 }
@@ -327,7 +320,6 @@ gst_ffmpegcsp_init (GstFFMpegCsp * space)
   gst_pad_set_getcaps_function (space->srcpad, gst_ffmpegcsp_getcaps);
 
   space->from_pixfmt = space->to_pixfmt = PIX_FMT_NB;
-  space->from_frame = space->to_frame = NULL;
   space->palette = NULL;
 }
 
@@ -369,16 +361,16 @@ gst_ffmpegcsp_chain (GstPad * pad, GstData * data)
     outbuf = gst_pad_alloc_buffer (space->srcpad, GST_BUFFER_OFFSET_NONE, size);
 
     /* convert */
-    gst_ffmpeg_avpicture_fill ((AVPicture *) space->from_frame,
+    gst_ffmpeg_avpicture_fill (&space->from_frame,
         GST_BUFFER_DATA (inbuf),
         space->from_pixfmt, space->width, space->height);
     if (space->palette)
-      space->from_frame->data[1] = (uint8_t *) space->palette;
-    gst_ffmpeg_avpicture_fill ((AVPicture *) space->to_frame,
+      space->from_frame.data[1] = (uint8_t *) space->palette;
+    gst_ffmpeg_avpicture_fill (&space->to_frame,
         GST_BUFFER_DATA (outbuf),
         space->to_pixfmt, space->width, space->height);
-    img_convert ((AVPicture *) space->to_frame, space->to_pixfmt,
-        (AVPicture *) space->from_frame, space->from_pixfmt,
+    img_convert (&space->to_frame, space->to_pixfmt,
+        &space->from_frame, space->from_pixfmt,
         space->width, space->height);
 
     GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
@@ -399,14 +391,8 @@ gst_ffmpegcsp_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PAUSED_TO_READY:
-      if (space->from_frame)
-        av_free (space->from_frame);
-      if (space->to_frame)
-        av_free (space->to_frame);
       if (space->palette)
         av_free (space->palette);
-      space->from_frame = NULL;
-      space->to_frame = NULL;
       space->palette = NULL;
       break;
   }

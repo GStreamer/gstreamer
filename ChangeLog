@@ -1,3 +1,10 @@
+2004-12-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_pad_link),
+	(gst_ffmpegcsp_init), (gst_ffmpegcsp_chain),
+	(gst_ffmpegcsp_change_state):
+	  Some sync with ffmpegcolorspace (flatten AVFrame).
+
 2004-11-05  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_avpicture_get_size),
