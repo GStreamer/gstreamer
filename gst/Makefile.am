@@ -215,6 +215,6 @@ libgst_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
 
 libgst_la_LIBADD = $(LIBGST_LIBS)
 
-libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION)
+libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION) -release $(GST_VERSION)
 
 EXTRA_DIST = ROADMAP
