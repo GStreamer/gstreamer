@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-12 14:02+0200\n"
+"POT-Creation-Date: 2004-08-27 02:22+0500\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -546,51 +546,51 @@ msgstr "peak of the album"
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:458
+#: gst/autoplug/gstspider.c:466
 #, c-format
 msgid "There is no element present to handle the stream's mime type %s."
 msgstr "There is no element present to handle the stream's mime type %s."
 
-#: gst/elements/gstfilesink.c:259
+#: gst/elements/gstfilesink.c:268
 msgid "No file name specified for writing."
 msgstr "No file name specified for writing."
 
-#: gst/elements/gstfilesink.c:266
+#: gst/elements/gstfilesink.c:275
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Could not open file \"%s\" for writing."
 
-#: gst/elements/gstfilesink.c:285
+#: gst/elements/gstfilesink.c:294
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Error closing file \"%s\"."
 
-#: gst/elements/gstfilesink.c:357 gst/elements/gstfilesink.c:392
-#: gst/elements/gstfilesink.c:445
+#: gst/elements/gstfilesink.c:366 gst/elements/gstfilesink.c:401
+#: gst/elements/gstfilesink.c:454
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Error while writing to file \"%s\"."
 
-#: gst/elements/gstfilesrc.c:757 gst/elements/gstmultifilesrc.c:289
+#: gst/elements/gstfilesrc.c:766 gst/elements/gstmultifilesrc.c:298
 msgid "No file name specified for reading."
 msgstr "No file name specified for reading."
 
-#: gst/elements/gstfilesrc.c:772 gst/elements/gstmultifilesrc.c:297
+#: gst/elements/gstfilesrc.c:781 gst/elements/gstmultifilesrc.c:306
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Could not open file \"%s\" for reading."
 
-#: gst/elements/gstfilesrc.c:783
+#: gst/elements/gstfilesrc.c:792
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:789
+#: gst/elements/gstfilesrc.c:798
 #, fuzzy, c-format
 msgid "File \"%s\" is a socket."
 msgstr "File \"%s\" isn't a regular file."
 
-#: gst/elements/gstidentity.c:267
+#: gst/elements/gstidentity.c:285
 msgid "Failed after iterations as requested."
 msgstr "Failed after iterations as requested."
 
@@ -678,7 +678,7 @@ msgstr "could not link sink element for URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "empty pipeline not allowed"
 
-#: tools/gst-inspect.c:1122
+#: tools/gst-inspect.c:1123
 #, fuzzy
 msgid "Print all elements"
 msgstr "no element \"%s\""

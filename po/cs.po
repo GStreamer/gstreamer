@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-12 14:02+0200\n"
+"POT-Creation-Date: 2004-08-27 02:22+0500\n"
 "PO-Revision-Date: 2004-08-08 22:59+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -552,51 +552,51 @@ msgstr "vrchol alba"
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:458
+#: gst/autoplug/gstspider.c:466
 #, c-format
 msgid "There is no element present to handle the stream's mime type %s."
 msgstr "Není přítomen žádý element pro obsloužení proudu s typem mime %s."
 
-#: gst/elements/gstfilesink.c:259
+#: gst/elements/gstfilesink.c:268
 msgid "No file name specified for writing."
 msgstr "Nezadán název souboru pro zápis."
 
-#: gst/elements/gstfilesink.c:266
+#: gst/elements/gstfilesink.c:275
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Nemohu otevřít soubor \"%s\" pro zápis."
 
-#: gst/elements/gstfilesink.c:285
+#: gst/elements/gstfilesink.c:294
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Chyba při zavírání souboru \"%s\"."
 
-#: gst/elements/gstfilesink.c:357 gst/elements/gstfilesink.c:392
-#: gst/elements/gstfilesink.c:445
+#: gst/elements/gstfilesink.c:366 gst/elements/gstfilesink.c:401
+#: gst/elements/gstfilesink.c:454
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Chyba při zápisu do souboru \"%s\"."
 
-#: gst/elements/gstfilesrc.c:757 gst/elements/gstmultifilesrc.c:289
+#: gst/elements/gstfilesrc.c:766 gst/elements/gstmultifilesrc.c:298
 msgid "No file name specified for reading."
 msgstr "Nezadán název souboru pro čtení."
 
-#: gst/elements/gstfilesrc.c:772 gst/elements/gstmultifilesrc.c:297
+#: gst/elements/gstfilesrc.c:781 gst/elements/gstmultifilesrc.c:306
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nemohu otevřít soubor \"%s\" pro čtení."
 
-#: gst/elements/gstfilesrc.c:783
+#: gst/elements/gstfilesrc.c:792
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" je adresář."
 
-#: gst/elements/gstfilesrc.c:789
+#: gst/elements/gstfilesrc.c:798
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Soubor \"%s\" je socket."
 
-#: gst/elements/gstidentity.c:267
+#: gst/elements/gstidentity.c:285
 msgid "Failed after iterations as requested."
 msgstr "Selhání po iteracích podle požadavku."
 
@@ -684,7 +684,7 @@ msgstr "nemohu připojit element spotřebiče pro URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "prázdná roura není povolena"
 
-#: tools/gst-inspect.c:1122
+#: tools/gst-inspect.c:1123
 msgid "Print all elements"
 msgstr "Vypsat všechny elementy"
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-12 14:02+0200\n"
+"POT-Creation-Date: 2004-08-27 02:22+0500\n"
 "PO-Revision-Date: 2004-03-19 18:40+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -539,51 +539,51 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:458
+#: gst/autoplug/gstspider.c:466
 #, c-format
 msgid "There is no element present to handle the stream's mime type %s."
 msgstr ""
 
-#: gst/elements/gstfilesink.c:259
+#: gst/elements/gstfilesink.c:268
 msgid "No file name specified for writing."
 msgstr ""
 
-#: gst/elements/gstfilesink.c:266
+#: gst/elements/gstfilesink.c:275
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr ""
 
-#: gst/elements/gstfilesink.c:285
+#: gst/elements/gstfilesink.c:294
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr ""
 
-#: gst/elements/gstfilesink.c:357 gst/elements/gstfilesink.c:392
-#: gst/elements/gstfilesink.c:445
+#: gst/elements/gstfilesink.c:366 gst/elements/gstfilesink.c:401
+#: gst/elements/gstfilesink.c:454
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:757 gst/elements/gstmultifilesrc.c:289
+#: gst/elements/gstfilesrc.c:766 gst/elements/gstmultifilesrc.c:298
 msgid "No file name specified for reading."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:772 gst/elements/gstmultifilesrc.c:297
+#: gst/elements/gstfilesrc.c:781 gst/elements/gstmultifilesrc.c:306
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:783
+#: gst/elements/gstfilesrc.c:792
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:789
+#: gst/elements/gstfilesrc.c:798
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr ""
 
-#: gst/elements/gstidentity.c:267
+#: gst/elements/gstidentity.c:285
 msgid "Failed after iterations as requested."
 msgstr ""
 
@@ -671,7 +671,7 @@ msgstr ""
 msgid "empty pipeline not allowed"
 msgstr ""
 
-#: tools/gst-inspect.c:1122
+#: tools/gst-inspect.c:1123
 msgid "Print all elements"
 msgstr ""
 
