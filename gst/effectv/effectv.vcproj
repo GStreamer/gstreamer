@@ -19,8 +19,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../gstreamer/win32;../../../gstreamer;../../../gstreamer/libs;../../../glib;../../../glib/glib;../../../glib/gmodule;&quot;../../gst-libs&quot;;../../../popt/include;../../../libxml2/include/libxml2"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;effectv_EXPORTS;HAVE_CONFIG_H"
+				AdditionalIncludeDirectories="../../../gstreamer/win32;../../../gstreamer;../../../gstreamer/libs;../../../glib;../../../glib/glib;../../../glib/gmodule;&quot;../../gst-libs&quot;;../../../popt/include;../../../libxml2/include/libxml2;../videofilter"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;effectv_EXPORTS;HAVE_CONFIG_H;_USE_MATH_DEFINES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -73,8 +73,8 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../../gstreamer/win32;../../../gstreamer;../../../gstreamer/libs;../../../glib;../../../glib/glib;../../../glib/gmodule;&quot;../../gst-libs&quot;;../../../popt/include;../../../libxml2/include/libxml2"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;effectv_EXPORTS;HAVE_CONFIG_H"
+				AdditionalIncludeDirectories="../../../gstreamer/win32;../../../gstreamer;../../../gstreamer/libs;../../../glib;../../../glib/glib;../../../glib/gmodule;&quot;../../gst-libs&quot;;../../../popt/include;../../../libxml2/include/libxml2;../videofilter"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;effectv_EXPORTS;HAVE_CONFIG_H;_USE_MATH_DEFINES"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -126,19 +126,22 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath=".\gsteffectv.c">
-			</File>
-			<File
-				RelativePath=".\gstedge.c">
-			</File>
-			<File
 				RelativePath=".\gstaging.c">
 			</File>
 			<File
 				RelativePath=".\gstdice.c">
 			</File>
 			<File
-				RelativePath=".\gstwarp.c">
+				RelativePath=".\gstedge.c">
+			</File>
+			<File
+				RelativePath=".\gsteffectv.c">
+			</File>
+			<File
+				RelativePath=".\gstquark.c">
+			</File>
+			<File
+				RelativePath=".\gstrev.c">
 			</File>
 			<File
 				RelativePath=".\gstshagadelic.c">
@@ -147,10 +150,7 @@
 				RelativePath=".\gstvertigo.c">
 			</File>
 			<File
-				RelativePath=".\gstrev.c">
-			</File>
-			<File
-				RelativePath=".\gstquark.c">
+				RelativePath=".\gstwarp.c">
 			</File>
 		</Filter>
 		<Filter
