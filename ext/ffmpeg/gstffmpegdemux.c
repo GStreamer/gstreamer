@@ -297,7 +297,7 @@ gst_ffmpegdemux_loop (GstElement *element)
     caps = gst_ffmpeg_codecid_to_caps (st->codec.codec_id,
 				       &st->codec);
     if (gst_pad_try_set_caps (pad, caps) <= 0) {
-      GST_DEBUG (GST_CAT_PLUGIN_ERRORS,
+      GST_DEBUG (
 		 "Failed to set caps from ffdemuxer on next element");
       /* we continue here, in the next pad-is-usable check,
        * we'll return nonetheless */

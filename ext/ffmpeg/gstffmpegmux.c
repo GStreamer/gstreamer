@@ -222,7 +222,7 @@ gst_ffmpegmux_request_new_pad (GstElement *element,
   ffmpegmux->context->streams[padnum] = st;
 
   /* we love debug output (c) (tm) (r) */
-  GST_DEBUG (GST_CAT_PLUGIN_INFO,
+  GST_DEBUG (
 	     "Created %s pad for ffmux_%s element",
 	     padname, oclass->in_plugin->name);
   g_free (padname);
@@ -283,7 +283,7 @@ gst_ffmpegmux_loop (GstElement *element)
 
     /* check whether the pad has successfully completed capsnego */ 
     if (st->codec.codec_id == CODEC_ID_NONE) {
-      GST_DEBUG (GST_CAT_PLUGIN_INFO,
+      GST_DEBUG (
 		 "ffmux loop function called without capsnego on pad %d",
 		 i);
       return;

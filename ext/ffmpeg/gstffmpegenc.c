@@ -300,7 +300,7 @@ gst_ffmpegenc_connect (GstPad  *pad,
 
     /* open codec */
     if (avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0) {
-      GST_DEBUG (GST_CAT_PLUGIN_INFO,
+      GST_DEBUG (
 		 "ffenc_%s: Failed to open FFMPEG codec",
 		 oclass->in_plugin->name);
       continue;
@@ -318,14 +318,14 @@ gst_ffmpegenc_connect (GstPad  *pad,
 					 ffmpegenc->context);
   if (!ret_caps) {
     avcodec_close (ffmpegenc->context);
-    GST_DEBUG (GST_CAT_PLUGIN_INFO,
+    GST_DEBUG (
 	       "Unsupported codec - no caps found");
     return GST_PAD_LINK_REFUSED;
   }
 
   if ((ret = gst_pad_try_set_caps (ffmpegenc->srcpad, ret_caps)) <= 0) {
     avcodec_close (ffmpegenc->context);
-    GST_DEBUG (GST_CAT_PLUGIN_INFO,
+    GST_DEBUG (
 	       "Failed to set caps on next element for ffmpeg encoder (%s)",
                oclass->in_plugin->name);
     return ret;

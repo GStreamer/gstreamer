@@ -204,7 +204,7 @@ gst_ffmpegdec_connect (GstPad  *pad,
    * simply because we don't know! We only get it
    * during playback... */
   if (avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0) {
-    GST_DEBUG (GST_CAT_PLUGIN_INFO,
+    GST_DEBUG (
 		"ffdec_%s: Failed to open FFMPEG codec",
 		oclass->in_plugin->name);
     return GST_PAD_LINK_REFUSED;
