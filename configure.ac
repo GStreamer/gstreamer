@@ -311,8 +311,8 @@ esac],
 [:]) dnl Default value
 
 AS_AC_EXPAND(GST_CACHE_DIR, $GST_CACHE_DIR)
+AC_DEFINE_UNQUOTED(GST_CACHE_DIR, "$GST_CACHE_DIR", [Location of registry])
 AC_MSG_NOTICE(Using $GST_CACHE_DIR as registry cache dir)
-
 
 dnl building of tests
 AC_ARG_ENABLE(tests,
@@ -635,7 +635,6 @@ examples/typefind/Makefile
 examples/xml/Makefile
 tools/Makefile
 docs/Makefile
-docs/version.entities
 docs/faq/Makefile
 docs/gst/Makefile
 docs/libs/Makefile
@@ -644,6 +643,7 @@ docs/pwg/Makefile
 docs/plugins/Makefile
 docs/plugins/gstreamer-plugins.types
 docs/xsl/Makefile
+docs/version.entities
 pkgconfig/Makefile
 stamp.h
 pkgconfig/gstreamer.pc
