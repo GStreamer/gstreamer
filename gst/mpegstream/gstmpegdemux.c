@@ -458,7 +458,6 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
         outpad = &((*outstream)->pad);
 			
 	*outpad = gst_pad_new_from_template (newtemp, name);
-	gst_element_add_pad (GST_ELEMENT (mpeg_demux), (*outpad));
 
 	gst_pad_set_formats_function (*outpad, gst_mpeg_demux_get_src_formats);
 	gst_pad_set_convert_function (*outpad, gst_mpeg_parse_convert_src);
@@ -467,6 +466,7 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 	gst_pad_set_query_type_function (*outpad, gst_mpeg_parse_get_src_query_types);
 	gst_pad_set_query_function (*outpad, gst_mpeg_parse_handle_src_query);
 	gst_pad_use_explicit_caps (*outpad);
+        gst_element_add_pad (GST_ELEMENT (mpeg_demux), (*outpad));
 
         gst_pad_set_explicit_caps (*outpad, caps);
 

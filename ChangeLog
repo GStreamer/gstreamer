@@ -1,3 +1,12 @@
+2004-01-05  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_parse_syshead):
+	  Add pad to element *after* setting functions such as event handler.
+	  Without this, the scheduler (opt) will link pads, set the event
+	  handler from the default event function (dispatcher in gstpad.c)
+	  and *after* that, we will set our own event function, which will
+	  thus never be used (and thus mpegdemux doesn't handle events).
+
 2004-01-04  David Schleef  <ds@schleef.org>
 
 	Fix the fixate functions to handle new prototype:
