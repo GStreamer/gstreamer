@@ -1,3 +1,17 @@
+2004-02-02  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/advanced-events.xml:
+	* docs/pwg/advanced-scheduling.xml:
+	* docs/pwg/intro-basics.xml:
+	* docs/pwg/other-manager.xml:
+	* docs/pwg/other-nton.xml:
+	* docs/pwg/other-ntoone.xml:
+	* docs/pwg/other-oneton.xml:
+	* docs/pwg/pwg.xml:
+	  All sort of documentation... Forgot what. Point is that I want this
+	  in before I leave. The 'other-*' will be the last section and will
+	  explain issues specific to these type of elements.
+
 2004-02-02  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/elements/gstfilesrc.c: (gst_filesrc_map_region),

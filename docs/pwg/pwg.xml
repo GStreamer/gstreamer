@@ -31,7 +31,11 @@
 
 <!ENTITY OTHER_SOURCE         SYSTEM "other-source.xml">
 <!ENTITY OTHER_SINK           SYSTEM "other-sink.xml">
+<!ENTITY OTHER_ONETON         SYSTEM "other-oneton.xml">
+<!ENTITY OTHER_NTOONE         SYSTEM "other-ntoone.xml">
+<!ENTITY OTHER_NTON           SYSTEM "other-nton.xml">
 <!ENTITY OTHER_AUTOPLUGGER    SYSTEM "other-autoplugger.xml">
+<!ENTITY OTHER_MANAGER        SYSTEM "other-manager.xml">
 
 <!ENTITY APPENDIX_CHECKLIST   SYSTEM "appendix-checklist.xml">
 <!ENTITY APPENDIX_PYTHON      SYSTEM "appendix-python.xml">
@@ -120,6 +124,12 @@
     <title>Advanced Filter Concepts</title>
     <partintro>
       <para>
+        By now, you should be able to create basic filter elements that can
+        receive and send data. This is the simple model that &GStreamer; stands
+        for. But &GStreamer; can do much more than only this! In this chapter,
+        various advanced topics will be discussed, such as scheduling, special
+        pad types, clocking, events, interfaces, tagging and more. These topics
+        are the sugar that makes &GStreamer; so easy to use for applications.
       </para>
     </partintro>
 
@@ -140,12 +150,24 @@
     <title>Other Element Types</title>
     <partintro>
       <para>
+        By now, we have looked at pretty much any feature that can be embedded
+        into a &GStreamer; element. However, we have limited ourselves to the
+        simple model of a filter element. In this chapter, we will look at the
+        specific difficulties and things to keep in mind when writing specific
+        types of elements. We will discuss output elements (sinks), input
+        elements (sources), 1-to-N elements, N-to-1 elements, N-to-N elements,
+        autopluggers and managers. Some of these represent elements that don't
+        actually exist. Rather, they represent a general concept.
       </para>
     </partintro>
 
     &OTHER_SOURCE;
     &OTHER_SINK;
+    &OTHER_ONETON;
+    &OTHER_NTOONE;
+    &OTHER_NTON;
     &OTHER_AUTOPLUGGER;
+    &OTHER_MANAGER;
   </part>
 
   <!-- ############ part ############# -->
@@ -154,6 +176,7 @@
     <title>Appendices</title>
     <partintro>
       <para>
+        This chapter contains things that don't belong anywhere else.
       </para>
     </partintro>
 

@@ -365,7 +365,7 @@ gst_my_filter_change_state (GstElement *element)
   <sect1 id="section-loopbased-secnd">
     <title>Adding a second output</title>
     <para>
-      Identity is now a tee
+      WRITEME
     </para>
   </sect1>
 

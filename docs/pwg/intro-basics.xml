@@ -185,6 +185,11 @@
       </itemizedlist>
     </para>
     <para>
+      Events will be discussed extensively in <xref linkend="chapter-advanced-events"/>.
+      Until then, the only event that will be used is the <emphasis>EOS</emphasis>
+      event, which is used to indicate the end-of-stream (usually end-of-file).
+    </para>
+    <para>
       See the &GstLibRef; for the current implementation details of a <ulink
       type="http"
       url="../gstreamer/gstreamer-gstdata.html"><classname>GstData</classname></ulink>, <ulink type="http"
