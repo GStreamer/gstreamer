@@ -79,7 +79,9 @@ gst_data_dispose (GstData *data)
  * Copies the given #GstData. This function will call the custom subclass
  * copy function or return NULL if no function was provided by the subclass.
  *
- * Returns: a copy of the data or NULL if the data cannot be copied.
+ * Returns: a copy of the data or NULL if the data cannot be copied. The refcount
+ * of the original buffer is not changed so you should unref it when you don't
+ * need it anymore.
  */
 GstData*
 gst_data_copy (const GstData *data) 
@@ -98,20 +100,25 @@ gst_data_copy (const GstData *data)
  * #GstData object can be written to safely.
  *
  * Returns: a copy of the data if the refcount is > 1, data if the refcount == 1
- * or NULL if the data could not be copied.
+ * or NULL if the data could not be copied. The refcount of the original buffer
+ * is decreased when a copy is made, so you are not supposed to use it after a
+ * call to this function.
  */
 GstData*
-gst_data_copy_on_write (const GstData *data) 
+gst_data_copy_on_write (GstData *data) 
 {
   gint refcount;
 
   GST_ATOMIC_INT_READ (&data->refcount, &refcount);
 
-  if (refcount == 1)
+  if (refcount == 1 && !GST_DATA_FLAG_IS_SET (data, GST_DATA_READONLY))
     return GST_DATA (data);
 	
-  if (data->copy)
-    return data->copy (data); 
+  if (data->copy) {
+    GstData *copy = data->copy (data); 
+    gst_data_unref (data);
+    return copy; 
+  }
 
   return NULL;
 }
