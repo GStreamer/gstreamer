@@ -293,18 +293,60 @@ gst_puzzle_shuffle (GstPuzzle * puzzle)
   puzzle->solved = FALSE;
 }
 
+/* The nav event handler handles nav events, but still forwards them, so you
+ * should be able to even use puzzle while navigating a dvd menu. We return 
+ * TRUE of course even when noone downstream handles the event.
+ */
 static gboolean
 nav_event_handler (GstPad * pad, GstEvent * event)
 {
   GstPuzzle *puzzle;
   GstVideofilter *filter;
   const gchar *type;
+  gboolean result = FALSE;
+  gdouble x, y;
+  gint xpos = 0, ypos = 0;
 
   puzzle = GST_PUZZLE (gst_pad_get_parent (pad));
   filter = GST_VIDEOFILTER (puzzle);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
+      /* translate the event */
+      if (gst_structure_get_double (event->event_data.structure.structure,
+              "pointer_x", &x) &&
+          gst_structure_get_double (event->event_data.structure.structure,
+              "pointer_y", &y)) {
+        gint width, height;
+
+        width = gst_videofilter_get_input_width (filter);
+        height = gst_videofilter_get_input_height (filter);
+        width = (width / puzzle->columns) & ~3;
+        height = (height / puzzle->rows) & ~3;
+        xpos = (int) x / width;
+        ypos = (int) y / height;
+        if (xpos >= 0 && xpos < puzzle->columns && ypos >= 0
+            && ypos < puzzle->rows) {
+          GstEvent *copy;
+          guint lookup;
+
+          lookup = puzzle->permutation[ypos * puzzle->columns + xpos];
+          GST_DEBUG_OBJECT (puzzle, "translated %dx%d (%gx%g) to %dx%d (%gx%g)",
+              xpos, ypos, x, y,
+              lookup % puzzle->columns, lookup / puzzle->columns,
+              x + ((gint) (lookup % puzzle->columns) - xpos) * width,
+              y + ((gint) (lookup / puzzle->columns) - ypos) * height);
+          x += ((gint) (lookup % puzzle->columns) - xpos) * width;
+          y += ((gint) (lookup / puzzle->columns) - ypos) * height;
+          copy = gst_event_copy (event);
+          gst_structure_set (copy->event_data.structure.structure,
+              "pointer_x", G_TYPE_DOUBLE, x,
+              "pointer_y", G_TYPE_DOUBLE, y, NULL);
+          gst_event_unref (event);
+          event = copy;
+        }
+      }
+      /* handle the event. NOTE: it has already been translated! */
       type = gst_structure_get_string (event->event_data.structure.structure,
           "event");
       if (g_str_equal (type, "key-press")) {
@@ -329,58 +371,37 @@ nav_event_handler (GstPad * pad, GstEvent * event)
             gst_puzzle_move (puzzle, DIR_UP);
           } else if (g_str_equal (key, "Down")) {
             gst_puzzle_move (puzzle, DIR_DOWN);
-          } else {
-            break;
           }
         }
         puzzle->solved = gst_puzzle_is_solved (puzzle);
-        gst_event_unref (event);
-        return TRUE;
       } else if (g_str_equal (type, "mouse-button-press")) {
         gint button;
 
         if (gst_structure_get_int (event->event_data.structure.structure,
                 "button", &button)) {
           if (button == 1) {
-            gdouble x, y;
-
-            if (gst_structure_get_double (event->event_data.structure.structure,
-                    "pointer_x", &x) &&
-                gst_structure_get_double (event->event_data.structure.structure,
-                    "pointer_y", &y)) {
-              gint xpos, ypos;
-
-              xpos =
-                  (int) x / ((gst_videofilter_get_input_width (filter) /
-                      puzzle->columns) & ~3);
-              ypos =
-                  (int) y / ((gst_videofilter_get_input_height (filter) /
-                      puzzle->rows) & ~3);
-              if (xpos >= 0 && xpos < puzzle->columns && ypos >= 0
-                  && ypos < puzzle->rows) {
-                gst_puzzle_swap (puzzle, ypos * puzzle->columns + xpos);
-              }
+            if (xpos >= 0 && xpos < puzzle->columns && ypos >= 0
+                && ypos < puzzle->rows && !puzzle->solved) {
+              gst_puzzle_swap (puzzle, ypos * puzzle->columns + xpos);
               puzzle->solved = gst_puzzle_is_solved (puzzle);
-              gst_event_unref (event);
-              return TRUE;
             }
           } else if (button == 2) {
-            if (gst_puzzle_is_solved (puzzle)) {
+            if (puzzle->solved) {
               gst_puzzle_shuffle (puzzle);
             } else {
               gst_puzzle_solve (puzzle);
             }
             puzzle->solved = gst_puzzle_is_solved (puzzle);
-            gst_event_unref (event);
-            return TRUE;
           }
         }
       }
+      /* FIXME: only return TRUE for events we handle? */
+      result = TRUE;
       break;
     default:
       break;
   }
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, event) || result;
 }
 
 static void
