@@ -230,6 +230,7 @@ gst_multidisksrc_get (GstPad *pad)
 
   /* simply set the buffer to point to the correct region of the file */
   GST_BUFFER_DATA (buf) = src->map;
+  GST_BUFFER_SIZE (buf) = src->size;
   GST_BUFFER_OFFSET (buf) = 0;
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
 
