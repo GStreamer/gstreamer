@@ -1,3 +1,10 @@
+2004-09-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/tmpl/gstthread.sgml:
+	* docs/manual/init-api.xml:
+	* examples/manual/Makefile.am:
+	  convert two code bits to examples
+
 2004-09-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstelement.c: (gst_element_change_state):

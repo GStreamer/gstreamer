@@ -12,21 +12,29 @@
     well as parse the GStreamer-specific command line options.
   </para>
   <para> 
-    A typical program would start like this:
+    A typical program would have code to initialize GStreamer that
+    looks like this:
   </para>
 
   <programlisting>
-#include &lt;gst/gst.h&gt;
+/* example-begin init.c */
 
-...
+#include &lt;gst/gst.h&gt;
 
 int
 main (int argc, char *argv[])
 {
-  ...
+  guint major, minor, micro;
+
   gst_init (&amp;argc, &amp;argv);
-  ...
+
+  gst_version (&amp;major, &amp;minor, &amp;micro);
+  printf ("This program is linked against GStreamer %d.%d.%d\n",
+          major, minor, micro);
+
+  return 0;
 }
+/* example-end init.c */
   </programlisting>
   <para>
     Use the <symbol>GST_VERSION_MAJOR</symbol>,
@@ -44,9 +52,14 @@ main (int argc, char *argv[])
   <sect1>
     <title>The popt interface</title>
     <para>
-      You can also use a popt table to initialize your own parameters as shown in the next code fragment:
+You can also use a popt table to initialize your own parameters as shown in the
+next example:
     </para>
     <programlisting>
+/* example-begin popt.c */
+
+#include &lt;gst/gst.h&gt;
+
 int
 main(int argc, char *argv[])
 {
@@ -62,7 +75,11 @@ main(int argc, char *argv[])
 
   gst_init_with_popt_table (&amp;argc, &amp;argv, options);
 
-  ...
+  printf ("Run me with --help to see the Application options appended.\n");
+
+  return 0;
+}
+/* example-end popt.c */
     </programlisting>
     <para>
       As shown in this fragment, you can use a <ulink
