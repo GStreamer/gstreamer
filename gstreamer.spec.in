@@ -108,13 +108,12 @@ rm -rf $RPM_BUILD_ROOT
                                                                                 
 %find_lang gstreamer-%{majorminor}
 # Clean out files that should not be part of the rpm.
-mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/gstreamer-%{majorminor}
 rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.la
 rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 # Create empty cache directory
-mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/gstreamer-%{major}
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/gstreamer-%{majorminor}
                                                                                 
 %clean
 rm -rf $RPM_BUILD_ROOT
