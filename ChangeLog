@@ -1,13 +1,22 @@
+2005-01-05  Vincent Torri  <torri@iecn.u-nancy.fr>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstregistry.h:
+	* gst/registries/gstxmlregistry.c:
+	  Fix macro's for Mingw (fixes #162276).
+
 2005-01-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/README:
-    quick shell oneliner to find undocumented members
+	  quick shell oneliner to find undocumented members
 	* docs/gst/tmpl/gstplugin.sgml:
 	* docs/gst/tmpl/gstscheduler.sgml:
 	* docs/gst/tmpl/gstthread.sgml:
-    more enumtypes cleanup
+	  more enumtypes cleanup
 	* gst/gsterror.h:
-    activated documentation comments, now someone needs to document the enums :(
+	  activated documentation comments, now someone needs to document
+	  the enums :(
 
 2005-01-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 

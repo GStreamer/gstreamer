@@ -319,7 +319,7 @@ get_time (const char *path, gboolean * is_dir)
   return statbuf.st_ctime;
 }
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define xmkdir(dirname) _mkdir (dirname)
 #else
 #define xmkdir(dirname) mkdir (dirname, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)
