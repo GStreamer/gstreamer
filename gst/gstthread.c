@@ -66,22 +66,25 @@ enum {
 
 
 
-static void			gst_thread_class_init		(GstThreadClass *klass);
-static void			gst_thread_init			(GstThread *thread);
+static void		gst_thread_class_init		(GstThreadClass *klass);
+static void		gst_thread_init			(GstThread *thread);
 
-static void 			gst_thread_dispose 	(GObject *object);
+static void		gst_thread_dispose		(GObject *object);
 
-static void			gst_thread_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void			gst_thread_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void		gst_thread_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void		gst_thread_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static GstElementStateReturn	gst_thread_change_state		(GstElement *element);
+static
+GstElementStateReturn	gst_thread_change_state		(GstElement *element);
 
 #ifndef GST_DISABLE_LOADSAVE
-static xmlNodePtr		gst_thread_save_thyself		(GstObject *object, xmlNodePtr parent);
-static void			gst_thread_restore_thyself	(GstObject *object, xmlNodePtr self);
+static xmlNodePtr	gst_thread_save_thyself		(GstObject *object,
+		                                         xmlNodePtr parent);
+static void		gst_thread_restore_thyself	(GstObject *object,
+		                                         xmlNodePtr self);
 #endif
 
-static void*			gst_thread_main_loop		(void *arg);
+static void*		gst_thread_main_loop		(void *arg);
 
 #define GST_TYPE_THREAD_SCHEDPOLICY (gst_thread_schedpolicy_get_type())
 static GType
@@ -101,7 +104,7 @@ gst_thread_schedpolicy_get_type(void) {
 }
 
 static GstBinClass *parent_class = NULL;
-static guint gst_thread_signals[LAST_SIGNAL] = { 0 }; 
+static guint gst_thread_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gst_thread_get_type(void) {
@@ -109,18 +112,15 @@ gst_thread_get_type(void) {
 
   if (!thread_type) {
     static const GTypeInfo thread_info = {
-      sizeof(GstThreadClass),
-      NULL,
-      NULL,
-      (GClassInitFunc)gst_thread_class_init,
-      NULL,
-      NULL,
-      sizeof(GstThread),
+      sizeof (GstThreadClass), NULL, NULL,
+      (GClassInitFunc) gst_thread_class_init, NULL, NULL,
+      sizeof (GstThread),
       4,
-      (GInstanceInitFunc)gst_thread_init,
+      (GInstanceInitFunc) gst_thread_init,
       NULL
     };
-    thread_type = g_type_register_static(GST_TYPE_BIN, "GstThread", &thread_info, 0);
+    thread_type = g_type_register_static (GST_TYPE_BIN, "GstThread",
+		                          &thread_info, 0);
   }
   return thread_type;
 }
@@ -184,7 +184,7 @@ gst_thread_init (GstThread *thread)
   thread->cond = g_cond_new ();
 
   thread->ppid = getpid ();
-  thread->thread_id = (GThread *) NULL;
+  thread->thread_id = (GThread *) NULL; /* set in NULL -> READLY */
   thread->sched_policy = G_THREAD_PRIORITY_NORMAL;
   thread->priority = 0;
   thread->stack = NULL;
@@ -298,7 +298,7 @@ gst_thread_new (const gchar *name)
   GST_DEBUG_ELEMENT(GST_CAT_THREAD, thread, "sync-main(" GST_DEBUG_THREAD_FORMAT "): " format , \
   GST_DEBUG_THREAD_ARGS(thread->ppid) , ## args )
 
-static GstElementStateReturn 
+static GstElementStateReturn
 gst_thread_update_state (GstThread *thread)
 {
   GST_DEBUG_ELEMENT (GST_CAT_THREAD, thread, "updating state of thread");
@@ -317,13 +317,13 @@ gst_thread_update_state (GstThread *thread)
 
 
 static GstElementStateReturn
-gst_thread_change_state (GstElement * element)
+gst_thread_change_state (GstElement *element)
 {
   GstThread *thread;
   gboolean stateset = GST_STATE_SUCCESS;
   gint transition;
-  GThread * self = g_thread_self ();
-  GError * error = NULL;
+  GThread *self = g_thread_self ();
+  GError *error = NULL;
 
   g_return_val_if_fail (GST_IS_THREAD (element), GST_STATE_FAILURE);
   g_return_val_if_fail (gst_has_threads (), GST_STATE_FAILURE);
@@ -338,7 +338,8 @@ gst_thread_change_state (GstElement * element)
 
   if (g_thread_equal (self, thread->thread_id)) {
     GST_DEBUG (GST_CAT_THREAD,
-	       "no sync(" GST_DEBUG_THREAD_FORMAT "): setting own thread's state to spinning",
+	       "no sync(" GST_DEBUG_THREAD_FORMAT "): "
+	       "setting own thread's state to spinning",
 	       GST_DEBUG_THREAD_ARGS (thread->pid));
     return gst_thread_update_state (thread);
   }
@@ -368,7 +369,7 @@ gst_thread_change_state (GstElement * element)
       if (!thread->thread_id){
         GST_DEBUG (GST_CAT_THREAD, "g_thread_create_full failed");
 	g_mutex_unlock (thread->lock);
-        GST_DEBUG (GST_CAT_THREAD, "could not create thread \"%s\"", 
+        GST_DEBUG (GST_CAT_THREAD, "could not create thread \"%s\"",
 	           GST_ELEMENT_NAME (element));
 	return GST_STATE_FAILURE;
       }
