@@ -68,6 +68,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 
 %post
 /sbin/ldconfig
+%{prefix}/bin/gstreamer-register
 
 %postun
 /sbin/ldconfig
