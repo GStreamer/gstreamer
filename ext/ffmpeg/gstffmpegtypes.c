@@ -61,9 +61,12 @@ gst_ffmpegtypes_typefind (GstBuffer *buffer, gpointer priv)
   if (highest) {
     GstCaps *caps;
     caps = g_hash_table_lookup (global_types, highest->name);
-    /* make sure we still hold a refcount to this caps */
-    gst_caps_ref (caps);
-    return caps;
+
+    if (caps) {
+      /* make sure we still hold a refcount to this caps */
+      gst_caps_ref (caps);
+      return caps;
+    }
   }
 	
   return NULL;
