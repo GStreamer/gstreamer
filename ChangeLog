@@ -1,3 +1,14 @@
+2004-02-06  David Schleef  <ds@schleef.org>
+
+	Build fixes for OS X: (see #129600)
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_strh),
+	(gst_riff_read_strf_vids), (gst_riff_read_strf_auds),
+	(gst_riff_read_strf_iavs):
+	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_avih),
+	(gst_avi_demux_stream_odml):
+	* gst/playondemand/Makefile.am:
+	* gst/rtp/rtp-packet.c:
+
 2004-02-05  David Schleef  <ds@schleef.org>
 
 	* ext/dv/gstdvdec.c: (gst_dvdec_init), (gst_dvdec_loop): Revert

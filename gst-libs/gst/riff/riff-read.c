@@ -414,7 +414,7 @@ gst_riff_read_strh (GstRiffRead    *riff,
   }
   if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strh)) {
     g_warning ("Too small strh (%d available, %d needed)",
-	       GST_BUFFER_SIZE (buf), sizeof (gst_riff_strh));
+	       GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strh));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -484,7 +484,7 @@ gst_riff_read_strf_vids (GstRiffRead         *riff,
   }
   if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strf_vids)) {
     g_warning ("Too small strf_vids (%d available, %d needed)",
-	       GST_BUFFER_SIZE (buf), sizeof (gst_riff_strf_vids));
+	       GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strf_vids));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -553,7 +553,7 @@ gst_riff_read_strf_auds (GstRiffRead         *riff,
   }
   if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strf_auds)) {
     g_warning ("Too small strf_auds (%d available, %d needed)",
-	       GST_BUFFER_SIZE (buf), sizeof (gst_riff_strf_auds));
+	       GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strf_auds));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -604,7 +604,7 @@ gst_riff_read_strf_iavs (GstRiffRead         *riff,
   }
   if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strf_iavs)) {
     g_warning ("Too small strf_iavs (%d available, %d needed)",
-	       GST_BUFFER_SIZE (buf), sizeof (gst_riff_strf_iavs));
+	       GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strf_iavs));
     gst_buffer_unref (buf);
     return FALSE;
   }
