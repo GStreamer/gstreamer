@@ -990,9 +990,9 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 			src->size = info->size;
 		if (info->valid_fields & GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE)
 		{
+			GstCaps *caps = gst_caps_new ("gnomevfssrc", info->mime_type, NULL);
 			GST_DEBUG (0, "got MIME type \"%s\", setting caps",
 				   info->mime_type);
-			GstCaps *caps = gst_caps_new ("gnomevfssrc", info->mime_type, NULL);
 			gst_pad_try_set_caps (src->srcpad, caps);
 		}
 		else
@@ -1113,6 +1113,7 @@ gst_gnomevfssrc_srcpad_event (GstPad *pad, GstEvent *event)
 	case GST_EVENT_SEEK:
         {
 		gint64 desired_offset;
+		GnomeVFSResult result;
 
 		if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
 			gst_event_unref (event);
@@ -1133,7 +1134,6 @@ gst_gnomevfssrc_srcpad_event (GstPad *pad, GstEvent *event)
 			return FALSE;
 			break;
 		}
-		GnomeVFSResult result;
 		
 		result = gnome_vfs_seek(src->handle,
 					GNOME_VFS_SEEK_START, desired_offset);
