@@ -168,4 +168,5 @@ int main ()
   rm -f conf.artstest
 ])
 dnl release C++ question
+AC_LANG_POP(C++)
 

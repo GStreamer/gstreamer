@@ -858,6 +858,8 @@ int main ()
 }
 
 ],, no_arts=yes,[echo $ac_n "cross compiling; assumed OK... $ac_c"])
+	dnl release C++ question
+	AC_LANG_POP(C++)
        CFLAGS="$ac_save_CFLAGS"
        LIBS="$ac_save_LIBS"
      fi
@@ -908,5 +910,4 @@ int main ()
   AC_SUBST(ARTS_LIBS)
   rm -f conf.artstest
 ])
-dnl release C++ question
 
