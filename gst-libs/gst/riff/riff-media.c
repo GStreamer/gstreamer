@@ -185,6 +185,7 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
       break;
 
     case GST_MAKE_FOURCC ('M', 'P', 'G', '4'):
+    case GST_MAKE_FOURCC ('M', 'P', '4', 'S'):
       caps = gst_caps_new_simple ("video/x-msmpeg",
           "msmpegversion", G_TYPE_INT, 41, NULL);
       if (codec_name)
@@ -284,6 +285,7 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
             "palette_data", &value);
         g_value_unset (&value);
         gst_buffer_unref (copy);
+        strf_data = NULL;       /* used */
       }
       if (strf) {
         gst_caps_set_simple (caps,
@@ -318,6 +320,12 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
     gst_caps_set_simple (caps,
         "width", GST_TYPE_INT_RANGE, 16, 4096,
         "height", GST_TYPE_INT_RANGE, 16, 4096, NULL);
+  }
+
+  /* extradata */
+  if (strf_data || strd_data) {
+    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER,
+        strf_data ? strf_data : strd_data, NULL);
   }
 
   return caps;
@@ -431,8 +439,9 @@ gst_riff_create_audio_caps_with_data (guint16 codec_id,
       break;
     case GST_RIFF_WAVE_FORMAT_WMAV1:
     case GST_RIFF_WAVE_FORMAT_WMAV2:
+    case GST_RIFF_WAVE_FORMAT_WMAV3:
     {
-      gint version = codec_id == GST_RIFF_WAVE_FORMAT_WMAV1 ? 1 : 2;
+      gint version = (codec_id - GST_RIFF_WAVE_FORMAT_WMAV1) + 1;
 
       block_align = TRUE;
 
@@ -448,10 +457,6 @@ gst_riff_create_audio_caps_with_data (guint16 codec_id,
       } else {
         gst_caps_set_simple (caps,
             "bitrate", GST_TYPE_INT_RANGE, 0, G_MAXINT, NULL);
-      }
-      if (strf_data) {
-        gst_caps_set_simple (caps,
-            "codec_data", GST_TYPE_BUFFER, strf_data, NULL);
       }
       break;
     }
@@ -480,6 +485,12 @@ gst_riff_create_audio_caps_with_data (guint16 codec_id,
       gst_caps_set_simple (caps,
           "block_align", GST_TYPE_INT_RANGE, 1, 8192, NULL);
     }
+  }
+
+  /* extradata */
+  if (strf_data || strd_data) {
+    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER,
+        strf_data ? strf_data : strd_data, NULL);
   }
 
   return caps;

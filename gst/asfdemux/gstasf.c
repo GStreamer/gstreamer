@@ -29,7 +29,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstbytestream"))
+  if (!gst_library_load ("gstbytestream") || !gst_library_load ("riff"))
     return FALSE;
 
   if (!gst_element_register (plugin, "asfdemux", GST_RANK_PRIMARY,
