@@ -1,3 +1,8 @@
+2004-08-06  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/videotestsrc/gstvideotestsrc.c: (generate_capslist):
+	  allow all pixel-aspect-ratios, not just 1:1
+
 2004-08-09  David Schleef  <ds@schleef.org>
 
 	* sys/glsink/ARB_multitexture.h:  Remove old files.
