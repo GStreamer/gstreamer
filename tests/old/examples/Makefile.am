@@ -4,8 +4,9 @@ else
 GST_LOADSAVE_DIRS = xml typefind
 endif
 
-SUBDIRS = 				\
+dirs = \
 	helloworld			\
+	helloworld2			\
 	queue				\
 	queue2				\
 	queue3				\
@@ -17,22 +18,9 @@ SUBDIRS = 				\
 	cutter				\
 	pingpong			\
 	manual				\
-	retag				\
-	$(GST_LOADSAVE_DIRS)
-
-DIST_SUBDIRS = helloworld		\
-	queue				\
-	queue2				\
-	queue3				\
-	queue4				\
-	launch				\
-	thread				\
-	plugins				\
-	mixer				\
-	cutter				\
-	pingpong			\
-	manual				\
-	xml				\
-	typefind			\
 	retag
 
+SUBDIRS = $(dirs)			\
+	$(GST_LOADSAVE_DIRS)
+
+DIST_SUBDIRS = $(dirs) xml typefind
