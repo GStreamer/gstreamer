@@ -28,17 +28,11 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/time.h>
 #include <sys/types.h>
-#include <netinet/in.h>
 #include <netdb.h>
 #include <sys/socket.h>
-#include <sys/wait.h>
 #include <fcntl.h>
 
 #define GST_TYPE_UDPSRC \

@@ -123,7 +123,8 @@ gst_udpsrc_get (GstPad *pad)
   GstUDPSrc *udpsrc;
   GstBuffer *outbuf;
   struct sockaddr_in tmpaddr;
-  int len, numbytes;
+  socklen_t len;
+  gint numbytes;
   fd_set read_fds;
 
   g_return_val_if_fail (pad != NULL, NULL);
@@ -142,7 +143,6 @@ gst_udpsrc_get (GstPad *pad)
       int ret;
       int fdread;
       struct sockaddr addr;
-      socklen_t len;
       xmlDocPtr doc;
       GstCaps *caps;
 
