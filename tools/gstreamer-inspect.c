@@ -262,9 +262,10 @@ print_element_info (GstElementFactory *factory)
 
   for (i=0;i<num_properties;i++) {
     GParamSpec *param = property_specs[i];
-    GValue value;
+    GValue value = { 0, };
 
-    g_object_get (G_OBJECT (element), param->name, &value, NULL);
+    g_value_init (&value, param->value_type);
+    g_object_get_property (G_OBJECT (element), param->name, &value);
 
     printf("  %-40.40s: ",param->name);
     switch (param->value_type) {
