@@ -45,8 +45,8 @@ static GstElementStateReturn	gst_bin_change_state_norecurse	(GstBin *bin);
 static gboolean			gst_bin_change_state_type	(GstBin *bin,
 								 GstElementState state,
 								 GType type);
-static void 			gst_bin_child_state_change 	(GstElement *child, GstElementState old, 
-								 GstElementState new, GstBin *bin);
+static void 			gst_bin_child_state_change 	(GstBin *bin, GstElementState old, 
+								 GstElementState new, GstElement *child);
 
 static gboolean			gst_bin_iterate_func		(GstBin *bin);
 
