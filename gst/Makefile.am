@@ -24,14 +24,14 @@ _gstmodule_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_gst
 nodist__gstmodule_la_SOURCES = gst.c
 
 CLEANFILES = gst.c
-EXTRA_DIST = gst.defs $(GST_OVERRIDES) arg-types.py
+EXTRA_DIST = gst.defs gst-types.defs $(GST_OVERRIDES) arg-types.py
 
 gst.c: $(srcdir)/gst.defs $(srcdir)/arg-types.py $(GST_OVERRIDES)
 	$(PYGTK_CODEGEN) \
 		--load-types $(srcdir)/arg-types.py \
 	        --register $(srcdir)/gst-types.defs \
 		--override $(srcdir)/gst.override \
-		--prefix pygst gst.defs > gen-gst.c \
+		--prefix pygst $(srcdir)/gst.defs > gen-gst.c \
         && rm -fr gtreamer.c \
         && echo '/* GENERATED FILE - DO NOT EDIT */' >> gst.c \
 	&& cat gen-gst.c >> gst.c \

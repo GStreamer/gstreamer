@@ -1,1 +1,1 @@
-SUBDIRS = gstreamer
+SUBDIRS = gst

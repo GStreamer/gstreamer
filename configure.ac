@@ -151,7 +151,7 @@ AC_OUTPUT([
   pkgconfig/gst-python.pc
   pkgconfig/gst-python-uninstalled.pc
   examples/Makefile
-  examples/gstreamer/Makefile
+  examples/gst/Makefile
   docs/Makefile
   docs/gst-python.ent
   testsuite/Makefile
