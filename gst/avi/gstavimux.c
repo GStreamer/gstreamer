@@ -591,7 +591,7 @@ gst_avimux_write_tag (const GstTagList * list, const gchar * tag, gpointer data)
     GST_RIFF_INFO_IARL, GST_TAG_LOCATION}, {
     0, NULL}
   };
-  gint n, len;
+  gint n, len, plen;
   GstBuffer *buf = data;
   gchar *str;
 
@@ -599,12 +599,15 @@ gst_avimux_write_tag (const GstTagList * list, const gchar * tag, gpointer data)
     if (!strcmp (rifftags[n].tag, tag) &&
         gst_tag_list_get_string (list, tag, &str)) {
       len = strlen (str);
-      if (GST_BUFFER_MAXSIZE (buf) >= GST_BUFFER_SIZE (buf) + 8 + len + 1) {
+      plen = len + 1;
+      if (plen & 1)
+        plen++;
+      if (GST_BUFFER_MAXSIZE (buf) >= GST_BUFFER_SIZE (buf) + 8 + plen) {
         GST_WRITE_UINT32_LE (GST_BUFFER_DATA (buf), rifftags[n].fcc);
         GST_WRITE_UINT32_LE (GST_BUFFER_DATA (buf) + 4, len + 1);
         memcpy (GST_BUFFER_DATA (buf) + 8, str, len);
         GST_BUFFER_DATA (buf)[8 + len] = 0;
-        GST_BUFFER_SIZE (buf) += 8 + len + 1;
+        GST_BUFFER_SIZE (buf) += 8 + plen;
       }
     }
     break;
