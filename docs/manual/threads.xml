@@ -104,7 +104,7 @@ eos (GstElement *src, gpointer data)
 int 
 main (int argc, char *argv[]) 
 {
-  GstElement *filesrc, *demuxer, *decoder, *audioconvert, *audiosink;
+  GstElement *filesrc, *demuxer, *decoder, *converter, *audiosink;
   GstElement *thread;
 
   if (argc &lt; 2) {
