@@ -755,7 +755,6 @@ static gboolean
 gst_id3_tag_do_caps_nego (GstID3Tag *tag, GstBuffer *buffer)
 {
   if (buffer != NULL) {
-    g_assert (tag->found_caps == NULL);
     tag->found_caps = gst_id3_tag_do_typefind (tag, buffer);
     if (!tag->found_caps) {
       return FALSE;
@@ -928,8 +927,9 @@ gst_id3_tag_chain (GstPad *pad, GstData *data)
 				     GST_BUFFER_SIZE (tag->buffer) - tag->v2tag_size);
       gst_data_unref (GST_DATA (tag->buffer));
       tag->buffer = NULL;
-      if (!gst_id3_tag_do_caps_nego (tag, buffer))
-	return;
+      if (tag->found_caps == NULL)
+	if (!gst_id3_tag_do_caps_nego (tag, buffer))
+	  return;
       /* seek to ID3v1 tag */
       if (gst_pad_send_event (GST_PAD_PEER (tag->sinkpad),
 			  gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_END | 
