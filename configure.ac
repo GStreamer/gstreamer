@@ -439,17 +439,6 @@ if test "x$USE_DEBUG" = xyes; then
    GST_INT_CFLAGS="$GST_INT_CFLAGS -g"
 fi
 
-if test "x$USE_PROFILING" = xyes; then
-dnl  CFLAGS="$CFLAGS -pg -fprofile-arcs"
-  FOMIT_FRAME_POINTER=""
-else
-  FOMIT_FRAME_POINTER="-fomit-frame-pointer"
-fi
-
-dnl
-dnl AC_SUBST(FOMIT_FRAME_POINTER)
-dnl
-
 dnl #############################
 dnl # Set automake conditionals #
 dnl #############################
