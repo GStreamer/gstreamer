@@ -1,3 +1,8 @@
+2004-08-10  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* gst/gstvalue.h:
+	  fix a memory leak that occured under Windows
+
 2004-08-10  Colin Walters  <walters@redhat.com>
 
 	* gst/registries/gstxmlregistry.c (gst_xml_registry_open_func):

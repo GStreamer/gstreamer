@@ -1255,7 +1255,7 @@ gst_string_wrap (const char *s)
   }
 
   if (!wrap)
-    return strdup (s);
+    return g_strdup (s);
 
   e = d = g_malloc (len + 3);
 
