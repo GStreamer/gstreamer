@@ -1,3 +1,48 @@
+2004-07-07  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/Makefile.am:
+	* gst/playback/README:
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_get_type),
+	(gst_decode_bin_class_init), (gst_decode_bin_factory_filter),
+	(compare_ranks), (print_feature), (gst_decode_bin_init),
+	(gst_decode_bin_dispose), (find_compatibles), (close_pad_link),
+	(try_to_link_1), (new_pad), (close_link), (type_found),
+	(gst_decode_bin_set_property), (gst_decode_bin_get_property),
+	(plugin_init):
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_get_type),
+	(gst_play_base_bin_class_init), (gst_play_base_bin_init),
+	(gst_play_base_bin_dispose), (rebuild_pipeline), (queue_overrun),
+	(gen_preroll_element), (no_more_pads), (new_stream),
+	(setup_source), (gst_play_base_bin_set_property),
+	(gst_play_base_bin_get_property), (gst_play_base_bin_change_state),
+	(gst_play_base_bin_add_element),
+	(gst_play_base_bin_remove_element),
+	(gst_play_base_bin_mute_stream), (gst_play_base_bin_link_stream),
+	(gst_play_base_bin_unlink_stream),
+	(gst_play_base_bin_get_streaminfo):
+	* gst/playback/gstplaybasebin.h:
+	* gst/playback/gstplaybin.c: (gst_play_bin_get_type),
+	(gst_play_bin_class_init), (gst_play_bin_init),
+	(gst_play_bin_dispose), (gst_play_bin_set_property),
+	(gst_play_bin_get_property), (gen_video_element),
+	(gen_audio_element), (setup_sinks), (gst_play_bin_change_state),
+	(gst_play_bin_get_event_masks), (gst_play_bin_send_event),
+	(gst_play_bin_get_formats), (gst_play_bin_convert),
+	(gst_play_bin_get_query_types), (gst_play_bin_query),
+	(plugin_init):
+	* gst/playback/gststreaminfo.c: (gst_stream_type_get_type),
+	(gst_stream_info_get_type), (gst_stream_info_class_init),
+	(gst_stream_info_init), (gst_stream_info_new),
+	(gst_stream_info_dispose), (gst_stream_info_set_property),
+	(gst_stream_info_get_property):
+	* gst/playback/gststreaminfo.h:
+	* gst/playback/test.c: (gen_video_element), (gen_audio_element),
+	(main):
+	* gst/playback/test2.c: (main):
+	* gst/playback/test3.c: (update_scale), (main):
+	More playbin fixes. Added README. Do better element filtering.
+	Added base class to preroll media. Added test apps.
+
 2004-07-07  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_flush_decoder):
