@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-02-25 19:28+0100\n"
+"POT-Creation-Date: 2004-02-26 15:22+0100\n"
 "PO-Revision-Date: 2004-01-13 12:03+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -453,8 +453,7 @@ msgid "codec the data is stored in"
 msgstr "codec waarin het stuk is opgeslagen"
 
 #: gst/gsttag.c:186
-#, fuzzy
-msgid "video-codec"
+msgid "video codec"
 msgstr "video codec"
 
 #: gst/gsttag.c:187
@@ -462,8 +461,7 @@ msgid "codec the video data is stored in"
 msgstr "video codec waarin het stuk is opgeslagen"
 
 #: gst/gsttag.c:191
-#, fuzzy
-msgid "audio-codec"
+msgid "audio codec"
 msgstr "audio codec"
 
 #: gst/gsttag.c:192

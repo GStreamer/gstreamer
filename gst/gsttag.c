@@ -183,12 +183,12 @@ _gst_tag_initialize (void)
 		    gst_tag_merge_strings_with_comma);
   gst_tag_register (GST_TAG_VIDEO_CODEC, GST_TAG_FLAG_ENCODED,
 		    G_TYPE_STRING,
-		    _("video-codec"),
+		    _("video codec"),
 		    _("codec the video data is stored in"),
 		    NULL);
   gst_tag_register (GST_TAG_AUDIO_CODEC, GST_TAG_FLAG_ENCODED,
 		    G_TYPE_STRING,
-		    _("audio-codec"),
+		    _("audio codec"),
 		    _("codec the audio data is stored in"),
 		    NULL);
   gst_tag_register (GST_TAG_BITRATE, GST_TAG_FLAG_ENCODED,

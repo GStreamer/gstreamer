@@ -1,5 +1,12 @@
 2004-02-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gsttag.c: (_gst_tag_initialize):
+	* po/fr.po:
+	* po/nl.po:
+          remove hyphen from codec tags
+
+2004-02-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/parse/Makefile.am:
           fix dependency so that a make from a clean build works the first
           time
