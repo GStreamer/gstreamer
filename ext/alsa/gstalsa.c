@@ -1195,8 +1195,9 @@ inline gboolean
 gst_alsa_pcm_wait (GstAlsa * this)
 {
   int err;
+  snd_pcm_state_t state = snd_pcm_state (this->handle);
 
-  if (snd_pcm_state (this->handle) == SND_PCM_STATE_RUNNING) {
+  if (state == SND_PCM_STATE_RUNNING) {
     if ((err = snd_pcm_wait (this->handle, 1000)) < 0) {
       if (err == EINTR) {
         /* happens mostly when run under gdb, or when exiting due to a signal */
@@ -1213,6 +1214,9 @@ gst_alsa_pcm_wait (GstAlsa * this)
         return FALSE;
       }
     }
+  } else {
+    GST_INFO_OBJECT (this, "in state %s, not waiting",
+        snd_pcm_state_name (state));
   }
   return TRUE;
 }

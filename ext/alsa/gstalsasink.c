@@ -532,6 +532,9 @@ sink_restart:
       if (sink->behaviour[i] != 1)
         sink->buf_data[i] += bytes;
     }
+  } else if (avail == 0 && gst_element_get_state (element) == GST_STATE_PLAYING) {
+    if (gst_alsa_pcm_wait (this) == FALSE)
+      return;
   }
 
   if (snd_pcm_state (this->handle) != SND_PCM_STATE_RUNNING
