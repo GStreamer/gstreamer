@@ -27,23 +27,29 @@
 
 /* Pad signals and args */
 enum {
+  SET_ACTIVE,
   /* FILL ME */
   LAST_SIGNAL
 };
 
 enum {
   ARG_0,
+  ARG_ACTIVE,
   /* FILL ME */
 };
 
 
 static void gst_pad_class_init(GstPadClass *klass);
 static void gst_pad_init(GstPad *pad);
+
+static void gst_pad_set_arg(GtkObject *object,GtkArg *arg,guint id);
+static void gst_pad_get_arg(GtkObject *object,GtkArg *arg,guint id);
+
 static void gst_pad_real_destroy(GtkObject *object);
 
 
 static GstObject *parent_class = NULL;
-//static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
+static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_pad_get_type(void) {
@@ -74,7 +80,18 @@ gst_pad_class_init (GstPadClass *klass)
 
   parent_class = gtk_type_class(GST_TYPE_OBJECT);
 
+  gst_pad_signals[SET_ACTIVE] =
+    gtk_signal_new ("set_active", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstPadClass, set_active),
+                    gtk_marshal_NONE__BOOL, GTK_TYPE_NONE, 1,
+                    GTK_TYPE_BOOL);
+
+  gtk_object_add_arg_type ("GstPad::active", GTK_TYPE_BOOL,
+                           GTK_ARG_READWRITE, ARG_ACTIVE);
+
   gtkobject_class->destroy = gst_pad_real_destroy;
+  gtkobject_class->set_arg = gst_pad_set_arg;
+  gtkobject_class->get_arg = gst_pad_get_arg;
 }
 
 static void 
@@ -91,6 +108,45 @@ gst_pad_init (GstPad *pad)
   pad->parent = NULL;
   pad->ghostparents = NULL;
 }
+
+static void
+gst_pad_set_arg (GtkObject *object,GtkArg *arg,guint id) {
+  g_return_if_fail(GST_IS_PAD(object));
+
+  switch (id) {
+    case ARG_ACTIVE:
+      if (GTK_VALUE_BOOL(*arg)) {
+        gst_info("gstpad: activating pad\n");
+        GST_FLAG_UNSET(object,GST_PAD_DISABLED);
+      } else {
+        gst_info("gstpad: de-activating pad\n");
+        GST_FLAG_SET(object,GST_PAD_DISABLED);
+      }
+      gtk_signal_emit(GTK_OBJECT(object), gst_pad_signals[SET_ACTIVE],
+                      ! GST_FLAG_IS_SET(object,GST_PAD_DISABLED));
+      break;
+    default:
+      break;
+  }
+}
+
+static void
+gst_pad_get_arg (GtkObject *object,
+                    GtkArg *arg,
+                    guint id)
+{
+  /* it's not null if we got it, but it might not be ours */
+  g_return_if_fail (GST_IS_PAD (object));
+
+  switch (id) {
+    case ARG_ACTIVE:
+      GTK_VALUE_BOOL (*arg) = ! GST_FLAG_IS_SET (object, GST_PAD_DISABLED);
+      break;
+    default:
+      break;
+  }
+}
+
 
 /**
  * gst_pad_new:
@@ -238,6 +294,13 @@ gst_pad_push (GstPad *pad,
   g_return_if_fail(GST_PAD_CONNECTED(pad));
   g_return_if_fail(buffer != NULL);
 
+  /* if the pad has been disabled, unreference the pad and let it drop */
+  if (GST_FLAG_IS_SET(pad,GST_PAD_DISABLED)) {
+    g_print("gst_pad_push: pad disabled, dropping buffer\n");
+    gst_buffer_unref(buffer);
+    return;
+  }
+
   gst_trace_add_entry(NULL,0,buffer,"push buffer");
 
   // first check to see if there's a push handler
@@ -272,6 +335,13 @@ gst_pad_pull (GstPad *pad)
 
   g_return_val_if_fail(pad != NULL, NULL);
   g_return_val_if_fail(GST_IS_PAD(pad), NULL);
+
+  /* check to see if the peer pad is disabled.  return NULL if it is */
+  /* FIXME: this may be the wrong way to go about it */
+  if (GST_FLAG_IS_SET(pad->peer,GST_PAD_DISABLED)) {
+    g_print("gst_pad_pull: pad disabled, returning NULL\n");
+    return NULL;
+  }
 
   // if no buffer in pen and there's a pull handler, fire it
   if (pad->bufpen == NULL) {

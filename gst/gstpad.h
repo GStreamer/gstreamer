@@ -60,6 +60,10 @@ typedef enum {
   GST_PAD_SINK,
 } GstPadDirection;
 
+typedef enum {
+  GST_PAD_DISABLED		= (1 << 4),
+} GstPadFlags;
+
 struct _GstPad {
   GstObject object;
 
@@ -84,6 +88,9 @@ struct _GstPad {
 
 struct _GstPadClass {
   GstObjectClass parent_class;
+
+  /* signal callbacks */
+  void (*set_active)	(GstPad *pad,gboolean active);
 };
 
 
