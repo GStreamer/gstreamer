@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -58,23 +59,13 @@ struct _GstDpTestClass
 
 GType gst_dptest_get_type (void);
 
-
-GstElementDetails gst_dptest_details = {
-  "DParamsTest",
-  "Filter",
-  "LGPL",
-  "Test for the GstDParam code",
-  VERSION,
-  "Steve Baker <stevebaker_org@yahoo.co.uk>",
-  "(C) 2001",
-};
-
 enum
 {
   ARG_0,
 };
 
 
+static void     gst_dptest_base_init            (gpointer g_class);
 static void 	gst_dptest_class_init 		(GstDpTestClass * klass);
 static void 	gst_dptest_init 		(GstDpTest * dptest);
 
@@ -93,7 +84,8 @@ gst_dptest_get_type (void)
 
   if (!dptest_type) {
     static const GTypeInfo dptest_info = {
-      sizeof (GstDpTestClass), NULL,
+      sizeof (GstDpTestClass),
+      gst_dptest_base_init,
       NULL,
       (GClassInitFunc) gst_dptest_class_init,
       NULL,
@@ -106,6 +98,22 @@ gst_dptest_get_type (void)
     dptest_type = g_type_register_static (GST_TYPE_ELEMENT, "GstDpTest", &dptest_info, 0);
   }
   return dptest_type;
+}
+
+static void
+gst_dptest_base_init (gpointer g_class)
+{
+  static GstElementDetails dptest_details = GST_ELEMENT_DETAILS (
+    "DParamTest",
+    "Filter",
+    "Test for the GstDParam code",
+    "Steve Baker <stevebaker_org@yahoo.co.uk>"
+  );
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &dptest_details);
+
+  g_print("got here %d\n",__LINE__);
 }
 
 static void
@@ -198,9 +206,29 @@ gst_dptest_chain (GstPad *pad, GstData *data)
   g_print("dp chain\n");
 }
 
+gboolean
+gst_dptest_register_elements (GstPlugin *plugin)
+{
+  return gst_element_register (plugin, "dptest", GST_RANK_NONE,
+      GST_TYPE_DPTEST);
+}
+
+static GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "dptest_elements",
+  "test elements",
+  &gst_dptest_register_elements,
+  NULL,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+};
+
 int main(int argc,char *argv[]) {
 
-  GstElementFactory *factory;
   GstElement *src;
   GstElement *sink;
   GstElement *testelement;
@@ -209,11 +237,12 @@ int main(int argc,char *argv[]) {
   GstDParam *dp_float1;
   GValue *dp_float1_value;
   
+  alarm(10);
+
   gst_init (&argc, &argv);
   gst_control_init(&argc,&argv);
-  
-  factory = gst_element_factory_new ("dptest", GST_TYPE_DPTEST, &gst_dptest_details);
-  g_assert (factory != NULL);
+
+  _gst_plugin_register_static (&plugin_desc);
 
   pipeline = gst_element_factory_make ("pipeline", "pipeline");
   g_assert (pipeline);
