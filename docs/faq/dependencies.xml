@@ -17,7 +17,7 @@ the code others have written.
         </para>
         <para>
 However, do realize that in no way you are forced to have all dependencies
-installed.  Nono of the core developers has all of them installed.  GStreamer
+installed.  None of the core developers has all of them installed.  GStreamer
 has only a few obligate dependencies : GLib 2.0, popt >= 1.6.0, and very
 common stuff like glibc, a C compiler, and so on.  All of the other
 dependencies are optional.

@@ -1,3 +1,16 @@
+2004-04-30  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+	* docs/faq/dependencies.xml: typo
+	* docs/faq/getting.xml :
+	    - fix download URL for new gstreamer site
+	    - hide sf.net download page as latest version aren't there
+	    - fix apt URLs
+	    - fill "get via CVS" paragraph (link to dev page on the site)
+	* docs/faq/general.xml:
+	    hide status tables as they no more exists
+	    change case on plugins license file to reflect reality
+	* docs/faq/troubleshooting.xml:
+	    remove the wiki question/answer as there is no more wiki
+
 2004-04-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gsterror.h:

@@ -172,23 +172,5 @@ To provide a backtrace, you should
       </answer>
     </qandaentry>
 
-    <qandaentry>
-      <question id="troubleshooting-wiki">
-        <para>
-I'm having problems building or installing GStreamer. What should I do ?
-        </para>
-      </question>
-
-      <answer>
-        <para>
-We've started a step-by-step 
-<ulink url="http://gstreamer.net/wiki/?DichotomousKey">
-troubleshooting guide</ulink>. 
-Look there before asking, your problem might already have been solved by 
-someone else.
-        </para>
-      </answer>
-    </qandaentry>
-
   </qandaset>
 </sect1>
