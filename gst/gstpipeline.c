@@ -106,7 +106,11 @@ gst_pipeline_init (GstPipeline *pipeline)
   /* get an instance of the default scheduler */
   scheduler = gst_scheduler_factory_make (NULL, GST_ELEMENT (pipeline));
   /* FIXME need better error handling */
-  g_return_if_fail (scheduler != NULL);
+  if (scheduler == NULL)
+  {
+    g_error ("Critical error: could not get a scheduler - \
+	      are you sure you have a registry ?");
+  }
 	  
   gst_scheduler_setup (scheduler);
 }

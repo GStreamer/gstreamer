@@ -810,11 +810,17 @@ GstScheduler*
 gst_scheduler_factory_make (const gchar *name, GstElement *parent)
 {
   GstSchedulerFactory *factory;
+  const gchar *default_name = gst_scheduler_factory_get_default_name ();
 
   if (name)
     factory = gst_scheduler_factory_find (name);
   else
-    factory = gst_scheduler_factory_find (gst_scheduler_factory_get_default_name ());
+  {
+    /* FIXME: do better error handling */
+    if (default_name == NULL)
+      g_error ("No default scheduler name - do you have a registry ?");
+    factory = gst_scheduler_factory_find (default_name);
+  }
 
   if (factory == NULL)
     return NULL;
