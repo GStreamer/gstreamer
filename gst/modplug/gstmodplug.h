@@ -28,7 +28,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+/*#include <gst/bytestream/bytestream.h>*/
 	
 #include "modplug_types.h"	
 
@@ -48,7 +48,9 @@ struct _GstModPlug {
   GstElement element;
   GstPad *sinkpad, *srcpad;
   guint8 *buffer_in;
-  GstByteStream *bs;
+  /*GstByteStream *bs;*/
+  GstCaps *metadata;
+  GstCaps	*streaminfo;
 
   const gchar *songname;
   gboolean reverb;
@@ -68,9 +70,14 @@ struct _GstModPlug {
 
   guchar *audiobuffer;
   gint32 length;
-  gboolean restart;
+  guint state;
+  guint bitsPerSample;
+  gboolean need_discont;
+  gboolean eos;
   gint64 seek_at;
   guint64 total_samples;
+  guint64 song_size;
+  guint64 bytes_read;
 
   CSoundFile *mSoundFile;
 };
