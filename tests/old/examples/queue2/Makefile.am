@@ -1,4 +1,4 @@
-bin_PROGRAMS = queue2
+noinst_PROGRAMS = queue2
 
 LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la
 INCLUDES = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir)

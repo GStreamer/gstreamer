@@ -3,7 +3,7 @@ noinst_LTLIBRARIES = libcrashtest.la
 libcrashtest_la_SOURCES = \
 	dummy.c
 
-include_HEADERS = \
+noinst_HEADERS = \
 	dummy.h
 
 CFLAGS = $(shell gnome-config --cflags gnomeui)
