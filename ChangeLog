@@ -1,3 +1,7 @@
+2004-07-15  Zaheer Abbas Merali  <zaheerabbas at merali.org>
+
+	* docs/manual/motivation.xml: Fix spelling
+
 2004-07-15  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstelement.h: 

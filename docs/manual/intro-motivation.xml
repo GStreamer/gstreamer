@@ -40,7 +40,7 @@
         If you want to convert an MPEG2 video stream into an AVI file, your best
         option would be to take all of the MPEG2 decoding algorithms out
         of the player and duplicate them into your own AVI encoder. These 
-        algorithms cannot easily be shared accross applications.
+        algorithms cannot easily be shared across applications.
       </para> 
       <para>
         Attempts have been made to create libraries for handling various media types.
