@@ -1,5 +1,6 @@
 SUBDIRS = gst-libs ext
-EXTRA_DIST=gst-ffmpeg.spec
+EXTRA_DIST=gst-ffmpeg.spec depcomp \
+	AUTHORS COPYING NEWS README ChangeLog
 
 # to do a release, run "make release"
 # this will generate all archives and md5sums
