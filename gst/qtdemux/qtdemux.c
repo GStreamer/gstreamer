@@ -1739,7 +1739,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       buffer = gst_buffer_new_and_alloc (len - 8);
       memcpy (GST_BUFFER_DATA (buffer), esds->data + 8, len - 8);
 
-      gst_caps_set_simple (stream->caps, "esds", GST_TYPE_BUFFER, buffer, NULL);
+      gst_caps_set_simple (stream->caps, "codec_data",
+          GST_TYPE_BUFFER, buffer, NULL);
     }
     GST_INFO ("type " GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT,
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4)),
