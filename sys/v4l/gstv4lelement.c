@@ -81,11 +81,13 @@ static guint gst_v4lelement_signals[LAST_SIGNAL] = { 0 };
 static gboolean
 gst_v4l_iface_supported (GstImplementsInterface * iface, GType iface_type)
 {
-  g_assert (iface_type == GST_TYPE_TUNER ||
 #ifdef HAVE_XVIDEO
-      iface_type == GST_TYPE_X_OVERLAY ||
-#endif
+  g_assert (iface_type == GST_TYPE_TUNER ||
+      iface_type == GST_TYPE_X_OVERLAY || iface_type == GST_TYPE_COLOR_BALANCE);
+#else
+  g_assert (iface_type == GST_TYPE_TUNER ||
       iface_type == GST_TYPE_COLOR_BALANCE);
+#endif
 
   return TRUE;
 }
