@@ -426,6 +426,22 @@ VFS_CFLAGS="`gnome-config --cflags vfs`"
 AC_SUBST(VFS_LIBS)
 AC_SUBST(VFS_CFLAGS)
 
+dnl Check for Avifile
+HAVE_AVIFILE="no"
+AC_MSG_CHECKING(for Avifile)
+if avifile-config --libs > /dev/null 2>&1; then
+	HAVE_AVIFILE="yes"
+	AC_MSG_RESULT(found)
+else
+	AC_MSG_WARN(Did not find Avifile installed)
+fi
+
+AVIFILE_LIBS="`avifile-config --libs`"
+AVIFILE_CFLAGS="`avifile-config --cflags`"
+
+AC_SUBST(AVIFILE_LIBS)
+AC_SUBST(AVIFILE_CFLAGS)
+
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
 dnl defines the wrong default symbol as well (HAVE_ASM_ATOMIC_H)
@@ -982,6 +998,7 @@ AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
 AM_CONDITIONAL(HAVE_LIBAA,          test "x$HAVE_LIBAA" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
+AM_CONDITIONAL(HAVE_AVIFILE,        test "x$HAVE_AVIFILE" = "xyes")
 AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME, test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGSM,         test "x$HAVE_LIBGSM" = "xyes")
 AM_CONDITIONAL(PLUGINS_USE_SRCDIR,  test "x$PLUGINS_USE_SRCDIR" = "xyes")
