@@ -1,5 +1,38 @@
 2004-07-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_parse_metadata),
+	(gst_matroska_demux_video_caps), (gst_matroska_demux_plugin_init):
+	* gst/mpegaudio/common.c:
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_class_init),
+	(gst_videoscale_getcaps), (gst_videoscale_link),
+	(gst_videoscale_src_fixate), (gst_videoscale_init),
+	(gst_videoscale_finalize):
+	* gst/videoscale/gstvideoscale.h:
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_videotestsrc_get_capslist):
+	* gst/wavenc/gstwavenc.c:
+	* sys/oss/gstossmixer.c: (fill_labels):
+	* sys/ximage/ximagesink.c: (gst_ximagesink_renegotiate_size),
+	(gst_ximagesink_handle_xevents),
+	(gst_ximagesink_calculate_pixel_aspect_ratio),
+	(gst_ximagesink_xcontext_get), (gst_ximagesink_fixate),
+	(gst_ximagesink_getcaps), (gst_ximagesink_sink_link),
+	(gst_ximagesink_chain), (gst_ximagesink_set_xwindow_id),
+	(gst_ximagesink_set_property), (gst_ximagesink_get_property),
+	(gst_ximagesink_init), (gst_ximagesink_class_init):
+	* sys/ximage/ximagesink.h:
+	* sys/xvimage/xvimagesink.c:
+	(gst_xvimagesink_calculate_pixel_aspect_ratio),
+	(gst_xvimagesink_xcontext_get), (gst_xvimagesink_sink_link),
+	(gst_xvimagesink_chain), (gst_xvimagesink_buffer_alloc),
+	(gst_xvimagesink_set_property), (gst_xvimagesink_get_property),
+	(gst_xvimagesink_init), (gst_xvimagesink_class_init):
+	* sys/xvimage/xvimagesink.h:
+	  first batch of pixel aspect ratio commits.
+
+2004-07-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
 	(gst_ffmpegcolorspace_class_init), (gst_ffmpegcolorspace_chain):
 	* gst/ffmpegcolorspace/imgconvert.c: (avpicture_fill):
