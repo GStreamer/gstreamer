@@ -29,6 +29,7 @@
 static GstElementDetails example_details = {
   "An example plugin",
   "Example/FirstExample",
+  "LGPL",
   "Shows the basic structure of a plugin",
   "0.1",
   "your name <your.name@your.isp>",
