@@ -1183,6 +1183,7 @@ plugins/SID/Makefile
 plugins/vorbis/Makefile
 plugins/capture/Makefile
 plugins/capture/v4l/Makefile
+plugins/capture/qcam/Makefile
 plugins/cdparanoia/Makefile
 plugins/esd/Makefile
 plugins/esd/esdsink/Makefile
