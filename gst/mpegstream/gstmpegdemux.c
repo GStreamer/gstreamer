@@ -370,6 +370,7 @@ gst_mpeg_demux_get_video_stream (GstMPEGDemux * mpeg_demux,
   GstMPEGVideoStream *video_str;
   gchar *name;
   GstCaps *caps;
+  gboolean set_caps = FALSE;
 
   g_return_val_if_fail (stream_nr < GST_MPEG_DEMUX_NUM_VIDEO_STREAMS, NULL);
   g_return_val_if_fail (type > GST_MPEG_DEMUX_VIDEO_UNKNOWN &&
@@ -380,7 +381,6 @@ gst_mpeg_demux_get_video_stream (GstMPEGDemux * mpeg_demux,
   if (str == NULL) {
     video_str = g_new0 (GstMPEGVideoStream, 1);
     str = (GstMPEGStream *) video_str;
-    str->type = GST_MPEG_DEMUX_VIDEO_UNKNOWN;
 
     name = g_strdup_printf ("video_%02d", stream_nr);
     CLASS (mpeg_demux)->init_stream (mpeg_demux, type, str, stream_nr, name,
@@ -388,6 +388,8 @@ gst_mpeg_demux_get_video_stream (GstMPEGDemux * mpeg_demux,
     g_free (name);
 
     mpeg_demux->video_stream[stream_nr] = str;
+
+    set_caps = TRUE;
   } else {
     /* This stream may have been created by a derived class, reset the
        size. */
@@ -395,16 +397,18 @@ gst_mpeg_demux_get_video_stream (GstMPEGDemux * mpeg_demux,
     mpeg_demux->video_stream[stream_nr] = str = (GstMPEGStream *) video_str;
   }
 
-  if (str->type != GST_MPEG_DEMUX_VIDEO_MPEG ||
-      video_str->mpeg_version != mpeg_version) {
+  if (set_caps || video_str->mpeg_version != mpeg_version) {
     /* We need to set new caps for this pad. */
     caps = gst_caps_new_simple ("video/mpeg",
         "mpegversion", G_TYPE_INT, mpeg_version,
         "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
-    gst_pad_set_explicit_caps (str->pad, caps);
+    if (!gst_pad_set_explicit_caps (str->pad, caps)) {
+      GST_ELEMENT_ERROR (GST_ELEMENT (mpeg_demux),
+          CORE, NEGOTIATION, (NULL), ("failed to set caps"));
+      return str;
+    }
 
     /* Store the current values. */
-    str->type = GST_MPEG_DEMUX_VIDEO_MPEG;
     video_str->mpeg_version = mpeg_version;
   }
 
@@ -418,6 +422,7 @@ gst_mpeg_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
   GstMPEGStream *str;
   gchar *name;
   GstCaps *caps;
+  gboolean set_caps = FALSE;
 
   g_return_val_if_fail (stream_nr < GST_MPEG_DEMUX_NUM_AUDIO_STREAMS, NULL);
   g_return_val_if_fail (type > GST_MPEG_DEMUX_AUDIO_UNKNOWN &&
@@ -427,7 +432,6 @@ gst_mpeg_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
 
   if (str == NULL) {
     str = g_new0 (GstMPEGStream, 1);
-    str->type = GST_MPEG_DEMUX_AUDIO_MPEG;
 
     name = g_strdup_printf ("audio_%02d", stream_nr);
     CLASS (mpeg_demux)->init_stream (mpeg_demux, type, str, stream_nr, name,
@@ -435,19 +439,24 @@ gst_mpeg_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
     g_free (name);
 
     mpeg_demux->audio_stream[stream_nr] = str;
+
+    /* new pad, set caps */
+    set_caps = TRUE;
   } else {
     /* This stream may have been created by a derived class, reset the
        size. */
     str = g_renew (GstMPEGStream, str, 1);
   }
 
-  if (str->type != GST_MPEG_DEMUX_AUDIO_MPEG) {
+  if (set_caps) {
     /* We need to set new caps for this pad. */
     caps = gst_caps_new_simple ("audio/mpeg",
         "mpegversion", G_TYPE_INT, 1, NULL);
-    gst_pad_set_explicit_caps (str->pad, caps);
-
-    str->type = GST_MPEG_DEMUX_AUDIO_MPEG;
+    if (!gst_pad_set_explicit_caps (str->pad, caps)) {
+      GST_ELEMENT_ERROR (GST_ELEMENT (mpeg_demux),
+          CORE, NEGOTIATION, (NULL), ("failed to set caps"));
+      return str;
+    }
   }
 
   return str;

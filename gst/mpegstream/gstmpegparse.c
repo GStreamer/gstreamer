@@ -306,14 +306,20 @@ gst_mpeg_parse_send_data (GstMPEGParse * mpeg_parse, GstData * data,
         break;
     }
   } else {
-    if (!GST_PAD_CAPS (mpeg_parse->srcpad)) {
+    if (!gst_pad_is_negotiated (mpeg_parse->srcpad)) {
       gboolean mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
+      GstCaps *caps;
 
-      gst_pad_set_explicit_caps (mpeg_parse->srcpad,
-          gst_caps_new_simple ("video/mpeg",
-              "mpegversion", G_TYPE_INT, (mpeg2 ? 2 : 1),
-              "systemstream", G_TYPE_BOOLEAN, TRUE,
-              "parsed", G_TYPE_BOOLEAN, TRUE, NULL));
+      caps = gst_caps_new_simple ("video/mpeg",
+          "mpegversion", G_TYPE_INT, (mpeg2 ? 2 : 1),
+          "systemstream", G_TYPE_BOOLEAN, TRUE,
+          "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+      if (!gst_pad_set_explicit_caps (mpeg_parse->srcpad, caps)) {
+        GST_ELEMENT_ERROR (GST_ELEMENT (mpeg_parse),
+            CORE, NEGOTIATION, (NULL), ("failed to set caps"));
+        return;
+      }
     }
 
     GST_BUFFER_TIMESTAMP (data) = time;
