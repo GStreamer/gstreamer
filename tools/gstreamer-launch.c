@@ -10,6 +10,7 @@ main(int argc, char *argv[])
   GstElement *pipeline;
   char **argvn;
   gchar *cmdline;
+  int i;
 
   gst_init (&argc, &argv);
 
@@ -18,6 +19,16 @@ main(int argc, char *argv[])
   // make a null-terminated version of argv
   argvn = g_new0 (char *,argc);
   memcpy (argvn, argv+1, sizeof (char*) * (argc-1));
+
+  // escape spaces
+  for (i=0; i<argc-1; i++) {
+    gchar **split;
+
+    split = g_strsplit (argvn[i], " ", 0);
+
+    argvn[i] = g_strjoinv ("\\ ", split);
+    g_strfreev (split);
+  }
   // join the argvs together
   cmdline = g_strjoinv (" ", argvn);
   // free the null-terminated argv
