@@ -333,7 +333,7 @@ gst_plugin_check_file (const gchar * filename, GError ** error)
     return FALSE;
   }
 
-  module = g_module_open (filename, G_MODULE_BIND_LAZY);
+  module = g_module_open (filename, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
 
   if (module == NULL) {
     GST_DEBUG ("Error loading plugin %s, reason: %s\n", filename,
@@ -384,7 +384,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   if (!gst_plugin_check_file (filename, error))
     return NULL;
 
-  module = g_module_open (filename, G_MODULE_BIND_LAZY);
+  module = g_module_open (filename, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
 
   if (module == NULL)
     goto load_error;

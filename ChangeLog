@@ -1,3 +1,11 @@
+2005-03-31  David Schleef  <ds@schleef.org>
+
+	* gst/gstplugin.c: (gst_plugin_check_file), (gst_plugin_load_file):
+	Switch to using G_MODULE_BIND_LOCAL, which means plugins are now
+	expected to link against libgstreamer.
+	* gst/base/Makefile.am: link against libgstreamer
+	* gst/elements/Makefile.am: same
+
 2005-03-31  Andy Wingo  <wingo@pobox.com>
 
 	* tests/instantiate/Makefile.am:
