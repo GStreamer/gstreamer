@@ -86,7 +86,7 @@ jpeg_caps_factory (void)
   return
     gst_caps_new (
   	"jpeg_jpeg",
-  	"video/x-jpeg",
+  	"image/jpeg",
   	    gst_props_new (
 		"width",     GST_PROPS_INT_RANGE (16, 4096),
 		"height",    GST_PROPS_INT_RANGE (16, 4096),
