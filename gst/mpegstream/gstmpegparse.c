@@ -359,7 +359,9 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     mpeg_parse->next_scr = scr;
   }
 
-  GST_DEBUG (0, "SCR is %" G_GUINT64_FORMAT " (%" G_GUINT64_FORMAT ") next: %" G_GINT64_FORMAT " (%" G_GINT64_FORMAT ") diff: %" G_GINT64_FORMAT " (%" G_GINT64_FORMAT ")", 
+  GST_DEBUG (0, "SCR is %" G_GUINT64_FORMAT " (%" G_GUINT64_FORMAT ") next: %" 
+	     G_GINT64_FORMAT " (%" G_GINT64_FORMAT ") diff: %" G_GINT64_FORMAT " (%" 
+	     G_GINT64_FORMAT ")", 
 		  scr, 
 		  MPEGTIME_TO_GSTTIME (scr),
 		  mpeg_parse->next_scr,
@@ -369,7 +371,9 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 		  MPEGTIME_TO_GSTTIME (mpeg_parse->next_scr));
 
   if (ABS ((gint64)mpeg_parse->next_scr - (gint64)(scr_adj)) > mpeg_parse->max_discont) {
-    GST_DEBUG (0, "discontinuity detected; expected: %" G_GUINT64_FORMAT " got: %" G_GUINT64_FORMAT " real:%" G_GINT64_FORMAT " adjust:%" G_GINT64_FORMAT, 
+    GST_DEBUG (0, "discontinuity detected; expected: %" 
+	       G_GUINT64_FORMAT " got: %" G_GUINT64_FORMAT " real:%" 
+	       G_GINT64_FORMAT " adjust:%" G_GINT64_FORMAT, 
            mpeg_parse->next_scr, scr_adj, scr, mpeg_parse->adjust);
 
     mpeg_parse->adjust = mpeg_parse->next_scr - scr;

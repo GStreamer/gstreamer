@@ -675,6 +675,7 @@ done:
     outbuf = gst_buffer_create_sub (buffer, headerlen + 4, datalen);
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+    GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer) + headerlen + 4;
 
     GST_DEBUG (0, "pushing buffer of len %d id %d, ts %" G_GINT64_FORMAT, 
 		    datalen, id, GST_BUFFER_TIMESTAMP (outbuf));
@@ -951,6 +952,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       outbuf = gst_buffer_create_sub (buffer, headerlen+4, datalen);
 
       GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+      GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer) + headerlen + 4;
 
       gst_pad_push(*outpad,outbuf);
     }

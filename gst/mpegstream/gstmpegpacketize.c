@@ -255,6 +255,7 @@ gst_mpeg_packetize_read (GstMPEGPacketize *packetize)
 	    break;
           default:
 	    if (packetize->MPEG2 && ((packetize->id < 0xBD) || (packetize->id > 0xFE))) {
+              gst_bytestream_flush (packetize->bs, 4);
 	      g_warning ("packetize: ******** unknown id 0x%02X",packetize->id);
 	    }
 	    else {
