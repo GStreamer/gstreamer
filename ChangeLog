@@ -1,3 +1,13 @@
+2005-01-10  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
+
+	* TODO:
+	  delete this file, it is by far outdated
+	* ext/alsa/gstalsa.1: remove
+	* ext/alsa/gstalsa.c: (add_rates), (add_channels), (gst_alsa_caps),
+	(gst_alsa_check_sample_rates), (gst_alsa_rates_probe),
+	(gst_alsa_get_caps):
+	  Add HW probing for supported sample rates. Fixes #161704
+
 2005-01-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/audioscale/gstaudioscale.c: (gst_audioscale_chain):
