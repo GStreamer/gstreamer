@@ -1,3 +1,22 @@
+2004-03-21  Tim-Philipp Müller <t.i.m@zen.co.uk>
+
+	reviewed by Benjamin Otte  <otte@gnome.org>
+
+	* gst/autoplug/gstspider.c: (gst_spider_dispose):
+	* gst/elements/gstaggregator.c: (gst_aggregator_finalize),
+	(gst_aggregator_class_init), (gst_aggregator_init):
+	* gst/elements/gstfilesrc.c: (gst_filesrc_init),
+	(gst_filesrc_dispose), (gst_filesrc_set_location):
+	* gst/elements/gstidentity.c: (gst_identity_finalize),
+	(gst_identity_class_init), (gst_identity_chain):
+	* gst/elements/gstmultifilesrc.c: (gst_multifilesrc_open_file):
+	* gst/elements/gststatistics.c: (gst_statistics_finalize),
+	(gst_statistics_class_init):
+	* gst/elements/gsttee.c: (gst_tee_finalize), (gst_tee_class_init),
+	(gst_tee_get_property):
+	  clean up used memory in this elements correctly on teardown (closes
+	  #137279)
+
 2004-03-20  Colin Walters  <walters@redhat.com>
 
 	* gst/registries/gstxmlregistry.c:

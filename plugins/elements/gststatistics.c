@@ -64,6 +64,7 @@ enum
 GST_BOILERPLATE_FULL (GstStatistics, gst_statistics, GstElement,
     GST_TYPE_ELEMENT, _do_init);
 
+static void gst_statistics_finalize (GObject * object);
 static void gst_statistics_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_statistics_get_property (GObject * object, guint prop_id,
@@ -85,6 +86,23 @@ gst_statistics_base_init (gpointer g_class)
 
   gst_element_class_set_details (gstelement_class, &gst_statistics_details);
 }
+
+static void
+gst_statistics_finalize (GObject * object)
+{
+  GstStatistics *statistics;
+
+  statistics = GST_STATISTICS (object);
+
+  if (statistics->timer)
+    g_timer_destroy (statistics->timer);
+
+  if (statistics->last_timer)
+    g_timer_destroy (statistics->last_timer);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 static void
 gst_statistics_class_init (GstStatisticsClass * klass)
 {
@@ -129,6 +147,7 @@ gst_statistics_class_init (GstStatisticsClass * klass)
       G_STRUCT_OFFSET (GstStatisticsClass, update), NULL, NULL,
       g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_statistics_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_statistics_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_statistics_get_property);
 }

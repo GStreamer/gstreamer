@@ -83,6 +83,7 @@ static GstPad *gst_aggregator_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * unused);
 static void gst_aggregator_update_functions (GstAggregator * aggregator);
 
+static void gst_aggregator_finalize (GObject * object);
 static void gst_aggregator_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_aggregator_get_property (GObject * object, guint prop_id,
@@ -106,6 +107,20 @@ gst_aggregator_base_init (gpointer g_class)
       gst_static_pad_template_get (&aggregator_src_template));
   gst_element_class_set_details (gstelement_class, &gst_aggregator_details);
 }
+
+static void
+gst_aggregator_finalize (GObject * object)
+{
+  GstAggregator *aggregator;
+
+  aggregator = GST_AGGREGATOR (object);
+
+  g_list_free (aggregator->sinkpads);
+  g_free (aggregator->last_message);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 static void
 gst_aggregator_class_init (GstAggregatorClass * klass)
 {
@@ -114,7 +129,6 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_PADS,
       g_param_spec_int ("num_pads", "Num pads", "The number of source pads",
@@ -130,6 +144,7 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
       g_param_spec_string ("last_message", "Last message",
           "The current state of the element", NULL, G_PARAM_READABLE));
 
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_aggregator_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_aggregator_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_aggregator_get_property);
 
@@ -148,6 +163,7 @@ gst_aggregator_init (GstAggregator * aggregator)
   aggregator->sinkpads = NULL;
   aggregator->silent = FALSE;
   aggregator->sched = AGGREGATOR_LOOP;
+  aggregator->last_message = NULL;
 
   gst_aggregator_update_functions (aggregator);
 }

@@ -248,7 +248,7 @@ gst_multifilesrc_open_file (GstMultiFileSrc * src, GstPad * srcpad)
     return FALSE;
   }
 
-  /* open the file */
+  /* open the file. FIXME: do we need to use O_LARGEFILE here? */
   src->fd = open ((const char *) src->currentfilename, O_RDONLY);
   if (src->fd < 0) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
@@ -260,9 +260,12 @@ gst_multifilesrc_open_file (GstMultiFileSrc * src, GstPad * srcpad)
     /* find the file length */
     src->size = lseek (src->fd, 0, SEEK_END);
     lseek (src->fd, 0, SEEK_SET);
-    /* map the file into memory */
+    /* map the file into memory. 
+     * FIXME: don't map the whole file at once, there might
+     *        be restrictions set. Get max size via getrlimit
+     *        or re-try with smaller size if mmap fails with ENOMEM? */
     src->map = mmap (NULL, src->size, PROT_READ, MAP_SHARED, src->fd, 0);
-    madvise (src->map, src->size, 2);
+    madvise (src->map, src->size, MADV_SEQUENTIAL);
     /* collapse state if that failed */
     if (src->map == NULL) {
       close (src->fd);

@@ -66,6 +66,7 @@ GST_BOILERPLATE_FULL (GstTee, gst_tee, GstElement, GST_TYPE_ELEMENT, _do_init);
 static GstPad *gst_tee_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * unused);
 
+static void gst_tee_finalize (GObject * object);
 static void gst_tee_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_tee_get_property (GObject * object, guint prop_id,
@@ -83,6 +84,19 @@ gst_tee_base_init (gpointer g_class)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&tee_src_template));
 }
+
+static void
+gst_tee_finalize (GObject * object)
+{
+  GstTee *tee;
+
+  tee = GST_TEE (object);
+
+  g_free (tee->last_message);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 static void
 gst_tee_class_init (GstTeeClass * klass)
 {
@@ -104,6 +118,7 @@ gst_tee_class_init (GstTeeClass * klass)
           NULL, G_PARAM_READABLE));
 
 
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_tee_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_tee_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_tee_get_property);
 
@@ -233,7 +248,7 @@ gst_tee_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, tee->silent);
       break;
     case ARG_LAST_MESSAGE:
-      g_value_set_string ((GValue *) value, tee->last_message);
+      g_value_set_string (value, tee->last_message);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

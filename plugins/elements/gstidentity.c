@@ -68,6 +68,7 @@ enum
 GST_BOILERPLATE_FULL (GstIdentity, gst_identity, GstElement, GST_TYPE_ELEMENT,
     _do_init);
 
+static void gst_identity_finalize (GObject * object);
 static void gst_identity_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_identity_get_property (GObject * object, guint prop_id,
@@ -84,6 +85,19 @@ gst_identity_base_init (gpointer g_class)
 
   gst_element_class_set_details (gstelement_class, &gst_identity_details);
 }
+
+static void
+gst_identity_finalize (GObject * object)
+{
+  GstIdentity *identity;
+
+  identity = GST_IDENTITY (object);
+
+  g_free (identity->last_message);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 static void
 gst_identity_class_init (GstIdentityClass * klass)
 {
@@ -125,6 +139,7 @@ gst_identity_class_init (GstIdentityClass * klass)
       G_STRUCT_OFFSET (GstIdentityClass, handoff), NULL, NULL,
       gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, GST_TYPE_BUFFER);
 
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_identity_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_identity_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_identity_get_property);
 }
@@ -180,9 +195,7 @@ gst_identity_chain (GstPad * pad, GstData * _data)
 
   if (identity->drop_probability > 0.0) {
     if ((gfloat) (1.0 * rand () / (RAND_MAX)) < identity->drop_probability) {
-      if (identity->last_message != NULL) {
-        g_free (identity->last_message);
-      }
+      g_free (identity->last_message);
       identity->last_message =
           g_strdup_printf ("dropping   ******* (%s:%s)i (%d bytes, %"
           G_GINT64_FORMAT ")", GST_DEBUG_PAD_NAME (identity->sinkpad),

@@ -233,6 +233,7 @@ gst_filesrc_init (GstFileSrc * src)
   src->filename = NULL;
   src->fd = 0;
   src->filelen = 0;
+  src->uri = NULL;
 
   src->curoffset = 0;
   src->block_size = DEFAULT_BLOCKSIZE;
@@ -251,12 +252,14 @@ gst_filesrc_dispose (GObject * object)
 
   src = GST_FILESRC (object);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  g_free (src->filename);
+  g_free (src->uri);
 
-  if (src->filename)
-    g_free (src->filename);
-  if (src->uri)
-    g_free (src->uri);
+  /* dispose may be called multiple times */
+  src->filename = NULL;
+  src->uri = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gboolean
@@ -266,10 +269,9 @@ gst_filesrc_set_location (GstFileSrc * src, const gchar * location)
   if (GST_STATE (src) != GST_STATE_READY && GST_STATE (src) != GST_STATE_NULL)
     return FALSE;
 
-  if (src->filename)
-    g_free (src->filename);
-  if (src->uri)
-    g_free (src->uri);
+  g_free (src->filename);
+  g_free (src->uri);
+
   /* clear the filename if we get a NULL (is that possible?) */
   if (location == NULL) {
     src->filename = NULL;

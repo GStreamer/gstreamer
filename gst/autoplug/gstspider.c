@@ -196,6 +196,7 @@ gst_spider_dispose (GObject * object)
 
   spider = GST_SPIDER (object);
   g_list_free (spider->factories);
+  spider->factories = NULL;
 
   ((GObjectClass *) parent_class)->dispose (object);
 }
