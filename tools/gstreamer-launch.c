@@ -62,7 +62,9 @@ gboolean
 idle_func (gpointer data)
 {
   if (!gst_bin_iterate (GST_BIN (data))) {
+#ifndef USE_GLIB2
     gtk_main_quit ();
+#endif
     return FALSE;
   }
   return TRUE;
