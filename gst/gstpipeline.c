@@ -154,9 +154,13 @@ gst_pipeline_change_state (GstElement *element)
     case GST_STATE_PAUSED_TO_READY:
       break;
     case GST_STATE_READY_TO_NULL:
+      /* FIXME: calling gst_scheduler_reset() here is bad, since we
+       * might not be in cothread 0 */
+#if 0
       if (GST_ELEMENT_SCHED (element)) {
         gst_scheduler_reset (GST_ELEMENT_SCHED (element));
       }
+#endif
       break;
   }
 
