@@ -1,7 +1,8 @@
 #include <gnome.h>
 #include <gst/gst.h>
 
-GstElement *parse2, *queue;
+GstPipeline *pipeline;
+GstElement *parse2, *v_queue, *a_queue, *v_thread, *a_thread;
 GtkWidget *appwindow;
 
 void eof(GstElement *src) {
@@ -17,19 +18,24 @@ gboolean idle_func(gpointer data) {
 void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
   g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
+//  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
 
   if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
-
-    gst_pad_connect(pad, gst_element_get_pad(queue,"sink"));
+    gst_pad_connect(pad, gst_element_get_pad(v_queue,"sink"));
+    gst_bin_add(GST_BIN(pipeline),v_thread);
+    gst_element_set_state(v_thread,GST_STATE_PLAYING);
+  } else if (strcmp(gst_pad_get_name(pad), "private_stream_1.0") == 0) {
+    gst_pad_connect(pad, gst_element_get_pad(a_queue,"sink"));
+    gst_bin_add(GST_BIN(pipeline),a_thread);
+    gst_element_set_state(a_thread,GST_STATE_PLAYING);
   }
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
+//  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 }
 
 int main(int argc,char *argv[]) {
-  GstPipeline *pipeline;
   GstElement *src, *parse;
-  GstElement *decode, *show, *thread, *color;
+  GstElement *v_decode, *show, *color;
+  GstElement *a_decode, *osssink;
   GtkWidget  *gtk_socket;
 
   g_print("have %d args\n",argc);
@@ -40,14 +46,19 @@ int main(int argc,char *argv[]) {
 
   pipeline = GST_PIPELINE(gst_pipeline_new("pipeline"));
   g_return_val_if_fail(pipeline != NULL, -1);
-  thread = GST_ELEMENT(gst_thread_new("thread"));
-  g_return_val_if_fail(thread != NULL, -1);
+
+  v_thread = GST_ELEMENT(gst_thread_new("v_thread"));
+  g_return_val_if_fail(v_thread != NULL, -1);
+
+  a_thread = GST_ELEMENT(gst_thread_new("a_thread"));
+  g_return_val_if_fail(a_thread != NULL, -1);
 
   if (strstr(argv[1],"video_ts")) {
     src = gst_elementfactory_make("dvdsrc","src");
     g_print("using DVD source\n");
-  } else
+  } else {
     src = gst_elementfactory_make("disksrc","src");
+  }
 
   g_return_val_if_fail(src != NULL, -1);
   gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
@@ -61,8 +72,11 @@ int main(int argc,char *argv[]) {
   //parse = gst_elementfactory_make("mpeg1parse","parse");
   g_return_val_if_fail(parse != NULL, -1);
 
-  queue = gst_elementfactory_make("queue","queue");
-  g_return_val_if_fail(queue != NULL, -1);
+  v_queue = gst_elementfactory_make("queue","v_queue");
+  g_return_val_if_fail(v_queue != NULL, -1);
+  
+  a_queue = gst_elementfactory_make("queue","a_queue");
+  g_return_val_if_fail(a_queue != NULL, -1);
   
   /****
    *  you can substitute mpeg2play with you own player here
@@ -72,15 +86,22 @@ int main(int argc,char *argv[]) {
    **/
   //parse2 = gst_elementfactory_make("mp2videoparse","parse");
   //g_return_val_if_fail(parse2 != NULL, -1);
-  decode = gst_elementfactory_make("mpeg2dec","decode_video");
-  g_return_val_if_fail(decode != NULL, -1);
+  v_decode = gst_elementfactory_make("mpeg2dec","decode_video");
+  g_return_val_if_fail(v_decode != NULL, -1);
 
   color = gst_elementfactory_make("colorspace","color");
   g_return_val_if_fail(color != NULL, -1);
 
   show = gst_elementfactory_make("xvideosink","show");
+  //show = gst_elementfactory_make("aasink","show");
   //gtk_object_set(GTK_OBJECT(show),"xv_enabled",FALSE,NULL);
   g_return_val_if_fail(show != NULL, -1);
+
+  a_decode = gst_elementfactory_make("ac3dec","decode_audio");
+  g_return_val_if_fail(a_decode != NULL, -1);
+
+  osssink = gst_elementfactory_make("osssink","osssink");
+  g_return_val_if_fail(osssink != NULL, -1);
 
   appwindow = gnome_app_new("MPEG player","MPEG player");
 
@@ -97,14 +118,17 @@ int main(int argc,char *argv[]) {
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));
-  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(queue));
+  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(v_queue));
 
-  //gst_bin_add(GST_BIN(thread),GST_ELEMENT(parse2));
-  gst_bin_add(GST_BIN(thread),GST_ELEMENT(decode));
-  gst_bin_add(GST_BIN(thread),GST_ELEMENT(color));
-  gst_bin_add(GST_BIN(thread),GST_ELEMENT(show));
+  gst_bin_add(GST_BIN(v_thread),GST_ELEMENT(v_queue));
+  //gst_bin_add(GST_BIN(v_thread),GST_ELEMENT(parse2));
+  gst_bin_add(GST_BIN(v_thread),GST_ELEMENT(v_decode));
+  gst_bin_add(GST_BIN(v_thread),GST_ELEMENT(color));
+  gst_bin_add(GST_BIN(v_thread),GST_ELEMENT(show));
 
-  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(thread));
+  gst_bin_add(GST_BIN(v_thread),GST_ELEMENT(a_queue));
+  gst_bin_add(GST_BIN(a_thread),GST_ELEMENT(a_decode));
+  gst_bin_add(GST_BIN(a_thread),GST_ELEMENT(osssink));
 
   gtk_signal_connect(GTK_OBJECT(parse),"new_pad",mpeg2parse_newpad, pipeline);
 
@@ -113,14 +137,21 @@ int main(int argc,char *argv[]) {
   gst_pad_connect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(parse,"sink"));
 
-  gst_pad_connect(gst_element_get_pad(queue,"src"),
+  // video
+  gst_pad_connect(gst_element_get_pad(v_queue,"src"),
   //                gst_element_get_pad(parse2,"sink"));
   //gst_pad_connect(gst_element_get_pad(parse2,"src"),
-                  gst_element_get_pad(decode,"sink"));
-  gst_pad_connect(gst_element_get_pad(decode,"src"),
+                  gst_element_get_pad(v_decode,"sink"));
+  gst_pad_connect(gst_element_get_pad(v_decode,"src"),
                   gst_element_get_pad(color,"sink"));
   gst_pad_connect(gst_element_get_pad(color,"src"),
                   gst_element_get_pad(show,"sink"));
+
+  // audio
+  gst_pad_connect(gst_element_get_pad(a_queue,"src"),
+                  gst_element_get_pad(a_decode,"sink"));
+  gst_pad_connect(gst_element_get_pad(a_decode,"src"),
+                  gst_element_get_pad(osssink,"sink"));
 
   gtk_widget_show_all(appwindow);
 
