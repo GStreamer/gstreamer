@@ -109,15 +109,15 @@ gst_autoplug_signal_new_object (GstAutoplug *autoplug, GstObject *object)
 
 /**
  * gst_autoplug_to_caps:
- * @autoplug: The autoplugger perform the autoplugging
- * @srccaps: The source cpabilities
- * @sinkcaps: The target capabilities
- * @...: more target capabilities
+ * @autoplug: The autoplugger performing the autoplugging.
+ * @srccaps: The source capabilities.
+ * @sinkcaps: The target capabilities.
+ * @...: more target capabilities.
  *
  * Perform the autoplugging procedure on the given autoplugger. 
  * The src caps will be connected to the sink caps.
  * 
- * Returns: A new Element that connects the src caps to the sink caps.
+ * Returns: A new #GstElement that connects the src caps to the sink caps.
  */
 GstElement*
 gst_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *sinkcaps, ...)
@@ -138,16 +138,16 @@ gst_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *sinkcaps
 }
 
 /**
- * gst_autoplug_to_caps:
- * @autoplug: The autoplugger perform the autoplugging
- * @srccaps: The source cpabilities
- * @sinkcaps: The target capabilities
- * @va_list: more target capabilities
+ * gst_autoplug_to_caps_valist:
+ * @autoplug: The autoplugger performing the autoplugging.
+ * @srccaps: The source capabilities.
+ * @sinkcaps: The target capabilities.
+ * @va_list: more target capabilities.
  *
  * Perform the autoplugging procedure on the given autoplugger. 
  * The src caps will be connected to the sink caps.
  * 
- * Returns: A new Element that connects the src caps to the sink caps.
+ * Returns: A new #GstElement that connects the src caps to the sink caps.
  */
 GstElement*
 gst_autoplug_to_caps_valist (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *sinkcaps, va_list args)
@@ -164,15 +164,15 @@ gst_autoplug_to_caps_valist (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
 
 /**
  * gst_autoplug_to_renderers:
- * @autoplug: The autoplugger perform the autoplugging
- * @srccaps: The source cpabilities
- * @target: The target element 
- * @...: more target elements
+ * @autoplug: The autoplugger performing the autoplugging.
+ * @srccaps: The source capabilities.
+ * @target: The target element. 
+ * @...: more target elements.
  *
  * Perform the autoplugging procedure on the given autoplugger. 
  * The src caps will be connected to the target elements.
  * 
- * Returns: A new Element that connects the src caps to the target elements.
+ * Returns: A new #GstElement that connects the src caps to the target elements.
  */
 GstElement*
 gst_autoplug_to_renderers (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *target, ...)
@@ -193,16 +193,16 @@ gst_autoplug_to_renderers (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *
 }
 
 /**
- * gst_autoplug_to_renderers:
- * @autoplug: The autoplugger perform the autoplugging
- * @srccaps: The source cpabilities
- * @target: The target element 
- * @va_list: more target elements
+ * gst_autoplug_to_renderers_valist:
+ * @autoplug: The autoplugger performing the autoplugging.
+ * @srccaps: The source capabilities.
+ * @target: The target element.
+ * @va_list: more target elements.
  *
  * Perform the autoplugging procedure on the given autoplugger. 
  * The src caps will be connected to the target elements.
  * 
- * Returns: A new Element that connects the src caps to the target elements.
+ * Returns: A new #GstElement that connects the src caps to the target elements.
  */
 GstElement*
 gst_autoplug_to_renderers_valist (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *target, va_list args)
