@@ -67,8 +67,7 @@ GST_PAD_TEMPLATE_FACTORY (audio_factory,
   GST_CAPS_NEW (
     "mpeg_demux_audio",
     "audio/mpeg",
-      "mpegversion", GST_PROPS_INT (1),
-      "layer", GST_PROPS_INT_RANGE (1, 2)
+      "mpegversion", GST_PROPS_INT (1)
   )
 );
 
