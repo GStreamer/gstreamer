@@ -185,6 +185,11 @@
 #define GST_RIFF_WPY2 GST_MAKE_FOURCC ('W', 'P', 'Y', '2')
 #define GST_RIFF_m263 GST_MAKE_FOURCC ('m', '2', '6', '3')
 #define GST_RIFF_M263 GST_MAKE_FOURCC ('M', '2', '6', '3')
+#define GST_RIFF_s263 GST_MAKE_FOURCC ('s', '2', '6', '3')
+#define GST_RIFF_H263 GST_MAKE_FOURCC ('H', '2', '6', '3')
+#define GST_RIFF_i263 GST_MAKE_FOURCC ('i', '2', '6', '3')
+#define GST_RIFF_L263 GST_MAKE_FOURCC ('L', '2', '6', '3')
+#define GST_RIFF_x263 GST_MAKE_FOURCC ('x', '2', '6', '3')
 
 #define GST_RIFF_Q1_0 GST_MAKE_FOURCC ('Q', '1',0x2e, '0')
 #define GST_RIFF_SFMC GST_MAKE_FOURCC ('S', 'F', 'M', 'C')

@@ -1,3 +1,12 @@
+2004-12-13  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
+
+	* gst/asfdemux/README
+	* gst/wavenc/riff.h
+	* gst-libs/gst/riff/riff-ids.h
+	* gst-libs/gst/riff/riff-media.c
+	  add new 4CC codes for h263 related codecs
+	  fixes partially bug #155163
+
 2004-12-12  Christian Fredrik Kalager Schaller  <christian at fluendo dot com>
 
 	* configure.ac: Update polyaudio requirement to 0.7
