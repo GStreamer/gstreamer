@@ -41,7 +41,7 @@ gst_play_typefind (GstBin *bin, GstElement *element)
   // push a buffer... the have_type signal handler will set the found flag
   gst_bin_iterate (bin);
 
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
+  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
 
   caps = gst_pad_get_caps (gst_element_get_pad (element, "src"));
 

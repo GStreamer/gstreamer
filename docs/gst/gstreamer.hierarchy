@@ -9,7 +9,6 @@ GtkObject
       GstFakeSrc
       GstFakeSink
       GstDiskSrc
-      GstDiskSink
       GstHttpSrc
       GstFdSrc
       GstSineSrc

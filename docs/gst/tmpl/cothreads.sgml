@@ -61,9 +61,9 @@ The maximum number of cothreads we are going to support.
 @argv: 
 @flags: 
 @sp: 
+@jmp: 
 @top_sp: 
 @pc: 
-@jmp: 
 
 <!-- ##### STRUCT cothread_context ##### -->
 <para>

@@ -221,10 +221,10 @@ used when data in a stream has been skipped
 @offset: 
 @timestamp: 
 @maxage: 
-@metas: 
 @parent: 
 @pool: 
 @pool_private: 
+@free: 
 
 <!-- ##### FUNCTION gst_buffer_new ##### -->
 <para>
@@ -304,41 +304,5 @@ used when data in a stream has been skipped
 </para>
 
 @buffer: 
-
-
-<!-- ##### FUNCTION gst_buffer_add_meta ##### -->
-<para>
-
-</para>
-
-@buffer: 
-@meta: 
-
-
-<!-- ##### FUNCTION gst_buffer_get_first_meta ##### -->
-<para>
-
-</para>
-
-@buffer: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_buffer_get_metas ##### -->
-<para>
-
-</para>
-
-@buffer: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_buffer_remove_meta ##### -->
-<para>
-
-</para>
-
-@buffer: 
-@meta: 
 
 

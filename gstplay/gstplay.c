@@ -124,7 +124,7 @@ gst_play_init (GstPlay *play)
   /* create a new bin to hold the elements */
   priv->thread = gst_thread_new ("main_thread");
   g_assert (priv->thread != NULL);
-  priv->bin = gst_bin_new ("main_bin");
+  priv->bin = gst_pipeline_new ("main_bin");
   g_assert (priv->bin != NULL);
 
   priv->audio_element = gst_elementfactory_make ("osssink", "play_audio");

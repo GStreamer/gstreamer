@@ -25,7 +25,7 @@ void new_pad(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     gst_element_connect(audioqueue,"src",audiodecode,"sink");
 
     fprintf(stderr,"creating esdsink\n");
-    audiosink = gst_elementfactory_make("esdsink","audiosink");
+    audiosink = gst_elementfactory_make("osssink","audiosink");
     gst_bin_add(GST_BIN(audiothread),audiosink);
     gst_element_connect(audiodecode,"src",audiosink,"sink");
 
@@ -45,7 +45,7 @@ int main(int argc,char *argv[]) {
   pipeline = gst_pipeline_new("pipeline");
   sourcethread = gst_elementfactory_make("thread","sourcethread");
   src = gst_elementfactory_make("disksrc","src");
-  gtk_object_set(GTK_OBJECT(src),"location","/home/omega/media/AlienSong.mpg",NULL);
+  gtk_object_set(GTK_OBJECT(src),"location","/opt/data/AlienSong.mpg",NULL);
   parse = gst_elementfactory_make("mpeg1parse","parse");
 
   gtk_signal_connect(GTK_OBJECT(parse),"new_pad",

@@ -313,6 +313,12 @@ the stream.
 </para>
 
 
+<!-- ##### ARG GstDiskSink:location ##### -->
+<para>
+The filename to write to.
+</para>
+
+
 <!-- ##### MACRO GST_IS_SRC_CLASS ##### -->
 <para>
 
@@ -645,6 +651,14 @@ Specify the current offset in the file.
 </para>
 
 
+<!-- ##### FUNCTION gst_element_get_manager ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
 <!-- ##### STRUCT MetaDGA ##### -->
 <para>
 
@@ -966,6 +980,14 @@ The buffer is sent to the sound card.
 @pad: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_buffer_add_meta ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@meta: 
+
 <!-- ##### FUNCTION gst_elementfactory_can_src_caps_list ##### -->
 <para>
 
@@ -988,6 +1010,14 @@ The buffer is sent to the sound card.
 
 </para>
 
+
+<!-- ##### FUNCTION gst_buffer_remove_meta ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@meta: 
 
 <!-- ##### FUNCTION gst_caps_register_count ##### -->
 <para>
@@ -1110,6 +1140,13 @@ The buffer is sent to the sound card.
 
 @name: 
 @Returns: 
+
+<!-- ##### SIGNAL GstDiskSink::handoff ##### -->
+<para>
+Is emited after the buffer has been written to the disk.
+</para>
+
+@gstdisksink: the object which received the signal.
 
 <!-- ##### MACRO GST_ESDSINK ##### -->
 <para>
@@ -1521,6 +1558,14 @@ Indicates a srcpad for the padfactory.
 </para>
 
 
+<!-- ##### FUNCTION gst_buffer_get_first_meta ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@Returns: 
+
 <!-- ##### MACRO GST_IS_SINK_CLASS ##### -->
 <para>
 
@@ -1667,6 +1712,14 @@ GstSrc
 @props: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_element_set_manager ##### -->
+<para>
+
+</para>
+
+@element: 
+@manager: 
+
 <!-- ##### MACRO GST_TYPE_AUDIOSRC ##### -->
 <para>
 
@@ -1784,19 +1837,19 @@ or a video card.
 </para>
 
 
-<!-- ##### FUNCTION gst_esdsink_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### MACRO GST_IS_BIN_CLASS ##### -->
 <para>
 
 </para>
 
 @obj: 
+
+<!-- ##### FUNCTION gst_esdsink_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### SECTION ./tmpl/GstElement.sgml:See_Also ##### -->
 <para>
@@ -1818,6 +1871,12 @@ Query whether this object has multiple input pads.
 
 @obj: Element to query for multiple input pads.
 
+<!-- ##### SECTION ./tmpl/gstfilter.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO DEBUG_NOPREFIX ##### -->
 <para>
 
@@ -1825,12 +1884,6 @@ Query whether this object has multiple input pads.
 
 @format: 
 @args...: 
-
-<!-- ##### SECTION ./tmpl/gstfilter.sgml:See_Also ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### ARG GstAudioSink:frequency ##### -->
 <para>
@@ -2748,6 +2801,14 @@ Reads data from a file. You can seek to a specific location by setting
 the offset.
 </para>
 
+
+<!-- ##### FUNCTION gst_buffer_get_metas ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@Returns: 
 
 <!-- ##### MACRO GST_IS_ASYNCDISKSRC_CLASS ##### -->
 <para>

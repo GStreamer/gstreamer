@@ -726,6 +726,7 @@ Get the type of the region that is being pulled.
 @regiontype: 
 @offset: 
 @len: 
+@sched: 
 @chainfunc: 
 @getfunc: 
 @getregionfunc: 
