@@ -76,7 +76,7 @@ enum
 {
   ARG_0,
   ARG_SOURCE,
-  ARG_DEST,
+  ARG_DEST
 };
 
 static void gst_colorspace_base_init (gpointer g_class);
