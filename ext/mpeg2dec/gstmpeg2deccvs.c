@@ -252,6 +252,14 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
 
   /* we what we are allowed to do */
   allowed = gst_pad_get_allowed_caps (mpeg2dec->srcpad);
+  /* we could not get allowed caps */
+  if (!allowed) {
+    allowed = GST_CAPS_NEW (
+                "mpeg2dec_negotiate",
+                "video/raw",
+               	  "format",        GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
+	      );
+  }
 
   /* try to fix our height */
   trylist = gst_caps_intersect (allowed,
@@ -435,7 +443,8 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	      (mpeg2dec->first && !GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_KEY_UNIT))) 
 	  {
 	  */
-	  if (picture->flags & PIC_FLAG_SKIP) {
+	  if (picture->flags & PIC_FLAG_SKIP || 
+	      !GST_PAD_IS_USABLE (mpeg2dec->srcpad)) {
 	    gst_buffer_unref (outbuf);
 	  }
 	  else {
