@@ -1,5 +1,10 @@
 2005-01-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstdecodebin.c: (try_to_link_1):
+	  Use realpad for signal.
+
+2005-01-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/mad/gstid3demuxbin.c: (gst_id3demux_bin_base_init):
 	  Fix category so decodebin picks it up.
 
