@@ -3,100 +3,48 @@
 int
 main (int argc, char *argv[])
 {
-  GstElement *element;
-  GstElement *sink1, *sink2;
   GstAutoplug *autoplug;
-  GstAutoplug *autoplug2;
+  GstElement *element;
+  GstElement *sink;
+  GstElement *pipeline;
+  GstElement *disksrc;
 
   gst_init(&argc,&argv);
 
-  sink1 = gst_elementfactory_make ("videosink", "videosink");
-  sink2 = gst_elementfactory_make ("osssink", "osssink");
+  sink = gst_elementfactory_make ("osssink", "osssink");
+  g_assert (sink != NULL);
 
   autoplug = gst_autoplugfactory_make ("staticrender");
-  autoplug2 = gst_autoplugfactory_make ("static");
+  g_assert (autoplug != NULL);
   
   element = gst_autoplug_to_renderers (autoplug, 
-		  gst_caps_new ("mp3caps", "audio/mp3", NULL), sink2, NULL);
-  xmlSaveFile ("autoplug3_1.gst", gst_xml_write (element));
+		                       gst_caps_new (
+					 "mp3caps", 
+					 "audio/mp3",
+					 NULL
+				       ), 
+				       sink,
+				       NULL);
+  g_assert (element != NULL);
 
-  element = gst_autoplug_to_renderers (autoplug, 
-		  gst_caps_new ("mpeg1caps", "video/mpeg", NULL), sink1, NULL);
-  if (element) {
-    xmlSaveFile ("autoplug3_2.gst", gst_xml_write (element));
-  }
+  pipeline = gst_pipeline_new ("main_pipeline");
+  g_assert (pipeline != NULL);
 
-  element = gst_autoplug_to_caps (autoplug2,
-		  gst_caps_new(
-			  "testcaps3",
-			  "video/mpeg",
-			  gst_props_new (
-			      "mpegversion",  GST_PROPS_INT (1),
-			      "systemstream", GST_PROPS_BOOLEAN (TRUE),
-			      NULL)),
-		  gst_caps_new("testcaps4","audio/raw", NULL),
-		  NULL);
-  if (element) {
-    xmlSaveFile ("autoplug3_3.gst", gst_xml_write (element));
-  }
+  disksrc = gst_elementfactory_make ("disksrc", "disk_reader");
+  g_assert (disksrc != NULL);
 
-  element = gst_autoplug_to_caps (autoplug2,
-		  gst_caps_new(
-			  "testcaps5",
-			  "video/mpeg",
-			  gst_props_new (
-			      "mpegversion",  GST_PROPS_INT (1),
-			      "systemstream", GST_PROPS_BOOLEAN (FALSE),
-			      NULL)),
-		  gst_caps_new("testcaps6", "video/raw", NULL),
-		  NULL);
-  if (element) {
-    xmlSaveFile ("autoplug3_4.gst", gst_xml_write (element));
-  }
+  gst_bin_add (GST_BIN (pipeline), disksrc);
+  gst_bin_add (GST_BIN (pipeline), element);
 
-  element = gst_autoplug_to_caps (autoplug2,
-		  gst_caps_new(
-			  "testcaps7",
-			  "video/avi", NULL),
-		  gst_caps_new("testcaps8", "video/raw", NULL),
-		  gst_caps_new("testcaps9", "audio/raw", NULL),
-		  NULL);
-  if (element) {
-    xmlSaveFile ("autoplug3_5.gst", gst_xml_write (element));
-  }
+  gst_element_connect (disksrc, "src", element, "sink");
 
-  element = gst_autoplug_to_caps (autoplug2,
-		  gst_caps_new(
-			  "testcaps10",
-			  "video/mpeg",
-			  gst_props_new (
-			      "mpegversion",  GST_PROPS_INT (1),
-			      "systemstream", GST_PROPS_BOOLEAN (TRUE),
-			      NULL)),
-		  gst_caps_new("testcaps10", "video/raw", NULL),
-		  gst_caps_new("testcaps11", "audio/raw", NULL),
-		  NULL);
-  if (element) {
-    xmlSaveFile ("autoplug3_6.gst", gst_xml_write (element));
-  }
+  gtk_object_set (GTK_OBJECT (disksrc), "location", argv[1], NULL);
 
-  sink1 = gst_elementfactory_make ("videosink", "videosink");
-  sink2 = gst_elementfactory_make ("osssink", "osssink");
-  
-  element = gst_autoplug_to_renderers (autoplug,
-		  gst_caps_new(
-			  "testcaps10",
-			  "video/mpeg",
-			  gst_props_new (
-			      "mpegversion",  GST_PROPS_INT (1),
-			      "systemstream", GST_PROPS_BOOLEAN (TRUE),
-			      NULL)),
-		  sink1,
-		  sink2,
-		  NULL);
-  if (element) {
-    xmlSaveFile ("autoplug3_7.gst", gst_xml_write (element));
-  }
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  while (gst_bin_iterate (GST_BIN (pipeline)));
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
 
   exit (0);
 }
