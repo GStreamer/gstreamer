@@ -56,8 +56,9 @@ typedef enum {
 typedef enum {
   GST_REGISTRY_READABLE			= (1 << 1),
   GST_REGISTRY_WRITABLE			= (1 << 2),
-  GST_REGISTRY_REMOTE			= (1 << 3),
-  GST_REGISTRY_DELAYED_LOADING		= (1 << 4)
+  GST_REGISTRY_EXISTS			= (1 << 3),
+  GST_REGISTRY_REMOTE			= (1 << 4),
+  GST_REGISTRY_DELAYED_LOADING		= (1 << 5)
 } GstRegistryFlags;
 
   
