@@ -1,3 +1,12 @@
+2004-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	reviewed by: <delete if not using a buddy>
+
+	* configure.ac:
+	* gst/elements/gstfakesrc.c:
+	* gst/elements/gstidentity.c:
+	* gst/gstthread.c:
+
 2004-10-01  Wim Taymans  <wim at fluendo dot com>
 
 	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_crc):

@@ -326,6 +326,8 @@ gst_identity_chain (GstPad * pad, GstData * _data)
   }
 
   for (i = identity->duplicate; i; i--) {
+    GstClockTime time;
+
     if (!identity->silent) {
       g_free (identity->last_message);
       identity->last_message =
@@ -339,7 +341,7 @@ gst_identity_chain (GstPad * pad, GstData * _data)
       g_object_notify (G_OBJECT (identity), "last-message");
     }
 
-    GstClockTime time = GST_BUFFER_TIMESTAMP (buf);
+    time = GST_BUFFER_TIMESTAMP (buf);
 
     if (identity->datarate > 0) {
       time = identity->bytes_handled * GST_SECOND / identity->datarate;

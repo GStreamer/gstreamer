@@ -795,6 +795,7 @@ gst_fakesrc_get (GstPad * pad)
 {
   GstFakeSrc *src;
   GstBuffer *buf;
+  GstClockTime time;
 
   g_return_val_if_fail (pad != NULL, NULL);
 
@@ -832,7 +833,7 @@ gst_fakesrc_get (GstPad * pad)
   buf = gst_fakesrc_create_buffer (src);
   GST_BUFFER_OFFSET (buf) = src->buffer_count++;
 
-  GstClockTime time = GST_CLOCK_TIME_NONE;
+  time = GST_CLOCK_TIME_NONE;
 
   if (src->datarate > 0) {
     time = (src->bytes_sent * GST_SECOND) / src->datarate;

@@ -491,9 +491,11 @@ gst_thread_change_state (GstElement * element)
     }
     case GST_STATE_PLAYING_TO_PAUSED:
     {
+      GList *elements;
+
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
 
-      GList *elements = (GList *) gst_bin_get_list (GST_BIN (thread));
+      elements = (GList *) gst_bin_get_list (GST_BIN (thread));
 
       while (elements) {
         gst_element_disable_threadsafe_properties ((GstElement *) elements->
