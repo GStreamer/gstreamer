@@ -221,7 +221,7 @@ fault_handler_sighandler (int signum)
   fault_spin ();
 }
 
-#else
+#else /* USE_SIGINFO */
 
 static void
 fault_handler_sigaction (int signum, siginfo_t * si, void *misc)
@@ -246,7 +246,7 @@ fault_handler_sigaction (int signum, siginfo_t * si, void *misc)
 
   fault_spin ();
 }
-#endif
+#endif /* USE_SIGINFO */
 
 static void
 fault_spin (void)
@@ -293,7 +293,7 @@ fault_setup (void)
   sigaction (SIGSEGV, &action, NULL);
   sigaction (SIGQUIT, &action, NULL);
 }
-#endif
+#endif /* DISABLE_FAULT_HANDLER */
 
 static void
 print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
@@ -343,6 +343,8 @@ error_cb (GObject * object, GstObject * source, GError * error, gchar * debug)
 static void
 sigint_handler_sighandler (int signum)
 {
+  g_print ("Caught interrupt -- ");
+
   sigint_restore ();
 
   caught_intr = TRUE;

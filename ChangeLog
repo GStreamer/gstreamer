@@ -1,3 +1,32 @@
+2005-03-10  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-MT-refcounting.txt:
+	* docs/design/part-clocks.txt:
+	* docs/design/part-gstelement.txt:
+	* docs/design/part-gstobject.txt:
+	* docs/design/part-standards.txt:
+	* gst/gstbin.c: (gst_bin_add_func), (gst_bin_add),
+	(gst_bin_remove_func), (gst_bin_remove):
+	* gst/gstbin.h:
+	* gst/gstbuffer.c:
+	* gst/gstcaps.h:
+	* testsuite/clock/clock1.c: (main):
+	* testsuite/clock/clock2.c: (gst_clock_debug), (element_wait),
+	(main):
+	* testsuite/dlopen/loadgst.c: (do_test):
+	* testsuite/refcounting/bin.c: (add_remove_test1),
+	(add_remove_test2), (main):
+	* testsuite/refcounting/element.c: (main):
+	* testsuite/refcounting/element_pad.c: (main):
+	* testsuite/refcounting/pad.c: (main):
+	* tools/gst-launch.c: (sigint_handler_sighandler):
+	* tools/gst-typefind.c: (main):
+	Doc updates.
+	Added doc about clock.
+	removed gst_bin_iterate_recurse_up(), marked methods
+	for removal.
+	Fix more testsuites.
+
 2005-03-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpad.c: (gst_pad_get_direction),

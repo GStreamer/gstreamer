@@ -300,6 +300,7 @@ gst_bin_get_clock_func (GstElement * element)
   return result;
 }
 
+/* will be removed */
 static void
 gst_bin_set_element_sched (GstElement * element, GstScheduler * sched)
 {
@@ -359,6 +360,7 @@ gst_bin_set_element_sched (GstElement * element, GstScheduler * sched)
   }
 }
 
+/* will be removed */
 static void
 gst_bin_unset_element_sched (GstElement * element, GstScheduler * sched)
 {
@@ -452,8 +454,8 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
     goto duplicate_name;
 
   /* set the element's parent and add the element to the bin's list of children */
-  if (G_UNLIKELY (!gst_object_set_parent (GST_OBJECT (element),
-              GST_OBJECT (bin))))
+  if (G_UNLIKELY (!gst_object_set_parent (GST_OBJECT_CAST (element),
+              GST_OBJECT_CAST (bin))))
     goto had_parent;
 
   bin->children = g_list_prepend (bin->children, element);
@@ -573,12 +575,12 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
 
   /* we ref here because after the _unparent() the element can be disposed
    * and we still need it to fire a signal. */
-  gst_object_ref (GST_OBJECT (element));
-  gst_object_unparent (GST_OBJECT (element));
+  gst_object_ref (GST_OBJECT_CAST (element));
+  gst_object_unparent (GST_OBJECT_CAST (element));
 
   g_signal_emit (G_OBJECT (bin), gst_bin_signals[ELEMENT_REMOVED], 0, element);
   /* element is really out of our control now */
-  gst_object_unref (GST_OBJECT (element));
+  gst_object_unref (GST_OBJECT_CAST (element));
 
   return TRUE;
 
@@ -731,12 +733,6 @@ gst_bin_iterate_recurse (GstBin * bin)
   return result;
 }
 
-GstIterator *
-gst_bin_iterate_recurse_up (GstBin * bin)
-{
-  return NULL;
-}
-
 /* returns 0 if the element is a sink, this is made so that
  * we can use this function as a filter 
  *
@@ -820,6 +816,8 @@ bin_element_is_sink (GstElement * child, GstBin * bin)
  * Each element will have its refcount increased, so unref 
  * after usage.
  *
+ * The sink elements are those without any linked srcpads.
+ *
  * Returns: a #GstIterator of #GstElements. gst_iterator_free after use.
  *
  * MT safe.
@@ -848,6 +846,8 @@ gst_bin_iterate_sinks (GstBin * bin)
  *
  * An internal function to inform the parent bin about a state change
  * of a child.
+ *
+ * Marked for removal.
  */
 void
 gst_bin_child_state_change (GstBin * bin, GstElementState oldstate,
@@ -873,6 +873,7 @@ gst_bin_child_state_change (GstBin * bin, GstElementState oldstate,
   }
 }
 
+/* will be removed */
 static void
 gst_bin_child_state_change_func (GstBin * bin, GstElementState oldstate,
     GstElementState newstate, GstElement * child)
@@ -937,6 +938,8 @@ typedef gboolean (*GstBinForeachFunc) (GstBin * bin, GstElement * element,
  * called, and that are still in @bin when the child is reached.
  *
  * Returns: TRUE if @func always returned TRUE, FALSE otherwise
+ *
+ * Marked for removal.
  **/
 static gboolean
 gst_bin_foreach (GstBin * bin, GstBinForeachFunc func, gpointer data)
@@ -1283,6 +1286,7 @@ gst_bin_get_by_interface (GstBin * bin, GType interface)
  *
  * Returns: An iterator for the  elements inside the bin implementing the interface.
  *
+ * MT safe.
  */
 GstIterator *
 gst_bin_iterate_all_by_interface (GstBin * bin, GType interface)

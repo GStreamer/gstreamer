@@ -129,7 +129,6 @@ GstElement*	gst_bin_get_by_interface	 (GstBin *bin, GType interface);
 /* retrieve multiple children */
 GstIterator*    gst_bin_iterate_elements	 (GstBin *bin);
 GstIterator*    gst_bin_iterate_recurse		 (GstBin *bin);
-GstIterator*    gst_bin_iterate_recurse_up	 (GstBin *bin);
 
 GstIterator*	gst_bin_iterate_sinks	 	 (GstBin *bin);
 GstIterator*	gst_bin_iterate_all_by_interface (GstBin *bin, GType interface);

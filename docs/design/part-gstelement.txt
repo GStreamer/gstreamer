@@ -10,15 +10,20 @@
 GstElement
 ==========
 
-The Element is the most important object in the entire GStreamer system, as it defines the structure of the pipeline.  
-Elements include sources, filters, sinks, and containers (Bins).  They may be an intrinsic part of the core GStreamer
-library, or may be loaded from a plugin.  In some cases they're even fabricated from completely different systems (see
-the LADSPA plugin).  They are generally created from a GstElementFactory, which will be covered in another chapter, but
-for the intrinsic types they can be created with specific functions.
+The Element is the most important object in the entire GStreamer system, as it
+defines the structure of the pipeline.  Elements include sources, filters,
+sinks, and containers (Bins).  They may be an intrinsic part of the core
+GStreamer library, or may be loaded from a plugin.  In some cases they're even
+fabricated from completely different systems (see the LADSPA plugin).  They
+are generally created from a GstElementFactory, which will be covered in
+another chapter, but for the intrinsic types they can be created with specific
+functions.
 
-Elements contains GstPads (also covered in another chapter), which are subsequently used to connect the Elements
-together to form a pipeline capable of passing and processing data.  They have a parent, which must be another Element.  
-This allows deeply nested pipelines, and the possibility of "black-box" meta-elements.
+Elements contains GstPads (also covered in another chapter), which are
+subsequently used to connect the Elements together to form a pipeline capable
+of passing and processing data.  They have a parent, which must be another
+Element.  This allows deeply nested pipelines, and the possibility of
+"black-box" meta-elements.
 
 Name
 ----

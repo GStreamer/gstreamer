@@ -7,12 +7,26 @@
  */
 
 #include <gst/gst.h>
+
 void
 gst_clock_debug (GstClock * clock, GstElement * fakesink)
 {
-  g_print ("Clock info: time %" G_GUINT64_FORMAT " - Element info: time %"
-      G_GUINT64_FORMAT "\n", gst_clock_get_time (clock),
-      gst_element_get_time (fakesink));
+  GstClockTime time;
+
+  time = gst_clock_get_time (clock);
+
+  g_print ("Clock info: time %" G_GUINT64_FORMAT " Element %" GST_TIME_FORMAT
+      "\n", time, GST_TIME_ARGS (time - fakesink->base_time));
+}
+
+static void
+element_wait (GstElement * element, GstClockTime time)
+{
+  GstClockID id;
+
+  id = gst_clock_new_single_shot_id (clock, time + element->base_time);
+  gst_clock_id_wait (id, NULL);
+  gst_clock_id_unref (id);
 }
 
 int
@@ -41,10 +55,10 @@ main (int argc, char *argv[])
   g_usleep (G_USEC_PER_SEC);
   gst_clock_debug (clock, fakesink);
 
-  gst_element_wait (fakesink, 2 * GST_SECOND);
+  element_wait (fakesink, 2 * GST_SECOND);
   gst_clock_debug (clock, fakesink);
 
-  gst_element_wait (fakesink, 5 * GST_SECOND);
+  element_wait (fakesink, 5 * GST_SECOND);
   gst_clock_debug (clock, fakesink);
 
   g_usleep (G_USEC_PER_SEC);

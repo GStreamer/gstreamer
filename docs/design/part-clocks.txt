@@ -1,0 +1,106 @@
+Clocks
+------
+
+To synchronize the different elements, the GstPipeline is responsible for
+selecting and distributing a global GstClock for all the elements in it.
+
+This selection happens whenever an element is added or removed from the 
+pipeline. Whever the clock changes in a pipeline, a message is posted on
+the bus signaling the new clock to the application.
+
+The GstClock returns a monotonically increasing time with the method 
+_get_time(). Its accuracy and base time depends on the specific clock 
+implementation but time is always expessed in nanoseconds. Since the
+baseline of the clock is undefined, the clock time returned is not
+meaningfull in itself, what matters are the deltas between two clock
+times.
+The time reported by the clock is called the absolute time.
+
+
+Time in GStreamer
+-----------------
+
+The absolute time is used to calculate the stream time. The stream time
+is defined as follows:
+
+ - If the pipeline is NULL/READY, the stream time is undefined.
+ - In PAUSED, the stream time remains at the time when it was last 
+   PAUSED. When the stream is PAUSED for the first time, the stream time
+   is 0. 
+ - In PLAYING, the stream time is the delta between the absolute time
+   and the base time. The base time is defined as the absolute time minus
+   the stream time at the time when the pipeline is set to PLAYING.
+ - after a seek, the stream time is set to seek time.
+
+The stream time is completely managed by the GstPipeline object using the
+GstClock absolute time.
+
+
+Timestamps
+----------
+
+Timestamps on buffers are always expressed in stream time. This means that
+all elements that require synchronizing to the clock need to be aware of
+the clock base time in order to know the absolute time of the timestamp.
+Converting a timestamp (in stream time) to absolute time is performed using
+the following formula:
+
+    AT = BT + ST               where: AT = absolute time
+                                      BT = base time
+                                      ST = stream time
+
+The pipeline base time is propagated to all the element during the PAUSED
+to PLAYING state change. All elements are therefore able to convert the 
+stream time to the absolute time. It is possible to specify an aditional
+delay to the base time to compensate for the delay it takes to perform
+the state change.
+
+
+Clock features
+--------------
+
+The clock supports periodic and single shot clock notifications both
+synchronous and asynchronous.
+
+One first needs to create a GstClockID for the periodic or single shot
+notification using _clock_new_single_shot_id() or _clock_new_periodic_id().
+
+To perform a blocking wait for the specific time of the GstClockID use the
+gst_clock_id_wait(). To receive a callback when the specific time is reached
+in the clock use gst_clock_id_wait_async(). Both these calls can be interrupted
+with the gst_clock_id_unschedule() call. If the blocking wait is unscheduled
+a return value of GST_CLOCK_UNSCHEDULED is returned.
+
+The async callbacks can happen from any thread, either provided by the
+core or from a streaming thread. The application should be prepared for this.
+
+A GstClockID that has been unscheduled cannot be used again for any wait
+operation. 
+
+It is possible to perform a blocking wait on the same ID from multiple 
+threads. However, registering the same ID for multiple async notifications is 
+not possible, the callback will only be called once.
+
+None of the wait operations unref the GstClockID, the application is 
+responsible for unreffing the ids itself. This holds for both periodic and
+single shot notifications. 
+
+These clock operations do not operate on the stream time, so the callbacks
+will also occur when not in PLAYING state as if the clock just keeps on 
+running.
+
+
+Clock implementations
+---------------------
+
+The GStreamer core provides a GstSystemClock based on the system time. 
+Asynchronous callbacks are scheduled from an internal thread.
+
+Clock implementors are encouraged to subclass this systemclock as it
+implements the async notification.
+
+Subclasses can however override all of the important methods for sync and
+async notifications to implement their own callback methods or blocking
+wait operations. 
+
+

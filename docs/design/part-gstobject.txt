@@ -50,6 +50,9 @@ The GstObject contains the necessary primitives to lock the object in a
 thread-safe manner.  This will be used to provide general thread-safety as
 needed.  However, this lock is generic, i.e. it covers the whole object.
 
+The object LOCK is a very lowlevel lock that should only be held to access
+the object properties for short periods of code.
+
 All members of the GstObject structure marked as
 /*< public >*/ /* with LOCK */
 are protected by this lock.  These members can only be accessed for reading
@@ -64,6 +67,20 @@ lock is voluntary and cooperative".
 This lock will ideally be used for parentage, flags and naming, which is
 reasonable, since they are the only possible things to protect in the
 GstObject.
+
+
+Locking order
+-------------
+
+In parent-child situations the lock of the parent must always be taken first
+before taking the lock of the child. It is NOT allowed to hold the child
+lock before taking the parent lock.
+
+This policy allows for parents to iterate their children and setting properties
+on them.
+
+Whenever a nested lock needs to be taken on objects not involved in a 
+parent-child relation (eg. pads), an explictic locking order has to be defined.
 
 
 Path Generation
