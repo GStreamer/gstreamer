@@ -61,6 +61,7 @@ typedef struct {
 
   /* pad, strh */
   GstPad	*pad;
+  GstCaps	*caps;
   gst_riff_strh	*strh;
 
   /* current position (byte, frame, time) */

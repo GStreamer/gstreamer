@@ -1,3 +1,105 @@
+2004-01-01  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	  Fix configure check for mpeg2enc. We need 1.6.1.93 instead of
+	  1.6.1.92, since the pkg-config file of 1.6.1.92 is borked and
+	  it therefore uses the wrong include paths. Too bad... Note
+	  that 1.6.1.93 is not release yet. ;).
+	  Also add a check for mplex, which is now using the lib'ified
+	  mplex from mjpegtools, too.
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  Add codec_tag for 3ivx/xvid. For xvid, this should fix playback
+	  issues. I don't think ffmpeg handles 3ivx correctly, so this
+	  probably won't work. But it won't hurt either.
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_connect),
+	(gst_ffmpegdec_chain):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_connect),
+	(gst_ffmpegenc_chain_audio):
+	  Fix memleak in audio encoding. Close codec if open fails, this
+	  calls the cleanup routines so we can re-use the context.
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	  Fix pad template names/types, fix memory issue with getcaps().
+	* ext/mpeg2enc/gstmpeg2encoder.cc:
+	* ext/mpeg2enc/gstmpeg2encoder.hh:
+	  Fix compile issue with new caps system (const thingy).
+	* ext/mpeg2enc/gstmpeg2encpicturereader.cc:
+	* ext/mpeg2enc/gstmpeg2encpicturereader.hh:
+	  We read a first frame right on initing, so that we have a caps
+	  when we init the output. This caps is cached in padprivate and
+	  read as first frame.
+	* ext/mplex/Makefile.am:
+	* ext/mplex/gstmplex.cc:
+	* ext/mplex/gstmplex.h:
+	* ext/mplex/gstmplex.hh:
+	* ext/mplex/gstmplexibitstream.cc:
+	* ext/mplex/gstmplexibitstream.hh:
+	* ext/mplex/gstmplexjob.cc:
+	* ext/mplex/gstmplexjob.hh:
+	* ext/mplex/gstmplexoutputstream.cc:
+	* ext/mplex/gstmplexoutputstream.hh:
+	  We wrap mjpegtools mplex. So I rewrote the plugin. The old plugin
+	  had issues, didn't do capsnego, supported only a subset of the
+	  mplex features and required a mplex fork in our local CVS. Plus
+	  that it worked agaist a very old mplex version. Rewriting was
+	  faster than updating it.
+	* gst-libs/ext/Makefile.am:
+	* gst-libs/ext/mplex/INSTRUCT:
+	* gst-libs/ext/mplex/Makefile.am:
+	* gst-libs/ext/mplex/README:
+	* gst-libs/ext/mplex/TODO:
+	* gst-libs/ext/mplex/ac3strm_in.cc:
+	* gst-libs/ext/mplex/audiostrm.hh:
+	* gst-libs/ext/mplex/audiostrm_out.cc:
+	* gst-libs/ext/mplex/aunit.hh:
+	* gst-libs/ext/mplex/bits.cc:
+	* gst-libs/ext/mplex/bits.hh:
+	* gst-libs/ext/mplex/buffer.cc:
+	* gst-libs/ext/mplex/buffer.hh:
+	* gst-libs/ext/mplex/fastintfns.h:
+	* gst-libs/ext/mplex/format_codes.h:
+	* gst-libs/ext/mplex/inputstrm.cc:
+	* gst-libs/ext/mplex/inputstrm.hh:
+	* gst-libs/ext/mplex/lpcmstrm_in.cc:
+	* gst-libs/ext/mplex/mjpeg_logging.cc:
+	* gst-libs/ext/mplex/mjpeg_logging.h:
+	* gst-libs/ext/mplex/mjpeg_types.h:
+	* gst-libs/ext/mplex/mpastrm_in.cc:
+	* gst-libs/ext/mplex/mpegconsts.cc:
+	* gst-libs/ext/mplex/mpegconsts.h:
+	* gst-libs/ext/mplex/mplexconsts.hh:
+	* gst-libs/ext/mplex/multplex.cc:
+	* gst-libs/ext/mplex/outputstream.hh:
+	* gst-libs/ext/mplex/padstrm.cc:
+	* gst-libs/ext/mplex/padstrm.hh:
+	* gst-libs/ext/mplex/stillsstream.cc:
+	* gst-libs/ext/mplex/stillsstream.hh:
+	* gst-libs/ext/mplex/systems.cc:
+	* gst-libs/ext/mplex/systems.hh:
+	* gst-libs/ext/mplex/vector.cc:
+	* gst-libs/ext/mplex/vector.hh:
+	* gst-libs/ext/mplex/videostrm.hh:
+	* gst-libs/ext/mplex/videostrm_in.cc:
+	* gst-libs/ext/mplex/videostrm_out.cc:
+	* gst-libs/ext/mplex/yuv4mpeg.cc:
+	* gst-libs/ext/mplex/yuv4mpeg.h:
+	* gst-libs/ext/mplex/yuv4mpeg_intern.h:
+	* gst-libs/ext/mplex/yuv4mpeg_ratio.cc:
+	  We don't fork mjpegtools' mplex in our CVS anymore.
+	* gst/avi/gstavidemux.c: (gst_avi_demux_src_getcaps),
+	(gst_avi_demux_add_stream):
+	* gst/avi/gstavidemux.h:
+	  Add getcaps() function for proper caps nego. This makes some
+	  parts of AVI playback/reading work.
+	* sys/ximage/ximagesink.c: (gst_ximagesink_sinkconnect):
+	  Resize window on new capsnego. This is probably wrong, but
+	  I'm still committing it because with current capsnego, the
+	  first successfull capsnego is auto-fixated, therefore rounded
+	  down to the lowest values in the caps. this results in a 16x16
+	  XWindow that is not reized when real capsnego finishes.
+	  Dave, I see more cases of this, do you know a proper solution?
+	* tools/gst-launch-ext.in:
+	  Fix MPEG-4 AAC (Apple iPod/iTunes) file commandline.
+
 2003-12-31  David Schleef  <ds@schleef.org>
 
 	* gst/tcp/gsttcpsrc.c: (gst_tcpsrc_get):

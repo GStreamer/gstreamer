@@ -497,6 +497,14 @@ gst_avi_demux_handle_src_query (GstPad      *pad,
   return res;
 }
 
+static GstCaps *
+gst_avi_demux_src_getcaps (GstPad *pad)
+{
+  avi_stream_context *stream = gst_pad_get_element_private (pad);
+
+  return gst_caps_copy (stream->caps);
+}
+
 static gint32
 gst_avi_demux_sync_streams (GstAviDemux *avi,
 			    guint64      time)
@@ -884,8 +892,6 @@ gst_avi_demux_add_stream (GstAviDemux *avi)
   /* set proper settings and add it */
   pad =  gst_pad_new_from_template (templ, padname);
   g_free (padname);
-  if (caps != NULL)
-    gst_pad_try_set_caps (pad, caps);
 
   gst_pad_set_formats_function (pad, gst_avi_demux_get_src_formats);
   gst_pad_set_event_mask_function (pad, gst_avi_demux_get_event_mask);
@@ -893,8 +899,10 @@ gst_avi_demux_add_stream (GstAviDemux *avi)
   gst_pad_set_query_type_function (pad, gst_avi_demux_get_src_query_types);
   gst_pad_set_query_function (pad, gst_avi_demux_handle_src_query);
   gst_pad_set_convert_function (pad, gst_avi_demux_src_convert);
+  gst_pad_set_getcaps_function (pad, gst_avi_demux_src_getcaps);
 
   stream = &avi->stream[avi->num_streams];
+  stream->caps = caps ? caps : gst_caps_new_empty ();
   stream->pad = pad;
   stream->strh = strh;
   stream->num = avi->num_streams;
@@ -908,6 +916,7 @@ gst_avi_demux_add_stream (GstAviDemux *avi)
   gst_pad_set_element_private (pad, stream);
   avi->num_streams++;
 
+  /* auto-negotiates */
   gst_element_add_pad (GST_ELEMENT (avi), pad);
 
   return TRUE;

@@ -109,7 +109,7 @@ read_config ($0);
   "fli", "flxdec ! colorspace ! $cfg{VIDEOSINK}",
   "m1v", "mpegdemux ! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }",
   "m2v", "mpegdemux ! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }",
-  "m4a", "qtdemux ! { queue .audio_00! faad ! $cfg{AUDIOSINK} }",
+  "m4a", "qtdemux .audio_00 ! { queue ! faad ! $cfg{AUDIOSINK} }",
   "mod", "modplug !  $cfg{AUDIOSINK}",
   "mp2", "mad ! $cfg{AUDIOSINK}",
   "mp3", "mad ! $cfg{AUDIOSINK}",
