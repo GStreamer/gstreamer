@@ -195,7 +195,7 @@ Pads:
            <listitem>
               <para>
                 an integer range value: the property denotes a range of 
-                possible integer. For example, the wavparse element has
+                possible integers. For example, the wavparse element has
                 a source pad where the "rate" property can go from 8000 to
                 48000.
               </para>
