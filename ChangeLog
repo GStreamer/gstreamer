@@ -1,5 +1,10 @@
 2005-01-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_peek):
+	  Yet Another Logic Error.
+
+2005-01-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_negotiate):
 	  <insert rant about why gcc should support parsing errors>.
 

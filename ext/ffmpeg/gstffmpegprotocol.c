@@ -102,7 +102,7 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
 
   info = (GstProtocolInfo *) h->priv_data;
 
-  g_return_val_if_fail (info->flags == URL_RDONLY, -EIO);
+  g_return_val_if_fail (info->flags == URL_RDONLY, AVERROR_IO);
 
   bs = info->bs;
 
@@ -164,7 +164,7 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
       if (will_get_eos)
         info->eos = TRUE;
     }
-  } while ((!info->eos && total != request) || have_event);
+  } while ((!info->eos && total != request) && !have_event);
 
   memcpy (buf, data, total);
 
