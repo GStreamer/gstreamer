@@ -26,6 +26,9 @@
 #include <tremor/ivorbisfile.h>
 #include <gst/bytestream/bytestream.h>
 
+GST_DEBUG_CATEGORY_STATIC (ivorbisfile_debug);
+#define GST_CAT_DEFAULT ivorbisfile_debug
+
 #define GST_TYPE_IVORBISFILE \
   (ivorbisfile_get_type())
 #define GST_IVORBISFILE(obj) \
@@ -41,28 +44,29 @@ typedef struct _Ivorbisfile Ivorbisfile;
 typedef struct _IvorbisfileClass IvorbisfileClass;
 
 struct _Ivorbisfile {
-  GstElement element;
+  GstElement	element;
 
-  GstPad *sinkpad,*srcpad;
+  GstPad	*sinkpad,
+		*srcpad;
   GstByteStream *bs;
 
   OggVorbis_File vf;
-  gint current_link;
+  gint		current_link;
 
-  gboolean restart;
-  gboolean need_discont;
-  gboolean eos;
-  gboolean seek_pending;
-  gint64 seek_value;
-  GstFormat seek_format;
-  gboolean seek_accurate;
+  gboolean	restart;
+  gboolean	need_discont;
+  gboolean	eos;
+  gboolean	seek_pending;
+  gint64	seek_value;
+  GstFormat	seek_format;
+  gboolean	seek_accurate;
 
-  gboolean may_eos;
-  guint64 total_bytes;
-  guint64 offset;
+  gboolean	may_eos;
+  guint64	total_bytes;
+  guint64	offset;
 
-  GstCaps *metadata;
-  GstCaps *streaminfo;
+  GstCaps	*metadata;
+  GstCaps	*streaminfo;
 };
 
 struct _IvorbisfileClass {
@@ -81,7 +85,8 @@ GstElementDetails ivorbisfile_details =
   "Codec/Audio/Decoder",
   "Decodes OGG Vorbis audio using the Tremor vorbisfile API",
   "Monty <monty@xiph.org>\n" 
-  "Wim Taymans <wim.taymans@chello.be>",
+  "Wim Taymans <wim.taymans@chello.be>\n"
+  "Amaury Jacquot <sxpert@esitcom.org>",
 };
 
 /* Ivorbisfile signals and args */
@@ -144,48 +149,6 @@ static GstElementClass *parent_class = NULL;
 
 static GstFormat logical_stream_format;
 
-static GstCaps*
-vorbis_caps_factory (void)
-{
-  return
-   gst_caps_new (
-  	"tremor_tremor",
-  	"application/ogg",
-  	NULL);
-}
-
-static GstCaps*
-raw_caps_factory (void)
-{
-  return
-   gst_caps_new (
-  	"tremor_raw",
-  	"audio/x-raw-int",
-	gst_props_new (
-    	    "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
-    	    "signed", 		GST_PROPS_BOOLEAN (TRUE),
-    	    "width", 		GST_PROPS_INT (16),
-    	    "depth",    	GST_PROPS_INT (16),
-    	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
-    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
-	    NULL));
-}
-
-static GstCaps*
-raw_caps2_factory (void)
-{
-  return
-   gst_caps_new (
-  	"tremor_raw_float",
-  	"audio/x-raw-float",
-	gst_props_new (
-    	    "depth",		GST_PROPS_INT (32),
-	    "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
-    	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
-    	    "channels", 	GST_PROPS_INT (2), /* ?? */
-	    NULL));
-}
-
 GType
 ivorbisfile_get_type (void)
 {
@@ -205,9 +168,51 @@ ivorbisfile_get_type (void)
 		                              &ivorbisfile_info, 0);
 
     logical_stream_format = gst_format_register ("logical_stream", "The logical stream");
+	
+    GST_DEBUG_CATEGORY_INIT (ivorbisfile_debug, "ivorbisfile", 0, 
+		"vorbis in ogg decoding element (integer arithmetic)");
   }
   return ivorbisfile_type;
 }
+
+static GstCaps*
+vorbis_caps_factory (void)
+{
+  return
+   gst_caps_new_simple (
+  	"application/ogg",
+  	NULL);
+
+}
+
+static GstCaps*
+raw_caps_factory (void)
+{
+  return
+   gst_caps_new_simple (
+  	"audio/x-raw-int",
+	"endianness",	G_TYPE_INT, G_BYTE_ORDER,
+	"signed",	G_TYPE_BOOLEAN, TRUE,
+	"width",	G_TYPE_INT, 16,
+	"depth",	G_TYPE_INT, 16,
+	"rate",		GST_TYPE_INT_RANGE, 11025, 48000,
+	"channels",	GST_TYPE_INT_RANGE, 1, 2,
+	NULL);
+}
+
+static GstCaps*
+raw_caps2_factory (void)
+{
+  return
+   gst_caps_new_simple (
+	"audio/x-raw-float",
+	"depth",	G_TYPE_INT, 32,
+	"endianness",	G_TYPE_INT, G_BYTE_ORDER,
+	"rate",		GST_TYPE_INT_RANGE, 11025, 48000,
+	"channels",	G_TYPE_INT, 2,
+	NULL); 
+}
+
 
 static void
 gst_ivorbisfile_base_init (gpointer g_class)
@@ -222,12 +227,12 @@ gst_ivorbisfile_base_init (gpointer g_class)
   /* register sink pads */
   gst_vorbisdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 		                                      GST_PAD_ALWAYS, 
-					              vorbis_caps, NULL);
-  raw_caps = gst_caps_prepend (raw_caps, raw_caps2);
+					              vorbis_caps);
+  gst_caps_append (raw_caps2, raw_caps);
   /* register src pads */
   gst_vorbisdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 		                                     GST_PAD_ALWAYS, 
-					             raw_caps, NULL);
+					             raw_caps2);
   gst_element_class_add_pad_template (element_class, gst_vorbisdec_sink_template);
   gst_element_class_add_pad_template (element_class, gst_vorbisdec_src_template);
   gst_element_class_set_details (element_class, &ivorbisfile_details);
@@ -420,6 +425,7 @@ ov_callbacks ivorbisfile_ov_callbacks =
   gst_ivorbisfile_tell,
 };
 
+#if 0
 /* retrieve the comment field (or tags) and put in metadata GstCaps
  * returns TRUE if caps could be set,
  * FALSE if they couldn't be read somehow */
@@ -509,32 +515,33 @@ gst_ivorbisfile_update_streaminfo (Ivorbisfile *ivorbisfile, gint link)
 
   return TRUE;
 }
+#endif
 
 static gboolean
 gst_ivorbisfile_new_link (Ivorbisfile *ivorbisfile, gint link)
 {
   vorbis_info *vi = ov_info (&ivorbisfile->vf, link);
-  GstCaps *newcaps;
+  GstCaps *caps;
+  gboolean res = TRUE;
 
   /* new logical bitstream */
   ivorbisfile->current_link = link;
 
-  gst_ivorbisfile_update_metadata (ivorbisfile, link);
-  gst_ivorbisfile_update_streaminfo (ivorbisfile, link);
+  caps = gst_caps_new_simple ("audio/x-raw-int",
+	"endianness",	G_TYPE_INT, G_BYTE_ORDER,
+	"signed",	G_TYPE_BOOLEAN, TRUE,
+	"width",	G_TYPE_INT, 16,
+	"depth",	G_TYPE_INT, 16,
+	"rate",		G_TYPE_INT, vi->rate,
+	"channels",	G_TYPE_INT, vi->channels,
+	NULL); 
 
-  newcaps = GST_CAPS_NEW ("vorbisdec_src",
-                          "audio/x-raw-int",    
-                            "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-                            "signed",     GST_PROPS_BOOLEAN (TRUE),
-                            "width",      GST_PROPS_INT (16),
-                            "depth",      GST_PROPS_INT (16),
-                            "rate",       GST_PROPS_INT (vi->rate),
-                            "channels",   GST_PROPS_INT (vi->channels)
-                          );
-  if (gst_pad_try_set_caps (ivorbisfile->srcpad, newcaps) <= 0) {
-     return FALSE;
+  if (gst_pad_try_set_caps (ivorbisfile->srcpad, caps) <= 0) {
+     res = FALSE;
   }
 
+  gst_caps_free (caps);
+	
   return TRUE;
 }
 

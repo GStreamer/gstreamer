@@ -17,13 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <string.h>
-#include <gst/gst.h>
-#include <tremor/ivorbiscodec.h>
-#include <tremor/ivorbisfile.h>
-#include <gst/bytestream/bytestream.h>
-
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
+
+#include <vorbisenc.h>
 
 extern GType ivorbisfile_get_type(void);
 

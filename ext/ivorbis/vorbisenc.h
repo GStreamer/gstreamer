@@ -24,7 +24,7 @@
 
 #include <gst/gst.h>
 
-#include <tremor/codec.h>
+#include <tremor/ivorbiscodec.h>
 
 #ifdef __cplusplus
 extern "C" {
