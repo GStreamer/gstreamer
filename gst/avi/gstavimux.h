@@ -1,5 +1,5 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* AVI muxer plugin for GStreamer
+ * Copyright (C) 2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,7 +22,6 @@
 #define __GST_AVIMUX_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 #include <gst/riff/riff.h>
 
@@ -44,39 +43,55 @@ extern "C" {
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AVIMUX))
 
 
-#define GST_AVIMUX_INITIAL	  0	/* initialized state */
-#define GST_AVIMUX_MOVI	  1	/* encoding movi */
-
-#define GST_AVIMUX_MAX_AUDIO_PADS	8	
-#define GST_AVIMUX_MAX_VIDEO_PADS	8	
-
 typedef struct _GstAviMux GstAviMux;
 typedef struct _GstAviMuxClass GstAviMuxClass;
+
+#define MAX_NUM_AUDIO_PADS 8
+#define MAX_NUM_VIDEO_PADS 8
 
 struct _GstAviMux {
   GstElement element;
 
   /* pads */
   GstPad *srcpad;
+  GstPad *audiosinkpad[MAX_NUM_AUDIO_PADS];
+  gint num_audio_pads;
+  GstPad *videosinkpad[MAX_NUM_VIDEO_PADS];
+  gint num_video_pads;
 
-  /* AVI encoding state */
-  gint state;
+  /* timestamps of first and current frame + num_frames for fps calculation */
+  guint64 first_timestamp;
+  guint64 current_timestamp;
 
-  /* RIFF encoding state */
-  GstRiff *riff;
+  /* the AVI header */
+  gst_riff_avih avi_hdr;
+  guint32 total_frames; /* total number of frames */
+  guint64 total_data; /* amount of total data */
+  guint32 data_size, datax_size; /* amount of data (bytes) in the AVI/AVIX block */
+  guint32 num_frames, numx_frames; /* num frames in the AVI/AVIX block */
+  guint32 header_size;
+  gboolean write_header;
+  guint32 audio_size;
 
-  guint64 next_time;
-  guint64 time_interval;
+  /* video header */
+  gst_riff_strh vids_hdr;
+  gst_riff_strf_vids vids;
 
-  gst_riff_avih  *aviheader;    /* the avi header */
-  guint num_audio_pads;
-  guint num_video_pads;
+  /* audio header */
+  gst_riff_strh auds_hdr;
+  gst_riff_strf_auds auds;
 
-  GstPad             *audio_pad[GST_AVIMUX_MAX_AUDIO_PADS];
-  gst_riff_strf_auds *audio_header[GST_AVIMUX_MAX_AUDIO_PADS];
-  
-  GstPad             *video_pad[GST_AVIMUX_MAX_VIDEO_PADS];
-  gst_riff_strf_vids *video_header[GST_AVIMUX_MAX_VIDEO_PADS];
+  /* information about the AVI index ('idx') */
+  gst_riff_index_entry *idx;
+  gint idx_index, idx_count;
+  guint32 idx_offset, idx_size;
+
+  /* are we a big file already? */
+  gboolean is_bigfile;
+  guint64 avix_start;
+
+  /* whether to use "large AVI files" or just stick to small indexed files */
+  gboolean enable_large_avi;
 };
 
 struct _GstAviMuxClass {
