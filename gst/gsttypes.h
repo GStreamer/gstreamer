@@ -15,7 +15,19 @@ typedef struct _GstScheduler GstScheduler;
 typedef struct _GstSchedulerClass GstSchedulerClass;
 typedef struct _GstEvent GstEvent;
 
-typedef enum _GstElementState GstElementState;
-typedef enum _GstElementStateReturn GstElementStateReturn;
+typedef enum {
+  GST_STATE_VOID_PENDING        = 0,
+  GST_STATE_NULL                = (1 << 0),
+  GST_STATE_READY               = (1 << 1),
+  GST_STATE_PAUSED              = (1 << 2),
+  GST_STATE_PLAYING             = (1 << 3),
+} GstElementState;
+
+typedef enum {
+  GST_STATE_FAILURE             = 0,
+  GST_STATE_SUCCESS             = 1,
+  GST_STATE_ASYNC               = 2,
+} GstElementStateReturn;
+
 
 #endif

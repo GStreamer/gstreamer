@@ -38,23 +38,6 @@ extern "C" {
 
 #define GST_NUM_STATES 4
 
-//typedef enum _GstElementState GstElementState;
-//typedef enum _GstElementStateReturn GstElementStateReturn;
-
-
-enum _GstElementState {
-  GST_STATE_VOID_PENDING        = 0,
-  GST_STATE_NULL                = (1 << 0),
-  GST_STATE_READY               = (1 << 1),
-  GST_STATE_PAUSED              = (1 << 2),
-  GST_STATE_PLAYING             = (1 << 3),
-};
-
-enum _GstElementStateReturn {
-  GST_STATE_FAILURE             = 0,
-  GST_STATE_SUCCESS             = 1,
-  GST_STATE_ASYNC               = 2,
-};
 
 /* NOTE: this probably should be done with an #ifdef to decide 
  * whether to safe-cast or to just do the non-checking cast.
