@@ -451,7 +451,7 @@ gst_vorbisfile_loop (GstElement *element)
     if (!GST_PAD_CAPS (vorbisfile->srcpad)) {
       vorbis_info *vi = ov_info (&vorbisfile->vf, -1);
       
-      gst_pad_try_set_caps (vorbisfile->srcpad,
+      if (gst_pad_try_set_caps (vorbisfile->srcpad,
                    GST_CAPS_NEW ("vorbisdec_src",
                                     "audio/raw",    
                                       "format",     GST_PROPS_STRING ("int"),
@@ -462,7 +462,12 @@ gst_vorbisfile_loop (GstElement *element)
                                       "depth",      GST_PROPS_INT (16),
                                       "rate",       GST_PROPS_INT (vi->rate),
                                       "channels",   GST_PROPS_INT (vi->channels)
-                                     ));
+                                     )) <= 0) 
+      {
+        gst_buffer_unref (outbuf);
+	gst_element_error (GST_ELEMENT (vorbisfile), "could not negotiate format");
+	return;
+      }
     }
 
     vorbisfile->may_eos = TRUE;

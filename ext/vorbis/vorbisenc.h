@@ -76,6 +76,9 @@ struct _VorbisEnc {
   gint             channels;
   gint             frequency;
 
+  guint64	   samples_in;
+  guint64	   bytes_out;
+
   GstCaps         *metadata;
 
   gboolean         setup;

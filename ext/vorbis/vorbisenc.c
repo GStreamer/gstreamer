@@ -58,6 +58,24 @@ enum
   ARG_LAST_MESSAGE,
 };
 
+static const GstFormat*
+gst_vorbisenc_get_formats (GstPad *pad)
+{
+  static const GstFormat src_formats[] = {
+    GST_FORMAT_BYTES,
+    GST_FORMAT_TIME,
+    0
+  };
+  static const GstFormat sink_formats[] = {
+    GST_FORMAT_BYTES,
+    GST_FORMAT_UNITS,
+    GST_FORMAT_TIME, 
+    0
+  };
+	      
+  return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
+} 
+
 #define MAX_BITRATE_DEFAULT 	-1
 #define BITRATE_DEFAULT 	-1
 #define MIN_BITRATE_DEFAULT 	-1
@@ -169,6 +187,213 @@ gst_vorbisenc_sinkconnect (GstPad * pad, GstCaps * caps)
   return GST_PAD_CONNECT_REFUSED;
 }
 
+static gboolean
+gst_vorbisenc_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value, 
+		      GstFormat *dest_format, gint64 *dest_value)
+{
+  gboolean res = TRUE;
+  VorbisEnc *vorbisenc;
+  gint64 avg;
+
+  vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
+
+  if (vorbisenc->samples_in == 0 || 
+      vorbisenc->bytes_out == 0 || 
+      vorbisenc->frequency == 0)
+    return FALSE;
+
+  avg = (vorbisenc->bytes_out * vorbisenc->frequency)/
+		  (vorbisenc->samples_in);
+
+  switch (src_format) {
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_TIME;
+        case GST_FORMAT_TIME:
+          *dest_value = src_value * GST_SECOND / avg;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_BYTES;
+        case GST_FORMAT_BYTES:
+          *dest_value = src_value * avg / GST_SECOND;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    default:
+      res = FALSE;
+  }
+  return res;
+}
+
+static gboolean
+gst_vorbisenc_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value, 
+		     GstFormat *dest_format, gint64 *dest_value)
+{
+  gboolean res = TRUE;
+  guint scale = 1;
+  gint bytes_per_sample;
+  VorbisEnc *vorbisenc;
+
+  vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
+  
+  bytes_per_sample = vorbisenc->channels * 2;
+  
+  switch (src_format) {
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_UNITS:
+	  if (bytes_per_sample == 0)
+            return FALSE;
+	  *dest_value = src_value / bytes_per_sample;
+          break;
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_TIME;
+        case GST_FORMAT_TIME:
+	{
+          gint byterate = bytes_per_sample * vorbisenc->frequency;
+
+	  if (byterate == 0)
+            return FALSE;
+	  *dest_value = src_value * GST_SECOND / byterate;
+          break;
+	}
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_UNITS:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+	  *dest_value = src_value * bytes_per_sample;
+	  break;
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_TIME;
+        case GST_FORMAT_TIME:
+	  if (vorbisenc->frequency == 0)
+            return FALSE;
+	  *dest_value = src_value * GST_SECOND / vorbisenc->frequency;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_BYTES;
+        case GST_FORMAT_BYTES:
+	  scale = bytes_per_sample;
+	  /* fallthrough */
+        case GST_FORMAT_UNITS:
+	  *dest_value = src_value * scale * vorbisenc->frequency / GST_SECOND;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    default:
+      res = FALSE;
+  }
+  return res;
+}
+
+static const GstPadQueryType*
+gst_vorbisenc_get_query_types (GstPad *pad)
+{
+  static const GstPadQueryType gst_vorbisenc_src_query_types[] = {
+    GST_PAD_QUERY_TOTAL,
+    GST_PAD_QUERY_POSITION,
+    0
+  };
+  return gst_vorbisenc_src_query_types;
+}
+
+static gboolean
+gst_vorbisenc_src_query (GstPad *pad, GstPadQueryType type,
+		   GstFormat *format, gint64 *value)
+{
+  gboolean res = TRUE;
+  VorbisEnc *vorbisenc;
+ 
+  vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
+
+  switch (type) {
+    case GST_PAD_QUERY_TOTAL:
+    {
+      switch (*format) {
+	case GST_FORMAT_DEFAULT:
+          *format = GST_FORMAT_TIME;
+	  /* fallthrough */
+	case GST_FORMAT_BYTES:
+	case GST_FORMAT_TIME:
+        {
+	  gint64 peer_value;
+          const GstFormat *peer_formats;
+
+	  res = FALSE;
+
+	  peer_formats = gst_pad_get_formats (GST_PAD_PEER (vorbisenc->sinkpad));
+
+	  while (peer_formats && *peer_formats && !res) {
+
+	    GstFormat peer_format = *peer_formats;
+
+	    /* do the probe */
+            if (gst_pad_query (GST_PAD_PEER (vorbisenc->sinkpad), GST_PAD_QUERY_TOTAL,
+			       &peer_format, &peer_value)) 
+	    {
+              GstFormat conv_format;
+	      /* convert to TIME */
+              conv_format = GST_FORMAT_TIME;
+	      res = gst_pad_convert (vorbisenc->sinkpad,
+				peer_format, peer_value,
+				&conv_format, value);
+	      /* and to final format */
+	      res &= gst_pad_convert (pad,
+			GST_FORMAT_TIME, *value,
+			format, value);
+	    }
+	    peer_formats++;
+	  }
+	  break;
+	}
+	default:
+	  res = FALSE;
+	  break;
+      }
+      break;
+    }
+    case GST_PAD_QUERY_POSITION:
+      switch (*format) {
+	case GST_FORMAT_DEFAULT:
+          *format = GST_FORMAT_TIME;
+	  /* fall through */
+	default:
+	{
+	  /* we only know about our samples, convert to requested format */
+	  res = gst_pad_convert (pad,
+			  GST_FORMAT_BYTES, vorbisenc->bytes_out,
+			  format, value);
+	  break;
+	}
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+  return res;
+}
+
 static void
 gst_vorbisenc_init (VorbisEnc * vorbisenc)
 {
@@ -176,8 +401,14 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
   gst_element_add_pad (GST_ELEMENT (vorbisenc), vorbisenc->sinkpad);
   gst_pad_set_chain_function (vorbisenc->sinkpad, gst_vorbisenc_chain);
   gst_pad_set_connect_function (vorbisenc->sinkpad, gst_vorbisenc_sinkconnect);
+  gst_pad_set_convert_function (vorbisenc->sinkpad, GST_DEBUG_FUNCPTR (gst_vorbisenc_convert_sink));
+  gst_pad_set_formats_function (vorbisenc->sinkpad, GST_DEBUG_FUNCPTR (gst_vorbisenc_get_formats));
 
   vorbisenc->srcpad = gst_pad_new_from_template (gst_vorbisenc_src_template, "src");
+  gst_pad_set_query_function (vorbisenc->srcpad, GST_DEBUG_FUNCPTR (gst_vorbisenc_src_query));
+  gst_pad_set_query_type_function (vorbisenc->srcpad, GST_DEBUG_FUNCPTR (gst_vorbisenc_get_query_types));
+  gst_pad_set_convert_function (vorbisenc->srcpad, GST_DEBUG_FUNCPTR (gst_vorbisenc_convert_src));
+  gst_pad_set_formats_function (vorbisenc->srcpad, GST_DEBUG_FUNCPTR (gst_vorbisenc_get_formats));
   gst_element_add_pad (GST_ELEMENT (vorbisenc), vorbisenc->srcpad);
 
   vorbisenc->channels = -1;
@@ -345,6 +576,7 @@ gst_vorbisenc_setup (VorbisEnc *vorbisenc)
       struct ovectl_ratemanage_arg ai;
       vorbis_encode_ctl (&vorbisenc->vi, OV_ECTL_RATEMANAGE_GET, &ai);
 
+      /* the bitrates are in kHz */
       ai.bitrate_hard_min = vorbisenc->min_bitrate / 1000;
       ai.bitrate_hard_max = vorbisenc->max_bitrate / 1000;
       ai.management_active = 1;
@@ -455,27 +687,29 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
     float **buffer;
 
     if (!vorbisenc->setup) {
-      gst_element_error (GST_ELEMENT (vorbisenc), "encoder not initialized (input is not audio?)");
       gst_buffer_unref (buf);
+      gst_element_error (GST_ELEMENT (vorbisenc), "encoder not initialized (input is not audio?)");
       return;
     }
   
     /* data to encode */
     data = (gint16 *) GST_BUFFER_DATA (buf);
-    size = GST_BUFFER_SIZE (buf) >> 1;
+    size = GST_BUFFER_SIZE (buf) / (vorbisenc->channels * 2);
 
     /* expose the buffer to submit data */
-    buffer = vorbis_analysis_buffer (&vorbisenc->vd, size / vorbisenc->channels);
+    buffer = vorbis_analysis_buffer (&vorbisenc->vd, size);
 
     /* uninterleave samples */
-    for (i = 0; i < size / vorbisenc->channels; i++) {
+    for (i = 0; i < size; i++) {
       for (j = 0; j < vorbisenc->channels; j++) {
 	buffer[j][i] = data[i * vorbisenc->channels + j] / 32768.f;
       }
     }
 
     /* tell the library how much we actually submitted */
-    vorbis_analysis_wrote (&vorbisenc->vd, size / vorbisenc->channels);
+    vorbis_analysis_wrote (&vorbisenc->vd, size);
+
+    vorbisenc->samples_in += size;
 
     gst_buffer_unref (buf);
   }
@@ -513,6 +747,8 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
 
         GST_DEBUG (0, "vorbisenc: encoded buffer of %d bytes", 
 			GST_BUFFER_SIZE (outbuf));
+
+        vorbisenc->bytes_out += GST_BUFFER_SIZE (outbuf);
 
         gst_pad_push (vorbisenc->srcpad, outbuf);
 
@@ -572,6 +808,7 @@ gst_vorbisenc_get_property (GObject * object, guint prop_id, GValue * value, GPa
       g_value_set_string (value, vorbisenc->last_message);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -636,6 +873,7 @@ gst_vorbisenc_set_property (GObject * object, guint prop_id, const GValue * valu
       vorbisenc->managed = g_value_get_boolean (value);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
