@@ -33,6 +33,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <locale.h>
 
 extern gboolean _gst_registry_auto_load;
 static gint num_features = 0;
@@ -73,6 +74,8 @@ int main (int argc,char *argv[])
 {
   GList *registries;
   GList *path_spill = NULL; /* used for path spill from failing registries */
+
+  setlocale(LC_ALL, "");
 
     /* Init gst */
   _gst_registry_auto_load = FALSE;

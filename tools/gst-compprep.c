@@ -2,6 +2,8 @@
 #  include "config.h"
 #endif
 
+#include <locale.h>
+
 #include <gst/gst.h>
 
 GST_DEBUG_CATEGORY_STATIC(debug_compprep);
@@ -17,6 +19,8 @@ int main(int argc,char *argv[]) {
   GstPadTemplate *padtemplate;
   GParamSpec **property_specs;
   guint num_properties,i;
+
+  setlocale (LC_ALL, "");
 
   gst_init(&argc,&argv);
   GST_DEBUG_CATEGORY_INIT (debug_compprep, "compprep", GST_DEBUG_BOLD, "gst-compprep application");

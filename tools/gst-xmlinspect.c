@@ -5,6 +5,7 @@
 #include <gst/gst.h>
 #include <gst/control/control.h>
 #include <string.h>
+#include <locale.h>
 
 #define PUT_START_TAG(pfx,tag)                                  \
 G_STMT_START{                                                   \
@@ -1001,6 +1002,8 @@ main (int argc, char *argv[])
      "Show scheduler details", NULL},
      POPT_TABLEEND
   };
+
+  setlocale (LC_ALL, "");
 
   gst_init_with_popt_table (&argc, &argv, options);
   gst_control_init (&argc, &argv);

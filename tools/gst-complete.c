@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <locale.h>
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -71,6 +72,8 @@ int main(int argc,char *argv[]) {
 
   struct stat stat_buf;
   
+  setlocale (LC_ALL, "");
+
   if(argc<4){
     fprintf(stderr,"gst-complete called with invalid arguments\n");
     exit(1);

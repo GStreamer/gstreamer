@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <gst/gst.h>
+#include <locale.h>
 
 static guint64 iterations = 0;
 static guint64 sum = 0;
@@ -65,6 +66,8 @@ main (int argc, char *argv[])
   gchar *md5string = g_malloc0 (33);
 
   free (malloc (8)); /* -lefence */
+
+  setlocale (LC_ALL, "");
 
   gst_init_with_popt_table (&argc, &argv, options);
   

@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <locale.h>
 #include <gst/gst.h>
 
 /*
@@ -37,6 +38,8 @@ main (int argc, char *argv[])
 {
   GstElement *pipeline;
   GstElement *source, *typefind;
+
+  setlocale (LC_ALL, "");
 
   gst_init (&argc, &argv);
 

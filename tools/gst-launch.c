@@ -7,6 +7,8 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <locale.h>
+
 #include <gst/gst.h>
 
 /* FIXME: This is just a temporary hack.  We should have a better
@@ -311,6 +313,8 @@ main(int argc, char *argv[])
   gint res = 0;
 
   free (malloc (8)); /* -lefence */
+
+  setlocale(LC_ALL, "");
 
   gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
   
