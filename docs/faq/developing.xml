@@ -20,12 +20,12 @@ If you're not familiar with pkg-config to compile and link a small
 one-file program, pass the --cflags and --libs arguments to pkg-config.
 For example:
 <programlisting>
-$ gcc `pkg-config --cflags --libs gstreamer-&GST_MAJORMINOR;` -o myprog myprog.c
+$ libtool --mode=link gcc `pkg-config --cflags --libs gstreamer-&GST_MAJORMINOR;` -o myprog myprog.c
 </programlisting>
 would be sufficient for a gstreamer-only program. 
 If (for example) your app also used GTK+ 2.0, you could use
 <programlisting>
-$ gcc `pkg-config --cflags --libs gstreamer-&GST_MAJORMINOR; gtk+-2.0` -o myprog myprog.c
+$ libtool --mode=link gcc `pkg-config --cflags --libs gstreamer-&GST_MAJORMINOR; gtk+-2.0` -o myprog myprog.c
 </programlisting>
 Those are back-ticks (on the same key with the tilde on US keyboards), 
 not single quotes.
