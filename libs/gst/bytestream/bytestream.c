@@ -473,3 +473,18 @@ gst_bytestream_print_status (GstByteStream * bs)
     bs_print ("STATUS: buffer starts at %d and is %d bytes long\n", GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf));
   }
 }
+
+
+static gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
+{
+  gst_plugin_set_longname (plugin, "GstByteStream: a byte-oriented layer on top of buffer-passing");
+  return TRUE;
+}
+
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "gstbytestream",
+  plugin_init
+};

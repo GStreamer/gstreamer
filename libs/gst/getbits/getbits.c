@@ -211,3 +211,18 @@ void gst_getbits_newbuf(gst_getbits_t *gb,unsigned char *buffer, unsigned long l
 /*  gb->qword = 0; */
 #endif /* HAVE_LIBMMX */
 }
+
+
+static gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
+{
+  gst_plugin_set_longname (plugin, "Accelerated routines for getting bits from a data stream");
+  return TRUE;
+}
+
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "gstgetbits",
+  plugin_init
+};

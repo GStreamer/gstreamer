@@ -19,9 +19,24 @@
  * Boston, MA 02111-1307, USA.
  */
  
+#include <gst/gst.h>
 #include <gst/control/control.h>
 
 void
 gst_control_init (int *argc, char **argv[]) {
 	_gst_dpman_initialize ();
 }
+
+static gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
+{
+  gst_plugin_set_longname (plugin, "Dynamic Parameters");
+  return TRUE;
+}
+
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "gstcontrol",
+  plugin_init
+};

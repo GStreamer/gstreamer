@@ -207,11 +207,11 @@ gst_default_debug_handler (gint category, gboolean incore,
 
 #ifdef GST_DEBUG_COLOR
   fprintf(stderr,"DEBUG(\033[00;%dm%5d\033[00m:\033[00;%dm%2d\033[00m)\033["
-          "%s;%sm%s%s\033[00m %s",
+          "%s;%sm%s%s\033[00m %s\n",
           pthread_color,pthread_id,cothread_color,cothread_id,incore?"00":"01",
           _gst_category_colors[category],location,elementname,string);
 #else
-  fprintf(stderr,"DEBUG(%5d:%2d)%s%s %s",
+  fprintf(stderr,"DEBUG(%5d:%2d)%s%s %s\n",
           pthread_id,cothread_id,location,elementname,string);
 #endif /* GST_DEBUG_COLOR */
 

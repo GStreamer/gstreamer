@@ -71,9 +71,6 @@ _gst_plugin_initialize (void)
   gst_plugin_register_statics (main_module);
 
 #ifdef PLUGINS_USE_BUILDDIR
-  /* the library directory */
-  gst_plugin_default_paths = g_list_prepend (gst_plugin_default_paths,
-                                             PLUGINS_BUILDDIR "/libs/gst");
   /* location libgstelements.so */
   gst_plugin_default_paths = g_list_prepend (gst_plugin_default_paths,
                                              PLUGINS_BUILDDIR "/gst/elements");
@@ -103,6 +100,10 @@ _gst_plugin_initialize (void)
     if (_gst_warn_old_registry)
 	g_warning ("gstplugin: registry needs rebuild: run gst-register\n");
     _gst_plugin_paths = g_list_concat (_gst_plugin_paths, gst_plugin_default_paths);
+#ifdef PLUGINS_USE_BUILDDIR
+    /* we prepend the lib dir first for performance reasons */
+    _gst_plugin_paths = g_list_prepend (_gst_plugin_paths, PLUGINS_BUILDDIR "/libs/gst");
+#endif
     gst_plugin_load_all ();
     /* gst_plugin_unload_all (); */
     return;
@@ -277,7 +278,7 @@ gst_plugin_load_all (void)
 
   path = _gst_plugin_paths;
   while (path != NULL) {
-    GST_INFO (GST_CAT_PLUGIN_LOADING,"loading plugins from %s",(gchar *)path->data);
+    GST_DEBUG (GST_CAT_PLUGIN_LOADING,"loading plugins from %s",(gchar *)path->data);
     gst_plugin_load_recurse(path->data,NULL);
     path = g_list_next(path);
   }
@@ -422,7 +423,7 @@ gst_plugin_load_absolute (const gchar *filename)
 
   g_return_val_if_fail (filename != NULL, FALSE);
 
-  GST_INFO (GST_CAT_PLUGIN_LOADING, "plugin \"%s\" absolute loading", filename);
+  GST_DEBUG (GST_CAT_PLUGIN_LOADING, "plugin \"%s\" absolute loading", filename);
 
   while (plugins) {
     GstPlugin *testplugin = (GstPlugin *)plugins->data;
@@ -501,10 +502,10 @@ gst_plugin_load_plugin (GstPlugin *plugin)
 
   filename = plugin->filename;
 
-  GST_INFO (GST_CAT_PLUGIN_LOADING, "plugin \"%s\" loading", filename);
+  GST_DEBUG (GST_CAT_PLUGIN_LOADING, "plugin \"%s\" loading", filename);
 
   if (g_module_supported () == FALSE) {
-    g_warning("gstplugin: wow, you built this on a platform without dynamic loading???\n");
+    g_warning ("gstplugin: wow, you built this on a platform without dynamic loading???\n");
     return FALSE;
   }
 
@@ -517,7 +518,7 @@ gst_plugin_load_plugin (GstPlugin *plugin)
 
   if (module != NULL) {
     if (g_module_symbol (module, "plugin_desc", (gpointer *)&desc)) {
-      GST_INFO (GST_CAT_PLUGIN_LOADING,"loading plugin \"%s\"...", filename);
+      GST_DEBUG (GST_CAT_PLUGIN_LOADING,"loading plugin \"%s\"...", filename);
 
       plugin->filename = g_strdup (filename);
       plugin = gst_plugin_register_func (desc, plugin, module);

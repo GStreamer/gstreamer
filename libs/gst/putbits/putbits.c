@@ -30,6 +30,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <gst/putbits/putbits.h>
+#include <gst/gstplugin.h>
+#include <gst/gstversion.h>
 
 /* initialize buffer, call once before first putbits or alignbits */
 void gst_putbits_init(gst_putbits_t *pb)
@@ -99,3 +101,17 @@ int gst_putbits_bitcount(gst_putbits_t *pb)
 {
   return 8*pb->bytecnt + (8-pb->outcnt);
 }
+
+static gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
+{
+  gst_plugin_set_longname (plugin, "Accelerated routines for putting bits into a data stream");
+  return TRUE;
+}
+
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "gstputbits",
+  plugin_init
+};
