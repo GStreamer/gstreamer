@@ -764,7 +764,7 @@ gst_riff_read_info (GstRiffRead *riff)
         type = NULL; /*"Subject";*/
         break;
       case GST_RIFF_INFO_ISFT:
-        type = GST_TAG_APPLICATION;
+        type = GST_TAG_ENCODER;
         break;
       case GST_RIFF_INFO_ISHP:
         type = NULL; /*"Sharpness";*/
