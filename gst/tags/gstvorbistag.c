@@ -468,6 +468,7 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
         if (!gst_tag_list_get_string_index (list, tag, i, &str))
           g_assert_not_reached ();
         result = g_strdup_printf ("%s=%s", vorbis_tag, str);
+        g_free (str);
         break;
       }
       case G_TYPE_DOUBLE:{
