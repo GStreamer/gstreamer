@@ -991,6 +991,10 @@ gst_videomixer_blend_buffers (GstVideoMixer * mix, GstBuffer * outbuf)
           pad->in_width, pad->in_height,
           pad->alpha,
           GST_BUFFER_DATA (outbuf), mix->out_width, mix->out_height);
+      if (pad == mix->master) {
+        GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (pad->buffer);
+        GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (pad->buffer);
+      }
     }
   }
 }
