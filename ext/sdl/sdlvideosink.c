@@ -215,11 +215,9 @@ gst_sdlvideosink_get_sdl_from_fourcc (GstSDLVideoSink *sdlvideosink,
     case GST_MAKE_FOURCC('Y','V','Y','U'):
       return SDL_YVYU_OVERLAY;
     default: {
-      gulong print_format;
-      print_format = GULONG_FROM_LE(code);
       gst_element_error(GST_ELEMENT(sdlvideosink),
-        "Unsupported format %08lx (%4.4s)",
-        print_format, (char*)&print_format);
+        "Unsupported format %08lx (" GST_FOURCC_FORMAT ")",
+        code, GST_FOURCC_ARGS(code));
       return 0;
     }
   }
@@ -263,7 +261,6 @@ gst_sdlvideosink_unlock (GstSDLVideoSink *sdlvideosink)
 static gboolean
 gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink, gboolean showlogo)
 {
-  gulong print_format;
   guint8 *sbuffer;
   gint i;
 
@@ -271,8 +268,6 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink, gboolean showlogo)
     sdlvideosink->window_height = sdlvideosink->image_height;
   if (sdlvideosink->window_width <= 0)
     sdlvideosink->window_width = sdlvideosink->image_width;
-
-  print_format = GULONG_FROM_LE (sdlvideosink->format);
 
   /* create a SDL window of the size requested by the user */
   sdlvideosink->screen = SDL_SetVideoMode(sdlvideosink->window_width,
@@ -296,18 +291,18 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink, gboolean showlogo)
   if ( sdlvideosink->yuv_overlay == NULL )
   {
     gst_element_error(GST_ELEMENT(sdlvideosink),
-      "SDL: Couldn't create SDL_yuv_overlay (%dx%d \'%4.4s\'): %s",
+      "SDL: Couldn't create SDL_yuv_overlay (%dx%d \'" GST_FOURCC_FORMAT "\'): %s",
       sdlvideosink->image_width, sdlvideosink->image_height,
-      (char*)&print_format, SDL_GetError());
+      GST_FOURCC_ARGS(sdlvideosink->format), SDL_GetError());
     return FALSE;
   }
   else
   {
-    g_message("Using a %dx%d %dbpp SDL screen with a %dx%d \'%4.4s\' YUV overlay\n",
+    g_message("Using a %dx%d %dbpp SDL screen with a %dx%d \'" GST_FOURCC_FORMAT "\' YUV overlay\n",
       sdlvideosink->window_width, sdlvideosink->window_height,
       sdlvideosink->screen->format->BitsPerPixel,
       sdlvideosink->image_width, sdlvideosink->image_height,
-      (gchar*)&print_format);
+      GST_FOURCC_ARGS(sdlvideosink->format));
   }
 
   sdlvideosink->rect.x = 0;
@@ -347,7 +342,7 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink, gboolean showlogo)
   else
     SDL_DisplayYUVOverlay(sdlvideosink->yuv_overlay, &(sdlvideosink->rect));
 
-  GST_DEBUG (0, "sdlvideosink: setting %08lx (%4.4s)", sdlvideosink->format, (gchar*)&print_format);
+  GST_DEBUG (0, "sdlvideosink: setting %08lx (" GST_FOURCC_FORMAT ")", sdlvideosink->format, GST_FOURCC_ARGS(sdlvideosink->format));
   
   /* TODO: is this the width of the input image stream or of the widget? */
   g_signal_emit (G_OBJECT (sdlvideosink), gst_sdlvideosink_signals[SIGNAL_HAVE_SIZE], 0,
