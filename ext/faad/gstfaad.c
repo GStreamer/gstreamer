@@ -517,19 +517,17 @@ gst_faad_srcconnect (GstPad * pad, const GstCaps * caps)
   if (fmt != -1) {
     faacDecConfiguration *conf;
 
-    g_print ("Set format %d\n", fmt);
     conf = faacDecGetCurrentConfiguration (faad->handle);
     conf->outputFormat = fmt;
-    g_print ("Trying to conf\n");
     if (faacDecSetConfiguration (faad->handle, conf) == 0)
       return GST_PAD_LINK_REFUSED;
-    g_print ("Done\n");
+
     /* FIXME: handle return value, how? */
     faad->bps = depth / 8;
 
     return GST_PAD_LINK_OK;
   }
-  g_print ("Format not recognized\n");
+
   return GST_PAD_LINK_REFUSED;
 }
 
@@ -592,9 +590,7 @@ gst_faad_chain (GstPad * pad, GstData * data)
   input_size = GST_BUFFER_SIZE (buf);
   info->bytesconsumed = input_size;
   while (input_size >= FAAD_MIN_STREAMSIZE && info->bytesconsumed > 0) {
-    g_print ("Decoding %d bytes of data\n", input_size);
     out = faacDecDecode (faad->handle, info, input_data, input_size);
-    g_print ("done, rec. %p\n", out);
     if (info->error) {
       GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
           ("Failed to decode buffer: %s",
@@ -626,14 +622,6 @@ gst_faad_chain (GstPad * pad, GstData * data)
       if (fmt_change) {
         GstPadLinkReturn ret;
 
-        g_print ("Format change\n");
-        g_print ("To %ld Hz, %d chans, %d/%d/%d/%d/%d/%d\n",
-            info->samplerate, info->channels,
-            info->channel_position[0],
-            info->channel_position[1],
-            info->channel_position[2],
-            info->channel_position[3],
-            info->channel_position[4], info->channel_position[5]);
         /* store new negotiation information */
         faad->samplerate = info->samplerate;
         faad->channels = info->channels;
@@ -653,11 +641,9 @@ gst_faad_chain (GstPad * pad, GstData * data)
 
       /* play decoded data */
       if (info->samples > 0) {
-        g_print ("Playing %ld samples from buf %p\n", info->samples, out);
         outbuf = gst_buffer_new_and_alloc (info->samples * faad->bps);
         /* ugh */
         memcpy (GST_BUFFER_DATA (outbuf), out, GST_BUFFER_SIZE (outbuf));
-        g_print ("done, to %p\n", GST_BUFFER_DATA (outbuf));
         GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
         GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
 
