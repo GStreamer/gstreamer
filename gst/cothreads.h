@@ -26,12 +26,6 @@
 #include <glib.h>
 #include <setjmp.h>
 
-#ifdef HAVE_ATOMIC_H
-#include <asm/atomic.h>
-#endif
-
-#undef COTHREAD_ATOMIC
-
 #ifndef CURRENT_STACK_FRAME
 #define CURRENT_STACK_FRAME  ({ char __csf; &__csf; })
 #endif /* CURRENT_STACK_FRAME */
@@ -45,27 +39,22 @@ typedef int (*cothread_func) (int argc,char **argv);
 #define COTHREAD_DESTROYED	0x02
 
 struct _cothread_state {
-  cothread_context *ctx;
-  int threadnum;
-  gpointer priv;
+  cothread_context 	*ctx;
+  int			 threadnum;
+  gpointer		 priv;
 
-  cothread_func func;
-  int argc;
-  char **argv;
+  cothread_func		 func;
+  int			 argc;
+  char		       **argv;
 
-  int flags;
-  void *sp;
-  jmp_buf jmp;
+  int			 flags;
+  void			*sp;
+  jmp_buf		 jmp;
   /* is this needed any more? */
-  void *top_sp;
-  void *pc;
+  void			*top_sp;
+  void			*pc;
 
-  int magic_number;
-#ifdef COTHREAD_ATOMIC
-  atomic_t lock;
-#else
-  GMutex *lock;
-#endif
+  int			 magic_number;
 };
 
 
