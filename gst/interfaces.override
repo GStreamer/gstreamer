@@ -53,23 +53,38 @@ ignore-glob
  gstinterfaces_*init
  *_get_type
 %%
-%%
-override gst_tuner_make kwargs
+override gst_tuner_list_channels noargs
 static PyObject *
-_wrap_gst_tuner_make(PyObject *self, PyObject *args, PyObject *kwargs)
+_wrap_gst_tuner_list_channels(PyGObject *self)
 {
-    static char *kwlist[] = { "obj", NULL };
-    PyObject *py_value = NULL;
-    GValue value = { 0 };
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstStructure.set_value", kwlist, &py_value))
-        return NULL;
-    g_value_init(&value, G_TYPE_STRING);
-    if (pyg_value_from_pyobject(&value, py_value) != 0) {
-        return NULL;
+    const GList *l, *list;
+    PyObject *py_list;
+	
+    list = gst_tuner_list_channels(GST_TUNER(self->obj));
+    
+    py_list = PyList_New(0);
+    for (l = list; l; l = l->next) {
+	GstTunerChannel *channel = (GstTunerChannel*)l->data;
+	PyList_Append(py_list, pygobject_new(G_OBJECT(channel)));
     }
-    gst_structure_set_value(pyg_boxed_get(self, GstStructure), field, &value);
-
-    Py_INCREF(Py_None);
-    return Py_None;
+		
+    return py_list;
+}
+%%
+override gst_tuner_list_norms noargs
+static PyObject *
+_wrap_gst_tuner_list_norms(PyGObject *self)
+{
+    const GList *l, *list;
+    PyObject *py_list;
+	
+    list = gst_tuner_list_norms(GST_TUNER(self->obj));
+    
+    py_list = PyList_New(0);
+    for (l = list; l; l = l->next) {
+	GstTunerNorm *norm = (GstTunerNorm*)l->data;
+	PyList_Append(py_list, pygobject_new(G_OBJECT(norm)));
+    }
+		
+    return py_list;
 }

@@ -1,3 +1,8 @@
+2004-08-12  Johan Dahlin  <johan@gnome.org>
+
+	* gst/interfaces.override (_wrap_gst_tuner_list_norms) 
+	(_wrap_gst_tuner_list_channels): Impl.
+
 2004-08-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.override:
