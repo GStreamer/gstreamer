@@ -1579,6 +1579,7 @@ gst_alsa_drain_audio (GstAlsa * this)
       break;
   }
 
+  GST_DEBUG ("stopped alsa");
   GST_FLAG_UNSET (this, GST_ALSA_RUNNING);
   return TRUE;
 }

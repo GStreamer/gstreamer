@@ -160,18 +160,21 @@ gst_alsa_sink_init (GstAlsaSink * sink)
 static inline void
 gst_alsa_sink_flush_one_pad (GstAlsaSink * sink, gint i)
 {
+  GST_DEBUG_OBJECT (sink, "flushing pad %d", i);
   switch (sink->behaviour[i]) {
     case 0:
-      if (sink->buf[i])
-        gst_data_unref (GST_DATA (sink->buf[i]));
-      sink->buf[i] = NULL;
-      sink->data[i] = NULL;
+      if (sink->gst_data[i]) {
+        GST_DEBUG_OBJECT (sink, "unreffing gst data %p", sink->gst_data[i]);
+        gst_data_unref (GST_DATA (sink->gst_data[i]));
+      }
+      sink->gst_data[i] = NULL;
+      sink->buf_data[i] = NULL;
       sink->behaviour[i] = 0;
       sink->size[i] = 0;
       break;
     case 1:
-      g_free (sink->data[i]);
-      sink->data[i] = NULL;
+      g_free (sink->buf_data[i]);
+      sink->buf_data[i] = NULL;
       sink->behaviour[i] = 0;
       sink->size[i] = 0;
       break;
@@ -196,9 +199,14 @@ static gboolean
 gst_alsa_sink_check_event (GstAlsaSink * sink, gint pad_nr)
 {
   gboolean cont = TRUE;
-  GstEvent *event = GST_EVENT (sink->buf[pad_nr]);
+  GstEvent *event;
   GstAlsa *this = GST_ALSA (sink);
 
+  /* we get the event from our internal buffer and clear the internal one */
+  event = GST_EVENT (sink->gst_data[pad_nr]);
+  sink->gst_data[pad_nr] = 0;
+  GST_LOG_OBJECT (sink, "checking event %p of type %d on sink pad %d",
+      event, GST_EVENT_TYPE (event), pad_nr);
   if (event) {
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
@@ -241,8 +249,10 @@ gst_alsa_sink_check_event (GstAlsaSink * sink, gint pad_nr)
             GST_EVENT_TYPE (event));
         break;
     }
+    GST_LOG_OBJECT (sink, "unreffing event %p of type %d with refcount %d",
+        event, GST_EVENT_TYPE (event), GST_DATA_REFCOUNT (event));
     gst_event_unref (event);
-    sink->buf[pad_nr] = NULL;
+    sink->gst_data[pad_nr] = NULL;
   } else {
     /* the element at the top of the chain did not emit an event. */
     g_assert_not_reached ();
@@ -266,14 +276,14 @@ gst_alsa_sink_mmap (GstAlsa * this, snd_pcm_sframes_t * avail)
   if (((GstElement *) this)->numpads == 1) {
     /* interleaved */
     for (i = 0; i < this->format->channels; i++) {
-      src[i].addr = sink->data[0];
+      src[i].addr = sink->buf_data[0];
       src[i].first = i * width;
       src[i].step = this->format->channels * width;
     }
   } else {
     /* noninterleaved */
     for (i = 0; i < this->format->channels; i++) {
-      src[i].addr = sink->data[i];
+      src[i].addr = sink->buf_data[i];
       src[i].first = 0;
       src[i].step = width;
     }
@@ -309,11 +319,11 @@ gst_alsa_sink_write (GstAlsa * this, snd_pcm_sframes_t * avail)
 
   if (((GstElement *) this)->numpads == 1) {
     /* interleaved */
-    err = snd_pcm_writei (this->handle, sink->data[0], *avail);
+    err = snd_pcm_writei (this->handle, sink->buf_data[0], *avail);
   } else {
     /* noninterleaved */
     for (i = 0; i < this->format->channels; i++) {
-      channels[i] = sink->data[i];
+      channels[i] = sink->buf_data[i];
     }
     err = snd_pcm_writen (this->handle, channels, *avail);
   }
@@ -354,36 +364,47 @@ sink_restart:
     }
 
     /* check how many bytes we still have in all our bytestreams */
-    /* initialize this value to a somewhat sane state, we might alloc this much data below (which would be a bug, but who knows)... */
+    /* initialize this value to a somewhat sane state, we might alloc
+     * this much data below (which would be a bug, but who knows)... */
     bytes = this->period_size * this->period_count * element->numpads * 8;      /* must be > max sample size in bytes */
     for (i = 0; i < element->numpads; i++) {
+      GstBuffer *buf;
+
       g_assert (this->pad[i] != NULL);
       while (sink->size[i] == 0) {
-        if (!sink->buf[i])
-          sink->buf[i] = GST_BUFFER (gst_pad_pull (this->pad[i]));
-        if (GST_IS_EVENT (sink->buf[i])) {
+        if (!sink->gst_data[i]) {
+          sink->gst_data[i] = gst_pad_pull (this->pad[i]);
+          GST_LOG_OBJECT (sink, "pulled data %p from pad %d",
+              sink->gst_data[i], i);
+        }
+
+        if (GST_IS_EVENT (sink->gst_data[i])) {
+          GST_LOG_OBJECT (sink, "pulled data %p is an event, checking",
+              sink->gst_data[i]);
           if (gst_alsa_sink_check_event (sink, i))
             continue;
           return;
         }
-        /* caps nego failed somewhere */
+        /* it's a buffer */
+        g_return_if_fail (GST_IS_BUFFER (sink->gst_data[i]));
+        buf = GST_BUFFER (sink->gst_data[i]);
+        /* check if caps nego failed somewhere */
         if (this->format == NULL) {
           GST_ELEMENT_ERROR (this, CORE, NEGOTIATION, (NULL),
               ("ALSA format not negotiated"));
         }
-        samplestamp =
-            gst_alsa_timestamp_to_samples (this,
-            GST_BUFFER_TIMESTAMP (sink->buf[i]));
+        samplestamp = gst_alsa_timestamp_to_samples (this,
+            GST_BUFFER_TIMESTAMP (buf));
         max_discont = gst_alsa_timestamp_to_samples (this, this->max_discont);
         /* optimization: check if we're using our own clock
-         * This optimization is important because if we're using our own clock 
-         * gst_element_get_time calls snd_pcm_delay and the following code assumes
-         * that both calls return the same value. However they can be wildly 
-         * different, since snd_pcm_delay goes deep into the kernel.
+         * This optimization is important because if we're using our own clock
+         * gst_element_get_time calls snd_pcm_delay and the following code
+         * assumes that both calls return the same value. However they can be
+         * wildly different, since snd_pcm_delay goes deep into the kernel.
          */
         if (gst_element_get_clock (element) == GST_CLOCK (this->clock)) {
-          /* FIXME: this is ugly because of the variables it uses but I don't know a 
-           * better way to get this info */
+          /* FIXME: this is ugly because of the variables it uses but I
+           * don't know a better way to get this info */
           if (element->base_time > this->clock->start_time) {
             expected =
                 this->played - gst_alsa_timestamp_to_samples (this,
@@ -404,13 +425,13 @@ sink_restart:
         }
         sample_diff = samplestamp - expected;
 
-        if ((!GST_BUFFER_TIMESTAMP_IS_VALID (sink->buf[i])) ||
+        if ((!GST_BUFFER_TIMESTAMP_IS_VALID (buf)) ||
             (-max_discont <= sample_diff && sample_diff <= max_discont)) {
 
           /* difference between expected and current is < GST_ALSA_DEVIATION */
         no_difference:
-          sink->size[i] = sink->buf[i]->size;
-          sink->data[i] = sink->buf[i]->data;
+          sink->size[i] = GST_BUFFER_SIZE (buf);
+          sink->buf_data[i] = GST_BUFFER_DATA (buf);
           sink->behaviour[i] = 0;
         } else if (sample_diff > 0) {
           /* there are empty samples in front of us, fill them with silence */
@@ -422,28 +443,28 @@ sink_restart:
           GST_INFO_OBJECT (this,
               "Allocating %d bytes (%ld samples) now to resync: sample %lu expected, but got %ld",
               size, MIN (bytes, sample_diff), expected, samplestamp);
-          sink->data[i] = g_try_malloc (size);
-          if (!sink->data[i]) {
+          sink->buf_data[i] = g_try_malloc (size);
+          if (!sink->buf_data[i]) {
             GST_WARNING_OBJECT (this,
                 "error allocating %d bytes, buffers unsynced now.", size);
             goto no_difference;
           }
           sink->size[i] = size;
           if (0 != snd_pcm_format_set_silence (this->format->format,
-                  sink->data[i], samples)) {
+                  sink->buf_data[i], samples)) {
             GST_WARNING_OBJECT (this,
                 "error silencing buffer, enjoy the noise.");
           }
           sink->behaviour[i] = 1;
-        } else if (gst_alsa_samples_to_bytes (this,
-                -sample_diff) >= sink->buf[i]->size) {
+        } else if (gst_alsa_samples_to_bytes (this, -sample_diff) >=
+            GST_BUFFER_SIZE (buf)) {
           GST_INFO_OBJECT (this,
               "Skipping %lu samples to resync (complete buffer): sample %lu expected, but got %ld",
-              gst_alsa_bytes_to_samples (this, sink->buf[i]->size), expected,
+              gst_alsa_bytes_to_samples (this, GST_BUFFER_SIZE (buf)), expected,
               samplestamp);
           /* this buffer is way behind */
-          gst_buffer_unref (sink->buf[i]);
-          sink->buf[i] = NULL;
+          gst_buffer_unref (buf);
+          sink->gst_data[i] = NULL;
           continue;
         } else if (sample_diff < 0) {
           gint difference = gst_alsa_samples_to_bytes (this, -sample_diff);
@@ -452,8 +473,8 @@ sink_restart:
               "Skipping %lu samples to resync: sample %lu expected, but got %ld",
               (gulong) - sample_diff, expected, samplestamp);
           /* this buffer is only a bit behind */
-          sink->size[i] = sink->buf[i]->size - difference;
-          sink->data[i] = sink->buf[i]->data + difference;
+          sink->size[i] = GST_BUFFER_SIZE (buf) - difference;
+          sink->buf_data[i] = GST_BUFFER_DATA (buf) + difference;
           sink->behaviour[i] = 0;
         } else {
           g_assert_not_reached ();
@@ -479,7 +500,8 @@ sink_restart:
         return;
     }
 
-    /* FIXME: lotsa stuff can have happened while fetching data. Do we need to check something? */
+    /* FIXME: lotsa stuff can have happened while fetching data.
+     * Do we need to check something? */
 
     /* put this data into alsa */
     if ((copied = this->transmit (this, &avail)) < 0)
@@ -495,7 +517,7 @@ sink_restart:
       }
       g_assert (sink->size[i] > 0);
       if (sink->behaviour[i] != 1)
-        sink->data[i] += bytes;
+        sink->buf_data[i] += bytes;
     }
   }
 

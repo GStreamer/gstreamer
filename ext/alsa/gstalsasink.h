@@ -39,9 +39,9 @@ struct _GstAlsaSink {
   GstAlsaMixer parent;
 
   /* array of the data on the channels */
-  guint8    *data[GST_ALSA_MAX_TRACKS];      /* pointer into buffer */
+  guint8    *buf_data[GST_ALSA_MAX_TRACKS];  /* pointer into buffer */
   guint      size[GST_ALSA_MAX_TRACKS];      /* sink: bytes left in buffer */
-  GstBuffer *buf[GST_ALSA_MAX_TRACKS];       /* current buffer */
+  GstData   *gst_data[GST_ALSA_MAX_TRACKS];  /* current data */
   guint      behaviour[GST_ALSA_MAX_TRACKS]; /* 0 = data points into buffer (so unref when size == 0),
                                                   1 = data should be freed, use buffer after that */
 };
