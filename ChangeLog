@@ -1,3 +1,14 @@
+2004-03-09  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gst.override (_wrap_gst_g_error_tp_str) 
+	(_wrap_gst_g_error_tp_str): Impl.
+
+	* gst/gst-types.defs (GError): Add
+
+	* gst/Makefile.am (defs_DATA): Install defs
+
+	* codegen/*: Resync
+
 2004-03-05  Johan Dahlin  <johan@gnome.org>
 
 	* testsuite/element.py: Update to new api

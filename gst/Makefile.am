@@ -23,10 +23,15 @@ _gstmodule_la_LIBADD = $(GST_LIBS)
 _gstmodule_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_gst
 nodist__gstmodule_la_SOURCES = gst.c
 
-CLEANFILES = gst.c
-EXTRA_DIST = gst.defs gst-types.defs $(GST_OVERRIDES) arg-types.py
+defs_DATA = \
+	gst.defs \
+	gst-types.defs
+defsdir = $(pkgdatadir)/2.0/defs
 
-.defs.c:
+CLEANFILES = gst.c
+EXTRA_DIST = $(defs_DATA) $(GST_OVERRIDES) arg-types.py
+
+gst.c: $(srcdir)/gst.defs $(srcdir)/gst-types.defs $(GST_OVERRIDES) 
 	(cd $(srcdir)\
 	 && $(PYGTK_CODEGEN) \
 		--load-types $(srcdir)/arg-types.py \

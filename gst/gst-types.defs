@@ -182,6 +182,18 @@
   (release-func "gst_data_unref")
 )
 
+(define-boxed GError
+  (in-module "Gst")
+  (c-name "GError")
+  (gtype-id "GST_TYPE_G_ERROR")
+  (copy-func "g_error_copy")
+  (release-func "g_error_free")
+  (fields
+   '("GQuark" "domain")
+   '("gint"   "code")
+   '("gchar*" "message"))
+)
+
 
 ;;
 ;; 0.7 Boxed types

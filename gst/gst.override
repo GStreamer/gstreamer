@@ -30,6 +30,7 @@ headers
 
 #include "pygobject.h"
 #include <gst/gst.h>
+#include <gst/gsterror.h>
 #include <gst/gstqueue.h>
 #include <gst/gsttypefind.h>
 
@@ -49,6 +50,7 @@ void            iterate_bin_all          (GstBin *bin);
 guint           add_iterate_bin          (GstBin *bin);
 void            remove_iterate_bin       (guint id);
 extern gboolean pygst_data_from_pyobject (PyObject *object, GstData **data);
+
 %%
 include
   gstpad-handlers.override
@@ -769,4 +771,20 @@ _wrap_gst_type_find_factory_get_caps(PyGObject *self)
 {
 	GstCaps *ret = (GstCaps*)gst_type_find_factory_get_caps(GST_TYPE_FIND_FACTORY(self->obj));
 	return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
+}
+%%
+override-attr GError.domain
+static PyObject *
+_wrap_gst_g_error__get_domain(PyGObject *self, void *closure)
+{
+    return PyString_FromString(g_quark_to_string(((GError*)self->obj)->domain));
+}
+%%
+override-slot GError.tp_str
+static PyObject *
+_wrap_gst_g_error_tp_str(PyGObject *self)
+{
+    GError *error = (GError*)self->obj;
+    return PyString_FromString(gst_error_get_message (error->domain,
+						      error->code));
 }
