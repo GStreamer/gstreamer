@@ -1,3 +1,13 @@
+2004-03-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* examples/gstplay/player.c: (main):
+	* gst-libs/gst/play/play.c: (gst_play_class_init),
+	(gst_play_set_location), (gst_play_set_data_src),
+	(gst_play_set_video_sink), (gst_play_set_audio_sink),
+	(gst_play_set_visualization), (gst_play_connect_visualization):
+          check return values of element_set_state and return FALSE where
+          failed
+
 2004-03-29  Benjamin Otte  <otte@gnome.org>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_handle_event):
