@@ -746,14 +746,14 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     /* check for PTS */
     if ((flags2 & 0x80)) {
     /*if ((flags2 & 0x80) && id == 0xe0) { */
-      pts  = (*buf++ & 0x0E) << 29;
-      pts |=  *buf++         << 22;
-      pts |= (*buf++ & 0xFE) << 14;
-      pts |=  *buf++         <<  7;
-      pts |= (*buf++ & 0xFE) >>  1;
+      pts  = ((guint64) (*buf++ & 0x0E)) << 29;
+      pts |= ((guint64)  *buf++        ) << 22;
+      pts |= ((guint64) (*buf++ & 0xFE)) << 14;
+      pts |= ((guint64)  *buf++        ) <<  7;
+      pts |= ((guint64) (*buf++ & 0xFE)) >>  1;
 
       GST_DEBUG ("%x PTS = %" G_GUINT64_FORMAT, 
-		      id, MPEGTIME_TO_GSTTIME (pts));
+		 id, MPEGTIME_TO_GSTTIME (pts));
 
     }
     if ((flags2 & 0x40)) {

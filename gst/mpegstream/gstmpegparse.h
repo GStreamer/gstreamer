@@ -71,7 +71,6 @@ struct _GstMPEGParse {
   gboolean	 scr_pending;
   gint		 max_discont;
 
-  GstClock 	*provided_clock;
   GstClock 	*clock;
   gboolean	 sync;
   GstClockID	 id;

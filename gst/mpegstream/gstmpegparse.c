@@ -85,8 +85,6 @@ static GstElementStateReturn
 			gst_mpeg_parse_change_state	(GstElement *element);
 
 static void 		gst_mpeg_parse_set_clock 	(GstElement *element, GstClock *clock);
-static GstClock* 	gst_mpeg_parse_get_clock 	(GstElement *element);
-static GstClockTime	gst_mpeg_parse_get_time 	(GstClock *clock, gpointer data);
 
 static gboolean		gst_mpeg_parse_parse_packhead 	(GstMPEGParse *mpeg_parse, GstBuffer *buffer);
 static void 		gst_mpeg_parse_send_data	(GstMPEGParse *mpeg_parse, GstData *data, GstClockTime time);
@@ -158,7 +156,6 @@ gst_mpeg_parse_class_init (GstMPEGParseClass *klass)
   gobject_class->set_property = gst_mpeg_parse_set_property;
 
   gstelement_class->change_state  = gst_mpeg_parse_change_state;
-  gstelement_class->get_clock     = gst_mpeg_parse_get_clock;
   gstelement_class->set_clock     = gst_mpeg_parse_set_clock;
   gstelement_class->get_index     = gst_mpeg_parse_get_index;
   gstelement_class->set_index     = gst_mpeg_parse_set_index;
@@ -206,19 +203,8 @@ gst_mpeg_parse_init (GstMPEGParse *mpeg_parse)
   mpeg_parse->sync = FALSE;
   mpeg_parse->id = NULL;
   mpeg_parse->max_discont = DEFAULT_MAX_DISCONT;
-  mpeg_parse->provided_clock = gst_mpeg_clock_new ("MPEGParseClock", 
-		  gst_mpeg_parse_get_time, mpeg_parse);
 
   GST_FLAG_SET (mpeg_parse, GST_ELEMENT_EVENT_AWARE);
-}
-
-static GstClock*
-gst_mpeg_parse_get_clock (GstElement *element)
-{   
-  /* GstMPEGParse *parse = GST_MPEG_PARSE (element); */
-
-  /* return parse->provided_clock; */
-  return NULL;
 }
 
 static void
@@ -228,14 +214,6 @@ gst_mpeg_parse_set_clock (GstElement *element, GstClock *clock)
 
   parse->clock = clock;
 } 
-
-static GstClockTime
-gst_mpeg_parse_get_time (GstClock *clock, gpointer data)
-{   
-  GstMPEGParse *parse = GST_MPEG_PARSE (data);
-
-  return MPEGTIME_TO_GSTTIME (parse->current_scr);
-}
 
 #if 0
 static void
