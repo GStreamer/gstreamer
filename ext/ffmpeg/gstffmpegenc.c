@@ -370,8 +370,10 @@ gst_ffmpegenc_connect (GstPad  *pad,
    * function. */
   if (!gst_pad_set_explicit_caps (ffmpegenc->srcpad, icaps)) {
     avcodec_close (ffmpegenc->context);
+    gst_caps_free (icaps);
     return GST_PAD_LINK_REFUSED;
   }
+  gst_caps_free (icaps);
 
   /* success! */
   ffmpegenc->opened = TRUE;
