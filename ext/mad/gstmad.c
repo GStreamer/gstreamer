@@ -89,15 +89,12 @@ struct _GstMadClass {
 };
 
 /* elementfactory information */
-static GstElementDetails gst_mad_details = {
+static GstElementDetails gst_mad_details = GST_ELEMENT_DETAILS (
   "mad mp3 decoder",
   "Codec/Audio/Decoder",
-  "GPL",
   "Uses mad code to decode mp3 streams",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 
 /* Mad signals and args */
@@ -144,7 +141,7 @@ GST_PAD_TEMPLATE_FACTORY (mad_sink_template_factory,
   )
 )
 
-
+static void		gst_mad_base_init	(gpointer g_class);
 static void		gst_mad_class_init	(GstMadClass *klass);
 static void		gst_mad_init		(GstMad *mad);
 static void		gst_mad_dispose 	(GObject *object);
@@ -191,7 +188,7 @@ gst_mad_get_type (void)
   if (!mad_type) {
     static const GTypeInfo mad_info = {
       sizeof (GstMadClass),
-      NULL,
+      gst_mad_base_init,
       NULL,
       (GClassInitFunc) gst_mad_class_init,
       NULL,
@@ -257,6 +254,17 @@ gst_mad_emphasis_get_type(void) {
   return mad_emphasis_type;
 }
 
+static void
+gst_mad_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_add_pad_template (element_class,
+		  GST_PAD_TEMPLATE_GET (mad_sink_template_factory));
+  gst_element_class_add_pad_template (element_class,
+		  GST_PAD_TEMPLATE_GET (mad_src_template_factory));
+  gst_element_class_set_details (element_class, &gst_mad_details);
+}
 static void
 gst_mad_class_init (GstMadClass *klass)
 {
@@ -1408,28 +1416,24 @@ gst_mad_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   /* create an elementfactory for the mad element */
-  factory = gst_element_factory_new ("mad", GST_TYPE_MAD, &gst_mad_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory,
-		  GST_PAD_TEMPLATE_GET (mad_sink_template_factory));
-  gst_element_factory_add_pad_template (factory,
-		  GST_PAD_TEMPLATE_GET (mad_src_template_factory));
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "mad", GST_RANK_PRIMARY, GST_TYPE_MAD))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "mad",
-  plugin_init
-};
+  "mp3 decoding based on the mad library",
+  plugin_init,
+  VERSION,
+  "GPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
