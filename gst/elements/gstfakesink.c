@@ -58,7 +58,8 @@ GST_PADTEMPLATE_FACTORY (fakesink_sink_factory,
 static void	gst_fakesink_class_init		(GstFakeSinkClass *klass);
 static void	gst_fakesink_init		(GstFakeSink *fakesink);
 
-static GstPad* 	gst_fakesink_request_new_pad 	(GstElement *element, GstPadTemplate *templ);
+static GstPad* 	gst_fakesink_request_new_pad 	(GstElement *element, GstPadTemplate *templ, const
+                                                 gchar *unused);
 
 static void	gst_fakesink_set_property	(GObject *object, guint prop_id, 
 						 const GValue *value, GParamSpec *pspec);
@@ -137,7 +138,7 @@ gst_fakesink_init (GstFakeSink *fakesink)
 }
 
 static GstPad*
-gst_fakesink_request_new_pad (GstElement *element, GstPadTemplate *templ)
+gst_fakesink_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar *unused)
 {
   gchar *name;
   GstPad *sinkpad;

@@ -178,7 +178,7 @@ struct _GstElementClass {
   /* change the element state */
   GstElementStateReturn (*change_state)		(GstElement *element);
   /* request a new pad */
-  GstPad*		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ);
+  GstPad*		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ, const gchar* name);
 };
 
 void			gst_element_class_add_padtemplate	(GstElementClass *element, GstPadTemplate *templ);

@@ -604,14 +604,14 @@ gst_element_get_padtemplate_by_compatible (GstElement *element, GstPadTemplate *
 }
 
 static GstPad*
-gst_element_request_pad (GstElement *element, GstPadTemplate *templ)
+gst_element_request_pad (GstElement *element, GstPadTemplate *templ, const gchar* name)
 {
   GstPad *newpad = NULL;
   GstElementClass *oclass;
 
   oclass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS(element));
   if (oclass->request_new_pad)
-    newpad = (oclass->request_new_pad)(element, templ);
+    newpad = (oclass->request_new_pad)(element, templ, name);
 
   return newpad;
 }
@@ -640,7 +640,7 @@ gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ)
 
   templ_new = gst_element_get_padtemplate_by_compatible (element, templ);
   if (templ_new != NULL)
-      pad = gst_element_request_pad (element, templ_new);
+      pad = gst_element_request_pad (element, templ_new, NULL);
 
   return pad;
 }
@@ -660,19 +660,40 @@ gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ)
 GstPad*
 gst_element_request_pad_by_name (GstElement *element, const gchar *name)
 {
-  GstPadTemplate *templ;
+  GstPadTemplate *templ = NULL;
   GstPad *pad;
+  const gchar *req_name = NULL;
+  gboolean templ_found = FALSE;
+  GList *list;
+  gint n;
 
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  templ = gst_element_get_padtemplate_by_name (element, name);
+  if (strstr (name, "%d")) {
+      templ = gst_element_get_padtemplate_by_name (element, name);
+      req_name = NULL;
+  } else {
+      list = gst_element_get_padtemplate_list(element);
+      while (!templ_found && list) {
+          templ = (GstPadTemplate*) list->data;
+          if (strstr (templ->name_template, "%d")) {
+              if (sscanf(name, templ->name_template, &n)) {
+                  templ_found = TRUE;
+                  req_name = name;
+                  break;
+              }
+          }
+          list = list->next;
+      }
+  }
+  
   if (templ == NULL)
-    return NULL;
-
-  pad = gst_element_request_pad (element, templ);
-
+      return NULL;
+  
+  pad = gst_element_request_pad (element, templ, req_name);
+  
   return pad;
 }
 
