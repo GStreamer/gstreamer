@@ -72,6 +72,7 @@ G_STMT_START{ \
 
 // type system
 #define GType					GtkType
+#define GTypeFlags				guint
 #define GClassInitFunc				GtkClassInitFunc
 #define GBaseInitFunc				GtkClassInitFunc
 #define GInstanceInitFunc			GtkObjectInitFunc
@@ -161,6 +162,7 @@ gtk_signal_emit_by_name ((GtkObject *)object,name,data,self)
 
 // first define GValue and GParamSpec
 #define GValue			GtkArg
+#define GParamFlags		gint
 #define G_VALUE_TYPE(v)		((v)->type)
 #define G_PARAM_READWRITE	GTK_ARG_READWRITE
 #define G_PARAM_READABLE	GTK_ARG_READABLE
