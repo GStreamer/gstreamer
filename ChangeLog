@@ -1,3 +1,10 @@
+2004-09-09  Scott Wheeler <wheeler@kde.org>
+
+	* gst/gstplaybin.c: (gst_play_bin_class_init), (gst_play_bin_init),
+	(gst_play_bin_set_property), (gst_play_bin_get_property),
+	(gen_audio_element), (gen_audio_element):
+	  Add a volume element / property to the pipeline.
+
 2004-09-07  Wim Taymans  <wim@fluendo.com>
 
 	* gst/videomixer/videomixer.c: (gst_videomixer_blend_buffers):
