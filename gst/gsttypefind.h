@@ -57,7 +57,8 @@ struct _GstTypeFindClass {
   GstElementClass 	parent_class;
 
   /* signals */
-  void 			(*have_type) 	(GstElement *element);
+  void 			(*have_type) 	(GstElement *element,
+					 GstCaps    *caps);
 };
 
 GType gst_type_find_get_type (void);
