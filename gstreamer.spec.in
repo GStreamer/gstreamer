@@ -66,12 +66,16 @@ applications and plugins for GStreamer.
 %files devel
 %defattr(-, root, root)
 %{_includedir}/gst
-%{_libdir}/libgst.a
-%{_libdir}/libgst.la
-%{_libdir}/libgst.so
+%{_libdir}/libgstreamer.a
+%{_libdir}/libgstreamer.la
+%{_libdir}/libgstreamer.so
 %{_libdir}/pkgconfig/*
 
 %changelog
+* Mon Feb 11 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- added libgstbasicscheduler
+- renamed libgst to libgstreamer
+
 * Fri Jan 04 2002 Christian Schaller <Uraeus@linuxrising.org>
 - Added configdir parameter as it seems the configdir gets weird otherwise
 
