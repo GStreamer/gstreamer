@@ -102,6 +102,9 @@ typedef enum {
   /* this element is incable of seeking (FIXME: does this apply to filters?) */
   GST_ELEMENT_NO_SEEK,
 
+  /***** !!!!! need to have a flag that says that an element must
+    *not* be an entry into a scheduling chain !!!!! *****/
+
   /* there is a new loopfunction ready for placement */
   GST_ELEMENT_NEW_LOOPFUNC,
   /* the cothread holding this element needs to be stopped */
