@@ -1,5 +1,5 @@
 ## we need to specify the plugindir if we want libtool to build .so files ...
-plugindir=$(libdir)/gst
+plugindir=$(libdir)/gstreamer-@GST_MAJORMINOR@
 
 plugin_LTLIBRARIES = libgstexample.la 
 
