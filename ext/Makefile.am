@@ -405,7 +405,6 @@ SUBDIRS=\
 	$(AALIB_DIR) \
 	$(ALSA_DIR) \
 	$(AMRNB_DIR) \
-	$(AMRWB_DIR) \
 	$(ARTS_DIR) \
 	$(ARTSC_DIR) \
 	$(AUDIOFILE_DIR) \
