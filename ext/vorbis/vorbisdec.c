@@ -246,13 +246,13 @@ vorbis_dec_chain (GstPad *pad, GstData *data)
     /* header packet */
     if (packet.packet[0] / 2 != packet.packetno) {
       /* FIXME: just skip? */
-      gst_element_error (GST_ELEMENT (vd), STREAM, DECODE,
+      GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
 	  (NULL), ("unexpected packet type %d", (gint) packet.packet[0]));
       gst_data_unref (data);
       return;
     }
     if (vorbis_synthesis_headerin (&vd->vi, &vd->vc, &packet)) {
-      gst_element_error (GST_ELEMENT (vd), STREAM, DECODE, 
+      GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE, 
 	  (NULL), ("couldn't read header packet"));
       gst_data_unref (data);
       return;
@@ -284,13 +284,13 @@ vorbis_dec_chain (GstPad *pad, GstData *data)
     
     /* normal data packet */
     if (vorbis_synthesis (&vd->vb, &packet)) {
-      gst_element_error (GST_ELEMENT (vd), STREAM, DECODE, 
+      GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE, 
 	  (NULL), ("couldn't read data packet"));
       gst_data_unref (data);
       return;
     }
     if (vorbis_synthesis_blockin (&vd->vd, &vd->vb) < 0) {
-      gst_element_error (GST_ELEMENT (vd), STREAM, DECODE,
+      GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
 	  (NULL), ("vorbis decoder did not accept data packet"));
       gst_data_unref (data);
       return;

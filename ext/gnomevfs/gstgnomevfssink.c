@@ -282,7 +282,7 @@ gst_gnomevfssink_open_file (GstGnomeVFSSink *sink)
 		       gst_gnomevfssink_signals[SIGNAL_ERASE_ASK], 0,
 		       sink->erase);
       }
-      gst_element_error (sink, RESOURCE, OPEN_WRITE,
+      GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
                          (_("Could not open vfs file \"%s\" for writing"), sink->filename),
                          GST_ERROR_SYSTEM);
       return FALSE;
@@ -307,7 +307,7 @@ gst_gnomevfssink_close_file (GstGnomeVFSSink *sink)
     result = gnome_vfs_close(sink->handle);
 
     if (result != GNOME_VFS_OK)
-	gst_element_error (sink, RESOURCE, CLOSE,
+	GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
                            (_("Could not close vfs file \"%s\""), sink->filename),
                            GST_ERROR_SYSTEM);
   }

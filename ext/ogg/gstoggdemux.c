@@ -356,7 +356,7 @@ gst_ogg_start_playing (GstOggDemux *ogg)
   GST_DEBUG_OBJECT (ogg, "got EOS in setup, changing to playback now");
   if (!gst_pad_send_event (GST_PAD_PEER (ogg->sinkpad),
       gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET, 0))) {
-    gst_element_error (ogg, CORE, SEEK, (NULL), 
+    GST_ELEMENT_ERROR (ogg, CORE, SEEK, (NULL), 
 	("cannot seek to start after EOS"));
   }
   ogg->current_chain = 0;
@@ -458,7 +458,7 @@ gst_ogg_demux_chain (GstPad *pad, GstData *buffer)
   memcpy (data, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
   if (ogg_sync_wrote (&ogg->sync, GST_BUFFER_SIZE (buffer)) != 0) {
     gst_data_unref (buffer);
-    gst_element_error (ogg, LIBRARY, FAILED /* MEMORY */, NULL, ("ogg_sync_wrote failed"));
+    GST_ELEMENT_ERROR (ogg, LIBRARY, TOO_LAZY, NULL, ("ogg_sync_wrote failed"));
     return;
   }
   offset_end = GST_BUFFER_OFFSET_IS_VALID (buffer) ?
@@ -524,7 +524,7 @@ gst_ogg_demux_chain (GstPad *pad, GstData *buffer)
 	      GST_DEBUG_OBJECT (ogg, "stream can seek, try setup now");
 	      if (!gst_pad_send_event (GST_PAD_PEER (ogg->sinkpad),
 		  gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET, 0))) {
-		gst_element_error (ogg, CORE, SEEK, NULL, 
+		GST_ELEMENT_ERROR (ogg, CORE, SEEK, NULL, 
 		    ("stream can seek to end, but not to start. Can't handle that."));
 	      }
 	      gst_ogg_add_chain (ogg);
@@ -609,7 +609,7 @@ br:
       /* FIXME: monitor if we are still in creation stage? */
       cur = gst_ogg_pad_new (ogg, ogg_page_serialno (page));
       if (!cur) {
-	gst_element_error (ogg, LIBRARY, FAILED, NULL, ("Creating ogg_stream struct failed."));
+	GST_ELEMENT_ERROR (ogg, LIBRARY, TOO_LAZY, NULL, ("Creating ogg_stream struct failed."));
 	return;
       }
       if (ogg->current_chain == -1) {
@@ -620,7 +620,7 @@ br:
     }
   }
   if (cur == NULL) {
-    gst_element_error (ogg, STREAM, DECODE, NULL, ("invalid ogg stream serial no"));
+    GST_ELEMENT_ERROR (ogg, STREAM, DECODE, NULL, ("invalid ogg stream serial no"));
     return;
   }
   if (ogg_stream_pagein (&cur->stream, page) != 0) {

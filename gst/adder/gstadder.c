@@ -312,7 +312,7 @@ gst_adder_loop (GstElement *element)
   buf_out = gst_buffer_new_and_alloc (1024);
 
   if (buf_out == NULL) {
-    gst_element_error (adder, CORE, TOO_LAZY, NULL, ("could not get new output buffer"));
+    GST_ELEMENT_ERROR (adder, CORE, TOO_LAZY, NULL, ("could not get new output buffer"));
     return;
   }
 
@@ -400,7 +400,7 @@ gst_adder_loop (GstElement *element)
           for (i = 0; i < GST_BUFFER_SIZE (buf_out); i++)
             out[i] = CLAMP(out[i] + in[i], 0x80, 0x7f);
         } else {
-          gst_element_error (adder, STREAM, FORMAT, NULL,
+          GST_ELEMENT_ERROR (adder, STREAM, FORMAT, NULL,
 		     ("invalid width (%u) for integer audio in gstadder",
 		     adder->width));
 	  return;
@@ -417,13 +417,13 @@ gst_adder_loop (GstElement *element)
           for (i = 0; i < GST_BUFFER_SIZE (buf_out) / sizeof (gfloat); i++)
             out[i] = CLAMP(out[i] + in[i], -1.0, 1.0);
         } else {
-          gst_element_error (adder, STREAM, FORMAT, NULL,
+          GST_ELEMENT_ERROR (adder, STREAM, FORMAT, NULL,
                      ("invalid width (%u) for float audio in gstadder",
                      adder->width));
           return;
         }
       } else {
-        gst_element_error (adder, STREAM, FORMAT, NULL,
+        GST_ELEMENT_ERROR (adder, STREAM, FORMAT, NULL,
 	           ("invalid audio format (%d) in gstadder",
 	           adder->format));
 	return;

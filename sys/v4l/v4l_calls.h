@@ -43,7 +43,7 @@ extern "C" {
 #define GST_V4L_CHECK_OPEN(element)				\
   if (element->video_fd <= 0)					\
   {								\
-    gst_element_error (element, RESOURCE, TOO_LAZY,		\
+    GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,		\
       (_("Device is not open")), NULL);				\
     return FALSE;						\
   }
@@ -52,7 +52,7 @@ extern "C" {
 #define GST_V4L_CHECK_NOT_OPEN(element)				\
   if (element->video_fd != -1)					\
   {								\
-    gst_element_error (element, RESOURCE, TOO_LAZY,		\
+    GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,		\
       (_("Device is open")), NULL);				\
     return FALSE;						\
   }
@@ -61,7 +61,7 @@ extern "C" {
 #define GST_V4L_CHECK_OVERLAY(element)				\
   if (!(element->vcap.type & VID_TYPE_OVERLAY))			\
   {								\
-    gst_element_error (element, RESOURCE, TOO_LAZY,		\
+    GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,		\
       NULL, ("Device cannot handle overlay"));			\
     return FALSE;						\
   }
@@ -70,7 +70,7 @@ extern "C" {
 #define GST_V4L_CHECK_ACTIVE(element)				\
   if (element->buffer == NULL)					\
   {								\
-    gst_element_error (element, RESOURCE, SETTINGS,		\
+    GST_ELEMENT_ERROR (element, RESOURCE, SETTINGS,		\
       NULL, ("Device is not in streaming mode"));		\
     return FALSE;						\
   }
@@ -79,7 +79,7 @@ extern "C" {
 #define GST_V4L_CHECK_NOT_ACTIVE(element)			\
   if (element->buffer != NULL)					\
   {								\
-    gst_element_error (element, RESOURCE, SETTINGS,		\
+    GST_ELEMENT_ERROR (element, RESOURCE, SETTINGS,		\
       NULL, ("Device is in streaming mode"));			\
     return FALSE;						\
   }

@@ -526,7 +526,7 @@ gst_vorbis_tag_chain (GstPad *pad, GstData *data)
   }
   
   if (GST_BUFFER_SIZE (buffer) == 0)
-    gst_element_error (tag, CORE, TAG, NULL, ("empty buffers are not allowed in vorbis data"));
+    GST_ELEMENT_ERROR (tag, CORE, TAG, NULL, ("empty buffers are not allowed in vorbis data"));
   
   if (GST_BUFFER_DATA (buffer)[0] == 3) {
     gchar *vendor;
@@ -534,7 +534,7 @@ gst_vorbis_tag_chain (GstPad *pad, GstData *data)
 
     gst_data_unref (data);
     if (list == NULL) {
-      gst_element_error (tag, CORE, TAG, NULL, ("invalid data in vorbis comments"));
+      GST_ELEMENT_ERROR (tag, CORE, TAG, NULL, ("invalid data in vorbis comments"));
       return;
     }
     gst_element_found_tags_for_pad (GST_ELEMENT (tag), tag->srcpad, 0,
