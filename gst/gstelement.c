@@ -2178,7 +2178,7 @@ gst_element_negotiate_pads (GstElement *element)
 
     /* if we have a connection on this pad and it doesn't have caps
      * allready, try to negotiate */
-    if (GST_PAD_IS_USABLE (srcpad) && !GST_PAD_CAPS (srcpad)) {
+    if (GST_PAD_IS_CONNECTED (srcpad) && !GST_PAD_CAPS (srcpad)) {
       GstRealPad *sinkpad;
       GstElementState otherstate;
       GstElement *parent;
