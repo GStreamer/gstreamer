@@ -1,5 +1,10 @@
 2004-03-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* docs/faq/general.xml:
+	  add entry about "does gst support format X?"
+
+2004-03-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* gst/gstthread.c:
 	  fix docs
 	* gst/gstutils.h:

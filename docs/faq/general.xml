@@ -68,6 +68,28 @@ in our <ulink url="http://gstreamer.net/status/">Status table</ulink>.
     </qandaentry>
 
     <qandaentry>
+      <question id="general-format">
+	<para>Does GStreamer support the format of my media files?</para>
+      </question>
+      <answer>
+	<para>
+GStreamer aims to support every format imaginable, but that doesn't mean the 
+developers have managed to achieve that aim yet. If a GStreamer enabled 
+application doesn't play back your files, you can help us solve that problem
+by <ulink url="htpp://bugzilla.gnome.org">filing an enhancement request 
+bug</ulink> for that format. If you have it, please provide: 
+<itemizedlist>
+  <listitem><para>links to other players, preferrably Open Source and working 
+  on Unix</para></listitem>
+  <listitem><para>links to explanations of the format.</para></listitem>
+  <listitem><para>ways to obtain mediafiles in that format to test.
+  </para></listitem>
+</itemizedlist>
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
       <question id="general-licensing">
         <para>
 What are the exact licensing terms for GStreamer and its plugins ?
