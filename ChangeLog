@@ -1,3 +1,8 @@
+2004-02-24  David I. Lehn  <dlehn@users.sourceforge.net>
+
+	* gstreamer/common.override:
+	Attempt to handle GstBuffer vs GstData better
+
 2004-02-24  Johan Dahlin  <johan@gnome.org>
 
 	* gstreamer/gstreamer.defs: rename all functions, remove

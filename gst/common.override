@@ -132,7 +132,7 @@ _wrap_gst_pad_set_link_function (PyGObject *self,
 override gst_pad_set_chain_function kwargs
 
 static void
-call_chain_function(GstPad *pad, GstBuffer *buf)
+call_chain_function(GstPad *pad, GstData *data)
 {
 	PyObject *function;
 
@@ -140,10 +140,17 @@ call_chain_function(GstPad *pad, GstBuffer *buf)
 
 	pyg_block_threads();
 
-	PyObject_CallFunction (function,
-			"OO", 
-			pad_private(pad)->pad,
-			pyg_boxed_new(GST_TYPE_BUFFER, buf, TRUE, TRUE));
+	if (GST_IS_BUFFER(data)) {
+		PyObject_CallFunction (function,
+				"OO", 
+				pad_private(pad)->pad,
+				pyg_boxed_new(GST_TYPE_BUFFER, data, TRUE, TRUE));
+	} else if (GST_IS_EVENT(data)) {
+		PyObject_CallFunction (function,
+				"OO", 
+				pad_private(pad)->pad,
+				pyg_boxed_new(GST_TYPE_EVENT, data, TRUE, TRUE));
+	}
 
 	if (PyErr_Occurred ()) {
 		PyErr_Print ();
