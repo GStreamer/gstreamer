@@ -39,8 +39,8 @@ BuildRequires:	gstreamer-tools >= 0.7.4
 @USE_GCONF_TRUE@BuildRequires: 	GConf2-devel
 @USE_GNOME_VFS_TRUE@Requires:      gnome-vfs2 > 1.9.4.00
 @USE_GNOME_VFS_TRUE@BuildRequires: gnome-vfs2-devel > 1.9.4.00
-@USE_HERMES_TRUE@Requires:      Hermes => 1.3.0
-@USE_HERMES_TRUE@BuildRequires: Hermes-devel => 1.3.0
+@USE_HERMES_TRUE@Requires:      Hermes >= 1.3.0
+@USE_HERMES_TRUE@BuildRequires: Hermes-devel >= 1.3.0
 @USE_JPEG_TRUE@Requires:      libjpeg
 @USE_JPEG_TRUE@BuildRequires: libjpeg-devel
 @USE_LIBPNG_TRUE@Requires:      libpng >= 1.2.0
@@ -423,8 +423,8 @@ GStreamer support libraries header files.
 @USE_DXR3_TRUE@Summary:       GStreamer plug-in for playback using dxr3 card.
 @USE_DXR3_TRUE@Group:         Applications/Multimedia
 @USE_DXR3_TRUE@Requires:      gstreamer-plugins = %{version}
-@USE_DXR3_TRUE@Requires:      em8300 => 0.12.0
-@USE_DXR3_TRUE@BuildRequires: em8300-devel => 0.12.0
+@USE_DXR3_TRUE@Requires:      em8300 >= 0.12.0
+@USE_DXR3_TRUE@BuildRequires: em8300-devel >= 0.12.0
 @USE_DXR3_TRUE@
 @USE_DXR3_TRUE@%description -n gstreamer-dxr3
 @USE_DXR3_TRUE@Plug-in supporting DVD playback using cards
@@ -448,8 +448,8 @@ GStreamer support libraries header files.
 @USE_FAAD_TRUE@Summary:GStreamer plug-ins for AAC audio playback.
 @USE_FAAD_TRUE@Group:         Applications/Multimedia
 @USE_FAAD_TRUE@Requires:      gstreamer-plugins = %{version}
-@USE_FAAD_TRUE@Requires:      faad2 => 2.0
-@USE_FAAD_TRUE@BuildRequires: faad2-devel => 2.0
+@USE_FAAD_TRUE@Requires:      faad2 >= 2.0
+@USE_FAAD_TRUE@BuildRequires: faad2-devel >= 2.0
 @USE_FAAD_TRUE@
 @USE_FAAD_TRUE@%description -n gstreamer-faad
 @USE_FAAD_TRUE@Plug-ins for playing AAC audio
@@ -493,7 +493,7 @@ GStreamer support libraries header files.
 @USE_JACK_TRUE@Summary:  GStreamer plug-in for the Jack Sound Server.
 @USE_JACK_TRUE@Group:    Applications/Multimedia
 @USE_JACK_TRUE@Requires: gstreamer-plugins = %{version}
-@USE_JACK_TRUE@Requires: jack-audio-connection-kit => 0.28.0
+@USE_JACK_TRUE@Requires: jack-audio-connection-kit >= 0.28.0
 @USE_JACK_TRUE@
 @USE_JACK_TRUE@Provides:	gstreamer-audiosrc
 @USE_JACK_TRUE@Provides:	gstreamer-audiosink
@@ -633,7 +633,7 @@ GStreamer support libraries header files.
 @USE_MAD_TRUE@Requires:      libmad >= 0.13.0
 @USE_MAD_TRUE@BuildRequires: libmad-devel >= 0.13.0
 @USE_MAD_TRUE@Requires:	     libid3tag >= 0.15.0
-@USE_MAD_TRUE@BuildRequires: libid3tag-devel => 0.15.0
+@USE_MAD_TRUE@BuildRequires: libid3tag-devel >= 0.15.0
 @USE_MAD_TRUE@
 @USE_MAD_TRUE@%description -n gstreamer-mad
 @USE_MAD_TRUE@Plug-in for playback of mp3 songs using the very good MAD library.
@@ -653,8 +653,8 @@ GStreamer support libraries header files.
 @USE_MPEG2DEC_TRUE@Summary:GStreamer plug-ins for MPEG video playback and encoding.
 @USE_MPEG2DEC_TRUE@Group:         Applications/Multimedia
 @USE_MPEG2DEC_TRUE@Requires:      gstreamer-plugins = %{version}
-@USE_MPEG2DEC_TRUE@Requires:      mpeg2dec => 0.3.1
-@USE_MPEG2DEC_TRUE@BuildRequires: mpeg2dec-devel => 0.3.1
+@USE_MPEG2DEC_TRUE@Requires:      mpeg2dec >= 0.3.1
+@USE_MPEG2DEC_TRUE@BuildRequires: mpeg2dec-devel >= 0.3.1
 @USE_MPEG2DEC_TRUE@Obsoletes:     gstreamer-mpeg1
 @USE_MPEG2DEC_TRUE@Obsoletes:     gstreamer-mpeg2
 @USE_MPEG2DEC_TRUE@Obsoletes:     gstreamer-mpeg2dec
@@ -678,7 +678,7 @@ GStreamer support libraries header files.
 @USE_NAS_TRUE@Summary:  GStreamer plug-in for the Network Audio System.
 @USE_NAS_TRUE@Group:    Applications/Multimedia
 @USE_NAS_TRUE@Requires: gstreamer-plugins = %{version}
-@USE_NAS_TRUE@Requires: libnas2 => 1.6
+@USE_NAS_TRUE@Requires: libnas2 >= 1.6
 @USE_NAS_TRUE@
 @USE_NAS_TRUE@%description -n gstreamer-nas
 @USE_NAS_TRUE@Plug-in for the Network Audio System sound server.
@@ -699,8 +699,8 @@ GStreamer support libraries header files.
 @USE_SIDPLAY_TRUE@Summary:       GStreamer Sid C64 music plug-in.
 @USE_SIDPLAY_TRUE@Group:         Applications/Multimedia
 @USE_SIDPLAY_TRUE@Requires:      gstreamer-plugins = %{version}
-@USE_SIDPLAY_TRUE@Requires:      libsidplay => 1.36.0
-@USE_SIDPLAY_TRUE@BuildRequires: libsidplay-devel => 1.36.0
+@USE_SIDPLAY_TRUE@Requires:      libsidplay >= 1.36.0
+@USE_SIDPLAY_TRUE@BuildRequires: libsidplay-devel >= 1.36.0
 @USE_SIDPLAY_TRUE@
 @USE_SIDPLAY_TRUE@%description -n gstreamer-sid
 @USE_SIDPLAY_TRUE@Plug-in for playback of C64 SID format music files.
@@ -745,7 +745,7 @@ GStreamer support libraries header files.
 @USE_SWFDEC_TRUE@Summary:  GStreamer Flash redering plug-in.
 @USE_SWFDEC_TRUE@Group:    Applications/Multimedia
 @USE_SWFDEC_TRUE@Requires: gstreamer-plugins = %{version}
-@USE_SWFDEC_TRUE@Requires: swfdec => 0.1.2
+@USE_SWFDEC_TRUE@Requires: swfdec >= 0.1.2
 @USE_SWFDEC_TRUE@
 @USE_SWFDEC_TRUE@%description -n gstreamer-swfdec
 @USE_SWFDEC_TRUE@Plug-in for rendering Flash animations using swfdec library
