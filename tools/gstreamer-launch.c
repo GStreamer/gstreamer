@@ -3,6 +3,7 @@
 #include <gst/gstparse.h>
 #include <string.h>
 #include <stdlib.h>
+#include <gst/gstpropsprivate.h>
 
 static int    launch_argc;
 static char **launch_argv;
@@ -100,6 +101,44 @@ xid_handler (GstElement *element, gint xid, void *priv)
 #endif
 }
 
+static void 
+print_props (gpointer data, gpointer user_data)
+{
+  GstPropsEntry *entry = (GstPropsEntry *)data;
+  GstElement *element = GST_ELEMENT (user_data);
+
+  g_print ("%s: %s :", gst_element_get_name (element), 
+		  g_quark_to_string (entry->propid));
+  switch (entry->propstype) {
+    case GST_PROPS_INT_ID:
+      g_print ("%d\n", entry->data.int_data);
+      break;
+    case GST_PROPS_STRING_ID:
+      g_print ("%s\n", entry->data.string_data.string);
+      break;
+    case GST_PROPS_FLOAT_ID:
+      g_print ("%f\n", entry->data.float_data);
+      break;
+    default:
+      g_print ("unknown\n");
+  }
+}
+
+static void 
+event_func (GstElement *element, GstEvent *event)
+{
+  GstProps *props;
+
+  if (event == NULL)
+    return;
+  
+  if (GST_EVENT_TYPE (event) == GST_EVENT_INFO) {
+    props = GST_EVENT_INFO_PROPS (event);
+
+    g_list_foreach (props->properties, print_props, GST_EVENT_SRC (event));
+  }
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -129,6 +168,7 @@ main(int argc, char *argv[])
 
   pipeline = gst_pipeline_new ("launch");
 
+  g_signal_connect (G_OBJECT (pipeline), "event", G_CALLBACK (event_func), NULL);
   /* make a null-terminated version of argv */
   argvn = g_new0 (char *,argc);
   memcpy (argvn, argv+1, sizeof (char*) * (argc-1));
@@ -176,7 +216,9 @@ main(int argc, char *argv[])
     gst_main ();
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
+
   }
+  gst_object_unref (GST_OBJECT (pipeline));
 
   return 0;
 }
