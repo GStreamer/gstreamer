@@ -1,3 +1,8 @@
+2004-03-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tools/gst-register.c: do not spill paths when registries are not
+          writable, until we fix the "user running gst-register" case.
+
 2004-03-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* *.c, *.h: commit of gst-indent run on core
