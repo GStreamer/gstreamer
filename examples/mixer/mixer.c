@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 //#define WITH_BUG
+//#define WITH_BUG2
 //#define DEBUG
 //#define AUTOPLUG	/* define if you want autoplugging of input channels */
 /* function prototypes */
@@ -295,6 +296,19 @@ create_input_channel (int id, char* location)
 
 #ifdef WITH_BUG
   srccaps = gst_play_typefind (GST_BIN (channel->pipe), channel->disksrc);
+#endif
+#ifdef WITH_BUG2
+  {
+    GstElement *pipeline;
+
+    pipeline = gst_pipeline_new ("autoplug_pipeline");
+
+    gst_bin_add (GST_BIN (pipeline), channel->pipe);
+    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN (pipeline), channel->pipe);
+    
+  }
 #endif
 
 #ifdef AUTOPLUG
