@@ -1018,5 +1018,6 @@ gst_element_signal_eos (GstElement *element)
   g_return_if_fail (GST_IS_ELEMENT (element));
 
   gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[EOS]);
+  GST_FLAG_SET(element,GST_ELEMENT_COTHREAD_STOPPING);
 }
 

@@ -318,7 +318,7 @@ gst_fakesrc_loop(GstElement *element)
 
       if (src->num_buffers == 0) {
         gst_pad_set_eos (pad);
-        return NULL;
+        return;
       }
       else {
       if (src->num_buffers > 0)
