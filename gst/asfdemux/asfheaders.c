@@ -46,6 +46,15 @@ ASFGuidHash asf_stream_guids[] = {
   ,
 };
 
+/*
+
+2 unknown GUIDs found in an extended header object :
+
+(0x26f18b5d/0x47ec4584/0x650e5f9f/0xc952041f) with size=26
+(0xd9aade20/0x4f9c7c17/0x558528bc/0xa2e298dd) with size=34
+
+*/
+
 ASFGuidHash asf_object_guids[] = {
   {ASF_OBJ_STREAM, {0xB7DC0791, 0x11CFA9B7, 0xC000E68E, 0x6553200C}
       }
@@ -80,7 +89,7 @@ ASFGuidHash asf_object_guids[] = {
   {ASF_OBJ_HEAD2, {0xabd3d211, 0x11cfa9ba, 0xC000E68e, 0x6553200c}
       }
   ,
-  {ASF_OBJ_PADDING, {0x1806D474, 0x4509CADF, 0xAB9ABAA4, 0xE8AA96CD}
+  {ASF_OBJ_PADDING, {0x1806D474, 0x4509CADF, 0xAB9ABAA4, 0xE8AA96CB}
       }
   ,
   {ASF_OBJ_BITRATE_PROPS, {0x7bf875ce, 0x11d1468d, 0x6000828d, 0xb2a2c997}
@@ -90,6 +99,16 @@ ASFGuidHash asf_object_guids[] = {
       }
   ,
   {ASF_OBJ_BITRATE_MUTEX, {0xd6e229dc, 0x11d135da, 0xa0003490, 0xbe4903c9}
+      }
+  ,
+  {ASF_OBJ_LANGUAGE_LIST, {0x7c4346a9, 0x4bfcefe0, 0x3e3929b2, 0x855c41de}
+      }
+  ,
+  {ASF_OBJ_METADATA_OBJECT, {0xc5f8cbea, 0x48775baf, 0x8caa6784, 0xca4cfa44}
+      }
+  ,
+  {ASF_OBJ_EXTENDED_STREAM_PROPS, {0x14e6a5cb, 0x4332c672, 0x69a99983,
+              0x5a5b0652}
       }
   ,
   {ASF_OBJ_UNDEFINED, {0, 0, 0, 0}

@@ -377,6 +377,14 @@ _read_obj_header (GstASFDemux * asf_demux, asf_obj_header * header)
 }
 
 static gboolean
+_read_obj_header_ext (GstASFDemux * asf_demux, asf_obj_header_ext * header_ext)
+{
+  return (_read_guid (asf_demux, &header_ext->reserved1) &&
+      _read_uint16 (asf_demux, &header_ext->reserved2) &&
+      _read_uint32 (asf_demux, &header_ext->data_size));
+}
+
+static gboolean
 _read_obj_stream (GstASFDemux * asf_demux, asf_obj_stream * stream)
 {
   return (_read_guid (asf_demux, &stream->type) &&
@@ -596,7 +604,6 @@ fail:
   return FALSE;
 }
 
-
 static gboolean
 gst_asf_demux_process_header (GstASFDemux * asf_demux, guint64 * obj_size)
 {
@@ -613,6 +620,28 @@ gst_asf_demux_process_header (GstASFDemux * asf_demux, guint64 * obj_size)
     if (!gst_asf_demux_process_object (asf_demux)) {
       return FALSE;
     }
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_asf_demux_process_header_ext (GstASFDemux * asf_demux, guint64 * obj_size)
+{
+  asf_obj_header_ext object;
+  guint64 original_offset;
+
+  /* Get the rest of the header's header */
+  _read_obj_header_ext (asf_demux, &object);
+
+  GST_INFO ("Object is an extended header with a size of %u bytes",
+      object.data_size);
+
+  original_offset = asf_demux->bs->offset;
+
+  while ((asf_demux->bs->offset - original_offset) < object.data_size) {
+    if (!gst_asf_demux_process_object (asf_demux))
+      return FALSE;
   }
 
   return TRUE;
@@ -1006,25 +1035,23 @@ gst_asf_demux_process_object (GstASFDemux * asf_demux)
       break;
     case ASF_OBJ_COMMENT:
       return gst_asf_demux_process_comment (asf_demux, &obj_size);
-    case ASF_OBJ_CODEC_COMMENT:
-      return gst_asf_demux_skip_object (asf_demux, &obj_size);
-    case ASF_OBJ_INDEX:
-      return gst_asf_demux_skip_object (asf_demux, &obj_size);
     case ASF_OBJ_HEAD1:
-      return gst_asf_demux_skip_object (asf_demux, &obj_size);
+      return gst_asf_demux_process_header_ext (asf_demux, &obj_size);
     case ASF_OBJ_HEAD2:
       break;
-    case ASF_OBJ_PADDING:
-      return gst_asf_demux_skip_object (asf_demux, &obj_size);
-    case ASF_OBJ_EXT_CONTENT_DESC:
-      return gst_asf_demux_skip_object (asf_demux, &obj_size);
     case ASF_OBJ_BITRATE_PROPS:
       return gst_asf_demux_process_bitrate_props_object (asf_demux, &obj_size);
-    case ASF_OBJ_BITRATE_MUTEX:
-      return gst_asf_demux_skip_object (asf_demux, &obj_size);
     case ASF_OBJ_UNDEFINED:
+    case ASF_OBJ_CODEC_COMMENT:
+    case ASF_OBJ_INDEX:
+    case ASF_OBJ_PADDING:
+    case ASF_OBJ_EXT_CONTENT_DESC:
+    case ASF_OBJ_BITRATE_MUTEX:
+    case ASF_OBJ_LANGUAGE_LIST:
+    case ASF_OBJ_METADATA_OBJECT:
+    case ASF_OBJ_EXTENDED_STREAM_PROPS:
     default:
-      /* unknown object read, just ignore it, we hate fatal errors */
+      /* unknown/unhandled object read, just ignore it, we hate fatal errors */
       return gst_asf_demux_skip_object (asf_demux, &obj_size);
   }
 
@@ -1185,7 +1212,7 @@ gst_asf_demux_process_chunk (GstASFDemux * asf_demux,
           (GST_SECOND / 1000) * asf_demux->pts;
 
       /*!!! Should handle flush events here? */
-      GST_DEBUG ("Sending strem %d of size %d", stream->id,
+      GST_DEBUG ("Sending stream %d of size %d", stream->id,
           segment_info->chunk_size);
 
       GST_INFO ("Pushing pad");
@@ -1788,7 +1815,6 @@ gst_asf_demux_setup_pad (GstASFDemux * asf_demux,
   gst_pad_set_element_private (src_pad, stream);
 
   GST_INFO ("Adding pad for stream %u", asf_demux->num_streams);
-
 
   asf_demux->num_streams++;
 

@@ -51,6 +51,9 @@ enum {
   ASF_OBJ_BITRATE_PROPS,
   ASF_OBJ_EXT_CONTENT_DESC,
   ASF_OBJ_BITRATE_MUTEX,
+  ASF_OBJ_LANGUAGE_LIST,
+  ASF_OBJ_METADATA_OBJECT,
+  ASF_OBJ_EXTENDED_STREAM_PROPS,
 };
 
 enum {
@@ -76,6 +79,14 @@ struct _asf_obj_header {
 };
 
 typedef struct _asf_obj_header asf_obj_header;
+
+struct _asf_obj_header_ext {
+  ASFGuid reserved1;
+  guint16 reserved2;
+  guint32 data_size;
+};
+
+typedef struct _asf_obj_header_ext asf_obj_header_ext;
 
 struct _asf_obj_comment {
   guint16 title_length;
