@@ -288,7 +288,7 @@ gst_alsa_mixer_build_list (GstAlsaMixer * mixer)
         temp = GST_ALSA_MIXER_TRACK (item->data)->element;
 
       if (!strcmp (snd_mixer_selem_get_name (element),
-              snd_mixer_selem_get_name (element)))
+              snd_mixer_selem_get_name (temp)))
         samename++;
     }
 
