@@ -33,6 +33,10 @@
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
 
+#ifdef FIONREAD_IN_SYS_FILIO
+#include <sys/filio.h>
+#endif
+
 GST_DEBUG_CATEGORY (tcpclientsrc_debug);
 #define GST_CAT_DEFAULT tcpclientsrc_debug
 

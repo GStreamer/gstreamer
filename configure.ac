@@ -95,6 +95,9 @@ if test "x$GST_CVS" = "xyes"; then
   AC_DEFINE(GST_LEVEL_DEFAULT, GST_LEVEL_ERROR, [Default errorlevel to use])
 fi
 
+dnl Check for FIONREAD ioctl declaration :
+HAVE_FIONREAD()
+
 dnl ############################################
 dnl # Super Duper options for plug-in building #
 dnl ############################################
