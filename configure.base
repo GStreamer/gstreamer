@@ -319,11 +319,9 @@ dnl Check for artsc
 GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [GST_CHECK_ARTS()])
 
 dnl Check for xmms
-dnl FIXME: change this check so that it is disabled by default, in a neater way
 GST_CHECK_FEATURE(LIBXMMS, [xmms plugin], xmms, [
   AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
-  HAVE_LIBXMMS=no
-])
+], disabled)
 
 dnl Check for alsa
 GST_CHECK_FEATURE(ALSA, [alsa plugins], gstalsa, [
@@ -863,7 +861,7 @@ AC_DEFUN(GST_SUBSYSTEM_DISABLE,
 dnl Add a subsystem --disable flag and all the necessary symbols and substitions
 dnl
 AC_ARG_ENABLE(translit([$1], A-Z, a-z), 
-[  --disable-translit([$1], A-Z, a-z)           disable $2],
+[  ]builtin(format, --disable-%-17s  disable %s, translit([$1], A-Z, a-z), $2),
 [ case "${enableval}" in
     yes) GST_DISABLE_[$1]=no ;;
     no) GST_DISABLE_[$1]=yes ;;

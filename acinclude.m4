@@ -314,20 +314,21 @@ dnl DEPENDENT-PLUGINS   lists any plugins which depend on this feature.
 dnl TEST-FOR-FEATURE    is a test which sets HAVE_<FEATURE-NAME> to "yes"
 dnl                     or "no" depending on whether the feature is
 dnl                     available.
-dnl DISABLE-BY-DEFAULT  if "yes", the feature is disabled by default,
+dnl DISABLE-BY-DEFAULT  if "disabled", the feature is disabled by default,
 dnl                     if any other value, the feature is enabled by default.
 dnl
 AC_DEFUN(GST_CHECK_FEATURE,
-[
-lower=translit([$1], A-Z, a-z)
+[dnl
+builtin(undefine, [gst_endisable])dnl
+builtin(define, [gst_endisable], ifelse($5, [disabled], [enable], [disable]))dnl
 AC_ARG_ENABLE(translit([$1], A-Z, a-z),
-  [  ]--disable-translit([$1], A-Z, a-z)             enable [$2]: [$3],
+  [  ]builtin(format, --%-26s gst_endisable %s: %s, gst_endisable-translit([$1], A-Z, a-z), [$2], [$3]),
   [ case "${enableval}" in
       yes) USE_[$1]=yes ;;
       no) USE_[$1]=no ;;
-      *) AC_MSG_ERROR(bad value ${enableval} for --enable-${lower}) ;;
+      *) AC_MSG_ERROR(bad value ${enableval} for --enable-translit([$1], A-Z, a-z)) ;;
     esac],
-  [ USE_$1=yes ])           dnl DEFAULT
+  [ USE_$1=]ifelse($5, [disabled], [no], [yes]))           dnl DEFAULT
 
 dnl *** If it's enabled
 if test x$USE_[$1] = xyes; then
@@ -357,6 +358,7 @@ if test x$USE_[$1] = xno; then
 fi
 dnl *** Define the conditional as appropriate
 AM_CONDITIONAL(USE_[$1], test x$USE_[$1] = xyes)
+builtin(undefine, [gst_endisable])dnl
 ])
 
 dnl Perform a check for existence of ARTSC
