@@ -3211,6 +3211,7 @@ gst_pad_pull (GstPad * pad)
         data = (peer->gethandler) (GST_PAD (peer));
         /* refetch - we might have been relinked */
         link = GST_RPAD_LINK (pad);
+        peer = GST_RPAD_PEER (pad);
       }
 
       if (data) {
@@ -3221,7 +3222,8 @@ gst_pad_pull (GstPad * pad)
             link->engaged = TRUE;
             data = _invent_event (pad, GST_BUFFER (data));
           } else if (GST_IS_EVENT (data) &&
-              GST_EVENT_TYPE (data) == GST_EVENT_DISCONTINUOUS) {
+              GST_EVENT_TYPE (data) == GST_EVENT_DISCONTINUOUS &&
+              GST_EVENT_DISCONT_NEW_MEDIA (data)) {
             link->engaged = TRUE;
             GST_CAT_LOG (GST_CAT_DATAFLOW,
                 "link engaged by discont event for pad %s:%s",
@@ -4307,7 +4309,8 @@ gst_pad_call_chain_function (GstPad * pad, GstData * data)
       g_assert (link->temp_store == data);
       link->temp_store = NULL;
     } else if (GST_IS_EVENT (data) &&
-        GST_EVENT_TYPE (data) == GST_EVENT_DISCONTINUOUS) {
+        GST_EVENT_TYPE (data) == GST_EVENT_DISCONTINUOUS &&
+        GST_EVENT_DISCONT_NEW_MEDIA (data)) {
       link->engaged = TRUE;
       GST_CAT_LOG (GST_CAT_DATAFLOW,
           "link engaged by discont event for pad %s:%s",

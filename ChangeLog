@@ -1,3 +1,23 @@
+2004-05-06  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/elements/gstfilesrc.c: (gst_filesrc_get),
+	(gst_filesrc_change_state), (gst_filesrc_srcpad_event):
+	* gst/elements/gstfilesrc.h:
+	  send NEW_MEDIA events correctly
+	* gst/elements/gsttypefindelement.c: (start_typefinding),
+	(gst_type_find_element_handle_event):
+	  restart typefinding when we get a NEW_MEDIA event
+	* gst/gstbin.c: (gst_bin_remove_func), (gst_bin_change_state),
+	(gst_bin_dispose):
+	  don't die when someone removes elements in callbacks
+	* gst/gstelement.c: (gst_element_change_state):
+	  improve debugging
+	* gst/gstpad.c: (gst_pad_pull), (gst_pad_call_chain_function):
+	  we need a NEW_MEDIA event to engage a link
+	* gst/gsttrace.c: (gst_trace_new), (gst_alloc_trace_set_flags_all):
+	  don't g_print debugging stuff
+	* testsuite/caps/simplify.c: (check_caps):
+
 2004-05-04  Benjamin Otte  <otte@gnome.org>
 
 	* gst/parse/grammar.y:

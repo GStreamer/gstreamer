@@ -678,11 +678,11 @@ gst_filesrc_get (GstPad * pad)
   if (src->need_discont) {
     GstEvent *event;
 
-    src->need_discont = FALSE;
     GST_DEBUG_OBJECT (src, "sending discont");
     event =
-        gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset,
-        NULL);
+        gst_event_new_discontinuous (src->need_discont > 1, GST_FORMAT_BYTES,
+        src->curoffset, NULL);
+    src->need_discont = 0;
     return GST_DATA (event);
   }
 
@@ -837,12 +837,11 @@ gst_filesrc_change_state (GstElement * element)
         if (!gst_filesrc_open_file (GST_FILESRC (element)))
           return GST_STATE_FAILURE;
       }
-      src->need_discont = TRUE;
+      src->need_discont = 2;
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (GST_FLAG_IS_SET (element, GST_FILESRC_OPEN))
         gst_filesrc_close_file (GST_FILESRC (element));
-      src->need_discont = TRUE;
       break;
     default:
       break;
@@ -950,7 +949,7 @@ gst_filesrc_srcpad_event (GstPad * pad, GstEvent * event)
           goto error;
           break;
       }
-      src->need_discont = TRUE;
+      src->need_discont = 1;
       src->need_flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
       break;
     }

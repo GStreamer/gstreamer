@@ -72,7 +72,7 @@ struct _GstFileSrc {
   GstBuffer *mapbuf;
   size_t mapsize;
 
-  gboolean need_discont;
+  gint need_discont;
   gboolean need_flush;
 };
 

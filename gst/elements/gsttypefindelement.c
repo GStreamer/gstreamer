@@ -317,10 +317,13 @@ free_entry (TypeFindEntry * entry)
 static void
 start_typefinding (GstTypeFindElement * typefind)
 {
-  g_assert (typefind->caps == NULL);
   g_assert (typefind->possibilities == NULL);
 
   GST_DEBUG_OBJECT (typefind, "starting typefinding");
+  gst_pad_unnegotiate (typefind->src);
+  if (typefind->caps) {
+    gst_caps_replace (&typefind->caps, NULL);
+  }
   typefind->mode = MODE_TYPEFIND;
   typefind->stream_length_available = TRUE;
   typefind->stream_length = 0;
@@ -429,7 +432,13 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
         break;
     }
   } else {
-    gst_pad_event_default (pad, event);
+    if (GST_EVENT_TYPE (event) == GST_EVENT_DISCONTINUOUS &&
+        GST_EVENT_DISCONT_NEW_MEDIA (event)) {
+      start_typefinding (typefind);
+      gst_event_unref (event);
+    } else {
+      gst_pad_event_default (pad, event);
+    }
   }
 }
 static guint8 *

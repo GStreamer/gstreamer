@@ -2870,7 +2870,7 @@ gst_element_change_state (GstElement * element)
   }
 
   GST_CAT_LOG_OBJECT (GST_CAT_STATES, element,
-      "default handler sets state from %s to %s %04x",
+      "default handler tries setting state from %s to %s %04x",
       gst_element_state_get_name (old_state),
       gst_element_state_get_name (old_pending), old_transition);
 
@@ -2903,8 +2903,11 @@ gst_element_change_state (GstElement * element)
       /* if we are going to paused, we try to negotiate the pads */
     case GST_STATE_READY_TO_PAUSED:
       g_assert (element->base_time == 0);
-      if (!gst_element_negotiate_pads (element))
+      if (!gst_element_negotiate_pads (element)) {
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+            "failed state change, could not negotiate pads");
         goto failure;
+      }
       break;
       /* going to the READY state clears all pad caps */
       /* FIXME: Why doesn't this happen on READY => NULL? -- Company */

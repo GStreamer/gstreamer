@@ -739,10 +739,11 @@ gst_bin_change_state (GstElement * element)
     GstElementState old_child_state;
 
     child = GST_ELEMENT (children->data);
-    children = g_list_next (children);
 
-    if (GST_FLAG_IS_SET (child, GST_ELEMENT_LOCKED_STATE))
+    if (GST_FLAG_IS_SET (child, GST_ELEMENT_LOCKED_STATE)) {
+      children = g_list_next (children);
       continue;
+    }
 
     old_child_state = GST_STATE (child);
 
@@ -780,6 +781,10 @@ gst_bin_change_state (GstElement * element)
             gst_element_state_get_name (pending));
         break;
     }
+    /* we need to do this down here, because there might be elements removed 
+     * from this bin during state changes, so g_list_next (children) might
+     * change as well */
+    children = g_list_next (children);
   }
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
@@ -818,26 +823,17 @@ static void
 gst_bin_dispose (GObject * object)
 {
   GstBin *bin = GST_BIN (object);
-  GList *children, *orig;
-  GstElement *child;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
   if (gst_element_get_state (GST_ELEMENT (object)) == GST_STATE_PLAYING)
     gst_element_set_state (GST_ELEMENT (object), GST_STATE_PAUSED);
 
-  if (bin->children) {
-    orig = children = g_list_copy (bin->children);
-    while (children) {
-      child = GST_ELEMENT (children->data);
-      gst_bin_remove (bin, child);
-      children = g_list_next (children);
-    }
-    g_list_free (bin->children);
-    g_list_free (orig);
+  while (bin->children) {
+    gst_bin_remove (bin, GST_ELEMENT (bin->children->data));
   }
-  bin->children = NULL;
-  bin->numchildren = 0;
+  g_assert (bin->children == NULL);
+  g_assert (bin->numchildren == 0);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
