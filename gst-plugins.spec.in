@@ -756,6 +756,7 @@ Plugin for playback of wav, au and mp3 audio files
 %{prefix}/lib/gst/libgstwavparse*
 %{prefix}/lib/gst/libgstauparse*
 %{prefix}/lib/gst/libgstmp3types*
+%{prefix}/lib/gst/libgstmodplug*
 
 %post -n gstreamer-audio-formats
 %{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
