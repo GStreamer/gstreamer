@@ -47,8 +47,13 @@ void
 GstMpeg2EncStreamWriter::PutBits (guint32 val,
 				  gint    n)
 {
-  /* only relevant bits */
-  val &= ~(0xffffffffU << n);
+  /* only relevant bits. Note that (according to Andrew),
+   * some CPUs do bitshifts modulo wordsize (32), which
+   * means that we have to check for n != 32 before
+   * bitshifting to the relevant bits (i.e. 0xffffffff <<
+   * 32 == 0xffffffff). */
+  if (n != 32)
+    val &= ~(0xffffffffU << n);
 
   /* write data */
   while (n >= outcnt) {
