@@ -3,6 +3,7 @@
 	* gst/wavenc/riff.h:
 	* gst-libs/gst/riff/riff-media.c:
 	* gst-libs/gst/riff/riff-ids.h:
+	* gst/avi/gstavimux.c
 	add 4CC code for VideoSoft h264 in AVI (VSSH)
 	  fixes bug #160655
 	remove s323 from riff, it's quicktime specific :(
