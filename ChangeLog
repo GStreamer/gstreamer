@@ -1,3 +1,8 @@
+2004-10-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstbin.c: (gst_bin_sync_children_state):
+	  Add missing break.
+
 2004-10-09  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/elements/gstfakesrc.c: (gst_fakesrc_get):

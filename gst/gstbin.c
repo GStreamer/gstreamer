@@ -1128,6 +1128,7 @@ gst_bin_sync_children_state (GstBin * bin)
           break;
         case GST_STATE_FAILURE:
           ret = GST_STATE_FAILURE;
+          break;
         default:
           /* make sure gst_element_set_state never returns this */
           g_assert_not_reached ();
