@@ -763,7 +763,12 @@ gst_id3_tag_do_caps_nego (GstID3Tag *tag, GstBuffer *buffer)
   }
   if (!tag->srcpad)
     gst_id3_tag_add_src_pad (tag);
-  return gst_pad_renegotiate (tag->srcpad) != GST_PAD_LINK_REFUSED;
+  if (!gst_pad_is_linked (tag->srcpad)) {
+    tag->parse_mode = GST_ID3_TAG_PARSE_TAG;
+    return TRUE;
+  } else {
+    return gst_pad_renegotiate (tag->srcpad) == GST_PAD_LINK_REFUSED;
+  }
 }
 
 static GstPadLinkReturn
