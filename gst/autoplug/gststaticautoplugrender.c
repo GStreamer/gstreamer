@@ -204,9 +204,9 @@ gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
     GST_DEBUG (0,"gstpipeline: delaying pad connections for \"%s\" to \"%s\"\n",
 		    GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
     g_signal_connectc (G_OBJECT(src),"new_pad",
-                       gst_autoplug_pads_autoplug_func, sink, FALSE);
+                       G_CALLBACK (gst_autoplug_pads_autoplug_func), sink, FALSE);
     g_signal_connectc (G_OBJECT(src),"new_ghost_pad",
-                       gst_autoplug_pads_autoplug_func, sink, FALSE);
+                       G_CALLBACK (gst_autoplug_pads_autoplug_func), sink, FALSE);
   }
 }
 

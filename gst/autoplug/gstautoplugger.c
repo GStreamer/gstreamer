@@ -85,7 +85,7 @@ static void			gst_autoplugger_class_init	(GstAutopluggerClass *klass);
 static void			gst_autoplugger_init		(GstAutoplugger *queue);
 
 static void			gst_autoplugger_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void			gst_autoplugger_get_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void			gst_autoplugger_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 //static GstElementStateReturn	gst_autoplugger_change_state	(GstElement *element);
 
@@ -168,11 +168,11 @@ gst_autoplugger_init (GstAutoplugger *autoplugger)
   g_return_if_fail (autoplugger->cache != NULL);
 
   GST_DEBUG(GST_CAT_AUTOPLUG, "turning on caps nego proxying in cache\n");
-  gtk_object_set(G_OBJECT(autoplugger->cache),"caps_proxy",TRUE,NULL);
+  g_object_set(G_OBJECT(autoplugger->cache),"caps_proxy",TRUE,NULL);
 
   // attach signals to the cache
   g_signal_connectc (G_OBJECT (autoplugger->cache), "first_buffer",
-                     gst_autoplugger_cache_first_buffer, autoplugger, FALSE);
+                     G_CALLBACK (gst_autoplugger_cache_first_buffer), autoplugger, FALSE);
 
   // add the cache to self
   gst_bin_add (GST_BIN(autoplugger), autoplugger->cache);
@@ -183,13 +183,13 @@ gst_autoplugger_init (GstAutoplugger *autoplugger)
 
   // attach handlers to the typefind pads
   g_signal_connectc (G_OBJECT (autoplugger->cache_sinkpad), "caps_changed",
-                     gst_autoplugger_external_sink_caps_changed, autoplugger,FALSE);
+                     G_CALLBACK (gst_autoplugger_external_sink_caps_changed), autoplugger,FALSE);
   g_signal_connectc (G_OBJECT (autoplugger->cache_srcpad), "caps_changed",
-                     gst_autoplugger_external_src_caps_changed, autoplugger,FALSE);
+                     G_CALLBACK (gst_autoplugger_external_src_caps_changed), autoplugger,FALSE);
   g_signal_connectc (G_OBJECT (autoplugger->cache_sinkpad), "caps_nego_failed",
-                     gst_autoplugger_external_sink_caps_nego_failed, autoplugger,FALSE);
+                     G_CALLBACK (gst_autoplugger_external_sink_caps_nego_failed), autoplugger,FALSE);
   g_signal_connectc (G_OBJECT (autoplugger->cache_srcpad), "caps_nego_failed",
-                     gst_autoplugger_external_src_caps_nego_failed, autoplugger,FALSE);
+                     G_CALLBACK (gst_autoplugger_external_src_caps_nego_failed), autoplugger,FALSE);
 //  g_signal_connectc (G_OBJECT (autoplugger->cache_sinkpad), "connected",
 //                     gst_autoplugger_external_sink_connected, autoplugger,FALSE);
 //  g_signal_connectc (G_OBJECT (autoplugger->cache_srcpad), "connected",
@@ -484,12 +484,12 @@ gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
 
   // now reset the autoplugcache
   GST_DEBUG(GST_CAT_AUTOPLUG, "resetting the cache to send first buffer(s) again\n");
-  gtk_object_set(G_OBJECT(autoplugger->cache),"reset",TRUE,NULL);
+  g_object_set(G_OBJECT(autoplugger->cache),"reset",TRUE,NULL);
 
   // attach the cache_empty handler
   // FIXME this is the wrong place, it shouldn't be done until we get successful caps nego!
   g_signal_connectc (G_OBJECT(autoplugger->cache),"cache_empty",
-                     gst_autoplugger_cache_empty,autoplugger,FALSE);
+                     G_CALLBACK (gst_autoplugger_cache_empty), autoplugger, FALSE);
 
   autoplugger->paused--;
   if (autoplugger->paused == 0)
@@ -533,7 +533,7 @@ gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
       autoplugger->typefind = gst_elementfactory_make("typefind","unnamed_typefind");
       autoplugger->typefind_sinkpad = gst_element_get_pad(autoplugger->typefind,"sink");
       g_signal_connectc (G_OBJECT(autoplugger->typefind),"have_type",
-                         gst_autoplugger_typefind_have_type, autoplugger, FALSE);
+                         G_CALLBACK (gst_autoplugger_typefind_have_type), autoplugger, FALSE);
     }
     // add it to self and attach it
     GST_DEBUG(GST_CAT_AUTOPLUG, "adding typefind to self and connecting to cache\n");
@@ -572,7 +572,7 @@ gst_autoplugger_set_property (GObject *object, guint prop_id, const GValue *valu
 }
 
 static void
-gst_autoplugger_get_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_autoplugger_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstAutoplugger *autoplugger;
 

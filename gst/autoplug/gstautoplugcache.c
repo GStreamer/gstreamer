@@ -85,8 +85,10 @@ enum {
 static void			gst_autoplugcache_class_init	(GstAutoplugCacheClass *klass);
 static void			gst_autoplugcache_init		(GstAutoplugCache *cache);
 
-static void			gst_autoplugcache_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void			gst_autoplugcache_get_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void			gst_autoplugcache_set_property	(GObject *object, guint prop_id, 
+								 const GValue *value, GParamSpec *pspec);
+static void			gst_autoplugcache_get_property	(GObject *object, guint prop_id, 
+								 GValue *value, GParamSpec *pspec);
 
 static void			gst_autoplugcache_loop		(GstElement *element);
 
@@ -333,7 +335,7 @@ GST_DEBUG(0,"caps_proxy is %d\n",cache->caps_proxy);
 }
 
 static void
-gst_autoplugcache_get_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_autoplugcache_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstAutoplugCache *cache;
 
