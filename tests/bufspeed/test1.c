@@ -1,5 +1,6 @@
-#include "gstbuffer.h"
 #include <gst/gst.h>
+#include "gst/gstbuffer.h"
+#include "gst/gstbufferpool-default.h"
 
 int 
 main (int argc, char *argv[])

@@ -1,8 +1,14 @@
-noinst_PROGRAMS = test1 test2
+if HAVE_NASM
+TEST1=test1
+else
+TEST1=
+endif
 
-test1_SOURCES = test1.c gstbuffer.c gstmempool.c
+noinst_PROGRAMS = $(TEST1) test2
+
+test1_SOURCES = test1.c $(top_srcdir)/gst/gstbuffer.c gstmempool.c
 
 EXTRA_DIST = gstbuffer.h gstmempool.h
 
 LDADD = $(GST_LIBS)
-AM_CFLAGS = $(GST_CFLAGS) 
+CFLAGS = $(GST_CFLAGS) 
