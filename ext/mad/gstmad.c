@@ -173,25 +173,15 @@ gst_mad_input (void *user_data,
       switch (GST_EVENT_TYPE (event)) {
         case GST_EVENT_DISCONTINUOUS:
 	  mad->need_sync = TRUE;
+        case GST_EVENT_EOS:
 	  if (buffer) {
 	    gst_buffer_unref (buffer);
 	    buffer = NULL;
-	  }
-	  break;
-        case GST_EVENT_EOS:
-	  gst_element_set_state (GST_ELEMENT (mad), GST_STATE_PAUSED);
-	  gst_buffer_unref (buffer);
-	  buffer = NULL;
-	  break;
+          }
         default:
-	  g_warning ("Don't know how to cope with event type %d",
-		   GST_EVENT_TYPE (event));
+	  gst_pad_event_default (mad->sinkpad, event);
 	  break;
       }
-
-      if (GST_PAD_CONNECTED (mad->srcpad))
-        gst_pad_push (mad->srcpad, inbuf);
-
       return MAD_FLOW_STOP;
     }
 
