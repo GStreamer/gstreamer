@@ -41,7 +41,7 @@
 
 static GstElementDetails plugin_details = {
   "Electric Fence",
-  "Testing/EFence",
+  "Testing",
   "This element converts a stream of normal GStreamer buffers into a "
       "stream of buffers that are allocated in such a way that out-of-bounds "
       "access to data in the buffer is more likely to cause segmentation "
