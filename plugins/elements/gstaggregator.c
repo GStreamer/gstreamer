@@ -88,7 +88,7 @@ static void  	gst_aggregator_chain 		(GstPad *pad, GstBuffer *buf);
 static void 	gst_aggregator_loop 		(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_aggregator_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_aggregator_signals[LAST_SIGNAL] = { 0 };*/
 
 GType
 gst_aggregator_get_type (void) 
@@ -331,7 +331,7 @@ gst_aggregator_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (buf != NULL);
 
   aggregator = GST_AGGREGATOR (gst_pad_get_parent (pad));
-//  gst_trace_add_entry (NULL, 0, buf, "aggregator buffer");
+/*  gst_trace_add_entry (NULL, 0, buf, "aggregator buffer");*/
 
   gst_aggregator_push (aggregator, pad, buf, "chain");
 }

@@ -57,15 +57,15 @@ struct _GstFileSrc {
   GstElement element;
   GstPad *srcpad;
 
-  guint pagesize;			// system page size
+  guint pagesize;			/* system page size*/
  
-  gchar *filename;			// filename
-  gint fd;				// open file descriptor
-  off_t filelen;			// what's the file length?
+  gchar *filename;			/* filename */
+  gint fd;				/* open file descriptor*/
+  off_t filelen;			/* what's the file length?*/
 
-  off_t curoffset;			// current offset in file
-  off_t block_size;			// bytes per read
-  gboolean touch;			// whether to touch every page
+  off_t curoffset;			/* current offset in file*/
+  off_t block_size;			/* bytes per read */
+  gboolean touch;			/* whether to touch every page */
 
   GstBuffer *mapbuf;
   size_t mapsize;

@@ -29,7 +29,7 @@
 #include <unistd.h>
 #include <errno.h>
 
-//#define DEBUG_ENABLED
+/*#define DEBUG_ENABLED*/
 #include "gstpipefilter.h"
 
 
@@ -69,7 +69,7 @@ static gboolean 		gst_pipefilter_handle_event 	(GstPad *pad, GstEvent *event);
 static GstElementStateReturn 	gst_pipefilter_change_state	(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_pipefilter_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_pipefilter_signals[LAST_SIGNAL] = { 0 };*/
 
 GType
 gst_pipefilter_get_type (void)
@@ -107,7 +107,7 @@ gst_pipefilter_class_init (GstPipefilterClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_COMMAND,
     g_param_spec_string("command","command","command",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
 
   gobject_class->set_property = gst_pipefilter_set_property;  
   gobject_class->get_property = gst_pipefilter_get_property;
@@ -161,7 +161,7 @@ gst_pipefilter_get (GstPad *pad)
   pipefilter = GST_PIPEFILTER (gst_pad_get_parent (pad));
 
   /* create the buffer */
-  // FIXME: should eventually use a bufferpool for this
+  /* FIXME: should eventually use a bufferpool for this */
   newbuf = gst_buffer_new();
   g_return_val_if_fail(newbuf, NULL);
 
@@ -277,11 +277,11 @@ gst_pipefilter_open_file (GstPipefilter *src)
   {
     close(src->fdin[1]);
     close(src->fdout[0]);
-    // child
+    /* child */
     dup2(src->fdin[0], STDIN_FILENO);  /* set the childs input stream */
     dup2(src->fdout[1], STDOUT_FILENO);  /* set the childs output stream */
     execvp(src->command[0], &src->command[0]);
-    // will only reach if error
+    /* will only reach if error */
     perror("exec");
     gst_element_error(GST_ELEMENT(src),"starting child process");
     return FALSE;

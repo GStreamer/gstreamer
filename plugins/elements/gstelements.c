@@ -96,12 +96,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
     if (_elements[i].factoryinit) {
       _elements[i].factoryinit (factory);
     }
-//      g_print("added factory '%s'\n",_elements[i].name);
+/*      g_print("added factory '%s'\n",_elements[i].name); */
 
     i++;
   }
 
-//  INFO (GST_INFO_PLUGIN_LOAD,"gstelements: loaded %d standard elements", i);
+/*  INFO (GST_INFO_PLUGIN_LOAD,"gstelements: loaded %d standard elements", i);*/
 
   return TRUE;
 }

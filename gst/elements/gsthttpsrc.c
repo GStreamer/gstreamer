@@ -67,7 +67,7 @@ static void			gst_httpsrc_close_url		(GstHttpSrc *src);
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_httpsrc_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_httpsrc_signals[LAST_SIGNAL] = { 0 };*/
 
 GType
 gst_httpsrc_get_type (void) 
@@ -145,9 +145,9 @@ gst_httpsrc_get(GstPad *pad)
     return NULL;
   }
 
-  //g_print ("%ld\n", readbytes);
+  /*g_print ("%ld\n", readbytes);*/
   if (readbytes < src->bytes_per_read) {
-    // FIXME: set the buffer's EOF bit here
+    /* FIXME: set the buffer's EOF bit here */
   }
   GST_BUFFER_OFFSET(buf) = src->curoffset;
   GST_BUFFER_SIZE(buf) = readbytes;

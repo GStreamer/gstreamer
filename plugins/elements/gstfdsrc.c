@@ -66,7 +66,7 @@ static GstBuffer *	gst_fdsrc_get		(GstPad *pad);
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_fdsrc_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_fdsrc_signals[LAST_SIGNAL] = { 0 };*/
 
 GType
 gst_fdsrc_get_type (void) 
@@ -189,7 +189,7 @@ gst_fdsrc_get(GstPad *pad)
   src = GST_FDSRC(gst_pad_get_parent (pad));
 
   /* create the buffer */
-  // FIXME: should eventually use a bufferpool for this
+  /* FIXME: should eventually use a bufferpool for this*/
   buf = gst_buffer_new ();
   g_return_val_if_fail (buf, NULL);
 
@@ -205,7 +205,7 @@ gst_fdsrc_get(GstPad *pad)
 
   /* if we didn't get as many bytes as we asked for, we're at EOF */
   if (readbytes < src->bytes_per_read) {
-    // set the buffer's EOF bit here
+    /* set the buffer's EOF bit here */
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_EOS);
   }
   GST_BUFFER_OFFSET(buf) = src->curoffset;

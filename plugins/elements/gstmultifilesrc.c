@@ -27,7 +27,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-//#define GST_DEBUG_ENABLED
+/*#define GST_DEBUG_ENABLED*/
 
 #include "gstmultidisksrc.h"
 
@@ -58,7 +58,7 @@ static void		gst_multidisksrc_set_property	(GObject *object, guint prop_id, cons
 static void		gst_multidisksrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static GstBuffer *	gst_multidisksrc_get		(GstPad *pad);
-//static GstBuffer *	gst_multidisksrc_get_region	(GstPad *pad,GstRegionType type,guint64 offset,guint64 len);
+/*static GstBuffer *	gst_multidisksrc_get_region	(GstPad *pad,GstRegionType type,guint64 offset,guint64 len);*/
 
 static GstElementStateReturn	gst_multidisksrc_change_state	(GstElement *element);
 
@@ -108,7 +108,7 @@ gst_multidisksrc_class_init (GstMultiDiskSrcClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATIONS,
     g_param_spec_string("locations","locations","locations",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
 
   gobject_class->set_property = gst_multidisksrc_set_property;
   gobject_class->get_property = gst_multidisksrc_get_property;
@@ -119,11 +119,11 @@ gst_multidisksrc_class_init (GstMultiDiskSrcClass *klass)
 static void
 gst_multidisksrc_init (GstMultiDiskSrc *multidisksrc)
 {
-//  GST_FLAG_SET (disksrc, GST_SRC_);
+/*  GST_FLAG_SET (disksrc, GST_SRC_); */
 
   multidisksrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_get_function (multidisksrc->srcpad,gst_multidisksrc_get);
-//  gst_pad_set_getregion_function (multidisksrc->srcpad,gst_multidisksrc_get_region);
+/*  gst_pad_set_getregion_function (multidisksrc->srcpad,gst_multidisksrc_get_region); */
   gst_element_add_pad (GST_ELEMENT (multidisksrc), multidisksrc->srcpad);
 
   multidisksrc->listptr = NULL;
@@ -213,11 +213,11 @@ gst_multidisksrc_get (GstPad *pad)
   if (!gst_multidisksrc_open_file(src, pad))
       return NULL;
 
-  // emitted after the open, as the user may free the list and string from here
+  /* emitted after the open, as the user may free the list and string from here*/
   g_signal_emit(G_OBJECT(src), gst_multidisksrc_signals[NEW_FILE], 0, list);
 
   /* create the buffer */
-  // FIXME: should eventually use a bufferpool for this
+  /* FIXME: should eventually use a bufferpool for this */
   buf = gst_buffer_new ();
 
   g_return_val_if_fail (buf != NULL, NULL);

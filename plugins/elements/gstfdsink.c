@@ -57,7 +57,7 @@ static void 	gst_fdsink_get_property	(GObject *object, guint prop_id,
 static void 	gst_fdsink_chain	(GstPad *pad,GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_fdsink_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_fdsink_signals[LAST_SIGNAL] = { 0 };*/
 
 GType
 gst_fdsink_get_type (void) 

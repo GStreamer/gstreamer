@@ -66,7 +66,7 @@ static void 	gst_tee_get_property 	(GObject *object, guint prop_id,
 static void  	gst_tee_chain 		(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_tee_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_tee_signals[LAST_SIGNAL] = { 0 };*/
 
 GType
 gst_tee_get_type(void) {
@@ -213,7 +213,7 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (buf != NULL);
 
   tee = GST_TEE (gst_pad_get_parent (pad));
-//  gst_trace_add_entry (NULL, 0, buf, "tee buffer");
+/*  gst_trace_add_entry (NULL, 0, buf, "tee buffer");*/
 
   for (i=0; i<tee->numsrcpads-1; i++)
     gst_buffer_ref (buf);
