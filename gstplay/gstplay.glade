@@ -394,6 +394,7 @@
   <copyright>(C) 1999-2000 Erik Walthinsen</copyright>
   <authors>Erik Walthinsen, main programmer
 Wim Taymans, plugin hacker
+Richard Boulton, makefile hacker
 </authors>
   <comments>A generice media player for the gstreamer streaming media framework.</comments>
 </widget>
