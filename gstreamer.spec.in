@@ -71,11 +71,14 @@ applications and plugins for GStreamer.
 %{_libdir}/libgstreamer.la
 %{_libdir}/libgstreamer.so
 %{_libdir}/pkgconfig/*
+%{_datadir}/devhelp/specs/gstreamer.devhelp
+%{_datadir}/devhelp/specs/gstreamer-libs.devhelp
 
 
 %changelog
 * Sun Mar 3 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - put html docs in canonical place, avoiding %doc erasure
+- added devhelp support, current install of it is hackish
 
 * Sat Mar 2 2002 Christian Schaller <Uraeus@linuxrising.org>
 - Added documentation to build
@@ -166,6 +169,11 @@ fi
 
 %install  
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
+# adding devhelp stuff here for now, need to integrate better
+# when devhelp allows it
+mkdir -p $RPM_BUILD_ROOT/usr/share/devhelp/specs
+cp $RPM_BUILD_DIR/%{name}-%{version}/docs/devhelp/*.devhelp $RPM_BUILD_ROOT/usr/share/devhelp/specs
+
 %makeinstall
 
 %clean
@@ -174,6 +182,12 @@ fi
 %post
 /sbin/ldconfig
 %{_prefix}/bin/gst-register --gst-mask=0
+
+%post devel
+# adding devhelp links to work around different base not working
+mkdir -p %{_datadir}/devhelp/books
+ln -sf %{_datadir}/doc/%{name}-devel-%{version}/html/gstreamer %{_datadir}/devhelp/books
+ln -sf %{_datadir}/doc/%{name}-devel-%{version}/html/gstreamer-libs %{_datadir}/devhelp/books
 
 %postun
 /sbin/ldconfig
