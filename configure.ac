@@ -219,7 +219,18 @@ dnl Check for essential libraries first:
 dnl ====================================
 
 GST_GLIB2_CHECK()
-PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK=yes, HAVE_GTK=no)
+
+dnl GTK
+HAVE_GTK=NO
+PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= 2.2.0, HAVE_GTK_22=yes, HAVE_GTK_22=no)
+if test "x$HAVE_GTK_22" = "xyes"; then
+  HAVE_GTK=yes
+else
+  PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK_20=yes, HAVE_GTK_20=no)
+fi
+if test "x$HAVE_GTK_20" = "xyes"; then
+  HAVE_GTK=yes
+fi
 GTK_CFLAGS=$GTK2_CFLAGS
 GTK_LIBS=$GTK2_LIBS
 AC_SUBST(GTK_LIBS)
@@ -684,7 +695,7 @@ GST_CHECK_FEATURE(FFMPEG, [ffmpeg plug-ins], ffmpeg, [
 dnl *** GDK pixbuf ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GDK_PIXBUF, true)
 GST_CHECK_FEATURE(GDK_PIXBUF, [GDK pixbuf], gdkpixbufsrc, [
-  if test $HAVE_GTK = "yes"; then HAVE_GDK_PIXBUF=yes; fi;
+  if test $HAVE_GTK_22 = "yes"; then HAVE_GDK_PIXBUF=yes; fi;
 ])
 
 dnl *** Gnome VFS ***
