@@ -1,3 +1,14 @@
+2004-10-25  Wim Taymans  <wim@fluendo.com>
+
+	* examples/seeking/Makefile.am:
+	* examples/seeking/cdplayer.c: (update_scale):
+	* examples/seeking/chained.c: (unlinked), (new_pad), (main):
+	* examples/seeking/playbin.c: (make_playerbin_pipeline),
+	(format_value), (update_scale), (iterate), (start_seek),
+	(stop_seek), (print_media_info), (play_cb), (pause_cb), (stop_cb),
+	(print_usage), (main):
+	Added some more examples, update others.
+
 2004-10-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/flac/gstflacdec.c: (gst_flacdec_update_metadata):
