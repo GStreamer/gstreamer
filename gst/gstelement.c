@@ -1022,12 +1022,13 @@ static void
 gst_element_error_func (GstElement* element, GstElement *source, gchar *errormsg)
 {
   /* tell the parent */
-  if (GST_OBJECT_PARENT (element))
-  {
-    GST_DEBUG (GST_CAT_EVENT, "forwarding error \"%s\" from %s to %s\n", errormsg, GST_ELEMENT_NAME (element), GST_OBJECT_NAME (GST_OBJECT_PARENT (element)));
-    gst_object_ref (element);
+  if (GST_OBJECT_PARENT (element)) {
+    GST_DEBUG (GST_CAT_EVENT, "forwarding error \"%s\" from %s to %s\n", errormsg, 
+	       GST_ELEMENT_NAME (element), GST_OBJECT_NAME (GST_OBJECT_PARENT (element)));
+
+    gst_object_ref (GST_OBJECT (element));
     g_signal_emit (G_OBJECT (GST_OBJECT_PARENT (element)), gst_element_signals[ERROR], 0, source, errormsg);
-    gst_object_unref (element);
+    gst_object_unref (GST_OBJECT (element));
   }
 }
 /**
@@ -1057,7 +1058,7 @@ gst_element_error (GstElement *element, const gchar *error, ...)
   GST_INFO (GST_CAT_EVENT, "ERROR in %s: %s", GST_ELEMENT_NAME (element), string);
 
   /* emit the signal, make sure the element stays available */
-  gst_object_ref (element);
+  gst_object_ref (GST_OBJECT (element));
   g_signal_emit (G_OBJECT (element), gst_element_signals[ERROR], 0, element, string);
   
  /* tell the scheduler */
@@ -1066,7 +1067,7 @@ gst_element_error (GstElement *element, const gchar *error, ...)
   } 
 
   /* cleanup */
-  gst_object_unref (element);
+  gst_object_unref (GST_OBJECT (element));
   g_free (string);
 }
 
