@@ -591,7 +591,7 @@ plugin_init (GstPlugin *plugin)
 {
   gst_control_init(NULL,NULL);
   
-  return gst_element_register (plugin, "volume", GST_RANK_PRIMARY, GST_TYPE_VOLUME);
+  return gst_element_register (plugin, "volume", GST_RANK_NONE, GST_TYPE_VOLUME);
 }
 
 GST_PLUGIN_DEFINE (

@@ -785,7 +785,7 @@ gst_audio_convert_channels (GstAudioConvert *this, GstBuffer *buf)
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
-  if (!gst_element_register (plugin, "audioconvert", GST_RANK_NONE, GST_TYPE_AUDIO_CONVERT))
+  if (!gst_element_register (plugin, "audioconvert", GST_RANK_PRIMARY, GST_TYPE_AUDIO_CONVERT))
     return FALSE;
 
   return TRUE;

@@ -1,5 +1,22 @@
 2004-02-22  Benjamin Otte  <otte@gnome.org>
 
+	reported by: Stefan Kost <kost@imn.htwk-leipzig.de>
+
+	* gst/audioconvert/gstaudioconvert.c: (plugin_init):
+	  set rank to PRIMARY
+	* gst/volume/gstvolume.c: (plugin_init):
+	  set rank to NONE
+	fixes #134960
+
+2004-02-22   Julio M. Merino Vidal <jmmv@menta.net>
+
+	reviewed by Benjamin Otte  <otte@gnome.org>
+
+	* ext/flac/gstflacenc.c: (gst_flacenc_chain):
+	  escape NULL strings in GST_ELEMENT_ERROR properly (fixes #135116)
+
+2004-02-22  Benjamin Otte  <otte@gnome.org>
+
 	* configure.ac:
 	  export [_]*{gst,Gst,GST}.* symbols from plugins
 
