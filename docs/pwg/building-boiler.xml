@@ -32,11 +32,7 @@
       the internet, and type the following commands at a command console:
     </para>
     <screen>
-<prompt>shell $ </prompt><userinput>cd .</userinput>
-<prompt>shell $ </prompt><userinput>cvs -d:pserver:anonymous@cvs.freedesktop.org:/home/cvs/gstreamer login</userinput>
-Logging in to :pserver:anonymous@cvs.freedesktop.org:2401/home/cvs/gstreamer
-CVS password:
-<prompt>shell $ </prompt><userinput>cvs -z3 -d:pserver:anonymous@cvs.freedesktop.org:/home/cvs/gstreamer co gst-template</userinput>
+<prompt>shell $ </prompt><userinput>cvs -z3 -d:pserver:anonymous@cvs.freedesktop.org:/cvs/gstreamer co gst-template</userinput>
 U gst-template/README
 U gst-template/gst-app/AUTHORS
 U gst-template/gst-app/ChangeLog

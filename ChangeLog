@@ -1,3 +1,7 @@
+2004-02-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/pwg/building-boiler.xml: fix cvs checkout documentation
+
 2004-02-06  David Schleef  <ds@schleef.org>
 
 	* docs/random/ds/0.9-suggested-changes: Random ramblings
