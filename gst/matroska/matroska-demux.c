@@ -849,6 +849,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       caps = gst_matroska_demux_audio_caps (audiocontext,
           context->codec_id,
           context->codec_priv, context->codec_priv_size, demux);
+      audiocontext->first_frame = TRUE;
       break;
     }
 
@@ -1890,8 +1891,10 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
             break;
         }
 
-        if ((cluster_time + time == 0) &&
-            (!strcmp (demux->src[stream]->codec_id,
+        if (((cluster_time + time == 0) ||
+                ((GstMatroskaTrackAudioContext *) demux->src[stream])->
+                first_frame)
+            && (!strcmp (demux->src[stream]->codec_id,
                     GST_MATROSKA_CODEC_ID_AUDIO_VORBIS))) {
           /* start of the stream and vorbis audio, need to send the codec_priv
            * data as first three packets */
@@ -1900,6 +1903,8 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
           gint i;
           GstBuffer *priv;
 
+          ((GstMatroskaTrackAudioContext *) demux->src[stream])->first_frame =
+              FALSE;
           p = (unsigned char *) demux->src[stream]->codec_priv;
           offset = 3;
           for (i = 0; i < 2; i++) {

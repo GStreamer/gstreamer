@@ -88,8 +88,7 @@ typedef struct _GstMatroskaDemux {
   guint64        time_scale;
 
   /* length, position (time, ns) */
-  guint64        duration,
-		 pos;
+  guint64        duration, pos;
 
   /* a possible pending seek */
   guint64        seek_pending;
