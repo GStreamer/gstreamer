@@ -60,19 +60,19 @@ static void gst_bin_dispose (GObject * object);
 static GstElementStateReturn gst_bin_change_state (GstElement * element);
 static GstElementStateReturn gst_bin_change_state_norecurse (GstBin * bin);
 
-#ifndef GST_DISABLE_INDEX
-static void gst_bin_set_index (GstElement * element, GstIndex * index);
-#endif
-
 static gboolean gst_bin_add_func (GstBin * bin, GstElement * element);
 static gboolean gst_bin_remove_func (GstBin * bin, GstElement * element);
+
+#ifndef GST_DISABLE_INDEX
+static void gst_bin_set_index_func (GstElement * element, GstIndex * index);
+#endif
+static GstClock *gst_bin_get_clock_func (GstElement * element);
+static void gst_bin_set_clock_func (GstElement * element, GstClock * clock);
+
 static void gst_bin_child_state_change_func (GstBin * bin,
     GstElementState oldstate, GstElementState newstate, GstElement * child);
 GstElementStateReturn gst_bin_set_state (GstElement * element,
     GstElementState state);
-
-static GstClock *gst_bin_get_clock_func (GstElement * element);
-static void gst_bin_set_clock_func (GstElement * element, GstClock * clock);
 
 static gboolean gst_bin_iterate_func (GstBin * bin);
 
@@ -180,11 +180,14 @@ gst_bin_class_init (GstBinClass * klass)
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_bin_change_state);
   gstelement_class->set_state = GST_DEBUG_FUNCPTR (gst_bin_set_state);
 #ifndef GST_DISABLE_INDEX
-  gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_bin_set_index);
+  gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_bin_set_index_func);
 #endif
+  gstelement_class->get_clock = GST_DEBUG_FUNCPTR (gst_bin_get_clock_func);
+  gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_bin_set_clock_func);
 
   klass->add_element = GST_DEBUG_FUNCPTR (gst_bin_add_func);
   klass->remove_element = GST_DEBUG_FUNCPTR (gst_bin_remove_func);
+
   klass->child_state_change =
       GST_DEBUG_FUNCPTR (gst_bin_child_state_change_func);
   klass->iterate = GST_DEBUG_FUNCPTR (gst_bin_iterate_func);
@@ -227,73 +230,13 @@ gst_bin_new (const gchar * name)
   return gst_element_factory_make ("bin", name);
 }
 
-static GstClock *
-gst_bin_get_clock_func (GstElement * element)
-{
-  if (GST_ELEMENT_SCHEDULER (element))
-    return gst_scheduler_get_clock (GST_ELEMENT_SCHEDULER (element));
-
-  return NULL;
-}
-
-static void
-gst_bin_set_clock_func (GstElement * element, GstClock * clock)
-{
-  if (GST_ELEMENT_SCHEDULER (element))
-    gst_scheduler_use_clock (GST_ELEMENT_SCHEDULER (element), clock);
-}
-
-/**
- * gst_bin_get_clock:
- * @bin: a #GstBin to get the clock of
+/* set the index on all elements in this bin
  *
- * Gets the current clock of the (scheduler of the) bin.
- *
- * Returns: the #GstClock of the bin
+ * MT safe 
  */
-GstClock *
-gst_bin_get_clock (GstBin * bin)
-{
-  g_return_val_if_fail (bin != NULL, NULL);
-  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
-
-  return gst_bin_get_clock_func (GST_ELEMENT (bin));
-}
-
-/**
- * gst_bin_use_clock:
- * @bin: the bin to set the clock for
- * @clock: the clock to use.
- *
- * Force the bin to use the given clock. Use NULL to 
- * force it to use no clock at all.
- */
-void
-gst_bin_use_clock (GstBin * bin, GstClock * clock)
-{
-  g_return_if_fail (GST_IS_BIN (bin));
-
-  gst_bin_set_clock_func (GST_ELEMENT (bin), clock);
-}
-
-/**
- * gst_bin_auto_clock:
- * @bin: the bin to autoclock
- *
- * Let the bin select a clock automatically.
- */
-void
-gst_bin_auto_clock (GstBin * bin)
-{
-  g_return_if_fail (GST_IS_BIN (bin));
-
-  if (GST_ELEMENT_SCHEDULER (bin))
-    gst_scheduler_auto_clock (GST_ELEMENT_SCHEDULER (bin));
-}
-
 #ifndef GST_DISABLE_INDEX
 static void
-gst_bin_set_index (GstElement * element, GstIndex * index)
+gst_bin_set_index_func (GstElement * element, GstIndex * index)
 {
   GstBin *bin;
   GList *children;
@@ -309,6 +252,53 @@ gst_bin_set_index (GstElement * element, GstIndex * index)
   GST_UNLOCK (bin);
 }
 #endif
+
+/* set the clock on all elements in this bin
+ *
+ * MT safe 
+ */
+static void
+gst_bin_set_clock_func (GstElement * element, GstClock * clock)
+{
+  GList *children;
+  GstBin *bin;
+
+  bin = GST_BIN (element);
+
+  GST_LOCK (bin);
+  for (children = bin->children; children; children = g_list_next (children)) {
+    GstElement *child = GST_ELEMENT (children->data);
+
+    gst_element_set_clock (child, clock);
+  }
+  GST_UNLOCK (bin);
+}
+
+/* get the clock for this bin by asking all of the children in this bin
+ *
+ * MT safe 
+ */
+static GstClock *
+gst_bin_get_clock_func (GstElement * element)
+{
+  GstClock *result = NULL;
+  GstBin *bin;
+  GList *children;
+
+  bin = GST_BIN (element);
+
+  GST_LOCK (bin);
+  for (children = bin->children; children; children = g_list_next (children)) {
+    GstElement *child = GST_ELEMENT (children->data);
+
+    result = gst_element_get_clock (child);
+    if (result)
+      break;
+  }
+  GST_UNLOCK (bin);
+
+  return result;
+}
 
 static void
 gst_bin_set_element_sched (GstElement * element, GstScheduler * sched)
@@ -737,6 +727,114 @@ gst_bin_iterate_recurse (GstBin * bin)
       (GstIteratorItemFunction) iterate_child_recurse,
       (GstIteratorDisposeFunction) gst_object_unref);
   GST_UNLOCK (bin);
+
+  return result;
+}
+
+GstIterator *
+gst_bin_iterate_recurse_up (GstBin * bin)
+{
+  return NULL;
+}
+
+/* returns 0 if the element is a sink, this is made so that
+ * we can use this function as a filter 
+ *
+ * MT safe
+ */
+static gint
+bin_element_is_sink (GstElement * child, GstBin * bin)
+{
+  gint ret = 1;
+
+  /* we lock the child here for the remainder of the function to
+   * get its pads and name safely. */
+  GST_LOCK (child);
+
+  /* check if this is a sink element, these are the elements
+   * without (linked) source pads. */
+  if (child->numsrcpads == 0) {
+    /* shortcut */
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
+        "adding child %s as sink", GST_OBJECT_NAME (child));
+    ret = 0;
+  } else {
+    /* loop over all pads, try to figure out if this element
+     * is a sink because it has no linked source pads */
+    GList *pads;
+    gboolean connected_src = FALSE;
+
+    for (pads = child->srcpads; pads; pads = g_list_next (pads)) {
+      GstPad *peer;
+
+      peer = gst_pad_get_peer (GST_PAD_CAST (pads->data));
+      if (peer) {
+        GstElement *parent;
+
+        parent = gst_pad_get_parent (peer);
+        if (parent) {
+          GstObject *grandparent;
+
+          grandparent = gst_object_get_parent (GST_OBJECT_CAST (parent));
+          if (grandparent == GST_OBJECT_CAST (bin)) {
+            connected_src = TRUE;
+          }
+          if (grandparent) {
+            gst_object_unref (GST_OBJECT_CAST (grandparent));
+          }
+          gst_object_unref (GST_OBJECT_CAST (parent));
+        }
+        gst_object_unref (GST_OBJECT_CAST (peer));
+        if (connected_src) {
+          break;
+        }
+      }
+    }
+
+    if (connected_src) {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
+          "not adding child %s as sink: linked source pads",
+          GST_OBJECT_NAME (child));
+    } else {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
+          "adding child %s as sink since it has unlinked source pads in this bin",
+          GST_OBJECT_NAME (child));
+      ret = 0;
+    }
+  }
+  GST_UNLOCK (child);
+
+  /* we did not find the element, need to release the ref
+   * added by the iterator */
+  if (ret == 1)
+    gst_object_unref (GST_OBJECT (child));
+
+  return ret;
+}
+
+/**
+ * gst_bin_iterate_sinks:
+ * @bin: #Gstbin to iterate on
+ *
+ * Get an iterator for the sink elements in this bin.
+ * Each element will have its refcount increased, so unref 
+ * after usage.
+ *
+ * Returns: a #GstIterator of #GstElements. gst_iterator_free after use.
+ *
+ * MT safe.
+ */
+GstIterator *
+gst_bin_iterate_sinks (GstBin * bin)
+{
+  GstIterator *children;
+  GstIterator *result;
+
+  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+
+  children = gst_bin_iterate_elements (bin);
+  result = gst_iterator_filter (children,
+      (GCompareFunc) bin_element_is_sink, bin);
 
   return result;
 }
@@ -1197,7 +1295,6 @@ gst_bin_iterate_all_by_interface (GstBin * bin, GType interface)
   children = gst_bin_iterate_recurse (bin);
   result = gst_iterator_filter (children, (GCompareFunc) compare_interface,
       GINT_TO_POINTER (interface));
-  gst_iterator_free (children);
 
   return result;
 }

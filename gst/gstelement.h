@@ -137,7 +137,7 @@ typedef enum
 
 #define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
 #define GST_ELEMENT_PARENT(obj)			(GST_OBJECT_PARENT(obj))
-#define GST_ELEMENT_SCHEDULER(obj)		(GST_ELEMENT_CAST(obj)->sched)
+#define GST_ELEMENT_SCHEDULER(obj)		(GST_ELEMENT_CAST(obj)->scheduler)
 #define GST_ELEMENT_CLOCK(obj)			(GST_ELEMENT_CAST(obj)->clock)
 #define GST_ELEMENT_PADS(obj)			(GST_ELEMENT_CAST(obj)->pads)
 
@@ -183,7 +183,7 @@ typedef void 		(*GstElementLoopFunction) 	(GstElement *element);
 #define GST_STATE_SIGNAL(elem)                 g_cond_signal (GST_STATE_GET_COND (elem));
 #define GST_STATE_BROADCAST(elem)              g_cond_broadcast (GST_STATE_GET_COND (elem));
 
-struct _GstElement 
+struct _GstElement
 {
   GstObject 		object;
 
@@ -198,7 +198,7 @@ struct _GstElement
   /*< public >*/ /* with LOCK */
   /* scheduling */
   GstElementLoopFunction loopfunc;
-  GstScheduler 	       *sched;
+  GstScheduler 	       *scheduler;
   /* private pointer for the scheduler */
   gpointer		sched_private;
 
@@ -246,7 +246,7 @@ struct _GstElementClass
   void (*found_tag)	(GstElement *element, GstElement *source, const GstTagList *tag_list);
 
   /*< protected >*/
-  /* vtable*/
+  /* vtable */
 
   /* request/release pads */
   GstPad*		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ, const gchar* name);
@@ -278,6 +278,7 @@ struct _GstElementClass
   const GstQueryType* 	(*get_query_types)    	(GstElement *element);
   gboolean		(*query)		(GstElement *element, GstQueryType type,
 		  				 GstFormat *format, gint64 *value);
+
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -316,7 +317,6 @@ void			gst_element_adjust_time		(GstElement *element, GstClockTimeDiff diff);
 gboolean		gst_element_is_indexable	(GstElement *element);
 void			gst_element_set_index		(GstElement *element, GstIndex *index);
 GstIndex*		gst_element_get_index		(GstElement *element);
-
 
 /* scheduling */
 void			gst_element_set_loop_function	(GstElement *element,
@@ -366,8 +366,6 @@ void 			gst_element_default_error	(GObject *object, GstObject *orig, GError *err
 #define 		gst_element_default_deep_notify gst_object_default_deep_notify
 
 /* state management */
-void			gst_element_set_eos		(GstElement *element);
-
 gboolean		gst_element_is_locked_state	(GstElement *element);
 gboolean		gst_element_set_locked_state	(GstElement *element, gboolean locked_state);
 gboolean		gst_element_sync_state_with_parent (GstElement *element);
@@ -376,6 +374,8 @@ GstElementState         gst_element_get_state           (GstElement *element);
 GstElementStateReturn	gst_element_set_state		(GstElement *element, GstElementState state);
 
 void 			gst_element_wait_state_change 	(GstElement *element);
+
+void			gst_element_set_eos		(GstElement *element);
 
 /* factory management */
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
@@ -459,4 +459,3 @@ void			__gst_element_factory_add_interface	(GstElementFactory *elementfactory,
 G_END_DECLS
 
 #endif /* __GST_ELEMENT_H__ */
-

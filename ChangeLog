@@ -1,5 +1,45 @@
 2005-03-09  Wim Taymans  <wim@fluendo.com>
 
+	* check/Makefile.am:
+	* check/gst/gstbin.c: (START_TEST), (gst_bin_suite), (main):
+	* check/gst/gstsystemclock.c: (START_TEST), (gst_clock_debug),
+	(ok_callback), (error_callback), (gst_systemclock_suite), (main):
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_set_index_func),
+	(gst_bin_set_clock_func), (gst_bin_get_clock_func),
+	(gst_bin_add_func), (gst_bin_add), (gst_bin_remove_func),
+	(gst_bin_remove), (gst_bin_iterate_recurse_up),
+	(bin_element_is_sink), (gst_bin_iterate_sinks),
+	(gst_bin_iterate_all_by_interface):
+	* gst/gstbin.h:
+	* gst/gstelement.c: (gst_element_init), (gst_element_error_full),
+	(gst_element_change_state), (gst_element_dispose),
+	(gst_element_finalize), (gst_element_set_loop_function):
+	* gst/gstelement.h:
+	* gst/gstiterator.c: (find_custom_fold_func):
+	* gst/gstpad.c: (_gst_pad_default_fixate_foreach),
+	(gst_pad_collectv), (gst_pad_collect_valist),
+	(gst_pad_template_new):
+	* gst/gstpipeline.c: (gst_pipeline_class_init),
+	(gst_pipeline_dispose), (gst_pipeline_set_property),
+	(gst_pipeline_get_property), (gst_pipeline_get_clock_func),
+	(gst_pipeline_get_clock), (gst_pipeline_use_clock),
+	(gst_pipeline_set_clock), (gst_pipeline_auto_clock):
+	* gst/gstutils.h:
+	* gst/schedulers/entryscheduler.c:
+	* gst/schedulers/gstbasicscheduler.c:
+	(gst_basic_scheduler_cothreaded_chain),
+	(gst_basic_scheduler_chain_add_element):
+	* testsuite/bins/interface.c: (main):
+	Added GstBin test.
+	Added GstSystemClock test.
+	Implemented clock distribution code in GstBin.
+	Implemented iterate sinks method for future use.
+	Rearranged gstelement.h
+	Fix GstIterator comparison bug.
+	Moved some code to GstPipeline, mostly clocking related.
+
+2005-03-09  Wim Taymans  <wim@fluendo.com>
+
 	* configure.ac:
 	* gst/gst_private.h:
 	* gst/gstbin.c: (gst_bin_add_func), (gst_bin_add),

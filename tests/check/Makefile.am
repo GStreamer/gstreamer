@@ -19,10 +19,12 @@ install-pluginLTLIBRARIES:
 CLEANFILES = core.*
 
 TESTS = $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@ \
-	gst/gstcaps     \
-	gst/gstdata	\
-	gst/gstiterator \
-	gst/gstobject	\
+	gst/gstbin	     	\
+	gst/gstcaps     	\
+	gst/gstdata		\
+	gst/gstiterator 	\
+	gst/gstobject		\
+	gst/gstsystemclock	\
 	gst-libs/gdp	
 
 check_PROGRAMS = $(TESTS)

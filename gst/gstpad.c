@@ -3587,16 +3587,6 @@ gst_pad_template_new (const gchar * name_template,
   if (!name_is_valid (name_template, presence))
     return NULL;
 
-#if 0
-#ifdef USE_POISONING
-  if (caps) {
-    GstCaps *newcaps = gst_caps_copy (caps);
-
-    gst_caps_unref (caps);
-    caps = newcaps;
-  }
-#endif
-#endif
   new = g_object_new (gst_pad_template_get_type (),
       "name", name_template, NULL);
 

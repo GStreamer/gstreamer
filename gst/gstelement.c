@@ -252,7 +252,7 @@ gst_element_init (GstElement * element)
   element->srcpads = NULL;
   element->sinkpads = NULL;
   element->loopfunc = NULL;
-  element->sched = NULL;
+  element->scheduler = NULL;
   element->clock = NULL;
   element->sched_private = NULL;
   element->state_lock = g_mutex_new ();
@@ -1766,8 +1766,8 @@ void gst_element_error_full
       GST_ELEMENT_NAME (element), sent_message);
 
   /* tell the scheduler */
-  if (element->sched) {
-    gst_scheduler_error (element->sched, element);
+  if (GST_ELEMENT_SCHEDULER (element)) {
+    gst_scheduler_error (GST_ELEMENT_SCHEDULER (element), element);
   }
 
   if (GST_STATE (element) == GST_STATE_PLAYING) {
@@ -2200,9 +2200,9 @@ gst_element_change_state (GstElement * element)
       gst_element_state_get_name (GST_STATE (element)));
 
   /* tell the scheduler if we have one */
-  if (element->sched) {
-    if (gst_scheduler_state_transition (element->sched, element,
-            old_transition) != GST_STATE_SUCCESS) {
+  if (GST_ELEMENT_SCHEDULER (element)) {
+    if (gst_scheduler_state_transition (GST_ELEMENT_SCHEDULER (element),
+            element, old_transition) != GST_STATE_SUCCESS) {
       GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
           "scheduler could not change state");
       goto failure;
@@ -2263,13 +2263,17 @@ gst_element_dispose (GObject * object)
   while (element->pads) {
     gst_element_remove_pad (element, GST_PAD (element->pads->data));
   }
+  if (G_UNLIKELY (element->pads != 0)) {
+    g_critical ("could not remove pads from element %s",
+        GST_STR_NULL (GST_OBJECT_NAME (object)));
+  }
 
-  element->numsrcpads = 0;
-  element->numsinkpads = 0;
-  element->numpads = 0;
-
-  gst_object_replace ((GstObject **) & element->sched, NULL);
+  GST_LOCK (element);
+  gst_object_replace ((GstObject **) & element->scheduler, NULL);
   gst_object_replace ((GstObject **) & element->clock, NULL);
+  GST_UNLOCK (element);
+
+  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose parent");
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -2279,8 +2283,16 @@ gst_element_finalize (GObject * object)
 {
   GstElement *element = GST_ELEMENT (object);
 
+  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "finalize");
+
+  GST_STATE_LOCK (element);
+  if (element->state_cond)
+    g_cond_free (element->state_cond);
+  element->state_cond = NULL;
+  GST_STATE_UNLOCK (element);
   g_mutex_free (element->state_lock);
-  g_cond_free (element->state_cond);
+
+  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "finalize parent");
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

@@ -647,7 +647,7 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
       if (peerpad) {
         GstElement *peerelement = GST_ELEMENT (GST_PAD_PARENT (peerpad));
         gboolean different_sched =
-            (peerelement->sched != GST_SCHEDULER (chain->sched));
+            (peerelement->scheduler != GST_SCHEDULER (chain->sched));
         gboolean peer_decoupled =
             GST_FLAG_IS_SET (peerelement, GST_ELEMENT_DECOUPLED);
 
@@ -804,7 +804,7 @@ gst_basic_scheduler_chain_add_element (GstSchedulerChain * chain,
     GstElement * element)
 {
   /* set the sched pointer for the element */
-  element->sched = GST_SCHEDULER (chain->sched);
+  element->scheduler = GST_SCHEDULER (chain->sched);
 
   /* add the element to either the main list or the disabled list */
   if (GST_STATE (element) == GST_STATE_PLAYING) {

@@ -25,8 +25,9 @@ gint
 main (gint argc, gchar * argv[])
 {
   GstBin *bin, *bin2;
-  GList *list;
   GstElement *filesrc;
+  GstIterator *it;
+  gpointer item;
 
   gst_init (&argc, &argv);
 
@@ -39,20 +40,24 @@ main (gint argc, gchar * argv[])
   gst_bin_add (bin, filesrc);
 
   g_assert (gst_bin_get_by_interface (bin, GST_TYPE_URI_HANDLER) == filesrc);
-  list = gst_bin_get_all_by_interface (bin, GST_TYPE_URI_HANDLER);
-  g_assert (g_list_length (list) == 1);
-  g_assert (list->data == (gpointer) filesrc);
-  g_list_free (list);
+  it = gst_bin_iterate_all_by_interface (bin, GST_TYPE_URI_HANDLER);
+  g_assert (it != NULL);
+  g_assert (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
+  g_assert (item == (gpointer) filesrc);
+  g_assert (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
+  gst_iterator_free (it);
 
   gst_bin_add_many (bin,
       gst_element_factory_make ("identity", NULL),
       gst_element_factory_make ("identity", NULL),
       gst_element_factory_make ("identity", NULL), NULL);
   g_assert (gst_bin_get_by_interface (bin, GST_TYPE_URI_HANDLER) == filesrc);
-  list = gst_bin_get_all_by_interface (bin, GST_TYPE_URI_HANDLER);
-  g_assert (g_list_length (list) == 1);
-  g_assert (list->data == (gpointer) filesrc);
-  g_list_free (list);
+  it = gst_bin_iterate_all_by_interface (bin, GST_TYPE_URI_HANDLER);
+  g_assert (it != NULL);
+  g_assert (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
+  g_assert (item == (gpointer) filesrc);
+  g_assert (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
+  gst_iterator_free (it);
 
   bin2 = bin;
   bin = GST_BIN (gst_bin_new (NULL));
@@ -62,16 +67,20 @@ main (gint argc, gchar * argv[])
       gst_element_factory_make ("identity", NULL),
       GST_ELEMENT (bin2), gst_element_factory_make ("identity", NULL), NULL);
   g_assert (gst_bin_get_by_interface (bin, GST_TYPE_URI_HANDLER) == filesrc);
-  list = gst_bin_get_all_by_interface (bin, GST_TYPE_URI_HANDLER);
-  g_assert (g_list_length (list) == 1);
-  g_assert (list->data == (gpointer) filesrc);
-  g_list_free (list);
+  it = gst_bin_iterate_all_by_interface (bin, GST_TYPE_URI_HANDLER);
+  g_assert (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
+  g_assert (item == (gpointer) filesrc);
+  g_assert (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
+  gst_iterator_free (it);
 
   gst_bin_add (bin, gst_element_factory_make ("filesrc", NULL));
   gst_bin_add (bin2, gst_element_factory_make ("filesrc", NULL));
-  list = gst_bin_get_all_by_interface (bin, GST_TYPE_URI_HANDLER);
-  g_assert (g_list_length (list) == 3);
-  g_list_free (list);
+  it = gst_bin_iterate_all_by_interface (bin, GST_TYPE_URI_HANDLER);
+  g_assert (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
+  g_assert (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
+  g_assert (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
+  g_assert (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
+  gst_iterator_free (it);
 
   g_object_unref (bin);
   return 0;

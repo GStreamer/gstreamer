@@ -100,7 +100,7 @@ typedef struct
 CothreadPrivate;
 
 #define ELEMENT_PRIVATE(element) ((CothreadPrivate *) GST_ELEMENT (element)->sched_private)
-#define SCHED(element) (GST_ENTRY_SCHEDULER ((element)->sched))
+#define SCHED(element) (GST_ENTRY_SCHEDULER ((element)->scheduler))
 
 typedef struct
 {

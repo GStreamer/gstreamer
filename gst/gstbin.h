@@ -60,8 +60,7 @@ GST_EXPORT GType _gst_bin_type;
  * and (un)set using GST_FLAG_SET () and GST_FLAG_UNSET ().
  */
 typedef enum {
-  GST_BIN_FLAG_FIXED_CLOCK		= GST_ELEMENT_FLAG_LAST,
-  GST_BIN_FLAG_MANAGER,
+  GST_BIN_FLAG_MANAGER          = GST_ELEMENT_FLAG_LAST,
   GST_BIN_SELF_SCHEDULABLE,
   GST_BIN_STATE_LOCKED,
   /* padding */
