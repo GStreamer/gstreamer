@@ -22,13 +22,19 @@
 #define __GST_TCP_H__
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
+#endif				/* __cplusplus */
+
+  typedef enum
+  {
+    CONTROL_ZERO,
+    CONTROL_NONE,
+    CONTROL_TCP
+  } Gst_TCP_Control;
+
+#ifdef __cplusplus
+}
 #endif /* __cplusplus */
 
-typedef enum {
-  CONTROL_ZERO,
-  CONTROL_NONE,
-  CONTROL_TCP
-} Gst_TCP_Control;
-
-#endif
+#endif /* __GST_TCP_H__ */
