@@ -112,6 +112,8 @@ static void     gst_alsa_xrun_recovery (GstAlsa *this);
 static gboolean gst_alsa_sink_check_event (GstAlsa *this, gint pad_nr, GstEvent *event);
 
 /* alsa setup / start / stop functions */
+static void     gst_alsa_set_eos (GstAlsa *this);
+
 static gboolean gst_alsa_probe_hw_params (GstAlsa *this, GstAlsaFormat *format);
 static gboolean gst_alsa_set_hw_params (GstAlsa *this);
 static gboolean gst_alsa_set_sw_params (GstAlsa *this);
@@ -1353,7 +1355,7 @@ gst_alsa_sink_check_event (GstAlsa *this, gint pad_nr, GstEvent *event)
   if (event) {
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
-        gst_element_set_eos (GST_ELEMENT (this));
+        gst_alsa_set_eos (this);
         cont = FALSE;
         break;
       case GST_EVENT_INTERRUPT:
@@ -1373,6 +1375,12 @@ gst_alsa_sink_check_event (GstAlsa *this, gint pad_nr, GstEvent *event)
 
 /*** AUDIO SETUP / START / STOP ***********************************************/
 
+static void
+gst_alsa_set_eos (GstAlsa *this)
+{
+  gst_alsa_drain_audio (this);
+  gst_element_set_eos (GST_ELEMENT (this));
+}
 static gboolean
 gst_alsa_open_audio (GstAlsa *this)
 {
@@ -1542,7 +1550,8 @@ gst_alsa_start_audio (GstAlsa *this)
 }
 
 static gboolean
-gst_alsa_drain_audio (GstAlsa *this) {
+gst_alsa_drain_audio (GstAlsa *this)
+{
   g_assert (this != NULL);
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (this->handle != NULL, FALSE);
