@@ -251,11 +251,6 @@ print_element_info (GstElementFactory *factory)
         printf("      Has getfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->getfunc));
       if (realpad->getregionfunc)
         printf("      Has getregionfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->getregionfunc));
-      if (realpad->qosfunc)
-        printf("      Has qosfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->qosfunc));
-      if (realpad->eosfunc != gst_pad_eos_func) {
-        printf("      Has eosfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->eosfunc));
-      }
 
       if (pad->padtemplate)
         printf("    Pad Template: '%s'\n",pad->padtemplate->name_template);

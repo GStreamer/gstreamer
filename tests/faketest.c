@@ -34,10 +34,15 @@ main (int argc, gchar *argv[])
   gst_element_connect (identity, "src", queue, "sink");
   gst_element_connect (queue, "src", fakesink, "sink");
 
+  gst_element_set_state (pipeline, GST_STATE_READY);
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   gst_bin_iterate (GST_BIN (pipeline));
 
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  gst_element_set_state (pipeline, GST_STATE_READY);
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   return 0;

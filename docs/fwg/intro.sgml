@@ -57,9 +57,16 @@
     The <application>GStreamer</application> API for developing plugins is 
     rather extensive and powerful. We will first try to get you up and running
     with a simple plugin as fast as possible. We will then gradually add more 
-    feature to our plugin. The basic topics will be:
+    features to our example plugin. The basic topics will be:
   </para>
   <itemizedlist>
+    <listitem>
+      <para>
+        Short overview of the GStreamer concepts. People familiar with the 
+	<emphasis>GStreamer Application Development Manual</emphasis> can use
+	this short overview to refresh their memory.
+      </para>
+    </listitem>
     <listitem>
       <para>
         Introduction to the basic structure of the plugin. We will cover all the
