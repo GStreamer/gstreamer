@@ -104,6 +104,11 @@ dnl ##############################
 dnl Check for tools:
 dnl ================
 
+dnl modify pkg-config path
+AC_ARG_WITH(pkg-config-path, 
+   AC_HELP_STRING([--with-pkg-config-path],[colon-separated list of pkg-config(1) dirs]),
+   [export PKG_CONFIG_PATH=${withval}])
+
 dnl Check for nasm
 AC_PATH_PROG(NASM_PATH, nasm, no)
 AC_SUBST(NASM_PATH)
