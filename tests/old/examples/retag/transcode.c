@@ -4,7 +4,7 @@
  * this, it parses the filename and sets artist and title in the ogg file.
  * It assumes the filename to be "<artist> - <title>.mp3"
  * 
- * Run the program as "retag <mp3 file>"
+ * Run the program as "transcode <mp3 file>"
  *
  * To run this program, you need to have the gst-plugins package (specifically
  * the vorbis and mad plugins) installed.
@@ -40,6 +40,7 @@ main (int argc, char *argv[])
   title = strstr (artist, " - ");
   if (title == NULL) {
     g_print ("The format of the mp3 file is invalid.\n");
+    g_print ("It needs to be in the form of artist - title.mp3.\n");
     return 1;
   }
   *title = '\0';
