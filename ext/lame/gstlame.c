@@ -351,6 +351,7 @@ static GstPadLinkReturn
 gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstLame *lame;
+  gint out_samplerate;
 
   lame = GST_LAME (gst_pad_get_parent (pad));
 
@@ -369,12 +370,13 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
     return GST_PAD_LINK_REFUSED;
   }
 
+  out_samplerate = lame_get_out_samplerate (lame->lgf);
   caps = GST_CAPS_NEW ("lame_src_caps",
 		       "audio/mpeg",
                          "mpegversion", GST_PROPS_INT (1),
 			 "layer",    GST_PROPS_INT (3),
 			 "channels", GST_PROPS_INT (lame->num_channels),
-			 "rate",     GST_PROPS_INT (lame->samplerate));
+			 "rate",     GST_PROPS_INT (out_samplerate));
 
   return gst_pad_try_set_caps (lame->srcpad, caps);
 }
