@@ -1052,7 +1052,7 @@ gst_asf_demux_process_chunk (GstASFDemux *asf_demux,
       if (segment_info->frag_offset != 0) {
 	/* cannot create new packet */
 	GST_DEBUG ("BUFFER: Freeing stream->payload (%p)", stream->payload);
-	gst_buffer_free(stream->payload);
+	gst_buffer_unref (stream->payload);
 	gst_bytestream_flush (bs, segment_info->chunk_size);
 	packet_info->size_left -= segment_info->chunk_size;
 	return TRUE;
