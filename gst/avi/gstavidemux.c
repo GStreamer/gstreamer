@@ -1256,7 +1256,10 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
     entry.size = GUINT32_FROM_LE (_entry->size);
     target = &index_entries[i];
 
-    if (entry.id == GST_RIFF_rec || entry.id == 0)
+    /* Don't index reclists. ID = 0 and offset = 0 (where this is not the
+     * first chunk) indicate broken indexes. Rebuild from there. */
+    if (entry.id == GST_RIFF_rec || entry.id == 0 ||
+        (entry.offset == 0 && i > 0))
       continue;
 
     stream_nr = CHUNKID_TO_STREAMNR (entry.id);
@@ -1584,6 +1587,9 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
     stream->total_frames++;
 
     list = g_list_prepend (list, entry);
+    GST_DEBUG ("Added index entry %d (in stream: %d), time %"
+        GST_TIME_FORMAT " for stream %d", index_size - 1,
+        entry->frames_before, GST_TIME_ARGS (entry->ts), entry->stream_nr);
 
   next:
     if (!gst_avi_demux_skip (avi, TRUE))
@@ -1945,6 +1951,7 @@ gst_avi_demux_handle_seek (GstAviDemux * avi)
   /* FIXME: if we seek in an openDML file, we will have multiple
    * primary levels. Seeking in between those will cause havoc. */
 
+  GST_LOG ("Seeking to entry %d", avi->seek_entry);
   avi->current_entry = avi->seek_entry;
 
   for (i = 0; i < avi->num_streams; i++) {
@@ -1968,13 +1975,14 @@ static gboolean
 gst_avi_demux_process_next_entry (GstAviDemux * avi)
 {
   GstRiffRead *riff = GST_RIFF_READ (avi);
-  gboolean processed;
+  gboolean processed = FALSE;
 
-  for (processed = FALSE; !processed;) {
+  do {
     if (avi->current_entry >= avi->index_size) {
       gst_bytestream_seek (riff->bs, 0, GST_SEEK_METHOD_END);
 
       /* get eos */
+      GST_LOG ("Handled last index entry, setting EOS");
       gst_riff_peek_tag (GST_RIFF_READ (avi), &avi->level_up);
       gst_pad_event_default (avi->sinkpad, gst_event_new (GST_EVENT_EOS));
       processed = TRUE;
@@ -1985,6 +1993,7 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
       avi_stream_context *stream;
 
       if (entry->stream_nr >= avi->num_streams) {
+        GST_DEBUG ("Entry has non-existing stream nr %d", entry->stream_nr);
         continue;
       }
 
@@ -2010,6 +2019,7 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
           }
         }
         if (!(buf = gst_riff_read_element_data (riff, entry->size, &got))) {
+          GST_ERROR ("Failed to read %d bytes of data", entry->size);
           return FALSE;
         }
         if (entry->flags & GST_RIFF_IF_KEYFRAME) {
@@ -2023,11 +2033,14 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
             gst_pad_get_name (stream->pad));
         gst_pad_push (stream->pad, GST_DATA (buf));
         processed = TRUE;
+      } else {
+        GST_DEBUG ("Unusable pad or zero chunksize, skipping entry");
+        processed = TRUE;
       }
       stream->current_frame = entry->frames_before + 1;
       stream->current_byte = entry->bytes_before + entry->size;
     }
-  }
+  } while (!processed);
 
   return TRUE;
 }
