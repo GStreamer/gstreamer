@@ -1,5 +1,11 @@
 2004-09-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybasebin.c:
+	(gst_play_base_bin_dispose), (gst_play_base_bin_set_property):
+	  Handle double disposals, and proper change of URIs.
+
+2004-09-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/gnomevfs/Makefile.am:
 	* ext/gnomevfs/gstgnomevfs.c: (plugin_init):
 	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnomevfssink_get_type),
