@@ -221,7 +221,8 @@ gmi_get_decoder (GstMediaInfo *info, const char *mime)
       factory = g_strdup ("vorbisfile");
     else if ((strcmp (mime, "audio/mpeg") == 0) ||
              (strcmp (mime, "audio/x-mp3") == 0) ||
-             (strcmp (mime, "audio/mp3") == 0))
+             (strcmp (mime, "audio/mp3") == 0) ||
+	     (strcmp (mime, "audio/x-id3") == 0))
       factory = g_strdup ("mad");
     else if (strcmp (mime, "application/x-flac") == 0)
       factory = g_strdup ("flacdec");
