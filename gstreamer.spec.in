@@ -21,7 +21,7 @@ plugins.
 
 %files
 %defattr(-, root, root)
-%doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING
+%doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING html
 %{_bindir}/gst-complete
 %{_bindir}/gst-compprep
 %{_bindir}/gst-inspect
@@ -69,10 +69,12 @@ applications and plugins for GStreamer.
 %{_libdir}/libgstreamer.la
 %{_libdir}/libgstreamer.so
 %{_libdir}/pkgconfig/*
-%{_datadir}/%{name}-%{version}/html/gstreamer
-%{_datadir}/%{name}-%{version}/html/gstreamer-libs
+
 
 %changelog
+* Sun Mar 3 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- put html docs in canonical place, avoiding %doc erasure
+
 * Sat Mar 2 2002 Christian Schaller <Uraeus@linuxrising.org>
 - Added documentation to build
 
@@ -153,7 +155,7 @@ FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
   --infodir=%{_infodir} \
   --with-configdir=/etc/gstreamer \
   --disable-tests --disable-examples --disable-debug-color \
-  --enable-docs-build
+  --enable-docs-build --with-html-dir=$RPM_BUILD_DIR/%{name}-%{version}/html
 if [ "$SMP" != "" ]; then
   (make "MAKE=make -k -j $SMP"; exit 0)
 else
