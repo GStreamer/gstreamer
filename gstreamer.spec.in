@@ -22,19 +22,19 @@ plugins.
 %files
 %defattr(-, root, root)
 %doc AUTHORS COPYING README
-%{_bindir}/gstreamer-complete
-%{_bindir}/gstreamer-compprep
-%{_bindir}/gstreamer-inspect
-%{_bindir}/gstreamer-launch
-%{_bindir}/gstreamer-register
+%{_bindir}/gst-complete
+%{_bindir}/gst-compprep
+%{_bindir}/gst-inspect
+%{_bindir}/gst-launch
+%{_bindir}/gst-register
 %{_libdir}/libgst.so.*
 %{_libdir}/gst/*.so.*
 %{_libdir}/gst/*.so
-%{_mandir}/man1/gstreamer-complete.*
-%{_mandir}/man1/gstreamer-compprep.*
-%{_mandir}/man1/gstreamer-inspect.*
-%{_mandir}/man1/gstreamer-launch.*
-%{_mandir}/man1/gstreamer-register.*
+%{_mandir}/man1/gst-complete.*
+%{_mandir}/man1/gst-compprep.*
+%{_mandir}/man1/gst-inspect.*
+%{_mandir}/man1/gst-launch.*
+%{_mandir}/man1/gst-register.*
 
 %package devel
 Summary: Libraries and include files for GStreamer streaming-media framework
@@ -145,7 +145,7 @@ fi
 
 %post
 /sbin/ldconfig
-%{_prefix}/bin/gstreamer-register --gst-mask=0
+%{_prefix}/bin/gst-register --gst-mask=0
 
 %postun
 /sbin/ldconfig
