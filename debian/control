@@ -2,22 +2,22 @@ Source: gstreamer
 Section: libs
 Priority: optional
 Maintainer: David I. Lehn <dlehn@vt.edu>
-Build-Depends: debhelper (>= 3.0.0), libxml2-dev (>= 2.4.13), zlib1g-dev (>= 1:1.1.3), libglib1.3-dev (>= 1.3.13), libgtk1.3-dev (>= 1.3.13), pkg-config (>= 0.8.0)
+Build-Depends: debhelper (>= 3.0.0), libxml2-dev (>= 2.4.16), zlib1g-dev (>= 1:1.1.4), libglib1.3-dev (>= 1.3.15), libgtk1.3-dev (>= 1.3.15), pkg-config (>= 0.11.0), libpopt-dev, gs
 Build-Depends-Indep: debhelper (>= 3.0.0), gtk-doc-tools (>= 0.4), jade (>= 1.2.1), transfig (>= 3.2.3.c), docbook-utils (>= 0.6.9), xsltproc (>= 1.0.6)
 Standards-Version: 3.5.6
 
-Package: libgst3
-Architecture: [alpha arm hppa i386 mips powerpc sparc]
+Package: libgstreamer0.3.3
+Architecture: [alpha arm hppa i386 mips mipsel powerpc sparc]
 Section: libs
 Depends: ${shlibs:Depends}
 Suggests: gstreamer-core, gstreamer-misc
 Description: Core GStreamer shared library
  Core GStreamer shared library
 
-Package: libgst-dev
+Package: libgstreamer-dev
 Architecture: any
 Section: devel
-Depends: libgst3 (= ${Source-Version}), libc6-dev, pkg-config
+Depends: libgstreamer0.3.3 (= ${Source-Version}), libc6-dev, pkg-config
 Recommends: gstreamer-doc (= ${Source-Version})
 Description: GStreamer development libraries and headers
  GStreamer development libraries and headers
@@ -34,7 +34,7 @@ Description: gstreamer-register binary needed to manage plugin registry
 Package: gstreamer-doc
 Architecture: all
 Section: doc
-Recommends: libgst-dev (= ${Source-Version})
+Recommends: libgstreamer-dev (= ${Source-Version})
 Description: Core GStreamer documentation
  Core GStreamer documentation
  .

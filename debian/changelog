@@ -1,3 +1,18 @@
+gstreamer (0.3.3-1) unstable; urgency=low
+
+  * New upstream
+  * Renamed libgstX to libgstreamerX.Y.Z
+    will move to better versioning once upstream starts interface versioning
+  * Renamed libgst-dev to libgstreamer-dev
+  * Patch to build plugins as only .so
+  * Added libstandardscheduler.so to -core
+  * Guessing that mips support handles mipsel too
+  * From David Schleef <ds@schleef.org>:
+    * Add popt, gs to Build-Depends:
+    * #include <errno.h> compile fix
+
+ -- David I. Lehn <dlehn@vt.edu>  Thu, 21 Mar 2002 01:42:18 -0500
+
 gstreamer (0.3.2-2) unstable; urgency=low
 
   * Rebuild for glib/gtk 1.3.15

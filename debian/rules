@@ -15,6 +15,12 @@ export DH_OPTIONS
 export DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 export DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
+ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
+	confflags += --build $(DEB_HOST_GNU_TYPE)
+else
+	confflags += --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
+endif
+
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
@@ -25,8 +31,7 @@ configure-stamp:
 
 	# Add here commands to configure the package.
 	./configure \
-		--build=$(DEB_BUILD_GNU_TYPE) \
-		--host=$(DEB_HOST_GNU_TYPE) \
+		$(confflags) \
 		--prefix=/usr \
 		--mandir=\$${prefix}/share/man \
 		--infodir=\$${prefix}/share/info \
@@ -161,7 +166,7 @@ binary-arch: build install
 	dh_makeshlibs
 	dh_installdeb
 #	dh_perl
-	dh_shlibdeps -l`pwd`/debian/libgst3/usr/lib
+	dh_shlibdeps -l`pwd`/debian/libgstreamer0.3.3/usr/lib
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
