@@ -16,21 +16,21 @@ noinst_HEADERS = \
 		gstavidemux.h \
 		gstaviaudiodecoder.h
 
-#CFLAGS += -Wall -O3 -fomit-frame-pointer -funroll-all-loops -finline-functions -ffast-math -DNDEBUG
+#CFLAGS += $(GST_CFLAGS) -O3 $(GST_OPT_CFLAGS) $(GST_FUNROLL_CFLAGS) -fomit-frame-pointer -DNDEBUG
 
-libgstavidemux_la_CFLAGS = -O2 -ffast-math $(GST_CFLAGS)
+libgstavidemux_la_CFLAGS = -O2 $(GST_FFASTMATH_CFLAGS) $(GST_CFLAGS)
 libgstavidemux_la_LIBADD =
 libgstavidemux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-libgstavimux_la_CFLAGS = -O2 -ffast-math $(GST_CFLAGS)
+libgstavimux_la_CFLAGS = -O2 $(GST_FFASTMATH_CFLAGS) $(GST_CFLAGS)
 libgstavimux_la_LIBADD =
 libgstavimux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-#libgstaviparse_la_CFLAGS = -O2 -ffast-math $(GST_CFLAGS)
+#libgstaviparse_la_CFLAGS = -O2 $(GST_FFASTMATH_CFLAGS) $(GST_CFLAGS)
 #libgstaviparse_la_LIBADD =
 #libgstaviparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-# libgstaviaudiodecoder_la_CFLAGS = -O2 -ffast-math $(GST_CFLAGS)
+# libgstaviaudiodecoder_la_CFLAGS = -O2 $(GST_FFASTMATH_CFLAGS) $(GST_CFLAGS)
 # libgstaviaudiodecoder_la_LIBADD =
 # libgstaviaudiodecoder_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
