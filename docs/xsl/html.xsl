@@ -7,7 +7,7 @@
 <!-- This file is for customizing the default XSL stylesheets. -->
 <!-- We include them here (this one is for HTML output):       -->
 <xsl:import
- href="http://docbook.sourceforge.net/release/xsl/current/xhtml/chunk.xsl"/>
+ href="http://docbook.sourceforge.net/release/xsl/1.50.0/xhtml/chunk.xsl"/>
 
 <!-- .. and customize them here:                               -->
 <xsl:include href="fileext.xsl"/>
