@@ -35,7 +35,7 @@ typedef struct _GstFFMpegDecAll {
 
   GstPad *srcpad, *sinkpad;
 
-  AVCodecContext context;
+  AVCodecContext *context;
   AVFrame picture;
 } GstFFMpegDecAll;
 
@@ -110,7 +110,7 @@ GST_PAD_TEMPLATE_FACTORY(sink_templ,
     "gstffmpeg_sink_avivideo",
     "video/avi",
       "format",       GST_PROPS_STRING("strf_vids"),
-      "compression",  GST_PROPS_LIST (
+      /*"compression",  GST_PROPS_LIST (
                         GST_PROPS_FOURCC (GST_MAKE_FOURCC('M','J','P','G')),
                         GST_PROPS_FOURCC (GST_MAKE_FOURCC('J','P','E','G')),
                         GST_PROPS_FOURCC (GST_MAKE_FOURCC('V','I','X','L')),
@@ -139,7 +139,7 @@ GST_PAD_TEMPLATE_FACTORY(sink_templ,
                         GST_PROPS_FOURCC (GST_MAKE_FOURCC('M','P','4','3')),
                         GST_PROPS_FOURCC (GST_MAKE_FOURCC('W','M','V','1')),
                         GST_PROPS_FOURCC (GST_MAKE_FOURCC('W','M','V','2'))
-                      ),
+                      ),*/
       "width",        GST_PROPS_INT_RANGE (16, 4096),
       "height",       GST_PROPS_INT_RANGE (16, 4096)
   ),
@@ -184,6 +184,7 @@ GST_PAD_TEMPLATE_FACTORY(sink_templ,
 /* A number of functon prototypes are given so we can refer to them later. */
 static void	gst_ffmpegdecall_class_init	(GstFFMpegDecAllClass *klass);
 static void	gst_ffmpegdecall_init		(GstFFMpegDecAll *ffmpegdec);
+static void	gst_ffmpegdecall_destroy	(GObject         *obj);
 static void	gst_ffmpegdecall_chain		(GstPad *pad, GstBuffer *buffer);
 static GstPadConnectReturn gst_ffmpegdecall_connect (GstPad *pad, GstCaps *caps);
 
@@ -228,7 +229,11 @@ gst_ffmpegdecall_get_type(void)
 static void
 gst_ffmpegdecall_class_init (GstFFMpegDecAllClass *klass)
 {
+  GObjectClass *obj_class = (GObjectClass*) klass;
+
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+
+  obj_class->dispose = gst_ffmpegdecall_destroy;
 }
 
 static void
@@ -248,6 +253,16 @@ gst_ffmpegdecall_init(GstFFMpegDecAll *ffmpegdec)
                       ffmpegdec->sinkpad);
   gst_element_add_pad(GST_ELEMENT(ffmpegdec),
                       ffmpegdec->srcpad);
+
+  ffmpegdec->context = avcodec_alloc_context();
+}
+
+static void
+gst_ffmpegdecall_destroy (GObject *obj)
+{
+  GstFFMpegDecAll *ffmpegdec = GST_FFMPEGDECALL(obj);
+  avcodec_close(ffmpegdec->context);
+  av_free(ffmpegdec->context);
 }
 
 static GstPadConnectReturn
@@ -256,21 +271,17 @@ gst_ffmpegdecall_connect (GstPad *pad, GstCaps *caps)
   GstFFMpegDecAll *ffmpegdec = GST_FFMPEGDECALL(gst_pad_get_parent(pad));
   enum CodecID id;
   AVCodec *plugin;
-  GstCaps *newcaps;
 
   if (!GST_CAPS_IS_FIXED(caps))
     return GST_PAD_CONNECT_DELAYED;
 
-  avcodec_get_context_defaults(&ffmpegdec->context);
+  avcodec_get_context_defaults(ffmpegdec->context);
 
-  if ((id = gst_ffmpeg_caps_to_codecid(caps, &ffmpegdec->context)) == CODEC_ID_NONE) {
+  if ((id = gst_ffmpeg_caps_to_codecid(caps, ffmpegdec->context)) == CODEC_ID_NONE) {
     GST_DEBUG(GST_CAT_PLUGIN_INFO,
               "Failed to find corresponding codecID");
     return GST_PAD_CONNECT_REFUSED;
   }
-
-  if (ffmpegdec->context.codec_type == CODEC_TYPE_VIDEO)
-    ffmpegdec->context.pix_fmt = PIX_FMT_YUV420P /*ANY*/;
 
   if ((plugin = avcodec_find_decoder(id)) == NULL) {
     GST_DEBUG(GST_CAT_PLUGIN_INFO,
@@ -280,26 +291,12 @@ gst_ffmpegdecall_connect (GstPad *pad, GstCaps *caps)
 
   /* we dont send complete frames */
   if (plugin->capabilities & CODEC_CAP_TRUNCATED)
-    ffmpegdec->context.flags |= CODEC_FLAG_TRUNCATED;
+    ffmpegdec->context->flags |= CODEC_FLAG_TRUNCATED;
 
-  if (avcodec_open(&ffmpegdec->context, plugin)) {
+  if (avcodec_open(ffmpegdec->context, plugin)) {
     GST_DEBUG(GST_CAT_PLUGIN_INFO,
               "Failed to open FFMPEG codec for id=%d", id);
     return GST_PAD_CONNECT_REFUSED;
-  }
-
-  if (ffmpegdec->context.width > 0 && ffmpegdec->context.height > 0) {
-    /* set caps on src pad based on context.pix_fmt && width/height */
-    newcaps = gst_ffmpeg_codecid_to_caps(CODEC_ID_RAWVIDEO,
-                                         &ffmpegdec->context);
-    if (!newcaps) {
-      GST_DEBUG(GST_CAT_PLUGIN_INFO,
-                "Failed to create caps for other end (pix_fmt=%d)",
-                ffmpegdec->context.pix_fmt);
-      return GST_PAD_CONNECT_REFUSED;
-    }
-
-    return gst_pad_try_set_caps(ffmpegdec->srcpad, newcaps);
   }
 
   return GST_PAD_CONNECT_OK;
@@ -318,9 +315,9 @@ gst_ffmpegdecall_chain (GstPad *pad, GstBuffer *inbuf)
   size = GST_BUFFER_SIZE (inbuf);
 
   do {
-    ffmpegdec->context.frame_number++;
+    ffmpegdec->context->frame_number++;
 
-    len = avcodec_decode_video (&ffmpegdec->context, &ffmpegdec->picture,
+    len = avcodec_decode_video (ffmpegdec->context, &ffmpegdec->picture,
 		  &have_picture, data, size);
 
     if (len < 0) {
@@ -333,17 +330,17 @@ gst_ffmpegdecall_chain (GstPad *pad, GstBuffer *inbuf)
       guchar *picdata, *picdata2, *outdata, *outdata2;
       gint xsize, i, width, height;
 
-      height = ffmpegdec->context.height;
-      width = ffmpegdec->context.width;
+      height = ffmpegdec->context->height;
+      width = ffmpegdec->context->width;
 
       if (!GST_PAD_CAPS(ffmpegdec->srcpad)) {
         GstCaps *newcaps = gst_ffmpeg_codecid_to_caps(CODEC_ID_RAWVIDEO,
-                                                      &ffmpegdec->context);
+                                                      ffmpegdec->context);
 
 	if (!newcaps) {
           gst_element_error(GST_ELEMENT(ffmpegdec),
                             "Failed to create caps for ffmpeg (pix_fmt=%d)",
-                            ffmpegdec->context.pix_fmt);
+                            ffmpegdec->context->pix_fmt);
           break;
         }
 
@@ -407,6 +404,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
                                     GST_TYPE_FFMPEGDECALL,
                                     &gst_ffmpegdecall_details);
   g_return_val_if_fail(factory != NULL, FALSE);
+
+  gst_element_factory_set_rank(factory, GST_ELEMENT_RANK_PRIMARY);
 
   gst_element_factory_add_pad_template(factory,
                                     GST_PAD_TEMPLATE_GET(src_templ));
