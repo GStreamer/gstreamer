@@ -1,3 +1,9 @@
+2003-12-27  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/mad/gstid3tag.c: (gst_id3_tag_add_src_pad),
+	(gst_id3_tag_do_caps_nego), (gst_id3_tag_src_link):
+	  Make id3tag use correct caps nego.
+
 2003-12-27  Amaury Jacquot <sxpert@esitcom.org>
 
 	* ext/ivorbis/vorbis.c: 
