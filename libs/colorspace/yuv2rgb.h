@@ -19,6 +19,9 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
+#ifndef __YUV2RGB_H__
+#define __YUV2RGB_H__
+
 typedef struct _GstColorSpaceYUVTables GstColorSpaceYUVTables;
 
 struct _GstColorSpaceYUVTables {
@@ -61,4 +64,5 @@ struct _GstColorSpaceYUVTables {
                         ? Min(127.0,  ((x) * chromaCorrect)) \
                         : Max(-128.0, ((x) * chromaCorrect)))
 
+#endif
 

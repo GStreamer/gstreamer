@@ -22,29 +22,32 @@
 
 #include <gstcolorspace.h>
 
-extern GstColorSpaceConverter gst_colorspace_rgb2rgb_get_converter(GstColorSpace srcspace, 
-		                                                      GstColorSpace destspace);
-extern GstColorSpaceConverter gst_colorspace_yuv2rgb_get_converter(GstColorSpace srcspace, 
-		                                                      GstColorSpace destspace);
-extern GstColorSpaceConverter gst_colorspace_rgb2yuv_get_converter(GstColorSpace srcspace, 
-		                                                      GstColorSpace destspace);
-extern GstColorSpaceConverter gst_colorspace_yuv2yuv_get_converter(GstColorSpace srcspace, 
-		                                                      GstColorSpace destspace);
 
-GstBuffer *gst_colorspace_convert(GstBuffer *src, GstColorSpace dest) {
-  switch (dest) {
-    default:
-      break;
-  }
+extern GstColorSpaceConverter gst_colorspace_rgb2rgb_get_converter(GstColorSpace *space, GstColorSpaceType srcspace, 
+		                                                      GstColorSpaceType destspace);
+extern GstColorSpaceConverter gst_colorspace_yuv2rgb_get_converter(GstColorSpace *space, GstColorSpaceType srcspace, 
+		                                                      GstColorSpaceType destspace);
+extern GstColorSpaceConverter gst_colorspace_rgb2yuv_get_converter(GstColorSpace *space, GstColorSpaceType srcspace, 
+		                                                      GstColorSpaceType destspace);
+extern GstColorSpaceConverter gst_colorspace_yuv2yuv_get_converter(GstColorSpace *space, GstColorSpaceType srcspace, 
+		                                                      GstColorSpaceType destspace);
 
-  return src;
-}
+GstColorSpace *gst_colorspace_new(int width, int height, GstColorSpaceType srcspace, GstColorSpaceType destspace, GdkVisual *destvisual) 
+{
 
-GstColorSpaceConverter gst_colorspace_get_converter(GstColorSpace srcspace, GstColorSpace destspace) {
-  DEBUG("gst_colorspace: get converter\n");
+  GstColorSpace *new = g_malloc(sizeof(GstColorSpace));
+
+  new->width = width;
+  new->height = height;
+  new->srcspace = srcspace;
+  new->destspace = destspace;
+  new->visual = destvisual;
+  new->convert = NULL;
+
+  DEBUG("gst_colorspace: new\n");
   if (GST_COLORSPACE_IS_RGB_TYPE(srcspace)) {
     if (GST_COLORSPACE_IS_RGB_TYPE(destspace)) {
-      return gst_colorspace_rgb2rgb_get_converter(srcspace, destspace);
+      new->convert =  gst_colorspace_rgb2rgb_get_converter(new, srcspace, destspace);
     }
     else {
       //return gst_colorspace_rgb2yuv_get_converter(srcspace, destspace);
@@ -52,12 +55,20 @@ GstColorSpaceConverter gst_colorspace_get_converter(GstColorSpace srcspace, GstC
   }
   else if (GST_COLORSPACE_IS_YUV_TYPE(srcspace)) {
     if (GST_COLORSPACE_IS_RGB_TYPE(destspace)) {
-      return gst_colorspace_yuv2rgb_get_converter(srcspace, destspace);
+      new->convert =  gst_colorspace_yuv2rgb_get_converter(new, srcspace, destspace);
     }
     else {
       //return gst_colorspace_yuv2yuv_get_converter(srcspace, destspace);
     }
   }
-  g_print("gst_colorspace: conversion not implemented\n");
-  return NULL;
+  if (new->convert == NULL) {
+    g_print("gst_colorspace: conversion not implemented\n");
+  }
+  return new;
+}
+
+void gst_colorspace_destroy(GstColorSpace *space) 
+{
+  if (space->color_tables) g_free(space->color_tables);
+  g_free(space);
 }

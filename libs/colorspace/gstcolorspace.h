@@ -25,8 +25,9 @@
 #include <gst/gstbuffer.h>
 #include <gst/gstplugin.h>
 
-typedef enum {
+#include "yuv2rgb.h"
 
+typedef enum {
 #define GST_COLORSPACE_RGB_FIRST GST_COLORSPACE_RGB555
   GST_COLORSPACE_RGB555,
   GST_COLORSPACE_BGR555,
@@ -45,15 +46,22 @@ typedef enum {
   GST_COLORSPACE_YUV422P,
 #define GST_COLORSPACE_YUV_LAST GST_COLORSPACE_YUV422P
 
-} GstColorSpace;
+} GstColorSpaceType;
 
-typedef struct _GstColorSpaceParameters GstColorSpaceParameters;
+typedef struct _GstColorSpace GstColorSpace;
+typedef void (*GstColorSpaceConverter) (GstColorSpace *space, unsigned char *src, unsigned char *dest);
 
-struct _GstColorSpaceParameters {
+struct _GstColorSpace {
   guint width;
   guint height;
-  gchar *outbuf;
+  GstColorSpaceType srcspace;
+  GstColorSpaceType destspace;
   GdkVisual *visual;
+  guint insize;
+  guint outsize;
+  /* private */
+  GstColorSpaceYUVTables *color_tables;
+  GstColorSpaceConverter convert;
 };
 
 
@@ -62,11 +70,7 @@ struct _GstColorSpaceParameters {
 #define GST_COLORSPACE_IS_YUV_TYPE(type) ((type)>=GST_COLORSPACE_YUV_FIRST && \
 		                          (type)<=GST_COLORSPACE_YUV_LAST)
 
-typedef GstBuffer * (*GstColorSpaceConverter) (GstBuffer *src, GstColorSpaceParameters *params);
-
-GstColorSpaceConverter gst_colorspace_get_converter(GstColorSpace srcspace, GstColorSpace destspace);
-
-/* convert a buffer to a new buffer in the given colorspace */
-GstBuffer *gst_colorspace_convert(GstBuffer *buf, GstColorSpace destspace);
+GstColorSpace *gst_colorspace_new(int width, int height, GstColorSpaceType srcspace, GstColorSpaceType destspace, GdkVisual *destvisual);
+void gst_colorspace_destroy(GstColorSpace *space);
 
 #endif /* __GST_COLORSPACE_H__ */

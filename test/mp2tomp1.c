@@ -139,18 +139,17 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     g_return_if_fail(decode_video != NULL);
     videoscale = gst_elementfactory_make("videoscale","videoscale");
     g_return_if_fail(videoscale != NULL);
-    g_return_if_fail(median != NULL);
+    gtk_object_set(GTK_OBJECT(videoscale),"width",352, "height", 240,NULL);
     median = gst_elementfactory_make("median","median");
-    gtk_object_set(GTK_OBJECT(median),"filtersize",5,NULL);
+    g_return_if_fail(median != NULL);
+    gtk_object_set(GTK_OBJECT(median),"filtersize",9,NULL);
     smooth = gst_elementfactory_make("smooth","smooth");
     g_return_if_fail(smooth != NULL);
     gtk_object_set(GTK_OBJECT(smooth),"filtersize",5,NULL);
     gtk_object_set(GTK_OBJECT(smooth),"tolerance",9,NULL);
-
-    gtk_object_set(GTK_OBJECT(videoscale),"width",352, "height", 240,NULL);
     encode = gst_elementfactory_make("mpeg2enc","encode");
-    gtk_object_set(GTK_OBJECT(encode),"frames_per_second",29.97,NULL);
     g_return_if_fail(encode != NULL);
+    gtk_object_set(GTK_OBJECT(encode),"frames_per_second",29.97,NULL);
     //encode = gst_elementfactory_make("mpeg1encoder","encode");
     //gtk_object_set(GTK_OBJECT(show),"width",640, "height", 480,NULL);
 
@@ -172,10 +171,10 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_pad_connect(gst_element_get_pad(parse_video,"src"),
                     gst_element_get_pad(decode_video,"sink"));
     gst_pad_connect(gst_element_get_pad(decode_video,"src"),
-                    gst_element_get_pad(videoscale,"sink"));
-    gst_pad_connect(gst_element_get_pad(videoscale,"src"),
                     gst_element_get_pad(median,"sink"));
     gst_pad_connect(gst_element_get_pad(median,"src"),
+                    gst_element_get_pad(videoscale,"sink"));
+    gst_pad_connect(gst_element_get_pad(videoscale,"src"),
     //                gst_element_get_pad(smooth,"sink"));
     //gst_pad_connect(gst_element_get_pad(smooth,"src"),
                     gst_element_get_pad(encode,"sink"));

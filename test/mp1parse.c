@@ -14,7 +14,7 @@ void eof(GstSrc *src) {
 }
 
 void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
-  GstElement *parse_audio, *parse_video, *decode, *decode_video, *play, *show;
+  GstElement *parse_audio, *parse_video, *decode, *decode_video, *play, *videoscale, *show;
   GstElement *audio_queue, *video_queue;
   GstElement *audio_thread, *video_thread;
 
@@ -71,12 +71,18 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
 
     gst_plugin_load("mp1videoparse");
     gst_plugin_load(VIDEO_DECODER);
+    gst_plugin_load("videoscale");
     gst_plugin_load("videosink");
     // construct internal pipeline elements
     parse_video = gst_elementfactory_make("mp1videoparse","parse_video");
     g_return_if_fail(parse_video != NULL);
     decode_video = gst_elementfactory_make(VIDEO_DECODER,"decode_video");
     g_return_if_fail(decode_video != NULL);
+    videoscale = gst_elementfactory_make("videoscale","videoscale");
+    g_return_if_fail(videoscale != NULL);
+    gtk_object_set(GTK_OBJECT(videoscale),"width",704, "height", 576,NULL);
+
+
     show = gst_elementfactory_make("videosink","show");
     g_return_if_fail(show != NULL);
     //gtk_object_set(GTK_OBJECT(show),"width",640, "height", 480,NULL);
@@ -91,6 +97,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     g_return_if_fail(video_thread != NULL);
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(parse_video));
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(decode_video));
+    gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(videoscale));
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(show));
 
     // set up pad connections
@@ -99,6 +106,8 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     gst_pad_connect(gst_element_get_pad(parse_video,"src"),
                     gst_element_get_pad(decode_video,"sink"));
     gst_pad_connect(gst_element_get_pad(decode_video,"src"),
+    //                gst_element_get_pad(videoscale,"sink"));
+    //gst_pad_connect(gst_element_get_pad(videoscale,"src"),
                     gst_element_get_pad(show,"sink"));
 
     // construct queue and connect everything in the main pipeline

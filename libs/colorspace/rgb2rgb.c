@@ -22,26 +22,32 @@
 #include <gst/gst.h>
 #include <gstcolorspace.h>
 
-static GstBuffer *gst_colorspace_rgb24_to_bgr24(GstBuffer *src, GstColorSpaceParameters *params);
-static GstBuffer *gst_colorspace_rgb_to_rgb_identity(GstBuffer *src, GstColorSpaceParameters *params);
+static void gst_colorspace_rgb_to_rgb_identity(GstColorSpace *space, unsigned char *src, unsigned char *dest); 
+static void gst_colorspace_rgb24_to_bgr24(GstColorSpace *space, unsigned char *src, unsigned char *dest);
 
-GstColorSpaceConverter gst_colorspace_rgb2rgb_get_converter(GstColorSpace src, GstColorSpace dest) {
+GstColorSpaceConverter gst_colorspace_rgb2rgb_get_converter(GstColorSpace *space, GstColorSpaceType src, GstColorSpaceType dest) {
   switch(src) {
     case GST_COLORSPACE_RGB24:
+      space->insize = space->width*space->height*3;
       switch(dest) {
         case GST_COLORSPACE_RGB24:
+	  space->outsize = space->width*space->height*3;
           return gst_colorspace_rgb_to_rgb_identity;
         case GST_COLORSPACE_BGR24:
+	  space->outsize = space->width*space->height*3;
           return gst_colorspace_rgb24_to_bgr24;
 	default:
 	  break;
       }
       break;
     case GST_COLORSPACE_BGR24:
+      space->insize = space->width*space->height*3;
       switch(dest) {
         case GST_COLORSPACE_RGB24:
+	  space->outsize = space->width*space->height*3;
           return gst_colorspace_rgb24_to_bgr24;
         case GST_COLORSPACE_BGR24:
+	  space->outsize = space->width*space->height*3;
           return gst_colorspace_rgb_to_rgb_identity;
 	default:
 	  break;
@@ -54,35 +60,36 @@ GstColorSpaceConverter gst_colorspace_rgb2rgb_get_converter(GstColorSpace src, G
   return NULL;
 }
 
-static GstBuffer *gst_colorspace_rgb_to_rgb_identity(GstBuffer *src, GstColorSpaceParameters *params) {
-  return src;
+static void gst_colorspace_rgb_to_rgb_identity(GstColorSpace *space, unsigned char *src, unsigned char *dest) 
+{
+  memcpy(dest, src, space->outsize);
 }
 
-static GstBuffer *gst_colorspace_rgb24_to_bgr24(GstBuffer *src, GstColorSpaceParameters *params) {
+static void gst_colorspace_rgb24_to_bgr24(GstColorSpace *space, unsigned char *src, unsigned char *dest) 
+{
   gint size;
   gchar temp;
-  gchar *data;
 
-  DEBUG("gst_colorspace_rgb24_to_bgr24 %d\n", GST_BUFFER_SIZE(src));
+  DEBUG("gst_colorspace_rgb24_to_bgr24\n");
 
-  size = GST_BUFFER_SIZE(src)/3;
+  size = space->outsize;
 
-  if (params != NULL && params->outbuf != NULL) {
-    data = params->outbuf;
-    DEBUG("gst_colorspace: to buffer %p\n", data);
+  if (src == dest) {
+    while (size--) {
+      temp = src[0];
+      src[0] = src[2];
+      src[2] = temp;
+      src+=3;
+    }
   }
   else {
-    data = GST_BUFFER_DATA(src);
+    while (size--) {
+      *dest++ = src[2];
+      *dest++ = src[1];
+      *dest++ = src[0];
+      src+=3;
+    }
   }
-
-  while (size--) {
-    temp = data[0];
-    data[0] = data[2];
-    data[2] = temp;
-    data+=3;
-  }
-  DEBUG("gst_colorspace_rgb24_to_bgr24 end %d\n", GST_BUFFER_SIZE(src));
-
-  return src;
+  DEBUG("gst_colorspace_rgb24_to_bgr24 end\n");
 }
 

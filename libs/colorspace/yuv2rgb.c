@@ -32,13 +32,13 @@
 
 #include "yuv2rgb.h"
 
-static GstBuffer *gst_colorspace_yuv420P_to_rgb32(GstBuffer *src, GstColorSpaceParameters *params);
-static GstBuffer *gst_colorspace_yuv420P_to_bgr32(GstBuffer *src, GstColorSpaceParameters *params);
-static GstBuffer *gst_colorspace_yuv420P_to_bgr32_mmx(GstBuffer *src, GstColorSpaceParameters *params);
-static GstBuffer *gst_colorspace_yuv420P_to_rgb24(GstBuffer *src, GstColorSpaceParameters *params);
-static GstBuffer *gst_colorspace_yuv420P_to_bgr24(GstBuffer *src, GstColorSpaceParameters *params);
-static GstBuffer *gst_colorspace_yuv420P_to_rgb16(GstBuffer *src, GstColorSpaceParameters *params);
-static GstBuffer *gst_colorspace_yuv420P_to_bgr16_mmx(GstBuffer *src, GstColorSpaceParameters *params);
+static void gst_colorspace_yuv420P_to_rgb32(GstColorSpace *space, unsigned char *src, unsigned char *dest);
+static void gst_colorspace_yuv420P_to_bgr32(GstColorSpace *space, unsigned char *src, unsigned char *dest);
+static void gst_colorspace_yuv420P_to_bgr32_mmx(GstColorSpace *space, unsigned char *src, unsigned char *dest);
+static void gst_colorspace_yuv420P_to_rgb24(GstColorSpace *space, unsigned char *src, unsigned char *dest);
+static void gst_colorspace_yuv420P_to_bgr24(GstColorSpace *space, unsigned char *src, unsigned char *dest);
+static void gst_colorspace_yuv420P_to_rgb16(GstColorSpace *space, unsigned char *src, unsigned char *dest);
+static void gst_colorspace_yuv420P_to_bgr16_mmx(GstColorSpace *space, unsigned char *src, unsigned char *dest);
 
 static void gst_colorspace_yuv_to_rgb16(GstColorSpaceYUVTables *tables,
 	    				unsigned char *lum,
@@ -76,25 +76,38 @@ static void gst_colorspace_yuv_to_bgr16_mmx(GstColorSpaceYUVTables *tables,
 static GstColorSpaceYUVTables * gst_colorspace_init_yuv(long depth, 
 						long red_mask, long green_mask, long blue_mask);
 
-GstColorSpaceConverter gst_colorspace_yuv2rgb_get_converter(GstColorSpace src, GstColorSpace dest) {
-  DEBUG("gst_colorspace_yuv2rgb_get_converter %d\n", dest);
+GstColorSpaceConverter gst_colorspace_yuv2rgb_get_converter(GstColorSpace *space, GstColorSpaceType src, GstColorSpaceType dest) {
+  DEBUG("gst_colorspace_yuv2rgb_get_converter %d %d\n", src, dest);
   switch(src) {
     case GST_COLORSPACE_YUV420P:
+      space->insize = space->width*space->height+space->width*space->height/2;
       switch(dest) {
         case GST_COLORSPACE_BGR32:
+          space->color_tables = gst_colorspace_init_yuv(32, 0xFF0000, 0x00FF00, 0x0000FF);
+          space->outsize = space->width*space->height*4;
           //return gst_colorspace_yuv420P_to_bgr32;
           return gst_colorspace_yuv420P_to_bgr32_mmx;
         case GST_COLORSPACE_RGB32:
+          space->color_tables = gst_colorspace_init_yuv(32, 0x0000FF, 0x00FF00, 0xFF0000);
+          space->outsize = space->width*space->height*4;
           return gst_colorspace_yuv420P_to_rgb32;
         case GST_COLORSPACE_RGB24:
+          space->color_tables = gst_colorspace_init_yuv(24, 0x0000FF, 0x00FF00, 0xFF0000);
+          space->outsize = space->width*space->height*3;
           return gst_colorspace_yuv420P_to_rgb24;
         case GST_COLORSPACE_BGR24:
+          space->color_tables = gst_colorspace_init_yuv(24, 0xFF0000, 0x00FF00, 0x0000FF);
+          space->outsize = space->width*space->height*3;
           return gst_colorspace_yuv420P_to_bgr24;
         case GST_COLORSPACE_RGB555:
         case GST_COLORSPACE_RGB565:
         case GST_COLORSPACE_BGR555:
+          g_return_val_if_fail(space->visual != NULL, NULL);
+          space->color_tables = gst_colorspace_init_yuv(16, space->visual->red_mask, space->visual->green_mask, space->visual->blue_mask);
+          space->outsize = space->width*space->height*2;
           return gst_colorspace_yuv420P_to_rgb16;
         case GST_COLORSPACE_BGR565:
+          space->outsize = space->width*space->height*2;
           return gst_colorspace_yuv420P_to_bgr16_mmx;
 	default:
 	  break;
@@ -107,221 +120,122 @@ GstColorSpaceConverter gst_colorspace_yuv2rgb_get_converter(GstColorSpace src, G
   return NULL;
 }
 
-static GstBuffer *gst_colorspace_yuv420P_to_bgr32(GstBuffer *src, GstColorSpaceParameters *params) {
-  static GstColorSpaceYUVTables *color_tables = NULL;
+static void gst_colorspace_yuv420P_to_bgr32(GstColorSpace *space, unsigned char *src, unsigned char *dest) 
+{
   int size;
-  GstBuffer *buf = NULL;
-  guchar *out;
   DEBUG("gst_colorspace_yuv420P_to_bgr32\n");
 
-  g_return_val_if_fail(params != NULL, NULL);
+  size = space->width * space->height;
 
-  if (color_tables == NULL) {
-    color_tables = gst_colorspace_init_yuv(32, 0xFF0000, 0x00FF00, 0x0000FF);
-  }
-  size = params->width * params->height;
-  if (params->outbuf == NULL) {
-    buf = gst_buffer_new();
-    out = GST_BUFFER_DATA(buf) = g_malloc(size * 4);
-    GST_BUFFER_SIZE(buf) = size * 4;
-  }
-  else out = params->outbuf;
+  gst_colorspace_yuv_to_rgb32(space->color_tables,
+			src,                                  	// Y component
+                        src+size,     				// cr component
+			src+size+(size>>2),		   	// cb component
+                        dest,
+			space->height,
+			space->width);
 
-  gst_colorspace_yuv_to_rgb32(color_tables,
-			GST_BUFFER_DATA(src),                                  	// Y component
-                        GST_BUFFER_DATA(src)+size,     				// cr component
-			GST_BUFFER_DATA(src)+size+(size>>2),		   	// cb component
-                        out,
-			params->height,
-			params->width);
-
-  if (buf) {
-    gst_buffer_unref(src);
-    return buf;
-  }
-  else return src;
 }
 
-static GstBuffer *gst_colorspace_yuv420P_to_rgb32(GstBuffer *src, GstColorSpaceParameters *params) {
-  static GstColorSpaceYUVTables *color_tables = NULL;
+static void gst_colorspace_yuv420P_to_rgb32(GstColorSpace *space, unsigned char *src, unsigned char *dest) 
+{
   int size;
-  GstBuffer *buf = NULL;
-  guchar *out;
   DEBUG("gst_colorspace_yuv420P_to_rgb32\n");
 
-  g_return_val_if_fail(params != NULL, NULL);
 
-  if (color_tables == NULL) {
-    color_tables = gst_colorspace_init_yuv(32, 0x0000FF, 0x00FF00, 0xFF0000);
-  }
-  size = params->width * params->height;
-  if (params->outbuf == NULL) {
-    buf = gst_buffer_new();
-    out = GST_BUFFER_DATA(buf) = g_malloc(size * 4);
-    GST_BUFFER_SIZE(buf) = size * 4;
-  }
-  else out = params->outbuf;
+  size = space->width * space->height;
 
-  gst_colorspace_yuv_to_rgb32(color_tables,
-			GST_BUFFER_DATA(src),                                  	// Y component
-                        GST_BUFFER_DATA(src)+size,     				// cr component
-			GST_BUFFER_DATA(src)+size+(size>>2),		   	// cb component
-                        out,
-			params->height,
-			params->width);
+  gst_colorspace_yuv_to_rgb32(space->color_tables,
+			src,                                  	// Y component
+                        src+size,     				// cr component
+			src+size+(size>>2),		   	// cb component
+                        dest,
+			space->height,
+			space->width);
 
-  if (buf) {
-    gst_buffer_unref(src);
-    return buf;
-  }
-  else return src;
 }
 
-static GstBuffer *gst_colorspace_yuv420P_to_bgr24(GstBuffer *src, GstColorSpaceParameters *params) {
-  static GstColorSpaceYUVTables *color_tables = NULL;
+static void gst_colorspace_yuv420P_to_bgr24(GstColorSpace *space, unsigned char *src, unsigned char *dest) {
   int size;
-  GstBuffer *buf = NULL;
-  guchar *out;
   DEBUG("gst_colorspace_yuv420P_to_bgr24\n");
 
-  g_return_val_if_fail(params != NULL, NULL);
+  size = space->width * space->height;
 
-  if (color_tables == NULL) {
-    color_tables = gst_colorspace_init_yuv(24, 0xFF0000, 0x00FF00, 0x0000FF);
-  }
-  size = params->width * params->height;
-  if (params->outbuf == NULL) {
-    buf = gst_buffer_new();
-    out = GST_BUFFER_DATA(buf) = g_malloc(size * 3);
-    GST_BUFFER_SIZE(buf) = size * 3;
-  }
-  else out = params->outbuf;
-
-  gst_colorspace_yuv_to_rgb24(color_tables,
-			GST_BUFFER_DATA(src),                                  	// Y component
-                        GST_BUFFER_DATA(src)+size,     				// cr component
-			GST_BUFFER_DATA(src)+size+(size>>2),		   	// cb component
-                        out,
-			params->height,
-			params->width);
-  if (buf) {
-    gst_buffer_unref(src);
-    return buf;
-  }
-  else return src;
+  gst_colorspace_yuv_to_rgb24(space->color_tables,
+			src,                                  	// Y component
+                        src+size,     				// cr component
+			src+size+(size>>2),		   	// cb component
+                        dest,
+			space->height,
+			space->width);
 }
 
-static GstBuffer *gst_colorspace_yuv420P_to_rgb24(GstBuffer *src, GstColorSpaceParameters *params) {
-  static GstColorSpaceYUVTables *color_tables = NULL;
+static void gst_colorspace_yuv420P_to_rgb24(GstColorSpace *space, unsigned char *src, unsigned char *dest) {
   int size;
-  GstBuffer *buf = NULL;
-  guchar *out;
   DEBUG("gst_colorspace_yuv420P_to_rgb24\n");
 
-  g_return_val_if_fail(params != NULL, NULL);
+  size = space->width * space->height;
 
-  if (color_tables == NULL) {
-    color_tables = gst_colorspace_init_yuv(24, 0x0000FF, 0x00FF00, 0xFF0000);
-  }
-  size = params->width * params->height;
-  if (params->outbuf == NULL) {
-    buf = gst_buffer_new();
-    out = GST_BUFFER_DATA(buf) = g_malloc(size * 3);
-    GST_BUFFER_SIZE(buf) = size * 3;
-  }
-  else out = params->outbuf;
+  gst_colorspace_yuv_to_rgb24(space->color_tables,
+			src,                                  	// Y component
+                        src+size,     				// cr component
+			src+size+(size>>2),		   	// cb component
+                        dest,
+			space->height,
+			space->width);
 
-  gst_colorspace_yuv_to_rgb24(color_tables,
-			GST_BUFFER_DATA(src),                                  	// Y component
-                        GST_BUFFER_DATA(src)+size,     				// cr component
-			GST_BUFFER_DATA(src)+size+(size>>2),		   	// cb component
-                        out,
-			params->height,
-			params->width);
-
-  if (buf) {
-    gst_buffer_unref(src);
-    return buf;
-  }
-  else return src;
 }
 
-static GstBuffer *gst_colorspace_yuv420P_to_rgb16(GstBuffer *src, GstColorSpaceParameters *params) {
-  static GstColorSpaceYUVTables *color_tables = NULL;
+static void gst_colorspace_yuv420P_to_rgb16(GstColorSpace *space, unsigned char *src, unsigned char *dest) {
   int size;
   DEBUG("gst_colorspace_yuv420P_to_rgb16\n");
 
-  g_return_val_if_fail(params != NULL, NULL);
-  g_return_val_if_fail(params->visual != NULL, NULL);
+  size = space->width * space->height;
 
-  if (color_tables == NULL) {
-    color_tables = gst_colorspace_init_yuv(16, params->visual->red_mask, params->visual->green_mask, params->visual->blue_mask);
-  }
-  size = params->width * params->height;
+  gst_colorspace_yuv_to_rgb16(space->color_tables,
+			src,                                  	// Y component
+                        src+size,     				// cr component
+			src+size+(size>>2),		   	// cb component
+                        dest,
+			space->height,
+			space->width);
 
-  gst_colorspace_yuv_to_rgb16(color_tables,
-			GST_BUFFER_DATA(src),                                  	// Y component
-                        GST_BUFFER_DATA(src)+size,     				// cr component
-			GST_BUFFER_DATA(src)+size+(size>>2),		   	// cb component
-                        params->outbuf,
-			params->height,
-			params->width);
-
-  return src;
 }
 
 #ifdef HAVE_LIBMMX
 static mmx_t MMX16_redmask   = (mmx_t)(long long)0xf800f800f800f800LL;             //dd    07c00 7c00h, 07c007c00h
 static mmx_t MMX16_grnmask   = (mmx_t)(long long)0x07e007e007e007e0LL;                 //dd    003e0 03e0h, 003e003e0h
 
-static GstBuffer *gst_colorspace_yuv420P_to_bgr32_mmx(GstBuffer *src, GstColorSpaceParameters *params) {
+static void gst_colorspace_yuv420P_to_bgr32_mmx(GstColorSpace *space, unsigned char *src, unsigned char *dest) {
   int size;
-  GstBuffer *buf = NULL;
-  guchar *out;
   DEBUG("gst_colorspace_yuv420P_to_rgb32_mmx\n");
 
-  g_return_val_if_fail(params != NULL, NULL);
-
-  size = params->width * params->height;
-  if (params->outbuf == NULL) {
-    buf = gst_buffer_new();
-    out = GST_BUFFER_DATA(buf) = g_malloc(size * 4);
-    GST_BUFFER_SIZE(buf) = size * 4;
-  }
-  else out = params->outbuf;
+  size = space->width * space->height;
 
   gst_colorspace_yuv_to_bgr32_mmx(NULL,
-			GST_BUFFER_DATA(src),                                  	// Y component
-                        GST_BUFFER_DATA(src)+size,     				// cr component
-			GST_BUFFER_DATA(src)+size+(size>>2),		   	// cb component
-                        out,
-			params->height,
-			params->width);
+			src,                                  	// Y component
+                        src+size,     				// cr component
+			src+size+(size>>2),		   	// cb component
+                        dest,
+			space->height,
+			space->width);
 
-  if (buf) {
-    gst_buffer_unref(src);
-    return buf;
-  }
-  else return src;
 }
-static GstBuffer *gst_colorspace_yuv420P_to_bgr16_mmx(GstBuffer *src, GstColorSpaceParameters *params) {
+static void gst_colorspace_yuv420P_to_bgr16_mmx(GstColorSpace *space, unsigned char *src, unsigned char *dest) {
   int size;
   DEBUG("gst_colorspace_yuv420P_to_bgr16_mmx \n");
 
-  g_return_val_if_fail(params != NULL, NULL);
-
-  size = params->width * params->height;
+  size = space->width * space->height;
 
   gst_colorspace_yuv_to_bgr16_mmx(NULL,
-			GST_BUFFER_DATA(src),                                  	// Y component
-                        GST_BUFFER_DATA(src)+size,     				// cr component
-			GST_BUFFER_DATA(src)+size+(size>>2),		   	// cb component
-                        params->outbuf,
-			params->height,
-			params->width);
+			src,                                  	// Y component
+                        src+size,     				// cr component
+			src+size+(size>>2),		   	// cb component
+                        dest,
+			space->height,
+			space->width);
   DEBUG("gst_colorspace_yuv420P_to_bgr16_mmx done\n");
 
-  return src;
 }
 #endif
 

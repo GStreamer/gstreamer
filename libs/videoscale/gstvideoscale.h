@@ -21,10 +21,32 @@
 #ifndef __GST_VIDEOSCALE_H__
 #define __GST_VIDEOSCALE_H__
 
-#include <gdk/gdk.h>
-#include <gst/gstbuffer.h>
-#include <gst/gstplugin.h>
+#include <gst/gst.h>
 
-GstBuffer *gst_videoscale_scale(GstBuffer *src, int sw, int sh, int dw, int dh, int format);
+typedef enum {
+  GST_VIDEOSCALE_NEAREST,
+  GST_VIDEOSCALE_BILINEAR,
+  GST_VIDEOSCALE_BICUBIC
+} GstVideoScaleMethod;
+
+typedef struct _GstVideoScale GstVideoScale;
+
+struct _GstVideoScale {
+  guint source_width;
+  guint source_height;
+  guint dest_width;
+  guint dest_height;
+  guint format;
+  GstVideoScaleMethod method;
+  /* private */
+  guchar copy_row[4096];
+  guchar *temp;
+  void (*scale) (GstVideoScale *scale, unsigned char *src, unsigned char *dest);
+  void (*scaler) (GstVideoScale *scale, unsigned char *src, unsigned char *dest, int sw, int sh, int dw, int dh);
+  unsigned char (*filter) (unsigned char *src, double x, double y, int sw, int sh);
+};
+
+GstVideoScale *gst_videoscale_new(int sw, int sh, int dw, int dh, int format, GstVideoScaleMethod method);
+void gst_videoscale_destroy(GstVideoScale *scale);
 
 #endif /* __GST_VIDEOSCALE_H__ */
