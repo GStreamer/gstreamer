@@ -747,8 +747,9 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
           } else if (!GST_PAD_IS_USABLE (mpeg2dec->srcpad)) {
             GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer, pad not usable");
             gst_buffer_unref (outbuf);
-          } else if (!mpeg2dec->discont_state != MPEG2DEC_DISC_NONE) {
-            GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer, discont problem");
+          } else if (mpeg2dec->discont_state != MPEG2DEC_DISC_NONE) {
+            GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer, discont state %d",
+                mpeg2dec->discont_state);
             gst_buffer_unref (outbuf);
           } else if (mpeg2dec->next_time < mpeg2dec->segment_start) {
             GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer, next_time %"
@@ -766,6 +767,7 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
                 GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
                 GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
                 GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
+            gst_pad_push (mpeg2dec->srcpad, GST_DATA (outbuf));
           }
         } else if (info->display_fbuf && !info->display_fbuf->id) {
           GST_WARNING ("Got a frame from libmpeg2, but it has no buffer");
