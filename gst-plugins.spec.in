@@ -120,13 +120,16 @@ GStreamer support libraries header files.
 %{_includedir}/gst-plugins-%{version}/gst/audio/audio.h
 %{_includedir}/gst-plugins-%{version}/gst/floatcast/floatcast.h
 %{_includedir}/gst-plugins-%{version}/gst/gconf/gconf.h
-%{_includedir}/gst-plugins-%{version}/gst/play/play.h
 %{_includedir}/gst-plugins-%{version}/gst/idct/idct.h
 %{_includedir}/gst-plugins-%{version}/gst/resample/resample.h
 %{_includedir}/gst-plugins-%{version}/gst/riff/riff.h
 %{_includedir}/gst-plugins-%{version}/gst/video/video.h
+%{_includedir}/gst-plugins-%{version}/gst/play/play.h
+%{_libdir}/libgstplay.so
+%{_libdir}/libgstplay.a
 %{_datadir}/aclocal/gst-element-check.m4
 %{_libdir}/pkgconfig/gstreamer-libs.pc
+%{_libdir}/pkgconfig/gstreamer-play.pc
 
 # Here are all the packages depending on external libs #
 
@@ -1448,32 +1451,38 @@ Plug-in for demuxing Quicktime movies
 @USE_GCONF_TRUE@%defattr(-, root, root)
 @USE_GCONF_TRUE@%{_sysconfdir}/gconf/schemas/gstreamer.schemas
 @USE_GCONF_TRUE@%{_libdir}/libgstgconf.so
-@USE_GCONF_TRUE@%{_libdir}/libgstgconf-0.4.1.1.so.0.0.0
+@USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{version}.so.*
 
 @USE_GCONF_TRUE@%post -n gstreamer-GConf
 @USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
 @USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
 
-# package for libgstplay library
-%package -n gstreamer-gstplay
-Summary:        GStreamer playback helper library
-Group:          Libraries/Multimedia
-Requires:       gstreamer >= 0.4.1
+# play library #
+%package -n gstreamer-play
+Summary: 	GStreamer play library.
+Group: 		Libraries/Multimedia
+Requires: 	gstreamer-plugins = %{version}
 
-%description -n gstreamer-gstplay
-Small helper library for creating media playback applications
+%description -n gstreamer-play
+This package contains a basic audio and video playback library.
 
-%files -n gstreamer-gstplay
+%files -n gstreamer-play
 %defattr(-, root, root)
-%{_libdir}/libgstplay.*
+%{_sysconfdir}/gconf/schemas/gstreamer.schemas
+%{_libdir}/libgstplay-%{version}.so.*
 
-%post -n gstreamer-gstplay
+%post -n gstreamer-GConf
+export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
+gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
 
+#
 %changelog
-* Thu Oct 30 2002 Christian Schaller <Uraeus@linuxrising.org>
-- Added gstplay library
+* Tue Oct 29 2002 Thomas Vander Stichele <thomas at apestaart dot org>
+- added -play package, libs, and .pc files
+
 * Thu Oct 24 2002 Christian Schaller <Uraeus@linuxrising.org>
 - Added wavenc to audio formats package
+
 * Sat Oct 20 2002 Christian Scchaller <Uraeus@linuxrising.org>
 - Removed all .la files
 - added separate non-openquicktime demuxer plugin
