@@ -258,8 +258,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 @USE_ARTSC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstartsdsink.so
 @USE_AUDIOFILE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaudiofile.so
 @USE_CDPARANOIA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcdparanoia.so
-@USE_ESD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstesdmon.so
-@USE_ESD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstesdsink.so
+@USE_ESD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstesd.so
 @USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfssrc.so
 @USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfssink.so
 @USE_JPEG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjpeg.so
