@@ -25,6 +25,7 @@ sub check_copyright();
 sub check_license();
 sub check_buffer_alloc();
 sub check_bad_includes();
+sub check_begin_decls();
 sub check_c99_comments();
 sub check_carriage_returns();
 sub check_printf_lld();
@@ -55,27 +56,34 @@ foreach $filename (<FIND>) {
 
 	print "I: $filename\n";
 
-	check_copyright();
-	check_license();
-
-	check_buffer_alloc();
+	# important stuff
 	check_bad_includes();
-	check_c99_comments();
-	check_carriage_returns();
 	check_printf_lld();
-	check_glibisms();
-	#check_indentation();
 	check_gst_props_set();
 	check_deprecated();
 	check_config_h();
+	check_old_typefind();
+	check_old_plugin();
+	check_caps();
+
+	# less important stuff
+
+if (0) {
+	check_copyright();
+	check_license();
+
+    check_gnuc_const();
+	check_begin_decls();
+	check_buffer_alloc();
+	check_c99_comments();
+	check_carriage_returns();
+	check_glibisms();
+	#check_indentation();
 	check_varargs_functions();
 	check_debugging();
-	check_old_typefind();
 	check_bad_casts();
-	check_old_plugin();
 	check_signal_new();
-    check_gnuc_const();
-	check_caps();
+}
 }
 
 open FIND, "find . -name \"Makefile.am\" -print|";
@@ -148,7 +156,10 @@ sub check_bad_includes()
 	if (grep { /^#include\s+<malloc.h>/; } @lines) {
 		print "E: bad header: malloc.h\n"
 	}
+}
 
+sub check_begin_decls()
+{
 	#
 	# Prefer "G_BEGIN_DECLS" to 'extern "C" {'
 	#
