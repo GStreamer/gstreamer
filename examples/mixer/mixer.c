@@ -188,25 +188,31 @@ int main(int argc,char *argv[])
       env_register_cp (channel_in->volenv,  num_channels * 10.0 - 5.0, 0.0000001); /* start fade in */
     }   
     env_register_cp (channel_in->volenv,  num_channels * 10.0      , 1.0 / num_channels); /* to end level */
-  }
 
   // write the pipeline to XML for visualization
-  xmlSaveFile("mixer.xml", gst_xml_write(GST_ELEMENT(main_bin)));
+    xmlSaveFile("mixer.xml", gst_xml_write(GST_ELEMENT(main_bin)));
 
-  /* start playing */
-  gst_element_set_state(main_bin, GST_STATE_PLAYING);
+    /* start playing */
+    gst_element_set_state(main_bin, GST_STATE_PLAYING);
 
-  // write out the schedule
-  gst_schedule_show(GST_ELEMENT_SCHED(main_bin));
+    // write out the schedule
+    gst_schedule_show(GST_ELEMENT_SCHED(main_bin));
+    playing = TRUE;
 
-  playing = TRUE;
-
-  j = 0;
-  while (playing && j < 1000) 
+    j = 0;
+    printf ("main: iterating %d\n", j);
+    while (playing && j < 100) 
+    {
+      gst_bin_iterate(GST_BIN(main_bin));
+     fprintf(stderr,"after iterate()\n");
+      ++j;
+    }
+  }
+  printf ("main: all the channels are open\n");
+  while (playing) 
   {
     gst_bin_iterate(GST_BIN(main_bin));
-fprintf(stderr,"after iterate()\n");
-    ++j;
+    fprintf(stderr,"after iterate()\n");
   }
   /* stop the bin */
   gst_element_set_state(main_bin, GST_STATE_NULL);
