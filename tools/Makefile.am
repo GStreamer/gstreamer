@@ -1,41 +1,41 @@
 if GST_DISABLE_REGISTRY
 GST_REGISTRY_SRC = 
 else
-GST_REGISTRY_SRC = gstreamer-register
+GST_REGISTRY_SRC = gst-register
 endif
 
 if GST_DISABLE_LOADSAVE
 GST_LOADSAVE_SRC = 
 else
-GST_LOADSAVE_SRC = gstreamer-compprep
+GST_LOADSAVE_SRC = gst-compprep
 endif
 
-bin_PROGRAMS = 	gstreamer-launch 	\
+bin_PROGRAMS = 	gst-launch 	\
 		$(GST_REGISTRY_SRC) 	\
-		gstreamer-inspect 	\
+		gst-inspect 	\
 		$(GST_LOADSAVE_SRC) 	\
-		gstreamer-complete
+		gst-complete
 
-man_MANS = gstreamer-launch.1 gstreamer-register.1 gstreamer-inspect.1 \
-	gstreamer-complete.1 gstreamer-compprep.1
+man_MANS = gst-launch.1 gst-register.1 gst-inspect.1 \
+	gst-complete.1 gst-compprep.1
 
-gstreamer_launch_LDADD = $(GST_LIBS) #-lefence
-gstreamer_launch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+gst_launch_LDADD = $(GST_LIBS) #-lefence
+gst_launch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
 
 if !GST_DISABLE_REGISTRY
-gstreamer_register_LDADD = $(GST_LIBS)
-gstreamer_register_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+gst_register_LDADD = $(GST_LIBS)
+gst_register_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
 endif
 
-gstreamer_inspect_LDADD = $(GST_LIBS)
-gstreamer_inspect_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+gst_inspect_LDADD = $(GST_LIBS)
+gst_inspect_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
 
-gstreamer_complete_LDADD = $(GST_LIBS)
-gstreamer_complete_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+gst_complete_LDADD = $(GST_LIBS)
+gst_complete_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
 
 if !GST_DISABLE_LOADSAVE
-gstreamer_compprep_LDADD = $(GST_LIBS)
-gstreamer_compprep_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+gst_compprep_LDADD = $(GST_LIBS)
+gst_compprep_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
 endif
 
 EXTRA_DIST = $(man_MANS)
