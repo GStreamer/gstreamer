@@ -22,7 +22,7 @@
 #endif
 #include <config.h>
 #include <gst/gst.h>
-
+#include <gst/video/video.h>
 #include "synaescope.h"
 
 #define GST_TYPE_SYNAESTHESIA (gst_synaesthesia_get_type())
@@ -93,10 +93,10 @@ GST_PAD_TEMPLATE_FACTORY (src_template,
     "video/x-raw-rgb",
       "bpp",		GST_PROPS_INT (32),
       "depth",		GST_PROPS_INT (32),
-      "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
-      "red_mask",   	GST_PROPS_INT (0xff0000),
-      "green_mask", 	GST_PROPS_INT (0xff00),
-      "blue_mask",  	GST_PROPS_INT (0xff),
+      "endianness", 	GST_PROPS_INT (G_BIG_ENDIAN),
+      "red_mask",   	GST_PROPS_INT (R_MASK_32),
+      "green_mask", 	GST_PROPS_INT (G_MASK_32),
+      "blue_mask",  	GST_PROPS_INT (B_MASK_32),
       "width",		GST_PROPS_INT_RANGE (16, 4096),
       "height",		GST_PROPS_INT_RANGE (16, 4096),
       "framerate",	GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
@@ -280,14 +280,14 @@ gst_synaesthesia_chain (GstPad *pad, GstBuffer *bufin)
 
     caps = GST_CAPS_NEW (
 		     "synaesthesiasrc",
-		     "video/raw",
+		     "video/x-raw-rgb",
 		       "format", 	GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")), 
 		       "bpp", 		GST_PROPS_INT (32), 
 		       "depth", 	GST_PROPS_INT (32), 
-		       "endianness", 	GST_PROPS_INT (G_BYTE_ORDER), 
-		       "red_mask", 	GST_PROPS_INT (0xff0000), 
-		       "green_mask", 	GST_PROPS_INT (0x00ff00), 
-		       "blue_mask", 	GST_PROPS_INT (0x0000ff), 
+		       "endianness", 	GST_PROPS_INT (G_BIG_ENDIAN), 
+		       "red_mask", 	GST_PROPS_INT (R_MASK_32), 
+		       "green_mask", 	GST_PROPS_INT (G_MASK_32), 
+		       "blue_mask", 	GST_PROPS_INT (B_MASK_32), 
 		       "width", 	GST_PROPS_INT (synaesthesia->width), 
 		       "height", 	GST_PROPS_INT (synaesthesia->height),
                        "framerate",	GST_PROPS_FLOAT (synaesthesia->fps)
