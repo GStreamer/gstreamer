@@ -2546,6 +2546,56 @@ name_is_valid (const gchar *name, GstPadPresence presence)
 }
 
 /**
+ * gst_pad_template_newv:
+ * @name_template: the name template.
+ * @direction: the #GstPadDirection of the template.
+ * @presence: the #GstPadPresence of the pad.
+ * @caps: a #GstCaps set for the template.
+ * @var_args: a NULL-terminated list of #GstCaps.
+ *
+ * Creates a new pad template with a name according to the given template
+ * and with the given arguments.
+ *
+ * Returns: a new #GstPadTemplate.
+ */
+GstPadTemplate*
+gst_pad_template_newv (const gchar *name_template,
+   		       GstPadDirection direction, GstPadPresence presence,
+		       GstCaps *caps, va_list var_args)
+{
+  GstPadTemplate *new;
+  GstCaps *thecaps = NULL;
+
+  g_return_val_if_fail (name_template != NULL, NULL);
+
+  if (!name_is_valid (name_template, presence))
+    return NULL;
+
+  new = g_object_new (gst_pad_template_get_type (),
+                      "name", name_template,
+                      NULL);
+
+  GST_PAD_TEMPLATE_NAME_TEMPLATE (new) = g_strdup (name_template);
+  GST_PAD_TEMPLATE_DIRECTION (new) = direction;
+  GST_PAD_TEMPLATE_PRESENCE (new) = presence;
+
+  GST_FLAG_SET (GST_OBJECT (new), GST_PAD_TEMPLATE_FIXED);
+  while (caps) {
+    if (!GST_CAPS_IS_FIXED (caps)) {
+      GST_FLAG_UNSET (GST_OBJECT (new), GST_PAD_TEMPLATE_FIXED);
+    }
+    thecaps = gst_caps_append (thecaps, caps);
+    caps = va_arg (var_args, GstCaps*);
+  }
+  
+  GST_PAD_TEMPLATE_CAPS (new) = thecaps;
+  gst_caps_ref (thecaps);
+  gst_caps_sink (thecaps);
+
+  return new;
+}
+
+/**
  * gst_pad_template_new:
  * @name_template: the name template.
  * @direction: the #GstPadDirection of the template.
@@ -2565,36 +2615,13 @@ gst_pad_template_new (const gchar *name_template,
 {
   GstPadTemplate *new;
   va_list var_args;
-  GstCaps *thecaps = NULL;
-
-  g_return_val_if_fail (name_template != NULL, NULL);
-
-  if (!name_is_valid (name_template, presence))
-    return NULL;
-
-  new = g_object_new (gst_pad_template_get_type (),
-                      "name", name_template,
-                      NULL);
-
-  GST_PAD_TEMPLATE_NAME_TEMPLATE (new) = g_strdup (name_template);
-  GST_PAD_TEMPLATE_DIRECTION (new) = direction;
-  GST_PAD_TEMPLATE_PRESENCE (new) = presence;
 
   va_start (var_args, caps);
 
-  GST_FLAG_SET (GST_OBJECT (new), GST_PAD_TEMPLATE_FIXED);
-  while (caps) {
-    if (!GST_CAPS_IS_FIXED (caps)) {
-      GST_FLAG_UNSET (GST_OBJECT (new), GST_PAD_TEMPLATE_FIXED);
-    }
-    thecaps = gst_caps_append (thecaps, caps);
-    caps = va_arg (var_args, GstCaps*);
-  }
+  new = gst_pad_template_newv (name_template, direction, presence, 
+                               caps, var_args);
+
   va_end (var_args);
-  
-  GST_PAD_TEMPLATE_CAPS (new) = thecaps;
-  gst_caps_ref (thecaps);
-  gst_caps_sink (thecaps);
 
   return new;
 }

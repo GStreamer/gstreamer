@@ -510,6 +510,10 @@ GstPadTemplate*		gst_pad_template_new			(const gchar *name_template,
 		                                        	 GstPadDirection direction, GstPadPresence presence,
 								 GstCaps *caps, ...);
 
+GstPadTemplate*		gst_pad_template_newv			(const gchar *name_template,
+		                                        	 GstPadDirection direction, GstPadPresence presence,
+								 GstCaps *caps, va_list var_args);
+
 GstCaps*		gst_pad_template_get_caps		(GstPadTemplate *templ);
 GstCaps*		gst_pad_template_get_caps_by_name	(GstPadTemplate *templ, const gchar *name);
 
