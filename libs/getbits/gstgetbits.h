@@ -3,11 +3,7 @@
 
 #include <stdio.h>
 
-#include <config.h>
-// FIXME - remove this HAVE_LIBMMX - let configure set it.
-#undef HAVE_LIBMMX
-
-//#include <byteswap.h>
+#include <gst/gst.h>
 
 #ifdef HAVE_LIBMMX
 #include <mmx.h>
@@ -15,17 +11,6 @@
 #ifdef HAVE_LIBSSE
 #include <sse.h>
 #endif /* HAVE_LIBSSE */
-
-// FIXME - let configure set DEBUG_ENABLED.
-/* debugging */
-#ifndef DEBUG
-#ifdef DEBUG_ENABLED
-#define DEBUG(format, args...) g_print("DEBUG:(%d) " format, getpid() , ##args)
-#else
-#define DEBUG(format, args...)
-#endif
-#endif
-
 
 #ifdef WORDS_BIGENDIAN
 #  define swab32(x) (x)

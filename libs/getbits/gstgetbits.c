@@ -162,9 +162,9 @@ void gst_getbits_init(gst_getbits_t *gb, GstGetbitsCallback callback, void *data
 
 #ifdef HAVE_LIBMMX
   if (1) {
-    gb->getbits = getbits_mmx;
-//    gb->backbits = getbits_back_mmx;
-//    gb->backbytes = getbits_byteback_mmx;
+    gb->getbits = _gst_getbits_mmx;
+//    gb->backbits = _gst_getbits_back_mmx;
+//    gb->backbytes = _gst_getbits_byteback_mmx;
   } else
 #endif /* HAVE_LIBMMX */
   {
