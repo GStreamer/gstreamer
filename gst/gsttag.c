@@ -438,12 +438,14 @@ gst_tag_list_add_value_internal (GstStructure *list, GstTagMergeMode mode, GQuar
     }
   }
 }
-static void
-gst_tag_list_copy_foreach (GstStructure *structure, GQuark tag, GValue *value, gpointer user_data)
+static int
+gst_tag_list_copy_foreach (GQuark tag, GValue *value, gpointer user_data)
 {
   GstTagCopyData *copy = (GstTagCopyData *) user_data;
 
   gst_tag_list_add_value_internal (copy->list, copy->mode, tag, value);
+
+  return TRUE;
 }
 /**
  * gst_tag_list_insert:
@@ -631,14 +633,16 @@ gst_tag_list_remove_tag (GstTagList *list, const gchar *tag)
 }
 typedef struct {
   GstTagForeachFunc	func;
+  GstTagList *          tag_list;
   gpointer		data;
 } TagForeachData;
-static void 
-structure_foreach_wrapper (GstStructure *structure, GQuark field_id, 
+static int
+structure_foreach_wrapper (GQuark field_id, 
 	GValue *value, gpointer user_data)
 {
   TagForeachData *data = (TagForeachData *) user_data;
-  data->func (GST_TAG_LIST (structure), g_quark_to_string (field_id), data->data);
+  data->func (data->tag_list, g_quark_to_string (field_id), data->data);
+  return TRUE;
 }
 /**
  * gst_tag_list_foreach:
@@ -658,6 +662,7 @@ gst_tag_list_foreach (GstTagList *list, GstTagForeachFunc func, gpointer user_da
   g_return_if_fail (func != NULL);
   
   data.func = func;
+  data.tag_list = list;
   data.data = user_data;
   gst_structure_field_foreach ((GstStructure *) list, structure_foreach_wrapper, &data);
 }

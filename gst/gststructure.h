@@ -31,6 +31,11 @@ typedef struct _GstStructureField GstStructureField;
 typedef gboolean (*GstStructureForeachFunc) (GQuark field_id, GValue *value,
     gpointer user_data);
 
+struct _GstStructureField {
+    GQuark name;
+    GValue value;
+};
+
 struct _GstStructure {
   GType type;
   int len;
