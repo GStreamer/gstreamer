@@ -1,3 +1,14 @@
+2004-06-29  Benjamin Otte  <otte@gnome.org>
+
+	* sys/oss/gstosssink.c:
+	* sys/oss/gstosssrc.c:
+	  advertise correct template caps - we indeed do non-native endianness
+	  and 8bit audio has no endianness
+	* sys/ximage/ximagesink.c: (gst_ximagesink_getcaps):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_getcaps):
+	  avoid (wrong) duplications in getcaps function and return
+	  template caps
+
 2004-06-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_recover_policy_get_type),

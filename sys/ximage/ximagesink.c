@@ -787,9 +787,7 @@ gst_ximagesink_getcaps (GstPad * pad)
   if (ximagesink->xcontext)
     return gst_caps_copy (ximagesink->xcontext->caps);
 
-  return gst_caps_from_string ("video/x-raw-rgb, "
-      "framerate = (double) [ 1, 100 ], "
-      "width = (int) [ 0, MAX ], " "height = (int) [ 0, MAX ]");
+  return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
 }
 
 static GstPadLinkReturn
