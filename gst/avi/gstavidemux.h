@@ -108,6 +108,7 @@ struct _GstAviDemux {
   gboolean 	 seek_pending;
   gint64 	 seek_offset;
   guint64 	 last_seek;
+  gboolean	 restart;
 };
 
 struct _GstAviDemuxClass {

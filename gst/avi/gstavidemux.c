@@ -153,6 +153,10 @@ static void 	gst_avi_demux_init		(GstAviDemux *avi_demux);
 
 static void 	gst_avi_demux_loop 		(GstElement *element);
 
+static gboolean gst_avi_demux_process_chunk 	(GstAviDemux *avi_demux, guint64 *filepos,
+			    			 guint32 desired_tag,
+			    			 gint rec_depth, guint32 *chunksize);
+
 static gboolean gst_avi_demux_send_event 	(GstElement *element, GstEvent *event);
 
 static gboolean gst_avi_demux_handle_src_event 	(GstPad *pad, GstEvent *event);
@@ -231,6 +235,7 @@ gst_avi_demux_init (GstAviDemux *avi_demux)
   avi_demux->index_entries = NULL;
   avi_demux->index_size = 0;
   avi_demux->seek_pending = 0;
+  avi_demux->restart = FALSE;
 
 }
 
@@ -681,6 +686,14 @@ gst_avi_demux_parse_index (GstAviDemux *avi_demux,
     target->size     = entry[i].size;
     target->offset   = entry[i].offset;
 
+    /* figure out if the index is 0 based or relative to the MOVI start */
+    if (i == 0) {
+      if (target->offset < filepos)
+	avi_demux->index_offset = filepos;
+      else
+	avi_demux->index_offset = 0;
+    }
+
     target->bytes_before = stream->total_bytes;
     target->frames_before = stream->total_frames;
 
@@ -714,7 +727,6 @@ gst_avi_demux_parse_index (GstAviDemux *avi_demux,
   gst_buffer_unref (buf);
 
 end:
-  avi_demux->index_offset = filepos;
   GST_DEBUG (GST_CAT_PLUGIN_INFO, "index offset at %08lx", filepos);
 
   if (!gst_bytestream_seek (avi_demux->bs, filepos, GST_SEEK_METHOD_SET)) {
@@ -1060,14 +1072,6 @@ gst_avi_demux_read_chunk (GstAviDemux *avi_demux, guint32 *id, guint32 *size)
   GstByteStream *bs = avi_demux->bs;
   guint32       got_bytes;
 
-  if (avi_demux->seek_pending) {
-    GST_DEBUG (0, "avidemux: seek pending to %lld %08llx", avi_demux->seek_offset, avi_demux->seek_offset);
-    if (!gst_bytestream_seek (avi_demux->bs, avi_demux->seek_offset, GST_SEEK_METHOD_SET)) {
-      GST_INFO (GST_CAT_PLUGIN_INFO, "avidemux: could not seek");
-    }
-    avi_demux->seek_pending = FALSE;
-  }
-
   do {
     got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&chunk, sizeof (gst_riff_chunk));
     if (got_bytes == sizeof (gst_riff_chunk)) {
@@ -1080,6 +1084,36 @@ gst_avi_demux_read_chunk (GstAviDemux *avi_demux, guint32 *id, guint32 *size)
     }
   } while (gst_avi_demux_handle_sink_event (avi_demux));
 
+  return TRUE;
+}
+
+static gboolean
+gst_avi_demux_process_movi (GstAviDemux *avi_demux, gint rec_depth, guint64 *filepos)
+{
+  guint32 subchunksize = 0;
+
+  while (!avi_demux->restart) {	/* while not showed all: */
+    if (avi_demux->seek_pending) {
+      GST_DEBUG (0, "avidemux: seek pending to %lld %08llx", avi_demux->seek_offset, avi_demux->seek_offset);
+      if (!gst_bytestream_seek (avi_demux->bs, avi_demux->seek_offset, GST_SEEK_METHOD_SET)) {
+        GST_INFO (GST_CAT_PLUGIN_INFO, "avidemux: could not seek");
+      }
+      else {
+        *filepos = avi_demux->seek_offset;
+      }
+      avi_demux->seek_pending = FALSE;
+    }
+
+    GST_INFO (GST_CAT_PLUGIN_INFO, "process chunk filepos %08llx", *filepos);
+    /* recurse for subchunks of RIFF and LIST chunks: */
+    if (!gst_avi_demux_process_chunk (avi_demux, filepos, 0,
+			   rec_depth + 1, &subchunksize)) {
+      return FALSE;
+    }
+    /* we are running in an infinite loop, we need to _yield 
+     * from time to time */
+    gst_element_yield (GST_ELEMENT (avi_demux));
+  }
   return TRUE;
 }
 
@@ -1133,7 +1167,9 @@ gst_avi_demux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
 	  }
 	  if  (avi_demux->avih.bufsize)
 	    gst_bytestream_size_hint (avi_demux->bs, avi_demux->avih.bufsize);
-          break;
+
+	  gst_avi_demux_process_movi (avi_demux, rec_depth, filepos);
+	  goto done;
 	default:
           /* flush the form type */
           gst_bytestream_flush_fast (bs, sizeof (guint32));
@@ -1154,6 +1190,8 @@ gst_avi_demux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
 			  %u %u\n", *filepos, *chunksize, datashowed);
 	  return FALSE;
 	}
+	if (avi_demux->restart)
+          goto done;
 
 	subchunksize = ((subchunksize + 1) & ~1);
 
@@ -1261,9 +1299,6 @@ gst_avi_demux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
   }
 
 done:
-  /* we are running in an infinite loop, we need to _yield 
-   * from time to time */
-  gst_element_yield (GST_ELEMENT (avi_demux));
 
   return TRUE;
 }
@@ -1280,13 +1315,16 @@ gst_avi_demux_loop (GstElement *element)
 
   avi_demux = GST_AVI_DEMUX (element);
 
+  avi_demux->restart = FALSE;
+
   /* this is basically an infinite loop */
   if (!gst_avi_demux_process_chunk (avi_demux, &filepos, GST_RIFF_TAG_RIFF, 0, &chunksize)) {
     gst_element_error (element, "This doesn't appear to be an AVI file");
     return;
   }
-  /* if we exit the loop we are EOS */
-  gst_pad_event_default (avi_demux->sinkpad, gst_event_new (GST_EVENT_EOS));
+  if (!avi_demux->restart)
+    /* if we exit the loop we are EOS */
+    gst_pad_event_default (avi_demux->sinkpad, gst_event_new (GST_EVENT_EOS));
 }
 
 static GstElementStateReturn
@@ -1299,6 +1337,7 @@ gst_avi_demux_change_state (GstElement *element)
       break;
     case GST_STATE_READY_TO_PAUSED:
       avi_demux->bs = gst_bytestream_new (avi_demux->sinkpad);
+      avi_demux->last_seek = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -1306,6 +1345,7 @@ gst_avi_demux_change_state (GstElement *element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       gst_bytestream_destroy (avi_demux->bs);
+      avi_demux->restart = TRUE;
       break;
     case GST_STATE_READY_TO_NULL:
       break;
