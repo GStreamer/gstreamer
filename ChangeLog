@@ -1,3 +1,11 @@
+2004-06-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/elements/gstidentity.c: (gst_identity_class_init),
+	(gst_identity_init), (gst_identity_chain),
+	(gst_identity_set_property), (gst_identity_get_property):
+	* gst/elements/gstidentity.h:
+	  check for perfect stream
+
 2004-06-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/elements/gstidentity.c: (gst_identity_chain):

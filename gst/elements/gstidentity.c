@@ -59,7 +59,8 @@ enum
   ARG_SILENT,
   ARG_LAST_MESSAGE,
   ARG_DUMP,
-  ARG_SYNC
+  ARG_SYNC,
+  ARG_CHECK_PERFECT
 };
 
 
@@ -140,6 +141,10 @@ gst_identity_class_init (GstIdentityClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
       g_param_spec_boolean ("sync", "Synchronize",
           "Synchronize to pipeline clock", FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CHECK_PERFECT,
+      g_param_spec_boolean ("check-perfect", "Check For Perfect Stream",
+          "Verify that the stream is time- and data-contiguous", FALSE,
+          G_PARAM_READWRITE));
 
   gst_identity_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -176,6 +181,10 @@ gst_identity_init (GstIdentity * identity)
   identity->drop_probability = 0.0;
   identity->silent = FALSE;
   identity->sync = FALSE;
+  identity->check_perfect = FALSE;
+  identity->prev_timestamp = GST_CLOCK_TIME_NONE;
+  identity->prev_duration = GST_CLOCK_TIME_NONE;
+  identity->prev_offset_end = -1;
   identity->dump = FALSE;
   identity->last_message = NULL;
   identity->srccaps = NULL;
@@ -219,6 +228,35 @@ gst_identity_chain (GstPad * pad, GstData * _data)
     }
     gst_pad_event_default (pad, event);
     return;
+  }
+
+  /* see if we need to do perfect stream checking */
+  /* invalid timestamp drops us out of check.  FIXME: maybe warn ? */
+  if (identity->check_perfect &&
+      GST_BUFFER_TIMESTAMP (buf) != GST_CLOCK_TIME_NONE) {
+    /* check if we had a previous buffer to compare to */
+    if (identity->prev_timestamp != GST_CLOCK_TIME_NONE) {
+      if (identity->prev_timestamp + identity->prev_duration !=
+          GST_BUFFER_TIMESTAMP (buf)) {
+        GST_WARNING_OBJECT (identity,
+            "Buffer not time-contiguous with previous one: " "prev ts %"
+            GST_TIME_FORMAT ", prev dur %" GST_TIME_FORMAT ", new ts %"
+            GST_TIME_FORMAT, GST_TIME_ARGS (identity->prev_timestamp),
+            GST_TIME_ARGS (identity->prev_duration),
+            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+      }
+      if (identity->prev_offset_end != GST_BUFFER_OFFSET (buf)) {
+        GST_WARNING_OBJECT (identity,
+            "Buffer not data-contiguous with previous one: "
+            "prev offset_end %" G_GINT64_FORMAT ", new offset %"
+            G_GINT64_FORMAT, identity->prev_offset_end,
+            GST_BUFFER_OFFSET (buf));
+      }
+    }
+    /* update prev values */
+    identity->prev_timestamp = GST_BUFFER_TIMESTAMP (buf);
+    identity->prev_duration = GST_BUFFER_DURATION (buf);
+    identity->prev_offset_end = GST_BUFFER_OFFSET_END (buf);
   }
 
   if (identity->error_after >= 0) {
@@ -352,6 +390,9 @@ gst_identity_set_property (GObject * object, guint prop_id,
     case ARG_SYNC:
       identity->sync = g_value_get_boolean (value);
       break;
+    case ARG_CHECK_PERFECT:
+      identity->check_perfect = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -396,6 +437,9 @@ gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_SYNC:
       g_value_set_boolean (value, identity->sync);
+      break;
+    case ARG_CHECK_PERFECT:
+      g_value_set_boolean (value, identity->check_perfect);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

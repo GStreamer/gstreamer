@@ -58,6 +58,10 @@ struct _GstIdentity {
   gboolean 	 silent;
   gboolean 	 dump;
   gboolean 	 sync;
+  gboolean 	 check_perfect;
+  GstClockTime   prev_timestamp;
+  GstClockTime   prev_duration;
+  guint64        prev_offset_end;
   GstClock	*clock;
   gchar 	*last_message;
   GstCaps	*srccaps;
