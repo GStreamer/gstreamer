@@ -719,8 +719,7 @@ gst_alsa_get_caps_internal (snd_pcm_format_t format)
 }
 
 static inline void
-add_channels (GstStructure * structure, gint min_rate, gint max_rate,
-    gint min_channels, gint max_channels)
+add_rates (GstStructure * structure, gint min_rate, gint max_rate)
 {
   if (min_rate < 0) {
     min_rate = GST_ALSA_MIN_RATE;
@@ -743,6 +742,11 @@ add_channels (GstStructure * structure, gint min_rate, gint max_rate,
     gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE, min_rate,
         max_rate, NULL);
   }
+}
+
+static inline void
+add_channels (GstStructure * structure, gint min_channels, gint max_channels)
+{
   if (min_channels < 0) {
     min_channels = 1;
     max_channels = GST_ALSA_MAX_CHANNELS;
@@ -785,7 +789,8 @@ gst_alsa_caps (snd_pcm_format_t format, gint rate, gint channels)
     g_assert (ret_caps != NULL);
     g_assert (gst_caps_get_size (ret_caps) == 1);
 
-    add_channels (gst_caps_get_structure (ret_caps, 0), rate, -1, channels, -1);
+    add_rates (gst_caps_get_structure (ret_caps, 0), rate, -1);
+    add_channels (gst_caps_get_structure (ret_caps, 0), channels, -1);
   } else {
     int i;
     GstCaps *temp;
@@ -797,7 +802,8 @@ gst_alsa_caps (snd_pcm_format_t format, gint rate, gint channels)
       /* can be NULL, because not all alsa formats can be specified as caps */
       if (temp != NULL) {
         g_assert (gst_caps_get_size (temp) == 1);
-        add_channels (gst_caps_get_structure (temp, 0), rate, -1, channels, -1);
+        add_rates (gst_caps_get_structure (temp, 0), rate, -1);
+        add_channels (gst_caps_get_structure (temp, 0), channels, -1);
         gst_caps_append (ret_caps, temp);
       }
     }
@@ -807,6 +813,107 @@ gst_alsa_caps (snd_pcm_format_t format, gint rate, gint channels)
   return ret_caps;
 }
 
+
+static int
+gst_alsa_check_sample_rates (snd_pcm_t * device_handle,
+    snd_pcm_hw_params_t * hw_params, unsigned int *tested_rates,
+    GValue * supported_rates)
+{
+  int i;
+  char init_done = 0;
+
+  GValue value = { 0 };
+  g_value_init (&value, G_TYPE_INT);
+
+  for (i = 0; tested_rates[i] != 0; i++) {
+    if (!snd_pcm_hw_params_test_rate (device_handle, hw_params, tested_rates[i],
+            0)) {
+      if (!init_done) {
+        /* at least one sample rate supported */
+        g_value_init (supported_rates, GST_TYPE_LIST);
+        init_done = 1;
+      }
+
+      g_value_set_int (&value, tested_rates[i]);
+      gst_value_list_append_value (supported_rates, &value);
+    }
+  }
+
+// only one -> G_TYPE_INT
+
+  g_value_unset (&value);
+
+  return init_done;
+}
+
+static int
+gst_alsa_rates_probe (snd_pcm_t * device_handle,
+    snd_pcm_hw_params_t * hw_params, GValue * supported_rates)
+{
+  unsigned int common_rates[] =
+      { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 88200,
+    96000, 192000, 0
+  };
+  unsigned int uncommon_rates[] = { 12345, 0 }; /* this dummy sample rate should only be supported by a software device */
+
+  int ret;
+  int dir;
+  unsigned int min_rate, max_rate;
+
+  /* Get MIN/MAX supported rate */
+  snd_pcm_hw_params_get_rate_min (hw_params, &min_rate, &dir);
+  min_rate =
+      min_rate <
+      GST_ALSA_MIN_RATE ? GST_ALSA_MIN_RATE : (min_rate +
+      GST_ALSA_DIR_MIN (dir));
+  snd_pcm_hw_params_get_rate_max (hw_params, &max_rate, &dir);
+  max_rate =
+      max_rate >
+      GST_ALSA_MAX_RATE ? GST_ALSA_MAX_RATE : (max_rate +
+      GST_ALSA_DIR_MAX (dir));
+
+
+  ret =
+      gst_alsa_check_sample_rates (device_handle, hw_params, uncommon_rates,
+      supported_rates);
+  if (ret) {
+    /* Uncommon sample rates supported, it is certainly a "software"/dummy device */
+    g_value_unset (supported_rates);
+    g_value_init (supported_rates, GST_TYPE_INT_RANGE);
+
+    if (min_rate != max_rate) {
+      gst_value_set_int_range (supported_rates, min_rate, max_rate);
+    } else {
+      /* Only one supported */
+      g_value_unset (supported_rates);
+      g_value_init (supported_rates, G_TYPE_INT);
+      g_value_set_int (supported_rates, min_rate);
+    }
+  } else {
+    /* Check common sample rates for real hardware support */
+    ret =
+        gst_alsa_check_sample_rates (device_handle, hw_params, common_rates,
+        supported_rates);
+    if (ret) {
+      if (gst_value_list_get_size (supported_rates) == 1) {
+        /* Only one supported */
+        GValue *rate = (GValue *) gst_value_list_get_value (supported_rates, 0);
+
+        min_rate = g_value_get_int (rate);
+        g_value_unset (supported_rates);
+        g_value_init (supported_rates, G_TYPE_INT);
+        g_value_set_int (supported_rates, min_rate);
+      }
+    } else {
+      /* No sample rate supported ?! WTF */
+      return 0;
+    }
+  }
+
+  return 0;
+}
+
+
 /* Return better caps when device is open */
 GstCaps *
 gst_alsa_get_caps (GstPad * pad)
@@ -815,7 +922,7 @@ gst_alsa_get_caps (GstPad * pad)
   snd_pcm_hw_params_t *hw_params;
   snd_pcm_format_mask_t *mask;
   int i;
-  unsigned int min_rate, max_rate;
+  GValue supported_rates = { 0 };
   unsigned int min_period_cnt, max_period_cnt;
   snd_pcm_uframes_t min_period_sz, max_period_sz;
   snd_pcm_uframes_t min_buffer_sz, max_buffer_sz;
@@ -840,26 +947,20 @@ gst_alsa_get_caps (GstPad * pad)
     min_channels = 1;
     max_channels = -1;
   } else {
-    ERROR_CHECK (snd_pcm_hw_params_get_channels_min (hw_params, &min_rate),
+    ERROR_CHECK (snd_pcm_hw_params_get_channels_min (hw_params, &min_channels),
         "Couldn't get minimum channel count for device %s: %s", this->device);
-    ERROR_CHECK (snd_pcm_hw_params_get_channels_max (hw_params, &max_rate),
+    ERROR_CHECK (snd_pcm_hw_params_get_channels_max (hw_params, &max_channels),
         "Couldn't get maximum channel count for device %s: %s", this->device);
-    min_channels = min_rate;
+    min_channels = min_channels < 1 ? 1 : min_channels;
     max_channels =
-        max_rate > GST_ALSA_MAX_CHANNELS ? GST_ALSA_MAX_CHANNELS : max_rate;
+        max_channels >
+        GST_ALSA_MAX_CHANNELS ? GST_ALSA_MAX_CHANNELS : max_channels;
   }
 
-  ERROR_CHECK (snd_pcm_hw_params_get_rate_min (hw_params, &min_rate, &i),
-      "Couldn't get minimum rate for device %s: %s", this->device);
-  min_rate =
-      min_rate <
-      GST_ALSA_MIN_RATE ? GST_ALSA_MIN_RATE : (min_rate + GST_ALSA_DIR_MIN (i));
-  ERROR_CHECK (snd_pcm_hw_params_get_rate_max (hw_params, &max_rate, &i),
-      "Couldn't get maximum rate for device %s: %s", this->device);
-  max_rate =
-      max_rate >
-      GST_ALSA_MAX_RATE ? GST_ALSA_MAX_RATE : (max_rate + GST_ALSA_DIR_MAX (i));
-
+  /* Check available sample rates */
+  if (!gst_alsa_rates_probe (this->handle, hw_params, &supported_rates)) {
+    ;
+  }
 
   /* Probe period_count and adjust default/user provided value against probed MIN/MAX */
   ERROR_CHECK (snd_pcm_hw_params_get_periods_min (hw_params, &min_period_cnt,
@@ -940,8 +1041,12 @@ gst_alsa_get_caps (GstPad * pad)
         gint n;
 
         g_assert (gst_caps_get_size (caps) == 1);
-        add_channels (gst_caps_get_structure (caps, 0), min_rate, max_rate,
-            min_channels, max_channels);
+
+        gst_structure_set_value (gst_caps_get_structure (caps, 0), "rate",
+            &supported_rates);
+
+        add_channels (gst_caps_get_structure (caps, 0), min_channels,
+            max_channels);
 
         /* channel configuration */
         /* MIN used to spped up because we don't support more than 8 channels */
@@ -999,6 +1104,8 @@ gst_alsa_get_caps (GstPad * pad)
   }
   gst_caps_do_simplify (ret);
   GST_LOG_OBJECT (this, "get_caps returns %P", ret);
+
+  g_value_unset (&supported_rates);
 
   this->cached_caps = gst_caps_copy (ret);
   return ret;
