@@ -1,3 +1,10 @@
+2004-12-16  Daniel Gazard  <dany42@free.fr>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstelementfactory.c: (gst_element_factory_create):
+	  Fix compile failure if compiling without libxml2 support (#149936).
+
 2004-12-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/manual/advanced-autoplugging.xml:

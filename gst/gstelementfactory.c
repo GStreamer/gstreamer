@@ -27,7 +27,9 @@
 #include "gstregistrypool.h"
 #include "gstinfo.h"
 #include "gsturi.h"
+#ifndef GST_DISABLE_REGISTRY
 #include "registries/gstxmlregistry.h"  /* g_critical in gst_element_factory_create */
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (element_factory_debug);
 #define GST_CAT_DEFAULT element_factory_debug
@@ -296,6 +298,7 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
     GST_INFO ("creating \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
 
   if (factory->type == 0) {
+#ifndef GST_DISABLE_REGISTRY
     GstPlugin *plugin = GST_PLUGIN_FEATURE (factory)->manager;
 
     g_critical
@@ -304,6 +307,10 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
         gst_plugin_get_name (plugin), gst_plugin_get_filename (plugin),
         GST_IS_XML_REGISTRY (plugin->manager) ? GST_XML_REGISTRY (plugin->
             manager)->location : "Unknown");
+#else
+    g_critical ("Factory for `%s' has no type",
+        GST_PLUGIN_FEATURE_NAME (factory));
+#endif
     return NULL;
   }
 
