@@ -631,7 +631,7 @@ gst_wavenc_chain (GstPad * pad, GstData * _data)
         gst_pad_event_default (wavenc->sinkpad, GST_EVENT (buf));
       }
     } else {
-      gst_pad_event_default (wavenc->srcpad, GST_EVENT (buf));
+      gst_pad_event_default (wavenc->sinkpad, GST_EVENT (buf));
     }
     return;
   }
