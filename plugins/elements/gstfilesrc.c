@@ -401,7 +401,7 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
   GST_BUFFER_SIZE (buf) = size;
   GST_BUFFER_MAXSIZE (buf) = size;
   GST_BUFFER_OFFSET (buf) = offset;
-  GST_BUFFER_TIMESTAMP (buf) = -1LL;
+  GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_POOL_PRIVATE (buf) = src;
   GST_BUFFER_FREE_FUNC (buf) = (GstDataFreeFunction) gst_filesrc_free_parent_mmap;
 

@@ -113,9 +113,10 @@ gst_fdsrc_class_init (GstFdSrcClass *klass)
 }
 
 static void gst_fdsrc_init(GstFdSrc *fdsrc) {
-  fdsrc->srcpad = gst_pad_new("src",GST_PAD_SRC);
-  gst_pad_set_get_function(fdsrc->srcpad,gst_fdsrc_get);
-  gst_element_add_pad(GST_ELEMENT(fdsrc),fdsrc->srcpad);
+  fdsrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  
+  gst_pad_set_get_function (fdsrc->srcpad, gst_fdsrc_get);
+  gst_element_add_pad (GST_ELEMENT (fdsrc), fdsrc->srcpad);
 
   fdsrc->fd = 0;
   fdsrc->curoffset = 0;
@@ -176,28 +177,23 @@ gst_fdsrc_get(GstPad *pad)
   GstBuffer *buf;
   glong readbytes;
 
-  g_return_val_if_fail (pad != NULL, NULL);
-  src = GST_FDSRC(gst_pad_get_parent (pad));
+  src = GST_FDSRC (gst_pad_get_parent (pad));
 
   /* create the buffer */
-  /* FIXME: should eventually use a bufferpool for this*/
-  buf = gst_buffer_new ();
-  g_return_val_if_fail (buf, NULL);
-
-  /* allocate the space for the buffer data */
-  GST_BUFFER_DATA(buf) = g_malloc(src->blocksize);
-  g_return_val_if_fail(GST_BUFFER_DATA(buf) != NULL, NULL);
+  buf = gst_buffer_new_and_alloc (src->blocksize);
 
   /* read it in from the file */
-  readbytes = read(src->fd,GST_BUFFER_DATA(buf),src->blocksize);
+  readbytes = read (src->fd, GST_BUFFER_DATA (buf), src->blocksize);
+
   /* if nothing was read, we're in eos */
   if (readbytes == 0) {
     gst_element_set_eos (GST_ELEMENT (src));
     return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
   }
 
-  GST_BUFFER_OFFSET(buf) = src->curoffset;
-  GST_BUFFER_SIZE(buf) = readbytes;
+  GST_BUFFER_OFFSET (buf) = src->curoffset;
+  GST_BUFFER_SIZE (buf) = readbytes;
+  GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
   src->curoffset += readbytes;
 
   /* we're done, return the buffer */
