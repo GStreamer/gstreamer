@@ -62,7 +62,7 @@ class DVDPlay(object):
 
    def main(self):
       if len(sys.argv) < 5:
-         print 'usage: %s dvdlocation title chapter angle' % argv[0]
+         print 'usage: %s dvdlocation title chapter angle' % sys.argv[0]
          return -1
 
       self.location = sys.argv[1]
@@ -100,9 +100,9 @@ class DVDPlay(object):
       for e in (self.v_queue, self.v_decode, self.color, self.show):
          self.v_thread.add(e)
 
-      self.v_queue.connect('src',self.v_decode,'sink')
-      self.v_decode.connect('src',self.color,'sink')
-      self.color.connect('src',self.show,'sink')
+      self.v_queue.connect(self.v_decode)
+      self.v_decode.connect(self.color)
+      self.color.connect(self.show)
 
    def build_audio_thread(self):
       # ***** pre-construct the audio thread *****
@@ -121,8 +121,8 @@ class DVDPlay(object):
       for e in (self.a_queue, self.a_decode, self.osssink):
          self.a_thread.add(e)
 
-      self.a_queue.connect('src',self.a_decode,'sink')
-      self.a_decode.connect('src',self.osssink,'sink')
+      self.a_queue.connect(self.a_decode)
+      self.a_decode.connect(self.osssink)
 
    def build(self):
       # ***** construct the main pipeline *****
@@ -143,7 +143,7 @@ class DVDPlay(object):
       self.pipeline.add(self.src)
       self.pipeline.add(self.parse)
 
-      self.src.connect('src',self.parse,'sink')
+      self.src.connect(self.parse)
 
       # pre-construct the audio/video threads
       self.build_video_thread()

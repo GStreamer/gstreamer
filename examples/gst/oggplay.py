@@ -62,7 +62,7 @@ def main():
    previous = None
    for e in (filesrc, decoder, osssink):
       if previous:
-         previous.connect('src', e, 'sink')
+         previous.connect(e)
       previous = e
 
    # start playing

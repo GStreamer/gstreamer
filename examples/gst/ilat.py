@@ -52,7 +52,7 @@ def build(filters, b):
    previous = None
    for e in elements:
       if previous:
-         previous.connect('src', e, 'sink')
+         previous.connect(e)
       previous = e
 
    return bin

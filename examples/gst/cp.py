@@ -59,7 +59,7 @@ def filter(filters):
    previous = None
    for e in elements:
       if previous:
-         previous.connect('src', e, 'sink')
+         previous.connect(e)
       previous = e
 
    # start playing
@@ -74,7 +74,8 @@ def filter(filters):
 
 def main():
    "A GStreamer based cp(1) with stats"
-   gst_debug_set_categories(0)
+   #gst_info_set_categories(-1)
+   #gst_debug_set_categories(-1)
 
    stats = gst_element_factory_make ('statistics', 'stats');
    if not stats:

@@ -49,7 +49,7 @@ def main():
       bin.add(e)
 
    # connect the elements
-   res = src.connect('src', sink, 'sink')
+   res = src.connect(sink)
    assert res
 
    # start playing
