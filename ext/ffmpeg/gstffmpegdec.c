@@ -445,7 +445,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
           return;
         }
 
-        if (have_data) {
+        if (len >= 0 && have_data) {
           GST_BUFFER_SIZE (outbuf) = have_data;
           if (GST_CLOCK_TIME_IS_VALID (expected_ts)) {
             GST_BUFFER_TIMESTAMP (outbuf) = expected_ts;
@@ -492,12 +492,16 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
                   oclass->in_plugin->name));
 	  if (caps != NULL)
 	    gst_caps_free (caps);
+          gst_buffer_unref (outbuf);
           return;
         }
 	gst_caps_free (caps);
       }
 
-      gst_pad_push (ffmpegdec->srcpad, GST_DATA (outbuf));
+      if (GST_PAD_IS_USABLE (ffmpegdec->srcpad))
+        gst_pad_push (ffmpegdec->srcpad, GST_DATA (outbuf));
+      else
+        gst_buffer_unref (outbuf);
     }
 
     size -= len;
