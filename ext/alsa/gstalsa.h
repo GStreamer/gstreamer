@@ -78,8 +78,22 @@ GST_DEBUG_CATEGORY_EXTERN (alsa_debug);
 
 #define GST_ALSA_MIN_RATE	8000
 #define GST_ALSA_MAX_RATE	192000
+#define GST_ALSA_MIN_PERIOD_CNT	2
+#define GST_ALSA_MAX_PERIOD_CNT	64
+#define GST_ALSA_MIN_PERIOD_SZ	2
+#define GST_ALSA_MAX_PERIOD_SZ	8192
+#define GST_ALSA_MIN_BUFFER_SZ	GST_ALSA_MIN_PERIOD_CNT*GST_ALSA_MIN_PERIOD_SZ
+#define GST_ALSA_MAX_BUFFER_SZ	65536
 #define GST_ALSA_MAX_TRACKS	64 /* we don't support more than 64 tracks */
 #define GST_ALSA_MAX_CHANNELS	32 /* tracks can have up to 32 channels */
+
+/* a few alsa functions return an int value and a 'direction', -1, 0 or +1
+  0 = exact value
+ -1 = real value is up to 1 before given value
+ +1 = real value is up to 1 after given value
+*/
+#define GST_ALSA_DIR_MIN(i) ((i == 1) ? 1 : 0)
+#define GST_ALSA_DIR_MAX(i) ((i ==-1) ?-1 : 0)
 
 /* Mono is 1 channel ; the 5.1 standard is 6 channels. The value for
    GST_ALSA_MAX_CHANNELS comes from alsa/mixer.h. */

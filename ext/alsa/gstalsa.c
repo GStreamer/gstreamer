@@ -177,19 +177,22 @@ gst_alsa_class_init (gpointer g_class, gpointer class_data)
   g_object_class_install_property (object_class, ARG_PERIODCOUNT,
       g_param_spec_int ("period-count", "Period count",
           "Number of hardware buffers to use",
-          2, 64, 2, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          GST_ALSA_MIN_PERIOD_CNT, GST_ALSA_MAX_PERIOD_CNT,
+          GST_ALSA_MIN_PERIOD_CNT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (object_class, ARG_PERIODSIZE,
       g_param_spec_int ("period-size", "Period size",
           "Number of frames (samples on each channel) in one hardware period",
-          2, 8192, 8192, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          GST_ALSA_MIN_PERIOD_SZ, GST_ALSA_MAX_PERIOD_SZ,
+          GST_ALSA_MAX_PERIOD_SZ, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (object_class, ARG_BUFFERSIZE,
       g_param_spec_int ("buffer-size", "Buffer size",
           "Number of frames the hardware buffer can hold",
-          4, 65536, 16384, G_PARAM_READWRITE));
+          GST_ALSA_MIN_BUFFER_SZ, GST_ALSA_MAX_BUFFER_SZ,
+          GST_ALSA_MIN_PERIOD_CNT * GST_ALSA_MAX_PERIOD_SZ, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, ARG_AUTORECOVER,
       g_param_spec_boolean ("autorecover", "Automatic xrun recovery",
-          "When TRUE tries to reduce processor load on xruns",
-          TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "When TRUE tries to reduce processor load on xruns", TRUE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (object_class, ARG_MMAP,
       g_param_spec_boolean ("mmap", "Use mmap'ed access",
           "Wether to use mmap (faster) or standard read/write (more compatible)",
@@ -813,6 +816,10 @@ gst_alsa_get_caps (GstPad * pad)
   snd_pcm_format_mask_t *mask;
   int i;
   unsigned int min_rate, max_rate;
+  unsigned int min_period_cnt, max_period_cnt;
+  snd_pcm_uframes_t min_period_sz, max_period_sz;
+  snd_pcm_uframes_t min_buffer_sz, max_buffer_sz;
+  gint buffer_size;
   gint min_channels, max_channels;
   GstCaps *ret = NULL;
 
@@ -844,10 +851,83 @@ gst_alsa_get_caps (GstPad * pad)
 
   ERROR_CHECK (snd_pcm_hw_params_get_rate_min (hw_params, &min_rate, &i),
       "Couldn't get minimum rate for device %s: %s", this->device);
-  min_rate = min_rate < GST_ALSA_MIN_RATE ? GST_ALSA_MIN_RATE : min_rate + i;
+  min_rate =
+      min_rate <
+      GST_ALSA_MIN_RATE ? GST_ALSA_MIN_RATE : (min_rate + GST_ALSA_DIR_MIN (i));
   ERROR_CHECK (snd_pcm_hw_params_get_rate_max (hw_params, &max_rate, &i),
       "Couldn't get maximum rate for device %s: %s", this->device);
-  max_rate = max_rate > GST_ALSA_MAX_RATE ? GST_ALSA_MAX_RATE : max_rate + i;
+  max_rate =
+      max_rate >
+      GST_ALSA_MAX_RATE ? GST_ALSA_MAX_RATE : (max_rate + GST_ALSA_DIR_MAX (i));
+
+
+  /* Probe period_count and adjust default/user provided value against probed MIN/MAX */
+  ERROR_CHECK (snd_pcm_hw_params_get_periods_min (hw_params, &min_period_cnt,
+          &i), "Couldn't get minimum period_count for device %s: %s",
+      this->device);
+  min_period_cnt =
+      min_period_cnt <
+      GST_ALSA_MIN_PERIOD_CNT ? GST_ALSA_MIN_PERIOD_CNT : (min_period_cnt +
+      GST_ALSA_DIR_MIN (i));
+  if (this->period_count < min_period_cnt) {
+    this->period_count = min_period_cnt;
+  };
+  ERROR_CHECK (snd_pcm_hw_params_get_periods_max (hw_params, &max_period_cnt,
+          &i), "Couldn't get maximum period_count for device %s: %s",
+      this->device);
+  max_period_cnt =
+      max_period_cnt >
+      GST_ALSA_MAX_PERIOD_CNT ? GST_ALSA_MAX_PERIOD_CNT : (max_period_cnt +
+      GST_ALSA_DIR_MAX (i));
+  if (this->period_count > max_period_cnt) {
+    this->period_count = max_period_cnt;
+  };
+
+  /* Probe period_size and adjust default/user provided value against probed MIN/MAX */
+  ERROR_CHECK (snd_pcm_hw_params_get_period_size_min (hw_params, &min_period_sz,
+          &i), "Couldn't get minimum period_size for device %s: %s",
+      this->device);
+  min_period_sz =
+      min_period_sz <
+      GST_ALSA_MIN_PERIOD_SZ ? GST_ALSA_MIN_PERIOD_SZ : (min_period_sz +
+      GST_ALSA_DIR_MIN (i));
+  if (this->period_size < min_period_sz) {
+    this->period_size = min_period_sz;
+  };
+  ERROR_CHECK (snd_pcm_hw_params_get_period_size_max (hw_params, &max_period_sz,
+          &i), "Couldn't get maximum period_size for device %s: %s",
+      this->device);
+  max_period_sz =
+      max_period_sz >
+      GST_ALSA_MAX_PERIOD_SZ ? GST_ALSA_MAX_PERIOD_SZ : (max_period_sz +
+      GST_ALSA_DIR_MAX (i));
+  if (this->period_size > max_period_sz) {
+    this->period_size = max_period_sz;
+  };
+
+  /* Probe buffer_size MIN/MAX */
+  buffer_size = this->period_count * this->period_size;
+  ERROR_CHECK (snd_pcm_hw_params_get_buffer_size_min (hw_params,
+          &min_buffer_sz), "Couldn't get minimum buffer_size for device %s: %s",
+      this->device);
+  min_buffer_sz =
+      min_buffer_sz <
+      GST_ALSA_MIN_BUFFER_SZ ? GST_ALSA_MIN_BUFFER_SZ : min_buffer_sz;
+  if (buffer_size < min_buffer_sz) {
+    buffer_size = min_buffer_sz;
+    this->period_size = GST_ALSA_MIN_BUFFER_SZ / this->period_count;
+  };
+  ERROR_CHECK (snd_pcm_hw_params_get_buffer_size_max (hw_params,
+          &max_buffer_sz), "Couldn't get maximum buffer_size for device %s: %s",
+      this->device);
+  max_buffer_sz =
+      max_buffer_sz >
+      GST_ALSA_MAX_BUFFER_SZ ? GST_ALSA_MAX_BUFFER_SZ : max_buffer_sz;
+  if (buffer_size > max_buffer_sz) {
+    buffer_size = max_buffer_sz;
+    this->period_size = GST_ALSA_MAX_BUFFER_SZ / this->period_count;
+  };
+
 
   snd_pcm_format_mask_alloca (&mask);
   snd_pcm_hw_params_get_format_mask (hw_params, mask);
