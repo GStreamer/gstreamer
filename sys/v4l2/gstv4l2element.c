@@ -30,11 +30,8 @@
 static GstElementDetails gst_v4l2element_details = {
 	"Generic video4linux2 Element",
 	"Generic/Video",
-	"LGPL",
 	"Generic plugin for handling common video4linux2 calls",
-	VERSION,
-	"Ronald Bultje <rbultje@ronald.bitfreak.net>",
-	"(C) 2002",
+	"Ronald Bultje <rbultje@ronald.bitfreak.net>"
 };
 
 /* V4l2Element signals and args */
@@ -54,6 +51,7 @@ enum {
 
 
 static void	gst_v4l2element_class_init	(GstV4l2ElementClass *klass);
+static void	gst_v4l2element_base_init	(GstV4l2ElementClass *klass);
 static void	gst_v4l2element_init		(GstV4l2Element *v4lelement);
 static void	gst_v4l2element_dispose		(GObject        *object);
 static void	gst_v4l2element_set_property	(GObject        *object,
@@ -109,7 +107,7 @@ gst_v4l2element_get_type (void)
 	if (!v4l2element_type) {
 		static const GTypeInfo v4l2element_info = {
 			sizeof(GstV4l2ElementClass),
-			NULL,
+			(GBaseInitFunc) gst_v4l2element_base_init,
 			NULL,
 			(GClassInitFunc) gst_v4l2element_class_init,
 			NULL,
@@ -191,6 +189,14 @@ gst_v4l2_device_get_type (void)
 	return v4l2_device_type;
 }
 
+static void
+gst_v4l2element_base_init (GstV4l2ElementClass *klass)
+{
+	GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  
+	gst_element_class_set_details (gstelement_class,
+				       &gst_v4l2element_details);
+}
 
 static void
 gst_v4l2element_class_init (GstV4l2ElementClass *klass)
@@ -380,23 +386,4 @@ gst_v4l2element_change_state (GstElement *element)
 		return GST_ELEMENT_CLASS(parent_class)->change_state(element);
 
 	return GST_STATE_SUCCESS;
-}
-
-
-gboolean
-gst_v4l2element_factory_init (GstPlugin *plugin)
-{
-	GstElementFactory *factory;
-
-	/* we can run without... But not yet. ;). */
-	if (!gst_library_load ("xwindowlistener"))
-		return FALSE;
-
-	/* create an elementfactory for the v4l2element */
-	factory = gst_element_factory_new("v4l2element", GST_TYPE_V4L2ELEMENT,
-				&gst_v4l2element_details);
-	g_return_val_if_fail(factory != NULL, FALSE);
-	gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-	return TRUE;
 }
