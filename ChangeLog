@@ -1,5 +1,9 @@
 2004-05-03  David Schleef  <ds@schleef.org>
 
+	* testsuite/caps/renegotiate.c: (my_fixate), (main): Another test.
+
+2004-05-03  David Schleef  <ds@schleef.org>
+
 	* testsuite/caps/deserialize.c: (main): Use the srcdir environment variable
 	  to find our source file.
 
