@@ -82,6 +82,11 @@ main(int argc, char **argv)
   gst_library_load("gstidct");
 
   idct = gst_idct_new(method);
+  if (idct == 0) {
+    printf("method not available\n\n\n");
+
+    return 0;
+  }
 
   dct_init();
 
