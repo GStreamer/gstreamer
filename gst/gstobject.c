@@ -1,5 +1,8 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *                    2000 Wim Taymans <wtay@chello.be>
+ *
+ * gstobject.c: Fundamental class used for all of GStreamer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -16,6 +19,8 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
+#include "gst_private.h"
 
 #include "gstobject.h"
 

@@ -1,5 +1,8 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *                    2000 Wim Taymans <wtay@chello.be>
+ *
+ * gstcaps.c: Element capabilities subsystem
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,13 +20,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define DEBUG_ENABLED
+//#define GST_DEBUG_ENABLED
+#include "gst_private.h"
 
-#include "gstdebug.h"
 #include "gstcaps.h"
 #include "gsttype.h"
 
 #include "gstpropsprivate.h"
+
+
 void 
 _gst_caps_initialize (void) 
 {

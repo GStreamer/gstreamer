@@ -22,7 +22,6 @@
 #define __GST_ASYNCDISKSRC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 

@@ -1,5 +1,8 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *                    2000 Wim Taymans <wtay@chello.be>
+ *
+ * gstelement.c: The base element, all elements derive from this
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,9 +20,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "gstdebug.h"
+//#define GST_DEBUG_ENABLED
+#include "gst_private.h"
+
 #include "gstelement.h"
 #include "gstextratypes.h"
+
 
 /* Element signals and args */
 enum {
@@ -371,9 +377,10 @@ gst_element_set_state (GstElement *element, GstElementState state)
 
     /* if that outright didn't work, we need to bail right away */
     /* NOTE: this will bail on ASYNC as well! */
-    if (return_val != GST_STATE_SUCCESS &&
-        return_val != GST_STATE_ASYNC) 
+    if (return_val == GST_STATE_FAILURE) {
+//      DEBUG("have async return from '%s'\n",gst_element_get_name(element));
       return return_val;
+    }
   }
 
   /* this is redundant, really, it will always return SUCCESS */

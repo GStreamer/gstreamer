@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstarch.h: Architecture-specific inclusions
+ * gst_private.h: Private header for within libgst
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,21 +20,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_GSTARCH_H__
-#define __GST_GSTARCH_H__
+
+#ifndef __GST_PRIVATE_H__
+#define __GST_PRIVATE_H__
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#ifdef HAVE_CPU_I386
-#include "gsti386.h"
-#else
-#ifdef HAVE_CPU_PPC
-#include "gstppc.h"
-#else
-#error Need to know about this architecture, or have a generic implementation
-#endif
-#endif
+#include <gst/gstdebug.h>
+//#include <gst/gstinfo.h>
 
-#endif /* __GST_GSTARCH_H__ */
+#endif /* __GST_PRIVATE_H__ */

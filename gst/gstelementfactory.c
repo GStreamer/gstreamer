@@ -1,5 +1,8 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *                    2000 Wim Taymans <wtay@chello.be>
+ *
+ * gstelementfactory.c: GstElementFactory object, support routines
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,8 +21,8 @@
  */
 
 //#define DEBUG_ENABLED
+#include "gst_private.h"
 
-#include "gstdebug.h"
 #include "gstelement.h"
 #include "gstplugin.h"
 

@@ -82,10 +82,11 @@ libgstinclude_HEADERS =	\
 	cothreads.h	\
 	gstscheduler.h
 
-noinst_HEADERS =	\
-	gstarch.h       \
-	gsti386.h       \
-	gstppc.h        
+noinst_HEADERS = 	\
+	gst_private.h	\
+	gstarch.h	\
+	gsti386.h	\
+	gstppc.h	
 
 libgst_la_LIBADD = $(GLIB_LIBS) $(GTK_LIBS) $(XML_LIBS)
 libgst_la_LDFLAGS = -version-info $(STREAMER_CURRENT):$(STREAMER_REVISION):$(STREAMER_AGE)

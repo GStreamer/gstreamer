@@ -1,5 +1,8 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *                    2000 Wim Taymans <wtay@chello.be>
+ *
+ * gstthread.c: Threaded container object
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,8 +22,11 @@
 
 #include <unistd.h>
 
+//#define GST_DEBUG_ENABLED
+#include "gst_private.h"
+
 #include "gstthread.h"
-#include "gstdebug.h"
+
 
 GstElementDetails gst_thread_details = {
   "Threaded container",
@@ -57,6 +63,7 @@ static void 			gst_thread_restore_thyself	(GstElement *element,xmlNodePtr parent
 								 GHashTable *elements);
 
 static void 			gst_thread_signal_thread	(GstThread *thread);
+static void 			gst_thread_wait_thread		(GstThread *thread);
 static void 			gst_thread_create_plan_dummy	(GstBin *bin);
 
 static void*			gst_thread_main_loop		(void *arg);
@@ -216,7 +223,7 @@ gst_thread_change_state (GstElement *element)
   pending = GST_STATE_PENDING (element);
   transition = GST_STATE_TRANSITION (element);
 
-  if (pending == GST_STATE (element)) return GST_STATE_SUCCESS;
+//  if (pending == GST_STATE (element)) return GST_STATE_SUCCESS;
 
   GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
 
@@ -228,34 +235,37 @@ gst_thread_change_state (GstElement *element)
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
-      if (!stateset) return FALSE;
+//      if (!stateset) return FALSE;
       // we want to prepare our internal state for doing the iterations
       gst_info("gstthread: preparing thread \"%s\" for iterations:\n",
                gst_element_get_name (GST_ELEMENT (element)));
-      
+
       // set the state to idle
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
       // create the thread if that's what we're supposed to do
       gst_info("gstthread: flags are 0x%08x\n", GST_FLAGS (thread));
-      
+
       if (GST_FLAG_IS_SET (thread, GST_THREAD_CREATE)) {
         gst_info("gstthread: starting thread \"%s\"\n",
                  gst_element_get_name (GST_ELEMENT (element)));
-	
+
+        // create the thread
         pthread_create (&thread->thread_id, NULL,
                         gst_thread_main_loop, thread);
+
+        // wait for it to 'spin up'
+//        gst_thread_wait_thread (thread);
       } else {
         gst_info("gstthread: NOT starting thread \"%s\"\n",
                 gst_element_get_name (GST_ELEMENT (element)));
       }
-      return GST_STATE_ASYNC;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
     case GST_STATE_READY_TO_PLAYING:
       if (!stateset) return FALSE;
       gst_info("gstthread: starting thread \"%s\"\n",
               gst_element_get_name (GST_ELEMENT (element)));
-      
+
       GST_FLAG_SET (thread, GST_THREAD_STATE_SPINNING);
       gst_thread_signal_thread (thread);
       break;  
@@ -295,16 +305,16 @@ gst_thread_main_loop (void *arg)
   gst_info("gstthread: thread \"%s\" is running with PID %d\n",
 		  gst_element_get_name (GST_ELEMENT (thread)), getpid ());
 
+  // construct the plan and signal back
   if (GST_BIN_CLASS (parent_class)->create_plan)
     GST_BIN_CLASS (parent_class)->create_plan (GST_BIN (thread));
+  gst_thread_signal_thread (thread);
 
   while (!GST_FLAG_IS_SET (thread, GST_THREAD_STATE_REAPING)) {
     if (GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING))
       gst_bin_iterate (GST_BIN (thread));
     else {
-      g_mutex_lock (thread->lock);
-      g_cond_wait (thread->cond, thread->lock);
-      g_mutex_unlock (thread->lock);
+      gst_thread_wait_thread (thread);
     }
   }
 
@@ -319,10 +329,21 @@ gst_thread_main_loop (void *arg)
 static void 
 gst_thread_signal_thread (GstThread *thread) 
 {
+  DEBUG("signaling thread\n");
   g_mutex_lock (thread->lock);
   g_cond_signal (thread->cond);
   g_mutex_unlock (thread->lock);
 }
+
+static void
+gst_thread_wait_thread (GstThread *thread)
+{
+  DEBUG("waiting for thread\n");
+  g_mutex_lock (thread->lock);
+  g_cond_wait (thread->cond, thread->lock);
+  g_mutex_unlock (thread->lock);
+}
+
 
 static void 
 gst_thread_restore_thyself (GstElement *element,

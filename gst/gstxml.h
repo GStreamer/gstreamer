@@ -1,5 +1,8 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *                    2000 Wim Taymans <wtay@chello.be>
+ *
+ * gstxml.h: Header for XML save/restore operations
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,12 +20,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_XML_H__
 #define __GST_XML_H__
 
 #include <gnome-xml/parser.h>
 #include <gst/gstelement.h>
+
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,5 +1,8 @@
-/* Gnome-Streamer   
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *                    2000 Wim Taymans <wtay@chello.be>
+ *
+ * gstmeta.h: Header for metadata subsystem
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,14 +26,15 @@
 #define __GST_META_H__
 
 #include <glib.h> 
- 
+
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include "config.h"
 #endif
 
 #ifdef HAVE_ATOMIC_H
 #include <asm/atomic.h>
 #endif
+
 
 #ifdef __cplusplus
 extern "C" {

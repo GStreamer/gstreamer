@@ -1,5 +1,8 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *                    2000 Wim Taymans <wtay@chello.be>
+ *
+ * gstprops.c: Properties subsystem for generic usage
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,10 +21,11 @@
  */
 
 #define DEBUG_ENABLED
+#include "gst_private.h"
 
-#include "gstdebug.h"
 #include "gstprops.h"
 #include "gstpropsprivate.h"
+
 
 static gboolean 	gst_props_entry_check_compatibility 	(GstPropsEntry *entry1, GstPropsEntry *entry2);
 	

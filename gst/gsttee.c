@@ -1,5 +1,8 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *                    2000 Wim Taymans <wtay@chello.be>
+ *
+ * gsttee.c: Tee element, one in N out
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,7 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "gst_private.h"
+
 #include "gsttee.h"
+
 
 GstElementDetails gst_tee_details = {
   "Tee pipe fitting",

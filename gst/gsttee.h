@@ -1,5 +1,8 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *                    2000 Wim Taymans <wtay@chello.be>
+ *
+ * gsttee.h: Header for GstTee element
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,8 +24,8 @@
 #ifndef __GST_TEE_H__
 #define __GST_TEE_H__
 
-
 #include <gst/gstfilter.h>
+
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,5 +1,8 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *                    2000 Wim Taymans <wtay@chello.be>
+ *
+ * gstbuffer.h: Header for GstBuffer object
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,16 +24,17 @@
 #ifndef __GST_BUFFER_H__
 #define __GST_BUFFER_H__
 
+#include <gst/gstobject.h>
+#include <gst/gstmeta.h>
+
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include "config.h"
 #endif
 
 #ifdef HAVE_ATOMIC_H
 #include <asm/atomic.h>
 #endif
 
-#include <gst/gstobject.h>
-#include <gst/gstmeta.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,5 +1,8 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *                    2000 Wim Taymans <wtay@chello.be>
+ *
+ * gstbuffer.c: Buffer operations
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,9 +23,10 @@
 
 /* this file makes too much noise for most debugging sessions */
 #define GST_DEBUG_FORCE_DISABLE
+#include "gst_private.h"
 
-#include "gstdebug.h"
 #include "gstbuffer.h"
+
 
 GMemChunk *_gst_buffer_chunk;
 

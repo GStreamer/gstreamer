@@ -1,5 +1,8 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *                    2000 Wim Taymans <wtay@chello.be>
+ *
+ * gsttrace.c: Tracing functions (depracated)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,7 +28,10 @@
 #include <fcntl.h>
 #include <string.h>
 
+#include "gst_private.h"
+
 #include "gsttrace.h"
+
 
 #ifdef HAVE_RDTS
 __inline__ void read_tsc(guint64 *dst) {

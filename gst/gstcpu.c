@@ -1,5 +1,8 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *                    2000 Wim Taymans <wtay@chello.be>
+ *
+ * gstcpu.c: CPU detection and architecture-specific routines
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,11 +22,10 @@
 
 #include <glib.h>
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#include "gst_private.h"
 
 #include "gstcpu.h"
+
 
 static guint32 _gst_cpu_flags;
 

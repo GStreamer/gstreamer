@@ -1,5 +1,8 @@
-/* Gnome-Streamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *                    2000 Wim Taymans <wtay@chello.be>
+ *
+ * gsttype.c: Media-type management functions
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -26,9 +29,11 @@
 
 #include <string.h>
 
-#include "gstdebug.h"
+#include "gst_private.h"
+
 #include "gsttype.h"
 #include "gstplugin.h"
+
 
 /* global list of registered types */
 GList *_gst_types;
