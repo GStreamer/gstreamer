@@ -213,8 +213,8 @@ gst_efence_chain (GstPad *pad, GstData *_data)
   GST_BUFFER_TIMESTAMP (copy)    = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_DURATION (copy)     = GST_BUFFER_DURATION (buffer);
   GST_BUFFER_OFFSET (copy)       = GST_BUFFER_OFFSET (buffer);
-  GST_BUFFER_BUFFERPOOL (copy)   = NULL;
-  GST_BUFFER_POOL_PRIVATE (copy) = NULL;
+  GST_BUFFER_FREE_DATA_FUNC (copy) = NULL;
+  GST_BUFFER_PRIVATE (copy)      = NULL;
 
   gst_buffer_unref(buffer);
   gst_pad_push (efence->srcpad, GST_DATA (copy));
@@ -305,8 +305,8 @@ GstBuffer *gst_fenced_buffer_new(void)
   GST_BUFFER_TIMESTAMP (newbuf)    = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (newbuf)     = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (newbuf)       = GST_BUFFER_OFFSET_NONE;
-  GST_BUFFER_BUFFERPOOL (newbuf)   = NULL;
-  GST_BUFFER_POOL_PRIVATE (newbuf) = NULL;
+  GST_BUFFER_FREE_DATA_FUNC (newbuf) = NULL;
+  GST_BUFFER_PRIVATE (newbuf)      = NULL;
 
   GST_DEBUG ("new buffer=%p", newbuf);
 
@@ -364,8 +364,8 @@ GstBuffer* gst_fenced_buffer_default_copy (GstBuffer *buffer)
   GST_BUFFER_TIMESTAMP (copy)    = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_DURATION (copy)     = GST_BUFFER_DURATION (buffer);
   GST_BUFFER_OFFSET (copy)       = GST_BUFFER_OFFSET (buffer);
-  GST_BUFFER_BUFFERPOOL (copy)   = NULL;
-  GST_BUFFER_POOL_PRIVATE (copy) = NULL;
+  GST_BUFFER_FREE_DATA_FUNC (copy) = NULL;
+  GST_BUFFER_PRIVATE (copy)      = NULL;
   
   return copy;
 }

@@ -247,7 +247,10 @@ static void gst_warptv_setup(GstVideofilter *videofilter)
 
   warptv->width = width;
   warptv->height = height;
+#if 0
+  /* FIXME this should be reset in PAUSE->READY, not here */
   warptv->tval = 0;
+#endif
 
   g_free (warptv->disttable);
   g_free (warptv->offstable);
