@@ -29,10 +29,11 @@ call_link_function (GstPad *pad, GstCaps *caps)
 	PyObject *function;
 	PyObject *retval;
 	GstPadLinkReturn ret;
+	PyGILState_STATE state;
 	
 	function = pad_private(pad)->link_function;
 	
-	pyg_block_threads();
+	state = pyg_gil_state_ensure();
 
 	retval = (PyObject*)PyObject_CallFunction (function,
 			"OO",
@@ -41,13 +42,13 @@ call_link_function (GstPad *pad, GstCaps *caps)
 
 	if (PyErr_Occurred ()) {
 		PyErr_Print ();
-        	pyg_unblock_threads();
+        	pyg_gil_state_release(state);
 		return GST_PAD_LINK_REFUSED;
 	}
 
 	ret = PyInt_AsLong(retval);
 
-	pyg_unblock_threads();
+	pyg_gil_state_release(state);
 
 	return ret;
 }
@@ -88,10 +89,11 @@ static void
 call_chain_function(GstPad *pad, GstBuffer *buf)
 {
 	PyObject *function;
+	PyGILState_STATE state;
 
 	function = pad_private(pad)->chain_function;
 
-	pyg_block_threads();
+	state = pyg_gil_state_ensure();
 
 	PyObject_CallFunction (function,
 			"OO", 
@@ -100,11 +102,11 @@ call_chain_function(GstPad *pad, GstBuffer *buf)
 
 	if (PyErr_Occurred ()) {
 		PyErr_Print ();
-		pyg_unblock_threads();
+		pyg_gil_state_release(state);
 		return;
 	}
 
-	pyg_unblock_threads();
+	pyg_gil_state_release(state);
 }
 
 static PyObject*
@@ -145,10 +147,11 @@ call_event_function (GstPad *pad, GstEvent *event)
 	PyObject *function;
 	PyObject *retval;
 	gboolean ret;
+	PyGILState_STATE state;
 	
 	function = pad_private(pad)->event_function;
 	
-	pyg_block_threads();
+	state = pyg_gil_state_ensure();
 
 	retval = PyObject_CallFunction (function,
 					"OO",
@@ -157,13 +160,13 @@ call_event_function (GstPad *pad, GstEvent *event)
 
 	if (PyErr_Occurred ()) {
 		PyErr_Print ();
-        	pyg_unblock_threads();
+        	pyg_gil_state_release(state);
 		return FALSE;
 	}
 
 	ret = PyInt_AsLong(retval);
 
-	pyg_unblock_threads();
+	pyg_gil_state_release(state);
 
 	return ret;
 }
@@ -206,10 +209,11 @@ call_get_function (GstPad *pad)
 	PyObject *function;
 	PyObject *retval;
 	GstData *data = NULL;
+	PyGILState_STATE state;
 	
 	function = pad_private(pad)->get_function;
 	
-	pyg_block_threads();
+	state = pyg_gil_state_ensure();
 
 	retval = PyObject_CallFunction(function, "O", pad_private(pad)->pad);
 
@@ -223,7 +227,7 @@ call_get_function (GstPad *pad)
 	pygst_data_from_pyobject(retval, &data);
 
 bail:
-	pyg_unblock_threads();
+	pyg_gil_state_release(state);
 	return data;
 }
 
