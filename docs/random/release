@@ -88,13 +88,14 @@ TODO :
     - release-specific docs should go in CVS
     - change docs/current symlink
   - remove the nano version number in configure.ac, AS_VERSION
-  - FIXME: run a build and generate devhelp stuff
   - tag tree
     - policy is at http://gstreamer.net/dev/cvs.php
-    - decide on a tag name : RELEASE-(VERSION)-(CODE)
-    - tag; for example for 0.3.3 :
+    - we stopped adding CODENAMES to cvs
+      --> all of this is not done anymore
+      - decide on a tag name : RELEASE-(VERSION)-(CODE)
+      - tag; for example for 0.3.3 :
            cvs tag RELEASE-0_3_3-GUADECBYFOOT
-  - add tag codename in www/dev/cvs.php
+  - add tag 
   - roll the tarball, build rpms
   - FIXME: update status table cvs status and then click on the release link
            http://gstreamer.net/admin.php is the portal to all of this
