@@ -1,3 +1,5 @@
+* version the element check m4
+
 * check qcam plugin; it includes source of the qcam package that might
   be librified
 

@@ -17,10 +17,10 @@ libgstresample_la_LIBADD =
 libgstresample_la_CFLAGS = $(GST_CFLAGS) -ffast-math $(ARCHCFLAGS)
 libgstresample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-#libgstresampleincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/resample
-#libgstresampleinclude_HEADERS = resample.h
+libgstresampleincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/resample
+libgstresampleinclude_HEADERS = resample.h
 
-noinst_HEADERS = private.h resample.h
+noinst_HEADERS = private.h
 
 #check_PROGRAMS = test
 #test_SOURCES = test.c
