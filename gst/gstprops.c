@@ -54,23 +54,23 @@ gst_props_create_entry (GstPropsFactory factory, gint *skipped)
 
   tag = factory[i++];
   switch (GPOINTER_TO_INT (tag)) {
-    case GST_PROPS_INT_ID:
+    case GPOINTER_TO_INT(GST_PROPS_INT_ID):
       entry->propstype = GST_PROPS_INT_ID_NUM;
       entry->data.int_data = GPOINTER_TO_INT (factory[i++]);
       break;
-    case GST_PROPS_INT_RANGE_ID:
+    case GPOINTER_TO_INT(GST_PROPS_INT_RANGE_ID):
       entry->propstype = GST_PROPS_INT_RANGE_ID_NUM;
       entry->data.int_range_data.min = GPOINTER_TO_INT (factory[i++]);
       entry->data.int_range_data.max = GPOINTER_TO_INT (factory[i++]);
       break;
-    case GST_PROPS_FOURCC_ID:
+    case GPOINTER_TO_INT(GST_PROPS_FOURCC_ID):
       entry->propstype = GST_PROPS_FOURCC_ID_NUM;
       entry->data.fourcc_data = GPOINTER_TO_INT (factory[i++]);
       break;
-    case GST_PROPS_LIST_ID:
+    case GPOINTER_TO_INT(GST_PROPS_LIST_ID):
       g_print("gstprops: list not allowed in list\n");
       break;
-    case GST_PROPS_BOOL_ID:
+    case GPOINTER_TO_INT(GST_PROPS_BOOL_ID):
       entry->propstype = GST_PROPS_BOOL_ID_NUM;
       entry->data.bool_data = GPOINTER_TO_INT (factory[i++]);
       break;
@@ -154,7 +154,7 @@ gst_props_register_count (GstPropsFactory factory, guint *counter)
 
     tag = factory[i];
     switch (GPOINTER_TO_INT (tag)) {
-      case GST_PROPS_LIST_ID: 
+      case GPOINTER_TO_INT(GST_PROPS_LIST_ID): 
       {
         GstPropsEntry *list_entry;
 
@@ -241,13 +241,13 @@ gst_props_new (GstPropsFactoryEntry entry, ...)
       value = va_arg (var_args, GstPropsFactoryEntry);
     }
     switch (GPOINTER_TO_INT (value)) {
-      case GST_PROPS_END_ID: 
+      case GPOINTER_TO_INT(GST_PROPS_END_ID): 
 	g_assert (inlist == TRUE);
 
 	inlist = FALSE;
 	skip = 0;
 	break;
-      case GST_PROPS_LIST_ID: 
+      case GPOINTER_TO_INT(GST_PROPS_LIST_ID): 
       {
 	g_assert (inlist == FALSE);
 
