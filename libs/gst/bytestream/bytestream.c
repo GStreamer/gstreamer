@@ -295,8 +295,6 @@ gst_bytestream_peek (GstByteStream *bs, GstBuffer **buf, guint32 len)
     GST_BUFFER_SIZE (retbuf) = len;
     GST_BUFFER_DATA (retbuf) = gst_bytestream_assemble (bs, len);
     GST_BUFFER_TIMESTAMP (retbuf) = bs->last_ts;
-    if (GST_BUFFER_OFFSET (headbuf) != -1)
-      GST_BUFFER_OFFSET (retbuf) = GST_BUFFER_OFFSET (headbuf) + (GST_BUFFER_SIZE (headbuf) - bs->headbufavail);
   }
 
   *buf = retbuf;
