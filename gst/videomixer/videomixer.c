@@ -746,8 +746,9 @@ gst_videomixer_handle_src_event (GstPad * pad, GstEvent * event)
 #define BLEND_MODE BLEND_HARDLIGHT
 #endif
 
-#define ROUND_UP_4(x) (((x) + 3) & ~3)
 #define ROUND_UP_2(x) (((x) + 1) & ~1)
+#define ROUND_UP_4(x) (((x) + 3) & ~3)
+#define ROUND_UP_8(x) (((x) + 7) & ~7)
 
 /* note that this function does packing conversion and blending at the
  * same time */
@@ -767,16 +768,13 @@ gst_videomixer_blend_ayuv_i420 (guint8 * src, gint xpos, gint ypos,
   guint8 *src1, *src2;
   gint Y, U, V;
   gint dest_stride, dest_stride2;
-  gint w2, h2;
 
-  src_stride = src_width * 4;
+  src_stride = ROUND_UP_2 (src_width) * 4;
 
   dest_stride = ROUND_UP_4 (dest_width);
-  dest_size = dest_stride * dest_height;
-  w2 = (dest_width + 1) >> 1;
-  dest_stride2 = ROUND_UP_4 (w2);
-  h2 = (dest_height + 1) >> 1;
-  dest_size2 = dest_stride2 * h2;
+  dest_size = dest_stride * ROUND_UP_2 (dest_height);
+  dest_stride2 = ROUND_UP_8 (dest_width) / 2;
+  dest_size2 = dest_stride2 * ROUND_UP_2 (dest_height) / 2;
 
   b_alpha = (gint) (src_alpha * 255);
 
@@ -800,8 +798,8 @@ gst_videomixer_blend_ayuv_i420 (guint8 * src, gint xpos, gint ypos,
   }
 
   src_add = 2 * src_stride - (8 * ROUND_UP_2 (src_width) / 2);
-  destY_add = 2 * dest_stride - (2 * (src_width / 2));
-  destC_add = dest_stride2 - (src_width / 2);
+  destY_add = 2 * dest_stride - (2 * (ROUND_UP_2 (src_width) / 2));
+  destC_add = dest_stride2 - (ROUND_UP_2 (src_width) / 2);
 
   destY1 = dest + xpos + (ypos * dest_stride);
   destY2 = destY1 + dest_stride;
@@ -812,8 +810,8 @@ gst_videomixer_blend_ayuv_i420 (guint8 * src, gint xpos, gint ypos,
   src2 = src + src_stride;
 
   /* we convert a square of 2x2 samples to generate 4 Luma and 2 chroma samples */
-  for (i = 0; i < src_height / 2; i++) {
-    for (j = 0; j < src_width / 2; j++) {
+  for (i = 0; i < ROUND_UP_2 (src_height) / 2; i++) {
+    for (j = 0; j < ROUND_UP_2 (src_width) / 2; j++) {
       alpha = (src1[0] * b_alpha) >> 8;
       BLEND_MODE (destY1[0], destU[0], destV[0], src1[1], src1[2], src1[3],
           alpha, Y, U, V);
@@ -1099,8 +1097,8 @@ gst_videomixer_loop (GstElement * element)
     mix->out_height = new_height;
   }
 
-  outsize = ROUND_UP_4 (mix->out_width) * mix->out_height +
-      2 * ROUND_UP_4 ((mix->out_width + 1) >> 1) * ((mix->out_height + 1) >> 1);
+  outsize = ROUND_UP_4 (mix->out_width) * ROUND_UP_2 (mix->out_height) +
+      2 * ROUND_UP_8 (mix->out_width) / 2 * ROUND_UP_2 (mix->out_height);
 
   outbuf = gst_pad_alloc_buffer (mix->srcpad, GST_BUFFER_OFFSET_NONE, outsize);
   switch (mix->background) {

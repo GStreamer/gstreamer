@@ -49,8 +49,9 @@ typedef enum
 }
 GstAlphaMethod;
 
-#define ROUND_UP_4(x) (((x) + 3) & ~3)
 #define ROUND_UP_2(x) (((x) + 1) & ~1)
+#define ROUND_UP_4(x) (((x) + 3) & ~3)
+#define ROUND_UP_8(x) (((x) + 7) & ~7)
 
 struct _GstAlpha
 {
@@ -399,8 +400,6 @@ gst_alpha_sink_link (GstPad * pad, const GstCaps * caps)
   return GST_PAD_LINK_OK;
 }
 
-#define ROUND_UP_4(x) (((x) + 3) & ~3)
-
 static void
 gst_alpha_add (guint8 * src, guint8 * dest, gint width, gint height,
     gdouble alpha)
@@ -410,17 +409,17 @@ gst_alpha_add (guint8 * src, guint8 * dest, gint width, gint height,
   guint8 *srcU;
   guint8 *srcV;
   gint i, j;
-  gint w2, h2;
   gint size, size2;
   gint stride, stride2;
   gint wrap, wrap2;
 
+  width = ROUND_UP_2 (width);
+  height = ROUND_UP_2 (height);
+
   stride = ROUND_UP_4 (width);
   size = stride * height;
-  w2 = (width + 1) >> 1;
-  stride2 = ROUND_UP_4 (w2);
-  h2 = (height + 1) >> 1;
-  size2 = stride2 * h2;
+  stride2 = ROUND_UP_8 (width) / 2;
+  size2 = stride2 * height / 2;
 
   wrap = stride - 2 * (width / 2);
   wrap2 = stride2 - width / 2;
@@ -463,19 +462,19 @@ gst_alpha_chroma_key (gchar * src, gchar * dest, gint width, gint height,
   guint8 *dest1, *dest2;
   gint i, j;
   gint x, z, u, v, y11, y12, y21, y22;
-  gint w2, h2;
   gint size, size2;
   gint stride, stride2;
   gint wrap, wrap2, wrap3;
   gint tmp, tmp1;
   gint x1, y1;
 
+  width = ROUND_UP_2 (width);
+  height = ROUND_UP_2 (height);
+
   stride = ROUND_UP_4 (width);
   size = stride * height;
-  w2 = (width + 1) >> 1;
-  stride2 = ROUND_UP_4 (w2);
-  h2 = (height + 1) >> 1;
-  size2 = stride2 * h2;
+  stride2 = ROUND_UP_8 (width) / 2;
+  size2 = stride2 * height / 2;
 
   srcY1 = src;
   srcY2 = src + stride;
@@ -487,7 +486,7 @@ gst_alpha_chroma_key (gchar * src, gchar * dest, gint width, gint height,
 
   wrap = 2 * stride - 2 * (width / 2);
   wrap2 = stride2 - width / 2;
-  wrap3 = 8 * width - 8 * (ROUND_UP_2 (width) / 2);
+  wrap3 = 8 * width - 8 * (width / 2);
 
   for (i = 0; i < height / 2; i++) {
     for (j = 0; j < width / 2; j++) {
@@ -676,7 +675,9 @@ gst_alpha_chain (GstPad * pad, GstData * _data)
     alpha->out_height = new_height;
   }
 
-  outbuf = gst_buffer_new_and_alloc (new_width * new_height * 4);
+  outbuf =
+      gst_buffer_new_and_alloc (ROUND_UP_2 (new_width) *
+      ROUND_UP_2 (new_height) * 4);
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
 
