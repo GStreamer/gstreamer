@@ -101,7 +101,11 @@ static GstStaticPadTemplate audiosink_templ =
         "width = (int) { 8, 16, 24 }, "
         "depth = (int) { 8, 16, 24 }, "
         "endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }, "
-        "signed = (boolean) { true, false }, " COMMON_AUDIO_CAPS)
+        "signed = (boolean) { true, false }, "
+        COMMON_AUDIO_CAPS ";"
+        "audio/x-raw-tta, "
+        "width = (int) { 8, 16, 24 }, "
+        "channels = (int) { 1, 2 }, " "rate = (int) [ 8000, 96000 ]")
     );
 
 static GstStaticPadTemplate subtitlesink_templ =
@@ -230,6 +234,7 @@ gst_matroska_mux_init (GstMatroskaMux * mux)
   for (i = 0; i < GST_MATROSKA_MUX_MAX_STREAMS; i++) {
     mux->sink[i].buffer = NULL;
     mux->sink[i].track = NULL;
+    mux->sink[i].duration = 0;
   }
   mux->index = NULL;
 
@@ -494,6 +499,14 @@ gst_matroska_mux_audio_pad_link (GstPad * pad, const GstCaps * caps)
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_AC3);
 
     return GST_PAD_LINK_OK;
+  } else if (!strcmp (mimetype, "audio/x-raw-tta")) {
+    gint width;
+
+    gst_structure_get_int (structure, "width", &width);
+    audiocontext->bitdepth = width;
+    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_TTA);
+
+    return GST_PAD_LINK_OK;
   }
 
   return GST_PAD_LINK_REFUSED;
@@ -655,6 +668,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   guint64 master, child;
   gint i;
   guint tracknum = 1;
+  gdouble duration = 0;
 
   /* we start with a EBML header */
   gst_ebml_write_header (ebml, "matroska", 1);
@@ -683,10 +697,24 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   master = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_INFO);
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TIMECODESCALE, mux->time_scale);
   mux->duration_pos = ebml->pos;
-  gst_ebml_write_float (ebml, GST_MATROSKA_ID_DURATION, 0);
-  gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_MUXINGAPP, "GStreamer");
-  if (mux->metadata &&
-      gst_structure_has_field (gst_caps_get_structure (mux->metadata, 0),
+  /* get duration */
+  for (i = 0; i < mux->num_streams; i++) {
+    gint64 trackduration;
+    GstFormat format = GST_FORMAT_TIME;
+
+    if (gst_pad_query (GST_PAD_PEER (mux->sink[i].track->pad), GST_QUERY_TOTAL,
+            &format, &trackduration)) {
+      if ((gdouble) trackduration > duration) {
+        duration = (gdouble) trackduration;
+      }
+    }
+  }
+  gst_ebml_write_float (ebml, GST_MATROSKA_ID_DURATION,
+      duration / mux->time_scale);
+  gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_MUXINGAPP,
+      "GStreamer plugin version " GST_PLUGINS_VERSION);
+  if (mux->metadata
+      && gst_structure_has_field (gst_caps_get_structure (mux->metadata, 0),
           "application")) {
     const gchar *app;
 
@@ -722,6 +750,8 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
 {
   GstEbmlWrite *ebml = GST_EBML_WRITE (mux);
   guint64 pos;
+  guint64 duration = 0;
+  gint i;
 
   /* cues */
   if (mux->index != NULL) {
@@ -785,11 +815,18 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
 #endif
 
   /* update duration */
-  pos = GST_EBML_WRITE (mux)->pos;
-  gst_ebml_write_seek (ebml, mux->duration_pos);
-  gst_ebml_write_float (ebml, GST_MATROSKA_ID_DURATION,
-      mux->duration / mux->time_scale);
-  gst_ebml_write_seek (ebml, pos);
+  /* first get the overall duration */
+  for (i = 0; i < mux->num_streams; i++) {
+    if (mux->sink[i].duration > duration)
+      duration = mux->sink[i].duration;
+  }
+  if (duration != 0) {
+    pos = GST_EBML_WRITE (mux)->pos;
+    gst_ebml_write_seek (ebml, mux->duration_pos);
+    gst_ebml_write_float (ebml, GST_MATROSKA_ID_DURATION,
+        (gdouble) duration / mux->time_scale);
+    gst_ebml_write_seek (ebml, pos);
+  }
 
   /* finish segment - this also writes element length */
   gst_ebml_write_master_finish (ebml, mux->segment_pos);
@@ -849,6 +886,10 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux)
   buf = mux->sink[i].buffer;
   mux->sink[i].buffer = NULL;
 
+  /* update duration of this track */
+  if (GST_BUFFER_DURATION_IS_VALID (buf))
+    mux->sink[i].duration += GST_BUFFER_DURATION (buf);
+
   /* We currently write an index entry for each keyframe in a
    * video track. This can be largely improved, such as doing
    * one for each keyframe or each second (for all-keyframe
@@ -895,9 +936,19 @@ static void
 gst_matroska_mux_loop (GstElement * element)
 {
   GstMatroskaMux *mux = GST_MATROSKA_MUX (element);
+  guint i;
 
   /* start with a header */
   if (mux->state == GST_MATROSKA_MUX_STATE_START) {
+    if (mux->num_streams == 0) {
+      return;
+    }
+    for (i = 0; i < mux->num_streams; i++) {
+      if (!gst_pad_is_negotiated (mux->sink[i].track->pad)) {
+        return;
+      } else {
+      }
+    }
     mux->state = GST_MATROSKA_MUX_STATE_HEADER;
     gst_matroska_mux_start (mux);
     mux->state = GST_MATROSKA_MUX_STATE_DATA;

@@ -57,6 +57,7 @@ typedef struct _GstMatroskaMux {
     GstMatroskaTrackContext *track;
     GstBuffer   *buffer;
     gboolean     eos;
+    guint64      duration;
   } sink[GST_MATROSKA_MUX_MAX_STREAMS];
   guint          num_streams,
                  num_v_streams, num_a_streams, num_t_streams;

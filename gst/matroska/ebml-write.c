@@ -402,9 +402,10 @@ gst_ebml_write_float (GstEbmlWrite * ebml, guint32 id, gdouble num)
   gst_ebml_write_element_id (buf, id);
   gst_ebml_write_element_size (buf, 8);
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-  for (n = 0; n < 8; n++)
+  for (n = 0; n < 8; n++) {
     GST_BUFFER_DATA (buf)[GST_BUFFER_SIZE (buf)] = ((guint8 *) & num)[7 - n];
-  GST_BUFFER_SIZE (buf) += 8;
+    GST_BUFFER_SIZE (buf) += 1;
+  }
 #else
   gst_ebml_write_element_data (buf, (guint8 *) & num, 8);
 #endif
