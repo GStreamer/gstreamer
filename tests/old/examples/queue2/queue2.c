@@ -46,11 +46,12 @@ int main(int argc,char *argv[])
   g_assert(audiosink != NULL);
 
   /* add objects to the main pipeline */
+  /*
   gst_pipeline_add_src(GST_PIPELINE(pipeline), disksrc);
   gst_pipeline_add_sink(GST_PIPELINE(pipeline), queue);
 
   gst_bin_add(GST_BIN(thread), audiosink);
-  
+
   gst_pad_connect(gst_element_get_pad(queue,"src"),
                   gst_element_get_pad(audiosink,"sink"));
 
@@ -58,6 +59,7 @@ int main(int argc,char *argv[])
     g_print("cannot autoplug pipeline\n");
     exit(-1);
   }
+  */
 
   gst_bin_add(GST_BIN(pipeline), thread);
 

@@ -38,8 +38,8 @@
 #include <gst/gstelement.h>
 
 
-typedef struct _GstPlugin 		GstPlugin;
-typedef struct _GstPluginElement 	GstPluginElement;
+typedef struct _GstPlugin		GstPlugin;
+typedef struct _GstPluginElement	GstPluginElement;
 
 struct _GstPlugin {
   gchar *name;			/* name of the plugin */
@@ -57,28 +57,28 @@ struct _GstPlugin {
 
 typedef GstPlugin* (*GstPluginInitFunc) (GModule *module);
 
-void 			_gst_plugin_initialize		(void);
+void			_gst_plugin_initialize		(void);
 
 GstPlugin*		gst_plugin_new			(const gchar *name);
 
 const gchar*		gst_plugin_get_name		(GstPlugin *plugin);
-void 			gst_plugin_set_name		(GstPlugin *plugin, const gchar *name);
+void			gst_plugin_set_name		(GstPlugin *plugin, const gchar *name);
 const gchar*		gst_plugin_get_longname		(GstPlugin *plugin);
-void 			gst_plugin_set_longname		(GstPlugin *plugin, const gchar *longname);
+void			gst_plugin_set_longname		(GstPlugin *plugin, const gchar *longname);
 
 const gchar*		gst_plugin_get_filename		(GstPlugin *plugin);
-gboolean 		gst_plugin_is_loaded		(GstPlugin *plugin);
+gboolean		gst_plugin_is_loaded		(GstPlugin *plugin);
 
 GList*			gst_plugin_get_type_list	(GstPlugin *plugin);
 GList*			gst_plugin_get_factory_list	(GstPlugin *plugin);
 
-void 			gst_plugin_load_all		(void);
-gboolean 		gst_plugin_load			(const gchar *name);
-gboolean 		gst_plugin_load_absolute	(const gchar *name);
-gboolean 		gst_library_load		(const gchar *name);
+void			gst_plugin_load_all		(void);
+gboolean		gst_plugin_load			(const gchar *name);
+gboolean		gst_plugin_load_absolute	(const gchar *name);
+gboolean		gst_library_load		(const gchar *name);
 
-void 			gst_plugin_add_factory		(GstPlugin *plugin, GstElementFactory *factory);
-void 			gst_plugin_add_type		(GstPlugin *plugin, GstTypeFactory *factory);
+void			gst_plugin_add_factory		(GstPlugin *plugin, GstElementFactory *factory);
+void			gst_plugin_add_type		(GstPlugin *plugin, GstTypeFactory *factory);
 
 GstPlugin*		gst_plugin_find			(const gchar *name);
 GList*			gst_plugin_get_list		(void);
@@ -86,9 +86,9 @@ GList*			gst_plugin_get_list		(void);
 GstElementFactory*	gst_plugin_find_elementfactory	(const gchar *name);
 
 GstElementFactory*	gst_plugin_load_elementfactory	(const gchar *name);
-void 			gst_plugin_load_typefactory	(const gchar *mime);
+void			gst_plugin_load_typefactory	(const gchar *mime);
 
-xmlNodePtr 		gst_plugin_save_thyself		(xmlNodePtr parent);
-void 			gst_plugin_load_thyself		(xmlNodePtr parent);
+xmlNodePtr		gst_plugin_save_thyself		(xmlNodePtr parent);
+void			gst_plugin_load_thyself		(xmlNodePtr parent);
 
 #endif /* __GST_PLUGIN_H__ */

@@ -24,6 +24,7 @@
 #include "gst_private.h"
 
 #include "gstautoplug.h"
+#include "gstbin.h"
 
 static void     gst_autoplug_class_init (GstAutoplugClass *klass);
 static void     gst_autoplug_init       (GstAutoplug *autoplug);
@@ -89,7 +90,8 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
       if (srctemp->direction == GST_PAD_SRC &&
           desttemp->direction == GST_PAD_SINK) {
 	if (gst_caps_list_check_compatibility (srctemp->caps, desttemp->caps)) {
-	  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory \"%s\" can connect with factory \"%s\"", src->name, dest->name);
+	  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,
+			  "factory \"%s\" can connect with factory \"%s\"", src->name, dest->name);
           return TRUE;
 	}
       }
@@ -98,8 +100,73 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
     }
     srctemps = g_list_next (srctemps);
   }
-  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory \"%s\" cannot connect with factory \"%s\"", src->name, dest->name);
+  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,
+		  "factory \"%s\" cannot connect with factory \"%s\"", src->name, dest->name);
   return FALSE;
+}
+
+static gboolean
+gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
+{
+  GList *sinkpads;
+  gboolean connected = FALSE;
+
+  GST_DEBUG (0,"gstpipeline: autoplug pad connect function for \"%s\" to \"%s\"\n",
+		  GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
+
+  sinkpads = gst_element_get_pad_list(sink);
+  while (sinkpads) {
+    GstPad *sinkpad = (GstPad *)sinkpads->data;
+
+    // if we have a match, connect the pads
+    if (gst_pad_get_direction(sinkpad)	 == GST_PAD_SINK &&
+        !GST_PAD_CONNECTED(sinkpad))
+    {
+      if (gst_caps_list_check_compatibility (gst_pad_get_caps_list(pad), gst_pad_get_caps_list(sinkpad))) {
+        gst_pad_connect(pad, sinkpad);
+        GST_DEBUG (0,"gstpipeline: autoconnect pad \"%s\" in element %s <-> ", GST_PAD_NAME (pad),
+		       GST_ELEMENT_NAME(src));
+        GST_DEBUG (0,"pad \"%s\" in element %s\n", GST_PAD_NAME (sinkpad),
+		      GST_ELEMENT_NAME(sink));
+        connected = TRUE;
+        break;
+      }
+      else {
+	GST_DEBUG (0,"pads incompatible %s, %s\n", GST_PAD_NAME (pad), GST_PAD_NAME (sinkpad));
+      }
+    }
+    sinkpads = g_list_next(sinkpads);
+  }
+
+  if (!connected) {
+    GST_DEBUG (0,"gstpipeline: no path to sinks for type\n");
+  }
+  return connected;
+}
+
+static void
+gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
+{
+  GList *srcpads;
+  gboolean connected = FALSE;
+
+  srcpads = gst_element_get_pad_list(src);
+
+  while (srcpads && !connected) {
+    GstPad *srcpad = (GstPad *)srcpads->data;
+
+    if (gst_pad_get_direction(srcpad) == GST_PAD_SRC)
+      connected = gst_autoplug_pads_autoplug_func (src, srcpad, sink);
+
+    srcpads = g_list_next(srcpads);
+  }
+
+  if (!connected) {
+    GST_DEBUG (0,"gstpipeline: delaying pad connections for \"%s\" to \"%s\"\n",
+		    GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
+    gtk_signal_connect(GTK_OBJECT(src),"new_pad",
+                 GTK_SIGNAL_FUNC(gst_autoplug_pads_autoplug_func), sink);
+  }
 }
 
 static GList*
@@ -144,58 +211,6 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
 }
 
 /**
- * gst_autoplug_caps:
- * @srccaps: the source caps
- * @sinkcaps: the sink caps
- *
- * Perform autoplugging between the two given caps.
- *
- * Returns: a list of elementfactories that can connect
- * the two caps
- */
-GList*
-gst_autoplug_caps (GstCaps *srccaps, GstCaps *sinkcaps)
-{
-  caps_struct caps;
-
-  caps.src = g_list_prepend (NULL,srccaps);
-  caps.sink = g_list_prepend (NULL,sinkcaps);
-
-  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"autoplugging two caps structures");
-
-  return gst_autoplug_func (caps.src, caps.sink,
-			    gst_autoplug_elementfactory_get_list,
-			    gst_autoplug_caps_find_cost,
-			    &caps);
-}
-
-/**
- * gst_autoplug_caps_list:
- * @srccaps: the source caps list
- * @sinkcaps: the sink caps list
- *
- * Perform autoplugging between the two given caps lists.
- *
- * Returns: a list of elementfactories that can connect
- * the two caps lists
- */
-GList*
-gst_autoplug_caps_list (GList *srccaps, GList *sinkcaps)
-{
-  caps_struct caps;
-
-  caps.src = srccaps;
-  caps.sink = sinkcaps;
-
-  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"autoplugging two caps list structures");
-
-  return gst_autoplug_func (caps.src, caps.sink,
-			    gst_autoplug_elementfactory_get_list,
-			    gst_autoplug_caps_find_cost,
-			    &caps);
-}
-
-/**
  * gst_autoplug_pads:
  * @srcpad: the source pad
  * @sinkpad: the sink pad
@@ -205,21 +220,239 @@ gst_autoplug_caps_list (GList *srccaps, GList *sinkcaps)
  * Returns: a list of elementfactories that can connect
  * the two pads
  */
-GList*
-gst_autoplug_pads (GstPad *srcpad, GstPad *sinkpad)
+GstElement*
+gst_autoplug_caps_list (GList *srccaps, GList *sinkcaps, ...)
 {
   caps_struct caps;
+  va_list args;
+  GList *capslist;
+  GstElement *result = NULL, *srcelement = NULL;
+  GList **factories;
+  GList *chains = NULL;
+  GList *endcaps = NULL;
+  guint numsinks = 0, i;
+  gboolean have_common = FALSE;
 
-  caps.src = gst_pad_get_caps_list(srcpad);
-  caps.sink = gst_pad_get_caps_list(sinkpad);
+  va_start (args, sinkcaps);
+  capslist = sinkcaps;
 
-  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"autoplugging two caps structures");
+  /*
+   * We first create a list of elements that are needed
+   * to convert the srcpad caps to the different sinkpad caps.
+   * and add the list of elementfactories to a list (chains).
+   */
+  caps.src  = srccaps;
 
-  return gst_autoplug_func (caps.src, caps.sink,
-			    gst_autoplug_elementfactory_get_list,
-			    gst_autoplug_caps_find_cost,
-			    &caps);
+  while (capslist) {
+    GList *elements;
+
+    caps.sink = capslist;
+
+    GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"autoplugging two caps structures");
+
+    elements =  gst_autoplug_func (caps.src, caps.sink,
+				   gst_autoplug_elementfactory_get_list,
+				   gst_autoplug_caps_find_cost,
+				   &caps);
+
+    if (elements) {
+      chains = g_list_append (chains, elements);
+      endcaps = g_list_append (endcaps, capslist);
+      numsinks++;
+    }
+    else {
+    }
+
+    capslist = va_arg (args, GList *);
+  }
+  va_end (args);
+
+  /*
+   * If no list could be found the pipeline cannot be autoplugged and
+   * we return a NULL element
+   */
+  if (numsinks == 0)
+    return NULL;
+
+  /*
+   * We now have a list of lists. We will turn this into an array
+   * of lists, this will make it much more easy to manipulate it
+   * in the next steps.
+   */
+  factories = g_new0 (GList *, numsinks);
+
+  for (i = 0; chains; i++) {
+    GList *elements = (GList *) chains->data;
+
+    factories[i] = elements;
+
+    chains = g_list_next (chains);
+  }
+  //FIXME, free the list
+
+  result = gst_bin_new ("autoplug_bin");
+
+  /*
+   * We now hav a list of lists that is probably like:
+   *
+   *  !
+   *  A -> B -> C
+   *  !
+   *  A -> D -> E
+   *
+   * we now try to find the common elements (A) and add them to
+   * the bin. We remove them from both lists too.
+   */
+  while (factories[0]) {
+    GstElementFactory *factory;
+    GstElement *element;
+
+    // fase 3: add common elements
+    factory = (GstElementFactory *) (factories[0]->data);
+
+    // check to other paths for matching elements (factories)
+    for (i=1; i<numsinks; i++) {
+      if (factory != (GstElementFactory *) (factories[i]->data)) {
+	goto differ;
+      }
+    }
+
+    GST_DEBUG (0,"common factory \"%s\"\n", factory->name);
+
+    element = gst_elementfactory_create (factory, factory->name);
+    gst_bin_add (GST_BIN(result), element);
+
+    if (srcelement != NULL) {
+      gst_autoplug_pads_autoplug (srcelement, element);
+    }
+    // this is the first element, find a good ghostpad
+    else {
+      GList *pads;
+
+      pads = gst_element_get_pad_list (element);
+
+      while (pads) {
+	GstPad *pad = GST_PAD (pads->data);
+
+	if (gst_caps_list_check_compatibility (srccaps, gst_pad_get_caps_list (pad))) {
+          gst_element_add_ghost_pad (result, pad, "sink");
+	  break;
+	}
+
+	pads = g_list_next (pads);
+      }
+    }
+
+    srcelement = element;
+
+    // advance the pointer in all lists
+    for (i=0; i<numsinks; i++) {
+      factories[i] = g_list_next (factories[i]);
+    }
+
+    have_common = TRUE;
+  }
+
+differ:
+
+  // loop over all the sink elements
+  for (i = 0; i < numsinks; i++) {
+    GstElement *thesrcelement = srcelement;
+    GstElement *thebin = GST_ELEMENT(result);
+    gboolean use_thread;
+
+    use_thread = have_common;
+
+    while (factories[i]) {
+      // fase 4: add other elements...
+      GstElementFactory *factory;
+      GstElement *element;
+
+      factory = (GstElementFactory *)(factories[i]->data);
+
+      GST_DEBUG (0,"factory \"%s\"\n", factory->name);
+      element = gst_elementfactory_create(factory, factory->name);
+
+      // this element suggests the use of a thread, so we set one up...
+      if (GST_ELEMENT_IS_THREAD_SUGGESTED(element) || use_thread) {
+        GstElement *queue;
+        GList *sinkpads;
+        GstPad *srcpad, *sinkpad;
+
+	use_thread = FALSE;
+
+        GST_DEBUG (0,"sugest new thread for \"%s\" %08x\n", GST_ELEMENT_NAME (element), GST_FLAGS(element));
+
+	// create a new queue and add to the previous bin
+        queue = gst_elementfactory_make("queue", g_strconcat("queue_", GST_ELEMENT_NAME(element), NULL));
+        GST_DEBUG (0,"adding element \"%s\"\n", GST_ELEMENT_NAME (element));
+        gst_bin_add(GST_BIN(thebin), queue);
+
+	// this will be the new bin for all following elements
+        thebin = gst_elementfactory_make("thread", g_strconcat("thread_", GST_ELEMENT_NAME(element), NULL));
+
+        srcpad = gst_element_get_pad(queue, "src");
+
+        sinkpads = gst_element_get_pad_list(element);
+        while (sinkpads) {
+          sinkpad = (GstPad *)sinkpads->data;
+
+	  // FIXME connect matching pads, not just the first one...
+          if (gst_pad_get_direction(sinkpad) == GST_PAD_SINK &&
+	      !GST_PAD_CONNECTED(sinkpad)) {
+            GList *caps = gst_pad_get_caps_list (sinkpad);
+
+	    // the queue has the type of the elements it connects
+	    gst_pad_set_caps_list (srcpad, caps);
+            gst_pad_set_caps_list (gst_element_get_pad(queue, "sink"), caps);
+	    break;
+	  }
+          sinkpads = g_list_next(sinkpads);
+        }
+        gst_autoplug_pads_autoplug(thesrcelement, queue);
+
+	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (element));
+        gst_bin_add(GST_BIN(thebin), element);
+	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (thebin));
+        gst_bin_add(GST_BIN(result), thebin);
+        thesrcelement = queue;
+      }
+      // no thread needed, easy case
+      else {
+	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (element));
+        gst_bin_add(GST_BIN(thebin), element);
+      }
+      gst_autoplug_pads_autoplug(thesrcelement, element);
+
+      // this element is now the new source element
+      thesrcelement = element;
+
+      factories[i] = g_list_next(factories[i]);
+    }
+    /*
+     * we're at the last element in the chain,
+     * find a suitable pad to turn into a ghostpad
+     */
+    {
+      GList *endcap = (GList *)(endcaps->data);
+      GList *pads = gst_element_get_pad_list (thesrcelement);
+      endcaps = g_list_next (endcaps);
+
+      while (pads) {
+	GstPad *pad = GST_PAD (pads->data);
+	pads = g_list_next (pads);
+
+	if (gst_caps_list_check_compatibility (gst_pad_get_caps_list (pad), endcap)) {
+          gst_element_add_ghost_pad (result, pad, g_strdup_printf("src_%02d", i));
+	  break;
+	}
+      }
+    }
+  }
+
+  return result;
 }
+
 static gint
 find_factory (gst_autoplug_node *rgnNodes, gpointer factory)
 {

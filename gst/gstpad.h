@@ -271,6 +271,7 @@ const gchar*		gst_pad_get_name		(GstPad *pad);
 
 void			gst_pad_set_parent		(GstPad *pad, GstObject *parent);
 GstObject*		gst_pad_get_parent		(GstPad *pad);
+GstObject*		gst_pad_get_real_parent		(GstPad *pad);
 
 void			gst_pad_add_ghost_pad		(GstPad *pad, GstPad *ghostpad);
 void			gst_pad_remove_ghost_pad	(GstPad *pad, GstPad *ghostpad);

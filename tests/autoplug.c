@@ -1,63 +1,33 @@
 #include <gst/gst.h>
 
-static GList* 
-autoplug_caps (gchar *mime1, gchar *mime2) 
+int
+main (int argc, char *argv[])
 {
-  GstCaps *caps1, *caps2;
-
-  caps1 = gst_caps_new ("tescaps1", mime1);
-  caps2 = gst_caps_new ("tescaps2", mime2);
-
-  return gst_autoplug_caps (caps1, caps2);
-}
-
-static void
-dump_factories (GList *factories) 
-{
-  g_print ("dumping factories\n");
-
-  while (factories) {
-    GstElementFactory *factory = (GstElementFactory *)factories->data;
-
-    g_print ("factory: \"%s\"\n", factory->name);
-
-    factories = g_list_next (factories);
-  }
-}
-
-int main(int argc,char *argv[]) 
-{
-  GList *factories;
+  GstElement *element;
+  GstElement *videosink, *audiosink;
+  GList *testcaps;
 
   gst_init(&argc,&argv);
 
-  factories = autoplug_caps ("audio/mp3", "audio/raw");
-  dump_factories (factories);
+  audiosink = gst_elementfactory_make ("audiosink", "audiosink");
+  g_assert (audiosink != NULL);
+  videosink = gst_elementfactory_make ("videosink", "videosink");
+  g_assert (videosink != NULL);
 
-  factories = autoplug_caps ("video/mpeg", "audio/raw");
-  dump_factories (factories);
+  testcaps = g_list_append (NULL,
+				gst_caps_new_with_props ("test_caps",
+							 "video/mpeg",
+							 gst_props_new (
+							   "mpegversion",  GST_PROPS_INT (1),
+							   "systemstream", GST_PROPS_BOOLEAN (TRUE),
+							   NULL)));
 
-  factories = gst_autoplug_caps (
-		  gst_caps_new_with_props(
-			  "testcaps3",
-			  "video/mpeg",
-			  gst_props_new ( 
-			      "mpegversion",  GST_PROPS_INT (1),
-			      "systemstream", GST_PROPS_BOOLEAN (TRUE),
-			      NULL)),
-		  gst_caps_new("testcaps4","audio/raw"));
-  dump_factories (factories);
 
-  factories = gst_autoplug_caps (
-		  gst_caps_new_with_props(
-			  "testcaps5",
-			  "video/mpeg",
-			  gst_props_new ( 
-			      "mpegversion",  GST_PROPS_INT (1),
-			      "systemstream", GST_PROPS_BOOLEAN (FALSE),
-			      NULL)),
-		  gst_caps_new("testcaps6", "video/raw"));
-  dump_factories (factories);
+  element = gst_autoplug_caps_list (testcaps, gst_pad_get_caps_list (gst_element_get_pad (audiosink, "sink")),
+		  gst_pad_get_caps_list (gst_element_get_pad (videosink, "sink")), NULL);
+  g_assert (element != NULL);
+
+  xmlDocDump (stdout, gst_xml_write (element));
 
   exit (0);
 }

@@ -55,13 +55,20 @@ struct _GstAutoplug {
 
 struct _GstAutoplugClass {
   GtkObjectClass parent_class;
+
+  /* signal callbacks */
+  void (*element_added)  (GstAutoplug *eutoplug, GstElement *element);
+
 };
 
-GtkType 	gst_autoplug_get_type			(void);
+struct _GstAutoplugFactory {
+  gchar *name;                  /* name of element */
+  GtkType type;                 /* unique GtkType of the autoplugger */
+};
 
-GList* 		gst_autoplug_caps 			(GstCaps *srccaps, GstCaps *sinkcaps);
-GList* 		gst_autoplug_caps_list 			(GList *srccaps, GList *sinkcaps);
-GList* 		gst_autoplug_pads 			(GstPad *srcpad, GstPad *sinkpad);
+GtkType		gst_autoplug_get_type			(void);
+
+GstElement*	gst_autoplug_caps_list			(GList *srcpad, GList *sinkpad, ...);
 
 
 #ifdef __cplusplus
@@ -69,5 +76,5 @@ GList* 		gst_autoplug_pads 			(GstPad *srcpad, GstPad *sinkpad);
 #endif /* __cplusplus */
 
 
-#endif /* __GST_AUTOPLUG_H__ */     
+#endif /* __GST_AUTOPLUG_H__ */
 

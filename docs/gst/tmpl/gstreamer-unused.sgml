@@ -217,19 +217,19 @@ the stream.
 </para>
 
 
-<!-- ##### FUNCTION gst_object_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### MACRO GST_SINESRC ##### -->
 <para>
 
 </para>
 
 @obj: 
+
+<!-- ##### FUNCTION gst_object_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### SECTION ./tmpl/plugin.sgml:Long_Description ##### -->
 <para>

@@ -31,8 +31,6 @@ int main(int argc,char *argv[])
     exit(-1);
   }
 
-
-
   /* create a new bin to hold the elements */
   pipeline = gst_pipeline_new("pipeline");
   g_assert(pipeline != NULL);
@@ -59,6 +57,7 @@ int main(int argc,char *argv[])
   gtk_widget_show_all(appwindow);
 
   /* add objects to the main pipeline */
+  /*
   gst_pipeline_add_src(GST_PIPELINE(pipeline), disksrc);
   gst_pipeline_add_sink(GST_PIPELINE(pipeline), videosink);
   gst_pipeline_add_sink(GST_PIPELINE(pipeline), audiosink);
@@ -67,6 +66,7 @@ int main(int argc,char *argv[])
     g_print("unable to handle stream\n");
     exit(-1);
   }
+  */
 
   xmlSaveFile("xmlTest.gst", gst_xml_write(GST_ELEMENT(pipeline)));
 
