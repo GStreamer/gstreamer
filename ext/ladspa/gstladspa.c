@@ -119,9 +119,13 @@ gst_ladspa_base_init (GstLADSPAClass * klass)
 
   /* construct the element details struct */
   details = g_new0 (GstElementDetails, 1);
-  details->longname = g_strdup (desc->Name);
+  details->longname = g_locale_to_utf8 (desc->Name, -1, NULL, NULL, NULL);
+  if (!details->longname)
+    details->longname = g_strdup ("no description available");
   details->description = details->longname;
-  details->author = g_strdup (desc->Maker);
+  details->author = g_locale_to_utf8 (desc->Maker, -1, NULL, NULL, NULL);
+  if (!details->author)
+    details->author = g_strdup ("no author available");
   if ((klass->numsinkpads > 0) && (klass->numsrcpads > 0))
     details->klass = "Filter/Effect/Audio/LADSPA";
   else if ((klass->numsinkpads == 0) && (klass->numsrcpads > 0))
