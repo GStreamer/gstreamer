@@ -1,3 +1,8 @@
+2003-12-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_get):
+	  Fix for 24bpp display.
+
 2003-12-23  Colin Walters  <walters@verbum.org>
 
 	* ext/gnomevfs/gstgnomevfssink.c: Add ARG_HANDLE property that takes
