@@ -1,5 +1,12 @@
 2004-08-03  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gst.c: (gst_register_core_elements):
+	  fix for G_DISABLE_ASSERT
+	* gst/gstinfo.c: (__gst_in_valgrind):
+	  add for GST_DISABLE_DEBUG
+
+2004-08-03  Benjamin Otte  <otte@gnome.org>
+
 	* gst/parse/parse.l:
 	  fix for G_DISABLE_ASSERT
 

@@ -520,14 +520,14 @@ static gboolean
 gst_register_core_elements (GstPlugin * plugin)
 {
   /* register some standard builtin types */
-  g_assert (gst_element_register (plugin, "bin", GST_RANK_PRIMARY,
-          GST_TYPE_BIN));
-  g_assert (gst_element_register (plugin, "pipeline", GST_RANK_PRIMARY,
-          GST_TYPE_PIPELINE));
-  g_assert (gst_element_register (plugin, "thread", GST_RANK_PRIMARY,
-          GST_TYPE_THREAD));
-  g_assert (gst_element_register (plugin, "queue", GST_RANK_PRIMARY,
-          GST_TYPE_QUEUE));
+  if (!gst_element_register (plugin, "bin", GST_RANK_PRIMARY,
+          GST_TYPE_BIN) ||
+      !gst_element_register (plugin, "pipeline", GST_RANK_PRIMARY,
+          GST_TYPE_PIPELINE) ||
+      !gst_element_register (plugin, "thread", GST_RANK_PRIMARY,
+          GST_TYPE_THREAD) ||
+      !gst_element_register (plugin, "queue", GST_RANK_PRIMARY, GST_TYPE_QUEUE))
+    g_assert_not_reached ();
 
   return TRUE;
 }

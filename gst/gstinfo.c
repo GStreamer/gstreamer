@@ -1107,7 +1107,16 @@ _gst_info_printf_extension_arginfo (const struct printf_info *info, size_t n,
 }
 #endif /* HAVE_PRINTF_EXTENSION */
 
+#else /* !GST_DISABLE_GST_DEBUG */
+
+gboolean
+__gst_in_valgrind (void)
+{
+  return FALSE;
+}
+
 #endif /* GST_DISABLE_GST_DEBUG */
+
 
 #ifdef GST_ENABLE_FUNC_INSTRUMENTATION
 /* FIXME make this thread specific */
