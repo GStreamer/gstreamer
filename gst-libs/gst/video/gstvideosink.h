@@ -63,7 +63,7 @@ struct _GstVideoSinkClass {
   GstElementClass parent_class;
     
   /* signals */
-  void (*have_size)       (GstVideoSink *element, gint width, gint height);
+  void (*have_video_size)       (GstVideoSink *element, gint width, gint height);
   
   GST_CLASS_PADDING
 };
