@@ -1,5 +1,13 @@
 2003-12-22  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst/volume/Makefile.am:
+	* gst/volume/gstvolume.c: (volume_connect), (volume_parse_caps),
+	(volume_base_init), (volume_init):
+	  Reenable volume element and fix to work with new caps stuff.
+	  Rhythmbox needs this.
+
+2003-12-22  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* gst/qtdemux/qtdemux.c: (plugin_init):
 	  qtdemux requires bytestream
 
