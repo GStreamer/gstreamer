@@ -1,5 +1,10 @@
 2005-01-06  Benjamin Otte  <otte@gnome.org>
 
+	* gst/games/gstvideoimage.c: (copy_hline_YUY2):
+	  fix stupid typo that borked copying on YUY2
+
+2005-01-06  Benjamin Otte  <otte@gnome.org>
+
 	* gst/games/gstpuzzle.c: (draw_puzzle):
 	  fix edges when image sizes aren't multiples of tile sizes
 
