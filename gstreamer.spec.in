@@ -7,7 +7,7 @@ Group: 		Libraries/Multimedia
 License: 	LGPL
 URL:		http://gstreamer.net/
 Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
-Source: 	http://gstreamer.net/src/gstreamer/gstreamer-%{version}.tar.gz
+Source: 	http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 %define		majorminor	@GST_MAJORMINOR@
