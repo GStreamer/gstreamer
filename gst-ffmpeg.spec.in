@@ -7,7 +7,7 @@ Group: 		Libraries/Multimedia
 License: 	LGPL
 URL:		http://gstreamer.net/
 Vendor:		GStreamer Backpackers Team <package@gstreamer.net>
-Source:		http://gstreamer.net/src/gst-ffmpeg/gst-ffmpeg-%{version}.tar.gz
+Source:		http://gstreamer.freedesktop.org/src/gst-ffmpeg/gst-ffmpeg/gst-ffmpeg-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 %define 	versioning	@GST_FFMPEG_VERSION_MAJOR@@GST_FFMPEG_VERSION_MINOR@	
