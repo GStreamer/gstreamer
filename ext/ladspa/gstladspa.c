@@ -20,59 +20,49 @@
 
 #include <string.h>
 #include <math.h>
+#include <gst/control/control.h>
 
 #include "gstladspa.h"
 #include "ladspa.h"     /* main ladspa sdk include file */
 #include "utils.h"      /* ladspa sdk utility functions */
 
 
-static GstPadTemplate* 
-ladspa_src_factory (void)
-{
-  return 
-    gst_pad_template_new (
-    "src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    gst_caps_new (
-    "ladspa_src",
-      "audio/raw",
-      gst_props_new (
-        "format",     GST_PROPS_STRING ("float"),
-        "layout",     GST_PROPS_STRING ("gfloat"),
-        "intercept",  GST_PROPS_FLOAT(0.0),
-        "slope",      GST_PROPS_FLOAT(1.0),
-        "channels",   GST_PROPS_INT (1),
-        "rate",       GST_PROPS_INT_RANGE (0,G_MAXINT),
-      NULL)),
-    NULL);
-}
+GST_PAD_TEMPLATE_FACTORY (ladspa_sink_factory,
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_REQUEST,
+  GST_CAPS_NEW (
+    "ladspa_sink",
+    "audio/raw",
+    "rate",       GST_PROPS_INT_RANGE (4000, 96000),
+    "format",     GST_PROPS_STRING ("float"),
+    "layout",     GST_PROPS_STRING ("gfloat"),
+    "intercept",  GST_PROPS_FLOAT(0.0),
+    "slope",      GST_PROPS_FLOAT(1.0),
+    "channels",   GST_PROPS_INT (1)
+  )
+);
 
-static GstPadTemplate* 
-ladspa_sink_factory (void) 
-{
-  return 
-    gst_pad_template_new (
-      "sink",
-      GST_PAD_SINK,
-      GST_PAD_ALWAYS,
-      gst_caps_new (
-      "float2int_sink",
-        "audio/raw",
-        gst_props_new (
-          "format",     GST_PROPS_STRING ("float"),
-          "layout",     GST_PROPS_STRING ("gfloat"),
-          "intercept",  GST_PROPS_FLOAT(0.0),
-          "slope",      GST_PROPS_FLOAT(1.0),
-          "channels",   GST_PROPS_INT (1),
-          "rate",       GST_PROPS_INT_RANGE (0,G_MAXINT),
-      NULL)),
-    NULL);
-}
+GST_PAD_TEMPLATE_FACTORY (ladspa_src_factory,
+  "src",
+  GST_PAD_SRC,
+  GST_PAD_REQUEST,
+  GST_CAPS_NEW (
+    "ladspa_src",
+    "audio/raw",
+    "rate",       GST_PROPS_INT_RANGE (4000, 96000),
+    "format",     GST_PROPS_STRING ("float"),
+    "layout",     GST_PROPS_STRING ("gfloat"),
+    "intercept",  GST_PROPS_FLOAT (0.0),
+    "slope",      GST_PROPS_FLOAT (1.0),
+    "channels",   GST_PROPS_INT (1)
+  )
+);
+
+static GstPadTemplate *srctempl, *sinktempl;
 
 enum {
   ARG_0,
-  ARG_LOOP_BASED,
   ARG_SAMPLERATE,
   ARG_BUFFERSIZE,
   ARG_LAST,
@@ -81,6 +71,7 @@ enum {
 static void			gst_ladspa_class_init		(GstLADSPAClass *klass);
 static void			gst_ladspa_init			(GstLADSPA *ladspa);
 
+static void			gst_ladspa_update_int(const GValue *value, gpointer data);
 static GstPadConnectReturn	gst_ladspa_connect		(GstPad *pad, GstCaps *caps);
 static GstPadConnectReturn	gst_ladspa_connect_get		(GstPad *pad, GstCaps *caps);
 static void			gst_ladspa_force_src_caps	(GstLADSPA *ladspa, GstPad *pad);
@@ -94,11 +85,10 @@ static void			gst_ladspa_deactivate		(GstLADSPA *ladspa);
 
 static GstElementStateReturn	gst_ladspa_change_state		(GstElement *element);
 static void			gst_ladspa_loop			(GstElement *element);
-static void			gst_ladspa_chain_mono		(GstPad *pad,GstBuffer *buf);
+static void			gst_ladspa_chain		(GstPad *pad,GstBuffer *buf);
 static GstBuffer *		gst_ladspa_get			(GstPad *pad);
 
 static GstElementClass *parent_class = NULL;
-static GstPadTemplate *srctempl, *sinktempl;
 /* static guint gst_ladspa_signals[LAST_SIGNAL] = { 0 }; */
 
 static GstPlugin *ladspa_plugin;
@@ -114,7 +104,7 @@ gst_ladspa_get_bufferpool (GstPad *pad)
 
   if (oclass->numsrcpads > 0)
     for (i=0;i<oclass->numsrcpads;i++)
-      if ((bp = gst_pad_get_bufferpool(ladspa->srcpads[0])) != NULL)
+      if ((bp = gst_pad_get_bufferpool(ladspa->srcpads[i])) != NULL)
         return bp;
 
   return NULL;
@@ -139,10 +129,6 @@ gst_ladspa_class_init (GstLADSPAClass *klass)
   gobject_class->get_property = gst_ladspa_get_property;
 
   gstelement_class->change_state = gst_ladspa_change_state;
-
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOOP_BASED,
-    g_param_spec_boolean("loop-based","loop-based","loop-based",
-                         FALSE,G_PARAM_READWRITE));
 
   /* look up and store the ladspa descriptor */
   klass->descriptor = g_hash_table_lookup(ladspa_descriptors,GINT_TO_POINTER(G_TYPE_FROM_CLASS(klass)));
@@ -242,7 +228,7 @@ gst_ladspa_class_init (GstLADSPAClass *klass)
         desc->PortRangeHints[current_portnum].LowerBound;
     } else {
       if (argtype==G_TYPE_INT) klass->control_info[i].lowerbound = (gfloat)G_MININT;
-      if (argtype==G_TYPE_FLOAT) klass->control_info[i].lowerbound = G_MINFLOAT;
+      if (argtype==G_TYPE_FLOAT) klass->control_info[i].lowerbound = -G_MINFLOAT;
     }
     
     if (LADSPA_IS_HINT_BOUNDED_ABOVE(hintdesc)) {
@@ -292,17 +278,25 @@ gst_ladspa_class_init (GstLADSPAClass *klass)
       argname = numargname;
     }
     
-    g_print("adding arg %s from %s\n",argname, klass->control_info[i].name);
+    klass->control_info[i].param_name = argname;
+    
+    GST_DEBUG (0, "adding arg %s from %s",argname, klass->control_info[i].name);
     
     if (argtype==G_TYPE_BOOLEAN){
       paramspec = g_param_spec_boolean(argname,argname,argname, FALSE, argperms);
     } else if (argtype==G_TYPE_INT){      
       paramspec = g_param_spec_int(argname,argname,argname, 
-        (gint)klass->control_info[i].lowerbound, (gint)klass->control_info[i].upperbound, 0, argperms);
+        (gint)klass->control_info[i].lowerbound, 
+        (gint)klass->control_info[i].upperbound, 
+        (gint)klass->control_info[i].lowerbound, argperms);
+    } else if (klass->control_info[i].samplerate){
+      paramspec = g_param_spec_float(argname,argname,argname, 
+        0.0, G_MAXFLOAT, 
+        0.0, argperms);
     } else {
       paramspec = g_param_spec_float(argname,argname,argname, 
         klass->control_info[i].lowerbound, klass->control_info[i].upperbound, 
-        (klass->control_info[i].lowerbound + klass->control_info[i].upperbound) / 2.0f, argperms);
+        klass->control_info[i].lowerbound, argperms);
     }
     
     g_object_class_install_property(G_OBJECT_CLASS(klass), i+ARG_LAST, paramspec);
@@ -313,6 +307,7 @@ static void
 gst_ladspa_init (GstLADSPA *ladspa)
 {
   GstLADSPAClass *oclass = (GstLADSPAClass*)(G_OBJECT_GET_CLASS(ladspa));
+  ladspa_control_info cinfo;
   
   LADSPA_Descriptor *desc;
   gint i,sinkcount,srccount,controlcount;
@@ -323,35 +318,76 @@ gst_ladspa_init (GstLADSPA *ladspa)
   /* allocate the various arrays */
   ladspa->srcpads = g_new0(GstPad*,oclass->numsrcpads);
   ladspa->sinkpads = g_new0(GstPad*,oclass->numsinkpads);
-  ladspa->bytestreams = g_new0(GstByteStream*,oclass->numsinkpads);
   ladspa->controls = g_new(gfloat,oclass->numcontrols);
-
+  ladspa->dpman = gst_dpman_new ("ladspa_dpman", GST_ELEMENT(ladspa));
+  
   /* walk through the ports and add all the pads */
   sinkcount = 0;
   srccount = 0;
   controlcount = 0;
   for (i=0;i<desc->PortCount;i++) {
-    if (LADSPA_IS_PORT_AUDIO(desc->PortDescriptors[i]) &&
-        LADSPA_IS_PORT_INPUT(desc->PortDescriptors[i])) {
-      ladspa->sinkpads[sinkcount] = gst_pad_new_from_template (sinktempl, (gchar *)desc->PortNames[i]);
-      ladspa->bytestreams[sinkcount] = gst_bytestream_new (ladspa->sinkpads[sinkcount]);
-      gst_element_add_pad(GST_ELEMENT(ladspa),ladspa->sinkpads[sinkcount]);
-      sinkcount++;
-    }
-    if (LADSPA_IS_PORT_AUDIO(desc->PortDescriptors[i]) &&
-        LADSPA_IS_PORT_OUTPUT(desc->PortDescriptors[i])) {
-      ladspa->srcpads[srccount] = gst_pad_new_from_template (srctempl, (gchar *)desc->PortNames[i]);
-      gst_element_add_pad(GST_ELEMENT(ladspa),ladspa->srcpads[srccount]);
-      srccount++;
+    
+    if (LADSPA_IS_PORT_AUDIO(desc->PortDescriptors[i])){
+      gchar *canon_port_name = g_strdup((gchar *)desc->PortNames[i]);
+      g_strcanon (canon_port_name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
+      if (LADSPA_IS_PORT_INPUT(desc->PortDescriptors[i])) {
+        ladspa->sinkpads[sinkcount] = gst_pad_new_from_template (sinktempl, canon_port_name);
+        gst_element_add_pad(GST_ELEMENT(ladspa),ladspa->sinkpads[sinkcount]);
+        sinkcount++;
+      }
+      if (LADSPA_IS_PORT_OUTPUT(desc->PortDescriptors[i])) {
+        ladspa->srcpads[srccount] = gst_pad_new_from_template (srctempl, canon_port_name);
+        gst_element_add_pad(GST_ELEMENT(ladspa),ladspa->srcpads[srccount]);
+        srccount++;
+      }
     }
     if (LADSPA_IS_PORT_CONTROL(desc->PortDescriptors[i]) &&
         LADSPA_IS_PORT_INPUT(desc->PortDescriptors[i])) {
+      cinfo = oclass->control_info[controlcount];
       /* use the lowerbound as the default value if it exists */
-      if (oclass->control_info[controlcount].lower){
-        ladspa->controls[controlcount]=oclass->control_info[controlcount].lowerbound;
+      if (cinfo.lower){
+        ladspa->controls[controlcount]=cinfo.lowerbound;
       } else {
         ladspa->controls[controlcount] = 0.0;
       }
+      
+      /* set up dparams for this instance */
+      if (cinfo.toggled){
+        gst_dpman_add_required_dparam_callback (
+          ladspa->dpman, 
+          g_param_spec_int(cinfo.param_name, cinfo.name, cinfo.name,
+                           0, 1, (gint)(ladspa->controls[controlcount]), G_PARAM_READWRITE),
+          "int", gst_ladspa_update_int, &(ladspa->controls[controlcount])
+        );
+      }
+      else if (cinfo.integer){
+        gst_dpman_add_required_dparam_callback (
+          ladspa->dpman, 
+          g_param_spec_int(cinfo.param_name, cinfo.name, cinfo.name,
+                           (gint)cinfo.lowerbound, (gint)cinfo.upperbound,
+                           (gint)ladspa->controls[controlcount], G_PARAM_READWRITE),
+          "int", gst_ladspa_update_int, &(ladspa->controls[controlcount])
+        );
+      }
+      else if (cinfo.samplerate){
+        gst_dpman_add_required_dparam_direct (
+          ladspa->dpman, 
+          g_param_spec_float(cinfo.param_name, cinfo.name, cinfo.name,
+                           cinfo.lowerbound, cinfo.upperbound,
+                           ladspa->controls[controlcount], G_PARAM_READWRITE),
+          "hertz-rate-bound", &(ladspa->controls[controlcount])
+        );
+      }
+      else {
+        gst_dpman_add_required_dparam_direct (
+          ladspa->dpman, 
+          g_param_spec_float(cinfo.param_name, cinfo.name, cinfo.name,
+                           cinfo.lowerbound, cinfo.upperbound,
+                           ladspa->controls[controlcount], G_PARAM_READWRITE),
+          "float", &(ladspa->controls[controlcount])
+        );
+      }
+
       controlcount++;
     }
   }
@@ -363,41 +399,48 @@ gst_ladspa_init (GstLADSPA *ladspa)
   ladspa->activated = FALSE;
   ladspa->bufpool = NULL;
 
-  /* we assume srccount > 0 because there are no LADSPA sink elements. */
-
-  if (sinkcount==0) {
+  if (sinkcount==0 && srccount == 1) {
     /* get mode (no sink pads) */
-    GST_INFO (0, "get mode with %d src pads\n", srccount);
+    GST_DEBUG (0, "mono get mode with 1 src pad");
 
     ladspa->newcaps = TRUE;
     ladspa->samplerate = 44100;
     ladspa->buffersize = 64;
 
-    for (i=0;i<srccount;i++) {
-      gst_pad_set_connect_function (ladspa->srcpads[i], gst_ladspa_connect_get);
-      gst_pad_set_get_function (ladspa->srcpads[i], gst_ladspa_get);
-    }
-  } else if (sinkcount==1 && srccount==1){
-    /* mono chain */
-    GST_INFO (0, "inplace mono chain mode\n");
+    gst_pad_set_connect_function (ladspa->srcpads[0], gst_ladspa_connect_get);
+    gst_pad_set_get_function (ladspa->srcpads[0], gst_ladspa_get);
+
+  } else if (sinkcount==1){
+    /* with one sink we can use the chain function */
+    GST_DEBUG (0, "chain mode");
 
     gst_pad_set_connect_function (ladspa->sinkpads[0], gst_ladspa_connect);
-    gst_pad_set_chain_function (ladspa->sinkpads[0], gst_ladspa_chain_mono);
+    gst_pad_set_chain_function (ladspa->sinkpads[0], gst_ladspa_chain);
     gst_pad_set_bufferpool_function (ladspa->sinkpads[0], gst_ladspa_get_bufferpool);
-  } else {
-    /* sinkcount>0 and srccount>0 : N sink pads and M src pads */
-    GST_INFO (0, "loop mode with %d sink pads and %d src pads\n", sinkcount, srccount);
+  } else if (sinkcount > 1){
+    /* more than one sink pad needs loop mode */
+    GST_DEBUG (0, "loop mode with %d sink pads and %d src pads", sinkcount, srccount);
 
     for (i=0;i<sinkcount;i++) {
       gst_pad_set_connect_function (ladspa->sinkpads[i], gst_ladspa_connect);
       gst_pad_set_bufferpool_function (ladspa->sinkpads[i], gst_ladspa_get_bufferpool);
     }
-
-    ladspa->loopbased = TRUE;
     gst_element_set_loop_function (GST_ELEMENT (ladspa), gst_ladspa_loop);
-  }  
+  } 
+  else if (sinkcount==0 && srccount == 0){
+    /* for some reason these plugins exist - we'll just ignore them */
+  } else {
+    g_warning("%d sink pads, %d src pads not yet supported", sinkcount, srccount);
+  }
 
   gst_ladspa_instantiate(ladspa);
+}
+
+static void
+gst_ladspa_update_int(const GValue *value, gpointer data)
+{
+  gfloat *target = (gfloat*) data;
+  *target = (gfloat)g_value_get_int(value);
 }
 
 static GstPadConnectReturn
@@ -411,12 +454,14 @@ gst_ladspa_connect (GstPad *pad, GstCaps *caps)
   g_return_val_if_fail (caps != NULL, GST_PAD_CONNECT_DELAYED);
   g_return_val_if_fail (pad  != NULL, GST_PAD_CONNECT_DELAYED);
 
-  gst_caps_get_int (caps, "rate", &rate);
-  /* have to instantiate ladspa plugin when samplerate changes (groan) */
-  if (ladspa->samplerate != rate){
-    ladspa->samplerate = rate;
-    if (! gst_ladspa_instantiate(ladspa))
-      return GST_PAD_CONNECT_REFUSED;
+  if (gst_caps_get_int (caps, "rate", &rate)){
+    /* have to instantiate ladspa plugin when samplerate changes (groan) */
+    if (ladspa->samplerate != rate){
+      ladspa->samplerate = rate;
+  
+      if (! gst_ladspa_instantiate(ladspa))
+        return GST_PAD_CONNECT_REFUSED;
+    }
   }
 
   /* if the caps are fixed, we are going to try to set all srcpads using this
@@ -429,7 +474,7 @@ gst_ladspa_connect (GstPad *pad, GstCaps *caps)
     }
   }
   
-  return GST_PAD_CONNECT_DELAYED;
+  return GST_PAD_CONNECT_OK;
 }
 
 static GstPadConnectReturn 
@@ -440,22 +485,22 @@ gst_ladspa_connect_get (GstPad *pad, GstCaps *caps)
  
   g_return_val_if_fail (caps != NULL, GST_PAD_CONNECT_DELAYED);
   g_return_val_if_fail (pad  != NULL, GST_PAD_CONNECT_DELAYED);
-
-  gst_caps_get_int (caps, "rate", &rate);
-
-  if (ladspa->samplerate != rate) {
-    ladspa->samplerate = rate;
-    if (! gst_ladspa_instantiate(ladspa))
-      return GST_PAD_CONNECT_REFUSED;
+  
+  if (gst_caps_get_int (caps, "rate", &rate)){
+    if (ladspa->samplerate != rate) {
+      ladspa->samplerate = rate;
+      if (! gst_ladspa_instantiate(ladspa))
+        return GST_PAD_CONNECT_REFUSED;
+    }
   }
 
-  return GST_PAD_CONNECT_DELAYED;
+  return GST_PAD_CONNECT_OK;
 }
 
 static void
 gst_ladspa_force_src_caps(GstLADSPA *ladspa, GstPad *pad)
 {
-  GST_DEBUG (0, "forcing caps");
+  GST_DEBUG (0, "forcing caps with rate %d", ladspa->samplerate);
   gst_pad_try_set_caps (pad, gst_caps_new (
     "ladspa_src_caps",
     "audio/raw",
@@ -494,19 +539,6 @@ gst_ladspa_set_property (GObject *object, guint prop_id, const GValue *value, GP
   
   /* is it a ladspa plugin arg? */
   if (cid < 0) return;
-
-/*
-  if (id == ARG_LOOP_BASED) {
-    * we can only do this in NULL state *
-    g_return_if_fail (GST_STATE(object) != GST_STATE_NULL);
-    ladspa->loopbased = g_value_get_boolean (value);
-    if (ladspa->loopbased) {
-      gst_element_set_loop_function (GST_ELEMENT (ladspa), gst_ladspa_loop);
-    } else {
-      gst_element_set_loop_function (GST_ELEMENT (ladspa), NULL);
-    }
-  }
-*/
 
   oclass = (GstLADSPAClass*)(G_OBJECT_GET_CLASS (object));
 
@@ -677,114 +709,174 @@ gst_ladspa_deactivate(GstLADSPA *ladspa)
 }
 
 static void
-gst_ladspa_loop (GstElement *element)
+gst_ladspa_loop(GstElement *element)
 {
-  gint8        *raw_in, *zero_out, i;
-  GstBuffer   **buffers_out;
+  guint        bufferbytesize, i, numsrcpads, numsinkpads, num_empty_pads;
+  guint        num_processed, num_to_process;
   GstEvent     *event = NULL;
   guint32       waiting;
-  LADSPA_Data **data_in, *data_out;
-  unsigned long size;
-
+  LADSPA_Data  **data_in, **data_out;
+  GstBuffer    **buffers_in, **buffers_out;
+  GstBufferPool *bufpool;
+  GstByteStream **bytestreams;
+  gboolean inplace_broken;
+ 
   GstLADSPA       *ladspa = (GstLADSPA *)element;
   GstLADSPAClass  *oclass = (GstLADSPAClass*)(G_OBJECT_GET_CLASS (ladspa));
   LADSPA_Descriptor *desc = ladspa->descriptor;
 
-  data_in = g_new0(LADSPA_Data *, oclass->numsinkpads);
-  buffers_out = g_new0(GstBuffer *, oclass->numsrcpads);
+  numsinkpads = oclass->numsinkpads;
+  numsrcpads = oclass->numsrcpads;
   
-  /* set up the bufferpool first if necessary */
-  i = 0;
-  while ((ladspa->bufpool == NULL) && (i < oclass->numsrcpads)) {
-    ladspa->bufpool = gst_pad_get_bufferpool (ladspa->srcpads[i++]);
-  }
-  if (ladspa->bufpool == NULL) {
-    ladspa->bufpool = gst_buffer_pool_get_default (sizeof (LADSPA_Data) * ladspa->buffersize,
-                                                   ladspa->numbuffers);
+  data_in = g_new0(LADSPA_Data*, numsinkpads);
+  data_out = g_new0(LADSPA_Data*, numsrcpads);
+  buffers_in = g_new0(GstBuffer*, numsinkpads);
+  buffers_out = g_new0(GstBuffer*, numsrcpads);
+  bytestreams = g_new0(GstByteStream*, numsinkpads);
+  
+  bufferbytesize = sizeof (LADSPA_Data) * ladspa->buffersize;
+  
+  /* find a bufferpool */
+  bufpool = gst_buffer_pool_get_default (bufferbytesize, ladspa->numbuffers);
+
+  /* get the bytestreams for each pad */
+  for (i=0 ; i<numsinkpads ; i++){
+    bytestreams[i] = gst_bytestream_new (ladspa->sinkpads[i]);
   }
 
   /* since this is a loop element, we just loop here til things fall apart. */
   do {
-
+    num_empty_pads = 0;
     /* first get all the necessary data from the input ports */
-    for (i=0;i<oclass->numsinkpads;i++){  
-      GST_DEBUG (0, "pulling %d bytes through channel %d'sbytestream\n", 
-		      ladspa->buffersize * sizeof (LADSPA_Data), i);
-      raw_in = gst_bytestream_peek_bytes (ladspa->bytestreams[i], ladspa->buffersize * sizeof (LADSPA_Data));
+    for (i=0 ; i<numsinkpads ; i++){  
+      GST_DEBUG (0, "pulling %u bytes through channel %d'sbytestream", bufferbytesize, i);
+      buffers_in[i] = gst_bytestream_read (bytestreams[i], bufferbytesize);
 
-      if (raw_in == NULL) {
+      if (buffers_in[i] == NULL) {
         /* we need to check for an event. */
-        gst_bytestream_get_status (ladspa->bytestreams[i], &waiting, &event);
+        gst_bytestream_get_status (bytestreams[i], &waiting, &event);
 
-        if (event) {
-          if (GST_EVENT_TYPE(event) == GST_EVENT_EOS) {
-            /* if we get an EOS event from one of our sink pads, we assume that
-               pad's finished handling data. delete the bytestream, free up the
-               pad, and free up the memory associated with the input channel. */
-            GST_DEBUG (0, "got an EOS event on sinkpad %d", i);
+        if (event && GST_EVENT_TYPE(event) == GST_EVENT_EOS) {
+          /* if we get an EOS event from one of our sink pads, we assume that
+             pad's finished handling data. delete the bytestream, free up the
+             pad, and free up the memory associated with the input channel. */
+          GST_DEBUG (0, "got an EOS event on sinkpad %d", i);
+        }
+        /* CHECKME should maybe check for other events and try to pull more data here */
+        num_empty_pads++;
+      } else {
+        data_in[i] = (LADSPA_Data *) GST_BUFFER_DATA(buffers_in[i]);
+        GST_BUFFER_TIMESTAMP(buffers_in[i]) = ladspa->timestamp;
+      }
+    }
+
+    if (num_empty_pads > 0){
+      if (num_empty_pads < numsinkpads){
+        /* only some pads have EOS, need to create some empty buffers */
+        for (i=0 ; i<numsinkpads ; i++){
+          if (buffers_in[i] == NULL){
+            int x;
+            LADSPA_Data  *data;
+            buffers_in[i] = gst_buffer_new_from_pool (ladspa->bufpool, 0, 0);
+            GST_BUFFER_TIMESTAMP(buffers_in[i]) = ladspa->timestamp;
+            data_in[i] = data = (LADSPA_Data *) GST_BUFFER_DATA(buffers_in[i]); 
+            for (x=0 ; x < ladspa->buffersize ; x++) 
+              data[x] = 0.0F;
+
+            data_in[i] = (LADSPA_Data *) GST_BUFFER_DATA(buffers_in[i]);
+            GST_BUFFER_TIMESTAMP(buffers_in[i]) = ladspa->timestamp;
           }
-
-          /* we need to create some zeroed out data to feed to this port of the
-             ladspa filter. */
-          data_in[i] = g_new0 (LADSPA_Data, ladspa->buffersize * sizeof (LADSPA_Data));
-        } else {
-          /* copy the retrieved data and bind the ladspa src port to the data */
-          data_in[i] = (LADSPA_Data *) raw_in;
         }
       }
-
-      raw_in = NULL;
-      desc->connect_port (ladspa->handle, oclass->sinkpad_portnums[i], data_in[i]);
-      gst_bytestream_flush (ladspa->bytestreams[i], ladspa->buffersize * sizeof (LADSPA_Data));
-    }
-
-    /* now set up the output ports */
-    for (i=0;i<oclass->numsrcpads;i++) {
-      buffers_out[i] = (GstBuffer *) gst_buffer_new_from_pool (ladspa->bufpool, 0, 0);
-
-      if (buffers_out[i] == NULL)
-        GST_ERROR (0, "could not get new output buffer for srcpad %d !\n", i);
-
-      data_out = (LADSPA_Data *) GST_BUFFER_DATA (buffers_out[i]);
-      size = GST_BUFFER_SIZE (buffers_out[i]);
-      GST_BUFFER_TIMESTAMP (buffers_out[i]) = ladspa->timestamp;
-
-      /* initialize the output data to 0 */
-      zero_out = (gint8 *) GST_BUFFER_DATA (buffers_out[i]);
-      for (i = 0; i < size; i++)
-        zero_out[i] = 0;
-
-      desc->connect_port (ladspa->handle, oclass->srcpad_portnums[i], data_out);
-    }
-
-    /* i'm not sure if this will work ; the number of samples might be
-       nonconstant across sources and sinks ... */
-    desc->run (ladspa->handle, ladspa->buffersize);
-
-    /* now go through and reset the ladspa ports, pushing out the output buffers
-       at the same time. */
-    for (i=0;i<oclass->numsinkpads;i++) {
-      desc->connect_port (ladspa->handle, oclass->sinkpad_portnums[i], NULL);
-    }
-    for (i=0;i<oclass->numsrcpads;i++) {
-      GST_DEBUG (0, "pushing buffer (%p) on src pad %d", buffers_out[i], i);
-      gst_pad_push (ladspa->srcpads[i], buffers_out[i]);
-      buffers_out[i] = NULL;
-      desc->connect_port (ladspa->handle, oclass->srcpad_portnums[i], NULL);
+      else {
+        /* all pads have EOS, time to quit */
+        /* CHECKME do I have to push EOS events here? */
+        GST_DEBUG (0, "All sink pads have EOS, finishing.");
+        break;
+      }
     }
     
-    ladspa->timestamp += ladspa->buffersize * ladspa->samplerate * 10^9;
+    /* we now have a full set of buffers_in.
+     * now share or create the buffers_out */
+    for (i=0 ; i<numsrcpads ; i++){
+      if (i <= numsinkpads && !inplace_broken){
+        /* we can share buffers */
+        buffers_out[i] = buffers_in[i];
+        data_out[i] = data_in[i];
+      } else {
+        buffers_out[i] = gst_buffer_new_from_pool (bufpool, 0, 0);
+        GST_BUFFER_TIMESTAMP(buffers_out[i]) = ladspa->timestamp;
+        data_out[i] = (LADSPA_Data *) GST_BUFFER_DATA(buffers_out[i]);
+      }
+    }
+
+    num_to_process = GST_DPMAN_PREPROCESS(ladspa->dpman, ladspa->buffersize, ladspa->timestamp);
+    num_processed = 0;
+
+    /* split up processing of the buffer into chunks so that dparams can
+     * be updated when required.
+     * In many cases the buffer will be processed in one chunk anyway.
+     */
+    while(GST_DPMAN_PROCESS_CHUNK(ladspa->dpman, num_to_process, num_processed)) {
+
+      for (i=0 ; i<numsinkpads ; i++){
+        desc->connect_port (ladspa->handle, oclass->sinkpad_portnums[i], data_in[i]);
+      }
+      for (i=0 ; i<numsrcpads ; i++){
+        desc->connect_port (ladspa->handle, oclass->srcpad_portnums[i], data_out[i]);
+      }
+      desc->run(ladspa->handle, num_to_process);
+      for (i=0 ; i<numsinkpads ; i++){
+        data_in[i] += num_to_process;
+      }
+      for (i=0 ; i<numsrcpads ; i++){
+        data_out[i] += num_to_process;
+      }
+
+      num_processed = num_to_process;
+      num_to_process = 0;
+    }
+    
+    for (i=0 ; i<numsrcpads ; i++) {
+      GST_DEBUG (0, "pushing buffer (%p) on src pad %d", buffers_out[i], i);
+      gst_pad_push (ladspa->srcpads[i], buffers_out[i]);
+      
+      data_out[i] = NULL;
+      buffers_out[i] = NULL;
+    }
+    for (i=0 ; i<numsinkpads ; i++) {
+      if (i > numsrcpads || inplace_broken){
+        /* we have some buffers to unref */
+        gst_buffer_unref(buffers_in[i]);
+      }
+      data_in[i] = NULL;
+      buffers_in[i] = NULL;
+    }      
+
+    ladspa->timestamp += ladspa->buffersize * 10^9 / ladspa->samplerate;
   } while (TRUE);
 
+  for (i=0 ; i<numsinkpads ; i++){
+    gst_bytestream_destroy (bytestreams[i]);
+  }
+
   g_free (buffers_out);
+  g_free (buffers_in);
+  g_free (data_out);
+  g_free (data_in);
+  g_free (bytestreams);
 }
 
 static void
-gst_ladspa_chain_mono (GstPad *pad, GstBuffer *buf)
+gst_ladspa_chain (GstPad *pad, GstBuffer *buf)
 {
   LADSPA_Descriptor *desc;
-  LADSPA_Data *data;
+  LADSPA_Data *data_in, **data_out;
+  GstBuffer **buffers_out;
+
   unsigned long num_samples;
+  gboolean inplace_broken;
+  guint num_to_process, num_processed, i, numsrcpads;
   
   GstLADSPA *ladspa;
   GstLADSPAClass *oclass;
@@ -799,39 +891,96 @@ gst_ladspa_chain_mono (GstPad *pad, GstBuffer *buf)
   /* this might happen if caps nego hasn't happened */
   g_return_if_fail(ladspa->handle != NULL);
 
-  if (! GST_IS_EVENT (buf)) {
-    oclass = (GstLADSPAClass *) (G_OBJECT_GET_CLASS (ladspa));
-    data = (LADSPA_Data *) GST_BUFFER_DATA(buf);
-    num_samples = GST_BUFFER_SIZE(buf) / sizeof(gfloat);
-  
-    desc = ladspa->descriptor;
+  oclass = (GstLADSPAClass *) (G_OBJECT_GET_CLASS (ladspa));
 
-    /* we know that we're dealing here with a filter that has one sink and one
-       src pad. */
-    desc->connect_port(ladspa->handle,oclass->sinkpad_portnums[0],data);
-    desc->connect_port(ladspa->handle,oclass->srcpad_portnums[0],data);
-
-    desc->run(ladspa->handle,num_samples);
-  
-    desc->connect_port(ladspa->handle,oclass->sinkpad_portnums[0],NULL);
-    desc->connect_port(ladspa->handle,oclass->srcpad_portnums[0],NULL);
+  if (GST_IS_EVENT (buf)) {    
+    /* push the event out all the src pads */
+    for (i=0 ; i<oclass->numsrcpads ; i++){
+      gst_pad_push (ladspa->srcpads[0], buf);
+    }
+    return;
   }
 
-  gst_pad_push (ladspa->srcpads[0], buf);
+  data_in = (LADSPA_Data *) GST_BUFFER_DATA(buf);
+  num_samples = GST_BUFFER_SIZE(buf) / sizeof(gfloat);
+  numsrcpads = oclass->numsrcpads;
+
+  desc = ladspa->descriptor;
+
+  inplace_broken = LADSPA_IS_INPLACE_BROKEN(desc->Properties);
+  if (numsrcpads > 0){
+    guint num_created_buffers = 0; 
+    buffers_out = g_new(GstBuffer*, numsrcpads);
+    data_out = g_new(LADSPA_Data*, numsrcpads);
+
+    if (inplace_broken){
+      num_created_buffers = numsrcpads;
+    }
+    else {
+      /* we can share the buffer for input and output */
+      buffers_out[0] = buf;
+      data_out[0] = (LADSPA_Data *)GST_BUFFER_DATA(buf);
+      num_created_buffers = numsrcpads - 1;
+    }
+
+    if (num_created_buffers > 0){
+      GstBufferPool *bufpool;
+      bufpool = gst_buffer_pool_get_default (sizeof (LADSPA_Data) * GST_BUFFER_SIZE(buf), ladspa->numbuffers);
+
+      for (i = numsrcpads - num_created_buffers ; i<numsrcpads ; i++){
+        buffers_out[i] = gst_buffer_new_from_pool (ladspa->bufpool, 0, 0);
+        GST_BUFFER_TIMESTAMP(buffers_out[i]) = GST_BUFFER_TIMESTAMP(buf);
+        data_out[i] = (LADSPA_Data *) GST_BUFFER_DATA(buffers_out[i]);
+      }
+    }
+  }
+
+  num_to_process = GST_DPMAN_PREPROCESS(ladspa->dpman, num_samples, GST_BUFFER_TIMESTAMP(buf));
+  num_processed = 0;
+
+  /* split up processing of the buffer into chunks so that dparams can
+   * be updated when required.
+   * In many cases the buffer will be processed in one chunk anyway.
+   */
+  while(GST_DPMAN_PROCESS_CHUNK(ladspa->dpman, num_to_process, num_processed)) {
+    desc->connect_port(ladspa->handle,oclass->sinkpad_portnums[0],data_in);  
+    for (i=0 ; i<numsrcpads ; i++){
+      desc->connect_port(ladspa->handle,oclass->srcpad_portnums[i],data_out[i]);
+    }
+    desc->run(ladspa->handle, num_to_process);
+    
+    data_in += num_to_process;
+    for (i=0 ; i<numsrcpads ; i++){
+      data_out[i] += num_to_process;
+    }
+    num_processed += num_to_process;
+    num_to_process = 0;
+  }
+
+  if (numsrcpads > 0){
+    for (i=0 ; i<numsrcpads ; i++){
+      gst_pad_push (ladspa->srcpads[i], buffers_out[i]);
+    }
+    g_free(buffers_out);
+    g_free(data_out);
+    return;
+  }
+
+  /* if we have reached here, there are no src pads */
+  gst_buffer_unref(buf);
 }
 
 static GstBuffer *
 gst_ladspa_get(GstPad *pad)
-{
-  LADSPA_Descriptor *desc;
-  LADSPA_Data *data;
-  
+{  
   GstLADSPA *ladspa;
   GstLADSPAClass *oclass;
-  GstBuffer *buf;
 
-  gint8 i, *zero_out;
-  unsigned long size;
+  GstBuffer *buf;
+  LADSPA_Data *data;
+  LADSPA_Descriptor *desc;
+
+  guint num_to_process, num_processed;
 
   g_return_val_if_fail(pad != NULL, NULL);
   g_return_val_if_fail(GST_IS_PAD(pad), NULL);
@@ -844,46 +993,43 @@ gst_ladspa_get(GstPad *pad)
 
   oclass = (GstLADSPAClass*)(G_OBJECT_GET_CLASS(ladspa));
 
-  /* force all src pads to set their caps */
+  /* force src pad to set caps */
   if (ladspa->newcaps) {
-    for (i=0;i<oclass->numsrcpads;i++) {
-      gst_ladspa_force_src_caps(ladspa, ladspa->srcpads[0]);
-    }
+    gst_ladspa_force_src_caps(ladspa, ladspa->srcpads[0]);
   }
 
   /* get a bufferpool */
-  i = 0;
-  while ((ladspa->bufpool == NULL) && (i < oclass->numsrcpads)) {
-    ladspa->bufpool = gst_pad_get_bufferpool (ladspa->srcpads[i++]);
-  }
   if (ladspa->bufpool == NULL) {
-    ladspa->bufpool = gst_buffer_pool_get_default (sizeof (LADSPA_Data) * ladspa->buffersize,
-                                                   ladspa->numbuffers);
+    ladspa->bufpool = gst_pad_get_bufferpool (ladspa->srcpads[0]);
+    if (ladspa->bufpool == NULL) {
+      ladspa->bufpool = gst_buffer_pool_get_default (sizeof (LADSPA_Data) * ladspa->buffersize, ladspa->numbuffers);
+    }
   }
-  
-  buf = (GstBuffer *) gst_buffer_new_from_pool (ladspa->bufpool, 0, 0);
-  g_return_val_if_fail (buf, NULL);
 
-  /* initialize the output data to 0 */
-  zero_out = (gint8 *) GST_BUFFER_DATA (buf);      
-  for (i = 0; i < GST_BUFFER_SIZE (buf); i++)
-    zero_out[i] = 0;
-
-  data = (LADSPA_Data *) GST_BUFFER_DATA(buf);
-  size = GST_BUFFER_SIZE(buf);
+  buf = gst_buffer_new_from_pool (ladspa->bufpool, 0, 0);
   GST_BUFFER_TIMESTAMP(buf) = ladspa->timestamp;
-  ladspa->timestamp += size * ladspa->samplerate * 10^9;
+  data = (LADSPA_Data *) GST_BUFFER_DATA(buf);  
 
   desc = ladspa->descriptor;
+  num_to_process = GST_DPMAN_PREPROCESS(ladspa->dpman, ladspa->buffersize, ladspa->timestamp);
+  num_processed = 0;
 
-  for (i=0;i<oclass->numsrcpads;i++)
-    desc->connect_port(ladspa->handle,oclass->srcpad_portnums[i],data);
+  /* update timestamp */  
+  ladspa->timestamp += num_to_process * 10^9 / ladspa->samplerate;
 
-  desc->run(ladspa->handle, size);  
-
-  for (i=0;i<oclass->numsrcpads;i++)
-    desc->connect_port(ladspa->handle,oclass->srcpad_portnums[i],NULL);
-
+  /* split up processing of the buffer into chunks so that dparams can
+   * be updated when required.
+   * In many cases the buffer will be processed in one chunk anyway.
+   */
+  while(GST_DPMAN_PROCESS_CHUNK(ladspa->dpman, num_to_process, num_processed)) {
+    desc->connect_port(ladspa->handle,oclass->srcpad_portnums[0],data);  
+    desc->run(ladspa->handle, num_to_process);
+    
+    data += num_to_process;
+    num_processed = num_to_process;
+    num_to_process = 0;
+  }
+  
   return buf;
 }
 
@@ -955,9 +1101,16 @@ ladspa_describe_plugin(const char *pcFullFilename,
         break;
       }
     }
-  
-    srctempl = ladspa_src_factory();
-    gst_element_factory_add_pad_template (factory, srctempl);
+
+    /* only add src padtemplate if there are srcpads */
+    for (j=0;j<desc->PortCount;j++) {
+      if (LADSPA_IS_PORT_AUDIO(desc->PortDescriptors[j]) &&
+          LADSPA_IS_PORT_OUTPUT(desc->PortDescriptors[j])) {
+        srctempl = ladspa_src_factory();
+        gst_element_factory_add_pad_template (factory, srctempl);
+        break;
+      }
+    }
 
   }
 }
@@ -976,7 +1129,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
     gst_info ("gstladspa: could not load support library: 'gstbytestream'\n");
     return FALSE;
   }
-    
+  
+  if (! gst_library_load ("gstcontrol")) {
+    gst_info ("gstladspa: could not load support library: 'gstcontrol'\n");
+    return FALSE;
+  }
+  
   return TRUE;
 }
 
