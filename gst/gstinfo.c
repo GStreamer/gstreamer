@@ -379,14 +379,14 @@ gst_debug_log_default (GstDebugCategory *category, GstDebugLevel level,
   if (object == NULL) {
     obj = g_strdup ("");
   } else if (GST_IS_PAD (object) && GST_OBJECT_NAME (object)) {
-    obj = g_strdup_printf ("[%s:%s] ", GST_DEBUG_PAD_NAME (object));
+    obj = g_strdup_printf (" [%s:%s]", GST_DEBUG_PAD_NAME (object));
   } else if (GST_IS_OBJECT (object) && GST_OBJECT_NAME (object)) {
-    obj = g_strdup_printf ("[%s] ", GST_OBJECT_NAME (object));
+    obj = g_strdup_printf (" [%s]", GST_OBJECT_NAME (object));
   } else {
-    obj = g_strdup_printf ("[%s@%p] ", G_OBJECT_TYPE_NAME(object), object);  
+    obj = g_strdup_printf (" [%s@%p]", G_OBJECT_TYPE_NAME(object), object);  
   }
 
-  g_printerr ("%s %s%s%s(%s%5d%s) %s%s(%d):%s: %s%s%s\n", 
+  g_printerr ("%s %s%15s%s(%s%5d%s) %s%s(%d):%s:%s%s %s\n", 
   	      gst_debug_level_get_name (level),
               color, gst_debug_category_get_name (category), clear,
               pidcolor, pid, clear,

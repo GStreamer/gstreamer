@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wim.taymans@chello.be>
  *
- * gstclock.c: Clock subsystem for maintaining time sync
+ * gstsystemclock.c: Default clock, uses the system clock
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

@@ -240,7 +240,7 @@ gst_element_factory_create (GstElementFactory *factory,
     /* copy pad template pointers to the element class, 
      * allow for custom padtemplates */
     oclass->padtemplates = g_list_concat (oclass->padtemplates, 
-		    g_list_copy (factory->padtemplates));
+                                          g_list_copy (factory->padtemplates));
     oclass->numpadtemplates += factory->numpadtemplates;
   }
 

@@ -1409,9 +1409,9 @@ gst_element_get_compatible_pad (GstElement *element, GstPad *pad)
 /**
  * gst_element_link_pads_filtered:
  * @src: a #GstElement containing the source pad.
- * @srcpadname: the name of the #GstPad in source element or NULL for any element.
+ * @srcpadname: the name of the #GstPad in source element or NULL for any pad.
  * @dest: the #GstElement containing the destination pad.
- * @destpadname: the name of the #GstPad in destination element or NULL for any element.
+ * @destpadname: the name of the #GstPad in destination element or NULL for any pad.
  * @filtercaps: the #GstCaps to use as a filter.
  *
  * Links the two named pads of the source and destination elements.
@@ -1494,7 +1494,7 @@ gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
       if ((GST_RPAD_DIRECTION (srcpad) == GST_PAD_SRC) &&
           (GST_PAD_PEER (srcpad) == NULL)) {
         GstPad *temp = gst_element_get_compatible_pad_filtered (dest, srcpad, 
-	                                                   filtercaps);
+                                                                filtercaps);
         if (temp && gst_pad_link_filtered (srcpad, temp, filtercaps)) {
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s", 
 	             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (temp));
