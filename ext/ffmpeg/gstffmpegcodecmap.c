@@ -191,7 +191,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
     case CODEC_ID_SVQ3:
       caps = GST_FF_VID_CAPS_NEW ("video/x-svq",
-	  "svqversion", G_TYPE_INT, 1,
+	  "svqversion", G_TYPE_INT, 3,
           NULL);
       break;
 
