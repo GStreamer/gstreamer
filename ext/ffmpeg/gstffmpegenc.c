@@ -389,7 +389,8 @@ gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
 
   /* open codec */
   if (avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0) {
-    avcodec_close (ffmpegenc->context);
+    if (ffmpegenc->context->priv_data)
+      avcodec_close (ffmpegenc->context);
     GST_DEBUG ("ffenc_%s: Failed to open FFMPEG codec",
         oclass->in_plugin->name);
     return GST_PAD_LINK_REFUSED;

@@ -1,3 +1,8 @@
+2005-02-05  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_link):
+	  Only free context if it was created (otherwise it crashes).
+
 2005-02-04  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame),
