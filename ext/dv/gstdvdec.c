@@ -17,17 +17,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
-/*
-
-Some data gathered from the net, specificaly for DV in riff/AVI : http://msdn.microsoft.com/library/default.asp?url=/library/en-us/directshow/htm/dvdataintheavifileformat.asp
-
-The 'dvsd' stream handler FOURCC specifies that the DV data is as defined in Part 2 of the Specification of Consumer-use Digital VCRs. Video is in the format of 525 lines at 29.97 Hz (525-60) or 625 lines at 25.00 Hz (625-50).
-The 'dvhd' stream handler FOURCC specifies that the DV data is as defined in Part 3 of the Specification of Consumer-use Digital VCRs. Video is in the format of 1125 lines at 30.00 Hz (1125-60) or 1250 lines at 25.00 Hz (1250-50).
-The 'dvsl' stream handler FOURCC specifies that the DV data is as defined in Part 6 of Specification of Consumer-use Digital VCRs. Video is in the format of high-compression SD (SDL). 
-
-*/
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
