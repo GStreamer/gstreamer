@@ -1,5 +1,14 @@
 2004-07-02  David Schleef  <ds@schleef.org>
 
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_setup),
+	(gst_wavenc_stop_file): Switch to GST_WRITE_UINT32_LE macros
+	(bug #144624)
+	* sys/oss/gstosselement.c: (gst_osselement_probe_caps),
+	(gst_osselement_rate_probe_check): Add another workaround for
+	buggy drivers (bug #145336)
+
+2004-07-02  David Schleef  <ds@schleef.org>
+
 	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_handle_client_write):
 	Most systems don't have MSG_NOSIGNAL.
 
