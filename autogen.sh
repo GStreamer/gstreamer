@@ -95,7 +95,8 @@ rm -f gst-libs/ext/ffmpeg/configure
 # now, run ffmpeg's autogen
 echo "+ running autogen.sh in gst-libs/ext/ffmpeg"
 cd gst-libs/ext/ffmpeg
-sh autogen.sh || exit 1
+chmod +x autogen.sh
+./autogen.sh || exit 1
 cd ../../..
 
 test -n "$NOCONFIGURE" && {

@@ -1,3 +1,9 @@
+2004-12-18  David Schleef  <ds@schleef.org>
+
+	* autogen.sh: execute ffmpeg's autogen.sh directly
+	* gst-libs/ext/ffmpeg/autogen.sh: Add a #! line.  Specify bash,
+	since there are bashisms ('local').
+
 2004-12-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_open),
