@@ -1,3 +1,8 @@
+2004-03-06  Christophe Fergeau  <teuf@users.sourceforge.net>
+
+	* ext/mad/gstmad.c: Fix detection of Xing headers
+	* gst/tags/gstid3tag.c: Changes to support TLEN tags
+
 2004-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_parse_fmt),
