@@ -529,12 +529,13 @@ GST_CHECK_FEATURE(FFMPEG, [ffmpeg plug-ins], ffmpeg, [
     AC_MSG_NOTICE(slurping FFmpeg CVS source)
     AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, 2002-12-14 12:00 GMT,
                     HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
-    AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, 1, 
-                       [defined if we use uninstalled ffmpeg])
   else
     AC_MSG_NOTICE(FFmpeg CVS code should be included already)
     HAVE_FFMPEG=yes
   fi
+  # we only bother with uninstalled (included) ffmpeg for now
+  AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, 1,
+                     [defined if we use uninstalled ffmpeg])
 ])
 
 dnl *** Gnome VFS ***
