@@ -230,6 +230,8 @@ gst_queue_init (GstQueue *queue)
   queue->size_time = 1000000000LL;	/* 1sec */
   queue->may_deadlock = TRUE;
   queue->block_timeout = -1;
+  queue->interrupt = FALSE;
+  queue->flush = FALSE;
 
   queue->qlock = g_mutex_new ();
   queue->reader = FALSE;
@@ -287,6 +289,8 @@ gst_queue_locked_flush (GstQueue *queue)
   queue->queue = NULL;
   queue->level_buffers = 0;
   queue->timeval = NULL;
+  /* make sure any pending buffers to be added are flushed too */
+  queue->flush = TRUE;
 }
 
 static void
@@ -316,6 +320,9 @@ restart:
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%ld", pthread_self ());
   g_mutex_lock (queue->qlock);
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locked t:%ld", pthread_self ());
+
+  /* assume don't need to flush this buffer when the queue is filled */
+  queue->flush = FALSE;
 
   if (GST_IS_EVENT (buf)) {
     switch (GST_EVENT_TYPE (buf)) {
@@ -379,12 +386,18 @@ restart:
     while (queue->level_buffers == queue->size_buffers) {
       /* if there's a pending state change for this queue or its manager, switch */
       /* back to iterator so bottom half of state change executes */
-      //while (GST_STATE_PENDING (queue) != GST_STATE_VOID_PENDING) {
       if (queue->interrupt) {
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!");
         g_mutex_unlock (queue->qlock);
 	if (gst_scheduler_interrupt (GST_RPAD_SCHED (queue->sinkpad), GST_ELEMENT (queue)))
           return;
+	/* if we got here bacause we were unlocked after a flush, we don't need
+	 * to add the buffer to the queue again */
+	if (queue->flush) {
+          GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "not adding pending buffer after flush");
+	  return;
+	}
+        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "adding pending buffer after interrupt");
 	goto restart;
       }
       if (GST_STATE (queue) != GST_STATE_PLAYING) {
@@ -580,8 +593,9 @@ gst_queue_handle_src_event (GstPad *pad, GstEvent *event)
       gst_queue_locked_flush (queue);
       break;
     case GST_EVENT_SEEK:
-      if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH)
+      if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
         gst_queue_locked_flush (queue);
+      }
     default:
       break;
   }
