@@ -66,6 +66,7 @@ struct _GstElementDetails
  */
 #define GST_STATE(obj)			(GST_ELEMENT(obj)->current_state)
 #define GST_STATE_PENDING(obj)		(GST_ELEMENT(obj)->pending_state)
+#define GST_STATE_ERROR(obj)		(GST_ELEMENT(obj)->state_error)
 
 /* Note: using 8 bit shift mostly "just because", it leaves us enough room to grow <g> */
 #define GST_STATE_TRANSITION(obj)	((GST_STATE(obj)<<8) | GST_STATE_PENDING(obj))
@@ -173,32 +174,34 @@ struct _GstElement
 
   /*< public > *//* with STATE_LOCK */
   /* element state */
-  GMutex *state_lock;
-  GCond *state_cond;
-  guint8 current_state;
-  guint8 pending_state;
+  GMutex   *state_lock;
+  GCond    *state_cond;
+  guint8    current_state;
+  guint8    pending_state;
+  gboolean  state_error; /* flag is set when the element has an error in the last state
+			    change. it is cleared when doing another state change. */
 
   /*< public > *//* with LOCK */
   /* element manager */
-  GstPipeline *manager;
-  GstBus *bus;
+  GstPipeline  *manager;
+  GstBus       *bus;
   GstScheduler *scheduler;
   /* private pointer for the scheduler */
-  gpointer sched_private;
+  gpointer      sched_private;
 
   /* allocated clock */
-  GstClock *clock;
-  GstClockTimeDiff base_time;   /* NULL/READY: 0 - PAUSED: current time - PLAYING: difference to clock */
+  GstClock         *clock;
+  GstClockTimeDiff  base_time;   /* NULL/READY: 0 - PAUSED: current time - PLAYING: difference to clock */
 
   /* element pads, these lists can only be iterated while holding
    * the LOCK or checking the cookie after each LOCK. */
-  guint16 numpads;
-  GList *pads;
-  guint16 numsrcpads;
-  GList *srcpads;
-  guint16 numsinkpads;
-  GList *sinkpads;
-  guint32 pads_cookie;
+  guint16   numpads;
+  GList    *pads;
+  guint16   numsrcpads;
+  GList    *srcpads;
+  guint16   numsinkpads;
+  GList    *sinkpads;
+  guint32   pads_cookie;
 
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
@@ -236,9 +239,9 @@ struct _GstElementClass
   void (*release_pad) (GstElement * element, GstPad * pad);
 
   /* state changes */
-    gboolean (*get_state) (GstElement * element, GstElementState * state,
-      GstElementState * pending, GTimeVal * timeout);
-    GstElementStateReturn (*change_state) (GstElement * element);
+  GstElementStateReturn (*get_state) 	(GstElement * element, GstElementState * state,
+      					 GstElementState * pending, GTimeVal * timeout);
+  GstElementStateReturn (*change_state) (GstElement * element);
 
   /* manager */
   void (*set_manager) (GstElement * element, GstPipeline * pipeline);
@@ -353,18 +356,20 @@ void gst_element_message_full (GstElement * element, GstMessageType type,
     const gchar * function, gint line);
 
 /* state management */
-gboolean gst_element_is_locked_state (GstElement * element);
-gboolean gst_element_set_locked_state (GstElement * element,
-    gboolean locked_state);
-gboolean gst_element_sync_state_with_parent (GstElement * element);
+gboolean 		gst_element_is_locked_state 		(GstElement * element);
+gboolean 		gst_element_set_locked_state 		(GstElement * element,
+   								 gboolean locked_state);
+gboolean 		gst_element_sync_state_with_parent 	(GstElement * element);
 
-gboolean gst_element_get_state (GstElement * element, GstElementState * state,
-    GstElementState * pending, GTimeVal * timeout);
-GstElementStateReturn gst_element_set_state (GstElement * element,
-    GstElementState state);
+GstElementStateReturn 	gst_element_get_state 			(GstElement * element, 
+								 GstElementState * state,
+    								 GstElementState * pending, 
+								 GTimeVal * timeout);
+GstElementStateReturn 	gst_element_set_state 			(GstElement * element,
+   								 GstElementState state);
 
-void gst_element_abort_state (GstElement * element);
-void gst_element_commit_state (GstElement * element);
+void 			gst_element_abort_state 		(GstElement * element);
+void 			gst_element_commit_state 		(GstElement * element);
 
 /* factory management */
 GstElementFactory *gst_element_get_factory (GstElement * element);

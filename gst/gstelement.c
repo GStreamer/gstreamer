@@ -66,7 +66,7 @@ static void gst_element_base_class_finalize (gpointer g_class);
 static void gst_element_dispose (GObject * object);
 
 static GstElementStateReturn gst_element_change_state (GstElement * element);
-static gboolean gst_element_get_state_func (GstElement * element,
+static GstElementStateReturn gst_element_get_state_func (GstElement * element,
     GstElementState * state, GstElementState * pending, GTimeVal * timeout);
 static void gst_element_set_manager_func (GstElement * element,
     GstPipeline * manager);
@@ -1559,11 +1559,11 @@ gst_element_sync_state_with_parent (GstElement * element)
 }
 
 /* MT safe */
-static gboolean
+static GstElementStateReturn
 gst_element_get_state_func (GstElement * element,
     GstElementState * state, GstElementState * pending, GTimeVal * timeout)
 {
-  gboolean ret = FALSE;
+  GstElementStateReturn ret = GST_STATE_FAILURE;
   GstElementState old_pending;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
@@ -1578,10 +1578,14 @@ gst_element_get_state_func (GstElement * element,
         *state = GST_STATE (element);
       if (pending)
         *pending = GST_STATE_PENDING (element);
-      ret = FALSE;
+      ret = GST_STATE_ASYNC;
     } else {
-      /* could be success or failure, we could check here if the
-       * state is equal to the old pending state */
+      /* could be success or failure */
+      if (old_pending == GST_STATE (element)) {
+        ret = GST_STATE_SUCCESS;
+      } else {
+        ret = GST_STATE_FAILURE;
+      }
     }
   }
   /* if nothing is pending anymore we can return TRUE and
@@ -1591,7 +1595,7 @@ gst_element_get_state_func (GstElement * element,
       *state = GST_STATE (element);
     if (pending)
       *pending = GST_STATE_VOID_PENDING;
-    ret = TRUE;
+    ret = GST_STATE_SUCCESS;
   }
   GST_STATE_UNLOCK (element);
 
@@ -1605,23 +1609,32 @@ gst_element_get_state_func (GstElement * element,
  * @pending: a pointer to #GstElementState to hold the pending state.
  *           Can be NULL.
  * @timeout: a #GTimeVal to specify the timeout for an async
- *           state change.
+ *           state change or NULL for infinite timeout.
  *
- * Gets the state of the element.
+ * Gets the state of the element. 
  *
- * Returns: TRUE if the element has no more pending state, FALSE
- *          if the element is still performing a state change.
+ * For elements that performed an ASYNC state change, as reported by 
+ * #gst_element_set_state(), this function will block up to the 
+ * specified timeout value for the state change to complete. 
+ * If the element completes the state change or goes into
+ * an error, this function returns immediatly with a return value of
+ * GST_STATE_SUCCESS or GST_STATE_FAILURE respectively. 
+ *
+ * Returns: GST_STATE_SUCCESS if the element has no more pending state and
+ *          the last state change succeeded, GST_STATE_ASYNC
+ *          if the element is still performing a state change or 
+ *          GST_STATE_FAILURE if the last state change failed.
  *
  * MT safe.
  */
-gboolean
+GstElementStateReturn
 gst_element_get_state (GstElement * element,
     GstElementState * state, GstElementState * pending, GTimeVal * timeout)
 {
   GstElementClass *oclass;
-  gboolean result = FALSE;
+  GstElementStateReturn result = GST_STATE_FAILURE;
 
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
@@ -1652,14 +1665,14 @@ gst_element_abort_state (GstElement * element)
 
   pending = GST_STATE_PENDING (element);
 
-  if (pending != GST_STATE_VOID_PENDING) {
+  if (pending != GST_STATE_VOID_PENDING && !GST_STATE_ERROR (element)) {
     GstElementState old_state = GST_STATE (element);
 
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
         "aborting state from %s to %s", gst_element_state_get_name (old_state),
         gst_element_state_get_name (pending));
 
-    GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
+    GST_STATE_ERROR (element) = TRUE;
 
     GST_STATE_BROADCAST (element);
   }
@@ -1726,6 +1739,9 @@ gst_element_set_state (GstElement * element, GstElementState state)
   /* get the element state lock */
   GST_STATE_LOCK (element);
 
+  /* clear the error flag */
+  GST_STATE_ERROR (element) = FALSE;
+
   /* start with the current state */
   current = GST_STATE (element);
 
@@ -1749,17 +1765,11 @@ gst_element_set_state (GstElement * element, GstElementState state)
     /* set the pending state variable */
     GST_STATE_PENDING (element) = pending;
 
-    if (pending != state) {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-          "intermediate: setting state from %s to %s",
-          gst_element_state_get_name (current),
-          gst_element_state_get_name (pending));
-    } else {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-          "final: setting state from %s to %s",
-          gst_element_state_get_name (current),
-          gst_element_state_get_name (pending));
-    }
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+        "%s: setting state from %s to %s",
+        (pending != state ? "intermediate" : "final"),
+        gst_element_state_get_name (current),
+        gst_element_state_get_name (pending));
 
     /* call the state change function so it can set the state */
     if (oclass->change_state)

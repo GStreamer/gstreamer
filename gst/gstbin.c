@@ -53,7 +53,7 @@ GType _gst_bin_type = 0;
 static void gst_bin_dispose (GObject * object);
 
 static GstElementStateReturn gst_bin_change_state (GstElement * element);
-static gboolean gst_bin_get_state (GstElement * element,
+static GstElementStateReturn gst_bin_get_state (GstElement * element,
     GstElementState * state, GstElementState * pending, GTimeVal * timeout);
 
 #ifndef GST_DISABLE_INDEX
@@ -645,12 +645,12 @@ gst_bin_iterate_sinks (GstBin * bin)
  *
  * MT safe
  */
-static gboolean
+static GstElementStateReturn
 gst_bin_get_state (GstElement * element, GstElementState * state,
     GstElementState * pending, GTimeVal * timeout)
 {
   GstBin *bin = GST_BIN (element);
-  gboolean ret;
+  GstElementStateReturn ret;
   GList *children;
   guint32 children_cookie;
 
@@ -661,7 +661,7 @@ gst_bin_get_state (GstElement * element, GstElementState * state,
    * is still busy with its state change. */
   GST_LOCK (bin);
 restart:
-  ret = TRUE;
+  ret = GST_STATE_SUCCESS;
   children = bin->children;
   children_cookie = bin->children_cookie;
   while (children) {
@@ -670,13 +670,14 @@ restart:
     gst_object_ref (GST_OBJECT_CAST (child));
     GST_UNLOCK (bin);
 
-    /* ret is false if some child is still performing the state change */
+    /* ret is ASYNC if some child is still performing the state change */
     ret = gst_element_get_state (child, NULL, NULL, timeout);
 
     gst_object_unref (GST_OBJECT_CAST (child));
 
-    if (!ret) {
-      /* some child is still busy, return FALSE */
+    if (ret != GST_STATE_SUCCESS) {
+      /* some child is still busy or in error, we can report that
+       * right away. */
       goto done;
     }
     /* now grab the lock to iterate to the next child */
@@ -692,9 +693,18 @@ restart:
 done:
   /* now we can take the state lock */
   GST_STATE_LOCK (bin);
-  if (ret) {
-    /* no async children, we can commit the state */
-    gst_element_commit_state (element);
+  switch (ret) {
+    case GST_STATE_SUCCESS:
+      /* we can commit the state */
+      gst_element_commit_state (element);
+      break;
+    case GST_STATE_FAILURE:
+      /* some element failed, abort the state change */
+      gst_element_abort_state (element);
+      break;
+    default:
+      /* other cases are just passed along */
+      break;
   }
 
   /* and report the state if needed */

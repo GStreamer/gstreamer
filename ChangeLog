@@ -1,3 +1,16 @@
+2005-01-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (gst_bin_set_index), (gst_bin_set_clock),
+	(gst_bin_set_bus), (gst_bin_set_scheduler), (gst_bin_add_func),
+	(gst_bin_iterate_elements), (gst_bin_get_state),
+	(gst_bin_change_state), (gst_bin_get_by_name_recurse_up):
+	* gst/gstelement.c: (gst_element_add_pad),
+	(gst_element_remove_pad), (gst_element_get_state_func),
+	(gst_element_get_state), (gst_element_abort_state),
+	(gst_element_set_state), (gst_element_pads_activate):
+	* gst/gstelement.h:
+	Patch state changes according to design document.
+
 2005-01-11  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:
