@@ -1,3 +1,18 @@
+2004-02-05  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_change_state):
+	  be sure to stop the clock when going to paused
+	* sys/oss/gstosssink.c: (gst_osssink_change_state):
+	  reset number of transmitted when going to ready.
+	fixes #132935
+
+2004-02-05  Charles Schmidt <cschmidt2@emich.edu>
+
+	reviewed by Benjamin Otte
+
+	* ext/mad/gstid3tag.c: (gst_mad_id3_to_tag_list):
+	  extract track count (fixes #133410)
+
 2004-02-04  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_do_caps_nego):

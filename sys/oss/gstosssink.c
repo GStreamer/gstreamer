@@ -582,6 +582,7 @@ gst_osssink_change_state (GstElement *element)
       if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN))
         ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_RESET, 0);
       gst_osselement_reset (GST_OSSELEMENT (osssink));
+      osssink->handled = 0;
       break;
     default:
       break;
