@@ -100,6 +100,7 @@ gst_buffer_new_from_pool (GstBufferPool *pool, guint64 location, gint size)
   buffer = pool->buffer_new (pool, location, size, pool->user_data);
   buffer->pool = pool;
   buffer->free = pool->buffer_free;
+  buffer->copy = pool->buffer_copy;
   buffer->pool_private = pool->user_data;
   
   return buffer;

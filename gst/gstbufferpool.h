@@ -56,6 +56,7 @@ struct _GstBufferPool {
 
   GstBufferPoolBufferNewFunction buffer_new;
   GstBufferFreeFunc buffer_free;
+  GstBufferCopyFunc buffer_copy;
   GstBufferPoolDestroyHook destroy_hook;
     
   gpointer user_data;
@@ -76,6 +77,8 @@ void 		gst_buffer_pool_set_buffer_new_function	        (GstBufferPool *pool,
                                                                  GstBufferPoolBufferNewFunction create);
 void 		gst_buffer_pool_set_buffer_free_function	(GstBufferPool *pool, 
                                                                  GstBufferFreeFunc destroy); 
+void 		gst_buffer_pool_set_buffer_copy_function	(GstBufferPool *pool, 
+                                                                 GstBufferCopyFunc copy); 
 void 		gst_buffer_pool_set_destroy_hook		(GstBufferPool *pool, 
                                                                  GstBufferPoolDestroyHook destroy);
 void 		gst_buffer_pool_set_user_data			(GstBufferPool *pool, 

@@ -172,11 +172,11 @@ gst_buffer_pool_set_buffer_new_function (GstBufferPool *pool,
 }
 
 /**
- * gst_buffer_pool_set_buffer_destroy_function:
- * @pool: the pool to set the buffer destroy function for
- * @destroy: the destroy function
+ * gst_buffer_pool_set_buffer_free_function:
+ * @pool: the pool to set the buffer free function for
+ * @destroy: the free function
  *
- * Sets the function that will be called when a buffer is destroyed 
+ * Sets the function that will be called when a buffer is freed
  * from this pool.
  */
 void 
@@ -189,6 +189,23 @@ gst_buffer_pool_set_buffer_free_function (GstBufferPool *pool,
 }
 
 /**
+ * gst_buffer_pool_set_buffer_copy_function:
+ * @pool: the pool to set the buffer copy function for
+ * @destroy: the copy function
+ *
+ * Sets the function that will be called when a buffer is copied.
+ * If this is not set, the default GstBuffer implementation will be used.
+ */
+void 
+gst_buffer_pool_set_buffer_copy_function (GstBufferPool *pool, 
+                                          GstBufferCopyFunc copy)
+{
+  g_return_if_fail (pool != NULL);
+  
+  pool->buffer_copy = copy;
+}
+
+/**
  * gst_buffer_pool_set_pool_destroy_hook:
  * @pool: the pool to set the destroy hook for
  * @destroy: the destroy function
@@ -197,8 +214,8 @@ gst_buffer_pool_set_buffer_free_function (GstBufferPool *pool,
  * You can take care of you private_data here.
  */
 void 
-gst_buffer_pool_set_pool_destroy_hook (GstBufferPool *pool, 
-                                       GstBufferPoolDestroyHook destroy)
+gst_buffer_pool_set_destroy_hook (GstBufferPool *pool, 
+                                  GstBufferPoolDestroyHook destroy)
 {
   g_return_if_fail (pool != NULL);
   
