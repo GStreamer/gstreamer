@@ -453,15 +453,6 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	GST_DEBUG (0, "sequence repeated");
         break;
       case STATE_GOP:
-        if (info->user_data_len > 0) {
-          if (GST_PAD_IS_USABLE (mpeg2dec->userdatapad)) {
-            GstBuffer *udbuf = gst_buffer_new_and_alloc (info->user_data_len);
-
-            memcpy (GST_BUFFER_DATA (udbuf), info->user_data, info->user_data_len);
-
-            gst_pad_push (mpeg2dec->userdatapad, udbuf);
-          }
-        }
         break;
       case STATE_PICTURE:
       {
@@ -530,7 +521,6 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	  if (picture->flags & PIC_FLAG_SKIP ||
 	      mpeg2dec->discont_pending ||
 	      (mpeg2dec->first && !GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_KEY_UNIT))) 
-	  {
 	  */
 	  if (picture->flags & PIC_FLAG_SKIP || 
 	      !GST_PAD_IS_USABLE (mpeg2dec->srcpad)) {
@@ -563,10 +553,18 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
         break;
     }
 
-    /* If there is user data and user data pad is usable, push it.
-     *
+    /*
      * FIXME: should pass more information such as state the user data is from
      */
+    if (info->user_data_len > 0) {
+      if (GST_PAD_IS_USABLE (mpeg2dec->userdatapad)) {
+        GstBuffer *udbuf = gst_buffer_new_and_alloc (info->user_data_len);
+
+        memcpy (GST_BUFFER_DATA (udbuf), info->user_data, info->user_data_len);
+
+        gst_pad_push (mpeg2dec->userdatapad, udbuf);
+      }
+    }
   }
   gst_buffer_unref(buf);
 }
