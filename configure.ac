@@ -692,6 +692,7 @@ dnl testsuite/refcounting/Makefile
 AC_OUTPUT(
 Makefile
 include/Makefile
+m4/Makefile
 gst/Makefile
 gst/gstversion.h
 gst/types/Makefile
@@ -740,6 +741,7 @@ docs/plugins/Makefile
 docs/plugins/gstreamer-plugins.types
 docs/manual/Makefile
 docs/fwg/Makefile
+docs/xsl/Makefile
 stamp.h
 gstreamer.pc
 gstreamer-uninstalled.pc
