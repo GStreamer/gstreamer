@@ -207,11 +207,11 @@ G_GNUC_UNUSED static gchar *_debug_string = NULL;
 #ifdef G_HAVE_ISO_VARARGS
 
 #ifdef GST_DEBUG_COLOR
-  #define GST_DEBUG_ENTER(...) GST_DEBUG( 31 , "\033[00;37mentering\033[00m :" __VA_ARGS__ )
-  #define GST_DEBUG_LEAVE(...) GST_DEBUG( 31 , "\033[00;37mleaving\033[00m :"  __VA_ARGS__ )
+  #define GST_DEBUG_ENTER(...) GST_DEBUG( 31 , "\033[00;37mentering\033[00m: " __VA_ARGS__ )
+  #define GST_DEBUG_LEAVE(...) GST_DEBUG( 31 , "\033[00;37mleaving\033[00m: "  __VA_ARGS__ )
 #else
-  #define GST_DEBUG_ENTER(...) GST_DEBUG( 31 , "entering :" __VA_ARGS__ )
-  #define GST_DEBUG_LEAVE(...) GST_DEBUG( 31 , "leaving :" __VA_ARGS__ )
+  #define GST_DEBUG_ENTER(...) GST_DEBUG( 31 , "entering: " __VA_ARGS__ )
+  #define GST_DEBUG_LEAVE(...) GST_DEBUG( 31 , "leaving: " __VA_ARGS__ )
 #endif
 
 #elif defined(G_HAVE_GNUC_VARARGS)
