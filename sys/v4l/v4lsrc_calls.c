@@ -484,7 +484,7 @@ gst_v4lsrc_requeue_frame (GstV4lSrc *v4lsrc, gint  num)
 gboolean
 gst_v4lsrc_capture_stop (GstV4lSrc *v4lsrc)
 {
-  int n, num;
+  int n;
 
 #ifdef DEBUG
   fprintf(stderr, "V4LSRC: gst_v4lsrc_capture_stop()\n");

@@ -414,8 +414,11 @@ gst_v4lmjpegsrc_change_state (GstElement *element)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+  if (GST_ELEMENT_CLASS (parent_class)->change_state) {
     parent_value = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  } else {
+    parent_value = GST_STATE_FAILURE;
+  }
 
   if (GST_STATE_TRANSITION(element) == GST_STATE_NULL_TO_READY)
   {

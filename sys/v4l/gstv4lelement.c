@@ -570,6 +570,7 @@ gst_v4lelement_change_state (GstElement *element)
           case V4L_AUDIO_MUTE:   temp = v4lelement->mute;   break;
           case V4L_AUDIO_VOLUME: temp = v4lelement->volume; break;
           case V4L_AUDIO_MODE:   temp = v4lelement->mode;   break;
+	  default: temp = 0; g_assert_not_reached ();
         }
         if (temp >= 0 && gst_v4l_has_audio(v4lelement))
         {
@@ -585,6 +586,7 @@ gst_v4lelement_change_state (GstElement *element)
           case V4L_PICTURE_BRIGHTNESS: temp = v4lelement->brightness; break;
           case V4L_PICTURE_SATURATION: temp = v4lelement->saturation; break;
           case V4L_PICTURE_CONTRAST:   temp = v4lelement->contrast;   break;
+	  default: temp = 0; g_assert_not_reached ();
         }
         if (temp >= 0)
         {

@@ -66,7 +66,6 @@ static void                  gst_v4lmjpegsink_get_property (GObject             
                                                             guint                prop_id,
                                                             GValue               *value,
                                                             GParamSpec           *pspec);
-static void                  gst_v4lmjpegsink_close        (GstV4lMjpegSink      *v4lmjpegsink);
 static GstElementStateReturn gst_v4lmjpegsink_change_state (GstElement           *element);
 static void		     gst_v4lmjpegsink_set_clock    (GstElement *element, GstClock *clock);
 
@@ -237,7 +236,7 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
   if (v4lmjpegsink->clock) {
     GST_DEBUG (0,"videosink: clock wait: %llu", GST_BUFFER_TIMESTAMP(buf));
 
-    jitter = gst_clock_current_diff(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP (buf));
+    jitter = 0; /* FIXME: jitter = gst_clock_current_diff(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP (buf)); */
 
     if (jitter > 500000 || jitter < -500000)
       GST_DEBUG (0, "jitter: %lld", jitter);
@@ -367,8 +366,11 @@ gst_v4lmjpegsink_change_state (GstElement *element)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+  if (GST_ELEMENT_CLASS (parent_class)->change_state) {
     parent_value = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  } else {
+    parent_value = GST_STATE_FAILURE;
+  }
 
   if (GST_STATE_TRANSITION(element) == GST_STATE_NULL_TO_READY)
   {
