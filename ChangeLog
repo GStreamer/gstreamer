@@ -1,5 +1,13 @@
 2004-01-25  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_avih),
+	(gst_avi_demux_stream_odml), (gst_avi_demux_stream_index):
+	  The index reading was broken. The rest worked fine, but the whole
+	  goal of my rewrite was to make avidemux readable, and this was
+	  not at all readable. Please use typed variables.
+
+2004-01-25  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_info):
 	  Additional pad usability check.
 	* gst/mpeg1videoparse/gstmp1videoparse.c: (gst_mp1videoparse_init),
