@@ -1,5 +1,11 @@
 2004-07-15  Benjamin Otte  <otte@gnome.org>
 
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_check_xshm_calls),
+	(gst_xvimagesink_xvimage_new), (gst_xvimagesink_xvimage_destroy):
+	  fix for non-shm xv. Original patch by Tim Ringenbach (fixes #147248)
+
+2004-07-15  Benjamin Otte  <otte@gnome.org>
+
 	* ext/alsa/gstalsa.c: (gst_alsa_open_audio),
 	(gst_alsa_sw_params_dump), (gst_alsa_hw_params_dump),
 	(gst_alsa_close_audio):
