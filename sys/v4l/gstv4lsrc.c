@@ -164,14 +164,14 @@ gst_v4lsrc_class_init (GstV4lSrcClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUMBUFS,
       g_param_spec_int ("num_buffers", "Num Buffers", "Number of buffers",
-          G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
+          0, G_MAXINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
       g_param_spec_int ("buffer_size", "Buffer Size", "Size of buffers",
-          G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
+          0, G_MAXINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_USE_FIXED_FPS,
       g_param_spec_boolean ("use_fixed_fps", "Use Fixed FPS",
           "Drop/Insert frames to reach a certain FPS (TRUE) "
-          "or adapt FPS to suit the number of frabbed frames",
+          "or adapt FPS to suit the number of grabbed frames",
           TRUE, G_PARAM_READWRITE));
 
   /* signals */
@@ -615,6 +615,7 @@ gst_v4lsrc_getcaps (GstPad * pad)
   GstCaps *list;
   GstV4lSrc *v4lsrc = GST_V4LSRC (gst_pad_get_parent (pad));
   struct video_capability *vcap = &GST_V4LELEMENT (v4lsrc)->vcap;
+  gfloat fps;
   GList *item;
 
   if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lsrc))) {
@@ -628,12 +629,15 @@ gst_v4lsrc_getcaps (GstPad * pad)
     one = gst_v4lsrc_palette_to_caps (GPOINTER_TO_INT (item->data));
     if (!one)
       g_print ("Palette %d gave no caps\n", GPOINTER_TO_INT (item->data));
-    GST_DEBUG_OBJECT (v4lsrc, "Device reports w: %d-%d, h: %d-%d",
-        vcap->minwidth, vcap->maxwidth, vcap->minheight, vcap->maxheight);
+    fps = gst_v4lsrc_get_fps (v4lsrc);
+    GST_DEBUG_OBJECT (v4lsrc,
+        "Device reports w: %d-%d, h: %d-%d, fps: %f for palette %d",
+        vcap->minwidth, vcap->maxwidth, vcap->minheight, vcap->maxheight, fps,
+        GPOINTER_TO_INT (item->data));
+
     gst_caps_set_simple (one, "width", GST_TYPE_INT_RANGE, vcap->minwidth,
         vcap->maxwidth, "height", GST_TYPE_INT_RANGE, vcap->minheight,
-        vcap->maxheight, "framerate", G_TYPE_DOUBLE,
-        gst_v4lsrc_get_fps (v4lsrc), NULL);
+        vcap->maxheight, "framerate", G_TYPE_DOUBLE, fps, NULL);
     gst_caps_append (list, one);
   }
 
