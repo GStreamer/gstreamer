@@ -72,8 +72,8 @@ gst_property_probe_iface_init (GstPropertyProbeInterface *iface)
     gst_property_probe_signals[SIGNAL_PROBE_NEEDED] =
       g_signal_new ("probe_needed", G_TYPE_FROM_CLASS (iface), G_SIGNAL_RUN_LAST,
 		    G_STRUCT_OFFSET (GstPropertyProbeInterface, probe_needed),
-		    NULL, NULL, g_cclosure_marshal_VOID__VOID,
-		    G_TYPE_NONE, 0);
+		    NULL, NULL, g_cclosure_marshal_VOID__POINTER,
+		    G_TYPE_NONE, 1, G_TYPE_POINTER);
     initialized = TRUE;
   }
 
