@@ -171,12 +171,13 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
 
 %files
 %defattr(-, root, root)
-%doc AUTHORS COPYING README RELEASE REQUIREMENTS
+%doc AUTHORS COPYING README REQUIREMENTS
 %{_bindir}/gst-launch-ext-%{majorminor}
 %{_bindir}/gst-visualise-%{majorminor}
 %{_mandir}/man1/gst-launch-ext-%{majorminor}.*
 %{_mandir}/man1/gst-visualise-%{majorminor}*
 %{_libdir}/libgstplay-%{majorminor}.so.*
+%{_datadir}/locale
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioscale.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudio.so
 %{_libdir}/gstreamer-%{majorminor}/libgstidct.so
@@ -250,7 +251,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsmoothwave.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttextoverlay.so
-%{_libdir}/gstreamer-%{majorminor}/libgstffmpeg.so
 %{_libdir}/gstreamer-%{majorminor}/libgstxwindowlistener.*
 %{_libdir}/gstreamer-%{majorminor}/libgstgnomevfs.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmatroska.so
@@ -262,7 +262,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstswitch.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttagediting.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiofilter.so
-%{_libdir}/gstreamer-%{majorminor}/libgstaudiofilterexample.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgamma.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcolorspace.so
 # non-core plugins with external dependencies
@@ -316,6 +315,14 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideosink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalance.h
 %{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalancechannel.h
+%{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalance-enumtypes.h
+%{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalance-marshal.h
+%{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixer-enumtypes.h
+%{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixer-marshal.h
+%{_includedir}/gstreamer-%{majorminor}/gst/play/play-enumtypes.h
+%{_includedir}/gstreamer-%{majorminor}/gst/play/play.h
+%{_includedir}/gstreamer-%{majorminor}/gst/tuner/tuner-enumtypes.h
+%{_includedir}/gstreamer-%{majorminor}/gst/tuner/tuner-marshal.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixertrack.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tuner/tuner.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tuner/tunerchannel.h
@@ -323,7 +330,6 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/xoverlay/xoverlay.h
 %{_includedir}/gstreamer-%{majorminor}/gst/xwindowlistener/xwindowlistener.h
 %{_includedir}/gstreamer-%{majorminor}/gst/propertyprobe/propertyprobe.h
-%{_includedir}/gstreamer-%{majorminor}/gst/play/gstplay.h
 %{_includedir}/gstreamer-%{majorminor}/gst/riff*
 %{_includedir}/gstreamer-%{majorminor}/gst/tag/tag.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiofilter.h
@@ -908,8 +914,12 @@ Plug-in for playing ASF movies under GStreamer.
 
 
 %changelog
+* Fri Feb 13 2004 Christian Schaller <Uraeus@gnome.org>
+- Added latest new headers
+
 * Wed Jan 21 2004 Christian Schaller <Uraeus@gnome.org>
 - added NAS plugin
+- added i18n locale dir
 
 * Fri Jan 16 2004 Christian Schaller <uraeus@gnome.org>
 - added libcaca plugin
