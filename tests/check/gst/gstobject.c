@@ -327,6 +327,111 @@ START_TEST (test_fake_object_name_threaded_unique)
 }
 
 END_TEST
+/* parentage test on GstFakeObject */
+START_TEST (test_fake_object_parentage)
+{
+  GstObject *object1, *object2;
+  GstObject *parent;
+  gboolean result;
+
+  /* create new object */
+  object1 = g_object_new (gst_fake_object_get_type (), NULL);
+  fail_if (object1 == NULL, "Failed to create instance of GstFakeObject");
+  fail_unless (GST_IS_OBJECT (object1),
+      "GstFakeObject instance is not a GstObject");
+  fail_unless (GST_OBJECT_IS_FLOATING (object1),
+      "GstFakeObject instance is not floating");
+
+  /* check the parent */
+  parent = gst_object_get_parent (object1);
+  fail_if (parent != NULL, "GstFakeObject has parent");
+  /* try to set a NULL parent, this should give a warning */
+  ASSERT_CRITICAL (result = gst_object_set_parent (object1, NULL));
+  fail_if (result == TRUE, "GstFakeObject accepted NULL parent");
+  /* try to set itself as parent, we expect a warning here */
+  ASSERT_CRITICAL (result = gst_object_set_parent (object1, object1));
+  fail_if (result == TRUE, "GstFakeObject accepted itself as parent");
+
+  /* should still be floating */
+  fail_unless (GST_OBJECT_IS_FLOATING (object1),
+      "GstFakeObject instance is not floating");
+
+  /* create another object */
+  object2 = g_object_new (gst_fake_object_get_type (), NULL);
+  fail_if (object2 == NULL,
+      "Failed to create another instance of GstFakeObject");
+  fail_unless (GST_IS_OBJECT (object2),
+      "second GstFakeObject instance is not a GstObject");
+  fail_unless (GST_OBJECT_IS_FLOATING (object1),
+      "GstFakeObject instance is not floating");
+
+  /* try to set other object as parent */
+  result = gst_object_set_parent (object1, object2);
+  fail_if (result == FALSE,
+      "GstFakeObject could not accept other object as parent");
+
+  /* should not be floating anymore */
+  fail_if (GST_OBJECT_IS_FLOATING (object1),
+      "GstFakeObject instance is still floating");
+  /* parent should still be floating */
+  fail_unless (GST_OBJECT_IS_FLOATING (object2),
+      "GstFakeObject instance is not floating");
+
+  /* check the parent */
+  parent = gst_object_get_parent (object1);
+  fail_if (parent != object2, "GstFakeObject has wrong parent");
+  gst_object_unref (parent);
+  /* try to set other object as parent again */
+  result = gst_object_set_parent (object1, object2);
+  fail_if (result == TRUE, "GstFakeObject could set parent twice");
+
+  /* ref before unparenting */
+  gst_object_ref (object1);
+  /* clear parent of object */
+  gst_object_unparent (object1);
+
+  /* check the parent */
+  parent = gst_object_get_parent (object1);
+  fail_if (parent != NULL, "GstFakeObject has parent");
+
+  /* object should not be floating */
+  fail_if (GST_OBJECT_IS_FLOATING (object1),
+      "GstFakeObject instance is floating again");
+
+  gst_object_unref (object1);
+  gst_object_unref (object2);
+}
+
+END_TEST
+/* parentage test dispose on GstFakeObject, since our testcase
+ * does not handle the parent relation completely, the parent does
+ * not hold a ref to the child, we cannot dispose the parent to
+ * dipose the child as well. This test needs to be run with DEBUG
+ * info to check if the finalize methods are called correctly. */
+START_TEST (test_fake_object_parentage_dispose)
+{
+  GstObject *object1, *object2;
+  gboolean result;
+
+  object1 = g_object_new (gst_fake_object_get_type (), NULL);
+  fail_if (object1 == NULL, "Failed to create instance of GstFakeObject");
+
+  object2 = g_object_new (gst_fake_object_get_type (), NULL);
+  fail_if (object2 == NULL, "Failed to create instance of GstFakeObject");
+
+  /* try to set other object as parent */
+  result = gst_object_set_parent (object1, object2);
+  fail_if (result == FALSE,
+      "GstFakeObject could not accept other object as parent");
+
+  /* clear parent of object */
+  gst_object_unparent (object1);
+
+  /* now dispose parent */
+  gst_object_unref (object2);
+}
+
+END_TEST
 /* test: try renaming a parented object, make sure it fails */
     Suite * gst_object_suite (void)
 {
@@ -339,6 +444,8 @@ END_TEST
   tcase_add_test (tc_chain, test_fake_object_name_threaded_wrong);
   tcase_add_test (tc_chain, test_fake_object_name_threaded_right);
   tcase_add_test (tc_chain, test_fake_object_name_threaded_unique);
+  tcase_add_test (tc_chain, test_fake_object_parentage);
+  tcase_add_test (tc_chain, test_fake_object_parentage_dispose);
   //tcase_add_checked_fixture (tc_chain, setup, teardown);
 
   /* SEGV tests go last so we can debug the others */

@@ -1,5 +1,12 @@
 2005-03-08  Wim Taymans  <wim@fluendo.com>
 
+	* check/gst/gstobject.c: (START_TEST), (gst_object_suite):
+	* gst/gstthread.c: (gst_thread_release_children_locks):
+	Added parentage check.
+	Fix build og GstThread again.
+
+2005-03-08  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-MT-refcounting.txt:
 	* docs/design/part-conventions.txt:
 	* docs/design/part-gstobject.txt:

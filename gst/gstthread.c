@@ -26,6 +26,7 @@
 #include "gstthread.h"
 #include "gstmarshal.h"
 #include "gstscheduler.h"
+#include "gstutils.h"
 #include "gstinfo.h"
 
 #define GST_CAT_DEFAULT GST_CAT_THREAD
