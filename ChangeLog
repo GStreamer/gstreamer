@@ -1,3 +1,8 @@
+2004-12-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/audio/Makefile.am:
+	  Try to fix buildbot.
+
 2004-12-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/tcp/gstmultifdsink.c:
