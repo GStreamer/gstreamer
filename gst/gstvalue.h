@@ -41,14 +41,16 @@ typedef int (* GstValueIntersectFunc) (GValue *dest, const GValue *value1,
         ((gchar) (((fourcc)>>16)&0xff)), \
         ((gchar) (((fourcc)>>24)&0xff))
 
-#define GST_VALUE_HOLDS_FOURCC(x) (G_VALUE_TYPE(x) == gst_type_fourcc)
-#define GST_VALUE_HOLDS_INT_RANGE(x) (G_VALUE_TYPE(x) == gst_type_int_range)
-#define GST_VALUE_HOLDS_DOUBLE_RANGE(x) (G_VALUE_TYPE(x) == gst_type_double_range)
-#define GST_VALUE_HOLDS_CAPS(x) TRUE /* FIXME */
+#define GST_VALUE_HOLDS_FOURCC(x)       (G_VALUE_HOLDS(x, gst_type_fourcc))
+#define GST_VALUE_HOLDS_INT_RANGE(x)    (G_VALUE_HOLDS(x, gst_type_int_range))
+#define GST_VALUE_HOLDS_DOUBLE_RANGE(x) (G_VALUE_HOLDS(x, gst_type_double_range))
+#define GST_VALUE_HOLDS_LIST(x)         (G_VALUE_HOLDS(x, gst_type_list))
+#define GST_VALUE_HOLDS_CAPS(x)         TRUE /* FIXME */
 
 #define GST_TYPE_FOURCC gst_type_fourcc
 #define GST_TYPE_INT_RANGE gst_type_int_range
 #define GST_TYPE_DOUBLE_RANGE gst_type_double_range
+#define GST_TYPE_LIST gst_type_list
 
 #define GST_VALUE_LESS_THAN (-1)
 #define GST_VALUE_EQUAL 0
@@ -58,6 +60,7 @@ typedef int (* GstValueIntersectFunc) (GValue *dest, const GValue *value1,
 extern GType gst_type_fourcc;
 extern GType gst_type_int_range;
 extern GType gst_type_double_range;
+extern GType gst_type_list;
 
 void gst_value_set_fourcc (GValue *value, guint32 fourcc);
 guint32 gst_value_get_fourcc (const GValue *value);

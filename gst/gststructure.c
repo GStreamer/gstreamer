@@ -601,7 +601,7 @@ gst_structure_remove_all_fields(GstStructure *structure)
  * @fieldname: the name of the field
  *
  * Finds the field with the given name, and returns the type of the
- * value it contains.  If the field is not found, G_TYPE_NONE is
+ * value it contains.  If the field is not found, G_TYPE_INVALID is
  * returned.
  *
  * Returns: the #GValue of the field
@@ -611,11 +611,11 @@ gst_structure_get_field_type(const GstStructure *structure, const gchar *fieldna
 {
   GstStructureField *field;
 
-  g_return_val_if_fail(structure != NULL, G_TYPE_NONE);
-  g_return_val_if_fail(fieldname != NULL, G_TYPE_NONE);
+  g_return_val_if_fail(structure != NULL, G_TYPE_INVALID);
+  g_return_val_if_fail(fieldname != NULL, G_TYPE_INVALID);
 
   field = gst_structure_get_field(structure, fieldname);
-  if(field == NULL) return G_TYPE_NONE;
+  if(field == NULL) return G_TYPE_INVALID;
 
   return G_VALUE_TYPE(&field->value);
 }
@@ -865,6 +865,67 @@ gst_structure_get_string(const GstStructure *structure, const gchar *fieldname)
   return g_value_get_string(&field->value);
 }
 
+typedef struct _GstStructureAbbreviation {
+  char *type_name;
+  GType type;
+} GstStructureAbbreviation;
+
+static GstStructureAbbreviation _gst_structure_abbrs[] = {
+  { "int",	G_TYPE_INT },
+  { "i",	G_TYPE_INT },
+  { "float",	G_TYPE_FLOAT },
+  { "f",	G_TYPE_FLOAT },
+  { "double",	G_TYPE_DOUBLE },
+  { "d",	G_TYPE_DOUBLE },
+//{ "fourcc",	GST_TYPE_FOURCC },
+  { "boolean",	G_TYPE_BOOLEAN },
+  { "bool",	G_TYPE_BOOLEAN },
+  { "b",	G_TYPE_BOOLEAN },
+  { "string",	G_TYPE_STRING },
+  { "str",	G_TYPE_STRING },
+  { "s",	G_TYPE_STRING }
+};
+
+static GType _gst_structure_from_abbr(const char *type_name)
+{
+  int i;
+
+  g_return_val_if_fail(type_name != NULL, G_TYPE_INVALID);
+
+  for(i=0;i<G_N_ELEMENTS(_gst_structure_abbrs);i++){
+    if(strcmp(type_name,_gst_structure_abbrs[i].type_name)==0){
+      return _gst_structure_abbrs[i].type;
+    }
+  }
+
+  /* FIXME shouldn't be a special case */
+  if (strcmp (type_name,"fourcc") == 0 || strcmp (type_name, "4") == 0) {
+    return GST_TYPE_FOURCC;
+  }
+
+  return g_type_from_name (type_name);
+}
+
+static const char *_gst_structure_to_abbr(GType type)
+{
+  int i;
+
+  g_return_val_if_fail(type != G_TYPE_INVALID, NULL);
+
+  for(i=0;i<G_N_ELEMENTS(_gst_structure_abbrs);i++){
+    if(type == _gst_structure_abbrs[i].type){
+      return _gst_structure_abbrs[i].type_name;
+    }
+  }
+
+  /* FIXME shouldn't be a special case */
+  if (type == GST_TYPE_FOURCC) {
+    return "fourcc";
+  }
+
+  return g_type_name(type);
+}
+
 /**
  * gst_structure_to_string:
  * @structure: a #GstStructure
@@ -892,11 +953,232 @@ gst_structure_to_string(const GstStructure *structure)
     g_value_init(&s_val, G_TYPE_STRING);
 
     g_value_transform(&field->value, &s_val);
-    g_string_append_printf(s, ", %s:%s", g_quark_to_string(field->name),
+    g_string_append_printf(s, ", %s:%s=%s", g_quark_to_string(field->name),
+	_gst_structure_to_abbr(G_VALUE_TYPE(&field->value)),
 	g_value_get_string(&s_val));
     g_value_unset(&s_val);
   }
   return g_string_free(s, FALSE);
+}
+
+/*
+ * r will still point to the string. if end == next, the string will not be 
+ * null-terminated. In all other cases it will be.
+ * end = pointer to char behind end of string, next = pointer to start of
+ * unread data.
+ * THIS FUNCTION MODIFIES THE STRING AND DETECTS INSIDE A NONTERMINATED STRING 
+ */
+static gboolean
+_gst_structure_parse_string (gchar *r, gchar **end, gchar **next)
+{
+  gchar *w;
+  gchar c = '\0';
+
+  w = r;
+  if (*r == '\'' || *r == '\"') {
+    c = *r;
+    r++;
+  }
+
+  for (;;r++) {
+    if (*r == '\0') {
+      if (c) {
+        goto error;
+      } else {
+        goto found;
+      }
+    }
+
+    if (*r == '\\') {
+      r++;
+      if (*r == '\0')
+        goto error;
+      *w++ = *r;
+      continue;
+    }
+
+    if (*r == c) {
+      r++;
+      if (*r == '\0')
+        goto found;
+      break;
+    }
+
+    if (!c) {
+      if (g_ascii_isspace (*r))
+        break;
+      /* this needs to be escaped */
+      if (*r == ',' || *r == ')' || *r == ']' || *r == ':' ||
+          *r == ';' || *r == '(' || *r == '[')
+        break;
+    }
+    *w++ = *r;
+  }
+
+found:
+  while (g_ascii_isspace (*r)) r++;
+  if (w != r)
+    *w++ = '\0';
+  *end = w;
+  *next = r;
+  return TRUE;
+
+error:
+  return FALSE;
+}
+
+static gboolean
+_gst_structure_parse_field (gchar *str, gchar **after, GstStructureField *field)
+{
+  /* NAME[:TYPE]=VALUE */
+  gchar *name;
+  gchar *type_name;
+  gchar *s, *del;
+  gchar *val;
+  gchar *end;
+  gboolean have_type = FALSE;
+  GType type = G_TYPE_INVALID;
+  int ret;
+
+g_print("parsing: \"%s\"\n", str);
+  name = s = str;
+  while (g_ascii_isalnum (*s) || *s == '_' || *s == '-') s++;
+  del = s;
+  while (g_ascii_isspace (*s)) s++;
+  if (!(*s == '=' || *s == ':')) return FALSE;
+  if (*s == ':') have_type = TRUE;
+  s++;
+  while (g_ascii_isspace (*s)) s++;
+  *del = '\0';
+
+  field->name = g_quark_from_string (name);
+
+  if (have_type) {
+    while (g_ascii_isspace (*s)) s++;
+    type_name = s;
+    while (g_ascii_isalnum (*s) || *s == '_' || *s == '-') s++;
+    del = s;
+    while (g_ascii_isspace (*s)) s++;
+    if (*s != '=') return FALSE;
+    s++;
+    while (g_ascii_isspace (*s)) s++;
+    *del = '\0';
+  
+g_print("type name is \"%s\"\n",type_name);
+    type = _gst_structure_from_abbr(type_name);
+g_print("type n is \"%s\"\n",g_type_name(type));
+
+    if (type == G_TYPE_INVALID) return FALSE;
+
+  } else {
+    if (g_ascii_isdigit (*s)) {
+      char *t = s;
+      while (g_ascii_isdigit (*t)) t++;
+      if (*t == '.'){
+        type = G_TYPE_DOUBLE;
+      } else {
+        type = G_TYPE_INT;
+      }
+    } else if (g_ascii_isalpha (*s) || *s == '"' || *s == '\'') {
+      type = G_TYPE_STRING;
+    } else {
+      /* FIXME */
+      return FALSE;
+    }
+  }
+
+  g_value_init(&field->value, type);
+
+  ret = FALSE;
+  val = s;
+  switch (type) {
+    case G_TYPE_INT:
+      {
+	int x;
+	x = strtol (val, &s, 0);
+	if (val != s) {
+	  g_value_set_int (&field->value, x);
+	  ret = TRUE;
+	}
+      }
+      break;
+    case G_TYPE_FLOAT:
+      {
+	double x;
+	x = g_ascii_strtod (val, &s);
+	if (val != s) {
+	  g_value_set_float (&field->value, x);
+	  ret = TRUE;
+	}
+      }
+      break;
+    case G_TYPE_DOUBLE:
+      {
+	double x;
+	x = g_ascii_strtod (val, &s);
+	if (val != s) {
+	  g_value_set_double (&field->value, x);
+	  ret = TRUE;
+	}
+      }
+      break;
+    case G_TYPE_BOOLEAN:
+      {
+	int len;
+	ret = _gst_structure_parse_string (val, &end, &s);
+	len = end - val;
+	if (ret) {
+	  if (strncmp (val, "true", len) == 0 ||
+	      strncmp (val, "yes", len) == 0 ||
+	      (len == 1 && (*val == 't' || *val == '1'))) {
+	    g_value_set_boolean (&field->value, TRUE);
+	  } else if (strncmp (val, "false", len) == 0 ||
+	      strncmp (val, "no", len) == 0 ||
+	      (len == 1 && (*val == 'f' || *val == '0'))) {
+	    g_value_set_boolean (&field->value, FALSE);
+	  } else {
+	    ret = FALSE;
+	  }
+	}
+      }
+      break;
+    case G_TYPE_STRING:
+      {
+	ret = _gst_structure_parse_string (val, &end, &s);
+	if (ret) {
+	  g_value_set_string_take_ownership (&field->value,
+	      g_strndup(val, end - val));
+	  ret = TRUE;
+	}
+      }
+      break;
+    default:
+      /* FIXME: make more general */
+      if (type == GST_TYPE_FOURCC) {
+	guint32 fourcc = 0;
+	if (g_ascii_isdigit (*s)) {
+	  fourcc = strtoul (val, &s, 0);
+	  if (val != s) {
+	    ret = TRUE;
+	  }
+	} else {
+	  ret = _gst_structure_parse_string (val, &end, &s);
+g_print("end - val = %d\n", end - val);
+	  if (end - val >= 4) {
+	    fourcc = GST_MAKE_FOURCC(val[0], val[1], val[2], val[3]);
+	    ret = TRUE;
+	  }
+	}
+	gst_value_set_fourcc (&field->value, fourcc);
+      } else {
+	g_critical("not handled");
+      }
+      break;
+  }
+  
+  *after = s;
+
+  return ret;
 }
 
 /**
@@ -908,15 +1190,49 @@ gst_structure_to_string(const GstStructure *structure)
  * Returns: a new #GstStructure
  */
 GstStructure *
-gst_structure_from_string (const gchar *string)
+gst_structure_from_string (const gchar *string, gchar **end)
 {
-  /* FIXME */
+  char *name;
+  char *copy;
+  char *w;
+  char *r;
+  char save;
+  GstStructure *structure;
+  GstStructureField field = { 0 };
+  gboolean res;
 
   g_return_val_if_fail(string != NULL, NULL);
 
-  g_assert_not_reached();
+  copy = g_strdup(string);
+  r = copy;
 
-  return NULL;
+  name = r;
+  res = _gst_structure_parse_string (r, &w, &r);
+  if (!res) return NULL;
+  
+  while (*r && g_ascii_isspace(*r)) r++;
+  if(!*r) return NULL;
+  if(*r != ';' && *r != ',') return NULL;
+  if(*r == ',') r++;
+
+  save = *w;
+  *w = 0;
+  structure = gst_structure_empty_new(name);
+  *w = save;
+
+  while (*r && g_ascii_isspace(*r)) r++;
+  while (*r && (*r != ';')){
+    res = _gst_structure_parse_field (r, &r, &field);
+g_print("returned %d \"%s\"\n", res, r);
+    if (!res) {
+      gst_structure_free (structure);
+      return NULL;
+    }
+    gst_structure_set_field(structure, &field);
+  }
+
+  if (end) *end = (char *)string + (r - copy);
+  return structure;
 }
 
 static void

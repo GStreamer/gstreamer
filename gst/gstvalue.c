@@ -48,7 +48,7 @@ struct _GstValueIntersectInfo {
 GType gst_type_fourcc;
 GType gst_type_int_range;
 GType gst_type_double_range;
-GType gst_type_value_list;
+GType gst_type_list;
 
 GArray *gst_value_compare_funcs;
 GArray *gst_value_union_funcs;
@@ -178,7 +178,7 @@ gst_value_union_lists (GValue *dest, const GValue *value1, const GValue *value2)
   
   value1_length = (GST_VALUE_HOLDS_LIST (value1) ? gst_value_list_get_size (value1) : 1);
   value2_length = (GST_VALUE_HOLDS_LIST (value2) ? gst_value_list_get_size (value2) : 1);
-  g_value_init (dest, GST_TYPE_VALUE_LIST);
+  g_value_init (dest, GST_TYPE_LIST);
   array = (GArray *) dest->data[0].v_pointer;
   g_array_set_size (array, value1_length + value2_length);
   
@@ -415,8 +415,17 @@ static void
 gst_value_transform_fourcc_string (const GValue *src_value,
     GValue *dest_value)
 {
-  dest_value->data[0].v_pointer = g_strdup_printf(GST_FOURCC_FORMAT,
-      GST_FOURCC_ARGS(src_value->data[0].v_long));
+  guint32 fourcc = src_value->data[0].v_long;
+
+  if (g_ascii_isprint ((fourcc>>0) & 0xff) &&
+      g_ascii_isprint ((fourcc>>8) & 0xff) &&
+      g_ascii_isprint ((fourcc>>16) & 0xff) &&
+      g_ascii_isprint ((fourcc>>24) & 0xff)){
+    dest_value->data[0].v_pointer = g_strdup_printf(
+	"\"" GST_FOURCC_FORMAT "\"", GST_FOURCC_ARGS(fourcc));
+  } else {
+    dest_value->data[0].v_pointer = g_strdup_printf("0x%08x", fourcc);
+  }
 }
 
 static void
@@ -730,7 +739,7 @@ _gst_value_initialize (void)
       gst_value_lcopy_list
     };
     info.value_table = &value_table;
-    gst_type_value_list = g_type_register_static (G_TYPE_BOXED, "GstValueList", &info, 0);
+    gst_type_list = g_type_register_static (G_TYPE_BOXED, "GstValueList", &info, 0);
   }
 
   g_value_register_transform_func (GST_TYPE_FOURCC, G_TYPE_STRING,
