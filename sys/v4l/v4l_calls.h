@@ -116,6 +116,7 @@ GList   *gst_v4l_get_chan_names (GstV4lElement *v4lelement);
 
 /* frequency control */
 gboolean gst_v4l_has_tuner      (GstV4lElement *v4lelement);
+gboolean gst_v4l_get_signal     (GstV4lElement *v4lelement, guint  *signal);
 gboolean gst_v4l_get_frequency  (GstV4lElement *v4lelement, gulong *frequency);
 gboolean gst_v4l_set_frequency  (GstV4lElement *v4lelement, gulong  frequency);
 

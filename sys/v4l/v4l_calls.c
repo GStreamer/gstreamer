@@ -243,8 +243,40 @@ gst_v4l_has_tuner (GstV4lElement *v4lelement)
   DEBUG("checking whether device has a tuner");
   GST_V4L_CHECK_OPEN(v4lelement);
 
-  return (v4lelement->vcap.type & VID_TYPE_TUNER &&
-          v4lelement->vchan.flags & VIDEO_VC_TUNER);
+  return v4lelement->vcap.type & VID_TYPE_TUNER;
+}
+
+
+/******************************************************
+ * gst_v4l_get_signal():
+ *   get the current signal
+ * return value: TRUE on success, FALSE on error
+ ******************************************************/
+
+gboolean
+gst_v4l_get_signal (GstV4lElement *v4lelement,
+                       guint        *signal)
+{
+	struct video_tuner tuner;
+
+  DEBUG("getting tuner signal");
+  GST_V4L_CHECK_OPEN(v4lelement);
+
+  if (!gst_v4l_has_tuner(v4lelement))
+    return FALSE;
+
+  tuner.tuner = 0;
+  if (ioctl(v4lelement->video_fd, VIDIOCGTUNER, &tuner) < 0)
+  {
+    gst_element_error(GST_ELEMENT(v4lelement),
+      "Error getting tuner signal: %s",
+      sys_errlist[errno]);
+    return FALSE;
+  }
+
+  *signal = tuner.signal;
+
+  return TRUE;
 }
 
 
@@ -288,8 +320,7 @@ gst_v4l_set_frequency (GstV4lElement *v4lelement,
 {
   DEBUG("setting tuner frequency to %lu", frequency);
   GST_V4L_CHECK_OPEN(v4lelement);
-  GST_V4L_CHECK_NOT_ACTIVE(v4lelement);
-
+  
   if (!gst_v4l_has_tuner(v4lelement))
     return FALSE;
 
@@ -424,8 +455,7 @@ gst_v4l_has_audio (GstV4lElement *v4lelement)
   DEBUG("checking whether device has audio");
   GST_V4L_CHECK_OPEN(v4lelement);
 
-  return (v4lelement->vcap.audios > 0 &&
-          v4lelement->vchan.flags & VIDEO_VC_AUDIO);
+  return v4lelement->vcap.audios > 0;
 }
 
 

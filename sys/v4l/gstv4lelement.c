@@ -65,6 +65,7 @@ enum {
   ARG_DISPLAY,
   ARG_VIDEOWINDOW,
   ARG_DO_OVERLAY,
+  ARG_SIGNAL,
 };
 
 
@@ -142,6 +143,9 @@ gst_v4lelement_class_init (GstV4lElementClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQUENCY,
     g_param_spec_ulong("frequency","frequency","frequency",
     0,G_MAXULONG,0,G_PARAM_READWRITE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SIGNAL,
+    g_param_spec_uint("signal","signal","signal",
+    0,65535,0,G_PARAM_READABLE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HAS_AUDIO,
     g_param_spec_boolean("has_audio","has_audio","has_audio",
@@ -289,11 +293,9 @@ gst_v4lelement_set_property (GObject      *object,
       break;
     case ARG_FREQUENCY:
       v4lelement->frequency = g_value_get_ulong(value);
-      if (GST_V4L_IS_OPEN(v4lelement) && !GST_V4L_IS_ACTIVE(v4lelement))
-      {
-        if (gst_v4l_has_tuner(v4lelement))
-          if (!gst_v4l_set_frequency(v4lelement, v4lelement->frequency))
-            return;
+      if (gst_v4l_has_tuner(v4lelement))
+        if (!gst_v4l_set_frequency(v4lelement, v4lelement->frequency))
+          return;
       }
       break;
     case ARG_MUTE:
@@ -431,6 +433,12 @@ gst_v4lelement_get_property (GObject    *object,
         if (gst_v4l_has_tuner(v4lelement))
           gst_v4l_get_frequency(v4lelement, &temp_ul);
       g_value_set_ulong(value, temp_ul);
+      break;
+    case ARG_SIGNAL:
+      if (GST_V4L_IS_OPEN(v4lelement))
+        if (gst_v4l_has_tuner(v4lelement))
+          gst_v4l_get_signal(v4lelement, &temp_i);
+      g_value_set_uint(value, temp_i);
       break;
     case ARG_HAS_AUDIO:
       g_value_set_boolean(value, FALSE);
