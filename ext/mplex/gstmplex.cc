@@ -246,7 +246,7 @@ gst_mplex_init (GstMPlex *mplex)
   (void)mjpeg_default_handler_verbosity(mplex->ostrm->opt_verbosity);
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_mplex_video_connect (GstPad *pad, GstCaps *caps)
 {   
   GstMPlex *mplex;
