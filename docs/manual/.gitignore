@@ -1,6 +1,7 @@
 Makefile
 Makefile.in
 *.bak
+*.png
 .deps
 images
 gstreamer-manual
