@@ -52,13 +52,13 @@ struct _GstGdkAnimation
   gchar *			temp_location;
   /* file descriptor to temporary file or 0 if we're done writing */
   int				temp_fd;
-  /* functions to notify the loader */
-
 
   /* size of image */
   gint				width;
   gint				height;
   gint				bpp;
+  /* static image we use */
+  GdkPixbuf *			pixbuf;
 };
 
 struct _GstGdkAnimationClass 
@@ -66,9 +66,14 @@ struct _GstGdkAnimationClass
   GdkPixbufAnimationClass	parent_class;
 };
 
-GType gst_gdk_animation_get_type (void);
+GType			gst_gdk_animation_get_type	(void);
 
-GdkPixbufAnimation *gst_gdk_animation_new_from_file (FILE *f, GError **error);
+GstGdkAnimation *	gst_gdk_animation_new		(GError **error);
+
+gboolean		gst_gdk_animation_add_data	(GstGdkAnimation *	ani,
+							 const guint8 *		data,
+							 guint			size);
+void			gst_gdk_animation_done_adding	(GstGdkAnimation *	ani);
 
 
 #define GST_TYPE_GDK_ANIMATION_ITER		(gst_gdk_animation_iter_get_type ())

@@ -93,35 +93,36 @@ gst_gdk_animation_finalize (GObject *object)
     remove (ani->temp_location);
     g_free (ani->temp_location);
   }
+  if (ani->pixbuf) {
+    g_object_unref (ani->pixbuf);
+    ani->pixbuf = NULL;
+  }
         
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
-GdkPixbufAnimation *
-gst_gdk_animation_new_from_file (FILE *f, GError **error)
+GstGdkAnimation *
+gst_gdk_animation_new (GError **error)
 {
-  GdkPixbufAnimationIter *iter;
-  GTimeVal tv;
-  int fd2;  
-  guint8 data[4096];
-  guint size;
-  int fd = fileno (f);
   GstGdkAnimation *ani = GST_GDK_ANIMATION (g_object_new (GST_TYPE_GDK_ANIMATION, NULL));
 
-  fd2 = g_file_open_tmp (NULL, &ani->temp_location, error);
-  if (fd2 == -1)
+  ani->temp_fd = g_file_open_tmp (NULL, &ani->temp_location, error);
+  if (ani->temp_fd == 0) {
+    g_object_unref (ani);
     return NULL;
-  while ((size = read (fd, data, 4096)) > 0) {
-    if (write (fd2, data, size) != size)
-      break;
   }
-  close (fd2);
-  
-  /* we need some info that is only provided by iters */
-  g_get_current_time (&tv);
-  iter = gst_gdk_animation_get_iter (GDK_PIXBUF_ANIMATION (ani), &tv);
-  g_object_unref (iter);
-  
-  return GDK_PIXBUF_ANIMATION (ani);
+
+  return ani;
+}
+gboolean
+gst_gdk_animation_add_data (GstGdkAnimation *ani, const guint8 *data, guint size)
+{
+  return (write (ani->temp_fd, data, size) == size);
+}
+void
+gst_gdk_animation_done_adding (GstGdkAnimation *ani)
+{
+  close (ani->temp_fd);
+  ani->temp_fd = 0;
 }
 static gboolean
 gst_gdk_animation_is_static_image (GdkPixbufAnimation *animation)
@@ -132,7 +133,9 @@ gst_gdk_animation_is_static_image (GdkPixbufAnimation *animation)
 static GdkPixbuf*
 gst_gdk_animation_get_static_image (GdkPixbufAnimation *animation)
 {
-  return NULL;
+  GstGdkAnimation *ani = GST_GDK_ANIMATION (animation);
+
+  return ani->pixbuf;
 }
 
 static void
@@ -269,20 +272,24 @@ gst_gdk_animation_iter_create_pipeline (GstGdkAnimationIter *iter)
   if (!(autoplugger = gst_element_factory_make ("spider", "autoplugger")))
     goto error;
   gst_bin_add (GST_BIN (ret), autoplugger);
-  gst_element_link (src, autoplugger);
+  if (!gst_element_link (src, autoplugger))
+    goto error;
   
   if (!(colorspace = gst_element_factory_make ("colorspace", "colorspace")))
     goto error;
   gst_bin_add (GST_BIN (ret), colorspace);
-  gst_element_link (autoplugger, colorspace);
+  if (!gst_element_link (autoplugger, colorspace))
+    goto error;
   
   if (!(sink = gst_element_factory_make ("fakesink", "sink")))
     goto error;
   g_object_set (sink, "signal-handoffs", TRUE, NULL);
   g_signal_connect (sink, "handoff", (GCallback) got_handoff, iter);
   gst_bin_add (GST_BIN (ret), sink);
-  gst_element_link_filtered (colorspace, sink, caps);
-  gst_element_set_state (ret, GST_STATE_PLAYING);
+  if (!gst_element_link_filtered (colorspace, sink, caps))
+    goto error;
+  if (gst_element_set_state (ret, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+    goto error;
   
   return ret;
 error:
@@ -303,7 +310,7 @@ gst_gdk_animation_iter_may_advance (GstGdkAnimationIter *iter)
   g_assert (data_amount >= 0);
   g_assert (gst_element_query (gst_bin_get_by_name (GST_BIN (iter->pipeline), "source"),
 			 GST_QUERY_POSITION, &bytes, &offset));
-  if (data_amount - offset > GST_GDK_BUFFER_SIZE) /* random number */
+  if (data_amount - offset > GST_GDK_BUFFER_SIZE)
     return TRUE;
 
   return FALSE;
@@ -315,15 +322,17 @@ gst_gdk_animation_get_more_buffers (GstGdkAnimationIter *iter)
   
   do {
     GST_LOG_OBJECT (iter, "iterating...");
-    if (!gst_gdk_animation_iter_may_advance (iter))
-      return FALSE;
+    if (!gst_gdk_animation_iter_may_advance (iter)) {
+      GST_LOG_OBJECT (iter, "no more data available");
+      break;
+    }
     if (!gst_bin_iterate (GST_BIN (iter->pipeline))) {
       GST_LOG_OBJECT (iter, "iterating done, setting EOS");
       iter->eos = TRUE;
       break;
     }
   } while (last == g_queue_peek_tail (iter->buffers));
-  return TRUE;
+  return last != g_queue_peek_tail (iter->buffers);
 }
 static void
 pixbuf_destroy_notify (guchar *pixels, gpointer data)
@@ -377,25 +386,38 @@ gst_gdk_animation_iter_create_pixbuf (GstGdkAnimationIter *iter)
 static GdkPixbufAnimationIter*
 gst_gdk_animation_get_iter (GdkPixbufAnimation *anim, const GTimeVal *start_time)
 {
+  GstGdkAnimation *ani = GST_GDK_ANIMATION (anim);
   GstGdkAnimationIter *iter;
+
+  if (ani->temp_fd != 0 && lseek (ani->temp_fd, 0, SEEK_CUR) < GST_GDK_BUFFER_SIZE)
+    return NULL;
 
   iter = g_object_new (GST_TYPE_GDK_ANIMATION_ITER, NULL);
 
   iter->start = *start_time;
   
-  iter->ani = GST_GDK_ANIMATION (anim);
+  iter->ani = ani;
+  g_object_ref (ani);
   iter->pipeline = gst_gdk_animation_iter_create_pipeline (iter);
-  if (iter->pipeline == NULL) {
-    g_object_unref (iter);
-    return NULL;
-  }
+  if (iter->pipeline == NULL) 
+    goto error;
     
-  g_object_ref (iter->ani);
         
-  gst_gdk_animation_get_more_buffers (iter);
+  if (!gst_gdk_animation_get_more_buffers (iter))
+    goto error;
+  
   gst_gdk_animation_iter_create_pixbuf (iter);
+  if (!ani->pixbuf) {
+    /* set our static image */
+    g_object_ref (iter->pixbuf);
+    ani->pixbuf = iter->pixbuf;
+  }
         
   return GDK_PIXBUF_ANIMATION_ITER (iter);
+
+error:
+  g_object_unref (iter);
+  return NULL;
 }
 static gboolean
 gst_gdk_animation_iter_advance (GdkPixbufAnimationIter *anim_iter, const GTimeVal *current_time)

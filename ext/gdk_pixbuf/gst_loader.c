@@ -24,19 +24,161 @@
 #endif
 
 #include "gstgdkanimation.h"
+#include <gst/gstinfo.h>
 #include <stdio.h>
+
+typedef struct {
+  /* stuff gdk throws at us and we're supposed to keep */
+  GdkPixbufModuleSizeFunc	size_func;
+  GdkPixbufModulePreparedFunc	prepared_func;
+  GdkPixbufModuleUpdatedFunc	updated_func;
+  gpointer			user_data;
+  /* our own stuff - we're much better at keeping fields small :p */
+  GstGdkAnimation *		ani;
+  gboolean			initialized;
+} GstLoaderContext;
+
+GST_DEBUG_CATEGORY_STATIC (gst_loader_debug);
+#define GST_CAT_DEFAULT gst_loader_debug
+
+static gboolean
+gst_loader_init (GError **error)
+{
+  static gboolean inited = FALSE;
+  
+  if (inited)
+    return TRUE;
+  
+  if (!g_thread_supported ()) {
+    g_set_error (error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_FAILED,
+		 "The GStreamer loader requires threading support.");
+    return FALSE;
+  }
+
+  if (!gst_init_check (0, NULL)) {
+    g_set_error (error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_FAILED,
+		 "GStreamer could not be initialized.");
+    return FALSE;
+  }
+
+  inited = TRUE;
+  GST_DEBUG_CATEGORY_INIT (gst_loader_debug, "gstloader", 0, "entry point debugging for the GStreamer gdk pixbuf loader");
+  return TRUE;
+}
+static gpointer
+gst_loader_begin_load (GdkPixbufModuleSizeFunc size_func, GdkPixbufModulePreparedFunc prepared_func,
+		       GdkPixbufModuleUpdatedFunc updated_func, gpointer user_data, GError **error)
+{
+  GstLoaderContext *context;
+  
+  if (!gst_loader_init (error))
+    return NULL;
+  
+  context = g_new (GstLoaderContext, 1);
+  context->size_func = size_func;
+  context->prepared_func = prepared_func;
+  context->updated_func = updated_func;
+  context->user_data = user_data;
+  context->ani = gst_gdk_animation_new (error);
+  context->initialized = FALSE;
+
+  if (!context->ani) {
+    GST_WARNING ("creating animation failed");
+    g_free (context);
+    return NULL;
+  }
+  GST_LOG_OBJECT (context->ani, "begin loading");
+  return context;
+}
+static gboolean
+gst_loader_load_increment (gpointer context_pointer, const guchar *buf, guint size, GError **error)
+{
+  GdkPixbufAnimationIter *iter;
+  GstLoaderContext *context = (GstLoaderContext *) context_pointer;
+
+  GST_LOG_OBJECT (context->ani, "load increment: %u bytes", size);
+  gst_gdk_animation_add_data (context->ani, buf, size);
+  if (!context->initialized && (iter = gdk_pixbuf_animation_get_iter (
+	      GDK_PIXBUF_ANIMATION (context->ani), NULL)) != NULL) {
+    int width = gdk_pixbuf_animation_get_width (GDK_PIXBUF_ANIMATION (context->ani));
+    int height = gdk_pixbuf_animation_get_height (GDK_PIXBUF_ANIMATION (context->ani));
+    GdkPixbuf *pixbuf = gdk_pixbuf_animation_get_static_image (GDK_PIXBUF_ANIMATION (context->ani));
+
+    g_object_unref (iter);
+    GST_LOG_OBJECT (context->ani, "initializing loader");
+    if (context->size_func) {
+      GST_LOG_OBJECT (context->ani, "calling size_func %p", context->size_func);
+      context->size_func (&width, &height, context->user_data);
+    }
+
+    if (context->prepared_func) {
+      GST_LOG_OBJECT (context->ani, "calling prepared_func %p", context->prepared_func);
+      context->prepared_func (pixbuf, GDK_PIXBUF_ANIMATION (context->ani), context->user_data);
+    }
+    
+    context->initialized = TRUE;
+  }
+  
+  return TRUE;
+}
+static gboolean
+gst_loader_stop_load (gpointer context_pointer, GError **error)
+{
+  GstLoaderContext *context = (GstLoaderContext *) context_pointer;
+
+  GST_LOG_OBJECT (context->ani, "stop loading");
+  gst_gdk_animation_done_adding (context->ani);
+  g_object_unref (context->ani);
+  g_free (context);
+
+  return TRUE;
+}
 
 static GdkPixbufAnimation *
 gst_loader_load_animation (FILE *f, GError **error)
 {
-  return gst_gdk_animation_new_from_file (f, error);
+  guchar data[4096];
+  guint size;
+  GdkPixbufAnimationIter *iter;
+  GstGdkAnimation *ani;
+  
+  if (!gst_loader_init (error))
+    return NULL;
+  
+  GST_LOG ("load_animation");
+  ani = gst_gdk_animation_new (error);
+  if (!ani)
+    return NULL;
+  
+  while ((size = fread (data, 1, 4096, f)) > 0) {
+    if (!gst_gdk_animation_add_data (ani, data, size)) {
+      g_set_error (error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_FAILED,
+		   "could not add more data to animation"); /* our errors suck ;) */
+      g_object_unref (ani);
+      GST_WARNING ("load_animation failed");
+      return NULL;
+    }
+  }
+  gst_gdk_animation_done_adding (ani);
+  iter = gdk_pixbuf_animation_get_iter (GDK_PIXBUF_ANIMATION (ani), NULL);
+  if (iter == NULL) {
+      g_set_error (error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+		   "could not create an image");
+      g_object_unref (ani);
+      GST_INFO ("could not create an image");
+      return NULL; 
+  }
+  g_object_unref (iter);
+  GST_LOG_OBJECT (ani, "load_animation succeeded");
+  return GDK_PIXBUF_ANIMATION (ani);
 }
 void
 fill_vtable (GdkPixbufModule *module)
 {
-  if (gst_init_check (0, NULL)) {
-    module->load_animation = gst_loader_load_animation;
-  }
+  module->begin_load = gst_loader_begin_load;
+  module->load_increment = gst_loader_load_increment;
+  module->stop_load = gst_loader_stop_load;
+  module->load_animation = gst_loader_load_animation;
 }
 void
 fill_info (GdkPixbufFormat *info)
