@@ -268,5 +268,5 @@ DIST_SUBDIRS=\
 	ladspa lame lcs libfame libpng \
 	mad mikmod mjpegtools mpeg2dec \
 	openquicktime raw1394 rtp \
-	sdl shout sidplay \
+	sdl snapshot shout shout2 sidplay \
 	smoothwave swfdec tarkin vorbis xmms
