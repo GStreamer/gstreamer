@@ -1,5 +1,5 @@
 
-SUBDIRS = memchunk muxing sched threadstate seeking # bufspeed
+SUBDIRS = instantiate memchunk muxing sched threadstate seeking # bufspeed
 
 if !GST_DISABLE_TRACE
 noinst_PROGRAMS = lat
@@ -9,4 +9,4 @@ lat_LDFLAGS = $(GST_LIBS)
 endif
 
 EXTRA_DIST = README
-DIST_SUBDIRS= bufspeed memchunk muxing sched threadstate seeking
+DIST_SUBDIRS= bufspeed instantiate memchunk muxing sched threadstate seeking

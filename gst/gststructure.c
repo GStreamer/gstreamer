@@ -1383,7 +1383,7 @@ _gst_structure_parse_value (gchar *str, gchar **after, GValue *value,
   gchar *value_end;
   gchar *s;
   gchar c;
-  int ret;
+  int ret = 0;
   GType type = default_type;
 
 

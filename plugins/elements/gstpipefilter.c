@@ -135,7 +135,6 @@ gst_pipefilter_init (GstPipefilter *pipefilter)
   pipefilter->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (pipefilter), pipefilter->sinkpad);
   gst_pad_set_chain_function (pipefilter->sinkpad, gst_pipefilter_chain);
-  gst_pad_set_event_function (pipefilter->sinkpad, gst_pipefilter_handle_event);
 
   pipefilter->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (pipefilter), pipefilter->srcpad);
@@ -155,10 +154,19 @@ gst_pipefilter_handle_event (GstPad *pad, GstEvent *event)
   pipefilter = GST_PIPEFILTER (gst_pad_get_parent (pad));
 
   GST_DEBUG ("pipefilter: %s received event", GST_ELEMENT_NAME (pipefilter));
-  if (close (pipefilter->fdin[1]) < 0)
-    perror("close");
-  if (close (pipefilter->fdout[0]) < 0)
-    perror("close");
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      if (close (pipefilter->fdin[1]) < 0)
+        perror("close");
+      if (close (pipefilter->fdout[0]) < 0)
+        perror("close");
+      break;
+    default:
+      break;
+  }
+
+  gst_pad_event_default (pad, event);
 
   return TRUE;
 }
@@ -206,7 +214,7 @@ gst_pipefilter_get (GstPad *pad)
 static void
 gst_pipefilter_chain (GstPad *pad,GstData *_data)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
+  GstBuffer *buf;
   GstPipefilter *pipefilter;
   glong writebytes;
   guchar *data;
@@ -214,10 +222,15 @@ gst_pipefilter_chain (GstPad *pad,GstData *_data)
 
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
-  g_return_if_fail(buf != NULL);
+
+  if (GST_IS_EVENT (_data)) {
+    gst_pipefilter_handle_event (pad, GST_EVENT (_data));
+    return;
+  }
 
   pipefilter = GST_PIPEFILTER (gst_pad_get_parent (pad));
 
+  buf = GST_BUFFER (_data);
   data = GST_BUFFER_DATA(buf);
   size = GST_BUFFER_SIZE(buf);
 

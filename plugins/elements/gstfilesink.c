@@ -192,8 +192,13 @@ gst_filesink_set_location (GstFileSink *sink, const gchar *location)
 
   g_free (sink->filename);
   g_free (sink->uri);
-  sink->filename = g_strdup (location);
-  sink->uri = gst_uri_construct ("file", location);
+  if (location != NULL) {
+    sink->filename = g_strdup (location);
+    sink->uri = gst_uri_construct ("file", location);
+  } else {
+    sink->filename = NULL;
+    sink->uri = NULL;
+  }
   
   if (GST_STATE (sink) == GST_STATE_PAUSED)
     gst_filesink_open_file (sink);
