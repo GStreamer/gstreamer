@@ -66,7 +66,7 @@ struct _GstTypeFindElementClass {
   /* signals */
   void 			(*have_type) 	(GstTypeFindElement *element,
 					 guint		probability,
-					 GstCaps *	caps);
+					 const GstCaps *	caps);
 };
 
 GType gst_type_find_element_get_type (void);

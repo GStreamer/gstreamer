@@ -141,7 +141,7 @@ gst_type_find_element_get_type (void)
   return typefind_type;
 }
 static void
-gst_type_find_element_have_type (GstTypeFindElement *typefind, guint probability, GstCaps *caps)
+gst_type_find_element_have_type (GstTypeFindElement *typefind, guint probability, const GstCaps *caps)
 {
   gchar *caps_str;
   
@@ -151,7 +151,7 @@ gst_type_find_element_have_type (GstTypeFindElement *typefind, guint probability
   caps_str = gst_caps_to_string (caps);
   GST_INFO_OBJECT (typefind, "found caps %s", caps_str);
   g_free (caps_str);
-  gst_caps_replace (&typefind->caps, caps);
+  typefind->caps = gst_caps_copy (caps);
   if (gst_pad_try_set_caps (typefind->src, caps) < GST_PAD_LINK_OK) {
     gst_element_error (GST_ELEMENT (typefind), "could not set caps on source pad");
   }
@@ -195,8 +195,8 @@ gst_type_find_element_class_init (gpointer g_class, gpointer class_data)
   gst_type_find_element_signals[HAVE_TYPE] = g_signal_new ("have_type", 
 	  G_TYPE_FROM_CLASS (g_class), G_SIGNAL_RUN_LAST,
           G_STRUCT_OFFSET (GstTypeFindElementClass, have_type), NULL, NULL,
-          gst_marshal_VOID__UINT_BOXED, G_TYPE_NONE, 2,
-          G_TYPE_UINT, gst_caps_get_type());
+          gst_marshal_VOID__UINT_POINTER, G_TYPE_NONE, 2,
+          G_TYPE_UINT, G_TYPE_POINTER);
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_type_find_element_change_state);
 }
@@ -669,7 +669,8 @@ gst_type_find_element_change_state (GstElement *element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       stop_typefinding (typefind);
-      gst_caps_replace (&typefind->caps, NULL);
+      if (typefind->caps)
+	gst_caps_free (typefind->caps);
       break;
     default:
       break;

@@ -1,3 +1,10 @@
+2003-12-24  Colin Walters  <walters@verbum.org>
+
+	* gst/elements/gsttypefindelement.c:
+	  gst/elements/gsttypefindelement.h: Make GstCaps parameter const.
+	  Copy caps parameter. Use _POINTER to marshal caps instead of _BOXED.
+	  Don't double-free caps.
+
 2003-12-23  David Schleef  <ds@schleef.org>
 
 	* gst/gstelement.c, gst/gstpad.c, gst/parse/grammar.y,
