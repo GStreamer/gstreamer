@@ -454,7 +454,7 @@ gst_queue_change_state (GstElement *element)
     // if element change_state() emits other signals, they need to be blocked
     // as well.
     if (state_change_id &&
-        g_signal_handler_has_pending(G_OBJECT(element), state_change_id, 0, FALSE))
+        g_signal_has_handler_pending(G_OBJECT(element), state_change_id, 0, FALSE))
       valid_handler = TRUE;
     if (valid_handler)
       g_signal_handler_block(G_OBJECT(element), state_change_id);

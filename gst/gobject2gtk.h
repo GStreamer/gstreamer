@@ -158,7 +158,7 @@ g_signal_emit_by_name(object,name,data,self) \
 gtk_signal_emit_by_name ((GtkObject *)object,name,data,self)
 
 #define \
-g_signal_handler_has_pending(object,name,data,may_block) \
+g_signal_has_handler_pending(object,name,data,may_block) \
 gtk_signal_handler_pending ((GtkObject *)object,name,may_block)
 
 #define g_signal_lookup			gtk_signal_lookup
