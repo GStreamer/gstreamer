@@ -1,13 +1,29 @@
+gstreamer (0.4.1-1) unstable; urgency=low
+
+  * New upstream
+  * gstreamer-tools.files/manpages: add gst-md5sum
+  * Use xsltproc 1.0.21 to fix doc image problems
+  * Don't use module flags for libgstcontrol
+
+ -- David I. Lehn <dlehn@vt.edu>  Tue,  1 Oct 2002 15:02:57 -0400
+
 gstreamer (0.4.0.2-cvs20020919-1) unstable; urgency=low
 
   * CVS snapshot, release branch
-  * gstreamer-code.files: change to libgst*scheduler, since the
+  * gstreamer-core.files: change to libgst*scheduler, since the
     scheduler names have changed.
   * gstreamer-core-libs.files: libgstcontrol.so moved
   * add debian/control.in, and create debian/control rule in debian/rules
     to change the version number automatically
 
  -- David Schleef <ds@schleef.org>  Thu, 19 Sep 2002 15:07:36 -0700
+
+gstreamer (0.4.0-2) unstable; urgency=low
+
+  * Remove libtool hack
+  * Dependency change from libc6-dev to libc6-dev | libc-dev
+
+ -- David I. Lehn <dlehn@vt.edu>  Fri, 23 Aug 2002 12:26:10 -0400
 
 gstreamer (0.4.0-1) unstable; urgency=low
 

@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-version=0.4.0.2
+version=0.4.1
 
 #export DH_VERBOSE=1
 export DH_COMPAT=3
@@ -15,18 +15,17 @@ else
 	confflags += --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
 endif
 
-debian/control: debian/control.in
+debian/control: debian/rules debian/control.in
 	sed 's/@VERSION@/$(version)/g' debian/control.in >debian/control
-	rm -f debian/libgstreamer$(version).files
-	ln -s libgstreamerVERSION.files debian/libgstreamer$(version).files
+
+debian/libgstreamer$(version).files: debian/control.in debian/libgstreamerVERSION.files
+	cp -f debian/libgstreamerVERSION.files debian/libgstreamer$(version).files
+
+maint: debian/control debian/libgstreamer$(version).files
 
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-
-	# make sure we're using a ltmain.sh that can handle relinking
-	# in case autogen.sh (and libtoolize) was run
-	cp ltmain-fixed.sh ltmain.sh
 
 	# Add here commands to configure the package.
 	./configure \
@@ -77,12 +76,7 @@ install: build
 
 	# move around the doc dirs
 	mkdir -p debian/gstreamer/usr/share/doc/gstreamer-doc
-	#-mv debian/gstreamer/usr/share/gstreamer/gst-plugin-writers-guide \
-	#   debian/gstreamer/usr/share/gstreamer/gstreamer-manual \
-	#   debian/gstreamer/usr/share/gstreamer/html/gstreamer-libs \
-	#   debian/gstreamer/usr/share/gst/html/gstreamer \
-	#   debian/gstreamer/usr/share/doc/gstreamer-doc
-	-cp -r docs/pwg/gst-plugin-writers-guide \
+	-cp -r docs/fwg/gst-plugin-writers-guide \
 	   docs/manual/gstreamer-manual \
 	   debian/gstreamer/usr/share/doc/gstreamer-doc
 
@@ -134,7 +128,7 @@ binary-arch: build install
 	dh_fixperms
 	dh_makeshlibs
 	dh_installdeb
-	dh_shlibdeps -l`pwd`/debian/libgstreamer$(version)/usr/lib
+	dh_shlibdeps -l`pwd`/debian/libgstreamer$(version)/usr/lib:`pwd`/debian/gstreamer-core-libs/usr/lib
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb

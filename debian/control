@@ -3,10 +3,10 @@ Section: libs
 Priority: optional
 Maintainer: David I. Lehn <dlehn@vt.edu>
 Build-Depends: debhelper (>= 3.0.0), libxml2-dev (>= 2.4.16), zlib1g-dev (>= 1:1.1.4), libglib2.0-dev (>= 2.0.4), pkg-config (>= 0.11.0), libpopt-dev, bison, flex
-Build-Depends-Indep: debhelper (>= 3.0.0), gtk-doc-tools (>= 0.4), jade (>= 1.2.1), transfig (>= 3.2.3.c), docbook-utils (>= 0.6.9), xsltproc (>= 1.0.6), gs, python (>= 2.1)
-Standards-Version: 3.5.6
+Build-Depends-Indep: debhelper (>= 3.0.0), gtk-doc-tools (>= 0.4), jade (>= 1.2.1), transfig (>= 3.2.3.c), docbook-utils (>= 0.6.9), xsltproc (>= 1.0.21), gs, python (>= 2.1)
+Standards-Version: 3.5.7
 
-Package: libgstreamer0.4.0.2
+Package: libgstreamer0.4.1
 Architecture: [alpha arm hppa i386 mips mipsel powerpc sparc]
 Section: libs
 Depends: ${shlibs:Depends}
@@ -17,7 +17,7 @@ Description: Core GStreamer shared library
 Package: libgstreamer-dev
 Architecture: any
 Section: devel
-Depends: libgstreamer0.4.0.2 (= ${Source-Version}), libc6-dev, pkg-config, libpopt-dev, libglib2.0-dev
+Depends: libgstreamer0.4.1 (= ${Source-Version}), libc6-dev | libc-dev, pkg-config, libpopt-dev, libglib2.0-dev
 Recommends: gstreamer-doc (= ${Source-Version})
 Description: GStreamer development libraries and headers
  GStreamer development libraries and headers
