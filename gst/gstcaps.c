@@ -232,7 +232,7 @@ GstCaps *gst_caps_copy (const GstCaps *caps)
 {
   GstCaps *newcaps;
   GstStructure *structure;
-  int i;
+  unsigned int i;
 
   g_return_val_if_fail(caps != NULL, NULL);
 
@@ -259,7 +259,7 @@ GstCaps *gst_caps_copy (const GstCaps *caps)
 void gst_caps_free (GstCaps *caps)
 {
   GstStructure *structure;
-  int i;
+  unsigned int i;
   
   g_return_if_fail(caps != NULL);
 
@@ -314,7 +314,7 @@ const GstCaps *gst_static_caps_get (GstStaticCaps *static_caps)
 void gst_caps_append (GstCaps *caps1, GstCaps *caps2)
 {
   GstStructure *structure;
-  int i;
+  unsigned int i;
 
   g_return_if_fail (caps1 != NULL);
   g_return_if_fail (caps2 != NULL);
@@ -397,7 +397,7 @@ int gst_caps_get_size (const GstCaps *caps)
  *
  * Returns: a pointer to the #GstStructure corresponding to @index
  */
-GstStructure *gst_caps_get_structure (const GstCaps *caps, int index)
+GstStructure *gst_caps_get_structure (const GstCaps *caps, unsigned int index)
 {
   g_return_val_if_fail (caps != NULL, NULL);
   g_return_val_if_fail (index >= 0, NULL);
@@ -637,7 +637,7 @@ static gboolean
 _gst_caps_cap_is_always_compatible (const GstStructure *struct1,
     const GstCaps *caps2)
 {
-  int i;
+  unsigned int i;
 
   for(i=0;i<caps2->structs->len;i++){
     GstStructure *struct2 = gst_caps_get_structure (caps2, i);
@@ -660,7 +660,7 @@ _gst_caps_cap_is_always_compatible (const GstStructure *struct1,
 gboolean
 gst_caps_is_always_compatible (const GstCaps *caps1, const GstCaps *caps2)
 {
-  int i;
+  unsigned int i;
 
   g_return_val_if_fail (caps1 != NULL, FALSE);
   g_return_val_if_fail (caps2 != NULL, FALSE);
@@ -794,7 +794,7 @@ static GstStructure *gst_caps_structure_union (const GstStructure *struct1,
  */
 GstCaps *gst_caps_intersect (const GstCaps *caps1, const GstCaps *caps2)
 {
-  int i,j;
+  unsigned int i,j;
   GstStructure *struct1;
   GstStructure *struct2;
   GstCaps *dest;
@@ -868,7 +868,7 @@ _gst_caps_normalize_foreach (GQuark field_id, GValue *value, gpointer ptr)
 {
   NormalizeForeach *nf = (NormalizeForeach *) ptr;
   GValue val = { 0 };
-  int i;
+  unsigned int i;
 
   if (G_VALUE_TYPE (value) == GST_TYPE_LIST) {
     for (i=1; i<gst_value_list_get_size (value); i++) {
@@ -902,7 +902,7 @@ GstCaps *gst_caps_normalize (const GstCaps *caps)
 {
   NormalizeForeach nf;
   GstCaps *newcaps;
-  int i;
+  unsigned int i;
 
   g_return_val_if_fail(caps != NULL, NULL);
 
@@ -1032,7 +1032,7 @@ void gst_caps_replace (GstCaps **caps, GstCaps *newcaps)
  */
 gchar *gst_caps_to_string (const GstCaps *caps)
 {
-  int i;
+  unsigned int i;
   GstStructure *structure;
   GString *s;
   char *sstr;
