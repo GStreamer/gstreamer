@@ -16,6 +16,7 @@ main (int argc,char *argv[])
   GstElement *src;
   GstElement *dvdec;
   //GstElement *cspace;
+  GstElement *deint;
   GstElement *videosink;
 
   GtkWidget *appwindow;
@@ -40,6 +41,7 @@ main (int argc,char *argv[])
   dvdec = gst_elementfactory_make ("dvdec", "decoder");
   if (!dvdec) fprintf(stderr,"no dvdec\n"),exit(1);
 //  cspace = gst_elementfactory_make ("colorspace", "cspace");
+  deint = gst_elementfactory_make ("deinterlace", "deinterlace");
   videosink = gst_elementfactory_make ("xvideosink", "videosink");
   if (!videosink) fprintf(stderr,"no dvdec\n"),exit(1);
   gtk_object_set(GTK_OBJECT(videosink),"width",720,"height",576,NULL);
@@ -52,7 +54,8 @@ main (int argc,char *argv[])
   gst_element_connect(src,"src",dvdec,"sink");
 //  gst_element_connect(cspace,"src",videosink,"sink");
 //  gst_element_connect(dvdec,"video",cspace,"sink");
-  gst_element_connect(dvdec,"video",videosink,"sink");
+  gst_element_connect(dvdec,"video",deint,"sink");
+  gst_element_connect(deint,"src",videosink,"sink");
 
   appwindow = gnome_app_new("Videotest","Videotest");
 
