@@ -26,7 +26,7 @@
 #include "gstv4l2element.h"
 #include "gstv4l2src.h"
 
-gboolean
+static gboolean
 plugin_init (GstPlugin *plugin)
 {
   /* actually, we can survive without it, but I'll create
