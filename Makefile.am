@@ -33,17 +33,11 @@ else
 SUBDIRS_EXAMPLES =
 endif
 
-if BUILD_PLUGINS
-SUBDIRS_PLUGINS = plugins
-else
-SUBDIRS_PLUGINS =
-endif
-
-SUBDIRS = include gst libs $(SUBDIRS_PLUGINS) tools $(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) \
+SUBDIRS = include gst libs tools $(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) \
 $(SUBDIRS_LGG) $(SUBDIRS_DOCS)
 
 # These are all the possible subdirs
-DIST_SUBDIRS = include gst libs plugins tools test tests testsuite examples gstplay editor docs
+DIST_SUBDIRS = include gst libs tools test tests testsuite examples gstplay editor docs
 
 
 pkgconfigdir = $(libdir)/pkgconfig
