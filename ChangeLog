@@ -1,5 +1,12 @@
 2004-05-09  Benjamin Otte  <otte@gnome.org>
 
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_destroy_sourcepad),
+	(gst_wavparse_create_sourcepad):
+	  make PAUSED=>READY=>PAUSED=READY work by not destroying NULL
+	  sourcepads
+
+2004-05-09  Benjamin Otte  <otte@gnome.org>
+
 	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event):
 	  allow discont events before caps nego
 
