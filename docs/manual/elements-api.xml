@@ -31,8 +31,8 @@ The following example &EXAFOOT; shows how to create an element named
 After checking, it unrefs the element.
     </para>
     <programlisting>
+<!-- example-begin elementmake.c a -->
 <![CDATA[
-/* example-begin elementmake.c */
 
 #include <gst/gst.h>
 
@@ -44,7 +44,11 @@ main (int argc, char *argv[])
   gst_init (&argc, &argv);
 
   element = gst_element_factory_make ("fakesrc", "source");
+]]>
+<!-- example-end elementmake.c a -->
 
+<!-- example-begin elementmake.c b -->
+<![CDATA[
   if (!element) {
     g_error ("Could not create an element from 'fakesrc' factory.\n");
   }
@@ -53,9 +57,8 @@ main (int argc, char *argv[])
 
   return 0;
 }
-
-/* example-end elementmake.c */
 ]]>
+<!-- example-end elementmake.c b -->
     </programlisting>
     <para> 
 <function>gst_element_factory_make</function> is actually a shorthand
@@ -121,9 +124,8 @@ will use the element factory to create an element with the given name.
       <classname>GObject</classname> property mechanism as shown below.
     </para> 
     <programlisting>
+<!-- example-begin elementget.c a -->
 <![CDATA[
-/* example-begin elementget.c */
-
 #include <gst/gst.h>
 
 int
@@ -143,9 +145,8 @@ main (int argc, char *argv[])
 
   return 0;
 }
-
-/* example-end elementget.c */
 ]]>
+<!-- example-end elementget.c a -->
     </programlisting>
     <para> 
       Most plugins provide additional properties to provide more information

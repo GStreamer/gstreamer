@@ -18,10 +18,10 @@
     We'll start with a simple main function:
   </para>
   <programlisting>
-
-/* example-begin dynamic.c */
-#include &lt;string.h&gt;
-#include &lt;gst/gst.h&gt;
+<!-- example-begin dynamic.c a -->
+<![CDATA[
+#include <string.h>
+#include <gst/gst.h>
 
 void 
 eof (GstElement *src) 
@@ -164,7 +164,8 @@ main (int argc, char *argv[])
 
   return 0;
 }
-/* example-end dynamic.c */
+]]>
+<!-- example-end dynamic.c a -->
   </programlisting>
   <para>
     We create two elements: a file source and an MPEG demuxer. 

@@ -1,3 +1,17 @@
+2004-12-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/manual/dynamic.xml:
+	* docs/manual/elements-api.xml:
+	* docs/manual/gnome.xml:
+	* docs/manual/helloworld2.xml:
+	* docs/manual/init-api.xml:
+	* docs/manual/queues.xml:
+	* docs/manual/threads.xml:
+	* docs/manual/xml.xml:
+	* examples/manual/extract.pl:
+	  Make it possible to extract example code from separate blocks.
+	  Should make Ronald happy.
+
 2004-12-15  Wim Taymans  <wim@fluendo.com>
 
 	* gst/schedulers/gstoptimalscheduler.c: (add_to_group),
@@ -215,8 +229,8 @@
 2004-11-29  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/manual/programs.xml:
-      Added a first batch of gst-launch examples, as provided by Ronald
-      and others from the devel-mlist
+	  Added a first batch of gst-launch examples, as provided by Ronald
+	  and others from the devel-mlist
 
 2004-11-28  Benjamin Otte  <otte@gnome.org>
 
@@ -368,7 +382,7 @@
 	* testsuite/schedulers/.cvsignore:
 	* testsuite/schedulers/Makefile.am:
 	* testsuite/schedulers/queue_link.c: (main):
-	Added testcase for schduler segfault.
+	Added testcase for scheduler segfault.
 	Fix scheduler segfault when removing a decoupled
 	entry point as the last element from a group.
 
@@ -402,7 +416,7 @@
 	* docs/gst/tmpl/gstutils.sgml:
 	* docs/random/ensonic/interfaces.txt:
 	* gst/gstinfo.h:
-      added some more docs, removed two obsolete defines
+	  added some more docs, removed two obsolete defines
 
 2004-11-02  Kjartan Maraas <as at gnome.org>
 
@@ -438,7 +452,7 @@
 
 	* gst/schedulers/gstoptimalscheduler.c: (add_to_group),
 	(gst_opt_scheduler_iterate):
-	Aplied patch #154061. Running a pipeline in which an element 
+	Applied patch #154061. Running a pipeline in which an element 
 	calls GST_ELEMENT_ERROR in the chain function, the opt 
 	scheduler doesn't unref the chain so it never gets freed.
 
@@ -472,7 +486,7 @@
 2004-10-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/pwg/building-boiler.xml:
-      exchanged GTK_ macros with G_TYPE macros (as pointed out by mathrick)
+	  exchanged GTK_ macros with G_TYPE macros (as pointed out by mathrick)
 
 2004-10-19  Wim Taymans  <wim at fluendo dot com>
 

@@ -7,6 +7,10 @@
 # main
 
 # decodes xml by translating &amp; &lt; &gt; back to what they should be
+# and also ignore
+# <![CDATA[
+# and
+# ]]>
 sub
 xml_decode ($)
 {
@@ -16,6 +20,10 @@ xml_decode ($)
   $input =~ s/&lt;/</g;
   $input =~ s/&gt;/>/g;
 
+  if ($input =~ /<!\[CDATA\[/) { $input = ""; }
+  if ($input =~ /]]>/) { $input = ""; }
+
+  #print "Returning line $input";
   return $input;
 }
 
@@ -23,6 +31,7 @@ xml_decode ($)
 my $output = shift @ARGV;
 
 $found = 0;
+%blocks = ();
 
 foreach $file (@ARGV)
 {
@@ -30,31 +39,40 @@ foreach $file (@ARGV)
 
   while ($line = <FILE>)
   {
-    if ($line =~ /\/\* example-begin $output \*\//)
+    if ($line =~ /<!-- example-begin $output (.*) -->/)
     {
-      print "Extracting $output from $file\n";
       $found = 1;
-      open OUTPUT, ">$output";
-      print OUTPUT xml_decode ($line); 
-      my $example = 1;
-      while (($line = <FILE>) && $example)
+      $block_id = $1;
+      $block = "\n/*** block $block_id from $file ***/\n";
+
+      print "Extracting $output block $block_id from $file\n";
+
+      while ($line = <FILE>)
       {
-        if ($line =~ /\/\* example-end/)
+        if ($line =~ /<!-- example-end $output (.*) -->/)
         {
-          print OUTPUT xml_decode ($line);
-          close OUTPUT;
-          $example = 0;
+          last;
         }
-        else
-        {
-          print OUTPUT xml_decode ($line);
-        }
+        $block .= xml_decode ($line);
       }
+      $blocks{$block_id} = $block;
     }
   }
 }
+
+
 if (!$found)
 {
   print "Could not find $output example !\n";
   exit(1);
 }
+
+# now output all the blocks in the right order
+open OUTPUT, ">$output";
+@block_ids = keys %blocks;
+foreach $block_id (sort @block_ids)
+{
+  print "Writing block with id $block_id\n";
+  print OUTPUT $blocks{$block_id};
+}
+close OUTPUT;

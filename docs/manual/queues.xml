@@ -46,9 +46,10 @@
   </para>
 
   <programlisting>
-/* example-begin queue.c */
-#include &lt;stdlib.h&gt;
-#include &lt;gst/gst.h&gt;
+<!-- example-begin queue.c a -->
+<![CDATA[
+#include <stdlib.h>
+#include <gst/gst.h>
 
 gboolean playing;
 
@@ -121,9 +122,7 @@ main (int argc, char *argv[])
 
   return 0;
 }
-/* example-end queue.c */
+]]>
+<!-- example-end queue.c a -->
   </programlisting>
-
-
-
 </chapter>

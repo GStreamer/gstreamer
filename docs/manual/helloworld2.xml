@@ -20,8 +20,9 @@
     </para>
 
     <programlisting>
-/* example-begin helloworld2.c */
-#include &lt;gst/gst.h&gt;
+<!-- example-begin helloworld2.c a -->
+<![CDATA[
+#include <gst/gst.h>
 
 static void 	gst_play_have_type 	(GstElement *typefind, GstCaps *caps, GstElement *pipeline);
 static void 	gst_play_cache_empty 	(GstElement *element, GstElement *pipeline);
@@ -156,7 +157,8 @@ main (int argc, char *argv[])
 
   exit(0);
 }
-/* example-end helloworld2.c */
+]]>
+<!-- example-end helloworld2.c a -->
     </programlisting>
     <para>
       We start by constructing a 'filesrc' element and an 'autobin' element that

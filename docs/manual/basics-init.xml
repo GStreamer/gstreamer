@@ -19,9 +19,8 @@
   </para>
 
   <programlisting>
+<!-- example-begin init.c a -->
 <![CDATA[
-/* example-begin init.c */
-
 #include <gst/gst.h>
 
 int
@@ -37,8 +36,8 @@ main (int argc, char *argv[])
 
   return 0;
 }
-/* example-end init.c */
 ]]>
+<!-- example-end init.c a -->
   </programlisting>
   <para>
     Use the <symbol>GST_VERSION_MAJOR</symbol>,
@@ -60,9 +59,9 @@ You can also use a popt table to initialize your own parameters as shown in the
 next example:
     </para>
     <programlisting>
-/* example-begin popt.c */
-
-#include &lt;gst/gst.h&gt;
+<!-- example-begin popt.c a -->
+<![CDATA[
+#include <gst/gst.h>
 
 int
 main(int argc, char *argv[])
@@ -83,7 +82,9 @@ main(int argc, char *argv[])
 
   return 0;
 }
-/* example-end popt.c */
+]]>
+<!-- example-end popt.c a -->
+
     </programlisting>
     <para>
       As shown in this fragment, you can use a <ulink

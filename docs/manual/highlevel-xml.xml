@@ -24,9 +24,11 @@
     </para>
 
     <programlisting>
-/* example-begin xml-mp3.c */
-#include &lt;stdlib.h&gt;
-#include &lt;gst/gst.h&gt;
+
+<!-- example-begin xml-mp3.c a -->
+<![CDATA[
+#include <stdlib.h>
+#include <gst/gst.h>
 
 gboolean playing;
 
@@ -88,7 +90,8 @@ main (int argc, char *argv[])
 
   exit (0);
 }
-/* example-end xml-mp3.c */
+]]>
+<!-- example-end xml-mp3.c a -->
     </programlisting>
     <para>
       The most important line is:

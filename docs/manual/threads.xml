@@ -82,8 +82,9 @@
   
     <para>
       <programlisting>
-/* example-begin threads.c */
-#include &lt;gst/gst.h&gt;
+<!-- example-begin threads.c a -->
+<![CDATA[
+#include <gst/gst.h>
 
 /* we set this to TRUE right before gst_main (), but there could still
    be a race condition between setting it and entering the function */
@@ -161,7 +162,8 @@ main (int argc, char *argv[])
 
   exit (0);
 }
-/* example-end threads.c */
+]]>
+<!-- example-end threads.c a -->
       </programlisting>
     </para>
   </sect1>

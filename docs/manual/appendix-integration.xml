@@ -23,9 +23,10 @@
     </para>  
 
     <programlisting>
-/* example-begin gnome.c */
-#include &lt;gnome.h&gt;
-#include &lt;gst/gst.h&gt;
+<!-- example-begin gnome.c a -->
+<![CDATA[
+#include <gnome.h>
+#include <gst/gst.h>
 
 int
 main (int argc, char **argv)
@@ -78,7 +79,8 @@ main (int argc, char **argv)
 
   return 0;
 }
-/* example-end gnome.c */
+]]>
+<!-- example-end gnome.c a -->
     </programlisting>
     <para>
       If you try out this program, you will see that when called with
