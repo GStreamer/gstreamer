@@ -708,7 +708,6 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	gst_pad_event_default (pad, event);
 	break;
     }
-    gst_event_free (event);
     return;
   }
 
@@ -757,6 +756,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
         }
 	mad_frame_mute (&mad->frame);
 	mad_synth_mute (&mad->synth);
+	mad_stream_sync (&mad->stream);
 	/* recoverable errors pass */
 	goto next;
       }
