@@ -1860,19 +1860,6 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   GNode *trak;
   GNode *udta;
 
-  udta = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_udta);
-  if (udta) {
-    qtdemux_parse_udta (qtdemux, udta);
-
-    if (qtdemux->tag_list) {
-      GST_DEBUG ("calling gst_element_found_tags with %s\n",
-          gst_structure_to_string (qtdemux->tag_list));
-      gst_element_found_tags (GST_ELEMENT (qtdemux), qtdemux->tag_list);
-    }
-  } else {
-    GST_LOG ("No udta node found.");
-  }
-
   mvhd = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_mvhd);
   if (mvhd == NULL) {
     GST_LOG ("No mvhd node found.");
@@ -1891,10 +1878,30 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
 /*  trak = qtdemux_tree_get_sibling_by_type(trak, FOURCC_trak);
   if(trak)qtdemux_parse_trak(qtdemux, trak);*/
 
+  /* kid pads */
   while ((trak = qtdemux_tree_get_sibling_by_type (trak, FOURCC_trak)) != NULL)
     qtdemux_parse_trak (qtdemux, trak);
-
   gst_element_no_more_pads (GST_ELEMENT (qtdemux));
+
+  /* tags */
+  udta = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_udta);
+  if (udta) {
+    qtdemux_parse_udta (qtdemux, udta);
+
+    if (qtdemux->tag_list) {
+      GstEvent *event;
+      gchar *t;
+
+      event = gst_event_new_tag (gst_tag_list_copy (qtdemux->tag_list));
+      gst_pad_event_default (qtdemux->sinkpad, event);
+      t = gst_structure_to_string (qtdemux->tag_list);
+      GST_DEBUG ("calling gst_element_found_tags with %s", t);
+      g_free (t);
+      gst_element_found_tags (GST_ELEMENT (qtdemux), qtdemux->tag_list);
+    }
+  } else {
+    GST_LOG ("No udta node found.");
+  }
 }
 
 static void
