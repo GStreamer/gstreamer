@@ -6,8 +6,8 @@ AC_CANONICAL_TARGET([])
 AM_CONFIG_HEADER(config.h)
 
 GST_VERSION_MAJOR=0
-GST_VERSION_MINOR=1
-GST_VERSION_MICRO=1
+GST_VERSION_MINOR=2
+GST_VERSION_MICRO=0-pre0
 GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
 
 PACKAGE=gstreamer
@@ -250,21 +250,52 @@ AC_ARG_ENABLE(artsd,
 
 dnl AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
 
+
 dnl Check for libasound
 alsa_save_LIBS=$LIBS
 alsa_save_CFLAGS=$CFLAGS
-AM_PATH_ALSA(0.5.0, HAVE_LIBASOUND=yes, HAVE_LIBASOUND=no)
+AM_PATH_ALSA(0.5.0, HAVE_LIBASOUND=yes,
+  HAVE_LIBASOUND=no
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: gstalsa
+))
+if test x$HAVE_LIBASOUND = xyes;then
+  AC_MSG_CHECKING(alsa libs == 0.5.x, not 0.9.x)
+  AC_TRY_COMPILE([
+#include <sys/asoundlib.h>
+], [
+#if !defined(SND_LIB_MINOR) && defined(SOUNDLIB_VERSION_MINOR)
+#define SND_LIB_MINOR SOUNDLIB_VERSION_MINOR
+#endif
+
+void main(void) {
+  // succeed only if it's 0.5.x
+#if (SND_LIB_MINOR == 5)
+  exit(0);
+#else
+#error not 0.5.x
+#endif
+
+  exit(1);
+}
+],AC_MSG_RESULT(0.5.x),
+  AC_MSG_RESULT(no)
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: gstalsa
+)
+  HAVE_LIBASOUND=no)
+fi
+
 LIBS=$alsa_save_LIBS
 CFLAGS=$alsa_save_CFLAGS
 AC_ARG_ENABLE(alsasink,
 [  --enable-alsasink          enable the building of the alsasink],
 [case "${enableval}" in
-	yes) HAVE_LIBASOUND=$HAVE_LIBASOUND ;;
-	no) HAVE_LIBASOUND=no ;;
-	*) AC_MSG_ERROR(bad value ${enableval} for --enable-alsasink) ;;
+        yes) HAVE_LIBASOUND=$HAVE_LIBASOUND ;;
+        no) HAVE_LIBASOUND=no ;;
+        *) AC_MSG_ERROR(bad value ${enableval} for --enable-alsasink) ;;
 esac],
 [HAVE_LIBASOUND=$HAVE_LIBASOUND])
-
 
 dnl Check for libaudiofile
 AC_PATH_PROG(AUDIOFILE_CONFIG, audiofile-config, no)
@@ -278,19 +309,6 @@ else
 fi
 AC_SUBST(AUDIOFILE_LIBS)
 
-alsa_save_LIBS=$LIBS
-alsa_save_CFLAGS=$CFLAGS
-AM_PATH_ALSA(0.5.0, HAVE_LIBASOUND=yes, HAVE_LIBASOUND=no)
-LIBS=$alsa_save_LIBS
-CFLAGS=$alsa_save_CFLAGS
-AC_ARG_ENABLE(alsasink,
-[  --enable-alsasink          enable the building of the alsasink],
-[case "${enableval}" in
-	yes) HAVE_LIBASOUND=$HAVE_LIBASOUND ;;
-	no) HAVE_LIBASOUND=no ;;
-	*) AC_MSG_ERROR(bad value ${enableval} for --enable-alsasink) ;;
-esac],
-[HAVE_LIBASOUND=$HAVE_LIBASOUND])
 
 dnl Check for libgdk-pixbuf
 AC_PATH_PROG(GDK_PIXBUF_CONFIG, gdk-pixbuf-config, no)
@@ -427,26 +445,58 @@ dnl Check for OSS audio
 AC_CHECK_HEADER(sys/soundcard.h, HAVE_OSS=yes, HAVE_OSS=no)
 
 dnl Check for xaudio
-AC_CHECK_HEADER(xaudio/decoder.h, HAVE_XAUDIO=yes, HAVE_XAUDIO=no)
+AC_CHECK_HEADER(xaudio/decoder.h,
+  AC_DEFINE(HAVE_XAUDIO)
+  HAVE_XAUDIO="yes",
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: gstxa
+)
+  HAVE_XAUDIO="no",
+)
 
 dnl Check for libmad
 AC_MSG_CHECKING(MAD library)
-AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_LIBMAD=yes, HAVE_LIBMAD=no, )
-AC_CHECK_HEADER(mad.h, :, HAVE_LIBMAD=no)
+AC_CHECK_LIB(mad, mad_decoder_finish,
+  HAVE_LIBMAD=yes
+  AC_DEFINE(HAVE_LIBMAD),
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: mad
+)
+  HAVE_LIBMAD=no,
+)
 
 dnl Check for libvorbis
 AC_MSG_CHECKING(Vorbis library)
-AC_CHECK_LIB(vorbis, ogg_sync_init, HAVE_VORBIS=yes, HAVE_VORBIS=no, )
-AC_CHECK_HEADER(vorbis/codec.h, :, HAVE_VORBIS=no)
+AC_CHECK_LIB(vorbis, ogg_sync_init,
+  HAVE_VORBIS=yes
+  AC_DEFINE(HAVE_VORBIS),
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: vorbisdec vorbisenc
+)
+  HAVE_VORBIS=no,
+)
 
 dnl Check for libjpeg
 AC_MSG_CHECKING(libjpeg library)
-AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_LIBJPEG=yes, HAVE_LIBJPEG=no, )
-AC_CHECK_HEADER(jpeglib.h, :, HAVE_LIBJPEG=no)
+AC_CHECK_LIB(jpeg, jpeg_set_defaults,
+  HAVE_LIBJPEG=yes
+  AC_DEFINE(HAVE_LIBJPEG),
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: jpegdec jpegenc
+)
+  HAVE_LIBJPEG=no,
+)
 
 dnl Check for libHermes
 AC_MSG_CHECKING(Hermes library)
-AC_CHECK_LIB(Hermes, Hermes_ConverterInstance, HAVE_LIBHERMES=yes, HAVE_LIBHERMES=no, )
+AC_CHECK_LIB(Hermes, Hermes_ConverterInstance,
+  HAVE_LIBHERMES=yes
+  AC_DEFINE(HAVE_LIBHERMES),
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: colorspace
+)
+  HAVE_LIBHERMES=no,
+)
 AC_CHECK_HEADER(Hermes/Hermes.h, :, HAVE_LIBHERMES=no)
 
 dnl Check for cdparanoia
@@ -1023,7 +1073,6 @@ plugins/visualization/spectrum/Makefile
 plugins/visualization/vumeter/Makefile
 plugins/visualization/synaesthesia/Makefile
 plugins/visualization/smoothwave/Makefile
-plugins/videosink/Makefile
 plugins/videoscale/Makefile
 plugins/xvideosink/Makefile
 plugins/wav/Makefile
