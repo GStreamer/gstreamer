@@ -301,7 +301,8 @@ gst_tcpserversink_init_send (GstMultiFdSink * parent)
     switch (errno) {
       default:
         GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
-            ("bind failed: %s", g_strerror (errno)));
+            ("bind on port %d failed: %s", this->server_port,
+                g_strerror (errno)));
         return FALSE;
         break;
     }
