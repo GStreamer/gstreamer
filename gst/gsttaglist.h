@@ -88,7 +88,15 @@ void		gst_tag_list_add		(GstTagList *		list,
 						 GstTagMergeMode	mode,
 						 const gchar *		tag,
 						 ...);
+void		gst_tag_list_add_values		(GstTagList *		list,
+						 GstTagMergeMode	mode,
+						 const gchar *		tag,
+						 ...);
 void		gst_tag_list_add_valist		(GstTagList *		list,
+						 GstTagMergeMode	mode,
+						 const gchar *		tag,
+						 va_list		var_args);
+void		gst_tag_list_add_valist_values	(GstTagList *		list,
 						 GstTagMergeMode	mode,
 						 const gchar *		tag,
 						 va_list		var_args);

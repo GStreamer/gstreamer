@@ -55,10 +55,22 @@ void		gst_tag_setter_add		(GstTagSetter *		setter,
 						 GstTagMergeMode	mode,
 						 const gchar *		tag,
 					         ...);
+
+void		gst_tag_setter_add_values	(GstTagSetter *		setter,
+						 GstTagMergeMode	mode,
+						 const gchar *		tag,
+					         ...);
+
 void            gst_tag_setter_add_valist     	(GstTagSetter *		setter,
 						 GstTagMergeMode	mode,
 						 const gchar *		tag,
 						 va_list		var_args);
+
+void            gst_tag_setter_add_valist_values(GstTagSetter *		setter,
+						 GstTagMergeMode	mode,
+						 const gchar *		tag,
+						 va_list		var_args);
+
 G_CONST_RETURN GstTagList *
 		gst_tag_setter_get_list	(GstTagSetter *		setter);
 

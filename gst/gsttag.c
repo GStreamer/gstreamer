@@ -577,6 +577,28 @@ gst_tag_list_add (GstTagList *list, GstTagMergeMode mode, const gchar *tag, ...)
   va_end (args);
 }
 /**
+ * gst_tag_list_add_values:
+ * @list: list to set tags in
+ * @mode: the mode to use
+ * @tag: tag
+ * @...: GValues to set
+ *
+ * Sets the GValues for the given tags using the specified mode.
+ */
+void
+gst_tag_list_add_values (GstTagList *list, GstTagMergeMode mode, const gchar *tag, ...)
+{
+  va_list args;
+
+  g_return_if_fail (GST_IS_TAG_LIST (list));
+  g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
+  g_return_if_fail (tag != NULL);
+  
+  va_start (args, tag);
+  gst_tag_list_add_valist_values (list, mode, tag, args);
+  va_end (args);
+}
+/**
  * gst_tag_list_add_valist:
  * @list: list to set tags in
  * @mode: the mode to use
@@ -613,6 +635,33 @@ gst_tag_list_add_valist (GstTagList *list, GstTagMergeMode mode, const gchar *ta
     }
     gst_tag_list_add_value_internal (list, mode, quark, &value);
     g_value_unset (&value);
+    tag = va_arg (var_args, gchar *);
+  }
+}
+/**
+ * gst_tag_list_add_valist_values:
+ * @list: list to set tags in
+ * @mode: the mode to use
+ * @tag: tag
+ * @var_args: tag / GValue pairs to set
+ *
+ * Sets the GValues for the given tags using the specified mode.
+ */
+void
+gst_tag_list_add_valist_values (GstTagList *list, GstTagMergeMode mode, const gchar *tag, va_list var_args)
+{
+  GstTagInfo *info;
+  GQuark quark;
+  
+  g_return_if_fail (GST_IS_TAG_LIST (list));
+  g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
+  g_return_if_fail (tag != NULL);
+  
+  while (tag != NULL) {
+    quark = g_quark_from_string (tag);
+    info = gst_tag_lookup (quark);
+    g_return_if_fail (info != NULL);
+    gst_tag_list_add_value_internal (list, mode, quark, va_arg (var_args, GValue *));
     tag = va_arg (var_args, gchar *);
   }
 }

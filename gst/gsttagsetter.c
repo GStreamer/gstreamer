@@ -139,6 +139,28 @@ gst_tag_setter_add (GstTagSetter *setter, GstTagMergeMode mode, const gchar *tag
   va_end (args);
 }
 /**
+ * gst_tag_setter_add_values:
+ * @setter: a #GstTagSetter
+ * @mode: the mode to use
+ * @tag: tag to set
+ * @...: more tag / GValue pairs to set
+ *
+ * Adds the given tag / GValue pairs on the setter using the given merge mode. 
+ * The list must be terminated with GST_TAG_INVALID.
+ */
+void
+gst_tag_setter_add_values (GstTagSetter *setter, GstTagMergeMode mode, const gchar *tag, ...)
+{
+  va_list args;
+
+  g_return_if_fail (GST_IS_TAG_SETTER (setter));
+  g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
+
+  va_start (args, tag);
+  gst_tag_setter_add_valist_values (setter, mode, tag, args);
+  va_end (args);
+}
+/**
  * gst_tag_setter_add_valist:
  * @setter: a #GstTagSetter
  * @mode: the mode to use
@@ -161,6 +183,30 @@ gst_tag_setter_add_valist (GstTagSetter *setter, GstTagMergeMode mode, const gch
     data->list = gst_tag_list_new ();
   
   gst_tag_list_add_valist (data->list, mode, tag, var_args);
+}
+/**
+ * gst_tag_setter_add_valist_values:
+ * @setter: a #GstTagSetter
+ * @mode: the mode to use
+ * @tag: tag to set
+ * @var_args: tag / GValue pairs to set
+ *
+ * Adds the given tag / GValue pairs on the setter using the given merge mode. 
+ * The list must be terminated with GST_TAG_INVALID.
+ */
+void
+gst_tag_setter_add_valist_values (GstTagSetter *setter, GstTagMergeMode mode, const gchar *tag, va_list var_args)
+{
+  GstTagData *data;
+  
+  g_return_if_fail (GST_IS_TAG_SETTER (setter));
+  g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
+
+  data = gst_tag_setter_get_data (setter);
+  if (!data->list)
+    data->list = gst_tag_list_new ();
+  
+  gst_tag_list_add_valist_values (data->list, mode, tag, var_args);
 }
 /**
  * gst_tag_setter_get_list:
