@@ -1,10 +1,10 @@
 plugindir = $(libdir)/gst
 
-plugin_LTLIBRARIES = libgstparseau.la
+plugin_LTLIBRARIES = libgstauparse.la
 
-libgstparseau_la_SOURCES = gstparseau.c
-libgstparseau_la_CFLAGS = $(GST_CFLAGS)
-libgstparseau_la_LIBADD = $(GST_LIBS)
-libgstparseau_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
+libgstauparse_la_SOURCES = gstauparse.c
+libgstauparse_la_CFLAGS = $(GST_CFLAGS)
+libgstauparse_la_LIBADD = $(GST_LIBS)
+libgstauparse_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
 
-noinst_HEADERS = gstparseau.h
+noinst_HEADERS = gstauparse.h

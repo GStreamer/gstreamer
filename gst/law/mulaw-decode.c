@@ -46,35 +46,33 @@ static void		gst_mulawdec_chain			(GstPad *pad, GstBuffer *buf);
 static GstElementClass *parent_class = NULL;
 /*static guint gst_stereo_signals[LAST_SIGNAL] = { 0 };*/
 
-/*
-static GstPadNegotiateReturn
-mulawdec_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
+
+static GstPadConnectReturn
+mulawdec_connect_sink (GstPad *pad, GstCaps *caps)
 {
-  GstCaps* tempcaps;
-  
+  GstCaps *newcaps;
   GstMuLawDec* mulawdec=GST_MULAWDEC (GST_OBJECT_PARENT (pad));
   
-  if (*caps==NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
+  if (caps==NULL) 
+    return GST_PAD_CONNECT_REFUSED;
 
-  tempcaps = gst_caps_copy(*caps);
+  newcaps = gst_caps_copy(caps);
 
-  gst_caps_set(tempcaps,"format",GST_PROPS_STRING("int"));
-  gst_caps_set(tempcaps,"law",GST_PROPS_INT(0));
-  gst_caps_set(tempcaps,"depth",GST_PROPS_INT(16));
-  gst_caps_set(tempcaps,"width",GST_PROPS_INT(16));
-  gst_caps_set(tempcaps,"signed",GST_PROPS_BOOLEAN(TRUE));
+  gst_caps_set(newcaps,"format",GST_PROPS_STRING("int"));
+  gst_caps_set(newcaps,"law",GST_PROPS_INT(0));
+  gst_caps_set(newcaps,"depth",GST_PROPS_INT(16));
+  gst_caps_set(newcaps,"width",GST_PROPS_INT(16));
+  gst_caps_set(newcaps,"signed",GST_PROPS_BOOLEAN(TRUE));
 
-  if (gst_pad_try_set_caps (mulawdec->srcpad, tempcaps))
-  {
-    return GST_PAD_NEGOTIATE_AGREE;
+  if (GST_CAPS_IS_FIXED (newcaps)) {
+    if (gst_pad_try_set_caps (mulawdec->srcpad, newcaps))
+      return GST_PAD_CONNECT_OK;
+    else
+      return GST_PAD_CONNECT_REFUSED;
   }
-  else {
-    gst_caps_unref (tempcaps);
-    return GST_PAD_NEGOTIATE_FAIL;
-  }
+
+  return GST_PAD_CONNECT_DELAYED;
 }		
-*/
 
 GType
 gst_mulawdec_get_type(void) {
@@ -116,7 +114,7 @@ gst_mulawdec_init (GstMuLawDec *mulawdec)
 {
   mulawdec->sinkpad = gst_pad_new_from_template(mulawdec_sink_template,"sink");
   mulawdec->srcpad = gst_pad_new_from_template(mulawdec_src_template,"src");
-  /*gst_pad_set_negotiate_function(mulawdec->sinkpad, mulawdec_negotiate_sink);*/
+  gst_pad_set_connect_function(mulawdec->sinkpad, mulawdec_connect_sink);
 
   gst_element_add_pad(GST_ELEMENT(mulawdec),mulawdec->sinkpad);
   gst_pad_set_chain_function(mulawdec->sinkpad,gst_mulawdec_chain);

@@ -269,7 +269,8 @@ gst_osssink_sinkconnect (GstPad *pad, GstCaps *caps)
   if (width != depth) 
     return GST_PAD_CONNECT_REFUSED;
 
-  osssink->bps = 0;
+  /* laws 1 and 2 are 1 bps anyway */
+  osssink->bps = 1;
 
   law = gst_caps_get_int (caps, "law");
   endianness = gst_caps_get_int (caps, "endianness");
@@ -300,6 +301,13 @@ gst_osssink_sinkconnect (GstPad *pad, GstCaps *caps)
       }
       osssink->bps = 1;
     }
+  } else if (law == 1) {
+    format = AFMT_MU_LAW;
+  } else if (law == 2) {
+    format = AFMT_A_LAW;
+  } else {
+    g_critical ("unknown law");
+    return GST_PAD_CONNECT_REFUSED;
   }
 
   if (format == -1) 
@@ -415,6 +423,11 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
   osssink = GST_OSSSINK (gst_pad_get_parent (pad));
 
   buftime = GST_BUFFER_TIMESTAMP (buf);
+
+  if (!osssink->bps) {
+    gst_buffer_unref (buf);
+    gst_element_error (GST_ELEMENT (osssink), "capsnego was never performed, unknown data type");
+  }
 
   if (osssink->fd >= 0) {
     if (!osssink->mute) {

@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __GST_PARSEAU_H__
-#define __GST_PARSEAU_H__
+#ifndef __GST_AUPARSE_H__
+#define __GST_AUPARSE_H__
 
 
 #include <config.h>
@@ -31,21 +31,21 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-#define GST_TYPE_PARSEAU \
-  (gst_parseau_get_type())
-#define GST_PARSEAU(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PARSEAU,GstParseAu))
-#define GST_PARSEAU_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PARSEAU,GstParseAu))
-#define GST_IS_PARSEAU(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PARSEAU))
-#define GST_IS_PARSEAU_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PARSEAU))
+#define GST_TYPE_AUPARSE \
+  (gst_auparse_get_type())
+#define GST_AUPARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUPARSE,GstAuParse))
+#define GST_AUPARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUPARSE,GstAuParse))
+#define GST_IS_AUPARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUPARSE))
+#define GST_IS_AUPARSE_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUPARSE))
 
-typedef struct _GstParseAu GstParseAu;
-typedef struct _GstParseAuClass GstParseAuClass;
+typedef struct _GstAuParse GstAuParse;
+typedef struct _GstAuParseClass GstAuParseClass;
 
-struct _GstParseAu {
+struct _GstAuParse {
   GstElement element;
 
   GstPad *sinkpad,*srcpad;
@@ -59,11 +59,11 @@ struct _GstParseAu {
 
 };
 
-struct _GstParseAuClass {
+struct _GstAuParseClass {
   GstElementClass parent_class;
 };
 
-GType gst_parseau_get_type (void);
+GType gst_auparse_get_type (void);
 
 
 #ifdef __cplusplus
@@ -71,4 +71,4 @@ GType gst_parseau_get_type (void);
 #endif /* __cplusplus */
 
 
-#endif /* __GST_PARSEAU_H__ */
+#endif /* __GST_AUPARSE_H__ */

@@ -24,11 +24,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <gstparseau.h>
+#include <gstauparse.h>
 
 
 /* elementfactory information */
-static GstElementDetails gst_parseau_details = {
+static GstElementDetails gst_auparse_details = {
   ".au parser",
   "Parser/Audio",
   "Parse an .au file into raw audio",
@@ -51,7 +51,7 @@ au_typefind (GstBuffer *buf, gpointer private)
 
 /* typefactory for 'au' */
 static GstTypeDefinition audefinition = {
-  "parseau_audio/au",
+  "auparse_audio/au",
   "audio/au",
   ".au",
   au_typefind,
@@ -96,7 +96,7 @@ GST_PADTEMPLATE_FACTORY (src_factory_templ,
   )
 )
 
-/* ParseAu signals and args */
+/* AuParse signals and args */
 enum {
   /* FILL ME */
   LAST_SIGNAL
@@ -107,37 +107,37 @@ enum {
   /* FILL ME */
 };
 
-static void 	gst_parseau_class_init		(GstParseAuClass *klass);
-static void 	gst_parseau_init		(GstParseAu *parseau);
+static void 	gst_auparse_class_init		(GstAuParseClass *klass);
+static void 	gst_auparse_init		(GstAuParse *auparse);
 
-static void 	gst_parseau_chain		(GstPad *pad,GstBuffer *buf);
+static void 	gst_auparse_chain		(GstPad *pad,GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_parseau_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_auparse_signals[LAST_SIGNAL] = { 0 };
 
 GType
-gst_parseau_get_type (void) 
+gst_auparse_get_type (void) 
 {
-  static GType parseau_type = 0;
+  static GType auparse_type = 0;
 
-  if (!parseau_type) {
-    static const GTypeInfo parseau_info = {
-      sizeof(GstParseAuClass),      NULL,
+  if (!auparse_type) {
+    static const GTypeInfo auparse_info = {
+      sizeof(GstAuParseClass),      NULL,
       NULL,
-      (GClassInitFunc) gst_parseau_class_init,
+      (GClassInitFunc) gst_auparse_class_init,
       NULL,
       NULL,
-      sizeof(GstParseAu),
+      sizeof(GstAuParse),
       0,
-      (GInstanceInitFunc) gst_parseau_init,
+      (GInstanceInitFunc) gst_auparse_init,
     };
-    parseau_type = g_type_register_static (GST_TYPE_ELEMENT, "GstParseAu", &parseau_info, 0);
+    auparse_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAuParse", &auparse_info, 0);
   }
-  return parseau_type;
+  return auparse_type;
 }
 
 static void
-gst_parseau_class_init (GstParseAuClass *klass) 
+gst_auparse_class_init (GstAuParseClass *klass) 
 {
   GstElementClass *gstelement_class;
 
@@ -147,28 +147,28 @@ gst_parseau_class_init (GstParseAuClass *klass)
 }
 
 static void 
-gst_parseau_init (GstParseAu *parseau) 
+gst_auparse_init (GstAuParse *auparse) 
 {
-  parseau->sinkpad = gst_pad_new_from_template (
+  auparse->sinkpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (sink_factory_templ), "sink");
-  gst_element_add_pad (GST_ELEMENT (parseau), parseau->sinkpad);
-  gst_pad_set_chain_function (parseau->sinkpad, gst_parseau_chain);
+  gst_element_add_pad (GST_ELEMENT (auparse), auparse->sinkpad);
+  gst_pad_set_chain_function (auparse->sinkpad, gst_auparse_chain);
 
-  parseau->srcpad = gst_pad_new_from_template (
+  auparse->srcpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (src_factory_templ), "src");
-  gst_element_add_pad (GST_ELEMENT (parseau), parseau->srcpad);
+  gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad);
 
-  parseau->offset = 0;
-  parseau->size = 0;
-  parseau->encoding = 0;
-  parseau->frequency = 0;
-  parseau->channels = 0;
+  auparse->offset = 0;
+  auparse->size = 0;
+  auparse->encoding = 0;
+  auparse->frequency = 0;
+  auparse->channels = 0;
 }
 
 static void 
-gst_parseau_chain (GstPad *pad, GstBuffer *buf) 
+gst_auparse_chain (GstPad *pad, GstBuffer *buf) 
 {
-  GstParseAu *parseau;
+  GstAuParse *auparse;
   gchar *data;
   glong size;
   GstCaps* tempcaps;
@@ -179,36 +179,36 @@ gst_parseau_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
-  parseau = GST_PARSEAU (gst_pad_get_parent (pad));
+  auparse = GST_AUPARSE (gst_pad_get_parent (pad));
   
-  GST_DEBUG (0, "gst_parseau_chain: got buffer in '%s'\n",
-          gst_element_get_name (GST_ELEMENT (parseau)));
+  GST_DEBUG (0, "gst_auparse_chain: got buffer in '%s'\n",
+          gst_element_get_name (GST_ELEMENT (auparse)));
 
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
 
   /* if we haven't seen any data yet... */
-  if (parseau->size == 0) {
+  if (auparse->size == 0) {
     GstBuffer *newbuf;
     gulong *head = (gulong *)data;
 
     /* normal format is big endian (au is a Sparc format) */
     if (GULONG_FROM_BE (*(head++)) == 0x2e736e64) {
-      parseau->le = 0;
-      parseau->offset 		= GULONG_FROM_BE (*(head++));
-      parseau->size 		= GULONG_FROM_BE (*(head++));
-      parseau->encoding 	= GULONG_FROM_BE (*(head++));
-      parseau->frequency 	= GULONG_FROM_BE (*(head++));
-      parseau->channels 	= GULONG_FROM_BE (*(head++));
+      auparse->le = 0;
+      auparse->offset 		= GULONG_FROM_BE (*(head++));
+      auparse->size 		= GULONG_FROM_BE (*(head++));
+      auparse->encoding 	= GULONG_FROM_BE (*(head++));
+      auparse->frequency 	= GULONG_FROM_BE (*(head++));
+      auparse->channels 	= GULONG_FROM_BE (*(head++));
 
     /* but I wouldn't be surprised by a little endian version */
     } else if (GULONG_FROM_LE (*(head++)) == 0x2e736e64) {
-      parseau->le = 1;
-      parseau->offset 		= GULONG_FROM_LE(*(head++));
-      parseau->size 		= GULONG_FROM_LE(*(head++));
-      parseau->encoding 	= GULONG_FROM_LE(*(head++));
-      parseau->frequency 	= GULONG_FROM_LE(*(head++));
-      parseau->channels 	= GULONG_FROM_LE(*(head++));
+      auparse->le = 1;
+      auparse->offset 		= GULONG_FROM_LE(*(head++));
+      auparse->size 		= GULONG_FROM_LE(*(head++));
+      auparse->encoding 	= GULONG_FROM_LE(*(head++));
+      auparse->frequency 	= GULONG_FROM_LE(*(head++));
+      auparse->channels 	= GULONG_FROM_LE(*(head++));
 
     } else {
       g_warning ("help, dunno what I'm looking at!\n");
@@ -217,13 +217,13 @@ gst_parseau_chain (GstPad *pad, GstBuffer *buf)
     }
 
     g_print ("offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld\n",
-             parseau->offset,parseau->size,parseau->encoding,
-             parseau->frequency,parseau->channels);
+             auparse->offset,auparse->size,auparse->encoding,
+             auparse->frequency,auparse->channels);
     GST_DEBUG (0, "offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld\n",
-             parseau->offset,parseau->size,parseau->encoding,
-             parseau->frequency,parseau->channels);
+             auparse->offset,auparse->size,auparse->encoding,
+             auparse->frequency,auparse->channels);
     
-    switch (parseau->encoding) {
+    switch (auparse->encoding) {
       case 1:
 	law = 1;
 	depth = 8;
@@ -248,31 +248,31 @@ gst_parseau_chain (GstPad *pad, GstBuffer *buf)
 		             "audio/raw",
 			       "format",  	GST_PROPS_STRING ("int"),
       			       "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
-			       "rate",  	GST_PROPS_INT (parseau->frequency),
-			       "channels",  	GST_PROPS_INT (parseau->channels),
+			       "rate",  	GST_PROPS_INT (auparse->frequency),
+			       "channels",  	GST_PROPS_INT (auparse->channels),
 			       "law",  		GST_PROPS_INT (law),
 			       "depth", 	GST_PROPS_INT (depth),
 			       "width", 	GST_PROPS_INT (depth),
 			       "signed", 	GST_PROPS_BOOLEAN (sign));
 
-    if (!gst_pad_try_set_caps (parseau->srcpad, tempcaps)) {
+    if (!gst_pad_try_set_caps (auparse->srcpad, tempcaps)) {
       gst_buffer_unref (buf);
-      gst_element_error (GST_ELEMENT (parseau), "could not set audio caps");
+      gst_element_error (GST_ELEMENT (auparse), "could not set audio caps");
       return;
     }
 
     newbuf = gst_buffer_new ();
-    GST_BUFFER_DATA (newbuf) = (gpointer) malloc (size-(parseau->offset));
-    memcpy (GST_BUFFER_DATA (newbuf), data+24, size-(parseau->offset));
-    GST_BUFFER_SIZE (newbuf) = size-(parseau->offset);
+    GST_BUFFER_DATA (newbuf) = (gpointer) malloc (size-(auparse->offset));
+    memcpy (GST_BUFFER_DATA (newbuf), data+24, size-(auparse->offset));
+    GST_BUFFER_SIZE (newbuf) = size-(auparse->offset);
 
     gst_buffer_unref (buf);
 
-    gst_pad_push (parseau->srcpad, newbuf);
+    gst_pad_push (auparse->srcpad, newbuf);
     return;
   }
 
-  gst_pad_push (parseau->srcpad, buf);
+  gst_pad_push (auparse->srcpad, buf);
 }
 
 
@@ -283,9 +283,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstTypeFactory *type;
 
   /* create the plugin structure */
-  /* create an elementfactory for the parseau element and list it */
-  factory = gst_elementfactory_new ("parseau", GST_TYPE_PARSEAU,
-                                    &gst_parseau_details);
+  /* create an elementfactory for the auparse element and list it */
+  factory = gst_elementfactory_new ("auparse", GST_TYPE_AUPARSE,
+                                    &gst_auparse_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
   gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_factory_templ));
@@ -302,7 +302,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 GstPluginDesc plugin_desc = {
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "parseau",
+  "auparse",
   plugin_init
 };
 
