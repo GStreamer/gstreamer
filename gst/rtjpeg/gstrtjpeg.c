@@ -41,13 +41,13 @@ conversion utilities");
 
   /* create an elementfactory for the rtjpegenc element */
   enc = gst_elementfactory_new("rtjpegenc",GST_TYPE_RTJPEGENC,
-                               &rtjpegenc_details);
+                               &gst_rtjpegenc_details);
   g_return_val_if_fail(enc != NULL, FALSE);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (enc));
 
   /* create an elementfactory for the rtjpegdec element */
   dec = gst_elementfactory_new("rtjpegdec",GST_TYPE_RTJPEGDEC,
-                               &rtjpegdec_details);
+                               &gst_rtjpegdec_details);
   g_return_val_if_fail(dec != NULL, FALSE);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (dec));
 

@@ -3,7 +3,7 @@
 filterdir = $(libdir)/gst
 filter_LTLIBRARIES = libgstmpegaudioparse.la libgstmp3types.la
 
-libgstmpegaudioparse_la_SOURCES = gstmpegaudioparse.c gstmp3types.c
+libgstmpegaudioparse_la_SOURCES = gstmpegaudioparse.c
 # FIXME is this useful?
 libgstmpegaudioparse_la_CFLAGS = -O3 $(FOMIT_FRAME_POINTER) -ffast-math -finline-functions $(GST_CFLAGS)
 

@@ -19,7 +19,7 @@
 
 
 /*#define DEBUG_ENABLED */
-#include <mpeg2subt.h>
+#include <gstmpeg2subt.h>
 
 static void	gst_mpeg2subt_class_init	(GstMpeg2SubtClass *klass);
 static void	gst_mpeg2subt_init		(GstMpeg2Subt *mpeg2subt);
