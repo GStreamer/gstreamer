@@ -129,7 +129,7 @@ struct _GstRealPad {
   GstPadPullFunction pullfunc;
   GstPadPullRegionFunction pullregionfunc;
 
-  GList *ghostparents;
+  GList *ghostpads;
 };
 
 struct _GstRealPadClass {
@@ -260,9 +260,9 @@ gpointer		gst_pad_get_element_private	(GstPad *pad);
 
 void 			gst_pad_set_parent		(GstPad *pad, GstObject *parent);
 GstObject*		gst_pad_get_parent		(GstPad *pad);
-void 			gst_pad_add_ghost_parent	(GstPad *pad, GstObject *parent);
-void 			gst_pad_remove_ghost_parent	(GstPad *pad, GstObject *parent);
-GList*			gst_pad_get_ghost_parents	(GstPad *pad);
+void 			gst_pad_add_ghost_pad		(GstPad *pad, GstPad *ghostpad);
+void 			gst_pad_remove_ghost_pad	(GstPad *pad, GstPad *ghostpad);
+GList*			gst_pad_get_ghost_pad_list	(GstPad *pad);
 
 GstPad*			gst_pad_get_peer		(GstPad *pad);
 
@@ -298,6 +298,8 @@ xmlNodePtr 		gst_pad_save_thyself		(GstPad *pad, xmlNodePtr parent);
 void 			gst_pad_load_and_connect	(xmlNodePtr parent, GstObject *element, GHashTable *elements);
 
 
+/* ghostpads */
+GstPad *		gst_ghost_pad_new		(gchar *name,GstPad *pad);
 
 
 

@@ -26,6 +26,7 @@
 
 #include <string.h>
 
+#include "gst_private.h"
 #include "gstparse.h"
 
 typedef struct _gst_parse_priv gst_parse_priv;
@@ -44,7 +45,7 @@ struct _gst_parse_delayed_pad {
   GstPad *peer;
 };
 
-/*
+/* FIXME need to either revive this, or have pad->padtemplate connections in core
 static void
 gst_parse_newpad(GstElement *element,GstPad *pad,launch_delayed_pad *peer)
 {
@@ -87,13 +88,13 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
   gint elementcount = 0;
   gint retval = 0;
 
-  priv->binlevel++; 
+  priv->binlevel++;
 
   if (GST_IS_PIPELINE(parent)) { closingchar = '\0';DEBUG("in pipeline "); }
   else if (GST_IS_THREAD(parent)) { closingchar = '}';DEBUG("in thread "); }
   else { closingchar = ')';DEBUG("in bin "); }
   DEBUG_NOPREFIX("%s\n",gst_element_get_name (GST_ELEMENT (parent)));
-          
+
   while (i < argc) {
     arg = argv[i];
     // FIXME this is a lame solution for problems with the first parser
@@ -101,21 +102,21 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
     len = strlen(arg);
     element = NULL;
     DEBUG("** ARGUMENT is '%s'\n",arg);
-      
+
     // a null that slipped through the reconstruction
     if (len == 0) {
       DEBUG("random arg, FIXME\n");
       i++;
       continue;
 
-    // end of the container  
+    // end of the container
     } else if (arg[0] == closingchar) {
       // time to finish off this bin
       DEBUG("exiting container %s\n",gst_element_get_name (GST_ELEMENT (parent)));
       retval = i+1;
       break;
-            
-    // a pad connection   
+
+    // a pad connection
     } else if ((ptr = strchr(arg,'!'))) {
       DEBUG("attempting to connect pads together....\n");
 
@@ -124,7 +125,7 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
         srcpadname = NULL;
         // if there's a sinkpad...
         if (len > 1)
-          sinkpadname = &arg[1];  
+          sinkpadname = &arg[1];
         else
           sinkpadname = NULL;
       } else {
@@ -135,32 +136,35 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
         else
           sinkpadname = NULL;
       }
-    
-      DEBUG("have sinkpad %s, srcpad %s\n",sinkpadname,srcpadname);
-  
+
+      GST_DEBUG(0,"have srcpad %s, sinkpad %s\n",srcpadname,sinkpadname);
+
       srcpad = NULL;
-  
+
       // if the srcpadname doesn't have any commas in it, find an actual pad
       if (!srcpadname || !strchr(srcpadname,',')) {
         if (srcpadname != NULL) {
           srcpad = gst_element_get_pad(previous,srcpadname);
           if (!srcpad)
-            VERBOSE("NO SUCH pad %s in element %s\n",srcpadname,gst_element_get_name(previous));
+            GST_DEBUG(0,"NO SUCH pad %s in element %s\n",srcpadname,gst_element_get_name(previous));
         }
 
         if (srcpad == NULL) {
-          // check through the list to find the first sink pad   
+          // check through the list to find the first sink pad
+          GST_DEBUG(0,"CHECKING through element %s for pad named %s\n",gst_element_get_name(previous),srcpadname);
           pads = gst_element_get_pad_list(previous);
           while (pads) {
             srcpad = GST_PAD(pads->data);
+GST_DEBUG(0,"have pad %s:%s\n",GST_DEBUG_PAD_NAME(srcpad));
+if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
             pads = g_list_next (pads);
             if (gst_pad_get_direction (srcpad) == GST_PAD_SRC) break;
             srcpad = NULL;
           }
         }
-  
-        if (!srcpad) DEBUG("error, can't find a src pad!!!\n");
-        else DEBUG("have src pad %s:%s\n",GST_DEBUG_PAD_NAME(srcpad));
+
+        if (!srcpad) GST_DEBUG(0,"error, can't find a src pad!!!\n");
+        else GST_DEBUG(0,"have src pad %s:%s\n",GST_DEBUG_PAD_NAME(srcpad));
       }
 
     // argument with = in it
@@ -181,15 +185,15 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
     } else {
       DEBUG("have element or bin/thread\n");
       // if we have a bin or thread starting
-      if (strchr("({",arg[0])) {   
+      if (strchr("({",arg[0])) {
         if (arg[0] == '(') {
           // create a bin and add it to the current parent
           element = gst_bin_new(g_strdup_printf("bin%d",priv->bincount++));
-          if (!element) {    
+          if (!element) {
             fprintf(stderr,"Couldn't create a bin!\n");
 //            exit(-1);
           }
-          VERBOSE("CREATED bin %s\n",gst_element_get_name(element));
+          GST_DEBUG(0,"CREATED bin %s\n",gst_element_get_name(element));
         } else if (arg[0] == '{') {
           // create a thread and add it to the current parent
           element = gst_thread_new(g_strdup_printf("thread%d",priv->threadcount++));
@@ -197,11 +201,11 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
             fprintf(stderr,"Couldn't create a thread!\n");
 //            exit(-1);
           }
-          VERBOSE("CREATED thread %s\n",gst_element_get_name(element));
+          GST_DEBUG(0,"CREATED thread %s\n",gst_element_get_name(element));
         }
 
         i += gst_parse_launch_cmdline(argc - i, argv + i + 1, GST_BIN (element), priv);
-          
+
       } else {
         // we have an element
         DEBUG("attempting to create element '%s'\n",arg);
@@ -211,25 +215,24 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
         if (!element) {
           fprintf(stderr,"Couldn't create a '%s', no such element or need to run gstraemer-register?\n",arg);
 //          exit(-1);
-        }   
-        VERBOSE("CREATED element %s\n",gst_element_get_name(element));
-        DEBUG("created element %s\n",gst_element_get_name(element));
+        }
+        GST_DEBUG(0,"CREATED element %s\n",gst_element_get_name(element));
       }
-      
+
       gst_bin_add (GST_BIN (parent), element);
       elementcount++;
-  
+
       if (srcpad != NULL) {
         DEBUG("need to connect to sinkpad %s:%s\n",GST_DEBUG_PAD_NAME(srcpad));
-      
+
         sinkpad = NULL;
-          
+
         if (sinkpadname != NULL)
           sinkpad = gst_element_get_pad(previous,sinkpadname);
 
         if (!sinkpad) {
-          // check through the list to find the first sink pad   
-          pads = gst_element_get_pad_list(element); 
+          // check through the list to find the first sink pad
+          pads = gst_element_get_pad_list(element);
           while (pads) {
             sinkpad = GST_PAD(pads->data);
             pads = g_list_next (pads);
@@ -237,17 +240,17 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
             sinkpad = NULL;
           }
         }
-  
+
         if (!sinkpad) DEBUG("error, can't find a sink pad!!!\n");
         else DEBUG("have sink pad %s:%s\n",GST_DEBUG_PAD_NAME(sinkpad));
-       
-        VERBOSE("CONNECTING %s:%s and %s:%s\n",GST_DEBUG_PAD_NAME(srcpad),GST_DEBUG_PAD_NAME(sinkpad));
+
+        GST_DEBUG(0,"CONNECTING %s:%s and %s:%s\n",GST_DEBUG_PAD_NAME(srcpad),GST_DEBUG_PAD_NAME(sinkpad));
         gst_pad_connect(srcpad,sinkpad);
-    
+
         sinkpad = NULL;
         srcpad = NULL;
       }
-      
+
       // if we're the first element, ghost all the sinkpads
       if (elementcount == 1) {
         DEBUG("first element, ghosting all of %s's sink pads to parent %s\n",
@@ -258,19 +261,21 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
           pads = g_list_next (pads);
           if (!sinkpad) DEBUG("much oddness, pad doesn't seem to exist\n");
           else if (gst_pad_get_direction (sinkpad) == GST_PAD_SINK) {
-            gst_element_add_ghost_pad (GST_ELEMENT (parent), sinkpad);
-            DEBUG("ghosted %s:%s\n",GST_DEBUG_PAD_NAME(sinkpad));
+            gst_element_add_ghost_pad (GST_ELEMENT (parent), sinkpad,
+g_strdup_printf("%s-ghost",gst_pad_get_name(sinkpad)));
+            GST_DEBUG(0,"GHOSTED %s:%s to %s as %s-ghost\n",
+                      GST_DEBUG_PAD_NAME(sinkpad),gst_element_get_name(GST_ELEMENT(parent)),gst_pad_get_name(sinkpad));
           }
         }
       }
 
-      previous = element;    
-      if (!GST_IS_BIN(element)) prevelement = element; 
+      previous = element;
+      if (!GST_IS_BIN(element)) prevelement = element;
     }
-           
+
     i++;
   }
-          
+
   // ghost all the src pads of the bin
   if (prevelement != NULL) {
     DEBUG("last element, ghosting all of %s's src pads to parent %s\n",
@@ -281,21 +286,23 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
       pads = g_list_next (pads);
       if (!srcpad) DEBUG("much oddness, pad doesn't seem to exist\n");
       else if (gst_pad_get_direction (srcpad) == GST_PAD_SRC) {
-        gst_element_add_ghost_pad (GST_ELEMENT (parent), srcpad);
-        DEBUG("ghosted %s:%s\n",GST_DEBUG_PAD_NAME(srcpad));
+        gst_element_add_ghost_pad (GST_ELEMENT (parent), srcpad,
+g_strdup_printf("%s-ghost",gst_pad_get_name(srcpad)));
+        GST_DEBUG(0,"GHOSTED %s:%s to %s as %s-ghost\n",
+GST_DEBUG_PAD_NAME(srcpad),gst_element_get_name(GST_ELEMENT(parent)),gst_pad_get_name(srcpad));
       }
     }
   }
-          
+
   priv->binlevel--;
-            
+
   if (retval) return retval;
-        
+
   if (closingchar != '\0')
     DEBUG("returning IN THE WRONG PLACE\n");
   else DEBUG("ending pipeline\n");
   return i+1;
-} 
+}
 
 gint gst_parse_launch(const gchar *cmdline,GstBin *parent) {
   gst_parse_priv priv;
@@ -326,7 +333,7 @@ gint gst_parse_launch(const gchar *cmdline,GstBin *parent) {
 
   // now allocate the new argv array
   argvn = g_new0(char *,newargc+1);
-  DEBUG("supposed to have %d args\n",newargc);
+  GST_DEBUG(0,"supposed to have %d args\n",newargc);
 
   // now attempt to construct the new arg list
   j = 0;k = 0;
@@ -354,7 +361,7 @@ gint gst_parse_launch(const gchar *cmdline,GstBin *parent) {
 
   // print them out
   for (i=0;i<newargc;i++) {
-    DEBUG("arg %d is: %s\n",i,argvn[i]);
+    GST_DEBUG(0,"arg %d is: %s\n",i,argvn[i]);
   }
 
   // set up the elementcounts hash

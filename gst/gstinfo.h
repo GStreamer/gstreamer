@@ -110,8 +110,8 @@ G_GNUC_UNUSED static gchar *_debug_string = NULL;
 
 /********** some convenience macros for debugging **********/
 #define GST_DEBUG_PAD_NAME(pad) \
-  (((GstPad*)(pad))->parent != NULL) ? \
-  gst_element_get_name(GST_ELEMENT(((GstPad*)(pad))->parent)) : \
+  (GST_PAD_PARENT(pad) != NULL) ? \
+  gst_element_get_name(GST_ELEMENT(GST_PAD_PARENT(pad))) : \
   "''", gst_pad_get_name((GstPad*)pad)
 
 

@@ -165,7 +165,7 @@ gst_real_pad_init (GstRealPad *pad)
   pad->pullfunc = NULL;
   pad->pullregionfunc = NULL;
 
-  pad->ghostparents = NULL;
+  pad->ghostpads = NULL;
   pad->caps = NULL;
 }
 
@@ -308,7 +308,7 @@ gst_pad_get_name (GstPad *pad)
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  return pad->name;
+  return GST_PAD_NAME(pad);
 }
 
 /**
@@ -573,50 +573,50 @@ gst_pad_set_parent (GstPad *pad,
 }
 
 /**
- * gst_pad_add_ghost_parent:
+ * gst_pad_add_ghost_pad:
  * @pad: the pad to set the ghost parent 
- * @parent: the object to set the ghost parent to
+ * @ghostpad: the ghost pad to add
  *
- * Add a ghost parent object to a pad.
+ * Add a ghost pad to a pad.
  */
 void 
-gst_pad_add_ghost_parent (GstPad *pad,
-		          GstObject *parent) 
+gst_pad_add_ghost_pad (GstPad *pad,
+		       GstPad *ghostpad) 
 {
   GstRealPad *realpad;
 
   g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_REAL_PAD (pad));		// NOTE this restriction
-  g_return_if_fail (parent != NULL);
-  g_return_if_fail (GTK_IS_OBJECT (parent));
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (ghostpad != NULL);
+  g_return_if_fail (GST_IS_GHOST_PAD (ghostpad));
 
   realpad = GST_PAD_REALIZE(pad);
 
-  realpad->ghostparents = g_list_prepend (realpad->ghostparents, parent);
+  realpad->ghostpads = g_list_prepend (realpad->ghostpads, ghostpad);
 }
 
 
 /**
  * gst_pad_remove_ghost_parent:
  * @pad: the pad to remove the ghost parent 
- * @parent: the object to remove the ghost parent from
+ * @ghostpad: the ghost pad to remove from the pad
  *
- * Remove a ghost parent object from a pad.
+ * Remove a ghost pad from a pad.
  */
 void 
 gst_pad_remove_ghost_parent (GstPad *pad,
-		             GstObject *parent) 
+		             GstPad *ghostpad) 
 {
   GstRealPad *realpad;
 
   g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_REAL_PAD (pad));		// NOTE this restriction
-  g_return_if_fail (parent != NULL);
-  g_return_if_fail (GTK_IS_OBJECT (parent));
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (ghostpad != NULL);
+  g_return_if_fail (GST_IS_GHOST_PAD (ghostpad));
 
   realpad = GST_PAD_REALIZE (pad);
 
-  realpad->ghostparents = g_list_remove (realpad->ghostparents, parent);
+  realpad->ghostpads = g_list_remove (realpad->ghostpads, ghostpad);
 }
 
 /**
@@ -637,20 +637,20 @@ gst_pad_get_parent (GstPad *pad)
 }
 
 /**
- * gst_pad_get_ghost_parents:
+ * gst_pad_get_ghost_pad_list:
  * @pad: the pad to get the ghost parents from
  *
  * Get the ghost parents of this pad.
  *
- * Returns: a GList of ghost parent objects
+ * Returns: a GList of ghost pads
  */
 GList*
 gst_pad_get_ghost_parents (GstPad *pad) 
 {
   g_return_val_if_fail (pad != NULL, NULL);
-  g_return_val_if_fail (GST_IS_REAL_PAD (pad), NULL);	// NOTE this restriction
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  return GST_PAD_REALIZE(pad)->ghostparents;
+  return GST_PAD_REALIZE(pad)->ghostpads;
 }
 
 /**
@@ -783,7 +783,7 @@ gst_real_pad_destroy (GtkObject *object)
 
   if (pad->name)
     g_free (pad->name);
-  g_list_free (GST_REAL_PAD(pad)->ghostparents);
+  g_list_free (GST_REAL_PAD(pad)->ghostpads);
 }
 
 
@@ -1287,4 +1287,36 @@ static void
 gst_ghost_pad_init (GstGhostPad *pad)
 {
   pad->realpad = NULL;
+}
+
+/**
+ * gst_ghost_pad_new:
+ * @name: name of the new ghost pad
+ * @pad: the pad to create a ghost pad of
+ *
+ * Create a new ghost pad associated with the given pad.
+ *
+ * Returns: new ghost pad
+ */
+GstPad*
+gst_ghost_pad_new (gchar *name,
+                   GstPad *pad)
+{
+  GstGhostPad *ghostpad;
+
+  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD(pad), NULL);
+
+  ghostpad = gtk_type_new (gst_ghost_pad_get_type ());
+  GST_PAD_NAME(ghostpad) = g_strdup (name);
+  GST_GPAD_REALPAD(ghostpad) = GST_PAD_REALIZE(pad);
+
+  // add ourselves to the real pad's list of ghostpads
+  gst_pad_add_ghost_pad (pad, GST_PAD(ghostpad));
+  
+  // FIXME need to ref the real pad here... ?
+
+  GST_DEBUG(0,"created ghost pad \"%s\"\n",name);
+
+  return GST_PAD(ghostpad);
 }

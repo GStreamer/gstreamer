@@ -178,28 +178,36 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
 /**
  * gst_element_add_ghost_pad:
  * @element: element to add ghost pad to
- * @pad: ghost pad to add
+ * @pad: pad from which the new ghost pad will be created
+ * @name: name of the new ghost pad
  *
- * Add a ghost pad to the element, setting the ghost parent of the pad to
- * the element (and thus adding a reference).
+ * Create a ghost pad from the given pad, and add it to the list of pads
+ * for this element.
  */
 void 
-gst_element_add_ghost_pad (GstElement *element, GstPad *pad) 
+gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name) 
 {
+  GstPad *ghostpad;
+
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
 
-  /* set the pad's parent */
-  gst_pad_add_ghost_parent (pad,GST_OBJECT (element));
+  GST_DEBUG(0,"creating new ghost pad called %s, from pad %s:%s\n",name,GST_DEBUG_PAD_NAME(pad));
+  ghostpad = gst_ghost_pad_new (name, pad);
 
   /* add it to the list */
-  element->pads = g_list_append (element->pads, pad);
+  GST_DEBUG(0,"adding ghost pad %s to element %s\n",name,gst_element_get_name(element));
+  element->pads = g_list_append (element->pads, ghostpad);
   element->numpads++;
+  // set the parent of the ghostpad
+  gst_pad_set_parent(ghostpad,element);
+
+  GST_DEBUG(0,"added ghostpad %s:%s\n",GST_DEBUG_PAD_NAME(ghostpad));
 
   /* emit the NEW_GHOST_PAD signal */
-  gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[NEW_GHOST_PAD], pad);
+  gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[NEW_GHOST_PAD], ghostpad);
 }
 
 /**
@@ -218,7 +226,7 @@ gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
 
-  // FIXME
+  // FIXME this is redundant?
 }
 
 
