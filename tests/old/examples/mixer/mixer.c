@@ -7,7 +7,7 @@
  * Latest change : 	28/04/2001
  * 					trying to adapt to incsched
  * 					
- * Version :		0.4
+ * Version :		0.4.1
  */
 
 #include <stdlib.h>
@@ -16,7 +16,7 @@
 #include <unistd.h>
 
 //#define DEBUG
-
+//#define AUTOPLUG	/* define if you want autoplugging of input channels */
 /* function prototypes */
 
 input_channel_t*	create_input_channel (int id, char* location);
@@ -282,6 +282,7 @@ create_input_channel (int id, char* location)
   g_assert(channel->volenv != NULL);    
 
   /* autoplug the pipe */
+#ifdef AUTOPLUG
 
 #ifdef DEBUG
   printf ("DEBUG : c_i_p : getting srccaps\n");
@@ -312,12 +313,23 @@ create_input_channel (int id, char* location)
     g_print ("could not autoplug, no suitable codecs found...\n");
     exit (-1);
   }
-  
+
+#else
+  /* static plug, use mad plugin and assume mp3 input */
+  new_element = gst_elementfactory_make ("mad", "mp3decode");
+#endif  
+
   gst_bin_add (GST_BIN(channel->pipe), channel->volenv);
   gst_bin_add (GST_BIN (channel->pipe), new_element);
   
   gst_element_connect (channel->disksrc, "src", new_element, "sink");
-  gst_element_connect (new_element, "src_00", channel->volenv, "sink");
+  gst_element_connect (new_element, 
+#ifdef AUTOPLUG
+"src_00",
+#else
+"src",
+#endif
+channel->volenv, "sink");
   
   /* add a ghost pad */
   sprintf (buffer, "channel%d", id);
