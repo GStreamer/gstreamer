@@ -1,7 +1,7 @@
 ### this is the part you can customize if you need to
 
 # base name of doc
-DOC = gst-plugin-writers-guide
+DOC = pwg
 
 # main xml file
 MAIN = $(DOC).xml
