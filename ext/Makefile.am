@@ -40,6 +40,12 @@ else
 MAD_DIR=
 endif
 
+if USE_MPEG2DEC
+MPEG2DEC_DIR=mad
+else
+MPEG2DEC_DIR=
+endif
+
 if USE_SDL
 SDL_DIR=sdl
 else
@@ -54,8 +60,8 @@ endif
 
 #$A52_DIR
 SUBDIRS=$(AALIB_DIR) $(ALSA_DIR) $(AUDIOFILE_DIR) $(ESD_DIR) \
-        $(LAME_DIR) $(MAD_DIR) \
+        $(LAME_DIR) $(MAD_DIR) $(MPEG2DEC_DIR) \
 	$(SDL_DIR) $(VORBIS_DIR)
 
 #a52
-DIST_SUBDIRS=aalib alsa audiofile esd lame mad sdl vorbis
+DIST_SUBDIRS=aalib alsa audiofile esd lame mad mpeg2dec sdl vorbis
