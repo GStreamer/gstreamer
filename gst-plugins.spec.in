@@ -14,7 +14,7 @@ Source: %{name}-%{ver}.tar.gz
 BuildRoot: /var/tmp/%{name}-%{ver}-root
 Docdir: %{prefix}/doc
 Prefix: %prefix
-Requires: libxml >= 1.8.0
+Requires: libxml2 >= 2.4.0
 Requires: gstreamer >= %{ver}
 BuildRequires: nasm => 0.90
 
@@ -289,9 +289,9 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_GNOME_VFS_TRUE@%package -n gstreamer-gnomevfs
 @USE_GNOME_VFS_TRUE@Summary: GStreamer plugins for GNOME VFS input and output
 @USE_GNOME_VFS_TRUE@Group: Libraries/Multimedia
-@USE_GNOME_VFS_TRUE@Requires: gnome-vfs > 1.0
+@USE_GNOME_VFS_TRUE@Requires: gnome-vfs2 > 1.9.4.90
 @USE_GNOME_VFS_TRUE@Requires: gstreamer >= %{ver}
-@USE_GNOME_VFS_TRUE@BuildRequires: gnome-vfs-devel > 1.0
+@USE_GNOME_VFS_TRUE@BuildRequires: gnome-vfs2-devel > 1.9.4.90
 @USE_GNOME_VFS_TRUE@
 @USE_GNOME_VFS_TRUE@%description -n gstreamer-gnomevfs
 @USE_GNOME_VFS_TRUE@Plugins for reading and writing through GNOME VFS.
@@ -768,6 +768,24 @@ Various plugins for visual effects to use with audio. Included are Smoothwave, S
 %post -n gstreamer-visualisation
 %{prefix}/bin/gst-register --gst-mask=0
 
+<<<<<<< gst-plugins.spec.in
+@USE_LIBMMX_TRUE@%package -n gstreamer-jpegmmx
+@USE_LIBMMX_TRUE@Summary: Gstreamer mjpegtools
+@USE_LIBMMX_TRUE@Group: Libraries/Multimedia
+@USE_LIBMMX_TRUE@Requires: gstreamer >= %{ver}
+
+@USE_LIBMMX_TRUE@%description -n gstreamer-jpegmmx
+@USE_LIBMMX_TRUE@Mgpegtools based encoding and decoding plugin
+
+@USE_LIBMMX_TRUE@%files -n gstreamer-jpegmmx
+@USE_LIBMMX_TRUE@%defattr(-, root, root)
+@USE_LIBMMX_TRUE@%{prefix}/lib/gst/libgstjpegmmx*
+
+@USE_LIBMMX_TRUE@%post -n gstreamer-jpegmmx
+@USE_LIBMMX_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+
+=======
+>>>>>>> 1.34
 %package -n gstreamer-plugin-libs
 Summary: GStreamer support libraries
 Group: Libraries/Multimedia
