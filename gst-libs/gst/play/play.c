@@ -671,6 +671,10 @@ gst_play_seek_to_time (GstPlay * play, gint64 time_nanos)
       GST_IS_ELEMENT (audio_sink_element)) {
     gboolean s = FALSE;
    
+    /* We block the tick signal while seeking */
+    if (play->priv->tick_id)
+      g_signal_handler_block (G_OBJECT (play), play->priv->tick_id);
+    
     s = gst_element_seek (video_seek_element, GST_FORMAT_TIME |
                           GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH,
                           time_nanos);
@@ -679,6 +683,10 @@ gst_play_seek_to_time (GstPlay * play, gint64 time_nanos)
                             GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH,
                             time_nanos);
     }
+    
+    /* We unblock the tick signal after seeking */
+    if (play->priv->tick_id)
+      g_signal_handler_unblock (G_OBJECT (play), play->priv->tick_id);
     
     if (s) {
       GstFormat format = GST_FORMAT_TIME;
@@ -1125,7 +1133,7 @@ gst_play_new (GError **error)
 {
   GstPlay *play = g_object_new (GST_TYPE_PLAY, NULL);
 
-  if (play->priv->error)
+  if ( (error) && (play->priv->error) )
   {
     *error = play->priv->error;
     play->priv->error = NULL;
