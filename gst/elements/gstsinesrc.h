@@ -60,13 +60,23 @@ struct _GstSineSrc {
 
   /* parameters */
   gdouble volume;
-  gint freq;
-
+  gdouble vol_scale;
+  gdouble freq;
+  
+  /* lookup table data */
+  gfloat *table_data;
+  gdouble table_pos;
+  gdouble table_inc;
+  gint table_size;
+  gdouble table_interp;
+  gint table_lookup;
+  gint table_lookup_next;
+    
   /* audio parameters */
   gint format;
-  gint channels;
-  gint frequency;
+  gint samplerate;
 
+  gint buffer_size;
   gulong seq;
 
   MetaAudioRaw meta;
