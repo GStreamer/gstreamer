@@ -1251,15 +1251,16 @@ GST_CHECK_FEATURE(LIBPNG, [libpng PNG encoder], pngenc, [
   AC_SUBST(LIBPNG_LIBS)
 ])
 
-dnl *** libmng ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMNG, true)
 dnl *** libmms ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMMS, true)
-GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [   dnl check with pkg-config first
+GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
+  dnl check with pkg-config first
   PKG_CHECK_MODULES(LIBMMS, libmms >= 0.1, HAVE_LIBMMS="yes", HAVE_LIBMMS="no")
 ])
 AC_SUBST(LIBMMS_LIBS)
 
+dnl *** libmng ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMNG, true)
 GST_CHECK_FEATURE(LIBMNG, [libmng library], mngdec, [
   GST_CHECK_LIBHEADER(LIBMNG, mng, mng_initialize,, libmng.h, LIBMNG_LIBS="-lmng")
   AC_SUBST(LIBMNG_LIBS)
