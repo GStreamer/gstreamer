@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-05-04 13:46+0200\n"
+"POT-Creation-Date: 2004-05-19 18:15+0200\n"
 "PO-Revision-Date: 2004-03-20 18:41+0100\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -113,12 +113,12 @@ msgstr "sökvägslista för inläsning av insticksmoduler (åtskild av \""
 msgid "Scheduler to use (default is '%s')"
 msgstr "Schemaläggare att använda (\""
 
-#: gst/gstelement.c:253
+#: gst/gstelement.c:258
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "FEL: från element %s: %s\n"
 
-#: gst/gstelement.c:255
+#: gst/gstelement.c:260
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -567,41 +567,41 @@ msgid "There is no element present to handle the stream's mime type %s."
 msgstr ""
 "Det finns inget element tillgängligt för att hantera flödets mime-typ %s."
 
-#: gst/elements/gstfilesink.c:257
+#: gst/elements/gstfilesink.c:259
 msgid "No file name specified for writing."
 msgstr "Inget filnamn angivet för skrivning."
 
-#: gst/elements/gstfilesink.c:264
+#: gst/elements/gstfilesink.c:266
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kunde inte öppna filen \"%s\" för skrivning."
 
-#: gst/elements/gstfilesink.c:283
+#: gst/elements/gstfilesink.c:285
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Fel vid stängning av filen \"%s\"."
 
-#: gst/elements/gstfilesink.c:355 gst/elements/gstfilesink.c:390
-#: gst/elements/gstfilesink.c:443
+#: gst/elements/gstfilesink.c:357 gst/elements/gstfilesink.c:392
+#: gst/elements/gstfilesink.c:445
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Fel vid skrivning till filen \"%s\"."
 
-#: gst/elements/gstfilesrc.c:739 gst/elements/gstmultifilesrc.c:248
+#: gst/elements/gstfilesrc.c:751 gst/elements/gstmultifilesrc.c:248
 msgid "No file name specified for reading."
 msgstr "Inget filnamn angivet för läsning."
 
-#: gst/elements/gstfilesrc.c:754 gst/elements/gstmultifilesrc.c:256
+#: gst/elements/gstfilesrc.c:766 gst/elements/gstmultifilesrc.c:256
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunde inte öppna filen \"%s\" för läsning."
 
-#: gst/elements/gstfilesrc.c:765
+#: gst/elements/gstfilesrc.c:777
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:771
+#: gst/elements/gstfilesrc.c:783
 #, fuzzy, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Filen \"%s\" är ingen vanlig fil."
@@ -628,80 +628,72 @@ msgid "maximum"
 msgstr "maximum"
 
 # Osäker.
-#: gst/parse/grammar.y:168
+#: gst/parse/grammar.y:186
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "angav tom korg \"%s\", inte tillåtet"
 
-#: gst/parse/grammar.y:173
+#: gst/parse/grammar.y:191
 #, c-format
 msgid "no bin \"%s\", skipping"
 msgstr "ingen korg \"%s\", hoppar över"
 
-#: gst/parse/grammar.y:311
+#: gst/parse/grammar.y:262
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "ingen \"%s\"-egenskap i elementet \"%s\""
 
-#: gst/parse/grammar.y:324
+#: gst/parse/grammar.y:275
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "kunde inte ställa in egenskapen \"%s\" i elementet \"%s\" till \"%s\""
 
-#: gst/parse/grammar.y:329
-#, c-format
-msgid ""
-"could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
-msgstr ""
-"kunde inte konvertera \"%s\" så att det passar egenskapen \"%s\" i elementet "
-"\"%s\""
-
-#: gst/parse/grammar.y:514
+#: gst/parse/grammar.y:460
 #, c-format
 msgid "could not link %s to %s"
 msgstr "kunde inte länka %s till %s"
 
-#: gst/parse/grammar.y:559
+#: gst/parse/grammar.y:505
 #, c-format
 msgid "no element \"%s\""
 msgstr "inget \"%s\"-element"
 
 # Osäker. Jag tror "caps" är kort för "capabilities".
-#: gst/parse/grammar.y:610
+#: gst/parse/grammar.y:556
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "kunde inte tolka förmågorna \"%s\""
 
-#: gst/parse/grammar.y:632 gst/parse/grammar.y:685 gst/parse/grammar.y:701
-#: gst/parse/grammar.y:759
+#: gst/parse/grammar.y:578 gst/parse/grammar.y:631 gst/parse/grammar.y:647
+#: gst/parse/grammar.y:705
 msgid "link without source element"
 msgstr "länk utan källelement"
 
-#: gst/parse/grammar.y:638 gst/parse/grammar.y:682 gst/parse/grammar.y:768
+#: gst/parse/grammar.y:584 gst/parse/grammar.y:628 gst/parse/grammar.y:714
 msgid "link without sink element"
 msgstr "länk utan utgångselement"
 
-#: gst/parse/grammar.y:719
+#: gst/parse/grammar.y:665
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "inget källelement för URI:n \"%s\""
 
-#: gst/parse/grammar.y:729
+#: gst/parse/grammar.y:675
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "inget element att länka URI:n \"%s\" till"
 
-#: gst/parse/grammar.y:737
+#: gst/parse/grammar.y:683
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "inget utgångselement för URI:n \"%s\""
 
-#: gst/parse/grammar.y:741
+#: gst/parse/grammar.y:687
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "kunde inte länka utgångselementet för URI:n \"%s\""
 
-#: gst/parse/grammar.y:753
+#: gst/parse/grammar.y:699
 msgid "empty pipeline not allowed"
 msgstr "tom rörledning är inte tillåtet"
 
@@ -714,141 +706,147 @@ msgid "Show scheduler details"
 msgstr "Visa detaljer för schemaläggare"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:79
+#: tools/gst-launch.c:91
 msgid "Execution ended after %"
 msgstr "Körning avslutades efter %"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:79
+#: tools/gst-launch.c:91
 msgid " iterations (sum %"
 msgstr " iterationer (totalt %"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:80
+#: tools/gst-launch.c:92
 msgid " ns, average %"
 msgstr " ns, medel %"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:80
+#: tools/gst-launch.c:92
 msgid " ns, min %"
 msgstr " ns, min %"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:81
+#: tools/gst-launch.c:93
 msgid " ns, max %"
 msgstr " ns, max %"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:81
+#: tools/gst-launch.c:93
 msgid " ns).\n"
 msgstr " ns).\n"
 
-#: tools/gst-launch.c:102
+#: tools/gst-launch.c:114
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr "Användning: gst-xmllaunch <fil.xml> [ element.egenskap=värde ... ]\n"
 
-#: tools/gst-launch.c:110
+#: tools/gst-launch.c:122
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "FEL: tolkning av xml-filen \"%s\" misslyckades.\n"
 
-#: tools/gst-launch.c:116
+#: tools/gst-launch.c:128
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "FEL: inget rörledningselement på översta nivån i filen \"%s\".\n"
 
-#: tools/gst-launch.c:123
+#: tools/gst-launch.c:135
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "VARNING: endast ett element på översta nivån stöds just nu."
 
-#: tools/gst-launch.c:134
+#: tools/gst-launch.c:146
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr "FEL: kunde inte tolka kommandoradsargumentet %d: %s.\n"
 
-#: tools/gst-launch.c:145
+#: tools/gst-launch.c:157
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "VARNING: elementet med namnet \"%s\" hittades inte.\n"
 
-#: tools/gst-launch.c:280
+#: tools/gst-launch.c:294
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "HITTADE TAGG   : hittat av elementet \"%s\".\n"
 
-#: tools/gst-launch.c:358
+#: tools/gst-launch.c:374
 msgid "Output tags (also known as metadata)"
 msgstr "Utmatningstaggar (även känt som metadata)"
 
-#: tools/gst-launch.c:360
+#: tools/gst-launch.c:376
 msgid "Output status information and property notifications"
 msgstr "Skriv ut statusinformation och egenskapsnotifieringar"
 
-#: tools/gst-launch.c:362
+#: tools/gst-launch.c:378
 msgid "Do not output status information of TYPE"
 msgstr "Skriv inte ut statusinformation av TYP"
 
-#: tools/gst-launch.c:362
+#: tools/gst-launch.c:378
 msgid "TYPE1,TYPE2,..."
 msgstr "TYP1,TYP2,..."
 
-#: tools/gst-launch.c:365
+#: tools/gst-launch.c:381
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Spara xml-representation av rörledningen i FIL och avsluta"
 
-#: tools/gst-launch.c:365
+#: tools/gst-launch.c:381
 msgid "FILE"
 msgstr "FIL"
 
-#: tools/gst-launch.c:368
+#: tools/gst-launch.c:384
 msgid "Do not install a fault handler"
 msgstr "Installera inte en felhanterare"
 
-#: tools/gst-launch.c:370
+#: tools/gst-launch.c:386
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Skriv ut alloc-spår (om aktiverat vid kompileringen)"
 
-#: tools/gst-launch.c:372
+#: tools/gst-launch.c:388
 msgid "Number of times to iterate pipeline"
 msgstr "Antalet gånger som rörledningen ska itereras"
 
-#: tools/gst-launch.c:438
+#: tools/gst-launch.c:458
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FEL: rörledningen kunde inte konstrueras: %s.\n"
 
-#: tools/gst-launch.c:442
+#: tools/gst-launch.c:462
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FEL: rörledningen kunde inte konstrueras.\n"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:446
+#: tools/gst-launch.c:466
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "VARNING: felaktig rörledning: %s\n"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:447
+#: tools/gst-launch.c:467
 #, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Försöker köra ändå.\n"
 
-#: tools/gst-launch.c:475
+#: tools/gst-launch.c:495
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FEL: \"pipeline\"-elementet hittades inte.\n"
 
-#: tools/gst-launch.c:482
+#: tools/gst-launch.c:502
 #, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "KÖR rörledning...\n"
 
-#: tools/gst-launch.c:485
+#: tools/gst-launch.c:505
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FEL: rörledningen vill inte spela.\n"
+
+#~ msgid ""
+#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+#~ msgstr ""
+#~ "kunde inte konvertera \"%s\" så att det passar egenskapen \"%s\" i "
+#~ "elementet \"%s\""
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
 #~ msgid "')"
