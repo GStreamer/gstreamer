@@ -1,5 +1,10 @@
 2004-03-16  Johan Dahlin  <johan@gnome.org>
 
+	* gst/Makefile.am: Move the gstplay bindings over here
+
+	* Makefile.am, configure.ac: Remove examples/ and put them in
+	EXTRA_DIST here
+
 	* gst/gst.defs (element_make_from_uri): Remove const from enum
 	here, should be fixed upstream too.
 

@@ -4,7 +4,7 @@ PYGTK_DEFSDIR = @PYGTK_DEFSDIR@
 defs_DATA = 
 defsdir = $(pkgdatadir)/2.0/defs
 
-EXTRA_DIST = $(defs_DATA)
+EXTRA_DIST = $(defs_DATA) arg-types.py
 
 pkgpythondir = $(pythondir)/gst
 pkgpyexecdir = $(pyexecdir)/gst
@@ -27,31 +27,33 @@ _gst_la_LDFLAGS = $(common_ldflags) -export-symbols-regex init_gst
 _gst_la_SOURCES = gst-argtypes.c gstmodule.c 
 nodist__gst_la_SOURCES = gst.c
 CLEANFILES = gst.c
-EXTRA_DIST += $(GST_OVERRIDES) arg-types.py
+EXTRA_DIST += $(GST_OVERRIDES)
 defs_DATA += $(GST_DEFS)
 gst.c: $(GST_DEFS) $(GST_OVERRIDES)
+
+# gst-play bindings
+
+# FIXEME: configure.ac
+PLAY_OVERRIDES = play.override
+PLAY_DEFS = play.defs
+
+#if BUILD_PLAY
+pygstexec_LTLIBRARIES += play.la
+#endif
+play_la_CFLAGS = $(GST_CFLAGS) $(GST_PLAY_CFLAGS) -fno-strict-aliasing
+play_la_LIBADD = $(GST_LIBS) $(GST_PLAY_LIBS)
+play_la_LDFLAGS = $(common_ldflags) -export-symbols-regex initplay
+play_la_SOURCES = playmodule.c
+nodist_play_la_SOURCES = play.c
+CLEANFILES += play.c
+EXTRA_DIST += $(PLAY_OVERRIDES)
+defs_DATA += $(PLAY_DEFS)
+play.c: $(PLAY_DEFS) $(PLAY_OVERRIDES)
 
 # GStreamer interfaces bindings
 
 INTERFACES_OVERRIDES = interfaces.override xoverlay.override
 INTERFACES_DEFS = interfaces.defs xoverlay.defs xwindowlistener.defs
-
-GST_INTERFACES_INCLUDES=
-GST_INTERFACES_INCLUDES += $(GST_INTERFACES_INCLUDEDIR)/gst/colorbalance/colorbalance.h
-GST_INTERFACES_INCLUDES += $(GST_INTERFACES_INCLUDEDIR)/gst/colorbalance/colorbalancechannel.h
-GST_INTERFACES_INCLUDES += $(GST_INTERFACES_INCLUDEDIR)/gst/mixer/mixer.h
-GST_INTERFACES_INCLUDES += $(GST_INTERFACES_INCLUDEDIR)/gst/mixer/mixertrack.h
-GST_INTERFACES_INCLUDES += $(GST_INTERFACES_INCLUDEDIR)/gst/navigation/navigation.h
-GST_INTERFACES_INCLUDES += $(GST_INTERFACES_INCLUDEDIR)/gst/propertyprobe/propertyprobe.h
-GST_INTERFACES_INCLUDES += $(GST_INTERFACES_INCLUDEDIR)/gst/tuner/tuner.h
-GST_INTERFACES_INCLUDES += $(GST_INTERFACES_INCLUDEDIR)/gst/tuner/tunerchannel.h
-GST_INTERFACES_INCLUDES += $(GST_INTERFACES_INCLUDEDIR)/gst/tuner/tunernorm.h
-
-# FIXME: configure.ac
-#if USE_X
-GST_INTERFACES_INCLUDES+=$(GST_INTERFACES_INCLUDEDIR)/gst/xoverlay/xoverlay.h
-GST_INTERFACES_INCLUDES+=$(GST_INTERFACES_INCLUDEDIR)/gst/xwindowlistener/xwindowlistener.h
-#endif
 
 # FIXEME: configure.ac
 #if BUILD_INTERFACES
@@ -63,7 +65,7 @@ interfaces_la_LDFLAGS = $(common_ldflags) -export-symbols-regex initinterface
 interfaces_la_SOURCES = interfacesmodule.c
 nodist_interfaces_la_SOURCES = interfaces.c
 CLEANFILES += interfaces.c
-EXTRA_DIST += $(INTERFACES_OVERRIDES) arg-types.py
+EXTRA_DIST += $(INTERFACES_OVERRIDES)
 defs_DATA += $(INTERFACES_DEFS)
 interfaces.c: $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES)
 

@@ -89,31 +89,15 @@ AC_SUBST(PYGTK_CODEGEN)
 #dnl check to make sure we can find gtk
 #AM_PATH_GTK_2_0(gtk_required_version,,[AC_MSG_ERROR(maybe you want the gtk-gnome-1-2 branch?)],$extra_mods)
 
-AC_MSG_CHECKING(for GStreamer include dir)
-GST_INCLUDEDIR=`$PKG_CONFIG --variable=includedir gstreamer-$GST_MAJORMINOR`
-AC_MSG_RESULT($GST_INCLUDEDIR)
-if test "x$GST_INCLUDEDIR" = "x"; then
-  AC_MSG_ERROR(no GStreamer include dir found)
-fi
-AC_SUBST(GST_INCLUDEDIR)
-
 AC_MSG_CHECKING(for GStreamer interfaces include dir)
 PKG_CHECK_MODULES(GST_INTERFACES, gstreamer-interfaces-$GST_MAJORMINOR)
-GST_INTERFACES_INCLUDEDIR=`$PKG_CONFIG --variable=includedir gstreamer-interfaces-$GST_MAJORMINOR`
-AC_MSG_RESULT($GST_INTERFACES_INCLUDEDIR)
-if test "x$GST_INTERFACES_INCLUDEDIR" = "x"; then
-  AC_MSG_ERROR(no GStreamer interfaces include dir found)
-fi
-AC_SUBST(GST_INTERFACES_INCLUDEDIR)
+AC_SUBST(GST_INTERFACES_CFLAGS)
+AC_SUBST(GST_INTERFACES_INCLUDES)
 
 AC_MSG_CHECKING(for GStreamer play include dir)
 PKG_CHECK_MODULES(GST_PLAY, gstreamer-play-$GST_MAJORMINOR)
-GST_PLAY_INCLUDEDIR=`$PKG_CONFIG --variable=includedir gstreamer-play-$GST_MAJORMINOR`
-AC_MSG_RESULT($GST_PLAY_INCLUDEDIR)
-if test "x$GST_PLAY_INCLUDEDIR" = "x"; then
-  AC_MSG_ERROR(no GStreamer play include dir found)
-fi
-AC_SUBST(GST_PLAY_INCLUDEDIR)
+AC_SUBST(GST_PLAY_CFLAGS)
+AC_SUBST(GST_PLAY_INCLUDES)
 
 AC_CHECK_PROG(HAVE_XMLTO, xmlto, true, false)
 AC_CHECK_PROG(HAVE_XMLCATALOG, xmlcatalog, true, false)
@@ -160,12 +144,9 @@ changequote([,])dnl
 AC_OUTPUT([
   Makefile
   gst/Makefile
-  gstplay/Makefile
   pkgconfig/Makefile
   pkgconfig/gst-python.pc
   pkgconfig/gst-python-uninstalled.pc
-  examples/Makefile
-  examples/gst/Makefile
   docs/Makefile
   docs/gst-python.ent
   testsuite/Makefile

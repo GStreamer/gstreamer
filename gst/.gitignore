@@ -10,3 +10,4 @@ Makefile.in
 gst.c
 gen-*.c
 interfaces.c
+play.c
