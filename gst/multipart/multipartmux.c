@@ -248,7 +248,7 @@ gst_multipart_mux_pad_link (GstPad * pad, GstPad * peer, gpointer data)
 {
   //GstMultipartMux *multipart_mux = GST_MULTIPART_MUX (data);
 
-  GST_DEBUG ("pad '%s' connected", gst_pad_get_name (padname));
+  GST_DEBUG ("pad '%s' connected", gst_pad_get_name (pad));
 }
 
 static void
