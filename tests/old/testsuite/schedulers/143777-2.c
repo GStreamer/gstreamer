@@ -53,6 +53,9 @@ main (int argc, char **argv)
       g_assert_not_reached ();
     g_print ("%d\n", i);
   }
+  g_print ("cleaning up...\n");
+  gst_object_unref (GST_OBJECT (pipeline));
 
+  g_print ("done.\n");
   return 0;
 }

@@ -1,3 +1,14 @@
+2004-07-16  Wim Taymans  <wim@fluendo.com>
+
+	* testsuite/schedulers/143777-2.c: (main):
+	* testsuite/schedulers/147713.c: (handoff_src), (handoff_sink),
+	(main):
+	* testsuite/schedulers/Makefile.am:
+	Added cleanup code to testcase 143777-2.
+	Added testcase to show bug 147713, does not really show the
+	deadlock as I can't figure out how to trigger it, but it does
+	demonstrate bad ordering in the scheduler.
+
 2004-07-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstvalue.c: (gst_value_deserialize_fraction):

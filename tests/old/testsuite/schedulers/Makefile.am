@@ -4,7 +4,7 @@ tests_pass = \
 	unlink_src unlink_sink \
 	relink_src relink_sink \
 	unref_src unref_sink \
-	143777 143777-2
+	143777 143777-2 147713
 
 # don't enable this one unless it actually works.
 #	useless_iteration
