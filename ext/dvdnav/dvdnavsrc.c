@@ -81,11 +81,8 @@ struct _DVDNavSrcClass {
 GstElementDetails dvdnavsrc_details = {
   "DVD Source",
   "Source/File/DVD",
-  "GPL",
   "Access a DVD with navigation features using libdvdnav",
-  VERSION,
   "David I. Lehn <dlehn@users.sourceforge.net>",
-  "(C) 2002",
 };
 
 
@@ -117,6 +114,7 @@ typedef enum {
 
 
 GType			dvdnavsrc_get_type	(void);
+static void             dvdnavsrc_base_init     (gpointer g_class);
 static void 		dvdnavsrc_class_init	(DVDNavSrcClass *klass);
 static void 		dvdnavsrc_init		(DVDNavSrc *dvdnavsrc);
 
@@ -169,7 +167,8 @@ dvdnavsrc_get_type (void)
 
   if (!dvdnavsrc_type) {
     static const GTypeInfo dvdnavsrc_info = {
-      sizeof(DVDNavSrcClass),      NULL,
+      sizeof(DVDNavSrcClass),
+      dvdnavsrc_base_init,
       NULL,
       (GClassInitFunc)dvdnavsrc_class_init,
       NULL,
@@ -186,6 +185,14 @@ dvdnavsrc_get_type (void)
     angle_format = gst_format_register ("angle", "DVD angle");
   }
   return dvdnavsrc_type;
+}
+
+static void
+dvdnavsrc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &dvdnavsrc_details);
 }
 
 static void
@@ -1444,23 +1451,22 @@ dvdnavsrc_query (GstPad *pad, GstQueryType type,
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the dvdnavsrc element */
-  factory = gst_element_factory_new ("dvdnavsrc", GST_TYPE_DVDNAVSRC,
-                                    &dvdnavsrc_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "dvdnavsrc", GST_RANK_NONE, GST_TYPE_DVDNAVSRC))
+    return FALSE;
   
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "dvdnavsrc",
-  plugin_init
-};
+  "Access a DVD with navigation features using libdvdnav",  
+  plugin_init,
+  VERSION,
+  "GPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
