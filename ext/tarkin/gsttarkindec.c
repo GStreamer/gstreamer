@@ -26,18 +26,15 @@
 
 #include "gsttarkindec.h"
 
-extern GstPadTemplate *dec_src_template, *dec_sink_template;
+static GstPadTemplate *dec_src_template, *dec_sink_template;
 
 /* elementfactory information */
 GstElementDetails tarkindec_details = {
   "Ogg Tarkin decoder",
   "Filter/Video/Decoder",
-  "LGPL",
   "Decodes video in OGG Tarkin format",
-  VERSION,
   "Monty <monty@xiph.org>, " 
   "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2002",
 };
 
 /* TarkinDec signals and args */
@@ -53,6 +50,7 @@ enum
   ARG_BITRATE,
 };
 
+static void     gst_tarkindec_base_init         (gpointer g_class);
 static void 	gst_tarkindec_class_init 	(TarkinDecClass *klass);
 static void 	gst_tarkindec_init 		(TarkinDec *arkindec);
 
@@ -77,7 +75,7 @@ tarkindec_get_type (void)
   if (!tarkindec_type) {
     static const GTypeInfo tarkindec_info = {
       sizeof (TarkinDecClass), 
-      NULL,
+      gst_tarkindec_base_init,
       NULL,
       (GClassInitFunc) gst_tarkindec_class_init,
       NULL,
@@ -90,6 +88,60 @@ tarkindec_get_type (void)
     tarkindec_type = g_type_register_static (GST_TYPE_ELEMENT, "TarkinDec", &tarkindec_info, 0);
   }
   return tarkindec_type;
+}
+
+static GstCaps*
+tarkin_caps_factory (void)
+{
+  return
+   gst_caps_new (
+  	"tarkin_tarkin",
+  	"application/ogg",
+	  NULL);
+}
+
+static GstCaps*
+raw_caps_factory (void)
+{
+  return
+   GST_CAPS_NEW (
+    "tarkin_raw",
+    "video/x-raw-rgb",
+      "bpp",        GST_PROPS_INT (24),
+      "depth",      GST_PROPS_INT (24),
+      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+      "red_mask",   GST_PROPS_INT (0xff0000),
+      "green_mask", GST_PROPS_INT (0xff00),
+      "blue_mask",  GST_PROPS_INT (0xff),
+      "width",      GST_PROPS_INT_RANGE (0, G_MAXINT),
+      "height",     GST_PROPS_INT_RANGE (0, G_MAXINT),
+      "framerate",  GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
+   );
+}
+
+static void
+gst_tarkindec_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstCaps *raw_caps, *tarkin_caps;
+
+  raw_caps = raw_caps_factory ();
+  tarkin_caps = tarkin_caps_factory ();
+
+  dec_sink_template = gst_pad_template_new ("sink", 
+					    GST_PAD_SINK, 
+					    GST_PAD_ALWAYS, 
+					    tarkin_caps, 
+					    NULL);
+  dec_src_template = gst_pad_template_new ("src", 
+					   GST_PAD_SRC, 
+					   GST_PAD_ALWAYS, 
+					   raw_caps, 
+					   NULL);
+  gst_element_class_add_pad_template (element_class, dec_sink_template);
+  gst_element_class_add_pad_template (element_class, dec_src_template);
+
+  gst_element_class_set_details (element_class, &tarkindec_details);
 }
 
 static void
