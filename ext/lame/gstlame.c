@@ -68,6 +68,7 @@ GST_PAD_TEMPLATE_FACTORY (gst_lame_src_factory,
   GST_CAPS_NEW (
     "gstlame_src",
     "audio/mpeg",
+      "mpegversion", GST_PROPS_INT (1),
       "layer",      GST_PROPS_INT (3),
       "rate",       GST_PROPS_LIST (
 	              GST_PROPS_INT (8000), 
@@ -370,6 +371,7 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
 
   caps = GST_CAPS_NEW ("lame_src_caps",
 		       "audio/mpeg",
+                         "mpegversion", GST_PROPS_INT (1),
 			 "layer",    GST_PROPS_INT (3),
 			 "channels", GST_PROPS_INT (lame->num_channels),
 			 "rate",     GST_PROPS_INT (lame->samplerate));
