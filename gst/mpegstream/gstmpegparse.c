@@ -343,9 +343,13 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     scr |= (scr1 & 0x00fffe00) << 6;
     scr |= (scr1 & 0x000000ff) << 7;
     scr |= (scr2 & 0xfe000000) >> 25;
-    
+
     buf += 5;
-    new_rate = (GUINT32_FROM_BE ((*(guint32 *) buf)) & 0x7ffffe00) >> 9;
+    /* we do this byte by byte because buf[3] might be outside of buf's
+     * memory space */
+    new_rate = (buf[0] & 0x7f) << 15;
+    new_rate |= buf[1] << 7;
+    new_rate |= buf[2] >> 1;
   }
 
   scr_orig = scr;
