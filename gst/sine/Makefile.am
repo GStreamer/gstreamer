@@ -1,10 +1,10 @@
-plugindir = $(libdir)/gst
+plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 plugin_LTLIBRARIES = libgstsinesrc.la
 
 libgstsinesrc_la_SOURCES = gstsinesrc.c
 libgstsinesrc_la_CFLAGS = $(GST_CFLAGS)
-libgstsinesrc_la_LIBADD = $(GST_LIBS) -lgstcontrol
+libgstsinesrc_la_LIBADD = $(GST_LIBS) $(GST_CONTROL_LIBS)
 libgstsinesrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstsinesrc.h
@@ -16,4 +16,4 @@ endif
 demo_dparams_SOURCES = demo-dparams.c
 ## putting GTK in front solves a bad compilation problem
 demo_dparams_CFLAGS  = $(GTK_CFLAGS) $(GST_CFLAGS) 
-demo_dparams_LDFLAGS = $(GST_LIBS) $(GTK_LIBS) -lgstcontrol
+demo_dparams_LDFLAGS = $(GST_LIBS) $(GTK_LIBS) $(GST_CONTROL_LIBS)

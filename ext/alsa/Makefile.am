@@ -1,4 +1,4 @@
-plugindir = $(libdir)/gst
+plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 man_MANS = gstalsa.1
 

@@ -1,4 +1,4 @@
-plugindir = $(libdir)/gst
+plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 plugin_LTLIBRARIES = libgstv4lelement.la libgstv4lsrc.la \
 	libgstv4lmjpegsrc.la libgstv4lmjpegsink.la
