@@ -1,3 +1,10 @@
+2004-04-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* po/LINGUAS:
+	* po/en_GB.po:
+          Added en_GB translation (Gareth Owen)
+
 2004-04-20  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gstpad.c (_invent_event): Clean up
