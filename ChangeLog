@@ -1,3 +1,9 @@
+2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/matroska/ebml-read.c: (gst_ebml_read_buffer):
+	  Allow for 0-sized buffers. Fixes length query problems in
+	  starwars.mkv from the testsuite.
+
 2005-01-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/videobox/gstvideobox.c: (gst_video_box_copy_plane_i420),
