@@ -958,10 +958,18 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
   GstCaps *oldcaps;
   GstElement *parent = GST_PAD_PARENT (pad);
 
+  /* thomas: FIXME: is this the right result to return ? */
+  g_return_val_if_fail (pad != NULL, GST_PAD_CONNECT_REFUSED);
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_CONNECT_REFUSED);
+  
   /* if this pad has a parent and the parent is not READY, delay the
    * negotiation */
   if (parent && GST_STATE (parent) < GST_STATE_READY)
+  {
+    GST_DEBUG (GST_CAT_CAPS, "parent %s of pad %s:%s is not ready\n",
+	       GST_ELEMENT_NAME (parent), GST_DEBUG_PAD_NAME (pad));
     return GST_PAD_CONNECT_DELAYED;
+  }
 	  
   GST_INFO (GST_CAT_CAPS, "trying to set caps %p on pad %s:%s",
             caps, GST_DEBUG_PAD_NAME (pad));
@@ -1061,14 +1069,14 @@ gst_pad_try_set_caps (GstPad *pad, GstCaps *caps)
   }
   /* if we have a peer try to set the caps, notifying the peerpad
    * if it has a connect function */
-  if (peer && !gst_pad_try_set_caps_func (peer, caps, TRUE))
+  if (peer && (gst_pad_try_set_caps_func (peer, caps, TRUE) != GST_PAD_CONNECT_OK))
   {
     GST_INFO (GST_CAT_CAPS, "tried to set caps on peerpad %s:%s but couldn't",
 	      GST_DEBUG_PAD_NAME (peer));
     return FALSE;
   }
   /* then try to set our own caps, we don't need to be notified */
-  if (!gst_pad_try_set_caps_func (realpad, caps, FALSE))
+  if (gst_pad_try_set_caps_func (realpad, caps, FALSE) != GST_PAD_CONNECT_OK)
   {
     GST_INFO (GST_CAT_CAPS, "tried to set own caps on pad %s:%s but couldn't",
 	      GST_DEBUG_PAD_NAME (realpad));
@@ -1077,6 +1085,7 @@ gst_pad_try_set_caps (GstPad *pad, GstCaps *caps)
   GST_INFO (GST_CAT_CAPS, "succeeded setting caps %p on pad %s:%s",
 	    caps, GST_DEBUG_PAD_NAME (realpad));
   gst_caps_debug (caps);
+  g_assert (GST_PAD_CAPS (pad));
 			  
   return TRUE;
 }
