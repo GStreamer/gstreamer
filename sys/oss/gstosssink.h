@@ -78,6 +78,7 @@ struct _GstOssSink {
   gint 		 channels;
   gint 		 frequency;
   gint 		 fragment;
+  gint		 fragment_size;
   gboolean 	 mute;
   guint 	 bufsize;
   guint 	 bps;
