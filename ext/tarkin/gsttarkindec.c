@@ -209,7 +209,7 @@ gst_tarkindec_chain (GstPad *pad, GstData *_data)
   tarkindec = GST_TARKINDEC (gst_pad_get_parent (pad));
 
   if (!tarkindec->setup) {
-    GST_ELEMENT_ERROR (tarkindec, CORE, NEGOTATION, NULL, ("decoder not initialized (input is not tarkin?)"));
+    GST_ELEMENT_ERROR (tarkindec, CORE, NEGOTATION, (NULL), ("decoder not initialized (input is not tarkin?)"));
     if (GST_IS_BUFFER (buf))
       gst_buffer_unref (buf);
     else
@@ -278,7 +278,7 @@ gst_tarkindec_chain (GstPad *pad, GstData *_data)
 					"framerate",  GST_PROPS_FLOAT (0.) /* FIXME!!! */
 				       )) <= 0)
 	      {
-		GST_ELEMENT_ERROR (tarkindec, CORE, NEGOTATION, NULL,  ("could not output format"));
+		GST_ELEMENT_ERROR (tarkindec, CORE, NEGOTATION, (NULL),  ("could not output format"));
 		gst_buffer_unref (buf);
 		return;
 	      }

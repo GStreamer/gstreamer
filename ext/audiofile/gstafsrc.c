@@ -317,7 +317,7 @@ gst_afsrc_open_file (GstAFSrc *src)
   if (src->file == AF_NULL_FILEHANDLE)
   {
      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-                        (_("Could not open file \"%s\" for reading"), src->filename),
+                        (_("Could not open file \"%s\" for reading."), src->filename),
                         ("system error: %s", strerror (errno)));
     return FALSE;
   }
@@ -375,7 +375,7 @@ gst_afsrc_close_file (GstAFSrc *src)
   if (afCloseFile (src->file) != 0)
   {
     GST_ELEMENT_ERROR (src, RESOURCE, CLOSE,
-                       (_("Error closing file \"%s\""), src->filename),
+                       (_("Error closing file \"%s\"."), src->filename),
                        GST_ERROR_SYSTEM);
   } else {
     GST_FLAG_UNSET (src, GST_AFSRC_OPEN);

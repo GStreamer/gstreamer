@@ -311,7 +311,7 @@ dxr3audiosink_open (Dxr3AudioSink *sink)
   sink->audio_fd = open (sink->audio_filename, O_WRONLY);
   if (sink->audio_fd < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-                       (_("Could not open audio device \"%s\" for writing"), sink->audio_filename),
+                       (_("Could not open audio device \"%s\" for writing."), sink->audio_filename),
                         GST_ERROR_SYSTEM);
     return FALSE;
   }
@@ -323,7 +323,7 @@ dxr3audiosink_open (Dxr3AudioSink *sink)
   sink->control_fd = open (sink->control_filename, O_WRONLY);
   if (sink->control_fd < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-                       (_("Could not open control device \"%s\" for writing"), sink->control_filename),
+                       (_("Could not open control device \"%s\" for writing."), sink->control_filename),
                         GST_ERROR_SYSTEM);
     return FALSE;
   }
@@ -357,7 +357,7 @@ dxr3audiosink_set_mode_pcm (Dxr3AudioSink *sink)
   if (ioctl (sink->audio_fd, SNDCTL_DSP_SETFMT, &tmp) < 0 ||
       tmp != oss_mode) {
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS,
-                       (_("Could not configure audio device \"%s\""), sink->audio_filename),
+                       (_("Could not configure audio device \"%s\"."), sink->audio_filename),
                         GST_ERROR_SYSTEM);
     return FALSE;
   }
@@ -371,7 +371,7 @@ dxr3audiosink_set_mode_pcm (Dxr3AudioSink *sink)
   tmp = sink->rate;
   if (ioctl (sink->audio_fd, SNDCTL_DSP_SPEED, &tmp) < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS,
-                       (_("Could not set audio device \"%s\" to %d Hz"), sink->audio_filename, sink->rate),
+                       (_("Could not set audio device \"%s\" to %d Hz."), sink->audio_filename, sink->rate),
                         GST_ERROR_SYSTEM);
     return FALSE;
   }
@@ -408,7 +408,7 @@ dxr3audiosink_set_mode_ac3 (Dxr3AudioSink *sink)
   if (ioctl (sink->audio_fd, SNDCTL_DSP_SPEED, &tmp) < 0 ||
       tmp != AC3_BYTE_RATE) {
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS,
-                       (_("Could not set audio device \"%s\" to %d Hz"), sink->audio_filename, AC3_BYTE_RATE),
+                       (_("Could not set audio device \"%s\" to %d Hz."), sink->audio_filename, AC3_BYTE_RATE),
                         GST_ERROR_SYSTEM);
     return FALSE;
   }
@@ -436,14 +436,14 @@ dxr3audiosink_close (Dxr3AudioSink *sink)
 
   if (close (sink->audio_fd) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-                       (_("Could not close audio device \"%s\""), sink->audio_filename),
+                       (_("Could not close audio device \"%s\"."), sink->audio_filename),
                         GST_ERROR_SYSTEM);
     return;
   }
 
   if (close (sink->control_fd) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-                       (_("Could not close control device \"%s\""), sink->audio_filename),
+                       (_("Could not close control device \"%s\"."), sink->audio_filename),
                         GST_ERROR_SYSTEM);
     return;
   }

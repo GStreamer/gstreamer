@@ -229,7 +229,7 @@ gst_divxdec_setup (GstDivxDec *divxdec)
       break;
   }
   if ((ret = decore(&handle, DEC_OPT_INIT, &xinit, NULL)) != 0) {
-    GST_ELEMENT_ERROR (divxdec, LIBRARY, INIT, NULL,
+    GST_ELEMENT_ERROR (divxdec, LIBRARY, INIT, (NULL),
                        ("divx library error: %s (%d)", gst_divxdec_error (ret), ret));
     return FALSE;
   }
@@ -247,7 +247,7 @@ gst_divxdec_setup (GstDivxDec *divxdec)
 
   if ((ret = decore(divxdec->handle, DEC_OPT_SETOUT,
                     &output, NULL)) != 0) {
-    GST_ELEMENT_ERROR (divxdec, LIBRARY, SETTINGS, NULL,
+    GST_ELEMENT_ERROR (divxdec, LIBRARY, SETTINGS, (NULL),
                        ("error setting output: %s (%d)",
                         gst_divxdec_error (ret), ret));
     gst_divxdec_unset(divxdec);
@@ -285,7 +285,7 @@ gst_divxdec_chain (GstPad    *pad,
 
   if (!divxdec->handle) {
     if (gst_divxdec_negotiate(divxdec) <= 0) {
-      GST_ELEMENT_ERROR (divxdec, CORE, TOO_LAZY, NULL,
+      GST_ELEMENT_ERROR (divxdec, CORE, TOO_LAZY, (NULL),
                         ("No format set - aborting"));
       gst_buffer_unref(buf);
       return;
@@ -309,7 +309,7 @@ gst_divxdec_chain (GstPad    *pad,
 
   if ((ret = decore(divxdec->handle, DEC_OPT_FRAME,
                     &xframe, NULL))) {
-    GST_ELEMENT_ERROR (divxdec, STREAM, DECODE, NULL,
+    GST_ELEMENT_ERROR (divxdec, STREAM, DECODE, (NULL),
                        ("Error decoding divx frame: %s (%d)",
                        gst_divxdec_error(ret), ret));
     gst_buffer_unref(buf);

@@ -245,7 +245,7 @@ speed_loop (GstElement *element)
 #include "filter.func"
 #undef _FORMAT
   } else {
-   GST_ELEMENT_ERROR (filter, CORE, NEGOTIATION, NULL,
+   GST_ELEMENT_ERROR (filter, CORE, NEGOTIATION, (NULL),
                       ("format wasn't negotiated before chain function"));
     gst_element_yield (element);
   }

@@ -366,7 +366,7 @@ gst_sdlvideosink_lock (GstSDLVideoSink *sdlvideosink)
 {
   /* assure that we've got a screen */
   if (!sdlvideosink->screen || !sdlvideosink->overlay) {
-    GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, NULL,
+    GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, (NULL),
 		       ("Tried to lock screen without being set-up"));
     return FALSE;
   }
@@ -376,14 +376,14 @@ gst_sdlvideosink_lock (GstSDLVideoSink *sdlvideosink)
   {
     if (SDL_LockSurface(sdlvideosink->screen) < 0)
     {
-      GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, NULL,
+      GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, (NULL),
         ("SDL: couldn't lock the SDL video window: %s", SDL_GetError()));
       return FALSE;
     }
   }
   if (SDL_LockYUVOverlay(sdlvideosink->overlay) < 0)
   {
-    GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, NULL,
+    GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, (NULL),
       ("SDL: couldn\'t lock the SDL YUV overlay: %s", SDL_GetError()));
     return FALSE;
   }
@@ -427,7 +427,7 @@ gst_sdlvideosink_initsdl (GstSDLVideoSink *sdlvideosink)
 
   /* Initialize the SDL library */
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0 ) {
-    GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, INIT, NULL,
+    GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, INIT, (NULL),
 		      ("Couldn't initialize SDL: %s", SDL_GetError()));
     return FALSE;
   }
@@ -464,7 +464,7 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink)
     GST_VIDEOSINK_HEIGHT (sdlvideosink), 0, SDL_HWSURFACE | SDL_RESIZABLE);
   if (sdlvideosink->screen == NULL)
   {
-    GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, NULL,
+    GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, (NULL),
       ("SDL: Couldn't set %dx%d: %s", GST_VIDEOSINK_WIDTH (sdlvideosink),
       GST_VIDEOSINK_HEIGHT (sdlvideosink), SDL_GetError()));
     return FALSE;
@@ -475,7 +475,7 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink)
     sdlvideosink->height, sdlvideosink->format, sdlvideosink->screen);
   if ( sdlvideosink->overlay == NULL )
   {
-    GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, NULL,
+    GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, (NULL),
       ("SDL: Couldn't create SDL YUV overlay (%dx%d \'" GST_FOURCC_FORMAT "\'): %s",
       sdlvideosink->width, sdlvideosink->height,
       GST_FOURCC_ARGS(sdlvideosink->format), SDL_GetError()));

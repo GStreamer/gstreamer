@@ -288,7 +288,7 @@ gst_swfdec_loop(GstElement *element)
                 if (GST_PAD_LINK_SUCCESSFUL (link_ret)){
                   /* good */
                 } else {
-                  GST_ELEMENT_ERROR (swfdec, CORE, NEGOTIATION, NULL, NULL);
+                  GST_ELEMENT_ERROR (swfdec, CORE, NEGOTIATION, (NULL), (NULL));
                   return;
                 }
                 swfdec->have_format = TRUE;

@@ -282,7 +282,7 @@ dxr3spusink_open (Dxr3SpuSink *sink)
   sink->spu_fd = open (sink->spu_filename, O_WRONLY);
   if (sink->spu_fd < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-                       (_("Could not open spu device \"%s\" for writing"), sink->spu_filename),                         GST_ERROR_SYSTEM);
+                       (_("Could not open spu device \"%s\" for writing."), sink->spu_filename),                         GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -293,7 +293,8 @@ dxr3spusink_open (Dxr3SpuSink *sink)
   sink->control_fd = open (sink->control_filename, O_WRONLY);
   if (sink->control_fd < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-                       (_("Could not open control device \"%s\" for writing"), sink->control_filename),                         GST_ERROR_SYSTEM);
+                       (_("Could not open control device \"%s\" for writing."), sink->control_filename),
+                        GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -310,7 +311,7 @@ dxr3spusink_close (Dxr3SpuSink *sink)
 
   if (close (sink->spu_fd) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-                       (_("Could not close spu device \"%s\""), sink->spu_filename),
+                       (_("Could not close spu device \"%s\"."), sink->spu_filename),
                         GST_ERROR_SYSTEM);
     return;
   }
@@ -318,7 +319,7 @@ dxr3spusink_close (Dxr3SpuSink *sink)
   if (close (sink->control_fd) != 0)
   {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-                       (_("Could not close control device \"%s\""), sink->control_filename),
+                       (_("Could not close control device \"%s\"."), sink->control_filename),
                         GST_ERROR_SYSTEM);
     return;
   }

@@ -569,7 +569,7 @@ gst_ivorbisfile_loop (GstElement *element)
     /* open our custom ivorbisfile data object with the callbacks we provide */
     if (ov_open_callbacks (ivorbisfile, &ivorbisfile->vf, NULL, 0,
 			   ivorbisfile_ov_callbacks) < 0) {
-      GST_ELEMENT_ERROR (element, STREAM, DECODE, NULL, NULL);
+      GST_ELEMENT_ERROR (element, STREAM, DECODE, (NULL), (NULL));
       return;
     }
     ivorbisfile->need_discont = TRUE;
@@ -633,7 +633,7 @@ gst_ivorbisfile_loop (GstElement *element)
   /* we update the caps for each logical stream */
   if (ivorbisfile->vf.current_link != ivorbisfile->current_link) {
     if (!gst_ivorbisfile_new_link (ivorbisfile, ivorbisfile->vf.current_link)) {
-      GST_ELEMENT_ERROR (ivorbisfile, CORE, NEGOTIATION, NULL, NULL);
+      GST_ELEMENT_ERROR (ivorbisfile, CORE, NEGOTIATION, (NULL), (NULL));
     }
     return;
   }

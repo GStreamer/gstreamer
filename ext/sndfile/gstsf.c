@@ -560,8 +560,8 @@ gst_sf_open_file (GstSF *this)
 
   if (!this->filename) {
     GST_ELEMENT_ERROR (this, RESOURCE, NOT_FOUND,
-                         (_("No filename specified")),
-                         NULL);
+                         (_("No filename specified.")),
+                         (NULL));
     return FALSE;
   }
     
@@ -587,7 +587,7 @@ gst_sf_open_file (GstSF *this)
               this->filename, info.samplerate, info.channels, info.format);
 
     if (!sf_format_check (&info)) {
-      GST_ELEMENT_ERROR (this, STREAM, ENCODE, NULL,
+      GST_ELEMENT_ERROR (this, STREAM, ENCODE, (NULL),
                            ("Input parameters (rate:%d, channels:%d, format:0x%x) invalid",
                                           info.samplerate, info.channels, info.format));
       return FALSE;
@@ -598,7 +598,7 @@ gst_sf_open_file (GstSF *this)
 
   if (!this->file) {
     GST_ELEMENT_ERROR (this, RESOURCE, OPEN_WRITE,
-                       (_("Could not open file \"%s\" for writing"), this->filename),
+                       (_("Could not open file \"%s\" for writing."), this->filename),
                          ("soundfile error: %s", sf_strerror (NULL)));
     return FALSE;
   }
@@ -637,7 +637,7 @@ gst_sf_close_file (GstSF *this)
 
   if ((err = sf_close (this->file)))
     GST_ELEMENT_ERROR (this, RESOURCE, CLOSE,
-                       ("Could not close file file \"%s\"", this->filename),
+                       ("Could not close file file \"%s\".", this->filename),
                        ("soundfile error: %s", strerror (err)));
   else
     GST_FLAG_UNSET (this, GST_SF_OPEN);
@@ -657,7 +657,7 @@ gst_sf_loop (GstElement *element)
   this = (GstSF*)element;
   
   if (this->channels == NULL) {
-    GST_ELEMENT_ERROR (element, CORE, PAD, NULL, ("You must connect at least one pad to sndfile elements."));
+    GST_ELEMENT_ERROR (element, CORE, PAD, (NULL), ("You must connect at least one pad to sndfile elements."));
     return;
   }
 
@@ -707,7 +707,7 @@ gst_sf_loop (GstElement *element)
               "buffer-frames", G_TYPE_INT, this->buffer_frames,
               NULL);
           if (!gst_pad_try_set_caps (GST_SF_CHANNEL (l)->pad, caps)) {
-            GST_ELEMENT_ERROR (this, CORE, NEGOTIATION, NULL,
+            GST_ELEMENT_ERROR (this, CORE, NEGOTIATION, (NULL),
                                ("Opened file with sample rate %d, but could not set caps", this->rate));
             gst_sf_close_file (this);
             return;
@@ -763,7 +763,7 @@ gst_sf_loop (GstElement *element)
            which then would set this->buffer_frames to a new value */
         buffer_frames = this->buffer_frames;
         if (buffer_frames == 0) {
-          GST_ELEMENT_ERROR (element, CORE, NEGOTIATION, NULL,
+          GST_ELEMENT_ERROR (element, CORE, NEGOTIATION, (NULL),
                              ("format wasn't negotiated before chain function"));
           return;
         }
@@ -790,7 +790,7 @@ gst_sf_loop (GstElement *element)
       written = sf_writef_float (this->file, buf, num_to_write);
       if (written != num_to_write)
         GST_ELEMENT_ERROR (element, RESOURCE, WRITE,
-                             (_("Could not write to file \"%s\""), this->filename),
+                             (_("Could not write to file \"%s\"."), this->filename),
                              ("soundfile error: %s", sf_strerror (this->file)));
     }
 

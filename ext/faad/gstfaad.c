@@ -359,7 +359,7 @@ gst_faad_chain (GstPad  *pad,
     faad->channels = channels;
     if (gst_faad_srcconnect (faad->srcpad,
 			     gst_pad_get_allowed_caps (faad->srcpad)) <= 0) {
-      GST_ELEMENT_ERROR (faad, CORE, NEGOTIATION, NULL, NULL);
+      GST_ELEMENT_ERROR (faad, CORE, NEGOTIATION, (NULL), (NULL));
       gst_buffer_unref (buf);
       return;
     }
@@ -368,7 +368,7 @@ gst_faad_chain (GstPad  *pad,
   out = faacDecDecode (faad->handle, &info,
 		       GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   if (info.error) {
-    GST_ELEMENT_ERROR (faad, STREAM, DECODE, NULL,
+    GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
 		       ("Failed to decode buffer: %s",
 		        faacDecGetErrorMessage (info.error)));
     gst_buffer_unref (buf);
@@ -381,7 +381,7 @@ gst_faad_chain (GstPad  *pad,
     faad->channels = info.channels;
     if (gst_faad_srcconnect (faad->srcpad,
 			     gst_pad_get_allowed_caps (faad->srcpad)) <= 0) {
-      GST_ELEMENT_ERROR (faad, CORE, NEGOTIATION, NULL, NULL);
+      GST_ELEMENT_ERROR (faad, CORE, NEGOTIATION, (NULL), (NULL));
       gst_buffer_unref (buf);
       return;
     }

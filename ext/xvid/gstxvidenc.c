@@ -299,7 +299,7 @@ gst_xvidenc_setup (GstXvidEnc *xvidenc)
 
   if ((ret = xvid_encore(NULL, XVID_ENC_CREATE,
                          &xenc, NULL)) < 0) {
-    GST_ELEMENT_ERROR (xvidenc, LIBRARY, INIT, NULL,
+    GST_ELEMENT_ERROR (xvidenc, LIBRARY, INIT, (NULL),
                       ("Error setting up xvid encoder: %s (%d)",
 		      gst_xvid_error(ret), ret));
     return FALSE;
@@ -355,7 +355,7 @@ gst_xvidenc_chain (GstPad    *pad,
 
   if ((ret = xvid_encore(xvidenc->handle, XVID_ENC_ENCODE,
                          &xframe, &xstats)) < 0) {
-    GST_ELEMENT_ERROR (xvidenc, LIBRARY, ENCODE, NULL,
+    GST_ELEMENT_ERROR (xvidenc, LIBRARY, ENCODE, (NULL),
                       ("Error encoding xvid frame: %s (%d)",
 		      gst_xvid_error(ret), ret));
     gst_buffer_unref(buf);
