@@ -1,5 +1,17 @@
 2004-05-20  David Schleef  <ds@schleef.org>
 
+	* configure.ac: Minor cosmetic change to convince the buildbot to
+	reautogen.
+	* sys/sunaudio/gstsunaudio.c: (gst_sunaudiosink_class_init),
+	(gst_sunaudiosink_init), (gst_sunaudiosink_getcaps),
+	(gst_sunaudiosink_pad_link), (gst_sunaudiosink_chain),
+	(gst_sunaudiosink_setparams), (gst_sunaudiosink_open),
+	(gst_sunaudiosink_close), (gst_sunaudiosink_change_state),
+	(gst_sunaudiosink_set_property), (gst_sunaudiosink_get_property):
+	More hacking.  Plays audio now.
+
+2004-05-20  David Schleef  <ds@schleef.org>
+
 	* configure.ac:
 	* sys/Makefile.am:
 
