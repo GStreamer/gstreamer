@@ -71,8 +71,6 @@ struct _GstBin {
   /* our children */
   gint numchildren;
   GList *children;
-  gint num_eos_providers;
-  GList *eos_providers;
   GCond *eoscond;
 
   GstElementState child_states[GST_NUM_STATES];

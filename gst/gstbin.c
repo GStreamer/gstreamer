@@ -135,8 +135,6 @@ gst_bin_init (GstBin *bin)
 
   bin->numchildren = 0;
   bin->children = NULL;
-  bin->eos_providers = NULL;
-  bin->num_eos_providers = 0;
   bin->eoscond = g_cond_new ();
 }
 
@@ -734,20 +732,5 @@ gst_bin_iterate (GstBin *bin)
   }
 
   return running;
-}
-
-/* out internal element fired EOS, we decrement the number of pending EOS childs */
-G_GNUC_UNUSED static void
-gst_bin_received_eos (GstElement *element, GstBin *bin)
-{
-  GST_INFO_ELEMENT (GST_CAT_PLANNING, bin, "child %s fired eos, pending %d", GST_ELEMENT_NAME (element),
-		  bin->num_eos_providers);
-
-  GST_LOCK (bin);
-  if (bin->num_eos_providers) {
-    bin->num_eos_providers--;
-    g_cond_signal (bin->eoscond);
-  }
-  GST_UNLOCK (bin);
 }
 
