@@ -1,5 +1,10 @@
 2004-10-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/Makefile.am:
+	  Fix the build fixes.
+
+2004-10-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_query),
 	(gst_ogg_demux_src_event), (_find_chain_seek),
 	(gst_ogg_pad_push):
