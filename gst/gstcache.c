@@ -357,6 +357,7 @@ gst_cache_add_association (GstCache *tc, gint id, GstAssocFlags flags,
   gulong size;
   gint nassocs = 0;
   GstFormat cur_format;
+  gint64 dummy;
 
   g_return_val_if_fail (GST_IS_CACHE (tc), NULL);
   g_return_val_if_fail (format != 0, NULL);
@@ -369,7 +370,7 @@ gst_cache_add_association (GstCache *tc, gint id, GstAssocFlags flags,
     nassocs++;
     cur_format = va_arg (args, GstFormat);
     if (cur_format)
-      value = va_arg (args, gint64);
+      dummy = va_arg (args, gint64);
   }
   va_end (args);
 
