@@ -1,3 +1,8 @@
+2004-07-20  David Schleef  <ds@schleef.org>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xwindow_decorate):
+	Don't use an Atom that doesn't exist.
+
 2004-07-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init),

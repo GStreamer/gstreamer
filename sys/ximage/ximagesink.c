@@ -314,12 +314,11 @@ gst_ximagesink_xwindow_decorate (GstXImageSink * ximagesink,
   g_mutex_lock (ximagesink->x_lock);
 
   hints_atom = XInternAtom (ximagesink->xcontext->disp, "_MOTIF_WM_HINTS", 1);
-
-  hints = g_malloc0 (sizeof (MotifWmHints));
-
-  if (!hints) {
+  if (hints_atom == None) {
     return FALSE;
   }
+
+  hints = g_malloc0 (sizeof (MotifWmHints));
 
   hints->flags |= MWM_HINTS_DECORATIONS;
   hints->decorations = 1 << 0;
