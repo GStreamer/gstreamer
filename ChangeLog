@@ -1,3 +1,23 @@
+2004-06-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_class_init),
+	(gst_tcpserversink_init), (gst_tcpserversink_handle_server_read),
+	(gst_tcpserversink_client_remove),
+	(gst_tcpserversink_handle_client_read),
+	(gst_tcpserversink_client_queue_data),
+	(gst_tcpserversink_client_queue_caps),
+	(gst_tcpserversink_client_queue_buffer),
+	(gst_tcpserversink_handle_client_write),
+	(gst_tcpserversink_queue_buffer),
+	(gst_tcpserversink_handle_clients), (gst_tcpserversink_thread),
+	(gst_tcpserversink_chain), (gst_tcpserversink_set_property),
+	(gst_tcpserversink_get_property), (gst_tcpserversink_init_send),
+	(gst_tcpserversink_close):
+	* gst/tcp/gsttcpserversink.h:
+	Serversink rewrite. Really do non blocking writes to clients and
+	maintain an internal queue to handle slower clients while not
+	disturbing fast clients.
+
 2004-06-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_get):
