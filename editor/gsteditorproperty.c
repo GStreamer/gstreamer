@@ -318,14 +318,14 @@ gst_editor_pads_create (GstEditorProperty *property, GstEditorElement *element)
 
   while (pads) {
     GstPad *pad = (GstPad *)pads->data;
-    GstCaps *caps = gst_pad_get_caps (pad);
+    GList *caps = gst_pad_get_caps_list (pad);
     gchar *mime;
     gchar *data[2];
     GtkCTreeNode *padnode;
 
     if (caps) {
       GstType *type;
-      type = gst_type_find_by_id (caps->id);
+      type = gst_type_find_by_id (((GstCaps *)caps->data)->id);
       mime = type->mime;
     }
     else {
@@ -337,7 +337,13 @@ gst_editor_pads_create (GstEditorProperty *property, GstEditorElement *element)
     padnode = gtk_ctree_insert_node (GTK_CTREE (tree), NULL, NULL, data, 0, 
 		    NULL, NULL, NULL, NULL, FALSE, TRUE);
 
-    gst_editor_add_caps_to_tree (caps, tree, padnode);
+    while (caps) {
+      GstCaps *cap = (GstCaps *)caps->data;
+
+      gst_editor_add_caps_to_tree (cap, tree, padnode);
+
+      caps = g_list_next (caps);
+    }
 
     pads = g_list_next (pads);
   }
@@ -345,14 +351,14 @@ gst_editor_pads_create (GstEditorProperty *property, GstEditorElement *element)
   pads = gst_element_get_padtemplate_list(realelement);
   while (pads) {
     GstPadTemplate *templ = (GstPadTemplate *)pads->data;
-    GstCaps *caps = templ->caps;
+    GList *caps = templ->caps;
     gchar *mime;
     gchar *data[2];
     GtkCTreeNode *padnode;
 
     if (caps) {
       GstType *type;
-      type = gst_type_find_by_id (caps->id);
+      type = gst_type_find_by_id (((GstCaps *)caps->data)->id);
       mime = type->mime;
     }
     else {
@@ -364,7 +370,13 @@ gst_editor_pads_create (GstEditorProperty *property, GstEditorElement *element)
     padnode = gtk_ctree_insert_node (GTK_CTREE (tree), NULL, NULL, data, 0, 
 		    NULL, NULL, NULL, NULL, FALSE, TRUE);
 
-    gst_editor_add_caps_to_tree (caps, tree, padnode);
+    while (caps) {
+      GstCaps *cap = (GstCaps *)caps->data;
+
+      gst_editor_add_caps_to_tree (cap, tree, padnode);
+
+      caps = g_list_next (caps);
+    }
 
     pads = g_list_next (pads);
   }
