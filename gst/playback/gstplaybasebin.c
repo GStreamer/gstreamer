@@ -46,6 +46,7 @@ enum
 {
   SETUP_OUTPUT_PADS_SIGNAL,
   REMOVED_OUTPUT_PAD_SIGNAL,
+  BUFFERING_SIGNAL,
   LINK_STREAM_SIGNAL,
   UNLINK_STREAM_SIGNAL,
   LAST_SIGNAL
@@ -149,6 +150,11 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPlayBaseBinClass, removed_output_pad),
       NULL, NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
+  gst_play_base_bin_signals[BUFFERING_SIGNAL] =
+      g_signal_new ("buffering", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstPlayBaseBinClass, buffering),
+      NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
   /* action signals */
   gst_play_base_bin_signals[LINK_STREAM_SIGNAL] =
@@ -557,6 +563,7 @@ probe_triggered (GstProbe * probe, GstData ** data, gpointer user_data)
         g_signal_emit (play_base_bin,
             gst_play_base_bin_signals[SETUP_OUTPUT_PADS_SIGNAL], 0);
 
+        GST_DEBUG ("Syncing state from %d", GST_STATE (play_base_bin->thread));
         gst_element_set_state (play_base_bin->thread, GST_STATE_PLAYING);
 
         /* get rid of the EOS event */
@@ -759,6 +766,113 @@ state_change (GstElement * element,
   }
 }
 
+/*
+ * Buffer/cache checking. FIXME: make configurable.
+ * Note that we could also do this (buffering) at the
+ * preroll-level. The advantage there is that it'd
+ * allow us to cache in time-units rather than byte-
+ * units. Ohwell...
+ */
+
+static gboolean
+check_queue (GstProbe * probe, GstData ** data, gpointer user_data)
+{
+  GstElement *queue = GST_ELEMENT (user_data);
+  GstPlayBaseBin *play_base_bin = g_object_get_data (G_OBJECT (queue), "pbb");
+  guint level = 0;
+
+  g_object_get (G_OBJECT (queue), "current-level-bytes", &level, NULL);
+  GST_DEBUG ("Queue size: %u bytes", level);
+  g_signal_emit (play_base_bin,
+      gst_play_base_bin_signals[BUFFERING_SIGNAL], 0,
+      level * 100 / (512 * 1024));
+
+  /* continue! */
+  return TRUE;
+}
+
+static void
+buffer_underrun (GstElement * queue, GstPlayBaseBin * play_base_bin)
+{
+  GST_DEBUG ("Underrun, re-caching");
+
+  /* On underrun, we want to temoprarily pause playback, set a "min-size"
+   * treshold and wait for the running signal and then play again. Take
+   * care of possible deadlocks and so on, */
+  g_object_set (queue, "min-threshold-bytes", 64 * 1024, NULL);
+
+  g_signal_emit (play_base_bin,
+      gst_play_base_bin_signals[BUFFERING_SIGNAL], 0, 0);
+}
+
+static void
+buffer_running (GstElement * queue, GstPlayBaseBin * play_base_bin)
+{
+  GST_DEBUG ("Running");
+
+  /* When we had an underrun, we now want to play again. */
+  g_object_set (queue, "min-threshold-bytes", 0,
+      "max-size-bytes", 512 * 1024, NULL);
+}
+
+static void
+buffer_overrun (GstElement * queue, GstPlayBaseBin * play_base_bin)
+{
+  GST_DEBUG ("Overrun, leaking upstream and flushing next few buffers");
+
+  /* we want to decrease max-size here so the next few bytes are flushed */
+  g_object_set (queue, "max-size-bytes", 448 * 1024, NULL);
+
+  g_signal_emit (play_base_bin,
+      gst_play_base_bin_signals[BUFFERING_SIGNAL], 0, 100);
+}
+
+/*
+ * Generate a source element that does caching for network streams.
+ */
+
+static GstElement *
+gen_source_element (GstPlayBaseBin * play_base_bin)
+{
+  GstElement *source, *queue, *bin;
+  GstProbe *probe;
+  gboolean is_stream;
+
+  source =
+      gst_element_make_from_uri (GST_URI_SRC, play_base_bin->uri, "source");
+  if (!source)
+    return NULL;
+
+  /* lame - FIXME, maybe we can use seek_types/mask here? */
+  is_stream = !strncmp (play_base_bin->uri, "http://", 7);
+  if (!is_stream)
+    return source;
+
+  /* buffer */
+  bin = gst_thread_new ("sourcebin");
+  queue = gst_element_factory_make ("queue", "buffer");
+  g_object_set (queue, "max-size-bytes", 512 * 1024,
+      "max-size-buffers", 0, NULL);
+  /* I'd like it to be leaky too, but only for live sources. How? */
+  g_signal_connect (queue, "underrun", G_CALLBACK (buffer_underrun),
+      play_base_bin);
+  g_signal_connect (queue, "running", G_CALLBACK (buffer_running),
+      play_base_bin);
+  g_signal_connect (queue, "overrun", G_CALLBACK (buffer_overrun),
+      play_base_bin);
+
+  /* give updates on queue size */
+  probe = gst_probe_new (FALSE, check_queue, queue);
+  gst_pad_add_probe (gst_element_get_pad (source, "src"), probe);
+  g_object_set_data (G_OBJECT (queue), "pbb", play_base_bin);
+
+  gst_element_link (source, queue);
+  gst_bin_add_many (GST_BIN (bin), source, queue, NULL);
+  gst_element_add_ghost_pad (bin, gst_element_get_pad (queue, "src"), "src");
+
+  return bin;
+}
+
 /* construct and run the source and decoder elements until we found
  * all the streams or until a preroll queue has been filled.
  */
@@ -778,12 +892,13 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
   old_src = play_base_bin->source;
 
   /* create and configure an element that can handle the uri */
-  play_base_bin->source =
-      gst_element_make_from_uri (GST_URI_SRC, play_base_bin->uri, "source");
+  play_base_bin->source = gen_source_element (play_base_bin);
 
   if (!play_base_bin->source) {
     /* whoops, could not create the source element */
-    g_warning ("don't know how to read %s", play_base_bin->uri);
+    g_set_error (error, 0, 0,
+        "No URI handler implemented for \"%s\"", play_base_bin->uri);
+    GST_WARNING ("don't know how to read %s", play_base_bin->uri);
     play_base_bin->source = old_src;
     return FALSE;
   } else {

@@ -91,6 +91,11 @@ struct _GstPlayBaseBinClass {
   void (*removed_output_pad)	(GstPlayBaseBin *play_base_bin,
 				 GstStreamInfo *info);
 
+  /* 0: buf=empty (underrun) - will re-cache,
+   * 100: buf=full (overrun) - will flush head of cache (latency) */
+  void (*buffering)		(GstPlayBaseBin *play_base_bin,
+				 gint            percentage);
+
   /* action signals */
   gboolean (*link_stream)	(GstPlayBaseBin *play_base_bin, 
 				 GstStreamInfo *info,
