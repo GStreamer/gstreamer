@@ -265,19 +265,19 @@ U gst-template/gst-app/src/Makefile.am
     <para>
       Once we have written code defining all the parts of the plugin, we need to
       write the plugin_init() function. This is a special function, which is
-      called as soon as the plugin is loaded, and must return a pointer to a newly
-      allocated GstPlugin structure. This structure contains the details of all
-      the facilities provided by the plugin, and is the mechanism by which the
-      definitions are made available to the rest of the &GStreamer; system. Helper
-      functions are provided to help fill the structure: for future compatability
-      it is recommended that these functions are used, as documented below, rather
-      than attempting to access the structure directly.
+      called as soon as the plugin is loaded, and must return a pointer to a
+      newly allocated GstPlugin structure. This structure contains the details
+      of all the facilities provided by the plugin, and is the mechanism by 
+      which the definitions are made available to the rest of the &GStreamer;
+      system. Helper functions are provided to help fill the structure: for 
+      future compatability it is required that these functions are used, as
+      documented below, rather than attempting to access the structure directly.
     </para>
     <para>
       Note that the information returned by the plugin_init() function will be
-      cached in a central registry. For this reason, it is important that the same
-      information is always returned by the function: for example, it must not
-      make element factories available based on runtime conditions. If an element
+      cached in a central registry. For this reason, it is important that the
+      same information is always returned by the function: for example, it 
+      must not make element factories available based on runtime conditions. If an element
       can only work in certain conditions (for example, if the soundcard is not
       being used by some other process) this must be reflected by the element
       being unable to enter the READY state if unavailable, rather than the plugin
