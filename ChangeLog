@@ -2,7 +2,9 @@
 
         * configure.ac:
           - releasing 0.6.0
-          - update libtool version from 3.0.0 -> 
+          - update libtool version from 3.0.0 -> 0.0.0  because libname
+            went from libgstreamer-0.5 -> libgstreamer-0.6
+
 2003-01-09  Thomas Vander Stichele <thomas at apestaart dot org>
 
         * first pass at changing _connect/_disconnect -> _link/_unlink
