@@ -1,4 +1,3 @@
-#include <gnome.h>
 #include <gst/gst.h>
 
 extern gboolean _gst_plugin_spew;
