@@ -1,3 +1,13 @@
+2004-05-04  Benjamin Otte  <otte@gnome.org>
+
+	* ext/libvisual/Makefile.am:
+	* ext/libvisual/visual.c: (gst_visual_class_init),
+	(gst_visual_init), (gst_visual_dispose), (gst_visual_getcaps),
+	(gst_visual_srclink), (gst_visual_chain),
+	(gst_visual_change_state), (plugin_init):
+	  use a GstAdapter to correctly adapt buffer sizes - allows using a
+	  framerate
+
 2004-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/v4l/gstv4lelement.h:
