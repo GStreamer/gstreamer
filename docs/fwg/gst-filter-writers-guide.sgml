@@ -1,0 +1,69 @@
+<!DOCTYPE book PUBLIC "-//GNOME//DTD DocBook PNG Variant V1.0//EN" "" [ 
+<!ENTITY INTRO SYSTEM "intro.sgml">
+<!ENTITY CHAINVSLOOP SYSTEM "chainvsloop.sgml">
+]>
+
+<book id="index">
+  <bookinfo>
+    
+    <authorgroup>
+      <author>
+	<firstname>Richard</firstname>
+	<surname>Boulton</surname>
+	<authorblurb>
+	  <para>
+	    <email>richard-gst@tartarus.org</email>
+	  </para>
+	</authorblurb>
+      </author>
+    </authorgroup>
+
+    <legalnotice>
+      <para>
+	This material may be distributed only subject to the terms and
+        conditions set forth in the Open Publication License, v1.0 or later (the
+        latest version is presently available at <ulink url="
+        http://www.opencontent.org/openpub/"
+        type="http">http://www.opencontent.org/openpub/</ulink> )
+      </para>
+    </legalnotice>
+
+    <title><application>GStreamer</application> Filter Writer's Guide</title>
+
+  </bookinfo>
+      
+<!-- ############# Overview - part ############### -->
+
+  <part id="overview"><title>Overview</title>
+    <partintro>
+      <para> 
+	This book describes how to extend the capabilities of
+	<application>GStreamer</application> by creating a new filter.  The
+	reader should be familiar with the basic workings of
+	<application>GStreamer</application>.  For a gentle introduction to
+	GStreamer, you may wish to read the <emphasis>FIXME</emphasis> Since
+	<application>GStreamer</application> adheres to the GTK+ programming
+	model, the reader is also assumed to understand the basics of GTK+.
+      </para>
+    </partintro>
+
+<!-- ############ Introduction - chapter ############# -->
+      &INTRO;
+  </part>
+
+<!-- ############ Basic concepts - part ############# -->
+
+  <part id="basic-concepts"><title>Basic concepts</title>
+    <partintro>
+      <para> 
+        We will first describe the concepts it is neccessary to understand
+	before building a filter.
+      </para>
+    </partintro>
+
+<!-- ############ Basic concepts - chapter ############# -->
+      &CHAINVSLOOP;
+  </part>
+
+<!-- ############ Building A Filter - part ############# -->
+</book>
