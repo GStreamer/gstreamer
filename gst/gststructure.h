@@ -39,6 +39,7 @@ typedef gboolean (*GstStructureForeachFunc) (GQuark   field_id,
 struct _GstStructure {
   GType type;
 
+  /*< private >*/
   GQuark name;
 
   GArray *fields;

@@ -225,14 +225,17 @@ Objects
 * Accessing lists
 
   If the object property is a list concurrent list iteration is needed to get the
-  contents of the list. GStreamer uses the cookie design pattern mechanism to 
-  mark the last update of a list. The list and the cookie are protected by the
-  same lock. Each update to a list requires the following actions:
+  contents of the list. GStreamer uses the cookie mechanism to mark the last update 
+  of a list. The list and the cookie are protected by the same lock. Each update to 
+  a list requires the following actions:
 
    - acquire lock
    - update list
    - update cookie
    - release lock
+
+  Updating the cookie is usually done by incrementing its value by one. Since cookies
+  use guint32 its wraparound is for all practical reasons is not a problem.
 
   Iterating a list can safely be done by surrounding the list iteration with a
   lock/unlock of the lock.
@@ -266,9 +269,10 @@ Objects
   
        GST_LOCK (lock);
        if (cookie != object->list_cookie) {
-         /* concurrent modification of the list here */
+         /* handle rollback caused by concurrent modification 
+	  * of the list here */
 
-	 ...undo changes to items...
+	 ...rollback changes to items...
 
 	 /* grab new cookie and list */
 	 cookie = object->list_cookie;

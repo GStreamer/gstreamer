@@ -1,3 +1,24 @@
+2004-12-10  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-MT-refcounting.txt:
+	* gst/gstbin.c: (gst_bin_set_index), (gst_bin_set_clock),
+	(gst_bin_add_func), (gst_bin_add), (gst_bin_remove_func),
+	(gst_bin_remove), (gst_bin_iterate_elements),
+	(bin_element_is_sink), (gst_bin_get_state), (gst_bin_change_state),
+	(gst_bin_get_by_name), (gst_bin_get_by_name_recurse_up),
+	(gst_bin_get_by_interface), (gst_bin_get_all_by_interface):
+	* gst/gstbin.h:
+	* gst/gstbuffer.h:
+	* gst/gstbus.h:
+	* gst/gstcaps.h:
+	* gst/gstclock.h:
+	* gst/gstdata.h:
+	* gst/gstelement.h:
+	* gst/gstevent.h:
+	* gst/gstmessage.h:
+	* gst/gststructure.h:
+	More MT fixes. Header cleanups, design doc update.
+
 2004-12-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpad.c: (gst_pad_custom_new), (gst_pad_get_direction),

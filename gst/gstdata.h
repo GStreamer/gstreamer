@@ -69,15 +69,18 @@ typedef enum
 struct _GstData {
   GType 		 type;
 
+  /*< public >*/ /* with COW */
   /* refcounting */
   GstAtomicInt		 refcount;
 
   guint16		 flags;
  
+  /*< protected >*/
   /* utility function pointers, can override default */
   GstDataFreeFunction 	 free;		/* free the data */
   GstDataCopyFunction 	 copy;		/* copy the data */
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

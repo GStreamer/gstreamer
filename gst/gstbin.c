@@ -62,8 +62,8 @@ static void gst_bin_set_index (GstElement * element, GstIndex * index);
 static void gst_bin_set_clock (GstElement * element, GstClock * clock);
 static GstClock *gst_bin_get_clock (GstElement * element);
 
-static void gst_bin_add_func (GstBin * bin, GstElement * element);
-static void gst_bin_remove_func (GstBin * bin, GstElement * element);
+static gboolean gst_bin_add_func (GstBin * bin, GstElement * element);
+static gboolean gst_bin_remove_func (GstBin * bin, GstElement * element);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr gst_bin_save_thyself (GstObject * object, xmlNodePtr parent);
@@ -252,32 +252,35 @@ gst_bin_get_clock (GstElement * element)
   return result;
 }
 
-static void
+static gboolean
 gst_bin_add_func (GstBin * bin, GstElement * element)
 {
   GstPipeline *manager;
+  gchar *elem_name;
 
+  GST_LOCK (element);
   /* the element must not already have a parent */
-  g_return_if_fail (GST_ELEMENT_PARENT (element) == NULL);
+  if (G_UNLIKELY (GST_ELEMENT_PARENT (element) != NULL))
+    goto had_parent;
+
+  elem_name = g_strdup (GST_ELEMENT_NAME (element));
+  GST_UNLOCK (element);
 
   GST_LOCK (bin);
+  /* we obviously can't add ourself to ourself */
+  if (G_UNLIKELY (GST_ELEMENT_CAST (element) == GST_ELEMENT_CAST (bin)))
+    goto adding_itself;
+
   /* then check to see if the element's name is already taken in the bin,
-   * we can sefely take the lock here. */
-  if (gst_object_check_uniqueness (bin->children,
-          GST_ELEMENT_NAME (element)) == FALSE) {
-    g_warning ("Name %s is not unique in bin %s, not adding\n",
-        GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (bin));
-    GST_UNLOCK (bin);
-    return;
-  }
+   * we can safely take the lock here. We can leave the element locked
+   * as it will not be in the bin. This check is probably bogus because
+   * you can safely change the element name after adding it to the bin. */
+  if (G_UNLIKELY (gst_object_check_uniqueness (bin->children,
+              elem_name) == FALSE))
+    goto duplicate_name;
+
   manager = GST_ELEMENT (bin)->manager;
   gst_element_set_manager (element, manager);
-
-  if (GST_STATE (element) > GST_STATE (bin)) {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
-        "setting state to receive element \"%s\"", GST_OBJECT_NAME (element));
-    gst_element_set_state ((GstElement *) bin, GST_STATE (element));
-  }
 
   /* set the element's parent and add the element to the bin's list of children */
   gst_object_set_parent (GST_OBJECT (element), GST_OBJECT (bin));
@@ -285,13 +288,35 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   bin->children = g_list_prepend (bin->children, element);
   bin->numchildren++;
   bin->children_cookie++;
-
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin, "added element \"%s\"",
-      GST_OBJECT_NAME (element));
-
   GST_UNLOCK (bin);
 
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin, "added element \"%s\"",
+      elem_name);
+  g_free (elem_name);
+
   g_signal_emit (G_OBJECT (bin), gst_bin_signals[ELEMENT_ADDED], 0, element);
+
+  return TRUE;
+
+  /* ERROR handling here */
+had_parent:
+  g_warning ("Element %s already has parent %p", GST_ELEMENT_NAME (element),
+      bin);
+  GST_UNLOCK (element);
+  return FALSE;
+
+adding_itself:
+  g_warning ("Cannot add bin %s to itself", GST_ELEMENT_NAME (bin));
+  GST_UNLOCK (bin);
+  g_free (elem_name);
+  return FALSE;
+
+duplicate_name:
+  g_warning ("Name %s is not unique in bin %s, not adding",
+      elem_name, GST_ELEMENT_NAME (bin));
+  GST_UNLOCK (bin);
+  g_free (elem_name);
+  return FALSE;
 }
 
 /**
@@ -301,64 +326,88 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
  *
  * Adds the given element to the bin.  Sets the element's parent, and thus
  * takes ownership of the element. An element can only be added to one bin.
+ *
+ * Returns: TRUE if the element could be added, FALSE on wrong parameters or
+ * the bin does not want to accept the element.
+ *
+ * MT safe.
  */
-void
+gboolean
 gst_bin_add (GstBin * bin, GstElement * element)
 {
   GstBinClass *bclass;
+  gboolean result;
 
-  g_return_if_fail (GST_IS_BIN (bin));
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  GST_CAT_INFO_OBJECT (GST_CAT_PARENTAGE, bin, "adding element \"%s\"",
-      GST_OBJECT_NAME (element));
+  g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   bclass = GST_BIN_GET_CLASS (bin);
 
-  if (bclass->add_element) {
-    bclass->add_element (bin, element);
-  } else {
-    g_warning ("cannot add element %s to bin %s",
-        GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (bin));
-  }
+  if (G_UNLIKELY (bclass->add_element == NULL))
+    goto no_function;
+
+  GST_CAT_DEBUG (GST_CAT_PARENTAGE, "adding element %s to bin %s",
+      GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (bin));
+
+  result = bclass->add_element (bin, element);
+
+  return result;
+
+no_function:
+  g_warning ("adding elements to bin %s is not supported",
+      GST_ELEMENT_NAME (bin));
+  return FALSE;
 }
 
-static void
+static gboolean
 gst_bin_remove_func (GstBin * bin, GstElement * element)
 {
+  gchar *elem_name;
+
   /* the element must have its parent set to the current bin */
-  g_return_if_fail (GST_ELEMENT_PARENT (element) == (GstObject *) bin);
+  GST_LOCK (element);
+  /* the element must not already have a parent */
+  if (G_UNLIKELY (GST_ELEMENT_PARENT (element) != GST_ELEMENT_CAST (bin)))
+    goto wrong_parent;
+
+  elem_name = g_strdup (GST_ELEMENT_NAME (element));
+  GST_UNLOCK (element);
 
   GST_LOCK (bin);
-
-  /* the element must be in the bin's list of children */
-  if (g_list_find (bin->children, element) == NULL) {
-    g_warning ("no element \"%s\" in bin \"%s\"\n", GST_ELEMENT_NAME (element),
-        GST_ELEMENT_NAME (bin));
-    GST_UNLOCK (bin);
-    return;
-  }
+  /* the element must be in the bin's list of children, is this
+   * check redundant with PARENT checking? */
+  if (G_UNLIKELY (g_list_find (bin->children, element) == NULL))
+    goto not_in_bin;
 
   /* now remove the element from the list of elements */
   bin->children = g_list_remove (bin->children, element);
   bin->numchildren--;
   bin->children_cookie++;
+  GST_UNLOCK (bin);
 
   GST_CAT_INFO_OBJECT (GST_CAT_PARENTAGE, bin, "removed child \"%s\"",
-      GST_OBJECT_NAME (element));
-
-  GST_UNLOCK (bin);
+      elem_name);
+  g_free (elem_name);
 
   gst_element_set_manager (element, NULL);
 
-  /* ref as we're going to emit a signal */
-  gst_object_ref (GST_OBJECT (element));
+  /* we should ref here to avoid bad app behaviour.. */
   gst_object_unparent (GST_OBJECT (element));
 
   g_signal_emit (G_OBJECT (bin), gst_bin_signals[ELEMENT_REMOVED], 0, element);
 
-  /* element is really out of our control now */
-  gst_object_unref (GST_OBJECT (element));
+  return TRUE;
+
+wrong_parent:
+  g_warning ("Element %s is not in bin %p", GST_ELEMENT_NAME (element), bin);
+  GST_UNLOCK (element);
+  return FALSE;
+
+not_in_bin:
+  g_warning ("Element %s is not in bin %s", elem_name, GST_ELEMENT_NAME (bin));
+  GST_UNLOCK (bin);
+  g_free (elem_name);
+  return FALSE;
 }
 
 /**
@@ -372,27 +421,42 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
  * will be freed in the process of removing it from the bin.  If you
  * want the element to still exist after removing, you need to call
  * #gst_object_ref before removing it from the bin.
+ *
+ * Returns: TRUE if the element could be removed, FALSE on wrong parameters or
+ * the bin does not want to remove the element.
+ *
+ * MT safe.
  */
-void
+gboolean
 gst_bin_remove (GstBin * bin, GstElement * element)
 {
   GstBinClass *bclass;
+  gboolean result;
 
-  GST_CAT_DEBUG (GST_CAT_PARENTAGE, "[%s]: trying to remove child %s",
-      GST_ELEMENT_NAME (bin), GST_ELEMENT_NAME (element));
-
-  g_return_if_fail (GST_IS_BIN (bin));
-  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   bclass = GST_BIN_GET_CLASS (bin);
 
-  if (bclass->remove_element) {
-    bclass->remove_element (bin, element);
-  } else {
-    g_warning ("cannot remove elements from bin %s\n", GST_ELEMENT_NAME (bin));
-  }
+  if (G_UNLIKELY (bclass->remove_element == NULL))
+    goto no_function;
+
+  GST_CAT_DEBUG (GST_CAT_PARENTAGE, "removing element %s from bin %s",
+      GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (bin));
+
+  result = bclass->remove_element (bin, element);
+
+  return result;
+
+no_function:
+  g_warning ("removing elements from bin %s is not supported",
+      GST_ELEMENT_NAME (bin));
+  return FALSE;
 }
 
+/* 
+ * bin iterator 
+ */
 typedef struct _GstBinIterator
 {
   GstIterator iterator;
@@ -436,14 +500,18 @@ gst_bin_iterator_free (GstBinIterator * it)
  * after usage.
  *
  * Returns: a #GstIterator of #GstElements. gst_iterator_free after
- * use.
+ * use. returns NULL when passing bad parameters.
+ *
+ * MT safe.
  */
 GstIterator *
 gst_bin_iterate_elements (GstBin * bin)
 {
   GstBinIterator *result;
 
-  GST_LOCK (bin);
+  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+
+  /* ne need to lock, nothing can change here */
   result = (GstBinIterator *) gst_iterator_new (sizeof (GstBinIterator),
       GST_GET_LOCK (bin),
       &bin->children_cookie,
@@ -451,6 +519,7 @@ gst_bin_iterate_elements (GstBin * bin)
       (GstIteratorResyncFunction) gst_bin_iterator_resync,
       (GstIteratorFreeFunction) gst_bin_iterator_free);
 
+  GST_LOCK (bin);
   result->bin = GST_BIN (gst_object_ref (GST_OBJECT (bin)));
   result->list = bin->children;
   GST_UNLOCK (bin);
@@ -478,6 +547,7 @@ bin_element_is_sink (GstElement * child, GstBin * bin)
     GList *pads;
     gboolean connected_src = FALSE;
 
+    /* FIXME not MT safe */
     for (pads = child->srcpads; pads; pads = g_list_next (pads)) {
       GstPad *pad = GST_PAD (pads->data);
 
@@ -514,6 +584,8 @@ bin_element_is_sink (GstElement * child, GstBin * bin)
  * after usage.
  *
  * Returns: a #GstIterator of #GstElements. gst_iterator_free after use.
+ *
+ * MT safe.
  */
 GstIterator *
 gst_bin_iterate_sinks (GstBin * bin)
@@ -556,6 +628,8 @@ gst_bin_get_state (GstElement * element, GstElementState * state,
 
   /* we cannot take the state lock yet as we might block when querying
    * the children, holding the lock too long for no reason */
+  /* FIXME, we can loop the list ourselves instead of creating the
+   * iterator */
   children = gst_bin_iterate_sinks (bin);
   child = gst_iterator_find_custom (children, timeout,
       (GCompareFunc) bin_find_pending_child);
@@ -597,8 +671,6 @@ gst_bin_change_state (GstElement * element)
 
   GQueue *elem_queue;           /* list of elements waiting for a state change */
 
-  g_return_val_if_fail (GST_IS_BIN (element), GST_STATE_FAILURE);
-
   bin = GST_BIN (element);
 
   old_state = GST_STATE (element);
@@ -616,6 +688,7 @@ gst_bin_change_state (GstElement * element)
 
   /* first step, find all sink elements, these are the elements
    * without (linked) source pads. */
+  /* FIXME, we can iterate the list ourselves */
   sinks = gst_bin_iterate_sinks (bin);
   while (!done) {
     gpointer child;
@@ -767,27 +840,30 @@ gst_bin_dispose (GObject * object)
  * Get the element with the given name from this bin. This
  * function recurses into subbins.
  *
- * Returns: the element with the given name
+ * Returns: the element with the given name. Returns NULL if the
+ * element is not found or when bad parameters were given.
+ *
+ * MT safe.
  */
 GstElement *
 gst_bin_get_by_name (GstBin * bin, const gchar * name)
 {
-  const GList *children;
+  GList *children;
   GstElement *result = NULL;
 
-  g_return_val_if_fail (bin != NULL, result);
-  g_return_val_if_fail (GST_IS_BIN (bin), result);
-  g_return_val_if_fail (name != NULL, result);
+  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
 
   GST_CAT_INFO (GST_CAT_PARENTAGE, "[%s]: looking up child element %s",
       GST_ELEMENT_NAME (bin), name);
 
   GST_LOCK (bin);
-  children = bin->children;
-  while (children) {
-    GstElement *child = GST_ELEMENT (children->data);
+  for (children = bin->children; children; children = g_list_next (children)) {
+    GstElement *child = GST_ELEMENT_CAST (children->data);
 
-    if (!strcmp (GST_OBJECT_NAME (child), name)) {
+    GST_LOCK (child);
+    if (!strcmp (GST_ELEMENT_NAME (child), name)) {
+      GST_UNLOCK (child);
       result = child;
       break;
     }
@@ -797,7 +873,6 @@ gst_bin_get_by_name (GstBin * bin, const gchar * name)
         break;
       }
     }
-    children = g_list_next (children);
   }
   GST_UNLOCK (bin);
 
@@ -812,25 +887,28 @@ gst_bin_get_by_name (GstBin * bin, const gchar * name)
  * Get the element with the given name from this bin. If the
  * element is not found, a recursion is performed on the parent bin.
  *
- * Returns: the element with the given name
+ * Returns: the element with the given name or NULL when the element
+ * was not found or bad parameters were given.
+ *
+ * MT safe.
  */
 GstElement *
 gst_bin_get_by_name_recurse_up (GstBin * bin, const gchar * name)
 {
-  GstElement *result = NULL;
-  GstObject *parent;
+  GstElement *result;
 
-  g_return_val_if_fail (bin != NULL, NULL);
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
   result = gst_bin_get_by_name (bin, name);
 
   if (!result) {
-    parent = gst_object_get_parent (GST_OBJECT (bin));
+    GstObject *parent;
+
+    parent = gst_object_get_parent (GST_OBJECT_CAST (bin));
 
     if (parent && GST_IS_BIN (parent)) {
-      result = gst_bin_get_by_name_recurse_up (GST_BIN (parent), name);
+      result = gst_bin_get_by_name_recurse_up (GST_BIN_CAST (parent), name);
     }
     gst_object_unref (parent);
   }
@@ -850,21 +928,22 @@ gst_bin_get_by_name_recurse_up (GstBin * bin, const gchar * name)
  * gst_bin_get_all_by_interface(). The function recurses bins inside bins.
  *
  * Returns: An element inside the bin implementing the interface.
+ *
+ * MT safe.
  */
 GstElement *
 gst_bin_get_by_interface (GstBin * bin, GType interface)
 {
-  const GList *walk;
+  GList *walk;
   GstElement *result = NULL;
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
   g_return_val_if_fail (G_TYPE_IS_INTERFACE (interface), NULL);
 
   GST_LOCK (bin);
-  walk = bin->children;
-  while (walk) {
+  for (walk = bin->children; walk; walk = g_list_next (walk)) {
     if (G_TYPE_CHECK_INSTANCE_TYPE (walk->data, interface)) {
-      result = GST_ELEMENT (walk->data);
+      result = GST_ELEMENT_CAST (walk->data);
       break;
     }
     if (GST_IS_BIN (walk->data)) {
@@ -872,7 +951,6 @@ gst_bin_get_by_interface (GstBin * bin, GType interface)
       if (result)
         break;
     }
-    walk = g_list_next (walk);
   }
   GST_UNLOCK (bin);
 
@@ -890,29 +968,27 @@ gst_bin_get_by_interface (GstBin * bin, GType interface)
  * g_list_free() after use.
  *
  * Returns: The elements inside the bin implementing the interface.
+ *
+ * MT safe.
  */
 GList *
 gst_bin_get_all_by_interface (GstBin * bin, GType interface)
 {
-  const GList *walk;
+  GList *walk;
   GList *ret = NULL;
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
   g_return_val_if_fail (G_TYPE_IS_INTERFACE (interface), NULL);
 
   GST_LOCK (bin);
-  walk = bin->children;
-  while (walk) {
+  for (walk = bin->children; walk; walk = g_list_next (walk)) {
     if (G_TYPE_CHECK_INSTANCE_TYPE (walk->data, interface)) {
-      GST_DEBUG_OBJECT (bin, "element %s implements requested interface",
-          GST_ELEMENT_NAME (GST_ELEMENT (walk->data)));
       ret = g_list_prepend (ret, walk->data);
     }
     if (GST_IS_BIN (walk->data)) {
       ret = g_list_concat (ret,
           gst_bin_get_all_by_interface (GST_BIN (walk->data), interface));
     }
-    walk = g_list_next (walk);
   }
   GST_UNLOCK (bin);
 

@@ -34,6 +34,7 @@ G_BEGIN_DECLS
 #define GST_CLOCK_CLASS(cclass)  	(G_TYPE_CHECK_CLASS_CAST ((cclass), GST_TYPE_CLOCK, GstClockClass))
 #define GST_IS_CLOCK_CLASS(cclass) 	(G_TYPE_CHECK_CLASS_TYPE ((cclass), GST_TYPE_CLOCK))
 #define GST_CLOCK_GET_CLASS(clock) 	(G_TYPE_INSTANCE_GET_CLASS ((clock), GST_TYPE_CLOCK, GstClockClass))
+#define GST_CLOCK_CAST(clock) 		((GstClock*)(clock))
 	
 typedef guint64 	GstClockTime;
 typedef gint64 		GstClockTimeDiff;
@@ -73,14 +74,14 @@ typedef gboolean 	(*GstClockCallback) 	(GstClock *clock, GstClockTime time,
 						 GstClockID id, gpointer user_data);
 
 typedef enum {
-  /* --- protected --- */
+  /*< protected >*/
   GST_CLOCK_ENTRY_OK,
   GST_CLOCK_ENTRY_EARLY,
   GST_CLOCK_ENTRY_RESTART
 } GstClockEntryStatus;
 
 typedef enum {
-  /* --- protected --- */
+  /*< protected >*/
   GST_CLOCK_ENTRY_SINGLE,
   GST_CLOCK_ENTRY_PERIODIC
 } GstClockEntryType;
@@ -93,7 +94,7 @@ typedef enum {
 #define GST_CLOCK_ENTRY_STATUS(entry)	((entry)->status)
 
 struct _GstClockEntry {
-  /* --- protected --- */
+  /*< protected >*/
   GstClock	 	*clock;
   GstClockEntryType 	 type;
   GstClockTime 		 time;
@@ -128,13 +129,14 @@ typedef enum
 struct _GstClock {
   GstObject 	 object;
 
+  /*< public >*/
   GstClockFlags	 flags;
 
-  /* --- protected --- */
+  /*< protected >*/
   GstClockTime	 start_time;
   GstClockTime	 last_time;
 
-  /* --- private --- */
+  /*< private >*/
   guint64	 resolution;
   GList		*entries;
   GMutex	*active_mutex;
@@ -147,6 +149,7 @@ struct _GstClock {
 struct _GstClockClass {
   GstObjectClass        parent_class;
 
+  /*< protected >*/
   /* vtable */
   gdouble               (*change_speed)         (GstClock *clock,
 		                                 gdouble oldspeed, gdouble newspeed);
@@ -162,6 +165,8 @@ struct _GstClockClass {
   GstClockEntryStatus   (*wait_async)           (GstClock *clock, GstClockEntry *entry);
   void                  (*unschedule)        	(GstClock *clock, GstClockEntry *entry);
   void                  (*unlock)            	(GstClock *clock, GstClockEntry *entry);
+
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

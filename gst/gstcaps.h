@@ -59,18 +59,23 @@ typedef struct _GstStaticCaps GstStaticCaps;
 struct _GstCaps {
   GType type;
 
+  /*< public >*/ /* with COW */
   /* refcounting */
   GstAtomicInt           refcount;
 
   guint16 flags;
   GPtrArray *structs;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstStaticCaps {
+  /*< public >*/
   GstCaps caps;
   const char *string;
+
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

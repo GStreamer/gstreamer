@@ -62,12 +62,14 @@ typedef enum {
 struct _GstMessage {
   GstData data;
 
+  /*< public >*/ /* with MESSAGE_LOCK */
+  GMutex	  *lock;	/* lock and cond for async delivery */
+  GCond		  *cond;
+
+  /*< public >*/ /* with COW */
   GstMessageType  type;
   guint64	  timestamp;
   GstObject	  *src;
-
-  GMutex	  *lock;	/* lock and cond for async delivery */
-  GCond		  *cond;
 
   union {
     struct {
@@ -82,6 +84,7 @@ struct _GstMessage {
     } tag;
   } message_data;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

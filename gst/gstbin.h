@@ -37,6 +37,7 @@ GST_EXPORT GType _gst_bin_type;
 #define GST_BIN_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BIN, GstBinClass))
 #define GST_BIN(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_BIN, GstBin))
 #define GST_BIN_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_BIN, GstBinClass))
+#define GST_BIN_CAST(obj)        ((GstBin*)(obj))
 
 typedef enum {
   GST_BIN_FLAG_FIXED_CLOCK,
@@ -56,25 +57,30 @@ struct _GstBin {
   GstElement 	 element;
 
   /*< public >*/ /* with LOCK */
-  /* our children */
+  /* our children, subclass are supposed to update these
+   * fields to reflect their state with _iterate_*() */
   gint 		 numchildren;
   GList 	*children;
   guint32	 children_cookie;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstBinClass {
   GstElementClass parent_class;
 
-  /* vtable */
-  void		(*add_element)		(GstBin *bin, GstElement *element);
-  void		(*remove_element)	(GstBin *bin, GstElement *element);
-
+  /*< public >*/
   /* signals */
   void		(*element_added)	(GstBin *bin, GstElement *child);
   void		(*element_removed)	(GstBin *bin, GstElement *child);
 
+  /*< protected >*/
+  /* vtable */
+  gboolean	(*add_element)		(GstBin *bin, GstElement *element);
+  gboolean	(*remove_element)	(GstBin *bin, GstElement *element);
+
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -82,8 +88,8 @@ GType		gst_bin_get_type		(void);
 GstElement*	gst_bin_new			(const gchar *name);
 
 /* add and remove elements from the bin */
-void		gst_bin_add			(GstBin *bin, GstElement *element);
-void		gst_bin_remove			(GstBin *bin, GstElement *element);
+gboolean	gst_bin_add			(GstBin *bin, GstElement *element);
+gboolean	gst_bin_remove			(GstBin *bin, GstElement *element);
 
 /* retrieve a single child */
 GstElement*	gst_bin_get_by_name		 (GstBin *bin, const gchar *name);

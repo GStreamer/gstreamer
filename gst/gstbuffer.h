@@ -108,6 +108,7 @@ typedef enum {
 struct _GstBuffer {
   GstData		 data_type;
 
+  /*< public >*/ /* with COW */
   /* pointer to data and its size */
   guint8		*data;			/* pointer to buffer data */
   guint			 size;			/* size of buffer data */
@@ -130,9 +131,11 @@ struct _GstBuffer {
   guint64		 offset;
   guint64		 offset_end;
 
+  /*< protected >*/
   GstBufferFreeDataFunc  free_data;
   gpointer		 buffer_private;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -167,7 +170,7 @@ GstBuffer*	gst_buffer_merge		(GstBuffer *buf1, GstBuffer *buf2);
 gboolean	gst_buffer_is_span_fast		(GstBuffer *buf1, GstBuffer *buf2);
 GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len);
 
-/* --- private --- */
+/* --- protected --- */
 void		_gst_buffer_initialize		(void);
 
 void		gst_buffer_default_free		(GstBuffer *buffer);

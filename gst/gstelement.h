@@ -115,7 +115,7 @@ typedef enum {
 } GstElementFlags;
 
 #define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
-#define GST_ELEMENT_PARENT(obj)			(GST_OBJECT_PARENT(obj))
+#define GST_ELEMENT_PARENT(obj)			(GST_ELEMENT_CAST(GST_OBJECT_PARENT(obj)))
 #define GST_ELEMENT_MANAGER(obj)		(GST_ELEMENT_CAST(obj)->manager)
 #define GST_ELEMENT_CLOCK(obj)			(GST_ELEMENT_CAST(obj)->clock)
 #define GST_ELEMENT_PADS(obj)			(GST_ELEMENT_CAST(obj)->pads)
@@ -182,6 +182,7 @@ struct _GstElement {
 struct _GstElementClass {
   GstObjectClass 	parent_class;
 
+  /*< public >*/
   /* the element details */
   GstElementDetails 	details;
 
@@ -199,6 +200,7 @@ struct _GstElementClass {
   void (*pad_removed)	(GstElement *element, GstPad *pad);
   void (*no_more_pads)	(GstElement *element);
 
+  /*< protected >*/
   /* vtable */
 
   /* request/release pads */
@@ -232,6 +234,7 @@ struct _GstElementClass {
   gboolean		(*query)		(GstElement *element, GstQueryType type,
 		  				 GstFormat *format, gint64 *value);
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING - 1];
 };
 

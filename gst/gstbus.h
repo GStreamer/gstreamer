@@ -34,6 +34,7 @@ G_BEGIN_DECLS
 #define GST_BUS_CLASS(bclass)     (G_TYPE_CHECK_CLASS_CAST ((bclass), GST_TYPE_BUS, GstBusClass))
 #define GST_IS_BUS_CLASS(bclass)  (G_TYPE_CHECK_CLASS_TYPE ((bclass), GST_TYPE_BUS))
 #define GST_BUS_GET_CLASS(bus)    (G_TYPE_INSTANCE_GET_CLASS ((bus), GST_TYPE_BUS, GstBusClass))
+#define GST_BUS_CAST(bus)         ((GstBus*)(bus))
 
 typedef enum
 {
@@ -51,6 +52,7 @@ typedef gboolean	(*GstBusHandler)	(GstBus *bus, GstMessage *message, gpointer da
 struct _GstBus {
   GstObject 	 object;
 
+  /*< private >*/
   GAsyncQueue	*queue;
 
   GstBusSyncHandler  sync_handler;
@@ -59,12 +61,14 @@ struct _GstBus {
   gint		 control_socket[2];
   GIOChannel	*io_channel;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstBusClass {
   GstObjectClass        parent_class;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
