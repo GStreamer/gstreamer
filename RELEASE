@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer FFmpeg 0.8.0 "In Buildings"
+GStreamer: Release notes for GStreamer FFmpeg 0.8.1 "Just Another Victim"
         
 
 The GStreamer team is happy to announce the first stable release of the
@@ -18,9 +18,15 @@ Features of this release
       * codecs for most popular formats
       * optimized colorspace conversion
 
+Bugs fixed in this release
+    
+      * 136493 : compile error in gst-ffmpeg
+      * 138985 : minor mem leak in gstffmpegdemux.c
+      * 139460 : Compile error with gcc 2.95
+
 Download
 
-You find source releases of gst-ffmpeg in the download directory:
+You can find source releases of gst-ffmpeg in the download directory:
 http://gstreamer.freedesktop.org/src/gst-ffmpeg/
 
 GStreamer Homepage
@@ -47,5 +53,8 @@ Contributors to this release
       * Ronald Bultje
       * Benjamin Otte
       * David Schleef
+      * Jeremy Simon
+      * Stephane Loeuillet
+      * Tim-Philipp Müller
       * Thomas Vander Stichele
  
