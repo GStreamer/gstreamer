@@ -30,8 +30,8 @@ static GstElementDetails gst_mpeg2dec_details = {
   "GPL",
   "Uses libmpeg2 to decode MPEG video streams",
   VERSION,
-  "Wim Taymans <wim.taymans@chello.be>, "
-  "(C) 2002",
+  "Wim Taymans <wim.taymans@chello.be>",
+  "(C) 2002"
 };
 
 /* Mpeg2dec signals and args */
@@ -67,6 +67,17 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
       "height",       GST_PROPS_INT_RANGE (16, 4096),
       "pixel_width",  GST_PROPS_INT_RANGE (1, 255),
       "pixel_height", GST_PROPS_INT_RANGE (1, 255)
+  )
+);
+
+GST_PAD_TEMPLATE_FACTORY (user_data_template_factory,
+  "user_data",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+    "mpeg2dec_user_data",
+    "application/octet-stream",
+    NULL
   )
 );
 
@@ -185,6 +196,10 @@ gst_mpeg2dec_init (GstMpeg2dec *mpeg2dec)
   gst_pad_set_query_type_function (mpeg2dec->srcpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_get_src_query_types));
   gst_pad_set_query_function (mpeg2dec->srcpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_src_query));
   gst_pad_set_convert_function (mpeg2dec->srcpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_convert_src));
+
+  mpeg2dec->userdatapad = gst_pad_new_from_template (
+		  GST_PAD_TEMPLATE_GET (user_data_template_factory), "user_data");
+  gst_element_add_pad (GST_ELEMENT (mpeg2dec), mpeg2dec->userdatapad);
 
   /* initialize the mpeg2dec decoder state */
   mpeg2dec->decoder = mpeg2_init ();
@@ -505,6 +520,22 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 			gst_element_get_name (GST_ELEMENT (mpeg2dec)),
 			state);
         break;
+    }
+
+    /* If there is user data and user data pad is usable, push it.
+     *
+     * FIXME: should pass more information such as state the user data is from
+     */
+    if (info->user_data_len > 0) {
+      if (GST_PAD_IS_USABLE (mpeg2dec->userdatapad)) {
+        GstBuffer *udbuf = gst_buffer_new_and_alloc (info->user_data_len);
+        memcpy (GST_BUFFER_DATA (udbuf), info->user_data, info->user_data_len);
+        GST_BUFFER_SIZE (udbuf) = info->user_data_len;
+        // FIXME
+        //GST_BUFFER_TIMESTAMP (udbuf) = mpeg2dec->...
+        //...
+        gst_pad_push (mpeg2dec->userdatapad, udbuf);
+      }
     }
   }
   gst_buffer_unref(buf);
@@ -915,6 +946,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_template_factory));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_template_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (user_data_template_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

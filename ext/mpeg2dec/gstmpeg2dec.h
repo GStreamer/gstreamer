@@ -26,10 +26,7 @@
 #include <gst/gst.h>
 #include <mpeg2.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_MPEG2DEC \
   (gst_mpeg2dec_get_type())
@@ -60,7 +57,8 @@ struct _GstMpeg2dec {
 
   /* pads */
   GstPad 	*sinkpad,
-  		*srcpad;
+  		*srcpad,
+  		*userdatapad;
   GstBufferPool *peerpool;
 
   mpeg2dec_t 	*decoder;
@@ -93,10 +91,6 @@ struct _GstMpeg2decClass {
 
 GType gst_mpeg2dec_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_MPEG2DEC_H__ */
