@@ -92,7 +92,7 @@ static void 	    gst_sinesrc_update_freq         (const GValue *value,
 		                                     gpointer data);
 static void 	    gst_sinesrc_populate_sinetable  (GstSineSrc *src);
 static inline void  gst_sinesrc_update_table_inc    (GstSineSrc *src);
-static void 	    gst_sinesrc_force_caps	    (GstSineSrc *src);
+static gboolean     gst_sinesrc_force_caps	    (GstSineSrc *src);
 
 static GstData*   gst_sinesrc_get		    (GstPad *pad);
 
@@ -285,7 +285,10 @@ gst_sinesrc_get (GstPad *pad)
 
   
   if (src->newcaps) {
-    gst_sinesrc_force_caps(src);
+    if (!gst_sinesrc_force_caps(src)) {
+      gst_element_error (GST_ELEMENT (src), "Could not set caps");
+      return NULL;
+    }
   }
   return GST_DATA (buf);
 }
@@ -426,15 +429,13 @@ gst_sinesrc_update_table_inc (GstSineSrc *src)
   src->table_inc = src->table_size * src->freq / src->samplerate;
 }
 
-static void 
+static gboolean 
 gst_sinesrc_force_caps (GstSineSrc *src) {
   GstCaps *caps;
 
   if (!src->newcaps)
-    return;
+    return TRUE;
   
-  src->newcaps = FALSE;
-
   caps = GST_CAPS_NEW (
 	   "sinesrc_src_caps",
 	   "audio/x-raw-int",
@@ -446,7 +447,8 @@ gst_sinesrc_force_caps (GstSineSrc *src) {
 	     "channels", 	GST_PROPS_INT (1)
 	  );
   
-  gst_pad_try_set_caps (src->srcpad, caps);
+  src->newcaps = gst_pad_try_set_caps (src->srcpad, caps) < GST_PAD_LINK_OK;
+  return !src->newcaps;
 }
 
 static gboolean
