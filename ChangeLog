@@ -1,5 +1,10 @@
 2004-07-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstvalue.c: (gst_value_deserialize_fraction):
+	  change strndup to g_strndup.  Fixes #147707
+
+2004-07-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* po/af.po:
 	* po/az.po:
 	* po/cs.po:

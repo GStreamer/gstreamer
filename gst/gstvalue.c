@@ -2494,7 +2494,7 @@ gst_value_deserialize_fraction (GValue * dest, const char *s)
   div = strstr (s, "/");
   if (!div)
     return FALSE;
-  tmp = strndup (s, (size_t) (div - s));
+  tmp = g_strndup (s, (size_t) (div - s));
   num = atoi (tmp);
   free (tmp);
   den = atoi (div + 1);
