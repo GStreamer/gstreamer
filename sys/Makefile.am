@@ -5,6 +5,12 @@ else
 OSS_SUBDS=
 endif
 
+if USE_QCAM
+QCAM_SUBDS=qcam
+else
+QCAM_SUBDS=
+endif
+
 if USE_V4L
 V4L_SUBDS=v4l
 else
@@ -23,7 +29,14 @@ else
 VGA_SUBDS=
 endif
 
-SUBDIRS=$(OSS_SUBDS) qcam $(V4L_SUBDS) $(VCD_SUBDS) $(VGA_SUBDS) xvideo
+if USE_XVIDEO
+XVIDEO_SUBDS=xvideo
+else
+XVIDEO_SUBDS=
+endif
+
+SUBDIRS=$(OSS_SUBDS) $(QCAM_SUBDS) $(V4L_SUBDS) $(VCD_SUBDS) \
+	$(VGA_SUBDS) $(XVIDEO_SUBDS)
 
 DIST_SUBDIRS=oss qcam v4l vcd vga xvideo
 
