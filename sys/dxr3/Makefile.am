@@ -2,7 +2,8 @@
 plugin_LTLIBRARIES = libgstdxr3.la
 
 libgstdxr3_la_SOURCES = dxr3videosink.c dxr3audiosink.c dxr3spusink.c \
-			dxr3init.c ac3_padder.c dxr3marshal.c
+			dxr3init.c ac3_padder.c 
+noinst_libgstdxr3_la_SOURCES = dxr3marshal.c
 libgstdxr3_la_CFLAGS = $(GST_CFLAGS)
 libgstdxr3_la_LIBADD =
 libgstdxr3_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
@@ -25,3 +26,4 @@ dxr3marshal.c: dxr3marshal.list
 	glib-genmarshal --body --prefix=dxr3_marshal $^ >> dxr3marshal.c.tmp
 	mv dxr3marshal.c.tmp dxr3marshal.c
 
+CLEANFILES = $(BUILT_SOURCES)
