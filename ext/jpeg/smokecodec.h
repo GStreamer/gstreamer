@@ -30,11 +30,12 @@ extern "C" {
 typedef struct _SmokeCodecInfo SmokeCodecInfo;
 
 typedef enum {
+  SMOKECODEC_WRONGVERSION	= -5,
   SMOKECODEC_WRONGSIZE		= -4,
   SMOKECODEC_ERROR		= -3,
   SMOKECODEC_NOMEM		= -2,
   SMOKECODEC_NULLPTR		= -1,
-  SMOKECODEC_OK  		=  0,
+  SMOKECODEC_OK  		=  0 
 } SmokeCodecResult;
 	
 typedef enum {
@@ -42,11 +43,21 @@ typedef enum {
   SMOKECODEC_MOTION_VECTORS	= (1<<1)
 } SmokeCodecFlags;
 	
+#define SMOKECODEC_ID_STRING "smoke"
+
+typedef enum {
+  SMOKECODEC_TYPE_ID		= 0x80,
+  SMOKECODEC_TYPE_COMMENT	= 0x81,
+  SMOKECODEC_TYPE_EXTRA		= 0x83,
+  SMOKECODEC_TYPE_DATA		= 0x40 
+} SmokePacketType;
 
 /* init */
 int 			smokecodec_encode_new 	(SmokeCodecInfo **info,
 		               		     	 const unsigned int width,
-				        	 const unsigned int height);
+				        	 const unsigned int height,
+						 const unsigned int fps_num,
+						 const unsigned int fps_denom);
 
 int 			smokecodec_decode_new 	(SmokeCodecInfo **info);
 
@@ -69,6 +80,10 @@ SmokeCodecResult	smokecodec_get_bitrate	(SmokeCodecInfo *info,
 						 unsigned int *bitrate);
 
 /* encoding */
+SmokeCodecResult 	smokecodec_encode_id	(SmokeCodecInfo *info,
+						 unsigned char *out,
+						 unsigned int *outsize);
+
 SmokeCodecResult 	smokecodec_encode	(SmokeCodecInfo *info,
 						 const unsigned char *in,
 						 SmokeCodecFlags flags,
@@ -76,12 +91,18 @@ SmokeCodecResult 	smokecodec_encode	(SmokeCodecInfo *info,
 						 unsigned int *outsize);
 
 /* decoding */
+SmokeCodecResult 	smokecodec_parse_id	(SmokeCodecInfo *info,
+				                 const unsigned char *in,
+				                 const unsigned int insize);
+
 SmokeCodecResult 	smokecodec_parse_header	(SmokeCodecInfo *info,
 						 const unsigned char *in,
 						 const unsigned int insize,
 						 SmokeCodecFlags *flags,
 						 unsigned int *width,
-						 unsigned int *height);
+						 unsigned int *height,
+						 unsigned int *fps_num,
+						 unsigned int *fps_denom);
 
 SmokeCodecResult 	smokecodec_decode	(SmokeCodecInfo *info,
 		 				 const unsigned char *in,

@@ -57,12 +57,15 @@ struct _GstSmokeEnc {
   gint frame;
   gint keyframe;
   gdouble fps;
+  gint fps_num, fps_denom;
 
   SmokeCodecInfo *info;
 
   gint threshold;
   gint min_quality;
   gint max_quality;
+
+  gboolean need_header;
 };
 
 struct _GstSmokeEncClass {

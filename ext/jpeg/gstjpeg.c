@@ -19,11 +19,29 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+#include <string.h>
 
 #include "gstjpegdec.h"
 #include "gstjpegenc.h"
 #include "gstsmokeenc.h"
 #include "gstsmokedec.h"
+
+static GstStaticCaps smoke_caps = GST_STATIC_CAPS ("video/x-smoke");
+
+#define SMOKE_CAPS (gst_static_caps_get(&smoke_caps))
+static void
+smoke_type_find (GstTypeFind * tf, gpointer private)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 6);
+
+  if (data) {
+    if (data[0] != 0x80)
+      return;
+    if (memcmp (&data[1], "smoke", 5) != 0)
+      return;
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, SMOKE_CAPS);
+  }
+}
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -42,6 +60,10 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "smokedec", GST_RANK_PRIMARY,
           GST_TYPE_SMOKEDEC))
+    return FALSE;
+
+  if (!gst_type_find_register (plugin, "video/x-smoke", GST_RANK_PRIMARY,
+          smoke_type_find, NULL, SMOKE_CAPS, NULL))
     return FALSE;
 
   return TRUE;

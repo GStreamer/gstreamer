@@ -186,6 +186,7 @@ gst_smokeenc_init (GstSmokeEnc * smokeenc)
   smokeenc->width = 0;
   smokeenc->height = 0;
   smokeenc->frame = 0;
+  smokeenc->need_header = TRUE;
 
   gst_smokeenc_resync (smokeenc);
 
@@ -264,9 +265,21 @@ gst_smokeenc_link (GstPad * pad, const GstCaps * caps)
 static void
 gst_smokeenc_resync (GstSmokeEnc * smokeenc)
 {
+  GValue fps = { 0 };
+  GValue framerate = { 0 };
+
   GST_DEBUG ("gst_smokeenc_resync: resync");
 
-  smokecodec_encode_new (&smokeenc->info, smokeenc->width, smokeenc->height);
+  g_value_init (&fps, G_TYPE_DOUBLE);
+  g_value_init (&framerate, GST_TYPE_FRACTION);
+  g_value_set_double (&fps, smokeenc->fps);
+  g_value_transform (&fps, &framerate);
+
+  smokeenc->fps_num = gst_value_get_fraction_numerator (&framerate);
+  smokeenc->fps_denom = gst_value_get_fraction_denominator (&framerate);
+
+  smokecodec_encode_new (&smokeenc->info, smokeenc->width, smokeenc->height,
+      smokeenc->fps_num, smokeenc->fps_denom);
   smokecodec_set_quality (smokeenc->info, smokeenc->min_quality,
       smokeenc->max_quality);
 
@@ -292,19 +305,33 @@ gst_smokeenc_chain (GstPad * pad, GstData * _data)
   GST_DEBUG ("gst_smokeenc_chain: got buffer of %ld bytes in '%s'", size,
       GST_OBJECT_NAME (smokeenc));
 
+  if (smokeenc->need_header) {
+    outbuf = gst_buffer_new ();
+    outsize = 256;
+    outdata = GST_BUFFER_DATA (outbuf) = g_malloc (outsize);
+    GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
+    GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
+
+    smokecodec_encode_id (smokeenc->info, outdata, &encsize);
+
+    GST_BUFFER_SIZE (outbuf) = encsize;
+
+    gst_pad_push (smokeenc->srcpad, GST_DATA (outbuf));
+
+    smokeenc->need_header = FALSE;
+  }
+
   outbuf = gst_buffer_new ();
   outsize = smokeenc->width * smokeenc->height * 3;
   outdata = GST_BUFFER_DATA (outbuf) = g_malloc (outsize);
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
+  GST_BUFFER_DURATION (outbuf) =
+      smokeenc->fps_denom * GST_SECOND / smokeenc->fps_num;
 
   flags = 0;
-  if (smokeenc->frame == 0) {
+  if ((smokeenc->frame % smokeenc->keyframe) == 0) {
     flags |= SMOKECODEC_KEYFRAME;
   }
-
-  smokeenc->frame = (smokeenc->frame + 1) % smokeenc->keyframe;
-
   smokecodec_set_quality (smokeenc->info, smokeenc->min_quality,
       smokeenc->max_quality);
   smokecodec_set_threshold (smokeenc->info, smokeenc->threshold);
@@ -312,9 +339,12 @@ gst_smokeenc_chain (GstPad * pad, GstData * _data)
   gst_buffer_unref (buf);
 
   GST_BUFFER_SIZE (outbuf) = encsize;
-  //memset(GST_BUFFER_DATA(outbuf)+encsize, 0, outsize - encsize); 
+  GST_BUFFER_OFFSET (outbuf) = smokeenc->frame;
+  GST_BUFFER_OFFSET_END (outbuf) = smokeenc->frame + 1;
 
   gst_pad_push (smokeenc->srcpad, GST_DATA (outbuf));
+
+  smokeenc->frame++;
 }
 
 static void

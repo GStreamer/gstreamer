@@ -55,12 +55,15 @@ struct _GstSmokeDec {
   gint width;
   gint height;
   gdouble fps;
+  GstClockTime next_time;
 
   SmokeCodecInfo *info;
 
   gint threshold;
   gint quality;
   gint smoothing;
+
+  gboolean need_keyframe;
 };
 
 struct _GstSmokeDecClass {

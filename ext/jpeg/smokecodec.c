@@ -34,15 +34,17 @@
 #include <jpeglib.h>
 
 #include "smokecodec.h"
+#include "smokeformat.h"
 
 //#define DEBUG(a...)   printf( a );
 #define DEBUG(a,...)
-
 
 struct _SmokeCodecInfo
 {
   unsigned int width;
   unsigned int height;
+  unsigned int fps_num;
+  unsigned int fps_denom;
 
   unsigned int minquality;
   unsigned int maxquality;
@@ -112,7 +114,9 @@ smokecodec_term_source (j_decompress_ptr cinfo)
 
 int
 smokecodec_encode_new (SmokeCodecInfo ** info,
-    const unsigned int width, const unsigned int height)
+    const unsigned int width,
+    const unsigned int height,
+    const unsigned int fps_num, const unsigned int fps_denom)
 {
   SmokeCodecInfo *newinfo;
   int i, j;
@@ -129,6 +133,8 @@ smokecodec_encode_new (SmokeCodecInfo ** info,
   }
   newinfo->width = width;
   newinfo->height = height;
+  newinfo->fps_num = fps_num;
+  newinfo->fps_denom = fps_denom;
 
   /* setup jpeglib */
   memset (&newinfo->cinfo, 0, sizeof (newinfo->cinfo));
@@ -200,7 +206,7 @@ smokecodec_encode_new (SmokeCodecInfo ** info,
 int
 smokecodec_decode_new (SmokeCodecInfo ** info)
 {
-  return smokecodec_encode_new (info, 16, 16);
+  return smokecodec_encode_new (info, 16, 16, 1, 1);
 }
 
 int
@@ -349,6 +355,25 @@ put (const unsigned char *src, unsigned char *dest,
 
 /* encoding */
 SmokeCodecResult
+smokecodec_encode_id (SmokeCodecInfo * info,
+    unsigned char *out, unsigned int *outsize)
+{
+  int i;
+
+  *out++ = SMOKECODEC_TYPE_ID;
+  for (i = 0; i < strlen (SMOKECODEC_ID_STRING); i++) {
+    *out++ = SMOKECODEC_ID_STRING[i];
+  }
+  *out++ = 0;
+  *out++ = 1;
+  *out++ = 0;
+
+  *outsize = 9;
+
+  return SMOKECODEC_OK;
+}
+
+SmokeCodecResult
 smokecodec_encode (SmokeCodecInfo * info,
     const unsigned char *in,
     SmokeCodecFlags flags, unsigned char *out, unsigned int *outsize)
@@ -384,13 +409,24 @@ smokecodec_encode (SmokeCodecInfo * info,
 
   max = blocks_w * blocks_h;
 
+  out[IDX_TYPE] = SMOKECODEC_TYPE_DATA;
+
 #define STORE16(var, pos, x) \
-   var[pos] = (x >> 8); \
+   var[pos]   = (x >> 8); \
    var[pos+1] = (x & 0xff);
+#define STORE32(var, pos, x) \
+   var[pos]   = ((x >> 24) & 0xff); \
+   var[pos+1] = ((x >> 16) & 0xff); \
+   var[pos+2] = ((x >> 8) & 0xff); \
+   var[pos+3] =  (x & 0xff);
 
   /* write dimension */
-  STORE16 (out, 0, width);
-  STORE16 (out, 2, height);
+  STORE16 (out, IDX_WIDTH, width);
+  STORE16 (out, IDX_HEIGHT, height);
+
+  /* write framerate */
+  STORE32 (out, IDX_FPS_NUM, info->fps_num);
+  STORE32 (out, IDX_FPS_DENOM, info->fps_denom);
 
   if (!(flags & SMOKECODEC_KEYFRAME)) {
     int block = 0;
@@ -400,7 +436,7 @@ smokecodec_encode (SmokeCodecInfo * info,
       for (j = 0; j < width; j += 2 * DCTSIZE) {
         s = abs_diff (ip, op, width);
         if (s >= threshold) {
-          STORE16 (out, blocks * 2 + 10, block);
+          STORE16 (out, blocks * 2 + IDX_BLOCKS, block);
           blocks++;
         }
 
@@ -422,13 +458,13 @@ smokecodec_encode (SmokeCodecInfo * info,
     blocks = 0;
     encoding = max;
   }
-  STORE16 (out, 6, blocks);
-  out[4] = (flags & 0xff);
+  STORE16 (out, IDX_NUM_BLOCKS, blocks);
+  out[IDX_FLAGS] = (flags & 0xff);
 
   DEBUG ("blocks %d, encoding %d\n", blocks, encoding);
 
-  info->jdest.next_output_byte = &out[blocks * 2 + 12];
-  info->jdest.free_in_buffer = (*outsize) - 12;
+  info->jdest.next_output_byte = &out[blocks * 2 + OFFS_PICT];
+  info->jdest.free_in_buffer = (*outsize) - OFFS_PICT;
 
   if (encoding > 0) {
     int quality;
@@ -461,7 +497,7 @@ smokecodec_encode (SmokeCodecInfo * info,
       if (flags & SMOKECODEC_KEYFRAME)
         pos = i;
       else
-        pos = (out[i * 2 + 10] << 8) | (out[i * 2 + 11]);
+        pos = (out[i * 2 + IDX_BLOCKS] << 8) | (out[i * 2 + IDX_BLOCKS + 1]);
 
       x = pos % (width / (DCTSIZE * 2));
       y = pos / (width / (DCTSIZE * 2));
@@ -488,11 +524,10 @@ smokecodec_encode (SmokeCodecInfo * info,
     jpeg_finish_compress (&info->cinfo);
   }
 
-  size = ((((*outsize) - 12 - info->jdest.free_in_buffer) + 3) & ~3);
-  out[8] = size >> 8;
-  out[9] = size & 0xff;
+  size = ((((*outsize) - OFFS_PICT - info->jdest.free_in_buffer) + 3) & ~3);
+  STORE16 (out, IDX_SIZE, size);
 
-  *outsize = size + blocks * 2 + 12;
+  *outsize = size + blocks * 2 + OFFS_PICT;
   DEBUG ("outsize %d\n", *outsize);
 
   // and decode in reference frame again
@@ -505,24 +540,62 @@ smokecodec_encode (SmokeCodecInfo * info,
   return SMOKECODEC_OK;
 }
 
+SmokeCodecResult
+smokecodec_parse_id (SmokeCodecInfo * info,
+    const unsigned char *in, const unsigned int insize)
+{
+  int i;
+
+  if (insize < 4 + strlen (SMOKECODEC_ID_STRING)) {
+    return SMOKECODEC_WRONGVERSION;
+  }
+
+  if (*in++ != SMOKECODEC_TYPE_ID)
+    return SMOKECODEC_ERROR;
+
+  for (i = 0; i < strlen (SMOKECODEC_ID_STRING); i++) {
+    if (*in++ != SMOKECODEC_ID_STRING[i])
+      return SMOKECODEC_ERROR;
+  }
+  if (*in++ != 0 || *in++ != 1 || *in++ != 0)
+    return SMOKECODEC_ERROR;
+
+  return SMOKECODEC_OK;
+}
+
+#define READ16(var, pos, x) \
+ x = var[pos]<<8 | var[pos+1];
+
+#define READ32(var, pos, x) \
+ x = var[pos]<<24 | var[pos+1]<<16 | \
+     var[pos+2]<<8 | var[pos+3];
+
 /* decoding */
 SmokeCodecResult
 smokecodec_parse_header (SmokeCodecInfo * info,
     const unsigned char *in,
     const unsigned int insize,
-    SmokeCodecFlags * flags, unsigned int *width, unsigned int *height)
+    SmokeCodecFlags * flags,
+    unsigned int *width,
+    unsigned int *height, unsigned int *fps_num, unsigned int *fps_denom)
 {
 
-  *width = in[0] << 8 | in[1];
-  *height = in[2] << 8 | in[3];
-  *flags = in[4];
+  READ16 (in, IDX_WIDTH, *width);
+  READ16 (in, IDX_HEIGHT, *height);
+  *flags = in[IDX_FLAGS];
+  READ32 (in, IDX_FPS_NUM, *fps_num);
+  READ32 (in, IDX_FPS_DENOM, *fps_denom);
 
-  if (info->width != *width || info->height != *height) {
+  if (info->width != *width ||
+      info->height != *height ||
+      info->fps_num != *fps_num || info->fps_denom != *fps_denom) {
     DEBUG ("new width: %d %d\n", *width, *height);
 
     info->reference = realloc (info->reference, 3 * ((*width) * (*height)) / 2);
     info->width = *width;
     info->height = *height;
+    info->fps_num = *fps_num;
+    info->fps_denom = *fps_denom;
   }
 
   return SMOKECODEC_OK;
@@ -533,6 +606,7 @@ smokecodec_decode (SmokeCodecInfo * info,
     const unsigned char *in, const unsigned int insize, unsigned char *out)
 {
   unsigned int width, height;
+  unsigned int fps_num, fps_denom;
   SmokeCodecFlags flags;
   int i, j;
   int blocks_w, blocks_h;
@@ -542,9 +616,10 @@ smokecodec_decode (SmokeCodecInfo * info,
   unsigned char *op;
   int res;
 
-  smokecodec_parse_header (info, in, insize, &flags, &width, &height);
+  smokecodec_parse_header (info, in, insize, &flags, &width, &height,
+      &fps_num, &fps_denom);
 
-  blocks = in[6] << 8 | in[7];
+  READ16 (in, IDX_NUM_BLOCKS, blocks);
   DEBUG ("blocks %d\n", blocks);
 
   if (flags & SMOKECODEC_KEYFRAME)
@@ -552,12 +627,11 @@ smokecodec_decode (SmokeCodecInfo * info,
   else
     decoding = blocks;
 
-
   if (decoding > 0) {
-    info->jsrc.next_input_byte = &in[blocks * 2 + 12];
-    info->jsrc.bytes_in_buffer = insize - (blocks * 2 + 12);
+    info->jsrc.next_input_byte = &in[blocks * 2 + OFFS_PICT];
+    info->jsrc.bytes_in_buffer = insize - (blocks * 2 + OFFS_PICT);
 
-    DEBUG ("header %02x %d\n", in[blocks * 2 + 12], insize);
+    DEBUG ("header %02x %d\n", in[blocks * 2 + OFFS_PICT], insize);
     res = jpeg_read_header (&info->dinfo, TRUE);
     DEBUG ("header %d %d %d\n", res, info->dinfo.image_width,
         info->dinfo.image_height);
@@ -590,7 +664,7 @@ smokecodec_decode (SmokeCodecInfo * info,
         if (flags & SMOKECODEC_KEYFRAME)
           pos = blockptr;
         else
-          pos = (in[blockptr * 2 + 10] << 8) | (in[blockptr * 2 + 11]);
+          READ16 (in, blockptr * 2 + IDX_BLOCKS, pos);
 
         x = pos % (width / (DCTSIZE * 2));
         y = pos / (width / (DCTSIZE * 2));

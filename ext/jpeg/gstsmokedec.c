@@ -29,9 +29,9 @@
 
 /* elementfactory information */
 GstElementDetails gst_smokedec_details = {
-  "Smoke image decoder",
+  "Smoke video decoder",
   "Codec/Decoder/Image",
-  "Decode images from Smoke format",
+  "Decode video from Smoke format",
   "Wim Taymans <wim@fluendo.com>",
 };
 
@@ -98,7 +98,7 @@ static GstStaticPadTemplate gst_smokedec_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/x-smoke, "
+    GST_STATIC_CAPS ("video/x-smoke, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], " "framerate = (double) [ 1, MAX ]")
     );
@@ -150,6 +150,7 @@ gst_smokedec_init (GstSmokeDec * smokedec)
   smokedec->format = -1;
   smokedec->width = -1;
   smokedec->height = -1;
+  smokedec->next_time = 0;
 }
 
 static GstPadLinkReturn
@@ -189,9 +190,10 @@ gst_smokedec_chain (GstPad * pad, GstData * _data)
   gulong size, outsize;
   GstBuffer *outbuf;
   SmokeCodecFlags flags;
+  GstClockTime time;
 
-  /*GstMeta *meta; */
   gint width, height;
+  gint fps_num, fps_denom;
 
   smokedec = GST_SMOKEDEC (GST_OBJECT_PARENT (pad));
 
@@ -202,17 +204,36 @@ gst_smokedec_chain (GstPad * pad, GstData * _data)
 
   data = (guchar *) GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
+  time = GST_BUFFER_TIMESTAMP (buf);
+
   GST_DEBUG ("gst_smokedec_chain: got buffer of %ld bytes in '%s'", size,
       GST_OBJECT_NAME (smokedec));
 
+  if (data[0] == SMOKECODEC_TYPE_ID) {
+    smokecodec_parse_id (smokedec->info, data, size);
+    return;
+  }
+
   GST_DEBUG ("gst_smokedec_chain: reading header %08lx", *(gulong *) data);
-  smokecodec_parse_header (smokedec->info, data, size, &flags, &width, &height);
+  smokecodec_parse_header (smokedec->info, data, size, &flags, &width, &height,
+      &fps_num, &fps_denom);
 
   outbuf = gst_buffer_new ();
   outsize = GST_BUFFER_SIZE (outbuf) = width * height + width * height / 2;
   outdata = GST_BUFFER_DATA (outbuf) = g_malloc (outsize);
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
+
+  GST_BUFFER_DURATION (outbuf) = GST_SECOND * fps_denom / fps_num;
+  GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buf);
+
+  if (time == GST_CLOCK_TIME_NONE) {
+    if (GST_BUFFER_OFFSET (buf) == -1) {
+      time = smokedec->next_time;
+    } else {
+      time = GST_BUFFER_OFFSET (buf) * GST_BUFFER_DURATION (outbuf);
+    }
+  }
+  GST_BUFFER_TIMESTAMP (outbuf) = time;
+  smokedec->next_time = time + GST_BUFFER_DURATION (outbuf);
 
   if (smokedec->height != height) {
     GstCaps *caps;
@@ -223,15 +244,26 @@ gst_smokedec_chain (GstPad * pad, GstData * _data)
         "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
-        "framerate", G_TYPE_DOUBLE, smokedec->fps, NULL);
+        "framerate", G_TYPE_DOUBLE, ((double) fps_num) / fps_denom, NULL);
     gst_pad_set_explicit_caps (smokedec->srcpad, caps);
     gst_caps_free (caps);
   }
 
-  smokecodec_decode (smokedec->info, data, size, outdata);
+  if (smokedec->need_keyframe) {
+    if (flags & SMOKECODEC_KEYFRAME) {
+      smokedec->need_keyframe = FALSE;
+    } else {
+      GST_DEBUG_OBJECT (smokedec, "dropping buffer while waiting for keyframe");
+      gst_buffer_unref (buf);
+      return;
+    }
+  }
 
-  GST_DEBUG ("gst_smokedec_chain: sending buffer");
-  gst_pad_push (smokedec->srcpad, GST_DATA (outbuf));
+  if (!smokedec->need_keyframe) {
+    smokecodec_decode (smokedec->info, data, size, outdata);
+    gst_buffer_unref (buf);
 
-  gst_buffer_unref (buf);
+    GST_DEBUG ("gst_smokedec_chain: sending buffer");
+    gst_pad_push (smokedec->srcpad, GST_DATA (outbuf));
+  }
 }
