@@ -61,30 +61,24 @@ GST_DEBUG_CATEGORY_STATIC (alsa_debug);
 }G_STMT_END
 #endif
 /* elementfactory information */
-static GstElementDetails gst_alsa_sink_details = {
+static GstElementDetails gst_alsa_sink_details = GST_ELEMENT_DETAILS (
   "Alsa Sink",
   "Sink/Audio",
-  "LGPL",
   "Output to a sound card via ALSA",
-  VERSION,
   "Thomas Nyberg <thomas@codefactory.se>, "
   "Andy Wingo <apwingo@eos.ncsu.edu>, "
-  "Benjamin Otte <in7y118@public.uni-hamburg.de>",
-  "(C) 2001-2003"
-};
+  "Benjamin Otte <in7y118@public.uni-hamburg.de>"
+);
 
 /* elementfactory information */
-static GstElementDetails gst_alsa_src_details = {
+static GstElementDetails gst_alsa_src_details = GST_ELEMENT_DETAILS (
   "Alsa Src",
   "Source/Audio",
-  "LGPL",
   "Read from a sound card via ALSA",
-  VERSION,
   "Thomas Nyberg <thomas@codefactory.se>, "
   "Andy Wingo <apwingo@eos.ncsu.edu>, "
-  "Benjamin Otte <in7y118@public.uni-hamburg.de>",
-  "(C) 2001-2003"
-};
+  "Benjamin Otte <in7y118@public.uni-hamburg.de>"
+);
 
 /* GObject functions */
 static void			gst_alsa_class_init		(GstAlsaClass *		klass);
@@ -102,6 +96,7 @@ static void			gst_alsa_get_property		(GObject *		object,
 /* GstAlsaSink functions */
 static GstPadTemplate *		gst_alsa_sink_pad_factory 	(void);
 static GstPadTemplate *		gst_alsa_sink_request_pad_factory (void);
+static void			gst_alsa_sink_base_init		(gpointer		g_class);
 static void			gst_alsa_sink_class_init	(GstAlsaSinkClass *	klass);
 static void			gst_alsa_sink_init		(GstAlsaSink *		this);
 static inline void		gst_alsa_sink_flush_one_pad	(GstAlsaSink *		sink,
@@ -119,6 +114,7 @@ static GstElementStateReturn	gst_alsa_sink_change_state	(GstElement *		element);
 /* GstAlsaSrc functions */
 static GstPadTemplate *		gst_alsa_src_pad_factory 	(void);
 static GstPadTemplate *		gst_alsa_src_request_pad_factory (void);
+static void			gst_alsa_src_base_init		(gpointer		g_class);
 static void			gst_alsa_src_class_init		(GstAlsaSrcClass *	klass);
 static void			gst_alsa_src_init		(GstAlsaSrc *		this);
 static int			gst_alsa_src_mmap		(GstAlsa *		this,
@@ -451,7 +447,7 @@ gst_alsa_sink_get_type (void)
   if (!alsa_sink_type) {
     static const GTypeInfo alsa_sink_info = {
       sizeof (GstAlsaSinkClass),
-      NULL,
+      gst_alsa_sink_base_init,
       NULL,
       (GClassInitFunc) gst_alsa_sink_class_init,
       NULL,
@@ -465,6 +461,18 @@ gst_alsa_sink_get_type (void)
   }
   return alsa_sink_type;
 }
+
+static void
+gst_alsa_sink_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+ 
+  gst_element_class_add_pad_template (element_class, gst_alsa_sink_pad_factory ());
+  gst_element_class_add_pad_template (element_class, gst_alsa_sink_request_pad_factory ());
+
+  gst_element_class_set_details (element_class, &gst_alsa_sink_details);
+}
+
 static void
 gst_alsa_sink_class_init (GstAlsaSinkClass *klass)
 {
@@ -865,7 +873,7 @@ gst_alsa_src_get_type (void)
   if (!alsa_src_type) {
     static const GTypeInfo alsa_src_info = {
       sizeof (GstAlsaSrcClass),
-      NULL,
+      gst_alsa_src_base_init,
       NULL,
       (GClassInitFunc) gst_alsa_src_class_init,
       NULL,
@@ -879,6 +887,18 @@ gst_alsa_src_get_type (void)
   }
   return alsa_src_type;
 }
+
+static void
+gst_alsa_src_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+ 
+  gst_element_class_add_pad_template (element_class, gst_alsa_src_pad_factory ());
+  gst_element_class_add_pad_template (element_class, gst_alsa_src_request_pad_factory ());
+
+  gst_element_class_set_details (element_class, &gst_alsa_src_details);
+}
+
 static void
 gst_alsa_src_class_init (GstAlsaSrcClass *klass)
 {
@@ -2350,32 +2370,27 @@ gst_alsa_timestamp_to_bytes (GstAlsa *this, GstClockTime time)
 /*** GSTREAMER PLUGIN *********************************************************/
 
 static gboolean
-plugin_init (GModule * module, GstPlugin * plugin)
+plugin_init (GstPlugin * plugin)
 {
-  GstElementFactory *factory;
-
   GST_DEBUG_CATEGORY_INIT (alsa_debug, "alsa", 0, "alsa plugins");
 
-  factory = gst_element_factory_new ("alsasrc", GST_TYPE_ALSA_SRC, &gst_alsa_src_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  gst_element_factory_add_pad_template (factory, gst_alsa_src_pad_factory ());
-  gst_element_factory_add_pad_template (factory, gst_alsa_src_request_pad_factory ());
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  factory = gst_element_factory_new ("alsasink", GST_TYPE_ALSA_SINK, &gst_alsa_sink_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  gst_element_factory_add_pad_template (factory, gst_alsa_sink_pad_factory ());
-  gst_element_factory_add_pad_template (factory, gst_alsa_sink_request_pad_factory ());
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  gst_plugin_set_longname (plugin, "ALSA plugin library");
+  if (!gst_element_register (plugin, "alsasrc", GST_RANK_NONE, GST_TYPE_ALSA_SRC))
+    return FALSE;
+  if (!gst_element_register (plugin, "alsasink", GST_RANK_NONE, GST_TYPE_ALSA_SINK))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "alsa",
-  plugin_init
-};
+  "ALSA plugin library",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
