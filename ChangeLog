@@ -1,3 +1,10 @@
+2004-04-22  Zaheer Abbas Merali <zaheerabbas@merali.org>
+
+	reviewed by Benjamin Otte  <otte@gnome.org>
+
+	* ext/shout/gstshout.c: (gst_icecastsend_change_state):
+	  fix shoutcast not working (fixes #140844)
+
 2004-04-22  Benjamin Otte  <otte@gnome.org>
 
 	* ext/hermes/gsthermescolorspace.c:
