@@ -150,7 +150,7 @@ gst_riff_read_element_level_up (GstRiffRead * riff)
  * TRUE on success or FALSE on failure.
  */
 
-static gboolean
+gboolean
 gst_riff_peek_head (GstRiffRead * riff,
     guint32 * tag, guint32 * length, guint * level_up)
 {
@@ -190,16 +190,40 @@ gst_riff_peek_head (GstRiffRead * riff,
  * Return: the data, as a GstBuffer.
  */
 
-static GstBuffer *
-gst_riff_read_element_data (GstRiffRead * riff, guint length)
+GstBuffer *
+gst_riff_read_element_data (GstRiffRead * riff, guint length, guint * got_bytes)
 {
   GstBuffer *buf = NULL;
+  guint32 got;
 
-  if (gst_bytestream_peek (riff->bs, &buf, length) != length) {
-    GST_ELEMENT_ERROR (riff, RESOURCE, READ, (NULL), (NULL));
-    if (buf)
-      gst_buffer_unref (buf);
-    return NULL;
+  while ((got = gst_bytestream_peek (riff->bs, &buf, length)) != length) {
+    /*GST_ELEMENT_ERROR (riff, RESOURCE, READ, (NULL), (NULL)); */
+    GstEvent *event = NULL;
+    guint32 remaining;
+
+    gst_bytestream_get_status (riff->bs, &remaining, &event);
+    if (GST_IS_EVENT (event)) {
+      gst_pad_event_default (riff->sinkpad, event);
+      if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+
+        if (buf)
+          gst_buffer_unref (buf);
+
+        if (got_bytes)
+          *got_bytes = got;
+
+        return NULL;
+      }
+    } else {
+      GST_ELEMENT_ERROR (riff, RESOURCE, READ, (NULL), (NULL));
+      if (buf)
+        gst_buffer_unref (buf);
+
+      if (got_bytes)
+        *got_bytes = got;
+
+      return NULL;
+    }
   }
 
   /* we need 16-bit alignment */
@@ -207,6 +231,9 @@ gst_riff_read_element_data (GstRiffRead * riff, guint length)
     length++;
 
   gst_bytestream_flush (riff->bs, length);
+
+  if (got_bytes)
+    *got_bytes = got;
 
   return buf;
 }
@@ -363,7 +390,7 @@ gst_riff_read_data (GstRiffRead * riff, guint32 * tag, GstBuffer ** buf)
     return FALSE;
   gst_bytestream_flush_fast (riff->bs, 8);
 
-  return ((*buf = gst_riff_read_element_data (riff, length)) != NULL);
+  return ((*buf = gst_riff_read_element_data (riff, length, NULL)) != NULL);
 }
 
 /*
@@ -559,7 +586,7 @@ gst_riff_read_strf_auds (GstRiffRead * riff, gst_riff_strf_auds ** header)
   if (!gst_riff_read_data (riff, &tag, &buf))
     return FALSE;
 
-  if (tag != GST_RIFF_TAG_strf) {
+  if (tag != GST_RIFF_TAG_strf && tag != GST_RIFF_TAG_fmt) {
     g_warning ("Not a strf chunk");
     gst_buffer_unref (buf);
     return FALSE;
