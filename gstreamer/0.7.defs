@@ -7,3 +7,9 @@
   (c-name "GstStructure")
   (gtype-id "GST_TYPE_STRUCTURE")
 )
+
+(define-boxed TagList
+  (in-module "Gst")
+  (c-name "GstTagList")
+  (gtype-id "GST_TYPE_TAG_LIST")
+)

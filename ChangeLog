@@ -1,5 +1,10 @@
 2004-02-18  David I. Lehn  <dlehn@users.sourceforge.net>
 
+	* gstreamer/0.7.defs:
+	Wrap GstTagList.
+
+2004-02-18  David I. Lehn  <dlehn@users.sourceforge.net>
+
 	* gstinterfaces/0.7.c:
 	* gstinterfaces/0.7.h:
 	* gstinterfaces/0.7.override:
@@ -17,6 +22,7 @@
 	* gstplay/common.c:
 	* gstplay/common.h:
 	* gstplay/common.override:
+	Adjust date to 2004.
 
 2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
