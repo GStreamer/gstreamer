@@ -471,6 +471,7 @@ gst_pad_set_chain_function (GstPad *pad, GstPadChainFunction chain)
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_RPAD_DIRECTION (pad) == GST_PAD_SINK);
 
   GST_RPAD_CHAINFUNC (pad) = chain;
   GST_CAT_DEBUG (GST_CAT_PADS, "chainfunc for %s:%s set to %s",
@@ -490,6 +491,7 @@ gst_pad_set_get_function (GstPad *pad,
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_RPAD_DIRECTION (pad) == GST_PAD_SRC);
 
   GST_RPAD_GETFUNC (pad) = get;
   
@@ -509,6 +511,7 @@ gst_pad_set_event_function (GstPad *pad,
                             GstPadEventFunction event)
 {
   g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_RPAD_DIRECTION (pad) == GST_PAD_SRC);
 
   GST_RPAD_EVENTFUNC (pad) = event;
 
