@@ -1,3 +1,8 @@
+2005-01-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/Makefile.am:
+	  Unbreak buildbot.
+
 2005-01-28  Andy Wingo  <wingo@pobox.com>
 
 	* ext/dv/gstdvdec.c: Change the pixel aspect ratio of dvdec output
