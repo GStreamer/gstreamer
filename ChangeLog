@@ -1,3 +1,8 @@
+2003-01-25  Colin Walters  <walters@gnu.org>
+
+	* ext/gnomevfs/gstgnomevfssrc.c (gst_gnomevfssrc_open_file): Don't
+	make a size request when in iradio mode.
+
 2002-11-25  Colin Walters  <walters@debian.org>
 
 	* ext/gnomevfs/gstgnomevfssrc.c (gst_gnomevfssrc_received_headers_callback):
