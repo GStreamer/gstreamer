@@ -102,7 +102,7 @@ _gst_plugin_initialize (void)
     if (_gst_warn_old_registry)
 	g_error ("gstplugin: registry needs rebuild: run gstreamer-register\n");
     gst_plugin_load_all ();
-    gst_plugin_unload_all ();
+    /* gst_plugin_unload_all (); */
     return;
   }
   gst_plugin_load_thyself (doc->xmlRootNode);
