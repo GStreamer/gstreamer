@@ -851,6 +851,9 @@ gst_ffmpeg_caps_to_pixfmt (GstCaps        *caps,
 	case GST_MAKE_FOURCC ('Y','4','1','B'):
 	  context->pix_fmt = PIX_FMT_YUV411P;
 	  break;
+	case GST_MAKE_FOURCC ('Y','4','2','B'):
+	  context->pix_fmt = PIX_FMT_YUV422P;
+	  break;
 	case GST_MAKE_FOURCC ('Y','U','V','9'):
 	  context->pix_fmt = PIX_FMT_YUV410P;
 	  break;
@@ -864,32 +867,34 @@ gst_ffmpeg_caps_to_pixfmt (GstCaps        *caps,
   } else if (strcmp (gst_caps_get_mime (caps), "video/x-raw-rgb") == 0) {
     if (gst_caps_has_property_typed (caps, "bpp", GST_PROPS_INT_TYPE) &&
 	gst_caps_has_property_typed (caps, "red_mask", GST_PROPS_INT_TYPE)) {
-      gint bpp = 0, red_mask = 0;
-      gst_caps_get_int (caps, "bpp", &bpp);
-      gst_caps_get_int (caps, "red_mask", &red_mask);
+      gint bpp = 0, rmask = 0, endianness = 0;
+
+      gst_caps_get (caps, "bpp",        &bpp,
+			  "red_mask",   &rmask,
+			  "endianness", &endianness, NULL);
 
       switch (bpp) {
         case 32:
-          context->pix_fmt = PIX_FMT_RGBA32;
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+          if (rmask == 0xff0000)
+#else
+          if (rmask == 0x0000ff)
+#endif
+            context->pix_fmt = PIX_FMT_RGBA32;
           break;
         case 24:
-          switch (red_mask) {
-            case 0x0000FF:
-              context->pix_fmt = PIX_FMT_BGR24;
-              break;
-            case 0xFF0000:
-              context->pix_fmt = PIX_FMT_RGB24;
-	      break;
-            default:
-              /* nothing */
-              break;
-          }
+          if (rmask == 0x0000FF)
+            context->pix_fmt = PIX_FMT_BGR24;
+          else
+            context->pix_fmt = PIX_FMT_RGB24;
 	  break;
         case 16:
-          context->pix_fmt = PIX_FMT_RGB565;
+          if (endianness == G_BYTE_ORDER)
+            context->pix_fmt = PIX_FMT_RGB565;
 	  break;
         case 15:
-          context->pix_fmt = PIX_FMT_RGB555;
+          if (endianness == G_BYTE_ORDER)
+            context->pix_fmt = PIX_FMT_RGB555;
 	  break;
         default:
           /* nothing */
@@ -1025,53 +1030,70 @@ gst_ffmpeg_caps_to_codecid (GstCaps        *caps,
 
   mimetype = gst_caps_get_mime(caps);
 
-  if (!strcmp (mimetype, "video/x-raw-rgb") ||
-      !strcmp (mimetype, "video/x-raw-yuv")) {
+  if (!strcmp (mimetype, "video/x-raw-rgb")) {
 
     id = CODEC_ID_RAWVIDEO;
 
     if (context != NULL) {
-      gint depth = 0, endianness = 0;
+      gint bpp = 0, endianness = 0, rmask = 0;
+      enum PixelFormat pix_fmt = -1;
+
+      gst_caps_get (caps, "bpp",        &bpp,
+			  "endianness", &endianness,
+			  "rmask",      &rmask, NULL);
+  
+      switch (bpp) {
+        case 15:
+          if (endianness == G_BYTE_ORDER) {
+            pix_fmt = PIX_FMT_RGB555;
+          }
+          break;
+        case 16:
+          if (endianness == G_BYTE_ORDER) {
+            pix_fmt = PIX_FMT_RGB565;
+          }
+          break;
+        case 24:
+          if (rmask == 0xff0000) {
+            pix_fmt = PIX_FMT_RGB24;
+          } else {
+            pix_fmt = PIX_FMT_BGR24;
+          }
+          break;
+        case 32:
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+          if (rmask == 0xff0000) {
+#else
+          if (rmask == 0x0000ff) {
+#endif
+            pix_fmt = PIX_FMT_RGBA32;
+          }
+          break;
+        default:
+          /* ... */
+          break;
+      }
+
+      /* only set if actually recognized! */
+      if (pix_fmt != -1) {
+        video = TRUE;
+        context->pix_fmt = pix_fmt;
+      } else {
+        id = CODEC_ID_NONE;
+      }
+    }
+
+  } else if (!strcmp (mimetype, "video/x-raw-yuv")) {
+
+    id = CODEC_ID_RAWVIDEO;
+
+    if (context != NULL) {
       guint32 fmt_fcc = 0;
       enum PixelFormat pix_fmt = -1;
 
-      if (gst_caps_has_property (caps, "format"))
-        gst_caps_get_fourcc_int (caps, "format", &fmt_fcc);
-      else
-        fmt_fcc = GST_MAKE_FOURCC ('R','G','B',' ');
+      gst_caps_get_fourcc_int (caps, "format", &fmt_fcc);
 
       switch (fmt_fcc) {
-        case GST_MAKE_FOURCC ('R','G','B',' '):
-          gst_caps_get_int (caps, "endianness", &endianness);
-          gst_caps_get_int (caps, "depth", &depth);
-          switch (depth) {
-            case 15:
-              if (endianness == G_BYTE_ORDER) {
-                pix_fmt = PIX_FMT_RGB555;
-              }
-              break;
-            case 16:
-              if (endianness == G_BYTE_ORDER) {
-                pix_fmt = PIX_FMT_RGB565;
-              }
-              break;
-            case 24:
-              if (endianness == G_BIG_ENDIAN) {
-                pix_fmt = PIX_FMT_RGB24;
-              } else {
-                pix_fmt = PIX_FMT_BGR24;
-              }
-              break;
-            case 32:
-              if (endianness == G_BIG_ENDIAN) {
-                pix_fmt = PIX_FMT_RGBA32;
-              }
-              break;
-            default:
-              /* ... */
-              break;
-          }
-          break;
         case GST_MAKE_FOURCC ('Y','U','Y','2'):
           pix_fmt = PIX_FMT_YUV422;
           break;
