@@ -3,7 +3,7 @@ AC_PREREQ(2.54)
 AC_INIT
 AC_CANONICAL_TARGET
 
-AS_VERSION(gst-python, GST_PYTHON_VERSION, 0, 1, 0, 0)
+AS_VERSION(gst-python, GST_PYTHON_VERSION, 0, 1, 0, 1)
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
 AC_CONFIG_SRCDIR([gstreamer/gstreamermodule.c])
@@ -153,5 +153,6 @@ AC_OUTPUT([
   examples/gstreamer/Makefile
   docs/Makefile
   docs/gst-python.ent
+  testsuite/Makefile
   gst-python.spec
 ])
