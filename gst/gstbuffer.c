@@ -71,7 +71,7 @@ gst_buffer_new(void)
   buffer->data = NULL;
   buffer->size = 0;
   buffer->maxsize = 0;
-  buffer->offset = 0;
+  buffer->offset = -1;
   buffer->timestamp = 0;
   buffer->parent = NULL;
   buffer->pool = NULL;
@@ -134,8 +134,13 @@ gst_buffer_create_sub (GstBuffer *parent,
   // set the data pointer, size, offset, and maxsize
   buffer->data = parent->data + offset;
   buffer->size = size;
-  buffer->offset = parent->offset + offset;
   buffer->maxsize = parent->size - offset;
+
+  // deal with bogus/unknown offsets
+  if (parent->offset != -1)
+    buffer->offset = parent->offset + offset;
+  else
+    buffer->offset = -1;
 
   // again, for lack of better, copy parent's timestamp
   buffer->timestamp = parent->timestamp;
@@ -154,6 +159,8 @@ gst_buffer_create_sub (GstBuffer *parent,
   return buffer;
 }
 
+
+// FIXME FIXME: how does this overlap with the newly-added gst_buffer_span() ???
 /**
  * gst_buffer_append:
  * @buffer: a buffer
@@ -366,4 +373,56 @@ gst_buffer_copy (GstBuffer *buffer)
   newbuf->pool = NULL;
 
   return newbuf;
+}
+
+
+GstBuffer *
+gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
+{
+  GstBuffer *newbuf;
+
+  // make sure buf1 has a lower address than buf2
+  if (buf1->data > buf2->data) {
+    GstBuffer *tmp = buf1;
+    buf1 = buf2;
+    buf2 = tmp;
+  }
+
+  // if the two buffers have the same parent and are adjacent
+  if ((buf1->parent == buf2->parent) &&
+      ((buf1->data + buf1->size) == buf2->data)) {
+    // we simply create a subbuffer of the common parent
+    return gst_buffer_create_sub(buf1->parent, buf1->data - (buf1->parent->data) + offset, len);
+  }
+
+  // otherwise we simply have to brute-force copy the buffers
+  newbuf = gst_buffer_new();
+
+  // put in new size
+  newbuf->size = len;
+  // allocate space for the copy
+  newbuf->data = (guchar *)g_malloc(len);
+  // copy the first buffer's data across
+  memcpy(newbuf->data, buffer->data + offset, buf1->size - offset);
+  // copy the second buffer's data across
+  memcpy(newbuf->data + offset, buf2->data, len - (buf1->size - offset));
+
+  if (newbuf->offset != -1)
+    newbuf->offset = buf1->offset + offset;
+  newbuf->timestamp = buf1->timestamp;
+  if (buf2->maxage > buf1->maxage) newbuf->maxage = buf2->maxage;
+  else newbuf->maxage = buf1->maxage;
+
+  newbuf->parent = NULL;
+  newbuf->pool = NULL;
+
+  return newbuf;
+}
+
+
+GstBuffer *
+gst_buffer_merge (GstBuffer *buf1, GstBuffer *buf2)
+{
+  // we're just a specific case of the more general gst_buffer_span()
+  return gst_buffer_span(buf1, 0, buf2, buf1->size + buf2->size);
 }

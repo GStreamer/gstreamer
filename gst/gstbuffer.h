@@ -112,9 +112,9 @@ struct _GstBuffer {
   guint32 offset;
 
   /* timestamp */
-  guint64 timestamp;
+  gint64 timestamp;
   /* max age */
-  guint64 maxage;
+  gint64 maxage;
 
   /* subbuffer support, who's my parent? */
   GstBuffer *parent;
@@ -150,6 +150,10 @@ void 		gst_buffer_destroy		(GstBuffer *buffer);
 
 /* copy buffer */
 GstBuffer*	gst_buffer_copy			(GstBuffer *buffer);
+
+/* merge or span two buffers, intelligently */
+GstBuffer*	gst_buffer_merge		(GstBuffer *buf1, GstBuffer *buf2);
+GstBuffer*	gst_buffer_span			(GstBuffer *buf1,guint32 offset,GstBuffer *buf2,guint32 len);
 
 #ifdef __cplusplus
 }
