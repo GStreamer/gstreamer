@@ -492,23 +492,29 @@ gst_audio_convert_fixate (GstPad * pad, const GstCaps * caps)
   GstAudioConvert *this =
       GST_AUDIO_CONVERT (gst_object_get_parent (GST_OBJECT (pad)));
   GstPad *otherpad = (pad == this->sink ? this->src : this->sink);
-  GstAudioConvertCaps ac_caps =
+  GstAudioConvertCaps try, ac_caps =
       (pad == this->sink ? this->srccaps : this->sinkcaps);
-  GstCaps *copy;
+  GstCaps *copy = gst_caps_copy (caps);
 
-  /* only fixate when we're proxying, so we don't fixate to some crap the other side doesn't want */
-  if (!GST_PAD_IS_NEGOTIATING (otherpad))
-    return NULL;
+  if (!GST_PAD_IS_NEGOTIATING (otherpad)) {
+    try.channels = 2;
+    try.width = 16;
+    try.depth = 16;
+    try.endianness = G_BYTE_ORDER;
+  } else {
+    try.channels = ac_caps.channels;
+    try.width = ac_caps.is_int ? ac_caps.width : 16;
+    try.depth = ac_caps.is_int ? ac_caps.depth : 16;
+    try.endianness = ac_caps.is_int ? ac_caps.endianness : G_BYTE_ORDER;
+  }
 
-  copy = gst_caps_copy (caps);
-  if (_fixate_caps_to_int (&copy, "channels", ac_caps.channels))
+  if (_fixate_caps_to_int (&copy, "channels", try.channels))
     return copy;
-  if (_fixate_caps_to_int (&copy, "width", ac_caps.is_int ? ac_caps.width : 16))
+  if (_fixate_caps_to_int (&copy, "width", try.width))
     return copy;
-  if (_fixate_caps_to_int (&copy, "depth", ac_caps.is_int ? ac_caps.depth : 16))
+  if (_fixate_caps_to_int (&copy, "depth", try.depth))
     return copy;
-  if (_fixate_caps_to_int (&copy, "endianness",
-          ac_caps.is_int ? ac_caps.endianness : G_BYTE_ORDER))
+  if (_fixate_caps_to_int (&copy, "endianness", try.endianness))
     return copy;
 
 
