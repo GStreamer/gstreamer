@@ -13,3 +13,5 @@ Jens Thiele <karme@unforgettable.com>
   - color conversion patches
 Thomas Nyberg <thomas@codefactory.se>
   - gstreamer.m4 macros
+Bastien Nocera <hadess@hadess.net>
+  - gnomevfs sink and source
