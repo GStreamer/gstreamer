@@ -112,6 +112,11 @@ int main(int argc,char *argv[])
     exit (-1);
   }
 
+  gst_bin_remove (GST_BIN (bin), disksrc);
+  // FIXME hack, reparent the disksrc so the scheduler doesn't break
+  bin = gst_pipeline_new("pipeline");
+
+  gst_bin_add (GST_BIN (bin), disksrc);
   gst_bin_add (GST_BIN (bin), new_element);
 
   gst_element_connect (disksrc, "src", new_element, "sink");

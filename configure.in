@@ -445,6 +445,9 @@ dnl Check for libraw1394
 AC_MSG_CHECKING(raw1394 library)
 AC_CHECK_LIB(raw1394, raw1394_get_handle, HAVE_RAW1394=yes, HAVE_RAW1394=no, )
 
+dnl Check for libdv
+AC_MSG_CHECKING(libdv)
+AC_CHECK_LIB(dv, dv_init, HAVE_LIBDV=yes, HAVE_LIBDV=no, -lm $GLIB_LIBS $GLIB_CFLAGS)
 
 
 dnl check if css-auth.c exists (FIXME)
@@ -711,6 +714,7 @@ AM_CONDITIONAL(HAVE_LIBXMMS,        test "x$HAVE_LIBXMMS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
 AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
 AM_CONDITIONAL(HAVE_RAW1394,        test "x%HAVE_RAW1394" = "xyes")
+AM_CONDITIONAL(HAVE_LIBDV,          test "x%HAVE_LIBDV" = "xyes")
 
 
 
@@ -881,6 +885,7 @@ plugins/artsd/Makefile
 plugins/xmms/Makefile
 plugins/arts/Makefile
 plugins/1394/Makefile
+plugins/dv/Makefile
 gstplay/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
 test/Makefile

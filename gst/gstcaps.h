@@ -61,7 +61,7 @@ gst_caps_new (                                  \
   name,                                         \
   type,                                         \
   gst_props_new (                               \
-    ##a,                                        \
+    a,                                        \
     NULL))
 
 #define GST_CAPS_FACTORY(factoryname, a...) 	\
@@ -70,7 +70,7 @@ factoryname (void)                              \
 {                                               \
   static GstCaps *caps = NULL;			\
   if (!caps) {                              	\
-    caps = gst_caps_chain (##a, NULL);      	\
+    caps = gst_caps_chain (a, NULL);      	\
   }                                             \
   return caps;                              	\
 }
