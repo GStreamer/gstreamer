@@ -62,6 +62,25 @@ various utility functions
 @element: 
 
 
+<!-- ##### FUNCTION gst_buffer_merge ##### -->
+<para>
+
+</para>
+
+@buf1: 
+@buf2: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_stamp ##### -->
+<para>
+
+</para>
+
+@dest: 
+@src: 
+
+
 <!-- ##### MACRO GST_BOILERPLATE_FULL ##### -->
 <para>
 

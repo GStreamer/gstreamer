@@ -272,6 +272,10 @@ GstCaps*		gst_pad_get_fixed_caps_func	(GstPad *pad);
 void            	gst_bin_add_many                (GstBin *bin, GstElement *element_1, ...);
 void            	gst_bin_remove_many             (GstBin *bin, GstElement *element_1, ...);
 
+/* buffer functions */
+GstBuffer *		gst_buffer_merge		(GstBuffer * buf1, GstBuffer * buf2);
+void			gst_buffer_stamp		(GstBuffer * dest, const GstBuffer * src);
+
 
 G_END_DECLS
 

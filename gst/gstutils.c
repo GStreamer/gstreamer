@@ -1597,3 +1597,52 @@ gst_element_class_install_std_props (GstElementClass * klass,
 
   va_end (args);
 }
+
+
+/**
+ * gst_buffer_merge:
+ * @buf1: a first source #GstBuffer to merge.
+ * @buf2: the second source #GstBuffer to merge.
+ *
+ * Create a new buffer that is the concatenation of the two source
+ * buffers.  The original source buffers will not be modified or
+ * unref'd.
+ *
+ * WARNING: Incorrect use of this function can lead to memory leaks.
+ * It is recommended to use gst_buffer_join() instead of this function.
+ *
+ * If the buffers point to contiguous areas of memory, the buffer
+ * is created without copying the data.
+ *
+ * Returns: the new #GstBuffer that's the concatenation of the source buffers.
+ */
+GstBuffer *
+gst_buffer_merge (GstBuffer * buf1, GstBuffer * buf2)
+{
+  GstBuffer *result;
+
+  /* we're just a specific case of the more general gst_buffer_span() */
+  result = gst_buffer_span (buf1, 0, buf2, buf1->size + buf2->size);
+
+  return result;
+}
+
+/**
+ * gst_buffer_stamp:
+ * @dest: buffer to stamp
+ * @src: buffer to stamp from
+ *
+ * Copies additional information (timestamps and offsets) from one buffer to
+ * the other.
+ */
+void
+gst_buffer_stamp (GstBuffer * dest, const GstBuffer * src)
+{
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (src != NULL);
+
+  GST_BUFFER_TIMESTAMP (dest) = GST_BUFFER_TIMESTAMP (src);
+  GST_BUFFER_DURATION (dest) = GST_BUFFER_DURATION (src);
+  GST_BUFFER_OFFSET (dest) = GST_BUFFER_OFFSET (src);
+  GST_BUFFER_OFFSET_END (dest) = GST_BUFFER_OFFSET_END (src);
+}
