@@ -41,6 +41,7 @@ enum {
 enum {
   ARG_0,
   ARG_NUM_SOURCES,
+  ARG_LOOP_BASED,
 };
 
 
@@ -50,7 +51,8 @@ static void		gst_fakesrc_init	(GstFakeSrc *fakesrc);
 static void		gst_fakesrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
 static void		gst_fakesrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 
-static GstBuffer *	gst_fakesrc_get		(GstPad *pad);
+static GstBuffer*	gst_fakesrc_get		(GstPad *pad);
+static void 		gst_fakesrc_loop	(GstElement *element);
 
 static GstSrcClass *parent_class = NULL;
 static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
@@ -89,6 +91,8 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
 
   gtk_object_add_arg_type ("GstFakeSrc::num_sources", GTK_TYPE_INT,
                            GTK_ARG_READWRITE, ARG_NUM_SOURCES);
+  gtk_object_add_arg_type ("GstIdentity::loop_based", GTK_TYPE_BOOL,
+                           GTK_ARG_READWRITE, ARG_LOOP_BASED);
 
   gtkobject_class->set_arg = gst_fakesrc_set_arg;
   gtkobject_class->get_arg = gst_fakesrc_get_arg;
@@ -103,7 +107,9 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
 
 }
 
-static void gst_fakesrc_init(GstFakeSrc *fakesrc) {
+static void 
+gst_fakesrc_init (GstFakeSrc *fakesrc) 
+{
   GstPad *pad;
 
   // set the default number of 
@@ -115,8 +121,31 @@ static void gst_fakesrc_init(GstFakeSrc *fakesrc) {
   gst_element_add_pad(GST_ELEMENT(fakesrc),pad);
   fakesrc->srcpads = g_slist_append(NULL,pad);
 
+  fakesrc->loop_based = FALSE;
   // we're ready right away, since we don't have any args...
 //  gst_element_set_state(GST_ELEMENT(fakesrc),GST_STATE_READY);
+}
+
+static void
+gst_fakesrc_update_functions (GstFakeSrc *src)
+{
+  GSList *pads;
+  GstPadGetFunction func;
+
+  pads = src->srcpads;
+  while (pads) {
+    GstPad *pad = GST_PAD (pads->data);
+
+    if (src->loop_based) {
+      gst_element_set_loop_function (GST_ELEMENT (src), gst_fakesrc_loop);
+      gst_fakesrc_set_get_function (pad, NULL);
+    }
+    else {
+      gst_fakesrc_set_get_function (pad, gst_fakesrc_get);
+      gst_element_set_loop_function (GST_ELEMENT (src), NULL);
+    }
+    pads = g_slist_next (pads);
+  }
 }
 
 static void
@@ -135,12 +164,16 @@ gst_fakesrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
       if (new_numsrcs > src->numsrcpads) {
         while (src->numsrcpads != new_numsrcs) {
           pad = gst_pad_new(g_strdup_printf("src%d",src->numsrcpads),GST_PAD_SRC);
-          gst_pad_set_get_function(pad,gst_fakesrc_get);
           gst_element_add_pad(GST_ELEMENT(src),pad);
           src->srcpads = g_slist_append(src->srcpads,pad);
           src->numsrcpads++;
         }
+        gst_fakesrc_update_functions (src);
       }
+      break;
+    case ARG_LOOP_BASED:
+      src->loop_based = GTK_VALUE_BOOL (*arg);
+      gst_fakesrc_update_functions (src);
       break;
     default:
       break;
@@ -160,6 +193,9 @@ gst_fakesrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
   switch (id) {
     case ARG_NUM_SOURCES:
       GTK_VALUE_INT (*arg) = src->numsrcpads;
+      break;
+    case ARG_LOOP_BASED:
+      GTK_VALUE_BOOL (*arg) = src->loop_based;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;
@@ -191,4 +227,42 @@ gst_fakesrc_get(GstPad *pad)
                                   src);
 
   return buf;
+}
+
+/**
+ * gst_fakesrc_get:
+ * @src: the faksesrc to get
+ * 
+ * generate an empty buffer and push it to the next element.
+ */
+static void
+gst_fakesrc_loop(GstElement *element)
+{
+  GstFakeSrc *src;
+
+  g_return_if_fail(element != NULL);
+  g_return_if_fail(GST_IS_FAKESRC(element));
+
+  src = GST_FAKESRC (element);
+
+  do {
+    GSList *pads;
+
+    pads = src->srcpads;
+
+    while (pads) {
+      GstPad *pad = GST_PAD (pads->data);
+      GstBuffer *buf;
+
+      buf = gst_buffer_new();
+      g_print("(%s:%s)> ",GST_DEBUG_PAD_NAME(pad));
+
+      gtk_signal_emit (GTK_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF],
+                                  src);
+      gst_pad_push (pad, buf);
+
+      if (!GST_ELEMENT_IS_COTHREAD_STOPPING (element)) break;
+
+    }
+  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
 }
