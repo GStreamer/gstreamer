@@ -31,6 +31,8 @@ static GstElementDetails gst_lame_details = {
   "Erik Walthinsen <omega@cse.ogi.edu>",
 };
 
+/* LAME can do MPEG-1, MPEG-2, and MPEG-2.5, so it has 9 possible
+ * sample rates it supports */
 static GstStaticPadTemplate gst_lame_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
