@@ -7,8 +7,14 @@ libgstbasicscheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_BASIC
 libgstbasicscheduler_la_LIBADD = ../libcothreads.la
 libgstbasicscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
+# some silly bug prevents us from putting both $(top_builddir) and
+# $(src_dir) on the same line for CFLAGS (try it, reverse them, see the
+# strangeness on your gcc line) so we pull this dirty += trick on it, hah !
 libgststandardscheduler_la_SOURCES = gstbasicscheduler.c
-libgststandardscheduler_la_CFLAGS = $(GST_CFLAGS) -I$(top_srcdir)/libs/ext/cothreads -D_COTHREADS_STANDARD
+libgststandardscheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_STANDARD
+libgststandardscheduler_la_CFLAGS += -I$(top_builddir)/libs/ext/cothreads
+libgststandardscheduler_la_CFLAGS += -I$(top_srcdir)/libs/ext/cothreads
+
 libgststandardscheduler_la_LIBADD = $(top_builddir)/libs/ext/cothreads/cothreads/libcothreads-gthreads.la
 libgststandardscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
@@ -18,7 +24,9 @@ libgstfastbasicscheduler_la_LIBADD = ../libcothreads.la
 libgstfastbasicscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 libgstfaststandardscheduler_la_SOURCES = gstfastscheduler.c
-libgstfaststandardscheduler_la_CFLAGS = $(GST_CFLAGS) -I$(top_srcdir)/libs/ext/cothreads -D_COTHREADS_STANDARD
+libgstfaststandardscheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_STANDARD
+libgstfaststandardscheduler_la_CFLAGS += -I$(top_builddir)/libs/ext/cothreads
+libgstfaststandardscheduler_la_CFLAGS += -I$(top_srcdir)/libs/ext/cothreads
 libgstfaststandardscheduler_la_LIBADD = $(top_builddir)/libs/ext/cothreads/cothreads/libcothreads-gthreads.la
 libgstfaststandardscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
