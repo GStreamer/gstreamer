@@ -509,9 +509,6 @@ gst_mad_src_event (GstPad *pad, GstEvent *event)
       /* shave off the flush flag, we'll need it later */
       flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
       
-      /* we need to break out of the processing loop on flush */
-      mad->restart = flush;
-
       /* assume the worst */
       res = FALSE;
 
@@ -536,6 +533,9 @@ gst_mad_src_event (GstPad *pad, GstEvent *event)
           gst_event_free (seek_event);
         }
 	/* at this point, either the seek worked or res == FALSE */
+	if (res)
+          /* we need to break out of the processing loop on flush */
+          mad->restart = flush;
       }
       break;
     }
