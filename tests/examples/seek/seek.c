@@ -30,6 +30,19 @@ typedef struct
   GstElement 	*bin;
 } dyn_link;
 
+static GstElement *
+gst_element_factory_make_or_warn (gchar *type, gchar *name)
+{
+  GstElement *element = gst_element_factory_make (type, name);
+
+  if (!element) {
+    g_warning ("Failed to create element %s of type %s",
+	       name, type);
+  }
+
+  return element;
+}
+
 static void
 dynamic_link (GstPadTemplate *templ, GstPad *newpad, gpointer data)
 {
