@@ -42,7 +42,7 @@ make_spider_pipeline (const gchar * location, gboolean thread)
 
   v_thread = gst_thread_new ("v_thread");
   v_queue = gst_element_factory_make ("queue", "v_queue");
-  videosink = gst_element_factory_make ("xvideosink", "v_sink");
+  videosink = gst_element_factory_make ("xvimagesink", "v_sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
