@@ -78,15 +78,32 @@ gst_ximagesink_navigation_send_event (GstNavigation *navigation, GstStructure *s
 {
   GstXImageSink *ximagesink = GST_XIMAGESINK (navigation);
   GstEvent *event;
-
+  gint x_offset, y_offset;
+  double x,y;
+  
   event = gst_event_new (GST_EVENT_NAVIGATION);
   event->event_data.structure.structure = structure;
 
   /* We are not converting the pointer coordinates as there's no hardware 
      scaling done here. The only possible scaling is done by videoscale and
      videoscale will have to catch those events and tranform the coordinates
-     to match the applied scaling */
+     to match the applied scaling. So here we just add the offset if the image
+     is centered in the window.  */
   
+  x_offset = ximagesink->xwindow->width - ximagesink->width;
+  y_offset = ximagesink->xwindow->height - ximagesink->height;
+  
+  if (gst_structure_get_double (structure, "pointer_x", &x))
+    {
+      x += x_offset;
+      gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
+    }
+  if (gst_structure_get_double (structure, "pointer_y", &y))
+    {
+      y += y_offset;
+      gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
+    }
+    
   gst_pad_send_event (gst_pad_get_peer (ximagesink->sinkpad), event);
 }
 
@@ -224,8 +241,7 @@ static void
 gst_ximagesink_ximage_put (GstXImageSink *ximagesink, GstXImage *ximage)
 {
   gint x, y;
-  XWindowAttributes attr; 
-  
+ 
   g_return_if_fail (ximage != NULL);
   g_return_if_fail (ximagesink != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
@@ -233,11 +249,8 @@ gst_ximagesink_ximage_put (GstXImageSink *ximagesink, GstXImage *ximage)
   g_mutex_lock (ximagesink->x_lock);
   
   /* We center the image in the window */
-  XGetWindowAttributes (ximagesink->xcontext->disp,
-                        ximagesink->xwindow->win, &attr); 
-
-  x = MAX (0, (attr.width - ximage->width) / 2);
-  y = MAX (0, (attr.height - ximage->height) / 2);
+  x = MAX (0, (ximagesink->xwindow->width - ximage->width) / 2);
+  y = MAX (0, (ximagesink->xwindow->height- ximage->height) / 2);
 
 #ifdef HAVE_XSHM
   if (ximagesink->xcontext->use_xshm)
@@ -374,6 +387,9 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
             if ( (ximagesink->xwindow->width != e.xconfigure.width) ||
                  (ximagesink->xwindow->height != e.xconfigure.height) )
               {
+                ximagesink->xwindow->width = e.xconfigure.width;
+                ximagesink->xwindow->height = e.xconfigure.height;
+                
                 gst_pad_try_set_caps (ximagesink->sinkpad,
                                       GST_CAPS_NEW ("ximagesink_ximage_caps", "video/x-raw-rgb",
                                                     "bpp",        GST_PROPS_INT (ximagesink->xcontext->bpp),
