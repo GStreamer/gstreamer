@@ -56,8 +56,8 @@ static void 			gst_bin_set_index 		(GstElement *element, GstIndex *index);
 static void 			gst_bin_add_func 		(GstBin *bin, GstElement *element);
 static void 			gst_bin_remove_func 		(GstBin *bin, GstElement *element);
 
-static GstClock* 		gst_bin_get_clock_func 		(GstBin *bin);
-static void	 		gst_bin_set_clock_func 		(GstBin *bin, GstClock *clock);
+static GstClock* 		gst_bin_get_clock_func 		(GstElement *element);
+static void	 		gst_bin_set_clock_func 		(GstElement *element, GstClock *clock);
 
 static gboolean 		gst_bin_iterate_func 		(GstBin *bin);
 
@@ -177,19 +177,19 @@ gst_bin_new (const gchar * name)
 }
 
 static GstClock*
-gst_bin_get_clock_func (GstBin *bin)
+gst_bin_get_clock_func (GstElement *element)
 {
-  if (GST_ELEMENT_SCHED (bin)) 
-    return gst_scheduler_get_clock (GST_ELEMENT_SCHED (bin));
+  if (GST_ELEMENT_SCHED (element)) 
+    return gst_scheduler_get_clock (GST_ELEMENT_SCHED (element));
 
   return NULL;
 }
 
 static void
-gst_bin_set_clock_func (GstBin *bin, GstClock *clock)
+gst_bin_set_clock_func (GstElement *element, GstClock *clock)
 {
-  if (GST_ELEMENT_SCHED (bin)) 
-    gst_scheduler_use_clock (GST_ELEMENT_SCHED (bin), clock);
+  if (GST_ELEMENT_SCHED (element)) 
+    gst_scheduler_use_clock (GST_ELEMENT_SCHED (element), clock);
 }
 
 /**
@@ -206,7 +206,7 @@ gst_bin_get_clock (GstBin *bin)
   g_return_val_if_fail (bin != NULL, NULL);
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
 
-  return gst_bin_get_clock_func (bin);
+  return gst_bin_get_clock_func (GST_ELEMENT (bin));
 }
 
 /**
@@ -223,7 +223,7 @@ gst_bin_use_clock (GstBin *bin, GstClock *clock)
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
 
-  return gst_bin_set_clock_func (bin, clock);
+  return gst_bin_set_clock_func (GST_ELEMENT (bin), clock);
 }
 
 /**
@@ -581,6 +581,35 @@ gst_bin_remove (GstBin *bin, GstElement *element)
   else {
     g_warning ("cannot remove elements from bin %s\n", GST_ELEMENT_NAME (bin));
   }
+}
+
+/**
+ * gst_bin_remove_many:
+ * @bin: the bin to remove the elements from
+ * @element_1: the first element to remove from the bin
+ * @...: NULL-terminated list of elements to remove from the bin
+ * 
+ * Remove a list of elements from a bin. Uses #gst_bin_remove.
+ */
+void
+gst_bin_remove_many (GstBin *bin, GstElement *element_1, ...)
+{
+  va_list args;
+
+  g_return_if_fail (bin != NULL);
+  g_return_if_fail (element_1 != NULL);
+  g_return_if_fail (GST_IS_BIN (bin));
+  g_return_if_fail (GST_IS_ELEMENT (element_1));
+
+  va_start (args, element_1);
+
+  while (element_1) {
+    gst_bin_remove (bin, element_1);
+    
+    element_1 = va_arg (args, GstElement*);
+  }
+
+  va_end (args);
 }
 
 /**

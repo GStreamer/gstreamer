@@ -110,6 +110,7 @@ GstElement*	gst_bin_new			(const gchar *name);
 void		gst_bin_add			(GstBin *bin, GstElement *element);
 void		gst_bin_add_many 		(GstBin *bin, GstElement *element_1, ...);
 void		gst_bin_remove			(GstBin *bin, GstElement *element);
+void		gst_bin_remove_many		(GstBin *bin, GstElement *element_1, ...);
 
 /* retrieve a single element or the list of children */
 GstElement*	gst_bin_get_by_name		(GstBin *bin, const gchar *name);
