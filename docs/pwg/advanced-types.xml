@@ -916,6 +916,19 @@ plugin_init (GstPlugin *plugin)
           <!-- ############ type ############# -->
 
           <row>
+            <entry>video/x-msvideocodec</entry>
+            <entry>Microsoft Video 1 (oldish codec).</entry>
+            <entry>msvideoversion</entry>
+            <entry>integer</entry>
+            <entry>1</entry>
+            <entry>
+              Version of the codec - always 1.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
             <entry>video/x-pn-realvideo</entry>
             <entry>Realmedia video.</entry>
             <entry>rmversion</entry>

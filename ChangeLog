@@ -1,3 +1,8 @@
+2004-04-11  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/advanced-types.xml:
+	  Document MS video 1 (video/x-msvideocodec) mimetype/format.
+
 2004-04-11  Benjamin Otte  <otte@gnome.org>
 
 	* gst/schedulers/gstbasicscheduler.c: (plugin_init):
