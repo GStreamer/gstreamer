@@ -1,3 +1,8 @@
+2004-03-18  David Schleef  <ds@schleef.org>
+
+	* configure.ac:  Remove HAVE_ATOMIC_H test, since it's unused.
+	(bug #137625)
+
 2004-03-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/sv.po: updated translation (Christian Rose)

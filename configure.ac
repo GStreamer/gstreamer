@@ -269,24 +269,6 @@ int main ()
 ])
 AC_SUBST(POPT_LIBS)
 
-dnl Check for atomic.h
-dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
-dnl defines the wrong default symbol as well (HAVE_ASM_ATOMIC_H)
-AC_CHECK_HEADER(asm/atomic.h, HAVE_ATOMIC_H=yes, HAVE_ATOMIC_H=no)
-dnl Do a compile to check that it has atomic_set (eg, linux 2.0 didn't)
-if test x$HAVE_ATOMIC_H = xyes; then
-  AC_LINK_IFELSE([
-#include "asm/atomic.h"
-main() {atomic_t t; atomic_set(&t,0); atomic_inc(&t); atomic_add(1,&t);return 0;}
-  ],, [
-    # Not successful
-    if test x$HAVE_ATOMIC_H = xyes; then
-      AC_MSG_WARN(Atomic reference counting is out of date: doing without.)
-    fi
-    HAVE_ATOMIC_H=no
-  ])
-fi
-
 dnl Check for ucontext.h
 AC_CHECK_HEADER(ucontext.h, AC_DEFINE(HAVE_UCONTEXT_H, 1, [defined if we have ucontext.h]))
 
@@ -304,16 +286,6 @@ AC_HELP_STRING([--enable-libmmx],[use libmmx, if available]),
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-libmmx) ;;
 esac], 
 [USE_LIBMMX=$HAVE_LIBMMX]) dnl Default value
-
-AC_ARG_ENABLE(atomic,
-AC_HELP_STRING([--enable-atomic],[use atomic reference counting header]),
-[case "${enableval}" in
-  yes) USE_ATOMIC_H=$HAVE_ATOMIC_H;;
-  noset) USE_ATOMIC_H=$HAVE_ATOMIC_H;;
-  no)  USE_ATOMIC_H=no;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-atomic) ;;
-esac], 
-[USE_ATOMIC_H=$HAVE_ATOMIC_H]) dnl Default value
 
 AC_ARG_ENABLE(fast-stack-trash,
 AC_HELP_STRING([--enable-fast-stack-trash],[use fast memory allocator (i586 or above)]),
@@ -435,10 +407,6 @@ if test "x$USE_LIBMMX" = xyes; then
   AC_DEFINE(HAVE_LIBMMX, 1, [Define if libmmx is available])
 fi
 
-if test "x$USE_ATOMIC_H" = xyes; then
-  AC_DEFINE(HAVE_ATOMIC_H, 1, [Define if atomic.h header file is available])
-fi
-
 if test "x$USE_FAST_STACK_TRASH" = xyes; then
   AC_DEFINE(USE_FAST_STACK_TRASH, 1, [Define if we should use i586 optimized stack functions])
 fi
@@ -485,7 +453,6 @@ dnl #############################
 
 dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
 dnl HAVE_ and it is likely to be easier to stick with the old name
-AM_CONDITIONAL(HAVE_ATOMIC_H,       test "x$USE_ATOMIC_H" = "xyes")
 AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
 AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
 AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
