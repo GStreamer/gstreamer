@@ -1268,8 +1268,8 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	}
 	time_offset = mad->total_samples * GST_SECOND
 					/ mad->frame.header.samplerate;
-	time_duration = ((mad->total_samples + nsamples) * GST_SECOND
-					/ mad->frame.header.samplerate) - time_offset;
+	time_duration = (nsamples * GST_SECOND
+			 / mad->frame.header.samplerate);
       }
 
       if (mad->index) {
