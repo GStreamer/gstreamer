@@ -1,3 +1,9 @@
+2004-12-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_loop):
+	  Fix for integer overflow. Makes #156001 not crash. Probably masks
+	  the real bug.
+
 2004-12-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/ac3parse/gstac3parse.c: (plugin_init):

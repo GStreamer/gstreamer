@@ -440,9 +440,15 @@ sink_restart:
           /* there are empty samples in front of us, fill them with silence */
           int samples = MIN (bytes, sample_diff) *
               (element->numpads == 1 ? this->format->channels : 1);
-          int size =
-              samples * snd_pcm_format_physical_width (this->format->format) /
-              8;
+          int width = snd_pcm_format_physical_width (this->format->format);
+          int size = samples * width / 8;
+
+          if (size / (width / 8) != samples) {
+            GST_WARNING_OBJECT (this,
+                "Integer overflow for size=%d/samples=%d - broken stream",
+                size, samples);
+            goto no_difference;
+          }
           GST_INFO_OBJECT (this,
               "Allocating %d bytes (%ld samples) now to resync: sample %lu expected, but got %ld",
               size, MIN (bytes, sample_diff), expected, samplestamp);
