@@ -54,6 +54,8 @@ struct _GstUnitConvertClass {
 	/* signal callbacks */
 };
 
+GType gst_unitconv_get_type (void);
+
 GstUnitConvert* gst_unitconv_new (void);
 void _gst_unitconv_initialize (void);
 
