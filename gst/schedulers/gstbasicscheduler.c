@@ -1248,11 +1248,7 @@ gst_basic_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
   GST_DEBUG ("srcpad sched is %p, sinkpad sched is %p",
       GST_ELEMENT_SCHED (srcelement), GST_ELEMENT_SCHED (sinkelement));
 
-  if (GST_ELEMENT_SCHED (srcelement) == GST_ELEMENT_SCHED (sinkelement)) {
-    GST_INFO ("peer %s:%s is in same scheduler, chaining together",
-        GST_DEBUG_PAD_NAME (sinkpad));
-    gst_basic_scheduler_chain_elements (bsched, srcelement, sinkelement);
-  }
+  gst_basic_scheduler_chain_elements (bsched, srcelement, sinkelement);
 }
 
 static void

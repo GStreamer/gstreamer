@@ -1,5 +1,11 @@
 2004-04-05  Benjamin Otte  <otte@gnome.org>
 
+	* gst/schedulers/gstbasicscheduler.c:
+	(gst_basic_scheduler_pad_link):
+	  fix to work with recent scheduling changes
+
+2004-04-05  Benjamin Otte  <otte@gnome.org>
+
 	* gst/schedulers/entryscheduler.c: (some functions, dunno which,
 	prepareChangeLog doesn't work when cvs indents):
 	  don't throw an error when no element can be scheduled, there's too
