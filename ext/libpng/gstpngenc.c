@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 #include "gstpngenc.h"
 #include <gst/video/video.h>
+#include <zlib.h>
 
 #define MAX_HEIGHT		4096
 
@@ -48,7 +49,8 @@ enum
 {
   ARG_0,
   ARG_SNAPSHOT,
-  ARG_NEWMEDIA
+  ARG_NEWMEDIA,
+  ARG_COMPRESSION_LEVEL
 };
 
 static void gst_pngenc_base_init (gpointer g_class);
@@ -149,6 +151,13 @@ gst_pngenc_class_init (GstPngEncClass * klass)
           "Send new media discontinuity after encoding each frame",
           FALSE, (GParamFlags) G_PARAM_READWRITE));
 
+  g_object_class_install_property
+      (gobject_class, ARG_COMPRESSION_LEVEL,
+      g_param_spec_uint ("compression-level", "compression-level",
+          "PNG compression level",
+          Z_NO_COMPRESSION, Z_BEST_COMPRESSION,
+          6, (GParamFlags) G_PARAM_READWRITE));
+
   gstelement_class->get_property = gst_pngenc_get_property;
   gstelement_class->set_property = gst_pngenc_set_property;
 }
@@ -199,6 +208,7 @@ gst_pngenc_init (GstPngEnc * pngenc)
 
   pngenc->snapshot = DEFAULT_SNAPSHOT;
   pngenc->newmedia = FALSE;
+  pngenc->compression_level = 6;
 }
 
 static void
@@ -281,7 +291,7 @@ gst_pngenc_chain (GstPad * pad, GstData * _data)
 
   png_set_filter (pngenc->png_struct_ptr, 0,
       PNG_FILTER_NONE | PNG_FILTER_VALUE_NONE);
-  png_set_compression_level (pngenc->png_struct_ptr, 9);
+  png_set_compression_level (pngenc->png_struct_ptr, pngenc->compression_level);
 
   png_set_IHDR (pngenc->png_struct_ptr,
       pngenc->png_info_ptr,
@@ -345,6 +355,9 @@ gst_pngenc_get_property (GObject * object,
     case ARG_NEWMEDIA:
       g_value_set_boolean (value, pngenc->newmedia);
       break;
+    case ARG_COMPRESSION_LEVEL:
+      g_value_set_uint (value, pngenc->compression_level);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -366,6 +379,9 @@ gst_pngenc_set_property (GObject * object,
       break;
     case ARG_NEWMEDIA:
       pngenc->newmedia = g_value_get_boolean (value);
+      break;
+    case ARG_COMPRESSION_LEVEL:
+      pngenc->compression_level = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
