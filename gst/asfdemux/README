@@ -36,8 +36,8 @@ Known stream fourccs are:
 
 Type		Tags		MIME type
 ------------------------------------------
-H263		H263 I263	video/x-h323
-MJPEG		MJPG		video/jpeg	
+H263		H263 I263	video/x-h263
+MJPEG		MJPG		image/jpeg	
 MPEG4		DIVX divx DX50	video/mpeg
 		XVID xvid mp4s	
 		MP4S M4S2 m4s2
