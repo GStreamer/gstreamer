@@ -1,3 +1,8 @@
+2004-12-01  Christophe Fergeau  <teuf@gnome.org>
+
+	* ext/mad/gstmad.c: (mpg123_parse_xing_header): fix xing header 
+	detection on mono and stereo mp3 files.
+
 2004-12-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_change_state):
