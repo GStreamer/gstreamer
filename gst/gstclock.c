@@ -29,9 +29,12 @@
 #include "gstlog.h"
 #include "gstmemchunk.h"
 
+#define DEFAULT_MAX_DIFF	(2 * GST_SECOND)
+
 enum {
   ARG_0,
   ARG_STATS,
+  ARG_MAX_DIFF,
 };
 
 static GstMemChunk *_gst_clock_entries_chunk;
@@ -157,20 +160,27 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff *jitter)
   requested = GST_CLOCK_ENTRY_TIME (entry);
 
   if (requested == GST_CLOCK_TIME_NONE) {
-    res = GST_CLOCK_TIMEOUT;
-    goto done;
+    return GST_CLOCK_TIMEOUT;
   }
-  
+
   clock = GST_CLOCK_ENTRY_CLOCK (entry);
   cclass = GST_CLOCK_GET_CLASS (clock);
   
   if (cclass->wait) {
     GstClockTime now;
+    
+    GST_LOCK (clock);
+    clock->entries = g_list_prepend (clock->entries, entry);
+    GST_UNLOCK (clock);
 
     do {
       res = cclass->wait (clock, entry);
     }
     while (res == GST_CLOCK_ENTRY_RESTART);
+
+    GST_LOCK (clock);
+    clock->entries = g_list_remove (clock->entries, entry);
+    GST_UNLOCK (clock);
 
     if (jitter) {
       now = gst_clock_get_time (clock);
@@ -180,11 +190,6 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff *jitter)
     if (clock->stats) {
       gst_clock_update_stats (clock);
     }
-  }
-
-done:
-  if (entry->type == GST_CLOCK_ENTRY_SINGLE) {
-    gst_clock_id_free (id);
   }
 
   return res;
@@ -231,6 +236,14 @@ gst_clock_id_wait_async (GstClockID id,
   }
 
   return res;
+}
+
+static void
+gst_clock_reschedule_func (GstClockEntry *entry)
+{
+  entry->status = GST_CLOCK_ENTRY_OK;
+  
+  gst_clock_id_unlock ((GstClockID)entry);
 }
 
 /**
@@ -350,11 +363,16 @@ gst_clock_class_init (GstClockClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STATS,
     g_param_spec_boolean ("stats", "Stats", "Enable clock stats",
                           FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_DIFF,
+    g_param_spec_int64 ("max-diff", "Max diff", "The maximum amount of time to wait in nanoseconds",
+                        0, G_MAXINT64, DEFAULT_MAX_DIFF, G_PARAM_READWRITE));
 }
 
 static void
 gst_clock_init (GstClock *clock)
 {
+  clock->max_diff = DEFAULT_MAX_DIFF;
+
   clock->speed = 1.0;
   clock->active = FALSE;
   clock->start_time = 0;
@@ -489,6 +507,7 @@ gst_clock_set_active (GstClock *clock, gboolean active)
     clock->last_time = time - clock->start_time;
     clock->accept_discont = FALSE;
   }
+  g_list_foreach (clock->entries, (GFunc) gst_clock_reschedule_func, NULL);
   GST_UNLOCK (clock);
 
   g_mutex_lock (clock->active_mutex);	
@@ -536,6 +555,7 @@ gst_clock_reset (GstClock *clock)
   clock->active = FALSE;
   clock->start_time = time;
   clock->last_time = 0LL;
+  g_list_foreach (clock->entries, (GFunc) gst_clock_reschedule_func, NULL);
   GST_UNLOCK (clock);
 }
 
@@ -583,6 +603,7 @@ gst_clock_handle_discont (GstClock *clock, guint64 time)
   clock->start_time = itime - time;
   clock->last_time = time;
   clock->accept_discont = FALSE;
+  g_list_foreach (clock->entries, (GFunc) gst_clock_reschedule_func, NULL);
   GST_UNLOCK (clock);
 
   GST_DEBUG (GST_CAT_CLOCK, "new time %" G_GUINT64_FORMAT,
@@ -675,6 +696,9 @@ gst_clock_set_property (GObject *object, guint prop_id,
     case ARG_STATS:
       clock->stats = g_value_get_boolean (value);
       break;
+    case ARG_MAX_DIFF:
+      clock->max_diff = g_value_get_int64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -692,6 +716,9 @@ gst_clock_get_property (GObject *object, guint prop_id,
   switch (prop_id) {
     case ARG_STATS:
       g_value_set_boolean (value, clock->stats);
+      break;
+    case ARG_MAX_DIFF:
+      g_value_set_int64 (value, clock->max_diff);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

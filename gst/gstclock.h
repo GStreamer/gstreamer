@@ -122,6 +122,7 @@ struct _GstClock {
   /* --- protected --- */
   GstClockTime	 start_time;
   GstClockTime	 last_time;
+  gint64	 max_diff;
 
   /* --- private --- */
   gboolean 	 accept_discont;

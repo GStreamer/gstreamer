@@ -24,6 +24,7 @@
 
 /* #define GST_DEBUG_ENABLED */
 #include "gst_private.h"
+#include "gstlog.h"
 
 #include "gstsystemclock.h"
 
@@ -35,6 +36,7 @@ static void			gst_system_clock_init		(GstSystemClock *clock);
 static GstClockTime		gst_system_clock_get_internal_time	(GstClock *clock);
 static guint64			gst_system_clock_get_resolution (GstClock *clock);
 static GstClockEntryStatus	gst_system_clock_wait		(GstClock *clock, GstClockEntry *entry);
+static void 			gst_system_clock_unlock 	(GstClock *clock, GstClockEntry *entry);
 
 static GCond 	*_gst_sysclock_cond = NULL;
 static GMutex 	*_gst_sysclock_mutex = NULL;
@@ -82,6 +84,7 @@ gst_system_clock_class_init (GstSystemClockClass *klass)
   gstclock_class->get_internal_time 	= gst_system_clock_get_internal_time;
   gstclock_class->get_resolution 	= gst_system_clock_get_resolution;
   gstclock_class->wait		 	= gst_system_clock_wait;
+  gstclock_class->unlock		= gst_system_clock_unlock;
 
   _gst_sysclock_cond  = g_cond_new ();
   _gst_sysclock_mutex = g_mutex_new ();
@@ -129,12 +132,19 @@ gst_system_clock_get_resolution (GstClock *clock)
 static GstClockEntryStatus
 gst_system_clock_wait (GstClock *clock, GstClockEntry *entry)
 {
-  GstClockEntryStatus res = GST_CLOCK_ENTRY_OK;
+  GstClockEntryStatus res;
   GstClockTime current, target;
+  gint64 diff;
 
   current = gst_clock_get_time (clock);
-  target = gst_system_clock_get_internal_time (clock) +
-           GST_CLOCK_ENTRY_TIME (entry) - current;
+  diff = GST_CLOCK_ENTRY_TIME (entry) - current;
+
+  if (ABS (diff) > clock->max_diff) {
+    g_warning ("abnormal clock request diff: %lld > %lld", diff, clock->max_diff);
+    return GST_CLOCK_ENTRY_EARLY;
+  }
+  
+  target = gst_system_clock_get_internal_time (clock) + diff;
 
   GST_DEBUG (GST_CAT_CLOCK, "real_target %" G_GUINT64_FORMAT
 		            " target %" G_GUINT64_FORMAT
@@ -148,6 +158,7 @@ gst_system_clock_wait (GstClock *clock, GstClockEntry *entry)
     g_mutex_lock (_gst_sysclock_mutex);
     g_cond_timed_wait (_gst_sysclock_cond, _gst_sysclock_mutex, &tv);
     g_mutex_unlock (_gst_sysclock_mutex);
+    res = entry->status;
   }
   else {
     res = GST_CLOCK_ENTRY_EARLY;
@@ -155,3 +166,10 @@ gst_system_clock_wait (GstClock *clock, GstClockEntry *entry)
   return res;
 }
 
+static void
+gst_system_clock_unlock (GstClock *clock, GstClockEntry *entry)
+{
+  g_mutex_lock (_gst_sysclock_mutex);
+  g_cond_broadcast (_gst_sysclock_cond);
+  g_mutex_unlock (_gst_sysclock_mutex);
+}

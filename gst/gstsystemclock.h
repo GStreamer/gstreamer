@@ -40,11 +40,11 @@ typedef struct _GstSystemClock GstSystemClock;
 typedef struct _GstSystemClockClass GstSystemClockClass;
 
 struct _GstSystemClock {
-  GstClock clock;
+  GstClock 	 clock;
 };
 
 struct _GstSystemClockClass {
-  GstClockClass parent_class;
+  GstClockClass  parent_class;
 };
 
 GType 			gst_system_clock_get_type 	(void);
