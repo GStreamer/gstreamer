@@ -1217,6 +1217,11 @@ gst_pad_link_fixate (GstPadLink * link)
         if (i == 4) {
           /* we trust the default fixation function unconditionally */
           bad = FALSE;
+        } else if (gst_caps_is_empty (newcaps)) {
+          g_warning
+              ("a fixation function did not fixate correctly, it returned empty caps");
+          gst_caps_free (newcaps);
+          continue;
         } else if (gst_caps_is_any (caps)) {
           bad = gst_caps_is_any (newcaps);
         } else {
@@ -3172,6 +3177,13 @@ gst_pad_push (GstPad * pad, GstData * data)
   if (!GST_PAD_IS_LINKED (pad)) {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "not pushing data %p as pad is unconnected", data);
+    gst_data_unref (data);
+    return;
+  }
+
+  if (GST_IS_BUFFER (data) && !gst_pad_is_negotiated (pad)) {
+    g_warning ("pushing data on non-negotiated pad %s:%s, not allowed.",
+        GST_DEBUG_PAD_NAME (pad));
     gst_data_unref (data);
     return;
   }

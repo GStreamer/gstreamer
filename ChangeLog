@@ -1,3 +1,22 @@
+2004-07-25  Benjamin Otte  <otte@gnome.org>
+
+	* gst/autoplug/gstspideridentity.c: (gst_spider_identity_link):
+	  don't delay links on the sink elements, it causes unnegotiated
+	  links.
+	* gst/elements/gsttypefindelement.c:
+	(gst_type_find_element_base_init):
+	  add our padtemplates, we indeed do have some.
+	* gst/elements/gsttypefindelement.c:
+	(gst_type_find_element_handle_event),
+	(gst_type_find_element_chain):
+	  don't push data when typefinding failed.
+	* gst/gstpad.c: (gst_pad_link_fixate):
+	  check that no fixate function returns empty caps.
+	* gst/gstpad.c: (gst_pad_push):
+	  check that the link is negotiated before data gets pushed.
+	* tools/gst-register.c: (main):
+	  don't assert (fixes #148283)
+
 2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* docs/gst/gstreamer-sections.txt:

@@ -127,6 +127,10 @@ gst_type_find_element_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&type_find_element_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&type_find_element_sink_template));
   gst_element_class_set_details (gstelement_class,
       &gst_type_find_element_details);
 }
@@ -426,9 +430,13 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
               GST_PLUGIN_FEATURE_NAME (entry->factory), entry->probability);
           g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE], 0,
               entry->probability, entry->caps);
+          stop_typefinding (typefind);
+          gst_pad_event_default (pad, event);
+        } else {
+          gst_pad_event_default (pad, event);
+          GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
+          stop_typefinding (typefind);
         }
-        stop_typefinding (typefind);
-        gst_pad_event_default (pad, event);
         break;
       default:
         gst_data_unref (GST_DATA (event));
@@ -610,6 +618,7 @@ gst_type_find_element_chain (GstPad * pad, GstData * data)
         stop_typefinding (typefind);
       } else if (typefind->possibilities == NULL) {
         GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
+        stop_typefinding (typefind);
       } else {
         /* set up typefind element for next iteration */
         typefind->possibilities =

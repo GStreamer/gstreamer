@@ -257,14 +257,15 @@ gst_spider_identity_link (GstPad * pad, const GstCaps * caps)
       GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
   GstPad *otherpad;
 
-  if (pad == spider_identity->src)
+  if (pad == spider_identity->src) {
     otherpad = spider_identity->sink;
-  else
+    if (GST_PAD_PEER (otherpad) == NULL)
+      return GST_PAD_LINK_DELAYED;
+  } else {
     otherpad = spider_identity->src;
+  }
 
   g_return_val_if_fail (otherpad != NULL, GST_PAD_LINK_REFUSED);
-  if (GST_PAD_PEER (otherpad) == NULL)
-    return GST_PAD_LINK_DELAYED;
 
   return gst_pad_try_set_caps (otherpad, caps);
 }

@@ -135,7 +135,9 @@ main (int argc, char *argv[])
         /* move over paths from this registry to the next one */
         path_spill = g_list_concat (path_spill,
             gst_registry_get_path_list (registry));
-        g_assert (path_spill != NULL);
+        /* this assertion triggers for a non-readable/writable user registry,
+         * see #148283 */
+        /* g_assert (path_spill != NULL); */
       }
       /* also move over paths if the registry wasn't writable
        * FIXME: we should check if the paths that were loaded from this
