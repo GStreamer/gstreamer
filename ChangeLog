@@ -1,3 +1,9 @@
+2004-08-20  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_next_buffer),
+	(gst_ogg_mux_loop):
+	I will accept bitchslappings with non sharp objects.
+
 2004-08-20  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* configure.ac:
