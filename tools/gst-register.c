@@ -81,7 +81,10 @@ int main (int argc,char *argv[])
 		      G_CALLBACK (plugin_added_func), NULL);
 
     if (registry->flags & GST_REGISTRY_WRITABLE) {
-      g_print ("rebuilding %s\n", registry->name);
+      char *location;
+      g_object_get (registry, "location", &location, NULL);
+      g_print ("rebuilding %s (%s)\n", registry->name, location);
+      g_free (location);
       gst_registry_rebuild (registry);
       gst_registry_save (registry);
     }

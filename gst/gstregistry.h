@@ -30,7 +30,7 @@
 #define GLOBAL_REGISTRY_FILE     GLOBAL_REGISTRY_DIR"/registry.xml"
 #define GLOBAL_REGISTRY_FILE_TMP GLOBAL_REGISTRY_DIR"/.registry.xml.tmp"
 
-#define LOCAL_REGISTRY_DIR       ".gstreamer"
+#define LOCAL_REGISTRY_DIR       ".gstreamer-"GST_MAJORMINOR
 #define LOCAL_REGISTRY_FILE      LOCAL_REGISTRY_DIR"/registry.xml"
 #define LOCAL_REGISTRY_FILE_TMP  LOCAL_REGISTRY_DIR"/.registry.xml.tmp"
 
