@@ -433,6 +433,11 @@ mpeg2_sys_type_find (GstTypeFind *tf, gpointer unused)
       gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
 	  G_TYPE_INT, 2, 0);
       gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
+    } else if ((data[4] & 0xF0) == 0x20) {
+      GstCaps *caps = MPEG_SYS_CAPS;
+      gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
+			 G_TYPE_INT, 1, 0);
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
     }
   }
 };
