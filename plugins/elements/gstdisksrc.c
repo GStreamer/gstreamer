@@ -238,7 +238,9 @@ gst_disksrc_get (GstPad *pad)
   if (src->curoffset >= src->size) {
     GST_DEBUG (0,"map offset %ld >= size %ld --> eos\n", src->curoffset, src->size);
     gst_pad_set_eos (pad);
-    return NULL;
+    buf =  gst_buffer_new();
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_EOS);
+    return buf;
   }
 
   /* create the buffer */
