@@ -1222,6 +1222,11 @@ gst_probe_dispatcher_set_active
 gst_probe_dispatcher_add_probe
 gst_probe_dispatcher_remove_probe
 gst_probe_dispatcher_dispatch
+<SUBSECTION Standard>
+GST_PROBE
+GST_TYPE_PROBE
+<SUBSECTION Private>
+gst_probe_get_type
 </SECTION>
 
 <SECTION>

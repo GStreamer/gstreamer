@@ -231,7 +231,6 @@ GST_VALUE_GREATER_THAN or GST_VALUE_UNORDERED
 @compare: 
 @serialize: 
 @deserialize: 
-@_gst_reserved: 
 
 <!-- ##### FUNCTION gst_type_is_fixed ##### -->
 <para>
