@@ -31,12 +31,13 @@ enum
   STATE_CHANGE,
   STREAM_LENGTH,
   TIME_TICK,
-  HAVE_XID,
-  HAVE_VIS_XID,
+  HAVE_VIDEO_OUT,
+  HAVE_VIS_VIDEO_OUT,
   HAVE_VIDEO_SIZE,
+  HAVE_VIS_SIZE,
   PIPELINE_ERROR,
   /* put additional signals before this comment */
-  LAST_SIGNAL,
+  LAST_SIGNAL
 };
 
 /* this struct is used to decouple signals coming out of threaded pipelines */
@@ -52,33 +53,27 @@ struct _GstPlaySignal
     {
       gint width;
       gint height;
-    }
-    video_size;
+    } video_size;
     struct
     {
-      gint xid;
-    }
-    video_xid;
+      gpointer video_out;
+    } video_out;
     struct
     {
       GstElementState old_state;
       GstElementState new_state;
-    }
-    state;
+    } state;
     struct
     {
       GstObject *object;
       GParamSpec *param;
-    }
-    info;
+    } info;
     struct
     {
       GstElement *element;
       char *error;
-    }
-    error;
-  }
-  signal_data;
+    } error;
+  } signal_data;
 };
 
 enum
@@ -345,16 +340,21 @@ gst_play_idle_signal (GstPlay * play)
 
   switch (signal->signal_id)
     {
-    case HAVE_XID:
-      g_signal_emit (G_OBJECT (play), gst_play_signals[HAVE_XID], 0,
-		     signal->signal_data.video_xid.xid);
+    case HAVE_VIDEO_OUT:
+      g_signal_emit (G_OBJECT (play), gst_play_signals[HAVE_VIDEO_OUT], 0,
+		     signal->signal_data.video_out.video_out);
       break;
-    case HAVE_VIS_XID:
-      g_signal_emit (G_OBJECT (play), gst_play_signals[HAVE_VIS_XID], 0,
-		     signal->signal_data.video_xid.xid);
+    case HAVE_VIS_VIDEO_OUT:
+      g_signal_emit (G_OBJECT (play), gst_play_signals[HAVE_VIS_VIDEO_OUT], 0,
+		     signal->signal_data.video_out.video_out);
       break;
     case HAVE_VIDEO_SIZE:
       g_signal_emit (G_OBJECT (play), gst_play_signals[HAVE_VIDEO_SIZE], 0,
+		     signal->signal_data.video_size.width,
+		     signal->signal_data.video_size.height);
+      break;
+    case HAVE_VIS_SIZE:
+      g_signal_emit (G_OBJECT (play), gst_play_signals[HAVE_VIS_SIZE], 0,
 		     signal->signal_data.video_size.width,
 		     signal->signal_data.video_size.height);
       break;
@@ -370,7 +370,6 @@ gst_play_idle_signal (GstPlay * play)
       gst_object_unref (signal->signal_data.info.object);
       break;
     case PIPELINE_ERROR:
-
       if (gst_element_get_state (play->pipeline) == GST_STATE_PLAYING)
 	if (gst_element_set_state (play->pipeline, GST_STATE_READY) !=
 	    GST_STATE_SUCCESS)
@@ -406,13 +405,14 @@ callback_audio_sink_eos (GstElement * element, GstPlay * play)
 }
 
 static void
-callback_video_have_xid (GstElement * element, gint xid, GstPlay * play)
+callback_video_have_video_out (GstElement * element,
+                               gpointer video_out, GstPlay * play)
 {
   GstPlaySignal *signal;
 
   signal = g_new0 (GstPlaySignal, 1);
-  signal->signal_id = HAVE_XID;
-  signal->signal_data.video_xid.xid = xid;
+  signal->signal_id = HAVE_VIDEO_OUT;
+  signal->signal_data.video_out.video_out = video_out;
 
   g_async_queue_push (play->signal_queue, signal);
 
@@ -420,13 +420,14 @@ callback_video_have_xid (GstElement * element, gint xid, GstPlay * play)
 }
 
 static void
-callback_video_have_vis_xid (GstElement * element, gint xid, GstPlay * play)
+callback_video_have_vis_video_out (GstElement * element,
+                                   gpointer video_out, GstPlay * play)
 {
   GstPlaySignal *signal;
 
   signal = g_new0 (GstPlaySignal, 1);
-  signal->signal_id = HAVE_VIS_XID;
-  signal->signal_data.video_xid.xid = xid;
+  signal->signal_id = HAVE_VIS_VIDEO_OUT;
+  signal->signal_data.video_out.video_out = video_out;
 
   g_async_queue_push (play->signal_queue, signal);
 
@@ -441,6 +442,22 @@ callback_video_have_size (GstElement * element,
 
   signal = g_new0 (GstPlaySignal, 1);
   signal->signal_id = HAVE_VIDEO_SIZE;
+  signal->signal_data.video_size.width = width;
+  signal->signal_data.video_size.height = height;
+
+  g_async_queue_push (play->signal_queue, signal);
+
+  play->idle_add_func ((GSourceFunc) gst_play_idle_signal, play);
+}
+
+static void
+callback_video_have_vis_size (GstElement * element,
+			      gint width, gint height, GstPlay * play)
+{
+  GstPlaySignal *signal;
+
+  signal = g_new0 (GstPlaySignal, 1);
+  signal->signal_id = HAVE_VIS_SIZE;
   signal->signal_data.video_size.width = width;
   signal->signal_data.video_size.height = height;
 
@@ -646,27 +663,36 @@ gst_play_class_init (GstPlayClass * klass)
 		  NULL, NULL,
 		  gst_marshal_VOID__INT64, G_TYPE_NONE, 1, G_TYPE_INT64);
 
-  gst_play_signals[HAVE_XID] =
-    g_signal_new ("have_xid",
+  gst_play_signals[HAVE_VIDEO_OUT] =
+    g_signal_new ("have_video_out",
 		  G_TYPE_FROM_CLASS (klass),
 		  G_SIGNAL_RUN_FIRST,
-		  G_STRUCT_OFFSET (GstPlayClass, have_xid),
+		  G_STRUCT_OFFSET (GstPlayClass, have_video_out),
 		  NULL, NULL,
-		  gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+		  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_INT);
 
-  gst_play_signals[HAVE_VIS_XID] =
-    g_signal_new ("have_vis_xid",
+  gst_play_signals[HAVE_VIS_VIDEO_OUT] =
+    g_signal_new ("have_vis_video_out",
 		  G_TYPE_FROM_CLASS (klass),
 		  G_SIGNAL_RUN_FIRST,
-		  G_STRUCT_OFFSET (GstPlayClass, have_vis_xid),
+		  G_STRUCT_OFFSET (GstPlayClass, have_vis_video_out),
 		  NULL, NULL,
-		  gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+		  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_INT);
 
   gst_play_signals[HAVE_VIDEO_SIZE] =
     g_signal_new ("have_video_size",
 		  G_TYPE_FROM_CLASS (klass),
 		  G_SIGNAL_RUN_FIRST,
 		  G_STRUCT_OFFSET (GstPlayClass, have_video_size),
+		  NULL, NULL,
+		  gst_marshal_VOID__INT_INT,
+		  G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);
+                  
+  gst_play_signals[HAVE_VIS_SIZE] =
+    g_signal_new ("have_vis_size",
+		  G_TYPE_FROM_CLASS (klass),
+		  G_SIGNAL_RUN_FIRST,
+		  G_STRUCT_OFFSET (GstPlayClass, have_vis_size),
 		  NULL, NULL,
 		  gst_marshal_VOID__INT_INT,
 		  G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);

@@ -46,8 +46,7 @@ typedef enum
   GST_PLAY_UNKNOWN_MEDIA,
   GST_PLAY_CANNOT_PLAY,
   GST_PLAY_ERROR,
-}
-GstPlayReturn;
+} GstPlayReturn;
 
 typedef enum
 {
@@ -56,8 +55,7 @@ typedef enum
   GST_PLAY_PIPE_AUDIO_HYPER_THREADED,
   GST_PLAY_PIPE_VIDEO,
   GST_PLAY_PIPE_VIDEO_VISUALISATION,
-}
-GstPlayPipeType;
+} GstPlayPipeType;
 
 typedef enum
 {
@@ -68,16 +66,14 @@ typedef enum
   GST_PLAY_ERROR_VOLUME,
   GST_PLAY_ERROR_COLORSPACE,
   GST_PLAY_ERROR_LAST,
-}
-GstPlayError;
+} GstPlayError;
 
 typedef enum
 {
   GST_PLAY_SINK_TYPE_AUDIO,
   GST_PLAY_SINK_TYPE_VIDEO,
   GST_PLAY_SINK_TYPE_ANY,
-}
-GstPlaySinkType;
+} GstPlaySinkType;
 
 #define GST_PLAY_ERROR 		gst_play_error_quark ()
 
@@ -152,9 +148,10 @@ struct _GstPlayClass
   void (*stream_end) (GstPlay * play);
   void (*time_tick) (GstPlay * play, gint64 time_nanos);
   void (*stream_length) (GstPlay * play, gint64 length_nanos);
-  void (*have_xid) (GstPlay * play, gint xid);
-  void (*have_vis_xid) (GstPlay * play, gint xid);
+  void (*have_video_out) (GstPlay * play, gpointer video_out);
+  void (*have_vis_video_out) (GstPlay * play, gpointer video_out);
   void (*have_video_size) (GstPlay * play, gint width, gint height);
+  void (*have_vis_size) (GstPlay * play, gint width, gint height);
 };
 
 struct _GstPlayIdleData

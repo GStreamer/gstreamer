@@ -580,8 +580,8 @@ gst_play_video_set_video (GstPlay * play, GstElement * video_sink)
   if (play->video_sink_element != NULL)
     {
       g_signal_connect (G_OBJECT (play->video_sink_element),
-			"have_xid",
-			G_CALLBACK (callback_video_have_xid), play);
+			"have_video_out",
+			G_CALLBACK (callback_video_have_video_out), play);
       g_signal_connect (G_OBJECT (play->video_sink_element),
 			"have_size",
 			G_CALLBACK (callback_video_have_size), play);
@@ -917,8 +917,8 @@ gst_play_video_vis_set_video (GstPlay * play, GstElement * video_sink)
   if (play->video_sink_element != NULL)
     {
       g_signal_connect (G_OBJECT (play->video_sink_element),
-			"have_xid",
-			G_CALLBACK (callback_video_have_xid), play);
+			"have_video_out",
+			G_CALLBACK (callback_video_have_video_out), play);
       g_signal_connect (G_OBJECT (play->video_sink_element),
 			"have_size",
 			G_CALLBACK (callback_video_have_size), play);
@@ -971,12 +971,11 @@ gst_play_set_visualisation_video_sink (GstPlay * play,
   if (play->visualisation_sink_element != NULL)
     {
       g_signal_connect (G_OBJECT (play->visualisation_sink_element),
-			"have_xid",
-			G_CALLBACK (callback_video_have_vis_xid), play);
-      /*g_signal_connect (    G_OBJECT (play->visualisation_sink_element),
-         "have_size",
-         G_CALLBACK (callback_video_have_vis_size),
-         play); */
+			"have_video_out",
+			G_CALLBACK (callback_video_have_vis_video_out), play);
+      g_signal_connect (G_OBJECT (play->visualisation_sink_element),
+                        "have_size",
+                        G_CALLBACK (callback_video_have_vis_size), play);
       g_object_set (G_OBJECT (play->visualisation_sink_element),
 		    "need_new_window", TRUE, "toplevel", FALSE, NULL);
     }
@@ -1039,7 +1038,7 @@ gst_play_connect_visualisation (GstPlay * play, gboolean connect)
 {
   GstPad *tee_vis_pad, *vis_video_thread_pad;
   GstElement *vis_video_thread;
-  gboolean connected = FALSE;
+  gboolean connected = FALSE, was_playing = FALSE;
 
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
@@ -1049,6 +1048,13 @@ gst_play_connect_visualisation (GstPlay * play, gboolean connect)
 					      "vis_video_thread_pad");
   vis_video_thread = g_hash_table_lookup (play->other_elements,
 					  "vis_video_thread");
+  
+  /* If pipeline was playing we pause it and note that */
+  if (gst_element_get_state (play->pipeline) == GST_STATE_PLAYING)
+    {
+      gst_element_set_state (play->pipeline, GST_STATE_PAUSED);
+      was_playing = TRUE;
+    }
 
   if (gst_pad_get_peer (vis_video_thread_pad) != NULL)
     connected = TRUE;
@@ -1063,11 +1069,13 @@ gst_play_connect_visualisation (GstPlay * play, gboolean connect)
     {
       gst_pad_unlink (tee_vis_pad, vis_video_thread_pad);
     }
-
-  if (GST_IS_ELEMENT (vis_video_thread) && GST_IS_ELEMENT (play->pipeline))
+    
+  /* Restore playing state if needed */
+  if (GST_IS_ELEMENT (vis_video_thread) &&
+      GST_IS_ELEMENT (play->pipeline) &&
+      was_playing)
     {
-      gst_element_set_state (vis_video_thread,
-			     gst_element_get_state (play->pipeline));
+      gst_element_set_state (play->pipeline, GST_STATE_PLAYING);
     }
 
   return TRUE;
