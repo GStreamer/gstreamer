@@ -100,12 +100,12 @@ AC_SUBST(GST_PLAY_CFLAGS)
 AC_SUBST(GST_PLAY_LIBS)
 
 dnl Editor
-AC_MSG_CHECKING(for GStreamer editor include dir)
-PKG_CHECK_MODULES(GST_EDITOR, gst-editor-libs >= 0.7.0,
-       	          HAVE_EDITOR=yes,HAVE_EDITOR=no)
-AM_CONDITIONAL(BUILD_EDITOR, test "x$HAVE_EDITOR" = "xyes")
-AC_SUBST(GST_EDITOR_CFLAGS)
-AC_SUBST(GST_EDITOR_LIBS)
+dnl AC_MSG_CHECKING(for GStreamer editor include dir)
+dnl PKG_CHECK_MODULES(GST_EDITOR, gst-editor-libs >= 0.7.0,
+dnl        	          HAVE_EDITOR=yes,HAVE_EDITOR=no)
+dnl AM_CONDITIONAL(BUILD_EDITOR, test "x$HAVE_EDITOR" = "xyes")
+dnl AC_SUBST(GST_EDITOR_CFLAGS)
+dnl AC_SUBST(GST_EDITOR_LIBS)
 
 AC_CHECK_PROG(HAVE_XMLTO, xmlto, true, false)
 AC_CHECK_PROG(HAVE_XMLCATALOG, xmlcatalog, true, false)

@@ -1,6 +1,10 @@
 2004-05-03  Johan Dahlin  <johan@gnome.org>
 
-	* configure.ac: define HAVE_OLD_PYGTK if we're on pygtk 2.3.91 or earlier.
+	* gst/Makefile.am (INCLUDES): Move PYGTK_CFLAGS to common_cflags
+	instead of INCLUDES
+
+	* configure.ac: define HAVE_OLD_PYGTK if we're on pygtk 2.3.91 or
+	earlier and disable editor checks
 
 	* gst/common.h: Add backwards compatible typedef for python < 2.3
 	and pygtk < 2.3.92

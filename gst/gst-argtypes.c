@@ -20,7 +20,7 @@
  */
 
 #include <gst/gst.h>
-#include <pygobject.h>
+#include "common.h"
 
 gboolean
 pygst_data_from_pyobject(PyObject *object, GstData **data)

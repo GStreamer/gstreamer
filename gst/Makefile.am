@@ -1,4 +1,4 @@
-common_cflags = $(GST_CFLAGS) -fno-strict-aliasing
+common_cflags = $(PYGTK_CFLAGS) $(GST_CFLAGS) -fno-strict-aliasing
 common_libadd = $(GST_LIBS)
 common_ldflags = -module -avoid-version
 
@@ -25,7 +25,7 @@ endif
 defs_DATA = gst-types.defs
 defsdir = $(pkgdatadir)/2.0/defs
 
-INCLUDES = $(PYTHON_INCLUDES) $(PYGTK_CFLAGS)
+INCLUDES = $(PYTHON_INCLUDES)
 EXTRA_DIST = $(defs_DATA) arg-types.py
 PYGTK_DEFSDIR = @PYGTK_DEFSDIR@
 
