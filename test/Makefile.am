@@ -16,7 +16,7 @@ noinst_PROGRAMS = qtest $(GNOME_PROGS) record mp3 teardown buffer mp3parse \
 		  vidcapture2 mp2toavi mp3tovorbis xmmstest \
 		  mp3mad lat
 
-SUBDIRS = xml bindings
+SUBDIRS = xml bindings events memchunk
 
 buffer_SOURCES = buffer.c mem.c
 teardown_SOURCES = teardown.c mem.c
