@@ -32,6 +32,7 @@
 #include <gst/gstbuffer.h>
 #include <gst/gstcpu.h>
 #include <gst/gstelement.h>
+#include <gst/gstextratypes.h>
 #include <gst/gstbin.h>
 #include <gst/gstpipeline.h>
 #include <gst/gstthread.h>

@@ -97,7 +97,7 @@ gst_disksrc_class_init(GstDiskSrcClass *klass) {
 
   parent_class = gtk_type_class(GST_TYPE_SRC);
 
-  gtk_object_add_arg_type("GstDiskSrc::location", GTK_TYPE_STRING,
+  gtk_object_add_arg_type("GstDiskSrc::location", GST_TYPE_FILENAME,
                           GTK_ARG_READWRITE, ARG_LOCATION);
   gtk_object_add_arg_type("GstDiskSrc::bytesperread", GTK_TYPE_INT,
                           GTK_ARG_READWRITE, ARG_BYTESPERREAD);

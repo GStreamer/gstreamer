@@ -97,7 +97,7 @@ gst_asyncdisksrc_class_init(GstAsyncDiskSrcClass *klass) {
 
   parent_class = gtk_type_class(GST_TYPE_SRC);
 
-  gtk_object_add_arg_type("GstAsyncDiskSrc::location", GTK_TYPE_STRING,
+  gtk_object_add_arg_type("GstAsyncDiskSrc::location", GST_TYPE_FILENAME,
                           GTK_ARG_READWRITE, ARG_LOCATION);
   gtk_object_add_arg_type("GstAsyncDiskSrc::bytesperread", GTK_TYPE_INT,
                           GTK_ARG_READWRITE, ARG_BYTESPERREAD);

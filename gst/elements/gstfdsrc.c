@@ -93,7 +93,7 @@ gst_fdsrc_class_init(GstFdSrcClass *klass) {
 
   parent_class = gtk_type_class(GST_TYPE_SRC);
 
-  gtk_object_add_arg_type("GstFdSrc::location", GTK_TYPE_STRING,
+  gtk_object_add_arg_type("GstFdSrc::location", GST_TYPE_FILENAME,
                           GTK_ARG_WRITABLE, ARG_LOCATION);
   gtk_object_add_arg_type("GstFdSrc::bytesperread", GTK_TYPE_INT,
                           GTK_ARG_READWRITE, ARG_BYTESPERREAD);

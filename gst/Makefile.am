@@ -28,6 +28,7 @@ libgst_la_SOURCES =	\
 	$(GSTARCH_SRCS) \
 	gstelement.c	\
 	gstelementfactory.c	\
+	gstextratypes.c	\
 	gstbin.c	\
 	gstpipeline.c	\
 	gstthread.c	\
@@ -55,6 +56,7 @@ libgstinclude_HEADERS =	\
 	gstclock.h	\
 	gstcpu.h	\
 	gstelement.h	\
+	gstextratypes.h	\
 	gstbin.h	\
 	gstpipeline.h	\
 	gstthread.h	\

@@ -65,6 +65,37 @@ enum {
   /* FILL ME */
 };
 
+#define GST_TYPE_AUDIOSINK_FORMATS (gst_audiosink_formats_get_type())
+
+GtkType 
+gst_audiosink_formats_get_type(void) {
+  static GtkType audiosink_formats_type = 0;
+  static GtkEnumValue audiosink_formats[] = {
+    {8, "8", "8 Bits"},
+    {16, "16", "16 Bits"},
+    {0, NULL, NULL},
+  };
+  if (!audiosink_formats_type) {
+    audiosink_formats_type = gtk_type_register_enum("GstAudiosinkFormats", audiosink_formats);
+  }
+  return audiosink_formats_type;
+}
+
+#define GST_TYPE_AUDIOSINK_CHANNELS (gst_audiosink_channels_get_type())
+
+GtkType 
+gst_audiosink_channels_get_type(void) {
+  static GtkType audiosink_channels_type = 0;
+  static GtkEnumValue audiosink_channels[] = {
+    {1, "1", "Mono"},
+    {2, "2", "Stereo"},
+    {0, NULL, NULL},
+  };
+  if (!audiosink_channels_type) {
+    audiosink_channels_type = gtk_type_register_enum("GstAudiosinkChannels", audiosink_channels);
+  }
+  return audiosink_channels_type;
+}
 
 static void gst_audiosink_class_init(GstAudioSinkClass *klass);
 static void gst_audiosink_init(GstAudioSink *audiosink);
@@ -111,9 +142,9 @@ gst_audiosink_class_init(GstAudioSinkClass *klass) {
 
   gtk_object_add_arg_type("GstAudioSink::mute", GTK_TYPE_BOOL,
                            GTK_ARG_READWRITE, ARG_MUTE);
-  gtk_object_add_arg_type("GstAudioSink::format", GTK_TYPE_INT,
+  gtk_object_add_arg_type("GstAudioSink::format", GST_TYPE_AUDIOSINK_FORMATS,
                            GTK_ARG_READWRITE, ARG_FORMAT);
-  gtk_object_add_arg_type("GstAudioSink::channels", GTK_TYPE_INT,
+  gtk_object_add_arg_type("GstAudioSink::channels", GST_TYPE_AUDIOSINK_CHANNELS,
                            GTK_ARG_READWRITE, ARG_CHANNELS);
   gtk_object_add_arg_type("GstAudioSink::frequency", GTK_TYPE_INT,
                            GTK_ARG_READWRITE, ARG_FREQUENCY);
@@ -246,11 +277,11 @@ static void gst_audiosink_set_arg(GtkObject *object,GtkArg *arg,guint id) {
       audiosink->mute = GTK_VALUE_BOOL(*arg);
       break;
     case ARG_FORMAT:
-      audiosink->format = GTK_VALUE_INT(*arg);
+      audiosink->format = GTK_VALUE_ENUM(*arg);
       gst_audiosink_sync_parms(audiosink);
       break;
     case ARG_CHANNELS:
-      audiosink->channels = GTK_VALUE_INT(*arg);
+      audiosink->channels = GTK_VALUE_ENUM(*arg);
       gst_audiosink_sync_parms(audiosink);
       break;
     case ARG_FREQUENCY:
@@ -274,10 +305,10 @@ static void gst_audiosink_get_arg(GtkObject *object,GtkArg *arg,guint id) {
       GTK_VALUE_BOOL(*arg) = audiosink->mute;
       break;
     case ARG_FORMAT:
-      GTK_VALUE_INT(*arg) = audiosink->format;
+      GTK_VALUE_ENUM(*arg) = audiosink->format;
       break;
     case ARG_CHANNELS:
-      GTK_VALUE_INT(*arg) = audiosink->channels;
+      GTK_VALUE_ENUM(*arg) = audiosink->channels;
       break;
     case ARG_FREQUENCY:
       GTK_VALUE_INT(*arg) = audiosink->frequency;
