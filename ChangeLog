@@ -1,3 +1,9 @@
+2005-01-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/elements/gsttypefindelement.c:
+	(gst_type_find_element_handle_event):
+	  Fix buffer pushing if stream EOSes during typefinding.
+
 2005-01-28  Edward Hervey  <bilboed@bilboed.com>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
