@@ -7,26 +7,514 @@ Base class for all pipeline elements
 <!-- ##### SECTION Long_Description ##### -->
 <para>
 GstElement is the base class needed to construct an element that can be
-used in a GST pipeline.  As such, it is not a functional entity, and
+used in a GStreamer pipeline.  As such, it is not a functional entity, and
 cannot do anything when placed in a pipeline.
 </para>
 
 <para>
-All GstElements have a list containing the #GstPad structure for all their
-inputs and outputs.  These can be added with gst_element_add_pad() or
-gst_element_add_ghost_pad(), and retrieved by name with
-gst_element_get_pad(), or in a list form by gst_element_get_pad_list().
+The name of a GstElement can be get with gst_element_get_name() and set with
+gst_element_set_name().  For speed, GST_ELEMENT_NAME() can be used in the 
+core.
+Do not use this in plug-ins or applications in order to retain ABI 
+compatibility.
 </para>
 
 <para>
-gst_element_connect() is a convenience function provided to make it
-simpler to connect pads of two elements together.
+All elements have pads (of the type #GstPad).  These pads connect to pads on
+other elements.  Buffers flow between these connected pads.
+A GstElement has a GList of #GstPad structures for all their input (or sink)
+and output (or source) pads.  
+Core and plug-in writers can add and remove pads with gst_element_add_pad()
+and gst_element_remove_pad().
+Application writers can manipulate ghost pads (copies of real pads inside a bin)
+with gst_element_add_ghost_pad() and gst_element_remove_ghost_pad().
+A pad of an element can be retrieved by name with gst_element_get_pad().
+A GList of all pads can be retrieved with gst_element_get_pad_list().
 </para>
 
+<para>
+Elements can be connected through their pads.
+If the connection is straightforward, use the gst_element_connect() 
+convenience function to connect two elements, or gst_element_connect_many() 
+for more elements in a row.
+Use gst_element_connect_filtered() to connect two elements constrained by
+a specified set of #GstCaps.
+For finer control, use gst_element_connect_pads() and 
+gst_element_connect_pads_filtered() to specify the pads to connect on 
+each element by name.
+</para>
+
+<para>
+Each element has a state (see #GstElementState).  You can get and set the state
+of an element with gst_element_get_state() and gst_element_set_state().  
+You can wait for an element to change it's state with gst_element_wait_state_change().
+To get a string representation of a #GstElementState, use 
+gst_element_statename(), which is a really bad name for what it does 
+and should probably be renamed
+to gst_element_state_get_name if we can be bothered to do that.
+</para>
+
+<para>
+You can get and set a #GstClock on an element using gst_element_get_clock()
+and gst_element_set_clock().  You can wait for the clock to reach a given
+#GstClockTime using gst_element_clock_wait().
+</para>
 <!-- ##### SECTION See_Also ##### -->
 <para>
-#GstElementFactory
+#GstElementFactory, #GstPad
 </para>
+
+<!-- basic object functions -->
+
+<!-- ##### STRUCT GstElement ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_element_destroy ##### -->
+<para>
+Destroys the element (without taking the refcount into account).
+An application programmer should use #gst_object_unref instead to dispose
+of an element he doesn't need anymore.
+</para>
+
+@element: a #GstElement to destroy
+
+
+<!-- ##### FUNCTION gst_element_get_name ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_set_name ##### -->
+<para>
+
+</para>
+
+@element: 
+@name: 
+
+
+<!-- connection -->
+
+
+<!-- ##### FUNCTION gst_element_get_factory ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_add_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@pad: 
+
+
+<!-- ##### FUNCTION gst_element_remove_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@pad: 
+
+
+<!-- ##### FUNCTION gst_element_add_ghost_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@pad: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_remove_ghost_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@pad: 
+
+
+<!-- pad template manipulation -->
+
+
+<!-- ##### FUNCTION gst_element_get_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@name: 
+@Returns: GList of #GstPads
+
+
+<!-- ##### FUNCTION gst_element_get_static_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_get_request_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_get_pad_list ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_get_pad_template_list ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+
+<!-- scheduling -->
+
+
+<!-- ##### FUNCTION gst_element_class_add_pad_template ##### -->
+<para>
+
+</para>
+
+@klass: 
+@templ: 
+<!-- # Unused Parameters # -->
+@element: 
+
+
+<!-- ##### FUNCTION gst_element_connect ##### -->
+<para>
+
+</para>
+
+@src: 
+@dest: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_connect_many ##### -->
+<para>
+
+</para>
+
+@element_1: 
+@element_2: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_connect_filtered ##### -->
+<para>
+
+</para>
+
+@src: 
+@dest: 
+@filtercaps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_connect_pads ##### -->
+<para>
+
+</para>
+
+@src: 
+@srcpadname: 
+@dest: 
+@destpadname: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_connect_pads_filtered ##### -->
+<para>
+
+</para>
+
+@src: 
+@srcpadname: 
+@dest: 
+@destpadname: 
+@filtercaps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_disconnect ##### -->
+<para>
+
+</para>
+
+@src: 
+@dest: 
+<!-- # Unused Parameters # -->
+@srcpadname: 
+@destpadname: 
+
+
+<!-- ##### FUNCTION gst_element_disconnect_many ##### -->
+<para>
+
+</para>
+
+@element_1: 
+@element_2: 
+@Varargs: 
+
+
+<!-- ##### FUNCTION gst_element_disconnect_pads ##### -->
+<para>
+
+</para>
+
+@src: 
+@srcpadname: 
+@dest: 
+@destpadname: 
+
+
+<!-- pad manipulation -->
+
+
+<!-- ##### FUNCTION gst_element_get_compatible_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_get_compatible_pad_filtered ##### -->
+<para>
+
+</para>
+
+@element: 
+@pad: 
+@filtercaps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_set_state ##### -->
+<para>
+
+</para>
+
+@element: 
+@state: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_get_state ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@elem: 
+
+
+<!-- ##### FUNCTION gst_element_wait_state_change ##### -->
+<para>
+
+</para>
+
+@element: 
+
+
+<!-- ##### FUNCTION gst_element_statename ##### -->
+<para>
+
+</para>
+
+@state: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_error ##### -->
+<para>
+
+</para>
+
+@element: 
+@error: 
+@Varargs: 
+
+
+<!-- ##### FUNCTION gst_element_set_eos ##### -->
+<para>
+
+</para>
+
+@element: 
+
+
+<!-- ##### FUNCTION gst_element_interrupt ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_yield ##### -->
+<para>
+
+</para>
+
+@element: 
+
+
+<!-- ##### FUNCTION gst_element_get_clock ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_set_clock ##### -->
+<para>
+
+</para>
+
+@element: 
+@clock: 
+
+
+<!-- ##### FUNCTION gst_element_clock_wait ##### -->
+<para>
+
+</para>
+
+@element: 
+@clock: 
+@time: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GstElementGetClockFunction ##### -->
+<para>
+The function to get the clock from a clock providing element
+</para>
+
+@element: The element to get the clock of
+@Returns: The clock provided by the element
+
+
+<!-- ##### USER_FUNCTION GstElementSetClockFunction ##### -->
+<para>
+The function to set the clock on a clock receiving element.
+</para>
+
+@element: The element to set the clock on
+@clock: The clock to set on the element
+
+
+<!-- ##### FUNCTION gst_element_set_loop_function ##### -->
+<para>
+
+</para>
+
+@element: 
+@loop: 
+
+
+<!-- ##### USER_FUNCTION GstElementLoopFunction ##### -->
+<para>
+This function type is used to specify a loop function for the element.  It
+is passed the element in question, and is expect to return only in error
+circumstances.
+</para>
+
+@element: The element in question.
+
+
+<!-- ##### FUNCTION gst_element_get_sched ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_set_sched ##### -->
+<para>
+
+</para>
+
+@element: 
+@sched: 
+
+
+<!-- ##### FUNCTION gst_element_get_parent ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_set_parent ##### -->
+<para>
+
+</para>
+
+@element: 
+@parent: 
+
+
+<!-- ##### FUNCTION gst_element_get_managing_bin ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+<!-- clocking -->
+
 
 <!-- ##### ENUM GstElementState ##### -->
 <para>
@@ -147,7 +635,7 @@ This enum defines the standard flags that an element may have.
 Queries whether the Element should be placed in a thread.
 </para>
 
-@obj: The element to query
+@obj: a #GstElement to query
 
 
 <!-- ##### MACRO GST_ELEMENT_IS_DECOUPLED ##### -->
@@ -155,7 +643,7 @@ Queries whether the Element should be placed in a thread.
 Queries if the Element is decoupled.
 </para>
 
-@obj: The element to query
+@obj: a #GstElement to query
 
 
 <!-- ##### MACRO GST_ELEMENT_IS_EOS ##### -->
@@ -163,7 +651,7 @@ Queries if the Element is decoupled.
 Query wether this element is in the End Of Stream state.
 </para>
 
-@obj: The element to query
+@obj: a #GstElement to query
 
 
 <!-- ##### MACRO GST_ELEMENT_IS_EVENT_AWARE ##### -->
@@ -171,7 +659,7 @@ Query wether this element is in the End Of Stream state.
 Query wether this element can handle events.
 </para>
 
-@obj: The element to query
+@obj: a #GstElement to query
 
 
 <!-- ##### MACRO GST_ELEMENT_PARENT ##### -->
@@ -179,15 +667,15 @@ Query wether this element can handle events.
 Get the parent object of this element.
 </para>
 
-@obj: The element to query
+@obj: a #GstElement to query
 
 
 <!-- ##### MACRO GST_ELEMENT_NAME ##### -->
 <para>
-Get the name of this element.
+Gets the name of this element.  Used in the core.  Not ABI-compatible.
 </para>
 
-@obj: The element to query
+@obj: A #GstElement to query
 
 
 <!-- ##### MACRO GST_ELEMENT_PADS ##### -->
@@ -195,7 +683,7 @@ Get the name of this element.
 Get the pads of this elements.
 </para>
 
-@obj: The element to query
+@obj: a #GstElement to query
 
 
 <!-- ##### MACRO GST_ELEMENT_SCHED ##### -->
@@ -203,7 +691,7 @@ Get the pads of this elements.
 Get the scheduler of this element.
 </para>
 
-@obj: The element to query
+@obj: a #GstElement to query
 
 
 <!-- ##### MACRO GST_ELEMENT_MANAGER ##### -->
@@ -211,7 +699,7 @@ Get the scheduler of this element.
 Get the manager of this element.
 </para>
 
-@obj: The element to query
+@obj: a #GstElement to query
 
 
 <!-- ##### MACRO GST_ELEMENT_CLOCK ##### -->
@@ -219,447 +707,7 @@ Get the manager of this element.
 Get the clock of this element
 </para>
 
-@obj: the Element to query
-
-
-<!-- ##### STRUCT GstElement ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### USER_FUNCTION GstElementLoopFunction ##### -->
-<para>
-This function type is used to specify a loop function for the element.  It
-is passed the element in question, and is expect to return only in error
-circumstances.
-</para>
-
-@element: The element in question.
-
-
-<!-- ##### USER_FUNCTION GstElementGetClockFunction ##### -->
-<para>
-The function to get the clock from a clock providing element
-</para>
-
-@element: The element to get the clock of
-@Returns: The clock provided by the element
-
-
-<!-- ##### USER_FUNCTION GstElementSetClockFunction ##### -->
-<para>
-The function to set the clock on a clock receiving element.
-</para>
-
-@element: The element to set the clock on
-@clock: The clock to set on the element
-
-
-<!-- ##### FUNCTION gst_element_class_add_pad_template ##### -->
-<para>
-
-</para>
-
-@klass: 
-@templ: 
-<!-- # Unused Parameters # -->
-@element: 
-
-
-<!-- ##### MACRO gst_element_destroy ##### -->
-<para>
-Destroy the element. This is potentially dangerous, use gst_object_unref
-instead.
-</para>
-
-@element: the element to destroy
-
-
-<!-- ##### FUNCTION gst_element_set_loop_function ##### -->
-<para>
-
-</para>
-
-@element: 
-@loop: 
-
-
-<!-- ##### FUNCTION gst_element_set_name ##### -->
-<para>
-
-</para>
-
-@element: 
-@name: 
-
-
-<!-- ##### FUNCTION gst_element_get_name ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_get_sched ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_set_sched ##### -->
-<para>
-
-</para>
-
-@element: 
-@sched: 
-
-
-<!-- ##### FUNCTION gst_element_set_parent ##### -->
-<para>
-
-</para>
-
-@element: 
-@parent: 
-
-
-<!-- ##### FUNCTION gst_element_get_parent ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_get_managing_bin ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_add_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@pad: 
-
-
-<!-- ##### FUNCTION gst_element_remove_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@pad: 
-
-
-<!-- ##### FUNCTION gst_element_get_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@name: 
-@Returns: GList of pads
-
-
-<!-- ##### FUNCTION gst_element_get_static_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_get_request_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_get_pad_list ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_get_pad_template_list ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_add_ghost_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@pad: 
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_remove_ghost_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@pad: 
-
-
-<!-- ##### FUNCTION gst_element_get_compatible_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_get_compatible_pad_filtered ##### -->
-<para>
-
-</para>
-
-@element: 
-@pad: 
-@filtercaps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_connect ##### -->
-<para>
-
-</para>
-
-@src: 
-@dest: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@srcpadname: 
-@destpadname: 
-
-
-<!-- ##### FUNCTION gst_element_connect_many ##### -->
-<para>
-
-</para>
-
-@element_1: 
-@element_2: 
-@Varargs: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_connect_filtered ##### -->
-<para>
-
-</para>
-
-@src: 
-@dest: 
-@filtercaps: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@srcpadname: 
-@destpadname: 
-
-
-<!-- ##### FUNCTION gst_element_connect_pads ##### -->
-<para>
-
-</para>
-
-@src: 
-@srcpadname: 
-@dest: 
-@destpadname: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_connect_pads_filtered ##### -->
-<para>
-
-</para>
-
-@src: 
-@srcpadname: 
-@dest: 
-@destpadname: 
-@filtercaps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_disconnect ##### -->
-<para>
-
-</para>
-
-@src: 
-@dest: 
-<!-- # Unused Parameters # -->
-@srcpadname: 
-@destpadname: 
-
-
-<!-- ##### FUNCTION gst_element_disconnect_many ##### -->
-<para>
-
-</para>
-
-@element_1: 
-@element_2: 
-@Varargs: 
-
-
-<!-- ##### FUNCTION gst_element_disconnect_pads ##### -->
-<para>
-
-</para>
-
-@src: 
-@srcpadname: 
-@dest: 
-@destpadname: 
-
-
-<!-- ##### FUNCTION gst_element_set_state ##### -->
-<para>
-
-</para>
-
-@element: 
-@state: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_get_state ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@elem: 
-
-
-<!-- ##### FUNCTION gst_element_wait_state_change ##### -->
-<para>
-
-</para>
-
-@element: 
-
-
-<!-- ##### FUNCTION gst_element_statename ##### -->
-<para>
-
-</para>
-
-@state: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_error ##### -->
-<para>
-
-</para>
-
-@element: 
-@error: 
-@Varargs: 
-
-
-<!-- ##### FUNCTION gst_element_get_factory ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_set_eos ##### -->
-<para>
-
-</para>
-
-@element: 
-
-
-<!-- ##### FUNCTION gst_element_interrupt ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_yield ##### -->
-<para>
-
-</para>
-
-@element: 
-
-
-<!-- ##### FUNCTION gst_element_clock_wait ##### -->
-<para>
-
-</para>
-
-@element: 
-@clock: 
-@time: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_get_clock ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_set_clock ##### -->
-<para>
-
-</para>
-
-@element: 
-@clock: 
+@obj: a #GstElement to query
 
 
 <!-- ##### SIGNAL GstElement::eos ##### -->
