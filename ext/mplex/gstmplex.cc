@@ -289,12 +289,13 @@ gst_mplex_read_callback (BitStream *bitstream, uint8_t *dest, size_t size, void 
 	default:
 	  break;
       }
+      gst_event_unref (event);
     }
   }
 
   memcpy (dest, data, len);
   
-  gst_bytestream_flush (stream->bytestream, len);
+  gst_bytestream_flush_fast (stream->bytestream, len);
 
   return len;
 }
