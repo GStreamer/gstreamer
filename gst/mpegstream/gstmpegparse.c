@@ -482,11 +482,10 @@ gst_mpeg_parse_loop (GstElement *element)
         mpeg_parse->discont_pending = FALSE;
       }
       else {
-	GST_DEBUG ("waiting for SCR\n");
+	GST_DEBUG ("waiting for SCR");
+        gst_buffer_unref (GST_BUFFER (data));
+        return;
       }
-      gst_buffer_unref (GST_BUFFER (data));
-      return;
-
     }
 
     size = GST_BUFFER_SIZE (data);
