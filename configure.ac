@@ -460,9 +460,9 @@ GST_CHECK_FEATURE(LIBDVDREAD, [dvdread library], libdvdread, [
 ])
 
 dnl **** ESound ****
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBESD, true)
-GST_CHECK_FEATURE(LIBESD, [esound plugins], esdsrc esdsink, [
-  AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
+translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
+GST_CHECK_FEATURE(ESD, [esound plugins], esdsrc esdsink, [
+  AM_PATH_ESD(0.2.12, HAVE_ESD=yes, HAVE_ESD=no)
 ])
 
 dnl *** FLAC ***
@@ -523,10 +523,11 @@ GST_CHECK_FEATURE(LIBJPEG, [libjpeg], jpegenc jpegdec, [
 
 dnl *** mad ***
 dnl FIXME: we could use header checks here as well IMO
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMAD, true)
-GST_CHECK_FEATURE(LIBMAD, [mad], mad, [
-AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_LIBMAD="yes")
+translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
+GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
+  AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad")
 ])
+AC_SUBST(MAD_LIBS)
 
 dnl *** mikmod ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMIKMOD, true)
@@ -930,14 +931,6 @@ dnl
 dnl AC_SUBST(FOMIT_FRAME_POINTER)
 dnl
 
-if test "x$HAVE_LIBXV" = xyes; then
-  AC_DEFINE(HAVE_LIBXV)
-fi
-
-if test "x$HAVE_LIBMAD" = xyes; then
-  AC_DEFINE(HAVE_LIBMAD)
-fi
-
 if test "x$HAVE_LIBMIKMOD" = xyes; then
   AC_DEFINE(HAVE_LIBMIKMOD)
 fi
@@ -1008,9 +1001,6 @@ AM_CONDITIONAL(HAVE_ATOMIC_H,       test "x$USE_ATOMIC_H" = "xyes")
 AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
 AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
 
-AM_CONDITIONAL(HAVE_OSS,            test "x$HAVE_OSS" = "xyes")
-AM_CONDITIONAL(HAVE_XAUDIO,         test "x$HAVE_XAUDIO" = "xyes")
-AM_CONDITIONAL(HAVE_LIBMAD,         test "x$HAVE_LIBMAD" = "xyes")
 AM_CONDITIONAL(HAVE_LIBMIKMOD,      test "x$HAVE_LIBMIKMOD" = "xyes")
 AM_CONDITIONAL(HAVE_LINUX_CDROM,    test "x$HAVE_LINUX_CDROM" = "xyes")
 AM_CONDITIONAL(HAVE_LINUX_VIDEODEV, test "x$HAVE_LINUX_VIDEODEV" = "xyes")
@@ -1022,7 +1012,6 @@ AM_CONDITIONAL(HAVE_LIBHERMES,      test "x$HAVE_LIBHERMES" = "xyes")
 AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGLADE_GNOME, test "x$HAVE_LIBGLADE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
-AM_CONDITIONAL(HAVE_LIBXV,          test "x$HAVE_LIBXV" = "xyes")
 AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
 AM_CONDITIONAL(BUILD_DOCS,          test "x$BUILD_DOCS" = "xyes")
@@ -1155,6 +1144,10 @@ sys/v4l/Makefile
 sys/vcd/Makefile
 sys/vga/Makefile
 sys/xvideo/Makefile
+ext/Makefile
+ext/esd/Makefile
+ext/mad/Makefile
+ext/vorbis/Makefile
 )
 
 echo -e "configure: *** Plugins that will be built : $GST_PLUGINS_YES"
