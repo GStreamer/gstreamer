@@ -1,3 +1,21 @@
+2004-10-24  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ogg/gstoggmux.c:
+	  Basic pad template which accepts OGM tracks, speex, flac, vorbis
+	  and theora. Any is incorrect.
+	* gst/asfdemux/gstasfmux.c: (gst_asfmux_vidsink_link):
+	  Fix caps.
+	* sys/v4l/gstv4lmjpegsink.c: (gst_v4lmjpegsink_base_init):
+	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_base_init),
+	(gst_v4lmjpegsrc_init), (gst_v4lmjpegsrc_srcconnect),
+	(gst_v4lmjpegsrc_getcaps), (gst_v4lmjpegsrc_change_state):
+	* sys/v4l/gstv4lmjpegsrc.h:
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_src_link), (gst_v4lsrc_getcaps),
+	(gst_v4lsrc_change_state):
+	* sys/v4l/v4lmjpegsrc_calls.c: (gst_v4lmjpegsrc_capture_start),
+	(gst_v4lmjpegsrc_capture_stop):
+	  Fix caps. Keep track of internal state. Work.
+
 2004-10-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/Makefile.am:
