@@ -1,3 +1,8 @@
+2004-03-10  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/registries/gstxmlregistry.c: (gst_xml_registry_load):
+	Free a leaked g_timer on early returns.
+
 2004-03-08  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/advanced-types.xml:

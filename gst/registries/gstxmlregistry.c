@@ -590,6 +590,7 @@ gst_xml_registry_load (GstRegistry *registry)
   xmlregistry->context = g_markup_parse_context_new (&gst_xml_registry_parser, 0, registry, NULL);
 
   if (!CLASS (xmlregistry)->open_func (xmlregistry, GST_XML_REGISTRY_READ)) {
+    g_timer_destroy (timer);
     return FALSE;
   }
 
@@ -605,6 +606,7 @@ gst_xml_registry_load (GstRegistry *registry)
       GST_ERROR ("parsing registry: %s\n", error->message);
       g_free (text);
       CLASS (xmlregistry)->close_func (xmlregistry);
+      g_timer_destroy (timer);
       return FALSE;
     }
 
