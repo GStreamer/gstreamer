@@ -77,7 +77,7 @@ dynamic_connect (GstElement * element, GstPad * newpad, gpointer data)
       return;
     }
   }
-  if (!GST_PAD_IS_CONNECTED (dc->target_pad)) {
+  if (!GST_PAD_IS_CONNECTED (dc->target_pad) && !GST_PAD_IS_CONNECTED (newpad)) {
     gst_element_set_state (dc->pipeline, GST_STATE_PAUSED);
     if (!gst_pad_connect (newpad, dc->target_pad) && warn) {
       g_warning ("could not connect %s:%s to %s:%s", GST_DEBUG_PAD_NAME (newpad), 
