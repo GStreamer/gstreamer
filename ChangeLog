@@ -1,3 +1,8 @@
+2004-04-14  David Schleef  <ds@schleef.org>
+
+	* gst/gstcpu.c: (gst_cpuid_i386): Add workaround for gcc-3.2
+	generating bad code around the cpu detection asm code.
+
 2004-04-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tools/gst-inspect.c: (print_element_info):
