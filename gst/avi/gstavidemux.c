@@ -583,12 +583,12 @@ gst_avidemux_parse_index (GstAviDemux *avi_demux,
 		  
   if (GST_BUFFER_OFFSET (buf) != filepos + offset || GST_BUFFER_SIZE (buf) != 8) {
     GST_INFO (GST_CAT_PLUGIN_INFO, "avidemux: could not get index");
-    return;
+    goto end;
   }
 
   if (gst_riff_fourcc_to_id (GST_BUFFER_DATA (buf)) != GST_RIFF_TAG_idx1) {
     GST_INFO (GST_CAT_PLUGIN_INFO, "avidemux: no index found");
-    return;
+    goto end;
   }
 
   index_size = GUINT32_FROM_LE(*(guint32 *)(GST_BUFFER_DATA (buf) + 4));
@@ -604,6 +604,7 @@ gst_avidemux_parse_index (GstAviDemux *avi_demux,
   memcpy (avi_demux->index_entries, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   gst_buffer_unref (buf);
 
+end:
   if (!gst_bytestream_seek (avi_demux->bs, GST_SEEK_BYTEOFFSET_SET, filepos)) {
     GST_INFO (GST_CAT_PLUGIN_INFO, "avidemux: could not seek back to movi");
     return;

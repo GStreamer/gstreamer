@@ -78,6 +78,7 @@ struct _GstOssSink {
   guint bufsize;
   guint bps;
   guint64 offset;
+  guint64 handled;
 
   guint64 fragment_time;
 };

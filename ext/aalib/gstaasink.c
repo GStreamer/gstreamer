@@ -242,8 +242,8 @@ gst_aasink_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_CONNECT_DELAYED;
   
-  aasink->width =  gst_caps_get_int (caps, "width");
-  aasink->height =  gst_caps_get_int (caps, "height");
+  gst_caps_get_int (caps, "width", &aasink->width);
+  gst_caps_get_int (caps, "height", &aasink->height);
 
   print_format = GULONG_FROM_LE (aasink->format);
 

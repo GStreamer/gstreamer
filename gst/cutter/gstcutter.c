@@ -235,13 +235,13 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
     if (filter->silent)
     {
 /*      g_print ("DEBUG: cutter: cut to here, turning off out\n"); */
-      gtk_signal_emit (G_OBJECT (filter), gst_cutter_signals[CUT_STOP]);
+      g_signal_emit (G_OBJECT (filter), gst_cutter_signals[CUT_STOP], 0);
     }
     else
     {
 /*      g_print ("DEBUG: cutter: start from here, turning on out\n"); */
       /* first of all, flush current buffer */
-      gtk_signal_emit (G_OBJECT (filter), gst_cutter_signals[CUT_START]);
+      g_signal_emit (G_OBJECT (filter), gst_cutter_signals[CUT_START], 0);
       g_print ("DEBUG: cutter: flushing buffer ");
       while (filter->pre_buffer)
       {
@@ -389,7 +389,7 @@ gst_cutter_get_caps (GstPad *pad, GstCutter* filter)
     /* FIXME : Please change this to a better warning method ! */
   if (caps == NULL)
     printf ("WARNING: cutter: get_caps: Could not get caps of pad !\n");
-  filter->width = gst_caps_get_int (caps, "width");
+  gst_caps_get_int (caps, "width", &filter->width);
   filter->max_sample = gst_audio_highest_sample_value (pad);
   filter->have_caps = TRUE;
 }

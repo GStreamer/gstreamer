@@ -110,9 +110,9 @@ gst_flacenc_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_CONNECT_DELAYED;
 
-  flacenc->channels = gst_caps_get_int (caps, "channels");
-  flacenc->depth = gst_caps_get_int (caps, "depth");
-  flacenc->sample_rate = gst_caps_get_int (caps, "rate");
+  gst_caps_get_int (caps, "channels", &flacenc->channels);
+  gst_caps_get_int (caps, "depth", &flacenc->depth);
+  gst_caps_get_int (caps, "rate", &flacenc->sample_rate);
 
   FLAC__stream_encoder_set_bits_per_sample (flacenc->encoder, flacenc->depth);
   FLAC__stream_encoder_set_sample_rate (flacenc->encoder, flacenc->sample_rate);

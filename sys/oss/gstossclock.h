@@ -45,18 +45,17 @@ extern "C" {
 typedef struct _GstOssClock GstOssClock;
 typedef struct _GstOssClockClass GstOssClockClass;
 
+typedef GstClockTime (*GstOssClockGetTimeFunc) (GstClock *clock, gpointer user_data);
+
+
 struct _GstOssClock {
   GstSystemClock clock;
-    
-  GList *entries;
-  GstClockTime current_time;
-  GstClockTime next_time;
-  GstClockTime base_time;
-  gboolean is_updated;
-  GstClockTime start_time;
-  GstClockTime origin;
 
-  GstElement *owner;
+  GstOssClockGetTimeFunc func;
+  gpointer user_data;
+
+  GstClockTime prev1, prev2;
+  GstClockTimeDiff adjust;
 };
 
 struct _GstOssClockClass {
@@ -64,10 +63,8 @@ struct _GstOssClockClass {
 };
 
 GType                   gst_oss_clock_get_type 		(void);
-GstOssClock*		gst_oss_clock_new		(gchar *name, GstElement *owner);
-
-void			gst_oss_clock_set_update 	(GstOssClock *clock, gboolean update);
-void			gst_oss_clock_set_base	 	(GstOssClock *clock, guint64 base);
+GstOssClock*		gst_oss_clock_new		(gchar *name, GstOssClockGetTimeFunc func,
+							 gpointer user_data);
 
 #ifdef __cplusplus
 }

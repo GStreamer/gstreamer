@@ -114,7 +114,7 @@ GST_PADTEMPLATE_FACTORY (sink_template,
       "width",      GST_PROPS_INT (16),
       "depth",      GST_PROPS_INT (16),
       "rate",       GST_PROPS_INT_RANGE (8000, 96000),
-      "channels",   GST_PROPS_INT (1)
+      "channels",   GST_PROPS_INT (2)
   )
 )
 

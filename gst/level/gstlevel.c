@@ -173,7 +173,7 @@ gst_level_chain (GstPad *pad,GstBuffer *buf)
     printf ("WARNING : chain : Could not get caps of pad !\n");
   }
 
-  width = gst_caps_get_int(caps, "width");
+  gst_caps_get_int(caps, "width", &width);
 
   in_data = (gint16 *)GST_BUFFER_DATA(buf);
   outbuf=gst_buffer_new();

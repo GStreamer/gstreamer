@@ -109,7 +109,7 @@ gst_ladspa_get_bufferpool (GstPad *pad)
 {
   gint i;
   GstBufferPool *bp;
-  GstLADSPA *ladspa = gst_pad_get_parent (pad);
+  GstLADSPA *ladspa = (GstLADSPA *) gst_pad_get_parent (pad);
   GstLADSPAClass *oclass = (GstLADSPAClass *) (G_OBJECT_GET_CLASS (ladspa));
 
   if (oclass->numsrcpads > 0)
@@ -394,7 +394,7 @@ gst_ladspa_init (GstLADSPA *ladspa)
     }
 
     ladspa->loopbased = TRUE;
-    gst_element_set_loop_function (ladspa, gst_ladspa_loop);
+    gst_element_set_loop_function (GST_ELEMENT (ladspa), gst_ladspa_loop);
   }  
 
   gst_ladspa_instantiate(ladspa);
@@ -406,13 +406,15 @@ gst_ladspa_connect (GstPad *pad, GstCaps *caps)
   GstLADSPA *ladspa = (GstLADSPA *) GST_PAD_PARENT (pad);
   GstLADSPAClass *oclass = (GstLADSPAClass *) (G_OBJECT_GET_CLASS (ladspa));
   guint i;
+  gint rate;
 
   g_return_val_if_fail (caps != NULL, GST_PAD_CONNECT_DELAYED);
   g_return_val_if_fail (pad  != NULL, GST_PAD_CONNECT_DELAYED);
 
+  gst_caps_get_int (caps, "rate", &rate);
   /* have to instantiate ladspa plugin when samplerate changes (groan) */
-  if (ladspa->samplerate != gst_caps_get_int (caps, "rate")){
-    ladspa->samplerate = gst_caps_get_int (caps, "rate");
+  if (ladspa->samplerate != rate){
+    ladspa->samplerate = rate;
     if (! gst_ladspa_instantiate(ladspa))
       return GST_PAD_CONNECT_REFUSED;
   }
@@ -434,12 +436,15 @@ static GstPadConnectReturn
 gst_ladspa_connect_get (GstPad *pad, GstCaps *caps) 
 {
   GstLADSPA *ladspa = (GstLADSPA*)GST_OBJECT_PARENT (pad);
+  gint rate;
  
   g_return_val_if_fail (caps != NULL, GST_PAD_CONNECT_DELAYED);
   g_return_val_if_fail (pad  != NULL, GST_PAD_CONNECT_DELAYED);
 
-  if (ladspa->samplerate != gst_caps_get_int (caps, "rate")) {
-    ladspa->samplerate = gst_caps_get_int (caps, "rate");
+  gst_caps_get_int (caps, "rate", &rate);
+
+  if (ladspa->samplerate != rate) {
+    ladspa->samplerate = rate;
     if (! gst_ladspa_instantiate(ladspa))
       return GST_PAD_CONNECT_REFUSED;
   }
@@ -674,7 +679,7 @@ gst_ladspa_deactivate(GstLADSPA *ladspa)
 static void
 gst_ladspa_loop (GstElement *element)
 {
-  gint8        *raw_in, *zero_out, i, cur_buf;
+  gint8        *raw_in, *zero_out, i;
   GstBuffer   **buffers_out;
   GstEvent     *event = NULL;
   guint32       waiting;
@@ -703,7 +708,8 @@ gst_ladspa_loop (GstElement *element)
 
     /* first get all the necessary data from the input ports */
     for (i=0;i<oclass->numsinkpads;i++){  
-      GST_DEBUG (0, "pulling %d bytes through channel %d's bytestream", i);
+      GST_DEBUG (0, "pulling %d bytes through channel %d'sbytestream\n", 
+		      ladspa->buffersize * sizeof (LADSPA_Data), i);
       raw_in = gst_bytestream_peek_bytes (ladspa->bytestreams[i], ladspa->buffersize * sizeof (LADSPA_Data));
 
       if (raw_in == NULL) {

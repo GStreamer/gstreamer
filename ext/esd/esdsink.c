@@ -227,9 +227,9 @@ gst_esdsink_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_CONNECT_DELAYED;
 
-  esdsink->depth = gst_caps_get_int (caps, "depth");
-  esdsink->channels = gst_caps_get_int (caps, "channels");
-  esdsink->frequency = gst_caps_get_int (caps, "rate");
+  gst_caps_get_int (caps, "depth", &esdsink->depth);
+  gst_caps_get_int (caps, "channels", &esdsink->channels);
+  gst_caps_get_int (caps, "rate", &esdsink->frequency);
 
   if (gst_esdsink_sync_parms (esdsink))
     return GST_PAD_CONNECT_OK;

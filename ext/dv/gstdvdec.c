@@ -317,8 +317,12 @@ gst_dvdec_loop (GstElement *element)
 
       /* try each format */
       if (gst_pad_try_set_caps (dvdec->videosrcpad, to_try)) {
+	guint32 fourcc;
+
 	/* it worked, try to find what it was again */
-	if (gst_caps_get_fourcc_int (to_try, "format") == GST_STR_FOURCC ("RGB ")) {
+	gst_caps_get_fourcc_int (to_try, "format", &fourcc);
+
+	if (fourcc == GST_STR_FOURCC ("RGB ")) {
           dvdec->space = e_dv_color_rgb;
           dvdec->bpp = 3;
 	}

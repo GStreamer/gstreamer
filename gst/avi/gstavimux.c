@@ -292,57 +292,68 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
 
     if (!strcmp (mimetype, "video/avi"))
     {
-      const gchar* format = gst_caps_get_string(caps, "format");
+      const gchar* format;
+      
+      gst_caps_get_string (caps, "format", &format);
 
       if (!strncmp (format, "strf_vids", 9)) {
         avimux->vids.size        = sizeof(gst_riff_strf_vids);
-        avimux->vids.width       = gst_caps_get_int (caps, "width");
-        avimux->vids.height      = gst_caps_get_int (caps, "height");
-        avimux->vids.planes      = gst_caps_get_int (caps, "planes");
-        avimux->vids.bit_cnt     = gst_caps_get_int (caps, "bit_cnt");
-        avimux->vids.compression = gst_caps_get_fourcc_int (caps, "compression");
-        avimux->vids.image_size  = gst_caps_get_int (caps, "image_size");
-        avimux->vids.xpels_meter = gst_caps_get_int (caps, "xpels_meter");
-        avimux->vids.ypels_meter = gst_caps_get_int (caps, "ypels_meter");
-        avimux->vids.num_colors  = gst_caps_get_int (caps, "num_colors");
-        avimux->vids.imp_colors  = gst_caps_get_int (caps, "imp_colors");
+	gst_caps_get (caps,
+		      "width",       GST_PROPS_INT_TYPE,    &avimux->vids.width,
+		      "height",      GST_PROPS_INT_TYPE,    &avimux->vids.height,
+		      "planes",      GST_PROPS_INT_TYPE,    &avimux->vids.planes,
+		      "bit_cnt",     GST_PROPS_INT_TYPE,    &avimux->vids.bit_cnt,
+		      "compression", GST_PROPS_FOURCC_TYPE, &avimux->vids.compression,
+		      "image_size",  GST_PROPS_INT_TYPE,    &avimux->vids.image_size,
+		      "xpels_meter", GST_PROPS_INT_TYPE,    &avimux->vids.xpels_meter,
+		      "ypels_meter", GST_PROPS_INT_TYPE,    &avimux->vids.ypels_meter,
+		      "num_colors",  GST_PROPS_INT_TYPE,    &avimux->vids.num_colors,
+		      "imp_colors",  GST_PROPS_INT_TYPE,    &avimux->vids.imp_colors,
+		      NULL);
       }
       else if (!strncmp (format, "strf_auds", 9)) {
-        avimux->auds.format      = gst_caps_get_int (caps, "format");
-        avimux->auds.channels    = gst_caps_get_int (caps, "channels");
-        avimux->auds.rate        = gst_caps_get_int (caps, "rate");
-        avimux->auds.av_bps      = gst_caps_get_int (caps, "av_bps");
-        avimux->auds.blockalign  = gst_caps_get_int (caps, "blockalign");
-        avimux->auds.size        = gst_caps_get_int (caps, "size");
+	gst_caps_get (caps,
+		      "format",      GST_PROPS_INT_TYPE,    &avimux->auds.format,
+		      "channels",    GST_PROPS_INT_TYPE,    &avimux->auds.channels,
+		      "rate",        GST_PROPS_INT_TYPE,    &avimux->auds.rate,
+		      "av_bps",      GST_PROPS_INT_TYPE,    &avimux->auds.av_bps,
+		      "blockalign",  GST_PROPS_INT_TYPE,    &avimux->auds.blockalign,
+		      "size",        GST_PROPS_INT_TYPE,    &avimux->auds.size,
+		      NULL);
       }
       goto done;
     }
     else if (!strcmp (mimetype, "video/raw"))
     {
-      switch (gst_caps_get_fourcc_int(caps, "format"))
+      guint32 format;
+
+      gst_caps_get_fourcc_int (caps, "format", &format);
+      switch (format)
       {
         case GST_MAKE_FOURCC('Y','U','Y','2'):
         case GST_MAKE_FOURCC('I','4','2','0'):
         case GST_MAKE_FOURCC('Y','4','1','P'):
         case GST_MAKE_FOURCC('R','G','B',' '):
           avimux->vids.size        = sizeof(gst_riff_strf_vids);
-          avimux->vids.width       = gst_caps_get_int (caps, "width");
-          avimux->vids.height      = gst_caps_get_int (caps, "height");
+	  gst_caps_get (caps,
+		      "width",       GST_PROPS_INT_TYPE,    &avimux->vids.width,
+		      "height",      GST_PROPS_INT_TYPE,    &avimux->vids.height,
+		      NULL);
           avimux->vids.planes      = 1;
-          switch (gst_caps_get_fourcc_int(caps, "format"))
+          switch (format)
           {
             case GST_MAKE_FOURCC('Y','U','Y','2'):
               avimux->vids.bit_cnt     = 16; /* YUY2 */
               break;
             case GST_MAKE_FOURCC('R','G','B',' '):
-              avimux->vids.bit_cnt     = gst_caps_get_fourcc_int(caps, "bpp"); /* RGB */
+              gst_caps_get_int (caps, "bpp", &avimux->vids.bit_cnt); /* RGB */
               break;
             case GST_MAKE_FOURCC('Y','4','1','P'):
             case GST_MAKE_FOURCC('I','4','2','0'):
               avimux->vids.bit_cnt     = 12; /* Y41P or I420 */
               break;
           }
-          avimux->vids.compression = gst_caps_get_fourcc_int(caps, "format");
+          gst_caps_get_fourcc_int(caps, "format", &avimux->vids.compression);
           avimux->vids.image_size  = avimux->vids.height * avimux->vids.width;
           goto done;
         default:
@@ -352,8 +363,10 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
     else if (!strcmp (mimetype, "video/jpeg"))
     {
       avimux->vids.size        = sizeof(gst_riff_strf_vids);
-      avimux->vids.width       = gst_caps_get_int (caps, "width");
-      avimux->vids.height      = gst_caps_get_int (caps, "height");
+      gst_caps_get (caps,
+		      "width",       GST_PROPS_INT_TYPE,    &avimux->vids.width,
+		      "height",      GST_PROPS_INT_TYPE,    &avimux->vids.height,
+		      NULL);
       avimux->vids.planes      = 1;
       avimux->vids.bit_cnt     = 24;
       avimux->vids.compression = GST_MAKE_FOURCC('M','J','P','G');
@@ -362,20 +375,29 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
     }
     else if (!strcmp (mimetype, "audio/raw"))
     {
+      gint width;
+
       avimux->auds.format      = GST_RIFF_WAVE_FORMAT_PCM;
-      avimux->auds.channels    = gst_caps_get_int (caps, "channels");
-      avimux->auds.rate        = gst_caps_get_int (caps, "rate");
-      avimux->auds.av_bps      = gst_caps_get_int (caps, "width") * avimux->auds.rate *
-                                               avimux->auds.channels / 8;
-      avimux->auds.blockalign  = gst_caps_get_int (caps, "width") * avimux->auds.channels/8;
-      avimux->auds.size        = gst_caps_get_int (caps, "depth");
+      gst_caps_get (caps,
+		      "channels",    GST_PROPS_INT_TYPE,    &avimux->auds.channels,
+		      "rate",        GST_PROPS_INT_TYPE,    &avimux->auds.rate,
+		      "width",       GST_PROPS_INT_TYPE,    &width,
+		      "depth",       GST_PROPS_INT_TYPE,    &avimux->auds.size,
+		      NULL);
+      avimux->auds.av_bps      = width * avimux->auds.rate * avimux->auds.channels / 8;
+      avimux->auds.blockalign  = width * avimux->auds.channels/8;
       goto done;
     }
     else if (!strcmp (mimetype, "audio/mp3"))
     {
+      gint layer;
+
+      gst_caps_get_int(caps, "layer", &layer);
+
       /* we don't need to do anything here, compressed mp3 contains it all */
-      avimux->auds.format      = gst_caps_get_int(caps, "layer")==3?
-                                   GST_RIFF_WAVE_FORMAT_MPEGL3:GST_RIFF_WAVE_FORMAT_MPEGL12;
+      avimux->auds.format      = (layer == 3?
+                                   GST_RIFF_WAVE_FORMAT_MPEGL3 : 
+				   GST_RIFF_WAVE_FORMAT_MPEGL12);
       goto done;
     }
   }

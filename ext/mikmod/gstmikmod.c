@@ -47,7 +47,7 @@ enum {
   ARG_REVERB,
   ARG_SNDFXVOLUME,
   ARG_VOLUME,
-  ARG_FIXFREQ,
+  ARG_MIXFREQ,
   ARG_INTERP,
   ARG_REVERSE,
   ARG_SURROUND,
@@ -226,10 +226,10 @@ gst_mikmod_class_init (GstMikModClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SONGNAME,
     g_param_spec_string("songname","songname","songname",
-                        "", G_PARAM_READABLE));
+                        NULL, G_PARAM_READABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MODTYPE,
     g_param_spec_string("modtype", "modtype", "modtype",
-    			"", G_PARAM_READABLE ));
+    			NULL, G_PARAM_READABLE ));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MUSICVOLUME,
     g_param_spec_int("musicvolume", "musivolume", "musicvolume",
     			0, 128, 128, G_PARAM_READWRITE ));
@@ -245,7 +245,7 @@ gst_mikmod_class_init (GstMikModClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VOLUME,
     g_param_spec_int("volume", "volume", "volume",
     			0, 128, 96, G_PARAM_READWRITE ));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FIXFREQ,
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MIXFREQ,
     g_param_spec_enum("mixfreq", "mixfreq", "mixfreq",
     		       GST_TYPE_MIKMOD_MIXFREQ, 3,G_PARAM_READWRITE )); 			    			  
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_INTERP,
@@ -305,6 +305,8 @@ gst_mikmod_init (GstMikMod *filter)
   filter->musicvolume = 128;
   filter->volume      = 96;
   filter->sndfxvolume = 128;
+  filter->songname    = NULL;
+  filter->modtype     = NULL;
 }
 
 
@@ -314,7 +316,6 @@ gst_mikmod_loop (GstElement *element)
   GstMikMod *mikmod;
   GstBuffer *buffer_in;
   gint mode16bits;
-  gint first = 0;
 
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_MIKMOD (element));
@@ -487,10 +488,12 @@ gst_mikmod_set_property (GObject *object, guint id, const GValue *value, GParamS
 
   switch (id) {
     case ARG_SONGNAME:
-      filter->songname = g_value_get_string (value);
+      g_free (filter->songname);
+      filter->songname = g_strdup (g_value_get_string (value));
       break;
     case ARG_MODTYPE:
-      filter->modtype = g_value_get_string (value);
+      g_free (filter->modtype);
+      filter->modtype = g_strdup (g_value_get_string (value));
       break;
     case ARG_MUSICVOLUME:
       filter->musicvolume = g_value_get_int (value);
@@ -507,7 +510,7 @@ gst_mikmod_set_property (GObject *object, guint id, const GValue *value, GParamS
     case ARG_VOLUME:
       filter->volume = g_value_get_int (value);
       break;
-    case ARG_FIXFREQ:
+    case ARG_MIXFREQ:
       filter->mixfreq = g_value_get_enum (value);
       break;
     case ARG_INTERP:
@@ -565,8 +568,8 @@ gst_mikmod_get_property (GObject *object, guint id, GValue *value, GParamSpec *p
     case ARG_VOLUME:
       g_value_set_int (value, filter->volume);
       break;
-    case ARG_FIXFREQ:
-      g_value_set_int (value, filter->mixfreq);
+    case ARG_MIXFREQ:
+      g_value_set_enum (value, filter->mixfreq);
       break;
     case ARG_INTERP:
       g_value_set_boolean (value, filter->interp);
