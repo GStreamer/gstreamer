@@ -184,9 +184,6 @@ static void gst_gnomevfssrc_class_init(GstGnomeVFSSrcClass *klass)
 
 #endif /* BROKEN_SIG */
 
-	/*FIXME was for the old cothread scheduling code */
-/*	gobject_class->set_property = gst_gnomevfssrc_set_property; */
-/*	gobject_class->get_property = gst_gnomevfssrc_get_property; */
 	gstelement_class->set_property = gst_gnomevfssrc_set_property;
 	gstelement_class->get_property = gst_gnomevfssrc_get_property;
 
