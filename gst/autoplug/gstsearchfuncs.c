@@ -39,16 +39,16 @@ g_list_free_list_and_elements (GList *list)
   g_list_free (list);
 }
 /**
- * gst_autoplug_can_connect_src:
- * @src: caps of the source
- * @sink: caps of the sink
+ * gst_autoplug_caps_intersect:
+ * @src: a source #GstCaps
+ * @sink: the sink #GstCaps
  *
- * Checks if a factory's sink can connect to the given caps
+ * Checks if the given caps have a non-null intersection.
  *
  * Return: TRUE, if both caps intersect.
  */
 gboolean
-gst_autoplag_caps_intersect (GstCaps *src, GstCaps *sink)
+gst_autoplug_caps_intersect (GstCaps *src, GstCaps *sink)
 {
   GstCaps *caps;
 
@@ -56,7 +56,7 @@ gst_autoplag_caps_intersect (GstCaps *src, GstCaps *sink)
   if ((src == NULL) && (sink == NULL))
     return TRUE;
 
-  /* get an interection */
+  /* get an intersection */
   caps = gst_caps_intersect (src, sink);
   
   /* if the caps can't connect, there is no intersection */
@@ -86,7 +86,7 @@ gst_autoplug_can_connect_src (GstElementFactory *fac, GstCaps *src)
   
   while (templs)
   {
-    if ((GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SINK) && gst_autoplag_caps_intersect (src, GST_PAD_TEMPLATE_CAPS (templs->data)))
+    if ((GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SINK) && gst_autoplug_caps_intersect (src, GST_PAD_TEMPLATE_CAPS (templs->data)))
     {
       return GST_PAD_TEMPLATE (templs->data);
     }
@@ -113,7 +113,7 @@ gst_autoplug_can_connect_sink (GstElementFactory *fac, GstCaps *sink)
   
   while (templs)
   {
-    if ((GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC) && gst_autoplag_caps_intersect (GST_PAD_TEMPLATE_CAPS (templs->data), sink))
+    if ((GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC) && gst_autoplug_caps_intersect (GST_PAD_TEMPLATE_CAPS (templs->data), sink))
     {
       return GST_PAD_TEMPLATE (templs->data);
     }
@@ -139,7 +139,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
 
       if (srctemp->direction == GST_PAD_SRC &&
           desttemp->direction == GST_PAD_SINK) {
-          if (gst_autoplag_caps_intersect (gst_pad_template_get_caps (srctemp), 
+          if (gst_autoplug_caps_intersect (gst_pad_template_get_caps (srctemp), 
               gst_pad_template_get_caps (desttemp))) {
             GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
                        "factory \"%s\" can connect with factory \"%s\"\n", 
@@ -307,14 +307,15 @@ gst_autoplug_factories_at_most_templates(GList *factories, GstPadDirection dir, 
  */
 /**
  * gst_autoplug_sp:
- * @srccaps: Caps to plug from
- * @sinkcaps: Caps to plug to
- * @factories: GList containing all allowed #GstElementFactory entries
+ * @srccaps: a #GstCaps to plug from.
+ * @sinkcaps: the #GstCaps to plug to.
+ * @factories: a #GList containing all allowed #GstElementFactory entries.
  *
- * main function 
+ * Finds the shortest path of elements that together make up a possible
+ * connection between the source and sink caps.
  *
- * Returns: a GList of GstElementFactory items which have to be connected to get
- *          the shortest path.
+ * Returns: a #GList of #GstElementFactory items which have to be connected 
+ * to get the shortest path.
  */
 GList *
 gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
@@ -326,7 +327,9 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
   g_return_val_if_fail (srccaps != NULL, NULL);
   g_return_val_if_fail (sinkcaps != NULL, NULL);
   
-  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT, "attempting to autoplug via shortest path from %s to %s\n", gst_caps_get_mime (srccaps), gst_caps_get_mime (sinkcaps));
+  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT, 
+            "attempting to autoplug via shortest path from %s to %s\n", 
+	    gst_caps_get_mime (srccaps), gst_caps_get_mime (sinkcaps));
   /* wrap all factories as GstAutoplugNode 
    * initialize the cost */
   while (factories)
@@ -335,9 +338,11 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
     node->prev = NULL;
     node->fac = (GstElementFactory *) factories->data;
     node->templ = gst_autoplug_can_connect_src (node->fac, srccaps);
-    node->cost = (node->templ ? gst_autoplug_get_cost (node->fac) : GST_AUTOPLUG_MAX_COST);
+    node->cost = (node->templ ? gst_autoplug_get_cost (node->fac) 
+		              : GST_AUTOPLUG_MAX_COST);
     node->endpoint = gst_autoplug_can_connect_sink (node->fac, sinkcaps);
-    if ((node->endpoint != NULL) && ((bestnode == NULL) || (node->cost < bestnode->cost)))
+    if ((node->endpoint != NULL) && 
+	((bestnode == NULL) || (node->cost < bestnode->cost)))
     {
       bestnode = node;
     }
@@ -350,7 +355,8 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
   /* check if we even have possible endpoints */
   if (bestnode == NULL)
   {
-    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "no factory found that could connect to sink caps");
+    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, 
+	       "no factory found that could connect to sink caps");
     g_list_free_list_and_elements (factory_nodes);
     return NULL;
   }

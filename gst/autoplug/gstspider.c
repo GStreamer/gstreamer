@@ -635,7 +635,8 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
   GstElement *startelement = conn->current;
 
   g_assert ((GstElement *) GST_OBJECT_PARENT (srcpad) == conn->current);
-  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "trying to plug from %s:%s to %s", GST_DEBUG_PAD_NAME (srcpad), GST_ELEMENT_NAME (conn->src));
+  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "trying to plug from %s:%s to %s", 
+	     GST_DEBUG_PAD_NAME (srcpad), GST_ELEMENT_NAME (conn->src));
   
   /* find a path from src to sink */
   /* FIXME: make that if go away and work anyway */
