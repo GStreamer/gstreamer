@@ -137,32 +137,39 @@ gst_median_class_init (GstMedianClass *klass)
 }
 
 static gboolean
-gst_median_sinkconnect (GstPad *pad, const GstCaps *caps)
+gst_median_link (GstPad *pad, const GstCaps *caps)
 {
-  GstMedian *filter;
-  GstStructure *structure;
+  GstMedian *filter = GST_MEDIAN (gst_pad_get_parent (pad));
+  GstPad *otherpad = (pad == filter->srcpad) ? filter->sinkpad : filter->srcpad;
+  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  gint w, h;
+  GstPadLinkReturn ret;
 
-  filter = GST_MEDIAN (gst_pad_get_parent (pad));
+  gst_structure_get_int (structure, "width", &w);
+  gst_structure_get_int (structure, "height", &h);
 
-  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_pad_try_set_caps (otherpad, caps);
+  if (GST_PAD_LINK_SUCCESSFUL (ret)) {
+    filter->width = w;
+    filter->height = h;
+  }
 
-  gst_structure_get_int (structure, "width", &filter->width);
-  gst_structure_get_int (structure, "height", &filter->height);
-
-  /* forward to the next plugin */
-  return gst_pad_try_set_caps(filter->srcpad, caps);
+  return ret;
 }
 
 void gst_median_init (GstMedian *median)
 {
   median->sinkpad = gst_pad_new_from_template (
 		  gst_static_pad_template_get (&median_sink_factory), "sink");
-  gst_pad_set_link_function (median->sinkpad, gst_median_sinkconnect);
+  gst_pad_set_getcaps_function (median->sinkpad, gst_pad_proxy_getcaps);
+  gst_pad_set_link_function (median->sinkpad, gst_median_link);
   gst_pad_set_chain_function (median->sinkpad, gst_median_chain);
   gst_element_add_pad (GST_ELEMENT (median), median->sinkpad);
 
   median->srcpad = gst_pad_new_from_template (
 		  gst_static_pad_template_get (&median_src_factory), "src");
+  gst_pad_set_getcaps_function (median->srcpad, gst_pad_proxy_getcaps);
+  gst_pad_set_link_function (median->sinkpad, gst_median_link);
   gst_element_add_pad (GST_ELEMENT (median), median->srcpad);
 
   median->filtersize = 5;
