@@ -87,6 +87,7 @@ gst_structure_id_empty_new (GQuark quark)
   g_return_val_if_fail (quark != 0, NULL);
 
   structure = g_new0 (GstStructure, 1);
+  structure->type = gst_structure_get_type ();
   structure->name = quark;
   structure->fields = g_array_new (FALSE, TRUE, sizeof (GstStructureField));
 
@@ -109,6 +110,7 @@ gst_structure_empty_new (const gchar * name)
   g_return_val_if_fail (name != NULL, NULL);
 
   structure = g_new0 (GstStructure, 1);
+  structure->type = gst_structure_get_type ();
   structure->name = g_quark_from_string (name);
   structure->fields = g_array_new (FALSE, TRUE, sizeof (GstStructureField));
 

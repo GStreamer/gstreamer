@@ -1,5 +1,14 @@
 2004-07-22  David Schleef  <ds@schleef.org>
 
+	* gst/gststructure.c: (gst_structure_id_empty_new),
+	(gst_structure_empty_new):  Set type field correctly.
+	* gst/gststructure.h: Check type field correctly.
+	* testsuite/caps/Makefile.am:
+	* testsuite/caps/structure.c: (test1), (main): Add a very small
+	test for structures.
+
+2004-07-22  David Schleef  <ds@schleef.org>
+
 	* docs/random/ds/0.9-suggested-changes: more comments
 	* tools/gst-launch.c: (idle_func): Fix hard-to-translate string.
 

@@ -27,8 +27,8 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_STRUCTURE             (gst_structure_get_type ())
-#define GST_STRUCTURE(object)          (G_TYPE_CHECK_INSTANCE_CAST ((object), GST_TYPE_STRUCTURE, GstStructure))
-#define GST_IS_STRUCTURE(object)       (G_TYPE_CHECK_INSTANCE_TYPE ((object), GST_TYPE_STRUCTURE))
+#define GST_STRUCTURE(object)          ((GstStructure *)(object))
+#define GST_IS_STRUCTURE(object)       ((object) && (GST_STRUCTURE(object)->type == GST_TYPE_STRUCTURE))
 
 typedef struct _GstStructure GstStructure;
 

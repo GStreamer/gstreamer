@@ -23,7 +23,8 @@ tests_pass = \
 	subtract \
 	sets \
 	simplify \
-	random
+	random \
+	structure
 
 EXTRA_DIST = caps_strings
 
