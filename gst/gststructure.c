@@ -71,6 +71,20 @@ gst_structure_get_type (void)
   return gst_structure_type;
 }
 
+GstStructure *
+gst_structure_id_empty_new_with_size (GQuark quark, guint prealloc)
+{
+  GstStructure *structure;
+
+  structure = g_new0 (GstStructure, 1);
+  structure->type = gst_structure_get_type ();
+  structure->name = quark;
+  structure->fields =
+      g_array_sized_new (FALSE, TRUE, sizeof (GstStructureField), prealloc);
+
+  return structure;
+}
+
 /**
  * gst_structure_id_empty_new:
  * @quark: name of new structure
@@ -82,16 +96,9 @@ gst_structure_get_type (void)
 GstStructure *
 gst_structure_id_empty_new (GQuark quark)
 {
-  GstStructure *structure;
-
   g_return_val_if_fail (quark != 0, NULL);
 
-  structure = g_new0 (GstStructure, 1);
-  structure->type = gst_structure_get_type ();
-  structure->name = quark;
-  structure->fields = g_array_new (FALSE, TRUE, sizeof (GstStructureField));
-
-  return structure;
+  return gst_structure_id_empty_new_with_size (quark, 0);
 }
 
 /**
@@ -105,16 +112,9 @@ gst_structure_id_empty_new (GQuark quark)
 GstStructure *
 gst_structure_empty_new (const gchar * name)
 {
-  GstStructure *structure;
-
   g_return_val_if_fail (name != NULL, NULL);
 
-  structure = g_new0 (GstStructure, 1);
-  structure->type = gst_structure_get_type ();
-  structure->name = g_quark_from_string (name);
-  structure->fields = g_array_new (FALSE, TRUE, sizeof (GstStructureField));
-
-  return structure;
+  return gst_structure_id_empty_new_with_size (g_quark_from_string (name), 0);
 }
 
 /**
@@ -190,8 +190,9 @@ gst_structure_copy (const GstStructure * structure)
 
   g_return_val_if_fail (structure != NULL, NULL);
 
-  new_structure = gst_structure_empty_new (g_quark_to_string (structure->name));
-  new_structure->name = structure->name;
+  new_structure =
+      gst_structure_id_empty_new_with_size (structure->name,
+      structure->fields->len);
 
   for (i = 0; i < structure->fields->len; i++) {
     GstStructureField new_field = { 0 };

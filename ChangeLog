@@ -1,3 +1,13 @@
+2004-08-04  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gststructure.c: (gst_structure_id_empty_new_with_size),
+	(gst_structure_id_empty_new), (gst_structure_empty_new),
+	(gst_structure_copy):
+	  add gst_structure_id_empty_new_with_size to allow preallocating
+	  value array sizes. Use this in gst_structure_copy to get rid of
+	  reallocs.
+	  don't do quark=>string=>quark when copying structures
+
 2004-08-03  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* docs/manual/win32.xml:
