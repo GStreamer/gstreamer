@@ -589,7 +589,8 @@ if sdl-config --libs > /dev/null 2>&1; then
   AC_CHECK_LIB(SDL, SDL_Init, :, HAVE_LIBSDL=no, $SDL_LIBS)
   dnl FIXME: CPPFLAGS should be set from SDL_CFLAGS for the next two checks
   AC_CHECK_HEADER(SDL/SDL.h, :, HAVE_LIBSDL=no)
-  AC_CHECK_FUNC(SDL_CreateYUVOverlay, :, HAVE_LIBSDL=no)
+  dnl AC_CHECK_FUNC(SDL_CreateYUVOverlay, :, HAVE_LIBSDL=no)
+  AC_CHECK_LIB(SDL, SDL_CreateYUVOverlay, :, HAVE_LIBSDL=no, $SDL_LIBS)
 else
   AC_MSG_RESULT(not found)
   HAVE_LIBSDL=no
