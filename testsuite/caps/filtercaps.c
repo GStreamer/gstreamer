@@ -32,9 +32,12 @@ main (gint argc, gchar ** argv)
   g_assert (sink);
   gst_element_link_filtered (identity, sink,
       gst_caps_new_simple ("audio/x-raw-int", NULL));
-  caps = gst_pad_get_allowed_caps (gst_element_get_pad (identity, "sink"));
-  g_print ("caps: %s", gst_caps_to_string (caps));
+  caps = gst_pad_get_caps (gst_element_get_pad (identity, "sink"));
+  g_print ("caps:         %s\n", gst_caps_to_string (caps));
   g_assert (!gst_caps_is_any (caps));
+  caps = gst_pad_get_allowed_caps (gst_element_get_pad (identity, "sink"));
+  g_print ("allowed caps: %s\n", gst_caps_to_string (caps));
+  g_assert (gst_caps_is_any (caps));
 
   return 0;
 }
