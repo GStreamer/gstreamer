@@ -458,14 +458,6 @@ dnl FIXME : add second check somehow if that is necessary
 dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
 dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
-dnl *** libdv ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDV, true)
-GST_CHECK_FEATURE(LIBDV, [libdv DV/video decoder], dvdec, [
-  PKG_CHECK_MODULES(LIBDV, libdv >= 0.98, HAVE_LIBDV="yes", HAVE_LIBDV="no")
-  AC_SUBST(LIBDV_CFLAGS)
-  AC_SUBST(LIBDV_LIBS)
-])
-
 dnl *** dvdread ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVDREAD, true)
 GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdreadsrc, [
@@ -596,6 +588,14 @@ GST_CHECK_FEATURE(LCS, Lcs, lcs, [
   AC_SUBST(LCS_LIBS)
 ])
 
+dnl *** libdv ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDV, true)
+GST_CHECK_FEATURE(LIBDV, [libdv DV/video decoder], dvdec, [
+  PKG_CHECK_MODULES(LIBDV, libdv >= 0.98, HAVE_LIBDV="yes", HAVE_LIBDV="no")
+  AC_SUBST(LIBDV_CFLAGS)
+  AC_SUBST(LIBDV_LIBS)
+])
+
 dnl *** libfame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBFAME, true)
 GST_CHECK_FEATURE(LIBFAME, [libfame MPEG1/4 encoder], libfame, [
@@ -603,6 +603,15 @@ GST_CHECK_FEATURE(LIBFAME, [libfame MPEG1/4 encoder], libfame, [
   AC_SUBST(LIBFAME_CFLAGS)
   AC_SUBST(LIBFAME_LIBS)
 ])
+
+dnl *** libpng ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBPNG, true)
+GST_CHECK_FEATURE(LIBPNG, [libpng PNG encoder], pngenc, [
+  PKG_CHECK_MODULES(LIBPNG, libpng12, HAVE_LIBPNG="yes", HAVE_LIBPNG="no")
+  AC_SUBST(LIBPNG_CFLAGS)
+  AC_SUBST(LIBPNG_LIBS)
+])
+
 
 dnl *** mad ***
 dnl FIXME: we could use header checks here as well IMO
@@ -1026,6 +1035,7 @@ ext/ladspa/Makefile
 ext/lame/Makefile
 ext/lcs/Makefile
 ext/libfame/Makefile
+ext/libpng/Makefile
 ext/mad/Makefile
 ext/mikmod/Makefile
 ext/mjpegtools/Makefile
