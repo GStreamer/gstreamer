@@ -42,7 +42,7 @@ gdouble 	gst_util_get_double_arg		(GObject *object, const gchar *argname);
 const gchar*	gst_util_get_string_arg		(GObject *object, const gchar *argname);
 gpointer 	gst_util_get_pointer_arg	(GObject *object, const gchar *argname);
 /*GtkWidget*	gst_util_get_widget_property	(GObject *object, const gchar *argname);*/
-
+void		gst_util_set_value_from_string(GValue *value, const gchar *value_str);
 void 		gst_util_set_object_arg 	(GObject *object, const gchar *name, const gchar *value);
 	
 void 		gst_util_dump_mem		(guchar *mem, guint size);

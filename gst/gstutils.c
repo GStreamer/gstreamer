@@ -247,6 +247,88 @@ gst_util_dump_mem (guchar * mem, guint size)
   g_print ("\n");
 }
 
+
+/**
+ * gst_util_set_value_from_string:
+ * @value: the value to set
+ * @value_str: the string to get the value from
+ *
+ * Converts the string to the type of the value and
+ * sets the value with it.
+ */
+void
+gst_util_set_value_from_string(GValue *value, const gchar *value_str)
+{
+
+	g_return_if_fail(value != NULL);
+	g_return_if_fail(value_str != NULL);
+	
+	GST_DEBUG(GST_CAT_PARAMS, "parsing '%s' to type %s\n", value_str, g_type_name(G_VALUE_TYPE(value)));
+
+	switch (G_VALUE_TYPE(value)) {
+		case G_TYPE_STRING:
+			g_value_set_string(value, g_strdup(value_str));
+			break;
+		case G_TYPE_ENUM: 
+		case G_TYPE_INT: {
+			gint i;
+			sscanf (value_str, "%d", &i);
+			g_value_set_int(value, i);
+			break;
+		}
+		case G_TYPE_UINT: {
+			guint i;
+			sscanf (value_str, "%u", &i);
+			g_value_set_uint(value, i);
+			break;
+		}
+		case G_TYPE_LONG: {
+			glong i;
+			sscanf (value_str, "%ld", &i);
+			g_value_set_long(value, i);
+			break;
+		}
+		case G_TYPE_ULONG: {
+			gulong i;
+			sscanf (value_str, "%lu", &i);
+			g_value_set_ulong(value, i);
+			break;
+		}
+		case G_TYPE_BOOLEAN: {
+			gboolean i = FALSE;
+			if (!strncmp ("true", value_str, 4)) i = TRUE;
+			g_value_set_boolean(value, i);
+			break;
+		}
+		case G_TYPE_CHAR: {
+			gchar i;
+			sscanf (value_str, "%c", &i);
+			g_value_set_char(value, i);
+			break;
+		}
+		case G_TYPE_UCHAR: {
+			guchar i;
+			sscanf (value_str, "%c", &i);
+			g_value_set_uchar(value, i);
+			break;
+		}
+		case G_TYPE_FLOAT: {
+			gfloat i;
+			sscanf (value_str, "%f", &i);
+			g_value_set_float(value, i);
+			break;
+		}
+		case G_TYPE_DOUBLE: {
+			gfloat i;
+			sscanf (value_str, "%g", &i);
+			g_value_set_double(value, (gdouble)i);
+			break;
+		}
+		default:
+	  		break;
+	}
+}
+
 /**
  * gst_util_set_object_arg:
  * @object: the object to set the argument of
