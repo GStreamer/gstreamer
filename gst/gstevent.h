@@ -32,24 +32,26 @@
 G_BEGIN_DECLS
 
 typedef enum {
-  GST_EVENT_UNKNOWN,
-  GST_EVENT_EOS,
-  GST_EVENT_FLUSH,
-  GST_EVENT_EMPTY,
-  GST_EVENT_DISCONTINUOUS,
-  GST_EVENT_NEW_MEDIA,
-  GST_EVENT_QOS,
-  GST_EVENT_SEEK,
-  GST_EVENT_SEEK_SEGMENT,
-  GST_EVENT_SEGMENT_DONE,
-  GST_EVENT_SIZE,
-  GST_EVENT_RATE,
-  GST_EVENT_FILLER,
-  GST_EVENT_TS_OFFSET,
-  GST_EVENT_INTERRUPT
+  GST_EVENT_UNKNOWN		= 0,
+  GST_EVENT_EOS			= 1,
+  GST_EVENT_FLUSH		= 2,
+  GST_EVENT_EMPTY		= 3,
+  GST_EVENT_DISCONTINUOUS	= 4,
+  GST_EVENT_NEW_MEDIA		= 5,
+  GST_EVENT_QOS			= 6,
+  GST_EVENT_SEEK		= 7,
+  GST_EVENT_SEEK_SEGMENT	= 8,
+  GST_EVENT_SEGMENT_DONE	= 9,
+  GST_EVENT_SIZE		= 10,
+  GST_EVENT_RATE		= 11,
+  GST_EVENT_FILLER		= 12,
+  GST_EVENT_TS_OFFSET		= 13,
+  GST_EVENT_INTERRUPT		= 14
 } GstEventType;
 
 extern GType _gst_event_type;
+
+#define GST_EVENT_TRACE_NAME	"GstEvent"
 
 #define GST_TYPE_EVENT		(_gst_event_type)
 #define GST_EVENT(event)	((GstEvent*)(event))
@@ -180,8 +182,6 @@ struct _GstEvent {
 };
 
 void 		_gst_event_initialize 		(void);
-
-void		gst_event_print_stats		(void);
 	
 GstEvent*	gst_event_new	        	(GstEventType type);
 

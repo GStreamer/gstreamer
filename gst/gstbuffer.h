@@ -31,6 +31,9 @@ G_BEGIN_DECLS
 typedef struct _GstBuffer GstBuffer;
 typedef struct _GstBufferPool GstBufferPool;
 
+#define GST_BUFFER_TRACE_NAME		"GstBuffer"
+#define GST_BUFFER_POOL_TRACE_NAME	"GstBufferPool"
+
 extern GType _gst_buffer_type;
 extern GType _gst_buffer_pool_type;
 
@@ -152,9 +155,6 @@ void		_gst_buffer_initialize		(void);
 /* functions used by subclasses and bufferpools */
 void		gst_buffer_default_free 	(GstBuffer *buffer);
 GstBuffer*	gst_buffer_default_copy 	(GstBuffer *buffer);
-
-void		gst_buffer_print_stats		(void);
-
 
 /* creating a new buffer pools */
 GstBufferPool*	gst_buffer_pool_new			(GstDataFreeFunction free,

@@ -31,11 +31,14 @@
 #include "gstlog.h"
 #include "gstbufferpool-default.h"
 
+/* #define GST_WITH_ALLOC_TRACE */
+#include "gsttrace.h"
+
 GType _gst_buffer_type;
 GType _gst_buffer_pool_type;
 
-static gint _gst_buffer_live;
-static gint _gst_buffer_pool_live;
+static GstAllocTrace *_gst_buffer_trace;
+static GstAllocTrace *_gst_buffer_pool_trace;
 
 static GstMemChunk *chunk;
 
@@ -50,27 +53,13 @@ _gst_buffer_initialize (void)
 		            (GBoxedCopyFunc) gst_data_ref,
 			    (GBoxedFreeFunc) gst_data_unref);
 
-  _gst_buffer_live = 0;
-  _gst_buffer_pool_live = 0;
+  _gst_buffer_trace = gst_alloc_trace_register (GST_BUFFER_TRACE_NAME);
+  _gst_buffer_pool_trace = gst_alloc_trace_register (GST_BUFFER_POOL_TRACE_NAME);
 
   chunk = gst_mem_chunk_new ("GstBufferChunk", sizeof (GstBuffer), 
                              sizeof (GstBuffer) * 200, 0);
 
   GST_INFO (GST_CAT_BUFFER, "Buffers are initialized now");
-}
-
-/**
- * gst_buffer_print_stats:
- *
- * Logs statistics about live buffers (using g_log).
- */
-void
-gst_buffer_print_stats (void)
-{
-  g_log (g_log_domain_gstreamer, G_LOG_LEVEL_INFO, "%d live buffer(s)", 
-                                 _gst_buffer_live);
-  g_log (g_log_domain_gstreamer, G_LOG_LEVEL_INFO, "%d live bufferpool(s)", 
-                                 _gst_buffer_pool_live);
 }
 
 static void
@@ -94,7 +83,7 @@ _gst_buffer_sub_free (GstBuffer *buffer)
   _GST_DATA_DISPOSE (GST_DATA (buffer));
   
   gst_mem_chunk_free (chunk, GST_DATA (buffer));
-  _gst_buffer_live--;
+  gst_alloc_trace_free (_gst_buffer_trace, buffer);
 }
 
 /**
@@ -121,7 +110,7 @@ gst_buffer_default_free (GstBuffer *buffer)
   _GST_DATA_DISPOSE (GST_DATA (buffer));
 
   gst_mem_chunk_free (chunk, GST_DATA (buffer));
-  _gst_buffer_live--;
+  gst_alloc_trace_free (_gst_buffer_trace, buffer);
 }
 
 static GstBuffer*
@@ -170,21 +159,21 @@ gst_buffer_default_copy (GstBuffer *buffer)
 GstBuffer*
 gst_buffer_new (void)
 {
-  GstBuffer *new;
+  GstBuffer *buf;
   
-  new = gst_mem_chunk_alloc0 (chunk);
-  _gst_buffer_live++;
+  buf = gst_mem_chunk_alloc0 (chunk);
+  gst_alloc_trace_new (_gst_buffer_trace, buf);
 
-  _GST_DATA_INIT (GST_DATA (new), 
+  _GST_DATA_INIT (GST_DATA (buf), 
 		  _gst_buffer_type,
 		  0,
 		  (GstDataFreeFunction) gst_buffer_default_free,
 		  (GstDataCopyFunction) gst_buffer_default_copy);
 
-  GST_BUFFER_BUFFERPOOL (new) = NULL;
-  GST_BUFFER_POOL_PRIVATE (new) = NULL;
+  GST_BUFFER_BUFFERPOOL (buf) = NULL;
+  GST_BUFFER_POOL_PRIVATE (buf) = NULL;
 
-  return new;
+  return buf;
 }
 
 /**
@@ -281,7 +270,7 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
 
   /* create the new buffer */
   buffer = gst_mem_chunk_alloc0 (chunk);
-  _gst_buffer_live++;
+  gst_alloc_trace_new (_gst_buffer_trace, buffer);
 
   /* make sure nobody overwrites data in the new buffer 
    * by setting the READONLY flag */
@@ -427,7 +416,7 @@ gst_buffer_pool_default_free (GstBufferPool *pool)
 
   _GST_DATA_DISPOSE (GST_DATA (pool));
   g_free (pool);
-  _gst_buffer_pool_live--;
+  gst_alloc_trace_free (_gst_buffer_pool_trace, pool);
 }
 
 /** 
@@ -460,7 +449,7 @@ gst_buffer_pool_new (GstDataFreeFunction free,
   g_return_val_if_fail (buffer_new != NULL, NULL);
 
   pool = g_new0 (GstBufferPool, 1);
-  _gst_buffer_pool_live++;
+  gst_alloc_trace_new (_gst_buffer_pool_trace, pool);
 
   GST_DEBUG (GST_CAT_BUFFER, "allocating new buffer pool %p\n", pool);
         

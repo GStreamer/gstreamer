@@ -27,11 +27,14 @@
 #include "gstevent.h"
 #include "gstlog.h"
 
+/* #define GST_WITH_ALLOC_TRACE */
+#include "gsttrace.h"
+
 /* #define MEMPROF */
 
 GType _gst_event_type;
 
-static gint _gst_event_live;
+static GstAllocTrace *_event_trace;
 
 void
 _gst_event_initialize (void)
@@ -40,21 +43,9 @@ _gst_event_initialize (void)
   _gst_event_type = g_boxed_type_register_static ("GstEvent",
                                                (GBoxedCopyFunc) gst_data_ref,
                                                (GBoxedFreeFunc) gst_data_unref);
-  _gst_event_live = 0;
-}
 
-/**
- * gst_event_print_stats:
- *
- * Logs statistics about live events (using g_log).
- */
-void
-gst_event_print_stats (void)
-{
-  g_log (g_log_domain_gstreamer, G_LOG_LEVEL_INFO,
-                    "%d live event(s)", _gst_event_live);
+  _event_trace = gst_alloc_trace_register (GST_EVENT_TRACE_NAME);
 }
-
 
 static GstEvent*
 _gst_event_copy (GstEvent *event)
@@ -62,7 +53,7 @@ _gst_event_copy (GstEvent *event)
   GstEvent *copy;
 
   copy = g_new0(GstEvent, 1);
-  _gst_event_live++;
+  gst_alloc_trace_new (_event_trace, copy);
 
   memcpy (copy, event, sizeof (GstEvent));
   
@@ -84,7 +75,8 @@ _gst_event_free (GstEvent* event)
       break;
   }
   _GST_DATA_DISPOSE (GST_DATA (event));
-  _gst_event_live--;
+  gst_alloc_trace_free (_event_trace, event);
+
   g_free (event);
 }
 
@@ -130,7 +122,8 @@ gst_event_new (GstEventType type)
   GstEvent *event;
 
   event = g_new0(GstEvent, 1);
-  _gst_event_live++;
+  gst_alloc_trace_new (_event_trace, event);
+
   GST_INFO (GST_CAT_EVENT, "creating new event %p %d", event, type);
 
   _GST_DATA_INIT (GST_DATA (event),
