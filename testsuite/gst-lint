@@ -33,6 +33,10 @@ sub check_indentation();
 sub check_gst_props_set();
 sub check_deprecated();
 sub check_config_h();
+sub check_varargs_functions();
+sub check_debugging();
+
+sub m_check_plugindir();
 
 open FIND, "find . -name \"*.[ch]\" -print|";
 
@@ -40,6 +44,7 @@ foreach $filename (<FIND>) {
 	chomp $filename;
 	open FILE, "$filename";
 	@lines = <FILE>;
+	close FILE;
 
 	print "I: $filename\n";
 
@@ -56,6 +61,21 @@ foreach $filename (<FIND>) {
 	check_gst_props_set();
 	check_deprecated();
 	check_config_h();
+	check_varargs_functions();
+	check_debugging();
+}
+
+open FIND, "find . -name \"Makefile.am\" -print|";
+
+foreach $filename (<FIND>) {
+	chomp $filename;
+	open FILE, "$filename";
+	@lines = <FILE>;
+	close FILE;
+
+	print "I: $filename\n";
+
+	m_check_plugindir();
 }
 
 #
@@ -268,5 +288,43 @@ sub check_config_h()
 		}
 	}
 
+}
+  
+#
+# Check for functions that take varargs to make sure they are
+# named correctly
+#
+sub check_varargs_functions()
+{
+	if($filename =~ /\.h$/){
+		if (grep { /varargs/; } @lines) {
+			print "I: has varargs\n";
+		}
+	}
+}
+
+#
+# Debugging checks
+#
+sub check_debugging()
+{
+	if (grep { /\Wg_print\W/; } @lines) {
+		print "W: friendly libraries don't use g_print\n";
+	}
+
+	if (grep { /GST_DEBUG.*\\n"/; } @lines) {
+		print "W: possible newline in GST_DEBUG()\n";
+	}
+
+}
+
+#
+# check for plugindir=
+#
+sub m_check_plugindir()
+{
+	if (grep { /plugindir\s*=/; } @lines) {
+		print "E: plugindir= is no longer necessary\n"
+	}
 }
 
