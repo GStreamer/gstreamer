@@ -1,0 +1,39 @@
+Stuff for the PWG
+-----------------
+
+* arguments
+
+  - how to add arguments
+    - create an identifier in the enum, starting with ARG_
+      example: ARG_RATE
+    - add the property by adding a
+      g_object_class_install_property line
+      FIXME: what is name/nick/blurb in the paramspec ?
+    - if the argument is readable, a block of code for it needs to be added
+      to the _get_property function.
+
+  - default value
+    - default value should be set in _init function
+    - default value can be specified in paramspec (but I don't think this
+      is used anywhere)
+
+
+  - things to check/possible problems
+    - do you have a _get_property function ?
+    - do you have a _set_property function ?
+    - do both have a default handler that handles invalid property ID's ?
+    - are the _get/_set_property handlers assigned to the class's struct ?
+    - do you have a g_object_class_install_property line for the argument ?
+    - are there restrictions on when your parameters can change ?
+      e.g. sample rate is not something that should be changed while PLAYING,
+           so it can only be changed in the NULL state
+    - did you use ARG_ ... consistently everywhere ?
+
+
+  - my own problems:
+    - how to set defaults and make the paramspec be right for them ?
+
+
+* audio
+  - explanation of difference of width and depth
+  - guidelines on how to implement this properly
