@@ -9,14 +9,14 @@ chmod:
 
 gstreamer.devhelp:
 	cd ../gst && make
-	sh html2xml.py ../gst/html
+	./html2xml.py ../gst/html
 	sed 's@base=""@base="@HTML_DIR@/gstreamer"@g' html.devhelp > gstreamer.devhelp
 	perl -i -p -e 's/name="html"/name="gstreamer"/' gstreamer.devhelp
 	rm html.devhelp
 
 gstreamer-libs.devhelp:
 	cd ../libs && make
-	sh html2xml.py ../libs/html
+	./html2xml.py ../libs/html
 	sed 's@base=""@base="@HTML_DIR@/gstreamer-libs"@g' html.devhelp > gstreamer-libs.devhelp
 	perl -i -p -e 's/name="html"/name="gstreamer-libs"/' gstreamer-libs.devhelp
 	rm html.devhelp
