@@ -14,6 +14,17 @@ void eof(GstSrc *src) {
   exit(0);
 }
 
+void frame_encoded(GstElement *element, gint framenum, gpointer data) {
+  gulong frame_size;
+  static gulong total = 0;
+
+  frame_size = gst_util_get_long_arg(GTK_OBJECT(element),"last_frame_size");
+
+  total+=frame_size;
+
+  g_print("encoded frame %d %ld %ld\n", framenum, frame_size, total/(framenum+1));
+}
+
 void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
   GstElement *parse_audio, *parse_video, *decode, *decode_video, *play, *encode, *audio_resample;
   GstElement *smooth, *median;
@@ -25,8 +36,8 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
 
   // connect to audio pad
-  //if (0) {
-  if (strncmp(gst_pad_get_name(pad), "private_stream_1.0", 18) == 0) {
+  if (0) {
+  //if (strncmp(gst_pad_get_name(pad), "private_stream_1.0", 18) == 0) {
     gst_plugin_load("ac3parse");
     gst_plugin_load("ac3dec");
     gst_plugin_load("audioscale");
@@ -135,7 +146,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_plugin_load("smooth");
     gst_plugin_load("median");
     gst_plugin_load("videoscale");
-    gst_plugin_load("mpeg2enc");
+    gst_plugin_load("wincodec");
     //gst_plugin_load("mpeg1encoder");
     // construct internal pipeline elements
     parse_video = gst_elementfactory_make("mp1videoparse","parse_video");
@@ -146,23 +157,27 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     g_return_if_fail(merge_subtitles != NULL);
     videoscale = gst_elementfactory_make("videoscale","videoscale");
     g_return_if_fail(videoscale != NULL);
-    gtk_object_set(GTK_OBJECT(videoscale),"width",352, "height", 288,NULL);
+    //gtk_object_set(GTK_OBJECT(videoscale),"width",352, "height", 288,NULL);
+    gtk_object_set(GTK_OBJECT(videoscale),"width",640, "height", 480,NULL);
     median = gst_elementfactory_make("median","median");
     g_return_if_fail(median != NULL);
-    gtk_object_set(GTK_OBJECT(median),"filtersize",5,NULL);
+    gtk_object_set(GTK_OBJECT(median),"filtersize",9,NULL);
     gtk_object_set(GTK_OBJECT(median),"active",TRUE,NULL);
     smooth = gst_elementfactory_make("smooth","smooth");
     g_return_if_fail(smooth != NULL);
     gtk_object_set(GTK_OBJECT(smooth),"filtersize",5,NULL);
     gtk_object_set(GTK_OBJECT(smooth),"tolerance",9,NULL);
     gtk_object_set(GTK_OBJECT(smooth),"active",FALSE,NULL);
-    encode = gst_elementfactory_make("mpeg2enc","encode");
+    encode = gst_elementfactory_make("winenc","encode");
     g_return_if_fail(encode != NULL);
-    gtk_object_set(GTK_OBJECT(encode),"frames_per_second",25.0,NULL);
+    gtk_signal_connect(GTK_OBJECT(encode),"frame_encoded",GTK_SIGNAL_FUNC(frame_encoded),NULL);
+    gtk_object_set(GTK_OBJECT(encode),"bitrate",800*4,NULL);
+    gtk_object_set(GTK_OBJECT(encode),"quality",10000,NULL);
+    //gtk_object_set(GTK_OBJECT(encode),"compression",NULL,NULL);
     //encode = gst_elementfactory_make("mpeg1encoder","encode");
     //gtk_object_set(GTK_OBJECT(show),"width",640, "height", 480,NULL);
 
-    gtk_object_set(GTK_OBJECT(mux),"video","00",NULL);
+    gtk_object_set(GTK_OBJECT(mux),"video","00:DIV3",NULL);
 
     // create the thread and pack stuff into it
     video_thread = gst_thread_new("video_thread");
@@ -224,7 +239,7 @@ int main(int argc,char *argv[]) {
 
   gst_init(&argc,&argv);
   gst_plugin_load("mpeg2parse");
-  gst_plugin_load("system_encode");
+  gst_plugin_load("aviencoder");
 
   pipeline = gst_pipeline_new("pipeline");
   g_return_val_if_fail(pipeline != NULL, -1);
@@ -244,10 +259,9 @@ int main(int argc,char *argv[]) {
   parse = gst_elementfactory_make("mpeg2parse","parse");
   g_return_val_if_fail(parse != NULL, -1);
 
-  mux = gst_elementfactory_make("system_encode","mux");
+  mux = gst_elementfactory_make("aviencoder","mux");
   g_return_val_if_fail(mux != NULL, -1);
   fd = open(argv[2],O_CREAT|O_RDWR|O_TRUNC, S_IREAD|S_IWRITE);
-  g_return_val_if_fail(fd >= 0, -1);
   fdsinkfactory = gst_elementfactory_find("fdsink");
   g_return_val_if_fail(fdsinkfactory != NULL, -1);
   fdsink = gst_elementfactory_create(fdsinkfactory,"fdsink");
@@ -274,6 +288,4 @@ int main(int argc,char *argv[]) {
   while (1) {
     gst_src_push(GST_SRC(src));
   }
-
-  return 0;
 }

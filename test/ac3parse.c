@@ -46,8 +46,8 @@ int main(int argc,char *argv[]) {
   gst_pad_connect(gst_element_get_pad(parse,"src"),
                   infopad);
 
-  g_print("setting to RUNNING state\n");
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_RUNNING);
+  g_print("setting to READY state\n");
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
 
   g_print("about to enter loop\n");
   while (1)

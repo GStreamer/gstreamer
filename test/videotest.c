@@ -68,7 +68,7 @@ int main(int argc,char *argv[]) {
 
   gtk_widget_show_all(appwindow);
 
-  gst_element_set_state(GST_ELEMENT(bin),GST_STATE_RUNNING);
+  gst_element_set_state(GST_ELEMENT(bin),GST_STATE_READY);
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_PLAYING);
 
   //gtk_object_set(GTK_OBJECT(src),"tune",133250,NULL);

@@ -16,7 +16,7 @@ int main(int argc,char *argv[]) {
 
   gst_plugin_load("v4lsrc");
   gst_plugin_load("aviencoder");
-  gst_plugin_load("jpeg");
+  gst_plugin_load("wincodec");
 
   pipeline = gst_pipeline_new("pipeline");
 
@@ -25,14 +25,15 @@ int main(int argc,char *argv[]) {
 
   videosrcfactory = gst_elementfactory_find("v4lsrc");
   videosrc = gst_elementfactory_create(videosrcfactory,"videosrc");
-  compressfactory = gst_elementfactory_find("jpegenc");
-  compress = gst_elementfactory_create(compressfactory,"jpegenc");
+  compressfactory = gst_elementfactory_find("winenc");
+  compress = gst_elementfactory_create(compressfactory,"winenc");
+  g_assert(compress != NULL);
   encoderfactory = gst_elementfactory_find("aviencoder");
   encoder = gst_elementfactory_create(encoderfactory,"aviencoder");
   gtk_object_set(GTK_OBJECT(videosrc),"width",320,"height",240,NULL);
-  gtk_object_set(GTK_OBJECT(videosrc),"format",9,NULL);
+  gtk_object_set(GTK_OBJECT(videosrc),"format",5,NULL);
 
-  gtk_object_set(GTK_OBJECT(encoder),"video","00:I420",NULL);
+  gtk_object_set(GTK_OBJECT(encoder),"video","00:DIV3",NULL);
 
   fd = open(argv[1],O_CREAT|O_RDWR|O_TRUNC);
 
@@ -52,8 +53,8 @@ int main(int argc,char *argv[]) {
 
   /* connect src to sink */
   gst_element_add_ghost_pad(GST_ELEMENT(video_thread),
-  //                gst_element_get_pad(compress,"sink"));
-  //gst_pad_connect(gst_element_get_pad(compress,"src"),
+                  gst_element_get_pad(compress,"sink"));
+  gst_pad_connect(gst_element_get_pad(compress,"src"),
                   gst_element_get_pad(encoder,"video_00"));
   gst_pad_connect(gst_element_get_pad(encoder,"src"),
                   gst_element_get_pad(fdsink,"sink"));
@@ -67,7 +68,7 @@ int main(int argc,char *argv[]) {
   gst_pad_connect(gst_element_get_pad(videosrc, "src"),
                   gst_element_get_pad(video_queue,"sink"));
   gst_pad_connect(gst_element_get_pad(video_queue,"src"),
-                  gst_element_get_pad(video_thread,"video_00"));
+                  gst_element_get_pad(video_thread,"sink"));
 
   gtk_object_set(GTK_OBJECT(video_thread),"create_thread",TRUE,NULL);
   g_print("\neverything's built, setting it up to be runnable\n");

@@ -25,9 +25,9 @@ int main(int argc,char *argv[]) {
   bin = gst_bin_new("bin");
 
   srcfactory = gst_elementfactory_find("audiosrc");
-  g_return_if_fail(srcfactory != NULL);
+  g_return_val_if_fail(srcfactory != NULL, -1);
   wavefactory = gst_elementfactory_find("smoothwave");
-  g_return_if_fail(wavefactory != NULL);
+  g_return_val_if_fail(wavefactory != NULL, -1);
 
   src = gst_elementfactory_create(srcfactory,"src");
   gtk_object_set(GTK_OBJECT(src),"bytes_per_read",(gulong)2048,NULL);
@@ -46,7 +46,7 @@ int main(int argc,char *argv[]) {
   gnome_app_set_contents(GNOME_APP(appwindow),gst_util_get_widget_arg(GTK_OBJECT(wave),"widget"));
   gtk_widget_show_all(appwindow);
 
-  gst_element_set_state(GST_ELEMENT(bin),GST_STATE_RUNNING);
+  gst_element_set_state(GST_ELEMENT(bin),GST_STATE_READY);
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_PLAYING);
 
   g_idle_add(idle_func,src);

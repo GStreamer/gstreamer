@@ -30,7 +30,7 @@ int main(int argc,char *argv[]) {
   gst_init(&argc,&argv);
 
   /* first create the main pipeline */
-  pipeline = gst_pipeline_new("pipeline");
+  pipeline = GST_ELEMENT(gst_pipeline_new("pipeline"));
 
   /* then the decode thread, source, and decoder */
   decodethread = gst_thread_new("decodethread");
@@ -86,14 +86,14 @@ int main(int argc,char *argv[]) {
   gtk_object_set(GTK_OBJECT(playthread),"create_thread",FALSE,NULL);
 
   g_print("\neverything's built, setting it up to be runnable\n");
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_RUNNING);
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
 
   g_print("\nok, runnable, hitting 'play'...\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 
   g_print("\niterating on %p and %p\n",decodethread,playthread);
   while (playing) {
-    gst_thread_iterate(GST_THREAD(playthread));
+    gst_thread_main_loop(GST_THREAD(playthread));
     /* buffers got wedged in the queue, unstick them */
 //    while (((GstQueue *)queue)->buffers_queued)
 //      gst_connection_push(GST_CONNECTION(queue));
@@ -101,4 +101,5 @@ int main(int argc,char *argv[]) {
 //    g_print("stuffed and unstuck the queue\n");
 //    sleep(1);
   }
+  return 0;
 }

@@ -19,8 +19,6 @@ int main(int argc,char *argv[]) {
   GstElementFactory *sinkfactory;
   GstElement *sink;
 
-  GtkWidget *appwindow;
-
   _gst_plugin_spew = TRUE;
 
   gst_init(&argc,&argv);
@@ -36,12 +34,12 @@ int main(int argc,char *argv[]) {
   sinkfactory = gst_elementfactory_find("audiosink");
 
   src = gst_elementfactory_create(srcfactory,"src");
-  g_return_if_fail(src != NULL);
+  g_return_val_if_fail(src != NULL, -1);
   gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
   mp3 = gst_elementfactory_create(mp3factory,"mp3");
-  g_return_if_fail(mp3 != NULL);
+  g_return_val_if_fail(mp3 != NULL, -1);
   sink = gst_elementfactory_create(sinkfactory,"sink");
-  g_return_if_fail(sink != NULL);
+  g_return_val_if_fail(sink != NULL, -1);
 
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(mp3));
@@ -55,9 +53,11 @@ int main(int argc,char *argv[]) {
   gtk_signal_connect(GTK_OBJECT(src),"eof",
                      GTK_SIGNAL_FUNC(eof),NULL);   
 
-  gst_element_set_state(GST_ELEMENT(bin),GST_STATE_RUNNING);
+  gst_element_set_state(GST_ELEMENT(bin),GST_STATE_READY);
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_PLAYING);
 
   while (playing)
     gst_src_push(GST_SRC(src));
+
+  return 0;
 }

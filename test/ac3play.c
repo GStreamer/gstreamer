@@ -69,14 +69,14 @@ int main(int argc,char *argv[]) {
   gtk_object_set(GTK_OBJECT(decodethread),"create_thread",TRUE,NULL);
   gtk_object_set(GTK_OBJECT(playthread),"create_thread",FALSE,NULL);
 
-  g_print("setting to RUNNING state\n");
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_RUNNING);
+  g_print("setting to READY state\n");
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 
 //  sleep(1);
   g_print("about to enter loop\n");
   while (1) {
-    gst_thread_iterate(GST_THREAD(playthread));
+    gst_thread_main_loop(GST_THREAD(playthread));
     g_print("using %d bytes\n",vmsize());
   }
 

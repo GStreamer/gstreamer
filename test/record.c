@@ -12,7 +12,7 @@ int main(int argc,char *argv[]) {
 
   gst_init(&argc,&argv);
 
-  pipeline = gst_pipeline_new("pipeline");
+  pipeline = GST_ELEMENT(gst_pipeline_new("pipeline"));
 
   audiosrcfactory = gst_elementfactory_find("audiosrc");
   audiosrc = gst_elementfactory_create(audiosrcfactory,"audiosrc");
@@ -32,7 +32,7 @@ int main(int argc,char *argv[]) {
                   gst_element_get_pad(fdsink,"sink"));
 
   g_print("\neverything's built, setting it up to be runnable\n");
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_RUNNING);
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
 
   g_print("\nok, runnable, hitting 'play'...\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);

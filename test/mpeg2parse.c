@@ -12,6 +12,8 @@ gboolean idle_func(gpointer data) {
   return TRUE;
 }
 
+GstElement *merge_subtitles;
+
 void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
   GstElement *parse_audio, *parse_video, *decode, *decode_video, *play, *show;
   GstElement *audio_queue, *video_queue;
@@ -20,6 +22,7 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
   GtkWidget *appwindow;
 
   g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
 
   // connect to audio pad
   //if (0) {
@@ -61,10 +64,12 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     // set up thread state and kick things off
     gtk_object_set(GTK_OBJECT(audio_thread),"create_thread",TRUE,NULL);
-    g_print("setting to RUNNING state\n");
-    gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_RUNNING);
-    g_print("setting to PLAYING state\n");
-    gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_PLAYING);
+    g_print("setting to READY state\n");
+    gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_READY);
+  } else if (strncmp(gst_pad_get_name(pad), "subtitle_stream_4", 17) == 0) {
+    gst_pad_connect(pad,
+                    gst_element_get_pad(merge_subtitles,"subtitle"));
+    
   } else if (strncmp(gst_pad_get_name(pad), "audio_", 6) == 0) {
     gst_plugin_load("mp3parse");
     gst_plugin_load("mpg123");
@@ -103,22 +108,24 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     // set up thread state and kick things off
     gtk_object_set(GTK_OBJECT(audio_thread),"create_thread",TRUE,NULL);
-    g_print("setting to RUNNING state\n");
-    gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_RUNNING);
-    g_print("setting to PLAYING state\n");
-    gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_PLAYING);
+    g_print("setting to READY state\n");
+    gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_READY);
   } else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
   //} else if (0) {
 
     gst_plugin_load("mp1videoparse");
     gst_plugin_load("mpeg2play");
+    gst_plugin_load("mpeg2subt");
     gst_plugin_load("videosink");
     // construct internal pipeline elements
     parse_video = gst_elementfactory_make("mp1videoparse","parse_video");
     g_return_if_fail(parse_video != NULL);
     decode_video = gst_elementfactory_make("mpeg2play","decode_video");
     g_return_if_fail(decode_video != NULL);
+    merge_subtitles = gst_elementfactory_make("mpeg2subt","merge_subtitles");
+    g_return_if_fail(merge_subtitles != NULL);
     show = gst_elementfactory_make("videosink","show");
+    //gtk_object_set(GTK_OBJECT(show),"xv_enabled",FALSE,NULL);
     g_return_if_fail(show != NULL);
     //gtk_object_set(GTK_OBJECT(show),"width",640, "height", 480,NULL);
 
@@ -132,7 +139,9 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     g_return_if_fail(video_thread != NULL);
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(parse_video));
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(decode_video));
+    gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(merge_subtitles));
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(show));
+    gst_bin_use_cothreads(GST_BIN(video_thread), FALSE);
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(video_thread),
@@ -140,6 +149,8 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_pad_connect(gst_element_get_pad(parse_video,"src"),
                     gst_element_get_pad(decode_video,"sink"));
     gst_pad_connect(gst_element_get_pad(decode_video,"src"),
+                    gst_element_get_pad(merge_subtitles,"video"));
+    gst_pad_connect(gst_element_get_pad(merge_subtitles,"src"),
                     gst_element_get_pad(show,"sink"));
 
     // construct queue and connect everything in the main pipeline
@@ -154,22 +165,20 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     // set up thread state and kick things off
     gtk_object_set(GTK_OBJECT(video_thread),"create_thread",TRUE,NULL);
-    g_print("setting to RUNNING state\n");
-    gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_RUNNING);
-    g_print("setting to PLAYING state\n");
-    gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_PLAYING);
+    g_print("setting to READY state\n");
+    gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_READY);
   }
   g_print("\n");
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 }
 
 int main(int argc,char *argv[]) {
   GstPipeline *pipeline;
-  GstElement *src, *parse, *out;
-  GstPad *infopad;
-  int i,c;
+  GstElement *src, *parse;
 
   g_print("have %d args\n",argc);
 
+  g_thread_init(NULL);
   gtk_init(&argc,&argv);
   gst_init(&argc,&argv);
   gnome_init("MPEG2 Video player","0.0.1",argc,argv);
@@ -177,7 +186,7 @@ int main(int argc,char *argv[]) {
   //gst_plugin_load("mpeg1parse");
 
   pipeline = gst_pipeline_new("pipeline");
-  g_return_if_fail(pipeline != NULL);
+  g_return_val_if_fail(pipeline != NULL, -1);
 
   if (strstr(argv[1],"video_ts")) {
     src = gst_elementfactory_make("dvdsrc","src");
@@ -185,7 +194,7 @@ int main(int argc,char *argv[]) {
   } else
     src = gst_elementfactory_make("disksrc","src");
 
-  g_return_if_fail(src != NULL);
+  g_return_val_if_fail(src != NULL, -1);
   gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
   if (argc >= 3) {
     gtk_object_set(GTK_OBJECT(src),"bytesperread",atoi(argv[2]),NULL);
@@ -195,7 +204,7 @@ int main(int argc,char *argv[]) {
 
   parse = gst_elementfactory_make("mpeg2parse","parse");
   //parse = gst_elementfactory_make("mpeg1parse","parse");
-  g_return_if_fail(parse != NULL);
+  g_return_val_if_fail(parse != NULL, -1);
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));
@@ -207,10 +216,15 @@ int main(int argc,char *argv[]) {
   gst_pad_connect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(parse,"sink"));
 
-  g_print("setting to RUNNING state\n");
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_RUNNING);
+  g_print("setting to READY state\n");
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 
   gtk_idle_add(idle_func,src);
 
+  gdk_threads_enter();
   gtk_main();
+  gdk_threads_leave();
+
+  return 0;
 }

@@ -63,8 +63,8 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     // set up thread state and kick things off
     gtk_object_set(GTK_OBJECT(audio_thread),"create_thread",TRUE,NULL);
-    g_print("setting to RUNNING state\n");
-    gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_RUNNING);
+    g_print("setting to READY state\n");
+    gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_READY);
     g_print("setting to PLAYING state\n");
     gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_PLAYING);
   } else if (strncmp(gst_pad_get_name(pad), "audio_", 6) == 0) {
@@ -105,8 +105,8 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     // set up thread state and kick things off
     gtk_object_set(GTK_OBJECT(audio_thread),"create_thread",TRUE,NULL);
-    g_print("setting to RUNNING state\n");
-    gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_RUNNING);
+    g_print("setting to READY state\n");
+    gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_READY);
     g_print("setting to PLAYING state\n");
     gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_PLAYING);
   } else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
@@ -161,8 +161,8 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     // set up thread state and kick things off
     gtk_object_set(GTK_OBJECT(video_thread),"create_thread",TRUE,NULL);
-    g_print("setting to RUNNING state\n");
-    gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_RUNNING);
+    g_print("setting to READY state\n");
+    gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_READY);
     g_print("setting to PLAYING state\n");
     gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_PLAYING);
   }
@@ -209,8 +209,8 @@ int main(int argc,char *argv[]) {
   gst_pad_connect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(parse,"sink"));
 
-  g_print("setting to RUNNING state\n");
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_RUNNING);
+  g_print("setting to READY state\n");
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
 
   while (1) {
     gst_src_push(GST_SRC(src));

@@ -36,11 +36,11 @@ int main(int argc,char *argv[]) {
   gst_pad_connect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(sink,"sink"));
 
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_RUNNING);
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 
-//  while (GST_STATE_IS_SET(src,GST_STATE_RUNNING))
+//  while (GST_STATE_IS_SET(src,GST_STATE_READY))
 //  while (1)
-  while (GST_STATE_IS_SET(src,1<<16))
+  while (GST_STATE(src) & 1<<16)
     gst_src_push(GST_SRC(src));
 }

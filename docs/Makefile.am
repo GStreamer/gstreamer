@@ -1,6 +1,6 @@
 SUBDIRS = 
 if HAVE_GTK_DOC
-  SUBDIRS += gst manual
+  SUBDIRS += gst 
 endif
 
 DIST_SUBDIRS = gst manual

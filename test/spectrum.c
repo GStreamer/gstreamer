@@ -52,17 +52,19 @@ int main(int argc,char *argv[]) {
   gnome_app_set_contents(GNOME_APP(appwindow),drawingarea);
   gtk_widget_show_all(appwindow);
 
-  gst_element_set_state(GST_ELEMENT(bin),GST_STATE_RUNNING);
+  gst_element_set_state(GST_ELEMENT(bin),GST_STATE_READY);
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_PLAYING);
 
   g_idle_add(idle_func,src);
 
   gtk_main();
+
+  return 0;
 }
 
 
 void spectrum_chain(GstPad *pad,GstBuffer *buf) {
-  gint i,size;
+  gint i;
   guchar *data = buf->data;
 
   gdk_draw_rectangle(drawingarea->window,drawingarea->style->black_gc,

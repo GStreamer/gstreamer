@@ -341,6 +341,7 @@ libs/videoscale/Makefile
 libs/getbits/Makefile
 libs/putbits/Makefile
 libs/winloader/Makefile
+libs/idct/Makefile
 plugins/Makefile
 plugins/au/Makefile
 plugins/wav/Makefile
