@@ -1,5 +1,10 @@
 2004-12-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/gstversion.h.in:
+	  Protect header.
+
+2004-12-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/schedulers/gstoptimalscheduler.c:
 	(gst_opt_scheduler_schedule_run_queue), (schedule_chain),
 	(gst_opt_scheduler_get_wrapper):
