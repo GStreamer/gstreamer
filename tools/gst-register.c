@@ -45,9 +45,10 @@ plugin_added_func (GstRegistry *registry, GstPlugin *plugin, gpointer user_data)
   num_plugins++;
 }
 
-int main(int argc,char *argv[]) 
+int main (int argc,char *argv[]) 
 {
   GList *registries;
+  GList *path_spill = NULL; /* used for path spill from failing registries */
 
     /* Init gst */
   _gst_registry_auto_load = FALSE;
@@ -58,6 +59,22 @@ int main(int argc,char *argv[])
 
   while (registries) {
     GstRegistry *registry = GST_REGISTRY (registries->data);
+    if (path_spill)
+    {
+      GList *iter;
+
+      /* add spilled paths to this registry;
+       * since they're spilled they probably weren't loaded correctly
+       * so we should give a lower priority registry the chance to do them */
+      for (iter = path_spill; iter; iter = iter->next)
+      {
+	g_print ("added path   %s to %s \n",
+                 (const char *) iter->data, registry->name);
+	gst_registry_add_path (registry, (const gchar *) iter->data);
+      }
+      g_list_free (path_spill);
+      path_spill = NULL;
+    }
 
     g_signal_connect (G_OBJECT (registry), "plugin_added", 
 		    G_CALLBACK (plugin_added_func), NULL);
@@ -68,8 +85,15 @@ int main(int argc,char *argv[])
       gst_registry_save (registry);
     }
     else {
-      g_print ("loading %s\n", registry->name);
-      gst_registry_load (registry);
+      g_print ("trying to load %s\n", registry->name);
+      if (!gst_registry_load (registry))
+      {
+	g_print ("error loading %s\n", registry->name);
+	/* move over paths from this registry to the next one */
+	path_spill = g_list_concat (path_spill, 
+	                            gst_registry_get_path_list (registry));
+	g_assert (path_spill != NULL);
+      }
     }
     
     registries = g_list_next (registries);
