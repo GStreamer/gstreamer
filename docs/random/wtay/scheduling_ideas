@@ -356,6 +356,66 @@ Wrapper functions
 
 
 
+iterating without cothreads
+---------------------------
+
+A cothread for each group is the easiest way to schedule most of
+the pipelines. Some pipelines are however schedulable without
+any cothreads.
+
+Each group is schedulable without cothreads, one can call the
+group schedule function and be done with it. Problems arise
+one the group boundaries of connected elements, which are always 
+of type E and F (chain->loop, loop->loop)
+
+We always have a producer group and a provider group in this case.
+
+chain->loop
+-----------
+
+
+
+Scheduler algorithm
+-------------------
+
+1: select (random?) group in chain
+2: schedule group
+3: on E/F connections, the get/chain wrapper is called
+   - get wrapper puts the peer element on the runqueue and
+     recursively invokes the scheduler.
+   - chain wrapper puts the buffer in the bufpen and puts
+     the peer element in the runqueue
+4: when the group is scheduled, take group from the runqueue
+   and goto 2:
+5: no more groups on the runqueue, iteration ends
+
+
+NOTES:
+
+- We need a GList instead of a single bufpen to hold buffers
+  for multi-out elements.
+  
+- We probably need to set a limit on the maximum number of
+  recursions and size of the bufpen list.
+
+- elements run non-preemtively, a group is done scheduling when all
+  elements in that group complete their chain/loop function.
+
+- can we only have a stack overflow when there is a loop in the
+  pipeline? I think so.
+
+- putting groups twice on the runqueue is not a good idea, we
+  need to check a flag or something, maybe give the group a 
+  higher priority?
+
+- what about starvation? We'll probably have to put the group
+  at the end of the runqueue.
+
+
+
+
+
+
 
 
 
