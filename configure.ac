@@ -850,7 +850,6 @@ GST_CHECK_FEATURE(MATROSKA, [matroska muxer/demuxer], matroska muxer/demuxer, [
     PATH_MATROSKA(0.4.4, [HAVE_MATROSKA=yes], [HAVE_MATROSKA=no])
   fi
 ])
-GST_CHECK_FEATURE(MATROSKA, [matroska muxer/demuxer], matroska muxer/demuxer, HAVE_MATROSKA=no)
 
 dnl *** mikmod ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MIKMOD, true)
