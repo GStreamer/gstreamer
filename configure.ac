@@ -632,8 +632,43 @@ dnl *** mjpegtools ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MJPEGTOOLS, true)
 GST_CHECK_FEATURE(MJPEGTOOLS, [mjpegtools], jpegmmxenc jpegmmxdec, [
   PKG_CHECK_MODULES(MJPEGTOOLS, mjpegtools, HAVE_MJPEGTOOLS="yes", HAVE_MJPEGTOOLS="no")
-  AC_SUBST(MJPEGTOOLS_LIBS)
-  AC_SUBST(MJPEGTOOLS_CFLAGS)
+
+  if [ test x$HAVE_MJPEGTOOLS = x"yes" ]; then
+    dnl some headers we might want to need
+    AC_CHECK_HEADERS(stdint.h, HAVE_STDINT_H="yes", HAVE_STDINT_H="no")
+    if [ test x$HAVE_STDINT_H = x"no" ]; then
+      AC_CHECK_HEADERS(inttypes.h sys/types.h, HAVE_INTTYPES_H="yes", [
+        AC_WARNING(No valid header files found, mjpegtools plugins disabled)
+        HAVE_INTTYPES_H="no" HAVE_MJPEGTOOLS="no"
+      ])
+    fi
+    AC_CHECK_HEADERS(stdbool.h, HAVE_STDBOOL_H="yes", HAVE_STDBOOL_H="no")
+
+    dnl sizeof PRId64 etc...
+    AC_CHECK_SIZEOF(int)
+    AC_CHECK_SIZEOF(long)
+    AC_CHECK_SIZEOF(long long)
+    case 8 in
+    $ac_cv_sizeof_int)
+      PRID64_STRING_FORMAT="d"
+      ;;
+    $ac_cv_sizeof_long)
+      PRID64_STRING_FORMAT="ld"
+      ;;
+    $ac_cv_sizeof_long_long)
+      PRID64_STRING_FORMAT="lld"
+      ;;
+    *)
+      AC_MSG_WARN(No suitable variant for 64bits integers found, mjpegtools plugins disabled)
+      HAVE_MJPEGTOOLS="no"
+      ;;
+    esac
+
+    AC_DEFINE_UNQUOTED(PRID64_STRING_FORMAT, "$PRID64_STRING_FORMAT",
+      [ A printf type definition for 64 bit integers ])
+    AC_SUBST(MJPEGTOOLS_LIBS)
+    AC_SUBST(MJPEGTOOLS_CFLAGS)
+  fi
 ])
 
 dnl *** mpeg2dec ***
