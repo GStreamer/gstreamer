@@ -1,3 +1,10 @@
+2004-10-25  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	reviewed by: Ronald Bultje <rbultje at gnome dot org>
+
+	* sys/v4l/v4l_calls.c: (gst_v4l_get_chan_names):
+	Fix for some v4l cards which hang in v4lsrc
+
 2004-10-25  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_remove),
