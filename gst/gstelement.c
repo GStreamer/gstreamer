@@ -2323,6 +2323,8 @@ gst_element_change_state (GstElement *element)
   if (element->sched) {
     if (gst_scheduler_state_transition (element->sched, element, 
 	                                old_transition) != GST_STATE_SUCCESS) {
+      GST_DEBUG_ELEMENT (GST_CAT_STATES, element, 
+		         "scheduler could change state");
       goto failure;
     }
   }
