@@ -71,6 +71,7 @@ int main(int argc,char *argv[]) {
   gst_bin_add(GST_BIN(thread),sinesrc);
   gst_bin_add(GST_BIN(thread),osssink);
   gst_element_connect(sinesrc,"src",osssink,"sink");
+  g_object_set(G_OBJECT(osssink),"fragment",0x00180008,NULL);
   g_object_set(G_OBJECT(sinesrc),"buffersize",64,NULL);
  
   dpman = GST_ELEMENT_DPARAM_MANAGER(sinesrc);
@@ -109,6 +110,7 @@ int main(int argc,char *argv[]) {
 
   /***** set up the GUI *****/
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_default_size(GTK_WINDOW(window), 80, 400);
   g_signal_connect(window,"delete_event",GTK_SIGNAL_FUNC(quit_live),NULL);
   hbox = gtk_hbox_new(TRUE,0);
   gtk_container_add(GTK_CONTAINER(window),hbox);
@@ -118,6 +120,7 @@ int main(int argc,char *argv[]) {
                                                   g_value_get_float(spec->min_val),
                                                   g_value_get_float(spec->max_val), 0.1, 0.01, 0.01);
   volume_slider = gtk_vscale_new(volume_adj);
+  gtk_scale_set_digits(GTK_SCALE(volume_slider), 2);
   gtk_box_pack_start(GTK_BOX(hbox),volume_slider,TRUE,TRUE,0);
 
   spec = gst_dpman_get_dparam_spec (dpman, "freq");
@@ -125,6 +128,7 @@ int main(int argc,char *argv[]) {
                                                 (gfloat)log(g_value_get_float(spec->min_val)),
                                                 (gfloat)log(g_value_get_float(spec->max_val)), 0.1, 0.01, 0.01);
   freq_slider = gtk_vscale_new(freq_adj);
+  gtk_scale_set_digits(GTK_SCALE(freq_slider), 2);
   gtk_box_pack_start(GTK_BOX(hbox),freq_slider,TRUE,TRUE,0);
   
   
