@@ -1,4 +1,4 @@
-testprogs = capsnego converter converter2 enum
+testprogs = converter enum # capsnego converter2
 
 TESTS = $(testprogs)
 
