@@ -923,8 +923,6 @@ gst_mad_handle_event (GstPad * pad, GstBuffer * buffer)
             mad->total_samples = 0;
           }
 
-          gst_event_unref (event);
-
           if (GST_PAD_IS_USABLE (mad->srcpad)) {
             discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
                 time, NULL);
@@ -936,6 +934,7 @@ gst_mad_handle_event (GstPad * pad, GstBuffer * buffer)
       mad->tempsize = 0;
       /* we don't need to restart when we get here */
       mad->restart = FALSE;
+      gst_event_unref (event);
       break;
     }
     case GST_EVENT_EOS:

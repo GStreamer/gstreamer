@@ -797,16 +797,10 @@ gst_lame_chain (GstPad * pad, GstData * _data)
         ((GST_BUFFER_SIZE (buf) / (2 + lame->num_channels)) * 1.25) + 7200;
     mp3_data = g_malloc (mp3_buffer_size);
 
-    if (lame->num_channels == 2) {
-      mp3_size = lame_encode_buffer_interleaved (lame->lgf,
-          (short int *) (GST_BUFFER_DATA (buf)),
-          GST_BUFFER_SIZE (buf) / 4, mp3_data, mp3_buffer_size);
-    } else {
-      mp3_size = lame_encode_buffer (lame->lgf,
-          (short int *) (GST_BUFFER_DATA (buf)),
-          (short int *) (GST_BUFFER_DATA (buf)),
-          GST_BUFFER_SIZE (buf) / 2, mp3_data, mp3_buffer_size);
-    }
+    mp3_size = lame_encode_buffer_interleaved (lame->lgf,
+        (short int *) (GST_BUFFER_DATA (buf)),
+        GST_BUFFER_SIZE (buf) / 2 / lame->num_channels,
+        mp3_data, mp3_buffer_size);
 
     GST_DEBUG ("encoded %d bytes of audio to %d bytes of mp3",
         GST_BUFFER_SIZE (buf), mp3_size);
