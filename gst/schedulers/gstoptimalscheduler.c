@@ -2186,7 +2186,8 @@ gst_opt_scheduler_pad_unlink (GstScheduler * sched,
         for (l = group->elements; l && l->data; l = l->next) {
           GstElement *element = (GstElement *) l->data;
 
-          if (GST_ELEMENT_IS_DECOUPLED (element))
+          if (!element || !GST_IS_ELEMENT (element) ||
+              GST_ELEMENT_IS_DECOUPLED (element))
             continue;
 
           linkcount = 0;

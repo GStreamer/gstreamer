@@ -1,3 +1,10 @@
+2004-05-03  Johan Dahlin  <johan@gnome.org>
+
+	* gst/schedulers/gstoptimalscheduler.c
+	(gst_opt_scheduler_pad_unlink): Check if element is non-NULL and
+	really is a GstElement. Avoids critical when running gst-launch -v
+	and a oggdemux/decoding pipeline.
+
 2004-05-02  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* docs/gst/tmpl/gstpipeline.sgml :
