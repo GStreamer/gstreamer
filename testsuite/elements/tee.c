@@ -2,6 +2,7 @@
  * test for tee element
  * this tests for proxying of caps from tee sink to src's in various situations
  * thomas@apestaart.org
+ * originally written for 0.3.2
  */
 
 #include <gst/gst.h>
