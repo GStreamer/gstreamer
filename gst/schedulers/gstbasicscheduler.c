@@ -936,24 +936,13 @@ gst_basic_scheduler_find_chain (GstBasicScheduler * sched, GstElement * element)
 }
 
 static void
-gst_basic_scheduler_chain_recursive_add (GstSchedulerChain * chain, GstElement * element, gboolean remove)
+gst_basic_scheduler_chain_recursive_add (GstSchedulerChain * chain, GstElement * element)
 {
   GList *pads;
   GstPad *pad;
   GstElement *peerelement;
-  GstSchedulerChain *prevchain;
 
-  /* check to see if it's in a chain already */
-  prevchain = gst_basic_scheduler_find_chain (chain->sched, element);
-  /* if it's already in another chain, either remove or punt */
-  if (prevchain != NULL) {
-    if (remove == TRUE)
-      gst_basic_scheduler_chain_remove_element (prevchain, element);
-    else
-      return;
-  }
-
-  /* add it to this one */
+  /* add the element to the chain */
   gst_basic_scheduler_chain_add_element (chain, element);
 
   GST_DEBUG (GST_CAT_SCHEDULING, "recursing on element \"%s\"", GST_ELEMENT_NAME (element));
@@ -970,9 +959,12 @@ gst_basic_scheduler_chain_recursive_add (GstSchedulerChain * chain, GstElement *
       GST_DEBUG (GST_CAT_SCHEDULING, "has peer %s:%s", GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)));
       peerelement = GST_PAD_PARENT (GST_PAD_PEER (pad));
       if (GST_ELEMENT_SCHED (GST_PAD_PARENT (pad)) == GST_ELEMENT_SCHED (peerelement)) {
-        GST_DEBUG (GST_CAT_SCHEDULING, "peer \"%s\" is valid for same chain",
+	GST_DEBUG (GST_CAT_SCHEDULING, "peer \"%s\" is valid for same chain",
 		   GST_ELEMENT_NAME (peerelement));
-        gst_basic_scheduler_chain_recursive_add (chain, peerelement, remove);
+	/* if it's not already in a chain, add it to this one */
+	if (gst_basic_scheduler_find_chain (chain->sched, peerelement) == NULL) {
+	  gst_basic_scheduler_chain_recursive_add (chain, peerelement);
+	}
       }
     }
   }
@@ -1217,7 +1209,6 @@ gst_basic_scheduler_pad_unlink (GstScheduler * sched, GstPad * srcpad, GstPad * 
   chain1 = gst_basic_scheduler_find_chain (bsched, element1);
   chain2 = gst_basic_scheduler_find_chain (bsched, element2);
 
-#if 0
   if (chain1 != chain2) {
     /* elements not in the same chain don't need to be separated */
     GST_INFO (GST_CAT_SCHEDULING, "elements not in the same chain");
@@ -1230,22 +1221,14 @@ gst_basic_scheduler_pad_unlink (GstScheduler * sched, GstPad * srcpad, GstPad * 
 
     /* now create a new chain to hold element1 and build it from scratch */
     chain1 = gst_basic_scheduler_chain_new (bsched);
-    gst_basic_scheduler_chain_recursive_add (chain1, element1, FALSE);
+    gst_basic_scheduler_chain_recursive_add (chain1, element1);
   }
 
   /* check the other element to see if it landed in the newly created chain */
   if (gst_basic_scheduler_find_chain (bsched, element2) == NULL) {
     /* if not in chain, create chain and build from scratch */
     chain2 = gst_basic_scheduler_chain_new (bsched);
-    gst_basic_scheduler_chain_recursive_add (chain2, element2, FALSE);
-  }
-#endif
-
-  /* if they're both in the same chain, move second set of elements to a new chain */
-  if (chain1 && (chain1 == chain2)) {
-    GST_INFO (GST_CAT_SCHEDULING, "creating new chain for second element and peers");
-    chain2 = gst_basic_scheduler_chain_new (bsched);
-    gst_basic_scheduler_chain_recursive_add (chain2, element2, TRUE);
+    gst_basic_scheduler_chain_recursive_add (chain2, element2);
   }
 }
 
