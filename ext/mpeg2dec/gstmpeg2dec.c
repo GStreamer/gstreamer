@@ -315,6 +315,11 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
   GstCaps *allowed;
   GstCaps *intersect, *trylist, *head, *to_intersect;
 
+  if (!GST_PAD_IS_LINKED (mpeg2dec->srcpad)) {
+    mpeg2dec->format = MPEG2DEC_FORMAT_I420;
+    return TRUE;
+  }
+
   /* we what we are allowed to do */
   allowed = gst_pad_get_allowed_caps (mpeg2dec->srcpad);
   /* we could not get allowed caps */
