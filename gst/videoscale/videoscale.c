@@ -109,10 +109,10 @@ videoscale_get_structure (struct videoscale_format_struct *format)
   if(format->scale==NULL)
     return NULL;
 
-  if(format->bpp){
+  if(format->depth){
     structure = gst_structure_new ("video/x-raw-rgb",
-	"depth", G_TYPE_INT, format->bpp,
-	"bpp", G_TYPE_INT, format->depth,
+	"depth", G_TYPE_INT, format->depth,
+	"bpp", G_TYPE_INT, format->bpp,
 	"endianness", G_TYPE_INT, format->endianness,
 	"red_mask", G_TYPE_INT, format->red_mask,
 	"green_mask", G_TYPE_INT, format->green_mask,
@@ -124,8 +124,8 @@ videoscale_get_structure (struct videoscale_format_struct *format)
   }
 
   gst_structure_set(structure,
-      "width", GST_TYPE_INT_RANGE, 0, G_MAXINT,
-      "height", GST_TYPE_INT_RANGE, 0, G_MAXINT,
+      "width", GST_TYPE_INT_RANGE, 100, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 100, G_MAXINT,
       "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,
       NULL);
 
@@ -139,7 +139,7 @@ videoscale_find_by_structure(GstStructure *structure)
   gboolean ret;
   struct videoscale_format_struct *format;
 
-  GST_DEBUG ("finding %p",structure);
+  GST_DEBUG ("finding %s",gst_structure_to_string(structure));
 
   g_return_val_if_fail(structure != NULL, NULL);
 
@@ -150,7 +150,7 @@ videoscale_find_by_structure(GstStructure *structure)
     if(!ret) return NULL;
     for (i = 0; i < videoscale_n_formats; i++){
       format = videoscale_formats + i;
-      if(format->bpp==0 && format->fourcc == fourcc){
+      if(format->depth==0 && format->fourcc == fourcc){
 	return format;
       }
     }
@@ -195,6 +195,9 @@ gst_videoscale_setup (GstVideoscale *videoscale)
 
   if(videoscale->to_width==0 || videoscale->to_height==0 ||
   	videoscale->from_width==0 || videoscale->from_height==0){
+    g_critical ("bad sizes %dx%d %dx%d",
+  	videoscale->from_width, videoscale->from_height,
+        videoscale->to_width, videoscale->to_height);
     return;
   }
 
@@ -209,9 +212,9 @@ gst_videoscale_setup (GstVideoscale *videoscale)
   GST_DEBUG ("videoscale: scaling method POINT_SAMPLE");
 
   videoscale->from_buf_size = (videoscale->from_width * videoscale->from_height
-		  * videoscale->format->depth) / 8;
+		  * videoscale->format->bpp) / 8;
   videoscale->to_buf_size = (videoscale->to_width * videoscale->to_height
-		  * videoscale->format->depth) / 8;
+		  * videoscale->format->bpp) / 8;
 
   videoscale->passthru = FALSE;
   videoscale->inited = TRUE;

@@ -27,9 +27,7 @@
 #include <gst/resample/resample.h>
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 
 #define GST_TYPE_AUDIOSCALE \
@@ -59,10 +57,6 @@ struct _Audioscale {
 
   /* audio state */
   gboolean passthru;
-  gint format;
-  gint channels;
-  gint frequency;
-  gint targetfrequency;
   gint64 offset;
 
   resample_t *resample;
@@ -77,9 +71,7 @@ struct _AudioscaleClass {
 GType gst_audioscale_get_type(void);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /* __AUDIOSCALE_H__ */

@@ -161,27 +161,19 @@ static GstCaps *
 gst_audioscale_getcaps (GstPad *pad)
 {
   Audioscale *audioscale;
-  GstCaps *peercaps;
   GstCaps *caps;
+  GstPad *otherpad;
   int i;
-  int n;
 
   audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
 
-  if (pad == audioscale->srcpad){
-    peercaps = gst_pad_get_allowed_caps (audioscale->sinkpad);
-  }else{
-    peercaps = gst_pad_get_allowed_caps (audioscale->srcpad);
-  }
-
-  caps = gst_caps_intersect (peercaps, gst_static_caps_get (
-	&gst_audioscale_sink_template.static_caps));
-  if (gst_caps_is_empty(caps)) return caps;
+  otherpad = (pad == audioscale->srcpad) ? audioscale->sinkpad :
+    audioscale->srcpad;
+  caps = gst_pad_get_allowed_caps (otherpad);
 
   /* we do this hack, because the audioscale lib doesn't handle
    * rate conversions larger than a factor of 2 */
-  n = gst_caps_get_size (caps);
-  for (i=0;i<n;i++){
+  for (i=0;i<gst_caps_get_size(caps);i++){
     int rate_min, rate_max;
     GstStructure *structure = gst_caps_get_structure (caps, i);
     const GValue *value;
@@ -199,8 +191,15 @@ gst_audioscale_getcaps (GstPad *pad)
       return NULL;
     }
 
-    gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE, rate_min/2,
-	rate_max*2, NULL);
+    rate_min /= 2;
+    if (rate_max < G_MAXINT/2){
+      rate_max *=2;
+    } else {
+      rate_max = G_MAXINT;
+    }
+
+    gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE, rate_min,
+	rate_max, NULL);
   }
 
   return caps;
@@ -216,29 +215,48 @@ gst_audioscale_link (GstPad * pad, const GstCaps * caps)
   int channels;
   int ret;
   GstPadLinkReturn link_ret;
+  GstPad *otherpad;
 
   audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
   r = audioscale->resample;
 
-  link_ret = gst_pad_try_set_caps ((pad == audioscale->srcpad)
-      ? audioscale->sinkpad : audioscale->srcpad, caps);
-  if(link_ret == GST_PAD_LINK_OK){
-    audioscale->passthru = TRUE;
-    return link_ret;
-  }
-
-  audioscale->passthru = FALSE;
+  otherpad = (pad == audioscale->srcpad) ? audioscale->sinkpad
+    : audioscale->srcpad;
 
   structure = gst_caps_get_structure (caps, 0);
 
   ret = gst_structure_get_int (structure, "rate", &rate);
   ret &= gst_structure_get_int (structure, "channels", &channels);
 
+  link_ret = gst_pad_try_set_caps (otherpad, gst_caps_copy (caps));
+  if (GST_PAD_LINK_SUCCESSFUL (link_ret)){
+    audioscale->passthru = TRUE;
+    r->channels = channels;
+    r->i_rate = rate;
+    r->o_rate = rate;
+    return link_ret;
+  }
+  audioscale->passthru = FALSE;
+
+
+  if (gst_pad_is_negotiated (otherpad)) {
+    GstCaps *trycaps = gst_caps_copy (caps);
+
+    gst_caps_set_simple (trycaps,
+        "rate", G_TYPE_INT,
+        (int)((pad == audioscale->srcpad) ? r->i_rate : r->o_rate),
+        NULL);
+    link_ret = gst_pad_try_set_caps (otherpad, trycaps);
+    if (GST_PAD_LINK_FAILED (link_ret)){
+      return link_ret;
+    }
+  }
+
   r->channels = channels;
   if (pad == audioscale->srcpad) {
-    r->i_rate = rate;
-  } else {
     r->o_rate = rate;
+  } else {
+    r->i_rate = rate;
   }
   resample_reinit(r);
 
@@ -253,7 +271,7 @@ gst_audioscale_get_buffer (void *priv, unsigned int size)
   audioscale->outbuf = gst_buffer_new();
   GST_BUFFER_SIZE(audioscale->outbuf) = size;
   GST_BUFFER_DATA(audioscale->outbuf) = g_malloc(size);
-  GST_BUFFER_TIMESTAMP(audioscale->outbuf) = audioscale->offset * GST_SECOND / audioscale->targetfrequency;
+  GST_BUFFER_TIMESTAMP(audioscale->outbuf) = audioscale->offset * GST_SECOND / audioscale->resample->o_rate;
   audioscale->offset += size / sizeof(gint16) / audioscale->resample->channels;
 
   return GST_BUFFER_DATA(audioscale->outbuf);
@@ -317,10 +335,8 @@ gst_audioscale_chain (GstPad *pad, GstData *_data)
   data = GST_BUFFER_DATA(buf);
   size = GST_BUFFER_SIZE(buf);
 
-  GST_DEBUG (
-	     "gst_audioscale_chain: got buffer of %ld bytes in '%s'\n",
-	     size, gst_element_get_name (GST_ELEMENT (audioscale)));
-
+  GST_DEBUG ("gst_audioscale_chain: got buffer of %ld bytes in '%s'\n",
+      size, gst_element_get_name (GST_ELEMENT (audioscale)));
 
   resample_scale (audioscale->resample, data, size);
 

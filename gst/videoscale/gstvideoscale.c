@@ -163,7 +163,7 @@ static GstCaps *
 gst_videoscale_getcaps (GstPad *pad)
 {
   GstVideoscale *videoscale;
-  GstCaps *peercaps;
+  GstCaps *othercaps;
   GstCaps *caps;
   GstPad *otherpad;
   int i;
@@ -171,29 +171,19 @@ gst_videoscale_getcaps (GstPad *pad)
   GST_DEBUG ("gst_videoscale_getcaps");
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
   
-  /* get list of peer's caps */
-  if(pad == videoscale->srcpad){
-    GST_DEBUG("getting caps of srcpad");
-    otherpad = videoscale->sinkpad;
-  }else{
-    GST_DEBUG("getting caps of sinkpad");
-    otherpad = videoscale->srcpad;
-  }
-  if (!GST_PAD_IS_LINKED (otherpad)){
-    GST_DEBUG ("otherpad not linked");
-    return GST_PAD_LINK_DELAYED;
-  }
-  peercaps = gst_pad_get_allowed_caps (GST_PAD_PEER(otherpad));
+  otherpad = (pad == videoscale->srcpad) ? videoscale->sinkpad :
+    videoscale->srcpad;
+  othercaps = gst_pad_get_allowed_caps (otherpad);
 
-  GST_DEBUG_CAPS("othercaps are", peercaps);
+  GST_DEBUG_CAPS("othercaps are", othercaps);
 
-  caps = gst_caps_copy (peercaps);
+  caps = gst_caps_copy (othercaps);
   for(i=0;i<gst_caps_get_size(caps);i++) {
     GstStructure *structure = gst_caps_get_structure (caps, i);
 
     gst_structure_set (structure,
-	"width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-	"height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+	"width", GST_TYPE_INT_RANGE, 100, G_MAXINT,
+	"height", GST_TYPE_INT_RANGE, 100, G_MAXINT,
 	NULL);
   }
 
@@ -208,42 +198,74 @@ gst_videoscale_link (GstPad *pad, const GstCaps *caps)
 {
   GstVideoscale *videoscale;
   GstPadLinkReturn ret;
-  const GstCaps *othercaps = NULL;
   GstPad *otherpad;
   GstStructure *structure;
+  struct videoscale_format_struct *format;
+  int height, width;
 
-  GST_DEBUG ("gst_videoscale_link");
+  GST_DEBUG ("gst_videoscale_link %s\n", gst_caps_to_string (caps));
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
 
-  if (pad == videoscale->srcpad) {
-    otherpad = videoscale->sinkpad;
-  } else {
-    otherpad = videoscale->srcpad;
-  }
+  otherpad = (pad == videoscale->srcpad) ? videoscale->sinkpad :
+    videoscale->srcpad;
+
+  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_structure_get_int (structure, "width", &width);
+  ret &= gst_structure_get_int (structure, "height", &height);
+
+  format = videoscale_find_by_structure (structure);
+
+  if(!ret || format==NULL) return GST_PAD_LINK_REFUSED;
 
   ret = gst_pad_try_set_caps (otherpad, caps);
   if (ret == GST_PAD_LINK_OK) {
     /* cool, we can use passthru */
-    videoscale->passthru = TRUE;
+
+    videoscale->format = format;
+    videoscale->to_width = width;
+    videoscale->to_height = height;
+    videoscale->from_width = width;
+    videoscale->from_height = height;
+
+    gst_videoscale_setup (videoscale);
 
     return GST_PAD_LINK_OK;
   }
 
-  othercaps = GST_PAD_CAPS (otherpad);
+  if (gst_pad_is_negotiated (otherpad)) {
+    GstCaps *newcaps = gst_caps_copy (caps);
 
-  structure = gst_caps_get_structure (caps, 0);
-  if (pad == videoscale->srcpad) {
-    ret = gst_structure_get_int (structure, "width", &videoscale->to_width);
-    ret &= gst_structure_get_int (structure, "height", &videoscale->to_height);
-  } else {
-    ret = gst_structure_get_int (structure, "width", &videoscale->from_width);
-    ret &= gst_structure_get_int (structure, "height", &videoscale->from_height);
+    if (pad == videoscale->srcpad) {
+      gst_caps_set_simple (newcaps,
+          "width", G_TYPE_INT, videoscale->from_width,
+          "height", G_TYPE_INT, videoscale->from_height,
+          NULL);
+    } else {
+      gst_caps_set_simple (newcaps,
+          "width", G_TYPE_INT, videoscale->to_width,
+          "height", G_TYPE_INT, videoscale->to_height,
+          NULL);
+    }
+    ret = gst_pad_try_set_caps (otherpad, newcaps);
+    if (GST_PAD_LINK_FAILED (ret)) {
+      return GST_PAD_LINK_REFUSED;
+    }
   }
 
-  if(!ret) return GST_PAD_LINK_REFUSED;
+  videoscale->passthru = FALSE;
 
-  videoscale->format = videoscale_find_by_structure (structure);
-  gst_videoscale_setup(videoscale);
+  if (pad == videoscale->srcpad) {
+    videoscale->to_width = width;
+    videoscale->to_height = height;
+  } else {
+    videoscale->from_width = width;
+    videoscale->from_height = height;
+  }
+  videoscale->format = format;
+
+  if (gst_pad_is_negotiated (otherpad)) {
+    gst_videoscale_setup (videoscale);
+  }
 
   return GST_PAD_LINK_OK;
 }

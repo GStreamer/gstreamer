@@ -25,9 +25,9 @@
 
 struct videoscale_format_struct {
 	unsigned int fourcc;
-	int depth;
-	void (*scale)(GstVideoscale *,unsigned char *dest, unsigned char *src);
 	int bpp;
+	void (*scale)(GstVideoscale *,unsigned char *dest, unsigned char *src);
+	int depth;
 	unsigned int endianness;
 	unsigned int red_mask;
 	unsigned int green_mask;

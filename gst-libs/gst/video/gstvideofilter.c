@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include <string.h>
 /*#define DEBUG_ENABLED */
 #include <gstvideofilter.h>
 
@@ -117,10 +118,10 @@ static GstStructure *gst_videofilter_format_get_structure(GstVideofilterFormat *
 
   fourcc = GST_MAKE_FOURCC(format->fourcc[0],format->fourcc[1],format->fourcc[2],format->fourcc[3]);
 
-  if(format->bpp){
+  if(format->depth){
     structure = gst_structure_new ("video/x-raw-rgb",
-	"depth", G_TYPE_INT, format->bpp,
-	"bpp", G_TYPE_INT, format->depth,
+	"depth", G_TYPE_INT, format->depth,
+	"bpp", G_TYPE_INT, format->bpp,
 	"endianness", G_TYPE_INT, format->endianness,
 	"red_mask", G_TYPE_INT, format->red_mask,
 	"green_mask", G_TYPE_INT, format->green_mask,
@@ -155,22 +156,27 @@ GstCaps * gst_videofilter_class_get_capslist(GstVideofilterClass *klass)
 }
 
 static GstCaps *
-gst_videofilter_sink_getcaps (GstPad *pad)
+gst_videofilter_getcaps (GstPad *pad)
 {
   GstVideofilter *videofilter;
   GstVideofilterClass *klass;
-  GstCaps *caps;
-  GstCaps *peercaps;
-  int i;
+  //GstCaps *caps;
+  GstCaps *othercaps;
+  GstPad *otherpad;
+  //int i;
 
-  GST_DEBUG("gst_videofilter_sink_getcaps");
+  GST_DEBUG("gst_videofilter_getcaps");
   videofilter = GST_VIDEOFILTER (gst_pad_get_parent (pad));
   
   klass = GST_VIDEOFILTER_CLASS(G_OBJECT_GET_CLASS(videofilter));
 
-  /* get list of peer's caps */
-  peercaps = gst_pad_get_allowed_caps (videofilter->srcpad);
+  otherpad = (pad == videofilter->srcpad) ? videofilter->sinkpad :
+    videofilter->srcpad;
 
+  othercaps = gst_pad_get_allowed_caps (otherpad);
+
+  return othercaps;
+#if 0
   /* FIXME videofilter doesn't allow passthru of video formats it
    * doesn't understand. */
   /* Look through our list of caps and find those that match with
@@ -182,7 +188,7 @@ gst_videofilter_sink_getcaps (GstPad *pad)
     GstCaps *fromcaps;
     
     fromcaps = gst_caps_new_full (gst_videofilter_format_get_structure (
-	  g_ptr_array_index (klass->formats,i)));
+	  g_ptr_array_index (klass->formats,i)), NULL);
 
     icaps = gst_caps_intersect (fromcaps, peercaps);
     if(icaps != NULL){
@@ -195,58 +201,57 @@ gst_videofilter_sink_getcaps (GstPad *pad)
   gst_caps_free (peercaps);
 
   return caps;
+#endif
 }
 
 static GstPadLinkReturn
-gst_videofilter_src_link (GstPad *pad, const GstCaps *caps)
+gst_videofilter_link (GstPad *pad, const GstCaps *caps)
 {
   GstVideofilter *videofilter;
   GstStructure *structure;
   gboolean ret;
+  int width, height;
+  double framerate;
+  GstPadLinkReturn lret;
+  GstPad *otherpad;
 
   GST_DEBUG("gst_videofilter_src_link");
   videofilter = GST_VIDEOFILTER (gst_pad_get_parent (pad));
 
-  structure = gst_caps_get_structure (caps, 0);
-
-  videofilter->format = gst_videofilter_find_format_by_caps (videofilter,caps);
-  g_return_val_if_fail(videofilter->format, GST_PAD_LINK_REFUSED);
-
-  ret = gst_structure_get_int (structure, "width", &videofilter->to_width);
-  ret &= gst_structure_get_int (structure, "height", &videofilter->to_height);
-  ret &= gst_structure_get_double (structure, "framerate", &videofilter->framerate);
-
-  if (!ret) return GST_PAD_LINK_REFUSED;
-
-  GST_DEBUG("width %d height %d",videofilter->to_width,videofilter->to_height);
-
-  gst_videofilter_setup(videofilter);
-
-  return GST_PAD_LINK_OK;
-}
-
-static GstPadLinkReturn
-gst_videofilter_sink_link (GstPad *pad, const GstCaps *caps)
-{
-  GstVideofilter *videofilter;
-  GstPadLinkReturn ret;
-  GstStructure *structure;
-
-  GST_DEBUG("gst_videofilter_sink_link");
-  videofilter = GST_VIDEOFILTER (gst_pad_get_parent (pad));
+  otherpad = (pad == videofilter->srcpad) ? videofilter->sinkpad :
+    videofilter->srcpad;
 
   structure = gst_caps_get_structure (caps, 0);
 
-  videofilter->format = gst_videofilter_find_format_by_caps (videofilter,caps);
+  videofilter->format = gst_videofilter_find_format_by_structure (
+      videofilter, structure);
   g_return_val_if_fail(videofilter->format, GST_PAD_LINK_REFUSED);
 
-  ret = gst_structure_get_int (structure, "width", &videofilter->from_width);
-  ret &= gst_structure_get_int (structure, "height", &videofilter->from_height);
-  ret &= gst_structure_get_double (structure, "framerate", &videofilter->framerate);
+  ret = gst_structure_get_int (structure, "width", &width);
+  ret &= gst_structure_get_int (structure, "height", &height);
+  ret &= gst_structure_get_double (structure, "framerate", &framerate);
 
   if (!ret) return GST_PAD_LINK_REFUSED;
 
-  GST_DEBUG("width %d height %d",videofilter->from_width,videofilter->from_height);
+  lret = gst_pad_try_set_caps (otherpad, caps);
+  if (GST_PAD_LINK_FAILED (lret)) return lret;
+
+  GST_DEBUG("width %d height %d",width,height);
+
+#if 0
+  if (pad == videofilter->srcpad) {
+    videofilter->to_width = width;
+    videofilter->to_height = height;
+  } else {
+    videofilter->from_width = width;
+    videofilter->from_height = height;
+  }
+#endif
+  videofilter->to_width = width;
+  videofilter->to_height = height;
+  videofilter->from_width = width;
+  videofilter->from_height = height;
+  videofilter->framerate = framerate;
 
   gst_videofilter_setup(videofilter);
 
@@ -267,16 +272,16 @@ gst_videofilter_init (GTypeInstance *instance, gpointer g_class)
   videofilter->sinkpad = gst_pad_new_from_template(pad_template, "sink");
   gst_element_add_pad(GST_ELEMENT(videofilter),videofilter->sinkpad);
   gst_pad_set_chain_function(videofilter->sinkpad,gst_videofilter_chain);
-  gst_pad_set_link_function(videofilter->sinkpad,gst_videofilter_sink_link);
-  gst_pad_set_getcaps_function(videofilter->sinkpad,gst_videofilter_sink_getcaps);
+  gst_pad_set_link_function(videofilter->sinkpad,gst_videofilter_link);
+  gst_pad_set_getcaps_function(videofilter->sinkpad,gst_videofilter_getcaps);
 
   pad_template = gst_element_class_get_pad_template(GST_ELEMENT_CLASS(g_class),
       "src");
   g_return_if_fail(pad_template != NULL);
   videofilter->srcpad = gst_pad_new_from_template(pad_template, "src");
   gst_element_add_pad(GST_ELEMENT(videofilter),videofilter->srcpad);
-  gst_pad_set_link_function(videofilter->srcpad,gst_videofilter_src_link);
-  //gst_pad_set_getcaps_function(videofilter->srcpad,gst_videofilter_src_getcaps);
+  gst_pad_set_link_function(videofilter->srcpad,gst_videofilter_link);
+  gst_pad_set_getcaps_function(videofilter->srcpad,gst_videofilter_getcaps);
 
   videofilter->inited = FALSE;
 }
@@ -400,7 +405,7 @@ void gst_videofilter_set_output_size(GstVideofilter *videofilter,
   videofilter->to_height = height;
 
   videofilter->to_buf_size = (videofilter->to_width * videofilter->to_height
-      * videofilter->format->depth)/8;
+      * videofilter->format->bpp)/8;
 
   srccaps = gst_caps_copy(gst_pad_get_caps(videofilter->srcpad));
   structure = gst_caps_get_structure (srccaps, 0);
@@ -439,37 +444,61 @@ static void gst_videofilter_setup(GstVideofilter *videofilter)
   g_return_if_fail(videofilter->to_height > 0);
 
   videofilter->from_buf_size = (videofilter->from_width * videofilter->from_height *
-      videofilter->format->depth) / 8;
+      videofilter->format->bpp) / 8;
   videofilter->to_buf_size = (videofilter->to_width * videofilter->to_height *
-      videofilter->format->depth) / 8;
+      videofilter->format->bpp) / 8;
 
   videofilter->inited = TRUE;
 }
 
-GstVideofilterFormat *gst_videofilter_find_format_by_caps(GstVideofilter *videofilter,
-    const GstCaps *caps)
+GstVideofilterFormat *gst_videofilter_find_format_by_structure (
+    GstVideofilter *videofilter, const GstStructure *structure)
 {
   int i;
   GstVideofilterClass *klass;
   GstVideofilterFormat *format;
   gboolean ret;
-  GstStructure *structure;
 
   klass = GST_VIDEOFILTER_CLASS(G_OBJECT_GET_CLASS(videofilter));
 
-  g_return_val_if_fail(caps != NULL, NULL);
+  g_return_val_if_fail(structure != NULL, NULL);
 
-  for(i=0;i<klass->formats->len;i++){
-    format = g_ptr_array_index(klass->formats,i);
-    structure = gst_videofilter_format_get_structure(format);
+  if (strcmp (gst_structure_get_name (structure), "video/x-raw-yuv") == 0) {
+    guint32 fourcc;
 
-    if(structure){
-      GstCaps *format_caps;
-      format_caps = gst_caps_new_full (structure, NULL);
-      ret = gst_caps_is_always_compatible (caps, format_caps);
-      gst_caps_free (format_caps);
+    ret = gst_structure_get_fourcc (structure, "format", &fourcc);
+    if (!ret) return NULL;
+    for(i=0;i<klass->formats->len;i++){
+      guint32 format_fourcc;
+      format = g_ptr_array_index(klass->formats,i);
+      format_fourcc = GST_STR_FOURCC (format->fourcc);
+      if (format->depth == 0 && format_fourcc == fourcc) {
+        return format;
+      }
+    }
+  } else if (strcmp (gst_structure_get_name (structure), "video/x-raw-rgb")
+      == 0) {
+    int bpp;
+    int depth;
+    int endianness;
+    int red_mask;
+    int green_mask;
+    int blue_mask;
 
-      if (ret) return format;
+    ret = gst_structure_get_int (structure, "bpp", &bpp);
+    ret &= gst_structure_get_int (structure, "depth", &depth);
+    ret &= gst_structure_get_int (structure, "endianness", &endianness);
+    ret &= gst_structure_get_int (structure, "red_mask", &red_mask);
+    ret &= gst_structure_get_int (structure, "green_mask", &green_mask);
+    ret &= gst_structure_get_int (structure, "blue_mask", &blue_mask);
+    if (!ret) return NULL;
+    for(i=0;i<klass->formats->len;i++){
+      format = g_ptr_array_index(klass->formats,i);
+      if (format->bpp == bpp && format->depth == depth &&
+          format->endianness == endianness && format->red_mask == red_mask &&
+          format->green_mask == green_mask && format->blue_mask == blue_mask) {
+        return format;
+      }
     }
   }
 

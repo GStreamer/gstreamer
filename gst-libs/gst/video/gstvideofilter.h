@@ -38,9 +38,9 @@ typedef void (*GstVideofilterSetupFunc)(GstVideofilter *filter);
 typedef struct _GstVideofilterFormat GstVideofilterFormat;
 struct _GstVideofilterFormat {
   char *fourcc;
-  int depth;
-  GstVideofilterFilterFunc filter_func;
   int bpp;
+  GstVideofilterFilterFunc filter_func;
+  int depth;
   unsigned int endianness;
   unsigned int red_mask;
   unsigned int green_mask;
@@ -94,8 +94,8 @@ int gst_videofilter_get_input_width(GstVideofilter *videofilter);
 int gst_videofilter_get_input_height(GstVideofilter *videofilter);
 void gst_videofilter_set_output_size(GstVideofilter *videofilter,
     int width, int height);
-GstVideofilterFormat *gst_videofilter_find_format_by_caps(GstVideofilter *filter,
-    const GstCaps *caps);
+GstVideofilterFormat *gst_videofilter_find_format_by_structure (GstVideofilter *filter,
+    const GstStructure *structure);
 GstCaps *gst_videofilter_class_get_capslist(GstVideofilterClass *videofilterclass);
 
 void gst_videofilter_class_add_format(GstVideofilterClass *videofilterclass,

@@ -310,15 +310,15 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
 		      "red_mask",   G_TYPE_INT, ximagesink->xcontext->visual->red_mask,
 		      "green_mask", G_TYPE_INT, ximagesink->xcontext->visual->green_mask,
 		      "blue_mask",  G_TYPE_INT, ximagesink->xcontext->visual->blue_mask,
-		      "width",      G_TYPE_INT, e.xconfigure.width,
-		      "height",     G_TYPE_INT, e.xconfigure.height,
+		      "width",      G_TYPE_INT, e.xconfigure.width & ~3,
+		      "height",     G_TYPE_INT, e.xconfigure.height & ~3,
 		      "framerate",  G_TYPE_DOUBLE, ximagesink->framerate,
 		      NULL));
                 
                 if ( (r == GST_PAD_LINK_OK) || (r == GST_PAD_LINK_DONE) )
                   {
-                    GST_VIDEOSINK_WIDTH (ximagesink) = e.xconfigure.width;
-                    GST_VIDEOSINK_HEIGHT (ximagesink) = e.xconfigure.height;
+                    GST_VIDEOSINK_WIDTH (ximagesink) = e.xconfigure.width & ~3;
+                    GST_VIDEOSINK_HEIGHT (ximagesink) = e.xconfigure.height & ~3;
                 
                     if ( (ximagesink->ximage) &&
                          ( (GST_VIDEOSINK_WIDTH (ximagesink) != ximagesink->ximage->width) ||
@@ -502,6 +502,32 @@ gst_ximagesink_xcontext_clear (GstXImageSink *ximagesink)
 }
 
 /* Element stuff */
+
+static GstCaps *
+gst_ximagesink_fixate (GstPad *pad, const GstCaps *caps, gpointer ignore)
+{
+  GstStructure *structure;
+  GstCaps *newcaps;
+
+  if (gst_caps_get_size (caps) > 1) return NULL;
+
+  newcaps = gst_caps_copy (caps);
+  structure = gst_caps_get_structure (newcaps, 0);
+
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 320)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "height", 240)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
+        30.0)) {
+    return newcaps;
+  }
+
+  gst_caps_free (newcaps);
+  return NULL;
+}
 
 static GstCaps *
 gst_ximagesink_getcaps (GstPad *pad)
@@ -948,6 +974,8 @@ gst_ximagesink_init (GstXImageSink *ximagesink)
                              gst_ximagesink_sinkconnect);
   gst_pad_set_getcaps_function (GST_VIDEOSINK_PAD (ximagesink),
                                 gst_ximagesink_getcaps);
+  gst_pad_set_fixate_function (GST_VIDEOSINK_PAD (ximagesink),
+                                gst_ximagesink_fixate);
 
   ximagesink->xcontext = NULL;
   ximagesink->xwindow = NULL;
