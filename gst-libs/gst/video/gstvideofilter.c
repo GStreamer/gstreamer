@@ -304,7 +304,7 @@ gst_videofilter_sink_link (GstPad *pad, GstCaps *caps)
   }
 
   videofilter->format = gst_videofilter_find_format_by_caps (videofilter,caps);
-  g_print("sink_link: %s\n",gst_caps_to_string(caps));
+  GST_DEBUG("sink_link: %s\n",gst_caps_to_string(caps));
   g_return_val_if_fail(videofilter->format, GST_PAD_LINK_REFUSED);
 
   gst_caps_get_int (caps, "width", &videofilter->from_width);
@@ -319,7 +319,7 @@ gst_videofilter_sink_link (GstPad *pad, GstCaps *caps)
   gst_caps_set(peercaps, "height", GST_PROPS_INT (videofilter->to_height));
   gst_caps_set(peercaps, "framerate", GST_PROPS_FLOAT (videofilter->framerate));
 
-  g_print("setting %s\n",gst_caps_to_string(peercaps));
+  GST_DEBUG("setting %s\n",gst_caps_to_string(peercaps));
 
   ret = gst_pad_try_set_caps (videofilter->srcpad, peercaps);
 
@@ -332,8 +332,6 @@ gst_videofilter_sink_link (GstPad *pad, GstCaps *caps)
     //gst_caps_get_int (caps, "height", &videofilter->to_height);
     //gst_videofilter_setup(videofilter);
   }
-
-  g_print("returning %d\n",ret);
 
   return ret;
 }
