@@ -134,10 +134,10 @@ struct minimal_stackframe {
 #elif defined(HAVE_CPU_MIPS)
 
 #define GST_ARCH_SET_SP(stackpointer) \
-    __asm__("move $sp,%0\n\t" : : "r"(stackpointer));
+    __asm__("lw $sp,0(%0)\n\t" : : "r"(stackpointer));
 
 #define GST_ARCH_CALL(target) \
-    __asm__("move $25,%1\n\t"	/* call via $25 */ \
+    __asm__("lw $25,0(%0)\n\t" /* call via $25 */ \
             "jal  $25\n\t" : : "r"(target));
 
 /* assuming the stackframe is 16 bytes */
