@@ -1,3 +1,9 @@
+2004-03-23  Jeremy Simon  <jesimon@libertysurf.fr>
+
+	* gst/typefind/gsttypefindfunctions.c: (ape_type_find),
+	(plugin_init):
+	Add a monkeysaudio typefind function
+
 2004-03-23  Johan Dahlin  <johan@gnome.org>
 
 	* gst-libs/gst/play/play.c (gst_play_audio_fixate) 

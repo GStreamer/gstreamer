@@ -772,6 +772,21 @@ shn_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** application/x-ape *********************************************/
+
+static GstStaticCaps ape_caps = GST_STATIC_CAPS ("application/x-ape");
+
+#define APE_CAPS gst_static_caps_get(&ape_caps)
+static void
+ape_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 4);
+
+  if (data && memcmp (data, "MAC ", 4) == 0) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, APE_CAPS);
+  }
+}
+
 /*** audio/x-m4a *********************************************/
 
 static GstStaticCaps aac_caps = GST_STATIC_CAPS ("audio/x-m4a");
@@ -1267,6 +1282,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *wav_exts[] = { "wav", NULL };
   static gchar *aiff_exts[] = { "aiff", "aif", "aifc", NULL };
   static gchar *shn_exts[] = { "shn", NULL };
+  static gchar *ape_exts[] = { "ape", NULL };
   static gchar *uri_exts[] = { "ram", NULL };
   static gchar *jpeg_exts[] = { "jpg", "jpe", "jpeg", NULL };
   static gchar *gif_exts[] = { "gif", NULL };
@@ -1337,6 +1353,8 @@ plugin_init (GstPlugin * plugin)
       aiff_type_find, aiff_exts, AIFF_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-shorten", GST_RANK_SECONDARY,
       shn_type_find, shn_exts, SHN_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/x-ape", GST_RANK_SECONDARY,
+      ape_type_find, ape_exts, APE_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "image/jpeg", GST_RANK_PRIMARY, jpeg_type_find,
       jpeg_exts, JPEG_CAPS, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "image/gif", GST_RANK_PRIMARY,
