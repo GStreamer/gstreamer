@@ -45,7 +45,7 @@ endif #!HAVE_XSLTPROC
 
 #$(DOC).fo: $(XML) $(PDFS) $(XSLFO) $(XSLFOMODS)
 #	cp magic-pdf magic
-#	xsltproc $(XSLFO) $(MAIN) > $@-t
+#	xsltproc $(XSLTPROC_OPTIONS) $(XSLFO) $(MAIN) > $@-t
 #	mv -f $@-t $@
 #
 #$(DOC).pdf: $(DOC).fo
@@ -68,7 +68,7 @@ $(DOC): $(XML) $(PNGS) $(XSLHTML) $(XSLHTMLMODS)
 	-$(RM) -r $@
 	mkdir $@
 	cp magic-png magic
-	xsltproc $(XSLHTML) $(MAIN)
+	xsltproc $(XSLTPROC_OPTIONS) $(XSLHTML) $(MAIN)
 	mv *.html $@
 	cp $(CSS) $@
 	test "x$(PNGS)" != "x" && mkdir $@/images && cp $(PNGS) $@/images || true
