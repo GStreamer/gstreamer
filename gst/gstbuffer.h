@@ -44,8 +44,10 @@ extern GType _gst_buffer_type;
 
 #define GST_BUFFER_REFCOUNT(buf)		GST_DATA_REFCOUNT(buf)
 #define GST_BUFFER_REFCOUNT_VALUE(buf)		GST_DATA_REFCOUNT_VALUE(buf)
+#ifndef GST_DISABLE_DEPRECATED
 #define GST_BUFFER_COPY_FUNC(buf)		GST_DATA_COPY_FUNC(buf)
 #define GST_BUFFER_FREE_FUNC(buf)		GST_DATA_FREE_FUNC(buf)
+#endif
 
 #define GST_BUFFER_FLAGS(buf)                   GST_DATA_FLAGS(buf)
 #define GST_BUFFER_FLAG_IS_SET(buf,flag)        GST_DATA_FLAG_IS_SET (buf, flag)

@@ -192,19 +192,6 @@ gst_filesrc_class_init (GstFileSrcClass *klass)
   gstelement_class->change_state = gst_filesrc_change_state;
 }
 
-static gint
-gst_filesrc_bufcmp (gconstpointer a, gconstpointer b)
-{
-/*  GstBuffer *bufa = (GstBuffer *)a, *bufb = (GstBuffer *)b;*/
-
-  /* sort first by offset, then in reverse by size */
-  if (GST_BUFFER_OFFSET(a) < GST_BUFFER_OFFSET(b)) return -1;
-  else if (GST_BUFFER_OFFSET(a) > GST_BUFFER_OFFSET(b)) return 1;
-  else if (GST_BUFFER_SIZE(a) > GST_BUFFER_SIZE(b)) return -1;
-  else if (GST_BUFFER_SIZE(a) < GST_BUFFER_SIZE(b)) return 1;
-  else return 0;
-}
-
 static void
 gst_filesrc_init (GstFileSrc *src)
 {
@@ -230,9 +217,6 @@ gst_filesrc_init (GstFileSrc *src)
   src->mapbuf = NULL;
   src->mapsize = DEFAULT_MMAPSIZE;		/* default is 4MB */
 
-  src->map_regions = g_tree_new (gst_filesrc_bufcmp);
-  src->map_regions_lock = g_mutex_new();
-
   src->seek_happened = FALSE;
 }
 
@@ -245,8 +229,6 @@ gst_filesrc_dispose (GObject *object)
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 
-  g_tree_destroy (src->map_regions);
-  g_mutex_free (src->map_regions_lock);
   if (src->filename)
     g_free (src->filename);
   if (src->uri)
@@ -348,19 +330,8 @@ gst_filesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 static void
 gst_filesrc_free_parent_mmap (GstBuffer *buf)
 {
-  GstFileSrc *src = GST_FILESRC (GST_BUFFER_PRIVATE (buf));
-
-  GST_LOG_OBJECT (src, "freeing mmap()d buffer at %"G_GUINT64_FORMAT"+%u", 
-		  GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf));
-
-  /* remove the buffer from the list of available mmap'd regions */
-  g_mutex_lock (src->map_regions_lock);
-  g_tree_remove (src->map_regions, buf);
-  /* check to see if the tree is empty */
-  if (g_tree_nnodes (src->map_regions) == 0) {
-    /* we have to free the bufferpool we don't have yet */
-  }
-  g_mutex_unlock (src->map_regions_lock);
+  GST_LOG ("freeing mmap()d buffer at %"G_GUINT64_FORMAT"+%u", 
+      GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf));
 
 #ifdef MADV_DONTNEED
   /* madvise to tell the kernel what to do with it */
@@ -370,15 +341,12 @@ gst_filesrc_free_parent_mmap (GstBuffer *buf)
   munmap (GST_BUFFER_DATA (buf), GST_BUFFER_MAXSIZE (buf));
   /* cast to unsigned long, since there's no gportable way to print
    * guint64 as hex */
-  GST_LOG_OBJECT (src, "unmapped region %08lx+%08lx at %p", 
-		  (unsigned long) GST_BUFFER_OFFSET (buf),
-		  (unsigned long) GST_BUFFER_MAXSIZE (buf), 
-		  GST_BUFFER_DATA (buf));
+  GST_LOG ("unmapped region %08lx+%08lx at %p", 
+      (unsigned long) GST_BUFFER_OFFSET (buf),
+      (unsigned long) GST_BUFFER_MAXSIZE (buf), 
+      GST_BUFFER_DATA (buf));
 
   GST_BUFFER_DATA (buf) = NULL;
-
-  g_object_unref (src);
-  gst_buffer_default_free (buf);
 }
 
 static GstBuffer *
@@ -423,12 +391,7 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
   GST_BUFFER_OFFSET_END (buf) = offset + size;
   GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_PRIVATE (buf) = src;
-  g_object_ref (src);
-  GST_BUFFER_FREE_FUNC (buf) = (GstDataFreeFunction) gst_filesrc_free_parent_mmap;
-
-  g_mutex_lock (src->map_regions_lock);
-  g_tree_insert (src->map_regions,buf,buf);
-  g_mutex_unlock (src->map_regions_lock);
+  GST_BUFFER_FREE_DATA_FUNC (buf) = gst_filesrc_free_parent_mmap;
 
   return buf;
 }
@@ -464,25 +427,6 @@ gst_filesrc_map_small_region (GstFileSrc *src, off_t offset, size_t size)
   return gst_filesrc_map_region(src,offset,size);
 }
 
-typedef struct {
-  off_t offset;
-  off_t size;
-} GstFileSrcRegion;
-
-/* This allows us to search for a potential mmap region. */
-static gint
-gst_filesrc_search_region_match (gpointer a, gpointer b)
-{
-  GstFileSrcRegion *r = (GstFileSrcRegion *)b;
-
-  /* trying to walk b down the tree, current node is a */
-  if (r->offset < GST_BUFFER_OFFSET(a)) return -1;
-  else if (r->offset >= (GST_BUFFER_OFFSET(a) + GST_BUFFER_SIZE(a))) return 1;
-  else if ((r->offset + r->size) <= (GST_BUFFER_OFFSET(a) + GST_BUFFER_SIZE(a))) return 0;
-
-  return -2;
-}
-
 /**
  * gst_filesrc_get_mmap:
  * @pad: #GstPad to push a buffer from
@@ -492,10 +436,9 @@ gst_filesrc_search_region_match (gpointer a, gpointer b)
 static GstBuffer *
 gst_filesrc_get_mmap (GstFileSrc *src)
 {
-  GstBuffer *buf = NULL, *map;
+  GstBuffer *buf = NULL;
   size_t readsize, mapsize;
   off_t readend,mapstart,mapend;
-  GstFileSrcRegion region;
   int i;
 
   /* calculate end pointers so we don't have to do so repeatedly later */
@@ -556,54 +499,39 @@ gst_filesrc_get_mmap (GstFileSrc *src)
   if (buf == NULL) {
     /* first check to see if there's a map that covers the right region already */
     GST_LOG_OBJECT (src, "searching for mapbuf to cover %llu+%d",src->curoffset,readsize);
-    region.offset = src->curoffset;
-    region.size = readsize;
-    map = g_tree_search (src->map_regions,
-			 (GCompareFunc) gst_filesrc_search_region_match,
-			 (gpointer)&region);
+    
+    /* if the read buffer crosses a mmap region boundary, create a one-off region */
+    if ((src->curoffset / src->mapsize) != (readend / src->mapsize)) {
+      GST_LOG_OBJECT (src, "read buf %llu+%d crosses a %d-byte boundary, creating a one-off",
+	     src->curoffset,readsize,src->mapsize);
+      buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
+      if (buf == NULL)
+	return NULL;
 
-    /* if we found an exact match, subbuffer it */
-    if (map != NULL) {
-      GST_LOG_OBJECT (src, "found mapbuf at %"G_GUINT64_FORMAT"+%u, creating subbuffer",
-		      GST_BUFFER_OFFSET (map), GST_BUFFER_SIZE (map));
-      buf = gst_buffer_create_sub (map, src->curoffset - GST_BUFFER_OFFSET(map), readsize);
-      GST_BUFFER_OFFSET (buf) = src->curoffset;
-
-    /* otherwise we need to create something out of thin air */
+    /* otherwise we will create a new mmap region and set it to the default */
     } else {
-      /* if the read buffer crosses a mmap region boundary, create a one-off region */
-      if ((src->curoffset / src->mapsize) != (readend / src->mapsize)) {
-        GST_LOG_OBJECT (src, "read buf %llu+%d crosses a %d-byte boundary, creating a one-off",
-               src->curoffset,readsize,src->mapsize);
-        buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
-	if (buf == NULL)
-          return NULL;
+      size_t mapsize;
 
-      /* otherwise we will create a new mmap region and set it to the default */
-      } else {
-	size_t mapsize;
+      off_t nextmap = src->curoffset - (src->curoffset % src->mapsize);
+      GST_LOG_OBJECT (src, "read buf %llu+%d in new mapbuf at %llu+%d, mapping and subbuffering",
+	     src->curoffset, readsize, nextmap, src->mapsize);
+      /* first, we're done with the old mapbuf */
+      gst_buffer_unref(src->mapbuf);
+      mapsize = src->mapsize;
 
-        off_t nextmap = src->curoffset - (src->curoffset % src->mapsize);
-        GST_LOG_OBJECT (src, "read buf %llu+%d in new mapbuf at %llu+%d, mapping and subbuffering",
-               src->curoffset, readsize, nextmap, src->mapsize);
-        /* first, we're done with the old mapbuf */
-        gst_buffer_unref(src->mapbuf);
-	mapsize = src->mapsize;
-
-	/* double the mapsize as long as the readsize is smaller */
-	while (readsize - (src->curoffset - nextmap) > mapsize) {
-          GST_LOG_OBJECT (src, "readsize smaller then mapsize %08x %d", readsize, mapsize);
-          mapsize <<=1;
-	}
-        /* create a new one */
-        src->mapbuf = gst_filesrc_map_region (src, nextmap, mapsize);
-	if (src->mapbuf == NULL)
-          return NULL;
-
-        /* subbuffer it */
-        buf = gst_buffer_create_sub (src->mapbuf, src->curoffset - nextmap, readsize);
-        GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET (src->mapbuf) + src->curoffset - nextmap;
+      /* double the mapsize as long as the readsize is smaller */
+      while (readsize - (src->curoffset - nextmap) > mapsize) {
+	GST_LOG_OBJECT (src, "readsize smaller then mapsize %08x %d", readsize, mapsize);
+	mapsize <<=1;
       }
+      /* create a new one */
+      src->mapbuf = gst_filesrc_map_region (src, nextmap, mapsize);
+      if (src->mapbuf == NULL)
+	return NULL;
+
+      /* subbuffer it */
+      buf = gst_buffer_create_sub (src->mapbuf, src->curoffset - nextmap, readsize);
+      GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET (src->mapbuf) + src->curoffset - nextmap;
     }
   }
 

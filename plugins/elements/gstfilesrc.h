@@ -70,9 +70,6 @@ struct _GstFileSrc {
   GstBuffer *mapbuf;
   size_t mapsize;
 
-  GTree *map_regions;
-  GMutex *map_regions_lock;
-
   gboolean seek_happened;
   gboolean need_flush;
 };

@@ -1,3 +1,14 @@
+2004-02-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/elements/gstfilesrc.c: (gst_filesrc_init),
+	(gst_filesrc_dispose), (gst_filesrc_free_parent_mmap),
+	(gst_filesrc_map_region), (gst_filesrc_get_mmap):
+	* gst/elements/gstfilesrc.h:
+	  don't ref the filesrc when creating mmaped buffers. Don't keep a
+	  list of not-yet-destroyed buffers.
+	* gst/gstbuffer.h:
+	  Deprecated BST_BUFFER_FREE_FUNC and GST_BUFFER_COPY_FUNC
+
 2004-02-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.c: (init_pre):
