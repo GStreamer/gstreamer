@@ -1,5 +1,13 @@
 2004-09-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query),
+	(gst_avi_demux_add_stream), (gst_avi_demux_stream_data):
+	* gst/avi/gstavidemux.h:
+	  Fix for compressed audio (mp3) timestamp generation. How did this
+	  ever work?
+
+2004-09-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/playback/gstplaybin.c: (gst_play_bin_get_property):
 	  Volume is a double not a float.
 
