@@ -121,9 +121,9 @@ else
 fi
 
 dnl check for gstreamer; check for uninstalled first
-PKG_CHECK_MODULES(GST, gstreamer-uninstalled >= 0.3.0, HAVE_GST="yes", HAVE_GST="no")
+PKG_CHECK_MODULES(GST, gstreamer-uninstalled >= 0.3.1, HAVE_GST="yes", HAVE_GST="no")
 if test "x$HAVE_GST" = "xno"; then
-  PKG_CHECK_MODULES(GST, gstreamer >= 0.3.0, HAVE_GST="yes", HAVE_GST="no")
+  PKG_CHECK_MODULES(GST, gstreamer >= 0.3.1, HAVE_GST="yes", HAVE_GST="no")
 fi
 
 if test "x$HAVE_GST" = "xno"; then
@@ -303,13 +303,27 @@ GST_CHECK_FEATURE(VGA, [VGA], vgavideosink, [
 ])
 
 dnl *** XVideo ***
-dnl look for the PIC library first, debian likes it
-dnl yeah but redhat doesn't even *have* it and it works fine without
-dnl GST_CHECK_LIBHEADER(XVIDEO, Xv_pic, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xvlib.h)
+dnl Look for the PIC library first, Debian requires it.
+dnl Check debian-devel archives for gory details.
+dnl 20020110:
+dnl At the moment XFree86 doesn't distribute shared libXv due
+dnl to unstable API.  On many platforms you CAN NOT link a shared
+dnl lib to a static non-PIC lib.  This is what the xvideo GStreamer
+dnl plugin wants to do.  So Debian distributes a PIC compiled
+dnl version of the static lib for plugins to link to when it is
+dnl inappropriate to link the main application to libXv directly.
+dnl FIXME: add check if this platform can support linking to a
+dnl        non-PIC libXv, if not then don not use Xv.
+dnl FIXME: perhaps warn user if they have a shared libXv since
+dnl        this is an error until XFree86 starts shipping one
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
 GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink, [
-  GST_CHECK_LIBHEADER(XVIDEO, Xv, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xvlib.h)
-  XVIDEO_LIBS="-lXv -lXext"
+  dnl check for PIC static lib
+  GST_CHECK_LIBHEADER(XVIDEO, Xv_pic, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xvlib.h, XVIDEO_LIBS="-lXv_pic -lXext")
+  if test x$HAVE_XVIDEO = xno; then
+    dnl PIC lib not found, check for regular lib
+    GST_CHECK_LIBHEADER(XVIDEO, Xv, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xvlib.h, XVIDEO_LIBS="-lXv -lXext")
+  fi
   AC_SUBST(XVIDEO_LIBS)
 ])
 
@@ -398,10 +412,9 @@ dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_in
 dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
 dnl *** dv ***
-dnl FIXME : check if those GLIB thingies are ok
 translit(dnm, m, l) AM_CONDITIONAL(USE_DV, true)
 GST_CHECK_FEATURE(DV, [dv library], dv, [
-  GST_CHECK_LIBHEADER(DV, dv, dv_init, -lm $GLIB_LIBS $GLIB_CFLAGS, libdv/dv.h, DV_LIBS="-ldv")
+  GST_CHECK_LIBHEADER(DV, dv, dv_init, -lm $GST_CFLAGS $GST_LIBS, libdv/dv.h, DV_LIBS="-ldv")
   AC_SUBST(DV_LIBS)
 ])
 
@@ -419,20 +432,26 @@ GST_CHECK_FEATURE(ESD, [esound plugins], esdsrc esdsink, [
 ])
 
 dnl **** festival ****
-dnl FIXME until thomas can be bothered to download the 20 MB festival sources
-dnl this will not go in
 translit(dnm, m, l) AM_CONDITIONAL(USE_FESTIVAL, true)
 GST_CHECK_FEATURE(FESTIVAL, [festival plugins], festivalsrc, [
-  GST_CHECK_LIBHEADER(FESTIVAL, festival, festival_tidy_up, -lFestival, festival/festival.h, FESTIVAL_LIBS="-lFestival")
-  AC_SUBST(FESTIVAL_LIBS)
+  dnl NOTE: just using local net connection now, add this lib check
+  dnl       in the future if needed
+  dnl AC_LANG_PUSH(C++)
+  dnl dnl FIXME: took out func to check for
+  dnl dnl This check puts festival_tidy_up in extern "C".
+  dnl dnl But, at least on Debian as of 20020110, it is compiled with name
+  dnl dnl mangling C++ nonsense and symbols can't resolve
+  dnl dnl GST_CHECK_LIBHEADER(FESTIVAL, Festival, festival_tidy_up, , festival/festival.h, FESTIVAL_LIBS="-lFestival")
+  dnl GST_CHECK_LIBHEADER(FESTIVAL, Festival, , , festival/festival.h, FESTIVAL_LIBS="-lFestival")
+  dnl AC_LANG_POP(C++)
+  dnl AC_SUBST(FESTIVAL_LIBS)
+  HAVE_FESTIVAL=yes
 ])
 
 dnl *** FLAC ***
-dnl thomas : checking for compile with main instead of actual function,
-dnl since that made autoconf break (for version 2.13)
 translit(dnm, m, l) AM_CONDITIONAL(USE_FLAC, true)
 GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flacenc flacdec, [
-  GST_CHECK_LIBHEADER(FLAC, FLAC, main, -lm, FLAC/all.h, FLAC_LIBS="-lFLAC")
+  GST_CHECK_LIBHEADER(FLAC, FLAC, FLAC__stream_decoder_new, -lm, FLAC/all.h, FLAC_LIBS="-lFLAC")
   AC_SUBST(FLAC_LIBS)
 ])
 
@@ -493,7 +512,7 @@ AC_SUBST(LAME_LIBS)
 
 dnl FIXME : check if these CPP flags can be dealt with otherwise
 dnl libdvcheck_save_CPPFLAGS="$CPPFLAGS"
-dnl CPPFLAGS="$CPPFLAGS $GLIB_CFLAGS"
+dnl CPPFLAGS="$CPPFLAGS $GST_CFLAGS"
 dnl AC_CHECK_HEADER(libdv/dv.h, :, HAVE_LIBDV=no)
 dnl CPPFLAGS="$libdvcheck_save_CPPFLAGS"
 
@@ -547,13 +566,14 @@ dnl *** rtp ***
 dnl FIXME : adapt and make it work
 translit(dnm, m, l) AM_CONDITIONAL(USE_RTP, true)
 GST_CHECK_FEATURE(RTP, [RTP library], rtpenc rtpdec,[
-  AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_RTP=yes, HAVE_RTP=no, $GLIB_LIBS $GLIB_CFLAGS)
+  AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_RTP=yes, HAVE_RTP=no, $GST_CFLAGS $GST_LIBS)
   RTP_LIBS="-lrtp"
   AC_SUBST(RTP_LIBS)
 ])
 
 
 dnl FIXME header check needs to use GLIB_CFLAGS in order to succeed for rtp
+dnl can use GST_* which should have GLIB_* info
 dnl AC_CHECK_HEADERS(rtp/rtp.h, HAVE_LIBRTP=yes, HAVE_LIBRTP=no)
 dnl AC_CHECK_HEADERS(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
 dnl AC_CHECK_HEADERS(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
@@ -718,17 +738,6 @@ AC_ARG_WITH(configdir,
   no) AC_MSG_ERROR(bad value ${withval} for --with-configdir) ;;
   *) GST_CONFIG_DIR="${withval}" ;;
 esac], 
-[:]) dnl Default value
-
-dnl Default value
-GST_WIN32_LIBDIR="/usr/lib/win32"
-AC_ARG_WITH(win32_libdir,
-[  --with-win32-libdir          specify location for win32 DLLs],
-[case "${withval}" in
-  yes) AC_MSG_ERROR(bad value ${withval} for --with-win32-libdir) ;;
-  no) AC_MSG_ERROR(bad value ${withval} for --with-win32-libdir) ;;
-  *) GST_WIN32_LIBDIR="${withval}" ;;
-esac],
 [:]) dnl Default value
 
 AC_ARG_ENABLE(docs-build,
@@ -900,10 +909,6 @@ dnl Set location of configuration dir.
 AC_DEFINE_UNQUOTED(GST_CONFIG_DIR,"$GST_CONFIG_DIR")
 AC_SUBST(GST_CONFIG_DIR)
 
-dnl Set location of windows dll dir.
-AC_DEFINE_UNQUOTED(GST_WIN32_LIBDIR,"$GST_WIN32_LIBDIR")
-AC_SUBST(GST_WIN32_LIBDIR)
-
 dnl Set location of plugin directory
 if test "x${prefix}" = "xNONE"; then
   PLUGINS_DIR=${ac_default_prefix}/lib/gst
@@ -918,16 +923,6 @@ PLUGINS_BUILDDIR=`pwd`
 AC_DEFINE_UNQUOTED(PLUGINS_BUILDDIR,"$PLUGINS_BUILDDIR")
 AC_SUBST(PLUGINS_BUILDDIR)
 
-dnl Private vars for libgst only
-LIBGST_LIBS="$GST_LIBS $XML_LIBS $GLIB_LIBS"
-LIBGST_CFLAGS="$GST_CFLAGS $XML_CFLAGS $GLIB_CFLAGS"
-AC_SUBST(LIBGST_LIBS)
-AC_SUBST(LIBGST_CFLAGS)
-
-dnl Vars for everyone else
-dnl FIXME: is there a reason to add this top_builddir stuff ? don't think so
-dnl GST_LIBS="\$(top_builddir)/gst/libgst.la $LIBGST_LIBS"
-dnl GST_CFLAGS="-I\$(top_srcdir) -I\$(top_srcdir)/include $LIBGST_CFLAGS"
 GST_CFLAGS="$GST_CFLAGS -I\$(top_srcdir)/gst-libs"
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
