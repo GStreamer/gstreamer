@@ -1,3 +1,11 @@
+2004-06-27  Julien Moutte  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xwindow_decorate),
+	(gst_ximagesink_xwindow_new):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xwindow_decorate),
+	(gst_xvimagesink_xwindow_new): Trying to fix the random behaviour of
+	window decorations.
+
 2004-06-27  Wim Taymans  <wim@fluendo.com>
 
 	* ext/dv/gstdvdec.c: (gst_dvdec_class_init), (gst_dvdec_init),
