@@ -238,7 +238,7 @@ GST_PLUGINS_ALL="\
 dnl see if we can build C++ plug-ins
 if test "x$HAVE_CXX" = "xyes"; then
   GST_PLUGINS_ALL="$GST_PLUGINS_ALL \
-                  modplug"
+                  modplug monkeyaudio"
 else
   AC_MSG_WARN([Not compiling plug-ins requiring C++ compiler])
 fi
@@ -1054,6 +1054,8 @@ gst/mpegtypes/Makefile
 gst/modplug/Makefile
 gst/modplug/libmodplug/Makefile
 gst/monoscope/Makefile
+gst/monkeyaudio/Makefile
+gst/monkeyaudio/libmonkeyaudio/Makefile
 gst/oneton/Makefile
 gst/passthrough/Makefile
 gst/playondemand/Makefile
