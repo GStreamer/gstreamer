@@ -19,6 +19,7 @@ TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)
 tmpl_sources =				\
 	tmpl/videoraw.sgml
 
+gstreamer_docdir = $(HTML_DIR)
 gstreamer_doc_DATA =		\
 	$(DOC_MODULE).html		\
 	$(DOC_MODULE).hierarchy	\
