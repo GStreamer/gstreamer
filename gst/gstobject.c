@@ -363,7 +363,7 @@ gst_object_dispatch_properties_changed (GObject * object,
   while (gst_object) {
     /* need own category? */
     for (i = 0; i < n_pspecs; i++) {
-      GST_CAT_LOG (GST_CAT_EVENT, "deep notification from %s to %s (%s)",
+      GST_CAT_LOG (GST_CAT_SIGNAL, "deep notification from %s to %s (%s)",
           GST_OBJECT_NAME (object) ? GST_OBJECT_NAME (object) : "(null)",
           GST_OBJECT_NAME (gst_object) ? GST_OBJECT_NAME (gst_object) :
           "(null)", pspecs[i]->name);

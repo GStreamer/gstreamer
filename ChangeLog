@@ -1,3 +1,15 @@
+2005-01-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/random/release:
+	  updates
+	* gst/gst_private.h:
+	* gst/gstinfo.c:
+	* gst/gstobject.c:
+	  move deep_notify logging to a new category
+	* gst/gstprobe.c:
+	* gst/gstprobe.h:
+	  add stuff so bindings can wrap probes
+
 2005-01-09  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
 
 	* gst/gstplugin.c: (gst_plugin_load):

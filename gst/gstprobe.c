@@ -20,9 +20,27 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #include "gst_private.h"
 #include "gstprobe.h"
+
+static GstProbe *
+_gst_probe_copy (const GstProbe * src)
+{
+  return gst_probe_new (src->single_shot, src->callback, src->user_data);
+}
+
+GType
+gst_probe_get_type (void)
+{
+  static GType gst_probe_type = 0;
+
+  if (!gst_probe_type) {
+    gst_probe_type = g_boxed_type_register_static ("GstProbe",
+        (GBoxedCopyFunc) _gst_probe_copy, (GBoxedFreeFunc) gst_probe_destroy);
+  }
+
+  return gst_probe_type;
+}
 
 /**
  * gst_probe_new:
@@ -55,7 +73,7 @@ gst_probe_new (gboolean single_shot,
  * gst_probe_destroy:
  * @probe: The probe to destroy
  *
- * Free the memeory associated with the probe.
+ * Free the memory associated with the probe.
  */
 void
 gst_probe_destroy (GstProbe * probe)

@@ -29,39 +29,44 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_PROBE		(gst_probe_get_type())
+#define GST_PROBE(object)	((GstProbe *) object)
+
 typedef struct _GstProbe GstProbe;
 
+GType                    gst_probe_get_type		(void) G_GNUC_CONST;
+
 /* the callback should return FALSE if the data should be discarded */
-typedef gboolean 		(*GstProbeCallback) 		(GstProbe *probe, 
-								 GstData **data, 
-								 gpointer user_data);
+typedef gboolean	(*GstProbeCallback)		(GstProbe *probe,
+							 GstData **data,
+							 gpointer user_data);
 
 struct _GstProbe {
   gboolean		single_shot;
-  
-  GstProbeCallback 	callback;
-  gpointer 		user_data;
+
+  GstProbeCallback	callback;
+  gpointer		user_data;
 };
 
 
-GstProbe*		gst_probe_new 			(gboolean single_shot, 
-							 GstProbeCallback callback, 
+GstProbe*		gst_probe_new			(gboolean single_shot,
+							 GstProbeCallback callback,
 							 gpointer user_data);
 void			gst_probe_destroy		(GstProbe *probe);
 
-gboolean		gst_probe_perform 		(GstProbe *probe, GstData **data);
+gboolean		gst_probe_perform		(GstProbe *probe, GstData **data);
 
 typedef struct _GstProbeDispatcher GstProbeDispatcher;
 
 struct _GstProbeDispatcher {
   gboolean		active;
-  
+
   GSList		*probes;
 };
 
-GstProbeDispatcher*	gst_probe_dispatcher_new 		(void);
-void			gst_probe_dispatcher_destroy 		(GstProbeDispatcher *disp);
-void			gst_probe_dispatcher_init 		(GstProbeDispatcher *disp);
+GstProbeDispatcher*	gst_probe_dispatcher_new		(void);
+void			gst_probe_dispatcher_destroy		(GstProbeDispatcher *disp);
+void			gst_probe_dispatcher_init		(GstProbeDispatcher *disp);
 
 void			gst_probe_dispatcher_set_active		(GstProbeDispatcher *disp, gboolean active);
 void			gst_probe_dispatcher_add_probe		(GstProbeDispatcher *disp, GstProbe *probe);
@@ -71,6 +76,5 @@ gboolean		gst_probe_dispatcher_dispatch		(GstProbeDispatcher *disp, GstData **da
 
 G_END_DECLS
 
-
-#endif /* __GST_PAD_H__ */
+#endif /* __GST_PROBE_H__ */
 
