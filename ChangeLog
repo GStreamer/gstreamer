@@ -1,8 +1,44 @@
-2004-02-25  Christian Fredrik Kalager Schaller <uraeus@gnome.org>
+ 2004-02-25  Christian Fredrik Kalager Schaller <uraeus@gnome.org>
 
 	* common/m4/gst-docs.m4
 	change flavour text from enable to disable as enable is our default
 	closes bug Bug 135304
+
+=== release 0.7.5 ===
+ 
+ 2004-02-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+ 
+	* NEWS:
+          instate NEWS file
+	* Makefile.am:
+	* gstreamer.spec.in:
+	* RELEASE:
+          put back release
+	* configure.ac:
+	* docs/random/release:
+          more updates
+
+2004-02-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gsttag.c: (_gst_tag_initialize):
+	* po/fr.po:
+	* po/nl.po:
+          remove hyphen from codec tags
+
+2004-02-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/parse/Makefile.am:
+          fix dependency so that a make from a clean build works the first
+          time
+
+2004-02-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/random/release:
+          update release strategy
+	* po/fr.po:
+          auto-update po file
+	* po/nl.po:
+          update dutch translation
 
 2004-02-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -20,7 +56,7 @@
 	* gst/gstelement.c (gst_element_dispose): Protect against multiple
 	invocations.
 
-	* gst/schedulers/gstoptimalscheduler.c
+	* gst/schedulers/gstoptimalscheduler.c:
 	I added a mess of prototypes at the top of the file by way of
 	documentation. Some of the operations on chains and groups were
 	re-organized.
@@ -147,6 +183,7 @@
 	* gst/elements/gstfilesink.c: (gst_filesink_open_file):
 	* gst/elements/gstfilesrc.c: (gst_filesrc_open_file):
 	* gst/elements/gstmultifilesrc.c: (gst_multifilesrc_open_file):
+          fix errors
 
 2004-02-20  Andy Wingo  <wingo@pobox.com>
 
@@ -302,11 +339,11 @@
 	* gst/gstbin.c: (gst_bin_change_state), (gst_bin_iterate): Fix a big
 	bug that was breaking pipelines like sinesrc ! { queue ! osssink } when
 	an error was thrown by osssink. Basically a state change failure for
-	an element in a different scheduling group was considered as successfull
-	, which means that caps nego was going on and weird stuff happened. Like
-	i wrote in the comment there, if someone want to revert that please
-	drop me a mail explaining why because i really see no point in keeping
-	that broken behaviour there.
+	an element in a different scheduling group was considered as
+        successful, which means that caps nego was going on and weird stuff
+        happened. Like I wrote in the comment there, if someone wants to
+        revert that please drop me a mail explaining why because I really see
+        no point in keeping that broken behaviour there.
 	* gst/gstqueue.c: (gst_queue_get): Add a safety check as the queue CAN
 	be empty, we then return NULL which will trigger a nice error when 
 	pulling from the pad.
@@ -599,7 +636,7 @@
 2004-02-09  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/gstdata.c: (gst_data_ref): Adding a categorized debug on data_ref
-	because data_unref has one and i prefer the debug to be symetric.
+	because data_unref has one and I prefer the debug to be symetric.
 	* gst/gstqueue.c: (gst_queue_locked_flush): Fix a huge memleak. Buffers
 	were refed when added to the queue and unrefed only once when the queue
 	was flushed. Now the flush handler unref the buffers two times : first

@@ -205,24 +205,24 @@ void		gst_debug_unset_threshold_for_name (const gchar *	name);
 /**
  * GST_DEBUG_CATEGORY:
  * @cat: the category
- * 
- * Defines a GstCategory variable.
+ *
+ * Defines a GstDebugCategory variable.
  * This macro expands to nothing if debugging is disabled.
  */
 #define GST_DEBUG_CATEGORY(cat) GstDebugCategory *cat = NULL
 /**
  * GST_DEBUG_CATEGORY_EXTERN:
  * @cat: the category
- * 
- * Defines an extern GstCategory variable. Use in header files.
+ *
+ * Declares a GstDebugCategory variable as extern. Use in header files.
  * This macro expands to nothing if debugging is disabled.
  */
 #define GST_DEBUG_CATEGORY_EXTERN(cat) extern GstDebugCategory *cat
 /**
  * GST_DEBUG_CATEGORY_STATIC:
  * @cat: the category
- * 
- * Defines a static GstCategory variable.
+ *
+ * Defines a static GstDebugCategory variable.
  * This macro expands to nothing if debugging is disabled.
  */
 #define GST_DEBUG_CATEGORY_STATIC(cat) static GstDebugCategory *cat = NULL
