@@ -84,6 +84,9 @@ gst_jack_bin_init(GstJackBin *this)
     /* make a new scheduler and associate it with the bin */
     gst_scheduler_factory_make (NULL, GST_ELEMENT (this));
 
+    this->cond = g_cond_new ();
+    this->lock = g_mutex_new ();
+    g_mutex_lock (this->lock);
     this->sched_setup = FALSE;
 }
 
@@ -104,7 +107,9 @@ gst_jack_bin_change_state (GstElement *element)
             g_message ("jack: closing client");
             jack_client_close (this->client);
         }
-            
+        
+        if (GST_ELEMENT_CLASS (parent_class)->change_state)
+            return GST_ELEMENT_CLASS (parent_class)->change_state (element);
         break;
         
     case GST_STATE_READY:
@@ -136,7 +141,16 @@ gst_jack_bin_change_state (GstElement *element)
                 l = g_list_next (l);
             }
             GST_FLAG_UNSET (GST_OBJECT (this), GST_JACK_OPEN);
+
+            if (GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_ACTIVE)) {
+                g_message ("jack: deactivating client");
+                jack_deactivate (this->client);
+                GST_FLAG_UNSET (GST_OBJECT (this), GST_JACK_ACTIVE);
+            }
         }
+            
+        if (GST_ELEMENT_CLASS (parent_class)->change_state)
+            return GST_ELEMENT_CLASS (parent_class)->change_state (element);
         break;
         
     case GST_STATE_PAUSED:
@@ -148,6 +162,27 @@ gst_jack_bin_change_state (GstElement *element)
                 pad = GST_JACK_PAD (l);
                 g_message ("jack: registering pad %s:%s", pad->name, pad->peer_name);
                 pad->port = jack_port_register (this->client, pad->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0);
+                l = g_list_next (l);
+            }
+            l = this->sink_pads;
+            while (l) {
+                pad = GST_JACK_PAD (l);
+                g_message ("jack: registering pad %s:%s", pad->name, pad->peer_name);
+                pad->port = jack_port_register (this->client, pad->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+                l = g_list_next (l);
+            }
+
+            if (!GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_ACTIVE)) {
+                g_message ("jack: activating client");
+                jack_activate (this->client);
+                GST_FLAG_SET (GST_OBJECT (this), GST_JACK_ACTIVE);
+            }
+
+            g_cond_wait (this->cond, this->lock);
+
+            l = this->src_pads;
+            while (l) {
+                pad = GST_JACK_PAD (l);
                 g_message ("connecting gst jack port %s to jack port %s", jack_port_name (pad->port), pad->peer_name);
                 if (jack_connect (this->client, jack_port_name (pad->port), pad->peer_name)) {
                     g_warning ("could not connect %s and %s", pad->peer_name, jack_port_name (pad->port));
@@ -158,40 +193,30 @@ gst_jack_bin_change_state (GstElement *element)
             l = this->sink_pads;
             while (l) {
                 pad = GST_JACK_PAD (l);
-                g_message ("jack: registering pad %s:%s", pad->name, pad->peer_name);
-                pad->port = jack_port_register (this->client, pad->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
                 g_message ("connecting gst jack port %s to jack port %s", jack_port_name (pad->port), pad->peer_name);
-/*                if (jack_connect (this->client, jack_port_name (pad->port), pad->peer_name)) {
+                if (jack_connect (this->client, jack_port_name (pad->port), pad->peer_name)) {
                     g_warning ("could not connect %s and %s", pad->peer_name, jack_port_name (pad->port));
                     return GST_STATE_FAILURE;
-                    } */
+                }
                 l = g_list_next (l);
             }
+
             g_message ("jack: setting OPEN flag");
             GST_FLAG_SET (GST_OBJECT (this), GST_JACK_OPEN);
+        } else {
+            g_cond_wait (this->cond, this->lock);
         }
 
-        if (GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_ACTIVE)) {
-            g_message ("jack: deactivating client");
-            jack_deactivate (this->client);
-            GST_FLAG_UNSET (GST_OBJECT (this), GST_JACK_ACTIVE);
-        }
         break;
     case GST_STATE_PLAYING:
         g_message ("jack: PLAYING");
-        if (!GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_ACTIVE)) {
-            g_message ("jack: activating client");
-            jack_activate (this->client);
-            GST_FLAG_SET (GST_OBJECT (this), GST_JACK_ACTIVE);
-        }
+
+        g_cond_wait (this->cond, this->lock);
         break;
     }
     
     g_message ("jack: state change finished");
     
-    if (GST_ELEMENT_CLASS (parent_class)->change_state)
-        return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
     return GST_STATE_SUCCESS;
 }
 
@@ -210,11 +235,37 @@ process (nframes_t nframes, void *arg)
     
     g_message ("jack: process()");
 
-    if (!bin->sched_setup) {
-        gst_scheduler_setup (GST_ELEMENT_SCHED (bin));
-        bin->sched_setup = TRUE;
+    if (GST_STATE_PENDING (bin) != GST_STATE_VOID_PENDING) {
+        g_message ("jackbin: doing state change from %s to %s",
+                   gst_element_state_get_name (GST_STATE (bin)), 
+                   gst_element_state_get_name (GST_STATE_PENDING (bin)));
+
+        /* FIXME: this breaks ultra-low latency... */
+        g_mutex_lock (bin->lock);
+            
+        switch (GST_STATE_TRANSITION (bin)) {
+        case GST_STATE_READY_TO_PAUSED:
+            if (!bin->sched_setup) {
+                gst_scheduler_setup (GST_ELEMENT_SCHED (bin));
+                bin->sched_setup = TRUE;
+            }
+            break;
+        }
+        
+        /* do the chaining up from within the jack thread, so that child
+           elements are initialized from within the proper thread */
+        if (GST_ELEMENT_CLASS (parent_class)->change_state)
+            GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT_CAST (bin));
+        
+        g_cond_signal (bin->cond);
+        g_mutex_unlock (bin->lock);
     }
-    
+
+    if (GST_STATE (bin) != GST_STATE_PLAYING) {
+        g_message ("jackbin: bin is not PLAYING yet, returning");
+        return 0;
+    }
+
     l = bin->src_pads;
     while (l) {
         pad = GST_JACK_PAD (l);
