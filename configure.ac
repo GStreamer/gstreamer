@@ -114,6 +114,7 @@ dnl ###########################
 dnl # Configure external libs #
 dnl ###########################
 if test "x$HAVE_FFMPEG" = "xyes"; then
+  ac_configure_args="$ac_configure_args --disable-v4l --disable-audio-oss --disable-dv1394"
   AC_CONFIG_SUBDIRS(gst-libs/ext/ffmpeg/ffmpeg)
 fi 
 

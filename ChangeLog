@@ -1,3 +1,8 @@
+2004-03-05  David Schleef  <ds@schleef.org>
+
+	* configure.ac:  Call ffmpeg's configure with --disable-v4l,
+	--disable-oss-audio, --disable-dv1394 (bug #127873)
+
 2004-03-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_formatid_to_caps):
