@@ -46,6 +46,17 @@ enum {
   /* FILL ME */
 };
 
+GST_PADTEMPLATE_FACTORY (src_factory,
+  "src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+    "gsm_enc",
+    "audio/x-gsm",
+      "rate",       GST_PROPS_INT_RANGE (1000, 48000)
+  )
+);
+
 static void		gst_gsmenc_class_init	(GstGSMEnc *klass);
 static void		gst_gsmenc_init		(GstGSMEnc *gsmenc);
 
@@ -121,7 +132,6 @@ gst_gsmenc_newcaps (GstPad *pad, GstCaps *caps)
   gsmenc = GST_GSMENC (gst_pad_get_parent (pad));
 
   gsmenc->rate = gst_caps_get_int (caps, "rate");
-
   gst_pad_set_caps (gsmenc->srcpad, GST_CAPS_NEW (
                               "gsm_gsm",
                               "audio/x-gsm",
@@ -142,6 +152,15 @@ gst_gsmenc_chain (GstPad *pad, GstBuffer *buf)
 
   gsmenc = GST_GSMENC (GST_OBJECT_PARENT (pad));
 	      
+  if (!GST_PAD_CAPS (gsmenc->srcpad)) {
+      gst_pad_set_caps (gsmenc->srcpad,
+		      GST_CAPS_NEW (
+    			"gsm_enc",
+    			"audio/x-gsm",
+    		 	"rate",  GST_PROPS_INT (gsmenc->rate)
+		      ));
+  }
+  
   data = (gsm_signal*) GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf) / sizeof (gsm_signal);
 

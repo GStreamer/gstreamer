@@ -108,7 +108,6 @@ gst_gsmdec_newcaps (GstPad *pad, GstCaps *caps)
   GstGSMDec *gsmdec;
   
   gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
-
   gst_pad_set_caps (gsmdec->srcpad, GST_CAPS_NEW (
 	  		"gsm_raw",
 			"audio/raw",
