@@ -270,7 +270,7 @@ gst_ffmpegcsp_get_type (void)
     };
 
     ffmpegcsp_type = g_type_register_static (GST_TYPE_ELEMENT,
-					     "GstFFMpegColorspace",
+					     "GstFFMpegCsp",
 					     &ffmpegcsp_info, 0);
   }
 
