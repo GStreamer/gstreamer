@@ -286,7 +286,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 @USE_GCONF_TRUE@%{_libdir}/pkgconfig/gstreamer-gconf-%{majorminor}.pc
 # Snapshot plugin
 @USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsnapshot.so
-
+%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so
 %post 
 %{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
 
