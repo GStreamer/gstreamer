@@ -120,7 +120,7 @@ gst_v4lmjpegsrc_set_input_norm (GstV4lMjpegSrc       *v4lmjpegsrc,
 
     for (n=V4L_MJPEG_INPUT_COMPOSITE;n<V4L_MJPEG_INPUT_AUTO;n++)
     {
-      g_message("Trying %s as input...\n",
+      gst_info("Trying %s as input...\n",
         input_name[n]);
       bstat.input = n;
 
@@ -137,7 +137,7 @@ gst_v4lmjpegsrc_set_input_norm (GstV4lMjpegSrc       *v4lmjpegsrc,
         input = bstat.input;
         if (norm == VIDEO_MODE_AUTO)
           norm = bstat.norm;
-        g_message("Signal found: on input %s, norm %s\n",
+        gst_info("Signal found: on input %s, norm %s\n",
           input_name[bstat.input], norm_name[bstat.norm]);
         break;
       }
@@ -170,7 +170,7 @@ gst_v4lmjpegsrc_set_input_norm (GstV4lMjpegSrc       *v4lmjpegsrc,
     if (bstat.signal)
     {
       norm = bstat.norm;
-      g_message("Norm %s detected on input %s\n",
+      gst_info("Norm %s detected on input %s\n",
         norm_name[bstat.norm], input_name[input]);
       GST_V4LELEMENT(v4lmjpegsrc)->norm = norm;
     }
@@ -435,7 +435,7 @@ gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc *v4lmjpegsrc)
     return FALSE;
   }
 
-  g_message("Got %ld buffers of size %ld KB\n",
+  gst_info("Got %ld buffers of size %ld KB\n",
     v4lmjpegsrc->breq.count, v4lmjpegsrc->breq.size/1024);
 
   /* Map the buffers */

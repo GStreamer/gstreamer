@@ -3,11 +3,13 @@ TODO list (short term):
 * as soon as we've trashed Gtk-1.2, change 'gint palette'
     to 'guint16 palette' in gstv4lsrc.[ch]
 * v4lsrc: actually try the format out on capsnego
+* all plugins: on try_set_caps(), loop try_set_caps() per caps
+    instead of using a multi-caps so we know the end-format
 * all three: fix interlacing (not handled at all...)
 * add overlay handling in v4lelement
 * libgstrec
 * avidemux: add events (seek)
-* avimux: fps calculations
+* avimux: fps calculations (or make that a set/get_property()?)
 
 TODO list (long term):
 ======================

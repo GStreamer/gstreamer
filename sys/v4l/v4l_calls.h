@@ -100,6 +100,7 @@ gboolean gst_v4l_close          (GstV4lElement *v4lelement);
 gint     gst_v4l_get_num_chans  (GstV4lElement *v4lelement);
 gboolean gst_v4l_get_chan_norm  (GstV4lElement *v4lelement, gint *channel,          gint *norm);
 gboolean gst_v4l_set_chan_norm  (GstV4lElement *v4lelement, gint  channel,          gint  norm);
+GList   *gst_v4l_get_chan_names (GstV4lElement *v4lelement);
 
 /* frequency control */
 gboolean gst_v4l_has_tuner      (GstV4lElement *v4lelement);

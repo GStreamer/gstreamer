@@ -363,7 +363,7 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink *v4lmjpegsink)
     return FALSE;
   }
 
-  g_message("Got %ld buffers of size %ld KB\n",
+  gst_info("Got %ld buffers of size %ld KB\n",
     v4lmjpegsink->breq.count, v4lmjpegsink->breq.size/1024);
 
   /* Map the buffers */

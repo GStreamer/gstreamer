@@ -313,6 +313,27 @@ gst_v4lmjpegsrc_get_property (GObject    *object,
     case ARG_HEIGHT:
       g_value_set_int(value, v4lmjpegsrc->end_height);
       break;
+    case ARG_X_OFFSET:
+      g_value_set_int(value, v4lmjpegsrc->x_offset);
+      break;
+    case ARG_Y_OFFSET:
+      g_value_set_int(value, v4lmjpegsrc->y_offset);
+      break;
+    case ARG_F_WIDTH:
+      g_value_set_int(value, v4lmjpegsrc->frame_width);
+      break;
+    case ARG_F_HEIGHT:
+      g_value_set_int(value, v4lmjpegsrc->frame_height);
+      break;
+    case ARG_H_DECIMATION:
+      g_value_set_int(value, v4lmjpegsrc->horizontal_decimation);
+      break;
+    case ARG_V_DECIMATION:
+      g_value_set_int(value, v4lmjpegsrc->vertical_decimation);
+      break;
+    case ARG_QUALITY:
+      g_value_set_int(value, v4lmjpegsrc->quality);
+      break;
     case ARG_NUMBUFS:
       g_value_set_int(value, v4lmjpegsrc->breq.count);
       break;

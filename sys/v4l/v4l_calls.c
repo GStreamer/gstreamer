@@ -29,11 +29,11 @@
 #include "v4l_calls.h"
 
 
-char *picture_name[] = { "Hue", "Brightness", "Contrast", "Saturation" };
+char *picture_name[] = { "Hue", "Brightness", "Contrast", "Saturation", NULL };
 
-char *audio_name[] = { "Volume", "Mute", "Mode" };
+char *audio_name[] = { "Volume", "Mute", "Mode", NULL };
 
-char *norm_name[] = { "PAL", "NTSC", "SECAM", "Autodetect" };
+char *norm_name[] = { "PAL", "NTSC", "SECAM", NULL };
 
 /******************************************************
  * gst_v4l_get_capabilities():
@@ -100,7 +100,7 @@ gst_v4l_open (GstV4lElement *v4lelement)
     return FALSE;
   }
 
-  g_message("Opened device \'%s\' (\'%s\') successfully\n",
+  gst_info("Opened device \'%s\' (\'%s\') successfully\n",
     v4lelement->vcap.name, v4lelement->videodev);
 
   return TRUE;
@@ -145,6 +145,37 @@ gst_v4l_get_num_chans (GstV4lElement *v4lelement)
   GST_V4L_CHECK_OPEN(v4lelement);
 
   return v4lelement->vcap.channels;
+}
+
+
+/******************************************************
+ * gst_v4l_get_chan_names()
+ * return value: a GList containing the channel names
+ ******************************************************/
+
+GList *
+gst_v4l_get_chan_names (GstV4lElement *v4lelement)
+{
+  struct video_channel vchan;
+  GList *list = NULL;
+  gint i;
+
+#ifdef DEBUG
+  fprintf(stderr, "V4L: gst_v4l_get_chan_names()\n");
+#endif
+
+  if (!GST_V4L_IS_OPEN(v4lelement))
+    return NULL;
+
+  for (i=0;i<gst_v4l_get_num_chans(v4lelement);i++)
+  {
+    vchan.channel = i;
+    if (ioctl(v4lelement->video_fd, VIDIOCGCHAN, &vchan) < 0)
+      return NULL;
+    list = g_list_append(list, (gpointer)g_strdup(vchan.name));
+  }
+
+  return list;
 }
 
 

@@ -37,9 +37,9 @@ enum {
 enum {
   ARG_0,
   ARG_CHANNEL,
-  ARG_CHANNEL_NAME,
+  ARG_CHANNEL_NAMES,
   ARG_NORM,
-  ARG_NORM_NAME,
+  ARG_NORM_NAMES,
   ARG_HAS_TUNER,
   ARG_FREQUENCY,
   ARG_HAS_AUDIO,
@@ -119,15 +119,15 @@ gst_v4lelement_class_init (GstV4lElementClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNEL,
     g_param_spec_int("channel","channel","channel",
     G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNEL_NAME,
-    g_param_spec_string("channel_name","channel_name","channel_name",
-    NULL, G_PARAM_READABLE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNEL_NAMES,
+    g_param_spec_pointer("channel_names","channel_names","channel_names",
+    G_PARAM_READABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NORM,
     g_param_spec_int("norm","norm","norm",
     G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NORM_NAME,
-    g_param_spec_string("norm_name","norm_name","norm_name",
-    NULL, G_PARAM_READABLE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NORM_NAMES,
+    g_param_spec_pointer("norm_names","norm_names","norm_names",
+    G_PARAM_READABLE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HAS_TUNER,
     g_param_spec_boolean("has_tuner","has_tuner","has_tuner",
@@ -346,6 +346,7 @@ gst_v4lelement_get_property (GObject    *object,
   GstV4lElement *v4lelement;
   gint temp_i = 0;
   gulong temp_ul = 0;
+  GList *list = NULL;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail(GST_IS_V4LELEMENT(object));
@@ -358,25 +359,20 @@ gst_v4lelement_get_property (GObject    *object,
         gst_v4l_get_chan_norm(v4lelement, &temp_i, NULL);
       g_value_set_int(value, temp_i);
       break;
-    case ARG_CHANNEL_NAME:
+    case ARG_CHANNEL_NAMES:
       if (GST_V4L_IS_OPEN(v4lelement))
-        g_value_set_string(value, g_strdup(v4lelement->vchan.name));
-      else
-        g_value_set_string(value, g_strdup("Unknown"));
+        list = gst_v4l_get_chan_names(v4lelement);
+      g_value_set_pointer(value, (gpointer)list);
       break;
     case ARG_NORM:
       if (GST_V4L_IS_OPEN(v4lelement))
         gst_v4l_get_chan_norm(v4lelement, NULL, &temp_i);
       g_value_set_int(value, temp_i);
       break;
-    case ARG_NORM_NAME:
-      if (GST_V4L_IS_OPEN(v4lelement))
-      {
-        gst_v4l_get_chan_norm(v4lelement, NULL, &temp_i);
-        g_value_set_string(value, g_strdup(norm_name[temp_i]));
-      }
-      else
-        g_value_set_string(value, g_strdup("Unknwon"));
+    case ARG_NORM_NAMES:
+      for (temp_i=0;norm_name[temp_i]!=NULL;temp_i++)
+        list = g_list_append(list, (gpointer)g_strdup(norm_name[temp_i]));
+      g_value_set_pointer(value, (gpointer)list);
       break;
     case ARG_HAS_TUNER:
       g_value_set_boolean(value, FALSE);
