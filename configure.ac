@@ -156,17 +156,6 @@ AC_ARG_WITH(pkg-config-path,
 dnl check architecture
 GST_ARCH()
 
-dnl Check for nasm
-AC_PATH_PROG(NASM_PATH, nasm, no)
-AC_SUBST(NASM_PATH)
-if test x$NASM_PATH = xno; then
-  AC_MSG_WARN(Couldn't find nasm)
-  HAVE_NASM="no"
-else
-  AC_DEFINE(HAVE_NASM, 1, [Define if NASM, the netwide assembler, is available])
-  HAVE_NASM="yes"
-fi
-
 dnl check for gconftool-2
 translit(dnm, m, l) AM_CONDITIONAL(USE_GCONFTOOL, true)
 GST_CHECK_FEATURE(GCONFTOOL, [GConf schemas], , [
@@ -817,7 +806,10 @@ dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 dnl *** dirac ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRAC, true)
 GST_CHECK_FEATURE(DIRAC, [dirac plug-ins], dirac, [
-  PKG_CHECK_MODULES(DIRAC, dirac, HAVE_DIRAC="yes", HAVE_DIRAC="no")
+  PKG_CHECK_MODULES(DIRAC, dirac-pic >= 0.4, HAVE_DIRAC="yes", HAVE_DIRAC="no")
+  if test x$HAVE_DIRAC = xno ; then
+    PKG_CHECK_MODULES(DIRAC, dirac >= 0.4, HAVE_DIRAC="yes", HAVE_DIRAC="no")
+  fi
   AC_SUBST(DIRAC_CFLAGS)
   AC_SUBST(DIRAC_LIBS)
 ])
