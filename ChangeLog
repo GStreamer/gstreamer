@@ -1,8 +1,14 @@
 2004-03-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* po/af.po:
+	* po/sv.po:
+          updated Afrikaans and Swedish
+
+2004-03-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* po/LINGUAS:
 	* po/az.po:
-          adding Azerbeidjan (Mətin Əmirov)
+          adding Azerbaijani (Mətin Əmirov)
 
 2004-03-28  Martin Soto  <martinsoto@users.sourceforge.net>
 
