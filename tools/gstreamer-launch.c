@@ -206,6 +206,7 @@ main(int argc, char *argv[])
   if (run_pipeline) {
     arg_search(GST_BIN(pipeline),"xid",xid_handler,NULL);
 
+    gst_buffer_print_stats();
     fprintf(stderr,"RUNNING pipeline\n");
     if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS) {
       fprintf(stderr,"pipeline doesn't want to play\n");
@@ -216,6 +217,7 @@ main(int argc, char *argv[])
     gst_main ();
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
+    gst_buffer_print_stats();
 
   }
   gst_object_unref (GST_OBJECT (pipeline));
