@@ -13,10 +13,6 @@ PDFS=$(FIGS:.fig=.pdf)
 SRC=$(XML)
 CSS=base.css
 
-EXTRA_DIST = $(XML) $(FIGS)
-
-## FIXME if we don't do this they don't get cleaned up in make distcheck
-## but maybe this is not the best way to do it
-CONFIG_CLEAN_FILES = $(XML) $(FIGS)
+EXTRA_DIST = $(XML) $(FIGS) $(CSS) magic-png magic-pdf
 
 include $(srcdir)/../manuals.mak
