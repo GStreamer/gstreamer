@@ -5,3 +5,7 @@ Makefile.in
 *.la
 .deps
 .libs
+
+createreg
+readreg
+*.xml
