@@ -183,16 +183,16 @@ gst_oggvorbisenc_class_init (OggVorbisEncClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_BITRATE,
-      g_param_spec_int ("max_bitrate", "Max bitrate",
-          " Specify a minimum bitrate (in bps). Useful for encoding for a fixed-size channel",
+      g_param_spec_int ("max-bitrate", "Maximum Bitrate",
+          "Specify a maximum bitrate (in bps). Useful for encoding for a fixed-size channel",
           -1, G_MAXINT, MAX_BITRATE_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
-      g_param_spec_int ("bitrate", "Bitrate", "Choose a bitrate to encode at. "
-          "Attempt to encode at a bitrate averaging this. Takes an argument in kbps.",
+      g_param_spec_int ("bitrate", "Target Bitrate",
+          "Specify a target average bitrate (in bps). ",
           -1, G_MAXINT, BITRATE_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MIN_BITRATE,
-      g_param_spec_int ("min_bitrate", "Min bitrate",
-          "Specify a maximum bitrate in bps. Useful for streaming applications.",
+      g_param_spec_int ("min_bitrate", "Minimum Bitrate",
+          "Specify a minimum bitrate (in bps).",
           -1, G_MAXINT, MIN_BITRATE_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
       g_param_spec_float ("quality", "Quality",
@@ -648,7 +648,8 @@ gst_oggvorbisenc_setup (OggVorbisEnc * vorbisenc)
 
       vorbis_encode_ctl (&vorbisenc->vi, OV_ECTL_RATEMANAGE_GET, &ai);
 
-      /* the bitrates are in kHz */
+      /* the bitrates used by libvorbisenc are in kbit/sec, ours in bit/sec
+       * also remember that in telecom kbit/sec is 1000 bit/sec */
       ai.bitrate_hard_min = vorbisenc->min_bitrate / 1000;
       ai.bitrate_hard_max = vorbisenc->max_bitrate / 1000;
       ai.management_active = 1;
