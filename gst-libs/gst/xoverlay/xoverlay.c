@@ -107,7 +107,7 @@ gst_x_overlay_base_init (gpointer g_class)
  * stop using that window and create an internal one.
  */
 void
-gst_x_overlay_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
+gst_x_overlay_set_xwindow_id (GstXOverlay *overlay, gulong xwindow_id)
 {
   GstXOverlayClass *klass = GST_X_OVERLAY_GET_CLASS (overlay);
 
@@ -126,7 +126,7 @@ gst_x_overlay_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
  * This function should be used by video overlay developpers.
  */
 void
-gst_x_overlay_got_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
+gst_x_overlay_got_xwindow_id (GstXOverlay *overlay, gulong xwindow_id)
 {
   g_return_if_fail (overlay != NULL);
   g_return_if_fail (GST_IS_X_OVERLAY (overlay));
