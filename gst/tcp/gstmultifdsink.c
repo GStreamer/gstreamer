@@ -410,7 +410,7 @@ gst_multifdsink_add (GstMultiFdSink * sink, int fd)
   client->bytes_sent = 0;
   client->dropped_buffers = 0;
   client->avg_queue_size = 0;
-  client->need_keyunit = sink->sync_clients;
+  client->new_connection = TRUE;
 
   /* update start time */
   g_get_current_time (&now);
@@ -750,20 +750,20 @@ gst_multifdsink_client_queue_caps (GstMultiFdSink * sink, GstTCPClient * client,
 }
 
 static gboolean
+is_sync_frame (GstMultiFdSink * sink, GstBuffer * buffer)
+{
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DELTA_UNIT)) {
+    return FALSE;
+  } else if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_IN_CAPS)) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+static gboolean
 gst_multifdsink_client_queue_buffer (GstMultiFdSink * sink,
     GstTCPClient * client, GstBuffer * buffer)
 {
-  if (client->need_keyunit) {
-    GST_LOG_OBJECT (sink, "client with fd %d needs keyunit", client->fd.fd);
-    if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DELTA_UNIT)) {
-      GST_LOG_OBJECT (sink, "skipping delta unit for fd %d", client->fd.fd);
-      return TRUE;
-    } else if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_IN_CAPS)) {
-      GST_LOG_OBJECT (sink, "found key unit for fd %d", client->fd.fd);
-      client->need_keyunit = FALSE;
-    }
-  }
-
   if (sink->protocol == GST_TCP_PROTOCOL_TYPE_GDP) {
     guint8 *header;
     guint len;
@@ -785,6 +785,31 @@ gst_multifdsink_client_queue_buffer (GstMultiFdSink * sink,
   return TRUE;
 }
 
+static gint
+gst_multifdsink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
+{
+  if (sink->sync_clients) {
+    GstBuffer *buf;
+
+    GST_LOG_OBJECT (sink, "New client on fd %d, bufpos %d",
+        client->fd.fd, client->bufpos);
+
+    if (client->bufpos < 0)
+      return -1;
+
+    buf = g_array_index (sink->bufqueue, GstBuffer *, client->bufpos);
+    if (is_sync_frame (sink, buf)) {
+      GST_LOG_OBJECT (sink, "New client on fd %d found sync", client->fd.fd);
+      return client->bufpos;
+    } else {
+      GST_LOG_OBJECT (sink, "New client on fd %d skipping buffer",
+          client->fd.fd);
+      client->bufpos--;
+      return -1;
+    }
+  }
+  return client->bufpos;
+}
 
 /* handle a write on a client,
  * which indicates a read request from a client.
@@ -873,6 +898,22 @@ gst_multifdsink_handle_client_write (GstMultiFdSink * sink,
       } else {
         /* client can pick a buffer from the global queue */
         GstBuffer *buf;
+
+        /* for new connections, we need to find a good spot in the
+         * bufqueue to start streaming from */
+        if (client->new_connection) {
+          gint position = gst_multifdsink_new_client (sink, client);
+
+          if (position > 0) {
+            /* we got a valid spot in the queue */
+            client->new_connection = FALSE;
+            client->bufpos = position;
+          } else {
+            /* cannot send data to this client yet */
+            gst_fdset_fd_ctl_write (sink->fdset, &client->fd, FALSE);
+            return TRUE;
+          }
+        }
 
         /* grab buffer */
         buf = g_array_index (sink->bufqueue, GstBuffer *, client->bufpos);
@@ -977,7 +1018,7 @@ gst_multifdsink_recover_client (GstMultiFdSink * sink, GstTCPClient * client)
       break;
     case GST_RECOVER_POLICY_RESYNC_KEYFRAME:
       /* find keyframe in buffers */
-      newbufpos = MIN (sink->bufqueue->len - 1, sink->units_soft_max);
+      newbufpos = MIN (sink->bufqueue->len - 1, sink->units_soft_max - 1);
 
       while (newbufpos > 0) {
         GstBuffer *buf;
@@ -987,6 +1028,7 @@ gst_multifdsink_recover_client (GstMultiFdSink * sink, GstTCPClient * client)
           /* found a buffer that is not a delta unit */
           break;
         }
+        newbufpos--;
       }
       break;
     default:
@@ -994,8 +1036,6 @@ gst_multifdsink_recover_client (GstMultiFdSink * sink, GstTCPClient * client)
       newbufpos = sink->units_soft_max;
       break;
   }
-  /* sync to keyframe if needed */
-  client->need_keyunit = sink->sync_clients;
   return newbufpos;
 }
 
@@ -1078,7 +1118,7 @@ gst_multifdsink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
       /* set client to invalid position while being removed */
       client->bufpos = -1;
       need_signal = TRUE;
-    } else if (client->bufpos == 0) {
+    } else if (client->bufpos == 0 || client->new_connection) {
       /* can send data to this client now. need to signal the select thread that
        * the fd_set changed */
       gst_fdset_fd_ctl_write (sink->fdset, &client->fd, TRUE);

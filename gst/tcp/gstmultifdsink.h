@@ -99,7 +99,7 @@ typedef struct {
 
   gboolean caps_sent;
   gboolean streamheader_sent;
-  gboolean need_keyunit;
+  gboolean new_connection;
 
   /* stats */
   guint64 bytes_sent;
