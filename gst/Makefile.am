@@ -3,11 +3,6 @@ SUBDIRS = . types meta elements
 
 lib_LTLIBRARIES = libgst.la
 
-GSTOBJECT_SRCS =	\
-	gstobject.c
-GSTOBJECT_INCLUDES =	\
-	gstobject.h
-
 if HAVE_CPU_I386
 GSTARCH_SRCS = gstcpuid_i386.s
 else
@@ -17,34 +12,34 @@ endif
 EXTRA_libgst_la_SOURCES =	\
 	gstcpuid_i386.s
 
-libgst_la_SOURCES =	\
-	gst.c		\
-	gstinfo.c	\
-	$(GSTOBJECT_SRCS)	\
-	gstpad.c	\
-	gstautoplug.c	\
-	gstbuffer.c	\
-	gstbufferpool.c	\
-	gstclock.c	\
-	gstcpu.c	\
-	$(GSTARCH_SRCS) \
-	gstelement.c	\
+libgst_la_SOURCES =		\
+	cothreads.c		\
+	gst.c			\
+	gstautoplug.c		\
+	gstbin.c		\
+	gstbuffer.c		\
+	gstbufferpool.c		\
+	gstcaps.c		\
+	gstclock.c		\
+	gstcpu.c		\
+	gstelement.c		\
 	gstelementfactory.c	\
-	gstextratypes.c	\
-	gstbin.c	\
-	gstpipeline.c	\
-	gstthread.c	\
-	gsttype.c	\
-	gstcaps.c	\
-	gstprops.c	\
-	gstplugin.c	\
-	gstutils.c	\
-	gsttrace.c	\
-	gstmeta.c	\
-	gsttee.c	\
-	gstxml.c	\
-	cothreads.c	\
-	gstscheduler.c
+	gstextratypes.c		\
+	gstinfo.c		\
+	gstmeta.c		\
+	gstobject.c		\
+	gstpad.c		\
+	gstpipeline.c		\
+	gstplugin.c		\
+	gstprops.c		\
+	gstscheduler.c		\
+	gsttee.c		\
+	gstthread.c		\
+	gsttrace.c		\
+	gsttype.c		\
+	gstutils.c		\
+	gstxml.c		\
+	$(GSTARCH_SRCS)
 
 # the compiler shoots cothreads.c in the head at -O6
 cothreads.lo: cothreads.c
@@ -53,40 +48,41 @@ cothreads.o: cothreads.c
 	$(COMPILE) -O2 -c $<
 
 libgstincludedir = $(includedir)/gst
-libgstinclude_HEADERS =	\
-	gst.h		\
-	gstinfo.h	\
-	gstlog.h	\
-	$(GSTOBJECT_INCLUDES)	\
-	gstpad.h	\
-	gstautoplug.h	\
-	gstbuffer.h	\
-	gstbufferpool.h	\
-	gstclock.h	\
-	gstcpu.h	\
-	gstelement.h	\
-	gstextratypes.h	\
-	gstbin.h	\
-	gstpipeline.h	\
-	gstthread.h	\
-	gsttype.h	\
-	gstcaps.h	\
-	gstprops.h	\
-	gstpropsprivate.h	\
-	gstplugin.h	\
-	gstutils.h	\
-	gsttrace.h	\
-	gstmeta.h	\
-	gsttee.h	\
-	gstxml.h	\
-	cothreads.h	\
-	gstscheduler.h
+libgstinclude_HEADERS =		\
+	cothreads.h		\
+	gst.h			\
+	gstautoplug.h		\
+	gstbin.h		\
+	gstbuffer.h		\
+	gstbufferpool.h		\
+	gstcaps.h		\
+	gstclock.h		\
+	gstcpu.h		\
+	gstelement.h		\
+	gstextratypes.h		\
+	gstinfo.h		\
+	gstlog.h		\
+	gstmeta.h		\
+	gstobject.h		\
+	gstpad.h		\
+	gstpipeline.h		\
+	gstplugin.h		\
+	gstprops.h		\
+	gstscheduler.h		\
+	gsttee.h		\
+	gstthread.h		\
+	gsttrace.h		\
+	gsttype.h		\
+	gstutils.h		\
+	gstxml.h
+
 
 noinst_HEADERS = 	\
 	gst_private.h	\
 	gstarch.h	\
 	gsti386.h	\
-	gstppc.h	
+	gstppc.h	\
+	gstpropsprivate.h
 
 libgst_la_LIBADD = $(GLIB_LIBS) $(GTK_LIBS) $(XML_LIBS)
 libgst_la_LDFLAGS = -version-info $(STREAMER_CURRENT):$(STREAMER_REVISION):$(STREAMER_AGE)

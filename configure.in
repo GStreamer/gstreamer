@@ -534,7 +534,6 @@ components/bonobo-gstmediaplay/Makefile
 test/Makefile
 test/xml/Makefile
 test/bindings/Makefile
-test/cothreads/Makefile
 tests/Makefile
 tests/sched/Makefile
 examples/Makefile
@@ -547,7 +546,6 @@ examples/queue3/Makefile
 examples/queue4/Makefile
 examples/thread/Makefile
 examples/xml/Makefile
-examples/launch/Makefile
 editor/Makefile
 tools/Makefile
 docs/Makefile
