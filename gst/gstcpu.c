@@ -23,7 +23,7 @@
 
 static guint32 _gst_cpu_flags;
 
-#ifdef __i386__
+#ifdef HAVE_CPU_I386
 void gst_cpuid_i386(int,long *,long *,long *,long *);
 #define gst_cpuid gst_cpuid_i386
 

@@ -160,7 +160,7 @@ void gst_pad_set_pull_function(GstPad *pad,GstPadPullFunction pull) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
 
-  fprintf(stderr, "pad setting pull function\n");
+  g_print("gstpad: pad setting pull function\n");
 
   pad->pullfunc = pull;
 }

@@ -322,7 +322,7 @@ static GList *construct_path (gst_type_node *rgnNodes, gint chNode)
   GstType *type;
   GList *converters;
 
-  g_print("gsttype: constructed pad ");
+  g_print("gsttype: constructed mime path ");
   while (current != MAX_COST)
   {
     type = gst_type_find_by_id(current);

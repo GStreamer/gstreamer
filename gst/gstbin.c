@@ -432,15 +432,17 @@ static int gst_bin_loopfunc_wrapper(int argc,char *argv[]) {
 //          argc,gst_element_get_name(element));
 
   if (element->loopfunc != NULL) {
-//    g_print("** gst_bin_loopfunc_wrapper(): element has loop function, calling it\n");
     while (1) {
+      DEBUG("** gst_bin_loopfunc_wrapper(): element has loop function, calling it\n");
       (element->loopfunc)(element);
+      DEBUG("** gst_bin_loopfunc_wrapper(): element ended loop function\n");
     }
   } else {
-//    g_print("** gst_bin_loopfunc_wrapper(): element is chain-based, calling in infinite loop\n");
+    DEBUG("** gst_bin_loopfunc_wrapper(): element is chain-based, calling in infinite loop\n");
     if (GST_IS_SRC(element)) {
-      while (1) {
-//        g_print("** gst_bin_loopfunc_wrapper(): calling push function of source\n");
+      //while (1) {
+      while (GST_STATE(element) != GST_STATE_NULL) {
+        DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of source\n");
         gst_src_push(GST_SRC(element));
       }
     } else {
@@ -449,9 +451,9 @@ static int gst_bin_loopfunc_wrapper(int argc,char *argv[]) {
         while (pads) {
           pad = GST_PAD(pads->data);
           if (pad->direction == GST_PAD_SINK) {
-//            g_print("** gst_bin_loopfunc_wrapper(): pulling a buffer\n");
+            DEBUG("** gst_bin_loopfunc_wrapper(): pulling a buffer\n");
             buf = gst_pad_pull(pad);
-//            g_print("** gst_bin_loopfunc_wrapper(): calling chain function\n");
+            DEBUG("** gst_bin_loopfunc_wrapper(): calling chain function\n");
             (pad->chainfunc)(pad,buf);
           }
           pads = g_list_next(pads);
@@ -459,18 +461,23 @@ static int gst_bin_loopfunc_wrapper(int argc,char *argv[]) {
       }
     }
   }
+  return 0;
 }
 
 static void gst_bin_pullfunc_wrapper(GstPad *pad) {
-//  g_print("** in gst_bin_pullfunc_wrapper()============================= %s\n",
-//          gst_element_get_name(GST_ELEMENT(pad->parent)));
+  DEBUG("** in gst_bin_pullfunc_wrapper()============================= %s\n",
+          gst_element_get_name(GST_ELEMENT(pad->parent)));
   cothread_switch(GST_ELEMENT(pad->parent)->threadstate);
+  DEBUG("** out gst_bin_pullfunc_wrapper()============================= %s\n",
+          gst_element_get_name(GST_ELEMENT(pad->parent)));
 }
 
 static void gst_bin_pushfunc_wrapper(GstPad *pad) {
-//  g_print("** in gst_bin_pushfunc_wrapper()============================= %s\n",
-//          gst_element_get_name(GST_ELEMENT(pad->parent)));
+  DEBUG("** in gst_bin_pushfunc_wrapper()============================= %s\n",
+          gst_element_get_name(GST_ELEMENT(pad->parent)));
   cothread_switch(GST_ELEMENT(pad->parent)->threadstate);
+  DEBUG("** out gst_bin_pushfunc_wrapper()============================= %s\n",
+          gst_element_get_name(GST_ELEMENT(pad->parent)));
 }
 
 static void gst_bin_create_plan_func(GstBin *bin) {
@@ -491,13 +498,13 @@ static void gst_bin_create_plan_func(GstBin *bin) {
     g_print("gstbin: found element \"%s\" in bin \"%s\"\n", gst_element_get_name(element), gst_element_get_name(GST_ELEMENT(bin)));
     // if it's a loop-based element, use cothreads
     if (element->loopfunc != NULL) {
-      g_print("gstbin: loop based elenemt \"%s\" in bin \"%s\"\n", gst_element_get_name(element), gst_element_get_name(GST_ELEMENT(bin)));
+      g_print("gstbin: loop based element \"%s\" in bin \"%s\"\n", gst_element_get_name(element), gst_element_get_name(GST_ELEMENT(bin)));
       bin->need_cothreads = TRUE;
       break;
     }
     // if it's a complex element, use cothreads
     if (GST_ELEMENT_IS_MULTI_IN(element)) {
-      g_print("gstbin: complex elenemt \"%s\" in bin \"%s\"\n", gst_element_get_name(element), gst_element_get_name(GST_ELEMENT(bin)));
+      g_print("gstbin: complex element \"%s\" in bin \"%s\"\n", gst_element_get_name(element), gst_element_get_name(GST_ELEMENT(bin)));
       bin->need_cothreads = TRUE;
       break;
     }
@@ -511,7 +518,7 @@ static void gst_bin_create_plan_func(GstBin *bin) {
       pads = g_list_next(pads);
     }
     if (sink_pads > 1) {
-      g_print("gstbin: more than 1 sinkpad for elenemt \"%s\" in bin \"%s\"\n", gst_element_get_name(element), gst_element_get_name(GST_ELEMENT(bin)));
+      g_print("gstbin: more than 1 sinkpad for element \"%s\" in bin \"%s\"\n", gst_element_get_name(element), gst_element_get_name(GST_ELEMENT(bin)));
       bin->need_cothreads = TRUE;
       break;
     }

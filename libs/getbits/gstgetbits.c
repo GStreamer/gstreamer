@@ -293,6 +293,7 @@ void gst_getbits_init(gst_getbits_t *gb, GstGetbitsCallback callback, void *data
       gb->backbits = _gst_getbits_back_int;
     }
     else {
+#ifdef HAVE_CPU_I386
       gb->get1bit = _gst_get1bit_i386;
       gb->getbits = _gst_getbits_i386;
       gb->getbits_fast = _gst_getbits_fast_i386;
@@ -301,6 +302,18 @@ void gst_getbits_init(gst_getbits_t *gb, GstGetbitsCallback callback, void *data
       gb->showbits = _gst_showbits_i386;
       gb->flushbits = _gst_flushbits_i386;
       gb->backbits = _gst_getbits_back_i386;
+      printf("gstgetbits: using intel optimized versions\n");
+#else
+      gb->get1bit = _gst_get1bit_int;
+      gb->getbits = _gst_getbits_int;
+      gb->getbits_fast = _gst_getbits_fast_int;
+      gb->getbyte = _gst_getbyte;
+      gb->show1bit = _gst_showbits_int;
+      gb->showbits = _gst_showbits_int;
+      gb->flushbits = _gst_flushbits_int;
+      gb->backbits = _gst_getbits_back_int;
+      printf("gstgetbits: using normal versions\n");
+#endif
     }
   }
 }

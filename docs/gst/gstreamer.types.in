@@ -28,3 +28,5 @@ gst_fdsink_get_type
 gst_pipefilter_get_type
 gst_identity_get_type
 gst_queue_get_type
+
+

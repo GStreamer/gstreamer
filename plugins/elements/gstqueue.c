@@ -55,7 +55,6 @@ static void gst_queue_class_init(GstQueueClass *klass);
 static void gst_queue_init(GstQueue *queue);
 static void gst_queue_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_queue_get_arg(GtkObject *object,GtkArg *arg,guint id);
-static GstBuffer *gst_queue_pull(GstPad *pad);
 
 void gst_queue_push(GstConnection *connection);
 void gst_queue_chain(GstPad *pad,GstBuffer *buf);
@@ -107,7 +106,6 @@ static void gst_queue_init(GstQueue *queue) {
   queue->sinkpad = gst_pad_new("sink",GST_PAD_SINK);
   gst_element_add_pad(GST_ELEMENT(queue),queue->sinkpad);
   gst_pad_set_chain_function(queue->sinkpad,gst_queue_chain);
-  gst_pad_set_pull_function(queue->sinkpad,gst_queue_pull);
   queue->srcpad = gst_pad_new("src",GST_PAD_SRC);
   gst_element_add_pad(GST_ELEMENT(queue),queue->srcpad);
 
@@ -130,18 +128,6 @@ GstElement *gst_queue_new(gchar *name) {
   GstElement *queue = GST_ELEMENT(gtk_type_new(GST_TYPE_QUEUE));
   gst_element_set_name(GST_ELEMENT(queue),name);
   return queue;
-}
-
-static GstBuffer *gst_queue_pull(GstPad *pad) {
-  GstQueue *queue;
-  GstBuffer *buf;
-
-  queue = GST_QUEUE(pad->parent);
-
-  if (GST_PAD_CAN_PULL(queue->srcpad) && (buf = gst_pad_pull(queue->srcpad)) != NULL) {
-    return buf;
-  }
-  else return NULL;
 }
 
 static void gst_queue_cleanup_buffers(gpointer data, gpointer user_data) 

@@ -55,6 +55,8 @@ static void gst_disksrc_init(GstDiskSrc *disksrc);
 static void gst_disksrc_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_disksrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
 
+static void gst_disksrc_close_file(GstDiskSrc *src);
+
 static void gst_disksrc_push(GstSrc *src);
 //static void gst_disksrc_push_region(GstSrc *src,gulong offset,gulong size);
 static GstElementStateReturn gst_disksrc_change_state(GstElement *element);
@@ -219,6 +221,8 @@ void gst_disksrc_push(GstSrc *src) {
   else if (readbytes == 0) {
     gst_src_signal_eos(GST_SRC(disksrc));
     gst_buffer_unref(buf);
+    gst_disksrc_close_file(disksrc);
+    GST_STATE(src) = GST_STATE_NULL;
     return;
   }
 
