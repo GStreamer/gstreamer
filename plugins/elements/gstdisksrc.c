@@ -24,14 +24,17 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/mman.h>
 
-#include <gstdisksrc.h>
+//#define GST_DEBUG_ENABLED
+
+#include "gstdisksrc.h"
 
 
 GstElementDetails gst_disksrc_details = {
-  "Disk Source",
+  "hronous Disk Source",
   "Source/File",
-  "Synchronous read from a file",
+  "Read from arbitrary point in a file",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",
   "(C) 1999",
@@ -53,15 +56,14 @@ enum {
 };
 
 
-static void 			gst_disksrc_class_init		(GstDiskSrcClass *klass);
+static void 			gst_disksrc_class_init	(GstDiskSrcClass *klass);
 static void 			gst_disksrc_init		(GstDiskSrc *disksrc);
 
-static void 			gst_disksrc_set_arg		(GtkObject *object, GtkArg *arg, guint id);
-static void 			gst_disksrc_get_arg		(GtkObject *object, GtkArg *arg, guint id);
+static void 			gst_disksrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void 			gst_disksrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 
-static void 			gst_disksrc_close_file		(GstDiskSrc *src);
-
-static GstBuffer *		gst_disksrc_get			(GstPad *pad);
+static GstBuffer *		gst_disksrc_get		(GstPad *pad);
+static GstBuffer *		gst_disksrc_get_region	(GstPad *pad, gulong offset, gulong size);
 
 static GstElementStateReturn 	gst_disksrc_change_state	(GstElement *element);
 
@@ -70,7 +72,8 @@ static GstElementClass *parent_class = NULL;
 //static guint gst_disksrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
-gst_disksrc_get_type(void) {
+gst_disksrc_get_type(void) 
+{
   static GtkType disksrc_type = 0;
 
   if (!disksrc_type) {
@@ -84,7 +87,7 @@ gst_disksrc_get_type(void) {
       (GtkArgGetFunc)gst_disksrc_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    disksrc_type = gtk_type_unique(GST_TYPE_ELEMENT,&disksrc_info);
+    disksrc_type = gtk_type_unique (GST_TYPE_ELEMENT, &disksrc_info);
   }
   return disksrc_type;
 }
@@ -104,9 +107,9 @@ gst_disksrc_class_init (GstDiskSrcClass *klass)
                            GTK_ARG_READWRITE, ARG_LOCATION);
   gtk_object_add_arg_type ("GstDiskSrc::bytesperread", GTK_TYPE_INT,
                            GTK_ARG_READWRITE, ARG_BYTESPERREAD);
-  gtk_object_add_arg_type ("GstDiskSrc::offset", GTK_TYPE_INT,
-                           GTK_ARG_READABLE, ARG_OFFSET);
-  gtk_object_add_arg_type ("GstDiskSrc::size", GTK_TYPE_INT,
+  gtk_object_add_arg_type ("GstDiskSrc::offset", GTK_TYPE_LONG,
+                           GTK_ARG_READWRITE, ARG_OFFSET);
+  gtk_object_add_arg_type ("GstDiskSrc::size", GTK_TYPE_LONG,
                            GTK_ARG_READABLE, ARG_SIZE);
 
   gtkobject_class->set_arg = gst_disksrc_set_arg;
@@ -118,16 +121,20 @@ gst_disksrc_class_init (GstDiskSrcClass *klass)
 static void 
 gst_disksrc_init (GstDiskSrc *disksrc) 
 {
+//  GST_FLAG_SET (disksrc, GST_SRC_);
+
   disksrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_pad_set_get_function(disksrc->srcpad,gst_disksrc_get);
+  gst_pad_set_get_function (disksrc->srcpad,gst_disksrc_get);
+  gst_pad_set_getregion_function (disksrc->srcpad,gst_disksrc_get_region);
   gst_element_add_pad (GST_ELEMENT (disksrc), disksrc->srcpad);
 
   disksrc->filename = NULL;
   disksrc->fd = 0;
+  disksrc->size = 0;
+  disksrc->map = NULL;
   disksrc->curoffset = 0;
   disksrc->bytes_per_read = 4096;
   disksrc->seq = 0;
-  disksrc->size = 0;
   disksrc->new_seek = FALSE;
 }
 
@@ -144,8 +151,8 @@ gst_disksrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
 
   switch(id) {
     case ARG_LOCATION:
-      /* the element must not be playing in order to do this */
-      g_return_if_fail (GST_STATE(src) < GST_STATE_PLAYING);
+      /* the element must be stopped in order to do this */
+      g_return_if_fail (GST_STATE (src) < GST_STATE_PLAYING);
 
       if (src->filename) g_free (src->filename);
       /* clear the filename if we get a NULL (is that possible?) */
@@ -160,13 +167,10 @@ gst_disksrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
     case ARG_BYTESPERREAD:
       src->bytes_per_read = GTK_VALUE_INT (*arg);
       break;
-      /*
     case ARG_OFFSET:
-      src->curoffset = GTK_VALUE_INT(*arg);
-      lseek(src->fd,src->curoffset, SEEK_SET);
+      src->curoffset = GTK_VALUE_LONG (*arg);
       src->new_seek = TRUE;
       break;
-      */
     default:
       break;
   }
@@ -179,6 +183,7 @@ gst_disksrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DISKSRC (object));
+  
   src = GST_DISKSRC (object);
 
   switch (id) {
@@ -189,10 +194,10 @@ gst_disksrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
       GTK_VALUE_INT (*arg) = src->bytes_per_read;
       break;
     case ARG_OFFSET:
-      GTK_VALUE_INT (*arg) = src->curoffset;
+      GTK_VALUE_LONG (*arg) = src->curoffset;
       break;
     case ARG_SIZE:
-      GTK_VALUE_INT (*arg) = src->size;
+      GTK_VALUE_LONG (*arg) = src->size;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;
@@ -200,127 +205,180 @@ gst_disksrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
   }
 }
 
+/**
+ * gst_disksrc_get:
+ * @pad: #GstPad to push a buffer from
+ *
+ * Push a new buffer from the disksrc at the current offset.
+ */
 static GstBuffer *
 gst_disksrc_get (GstPad *pad) 
 {
   GstDiskSrc *src;
   GstBuffer *buf;
-  glong readbytes;
 
   g_return_val_if_fail (pad != NULL, NULL);
-  src = GST_DISKSRC(gst_pad_get_parent (pad));
+  src = GST_DISKSRC (gst_pad_get_parent (pad));
   g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_DISKSRC_OPEN), NULL);
-  g_return_val_if_fail (GST_STATE (src) >= GST_STATE_READY, NULL);
+
+  /* deal with EOF state */
+  if (src->curoffset >= src->size) {
+    gst_element_signal_eos (GST_ELEMENT (src));
+    return NULL;
+  }
 
   /* create the buffer */
   // FIXME: should eventually use a bufferpool for this
   buf = gst_buffer_new ();
-  g_return_val_if_fail (buf, NULL);
 
-  /* allocate the space for the buffer data */
-  GST_BUFFER_DATA (buf) = g_malloc (src->bytes_per_read);
-  g_return_val_if_fail (GST_BUFFER_DATA (buf) != NULL, NULL);
+  g_return_val_if_fail (buf != NULL, NULL);
 
-  /* read it in from the file */
-  readbytes = read (src->fd, GST_BUFFER_DATA (buf), src->bytes_per_read);
-  if (readbytes == -1) {
-    perror ("read()");
-    gst_buffer_unref (buf);
-    return NULL;
-  } else if (readbytes == 0) {
-    gst_element_signal_eos (GST_ELEMENT (src));
-    gst_buffer_unref (buf);
-    return NULL;
-  }
+  /* simply set the buffer to point to the correct region of the file */
+  GST_BUFFER_DATA (buf) = src->map + src->curoffset;
+  GST_BUFFER_OFFSET (buf) = src->curoffset;
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
 
-  /* if we didn't get as many bytes as we asked for, we're at EOF */
-  if (readbytes < src->bytes_per_read) {
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_EOS);
-    GST_DEBUG (0,"setting GST_BUFFER_EOS\n");
-  }
+  if ((src->curoffset + src->bytes_per_read) > src->size) {
+    GST_BUFFER_SIZE (buf) = src->size - src->curoffset;
+    // FIXME: set the buffer's EOF bit here
+  } else
+    GST_BUFFER_SIZE (buf) = src->bytes_per_read;
 
-  /* if we have a new buffer from a seek, mark it */
+  GST_DEBUG (0,"map %p, offset %ld, size %d\n", src->map, src->curoffset, GST_BUFFER_SIZE (buf));
+
+  //gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+
+  src->curoffset += GST_BUFFER_SIZE (buf);
+
   if (src->new_seek) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
+    GST_DEBUG (0,"new seek\n");
     src->new_seek = FALSE;
   }
 
-  GST_BUFFER_OFFSET (buf) = src->curoffset;
-  GST_BUFFER_SIZE (buf) = readbytes;
-  src->curoffset += readbytes;
+  /* we're done, return the buffer */
+  return buf;
+}
 
-  GST_DEBUG (0,"pushing %d bytes with offset %d\n", GST_BUFFER_SIZE(buf), GST_BUFFER_OFFSET (buf));
-  /* we're done, push the buffer off now */
-  GST_DEBUG (0,"returning %d bytes with offset %d done\n", GST_BUFFER_SIZE(buf), GST_BUFFER_OFFSET (buf));
+/**
+ * gst_disksrc_get_region:
+ * @src: #GstSrc to push a buffer from
+ * @offset: offset in file
+ * @size: number of bytes
+ *
+ * Push a new buffer from the disksrc of given size at given offset.
+ */
+static GstBuffer *
+gst_disksrc_get_region (GstPad *pad, gulong offset, gulong size) 
+{
+  GstDiskSrc *src;
+  GstBuffer *buf;
+
+  g_return_val_if_fail (pad != NULL, NULL);
+
+  src = GST_DISKSRC (gst_pad_get_parent (pad));
+
+  g_return_val_if_fail (GST_IS_DISKSRC (src), NULL);
+  g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_DISKSRC_OPEN), NULL);
+  
+  /* deal with EOF state */
+  if (offset >= src->size) {
+    gst_element_signal_eos (GST_ELEMENT (src));
+    return NULL;
+  }
+
+  /* create the buffer */
+  // FIXME: should eventually use a bufferpool for this
+  buf = gst_buffer_new ();
+  g_return_val_if_fail (buf != NULL, NULL);
+
+  /* simply set the buffer to point to the correct region of the file */
+  GST_BUFFER_DATA (buf) = src->map + offset;
+  GST_BUFFER_OFFSET (buf) = offset;
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
+
+  if ((offset + size) > src->size) {
+    GST_BUFFER_SIZE (buf) = src->size - offset;
+    // FIXME: set the buffer's EOF bit here
+  } else
+    GST_BUFFER_SIZE (buf) = size;
+
+  GST_DEBUG (0,"map %p, offset %ld, size %d\n", src->map, offset, GST_BUFFER_SIZE (buf));
+
+  /* we're done, return the buffer off now */
   return buf;
 }
 
 
-/* open the file, necessary to go to RUNNING state */
-static gboolean 
-gst_disksrc_open_file (GstDiskSrc *src) 
+/* open the file and mmap it, necessary to go to READY state */
+static 
+gboolean gst_disksrc_open_file (GstDiskSrc *src) 
 {
-  struct stat f_stat;
-
-  g_return_val_if_fail (!GST_FLAG_IS_SET (src, GST_DISKSRC_OPEN), FALSE);
-  g_return_val_if_fail (src->filename != NULL, FALSE);
+  g_return_val_if_fail (!GST_FLAG_IS_SET (src ,GST_DISKSRC_OPEN), FALSE);
 
   /* open the file */
   src->fd = open (src->filename, O_RDONLY);
   if (src->fd < 0) {
-    perror ("open()");
-    gst_element_error (GST_ELEMENT (src), "opening file");
+    perror ("open");
+    gst_element_error (GST_ELEMENT (src), g_strconcat("opening file \"", src->filename, "\"", NULL));
     return FALSE;
+  } else {
+    /* find the file length */
+    src->size = lseek (src->fd, 0, SEEK_END);
+    lseek (src->fd, 0, SEEK_SET);
+    /* map the file into memory */
+    src->map = mmap (NULL, src->size, PROT_READ, MAP_SHARED, src->fd, 0);
+    madvise (src->map,src->size, 2);
+    /* collapse state if that failed */
+    if (src->map == NULL) {
+      close (src->fd);
+      gst_element_error (GST_ELEMENT (src),"mmapping file");
+      return FALSE;
+    }
+    GST_FLAG_SET (src, GST_DISKSRC_OPEN);
+    src->new_seek = TRUE;
   }
-  if (fstat (src->fd, &f_stat) < 0) {
-    perror("fstat()");
-  }
-  else {
-    src->size = f_stat.st_size;
-    GST_DEBUG (0,"gstdisksrc: file size %ld\n", src->size);
-  }
-  GST_FLAG_SET (src, GST_DISKSRC_OPEN);
   return TRUE;
 }
 
-/* close the file */
+/* unmap and close the file */
 static void 
 gst_disksrc_close_file (GstDiskSrc *src) 
 {
   g_return_if_fail (GST_FLAG_IS_SET (src, GST_DISKSRC_OPEN));
 
+  /* unmap the file from memory */
+  munmap (src->map, src->size);
   /* close the file */
   close (src->fd);
 
   /* zero out a lot of our state */
   src->fd = 0;
+  src->size = 0;
+  src->map = NULL;
   src->curoffset = 0;
   src->seq = 0;
-  src->size = 0;
+  src->new_seek = FALSE;
 
   GST_FLAG_UNSET (src, GST_DISKSRC_OPEN);
 }
+
 
 static GstElementStateReturn 
 gst_disksrc_change_state (GstElement *element) 
 {
   g_return_val_if_fail (GST_IS_DISKSRC (element), GST_STATE_FAILURE);
 
-  GST_DEBUG (0,"gstdisksrc: state pending %d\n", GST_STATE_PENDING (element));
-
-  /* if going down into NULL state, close the file if it's open */
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
     if (GST_FLAG_IS_SET (element, GST_DISKSRC_OPEN))
       gst_disksrc_close_file (GST_DISKSRC (element));
-  /* otherwise (READY or higher) we need to open the file */
   } else {
     if (!GST_FLAG_IS_SET (element, GST_DISKSRC_OPEN)) {
-      if (!gst_disksrc_open_file (GST_DISKSRC (element)))
+      if (!gst_disksrc_open_file (GST_DISKSRC (element))) 
         return GST_STATE_FAILURE;
     }
   }
 
-  /* if we haven't failed already, give the parent class a chance to ;-) */
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 

@@ -23,7 +23,6 @@
 
 #include <gst/gst.h>
 
-#include "gstasyncdisksrc.h"
 #include "gstaudiosink.h"
 #include "gstaudiosrc.h"
 #include "gstdisksrc.h"
@@ -49,18 +48,18 @@ struct _elements_entry {
 };
 
 static struct _elements_entry _elements[] = {
-  { "fakesrc", 	    gst_fakesrc_get_type, 	&gst_fakesrc_details,      NULL },
-  { "fakesink",     gst_fakesink_get_type, 	&gst_fakesink_details,     NULL },
-  { "asyncdisksrc", gst_asyncdisksrc_get_type, 	&gst_asyncdisksrc_details, NULL },
-  { "audiosink",    gst_audiosink_get_type, 	&gst_audiosink_details,    gst_audiosink_factory_init },
-  { "audiosrc",     gst_audiosrc_get_type, 	&gst_audiosrc_details, 	   NULL },
-  { "disksrc", 	    gst_disksrc_get_type, 	&gst_disksrc_details,      NULL },
-  { "identity",     gst_identity_get_type,  	&gst_identity_details,     NULL },
-  { "fdsink",       gst_fdsink_get_type, 	&gst_fdsink_details,       NULL },
-  { "fdsrc", 	    gst_fdsrc_get_type, 	&gst_fdsrc_details,        NULL },
-  { "pipefilter",   gst_pipefilter_get_type, 	&gst_pipefilter_details,   NULL },
-  { "sinesrc", 	    gst_sinesrc_get_type, 	&gst_sinesrc_details,      NULL },
-  { "tee",     	    gst_tee_get_type, 		&gst_tee_details,     	   gst_tee_factory_init },
+  { "fakesrc", 	    gst_fakesrc_get_type, 	&gst_fakesrc_details,		NULL },
+  { "fakesink",     gst_fakesink_get_type, 	&gst_fakesink_details,		NULL },
+  { "asyncdisksrc", gst_disksrc_get_type, 	&gst_disksrc_details, 		NULL },
+  { "audiosink",    gst_audiosink_get_type, 	&gst_audiosink_details,		gst_audiosink_factory_init },
+  { "audiosrc",     gst_audiosrc_get_type, 	&gst_audiosrc_details,		NULL },
+  { "disksrc", 	    gst_disksrc_get_type, 	&gst_disksrc_details,		NULL },
+  { "identity",     gst_identity_get_type,  	&gst_identity_details,		NULL },
+  { "fdsink",       gst_fdsink_get_type, 	&gst_fdsink_details,		NULL },
+  { "fdsrc", 	    gst_fdsrc_get_type, 	&gst_fdsrc_details,		NULL },
+  { "pipefilter",   gst_pipefilter_get_type, 	&gst_pipefilter_details,	NULL },
+  { "sinesrc", 	    gst_sinesrc_get_type, 	&gst_sinesrc_details,		NULL },
+  { "tee",     	    gst_tee_get_type, 		&gst_tee_details,		gst_tee_factory_init },
 
 #if HAVE_LIBGHTTP
   { "httpsrc", 	    gst_httpsrc_get_type, 	&gst_httpsrc_details,      NULL },

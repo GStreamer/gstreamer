@@ -15,7 +15,6 @@ libgstelements_la_SOURCES =	\
 	gstidentity.c		\
 	gstfakesink.c		\
 	gstdisksrc.c		\
-	gstasyncdisksrc.c	\
 	gstfdsrc.c		\
 	gstaudiosink.c		\
 	gstaudiosrc.c		\
@@ -30,7 +29,6 @@ noinst_HEADERS =		\
 	gstidentity.h		\
 	gstfakesink.h		\
 	gstdisksrc.h		\
-	gstasyncdisksrc.h	\
 	gstfdsrc.h		\
 	gsthttpsrc.h		\
 	gstaudiosink.h		\

@@ -25,7 +25,6 @@
 #define __GST_DISKSRC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 
@@ -34,8 +33,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-extern GstElementDetails gst_disksrc_details;
-
+GstElementDetails gst_disksrc_details;
 
 #define GST_TYPE_DISKSRC \
   (gst_disksrc_get_type())
@@ -51,7 +49,7 @@ extern GstElementDetails gst_disksrc_details;
 typedef enum {
   GST_DISKSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
 
-  GST_DISKSRC_FLAG_LAST		= GST_ELEMENT_FLAG_LAST+2,
+  GST_DISKSRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST + 2,
 } GstDiskSrcFlags;
 
 typedef struct _GstDiskSrc GstDiskSrc;
@@ -62,16 +60,21 @@ struct _GstDiskSrc {
   /* pads */
   GstPad *srcpad;
 
-  /* file state */
+  /* filename */
   gchar *filename;
+  /* fd */
   gint fd;
 
+  /* mapping parameters */
+  gulong size;				/* how long is the file? */
+  guchar *map;				/* where the file is mapped to */
+
+  /* details for fallback synchronous read */
   gulong curoffset;			/* current offset in file */
   gulong bytes_per_read;		/* bytes per read */
   gboolean new_seek;
 
   gulong seq;				/* buffer sequence number */
-  gulong size;				
 };
 
 struct _GstDiskSrcClass {
