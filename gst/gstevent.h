@@ -45,7 +45,8 @@ typedef enum {
   GST_EVENT_SIZE,
   GST_EVENT_RATE,
   GST_EVENT_FILLER,
-  GST_EVENT_TS_OFFSET
+  GST_EVENT_TS_OFFSET,
+  GST_EVENT_INTERRUPT
 } GstEventType;
 
 extern GType _gst_event_type;
@@ -57,6 +58,8 @@ extern GType _gst_event_type;
 #define GST_EVENT_TYPE(event)		(GST_EVENT(event)->type)
 #define GST_EVENT_TIMESTAMP(event)	(GST_EVENT(event)->timestamp)
 #define GST_EVENT_SRC(event)		(GST_EVENT(event)->src)
+
+#define GST_EVENT_IS_INTERRUPT(event) (GST_EVENT_TYPE (event) == GST_EVENT_INTERRUPT)
 
 #define GST_SEEK_FORMAT_SHIFT	0
 #define GST_SEEK_METHOD_SHIFT	16

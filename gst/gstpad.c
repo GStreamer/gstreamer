@@ -2193,7 +2193,8 @@ gst_pad_pull (GstPad *pad)
   
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
 
-  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, NULL);
+  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, 
+          	        GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT)));
 
   peer = GST_RPAD_PEER (pad);
 
@@ -2204,6 +2205,7 @@ gst_pad_pull (GstPad *pad)
 		       GST_PAD_NAME (pad), NULL);
   }
   else {
+restart:
     if (peer->gethandler) {
       GstBuffer *buf;
       gboolean active = GST_PAD_IS_ACTIVE (peer);
@@ -2216,12 +2218,12 @@ gst_pad_pull (GstPad *pad)
 
       if (buf) {
         if (!gst_probe_dispatcher_dispatch (&peer->probedisp, GST_DATA (buf)))
-          return NULL;
+          goto restart;
 
         if (!GST_IS_EVENT (buf) && !active) {
           g_warning ("pull on pad %s:%s but it is not active", 
 	         GST_DEBUG_PAD_NAME (peer));
-          return NULL;
+          return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
         }
         return buf;
       }
@@ -2239,7 +2241,7 @@ gst_pad_pull (GstPad *pad)
 		         NULL);
     }
   }
-  return NULL;
+  return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
 }
 
 /**

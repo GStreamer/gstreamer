@@ -60,6 +60,7 @@ typedef enum {
   GST_OPT_SCHEDULER_STATE_STOPPED,
   GST_OPT_SCHEDULER_STATE_ERROR,
   GST_OPT_SCHEDULER_STATE_RUNNING,
+  GST_OPT_SCHEDULER_STATE_INTERRUPTED
 } GstOptSchedulerState;
 
 struct _GstOptScheduler {
@@ -768,8 +769,13 @@ get_group_schedule_function (int argc, char *argv[])
 	      GST_DEBUG_PAD_NAME (pad), group);
 
     buffer = GST_RPAD_GETFUNC (pad) (pad);
-    if (buffer)
+    if (buffer) {
+      if (GST_EVENT_IS_INTERRUPT (buffer)) {
+	gst_event_unref (GST_EVENT (buffer));
+	break;
+      }
       gst_pad_push (pad, buffer);
+    }
   }
 
   group->flags &= ~GST_OPT_SCHEDULER_GROUP_RUNNING;
@@ -879,9 +885,14 @@ gst_opt_scheduler_get_wrapper (GstPad *srcpad)
     else {
       g_warning ("deadlock detected, disabling group %p", group);
       group_error_handler (group);
-      return NULL;
+      return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
     }
 #endif
+    /* if the scheduler interrupted, make sure we send an INTERRUPTED event to the
+     * >        * loop based element */
+    if (osched->state == GST_OPT_SCHEDULER_STATE_INTERRUPTED) {
+      return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
+    }
     
     if (GST_PAD_BUFLIST (srcpad)) {
       buffer = (GstBuffer *) GST_PAD_BUFLIST (srcpad)->data;
@@ -1219,10 +1230,18 @@ gst_opt_scheduler_yield (GstScheduler *sched, GstElement *element)
 static gboolean
 gst_opt_scheduler_interrupt (GstScheduler *sched, GstElement *element)
 {
+  GST_INFO (GST_CAT_SCHEDULING, "interrupt from \"%s\"", 
+            GST_ELEMENT_NAME (element));
+
 #ifdef USE_COTHREADS
   do_cothread_switch (do_cothread_get_main (((GstOptScheduler*)sched)->context)); 
   return FALSE;
 #else
+  {
+    GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+ 
+    osched->state = GST_OPT_SCHEDULER_STATE_INTERRUPTED;
+  }
   return TRUE;
 #endif
 }
@@ -1564,6 +1583,10 @@ gst_opt_scheduler_iterate (GstScheduler *sched)
         schedule_chain (chain);
         scheduled = TRUE;
       }
+
+      /* don't schedule any more chains when interrupted or in error */
+      if (osched->state != GST_OPT_SCHEDULER_STATE_RUNNING)
+        break;
     }
 
     /* at this point it's possible that the scheduler state is

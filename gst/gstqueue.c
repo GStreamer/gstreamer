@@ -485,7 +485,7 @@ restart:
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!");
       g_mutex_unlock (queue->qlock);
       if (gst_scheduler_interrupt (gst_pad_get_scheduler (queue->srcpad), GST_ELEMENT (queue)))
-        return NULL;
+        return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
       goto restart;
     }
     if (GST_STATE (queue) != GST_STATE_PLAYING) {

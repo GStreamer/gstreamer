@@ -265,10 +265,18 @@ gst_identity_loop (GstElement *element)
   
   buf = gst_pad_pull (identity->sinkpad);
   if (GST_IS_EVENT (buf)) {
-    gst_pad_event_default (identity->sinkpad, GST_EVENT (buf));
-  }
+    GstEvent *event = GST_EVENT (buf);
 
-  gst_identity_chain (identity->sinkpad, buf);
+    if (GST_EVENT_IS_INTERRUPT (event)) {
+      gst_event_unref (event);
+    }
+    else {
+      gst_pad_event_default (identity->sinkpad, event);
+    }
+  }
+  else {
+    gst_identity_chain (identity->sinkpad, buf);
+  }
 }
 
 static void 
