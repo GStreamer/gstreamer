@@ -1,5 +1,26 @@
 2005-03-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_set_manager),
+	(gst_bin_send_event):
+	  Add default event/set_manager handlers. The set_manager handler
+	  takes care that the manager is distributed over kids that were
+	  already in the bin before the manager was set. The event handler
+	  is a utility virtual function that sends the event over all sinks,
+	  so that gst_element_send_event (bin, event); has the expected
+	  behaviour.
+	* gst/gstpad.c: (gst_pad_event_default):
+	  Re-install default event handling for discontinuities, so that
+	  seeking works without requiring hacks in applications or extra
+	  code in sinks.
+	* gst/gstpipeline.c: (gst_pipeline_class_init),
+	(gst_pipeline_send_event):
+	  Half hack, half utility: set a pipeline to PAUSED for seek events,
+	  since that is the only way we can guarantee a/v sync. Means that
+	  you can do gst_element_seek (pipeline, method, pos); on a pipeline
+	  and it "just works".
+
+2005-03-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/gstpipeline.c: (gst_pipeline_use_clock):
 	  Lock/unlock mismatch.
 

@@ -61,6 +61,9 @@ static GstElementStateReturn gst_bin_get_state (GstElement * element,
 static gboolean gst_bin_add_func (GstBin * bin, GstElement * element);
 static gboolean gst_bin_remove_func (GstBin * bin, GstElement * element);
 
+static void gst_bin_set_manager (GstElement * element, GstPipeline * manager);
+static gboolean gst_bin_send_event (GstElement * element, GstEvent * event);
+
 #ifndef GST_DISABLE_INDEX
 static void gst_bin_set_index_func (GstElement * element, GstIndex * index);
 #endif
@@ -166,6 +169,8 @@ gst_bin_class_init (GstBinClass * klass)
       GST_DEBUG_FUNCPTR (gst_bin_restore_thyself);
 #endif
 
+  gstelement_class->set_manager = GST_DEBUG_FUNCPTR (gst_bin_set_manager);
+  gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_bin_send_event);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_bin_change_state);
   gstelement_class->get_state = GST_DEBUG_FUNCPTR (gst_bin_get_state);
 #ifndef GST_DISABLE_INDEX
@@ -785,6 +790,60 @@ gst_bin_dispose (GObject * object)
   g_assert (bin->numchildren == 0);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_bin_set_manager (GstElement * element, GstPipeline * manager)
+{
+  GstBin *bin = GST_BIN (element);
+  GList *kids;
+  GstElement *kid;
+
+  GST_ELEMENT_CLASS (parent_class)->set_manager (element, manager);
+
+  GST_LOCK (element);
+  for (kids = bin->children; kids != NULL; kids = kids->next) {
+    kid = GST_ELEMENT (kids->data);
+    gst_element_set_manager (kid, manager);
+  }
+  GST_UNLOCK (element);
+}
+
+/*
+ * This function is a utility event handler for seek events.
+ * It will change pipeline state to PAUSED, iterate event
+ * over all available sinks, distribute new basetime to the
+ * pipeline after preroll is done and then re-set to PLAYING.
+ * Applications are free to override this behaviour and
+ * implement their own seek handler, but this will work for
+ * pretty much all cases in practice.
+ */
+
+static gboolean
+gst_bin_send_event (GstElement * element, GstEvent * event)
+{
+  GstBin *bin = GST_BIN (element);
+  GstIterator *iter;
+  GstElement *sink;
+  gpointer data;
+  gboolean res = TRUE;
+
+  iter = gst_bin_iterate_sinks (bin);
+  GST_DEBUG_OBJECT (bin, "Sending event to sink children");
+
+  /* iterate over all sinks; preroll will take care of sync,
+   * discont event handling will take care of proper clock
+   * adjustment. Sweet. */
+  while (gst_iterator_next (iter, &data) == GST_ITERATOR_OK) {
+    gst_event_ref (event);
+    sink = GST_ELEMENT (data);
+    res &= gst_element_send_event (sink, event);
+    gst_object_unref (GST_OBJECT (sink));
+  }
+  gst_iterator_free (iter);
+  gst_event_unref (event);
+
+  return res;
 }
 
 static gint

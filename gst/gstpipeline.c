@@ -61,6 +61,8 @@ static void gst_pipeline_set_property (GObject * object, guint prop_id,
 static void gst_pipeline_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean gst_pipeline_send_event (GstElement * element,
+    GstEvent * event);
 static GstBusSyncReply pipeline_bus_handler (GstBus * bus, GstMessage * message,
     GstPipeline * pipeline);
 
@@ -128,6 +130,7 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pipeline_dispose);
 
+  gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_pipeline_send_event);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_pipeline_change_state);
   gstelement_class->get_clock = GST_DEBUG_FUNCPTR (gst_pipeline_get_clock_func);
@@ -272,6 +275,28 @@ is_eos (GstPipeline * pipeline)
   }
   gst_iterator_free (sinks);
   return result;
+}
+
+static gboolean
+gst_pipeline_send_event (GstElement * element, GstEvent * event)
+{
+  gboolean was_playing;
+  gboolean res;
+
+  GST_STATE_LOCK (element);
+  /* hmm... questionable */
+  was_playing = (GST_STATE (element) == GST_STATE_PLAYING);
+  GST_STATE_UNLOCK (element);
+
+  if (was_playing && GST_EVENT_TYPE (event) == GST_EVENT_SEEK)
+    gst_element_set_state (element, GST_STATE_PAUSED);
+
+  res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
+
+  if (was_playing && GST_EVENT_TYPE (event) == GST_EVENT_SEEK)
+    gst_element_set_state (element, GST_STATE_PLAYING);
+
+  return res;
 }
 
 /* FIXME, make me threadsafe */

@@ -26,6 +26,7 @@
 #include "gstmarshal.h"
 #include "gstutils.h"
 #include "gstelement.h"
+#include "gstpipeline.h"
 #include "gstbin.h"
 #include "gstscheduler.h"
 #include "gstevent.h"
@@ -3381,6 +3382,7 @@ done:
  *
  * Returns: TRUE if the event was sent succesfully.
  */
+
 gboolean
 gst_pad_event_default (GstPad * pad, GstEvent * event)
 {
@@ -3388,8 +3390,17 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
   g_return_val_if_fail (event != NULL, FALSE);
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
-    {
+    case GST_EVENT_DISCONTINUOUS:{
+      GstElement *element = gst_pad_get_parent (pad);
+      guint64 time;
+
+      if (element && element->clock && GST_ELEMENT_MANAGER (element) &&
+          gst_event_discont_get_value (event, GST_FORMAT_TIME, &time)) {
+        GST_PIPELINE (GST_ELEMENT_MANAGER (element))->stream_time = time;
+      }
+      break;
+    }
+    case GST_EVENT_EOS:{
       GstRealPad *rpad = GST_PAD_REALIZE (pad);
 
       if (GST_RPAD_TASK (rpad)) {
@@ -3397,10 +3408,11 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
         gst_task_pause (GST_RPAD_TASK (rpad));
       }
     }
-      return gst_pad_event_default_dispatch (pad, event);
     default:
-      return gst_pad_event_default_dispatch (pad, event);
+      break;
   }
+
+  return gst_pad_event_default_dispatch (pad, event);
 }
 
 /**
