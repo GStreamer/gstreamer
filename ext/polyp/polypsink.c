@@ -319,11 +319,6 @@ create_stream (GstPolypSink * polypsink)
       polypsink);
   pa_stream_connect_playback (polypsink->stream, NULL, NULL,
       PA_STREAM_INTERPOLATE_LATENCY, PA_VOLUME_NORM);
-
-  while (polypsink->context && pa_context_is_pending (polypsink->context)) {
-    if (pa_mainloop_iterate (polypsink->mainloop, 1, NULL) < 0)
-      return;
-  }
 }
 
 static void

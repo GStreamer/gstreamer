@@ -1429,7 +1429,7 @@ GST_CHECK_FEATURE(PANGO, [pango], pango, [
 dnl *** polypaudio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_POLYP, true)
 GST_CHECK_FEATURE(POLYP, [polyp], polyp, [
-  PKG_CHECK_MODULES(POLYP, polyplib >= 0.6,
+  PKG_CHECK_MODULES(POLYP, polyplib >= 0.7,
       HAVE_POLYP="yes", HAVE_POLYP="no")
   AC_SUBST(POLYP_CFLAGS)
   AC_SUBST(POLYP_CFLAGS)
