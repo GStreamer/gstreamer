@@ -23,7 +23,6 @@
 #endif
 #include <string.h>
 
-/*#define DEBUG_ENABLED*/
 #include "gstjpegdec.h"
 #include <gst/video/video.h>
 
@@ -130,39 +129,39 @@ gst_jpegdec_class_init (GstJpegDec * klass)
 static void
 gst_jpegdec_init_source (j_decompress_ptr cinfo)
 {
-  GST_DEBUG ("gst_jpegdec_chain: init_source");
+  GST_DEBUG ("init_source");
 }
 
 static gboolean
 gst_jpegdec_fill_input_buffer (j_decompress_ptr cinfo)
 {
-  GST_DEBUG ("gst_jpegdec_chain: fill_input_buffer");
+  GST_DEBUG ("fill_input_buffer");
   return TRUE;
 }
 
 static void
 gst_jpegdec_skip_input_data (j_decompress_ptr cinfo, glong num_bytes)
 {
-  GST_DEBUG ("gst_jpegdec_chain: skip_input_data");
+  GST_DEBUG ("skip_input_data");
 }
 
 static gboolean
 gst_jpegdec_resync_to_restart (j_decompress_ptr cinfo, gint desired)
 {
-  GST_DEBUG ("gst_jpegdec_chain: resync_to_start");
+  GST_DEBUG ("resync_to_start");
   return TRUE;
 }
 
 static void
 gst_jpegdec_term_source (j_decompress_ptr cinfo)
 {
-  GST_DEBUG ("gst_jpegdec_chain: term_source");
+  GST_DEBUG ("term_source");
 }
 
 static void
 gst_jpegdec_init (GstJpegDec * jpegdec)
 {
-  GST_DEBUG ("gst_jpegdec_init: initializing");
+  GST_DEBUG ("initializing");
   /* create the sink and src pads */
 
   jpegdec->sinkpad =
@@ -380,14 +379,13 @@ gst_jpegdec_chain (GstPad * pad, GstData * _data)
 
   data = (guchar *) GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
-  GST_DEBUG ("gst_jpegdec_chain: got buffer of %ld bytes in '%s'", size,
-      GST_OBJECT_NAME (jpegdec));
+  GST_LOG_OBJECT (jpegdec, "got buffer of %ld bytes", size);
 
   jpegdec->jsrc.next_input_byte = data;
   jpegdec->jsrc.bytes_in_buffer = size;
 
 
-  GST_DEBUG ("gst_jpegdec_chain: reading header %08lx", *(gulong *) data);
+  GST_LOG_OBJECT (jpegdec, "reading header %08lx", *(gulong *) data);
   jpeg_read_header (&jpegdec->cinfo, TRUE);
 
   r_h = jpegdec->cinfo.cur_comp_info[0]->h_samp_factor;
@@ -402,17 +400,23 @@ gst_jpegdec_chain (GstPad * pad, GstData * _data)
   jpegdec->cinfo.out_color_space = JCS_YCbCr;
   jpegdec->cinfo.dct_method = JDCT_IFAST;
   jpegdec->cinfo.raw_data_out = TRUE;
-  GST_DEBUG ("gst_jpegdec_chain: starting decompress");
+  GST_LOG_OBJECT (jpegdec, "starting decompress");
   guarantee_huff_tables (&jpegdec->cinfo);
   jpeg_start_decompress (&jpegdec->cinfo);
   width = jpegdec->cinfo.output_width;
   height = jpegdec->cinfo.output_height;
-  GST_DEBUG ("gst_jpegdec_chain: width %d, height %d", width, height);
 
-  outbuf = gst_buffer_new ();
-  outsize = GST_BUFFER_SIZE (outbuf) = width * height + width * height / 2;
-  outdata = GST_BUFFER_DATA (outbuf) = g_malloc (outsize);
+  /* FIXME: someone needs to do the work to figure out how to correctly
+   * calculate an output size that takes into account everything libjpeg
+   * needs, like padding for DCT size and so on.  */
+  outsize = width * height + width * height / 2;
+  outbuf = gst_pad_alloc_buffer (jpegdec->srcpad, GST_BUFFER_OFFSET_NONE,
+      outsize);
+  outdata = GST_BUFFER_DATA (outbuf);
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
+  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
+  GST_LOG_OBJECT (jpegdec, "width %d, height %d, buffer size %d", width,
+      height, outsize);
 
   if (jpegdec->height != height || jpegdec->line[0] == NULL) {
     GstCaps *caps;
@@ -427,18 +431,21 @@ gst_jpegdec_chain (GstPad * pad, GstData * _data)
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
         "framerate", G_TYPE_DOUBLE, jpegdec->fps, NULL);
+    GST_DEBUG_OBJECT (jpegdec, "height changed, setting caps %" GST_PTR_FORMAT,
+        caps);
     gst_pad_set_explicit_caps (jpegdec->srcpad, caps);
     gst_caps_free (caps);
   }
 
   /* mind the swap, jpeglib outputs blue chroma first */
+  /* FIXME: this needs stride love */
   base[0] = outdata;
   base[1] = base[0] + width * height;
   base[2] = base[1] + width * height / 4;
 
   width2 = width >> 1;
 
-  GST_DEBUG ("gst_jpegdec_chain: decompressing %u",
+  GST_LOG_OBJECT (jpegdec, "decompressing %u",
       jpegdec->cinfo.rec_outbuf_height);
   for (i = 0; i < height; i += r_v * DCTSIZE) {
     for (j = 0, k = 0; j < (r_v * DCTSIZE); j += r_v, k++) {
@@ -459,10 +466,10 @@ gst_jpegdec_chain (GstPad * pad, GstData * _data)
     jpeg_read_raw_data (&jpegdec->cinfo, jpegdec->line, r_v * DCTSIZE);
   }
 
-  GST_DEBUG ("gst_jpegdec_chain: decompressing finished");
+  GST_LOG_OBJECT (jpegdec, "decompressing finished");
   jpeg_finish_decompress (&jpegdec->cinfo);
 
-  GST_DEBUG ("gst_jpegdec_chain: sending buffer");
+  GST_LOG_OBJECT (jpegdec, "sending buffer");
   gst_pad_push (jpegdec->srcpad, GST_DATA (outbuf));
 
   gst_buffer_unref (buf);

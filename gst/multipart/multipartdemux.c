@@ -165,7 +165,6 @@ gst_multipart_demux_init (GstMultipartDemux * multipart)
   GST_FLAG_SET (multipart, GST_ELEMENT_EVENT_AWARE);
 
   multipart->maxlen = 4096;
-  multipart->buffer = g_malloc (multipart->maxlen);
   multipart->parsing_mime = NULL;
   multipart->numpads = 0;
   multipart->scanpos = 0;
@@ -321,9 +320,10 @@ gst_multipart_demux_chain (GstPad * pad, GstData * buffer)
         }
         // move rest downward
         multipart->bufsize -= multipart->scanpos;
-        memcpy (multipart->buffer, multipart->buffer + multipart->scanpos,
+        memmove (multipart->buffer, multipart->buffer + multipart->scanpos,
             multipart->bufsize);
 
+        g_free (multipart->parsing_mime);
         multipart->parsing_mime = mime_type;
         multipart->scanpos = 0;
       }
@@ -344,10 +344,20 @@ gst_multipart_demux_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
+      break;
     case GST_STATE_READY_TO_PAUSED:
+      multipart->buffer = g_malloc (multipart->maxlen);
+      break;
     case GST_STATE_PAUSED_TO_PLAYING:
+      break;
     case GST_STATE_PLAYING_TO_PAUSED:
+      break;
     case GST_STATE_PAUSED_TO_READY:
+      g_free (multipart->parsing_mime);
+      multipart->parsing_mime = NULL;
+      g_free (multipart->buffer);
+      multipart->buffer = NULL;
+      break;
     case GST_STATE_READY_TO_NULL:
       break;
     default:
