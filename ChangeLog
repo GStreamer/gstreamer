@@ -1,6 +1,13 @@
 2004-11-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/v4l/gstv4lsrc.c:
+	* sys/v4l/gstv4lsrc.h:
+	* sys/v4l/v4lsrc_calls.c:
+	  add autoprobe-fps property so we can separate autoprobing parts
+
+2004-11-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* sys/v4l/gstv4lsrc.c:
 	* sys/v4l/v4lsrc_calls.c:
 	initialise fourcc to catch unset fourcc's, and debug
 
