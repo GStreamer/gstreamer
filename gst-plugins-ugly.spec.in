@@ -629,6 +629,26 @@ GStreamer support libraries header files.
 @USE_NAS_TRUE@%postun -n gstreamer-nas
 @USE_NAS_TRUE@%{register}
 
+#### MMS Protocol support ####
+@USE_LIBMMS_TRUE@%package -n gstreamer-mms
+@USE_LIBMMS_TRUE@Summary:  GStreamer plug-in for MMS protocol support 
+@USE_LIBMMS_TRUE@Group:    Applications/Multimedia
+@USE_LIBMMS_TRUE@Requires: gstreamer-plugins = %{version}
+@USE_LIBMMS_TRUE@Requires: libmms >= 0.1
+@USE_LIBMMS_TRUE@
+@USE_LIBMMS_TRUE@%description -n gstreamer-mms
+@USE_LIBMMS_TRUE@Plug-in for the MMS protocol used by Microsoft
+@USE_LIBMMS_TRUE@
+@USE_LIBMMS_TRUE@%files -n gstreamer-mms
+@USE_LIBMMS_TRUE@%defattr(-, root, root)
+@USE_LIBMMS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmms.so
+@USE_LIBMMS_TRUE@
+@USE_LIBMMS_TRUE@%post -n gstreamer-mms
+@USE_LIBMMS_TRUE@%{register}
+@USE_LIBMMS_TRUE@
+@USE_LIBMMS_TRUE@%postun -n gstreamer-mms
+@USE_LIBMMS_TRUE@%{register}
+
 ### VIDEO 4 LINUX 2 ###
 @USE_GST_V4L2_TRUE@%package -n gstreamer-v4l2
 @USE_GST_V4L2_TRUE@Summary:       GStreamer Video for Linux 2 plug-in.
@@ -671,6 +691,9 @@ GStreamer support libraries header files.
 
 
 %changelog
+* Thu Dec 9  2004 Christian Schaller <christian a fluendo dot com>
+- Add the mms plugin
+
 * Wed Oct 06 2004 Christian Schaller <christian at fluendo dot com>
 - Add Wim's new mng decoder plugin
 - add shout2 plugin for Zaheer, hope it is correctly done :)
