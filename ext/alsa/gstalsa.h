@@ -31,6 +31,8 @@
 #include <glib.h>
 
 #define GST_ALSA_MAX_CHANNELS 64 /* we don't support more than 64 channels */
+#define GST_ALSA_MIN_RATE 8000
+#define GST_ALSA_MAX_RATE 192000
 
 #define GST_ALSA(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_ALSA, GstAlsa)
 #define GST_ALSA_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_ALSA, GstAlsaClass)
