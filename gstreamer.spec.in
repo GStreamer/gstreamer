@@ -152,10 +152,9 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_libdir}/gstreamer-%{majorminor}/libgstautoplugcache*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstautoplugger*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstbasicomega*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstfastomega*.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstoptscheduler.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstoptomega*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstbasicwingo*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstfastwingo*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstoptwingoscheduler*.so
 %{_libdir}/gstreamer-%{majorminor}/libgstelements*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgsttypes*.so*
