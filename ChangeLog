@@ -1,3 +1,15 @@
+2004-05-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/videoscale/videoscale.c: (gst_videoscale_scale_nearest),
+	(gst_videoscale_scale_nearest_str2),
+	(gst_videoscale_scale_nearest_str4),
+	(gst_videoscale_scale_nearest_32bit),
+	(gst_videoscale_scale_nearest_24bit),
+	(gst_videoscale_scale_nearest_16bit):
+	Fix the scaling algorithm and avoid a buffer overflow.
+        removed the while loop in the scaling function as it
+	was used for point sampling only.
+
 2004-05-24  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_get_type),
