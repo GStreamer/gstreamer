@@ -5,6 +5,9 @@
 
 #include <gst/gst.h>
 
+/* disabled for now */
+#undef HAVE_LIBMMX
+
 #ifdef HAVE_LIBMMX
 #include <mmx.h>
 #endif /* HAVE_LIBMMX */
