@@ -1,3 +1,8 @@
+2004-08-25 Arwed v. Merkatz <v.merkatz@gmx.net>
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_parse_blockgroup),
+	send vorbis headers at the beginning of a stream, fixes bug #141554.
+
 2004-08-24  Sebastien Cote  <sc5@hermes.usherb.ca>
  
 	* gst-libs/gst/riff/riff-read.c: (gst_riff_peek_head),
