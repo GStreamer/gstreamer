@@ -258,8 +258,8 @@ else
   LIBGLADE_GNOME_CFLAGS=`libglade-config --cflags gnome`
   libglade_save_CFLAGS="$CFLAGS"
   libglade_save_LIBS="$LIBS"
-  CFLAGS="$CFLAGS $LIBGLADE_GNOME_CFLAGS"
-  LIBS="$LIBS $LIBGLADE_GNOME_LIBS"
+  CFLAGS="$CFLAGS $LIBGLADE_GNOME_CFLAGS $GTK_CFLAGS"
+  LIBS="$LIBS $LIBGLADE_GNOME_LIBS $GTK_LIBS"
   HAVE_LIBGLADE_GNOME="no"
   AC_TRY_LINK([#include <glade/glade.h>],[glade_gnome_init();],
 	      HAVE_LIBGLADE_GNOME="yes",
