@@ -35,7 +35,7 @@ if os.path.exists(devloc):
 sys.setdlopenflags(dl.RTLD_LAZY | dl.RTLD_GLOBAL)
 del devloc, sys, os
 
-from _gstreamer import *
+from _gst import *
 
 #from gtk import threads_init, threads_enter, threads_leave
 

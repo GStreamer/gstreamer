@@ -34,7 +34,7 @@ void pygstreamer_add_constants(PyObject *module, const gchar *strip_prefix);
 extern PyMethodDef pygstreamer_functions[];
 
 DL_EXPORT(void)
-init_gstreamer (void)
+init_gst (void)
 {
 	PyObject *m, *d;
 	PyObject *av;
@@ -70,7 +70,7 @@ init_gstreamer (void)
             g_free (argv);
         }
 
-	m = Py_InitModule ("_gstreamer", pygstreamer_functions);
+	m = Py_InitModule ("gst._gst", pygstreamer_functions);
 	d = PyModule_GetDict (m);
 
 	pygstreamer_register_classes (d);

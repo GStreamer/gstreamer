@@ -3,10 +3,17 @@ MODULE = gstreamer
 INCLUDES = $(PYTHON_INCLUDES) $(PYGTK_CFLAGS)
 PYGTK_DEFSDIR = @PYGTK_DEFSDIR@
 
-pygstreamerdir = $(pythondir)/$(MODULE)
-pygstreamer_PYTHON = __init__.py
+pkgpythondir = $(pythondir)/gst
+pkgpyexecdir = $(pyexecdir)/gst
 
-pygstreamerexecdir = $(pyexecdir)/$(MODULE)
+pygstdir = $(pkgpythondir)
+pygst_PYTHON = __init__.py
+
+# Backwards comptibility
+pygstreamerdir = $(pythondir)
+pygstreamer_PYTHON = gstreamer.py
+
+pygstexecdir = $(pkgpyexecdir)
 
 GST_OVERRIDES = common.override \
 	0.6.override \
@@ -27,15 +34,15 @@ if GST_0_7
 VERSOURCES = 0.7.c 0.7.h
 endif
 
-pyexec_LTLIBRARIES = _gstreamermodule.la
-_gstreamermodule_la_SOURCES = \
+pygstexec_LTLIBRARIES = _gstmodule.la
+_gstmodule_la_SOURCES = \
 	gstreamermodule.c \
 	common.c common.h \
 	$(VERSOURCES)
-_gstreamermodule_la_CFLAGS = $(GST_CFLAGS) -fno-strict-aliasing
-_gstreamermodule_la_LIBADD = $(GST_LIBS)
-_gstreamermodule_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_gstreamer
-nodist__gstreamermodule_la_SOURCES = gstreamer.c
+_gstmodule_la_CFLAGS = $(GST_CFLAGS) -fno-strict-aliasing
+_gstmodule_la_LIBADD = $(GST_LIBS)
+_gstmodule_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_gst
+nodist__gstmodule_la_SOURCES = gstreamer.c
 
 CLEANFILES = $(MODULE).c h2def.defs $(MODULE).defs $(MODULE).override
 EXTRA_DIST = $(GST_OVERRIDES) $(GST_DEFS) $(GST_CODE) arg-types.py

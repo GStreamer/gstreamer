@@ -1,3 +1,10 @@
+2004-02-23  Johan Dahlin  <johan@gnome.org>
+
+	* gstreamer/gstreamer.py: Backwards compatibility module
+
+	* gstreamer/gstreamermodule.c:
+	* gstreamer/Makefile.am: Rename the module to gst
+
 2004-02-18  David I. Lehn  <dlehn@users.sourceforge.net>
 
 	* gstreamer/0.7.defs:
