@@ -27,7 +27,9 @@
 
 #ifndef GST_DISABLE_GST_DEBUG
 
+#ifdef HAVE_DLFCN_H
 #include <dlfcn.h>
+#endif
 #include <unistd.h>
 #include "gstinfo.h"
 #include "gstlog.h"
@@ -39,6 +41,7 @@
 
 GST_DEBUG_CATEGORY_STATIC(GST_CAT_DEBUG);
 
+#if 0
 #if defined __sgi__
 #include <rld_interface.h>
 typedef struct DL_INFO {
@@ -60,6 +63,7 @@ int dladdr(void *address, Dl_info *dl)
   return (int)v;
 }
 #endif /* __sgi__ */
+#endif
 
 extern gchar *_gst_progname;
 
@@ -876,15 +880,23 @@ gchar *
 _gst_debug_nameof_funcptr (void *ptr)
 {
   gchar *ptrname;
+#ifdef HAVE_DLADDR
   Dl_info dlinfo;
+#endif
+
   if (__gst_function_pointers && (ptrname = g_hash_table_lookup(__gst_function_pointers,ptr))) {
     return g_strdup(ptrname);
-  } else if (dladdr(ptr,&dlinfo) && dlinfo.dli_sname) {
+  } else
+#ifdef HAVE_DLADDR
+  if (dladdr(ptr,&dlinfo) && dlinfo.dli_sname) {
     return g_strdup(dlinfo.dli_sname);
-  } else {
+  } else
+#endif
+  {
     return g_strdup_printf("%p",ptr);
   }
 }
+
 void *
 _gst_debug_register_funcptr (void *ptr, gchar *ptrname)
 {
