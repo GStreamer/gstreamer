@@ -1,0 +1,151 @@
+States
+======
+
+Both elements and pads can be in different states. The states of the pads are 
+linked to the state of the element so the design of the states is mainly
+focused around the element states.
+
+An element can be in 4 states. NULL, READY, PAUSED and PLAYING. When an element
+is initially instantiated, it is in the NULL state.
+
+
+State definitions
+-----------------
+
+ - NULL:    This is the initial state of an element. 
+ - READY:   The element should be prepared to go to PAUSED.
+ - PAUSED:  The element should be ready to accept and process data. Sink
+            elements however only accept one buffer and then block.
+ - PLAYING: The same as PAUSED except for sinks, who are now accepting
+            and rendering data.
+
+We call the sequence NULL->PLAYING an upwards state change and PLAYING->NULL
+a downwards state change.
+
+
+State variables
+---------------
+
+An element has a special lock to manage the state changes. This lock is called
+the STATE_LOCK. 
+
+The STATE_LOCK protects 3 element variables:
+
+  - STATE
+  - PENDING_STATE 
+  - STATE_ERROR flag
+
+The STATE always reflects the current state of the element. The PENDING_STATE
+always reflects the required state of the element. The PENDING_STATE can be
+VOID_PENDING if the element is in the right state. The STATE_ERROR flag 
+indicates that an error occured while doing the last state change.
+
+
+Setting state on elements
+-------------------------
+
+The state of an element can be changed with _element_set_state(). When chaning
+the state of an element all intermediate states will also be set on the element
+until the final desired state is set.
+
+The _set_state() function can return 3 possible values:
+
+  GST_STATE_FAILURE: The state change failed for some reason. The plugin should
+                     have posted an error message on the bus with information.
+  
+  GST_STATE_SUCCESS: The state change is completed successfully.
+
+  GST_STATE_ASYNC:   The state change will complete later on. This can happen 
+                     When the element needs a long time to perform the state
+		     change or for sinks that need to receive the first buffer
+		     before they can complete the state change (preroll).
+
+In the case of an async state change, it is not possible to proceed to the next
+state until the current state change completed. After receiving an ASYNC return
+value, you can use _element_get_state() to poll the status of the element.
+
+When setting the state of an element, the PENDING_STATE is set to the required 
+state and the STATE_ERROR flag is cleared. Then the state change function of the
+element is called and the result of that function is used to update the STATE,
+PENDING_STATE and STATE_ERROR flags. If the function returned ASYNC, this result
+is immediatly returned to the caller.
+
+
+Getting state of elements
+-------------------------
+
+The _get_state() function takes 3 arguments, two pointers that will hold the
+current and pending state and one GTimeVal that holds a timeout value. The 
+function returns a GstElementStateReturn.
+
+ - If the element returned SUCCESS to the previous _set_state() function, this
+   function will return the last state set on the element and VOID_PENDING in
+   the pending state value.
+
+ - If the element returned FAILURE to the previous _set_state() call, this 
+   funciton will return FAILURE with the state set to the current state of
+   the element and the pending state set to the value used in the last call
+   of _set_state().
+
+ - If the element returned ASYNC to the previous _set_state() call, this function
+   will wait for the element to complete its state change up to the amount of time
+   specified in the GTimeVal. 
+
+   * If the element does not complete the state change in the specified amount of 
+     time, this function will return ASYNC with the state set to the current state
+     and the pending state set to the pending state.
+
+   * If the element completes the state change within the specified timeout, this 
+     function returns the updated state and VOID_PENDING as the pending state.
+
+   * If the element aborts the ASYNC state change due to an error within the 
+     specified timeout, this function returns FAILURE with the state set to last
+     successfull state and pending set to the last attempt. The element should 
+     also post an error message on the bus with more information about the problem.
+
+
+States in GstBin
+----------------
+
+A GstBin manages the state of its children. It does this by propagating the state
+changes performed on it to all of its children.  The _set_state() function on a 
+bin will call the _set_state() function on all of its children. 
+
+The children are iterated from the sink elements to the source elements. This makes
+sure that when changing the state of an element, the downstream elements are in
+the correct state to process the eventual buffers. In the case of a downwards
+state change, the sink elements will shut down first which makes the upstream
+elements shut down as well since the _push() function returns a GST_FLOW_WRONG_STATE
+error.
+
+If all the children return SUCCESS, the function returns SUCCESS as well. 
+
+If one of the children returns FAILURE, the function returns FAILURE as well. In
+this state it is possible that some elements successfuly changed state. The 
+application can check which elements have a changed state, which were in error
+and which were not affected by iterating the elements and calling _get_state()
+on the elements.
+
+If after calling the state function on all children, one of the children returned
+ASYNC, the function returns ASYNC as well. 
+
+The current state of the bin can be retrieved with _get_state(). This function will
+call the _get_state() function on all the elements. If one of the children returns
+FAILURE or ASYNC, the bin reports FAILURE or ASYNC respectively. The bin also
+updates its state variables after polling its children, this means that the state
+variables of the bin are only updated after calling _get_state() on the bin.
+
+The _get_state() function will be called on the children with the same timout value
+so the function can potentially block timeout*num_children.
+
+
+Implementing states in elements
+-------------------------------
+
+READY
+-----
+
+
+   
+
+

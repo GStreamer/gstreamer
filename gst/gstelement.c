@@ -508,6 +508,13 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   element->pads_cookie++;
   GST_UNLOCK (element);
 
+  GST_STATE_LOCK (element);
+  /* activate pad when we are playing */
+  if (GST_STATE (element) == GST_STATE_PLAYING)
+    /* FIXME, figure out mode */
+    gst_pad_set_active (pad, GST_ACTIVATE_PUSH);
+  GST_STATE_UNLOCK (element);
+
   /* emit the NEW_PAD signal */
   g_signal_emit (G_OBJECT (element), gst_element_signals[NEW_PAD], 0, pad);
 
@@ -1603,8 +1610,66 @@ gst_element_get_state_func (GstElement * element,
     GstElementState * state, GstElementState * pending, GTimeVal * timeout)
 {
   GstElementStateReturn ret = GST_STATE_FAILURE;
+  GstElementState old_pending;
 
-  /* implment me */
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "getting state");
+
+  GST_STATE_LOCK (element);
+  /* we got an error, report immediatly */
+  if (GST_STATE_ERROR (element))
+    goto done;
+
+  old_pending = GST_STATE_PENDING (element);
+  if (old_pending != GST_STATE_VOID_PENDING) {
+    GTimeVal *timeval, abstimeout;
+
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "wait for pending");
+    if (timeout) {
+      /* make timeout absolute */
+      g_get_current_time (&abstimeout);
+      g_time_val_add (&abstimeout,
+          timeout->tv_sec * G_USEC_PER_SEC + timeout->tv_usec);
+      timeval = &abstimeout;
+    } else {
+      timeval = NULL;
+    }
+    /* we have a pending state change, wait for it to complete */
+    if (!GST_STATE_TIMED_WAIT (element, timeval)) {
+      GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "timeout");
+      /* timeout triggered */
+      ret = GST_STATE_ASYNC;
+    } else {
+      /* could be success or failure */
+      if (old_pending == GST_STATE (element)) {
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "got success");
+        ret = GST_STATE_SUCCESS;
+      } else {
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "got failure");
+        ret = GST_STATE_FAILURE;
+      }
+    }
+  }
+  /* if nothing is pending anymore we can return SUCCESS */
+  if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING) {
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "nothing pending");
+    ret = GST_STATE_SUCCESS;
+  }
+
+done:
+  if (state)
+    *state = GST_STATE (element);
+  if (pending)
+    *pending = GST_STATE_PENDING (element);
+
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+      "state current: %s, pending: %s",
+      gst_element_state_get_name (GST_STATE (element)),
+      gst_element_state_get_name (GST_STATE_PENDING (element)));
+
+  GST_STATE_UNLOCK (element);
+
   return ret;
 }
 
@@ -1665,7 +1730,24 @@ gst_element_get_state (GstElement * element,
 void
 gst_element_abort_state (GstElement * element)
 {
-  /* implment me */
+  GstElementState pending;
+
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  pending = GST_STATE_PENDING (element);
+
+  if (pending != GST_STATE_VOID_PENDING && !GST_STATE_ERROR (element)) {
+    GstElementState old_state = GST_STATE (element);
+
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+        "aborting state from %s to %s", gst_element_state_get_name (old_state),
+        gst_element_state_get_name (pending));
+
+    /* flag error */
+    GST_STATE_ERROR (element) = TRUE;
+
+    GST_STATE_BROADCAST (element);
+  }
 }
 
 /**
@@ -1682,7 +1764,31 @@ gst_element_abort_state (GstElement * element)
 void
 gst_element_commit_state (GstElement * element)
 {
-  /* implement me */
+  GstElementState pending;
+  GstMessage *message;
+
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  pending = GST_STATE_PENDING (element);
+
+  if (pending != GST_STATE_VOID_PENDING) {
+    GstElementState old_state = GST_STATE (element);
+
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+        "commiting state from %s to %s", gst_element_state_get_name (old_state),
+        gst_element_state_get_name (pending));
+
+    GST_STATE (element) = pending;
+    GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
+    GST_STATE_ERROR (element) = FALSE;
+
+    g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
+        0, old_state, pending);
+    message = gst_message_new_state_changed (GST_OBJECT (element),
+        old_state, pending);
+    gst_element_post_message (element, message);
+    GST_STATE_BROADCAST (element);
+  }
 }
 
 /**
@@ -1705,7 +1811,18 @@ gst_element_commit_state (GstElement * element)
 void
 gst_element_lost_state (GstElement * element)
 {
-  /* implement me */
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING &&
+      !GST_STATE_ERROR (element)) {
+    GstElementState current_state = GST_STATE (element);
+
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+        "lost state of %s", gst_element_state_get_name (current_state));
+
+    GST_STATE_PENDING (element) = current_state;
+    GST_STATE_ERROR (element) = FALSE;
+  }
 }
 
 /**
@@ -1724,8 +1841,116 @@ gst_element_lost_state (GstElement * element)
 GstElementStateReturn
 gst_element_set_state (GstElement * element, GstElementState state)
 {
-  /* implement me */
-  return GST_STATE_SUCCESS;
+  GstElementClass *oclass;
+  GstElementState current;
+  GstElementStateReturn return_val = GST_STATE_SUCCESS;
+
+  /* get the element state lock */
+  GST_STATE_LOCK (element);
+
+#if 0
+  /* a state change is pending and we are not in error, the element is busy
+   * with a state change and we cannot proceed. 
+   * FIXME, does not work for a bin.*/
+  if (G_UNLIKELY (GST_STATE_PENDING (element) != GST_STATE_VOID_PENDING &&
+          !GST_STATE_ERROR (element)))
+    goto was_busy;
+#endif
+
+  /* clear the error flag */
+  GST_STATE_ERROR (element) = FALSE;
+
+  /* start with the current state */
+  current = GST_STATE (element);
+
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "setting state from %s to %s",
+      gst_element_state_get_name (current), gst_element_state_get_name (state));
+
+  oclass = GST_ELEMENT_GET_CLASS (element);
+
+  /* We always perform at least one state change, even if the 
+   * current state is equal to the required state. This is needed
+   * for bins that sync their children. */
+  do {
+    GstElementState pending;
+
+    /* calculate the pending state */
+    if (current < state)
+      pending = current << 1;
+    else if (current > state)
+      pending = current >> 1;
+    else
+      pending = current;
+
+    /* set the pending state variable */
+    GST_STATE_PENDING (element) = pending;
+
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+        "%s: setting state from %s to %s",
+        (pending != state ? "intermediate" : "final"),
+        gst_element_state_get_name (current),
+        gst_element_state_get_name (pending));
+
+    /* call the state change function so it can set the state */
+    if (oclass->change_state)
+      return_val = (oclass->change_state) (element);
+    else
+      return_val = GST_STATE_FAILURE;
+
+    switch (return_val) {
+      case GST_STATE_FAILURE:
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+            "have failed change_state return");
+        /* state change failure exits the loop */
+        gst_element_abort_state (element);
+        goto exit;
+      case GST_STATE_ASYNC:
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+            "element will change state async");
+        /* an async state change exits the loop, we can only
+         * go to the next state change when this one completes. */
+        goto exit;
+      case GST_STATE_SUCCESS:
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+            "element changed state successfuly");
+        /* we can commit the state now and proceed to the next state */
+        gst_element_commit_state (element);
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "commited state");
+        break;
+      default:
+        goto invalid_return;
+    }
+    /* get the current state of the element and see if we need to do more
+     * state changes */
+    current = GST_STATE (element);
+  }
+  while (current != state);
+
+exit:
+  GST_STATE_UNLOCK (element);
+
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "exit state change");
+
+  return return_val;
+
+  /* ERROR */
+#if 0
+was_busy:
+  {
+    GST_STATE_UNLOCK (element);
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+        "was busy with a state change");
+
+    return GST_STATE_BUSY;
+  }
+#endif
+invalid_return:
+  {
+    GST_STATE_UNLOCK (element);
+    /* somebody added a GST_STATE_ and forgot to do stuff here ! */
+    g_critical ("unkown return value from a state change function");
+    return GST_STATE_FAILURE;
+  }
 }
 
 /* is called with STATE_LOCK
@@ -1739,7 +1964,92 @@ gst_element_set_state (GstElement * element, GstElementState state)
 static gboolean
 gst_element_pads_activate (GstElement * element, gboolean active)
 {
-  return FALSE;
+  GList *pads;
+  gboolean result;
+  guint32 cookie;
+
+  GST_LOCK (element);
+restart:
+  result = TRUE;
+  pads = element->pads;
+  cookie = element->pads_cookie;
+  for (; pads && result; pads = g_list_next (pads)) {
+    GstPad *pad = GST_PAD (pads->data);
+
+    gst_object_ref (GST_OBJECT (pad));
+    GST_UNLOCK (element);
+
+    /* we only care about real pads */
+    if (GST_IS_REAL_PAD (pad)) {
+      GstRealPad *peer;
+      gboolean pad_loop, pad_get;
+      gboolean delay = FALSE;
+
+      /* see if the pad has a loop function and grab
+       * the peer */
+      GST_LOCK (pad);
+      pad_get = GST_RPAD_GETRANGEFUNC (pad) != NULL;
+      pad_loop = GST_RPAD_LOOPFUNC (pad) != NULL;
+      peer = GST_RPAD_PEER (pad);
+      if (peer)
+        gst_object_ref (GST_OBJECT (peer));
+      GST_UNLOCK (pad);
+
+      if (peer) {
+        gboolean peer_loop, peer_get;
+
+        /* see if the peer has a getrange function */
+        peer_get = GST_RPAD_GETRANGEFUNC (peer) != NULL;
+        /* see if the peer has a loop function */
+        peer_loop = GST_RPAD_LOOPFUNC (peer) != NULL;
+
+        /* sinkpads with a loop function are delayed since they
+         * need the srcpad to be active first */
+        if (GST_PAD_IS_SINK (pad) && pad_loop && peer_get) {
+          GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+              "delaying pad %s", GST_OBJECT_NAME (pad));
+          delay = TRUE;
+        } else if (GST_PAD_IS_SRC (pad) && peer_loop && pad_get) {
+          /* If the pad is a source and the peer has a loop function,
+           * we can activate the srcpad and then the loopbased sinkpad */
+          GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+              "%sactivating pad %s", (active ? "" : "(de)"),
+              GST_OBJECT_NAME (pad));
+          result &= gst_pad_set_active (pad,
+              (active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE));
+
+          GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+              "%sactivating delayed pad %s", (active ? "" : "(de)"),
+              GST_OBJECT_NAME (peer));
+          result &= gst_pad_set_active (GST_PAD (peer),
+              (active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE));
+
+          /* set flag here since we don't want the code below to activate
+           * the pad again */
+          delay = TRUE;
+        }
+        gst_object_unref (GST_OBJECT (peer));
+      }
+
+      /* all other conditions are just push based pads */
+      if (!delay) {
+        GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+            "%sactivating pad %s", (active ? "" : "(de)"),
+            GST_OBJECT_NAME (pad));
+
+        result &= gst_pad_set_active (pad,
+            (active ? GST_ACTIVATE_PUSH : GST_ACTIVATE_NONE));
+      }
+    }
+    gst_object_unref (GST_OBJECT (pad));
+
+    GST_LOCK (element);
+    if (cookie != element->pads_cookie)
+      goto restart;
+  }
+  GST_UNLOCK (element);
+
+  return result;
 }
 
 /* is called with STATE_LOCK */

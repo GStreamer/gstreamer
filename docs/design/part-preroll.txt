@@ -1,0 +1,49 @@
+Preroll
+-------
+
+A sink element can only complete the state change to PAUSED after a buffer
+has been queued on the input pad or pads. This process is called prerolling
+and is needed to fill the pipeline with buffers so that the transition to
+PLAYING goes as fast as possible with no visual delay for the user.
+
+After receiving a buffer (or EOS) on a pad the chain/event function should
+wait to render the buffers or in the EOS case, wait to post the EOS
+message.
+
+Several things can happen that require the preroll lock to be unlocked. This
+include state changes or flush events.
+
+
+Committing the state
+--------------------
+
+When going to PAUSED and PLAYING a buffer should be queued in the pad. We also
+make this requirement for going to PLAYING since a flush event in the PAUSED
+state could unqueue the buffer again.
+
+The state is commited in the following conditions:
+
+ - a buffer is received on a sinkpad
+ - an EOS is received on a sinkpad.
+
+We require the state change to be commited in EOS as well since an EOS means
+by definition that no buffer is going to arrive anymore.
+
+
+Unlocking the preroll
+---------------------
+
+The following conditions unlock the preroll:
+
+ - a state change
+ - a flush event
+ 
+
+Result of the preroll
+---------------------
+
+After the preroll is unlocked, the element can be in the following states:
+
+ - in a state that disallows it to process the data (flushing, pad inactive)
+ - in a state that allows it to process the data.
+

@@ -1,3 +1,54 @@
+2005-03-28  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	* docs/design/part-gstelement.txt:
+	* docs/design/part-negotiation.txt:
+	* docs/design/part-preroll.txt:
+	* docs/design/part-scheduling.txt:
+	* docs/design/part-states.txt:
+	* gst/Makefile.am:
+	* gst/base/Makefile.am:
+	* gst/base/README:
+	* gst/base/gstbasesink.c: (gst_basesink_get_template),
+	(gst_basesink_base_init), (gst_basesink_class_init),
+	(gst_basesink_pad_getcaps), (gst_basesink_pad_setcaps),
+	(gst_basesink_pad_buffer_alloc), (gst_basesink_init),
+	(gst_basesink_set_pad_functions),
+	(gst_basesink_set_all_pad_functions), (gst_basesink_set_clock),
+	(gst_basesink_set_property), (gst_basesink_get_property),
+	(gst_base_sink_get_template), (gst_base_sink_get_caps),
+	(gst_base_sink_set_caps), (gst_base_sink_buffer_alloc),
+	(gst_basesink_preroll_queue_push),
+	(gst_basesink_preroll_queue_empty),
+	(gst_basesink_preroll_queue_flush), (gst_basesink_finish_preroll),
+	(gst_basesink_event), (gst_basesink_get_times),
+	(gst_basesink_do_sync), (gst_basesink_handle_buffer),
+	(gst_basesink_chain_unlocked), (gst_basesink_chain),
+	(gst_basesink_loop), (gst_basesink_activate),
+	(gst_basesink_change_state):
+	* gst/base/gstbasesink.h:
+	* gst/elements/Makefile.am:
+	* gst/elements/gstfakesink.c: (gst_fakesink_base_init),
+	(gst_fakesink_class_init), (gst_fakesink_init),
+	(gst_fakesink_set_property), (gst_fakesink_get_property),
+	(gst_fakesink_get_times), (gst_fakesink_event),
+	(gst_fakesink_preroll), (gst_fakesink_render),
+	(gst_fakesink_change_state):
+	* gst/elements/gstfakesink.h:
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_set_manager),
+	(gst_bin_get_state), (gst_bin_change_state), (gst_bin_send_event):
+	* gst/gstelement.c: (gst_element_add_pad),
+	(gst_element_get_state_func), (gst_element_abort_state),
+	(gst_element_commit_state), (gst_element_lost_state),
+	(gst_element_set_state), (gst_element_pads_activate):
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_event_default):
+	* gst/gstpipeline.c: (gst_pipeline_send_event),
+	(gst_pipeline_change_state):
+	Added state change code.
+	Added/updated docs.
+	Added sink base class, make fakesink extend the base class.
+	Small cleanups in GstPipeline.
+
 2005-03-26  David Schleef  <ds@schleef.org>
 
 	* gst/Makefile.am: remove gstcpu.[ch].  The gst_cpu functionality

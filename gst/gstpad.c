@@ -26,7 +26,6 @@
 #include "gstmarshal.h"
 #include "gstutils.h"
 #include "gstelement.h"
-#include "gstpipeline.h"
 #include "gstbin.h"
 #include "gstscheduler.h"
 #include "gstevent.h"
@@ -449,10 +448,101 @@ lost_ghostpad:
 gboolean
 gst_pad_set_active (GstPad * pad, GstActivateMode mode)
 {
-  /* implement me */
-  return FALSE;
-}
+  GstRealPad *realpad;
+  gboolean old;
+  GstPadActivateFunction activatefunc;
+  gboolean active;
 
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
+
+  active = (mode != GST_ACTIVATE_NONE);
+
+  old = GST_PAD_IS_ACTIVE (realpad);
+
+  /* if nothing changed, we can just exit */
+  if (G_UNLIKELY (old == active))
+    goto exit;
+
+  /* make sure data is disallowed when going inactive */
+  if (!active) {
+    GST_CAT_DEBUG (GST_CAT_PADS, "de-activating pad %s:%s",
+        GST_DEBUG_PAD_NAME (realpad));
+    GST_FLAG_UNSET (realpad, GST_PAD_ACTIVE);
+    /* unlock blocked pads so element can resume and stop */
+    GST_PAD_BLOCK_SIGNAL (realpad);
+  }
+
+  if (active) {
+    if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
+      if (mode == GST_ACTIVATE_PULL) {
+        if (!realpad->getrangefunc)
+          goto wrong_mode;
+      } else {
+        /* we can push if driven by a chain or loop on the sink pad */
+      }
+    } else {                    /* sink pads */
+      if (mode == GST_ACTIVATE_PULL) {
+        /* the src can drive us with getrange */
+      } else {
+        if (!realpad->chainfunc)
+          goto wrong_mode;
+      }
+    }
+  }
+
+  activatefunc = realpad->activatefunc;
+  if (activatefunc) {
+    gboolean result;
+
+    GST_CAT_DEBUG (GST_CAT_PADS,
+        "calling activate function on pad %s:%s with mode %d",
+        GST_DEBUG_PAD_NAME (realpad), mode);
+
+    /* unlock so element can sync */
+    GST_UNLOCK (realpad);
+    result = activatefunc (GST_PAD_CAST (realpad), mode);
+    /* and lock again */
+    GST_LOCK (realpad);
+    if (result == FALSE)
+      goto activate_error;
+  }
+
+  /* when going to active alow data passing now */
+  if (active) {
+    GST_CAT_DEBUG (GST_CAT_PADS, "activating pad %s:%s",
+        GST_DEBUG_PAD_NAME (realpad));
+    GST_FLAG_SET (realpad, GST_PAD_ACTIVE);
+  }
+
+exit:
+  GST_UNLOCK (realpad);
+
+  return TRUE;
+
+  /* errors */
+lost_ghostpad:
+  {
+    return FALSE;
+  }
+wrong_mode:
+  {
+    GST_CAT_DEBUG (GST_CAT_PADS,
+        "pad %s:%s lacks functions to be active in mode %d",
+        GST_DEBUG_PAD_NAME (realpad), mode);
+    GST_UNLOCK (realpad);
+    return FALSE;
+  }
+activate_error:
+  {
+    GST_CAT_DEBUG (GST_CAT_PADS,
+        "activate function returned FALSE for pad %s:%s",
+        GST_DEBUG_PAD_NAME (realpad));
+    GST_UNLOCK (realpad);
+    return FALSE;
+  }
+}
 
 /**
  * gst_pad_is_active:
@@ -3382,7 +3472,6 @@ done:
  *
  * Returns: TRUE if the event was sent succesfully.
  */
-
 gboolean
 gst_pad_event_default (GstPad * pad, GstEvent * event)
 {
@@ -3390,17 +3479,8 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
   g_return_val_if_fail (event != NULL, FALSE);
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_DISCONTINUOUS:{
-      GstElement *element = gst_pad_get_parent (pad);
-      guint64 time;
-
-      if (element && element->clock && GST_ELEMENT_MANAGER (element) &&
-          gst_event_discont_get_value (event, GST_FORMAT_TIME, &time)) {
-        GST_PIPELINE (GST_ELEMENT_MANAGER (element))->stream_time = time;
-      }
-      break;
-    }
-    case GST_EVENT_EOS:{
+    case GST_EVENT_EOS:
+    {
       GstRealPad *rpad = GST_PAD_REALIZE (pad);
 
       if (GST_RPAD_TASK (rpad)) {

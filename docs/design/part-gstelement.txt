@@ -28,18 +28,14 @@ Element.  This allows deeply nested pipelines, and the possibility of
 Name
 ----
 
-All elements are named, and while they should ideally be unique in any given pipeline, the do not have to be.  The only 
-guaranteed unique name for an element is its complete path in the object hierarchy.  Functions are provided to set and 
-get the name of the element.  _set_name() creates a local copy of the string passed.  _get_name() returns the actual 
-element's pointer.  Therefore, the argument to _set_name() is the responsibility of the caller to free if necessary, 
-but the return from _get_name() is definitely not to be messed with by the caller.  Accordingly, _get_name() returns an 
-const gchar *.
+All elements are named, and while they should ideally be unique in any given
+pipeline, they do not have to be.  The only guaranteed unique name for an
+element is its complete path in the object hierarchy.  In other words, an
+element's name is unique inside its parent.  (This follows from GstObject's
+name explanation)
 
-Providing a new name to an element causes it to free its internal copy of the name and make a copy of the new name.
-This means that you must consider the pointer returned by _get_name() to be short-lived.  If you must make use of the 
-name beyond the immediate scope, it is suggested that you make yourself a copy of it.  If you know for a fact neither 
-the pointer nor its contents will change, you may retain the original pointer.  If you get odd results when using the 
-returned string, that's the first thing to check.
+This uniqueness is guaranteed through all functions where either parentage
+or name of an element is changed.
 
 
 Pads

@@ -61,18 +61,17 @@ static GstElementStateReturn gst_bin_get_state (GstElement * element,
 static gboolean gst_bin_add_func (GstBin * bin, GstElement * element);
 static gboolean gst_bin_remove_func (GstBin * bin, GstElement * element);
 
-static void gst_bin_set_manager (GstElement * element, GstPipeline * manager);
-static gboolean gst_bin_send_event (GstElement * element, GstEvent * event);
-
 #ifndef GST_DISABLE_INDEX
 static void gst_bin_set_index_func (GstElement * element, GstIndex * index);
 #endif
 static GstClock *gst_bin_get_clock_func (GstElement * element);
 static void gst_bin_set_clock_func (GstElement * element, GstClock * clock);
 
+static void gst_bin_set_manager (GstElement * element, GstPipeline * manager);
 static void gst_bin_set_bus (GstElement * element, GstBus * bus);
 static void gst_bin_set_scheduler (GstElement * element, GstScheduler * sched);
 
+static gboolean gst_bin_send_event (GstElement * element, GstEvent * event);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr gst_bin_save_thyself (GstObject * object, xmlNodePtr parent);
@@ -169,8 +168,6 @@ gst_bin_class_init (GstBinClass * klass)
       GST_DEBUG_FUNCPTR (gst_bin_restore_thyself);
 #endif
 
-  gstelement_class->set_manager = GST_DEBUG_FUNCPTR (gst_bin_set_manager);
-  gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_bin_send_event);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_bin_change_state);
   gstelement_class->get_state = GST_DEBUG_FUNCPTR (gst_bin_get_state);
 #ifndef GST_DISABLE_INDEX
@@ -178,8 +175,11 @@ gst_bin_class_init (GstBinClass * klass)
 #endif
   gstelement_class->get_clock = GST_DEBUG_FUNCPTR (gst_bin_get_clock_func);
   gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_bin_set_clock_func);
+  gstelement_class->set_manager = GST_DEBUG_FUNCPTR (gst_bin_set_manager);
   gstelement_class->set_bus = GST_DEBUG_FUNCPTR (gst_bin_set_bus);
   gstelement_class->set_scheduler = GST_DEBUG_FUNCPTR (gst_bin_set_scheduler);
+
+  gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_bin_send_event);
 
   klass->add_element = GST_DEBUG_FUNCPTR (gst_bin_add_func);
   klass->remove_element = GST_DEBUG_FUNCPTR (gst_bin_remove_func);
@@ -321,6 +321,27 @@ gst_bin_set_scheduler (GstElement * element, GstScheduler * sched)
     gst_element_set_scheduler (child, sched);
   }
   GST_UNLOCK (bin);
+}
+
+/* set the manager on all of the children in this bin
+ *
+ * MT safe 
+ */
+static void
+gst_bin_set_manager (GstElement * element, GstPipeline * manager)
+{
+  GstBin *bin = GST_BIN (element);
+  GList *kids;
+  GstElement *kid;
+
+  GST_ELEMENT_CLASS (parent_class)->set_manager (element, manager);
+
+  GST_LOCK (element);
+  for (kids = bin->children; kids != NULL; kids = kids->next) {
+    kid = GST_ELEMENT (kids->data);
+    gst_element_set_manager (kid, manager);
+  }
+  GST_UNLOCK (element);
 }
 
 /* add an element to this bin
@@ -747,8 +768,73 @@ static GstElementStateReturn
 gst_bin_get_state (GstElement * element, GstElementState * state,
     GstElementState * pending, GTimeVal * timeout)
 {
-  /* implement me */
-  return GST_STATE_FAILURE;
+  GstBin *bin = GST_BIN (element);
+  GstElementStateReturn ret;
+  GList *children;
+  guint32 children_cookie;
+
+  /* we cannot take the state lock yet as we might block when querying
+   * the children, holding the lock too long for no reason. */
+
+  /* next we poll all children for their state to see if one of them
+   * is still busy with its state change. */
+  GST_LOCK (bin);
+restart:
+  ret = GST_STATE_SUCCESS;
+  children = bin->children;
+  children_cookie = bin->children_cookie;
+  while (children) {
+    GstElement *child = GST_ELEMENT_CAST (children->data);
+
+    gst_object_ref (GST_OBJECT_CAST (child));
+    GST_UNLOCK (bin);
+
+    /* ret is ASYNC if some child is still performing the state change */
+    ret = gst_element_get_state (child, NULL, NULL, timeout);
+
+    gst_object_unref (GST_OBJECT_CAST (child));
+
+    if (ret != GST_STATE_SUCCESS) {
+      /* some child is still busy or in error, we can report that
+       * right away. */
+      goto done;
+    }
+    /* now grab the lock to iterate to the next child */
+    GST_LOCK (bin);
+    if (G_UNLIKELY (children_cookie != bin->children_cookie))
+      /* child added/removed during state change, restart */
+      goto restart;
+
+    children = g_list_next (children);
+  }
+  GST_UNLOCK (bin);
+
+done:
+  /* now we can take the state lock */
+  GST_STATE_LOCK (bin);
+  switch (ret) {
+    case GST_STATE_SUCCESS:
+      /* we can commit the state */
+      gst_element_commit_state (element);
+      break;
+    case GST_STATE_FAILURE:
+      /* some element failed, abort the state change */
+      gst_element_abort_state (element);
+      break;
+    default:
+      /* other cases are just passed along */
+      break;
+  }
+
+  /* and report the state if needed */
+  if (state)
+    *state = GST_STATE (element);
+  if (pending)
+    *pending = GST_STATE_PENDING (element);
+
+  GST_STATE_UNLOCK (bin);
+
+  return ret;
 }
 
 /* this function is called with the STATE_LOCK held. It works
@@ -768,8 +854,178 @@ gst_bin_get_state (GstElement * element, GstElementState * state,
 static GstElementStateReturn
 gst_bin_change_state (GstElement * element)
 {
-  /* implement me */
-  return GST_STATE_FAILURE;
+  GstBin *bin;
+  GstElementStateReturn ret;
+  GstElementState old_state, pending;
+  gboolean have_async = FALSE;
+  GList *children;
+  guint32 children_cookie;
+  GQueue *elem_queue;           /* list of elements waiting for a state change */
+
+  bin = GST_BIN (element);
+
+  /* we don't need to take the STATE_LOCK, it is already taken */
+  old_state = GST_STATE (element);
+  pending = GST_STATE_PENDING (element);
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+      "changing state of children from %s to %s",
+      gst_element_state_get_name (old_state),
+      gst_element_state_get_name (pending));
+
+  if (pending == GST_STATE_VOID_PENDING)
+    return GST_STATE_SUCCESS;
+
+  /* all elements added to this queue should have their refcount
+   * incremented */
+  elem_queue = g_queue_new ();
+
+  /* first step, find all sink elements, these are the elements
+   * without (linked) source pads. */
+  GST_LOCK (bin);
+restart:
+  children = bin->children;
+  children_cookie = bin->children_cookie;
+  while (children) {
+    GstElement *child = GST_ELEMENT_CAST (children->data);
+
+    gst_object_ref (GST_OBJECT_CAST (child));
+    GST_UNLOCK (bin);
+
+    if (bin_element_is_sink (child, bin) == 0) {
+      /* this also keeps the refcount on the element, note that
+       * the _is_sink function unrefs the element when it is not
+       * a sink. */
+      g_queue_push_tail (elem_queue, child);
+    }
+
+    GST_LOCK (bin);
+    if (G_UNLIKELY (children_cookie != bin->children_cookie)) {
+      /* undo what we had */
+      g_queue_foreach (elem_queue, (GFunc) gst_object_unref, NULL);
+      while (g_queue_pop_head (elem_queue));
+      goto restart;
+    }
+
+    children = g_list_next (children);
+  }
+  GST_UNLOCK (bin);
+
+  /* second step, change state of elements in the queue */
+  while (!g_queue_is_empty (elem_queue)) {
+    GstElement *qelement = g_queue_pop_head (elem_queue);
+    GList *pads;
+    gboolean locked;
+
+    /* queue all elements connected to the sinkpads of this element */
+    GST_LOCK (qelement);
+    pads = qelement->sinkpads;
+    while (pads) {
+      GstPad *pad = GST_PAD_CAST (pads->data);
+      GstPad *peer;
+
+      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+          "found sinkpad %s:%s", GST_DEBUG_PAD_NAME (pad));
+
+      peer = gst_pad_get_peer (pad);
+      if (peer) {
+        GstObject *peer_elem;
+
+        peer_elem = gst_object_get_parent (GST_OBJECT_CAST (peer));
+
+        if (peer_elem) {
+          GstObject *parent;
+
+          /* see if this element is in the bin we are currently handling */
+          parent = gst_object_get_parent (GST_OBJECT_CAST (peer_elem));
+          if (parent && parent == GST_OBJECT_CAST (bin)) {
+            GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+                "adding element %s to queue", GST_ELEMENT_NAME (peer_elem));
+
+            /* was reffed before pushing on the queue by the 
+             * gst_object_get_parent() call we used to get the element. */
+            g_queue_push_tail (elem_queue, peer_elem);
+          } else {
+            GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+                "not adding element %s to queue, it is in another bin",
+                GST_ELEMENT_NAME (peer_elem));
+          }
+          if (parent) {
+            gst_object_unref (GST_OBJECT_CAST (parent));
+          }
+        }
+        gst_object_unref (GST_OBJECT_CAST (peer));
+      } else {
+        GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+            "pad %s:%s does not have a peer", GST_DEBUG_PAD_NAME (pad));
+      }
+      pads = g_list_next (pads);
+    }
+    /* peel off the locked flag and release the element lock */
+    locked = GST_FLAG_IS_SET (qelement, GST_ELEMENT_LOCKED_STATE);
+    GST_UNLOCK (qelement);
+
+    if (G_UNLIKELY (locked))
+      goto next_element;
+
+    qelement->base_time = element->base_time;
+    ret = gst_element_set_state (qelement, pending);
+    switch (ret) {
+      case GST_STATE_SUCCESS:
+        GST_CAT_DEBUG (GST_CAT_STATES,
+            "child '%s' changed state to %d(%s) successfully",
+            GST_ELEMENT_NAME (qelement), pending,
+            gst_element_state_get_name (pending));
+        break;
+      case GST_STATE_ASYNC:
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+            "child '%s' is changing state asynchronously",
+            GST_ELEMENT_NAME (qelement));
+        have_async = TRUE;
+        break;
+      case GST_STATE_FAILURE:
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+            "child '%s' failed to go to state %d(%s)",
+            GST_ELEMENT_NAME (qelement),
+            pending, gst_element_state_get_name (pending));
+        ret = GST_STATE_FAILURE;
+        /* release refcount of element we popped off the queue */
+        gst_object_unref (GST_OBJECT (qelement));
+        goto exit;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+  next_element:
+    gst_object_unref (GST_OBJECT (qelement));
+  }
+
+  if (have_async) {
+    ret = GST_STATE_ASYNC;
+  } else {
+    if (parent_class->change_state) {
+      ret = parent_class->change_state (element);
+    } else {
+      ret = GST_STATE_SUCCESS;
+    }
+    if (ret == GST_STATE_SUCCESS) {
+      /* we can commit the state change now */
+      gst_element_commit_state (element);
+    }
+  }
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+      "done changing bin's state from %s to %s, now in %s",
+      gst_element_state_get_name (old_state),
+      gst_element_state_get_name (pending),
+      gst_element_state_get_name (GST_STATE (element)));
+
+exit:
+  /* release refcounts in queue, should normally be empty */
+  g_queue_foreach (elem_queue, (GFunc) gst_object_unref, NULL);
+  g_queue_free (elem_queue);
+
+  return ret;
 }
 
 static void
@@ -792,53 +1048,47 @@ gst_bin_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-static void
-gst_bin_set_manager (GstElement * element, GstPipeline * manager)
-{
-  GstBin *bin = GST_BIN (element);
-  GList *kids;
-  GstElement *kid;
-
-  GST_ELEMENT_CLASS (parent_class)->set_manager (element, manager);
-
-  GST_LOCK (element);
-  for (kids = bin->children; kids != NULL; kids = kids->next) {
-    kid = GST_ELEMENT (kids->data);
-    gst_element_set_manager (kid, manager);
-  }
-  GST_UNLOCK (element);
-}
-
 /*
  * This function is a utility event handler for seek events.
- * It will change pipeline state to PAUSED, iterate event
- * over all available sinks, distribute new basetime to the
- * pipeline after preroll is done and then re-set to PLAYING.
+ * It will send the event to all sinks.
  * Applications are free to override this behaviour and
  * implement their own seek handler, but this will work for
  * pretty much all cases in practice.
  */
-
 static gboolean
 gst_bin_send_event (GstElement * element, GstEvent * event)
 {
   GstBin *bin = GST_BIN (element);
   GstIterator *iter;
-  GstElement *sink;
-  gpointer data;
   gboolean res = TRUE;
+  gboolean done = FALSE;
 
   iter = gst_bin_iterate_sinks (bin);
   GST_DEBUG_OBJECT (bin, "Sending event to sink children");
 
-  /* iterate over all sinks; preroll will take care of sync,
-   * discont event handling will take care of proper clock
-   * adjustment. Sweet. */
-  while (gst_iterator_next (iter, &data) == GST_ITERATOR_OK) {
-    gst_event_ref (event);
-    sink = GST_ELEMENT (data);
-    res &= gst_element_send_event (sink, event);
-    gst_object_unref (GST_OBJECT (sink));
+  while (!done) {
+    gpointer data;
+
+    switch (gst_iterator_next (iter, &data)) {
+      case GST_ITERATOR_OK:
+      {
+        GstElement *sink;
+
+        gst_event_ref (event);
+        sink = GST_ELEMENT_CAST (data);
+        res &= gst_element_send_event (sink, event);
+        gst_object_unref (GST_OBJECT (sink));
+        break;
+      }
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
+        res = TRUE;
+        break;
+      default:
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
   }
   gst_iterator_free (iter);
   gst_event_unref (event);

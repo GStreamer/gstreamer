@@ -1,0 +1,152 @@
+Negotiation
+-----------
+
+Negotiation happens when elements want to push buffers and need to decide
+on the format. This is called downstream negotiation because the upstream
+element decides the format for the downstream element. This is the most
+common case.
+
+Negotiation can also happen when a downstream element wants to receive 
+another data format from an upstream element. This is called upstream
+negotiation.
+
+The basics of negotiation are as follows:
+
+ - GstCaps (see part-caps.txt) are attached and refcounted before they
+   are attached to a buffer to describe the contents of the buffer.
+   It is possible to add a NULL caps to a buffer, this means that the
+   buffer type did not change relative to the previous buffer. If no
+   previous buffer was received by a downstream element, it is free to
+   discard the buffer.
+
+ - Before receiving a buffer, an element must check if the datatype of
+   the buffer has changed. The element should reconfigure itself to the
+   new format before processing the buffer data. If the data type on
+   the buffer is not acceptable, the element should refuse the buffer.
+
+ - When requesting a buffer from a bufferpool, the prefered type should
+   be passed to the buffer allocation function. After receiving a buffer
+   from a bufferpool, the datatype should be checked again.
+
+ - A bufferpool allocation function should try to allocate a buffer of the
+   prefered type. If there is a good reason to choose another type, the
+   alloc function should see if that other type is accepted by the other
+   element, then allocate a buffer of that type and attach the type to the
+   buffer before returning it.
+
+
+The general flow for a source pad starting the negotiation.
+
+             src              sink
+              |                 |
+              |  accepts?       |
+  type A      |---------------->|
+              |      yes        |
+              |<----------------|
+              |                 |
+ get buffer   |  alloc_buf      |
+ from pool    |---------------->| 
+ with type A  |                 | Create buffer of type A.
+              |                 |
+ check type   |<----------------|
+ and use A    |                 |
+              |  push           |
+ push buffer  |---------------->| Receive type A, reconfigure to
+ with new type|                 | process type A.
+              |                 |
+
+ One possible implementation in pseudo code:
+
+ [element wants to create a buffer]
+ if not format
+   # see what the peer can do
+   peercaps = gst_pad_peer_get_caps (srcpad)
+   # see what we can do
+   ourcaps = gst_pad_get_caps (srcpad)
+
+   # get common formats
+   candidates = gst_caps_intersect (peercaps, ourcaps)
+
+   foreach candidate in candidates
+     # make sure the caps is fixed
+     fixedcaps = gst_pad_fixate_caps (srcpad, candidate)
+
+     # see if the peer accepts it
+     if gst_pad_peer_accept_caps (srcpad, fixedcaps)
+       # store the caps as the negotiated caps, this will
+       # call the setcaps function on the pad
+       gst_pad_set_caps (srcpad, fixedcaps)
+       break
+     endif
+   done
+ endif
+
+ # if the type is different, this will call the setcaps function of 
+ # the pad.
+ buffer = gst_pad_alloc_buffer (srcpad, 0, size, GST_PAD_CAPS (fixedcaps));
+ if buffer
+   [fill buffer and push]
+ elseif
+   [no buffer, either no peer or no acceptable format found]
+ endif
+
+
+The general flow for a sink pad starting a renegotiation.
+
+             src              sink
+              |                 |
+              |  accepts?       |
+	      |<----------------| type B
+              |      yes        |
+              |---------------->|
+              |                 |
+ get buffer   |  alloc_buf      |
+ from pool    |---------------->| 
+ with type    |                 | Create buffer of new type B.
+              |                 |
+ check type   |<----------------|
+ and          |                 |
+ reconfigure  |                 |
+              |  push           |
+ push buffer  |---------------->| Receive type B, reconfigure to
+ with new type|                 | process type B.
+              |                 |
+
+	      
+
+Use case:
+
+
+videotestsrc ! xvimagesink
+
+  1) Who decides what format to use?
+   - src pad always decides, by convention. sinkpad can suggest a format
+     by putting it high in the getcaps function GstCaps. 
+   - since the src decides, it can always choose something that it can do,
+     so this step can only fail if the sinkpad stated it could accept
+     something while later on it couldn't.
+
+  2) When does negotiation happen?
+   - before srcpad does a push, it figures out a type as stated in 1), then 
+     it calls the pad alloc function with the type. The sinkpad has to 
+     create a buffer of that type, src fills the buffer and sends it to sink.
+   - since the sink stated in 1) it could accept the type, it will be able to
+     create a buffer of the type and handle it.
+   - sink checks media type of buffer and configures itself for this type.
+     
+  3) How can sink request another format?
+   - sink asks if new format is possible for the source.
+   - sink returns buffer with new type in allocfunction.
+   - src receives buffer with new type, reconfigures and pushes.
+   - sink can always select something it can create and handle since it takes
+     the initiative. src should be able to handle the new type since it said
+     it could accept it.
+
+videotestsrc ! queue ! xvimagesink
+
+  - queue implements an allocfunction, proxying all calls to its srcpad peer.
+  - queue proxies all accept and getcaps to the other peer pad.
+  - queue contains buffers with different types.
+
+   
+

@@ -277,16 +277,21 @@ is_eos (GstPipeline * pipeline)
   return result;
 }
 
+/* sending an event on the pipeline pauses the pipeline if it
+ * was playing.
+ */
 static gboolean
 gst_pipeline_send_event (GstElement * element, GstEvent * event)
 {
   gboolean was_playing;
   gboolean res;
+  GstElementState state;
 
-  GST_STATE_LOCK (element);
-  /* hmm... questionable */
-  was_playing = (GST_STATE (element) == GST_STATE_PLAYING);
-  GST_STATE_UNLOCK (element);
+  /* need to call _get_state() since a bin state is only updated
+   * with this call. FIXME, we should probably not block but just
+   * take a snapshot. */
+  gst_element_get_state (element, &state, NULL, NULL);
+  was_playing = state == GST_STATE_PLAYING;
 
   if (was_playing && GST_EVENT_TYPE (event) == GST_EVENT_SEEK)
     gst_element_set_state (element, GST_STATE_PAUSED);
@@ -358,8 +363,87 @@ gst_pipeline_new (const gchar * name)
 static GstElementStateReturn
 gst_pipeline_change_state (GstElement * element)
 {
-  /* implement me */
-  return GST_STATE_FAILURE;
+  GstElementStateReturn result = GST_STATE_SUCCESS;
+  GstPipeline *pipeline = GST_PIPELINE (element);
+  gint transition = GST_STATE_TRANSITION (element);
+
+  switch (transition) {
+    case GST_STATE_NULL_TO_READY:
+      gst_scheduler_setup (GST_ELEMENT_SCHEDULER (pipeline));
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+    {
+      GstClock *clock;
+
+      clock = gst_element_get_clock (element);
+      gst_element_set_clock (element, clock);
+      pipeline->eosed = NULL;
+      break;
+    }
+    case GST_STATE_PAUSED_TO_PLAYING:
+      if (element->clock) {
+        GstClockTime start_time = gst_clock_get_time (element->clock);
+
+        element->base_time = start_time -
+            pipeline->stream_time + pipeline->delay;
+        GST_DEBUG ("stream_time=%" GST_TIME_FORMAT ", start_time=%"
+            GST_TIME_FORMAT, GST_TIME_ARGS (pipeline->stream_time),
+            GST_TIME_ARGS (start_time));
+      } else {
+        element->base_time = 0;
+        GST_DEBUG ("no clock, using base time of 0");
+      }
+      break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_READY_TO_NULL:
+      break;
+  }
+
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  switch (transition) {
+    case GST_STATE_READY_TO_PAUSED:
+      pipeline->stream_time = 0;
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      if (element->clock) {
+        pipeline->stream_time = gst_clock_get_time (element->clock) -
+            element->base_time;
+      }
+      GST_DEBUG ("stream_time=%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (pipeline->stream_time));
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break;
+  }
+
+  /* we wait for async state changes ourselves.
+   * FIXME this can block forever, better do this in a worker
+   * thread or use a timeout? */
+  if (result == GST_STATE_ASYNC) {
+    GTimeVal *timeval, timeout;
+
+    GST_STATE_UNLOCK (pipeline);
+
+    GST_LOCK (pipeline);
+    if (pipeline->play_timeout > 0) {
+      GST_TIME_TO_TIMEVAL (pipeline->play_timeout, timeout);
+      timeval = &timeout;
+    } else {
+      timeval = NULL;
+    }
+    GST_UNLOCK (pipeline);
+
+    result = gst_element_get_state (element, NULL, NULL, timeval);
+    GST_STATE_LOCK (pipeline);
+  }
+
+  return result;
 }
 
 /**

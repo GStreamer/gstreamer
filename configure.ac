@@ -655,7 +655,7 @@ include/Makefile
 gst/Makefile
 gst/gstconfig.h
 gst/gstversion.h
-gst/autoplug/Makefile
+gst/base/Makefile
 gst/indexers/Makefile
 gst/elements/Makefile
 gst/parse/Makefile
@@ -663,7 +663,6 @@ gst/schedulers/Makefile
 gst/registries/Makefile
 libs/Makefile
 libs/gst/Makefile
-libs/gst/bytestream/Makefile
 libs/gst/control/Makefile
 libs/gst/dataprotocol/Makefile
 libs/gst/getbits/Makefile
@@ -679,7 +678,6 @@ tests/sched/Makefile
 tests/threadstate/Makefile
 testsuite/Makefile
 testsuite/bins/Makefile
-testsuite/bytestream/Makefile
 testsuite/caps/Makefile
 testsuite/cleanup/Makefile
 testsuite/clock/Makefile
@@ -690,7 +688,6 @@ testsuite/elements/Makefile
 testsuite/ghostpads/Makefile
 testsuite/indexers/Makefile
 testsuite/negotiation/Makefile
-testsuite/pad/Makefile
 testsuite/parse/Makefile
 testsuite/plugin/Makefile
 testsuite/refcounting/Makefile

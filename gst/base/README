@@ -1,0 +1,16 @@
+Base classes
+------------
+
+GstBaseSink
+ 
+  Base class for sink elements.
+
+  - one sinkpad
+  - handles state changes
+  - does flushing
+  - preroll with optional preview
+  - pull/push mode
+  - EOS handling
+
+  FIXME: not much point making it operate in pull mode as a generic
+  base class I guess... 
