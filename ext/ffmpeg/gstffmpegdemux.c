@@ -550,9 +550,10 @@ gst_ffmpegdemux_type_find (GstTypeFind * tf, gpointer priv)
     probe_data.buf_size = GST_FFMPEG_TYPE_FIND_SIZE;
 
     res = in_plugin->read_probe (&probe_data);
-    res = res * GST_TYPE_FIND_MAXIMUM / AVPROBE_SCORE_MAX;
-    if (res > 0)
+    if (res > 0) {
+      res = MAX (1, res * GST_TYPE_FIND_POSSIBLE / AVPROBE_SCORE_MAX);
       gst_type_find_suggest (tf, res, params->sinkcaps);
+    }
   }
 }
 

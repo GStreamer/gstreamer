@@ -1,3 +1,9 @@
+2004-04-19  Benjamin Otte  <otte@gnome.org>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_type_find):
+	  reduce maximum probability in typefinding to POSSIBLE. prevents
+	  misidentification of my mp3s as video/mpeg
+
 2004-04-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_chain):
