@@ -45,6 +45,10 @@ struct monoscope_state *
 monoscope_init (guint32 resx, guint32 resy)
 {
   struct monoscope_state *stateptr;
+
+  /* I didn't program monoscope to only do 256*128, but it works that way */
+  g_return_val_if_fail (resx == 256, 0);
+  g_return_val_if_fail (resy == 128, 0);
   stateptr = calloc (1, sizeof (struct monoscope_state));
   if (stateptr == 0)
     return 0;
