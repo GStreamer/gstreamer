@@ -1,5 +1,13 @@
 2004-03-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* common/ChangeLog:
+	* common/gst-autogen.sh:
+          add some explanation about the version detection
+	* configure.ac:
+          fix X check
+
+2004-03-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac: bump nano to 1
 
 === gst-plugins 0.8.0 ===
