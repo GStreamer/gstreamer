@@ -1,5 +1,29 @@
 2004-01-11  David Schleef  <ds@schleef.org>
 
+	* ext/ffmpeg/gstffmpeg.c:
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegprotocol.c:
+	* ext/gdk_pixbuf/gstgdkanimation.c:
+	* ext/jpeg/gstjpeg.c:
+	* ext/libpng/gstpng.c:
+	* ext/mpeg2dec/perftest.c:
+	* ext/speex/gstspeex.c:
+	* gst-libs/gst/resample/dtos.c:
+	* gst/intfloat/gstintfloatconvert.c:
+	* gst/oneton/gstoneton.c:
+	* gst/rtjpeg/RTjpeg.c:
+	* gst/rtp/gstrtp.c:
+	* sys/dxr3/dxr3init.c:
+	* sys/glsink/gstgl_nvimage.c:
+	* sys/glsink/gstgl_pdrimage.c:
+	* sys/glsink/gstglsink.c:
+	* testsuite/gst-lint:
+	Make sure everybody wraps #include "config.h" in #ifdef HAVE_CONFIG_H
+
+2004-01-11  David Schleef  <ds@schleef.org>
+
 	* ext/alsa/gstalsasrc.c: (gst_alsa_src_set_caps):
 	* ext/faac/gstfaac.c: (gst_faac_sinkconnect):
 	* ext/gdk_pixbuf/gstgdkanimation.c:
