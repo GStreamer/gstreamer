@@ -39,7 +39,8 @@ static gint num_plugins = 0;
 static void
 plugin_added_func (GstRegistry *registry, GstPlugin *plugin, gpointer user_data)
 {
-  g_print ("added plugin %s with %d feature(s)\n", plugin->name, plugin->numfeatures);
+  g_print ("added plugin %s with %d feature(s)\n", plugin->name, 
+           plugin->numfeatures);
 
   num_features += plugin->numfeatures;
   num_plugins++;
@@ -101,6 +102,6 @@ int main (int argc,char *argv[])
 
   g_print ("loaded %d plugins with %d features\n", num_plugins, num_features);
 
-  return(0);
+  return (0);
 }
 
