@@ -26,3 +26,4 @@ install-sh
 depcomp
 autoregen.sh
 ABOUT-NLS
+_stdint.h
