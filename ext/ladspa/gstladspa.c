@@ -772,10 +772,14 @@ gst_ladspa_loop(GstElement *element)
   buffers_out = g_new0(GstBuffer*, numsrcpads);
   bytestreams = g_new0(GstByteStream*, numsinkpads);
   
-  bufferbytesize = sizeof (LADSPA_Data) * ladspa->buffersize;
-  
   /* find a bufferpool */
-  bufpool = gst_buffer_pool_get_default (bufferbytesize, ladspa->numbuffers);
+  if (numsrcpads > 0 && (bufpool = gst_pad_get_bufferpool (ladspa->srcpads[0]))) {
+    GST_DEBUG (0, "Got bufferpool from first source pad");
+  } else {
+    bufferbytesize = sizeof (LADSPA_Data) * ladspa->buffersize;
+    bufpool = gst_buffer_pool_get_default (bufferbytesize, ladspa->numbuffers);
+    GST_DEBUG (0, "Created default bufferpool, %d x %d bytes", ladspa->numbuffers, bufferbytesize);
+  }
 
   /* get the bytestreams for each pad */
   for (i=0 ; i<numsinkpads ; i++){
@@ -784,10 +788,20 @@ gst_ladspa_loop(GstElement *element)
 
   /* since this is a loop element, we just loop here til things fall apart. */
   do {
+    /* we need to get the buffers_out first so we can know how many bytes to process */
+    for (i=0 ; i<numsrcpads ; i++){
+      buffers_out[i] = gst_buffer_new_from_pool (bufpool, 0, 0);
+      GST_BUFFER_TIMESTAMP(buffers_out[i]) = ladspa->timestamp;
+      data_out[i] = (LADSPA_Data *) GST_BUFFER_DATA(buffers_out[i]);
+    }
+
+    bufferbytesize = GST_BUFFER_SIZE (buffers_out[0]);
+    ladspa->buffersize = bufferbytesize / sizeof (LADSPA_Data);
+
     num_empty_pads = 0;
     /* first get all the necessary data from the input ports */
     for (i=0 ; i<numsinkpads ; i++){  
-      GST_DEBUG (0, "pulling %u bytes through channel %d'sbytestream", bufferbytesize, i);
+      GST_DEBUG (0, "pulling %u bytes through channel %d's bytestream", bufferbytesize, i);
       got_bytes = gst_bytestream_read (bytestreams[i], buffers_in + i, bufferbytesize);
 
       if (got_bytes != bufferbytesize) {
@@ -834,20 +848,6 @@ gst_ladspa_loop(GstElement *element)
       }
     }
     
-    /* we now have a full set of buffers_in.
-     * now share or create the buffers_out */
-    for (i=0 ; i<numsrcpads ; i++){
-      if (i <= numsinkpads && !ladspa->inplace_broken){
-        /* we can share buffers */
-        buffers_out[i] = buffers_in[i];
-        data_out[i] = data_in[i];
-      } else {
-        buffers_out[i] = gst_buffer_new_from_pool (bufpool, 0, 0);
-        GST_BUFFER_TIMESTAMP(buffers_out[i]) = ladspa->timestamp;
-        data_out[i] = (LADSPA_Data *) GST_BUFFER_DATA(buffers_out[i]);
-      }
-    }
-
     GST_DPMAN_PREPROCESS(ladspa->dpman, ladspa->buffersize, ladspa->timestamp);
     num_processed = 0;
 
@@ -883,15 +883,14 @@ gst_ladspa_loop(GstElement *element)
       buffers_out[i] = NULL;
     }
     for (i=0 ; i<numsinkpads ; i++) {
-      if (i > numsrcpads || ladspa->inplace_broken){
-        /* we have some buffers to unref */
-        gst_buffer_unref(buffers_in[i]);
-      }
+      gst_buffer_unref(buffers_in[i]);
       data_in[i] = NULL;
       buffers_in[i] = NULL;
     }      
 
     ladspa->timestamp += ladspa->buffersize * 10^9 / ladspa->samplerate;
+
+    gst_element_yield (element);
   } while (TRUE);
 
   gst_buffer_pool_unref(bufpool);
