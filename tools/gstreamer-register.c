@@ -39,6 +39,16 @@
 #define GLOBAL_REGISTRY_FILE     GLOBAL_REGISTRY_DIR"/reg.xml"
 #define GLOBAL_REGISTRY_FILE_TMP GLOBAL_REGISTRY_DIR"/.reg.xml.tmp"
 
+#define REGISTRY_DIR_PERMS (S_ISGID | \
+			    S_IRUSR | S_IWUSR | S_IXUSR | \
+			    S_IRGRP | S_IXGRP | \
+			    S_IROTH | S_IXOTH)
+#define REGISTRY_TMPFILE_PERMS (S_IRUSR | S_IWUSR)
+#define REGISTRY_FILE_PERMS (S_IRUSR | S_IWUSR | \
+			     S_IRGRP | S_IWGRP | \
+			     S_IROTH | S_IWOTH)
+
+
 extern gboolean _gst_plugin_spew;
 extern gboolean _gst_warn_old_registry;
 
@@ -69,13 +79,29 @@ static int is_dir(const char * filename) {
   return S_ISDIR(statbuf.st_mode);
 }
 
-static void move_file(const char * nameold, const char * namenew) {
+static void set_filemode(const char * filename, mode_t mode) {
+    if(chmod(filename, mode)) {
+	g_print("Cannot set file permissions on `%s' to %o", filename, mode);
+	error_perm();
+    }
+}
+
+static int get_filemode(const char * filename, mode_t * mode) {
+    struct stat statbuf;
+    if(stat(filename, &statbuf)) return 0;
+    *mode = statbuf.st_mode & ~ S_IFMT;
+    return 1;
+}
+
+static void move_file(const char * nameold,
+		      const char * namenew,
+		      mode_t * newmode) {
     if (!is_file(nameold)) {
 	g_print("Temporary `%s' is not a file", nameold);
 	error_perm();
     }
     if (is_dir(namenew)) {
-	g_print("Destination path `%s' is a directory\n", namenew);
+	g_print("Destination path `%s' for registry file is a directory\n", namenew);
 	g_print("Please remove, or reconfigure GStreamer\n\n");
 	exit(1);
     }
@@ -83,46 +109,68 @@ static void move_file(const char * nameold, const char * namenew) {
 	g_print("Cannot move `%s' to `%s'", nameold, namenew);
 	error_perm();
     }
+    // set mode again, to make this public
+    set_filemode(namenew, *newmode);
 }
 
-static int make_dir(const char * dirname) {
-    mode_t mode = 0777;
-    return !mkdir(dirname, mode);
+static void make_dir(const char * dirname) {
+    mode_t mode = REGISTRY_DIR_PERMS;
+    if(mkdir(dirname, mode)) {
+	g_print("Cannot create GStreamer registry directory `%s'", dirname);
+	error_perm();
+    }
+
+    if(chmod(dirname, mode)) {
+	g_print("Cannot set permissions on GStreamer registry directory `%s' to %o", dirname, mode);
+	error_perm();
+    }
+
+    return;
 }
 
 static void check_dir(const char * dirname) {
     if (!is_dir(dirname)) {
-	if (!make_dir(dirname)) {
-	    g_print("Cannot create GStreamer registry directory `%s'",
-		    dirname);
-	    error_perm();
-	}
+	make_dir(dirname);
     }
 }
 
-static void save_registry(const char *destfile, xmlDocPtr * doc) {
+static void save_registry(const char *destfile,
+			  xmlDocPtr * doc) {
+    mode_t tmpmode = REGISTRY_TMPFILE_PERMS;
 #if 0
     FILE *fp;
+    int fd;
 
-    fp = fopen (destfile, "w");
-    if (!fp) {
+    fd = open(destfile, O_CREAT | O_TRUNC | O_WRONLY, tmpmode);
+    if (fd == -1) {
 	g_print("Cannot open `%s' to save new registry to.", destfile);
 	error_perm();
     }
+    fp = fdopen (fd, "wb");
+    if (!fp) {
+	g_print("Cannot fopen `%s' to save new registry to.", destfile);
+	error_perm();
+    }
+    // set mode to make this private
+    set_filemode(destfile, tmpmode);
 
     // FIXME: no way to check success of xmlDocDump, which is why
     // this piece of code is ifdefed out.
+    // The version of libxml currently (Jan 2001) in their CVS tree fixes
+    // this problem. 
     xmlDocDump(fp, *doc);
 
     if (!fclose(fp)) {
 	g_print("Cannot close `%s' having saved new registry.", destfile);
 	error_perm();
     }
+
 #else
     if (xmlSaveFile(destfile, *doc) <= 0) {
 	g_print("Cannot save new registry to `%s'", destfile);
 	error_perm();
     }
+    set_filemode(destfile, tmpmode);
 #endif
 }
 
@@ -130,8 +178,19 @@ int main(int argc,char *argv[])
 {
     xmlDocPtr doc;
 
+    // Mode of the file we're saving the repository to;
+    mode_t newmode;
+
+    // Get mode of old repository, or a default.
+    if (!get_filemode(GLOBAL_REGISTRY_FILE, &newmode)) {
+	mode_t theumask = umask(0);
+	umask(theumask);
+	newmode = REGISTRY_FILE_PERMS & ~ theumask;
+    }
+
     // remove the old registry file first
-    // FIXME this could fail, at which point we're spinning
+    // If this fails, we simply ignore it since we'll overwrite it later
+    // anyway.
     unlink(GLOBAL_REGISTRY_FILE);
 
     // Init gst
@@ -155,7 +214,7 @@ int main(int argc,char *argv[])
     save_registry(GLOBAL_REGISTRY_FILE_TMP, &doc);
 
     // Make the tmp file live.
-    move_file(GLOBAL_REGISTRY_FILE_TMP, GLOBAL_REGISTRY_FILE);
+    move_file(GLOBAL_REGISTRY_FILE_TMP, GLOBAL_REGISTRY_FILE, &newmode);
 
     return(0);
 }
