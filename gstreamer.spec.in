@@ -1,11 +1,13 @@
 Name: 		gstreamer
 Version: 	@VERSION@
 Release: 	@GST_VERSION_RELEASE@
-Summary: 	GStreamer streaming media framework runtime
+Summary: 	GStreamer streaming media framework runtime.
 
-License: 	LGPL
 Group: 		Libraries/Multimedia
-Source: 	%{name}-%{version}.tar.gz
+License: 	LGPL
+URL:		http://gstreamer.net/
+Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
+Source: 	http://gstreamer.net/releases/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 
 %define 	_glib2		@GLIB2_REQ@
@@ -38,7 +40,7 @@ types or processing capabilities can be added simply by installing new
 plugins.
 
 %package devel
-Summary: 	Libraries/include files for GStreamer streaming media framework
+Summary: 	Libraries/include files for GStreamer streaming media framework.
 Group: 		Development/Libraries
 
 Requires: 	%{name} = %{version}-%{release}
