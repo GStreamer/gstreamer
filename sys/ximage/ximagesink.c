@@ -22,8 +22,8 @@
 #endif
 
 /* Our interfaces */
-#include <gst-libs/gst/navigation/navigation.h>
-#include <gst-libs/gst/xoverlay/xoverlay.h>
+#include <gst/navigation/navigation.h>
+#include <gst/xoverlay/xoverlay.h>
 
 /* Object header */
 #include "ximagesink.h"
@@ -542,6 +542,8 @@ gst_ximagesink_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_LINK_DELAYED;
   if (GST_CAPS_IS_CHAINED (caps))
+    return GST_PAD_LINK_DELAYED;
+  if (!ximagesink->xcontext)
     return GST_PAD_LINK_DELAYED;
   
   GST_DEBUG ("sinkconnect %s with %s", gst_caps_to_string(caps),

@@ -22,8 +22,8 @@
 #endif
 
 /* Our interfaces */
-#include <gst-libs/gst/navigation/navigation.h>
-#include <gst-libs/gst/xoverlay/xoverlay.h>
+#include <gst/navigation/navigation.h>
+#include <gst/xoverlay/xoverlay.h>
 
 /* Object header */
 #include "xvimagesink.h"
