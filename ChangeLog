@@ -1,3 +1,8 @@
+2004-12-14  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/typefind/gsttypefindfunctions.c: (mpeg2_sys_type_find):
+	Add typefinding for mpeg2 pes streams
+
 2004-12-13  David Schleef  <ds@schleef.org>
 
 	* configure.ac:  Applied patch from bug #143659, making default
