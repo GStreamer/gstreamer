@@ -561,6 +561,7 @@ gst_wavparse_fmt (GstWavParse * wav)
     gst_pad_set_explicit_caps (wav->srcpad, caps);
     gst_caps_free (caps);
     gst_element_add_pad (GST_ELEMENT (wav), wav->srcpad);
+    gst_element_no_more_pads (GST_ELEMENT (wav));
     GST_DEBUG ("frequency %d, channels %d", wav->rate, wav->channels);
   } else {
     GST_ELEMENT_ERROR (wav, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
