@@ -58,7 +58,7 @@ A (non-complete) list of output plug-ins for audio is
 <itemizedlist>
 <listitem><para>osssink for OSS output</para></listitem>
 <listitem><para>esdsink for ESound output</para></listitem>
-<listitem><para>artssink for aRTs output</para></listitem>
+<listitem><para>artsdsink for aRTs output</para></listitem>
 <listitem><para>alsasink for ALSA output</para></listitem>
 <listitem><para>jacksink for JACK output</para></listitem>
 </itemizedlist>

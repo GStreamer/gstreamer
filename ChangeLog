@@ -1,3 +1,8 @@
+2005-02-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/faq/using.xml:
+	  Fix typo in FAQ (artssink => artsdsink)
+
 2005-02-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* tools/gst-launch.1.in:
