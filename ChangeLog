@@ -1,3 +1,9 @@
+2004-09-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/schedulers/gstoptimalscheduler.c: (add_to_group),
+	(remove_from_group):
+	Some more debug info.
+
 2004-09-03  Wim Taymans  <wim@fluendo.com>
 
 	* gst/elements/gstfakesrc.c: (gst_fakesrc_class_init),

@@ -866,8 +866,8 @@ add_to_group (GstOptSchedulerGroup * group, GstElement * element,
   g_assert (group != NULL);
   g_assert (element != NULL);
 
-  GST_DEBUG ("adding element \"%s\" to group %p", GST_ELEMENT_NAME (element),
-      group);
+  GST_DEBUG ("adding element %p \"%s\" to group %p", element,
+      GST_ELEMENT_NAME (element), group);
 
   if (GST_ELEMENT_IS_DECOUPLED (element)) {
     GST_DEBUG ("element \"%s\" is decoupled, not adding to group %p",
@@ -899,8 +899,8 @@ add_to_group (GstOptSchedulerGroup * group, GstElement * element,
 static GstOptSchedulerGroup *
 remove_from_group (GstOptSchedulerGroup * group, GstElement * element)
 {
-  GST_DEBUG ("removing element \"%s\" from group %p",
-      GST_ELEMENT_NAME (element), group);
+  GST_DEBUG ("removing element %p \"%s\" from group %p",
+      element, GST_ELEMENT_NAME (element), group);
 
   g_assert (group != NULL);
   g_assert (element != NULL);
