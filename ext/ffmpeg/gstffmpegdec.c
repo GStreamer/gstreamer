@@ -91,7 +91,7 @@ static void	gst_ffmpegdec_dispose		(GObject      *object);
 static GstPadLinkReturn	gst_ffmpegdec_connect	(GstPad    *pad,
 						 GstCaps   *caps);
 static void	gst_ffmpegdec_chain		(GstPad    *pad,
-						 GstBuffer *buffer);
+						 GstData   *data);
 
 static GstElementStateReturn
 		gst_ffmpegdec_change_state	(GstElement *element);
