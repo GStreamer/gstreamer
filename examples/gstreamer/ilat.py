@@ -93,7 +93,8 @@ def check(f, n, b):
 
 def main():
     "Identity timer and latency check"
-    gst_debug_set_categories(0L)
+    if gst_version() < (0,7,0):
+        gst_debug_set_categories(0L)
 
     if len(sys.argv) < 3:
         print 'usage: %s identites buffers' % (sys.argv[0],)

@@ -1,3 +1,15 @@
+2003-10-10  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* configure.ac, gstreamer/Makefile.am, gstreamer/*: Mass change to
+	support compiling for both 0.6 and 0.7.  Common support is now in
+	common.{defs,override,c,h}.  Specific version support is in
+	{0.6,0.7}.{defs,override,c,h}.  The common and version specific files
+	are merged and/or used as needed.
+
+	* gstreamer/common.override: add gst_version
+
+	* examples/gstreamer/ilat.py: add annoying version check for 0.6 API
+
 2003-10-09  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* configure.ac: require autoconf 2.57 and pygtk 2.0.0.
