@@ -568,9 +568,9 @@ dnl AC_CHECK_HEADERS(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
 
 
 dnl *** SDL ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBSDL, true)
-GST_CHECK_FEATURE(LIBSDL, [SDL plugin], sdlvideosink, [
- AM_PATH_SDL(, HAVE_LIBSDL=yes, HAVE_LIBSDL=no)
+translit(dnm, m, l) AM_CONDITIONAL(USE_SDL, true)
+GST_CHECK_FEATURE(SDL, [SDL plugin], sdlvideosink, [
+ AM_PATH_SDL(, HAVE_SDL=yes, HAVE_SDL=no)
 ])
 
 dnl *** shout ***
@@ -1147,6 +1147,7 @@ sys/xvideo/Makefile
 ext/Makefile
 ext/esd/Makefile
 ext/mad/Makefile
+ext/sdl/Makefile
 ext/vorbis/Makefile
 )
 
