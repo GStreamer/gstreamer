@@ -83,7 +83,6 @@ static void	gst_queue_get_property		(GObject       *object,
 						 GValue        *value,
 						 GParamSpec    *pspec);
 
-static GstCaps *gst_queue_getcaps		(GstPad        *pad);
 static GstPadLinkReturn
 		gst_queue_link			(GstPad        *pad,
 						 const GstCaps *caps);
@@ -252,14 +251,14 @@ gst_queue_init (GstQueue *queue)
   gst_pad_set_chain_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_chain));
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
   gst_pad_set_link_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_link));
-  gst_pad_set_getcaps_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_getcaps));
+  gst_pad_set_getcaps_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_active (queue->sinkpad, TRUE);
 
   queue->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_get_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_get));
   gst_element_add_pad (GST_ELEMENT (queue), queue->srcpad);
   gst_pad_set_link_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_link));
-  gst_pad_set_getcaps_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_getcaps));
+  gst_pad_set_getcaps_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_event_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_handle_src_event));
   gst_pad_set_active (queue->srcpad, TRUE);
 
@@ -333,17 +332,6 @@ static GstPadLinkReturn
 gst_queue_link (GstPad  *pad, const GstCaps *caps)
 {
   return gst_pad_try_set_caps (gst_queue_otherpad (pad), caps);
-}
-
-static GstCaps *
-gst_queue_getcaps (GstPad  *pad)
-{
-  GstPad *otherpad = GST_PAD_PEER (gst_queue_otherpad (pad));
-
-  if (otherpad)
-    return gst_pad_get_caps (otherpad);
-
-  return gst_caps_new_any ();
 }
 
 static void

@@ -1,3 +1,8 @@
+2003-12-31  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstqueue.c: (gst_queue_init):
+	  use gst_pad_proxy_getcaps()
+
 2003-12-31  David Schleef  <ds@schleef.org>
 
 	* gst/elements/gstshaper.c: (gst_shaper_link):
