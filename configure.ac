@@ -1432,7 +1432,7 @@ GST_CHECK_FEATURE(LIBPNG, [snapshot plug-in], snapshot, [
   AC_SUBST(LIBPNG_LIBS)
 ])
 
-dnl *** speex 1.0.x or >= 1.1.5 ***
+dnl *** speex >= 1.0.4 or >= 1.1.5 ***
 dnl   1.1.4 and earlier were not API/ABI compatible with 1.0
 dnl   1.1.6 is the first to use a .pc/pkg-config file ***
 dnl   speex_jitter.h is 1.1.x only
@@ -1455,12 +1455,17 @@ GST_CHECK_FEATURE(SPEEX, [speex plug-in], speex, [
         ],[
           HAVE_SPEEX="no"
         ])
-      ], [
+      ],[
         dnl speex 1.0.x :
-        HAVE_SPEEX="yes"
-        SPEEX_LIBS="-lspeex"
-        AC_SUBST(SPEEX_CFLAGS)
-        AC_SUBST(SPEEX_LIBS)
+          AC_CHECK_DECL(SPEEX_GET_LOOKAHEAD, [
+            dnl speex 1.0.4
+            HAVE_SPEEX="yes"
+            SPEEX_LIBS="-lspeex"
+            AC_SUBST(SPEEX_CFLAGS)
+            AC_SUBST(SPEEX_LIBS)
+        ],[
+            AC_MSG_NOTICE(You need at least 1.0.4 to compile the speex plugin)
+        ])
       ])
     ])
   ])
