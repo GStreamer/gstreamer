@@ -92,6 +92,7 @@ struct _GstDParamClass {
 	GstObjectClass parent_class;
 
 	/* signal callbacks */
+	void (*value_changed) (GstDParam *dparam);
 };
 
 

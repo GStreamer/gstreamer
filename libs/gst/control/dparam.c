@@ -39,6 +39,13 @@ enum {
 	ARG_VALUE_INT64,
 };
 
+enum {
+  VALUE_CHANGED,
+  LAST_SIGNAL
+};
+
+static guint gst_dparam_signals[LAST_SIGNAL] = { 0 };
+
 GType 
 gst_dparam_get_type(void) {
 	static GType dparam_type = 0;
@@ -89,6 +96,10 @@ gst_dparam_class_init (GstDParamClass *klass)
                      
 	gobject_class->dispose = gst_dparam_dispose;
 	
+	gst_dparam_signals[VALUE_CHANGED] =
+		g_signal_new ("value_changed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+		              G_STRUCT_OFFSET (GstDParamClass, value_changed), NULL, NULL,
+		              gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
 	/*gstobject_class->save_thyself = gst_dparam_save_thyself; */
 
 }
@@ -150,27 +161,30 @@ gst_dparam_set_property (GObject *object, guint prop_id, const GValue *value, GP
 		case ARG_VALUE_FLOAT:
 			GST_DEBUG(GST_CAT_PARAMS, "setting value from %f to %f", dparam->value_float, g_value_get_float (value));
 			dparam->value_float = g_value_get_float (value);
-			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
 			GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam);
+			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
 			break;
 			
 		case ARG_VALUE_INT:
 			GST_DEBUG(GST_CAT_PARAMS, "setting value from %d to %d", dparam->value_int, g_value_get_int (value));
 			dparam->value_int = g_value_get_int (value);
-			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
 			GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam);
+			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
 			break;
 			
 		case ARG_VALUE_INT64:
 			GST_DEBUG(GST_CAT_PARAMS, "setting value from %lld to %lld", dparam->value_int64, g_value_get_int64 (value));
 			dparam->value_int64 = g_value_get_int (value);
-			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
 			GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam);
+			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
 			break;
 			
 		default:
 			break;
 	}
+
+	/* note that this signal is sent while we still have the lock. */
+	g_signal_emit (G_OBJECT (dparam), gst_dparam_signals[VALUE_CHANGED], 0);
 	GST_DPARAM_UNLOCK(dparam);
 }
 
@@ -199,9 +213,9 @@ gst_dparam_do_update_default (GstDParam *dparam, gint64 timestamp, GValue *value
 			break;
 	}
 
-	GST_DPARAM_READY_FOR_UPDATE(dparam) = FALSE;
 	GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam) = timestamp;
 	GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = timestamp;
+	GST_DPARAM_READY_FOR_UPDATE(dparam) = FALSE;
 
 	GST_DPARAM_UNLOCK(dparam);
 }
