@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-02 13:00+0200\n"
+"POT-Creation-Date: 2004-11-12 19:06+0100\n"
 "PO-Revision-Date: 2004-10-04 15:54+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -14,49 +14,106 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:346 ext/sndfile/gstsf.c:621
+#: ext/alsa/gstalsamixertrack.c:83
+msgid "Master"
+msgstr ""
+
+#: ext/alsa/gstalsamixertrack.c:84 sys/oss/gstossmixer.c:100
+msgid "Bass"
+msgstr "Bass"
+
+#: ext/alsa/gstalsamixertrack.c:85 sys/oss/gstossmixer.c:102
+msgid "Treble"
+msgstr "Diskant"
+
+#: ext/alsa/gstalsamixertrack.c:86 sys/oss/gstossmixer.c:106
+msgid "PCM"
+msgstr "PCM"
+
+#: ext/alsa/gstalsamixertrack.c:87 sys/oss/gstossmixer.c:104
+msgid "Synth"
+msgstr "Synth"
+
+#: ext/alsa/gstalsamixertrack.c:88 sys/oss/gstossmixer.c:110
+msgid "Line-in"
+msgstr "Linje inn"
+
+#: ext/alsa/gstalsamixertrack.c:89 sys/oss/gstossmixer.c:114
+msgid "CD"
+msgstr "CD"
+
+#: ext/alsa/gstalsamixertrack.c:90 sys/oss/gstossmixer.c:112
+msgid "Microphone"
+msgstr "Mikrofon"
+
+#: ext/alsa/gstalsamixertrack.c:91
+#, fuzzy
+msgid "PC Speaker"
+msgstr "Høyttaler"
+
+#: ext/alsa/gstalsamixertrack.c:92
+msgid "Playback"
+msgstr ""
+
+#: ext/alsa/gstalsamixertrack.c:93
+msgid "Capture"
+msgstr ""
+
+#: ext/audiofile/gstafsink.c:344 ext/sndfile/gstsf.c:624
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kunne ikke åpne filen «%s» for skriving."
 
-#: ext/audiofile/gstafsink.c:368 ext/audiofile/gstafsrc.c:373
+#: ext/audiofile/gstafsink.c:366 ext/audiofile/gstafsrc.c:371
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Feil under lukking av fil «%s»."
 
-#: ext/audiofile/gstafsrc.c:320
+#: ext/audiofile/gstafsrc.c:318
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunne ikke åpne filen «%s» for lesing."
 
-#: ext/cdparanoia/gstcdparanoia.c:657 ext/cdparanoia/gstcdparanoia.c:673
+#: ext/cdparanoia/gstcdparanoia.c:273
+msgid "discid"
+msgstr ""
+
+#: ext/cdparanoia/gstcdparanoia.c:273
+msgid "CDDA discid for metadata retrieval"
+msgstr ""
+
+#: ext/cdparanoia/gstcdparanoia.c:677 ext/cdparanoia/gstcdparanoia.c:693
 msgid "Could not open CD device for reading."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1067 ext/gnomevfs/gstgnomevfssrc.c:1090
+#: ext/gnomevfs/gstgnomevfssrc.c:1157
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
 msgstr "Kunne ikke åpne VFS-fil «%s» for lesing."
 
-#: ext/gnomevfs/gstgnomevfssink.c:344
+#: ext/gnomevfs/gstgnomevfssrc.c:1165
+msgid "No filename given."
+msgstr "Ingen filnavn oppgitt."
+
+#: ext/gnomevfs/gstgnomevfssink.c:432
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Kunne ikke åpne VFS-fil «%s» for skriving: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:351
+#: ext/gnomevfs/gstgnomevfssink.c:439
 msgid "No filename given"
 msgstr "Ingen filnavn oppgitt"
 
-#: ext/gnomevfs/gstgnomevfssink.c:377
+#: ext/gnomevfs/gstgnomevfssink.c:467
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunne ikke lukke VFS-fil «%s»."
 
-#: ext/sndfile/gstsf.c:582
+#: ext/sndfile/gstsf.c:585
 msgid "No filename specified."
 msgstr "Ingen filnavn oppgitt."
 
-#: ext/sndfile/gstsf.c:835
+#: ext/sndfile/gstsf.c:838
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kunne ikke skrive til fil «%s»."
@@ -67,7 +124,10 @@ msgstr ""
 
 #: gst-libs/gst/play/play.c:110
 #, c-format
-msgid "The %s element could not be found. This element is essential for playback. Please install the right plug-in and verify that it works by running 'gst-inspect %s'"
+msgid ""
+"The %s element could not be found. This element is essential for playback. "
+"Please install the right plug-in and verify that it works by running 'gst-"
+"inspect %s'"
 msgstr ""
 
 #: gst-libs/gst/play/play.c:139
@@ -116,7 +176,7 @@ msgstr ""
 msgid "Could not close video device \"%s\"."
 msgstr ""
 
-#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:123
+#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:124
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr ""
@@ -131,7 +191,7 @@ msgstr ""
 msgid "Could not access device \"%s\", check its permissions."
 msgstr ""
 
-#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:167
+#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:168
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Enhet «%s» eksisterer ikke."
@@ -154,37 +214,9 @@ msgstr ""
 msgid "Volume"
 msgstr "Volum"
 
-#: sys/oss/gstossmixer.c:100
-msgid "Bass"
-msgstr "Bass"
-
-#: sys/oss/gstossmixer.c:102
-msgid "Treble"
-msgstr "Diskant"
-
-#: sys/oss/gstossmixer.c:104
-msgid "Synth"
-msgstr "Synth"
-
-#: sys/oss/gstossmixer.c:106
-msgid "PCM"
-msgstr "PCM"
-
 #: sys/oss/gstossmixer.c:108
 msgid "Speaker"
 msgstr "Høyttaler"
-
-#: sys/oss/gstossmixer.c:110
-msgid "Line-in"
-msgstr "Linje inn"
-
-#: sys/oss/gstossmixer.c:112
-msgid "Microphone"
-msgstr "Mikrofon"
-
-#: sys/oss/gstossmixer.c:114
-msgid "CD"
-msgstr "CD"
 
 #: sys/oss/gstossmixer.c:116
 msgid "Mixer"
@@ -250,11 +282,11 @@ msgstr "Radio"
 msgid "Monitor"
 msgstr "Monitor"
 
-#: sys/v4l/v4l_calls.c:158
+#: sys/v4l/v4l_calls.c:159
 msgid "No device specified."
 msgstr "Ingen enhet oppgitt."
 
-#: sys/v4l/v4l_calls.c:171 sys/v4l2/v4l2_calls.c:397
+#: sys/v4l/v4l_calls.c:172 sys/v4l2/v4l2_calls.c:400
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kunne ikke åpne enhet «%s» for lesing og skriving."
@@ -267,20 +299,17 @@ msgstr "Enheten er ikke åpen."
 msgid "Device is open."
 msgstr "Enheten er åpen."
 
-#: sys/v4l2/v4l2_calls.c:411
+#: sys/v4l2/v4l2_calls.c:414
 #, c-format
 msgid "Device \"%s\" is not a capture device."
 msgstr "Enhet «%s» kan ikke fange data."
 
-#: sys/v4l2/v4l2src_calls.c:255
+#: sys/v4l2/v4l2src_calls.c:256
 #, c-format
 msgid "Could not get buffers from device \"%s\"."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:264
+#: sys/v4l2/v4l2src_calls.c:265
 #, c-format
 msgid "Could not get enough buffers from device \"%s\"."
 msgstr ""
-
-#~ msgid "No filename given."
-#~ msgstr "Ingen filnavn oppgitt."

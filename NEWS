@@ -1,4 +1,75 @@
-This is GStreamer Plugins 0.8.5
+This is GStreamer Plugins 0.8.6
+  
+Changes since 0.8.5:
+    
+      * New translation in this release: Norwegian Bokmaal
+      * New translation in this release: Luca Ferretti
+      * new element: polypsink
+      * new element: musepack decoder
+      * alsa fixes
+      * playbin fixes
+      * support for cd://, cdda:// and dv:// uri
+      * v4lsrc fixes
+      * id3demux fixes
+      * avc-based Firewire camera support
+      * speex fixes
+      * tcp fixes
+      * multifdsink improvements
+      * ffmpegcolorspace fixes
+      * chained ogg support
+
+Bugs fixed since 0.8.5:
+    
+      * 140994 : [mplex] configure failure
+      * 143961 : MusePack codec support
+      * 144389 : alsasink dies after some time playing
+      * 144436 : opt / oggmux problem (endless interrupt event loop)
+      * 150061 : gstreamer error in rhythmbox: vorbisdec(27925) vorbisdec....
+      * 150576 : pad v4l2src0:src returned caps that are not a real subset...
+      * 151059 : [sdlvideosink] doesn't implement overlay properly
+      * 151064 : asfdemux crash
+      * 151122 : playing a m4a-file using " spider " doesn't work
+      * 152750 : audioconvert crash
+      * 154781 : [playbin/totem] avi file with just divx video (no audio) ...
+      * 154784 : [playbin/totem] playing avi with 320x240 raw yuv video an...
+      * 154788 : Xv video in another window
+      * 154807 : auparse doesn't error out on invalid files
+      * 154834 : [dvdreadsrc] immediate EOS when specifying a title > 0
+      * 154903 : cdparanoia plugin doesn't handle URIs
+      * 154967 : [wavenc] missing cast and terminator in gst_event_new_dis...
+      * 155008 : LoTr movie segfaulting with gstreamer+totem
+      * 155223 : memleak in wavparse
+      * 155814 : gst_bin_iterate() gets stuck on some images
+      * 155864 : [oggdemux] regression with files without proper EOS flag
+      * 156372 : gst-plugins fails to build on AMD64
+      * 156387 : [oggdemux] seeking is off by up to 30 secs (regression)
+      * 156477 : Ogg Vorbis file fails to play. Works with ogg123
+      * 156488 : Introducing device for alsasink in gconf makes totem crash
+      * 156565 : gst_bin_remove crashes deep down
+      * 156910 : Rhythmbox crash at the end of this song
+      * 157032 : Patch for dispose/finalize functions in gst-plugins
+      * 157281 : crash with totem-gst
+      * 157543 : [rtpgsmparse] missing NULL terminator to gst_caps_new_sim...
+      * 157548 : [vorbisenc] premature and/or missing terminator to gst_ca...
+      * 157632 : C99 style variable initialization(multifilesrc_test.c)
+      * 157964 : smoothwave display warnings when launching gst-register
+      * 157986 : [vorbisdec] fix warning when querying while draining
+      * 158006 : alsasink/rhythmbox don't like each other anymore
+      * 158125 : gstreamer apps have serious issues with 0.8.5.2 plugins & ...
+      * 158221 : Build fix for gstreamer-plugins 0.8.5.3
+      * 158365 : Fix for playbin hangs
+      * 158375 : fix segfault in mp3 typefinding
+      * 158462 : [dvdreadsrc] invalid reads / is_nav_pack assertion failure
+      * 158832 : pngenc drops GstBuffer extra info (timestamp, length...)
+      * 158976 : [oggdemux] seeking broken again [regression]
+      * 159186 : [PATCH] videorate doesn't handle all colorspaces
+      * 159187 : [PATCH] v4l probes too much and should cache
+
+API changes since 0.8.5:
+
+- API additions:
+    
+* A new v4lsrc property, autoprobe-fps, has been added.
 
 Changes since 0.8.4:
 
@@ -367,3 +438,4 @@ Bugs fixed since 0.7.4:
       * 135038 : port gst-shorten to the new caps system
       * 135042 : fix tag writing in lame
       * 135116 : gstflacenc.c fails to build in NetBSD
+

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-10-06 18:20+0200\n"
+"POT-Creation-Date: 2004-11-12 19:06+0100\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -16,56 +16,109 @@ msgstr ""
 "Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :  (n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: ext/audiofile/gstafsink.c:345 ext/sndfile/gstsf.c:618
+#: ext/alsa/gstalsamixertrack.c:83
+msgid "Master"
+msgstr ""
+
+#: ext/alsa/gstalsamixertrack.c:84 sys/oss/gstossmixer.c:100
+msgid "Bass"
+msgstr "Бас"
+
+#: ext/alsa/gstalsamixertrack.c:85 sys/oss/gstossmixer.c:102
+msgid "Treble"
+msgstr "Шум"
+
+#: ext/alsa/gstalsamixertrack.c:86 sys/oss/gstossmixer.c:106
+msgid "PCM"
+msgstr "ПЦМ"
+
+#: ext/alsa/gstalsamixertrack.c:87 sys/oss/gstossmixer.c:104
+msgid "Synth"
+msgstr "Синт."
+
+#: ext/alsa/gstalsamixertrack.c:88 sys/oss/gstossmixer.c:110
+msgid "Line-in"
+msgstr "Ул.лин."
+
+#: ext/alsa/gstalsamixertrack.c:89 sys/oss/gstossmixer.c:114
+msgid "CD"
+msgstr "ЦД"
+
+#: ext/alsa/gstalsamixertrack.c:90 sys/oss/gstossmixer.c:112
+msgid "Microphone"
+msgstr "Микрофон"
+
+#: ext/alsa/gstalsamixertrack.c:91
+#, fuzzy
+msgid "PC Speaker"
+msgstr "Звучник"
+
+#: ext/alsa/gstalsamixertrack.c:92
+msgid "Playback"
+msgstr ""
+
+#: ext/alsa/gstalsamixertrack.c:93
+msgid "Capture"
+msgstr ""
+
+#: ext/audiofile/gstafsink.c:344 ext/sndfile/gstsf.c:624
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Не могу да отворим датотеку „%s“ ради уписа."
 
-#: ext/audiofile/gstafsink.c:367 ext/audiofile/gstafsrc.c:373
+#: ext/audiofile/gstafsink.c:366 ext/audiofile/gstafsrc.c:371
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Грешка при затварању датотеке „%s“."
 
-#: ext/audiofile/gstafsrc.c:320
+#: ext/audiofile/gstafsrc.c:318
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не могу да отворим датотеку „%s“ ради читања."
 
-#: ext/cdparanoia/gstcdparanoia.c:657 ext/cdparanoia/gstcdparanoia.c:673
+#: ext/cdparanoia/gstcdparanoia.c:273
+msgid "discid"
+msgstr ""
+
+#: ext/cdparanoia/gstcdparanoia.c:273
+msgid "CDDA discid for metadata retrieval"
+msgstr ""
+
+#: ext/cdparanoia/gstcdparanoia.c:677 ext/cdparanoia/gstcdparanoia.c:693
 msgid "Could not open CD device for reading."
 msgstr "Не могу да отворим ЦД уређај ради читања."
 
 # Виртуелни Систем Датотека
-#: ext/gnomevfs/gstgnomevfssrc.c:1156
+#: ext/gnomevfs/gstgnomevfssrc.c:1157
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
 msgstr "Не могу да отворим ВСД датотеку „%s“ ради читања."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1164
+#: ext/gnomevfs/gstgnomevfssrc.c:1165
 #, fuzzy
 msgid "No filename given."
 msgstr "Име датотеке није задато."
 
-#: ext/gnomevfs/gstgnomevfssink.c:428
+#: ext/gnomevfs/gstgnomevfssink.c:432
 #, fuzzy, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Не могу да отворим ВСД датотеку „%s“ ради уписа."
 
-#: ext/gnomevfs/gstgnomevfssink.c:435
+#: ext/gnomevfs/gstgnomevfssink.c:439
 #, fuzzy
 msgid "No filename given"
 msgstr "Име датотеке није задато."
 
-#: ext/gnomevfs/gstgnomevfssink.c:463
+#: ext/gnomevfs/gstgnomevfssink.c:467
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Не могу да затворим ВСД датотеку „%s“."
 
-#: ext/sndfile/gstsf.c:579
+#: ext/sndfile/gstsf.c:585
 msgid "No filename specified."
 msgstr "Име датотеке није задато."
 
-#: ext/sndfile/gstsf.c:832
+#: ext/sndfile/gstsf.c:838
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Не могу да пишем у датотеку „%s“."
@@ -88,32 +141,32 @@ msgid ""
 "Please install one and restart."
 msgstr ""
 
-#: sys/dxr3/dxr3audiosink.c:297
+#: sys/dxr3/dxr3audiosink.c:298
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
 msgstr "Не могу да отворим звучни уређај „%s“ ради уписа."
 
-#: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:283
+#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
 msgstr "Не могу да отворим управљачки уређај „%s“ ради уписа."
 
-#: sys/dxr3/dxr3audiosink.c:342
+#: sys/dxr3/dxr3audiosink.c:343
 #, c-format
 msgid "Could not configure audio device \"%s\"."
 msgstr "Не могу да подесим звучни уређај „%s“."
 
-#: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
+#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
 msgstr "Не могу да поставим звучни уређај „%s“ на %d Hz."
 
-#: sys/dxr3/dxr3audiosink.c:421
+#: sys/dxr3/dxr3audiosink.c:422
 #, c-format
 msgid "Could not close audio device \"%s\"."
 msgstr "Не могу да отворим радио уређај '%s'"
 
-#: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:308
+#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
 #, c-format
 msgid "Could not close control device \"%s\"."
 msgstr "Не могу да затворим управљачки уређај „%s“."
@@ -128,7 +181,7 @@ msgstr "Не могу да отворим видео уређај „%s“ ра�
 msgid "Could not close video device \"%s\"."
 msgstr "Не могу да затворим видео уређај „%s“."
 
-#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:123
+#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:124
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Не могу да пишем на видео уређај „%s“."
@@ -166,37 +219,9 @@ msgstr ""
 msgid "Volume"
 msgstr "Јачина звука"
 
-#: sys/oss/gstossmixer.c:100
-msgid "Bass"
-msgstr "Бас"
-
-#: sys/oss/gstossmixer.c:102
-msgid "Treble"
-msgstr "Шум"
-
-#: sys/oss/gstossmixer.c:104
-msgid "Synth"
-msgstr "Синт."
-
-#: sys/oss/gstossmixer.c:106
-msgid "PCM"
-msgstr "ПЦМ"
-
 #: sys/oss/gstossmixer.c:108
 msgid "Speaker"
 msgstr "Звучник"
-
-#: sys/oss/gstossmixer.c:110
-msgid "Line-in"
-msgstr "Ул.лин."
-
-#: sys/oss/gstossmixer.c:112
-msgid "Microphone"
-msgstr "Микрофон"
-
-#: sys/oss/gstossmixer.c:114
-msgid "CD"
-msgstr "ЦД"
 
 #: sys/oss/gstossmixer.c:116
 msgid "Mixer"
@@ -266,7 +291,7 @@ msgstr "Праћење"
 msgid "No device specified."
 msgstr "Уређај није наведен."
 
-#: sys/v4l/v4l_calls.c:172 sys/v4l2/v4l2_calls.c:397
+#: sys/v4l/v4l_calls.c:172 sys/v4l2/v4l2_calls.c:400
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Не могу да отворим уређај „%s“ ради читања и уписа."
@@ -279,17 +304,17 @@ msgstr "Уређај није отворен."
 msgid "Device is open."
 msgstr "Уређај је отворен."
 
-#: sys/v4l2/v4l2_calls.c:411
+#: sys/v4l2/v4l2_calls.c:414
 #, c-format
 msgid "Device \"%s\" is not a capture device."
 msgstr "Уређај „%s“ не представља уређај за снимање."
 
-#: sys/v4l2/v4l2src_calls.c:255
+#: sys/v4l2/v4l2src_calls.c:256
 #, c-format
 msgid "Could not get buffers from device \"%s\"."
 msgstr "Не могу да примим бафере са уређаја „%s“."
 
-#: sys/v4l2/v4l2src_calls.c:264
+#: sys/v4l2/v4l2src_calls.c:265
 #, c-format
 msgid "Could not get enough buffers from device \"%s\"."
 msgstr "Не могу да примим довољно бафера са уређаја „%s“."
