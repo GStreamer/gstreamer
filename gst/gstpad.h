@@ -308,7 +308,7 @@ typedef enum {
   GST_PAD_TEMPLATE_FLAG_LAST	= GST_OBJECT_FLAG_LAST + 4
 } GstPadTemplateFlags;
 
-#define GST_PAD_TEMPLATE_IS_FIXED(templ)	(GST_FLAG_IS_SET(templ), GST_PAD_TEMPLATE_FIXED)
+#define GST_PAD_TEMPLATE_IS_FIXED(templ)	(GST_FLAG_IS_SET(templ, GST_PAD_TEMPLATE_FIXED))
 
 struct _GstPadTemplate {
   GstObject	   object;
