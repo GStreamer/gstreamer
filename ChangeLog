@@ -1,3 +1,9 @@
+2004-05-17  Benjamin Otte  <otte@gnome.org>
+
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_loop):
+	  use correct variable when determining amount of data to skip so we
+	  don't skip into the void and segfault
+
 2004-05-16  Benjamin Otte  <otte@gnome.org>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_audio_caps):
