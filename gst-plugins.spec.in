@@ -109,6 +109,8 @@ GStreamer support libraries header files.
 %files -n gstreamer-plugins-devel
 %defattr(-, root, root)
 %{_includedir}/gst-plugins-%{version}/gst/audio/audio.h
+%{_includedir}/gst-plugins-%{version}/gst/floatcast/floatcast.h
+%{_includedir}/gst-plugins-%{version}/gst/gconf/gconf.h
 %{_includedir}/gst-plugins-%{version}/gst/idct/idct.h
 %{_includedir}/gst-plugins-%{version}/gst/resample/resample.h
 %{_includedir}/gst-plugins-%{version}/gst/riff/riff.h
@@ -743,6 +745,7 @@ integer to float conversion, LAW conversion and level detection plug-ins.
 # %{_libdir}/gst/libgstfloatcast.so
 %{_libdir}/gst/libgstcutter.so
 %{_libdir}/gst/libgstfilter.so
+%{_libdir}/gst/libmixmatrix.so
 
 ### audio-formats ###
 %package -n gstreamer-audio-formats
@@ -897,12 +900,18 @@ processed with the lavtools from mjpegtools.
 @USE_GCONF_TRUE@%files -n gstreamer-GConf
 @USE_GCONF_TRUE@%defattr(-, root, root)
 @USE_GCONF_TRUE@%{_sysconfdir}/gconf/schemas/gstreamer.schemas
+@USE_GCONF_TRUE@%{_libdir}/libgstgconf.so
 
 @USE_GCONF_TRUE@%post -n gstreamer-GConf
 @USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
 @USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
 
 %changelog
+* Thu Aug 27 2002 Christian Schaller <Uraeus@linuxrising.org>
+- Fixed USE_DV_TRUE to USE_LIBDV_TRUE
+- Added Gconf and floatcast headers to gstreamer-plugins-devel package
+- Added mixmatrix plugin to audio-effects package
+
 * Thu Jul 11 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - fixed oss package to buildrequire instead of require glibc headers
 
