@@ -59,7 +59,7 @@ gst_v4l_set_overlay (GstV4lElement * v4lelement)
     return FALSE;
 
   /* start v4l-conf */
-  buff = g_strdup_printf ("v4l-conf -q -c %s -d %s",
+  buff = g_strdup_printf ("v4l-conf -q -c %s -d %s 2> /dev/null",
       v4lelement->videodev, v4lelement->display);
 
   switch (system (buff)) {
