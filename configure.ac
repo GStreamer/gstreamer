@@ -728,7 +728,7 @@ AM_CONDITIONAL(HAVE_LIBGSM,         test "x$HAVE_LIBGSM" = "xyes")
 AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
 
 
-GST_CFLAGS="$GST_CFLAGS -I\$(top_srcdir)/gst-libs"
+GST_CFLAGS="$GST_CFLAGS -I\$(top_srcdir)/gst-libs -Wall"
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
 
