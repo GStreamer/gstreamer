@@ -42,8 +42,11 @@ PDFFILES=gstreamer-manual.pdf
 PSFILES=gstreamer-manual.ps
 
 
-htmldocs: gstreamer-manual/gstreamer.html
-	ln -s ../images gstreamer-manual || true
+htmldocs: gstreamer-manual/gstreamer.html gstreamer-manual/images
+
+gstreamer-manual/images:
+	ln -s ../images gstreamer-manual
+
 htmldist: 
 	@if [ -r gstreamer-manual/gstreamer.html ] ; then \
 	    echo "Adding HTML manual to distribution" ; \
