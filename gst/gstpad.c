@@ -1455,7 +1455,7 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
 
   GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
 
-  g_return_if_fail (GST_PAD_DIRECTION (pad) != GST_PAD_SRC);
+  g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
   g_return_if_fail (peer != NULL);
   
   if (peer->pushfunc) {
@@ -1483,7 +1483,7 @@ gst_pad_pull (GstPad *pad)
   
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
 
-  g_return_val_if_fail (GST_PAD_DIRECTION (pad) != GST_PAD_SINK, NULL);
+  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, NULL);
   g_return_val_if_fail (peer != NULL, NULL);
 
   if (peer->pullfunc) {
@@ -1517,7 +1517,7 @@ gst_pad_pullregion (GstPad *pad, GstRegionType type, guint64 offset, guint64 len
 {
   GstRealPad *peer = GST_RPAD_PEER(pad);
   
-  g_return_val_if_fail (GST_PAD_DIRECTION (pad) != GST_PAD_SINK, NULL);
+  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, NULL);
   g_return_val_if_fail (peer != NULL, NULL);
 
   GST_DEBUG_ENTER("(%s:%s,%d,%lld,%lld)",GST_DEBUG_PAD_NAME(pad),type,offset,len);
