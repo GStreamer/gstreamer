@@ -1,12 +1,13 @@
 2004-05-28  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* gst/elements    : gstaggregator.c gstfakesink.c gstfakesrc.c
-                            gstmd5sink.c gstshaper.c gsttee.c
-                            gsttypefindelement.c
+			    gstmd5sink.c gstshaper.c gsttee.c
+			    gsttypefindelement.c
 	* gst/schedulers  : gstbasicscheduler.c gstoptimalscheduler.c
 
 	  - removing trailing commas at end of enums
-	    it is correct C99 code but C90 compilers would complain (AIX, Forte, ...)
+	    it is correct C99 code but C90 compilers would complain
+	    (AIX, Forte, ...)
 	    ('should' fix #143290, at least partially)
 
 2004-05-27  Wim Taymans  <wim@fluendo.com>
@@ -610,8 +611,8 @@
 
 2004-05-03  David Schleef  <ds@schleef.org>
 
-	* testsuite/caps/deserialize.c: (main): Use the srcdir environment variable
-	  to find our source file.
+	* testsuite/caps/deserialize.c: (main): Use the srcdir environment
+	  variable to find our source file.
 
 2004-05-03  David Schleef  <ds@schleef.org>
 
@@ -627,7 +628,7 @@
 	* libs/gst/bytestream/Makefile.am:
 	* libs/gst/bytestream/adapter.c: 
 	* libs/gst/bytestream/adapter.h:
-	  add GstAdapter, similar to bytestream, but oesn't require ugly event
+	  add GstAdapter, similar to bytestream, but doesn't require ugly event
 	  handling or uglier loopbased elements
 
 2004-05-03  David Schleef  <ds@schleef.org>
