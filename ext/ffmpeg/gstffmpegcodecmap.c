@@ -147,7 +147,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
       caps = gst_caps_append(caps,
              GST_FF_VID_CAPS_NEW ("ffmpeg_divx",
                                   "video/divx",
-                                    "divxversion",  GST_PROPS_INT (5)
+				    "divxversion",  GST_PROPS_INT (5)
                                  ));
       caps = gst_caps_append(caps,
              GST_FF_VID_CAPS_NEW ("ffmpeg_xvid",
@@ -534,4 +534,160 @@ gst_ffmpeg_codectype_to_caps (enum CodecType  codec_type,
   }
 
   return caps;
+}
+
+/* Convert a GstCaps (audio/raw) to a FFMPEG SampleFmt
+ * and other audio properties in a AVCodecContext.
+ *
+ * For usefullness, see below
+ */
+
+static void
+gst_ffmpeg_caps_to_smpfmt (GstCaps        *caps,
+                           AVCodecContext *context)
+{
+  if (gst_caps_has_property_typed (caps, "width",
+				   GST_PROPS_INT_TYPE) &&
+      gst_caps_has_property_typed (caps, "depth",
+				   GST_PROPS_INT_TYPE) &&
+      gst_caps_has_property_typed (caps, "signed",
+				   GST_PROPS_BOOLEAN_TYPE) &&
+      gst_caps_has_property_typed (caps, "endianness",
+				   GST_PROPS_INT_TYPE)) {
+    gint depth = 0, width = 0, endianness = 0;
+    gboolean signedness = FALSE;
+    gst_caps_get (caps,
+                  "width",      &width,
+                  "depth",      &depth,
+                  "endianness", &endianness,
+                  "signed",     &signedness,
+                  NULL);
+    if (width == 16 && depth == 16 &&
+        endianness == G_BYTE_ORDER && signedness == TRUE) {
+      context->sample_fmt = SAMPLE_FMT_S16;
+    }
+  }
+
+  if (gst_caps_has_property_typed (caps, "channels",
+				   GST_PROPS_INT_TYPE)) {
+    gst_caps_get_int (caps, "rate", &context->channels);
+  }
+
+  if (gst_caps_has_property_typed (caps, "rate",
+				   GST_PROPS_INT_TYPE)) {
+    gst_caps_get_int (caps, "rate", &context->sample_rate);
+  }
+}
+
+/* Convert a GstCaps (video/raw) to a FFMPEG PixFmt
+ * and other video properties in a AVCodecContext.
+ *
+ * For usefullness, see below
+ */
+
+static void
+gst_ffmpeg_caps_to_pixfmt (GstCaps        *caps,
+                           AVCodecContext *context)
+{
+  if (gst_caps_has_property_typed (caps, "width",
+				   GST_PROPS_INT_TYPE) &&
+      gst_caps_has_property_typed (caps, "height",
+				   GST_PROPS_INT_TYPE)) {
+    gst_caps_get (caps,
+                  "width",  &context->width,
+                  "height", &context->height,
+                  NULL);
+  }
+
+  if (gst_caps_has_property_typed (caps, "format",
+				   GST_PROPS_FOURCC_TYPE)) {
+    guint32 fourcc;
+    gst_caps_get_fourcc_int (caps, "format", &fourcc);
+
+    switch (fourcc) {
+      case GST_MAKE_FOURCC ('Y','U','Y','2'):
+        context->pix_fmt = PIX_FMT_YUV422;
+        break;
+      case GST_MAKE_FOURCC ('I','4','2','0'):
+        context->pix_fmt = PIX_FMT_YUV420P;
+        break;
+      case GST_MAKE_FOURCC ('Y','4','1','P'):
+        context->pix_fmt = PIX_FMT_YUV411P;
+        break;
+      case GST_MAKE_FOURCC ('R','G','B',' '):
+        if (gst_caps_has_property_typed (caps, "depth",
+					 GST_PROPS_INT_TYPE) &&
+	    gst_caps_has_property_typed (caps, "endianness",
+					 GST_PROPS_INT_TYPE)) {
+          gint depth = 0, endianness = 0;
+          gst_caps_get_int (caps, "depth", &depth);
+          gst_caps_get_int (caps, "endianness", &endianness);
+
+          switch (depth) {
+            case 32:
+              if (endianness == G_BYTE_ORDER)
+                context->pix_fmt = PIX_FMT_RGBA32;
+              break;
+            case 24:
+              switch (endianness) {
+                case G_LITTLE_ENDIAN:
+                  context->pix_fmt = PIX_FMT_BGR24;
+                  break;
+                case G_BIG_ENDIAN:
+                  context->pix_fmt = PIX_FMT_RGB24;
+                  break;
+                default:
+                  /* nothing */
+                  break;
+              }
+              break;
+            case 16:
+              if (endianness == G_BYTE_ORDER)
+                context->pix_fmt = PIX_FMT_RGB565;
+              break;
+            case 15:
+              if (endianness == G_BYTE_ORDER)
+                context->pix_fmt = PIX_FMT_RGB555;
+              break;
+            default:
+              /* nothing */
+              break;
+          }
+        }
+        break;
+      default:
+        /* nothing */
+        break;
+    }
+  }
+}
+
+/* Convert a GstCaps and a FFMPEG codec Type to a
+ * AVCodecContext. If the context is ommitted, no fixed values
+ * for video/audio size will be included in the context
+ *
+ * CodecType is primarily meant for uncompressed data GstCaps!
+ */
+
+void
+gst_ffmpeg_caps_to_codectype (enum CodecType  type,
+                              GstCaps        *caps,
+                              AVCodecContext *context)
+{
+  if (context == NULL)
+    return;
+
+  switch (type) {
+    case CODEC_TYPE_VIDEO:
+      gst_ffmpeg_caps_to_pixfmt (caps, context);
+      break;
+
+    case CODEC_TYPE_AUDIO:
+      gst_ffmpeg_caps_to_smpfmt (caps, context);
+      break;
+
+    default:
+      /* unknown */
+      break;
+  }
 }
