@@ -1,3 +1,8 @@
+2004-04-02  David Schleef  <ds@schleef.org>
+
+	* ext/gdk_pixbuf/Makefile.am:  Make sure gstgdkanimation.h is
+	disted (bug #138914)
+
 2004-04-01  Benjamin Otte  <otte@gnome.org>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_change_state),
