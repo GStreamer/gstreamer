@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 #include <string.h>
+#include <math.h>
 
 /* First, include the header file for the plugin, to bring in the
  * object definition and other useful things.
@@ -824,8 +825,9 @@ gst_dvdec_video_link (GstPad * pad, const GstCaps * caps)
       !gst_structure_get_double (structure, "framerate", &framerate))
     return GST_PAD_LINK_REFUSED;
 
-  if ((height != dvdec->height)
-      || (framerate != dvdec->framerate / dvdec->drop_factor))
+  /* allow a margin of error for the framerate caused by float rounding errors */
+  if ((height != dvdec->height) ||
+      (fabs (framerate - (dvdec->framerate / dvdec->drop_factor)) > 0.00000001))
     return GST_PAD_LINK_REFUSED;
 
   if (strcmp (gst_structure_get_name (structure), "video/x-raw-rgb") == 0) {
