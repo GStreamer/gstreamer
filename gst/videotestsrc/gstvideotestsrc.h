@@ -55,10 +55,11 @@ struct _GstVideotestsrc {
   GstPad *sinkpad,*srcpad;
 
   /* video state */
-  guint32 format;
+  char *format_name;
   gint width;
   gint height;
-  gint forced_format;
+  char *forced_format;
+  struct fourcc_list_struct *fourcc;
   
   /* private */
   gint64 timestamp;
@@ -76,9 +77,7 @@ struct _GstVideotestsrcClass {
   GstElementClass parent_class;
 };
 
-static GType gst_videotestsrc_get_type(void);
-
-static void gst_videotestsrc_setup(GstVideotestsrc *);
+GType gst_videotestsrc_get_type(void);
 
 G_END_DECLS
 
