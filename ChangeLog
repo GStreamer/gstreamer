@@ -1,3 +1,8 @@
+2003-12-30  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* ext/sndfile/gstsf.c: (gst_sf_loop):
+	  Fix warning about discarding const qualifier
+
 2003-12-27  Jeremy Simon   <jesimon@libertysurf.fr>
 
 	* gst/cutter/gstcutter.c:

@@ -695,7 +695,7 @@ gst_sf_loop (GstElement *element)
           continue;
 
         if (!channel->caps_set) {
-          GstCaps *caps = GST_PAD_CAPS (GST_SF_CHANNEL (l)->pad);
+          GstCaps *caps = gst_caps_copy (GST_PAD_CAPS (GST_SF_CHANNEL (l)->pad));
           if (!caps)
             caps = gst_caps_copy
               (GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (GST_SF_CHANNEL (l)->pad)));
