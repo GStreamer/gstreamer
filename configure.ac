@@ -10,6 +10,8 @@ AM_DISABLE_STATIC
 dnl when going to/from release please set the nano (fourth number) right !
 AS_VERSION(gst-plugins, GST_PLUGINS, 0, 3, 2, 1)
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
+dnl We disable static building for development, for time savings
+AM_DISABLE_STATIC
 AS_LIBTOOL(GST_PLUGINS, 0, 0, 0, yes)
 
 dnl FIXME take something else ?
@@ -797,6 +799,7 @@ gst-libs/gst/riff/Makefile
 examples/capsfilter/Makefile
 examples/Makefile
 tools/Makefile
+testsuite/autoplug/Makefile
 testsuite/Makefile
 )
 
