@@ -208,9 +208,13 @@ gst_media_play_init (GstMediaPlay *mplay)
 
 static int
 window_key_press_event (GtkWidget *widget,
-			    GdkEventKey *event,
-			    GstMediaPlay *mplay)
+			GdkEventKey *event,
+			GstMediaPlay *mplay)
 {
+	guint state;
+
+	state = event->state;
+
 	switch (event->keyval) {
 	case GDK_space:
 		if (mplay->play->state == GST_PLAY_PLAYING)
@@ -227,6 +231,13 @@ window_key_press_event (GtkWidget *widget,
 			gdk_threads_enter ();
 			update_buttons (mplay, GST_PLAY_STATE(mplay->play));
 		}
+		break;
+	case GDK_m:
+		gst_media_play_set_fullscreen (mplay);
+		break;
+	case GDK_Return:
+		if (state & GDK_MOD1_MASK)
+			gst_media_play_set_fullscreen (mplay);
 		break;
 	}
 
