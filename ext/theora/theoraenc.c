@@ -245,8 +245,11 @@ theora_enc_sink_link (GstPad * pad, const GstCaps * caps)
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
   /* Theora has a divisible-by-sixteen restriction for the encoded video size */
-  if ((enc->width & 0x0f) != 0 || (enc->height & 0x0f) != 0)
+  if ((enc->width & 0x0f) != 0 || (enc->height & 0x0f) != 0) {
+    GST_DEBUG ("width and height not a multiple of 16 in caps %" GST_PTR_FORMAT,
+        caps);
     return GST_PAD_LINK_REFUSED;
+  }
 
   theora_info_init (&enc->info);
   enc->info.width = enc->width;

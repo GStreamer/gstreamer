@@ -460,6 +460,10 @@ theora_dec_event (GstTheoraDec * dec, GstEvent * event)
   gst_pad_event_default (dec->sinkpad, event);
 }
 
+#define ROUND_UP_2(x) (((x) + 1) & ~1)
+#define ROUND_UP_4(x) (((x) + 3) & ~3)
+#define ROUND_UP_8(x) (((x) + 7) & ~7)
+
 static void
 theora_dec_chain (GstPad * pad, GstData * data)
 {
@@ -545,9 +549,19 @@ theora_dec_chain (GstPad * pad, GstData * data)
       par_den = dec->info.aspect_denominator;
       if (par_num == 0 && par_den == 0) {
         par_num = par_den = 1;
+
       }
-      GST_DEBUG_OBJECT (dec, "video %dx%d, PAR %d/%d", dec->info.width,
+      /* theora has:
+       *
+       *  width/height : dimension of the encoded frame 
+       *  frame_width/frame_height : dimension of the visible part
+       *  offset_x/offset_y : offset in encoded frame where visible part starts
+       */
+      GST_DEBUG_OBJECT (dec, "dimension %dx%d, PAR %d/%d", dec->info.width,
           dec->info.height, par_num, par_den);
+      GST_DEBUG_OBJECT (dec, "frame dimension %dx%d, offset %d:%d",
+          dec->info.frame_width, dec->info.frame_height,
+          dec->info.offset_x, dec->info.offset_y);
 
       /* done */
       theora_decode_init (&dec->state, &dec->info);
@@ -556,8 +570,8 @@ theora_dec_chain (GstPad * pad, GstData * data)
           "framerate", G_TYPE_DOUBLE,
           ((gdouble) dec->info.fps_numerator) / dec->info.fps_denominator,
           "pixel-aspect-ratio", GST_TYPE_FRACTION, par_num, par_den,
-          "width", G_TYPE_INT, dec->info.width, "height", G_TYPE_INT,
-          dec->info.height, NULL);
+          "width", G_TYPE_INT, dec->info.frame_width, "height", G_TYPE_INT,
+          dec->info.frame_height, NULL);
       gst_pad_set_explicit_caps (dec->srcpad, caps);
       gst_caps_free (caps);
     }
@@ -565,9 +579,12 @@ theora_dec_chain (GstPad * pad, GstData * data)
     /* normal data packet */
     yuv_buffer yuv;
     GstBuffer *out;
-    guint8 *y, *v, *u;
     guint i;
     gboolean keyframe;
+    gint out_size;
+    gint stride_y, stride_uv;
+    gint width, height;
+    gint cwidth, cheight;
 
     /* the second most significant bit of the first data byte is cleared 
      * for keyframes */
@@ -591,20 +608,70 @@ theora_dec_chain (GstPad * pad, GstData * data)
       gst_data_unref (data);
       return;
     }
+
     g_return_if_fail (yuv.y_width == dec->info.width);
     g_return_if_fail (yuv.y_height == dec->info.height);
-    out = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE,
-        yuv.y_width * yuv.y_height * 3 / 2);
-    y = GST_BUFFER_DATA (out);
-    u = y + yuv.y_width * yuv.y_height;
-    v = u + yuv.y_width * yuv.y_height / 4;
-    for (i = 0; i < yuv.y_height; i++) {
-      memcpy (y + i * yuv.y_width, yuv.y + i * yuv.y_stride, yuv.y_width);
+
+    width = dec->info.frame_width;
+    height = dec->info.frame_height;
+
+    /* should get the stride from the caps, for now we round up to the nearest
+     * multiple of 4 because some element needs it. chroma needs special 
+     * treatment, see videotestsrc. */
+    stride_y = ROUND_UP_4 (width);
+    stride_uv = ROUND_UP_8 (width) / 2;
+
+    /* for odd offsets we need to copy one extra line/column of chroma samples */
+    cwidth = width / 2 + (dec->info.offset_x & 1);
+    cheight = height / 2 + (dec->info.offset_y & 1);
+
+    out_size = stride_y * height + stride_uv * cheight * 2;
+
+    /* now copy over the area contained in offset_x,offset_y,
+     * frame_width, frame_height */
+    out = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE, out_size);
+
+    /* copy the visible region to the destination. This is actually pretty
+     * complicated and gstreamer doesn't support all the needed caps to do this
+     * correctly. For example, when we have an odd offset, we should only combine
+     * 1 row/column of luma samples with on chroma sample in colorspace conversion. 
+     */
+    {
+      guint8 *dest_y, *src_y;
+      guint8 *dest_u, *src_u;
+      guint8 *dest_v, *src_v;
+
+      dest_y = GST_BUFFER_DATA (out);
+      dest_u = dest_y + stride_y * height;
+      dest_v = dest_u + stride_uv * height / 2;
+
+      src_y = yuv.y + dec->info.offset_x + dec->info.offset_y * yuv.y_stride;
+
+      for (i = 0; i < height; i++) {
+        memcpy (dest_y, src_y, width);
+
+        dest_y += stride_y;
+        src_y += yuv.y_stride;
+      }
+
+      src_u =
+          yuv.u + dec->info.offset_x / 2 +
+          dec->info.offset_y / 2 * yuv.uv_stride;
+      src_v =
+          yuv.v + dec->info.offset_x / 2 +
+          dec->info.offset_y / 2 * yuv.uv_stride;
+
+      for (i = 0; i < cheight; i++) {
+        memcpy (dest_u, src_u, cwidth);
+        memcpy (dest_v, src_v, cwidth);
+
+        dest_u += stride_uv;
+        src_u += yuv.uv_stride;
+        dest_v += stride_uv;
+        src_v += yuv.uv_stride;
+      }
     }
-    for (i = 0; i < yuv.y_height / 2; i++) {
-      memcpy (u + i * yuv.uv_width, yuv.u + i * yuv.uv_stride, yuv.uv_width);
-      memcpy (v + i * yuv.uv_width, yuv.v + i * yuv.uv_stride, yuv.uv_width);
-    }
+
     GST_BUFFER_OFFSET (out) = dec->packetno - 4;
     GST_BUFFER_OFFSET_END (out) = dec->packetno - 3;
     GST_BUFFER_DURATION (out) =
