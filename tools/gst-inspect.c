@@ -835,8 +835,12 @@ print_element_list (void)
         GstTypeFactory *factory;
 
         factory = GST_TYPE_FACTORY (feature);
-        g_print ("%s type:  %s: %s\n", plugin->name,
-                factory->mime, factory->exts);
+        if (factory->exts)
+          g_print ("%s type:  %s: %s\n", plugin->name,
+                  factory->mime, factory->exts);
+        else
+          g_print ("%s type:  %s: N/A\n", plugin->name,
+                  factory->mime);
 
         if (factory->typefindfunc)
           g_print ("      Has typefind function: %s\n",
