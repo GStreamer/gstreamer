@@ -13,7 +13,8 @@ check_PROGRAMS = $(tests_pass) $(tests_fail)
 $(tests_pass) $(tests_fail): $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@
 
 # rebuild gst-register-@GST_MAJORMINOR@ if needed
-$(top_builddir)/tools/gst-register-@GST_MAJORMINOR@:
+# the EXEEXT is because am 1.6 complained about overrides
+$(top_builddir)/tools/gst-register-@GST_MAJORMINOR@$(EXEEXT):
 	cd $(top_builddir)/tools && make
 
 TESTS = $(tests_pass) $(tests_fail)
