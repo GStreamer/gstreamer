@@ -1,3 +1,12 @@
+2004-05-13  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstelement.c: (gst_element_class_init):
+	  whoops, store the signal id correctly
+	* gst/schedulers/gstbasicscheduler.c:
+	(gst_basic_scheduler_chain_wrapper):
+	  detect infinfinfinfinfinf^Cinite loops in chain wrapper when the
+	  chain function isn't linked
+
 2004-05-13  Jan Schmidt  <thaytan@mad.scientist.com>
 	* configure.ac:
 	Add $GST_PKG_CFLAGS back into GST_INT_CFLAGS so I have large file

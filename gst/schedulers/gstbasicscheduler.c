@@ -373,6 +373,11 @@ gst_basic_scheduler_chain_wrapper (int argc, char **argv)
         pads = g_list_next (pads);
       }
     } while (pads != NULL);
+    if (already_iterated == NULL) {
+      GST_DEBUG_OBJECT (SCHED (element), "nothing to iterate for element %s",
+          GST_ELEMENT_NAME (element));
+      break;
+    }
     g_slist_free (already_iterated);
     already_iterated = NULL;
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));

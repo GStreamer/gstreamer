@@ -148,7 +148,7 @@ gst_element_class_init (GstElementClass * klass)
       G_STRUCT_OFFSET (GstElementClass, found_tag), NULL, NULL,
       gst_marshal_VOID__OBJECT_BOXED, G_TYPE_NONE, 2, GST_TYPE_ELEMENT,
       GST_TYPE_TAG_LIST);
-  gst_element_signals[FOUND_TAG] =
+  gst_element_signals[NO_MORE_PADS] =
       g_signal_new ("no-more-pads", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstElementClass, no_more_pads), NULL,
       NULL, gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
