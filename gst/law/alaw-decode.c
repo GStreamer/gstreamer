@@ -1,10 +1,12 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
+ * PCM - A-Law conversion
+ *   Copyright (C) 2000 by Abramo Bagnara <abramo@alsa-project.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,8 +21,6 @@
 
 #include <gst/gst.h>
 #include "alaw-decode.h"
-#include "mulaw-conversion.h"
-#include "alaw-conversion.h"
 
 extern GstPadTemplate *alawdec_src_template, *alawdec_sink_template;
 
@@ -46,35 +46,59 @@ static void		gst_alawdec_chain			(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_stereo_signals[LAST_SIGNAL] = { 0 }; */
+
 /*
-static GstPadNegotiateReturn
-alawdec_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
+ * alaw_to_s16() - Convert an A-law value to 16-bit linear PCM
+ *
+ */
+static gint alaw_to_s16(guint8 a_val)
+{
+	gint		t;
+	gint		seg;
+
+	a_val ^= 0x55;
+	t = a_val & 0x7f;
+	if (t < 16)
+		t = (t << 4) + 8;
+	else {
+		seg = (t >> 4) & 0x07;
+		t = ((t & 0x0f) << 4) + 0x108;
+		t <<= seg -1;
+	}
+	return ((a_val & 0x80) ? t : -t);
+}
+
+static GstPadLinkReturn
+alawdec_link (GstPad *pad, GstCaps *caps)
 {
   GstCaps* tempcaps;
+  gint rate, channels;
   
-  GstALawDec* alawdec=GST_ALAWDEC (GST_OBJECT_PARENT (pad));
+  GstALawDec* alawdec = GST_ALAWDEC (GST_OBJECT_PARENT (pad));
   
-  if (*caps==NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
-
-  tempcaps = gst_caps_copy(*caps);
-
-  gst_caps_set(tempcaps,"format",GST_PROPS_STRING("int"));
-  gst_caps_set(tempcaps,"law",GST_PROPS_INT(0));
-  gst_caps_set(tempcaps,"depth",GST_PROPS_INT(16));
-  gst_caps_set(tempcaps,"width",GST_PROPS_INT(16));
-  gst_caps_set(tempcaps,"signed",GST_PROPS_BOOLEAN(TRUE));
-
-  if (gst_pad_try_set_caps (alawdec->srcpad, tempcaps) > 0)
-  {
-    return GST_PAD_NEGOTIATE_AGREE;
-  }
-  else {
-    gst_caps_unref (tempcaps);
-    return GST_PAD_NEGOTIATE_FAIL;
-  }
-}		
-*/
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_LINK_DELAYED;  
+  
+  if (!gst_caps_get (caps, "rate", &rate,
+                           "channels", &channels,
+                           NULL))
+    return GST_PAD_LINK_DELAYED;
+  
+  tempcaps = GST_CAPS_NEW (
+	      "alawdec_src_caps",
+	      "audio/raw",
+          "format",   GST_PROPS_STRING ("int"),
+          "law",      GST_PROPS_INT (0),
+          "depth",    GST_PROPS_INT (16),
+          "width",    GST_PROPS_INT (16),
+          "signed",   GST_PROPS_BOOLEAN (TRUE),
+          "endianness",   GST_PROPS_INT (G_BYTE_ORDER),
+          "rate",     GST_PROPS_INT (rate),
+          "channels", GST_PROPS_INT (channels),
+        NULL);
+  
+  return gst_pad_try_set_caps (alawdec->srcpad, tempcaps);
+}
 
 GType
 gst_alawdec_get_type(void) {
@@ -116,7 +140,7 @@ gst_alawdec_init (GstALawDec *alawdec)
 {
   alawdec->sinkpad = gst_pad_new_from_template(alawdec_sink_template,"sink");
   alawdec->srcpad = gst_pad_new_from_template(alawdec_src_template,"src");
-  /*gst_pad_set_negotiate_function(alawdec->sinkpad, alawdec_negotiate_sink);*/
+  gst_pad_set_link_function(alawdec->sinkpad, alawdec_link);
 
   gst_element_add_pad(GST_ELEMENT(alawdec),alawdec->sinkpad);
   gst_pad_set_chain_function(alawdec->sinkpad,gst_alawdec_chain);
@@ -130,6 +154,7 @@ gst_alawdec_chain (GstPad *pad,GstBuffer *buf)
   gint16 *linear_data;
   guint8 *alaw_data;
   GstBuffer* outbuf;
+  gint i;
 
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -145,9 +170,11 @@ gst_alawdec_chain (GstPad *pad,GstBuffer *buf)
   GST_BUFFER_SIZE(outbuf) = GST_BUFFER_SIZE(buf)*2;
 
   linear_data = (gint16*)GST_BUFFER_DATA(outbuf);
-
-  isdn_audio_alaw2ulaw(alaw_data,GST_BUFFER_SIZE(buf));
-  mulaw_decode(alaw_data,linear_data,GST_BUFFER_SIZE(buf));
+  for (i = 0; i < GST_BUFFER_SIZE(buf); i++) {
+    *linear_data = alaw_to_s16 (*alaw_data);
+    linear_data++;
+    alaw_data++;
+  }
   
   gst_buffer_unref(buf);
   gst_pad_push(alawdec->srcpad,outbuf);

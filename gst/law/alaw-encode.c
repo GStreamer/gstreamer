@@ -1,10 +1,12 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
+ * PCM - A-Law conversion
+ *   Copyright (C) 2000 by Abramo Bagnara <abramo@alsa-project.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,8 +21,6 @@
 
 #include <gst/gst.h>
 #include "alaw-encode.h"
-#include "mulaw-conversion.h"
-#include "alaw-conversion.h"
 
 extern GstPadTemplate *alawenc_src_template, *alawenc_sink_template;
 
@@ -43,39 +43,101 @@ static void		gst_alawenc_get_property			(GObject *object, guint prop_id, GValue 
 
 static void		gst_alawenc_chain			(GstPad *pad, GstBuffer *buf);
 
+/*
+ * s16_to_alaw() - Convert a 16-bit linear PCM value to 8-bit A-law
+ *
+ * s16_to_alaw() accepts an 16-bit integer and encodes it as A-law data.
+ *
+ *		Linear Input Code	Compressed Code
+ *	------------------------	---------------
+ *	0000000wxyza			000wxyz
+ *	0000001wxyza			001wxyz
+ *	000001wxyzab			010wxyz
+ *	00001wxyzabc			011wxyz
+ *	0001wxyzabcd			100wxyz
+ *	001wxyzabcde			101wxyz
+ *	01wxyzabcdef			110wxyz
+ *	1wxyzabcdefg			111wxyz
+ *
+ * For further information see John C. Bellamy's Digital Telephony, 1982,
+ * John Wiley & Sons, pps 98-111 and 472-476.
+ */
+
+static inline gint val_seg(gint val)
+{
+	gint r = 1;
+	val >>= 8;
+	if (val & 0xf0) {
+		val >>= 4;
+		r += 4;
+	}
+	if (val & 0x0c) {
+		val >>= 2;
+		r += 2;
+	}
+	if (val & 0x02)
+		r += 1;
+	return r;
+}
+
+static guint8 s16_to_alaw(gint pcm_val)
+{
+	gint		seg;
+	guint8	mask;
+	guint8	aval;
+
+	if (pcm_val >= 0) {
+		mask = 0xD5;
+	} else {
+		mask = 0x55;
+		pcm_val = -pcm_val;
+		if (pcm_val > 0x7fff)
+			pcm_val = 0x7fff;
+	}
+
+	if (pcm_val < 256)
+		aval = pcm_val >> 4;
+	else {
+		/* Convert the scaled magnitude to segment number. */
+		seg = val_seg(pcm_val);
+		aval = (seg << 4) | ((pcm_val >> (seg + 3)) & 0x0f);
+	}
+	return aval ^ mask;
+}
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_stereo_signals[LAST_SIGNAL] = { 0 }; */
 
-/*
-static GstPadNegotiateReturn
-alawenc_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
+static GstPadLinkReturn
+alawenc_link (GstPad *pad, GstCaps *caps)
 {
   GstCaps* tempcaps;
+  gint rate, channels;
   
-  GstALawEnc* alawenc=GST_ALAWENC (GST_OBJECT_PARENT (pad));
+  GstALawEnc* alawenc = GST_ALAWENC (GST_OBJECT_PARENT (pad));
   
-  if (*caps==NULL) 
-    return GST_PAD_NEGOTIATE_FAIL;
-
-  tempcaps = gst_caps_copy(*caps);
-
-  gst_caps_set(tempcaps,"format",GST_PROPS_STRING("int"));
-  gst_caps_set(tempcaps,"law",GST_PROPS_INT(2));
-  gst_caps_set(tempcaps,"depth",GST_PROPS_INT(8));
-  gst_caps_set(tempcaps,"width",GST_PROPS_INT(8));
-  gst_caps_set(tempcaps,"signed",GST_PROPS_BOOLEAN(FALSE));
-
-  if (gst_pad_try_set_caps (alawenc->srcpad, tempcaps) > 0)
-  {
-    return GST_PAD_NEGOTIATE_AGREE;
-  }
-  else {
-    gst_caps_unref (tempcaps);
-    return GST_PAD_NEGOTIATE_FAIL;
-  }
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_LINK_DELAYED;  
+  
+  if (!gst_caps_get (caps, "rate", &rate,
+                           "channels", &channels,
+                           NULL))
+    return GST_PAD_LINK_DELAYED;
+  
+  tempcaps = GST_CAPS_NEW (
+	      "alawenc_src_caps",
+	      "audio/raw",
+          "format",   GST_PROPS_STRING ("int"),
+          "law",      GST_PROPS_INT (2),
+          "depth",    GST_PROPS_INT (8),
+          "width",    GST_PROPS_INT (8),
+          "signed",   GST_PROPS_BOOLEAN (FALSE),
+          "rate",     GST_PROPS_INT (rate),
+          "channels", GST_PROPS_INT (channels),
+        NULL);
+  
+  return gst_pad_try_set_caps (alawenc->srcpad, tempcaps);
 }		
-*/
 
 GType
 gst_alawenc_get_type(void) {
@@ -117,7 +179,7 @@ gst_alawenc_init (GstALawEnc *alawenc)
 {
   alawenc->sinkpad = gst_pad_new_from_template(alawenc_sink_template,"sink");
   alawenc->srcpad = gst_pad_new_from_template(alawenc_src_template,"src");
-  /*gst_pad_set_negotiate_function(alawenc->sinkpad, alawenc_negotiate_sink);*/
+  gst_pad_set_link_function (alawenc->sinkpad, alawenc_link);
 
   gst_element_add_pad(GST_ELEMENT(alawenc),alawenc->sinkpad);
   gst_pad_set_chain_function(alawenc->sinkpad,gst_alawenc_chain);
@@ -131,6 +193,7 @@ gst_alawenc_chain (GstPad *pad,GstBuffer *buf)
   gint16 *linear_data;
   guint8 *alaw_data;
   GstBuffer* outbuf;
+  gint i;
 
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -142,12 +205,16 @@ gst_alawenc_chain (GstPad *pad,GstBuffer *buf)
 
   linear_data = (gint16 *)GST_BUFFER_DATA(buf);
   outbuf=gst_buffer_new();
-  GST_BUFFER_DATA(outbuf) = (gchar*)g_new(gint16,GST_BUFFER_SIZE(buf)/4);
+  GST_BUFFER_DATA(outbuf) = (gchar*)g_new(guint8,GST_BUFFER_SIZE(buf)/2);
   GST_BUFFER_SIZE(outbuf) = GST_BUFFER_SIZE(buf)/2;
 
+  
   alaw_data = (guint8*)GST_BUFFER_DATA(outbuf);
-  mulaw_encode(linear_data,alaw_data,GST_BUFFER_SIZE(outbuf));
-  isdn_audio_ulaw2alaw(alaw_data,GST_BUFFER_SIZE(outbuf));
+  for (i = 0; i < GST_BUFFER_SIZE(outbuf); i++) {
+    *alaw_data = s16_to_alaw (*linear_data);
+    *alaw_data++;
+    *linear_data++;
+  }
   gst_buffer_unref(buf);
   gst_pad_push(alawenc->srcpad,outbuf);
 }

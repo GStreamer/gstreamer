@@ -60,7 +60,7 @@ mulawenc_link (GstPad *pad, GstCaps *caps)
   if (!gst_caps_get (caps, "rate", &rate,
                            "channels", &channels,
                            NULL))
-    return GST_PAD_LINK_REFUSED;
+    return GST_PAD_LINK_DELAYED;
   
   tempcaps = GST_CAPS_NEW (
 	      "sinesrc_src_caps",

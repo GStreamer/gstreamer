@@ -51,6 +51,7 @@ linear_factory (void)
       	    "law",      GST_PROPS_INT(0),
       	    "width",    GST_PROPS_INT(16),
       	    "depth",    GST_PROPS_INT(16),
+      	    "endianness",    GST_PROPS_INT(G_BYTE_ORDER),
       	    "signed",   GST_PROPS_BOOLEAN(TRUE),
 	    NULL));
 }
