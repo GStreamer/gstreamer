@@ -290,6 +290,14 @@ gst_thread_change_state (GstElement * element)
       g_mutex_unlock (thread->lock);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
+    {
+      /* fixme: recurse into sub-bins */
+      const GList *elements = gst_bin_get_list (GST_BIN (thread));
+      while (elements) {
+        gst_element_enable_threadsafe_properties ((GstElement*)elements->data);
+        elements = g_list_next (elements);
+      }
+      
       THR_DEBUG ("telling thread to start spinning");
       g_mutex_lock (thread->lock);
       THR_DEBUG ("signaling");
@@ -299,9 +307,10 @@ gst_thread_change_state (GstElement * element)
       THR_DEBUG ("got ack");
       g_mutex_unlock (thread->lock);
       break;
+    }
     case GST_STATE_PLAYING_TO_PAUSED:
     {
-      GList *elements = (GList *) gst_bin_get_list (GST_BIN (thread));
+      const GList *elements = (GList *) gst_bin_get_list (GST_BIN (thread));
 
       THR_INFO ("pausing thread");
 
@@ -374,6 +383,8 @@ gst_thread_change_state (GstElement * element)
 	    }
 	  }
 	}
+
+        gst_element_disable_threadsafe_properties (element);
       }
       THR_DEBUG ("telling thread to pause, signaling");
       g_cond_signal (thread->cond);

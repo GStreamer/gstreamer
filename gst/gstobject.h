@@ -84,7 +84,7 @@ struct _GstObject {
 
   /* locking for all sorts of things (like the refcount) */
   GMutex 	*lock;
-  /* this objects parent */
+  /* this object's parent */
   GstObject 	*parent;
 
   guint32 	flags;

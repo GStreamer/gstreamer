@@ -21,7 +21,7 @@
  */
 
 /*#define GST_DEBUG_ENABLED */
-#include <gst/gst.h>
+#include "../gst.h"
 
 #include "cothreads_compat.h"
 
@@ -62,6 +62,7 @@ struct _GstSchedulerChain {
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASIC_SCHEDULER))
 
 #define GST_BASIC_SCHEDULER_CAST(sched)	((GstBasicScheduler *)(sched))
+#define SCHED(element) GST_BASIC_SCHEDULER_CAST (GST_ELEMENT_SCHED (element))
 
 typedef enum {
   GST_BASIC_SCHEDULER_STATE_NONE,
@@ -87,6 +88,7 @@ struct _GstBasicScheduler {
   GstBasicSchedulerState state;
   
   cothread_context *context;
+  GstElement *current;
 };
 
 struct _GstBasicSchedulerClass {
@@ -122,6 +124,18 @@ static GstSchedulerState
 static void     	gst_basic_scheduler_show  		(GstScheduler *sched);
 
 static GstSchedulerClass *parent_class = NULL;
+
+#define do_element_switch(element) G_STMT_START{		\
+  GstElement *from = SCHED (element)->current;			\
+  if (from->post_run_func)					\
+    from->post_run_func (from);					\
+  SCHED (element)->current = element;				\
+  do_cothread_switch (GST_ELEMENT_THREADSTATE (element));	\
+  /* we assume other cothread switches will set ->current	\
+   * properly, no need to do it from this side */		\
+  if (from->pre_run_func)					\
+    from->pre_run_func (from);					\
+}G_STMT_END
 
 static GType
 gst_basic_scheduler_get_type (void)
@@ -312,6 +326,9 @@ gst_basic_scheduler_src_wrapper (int argc, char *argv[])
 
   GST_DEBUG_ENTER ("(%d,\"%s\")", argc, name);
 
+  if (element->pre_run_func)
+    element->pre_run_func (element);
+
   do {
     pads = element->pads;
     while (pads) {
@@ -358,8 +375,12 @@ gst_basic_scheduler_src_wrapper (int argc, char *argv[])
 static void
 gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
 {
-  GstRealPad *peer = GST_RPAD_PEER (pad);
   gint loop_count = 100;
+  GstElement *parent;
+  GstRealPad *peer;
+
+  parent = GST_PAD_PARENT (pad);
+  peer = GST_RPAD_PEER (pad);
 
   GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
   GST_DEBUG (GST_CAT_DATAFLOW, "putting buffer %p in peer \"%s:%s\"'s pen", buf,
@@ -370,8 +391,9 @@ gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
    */
   while (GST_RPAD_BUFPEN (GST_RPAD_PEER (pad)) != NULL && --loop_count) {
     GST_DEBUG (GST_CAT_DATAFLOW, "switching to %p to empty bufpen %d",
-	       GST_ELEMENT_THREADSTATE (GST_PAD_PARENT (pad)), loop_count);
-    do_cothread_switch (GST_ELEMENT_THREADSTATE (GST_PAD_PARENT (pad)));
+	       GST_ELEMENT_THREADSTATE (parent), loop_count);
+
+    do_element_switch (parent);
 
     /* we may no longer be the same pad, check. */
     if (GST_RPAD_PEER (peer) != (GstRealPad *) pad) {
@@ -381,16 +403,19 @@ gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
   }
 
   if (loop_count == 0) {
-    gst_element_error (GST_PAD_PARENT (pad), 
+    gst_element_error (parent, 
 		    "(internal error) maximum number of switches exceeded");
     return;
   }
+
   g_assert (GST_RPAD_BUFPEN (GST_RPAD_PEER (pad)) == NULL);
+
   /* now fill the bufferpen and switch so it can be consumed */
   GST_RPAD_BUFPEN (GST_RPAD_PEER (pad)) = buf;
   GST_DEBUG (GST_CAT_DATAFLOW, "switching to %p",
 	     GST_ELEMENT_THREADSTATE (GST_PAD_PARENT (pad)));
-  do_cothread_switch (GST_ELEMENT_THREADSTATE (GST_PAD_PARENT (pad)));
+
+  do_element_switch (parent);
 
   GST_DEBUG (GST_CAT_DATAFLOW, "done switching");
 }
@@ -398,6 +423,10 @@ gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
 static void
 gst_basic_scheduler_select_proxy (GstPad * pad, GstBuffer * buf)
 {
+  GstElement *parent;
+  
+  parent = GST_PAD_PARENT (pad);
+
   GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
 
   GST_DEBUG (GST_CAT_DATAFLOW, "putting buffer %p in peer's pen", buf);
@@ -406,11 +435,11 @@ gst_basic_scheduler_select_proxy (GstPad * pad, GstBuffer * buf)
   /* now fill the bufferpen and switch so it can be consumed */
   GST_RPAD_BUFPEN (GST_RPAD_PEER (pad)) = buf;
   GST_DEBUG (GST_CAT_DATAFLOW, "switching to %p",
-	     GST_ELEMENT_THREADSTATE (GST_PAD_PARENT (pad)));
-  GST_ELEMENT (GST_PAD_PARENT (pad))->select_pad = pad;
+	     GST_ELEMENT_THREADSTATE (parent));
+  parent->select_pad = pad;
 
-  do_cothread_switch (GST_ELEMENT_THREADSTATE (GST_PAD_PARENT (pad)));
-
+  do_element_switch (parent);
+  
   GST_DEBUG (GST_CAT_DATAFLOW, "done switching");
 }
 
@@ -419,7 +448,11 @@ static GstBuffer *
 gst_basic_scheduler_gethandler_proxy (GstPad * pad)
 {
   GstBuffer *buf;
-  GstRealPad *peer = GST_RPAD_PEER (pad);
+  GstElement *parent;
+  GstRealPad *peer;
+
+  parent = GST_PAD_PARENT (pad);
+  peer = GST_RPAD_PEER (pad);
 
   GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
 
@@ -427,16 +460,17 @@ gst_basic_scheduler_gethandler_proxy (GstPad * pad)
   /* we will loop switching to the peer until it's filled up the bufferpen */
   while (GST_RPAD_BUFPEN (pad) == NULL) {
     GST_DEBUG (GST_CAT_DATAFLOW, "switching to \"%s\": %p to fill bufpen",
-	       GST_ELEMENT_NAME (GST_ELEMENT (GST_PAD_PARENT (pad))),
-	       GST_ELEMENT_THREADSTATE (GST_PAD_PARENT (pad)));
-    do_cothread_switch (GST_ELEMENT_THREADSTATE (GST_PAD_PARENT (pad)));
+	       GST_ELEMENT_NAME (parent),
+	       GST_ELEMENT_THREADSTATE (parent));
+
+    do_element_switch (parent);
 
     /* we may no longer be the same pad, check. */
     if (GST_RPAD_PEER (peer) != (GstRealPad *) pad) {
       GST_DEBUG (GST_CAT_DATAFLOW, "new pad in mid-switch!");
       pad = (GstPad *) GST_RPAD_PEER (peer);
       if (!pad) {
-	gst_element_error (GST_ELEMENT (GST_PAD_PARENT (peer)), "pad unconnected");
+	gst_element_error (parent, "pad unconnected");
       }
     }
   }
@@ -453,7 +487,11 @@ static GstBuffer *
 gst_basic_scheduler_pullregionfunc_proxy (GstPad * pad, GstRegionType type, guint64 offset, guint64 len)
 {
   GstBuffer *buf;
-  GstRealPad *peer = GST_RPAD_PEER (pad);
+  GstElement *parent;
+  GstRealPad *peer;
+
+  parent = GST_PAD_PARENT (pad);
+  peer = GST_RPAD_PEER (pad);
 
   GST_DEBUG_ENTER ("%s:%s,%d,%lld,%lld", GST_DEBUG_PAD_NAME (pad), type, offset, len);
 
@@ -466,8 +504,9 @@ gst_basic_scheduler_pullregionfunc_proxy (GstPad * pad, GstRegionType type, guin
   /* we will loop switching to the peer until it's filled up the bufferpen */
   while (GST_RPAD_BUFPEN (pad) == NULL) {
     GST_DEBUG (GST_CAT_DATAFLOW, "switching to %p to fill bufpen",
-	       GST_ELEMENT_THREADSTATE (GST_PAD_PARENT (pad)));
-    do_cothread_switch (GST_ELEMENT_THREADSTATE (GST_PAD_PARENT (pad)));
+	       GST_ELEMENT_THREADSTATE (parent));
+
+    do_element_switch (parent);
 
     /* we may no longer be the same pad, check. */
     if (GST_RPAD_PEER (peer) != (GstRealPad *) pad) {
@@ -1064,7 +1103,13 @@ static void
 gst_basic_scheduler_yield (GstScheduler *sched, GstElement *element)
 {
   if (GST_ELEMENT_IS_COTHREAD_STOPPING (element)) {
+    if (element->post_run_func)
+      element->post_run_func (element);
+    
+    SCHED (element)->current = NULL;
     do_cothread_switch (do_cothread_get_main (((GstBasicScheduler *) sched)->context));
+    
+    /* no need to do a pre_run, the cothread is stopping */
   }
 }
 
@@ -1072,6 +1117,11 @@ static gboolean
 gst_basic_scheduler_interrupt (GstScheduler *sched, GstElement *element)
 {
   GST_FLAG_SET (element, GST_ELEMENT_COTHREAD_STOPPING);
+
+  if (element->post_run_func)
+    element->post_run_func (element);
+
+  SCHED (element)->current = NULL;
   do_cothread_switch (do_cothread_get_main (((GstBasicScheduler *) sched)->context));
 
   return FALSE;
@@ -1091,6 +1141,10 @@ gst_basic_scheduler_error (GstScheduler *sched, GstElement *element)
 
     GST_SCHEDULER_STATE (sched) = GST_SCHEDULER_STATE_ERROR;
 
+    if (element->post_run_func)
+      element->post_run_func (element);
+
+    SCHED (element)->current = NULL;
     do_cothread_switch (do_cothread_get_main (((GstBasicScheduler *) sched)->context));
   }
 }
@@ -1192,7 +1246,7 @@ gst_basic_scheduler_pad_select (GstScheduler * sched, GList * padlist)
   if (pad != NULL) {
     GstRealPad *peer = GST_RPAD_PEER (pad);
 
-    do_cothread_switch (GST_ELEMENT_THREADSTATE (GST_PAD_PARENT (peer)));
+    do_element_switch (GST_PAD_PARENT (peer));
 
     pad = GST_ELEMENT (GST_PAD_PARENT (pad))->select_pad;
 
@@ -1266,7 +1320,15 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
 	GST_DEBUG (GST_CAT_DATAFLOW, "set COTHREAD_STOPPING flag on \"%s\"(@%p)",
 		   GST_ELEMENT_NAME (entry), entry);
 	if (GST_ELEMENT_THREADSTATE (entry)) {
+          if (entry->pre_run_func)
+            entry->pre_run_func (entry);
+
+          bsched->current = entry;
 	  do_cothread_switch (GST_ELEMENT_THREADSTATE (entry));
+
+          if (bsched->current && bsched->current->post_run_func)
+            bsched->current->post_run_func (bsched->current);
+          
 	  state = GST_SCHEDULER_STATE (sched);
 	  /* if something changed, return - go on else */
 	  if (GST_FLAG_IS_SET(bsched, GST_BASIC_SCHEDULER_CHANGE) &&

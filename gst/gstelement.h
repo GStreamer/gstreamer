@@ -32,9 +32,7 @@
 #include <gst/gstclock.h>
 #include <gst/gstpluginfeature.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GST_NUM_STATES 4
 
@@ -80,23 +78,22 @@ typedef enum {
   GST_ELEMENT_THREAD_SUGGESTED,
   /* this element is incable of seeking (FIXME: does this apply to filters?) */
   GST_ELEMENT_NO_SEEK,
-
   /* this element, for some reason, has a loop function that performs
    * an infinite loop without calls to gst_element_yield () */
   GST_ELEMENT_INFINITE_LOOP,
+  /* there is a new loopfunction ready for placement */
+  GST_ELEMENT_NEW_LOOPFUNC,
+  /* if this element can handle events */
+  GST_ELEMENT_EVENT_AWARE,
+  /* use threadsafe property get/set implementation */
+  GST_ELEMENT_USE_THREADSAFE_PROPERTIES,
 
   /* private flags that can be used by the scheduler */
   GST_ELEMENT_SCHEDULER_PRIVATE1,
   GST_ELEMENT_SCHEDULER_PRIVATE2,
 
-  /* there is a new loopfunction ready for placement */
-  GST_ELEMENT_NEW_LOOPFUNC,
-
-  /* if this element can handle events */
-  GST_ELEMENT_EVENT_AWARE,
-
   /* use some padding for future expansion */
-  GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 12,
+  GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 16,
 } GstElementFlags;
 
 #define GST_ELEMENT_IS_THREAD_SUGGESTED(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_THREAD_SUGGESTED))
@@ -111,14 +108,14 @@ typedef enum {
 #define GST_ELEMENT_CLOCK(obj)			(((GstElement*)(obj))->clock)
 #define GST_ELEMENT_PADS(obj)			((obj)->pads)
 
-/*typedef struct _GstElement GstElement;*/
-/*typedef struct _GstElementClass GstElementClass;*/
 typedef struct _GstElementFactory GstElementFactory;
 typedef struct _GstElementFactoryClass GstElementFactoryClass;
 
 typedef void 		(*GstElementLoopFunction) 	(GstElement *element);
 typedef void 		(*GstElementSetClockFunction) 	(GstElement *element, GstClock *clock);
 typedef GstClock* 	(*GstElementGetClockFunction) 	(GstElement *element);
+typedef void 		(*GstElementPreRunFunction) 	(GstElement *element);
+typedef void 		(*GstElementPostRunFunction) 	(GstElement *element);
 
 struct _GstElement {
   GstObject 		object;
@@ -143,6 +140,11 @@ struct _GstElement {
 
   GMutex 		*state_mutex;
   GCond 		*state_cond;
+
+  GstElementPreRunFunction  pre_run_func;
+  GstElementPostRunFunction post_run_func;
+  GAsyncQueue		*prop_value_queue;
+  GMutex		*property_mutex;
 };
 
 struct _GstElementClass {
@@ -155,12 +157,12 @@ struct _GstElementClass {
   gint 			numpadtemplates;
   
   /* signal callbacks */
-  void (*state_change)		(GstElement *element, GstElementState old, GstElementState state);
-  void (*new_pad)		(GstElement *element, GstPad *pad);
-  void (*pad_removed)		(GstElement *element, GstPad *pad);
-  void (*error)			(GstElement *element, GstElement *source, gchar *error);
-  void (*eos)			(GstElement *element);
-  void (*deep_notify)		(GstObject *object, GstObject *orig, GParamSpec *pspec);
+  void (*state_change)	(GstElement *element, GstElementState old, GstElementState state);
+  void (*new_pad)	(GstElement *element, GstPad *pad);
+  void (*pad_removed)	(GstElement *element, GstPad *pad);
+  void (*error)		(GstElement *element, GstElement *source, gchar *error);
+  void (*eos)		(GstElement *element);
+  void (*deep_notify)	(GstObject *object, GstObject *orig, GParamSpec *pspec);
 
   /* local pointers for get/set */
   void (*set_property) 	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -175,12 +177,31 @@ struct _GstElementClass {
 };
 
 void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplate *templ);
+void                    gst_element_class_install_std_props	(GstElementClass *klass,
+								 const gchar      *first_name, ...);
+
 
 GType			gst_element_get_type		(void);
 #define			gst_element_destroy(element)	gst_object_destroy (GST_OBJECT (element))
 
 void			gst_element_set_loop_function	(GstElement *element,
 							 GstElementLoopFunction loop);
+
+/* threadsafe versions of their g_object_* counterparts */
+void	    		gst_element_set			(GstElement *element, const gchar *first_property_name, ...);
+void        		gst_element_get			(GstElement *element, const gchar *first_property_name, ...);
+void			gst_element_set_valist		(GstElement *element, const gchar *first_property_name,
+                                                         va_list var_args);
+void			gst_element_get_valist		(GstElement *element, const gchar *first_property_name,
+                                                         va_list var_args);
+void			gst_element_set_property	(GstElement *element, const gchar *property_name,
+                                                         const GValue   *value);
+void			gst_element_get_property	(GstElement *element, const gchar *property_name,
+                                                         GValue *value);
+
+void			gst_element_enable_threadsafe_properties	(GstElement *element);
+void			gst_element_disable_threadsafe_properties	(GstElement *element);
+void			gst_element_set_pending_properties		(GstElement *element);
 
 void                    gst_element_set_name            (GstElement *element, const gchar *name);
 const gchar*            gst_element_get_name            (GstElement *element);
@@ -248,9 +269,6 @@ const gchar*		gst_element_state_get_name	(GstElementState state);
 
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
 
-void                    gst_element_class_install_std_props	(GstElementClass *klass,
-								 const char      *first_name, ...);
-
 GstBin*			gst_element_get_managing_bin	(GstElement *element);
 
 
@@ -314,9 +332,7 @@ GstElement*		gst_element_factory_create		(GstElementFactory *factory,
 /* FIXME this name is wrong, probably so is the one above it */
 GstElement*		gst_element_factory_make		(const gchar *factoryname, const gchar *name);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /* __GST_ELEMENT_H__ */

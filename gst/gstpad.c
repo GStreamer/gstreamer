@@ -1791,7 +1791,9 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
 GstBuffer*
 gst_pad_pull (GstPad *pad) 
 {
-  GstRealPad *peer = GST_RPAD_PEER(pad);
+  GstRealPad *peer;
+
+  peer = GST_RPAD_PEER (pad);
   
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
 
@@ -1811,8 +1813,10 @@ gst_pad_pull (GstPad *pad)
         GST_DEBUG_FUNCPTR_NAME (peer->gethandler), GST_DEBUG_PAD_NAME (peer));
 
       buf = (peer->gethandler) (GST_PAD_CAST (peer));
+
       if (buf)
         return buf;
+
       /* no null buffers allowed */
       gst_element_error (GST_PAD_PARENT (pad), 
 		    "NULL buffer during pull on %s:%s", GST_DEBUG_PAD_NAME (pad), NULL);

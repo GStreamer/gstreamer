@@ -23,6 +23,7 @@
 /* #define GST_DEBUG_ENABLED */
 #include <glib.h>
 #include <stdarg.h>
+#include <gobject/gvaluecollector.h>
 #include "gst_private.h"
 
 #include "gstelement.h"
@@ -54,9 +55,9 @@ static void			gst_element_class_init		(GstElementClass *klass);
 static void			gst_element_init		(GstElement *element);
 static void			gst_element_base_class_init	(GstElementClass *klass);
 
-static void			gst_element_set_property	(GObject *object, guint prop_id, 
+static void			gst_element_real_set_property	(GObject *object, guint prop_id, 
 								 const GValue *value, GParamSpec *pspec);
-static void			gst_element_get_property	(GObject *object, guint prop_id, GValue *value, 
+static void			gst_element_real_get_property	(GObject *object, guint prop_id, GValue *value, 
 								 GParamSpec *pspec);
 static void			gst_element_dispatch_properties_changed (GObject * object, guint n_pspecs, GParamSpec **pspecs);
 
@@ -139,8 +140,8 @@ gst_element_class_init (GstElementClass *klass)
 		  2, G_TYPE_OBJECT, G_TYPE_PARAM);
 
 
-  gobject_class->set_property 		= GST_DEBUG_FUNCPTR (gst_element_set_property);
-  gobject_class->get_property 		= GST_DEBUG_FUNCPTR (gst_element_get_property);
+  gobject_class->set_property 		= GST_DEBUG_FUNCPTR (gst_element_real_set_property);
+  gobject_class->get_property 		= GST_DEBUG_FUNCPTR (gst_element_real_get_property);
 
   /* see the comments at gst_element_dispatch_properties_changed */
   gobject_class->dispatch_properties_changed
@@ -167,8 +168,8 @@ gst_element_base_class_init (GstElementClass *klass)
 
   gobject_class = (GObjectClass*) klass;
 
-  gobject_class->set_property =		GST_DEBUG_FUNCPTR(gst_element_set_property);
-  gobject_class->get_property =		GST_DEBUG_FUNCPTR(gst_element_get_property);
+  gobject_class->set_property =		GST_DEBUG_FUNCPTR(gst_element_real_set_property);
+  gobject_class->get_property =		GST_DEBUG_FUNCPTR(gst_element_real_get_property);
 }
 
 static void
@@ -188,7 +189,7 @@ gst_element_init (GstElement *element)
 }
 
 static void
-gst_element_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_element_real_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstElementClass *oclass = CLASS (object);
 
@@ -197,7 +198,7 @@ gst_element_set_property (GObject *object, guint prop_id, const GValue *value, G
 }
 
 static void
-gst_element_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_element_real_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstElementClass *oclass = CLASS (object);
 
@@ -235,6 +236,339 @@ gst_element_dispatch_properties_changed (GObject     *object,
 
     gst_object = GST_OBJECT_PARENT (gst_object);
   }
+}
+
+typedef struct {
+  const GParamSpec *pspec;
+  const GValue *value;
+} prop_value_t;
+
+static void
+element_set_property (GstElement *element, const GParamSpec *pspec, const GValue *value)
+{
+  prop_value_t *prop_value = g_new0 (prop_value_t, 1);
+
+  g_message ("Setting property %s::%s to %s for object %s\n", G_OBJECT_TYPE_NAME (element),
+             pspec->name, g_strdup_value_contents (value), GST_OBJECT_NAME (element));
+
+  prop_value->pspec = pspec;
+  prop_value->value = value;
+
+  g_async_queue_push (element->prop_value_queue, prop_value);
+}
+
+static void
+element_get_property (GstElement *element, const GParamSpec *pspec, GValue *value)
+{
+  g_message ("Getting property %s::%s to %s for object %s\n", G_OBJECT_TYPE_NAME (element),
+             pspec->name, g_strdup_value_contents (value), GST_OBJECT_NAME (element));
+
+  g_mutex_lock (element->property_mutex);
+  g_object_get_property ((GObject*)element, pspec->name, value);
+  g_mutex_unlock (element->property_mutex);
+}
+
+static void
+gst_element_threadsafe_properties_pre_run (GstElement *element)
+{
+  GST_DEBUG (GST_CAT_THREAD, "locking element %s", GST_OBJECT_NAME (element));
+  g_mutex_lock (element->property_mutex);
+  gst_element_set_pending_properties (element);
+}
+
+static void
+gst_element_threadsafe_properties_post_run (GstElement *element)
+{
+  GST_DEBUG (GST_CAT_THREAD, "unlocking element %s", GST_OBJECT_NAME (element));
+  g_mutex_unlock (element->property_mutex);
+}
+
+void
+gst_element_enable_threadsafe_properties (GstElement *element)
+{
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  
+  GST_FLAG_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES);
+  element->pre_run_func = gst_element_threadsafe_properties_pre_run;
+  element->post_run_func = gst_element_threadsafe_properties_post_run;
+  if (!element->prop_value_queue)
+    element->prop_value_queue = g_async_queue_new ();
+  if (!element->property_mutex)
+    element->property_mutex = g_mutex_new ();
+}
+
+void
+gst_element_disable_threadsafe_properties (GstElement *element)
+{
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  
+  GST_FLAG_UNSET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES);
+  element->pre_run_func = NULL;
+  element->post_run_func = NULL;
+  /* let's keep around that async queue */
+}
+
+void
+gst_element_set_pending_properties (GstElement *element) 
+{
+  prop_value_t *prop_value;
+
+  while ((prop_value = g_async_queue_try_pop (element->prop_value_queue))) {
+    g_object_set_property ((GObject*)element, prop_value->pspec->name, prop_value->value);
+    g_free (prop_value);
+  }
+}
+
+/* following 6 functions taken mostly from gobject.c */
+
+void
+gst_element_set (GstElement *element, const gchar *first_property_name, ...)
+{
+  va_list var_args;
+  
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  
+  va_start (var_args, first_property_name);
+  gst_element_set_valist (element, first_property_name, var_args);
+  va_end (var_args);
+}
+
+void
+gst_element_get (GstElement *element, const gchar *first_property_name, ...)
+{
+  va_list var_args;
+  
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  
+  va_start (var_args, first_property_name);
+  gst_element_get_valist (element, first_property_name, var_args);
+  va_end (var_args);
+}
+
+void
+gst_element_set_valist (GstElement *element, const gchar *first_property_name, va_list var_args)
+{
+  const gchar *name;
+  GObject *object;
+  
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  
+  object = (GObject*)element;
+
+  if (!GST_FLAG_IS_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES)) {
+    g_object_set_valist (object, first_property_name, var_args);
+    return;
+  }
+
+  g_object_ref (object);
+  
+  name = first_property_name;
+
+  while (name)
+    {
+      GValue value = { 0, };
+      GParamSpec *pspec;
+      gchar *error = NULL;
+      
+      pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), name);
+
+      if (!pspec)
+        {
+	  g_warning ("%s: object class `%s' has no property named `%s'",
+		     G_STRLOC,
+		     G_OBJECT_TYPE_NAME (object),
+		     name);
+	  break;
+	}
+      if (!(pspec->flags & G_PARAM_WRITABLE))
+	{
+	  g_warning ("%s: property `%s' of object class `%s' is not writable",
+		     G_STRLOC,
+		     pspec->name,
+		     G_OBJECT_TYPE_NAME (object));
+	  break;
+	}
+      
+      g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+      
+      G_VALUE_COLLECT (&value, var_args, 0, &error);
+      if (error)
+	{
+	  g_warning ("%s: %s", G_STRLOC, error);
+	  g_free (error);
+	  
+	  /* we purposely leak the value here, it might not be
+	   * in a sane state if an error condition occoured
+	   */
+	  break;
+	}
+      
+      element_set_property (element, pspec, &value);
+      g_value_unset (&value);
+      
+      name = va_arg (var_args, gchar*);
+    }
+
+  g_object_unref (object);
+}
+
+void
+gst_element_get_valist (GstElement *element, const gchar *first_property_name, va_list var_args)
+{
+  const gchar *name;
+  GObject *object;
+  
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  
+  object = (GObject*)element;
+
+  if (!GST_FLAG_IS_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES)) {
+    g_object_get_valist (object, first_property_name, var_args);
+    return;
+  }
+
+  g_object_ref (object);
+  
+  name = first_property_name;
+  
+  while (name)
+    {
+      GValue value = { 0, };
+      GParamSpec *pspec;
+      gchar *error;
+      
+      pspec =  g_object_class_find_property (G_OBJECT_GET_CLASS (object), name);
+
+      if (!pspec)
+	{
+	  g_warning ("%s: object class `%s' has no property named `%s'",
+		     G_STRLOC,
+		     G_OBJECT_TYPE_NAME (object),
+		     name);
+	  break;
+	}
+      if (!(pspec->flags & G_PARAM_READABLE))
+	{
+	  g_warning ("%s: property `%s' of object class `%s' is not readable",
+		     G_STRLOC,
+		     pspec->name,
+		     G_OBJECT_TYPE_NAME (object));
+	  break;
+	}
+      
+      g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+      
+      element_get_property (element, pspec, &value);
+      
+      G_VALUE_LCOPY (&value, var_args, 0, &error);
+      if (error)
+	{
+	  g_warning ("%s: %s", G_STRLOC, error);
+	  g_free (error);
+	  g_value_unset (&value);
+	  break;
+	}
+      
+      g_value_unset (&value);
+      
+      name = va_arg (var_args, gchar*);
+    }
+  
+  g_object_unref (object);
+}
+
+void
+gst_element_set_property (GstElement *element, const gchar *property_name, const GValue *value)
+{
+  GParamSpec *pspec;
+  GObject *object;
+  
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (property_name != NULL);
+  g_return_if_fail (G_IS_VALUE (value));
+  
+  object = (GObject*)element;
+
+  if (!GST_FLAG_IS_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES)) {
+    g_object_set_property (object, property_name, value);
+    return;
+  }
+
+  g_object_ref (object);
+  
+  pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), property_name);
+  
+  if (!pspec)
+    g_warning ("%s: object class `%s' has no property named `%s'",
+	       G_STRLOC,
+	       G_OBJECT_TYPE_NAME (object),
+	       property_name);
+  else
+    element_set_property (element, pspec, value);
+  
+  g_object_unref (object);
+}
+  
+void
+gst_element_get_property (GstElement *element, const gchar *property_name, GValue *value)
+{
+  GParamSpec *pspec;
+  GObject *object;
+  
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (property_name != NULL);
+  g_return_if_fail (G_IS_VALUE (value));
+  
+  object = (GObject*)element;
+
+  if (!GST_FLAG_IS_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES)) {
+    g_object_get_property (object, property_name, value);
+    return;
+  }
+
+  g_object_ref (object);
+  
+  pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), property_name);
+  
+  if (!pspec)
+    g_warning ("%s: object class `%s' has no property named `%s'",
+	       G_STRLOC,
+	       G_OBJECT_TYPE_NAME (object),
+	       property_name);
+  else
+    {
+      GValue *prop_value, tmp_value = { 0, };
+      
+      /* auto-conversion of the callers value type
+       */
+      if (G_VALUE_TYPE (value) == G_PARAM_SPEC_VALUE_TYPE (pspec))
+	{
+	  g_value_reset (value);
+	  prop_value = value;
+	}
+      else if (!g_value_type_transformable (G_PARAM_SPEC_VALUE_TYPE (pspec), G_VALUE_TYPE (value)))
+	{
+	  g_warning ("can't retrieve property `%s' of type `%s' as value of type `%s'",
+		     pspec->name,
+		     g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)),
+		     G_VALUE_TYPE_NAME (value));
+	  g_object_unref (object);
+	  return;
+	}
+      else
+	{
+	  g_value_init (&tmp_value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+	  prop_value = &tmp_value;
+	}
+      element_get_property (element, pspec, prop_value);
+      if (prop_value != value)
+	{
+	  g_value_transform (prop_value, value);
+	  g_value_unset (&tmp_value);
+	}
+    }
+  
+  g_object_unref (object);
 }
 
 static GstPad*
@@ -1618,6 +1952,12 @@ gst_element_dispose (GObject *object)
   g_mutex_free (element->state_mutex);
   g_cond_free (element->state_cond);
 
+  if (element->prop_value_queue)
+    g_async_queue_unref (element->prop_value_queue);
+  element->prop_value_queue = NULL;
+  if (element->property_mutex)
+    g_mutex_free (element->property_mutex);
+  
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -1897,7 +2237,7 @@ gst_element_state_get_name (GstElementState state)
 
 static void
 gst_element_populate_std_props (GObjectClass * klass,
-				const char *prop_name, guint arg_id, GParamFlags flags)
+				const gchar *prop_name, guint arg_id, GParamFlags flags)
 {
   GQuark prop_id = g_quark_from_string (prop_name);
   GParamSpec *pspec;
@@ -2004,7 +2344,7 @@ gst_element_populate_std_props (GObjectClass * klass,
  * the flags determine readability / writeability.
  **/
 void
-gst_element_class_install_std_props (GstElementClass * klass, const char *first_name, ...)
+gst_element_class_install_std_props (GstElementClass * klass, const gchar *first_name, ...)
 {
   const char *name;
 
