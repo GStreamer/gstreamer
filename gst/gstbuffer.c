@@ -186,7 +186,7 @@ gst_buffer_new (void)
 {
   GstBuffer *buf;
   
-  buf = gst_mem_chunk_alloc0 (chunk);
+  buf = gst_mem_chunk_alloc (chunk);
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_gst_buffer_trace, buf);
 #endif
