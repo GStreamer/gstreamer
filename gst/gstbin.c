@@ -689,6 +689,8 @@ gst_bin_change_state (GstElement * element)
 		   GST_ELEMENT_NAME (child), pending, gst_element_state_get_name (pending));
 
 	gst_element_set_state (child, old_child_state);
+	/* FIXME, this is legacy code, a failed state change of a child should
+	 * return a failure in all cases */
 	if (GST_ELEMENT_SCHED (child) == GST_ELEMENT_SCHED (element)) {
           /* try to reset it to what is was */
           GST_STATE_PENDING (element) = old_state;
