@@ -1,3 +1,13 @@
+2004-10-06  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
+
+	* gst/wavparse/gstwavparse.h
+	  remove duplicated defines for audio codec codes
+
+	* gst-libs/gst/riff/riff-ids.h
+	* gst/wavenc/riff.h:
+	  add "4CC" code for ATRAC3 audio streams
+	  add "4CC" code for ITU_G721_ADPCM (unused for now)
+
 2004-10-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/flx/gstflxdec.c: (gst_flxdec_init), (gst_flxdec_loop):
