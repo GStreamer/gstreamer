@@ -91,7 +91,7 @@ _gst_tag_initialize (void)
 		    _("track number inside a collection"),
 		    gst_tag_merge_use_first);
   gst_tag_register (GST_TAG_TRACK_COUNT,
-		    G_TYPE_STRING,
+		    G_TYPE_UINT,
 		    _("track count"),
 		    _("count of tracks inside collection this track belongs to"), 
 		    gst_tag_merge_use_first);
