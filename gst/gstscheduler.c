@@ -773,6 +773,18 @@ void gst_bin_schedule_func(GstBin *bin) {
   }
 */
 
+static void 
+gst_schedule_lock_element (GstSchedule *sched,GstElement *element)
+{
+  cothread_lock(element->threadstate);
+}
+
+static void
+gst_schedule_unlock_element (GstSchedule *sched,GstElement *element)
+{
+  cothread_unlock(element->threadstate);
+}
+
 
 /*************** INCREMENTAL SCHEDULING CODE STARTS HERE ***************/
 
@@ -814,6 +826,8 @@ gst_schedule_init (GstSchedule *schedule)
   schedule->remove_element = GST_DEBUG_FUNCPTR(gst_schedule_remove_element);
   schedule->enable_element = GST_DEBUG_FUNCPTR(gst_schedule_enable_element);
   schedule->disable_element = GST_DEBUG_FUNCPTR(gst_schedule_disable_element);
+  schedule->lock_element = GST_DEBUG_FUNCPTR(gst_schedule_lock_element);
+  schedule->unlock_element = GST_DEBUG_FUNCPTR(gst_schedule_unlock_element);
   schedule->pad_connect = GST_DEBUG_FUNCPTR(gst_schedule_pad_connect);
   schedule->pad_disconnect = GST_DEBUG_FUNCPTR(gst_schedule_pad_disconnect);
   schedule->iterate = GST_DEBUG_FUNCPTR(gst_schedule_iterate);

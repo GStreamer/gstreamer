@@ -64,6 +64,8 @@ struct _GstSchedule {
   void (*remove_element)	(GstSchedule *sched, GstElement *element);
   void (*enable_element)	(GstSchedule *sched, GstElement *element);
   void (*disable_element)	(GstSchedule *sched, GstElement *element);
+  void (*lock_element)		(GstSchedule *sched, GstElement *element);
+  void (*unlock_element)	(GstSchedule *sched, GstElement *element);
   void (*pad_connect)		(GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad);
   void (*pad_disconnect)	(GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad);
   gboolean (*iterate)		(GstSchedule *sched);
@@ -83,6 +85,14 @@ struct _GstScheduleClass {
   GST_SCHEDULE_SAFETY ((sched)->enable_element((sched),(element)))
 #define GST_SCHEDULE_DISABLE_ELEMENT(sched,element) \
   GST_SCHEDULE_SAFETY ((sched)->disable_element((sched),(element)))
+
+#define GST_SCHEDULE_LOCK_ELEMENT(sched,element) \
+if ((sched)->lock_element != NULL) \
+((sched)->lock_element((sched),(element)))
+#define GST_SCHEDULE_UNLOCK_ELEMENT(sched,element) \
+if ((sched)->unlock_element != NULL) \
+((sched)->unlock_element((sched),(element)))
+
 #define GST_SCHEDULE_PAD_CONNECT(sched,srcpad,sinkpad) \
   GST_SCHEDULE_SAFETY ((sched)->pad_connect((sched),(srcpad),(sinkpad)))
 #define GST_SCHEDULE_PAD_DISCONNECT(sched,srcpad,sinkpad) \

@@ -26,8 +26,14 @@
 #include <glib.h>
 #include <setjmp.h>
 
-#define COTHREAD_STACKSIZE 8192
-#define COTHREAD_MAXTHREADS 16
+#ifdef HAVE_ATOMIC_H
+#include <asm/atomic.h>
+#endif
+
+#undef COTHREAD_ATOMIC
+
+#define COTHREAD_STACKSIZE 32768
+#define COTHREAD_MAXTHREADS 64
 #define STACK_SIZE 0x200000
 
 #ifndef CURRENT_STACK_FRAME
@@ -51,10 +57,16 @@ struct _cothread_state {
 
   int flags;
   void *sp;
+  jmp_buf jmp;
   /* is this needed any more? */
   void *top_sp;
   void *pc;
-  jmp_buf jmp;
+
+#ifdef COTHREAD_ATOMIC
+  atomic_t lock;
+#else
+  GMutex *lock;
+#endif
 };
 
 struct _cothread_context {
@@ -72,6 +84,10 @@ int				cothread_getcurrent	(void);
 void				cothread_switch		(cothread_state *thread);
 void				cothread_set_data	(cothread_state *thread, gchar *key, gpointer data);
 gpointer			cothread_get_data	(cothread_state *thread, gchar *key);
+
+void				cothread_lock		(cothread_state *thread);
+gboolean			cothread_trylock	(cothread_state *thread);
+void				cothread_unlock		(cothread_state *thread);
 
 cothread_state*			cothread_main		(cothread_context *ctx);
 

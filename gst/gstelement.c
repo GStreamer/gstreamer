@@ -49,6 +49,9 @@ enum {
 static void			gst_element_class_init		(GstElementClass *klass);
 static void			gst_element_init		(GstElement *element);
 
+static void			gst_element_set_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void			gst_element_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+
 static void			gst_element_real_destroy	(GtkObject *object);
 
 static GstElementStateReturn	gst_element_change_state	(GstElement *element);
@@ -68,8 +71,8 @@ GtkType gst_element_get_type(void) {
       sizeof(GstElementClass),
       (GtkClassInitFunc)gst_element_class_init,
       (GtkObjectInitFunc)gst_element_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
+      (GtkArgSetFunc)gst_element_set_arg,
+      (GtkArgGetFunc)gst_element_get_arg,
       (GtkClassInitFunc)NULL,
     };
     element_type = gtk_type_unique(GST_TYPE_OBJECT,&element_info);
@@ -116,6 +119,8 @@ gst_element_class_init (GstElementClass *klass)
 
   gtk_object_class_add_signals (gtkobject_class, gst_element_signals, LAST_SIGNAL);
 
+  gtkobject_class->set_arg =		gst_element_set_arg;
+  gtkobject_class->get_arg =		gst_element_get_arg;
   gtkobject_class->destroy =		gst_element_real_destroy;
 
   gstobject_class->save_thyself =	gst_element_save_thyself;
@@ -137,6 +142,35 @@ gst_element_init (GstElement *element)
   element->threadstate = NULL;
   element->sched = NULL;
 }
+
+
+static void
+gst_element_set_arg (GtkObject *object, GtkArg *arg, guint id)
+{
+  GstElementClass *oclass = GST_ELEMENT_CLASS (object->klass);
+
+  GST_SCHEDULE_LOCK_ELEMENT ( GST_ELEMENT_SCHED(object), GST_ELEMENT(object) );
+
+  if (oclass->set_arg)
+    (oclass->set_arg)(object,arg,id);
+
+  GST_SCHEDULE_UNLOCK_ELEMENT ( GST_ELEMENT_SCHED(object), GST_ELEMENT(object) );
+}
+
+
+static void
+gst_element_get_arg (GtkObject *object, GtkArg *arg, guint id)
+{
+  GstElementClass *oclass = GST_ELEMENT_CLASS (object->klass);
+
+  GST_SCHEDULE_LOCK_ELEMENT (GST_ELEMENT_SCHED(object), GST_ELEMENT(object) );
+
+  if (oclass->get_arg)
+    (oclass->get_arg)(object,arg,id);
+
+  GST_SCHEDULE_UNLOCK_ELEMENT (GST_ELEMENT_SCHED(object), GST_ELEMENT(object) );
+}
+
 
 /**
  * gst_element_new:

@@ -76,6 +76,13 @@ cothread_init (void)
   ctx->threads[0]->sp = (int *)CURRENT_STACK_FRAME;
   ctx->threads[0]->pc = 0;
 
+  // initialize the lock
+#ifdef COTHREAD_ATOMIC
+  atomic_set (&ctx->threads[0]->lock, 0);
+#else
+  ctx->threads[0]->lock = g_mutex_new();
+#endif
+
   GST_INFO (GST_CAT_COTHREADS,"0th thread is %p at sp:%p",ctx->threads[0], ctx->threads[0]->sp);
 
   // we consider the initiating process to be cothread 0
@@ -176,6 +183,11 @@ cothread_stub (void)
   GST_DEBUG_ENTER("");
 
   thread->flags |= COTHREAD_STARTED;
+#ifdef COTHREAD_ATOMIC
+  // do something here to lock
+#else
+  g_mutex_lock(thread->lock);
+#endif
   while (1) {
     thread->func(thread->argc,thread->argv);
     // we do this to avoid ever returning, we just switch to 0th thread
@@ -262,6 +274,20 @@ cothread_switch (cothread_state *thread)
 #endif
   if (current == thread) goto selfswitch;
 
+  // unlock the current thread, we're out of that context now
+#ifdef COTHREAD_ATOMIC
+  // do something to unlock the cothread
+#else
+  g_mutex_unlock(current->lock);
+#endif
+
+  // lock the next cothread before we even switch to it
+#ifdef COTHREAD_ATOMIC
+  // do something to lock the cothread
+#else
+  g_mutex_lock(thread->lock);
+#endif
+
   // find the number of the thread to switch to
   GST_INFO (GST_CAT_COTHREAD_SWITCH,"switching from cothread #%d to cothread #%d",
             ctx->current,thread->threadnum);
@@ -313,3 +339,35 @@ selfswitch:
   g_print("cothread: trying to switch to same thread, legal but not necessary\n");
   return;
 }
+
+
+void
+cothread_lock (cothread_state *thread)
+{
+#ifdef COTHREAD_ATOMIC
+  // do something to lock the cothread
+#else
+  g_mutex_lock(thread->lock);
+#endif
+}
+
+gboolean
+cothread_trylock (cothread_state *thread)
+{
+#ifdef COTHREAD_ATOMIC
+  // do something to try to lock the cothread
+#else
+  return g_mutex_trylock(thread->lock);
+#endif
+}
+
+void
+cothread_unlock (cothread_state *thread)
+{
+#ifdef COTHREAD_ATOMIC
+  // do something to unlock the cothread
+#else
+  g_mutex_unlock(thread->lock);
+#endif
+}
+
