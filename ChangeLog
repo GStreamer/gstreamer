@@ -1,3 +1,8 @@
+2004-02-05  David Schleef  <ds@schleef.org>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_init), (gst_dvdec_loop): Revert
+	last change, because it Just Doesn't Compile.
+
 2004-02-05  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_chain):
