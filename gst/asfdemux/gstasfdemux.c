@@ -705,13 +705,15 @@ gst_asf_demux_process_segment (GstASFDemux * asf_demux,
         return FALSE;
       }
 
-      gst_asf_demux_process_chunk (asf_demux, packet_info, &segment_info);
+      if (!gst_asf_demux_process_chunk (asf_demux, packet_info, &segment_info))
+	return FALSE;
 
       frag_size -= segment_info.chunk_size + 1;
     }
   } else {
     segment_info.chunk_size = frag_size;
-    gst_asf_demux_process_chunk (asf_demux, packet_info, &segment_info);
+    if (!gst_asf_demux_process_chunk (asf_demux, packet_info, &segment_info))
+      return FALSE;
   }
 
   return TRUE;
