@@ -28,11 +28,8 @@
 static GstElementDetails gst_asf_demux_details = {
   "ASF Demuxer",
   "Codec/Demuxer",
-  "LGPL",
   "Demultiplexes ASF Streams",
-  VERSION,
   "Owen Fraser-Green <owen@discobabe.net>",
-  "(C) 2002",
 };
 
 GST_PAD_TEMPLATE_FACTORY (sink_factory,
@@ -44,6 +41,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
 		  NULL)
 );
 			  
+static void	gst_asf_demux_base_init		(gpointer g_class);
 static void 	gst_asf_demux_class_init	(GstASFDemuxClass *klass);
 static void 	gst_asf_demux_init		(GstASFDemux *asf_demux);
 static gboolean gst_asf_demux_send_event 	(GstElement *element, 
@@ -83,6 +81,10 @@ static gboolean            gst_asf_demux_setup_pad        (GstASFDemux *asf_demu
 							   guint16 id);
 
 static GstElementStateReturn gst_asf_demux_change_state   (GstElement *element);
+static GstCaps * gst_asf_demux_video_caps (guint32 codec_fcc,
+					   asf_stream_video_format *video);
+static GstCaps * gst_asf_demux_audio_caps (guint16 codec_id,
+					   asf_stream_audio *audio);
 
 static GstPadTemplate *videosrctempl, *audiosrctempl;
 static GstElementClass *parent_class = NULL;
@@ -95,7 +97,7 @@ asf_demux_get_type (void)
   if (!asf_demux_type) {
     static const GTypeInfo asf_demux_info = {
       sizeof(GstASFDemuxClass),      
-      NULL,
+      gst_asf_demux_base_init,
       NULL,
       (GClassInitFunc)gst_asf_demux_class_init,
       NULL,
@@ -107,6 +109,63 @@ asf_demux_get_type (void)
     asf_demux_type = g_type_register_static(GST_TYPE_ELEMENT, "GstASFDemux", &asf_demux_info, 0);
   }
   return asf_demux_type;
+}
+
+static void
+gst_asf_demux_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  int i;
+  GstCaps *audcaps = NULL, *vidcaps = NULL, *temp;
+  guint32 vid_list[] = {
+    GST_MAKE_FOURCC('I','4','2','0'),
+    GST_MAKE_FOURCC('Y','U','Y','2'),
+    GST_MAKE_FOURCC('M','J','P','G'),
+    GST_MAKE_FOURCC('D','V','S','D'),
+    GST_MAKE_FOURCC('W','M','V','1'),
+    GST_MAKE_FOURCC('W','M','V','2'),
+    GST_MAKE_FOURCC('M','P','G','4'),
+    GST_MAKE_FOURCC('M','P','4','2'),
+    GST_MAKE_FOURCC('M','P','4','3'),
+    GST_MAKE_FOURCC('D','I','V','3'),
+    GST_MAKE_FOURCC('D','X','5','0'),
+    0 /* end */
+  };
+  gint aud_list[] = {
+    GST_RIFF_WAVE_FORMAT_MPEGL3,
+    GST_RIFF_WAVE_FORMAT_MPEGL12,
+    GST_RIFF_WAVE_FORMAT_PCM,
+    GST_RIFF_WAVE_FORMAT_VORBIS1,
+    GST_RIFF_WAVE_FORMAT_A52,
+    GST_RIFF_WAVE_FORMAT_DIVX_WMAV1,
+    GST_RIFF_WAVE_FORMAT_DIVX_WMAV2,
+    GST_RIFF_WAVE_FORMAT_WMAV9,
+    -1 /* end */
+  };
+
+  for (i = 0; aud_list[i] != -1; i++) {
+    temp = gst_asf_demux_audio_caps (aud_list[i], NULL);
+    audcaps = gst_caps_append (audcaps, temp);
+  }
+
+  audiosrctempl = gst_pad_template_new ("audio_%02d",
+					GST_PAD_SRC,
+				        GST_PAD_SOMETIMES,
+					audcaps, NULL);
+  for (i = 0; vid_list[i] != 0; i++) {
+    temp = gst_asf_demux_video_caps (vid_list[i], NULL);
+    vidcaps = gst_caps_append (vidcaps, temp);
+  }
+
+  videosrctempl = gst_pad_template_new ("video_%02d",
+					GST_PAD_SRC,
+				      	GST_PAD_SOMETIMES,
+					vidcaps, NULL);
+  gst_element_class_add_pad_template (element_class, audiosrctempl);
+  gst_element_class_add_pad_template (element_class, videosrctempl);
+  gst_element_class_add_pad_template (element_class, 
+		  GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_set_details (element_class, &gst_asf_demux_details);
 }
 
 static void
@@ -1509,80 +1568,28 @@ gst_asf_demux_setup_pad (GstASFDemux *asf_demux,
   return TRUE;
 }
 
-
-
-
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-  gint i = 0;
-  GstCaps *audcaps = NULL, *vidcaps = NULL, *temp;
-  guint32 vid_list[] = {
-    GST_MAKE_FOURCC('I','4','2','0'),
-    GST_MAKE_FOURCC('Y','U','Y','2'),
-    GST_MAKE_FOURCC('M','J','P','G'),
-    GST_MAKE_FOURCC('D','V','S','D'),
-    GST_MAKE_FOURCC('W','M','V','1'),
-    GST_MAKE_FOURCC('W','M','V','2'),
-    GST_MAKE_FOURCC('M','P','G','4'),
-    GST_MAKE_FOURCC('M','P','4','2'),
-    GST_MAKE_FOURCC('M','P','4','3'),
-    GST_MAKE_FOURCC('D','I','V','3'),
-    GST_MAKE_FOURCC('D','X','5','0'),
-    0 /* end */
-  };
-  gint aud_list[] = {
-    GST_RIFF_WAVE_FORMAT_MPEGL3,
-    GST_RIFF_WAVE_FORMAT_MPEGL12,
-    GST_RIFF_WAVE_FORMAT_PCM,
-    GST_RIFF_WAVE_FORMAT_VORBIS1,
-    GST_RIFF_WAVE_FORMAT_A52,
-    GST_RIFF_WAVE_FORMAT_DIVX_WMAV1,
-    GST_RIFF_WAVE_FORMAT_DIVX_WMAV2,
-    GST_RIFF_WAVE_FORMAT_WMAV9,
-    -1 /* end */
-  };
-
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
   /* create an elementfactory for the asf_demux element */
-  factory = gst_element_factory_new ("asfdemux",GST_TYPE_ASF_DEMUX,
-                                    &gst_asf_demux_details);
-
-  g_return_val_if_fail (factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_NONE);
-
-  for (i = 0; aud_list[i] != -1; i++) {
-    temp = gst_asf_demux_audio_caps (aud_list[i], NULL);
-    audcaps = gst_caps_append (audcaps, temp);
-  }
-  audiosrctempl = gst_pad_template_new ("audio_%02d",
-					GST_PAD_SRC,
-					GST_PAD_SOMETIMES,
-					audcaps, NULL);
-  for (i = 0; vid_list[i] != 0; i++) {
-    temp = gst_asf_demux_video_caps (vid_list[i], NULL);
-    vidcaps = gst_caps_append (vidcaps, temp);
-  }
-  videosrctempl = gst_pad_template_new ("video_%02d",
-					GST_PAD_SRC,
-					GST_PAD_SOMETIMES,
-					vidcaps, NULL);
-  gst_element_factory_add_pad_template (factory, audiosrctempl);
-  gst_element_factory_add_pad_template (factory, videosrctempl);
-  gst_element_factory_add_pad_template (factory,
-	GST_PAD_TEMPLATE_GET (sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "asfdemux", GST_RANK_NONE, GST_TYPE_ASF_DEMUX))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "asfdemux",
-  plugin_init
-};
+  "Demuxes ASF streams",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
