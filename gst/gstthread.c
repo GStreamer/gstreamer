@@ -136,10 +136,7 @@ gst_thread_init (GstThread *thread)
   GST_FLAG_SET (thread, GST_BIN_FLAG_MANAGER);
 
   // default is to create a thread
-  GST_FLAG_UNSET (thread, GST_THREAD_STATE_STARTED);
-  GST_FLAG_UNSET (thread, GST_THREAD_STATE_REAPING);
-  GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
-  GST_FLAG_UNSET (thread, GST_THREAD_STATE_ELEMENT_CHANGED);
+  GST_FLAG_SET (thread, GST_THREAD_CREATE);
 
   thread->lock = g_mutex_new();
   thread->cond = g_cond_new();
@@ -299,7 +296,7 @@ gst_thread_change_state (GstElement *element)
       //GST_FLAG_SET (thread, GST_THREAD_STATE_REAPING);
       gst_thread_signal_thread (thread,GST_THREAD_STATE_REAPING);
 
-      pthread_join(thread->thread_id);
+      pthread_join(thread->thread_id,NULL);
 
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_REAPING);
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_STARTED);
@@ -369,7 +366,6 @@ gst_thread_main_loop (void *arg)
       gst_thread_signal_thread (thread,GST_THREAD_STATE_ELEMENT_CHANGED);
     }
   }
-  
 
   GST_INFO (GST_CAT_THREAD, "gstthread: thread \"%s\" is stopped",
 		  GST_ELEMENT_NAME (thread));
