@@ -172,6 +172,8 @@ struct _GstElementClass {
   /* vtable*/
   gboolean		(*release_locks)	(GstElement *element);
   gboolean		(*send_event)		(GstElement *element, GstEvent *event);
+  gboolean		(*query)		(GstElement *element, GstPadQueryType type,
+		  				 GstFormat *format, gint64 *value);
   /* change the element state */
   GstElementStateReturn (*change_state)		(GstElement *element);
   /* request a new pad */
@@ -263,6 +265,8 @@ void			gst_element_disconnect_pads	(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
 
 gboolean		gst_element_send_event		(GstElement *element, GstEvent *event);
+gboolean		gst_element_query		(GstElement *element, GstPadQueryType type,
+			                                 GstFormat *format, gint64 *value);
 
 void			gst_element_set_eos		(GstElement *element);
 

@@ -64,6 +64,8 @@ static void			gst_element_dispatch_properties_changed (GObject * object, guint n
 static void 			gst_element_dispose 		(GObject *object);
 
 static gboolean 		gst_element_send_event_default 	(GstElement *element, GstEvent *event);
+static gboolean 		gst_element_query_default 	(GstElement *element, GstPadQueryType type,
+		          					 GstFormat *format, gint64 *value);
 
 static GstElementStateReturn	gst_element_change_state	(GstElement *element);
 static void			gst_element_error_func		(GstElement* element, GstElement *source, gchar *errormsg);
@@ -162,6 +164,7 @@ gst_element_class_init (GstElementClass *klass)
   klass->padtemplates 			= NULL;
   klass->numpadtemplates 		= 0;
   klass->send_event	 		= GST_DEBUG_FUNCPTR (gst_element_send_event_default);
+  klass->query		 		= GST_DEBUG_FUNCPTR (gst_element_query_default);
 }
 
 static void
@@ -1657,6 +1660,42 @@ gst_element_send_event (GstElement *element, GstEvent *event)
 
   return FALSE;
 }
+
+static gboolean
+gst_element_query_default (GstElement *element, GstPadQueryType type,
+		           GstFormat *format, gint64 *value)
+{
+  GList *pads = element->pads;
+  gboolean res = FALSE;
+
+  while (pads) {
+    GstPad *pad = GST_PAD_CAST (pads->data);
+    
+    if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
+      if (GST_PAD_IS_CONNECTED (pad)) {
+	res = gst_pad_query (GST_PAD_PEER (pad), type, format, value);
+	break;
+      }
+    }
+    pads = g_list_next (pads);
+  }
+  return res;
+}
+
+gboolean
+gst_element_query (GstElement *element, GstPadQueryType type,
+		   GstFormat *format, gint64 *value)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (format != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+  
+  if (CLASS (element)->query)
+    return CLASS (element)->query (element, type, format, value);
+
+  return FALSE;
+}
+
 
 
 /**
