@@ -2,6 +2,7 @@
 # Jack Moffitt <jack@icecast.org> 10-21-2000
 # Shamelessly stolen from Owen Taylor and Manish Singh
 # thomasvs added check for vorbis_bitrate_addblock which is new in rc3
+# thomasvs added check for OV_ECTL_RATEMANAGE_SET which is new in 1.0 final
 
 dnl XIPH_PATH_VORBIS([ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
 dnl Test for libvorbis, and define VORBIS_CFLAGS and VORBIS_LIBS
@@ -69,8 +70,13 @@ int main ()
     /* this function was added in 1.0rc3, so this is what we're testing for */
     vorbis_bitrate_addblock (&vb);
 
+    /* this define was added in 1.0 final */
+#ifdef OV_ECTL_RATEMANAGE_SET
     system("touch conf.vorbistest");
     return 0;
+#else
+    return -1;
+#endif
 }
 
 ],, no_vorbis=yes,[echo $ac_n "cross compiling; assumed OK... $ac_c"])
