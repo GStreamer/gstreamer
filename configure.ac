@@ -388,7 +388,7 @@ GST_CHECK_FEATURE(AVIFILE, [avifile], windec winenc, [
 dnl *** CDParanoia ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDPARANOIA, true)
 GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
-  GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, cdda_open, , cdda_interface.h, CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia")
+  GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, cdda_open, -lm, cdda_interface.h, CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia")
   AC_SUBST(CDPARANOIA_LIBS)
 ])
 dnl FIXME : add second check somehow if that is necessary
@@ -531,7 +531,7 @@ GST_CHECK_FEATURE(OPENQUICKTIME, [Open Quicktime], quicktime_parser quicktime_de
 dnl *** raw1394 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_RAW1394, true)
 GST_CHECK_FEATURE(RAW1394, [raw1394 library], dv1394src, [
-  GST_CHECK_LIBHEADER(RAW1394, raw1934, raw1934_get_handle,, libraw1394/raw1394.h, RAW1394_LIBS="-raw1394")
+  GST_CHECK_LIBHEADER(RAW1394, raw1394, raw1394_get_handle,, libraw1394/raw1394.h, RAW1394_LIBS="-raw1394")
   AC_SUBST(RAW1394_LIBS)
 ])
 
