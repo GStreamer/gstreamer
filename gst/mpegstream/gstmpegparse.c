@@ -424,6 +424,8 @@ gst_mpeg_parse_loop (GstElement *element)
     GST_DEBUG (0, "have chunk 0x%02X", id);
 
     switch (id) {
+      case 0xb9:
+	break;
       case 0xba:
         if (CLASS (mpeg_parse)->parse_packhead) {
 	  CLASS (mpeg_parse)->parse_packhead (mpeg_parse, buffer);

@@ -54,7 +54,7 @@ gst_mpeg_packetize_destroy (GstMPEGPacketize *packetize)
 }
 
 static GstData*
-parse_packhead (GstMPEGPacketize * packetize)
+parse_packhead (GstMPEGPacketize *packetize)
 {
   gint length = 8 + 4;
   guint8 *buf;
@@ -66,6 +66,7 @@ parse_packhead (GstMPEGPacketize * packetize)
   got_bytes = gst_bytestream_peek_bytes (packetize->bs, &buf, length);
   if (got_bytes < length)
     return NULL;
+
   buf += 4;
 
   GST_DEBUG (0, "code %02x", *buf);
@@ -91,6 +92,19 @@ parse_packhead (GstMPEGPacketize * packetize)
   return GST_DATA (outbuf);
 }
 
+static GstData*
+parse_end (GstMPEGPacketize *packetize)
+{
+  guint32 got_bytes;
+  GstBuffer *outbuf;
+
+  got_bytes = gst_bytestream_read (packetize->bs, &outbuf, 4);
+  if (got_bytes < 4)
+    return NULL;
+
+  return GST_DATA (outbuf);
+}
+
 static inline GstData*
 parse_generic (GstMPEGPacketize *packetize)
 {
@@ -105,6 +119,7 @@ parse_generic (GstMPEGPacketize *packetize)
   got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&buf, length);
   if (got_bytes < 6) 
     return NULL;
+
   buf += 4;
 
   length += GUINT16_FROM_BE (*(guint16 *) buf);
@@ -129,7 +144,8 @@ parse_chunk (GstMPEGPacketize *packetize)
 
   chunksize = gst_bytestream_peek_bytes (bs, (guint8**)&buf, 4096);
   if (chunksize == 0)
-    return FALSE;
+    return NULL;
+
   offset = 4;
 
   code = GUINT32_FROM_BE (*((guint32 *)(buf+offset)));
@@ -168,18 +184,19 @@ find_start_code (GstMPEGPacketize *packetize)
   gint chunksize;
 
   chunksize = gst_bytestream_peek_bytes (bs, (guint8**)&buf, 4096);
-  if (chunksize == 0)
+  if (chunksize < 5)
     return FALSE;
+
   offset = 4;
 
   code = GUINT32_FROM_BE (*((guint32 *)(buf)));
 
-  GST_DEBUG (0, "code = %08x", code);
+  GST_DEBUG (0, "code = %08x %p %08x", code, buf, chunksize);
 
   while ((code & 0xffffff00) != 0x100L) {
     code = (code << 8) | buf[offset++];
     
-    GST_DEBUG (0, "  code = %08x", code);
+    GST_DEBUG (0, "  code = %08x %p %08x", code, buf, chunksize);
 
     if (offset == chunksize) {
       gst_bytestream_flush_fast (bs, offset);
@@ -204,6 +221,8 @@ gst_mpeg_packetize_read (GstMPEGPacketize *packetize)
   gboolean got_event = FALSE;
   GstData *outbuf = NULL;
 
+  g_return_val_if_fail (packetize != NULL, NULL);
+
   while (outbuf == NULL) {
     if (!find_start_code (packetize))
       got_event = TRUE;
@@ -226,6 +245,11 @@ gst_mpeg_packetize_read (GstMPEGPacketize *packetize)
 	    break;
           case SYS_HEADER_START_CODE:
 	    outbuf = parse_generic (packetize);
+	    if (!outbuf)
+	      got_event = TRUE;
+	    break;
+	  case ISO11172_END_START_CODE:
+	    outbuf = parse_end (packetize);
 	    if (!outbuf)
 	      got_event = TRUE;
 	    break;
