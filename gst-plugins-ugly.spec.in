@@ -1,6 +1,6 @@
 Name: 		gstreamer-plugins
 Version: 	@VERSION@
-Release: 	@GST_PLUGINS_RELEASE@
+Release: 	@GST_PLUGINS_VERSION_RELEASE@
 Summary: 	GStreamer Streaming-media framework plug-ins.
 
 %define 	prefix  /usr
