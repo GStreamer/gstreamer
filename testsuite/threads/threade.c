@@ -13,7 +13,7 @@ gboolean done = FALSE;
 static void
 construct_pipeline (GstElement *pipeline, gint identities)
 {
-  GstElement *src, *sink, *identity;
+  GstElement *src, *sink, *identity = NULL;
   GstElement *from;
   int i;
 
