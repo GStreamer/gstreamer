@@ -44,5 +44,16 @@
         <long>GStreamer can record video from any number of input elements.  Some possible choices are v4lsrc and videotestsrc. The video source can be a partial pipeline instead of just one element.</long>
       </locale>
     </schema>
+    <schema>
+      <key>/schemas/system/gstreamer/default/visualisation</key>
+      <applyto>/system/gstreamer/default/visualisation</applyto>
+      <owner>gstreamer</owner>
+      <type>string</type>
+      <default>goom</default>
+      <locale name="C">
+        <short>default GStreamer visualisation plugin</short>
+        <long>GStreamer can put visualisation plugins in a pipeline to transform audio stream in video frames. Default is goom but more visualisation plugins will be ported soon. The visualisation plugin can be a partial pipeline instead of just one element.</long>
+      </locale>
+    </schema>
   </schemalist>
 </gconfschemafile>

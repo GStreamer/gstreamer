@@ -19,10 +19,6 @@ GstElement *	gst_gconf_get_default_video_sink (void);
 GstElement *	gst_gconf_get_default_audio_sink (void);
 GstElement *	gst_gconf_get_default_video_src (void);
 GstElement *	gst_gconf_get_default_audio_src (void);
+GstElement *	gst_gconf_get_default_visualisation_element (void);
 
-/*
-guint		gst_gconf_notify_add		(const gchar *key,
-    						 GConfClientNotifyFunc func,
-						 gpointer user_data);
-*/
 #endif /* GST_GCONF_H */
