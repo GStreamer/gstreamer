@@ -256,9 +256,6 @@ gst_v4lsrc_srcconvert (GstPad    *pad,
     case GST_FORMAT_TIME:
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_UNITS;
-          /* fall-through */
-        case GST_FORMAT_UNITS:
           *dest_value = src_value * fps / GST_SECOND;
           break;
         default:
@@ -266,11 +263,8 @@ gst_v4lsrc_srcconvert (GstPad    *pad,
       }
       break;
 
-    case GST_FORMAT_UNITS:
+    case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
-          /* fall-through */
         case GST_FORMAT_TIME:
           *dest_value = src_value * GST_SECOND / fps;
           break;

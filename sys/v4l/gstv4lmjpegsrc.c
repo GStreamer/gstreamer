@@ -97,7 +97,7 @@ static GstElementStateReturn gst_v4lmjpegsrc_change_state (GstElement     *eleme
 
 /* bufferpool functions */
 static GstBuffer*            gst_v4lmjpegsrc_buffer_new   (GstBufferPool  *pool,
-                                                           guint64        location,
+                                                           guint64        offset,
                                                            guint          size,
                                                            gpointer       user_data);
 static void                  gst_v4lmjpegsrc_buffer_free  (GstBufferPool  *pool,
@@ -300,9 +300,6 @@ gst_v4lmjpegsrc_srcconvert (GstPad    *pad,
     case GST_FORMAT_TIME:
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_UNITS;
-          /* fall-through */
-        case GST_FORMAT_UNITS:
           *dest_value = src_value * fps / GST_SECOND;
           break;
         default:
@@ -310,11 +307,8 @@ gst_v4lmjpegsrc_srcconvert (GstPad    *pad,
       }
       break;
 
-    case GST_FORMAT_UNITS:
+    case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
-          /* fall-through */
         case GST_FORMAT_TIME:
           *dest_value = src_value * GST_SECOND / fps;
           break;
@@ -798,7 +792,7 @@ gst_v4lmjpegsrc_set_clock (GstElement *element,
 
 static GstBuffer*
 gst_v4lmjpegsrc_buffer_new (GstBufferPool *pool,
-                            guint64       location,
+                            guint64       offset,
                             guint         size,
                             gpointer      user_data)
 {
