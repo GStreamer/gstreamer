@@ -1,22 +1,30 @@
-filterdir = $(libdir)/gst
+plugindir = $(libdir)/gst
 
-filter_LTLIBRARIES = libgststaticautoplug.la libgststaticautoplugrender.la \
-	libgstautoplugcache.la libgstautoplugger.la
+plugin_LTLIBRARIES = \
+	libgststaticautoplug.la \
+	libgststaticautoplugrender.la \
+	libgstautoplugcache.la \
+	libgstautoplugger.la
 
 libgststaticautoplug_la_SOURCES = gststaticautoplug.c 
-libgststaticautoplugrender_la_SOURCES =	gststaticautoplugrender.c
-libgstautoplugcache_la_SOURCES = gstautoplugcache.c
-libgstautoplugger_la_SOURCES = gstautoplugger.c
-
+libgststaticautoplug_la_CFLAGS = $(GST_CFLAGS)
+libgststaticautoplug_la_LIBADD = $(GST_LIBS)
 libgststaticautoplug_la_LDFLAGS = -version-info $(GST_LIBVERSION)
-libgststaticautoplugrender_la_LDFLAGS = -version-info $(GST_LIBVERSION)
-libgstautoplugcache_la_LDFLAGS = -version-info $(GST_LIBVERSION)
-libgstautoplugger_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 
-libgststaticautoplug_la_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
-libgststaticautoplugrender_la_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
-libgstautoplugcache_la_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
-libgstautoplugger_la_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
+libgststaticautoplugrender_la_SOURCES = gststaticautoplugrender.c
+libgststaticautoplugrender_la_CFLAGS = $(GST_CFLAGS)
+libgststaticautoplugrender_la_LIBADD = $(GST_LIBS)
+libgststaticautoplugrender_la_LDFLAGS = -version-info $(GST_LIBVERSION)
+
+libgstautoplugcache_la_SOURCES = gstautoplugcache.c
+libgstautoplugcache_la_CFLAGS = $(GST_CFLAGS)
+libgstautoplugcache_la_LIBADD = $(GST_LIBS)
+libgstautoplugcache_la_LDFLAGS = -version-info $(GST_LIBVERSION)
+
+libgstautoplugger_la_SOURCES = gstautoplugger.c
+libgstautoplugger_la_CFLAGS = $(GST_CFLAGS)
+libgstautoplugger_la_LIBADD = $(GST_LIBS)
+libgstautoplugger_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 
 noinst_HEADERS = gststaticautoplug.h gststaticautoplugrender.h
 

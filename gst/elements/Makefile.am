@@ -1,6 +1,6 @@
-filterdir = $(libdir)/gst
+plugindir = $(libdir)/gst
 
-filter_LTLIBRARIES = libgstelements.la
+plugin_LTLIBRARIES = libgstelements.la
 
 libgstelements_la_DEPENDENCIES = ../libgst.la
 libgstelements_la_SOURCES =	\
@@ -17,6 +17,9 @@ libgstelements_la_SOURCES =	\
 	gsttee.c		\
 	gstaggregator.c		\
 	gststatistics.c
+libgstelements_la_CFLAGS = $(GST_CFLAGS)
+libgstelements_la_LIBADD = $(GST_LIBS)
+libgstelements_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 
 noinst_HEADERS =		\
 	gstfakesrc.h		\
@@ -31,7 +34,3 @@ noinst_HEADERS =		\
 	gstaggregator.h		\
 	gststatistics.h	        \
 	gstfilesrc.h
-
-libgstelements_la_CFLAGS = $(GHTTP_CFLAGS) $(GST_CFLAGS)
-libgstelements_la_LIBADD = $(GHTTP_LIBS) $(GST_LIBS)
-## left from merging, FIXME or DELETEME libgstelements_la_LDFLAGS = -version-info $(GST_LIBVERSION)

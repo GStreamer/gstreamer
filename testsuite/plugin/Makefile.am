@@ -2,6 +2,9 @@
 testprogs = static # dynamic linked loading registry static2
 # filterdir = $(libdir)/gst
 
+AM_CFLAGS = $(GST_CFLAGS)
+LIBS = $(GST_LIBS)
+
 noinst_LTLIBRARIES = libtestplugin.la libtestplugin2.la
 
 libtestplugin_la_SOURCES = testplugin.c
@@ -18,7 +21,3 @@ static_SOURCES = static.c testplugin_s.c testplugin2_s.c
 TESTS = $(testprogs)
 
 check_PROGRAMS = $(testprogs)
-
-LIBS = $(GST_LIBS)
-CFLAGS = $(GST_CFLAGS)
-
