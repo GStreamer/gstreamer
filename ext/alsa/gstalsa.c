@@ -1168,7 +1168,6 @@ sink_restart:
         pad->buf = gst_pad_pull (pad->pad);
         if (GST_IS_EVENT (pad->buf)) {
 	  gboolean cont = gst_alsa_sink_check_event (this, i, GST_EVENT (pad->buf));
-	  gst_data_unref (GST_DATA (pad->buf));
 	  pad->buf = NULL;
 	  if (cont)
 	    continue;
