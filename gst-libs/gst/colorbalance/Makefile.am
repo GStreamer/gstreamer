@@ -19,8 +19,7 @@ built_headers =	\
 	colorbalance-enumtypes.h
 
 libgstcolorbalanceinclude_HEADERS = \
-	$(colorbalance_headers) \
-	colorbalance-enumtypes.h
+	$(colorbalance_headers)
 
 nodist_libgstcolorbalanceinclude_HEADERS = \
 	colorbalance-enumtypes.h

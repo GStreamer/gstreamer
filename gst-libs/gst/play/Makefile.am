@@ -17,7 +17,8 @@ libgstplay_@GST_MAJORMINOR@_la_SOURCES = play.c
 nodist_libgstplay_@GST_MAJORMINOR@_la_SOURCES = play-enumtypes.c
 
 libgstplay_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/play
-libgstplay_@GST_MAJORMINOR@include_HEADERS = $(play_headers) $(built_headers)
+libgstplay_@GST_MAJORMINOR@include_HEADERS = $(play_headers)
+nodist_libgstplay_@GST_MAJORMINOR@include_HEADERS = $(built_headers)
 
 libgstplay_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_CFLAGS)
 libgstplay_@GST_MAJORMINOR@_la_LIBADD =	\
