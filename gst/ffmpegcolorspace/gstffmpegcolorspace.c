@@ -62,7 +62,7 @@ struct _GstFFMpegColorspaceClass
 
 /* elementfactory information */
 static GstElementDetails ffmpegcolorspace_details = {
-  "FFMPEG Colorspace converter",
+  "FFMPEG-based colorspace converter in gst-plugins",
   "Filter/Converter/Video",
   "Converts video from one colorspace to another",
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",
@@ -143,7 +143,7 @@ static GstCaps *
 gst_ffmpegcolorspace_getcaps (GstPad * pad)
 {
   GstFFMpegColorspace *space;
-  GstCaps *othercaps;
+  GstCaps *othercaps = NULL;
   GstCaps *caps;
   GstPad *otherpad;
 
@@ -151,7 +151,11 @@ gst_ffmpegcolorspace_getcaps (GstPad * pad)
 
   otherpad = (pad == space->srcpad) ? space->sinkpad : space->srcpad;
 
-  othercaps = gst_pad_get_allowed_caps (otherpad);
+  /* use already negotiated caps if they exist */
+  if (GST_PAD_CAPS (otherpad))
+    othercaps = gst_caps_copy (GST_PAD_CAPS (otherpad));
+  if (!othercaps)
+    othercaps = gst_pad_get_allowed_caps (otherpad);
 
   othercaps = gst_ffmpegcolorspace_caps_remove_format_info (othercaps);
 
