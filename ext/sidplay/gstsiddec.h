@@ -27,11 +27,9 @@
 #include <stdlib.h>
 #include <sidplay/player.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 #include <gst/gst.h>
+
+G_BEGIN_DECLS
 
 #define GST_TYPE_SIDDEC \
   (gst_siddec_get_type())
@@ -62,6 +60,8 @@ struct _GstSidDec {
   emuEngine *engine;
   sidTune *tune;
   emuConfig *config;
+
+  GstCaps *metadata;
 };
 
 struct _GstSidDecClass {
@@ -70,9 +70,6 @@ struct _GstSidDecClass {
 
 GType gst_siddec_get_type (void);
 	
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_SIDDEC_H__ */

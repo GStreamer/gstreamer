@@ -52,9 +52,6 @@ enum {
 
 enum {
   ARG_0,
-  ARG_DEPTH,
-  ARG_CHANNELS,
-  ARG_FREQUENCY,
   ARG_TUNE,
   ARG_CLOCK,
   ARG_MEMORY,
@@ -62,6 +59,7 @@ enum {
   ARG_MEASURED_VOLUME,
   ARG_MOS8580,
   ARG_FORCE_SPEED,
+  ARG_METADATA,
   /* FILL ME */
 };
 
@@ -108,61 +106,6 @@ enum {
   SID_STATE_LOAD_TUNE = 2,
   SID_STATE_PLAY_TUNE = 3,
 };
-
-#define GST_TYPE_SID_DEPTH (gst_sid_depth_get_type())
-static GType
-gst_sid_depth_get_type (void)
-{
-  static GType sid_depth_type = 0;
-  static GEnumValue sid_depth[] = {
-    { SIDEMU_8BIT,   "8",  "8 bit" },
-    { SIDEMU_16BIT,  "16", "16 bit" },
-    { 0, NULL, NULL },
-  };
-  if (!sid_depth_type) {
-    sid_depth_type = g_enum_register_static ("GstSidDepth", sid_depth);
-  }
-  return sid_depth_type;
-}
-
-#define GST_TYPE_SID_CHANNELS (gst_sid_channels_get_type())
-static GType
-gst_sid_channels_get_type (void)
-{
-  static GType sid_channels_type = 0;
-  static GEnumValue sid_channels[] = {
-    { SIDEMU_MONO,   "1", "Mono" },
-    { SIDEMU_STEREO, "2", "Stereo" },
-    { 0, NULL, NULL },
-  };
-  if (!sid_channels_type) {
-    sid_channels_type = g_enum_register_static ("GstSidChannels", sid_channels);
-  }
-  return sid_channels_type;
-}
-
-#define GST_TYPE_SID_FREQUENCY (gst_sid_frequency_get_type())
-static GType
-gst_sid_frequency_get_type (void)
-{
-  static GType sid_frequency_type = 0;
-  static GEnumValue sid_frequency[] = {
-    { 8000,   "8000",  "8000 Hz" },
-    { 11025,  "11025", "11025 Hz" },
-    { 16500,  "16500", "16500 Hz" },
-    { 22050,  "22050", "22050 Hz" },
-    { 27500,  "27500", "27500 Hz" },
-    { 32000,  "32000", "32000 Hz" },
-    { 37500,  "37500", "37500 Hz" },
-    { 44100,  "44100", "44100 Hz" },
-    { 48000,  "48000", "48000 Hz" },
-    { 0, NULL, NULL },
-  };
-  if (!sid_frequency_type) {
-    sid_frequency_type = g_enum_register_static ("GstSidFrequency", sid_frequency);
-  }
-  return sid_frequency_type;
-}
 
 #define GST_TYPE_SID_CLOCK (gst_sid_clock_get_type())
 static GType
@@ -266,15 +209,6 @@ gst_siddec_class_init (GstSidDec *klass)
 
   parent_class = GST_ELEMENT_CLASS (g_type_class_ref (GST_TYPE_ELEMENT));
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEPTH,
-    g_param_spec_enum ("depth", "depth", "depth",
-                       GST_TYPE_SID_DEPTH, SIDEMU_16BIT, (GParamFlags)G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNELS,
-    g_param_spec_enum ("channels", "channels", "channels",
-                       GST_TYPE_SID_CHANNELS, SIDEMU_STEREO, (GParamFlags)G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQUENCY,
-    g_param_spec_enum ("frequency", "frequency", "frequency",
-                       GST_TYPE_SID_FREQUENCY, 44100, (GParamFlags)G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TUNE,
     g_param_spec_int ("tune", "tune", "tune",
                        1, 100, 1, (GParamFlags)G_PARAM_READWRITE));
@@ -296,6 +230,9 @@ gst_siddec_class_init (GstSidDec *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FORCE_SPEED,
     g_param_spec_boolean ("force_speed", "force_speed", "force_speed",
                        TRUE, (GParamFlags)G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_METADATA,
+    g_param_spec_boxed ("metadata", "Metadata", "Metadata",
+                        GST_TYPE_CAPS, G_PARAM_READABLE));
 
   gobject_class->set_property = gst_siddec_set_property;
   gobject_class->get_property = gst_siddec_get_property;
@@ -327,6 +264,7 @@ gst_siddec_init (GstSidDec *siddec)
   siddec->config->bitsPerSample = SIDEMU_16BIT;            // bits per sample
   siddec->config->sampleFormat = SIDEMU_SIGNED_PCM;        // sample fomat
   siddec->config->channels = SIDEMU_STEREO;                // channels
+  
   siddec->config->sidChips = 0;                            // -
   siddec->config->volumeControl = SIDEMU_NONE;             // volume control
   siddec->config->mos8580 = TRUE;                          // mos8580
@@ -349,6 +287,101 @@ gst_siddec_init (GstSidDec *siddec)
   siddec->tune_len = 0;
   siddec->tune_number = 1;
   siddec->total_bytes = 0;
+}
+
+static void 
+update_metadata (GstSidDec *siddec)
+{
+  sidTuneInfo info;
+  GstProps *props;
+  GstPropsEntry *entry;
+
+  if (siddec->tune->getInfo (info)) {
+    props = gst_props_empty_new ();
+
+    if (info.nameString) {
+      entry = gst_props_entry_new ("Title", GST_PROPS_STRING (info.nameString));
+      gst_props_add_entry (props, entry);
+    }
+    if (info.authorString) {
+      entry = gst_props_entry_new ("Composer", GST_PROPS_STRING (info.authorString));
+      gst_props_add_entry (props, entry);
+    }
+    if (info.copyrightString) {
+      entry = gst_props_entry_new ("Copyright", GST_PROPS_STRING (info.copyrightString));
+      gst_props_add_entry (props, entry);
+    }
+
+    siddec->metadata = gst_caps_new ("mad_metadata",
+                                     "application/x-gst-metadata",
+			              props);
+
+    g_object_notify (G_OBJECT (siddec), "metadata");
+  }
+}
+
+#define GET_FIXED_INT(caps, name, dest)         \
+G_STMT_START {                                  \
+  if (gst_caps_has_fixed_property (caps, name)) \
+    gst_caps_get_int (caps, name, (gint*)dest);  \
+} G_STMT_END
+#define GET_FIXED_BOOLEAN(caps, name, dest)     \
+G_STMT_START {                                  \
+  if (gst_caps_has_fixed_property (caps, name)) \
+    gst_caps_get_boolean (caps, name, dest);    \
+} G_STMT_END
+
+static gboolean
+siddec_negotiate (GstSidDec *siddec)
+{
+  GstCaps *allowed;
+  gboolean sign = TRUE;
+  gint width = 0, depth = 0;
+
+  allowed = gst_pad_get_allowed_caps (siddec->srcpad);
+  if (!allowed)
+    return FALSE;
+
+  GET_FIXED_INT     (allowed, "width",      &width);
+  GET_FIXED_INT     (allowed, "depth",      &depth);
+
+  if (width && depth && width != depth) {
+    return FALSE;
+  }
+  width = width | depth;
+  
+  if (width) {
+    siddec->config->bitsPerSample = width;
+  }
+
+  GET_FIXED_BOOLEAN (allowed, "signed",     &sign);
+  GET_FIXED_INT     (allowed, "rate",       &siddec->config->frequency);
+  GET_FIXED_INT     (allowed, "channels",   &siddec->config->channels);
+
+  siddec->config->sampleFormat = (sign ? SIDEMU_SIGNED_PCM : SIDEMU_UNSIGNED_PCM);
+  
+  if (!GST_PAD_CAPS (siddec->srcpad)) {
+    if (!gst_pad_try_set_caps (siddec->srcpad, 
+      GST_CAPS_NEW (
+        "siddec_src",
+        "audio/raw",
+          "format",       GST_PROPS_STRING ("int"),
+            "law",        GST_PROPS_INT (0),            
+            "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+            "signed",     GST_PROPS_BOOLEAN (sign),
+            "width",      GST_PROPS_INT (siddec->config->bitsPerSample),
+            "depth",      GST_PROPS_INT (siddec->config->bitsPerSample),
+            "rate",       GST_PROPS_INT (siddec->config->frequency),
+            "channels",   GST_PROPS_INT (siddec->config->channels)
+      )))
+    {
+      return FALSE;
+    }
+  }
+
+  siddec->engine->setConfig (*siddec->config);
+
+  return TRUE;
 }
 
 static void 
@@ -388,40 +421,31 @@ gst_siddec_loop (GstElement *element)
     }
   }
   if (siddec->state == SID_STATE_LOAD_TUNE) {
-
-    if (siddec->tune->load (siddec->tune_buffer, siddec->tune_len)) {
-      if (sidEmuInitializeSong (*siddec->engine, *siddec->tune, siddec->tune_number)) {
-
-	gst_pad_try_set_caps (siddec->srcpad, 
-			  GST_CAPS_NEW (
-			    "siddec_src",
-			    "audio/raw",
-			      "format",       GST_PROPS_STRING ("int"),
-			        "law",        GST_PROPS_INT (0),            
-			        "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-			        "signed",     GST_PROPS_BOOLEAN (siddec->config->bitsPerSample==8?FALSE:TRUE),
-			        "width",      GST_PROPS_INT (siddec->config->bitsPerSample),
-			        "depth",      GST_PROPS_INT (siddec->config->bitsPerSample),
-			        "rate",       GST_PROPS_INT (siddec->config->frequency),
-			        "channels",   GST_PROPS_INT (siddec->config->channels)
-				));
-	siddec->state = SID_STATE_PLAY_TUNE;
-      }
-      else {
-        g_warning ("siddec: could not initialize song\n");
-      }
+    if (!siddec->tune->load (siddec->tune_buffer, siddec->tune_len)) {
+      gst_element_error (GST_ELEMENT (siddec), "could not load song");
+      return;
     }
-    else {
-      g_warning ("siddec: could not load song\n");
+    
+    update_metadata (siddec);
+
+    if (!siddec_negotiate (siddec)) {
+      gst_element_error (GST_ELEMENT (siddec), "could not negotiate format");
+      return;
     }
+
+    if (!sidEmuInitializeSong (*siddec->engine, *siddec->tune, siddec->tune_number)) {
+      gst_element_error (GST_ELEMENT (siddec), "could not initialize song");
+      return;
+    }
+
+    siddec->state = SID_STATE_PLAY_TUNE;
   }
   if (siddec->state == SID_STATE_PLAY_TUNE) {
-    GstBuffer *out = gst_buffer_new ();
+    GstBuffer *out;
     GstFormat format;
     gint64 value;
 
-    GST_BUFFER_SIZE (out) = 4096;
-    GST_BUFFER_DATA (out) = (guchar *)g_malloc (4096);
+    out = gst_buffer_new_and_alloc (4096);
 
     sidEmuFillBuffer (*siddec->engine, *siddec->tune,
  		      GST_BUFFER_DATA (out), GST_BUFFER_SIZE (out));
@@ -542,18 +566,6 @@ gst_siddec_set_property (GObject *object, guint prop_id, const GValue *value, GP
   siddec = GST_SIDDEC(object);
 
   switch(prop_id) {
-    case ARG_DEPTH:
-      siddec->config->bitsPerSample =  g_value_get_enum (value);
-      siddec->config->sampleFormat = (siddec->config->bitsPerSample==8?
-      			SIDEMU_UNSIGNED_PCM:
-      			SIDEMU_SIGNED_PCM);
-      break;
-    case ARG_CHANNELS:
-      siddec->config->channels = g_value_get_enum (value);
-      break;
-    case ARG_FREQUENCY:
-      siddec->config->frequency = g_value_get_enum (value);
-      break;
     case ARG_TUNE:
       siddec->tune_number = g_value_get_int (value);
       break;
@@ -592,15 +604,6 @@ gst_siddec_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
   siddec = GST_SIDDEC(object);
 
   switch(prop_id) {
-    case ARG_DEPTH:
-      g_value_set_enum (value, siddec->config->bitsPerSample);
-      break;
-    case ARG_CHANNELS:
-      g_value_set_enum (value, siddec->config->channels);
-      break;
-    case ARG_FREQUENCY:
-      g_value_set_enum (value, siddec->config->frequency);
-      break;
     case ARG_TUNE:
       g_value_set_int (value, siddec->tune_number);
       break;
@@ -621,6 +624,9 @@ gst_siddec_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
       break;
     case ARG_FORCE_SPEED:
       g_value_set_boolean (value, siddec->config->forceSongSpeed);
+      break;
+    case ARG_METADATA:
+      g_value_set_boxed (value, siddec->metadata);
       break;
     default:
       /* G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec); */
