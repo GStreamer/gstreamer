@@ -66,7 +66,8 @@ debug_log_handler (const gchar *log_domain,
 }
 
 enum {
-  ARG_FATAL_WARNINGS=1,
+  ARG_VERSION=1,
+  ARG_FATAL_WARNINGS,
   ARG_INFO_MASK,
   ARG_DEBUG_MASK,
   ARG_MASK,
@@ -84,16 +85,17 @@ enum {
 
 static const struct poptOption options[] = {
   {NULL, NUL, POPT_ARG_CALLBACK|POPT_CBFLAG_PRE|POPT_CBFLAG_POST, &init_popt_callback, 0, NULL, NULL},
-  {"gst-fatal-warnings", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP, NULL, ARG_FATAL_WARNINGS, "Make all warnings fatal", NULL},
-  {"gst-info-mask",   NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_INFO_MASK,   "info bitmask", "MASK"},
-  {"gst-debug-mask",  NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_DEBUG_MASK,  "debugging bitmask", "MASK"},
-  {"gst-mask",        NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_MASK,        "bitmask for both info and debugging", "MASK"},
-  {"gst-mask-help",   NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_MASK_HELP,   "how to set the level of diagnostic output (-mask values)", NULL},
-  {"gst-plugin-spew", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_PLUGIN_SPEW, "enable verbose plugin loading diagnostics", NULL},
-  {"gst-plugin-path", NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_PATH, "'" G_SEARCHPATH_SEPARATOR_S "'--separated path list for loading plugins", "PATHS"},
-  {"gst-plugin-load", NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_LOAD, "comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH", "PLUGINS"},
-  {"gst-scheduler",   NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_SCHEDULER,   "scheduler to use ('standard' is the default)", "SCHEDULER"},
-  {"gst-registry",   NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_REGISTRY,   "registry to use" , "REGISTRY"},
+  {"gst-version",        NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_VERSION,        "Print the GStreamer version", NULL},
+  {"gst-fatal-warnings", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_FATAL_WARNINGS, "Make all warnings fatal", NULL},
+  {"gst-info-mask",      NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_INFO_MASK,      "info bitmask", "MASK"},
+  {"gst-debug-mask",     NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_DEBUG_MASK,     "debugging bitmask", "MASK"},
+  {"gst-mask",           NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_MASK,           "bitmask for both info and debugging", "MASK"},
+  {"gst-mask-help",      NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_MASK_HELP,      "how to set the level of diagnostic output (-mask values)", NULL},
+  {"gst-plugin-spew",    NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_PLUGIN_SPEW,    "enable verbose plugin loading diagnostics", NULL},
+  {"gst-plugin-path",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_PATH,    "'" G_SEARCHPATH_SEPARATOR_S "'--separated path list for loading plugins", "PATHS"},
+  {"gst-plugin-load",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_LOAD,    "comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH", "PLUGINS"},
+  {"gst-scheduler",      NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_SCHEDULER,      "scheduler to use ('standard' is the default)", "SCHEDULER"},
+  {"gst-registry",       NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_REGISTRY,       "registry to use" , "REGISTRY"},
   POPT_TABLEEND
 };
 
@@ -445,6 +447,9 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
     break;
   case POPT_CALLBACK_REASON_OPTION:
     switch (option->val) {
+    case ARG_VERSION:
+      g_print ("GStreamer Core Library version %s\n", GST_VERSION);
+      exit (0);
     case ARG_FATAL_WARNINGS:
       fatal_mask = g_log_set_always_fatal (G_LOG_FATAL_MASK);
       fatal_mask |= G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL;
