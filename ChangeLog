@@ -1,5 +1,18 @@
 2004-06-17  Wim Taymans  <wim@fluendo.com>
 
+	* ext/alsa/gstalsa.c: (gst_alsa_init), (gst_alsa_dispose),
+	(gst_alsa_get_time), (gst_alsa_xrun_recovery):
+	* ext/alsa/gstalsa.h:
+	* ext/alsa/gstalsaclock.c: (gst_alsa_clock_get_type):
+	* ext/alsa/gstalsasrc.c: (gst_alsa_src_init), (gst_alsa_src_loop),
+	(gst_alsa_src_change_state):
+	* ext/alsa/gstalsasrc.h:
+	Make the xrun code timestamp and offset the buffers correctly.
+	moved the clock to the base class, use alsa methods to get time.
+	Do correct timestamping on outgoing buffers.
+
+2004-06-17  Wim Taymans  <wim@fluendo.com>
+
 	* gst/audiorate/Makefile.am:
 	* gst/audiorate/gstaudiorate.c: (gst_audiorate_get_type),
 	(gst_audiorate_base_init), (gst_audiorate_class_init),
