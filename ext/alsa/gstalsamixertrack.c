@@ -69,6 +69,7 @@ gst_alsa_mixer_track_init (GstAlsaMixerTrack * alsa_track)
 
 GstMixerTrack *
 gst_alsa_mixer_track_new (snd_mixer_elem_t * element,
+    const gchar * label,
     gint track_num, gint channels, gint flags, gint alsa_flags)
 {
   gint i;
@@ -78,7 +79,7 @@ gst_alsa_mixer_track_new (snd_mixer_elem_t * element,
   GstAlsaMixerTrack *alsa_track = (GstAlsaMixerTrack *) track;
 
   /* set basic information */
-  track->label = g_strdup_printf ("%s", snd_mixer_selem_get_name (element));
+  track->label = g_strdup (label);
   track->num_channels = channels;
   track->flags = flags;
   alsa_track->element = element;

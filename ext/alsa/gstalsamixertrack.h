@@ -51,6 +51,7 @@ struct _GstAlsaMixerTrackClass {
 
 GType		gst_alsa_mixer_track_get_type	(void);
 GstMixerTrack *	gst_alsa_mixer_track_new	(snd_mixer_elem_t *	element,
+						 const gchar *          name,
 						 gint			track_num,
 						 gint			channels,
 						 gint			flags,
