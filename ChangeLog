@@ -1,5 +1,10 @@
 2004-10-24  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* sys/oss/gstosssrc.c: (gst_osssrc_get):
+	  Don't mix bytes and samples.
+
+2004-10-24  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ogg/gstoggmux.c:
 	  Basic pad template which accepts OGM tracks, speex, flac, vorbis
 	  and theora. Any is incorrect.
