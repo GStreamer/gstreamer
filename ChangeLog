@@ -1,3 +1,8 @@
+2004-10-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/pwg/building-boiler.xml:
+      exchanged GTK_ macros with G_TYPE macros (as pointed out by mathrick)
+
 2004-10-19  Wim Taymans  <wim at fluendo dot com>
 
 	* gst/parse/parse.l:

@@ -155,13 +155,13 @@ U gst-template/gst-app/src/Makefile.am
   #define GST_TYPE_EXAMPLE \
     (gst_example_get_type())
   #define GST_EXAMPLE(obj) \
-    (GTK_CHECK_CAST((obj),GST_TYPE_EXAMPLE,GstExample))
+    (G_TYPE_CHECK_CAST((obj),GST_TYPE_EXAMPLE,GstExample))
   #define GST_EXAMPLE_CLASS(klass) \
-    (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_EXAMPLE,GstExample))
+    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_EXAMPLE,GstExample))
   #define GST_IS_EXAMPLE(obj) \
-    (GTK_CHECK_TYPE((obj),GST_TYPE_EXAMPLE))
+    (G_TYPE_CHECK_TYPE((obj),GST_TYPE_EXAMPLE))
   #define GST_IS_EXAMPLE_CLASS(obj) \
-    (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EXAMPLE))
+    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EXAMPLE))
 
   /* Standard function returning type information. */
   GType gst_example_get_type (void);
