@@ -1130,7 +1130,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
   /* handle timestamps */
-  if (timestamp != -1) {
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
     /* if there is nothing queued (partial buffer), we prepare to set the
      * timestamp on the next buffer */
     if (mad->tempsize == 0) {
@@ -1274,7 +1274,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 
       if (mad->frame.header.samplerate == 0) {
 	g_warning ("mad->frame.header.samplerate is 0; timestamps cannot be calculated");
-	time_offset = mad->base_time + 0;
+	time_offset = GST_CLOCK_TIME_NONE;
       }
       else {
 	time_offset = mad->base_time + (mad->total_samples * GST_SECOND
@@ -1291,7 +1291,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       }
 
       if (GST_PAD_IS_USABLE (mad->srcpad) &&
-	  mad->segment_start < time_offset) {
+	  mad->segment_start <= (time_offset == GST_CLOCK_TIME_NONE ? mad->base_time : time_offset)) {
 
 	/* for sample accurate seeking, calculate how many samples
 	   to skip and send the remaining pcm samples */
