@@ -1,5 +1,19 @@
 2004-04-17  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* ext/mad/gstid3tag.c: (gst_id3_tag_get_type),
+	(gst_id3_tag_class_init), (gst_id3_tag_get_caps),
+	(gst_id3_tag_add_src_pad), (gst_id3_tag_init),
+	(gst_id3_tag_set_property), (gst_id3_tag_do_caps_nego),
+	(gst_id3_tag_src_link), (gst_id3_tag_chain),
+	(gst_id3_tag_change_state), (plugin_init):
+	  deprecate id3tag element and replace with id3demux/id3mux.
+	  great side effect: this ugly file is now even uglier, yay!
+	* ext/mad/gstmad.h:
+	  remove non-available function
+	  update for new get_type
+
+2004-04-17  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* configure.ac:
 	  require mpeg2dec >= 0.4.0
 
