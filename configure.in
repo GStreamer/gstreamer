@@ -436,10 +436,15 @@ AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GL
 dnl Check for arts
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
-AC_MSG_CHECKING(arts)
+AC_MSG_CHECKING(arts library)
 dnl AC_CHECK_LIB(artsflow, convert_stereo_ifloat_2float, HAVE_ARTS=yes, HAVE_ARTS=no, -lmcop -lartsflow_idl)
 AC_CHECK_HEADER(arts/artsflow.h, HAVE_ARTS=yes, HAVE_ARTS=no)
 AC_LANG_RESTORE
+
+dnl Check for libraw1394
+AC_MSG_CHECKING(raw1394 library)
+AC_CHECK_LIB(raw1394, raw1394_get_handle, HAVE_RAW1394=yes, HAVE_RAW1394=no, )
+
 
 
 dnl check if css-auth.c exists (FIXME)
@@ -705,6 +710,7 @@ AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
 AM_CONDITIONAL(HAVE_LIBXMMS,        test "x$HAVE_LIBXMMS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
 AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
+AM_CONDITIONAL(HAVE_RAW1394,        test "x%HAVE_RAW1394" = "xyes")
 
 
 
@@ -874,6 +880,7 @@ plugins/esd/esdsink/Makefile
 plugins/artsd/Makefile
 plugins/xmms/Makefile
 plugins/arts/Makefile
+plugins/1394/Makefile
 gstplay/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
 test/Makefile
