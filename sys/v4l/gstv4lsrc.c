@@ -52,21 +52,22 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_SYNC_MODE GST_V4LSRC_SYNC_MODE_CLOCK
+#define DEFAULT_COPY_MODE FALSE
 /* arguments */
 enum
 {
   ARG_0,
   ARG_NUMBUFS,
   ARG_BUFSIZE,
-  ARG_SYNC_MODE
+  ARG_SYNC_MODE,
+  ARG_COPY_MODE
 };
 
 GST_FORMATS_FUNCTION (GstPad *, gst_v4lsrc_get_formats,
     GST_FORMAT_TIME, GST_FORMAT_DEFAULT);
 GST_QUERY_TYPE_FUNCTION (GstPad *, gst_v4lsrc_get_query_types,
     GST_QUERY_POSITION);
-
-#define DEFAULT_SYNC_MODE GST_V4LSRC_SYNC_MODE_CLOCK
 
 #define GST_TYPE_V4LSRC_SYNC_MODE (gst_v4lsrc_sync_mode_get_type())
 static GType
@@ -201,6 +202,10 @@ gst_v4lsrc_class_init (GstV4lSrcClass * klass)
       g_param_spec_enum ("sync_mode", "Sync mode",
           "Method to use for timestamping captured frames",
           GST_TYPE_V4LSRC_SYNC_MODE, DEFAULT_SYNC_MODE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_COPY_MODE,
+      g_param_spec_boolean ("copy_mode", "Copy mode",
+          "Don't send out HW buffers, send copy instead", DEFAULT_COPY_MODE,
+          G_PARAM_READWRITE));
 
   /* signals */
   gst_v4lsrc_signals[SIGNAL_FRAME_CAPTURE] =
@@ -258,8 +263,8 @@ gst_v4lsrc_init (GstV4lSrc * v4lsrc)
   /* no colourspaces */
   v4lsrc->colourspaces = NULL;
 
-  /* fps */
   v4lsrc->syncmode = DEFAULT_SYNC_MODE;
+  v4lsrc->copy_mode = DEFAULT_COPY_MODE;
 
   v4lsrc->is_capturing = FALSE;
 }
@@ -875,11 +880,19 @@ gst_v4lsrc_get (GstPad * pad)
   v4lsrc_private->num = num;
   GST_BUFFER_PRIVATE (buf) = v4lsrc_private;
 
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY | GST_BUFFER_DONTFREE);
+  /* don't | the flags, they are integers, not bits!! */
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY);
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
   GST_BUFFER_DATA (buf) = gst_v4lsrc_get_buffer (v4lsrc, num);
   GST_BUFFER_MAXSIZE (buf) = v4lsrc->mbuf.size / v4lsrc->mbuf.frames;
   GST_BUFFER_SIZE (buf) = v4lsrc->buffer_size;
 
+  if (v4lsrc->copy_mode) {
+    GstBuffer *copy = gst_buffer_copy (buf);
+
+    gst_buffer_unref (buf);
+    buf = copy;
+  }
 
   switch (v4lsrc->syncmode) {
     case GST_V4LSRC_SYNC_MODE_FIXED_FPS:
@@ -973,6 +986,10 @@ gst_v4lsrc_set_property (GObject * object,
       }
       break;
 
+    case ARG_COPY_MODE:
+      v4lsrc->copy_mode = g_value_get_boolean (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1004,6 +1021,10 @@ gst_v4lsrc_get_property (GObject * object,
 
     case ARG_SYNC_MODE:
       g_value_set_enum (value, v4lsrc->syncmode);
+      break;
+
+    case ARG_COPY_MODE:
+      g_value_set_boolean (value, v4lsrc->copy_mode);
       break;
 
     default:

@@ -101,6 +101,8 @@ struct _GstV4lSrc
 
   /* how are we going to timestamp buffers? */
    GstV4lSrcSyncMode syncmode;
+
+   gboolean copy_mode;
 };
 
 struct _GstV4lSrcClass

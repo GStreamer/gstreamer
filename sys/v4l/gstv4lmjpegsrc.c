@@ -574,7 +574,8 @@ gst_v4lmjpegsrc_get (GstPad * pad)
   GST_BUFFER_DATA (buf) = gst_v4lmjpegsrc_get_buffer (v4lmjpegsrc, num);
   GST_BUFFER_SIZE (buf) = v4lmjpegsrc->last_size;
   GST_BUFFER_MAXSIZE (buf) = v4lmjpegsrc->breq.size;
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY | GST_BUFFER_DONTFREE);
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY);
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
   if (v4lmjpegsrc->use_fixed_fps)
     GST_BUFFER_TIMESTAMP (buf) = v4lmjpegsrc->handled * GST_SECOND / fps;
   else                          /* calculate time based on our own clock */
