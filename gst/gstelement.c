@@ -714,7 +714,7 @@ gst_element_set_clock (GstElement *element, GstClock *clock)
   if (oclass->set_clock)
     oclass->set_clock (element, clock);
 
-  element->clock = clock;
+  gst_object_swap ((GstObject **)&element->clock, (GstObject *)clock);
 }
 
 /**
@@ -2411,6 +2411,9 @@ gst_element_dispose (GObject *object)
   if (element->property_mutex)
     g_mutex_free (element->property_mutex);
 
+  gst_object_swap ((GstObject **)&element->sched, NULL);
+  gst_object_swap ((GstObject **)&element->clock, NULL);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -2598,7 +2601,7 @@ gst_element_set_scheduler (GstElement *element,
   
   GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting scheduler to %p", sched);
 
-  GST_ELEMENT_SCHED (element) = sched;
+  gst_object_swap ((GstObject **)&GST_ELEMENT_SCHED (element), GST_OBJECT (sched));
 }
 
 /**

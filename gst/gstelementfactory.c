@@ -110,21 +110,24 @@ gst_element_factory_find (const gchar *name)
 static void
 gst_element_details_free (GstElementDetails *dp)
 {
-  g_return_if_fail (dp);
-
-  if (dp->longname)
-    g_free (dp->longname);
-  if (dp->klass)
-    g_free (dp->klass);
-  if (dp->description)
-    g_free (dp->description);
-  if (dp->version)
-    g_free (dp->version);
-  if (dp->author)
-    g_free (dp->author);
-  if (dp->copyright)
-    g_free (dp->copyright);
+  g_free (dp->longname);
+  g_free (dp->klass);
+  g_free (dp->description);
+  g_free (dp->version);
+  g_free (dp->author);
+  g_free (dp->copyright);
   g_free (dp);
+}
+
+static void
+gst_element_factory_cleanup (GstElementFactory *factory)
+{
+  if (factory->details_dynamic) {
+    gst_element_details_free (factory->details);
+    factory->details_dynamic = FALSE;
+  }
+
+  g_free (GST_PLUGIN_FEATURE (factory)->name);
 }
 
 /**
@@ -152,13 +155,12 @@ gst_element_factory_new (const gchar *name, GType type,
 
   if (!factory)
     factory = GST_ELEMENT_FACTORY (g_object_new (GST_TYPE_ELEMENT_FACTORY, NULL));
-
-  if (factory->details_dynamic) {
-    gst_element_details_free (factory->details);
-    factory->details_dynamic = FALSE;
+  else {
+    gst_element_factory_cleanup (factory);
   }
 
   factory->details = details;
+  factory->details_dynamic = FALSE;
 
   if (!factory->type)
     factory->type = type;
@@ -181,7 +183,7 @@ gst_element_factory_new (const gchar *name, GType type,
  *
  * Returns: new #GstElement
  */
-GstElement *
+GstElement*
 gst_element_factory_create (GstElementFactory *factory,
                            const gchar *name)
 {
@@ -280,7 +282,9 @@ gst_element_factory_make (const gchar *factoryname, const gchar *name)
 GstElement*
 gst_element_factory_make_or_warn (const gchar *factoryname, const gchar *name)
 {
-  GstElement *element = gst_element_factory_make (factoryname, name);
+  GstElement *element;
+  
+  element = gst_element_factory_make (factoryname, name);
 
   if (element == NULL) 
     g_warning ("Could not create element from factory %s !\n", factoryname);
@@ -301,8 +305,8 @@ gst_element_factory_add_pad_template (GstElementFactory *factory,
 {
   GList *padtemplates;
   
-  g_return_if_fail(factory != NULL);
-  g_return_if_fail(templ != NULL);
+  g_return_if_fail (factory != NULL);
+  g_return_if_fail (templ != NULL);
 
   padtemplates = factory->padtemplates;
 
@@ -401,7 +405,7 @@ gst_element_factory_can_sink_caps (GstElementFactory *factory,
 void
 gst_element_factory_set_rank (GstElementFactory *factory, guint16 rank)
 {
-  g_return_if_fail(factory != NULL);
+  g_return_if_fail (factory != NULL);
   factory->rank = rank;
 }
 
