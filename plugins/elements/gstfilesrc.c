@@ -117,6 +117,8 @@ struct _GstFileSrc {
 
   GTree *map_regions;
   GMutex *map_regions_lock;
+
+  gboolean seek_happened;
 };
 
 struct _GstFileSrcClass {
@@ -249,6 +251,8 @@ gst_filesrc_init (GstFileSrc *src)
 
   src->map_regions = g_tree_new(gst_filesrc_bufcmp);
   src->map_regions_lock = g_mutex_new();
+
+  src->seek_happened = FALSE;
 }
 
 
@@ -442,8 +446,15 @@ gst_filesrc_get (GstPad *pad)
   src = GST_FILESRC (gst_pad_get_parent (pad));
   g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_FILESRC_OPEN), NULL);
 
+  // check for seek
+  if (src->seek_happened) {
+    src->seek_happened = FALSE;
+    return gst_event_empty_new(GST_EVENT_DISCONTINUOUS);
+  }
+
   // check for EOF
   if (src->curoffset == src->filelen) {
+    gst_element_set_state(src,GST_STATE_PAUSED);
     return gst_event_empty_new(GST_EVENT_EOS);
   }
 
@@ -617,6 +628,7 @@ gst_filesrc_srcpad_event(GstPad *pad, GstEventType event, gint64 location, guint
     } else if (data == SEEK_END) {
       src->curoffset = src->filelen - (guint64)location;
     }
+    src->seek_happened = TRUE;
     // push a discontinuous event?
     return TRUE;
   }
