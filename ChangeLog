@@ -1,3 +1,12 @@
+2004-03-06  Benjamin Otte  <otte@gnome.org>
+
+	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_getcaps),
+	(gst_audio_convert_link), (gst_audio_convert_change_state),
+	(gst_audio_convert_buffer_from_default_format):
+	  do conversions from/to float correctly, fix some caps nego errors,
+	  export correct supported caps in template and getcaps, use correct
+	  caps in try_set_caps functions
+
 2004-03-06  Christophe Fergeau  <teuf@gnome.org>
 
 	For some reason, I only committed a ChangeLog entry yesterday and 
