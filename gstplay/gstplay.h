@@ -39,13 +39,14 @@ typedef enum {
 	GST_PLAY_TYPE_VIDEO = (1 << 1),
 } GstPlayMediaTypeFlags;
 
+typedef struct _GstPlayPrivate GstPlayPrivate;
+
 struct _GstPlay {
 	GtkHBox parent;
 	
-	GstPlayState state;
+	GstPlayState          state;
 	GstPlayMediaTypeFlags flags;
-	
-	gpointer priv;
+	GstPlayPrivate       *priv;
 };
 
 #define GST_PLAY_STATE(play)         ((play)->state)

@@ -205,6 +205,8 @@ gst_media_play_init (GstMediaPlay *mplay)
 
 	gtk_widget_show (GTK_WIDGET (mplay->play));
 
+	gtk_widget_show (GTK_WIDGET (glade_xml_get_widget (mplay->xml, "gstplay")));
+
 	mplay->status = (GstStatusArea *) glade_xml_get_widget (mplay->xml, "status_area");
 	gst_status_area_set_state (mplay->status, GST_STATUS_AREA_STATE_INIT);
 	gst_status_area_set_playtime (mplay->status, "00:00 / 00:00");

@@ -1,3 +1,4 @@
+#include <config.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -9,6 +10,12 @@
 
 #include <glib.h>
 #include <gtk/gtk.h>
+#ifdef USE_GLIB2
+#define GTK_ENABLE_BROKEN
+#include <gtk/gtktree.h>
+#include <gtk/gtktreeitem.h>
+#undef GTK_ENABLE_BROKEN
+#endif
 #include <gst/gst.h>
 
 GtkWidget *start_but, *pause_but, *parse_but, *status;
@@ -604,13 +611,18 @@ pause_callback( GtkWidget *widget,
 	}
 }
 
-int main(int argc,char *argv[]) {
+int
+main (int argc, char *argv[])
+{
 	GtkWidget *window;
 	GtkWidget *vbox;
 	GtkWidget *parse_line, *pipe_combo, *notebook, *pane;
 	GtkWidget *tree_root, *tree_root_item, *page_scroll;
 
-	gst_init(&argc,&argv);
+#ifdef USE_GLIB2
+	gtk_init (&argc, &argv);
+#endif
+	gst_init (&argc, &argv);
 	
 	/***** set up the GUI *****/
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);

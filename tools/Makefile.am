@@ -12,7 +12,15 @@ GST_LOADSAVE_SRC = gstreamer-compprep
 endif
 
 if USE_GLIB2
+if HAVE_LIBGLADE_GNOME
+GST_GUI_LAUNCH = gstreamer-guilaunch
+gstreamer_guilaunch_CFLAGS = \
+	$(LIBGLADE_GNOME_CFLAGS) $(CFLAGS)
+gstreamer_guilaunch_LDADD = \
+	$(LIBGLADE_GNOME_LIBS) $(LDADD)
+else
 GST_GUI_LAUNCH = 
+endif
 else
 GST_GUI_LAUNCH = gstreamer-guilaunch
 endif

@@ -1335,16 +1335,18 @@ gst_element_populate_std_props (GObjectClass * klass,
 
   if (prop_id == fd_id) {
     pspec = g_param_spec_int ("fd", "File-descriptor",
-		      	      "File-descriptor for the file being read", 0, G_MAXINT, 0, flags);
-
+			      "File-descriptor for the file being read",
+			      0, G_MAXINT, 0, flags);
   }
   else if (prop_id == blocksize_id) {
     pspec = g_param_spec_ulong ("blocksize", "Block Size",
-				"Block size to read per buffer", 0, G_MAXULONG, 4096, flags);
+				"Block size to read per buffer",
+				0, G_MAXULONG, 4096, flags);
 
   }
   else if (prop_id == bytesperread_id) {
-    pspec = g_param_spec_int ("bytesperread", "bytesperread", "bytesperread",
+    pspec = g_param_spec_int ("bytesperread", "bytesperread",
+			      "bytesperread",
 			      G_MININT, G_MAXINT, 0, flags);
 
   }
@@ -1354,7 +1356,8 @@ gst_element_populate_std_props (GObjectClass * klass,
   }
   else if (prop_id == filesize_id) {
     pspec = g_param_spec_int64 ("filesize", "File Size",
-				"Size of the file being read", 0, G_MAXINT64, 0, flags);
+				"Size of the file being read",
+				0, G_MAXINT64, 0, flags);
 
   }
   else if (prop_id == mmapsize_id) {
@@ -1365,21 +1368,25 @@ gst_element_populate_std_props (GObjectClass * klass,
   }
   else if (prop_id == location_id) {
     pspec = g_param_spec_string ("location", "File Location",
-				 "Location of the file to read", NULL, flags);
+				 "Location of the file to read",
+				 NULL, flags);
 
   }
   else if (prop_id == offset_id) {
     pspec = g_param_spec_int64 ("offset", "File Offset",
-				"Byte offset of current read pointer", 0, G_MAXINT64, 0, flags);
+				"Byte offset of current read pointer",
+				0, G_MAXINT64, 0, flags);
 
   }
   else if (prop_id == silent_id) {
-    pspec = g_param_spec_boolean ("silent", "silent", "silent", FALSE, flags);
+    pspec = g_param_spec_boolean ("silent", "silent", "silent",
+				  FALSE, flags);
 
   }
   else if (prop_id == touch_id) {
     pspec = g_param_spec_boolean ("touch", "Touch read data",
-				  "Touch data to force disk read before push ()", TRUE, flags);
+				  "Touch data to force disk read before "
+				  "push ()", TRUE, flags);
   }
   else {
     g_warning ("Unknown - 'standard' property '%s' id %d from klass %s",
@@ -1426,3 +1433,4 @@ gst_element_install_std_props (GstElementClass * klass, const char *first_name, 
 
   va_end (args);
 }
+

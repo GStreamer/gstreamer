@@ -94,6 +94,27 @@ gst_util_get_long_arg (GObject * object, const gchar * argname)
 }
 
 /**
+ * gst_util_get_long_arg:
+ * @object: the object to query
+ * @argname: the name of the argument
+ *
+ * Retrieves a property of an object as a long.
+ *
+ * Returns: the property of the object
+ */
+gint64
+gst_util_get_int64_arg (GObject *object, const gchar *argname)
+{
+  GValue value;
+
+  ZERO (value);
+  g_value_init (&value, G_TYPE_INT64);
+  g_object_get_property (G_OBJECT (object), argname, &value);
+
+  return g_value_get_int64 (&value);
+}
+
+/**
  * gst_util_get_float_arg:
  * @object: the object to query
  * @argname: the name of the argument
@@ -567,4 +588,32 @@ gst_print_element_args (GString * buf, gint indent, GstElement * element)
     }
   }
   g_free (property_specs);
+}
+
+/**
+ * gst_util_has_arg:
+ * @object: an object
+ * @argname: a property it might have
+ * @arg_type: the type of the argument it should have
+ * 
+ * Determines whether this @object has a property of name
+ * @argname and of type @arg_type
+ * 
+ * Return value: TRUE if it has the prop, else FALSE
+ **/
+gboolean
+gst_util_has_arg (GObject *object, const gchar *argname, GType arg_type)
+{
+  GParamSpec *pspec;
+
+  pspec = g_object_class_find_property (
+	  G_OBJECT_GET_CLASS (object), argname);
+
+  if (!pspec)
+    return FALSE;
+
+  if (pspec->value_type != arg_type)
+    return FALSE;
+
+  return TRUE;
 }

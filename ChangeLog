@@ -1,5 +1,28 @@
 2001-12-14  Michael Meeks  <michael@ximian.com>
 
+	* gst/gst.c (gst_main, gst_main_quit): upd.
+
+	* gst/gstutils.c (gst_util_has_arg): impl.
+	(gst_util_get_int64_arg): impl.
+
+	* plugins/mpeg2/video/gstmpeg2play.c
+	(gst_mpeg2play_class_init): min frames per sec = 0.
+
+	* plugins/mikmod/gstmikmod.c (gst_mikmod_class_init): 
+	s/16bit/use16bit/ properties can't begin with a non
+	alpha.
+
+	* tools/gstreamer-guilaunch.c: fresh from the ministy
+	of nasty hacks.
+
+	* tools/Makefile.am: enable gstreamer-guilaunch for
+	Gnome 2.0
+
+	* tools/gstreamer-launch.c (main): upd.
+	(idle_func): quit the mainloop.
+
+2001-12-14  Michael Meeks  <michael@ximian.com>
+
         * plugins/audiofile/gstafsrc.c (gst_afsrc_class_init): upd.
 
         * plugins/gnomevfs/gnomevfssrc.c (gst_gnomevfssrc_class_init):

@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-static int launch_argc;
+static int    launch_argc;
 static char **launch_argv;
 
 #ifndef USE_GLIB2
@@ -62,9 +62,7 @@ gboolean
 idle_func (gpointer data)
 {
   if (!gst_bin_iterate (GST_BIN (data))) {
-#ifndef USE_GLIB2
-    gtk_main_quit ();
-#endif
+    gst_main_quit ();
     g_print ("iteration ended\n");
     return FALSE;
   }
@@ -174,12 +172,8 @@ main(int argc, char *argv[])
       exit (-1);
     }
 
-    g_idle_add(idle_func,pipeline);
-#ifdef USE_GLIB2
-    g_main_loop_run (g_main_loop_new (NULL, FALSE));
-#else
-    gtk_main();
-#endif
+    g_idle_add (idle_func, pipeline);
+    gst_main ();
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }

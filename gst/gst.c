@@ -73,7 +73,8 @@ gst_init (int *argc, char **argv[])
   GstTrace *gst_trace;
 #endif
 
-  if (!g_thread_supported ()) g_thread_init (NULL);
+  if (!g_thread_supported ())
+    g_thread_init (NULL);
 
 #ifdef USE_GLIB2
   g_type_init();
@@ -343,6 +344,10 @@ gst_init_check (int     *argc,
   return ret;
 }
 
+#ifdef USE_GLIB2
+static GSList *mainloops = NULL;
+#endif
+
 /**
  * gst_main:
  *
@@ -351,7 +356,14 @@ gst_init_check (int     *argc,
 void 
 gst_main (void) 
 {
-#ifndef USE_GLIB2
+#ifdef USE_GLIB2
+  GMainLoop *loop;
+
+  loop = g_main_loop_new (NULL, FALSE);
+  mainloops = g_slist_prepend (mainloops, loop);
+
+  g_main_loop_run (loop);
+#else
   gtk_main ();
 #endif
 }
@@ -364,7 +376,15 @@ gst_main (void)
 void 
 gst_main_quit (void) 
 {
-#ifndef USE_GLIB2
+#ifdef USE_GLIB2
+  if (!mainloops)
+    g_warning ("Quit more loops than there are");
+  else {
+    GMainLoop *loop = mainloops->data;
+    mainloops = g_slist_delete_link (mainloops, mainloops);
+    g_main_loop_quit (loop);
+  }
+#else
   gtk_main_quit ();
 #endif
 }

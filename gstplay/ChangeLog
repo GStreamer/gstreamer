@@ -1,23 +1,19 @@
-2001-12-14  Wim Taymans  <wim.taymans@chello.be>
+2001-12-14  Michael Meeks  <michael@ximian.com>
 
-        * (gst_play_set_uri): use filesrc again.
+	* gstplay.c (gst_play_set_uri): remove bogus
+	priv->offset_element set.
 
-2001-12-13  Michael Meeks  <michael@ximian.com>
+	* gstplayprivate.h: kill, move into
 
-        * gstplay.c (gst_play_object_introspect): copy and
-        port to GObject.
-        (gst_play_get_arg): use UINT for compat.
-        (gst_play_set_uri): use disksrc instead.
+	* gstplay.c: here & lots of cleanup.
 
-        * gststatusarea.c (gst_status_area_expose): needs
-        pangoizing, conditionaly build.
+	* gstplay.h: use an opaque typedef for GstPlayPrivate,
+	lots of ugly casts die.
 
-        * gstmediaplay.c (gst_media_play_init): upd.
-        (gst_media_play_show_playlist):
+	* main.c (main): use gtk_main; gst_main no longer hits
+	the GUI mainloop.
 
-        * gstplay.h (gst_glade_xml_new): add.
-
-        * callbacks.c (on_preferences1_activate): glade hacks.
+	* gstmediaplay.c (gst_media_play_init): show the toplevel
 
 2001-12-06  Arik Devens  <arik@gnome.org>
 

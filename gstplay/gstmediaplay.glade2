@@ -14,7 +14,7 @@
     <property name="wmclass_name">gstmediaplay</property>
     <property name="wmclass_class">GstMediaPlay</property>
     <property name="enable_layout_config">yes</property>
-    <property name="visible">yes</property>
+    <property name="visible">no</property>
     <property name="window-position">GTK_WIN_POS_CENTER</property>
 
     <signal name="delete_event" handler="on_gst_media_play_delete_event" />
@@ -430,14 +430,6 @@
                     <signal name="toggled" handler="on_toggle_stop_toggled" />
                   </widget>
                 </child>
-
-                <child>
-                  <widget class="button" id="button1">
-                    <property name="label" translatable="yes">button1</property>
-                    <property name="icon">play.xpm</property>
-                    <property name="visible">yes</property>
-                  </widget>
-                </child>
               </widget>
             </child>
           </widget>
@@ -658,18 +650,20 @@ Arik Devens &lt;arik@gnome.org&gt;
       <widget class="GtkScrolledWindow" id="scrolledwindow1">
         <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
         <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-        <property name="shadow_type">GTK_SHADOW_IN</property>
         <property name="visible">yes</property>
 
         <child>
-          <widget class="GtkTreeView" id="playlist_clist">
+          <widget class="GtkCList" id="playlist_clist">
             <property name="can_focus">yes</property>
-            <property name="headers-visible">yes</property>
+            <property name="column_widths">273,80</property>
+            <property name="selection_mode">GTK_SELECTION_SINGLE</property>
+            <property name="show_titles">yes</property>
+            <property name="shadow_type">GTK_SHADOW_IN</property>
+            <property name="n_columns">2</property>
             <property name="visible">yes</property>
 
             <child>
               <widget class="GtkLabel" id="track_name">
-                <property name="child_name">CList:title</property>
                 <property name="label" translatable="yes">track name</property>
                 <property name="justify">GTK_JUSTIFY_CENTER</property>
                 <property name="wrap">no</property>
@@ -683,7 +677,6 @@ Arik Devens &lt;arik@gnome.org&gt;
 
             <child>
               <widget class="GtkLabel" id="track_lengthe">
-                <property name="child_name">CList:title</property>
                 <property name="label" translatable="yes">track length</property>
                 <property name="justify">GTK_JUSTIFY_CENTER</property>
                 <property name="wrap">no</property>
