@@ -1,3 +1,8 @@
+2004-03-06  Christophe Fergeau  <teuf@gnome.org>
+
+	* gst/autoplug/gstspider.c: (gst_spider_identity_plug): fixed caps
+	leak
+
 2004-03-05  David Schleef  <ds@schleef.org>
 
 	reviewed by: <delete if not using a buddy>
