@@ -2,8 +2,13 @@
 
 extern gboolean _gst_plugin_spew;
 
+void eof(GstSrc *src) {
+    g_print("have eof, quitting\n");
+   exit(0);
+}
+
 void mp3parse_info_chain(GstPad *pad,GstBuffer *buf) {
-  g_print("got buffer of size %d\n",GST_BUFFER_SIZE(buf));
+  g_print("sink : got buffer of size %d\n",GST_BUFFER_SIZE(buf));
   gst_buffer_unref(buf);
 }
 
@@ -40,6 +45,9 @@ int main(int argc,char *argv[]) {
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));
+
+  gtk_signal_connect(GTK_OBJECT(src),"eos",
+                      GTK_SIGNAL_FUNC(eof),NULL);
 
   gst_pad_connect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(parse,"sink"));

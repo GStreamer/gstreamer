@@ -2,6 +2,11 @@
 
 extern gboolean _gst_plugin_spew;
 
+void eof(GstSrc *src) {
+   g_print("have eof, quitting\n");
+   exit(0);
+}
+
 int main(int argc,char *argv[]) {
   GstPipeline *pipeline;
   GstElementFactory *srcfactory, *parsefactory, *decodefactory, *playfactory;
@@ -37,6 +42,9 @@ int main(int argc,char *argv[]) {
   g_return_if_fail(decode != NULL);
   play = gst_elementfactory_create(playfactory,"play");
   g_return_if_fail(play != NULL);
+
+  gtk_signal_connect(GTK_OBJECT(src),"eos",
+	                       GTK_SIGNAL_FUNC(eof),NULL);
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));

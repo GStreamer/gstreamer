@@ -44,7 +44,7 @@ int main(int argc,char *argv[]) {
 
   audiosink = gst_audiosink_new("audiosink");
 
-  gtk_signal_connect(GTK_OBJECT(disksrc),"eof",
+  gtk_signal_connect(GTK_OBJECT(disksrc),"eos",
                      GTK_SIGNAL_FUNC(eof),NULL);
 
   /* add objects to the main pipeline */
