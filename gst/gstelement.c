@@ -304,6 +304,75 @@ gst_element_get_padtemplate_list (GstElement *element)
 }
 
 /**
+ * gst_element_get_padtemplate_by_name:
+ * @element: element to get padtemplate of
+ * @name: the name of the padtemplate to get.
+ *
+ * Retrieve a padtemplate from this element with the
+ * given name.
+ *
+ * Returns: the padtemplate with the given name
+ */
+GstPadTemplate*
+gst_element_get_padtemplate_by_name (GstElement *element, const guchar *name)
+{
+  GList *padlist;
+
+  g_return_val_if_fail (element != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  padlist = gst_element_get_padtemplate_list (element);
+
+  while (padlist) {
+    GstPadTemplate *padtempl = (GstPadTemplate*) padlist->data;
+
+    if (!strcmp (padtempl->name_template, name))
+      return padtempl;
+	
+    padlist = g_list_next (padlist);
+  }
+
+  return NULL;
+}
+
+GstPad*
+gst_element_request_pad (GstElement *element, GstPadTemplate *temp)
+{
+  GstPad *newpad = NULL;
+  GstElementClass *oclass;
+
+  g_return_val_if_fail (element != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (temp != NULL, NULL);
+
+  /* call the state change function so it can set the state */
+  oclass = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
+  if (oclass->request_new_pad)
+    newpad = (oclass->request_new_pad)(element, temp);
+
+  return newpad; 
+}
+
+GstPad*
+gst_element_request_pad_by_name (GstElement *element, const gchar *name)
+{
+  GstPadTemplate *templ;
+  GstPad *pad;
+
+  g_return_val_if_fail (element != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  templ = gst_element_get_padtemplate_by_name (element, name);
+  g_return_val_if_fail (templ != NULL, NULL);
+
+  pad = gst_element_request_pad (element, templ);
+
+  return pad;
+}
+
+/**
  * gst_element_connect:
  * @src: element containing source pad
  * @srcpadname: name of pad in source element

@@ -45,7 +45,6 @@
 #include <gst/gstutils.h>
 #include <gst/gsttrace.h>
 #include <gst/gstxml.h>
-#include <gst/gsttee.h>
 #include <gst/cothreads.h>
 
 #include <gst/gstparse.h>

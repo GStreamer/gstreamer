@@ -22,6 +22,7 @@ libgstelements_la_SOURCES =	\
 	gstfdsink.c		\
 	gstpipefilter.c		\
 	gstqueue.c		\
+	gsttee.c		\
 	gsttypefind.c		\
 	gstsinesrc.c		\
 	$(GSTHTTPSRC)
@@ -39,6 +40,7 @@ noinst_HEADERS =		\
 	gstfdsink.h		\
 	gstpipefilter.h		\
 	gstqueue.h		\
+	gsttee.h		\
 	gsttypefind.h		\
 	gstsinesrc.h
 

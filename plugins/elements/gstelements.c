@@ -23,19 +23,20 @@
 
 #include <gst/gst.h>
 
-#include <gstasyncdisksrc.h>
-#include <gstaudiosink.h>
-#include <gstaudiosrc.h>
-#include <gstdisksrc.h>
-#include <gstidentity.h>
-#include <gstfakesink.h>
-#include <gstfakesrc.h>
-#include <gstfdsink.h>
-#include <gstfdsrc.h>
-#include <gstpipefilter.h>
-#include <gstqueue.h>
-#include <gstsinesrc.h>
-#include <gsttypefind.h>
+#include "gstasyncdisksrc.h"
+#include "gstaudiosink.h"
+#include "gstaudiosrc.h"
+#include "gstdisksrc.h"
+#include "gstidentity.h"
+#include "gstfakesink.h"
+#include "gstfakesrc.h"
+#include "gstfdsink.h"
+#include "gstfdsrc.h"
+#include "gstpipefilter.h"
+#include "gstqueue.h"
+#include "gstsinesrc.h"
+#include "gsttee.h"
+#include "gsttypefind.h"
 
 #if HAVE_LIBGHTTP
 #include <gsthttpsrc.h>
@@ -62,6 +63,7 @@ static struct _elements_entry _elements[] = {
   { "pipefilter",   gst_pipefilter_get_type, 	&gst_pipefilter_details,   NULL },
   { "queue", 	    gst_queue_get_type, 	&gst_queue_details,        NULL },
   { "sinesrc", 	    gst_sinesrc_get_type, 	&gst_sinesrc_details,      NULL },
+  { "tee",     	    gst_tee_get_type, 		&gst_tee_details,     	   gst_tee_factory_init },
   { "typefind",     gst_typefind_get_type, 	&gst_typefind_details,     NULL },
 
 #if HAVE_LIBGHTTP

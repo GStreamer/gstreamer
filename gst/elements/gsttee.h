@@ -24,7 +24,7 @@
 #ifndef __GST_TEE_H__
 #define __GST_TEE_H__
 
-#include "gstelement.h"
+#include <gst/gst.h>
 
 
 #ifdef __cplusplus
@@ -62,10 +62,7 @@ struct _GstTeeClass {
 
 GtkType 	gst_tee_get_type	(void);
 
-GstElement*	gst_tee_new		(gchar *name);
-
-gchar*		gst_tee_new_pad		(GstTee *tee);
-void 		gst_tee_chain		(GstPad *pad, GstBuffer *buf);
+gboolean 	gst_tee_factory_init 	(GstElementFactory *factory);
 
 #ifdef __cplusplus
 }

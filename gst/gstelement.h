@@ -158,7 +158,9 @@ struct _GstElementClass {
   void (*eos)		(GstElement *element);
 
   /* change the element state */
-  GstElementStateReturn (*change_state) (GstElement *element);
+  GstElementStateReturn (*change_state) 	(GstElement *element);
+  /* request a new pad */
+  GstPad* 		(*request_new_pad)	(GstElement *element, GstPadTemplate *temp);
 
   /* create or read XML representation of self */
   xmlNodePtr	(*save_thyself) 	(GstElement *element, xmlNodePtr parent);
@@ -201,8 +203,12 @@ void 			gst_element_add_pad		(GstElement *element, GstPad *pad);
 GstPad*			gst_element_get_pad		(GstElement *element, const gchar *name);
 GList*			gst_element_get_pad_list	(GstElement *element);
 GList*			gst_element_get_padtemplate_list	(GstElement *element);
+GstPadTemplate*		gst_element_get_padtemplate_by_name	(GstElement *element, const guchar *name);
 void 			gst_element_add_ghost_pad	(GstElement *element, GstPad *pad);
 void			gst_element_remove_ghost_pad	(GstElement *element, GstPad *pad);
+
+GstPad*			gst_element_request_pad		(GstElement *element, GstPadTemplate *temp);
+GstPad*			gst_element_request_pad_by_name	(GstElement *element, const gchar *name);
 
 void 			gst_element_connect		(GstElement *src, const gchar *srcpadname,
                          				 GstElement *dest, const gchar *destpadname);
@@ -234,11 +240,11 @@ GstElementFactory*	gst_elementfactory_new			(const gchar *name,GtkType type,
                                           			 GstElementDetails *details);
 void 			gst_elementfactory_destroy		(GstElementFactory *elementfactory);
 
-void 			gst_elementfactory_add_padtemplate	(GstElementFactory *elementfactory, 
-							 	 GstPadTemplate *temp);
-
 GstElementFactory*	gst_elementfactory_find			(const gchar *name);
 GList*			gst_elementfactory_get_list		(void);
+
+void 			gst_elementfactory_add_padtemplate	(GstElementFactory *elementfactory, 
+							 	 GstPadTemplate *temp);
 
 gboolean		gst_elementfactory_can_src_caps 	(GstElementFactory *factory,
 								 GstCaps *caps);

@@ -33,7 +33,6 @@ libgst_la_SOURCES =		\
 	gstplugin.c		\
 	gstprops.c		\
 	gstscheduler.c		\
-	gsttee.c		\
 	gstthread.c		\
 	gsttrace.c		\
 	gsttype.c		\
@@ -88,7 +87,6 @@ libgstinclude_HEADERS =		\
 	gstplugin.h		\
 	gstprops.h		\
 	gstscheduler.h		\
-	gsttee.h		\
 	gstthread.h		\
 	gsttrace.h		\
 	gsttype.h		\

@@ -977,10 +977,26 @@ gst_padtemplate_save_thyself (GstPadTemplate *pad, xmlNodePtr parent)
 {
   xmlNodePtr subtree;
   GList *caps;
+  guchar *presence;
 
   xmlNewChild(parent,NULL,"nametemplate", pad->name_template);
   xmlNewChild(parent,NULL,"direction", (pad->direction == GST_PAD_SINK? "sink":"src"));
-  xmlNewChild(parent,NULL,"presence", (pad->presence == GST_PAD_ALWAYS? "always":"sometimes"));
+
+  switch (pad->presence) {
+    case GST_PAD_ALWAYS:
+      presence = "always";
+      break;
+    case GST_PAD_SOMETIMES:
+      presence = "sometimes";
+      break;
+    case GST_PAD_REQUEST:
+      presence = "request";
+      break;
+    default:
+      presence = "unknown";
+      break;
+  }
+  xmlNewChild(parent,NULL,"presence", presence);
 
   caps = pad->caps;
   while (caps) {
@@ -1033,6 +1049,9 @@ gst_padtemplate_load_thyself (xmlNodePtr parent)
       }
       else if (!strcmp(value, "sometimes")) {
         factory->presence = GST_PAD_SOMETIMES;
+      }
+      else if (!strcmp(value, "request")) {
+        factory->presence = GST_PAD_REQUEST;
       }
       g_free (value);
     }
