@@ -185,7 +185,7 @@ gst_mem_index_add_id (GstIndex *index, GstIndexEntry *entry)
 
     id_index->id = entry->id;
     id_index->format_index = g_hash_table_new (g_int_hash, g_int_equal);
-    g_hash_table_insert (memindex->id_index, &entry->id, id_index);
+    g_hash_table_insert (memindex->id_index, &id_index->id, id_index);
   }
 }
 
@@ -223,7 +223,7 @@ gst_mem_index_index_format (GstMemIndexId *id_index, GstIndexEntry *entry, gint 
     index->offset = assoc;
     index->tree = g_tree_new_with_data (mem_index_compare, index);
 
-    g_hash_table_insert (id_index->format_index, format, index);
+    g_hash_table_insert (id_index->format_index, &index->format, index);
   }
 
   g_tree_insert (index->tree, entry, entry);

@@ -220,7 +220,7 @@ gst_file_index_get_writer_id  (GstIndex *_index,
   GSList *elem;
 
   if (!index->is_loaded)
-    return TRUE;
+    return FALSE;
 
   g_return_val_if_fail (id, FALSE);
   g_return_val_if_fail (writer_string, FALSE);
@@ -557,6 +557,7 @@ gst_file_index_add_id (GstIndex *index, GstIndexEntry *entry)
 
 static gboolean
 _fc_bsearch (GArray *          ary,
+	     gint              stride,
 	     gint *            ret,
 	     GCompareDataFunc  compare,
 	     gconstpointer     sample,
@@ -584,14 +585,14 @@ _fc_bsearch (GArray *          ary,
   while (midsize > 1) {
     mid = first + midsize / 2;
     
-    cmp = (*compare) (sample, &g_array_index (ary, char, mid), user_data);
+    cmp = (*compare) (sample, ary->data + mid*stride, user_data);
     
     if (cmp == 0)
       {
 	// if there are multiple matches then scan for the first match
 	while (mid > 0 &&
 	       (*compare) (sample,
-			   &g_array_index (ary, char, mid - 1),
+			   ary->data + (mid - 1) * stride,
 			   user_data) == 0)
 	  --mid;
 
@@ -609,7 +610,7 @@ _fc_bsearch (GArray *          ary,
 
   for (tx = first; tx <= last; tx++)
     {
-      cmp = (*compare) (sample, &g_array_index (ary, char, tx), user_data);
+      cmp = (*compare) (sample, ary->data + tx*stride, user_data);
 
       if (cmp < 0)
 	{
@@ -635,9 +636,10 @@ file_index_compare (gconstpointer sample,
   //GstFileIndexId *id_index = user_data;
   const GstIndexAssociation *ca = sample;
   gint64 val1 = ca->value;
-  gint64 val2 = GINT64_FROM_BE (ARRAY_ROW_VALUE (row, ca->format));
+  gint64 val2_be = ARRAY_ROW_VALUE (row, ca->format);
+  gint64 val2 = GINT64_FROM_BE (val2_be);
   gint64 diff = val2 - val1;
-  return (diff == 0 ? 0 : (diff > 0 ? 1 : -1));
+  return (diff == 0 ? 0 : (diff < 0 ? 1 : -1));
 }
 
 static void
@@ -683,7 +685,8 @@ gst_file_index_add_association (GstIndex *index, GstIndexEntry *entry)
   sample.value = GST_INDEX_ASSOC_VALUE (entry, 0);
 
   exact =
-    _fc_bsearch (id_index->array, &mx, file_index_compare,
+    _fc_bsearch (id_index->array, ARRAY_ROW_SIZE (id_index),
+		 &mx, file_index_compare,
 		 &sample, id_index);
 
   if (exact) {
@@ -698,12 +701,13 @@ gst_file_index_add_association (GstIndex *index, GstIndexEntry *entry)
   {
     gchar row_data[ARRAY_ROW_SIZE (id_index)];
 
-    ARRAY_ROW_FLAGS (row_data) =
-      GINT32_TO_BE (GST_INDEX_ASSOC_FLAGS (entry));
+    gint32 flags_host = GST_INDEX_ASSOC_FLAGS (entry);
+    ARRAY_ROW_FLAGS (row_data) = GINT32_TO_BE (flags_host);
 
-    for (fx = 0; fx < id_index->nformats; fx++)
-      ARRAY_ROW_VALUE (row_data, fx) =
-        GINT64_TO_BE (GST_INDEX_ASSOC_VALUE (entry, fx));
+    for (fx = 0; fx < id_index->nformats; fx++) {
+      gint64 val_host = GST_INDEX_ASSOC_VALUE (entry, fx);
+      ARRAY_ROW_VALUE (row_data, fx) = GINT64_TO_BE (val_host);
+    }
 
     g_array_insert_val (id_index->array, mx, row_data);
   }
@@ -806,8 +810,8 @@ gst_file_index_get_assoc_entry (GstIndex *index,
   sample.format = formatx;
   sample.value = value;
 
-  exact =  _fc_bsearch (id_index->array, &mx, file_index_compare,
-		 &sample, id_index);
+  exact = _fc_bsearch (id_index->array, ARRAY_ROW_SIZE (id_index),
+		       &mx, file_index_compare, &sample, id_index);
 
   if (!exact) {
     if (method == GST_INDEX_LOOKUP_EXACT)
@@ -822,7 +826,7 @@ gst_file_index_get_assoc_entry (GstIndex *index,
     }
   }
 
-  row_data = &g_array_index (id_index->array, char, mx);
+  row_data = id_index->array->data + mx * ARRAY_ROW_SIZE (id_index);
 
   // if exact then ignore flags (?)
   if (method != GST_INDEX_LOOKUP_EXACT)
@@ -833,7 +837,7 @@ gst_file_index_get_assoc_entry (GstIndex *index,
 	mx += 1;
       if (mx < 0 || mx >= id_index->array->len)
 	return NULL;
-      row_data = &g_array_index (id_index->array, char, mx);
+      row_data = id_index->array->data + mx * ARRAY_ROW_SIZE (id_index);
     }
 
   // entry memory management needs improvement
@@ -849,15 +853,17 @@ gst_file_index_get_assoc_entry (GstIndex *index,
   entry->data.assoc.assocs =
     g_new (GstIndexAssociation, id_index->nformats);
 
-  GST_INDEX_ASSOC_FLAGS (entry) =
-    GINT32_FROM_BE (ARRAY_ROW_FLAGS (row_data));
+  {
+    gint32 flags_be = ARRAY_ROW_FLAGS (row_data);
+    GST_INDEX_ASSOC_FLAGS (entry) = GINT32_FROM_BE (flags_be);
 
-  for (xx=0; xx < id_index->nformats; xx++) 
-    {
-      GST_INDEX_ASSOC_FORMAT (entry, xx) = id_index->format[xx];
-      GST_INDEX_ASSOC_VALUE (entry, xx) =
-	GINT64_FROM_BE (ARRAY_ROW_VALUE (row_data, xx));
-    }
+    for (xx=0; xx < id_index->nformats; xx++) 
+      {
+	gint64 val_be = ARRAY_ROW_VALUE (row_data, xx);
+	GST_INDEX_ASSOC_FORMAT (entry, xx) = id_index->format[xx];
+	GST_INDEX_ASSOC_VALUE (entry, xx) = GINT64_FROM_BE (val_be);
+      }
+  }
 
   return entry;
 }
