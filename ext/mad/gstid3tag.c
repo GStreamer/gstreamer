@@ -943,6 +943,7 @@ gst_id3_tag_do_typefind (GstID3Tag * tag, GstBuffer * buffer)
   find.caps = NULL;
   gst_find.data = &find;
   gst_find.peek = simple_find_peek;
+  gst_find.get_length = NULL;
   gst_find.suggest = simple_find_suggest;
   while (walk) {
     GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
