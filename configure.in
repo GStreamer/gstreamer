@@ -738,6 +738,7 @@ plugins/au/Makefile
 plugins/audioscale/Makefile
 plugins/avi/Makefile
 plugins/avi/wincodec/Makefile
+plugins/flx/Makefile
 plugins/jpeg/Makefile
 plugins/mp3decode/Makefile
 plugins/mp3decode/types/Makefile

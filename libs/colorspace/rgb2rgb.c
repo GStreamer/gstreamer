@@ -90,6 +90,9 @@ GstColorSpaceConvertFunction gst_colorspace_rgb2rgb_get_converter(GstColorSpaceC
         case GST_COLORSPACE_BGR565:
 	  space->outsize = space->width*space->height*2;
           return gst_colorspace_bgr32_to_bgr565;
+        case GST_COLORSPACE_RGB565:
+	  space->outsize = space->width*space->height*2;
+          return gst_colorspace_bgr32_to_bgr565;
 	default:
 	  break;
       }
