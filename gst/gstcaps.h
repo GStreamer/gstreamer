@@ -35,8 +35,7 @@ extern GType _gst_caps_type;
 #define GST_TYPE_CAPS  (_gst_caps_type)
 
 
-#define GST_CAPS(caps) \
-  ((GstCaps *)(caps))
+#define GST_CAPS(caps)  	((GstCaps *)(caps))
 
 #define GST_CAPS_IS_FIXED(caps)		((caps)->fixed)
 #define GST_CAPS_IS_CHAINED(caps)  	((caps)->next)

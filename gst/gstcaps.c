@@ -841,6 +841,7 @@ gst_caps_load_thyself (xmlNodePtr parent)
       xmlNodePtr subfield = field->xmlChildrenNode;
       GstCaps *caps;
       gchar *content;
+      gboolean fixed = TRUE;
 
       g_mutex_lock (_gst_caps_chunk_lock);
       caps = g_mem_chunk_alloc0 (_gst_caps_chunk);
@@ -848,7 +849,6 @@ gst_caps_load_thyself (xmlNodePtr parent)
 
       caps->refcount = 1;
       caps->next = NULL;
-      caps->fixed = TRUE;
 	
       while (subfield) {
         if (!strcmp (subfield->name, "name")) {
@@ -861,10 +861,13 @@ gst_caps_load_thyself (xmlNodePtr parent)
         }
         else if (!strcmp (subfield->name, "properties")) {
           caps->properties = gst_props_load_thyself (subfield);
+          fixed &= caps->properties->fixed;
         }
 	
         subfield = subfield->next;
       }
+      caps->fixed = fixed;
+
       result = gst_caps_append (result, caps);
     }
     field = field->next;
