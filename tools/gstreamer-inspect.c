@@ -225,9 +225,19 @@ gint print_element_info(GstElementFactory *factory) {
         printf("    Capabilities:\n");
         caps = pad->caps;
         while (caps) {
+	  GstType *type;
+
           cap = (GstCaps*)(caps->data);
           caps = g_list_next(caps);
+
           printf("      '%s':\n",cap->name);
+
+	  type = gst_type_find_by_id (cap->id);
+	  if (type) 
+            printf("        MIME type: '%s':\n",type->mime);
+	  else
+            printf("        MIME type: 'unknown/unknown':\n");
+
 	  if (cap->properties)
             print_props(cap->properties,"        ");
         }
