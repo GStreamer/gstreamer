@@ -66,21 +66,20 @@ GstMplexIBitStream::~GstMplexIBitStream (void)
  * Read data.
  */
 
-size_t GstMplexIBitStream::ReadStreamBytes (uint8_t * buf, size_t size)
+size_t
+GstMplexIBitStream::ReadStreamBytes (uint8_t * buf, size_t size)
 {
-  guint8 *
-      data;
-  guint
-      read;
+  guint8 *data;
+
+  guint read = 0;
 
   if (eos)
     return 0;
 
   while (!eos && (read = gst_bytestream_peek_bytes (bs, &data, size)) != size) {
-    GstEvent *
-        event;
-    guint
-        pending;
+    GstEvent *event;
+
+    guint pending;
 
     gst_bytestream_get_status (bs, &pending, &event);
     if (event) {
@@ -95,8 +94,10 @@ size_t GstMplexIBitStream::ReadStreamBytes (uint8_t * buf, size_t size)
     }
   }
 
-  memcpy (buf, data, read);
-  gst_bytestream_flush_fast (bs, read);
+  if (read > 0) {
+    memcpy (buf, data, read);
+    gst_bytestream_flush_fast (bs, read);
+  }
 
   return read;
 }
@@ -105,7 +106,8 @@ size_t GstMplexIBitStream::ReadStreamBytes (uint8_t * buf, size_t size)
  * Are we at EOS?
  */
 
-bool GstMplexIBitStream::EndOfStream (void)
+bool
+GstMplexIBitStream::EndOfStream (void)
 {
   return eos;
 }
