@@ -1,3 +1,10 @@
+2004-02-11  David Schleef  <ds@schleef.org>
+
+	* ext/librfb/gstrfbsrc.c: (gst_rfbsrc_class_init),
+	(gst_rfbsrc_change_state), (gst_rfbsrc_init),
+	(gst_rfbsrc_set_property), (gst_rfbsrc_get_property):
+	Add server and port properties
+
 2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* m4/a52.m4:
