@@ -428,7 +428,8 @@ gst_ogg_demux_src_query (GstPad * pad, GstQueryType type,
     guint64 base, time;
 
     /* subtract base */
-    if (!gst_pad_convert (GST_PAD_PEER (pad),
+    if (!GST_PAD_PEER (pad) ||
+        !gst_pad_convert (GST_PAD_PEER (pad),
             GST_FORMAT_DEFAULT, granulepos, &fmt, &time) ||
         !gst_pad_convert (GST_PAD_PEER (pad),
             GST_FORMAT_DEFAULT, cur->start, &fmt, &base))
@@ -536,7 +537,8 @@ gst_ogg_demux_src_event (GstPad * pad, GstEvent * event)
 
       my_format = GST_FORMAT_TIME;
       if (format != GST_FORMAT_TIME) {
-        if (!gst_pad_convert (GST_PAD_PEER (pad), format,
+        if (!GST_PAD_PEER (pad) ||
+            !gst_pad_convert (GST_PAD_PEER (pad), format,
                 offset, &my_format, &position))
           goto error;
       } else {
@@ -557,10 +559,12 @@ gst_ogg_demux_src_event (GstPad * pad, GstEvent * event)
 
       GST_OGG_SET_STATE (ogg, GST_OGG_STATE_PLAY);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
+          );
       if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
         FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-            pad->flags |= GST_OGG_PAD_NEEDS_FLUSH;);
+            pad->flags |= GST_OGG_PAD_NEEDS_FLUSH;
+            );
       }
       GST_DEBUG_OBJECT (ogg,
           "initiating seeking to format %d, offset %" G_GUINT64_FORMAT, format,
@@ -634,7 +638,8 @@ gst_ogg_demux_handle_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       GST_FLAG_UNSET (ogg, GST_OGG_FLAG_WAIT_FOR_DISCONT);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
+          );
       break;
     default:
       gst_pad_event_default (pad, event);
@@ -920,7 +925,8 @@ _find_chain_get_unknown_part (GstOggDemux * ogg, gint64 * start, gint64 * end)
   *end = G_MAXINT64;
 
   g_assert (ogg->current_chain >= 0);
-  FOR_PAD_IN_CURRENT_CHAIN (ogg, pad, *start = MAX (*start, pad->end_offset););
+  FOR_PAD_IN_CURRENT_CHAIN (ogg, pad, *start = MAX (*start, pad->end_offset);
+      );
 
   if (ogg->setup_state == SETUP_FIND_LAST_CHAIN) {
     *end = gst_file_pad_get_length (ogg->sinkpad);
@@ -986,7 +992,6 @@ _find_chain_seek (GstOggDemux * ogg, gint64 start, gint64 end)
         return FALSE;
     }
   } else {
-    ogg->seek_skipped = 0;
     if (!gst_ogg_demux_seek_before (ogg, (start + end) / 2, start))
       return FALSE;
   }
@@ -1014,6 +1019,7 @@ _find_chain_process (GstOggDemux * ogg, ogg_page * page)
 
   if (!_find_chain_get_unknown_part (ogg, &start, &end))
     return FALSE;
+
   if (ogg->seek_to <= start && gst_ogg_demux_position (ogg) > end) {
     /* we now should have the first bos page, because
      * - we seeked to a point in the known chain
@@ -1049,7 +1055,8 @@ _find_streams_check (GstOggDemux * ogg)
   } else {
     endpos = G_MAXINT64;
     FOR_PAD_IN_CHAIN (ogg, pad, ogg->chains->len - 1,
-        endpos = MIN (endpos, pad->start_offset););
+        endpos = MIN (endpos, pad->start_offset);
+        );
   }
   if (!ogg->seek_skipped || gst_ogg_demux_position (ogg) >= endpos) {
     /* have we found the endposition for all streams yet? */
@@ -1424,11 +1431,11 @@ gst_ogg_pad_push (GstOggDemux * ogg, GstOggPad * pad)
           pad->packetno = packet.packetno + 1;
         }
 
-        if (pad->known_offset != -1)
+        if (pad->known_offset != -1 && GST_PAD_PEER (pad->pad))
           if (!gst_pad_convert (GST_PAD_PEER (pad->pad),
                   GST_FORMAT_DEFAULT, pad->known_offset, &fmt, &pos))
             pos = -1;
-        if (pad->start != -1)
+        if (pad->start != -1 && GST_PAD_PEER (pad->pad))
           if (!gst_pad_convert (GST_PAD_PEER (pad->pad),
                   GST_FORMAT_DEFAULT, pad->start, &fmt, &base))
             base = -1;
