@@ -212,7 +212,7 @@ enum
   COLOR_NEG_I,
   COLOR_POS_Q,
   COLOR_SUPER_BLACK,
-  COLOR_DARK_GREY,
+  COLOR_DARK_GREY
 };
 
 static struct vts_color_struct vts_colors[] = {

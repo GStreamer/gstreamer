@@ -45,8 +45,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_METHOD,
-  /* FILL ME */
+  ARG_METHOD
+      /* FILL ME */
 };
 
 #define GST_TYPE_VIDEOSCALE_METHOD (gst_videoscale_method_get_type())

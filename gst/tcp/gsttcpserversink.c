@@ -57,8 +57,8 @@ enum
 {
   ARG_0,
   ARG_HOST,
-  ARG_PORT,
-  /* FILL ME */
+  ARG_PORT
+      /* FILL ME */
 };
 
 static void gst_tcpserversink_base_init (gpointer g_class);

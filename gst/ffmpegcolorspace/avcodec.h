@@ -32,7 +32,7 @@ enum CodecType {
     CODEC_TYPE_UNKNOWN = -1,
     CODEC_TYPE_VIDEO,
     CODEC_TYPE_AUDIO,
-    CODEC_TYPE_DATA,
+    CODEC_TYPE_DATA
 };
 
 /**
@@ -74,7 +74,7 @@ enum PixelFormat {
     PIX_FMT_YUVJ444P,  ///< Planar YUV 4:4:4 full scale (jpeg)
     PIX_FMT_XVMC_MPEG2_MC,///< XVideo Motion Acceleration via common packet passing(xvmc_render.h)
     PIX_FMT_XVMC_MPEG2_IDCT,
-    PIX_FMT_NB,
+    PIX_FMT_NB
 };
 
 /**

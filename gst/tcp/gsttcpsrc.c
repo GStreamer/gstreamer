@@ -45,9 +45,9 @@ enum
 {
   ARG_0,
   ARG_PORT,
-  ARG_CONTROL,
+  ARG_CONTROL
 /*  ARG_SOCKET_OPTIONS,*/
-  /* FILL ME */
+      /* FILL ME */
 };
 
 #define GST_TYPE_TCPSRC_CONTROL	(gst_tcpsrc_control_get_type())

@@ -988,7 +988,7 @@ enum {
     ST_INTRA_MB,
     ST_INTER_MB,
     ST_MV,
-    ST_NB,
+    ST_NB
 };
 
 extern int st_current_index;

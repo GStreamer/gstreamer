@@ -48,8 +48,8 @@ enum
 {
   ARG_0,
   ARG_FILTERLEN,
-  ARG_METHOD,
-  /* FILL ME */
+  ARG_METHOD
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate gst_audioscale_sink_template =

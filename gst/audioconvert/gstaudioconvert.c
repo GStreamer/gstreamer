@@ -132,7 +132,7 @@ enum
 enum
 {
   ARG_0,
-  ARG_AGGRESSIVE,
+  ARG_AGGRESSIVE
 };
 
 #define DEBUG_INIT(bla) \

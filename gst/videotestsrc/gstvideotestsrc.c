@@ -52,8 +52,8 @@ enum
   ARG_0,
   ARG_TYPE,
   ARG_SYNC,
-  ARG_NUM_BUFFERS,
-  /* FILL ME */
+  ARG_NUM_BUFFERS
+      /* FILL ME */
 };
 
 static void gst_videotestsrc_base_init (gpointer g_class);

@@ -63,8 +63,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_NUM_PADS,
-  /* FILL ME */
+  ARG_NUM_PADS
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate gst_adder_src_template =

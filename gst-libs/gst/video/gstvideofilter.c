@@ -38,8 +38,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_METHOD,
-  /* FILL ME */
+  ARG_METHOD
+      /* FILL ME */
 };
 
 static void gst_videofilter_base_init (gpointer g_class);

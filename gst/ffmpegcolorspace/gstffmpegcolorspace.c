@@ -78,7 +78,7 @@ enum
 
 enum
 {
-  ARG_0,
+  ARG_0
 };
 
 static GType gst_ffmpegcolorspace_get_type (void);
