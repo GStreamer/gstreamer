@@ -352,13 +352,15 @@ gst_plugin_load_absolute (const gchar *name)
   GstPlugin *plugin;
   struct stat file_status;
 
+  GST_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" loading", name);
+
   if (g_module_supported() == FALSE) {
     g_warning("gstplugin: wow, you built this on a platform without dynamic loading???\n");
     return FALSE;
   }
 
   if (stat(name,&file_status)) {
-//    g_print("problem opening file %s\n",name);
+    g_print("problem opening file %s\n",name);
     return FALSE;
   }
 
@@ -394,6 +396,9 @@ gst_plugin_load_absolute (const gchar *name)
   } else if (_gst_plugin_spew) {
     // FIXME this should be some standard gst mechanism!!!
     g_printerr ("error loading plugin %s, reason: %s\n", name, g_module_error());
+  }
+  else {
+    GST_INFO (GST_CAT_PLUGIN_LOADING, "error loading plugin %s, reason: %s\n", name, g_module_error());
   }
 
   return FALSE;

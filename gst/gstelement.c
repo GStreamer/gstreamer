@@ -660,7 +660,6 @@ gst_element_connect (GstElement *src, const gchar *srcpadname,
                      GstElement *dest, const gchar *destpadname)
 {
   GstPad *srcpad,*destpad;
-  GstObject *srcparent,*destparent;
 
   g_return_if_fail (src != NULL);
   g_return_if_fail (GST_IS_ELEMENT(src));
@@ -680,19 +679,6 @@ gst_element_connect (GstElement *src, const gchar *srcpadname,
     GST_ERROR(dest,"destination element has no pad \"%s\"",destpadname);
     return;
   }
-
-  /* find the parent elements of each element */
-  srcparent = gst_object_get_parent (GST_OBJECT (src));
-  destparent = gst_object_get_parent (GST_OBJECT (dest));
-
-  /* have to make sure that they have the same parents... */
-  /*
-  if (srcparent != destparent) {
-    GST_ERROR_OBJECT(srcparent,destparent,"%s and %s have different parents",
-                 GST_ELEMENT_NAME (src),GST_ELEMENT_NAME (dest));
-    return;
-  }
-  */
 
   /* we're satisified they can be connected, let's do it */
   gst_pad_connect(srcpad,destpad);

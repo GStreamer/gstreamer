@@ -156,7 +156,7 @@ void 		gst_buffer_destroy		(GstBuffer *buffer);
 GstBuffer*	gst_buffer_copy			(GstBuffer *buffer);
 
 /* add, retrieve, and remove metadata from the buffer */
-/* DEPRACATED!!!
+/* DEPRECATED!!!
 void 		gst_buffer_add_meta		(GstBuffer *buffer, GstMeta *meta);
 void 		gst_buffer_remove_meta		(GstBuffer *buffer, GstMeta *meta);
 GstMeta*	gst_buffer_get_first_meta	(GstBuffer *buffer);
