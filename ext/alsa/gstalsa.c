@@ -1243,13 +1243,14 @@ gst_alsa_open_audio(GstAlsa *this)
     
     ret = snd_output_stdio_attach(&this->out, stdout, 0);
     if (ret < 0) {
-        g_print("error opening log output: %s", snd_strerror(ret));
+        g_print("error opening log output: %s\n", snd_strerror(ret));
         return FALSE;
     }
     
     /* blocking i/o */
     if ((ret = snd_pcm_open(&this->handle, this->device, this->stream, 0))) {
-        g_print("error opening pcm device: %s", snd_strerror(ret));
+        g_print("error opening pcm device %s: %s\n", 
+	        this->device, snd_strerror(ret));
         return FALSE;
     }
     
