@@ -30,7 +30,7 @@ static void _gst_caps2_value_init (GValue *value);
 static void _gst_caps2_value_free (GValue *value);
 static void _gst_caps2_value_copy (const GValue *src, GValue *dest);
 static gpointer _gst_caps2_value_peek_pointer (const GValue *value);
-static void _gst_caps2_from_string_inplace (GstCaps2 *caps,
+static gboolean _gst_caps2_from_string_inplace (GstCaps2 *caps,
     const gchar *string);
 
 
@@ -150,6 +150,8 @@ GstCaps2 *gst_caps2_copy (const GstCaps2 *caps)
   GstStructure *structure;
   int i;
 
+  g_return_val_if_fail(caps != NULL, NULL);
+
   newcaps = g_new0(GstCaps2, 1);
   newcaps->type = _gst_caps2_type;
   newcaps->flags = caps->flags;
@@ -168,6 +170,8 @@ void gst_caps2_free (GstCaps2 *caps)
   GstStructure *structure;
   int i;
   
+  g_return_if_fail(caps != NULL);
+
   for(i=0;i<caps->structs->len;i++){
     structure = gst_caps2_get_nth_cap (caps, i);
     gst_structure_free (structure);
@@ -176,12 +180,13 @@ void gst_caps2_free (GstCaps2 *caps)
   g_free(caps);
 }
 
-const GstCaps2 *gst_caps2_from_static (GstStaticCaps2 *static_caps)
+const GstCaps2 *gst_static_caps2_get (GstStaticCaps2 *static_caps)
 {
   GstCaps2 *caps = (GstCaps2 *)static_caps;
 
   if (caps->type == 0) {
     caps->type = _gst_caps2_type;
+    caps->structs = g_ptr_array_new();
     _gst_caps2_from_string_inplace (caps, static_caps->string);
   }
 
@@ -226,6 +231,8 @@ GstCaps2 *gst_caps2_copy_1 (const GstCaps2 *caps)
   GstCaps2 *newcaps;
   GstStructure *structure;
 
+  g_return_val_if_fail(caps != NULL, NULL);
+
   newcaps = g_new0(GstCaps2, 1);
   newcaps->type = _gst_caps2_type;
   newcaps->flags = caps->flags;
@@ -264,7 +271,7 @@ gboolean gst_caps2_is_fixed (const GstCaps2 *caps)
   GType type;
   int i;
 
-  if (caps->structs->len > 1) return FALSE;
+  if (caps->structs->len != 1) return FALSE;
 
   structure = gst_caps2_get_nth_cap (caps, 0);
 
@@ -528,21 +535,36 @@ gchar *gst_caps2_to_string (const GstCaps2 *caps)
   return g_string_free(s, FALSE);
 }
 
-static void _gst_caps2_from_string_inplace (GstCaps2 *caps,
+static gboolean _gst_caps2_from_string_inplace (GstCaps2 *caps,
     const gchar *string)
 {
   GstStructure *structure;
+  gchar *s;
 
   if (strcmp("ANY", string)==0) {
     caps->flags = GST_CAPS2_FLAGS_ANY;
-    return;
+    return TRUE;
   }
   if (strcmp("NONE", string)==0) {
-    return;
+    return TRUE;
   }
 
-  structure = gst_structure_from_string(string);
+  structure = gst_structure_from_string(string, &s);
+  if (structure == NULL) {
+    return FALSE;
+  }
   gst_caps2_append_cap (caps, structure);
+
+  while (*s == ';') {
+    s++;
+    structure = gst_structure_from_string(s, &s);
+    if (structure == NULL) {
+      return FALSE;
+    }
+    gst_caps2_append_cap (caps, structure);
+  }
+
+  return TRUE;
 }
 
 GstCaps2 *gst_caps2_from_string (const gchar *string)
