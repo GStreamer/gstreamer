@@ -1,3 +1,8 @@
+2004-06-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  add a header check for a dvdread header in dvdnav.  Fixes #133002
+
 2004-06-12  Zaheer Abbas Merali  <zaheerabbas@merali.org>
 
 	* gst/tcp/gsttcpclientsink.c: (gst_tcpclientsink_init_send):
