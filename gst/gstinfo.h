@@ -399,7 +399,6 @@ G_CONST_RETURN gchar*
 #ifdef __GNUC__
 #  pragma GCC poison gst_debug_log
 #  pragma GCC poison gst_debug_log_valist
-#  pragma GCC poison gst_debug_log_default
 #  pragma GCC poison _gst_debug_category_new
 #endif
 

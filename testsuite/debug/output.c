@@ -27,6 +27,7 @@ GST_DEBUG_CATEGORY_STATIC (cat2);
 static gint count = -1;
 static GstElement *pipeline;
 
+#ifndef GST_DISABLE_GST_DEBUG
 static void
 check_message (GstDebugCategory * category, GstDebugLevel level,
     const gchar * file, const gchar * function, gint line, GObject * object,
@@ -52,6 +53,7 @@ check_message (GstDebugCategory * category, GstDebugLevel level,
   g_assert (object == (GObject *) (temp ? pipeline : NULL));
   g_print ("[OK]\n");
 }
+#endif
 
 gint
 main (gint argc, gchar * argv[])
@@ -63,8 +65,10 @@ main (gint argc, gchar * argv[])
       "default category for this test");
   GST_DEBUG_CATEGORY_INIT (cat2, "GST_Check_2", 0,
       "second category for this test");
-  g_assert (gst_debug_remove_log_function (gst_debug_log_default) == 1);
-  gst_debug_add_log_function (check_message, NULL);
+  g_assert (gst_debug_remove_log_function (gst_debug_log_default) !=
+      GST_DISABLE_GST_DEBUG);
+  g_assert (gst_debug_add_log_function (check_message,
+          NULL) != GST_DISABLE_GST_DEBUG);
 
   count = 0;
   GST_ERROR ("This is an error.");
@@ -115,7 +119,8 @@ main (gint argc, gchar * argv[])
       "This is a log message with category and object.");
   count = -1;
 
-  g_assert (gst_debug_remove_log_function (check_message) == 1);
+  g_assert (gst_debug_remove_log_function (check_message) ==
+      (GST_DISABLE_GST_DEBUG ? 0 : 1));
 
   return 0;
 }

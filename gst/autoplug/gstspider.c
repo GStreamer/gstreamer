@@ -434,9 +434,8 @@ gst_spider_identity_plug (GstSpiderIdentity * ident)
       while (factories) {
         if ((padtemp =
                 gst_autoplug_can_connect_src (factories->data, src_caps))) {
-          const GstCaps *caps = gst_pad_template_get_caps (padtemp);
-
-          GST_DEBUG ("can connect src to pad template: %" GST_PTR_FORMAT, caps);
+          GST_DEBUG ("can connect src to pad template: %" GST_PTR_FORMAT,
+              gst_pad_template_get_caps (padtemp));
           found = TRUE;
         }
         factories = factories->next;

@@ -23,7 +23,7 @@ main (gint argc, gchar * argv[])
 {
   GstCaps *caps;
   GstElement *element;
-  int zero = 0;
+  G_GNUC_UNUSED int zero = 0;
 
   gst_init (&argc, &argv);
 

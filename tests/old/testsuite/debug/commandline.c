@@ -34,7 +34,7 @@ static const gchar *lines[] = {
   "--gst-debug-level=4 --gst-debug=cat_*:5"
 };
 
-static void
+static void G_GNUC_UNUSED
 debug_not_reached (GstDebugCategory * category, GstDebugLevel level,
     const gchar * file, const gchar * function, gint line, GObject * object,
     GstDebugMessage * message, gpointer thread)
@@ -52,7 +52,7 @@ main (gint argc, gchar * argv[])
 
     unsetenv ("GST_DEBUG");
     gst_init (&argc, &argv);
-    runs = G_N_ELEMENTS (lines);
+    runs = (GST_DISABLE_GST_DEBUG ? 0 : G_N_ELEMENTS (lines));
     for (i = 0; i < runs; i++) {
       command = g_strdup_printf ("%s %s %d", argv[0], lines[i], i);
       g_print ("running \"%s\"\n", command);
@@ -71,13 +71,15 @@ main (gint argc, gchar * argv[])
           ("something funny happened to the command line arguments, aborting.\n");
       return 1;
     }
-    gst_debug_remove_log_function (gst_debug_log_default);
+    g_assert (gst_debug_remove_log_function (gst_debug_log_default) !=
+        GST_DISABLE_GST_DEBUG);
     GST_DEBUG_CATEGORY_INIT (cat, "cat", 0, "non-static category");
     GST_DEBUG_CATEGORY_INIT (cat_static, "cat_static", 0, "static category");
     switch (argv[1][0]) {
       case '0':
         g_assert (gst_debug_is_active () == FALSE);
-        gst_debug_add_log_function (debug_not_reached, NULL);
+        g_assert (gst_debug_add_log_function (debug_not_reached,
+                NULL) != GST_DISABLE_GST_DEBUG);
         GST_ERROR ("This will not be seen");
         return 0;
       case '1':
