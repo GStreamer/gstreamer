@@ -654,10 +654,12 @@ restart:
            * or its manager, switch back to iterator so bottom
            * half of state change executes */
           if (queue->interrupt) {
+            GstScheduler *sched;
+
             GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "interrupted");
             GST_QUEUE_MUTEX_UNLOCK;
-            if (gst_scheduler_interrupt (gst_pad_get_scheduler (queue->sinkpad),
-                    GST_ELEMENT (queue))) {
+            sched = gst_pad_get_scheduler (queue->sinkpad);
+            if (!sched || gst_scheduler_interrupt (sched, GST_ELEMENT (queue))) {
               goto out_unref;
             }
             /* if we got here because we were unlocked after a
@@ -778,10 +780,12 @@ restart:
        * manager, switch back to iterator so bottom half of state
        * change executes. */
       if (queue->interrupt) {
+        GstScheduler *sched;
+
         GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "interrupted");
         GST_QUEUE_MUTEX_UNLOCK;
-        if (gst_scheduler_interrupt (gst_pad_get_scheduler (queue->srcpad),
-                GST_ELEMENT (queue)))
+        sched = gst_pad_get_scheduler (queue->srcpad);
+        if (!sched || gst_scheduler_interrupt (sched, GST_ELEMENT (queue)))
           return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
         goto restart;
       }

@@ -555,6 +555,9 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   /* remove this element from the list of managed elements */
   gst_bin_unset_element_sched (element, GST_ELEMENT_SCHED (bin));
 
+  /* if it is still iterating, make it stop */
+  gst_element_release_locks (element);
+
   /* now remove the element from the list of elements */
   bin->children = g_list_remove (bin->children, element);
   bin->numchildren--;

@@ -1,3 +1,12 @@
+2005-02-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstbin.c: (gst_bin_remove_func):
+	  Explicitely make an element release locks in a group when being
+	  remove from a bin.
+	* gst/gstqueue.c: (gst_queue_chain), (gst_queue_get):
+	  If there's no scheduler, always return immediately (similar to
+	  gst_element_interrupt).
+
 2005-01-31  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstbin.c: (gst_bin_child_state_change_func):
