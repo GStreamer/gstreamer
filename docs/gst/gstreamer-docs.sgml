@@ -13,6 +13,8 @@
 <!ENTITY GstCpu SYSTEM "xml/gstcpu.xml">
 <!ENTITY GstData SYSTEM "xml/gstdata.xml">
 <!ENTITY GstElement SYSTEM "xml/gstelement.xml">
+<!ENTITY GstElementDetails SYSTEM "xml/gstelementdetails.xml">
+<!ENTITY GstElementFactory SYSTEM "xml/gstelementfactory.xml">
 <!ENTITY GstError SYSTEM "xml/gsterror.xml">
 <!ENTITY GstEvent SYSTEM "xml/gstevent.xml">
 <!ENTITY GstFormat SYSTEM "xml/gstformat.xml">
@@ -86,6 +88,8 @@
     &GstCpu;
     &GstData;
     &GstElement;
+    &GstElementDetails;
+    &GstElementFactory;
     &GstError;
     &GstEvent;
     &GstFormat;

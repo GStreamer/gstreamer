@@ -1,0 +1,213 @@
+<!-- ##### SECTION Title ##### -->
+GstElementFactory
+
+<!-- ##### SECTION Short_Description ##### -->
+Create GstElements from a factory
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+GstElementFactory is used to create instances of elements. A GstElementfactory
+can be added to a #GstPlugin as it is also a #GstPluginFeature.
+</para>
+<para>
+Use gst_element_factory_new() to create a new factory which can be added to a plugin 
+with gst_plugin_add_feature().
+</para>
+<para>
+gst_element_factory_add_pad_template() is used to add a padtemplate to the factory.
+This function will enable the application to query for elementfactories that handle
+a specific media type.
+</para>
+<para>
+Use the gst_element_factory_find() and gst_element_factory_create() functions
+to create element instances or use gst_element_factory_make() as a convenient 
+shortcut.
+</para>
+<para>
+The following code example shows you how to create a GstFileSrc element.
+</para>
+
+<para>
+  <programlisting role="C">
+  #include &lt;gst/gst.h&gt;
+
+  GstElement *src;
+  GstElementFactory *srcfactory;
+
+  gst_init(&amp;argc,&amp;argv);
+
+  srcfactory = gst_element_factory_find("filesrc");
+  g_return_if_fail(srcfactory != NULL);
+
+  src = gst_element_factory_create(srcfactory,"src");
+  g_return_if_fail(src != NULL);
+  ...
+  </programlisting>
+</para>
+<para>
+An elementfactory can be assigned a rank with gst_element_factory_set_rank() 
+so that the autopluggers can select a plugin more appropriatly
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+#GstElement, #GstPlugin, #GstPluginFeature, #GstPadTemplate.
+</para>
+
+<!-- ##### MACRO GST_TYPE_ELEMENT_FACTORY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### STRUCT GstElementFactory ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_element_register ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@name: 
+@rank: 
+@type: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@elementname: 
+
+
+<!-- ##### FUNCTION gst_element_factory_find ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_factory_get_element_type ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_factory_get_longname ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_factory_get_klass ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_factory_get_description ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_factory_get_author ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_factory_get_num_pad_templates ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_factory_get_pad_templates ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_factory_get_uri_type ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_factory_get_uri_protocols ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_factory_create ##### -->
+<para>
+
+</para>
+
+@factory: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_factory_make ##### -->
+<para>
+
+</para>
+
+@factoryname: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_factory_can_src_caps ##### -->
+<para>
+
+</para>
+
+@factory: 
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_factory_can_sink_caps ##### -->
+<para>
+
+</para>
+
+@factory: 
+@caps: 
+@Returns: 
+
+

@@ -1,0 +1,30 @@
+<!-- ##### SECTION Title ##### -->
+GstElementDetails
+
+<!-- ##### SECTION Short_Description ##### -->
+Defines public information about a #GstElement
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstElementDetails ##### -->
+<para>
+This struct is used to define public information about the element.  It
+describes the element, mostly for the benefit of editors.
+</para>
+
+@longname: 
+@klass: 
+@description: 
+@author: 
+@_gst_reserved: 
+
