@@ -3,6 +3,50 @@
 
 #define VM_THRES 1000
 
+typedef struct
+{
+  gchar *desc;
+  gint src_data;
+  gint src_sizetype;
+  gint src_filltype;
+  gboolean src_silent;
+
+  gint bs_sizetype;
+  gint bs_accesstype;
+  gboolean bs_silent;
+
+  gboolean sink_dump;
+  gboolean sink_silent;
+} TestParam;
+
+static TestParam params[] = {
+  {"fixed size src, fixed size _read", 			1, 2, 5, TRUE,   1, 1, TRUE,   FALSE, TRUE },
+  {"fixed size src, random size _read", 		1, 2, 5, TRUE,   2, 1, TRUE,   FALSE, TRUE },
+  {"random size src, fixed size _read", 		1, 3, 5, TRUE,   1, 1, TRUE,   FALSE, TRUE },
+  {"random size src, random size _read", 		1, 3, 5, TRUE,   2, 1, TRUE,   FALSE, TRUE },
+  {"fixed size subbuffer, fixed size _read", 		2, 2, 5, TRUE,   1, 1, TRUE,   FALSE, TRUE },
+  {"fixed size subbuffer, random size _read", 		2, 2, 5, TRUE,   2, 1, TRUE,   FALSE, TRUE },
+  {"random size subbuffer, fixed size _read", 		2, 3, 5, TRUE,   1, 1, TRUE,   FALSE, TRUE },
+  {"random size subbuffer, random size _read", 		2, 3, 5, TRUE,   2, 1, TRUE,   FALSE, TRUE },
+  {"fixed size src, fixed size _peek_read", 		1, 2, 5, TRUE,   1, 2, TRUE,   FALSE, TRUE },
+  {"fixed size src, random size _peek_read", 		1, 2, 5, TRUE,   2, 2, TRUE,   FALSE, TRUE },
+  {"random size src, fixed size _peek_read", 		1, 3, 5, TRUE,   1, 2, TRUE,   FALSE, TRUE },
+  {"random size src, random size _peek_read", 		1, 3, 5, TRUE,   2, 2, TRUE,   FALSE, TRUE },
+  {"fixed size subbuffer, fixed size _peek_read", 	2, 2, 5, TRUE,   1, 2, TRUE,   FALSE, TRUE },
+  {"fixed size subbuffer, random size _peek_read", 	2, 2, 5, TRUE,   2, 2, TRUE,   FALSE, TRUE },
+  {"random size subbuffer, fixed size _peek_read", 	2, 3, 5, TRUE,   1, 2, TRUE,   FALSE, TRUE },
+  {"random size subbuffer, random size _peek_read", 	2, 3, 5, TRUE,   2, 2, TRUE,   FALSE, TRUE },
+  {"fixed size src, fixed size _peek_readrand", 	1, 2, 5, TRUE,   1, 3, TRUE,   FALSE, TRUE },
+  {"fixed size src, random size _peek_readrand", 	1, 2, 5, TRUE,   2, 3, TRUE,   FALSE, TRUE },
+  {"random size src, fixed size _peek_readrand", 	1, 3, 5, TRUE,   1, 3, TRUE,   FALSE, TRUE },
+  {"random size src, random size _peek_readrand", 	1, 3, 5, TRUE,   2, 3, TRUE,   FALSE, TRUE },
+  {"fixed size subbuffer, fixed size _peek_readrand", 	2, 2, 5, TRUE,   1, 3, TRUE,   FALSE, TRUE },
+  {"fixed size subbuffer, random size _peek_readrand", 	2, 2, 5, TRUE,   2, 3, TRUE,   FALSE, TRUE },
+  {"random size subbuffer, fixed size _peek_readrand", 	2, 3, 5, TRUE,   1, 3, TRUE,   FALSE, TRUE },
+  {"random size subbuffer, random size _peek_readrand",	2, 3, 5, TRUE,   2, 3, TRUE,   FALSE, TRUE },
+  {NULL, 2, 3, 5, TRUE,   2, 2, TRUE,   FALSE, TRUE }
+};
+
 static guint8 count;
 
 static void
@@ -59,7 +103,7 @@ main (int argc, char *argv[])
   GstElement *sink;
   GstElement *bs;
   GstElement *pipeline;
-  gint testnum = 1;
+  gint testnum = 0;
 
   gst_init (&argc, &argv);
 
@@ -83,62 +127,26 @@ main (int argc, char *argv[])
   gst_bin_add (GST_BIN (pipeline), bs);
   gst_bin_add (GST_BIN (pipeline), sink);
 
-  g_print ("\n\nrunning test %d:\n", testnum++);
-  g_print ("fixed size src, fixed size _read:\n");
-  g_object_set (G_OBJECT (src), "data", 1, "sizetype", 2, "filltype", 5, "silent", TRUE, NULL);
-  g_object_set (G_OBJECT (bs),  "sizetype", 1, "silent", TRUE, NULL);
-  g_object_set (G_OBJECT (sink), "dump", FALSE, "silent", TRUE, NULL);
-  run_test (GST_BIN (pipeline), 50000);
+  while (params[testnum].desc) {
+    g_print ("\n\nrunning test %d:\n", testnum+1);
+    g_print ("%s\n", params[testnum].desc);
 
-  g_print ("\n\nrunning test %d:\n", testnum++);
-  g_print ("fixed size src, random size _read:\n");
-  g_object_set (G_OBJECT (src), "data", 1, "sizetype", 2, "filltype", 5, "silent", TRUE, NULL);
-  g_object_set (G_OBJECT (bs),  "sizetype", 2, "silent", TRUE, NULL);
-  g_object_set (G_OBJECT (sink), "dump", FALSE, "silent", TRUE, NULL);
-  run_test (GST_BIN (pipeline), 50000);
+    g_object_set (G_OBJECT (src), "data", params[testnum].src_data, 
+		                  "sizetype", params[testnum].src_sizetype, 
+				  "filltype", params[testnum].src_filltype, 
+				  "silent", params[testnum].src_silent, NULL);
 
-  g_print ("\n\nrunning test %d:\n", testnum++);
-  g_print ("random size src, fixed size _read:\n");
-  g_object_set (G_OBJECT (src), "data", 1, "sizetype", 3, "filltype", 5, "silent", TRUE, NULL);
-  g_object_set (G_OBJECT (bs),  "sizetype", 1, "silent", TRUE, NULL);
-  g_object_set (G_OBJECT (sink), "dump", FALSE, "silent", TRUE, NULL);
-  run_test (GST_BIN (pipeline), 50000);
+    g_object_set (G_OBJECT (bs),  "sizetype", params[testnum].bs_sizetype, 
+		    		  "accesstype", params[testnum].bs_accesstype, 
+				  "silent", TRUE, NULL);
 
-  g_print ("\n\nrunning test %d:\n", testnum++);
-  g_print ("random size src, random size _read:\n");
-  g_object_set (G_OBJECT (src), "data", 1, "sizetype", 3, "filltype", 5, "silent", TRUE, NULL);
-  g_object_set (G_OBJECT (bs),  "sizetype", 2, "silent", TRUE, NULL);
-  g_object_set (G_OBJECT (sink), "dump", FALSE, "silent", TRUE, NULL);
-  run_test (GST_BIN (pipeline), 50000);
+    g_object_set (G_OBJECT (sink), "dump", params[testnum].sink_dump, 
+		     		   "silent", params[testnum].sink_silent, NULL);
 
-  
-  g_print ("\n\nrunning test %d:\n", testnum++);
-  g_print ("fixed size src as subbuffer, fixed size _read:\n");
-  g_object_set (G_OBJECT (src), "data", 2, "sizetype", 2, "filltype", 5, "silent", TRUE, NULL);
-  g_object_set (G_OBJECT (bs),  "sizetype", 1, "silent", TRUE, NULL);
-  g_object_set (G_OBJECT (sink), "dump", FALSE, "silent", TRUE, NULL);
-  run_test (GST_BIN (pipeline), 50000);
+    run_test (GST_BIN (pipeline), 50000);
 
-  g_print ("\n\nrunning test %d:\n", testnum++);
-  g_print ("fixed size src as subbuffer, random size _read:\n");
-  g_object_set (G_OBJECT (src), "data", 2, "sizetype", 2, "filltype", 5, "silent", TRUE, NULL);
-  g_object_set (G_OBJECT (bs),  "sizetype", 2, "silent", TRUE, NULL);
-  g_object_set (G_OBJECT (sink), "dump", FALSE, "silent", TRUE, NULL);
-  run_test (GST_BIN (pipeline), 50000);
-
-  g_print ("\n\nrunning test %d:\n", testnum++);
-  g_print ("random size src as subbuffer, fixed size _read:\n");
-  g_object_set (G_OBJECT (src), "data", 2, "sizetype", 3, "filltype", 5, "silent", TRUE, NULL);
-  g_object_set (G_OBJECT (bs),  "sizetype", 1, "silent", TRUE, NULL);
-  g_object_set (G_OBJECT (sink), "dump", FALSE, "silent", TRUE, NULL);
-  run_test (GST_BIN (pipeline), 50000);
-
-  g_print ("\n\nrunning test %d:\n", testnum++);
-  g_print ("random size src as subbuffer, random size _read:\n");
-  g_object_set (G_OBJECT (src), "data", 2, "sizetype", 3, "filltype", 5, "silent", TRUE, NULL);
-  g_object_set (G_OBJECT (bs),  "sizetype", 2, "silent", TRUE, NULL);
-  g_object_set (G_OBJECT (sink), "dump", FALSE, "silent", TRUE, NULL);
-  run_test (GST_BIN (pipeline), 50000);
+    testnum++;
+  }
 
   g_print ("\n\ndone\n");
 
