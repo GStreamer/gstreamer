@@ -1,3 +1,9 @@
+2004-12-07  Christian Fredrik Kalager Schaller  <uraeus@gnome.org>
+
+	* gst/monoscope/README: Update information to be more correct
+	* gst/monoscope/convolve.c: Relicense to LGPL
+	* gst/monoscope/convolve.h: Relicense to LGPL
+
 2004-12-06  Arwed v. Merkatz <v.merkatz@gmx.net>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_chain):
