@@ -22,8 +22,8 @@ static uint __chains;
 gchar *
 __gst_parse_strdup (gchar *org)
 {
+  gchar *ret; 
   __strings++;
-  gchar *ret;
   ret = g_strdup (org);
   /* g_print ("ALLOCATED STR   (%3u): %p %s\n", __strings, ret, ret); */
   return ret;
@@ -407,12 +407,13 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
     GstPadTemplate *templ = (GstPadTemplate *) templs->data;
     if ((GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC) && (GST_PAD_TEMPLATE_PRESENCE(templ) == GST_PAD_SOMETIMES))
     {
+      DelayedLink *data = g_new (DelayedLink, 1); 
+      
       /* TODO: maybe we should check if src_pad matches this template's names */
 
       GST_DEBUG (GST_CAT_PIPELINE, "trying delayed link %s:%s to %s:%s", 
                  GST_ELEMENT_NAME (src), src_pad, GST_ELEMENT_NAME (sink), sink_pad);
 
-      DelayedLink *data = g_new (DelayedLink, 1);
       data->src_pad = g_strdup (src_pad);
       data->sink = sink;
       data->sink_pad = g_strdup (sink_pad);
