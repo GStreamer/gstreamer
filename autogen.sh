@@ -6,13 +6,12 @@ package=GStreamer
 srcfile=gst/gstobject.h
 #DEBUG=defined
 
-for a in common libs/ext/cothreads; do
-  if test ! -d $a;
-  then
-    echo "+ getting $a from cvs"
-    cvs co $a
-  fi
-done
+if test ! -d common; then
+  echo "+ getting common from cvs"; cvs co common
+fi
+if test ! -d libs/ext/cothreads; then
+  echo "+ getting cothreads from cvs"; cd libs/ext; cvs co cothreads
+fi
 
 CONFIGURE_OPT='--enable-maintainer-mode --enable-plugin-builddir'
 
