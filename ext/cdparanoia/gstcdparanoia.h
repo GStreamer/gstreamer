@@ -74,7 +74,7 @@ struct _CDParanoia {
 
   gchar *device;
   gchar *generic_device;
-  gint start_track, end_track, cur_track;
+  gint start_track, end_track;
   gint start_sector, end_sector;
   gint last_track;
   gint default_sectors;
@@ -83,7 +83,7 @@ struct _CDParanoia {
   gint read_speed;
   gint toc_offset;
   gboolean toc_bias;
-  gboolean never_skip;
+  gint never_skip;
   gboolean abort_on_skip;
   gint paranoia_mode;
 
@@ -95,9 +95,9 @@ struct _CDParanoia {
 
   /* hacks by Gordon Irving */
   gint no_tracks;
-  gchar *discid;
-  gchar *offsets;
-  gchar *total_seconds;
+  gchar discid[20];
+  gint64 offsets[MAXTRK];
+  gint64 total_seconds;
 };
 
 struct _CDParanoiaClass {
