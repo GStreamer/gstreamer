@@ -240,7 +240,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_element_factory_new("lavencode",GST_TYPE_LAVENCODE,
+  factory = gst_element_factory_new("lavenc",GST_TYPE_LAVENCODE,
                                    &lavencode_details);
   g_return_val_if_fail(factory != NULL, FALSE);
   
@@ -257,6 +257,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
 GstPluginDesc plugin_desc = {
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "lavencode",
+  "lavenc",
   plugin_init
 };
