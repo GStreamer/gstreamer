@@ -1,11 +1,14 @@
 2004-03-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* po/sv.po: updated translation (Christian Rose)
+
+2004-03-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/elements/gstfilesink.c: (gst_filesink_get_formats),
 	(gst_filesink_get_query_types), (_do_init),
 	(gst_filesink_handle_event), (gst_filesink_uri_get_protocols):
           return FALSE silently
-	* po/af.po:
-          updated translation (Joost Petri)
+	* po/af.po: updated translation (Petri Jooste)
 
 2004-03-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
