@@ -38,9 +38,9 @@ CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --sysconfdir=%{sysconfdir
 
 if [ "$SMP" != "" ]; then
   (make "MAKE=make -k -j $SMP"; exit 0)
-  make 2> | tee make.log
+  make 2>&1 | tee make.log
 else
-  make 2> | tee make.log
+  make 2>&1 | tee make.log
 fi
 
 %install
