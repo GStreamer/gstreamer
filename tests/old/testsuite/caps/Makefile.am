@@ -1,7 +1,7 @@
 TOP_BUILDDIR=$(shell cd $(top_builddir) && pwd)
 TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(TOP_BUILDDIR) GST_REGISTRY=$(TOP_BUILDDIR)/testsuite/test-registry.xml
 
-testprogs = intersection compatibility normalisation union string-conversions fixed
+testprogs = intersection compatibility normalisation union string-conversions fixed intersect2
 
 # we run gst-register here, which is a HACK to generate the test registry
 # before we actually run the real tests
@@ -22,3 +22,6 @@ string_conversions_LDADD = $(GST_LIBS)
 string_conversions_CFLAGS = $(GST_CFLAGS) $(GNOME_CFLAGS) $(XML_CFLAGS)
 fixed_LDADD = $(GST_LIBS) 
 fixed_CFLAGS = $(GST_CFLAGS) $(GNOME_CFLAGS) $(XML_CFLAGS)
+intersect2_LDADD = $(GST_LIBS) 
+intersect2_CFLAGS = $(GST_CFLAGS) $(GNOME_CFLAGS) $(XML_CFLAGS)
+
