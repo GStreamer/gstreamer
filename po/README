@@ -21,4 +21,7 @@ Q: How do I update a language ?
 A: - run make language.po-update to update your .po file
      (replace language with your language code)
    - edit the .po file, and translate the untranslated strings
+   - run make install from the .po dir (so the updated strings get installed
+     and will be used in the lib/app) and test if the new strings are
+     translated
    - commit
