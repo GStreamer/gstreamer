@@ -24,6 +24,7 @@
 #endif
 
 #include "gst_private.h"
+#include "gst-i18n-lib.h"
 #include "gsttag.h"
 #include "gstinfo.h"
 #include "gstvalue.h"
@@ -63,7 +64,7 @@ _gst_tag_initialize (void)
   gst_tag_register (GST_TAG_ARTIST,
 		    G_TYPE_STRING,
 		    _("artist"),
-		    _("person(s) resposible for the recording"),
+		    _("person(s) responsible for the recording"),
 		    gst_tag_merge_strings_with_comma);
   gst_tag_register (GST_TAG_ALBUM,
 		    G_TYPE_STRING,
@@ -73,7 +74,7 @@ _gst_tag_initialize (void)
   gst_tag_register (GST_TAG_DATE,
 		    G_TYPE_UINT, /* FIXME: own data type for dates? */
 		    _("date"),
-		    _("date the data was created in julien days"),
+		    _("date the data was created (in Julian calendar days)"),
 		    NULL);
   gst_tag_register (GST_TAG_GENRE,
 		    G_TYPE_STRING,
@@ -97,7 +98,7 @@ _gst_tag_initialize (void)
 		    gst_tag_merge_use_first);
   gst_tag_register (GST_TAG_LOCATION,
 		    G_TYPE_STRING,
-		    _("loccation"),
+		    _("location"),
 		    _("original location of file as a URI"),
 		    gst_tag_merge_strings_with_comma);
   gst_tag_register (GST_TAG_DESCRIPTION,

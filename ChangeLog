@@ -1,3 +1,7 @@
+2004-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+        * gst/gsttag.c: fix some strings marked for translation
+
 2004-01-13  Iain <iain@prettypeople.org>
 
 	* gst/schedulers/gstoptimalscheduler.c (add_to_group): Reference the
