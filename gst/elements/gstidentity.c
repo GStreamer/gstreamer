@@ -138,6 +138,9 @@ gst_identity_class_init (GstIdentityClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
 
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_identity_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_identity_get_property);
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOOP_BASED,
       g_param_spec_boolean ("loop-based", "Loop-based",
           "Set to TRUE to use loop-based rather than chain-based scheduling",
@@ -185,8 +188,6 @@ gst_identity_class_init (GstIdentityClass * klass)
       GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_identity_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_identity_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_identity_get_property);
 
   gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_identity_set_clock);
   gstelement_class->change_state =

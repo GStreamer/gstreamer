@@ -145,6 +145,8 @@ gst_filesink_class_init (GstFileSinkClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
+  gobject_class->set_property = gst_filesink_set_property;
+  gobject_class->get_property = gst_filesink_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATION,
       g_param_spec_string ("location", "File Location",
@@ -155,8 +157,6 @@ gst_filesink_class_init (GstFileSinkClass * klass)
       G_STRUCT_OFFSET (GstFileSinkClass, handoff), NULL, NULL,
       g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
-  gobject_class->set_property = gst_filesink_set_property;
-  gobject_class->get_property = gst_filesink_get_property;
   gobject_class->dispose = gst_filesink_dispose;
 }
 static void

@@ -113,6 +113,8 @@ gst_tee_class_init (GstTeeClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_tee_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_tee_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_PADS,
       g_param_spec_int ("num_pads", "num_pads", "num_pads",
@@ -126,8 +128,6 @@ gst_tee_class_init (GstTeeClass * klass)
 
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_tee_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_tee_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_tee_get_property);
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_tee_request_new_pad);

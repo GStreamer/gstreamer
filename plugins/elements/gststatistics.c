@@ -124,6 +124,8 @@ gst_statistics_class_init (GstStatisticsClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
 
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_statistics_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_statistics_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFERS,
       g_param_spec_int64 ("buffers", "buffers", "total buffers count",
@@ -162,8 +164,6 @@ gst_statistics_class_init (GstStatisticsClass * klass)
       g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_statistics_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_statistics_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_statistics_get_property);
 }
 
 static void

@@ -214,6 +214,8 @@ gst_filesrc_class_init (GstFileSrcClass * klass)
 
   gobject_class = (GObjectClass *) klass;
 
+  gobject_class->set_property = gst_filesrc_set_property;
+  gobject_class->get_property = gst_filesrc_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
       g_param_spec_int ("fd", "File-descriptor",
@@ -235,8 +237,6 @@ gst_filesrc_class_init (GstFileSrcClass * klass)
           "Touch data to force disk read", FALSE, G_PARAM_READWRITE));
 
   gobject_class->dispose = gst_filesrc_dispose;
-  gobject_class->set_property = gst_filesrc_set_property;
-  gobject_class->get_property = gst_filesrc_get_property;
 
   gstelement_class->change_state = gst_filesrc_change_state;
 }

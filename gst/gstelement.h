@@ -1,7 +1,6 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
- *                    2004 Wim Taymans <wim@fluendo.com>
+ *               2000,2004 Wim Taymans <wim@fluendo.com>
  *
  * gstelement.h: Header for GstElement
  *
@@ -118,9 +117,6 @@ typedef enum
   GST_ELEMENT_NEW_LOOPFUNC,
   /* if this element can handle events */
   GST_ELEMENT_EVENT_AWARE,
-  /* use threadsafe property get/set implementation */
-  GST_ELEMENT_USE_THREADSAFE_PROPERTIES,
-
 
   /* private flags that can be used by the scheduler */
   GST_ELEMENT_SCHEDULER_PRIVATE1,
@@ -142,9 +138,9 @@ typedef enum
 
 #define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
 #define GST_ELEMENT_PARENT(obj)			(GST_OBJECT_PARENT(obj))
-#define GST_ELEMENT_SCHEDULER(obj)		(((GstElement*)(obj))->sched)
-#define GST_ELEMENT_CLOCK(obj)			(((GstElement*)(obj))->clock)
-#define GST_ELEMENT_PADS(obj)			((obj)->pads)
+#define GST_ELEMENT_SCHEDULER(obj)		(GST_ELEMENT_CAST(obj)->sched)
+#define GST_ELEMENT_CLOCK(obj)			(GST_ELEMENT_CAST(obj)->clock)
+#define GST_ELEMENT_PADS(obj)			(GST_ELEMENT_CAST(obj)->pads)
 
 /**
  * GST_ELEMENT_ERROR:
@@ -158,91 +154,120 @@ typedef enum
  * data processing error. The pipeline will throw an error signal and the
  * application will be requested to stop further media processing.
  */
-#define GST_ELEMENT_ERROR(el, domain, code, message, debug) G_STMT_START { \
-  gchar *__msg = _gst_element_error_printf message; \
-  gchar *__dbg = _gst_element_error_printf debug; \
-  if (__msg) \
-    GST_ERROR_OBJECT (el, "%s", __msg); \
-  if (__dbg) \
-  GST_ERROR_OBJECT (el, "%s", __dbg); \
-  gst_element_error_full (GST_ELEMENT(el), \
-  GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code, \
-  __msg, __dbg, __FILE__, GST_FUNCTION, __LINE__); \
+#define GST_ELEMENT_ERROR(el, domain, code, message, debug) 		\
+G_STMT_START { 								\
+  gchar *__msg = _gst_element_error_printf message; 			\
+  gchar *__dbg = _gst_element_error_printf debug; 			\
+  if (__msg) 								\
+    GST_ERROR_OBJECT (el, "%s", __msg); 				\
+  if (__dbg) 								\
+    GST_ERROR_OBJECT (el, "%s", __dbg); 				\
+  gst_element_error_full (GST_ELEMENT(el), 				\
+    GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code, 	\
+    __msg, __dbg, __FILE__, GST_FUNCTION, __LINE__); 			\
 } G_STMT_END
 
 typedef struct _GstElementFactory GstElementFactory;
 typedef struct _GstElementFactoryClass GstElementFactoryClass;
 
 typedef void 		(*GstElementLoopFunction) 	(GstElement *element);
-typedef void 		(*GstElementPreRunFunction) 	(GstElement *element);
-typedef void 		(*GstElementPostRunFunction) 	(GstElement *element);
 
-struct _GstElement {
+/* the state change mutexes and conds */
+#define GST_STATE_GET_LOCK(elem)               (GST_ELEMENT_CAST(elem)->state_lock)
+#define GST_STATE_LOCK(elem)                   g_mutex_lock(GST_STATE_GET_LOCK(elem))
+#define GST_STATE_TRYLOCK(elem)                g_mutex_trylock(GST_STATE_GET_LOCK(elem))
+#define GST_STATE_UNLOCK(elem)                 g_mutex_unlock(GST_STATE_GET_LOCK(elem))
+#define GST_STATE_GET_COND(elem)               (GST_ELEMENT_CAST(elem)->state_cond)
+#define GST_STATE_WAIT(elem)                   g_cond_wait (GST_STATE_GET_COND (elem), GST_STATE_GET_LOCK (elem))
+#define GST_STATE_TIMED_WAIT(elem, timeval)    g_cond_timed_wait (GST_STATE_GET_COND (elem), GST_STATE_GET_LOCK (elem),\
+		                                                timeval)
+#define GST_STATE_SIGNAL(elem)                 g_cond_signal (GST_STATE_GET_COND (elem));
+#define GST_STATE_BROADCAST(elem)              g_cond_broadcast (GST_STATE_GET_COND (elem));
+
+struct _GstElement 
+{
   GstObject 		object;
 
-  /* element state  and scheduling */
-  guint8 		current_state;
-  guint8 		pending_state;
+  /*< public >*/ /* with STATE_LOCK */
+  /* element state */
+  GMutex               *state_lock;
+  GCond                *state_cond;
+  guint8                current_state;
+  guint8                pending_state;
+  gboolean              state_error; /* flag is set when the element has an error in the last state
+                                        change. it is cleared when doing another state change. */
+  /*< public >*/ /* with LOCK */
+  /* scheduling */
   GstElementLoopFunction loopfunc;
-
-  GstScheduler 		*sched;
+  GstScheduler 	       *sched;
+  /* private pointer for the scheduler */
   gpointer		sched_private;
 
   /* allocated clock */
-  GstClock		*clock;
+  GstClock	       *clock;
   GstClockTimeDiff    	base_time; /* NULL/READY: 0 - PAUSED: current time - PLAYING: difference to clock */
 
-   /* element pads, these lists can only be iterated while holding
+  /* element pads, these lists can only be iterated while holding
    * the LOCK or checking the cookie after each LOCK. */
-  guint16   numpads;
-  GList    *pads;
-  guint16   numsrcpads;
-  GList    *srcpads;
-  guint16   numsinkpads;
-  GList    *sinkpads;
-  guint32   pads_cookie;
+  guint16               numpads;
+  GList                *pads;
+  guint16               numsrcpads;
+  GList                *srcpads;
+  guint16               numsinkpads;
+  GList                *sinkpads;
+  guint32               pads_cookie;
 
-  GMutex 		*state_mutex;
-  GCond 		*state_cond;
-
-  GstElementPreRunFunction  pre_run_func;
-  GstElementPostRunFunction post_run_func;
-  GAsyncQueue		*prop_value_queue;
-  GMutex		*property_mutex;
-
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstElementClass
 {
-  GstObjectClass parent_class;
+  GstObjectClass         parent_class;
 
-  /*< public > */
+  /*< public >*/
   /* the element details */
-  GstElementDetails 	details;
+  GstElementDetails 	 details;
 
   /* factory that the element was created from */
   GstElementFactory	*elementfactory;
 
   /* templates for our pads */
-  GList *padtemplates;
-  gint numpadtemplates;
-  guint32 pad_templ_cookie;
+  GList                 *padtemplates;
+  gint                   numpadtemplates;
+  guint32                pad_templ_cookie;
 
   /* signal callbacks */
   void (*state_change)	(GstElement *element, GstElementState old, GstElementState state);
   void (*new_pad)	(GstElement *element, GstPad *pad);
   void (*pad_removed)	(GstElement *element, GstPad *pad);
+  void (*no_more_pads)	(GstElement *element);
   void (*error)		(GstElement *element, GstElement *source, GError *error, gchar *debug);
   void (*eos)		(GstElement *element);
   void (*found_tag)	(GstElement *element, GstElement *source, const GstTagList *tag_list);
 
-  /* local pointers for get/set */
-  void (*set_property) 	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-  void (*get_property)	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
-
+  /*< protected >*/
   /* vtable*/
+
+  /* request/release pads */
+  GstPad*		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ, const gchar* name);
+  void			(*release_pad)		(GstElement *element, GstPad *pad);
+
+  /* state changes */
+  GstElementStateReturn (*change_state)		(GstElement *element);
+  GstElementStateReturn	(*set_state)		(GstElement *element, GstElementState state);
+
+  /* scheduling */
   gboolean		(*release_locks)	(GstElement *element);
+  void			(*set_scheduler)	(GstElement *element, GstScheduler *scheduler);
+
+  /* set/get clocks */
+  GstClock*		(*get_clock)		(GstElement *element);
+  void			(*set_clock)		(GstElement *element, GstClock *clock);
+
+  /* index */
+  GstIndex*		(*get_index)		(GstElement *element);
+  void			(*set_index)		(GstElement *element, GstIndex *index);
 
   /* query/convert/events functions */
   const GstEventMask*   (*get_event_masks)     	(GstElement *element);
@@ -254,71 +279,25 @@ struct _GstElementClass
   const GstQueryType* 	(*get_query_types)    	(GstElement *element);
   gboolean		(*query)		(GstElement *element, GstQueryType type,
 		  				 GstFormat *format, gint64 *value);
-
-  /* change the element state */
-  GstElementStateReturn (*change_state)		(GstElement *element);
-
-  /* request/release pads */
-  GstPad*		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ, const gchar* name);
-  void			(*release_pad)		(GstElement *element, GstPad *pad);
-
-  /* set/get clocks */
-  GstClock*		(*get_clock)		(GstElement *element);
-  void			(*set_clock)		(GstElement *element, GstClock *clock);
-
-  /* index */
-  GstIndex*		(*get_index)		(GstElement *element);
-  void			(*set_index)		(GstElement *element, GstIndex *index);
-
-  /* scheduler */
-  void			(*set_scheduler)	(GstElement *element, GstScheduler *scheduler);
-
-  GstElementStateReturn	(*set_state)		(GstElement *element, GstElementState state);
-
-  /* FIXME 0.9: move up to signals */
-  void			(*no_more_pads)		(GstElement *element);
-  
-  gpointer _gst_reserved[GST_PADDING - 1];
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
-
-GType			gst_element_get_type		(void);
 
 /* element class pad templates */
 void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplate *templ);
 GstPadTemplate*		gst_element_class_get_pad_template	(GstElementClass *element_class, const gchar *name);
 GList*                  gst_element_class_get_pad_template_list (GstElementClass *element_class);
-
-/* element class details */
 void			gst_element_class_set_details		(GstElementClass *klass,
 								 const GstElementDetails *details);
 
-#define 		gst_element_default_deep_notify 	gst_object_default_deep_notify
+/* element instance */
+GType			gst_element_get_type		(void);
 
-void 			gst_element_default_error		(GObject *object, GstObject *orig, GError *error, gchar *debug);
-
-void			gst_element_set_loop_function	(GstElement *element,
-							 GstElementLoopFunction loop);
-
+/* basic name and parentage stuff from GstObject */
 #define			gst_element_get_name(elem)	gst_object_get_name(GST_OBJECT(elem))
 #define			gst_element_set_name(elem,name)	gst_object_set_name(GST_OBJECT(elem),name)
 #define			gst_element_get_parent(elem)	gst_object_get_parent(GST_OBJECT(elem))
 #define			gst_element_set_parent(elem,parent)	gst_object_set_parent(GST_OBJECT(elem),parent)
-
-/* threadsafe versions of their g_object_* counterparts */
-void	    		gst_element_set			(GstElement *element, const gchar *first_property_name, ...);
-void        		gst_element_get			(GstElement *element, const gchar *first_property_name, ...);
-void			gst_element_set_valist		(GstElement *element, const gchar *first_property_name,
-                                                         va_list var_args);
-void			gst_element_get_valist		(GstElement *element, const gchar *first_property_name,
-                                                         va_list var_args);
-void			gst_element_set_property	(GstElement *element, const gchar *property_name,
-                                                         const GValue   *value);
-void			gst_element_get_property	(GstElement *element, const gchar *property_name,
-                                                         GValue *value);
-
-void			gst_element_enable_threadsafe_properties	(GstElement *element);
-void			gst_element_disable_threadsafe_properties	(GstElement *element);
-void			gst_element_set_pending_properties		(GstElement *element);
 
 /* clocking */
 gboolean		gst_element_requires_clock	(GstElement *element);
@@ -333,20 +312,24 @@ void			gst_element_set_time		(GstElement *element, GstClockTime time);
 void			gst_element_set_time_delay	(GstElement *element, GstClockTime time, GstClockTime delay);
 
 void			gst_element_adjust_time		(GstElement *element, GstClockTimeDiff diff);
- 
-/* indexs */
+
+/* indexes */
 gboolean		gst_element_is_indexable	(GstElement *element);
 void			gst_element_set_index		(GstElement *element, GstIndex *index);
 GstIndex*		gst_element_get_index		(GstElement *element);
 
 
+/* scheduling */
+void			gst_element_set_loop_function	(GstElement *element,
+							 GstElementLoopFunction loop);
 gboolean		gst_element_release_locks	(GstElement *element);
-
 void			gst_element_yield		(GstElement *element);
 gboolean		gst_element_interrupt		(GstElement *element);
 void			gst_element_set_scheduler	(GstElement *element, GstScheduler *sched);
 GstScheduler*		gst_element_get_scheduler	(GstElement *element);
+GstBin*			gst_element_get_managing_bin	(GstElement *element);
 
+/* pad management */
 gboolean		gst_element_add_pad		(GstElement *element, GstPad *pad);
 gboolean		gst_element_remove_pad		(GstElement *element, GstPad *pad);
 GstPad *		gst_element_add_ghost_pad	(GstElement *element, GstPad *pad, const gchar *name);
@@ -359,6 +342,7 @@ void			gst_element_release_request_pad	(GstElement *element, GstPad *pad);
 
 GstIterator *		gst_element_iterate_pads 	(GstElement * element);
 
+/* event/query/format stuff */
 G_CONST_RETURN GstEventMask*
 			gst_element_get_event_masks	(GstElement *element);
 gboolean		gst_element_send_event		(GstElement *element, GstEvent *event);
@@ -374,16 +358,16 @@ gboolean		gst_element_convert		(GstElement *element,
 		 					 GstFormat  src_format,  gint64  src_value,
 							 GstFormat *dest_format, gint64 *dest_value);
 
-void			gst_element_found_tags		(GstElement *element, const GstTagList *tag_list);
-void			gst_element_found_tags_for_pad	(GstElement *element, GstPad *pad, GstClockTime timestamp, 
-							 GstTagList *list);
-
-void			gst_element_set_eos		(GstElement *element);
-
+/* error handling */
 gchar *			_gst_element_error_printf	(const gchar *format, ...);
 void			gst_element_error_full		(GstElement *element, GQuark domain, gint code, 
 							 gchar *message, gchar *debug, 
 							 const gchar *file, const gchar *function, gint line);
+void 			gst_element_default_error	(GObject *object, GstObject *orig, GError *error, gchar *debug);
+#define 		gst_element_default_deep_notify gst_object_default_deep_notify
+
+/* state management */
+void			gst_element_set_eos		(GstElement *element);
 
 gboolean		gst_element_is_locked_state	(GstElement *element);
 gboolean		gst_element_set_locked_state	(GstElement *element, gboolean locked_state);
@@ -393,12 +377,15 @@ GstElementState         gst_element_get_state           (GstElement *element);
 GstElementStateReturn	gst_element_set_state		(GstElement *element, GstElementState state);
 
 void 			gst_element_wait_state_change 	(GstElement *element);
-	
+
+/* factory management */
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
 
-GstBin*			gst_element_get_managing_bin	(GstElement *element);
 
-
+/* misc */
+void			gst_element_found_tags		(GstElement *element, const GstTagList *tag_list);
+void			gst_element_found_tags_for_pad	(GstElement *element, GstPad *pad, GstClockTime timestamp, 
+							 GstTagList *list);
 /*
  *
  * factories stuff
@@ -470,9 +457,7 @@ void			__gst_element_factory_add_pad_template	(GstElementFactory *elementfactory
 void			__gst_element_factory_add_interface	(GstElementFactory *elementfactory,
 								 const gchar *interfacename);
 
-
 G_END_DECLS
-
 
 #endif /* __GST_ELEMENT_H__ */
 

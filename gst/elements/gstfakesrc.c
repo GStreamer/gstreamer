@@ -214,6 +214,8 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fakesrc_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesrc_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_SOURCES,
       g_param_spec_int ("num-sources", "num-sources", "Number of sources",
@@ -280,9 +282,6 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
       G_STRUCT_OFFSET (GstFakeSrcClass, handoff), NULL, NULL,
       gst_marshal_VOID__BOXED_OBJECT, G_TYPE_NONE, 2,
       GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE, GST_TYPE_PAD);
-
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fakesrc_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesrc_get_property);
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_fakesrc_request_new_pad);

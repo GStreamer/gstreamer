@@ -217,6 +217,9 @@ gst_queue_class_init (GstQueueClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_queue_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_queue_get_property);
+
   /* signals */
   gst_queue_signals[SIGNAL_UNDERRUN] =
       g_signal_new ("underrun", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
@@ -287,8 +290,6 @@ gst_queue_class_init (GstQueueClass * klass)
 
   /* set several parent class virtual functions */
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_queue_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_queue_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_queue_get_property);
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_queue_change_state);
   gstelement_class->release_locks = GST_DEBUG_FUNCPTR (gst_queue_release_locks);

@@ -163,6 +163,9 @@ gst_thread_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (g_class);
 
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_thread_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_thread_get_property);
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PRIORITY,
       g_param_spec_enum ("priority", "Scheduling Policy",
           "The scheduling priority of the thread", GST_TYPE_THREAD_PRIORITY,
@@ -182,9 +185,6 @@ gst_thread_class_init (gpointer g_class, gpointer class_data)
 #endif
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_thread_change_state);
-
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_thread_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_thread_get_property);
 
   gstbin_class->child_state_change =
       GST_DEBUG_FUNCPTR (gst_thread_child_state_change);
@@ -476,32 +476,13 @@ revert:
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
     {
-      /* FIXME: recurse into sub-bins. not MT safe but gstthread is going
-       * away soon. */
-      GList *elements = (GList *) GST_BIN (thread)->children;
-
-      while (elements) {
-        gst_element_enable_threadsafe_properties ((GstElement *) elements->
-            data);
-        elements = g_list_next (elements);
-      }
       /* reset self to spinning */
       GST_FLAG_SET (thread, GST_THREAD_STATE_SPINNING);
       break;
     }
     case GST_STATE_PLAYING_TO_PAUSED:
     {
-      GList *elements;
-
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
-
-      elements = (GList *) GST_BIN (thread)->children;
-
-      while (elements) {
-        gst_element_disable_threadsafe_properties ((GstElement *) elements->
-            data);
-        elements = g_list_next (elements);
-      }
       break;
     }
     case GST_STATE_PAUSED_TO_READY:

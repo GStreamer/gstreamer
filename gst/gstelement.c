@@ -64,11 +64,6 @@ static void gst_element_init (GstElement * element);
 static void gst_element_base_class_init (gpointer g_class);
 static void gst_element_base_class_finalize (gpointer g_class);
 
-static void gst_element_real_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_element_real_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 static void gst_element_dispose (GObject * object);
 static void gst_element_finalize (GObject * object);
 
@@ -207,11 +202,6 @@ gst_element_class_init (GstElementClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstElementClass, no_more_pads), NULL,
       NULL, gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_element_real_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_element_real_get_property);
-
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_element_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_element_finalize);
 
@@ -233,14 +223,7 @@ gst_element_class_init (GstElementClass * klass)
 static void
 gst_element_base_class_init (gpointer g_class)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_element_real_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_element_real_get_property);
 
   memset (&element_class->details, 0, sizeof (GstElementDetails));
   element_class->padtemplates = NULL;
@@ -272,28 +255,8 @@ gst_element_init (GstElement * element)
   element->sched = NULL;
   element->clock = NULL;
   element->sched_private = NULL;
-  element->state_mutex = g_mutex_new ();
+  element->state_lock = g_mutex_new ();
   element->state_cond = g_cond_new ();
-}
-
-static void
-gst_element_real_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstElementClass *oclass = GST_ELEMENT_GET_CLASS (object);
-
-  if (oclass->set_property)
-    (oclass->set_property) (object, prop_id, value, pspec);
-}
-
-static void
-gst_element_real_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstElementClass *oclass = GST_ELEMENT_GET_CLASS (object);
-
-  if (oclass->get_property)
-    (oclass->get_property) (object, prop_id, value, pspec);
 }
 
 /**
@@ -321,408 +284,6 @@ gst_element_default_error (GObject * object, GstObject * source, GError * error,
     g_print (_("Additional debug info:\n%s\n"), debug);
 
   g_free (name);
-}
-
-typedef struct
-{
-  const GParamSpec *pspec;
-  GValue value;
-}
-prop_value_t;
-
-static void
-element_set_property (GstElement * element, const GParamSpec * pspec,
-    const GValue * value)
-{
-  prop_value_t *prop_value = g_new0 (prop_value_t, 1);
-
-  prop_value->pspec = pspec;
-  prop_value->value = *value;
-
-  g_async_queue_push (element->prop_value_queue, prop_value);
-}
-
-static void
-element_get_property (GstElement * element, const GParamSpec * pspec,
-    GValue * value)
-{
-  g_mutex_lock (element->property_mutex);
-  g_object_get_property ((GObject *) element, pspec->name, value);
-  g_mutex_unlock (element->property_mutex);
-}
-
-static void
-gst_element_threadsafe_properties_pre_run (GstElement * element)
-{
-  /* need to ref the object because we don't want to lose the object
-   * before the post run function is called */
-  gst_object_ref (GST_OBJECT (element));
-  GST_DEBUG ("locking element %s", GST_OBJECT_NAME (element));
-  g_mutex_lock (element->property_mutex);
-  gst_element_set_pending_properties (element);
-}
-
-static void
-gst_element_threadsafe_properties_post_run (GstElement * element)
-{
-  GST_DEBUG ("unlocking element %s", GST_OBJECT_NAME (element));
-  g_mutex_unlock (element->property_mutex);
-  gst_object_unref (GST_OBJECT (element));
-}
-
-/**
- * gst_element_enable_threadsafe_properties:
- * @element: a #GstElement to enable threadsafe properties on.
- *
- * Installs an asynchronous queue, a mutex and pre- and post-run functions on
- * this element so that properties on the element can be set in a
- * threadsafe way.
- */
-void
-gst_element_enable_threadsafe_properties (GstElement * element)
-{
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  GST_FLAG_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES);
-  element->pre_run_func = gst_element_threadsafe_properties_pre_run;
-  element->post_run_func = gst_element_threadsafe_properties_post_run;
-  if (!element->prop_value_queue)
-    element->prop_value_queue = g_async_queue_new ();
-  if (!element->property_mutex)
-    element->property_mutex = g_mutex_new ();
-}
-
-/**
- * gst_element_disable_threadsafe_properties:
- * @element: a #GstElement to disable threadsafe properties on.
- *
- * Removes the threadsafe properties, post- and pre-run locks from
- * this element.
- */
-void
-gst_element_disable_threadsafe_properties (GstElement * element)
-{
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  GST_FLAG_UNSET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES);
-
-  //element->pre_run_func = NULL;
-  //element->post_run_func = NULL;
-  /* let's keep around that async queue */
-}
-
-/**
- * gst_element_set_pending_properties:
- * @element: a #GstElement to set the pending properties on.
- *
- * Sets all pending properties on the threadsafe properties enabled
- * element.
- */
-void
-gst_element_set_pending_properties (GstElement * element)
-{
-  prop_value_t *prop_value;
-
-  while ((prop_value = g_async_queue_try_pop (element->prop_value_queue))) {
-    g_object_set_property ((GObject *) element, prop_value->pspec->name,
-        &prop_value->value);
-    g_value_unset (&prop_value->value);
-    g_free (prop_value);
-  }
-}
-
-/* following 6 functions taken mostly from gobject.c */
-
-/**
- * gst_element_set:
- * @element: a #GstElement to set properties on.
- * @first_property_name: the first property to set.
- * @...: value of the first property, and more properties to set, ending
- *       with NULL.
- *
- * Sets properties on an element. If the element uses threadsafe properties,
- * they will be queued and set on the object when it is scheduled again.
- */
-void
-gst_element_set (GstElement * element, const gchar * first_property_name, ...)
-{
-  va_list var_args;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  va_start (var_args, first_property_name);
-  gst_element_set_valist (element, first_property_name, var_args);
-  va_end (var_args);
-}
-
-/**
- * gst_element_get:
- * @element: a #GstElement to get properties of.
- * @first_property_name: the first property to get.
- * @...: pointer to a variable to store the first property in, as well as
- * more properties to get, ending with NULL.
- *
- * Gets properties from an element. If the element uses threadsafe properties,
- * the element will be locked before getting the given properties.
- */
-void
-gst_element_get (GstElement * element, const gchar * first_property_name, ...)
-{
-  va_list var_args;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  va_start (var_args, first_property_name);
-  gst_element_get_valist (element, first_property_name, var_args);
-  va_end (var_args);
-}
-
-/**
- * gst_element_set_valist:
- * @element: a #GstElement to set properties on.
- * @first_property_name: the first property to set.
- * @var_args: the var_args list of other properties to get.
- *
- * Sets properties on an element. If the element uses threadsafe properties,
- * the property change will be put on the async queue.
- */
-void
-gst_element_set_valist (GstElement * element, const gchar * first_property_name,
-    va_list var_args)
-{
-  const gchar *name;
-  GObject *object;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  object = (GObject *) element;
-
-  GST_CAT_DEBUG (GST_CAT_PROPERTIES,
-      "setting valist of properties starting with %s on element %s",
-      first_property_name, gst_element_get_name (element));
-
-  if (!GST_FLAG_IS_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES)) {
-    g_object_set_valist (object, first_property_name, var_args);
-    return;
-  }
-
-  g_object_ref (object);
-
-  name = first_property_name;
-
-  while (name) {
-    GValue value = { 0, };
-    GParamSpec *pspec;
-    gchar *error = NULL;
-
-    pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), name);
-
-    if (!pspec) {
-      g_warning ("%s: object class `%s' has no property named `%s'",
-          G_STRLOC, G_OBJECT_TYPE_NAME (object), name);
-      break;
-    }
-    if (!(pspec->flags & G_PARAM_WRITABLE)) {
-      g_warning ("%s: property `%s' of object class `%s' is not writable",
-          G_STRLOC, pspec->name, G_OBJECT_TYPE_NAME (object));
-      break;
-    }
-
-    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
-
-    G_VALUE_COLLECT (&value, var_args, 0, &error);
-    if (error) {
-      g_warning ("%s: %s", G_STRLOC, error);
-      g_free (error);
-
-      /* we purposely leak the value here, it might not be
-       * in a sane state if an error condition occoured
-       */
-      break;
-    }
-
-    element_set_property (element, pspec, &value);
-    g_value_unset (&value);
-
-    name = va_arg (var_args, gchar *);
-  }
-
-  g_object_unref (object);
-}
-
-/**
- * gst_element_get_valist:
- * @element: a #GstElement to get properties of.
- * @first_property_name: the first property to get.
- * @var_args: the var_args list of other properties to get.
- *
- * Gets properties from an element. If the element uses threadsafe properties,
- * the element will be locked before getting the given properties.
- */
-void
-gst_element_get_valist (GstElement * element, const gchar * first_property_name,
-    va_list var_args)
-{
-  const gchar *name;
-  GObject *object;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  object = (GObject *) element;
-
-  if (!GST_FLAG_IS_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES)) {
-    g_object_get_valist (object, first_property_name, var_args);
-    return;
-  }
-
-  g_object_ref (object);
-
-  name = first_property_name;
-
-  while (name) {
-    GValue value = { 0, };
-    GParamSpec *pspec;
-    gchar *error;
-
-    pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), name);
-
-    if (!pspec) {
-      g_warning ("%s: object class `%s' has no property named `%s'",
-          G_STRLOC, G_OBJECT_TYPE_NAME (object), name);
-      break;
-    }
-    if (!(pspec->flags & G_PARAM_READABLE)) {
-      g_warning ("%s: property `%s' of object class `%s' is not readable",
-          G_STRLOC, pspec->name, G_OBJECT_TYPE_NAME (object));
-      break;
-    }
-
-    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
-
-    element_get_property (element, pspec, &value);
-
-    G_VALUE_LCOPY (&value, var_args, 0, &error);
-    if (error) {
-      g_warning ("%s: %s", G_STRLOC, error);
-      g_free (error);
-      g_value_unset (&value);
-      break;
-    }
-
-    g_value_unset (&value);
-
-    name = va_arg (var_args, gchar *);
-  }
-
-  g_object_unref (object);
-}
-
-/**
- * gst_element_set_property:
- * @element: a #GstElement to set properties on.
- * @property_name: the first property to get.
- * @value: the #GValue that holds the value to set.
- *
- * Sets a property on an element. If the element uses threadsafe properties,
- * the property will be put on the async queue.
- */
-void
-gst_element_set_property (GstElement * element, const gchar * property_name,
-    const GValue * value)
-{
-  GParamSpec *pspec;
-  GObject *object;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (property_name != NULL);
-  g_return_if_fail (G_IS_VALUE (value));
-
-  object = (GObject *) element;
-
-  GST_CAT_DEBUG (GST_CAT_PROPERTIES, "setting property %s on element %s",
-      property_name, gst_element_get_name (element));
-  if (!GST_FLAG_IS_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES)) {
-    g_object_set_property (object, property_name, value);
-    return;
-  }
-
-  g_object_ref (object);
-
-  pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object),
-      property_name);
-
-  if (!pspec)
-    g_warning ("%s: object class `%s' has no property named `%s'",
-        G_STRLOC, G_OBJECT_TYPE_NAME (object), property_name);
-  else
-    element_set_property (element, pspec, value);
-
-  g_object_unref (object);
-}
-
-/**
- * gst_element_get_property:
- * @element: a #GstElement to get properties of.
- * @property_name: the first property to get.
- * @value: the #GValue to store the property value in.
- *
- * Gets a property from an element. If the element uses threadsafe properties,
- * the element will be locked before getting the given property.
- */
-void
-gst_element_get_property (GstElement * element, const gchar * property_name,
-    GValue * value)
-{
-  GParamSpec *pspec;
-  GObject *object;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (property_name != NULL);
-  g_return_if_fail (G_IS_VALUE (value));
-
-  object = (GObject *) element;
-
-  if (!GST_FLAG_IS_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES)) {
-    g_object_get_property (object, property_name, value);
-    return;
-  }
-
-  g_object_ref (object);
-
-  pspec =
-      g_object_class_find_property (G_OBJECT_GET_CLASS (object), property_name);
-
-  if (!pspec)
-    g_warning ("%s: object class `%s' has no property named `%s'",
-        G_STRLOC, G_OBJECT_TYPE_NAME (object), property_name);
-  else {
-    GValue *prop_value, tmp_value = { 0, };
-
-    /* auto-conversion of the callers value type
-     */
-    if (G_VALUE_TYPE (value) == G_PARAM_SPEC_VALUE_TYPE (pspec)) {
-      g_value_reset (value);
-      prop_value = value;
-    } else if (!g_value_type_transformable (G_PARAM_SPEC_VALUE_TYPE (pspec),
-            G_VALUE_TYPE (value))) {
-      g_warning
-          ("can't retrieve property `%s' of type `%s' as value of type `%s'",
-          pspec->name, g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)),
-          G_VALUE_TYPE_NAME (value));
-      g_object_unref (object);
-      return;
-    } else {
-      g_value_init (&tmp_value, G_PARAM_SPEC_VALUE_TYPE (pspec));
-      prop_value = &tmp_value;
-    }
-    element_get_property (element, pspec, prop_value);
-    if (prop_value != value) {
-      g_value_transform (prop_value, value);
-      g_value_unset (&tmp_value);
-    }
-  }
-
-  g_object_unref (object);
 }
 
 /**
@@ -1593,7 +1154,7 @@ iterate_pad (GstIterator * it, GstPad * pad)
  *
  * Retrieves an iterattor of @element's pads. 
  *
- * Returns: the #GstIterator of pads.
+ * Returns: the #GstIterator of #GstPad. unref each pad after usage.
  *
  * MT safe.
  */
@@ -1747,17 +1308,17 @@ gst_element_get_random_pad (GstElement * element, GstPadDirection dir)
 
   GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "getting a random pad");
 
-  GST_LOCK (element);
   switch (dir) {
     case GST_PAD_SRC:
+      GST_LOCK (element);
       pads = element->srcpads;
       break;
     case GST_PAD_SINK:
+      GST_LOCK (element);
       pads = element->sinkpads;
       break;
     default:
-      g_warning ("unknown pad direction");
-      return NULL;
+      goto wrong_direction;
   }
   for (; pads; pads = g_list_next (pads)) {
     GstPad *pad = GST_PAD (pads->data);
@@ -1782,6 +1343,13 @@ gst_element_get_random_pad (GstElement * element, GstPadDirection dir)
   GST_UNLOCK (element);
 
   return result;
+
+  /* ERROR handling */
+wrong_direction:
+  {
+    g_warning ("unknown pad direction");
+    return NULL;
+  }
 }
 
 /**
@@ -2349,9 +1917,9 @@ gst_element_get_state (GstElement * element)
 void
 gst_element_wait_state_change (GstElement * element)
 {
-  g_mutex_lock (element->state_mutex);
-  g_cond_wait (element->state_cond, element->state_mutex);
-  g_mutex_unlock (element->state_mutex);
+  GST_STATE_LOCK (element);
+  GST_STATE_WAIT (element);
+  GST_STATE_UNLOCK (element);
 }
 
 /**
@@ -2652,7 +2220,7 @@ gst_element_change_state (GstElement * element)
       0, old_state, GST_STATE (element));
 
   /* signal the state change in case somebody is waiting for us */
-  g_cond_signal (element->state_cond);
+  GST_STATE_BROADCAST (element);
 
   gst_object_unref (GST_OBJECT (element));
   return GST_STATE_SUCCESS;
@@ -2699,19 +2267,6 @@ gst_element_dispose (GObject * object)
   element->numsrcpads = 0;
   element->numsinkpads = 0;
   element->numpads = 0;
-  if (element->state_mutex)
-    g_mutex_free (element->state_mutex);
-  element->state_mutex = NULL;
-  if (element->state_cond)
-    g_cond_free (element->state_cond);
-  element->state_cond = NULL;
-
-  if (element->prop_value_queue)
-    g_async_queue_unref (element->prop_value_queue);
-  element->prop_value_queue = NULL;
-  if (element->property_mutex)
-    g_mutex_free (element->property_mutex);
-  element->property_mutex = NULL;
 
   gst_object_replace ((GstObject **) & element->sched, NULL);
   gst_object_replace ((GstObject **) & element->clock, NULL);
@@ -2722,7 +2277,10 @@ gst_element_dispose (GObject * object)
 static void
 gst_element_finalize (GObject * object)
 {
-  //GstElement *element = GST_ELEMENT (object);
+  GstElement *element = GST_ELEMENT (object);
+
+  g_mutex_free (element->state_lock);
+  g_cond_free (element->state_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

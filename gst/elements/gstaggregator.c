@@ -137,6 +137,9 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_aggregator_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_aggregator_get_property);
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_PADS,
       g_param_spec_int ("num_pads", "Num pads", "The number of source pads",
           0, G_MAXINT, 0, G_PARAM_READABLE));
@@ -152,8 +155,6 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
           "The current state of the element", NULL, G_PARAM_READABLE));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_aggregator_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_aggregator_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_aggregator_get_property);
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_aggregator_request_new_pad);

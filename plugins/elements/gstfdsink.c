@@ -88,13 +88,12 @@ gst_fdsink_class_init (GstFdSinkClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
 
+  gobject_class->set_property = gst_fdsink_set_property;
+  gobject_class->get_property = gst_fdsink_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to write to",
           0, G_MAXINT, 1, G_PARAM_READWRITE));
-
-  gobject_class->set_property = gst_fdsink_set_property;
-  gobject_class->get_property = gst_fdsink_get_property;
 }
 
 static void

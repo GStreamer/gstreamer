@@ -152,19 +152,11 @@ static GstSchedulerClass *parent_class = NULL;
  * that will avoid using do_cothread_switch from within the scheduler. */
 
 #define do_element_switch(element) G_STMT_START{		\
-  GstElement *from = SCHED (element)->current;			\
-  if (from && from->post_run_func)				\
-    from->post_run_func (from);					\
   SCHED (element)->current = element;				\
-  if (element->pre_run_func)					\
-    element->pre_run_func (element);				\
   do_cothread_switch (GST_ELEMENT_THREADSTATE (element));	\
 }G_STMT_END
 
 #define do_switch_to_main(sched) G_STMT_START{			\
-  GstElement *current = ((GstBasicScheduler*)sched)->current;	\
-  if (current && current->post_run_func)			\
-    current->post_run_func (current);				\
   ((GstBasicScheduler*) sched)->current = NULL;				\
   do_cothread_switch						\
     (do_cothread_get_main					\
@@ -172,8 +164,6 @@ static GstSchedulerClass *parent_class = NULL;
 }G_STMT_END
 
 #define do_switch_from_main(entry) G_STMT_START{		\
-  if (entry->pre_run_func)					\
-    entry->pre_run_func (entry);				\
   SCHED (entry)->current = entry;				\
   do_cothread_switch (GST_ELEMENT_THREADSTATE (entry));		\
 }G_STMT_END
@@ -302,9 +292,6 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
   /* due to oddities in the cothreads code, when this function returns it will
    * switch to the main cothread. thus, we need to unlock the current element. */
   if (SCHED (element)) {
-    if (SCHED (element)->current && SCHED (element)->current->post_run_func) {
-      SCHED (element)->current->post_run_func (SCHED (element)->current);
-    }
     SCHED (element)->current = NULL;
   }
 
@@ -381,9 +368,6 @@ gst_basic_scheduler_chain_wrapper (int argc, char **argv)
   /* due to oddities in the cothreads code, when this function returns it will
    * switch to the main cothread. thus, we need to unlock the current element. */
   if (SCHED (element)) {
-    if (SCHED (element)->current && SCHED (element)->current->post_run_func) {
-      SCHED (element)->current->post_run_func (SCHED (element)->current);
-    }
     SCHED (element)->current = NULL;
   }
 
@@ -434,8 +418,6 @@ gst_basic_scheduler_src_wrapper (int argc, char **argv)
 
   /* due to oddities in the cothreads code, when this function returns it will
    * switch to the main cothread. thus, we need to unlock the current element. */
-  if (SCHED (element)->current->post_run_func)
-    SCHED (element)->current->post_run_func (SCHED (element)->current);
   SCHED (element)->current = NULL;
 
   GST_DEBUG ("leaving src wrapper of element %s", name);
@@ -1128,8 +1110,6 @@ gst_basic_scheduler_remove_element (GstScheduler * sched, GstElement * element)
     /* if we are removing the currently scheduled element */
     if (bsched->current == element) {
       GST_FLAG_SET (element, GST_ELEMENT_COTHREAD_STOPPING);
-      if (element->post_run_func)
-        element->post_run_func (element);
       bsched->current = NULL;
     }
     /* find what chain the element is in */
