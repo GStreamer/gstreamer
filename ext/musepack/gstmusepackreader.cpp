@@ -64,6 +64,9 @@ GstMusepackReader::read (void * ptr, mpc_int32_t size)
           this->eos = true;
           gst_event_unref (event);
           goto done;
+        case GST_EVENT_FLUSH:
+          gst_event_unref (event);
+          break;
         default:
           gst_pad_event_default (this->bs->pad, event);
           break;
@@ -117,6 +120,9 @@ GstMusepackReader::seek (mpc_int32_t offset)
       case GST_EVENT_INTERRUPT:
         g_warning ("interrupt!");
         return false;
+      case GST_EVENT_FLUSH:
+        gst_event_unref (event);
+        break;
       default:
         gst_pad_event_default (this->bs->pad, event);
         break;

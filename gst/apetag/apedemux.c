@@ -710,6 +710,7 @@ gst_ape_demux_stream_data (GstApeDemux * ape)
   GstData *data;
 
   data = gst_pad_pull (ape->sinkpad);
+
   if (GST_IS_EVENT (data)) {
     GstEvent *event = GST_EVENT (data);
 
