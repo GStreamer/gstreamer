@@ -2,6 +2,7 @@
 
 	* tools/Makefile.am:
 	  use AM_CFLAGS since all the CFLAGS are the same
+	  use AM_LDFAGS
 
 2004-02-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 

@@ -45,25 +45,13 @@ SUFFIXES = .1 .1.in
 		$< >$@
 
 AM_CFLAGS = $(GST_CFLAGS)
+AM_LDFLAGS = $(GST_LIBS)
 
-gst_launch_LDADD = $(GST_LIBS) #-lefence
+gst_inspect_LDADD = ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
 
-gst_md5sum_LDADD = $(GST_LIBS) #-lefence
-
-gst_typefind_LDADD = $(GST_LIBS) #-lefence
-
-gst_inspect_LDADD = $(GST_LIBS) ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
-
-gst_xmlinspect_LDADD = $(GST_LIBS) ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
+gst_xmlinspect_LDADD = ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
 
 if !GST_DISABLE_REGISTRY
-gst_register_LDADD = $(GST_LIBS)
-
-gst_complete_LDADD = $(GST_LIBS)
-
-gst_compprep_LDADD = $(GST_LIBS)
-
 gst_xmllaunch_SOURCES = gst-launch.c
-gst_xmllaunch_LDADD = $(GST_LIBS)
 endif
 
