@@ -51,7 +51,9 @@ struct _GstMad {
   GstPad *sinkpad,*srcpad;
 
   /* state */
-  struct mad_decoder decoder;
+  struct mad_stream stream;
+  struct mad_frame frame;
+  struct mad_synth synth;
   guchar *tempbuffer;
   glong tempsize;
   gboolean need_sync;

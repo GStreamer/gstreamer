@@ -74,14 +74,12 @@ GST_PADTEMPLATE_FACTORY (mad_sink_template_factory,
 
 static void 		gst_mad_class_init	(GstMadClass *klass);
 static void 		gst_mad_init		(GstMad *mad);
+static void 		gst_mad_dispose 	(GObject *object);
 
-static void 		gst_mad_loop 		(GstElement *element);
+static void 		gst_mad_chain 		(GstPad *pad, GstBuffer *buffer);
 
-static enum mad_flow 	gst_mad_input 		(void *data, struct mad_stream *stream);
-static enum mad_flow 	gst_mad_output 		(void *data, struct mad_header const *header, 
-						 struct mad_pcm *pcm);
-static enum mad_flow 	gst_mad_error 		(void *data, struct mad_stream *stream, 
-						 struct mad_frame *frame);
+static GstElementStateReturn
+			gst_mad_change_state (GstElement *element);
 
 
 static GstElementClass *parent_class = NULL;
@@ -111,11 +109,17 @@ gst_mad_get_type (void)
 static void
 gst_mad_class_init (GstMadClass *klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gstelement_class = (GstElementClass*)klass;
+  gobject_class = (GObjectClass*) klass;
+  gstelement_class = (GstElementClass*) klass;
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+
+  gobject_class->dispose = gst_mad_dispose;
+
+  gstelement_class->change_state = gst_mad_change_state;
 }
 
 static void
@@ -126,20 +130,13 @@ gst_mad_init (GstMad *mad)
 		  GST_PADTEMPLATE_GET (mad_sink_template_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(mad),mad->sinkpad);
   gst_pad_set_caps (mad->sinkpad, gst_pad_get_padtemplate_caps (mad->sinkpad));
+  gst_pad_set_chain_function (mad->sinkpad, GST_DEBUG_FUNCPTR(gst_mad_chain));
 
   mad->srcpad = gst_pad_new_from_template(
 		  GST_PADTEMPLATE_GET (mad_src_template_factory), "src");
   gst_element_add_pad(GST_ELEMENT(mad),mad->srcpad);
 
-  gst_element_set_loop_function (GST_ELEMENT (mad), GST_DEBUG_FUNCPTR(gst_mad_loop));
-  // the MAD API is broken, so we have to set this
-  //GST_FLAG_SET(GST_ELEMENT(mad), GST_ELEMENT_NO_ENTRY);
-
-  mad_decoder_init (&mad->decoder, mad, 
-                     gst_mad_input, 0 /* header */, 0 /* filter */, gst_mad_output,
-                     gst_mad_error, 0 /* message */);
-
-  mad->tempbuffer = g_malloc (8192);
+  mad->tempbuffer = g_malloc (MAD_BUFFER_MDLEN * 3);
   mad->tempsize = 0;
   mad->need_sync = TRUE;
   mad->last_time = 0;
@@ -147,90 +144,14 @@ gst_mad_init (GstMad *mad)
   mad->new_header = TRUE;
 }
 
-static enum mad_flow 
-gst_mad_input (void *user_data,
-               struct mad_stream *stream)
+static void
+gst_mad_dispose (GObject *object)
 {
-  GstMad *mad;
-  GstBuffer *buffer = NULL;
-  gchar *data;
-  glong size;
-  gint offset = 0;
+  GstMad *mad = GST_MAD (object);
 
-  mad = GST_MAD (user_data);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 
-  /* we yield here because the loop function doesn't return */
-  gst_element_yield (GST_ELEMENT (mad));
-
-  do {
-    GstBuffer *inbuf;
-    inbuf = gst_pad_pull (mad->sinkpad);
-
-    /* deal with events */
-    if (GST_IS_EVENT (inbuf)) {
-      GstEvent *event = GST_EVENT (inbuf);
-
-      switch (GST_EVENT_TYPE (event)) {
-        case GST_EVENT_DISCONTINUOUS:
-	  mad->need_sync = TRUE;
-        case GST_EVENT_EOS:
-	  if (buffer) {
-	    gst_buffer_unref (buffer);
-	    buffer = NULL;
-          }
-        default:
-	  gst_pad_event_default (mad->sinkpad, event);
-	  break;
-      }
-      return MAD_FLOW_STOP;
-    }
-
-    if (buffer) {
-      buffer = gst_buffer_append (buffer, inbuf);
-      gst_buffer_unref (inbuf);
-    }
-    else
-      buffer = inbuf;
-  }
-  while (GST_BUFFER_SIZE (buffer) < MAD_BUFFER_MDLEN);
-
-  mad->last_time = GST_BUFFER_TIMESTAMP (buffer);
-
-  /* thomas added this bit to implement timestamps */
-#ifdef DEBUG_TIMESTAMP
-  if (GST_BUFFER_TIMESTAMP (buffer) == 0)
-  {
-    GST_BUFFER_TIMESTAMP (buffer) = mad->framestamp * 1E9
-				  / gst_audio_frame_rate (mad->srcpad);
-    printf ("DEBUG: mad: timestamp set on input  buffer: %f sec\n",
-	GST_BUFFER_TIMESTAMP (buffer) / 1E9);
-  }
-#endif
-  /* end of new bit */
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
-
-  if (stream->next_frame != NULL && !mad->need_sync) {
-    offset = mad->tempsize - (stream->next_frame - mad->tempbuffer);
-    memmove (mad->tempbuffer, stream->next_frame, offset);
-  }
-
-  memcpy (mad->tempbuffer+offset, data, size);
-  mad->tempsize = offset + size;
-
-  gst_buffer_unref (buffer);
-  
-  GST_DEBUG (0, "decoder_in %ld %p %p\n", mad->tempsize, mad->tempbuffer, stream->next_frame);
-
-  mad_stream_buffer (stream, mad->tempbuffer, mad->tempsize);
-
-  /* this doesn't seem to work very well.. */
-  /*if (mad->need_sync)
-      mad_stream_sync (stream); */
-     
-  GST_DEBUG (0, "decoder_in done %p\n", stream->next_frame);
-
-  return MAD_FLOW_CONTINUE;
+  g_free (mad->tempbuffer);
 }
 
 static inline signed int 
@@ -280,100 +201,148 @@ G_STMT_START{							\
   mad->new_header = FALSE;
 }
 
-static enum mad_flow 
-gst_mad_output (void *data,
-                struct mad_header const *header,
-                struct mad_pcm *pcm)
-{
-  unsigned int nchannels, nsamples;
-  mad_fixed_t const *left_ch, *right_ch;
-  GstMad *mad;
-  GstBuffer *buffer;
-  gint16 *outdata;
-
-  mad = GST_MAD (data);
-
-  GST_DEBUG (0, "decoder_out\n");
-
-  /* header->sfreq or header->samplerate contains the sampling frequency */
-  nchannels = MAD_NCHANNELS (header);
-  nsamples  = pcm->length;
-  left_ch   = pcm->samples[0];
-  right_ch  = pcm->samples[1];
-
-  gst_mad_update_info (mad, header);
-
-  buffer = gst_buffer_new ();
-  outdata = (gint16 *) GST_BUFFER_DATA (buffer) = g_malloc (nsamples*nchannels*2);
-  GST_BUFFER_SIZE (buffer) = nsamples*nchannels*2;
-  GST_BUFFER_TIMESTAMP (buffer) = mad->last_time;
-  
-  /* end of new bit */
-  while (nsamples--) {
-    /* output sample(s) in 16-bit signed native-endian PCM */
-    *outdata++ = scale(*left_ch++) & 0xffff;
-
-    if (nchannels == 2) {
-      *outdata++ = scale(*right_ch++) & 0xffff;
-    }
-  }
-  if (GST_PAD_CAPS (mad->srcpad) == NULL) {
-    gst_pad_set_caps (mad->srcpad,
-  	gst_caps_new (
-  	  "mad_src",
-    	  "audio/raw",
-	  gst_props_new (
-    	    "format",   GST_PROPS_STRING ("int"),
-      	     "law",         GST_PROPS_INT (0),
-      	     "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
-      	     "signed",      GST_PROPS_BOOLEAN (TRUE),
-      	     "width",       GST_PROPS_INT (16),
-      	     "depth",       GST_PROPS_INT (16),
-#if MAD_VERSION_MINOR <= 12
-      	     "rate",        GST_PROPS_INT (header->sfreq),
-#else
-      	     "rate",        GST_PROPS_INT (header->samplerate),
-#endif
-      	     "channels",    GST_PROPS_INT (nchannels),
-	     NULL)));
-  }
-
-  if (mad->need_sync) {
-    /* use an event FIXME */
-    mad->need_sync = FALSE;
-  }
-  if (GST_PAD_CONNECTED (mad->srcpad))
-    gst_pad_push (mad->srcpad, buffer);
-  else
-    gst_buffer_unref (buffer);
-
-  return MAD_FLOW_CONTINUE;
-}
-
-static enum mad_flow 
-gst_mad_error (void *data,
-	       struct mad_stream *stream,
-	       struct mad_frame *frame)
-{
-  GST_DEBUG (0, "decoding error 0x%04x at byte offset %p\n",
-         stream->error, stream->this_frame);
-
-  return MAD_FLOW_CONTINUE;
-}
-
 static void
-gst_mad_loop (GstElement *element)
+gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 {
   GstMad *mad;
-  gint ret;
+  gchar *data;
+  glong size;
+
+  mad = GST_MAD (gst_pad_get_parent (pad));
+
+  /* end of new bit */
+  data = GST_BUFFER_DATA (buffer);
+  size = GST_BUFFER_SIZE (buffer);
+
+  while (size > 0) {
+    gint tocopy;
+    guchar *mad_input_buffer;
+
+    /* cut the buffer in MDLEN pieces */
+    tocopy = MIN (MAD_BUFFER_MDLEN, size);
+	  
+    memcpy (mad->tempbuffer + mad->tempsize, data, tocopy);
+    mad->tempsize += tocopy;
+
+    size -= tocopy;
+    data += tocopy;
+
+    mad_input_buffer = mad->tempbuffer;
+
+    /* it we have enough data we can proceed */
+    while (mad->tempsize >= MAD_BUFFER_MDLEN) {
+      gint consumed;
+      guint nchannels, nsamples;
+      mad_fixed_t const *left_ch, *right_ch;
+      GstBuffer *outbuffer;
+      gint16 *outdata;
+
+      mad_stream_buffer (&mad->stream, mad_input_buffer, mad->tempsize);
+
+      if (mad_frame_decode (&mad->frame, &mad->stream) == -1) {
+        if (!MAD_RECOVERABLE (mad->stream.error)) {
+          gst_element_error (GST_ELEMENT (mad), "fatal error decoding stream");
+          return;
+        }
+	else {
+	  goto next;
+	}
+      }
+      mad_synth_frame (&mad->synth, &mad->frame);
+
+      nchannels = MAD_NCHANNELS (&mad->frame.header);
+      nsamples  = mad->synth.pcm.length;
+      left_ch   = mad->synth.pcm.samples[0];
+      right_ch  = mad->synth.pcm.samples[1];
+
+      gst_mad_update_info (mad, &mad->frame.header);
+
+      outbuffer = gst_buffer_new ();
+      outdata = (gint16 *) GST_BUFFER_DATA (outbuffer) = g_malloc (nsamples * nchannels * 2);
+      GST_BUFFER_SIZE (outbuffer) = nsamples * nchannels * 2;
+      GST_BUFFER_TIMESTAMP (outbuffer) = GST_BUFFER_TIMESTAMP (buffer);
+  
+      /* end of new bit */
+      while (nsamples--) {
+        /* output sample(s) in 16-bit signed native-endian PCM */
+        *outdata++ = scale(*left_ch++) & 0xffff;
+
+        if (nchannels == 2) {
+          *outdata++ = scale(*right_ch++) & 0xffff;
+        }
+      }
+      if (GST_PAD_CAPS (mad->srcpad) == NULL) {
+        gst_pad_set_caps (mad->srcpad,
+  	    gst_caps_new (
+  	      "mad_src",
+    	      "audio/raw",
+	      gst_props_new (
+    	        "format",   GST_PROPS_STRING ("int"),
+      	         "law",         GST_PROPS_INT (0),
+      	         "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
+      	         "signed",      GST_PROPS_BOOLEAN (TRUE),
+      	         "width",       GST_PROPS_INT (16),
+      	         "depth",       GST_PROPS_INT (16),
+#if MAD_VERSION_MINOR <= 12
+      	         "rate",        GST_PROPS_INT (mad->header.sfreq),
+#else
+      	         "rate",        GST_PROPS_INT (mad->header.samplerate),
+#endif
+      	         "channels",    GST_PROPS_INT (nchannels),
+	         NULL)));
+      }
+
+      if (GST_PAD_CONNECTED (mad->srcpad))
+        gst_pad_push (mad->srcpad, outbuffer);
+      else
+        gst_buffer_unref (outbuffer);
+next:
+      /* figure out how many bytes mad consumed */
+      consumed = mad->stream.next_frame - mad_input_buffer;
+
+      /* move out pointer to where mad want the next data */
+      mad_input_buffer += consumed;
+      mad->tempsize -= consumed;
+    }
+    memmove (mad->tempbuffer, mad_input_buffer, mad->tempsize);
+  }
+
+  gst_buffer_unref (buffer);
+}
+
+static GstElementStateReturn
+gst_mad_change_state (GstElement *element)
+{
+  GstMad *mad;
 
   mad = GST_MAD (element);
 
-  GST_DEBUG (0, "decoder_run\n");
-  ret = mad_decoder_run (&mad->decoder, MAD_DECODER_MODE_SYNC);
-  GST_DEBUG (0, "decoder_run done %d\n", ret);
-}
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+      mad_stream_init (&mad->stream);
+      mad_frame_init (&mad->frame);
+      mad_synth_init (&mad->synth);
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      /* do something to get out of the chain function faster */
+      break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      mad_synth_finish (&mad->synth);
+      mad_frame_finish (&mad->frame);
+      mad_stream_finish (&mad->stream);
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break;
+  }
 
+  parent_class->change_state (element);
+
+  return GST_STATE_SUCCESS;
+}
 
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
