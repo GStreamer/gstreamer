@@ -34,13 +34,20 @@ enum {
 static void gst_dpman_class_init (GstDParamManagerClass *klass);
 static void gst_dpman_init (GstDParamManager *dpman);
 static void gst_dpman_dispose (GObject *object);
- static GstDParamWrapper* gst_dpman_new_wrapper(GstDParamManager *dpman, GParamSpec *param_spec, gchar *unit_name, GstDPMUpdateMethod update_method);
- static GstDParamWrapper* gst_dpman_get_wrapper(GstDParamManager *dpman, gchar *dparam_name);
+static GstDParamWrapper* gst_dpman_new_wrapper(GstDParamManager *dpman, GParamSpec *param_spec, gchar *unit_name, GstDPMUpdateMethod update_method);
+static GstDParamWrapper* gst_dpman_get_wrapper(GstDParamManager *dpman, gchar *dparam_name);
 static void gst_dpman_state_change (GstElement *element, gint old_state, gint new_state, GstDParamManager *dpman);
-static void gst_dpman_caps_changed (GstPad *pad, GstCaps *caps, GstDParamManager *dpman);
-static guint gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 timestamp);
-static guint gst_dpman_preprocess_noop(GstDParamManager *dpman, guint frames, gint64 timestamp);
-static guint gst_dpman_process_noop(GstDParamManager *dpman, guint frame_count);
+static gboolean gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 timestamp);
+static gboolean gst_dpman_preprocess_asynchronous(GstDParamManager *dpman, guint frames, gint64 timestamp);
+static gboolean gst_dpman_process_asynchronous(GstDParamManager *dpman, guint frame_count);
+static gboolean gst_dpman_preprocess_noop(GstDParamManager *dpman, guint frames, gint64 timestamp);
+static gboolean gst_dpman_process_noop(GstDParamManager *dpman, guint frame_count);
+static void gst_dpman_setup_synchronous(GstDParamManager *dpman);
+static void gst_dpman_setup_asynchronous(GstDParamManager *dpman);
+static void gst_dpman_setup_disabled(GstDParamManager *dpman);
+static void gst_dpman_teardown_synchronous(GstDParamManager *dpman);
+static void gst_dpman_teardown_asynchronous(GstDParamManager *dpman);
+static void gst_dpman_teardown_disabled(GstDParamManager *dpman);
 
 static GObjectClass *parent_class;
 static guint gst_dpman_signals[LAST_SIGNAL] = { 0 };
@@ -91,11 +98,14 @@ gst_dpman_class_init (GstDParamManagerClass *klass)
 	klass->modes = g_hash_table_new(g_str_hash,g_str_equal);
 
 	gst_dpman_register_mode (klass, "synchronous", 
-	                       gst_dpman_preprocess_synchronous, gst_dpman_process_noop, NULL, NULL);
+	                       gst_dpman_preprocess_synchronous, gst_dpman_process_noop, 
+			       gst_dpman_setup_synchronous, gst_dpman_teardown_synchronous);
 	gst_dpman_register_mode (klass, "asynchronous", 
-	                       gst_dpman_preprocess_noop, gst_dpman_process_noop, NULL, NULL);
+	                       gst_dpman_preprocess_asynchronous, gst_dpman_process_asynchronous, 
+			       gst_dpman_setup_asynchronous, gst_dpman_teardown_asynchronous);
 	gst_dpman_register_mode (klass, "disabled", 
-	                       gst_dpman_preprocess_noop, gst_dpman_process_noop, NULL, NULL);
+	                       gst_dpman_preprocess_noop, gst_dpman_process_noop, 
+			       gst_dpman_setup_disabled, gst_dpman_teardown_disabled);
 
 
 	gst_dpman_signals[NEW_REQUIRED_DPARAM] =
@@ -115,7 +125,6 @@ gst_dpman_init (GstDParamManager *dpman)
 	GST_DPMAN_PARENT(dpman) = NULL;
 	GST_DPMAN_MODE_NAME(dpman) = NULL;
 	GST_DPMAN_MODE(dpman) = NULL;
-	GST_DPMAN_MODE_DATA(dpman) = NULL;
 	GST_DPMAN_RATE(dpman) = 0;
 }
 
@@ -274,7 +283,7 @@ gst_dpman_remove_required_dparam (GstDParamManager *dpman, gchar *dparam_name)
 	GST_DEBUG(GST_CAT_PARAMS, "removing required dparam: %s", dparam_name);
 	
 	g_hash_table_remove(GST_DPMAN_DPARAMS(dpman), dparam_name);
-	GST_DPMAN_DPARAMS_LIST(dpman) = g_slist_remove(GST_DPMAN_DPARAMS_LIST(dpman), dpwrap);
+	GST_DPMAN_DPARAMS_LIST(dpman) = g_list_remove(GST_DPMAN_DPARAMS_LIST(dpman), dpwrap);
 
 	g_free(dpwrap->value);
 	g_free(dpwrap);
@@ -383,21 +392,21 @@ GParamSpec**
 gst_dpman_list_dparam_specs(GstDParamManager *dpman)
 {
 	GstDParamWrapper* dpwrap;
-	GSList *dpwraps;
+	GList *dwraps;
 	GParamSpec** param_specs;
 	guint x = 0;
 
 	g_return_val_if_fail (dpman != NULL, NULL);
 	g_return_val_if_fail (GST_IS_DPMAN (dpman), NULL);
 	
-	dpwraps = GST_DPMAN_DPARAMS_LIST(dpman);
+	dwraps = GST_DPMAN_DPARAMS_LIST(dpman);
 
-	param_specs = g_new0(GParamSpec*, g_slist_length(dpwraps) + 1);
+	param_specs = g_new0(GParamSpec*, g_list_length(dwraps) + 1);
 	
-	while (dpwraps){
-		dpwrap = (GstDParamWrapper*)dpwraps->data;
+	while (dwraps){
+		dpwrap = (GstDParamWrapper*)dwraps->data;
 		param_specs[x++] = dpwrap->param_spec;
-		dpwraps = g_slist_next(dpwraps);
+		dwraps = g_list_next(dwraps);
 	}
 	return param_specs;
 }
@@ -413,6 +422,13 @@ gst_dpman_get_param_spec (GstDParamManager *dpman, gchar *dparam_name)
 
 	dpwrap = gst_dpman_get_wrapper(dpman, dparam_name);
 	return dpwrap->param_spec;
+}
+
+void
+gst_dpman_set_rate (GstDParamManager *dpman, gint rate)
+{
+	g_return_if_fail (GST_IS_DPMAN (dpman));
+	GST_DPMAN_RATE(dpman) = rate;
 }
 
 /**
@@ -530,24 +546,6 @@ gst_dpman_get_manager (GstElement *parent)
 }
 
 /**
- * gst_dpman_set_rate_change_pad
- * @dpman: GstDParamManager instance
- * @pad: the pad which may have a "rate" caps property
- *
- */
-void
-gst_dpman_set_rate_change_pad(GstDParamManager *dpman, GstPad *pad)
-{
-	g_return_if_fail (dpman != NULL);
-	g_return_if_fail (GST_IS_DPMAN (dpman));
-	g_return_if_fail (pad != NULL);
-	g_return_if_fail (GST_IS_PAD (pad));
-
-	g_signal_connect(G_OBJECT(pad), "caps_changed", 
-	                 G_CALLBACK (gst_dpman_caps_changed), dpman);
-}
-
-/**
  * gst_dpman_bypass_dparam:
  * @dpman: GstDParamManager instance
  * @dparam_name: the name of dparam
@@ -610,7 +608,7 @@ gst_dpman_new_wrapper(GstDParamManager *dpman,
 	dpwrap->unit_name = unit_name;
 	
 	g_hash_table_insert(GST_DPMAN_DPARAMS(dpman), dparam_name, dpwrap);
-	GST_DPMAN_DPARAMS_LIST(dpman) = g_slist_append(GST_DPMAN_DPARAMS_LIST(dpman), dpwrap);
+	GST_DPMAN_DPARAMS_LIST(dpman) = g_list_append(GST_DPMAN_DPARAMS_LIST(dpman), dpwrap);
 	
 	return dpwrap;	
 }
@@ -619,7 +617,7 @@ gst_dpman_new_wrapper(GstDParamManager *dpman,
 static void 
 gst_dpman_state_change (GstElement *element, gint old_state, gint new_state, GstDParamManager *dpman)
 {
-	GSList *dwraps;
+	GList *dwraps;
 	GstDParam *dparam;
 	GstDParamWrapper *dpwrap;
 
@@ -629,8 +627,6 @@ gst_dpman_state_change (GstElement *element, gint old_state, gint new_state, Gst
 	if (new_state == GST_STATE_PLAYING){
 		GST_DEBUG(GST_CAT_PARAMS, "initialising params");
 
-		/* some dparams treat the first update after the pipeline starts differently */
-		dpman->update_info = GST_DPARAM_UPDATE_FIRST;
 			
 		/* force all params to be updated */
 		dwraps = GST_DPMAN_DPARAMS_LIST(dpman);
@@ -642,115 +638,335 @@ gst_dpman_state_change (GstElement *element, gint old_state, gint new_state, Gst
 				GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
 				GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = 0LL;
 			}
-			dwraps = g_slist_next(dwraps);
+			/* some dparams treat the first update after the pipeline starts differently */
+			dpwrap->update_info = GST_DPARAM_UPDATE_FIRST;
+			dwraps = g_list_next(dwraps);
 		}
 	}
 }
 
-static void
-gst_dpman_caps_changed (GstPad *pad, GstCaps *caps, GstDParamManager *dpman)
-{
-	gint rate;
-
-	g_return_if_fail (caps != NULL);
-	g_return_if_fail (dpman != NULL);
-	g_return_if_fail (GST_IS_DPMAN (dpman));
-	
-	gst_caps_get_int (caps, "rate", &rate);
-	GST_DPMAN_RATE(dpman) = rate;
-	
-	GST_DEBUG(GST_CAT_PARAMS, "got caps change %d", GST_DPMAN_RATE(dpman));
+static inline void
+gst_dpman_inline_direct_update(GValue *value, gpointer data){
+	switch (G_VALUE_TYPE(value)){
+		case G_TYPE_INT:
+			*(gint*)data = g_value_get_int(value);
+			break;
+		case G_TYPE_INT64:
+			*(gint64*)data = g_value_get_int64(value);
+			break;
+		case G_TYPE_FLOAT:
+			*(gfloat*)data = g_value_get_float(value);
+			break;
+		default:
+			break;
+	}
 }
 
-static guint 
+static gboolean 
 gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 timestamp)
 {
-	GSList *dwraps;
-   	GstDParam *dparam;
+	GList *dwraps;
 	GstDParamWrapper *dpwrap;
 
-	g_return_val_if_fail (dpman != NULL, frames);
-	g_return_val_if_fail (GST_IS_DPMAN (dpman), frames);
+	g_return_val_if_fail (GST_IS_DPMAN (dpman), FALSE);
 
-	/* now check whether any passive dparams are ready for an update */
+	/* this basically means don't call GST_DPMAN_PREPROCESS at all */
+	dpman->next_update_frame = frames;
+	dpman->frames_to_process = frames;
+
+	/* now check whether any dparams are ready for an update */
 	dwraps = GST_DPMAN_DPARAMS_LIST(dpman);
 	while (dwraps){
 		dpwrap = (GstDParamWrapper*)dwraps->data;
-		dparam = dpwrap->dparam;
 		
-		/*g_print("timestamp    %lld \n", timestamp);
-		if (dparam)
-			g_print("next update: %lld \n", GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam));*/
-		if (dparam && (GST_DPARAM_READY_FOR_UPDATE(dparam) && 
-		              (GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) <= timestamp))){
-		              	
+		if (dpwrap->dparam && 
+		    GST_DPARAM_READY_FOR_UPDATE(dpwrap->dparam) && 
+		    GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dpwrap->dparam) <= timestamp){
+
 			switch (dpwrap->update_method) {
 				
 				/* direct method - set the value directly in the struct of the element */
 				case GST_DPMAN_DIRECT:
-					GST_DPARAM_DO_UPDATE(dparam, timestamp, dpwrap->value, dpman->update_info);
+					GST_DPARAM_DO_UPDATE(dpwrap->dparam, timestamp, dpwrap->value, dpwrap->update_info);
 					GST_DEBUG(GST_CAT_PARAMS, "doing direct update");
-					switch (G_VALUE_TYPE(dpwrap->value)){
-						case G_TYPE_INT:
-							*(gint*)dpwrap->update_data = g_value_get_int(dpwrap->value);
-							break;
-						case G_TYPE_INT64:
-							*(gint64*)dpwrap->update_data = g_value_get_int64(dpwrap->value);
-							break;
-						case G_TYPE_FLOAT:
-							*(gfloat*)dpwrap->update_data = g_value_get_float(dpwrap->value);
-							break;
-						default:
-							break;
-					}
+
+					gst_dpman_inline_direct_update(dpwrap->value, dpwrap->update_data);
 					break;
 
 				/* callback method - call the element's callback so it can do what it likes */
 				case GST_DPMAN_CALLBACK:
-					GST_DPARAM_DO_UPDATE(dparam, timestamp, dpwrap->value, dpman->update_info);
+					GST_DPARAM_DO_UPDATE(dpwrap->dparam, timestamp, dpwrap->value, dpwrap->update_info);
 					GST_DEBUG(GST_CAT_PARAMS, "doing callback update");
-					GST_DPMAN_DO_UPDATE(dpwrap);
-					break;
 					
-				/* array method - generate an array of the right size  */
-				/* with each value being the same (in synchronous update mode) */
+					GST_DPMAN_CALLBACK_UPDATE(dpwrap, dpwrap->value);
+					break;
+
 				case GST_DPMAN_ARRAY:
-					GST_DEBUG(GST_CAT_PARAMS, "doing array update");
-					switch (G_VALUE_TYPE(dpwrap->value)){
-						case G_TYPE_INT:
-							break;
-						case G_TYPE_INT64:
-							break;
-						case G_TYPE_FLOAT:
-							break;
-						default:
-							break;
-					}
+					/* FIXME do array method checking here */
 					break;
 				default:
 					break;
 			}
+
+			if (dpwrap->update_info == GST_DPARAM_UPDATE_FIRST){
+				/* it is not the first update anymore */
+				dpwrap->update_info = GST_DPARAM_UPDATE_NORMAL;
+			}
 		}
-		dwraps = g_slist_next(dwraps);
+		dwraps = g_list_next(dwraps);
 	}
 
-	if (dpman->update_info == GST_DPARAM_UPDATE_FIRST){
-		/* it is not the first update anymore */
-		dpman->update_info = GST_DPARAM_UPDATE_NORMAL;
-	}
 
-	return frames;
+	return FALSE;
 }
 
-static guint 
+static gint 
+gst_dpman_dpwrap_compare (const GstDParamWrapper *a, const GstDParamWrapper *b)
+{
+	if (a->next_update_frame > b->next_update_frame) return 1;
+	return (a->next_update_frame < b->next_update_frame) ? -1 : 0;
+}
+
+static gboolean 
+gst_dpman_preprocess_asynchronous(GstDParamManager *dpman, guint frames, gint64 timestamp)
+{
+	GList *dwraps;
+	GstDParamWrapper *dpwrap;
+	gint64 current_time;
+	gboolean updates_pending;
+
+	g_return_val_if_fail (GST_IS_DPMAN (dpman), FALSE);
+
+
+	if (GST_DPMAN_RATE(dpman) == 0){
+		g_warning("The element hasn't given GstDParamManager a frame rate");
+		return FALSE;
+	}
+	dpman->rate_ratio = (guint)(1000000000LL / (gint64)GST_DPMAN_RATE(dpman));
+
+	dpman->time_buffer_starts = timestamp;
+	dpman->time_buffer_ends = timestamp + ((gint64)frames * (gint64)dpman->rate_ratio);
+	dpman->num_frames = frames;
+
+	updates_pending = FALSE;
+
+	/* now check whether any dparams are ready for an update */
+	dwraps = GST_DPMAN_DPARAMS_LIST(dpman);
+	while (dwraps){
+		dpwrap = (GstDParamWrapper*)dwraps->data;
+		
+		dpwrap->next_update_frame = frames;
+
+		if (dpwrap->dparam && 
+		    GST_DPARAM_READY_FOR_UPDATE(dpwrap->dparam)){
+
+			current_time = GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dpwrap->dparam);
+			if (current_time > dpman->time_buffer_ends){
+				/* not due for an update in this buffer */
+				dwraps = g_list_next(dwraps);
+				continue;
+			}
+			if (current_time < timestamp){
+				current_time = timestamp;
+			}
+
+			if (current_time == timestamp){
+				/* we are overdue for an update. lets do it now */
+
+				GST_DPARAM_DO_UPDATE(dpwrap->dparam, current_time, dpwrap->value, dpwrap->update_info);
+
+				if (dpwrap->update_info == GST_DPARAM_UPDATE_FIRST){
+					/* it is not the first update anymore */
+					dpwrap->update_info = GST_DPARAM_UPDATE_NORMAL;
+				}
+
+				switch (dpwrap->update_method) {
+
+					/* direct method - set the value directly in the struct of the element */
+					case GST_DPMAN_DIRECT:
+						GST_DEBUG(GST_CAT_PARAMS, "doing direct update");
+						gst_dpman_inline_direct_update(dpwrap->value, dpwrap->update_data);
+						break;
+
+					/* callback method - call the element's callback so it can do what it likes */
+					case GST_DPMAN_CALLBACK:
+						GST_DEBUG(GST_CAT_PARAMS, "doing callback update");
+						GST_DPMAN_CALLBACK_UPDATE(dpwrap, dpwrap->value);
+						break;
+					default:
+						break;
+				}
+
+				current_time = GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dpwrap->dparam);
+
+				if (!GST_DPARAM_READY_FOR_UPDATE(dpwrap->dparam) || 
+				    current_time > dpman->time_buffer_ends){
+					/* not due for an update in this buffer */
+					dwraps = g_list_next(dwraps);
+					continue;
+				}
+			}
+
+			dpwrap->next_update_frame = (guint)(current_time - timestamp) / dpman->rate_ratio;
+			updates_pending = TRUE;
+
+			GST_DEBUG(GST_CAT_PARAMS, "timestamp start: %lld end: %lld current: %lld", 
+			          timestamp, dpman->time_buffer_ends, current_time);
+
+		}
+		dwraps = g_list_next(dwraps);
+	}
+	if (updates_pending){
+		GST_DPMAN_DPARAMS_LIST(dpman) = g_list_sort(GST_DPMAN_DPARAMS_LIST(dpman), (GCompareFunc)gst_dpman_dpwrap_compare); 
+		dwraps = GST_DPMAN_DPARAMS_LIST(dpman);
+		dpwrap = (GstDParamWrapper*)dwraps->data;
+
+		dpman->next_update_frame = dpwrap->next_update_frame;
+		dpman->frames_to_process = dpman->next_update_frame;
+
+		GST_DEBUG(GST_CAT_PARAMS, "next update frame %u, frames to process %u", dpman->next_update_frame, dpman->frames_to_process);
+		return TRUE;
+	}
+	
+	dpman->next_update_frame = frames;
+	dpman->frames_to_process = frames;
+	return FALSE;
+}
+
+static gboolean 
+gst_dpman_process_asynchronous(GstDParamManager *dpman, guint frame_count)
+{
+	GstDParamWrapper *dpwrap;
+	GList *dwraps;
+	gint64 current_time;
+	gboolean needs_resort = FALSE;
+
+	dwraps = GST_DPMAN_DPARAMS_LIST(dpman);
+	dpwrap = (GstDParamWrapper*)dwraps->data;
+
+	GST_DEBUG(GST_CAT_PARAMS, "in gst_dpman_process_asynchronous");
+
+	if (frame_count >= dpman->num_frames){
+		g_warning("there is no more buffer to process");
+		dpman->next_update_frame = dpman->num_frames;
+		dpman->frames_to_process = 0;
+		return FALSE;
+	}
+
+	if (frame_count != dpwrap->next_update_frame){
+		g_warning("frame count %u does not match update frame %u", 
+		          frame_count, dpwrap->next_update_frame);
+	}
+
+	while (dpwrap){
+
+		current_time = GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dpwrap->dparam);
+		GST_DPARAM_DO_UPDATE(dpwrap->dparam, current_time, dpwrap->value, dpwrap->update_info);
+		switch (dpwrap->update_method) {
+
+			/* direct method - set the value directly in the struct of the element */
+			case GST_DPMAN_DIRECT:
+				GST_DEBUG(GST_CAT_PARAMS, "doing direct update");
+				gst_dpman_inline_direct_update(dpwrap->value, dpwrap->update_data);
+				break;
+
+			/* callback method - call the element's callback so it can do what it likes */
+			case GST_DPMAN_CALLBACK:
+				GST_DEBUG(GST_CAT_PARAMS, "doing callback update");
+				GST_DPMAN_CALLBACK_UPDATE(dpwrap, dpwrap->value);
+				break;
+			default:
+				break;
+		}
+
+		dpwrap->next_update_frame = dpman->num_frames;
+		needs_resort = TRUE;
+
+		if(GST_DPARAM_READY_FOR_UPDATE(dpwrap->dparam)){
+			current_time = GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dpwrap->dparam);
+			if (current_time <= dpman->time_buffer_ends){
+				dpwrap->next_update_frame = (guint)(current_time - dpman->time_buffer_starts) / dpman->rate_ratio;
+			}
+		}
+
+		if ((dwraps = g_list_next(dwraps))){
+			dpwrap = (GstDParamWrapper*)dwraps->data;
+			if (frame_count == dpwrap->next_update_frame){
+				continue;
+			}
+		}
+		dpwrap = NULL;
+	}
+
+	if (needs_resort && g_list_length(GST_DPMAN_DPARAMS_LIST(dpman)) > 1){
+		GST_DPMAN_DPARAMS_LIST(dpman) = g_list_sort(GST_DPMAN_DPARAMS_LIST(dpman), (GCompareFunc)gst_dpman_dpwrap_compare); 
+	}
+	
+	dwraps = GST_DPMAN_DPARAMS_LIST(dpman);
+	dpwrap = (GstDParamWrapper*)dwraps->data;
+
+	if (dpwrap->next_update_frame == dpman->num_frames){
+		dpman->next_update_frame = dpman->num_frames;
+		dpman->frames_to_process = dpman->num_frames - frame_count;
+		GST_DEBUG(GST_CAT_PARAMS, "no more updates, frames to process %u", dpman->frames_to_process);
+	}
+	else {
+		dpman->next_update_frame = dpwrap->next_update_frame;
+		dpman->frames_to_process = dpman->next_update_frame - frame_count;
+		GST_DEBUG(GST_CAT_PARAMS, "next update frame %u, frames to process %u", dpman->next_update_frame, dpman->frames_to_process);
+	}
+
+	return TRUE;
+}
+
+static gboolean 
 gst_dpman_preprocess_noop(GstDParamManager *dpman, guint frames, gint64 timestamp)
 {
-	return frames;
+	dpman->next_update_frame = frames;
+	dpman->frames_to_process = frames;
+	return FALSE;
 }
 
-static guint 
+static gboolean 
 gst_dpman_process_noop(GstDParamManager *dpman, guint frame_count)
 {
-	return 0;
+	g_warning("gst_dpman_process_noop should never be called - something might be wrong with your processing loop");
+	return FALSE;
+}
+
+static void 
+gst_dpman_setup_synchronous(GstDParamManager *dpman){
+	g_return_if_fail (GST_IS_DPMAN (dpman));
+
+}
+
+static void 
+gst_dpman_setup_asynchronous(GstDParamManager *dpman){
+	g_return_if_fail (GST_IS_DPMAN (dpman));
+
+}
+
+static void 
+gst_dpman_setup_disabled(GstDParamManager *dpman){
+	g_return_if_fail (GST_IS_DPMAN (dpman));
+
+}
+
+static void 
+gst_dpman_teardown_synchronous(GstDParamManager *dpman){
+	g_return_if_fail (GST_IS_DPMAN (dpman));
+
+}
+
+static void 
+gst_dpman_teardown_asynchronous(GstDParamManager *dpman){
+	g_return_if_fail (GST_IS_DPMAN (dpman));
+	
+}
+
+static void 
+gst_dpman_teardown_disabled(GstDParamManager *dpman){
+	g_return_if_fail (GST_IS_DPMAN (dpman));
+
 }
 

@@ -45,8 +45,9 @@ extern "C" {
 
 #define GST_DPMAN_MODE_NAME(dpman)				 ((dpman)->mode_name)
 #define GST_DPMAN_MODE(dpman)				 ((dpman)->mode)
-#define GST_DPMAN_MODE_DATA(dpman)				 ((dpman)->mode_data)
 #define GST_DPMAN_RATE(dpman)				 ((dpman)->rate)
+#define GST_DPMAN_FRAMES_TO_PROCESS(dpman)		 ((dpman)->frames_to_process)
+#define GST_DPMAN_NEXT_UPDATE_FRAME(dpman)		 ((dpman)->next_update_frame)
 
 typedef enum {
   GST_DPMAN_CALLBACK,
@@ -57,9 +58,10 @@ typedef enum {
 typedef struct _GstDParamManagerClass GstDParamManagerClass;
 typedef struct _GstDPMMode GstDPMMode;
 typedef struct _GstDParamWrapper GstDParamWrapper;
+typedef struct _GstDParamAsyncToUpdate GstDParamAsyncToUpdate;
 
-typedef guint (*GstDPMModePreProcessFunction) (GstDParamManager *dpman, guint frames, gint64 timestamp);
-typedef guint (*GstDPMModeProcessFunction) (GstDParamManager *dpman, guint frame_count);
+typedef gboolean (*GstDPMModePreProcessFunction) (GstDParamManager *dpman, guint frames, gint64 timestamp);
+typedef gboolean (*GstDPMModeProcessFunction) (GstDParamManager *dpman, guint frame_count);
 typedef void (*GstDPMModeSetupFunction) (GstDParamManager *dpman);
 typedef void (*GstDPMModeTeardownFunction) (GstDParamManager *dpman);
 
@@ -69,22 +71,29 @@ struct _GstDParamManager {
 	GstObject		object;
 
 	GHashTable *dparams;
-	GSList *dparams_list;
-	
-	gchar *mode_name;
+	GList *dparams_list;
+
+        /* mode state */
 	GstDPMMode* mode;
-	gpointer mode_data;
+	gchar *mode_name;
 	
-	gint64 timestamp;
-	guint rate;
-	GstDParamUpdateInfo update_info;
+	guint frames_to_process;  /* the number of frames in the current buffer */
+	guint next_update_frame;  /* the frame when the next update is required */
+
+	/* the following data is only used for async mode */
+	guint rate;               /* the frame/sample rate - */
+	guint rate_ratio;         /* number used to convert between samples and time */
+	guint num_frames;         /* the number of frames in the current buffer */
+
+	gint64 time_buffer_ends;
+	gint64 time_buffer_starts;
 };
 
 struct _GstDParamManagerClass {
 	GstObjectClass parent_class;
-	void (*new_required_dparam) (GstDParamManager *dpman, gchar* dparam_name);
 	GHashTable *modes;
 	/* signal callbacks */
+	void (*new_required_dparam) (GstDParamManager *dpman, gchar* dparam_name);
 };
 
 struct _GstDPMMode {
@@ -98,10 +107,21 @@ struct _GstDParamWrapper {
 	GParamSpec* param_spec;
 	GValue *value;
 	GstDParam *dparam;
+
+	guint next_update_frame;
+	
 	GstDPMUpdateMethod update_method;
 	gpointer update_data;
 	GstDPMUpdateFunction update_func;
+	
 	gchar *unit_name;
+	GstDParamUpdateInfo update_info;
+};
+
+struct _GstDParamAsyncToUpdate {
+	guint frame;
+	GValue *value;
+	GstDParamWrapper *dpwrap;
 };
 
 #define GST_DPMAN_PREPROCESSFUNC(dpman)		(((dpman)->mode)->preprocessfunc)
@@ -110,20 +130,13 @@ struct _GstDParamWrapper {
 #define GST_DPMAN_TEARDOWNFUNC(dpman)		(((dpman)->mode)->teardownfunc)
 
 #define GST_DPMAN_PREPROCESS(dpman, buffer_size, timestamp) \
-				(GST_DPMAN_PREPROCESSFUNC(dpman)(dpman, buffer_size, timestamp))
+			(GST_DPMAN_PREPROCESSFUNC(dpman)(dpman, buffer_size, timestamp))
 
 #define GST_DPMAN_PROCESS(dpman, frame_count) \
-				(GST_DPMAN_PROCESSFUNC(dpman)(dpman, frame_count))
+                         (frame_count < dpman->next_update_frame || \
+                         (dpman->next_update_frame < dpman->num_frames && (GST_DPMAN_PROCESSFUNC(dpman)(dpman, frame_count))))
 
-#define GST_DPMAN_PROCESS_COUNTDOWN(dpman, frame_countdown, frame_count) \
-				(frame_countdown-- || \
-				(frame_countdown = GST_DPMAN_PROCESS(dpman, frame_count)))
-
-#define GST_DPMAN_PROCESS_CHUNK(dpman, frames_to_process, frame_count) \
-				(frames_to_process || \
-				(frames_to_process = GST_DPMAN_PROCESS(dpman, frame_count)))
-				
-#define GST_DPMAN_DO_UPDATE(dpwrap) ((dpwrap->update_func)(dpwrap->value, dpwrap->update_data))
+#define GST_DPMAN_CALLBACK_UPDATE(dpwrap, value) ((dpwrap->update_func)(value, dpwrap->update_data))
 
 void _gst_dpman_initialize();
 GType gst_dpman_get_type (void);
@@ -156,7 +169,7 @@ GParamSpec** gst_dpman_list_dparam_specs(GstDParamManager *dpman);
 GParamSpec* gst_dpman_get_param_spec (GstDParamManager *dpman, gchar *dparam_name);
 void gst_dpman_dparam_spec_has_changed (GstDParamManager *dpman, gchar *dparam_name);
 
-void gst_dpman_set_rate_change_pad(GstDParamManager *dpman, GstPad *pad);
+void gst_dpman_set_rate(GstDParamManager *dpman, gint rate);
 void gst_dpman_bypass_dparam(GstDParamManager *dpman, gchar *dparam_name);
 
 gboolean gst_dpman_set_mode(GstDParamManager *dpman, gchar *modename);
