@@ -868,7 +868,6 @@ examples/capsfilter/Makefile
 examples/Makefile
 tools/Makefile
 gconf/Makefile
-testsuite/seeking/Makefile
 )
 
 AC_OUTPUT
