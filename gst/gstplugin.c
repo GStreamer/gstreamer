@@ -832,7 +832,7 @@ gst_plugin_add_autoplugger (GstPlugin *plugin, GstAutoplugFactory *factory)
 GList*
 gst_plugin_get_list (void)
 {
-  return _gst_plugins;
+  return g_list_copy (_gst_plugins);
 }
 
 /**
