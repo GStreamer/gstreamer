@@ -62,7 +62,6 @@ test_string_deserialization (void)
   } tests[] = {
     {
     "", ""}, {
-    "\\", "\\"}, {
     "\"\"", ""},
         /* FAILURES */
     {

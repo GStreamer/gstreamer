@@ -1,3 +1,11 @@
+2004-12-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstvalue.c: (gst_value_deserialize_string):
+	  check that a simple string that gets deserialized does not contain
+	  invalid characters
+	* testsuite/caps/value_serialize.c: (test_string_deserialization):
+	  remove a test that tested a wring behaviour
+
 2004-12-16  Matt Kraai  <kraai@alumni.cmu.edu>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
