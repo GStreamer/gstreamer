@@ -887,9 +887,9 @@ dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 dnl *** dirac ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRAC, true)
 GST_CHECK_FEATURE(DIRAC, [dirac plug-ins], dirac, [
-  PKG_CHECK_MODULES(DIRAC, dirac-pic >= 0.4, HAVE_DIRAC="yes", HAVE_DIRAC="no")
+  PKG_CHECK_MODULES(DIRAC, dirac-pic >= 0.5.0, HAVE_DIRAC="yes", HAVE_DIRAC="no")
   if test x$HAVE_DIRAC = xno ; then
-    PKG_CHECK_MODULES(DIRAC, dirac >= 0.4, HAVE_DIRAC="yes", HAVE_DIRAC="no")
+    PKG_CHECK_MODULES(DIRAC, dirac >= 0.5.0, HAVE_DIRAC="yes", HAVE_DIRAC="no")
   fi
   AC_SUBST(DIRAC_CFLAGS)
   AC_SUBST(DIRAC_LIBS)
