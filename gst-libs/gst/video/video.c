@@ -30,7 +30,7 @@ gdouble
 gst_video_frame_rate (GstPad *pad)
 {
   gdouble fps = 0.;
-  GstCaps *caps;
+  const GstCaps *caps = NULL;
   GstStructure *structure;
 
   /* get pad caps */
@@ -62,7 +62,7 @@ gst_video_get_size (GstPad *pad,
                     gint   *width,
                     gint   *height)
 {
-  GstCaps *caps;
+  const GstCaps *caps = NULL;
   GstStructure *structure;
   gboolean ret;
 
