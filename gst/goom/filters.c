@@ -84,7 +84,7 @@ inline int ShiftRight (int x, const unsigned char s)
   px et py indique la nouvelle position (en sqrtperte ieme de pixel)
   (valeur * 16)
 */
-inline void calculatePXandPY (int x, int y, int *px, int *py)
+void calculatePXandPY (int x, int y, int *px, int *py)
 {
     if (theMode == WATER_MODE)
     {
