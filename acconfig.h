@@ -30,6 +30,7 @@
 #undef HAVE_VORBIS
 #undef HAVE_LIBJPEG
 #undef HAVE_NASM
+#undef HAVE_MPEG2DEC
 
 #undef HAVE_ATOMIC_H
 

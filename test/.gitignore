@@ -27,6 +27,7 @@ teardown
 buffer
 mp3parse
 mpeg2parse
+mpeg2parse2
 mp3play
 ac3parse
 ac3play
