@@ -136,7 +136,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 /sbin/ldconfig
 
 %files
-%defattr(-, root, root)
+%defattr(-, root, root, -)
 %doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING RELEASE 
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstcontrol-%{majorminor}.so.*
@@ -161,6 +161,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_libdir}/gstreamer-%{majorminor}/libgstindexers.so
 
 %files tools
+%defattr(-, root, root, -)
 %{_bindir}/gst-complete
 %{_bindir}/gst-compprep
 %{_bindir}/gst-inspect
@@ -180,7 +181,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 
 %files devel
-%defattr(-, root, root)
+%defattr(-, root, root, -)
 %dir %{_includedir}/%{name}-%{majorminor}
 %dir %{_includedir}/%{name}-%{majorminor}/gst
 %{_includedir}/%{name}-%{majorminor}/gst/*.h
@@ -264,6 +265,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 
 %changelog
+* Mon May 19 2003 Thomas Vander Stichele <thomas at apestaart dot org>
+- defattr fixes
+
 * Sun May 18 2003 Thomas Vander Stichele <thomas at apestaart dot org>
 - adding ghostscript and libxlst BuildRequires: for xsltproc and fig2dev/gs
 
