@@ -418,7 +418,7 @@ gst_adder_loop (GstElement *element)
 
       GST_DEBUG (0, "looking into channel %p", input);
       
-      if (GST_PAD_IS_USABLE (input->sinkpad)) {
+      if (!GST_PAD_IS_USABLE (input->sinkpad)) {
         GST_DEBUG (0, "adder ignoring pad %s:%s", GST_DEBUG_PAD_NAME (input->sinkpad));
         inputs = inputs->next;
         continue;
