@@ -9,8 +9,6 @@ if HAVE_GDK_LOADERS
 loaderdir = $(DESTDIR)$(GDK_PIXBUF_LOADER_DIR)
 loader_LTLIBRARIES = gst_loader.la
 
-gst_loader_headers = gstgdkanimation.h
-
 install-data-hook:
 	if test -z "$(DESTDIR)"  ; then \
 	  $(mkinstalldirs) $(DESTDIR)$(GDK_PIXBUF_CONF_DIR) ; \
@@ -29,4 +27,5 @@ install-data-hook:
 endif
 
 noinst_HEADERS = gstgdkpixbuf.h \
-	$(gst_loader_headers)
+	gstgdkanimation.h
+
