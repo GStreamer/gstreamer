@@ -34,12 +34,6 @@
 GST_DEBUG_CATEGORY (data_protocol_debug);
 #define GST_CAT_DEFAULT data_protocol_debug
 
-/*** private functions ***/
-
-#define GST_DP_WRITE_GUINT64(buf, value) (*((guint64 *) (buf)) = GUINT64_TO_BE (value))
-#define GST_DP_WRITE_GUINT32(buf, value) (*((guint32 *) (buf)) = GUINT32_TO_BE (value))
-#define GST_DP_WRITE_GUINT16(buf, value) (*((guint16 *) (buf)) = GUINT16_TO_BE (value))
-
 /* calculate a CCITT 16 bit CRC check value for a given byte array */
 /*
  * this code snippet is adapted from a web page I found
@@ -172,6 +166,7 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buffer) > 0, FALSE);
+  g_return_val_if_fail (header, FALSE);
 
   *length = GST_DP_HEADER_LENGTH;
   h = g_malloc (GST_DP_HEADER_LENGTH);
@@ -183,15 +178,15 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
   h[3] = GST_DP_PAYLOAD_BUFFER;
 
   /* buffer properties */
-  GST_DP_WRITE_GUINT32 (h + 4, GST_BUFFER_SIZE (buffer));
-  GST_DP_WRITE_GUINT64 (h + 8, GST_BUFFER_TIMESTAMP (buffer));
-  GST_DP_WRITE_GUINT64 (h + 16, GST_BUFFER_DURATION (buffer));
-  GST_DP_WRITE_GUINT64 (h + 24, GST_BUFFER_OFFSET (buffer));
-  GST_DP_WRITE_GUINT64 (h + 32, GST_BUFFER_OFFSET_END (buffer));
+  GST_WRITE_UINT32_BE (h + 4, GST_BUFFER_SIZE (buffer));
+  GST_WRITE_UINT64_BE (h + 8, GST_BUFFER_TIMESTAMP (buffer));
+  GST_WRITE_UINT64_BE (h + 16, GST_BUFFER_DURATION (buffer));
+  GST_WRITE_UINT64_BE (h + 24, GST_BUFFER_OFFSET (buffer));
+  GST_WRITE_UINT64_BE (h + 32, GST_BUFFER_OFFSET_END (buffer));
 
   /* ABI padding */
-  GST_DP_WRITE_GUINT64 (h + 40, (guint64) 0);
-  GST_DP_WRITE_GUINT64 (h + 48, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 40, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 48, (guint64) 0);
 
   /* CRC */
   crc = 0;
@@ -199,13 +194,13 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
     /* we don't crc the last four bytes of the header since they are crc's */
     crc = gst_dp_crc (h, 56);
   }
-  GST_DP_WRITE_GUINT16 (h + 56, crc);
+  GST_WRITE_UINT16_BE (h + 56, crc);
 
   crc = 0;
   if (flags & GST_DP_HEADER_FLAG_CRC_PAYLOAD) {
     crc = gst_dp_crc (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
   }
-  GST_DP_WRITE_GUINT16 (h + 58, crc);
+  GST_WRITE_UINT16_BE (h + 58, crc);
 
   GST_LOG ("created header from buffer:");
   gst_dp_dump_byte_array (h, GST_DP_HEADER_LENGTH);
@@ -235,6 +230,9 @@ gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
 
   /* FIXME: GST_IS_CAPS doesn't work
      g_return_val_if_fail (GST_IS_CAPS (caps), FALSE); */
+  g_return_val_if_fail (caps, FALSE);
+  g_return_val_if_fail (header, FALSE);
+  g_return_val_if_fail (payload, FALSE);
 
   *length = GST_DP_HEADER_LENGTH;
   h = g_malloc (GST_DP_HEADER_LENGTH);
@@ -248,28 +246,28 @@ gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
   h[3] = GST_DP_PAYLOAD_CAPS;
 
   /* buffer properties */
-  GST_DP_WRITE_GUINT32 (h + 4, strlen (string) + 1);    /* include trailing 0 */
-  GST_DP_WRITE_GUINT64 (h + 8, (guint64) 0);
-  GST_DP_WRITE_GUINT64 (h + 16, (guint64) 0);
-  GST_DP_WRITE_GUINT64 (h + 24, (guint64) 0);
-  GST_DP_WRITE_GUINT64 (h + 32, (guint64) 0);
+  GST_WRITE_UINT32_BE (h + 4, strlen (string) + 1);     /* include trailing 0 */
+  GST_WRITE_UINT64_BE (h + 8, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 16, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 24, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 32, (guint64) 0);
 
   /* ABI padding */
-  GST_DP_WRITE_GUINT64 (h + 40, (guint64) 0);
-  GST_DP_WRITE_GUINT64 (h + 48, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 40, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 48, (guint64) 0);
 
   /* CRC */
   crc = 0;
   if (flags & GST_DP_HEADER_FLAG_CRC_HEADER) {
     crc = gst_dp_crc (h, 56);
   }
-  GST_DP_WRITE_GUINT16 (h + 56, crc);
+  GST_WRITE_UINT16_BE (h + 56, crc);
 
   crc = 0;
   if (flags & GST_DP_HEADER_FLAG_CRC_PAYLOAD) {
     crc = gst_dp_crc (string, strlen (string) + 1);
   }
-  GST_DP_WRITE_GUINT16 (h + 58, crc);
+  GST_WRITE_UINT16_BE (h + 58, crc);
 
   GST_LOG ("created header from caps:");
   gst_dp_dump_byte_array (h, GST_DP_HEADER_LENGTH);
@@ -296,10 +294,12 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
 {
   guint8 *h;
   guint16 crc;
-  gchar *string = NULL;
   guint pl_length;              /* length of payload */
 
+  g_return_val_if_fail (event, FALSE);
   g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
+  g_return_val_if_fail (header, FALSE);
+  g_return_val_if_fail (payload, FALSE);
 
   *length = GST_DP_HEADER_LENGTH;
   h = g_malloc0 (GST_DP_HEADER_LENGTH);
@@ -315,28 +315,28 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
     case GST_EVENT_FLUSH:
     case GST_EVENT_EMPTY:
     case GST_EVENT_DISCONTINUOUS:
-      GST_DP_WRITE_GUINT64 (h + 8, GST_EVENT_TIMESTAMP (event));
+      GST_WRITE_UINT64_BE (h + 8, GST_EVENT_TIMESTAMP (event));
       pl_length = 0;
       *payload = NULL;
       break;
     case GST_EVENT_SEEK:
       pl_length = 4 + 8 + 4;
       *payload = g_malloc0 (pl_length);
-      GST_DP_WRITE_GUINT32 (*payload, (guint32) GST_EVENT_SEEK_TYPE (event));
-      GST_DP_WRITE_GUINT64 (*payload + 4,
+      GST_WRITE_UINT32_BE (*payload, (guint32) GST_EVENT_SEEK_TYPE (event));
+      GST_WRITE_UINT64_BE (*payload + 4,
           (guint64) GST_EVENT_SEEK_OFFSET (event));
-      GST_DP_WRITE_GUINT32 (*payload + 12,
+      GST_WRITE_UINT32_BE (*payload + 12,
           (guint32) GST_EVENT_SEEK_ACCURACY (event));
       break;
     case GST_EVENT_SEEK_SEGMENT:
       pl_length = 4 + 8 + 8 + 4;
       *payload = g_malloc0 (pl_length);
-      GST_DP_WRITE_GUINT32 (*payload, (guint32) GST_EVENT_SEEK_TYPE (event));
-      GST_DP_WRITE_GUINT64 (*payload + 4,
+      GST_WRITE_UINT32_BE (*payload, (guint32) GST_EVENT_SEEK_TYPE (event));
+      GST_WRITE_UINT64_BE (*payload + 4,
           (guint64) GST_EVENT_SEEK_OFFSET (event));
-      GST_DP_WRITE_GUINT64 (*payload + 12,
+      GST_WRITE_UINT64_BE (*payload + 12,
           (guint64) GST_EVENT_SEEK_ENDOFFSET (event));
-      GST_DP_WRITE_GUINT32 (*payload + 20,
+      GST_WRITE_UINT32_BE (*payload + 20,
           (guint32) GST_EVENT_SEEK_ACCURACY (event));
       break;
     case GST_EVENT_QOS:
@@ -364,26 +364,27 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
   h[3] = GST_DP_PAYLOAD_EVENT_NONE + GST_EVENT_TYPE (event);
 
   /* length */
-  GST_DP_WRITE_GUINT32 (h + 4, (guint32) pl_length);
+  GST_WRITE_UINT32_BE (h + 4, (guint32) pl_length);
   /* timestamp */
-  GST_DP_WRITE_GUINT64 (h + 8, GST_EVENT_TIMESTAMP (event));
+  GST_WRITE_UINT64_BE (h + 8, GST_EVENT_TIMESTAMP (event));
 
   /* ABI padding */
-  GST_DP_WRITE_GUINT64 (h + 40, (guint64) 0);
-  GST_DP_WRITE_GUINT64 (h + 48, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 40, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 48, (guint64) 0);
 
   /* CRC */
   crc = 0;
   if (flags & GST_DP_HEADER_FLAG_CRC_HEADER) {
     crc = gst_dp_crc (h, 56);
   }
-  GST_DP_WRITE_GUINT16 (h + 56, crc);
+  GST_WRITE_UINT16_BE (h + 56, crc);
 
   crc = 0;
-  if (flags & GST_DP_HEADER_FLAG_CRC_PAYLOAD) {
-    crc = gst_dp_crc (string, strlen (string) + 1);
+  /* events can have a NULL payload */
+  if (*payload && flags & GST_DP_HEADER_FLAG_CRC_PAYLOAD) {
+    crc = gst_dp_crc (*payload, strlen (*payload) + 1);
   }
-  GST_DP_WRITE_GUINT16 (h + 58, crc);
+  GST_WRITE_UINT16_BE (h + 58, crc);
 
   GST_LOG ("created header from event:");
   gst_dp_dump_byte_array (h, GST_DP_HEADER_LENGTH);
@@ -487,9 +488,9 @@ gst_dp_event_from_packet (guint header_length, const guint8 * header,
       gint64 offset;
       GstSeekAccuracy accuracy;
 
-      type = (GstSeekType) GST_DP_GUINT32 (payload);
-      offset = (gint64) GST_DP_GUINT64 (payload + 4);
-      accuracy = (GstSeekAccuracy) GST_DP_GUINT32 (payload + 12);
+      type = (GstSeekType) GST_READ_UINT32_BE (payload);
+      offset = (gint64) GST_READ_UINT64_BE (payload + 4);
+      accuracy = (GstSeekAccuracy) GST_READ_UINT32_BE (payload + 12);
       event = gst_event_new_seek (type, offset);
       GST_EVENT_TIMESTAMP (event) = GST_DP_HEADER_TIMESTAMP (header);
       GST_EVENT_SEEK_ACCURACY (event) = accuracy;
@@ -501,10 +502,10 @@ gst_dp_event_from_packet (guint header_length, const guint8 * header,
       gint64 offset, endoffset;
       GstSeekAccuracy accuracy;
 
-      type = (GstSeekType) GST_DP_GUINT32 (payload);
-      offset = (gint64) GST_DP_GUINT64 (payload + 4);
-      endoffset = (gint64) GST_DP_GUINT64 (payload + 12);
-      accuracy = (GstSeekAccuracy) GST_DP_GUINT32 (payload + 20);
+      type = (GstSeekType) GST_READ_UINT32_BE (payload);
+      offset = (gint64) GST_READ_UINT64_BE (payload + 4);
+      endoffset = (gint64) GST_READ_UINT64_BE (payload + 12);
+      accuracy = (GstSeekAccuracy) GST_READ_UINT32_BE (payload + 20);
       event = gst_event_new_segment_seek (type, offset, endoffset);
       GST_EVENT_TIMESTAMP (event) = GST_DP_HEADER_TIMESTAMP (header);
       GST_EVENT_SEEK_ACCURACY (event) = accuracy;
