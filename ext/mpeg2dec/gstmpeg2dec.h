@@ -81,6 +81,8 @@ struct _GstMpeg2dec {
   Mpeg2decFormat format;
   gint		 width;
   gint		 height;
+  gint		 decoded_width;
+  gint		 decoded_height;
   gint		 pixel_width;
   gint		 pixel_height;
   gint		 frame_rate_code;

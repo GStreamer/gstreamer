@@ -88,8 +88,7 @@ src_templ (void)
     GstCaps *caps;
     GstStructure *structure;
     GValue list = { 0 }
-    , fps =
-    {
+    , fps = {
     0}
     , fmt = {
     0};
@@ -176,6 +175,8 @@ static GstElementStateReturn gst_mpeg2dec_change_state (GstElement * element);
 static void gst_mpeg2dec_chain (GstPad * pad, GstData * _data);
 
 static GstElementClass *parent_class = NULL;
+
+static GstBuffer *crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer * input);
 
 /*static guint gst_mpeg2dec_signals[LAST_SIGNAL] = { 0 };*/
 
@@ -336,12 +337,84 @@ gst_mpeg2dec_get_index (GstElement * element)
   return mpeg2dec->index;
 }
 
+
+static GstBuffer *
+crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer * input)
+{
+  unsigned char *in_data;
+  unsigned char *out_data;
+  uint h_subsample;
+  uint v_subsample;
+  uint line;
+  GstBuffer *outbuf = input;
+
+  /*We crop only if the target region is smaller than the input one */
+  if ((mpeg2dec->decoded_width > mpeg2dec->width) ||
+      (mpeg2dec->decoded_height > mpeg2dec->height)) {
+    /* If we don't know about the format, we just return the original 
+     * buffer.
+     */
+    if (mpeg2dec->format == MPEG2DEC_FORMAT_I422 ||
+        mpeg2dec->format == MPEG2DEC_FORMAT_I420 ||
+        mpeg2dec->format == MPEG2DEC_FORMAT_YV12) {
+      /*FIXME:  I have tried to use gst_buffer_copy_on_write, but it 
+       *        still have some artifact, so I'me allocating new buffer
+       *        for each frame decoded...
+       */
+      if (mpeg2dec->format == MPEG2DEC_FORMAT_I422) {
+        outbuf =
+            gst_buffer_new_and_alloc (mpeg2dec->width * mpeg2dec->height * 2);
+        h_subsample = 2;
+        v_subsample = 1;
+      } else {
+        outbuf =
+            gst_buffer_new_and_alloc (mpeg2dec->width * mpeg2dec->height * 1.5);
+        h_subsample = 2;
+        v_subsample = 2;
+      }
+
+      GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (input);
+      GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (input);
+      GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (input);
+
+      /* Copy Y first */
+      in_data = GST_BUFFER_DATA (input);
+      out_data = GST_BUFFER_DATA (outbuf);
+      for (line = 0; line < mpeg2dec->height; line++) {
+        memcpy (out_data, in_data, mpeg2dec->width);
+        out_data += mpeg2dec->width;
+        in_data += mpeg2dec->decoded_width;
+      }
+
+      /* Now copy U & V */
+      in_data =
+          GST_BUFFER_DATA (input) +
+          mpeg2dec->decoded_width * mpeg2dec->decoded_height;
+      for (line = 0; line < mpeg2dec->height / v_subsample; line++) {
+        memcpy (out_data, in_data, mpeg2dec->width / h_subsample);
+        memcpy (out_data +
+            mpeg2dec->width * mpeg2dec->height / (v_subsample * h_subsample),
+            in_data +
+            mpeg2dec->decoded_width * mpeg2dec->decoded_height / (v_subsample *
+                h_subsample), mpeg2dec->width / h_subsample);
+        out_data += mpeg2dec->width / h_subsample;
+        in_data += mpeg2dec->decoded_width / h_subsample;
+      }
+
+      gst_buffer_unref (input);
+    }
+  }
+
+  return outbuf;
+}
+
+
 static GstBuffer *
 gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info,
     gint64 offset)
 {
   GstBuffer *outbuf = NULL;
-  gint size = mpeg2dec->width * mpeg2dec->height;
+  gint size = mpeg2dec->decoded_width * mpeg2dec->decoded_height;
   guint8 *buf[3], *out;
   const mpeg2_picture_t *picture;
 
@@ -585,10 +658,12 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
       {
         gint i;
 
-        mpeg2dec->width = info->sequence->width;
-        mpeg2dec->height = info->sequence->height;
+        mpeg2dec->width = info->sequence->picture_width;
+        mpeg2dec->height = info->sequence->picture_height;
         mpeg2dec->pixel_width = info->sequence->pixel_width;
         mpeg2dec->pixel_height = info->sequence->pixel_height;
+        mpeg2dec->decoded_width = info->sequence->width;
+        mpeg2dec->decoded_height = info->sequence->height;
         mpeg2dec->total_frames = 0;
 
         /* find framerate */
@@ -771,6 +846,11 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
                 GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
                 GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
                 GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
+
+            if ((mpeg2dec->decoded_height > mpeg2dec->height) ||
+                (mpeg2dec->decoded_width > mpeg2dec->width))
+              outbuf = crop_buffer (mpeg2dec, outbuf);
+
             gst_pad_push (mpeg2dec->srcpad, GST_DATA (outbuf));
           }
         } else if (info->display_fbuf && !info->display_fbuf->id) {
@@ -1272,7 +1352,7 @@ gst_mpeg2dec_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "mpeg2dec", GST_RANK_PRIMARY,
+  if (!gst_element_register (plugin, "mpeg2dec", GST_RANK_SECONDARY,
           GST_TYPE_MPEG2DEC))
     return FALSE;
 
