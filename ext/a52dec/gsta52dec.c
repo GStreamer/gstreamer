@@ -27,6 +27,8 @@
 #include "_stdint.h"
 
 #include <gst/gst.h>
+#include <gst/audio/multichannel.h>
+
 #include <a52dec/a52.h>
 #include <a52dec/mm_accel.h>
 #include "gsta52dec.h"
@@ -38,6 +40,12 @@ static GstElementDetails gst_a52dec_details = {
   "Decodes ATSC A/52 encoded audio streams",
   "David I. Lehn <dlehn@users.sourceforge.net>",
 };
+
+#ifdef LIBA52_DOUBLE
+#define SAMPLE_WIDTH 64
+#else
+#define SAMPLE_WIDTH 32
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (a52dec_debug);
 #define GST_CAT_DEFAULT (a52dec_debug)
@@ -68,12 +76,10 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
+    GST_STATIC_CAPS ("audio/x-raw-float, "
         "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) true, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) [ 4000, 48000 ], " "channels = (int) [ 1, 6 ]")
+        "width = (int) " G_STRINGIFY (SAMPLE_WIDTH) ", "
+        "rate = (int) [ 4000, 96000 ], " "channels = (int) [ 1, 6 ]")
     );
 
 static void gst_a52dec_base_init (gpointer g_class);
@@ -170,176 +176,108 @@ gst_a52dec_init (GstA52Dec * a52dec)
   a52dec->dynamic_range_compression = FALSE;
 }
 
-/* BEGIN modified a52dec conversion code */
-
-static inline int16_t
-convert (int32_t i)
-{
-  if (i > 0x43c07fff)
-    return 32767;
-  else if (i < 0x43bf8000)
-    return -32768;
-  else
-    return i - 0x43c00000;
-}
-
-static inline void
-float_to_int (float *_f, int16_t * s16, int flags)
-{
-  int i;
-  int32_t *f = (int32_t *) _f;
-
-  switch (flags) {
-    case A52_MONO:
-      for (i = 0; i < 256; i++) {
-        s16[5 * i] = s16[5 * i + 1] = s16[5 * i + 2] = s16[5 * i + 3] = 0;
-        s16[5 * i + 4] = convert (f[i]);
-      }
-      break;
-    case A52_CHANNEL:
-    case A52_STEREO:
-    case A52_DOLBY:
-      for (i = 0; i < 256; i++) {
-        s16[2 * i] = convert (f[i]);
-        s16[2 * i + 1] = convert (f[i + 256]);
-      }
-      break;
-    case A52_3F:
-      for (i = 0; i < 256; i++) {
-        s16[5 * i] = convert (f[i]);
-        s16[5 * i + 1] = convert (f[i + 512]);
-        s16[5 * i + 2] = s16[5 * i + 3] = 0;
-        s16[5 * i + 4] = convert (f[i + 256]);
-      }
-      break;
-    case A52_2F2R:
-      for (i = 0; i < 256; i++) {
-        s16[4 * i] = convert (f[i]);
-        s16[4 * i + 1] = convert (f[i + 256]);
-        s16[4 * i + 2] = convert (f[i + 512]);
-        s16[4 * i + 3] = convert (f[i + 768]);
-      }
-      break;
-    case A52_3F2R:
-      for (i = 0; i < 256; i++) {
-        s16[5 * i] = convert (f[i]);
-        s16[5 * i + 1] = convert (f[i + 512]);
-        s16[5 * i + 2] = convert (f[i + 768]);
-        s16[5 * i + 3] = convert (f[i + 1024]);
-        s16[5 * i + 4] = convert (f[i + 256]);
-      }
-      break;
-    case A52_MONO | A52_LFE:
-      for (i = 0; i < 256; i++) {
-        s16[6 * i] = s16[6 * i + 1] = s16[6 * i + 2] = s16[6 * i + 3] = 0;
-        s16[6 * i + 4] = convert (f[i + 256]);
-        s16[6 * i + 5] = convert (f[i]);
-      }
-      break;
-    case A52_CHANNEL | A52_LFE:
-    case A52_STEREO | A52_LFE:
-    case A52_DOLBY | A52_LFE:
-      for (i = 0; i < 256; i++) {
-        s16[6 * i] = convert (f[i + 256]);
-        s16[6 * i + 1] = convert (f[i + 512]);
-        s16[6 * i + 2] = s16[6 * i + 3] = s16[6 * i + 4] = 0;
-        s16[6 * i + 5] = convert (f[i]);
-      }
-      break;
-    case A52_3F | A52_LFE:
-      for (i = 0; i < 256; i++) {
-        s16[6 * i] = convert (f[i + 256]);
-        s16[6 * i + 1] = convert (f[i + 768]);
-        s16[6 * i + 2] = s16[6 * i + 3] = 0;
-        s16[6 * i + 4] = convert (f[i + 512]);
-        s16[6 * i + 5] = convert (f[i]);
-      }
-      break;
-    case A52_2F2R | A52_LFE:
-      for (i = 0; i < 256; i++) {
-        s16[6 * i] = convert (f[i + 256]);
-        s16[6 * i + 1] = convert (f[i + 512]);
-        s16[6 * i + 2] = convert (f[i + 768]);
-        s16[6 * i + 3] = convert (f[i + 1024]);
-        s16[6 * i + 4] = 0;
-        s16[6 * i + 5] = convert (f[i]);
-      }
-      break;
-    case A52_3F2R | A52_LFE:
-      for (i = 0; i < 256; i++) {
-        s16[6 * i] = convert (f[i + 256]);
-        s16[6 * i + 1] = convert (f[i + 768]);
-        s16[6 * i + 2] = convert (f[i + 1024]);
-        s16[6 * i + 3] = convert (f[i + 1280]);
-        s16[6 * i + 4] = convert (f[i + 512]);
-        s16[6 * i + 5] = convert (f[i]);
-      }
-      break;
-  }
-}
-
 static int
-gst_a52dec_channels (int flags)
+gst_a52dec_channels (int flags, GstAudioChannelPosition ** pos)
 {
   int chans = 0;
 
+  /* allocated just for safety. Number makes no sense */
+  if (pos) {
+    *pos = g_new (GstAudioChannelPosition, 6);
+  }
+
   if (flags & A52_LFE) {
     chans += 1;
+    *pos[0] = GST_AUDIO_CHANNEL_POSITION_LFE;
   }
   flags &= A52_CHANNEL_MASK;
   switch (flags) {
     case A52_3F2R:
+      if (pos) {
+        *pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        *pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+        *pos[2 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        *pos[3 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+        *pos[4 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+      }
       chans += 5;
       break;
     case A52_2F2R:
+      if (pos) {
+        *pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        *pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        *pos[2 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+        *pos[3 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+      }
+      chans += 4;
+      break;
     case A52_3F1R:
+      if (pos) {
+        *pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        *pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+        *pos[2 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        *pos[3 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
+      }
       chans += 4;
       break;
     case A52_2F1R:
-    case A52_3F:
+      if (pos) {
+        *pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        *pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        *pos[2 + chans] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
+      }
       chans += 3;
-    case A52_CHANNEL:
+      break;
+    case A52_3F:
+      if (pos) {
+        *pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        *pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+        *pos[2 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      }
+      chans += 3;
+      break;
+      /*case A52_CHANNEL: */
     case A52_STEREO:
     case A52_DOLBY:
+      if (pos) {
+        *pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        *pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      }
       chans += 2;
       break;
     default:
       /* error */
       g_warning ("a52dec invalid flags %d", flags);
+      g_free (pos);
       return 0;
   }
+
   return chans;
 }
 
 static int
-gst_a52dec_push (GstPad * srcpad, int flags, sample_t * _samples,
+gst_a52dec_push (GstPad * srcpad, int flags, sample_t * samples,
     GstClockTime timestamp)
 {
   GstBuffer *buf;
-  int chans;
+  int chans, n, c;
 
-#ifdef LIBA52_DOUBLE
-  float samples[256 * 6];
-  int i;
-
-  for (i = 0; i < 256 * 6; i++)
-    samples[i] = _samples[i];
-#else
-  float *samples = _samples;
-#endif
-
-  flags &= A52_CHANNEL_MASK | A52_LFE;
-
-  chans = gst_a52dec_channels (flags);
+  flags &= (A52_CHANNEL_MASK | A52_LFE);
+  chans = gst_a52dec_channels (flags, NULL);
   if (!chans) {
     return 1;
   }
 
   buf = gst_buffer_new ();
-  GST_BUFFER_SIZE (buf) = sizeof (int16_t) * 256 * chans;
+  GST_BUFFER_SIZE (buf) = 256 * chans * (SAMPLE_WIDTH / 8);
   GST_BUFFER_DATA (buf) = g_malloc (GST_BUFFER_SIZE (buf));
+  for (n = 0; n < 256; n++) {
+    for (c = 0; c < chans; c++) {
+      ((sample_t *) GST_BUFFER_DATA (buf))[n * chans + c] =
+          samples[c * 256 + n];
+    }
+  }
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
-  float_to_int (samples, (int16_t *) GST_BUFFER_DATA (buf), flags);
 
   gst_pad_push (srcpad, GST_DATA (buf));
 
@@ -348,18 +286,29 @@ gst_a52dec_push (GstPad * srcpad, int flags, sample_t * _samples,
 
 /* END modified a52dec conversion code */
 
-static void
-gst_a52dec_reneg (GstPad * pad, int channels, int rate)
+static gboolean
+gst_a52dec_reneg (GstPad * pad)
 {
-  GST_INFO ("a52dec: reneg channels:%d rate:%d\n", channels, rate);
+  GstAudioChannelPosition *pos;
+  GstA52Dec *a52dec = GST_A52DEC (gst_pad_get_parent (pad));
+  gint channels = gst_a52dec_channels (a52dec->using_channels, &pos);
+  GstCaps *caps;
 
-  gst_pad_set_explicit_caps (pad,
-      gst_caps_new_simple ("audio/x-raw-int",
-          "endianness", G_TYPE_INT, G_BYTE_ORDER,
-          "signed", G_TYPE_BOOLEAN, TRUE,
-          "width", G_TYPE_INT, 16,
-          "depth", G_TYPE_INT, 16,
-          "channels", G_TYPE_INT, channels, "rate", G_TYPE_INT, rate, NULL));
+  if (!channels)
+    return FALSE;
+
+  GST_INFO ("a52dec: reneg channels:%d rate:%d\n",
+      channels, a52dec->sample_rate);
+
+  caps = gst_caps_new_simple ("audio/x-raw-float",
+      "endianness", G_TYPE_INT, G_BYTE_ORDER,
+      "width", G_TYPE_INT, SAMPLE_WIDTH,
+      "channels", G_TYPE_INT, channels,
+      "rate", G_TYPE_INT, a52dec->sample_rate, NULL);
+  gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
+  g_free (pos);
+
+  return gst_pad_set_explicit_caps (pad, caps);
 }
 
 static void
@@ -487,8 +436,8 @@ gst_a52dec_loop (GstElement * element)
   if (need_reneg == TRUE) {
     GST_DEBUG ("a52dec reneg: sample_rate:%d stream_chans:%d using_chans:%d\n",
         a52dec->sample_rate, a52dec->stream_channels, a52dec->using_channels);
-    gst_a52dec_reneg (a52dec->srcpad,
-        gst_a52dec_channels (a52dec->using_channels), a52dec->sample_rate);
+    if (!gst_a52dec_reneg (a52dec->srcpad))
+      goto end;
   }
 
   if (a52dec->dynamic_range_compression == FALSE) {
@@ -621,7 +570,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
 
-  if (!gst_library_load ("gstbytestream"))
+  if (!gst_library_load ("gstbytestream") || !gst_library_load ("gstaudio"))
     return FALSE;
 
   if (!gst_element_register (plugin, "a52dec", GST_RANK_PRIMARY,
