@@ -445,8 +445,8 @@ if test "x$PLUGINS_USE_BUILDDIR" = xyes; then
 This option is for development purposes only: binaries built with
 it should be used with code in the build tree only.  To build an
 installable version, use ./configure without the --enable-plugin-builddir
-option.  Note that the autogen.sh script supplies the plugin builddir
-option automatically -- run ./autogen.sh --disable-plugin-builddir to make
+option.  Note that the autogen.sh script can pass this as well
+-- run ./autogen.sh -- --disable-plugin-builddir to make
 an installable build.
 
 "
