@@ -1,5 +1,10 @@
 2004-01-15  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* ext/mad/gstid3tag.c: (gst_id3_tag_do_caps_nego):
+	  assume tag mode when pad is not connected
+
+2004-01-15  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event):
 	  Don't update the time of the clock
 	(gst_alsa_sink_loop):
