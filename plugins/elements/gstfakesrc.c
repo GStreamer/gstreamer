@@ -35,6 +35,11 @@
 #define DEFAULT_SIZEMAX		4096
 #define DEFAULT_PARENTSIZE	4096*10
 
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 GST_DEBUG_CATEGORY_STATIC (gst_fakesrc_debug);
 #define GST_CAT_DEFAULT gst_fakesrc_debug
 
@@ -188,6 +193,8 @@ gst_fakesrc_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
   gst_element_class_set_details (gstelement_class, &gst_fakesrc_details);
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&fakesrc_src_template));
@@ -276,7 +283,9 @@ gst_fakesrc_init (GstFakeSrc * fakesrc)
   GstPad *pad;
 
   /* create our first output pad */
-  pad = gst_pad_new ("src", GST_PAD_SRC);
+  pad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
+      "src");
   gst_element_add_pad (GST_ELEMENT (fakesrc), pad);
 
   fakesrc->loop_based = FALSE;

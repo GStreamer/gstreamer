@@ -38,6 +38,11 @@
 #endif
 
 
+static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 GST_DEBUG_CATEGORY_STATIC (gst_filesink_debug);
 #define GST_CAT_DEFAULT gst_filesink_debug
 
@@ -131,6 +136,8 @@ gst_filesink_base_init (gpointer g_class)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
   gstelement_class->change_state = gst_filesink_change_state;
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
   gst_element_class_set_details (gstelement_class, &gst_filesink_details);
 }
 static void
@@ -157,7 +164,9 @@ gst_filesink_init (GstFileSink * filesink)
 {
   GstPad *pad;
 
-  pad = gst_pad_new ("sink", GST_PAD_SINK);
+  pad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
+      "sink");
   gst_element_add_pad (GST_ELEMENT (filesink), pad);
   gst_pad_set_chain_function (pad, gst_filesink_chain);
 

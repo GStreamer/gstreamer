@@ -41,6 +41,11 @@
 
 #include "../gst-i18n-lib.h"
 
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 /* FIXME we should be using glib for this */
 #ifndef S_ISREG
 #define S_ISREG(mode) ((mode)&_S_IFREG)
@@ -197,6 +202,8 @@ gst_filesrc_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
   gst_element_class_set_details (gstelement_class, &gst_filesrc_details);
 }
 static void
@@ -237,7 +244,9 @@ gst_filesrc_class_init (GstFileSrcClass * klass)
 static void
 gst_filesrc_init (GstFileSrc * src)
 {
-  src->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  src->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
+      "src");
   gst_pad_set_get_function (src->srcpad, gst_filesrc_get);
   gst_pad_set_event_function (src->srcpad, gst_filesrc_srcpad_event);
   gst_pad_set_event_mask_function (src->srcpad, gst_filesrc_get_event_mask);

@@ -37,6 +37,11 @@
 
 #include "gstmultifilesrc.h"
 
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 GST_DEBUG_CATEGORY_STATIC (gst_multifilesrc_debug);
 #define GST_CAT_DEFAULT gst_multifilesrc_debug
 
@@ -89,6 +94,8 @@ gst_multifilesrc_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
   gst_element_class_set_details (gstelement_class, &gst_multifilesrc_details);
 }
 static void
@@ -125,7 +132,9 @@ gst_multifilesrc_init (GstMultiFileSrc * multifilesrc)
 {
 /*  GST_FLAG_SET (filesrc, GST_SRC_); */
 
-  multifilesrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  multifilesrc->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
+      "src");
   gst_pad_set_get_function (multifilesrc->srcpad, gst_multifilesrc_get);
 /*  gst_pad_set_getregion_function (multifilesrc->srcpad,gst_multifilesrc_get_region); */
   gst_element_add_pad (GST_ELEMENT (multifilesrc), multifilesrc->srcpad);

@@ -1,5 +1,36 @@
 2004-08-17  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst/autoplug/gstspideridentity.c:
+	(gst_spider_identity_request_new_pad):
+	* gst/elements/gstaggregator.c: (gst_aggregator_base_init),
+	(gst_aggregator_init):
+	* gst/elements/gstfakesink.c: (gst_fakesink_base_init),
+	(gst_fakesink_init):
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_base_init),
+	(gst_fakesrc_init):
+	* gst/elements/gstfdsink.c: (gst_fdsink_base_init),
+	(gst_fdsink_init):
+	* gst/elements/gstfdsrc.c: (gst_fdsrc_base_init), (gst_fdsrc_init):
+	* gst/elements/gstfilesink.c: (gst_filesink_base_init),
+	(gst_filesink_init):
+	* gst/elements/gstfilesrc.c: (gst_filesrc_base_init),
+	(gst_filesrc_init):
+	* gst/elements/gstidentity.c: (gst_identity_base_init),
+	(gst_identity_init):
+	* gst/elements/gstmultifilesrc.c: (gst_multifilesrc_base_init),
+	(gst_multifilesrc_init):
+	* gst/elements/gstpipefilter.c: (gst_pipefilter_base_init),
+	(gst_pipefilter_init):
+	* gst/elements/gststatistics.c: (gst_statistics_base_init),
+	(gst_statistics_init):
+	* gst/elements/gsttee.c: (gst_tee_base_init), (gst_tee_init):
+	* gst/gstqueue.c: (gst_queue_base_init), (gst_queue_init):
+	  s/gst_pad_new/&_from_template/
+	  register pad templates in the base_init function
+	  add static pad template definitions
+
+2004-08-17  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* testsuite/bytestream/gstbstest.c: (gst_bstest_init):
 	* testsuite/dynparams/dparamstest.c: (gst_dptest_init):
 	* testsuite/refcounting/pad.c: (main):

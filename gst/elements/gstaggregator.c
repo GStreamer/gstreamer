@@ -26,6 +26,11 @@
 
 #include "gstaggregator.h"
 
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 GST_DEBUG_CATEGORY_STATIC (gst_aggregator_debug);
 #define GST_CAT_DEFAULT gst_aggregator_debug
 
@@ -105,6 +110,8 @@ gst_aggregator_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&aggregator_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
   gst_element_class_set_details (gstelement_class, &gst_aggregator_details);
 }
 
@@ -155,7 +162,9 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
 static void
 gst_aggregator_init (GstAggregator * aggregator)
 {
-  aggregator->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  aggregator->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
+      "src");
   gst_pad_set_getcaps_function (aggregator->srcpad, gst_pad_proxy_getcaps);
   gst_element_add_pad (GST_ELEMENT (aggregator), aggregator->srcpad);
 

@@ -30,6 +30,16 @@
 #include "gstinfo.h"
 #include "gsterror.h"
 
+static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 GST_DEBUG_CATEGORY_STATIC (queue_dataflow);
 
 static GstElementDetails gst_queue_details = GST_ELEMENT_DETAILS ("Queue",
@@ -170,6 +180,10 @@ gst_queue_base_init (GstQueueClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
   gst_element_class_set_details (gstelement_class, &gst_queue_details);
 }
 
@@ -265,7 +279,9 @@ gst_queue_init (GstQueue * queue)
   GST_FLAG_SET (queue, GST_ELEMENT_DECOUPLED);
   GST_FLAG_SET (queue, GST_ELEMENT_EVENT_AWARE);
 
-  queue->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  queue->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
+      "sink");
   gst_pad_set_chain_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue_chain));
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
@@ -275,7 +291,9 @@ gst_queue_init (GstQueue * queue)
       GST_DEBUG_FUNCPTR (gst_queue_getcaps));
   gst_pad_set_active (queue->sinkpad, TRUE);
 
-  queue->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  queue->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
+      "src");
   gst_pad_set_get_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_get));
   gst_element_add_pad (GST_ELEMENT (queue), queue->srcpad);
   gst_pad_set_link_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_link));

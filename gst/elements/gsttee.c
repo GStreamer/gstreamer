@@ -28,6 +28,11 @@
 
 #include <string.h>
 
+static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 GST_DEBUG_CATEGORY_STATIC (gst_tee_debug);
 #define GST_CAT_DEFAULT gst_tee_debug
 
@@ -80,6 +85,8 @@ gst_tee_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
   gst_element_class_set_details (gstelement_class, &gst_tee_details);
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&tee_src_template));
@@ -129,7 +136,9 @@ gst_tee_class_init (GstTeeClass * klass)
 static void
 gst_tee_init (GstTee * tee)
 {
-  tee->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  tee->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
+      "sink");
   gst_element_add_pad (GST_ELEMENT (tee), tee->sinkpad);
   gst_pad_set_chain_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_chain));
   gst_pad_set_link_function (tee->sinkpad,

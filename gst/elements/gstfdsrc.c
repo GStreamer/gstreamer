@@ -39,6 +39,11 @@
 
 #define DEFAULT_BLOCKSIZE	4096
 
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 GST_DEBUG_CATEGORY_STATIC (gst_fdsrc_debug);
 #define GST_CAT_DEFAULT gst_fdsrc_debug
 
@@ -86,6 +91,8 @@ gst_fdsrc_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
   gst_element_class_set_details (gstelement_class, &gst_fdsrc_details);
 }
 static void
@@ -121,7 +128,9 @@ gst_fdsrc_class_init (GstFdSrcClass * klass)
 static void
 gst_fdsrc_init (GstFdSrc * fdsrc)
 {
-  fdsrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  fdsrc->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
+      "src");
 
   gst_pad_set_get_function (fdsrc->srcpad, gst_fdsrc_get);
   gst_element_add_pad (GST_ELEMENT (fdsrc), fdsrc->srcpad);
