@@ -418,14 +418,13 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
   gboolean getmorebuf = TRUE;
   GList *type_list;
   gboolean restart_spider = FALSE;
+  GstCaps *caps;
 
   /* this should possibly be a property */
   guint bufsizelimit = 4096;
   
-  /* checks - disable for speed */
-  g_return_if_fail (ident != NULL);
   g_return_if_fail (GST_IS_SPIDER_IDENTITY (ident));
-  
+
   while (getmorebuf){
 
     /* check if our buffer is big enough to do a typefind */
@@ -472,6 +471,11 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
     goto end;
   }
 
+  /* maybe there are already valid caps now? */
+  if ((caps = gst_pad_get_caps (ident->sink)) != NULL) {
+    goto plug;
+  }
+  
   /* now do the actual typefinding with the supplied buffer */
   type_list = (GList *) gst_type_get_list ();
     
@@ -482,28 +486,15 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
     while (factories) {
       GstTypeFactory *factory = GST_TYPE_FACTORY (factories->data);
       GstTypeFindFunc typefindfunc = (GstTypeFindFunc)factory->typefindfunc;
-      GstCaps *caps;
 
       GST_DEBUG (0, "trying typefind function %s", GST_PLUGIN_FEATURE_NAME (factory));
       if (typefindfunc && (caps = typefindfunc (buf, factory))) {
-
-	gst_caps_debug (caps, "spider typefind caps");
-        /* pause the autoplugger */
-        if (gst_element_get_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident))) == GST_STATE_PLAYING) {
-          gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident)), GST_STATE_PAUSED);
-          restart_spider = TRUE;
-        }
-	if (gst_pad_try_set_caps (ident->sink, caps) <= 0) {
+        if (gst_pad_try_set_caps (ident->sink, caps) <= 0) {
           g_warning ("typefind: found type but peer didn't accept it");
+	  gst_caps_sink (caps);
+        } else {
+          goto plug;
 	}
-        gst_spider_identity_plug (ident);  
-
-        /* restart autoplugger */
-        if (restart_spider){
-          gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident)), GST_STATE_PLAYING);
-	}
-
-        goto end;
       }
       factories = g_slist_next (factories);
     }
@@ -521,6 +512,25 @@ end:
   
   /* push the buffer */
   gst_spider_identity_chain (ident->sink, buf);
+  
+  return;
+
+plug:
+
+  gst_caps_debug (caps, "spider starting caps");
+  gst_caps_sink (caps);
+  /* pause the autoplugger */
+  if (gst_element_get_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident))) == GST_STATE_PLAYING) {
+    gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident)), GST_STATE_PAUSED);
+    restart_spider = TRUE;
+  }
+  gst_spider_identity_plug (ident);  
+
+  /* restart autoplugger */
+  if (restart_spider){
+    gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident)), GST_STATE_PLAYING);
+  }
+  goto end;
 }
 
 static gboolean
