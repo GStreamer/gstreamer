@@ -1,3 +1,8 @@
+2005-01-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/avi/gstavimux.c: (gst_avimux_handle_event):
+	  Free events (fix memleak in #162905).
+
 2005-01-15  Gergely Nagy  <algernon@bonehunter.rulez.org>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
