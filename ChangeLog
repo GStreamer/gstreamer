@@ -1,3 +1,9 @@
+2004-04-16  David Schleef  <ds@schleef.org>
+
+	* common/m4/gst-arch.m4:  Implmenent a whitelist and blacklist
+	for GST_UNALIGNED_ACESS, since we essentially know which archs
+	are ok.
+
 2004-04-17  Benjamin Otte  <otte@gnome.org>
 
 	* docs/gst/Makefile.am:
