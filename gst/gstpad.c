@@ -1151,6 +1151,7 @@ gst_pad_link_fixate (GstPadLink * link)
 
   GST_DEBUG ("trying to fixate caps %" GST_PTR_FORMAT, caps);
 
+  gst_caps_do_simplify (caps);
   while (!gst_caps_is_fixed (caps)) {
     int i;
 
@@ -1196,9 +1197,11 @@ gst_pad_link_fixate (GstPadLink * link)
           break;
       }
       if (newcaps) {
+        G_GNUC_UNUSED gboolean bad;
+
+        gst_caps_do_simplify (newcaps);
 #ifndef G_DISABLE_CHECKS
         /* some mad checking for correctly working fixation functions */
-        gboolean bad;
 
         if (i == 4) {
           /* we trust the default fixation function unconditionally */
@@ -3578,6 +3581,7 @@ gst_pad_template_new (const gchar * name_template,
   GstPadTemplate *new;
 
   g_return_val_if_fail (name_template != NULL, NULL);
+  g_return_val_if_fail (caps != NULL, NULL);
 
   if (!name_is_valid (name_template, presence))
     return NULL;
@@ -3598,6 +3602,7 @@ gst_pad_template_new (const gchar * name_template,
   GST_PAD_TEMPLATE_NAME_TEMPLATE (new) = g_strdup (name_template);
   GST_PAD_TEMPLATE_DIRECTION (new) = direction;
   GST_PAD_TEMPLATE_PRESENCE (new) = presence;
+  gst_caps_do_simplify (caps);
   GST_PAD_TEMPLATE_CAPS (new) = caps;
 
   return new;

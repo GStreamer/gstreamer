@@ -298,6 +298,7 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
       structure = gst_caps_get_structure (caps2, i);
       gst_caps_append_structure (caps1, structure);
     }
+    gst_caps_do_simplify (caps1);
   }
   g_ptr_array_free (caps2->structs, TRUE);
 #ifdef USE_POISONING
@@ -1186,6 +1187,7 @@ gst_caps_structure_simplify (const GstStructure * simplify,
     g_assert (field.name != 0);
     gst_structure_id_set_value (compare, field.name, &field.value);
     gst_structure_free (ret);
+    g_value_unset (&field.value);
     return NULL;
   }
 
@@ -1193,7 +1195,7 @@ gst_caps_structure_simplify (const GstStructure * simplify,
 }
 
 /**
- * gst_caps_simplify:
+ * gst_caps_do_simplify:
  * @caps: a #GstCaps to simplify
  *
  * Modifies the given @caps inplace into a representation that represents the 

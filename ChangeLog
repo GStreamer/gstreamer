@@ -1,5 +1,15 @@
 2004-04-22  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstcaps.c: (gst_caps_structure_simplify):
+	  unset GValue after use
+	* gst/gstcaps.c: (gst_caps_append), 
+	* gst/gstpad.c: (gst_pad_link_fixate), (gst_pad_template_new):
+	  use gst_caps_simplify (reduces registry size by 30%)
+	* gst/gstpad.c: (gst_pad_template_new):
+	  don't allow NULL caps
+
+2004-04-22  Benjamin Otte  <otte@gnome.org>
+
 	* docs/gst/gstreamer-sections.txt:
 	  add gst_caps_do_simplify
 	* gst/gstcaps.c:
