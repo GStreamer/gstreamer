@@ -17,15 +17,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <assert.h>
 #include <string.h>
-#include <libavcodec/avcodec.h>
+#include <libav/avformat.h>
 
 #include <gst/gst.h>
+	
+typedef struct _GstFFMpegMux GstFFMpegMux;
 
-typedef struct _GstFFMpegDec GstFFMpegDec;
-
-struct _GstFFMpegDec {
+struct _GstFFMpegMux {
   GstElement element;
 
   /* We need to keep track of our pads, so we do so here. */
@@ -36,24 +35,24 @@ struct _GstFFMpegDec {
   AVPicture *picture;
 };
 
-typedef struct _GstFFMpegDecClass GstFFMpegDecClass;
+typedef struct _GstFFMpegMuxClass GstFFMpegMuxClass;
 
-struct _GstFFMpegDecClass {
+struct _GstFFMpegMuxClass {
   GstElementClass parent_class;
 
   AVCodec *in_plugin;
 };
 
-#define GST_TYPE_FFMPEGDEC \
+#define GST_TYPE_FFMPEGMUX \
   (gst_ffmpegdec_get_type())
-#define GST_FFMPEGDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGDEC,GstFFMpegDec))
-#define GST_FFMPEGDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGDEC,GstFFMpegDecClass))
-#define GST_IS_FFMPEGDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGDEC))
-#define GST_IS_FFMPEGDEC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGDEC))
+#define GST_FFMPEGMUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGMUX,GstFFMpegMux))
+#define GST_FFMPEGMUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGMUX,GstFFMpegMuxClass))
+#define GST_IS_FFMPEGMUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGMUX))
+#define GST_IS_FFMPEGMUX_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGMUX))
 
 enum {
   /* FILL ME */
@@ -66,29 +65,29 @@ enum {
 };
 
 /* This factory is much simpler, and defines the source pad. */
-GST_PAD_TEMPLATE_FACTORY (gst_ffmpegdec_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (gst_ffmpegmux_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
-    "ffmpegdec_sink",
+    "ffmpegmux_sink",
     "video/avi",
       "format",		GST_PROPS_STRING ("strf_vids")
   ),
   GST_CAPS_NEW (
-    "ffmpegdec_sink",
+    "ffmpegmux_sink",
     "video/mpeg",
     NULL
   )
 )
 
 /* This factory is much simpler, and defines the source pad. */
-GST_PAD_TEMPLATE_FACTORY (gst_ffmpegdec_audio_src_factory,
+GST_PAD_TEMPLATE_FACTORY (gst_ffmpegmux_audio_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
-    "ffmpegdec_src",
+    "ffmpegmux_src",
     "audio/raw",
       "format",       GST_PROPS_STRING ("int"),
         "law",        GST_PROPS_INT (0),
@@ -102,12 +101,12 @@ GST_PAD_TEMPLATE_FACTORY (gst_ffmpegdec_audio_src_factory,
 )
 
 /* This factory is much simpler, and defines the source pad. */
-GST_PAD_TEMPLATE_FACTORY (gst_ffmpegdec_video_src_factory,
+GST_PAD_TEMPLATE_FACTORY (gst_ffmpegmux_video_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
-    "ffmpegdec_src",
+    "ffmpegmux_src",
     "video/raw",
       "format",       GST_PROPS_LIST (
 	                GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
@@ -120,23 +119,23 @@ GST_PAD_TEMPLATE_FACTORY (gst_ffmpegdec_video_src_factory,
 static GHashTable *global_plugins;
 
 /* A number of functon prototypes are given so we can refer to them later. */
-static void	gst_ffmpegdec_class_init	(GstFFMpegDecClass *klass);
-static void	gst_ffmpegdec_init		(GstFFMpegDec *ffmpegdec);
+static void	gst_ffmpegmux_class_init	(GstFFMpegMuxClass *klass);
+static void	gst_ffmpegmux_init		(GstFFMpegMux *ffmpegmux);
 
-static void	gst_ffmpegdec_chain_audio	(GstPad *pad, GstBuffer *buffer);
-static void	gst_ffmpegdec_chain_video	(GstPad *pad, GstBuffer *buffer);
+static void	gst_ffmpegmux_chain_audio	(GstPad *pad, GstBuffer *buffer);
+static void	gst_ffmpegmux_chain_video	(GstPad *pad, GstBuffer *buffer);
 
-static void	gst_ffmpegdec_set_property	(GObject *object, guint prop_id, const GValue *value, 
+static void	gst_ffmpegmux_set_property	(GObject *object, guint prop_id, const GValue *value, 
 						 GParamSpec *pspec);
-static void	gst_ffmpegdec_get_property	(GObject *object, guint prop_id, GValue *value, 
+static void	gst_ffmpegmux_get_property	(GObject *object, guint prop_id, GValue *value, 
 						 GParamSpec *pspec);
 
 static GstElementClass *parent_class = NULL;
 
-/*static guint gst_ffmpegdec_signals[LAST_SIGNAL] = { 0 }; */
+/*static guint gst_ffmpegmux_signals[LAST_SIGNAL] = { 0 }; */
 
 static void
-gst_ffmpegdec_class_init (GstFFMpegDecClass *klass)
+gst_ffmpegmux_class_init (GstFFMpegMuxClass *klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -149,73 +148,73 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass *klass)
   klass->in_plugin = g_hash_table_lookup (global_plugins,
 		  GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
 
-  gobject_class->set_property = gst_ffmpegdec_set_property;
-  gobject_class->get_property = gst_ffmpegdec_get_property;
+  gobject_class->set_property = gst_ffmpegmux_set_property;
+  gobject_class->get_property = gst_ffmpegmux_get_property;
 }
 
 static GstPadConnectReturn
-gst_ffmpegdec_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_ffmpegmux_sinkconnect (GstPad *pad, GstCaps *caps)
 {
-  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *)(gst_pad_get_parent (pad));
-  GstFFMpegDecClass *oclass = (GstFFMpegDecClass*)(G_OBJECT_GET_CLASS (ffmpegdec));
+  GstFFMpegMux *ffmpegmux = (GstFFMpegMux *)(gst_pad_get_parent (pad));
+  GstFFMpegMuxClass *oclass = (GstFFMpegMuxClass*)(G_OBJECT_GET_CLASS (ffmpegmux));
 
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_CONNECT_DELAYED;
 
   if (gst_caps_has_property_typed (caps, "width", GST_PROPS_INT_TYPE))
-    gst_caps_get_int (caps, "width", &ffmpegdec->context->width);
+    gst_caps_get_int (caps, "width", &ffmpegmux->context->width);
   if (gst_caps_has_property_typed (caps, "height", GST_PROPS_INT_TYPE))
-    gst_caps_get_int (caps, "height", &ffmpegdec->context->height);
+    gst_caps_get_int (caps, "height", &ffmpegmux->context->height);
 
-  ffmpegdec->context->pix_fmt = PIX_FMT_YUV420P;
-  ffmpegdec->context->frame_rate = 23 * FRAME_RATE_BASE;
-  ffmpegdec->context->bit_rate = 0;
+  ffmpegmux->context->pix_fmt = PIX_FMT_YUV420P;
+  ffmpegmux->context->frame_rate = 23 * FRAME_RATE_BASE;
+  ffmpegmux->context->bit_rate = 0;
 
   /* FIXME bug in ffmpeg */
-  if (avcodec_open (ffmpegdec->context, avcodec_find_encoder(CODEC_ID_MPEG1VIDEO)) <0 ) {
-    g_warning ("ffmpegdec: could not open codec");
+  if (avcodec_open (ffmpegmux->context, avcodec_find_encoder(CODEC_ID_MPEG1VIDEO)) <0 ) {
+    g_warning ("ffmpegmux: could not open codec");
     return GST_PAD_CONNECT_REFUSED;
   }
 
-  if (avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0) {
-    g_warning ("ffmpegdec: could not open codec");
+  if (avcodec_open (ffmpegmux->context, oclass->in_plugin) < 0) {
+    g_warning ("ffmpegmux: could not open codec");
     return GST_PAD_CONNECT_REFUSED;
   }
   return GST_PAD_CONNECT_OK;
 }
 
 static void
-gst_ffmpegdec_init(GstFFMpegDec *ffmpegdec)
+gst_ffmpegmux_init(GstFFMpegMux *ffmpegmux)
 {
-  GstFFMpegDecClass *oclass = (GstFFMpegDecClass*)(G_OBJECT_GET_CLASS (ffmpegdec));
+  GstFFMpegMuxClass *oclass = (GstFFMpegMuxClass*)(G_OBJECT_GET_CLASS (ffmpegmux));
 
-  ffmpegdec->context = g_malloc0 (sizeof (AVCodecContext));
+  ffmpegmux->context = g_malloc0 (sizeof (AVCodecContext));
 
-  ffmpegdec->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (gst_ffmpegdec_sink_factory), "sink");
-  gst_pad_set_connect_function (ffmpegdec->sinkpad, gst_ffmpegdec_sinkconnect);
+  ffmpegmux->sinkpad = gst_pad_new_from_template (
+		  GST_PAD_TEMPLATE_GET (gst_ffmpegmux_sink_factory), "sink");
+  gst_pad_set_connect_function (ffmpegmux->sinkpad, gst_ffmpegmux_sinkconnect);
 
   if (oclass->in_plugin->type == CODEC_TYPE_VIDEO) {
-    ffmpegdec->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (gst_ffmpegdec_video_src_factory), "src");
-    gst_pad_set_chain_function (ffmpegdec->sinkpad, gst_ffmpegdec_chain_video);
+    ffmpegmux->srcpad = gst_pad_new_from_template (
+		  GST_PAD_TEMPLATE_GET (gst_ffmpegmux_video_src_factory), "src");
+    gst_pad_set_chain_function (ffmpegmux->sinkpad, gst_ffmpegmux_chain_video);
   }
   else if (oclass->in_plugin->type == CODEC_TYPE_AUDIO) {
-    ffmpegdec->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (gst_ffmpegdec_audio_src_factory), "src");
-    gst_pad_set_chain_function (ffmpegdec->sinkpad, gst_ffmpegdec_chain_audio);
+    ffmpegmux->srcpad = gst_pad_new_from_template (
+		  GST_PAD_TEMPLATE_GET (gst_ffmpegmux_audio_src_factory), "src");
+    gst_pad_set_chain_function (ffmpegmux->sinkpad, gst_ffmpegmux_chain_audio);
   }
 
-  gst_element_add_pad (GST_ELEMENT (ffmpegdec), ffmpegdec->sinkpad);
-  gst_element_add_pad (GST_ELEMENT (ffmpegdec), ffmpegdec->srcpad);
+  gst_element_add_pad (GST_ELEMENT (ffmpegmux), ffmpegmux->sinkpad);
+  gst_element_add_pad (GST_ELEMENT (ffmpegmux), ffmpegmux->srcpad);
 
-  ffmpegdec->picture = g_malloc0 (sizeof (AVPicture));
+  ffmpegmux->picture = g_malloc0 (sizeof (AVPicture));
 }
 
 static void
-gst_ffmpegdec_chain_audio (GstPad *pad, GstBuffer *inbuf)
+gst_ffmpegmux_chain_audio (GstPad *pad, GstBuffer *inbuf)
 {
-  /*GstFFMpegDec *ffmpegdec = (GstFFMpegDec *)(gst_pad_get_parent (pad)); */
+  /*GstFFMpegMux *ffmpegmux = (GstFFMpegMux *)(gst_pad_get_parent (pad)); */
   gpointer data;
   gint size;
 
@@ -228,10 +227,10 @@ gst_ffmpegdec_chain_audio (GstPad *pad, GstBuffer *inbuf)
 }
 
 static void
-gst_ffmpegdec_chain_video (GstPad *pad, GstBuffer *inbuf)
+gst_ffmpegmux_chain_video (GstPad *pad, GstBuffer *inbuf)
 {
   GstBuffer *outbuf;
-  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *)(gst_pad_get_parent (pad));
+  GstFFMpegMux *ffmpegmux = (GstFFMpegMux *)(gst_pad_get_parent (pad));
   guchar *data;
   gint size, frame_size, len;
   gint have_picture;
@@ -240,13 +239,13 @@ gst_ffmpegdec_chain_video (GstPad *pad, GstBuffer *inbuf)
   size = GST_BUFFER_SIZE (inbuf);
 
   do {
-    ffmpegdec->context->frame_number++;
+    ffmpegmux->context->frame_number++;
 
-    len = avcodec_decode_video (ffmpegdec->context, ffmpegdec->picture,
+    len = avcodec_decode_video (ffmpegmux->context, ffmpegmux->picture,
 		  &have_picture, data, size);
 
     if (len < 0) {
-      g_warning ("ffmpegdec: decoding error");
+      g_warning ("ffmpegmux: decoding error");
       break;
     }
 
@@ -254,13 +253,13 @@ gst_ffmpegdec_chain_video (GstPad *pad, GstBuffer *inbuf)
       guchar *picdata, *picdata2, *outdata, *outdata2;
       gint xsize, i, width, height;
 
-      width = ffmpegdec->context->width;
-      height = ffmpegdec->context->height;
+      width = ffmpegmux->context->width;
+      height = ffmpegmux->context->height;
 
-      if (!GST_PAD_CAPS (ffmpegdec->srcpad)) {
-        gst_pad_try_set_caps (ffmpegdec->srcpad, 
+      if (!GST_PAD_CAPS (ffmpegmux->srcpad)) {
+        gst_pad_try_set_caps (ffmpegmux->srcpad, 
 		      GST_CAPS_NEW (
-			"ffmpegdec_src",
+			"ffmpegmux_src",
 			"video/raw",
 			  "format",	GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
 			    "width",	GST_PROPS_INT (width),
@@ -275,8 +274,8 @@ gst_ffmpegdec_chain_video (GstPad *pad, GstBuffer *inbuf)
       outdata = GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
  
-      picdata = ffmpegdec->picture->data[0];
-      xsize = ffmpegdec->picture->linesize[0];
+      picdata = ffmpegmux->picture->data[0];
+      xsize = ffmpegmux->picture->linesize[0];
       for (i=height; i; i--) {
         memcpy (outdata, picdata, width);
         outdata += width;
@@ -288,9 +287,9 @@ gst_ffmpegdec_chain_video (GstPad *pad, GstBuffer *inbuf)
       height >>= 1;
       outdata2 = outdata + frame_size;
 
-      picdata = ffmpegdec->picture->data[1];
-      picdata2 = ffmpegdec->picture->data[2];
-      xsize = ffmpegdec->picture->linesize[1];
+      picdata = ffmpegmux->picture->data[1];
+      picdata2 = ffmpegmux->picture->data[2];
+      xsize = ffmpegmux->picture->linesize[1];
       for (i=height; i; i--) {
         memcpy (outdata, picdata, width);
         memcpy (outdata2, picdata2, width);
@@ -298,7 +297,7 @@ gst_ffmpegdec_chain_video (GstPad *pad, GstBuffer *inbuf)
         picdata += xsize; picdata2 += xsize;
       }
 
-      gst_pad_push (ffmpegdec->srcpad, outbuf);
+      gst_pad_push (ffmpegmux->srcpad, outbuf);
     } 
 
     size -= len;
@@ -310,12 +309,12 @@ gst_ffmpegdec_chain_video (GstPad *pad, GstBuffer *inbuf)
 }
 
 static void
-gst_ffmpegdec_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_ffmpegmux_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
-  GstFFMpegDec *ffmpegdec;
+  GstFFMpegMux *ffmpegmux;
 
   /* Get a pointer of the right type. */
-  ffmpegdec = (GstFFMpegDec *)(object);
+  ffmpegmux = (GstFFMpegMux *)(object);
 
   /* Check the argument id to see which argument we're setting. */
   switch (prop_id) {
@@ -327,12 +326,12 @@ gst_ffmpegdec_set_property (GObject *object, guint prop_id, const GValue *value,
 
 /* The set function is simply the inverse of the get fuction. */
 static void
-gst_ffmpegdec_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_ffmpegmux_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
-  GstFFMpegDec *ffmpegdec;
+  GstFFMpegMux *ffmpegmux;
 
   /* It's not null if we got it, but it might not be ours */
-  ffmpegdec = (GstFFMpegDec *)(object);
+  ffmpegmux = (GstFFMpegMux *)(object);
 
   switch (prop_id) {
     default:
@@ -342,19 +341,19 @@ gst_ffmpegdec_get_property (GObject *object, guint prop_id, GValue *value, GPara
 }
 
 gboolean
-gst_ffmpegdec_register (GstPlugin *plugin)
+gst_ffmpegmux_register (GstPlugin *plugin)
 {
   GstElementFactory *factory;
   GTypeInfo typeinfo = {
-    sizeof(GstFFMpegDecClass),      
+    sizeof(GstFFMpegMuxClass),      
     NULL,
     NULL,
-    (GClassInitFunc)gst_ffmpegdec_class_init,
+    (GClassInitFunc)gst_ffmpegmux_class_init,
     NULL,
     NULL,
-    sizeof(GstFFMpegDec),
+    sizeof(GstFFMpegMux),
     0,
-    (GInstanceInitFunc)gst_ffmpegdec_init,
+    (GInstanceInitFunc)gst_ffmpegmux_init,
   };
   GType type;
   GstElementDetails *details;
@@ -407,15 +406,15 @@ gst_ffmpegdec_register (GstPlugin *plugin)
     gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_NONE);
 
     gst_element_factory_add_pad_template (factory, 
-		    GST_PAD_TEMPLATE_GET (gst_ffmpegdec_sink_factory));
+		    GST_PAD_TEMPLATE_GET (gst_ffmpegmux_sink_factory));
 
     if (in_plugin->type == CODEC_TYPE_VIDEO) {
       gst_element_factory_add_pad_template (factory, 
-		    GST_PAD_TEMPLATE_GET (gst_ffmpegdec_video_src_factory));
+		    GST_PAD_TEMPLATE_GET (gst_ffmpegmux_video_src_factory));
     }
     else if (in_plugin->type == CODEC_TYPE_AUDIO) {
       gst_element_factory_add_pad_template (factory, 
-		    GST_PAD_TEMPLATE_GET (gst_ffmpegdec_audio_src_factory));
+		    GST_PAD_TEMPLATE_GET (gst_ffmpegmux_audio_src_factory));
     }
 
     /* The very last thing is to register the elementfactory with the plugin. */

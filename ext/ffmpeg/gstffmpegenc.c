@@ -17,9 +17,50 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "gstffmpegenc.h"
-
 #include <string.h>
+#include <assert.h>
+#include <libavcodec/avcodec.h>
+
+#include <gst/gst.h>
+
+typedef struct _GstFFMpegEnc GstFFMpegEnc;
+
+struct _GstFFMpegEnc {
+  GstElement element;
+
+  /* We need to keep track of our pads, so we do so here. */
+  GstPad *srcpad;
+  GstPad *sinkpad;
+
+  gboolean need_resample;
+  gint in_width, in_height;
+  gint out_width, out_height;
+
+  guchar *buffer;
+  gint buffer_pos;
+
+  AVCodecContext *context;
+  ImgReSampleContext *resample;
+};
+
+typedef struct _GstFFMpegEncClass GstFFMpegEncClass;
+
+struct _GstFFMpegEncClass {
+  GstElementClass parent_class;
+
+  AVCodec *in_plugin;
+};
+
+#define GST_TYPE_FFMPEGENC \
+  (gst_ffmpegenc_get_type())
+#define GST_FFMPEGENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGENC,GstFFMpegEnc))
+#define GST_FFMPEGENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGENC,GstFFMpegEncClass))
+#define GST_IS_FFMPEGENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGENC))
+#define GST_IS_FFMPEGENC_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGENC))
 
 #define VIDEO_BUFFER_SIZE (1024*1024)
 
@@ -515,7 +556,7 @@ gst_ffmpegenc_register (GstPlugin *plugin)
       goto next;
     }
     /* construct the type */
-    type_name = g_strdup_printf("ffmpeg%s_%s", codec_type, in_plugin->name);
+    type_name = g_strdup_printf("ff%s_%s", codec_type, in_plugin->name);
 
     /* if it's already registered, drop it */
     if (g_type_from_name(type_name)) {

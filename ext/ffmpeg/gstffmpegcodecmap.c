@@ -1,0 +1,237 @@
+/* GStreamer
+ * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#include <libavcodec/avcodec.h>
+#include <gst/gst.h>
+
+GstCaps *
+gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *context)
+{
+  switch (context->codec_id) {
+    case CODEC_ID_NONE:
+      return GST_CAPS_NEW ("ffmpeg_none",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_MPEG1VIDEO:
+      return GST_CAPS_NEW ("ffmpeg_mpeg1video",
+		           "video/mpeg",
+			     "mpegversion",  GST_PROPS_INT (1),
+			     "systemstream", GST_PROPS_BOOLEAN (FALSE)
+			  );
+      break;
+    case CODEC_ID_H263:
+      return GST_CAPS_NEW ("ffmpeg_h263",
+		           "video/H263",
+			   NULL);
+      break;
+    case CODEC_ID_RV10:
+      return GST_CAPS_NEW ("ffmpeg_rv10",
+		           "video/x-rv10",
+			   NULL);
+      break;
+    case CODEC_ID_MP2:
+      return GST_CAPS_NEW ("ffmpeg_mp2",
+		           "audio/mp3",
+			   NULL);
+      break;
+    case CODEC_ID_MP3LAME:
+      return GST_CAPS_NEW ("ffmpeg_mp3",
+		           "audio/mp3",
+			   NULL);
+      break;
+    case CODEC_ID_VORBIS:
+      return GST_CAPS_NEW ("ffmpeg_vorbis",
+		           "application/x-ogg",
+			   NULL);
+      break;
+    case CODEC_ID_AC3:
+      return GST_CAPS_NEW ("ffmpeg_ac3",
+		           "audio/ac3",
+			   NULL);
+      break;
+    case CODEC_ID_MJPEG:
+      return GST_CAPS_NEW ("ffmpeg_mjpeg",
+		           "video/x-mjpeg",
+			   NULL);
+      break;
+    case CODEC_ID_MPEG4:
+      return GST_CAPS_NEW ("ffmpeg_mpeg4",
+		           "video/avi",
+			     "format",  GST_PROPS_STRING ("strf_vids"),
+			      "fourcc",  GST_PROPS_FOURCC (context->fourcc),
+			      "width",   GST_PROPS_INT (context->width),
+			      "height",  GST_PROPS_INT (context->height)
+			  );
+      break;
+    case CODEC_ID_RAWVIDEO:
+      return GST_CAPS_NEW ("ffmpeg_rawvideo",
+		           "video/raw",
+			   NULL);
+      break;
+    case CODEC_ID_MSMPEG4V1:
+      return GST_CAPS_NEW ("ffmpeg_msmpeg4v1",
+		           "video/avi",
+			     "format",  GST_PROPS_STRING ("strf_vids"),
+			      "fourcc",  GST_PROPS_FOURCC (context->fourcc),
+			      "width",   GST_PROPS_INT (context->width),
+			      "height",  GST_PROPS_INT (context->height)
+			  );
+      break;
+    case CODEC_ID_MSMPEG4V2:
+      return GST_CAPS_NEW ("ffmpeg_msmpeg4v2",
+		           "video/avi",
+			     "format",  GST_PROPS_STRING ("strf_vids"),
+			      "fourcc",  GST_PROPS_FOURCC (context->fourcc),
+			      "width",   GST_PROPS_INT (context->width),
+			      "height",  GST_PROPS_INT (context->height)
+			  );
+      break;
+    case CODEC_ID_MSMPEG4V3:
+      return GST_CAPS_NEW ("ffmpeg_msmpeg4v3",
+		           "video/avi",
+			     "format",  GST_PROPS_STRING ("strf_vids"),
+			      "fourcc",  GST_PROPS_FOURCC (context->fourcc),
+			      "width",   GST_PROPS_INT (context->width),
+			      "height",  GST_PROPS_INT (context->height)
+			  );
+      break;
+    case CODEC_ID_WMV1:
+      return GST_CAPS_NEW ("ffmpeg_wmv1",
+		           "video/avi",
+			     "format",  GST_PROPS_STRING ("strf_vids"),
+			      "fourcc",  GST_PROPS_FOURCC (GST_STR_FOURCC ("WMV1")),
+			      "width",   GST_PROPS_INT (context->width),
+			      "height",  GST_PROPS_INT (context->height)
+			  );
+      break;
+    case CODEC_ID_WMV2:
+      return GST_CAPS_NEW ("ffmpeg_wmv2",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_H263P:
+      return GST_CAPS_NEW ("ffmpeg_h263p",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_H263I:
+      return GST_CAPS_NEW ("ffmpeg_h263i",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_SVQ1:
+      return GST_CAPS_NEW ("ffmpeg_svq1",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_DVVIDEO:
+      return GST_CAPS_NEW ("ffmpeg_dvvideo",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_DVAUDIO: 
+      return GST_CAPS_NEW ("ffmpeg_dvaudio",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_WMAV1:
+      return GST_CAPS_NEW ("ffmpeg_wmav1",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_WMAV2:
+      return GST_CAPS_NEW ("ffmpeg_wmav2",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_MACE3:
+      return GST_CAPS_NEW ("ffmpeg_mace3",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_MACE6:
+      return GST_CAPS_NEW ("ffmpeg_mace6",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    /* various pcm "codecs" */
+    case CODEC_ID_PCM_S16LE:
+      return GST_CAPS_NEW ("ffmpeg_s16le",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_PCM_S16BE:
+      return GST_CAPS_NEW ("ffmpeg_s16be",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_PCM_U16LE:
+      return GST_CAPS_NEW ("ffmpeg_u16le",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_PCM_U16BE:
+      return GST_CAPS_NEW ("ffmpeg_u16be",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_PCM_S8:
+      return GST_CAPS_NEW ("ffmpeg_s8",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_PCM_U8:
+      return GST_CAPS_NEW ("ffmpeg_u8",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_PCM_MULAW:
+      return GST_CAPS_NEW ("ffmpeg_mulaw",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_PCM_ALAW:
+      return GST_CAPS_NEW ("ffmpeg_alaw",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    /* various adpcm codecs */
+    case CODEC_ID_ADPCM_IMA_QT:
+      return GST_CAPS_NEW ("ffmpeg_adpcm_ima_qt",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_ADPCM_IMA_WAV:
+      return GST_CAPS_NEW ("ffmpeg_adpcm_ima_wav",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    case CODEC_ID_ADPCM_MS:
+      return GST_CAPS_NEW ("ffmpeg_adpcm_ms",
+		           "unkown/unkown",
+			   NULL);
+      break;
+    default:
+      g_warning ("no caps found for codec id %d\n", context->codec_id);
+      break;
+  }
+
+  return NULL;
+}

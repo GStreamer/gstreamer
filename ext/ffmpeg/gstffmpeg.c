@@ -20,17 +20,29 @@
 /* First, include the header file for the plugin, to bring in the
  * object definition and other useful things.
  */
-#include "gstffmpegdec.h"
-#include "gstffmpegenc.h"
+
+#include <libavcodec/avcodec.h>
+#include <libav/avformat.h>
+
+#include <gst/gst.h>
+
+extern gboolean gst_ffmpegdemux_register (GstPlugin *plugin);
+extern gboolean gst_ffmpegdec_register (GstPlugin *plugin);
+extern gboolean gst_ffmpegenc_register (GstPlugin *plugin);
 
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   avcodec_init ();
   avcodec_register_all ();
+  av_register_all ();
+
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
 
   gst_ffmpegenc_register (plugin);
   gst_ffmpegdec_register (plugin);
+  gst_ffmpegdemux_register (plugin);
 
   /* Now we can return the pointer to the newly created Plugin object. */
   return TRUE;
