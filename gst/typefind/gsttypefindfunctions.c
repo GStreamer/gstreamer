@@ -369,14 +369,14 @@ static GstStaticCaps mp3_caps = GST_STATIC_CAPS ("audio/mpeg, "
 static void
 mp3_type_find (GstTypeFind * tf, gpointer unused)
 {
-  guint64 length = gst_type_find_get_length (tf);
+  /*guint64 length = gst_type_find_get_length (tf); */
   gint try;
   guint8 *data = NULL;
   guint size;
   guint64 skipped;
 
   for (try = 0; try < 1 /* 2 */ ; try++) {
-    guint64 start_off = (try == 0) ? 0 : length / 2;
+    guint64 start_off = 0;      /*(try == 0) ? 0 : length / 2; */
 
     if (try != 0 && start_off == 0)
       return;
