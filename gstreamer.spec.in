@@ -164,7 +164,7 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_libdir}/gstreamer-%{majorminor}/libgstgetbits*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstputbits*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstspider*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstcaches.so
+%{_libdir}/gstreamer-%{majorminor}/libgstindexers.so
 
 %files tools
 %{_bindir}/gst-complete
@@ -235,7 +235,6 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstprops.html
 %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gststaticautoplug.html
 %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gststaticautoplugrender.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gsttee.html
 %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gsttype.html
 %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer-gstutils.html
 %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer.html
