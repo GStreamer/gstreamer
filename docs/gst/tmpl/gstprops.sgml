@@ -265,16 +265,6 @@ An entry hols one key/value pair.
 @props2: 
 
 
-<!-- ##### FUNCTION gst_props_has_property ##### -->
-<para>
-
-</para>
-
-@props: 
-@name: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_props_normalize ##### -->
 <para>
 
