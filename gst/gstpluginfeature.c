@@ -91,11 +91,13 @@ gboolean
 gst_plugin_feature_ensure_loaded (GstPluginFeature * feature)
 {
   GstPlugin *plugin;
+  static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
 
   g_return_val_if_fail (feature != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), FALSE);
 
   plugin = (GstPlugin *) (feature->manager);
+  g_static_mutex_lock (&mutex);
 
   if (plugin && !gst_plugin_is_loaded (plugin)) {
 #ifndef GST_DISABLE_REGISTRY
@@ -104,12 +106,21 @@ gst_plugin_feature_ensure_loaded (GstPluginFeature * feature)
           "loading plugin %s for feature", plugin->desc.name);
 
       if (gst_registry_load_plugin (GST_REGISTRY (plugin->manager),
-              plugin) != GST_REGISTRY_OK)
+              plugin) != GST_REGISTRY_OK) {
+        g_static_mutex_unlock (&mutex);
         return FALSE;
-    } else
-#endif /* GST_DISABLE_REGISTRY */
+      }
+    } else {
+      g_static_mutex_unlock (&mutex);
       return FALSE;
+    }
+#else /* GST_DISABLE_REGISTRY */
+    g_static_mutex_unlock (&mutex);
+    return FALSE;
+#endif
   }
+
+  g_static_mutex_unlock (&mutex);
   return TRUE;
 }
 
