@@ -125,7 +125,7 @@ gst_index_get_type (void)
       NULL,
       NULL,
       sizeof (GstIndex),
-      1,
+      0,
       (GInstanceInitFunc) gst_index_init,
       NULL
     };

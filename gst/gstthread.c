@@ -124,7 +124,7 @@ gst_thread_get_type (void)
       NULL,
       NULL,
       sizeof (GstThread),
-      4,
+      0,
       gst_thread_init,
       NULL
     };

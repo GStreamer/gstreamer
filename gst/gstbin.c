@@ -106,7 +106,7 @@ gst_bin_get_type (void)
       NULL,
       NULL,
       sizeof (GstBin),
-      8,
+      0,
       (GInstanceInitFunc) gst_bin_init,
       NULL
     };

@@ -131,7 +131,7 @@ gst_queue_get_type (void)
       NULL,
       NULL,
       sizeof (GstQueue),
-      4,
+      0,
       (GInstanceInitFunc) gst_queue_init,
       NULL
     };

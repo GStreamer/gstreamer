@@ -109,7 +109,7 @@ gst_object_get_type (void)
       NULL,
       NULL,
       sizeof (GstObject),
-      32,
+      0,
       (GInstanceInitFunc) gst_object_init,
       NULL
     };
@@ -803,7 +803,7 @@ gst_signal_object_get_type (void)
       NULL,
       NULL,
       sizeof (GstSignalObject),
-      16,
+      0,
       (GInstanceInitFunc) gst_signal_object_init,
       NULL
     };

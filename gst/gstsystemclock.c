@@ -59,7 +59,7 @@ gst_system_clock_get_type (void)
       NULL,
       NULL,
       sizeof (GstSystemClock),
-      4,
+      0,
       (GInstanceInitFunc) gst_system_clock_init,
       NULL
     };

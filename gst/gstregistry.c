@@ -63,7 +63,7 @@ gst_registry_get_type (void)
       NULL,
       NULL,
       sizeof (GstRegistry),
-      32,
+      0,
       (GInstanceInitFunc) gst_registry_init,
       NULL
     };

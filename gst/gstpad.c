@@ -74,7 +74,7 @@ gst_pad_get_type (void)
       sizeof (GstPadClass), NULL, NULL,
       (GClassInitFunc) gst_pad_class_init, NULL, NULL,
       sizeof (GstPad),
-      32,
+      0,
       (GInstanceInitFunc) gst_pad_init, NULL
     };
 
@@ -156,7 +156,7 @@ gst_real_pad_get_type (void)
       sizeof (GstRealPadClass), NULL, NULL,
       (GClassInitFunc) gst_real_pad_class_init, NULL, NULL,
       sizeof (GstRealPad),
-      32,
+      0,
       (GInstanceInitFunc) gst_real_pad_init, NULL
     };
 
@@ -3327,7 +3327,7 @@ gst_pad_template_get_type (void)
       sizeof (GstPadTemplateClass), NULL, NULL,
       (GClassInitFunc) gst_pad_template_class_init, NULL, NULL,
       sizeof (GstPadTemplate),
-      32,
+      0,
       (GInstanceInitFunc) gst_pad_template_init, NULL
     };
 
@@ -3566,7 +3566,7 @@ gst_ghost_pad_get_type (void)
       sizeof (GstGhostPadClass), NULL, NULL,
       (GClassInitFunc) gst_ghost_pad_class_init, NULL, NULL,
       sizeof (GstGhostPad),
-      8,
+      0,
       (GInstanceInitFunc) gst_ghost_pad_init,
       NULL
     };

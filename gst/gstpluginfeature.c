@@ -50,7 +50,7 @@ gst_plugin_feature_get_type (void)
       NULL,
       NULL,
       sizeof (GObject),
-      32,
+      0,
       (GInstanceInitFunc) gst_plugin_feature_init,
       NULL
     };

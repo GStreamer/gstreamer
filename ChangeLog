@@ -1,3 +1,19 @@
+2004-04-09  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstbin.c: (gst_bin_get_type):
+	* gst/gstclock.c: (gst_clock_get_type):
+	* gst/gstindex.c: (gst_index_get_type):
+	* gst/gstobject.c: (gst_object_get_type),
+	(gst_signal_object_get_type):
+	* gst/gstpad.c: (gst_pad_get_type), (gst_real_pad_get_type),
+	(gst_pad_template_get_type), (gst_ghost_pad_get_type):
+	* gst/gstpluginfeature.c: (gst_plugin_feature_get_type):
+	* gst/gstqueue.c: (gst_queue_get_type):
+	* gst/gstregistry.c: (gst_registry_get_type):
+	* gst/gstsystemclock.c: (gst_system_clock_get_type):
+	* gst/gstthread.c: (gst_thread_get_type):
+	  don't use memchunks for these objects, use malloc instead
+
 2004-04-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/.cvsignore:
