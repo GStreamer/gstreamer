@@ -371,8 +371,8 @@ plugin_init (GstPlugin *plugin)
           <!-- ############ type ############# -->
 
           <row>
-            <entry>audio/x-adpcm</entry>
-            <entry>ADPCM Audio streams.</entry>
+            <entry morerows="1">audio/x-adpcm</entry>
+            <entry morerows="1">ADPCM Audio streams.</entry>
             <entry>layout</entry>
             <entry>string</entry>
             <entry>
@@ -385,6 +385,16 @@ plugin_init (GstPlugin *plugin)
               This number of samples differs per format, hence the different
               layouts. On the long term, we probably want this variable to die
               and use something more descriptive, but this will do for now.
+            </entry>
+          </row>
+          <row>
+            <entry>block_align</entry>
+            <entry>integer</entry>
+            <entry>
+              Any
+            </entry>
+            <entry>
+              Chunk buffer size.
             </entry>
           </row>
 
@@ -937,6 +947,40 @@ plugin_init (GstPlugin *plugin)
             <entry>
               Version of the Real Video codec that this stream was encoded
               with.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry morerows="2">video/x-rle</entry>
+            <entry morerows="2">RLE animation format.</entry>
+            <entry>layout</entry>
+            <entry>string</entry>
+            <entry>"microsoft" or "quicktime"</entry>
+            <entry>
+              The RLE format inside the Microsoft AVI container has a
+              different byte layout than the RLE format inside Apple's
+              Quicktime container; this property keeps track of the
+              layout.
+            </entry>
+          </row>
+          <row>
+            <entry>depth</entry>
+            <entry>integer</entry>
+            <entry>1 to 64</entry>
+            <entry>
+              Bitdepth of the used palette. This means that the palette
+              that belongs to this format defines 2^depth colors.
+            </entry>
+          </row>
+          <row>
+            <entry>palette_data</entry>
+            <entry>GstBuffer</entry>
+            <entry></entry>
+            <entry>
+              Buffer containing a color palette (in native-endian RGBA) used
+              by this format. The buffer is of size 4*2^depth.
             </entry>
           </row>
 

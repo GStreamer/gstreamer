@@ -1,3 +1,9 @@
+2004-04-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/advanced-types.xml:
+	  Add MS RLE support. Also document Qt RLE although I have no sample
+	  files for that yet. And document an extra property for ADPCM.
+
 2004-04-15  David Schleef  <ds@schleef.org>
 
 	* gst/gstplugin.c: (_gst_plugin_fault_handler_restore),
