@@ -1,6 +1,9 @@
 plugin_LTLIBRARIES = libgstmad.la 
 
-libgstmad_la_SOURCES = gstmad.c gstid3tag.c
+libgstmad_la_SOURCES = \
+	gstmad.c \
+	gstid3tag.c \
+	gstid3demuxbin.c
 
 libgstmad_la_CFLAGS = $(GST_CFLAGS) $(MAD_CFLAGS) $(ID3_CFLAGS)
 libgstmad_la_LIBADD = $(MAD_LIBS) $(ID3_LIBS)

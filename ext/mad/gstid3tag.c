@@ -76,7 +76,6 @@ struct _GstID3Tag
 
   /* caps */
   GstID3ParseMode parse_mode;
-  GstCaps *found_caps;
 
   /* tags */
   GstTagList *event_tags;
@@ -124,8 +123,7 @@ GST_DEBUG_CATEGORY_EXTERN (mad_debug);
 static GstStaticPadTemplate id3_tag_src_any_template_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
-  /* FIXME: for spider - should be GST_PAD_ALWAYS, */
-    GST_PAD_SOMETIMES,
+    GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("ANY")
     );
 
@@ -283,28 +281,9 @@ gst_id3_tag_class_init (gpointer g_class, gpointer class_data)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_id3_tag_get_property);
 }
 
-static GstCaps *
-gst_id3_tag_get_caps (GstPad * pad)
-{
-  GstID3Tag *tag = GST_ID3_TAG (gst_pad_get_parent (pad));
-
-  if (tag->found_caps) {
-    GstCaps *caps = gst_caps_copy (tag->found_caps);
-
-    if (CAN_BE_MUXER (tag)) {
-      gst_caps_append (caps,
-          gst_caps_from_string ("application/x-gst-tags; application/x-id3"));
-    }
-    return caps;
-  } else {
-    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
-  }
-}
-
 static void
 gst_id3_tag_add_src_pad (GstID3Tag * tag)
 {
-  g_assert (tag->srcpad == NULL);
   tag->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template
       (GST_ELEMENT_GET_CLASS (tag), "src"), "src");
@@ -316,8 +295,6 @@ gst_id3_tag_add_src_pad (GstID3Tag * tag)
       GST_DEBUG_FUNCPTR (gst_id3_tag_src_query));
   gst_pad_set_query_type_function (tag->srcpad,
       GST_DEBUG_FUNCPTR (gst_id3_tag_get_query_types));
-  gst_pad_set_getcaps_function (tag->srcpad,
-      GST_DEBUG_FUNCPTR (gst_id3_tag_get_caps));
   gst_pad_set_link_function (tag->srcpad,
       GST_DEBUG_FUNCPTR (gst_id3_tag_src_link));
   gst_element_add_pad (GST_ELEMENT (tag), tag->srcpad);
@@ -336,13 +313,11 @@ gst_id3_tag_init (GTypeInstance * instance, gpointer g_class)
     gst_element_add_pad (GST_ELEMENT (tag), tag->sinkpad);
     gst_pad_set_chain_function (tag->sinkpad,
         GST_DEBUG_FUNCPTR (gst_id3_tag_chain));
-  }
-  if (GST_ID3_TAG_GET_CLASS (tag)->type == GST_ID3_TAG_PARSE_MUX) {
-    /* only the muxer class here, all other use sometimes pads */
+
     gst_id3_tag_add_src_pad (tag);
+
+    tag->parse_mode = GST_ID3_TAG_GET_CLASS (tag)->type;
   }
-  /* FIXME: for the alli^H^H^H^Hspider - gst_id3_tag_add_src_pad (tag); */
-  tag->parse_mode = GST_ID3_TAG_PARSE_BASE;
   tag->buffer = NULL;
 
   GST_FLAG_SET (tag, GST_ELEMENT_EVENT_AWARE);
@@ -995,92 +970,6 @@ gst_id3_tag_handle_event (GstPad * pad, GstEvent * event)
   }
   return;
 }
-typedef struct
-{
-  guint best_probability;
-  GstCaps *caps;
-  GstBuffer *buffer;
-}
-SimpleTypeFind;
-guint8 *
-simple_find_peek (gpointer data, gint64 offset, guint size)
-{
-  SimpleTypeFind *find = (SimpleTypeFind *) data;
-
-  if (offset < 0)
-    return NULL;
-
-  if (GST_BUFFER_SIZE (find->buffer) >= offset + size) {
-    return GST_BUFFER_DATA (find->buffer) + offset;
-  }
-  return NULL;
-}
-static void
-simple_find_suggest (gpointer data, guint probability, const GstCaps * caps)
-{
-  SimpleTypeFind *find = (SimpleTypeFind *) data;
-
-  if (probability > find->best_probability) {
-    gst_caps_replace (&find->caps, gst_caps_copy (caps));
-    find->best_probability = probability;
-  }
-}
-static GstCaps *
-gst_id3_tag_do_typefind (GstID3Tag * tag, GstBuffer * buffer)
-{
-  GList *walk, *type_list;
-  SimpleTypeFind find;
-  GstTypeFind gst_find;
-
-  /* this will help us detecting the media stream type after
-   * this id3 thingy... Please note that this is a cruel hack
-   * for as long as spider doesn't support multi-type-finding.
-   */
-  walk = type_list = gst_type_find_factory_get_list ();
-
-  find.buffer = buffer;
-  find.best_probability = 0;
-  find.caps = NULL;
-  gst_find.data = &find;
-  gst_find.peek = simple_find_peek;
-  gst_find.get_length = NULL;
-  gst_find.suggest = simple_find_suggest;
-  while (walk) {
-    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
-
-    gst_type_find_factory_call_function (factory, &gst_find);
-    if (find.best_probability >= GST_TYPE_FIND_MAXIMUM)
-      break;
-    walk = g_list_next (walk);
-  }
-  g_list_free (type_list);
-  if (find.best_probability > 0) {
-    return find.caps;
-  } else {
-    GST_ELEMENT_ERROR (tag, CORE, CAPS, (NULL), ("no caps found"));
-    return NULL;
-  }
-}
-static gboolean
-gst_id3_tag_do_caps_nego (GstID3Tag * tag, GstBuffer * buffer)
-{
-  if (buffer != NULL && CAN_BE_DEMUXER (tag)) {
-    tag->found_caps = gst_id3_tag_do_typefind (tag, buffer);
-    if (!tag->found_caps) {
-      return FALSE;
-    }
-  }
-  if (!tag->srcpad)
-    gst_id3_tag_add_src_pad (tag);
-  if (!gst_pad_is_linked (tag->srcpad)) {
-    GST_DEBUG_OBJECT (tag, "srcpad not linked, not proceeding");
-    tag->parse_mode = GST_ID3_TAG_GET_CLASS (tag)->type;
-    return TRUE;
-  } else {
-    GST_DEBUG_OBJECT (tag, "renegotiating");
-    return gst_pad_renegotiate (tag->srcpad) != GST_PAD_LINK_REFUSED;
-  }
-}
 
 static GstPadLinkReturn
 gst_id3_tag_src_link (GstPad * pad, const GstCaps * caps)
@@ -1090,8 +979,6 @@ gst_id3_tag_src_link (GstPad * pad, const GstCaps * caps)
 
   tag = GST_ID3_TAG (gst_pad_get_parent (pad));
 
-  if (!tag->found_caps && CAN_BE_DEMUXER (tag))
-    return GST_PAD_LINK_DELAYED;
   if (!CAN_BE_MUXER (tag) || !CAN_BE_DEMUXER (tag)) {
     tag->parse_mode = GST_ID3_TAG_GET_CLASS (tag)->type;
     return GST_PAD_LINK_OK;
@@ -1270,9 +1157,6 @@ gst_id3_tag_chain (GstPad * pad, GstData * data)
             GST_BUFFER_OFFSET_END (tag->buffer) + tag->v2tag_size;
       gst_data_unref (GST_DATA (tag->buffer));
       tag->buffer = NULL;
-      if (tag->found_caps == NULL)
-        if (!gst_id3_tag_do_caps_nego (tag, buffer))
-          return;
       /* seek to ID3v1 tag */
       if (gst_pad_send_event (GST_PAD_PEER (tag->sinkpad),
               gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_END |
@@ -1333,6 +1217,7 @@ gst_id3_tag_chain (GstPad * pad, GstData * data)
             GstBuffer *sub = gst_buffer_create_sub (buffer, 0,
                 buffer->size - 128);
 
+            GST_BUFFER_OFFSET (sub) = GST_BUFFER_OFFSET (buffer);
             gst_data_unref (GST_DATA (buffer));
             buffer = sub;
           }
@@ -1397,11 +1282,7 @@ gst_id3_tag_change_state (GstElement * element)
         gst_data_unref (GST_DATA (tag->buffer));
         tag->buffer = NULL;
       }
-      if (tag->found_caps) {
-        gst_caps_free (tag->found_caps);
-        tag->found_caps = NULL;
-      }
-      tag->parse_mode = GST_ID3_TAG_PARSE_BASE;
+      tag->parse_mode = GST_ID3_TAG_GET_CLASS (tag)->type;
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -1420,13 +1301,15 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "mad", GST_RANK_PRIMARY,
           gst_mad_get_type ())
-      || !gst_element_register (plugin, "id3demux", GST_RANK_PRIMARY,
+      || !gst_element_register (plugin, "id3demux", GST_RANK_NONE,
           gst_id3_tag_get_type (GST_ID3_TAG_PARSE_DEMUX))
       || !gst_element_register (plugin, "id3mux", GST_RANK_NONE,        /* removed for spider */
           gst_id3_tag_get_type (GST_ID3_TAG_PARSE_MUX))
       /* FIXME 0.9: remove this element */
       || !gst_element_register (plugin, "id3tag", GST_RANK_NONE,
-          gst_id3_tag_get_type (GST_ID3_TAG_PARSE_ANY))) {
+          gst_id3_tag_get_type (GST_ID3_TAG_PARSE_ANY))
+      || !gst_element_register (plugin, "id3demuxbin", GST_RANK_PRIMARY,
+          gst_id3demux_bin_get_type ())) {
     return FALSE;
   }
 
