@@ -1,3 +1,9 @@
+2004-02-05  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gsttag.c: (_gst_tag_initialize):
+	* gst/gsttag.h:
+	  remove duplicated field GST_TAG_APPLICATION. It's GST_TAG_ENCODER
+
 2004-02-04  David Schleef  <ds@schleef.org>
 
 	Fix some memleaks:

@@ -142,11 +142,6 @@ _gst_tag_initialize (void)
 		    _("performer"),
 		    _("person(s) performing"),
 		    gst_tag_merge_strings_with_comma);
-  gst_tag_register (GST_TAG_APPLICATION, GST_TAG_FLAG_META,
-		    G_TYPE_STRING,
-		    _("application"),
-		    _("application that wrote the stream"),
-		    gst_tag_merge_strings_with_comma);
   gst_tag_register (GST_TAG_DURATION, GST_TAG_FLAG_DECODED,
 		    G_TYPE_UINT64,
 		    _("duration"),
