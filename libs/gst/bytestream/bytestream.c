@@ -555,7 +555,7 @@ gst_bytestream_seek (GstByteStream * bs, gint64 offset, GstSeekType method)
 
   peer = GST_RPAD_PEER (bs->pad);
 
-  GST_DEBUG ("bs: send event\n");
+  GST_DEBUG ("bs: send event");
   if (gst_pad_send_event (GST_PAD (peer), gst_event_new_seek (GST_FORMAT_BYTES |
               (method & GST_SEEK_METHOD_MASK) |
               GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, offset))) {

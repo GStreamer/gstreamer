@@ -1,108 +1,106 @@
-# Czech translation of gstreamer.
-# Copyright (C) 2004 gst-plugins' COPYRIGHT HOLDER
-# Copyright (C) 2004 Miloslav Trmac <mitr@volny.cz>
-# This file is put in the public domain.
-# Miloslav Trmac <mitr@volny.cz>, 2004.
+# Përkthimi i mesazheve të gstreamer në shqip.
+# Copyright (C) 2004 Free Software Foundation, Inc.
+# Laurent Dhima <laurenti@alblinux.net>, 2004.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2004-07-15 22:30+0200\n"
-"PO-Revision-Date: 2004-08-08 22:59+0200\n"
-"Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
-"Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
+"PO-Revision-Date: 2004-08-07 23:46+0200\n"
+"Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
+"Language-Team: Albanian <begraj@hotmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: gst/gst.c:160
 msgid "Print the GStreamer version"
-msgstr "Vypsat verzi GStreamer"
+msgstr "Printo versionin e GStreamer"
 
 #: gst/gst.c:162
 msgid "Make all warnings fatal"
-msgstr "Chápat všechna varování jako fatální"
+msgstr "Bëj që të gjithë paralajmërimet të jenë fatale"
 
 #: gst/gst.c:166
 msgid "Print available debug categories and exit"
-msgstr "Vypsat dostupné kategorie ladění a skončit"
+msgstr "Printo kategoritë e debug në dispozicion dhe dil"
 
 #: gst/gst.c:169
 msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
-msgstr "Implicitní úroveň ladění od 1 (jen chyby) do 5 (vše) nebo 0 pro žádný výstup"
+msgstr "Niveli i prezgjedhur i debug nga 1 (vetëm gabimi) në 5 (gjithçka) ose 0 për jo output"
 
 #: gst/gst.c:171
 msgid "LEVEL"
-msgstr "ÚROVEŇ"
+msgstr "NIVELI"
 
 #: gst/gst.c:173
 msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr "Čárkami oddělený seznam dvojic název_kategorie:úroveň pro nastavení konkrétních úrovní pro jednotlivé kategorie. Příklad: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr "Lista e category_name, ndarë me presje:etiketë çifte për të përcaktuar etiketa specifike për kategoritë individuale. Shembull: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 #: gst/gst.c:176
 msgid "LIST"
-msgstr "SEZNAM"
+msgstr "LISTË"
 
 #: gst/gst.c:178
 msgid "Disable colored debugging output"
-msgstr "Zakázat obarvený ladicí výstup"
+msgstr "Ç'aktivo output shumëngjyrësh të debug"
 
 #: gst/gst.c:180
 msgid "Disable debugging"
-msgstr "Zakázat ladění"
+msgstr "Ç'aktivo debug"
 
 #: gst/gst.c:184
 msgid "Disable accelerated CPU instructions"
-msgstr "Zakázat akcelerované instrukce CPU"
+msgstr "Ç'aktivo instruksionet e përshpejtimit të CPU"
 
 #: gst/gst.c:186
 msgid "Enable verbose plugin loading diagnostics"
-msgstr "Povolit podrobnou diagnostiku načítání modulů"
+msgstr "Aktivo kërkesën e plugin të ngarkimit të diagnostikimeve"
 
 #: gst/gst.c:188
 msgid "PATHS"
-msgstr "CESTY"
+msgstr "POZICIONET"
 
 #: gst/gst.c:191
 msgid "Comma-separated list of plugins to preload in addition to the list stored in envronment variable GST_PLUGIN_PATH"
-msgstr "Čárkami oddělený seznam modulů, které přednačíst kromě seznamu uloženém v proměnné prostředí GST_PLUGIN_PATH"
+msgstr "Lista e plugin, të ndarë me presje, që duhen parangarkuar në plotësim të listës së regjistruar tek e ndryshueshmja e ambientit GST_PLUGIN_PATH"
 
 #: gst/gst.c:193
 msgid "PLUGINS"
-msgstr "MODULY"
+msgstr "PLUGINS"
 
 #: gst/gst.c:196
 msgid "Disable trapping of segmentation faults during plugin loading"
-msgstr "Zakázat zachycování porušení segmentace při načítání modulů"
+msgstr "Ç'aktivo regjistrimin e dështimeve të segmentuara gjatë ngarkimit të plugin"
 
 #: gst/gst.c:199
 msgid "SCHEDULER"
-msgstr "PLÁNOVAČ"
+msgstr "PLANIFIKUES"
 
 #: gst/gst.c:201
 msgid "Registry to use"
-msgstr "Registr, který používat"
+msgstr "Regjistri që duhet përdorur"
 
 #: gst/gst.c:201
 msgid "REGISTRY"
-msgstr "REGISTR"
+msgstr "REGJISTRI"
 
 #: gst/gst.c:214
 #, c-format
 msgid "path list for loading plugins (separated by '%s')"
-msgstr "seznam cest pro načítání modulů (oddělený '%s')"
+msgstr "pozicioni i listës për ngarkimin e plugins (ndarë me '%s')"
 
 #: gst/gst.c:218
 #, c-format
 msgid "Scheduler to use (default is '%s')"
-msgstr "Plánovač, který používat (implicitní je '%s')"
+msgstr "Planifikuesi që duhet përdorur (i prezgjedhuri është '%s')"
 
 #: gst/gstelement.c:261
 #, c-format
 msgid "ERROR: from element %s: %s\n"
-msgstr "CHYBA: od eleemntu %s: %s\n"
+msgstr "GABIM: nga elementi %s: %s\n"
 
 #: gst/gstelement.c:263
 #, c-format
@@ -110,262 +108,262 @@ msgid ""
 "Additional debug info:\n"
 "%s\n"
 msgstr ""
-"Přídavné ladicí informace:\n"
+"Informacione shtesë të debug:\n"
 "%s\n"
 
 #: gst/gsterror.c:56
 msgid "GStreamer encountered a general core library error."
-msgstr "V GStreamer došlo k obecné chybě hlavní knihovny."
+msgstr "GStreamer ndeshi në një gabim të përgjithshëm të librarisë bazë."
 
 #: gst/gsterror.c:58 gst/gsterror.c:95 gst/gsterror.c:115 gst/gsterror.c:145
 msgid "GStreamer developers were too lazy to assign an error code to this error.  Please file a bug."
-msgstr "Vývojáři GStreamer byli příliš líní na to, aby této chybě přiřadili kód. Ohlaste prosím tuto chybu."
+msgstr "Zhvilluesit e GStreamer ishin tepër të lodhur për t'i caktuar një kod gabimi këtij difekti.  Ju lutem dërgoni një raport."
 
 #: gst/gsterror.c:61
 msgid "Internal GStreamer error: code not implemented.  File a bug."
-msgstr "Interní chyba GStreamer: kód neimplementován. Ohlaste tuto chybu."
+msgstr "Gabim i brendshëm i GStreamer: kodi mungon.  Raporto bug."
 
 #: gst/gsterror.c:63
 msgid "Internal GStreamer error: state change failed.  File a bug."
-msgstr "Interní chyba GStreamer: změna stavu selhala. Ohlaste tuto chybu."
+msgstr "Gabim i brendshëm i GStreamer: ndryshimi i gjendjes dështoi.  Raporto bug."
 
 #: gst/gsterror.c:65
 msgid "Internal GStreamer error: pad problem.  File a bug."
-msgstr "Interní chyba GStreamer: problém při vyplňování. Ohlaste tuto chybu."
+msgstr "Gabim i brendshëm i GStreamer: problem me shtegun.  Raporto bug."
 
 #: gst/gsterror.c:67
 msgid "Internal GStreamer error: thread problem.  File a bug."
-msgstr "Interní chyba GStreamer: problém s vlákny. Ohlaste tuto chybu."
+msgstr "Gabim i brendshëm i GStreamer: problem i thread.  Raporto bug."
 
 #: gst/gsterror.c:69
 msgid "Internal GStreamer error: scheduler problem.  File a bug."
-msgstr "Interní chyba GStreamer: problém s plánovačem. Ohlaste tuto chybu."
+msgstr "Gabim i brendshëm i GStreamer: problem planifikimi.  Raporto bug."
 
 #: gst/gsterror.c:71
 msgid "Internal GStreamer error: negotiation problem.  File a bug."
-msgstr "Interní chyba GStreamer: problém při vyjednávání. Ohlaste tuto chybu."
+msgstr "Gabim i brendshëm i GStreamer: problem negocimi.  Raporto bug."
 
 #: gst/gsterror.c:73
 msgid "Internal GStreamer error: event problem.  File a bug."
-msgstr "Interní chyba GStreamer: problém s událostmi. Ohlaste tuto chybu."
+msgstr "Gabim i brendshëm i GStreamer: problem ndodhie.  Raporto bug."
 
 #: gst/gsterror.c:75
 msgid "Internal GStreamer error: seek problem.  File a bug."
-msgstr "Interní chyba GStreamer: problém s posunem. Ohlaste tuto chybu."
+msgstr "Gabim i brendshëm i GStreamer: problem kërkimi.  Raporto bug."
 
 #: gst/gsterror.c:77
 msgid "Internal GStreamer error: caps problem.  File a bug."
-msgstr "Interní chyba GStreamer: problém se schopnostmi. Ohlaste tuto chybu."
+msgstr "Gabim i brendshëm i GStreamer: problem drejtimi.  Raporto bug."
 
 #: gst/gsterror.c:79
 msgid "Internal GStreamer error: tag problem.  File a bug."
-msgstr "Interní chyba GStreamer: problém s tagy. Ohlaste tuto chybu."
+msgstr "Gabim i brendshëm i GStreamer: problem me tag.  Raporto bug."
 
 #: gst/gsterror.c:93 gst/gsterror.c:113 gst/gsterror.c:143
 msgid "GStreamer encountered a general supporting library error."
-msgstr "V GStreamer došlo k chybě obecné podpůrné knihovny."
+msgstr "GStreamer ndeshi në një gabim librarie të suportit të përgjithshëm."
 
 #: gst/gsterror.c:97
 msgid "Could not initialize supporting library."
-msgstr "Nemohu inicializovat podpůrnou knihovnu."
+msgstr "E pamundur nisja e librarisë mbështetëse."
 
 #: gst/gsterror.c:98 gst/gsterror.c:99
 msgid "Could not close supporting library."
-msgstr "Nemohu zavřít podpůrou knihovnu."
+msgstr "E pamundur mbyllja e librarisë mbështetëse."
 
 #: gst/gsterror.c:117
 msgid "Resource not found."
-msgstr "Zdroj nenalezen."
+msgstr "Burimi nuk u gjet."
 
 #: gst/gsterror.c:118
 msgid "Resource busy or not available."
-msgstr "Zdroj se používá nebo není k dispozici."
+msgstr "Burimi është i zënë ose jo në dispozicion."
 
 #: gst/gsterror.c:119
 msgid "Could not open resource for reading."
-msgstr "Nemohu otevřít zdroj pro čtení."
+msgstr "E pamundur hapja e burimit për lexim."
 
 #: gst/gsterror.c:120
 msgid "Could not open resource for writing."
-msgstr "Nemohu otevřít zdroj pro zápis."
+msgstr "E pamundur hapja e burimit për shkrim."
 
 #: gst/gsterror.c:122
 msgid "Could not open resource for reading and writing."
-msgstr "Nemohu otevřít zdroj pro čtení a zápis."
+msgstr "E pamundur hapja e burimit për lexim dhe shkrim."
 
 #: gst/gsterror.c:123
 msgid "Could not close resource."
-msgstr "Nemohu zavřít zdroj."
+msgstr "E pamundur mbyllja e burimit."
 
 #: gst/gsterror.c:124
 msgid "Could not read from resource."
-msgstr "Nemohu číst ze zdroje."
+msgstr "I pamundur leximi nga burimi."
 
 #: gst/gsterror.c:125
 msgid "Could not write to resource."
-msgstr "Nemohu zapisovat do zdroje."
+msgstr "I pamundur hkrimi në burim."
 
 #: gst/gsterror.c:126
 msgid "Could not perform seek on resource."
-msgstr "Nemohu se posunovat ve zdroji."
+msgstr "E pamundur kryerja e kërkimit në burim."
 
 #: gst/gsterror.c:127
 msgid "Could not synchronize on resource."
-msgstr "Nemohu se synchronizovat se zdrojem."
+msgstr "Sinkronizim i pamundur në burim."
 
 #: gst/gsterror.c:129
 msgid "Could not get/set settings from/on resource."
-msgstr "Nemohu získat/změnit nastavení zdroje."
+msgstr "E pamundur marrja/vendosja e rregullimeve nga/në burim."
 
 #: gst/gsterror.c:148
 msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr "Element neimplementuje obsluhu tohoto proudu. Ohlaste prosím tuto chybu."
+msgstr "Elementi nuk suporton trajtimin e kësaj vazhde. Ju lutem raporto një bug."
 
 #: gst/gsterror.c:150
 msgid "Could not determine type of stream."
-msgstr "Nemohu zjistit typ proudu."
+msgstr "I pamundur përcaktimi i llojit të vazhdës."
 
 #: gst/gsterror.c:152
 msgid "The stream is of a different type than handled by this element."
-msgstr "Proud je jiného typu, než který tento element obsluhuje."
+msgstr "Vazhda është e një lloji të ndryshëm nga të trajtuarit nga ky element."
 
 #: gst/gsterror.c:154
 msgid "There is no codec present that can handle the stream's type."
-msgstr "Není přítomen žádný kodek, který umí obsloužit typ tohoto proudu."
+msgstr "Asnjë kodues/dekodues në dispozicion për të trajtuar llojin e vazhdës."
 
 #: gst/gsterror.c:155
 msgid "Could not decode stream."
-msgstr "Nemohu dekódovat proud."
+msgstr "I pamundur dekodifikimi i vazhdës."
 
 #: gst/gsterror.c:156
 msgid "Could not encode stream."
-msgstr "Nemohu kódovat proud."
+msgstr "I pamundur kodifikimi i vazhdës."
 
 #: gst/gsterror.c:157
 msgid "Could not demultiplex stream."
-msgstr "Nemohu demultiplexovat proud."
+msgstr "I pamundur demultipleksimi i stream."
 
 #: gst/gsterror.c:158
 msgid "Could not multiplex stream."
-msgstr "Nemohu multiplexovat proud."
+msgstr "I pamundur multipleksimi i vazhdës."
 
 #: gst/gsterror.c:159
 msgid "Stream is of the wrong format."
-msgstr "Proud je ve špatném formátu."
+msgstr "Vazhda është në një format të gabuar."
 
 #: gst/gsterror.c:207
 #, c-format
 msgid "No error message for domain %s."
-msgstr "Pro doménu %s není zpráva o chybě."
+msgstr "Asnjë mesazh gabimi për domain %s."
 
 #: gst/gsterror.c:215
 #, c-format
 msgid "No standard error message for domain %s and code %d."
-msgstr "Pro doménu %s a kód %d není standardní zpráva o chybě."
+msgstr "Asnjë mesazh gabimi standart për domain %s dhe kodin %d."
 
 #: gst/gsttag.c:83
 msgid "title"
-msgstr "název"
+msgstr "titulli"
 
 #: gst/gsttag.c:83
 msgid "commonly used title"
-msgstr "obecně používaný název"
+msgstr "titulli i përdorur zakonisht"
 
 #: gst/gsttag.c:86
 msgid "artist"
-msgstr "umělec"
+msgstr "artisti"
 
 #: gst/gsttag.c:87
 msgid "person(s) responsible for the recording"
-msgstr "osoby odpovědné za nahrávku"
+msgstr "personi(at) përgjegjës për regjistrimin"
 
 #: gst/gsttag.c:91
 msgid "album"
-msgstr "album"
+msgstr "albumi"
 
 #: gst/gsttag.c:92
 msgid "album containing this data"
-msgstr "album obsahující tato data"
+msgstr "albumi që përmban këtë të dhënë"
 
 #: gst/gsttag.c:94
 msgid "date"
-msgstr "datum"
+msgstr "data"
 
 #: gst/gsttag.c:95
 msgid "date the data was created (in Julian calendar days)"
-msgstr "datum, kdy byla data vytvořena (ve dnech juliánského kalendáře)"
+msgstr "data e krijimit të së dhënës (në ditë të kalendarit Julian)"
 
 #: gst/gsttag.c:98
 msgid "genre"
-msgstr "žánr"
+msgstr "lloji"
 
 #: gst/gsttag.c:99
 msgid "genre this data belongs to"
-msgstr "žánr, do kterého tato data patří"
+msgstr "lloji së cilit i takon e dhëna"
 
 #: gst/gsttag.c:102
 msgid "comment"
-msgstr "poznámka"
+msgstr "komenti"
 
 #: gst/gsttag.c:103
 msgid "free text commenting the data"
-msgstr "volný text komentující data"
+msgstr "tekst i lirë komentues i së dhënës"
 
 #: gst/gsttag.c:106
 msgid "track number"
-msgstr "číslo stopy"
+msgstr "numri i pistës"
 
 #: gst/gsttag.c:107
 msgid "track number inside a collection"
-msgstr "číslo stopy v souboru"
+msgstr "numri i pjesës në brendësi të një koleksioni"
 
 #: gst/gsttag.c:110
 msgid "track count"
-msgstr "počet stop"
+msgstr "numërimi i pjesës"
 
 #: gst/gsttag.c:111
 msgid "count of tracks inside collection this track belongs to"
-msgstr "počet stop v souboru, do kterého tato stopa patří"
+msgstr "numurimi i pjesëve në brendësi të koleksionit të cilit i përket pjesa"
 
 #: gst/gsttag.c:115
 msgid "disc number"
-msgstr "číslo disku"
+msgstr "numri i diskut"
 
 #: gst/gsttag.c:116
 msgid "disc number inside a collection"
-msgstr "číslo disku v souboru"
+msgstr "numri i diskut në brendësi të një koleksioni"
 
 #: gst/gsttag.c:119
 msgid "disc count"
-msgstr "počet disků"
+msgstr "numurimi i diskut"
 
 #: gst/gsttag.c:120
 msgid "count of discs inside collection this disc belongs to"
-msgstr "počet disků v souboru, do kterého tento disk patří"
+msgstr "numurimi i disqeve në brendësi të koleksionit të cilit i përket disku"
 
 #: gst/gsttag.c:124
 msgid "location"
-msgstr "umístění"
+msgstr "pozicioni"
 
 #: gst/gsttag.c:125
 msgid "original location of file as a URI"
-msgstr "původní umístění souboru jako URI"
+msgstr "vendodhja orgjinale e file si një URI"
 
 #: gst/gsttag.c:129
 msgid "description"
-msgstr "popis"
+msgstr "përshkrimi"
 
 #: gst/gsttag.c:130
 msgid "short text describing the content of the data"
-msgstr "krátký text popisující obsah dat"
+msgstr "teks i shkurtër përshkrues i përmbajtjes së së dhënës"
 
 #: gst/gsttag.c:133
 msgid "version"
-msgstr "verze"
+msgstr "versioni"
 
 #: gst/gsttag.c:133
 msgid "version of this data"
-msgstr "verze těchto dat"
+msgstr "versioni i kësaj të dhëne"
 
 #: gst/gsttag.c:136
 msgid "ISRC"
@@ -373,11 +371,11 @@ msgstr "ISRC"
 
 #: gst/gsttag.c:138
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr "International Standard Recording Code - viz http://www.ifpi.org/isrc/"
+msgstr "International Standard Recording Code - shiko http://www.ifpi.org/isrc/"
 
 #: gst/gsttag.c:140
 msgid "organization"
-msgstr "organizace"
+msgstr "organizata"
 
 #: gst/gsttag.c:143
 msgid "copyright"
@@ -385,63 +383,63 @@ msgstr "copyright"
 
 #: gst/gsttag.c:143
 msgid "copyright notice of the data"
-msgstr "oznámení o copyrightu dat"
+msgstr "shënime mbi të drejtat e së dhënës"
 
 #: gst/gsttag.c:146
 msgid "contact"
-msgstr "kontakt"
+msgstr "kontakti"
 
 #: gst/gsttag.c:146
 msgid "contact information"
-msgstr "kontaktní informace"
+msgstr "informacione në lidhje me kontaktin"
 
 #: gst/gsttag.c:148
 msgid "license"
-msgstr "licence"
+msgstr "liçenca"
 
 #: gst/gsttag.c:148
 msgid "license of data"
-msgstr "licence dat"
+msgstr "liçenca e së dhënës"
 
 #: gst/gsttag.c:151
 msgid "performer"
-msgstr "výkonný umělec"
+msgstr "interpretuesi"
 
 #: gst/gsttag.c:152
 msgid "person(s) performing"
-msgstr "vystupující osoby "
+msgstr "personi(at) interpretues"
 
 #: gst/gsttag.c:155
 msgid "duration"
-msgstr "trvání"
+msgstr "kohëzgjatja"
 
 #: gst/gsttag.c:155
 msgid "length in GStreamer time units (nanoseconds)"
-msgstr "délka v jednotkách času GStreamer (nanosekundách)"
+msgstr "gjatësia në njësi kohore të GStreamer (nanosekonda)"
 
 #: gst/gsttag.c:158
 msgid "codec"
-msgstr "kodek"
+msgstr "codec"
 
 #: gst/gsttag.c:159
 msgid "codec the data is stored in"
-msgstr "kodek, ve kterém jsou uložena data"
+msgstr "codec ku janë regjistruar të dhënat"
 
 #: gst/gsttag.c:162
 msgid "video codec"
-msgstr "kodek videa"
+msgstr "video codec"
 
 #: gst/gsttag.c:162
 msgid "codec the video data is stored in"
-msgstr "kodek, ve kterém jsou uložena data videa"
+msgstr "codec ku janë regjistruar të dhënat video"
 
 #: gst/gsttag.c:165
 msgid "audio codec"
-msgstr "kodek zvuku"
+msgstr "audio codec"
 
 #: gst/gsttag.c:165
 msgid "codec the audio data is stored in"
-msgstr "kodek, ve kterém jsou uložena data zvuku"
+msgstr "codec ku janë regjistruar të dhënat audio"
 
 #: gst/gsttag.c:167
 msgid "bitrate"
@@ -449,87 +447,87 @@ msgstr "bitrate"
 
 #: gst/gsttag.c:167
 msgid "exact or average bitrate in bits/s"
-msgstr "přesná nebo průměrná bitrate v bitech/s"
+msgstr "bitrate preçize ose mesatare në bits/s"
 
 #: gst/gsttag.c:169
 msgid "nominal bitrate"
-msgstr "nominální bitrate"
+msgstr "bitrate nominale"
 
 #: gst/gsttag.c:169
 msgid "nominal bitrate in bits/s"
-msgstr "nominální bitrate v bitech/s"
+msgstr "bitrate nominale në bits/s"
 
 #: gst/gsttag.c:171
 msgid "minimum bitrate"
-msgstr "minimální bitrate"
+msgstr "bitrate minimum"
 
 #: gst/gsttag.c:171
 msgid "minimum bitrate in bits/s"
-msgstr "minimální bitrate v bitech/s"
+msgstr "bitrate minimum në bits/s"
 
 #: gst/gsttag.c:173
 msgid "maximum bitrate"
-msgstr "maximální bitrate"
+msgstr "bitrate maksimum"
 
 #: gst/gsttag.c:173
 msgid "maximum bitrate in bits/s"
-msgstr "maximální bitrate v bitech/s"
+msgstr "bitrate maksimum në bits/s"
 
 #: gst/gsttag.c:176
 msgid "encoder"
-msgstr "kodér"
+msgstr "kodifikuesi"
 
 #: gst/gsttag.c:176
 msgid "encoder used to encode this stream"
-msgstr "kodér používaný pro kódování tohoto proudu"
+msgstr "kodifikuesi i përdorur për të kodifikuar këtë fluks"
 
 #: gst/gsttag.c:179
 msgid "encoder version"
-msgstr "verze kodéru"
+msgstr "versioni i kodifikuesit"
 
 #: gst/gsttag.c:180
 msgid "version of the encoder used to encode this stream"
-msgstr "verze kodéru používaného pro kódování tohoto proudu"
+msgstr "versioni i kodifikuesit të përdorur për të kodifikuar këtë fluks"
 
 #: gst/gsttag.c:182
 msgid "serial"
-msgstr "sériové"
+msgstr "seria"
 
 #: gst/gsttag.c:182
 msgid "serial number of track"
-msgstr "sériové číslo stopy"
+msgstr "numri serisë së pjesës"
 
 #: gst/gsttag.c:184
 msgid "replaygain track gain"
-msgstr "replaygain zisk přehrávání stopy"
+msgstr "ecuria i pjesës në replygain"
 
 #: gst/gsttag.c:184
 msgid "track gain in db"
-msgstr "zisk přehrávání stopy v db"
+msgstr "rritja e pjesës në db"
 
 #: gst/gsttag.c:186
 msgid "replaygain track peak"
-msgstr "replaygain vrchol stopy"
+msgstr "maksimumi i pjesës në replygain"
 
 #: gst/gsttag.c:186
 msgid "peak of the track"
-msgstr "vrchol stopy"
+msgstr "skaji i pistës"
 
 #: gst/gsttag.c:188
 msgid "replaygain album gain"
-msgstr "replaygain zisk alba"
+msgstr "replaygain album gain"
 
 #: gst/gsttag.c:188
 msgid "album gain in db"
-msgstr "zisk alba v db"
+msgstr "gain i albumit në db"
 
 #: gst/gsttag.c:190
 msgid "replaygain album peak"
-msgstr "replaygain vrchol alba"
+msgstr "replaygain album peak"
 
 #: gst/gsttag.c:190
 msgid "peak of the album"
-msgstr "vrchol alba"
+msgstr "kulmi i albumit"
 
 #: gst/gsttag.c:229
 msgid ", "
@@ -538,58 +536,58 @@ msgstr ", "
 #: gst/autoplug/gstspider.c:458
 #, c-format
 msgid "There is no element present to handle the stream's mime type %s."
-msgstr "Není přítomen žádý element pro obsloužení proudu s typem mime %s."
+msgstr "Nuk ekziston asnjë element për të trajtuar llojin mime %s të fluksit."
 
 #: gst/elements/gstfilesink.c:259
 msgid "No file name specified for writing."
-msgstr "Nezadán název souboru pro zápis."
+msgstr "Nuk është përcaktuar asnjë emër file për tu shkruar."
 
 #: gst/elements/gstfilesink.c:266
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Nemohu otevřít soubor \"%s\" pro zápis."
+msgstr "E pamundur hapja e file \"%s\" në shkrim."
 
 #: gst/elements/gstfilesink.c:285
 #, c-format
 msgid "Error closing file \"%s\"."
-msgstr "Chyba při zavírání souboru \"%s\"."
+msgstr "Gabim gjatë mbylljes së file \"%s\"."
 
 #: gst/elements/gstfilesink.c:357 gst/elements/gstfilesink.c:392
 #: gst/elements/gstfilesink.c:445
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr "Chyba při zápisu do souboru \"%s\"."
+msgstr "Gabim gjatë shkrimit tek file \"%s\"."
 
 #: gst/elements/gstfilesrc.c:754 gst/elements/gstmultifilesrc.c:248
 msgid "No file name specified for reading."
-msgstr "Nezadán název souboru pro čtení."
+msgstr "Nuk është përcaktuar asnjë emër file për tu lexuar."
 
 #: gst/elements/gstfilesrc.c:769 gst/elements/gstmultifilesrc.c:256
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Nemohu otevřít soubor \"%s\" pro čtení."
+msgstr "E pamundur hapja e file \"%s\" për lexim."
 
 #: gst/elements/gstfilesrc.c:780
 #, c-format
 msgid "\"%s\" is a directory."
-msgstr "\"%s\" je adresář."
+msgstr "\"%s\" është një directory."
 
 #: gst/elements/gstfilesrc.c:786
 #, c-format
 msgid "File \"%s\" is a socket."
-msgstr "Soubor \"%s\" je socket."
+msgstr "File \"%s\" është një socket."
 
 #: gst/elements/gstidentity.c:267
 msgid "Failed after iterations as requested."
-msgstr "Selhání po iteracích podle požadavku."
+msgstr "Dështoi mbas përsëritjeve sikurse të kërkuara."
 
 #: gst/elements/gsttypefindelement.c:148
 msgid "caps"
-msgstr "schopnosti"
+msgstr "mbrojtëse"
 
 #: gst/elements/gsttypefindelement.c:149
 msgid "detected capabilities in stream"
-msgstr "detekované schopnosti v proudu"
+msgstr "u zbuluan mundësi në fluks"
 
 #: gst/elements/gsttypefindelement.c:152
 msgid "minimum"
@@ -597,95 +595,95 @@ msgstr "minimum"
 
 #: gst/elements/gsttypefindelement.c:156
 msgid "maximum"
-msgstr "maximum"
+msgstr "maksimum"
 
 #: gst/parse/grammar.y:186
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
-msgstr "zadán prázdný zásobník \"%s\", nedovoleno"
+msgstr "u specifikua bin bosh \"%s\", nuk lejohet"
 
 #: gst/parse/grammar.y:191
 #, c-format
 msgid "no bin \"%s\", skipping"
-msgstr "zásobník \"%s\" neexistuje, přeskakuji"
+msgstr "asnjë bin \"%s\", u kapërcye"
 
 #: gst/parse/grammar.y:262
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
-msgstr "v elementu \"%2$s\" není vlastnost \"%1$s\""
+msgstr "asnjë pronësi \"%s\" tek elementi \"%s\""
 
 #: gst/parse/grammar.y:275
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "nemohu nastavit vlastnost \"%s\" v elementu \"%s\" na \"%s\""
+msgstr "e pamundur vendosja e pronësisë \"%s\" tek elementi \"%s\" në \"%s"
 
 #: gst/parse/grammar.y:460
 #, c-format
 msgid "could not link %s to %s"
-msgstr "nemohu připojit %s k %s"
+msgstr "e pamundur lidhja e %s me %s"
 
 #: gst/parse/grammar.y:505
 #, c-format
 msgid "no element \"%s\""
-msgstr "element \"%s\" neexistuje"
+msgstr "asnjë element \"%s\""
 
 #: gst/parse/grammar.y:556
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr "nemohu zpracovat schopnosti \"%s\""
+msgstr "i pamundur analizimi i caps \"%s\""
 
 #: gst/parse/grammar.y:578 gst/parse/grammar.y:626 gst/parse/grammar.y:642
 #: gst/parse/grammar.y:700
 msgid "link without source element"
-msgstr "propojení bez elementu zdroje"
+msgstr "lidhje ma element burues"
 
 #: gst/parse/grammar.y:584 gst/parse/grammar.y:623 gst/parse/grammar.y:709
 msgid "link without sink element"
-msgstr "propojení bez elementu spotřebiče"
+msgstr "lidhje pa elementin sink"
 
 #: gst/parse/grammar.y:660
 #, c-format
 msgid "no source element for URI \"%s\""
-msgstr "neexistuje element zdroje pro URI \"%s\""
+msgstr "asnjë element burues për URI \"%s\""
 
 #: gst/parse/grammar.y:670
 #, c-format
 msgid "no element to link URI \"%s\" to"
-msgstr "neexistuje element, ke kterému připojit URI \"%s\""
+msgstr "asnjë element për të lidhur URI \"%s\" me"
 
 #: gst/parse/grammar.y:678
 #, c-format
 msgid "no sink element for URI \"%s\""
-msgstr "neexistuje element spotřebiče pro URI \"%s\""
+msgstr "asnjë element shpërndarës për URI \"%s\""
 
 #: gst/parse/grammar.y:682
 #, c-format
 msgid "could not link sink element for URI \"%s\""
-msgstr "nemohu připojit element spotřebiče pro URI \"%s\""
+msgstr "e pamundur lidhja e elementit sink për URI \"%s\""
 
 #: gst/parse/grammar.y:694
 msgid "empty pipeline not allowed"
-msgstr "prázdná roura není povolena"
+msgstr "nuk lejohet konduktori bosh"
 
 #: tools/gst-inspect.c:1115
 msgid "Print all elements"
-msgstr "Vypsat všechny elementy"
+msgstr "Printo të gjithë elementët"
 
 #: tools/gst-launch.c:91
 msgid "Execution ended after %"
-msgstr "Provádění skončilo po %"
+msgstr "Ekzekutimi përfundoi mbas %"
 
 #: tools/gst-launch.c:91
 msgid " iterations (sum %"
-msgstr " iteracích (celkem %"
+msgstr " përsëritjet (shuma %"
 
 #: tools/gst-launch.c:92
 msgid " ns, average %"
-msgstr " ns, průměr %"
+msgstr " ns, mesatarja %"
 
 #: tools/gst-launch.c:92
 msgid " ns, min %"
-msgstr " ns, min %s"
+msgstr " ns, min %"
 
 #: tools/gst-launch.c:93
 msgid " ns, max %"
@@ -697,143 +695,141 @@ msgstr " ns).\n"
 
 #: tools/gst-launch.c:114
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Použití: gst-xmllaunch <soubor.xml> [ element.vlastnost=hodnota ... ]\n"
+msgstr "Përdorimi: gst-xmllaunch <file.xml> [ element.property=vlera ... ]\n"
 
 #: tools/gst-launch.c:122
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "CHYBA: zpracovávání xml souboru '%s' selhalo.\n"
+msgstr "GABIM: analizimi i file xml '%s' dështoi.\n"
 
 #: tools/gst-launch.c:128
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "CHYBA: v souboru '%s' není element nejvyšší úrovně pipeline.\n"
+msgstr "GABIM: asnjë element i pipline të toplevel tek file '%s'.\n"
 
 #: tools/gst-launch.c:135
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
-msgstr "VAROVÁNÍ: v současné době je podporován jen jeden element nejvyšší úrovně."
+msgstr "KUJDES: vetëm një element toplevel suportohet aktualisht."
 
 #: tools/gst-launch.c:146
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "CHYBA: nemohu zpracovat argument %d na příkazovém řádku: %s.\n"
+msgstr "GABIM: i pamundur analizimi i argumentit %d të rreshtit të komandës: %s.\n"
 
 #: tools/gst-launch.c:157
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
-msgstr "VAROVÁNÍ: element nazvaný '%s' nenalezen.\n"
+msgstr "KUJDES: elementi me emrin '%s' nuk u gjet.\n"
 
 #: tools/gst-launch.c:294
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr "NALEZEN TAG    : nalezen elementem \"%s\".\n"
+msgstr "NDRYSHIM I GJETUR      : u gjet nga elementi \"%s\".\n"
 
 #: tools/gst-launch.c:374
 msgid "Output tags (also known as metadata)"
-msgstr "Vypsat tagy (také známé jako metadata)"
+msgstr "Tags e output (njohur gjithashtu si metadata)"
 
 #: tools/gst-launch.c:376
 msgid "Output status information and property notifications"
-msgstr "Vypsat informace o stavu a upozornění na vlastnosti"
+msgstr "Njoftime të informacioneve dhe pronësisë së kondicionit të daljes"
 
 #: tools/gst-launch.c:378
 msgid "Do not output status information of TYPE"
-msgstr "Nevypisovat informace o stavu s TYPEM"
+msgstr "Mos jep informacionin e gjendjes së LLOJIT"
 
 #: tools/gst-launch.c:378
 msgid "TYPE1,TYPE2,..."
-msgstr "TYP1,TYP2,..."
+msgstr "LLOJI1,LLOJI2,..."
 
 #: tools/gst-launch.c:381
 msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "Uložit reprezentaci roury v xml do SOUBORu a skončit"
+msgstr "Ruaj prezantimin xml të pipeline tek FILE dhe dil"
 
 #: tools/gst-launch.c:381
 msgid "FILE"
-msgstr "SOUBOR"
+msgstr "FILE"
 
 #: tools/gst-launch.c:384
 msgid "Do not install a fault handler"
-msgstr "Neinstalovat obsluhu výjimek"
+msgstr "Mos instalo një ushqyes të dëmtuar"
 
 #: tools/gst-launch.c:386
 msgid "Print alloc trace (if enabled at compile time)"
-msgstr "Vypisovat stopu alokace (je-li povoleno při kompilaci)"
+msgstr "Printo shenjat e alloc (nëse aktivuar në kohën e kompilimit)"
 
 #: tools/gst-launch.c:388
 msgid "Number of times to iterate pipeline"
-msgstr "Kolikrát iterovat rouru"
+msgstr "Numri i herëve të përsëritjes së kanalit"
 
 #: tools/gst-launch.c:458
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
-msgstr "CHYBA: nelze vytvořit rouru: %s.\n"
+msgstr "GABIM: i pamundur ndërtimi i pipeline: %s.\n"
 
 #: tools/gst-launch.c:462
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
-msgstr "CHYBA: nelze vytvořit rouru.\n"
+msgstr "GABIM: i pamundur ndërtimi i pipeline.\n"
 
 #: tools/gst-launch.c:466
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
-msgstr "VAROVÁNÍ: chybná roura: %s\n"
+msgstr "KUJDES: pipline e gabuar: %s\n"
 
 #: tools/gst-launch.c:467
 #, c-format
 msgid "         Trying to run anyway.\n"
-msgstr "         Přesto se ji pokouším spustit.\n"
+msgstr "         Duke u përpjekur të zbatohet sidoqoftë.\n"
 
 #: tools/gst-launch.c:495
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr "CHYBA: element 'pipeline' nebyl nalezen.\n"
+msgstr "GABIM: elementi 'konduktor' nuk u gjet.\n"
 
 #: tools/gst-launch.c:502
 #, c-format
 msgid "RUNNING pipeline ...\n"
-msgstr "SPOUŠTÍM rouru ...\n"
+msgstr "DUKE ZBATUAR pipeline ...\n"
 
-# On strike?
 #: tools/gst-launch.c:505
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "chyba: roura nechce hrát.\n"
+msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
 
 #: tools/gst-register.c:49
 #, c-format
 msgid "Added plugin %s with %d %s.\n"
-msgstr "Přidán modul %s s %d %s.\n"
+msgstr "U shtua plugin %s me %d %s.\n"
 
 #: tools/gst-register.c:51 tools/gst-register.c:167
 msgid "feature"
 msgid_plural "features"
-msgstr[0] "funkcí"
-msgstr[1] "funkcemi"
-msgstr[2] "funkcemi"
+msgstr[0] "karakteristika"
+msgstr[1] "karakteristikat"
 
 #: tools/gst-register.c:112
 #, c-format
 msgid "Added path   %s to %s \n"
-msgstr "Přidána cesta %s do %s \n"
+msgstr "U shtua pozicioni   %s tek %s \n"
 
 #: tools/gst-register.c:127
 #, c-format
 msgid "Rebuilding %s (%s) ...\n"
-msgstr "Znovu sestavuji %s (%s) ...\n"
+msgstr "Duke rindërtuar %s (%s) ...\n"
 
 #: tools/gst-register.c:132
 #, c-format
 msgid "Trying to load %s ...\n"
-msgstr "Pokouším se načíst %s ...\n"
+msgstr "Duke u përpjekur të ngarkoj %s ...\n"
 
 #: tools/gst-register.c:134
 #, c-format
 msgid "Error loading %s\n"
-msgstr "Chyba při načítání %s\n"
+msgstr "Gabim gjatë ngarkimit të %s\n"
 
 #: tools/gst-register.c:166
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
-msgstr "Načteno %d modulů s %d %s.\n"
+msgstr "U ngarkuan %d plugins me %d %s.\n"

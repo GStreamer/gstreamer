@@ -1,4 +1,3 @@
-
 if GST_DISABLE_OMEGA_COTHREADS
 omegaschedulers =
 omegaschedulers_nola =
@@ -100,8 +99,6 @@ as-libtool-uninstall-local:
 
 endif
 
-
-
 %.lib: %.def
 	dlltool -S $(CC) -f "-c" --export-all-symbols --input-def \
 		%.def --output-lib %.lib
@@ -113,4 +110,3 @@ endif
 		awk '{ print $$3 }' | \
 		sed 's/^/       /' >>%.def.tmp
 	mv %.def.tmp %.def
-

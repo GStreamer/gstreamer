@@ -1,3 +1,17 @@
+2004-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/faq/gst-uninstalled:
+	  fix PKG_CONFIG_PATH and PYTHONPATH
+	* gst/schedulers/Makefile.am:
+	  cleanup
+	* libs/gst/bytestream/bytestream.c:
+	  remove newline
+	* po/LINGUAS:
+	* po/sq.po:
+	  adding Albanian translation (Laurent Dhima)
+	* po/cs.po:
+	  updated
+
 2004-08-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/ca.po:
