@@ -447,6 +447,12 @@ dnl *** gsm ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GSM, true)
 GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
   GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm.h, GSM_LIBS="-lgsm")
+  if test $HAVE_GSM != "yes"; then
+    GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm/gsm.h, GSM_LIBS="-lgsm")
+    if test $HAVE_GSM = "yes"; then 
+      AC_DEFINE(GSM_HEADER_IN_SUBDIR)
+    fi
+  fi
   AC_SUBST(GSM_LIBS)
 ])
 
