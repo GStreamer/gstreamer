@@ -330,7 +330,7 @@ gst_ffmpegmux_loop (GstElement *element)
     if (url_fopen (&ffmpegmux->context->pb,
 		   ffmpegmux->context->filename,
 		   URL_WRONLY) < 0) {
-      GST_ELEMENT_ERROR (element, LIBRARY, TOO_LAZY, NULL,
+      GST_ELEMENT_ERROR (element, LIBRARY, TOO_LAZY, (NULL),
 			 ("Failed to open stream context in ffmux"));
       return;
     }
