@@ -2,6 +2,12 @@ filterdir = $(libdir)/gst
 
 filter_LTLIBRARIES = libgstelements.la
 
+if HAVE_LIBGHTTP
+GSTHTTPSRC=gsthttpsrc.c
+else
+GSTHTTPSRC=
+endif
+
 libgstelements_la_DEPENDENCIES = ../libgst.la
 libgstelements_la_SOURCES =	\
 	gstelements.c		\
@@ -11,7 +17,7 @@ libgstelements_la_SOURCES =	\
 	gstdisksrc.c		\
 	gstasyncdisksrc.c	\
 	gstfdsrc.c		\
-	gsthttpsrc.c		\
+	$(GSTHTTPSRC)           \
 	gstaudiosink.c		\
 	gstaudiosrc.c		\
 	gstfdsink.c		\
@@ -32,5 +38,5 @@ noinst_HEADERS =		\
 	gstqueue.h		\
 	gstsinesrc.h
 
-libgstelements_la_LIBADD = $(GLIB_LIBS) $(GTK_LIBS) 
+libgstelements_la_LIBADD = $(GLIB_LIBS) $(GTK_LIBS)
 libgstelements_la_LDFLAGS = -version-info $(STREAMER_CURRENT):$(STREAMER_REVISION):$(STREAMER_AGE)

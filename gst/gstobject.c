@@ -188,7 +188,7 @@ void gst_object_unref (GstObject *object) {
   /* if we ended up with the refcount at zero */
   if (reftest) {
     /* get the count to 1 for gtk_object_destroy() */
-#ifdef HAVE_ATOMIC_T
+#ifdef HAVE_ATOMIC_H
     atomic_set(&(object->refcount),1);
 #else
     object->refcount = 1;
@@ -196,7 +196,7 @@ void gst_object_unref (GstObject *object) {
     /* destroy it */
     gtk_object_destroy(GTK_OBJECT(object));
     /* drop the refcount back to zero */
-#ifdef HAVE_ATOMIC_T
+#ifdef HAVE_ATOMIC_H
     atomic_set(&(object->refcount),0);
 #else
     object->refcount = 0;

@@ -29,7 +29,9 @@
 #include <gstfakesrc.h>
 #include <gstfdsink.h>
 #include <gstfdsrc.h>
+#if HAVE_LIBGHTTP
 #include <gsthttpsrc.h>
+#endif /* HAVE_LIBGHTTP */
 #include <gstqueue.h>
 #include <gstsinesrc.h>
 
@@ -50,7 +52,9 @@ struct _elements_entry _elements[] = {
   { "fakesrc", gst_fakesrc_get_type, &gst_fakesrc_details },
   { "fdsink", gst_fdsink_get_type, &gst_fdsink_details },
   { "fdsrc", gst_fdsrc_get_type, &gst_fdsrc_details },
+#if HAVE_LIBGHTTP
   { "httpsrc", gst_httpsrc_get_type, &gst_httpsrc_details },
+#endif /* HAVE_LIBGHTTP */
   { "queue", gst_queue_get_type, &gst_queue_details },
   { "sinesrc", gst_sinesrc_get_type, &gst_sinesrc_details },
   { NULL, 0 },

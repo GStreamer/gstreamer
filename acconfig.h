@@ -3,7 +3,6 @@
 #undef PLUGINS_USE_SRCDIR
 
 #undef HAVE_LIBGHTTP
-#undef HAVE_LIBXML
 #undef HAVE_LIBMMX
 #undef HAVE_XAUDIO
 #undef HAVE_CSSAUTH
