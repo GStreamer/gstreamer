@@ -229,6 +229,27 @@ gst_object_sink (GstObject *object)
 }
 
 /**
+ * gst_object_swap:
+ * @oldobj: pointer to place of old GstObject
+ * @newobj: new GstObject
+ *
+ * Unrefs the object pointer to by oldobj, refs the newobj and
+ * puts the newobj in *oldobj.
+ */
+void
+gst_object_swap (GstObject **oldobj, GstObject *newobj)
+{
+  if (*oldobj != newobj) {
+    if (newobj)
+      gst_object_ref (newobj);
+    if (*oldobj)
+      gst_object_unref (*oldobj);
+
+    *oldobj = newobj;
+  }
+}
+
+/**
  * gst_object_destroy:
  * @object: GstObject to destroy
  *
