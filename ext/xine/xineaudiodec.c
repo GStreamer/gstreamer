@@ -459,7 +459,7 @@ gst_xine_audio_dec_subclass_init (gpointer g_class, gpointer class_data)
   GstXineAudioDecClass *xine_class = GST_XINE_AUDIO_DEC_CLASS (g_class);
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstElementDetails details = GST_ELEMENT_DETAILS (NULL,
-      "Filter/Decoder/Audio",
+      "Codec/Decoder/Audio",
       NULL,
       "Benjamin Otte <otte@gnome.org>");
   GstPadTemplate *template;
