@@ -241,7 +241,7 @@ gst_ffmpegdecall_init(GstFFMpegDecAll *ffmpegdec)
 {
   ffmpegdec->sinkpad = gst_pad_new_from_template(
                              GST_PAD_TEMPLATE_GET(sink_templ), "sink");
-  gst_pad_set_connect_function(ffmpegdec->sinkpad,
+  gst_pad_set_link_function(ffmpegdec->sinkpad,
                                gst_ffmpegdecall_connect);
   gst_pad_set_chain_function(ffmpegdec->sinkpad,
                              gst_ffmpegdecall_chain);
@@ -273,20 +273,20 @@ gst_ffmpegdecall_connect (GstPad *pad, GstCaps *caps)
   AVCodec *plugin;
 
   if (!GST_CAPS_IS_FIXED(caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   avcodec_get_context_defaults(ffmpegdec->context);
 
   if ((id = gst_ffmpeg_caps_to_codecid(caps, ffmpegdec->context)) == CODEC_ID_NONE) {
     GST_DEBUG(GST_CAT_PLUGIN_INFO,
               "Failed to find corresponding codecID");
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   }
 
   if ((plugin = avcodec_find_decoder(id)) == NULL) {
     GST_DEBUG(GST_CAT_PLUGIN_INFO,
               "Failed to find an avdecoder for id=%d", id);
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   }
 
   /* we dont send complete frames */
@@ -296,10 +296,10 @@ gst_ffmpegdecall_connect (GstPad *pad, GstCaps *caps)
   if (avcodec_open(ffmpegdec->context, plugin)) {
     GST_DEBUG(GST_CAT_PLUGIN_INFO,
               "Failed to open FFMPEG codec for id=%d", id);
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   }
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void

@@ -231,7 +231,7 @@ gst_ffmpegenc_sinkconnect (GstPad *pad, GstCaps *caps)
   GstFFMpegEncClass *oclass = (GstFFMpegEncClass*)(G_OBJECT_GET_CLASS(ffmpegenc));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   if (strstr (gst_caps_get_mime (caps), "audio/raw")) {
     gst_caps_get_int (caps, "rate", &ffmpegenc->context->sample_rate);
@@ -264,12 +264,12 @@ gst_ffmpegenc_sinkconnect (GstPad *pad, GstCaps *caps)
   }
   else {
     g_warning ("ffmpegenc: invalid caps %s\n", gst_caps_get_mime (caps));
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   }
 
   if (avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0) {
     g_warning ("ffmpegenc: could not open codec\n");
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   }
 
   if (oclass->in_plugin->type == CODEC_TYPE_AUDIO) {
@@ -277,7 +277,7 @@ gst_ffmpegenc_sinkconnect (GstPad *pad, GstCaps *caps)
 		  ffmpegenc->context->channels);
     ffmpegenc->buffer_pos = 0;
   }
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void
@@ -309,7 +309,7 @@ gst_ffmpegenc_init(GstFFMpegEnc *ffmpegenc)
     ffmpegenc->context->sample_rate = -1;
   }
 
-  gst_pad_set_connect_function (ffmpegenc->sinkpad, gst_ffmpegenc_sinkconnect);
+  gst_pad_set_link_function (ffmpegenc->sinkpad, gst_ffmpegenc_sinkconnect);
   gst_element_add_pad (GST_ELEMENT (ffmpegenc), ffmpegenc->sinkpad);
 
   ffmpegenc->srcpad = gst_pad_new_from_template (

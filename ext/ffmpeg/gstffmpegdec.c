@@ -161,7 +161,7 @@ gst_ffmpegdec_sinkconnect (GstPad *pad, GstCaps *caps)
   GstFFMpegDecClass *oclass = (GstFFMpegDecClass*)(G_OBJECT_GET_CLASS (ffmpegdec));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   if (gst_caps_has_property_typed (caps, "width", GST_PROPS_INT_TYPE))
     gst_caps_get_int (caps, "width", &ffmpegdec->context->width);
@@ -175,15 +175,15 @@ gst_ffmpegdec_sinkconnect (GstPad *pad, GstCaps *caps)
   /*
   if (avcodec_open (ffmpegdec->context, avcodec_find_encoder(CODEC_ID_MPEG1VIDEO)) <0 ) {
     g_warning ("ffmpegdec: could not open codec");
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   }
   */
 
   if (avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0) {
     g_warning ("ffmpegdec: could not open codec");
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   }
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void
@@ -194,7 +194,7 @@ gst_ffmpegdec_init(GstFFMpegDec *ffmpegdec)
   ffmpegdec->context = avcodec_alloc_context();
 
   ffmpegdec->sinkpad = gst_pad_new_from_template (oclass->templ, "sink");
-  gst_pad_set_connect_function (ffmpegdec->sinkpad, gst_ffmpegdec_sinkconnect);
+  gst_pad_set_link_function (ffmpegdec->sinkpad, gst_ffmpegdec_sinkconnect);
 
   if (oclass->in_plugin->type == CODEC_TYPE_VIDEO) {
     ffmpegdec->srcpad = gst_pad_new_from_template (

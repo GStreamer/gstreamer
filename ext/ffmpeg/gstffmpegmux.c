@@ -164,7 +164,7 @@ gst_ffmpegmux_sinkconnect (GstPad *pad, GstCaps *caps)
   GstFFMpegMuxClass *oclass = (GstFFMpegMuxClass*)(G_OBJECT_GET_CLASS (ffmpegmux));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   if (gst_caps_has_property_typed (caps, "width", GST_PROPS_INT_TYPE))
     gst_caps_get_int (caps, "width", &ffmpegmux->context->width);
@@ -178,14 +178,14 @@ gst_ffmpegmux_sinkconnect (GstPad *pad, GstCaps *caps)
   /* FIXME bug in ffmpeg */
   if (avcodec_open (ffmpegmux->context, avcodec_find_encoder(CODEC_ID_MPEG1VIDEO)) <0 ) {
     g_warning ("ffmpegmux: could not open codec");
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   }
 
   if (avcodec_open (ffmpegmux->context, oclass->in_plugin) < 0) {
     g_warning ("ffmpegmux: could not open codec");
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   }
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void
@@ -197,7 +197,7 @@ gst_ffmpegmux_init(GstFFMpegMux *ffmpegmux)
 
   ffmpegmux->sinkpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (gst_ffmpegmux_sink_factory), "sink");
-  gst_pad_set_connect_function (ffmpegmux->sinkpad, gst_ffmpegmux_sinkconnect);
+  gst_pad_set_link_function (ffmpegmux->sinkpad, gst_ffmpegmux_sinkconnect);
 
   if (oclass->in_plugin->type == CODEC_TYPE_VIDEO) {
     ffmpegmux->srcpad = gst_pad_new_from_template (
