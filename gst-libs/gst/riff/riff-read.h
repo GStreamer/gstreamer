@@ -64,6 +64,10 @@ GType    gst_riff_read_get_type  (void);
 guint32  gst_riff_peek_tag       (GstRiffRead *riff,
 				  guint       *level_up);
 guint32  gst_riff_peek_list      (GstRiffRead *riff);
+gboolean gst_riff_peek_head      (GstRiffRead *riff,
+				  guint32     *tag,
+				  guint32     *length,
+				  guint       *level_up);
 
 GstEvent *gst_riff_read_seek      (GstRiffRead *riff,
 				  guint64      offset);
@@ -78,7 +82,9 @@ gboolean gst_riff_read_list      (GstRiffRead *riff,
 				  guint32     *tag);
 gboolean gst_riff_read_header    (GstRiffRead *read,
 				  guint32     *doctype);
-
+GstBuffer *gst_riff_read_element_data (GstRiffRead *riff,
+				       guint        length,
+				       guint       *got_bytes);
 /*
  * Utility functions (including byteswapping).
  */
