@@ -1,3 +1,30 @@
+2004-01-07  Julien MOUTTE,,,  <julien@moutte.net>
+
+	* examples/gstplay/player.c: (got_time_tick), (got_stream_length),
+	(got_video_size): Adding some new lines in g_print calls.
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xwindow_new),
+	(gst_ximagesink_xwindow_destroy), (gst_ximagesink_xwindow_resize),
+	(gst_ximagesink_handle_xevents), (gst_ximagesink_fixate),
+	(gst_ximagesink_sinkconnect), (gst_ximagesink_change_state),
+	(gst_ximagesink_chain), (gst_ximagesink_buffer_new),
+	(gst_ximagesink_set_xwindow_id), (gst_ximagesink_get_desired_size):
+	Complete code review, reverting some stuff i disagree with, adding
+	some fixes : time synchronization on invalid timestamps, renegotiation
+	of private window.
+	* sys/ximage/ximagesink.h:
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xwindow_destroy),
+	(gst_xvimagesink_xwindow_resize), (gst_xvimagesink_handle_xevents),
+	(gst_xvimagesink_get_xv_support), (gst_xvimagesink_xcontext_get),
+	(gst_xvimagesink_fixate), (gst_xvimagesink_sinkconnect),
+	(gst_xvimagesink_change_state), (gst_xvimagesink_chain),
+	(gst_xvimagesink_buffer_new),
+	(gst_xvimagesink_navigation_send_event),
+	(gst_xvimagesink_set_xwindow_id),
+	(gst_xvimagesink_get_desired_size),
+	(gst_xvimagesink_xoverlay_init): Complete code review, reverting some
+	stuff i disagree with, adding some fixes : Renegotiation of private
+	window, implementing get_desired_size.
+
 2004-01-07  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/audiofile/gstafsink.c: (gst_afsink_init), (gst_afsink_chain),
