@@ -1,0 +1,20 @@
+# OpenGL usage
+How to set up openGL using plugins in such a way that they can
+render to an on-screen window, or offscreen equally?
+
+eg:
+superfoo3d ! glwindow
+or
+superfoo3d ! gloffscreen ! xvideowindow
+
+This would imply that there is some mime type which connects a glwindow/gloffscreen and a GL using component sensibly. I don't see that there is any actual 
+data to send, however - the only purpose of the glwindow/gloffscreen is to 
+set up an openGL context and then 'output' it somehow one the superfoo3d has
+finished drawing each frame.
+
+In the case of glwindow, 'output' it means translate into an on-screen window,
+but for gloffscreen it means produce a video packet and go.
+
+These components really need some other 2 way communication, rather than the
+pads metaphor, I think?
+

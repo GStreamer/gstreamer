@@ -1,0 +1,28 @@
+# Compositing and video overlays.
+We want a way to composite a video frame and an overlay frame. The video frame is as we expect, the overlay is a normal video frame + an alpha mask. In the following monologue, please consider that I mean RGB/I420/YV12/YUY2 wherever I say RGB.
+
+So we have a plugin with 2 sinks and one src:
+   +----------------+
+   |video           |
+   |           video|
+   |overlay         |
+   +----------------+
+
+What should the format for the overlay data look like?
+Ideas:
+ * RGBA   - 4 byte per pixel video frame
+ * RGB+A  - 3 Bytes per pixel video frame, then 1 byte per pixel overlay frame.
+            A new mime type, or a variation on video/raw? I'm not sure
+ * Overlay is actually 2 sinks, one takes a RGB/YUV data the other the alpha channel.
+
+I'm not sure which approach is better, but I think it is probably neatest to 
+use RGB+A, and then have a separate plugin which has 2 sinks and converts an
+RGB/YUV stream plus an alpha stream into an RGB+A stream. The benefit of RGB+A over RGBA in this scenario, is that it is easier (correct me if I'm wrong) to optimise 2 block copies which appends an alpha frame to a RGB frame than it is to
+do the many copies required to interleave them into an RGBA stream.
+
+So, I see this producing a few new plugins:
+videooverlay - takes an RGB and an RGB+A frame from 2 sinks, does the overlay (according to some properties) and outputs a result frame in RGB or RGB+A (as negotiated) format on 1 src.
+rgb2rgba - takes 1 RGB frame and one A frame from 2 sinks and outputs RGB+A on 1 src. If the A sink is not connected, we just add a fixed alpha channel based on an object-property.
+rgb2rgba - takes an RGB+A frame and discards the RGB component.
+textoverlay - This plugin, instead of taking a video frame and overlaying text, can just output an RGB+A stream with appropriate timestamping. This prevents duplicating code to composite with an alpha mask and allows us to optimise it in one spot only.
+
