@@ -42,7 +42,7 @@ extern "C" {
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
-#include "gsttcp.h"
+#include "gstmultifdsink.h"
 
 #define GST_TYPE_TCPSERVERSINK \
   (gst_tcpserversink_get_type())
@@ -65,10 +65,7 @@ typedef enum {
 } GstTCPServerSinkFlags;
 
 struct _GstTCPServerSink {
-  GstElement element;
-
-  /* pad */
-  GstPad *sinkpad;
+  GstMultiFdSink element;
 
   /* server information */
   int server_port;
@@ -77,39 +74,10 @@ struct _GstTCPServerSink {
 
   /* socket */
   int server_sock_fd;
-
-  size_t data_written; /* how much bytes have we written ? */
-
-  GMutex *clientslock;
-  GList *clients;	/* list of clients we are serving */
-  
-  fd_set readfds; /* all the client file descriptors that we can read from */
-  fd_set writefds; /* all the client file descriptors that we can write to */
-
-  int control_sock[2];	/* sockets for controlling the select call */
-
-  GList *streamheader; /* GList of GstBuffers to use as streamheader */
-  GstTCPProtocolType protocol;
-  guint mtu;
-  GstClock *clock;
-
-  GArray *bufqueue;
-  GMutex *queuelock;
-  GCond *queuecond;
-
-  gboolean running;
-  GThread *thread;
-
-  gint buffers_max;
-  gint buffers_soft_max;
 };
 
 struct _GstTCPServerSinkClass {
-  GstElementClass parent_class;
-
-  /* signals */
-  void (*client_added) (GstElement *element, gchar *host, gint fd);
-  void (*client_removed) (GstElement *element, gchar *host, gint fd);
+  GstMultiFdSinkClass parent_class;
 };
 
 GType gst_tcpserversink_get_type (void);

@@ -27,6 +27,7 @@
 #include "gsttcpclientsink.h"
 #include "gsttcpserversrc.h"
 #include "gsttcpserversink.h"
+#include "gstmultifdsink.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -52,6 +53,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   if (!gst_element_register (plugin, "tcpserversrc", GST_RANK_NONE,
           GST_TYPE_TCPSERVERSRC))
+    return FALSE;
+  if (!gst_element_register (plugin, "multifdsink", GST_RANK_NONE,
+          GST_TYPE_MULTIFDSINK))
     return FALSE;
 
   return TRUE;
