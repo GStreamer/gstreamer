@@ -1,3 +1,18 @@
+2004-01-28  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xerror),
+	(gst_ximagesink_check_xshm_calls), (gst_ximagesink_ximage_destroy),
+	(gst_ximagesink_xcontext_get), (gst_ximagesink_class_init):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_handle_xerror),
+	(gst_xvimagesink_check_xshm_calls),
+	(gst_xvimagesink_xvimage_destroy), (gst_xvimagesink_xcontext_get): Our
+	X plugins are now able to detect that XShm calls will fail even if the
+	server claims that it has XShm support (remote displays most of the
+	time). We then log the error as a GST_DEBUG and set use_shm to FALSE
+	so that we use non XShm functions. This feature is almost useless for
+	xvimagesink as Xv is not supported on remote displays anyway, but 
+	it might happen than even on the local display XShm calls fail.
+
 2004-01-27  David Schleef  <ds@schleef.org>
 
 	* ext/esd/esdsink.c: (gst_esdsink_class_init), (gst_esdsink_init),
