@@ -1,5 +1,9 @@
 2004-08-11  David Schleef  <ds@schleef.org>
 
+	* gst/tcp/gstfdset.c: Fix compile problem on OS/X.
+
+2004-08-11  David Schleef  <ds@schleef.org>
+
 	* gst/mpeg1sys/gstmpeg1systemencode.c: Oops, this was correct
 	before.
 
