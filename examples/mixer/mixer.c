@@ -40,7 +40,7 @@ void eos(GstElement *element)
 /*  playing = FALSE; */
 }
 
-static GstCaps*
+G_GNUC_UNUSED static GstCaps*
 gst_play_typefind (GstBin *bin, GstElement *element)
 {
   GstElement *typefind;
@@ -140,7 +140,7 @@ int main(int argc,char *argv[])
 
     /* request pads and connect to adder */
     GST_INFO (0, "requesting pad\n");
-    pad = gst_element_request_pad_by_name (adder, "sink%d");
+    pad = gst_element_get_request_pad (adder, "sink%d");
     printf ("\tGot new adder sink pad %s\n", gst_pad_get_name (pad));
     sprintf (buffer, "channel%d", i);
     gst_pad_connect (gst_element_get_pad (channel_in->pipe, buffer), pad);
@@ -237,8 +237,8 @@ create_input_channel (int id, char* location)
   
   char buffer[20]; 		/* hold the names */
 
-  GstAutoplug *autoplug;
-  GstCaps *srccaps;
+/*  GstAutoplug *autoplug;
+  GstCaps *srccaps; */
   GstElement *new_element;  
   GstElement *decoder;
 
@@ -364,8 +364,8 @@ create_input_channel (int id, char* location)
   gst_bin_add (GST_BIN(channel->pipe), channel->volenv);
   gst_bin_add (GST_BIN (channel->pipe), new_element);
   
-  gst_element_connect (channel->filesrc, "src", new_element, "sink");
-  gst_element_connect (new_element, "src_00", channel->volenv, "sink");
+  gst_element_connect_pads (channel->filesrc, "src", new_element, "sink");
+  gst_element_connect_pads (new_element, "src_00", channel->volenv, "sink");
   
   /* add a ghost pad */
   sprintf (buffer, "channel%d", id);

@@ -1,38 +1,43 @@
 #include <glib-object.h>
+#include "../gstelement.h"
 
 typedef struct {
-    gchar *name;
+    gchar *type;
+    gint index;
     GList *property_values;
+    GstElement *element;
 } element_t;
 
 typedef struct {
     gchar *name;
-    GType value_type;
-    union {
-        gdouble d;
-        gboolean b;
-        gint i;
-        gchar *s;
-    } value;
+    GValue *value;
 } property_t;
 
 typedef struct {
-    char *src;
-    char *sink;
+    /* if the names are present, upon connection we'll search out the pads of the
+       proper name and use those. otherwise, we'll search for elements of src_index
+       and sink_index. */
+    char *src_name;
+    char *sink_name;
+    int src_index;
+    int sink_index;
     GList *src_pads;
     GList *sink_pads;
 } connection_t;
 
-typedef struct {
+typedef struct _graph_t graph_t;
+
+struct _graph_t {
+    element_t *first;
     element_t *current;
+    graph_t *parent;
     gchar *current_bin_type;
     GList *elements;
     GList *connections;
     GList *connections_pending;
     GList *bins;
-} graph_t;
+    GstElement *bin;
+};
 
-typedef struct {
-    gchar *id1;
-    gchar *id2;
-} hash_t;
+graph_t * _gst_parse_launch (const gchar *str, GError **error);
+

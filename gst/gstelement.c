@@ -174,7 +174,6 @@ gst_element_init (GstElement *element)
   element->state_cond = g_cond_new ();
 }
 
-
 static void
 gst_element_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
@@ -184,7 +183,6 @@ gst_element_set_property (GObject *object, guint prop_id, const GValue *value, G
     (oclass->set_property) (object, prop_id, value, pspec);
 }
 
-
 static void
 gst_element_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -192,6 +190,19 @@ gst_element_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 
   if (oclass->get_property)
     (oclass->get_property) (object, prop_id, value, pspec);
+}
+
+static GstPad*
+gst_element_request_pad (GstElement *element, GstPadTemplate *templ, const gchar* name)
+{
+  GstPad *newpad = NULL;
+  GstElementClass *oclass;
+
+  oclass = CLASS (element);
+  if (oclass->request_new_pad)
+    newpad = (oclass->request_new_pad)(element, templ, name);
+
+  return newpad;
 }
 
 
@@ -483,31 +494,124 @@ gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
 GstPad*
 gst_element_get_pad (GstElement *element, const gchar *name)
 {
-  GList *walk;
+  GstPad *pad;
 
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  /* if there aren't any pads, well, we're not likely to find one */
-  if (!element->numpads)
-    return NULL;
+  if ((pad = gst_element_get_static_pad (element, name)))
+    return pad;
+  
+  pad = gst_element_get_request_pad (element, name);
+  
+  return pad;
+}
 
-  /* look through the list, matching by name */
+/**
+ * gst_element_get_static_pad:
+ * @element: element to find pad of
+ * @name: name of pad to retrieve
+ *
+ * Retrieve a pad from the element by name. This version only retrieves
+ * already-existing (i.e. 'static') pads.
+ *
+ * Returns: requested pad if found, otherwise NULL.
+ */
+GstPad *
+gst_element_get_static_pad (GstElement *element, const gchar *name)
+{
+  GList *walk;
+  
+  g_return_val_if_fail (element != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
   walk = element->pads;
   while (walk) {
     GstPad *pad;
     
     pad = GST_PAD(walk->data);
-    if (!strcmp (GST_PAD_NAME(pad), name)) {
-      GST_INFO(GST_CAT_ELEMENT_PADS,"found pad %s:%s",GST_DEBUG_PAD_NAME(pad));
+    if (strcmp (GST_PAD_NAME(pad), name) == 0) {
+      GST_INFO (GST_CAT_ELEMENT_PADS, "found pad %s:%s", GST_DEBUG_PAD_NAME (pad));
       return pad;
     }
     walk = g_list_next (walk);
   }
 
-  GST_INFO(GST_CAT_ELEMENT_PADS,"no such pad '%s' in element \"%s\"",name,GST_ELEMENT_NAME(element));
+  GST_INFO (GST_CAT_ELEMENT_PADS, "no such pad '%s' in element \"%s\"", name, GST_OBJECT_NAME (element));
   return NULL;
+}
+
+/**
+ * gst_element_get_request_pad:
+ * @element: element to find pad of
+ * @name: name of pad to retrieve
+ *
+ * Retrieve a pad from the element by name. This version only retrieves
+ * request pads.
+ *
+ * Returns: requested pad if found, otherwise NULL.
+ */
+GstPad*
+gst_element_get_request_pad (GstElement *element, const gchar *name)
+{
+  GstPadTemplate *templ = NULL;
+  GstPad *pad;
+  const gchar *req_name = NULL;
+  gboolean templ_found = FALSE;
+  GList *list;
+  gint n;
+  const gchar *data;
+  gchar *str, *endptr = NULL;
+
+  g_return_val_if_fail (element != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  if (strstr (name, "%")) {
+    templ = gst_element_get_padtemplate_by_name (element, name);
+    req_name = NULL;
+    if (templ)
+      templ_found = TRUE;
+  } else {
+    list = gst_element_get_padtemplate_list(element);
+    while (!templ_found && list) {
+      templ = (GstPadTemplate*) list->data;
+      if (templ->presence == GST_PAD_REQUEST) {
+        /* we know that %s and %d are the only possibilities because of sanity
+           checks in gst_padtemplate_new */
+        GST_DEBUG (GST_CAT_PADS, "comparing %s to %s", name, templ->name_template);
+        if ((str = strchr (templ->name_template, '%')) &&
+            strncmp (templ->name_template, name, str - templ->name_template) == 0 &&
+            strlen (name) > str - templ->name_template) {
+          data = name + (str - templ->name_template);
+          if (*(str+1) == 'd') {
+            /* it's an int */
+            n = (gint) strtol (data, &endptr, 10);
+            if (endptr && *endptr == '\0') {
+              templ_found = TRUE;
+              req_name = name;
+              break;
+            }
+          } else {
+            /* it's a string */
+            templ_found = TRUE;
+            req_name = name;
+            break;
+          }
+        }
+      }
+      list = list->next;
+    }
+  }
+  
+  if (!templ_found)
+      return NULL;
+  
+  pad = gst_element_request_pad (element, templ, req_name);
+  
+  return pad;
 }
 
 /**
@@ -658,19 +762,6 @@ gst_element_get_padtemplate_by_compatible (GstElement *element, GstPadTemplate *
   return newtempl;
 }
 
-static GstPad*
-gst_element_request_pad (GstElement *element, GstPadTemplate *templ, const gchar* name)
-{
-  GstPad *newpad = NULL;
-  GstElementClass *oclass;
-
-  oclass = CLASS (element);
-  if (oclass->request_new_pad)
-    newpad = (oclass->request_new_pad)(element, templ, name);
-
-  return newpad;
-}
-
 /**
  * gst_element_request_compatible_pad:
  * @element: element to request a new pad from
@@ -700,78 +791,6 @@ gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ)
   return pad;
 }
 
-/**
- * gst_element_request_pad_by_name:
- * @element: element to request a new pad from
- * @name: the name of the padtemplate to use.
- *
- * Request a new pad from the element. The name argument will
- * be used to decide what padtemplate to use. This function
- * is typically used for elements with a padtemplate with presence
- * GST_PAD_REQUEST.
- *
- * Returns: the new pad that was created.
- */
-GstPad*
-gst_element_request_pad_by_name (GstElement *element, const gchar *name)
-{
-  GstPadTemplate *templ = NULL;
-  GstPad *pad;
-  const gchar *req_name = NULL;
-  gboolean templ_found = FALSE;
-  GList *list;
-  gint n;
-  const gchar *data;
-  gchar *str, *endptr;
-
-  g_return_val_if_fail (element != NULL, NULL);
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-  g_return_val_if_fail (name != NULL, NULL);
-
-
-  if (strstr (name, "%")) {
-    templ = gst_element_get_padtemplate_by_name (element, name);
-    req_name = NULL;
-    if (templ)
-      templ_found = TRUE;
-  } else {
-    list = gst_element_get_padtemplate_list(element);
-    while (!templ_found && list) {
-      templ = (GstPadTemplate*) list->data;
-      if (templ->presence == GST_PAD_REQUEST) {
-        /* we know that %s and %d are the only possibilities because of sanity
-           checks in gst_padtemplate_new */
-        if ((str = strchr (templ->name_template, '%')) &&
-            strncmp (templ->name_template, name, str - templ->name_template) == 0 &&
-            strlen (name) > str - templ->name_template) {
-          data = name + (str - templ->name_template);
-          if (*(str+1) == 'd') {
-            /* it's an int */
-            n = (gint) strtol (data, &endptr, 10);
-            if (endptr == NULL) {
-              templ_found = TRUE;
-              req_name = name;
-              break;
-            }
-          } else {
-            /* it's a string */
-            templ_found = TRUE;
-            req_name = name;
-            break;
-          }
-        }
-      }
-      list = list->next;
-    }
-  }
-  
-  if (!templ_found)
-      return NULL;
-  
-  pad = gst_element_request_pad (element, templ, req_name);
-  
-  return pad;
-}
 
 /**
  * gst_element_get_compatible_pad_filtered:
@@ -860,7 +879,7 @@ gst_element_get_compatible_pad (GstElement *element, GstPad *pad)
 }
 
 /**
- * gst_element_connect_elements_filtered:
+ * gst_element_connect_filtered:
  * @src: the element containing source pad
  * @dest: the element containing destination pad
  * @filtercaps: the caps to use as filter
@@ -875,7 +894,7 @@ gst_element_get_compatible_pad (GstElement *element, GstPad *pad)
  * Returns: TRUE if the elements could be connected.
  */
 gboolean
-gst_element_connect_elements_filtered (GstElement *src, GstElement *dest, 
+gst_element_connect_filtered (GstElement *src, GstElement *dest, 
 			               GstCaps *filtercaps)
 {
   GList *srcpads, *destpads, *srctempls, *desttempls, *l;
@@ -936,8 +955,8 @@ gst_element_connect_elements_filtered (GstElement *src, GstElement *dest,
           if (desttempl->presence == GST_PAD_REQUEST && desttempl->direction != srctempl->direction) {
             if (gst_caps_check_compatibility (gst_padtemplate_get_caps (srctempl),
                                               gst_padtemplate_get_caps (desttempl))) {
-              srcpad = gst_element_request_pad_by_name (src, srctempl->name_template);
-              destpad = gst_element_request_pad_by_name (dest, desttempl->name_template);
+              srcpad = gst_element_get_request_pad (src, srctempl->name_template);
+              destpad = gst_element_get_request_pad (dest, desttempl->name_template);
               if (gst_pad_connect_filtered (srcpad, destpad, filtercaps)) {
                 GST_DEBUG (GST_CAT_ELEMENT_PADS, "connected pad %s:%s to pad %s:%s",
                            GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
@@ -957,19 +976,17 @@ gst_element_connect_elements_filtered (GstElement *src, GstElement *dest,
 }
 
 /**
- * gst_element_connect_elements_many:
+ * gst_element_connect_many:
  * @element_1: the first element in the connection chain
  * @element_2: the second element in the connection chain
  * @...: NULL-terminated list of elements to connect in order
  * 
- * Chain together a series of elements. Uses #gst_element_connect_elements.
+ * Chain together a series of elements. Uses #gst_element_connect.
  *
  * Returns: TRUE on success, FALSE otherwise.
  */
-/* API FIXME: this should be called gst_element_connect_many, and connect_elements
- * should just be connect */
 gboolean
-gst_element_connect_elements_many (GstElement *element_1, GstElement *element_2, ...)
+gst_element_connect_many (GstElement *element_1, GstElement *element_2, ...)
 {
   va_list args;
 
@@ -979,7 +996,7 @@ gst_element_connect_elements_many (GstElement *element_1, GstElement *element_2,
   va_start (args, element_2);
 
   while (element_2) {
-    if (!gst_element_connect_elements (element_1, element_2))
+    if (!gst_element_connect (element_1, element_2))
       return FALSE;
     
     element_1 = element_2;
@@ -992,7 +1009,7 @@ gst_element_connect_elements_many (GstElement *element_1, GstElement *element_2,
 }
 
 /**
- * gst_element_connect_elements:
+ * gst_element_connect:
  * @src: element containing source pad
  * @dest: element containing destination pad
  *
@@ -1006,13 +1023,13 @@ gst_element_connect_elements_many (GstElement *element_1, GstElement *element_2,
  * Returns: TRUE if the elements could be connected.
  */
 gboolean
-gst_element_connect_elements (GstElement *src, GstElement *dest)
+gst_element_connect (GstElement *src, GstElement *dest)
 {
-  return gst_element_connect_elements_filtered (src, dest, NULL);
+  return gst_element_connect_filtered (src, dest, NULL);
 }
 
 /**
- * gst_element_connect_filtered:
+ * gst_element_connect_pads_filtered:
  * @src: element containing source pad
  * @srcpadname: name of pad in source element
  * @dest: element containing destination pad
@@ -1027,17 +1044,17 @@ gst_element_connect_elements (GstElement *src, GstElement *dest)
  * Returns: TRUE if the pads could be connected.
  */
 gboolean
-gst_element_connect_filtered (GstElement *src, const gchar *srcpadname,
-                              GstElement *dest, const gchar *destpadname, 
-			      GstCaps *filtercaps)
+gst_element_connect_pads_filtered (GstElement *src, const gchar *srcpadname,
+                                   GstElement *dest, const gchar *destpadname, 
+                                   GstCaps *filtercaps)
 {
   GstPad *srcpad,*destpad;
 
   g_return_val_if_fail (src != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_ELEMENT(src), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (src), FALSE);
   g_return_val_if_fail (srcpadname != NULL, FALSE);
   g_return_val_if_fail (dest != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_ELEMENT(dest), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (dest), FALSE);
   g_return_val_if_fail (destpadname != NULL, FALSE);
 
   /* obtain the pads requested */
@@ -1057,7 +1074,7 @@ gst_element_connect_filtered (GstElement *src, const gchar *srcpadname,
 }
 
 /**
- * gst_element_connect:
+ * gst_element_connect_pads:
  * @src: element containing source pad
  * @srcpadname: name of pad in source element
  * @dest: element containing destination pad
@@ -1071,14 +1088,14 @@ gst_element_connect_filtered (GstElement *src, const gchar *srcpadname,
  * Returns: TRUE if the pads could be connected.
  */
 gboolean
-gst_element_connect (GstElement *src, const gchar *srcpadname,
-                     GstElement *dest, const gchar *destpadname)
+gst_element_connect_pads (GstElement *src, const gchar *srcpadname,
+                          GstElement *dest, const gchar *destpadname)
 {
-  return gst_element_connect_filtered (src, srcpadname, dest, destpadname, NULL);
+  return gst_element_connect_pads_filtered (src, srcpadname, dest, destpadname, NULL);
 }
 
 /**
- * gst_element_disconnect:
+ * gst_element_disconnect_pads:
  * @src: element containing source pad
  * @srcpadname: name of pad in source element
  * @dest: element containing destination pad
@@ -1087,8 +1104,8 @@ gst_element_connect (GstElement *src, const gchar *srcpadname,
  * Disconnect the two named pads of the source and destination elements.
  */
 void
-gst_element_disconnect (GstElement *src, const gchar *srcpadname,
-                        GstElement *dest, const gchar *destpadname)
+gst_element_disconnect_pads (GstElement *src, const gchar *srcpadname,
+                             GstElement *dest, const gchar *destpadname)
 {
   GstPad *srcpad,*destpad;
 
@@ -1116,14 +1133,42 @@ gst_element_disconnect (GstElement *src, const gchar *srcpadname,
 }
 
 /**
- * gst_element_disconnect_elements:
+ * gst_element_disconnect_many:
+ * @element_1: the first element in the connection chain
+ * @element_2: the second element in the connection chain
+ * @...: NULL-terminated list of elements to disconnect in order
+ * 
+ * Disconnect a series of elements. Uses #gst_element_disconnect.
+ */
+void
+gst_element_disconnect_many (GstElement *element_1, GstElement *element_2, ...)
+{
+  va_list args;
+
+  g_return_if_fail (element_1 != NULL && element_2 != NULL);
+  g_return_if_fail (GST_IS_ELEMENT (element_1) && GST_IS_ELEMENT (element_2));
+
+  va_start (args, element_2);
+
+  while (element_2) {
+    gst_element_disconnect (element_1, element_2);
+    
+    element_1 = element_2;
+    element_2 = va_arg (args, GstElement*);
+  }
+
+  va_end (args);
+}
+
+/**
+ * gst_element_disconnect:
  * @src: source element
  * @dest: sink element
  *
  * Disconnect all pads connecting the two elements in the direction src -> dest.
  */
 void
-gst_element_disconnect_elements (GstElement *src, GstElement *dest)
+gst_element_disconnect (GstElement *src, GstElement *dest)
 {
   GList *srcpads;
   GstPad *pad;
@@ -1157,6 +1202,7 @@ gst_element_error_func (GstElement* element, GstElement *source, gchar *errormsg
     gst_object_unref (GST_OBJECT (element));
   }
 }
+
 /**
  * gst_element_error:
  * @element: Element with the error
@@ -1226,6 +1272,7 @@ gst_element_wait_state_change (GstElement *element)
   g_cond_wait (element->state_cond, element->state_mutex);
   g_mutex_unlock (element->state_mutex);
 }
+
 /**
  * gst_element_set_state:
  * @element: element to change state of

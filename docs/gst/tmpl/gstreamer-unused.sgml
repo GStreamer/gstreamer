@@ -58,6 +58,27 @@ audioraw
 GObject
 
 
+<!-- ##### SECTION ./tmpl/gstaggregator.sgml:Long_Description ##### -->
+<para>
+The aggregator is mainly used for testing purposes. It has several
+methods to request buffers from its pads.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstaggregator.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstaggregator.sgml:Short_Description ##### -->
+Combine buffers.
+
+
+<!-- ##### SECTION ./tmpl/gstaggregator.sgml:Title ##### -->
+GstAggregator
+
+
 <!-- ##### SECTION ./tmpl/gstasyncdisksrc.sgml:Long_Description ##### -->
 <para>
 Reads data from a file. You can seek to a specific location by setting
@@ -157,6 +178,26 @@ Generic connection between elements.
 GstConnection
 
 
+<!-- ##### SECTION ./tmpl/gstdisksink.sgml:Long_Description ##### -->
+<para>
+The disksink write to a file. The filename can be given as an argument.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstdisksink.sgml:See_Also ##### -->
+<para>
+#GstFdSink
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstdisksink.sgml:Short_Description ##### -->
+Write to a file
+
+
+<!-- ##### SECTION ./tmpl/gstdisksink.sgml:Title ##### -->
+GstDiskSink
+
+
 <!-- ##### SECTION ./tmpl/gstdisksrc.sgml:Long_Description ##### -->
 <para>
 Asynchonously read buffers from a file. 
@@ -196,6 +237,129 @@ GstDiskSrc
 
 <!-- ##### SECTION ./tmpl/gstesdsink.sgml:Title ##### -->
 GstEsdSink
+
+
+<!-- ##### SECTION ./tmpl/gstextratypes.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstextratypes.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstextratypes.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstextratypes.sgml:Title ##### -->
+GstExtraTypes
+
+
+<!-- ##### SECTION ./tmpl/gstfakesink.sgml:Long_Description ##### -->
+<para>
+Take a buffer and gst_buffer_unref() it. This element does nothing
+with the buffer. (fakesink)
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstfakesink.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstfakesink.sgml:Short_Description ##### -->
+Sources a buffer without doing anything with it. (fakesink)
+
+
+<!-- ##### SECTION ./tmpl/gstfakesink.sgml:Title ##### -->
+GstFakeSink
+
+
+<!-- ##### SECTION ./tmpl/gstfakesrc.sgml:Long_Description ##### -->
+<para>
+The <classname>GstFakeSrc</classname> generates empty buffers. (fakesrc)
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstfakesrc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstfakesrc.sgml:Short_Description ##### -->
+Generate empty buffers. (fakesrc)
+
+
+<!-- ##### SECTION ./tmpl/gstfakesrc.sgml:Title ##### -->
+GstFakeSrc
+
+
+<!-- ##### SECTION ./tmpl/gstfdsink.sgml:Long_Description ##### -->
+<para>
+Write data to a file descriptor.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstfdsink.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstfdsink.sgml:Short_Description ##### -->
+Write data to a file descriptor. (fdsink)
+
+
+<!-- ##### SECTION ./tmpl/gstfdsink.sgml:Title ##### -->
+GstFdSink
+
+
+<!-- ##### SECTION ./tmpl/gstfdsrc.sgml:Long_Description ##### -->
+<para>
+Read buffers from a file descriptor.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstfdsrc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstfdsrc.sgml:Short_Description ##### -->
+Read buffers from a file descriptor. (fdsrc)
+
+
+<!-- ##### SECTION ./tmpl/gstfdsrc.sgml:Title ##### -->
+GstFdSrc
+
+
+<!-- ##### SECTION ./tmpl/gstfilesrc.sgml:Long_Description ##### -->
+<para>
+FileSrc is used to read buffers from a file. It efficiently uses mmap
+and subbuffers.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstfilesrc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstfilesrc.sgml:Short_Description ##### -->
+Read data from a file
+
+
+<!-- ##### SECTION ./tmpl/gstfilesrc.sgml:Title ##### -->
+GstFileSrc
 
 
 <!-- ##### SECTION ./tmpl/gstfilter.sgml:Long_Description ##### -->
@@ -259,6 +423,46 @@ Reads data from a URL. (httpsrc)
 
 <!-- ##### SECTION ./tmpl/gsthttpsrc.sgml:Title ##### -->
 GstHttpSrc
+
+
+<!-- ##### SECTION ./tmpl/gstidentity.sgml:Long_Description ##### -->
+<para>
+Pass data without modification.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstidentity.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstidentity.sgml:Short_Description ##### -->
+Pass data without modification. (identity)
+
+
+<!-- ##### SECTION ./tmpl/gstidentity.sgml:Title ##### -->
+GstIdentity
+
+
+<!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstmd5sink.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Title ##### -->
+GstMD5Sink
 
 
 <!-- ##### SECTION ./tmpl/gstmeta.sgml:Long_Description ##### -->
@@ -374,6 +578,78 @@ Provide context for buffers
 GstMeta
 
 
+<!-- ##### SECTION ./tmpl/gstmultidisksrc.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstmultidisksrc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstmultidisksrc.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstmultidisksrc.sgml:Title ##### -->
+GstMultiDiskSrc
+
+
+<!-- ##### SECTION ./tmpl/gstpipefilter.sgml:Long_Description ##### -->
+<para>
+A GstPipefilter pipes data to an external program and creates
+buffers from its output.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstpipefilter.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstpipefilter.sgml:Short_Description ##### -->
+A wrapper around every stdin/stdout capable program
+
+
+<!-- ##### SECTION ./tmpl/gstpipefilter.sgml:Title ##### -->
+GstPipefilter
+
+
+<!-- ##### SECTION ./tmpl/gstqueue.sgml:Long_Description ##### -->
+<para>
+Simple data queue. Data is queued till max_level buffers any subsequent buffers
+sent to this filter will block until free space becomes available in the buffer.
+The queue is typically used in conjunction with a thread.
+</para>
+<para>
+You can query how many buffers are queued with the level argument.
+</para>
+<para>
+The default queue length is set to 10.
+</para>
+<para>
+The queue blocks by default.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstqueue.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstqueue.sgml:Short_Description ##### -->
+Simple asynchronous data queue.
+
+
+<!-- ##### SECTION ./tmpl/gstqueue.sgml:Title ##### -->
+GstQueue
+
+
 <!-- ##### SECTION ./tmpl/gstsinesrc.sgml:Long_Description ##### -->
 <para>
 Create a sine wave of a given frequency and volume.
@@ -436,6 +712,68 @@ The start point of a filter graph
 
 <!-- ##### SECTION ./tmpl/gstsrc.sgml:Title ##### -->
 GstSrc
+
+
+<!-- ##### SECTION ./tmpl/gststatistics.sgml:Long_Description ##### -->
+<para>
+The plugin doesn't alter the data but provides statistics about
+the data stream, such as buffers/bytes/events etc.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gststatistics.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gststatistics.sgml:Short_Description ##### -->
+Provide statistics about data that passes this plugin
+
+
+<!-- ##### SECTION ./tmpl/gststatistics.sgml:Title ##### -->
+GstStatistics
+
+
+<!-- ##### SECTION ./tmpl/gstsystemclock.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstsystemclock.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstsystemclock.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstsystemclock.sgml:Title ##### -->
+GstSystemClock
+
+
+<!-- ##### SECTION ./tmpl/gsttypefind.sgml:Long_Description ##### -->
+<para>
+This element can be added to the pipeline and will notify the listener of
+the detected mime type of the stream. It is used in autoplugging.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gsttypefind.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gsttypefind.sgml:Short_Description ##### -->
+Detect the mime type of a media stream
+
+
+<!-- ##### SECTION ./tmpl/gsttypefind.sgml:Title ##### -->
+GstTypeFind
 
 
 <!-- ##### SECTION ./tmpl/plugin.sgml:Long_Description ##### -->
@@ -1889,6 +2227,12 @@ This macro unsets the given state on the element.
 </para>
 
 
+<!-- ##### MACRO GST_TYPE_FILENAME ##### -->
+<para>
+A type that can be used to indicate a filename.
+</para>
+
+
 <!-- ##### MACRO GST_TYPE_FILTER ##### -->
 <para>
 
@@ -2378,6 +2722,40 @@ This macro unsets the given state on the element.
 
 @v: 
 
+<!-- ##### ARG GstAggregator:last-message ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstAggregator:num-pads ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstAggregator:sched ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstAggregator:silent ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM GstAggregatorSchedType ##### -->
+<para>
+
+</para>
+
+@AGGREGATOR_LOOP: 
+@AGGREGATOR_LOOP_PEEK: 
+@AGGREGATOR_LOOP_SELECT: 
+@AGGREGATOR_CHAIN: 
+
 <!-- ##### STRUCT GstAsyncDiskSrc ##### -->
 <para>
 
@@ -2586,7 +2964,26 @@ the pool.
 </para>
 
 
+<!-- ##### SIGNAL GstDiskSink::handoff ##### -->
+<para>
+Is emited after the buffer has been written to the disk.
+</para>
+
+@gstdisksink: the object which received the signal.
+
 <!-- ##### ARG GstDiskSink:closed ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstDiskSink:location ##### -->
+<para>
+The filename to write to.
+</para>
+
+
+<!-- ##### ARG GstDiskSink:maxfilesize ##### -->
 <para>
 
 </para>
@@ -2716,9 +3113,47 @@ GstElementDetails struct for the element.
 </para>
 
 
+<!-- ##### SIGNAL GstFakeSink::handoff ##### -->
+<para>
+This signal is emmitted when a buffer is handled.
+</para>
+
+@gstfakesink: the object which received the signal.
+@arg1: The buffer that is received.
+
+<!-- ##### ARG GstFakeSink:dump ##### -->
+<para>
+Dump the contents of the buffer
+</para>
+
+
+<!-- ##### ARG GstFakeSink:last-message ##### -->
+<para>
+The last message this plugin emmited.
+</para>
+
+
+<!-- ##### ARG GstFakeSink:num-sinks ##### -->
+<para>
+The number of sink pads.
+</para>
+
+
 <!-- ##### ARG GstFakeSink:num-sources ##### -->
 <para>
 
+</para>
+
+
+<!-- ##### ARG GstFakeSink:silent ##### -->
+<para>
+Indicates the plugin should not emit messages.
+</para>
+
+
+<!-- ##### ARG GstFakeSink:sync ##### -->
+<para>
+Sync on the clock
 </para>
 
 
@@ -2734,7 +3169,105 @@ GstElementDetails struct for the element.
 </para>
 
 
+<!-- ##### SIGNAL GstFakeSrc::handoff ##### -->
+<para>
+
+</para>
+
+@gstfakesrc: the object which received the signal.
+@arg1: 
+
+<!-- ##### ARG GstFakeSrc:data ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFakeSrc:dump ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFakeSrc:eos ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFakeSrc:filltype ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFakeSrc:last-message ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFakeSrc:loop-based ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFakeSrc:num-buffers ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFakeSrc:num-sources ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFakeSrc:output ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFakeSrc:parentsize ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### ARG GstFakeSrc:patern ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFakeSrc:pattern ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFakeSrc:silent ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFakeSrc:sizemax ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFakeSrc:sizemin ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFakeSrc:sizetype ##### -->
 <para>
 
 </para>
@@ -2752,6 +3285,12 @@ GstElementDetails struct for the element.
 </para>
 
 
+<!-- ##### ARG GstFdSink:fd ##### -->
+<para>
+The filedescriptor to write to.
+</para>
+
+
 <!-- ##### STRUCT GstFdSinkClass ##### -->
 <para>
 
@@ -2764,9 +3303,69 @@ GstElementDetails struct for the element.
 </para>
 
 
+<!-- ##### ARG GstFdSrc:bytesperread ##### -->
+<para>
+The number of bytes per read.
+</para>
+
+
+<!-- ##### ARG GstFdSrc:location ##### -->
+<para>
+The filedescriptor to read from. Pass the argument as a char* (???)
+</para>
+
+
+<!-- ##### ARG GstFdSrc:offset ##### -->
+<para>
+Get the current offset in the file.
+</para>
+
+
 <!-- ##### STRUCT GstFdSrcClass ##### -->
 <para>
 
+</para>
+
+
+<!-- ##### ARG GstFileSrc:blocksize ##### -->
+<para>
+The size of the buffers to pass to the peer element.
+</para>
+
+
+<!-- ##### ARG GstFileSrc:fd ##### -->
+<para>
+The file descriptor.
+</para>
+
+
+<!-- ##### ARG GstFileSrc:filesize ##### -->
+<para>
+The filesize.
+</para>
+
+
+<!-- ##### ARG GstFileSrc:location ##### -->
+<para>
+The filename 
+</para>
+
+
+<!-- ##### ARG GstFileSrc:mmapsize ##### -->
+<para>
+The size of the mmapped area.
+</para>
+
+
+<!-- ##### ARG GstFileSrc:offset ##### -->
+<para>
+The offset in the file that is currently being read.
+</para>
+
+
+<!-- ##### ARG GstFileSrc:touch ##### -->
+<para>
+Indicates the mmapped area should be touched to bring it into memory.
 </para>
 
 
@@ -2813,7 +3412,63 @@ Specify the location of the file. The location must be a fully qualified URL.
 </para>
 
 
+<!-- ##### SIGNAL GstIdentity::handoff ##### -->
+<para>
+
+</para>
+
+@gstidentity: the object which received the signal.
+@arg1: 
+
 <!-- ##### ARG GstIdentity:control ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstIdentity:drop-probability ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstIdentity:dump ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstIdentity:duplicate ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstIdentity:error-after ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstIdentity:last-message ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstIdentity:loop-based ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstIdentity:silent ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstIdentity:sleep-time ##### -->
 <para>
 
 </para>
@@ -2841,6 +3496,14 @@ Flags indicating properties about the meta data.
 </para>
 
 @GST_META_FREEABLE: the meta data can be freed
+
+<!-- ##### ENUM GstMultiDiskSrcFlags ##### -->
+<para>
+
+</para>
+
+@GST_MULTIDISKSRC_OPEN: 
+@GST_MULTIDISKSRC_FLAG_LAST: 
 
 <!-- ##### STRUCT GstObjectClass ##### -->
 <para>
@@ -2936,6 +3599,23 @@ The function that will be called when a QoS message is sent.
 @pad: the pad that sent the QoS message
 @qos_message: the message
 
+<!-- ##### ENUM GstParseErrors ##### -->
+<para>
+
+</para>
+
+@GST_PARSE_ERROR_SYNTAX: 
+@GST_PARSE_ERROR_CREATING_ELEMENT: 
+@GST_PARSE_ERROR_NOSUCH_ELEMENT: 
+@GST_PARSE_ERROR_INTERNAL: 
+@GST_PARSE_ERROR_CONNECT: 
+
+<!-- ##### ARG GstPipefilter:command ##### -->
+<para>
+Sets the command to be executed.
+</para>
+
+
 <!-- ##### STRUCT GstPipelineClass ##### -->
 <para>
 
@@ -2987,6 +3667,31 @@ The function that will be called when a QoS message is sent.
 <!-- ##### ARG GstQueue:block ##### -->
 <para>
 Specify wether the queue blocks or not. 
+</para>
+
+
+<!-- ##### ARG GstQueue:leaky ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstQueue:level ##### -->
+<para>
+Get the number of buffers in the queue.
+</para>
+
+
+<!-- ##### ARG GstQueue:max-level ##### -->
+<para>
+Specify the maximum number of buffers in the queue before the queue
+blocks.
+</para>
+
+
+<!-- ##### ARG GstQueue:may-deadlock ##### -->
+<para>
+
 </para>
 
 
@@ -3117,7 +3822,93 @@ Flags for the GstSrc element
 @GST_SRC_ASYNC: Indicates that this src is asynchronous
 @GST_SRC_FLAG_LAST: subclasses can use this to number their flags
 
+<!-- ##### SIGNAL GstStatistics::update ##### -->
+<para>
+
+</para>
+
+@gststatistics: the object which received the signal.
+
+<!-- ##### ARG GstStatistics:buffer-update-freq ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstStatistics:buffers ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstStatistics:bytes ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstStatistics:bytes-update-freq ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstStatistics:event-update-freq ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstStatistics:events ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstStatistics:silent ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstStatistics:update ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstStatistics:update-on-eos ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstSystemClock ##### -->
+<para>
+
+</para>
+
+@clock: 
+
 <!-- ##### STRUCT GstTee ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstTee:last-message ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstTee:num-pads ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstTee:silent ##### -->
 <para>
 
 </para>
@@ -3162,6 +3953,20 @@ TRUE if the thread should be created.
 @sequence: 
 @data: 
 @message: 
+
+<!-- ##### SIGNAL GstTypeFind::have-type ##### -->
+<para>
+The signal to indicate the mime type was detected.
+</para>
+
+@gsttypefind: the object which received the signal.
+@arg1: The mime type that was detected
+
+<!-- ##### ARG GstTypeFind:caps ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### ARG GstTypeFind:type ##### -->
 <para>
@@ -4460,6 +5265,43 @@ must be defined to activate the tracing functionality.
 @state: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_element_connect_elements ##### -->
+<para>
+
+</para>
+
+@src: 
+@dest: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_connect_elements_filtered ##### -->
+<para>
+
+</para>
+
+@src: 
+@dest: 
+@filtercaps: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_connect_elements_many ##### -->
+<para>
+
+</para>
+
+@element_1: 
+@element_2: 
+@Varargs: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_disconnect_elements ##### -->
+<para>
+
+</para>
+
+@src: 
+@dest: 
+
 <!-- ##### FUNCTION gst_element_get_type ##### -->
 <para>
 
@@ -4510,6 +5352,15 @@ must be defined to activate the tracing functionality.
 
 @Returns: 
 
+<!-- ##### FUNCTION gst_element_request_compatible_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@templ: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_element_request_pad ##### -->
 <para>
 
@@ -4519,6 +5370,15 @@ must be defined to activate the tracing functionality.
 @templ: 
 @Returns: 
 @temp: 
+
+<!-- ##### FUNCTION gst_element_request_pad_by_name ##### -->
+<para>
+
+</para>
+
+@element: 
+@name: 
+@Returns: 
 
 <!-- ##### FUNCTION gst_element_restore_thyself ##### -->
 <para>
@@ -5508,6 +6368,13 @@ Call the EOS function of the pad
 </para>
 
 @src: 
+
+<!-- ##### FUNCTION gst_system_clock_obtain ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gst_tee_chain ##### -->
 <para>

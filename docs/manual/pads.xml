@@ -1,7 +1,7 @@
 <chapter id="cha-pads">
   <title>GstPad</title>
   <para>
-    As we have seen in the previous chapter (GstElement), the pads are the elements
+    As we have seen in the previous chapter (GstElement), the pads are the element's
     connections with the outside world. 
   </para>
   <para>
@@ -44,7 +44,7 @@
       <title>Useful pad functions</title>
       <para> 
         You can get the name of a pad with gst_pad_get_name () and set its name with
-	get_pad_set_name();
+	get_pad_set_name().
       </para> 
       <para> 
         gst_pad_get_direction (GstPad *pad) can be used to query if the pad is a sink 
@@ -53,8 +53,8 @@
       </para> 
       <para> 
         You can get the parent of the pad, this is the element that this pad belongs to,
-	with get_pad_set_parent(GstPad *pad). This function will return a pointer to a
-	GstObject.
+	with get_pad_get_parent(GstPad *pad). This function will return a pointer to a
+	GstElement.
       </para> 
     </sect2>
     <sect2 id="sec-pads-dynamic">
@@ -63,10 +63,10 @@
         Some elements might not have their pads when they are created. This can, for 
 	example, happen with an MPEG2 system demuxer. The demuxer will create its 
 	pads at runtime when it detects the different elementary streams in the MPEG2
-	system stream. 
+	system stream.
       </para> 
       <para> 
-        Running <application>gstreamer-inspect mpeg2parse</application> will show that
+        Running <application>gst-inspect mpegdemux</application> will show that
 	the element has only one pad: a sink pad called 'sink'. The other pads are 
 	"dormant" as you can see in the padtemplates from the 'Exists: Sometimes'
 	property. Depending on the type of MPEG2 file you play, the pads are created. We
@@ -104,7 +104,7 @@ main(int argc, char *argv[])
   // create pipeline and do something usefull
   ...
   
-  mpeg2parser = gst_elementfactory_make ("mpeg2parse", "mpeg2parse");
+  mpeg2parser = gst_elementfactory_make ("mpegdemux", "mpegdemux");
   g_signal_connect (G_OBJECT (mpeg2parser), "new_pad", pad_connect_func, pipeline);  
   ...
 
@@ -141,19 +141,19 @@ main(int argc, char *argv[])
     ...
   element = gst_elementfactory_make ("tee", "element");
 
-  pad = gst_element_request_pad_by_name (element, "src%d");
+  pad = gst_element_get_request_pad (element, "src%d");
   g_print ("new pad %s\n", gst_pad_get_name (pad));
     ...
       </programlisting>
       <para> 
-        The gst_element_request_pad_by_name method can be used to get a pad
+        The gst_element_get_request_pad method can be used to get a pad
 	from the element based on the name_template of the padtemplate.
       </para> 
       <para> 
         It is also possible to request a pad that is compatible with another
 	padtemplate. This is very usefull if you want to connect an element to
 	a muxer element and you need to request a pad that is compatible. The
-	gst_element_request_compatible_pad is used to request a compatible pad, as
+	gst_element_get_compatible_pad is used to request a compatible pad, as
 	is shown in the next example.
       </para> 
       <programlisting>
@@ -162,11 +162,11 @@ main(int argc, char *argv[])
   GstPad *pad;
     ...
   element = gst_elementfactory_make ("tee", "element");
-  mp3parse = gst_elementfactory_make ("mp3parse", "mp3parse");
+  mad = gst_elementfactory_make ("mad", "mad");
 
-  templ = gst_element_get_padtemplate_by_name (mp3parse, "sink");
+  templ = gst_element_get_padtemplate_by_name (mad, "sink");
 
-  pad = gst_element_request_compatible_pad (element, templ);
+  pad = gst_element_get_compatible_pad (element, templ);
   g_print ("new pad %s\n", gst_pad_get_name (pad));
   ...
       </programlisting>
@@ -181,7 +181,7 @@ main(int argc, char *argv[])
     <para> 
       We will briefly describe what capabilities are, enough for you to get a basic understanding
       of the concepts. You will find more information on how to create capabilities in the 
-      filter-writer-guide.
+      Plugin Writer's Guide.
     </para>
 
     <sect2 id="sec-pads-caps">
@@ -207,8 +207,8 @@ struct _GstCaps {
 };
       </programlisting>
       <para> 
-        Below is a dump of the capabilities of the element mpg123, as shown by 
-	<command>gstreamer-inspect</command>.    
+        Below is a dump of the capabilities of the element mad, as shown by 
+	<command>gst-inspect</command>.    
 	You can see two pads: sink and src. Both pads have capability information attached to them.
       </para>
       <para> 
@@ -221,26 +221,25 @@ struct _GstCaps {
       </para>
       <programlisting>
 Pads:
-  SINK: 'sink'
-    ....
-      Capabilities:
-      'mpg123_sink':
-       MIME type: 'audio/mp3':
-        layer: Integer range: 1 - 3
-        bitrate: Integer range: 8 - 320
-        framed: Boolean: TRUE
-
-  SRC: 'src'
-    ....
+  SINK template: 'sink'
+    Availability: Always
     Capabilities:
-    'mpg123_src':
-     MIME type: 'audio/raw':
-      format: Integer: 16
-      depth: Integer: 16
-      rate: Integer range: 11025 - 48000
-      channels: List:
-        Integer: 1
-        Integer: 2
+      'mad_sink':
+        MIME type: 'audio/mp3':
+
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      'mad_src':
+        MIME type: 'audio/raw':
+        format: String: int
+        endianness: Integer: 1234
+        width: Integer: 16
+        depth: Integer: 16
+        channels: Integer range: 1 - 2
+        law: Integer: 0
+        signed: Boolean: TRUE
+        rate: Integer range: 11025 - 48000
       </programlisting>
     </sect2>
     <sect2 id="sec-pads-props">
@@ -260,7 +259,7 @@ Pads:
         <listitem>
           <para>
             An integer range value. The property denotes a range of possible values. In the case
-	    of the mpg123 element: the src pad has a property rate that can go from 11025 to 48000.
+	    of the mad element: the src pad has a property rate that can go from 11025 to 48000.
           </para>
         </listitem>
         <listitem>
@@ -349,7 +348,7 @@ Pads:
       </para>
       <para> 
         As we said, a capability has a name, a mime-type and some properties. The signature of the 
-	function to create a new <classname>GstCaps *</classname> structure is like:
+	function to create a new <classname>GstCaps</classname> structure is like:
     <programlisting>
 GstCaps*    gst_caps_new (const gchar *name, const gchar *mime, GstProps *props);
     </programlisting>

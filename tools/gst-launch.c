@@ -2,9 +2,6 @@
 #include <stdlib.h>
 #include <gst/gst.h>
 
-static int    launch_argc;
-static char **launch_argv;
-
 static guint64 iterations = 0;
 static guint64 sum = 0;
 static guint64 min = G_MAXINT;
@@ -134,44 +131,37 @@ main(int argc, char *argv[])
 {
 /* options */
   gboolean silent = FALSE;
+  gchar *savefile = NULL;
   struct poptOption options[] = {
-    {"silent",	's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,	&silent, 0, "do not output status information", NULL},
+    {"silent",	's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &silent,   0,
+     "do not output status information", NULL},
+    {"output",	'o',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &savefile, 0,
+     "save xml representation of pipeline to FILE and exit", "FILE"},
     POPT_TABLEEND
   };
 
   GstElement *pipeline;
   gchar **argvn;
-  gboolean save_pipeline = FALSE;
-  gboolean run_pipeline = TRUE;
-  gchar *savefile = "";
+  GError *error = NULL;
 
   free (malloc (8)); /* -lefence */
 
   gst_init_with_popt_table (&argc, &argv, options);
   
-  if (argc >= 3 && !strcmp(argv[1], "-o")) {
-    save_pipeline = TRUE;
-    run_pipeline = FALSE;
-    savefile = argv[2];
-    argv[2] = argv[0];
-    argv+=2;
-    argc-=2;
-  }
-
-  launch_argc = argc;
-  launch_argv = argv;
-
   /* make a null-terminated version of argv */
-  argvn = g_new0 (char *,argc);
+  argvn = g_new0 (char*, argc);
   memcpy (argvn, argv+1, sizeof (char*) * (argc-1));
   if (strstr (argv[0], "gst-xmllaunch")) {
-    pipeline = xmllaunch_parse_cmdline ((const gchar **) argvn);
+    pipeline = xmllaunch_parse_cmdline ((const gchar**)argvn);
   } else {
-    pipeline = (GstElement*) gst_parse_launchv ((const gchar **) argvn);
+    pipeline = (GstElement*) gst_parse_launchv ((const gchar**)argvn, &error);
   }
 
   if (!pipeline) {
-    fprintf(stderr, "ERROR: pipeline could not be constructed\n");
+    if (error)
+      fprintf(stderr, "ERROR: pipeline could not be constructed: %s\n", error->message);
+    else
+      fprintf(stderr, "ERROR: pipeline could not be constructed\n");
     exit(1);
   }
   
@@ -180,12 +170,12 @@ main(int argc, char *argv[])
   g_signal_connect (pipeline, "error", G_CALLBACK (error_callback), NULL);
   
 #ifndef GST_DISABLE_LOADSAVE
-  if (save_pipeline) {
+  if (savefile) {
     gst_xml_write_file (GST_ELEMENT (pipeline), fopen (savefile, "w"));
   }
 #endif
   
-  if (run_pipeline) {
+  if (!savefile) {
     gst_buffer_print_stats();
     fprintf(stderr,"RUNNING pipeline\n");
     if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS) {

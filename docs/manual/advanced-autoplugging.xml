@@ -21,28 +21,27 @@
     <programlisting>
   ...    
   /* now it's time to get the parser */
-  parse = gst_elementfactory_make ("mp3parse", "parse");
-  decoder = gst_elementfactory_make ("mpg123", "decoder");
+  decoder = gst_elementfactory_make ("mad", "decoder");
   ...
     </programlisting>
 
     <para>
       While this mechanism is quite effective it also has some big problems:
       The elements are created based on their name. Indeed, we create an 
-      element mpg123 by explicitly stating the mpg123 elements name.
-      Our little program therefore always uses the mpg123 decoder element
+      element mad by explicitly stating the mad element's name.
+      Our little program therefore always uses the mad decoder element
       to decode the MP3 audio stream, even if there are 3 other MP3 decoders
       in the system. We will see how we can use a more general way to create 
       an MP3 decoder element.
     </para>
     <para>
-      We have to introduce the concept of MIME types  and capabilities 
+      We have to introduce the concept of MIME types and capabilities 
       added to the source and sink pads.
     </para>
   </sect1>
 
   <sect1>
-    <title>more on MIME Types</title>
+    <title>More on MIME Types</title>
     <para> 
       GStreamer uses MIME types to indentify the different types of data
       that can be handled by the elements. They are the high level
@@ -124,9 +123,9 @@
       a function that can be used to determine if a given buffer is of
       the given MIME type.
     </para>
-    <para> 
-      There is also an association between a MIME type and a file
-      extension. 
+    <para>
+      There is also an association between a MIME type and a file extension, but the use of typefind
+      functions (similar to file(1)) is preferred..
     </para>
     <para> 
       The type information is maintained in a list of 
@@ -202,86 +201,9 @@ struct _GstType {
         This function will return 0 if the extension was not known.
       </para> 
     </sect2>
-
-    <sect2>
-      <title>id to <classname>GstElementFactory</classname> conversion</title>
-      <para>
-        When we have obtained a given type id using one of the above methods,
-        we can obtain a list of all the elements that operate on this MIME
-        type or extension.
-      </para>
-      <para>
-        Obtain a list of all the elements that use this id as source with:
-      </para>
-      <programlisting>
-  GList *list;
-
-  list = gst_type_gst_srcs (id);
-      </programlisting>
-
-      <para>
-        Obtain a list of all the elements that use this id as sink with:
-      </para>
-      <programlisting>
-  GList *list;
-
-  list = gst_type_gst_sinks (id);
-      </programlisting>
-      <para>
-        When you have a list of elements, you can simply take the first
-	element of the list to obtain an appropriate element.
-      </para>
-      <note>
-        <para>
-	  As you can see, there might be a multitude of elements that
-	  are able to operate on audio/raw types. some might include:
-          <itemizedlist>
-            <listitem>
-              <para>
-                an MP3 audio encoder.
-              </para>
-            </listitem>
-            <listitem>
-              <para>
-                an audio sink.
-              </para>
-            </listitem>
-            <listitem>
-              <para>
-                an audio resampler.
-              </para>
-            </listitem>
-            <listitem>
-              <para>
-                a spectrum filter.
-              </para>
-            </listitem>
-          </itemizedlist>
-	  Depending on the application, you might want to use a different
-	  element. This is why GStreamer leaves that decision up to the
-	  application programmer.
-        </para>
-      </note>
-      
-    </sect2>
-
-    <sect2>
-      <title>id to id path detection</title>
-      <para>
-        You can obtain a <classname>GList</classname> of elements that
-	will transform the source id into the destination id.
-      </para>
-      <programlisting>
-  GList *list;
-
-  list = gst_type_gst_sink_to_src (sourceid, sinkid);
-      </programlisting>
-      <para>
-        This piece of code will give you the elements needed to construct
-	a path from sourceid to sinkid. This function is mainly used in
-	autoplugging the pipeline.
-      </para>
-    </sect2>
+    <para>
+      For more information, see <xref linkend="cha-autoplug"/>.
+    </para>
   </sect1>
 
   <sect1>

@@ -34,5 +34,29 @@ main (int argc, char *argv[])
     Use the GST_VERSION_MAJOR, GST_VERSION_MINOR and GST_VERSION_MICRO macros to
     get the <application>GStreamer</application> version you are building against.
   </para>
+  <sect1>
+    <title>The popt interface</title>
+    <para>
+      more info here
+    </para>
+    <programlisting>
+int
+main(int argc, char *argv[])
+{
+  gboolean silent = FALSE;
+  gchar *savefile = NULL;
+  struct poptOption options[] = {
+    {"silent",	's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &amp;silent,   0,
+     "do not output status information", NULL},
+    {"output",	'o',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &amp;savefile, 0,
+     "save xml representation of pipeline to FILE and exit", "FILE"},
+    POPT_TABLEEND
+  };
+
+  gst_init_with_popt_table (&amp;argc, &amp;argv, options);
+
+  ...
+    </programlisting>
+  </sect1>
 
 </chapter>

@@ -44,15 +44,14 @@ can be made with <option>{}</option>.
 
 </para>
 
-<!-- ##### ENUM GstParseErrors ##### -->
+<!-- ##### ENUM GstParseError ##### -->
 <para>
 
 </para>
 
 @GST_PARSE_ERROR_SYNTAX: 
-@GST_PARSE_ERROR_CREATING_ELEMENT: 
-@GST_PARSE_ERROR_NOSUCH_ELEMENT: 
-@GST_PARSE_ERROR_INTERNAL: 
+@GST_PARSE_ERROR_NO_SUCH_ELEMENT: 
+@GST_PARSE_ERROR_NO_SUCH_PROPERTY: 
 @GST_PARSE_ERROR_CONNECT: 
 
 <!-- ##### FUNCTION gst_parse_launch ##### -->
@@ -61,6 +60,7 @@ can be made with <option>{}</option>.
 </para>
 
 @pipeline_description: 
+@error: 
 @Returns: 
 <!-- # Unused Parameters # -->
 @cmdline: 
@@ -73,6 +73,7 @@ can be made with <option>{}</option>.
 </para>
 
 @argv: 
+@error: 
 @Returns: 
 
 

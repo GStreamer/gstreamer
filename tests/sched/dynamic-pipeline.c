@@ -25,7 +25,7 @@ int main (int argc, char *argv[])
     /* make the first pipeline */
     gst_bin_add (GST_BIN(pipe1), fakesrc);
     gst_bin_add (GST_BIN(pipe1), fakesink1);
-    gst_element_connect(fakesrc, "src", fakesink1, "sink");
+    gst_element_connect_pads (fakesrc, "src", fakesink1, "sink");
     
     /* initialize cothreads */
     gst_element_set_state(pipe1, GST_STATE_PLAYING);
@@ -33,7 +33,7 @@ int main (int argc, char *argv[])
     gst_element_set_state(pipe1, GST_STATE_READY);
     
     /* destroy the fakesink, but keep fakesrc (its state is GST_STATE_READY) */
-    gst_element_disconnect(fakesrc, "src", fakesink1, "sink");
+    gst_element_disconnect_pads (fakesrc, "src", fakesink1, "sink");
     gst_object_ref(GST_OBJECT(fakesrc));
     gst_bin_remove(GST_BIN(pipe1), fakesrc);
     gst_bin_remove(GST_BIN(pipe1), fakesink1);
@@ -44,7 +44,7 @@ int main (int argc, char *argv[])
     
     /* don't change the new pipeline's state, it should change on the bin_add */
     gst_bin_add (GST_BIN(pipe2), fakesrc);
-    gst_element_connect(fakesrc, "src", fakesink2, "sink");
+    gst_element_connect_pads (fakesrc, "src", fakesink2, "sink");
     
     /* show the pipeline state */
     gst_xml_write_file (GST_ELEMENT (pipe2), stdout);

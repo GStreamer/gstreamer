@@ -1,7 +1,7 @@
 <chapter id="cha-threads">
   <title>Threads</title>
   <para> 
-    GStreamer has support for multithreading throught the use of
+    GStreamer has support for multithreading through the use of
     the <classname>GstThread</classname> object. This object is in fact
     a special <classname>GstBin</classname> that will become a thread when started.
   </para>
@@ -13,39 +13,58 @@
   <programlisting>
   GstElement *my_thread;
 
-  // create the thread object
+  /* create the thread object */
   my_thread = gst_thread_new ("my_thread");
-  g_return_if_fail (audio_thread != NULL);
+  /* you could have used gst_elementfactory_make ("thread", "my_thread"); */
+  g_return_if_fail (my_thread != NULL);
 
-  // add some plugins
+  /* add some plugins */
   gst_bin_add (GST_BIN (my_thread), GST_ELEMENT (funky_src));
   gst_bin_add (GST_BIN (my_thread), GST_ELEMENT (cool_effect));
 
-  // connect the elements here...
+  /* connect the elements here... */
   ...
   
-  // start playing
+  /* start playing */
   gst_element_set_state (GST_ELEMENT (my_thread), GST_STATE_PLAYING);
 
   </programlisting>
 
-  <para> 
-    The above program will create a thread with two elements in it. As soon
-    as it is set to the PLAYING state, the thread will start to iterate.
+  <para>
+    The above program will create a thread with two elements in it. As soon as it is set to the
+    PLAYING state, the thread will start to iterate itself. You never need to manually iterate a
+    thread.
   </para>
   
-  <note> 
-    <para> 
-      A thread should normally contain a source element. Most often, the thread
-      is fed with data from a queue.
-    </para> 
-  </note>
-  
+  <sect2>
+    <title>Constraints placed on the pipeline by the GstThread</title>
+    <para>
+      Within the pipeline, everything is the same as in any other bin. The difference lies at the
+      thread boundary, at the connection between the thread and the outside world (containing bin).
+      Since GStreamer is fundamentally buffer-oriented rather than byte-oriented, the natural
+      solution to this problem is an element that can "buffer" the buffers between the threads, in a
+      thread-safe fashion. This element is the queue, described more fully in <xref
+      linkend="cha-queues"/>. It doesn't matter if the queue is placed in the containing bin or in
+      the thread itself, but it needs to be present on one side of the other to enable inter-thread
+      communication.
+    </para>
+  </sect2>
+  <sect2>
+    <title>When would you want to use a thread?</title>
+    <para>
+      If you are writing a GUI application, making the top-level bin a thread will make your GUI
+      more responsive. If it were a pipeline instead, it would have to be iterated by your
+      application's event loop, which increases the latency between events (say, keyboard presses)
+      and responses from the GUI. In addition, any slight hang in the GUI would delay iteration of
+      the pipeline, which (for example) could cause pops in the output of the sound card, if it is
+      an audio pipeline.
+    </para>
+  </sect2>
   <para> 
-    A thread will be visualised as below
+    A thread can be visualised as below
   </para>
   <figure float="1" id="sec-threads-img">
-    <title>a thread</title>
+    <title>A thread</title>
     <mediaobject>
       <imageobject>
         <imagedata fileref="images/thread.&magic;" format="&magic;" />

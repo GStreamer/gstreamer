@@ -2,8 +2,8 @@
   <title>Autoplugging</title>
   <para> 
     <application>GStreamer</application> provides an API to automatically
-    construct complex pipelinebased on source and destination capabilities.
-    This feature is very usefull if you want to convert type X to type Y but
+    construct complex pipelines based on source and destination capabilities.
+    This feature is very useful if you want to convert type X to type Y but
     don't care about the plugins needed to accomplish this task. The 
     autoplugger will consult the plugin repository, select and connect the
     elements needed for the conversion.
@@ -106,7 +106,7 @@
         <listitem>
           <para>
 	    Add the autoplugcache element to a bin and connect the sink pad to the src
-	    pad of an element with unkown caps.
+	    pad of an element with unknown caps.
           </para>
         </listitem>
         <listitem>
@@ -141,8 +141,52 @@
       </orderedlist>
     </para>
     <para>
-      In the next chapter we will create a new version of our helloworld exaple using the
+      In the next chapter we will create a new version of our helloworld example using the
       autoplugger, the autoplugcache and the typefind element.
     </para>
+  </sect1>
+  <sect1>
+    <title>Another approach to autoplugging</title>
+    <para>
+      The autoplug API is interesting, but often impractical. It is static; it cannot deal with
+      dynamic pipelines (insert ref here). What one often wants is just an element to stick into a
+      pipeline that will DWIM (ref). Enter the spider.
+    </para>
+    <sect2>
+      <title>The spider element</title>
+      <para>
+        The spider element is a generalized autoplugging element. At this point (April 2002), it's
+        the best we've got; it can be inserted anywhere within a pipeline to perform caps
+        conversion, if possible. Consider the following gst-launch line:
+        <programlisting>
+          $ gst-launch filesrc location=my.mp3 ! spider ! osssink
+        </programlisting>
+        The spider will detect the type of the stream, autoplug it to the osssink's caps, and play
+        the pipeline. It's neat.
+      </para>
+    </sect2>
+    <sect2>
+      <title>Spider features</title>
+      <para>
+        <orderedlist>
+          <listitem>
+            <para>
+              Automatically typefinds the incoming stream.
+            </para>
+          </listitem>
+         <listitem>
+            <para>
+              Has request pads on the src side. This means that it can autoplug one source stream
+              into many sink streams. For example, a MPEG1 system stream can have audio as well as
+              video; that pipeline would be represented in gst-launch syntax as
+              <programlisting>
+                $ gst-launch filesrc location=my.mpeg1 ! spider ! { queue ! osssink } spider.src_%d!
+                             { queue ! xvideosink }
+              </programlisting>
+            </para>
+          </listitem>
+        </orderedlist>
+      </para>
+    </sect2>
   </sect1>
 </chapter>

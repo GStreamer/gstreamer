@@ -146,7 +146,7 @@
     </note>
     <para> 
       The pipeline has to be in the PAUSED or NULL state if you want to insert or modify an element
-      in the pipeline. We will cover dynamic pipeline behaviour in ... <!-- fixme -->
+      in the pipeline. We will cover dynamic pipeline behaviour in <xref linkend="cha-dynamic"/>.
     </para>
   </sect1>
 

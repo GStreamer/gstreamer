@@ -23,11 +23,11 @@
     <para>
       GStreamer, however, is much more than just another media player. Its
       main advantages are that the pluggable components also make it possible
-      to write a full flegded video or audio editing application. 
+      to write a full fledged video or audio editing application. 
     </para> 
 
     <para>
-      The framework is based on plug-ins that will provide the various codec 
+      The framework is based on plugins that will provide the various codec 
       and other functionality. The plugins can be connected and arranged in
       a pipeline. This pipeline defines the flow of the data. Pipelines can 
       also be edited with a GUI editor and saved as XML so that pipeline

@@ -1,14 +1,11 @@
-#noinst_LTLIBRARIES = libgstparse.la
+noinst_LTLIBRARIES = libgstparse.la
 
-#libgstparse_la_SOURCES = parse.c grammar.c
+libgstparse_la_SOURCES = lex.yy.c grammar.tab.c
 
 BISON = bison -d -v
 
-noinst_PROGRAMS = grammar
-
-grammar_SOURCES = lex.yy.c grammar.tab.c
-grammar_CFLAGS = $(GLIB_CFLAGS)
-grammar_LDADD = $(GLIB_LIBS)
+libgstparse_la_CFLAGS = $(LIBGST_CFLAGS)
+libgstparse_la_LIBADD = $(LIBGST_LIBS)
 
 noinst_HEADERS = grammar.tab.h
 

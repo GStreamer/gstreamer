@@ -14,20 +14,3 @@ The disksink write to a file. The filename can be given as an argument.
 #GstFdSink
 </para>
 
-<!-- ##### SIGNAL GstDiskSink::handoff ##### -->
-<para>
-Is emited after the buffer has been written to the disk.
-</para>
-
-@gstdisksink: the object which received the signal.
-
-<!-- ##### ARG GstDiskSink:location ##### -->
-<para>
-The filename to write to.
-</para>
-
-<!-- ##### ARG GstDiskSink:maxfilesize ##### -->
-<para>
-
-</para>
-

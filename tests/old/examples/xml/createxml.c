@@ -19,7 +19,7 @@ object_saved (GstObject *object, xmlNodePtr parent, gpointer data)
 
 int main(int argc,char *argv[])
 {
-  GstElement *filesrc, *osssink, *queue, *queue2, *parse, *decode;
+  GstElement *filesrc, *osssink, *queue, *queue2, *decode;
   GstElement *pipeline;
   GstElement *thread, *thread2;
 

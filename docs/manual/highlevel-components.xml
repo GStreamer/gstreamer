@@ -1,5 +1,10 @@
 <chapter id="cha-components">
   <title>Components</title>
+
+  <para>
+    FIXME: This chapter is way out of date.
+  </para>
+
   <para> 
     <application>GStreamer</application> includes components that people can include
     in their programs.

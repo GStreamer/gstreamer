@@ -1,39 +1,42 @@
 %{
 #include <glib.h>
 #include <stdio.h>
+#include "../gstparse.h"
 #include "types.h"
+
 #define YYDEBUG 1
 #define YYERROR_VERBOSE 1
+#define YYPARSE_PARAM pgraph
+
+static int yylex (void *lvalp);
+static int yyerror (const char *s);
 %}
 
 %union {
-    double d;
-    gboolean b;
-    gint i;
     gchar *s;
+    GValue *v;
     graph_t *g;
     connection_t *c;
     property_t *p;
     element_t *e;
-    hash_t *h;
 }
 
-%token <s> IDENTIFIER STRING
-%token <d> FLOAT
-%token <i> INTEGER
-%token <b> BOOLEAN
+%token <s> IDENTIFIER
+%token <c> CONNECTION BCONNECTION
+%token <v> VALUE
 
 %type <s> id
-%type <h> qid
 %type <g> graph bin
 %type <e> element
 %type <p> property_value value
-%type <c> connection lconnection rconnection qconnection iconnection
+%type <c> connection rconnection
 
 %left '{' '}' '(' ')'
 %left '!' '='
-%left '+'
+%left ','
 %left '.'
+
+%pure_parser
 
 %start graph
 %%
@@ -41,33 +44,25 @@
 id:     IDENTIFIER
         ;
 
-qid:            id                   { $$ = g_new0 (hash_t, 1); $$->id2 = $1 }
-        |       id '.' id            { $$ = g_new0 (hash_t, 1); $$->id1 = $1; $$->id2 = $3; }
-        ;
-
-value:          STRING               { $$ = g_new0 (property_t, 1); 
-                                       $$->value_type = G_TYPE_STRING; $$->value.s = $1; }
-        |       FLOAT                { $$ = g_new0 (property_t, 1);
-                                       $$->value_type = G_TYPE_DOUBLE; $$->value.d = $1; }
-        |       INTEGER              { $$ = g_new0 (property_t, 1);
-                                       $$->value_type = G_TYPE_INT; $$->value.i = $1; }
-        |       BOOLEAN              { $$ = g_new0 (property_t, 1);
-                                       $$->value_type = G_TYPE_BOOLEAN; $$->value.b = $1; }
+value:          VALUE                { $$ = g_new0 (property_t, 1); $$->value = $1; }
         ;
 
 property_value: id '=' value         { $$ = $3; $$->name = $1; }
         ;
 
-element:        id                   { $$ = g_new0 (element_t, 1); $$->name = $1; }
+element:        id                   { static int i = 0; $$ = g_new0 (element_t, 1);
+                                       $$->type = $1; $$->index = ++i; }
         ;
 
-graph:          /* empty */          { $$ = g_new0 (graph_t, 1); }
-        |       graph element        { GList *l = $$->connections_pending;
-                                       $$ = $1;
+graph:          /* empty */          { $$ = g_new0 (graph_t, 1); *((graph_t**) pgraph) = $$; }
+        |       graph element        { GList *l;
+                                       $$ = $1; l = $$->connections_pending;
                                        $$->elements = g_list_append ($$->elements, $2);
                                        $$->current = $2;
+                                       if (!$$->first)
+                                           $$->first = $$->current;
                                        while (l) {
-                                           ((connection_t*) l->data)->sink = $$->current->name;
+                                           ((connection_t*) l->data)->sink_index = $$->current->index;
                                            l = g_list_next (l);
                                        }
                                        if ($$->connections_pending) {
@@ -75,11 +70,27 @@ graph:          /* empty */          { $$ = g_new0 (graph_t, 1); }
                                            $$->connections_pending = NULL;
                                        }
                                      }
-        |       graph bin            { $$ = $1; $$->bins = g_list_append ($$->bins, $2); }
-        |       graph connection     { $$ = $1; $$->connections = g_list_append ($$->connections, $2);
-                                       if (!$2->src)
-                                           $2->src = $$->current->name;
-                                       if (!$2->sink)
+        |       graph bin            { GList *l; $$ = $1; l = $$->connections_pending;
+                                       *((graph_t**) pgraph) = $$;
+                                       $$->bins = g_list_append ($$->bins, $2);
+                                       $2->parent = $$;
+                                       $$->current = $2->first;
+                                       if (!$$->first)
+                                           $$->first = $$->current;
+                                       while (l) {
+                                           ((connection_t*) l->data)->sink_index = $$->current->index;
+                                           l = g_list_next (l);
+                                       }
+                                       if ($$->connections_pending) {
+                                           g_list_free ($$->connections_pending);
+                                           $$->connections_pending = NULL;
+                                       }
+                                       $$->current = $2->current;
+                                     }
+        |       graph connection     { $$ = $1;
+                                       $$->connections = g_list_append ($$->connections, $2);
+                                       $2->src_index = $$->current->index;
+                                       if (!$2->sink_name)
                                            $$->connections_pending = g_list_append ($$->connections_pending, $2);
                                      }
         |       graph property_value { $$ = $1;
@@ -88,40 +99,19 @@ graph:          /* empty */          { $$ = g_new0 (graph_t, 1); }
                                      }
         ;
 
-bin:            '{' graph '}'        { $$ = $2; $$->current_bin_type = "gstthread"; }
+bin:            '{' graph '}'        { $$ = $2; $$->current_bin_type = "thread"; }
         |       id '.' '(' graph ')' { $$ = $4; $$->current_bin_type = $1; }
         ;
 
-connection:     lconnection
+connection:     CONNECTION
         |       rconnection
-        |       qconnection
-        |       iconnection
         ;
 
-lconnection:    qid '+' '!'          { $$ = g_new0 (connection_t, 1);
-                                       $$->src = $1->id1;
-                                       $$->src_pads = g_list_append ($$->src_pads, $1->id2);
-                                     }
-        ;
-
-rconnection:    '!' '+' qid          { $$ = g_new0 (connection_t, 1);
-                                       $$->sink = $3->id1;
-                                       $$->sink_pads = g_list_append ($$->src_pads, $3->id2);
-                                     }
-        ;
-
-qconnection:    qid '+' '!' '+' qid  { $$ = g_new0 (connection_t, 1);
-                                       $$->src = $1->id1;
-                                       $$->src_pads = g_list_append ($$->src_pads, $1->id2);
-                                       $$->sink = $5->id1;
-                                       $$->sink_pads = g_list_append ($$->sink_pads, $5->id2);
-                                     }
-        ;
-
-iconnection:   '!'                   { $$ = g_new0 (connection_t, 1); }
-        |       id '+' iconnection '+' id 
+rconnection:   '!'                   { $$ = g_new0 (connection_t, 1); }
+        |       BCONNECTION          { $$ = $1; }
+        |       id ',' rconnection ',' id 
                                      { $$ = $3;
-                                       $$->src_pads = g_list_append ($$->src_pads, $1);
+                                       $$->src_pads = g_list_prepend ($$->src_pads, $1);
                                        $$->sink_pads = g_list_append ($$->sink_pads, $5);
                                      }
         ;
@@ -129,25 +119,47 @@ iconnection:   '!'                   { $$ = g_new0 (connection_t, 1); }
 %%
 
 extern FILE *yyin;
+int _gst_parse_yylex (YYSTYPE *lvalp);
 
-int
+static int yylex (void *lvalp) {
+    return _gst_parse_yylex ((YYSTYPE*) lvalp);
+}
+
+static int
 yyerror (const char *s)
 {
   printf ("error: %s\n", s);
   return -1;
 }
 
-int main (int argc, char **argv)
+int yy_scan_string (char*);
+
+graph_t * _gst_parse_launch (const gchar *str, GError **error)
 {
-    ++argv, --argc;  /* skip over program name */
-    if ( argc > 0 )
-        yyin = fopen (argv[0], "r");
-    else
-        yyin = stdin;
+    graph_t *g = NULL;
+    gchar *dstr;
+    
+    g_return_val_if_fail (str != NULL, NULL);
+
+    dstr = g_strdup (str);
+    yy_scan_string (dstr);
 
 #ifdef DEBUG
     yydebug = 1;
 #endif
 
-    return yyparse();
+    if (yyparse (&g) != 0) {
+        g_set_error (error,
+                     GST_PARSE_ERROR,
+                     GST_PARSE_ERROR_SYNTAX,
+                     "Invalid syntax");
+        g_free (dstr);
+        return NULL;
+    }
+    
+    g_assert (g != NULL);
+
+    g_free (dstr);
+
+    return g;
 }

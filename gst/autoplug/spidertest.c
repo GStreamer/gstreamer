@@ -119,9 +119,9 @@ int main(int argc,char *argv[])
   gst_bin_add(GST_BIN(bin), videosink);
 
   /* connect objects */
-  if (!(gst_element_connect_elements(filesrc, decoder) &&
-	gst_element_connect_elements(decoder, osssink) &&
-	gst_element_connect_elements(decoder, videosink)))
+  if (!(gst_element_connect(filesrc, decoder) &&
+	gst_element_connect(decoder, osssink) &&
+	gst_element_connect(decoder, videosink)))
   {
     g_print ("the pipeline could not be connected\n");
     exit (-4);

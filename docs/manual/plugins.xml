@@ -20,6 +20,11 @@
         one or more autopluggers
       </para>
     </listitem>
+    <listitem>
+      <para>
+        exported symbols for use in other plugins
+      </para>
+    </listitem>
   </itemizedlist>
   <para> 
     The plugins have one simple method: plugin_init () where all the elementfactories are

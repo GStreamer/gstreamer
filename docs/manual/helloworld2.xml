@@ -1,8 +1,8 @@
 <chapter id="cha-hello2">
   <title>Your second application</title>
-  <para> 
-    In a previous chapter we created a first version of the helloworld
-    application. We then explained a better way of creating the elements
+  <para>
+    FIXME: delete this section, talk more about the spider. In a previous chapter we created a first
+    version of the helloworld application. We then explained a better way of creating the elements
     using factories identified by MIME types and the autoplugger.
   </para>
 
@@ -35,7 +35,7 @@ main (int argc, char *argv[])
   gst_init (&amp;argc, &amp;argv);
 
   if (argc != 2) {
-    g_print ("usage: %s &lt;filename&gt;\n", argv[0]);
+    g_print ("usage: &percnt;s &lt;filename&gt;\n", argv[0]);
     exit (-1);
   }
 

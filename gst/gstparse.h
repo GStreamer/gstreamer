@@ -25,22 +25,24 @@
 
 #include <gst/gstpipeline.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #ifndef GST_DISABLE_PARSE
 
-typedef enum {
-  GST_PARSE_ERROR_SYNTAX = -1, 
-  GST_PARSE_ERROR_CREATING_ELEMENT = -2,
-  GST_PARSE_ERROR_NOSUCH_ELEMENT = -3,
-  GST_PARSE_ERROR_INTERNAL = -4,
-  GST_PARSE_ERROR_CONNECT = -5,
-} GstParseErrors;
-  
-GstPipeline*	gst_parse_launch	(const gchar *pipeline_description);
-GstPipeline*	gst_parse_launchv	(const gchar **argv);
+GQuark gst_parse_error_quark (void);
+#define GST_PARSE_ERROR gst_parse_error_quark ()
+
+typedef enum
+{
+  GST_PARSE_ERROR_SYNTAX,
+  GST_PARSE_ERROR_NO_SUCH_ELEMENT,
+  GST_PARSE_ERROR_NO_SUCH_PROPERTY,
+  GST_PARSE_ERROR_CONNECT
+} GstParseError;
+
+
+GstBin*		gst_parse_launch	(const gchar *pipeline_description, GError **error);
+GstBin*		gst_parse_launchv	(const gchar **argv, GError **error);
 
 #else /* GST_DISABLE_PARSE */
 
@@ -48,8 +50,6 @@ GstPipeline*	gst_parse_launchv	(const gchar **argv);
 
 #endif /* GST_DISABLE_PARSE */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_PARSE_H__ */

@@ -45,16 +45,42 @@
 
   </programlisting>
    <para> 
-     A convenient shortcut for the above code is done with the gst_element_connect ()
+     A convenient shortcut for the above code is done with the gst_element_connect_pads ()
      function:
    </para>
   <programlisting>
 
  // connect them
- gst_element_connect (element1, "src", element2, "sink");
+ gst_element_connect_pads (element1, "src", element2, "sink");
    ....
  // and disconnect them
- gst_element_disconnect (element1, "src", element2, "sink");
+ gst_element_disconnect_pads (element1, "src", element2, "sink");
+
+  </programlisting>
+   <para>
+     An even more convenient shortcut for single-source, single-sink elements is the
+     gst_element_connect () function:
+   </para>
+  <programlisting>
+
+ // connect them
+ gst_element_connect (element1, element2);
+   ....
+ // and disconnect them
+ gst_element_disconnect (element1, element2);
+
+  </programlisting>
+   <para>
+     If you have more than one element to connection, the gst_element_connect_many () function takes
+     a NULL-terminated list of elements:
+   </para>
+  <programlisting>
+
+ // connect them
+ gst_element_connect_many (element1, element2, element3, element4, NULL);
+   ....
+ // and disconnect them
+ gst_element_disconnect_many (element1, element2, element3, element4, NULL);
 
   </programlisting>
    <para> 
@@ -70,7 +96,7 @@
    <title>Making filtered connections</title>
     <para>
       You can also force a specific media type on the connection by using gst_pad_connect_filtered ()
-      and gst_element_connect_filtered ().
+      and gst_element_connect_filtered (). FIXME link to caps documentation.
     </para>
   </sect1>
 

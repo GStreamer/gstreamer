@@ -34,6 +34,12 @@
        </listitem>
        <listitem>
          <para>
+          <option>--gst-mask-help</option> 
+	  Print out the meaning of gst-mask-* values.
+         </para>
+       </listitem>
+       <listitem>
+         <para>
           <option>--gst-plugin-spew</option> 
 	  Enable printout of errors while loading GST plugins.
          </para>
@@ -47,16 +53,15 @@
        <listitem>
          <para>
            <option>--help</option> Print the a short desciption of the
-	   options and an overview of the current debugging/info masks
-	   set.
+	   options
          </para>
        </listitem>
      </itemizedlist>
     </para>
     <para>
-      The follwing table gives an overview of the mask values and 
-      their meaning. (enabled) means that the corresponding flag
-      has been set.
+      The following table gives an overview of the mask values and their meaning. (enabled) means
+      that the corresponding flag is set by default. This table is available to any GStreamer
+      application by the --gst-mask-help option.
     </para>
     <programlisting>
 Mask (to be OR'ed)   info/debug         FLAGS   

@@ -1,9 +1,9 @@
 <chapter id="cha-cothreads">
   <title>Cothreads</title>
-  <para> 
-    Cothreads are user-space threads that greatly reduce context
-    switching overhead introduced by regular kernel threads.
-    Cothreads are also used to handle the more complex elements.
+  <para>
+    Cothreads are user-space threads that greatly reduce context switching overhead introduced by
+    regular kernel threads. Cothreads are also used to handle the more complex elements. They differ
+    from other user-space threading libraries in that they are scheduled explictly by GStreamer.
   </para>
   <para> 
     A cothread is created by a <classname>GstBin</classname> whenever an element is found
@@ -72,7 +72,7 @@ chain_function (GstPad *pad, GstBuffer *buffer)
   <sect1 id="sec-loop-based">
     <title>Loop-based elements</title>
     <para>
-     As opposed to chain-based elements, Loop-based elements enter an 
+     As opposed to chain-based elements, loop-based elements enter an 
      infinite loop that looks like this:
 
     <programlisting>
@@ -97,24 +97,24 @@ chain_function (GstPad *pad, GstBuffer *buffer)
     </para>
 
     <para>
-      When the request for a buffer cannot immedialty satisfied, the control
-      will be given to the source element of the loop-based element until it
-      performs a push on its source pad. At that time the control is handed back
-      to the loop-based element, etc... The the execution trace can get fairly
-      complex using cothreads when there are multiple input/output pads for the
-      loop-based element.
+      When the request for a buffer cannot immediatly satisfied, the control will be given to the
+      source element of the loop-based element until it performs a push on its source pad. At that
+      time the control is handed back to the loop-based element, etc... The the execution trace can
+      get fairly complex using cothreads when there are multiple input/output pads for the
+      loop-based element. Cothread switches are performed within the call to gst_pad_pull and
+      gst_pad_push; from the perspective of the loop-based element, it just "appears" that
+      gst_pad_push (or _pull) might take a long time to return.
     </para>
     <para>
-      Loop based elements are mainly used for the more complex elements that need a
-      specific amount of data before they can start to produce output. An example
-      of such an element is the mpeg video decoder. the element will pull a buffer,
-      performs some decoding on it and optionally requests more buffers to decode, when
-      a complete video frame has been decoded, a buffer is send out.
+      Loop based elements are mainly used for the more complex elements that need a specific amount
+      of data before they can start to produce output. An example of such an element is the mpeg
+      video decoder. the element will pull a buffer, performs some decoding on it and optionally
+      requests more buffers to decode, when a complete video frame has been decoded, a buffer is
+      send out. For example, any plugin using the bytestream library will need to be loop-based.
     </para>
     <para>
-      There is no problem in putting cothreaded elements into a 
-      <classname>GstThread</classname> to create even more complex pipelines with
-      both user and kernel space threads.
+      There is no problem in putting cothreaded elements into a <classname>GstThread</classname> to
+      create even more complex pipelines with both user and kernel space threads.
     </para>
 
   </sect1>

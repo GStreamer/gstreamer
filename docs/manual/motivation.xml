@@ -80,7 +80,7 @@
       </para> 
       <para> 
         No provisions have been made for emerging technologies such as
-	the GNOME object embedding using BONOBO.
+	the GNOME object embedding using Bonobo.
       </para> 
       <para> 
         While the GStreamer core does not use network transparent technologies

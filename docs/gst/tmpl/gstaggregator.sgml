@@ -25,23 +25,3 @@ methods to request buffers from its pads.
 @AGGREGATOR_LOOP_SELECT: 
 @AGGREGATOR_CHAIN: 
 
-<!-- ##### ARG GstAggregator:num-pads ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstAggregator:silent ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstAggregator:sched ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstAggregator:last-message ##### -->
-<para>
-
-</para>
-

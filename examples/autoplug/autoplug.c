@@ -19,22 +19,22 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
   cache = gst_bin_get_by_name (GST_BIN (autobin), "cache");
 
   /* disconnect the typefind from the pipeline and remove it */
-  gst_element_disconnect (cache, "src", typefind, "sink");
+  gst_element_disconnect_pads (cache, "src", typefind, "sink");
   gst_bin_remove (GST_BIN (autobin), typefind);
       
   /* and an audio sink */
-  osssink = gst_elementfactory_make("osssink", "play_audio");
-  g_assert(osssink != NULL);
+  osssink = gst_elementfactory_make ("osssink", "play_audio");
+  g_assert (osssink != NULL);
 
   videosink = gst_bin_new ("videosink");
   /* and an video sink */
-  videoelement = gst_elementfactory_make("xvideosink", "play_video");
-  g_assert(videosink != NULL);
+  videoelement = gst_elementfactory_make ("xvideosink", "play_video");
+  g_assert (videosink != NULL);
 
-  colorspace = gst_elementfactory_make("colorspace", "colorspace");
-  g_assert(colorspace != NULL);
+  colorspace = gst_elementfactory_make ("colorspace", "colorspace");
+  g_assert (colorspace != NULL);
 
-  gst_element_connect (colorspace, "src", videoelement, "sink");
+  gst_element_connect_pads (colorspace, "src", videoelement, "sink");
   gst_bin_add (GST_BIN (videosink), colorspace);
   gst_bin_add (GST_BIN (videosink), videoelement);
 
@@ -61,7 +61,7 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
 
   g_object_set (G_OBJECT (cache), "reset", TRUE, NULL);
 
-  gst_element_connect (cache, "src", new_element, "sink");
+  gst_element_connect_pads (cache, "src", new_element, "sink");
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
       
@@ -87,10 +87,9 @@ gst_play_cache_empty (GstElement *element, GstElement *pipeline)
   cache = gst_bin_get_by_name (GST_BIN (autobin), "cache");
   new_element = gst_bin_get_by_name (GST_BIN (autobin), "new_element");
 
-  gst_element_disconnect (filesrc, "src", cache, "sink");
-  gst_element_disconnect (cache, "src", new_element, "sink");
+  gst_element_disconnect_many (filesrc, cache, new_element, NULL);
   gst_bin_remove (GST_BIN (autobin), cache);
-  gst_element_connect (filesrc, "src", new_element, "sink");
+  gst_element_connect_pads (filesrc, "src", new_element, "sink");
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
@@ -132,14 +131,14 @@ int main(int argc,char *argv[])
   gst_bin_add (GST_BIN (autobin), cache);
   gst_bin_add (GST_BIN (autobin), typefind);
 
-  gst_element_connect (cache, "src", typefind, "sink");
+  gst_element_connect_pads (cache, "src", typefind, "sink");
   gst_element_add_ghost_pad (autobin, gst_element_get_pad (cache, "sink"), "sink");
 
   gst_bin_add (GST_BIN( pipeline), autobin);
-  gst_element_connect (filesrc, "src", autobin, "sink");
+  gst_element_connect_pads (filesrc, "src", autobin, "sink");
 
   /* start playing */
-  gst_element_set_state( GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
   while (gst_bin_iterate (GST_BIN (pipeline)));
 

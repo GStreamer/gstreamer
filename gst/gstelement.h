@@ -197,32 +197,37 @@ GstScheduler*		gst_element_get_sched		(GstElement *element);
 
 void			gst_element_add_pad		(GstElement *element, GstPad *pad);
 void			gst_element_remove_pad		(GstElement *element, GstPad *pad);
-GstPad*			gst_element_get_pad		(GstElement *element, const gchar *name);
-GList*			gst_element_get_pad_list	(GstElement *element);
-GList*			gst_element_get_padtemplate_list	(GstElement *element);
-GstPadTemplate*		gst_element_get_padtemplate_by_name	(GstElement *element, const guchar *name);
 GstPad *		gst_element_add_ghost_pad	(GstElement *element, GstPad *pad, gchar *name);
 void			gst_element_remove_ghost_pad	(GstElement *element, GstPad *pad);
 
-GstPad*			gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ);
-GstPad*			gst_element_request_pad_by_name	(GstElement *element, const gchar *name);
+GstPad*			gst_element_get_pad		(GstElement *element, const gchar *name);
+GstPad*			gst_element_get_static_pad	(GstElement *element, const gchar *name);
+GstPad*			gst_element_get_request_pad	(GstElement *element, const gchar *name);
+
+GList*			gst_element_get_pad_list	(GstElement *element);
+GList*			gst_element_get_padtemplate_list	(GstElement *element);
+GstPadTemplate*		gst_element_get_padtemplate_by_name	(GstElement *element, const guchar *name);
+
+GstPad*			gst_element_get_compatible_pad	(GstElement *element, GstPad *pad);
 GstPad*			gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, 
 							 GstCaps *filtercaps);
-GstPad*			gst_element_get_compatible_pad	(GstElement *element, GstPad *pad);
+GstPad*			gst_element_get_compatible_request_pad (GstElement *element, GstPadTemplate *templ);
+GstPad*			gst_element_get_compatible_static_pad (GstElement *element, GstPadTemplate *templ);
 
-/* these functions should probably have another name, but gst_element_connect is already used */
-gboolean		gst_element_connect_elements	(GstElement *src, GstElement *dest);
-gboolean		gst_element_connect_elements_filtered (GstElement *src, GstElement *dest,
+gboolean		gst_element_connect		(GstElement *src, GstElement *dest);
+gboolean		gst_element_connect_many 	(GstElement *element_1, GstElement *element_2, ...);
+gboolean		gst_element_connect_filtered 	(GstElement *src, GstElement *dest,
 							 GstCaps *filtercaps);
-gboolean		gst_element_connect		(GstElement *src, const gchar *srcpadname,
+void			gst_element_disconnect 		(GstElement *src, GstElement *dest);
+void			gst_element_disconnect_many 	(GstElement *element_1, GstElement *element_2, ...);
+
+gboolean		gst_element_connect_pads	(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
-gboolean		gst_element_connect_filtered	(GstElement *src, const gchar *srcpadname,
+gboolean		gst_element_connect_pads_filtered (GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname,
 							 GstCaps *filtercaps);
-void			gst_element_disconnect		(GstElement *src, const gchar *srcpadname,
+void			gst_element_disconnect_pads	(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
-void			gst_element_disconnect_elements (GstElement *src, GstElement *dest);
-gboolean		gst_element_connect_elements_many (GstElement *element_1, GstElement *element_2, ...);
 
 void			gst_element_set_eos		(GstElement *element);
 

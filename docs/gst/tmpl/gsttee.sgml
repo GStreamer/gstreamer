@@ -14,18 +14,3 @@ A tee can be used to split out the filter graph.
 
 </para>
 
-<!-- ##### ARG GstTee:silent ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstTee:num-pads ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstTee:last-message ##### -->
-<para>
-
-</para>
-

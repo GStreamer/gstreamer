@@ -38,11 +38,11 @@
     <sect2 id="sec-goals-object">
       <title>Object oriented</title>
       <para>
-        Adhere as much as possible to the glib2.0 object model. A programmer familiar
-	with glib2 and GTK+ will be confortable with GStreamer.
-      </para> 
+        Adhere to the GLib 2.0 object model. A programmer familiar with GLib 2.0 or older versions
+	of Gtk+ will be comfortable with GStreamer.
+      </para>
       <para>
-        GStreamer uses the mechanism of signals and object arguments. 
+        GStreamer uses the mechanism of signals and object properties. 
       </para> 
       <para>
         All objects can be queried at runtime for their various properties and
@@ -53,7 +53,7 @@
     <sect2 id="sec-goals-extensible">
       <title>Extensible</title>
       <para> 
-	All GStreamer Objects can be extended using the glib2 inheritance methods.
+	All GStreamer Objects can be extended using the GObject inheritance methods.
       </para> 
       <para> 
         All plugins are loaded dynamically and can be extended and upgraded
@@ -63,15 +63,14 @@
 
     <sect2 id="sec-goals-binary">
       <title>Allow binary only plugins</title>
-      <para> 
-        plugins are shared libraries that are loaded at runtime. since all the
-	properties of the plugin can be set using the GObject properties, there
-	is no need to have any header files installed for the plugins.
-      </para> 
+      <para>
+        Plugins are shared libraries that are loaded at runtime. Since all the properties of the
+	plugin can be set using the GObject properties, there is no need (and in fact no way) to
+	have any header files installed for the plugins.
+      </para>
       <para> 
         Special care has been taking into making the plugin completely self 
-	contained. This is in the operations, specification of the capabilities
-	of the plugin and properties.
+	contained. All relevant aspects of plugins can be queried at run-time.
       </para> 
     </sect2>
 
@@ -83,44 +82,43 @@
       <itemizedlist>
         <listitem>
 	  <para>
-	    Using glib g_mem_chunk where possible to minimize dynamic memory
+	    Using GLib g_mem_chunk where possible to minimize dynamic memory
 	    allocation.
 	  </para>
         </listitem>
         <listitem>
 	  <para>
-	    Connections between plugins are extremely light-weight. Data can travel
+	    Extremely light-weight connections between plugins. Data can travel
 	    the pipeline with minimal overhead.
 	  </para>
         </listitem>
         <listitem>
 	  <para>
-	    Provide a mechanism to directly work on the target memory. A
-	    plugin can for example directly write to the X servers shared mem.
-	    Buffers can also point to arbitrary memory like kernel memory.
+	    Providing a mechanism to directly work on the target memory. A plugin can for example
+	    directly write to the X server's shared memory space. Buffers can also point to
+	    arbitrary memory, such as a sound card's internal hardware buffer.
 	  </para>
         </listitem>
         <listitem>
 	  <para>
-	    Refcounting and copy on write to minimize the amount of memcpy.
-	    Subbufers to efficiently split the data in a buffer.
+	    Refcounting and copy on write minimize usage of memcpy(3).
+	    Sub-buffers efficiently split buffers into manageable pieces.
 	  </para>
         </listitem>
         <listitem>
 	  <para>
-	    Pipelines can be constructed using cothreads to minimize the
-	    threading overhead. Cothreads are a simple user-space method for 
-	    switching between subtasks.
+	    The use of cothreads to minimize the threading overhead. Cothreads are a simple and fast
+	    user-space method for switching between subtasks.
 	  </para>
         </listitem>
         <listitem>
 	  <para>
-	    HW acceleration is possible by writing a specialized plugin.
+	    Allowing HW acceleration by the use of specialized plugins.
 	  </para>
         </listitem>
         <listitem>
 	  <para>
-	    Uses a plugin registry with the specifications of the plugins so 
+	    Using a plugin registry with the specifications of the plugins so 
 	    that the plugin loading can be delayed until the plugin is actually
 	    used.
 	  </para>

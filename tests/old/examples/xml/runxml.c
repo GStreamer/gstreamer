@@ -4,7 +4,7 @@
 
 gboolean playing;
 
-static void
+G_GNUC_UNUSED static void
 xml_loaded (GstXML *xml, GstObject *object, xmlNodePtr self, gpointer data)
 {
   xmlNodePtr children = self->xmlChildrenNode;

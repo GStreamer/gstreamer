@@ -51,7 +51,7 @@
   <para> 
     A more complex case is when the filter modifies the data in place.  It
     does so and simply passes on the buffer to the next element.  This is just
-    as easy to deal with. An element that works in place has to be carefull when
+    as easy to deal with. An element that works in place has to be careful when
     the buffer is used in more than one element; a copy on write has to made in this
     situation.
   </para>

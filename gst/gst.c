@@ -66,6 +66,7 @@ enum {
   ARG_INFO_MASK=1,
   ARG_DEBUG_MASK,
   ARG_MASK,
+  ARG_MASK_HELP,
   ARG_PLUGIN_SPEW,
   ARG_PLUGIN_PATH,
   ARG_PLUGIN_LOAD,
@@ -82,6 +83,7 @@ static const struct poptOption options[] = {
   {"gst-info-mask",   NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_INFO_MASK,   "info bitmask", "MASK"},
   {"gst-debug-mask",  NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_DEBUG_MASK,  "debugging bitmask", "MASK"},
   {"gst-mask",        NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_MASK,        "bitmask for both info and debugging", "MASK"},
+  {"gst-mask-help",   NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_MASK_HELP,   "how to set the level of diagnostic output (-mask values)", NULL},
   {"gst-plugin-spew", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_PLUGIN_SPEW, "enable verbose plugin loading diagnostics", NULL},
   {"gst-plugin-path", NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_PATH, "'" G_SEARCHPATH_SEPARATOR_S "'--separated path list for loading plugins", "PATHS"},
   {"gst-plugin-load", NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_LOAD, "comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH", "PLUGINS"},
@@ -265,7 +267,6 @@ static void
 init_post (void)
 {
   GLogLevelFlags llf;
-  gboolean showhelp = FALSE;
   const gchar *plugin_path;
 #ifndef GST_DISABLE_TRACE
   GstTrace *gst_trace;
@@ -326,44 +327,33 @@ init_post (void)
   if (_gst_progname == NULL) {
     _gst_progname = g_strdup("gstprog");
   }
+}
 
-  /* FIXME: this is never true... */
-  if (showhelp) {
-    guint i;
-
-    g_print ("usage %s [OPTION...]\n", _gst_progname);
-
-    g_print ("\nGStreamer options\n");
-    g_print ("  --gst-info-mask=FLAGS               GST info flags to set (current %08x)\n", gst_info_get_categories());
-    g_print ("  --gst-debug-mask=FLAGS              GST debugging flags to set\n");
-    g_print ("  --gst-mask=FLAGS                    GST info *and* debug flags to set\n");
-    g_print ("  --gst-plugin-spew                   Enable printout of errors while loading GST plugins\n");
-    g_print ("  --gst-plugin-path=PATH              Add directories separated with '%s' to the plugin search path\n",
-             G_SEARCHPATH_SEPARATOR_S);
-    g_print ("  --gst-plugin-load=PLUGINS           Load plugins separated with '%s'\n",
-             GST_PLUGIN_SEPARATOR);
-    g_print ("  --gst-scheduler=NAME                Use a nonstandard scheduler\n");
-
-    g_print ("\n  Mask (to be OR'ed)   info/debug         FLAGS   \n");
-    g_print ("--------------------------------------------------------\n");
-
-    for (i = 0; i<GST_CAT_MAX_CATEGORY; i++) {
-      if (gst_get_category_name(i)) {
+static void
+gst_mask_help (void) 
+{
+  guint i;
+  
+  g_print ("\n  Mask (to be OR'ed)   info/debug         FLAGS   \n");
+  g_print ("--------------------------------------------------------\n");
+  
+  for (i = 0; i<GST_CAT_MAX_CATEGORY; i++) {
+    if (gst_get_category_name(i)) {
 #if GST_DEBUG_COLOR
-        g_print ("   0x%08x     %s%s     \033[%sm%s\033[00m\n", 1<<i, 
-                 (gst_info_get_categories() & (1<<i)?"(enabled)":"         "),
-                 (gst_debug_get_categories() & (1<<i)?"/(enabled)":"/         "),
-                 _gst_category_colors[i], gst_get_category_name (i));
+      g_print ("   0x%08x     %s%s     \033[%sm%s\033[00m\n", 1<<i, 
+               (gst_info_get_categories() & (1<<i)?"(enabled)":"         "),
+               (gst_debug_get_categories() & (1<<i)?"/(enabled)":"/         "),
+               _gst_category_colors[i], gst_get_category_name (i));
 #else
-        g_print ("   0x%08x     %s%s     %s\n", 1<<i, 
-                 (gst_info_get_categories() & (1<<i)?"(enabled)":"         "),
-                 (gst_debug_get_categories() & (1<<i)?"/(enabled)":"/         "),
-                 gst_get_category_name (i));
+      g_print ("   0x%08x     %s%s     %s\n", 1<<i, 
+               (gst_info_get_categories() & (1<<i)?"(enabled)":"         "),
+               (gst_debug_get_categories() & (1<<i)?"/(enabled)":"/         "),
+               gst_get_category_name (i));
 #endif
-      }
     }
   }
 }
+  
 
 static void
 init_popt_callback (poptContext context, enum poptCallbackReason reason,
@@ -390,6 +380,9 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
       gst_debug_set_categories (val);
       gst_info_set_categories (val);
       break;
+    case ARG_MASK_HELP:
+      gst_mask_help ();
+      exit (0);
     case ARG_PLUGIN_SPEW:
       _gst_plugin_spew = TRUE;
       break;

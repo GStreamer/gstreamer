@@ -4,38 +4,35 @@
   </para>
 
   <sect1>
-    <title><command>gstreamer-register</command></title>
+    <title><command>gst-register</command></title>
     <para> 
-      <command>gstreamer-register</command> is used to rebuild the database of plugins.
+      <command>gst-register</command> is used to rebuild the database of plugins.
       It is used after a new plugin has been added to the system. The plugin database
-      can be found in <filename>/etc/gstreamer/reg.xml</filename>.
+      can be found, by default, in <filename>/etc/gstreamer/reg.xml</filename>.
     </para>
   </sect1>
 
   <sect1>
-    <title><command>gstreamer-launch</command></title>
+    <title><command>gst-launch</command></title>
     <para> 
       This is a tool that will construct pipelines based on a command-line
-      syntax.  
+      syntax. FIXME: need a more extensive grammar reference
     </para> 
     <para> 
       A simple commandline looks like:
 
     <screen>
-gstreamer-launch filesrc location=hello.mp3 ! mp3parse ! mpg123 ! audiosink
+gst-launch filesrc location=hello.mp3 ! mad ! osssink
     </screen>
 
       A more complex pipeline looks like:
 
     <screen>
-gstreamer-launch filesrc redpill.vob audio_00! (ac3parse ! ac3dec ! audiosink) \
-video_00! (mpeg2dec ! videosink)
+gst-launch filesrc location=redpill.vob ! mpegdemux name=demux \
+ demux.audio_00! { ac3parse ! a52dec ! osssink } \
+ demux.video_00! { mpeg2dec ! xvideosink }
     </screen>
 
-    </para>
-    <para>
-      Note that the parser isn't capable of more complex pipelines yet, including
-      the VOB player above.  The minor tweaks will be made post 0.2.1.
     </para>
     <para>
       You can also use the the parser in you own code. <application>GStreamer</application>
@@ -51,17 +48,21 @@ main (int argc, char *argv[])
 {
   GstElement *pipeline;
   GstElement *filesrc;
+  GError *error = NULL;
 
   gst_init (&amp;argc, &amp;argv);
 
   if (argc != 2) {
-    g_print ("usage: %s &lt;filename&gt;\n", argv[0]);
+    g_print ("usage: &percnt;s &lt;filename&gt;\n", argv[0]);
     return -1;
   }
-  pipeline = gst_pipeline_new ("my_pipeline");
 
-  gst_parse_launch ("filesrc[my_filesrc] ! mp3parse ! mpg123 ! osssink", GST_BIN (pipeline));
-
+  pipeline = gst_parse_launch ("filesrc name=my_filesrc ! mad ! osssink", &amp;error);
+  if (!pipeline) {
+    g_print ("Parse error: &percnt;s\n", error->message);
+    exit (1);
+  }
+  
   filesrc = gst_bin_get_by_name (GST_BIN (pipeline), "my_filesrc");
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
@@ -81,20 +82,20 @@ main (int argc, char *argv[])
   </sect1>
 
   <sect1>
-    <title><command>gstreamer-inspect</command></title>
+    <title><command>gst-inspect</command></title>
     <para> 
       This is a tool to query a plugin or an element about its properties.
     </para> 
     <para> 
-      To query the information about the element mpg123, you would specify:
+      To query the information about the element mad, you would specify:
     </para> 
 
     <screen>
-gstreamer-inspect mpg123
+gst-inspect mad
     </screen>
 
     <para> 
-      Below is the output of a query for the audiosink element:
+      Below is the output of a query for the osssink element:
     </para> 
 
     <screen>
@@ -102,56 +103,72 @@ Factory Details:
   Long name:	Audio Sink (OSS)
   Class:	Sink/Audio
   Description:	Output to a sound card via OSS
-  Version:	0.1.0
-  Author(s):	Erik Walthinsen &lt;omega@cse.ogi.edu&gt;
+  Version:	0.3.3.1
+  Author(s):	Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim.taymans@chello.be&gt;
   Copyright:	(C) 1999
+
+GObject
+ +----GstObject
+       +----GstElement
+             +----GstOssSink
 
 Pad Templates:
   SINK template: 'sink'
-    Exists: Always
+    Availability: Always
     Capabilities:
-      'audiosink_sink':
+      'osssink_sink':
         MIME type: 'audio/raw':
-        format: Integer: 16
+        format: String: int
+        endianness: Integer: 1234
+        width: List:
+          Integer: 8
+          Integer: 16
         depth: List:
           Integer: 8
           Integer: 16
-        rate: Integer range: 8000 - 48000
         channels: Integer range: 1 - 2
+        law: Integer: 0
+        signed: List:
+          Boolean: FALSE
+          Boolean: TRUE
+        rate: Integer range: 1000 - 48000
+
 
 Element Flags:
   GST_ELEMENT_THREADSUGGESTED
-  no flags set
 
 Element Implementation:
   No loopfunc(), must be chain-based or not configured yet
-  Has change_state() function
+  Has change_state() function: gst_osssink_change_state
+  Has custom save_thyself() function: gst_element_save_thyself
+  Has custom restore_thyself() function: gst_element_restore_thyself
+
+Clocking Interaction:
+  element requires a clock
+  element provides a clock: GstOssClock
 
 Pads:
   SINK: 'sink'
     Implementation:
-      Has chainfunc(): 0x4001cde8
-      Has default eosfunc() gst_pad_eos_func()
+      Has chainfunc(): 0x40056fc0
     Pad Template: 'sink'
-    Capabilities:
-      'audiosink_sink':
-        MIME type: 'audio/raw':
-        format: Integer: 16
-        depth: List:
-          Integer: 8
-          Integer: 16
-        rate: Integer range: 8000 - 48000
-        channels: Integer range: 1 - 2
 
 Element Arguments:
-  GstAudioSink::mute: Boolean
-  GstAudioSink::format: Enum (default 16)
-    (8): 	8 Bits
-    (16): 	16 Bits
-  GstAudioSink::channels: Enum (default 2)
+  name                                    : String (Default "element")
+  device                                  : String (Default "/dev/dsp")
+  mute                                    : Boolean (Default false)
+  format                                  : Integer (Default 16)
+  channels                                : Enum "GstAudiosinkChannels" (default 1)
+    (0): 	Silence
     (1): 	Mono
     (2): 	Stereo
-  GstAudioSink::frequency: Integer
+  frequency                               : Integer (Default 11025)
+  fragment                                : Integer (Default 6)
+  buffer-size                             : Integer (Default 4096)
+
+Element Signals:
+  "handoff" :	 void user_function (GstOssSink* object, 
+    				gpointer user_data);
     </screen>
 
     <para> 
@@ -159,11 +176,11 @@ Element Arguments:
     </para> 
 
     <screen>
-gstreamer-inspect gstelements
+gst-inspect gstelements
     </screen>
   </sect1>
   <sect1>
-    <title><command>gstmediaplay</command></title>
+    <title><command>gst-play</command></title>
     <para> 
       A sample media player.
     </para>

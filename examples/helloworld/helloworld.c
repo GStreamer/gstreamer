@@ -22,7 +22,7 @@ int main (int argc, char *argv[])
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
   /* now it's time to get the decoder */
-  decoder = gst_elementfactory_make ("mad", "parse");
+  decoder = gst_elementfactory_make ("mad", "decode");
   if (!decoder) {
     g_print ("could not find plugin \"mad\"");
     return -1;
@@ -35,7 +35,7 @@ int main (int argc, char *argv[])
   gst_bin_add_many (GST_BIN (bin), filesrc, decoder, osssink, NULL);
 
   /* connect the elements */
-  gst_element_connect_elements_many (filesrc, decoder, osssink, NULL);
+  gst_element_connect_many (filesrc, decoder, osssink, NULL);
   
   /* start playing */
   gst_element_set_state (bin, GST_STATE_PLAYING);

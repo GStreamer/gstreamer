@@ -25,24 +25,3 @@ The queue blocks by default.
 
 </para>
 
-<!-- ##### ARG GstQueue:leaky ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstQueue:level ##### -->
-<para>
-Get the number of buffers in the queue.
-</para>
-
-<!-- ##### ARG GstQueue:max-level ##### -->
-<para>
-Specify the maximum number of buffers in the queue before the queue
-blocks.
-</para>
-
-<!-- ##### ARG GstQueue:may-deadlock ##### -->
-<para>
-
-</para>
-

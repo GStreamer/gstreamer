@@ -44,8 +44,7 @@ endif
 
 EXTRA_libgstreamer_la_SOURCES = gstcpuid_i386.s gstmarshal.list gstxml.c gsttypefind.c gstparse.c gstautoplug.c gsttrace.c
 
-# cheap trick to build . first...
-SUBDIRS = . $(GST_AUTOPLUG_DIRS) elements schedulers types
+SUBDIRS = parse . $(GST_AUTOPLUG_DIRS) elements schedulers types
 DIST_SUBDIRS = autoplug elements parse types schedulers
 
 libcothreads_la_SOURCES = cothreads.c
@@ -156,7 +155,7 @@ libgstreamer_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" 
 # the compiler shoots cothreads.c in the head at -O6
 libcothreads_la_CFLAGS = $(libgstreamer_la_CFLAGS) -O2 
 
-libgstreamer_la_LIBADD = $(LIBGST_LIBS)
+libgstreamer_la_LIBADD = $(LIBGST_LIBS) parse/libgstparse.la
 libgstreamer_la_LDFLAGS = @GST_LT_LDFLAGS@ -version-info @GST_LIBVERSION@ 
 
 EXTRA_DIST = ROADMAP

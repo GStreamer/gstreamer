@@ -12,21 +12,16 @@
       different components you are going to use are derived from this GstElement.
       This means that a lot of functions you are going to use operate on this object.
     </para>
-    <para> 
-      You will see that those elements have pads. These are the elements 
-      connections with the 'outside' world. Depending on the number and direction of
-      the pads, we can see three types of elements: source, filter and sink element.
-    </para>
-    <para> 
-      These three types are all the same GstElement object, they just differ in how
-      the pads are.
+    <para> Elements, from the perspective of GStreamer, are viewed as "black boxes" with a number of
+      different aspects. One of these aspects is the presence of "pads", or connection points. This
+      terminology arises from soldering; pads are where wires can be attached.
     </para>
 
     <sect2 id="sec-elements-src">
-      <title>GStreamer source elements</title>
+      <title>Source elements</title>
       <para>
-        This element will generate data that will be used by the pipeline. It is
-	typically a file or an audio source.
+        Source elements generate data for use by a pipeline, for example reading from disk or from a
+	sound card.
       </para>
       <para>
         Below you see how we will visualize the element.
@@ -48,19 +43,17 @@
     </sect2>
 
     <sect2 id="sec-elements-filter">
-      <title>GStreamer filter elements</title>
+      <title>Filters and codecs</title>
       <para>
-        Filter elements both have an input and an output pad. They operate on data
-	they receive in the sink pad and send the result to the src pad.
-      </para> 
+        Filter elements both have input and output pads. They operate on data they receive in their
+	sink pads and produce data on their src pads. For example, MPEG decoders and volume filters
+	would fall into this category.
+      </para>
       <para>
-        Examples of a filter element might include: an MPEG decoder, volume filter,...
-      </para> 
-      <para>
-        Filters may also contain any number of input pads and output pads. For example,
-	a video mixer might have to input pads (the images of the two different video 
-	streams) and one output pad. 
-      </para> 
+        Elements are not constrained as to the number of pads they migh have; for example, a video
+	mixer might have two input pads (the images of the two different video streams) and one
+	output pad.
+      </para>
       <figure float="1" id="sec-element-filterimg">
         <title>Visualisation of a filter element</title>
           <mediaobject>  
@@ -71,7 +64,7 @@
       </figure>
       <para>
         The above figure shows the visualisation of a filter element. This element has 
-	one sink pad (input) and one src (output) pad. Sink pads are drawn on the left
+	one sink (input) pad and one src (output) pad. Sink pads are drawn on the left
 	of the element.
       </para> 
       <figure float="1" id="sec-element-multifilterimg">
@@ -84,21 +77,21 @@
         </mediaobject>
       </figure>
       <para>
-        The above figure shows the visualisation of a filter element with more than one
-	output pad. An example of such a filter is the AVI splitter. This element will
-	parse the input data and extracts the audio and video data. Most of these filters
-	dynamically send out a signal when a new pad is created so that the application
-	programmer can connect an arbitrary element to the newly created pad.
-      </para> 
+        The above figure shows the visualisation of a filter element with more than one output pad.
+	An example of such a filter is the AVI splitter (demuxer). This element will parse the input
+	data and extracts the audio and video data. Most of these filters dynamically send out a
+	signal when a new pad is created so that the application programmer can connect an arbitrary
+	element to the newly created pad.
+      </para>
     </sect2>
   
     <sect2 id="sec-elements-sink">
-      <title>GStreamer sink elements</title>
-      <para> 
-        This element accepts data but will not generate any new data. A sink element 
-	is typically a file on disk, a soundcard, a display,... It is presented as
-	below:
-      </para> 
+      <title>Sink elements</title>
+      <para>
+        Sink elements are terminal points in a media pipeline. They accept data but do not produce
+	anything. Disk writing, soundcard playback, and video output woul all be implemented by sink
+	elements.
+      </para>
       <figure float="1" id="sec-element-sinkimg">
         <title>Visualisation of a sink element</title>
         <mediaobject>  
@@ -117,12 +110,12 @@
     </para> 
     <para> 
       The following code example is used to get a factory that can be used to create the 
-      mpg123 element, an mp3 decoder.
+      'mad' element, an mp3 decoder.
     </para> 
     <programlisting>
  GstElementFactory *factory;
 
- factory = gst_elementfactory_find ("mpg123");
+ factory = gst_elementfactory_find ("mad");
     </programlisting>
     <para> 
       Once you have the handle to the elementfactory, you can create a real element with
@@ -133,23 +126,23 @@
 
  element = gst_elementfactory_create (factory, "decoder");
     </programlisting>
-    <para> 
-      gst_elementfactory_create () will use the elementfactory to create an element with the
-      given name. The name of the element is something you can use later on to lookup the
-      element in a bin, for example.
-    </para> 
-    <para> 
-      A simple shortcut exists for creating an element from a factory. The following example
-      creates an element, named "decoder" from the elementfactory named "mpg123". This 
-      convenient function is most widly used to create an element.
-    </para> 
+    <para>
+      gst_elementfactory_create () will use the elementfactory to create an element with the given
+      name. The name of the element is something you can use later on to lookup the element in a
+      bin, for example. You can pass NULL as the name argument to get a unique, default name.
+    </para>
+    <para>
+      A simple shortcut exists for creating an element from a factory. The following example creates
+      an element, named "decoder" from the elementfactory named "mad". This convenient function is
+      most widely used to create an element.
+    </para>
     <programlisting>
  GstElement *element;
 
- element = gst_elementfactory_make ("mpg123", "decoder");
+ element = gst_elementfactory_make ("mad", "decoder");
     </programlisting>
     <para> 
-      An element can be destroyed with:  
+      An element can be destroyed with:  FIXME talk about refcounting
     </para> 
     <programlisting>
  GstElement *element;

@@ -8,12 +8,11 @@
 
   <sect1>
     <title>Hello world</title>
-    <para> 
-      We will create a simple first application. In fact it will be a complete
-      MP3 player, using standard <application>GStreamer</application> components. The player will read from
-      a file that is given as the first argument of the program.
+    <para>
+      We will create a simple first application, a complete MP3 player, using standard
+      <application>GStreamer</application> components. The player will read from a file that is
+      given as the first argument of the program.
     </para>
-
 
     <programlisting>
       
@@ -45,15 +44,10 @@ main (int argc, char *argv[])
   audiosink = gst_elementfactory_make ("osssink", "play_audio");
 
   /* add objects to the main pipeline */
-  gst_bin_add (GST_BIN (pipeline), filesrc);
-  gst_bin_add (GST_BIN (pipeline), decoder);
-  gst_bin_add (GST_BIN (pipeline), audiosink);
+  gst_bin_add_many (GST_BIN (pipeline), filesrc, decoder, audiosink, NULL);
 
   /* connect src to sink */
-  gst_pad_connect (gst_element_get_pad (filesrc, "src"),
-                   gst_element_get_pad (decoder, "sink"));
-  gst_pad_connect (gst_element_get_pad (decoder, "src"),
-                   gst_element_get_pad (audiosink, "sink"));
+  gst_element_connect_many (filesrc, decoder, audiosink, NULL);
 
   /* start playing */
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -64,10 +58,8 @@ main (int argc, char *argv[])
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   /* we don't need a reference to these objects anymore */
-  gst_object_unref (GST_OBJECT (audiosink));
-  gst_object_unref (GST_OBJECT (decoder));
-  gst_object_unref (GST_OBJECT (filesrc));
   gst_object_unref (GST_OBJECT (pipeline));
+  /* unreffing the pipeline unrefs the contained elements as well */
 
   exit (0);
 }
@@ -98,8 +90,8 @@ main (int argc, char *argv[])
     </programlisting>
 
     <para>
-      We are going to create 3 elements and one pipeline. Since all objects are
-      in fact elements, we can define them as:
+      We are going to create 3 elements and one pipeline. Since all elements share the same base
+      type, <classname>GstElement</classname>, we can define them as:
     </para>
     <programlisting>
   ...
@@ -142,7 +134,7 @@ main (int argc, char *argv[])
       is installed on the system where this application is executed.
     </para>
     <programlisting>
-  /* now it's time to get the parser */
+  /* now it's time to get the decoder */
   decoder = gst_elementfactory_make ("mad", "decoder");
     </programlisting>
     <para>
@@ -167,9 +159,7 @@ main (int argc, char *argv[])
     </para>
     <programlisting>
   /* add objects to the main pipeline */
-  gst_bin_add (GST_BIN (pipeline), filesrc);
-  gst_bin_add (GST_BIN (pipeline), decoder);
-  gst_bin_add (GST_BIN (pipeline), audiosink);
+  gst_bin_add_many (GST_BIN (pipeline), filesrc, decoder, audiosink, NULL);
     </programlisting>
 
     <para>
@@ -177,10 +167,7 @@ main (int argc, char *argv[])
     </para>
     <programlisting>
   /* connect src to sink */
-  gst_pad_connect (gst_element_get_pad (filesrc, "src"),
-                   gst_element_get_pad (decoder, "sink"));
-  gst_pad_connect (gst_element_get_pad (decoder, "src"),
-                   gst_element_get_pad (audiosink, "sink"));
+  gst_element_connect_many (filesrc, decoder, audiosink, NULL);
     </programlisting>
     
     <para>
@@ -229,16 +216,13 @@ main (int argc, char *argv[])
   /* stop the pipeline */
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
-  gst_object_unref (GST_OBJECT (audiosink));
-  gst_object_unref (GST_OBJECT (decoder));
-  gst_object_unref (GST_OBJECT (filesrc));
   gst_object_unref (GST_OBJECT (pipeline));
 
   exit (0);
     </programlisting>
     <note>
       <para>
-        don't forget to set the state of the pipeline to NULL. This will free
+        Don't forget to set the state of the pipeline to NULL. This will free
         all of the resources held by the elements.
       </para>
     </note>
@@ -246,7 +230,7 @@ main (int argc, char *argv[])
   </sect1>
 
   <sect1>
-    <title>compiling helloworld.c</title>
+    <title>Compiling helloworld.c</title>
     <para>
       To compile the helloworld example, use: 
     </para>
@@ -268,10 +252,10 @@ main (int argc, char *argv[])
   </sect1>
 
   <sect1>
-    <title>conclusion</title>
+    <title>Conclusion</title>
     <para>
       This concludes our first example. As you see, setting up a pipeline
-      is very lowlevel but powerfull. You will later in this manual how
+      is very lowlevel but powerful. You will later in this manual how
       you can create a custom MP3 element with a more high level API.
     </para>
     <para>
@@ -284,7 +268,7 @@ main (int argc, char *argv[])
       We could use a disksink to write the raw samples to a file, for example.
       It should also be clear that inserting filters, like a stereo effect,
       into the pipeline is not that hard to do. The most important thing is
-      that you can reuse allready existing elements.
+      that you can reuse already existing elements.
     </para>
   </sect1>
 </chapter>

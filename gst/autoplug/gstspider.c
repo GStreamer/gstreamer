@@ -533,7 +533,7 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
       gst_bin_add (GST_BIN (spider), element);
     }
     /* insert and connect new element */
-    if (!gst_element_connect_elements (conn->current, element))
+    if (!gst_element_connect (conn->current, element))
     {
       /* check if the src has SOMETIMES templates. If so, connect a callback */
       GList *templs = gst_element_get_padtemplate_list (conn->current);

@@ -5,6 +5,7 @@ main (int argc, char *argv[])
 {
   GstElement *pipeline;
   GstElement *filesrc;
+  GError *error = NULL;
 
   gst_init (&argc, &argv);
 
@@ -13,8 +14,12 @@ main (int argc, char *argv[])
     return -1;
   }
 
-  pipeline = (GstElement*) gst_parse_launch ("filesrc [ my_filesrc ] ! mad ! osssink");
-
+  pipeline = (GstElement*) gst_parse_launch ("filesrc name=my_filesrc ! mad ! osssink", &error);
+  if (!pipeline) {
+    fprintf (stderr, "Parse error: %s", error->message);
+    exit (1);
+  }
+  
   filesrc = gst_bin_get_by_name (GST_BIN (pipeline), "my_filesrc");
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 

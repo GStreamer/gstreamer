@@ -44,23 +44,18 @@ main(int argc,char *argv[])
   sink = gst_elementfactory_make ("fakesink", "sink");
   g_return_val_if_fail (sink != NULL, 4);
 
-  gst_bin_add (pipeline, GST_ELEMENT (src));
-  gst_bin_add (pipeline, GST_ELEMENT (tee));
-  gst_bin_add (pipeline, GST_ELEMENT (identity1));
-  gst_bin_add (pipeline, GST_ELEMENT (identity2));
-  gst_bin_add (pipeline, GST_ELEMENT (aggregator));
-  gst_bin_add (pipeline, GST_ELEMENT (sink));
+  gst_bin_add_many (pipeline, src, tee, identity1, identity2, aggregator, sink, NULL);
 
-  gst_element_connect (src, "src", tee, "sink");
-  gst_pad_connect (gst_element_request_pad_by_name (tee, "src%d"),
+  gst_element_connect_pads (src, "src", tee, "sink");
+  gst_pad_connect (gst_element_get_request_pad (tee, "src%d"),
 		   gst_element_get_pad (identity1, "sink"));
-  gst_pad_connect (gst_element_request_pad_by_name (tee, "src%d"),
+  gst_pad_connect (gst_element_get_request_pad (tee, "src%d"),
 		   gst_element_get_pad (identity2, "sink"));
   gst_pad_connect (gst_element_get_pad (identity1, "src"),
-  		   gst_element_request_pad_by_name (aggregator, "sink%d"));
+  		   gst_element_get_request_pad (aggregator, "sink%d"));
   gst_pad_connect (gst_element_get_pad (identity2, "src"),
-  		   gst_element_request_pad_by_name (aggregator, "sink%d"));
-  gst_element_connect (aggregator, "src", sink, "sink");
+  		   gst_element_get_request_pad (aggregator, "sink%d"));
+  gst_element_connect_pads (aggregator, "src", sink, "sink");
 
   g_signal_connect (G_OBJECT (src), "eos",
 		    G_CALLBACK (eos_signal), NULL);

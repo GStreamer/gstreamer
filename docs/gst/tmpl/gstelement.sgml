@@ -376,6 +376,26 @@ instead.
 @Returns: GList of pads
 
 
+<!-- ##### FUNCTION gst_element_get_static_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_get_request_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@name: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_element_get_pad_list ##### -->
 <para>
 
@@ -424,7 +444,17 @@ instead.
 @pad: 
 
 
-<!-- ##### FUNCTION gst_element_request_compatible_pad ##### -->
+<!-- ##### FUNCTION gst_element_get_compatible_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_get_compatible_static_pad ##### -->
 <para>
 
 </para>
@@ -434,23 +464,13 @@ instead.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_request_pad_by_name ##### -->
+<!-- ##### FUNCTION gst_element_get_compatible_request_pad ##### -->
 <para>
 
 </para>
 
 @element: 
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_get_compatible_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@pad: 
+@templ: 
 @Returns: 
 
 
@@ -471,47 +491,14 @@ instead.
 </para>
 
 @src: 
+@dest: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @srcpadname: 
-@dest: 
 @destpadname: 
-@Returns: 
 
 
-<!-- ##### FUNCTION gst_element_connect_filtered ##### -->
-<para>
-
-</para>
-
-@src: 
-@srcpadname: 
-@dest: 
-@destpadname: 
-@filtercaps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_connect_elements ##### -->
-<para>
-
-</para>
-
-@src: 
-@dest: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_connect_elements_filtered ##### -->
-<para>
-
-</para>
-
-@src: 
-@dest: 
-@filtercaps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_connect_elements_many ##### -->
+<!-- ##### FUNCTION gst_element_connect_many ##### -->
 <para>
 
 </para>
@@ -522,7 +509,21 @@ instead.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_disconnect ##### -->
+<!-- ##### FUNCTION gst_element_connect_filtered ##### -->
+<para>
+
+</para>
+
+@src: 
+@dest: 
+@filtercaps: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@srcpadname: 
+@destpadname: 
+
+
+<!-- ##### FUNCTION gst_element_connect_pads ##### -->
 <para>
 
 </para>
@@ -531,15 +532,53 @@ instead.
 @srcpadname: 
 @dest: 
 @destpadname: 
+@Returns: 
 
 
-<!-- ##### FUNCTION gst_element_disconnect_elements ##### -->
+<!-- ##### FUNCTION gst_element_connect_pads_filtered ##### -->
+<para>
+
+</para>
+
+@src: 
+@srcpadname: 
+@dest: 
+@destpadname: 
+@filtercaps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_disconnect ##### -->
 <para>
 
 </para>
 
 @src: 
 @dest: 
+<!-- # Unused Parameters # -->
+@srcpadname: 
+@destpadname: 
+
+
+<!-- ##### FUNCTION gst_element_disconnect_many ##### -->
+<para>
+
+</para>
+
+@element_1: 
+@element_2: 
+@Varargs: 
+
+
+<!-- ##### FUNCTION gst_element_disconnect_pads ##### -->
+<para>
+
+</para>
+
+@src: 
+@srcpadname: 
+@dest: 
+@destpadname: 
 
 
 <!-- ##### FUNCTION gst_element_set_state ##### -->
