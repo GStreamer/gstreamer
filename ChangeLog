@@ -1,3 +1,8 @@
+2004-07-24  Steve Lhomme  <steve.lhomme at free dot fr>
+
+	* gst/registries/gstxmlregistry.c:
+	Remove the registry before renaming the tempfile (needed for Windows)
+
 2004-07-23  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/elements/gstmultifilesrc.c: (gst_multifilesrc_class_init),

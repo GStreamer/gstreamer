@@ -631,8 +631,10 @@ gst_xml_registry_close_func (GstXMLRegistry * registry)
 
   /* If we opened for writing, rename our temporary file. */
   tmploc = g_strconcat (registry->location, ".tmp", NULL);
-  if (g_file_test (tmploc, G_FILE_TEST_EXISTS))
+  if (g_file_test (tmploc, G_FILE_TEST_EXISTS)) {
+    remove (registry->location);
     rename (tmploc, registry->location);
+  }
   g_free (tmploc);
 
   registry->open = FALSE;
