@@ -87,6 +87,7 @@ void 			_gst_props_initialize		(void);
 
 GstProps*		gst_props_new			(const gchar *firstname, ...);
 GstProps*		gst_props_newv			(const gchar *firstname, va_list var_args);
+GstProps*		gst_props_empty_new		(void);
 
 void            	gst_props_unref                 (GstProps *props);
 void            	gst_props_ref                   (GstProps *props);
@@ -110,9 +111,12 @@ gboolean 		gst_props_has_property		(GstProps *props, const gchar *name);
 gboolean 		gst_props_has_property_typed 	(GstProps *props, const gchar *name, GstPropsType type);
 gboolean 		gst_props_has_fixed_property	(GstProps *props, const gchar *name);
 
+const GstPropsEntry* 	gst_props_get_entry		(GstProps *props, const gchar *name);
+void			gst_props_add_entry		(GstProps *props, GstPropsEntry *entry);
 
 /* working with props entries */
-const GstPropsEntry* 	gst_props_get_entry		(GstProps *props, const gchar *name);
+GstPropsEntry*		gst_props_entry_new		(const gchar *name, ...);
+
 GstPropsType		gst_props_entry_get_type	(const GstPropsEntry *entry);
 const gchar*		gst_props_entry_get_name	(const GstPropsEntry *entry);
 gboolean		gst_props_entry_is_fixed	(const GstPropsEntry *entry);

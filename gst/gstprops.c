@@ -274,8 +274,15 @@ gst_props_entry_destroy (GstPropsEntry *entry)
   g_mutex_unlock (_gst_props_entries_chunk_lock);
 }
 
-static GstProps*
-gst_props_alloc (void)
+/**
+ * gst_props_empty_new:
+ *
+ * Create a new empty property.
+ *
+ * Returns: the new property
+ */
+GstProps*
+gst_props_empty_new (void)
 {
   GstProps *props;
 
@@ -290,7 +297,14 @@ gst_props_alloc (void)
   return props;
 }
 
-static void
+/**
+ * gst_props_add_entry:
+ * @props: the property to add the entry to
+ * @entry: the entry to add
+ *
+ * Addes the given propsentry to the props
+ */
+void
 gst_props_add_entry (GstProps *props, GstPropsEntry *entry)
 {
   g_return_if_fail (props);
@@ -455,6 +469,40 @@ gst_props_add_to_int_list (GList * entries, GstPropsEntry * newentry)
   return g_list_prepend (entries, newentry);
 }
 
+static GstPropsEntry*
+gst_props_entry_newv (const gchar *name, va_list var_args)
+{
+  GstPropsEntry *entry;
+
+  entry = gst_props_alloc_entry ();
+  entry->propid = g_quark_from_string (name);
+  GST_PROPS_ENTRY_FILL (entry, var_args);
+  
+  return entry;
+}
+
+/**
+ * gst_props_entry_new:
+ * @name: the name of the props entry
+ * @...: the value of the entry
+ *
+ * Create a new property entry with the given key/value.
+ *
+ * Returns: the new entry.
+ */
+GstPropsEntry*
+gst_props_entry_new (const gchar *name, ...)
+{
+  va_list var_args;
+  GstPropsEntry *entry;
+  
+  va_start (var_args, name);
+  entry = gst_props_entry_newv (name, var_args);
+  va_end (var_args);
+
+  return entry;
+}
+
 /**
  * gst_props_newv:
  * @firstname: the first property name
@@ -487,7 +535,7 @@ gst_props_newv (const gchar *firstname, va_list var_args)
   if (firstname == NULL)
     return NULL;
 
-  props = gst_props_alloc ();
+  props = gst_props_empty_new ();
 
   prop_name = firstname;
 
@@ -599,6 +647,8 @@ gst_props_set (GstProps *props, const gchar *name, ...)
   GQuark quark;
   GList *lentry;
   va_list var_args;
+
+  g_return_val_if_fail (props != NULL, NULL);
   
   quark = g_quark_from_string (name);
 
@@ -621,6 +671,7 @@ gst_props_set (GstProps *props, const gchar *name, ...)
 
   return props;
 }
+
 
 /**
  * gst_props_unref:
@@ -738,7 +789,7 @@ gst_props_copy (GstProps *props)
   if (props == NULL)
     return NULL;
 
-  new = gst_props_alloc ();
+  new = gst_props_empty_new ();
   new->properties = gst_props_list_copy (props->properties);
   new->fixed = props->fixed;
 
@@ -1575,7 +1626,7 @@ gst_props_intersect (GstProps *props1, GstProps *props2)
   GList *leftovers;
   GstPropsEntry *iprops = NULL;
 
-  intersection = gst_props_alloc ();
+  intersection = gst_props_empty_new ();
   intersection->fixed = TRUE;
 
   g_return_val_if_fail (props1 != NULL, NULL);
@@ -1697,7 +1748,7 @@ gst_props_normalize (GstProps *props)
 	GstProps *newprops;
 	GList *lentry;
 
-	newprops = gst_props_alloc ();
+	newprops = gst_props_empty_new ();
 	newprops->properties = gst_props_list_copy (props->properties);
         lentry = g_list_find_custom (newprops->properties, GINT_TO_POINTER (list_entry->propid), props_find_func);
 	if (lentry) {
@@ -1940,7 +1991,7 @@ gst_props_load_thyself (xmlNodePtr parent)
   xmlNodePtr field = parent->xmlChildrenNode;
   gchar *prop;
 
-  props = gst_props_alloc ();
+  props = gst_props_empty_new ();
 
   while (field) {
     if (!strcmp (field->name, "list")) {
