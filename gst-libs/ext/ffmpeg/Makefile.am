@@ -190,13 +190,14 @@ endif
 
 if HAVE_CPU_PPC
 sources_powerpc = \
-	ffmpeg/libavcodec/ppc/dsputil_altivec.c \
 	ffmpeg/libavcodec/ppc/dsputil_ppc.c \
-	ffmpeg/libavcodec/ppc/fft_altivec.c \
-	ffmpeg/libavcodec/ppc/gmc_altivec.c \
-	ffmpeg/libavcodec/ppc/idct_altivec.c \
-	ffmpeg/libavcodec/ppc/mpegvideo_altivec.c \
 	ffmpeg/libavcodec/ppc/mpegvideo_ppc.c
+# disabled Altivec support for now until someone shows up that make them compile conditionally
+#	ffmpeg/libavcodec/ppc/dsputil_altivec.c \
+#	ffmpeg/libavcodec/ppc/fft_altivec.c \
+#	ffmpeg/libavcodec/ppc/gmc_altivec.c \
+#	ffmpeg/libavcodec/ppc/idct_altivec.c \
+#	ffmpeg/libavcodec/ppc/mpegvideo_altivec.c \
 else
 sources_powerpc =
 endif
