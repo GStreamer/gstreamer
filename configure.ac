@@ -8,12 +8,12 @@ AM_CONFIG_HEADER(config.h)
 
 GST_VERSION_MAJOR=0
 GST_VERSION_MINOR=3
-GST_VERSION_MICRO=1
+GST_VERSION_MICRO=11
 
 dnl we use a datestamped release tag during CVS development
-dnl GST_VERSION_RELEASE=`date +%Y%m%d`
+GST_VERSION_RELEASE=`date +%Y%m%d`
 dnl we use a normal release tag increased manually when releasing
-GST_VERSION_RELEASE=1
+dnl GST_VERSION_RELEASE=1
 
 GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
 
@@ -689,6 +689,7 @@ dnl components/bonobo-gstmediaplay/Makefile
 dnl someone should fix this test/misc/Makefile
 dnl wtay fix this: testsuite/threads/Makefile
 dnl testsuite/refcounting/Makefile
+dnl testsuite/cleanup/Makefile
 AC_OUTPUT(
 Makefile
 include/Makefile
@@ -714,7 +715,6 @@ testsuite/Makefile
 testsuite/bytestream/Makefile
 testsuite/capsnego/Makefile
 testsuite/plugin/Makefile
-testsuite/cleanup/Makefile
 examples/Makefile
 examples/autoplug/Makefile
 examples/helloworld/Makefile
