@@ -164,7 +164,6 @@ gst_pixbufscale_getcaps (GstPad * pad)
   GstCaps *othercaps;
   GstCaps *caps;
   GstPad *otherpad;
-  int i;
 
   pixbufscale = GST_PIXBUFSCALE (gst_pad_get_parent (pad));
 
@@ -172,14 +171,8 @@ gst_pixbufscale_getcaps (GstPad * pad)
       pixbufscale->srcpad;
   othercaps = gst_pad_get_allowed_caps (otherpad);
 
-  caps = gst_caps_copy (othercaps);
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    GstStructure *structure = gst_caps_get_structure (caps, i);
-
-    gst_structure_set (structure,
-        "width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
-        "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
-  }
+  caps = gst_caps_intersect (othercaps, gst_pad_get_pad_template_caps (pad));
+  gst_caps_free (othercaps);
 
   GST_DEBUG ("getcaps are: %" GST_PTR_FORMAT, caps);
   return caps;
