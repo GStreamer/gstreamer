@@ -278,6 +278,11 @@ gst_xml_registry_get_property (GObject* object, guint prop_id,
   }
 }
 
+/* this function returns the biggest of the path's mtime and ctime
+ * mtime is updated through an actual write (data)
+ * ctime is updated through changing inode information
+ * so this function returns the last time *anything* changed to this path
+ */
 static time_t
 get_time(const char * path)
 {
@@ -326,7 +331,8 @@ gst_xml_registry_get_perms_func (GstXMLRegistry *registry)
 
   /* if the dir does not exist, make it. if that can't be done, flags = 0x0.
      if the file can be appended to, it's writable. if it can then be read,
-     it's readable. */
+     it's readable. 
+     After that check if it exists. */
   
   if (make_dir (registry->location) != TRUE) {
     /* we can't do anything with it, leave flags as 0x0 */
@@ -343,6 +349,10 @@ gst_xml_registry_get_perms_func (GstXMLRegistry *registry)
   if ((temp = fopen (registry->location, "r"))) {
     GST_REGISTRY (registry)->flags |= GST_REGISTRY_READABLE;
     fclose (temp);
+  }
+
+  if (g_file_test (registry->location, G_FILE_TEST_EXISTS)) {
+    GST_REGISTRY (registry)->flags |= GST_REGISTRY_EXISTS;
   }
 
   if (mod_time) {
@@ -463,7 +473,22 @@ gst_xml_registry_open_func (GstXMLRegistry *registry, GstXMLRegistryMode mode)
 
   g_return_val_if_fail (registry->open == FALSE, FALSE);
 
+  /* if it doesn't exist, first try to build it, and check if it worked
+   * if it's not readable, return false
+   * if it's out of date, rebuild it */
   if (mode == GST_XML_REGISTRY_READ) {
+    if (!(gst_registry->flags & GST_REGISTRY_EXISTS))
+    {
+      GST_INFO (GST_CAT_GST_INIT, "Registry doesn't exist, trying to build...");
+      gst_registry_rebuild (gst_registry);
+      gst_registry_save (gst_registry);
+      /* FIXME: verify that the flags actually get updated ! */
+      if (!(gst_registry->flags & GST_REGISTRY_EXISTS))
+      {
+	return (FALSE);
+      }
+    }
+    /* at this point we know it exists */
     g_return_val_if_fail (gst_registry->flags & GST_REGISTRY_READABLE, FALSE);
 
     if (!plugin_times_older_than (paths, get_time (registry->location))) {
