@@ -1,3 +1,8 @@
+2004-04-18  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/faq/troubleshooting.xml:
+	  Mention gst-register in the FAQ (fixes 139045).
+
 2004-04-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/gstreamer-sections.txt:

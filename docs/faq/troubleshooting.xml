@@ -3,6 +3,31 @@
   <qandaset>
 
     <qandaentry>
+      <question id="troubleshooting-undefined-behaviour">
+        <para>
+My GStreamer-based application crashes on startup with errors about unfound
+schedulers on the command-line. I get undefined behaviour as soon as any
+GStreamer element is being initialized.
+        </para>
+      </question>
+
+      <answer>
+        <para>
+Your registry is probably missing, or it is outdated (i.e. not updated after
+a recent upgrade). Fix this by running gst-register yourself:
+          <programlisting>
+gst-register
+          </programlisting>
+In the worst case, you might have to run it both as user and as root.
+        </para>
+        <para>
+Note that package managers are suggested to run this automatically during the
+post-installation. Our RPMs and Debian packages do just that.
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
       <question id="troubleshooting-missing-plug-in">
         <para>
 Some application is telling me that I am missing a plug-in.  What do I do ?
@@ -62,6 +87,22 @@ What's  wrong ?
       </question>
 
       <answer>
+        <para>
+If you run GStreamer CVS uninstalled, it means that something changed in
+the core that requires a recompilation in the plugins. Recompile the
+plugins by doing "make clean &amp;&amp; make".
+        </para>
+        <para>
+If you run GStreamer installed, it probably means that you run the plugins
+against a different (incompatible) version than they were compiled against,
+which ususally means that you run multiple installations of GStreamer.
+Remove the old ones and - if needed - recompile again to ensure that it is
+using the right version.
+        </para>
+        <para>
+Note that we strongly recommend using Debian or RPM packages, since you will
+not get such issues if you use provided packages.
+        </para>
       </answer>
     </qandaentry>
 
