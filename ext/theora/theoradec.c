@@ -60,11 +60,20 @@ struct _GstTheoraDec
   gboolean need_keyframe;
   gint width, height;
   gint offset_x, offset_y;
+
+  gboolean crop;
 };
 
 struct _GstTheoraDecClass
 {
   GstElementClass parent_class;
+};
+
+#define THEORA_DEF_CROP		TRUE
+enum
+{
+  ARG_0,
+  ARG_CROP
 };
 
 static GstElementDetails theora_dec_details = {
@@ -93,6 +102,11 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 GST_BOILERPLATE (GstTheoraDec, gst_theora_dec, GstElement, GST_TYPE_ELEMENT);
+
+static void theora_dec_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void theora_dec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
 
 static void theora_dec_chain (GstPad * pad, GstData * data);
 static GstElementStateReturn theora_dec_change_state (GstElement * element);
@@ -125,7 +139,16 @@ gst_theora_dec_base_init (gpointer g_class)
 static void
 gst_theora_dec_class_init (GstTheoraDecClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->set_property = theora_dec_set_property;
+  gobject_class->get_property = theora_dec_get_property;
+
+  g_object_class_install_property (gobject_class, ARG_CROP,
+      g_param_spec_boolean ("crop", "Crop",
+          "Crop the image to the visible region", THEORA_DEF_CROP,
+          (GParamFlags) G_PARAM_READWRITE));
 
   gstelement_class->change_state = theora_dec_change_state;
 
@@ -157,6 +180,8 @@ gst_theora_dec_init (GstTheoraDec * dec)
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
   GST_FLAG_SET (dec, GST_ELEMENT_EVENT_AWARE);
+
+  dec->crop = THEORA_DEF_CROP;
 }
 
 /* FIXME: copy from libtheora, theora should somehow make this available for seeking */
@@ -565,14 +590,22 @@ theora_dec_chain (GstPad * pad, GstData * data)
           dec->info.frame_width, dec->info.frame_height,
           dec->info.offset_x, dec->info.offset_y);
 
-      /* add black borders to make width/height/offsets even. we need this because
-       * we cannot express an offset to the peer plugin. */
-      dec->width =
-          ROUND_UP_2 (dec->info.frame_width + (dec->info.offset_x & 1));
-      dec->height =
-          ROUND_UP_2 (dec->info.frame_height + (dec->info.offset_y & 1));
-      dec->offset_x = dec->info.offset_x & ~1;
-      dec->offset_y = dec->info.offset_y & ~1;
+      if (dec->crop) {
+        /* add black borders to make width/height/offsets even. we need this because
+         * we cannot express an offset to the peer plugin. */
+        dec->width =
+            ROUND_UP_2 (dec->info.frame_width + (dec->info.offset_x & 1));
+        dec->height =
+            ROUND_UP_2 (dec->info.frame_height + (dec->info.offset_y & 1));
+        dec->offset_x = dec->info.offset_x & ~1;
+        dec->offset_y = dec->info.offset_y & ~1;
+      } else {
+        /* no cropping, use the encoded dimensions */
+        dec->width = dec->info.width;
+        dec->height = dec->info.height;
+        dec->offset_x = 0;
+        dec->offset_y = 0;
+      }
 
       GST_DEBUG_OBJECT (dec, "after fixup frame dimension %dx%d, offset %d:%d",
           dec->width, dec->height, dec->offset_x, dec->offset_y);
@@ -725,4 +758,36 @@ theora_dec_change_state (GstElement * element)
   }
 
   return parent_class->change_state (element);
+}
+
+static void
+theora_dec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstTheoraDec *dec = GST_THEORA_DEC (object);
+
+  switch (prop_id) {
+    case ARG_CROP:
+      dec->crop = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+theora_dec_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstTheoraDec *dec = GST_THEORA_DEC (object);
+
+  switch (prop_id) {
+    case ARG_CROP:
+      g_value_set_boolean (value, dec->crop);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }

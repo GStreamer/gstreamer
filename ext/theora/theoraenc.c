@@ -43,6 +43,33 @@ GST_DEBUG_CATEGORY (theoraenc_debug);
 typedef struct _GstTheoraEnc GstTheoraEnc;
 typedef struct _GstTheoraEncClass GstTheoraEncClass;
 
+typedef enum
+{
+  BORDER_NONE,
+  BORDER_BLACK,
+  BORDER_MIRROR
+}
+GstTheoraEncBorderMode;
+
+#define GST_TYPE_BORDER_MODE (gst_border_mode_get_type())
+static GType
+gst_border_mode_get_type (void)
+{
+  static GType border_mode_type = 0;
+  static GEnumValue border_mode[] = {
+    {BORDER_NONE, "BORDER_NONE", "No Border"},
+    {BORDER_BLACK, "BORDER_BLACK", "Black Border"},
+    {BORDER_MIRROR, "BORDER_MIRROR", "Mirror image in borders"},
+    {0, NULL, NULL},
+  };
+
+  if (!border_mode_type) {
+    border_mode_type =
+        g_enum_register_static ("GstTheoraEncBorderMode", border_mode);
+  }
+  return border_mode_type;
+}
+
 struct _GstTheoraEnc
 {
   GstElement element;
@@ -57,6 +84,7 @@ struct _GstTheoraEnc
   theora_comment comment;
 
   gboolean center;
+  GstTheoraEncBorderMode border;
 
   gint video_bitrate;           /* bitrate target for Theora video */
   gint video_quality;           /* Theora quality selector 0 = low, 63 = high */
@@ -88,6 +116,7 @@ struct _GstTheoraEncClass
 #define ROUND_UP_8(x) (((x) + 7) & ~7)
 
 #define THEORA_DEF_CENTER 		TRUE
+#define THEORA_DEF_BORDER 		BORDER_BLACK
 #define THEORA_DEF_BITRATE 		0
 #define THEORA_DEF_QUALITY 		16
 #define THEORA_DEF_QUICK		TRUE
@@ -102,6 +131,7 @@ enum
 {
   ARG_0,
   ARG_CENTER,
+  ARG_BORDER,
   ARG_BITRATE,
   ARG_QUALITY,
   ARG_QUICK,
@@ -174,6 +204,11 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
       g_param_spec_boolean ("center", "Center",
           "Center image when sizes not multiple of 16", THEORA_DEF_CENTER,
           (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_BORDER,
+      g_param_spec_enum ("border", "Border",
+          "Border color to add when sizes not multiple of 16",
+          GST_TYPE_BORDER_MODE, THEORA_DEF_BORDER,
+          (GParamFlags) G_PARAM_READWRITE));
   /* general encoding stream options */
   g_object_class_install_property (gobject_class, ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Compressed video bitrate (kbps)",
@@ -228,6 +263,9 @@ gst_theora_enc_init (GstTheoraEnc * enc)
       (&theora_enc_src_factory), "src");
   gst_pad_use_explicit_caps (enc->srcpad);
   gst_element_add_pad (GST_ELEMENT (enc), enc->srcpad);
+
+  enc->center = THEORA_DEF_CENTER;
+  enc->border = THEORA_DEF_BORDER;
 
   enc->video_bitrate = THEORA_DEF_BITRATE;
   enc->video_quality = THEORA_DEF_QUALITY;
@@ -494,6 +532,7 @@ theora_enc_chain (GstPad * pad, GstData * data)
       gint dst_y_stride, dst_uv_stride;
       gint width, height;
       gint cwidth, cheight;
+      gint offset_x, right_x, right_border;
 
       /* source width/height */
       width = enc->width;
@@ -513,38 +552,89 @@ theora_enc_chain (GstPad * pad, GstData * data)
       newbuf = gst_pad_alloc_buffer (enc->srcpad,
           GST_BUFFER_OFFSET_NONE, y_size * 3 / 2);
 
-      yuv.y = GST_BUFFER_DATA (newbuf);
-      yuv.u = yuv.y + y_size;
-      yuv.v = yuv.u + y_size / 4;
-
-      /* center if needed */
-      dest_y = yuv.y + enc->offset_x + enc->offset_y * dst_y_stride;
-      dest_u =
-          yuv.u + (enc->offset_x / 2) + (enc->offset_y / 2) * dst_uv_stride;
-      dest_v =
-          yuv.v + (enc->offset_x / 2) + (enc->offset_y / 2) * dst_uv_stride;
+      dest_y = yuv.y = GST_BUFFER_DATA (newbuf);
+      dest_u = yuv.u = yuv.y + y_size;
+      dest_v = yuv.v = yuv.u + y_size / 4;
 
       src_y = GST_BUFFER_DATA (buf);
       src_u = src_y + src_y_stride * ROUND_UP_2 (height);
       src_v = src_u + src_uv_stride * ROUND_UP_2 (height) / 2;
 
+      if (enc->border != BORDER_NONE) {
+        /* fill top border */
+        for (i = 0; i < enc->offset_y; i++) {
+          memset (dest_y, 0, dst_y_stride);
+          dest_y += dst_y_stride;
+        }
+      } else {
+        dest_y += dst_y_stride * enc->offset_y;
+      }
+
+      offset_x = enc->offset_x;
+      right_x = width + enc->offset_x;
+      right_border = dst_y_stride - right_x;
+
       /* copy Y plane */
       for (i = 0; i < height; i++) {
-        memcpy (dest_y, src_y, width);
+        memcpy (dest_y + offset_x, src_y, width);
+        if (enc->border != BORDER_NONE) {
+          memset (dest_y, 0, offset_x);
+          memset (dest_y + right_x, 0, right_border);
+        }
 
         dest_y += dst_y_stride;
         src_y += src_y_stride;
       }
 
+      if (enc->border != BORDER_NONE) {
+        /* fill bottom border */
+        for (i = height + enc->offset_y; i < enc->info.height; i++) {
+          memset (dest_y, 0, dst_y_stride);
+          dest_y += dst_y_stride;
+        }
+
+        /* fill top border chroma */
+        for (i = 0; i < enc->offset_y / 2; i++) {
+          memset (dest_u, 128, dst_uv_stride);
+          memset (dest_v, 128, dst_uv_stride);
+          dest_u += dst_uv_stride;
+          dest_v += dst_uv_stride;
+        }
+      } else {
+        dest_u += dst_uv_stride * enc->offset_y / 2;
+        dest_v += dst_uv_stride * enc->offset_y / 2;
+      }
+
+      offset_x = enc->offset_x / 2;
+      right_x = cwidth + offset_x;
+      right_border = dst_uv_stride - right_x;
+
       /* copy UV planes */
       for (i = 0; i < cheight; i++) {
-        memcpy (dest_u, src_u, cwidth);
-        memcpy (dest_v, src_v, cwidth);
+        memcpy (dest_v + offset_x, src_v, cwidth);
+        memcpy (dest_u + offset_x, src_u, cwidth);
+
+        if (enc->border != BORDER_NONE) {
+          memset (dest_u, 128, offset_x);
+          memset (dest_u + right_x, 128, right_border);
+          memset (dest_v, 128, offset_x);
+          memset (dest_v + right_x, 128, right_border);
+        }
 
         dest_u += dst_uv_stride;
         dest_v += dst_uv_stride;
         src_u += src_uv_stride;
         src_v += src_uv_stride;
+      }
+
+      if (enc->border != BORDER_NONE) {
+        /* fill bottom border */
+        for (i = cheight + enc->offset_y / 2; i < enc->info_height / 2; i++) {
+          memset (dest_u, 128, dst_uv_stride);
+          memset (dest_v, 128, dst_uv_stride);
+          dest_u += dst_uv_stride;
+          dest_v += dst_uv_stride;
+        }
       }
 
       gst_buffer_unref (buf);
@@ -604,6 +694,9 @@ theora_enc_set_property (GObject * object, guint prop_id,
     case ARG_CENTER:
       enc->center = g_value_get_boolean (value);
       break;
+    case ARG_BORDER:
+      enc->border = g_value_get_enum (value);
+      break;
     case ARG_BITRATE:
       enc->video_bitrate = g_value_get_int (value) * 1000;
       enc->video_quality = 0;
@@ -648,6 +741,9 @@ theora_enc_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_CENTER:
       g_value_set_boolean (value, enc->center);
+      break;
+    case ARG_BORDER:
+      g_value_set_enum (value, enc->border);
       break;
     case ARG_BITRATE:
       g_value_set_int (value, enc->video_bitrate / 1000);
