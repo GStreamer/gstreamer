@@ -40,9 +40,11 @@ static void mikmod_Update( void )
   length = VC_WriteBytes((SBYTE *) audiobuffer, buffer_size);
   	
   outdata = gst_buffer_new();
-  
+
   GST_BUFFER_DATA( outdata ) = g_memdup( audiobuffer, length );
   GST_BUFFER_SIZE( outdata ) = length;
+
+  GST_BUFFER_TIMESTAMP( outdata ) = timestamp;
 
   if ( need_sync == 1 )
   {

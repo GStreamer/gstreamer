@@ -76,6 +76,7 @@ typedef struct _GstMikModClass GstMikModClass;
 MODULE *module;
 MREADER *reader;
 GstPad *srcpad;
+gint64 timestamp;
 int need_sync;
 
 GType gst_mikmod_get_type(void);

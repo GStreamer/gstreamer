@@ -332,13 +332,15 @@ gst_mikmod_loop (GstElement *element)
       if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) 
          break;
     }
-		
-    if ( mikmod->Buffer ) {	 
-      mikmod->Buffer = gst_buffer_append( mikmod->Buffer, buffer_in );
-      gst_buffer_unref( buffer_in );	 	  
+    else		
+    {
+      if ( mikmod->Buffer ) {	 
+        mikmod->Buffer = gst_buffer_append( mikmod->Buffer, buffer_in );
+        gst_buffer_unref( buffer_in );	 	  
+      }
+      else
+        mikmod->Buffer = buffer_in;
     }
-    else
-      mikmod->Buffer = buffer_in;
   }  
   
   if ( mikmod->_16bit )
@@ -346,6 +348,8 @@ gst_mikmod_loop (GstElement *element)
   else
     mode16bits = 8;
 
+  gst_mikmod_setup( mikmod );
+  
   MikMod_RegisterDriver(&drv_gst);
   MikMod_RegisterAllLoaders();
 
@@ -373,8 +377,9 @@ gst_mikmod_loop (GstElement *element)
 				    
   do {
     if ( Player_Active() ) {
-      drv_gst.Update();
 
+      timestamp = ( module->sngtime / 1024.0 ) * GST_SECOND;
+      drv_gst.Update();
       gst_element_yield (element);
     }
     else {
@@ -438,7 +443,6 @@ GstMikMod *mikmod;
 
   GST_DEBUG (0,"state pending %d", GST_STATE_PENDING (element));
 
-  /* if going down into NULL state, close the file if it's open */
   if (GST_STATE_PENDING (element) == GST_STATE_READY) 
   {
      gst_mikmod_setup(mikmod);
@@ -469,7 +473,6 @@ GstMikMod *mikmod;
 	  MikMod_Exit();    
   
 
-  /* if we haven't failed already, give the parent class a chance to ;-) */
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
@@ -611,7 +614,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   factory = gst_element_factory_new("mikmod",GST_TYPE_MIKMOD,
                                    &mikmod_details);
   g_return_val_if_fail(factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
+  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_SECONDARY);
  
   gst_element_factory_add_pad_template (factory, mikmod_src_factory ());
   gst_element_factory_add_pad_template (factory, mikmod_sink_factory ());
