@@ -173,6 +173,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink,
   GstXvImage *xvimage = NULL;
 
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
+  GST_DEBUG_OBJECT (xvimagesink, "creating %dx%d", width, height);
 
   xvimage = g_new0 (GstXvImage, 1);
 
@@ -185,6 +186,8 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink,
 
   xvimage->size =
       (xvimagesink->xcontext->bpp / 8) * xvimage->width * xvimage->height;
+  GST_DEBUG_OBJECT (xvimagesink, "GStreamer's image size is %d, stride %d",
+      xvimage->size, xvimage->size / xvimage->height);
 
 #ifdef HAVE_XSHM
   if (xvimagesink->xcontext->use_xshm) {
@@ -192,6 +195,9 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink,
         xvimagesink->xcontext->xv_port_id,
         xvimage->im_format, NULL,
         xvimage->width, xvimage->height, &xvimage->SHMInfo);
+    /* we have to use the returned data_size, not our own calculation */
+    xvimage->size = xvimage->xvimage->data_size;
+    GST_DEBUG_OBJECT (xvimagesink, "XShm image size is %d", xvimage->size);
 
     xvimage->SHMInfo.shmid = shmget (IPC_PRIVATE, xvimage->size,
         IPC_CREAT | 0777);
@@ -1225,7 +1231,7 @@ gst_xvimagesink_chain (GstPad * pad, GstData * data)
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     xvimagesink->time = GST_BUFFER_TIMESTAMP (buf);
   }
-  GST_DEBUG ("clock wait: %" GST_TIME_FORMAT,
+  GST_LOG_OBJECT (xvimagesink, "clock wait: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (xvimagesink->time));
 
   if (GST_VIDEOSINK_CLOCK (xvimagesink)) {
@@ -1240,6 +1246,7 @@ gst_xvimagesink_chain (GstPad * pad, GstData * data)
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
     if (!xvimagesink->xvimage) {
+      GST_DEBUG_OBJECT (xvimagesink, "creating our xvimage");
       xvimagesink->xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
           GST_VIDEOSINK_WIDTH (xvimagesink),
           GST_VIDEOSINK_HEIGHT (xvimagesink));
@@ -1334,6 +1341,7 @@ gst_xvimagesink_buffer_alloc (GstPad * pad, guint64 offset, guint size)
 
   if (!xvimage) {
     /* We found no suitable image in the pool. Creating... */
+    GST_DEBUG_OBJECT (xvimagesink, "no usable image in pool, creating xvimage");
     xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
         GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
   }

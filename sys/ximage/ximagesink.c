@@ -162,6 +162,7 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, gint width, gint height)
   GstXImage *ximage = NULL;
 
   g_return_val_if_fail (GST_IS_XIMAGESINK (ximagesink), NULL);
+  GST_DEBUG_OBJECT (ximagesink, "creating %dx%d", width, height);
 
   ximage = g_new0 (GstXImage, 1);
 
@@ -173,6 +174,8 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, gint width, gint height)
 
   ximage->size =
       (ximagesink->xcontext->bpp / 8) * ximage->width * ximage->height;
+  GST_DEBUG_OBJECT (ximagesink, "GStreamer's image size is %d, stride %d",
+      ximage->size, ximage->size / ximage->height);
 
 #ifdef HAVE_XSHM
   if (ximagesink->xcontext->use_xshm) {
@@ -180,6 +183,10 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, gint width, gint height)
         ximagesink->xcontext->visual,
         ximagesink->xcontext->depth,
         ZPixmap, NULL, &ximage->SHMInfo, ximage->width, ximage->height);
+    /* we have to use the returned bytes_per_line, not our own calculation */
+    ximage->size = ximage->ximage->bytes_per_line * ximage->ximage->height;
+    GST_DEBUG_OBJECT (ximagesink, "XShm image size is %d, stride %d",
+        ximage->size, ximage->ximage->bytes_per_line);
 
     ximage->SHMInfo.shmid = shmget (IPC_PRIVATE, ximage->size,
         IPC_CREAT | 0777);
@@ -203,9 +210,9 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, gint width, gint height)
         ximagesink->xcontext->depth,
         ZPixmap, 0, NULL,
         ximage->width, ximage->height,
-        ximagesink->xcontext->bpp,
-        ximage->width * (ximagesink->xcontext->bpp / 8));
+        ximagesink->xcontext->bpp, ximage->size / ximage->height);
 
+    /* we passed a bytes_per_line, so we know the size */
     ximage->ximage->data = g_malloc (ximage->size);
 
     XSync (ximagesink->xcontext->disp, FALSE);
@@ -270,6 +277,7 @@ static void
 gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImage * ximage)
 {
   gint x, y;
+  gint w, h;
 
   g_return_if_fail (ximage != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
@@ -278,22 +286,25 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImage * ximage)
   if (ximagesink->cur_image != ximage)
     ximagesink->cur_image = ximage;
 
-  /* We center the image in the window */
+  /* We center the image in the window; so calculate top left corner location */
   x = MAX (0, (ximagesink->xwindow->width - ximage->width) / 2);
   y = MAX (0, (ximagesink->xwindow->height - ximage->height) / 2);
+
+  w = ximage->width, h = ximage->height;
 
   g_mutex_lock (ximagesink->x_lock);
 #ifdef HAVE_XSHM
   if (ximagesink->xcontext->use_xshm) {
+    GST_LOG_OBJECT (ximagesink,
+        "XShmPutImage, src: %d, %d - dest: %d, %d, dim: %dx%d",
+        0, 0, x, y, w, h);
     XShmPutImage (ximagesink->xcontext->disp, ximagesink->xwindow->win,
-        ximagesink->xwindow->gc, ximage->ximage,
-        0, 0, x, y, ximage->width, ximage->height, FALSE);
+        ximagesink->xwindow->gc, ximage->ximage, 0, 0, x, y, w, h, FALSE);
   } else
 #endif /* HAVE_XSHM */
   {
     XPutImage (ximagesink->xcontext->disp, ximagesink->xwindow->win,
-        ximagesink->xwindow->gc, ximage->ximage,
-        0, 0, x, y, ximage->width, ximage->height);
+        ximagesink->xwindow->gc, ximage->ximage, 0, 0, x, y, w, h);
   }
 
   XSync (ximagesink->xcontext->disp, FALSE);
@@ -509,6 +520,7 @@ gst_ximagesink_renegotiate_size (GstXImageSink * ximagesink)
               (GST_VIDEOSINK_HEIGHT (ximagesink) !=
                   ximagesink->ximage->height))) {
         /* We renew our ximage only if size changed */
+        GST_DEBUG_OBJECT (ximagesink, "destroying and recreating our ximage");
         gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
         ximagesink->ximage = NULL;
       }
@@ -930,7 +942,8 @@ gst_ximagesink_chain (GstPad * pad, GstData * data)
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     ximagesink->time = GST_BUFFER_TIMESTAMP (buf);
   }
-  GST_DEBUG ("clock wait: %" GST_TIME_FORMAT, GST_TIME_ARGS (ximagesink->time));
+  GST_LOG_OBJECT (ximagesink, "clock wait: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (ximagesink->time));
 
   if (GST_VIDEOSINK_CLOCK (ximagesink)) {
     gst_element_wait (GST_ELEMENT (ximagesink), ximagesink->time);
@@ -944,6 +957,7 @@ gst_ximagesink_chain (GstPad * pad, GstData * data)
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
     if (!ximagesink->ximage) {
+      GST_DEBUG_OBJECT (ximagesink, "creating our ximage");
       ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
           GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
       if (!ximagesink->ximage) {
@@ -1034,6 +1048,7 @@ gst_ximagesink_buffer_alloc (GstPad * pad, guint64 offset, guint size)
 
   if (!ximage) {
     /* We found no suitable image in the pool. Creating... */
+    GST_DEBUG_OBJECT (ximagesink, "no usable image in pool, creating ximage");
     ximage = gst_ximagesink_ximage_new (ximagesink,
         GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
   }
