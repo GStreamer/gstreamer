@@ -138,18 +138,10 @@ gst_adder_get_type(void) {
   return adder_type;
 }
 
-static GstPadConnectReturn
-gst_adder_sinkpad_connect (GstPad *pad, GstCaps *caps)
+static gboolean
+gst_adder_parse_caps (GstAdder *adder, GstCaps *caps)
 {
-  const gchar *format;
-  GstAdder *adder;
-  
-  g_return_val_if_fail (caps != NULL, GST_PAD_CONNECT_DELAYED);
-  g_return_val_if_fail (pad  != NULL, GST_PAD_CONNECT_DELAYED);
-
-  adder = GST_ADDER (GST_PAD_PARENT (pad));
-
-  format = gst_caps_get_string (caps, "format");
+  const gchar *format = gst_caps_get_string (caps, "format");
 
   if (adder->format == GST_ADDER_FORMAT_UNSET) {
     /* the caps haven't been set yet at all, so we need to go ahead and set all
@@ -174,25 +166,57 @@ gst_adder_sinkpad_connect (GstPad *pad, GstCaps *caps)
       if ((adder->format != GST_ADDER_FORMAT_INT) ||
           (adder->width  != gst_caps_get_int (caps, "width")) ||
           (adder->is_signed != gst_caps_get_int (caps, "signed"))) {
-        return GST_PAD_CONNECT_REFUSED;
+        return FALSE;
       }
     } else if (strcmp (format, "float") == 0) {
       if (adder->format != GST_ADDER_FORMAT_FLOAT) {
-        return GST_PAD_CONNECT_REFUSED;
+        return FALSE;
       }
     } else {
       /* whoa, we don't know what's trying to connect with us ! barf ! */
-      return GST_PAD_CONNECT_REFUSED;
+      return FALSE;
     }
   }
+  return TRUE;
+}
 
-  if (GST_CAPS_IS_FIXED (caps))
-    if (gst_pad_try_set_caps (adder->srcpad, caps))
-      return GST_PAD_CONNECT_OK;
-    else
+static GstPadConnectReturn
+gst_adder_connect (GstPad *pad, GstCaps *caps)
+{
+  GstAdder *adder;
+  GList *sinkpads;
+  GstPad *p;
+  
+  g_return_val_if_fail (caps != NULL, GST_PAD_CONNECT_REFUSED);
+  g_return_val_if_fail (pad  != NULL, GST_PAD_CONNECT_REFUSED);
+
+  adder = GST_ADDER (GST_PAD_PARENT (pad));
+
+  if (GST_CAPS_IS_FIXED (caps)) {
+    if (!gst_adder_parse_caps (adder, caps))
       return GST_PAD_CONNECT_REFUSED;
-  else
+  
+    if (pad == adder->srcpad || gst_pad_try_set_caps (adder->srcpad, caps)) {
+      sinkpads = gst_element_get_pad_list ((GstElement*) adder);
+      while (sinkpads) {
+        p = (GstPad*) sinkpads->data;
+        if (p != pad && p != adder->srcpad) {
+          if (!gst_pad_try_set_caps (p, caps)) {
+            GST_DEBUG (0, "caps mismatch; disconnecting and removing pad %s:%s (peer %s:%s)\n",
+                       GST_DEBUG_PAD_NAME (p), GST_DEBUG_PAD_NAME (GST_PAD_PEER (p)));
+            gst_pad_disconnect (GST_PAD (GST_PAD_PEER (p)), p);
+            gst_element_remove_pad (GST_ELEMENT (adder), p);
+          }
+        }
+        sinkpads = g_list_next (sinkpads);
+      }
+      return GST_PAD_CONNECT_OK;
+    } else {
+      return GST_PAD_CONNECT_REFUSED;
+    }
+  } else {
     return GST_PAD_CONNECT_DELAYED;
+  }
 }
 
 static void
@@ -221,6 +245,7 @@ gst_adder_init (GstAdder *adder)
   adder->srcpad = gst_pad_new_from_template (gst_adder_src_template_factory (), "src");
   gst_element_add_pad (GST_ELEMENT (adder), adder->srcpad);
   gst_element_set_loop_function (GST_ELEMENT (adder), gst_adder_loop);
+  gst_pad_set_connect_function (adder->srcpad, gst_adder_connect);
 
   adder->format = GST_ADDER_FORMAT_UNSET;
 
@@ -261,7 +286,7 @@ gst_adder_request_new_pad (GstElement *element, GstPadTemplate *templ, const gch
   input->bytestream = gst_bytestream_new (input->sinkpad);
 
   gst_element_add_pad (GST_ELEMENT (adder), input->sinkpad);
-  gst_pad_set_connect_function(input->sinkpad, gst_adder_sinkpad_connect);
+  gst_pad_set_connect_function(input->sinkpad, gst_adder_connect);
 
   /* add the input_channel to the list of input channels */
   
