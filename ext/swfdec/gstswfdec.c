@@ -102,7 +102,7 @@ gst_swfdec_request_new_pad (GstElement *element, GstPadTemplate *templ,
 
 #if 0
 static gboolean gst_swfdec_src_event       	(GstPad *pad, GstEvent *event);
-static gboolean gst_swfdec_src_query 		(GstPad *pad, GstPadQueryType type,
+static gboolean gst_swfdec_src_query 		(GstPad *pad, GstQueryType type,
 		       				 GstFormat *format, gint64 *value);
 
 static gboolean gst_swfdec_convert_sink 	(GstPad *pad, GstFormat src_format, gint64 src_value,
@@ -851,7 +851,7 @@ gst_swfdec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
 
 #if 0
 static gboolean 
-gst_swfdec_src_query (GstPad *pad, GstPadQueryType type,
+gst_swfdec_src_query (GstPad *pad, GstQueryType type,
 		        GstFormat *format, gint64 *value)
 {
   gboolean res = TRUE;
@@ -863,7 +863,7 @@ gst_swfdec_src_query (GstPad *pad, GstPadQueryType type,
   swfdec = GST_SWFDEC (gst_pad_get_parent (pad));
 
   switch (type) {
-    case GST_PAD_QUERY_TOTAL:
+    case GST_QUERY_TOTAL:
     {
       switch (*format) {
         case GST_FORMAT_DEFAULT:
@@ -882,7 +882,7 @@ gst_swfdec_src_query (GstPad *pad, GstPadQueryType type,
 	    peer_format = formats[i];
 	  
             /* do the probe */
-            if (gst_pad_query (GST_PAD_PEER (swfdec->sinkpad), GST_PAD_QUERY_TOTAL,
+            if (gst_pad_query (GST_PAD_PEER (swfdec->sinkpad), GST_QUERY_TOTAL,
 			       &peer_format, &peer_value)) 
 	    {
               GstFormat conv_format;
@@ -906,7 +906,7 @@ gst_swfdec_src_query (GstPad *pad, GstPadQueryType type,
       }
       break;
     }
-    case GST_PAD_QUERY_POSITION:
+    case GST_QUERY_POSITION:
     {
       switch (*format) {
         case GST_FORMAT_DEFAULT:

@@ -175,7 +175,7 @@ print_progress (GstPad *pad)
   status[0] = '|';
 
   format = GST_FORMAT_PERCENT;
-  res = gst_pad_query (pad, GST_PAD_QUERY_POSITION, &format, &value);
+  res = gst_pad_query (pad, GST_QUERY_POSITION, &format, &value);
   if (res) {
     percent = value / (2 * GST_FORMAT_PERCENT_SCALE); 
   }
@@ -222,7 +222,6 @@ main (gint argc, gchar *argv[])
 
   /* create index that elements can fill */
   index = gst_index_factory_make ("memindex");
-  index = NULL;
   if (verbose && index)
     g_signal_connect (G_OBJECT (index), "entry_added", G_CALLBACK (entry_added), NULL);
 

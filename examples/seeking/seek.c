@@ -407,7 +407,7 @@ make_mpeg_pipeline (const gchar *location)
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
   demux = gst_element_factory_make_or_warn ("mpegdemux", "demux");
-  //g_object_set (G_OBJECT (demux), "sync", TRUE, NULL);
+  g_object_set (G_OBJECT (demux), "sync", TRUE, NULL);
 
   seekable_elements = g_list_prepend (seekable_elements, demux);
 
@@ -604,7 +604,7 @@ query_durations ()
       GstFormat format;
 
       format = seek_formats[i].format;
-      res = gst_pad_query (pad, GST_PAD_QUERY_TOTAL, &format, &value);
+      res = gst_pad_query (pad, GST_QUERY_TOTAL, &format, &value);
       if (res) {
         g_print ("%s %13lld | ", seek_formats[i].name, value);
       }
@@ -635,7 +635,7 @@ query_positions ()
       GstFormat format;
 
       format = seek_formats[i].format;
-      res = gst_pad_query (pad, GST_PAD_QUERY_POSITION, &format, &value);
+      res = gst_pad_query (pad, GST_QUERY_POSITION, &format, &value);
       if (res) {
         g_print ("%s %13lld | ", seek_formats[i].name, value);
       }
@@ -662,7 +662,7 @@ update_scale (gpointer data)
 
   if (seekable_pads) {
     GstPad *pad = GST_PAD (seekable_pads->data);
-    gst_pad_query (pad, GST_PAD_QUERY_TOTAL, &format, &duration);
+    gst_pad_query (pad, GST_QUERY_TOTAL, &format, &duration);
   }
   position = gst_clock_get_time (clock);
 

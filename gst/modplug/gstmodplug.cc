@@ -120,12 +120,12 @@ static void  	gst_modplug_loop          (GstElement *element);
 static void		gst_modplug_setup 		    (GstModPlug *modplug);
 static const GstFormat* 
               gst_modplug_get_formats (GstPad *pad);
-static const GstPadQueryType*
+static const GstQueryType*
               gst_modplug_get_query_types (GstPad *pad);
 static gboolean		
               gst_modplug_src_event	(GstPad *pad, GstEvent *event);
 static gboolean		
-              gst_modplug_src_query (GstPad *pad, GstPadQueryType type, GstFormat *format, gint64 *value);
+              gst_modplug_src_query (GstPad *pad, GstQueryType type, GstFormat *format, gint64 *value);
 static GstElementStateReturn  
               gst_modplug_change_state   (GstElement *element);
 
@@ -395,18 +395,18 @@ gst_modplug_get_formats (GstPad *pad)
   return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
 }
 
-static const GstPadQueryType*
+static const GstQueryType*
 gst_modplug_get_query_types (GstPad *pad)
 {
-  static const GstPadQueryType gst_modplug_src_query_types[] = {
-    GST_PAD_QUERY_TOTAL,
-    GST_PAD_QUERY_POSITION,
-    (GstPadQueryType)0
+  static const GstQueryType gst_modplug_src_query_types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
+    (GstQueryType)0
   };
   return gst_modplug_src_query_types;
 }
 static gboolean
-gst_modplug_src_query (GstPad *pad, GstPadQueryType type,
+gst_modplug_src_query (GstPad *pad, GstQueryType type,
 		                   GstFormat *format, gint64 *value)
 {
   gboolean res = TRUE;
@@ -416,7 +416,7 @@ gst_modplug_src_query (GstPad *pad, GstPadQueryType type,
   modplug = GST_MODPLUG (gst_pad_get_parent (pad));
 
   switch (type) {
-    case GST_PAD_QUERY_TOTAL:
+    case GST_QUERY_TOTAL:
       switch (*format) {
         case GST_FORMAT_DEFAULT:
             *format = GST_FORMAT_TIME;
@@ -428,7 +428,7 @@ gst_modplug_src_query (GstPad *pad, GstPadQueryType type,
             break;
       }
       break;
-    case GST_PAD_QUERY_POSITION:
+    case GST_QUERY_POSITION:
       switch (*format) {
          case GST_FORMAT_DEFAULT:
            *format = GST_FORMAT_TIME;
@@ -621,7 +621,11 @@ gst_modplug_handle_event (GstPad *pad, GstBuffer *buffer)
 
       for (i = 0; i < n; i++)
       {
-        if (gst_pad_handles_format (pad,
+        const GstFormat *formats;
+
+	formats = gst_pad_get_formats (pad);
+
+        if (gst_formats_contains (formats,
 			            GST_EVENT_DISCONT_OFFSET(event, i).format))
         {
           gint64 value = GST_EVENT_DISCONT_OFFSET (event, i).value;
@@ -754,7 +758,7 @@ gst_modplug_loop (GstElement *element)
       gint64 value;
    
       format = GST_FORMAT_TIME;
-      gst_modplug_src_query (modplug->srcpad, GST_PAD_QUERY_POSITION, &format, &value);
+      gst_modplug_src_query (modplug->srcpad, GST_QUERY_POSITION, &format, &value);
       
       if (modplug->need_discont && GST_PAD_IS_USABLE (modplug->srcpad))
       {

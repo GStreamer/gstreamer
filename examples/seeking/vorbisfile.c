@@ -230,7 +230,7 @@ collect_stream_properties (struct probe_context *context)
     format = *formats;
     formats++;
 
-    res = gst_pad_query (context->pad, GST_PAD_QUERY_TOTAL, 
+    res = gst_pad_query (context->pad, GST_QUERY_TOTAL, 
 		         &format, &value);
 
     definition = gst_format_get_details (format);

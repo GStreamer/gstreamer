@@ -548,12 +548,12 @@ gst_play_get_length_callback (GstPlay *play)
 	g_print("trying to get length\n");
 	if (play->audio_sink_element != NULL){
 		g_mutex_lock(play->audio_bin_mutex);
-		query_worked = gst_element_query (play->audio_sink_element, GST_PAD_QUERY_TOTAL, &format, &value);
+		query_worked = gst_element_query (play->audio_sink_element, GST_QUERY_TOTAL, &format, &value);
 		g_mutex_unlock(play->audio_bin_mutex);
 	}
 	else if (play->video_sink_element != NULL){
 		g_mutex_lock(play->video_bin_mutex);
-		query_worked = gst_element_query (play->video_sink_element, GST_PAD_QUERY_TOTAL, &format, &value);
+		query_worked = gst_element_query (play->video_sink_element, GST_QUERY_TOTAL, &format, &value);
 		g_mutex_unlock(play->video_bin_mutex);
 	}
 	if (query_worked){
