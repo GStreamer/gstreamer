@@ -113,17 +113,6 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
 
 static GstElementClass *parent_class = NULL;
 
-static const GstEventMask *
-gst_wavenc_get_event_masks (GstPad *pad)
-{
-	static const GstEventMask src_event_masks[] = {
-		{ GST_EVENT_EOS, 0 },
-		{ 0, }
-	};
-
-	return src_event_masks;
-}
-
 static GType
 gst_wavenc_get_type (void)
 {
@@ -267,33 +256,6 @@ gst_wavenc_stop_file (GstWavEnc *wavenc)
   gst_pad_push (wavenc->srcpad, outbuf);
 }
 
-static gboolean
-gst_wavenc_handle_event (GstPad *pad,
-			 GstEvent *event)
-{
-  GstWavEnc *wavenc;
-  GstEventType type;
-
-  wavenc = GST_WAVENC (gst_pad_get_parent (pad));
-
-  type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
-
-  switch (type) {
-  case GST_EVENT_EOS:
-    wavenc->pad_eos = TRUE;
-    gst_wavenc_stop_file (wavenc);
-    gst_pad_push (wavenc->srcpad,
-		  GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
-    gst_element_set_eos (GST_ELEMENT (wavenc));
-    break;
-
-  default:
-    break;
-  }
-
-  return TRUE;
-}
-
 static void
 gst_wavenc_init (GstWavEnc *wavenc)
 {
@@ -301,14 +263,14 @@ gst_wavenc_init (GstWavEnc *wavenc)
   gst_element_add_pad (GST_ELEMENT (wavenc), wavenc->sinkpad);
   gst_pad_set_chain_function (wavenc->sinkpad, gst_wavenc_chain);
   gst_pad_set_link_function (wavenc->sinkpad, gst_wavenc_sinkconnect);
-  gst_pad_set_event_function (wavenc->sinkpad, gst_wavenc_handle_event);
-  gst_pad_set_event_mask_function (wavenc->sinkpad, gst_wavenc_get_event_masks);
   
   wavenc->srcpad = gst_pad_new_from_template (srctemplate, "src");
   gst_element_add_pad (GST_ELEMENT (wavenc), wavenc->srcpad);
 
   wavenc->setup = FALSE;
   wavenc->flush_header = TRUE;
+
+	GST_FLAG_SET (wavenc, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
@@ -324,6 +286,19 @@ gst_wavenc_chain (GstPad *pad,
     gst_element_error (GST_ELEMENT (wavenc), "encoder not initialised (input is not audio?)");
     return;
   }
+
+	if (GST_IS_EVENT (buf)) {
+		if (GST_EVENT_TYPE (buf) == GST_EVENT_EOS) {
+			wavenc->pad_eos = TRUE;
+			gst_wavenc_stop_file (wavenc);
+			gst_pad_push (wavenc->srcpad,
+										GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+			gst_element_set_eos (GST_ELEMENT (wavenc));
+		} else {
+			gst_pad_event_default (wavenc->srcpad, GST_EVENT (buf));
+		}
+		return;
+	}
 
   if (GST_PAD_IS_USABLE (wavenc->srcpad)) {
     if (wavenc->flush_header) {
