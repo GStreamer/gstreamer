@@ -73,8 +73,10 @@ struct _GstBuffer {
   /* refcounting */
 #ifdef HAVE_ATOMIC_H
   atomic_t refcount;
+#define GST_BUFFER_REFCOUNT(buf)	(atomic_read(&(GST_BUFFER((buf))->refcount)))
 #else
   int refcount;
+#define GST_BUFFER_REFCOUNT(buf)	(GST_BUFFER(buf)->refcount)
 #endif
 
   /* data type of this buffer */

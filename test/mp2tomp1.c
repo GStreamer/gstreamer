@@ -116,6 +116,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_plugin_load("mpeg2play");
     gst_plugin_load("videoscale");
     gst_plugin_load("mpeg2enc");
+    //gst_plugin_load("mpeg1encoder");
     // construct internal pipeline elements
     parse_video = gst_elementfactory_make("mp1videoparse","parse_video");
     g_return_if_fail(parse_video != NULL);
@@ -124,6 +125,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     videoscale = gst_elementfactory_make("videoscale","videoscale");
     g_return_if_fail(videoscale != NULL);
     encode = gst_elementfactory_make("mpeg2enc","encode");
+    //encode = gst_elementfactory_make("mpeg1encoder","encode");
     g_return_if_fail(encode != NULL);
     //gtk_object_set(GTK_OBJECT(show),"width",640, "height", 480,NULL);
     fd = open(outfile,O_CREAT|O_RDWR|O_TRUNC);

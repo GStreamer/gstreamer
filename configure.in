@@ -345,8 +345,12 @@ plugins/mpeg2/mpeg2enc/Makefile
 plugins/mpeg1/Makefile
 plugins/mpeg1/mpeg_play/Makefile
 plugins/mpeg1/parse/Makefile
+plugins/mpeg1/mpeg1encoder/Makefile
 plugins/mpeg1video/Makefile
 plugins/mpeg1video/parse/Makefile
+plugins/filters/Makefile
+plugins/filters/smooth/Makefile
+plugins/filters/median/Makefile
 plugins/effects/Makefile
 plugins/effects/stereo/Makefile
 plugins/effects/volume/Makefile

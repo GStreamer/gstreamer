@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+//#define DEBUG_ENABLED
 
 #include <gstqueue.h>
 
@@ -48,6 +49,7 @@ static void gst_queue_class_init(GstQueueClass *klass);
 static void gst_queue_init(GstQueue *queue);
 static void gst_queue_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_queue_get_arg(GtkObject *object,GtkArg *arg,guint id);
+static GstBuffer *gst_queue_pull(GstPad *pad);
 
 void gst_queue_push(GstConnection *connection);
 void gst_queue_chain(GstPad *pad,GstBuffer *buf);
@@ -99,6 +101,7 @@ static void gst_queue_init(GstQueue *queue) {
   queue->sinkpad = gst_pad_new("sink",GST_PAD_SINK);
   gst_element_add_pad(GST_ELEMENT(queue),queue->sinkpad);
   gst_pad_set_chain_function(queue->sinkpad,gst_queue_chain);
+  gst_pad_set_pull_function(queue->sinkpad,gst_queue_pull);
   queue->srcpad = gst_pad_new("src",GST_PAD_SRC);
   gst_element_add_pad(GST_ELEMENT(queue),queue->srcpad);
 
@@ -123,6 +126,18 @@ GstElement *gst_queue_new(gchar *name) {
   return queue;
 }
 
+static GstBuffer *gst_queue_pull(GstPad *pad) {
+  GstQueue *queue;
+  GstBuffer *buf;
+
+  queue = GST_QUEUE(pad->parent);
+
+  if (GST_PAD_CAN_PULL(queue->srcpad) && (buf = gst_pad_pull(queue->srcpad)) != NULL) {
+    return buf;
+  }
+  else return NULL;
+}
+
 void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
   GstQueue *queue;
   gboolean tosignal = FALSE;
@@ -136,19 +151,19 @@ void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
   /* we have to lock the queue since we span threads */
   
   GST_LOCK(queue);
-  //g_print("queue: chain %d\n", queue->level_buffers);
+  DEBUG("queue: chain %d %p\n", queue->level_buffers, buf);
 
   if (queue->level_buffers >= queue->max_buffers) {
-	  //g_print("queue: waiting %d\n", queue->level_buffers);
+    DEBUG("queue: waiting %d\n", queue->level_buffers);
     GST_UNLOCK(queue);
     while (queue->level_buffers >= queue->max_buffers) {
       g_mutex_lock(queue->fulllock);
-//      g_print("0");
+      //g_print("O");
       g_cond_wait(queue->fullcond,queue->fulllock);
       g_mutex_unlock(queue->fulllock);
     }
     GST_LOCK(queue);
-	  //g_print("queue: waiting done %d\n", queue->level_buffers);
+    DEBUG("queue: waiting done %d\n", queue->level_buffers);
   }
   
 
@@ -163,20 +178,21 @@ void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
 //    queue->tail = g_list_next(queue->tail);
     queue->queue = g_list_append(queue->queue,buf);
   }
-//  g_print("+");
+  //g_print("+");
 
   /* if we were empty, but aren't any more, signal a condition */
-  tosignal = (queue->level_buffers++ == 0);
+  tosignal = (queue->level_buffers <= 0);
+  queue->level_buffers++;
 
   /* we can unlock now */
-	//g_print("queue: chain %d end\n", queue->level_buffers);
+  DEBUG("queue: chain %d end\n", queue->level_buffers);
   GST_UNLOCK(queue);
 
   if (tosignal) {
     g_mutex_lock(queue->emptylock);
     g_cond_signal(queue->emptycond);
     g_mutex_unlock(queue->emptylock);
-//    g_print(">");
+    //g_print(">");
   }
 }
 
@@ -188,13 +204,13 @@ void gst_queue_push(GstConnection *connection) {
 
   /* have to lock for thread-safety */
   GST_LOCK(queue);
-	//g_print("queue: push %d\n", queue->level_buffers);
+  DEBUG("queue: push %d\n", queue->level_buffers);
 
   if (!queue->level_buffers) {
     GST_UNLOCK(queue);
     while (!queue->level_buffers) {
       g_mutex_lock(queue->emptylock);
-//      g_print("0");
+      //g_print("U");
       g_cond_wait(queue->emptycond,queue->emptylock);
       g_mutex_unlock(queue->emptylock);
     }
@@ -204,14 +220,10 @@ void gst_queue_push(GstConnection *connection) {
   front = queue->queue;
   buf = (GstBuffer *)(front->data);
   queue->queue = g_list_remove_link(queue->queue,front);
-	//g_print("queue: pushing %d\n", queue->level_buffers);
-  gst_pad_push(queue->srcpad,buf);
-	//g_print("queue: pushing %d done\n", queue->level_buffers);
   g_list_free(front);
   queue->level_buffers--;
-
+  //g_print("-%d", queue->level_buffers);
   tosignal = queue->level_buffers < queue->max_buffers;
-	//g_print("queue: push end %d\n", queue->level_buffers);
   GST_UNLOCK(queue);
 
   if (tosignal) {
@@ -219,7 +231,10 @@ void gst_queue_push(GstConnection *connection) {
     g_cond_signal(queue->fullcond);
     g_mutex_unlock(queue->fulllock);
   }
-  
+
+  DEBUG("queue: pushing %d %p\n", queue->level_buffers, buf);
+  gst_pad_push(queue->srcpad,buf);
+  DEBUG("queue: pushing %d done\n", queue->level_buffers);
 
   /* unlock now */
 }

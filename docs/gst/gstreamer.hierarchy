@@ -1,4 +1,7 @@
 GtkObject
+  GtkWidget
+    GtkRange
+    GtkContainer
   GstObject
     GstElement
       GstBin
@@ -15,6 +18,7 @@ GtkObject
         GstFakeSrc
         GstDiskSrc
         GstAsyncDiskSrc
+        GstHttpSrc
         GstFdSrc
         GstAudioSrc
         GstSineSrc

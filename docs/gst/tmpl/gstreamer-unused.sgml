@@ -72,13 +72,6 @@
 </para>
 
 
-<!-- ##### ARG GstHttpSrc:bytesperread ##### -->
-<para>
-Specify how many bytes to read at a time.
-
-</para>
-
-
 <!-- ##### STRUCT GstBinClass ##### -->
 <para>
 
@@ -174,13 +167,6 @@ Specify how many bytes to read at a time.
 
 @Returns: 
 
-<!-- ##### MACRO GST_SINESRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
 <!-- ##### FUNCTION gst_object_get_type ##### -->
 <para>
 
@@ -188,18 +174,18 @@ Specify how many bytes to read at a time.
 
 @Returns: 
 
+<!-- ##### MACRO GST_SINESRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
 <!-- ##### SECTION ./tmpl/plugin.sgml:Long_Description ##### -->
 <para>
 
 </para>
 
-
-<!-- ##### MACRO GST_QUEUE_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
 
 <!-- ##### FUNCTION gst_audiosrc_get_type ##### -->
 <para>
@@ -207,6 +193,13 @@ Specify how many bytes to read at a time.
 </para>
 
 @Returns: 
+
+<!-- ##### MACRO GST_QUEUE_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
 
 <!-- ##### MACRO GST_IS_QUEUE ##### -->
 <para>
@@ -346,18 +339,18 @@ Specify how many bytes to read at a time.
 </para>
 
 
+<!-- ##### STRUCT GstFakeSink ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_THREAD_CLASS ##### -->
 <para>
 
 </para>
 
 @klass: 
-
-<!-- ##### STRUCT GstFakeSink ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### MACRO GST_BIN_CLASS ##### -->
 <para>
@@ -667,14 +660,14 @@ The frequency.
 </para>
 
 
-<!-- ##### MACRO GST_ESDSINK_CLASS ##### -->
+<!-- ##### MACRO GST_ASYNCDISKSRC_CLASS ##### -->
 <para>
 
 </para>
 
 @klass: 
 
-<!-- ##### MACRO GST_ASYNCDISKSRC_CLASS ##### -->
+<!-- ##### MACRO GST_ESDSINK_CLASS ##### -->
 <para>
 
 </para>
@@ -1274,19 +1267,19 @@ plugin
 </para>
 
 
-<!-- ##### FUNCTION gst_audiosink_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### MACRO GST_META ##### -->
 <para>
 
 </para>
 
 @meta: 
+
+<!-- ##### FUNCTION gst_audiosink_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gst_httpsrc_get_type ##### -->
 <para>
@@ -1329,18 +1322,18 @@ plugin
 </para>
 
 
-<!-- ##### MACRO GST_TYPE_FILTER ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_IS_SINESRC_CLASS ##### -->
 <para>
 
 </para>
 
 @obj: 
+
+<!-- ##### MACRO GST_TYPE_FILTER ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### MACRO GST_IS_AUDIOSRC_CLASS ##### -->
 <para>
@@ -1419,16 +1412,16 @@ GstElement
 
 @obj: 
 
-<!-- ##### SECTION ./tmpl/plugin.sgml:Short_Description ##### -->
-
-
-
 <!-- ##### FUNCTION gst_audiosrc_push ##### -->
 <para>
 
 </para>
 
 @src: 
+
+<!-- ##### SECTION ./tmpl/plugin.sgml:Short_Description ##### -->
+
+
 
 <!-- ##### MACRO GST_HTTPSRC_CLASS ##### -->
 <para>
@@ -1494,12 +1487,6 @@ GstElement
 </para>
 
 @klass: 
-
-<!-- ##### ARG GstHttpSrc:location ##### -->
-<para>
-Specify the location of the file. The location must be a fully qualified URL.
-</para>
-
 
 <!-- ##### MACRO GST_IS_AUDIOSINK ##### -->
 <para>

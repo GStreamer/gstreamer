@@ -74,18 +74,19 @@ static char gst_videoscale_interp_simple(unsigned char *src, int x, int y, int d
   int interp;
   int i,j;
 
-  if (x>0) src--;
-  if (x>dw-1) src--;
-  if (y>0) src-=sw;
-  if (y>dh-1) src-=sw;
+  //printf("scale: %d %d %p\n", ix, iy, src);
+  if (x>=ix) src-=(ix);
+  if (y>=iy) src-=(sw*iy);
 
   isourcep = src;
   interp =0;
 
   for (i =0; i<iy; i++) {
     for (j =0; j<ix; j++) {
+      //printf("%d ", *isourcep);
       interp += *isourcep++;
     }
+    //printf("\n");
     isourcep = isourcep-ix+sw;
   }
   return interp/(ix*iy);
@@ -153,7 +154,8 @@ static void gst_videoscale_scale_plane(unsigned char *src, unsigned char *dest, 
       }
       sourcep += xinc;
 
-      *dest++ = gst_videoscale_interp_other(sourcep, x, y, dw, dh, sw, sh, 3, 3);
+      *dest++ = gst_videoscale_interp_simple(sourcep, x, y, dw, dh, sw, sh, xinc+xskip, yinc+yskip);
+      //*dest++ = *sourcep;
     }
     if (dy <= 0) {
       dy += incyE;
