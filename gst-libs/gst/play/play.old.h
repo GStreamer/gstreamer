@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000,2001,2002 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000,2001,2002 Wim Taymans <wtay@chello.be>
  *                              2002 Steve Baker <steve@stevebaker.org>
- *								2003 Julien Moutte <julien@moutte.net>
+ *                              2003 Julien Moutte <julien@moutte.net>
  *
  * play.h: GstPlay object code
  *
@@ -117,9 +117,6 @@ struct _GstPlay
 
 	GstClock *clock;
 
-	GMutex *audio_bin_mutex;
-	GMutex *video_bin_mutex;
-
 	gboolean need_stream_length;
 	gboolean need_seek;
  	gint time_seconds;
@@ -139,25 +136,25 @@ struct _GstPlayClass
 	GObjectClass parent_class;
 	
 	/* signals */
-	void (*information)		(	GstPlay* play,
+	void (*information)		(GstPlay* play,
 								GstObject* element,
 								GParamSpec *param);
-	void (*pipeline_error)	(	GstPlay* play,
+	void (*pipeline_error)	(GstPlay* play,
 								GstElement* element,
-								gchar *error);
-	void (*state_changed)	(	GstPlay* play,
+								char *error);
+	void (*state_changed)	(GstPlay* play,
 								GstElementState old_state,
 								GstElementState new_state);
-	void (*stream_end)		(	GstPlay* play);
-	void (*time_tick)		(	GstPlay* play,
+	void (*stream_end)		(GstPlay* play);
+	void (*time_tick)		(GstPlay* play,
 								gint64 time_nanos);
-	void (*stream_length)	(	GstPlay* play,
+	void (*stream_length)	(GstPlay* play,
 								gint64 length_nanos);
-	void (*have_xid)	  	(	GstPlay* play,
+	void (*have_xid)	  	(GstPlay* play,
 								gint xid);
-	void (*have_vis_xid)	 (	GstPlay* play,
+	void (*have_vis_xid)	 (GstPlay* play,
 								gint xid);
-	void (*have_video_size)	(	GstPlay* play,
+	void (*have_video_size)	(GstPlay* play,
 								gint width,
 								gint height);
 };
