@@ -215,7 +215,7 @@ main (gint argc, gchar *argv[])
       POPT_TABLEEND
     };
 
-  if (!gst_init_with_popt_table (&argc, &argv, options) || argc < 3) {
+  if (!gst_init_check_with_popt_table (&argc, &argv, options) || argc < 3) {
     g_print ("usage: %s [-v] <type> <filename>  \n" 
 	     "  type can be: 0 mpeg_systems\n"
 	     "               1 mpeg_decoder\n"
