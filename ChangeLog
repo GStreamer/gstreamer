@@ -1,3 +1,12 @@
+=== release 0.8.7 ===
+
+2005-01-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  releasing 0.8.7, "Hyperspace"
+
 2005-01-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch by: Tim-Philipp Müller  <t.i.m@zen.co.uk>
@@ -43,7 +52,6 @@
 	  Initialize caps cache to NULL.
 	* gst/playback/gstplaybin.c: (gst_play_bin_change_state):
 	  Only change state on audiosink if it exists.
-
 
 2004-12-28  Maciej Katafiasz  <mathrick@mathrick.org>
 
@@ -489,16 +497,17 @@
 	fix my name's spelling! :)
 
 2004-12-11  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
+
 	* AUTHORS ChangeLog
 	* gst/auparse/gstauparse.c
 	* gst/interleave/deinterleave.c
-	* gst/law/ :
+	* gst/law/:
 		alaw-decode.c alaw-encode.c
 		mulaw-decode.c mulaw-encode.c
 	* gst/oneton/gstoneton.c
-	* sys/osxaudio/ :
+	* sys/osxaudio/:
 		gstosxaudioelement.c gstosxaudiosink.c gstosxaudiosrc.c
-	* sys/osxvideo/ :
+	* sys/osxvideo/:
 		cocoawindow.h cocoawindow.m
 		osxvideosink.h osxvideosink.m
 
@@ -559,11 +568,10 @@
 
 2004-12-07  Christian Fredrik Kalager Schaller  <uraeus@gnome.org>
 
-	Woooho Monoscope is now effectivly LGPL licensed
-
 	* gst/monoscope/README: remove blurb about files being GPL
 	* gst/monoscope/gstmonoscope.c: Change license field to LGPL
 	* gst/monoscope/monoscope.c: Change license to BSD with explanation
+	  monoscope is now effectively LGPL licensed
 
 2004-12-07  Christian Fredrik Kalager Schaller  <uraeus@gnome.org>
 
@@ -806,7 +814,7 @@
 	* ext/alsa/gstalsa.h:
 	* ext/alsa/gstalsa.c (gst_alsa_set_clock):
 	Make alsasink actually honor gst_element_set_clock and use that
-	clock instead of ist internal one.
+	clock instead of its internal one.
 
 2004-11-27  Christophe Fergeau  <teuf@gnome.org>
 
@@ -871,6 +879,7 @@
 	grows and avoid abrupt value changes.
 
 2004-11-27  Arwed v. Merkatz <v.merkatz@gmx.net>
+
 	* configure.ac:
 	* gst/tta/Makefile.am:
 	* gst/tta/crc32.h:
@@ -900,7 +909,7 @@
 2004-11-26  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_get_caps):
-	  Don't omit the last (which incase of dmix is the only :) )
+	  Don't omit the last (which in case of dmix is the only :) )
 	  channel count. Don't set channels if <= 2.
 
 2004-11-26  Christophe Fergeau  <teuf@gnome.org>
