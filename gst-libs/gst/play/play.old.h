@@ -77,8 +77,8 @@ typedef struct _GstPlay          GstPlay;
 typedef struct _GstPlayClass     GstPlayClass;
 typedef struct _GstPlayIdleData  GstPlayIdleData;
 
-typedef void (*GstPlayTimeoutAdd) (guint interval, GSourceFunc function, gpointer data);
-typedef void (*GstPlayIdleAdd)    (GSourceFunc function, gpointer data);
+typedef guint (*GstPlayTimeoutAdd) (guint interval, GSourceFunc function, gpointer data);
+typedef guint (*GstPlayIdleAdd)    (GSourceFunc function, gpointer data);
 
 struct _GstPlay
 {
@@ -116,6 +116,12 @@ struct _GstPlay
 	gint64 seek_time;
  	gint64 time_nanos;
  	gint64 length_nanos;
+	
+	/*fixored by dolphy */
+	
+	guint tick_timeout_id;
+	guint idle_timeout_id;
+	guint idle_signal_id;
 
 	GAsyncQueue *signal_queue;
 
