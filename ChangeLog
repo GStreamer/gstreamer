@@ -1,5 +1,12 @@
 2004-01-02  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* sys/v4l/gstv4lmjpegsink.c: (gst_v4lmjpegsink_init):
+	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_init):
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_base_init), (gst_v4lsrc_init):
+	  Fix pad template stuff.
+
+2004-01-02  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/matroska/ebml-read.c: (gst_ebml_read_sint):
 	* gst/matroska/ebml-write.c: (gst_ebml_write_sint):
 	  fix signed integer reading/writing.
