@@ -212,7 +212,7 @@ gst_autoplugcache_loop (GstElement *element)
   /* the first time through, the current_playout pointer is going to be NULL */
   if (cache->current_playout == NULL) {
     /* get a buffer */
-    buf = gst_pad_pull (cache->sinkpad);
+    buf = GST_BUFFER (gst_pad_pull (cache->sinkpad));
     if (GST_IS_EVENT (buf)) {
       gst_pad_event_default (cache->sinkpad, GST_EVENT (buf));
       return;
@@ -229,7 +229,7 @@ gst_autoplugcache_loop (GstElement *element)
     g_signal_emit (G_OBJECT(cache), gst_autoplugcache_signals[FIRST_BUFFER], 0, buf);
 
     /* send the buffer on its way */
-    gst_pad_push (cache->srcpad, buf);
+    gst_pad_push (cache->srcpad, GST_DATA (buf));
   }
   /* the steady state is where the playout is at the front of the cache */
   else if (g_list_previous(cache->current_playout) == NULL) {
@@ -249,7 +249,7 @@ gst_autoplugcache_loop (GstElement *element)
     }
 
     /* get a buffer */
-    buf = gst_pad_pull (cache->sinkpad);
+    buf = GST_BUFFER (gst_pad_pull (cache->sinkpad));
     if (GST_IS_EVENT (buf)) {
       gst_pad_event_default (cache->sinkpad, GST_EVENT (buf));
       return;
@@ -264,7 +264,7 @@ gst_autoplugcache_loop (GstElement *element)
     cache->current_playout = cache->cache;
 
     /* send the buffer on its way */
-    gst_pad_push (cache->srcpad, buf);
+    gst_pad_push (cache->srcpad, GST_DATA (buf));
   }
 
   /* otherwise we're trundling through existing cached buffers */
@@ -278,7 +278,7 @@ gst_autoplugcache_loop (GstElement *element)
     }
 
     /* push that buffer */
-    gst_pad_push (cache->srcpad, GST_BUFFER(cache->current_playout->data));
+    gst_pad_push (cache->srcpad, GST_DATA (GST_BUFFER(cache->current_playout->data)));
   }
 }
 

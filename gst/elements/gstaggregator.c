@@ -92,7 +92,7 @@ static void 	gst_aggregator_set_property 	(GObject *object, guint prop_id,
 static void 	gst_aggregator_get_property 	(GObject *object, guint prop_id, 
 						 GValue *value, GParamSpec *pspec);
 
-static void  	gst_aggregator_chain 		(GstPad *pad, GstBuffer *buf);
+static void  	gst_aggregator_chain 		(GstPad *pad, GstData *_data);
 static void 	gst_aggregator_loop 		(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
@@ -286,7 +286,7 @@ gst_aggregator_push (GstAggregator *aggregator, GstPad *pad, GstBuffer *buf, guc
     g_object_notify (G_OBJECT (aggregator), "last_message");
   }
 
-  gst_pad_push (aggregator->srcpad, buf);
+  gst_pad_push (aggregator->srcpad, GST_DATA (buf));
 }
 
 static void 
@@ -313,7 +313,7 @@ gst_aggregator_loop (GstElement *element)
        * and that the peer pad is also enabled.
        */
       if (GST_PAD_IS_USABLE (pad)) {
-        buf = gst_pad_pull (pad);
+        buf = GST_BUFFER (gst_pad_pull (pad));
         debug = "loop";
 
 	/* then push it forward */
@@ -328,7 +328,7 @@ gst_aggregator_loop (GstElement *element)
       debug = "loop_select";
 
       pad = gst_pad_select (aggregator->sinkpads);
-      buf = gst_pad_pull (pad);
+      buf = GST_BUFFER (gst_pad_pull (pad));
 
       gst_aggregator_push (aggregator, pad, buf, debug);
     }
@@ -346,8 +346,9 @@ gst_aggregator_loop (GstElement *element)
  * Chain a buffer on a pad.
  */
 static void 
-gst_aggregator_chain (GstPad *pad, GstBuffer *buf) 
+gst_aggregator_chain (GstPad *pad, GstData *_data) 
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstAggregator *aggregator;
 
   g_return_if_fail (pad != NULL);

@@ -117,6 +117,7 @@ struct _GstOptSchedulerChain {
   gint				 num_groups;
   gint				 num_enabled;
 };
+
 /* 
  * elements that are scheduled in one cothread 
  */
@@ -187,7 +188,9 @@ struct _GstOptSchedulerGroup {
 /* some group operations */
 static GstOptSchedulerGroup* 	ref_group 			(GstOptSchedulerGroup *group);
 #ifndef USE_COTHREADS
+/*
 static GstOptSchedulerGroup* 	ref_group_by_count 		(GstOptSchedulerGroup *group, gint count);
+*/
 #endif
 static GstOptSchedulerGroup* 	unref_group 			(GstOptSchedulerGroup *group);
 static void 			destroy_group 			(GstOptSchedulerGroup *group);
@@ -253,67 +256,6 @@ static void     	gst_opt_scheduler_show  		(GstScheduler *sched);
 
 static GstSchedulerClass *parent_class = NULL;
 
-/* debug functions */
-
-static void
-gst_opt_scheduler_group_debug (GstOptSchedulerGroup *group)
-{
-  GSList *el;
-  GstElement *e;
-  gchar *string;
-  gchar *name;
-  gchar *s;
-
-  el = group->elements;
-
-  if (!el) return;
-  e = GST_ELEMENT (el->data);
-  string = g_strdup (GST_ELEMENT_NAME (e));
-  el = el->next;
-
-  while (el)
-  {
-    e = GST_ELEMENT (el->data);
-    s = string;
-    name = g_strdup_printf (",%s", GST_ELEMENT_NAME (e));
-    string = g_strconcat (s, name, NULL);
-    g_free (s);
-    g_free (name);
-    el = el->next;
-  }
-  GST_DEBUG ("scheduler group %p: %s", group, string);
-  g_free (string);
-}
-
-
-static void
-gst_opt_scheduler_chain_debug (GstOptSchedulerChain *chain, const gchar *label)
-{
-  GSList *group = NULL;
-
-  GST_DEBUG ("starting opt scheduler chain debug: %s", label);
-  GST_DEBUG ("refcount %d, num_groups %d, num_enabled %d",
-             chain->refcount, chain->num_groups, chain->num_enabled);
-  GST_DEBUG ("scheduler %p", chain->sched);
-  group = chain->groups;
-  while (group)
-  {
-    gst_opt_scheduler_group_debug ((GstOptSchedulerGroup *) group->data);
-    group = group->next;
-  }
-  GST_DEBUG ("finished caps debug");
-}
-
-#ifndef USE_COTHREADS
-static void
-gst_opt_scheduler_debug (GstOptScheduler *osched, const gchar *label)
-{
-  GST_INFO ("%s:debugging scheduler run queue with recursion %d and length %d", 
-	    label, osched->recursion, g_list_length (osched->runqueue));
-  g_list_foreach (osched->runqueue, (GFunc) gst_opt_scheduler_group_debug, NULL);
-}
-#endif
- 
 static GType
 gst_opt_scheduler_get_type (void)
 {
@@ -654,6 +596,7 @@ ref_group (GstOptSchedulerGroup *group)
 }
 
 #ifndef USE_COTHREADS
+/* remove me
 static GstOptSchedulerGroup*
 ref_group_by_count (GstOptSchedulerGroup *group, gint count)
 {
@@ -664,6 +607,7 @@ ref_group_by_count (GstOptSchedulerGroup *group, gint count)
 
   return group;
 }
+*/
 #endif
 
 static GstOptSchedulerGroup*
@@ -866,7 +810,6 @@ group_element_set_enabled (GstOptSchedulerGroup *group, GstElement *element, gbo
 static gboolean 
 schedule_group (GstOptSchedulerGroup *group) 
 {
-  g_assert (group != NULL);
   if (!group->entry) {
     GST_INFO ( "not scheduling group %p without entry", group);
     return FALSE;
@@ -911,8 +854,7 @@ schedule_group (GstOptSchedulerGroup *group)
 static void
 gst_opt_scheduler_schedule_run_queue (GstOptScheduler *osched)
 {
-  GST_LOG_OBJECT (osched,
-                  "entering scheduler run queue (recursion %d, length %d)", 
+  GST_LOG_OBJECT (osched, "entering scheduler run queue recursion %d %d", 
 		  osched->recursion, g_list_length (osched->runqueue));
 
   /* make sure we don't exceed max_recursion */
@@ -926,24 +868,12 @@ gst_opt_scheduler_schedule_run_queue (GstOptScheduler *osched)
   while (osched->runqueue) {
     GstOptSchedulerGroup *group;
     gboolean res;
-    GList *p;
     
     group = (GstOptSchedulerGroup *) osched->runqueue->data;
 
-    /* Get the next group that isn't disabled */
-    p = osched->runqueue;
-    while (GST_OPT_SCHEDULER_GROUP_IS_DISABLED (group)) {
-      p = p->next;
-      if (p == NULL) {
-	return;
-      }
-      group = (GstOptSchedulerGroup *) p->data;
-    }
-
-    /* runqueue holds refcount to group */
-    gst_opt_scheduler_debug (osched, "scheduler runqueue loop");
+    /* runqueue hols refcount to group */
     osched->runqueue = g_list_remove (osched->runqueue, group);
-    
+
     GST_LOG_OBJECT (osched, "scheduling group %p", group);
 
     res = schedule_group (group);
@@ -957,9 +887,7 @@ gst_opt_scheduler_schedule_run_queue (GstOptScheduler *osched)
     unref_group (group);
   }
 
-#if 0
   GST_LOG_OBJECT (osched, "run queue length after scheduling %d", g_list_length (osched->runqueue));
-#endif
 
   osched->recursion--;
 }
@@ -975,8 +903,6 @@ schedule_chain (GstOptSchedulerChain *chain)
   osched = chain->sched;
   groups = chain->groups;
 
-  GST_DEBUG ("scheduling chain %p with %d groups",
-             chain, g_slist_length (groups));
   while (groups) {
     GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) groups->data;
 
@@ -989,13 +915,12 @@ schedule_chain (GstOptSchedulerChain *chain)
       schedule_group (group);
 #else
       osched->recursion = 0;
-      if (osched->runqueue == NULL || group != osched->runqueue->data) {
-	ref_group (group);
-	osched->runqueue = g_list_append (osched->runqueue, group);
+      if (!g_list_find (osched->runqueue, group))
+      {
+        ref_group (group);
+        osched->runqueue = g_list_append (osched->runqueue, group);
       }
-      GST_LOG ("calling scheduler_run_queue on %p", osched);
       gst_opt_scheduler_schedule_run_queue (osched);
-      GST_LOG ("calling scheduler_run_queue on %p done", osched);
 #endif
 
       GST_LOG ("done scheduling group %p in chain %p", 
@@ -1006,7 +931,6 @@ schedule_chain (GstOptSchedulerChain *chain)
 
     groups = g_slist_next (groups);
   }
-  GST_DEBUG ("done scheduling chain %p", chain);
 }
 
 /* a get-based group is scheduled by getting a buffer from the get based
@@ -1025,7 +949,7 @@ get_group_schedule_function (int argc, char *argv[])
   group->flags |= GST_OPT_SCHEDULER_GROUP_RUNNING;
 
   while (pads) {
-    GstBuffer *buffer;
+    GstData *data;
     GstPad *pad = GST_PAD_CAST (pads->data);
     pads = g_list_next (pads);
 
@@ -1036,13 +960,13 @@ get_group_schedule_function (int argc, char *argv[])
     GST_LOG ("doing get and push on pad \"%s:%s\" in group %p", 
 	     GST_DEBUG_PAD_NAME (pad), group);
 
-    buffer = GST_RPAD_GETFUNC (pad) (pad);
-    if (buffer) {
-      if (GST_EVENT_IS_INTERRUPT (buffer)) {
-	gst_event_unref (GST_EVENT (buffer));
+    data = GST_RPAD_GETFUNC (pad) (pad);
+    if (data) {
+      if (GST_EVENT_IS_INTERRUPT (data)) {
+	gst_event_unref (GST_EVENT (data));
 	break;
       }
-      gst_pad_push (pad, buffer);
+      gst_pad_push (pad, data);
     }
   }
 
@@ -1095,7 +1019,7 @@ unknown_group_schedule_function (int argc, char *argv[])
  * link performs a push to the loop element. We then schedule the
  * group with the loop-based element until the bufpen is empty */
 static void
-gst_opt_scheduler_loop_wrapper (GstPad *sinkpad, GstBuffer *buffer)
+gst_opt_scheduler_loop_wrapper (GstPad *sinkpad, GstData *data)
 {
   GstOptSchedulerGroup *group;
   GstOptScheduler *osched;
@@ -1112,36 +1036,33 @@ gst_opt_scheduler_loop_wrapper (GstPad *sinkpad, GstBuffer *buffer)
     group_error_handler (group);
   }
   else {
-    GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)) = g_list_append (GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)), buffer);
+    GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)) = g_list_append (GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)), data);
     schedule_group (group);
   }
 #else
-  GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)) = g_list_append (GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)), buffer);
+  GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)) = g_list_append (GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)), data);
   if (!(group->flags & GST_OPT_SCHEDULER_GROUP_RUNNING)) {
-    /* Only schedule the group if it's not already scheduled */
-    if (osched->runqueue == NULL || osched->runqueue->data != group) {
+    GST_LOG ("adding %p to runqueue", group);
+    if (!g_list_find (osched->runqueue, group))
+    {
       ref_group (group);
-      GST_LOG ("adding %p to runqueue", group);
       osched->runqueue = g_list_append (osched->runqueue, group);
-    } 
+    }
   }
 #endif
-
-#if 0
+  
   GST_LOG ("after loop wrapper buflist %d", 
 	    g_list_length (GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad))));
-#endif
 }
 
 /* this function is called by a loop based element that performs a
  * pull on a sinkpad. We schedule the peer group until the bufpen
  * is filled with the buffer so that this function  can return */
-static GstBuffer*
+static GstData*
 gst_opt_scheduler_get_wrapper (GstPad *srcpad)
 {
-  GstBuffer *buffer;
-  GstPad *sinkpad;
-  GstOptSchedulerGroup *group, *peergroup;
+  GstData *data;
+  GstOptSchedulerGroup *group;
   GstOptScheduler *osched;
   gboolean disabled;
     
@@ -1149,24 +1070,19 @@ gst_opt_scheduler_get_wrapper (GstPad *srcpad)
 
   /* first try to grab a queued buffer */
   if (GST_PAD_BUFLIST (srcpad)) {
-    buffer = GST_PAD_BUFLIST (srcpad)->data;
-    GST_PAD_BUFLIST (srcpad) = g_list_remove (GST_PAD_BUFLIST (srcpad), buffer);
+    data = GST_PAD_BUFLIST (srcpad)->data;
+    GST_PAD_BUFLIST (srcpad) = g_list_remove (GST_PAD_BUFLIST (srcpad), data);
     
-    GST_LOG ("get wrapper, returning queued buffer");
+    GST_LOG ("get wrapper, returning queued data %d",
+	     g_list_length (GST_PAD_BUFLIST (srcpad)));
 
-    return buffer;
+    return data;
   }
 
-  sinkpad = gst_pad_get_peer (srcpad);
-  peergroup = GST_ELEMENT_SCHED_GROUP (GST_PAD_PARENT (sinkpad));
-  /* Disable the loop group */
-  peergroup->flags &= ~GST_OPT_SCHEDULER_GROUP_RUNNING;
-  peergroup->flags |= GST_OPT_SCHEDULER_GROUP_DISABLED;
-  
   /* else we need to schedule the peer element */
   group = GST_ELEMENT_SCHED_GROUP (GST_PAD_PARENT (srcpad));
   osched = group->chain->sched;
-  buffer = NULL;
+  data = NULL;
   disabled = FALSE;
 
   do {
@@ -1174,10 +1090,14 @@ gst_opt_scheduler_get_wrapper (GstPad *srcpad)
     schedule_group (group);
 #else
     if (!(group->flags & GST_OPT_SCHEDULER_GROUP_RUNNING)) {
-      ref_group_by_count (group, 2);
+      ref_group (group);
 
-      gst_opt_scheduler_debug (osched, "scheduler debug");
-      osched->runqueue = g_list_append (osched->runqueue, group);
+      if (!g_list_find (osched->runqueue, group))
+      {
+        ref_group (group);
+        osched->runqueue = g_list_append (osched->runqueue, group);
+      }
+
       GST_LOG_OBJECT (osched, "recursing into scheduler group %p", group);
       gst_opt_scheduler_schedule_run_queue (osched);
       GST_LOG_OBJECT (osched, "return from recurse group %p", group);
@@ -1192,52 +1112,48 @@ gst_opt_scheduler_get_wrapper (GstPad *srcpad)
       }
     }
     else {
-      /* in this case, the group was running and we wanted to swich to it,
+      /* in this case, the group was running and we wanted to swtich to it,
        * this is not allowed in the optimal scheduler (yet) */
       g_warning ("deadlock detected, disabling group %p", group);
       group_error_handler (group);
-      return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
+      return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
     }
 #endif
-
-    /* Reenable our loop group */
-    peergroup->flags &= ~GST_OPT_SCHEDULER_GROUP_DISABLED;
-    peergroup->flags |= GST_OPT_SCHEDULER_GROUP_RUNNING;
-    
     /* if the scheduler interrupted, make sure we send an INTERRUPTED event to the
      * loop based element */
     if (osched->state == GST_OPT_SCHEDULER_STATE_INTERRUPTED) {
       GST_INFO ( "scheduler interrupted, return interrupt event");
-      buffer = GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
+      data = GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
     }
     else {
       if (GST_PAD_BUFLIST (srcpad)) {
-        buffer = (GstBuffer *) GST_PAD_BUFLIST (srcpad)->data;
-        GST_PAD_BUFLIST (srcpad) = g_list_remove (GST_PAD_BUFLIST (srcpad), buffer);
+        data = GST_PAD_BUFLIST (srcpad)->data;
+        GST_PAD_BUFLIST (srcpad) = g_list_remove (GST_PAD_BUFLIST (srcpad), data);
       }
       else if (disabled) {
         /* no buffer in queue and peer group was disabled */
-        buffer = GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
+        data = GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
       }
     }
   }
-  while (buffer == NULL);
+  while (data == NULL);
 
-  GST_LOG ("get wrapper, returning buffer %p", buffer);
+  GST_LOG ("get wrapper, returning data %p, queue length %d",
+	   data, g_list_length (GST_PAD_BUFLIST (srcpad)));
 
-  return buffer;
+  return data;
 }
 
 /* this function is a chain wrapper for non-event-aware plugins,
  * it'll simply dispatch the events to the (default) event handler */
 static void
-gst_opt_scheduler_chain_wrapper (GstPad *sinkpad, GstBuffer *buffer)
+gst_opt_scheduler_chain_wrapper (GstPad *sinkpad, GstData *data)
 {
-  if (GST_IS_EVENT (buffer)) {
-    gst_pad_send_event (sinkpad, GST_EVENT (buffer));
+  if (GST_IS_EVENT (data)) {
+    gst_pad_send_event (sinkpad, GST_EVENT (data));
   }
   else {
-    GST_RPAD_CHAINFUNC (sinkpad) (sinkpad, buffer);
+    GST_RPAD_CHAINFUNC (sinkpad) (sinkpad, data);
   }
 }
 
@@ -2148,18 +2064,13 @@ gst_opt_scheduler_iterate (GstScheduler *sched)
 
     /* we have to schedule each of the scheduler chains now */
     chains = osched->chains;
-    GST_INFO ("going through all chains (%d)",
-              g_slist_length (chains));
     while (chains) {
       GstOptSchedulerChain *chain = (GstOptSchedulerChain *) chains->data;
 
-      gst_opt_scheduler_chain_debug (chain, "chain loop");
       ref_chain (chain);
       /* if the chain is not disabled, schedule it */
       if (!GST_OPT_SCHEDULER_CHAIN_IS_DISABLED (chain)) {
-        GST_INFO ("chain %p enabled, scheduling", chain);
         schedule_chain (chain);
-        GST_INFO ("chain %p enabled, scheduling done", chain);
         scheduled = TRUE;
       }
 
@@ -2178,7 +2089,6 @@ gst_opt_scheduler_iterate (GstScheduler *sched)
       chains = g_slist_next (chains);
       unref_chain (chain);
     }
-    GST_INFO ("done going through all chains");
 
     /* at this point it's possible that the scheduler state is
      * in error, we then return an error */

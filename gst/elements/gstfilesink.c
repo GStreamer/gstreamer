@@ -83,7 +83,7 @@ static void 	gst_filesink_close_file 	(GstFileSink *sink);
 static gboolean gst_filesink_handle_event       (GstPad *pad, GstEvent *event);
 static gboolean	gst_filesink_pad_query		(GstPad *pad, GstQueryType type,
 						 GstFormat *format, gint64 *value);
-static void	gst_filesink_chain		(GstPad *pad,GstBuffer *buf);
+static void	gst_filesink_chain		(GstPad *pad,GstData *_data);
 
 static GstElementStateReturn gst_filesink_change_state (GstElement *element);
 
@@ -361,8 +361,9 @@ gst_filesink_handle_event (GstPad *pad, GstEvent *event)
  * take the buffer from the pad and write to file if it's open
  */
 static void 
-gst_filesink_chain (GstPad *pad, GstBuffer *buf) 
+gst_filesink_chain (GstPad *pad, GstData *_data) 
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstFileSink *filesink;
 
   g_return_if_fail (pad != NULL);

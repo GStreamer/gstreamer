@@ -71,7 +71,7 @@ static void 	gst_tee_set_property 	(GObject *object, guint prop_id,
 static void 	gst_tee_get_property 	(GObject *object, guint prop_id, 
 					 GValue *value, GParamSpec *pspec);
 
-static void  	gst_tee_chain 		(GstPad *pad, GstBuffer *buf);
+static void  	gst_tee_chain 		(GstPad *pad, GstData *_data);
 
 
 static GstElementClass *parent_class = NULL;
@@ -342,8 +342,9 @@ gst_tee_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec 
  * Chain a buffer on a pad.
  */
 static void 
-gst_tee_chain (GstPad *pad, GstBuffer *buf) 
+gst_tee_chain (GstPad *pad, GstData *_data) 
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstTee *tee;
   const GList *pads;
 
@@ -373,7 +374,7 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
     }
 
     if (GST_PAD_IS_USABLE (outpad))
-      gst_pad_push (outpad, buf);
+      gst_pad_push (outpad, GST_DATA (buf));
     else
       gst_buffer_unref (buf);
   }

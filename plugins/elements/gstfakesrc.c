@@ -170,7 +170,7 @@ static void		gst_fakesrc_get_property	(GObject *object, guint prop_id,
 
 static GstElementStateReturn gst_fakesrc_change_state 	(GstElement *element);
 
-static GstBuffer*	gst_fakesrc_get			(GstPad *pad);
+static GstData*	gst_fakesrc_get			(GstPad *pad);
 static void 		gst_fakesrc_loop		(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
@@ -734,7 +734,7 @@ gst_fakesrc_create_buffer (GstFakeSrc *src)
   return buf;
 }
 
-static GstBuffer *
+static GstData *
 gst_fakesrc_get(GstPad *pad)
 {
   GstFakeSrc *src;
@@ -748,22 +748,22 @@ gst_fakesrc_get(GstPad *pad)
 
   if (src->need_flush) {
     src->need_flush = FALSE;
-    return GST_BUFFER(gst_event_new (GST_EVENT_FLUSH));
+    return GST_DATA(gst_event_new (GST_EVENT_FLUSH));
   }
 
   if (src->buffer_count == src->segment_end) {
     if (src->segment_loop) {
-      return GST_BUFFER(gst_event_new (GST_EVENT_SEGMENT_DONE));
+      return GST_DATA(gst_event_new (GST_EVENT_SEGMENT_DONE));
     }
     else {
       gst_element_set_eos (GST_ELEMENT (src));
-      return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
+      return GST_DATA(gst_event_new (GST_EVENT_EOS));
     }
   }
 
   if (src->rt_num_buffers == 0) {
     gst_element_set_eos (GST_ELEMENT (src));
-    return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
+    return GST_DATA(gst_event_new (GST_EVENT_EOS));
   }
   else {
     if (src->rt_num_buffers > 0)
@@ -772,7 +772,7 @@ gst_fakesrc_get(GstPad *pad)
 
   if (src->eos) {
     GST_INFO ( "fakesrc is setting eos on pad");
-    return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
+    return GST_DATA(gst_event_new (GST_EVENT_EOS));
   }
 
   buf = gst_fakesrc_create_buffer (src);
@@ -795,7 +795,7 @@ gst_fakesrc_get(GstPad *pad)
     GST_LOG_OBJECT (src, "post handoff emit");
   }
 
-  return buf;
+  return GST_DATA (buf);
 }
 
 /**
@@ -819,10 +819,10 @@ gst_fakesrc_loop(GstElement *element)
 
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
-    GstBuffer *buf;
+    GstData *data;
 
-    buf = gst_fakesrc_get (pad);
-    gst_pad_push (pad, buf);
+    data = gst_fakesrc_get (pad);
+    gst_pad_push (pad, data);
 
     if (src->eos) {
       return;

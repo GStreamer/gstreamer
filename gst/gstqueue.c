@@ -72,8 +72,8 @@ static void			gst_queue_set_property		(GObject *object, guint prop_id,
 static void			gst_queue_get_property		(GObject *object, guint prop_id, 
 								 GValue *value, GParamSpec *pspec);
 
-static void			gst_queue_chain			(GstPad *pad, GstBuffer *buf);
-static GstBuffer *		gst_queue_get			(GstPad *pad);
+static void			gst_queue_chain			(GstPad *pad, GstData *data);
+static GstData *		gst_queue_get			(GstPad *pad);
 static GstBufferPool* 		gst_queue_get_bufferpool 	(GstPad *pad);
 	
 static gboolean 		gst_queue_handle_src_event 	(GstPad *pad, GstEvent *event);
@@ -300,13 +300,13 @@ gst_queue_locked_flush (GstQueue *queue)
 }
 
 static void
-gst_queue_chain (GstPad *pad, GstBuffer *buf)
+gst_queue_chain (GstPad *pad, GstData *data)
 {
   GstQueue *queue;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  g_return_if_fail (data != NULL);
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
   
@@ -319,33 +319,35 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
     GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue, "event sent\n");
   }
   g_async_queue_unlock(queue->events);
-
+  
 restart:
   /* we have to lock the queue since we span threads */
   GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue, "locking t:%p", g_thread_self ());
   g_mutex_lock (queue->qlock);
   GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue, "locked t:%p", g_thread_self ());
-
+  
   /* assume don't need to flush this buffer when the queue is filled */
   queue->flush = FALSE;
-
-  if (GST_IS_EVENT (buf)) {
-    switch (GST_EVENT_TYPE (buf)) {
+  
+  if (GST_IS_EVENT (data)) {
+    switch (GST_EVENT_TYPE (data)) {
       case GST_EVENT_FLUSH:
         GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue, "FLUSH event, flushing queue\n");
         gst_queue_locked_flush (queue);
 	break;
       case GST_EVENT_EOS:
 	GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue, "eos in on %s %d\n", 
-			   GST_ELEMENT_NAME (queue), queue->level_buffers);
+                              GST_ELEMENT_NAME (queue), queue->level_buffers);
 	break;
       default:
 	/* we put the event in the queue, we don't have to act ourselves */
 	break;
     }
   }
-
-  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue, "adding buffer %p of size %d",buf,GST_BUFFER_SIZE(buf));
+  
+  if (GST_IS_BUFFER (data))
+    GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue, 
+                        "adding buffer %p of size %d", data, GST_BUFFER_SIZE (data));
 
   if (queue->level_buffers == queue->size_buffers) {
     g_mutex_unlock (queue->qlock);
@@ -358,10 +360,10 @@ restart:
       /* if we leak on the upstream side, drop the current buffer */
       if (queue->leaky == GST_QUEUE_LEAK_UPSTREAM) {
         GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue, "queue is full, leaking buffer on upstream end");
-        if (GST_IS_EVENT (buf))
+        if (GST_IS_EVENT (data))
           fprintf(stderr, "Error: queue [%s] leaked an event, type:%d\n",
               GST_ELEMENT_NAME(GST_ELEMENT(queue)),
-              GST_EVENT_TYPE(GST_EVENT(buf)));
+              GST_EVENT_TYPE(GST_EVENT(data)));
         /* now we have to clean up and exit right away */
         g_mutex_unlock (queue->qlock);
         goto out_unref;
@@ -369,21 +371,23 @@ restart:
       /* otherwise we have to push a buffer off the other end */
       else {
         gpointer front;
-        GstBuffer *leakbuf;
+        GstData *leak;
 
         GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue, "queue is full, leaking buffer on downstream end");
 
         front = g_queue_pop_head (queue->queue);
-        leakbuf = (GstBuffer *)(front);
+        leak = GST_DATA (front);
 
-        if (GST_IS_EVENT (leakbuf)) {
+        queue->level_buffers--;
+        if (GST_IS_EVENT (leak)) {
           fprintf(stderr, "Error: queue [%s] leaked an event, type:%d\n",
               GST_ELEMENT_NAME(GST_ELEMENT(queue)),
-              GST_EVENT_TYPE(GST_EVENT(leakbuf)));
-	}
-        queue->level_buffers--;
-        queue->level_bytes -= GST_BUFFER_SIZE(leakbuf);
-        gst_data_unref (GST_DATA (leakbuf));
+              GST_EVENT_TYPE(GST_EVENT(leak)));
+	} else {
+          queue->level_bytes -= GST_BUFFER_SIZE(leak);
+        }
+
+        gst_data_unref (leak);
       }
     }
 
@@ -412,7 +416,7 @@ restart:
 	/* try to signal to resolve the error */
 	if (!queue->may_deadlock) {
           g_mutex_unlock (queue->qlock);
-          gst_data_unref (GST_DATA (buf));
+          gst_data_unref (data);
           gst_element_error (GST_ELEMENT (queue), "deadlock found, source pad elements are shut down");
 	  /* we don't want to goto out_unref here, since we want to clean up before calling gst_element_error */
 	  return;
@@ -428,14 +432,15 @@ restart:
       GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue, "got not_full signal");
     }
     GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue, "post full wait, level:%d/%d buffers, %d bytes",
-        queue->level_buffers, queue->size_buffers, queue->level_bytes);
+                        queue->level_buffers, queue->size_buffers, queue->level_bytes);
   }
 
   /* put the buffer on the tail of the list */
-  g_queue_push_tail (queue->queue, buf);
+  g_queue_push_tail (queue->queue, data);
 
   queue->level_buffers++;
-  queue->level_bytes += GST_BUFFER_SIZE(buf);
+  if (GST_IS_BUFFER (data))
+    queue->level_bytes += GST_BUFFER_SIZE (data);
 
   /* this assertion _has_ to hold */
   g_assert (queue->queue->length == queue->level_buffers);
@@ -451,15 +456,15 @@ restart:
   return;
 
 out_unref:
-  gst_data_unref (GST_DATA (buf));
+  gst_data_unref (data);
   return;
 }
 
-static GstBuffer *
+static GstData *
 gst_queue_get (GstPad *pad)
 {
   GstQueue *queue;
-  GstBuffer *buf = NULL;
+  GstData *data = NULL;
   gpointer front;
 
   g_assert(pad != NULL);
@@ -486,7 +491,7 @@ restart:
       GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue, "interrupted!!");
       g_mutex_unlock (queue->qlock);
       if (gst_scheduler_interrupt (gst_pad_get_scheduler (queue->srcpad), GST_ELEMENT (queue)))
-        return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
+        return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
       goto restart;
     }
     if (GST_STATE (queue) != GST_STATE_PLAYING) {
@@ -512,7 +517,7 @@ restart:
       if (!g_cond_timed_wait (queue->not_empty, queue->qlock, &timeout)){
         g_mutex_unlock (queue->qlock);
 	g_warning ("filler");
-        return GST_BUFFER(gst_event_new_filler());
+        return GST_DATA (gst_event_new_filler());
       }
     }
     else {
@@ -524,11 +529,12 @@ restart:
     queue->level_buffers, queue->size_buffers, queue->level_bytes);
 
   front = g_queue_pop_head (queue->queue);
-  buf = (GstBuffer *)(front);
-  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue, "retrieved buffer %p from queue", buf);
+  data = GST_DATA (front);
+  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue, "retrieved data %p from queue", data);
 
   queue->level_buffers--;
-  queue->level_bytes -= GST_BUFFER_SIZE(buf);
+  if (GST_IS_BUFFER (data))
+    queue->level_bytes -= GST_BUFFER_SIZE (data);
 
   GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue, "(%s:%s)- level:%d/%d buffers, %d bytes",
       GST_DEBUG_PAD_NAME(pad),
@@ -543,8 +549,8 @@ restart:
   g_mutex_unlock (queue->qlock);
 
   /* FIXME where should this be? locked? */
-  if (GST_IS_EVENT(buf)) {
-    GstEvent *event = GST_EVENT(buf);
+  if (GST_IS_EVENT (data)) {
+    GstEvent *event = GST_EVENT (data);
     switch (GST_EVENT_TYPE(event)) {
       case GST_EVENT_EOS:
         GST_CAT_DEBUG_OBJECT (GST_CAT_DATAFLOW, queue, "queue \"%s\" eos", GST_ELEMENT_NAME (queue));
@@ -555,7 +561,7 @@ restart:
     }
   }
 
-  return buf;
+  return data;
 }
 
 

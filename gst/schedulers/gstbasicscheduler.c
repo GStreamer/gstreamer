@@ -35,7 +35,7 @@ GST_DEBUG_CATEGORY_STATIC(debug_scheduler);
 typedef struct _GstSchedulerChain GstSchedulerChain;
 
 #define GST_ELEMENT_THREADSTATE(elem)	(cothread*) (GST_ELEMENT_CAST (elem)->sched_private)
-#define GST_RPAD_BUFPEN(pad)		(GstBuffer*) (GST_REAL_PAD_CAST(pad)->sched_private)
+#define GST_RPAD_BUFPEN(pad)		(GstData*)  (GST_REAL_PAD_CAST(pad)->sched_private)
 
 #define GST_ELEMENT_COTHREAD_STOPPING			GST_ELEMENT_SCHEDULER_PRIVATE1
 #define GST_ELEMENT_IS_COTHREAD_STOPPING(element)	GST_FLAG_IS_SET((element), GST_ELEMENT_COTHREAD_STOPPING)
@@ -333,19 +333,19 @@ gst_basic_scheduler_chain_wrapper (int argc, char **argv)
 
       if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SINK && 
 	  GST_PAD_IS_LINKED (realpad)) {
-	GstBuffer *buf;
+	GstData *data;
 
 	GST_CAT_DEBUG (debug_dataflow, "pulling data from %s:%s", name, 
 	           GST_PAD_NAME (pad));
-	buf = gst_pad_pull (pad);
-	if (buf) {
-	  if (GST_IS_EVENT (buf) && !GST_ELEMENT_IS_EVENT_AWARE (element)) {
-	    gst_pad_send_event (pad, GST_EVENT (buf));
+	data = gst_pad_pull (pad);
+	if (data) {
+	  if (GST_IS_EVENT (data) && !GST_ELEMENT_IS_EVENT_AWARE (element)) {
+	    gst_pad_send_event (pad, GST_EVENT (data));
 	  }
 	  else {
 	    GST_CAT_DEBUG (debug_dataflow, "calling chain function of %s:%s %p", 
-		       name, GST_PAD_NAME (pad), buf);
-	    GST_RPAD_CHAINFUNC (realpad) (pad, buf);
+		       name, GST_PAD_NAME (pad), data);
+	    GST_RPAD_CHAINFUNC (realpad) (pad, data);
 	    GST_CAT_DEBUG (debug_dataflow, 
 		       "calling chain function of element %s done", name);
 	  }
@@ -377,7 +377,7 @@ gst_basic_scheduler_src_wrapper (int argc, char **argv)
   GstElement *element = GST_ELEMENT_CAST (argv);
   GList *pads;
   GstRealPad *realpad;
-  GstBuffer *buf = NULL;
+  GstData *data = NULL;
   G_GNUC_UNUSED const gchar *name = GST_ELEMENT_NAME (element);
 
   GST_DEBUG ("entering src wrapper of element %s", name);
@@ -395,11 +395,11 @@ gst_basic_scheduler_src_wrapper (int argc, char **argv)
       if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SRC && GST_PAD_IS_USABLE (realpad)) {
 	GST_CAT_DEBUG (debug_dataflow, "calling _getfunc for %s:%s", GST_DEBUG_PAD_NAME (realpad));
 	g_return_val_if_fail (GST_RPAD_GETFUNC (realpad) != NULL, 0);
-	buf = GST_RPAD_GETFUNC (realpad) (GST_PAD_CAST (realpad));
-	if (buf) {
+	data = GST_RPAD_GETFUNC (realpad) (GST_PAD_CAST (realpad));
+	if (data) {
 	  GST_CAT_DEBUG (debug_dataflow, "calling gst_pad_push on pad %s:%s %p",
-		     GST_DEBUG_PAD_NAME (realpad), buf);
-	  gst_pad_push (GST_PAD_CAST (realpad), buf);
+		     GST_DEBUG_PAD_NAME (realpad), data);
+	  gst_pad_push (GST_PAD_CAST (realpad), data);
 	}
       }
     }
@@ -419,7 +419,7 @@ gst_basic_scheduler_src_wrapper (int argc, char **argv)
 }
 
 static void
-gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
+gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstData * data)
 {
   gint loop_count = 100;
   GstElement *parent;
@@ -429,7 +429,7 @@ gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
   peer = GST_RPAD_PEER (pad);
 
   GST_DEBUG ("entered chainhandler proxy of %s:%s", GST_DEBUG_PAD_NAME (pad));
-  GST_CAT_DEBUG (debug_dataflow, "putting buffer %p in peer \"%s:%s\"'s pen", buf,
+  GST_CAT_DEBUG (debug_dataflow, "putting buffer %p in peer \"%s:%s\"'s pen", data,
 	     GST_DEBUG_PAD_NAME (peer));
 
   /* 
@@ -459,9 +459,9 @@ gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
   g_assert (GST_RPAD_BUFPEN (GST_RPAD_PEER (pad)) == NULL);
 
   /* now fill the bufferpen and switch so it can be consumed */
-  GST_RPAD_BUFPEN (GST_RPAD_PEER (pad)) = buf;
+  GST_RPAD_BUFPEN (GST_RPAD_PEER (pad)) = data;
   GST_CAT_DEBUG (debug_dataflow, "switching to %p to consume buffer %p",
-	     GST_ELEMENT_THREADSTATE (GST_PAD_PARENT (pad)), buf);
+	     GST_ELEMENT_THREADSTATE (GST_PAD_PARENT (pad)), data);
 
   do_element_switch (parent);
 
@@ -469,18 +469,18 @@ gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
 }
 
 static void
-gst_basic_scheduler_select_proxy (GstPad * pad, GstBuffer * buf)
+gst_basic_scheduler_select_proxy (GstPad * pad, GstData * data)
 {
   GstElement *parent;
   
   parent = GST_PAD_PARENT (pad);
 
   GST_CAT_DEBUG (debug_dataflow, "putting buffer %p in peer's pen of pad %s:%s", 
-                 buf, GST_DEBUG_PAD_NAME (pad));
+                 data, GST_DEBUG_PAD_NAME (pad));
 
   g_assert (GST_RPAD_BUFPEN (GST_RPAD_PEER (pad)) == NULL);
   /* now fill the bufferpen and switch so it can be consumed */
-  GST_RPAD_BUFPEN (GST_RPAD_PEER (pad)) = buf;
+  GST_RPAD_BUFPEN (GST_RPAD_PEER (pad)) = data;
   GST_CAT_DEBUG (debug_dataflow, "switching to %p",
 	     GST_ELEMENT_THREADSTATE (parent));
   /* FIXME temporarily diabled */
@@ -492,10 +492,10 @@ gst_basic_scheduler_select_proxy (GstPad * pad, GstBuffer * buf)
 }
 
 
-static GstBuffer *
+static GstData *
 gst_basic_scheduler_gethandler_proxy (GstPad * pad)
 {
-  GstBuffer *buf;
+  GstData *data;
   GstElement *parent;
   GstRealPad *peer;
 
@@ -528,12 +528,12 @@ gst_basic_scheduler_gethandler_proxy (GstPad * pad)
   GST_CAT_DEBUG (debug_dataflow, "done switching");
 
   /* now grab the buffer from the pen, clear the pen, and return the buffer */
-  buf = GST_RPAD_BUFPEN (pad);
+  data = GST_RPAD_BUFPEN (pad);
   GST_RPAD_BUFPEN (pad) = NULL;
 
   GST_DEBUG ("leaving gethandler proxy of %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  return buf;
+  return data;
 }
 
 static gboolean
@@ -559,7 +559,7 @@ gst_basic_scheduler_eventhandler_proxy (GstPad *srcpad, GstEvent *event)
   }
 
   if (flush) {
-    GstData *data = GST_DATA (GST_RPAD_BUFPEN (srcpad));
+    GstData *data = GST_RPAD_BUFPEN (srcpad);
 
     GST_INFO ("event is flush");
 

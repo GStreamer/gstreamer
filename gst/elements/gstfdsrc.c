@@ -71,7 +71,7 @@ static void		gst_fdsrc_set_property	(GObject *object, guint prop_id,
 static void		gst_fdsrc_get_property	(GObject *object, guint prop_id, 
 						 GValue *value, GParamSpec *pspec);
 
-static GstBuffer *	gst_fdsrc_get		(GstPad *pad);
+static GstData *	gst_fdsrc_get		(GstPad *pad);
 
 
 static GstElementClass *parent_class = NULL;
@@ -177,7 +177,7 @@ gst_fdsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
   }
 }
 
-static GstBuffer *
+static GstData *
 gst_fdsrc_get(GstPad *pad)
 {
   GstFdSrc *src;
@@ -195,14 +195,14 @@ gst_fdsrc_get(GstPad *pad)
   /* if nothing was read, we're in eos */
   if (readbytes == 0) {
     gst_element_set_eos (GST_ELEMENT (src));
-    return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+    return GST_DATA (gst_event_new (GST_EVENT_EOS));
   }
 
   if (readbytes == -1) {
-	  g_error ("Error reading from file descriptor. Ending stream.\n");
-	  gst_element_set_eos (GST_ELEMENT (src));
-	  return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
-	  }
+    g_error ("Error reading from file descriptor. Ending stream.\n");
+    gst_element_set_eos (GST_ELEMENT (src));
+    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+  }
   
   GST_BUFFER_OFFSET (buf) = src->curoffset;
   GST_BUFFER_SIZE (buf) = readbytes;
@@ -210,5 +210,5 @@ gst_fdsrc_get(GstPad *pad)
   src->curoffset += readbytes;
 
   /* we're done, return the buffer */
-  return buf;
+  return GST_DATA (buf);
 }

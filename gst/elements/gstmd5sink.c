@@ -63,7 +63,7 @@ static void			gst_md5sink_init		(GstMD5Sink *md5sink);
 static void			gst_md5sink_get_property	(GObject *object, guint prop_id, 
 								 GValue *value, GParamSpec *pspec);
 
-static void			gst_md5sink_chain		(GstPad *pad, GstBuffer *buf);
+static void			gst_md5sink_chain		(GstPad *pad, GstData *_data);
 static GstElementStateReturn	gst_md5sink_change_state	(GstElement *element);
 
 /* variables */
@@ -489,8 +489,9 @@ gst_md5sink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 }
 
 static void 
-gst_md5sink_chain (GstPad *pad, GstBuffer *buf) 
+gst_md5sink_chain (GstPad *pad, GstData *_data) 
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstMD5Sink *md5sink;
 
   g_return_if_fail (pad != NULL);

@@ -67,7 +67,7 @@ static void gst_statistics_init		(GstStatistics *statistics);
 static void gst_statistics_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_statistics_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void gst_statistics_chain		(GstPad *pad, GstBuffer *buf);
+static void gst_statistics_chain		(GstPad *pad, GstData *_data);
 static void gst_statistics_reset		(GstStatistics *statistics);
 static void gst_statistics_print		(GstStatistics *statistics);
 
@@ -256,8 +256,9 @@ gst_statistics_print (GstStatistics *statistics)
 }
 
 static void 
-gst_statistics_chain (GstPad *pad, GstBuffer *buf) 
+gst_statistics_chain (GstPad *pad, GstData *_data) 
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstStatistics *statistics;
   gboolean update = FALSE;
 
@@ -313,7 +314,7 @@ gst_statistics_chain (GstPad *pad, GstBuffer *buf)
       gst_statistics_print(statistics);
     }
   }
-  gst_pad_push (statistics->srcpad, buf);
+  gst_pad_push (statistics->srcpad, GST_DATA (buf));
 }
 
 static void 

@@ -2302,15 +2302,14 @@ gst_ghost_pad_save_thyself (GstPad *pad, xmlNodePtr parent)
 /**
  * gst_pad_push:
  * @pad: a #GstPad to push the buffer out of.
- * @buf: the #GstBuffer to push.
+ * @data: the #GstData to push.
  *
- * Pushes a buffer to the peer of the pad.
+ * Pushes a buffer or an event to the peer of the pad.
  */
 void 
-gst_pad_push (GstPad *pad, GstBuffer *buf) 
+gst_pad_push (GstPad *pad, GstData *data) 
 {
   GstRealPad *peer;
-  GstData *data = GST_DATA(buf);
 
   g_assert (GST_IS_PAD (pad));
   GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad, "pushing");
@@ -2342,7 +2341,7 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
         if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data))
           return;
 
-        (peer->chainhandler) (GST_PAD_CAST (peer), (GstBuffer *)data);
+        (peer->chainhandler) (GST_PAD_CAST (peer), data);
 	return;
       }
       else {
@@ -2364,11 +2363,11 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
  * gst_pad_pull:
  * @pad: a #GstPad to pull a buffer from.
  *
- * Pulls a buffer from the peer pad.
+ * Pulls an event or a buffer from the peer pad.
  *
- * Returns: a new #GstBuffer from the peer pad.
+ * Returns: a new #GstData from the peer pad.
  */
-GstBuffer*
+GstData*
 gst_pad_pull (GstPad *pad) 
 {
   GstRealPad *peer;
@@ -2376,7 +2375,7 @@ gst_pad_pull (GstPad *pad)
   GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad, "pulling");
 
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, 
-          	        GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT)));
+          	        GST_DATA (gst_event_new (GST_EVENT_INTERRUPT)));
 
   peer = GST_RPAD_PEER (pad);
 
@@ -2396,12 +2395,12 @@ restart:
                		  GST_DEBUG_FUNCPTR_NAME (peer->gethandler), 
 			  GST_DEBUG_PAD_NAME (peer));
 
-      data = GST_DATA((peer->gethandler) (GST_PAD_CAST (peer)));
+      data = (peer->gethandler) (GST_PAD_CAST (peer));
 
       if (data) {
         if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data))
           goto restart;
-        return GST_BUFFER(data);
+        return data;
       }
 
       /* no null buffers allowed */
@@ -2416,7 +2415,7 @@ restart:
 		         GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer));
     }
   }
-  return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
+  return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
 }
 
 /**
@@ -2891,7 +2890,7 @@ gst_pad_event_default_dispatch (GstPad *pad, GstElement *element,
       if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
 	/* increase the refcount */
         gst_event_ref (event);
-        gst_pad_push (eventpad, GST_BUFFER (event));
+        gst_pad_push (eventpad, GST_DATA (event));
       }
       else {
 	GstPad *peerpad = GST_PAD_CAST (GST_RPAD_PEER (eventpad));

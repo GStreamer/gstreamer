@@ -133,8 +133,8 @@ typedef enum {
 /* this defines the functions used to chain buffers
  * pad is the sink pad (so the same chain function can be used for N pads)
  * buf is the buffer being passed */
-typedef void 			(*GstPadChainFunction) 		(GstPad *pad,GstBuffer *buf);
-typedef GstBuffer*		(*GstPadGetFunction) 		(GstPad *pad);
+typedef void 			(*GstPadChainFunction) 		(GstPad *pad,GstData *data);
+typedef GstData*		(*GstPadGetFunction) 		(GstPad *pad);
 typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
 typedef gboolean		(*GstPadConvertFunction)	(GstPad *pad, 
 		 						 GstFormat src_format,  gint64  src_value,
@@ -470,8 +470,8 @@ gboolean	     	gst_pad_recalc_allowed_caps    		(GstPad *pad);
 gboolean	     	gst_pad_recover_caps_error    		(GstPad *pad, GstCaps *allowed);
 
 /* data passing functions */
-void			gst_pad_push				(GstPad *pad, GstBuffer *buf);
-GstBuffer*		gst_pad_pull				(GstPad *pad);
+void			gst_pad_push				(GstPad *pad, GstData *data);
+GstData*		gst_pad_pull				(GstPad *pad);
 gboolean		gst_pad_send_event			(GstPad *pad, GstEvent *event);
 gboolean		gst_pad_event_default			(GstPad *pad, GstEvent *event);
 GstPad*			gst_pad_select				(GList *padlist);

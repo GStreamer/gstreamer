@@ -142,7 +142,7 @@ static void		gst_filesrc_set_property	(GObject *object, guint prop_id,
 static void		gst_filesrc_get_property	(GObject *object, guint prop_id, 
 							 GValue *value, GParamSpec *pspec);
 
-static GstBuffer *	gst_filesrc_get			(GstPad *pad);
+static GstData *	gst_filesrc_get			(GstPad *pad);
 static gboolean 	gst_filesrc_srcpad_event 	(GstPad *pad, GstEvent *event);
 static gboolean 	gst_filesrc_srcpad_query 	(GstPad *pad, GstQueryType type,
 		         				 GstFormat *format, gint64 *value);
@@ -650,7 +650,7 @@ gst_filesrc_get_read (GstFileSrc *src)
   return buf;
 }
 
-static GstBuffer *
+static GstData *
 gst_filesrc_get (GstPad *pad)
 {
   GstFileSrc *src;
@@ -667,13 +667,13 @@ gst_filesrc_get (GstPad *pad)
     GST_DEBUG ("filesrc sending discont");
     event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset, NULL);
     src->need_flush = FALSE;
-    return GST_BUFFER (event);
+    return GST_DATA (event);
   }
   /* check for flush */
   if (src->need_flush) {
     src->need_flush = FALSE;
     GST_DEBUG ("filesrc sending flush");
-    return GST_BUFFER (gst_event_new_flush ());
+    return GST_DATA (gst_event_new_flush ());
   }
 
   /* check for EOF */
@@ -681,13 +681,13 @@ gst_filesrc_get (GstPad *pad)
     GST_DEBUG ("filesrc eos %" G_GINT64_FORMAT" %" G_GINT64_FORMAT,
                src->curoffset, src->filelen);
     gst_element_set_eos (GST_ELEMENT (src));
-    return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+    return GST_DATA (gst_event_new (GST_EVENT_EOS));
   }
 
   if (src->using_mmap){
-    return gst_filesrc_get_mmap (src);
+    return GST_DATA (gst_filesrc_get_mmap (src));
   }else{
-    return gst_filesrc_get_read (src);
+    return GST_DATA (gst_filesrc_get_read (src));
   }
 }
 

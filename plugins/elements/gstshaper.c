@@ -286,14 +286,14 @@ gst_shaper_loop (GstElement *element)
     if (connection->buffer == NULL && GST_PAD_IS_USABLE (connection->sinkpad)) {
       GstBuffer *buffer;
 
-      buffer = gst_pad_pull (connection->sinkpad);
+      buffer = GST_BUFFER (gst_pad_pull (connection->sinkpad));
 
       /* events are simply pushed ASAP */
       if (GST_IS_EVENT (buffer)) {
 	/* save event type as it will be unreffed after the next push */
 	GstEventType type = GST_EVENT_TYPE (buffer);
 
-	gst_pad_push (connection->srcpad, buffer);
+	gst_pad_push (connection->srcpad, GST_DATA (buffer));
 
 	switch (type) {
           /* on EOS we disable the pad so that we don't pull on
@@ -322,7 +322,7 @@ gst_shaper_loop (GstElement *element)
   }
   /* if we have a connection with a buffer, push it */
   if (min != NULL && min->buffer) {
-    gst_pad_push (min->srcpad, min->buffer);
+    gst_pad_push (min->srcpad, GST_DATA (min->buffer));
     min->buffer = NULL;
     /* since we pushed a buffer, it's not EOS */
     eos = FALSE;

@@ -186,7 +186,7 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
         if (conn->current != (GstElement *) conn->src) {
           GST_DEBUG ("sending EOS to unconnected element %s from %s", 
 	       GST_ELEMENT_NAME (conn->src), GST_ELEMENT_NAME (ident));
-          gst_pad_push (conn->src->src, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));  
+          gst_pad_push (conn->src->src, GST_DATA (GST_BUFFER (gst_event_new (GST_EVENT_EOS))));  
           gst_element_set_eos (GST_ELEMENT (conn->src));
 	}
       }
@@ -200,7 +200,7 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
   if ((ident->src != NULL) && (GST_PAD_PEER (ident->src) != NULL)) {
     /* g_print("pushing buffer %p (refcount %d - buffersize %d) to pad %s:%s\n", buf, GST_BUFFER_REFCOUNT (buf), GST_BUFFER_SIZE (buf), GST_DEBUG_PAD_NAME (ident->src)); */
     GST_LOG ( "push %p %" G_GINT64_FORMAT, buf, GST_BUFFER_OFFSET (buf));
-    gst_pad_push (ident->src, buf);
+    gst_pad_push (ident->src, GST_DATA (buf));
   } else if (GST_IS_BUFFER (buf)) {
     gst_buffer_unref (buf);
   }
@@ -386,7 +386,7 @@ gst_spider_identity_dumb_loop  (GstSpiderIdentity *ident)
   g_return_if_fail (GST_IS_SPIDER_IDENTITY (ident));
   g_assert (ident->sink != NULL);
 
-  buf = gst_pad_pull (ident->sink);
+  buf = GST_BUFFER (gst_pad_pull (ident->sink));
 
   gst_spider_identity_chain (ident->sink, buf);
 }

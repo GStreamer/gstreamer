@@ -102,7 +102,7 @@ static void	gst_fakesink_get_property	(GObject *object, guint prop_id,
 static GstElementStateReturn
 		gst_fakesink_change_state 	(GstElement *element);
 
-static void	gst_fakesink_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_fakesink_chain		(GstPad *pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
@@ -298,8 +298,9 @@ gst_fakesink_get_property (GObject *object, guint prop_id, GValue *value, GParam
 }
 
 static void 
-gst_fakesink_chain (GstPad *pad, GstBuffer *buf) 
+gst_fakesink_chain (GstPad *pad, GstData *_data) 
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstFakeSink *fakesink;
 
   g_return_if_fail (pad != NULL);

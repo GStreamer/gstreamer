@@ -70,7 +70,7 @@ static void gst_identity_init		(GstIdentity *identity);
 static void gst_identity_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_identity_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void gst_identity_chain		(GstPad *pad, GstBuffer *buf);
+static void gst_identity_chain		(GstPad *pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
@@ -224,8 +224,9 @@ gst_identity_init (GstIdentity *identity)
 }
 
 static void 
-gst_identity_chain (GstPad *pad, GstBuffer *buf) 
+gst_identity_chain (GstPad *pad, GstData *_data) 
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstIdentity *identity;
   guint i;
 
@@ -286,7 +287,7 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
     if (i>1) 
       gst_buffer_ref (buf);
 
-    gst_pad_push (identity->srcpad, buf);
+    gst_pad_push (identity->srcpad, GST_DATA (buf));
 
     if (identity->sleep_time)
       g_usleep (identity->sleep_time);
@@ -304,7 +305,7 @@ gst_identity_loop (GstElement *element)
 
   identity = GST_IDENTITY (element);
   
-  buf = gst_pad_pull (identity->sinkpad);
+  buf = GST_BUFFER (gst_pad_pull (identity->sinkpad));
   if (GST_IS_EVENT (buf)) {
     GstEvent *event = GST_EVENT (buf);
 
@@ -316,7 +317,7 @@ gst_identity_loop (GstElement *element)
     }
   }
   else {
-    gst_identity_chain (identity->sinkpad, buf);
+    gst_identity_chain (identity->sinkpad, GST_DATA (buf));
   }
 }
 
