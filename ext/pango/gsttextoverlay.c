@@ -39,7 +39,7 @@ GST_PAD_TEMPLATE_FACTORY(textoverlay_src_template_factory,
 			 GST_PAD_ALWAYS,
 			 GST_CAPS_NEW(
 			     "textoverlay_src",
-			     "video/raw",
+			     "video/x-raw-yuv",
 			     "format",		GST_PROPS_LIST(
 				 GST_PROPS_FOURCC(GST_STR_FOURCC("I420"))
 				 ),
@@ -54,7 +54,7 @@ GST_PAD_TEMPLATE_FACTORY(video_sink_template_factory,
 			 GST_PAD_ALWAYS,
 			 GST_CAPS_NEW(
 			     "video_sink",
-			     "video/raw",
+			     "video/x-raw-yuv",
 			     "format",		GST_PROPS_LIST(
 				 GST_PROPS_FOURCC(GST_STR_FOURCC("I420"))
 				 ),
@@ -274,10 +274,10 @@ gst_text_overlay_blit_yuv420(GstTextOverlay *overlay, FT_Bitmap *bitmap,
       for(n=bitmap_width; n>0; --n){
 	v = *bitp;
 	if (v) {
-	  p[-1] = 0;
-	  p[ 1] = 0;
-	  p[-video_width] = 0;
-	  p[ video_width] = 0;
+	  p[-1] = CLAMP(p[-1] - v, 0, 255);
+	  p[ 1] = CLAMP(p[ 1] - v, 0, 255);
+	  p[-video_width] = CLAMP(p[-video_width] - v, 0, 255);
+	  p[ video_width] = CLAMP(p[ video_width] - v, 0, 255);
 	}
 	p++;
 	bitp++;
