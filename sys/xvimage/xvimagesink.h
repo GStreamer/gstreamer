@@ -81,7 +81,7 @@ struct _GstXContext {
 
   gint width, height;
   gint widthmm, heightmm;
-  GValue par;                  /* calculated pixel aspect ratio */
+  GValue *par;                  /* calculated pixel aspect ratio */
 
   gboolean use_xshm;
 
@@ -145,7 +145,7 @@ struct _GstXvImageSink {
 
   guint video_width, video_height;     /* size of incoming video;
                                         * used as the size for XvImage */
-  GValue par;                          /* object-set pixel aspect ratio */
+  GValue *par;                         /* object-set pixel aspect ratio */
 
   GstClockTime time;
 
