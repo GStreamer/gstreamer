@@ -29,11 +29,8 @@
 static GstElementDetails cutter_details = {
   "Cutter",
   "Filter/Audio/Effect",
-  "LGPL",
   "Audio Cutter to split audio into non-silent bits",
-  VERSION,
   "Thomas <thomas@apestaart.org>",
-  "(C) 2001",
 };
 
 
@@ -86,6 +83,7 @@ GST_PAD_TEMPLATE_FACTORY (cutter_sink_factory,
   )
 );
 
+static void     gst_cutter_base_init    (gpointer g_class);
 static void	gst_cutter_class_init	(GstCutterClass *klass);
 static void	gst_cutter_init		(GstCutter *filter);
 
@@ -113,7 +111,9 @@ gst_cutter_get_type (void) {
 
   if (!cutter_type) {
     static const GTypeInfo cutter_info = {
-      sizeof (GstCutterClass), NULL, NULL,
+      sizeof (GstCutterClass),
+      gst_cutter_base_init,
+      NULL,
       (GClassInitFunc) gst_cutter_class_init, NULL, NULL,
       sizeof (GstCutter), 0,
       (GInstanceInitFunc) gst_cutter_init,
@@ -122,6 +122,16 @@ gst_cutter_get_type (void) {
 		                          &cutter_info, 0);
   }
   return cutter_type;
+}
+
+static void
+gst_cutter_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (cutter_src_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (cutter_sink_factory));
+  gst_element_class_set_details (element_class, &cutter_details);
 }
 
 static GstPadLinkReturn
@@ -424,33 +434,29 @@ gst_cutter_get_property (GObject *object, guint prop_id,
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new ("cutter", GST_TYPE_CUTTER,
-                                     &cutter_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
- 
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (cutter_src_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (cutter_sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  /* load audio support library */
+    /* load audio support library */
   if (!gst_library_load ("gstaudio"))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "cutter", GST_RANK_NONE, GST_TYPE_CUTTER))
     return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc =
-{
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "cutter",
-  plugin_init
-};
+  "Audio Cutter to split audio into non-silent bits",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
 
 void
 gst_cutter_get_caps (GstPad *pad, GstCutter* filter)

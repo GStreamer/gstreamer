@@ -37,15 +37,12 @@
 static GstElementDetails plugin_details = {
   "Electric Fence",
   "Testing/EFence",
-  "LGPL",
   "This element converts a stream of normal GStreamer buffers into a "
 "stream of buffers that are allocated in such a way that out-of-bounds "
 "access to data in the buffer is more likely to cause segmentation "
 "faults.  This allocation method is very similar to the debugging tool "
 "\"Electric Fence\".",
-  VERSION,
   "David A. Schleef <ds@schleef.org>",
-  "(C) 2002, 2003"
 };
 
 /* Filter signals and args */
@@ -73,6 +70,7 @@ GST_PAD_TEMPLATE_FACTORY (gst_efence_src_factory,
   GST_CAPS_ANY
 );
 
+static void     gst_efence_base_init    (gpointer g_class);
 static void	gst_efence_class_init	(GstEFenceClass *klass);
 static void	gst_efence_init	(GstEFence *filter);
 
@@ -138,7 +136,7 @@ gst_gst_efence_get_type (void)
     static const GTypeInfo plugin_info =
     {
       sizeof (GstEFenceClass),
-      NULL,
+      gst_efence_base_init,
       NULL,
       (GClassInitFunc) gst_efence_class_init,
       NULL,
@@ -152,6 +150,16 @@ gst_gst_efence_get_type (void)
 	                                  &plugin_info, 0);
   }
   return plugin_type;
+}
+
+static void
+gst_efence_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, gst_efence_sink_factory ());
+  gst_element_class_add_pad_template (element_class, gst_efence_src_factory ());
+  gst_element_class_set_details (element_class, &plugin_details);
 }
 
 /* initialize the plugin's class */
@@ -280,36 +288,30 @@ gst_efence_get_property (GObject *object, guint prop_id,
  * register the features
  */
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new ("efence", GST_TYPE_EFENCE,
-                                     &plugin_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory,
-                                        gst_efence_src_factory ());
-  gst_element_factory_add_pad_template (factory,
-                                        gst_efence_sink_factory ());
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
+  if (!gst_element_register (plugin, "efence", GST_RANK_NONE, GST_TYPE_EFENCE))
+    return FALSE;
+  
   /* plugin initialisation succeeded */
   return TRUE;
 }
 
-/* this is the structure that gst-register looks for
- * so keep the name plugin_desc, or you cannot get your plug-in registered */
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "efence",
-  plugin_init
-};
-
-
-
+  "This element converts a stream of normal GStreamer buffers into a "
+  "stream of buffers that are allocated in such a way that out-of-bounds "
+  "access to data in the buffer is more likely to cause segmentation "
+  "faults.  This allocation method is very similar to the debugging tool "
+  "\"Electric Fence\".",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
 
 GstBuffer *gst_fenced_buffer_new(void)
 {
