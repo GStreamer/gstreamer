@@ -77,6 +77,8 @@ struct _GstMad {
 
   GstIndex	*index;
   gint		 index_id;
+
+  gboolean      check_for_xing;
 };
 
 struct _GstMadClass {
@@ -329,7 +331,7 @@ gst_mad_init (GstMad *mad)
 
   mad->half = FALSE;
   mad->ignore_crc = FALSE;
-
+  mad->check_for_xing = TRUE;
   GST_FLAG_SET (mad, GST_ELEMENT_EVENT_AWARE);
 }
 
@@ -910,6 +912,153 @@ gst_mad_check_restart (GstMad *mad)
   return yes;
 }
 
+
+/* The following code has been taken from 
+ * rhythmbox/metadata/monkey-media/stream-info-impl/id3-vfs/mp3bitrate.c
+ * which took it from xine-lib/src/demuxers/demux_mpgaudio.c
+ * This code has been kindly relicensed to LGPL by Thibaut Mattern and 
+ * Bastien Nocera
+ */
+#define BE_32 GINT_FROM_BE
+
+#define FOURCC_TAG( ch0, ch1, ch2, ch3 )		\
+	( (long)(unsigned char)(ch3) |			\
+	  ( (long)(unsigned char)(ch2) << 8 ) |		\
+	  ( (long)(unsigned char)(ch1) << 16 ) |	\
+	  ( (long)(unsigned char)(ch0) << 24 ) )
+
+/* Xing header stuff */
+#define XING_TAG FOURCC_TAG('X', 'i', 'n', 'g')
+#define XING_FRAMES_FLAG     0x0001
+#define XING_BYTES_FLAG      0x0002
+#define XING_TOC_FLAG        0x0004
+#define XING_VBR_SCALE_FLAG  0x0008
+#define XING_TOC_LENGTH      100
+
+/* check for valid "Xing" VBR header */
+static int is_xhead(unsigned char *buf)
+{
+  return (BE_32(buf) == XING_TAG);
+}
+
+
+#undef LOG
+//#define LOG
+#ifdef LOG
+#define lprintf(x...) g_print(x)
+#else
+#define lprintf(x...)
+#endif
+
+static int mpg123_parse_xing_header(struct mad_header *header,
+				    const guint8 *buf, int bufsize, int *bitrate,
+				    int *time)
+{
+  int i;
+  guint8 *ptr = (guint8*)buf;
+  double frame_duration;
+  int xflags, xframes, xbytes, xvbr_scale;
+  int abr;
+  guint8 xtoc[100];
+  /* This should be the MPEG Audio version ID 
+   * (version 2.5, 2 or 1) least significant byte, but mad doesn't 
+   * provide that, so assume it's always MPEG 1
+   */
+  int lsf_bit = 1;
+  xframes = xbytes = 0;
+
+  /* offset of the Xing header */
+  if ( lsf_bit )
+  {
+    if( header->mode != MAD_MODE_STEREO )
+      ptr += (32 + 4);
+    else
+      ptr += (17 + 4);
+  } else {
+    if( header->mode != MAD_MODE_STEREO )
+      ptr += (17 + 4);
+    else
+      ptr += (9 + 4);
+  }
+
+  if (ptr >= (buf + bufsize - 4))
+    return 0;
+
+  if (is_xhead(ptr))
+  {
+    lprintf("Xing header found\n");
+
+    ptr += 4; if (ptr >= (buf + bufsize - 4)) return 0;
+
+    xflags = BE_32(ptr);
+    ptr += 4;
+
+    if (xflags & XING_FRAMES_FLAG)
+    {
+      if (ptr >= (buf + bufsize - 4)) return 0;
+      xframes = BE_32(ptr);
+      lprintf("xframes: %d\n", xframes);
+      ptr += 4;
+    }
+    if (xflags & XING_BYTES_FLAG)
+    {
+      if (ptr >= (buf + bufsize - 4)) return 0;
+      xbytes = BE_32(ptr);
+      lprintf("xbytes: %d\n", xbytes);
+      ptr += 4; 
+    }
+    if (xflags & XING_TOC_FLAG)
+    {
+      lprintf("toc found\n");
+      if (ptr >= (buf + bufsize - XING_TOC_LENGTH)) return 0;
+      for (i = 0; i < XING_TOC_LENGTH; i++)
+      {
+        xtoc[i] = *(ptr + i);
+	lprintf("%d ", xtoc[i]);
+      }
+      lprintf("\n");
+      ptr += XING_TOC_LENGTH; 
+    }
+
+    xvbr_scale = -1;
+    if (xflags & XING_VBR_SCALE_FLAG) {
+      if (ptr >= (buf + bufsize - 4)) return 0;
+      xvbr_scale = BE_32(ptr);
+      lprintf("xvbr_scale: %d\n", xvbr_scale);
+    }
+
+    /* 1 kbit = 1000 bits ! (and not 1024 bits) */
+    if (xflags & (XING_FRAMES_FLAG | XING_BYTES_FLAG)) {
+      if (header->layer == MAD_LAYER_I) {
+        frame_duration = 384.0 / (double)header->samplerate;
+      } else {
+        int slots_per_frame;
+	slots_per_frame = ((header->layer == MAD_LAYER_III) && !lsf_bit) ? 72 : 144;
+	frame_duration = slots_per_frame * 8.0 / (double)header->samplerate;
+      }
+      abr = ((double)xbytes * 8.0) / ((double)xframes * frame_duration);
+      lprintf("abr: %d bps\n", abr);
+      if (bitrate != NULL) {
+	*bitrate = abr;
+      }
+      if (time != NULL) {
+	*time = (double)xframes * frame_duration;
+	lprintf("stream_length: %d s, %d min %d s\n", *time,
+		*time / 60, *time % 60);
+      }
+    } else {
+      /* it's a stupid Xing header */
+      lprintf ("not a Xing VBR file\n");
+    }
+    return 1;
+  } else {
+    lprintf("Xing header not found\n");
+    return 0;
+  }
+}
+/* End of Xine code */
+
+
 static void
 gst_mad_chain (GstPad *pad, GstData *_data)
 {
@@ -955,6 +1104,7 @@ gst_mad_chain (GstPad *pad, GstData *_data)
   /* handle data */
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
+
 
   /* process the incoming buffer in chunks of maximum MAD_BUFFER_MDLEN bytes;
    * this is the upper limit on processable chunk sizes set by mad */
@@ -1038,6 +1188,7 @@ gst_mad_chain (GstPad *pad, GstData *_data)
 	    }
 	  }
 	}
+
 	mad_frame_mute (&mad->frame);
 	mad_synth_mute (&mad->synth);
 	mad_stream_sync (&mad->stream);
@@ -1045,6 +1196,30 @@ gst_mad_chain (GstPad *pad, GstData *_data)
 	goto next;
       }
 
+      if (mad->check_for_xing) {
+	int bitrate, time;
+	GstTagList *list;
+	int frame_len = mad->stream.next_frame - mad->stream.this_frame;
+
+	/* Assume Xing headers can only be the first frame in a mp3 file */
+	if (mpg123_parse_xing_header (&mad->frame.header, 
+				      mad->stream.this_frame, 
+				      frame_len, &bitrate, &time)) {
+	  list = gst_tag_list_new ();
+	  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, 
+			    GST_TAG_DURATION, (gint64)time*1000*1000*1000,
+			    NULL);
+	  gst_element_found_tags (GST_ELEMENT (mad), list);
+	  if (GST_PAD_IS_USABLE (mad->srcpad)) {
+	    gst_pad_push (mad->srcpad, GST_DATA (gst_event_new_tag (list)));
+	  } else {
+	    gst_tag_list_free (list);
+	  }
+	}
+
+	mad->check_for_xing = FALSE;
+	goto next;
+      }
       nchannels = MAD_NCHANNELS (&mad->frame.header);
       nsamples  = MAD_NSBSAMPLES (&mad->frame.header) *
          (mad->stream.options & MAD_OPTION_HALFSAMPLERATE ? 16 : 32);
@@ -1130,8 +1305,7 @@ gst_mad_chain (GstPad *pad, GstData *_data)
           while (count--) {
             *outdata++ = scale(*left_ch++) & 0xffff;
           }
-	}
-	else {
+	} else {
           gint count = nsamples;
           while (count--) {
             *outdata++ = scale(*left_ch++) & 0xffff;
@@ -1160,7 +1334,6 @@ gst_mad_chain (GstPad *pad, GstData *_data)
 next:
       /* figure out how many bytes mad consumed */
       consumed = mad->stream.next_frame - mad_input_buffer;
-
       /* move out pointer to where mad want the next data */
       mad_input_buffer += consumed;
       mad->tempsize -= consumed;

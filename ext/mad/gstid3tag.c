@@ -518,7 +518,20 @@ gst_mad_id3_to_tag_list(const struct id3_tag *tag)
 	  gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, tag_name, tmp, NULL);
 	  break;
 	}
-	default:
+        case G_TYPE_UINT64:
+	{
+	  guint64 tmp;
+	  g_assert ((strcmp(tag_name,GST_TAG_DURATION) == 0));
+	  tmp = strtoul (utf8, NULL, 10);
+	  if (tmp == 0) {
+	    break;
+	  }
+	  gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, 
+			    GST_TAG_DURATION, tmp*1000*1000, 
+			    NULL);
+	  break;
+	}
+        default:
 	  g_assert (gst_tag_get_type (tag_name) == G_TYPE_STRING);
 	  gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, tag_name, utf8, NULL);
 	  break;
