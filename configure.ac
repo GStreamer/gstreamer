@@ -279,7 +279,16 @@ GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
 
 dnl *** QuickCam ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_QCAM, true)
-GST_CHECK_FEATURE(QCAM, [QuickCam], qcamsrc, HAVE_QCAM="yes")
+GST_CHECK_FEATURE(QCAM, [QuickCam], qcamsrc, [
+dnl this one is for hadess, no qcam when no nasm found
+  if test "x$HAVE_NASM" = "xno";
+  then
+    HAVE_QCAM="no"
+    AC_MSG_WARN([QuickCam needs nasm])
+  else
+    HAVE_QCAM="yes"
+  fi
+])
 
 dnl *** Video 4 Linux ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_V4L, true)
