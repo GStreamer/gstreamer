@@ -235,6 +235,10 @@ gst_bytestream_peek_bytes (GstByteStream * bs, guint32 len)
   g_return_val_if_fail (len > 0, NULL);
 
   bs_print ("peek_bytes: asking for %d bytes\n", len);
+  if (bs->assembled) {
+    g_free (bs->assembled);
+    bs->assembled = NULL;
+  }
 
   // make sure we have enough
   bs_print ("peek_bytes: there are %d bytes in the list\n", bs->listavail);
