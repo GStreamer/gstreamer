@@ -635,11 +635,25 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      src->curoffset = (guint64) GST_EVENT_SEEK_OFFSET (event);
+      switch (GST_EVENT_SEEK_TYPE (event)) {
+        case GST_SEEK_BYTEOFFSET_SET:
+          src->curoffset = (guint64) GST_EVENT_SEEK_OFFSET (event);
+	  break;
+        case GST_SEEK_BYTEOFFSET_CUR:
+          src->curoffset += GST_EVENT_SEEK_OFFSET (event);
+	  break;
+        case GST_SEEK_BYTEOFFSET_END:
+          src->curoffset = src->filelen - ABS (GST_EVENT_SEEK_OFFSET (event));
+	  break;
+	default:
+          return FALSE;
+	  break;
+      }
       src->seek_happened = TRUE;
       gst_event_free (event);
       /* push a discontinuous event? */
     default:
+      return FALSE;
       break;
   }
 
