@@ -4,8 +4,8 @@ else
 ALSA_DIR=
 endif
 
-SUBDIRS=autoplug spider $(ALSA_DIR) #seeking
-DIST_SUBDIRS=autoplug spider alsa
+SUBDIRS=spider $(ALSA_DIR) #seeking
+DIST_SUBDIRS=spider alsa
 
 GST_PLUGIN_PATH=$(shell cd $(top_builddir) && pwd)
 
