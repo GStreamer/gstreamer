@@ -31,16 +31,6 @@
 #include <config.h>
 #endif
 
-#ifdef HAVE_FUNC
-#define FUNCTION __func__
-#elif HAVE_PRETTY_FUNCTION
-#define FUNCTION __PRETTY_FUNCTION__
-#elif HAVE_FUNCTION
-#define FUNCTION __FUNCTION__
-#else
-#define FUNCTION ""
-#endif
-
 /***** are we in the core or not? *****/
 #ifdef __GST_PRIVATE_H__
   #define _GST_DEBUG_INCORE TRUE
@@ -150,13 +140,13 @@ G_GNUC_UNUSED static gchar *_debug_string = NULL;
 #ifdef GST_DEBUG_ENABLED
 #define GST_DEBUG(cat, ...) G_STMT_START{ \
   if ((1<<cat) & _gst_debug_categories) \
-    _gst_debug_handler(cat,_GST_DEBUG_INCORE,__FILE__,FUNCTION,__LINE__,_debug_string, \
+    _gst_debug_handler(cat,_GST_DEBUG_INCORE,__FILE__,G_GNUC_PRETTY_FUNCTION,__LINE__,_debug_string, \
                        NULL,g_strdup_printf( __VA_ARGS__ )); \
 }G_STMT_END
 
 #define GST_DEBUG_ELEMENT(cat, element, ...) G_STMT_START{ \
   if ((1<<cat) & _gst_debug_categories) \
-    _gst_debug_handler(cat,_GST_DEBUG_INCORE,__FILE__,FUNCTION,__LINE__,_debug_string, \
+    _gst_debug_handler(cat,_GST_DEBUG_INCORE,__FILE__,G_GNUC_PRETTY_FUNCTION,__LINE__,_debug_string, \
                        element,g_strdup_printf( __VA_ARGS__ )); \
 }G_STMT_END
 
@@ -170,13 +160,13 @@ G_GNUC_UNUSED static gchar *_debug_string = NULL;
 #ifdef GST_DEBUG_ENABLED
 #define GST_DEBUG(cat,format,args...) G_STMT_START{ \
   if ((1<<cat) & _gst_debug_categories) \
-    _gst_debug_handler(cat,_GST_DEBUG_INCORE,__FILE__,FUNCTION,__LINE__,_debug_string, \
+    _gst_debug_handler(cat,_GST_DEBUG_INCORE,__FILE__,G_GNUC_PRETTY_FUNCTION,__LINE__,_debug_string, \
                        NULL,g_strdup_printf( format , ## args )); \
 }G_STMT_END
 
 #define GST_DEBUG_ELEMENT(cat,element,format,args...) G_STMT_START{ \
   if ((1<<cat) & _gst_debug_categories) \
-    _gst_debug_handler(cat,_GST_DEBUG_INCORE,__FILE__,FUNCTION,__LINE__,_debug_string, \
+    _gst_debug_handler(cat,_GST_DEBUG_INCORE,__FILE__,G_GNUC_PRETTY_FUNCTION,__LINE__,_debug_string, \
                        element,g_strdup_printf( format , ## args )); \
 }G_STMT_END
 
@@ -361,13 +351,13 @@ extern guint32 _gst_info_categories;
 #ifdef GST_INFO_ENABLED
 #define GST_INFO(cat,...) G_STMT_START{ \
   if ((1<<cat) & _gst_info_categories) \
-    _gst_info_handler(cat,_GST_DEBUG_INCORE,__FILE__,FUNCTION,__LINE__,_debug_string, \
+    _gst_info_handler(cat,_GST_DEBUG_INCORE,__FILE__,G_GNUC_PRETTY_FUNCTION,__LINE__,_debug_string, \
                       NULL,g_strdup_printf( __VA_ARGS__ )); \
 }G_STMT_END
 
 #define GST_INFO_ELEMENT(cat,element,...) G_STMT_START{ \
   if ((1<<cat) & _gst_info_categories) \
-    _gst_info_handler(cat,_GST_DEBUG_INCORE,__FILE__,FUNCTION,__LINE__,_debug_string, \
+    _gst_info_handler(cat,_GST_DEBUG_INCORE,__FILE__,G_GNUC_PRETTY_FUNCTION,__LINE__,_debug_string, \
                       element,g_strdup_printf( __VA_ARGS__ )); \
 }G_STMT_END
 
@@ -381,13 +371,13 @@ extern guint32 _gst_info_categories;
 #ifdef GST_INFO_ENABLED
 #define GST_INFO(cat,format,args...) G_STMT_START{ \
   if ((1<<cat) & _gst_info_categories) \
-    _gst_info_handler(cat,_GST_DEBUG_INCORE,__FILE__,FUNCTION,__LINE__,_debug_string, \
+    _gst_info_handler(cat,_GST_DEBUG_INCORE,__FILE__,G_GNUC_PRETTY_FUNCTION,__LINE__,_debug_string, \
                       NULL,g_strdup_printf( format , ## args )); \
 }G_STMT_END
 
 #define GST_INFO_ELEMENT(cat,element,format,args...) G_STMT_START{ \
   if ((1<<cat) & _gst_info_categories) \
-    _gst_info_handler(cat,_GST_DEBUG_INCORE,__FILE__,FUNCTION,__LINE__,_debug_string, \
+    _gst_info_handler(cat,_GST_DEBUG_INCORE,__FILE__,G_GNUC_PRETTY_FUNCTION,__LINE__,_debug_string, \
                       element,g_strdup_printf( format , ## args )); \
 }G_STMT_END
 
@@ -429,21 +419,21 @@ extern GstErrorHandler _gst_error_handler;
 #ifdef G_HAVE_ISO_VARARGS
 
 #define GST_ERROR(element,...) \
-  _gst_error_handler(__FILE__,FUNCTION,__LINE__,_debug_string, \
+  _gst_error_handler(__FILE__,G_GNUC_PRETTY_FUNCTION,__LINE__,_debug_string, \
                      element,NULL,g_strdup_printf( __VA_ARGS__ ))
 
 #define GST_ERROR_OBJECT(element,object,...) \
-  _gst_error_handler(__FILE__,FUNCTION,__LINE__,_debug_string, \
+  _gst_error_handler(__FILE__,G_GNUC_PRETTY_FUNCTION,__LINE__,_debug_string, \
                      element,object,g_strdup_printf( __VA_ARGS__ ))
 
 #elif defined(G_HAVE_GNUC_VARARGS)
 
 #define GST_ERROR(element,format,args...) \
-  _gst_error_handler(__FILE__,FUNCTION,__LINE__,_debug_string, \
+  _gst_error_handler(__FILE__,G_GNUC_PRETTY_FUNCTION,__LINE__,_debug_string, \
                      element,NULL,g_strdup_printf( format , ## args ))
 
 #define GST_ERROR_OBJECT(element,object,format,args...) \
-  _gst_error_handler(__FILE__,FUNCTION,__LINE__,_debug_string, \
+  _gst_error_handler(__FILE__,G_GNUC_PRETTY_FUNCTION,__LINE__,_debug_string, \
                      element,object,g_strdup_printf( format , ## args ))
 
 #endif
