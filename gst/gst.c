@@ -32,6 +32,7 @@
 #include "gstpipeline.h"
 #include "gstthread.h"
 #include "gstqueue.h"
+#include "gstautoplug.h"
 #ifndef GST_DISABLE_TYPEFIND
 #include "gsttypefind.h"
 #endif
@@ -88,8 +89,11 @@ gst_init (int *argc, char **argv[])
 
   GST_INFO (GST_CAT_GST_INIT, "Initializing GStreamer Core Library");
 
+  gst_elementfactory_get_type ();
+  gst_typefactory_get_type ();
+  gst_autoplugfactory_get_type ();
+
   _gst_cpu_initialize ();
-  _gst_type_initialize ();
   _gst_props_initialize ();
   _gst_caps_initialize ();
   _gst_plugin_initialize ();

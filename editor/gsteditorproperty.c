@@ -479,7 +479,7 @@ gst_editor_property_create (GstEditorProperty *property, GstEditorElement *eleme
   gtk_widget_show(entry);
   gtk_entry_set_editable(GTK_ENTRY(entry), FALSE);
   gtk_entry_set_text(GTK_ENTRY(entry),
-		     gst_element_get_factory(element->element)->name);
+		     gst_object_get_name (GST_OBJECT (gst_element_get_factory(element->element))));
   gtk_table_attach(GTK_TABLE(table), label, 0, 1, count, count+1, GTK_FILL, 0, 0, 0);
   gtk_table_attach(GTK_TABLE(table), entry, 1, 2, count, count+1, GTK_FILL|GTK_EXPAND, 0, 0, 0);
   count++;

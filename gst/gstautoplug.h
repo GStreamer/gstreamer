@@ -69,13 +69,6 @@ struct _GstAutoplugClass {
   GstElement* (*autoplug_to_renderers) (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *target, va_list args);
 };
 
-typedef struct _GstAutoplugFactory GstAutoplugFactory;
-
-struct _GstAutoplugFactory {
-  gchar *name;                  /* name of autoplugger */
-  gchar *longdesc;              /* long description of the autoplugger (well, don't overdo it..) */
-  GType type;                 /* unique GType of the autoplugger */
-};
 
 GType			gst_autoplug_get_type			(void);
 
@@ -90,6 +83,33 @@ GstElement*		gst_autoplug_to_renderers		(GstAutoplug *autoplug, GstCaps *srccaps
  * creating autopluggers
  *
  */
+#define GST_TYPE_AUTOPLUGFACTORY \
+  (gst_autoplugfactory_get_type())
+#define GST_AUTOPLUGFACTORY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUTOPLUGFACTORY,GstAutoplugFactory))
+#define GST_AUTOPLUGFACTORY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUTOPLUGFACTORY,GstAutoplugFactoryClass))
+#define GST_IS_AUTOPLUGFACTORY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUTOPLUGFACTORY))
+#define GST_IS_AUTOPLUGFACTORY_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUTOPLUGFACTORY))
+
+typedef struct _GstAutoplugFactory GstAutoplugFactory;
+typedef struct _GstAutoplugFactoryClass GstAutoplugFactoryClass;
+
+struct _GstAutoplugFactory {
+  GstPluginFeature feature;
+
+  gchar *longdesc;              /* long description of the autoplugger (well, don't overdo it..) */
+  GType type;                 /* unique GType of the autoplugger */
+};
+
+struct _GstAutoplugFactoryClass {
+  GstPluginFeatureClass parent;
+};
+
+GType			gst_autoplugfactory_get_type		(void);
+
 GstAutoplugFactory*	gst_autoplugfactory_new			(const gchar *name, const gchar *longdesc, GType type);
 void                    gst_autoplugfactory_destroy		(GstAutoplugFactory *factory);
 
@@ -98,9 +118,6 @@ GList*			gst_autoplugfactory_get_list		(void);
 
 GstAutoplug*		gst_autoplugfactory_create		(GstAutoplugFactory *factory);
 GstAutoplug*		gst_autoplugfactory_make		(const gchar *name);
-
-xmlNodePtr		gst_autoplugfactory_save_thyself	(GstAutoplugFactory *factory, xmlNodePtr parent);
-GstAutoplugFactory*	gst_autoplugfactory_load_thyself	(xmlNodePtr parent);
 
 #ifdef __cplusplus
 }
@@ -113,6 +130,7 @@ GstAutoplugFactory*	gst_autoplugfactory_load_thyself	(xmlNodePtr parent);
 #pragma GCC poison	gst_autoplug_to_caps
 #pragma GCC poison	gst_autoplug_to_renderers
 
+#pragma GCC poison	gst_autoplugfactory_get_type	
 #pragma GCC poison	gst_autoplugfactory_new
 #pragma GCC poison      gst_autoplugfactory_destroy
 
@@ -121,9 +139,6 @@ GstAutoplugFactory*	gst_autoplugfactory_load_thyself	(xmlNodePtr parent);
 
 #pragma GCC poison	gst_autoplugfactory_create
 #pragma GCC poison	gst_autoplugfactory_make
-
-#pragma GCC poison	gst_autoplugfactory_save_thyself
-#pragma GCC poison	gst_autoplugfactory_load_thyself
 
 #endif // GST_DISABLE_AUTOPLUG
 

@@ -123,7 +123,7 @@ main (int argc, char *argv[])
   doc->xmlRootNode = xmlNewDocNode (doc, NULL, "Capabilities", NULL);
 
   g_thread_init (NULL);
-  _gst_type_initialize ();
+  gst_typefactory_get_type ();
   _gst_props_initialize ();
   _gst_caps_initialize ();
 

@@ -26,13 +26,16 @@
 
 #include <gst/gstbuffer.h>
 #include <gst/gstcaps.h>
+#include <gst/gstpluginfeature.h>
 
 
 /* type of function used to check a stream for equality with type */
-typedef GstCaps *(*GstTypeFindFunc) (GstBuffer *buf,gpointer priv);
+typedef GstCaps *(*GstTypeFindFunc) (GstBuffer *buf, gpointer priv);
 
 typedef struct _GstType GstType;
+typedef struct _GstTypeDefinition GstTypeDefinition;
 typedef struct _GstTypeFactory GstTypeFactory;
+typedef struct _GstTypeFactoryClass GstTypeFactoryClass;
 
 struct _GstType {
   guint16 id;			/* type id (assigned) */
@@ -40,34 +43,58 @@ struct _GstType {
   gchar *mime;			/* MIME type */
   gchar *exts;			/* space-delimited list of extensions */
 
-  GSList *typefindfuncs;	/* typefind functions */
+  GSList *factories;		/* factories providing this type */
 
 };
 
-struct _GstTypeFactory {
+struct _GstTypeDefinition {
+  gchar *name;
   gchar *mime;
   gchar *exts;
   GstTypeFindFunc typefindfunc;
 };
 
+#define GST_TYPE_TYPEFACTORY \
+  (gst_typefactory_get_type())
+#define GST_TYPEFACTORY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TYPEFACTORY,GstTypeFactory))
+#define GST_TYPEFACTORY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TYPEFACTORY,GstTypeFactoryClass))
+#define GST_IS_TYPEFACTORY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TYPEFACTORY))
+#define GST_IS_TYPEFACTORY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TYPEFACTORY))
 
-/* initialize the subsystem */
-void		_gst_type_initialize		(void);
+struct _GstTypeFactory {
+  GstPluginFeature feature;
+
+  gchar *mime;
+  gchar *exts;
+  GstTypeFindFunc typefindfunc;
+};
+
+struct _GstTypeFactoryClass {
+  GstPluginFeatureClass parent;
+};
+
+
+GType			gst_typefactory_get_type	(void);
+
+GstTypeFactory*		gst_typefactory_new		(GstTypeDefinition *definition);
+
+GstTypeFactory*		gst_typefactory_find		(const gchar *name);
 
 /* create a new type, or find/merge an existing one */
-guint16		gst_type_register		(GstTypeFactory *factory);
+guint16			gst_type_register		(GstTypeFactory *factory);
 
 /* look up a type by mime or extension */
-guint16		gst_type_find_by_mime		(const gchar *mime);
-guint16		gst_type_find_by_ext		(const gchar *ext);
+guint16			gst_type_find_by_mime		(const gchar *mime);
+guint16			gst_type_find_by_ext		(const gchar *ext);
 
 /* get GstType by id */
-GstType*	gst_type_find_by_id		(guint16 id);
+GstType*		gst_type_find_by_id		(guint16 id);
 
 /* get the list of registered types (returns list of GstType!) */
-GList*		gst_type_get_list		(void);
-
-xmlNodePtr	gst_typefactory_save_thyself	(GstTypeFactory *factory, xmlNodePtr parent);
-GstTypeFactory*	gst_typefactory_load_thyself	(xmlNodePtr parent);
+GList*			gst_type_get_list		(void);
 
 #endif /* __GST_TYPE_H__ */

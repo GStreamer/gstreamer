@@ -93,7 +93,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 		  gst_static_autoplug_render_get_type ());
 
   if (factory != NULL) {
-     gst_plugin_add_autoplugger (plugin, factory);
+     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
   }
   return TRUE;
 }
@@ -151,7 +151,8 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
       if (desttemp->direction == GST_PAD_SINK && desttemp->presence != GST_PAD_REQUEST) {
 	if (gst_caps_check_compatibility (GST_PADTEMPLATE_CAPS (srctemp), GST_PADTEMPLATE_CAPS (desttemp))) {
 	  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
-			  "factory \"%s\" can connect with factory \"%s\"\n", src->name, dest->name);
+			  "factory \"%s\" can connect with factory \"%s\"\n", 
+			  GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
           return TRUE;
 	}
       }
@@ -159,7 +160,8 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
     }
   }
   GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
-		  "factory \"%s\" cannot connect with factory \"%s\"\n", src->name, dest->name);
+		  "factory \"%s\" cannot connect with factory \"%s\"\n", 
+			  GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
   return FALSE;
 }
 
@@ -283,7 +285,7 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
   else {
     res = gst_autoplug_can_match ((GstElementFactory *)src, (GstElementFactory *)dest);
     GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to factory %s %d", 
-		    ((GstElementFactory *)src)->name, ((GstElementFactory *)dest)->name, res);
+			  GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest), res);
   }
 
   if (res)
@@ -394,9 +396,9 @@ next:
       }
     }
 
-    GST_DEBUG (0,"common factory \"%s\"\n", factory->name);
+    GST_DEBUG (0,"common factory \"%s\"\n", GST_OBJECT_NAME (factory));
 
-    element = gst_elementfactory_create (factory, factory->name);
+    element = gst_elementfactory_create (factory, GST_OBJECT_NAME (factory));
     gst_bin_add (GST_BIN(result), element);
 
     if (srcelement != NULL) {
@@ -454,8 +456,8 @@ differ:
       if (factories[i]) {
         factory = (GstElementFactory *)(factories[i]->data);
 
-        GST_DEBUG (0,"factory \"%s\"\n", factory->name);
-        element = gst_elementfactory_create(factory, factory->name);
+        GST_DEBUG (0,"factory \"%s\"\n", GST_OBJECT_NAME (factory));
+        element = gst_elementfactory_create(factory, GST_OBJECT_NAME (factory));
       }
       else {
 	element = sinkelement;
@@ -553,7 +555,7 @@ construct_path (gst_autoplug_node *rgnNodes, gpointer factory)
     next = rgnNodes[find_factory(rgnNodes, current)].iPrev;
     if (next) {
       factories = g_list_prepend (factories, current);
-      GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory: \"%s\"", current->name);
+      GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory: \"%s\"", GST_OBJECT_NAME (current));
     }
     current = next;
   }

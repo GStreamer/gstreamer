@@ -1,4 +1,4 @@
-SUBDIRS = refcounting capsnego
+SUBDIRS = refcounting capsnego plugin
 
 testprogs = test_gst_init
 

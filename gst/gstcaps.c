@@ -47,13 +47,17 @@ get_type_for_mime (const gchar *mime)
 
   typeid = gst_type_find_by_mime (mime);
   if (typeid == 0) {
-     GstTypeFactory factory; // = g_new0 (GstTypeFactory, 1);
+     GstTypeDefinition definition;
+     GstTypeFactory *factory;
 
-     factory.mime = g_strdup (mime);
-     factory.exts = NULL;
-     factory.typefindfunc = NULL;
+     definition.name = "capstype";
+     definition.mime = g_strdup (mime);
+     definition.exts = NULL;
+     definition.typefindfunc = NULL;
 
-     typeid = gst_type_register (&factory);
+     factory = gst_typefactory_new (&definition);
+
+     typeid = gst_type_register (factory);
   }
   return typeid;
 }

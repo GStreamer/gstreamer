@@ -82,7 +82,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
                                       (_elements[i].type) (),
                                       _elements[i].details);
     if (factory != NULL) {
-      gst_plugin_add_factory (plugin, factory);
+      gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
       if (_elements[i].factoryinit) {
         _elements[i].factoryinit (factory);
       }

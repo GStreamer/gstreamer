@@ -4,9 +4,7 @@
 int main(int argc,char *argv[]) {
   xmlDocPtr doc;
   xmlNodePtr factorynode, padnode, argnode, optionnode;
-  GList *plugins, *factories, *padtemplates, *pads;
-  GstPlugin *plugin;
-  GstElementFactory *factory;
+  GList *plugins, *features, *padtemplates, *pads;
   GstElement *element;
   GstPad *pad;
   GstPadTemplate *padtemplate;
@@ -22,20 +20,31 @@ int main(int argc,char *argv[]) {
 
   plugins = gst_plugin_get_list();
   while (plugins) {
+    GstPlugin *plugin;
+
     plugin = (GstPlugin *)(plugins->data);
     plugins = g_list_next (plugins);
 
-    factories = gst_plugin_get_factory_list(plugin);
-    while (factories) {
-      factory = (GstElementFactory *)(factories->data);
-      factories = g_list_next (factories);
+    features = gst_plugin_get_feature_list(plugin);
+    while (features) {
+      GstPluginFeature *feature;
+      GstElementFactory *factory;
+
+      feature = GST_PLUGIN_FEATURE (features->data);
+      features = g_list_next (features);
+
+      if (!GST_IS_ELEMENTFACTORY (feature))
+	continue;
+
+      factory = GST_ELEMENTFACTORY (feature);
 
       factorynode = xmlNewChild (doc->xmlRootNode, NULL, "element", NULL);
-      xmlNewChild (factorynode, NULL, "name", factory->name);
+      xmlNewChild (factorynode, NULL, "name", gst_object_get_name (GST_OBJECT (factory)));
 
       element = gst_elementfactory_create(factory,"element");
       if (element == NULL) {
-        fprintf(stderr,"couldn't construct element from factory %s\n",factory->name);
+        fprintf(stderr,"couldn't construct element from factory %s\n", 
+			gst_object_get_name (GST_OBJECT (factory)));
         return 1;
       }
 

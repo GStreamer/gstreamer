@@ -9,7 +9,7 @@ dump_plugins (void)
   while (plugins) {
     GstPlugin *plugin = (GstPlugin *)plugins->data;
     
-    g_print ("plugin: %s, loaded %d\n", plugin->name, plugin->loaded);
+    g_print ("plugin: %s, loaded %d\n", plugin->name, gst_plugin_is_loaded (plugin));
 
     plugins = g_list_next (plugins);
   }
@@ -24,7 +24,7 @@ dump_factories (void)
   while (factories) {
     GstElementFactory *factory = (GstElementFactory *)factories->data;
     
-    g_print ("factory: %s %d\n", factory->name, factory->type);
+    g_print ("factory: %s %d\n", gst_object_get_name (GST_OBJECT (factory)), factory->type);
 
     factories = g_list_next (factories);
   }

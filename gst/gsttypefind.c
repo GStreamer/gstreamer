@@ -52,13 +52,15 @@ enum {
 };
 
 
-static void	gst_typefind_class_init	(GstTypeFindClass *klass);
-static void	gst_typefind_init	(GstTypeFind *typefind);
+static void	gst_typefind_class_init		(GstTypeFindClass *klass);
+static void	gst_typefind_init		(GstTypeFind *typefind);
 
-static void	gst_typefind_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void	gst_typefind_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void	gst_typefind_set_property	(GObject *object, guint prop_id, 
+						 const GValue *value, GParamSpec *pspec);
+static void	gst_typefind_get_property	(GObject *object, guint prop_id, 
+						 GValue *value, GParamSpec *pspec);
 
-static void	gst_typefind_chain	(GstPad *pad, GstBuffer *buf);
+static void	gst_typefind_chain		(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_typefind_signals[LAST_SIGNAL] = { 0 };
@@ -103,8 +105,8 @@ gst_typefind_class_init (GstTypeFindClass *klass)
                      g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                      G_TYPE_POINTER);
 
-  gobject_class->set_property = gst_typefind_set_property;
-  gobject_class->get_property = gst_typefind_get_property;
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_typefind_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_typefind_get_property);
 }
 
 static void
@@ -168,17 +170,18 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
   type_list = gst_type_get_list ();
 
   while (type_list) {
-    GSList *funcs;
+    GSList *factories;
     type = (GstType *)type_list->data;
 
-    funcs = type->typefindfuncs;
+    factories = type->factories;
 
-    while (funcs) {
-      GstTypeFindFunc typefindfunc = (GstTypeFindFunc)funcs->data;
+    while (factories) {
+      GstTypeFactory *factory = GST_TYPEFACTORY (factories->data);
+      GstTypeFindFunc typefindfunc = (GstTypeFindFunc)factory->typefindfunc;
       GstCaps *caps;
 
       GST_DEBUG (0,"try type :%d \"%s\"\n", type->id, type->mime);
-      if (typefindfunc && (caps = typefindfunc (buf, type))) {
+      if (typefindfunc && (caps = typefindfunc (buf, factory))) {
         GST_DEBUG (0,"found type :%d \"%s\" \"%s\"\n", caps->id, type->mime, 
 			gst_caps_get_name (caps));
 	typefind->caps = caps;
@@ -200,7 +203,7 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
 
         goto end;
       }
-      funcs = g_slist_next (funcs);
+      factories = g_slist_next (factories);
     }
 
     type_list = g_list_next (type_list);

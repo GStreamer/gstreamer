@@ -126,19 +126,6 @@ gst_object_init (GstObject *object)
 }
 
 /**
- * gst_object_new:
- *
- * Create a new, empty object.  Not very useful, should never be used.
- *
- * Returns: new object
- */
-GstObject*
-gst_object_new (void)
-{
-  return GST_OBJECT (g_object_new (gst_object_get_type (), NULL));
-}
-
-/**
  * gst_object_ref:
  * @object: GstObject to reference
  *
@@ -454,13 +441,15 @@ gst_object_unref (GstObject *object)
 gboolean
 gst_object_check_uniqueness (GList *list, const gchar *name)
 {
-  GstObject *child;
+  g_return_val_if_fail (name != NULL, FALSE);
 
   while (list) {
-    child = GST_OBJECT (list->data);
+    GstObject *child = GST_OBJECT (list->data);
+
     list = g_list_next(list);
       
-    if (strcmp(GST_OBJECT_NAME(child), name) == 0) return FALSE;
+    if (strcmp(GST_OBJECT_NAME(child), name) == 0) 
+      return FALSE;
   }
 
   return TRUE;
@@ -468,7 +457,6 @@ gst_object_check_uniqueness (GList *list, const gchar *name)
 
 
 #ifndef GST_DISABLE_LOADSAVE
-
 /**
  * gst_object_save_thyself:
  * @object: GstObject to save
@@ -488,17 +476,36 @@ gst_object_save_thyself (GstObject *object, xmlNodePtr parent)
   g_return_val_if_fail (parent != NULL, parent);
 
   oclass = (GstObjectClass *)G_OBJECT_GET_CLASS(object);
-
   if (oclass->save_thyself)
     oclass->save_thyself (object, parent);
 
-#ifndef GST_DISABLE_LOADSAVE
   g_signal_emit (G_OBJECT (object), gst_object_signals[OBJECT_SAVED], 0, parent);
-#endif
 
   return parent;
 }
 
+/**
+ * gst_object_load_thyself:
+ * @object: GstObject to load into
+ * @parent: The parent XML node to save the object into
+ *
+ * Saves the given object into the parent XML node.
+ *
+ * Returns: the new xmlNodePtr with the saved object
+ */
+void
+gst_object_restore_thyself (GstObject *object, xmlNodePtr parent)
+{
+  GstObjectClass *oclass;
+
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (GST_IS_OBJECT (object));
+  g_return_if_fail (parent != NULL);
+
+  oclass = (GstObjectClass *)G_OBJECT_GET_CLASS(object);
+  if (oclass->restore_thyself)
+    oclass->restore_thyself (object, parent);
+}
 #endif // GST_DISABLE_LOADSAVE
 
 /**

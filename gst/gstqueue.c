@@ -67,30 +67,33 @@ enum {
 };
 
 
-static void			gst_queue_class_init	(GstQueueClass *klass);
-static void			gst_queue_init		(GstQueue *queue);
+static void			gst_queue_class_init		(GstQueueClass *klass);
+static void			gst_queue_init			(GstQueue *queue);
 
-static void			gst_queue_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void			gst_queue_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void			gst_queue_set_property		(GObject *object, guint prop_id, 
+								 const GValue *value, GParamSpec *pspec);
+static void			gst_queue_get_property		(GObject *object, guint prop_id, 
+								 GValue *value, GParamSpec *pspec);
 
-static GstPadNegotiateReturn 	gst_queue_handle_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data);
+static GstPadNegotiateReturn 	gst_queue_handle_negotiate_src 	(GstPad *pad, GstCaps **caps, gpointer *data);
 static GstPadNegotiateReturn	gst_queue_handle_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data);
-static void			gst_queue_chain		(GstPad *pad, GstBuffer *buf);
-static GstBuffer *		gst_queue_get		(GstPad *pad);
-static GstBufferPool* 		gst_queue_get_bufferpool (GstPad *pad);
+static void			gst_queue_chain			(GstPad *pad, GstBuffer *buf);
+static GstBuffer *		gst_queue_get			(GstPad *pad);
+static GstBufferPool* 		gst_queue_get_bufferpool 	(GstPad *pad);
 	
-static void			gst_queue_flush		(GstQueue *queue);
+static void			gst_queue_flush			(GstQueue *queue);
 
-static GstElementStateReturn	gst_queue_change_state	(GstElement *element);
+static GstElementStateReturn	gst_queue_change_state		(GstElement *element);
 
   
+#define GST_TYPE_QUEUE_LEAKY (queue_leaky_get_type())
 static GType
 queue_leaky_get_type(void) {
   static GType queue_leaky_type = 0;
   static GEnumValue queue_leaky[] = {
-    { GST_QUEUE_NO_LEAK, "0", "Not Leaky" },
-    { GST_QUEUE_LEAK_UPSTREAM, "1", "Leaky on Upstream" },
-    { GST_QUEUE_LEAK_DOWNSTREAM, "2", "Leaky on Downstream" },
+    { GST_QUEUE_NO_LEAK, 		"0", "Not Leaky" },
+    { GST_QUEUE_LEAK_UPSTREAM, 		"1", "Leaky on Upstream" },
+    { GST_QUEUE_LEAK_DOWNSTREAM, 	"2", "Leaky on Downstream" },
     { 0, NULL, NULL },
   };
   if (!queue_leaky_type) {
@@ -98,14 +101,13 @@ queue_leaky_get_type(void) {
   }
   return queue_leaky_type;
 }
-#define GST_TYPE_QUEUE_LEAKY (queue_leaky_get_type())
-
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_queue_signals[LAST_SIGNAL] = { 0 };
 
 GType
-gst_queue_get_type(void) {
+gst_queue_get_type(void) 
+{
   static GType queue_type = 0;
 
   if (!queue_type) {

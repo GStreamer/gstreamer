@@ -36,6 +36,7 @@
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
 #include <gst/cothreads.h>
+#include <gst/gstpluginfeature.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -125,8 +126,8 @@ typedef enum {
 
 //typedef struct _GstElement GstElement;
 //typedef struct _GstElementClass GstElementClass;
-typedef struct _GstElementDetails GstElementDetails;
 typedef struct _GstElementFactory GstElementFactory;
+typedef struct _GstElementFactoryClass GstElementFactoryClass;
 
 typedef void (*GstElementLoopFunction) (GstElement *element);
 
@@ -177,29 +178,9 @@ struct _GstElementClass {
   GstPad*		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ);
 };
 
-struct _GstElementDetails {
-  gchar *longname;              /* long, english name */
-  gchar *klass;                 /* type of element, as hierarchy */
-  gchar *description;           /* insights of one form or another */
-  gchar *version;               /* version of the element */
-  gchar *author;                /* who wrote this thing? */
-  gchar *copyright;             /* copyright details (year, etc.) */
-};
-
-struct _GstElementFactory {
-  gchar *name;			/* name of element */
-  GType type;			/* unique GType of element */
-
-  GstElementDetails *details;	/* pointer to details struct */
-
-  GList *padtemplates;
-  guint16 numpadtemplates;
-};
-
 void			gst_element_class_add_padtemplate	(GstElementClass *element, GstPadTemplate *templ);
 
 GType			gst_element_get_type		(void);
-GstElement*		gst_element_new			(void);
 #define			gst_element_destroy(element)	gst_object_destroy (GST_OBJECT (element))
 
 void			gst_element_set_loop_function	(GstElement *element,
@@ -236,6 +217,7 @@ void			gst_element_signal_eos		(GstElement *element);
 
 /* called by the app to set the state of the element */
 gint			gst_element_set_state		(GstElement *element, GstElementState state);
+const gchar *		gst_element_statename		(GstElementState state);
 
 void			gst_element_error		(GstElement *element, const gchar *error);
 
@@ -250,12 +232,50 @@ GstElement*		gst_element_restore_thyself	(xmlNodePtr self, GstObject *parent);
  * factories stuff
  *
  **/
+typedef struct _GstElementDetails GstElementDetails;
+
+struct _GstElementDetails {
+  gchar *longname;              /* long, english name */
+  gchar *klass;                 /* type of element, as hierarchy */
+  gchar *description;           /* insights of one form or another */
+  gchar *version;               /* version of the element */
+  gchar *author;                /* who wrote this thing? */
+  gchar *copyright;             /* copyright details (year, etc.) */
+};
+
+#define GST_TYPE_ELEMENTFACTORY \
+  (gst_elementfactory_get_type())
+#define GST_ELEMENTFACTORY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ELEMENTFACTORY,GstElementFactory))
+#define GST_ELEMENTFACTORY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ELEMENTFACTORY,GstElementFactoryClass))
+#define GST_IS_ELEMENTFACTORY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ELEMENTFACTORY))
+#define GST_IS_ELEMENTFACTORY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENTFACTORY))
+
+struct _GstElementFactory {
+  GstPluginFeature feature;
+
+  GType type;			/* unique GType of element */
+
+  GstElementDetails *details;	/* pointer to details struct */
+
+  GList *padtemplates;
+  guint16 numpadtemplates;
+};
+
+struct _GstElementFactoryClass {
+  GstPluginFeatureClass parent_class;
+};
+
+GType 			gst_elementfactory_get_type 		(void);
+
 GstElementFactory*	gst_elementfactory_new			(const gchar *name,GType type,
                                                                  GstElementDetails *details);
-void			gst_elementfactory_destroy		(GstElementFactory *elementfactory);
 
 GstElementFactory*	gst_elementfactory_find			(const gchar *name);
-GList*			gst_elementfactory_get_list		(void);
+const GList*		gst_elementfactory_get_list		(void);
 
 void			gst_elementfactory_add_padtemplate	(GstElementFactory *elementfactory,
 								 GstPadTemplate *templ);
@@ -270,12 +290,6 @@ GstElement*		gst_elementfactory_create		(GstElementFactory *factory,
 /* FIXME this name is wrong, probably so is the one above it */
 GstElement*		gst_elementfactory_make			(const gchar *factoryname, const gchar *name);
 
-
-xmlNodePtr		gst_elementfactory_save_thyself		(GstElementFactory *factory, xmlNodePtr parent);
-GstElementFactory*	gst_elementfactory_load_thyself		(xmlNodePtr parent);
-
-
-const gchar *		gst_element_statename			(int state);
 
 #ifdef __cplusplus
 }

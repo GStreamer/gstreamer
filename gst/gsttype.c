@@ -30,26 +30,101 @@
 #include "gst_private.h"
 
 #include "gsttype.h"
-#include "gstplugin.h"
 
 
 /* global list of registered types */
-GList *_gst_types;
-guint16 _gst_maxtype;
+static GList *_gst_types;
+static guint16 _gst_maxtype;
 
-struct _GstTypeFindInfo {
-  GstTypeFindFunc typefindfunc; /* typefind function */
+static GList *_gst_typefactories;
 
-  GstPlugin *plugin;            /* the plugin with this typefind function */
-};
+static void 		gst_typefactory_class_init 	(GstTypeFactoryClass *klass);
+static void 		gst_typefactory_init 		(GstTypeFactory *factory);
 
 static GstCaps*		gst_type_typefind_dummy		(GstBuffer *buffer, gpointer priv);
 
-void
-_gst_type_initialize (void)
+static xmlNodePtr 	gst_typefactory_save_thyself 	(GstObject *object, xmlNodePtr parent);
+static void 		gst_typefactory_restore_thyself (GstObject *object, xmlNodePtr parent);
+
+static void 		gst_typefactory_unload_thyself 	(GstPluginFeature *feature);
+
+static GstPluginFeatureClass *parent_class = NULL;
+//static guint gst_typefactory_signals[LAST_SIGNAL] = { 0 };
+
+GType
+gst_typefactory_get_type (void)
 {
+  static GType typefactory_type = 0;
+
+  if (!typefactory_type) {
+    static const GTypeInfo typefactory_info = {
+      sizeof (GstTypeFactoryClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) gst_typefactory_class_init,
+      NULL,
+      NULL,
+      sizeof(GstTypeFactory),
+      0,
+      (GInstanceInitFunc) gst_typefactory_init,
+    };
+    typefactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE,
+                                               "GstTypeFactory", &typefactory_info, 0);
+  }
+  return typefactory_type;
+}
+
+static void
+gst_typefactory_class_init (GstTypeFactoryClass *klass)
+{
+  GObjectClass *gobject_class;
+  GstObjectClass *gstobject_class;
+  GstPluginFeatureClass *gstpluginfeature_class;
+
+  gobject_class = (GObjectClass*)klass;
+  gstobject_class = (GstObjectClass*)klass;
+  gstpluginfeature_class = (GstPluginFeatureClass*) klass;
+
+  parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
+
+  gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_typefactory_save_thyself);
+  gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_typefactory_restore_thyself);
+
+  gstpluginfeature_class->unload_thyself = GST_DEBUG_FUNCPTR (gst_typefactory_unload_thyself);
+
   _gst_types = NULL;
   _gst_maxtype = 1;		/* type 0 is undefined */
+
+  _gst_typefactories = NULL;
+}
+
+static void
+gst_typefactory_init (GstTypeFactory *factory)
+{
+  _gst_typefactories = g_list_prepend (_gst_typefactories, factory);
+}
+
+GstTypeFactory* 
+gst_typefactory_new (GstTypeDefinition *definition)
+{
+  GstTypeFactory *factory;
+
+  g_return_val_if_fail (definition != NULL, NULL);
+  g_return_val_if_fail (definition->name != NULL, NULL);
+  g_return_val_if_fail (definition->mime != NULL, NULL);
+
+  factory = gst_typefactory_find (definition->name);
+
+  if (!factory) {
+    factory = GST_TYPEFACTORY (g_object_new (GST_TYPE_TYPEFACTORY, NULL));
+  }
+
+  gst_object_set_name (GST_OBJECT (factory), definition->name);
+  factory->mime = g_strdup (definition->mime);
+  factory->exts = g_strdup (definition->exts);
+  factory->typefindfunc = definition->typefindfunc;
+
+  return factory;
 }
 
 /**
@@ -77,10 +152,10 @@ gst_type_register (GstTypeFactory *factory)
     type->id =		_gst_maxtype++;
     type->mime =	factory->mime;
     type->exts =	factory->exts;
+    type->factories = 	NULL;
     _gst_types =	g_list_prepend (_gst_types, type);
 
     id = type->id;
-    GST_DEBUG (GST_CAT_TYPES,"gsttype: new mime type '%s', id %d\n", type->mime, type->id);
 
   } else {
     type = gst_type_find_by_id (id);
@@ -90,15 +165,15 @@ gst_type_register (GstTypeFactory *factory)
 
     /* if there is no existing typefind function, try to use new one  */
   }
-  if (factory->typefindfunc) {
-    type->typefindfuncs = g_slist_prepend (type->typefindfuncs, factory->typefindfunc);
-  }
+  GST_DEBUG (GST_CAT_TYPES,"gsttype: %s(%p) gave new mime type '%s', id %d\n", 
+		    GST_OBJECT_NAME (factory), factory, type->mime, type->id);
+  type->factories = g_slist_prepend (type->factories, factory);
 
   return id;
 }
 
-static
-guint16 gst_type_find_by_mime_func (const gchar *mime)
+static guint16 
+gst_type_find_by_mime_func (const gchar *mime)
 {
   GList *walk;
   GstType *type;
@@ -202,18 +277,56 @@ gst_type_get_list (void)
   return _gst_types;
 }
 
+
 /**
- * gst_typefactory_save_thyself:
- * @factory: the type factory to save
- * @parent: the parent node to save into
+ * gst_typefactory_find:
+ * @name: the name of the typefactory to find
  *
- * Save a typefactory into an XML representation.
+ * Return the TypeFactory with the given name. 
  *
- * Returns: the new xmlNodePtr
+ * Returns: a GstTypeFactory with the given name;
  */
-xmlNodePtr
-gst_typefactory_save_thyself (GstTypeFactory *factory, xmlNodePtr parent)
+GstTypeFactory*
+gst_typefactory_find (const gchar *name)
 {
+  GList *walk = _gst_typefactories;
+  GstTypeFactory *factory;
+
+  while (walk) {
+    factory = GST_TYPEFACTORY (walk->data);
+    if (!strcmp (GST_OBJECT_NAME (factory), name))
+      return factory;
+    walk = g_list_next (walk);
+  }
+  return NULL;
+}
+
+static void
+gst_typefactory_unload_thyself (GstPluginFeature *feature)
+{
+  GstTypeFactory *factory;
+
+  g_return_if_fail (GST_IS_TYPEFACTORY (feature));
+
+  factory = GST_TYPEFACTORY (feature);
+
+  if (factory->typefindfunc)
+    factory->typefindfunc = gst_type_typefind_dummy;
+}
+
+static xmlNodePtr
+gst_typefactory_save_thyself (GstObject *object, xmlNodePtr parent)
+{
+  GstTypeFactory *factory;
+
+  g_return_val_if_fail (GST_IS_TYPEFACTORY (object), parent);
+
+  factory = GST_TYPEFACTORY (object);
+
+  if (GST_OBJECT_CLASS (parent_class)->save_thyself) {
+    GST_OBJECT_CLASS (parent_class)->save_thyself (object, parent);
+  }
+
   xmlNewChild (parent, NULL, "mime", factory->mime);
   if (factory->exts) {
     xmlNewChild (parent, NULL, "extensions", factory->exts);
@@ -225,51 +338,42 @@ gst_typefactory_save_thyself (GstTypeFactory *factory, xmlNodePtr parent)
   return parent;
 }
 
-static GstCaps *
+static GstCaps*
 gst_type_typefind_dummy (GstBuffer *buffer, gpointer priv)
 {
-  GstType *type = (GstType *)priv;
-  guint16 typeid;
-  GSList *funcs;
+  GstTypeFactory *factory = (GstTypeFactory *)priv;
 
-  GST_DEBUG (GST_CAT_TYPES,"gsttype: need to load typefind function for %s\n", type->mime);
+  GST_DEBUG (GST_CAT_TYPES,"gsttype: need to load typefind function for %s\n", factory->mime);
 
-  type->typefindfuncs = NULL;
-  gst_plugin_load_typefactory (type->mime);
-  typeid = gst_type_find_by_mime (type->mime);
-  type = gst_type_find_by_id (typeid);
+  gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory));
 
-  funcs = type->typefindfuncs;
-
-  while (funcs) {
-    GstTypeFindFunc func = (GstTypeFindFunc) funcs->data;
-
-    if (func) {
-       GstCaps *res = func (buffer, type);
-       if (res) return res;
-    }
-
-    funcs = g_slist_next (funcs);
+  if (factory->typefindfunc) {
+     GstCaps *res = factory->typefindfunc (buffer, factory);
+     if (res) 
+       return res;
   }
 
-  return FALSE;
+  return NULL;
 }
 
 /**
- * gst_typefactory_load_thyself:
+ * gst_typefactory_restore_thyself:
  * @parent: the parent node to load from
  *
  * Load a typefactory from an XML representation.
  *
  * Returns: the new typefactory
  */
-GstTypeFactory*
-gst_typefactory_load_thyself (xmlNodePtr parent)
+static void
+gst_typefactory_restore_thyself (GstObject *object, xmlNodePtr parent)
 {
-
-  GstTypeFactory *factory = g_new0 (GstTypeFactory, 1);
+  GstTypeFactory *factory = GST_TYPEFACTORY (object);
   xmlNodePtr field = parent->xmlChildrenNode;
   factory->typefindfunc = NULL;
+
+  if (GST_OBJECT_CLASS (parent_class)->restore_thyself) {
+    GST_OBJECT_CLASS (parent_class)->restore_thyself (object, parent);
+  }
 
   while (field) {
     if (!strcmp (field->name, "mime")) {
@@ -284,6 +388,6 @@ gst_typefactory_load_thyself (xmlNodePtr parent)
     field = field->next;
   }
 
-  return factory;
+  gst_type_register (factory);
 }
 

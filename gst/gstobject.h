@@ -103,17 +103,13 @@ struct _GstObjectClass {
 
   /* signals */
   void		(*parent_set)		(GstObject *object, GstObject *parent);
-#ifndef GST_DISABLE_LOADSAVE
   void		(*object_saved)		(GstObject *object, xmlNodePtr parent);
-#endif
 
   /* functions go here */
   void		(*destroy)		(GstObject *object);
 
-#ifndef GST_DISABLE_LOADSAVE
   xmlNodePtr	(*save_thyself)		(GstObject *object, xmlNodePtr parent);
   void		(*restore_thyself)	(GstObject *object, xmlNodePtr self);
-#endif
 };
 
 #define GST_FLAGS(obj)			(GST_OBJECT (obj)->flags)
@@ -136,7 +132,6 @@ struct _GstObjectClass {
 
 /* normal GObject stuff */
 GType		gst_object_get_type		(void);
-GstObject*	gst_object_new			(void);
 
 /* name routines */
 void		gst_object_set_name		(GstObject *object, const gchar *name);
@@ -151,6 +146,7 @@ gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
 
 #ifndef GST_DISABLE_LOADSAVE
 xmlNodePtr	gst_object_save_thyself		(GstObject *object, xmlNodePtr parent);
+void		gst_object_restore_thyself		(GstObject *object, xmlNodePtr parent);
 #else
 #pragma GCC poison gst_object_save_thyself
 #endif
@@ -159,7 +155,6 @@ xmlNodePtr	gst_object_save_thyself		(GstObject *object, xmlNodePtr parent);
 GstObject *	gst_object_ref			(GstObject *object);
 void 		gst_object_unref		(GstObject *object);
 void 		gst_object_sink			(GstObject *object);
-
 /* destroying an object */
 void 		gst_object_destroy		(GstObject *object);
 

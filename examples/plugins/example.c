@@ -87,18 +87,15 @@ GST_PADTEMPLATE_FACTORY (src_factory,
 
 
 /* A number of functon prototypes are given so we can refer to them later. */
-static void	gst_example_class_init	(GstExampleClass *klass);
-static void	gst_example_init	(GstExample *example);
+static void	gst_example_class_init		(GstExampleClass *klass);
+static void	gst_example_init		(GstExample *example);
 
-static void	gst_example_chain	(GstPad *pad, GstBuffer *buf);
+static void	gst_example_chain		(GstPad *pad, GstBuffer *buf);
 
-static void	gst_example_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void	gst_example_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
-
-/* These hold the constructed pad templates, which are created during
- * plugin load, and used during element instantiation.
- */
-static GstPadTemplate *src_template, *sink_template;
+static void	gst_example_set_property	(GObject *object, guint prop_id, 
+						 const GValue *value, GParamSpec *pspec);
+static void	gst_example_get_property	(GObject *object, guint prop_id, 
+						 GValue *value, GParamSpec *pspec);
 
 /* The parent class pointer needs to be kept around for some object
  * operations.
@@ -189,10 +186,10 @@ static void
 gst_example_init(GstExample *example)
 {
   /* First we create the sink pad, which is the input to the element.
-   * We will use the sink_template constructed in the plugin_init function
-   * (below) to quickly generate the pad we need.
+   * We will use the template constructed by the factory.
    */
-  example->sinkpad = gst_pad_new_from_template (sink_template, "sink");
+  example->sinkpad = gst_pad_new_from_template (
+		  GST_PADTEMPLATE_GET (sink_factory), "sink");
   /* Setting the chain function allows us to supply the function that will
    * actually be performing the work.  Without this, the element would do
    * nothing, with undefined results (assertion failures and such).
@@ -208,7 +205,8 @@ gst_example_init(GstExample *example)
    * pads don't have chain functions, because they can't accept buffers,
    * they only produce them.
    */
-  example->srcpad = gst_pad_new_from_template (src_template, "src");
+  example->srcpad = gst_pad_new_from_template (
+		  GST_PADTEMPLATE_GET (src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(example),example->srcpad);
 
   /* Initialization of element's private variables. */
@@ -344,17 +342,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   /* The pad templates can be easily generated from the factories above,
    * and then added to the list of padtemplates for the elementfactory.
-   * Note that the generated padtemplates are stored in static global
-   * variables, for the gst_example_init function to use later on.
    */
-  sink_template = sink_factory ();
-  gst_elementfactory_add_padtemplate (factory, sink_template);
-
-  src_template = src_factory ();
-  gst_elementfactory_add_padtemplate (factory, src_template);
+  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_factory));
+  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_factory));
 
   /* The very last thing is to register the elementfactory with the plugin. */
-  gst_plugin_add_factory (plugin, factory);
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
   /* Now we can return successfully. */
   return TRUE;

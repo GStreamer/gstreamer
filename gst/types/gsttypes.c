@@ -21,10 +21,10 @@
 #include <gst/gst.h>
 #include <string.h>
 
-GstTypeFactory _factories[] = {
-  { "audio/raw", ".raw", NULL },
-  { "video/raw image/raw", ".raw", NULL },
-  { NULL, NULL, NULL },
+GstTypeDefinition _definitions[] = {
+  { "gsttypes_audio/raw", "audio/raw", ".raw", NULL },
+  { "gsttypes_video/raw", "video/raw", ".raw", NULL },
+  { NULL, NULL, NULL, NULL },
 };
 
 
@@ -33,10 +33,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   gint i = 0;
 
-  while (_factories[i].mime) {
-    gst_type_register (&_factories[i]);
-    gst_plugin_add_type (plugin, &_factories[i]);
-    GST_DEBUG(0, "added factory #%d '%s'\n",i,_factories[i].mime);
+  while (_definitions[i].name) {
+    GstTypeFactory *factory;
+
+    factory = gst_typefactory_new (&_definitions[i]);
+    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+    GST_DEBUG(0, "added factory #%d '%s'\n", i, _definitions[i].name);
     i++;
   }
 

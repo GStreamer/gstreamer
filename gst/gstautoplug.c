@@ -24,9 +24,8 @@
 #include "gst_private.h"
 
 #include "gstautoplug.h"
-#include "gstplugin.h"
 
-GList* _gst_autoplugfactories;
+static GList* _gst_autoplugfactories;
 
 enum {
   NEW_OBJECT,
@@ -60,7 +59,7 @@ GType gst_autoplug_get_type(void)
       4,
       (GInstanceInitFunc)gst_autoplug_init,
     };
-    autoplug_type = g_type_register_static (GST_TYPE_OBJECT, "GstAutoplug", &autoplug_info, 0);
+    autoplug_type = g_type_register_static (GST_TYPE_OBJECT, "GstAutoplug", &autoplug_info, G_TYPE_FLAG_ABSTRACT);
   }
   return autoplug_type;
 }
@@ -81,16 +80,11 @@ gst_autoplug_class_init(GstAutoplugClass *klass)
                     G_STRUCT_OFFSET (GstAutoplugClass, new_object), NULL, NULL,
                     g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                     GST_TYPE_OBJECT);
+
 }
 
 static void gst_autoplug_init(GstAutoplug *autoplug)
 {
-}
-
-void
-_gst_autoplug_initialize (void)
-{
-  _gst_autoplugfactories = NULL;
 }
 
 /**
@@ -170,6 +164,63 @@ gst_autoplug_to_renderers (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *
   return element;
 }
 
+static void 		gst_autoplugfactory_class_init 		(GstAutoplugFactoryClass *klass);
+static void 		gst_autoplugfactory_init 		(GstAutoplugFactory *factory);
+
+static xmlNodePtr 	gst_autoplugfactory_save_thyself 	(GstObject *object, xmlNodePtr parent);
+static void 		gst_autoplugfactory_restore_thyself 	(GstObject *object, xmlNodePtr parent);
+
+static GstPluginFeatureClass *factory_parent_class = NULL;
+//static guint gst_autoplugfactory_signals[LAST_SIGNAL] = { 0 };
+
+GType 
+gst_autoplugfactory_get_type (void) 
+{
+  static GType autoplugfactory_type = 0;
+
+  if (!autoplugfactory_type) {
+    static const GTypeInfo autoplugfactory_info = {
+      sizeof (GstAutoplugFactoryClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) gst_autoplugfactory_class_init,
+      NULL,
+      NULL,
+      sizeof(GstAutoplugFactory),
+      0,
+      (GInstanceInitFunc) gst_autoplugfactory_init,
+    };
+    autoplugfactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE, 
+		    				  "GstAutoplugFactory", &autoplugfactory_info, 0);
+  }
+  return autoplugfactory_type;
+}
+
+static void
+gst_autoplugfactory_class_init (GstAutoplugFactoryClass *klass)
+{
+  GObjectClass *gobject_class;
+  GstObjectClass *gstobject_class;
+  GstPluginFeatureClass *gstpluginfeature_class;
+
+  gobject_class = (GObjectClass*)klass;
+  gstobject_class = (GstObjectClass*)klass;
+  gstpluginfeature_class = (GstPluginFeatureClass*) klass;
+
+  factory_parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
+
+  gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_autoplugfactory_save_thyself);
+  gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_autoplugfactory_restore_thyself);
+
+  _gst_autoplugfactories = NULL;
+}
+
+static void
+gst_autoplugfactory_init (GstAutoplugFactory *factory)
+{
+  _gst_autoplugfactories = g_list_prepend (_gst_autoplugfactories, factory);
+}
+	
 
 /**
  * gst_autoplugfactory_new:
@@ -187,14 +238,16 @@ gst_autoplugfactory_new (const gchar *name, const gchar *longdesc, GType type)
   GstAutoplugFactory *factory;
 
   g_return_val_if_fail(name != NULL, NULL);
+  factory = gst_autoplugfactory_find (name);
+  if (!factory) {
+    factory = GST_AUTOPLUGFACTORY (g_object_new (GST_TYPE_AUTOPLUGFACTORY, NULL));
+  }
 
-  factory = g_new0(GstAutoplugFactory, 1);
-
-  factory->name = g_strdup(name);
+  gst_object_set_name (GST_OBJECT (factory), name);
+  if (factory->longdesc)
+    g_free (factory->longdesc);
   factory->longdesc = g_strdup (longdesc);
   factory->type = type;
-
-  _gst_autoplugfactories = g_list_prepend (_gst_autoplugfactories, factory);
 
   return factory;
 }
@@ -236,7 +289,7 @@ gst_autoplugfactory_find (const gchar *name)
   walk = _gst_autoplugfactories;
   while (walk) {
     factory = (GstAutoplugFactory *)(walk->data);
-    if (!strcmp (name, factory->name))
+    if (!strcmp (name, GST_OBJECT_NAME (factory)))
       return factory;
     walk = g_list_next (walk);
   }
@@ -273,10 +326,8 @@ gst_autoplugfactory_create (GstAutoplugFactory *factory)
 
   g_return_val_if_fail (factory != NULL, NULL);
 
-  if (factory->type == 0){
-    factory = gst_plugin_load_autoplugfactory (factory->name);
-  }
-  g_return_val_if_fail (factory != NULL, NULL);
+  gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory));
+
   g_return_val_if_fail (factory->type != 0, NULL);
 
   new = GST_AUTOPLUG (g_object_new(factory->type,NULL));
@@ -308,21 +359,19 @@ gst_autoplugfactory_make (const gchar *name)
   return gst_autoplugfactory_create (factory);;
 }
 
-/**
- * gst_autoplugfactory_save_thyself:
- * @factory: The facory to save
- * @parent: the parent XML node pointer
- *
- * Save the autoplugfactory into an XML representation
- *
- * Returns: The new XML parent.
- */
-xmlNodePtr
-gst_autoplugfactory_save_thyself (GstAutoplugFactory *factory, xmlNodePtr parent)
+static xmlNodePtr
+gst_autoplugfactory_save_thyself (GstObject *object, xmlNodePtr parent)
 {
-  g_return_val_if_fail(factory != NULL, NULL);
+  GstAutoplugFactory *factory;
 
-  xmlNewChild(parent,NULL,"name",factory->name);
+  g_return_val_if_fail(GST_IS_AUTOPLUGFACTORY (object), parent);
+
+  factory = GST_AUTOPLUGFACTORY (object);
+
+  if (GST_OBJECT_CLASS (factory_parent_class)->save_thyself) {
+    GST_OBJECT_CLASS (factory_parent_class)->save_thyself (object, parent);
+  }
+
   xmlNewChild(parent,NULL,"longdesc", factory->longdesc);
 
   return parent;
@@ -336,23 +385,23 @@ gst_autoplugfactory_save_thyself (GstAutoplugFactory *factory, xmlNodePtr parent
  *
  * Returns: A new factory based on the XML node.
  */
-GstAutoplugFactory*
-gst_autoplugfactory_load_thyself (xmlNodePtr parent)
+static void
+gst_autoplugfactory_restore_thyself (GstObject *object, xmlNodePtr parent)
 {
-  GstAutoplugFactory *factory = g_new0(GstAutoplugFactory, 1);
+  GstAutoplugFactory *factory = GST_AUTOPLUGFACTORY (object);
   xmlNodePtr children = parent->xmlChildrenNode;
+
+  if (GST_OBJECT_CLASS (factory_parent_class)->restore_thyself) {
+    GST_OBJECT_CLASS (factory_parent_class)->restore_thyself (object, parent);
+  }
 
   while (children) {
     if (!strcmp(children->name, "name")) {
-      factory->name = xmlNodeGetContent(children);
+      gst_object_set_name (GST_OBJECT (factory), xmlNodeGetContent(children));
     }
     if (!strcmp(children->name, "longdesc")) {
       factory->longdesc = xmlNodeGetContent(children);
     }
     children = children->next;
   }
-
-  _gst_autoplugfactories = g_list_prepend (_gst_autoplugfactories, factory);
-
-  return factory;
 }

@@ -33,8 +33,8 @@ struct element_select_details {
 };
 
 static gint compare_name(gconstpointer a,gconstpointer b) {
-  return (strcmp(((GstElementFactory *)a)->name,
-                 ((GstElementFactory *)b)->name));
+  return (strcmp(GST_OBJECT_NAME (a),
+                 GST_OBJECT_NAME (b)));
 }
 
 gint str_compare(gconstpointer a,gconstpointer b) {
@@ -64,7 +64,7 @@ static void make_ctree(GtkCTree *tree,GtkCTreeNode *parent,
   traverse = class->factories;
   while (traverse) {
     GstElementFactory *factory = (GstElementFactory *)(traverse->data);
-    data[0] = g_strdup(factory->name);
+    data[0] = g_strdup(GST_OBJECT_NAME (factory));
     data[1] = g_strdup(factory->details->description);
     node = gtk_ctree_insert_node(tree,classnode,NULL,data,0,
                                  NULL,NULL,NULL,NULL,TRUE,FALSE);
@@ -200,7 +200,7 @@ GstElementFactory *element_select_dialog() {
   elements = gst_elementfactory_get_list();
   while (elements) {
     element = (GstElementFactory *)(elements->data);
-    printf("%s %s\n", element->name, element->details->klass);
+    printf("%s %s\n", GST_OBJECT_NAME (element), element->details->klass);
     /* split up the factory's class */
     classes = g_strsplit(element->details->klass,"/",0);
     class = classes;

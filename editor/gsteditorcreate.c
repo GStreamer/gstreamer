@@ -36,7 +36,7 @@ gst_editor_create_item(gdouble x,gdouble y)
   factory = element_select_dialog();
   if (factory) {
 //    g_print("got factory \"%s\"\n",factory->name);
-    element = gst_elementfactory_create(factory,factory->name);
+    element = gst_elementfactory_create(factory, GST_OBJECT_NAME (factory));
     if (element) {
       if (GST_IS_BIN(element)) {
 //        g_print("factory is a bin\n");

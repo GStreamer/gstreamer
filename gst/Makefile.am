@@ -72,6 +72,7 @@ libgst_la_SOURCES =		\
 	gstpad.c		\
 	gstpipeline.c		\
 	gstplugin.c		\
+	gstpluginfeature.c	\
 	gstprops.c		\
 	gstqueue.c		\
 	gstscheduler.c		\
@@ -171,6 +172,7 @@ libgstinclude_HEADERS =		\
 	gstpad.h		\
 	gstpipeline.h		\
 	gstplugin.h		\
+	gstpluginfeature.h	\
 	gstprops.h		\
 	gstqueue.h		\
 	gstscheduler.h		\

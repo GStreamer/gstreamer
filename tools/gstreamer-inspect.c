@@ -4,7 +4,9 @@
 // this must be built within the gstreamer dir, else this will fail
 #include <gst/gstpropsprivate.h>
 
-void print_prop(GstPropsEntry *prop,gboolean showname,gchar *pfx) {
+static void 
+print_prop (GstPropsEntry *prop, gboolean showname, gchar *pfx) 
+{
   GList *list;
   GstPropsEntry *listentry;
   gchar *longprefix;
@@ -56,7 +58,9 @@ void print_prop(GstPropsEntry *prop,gboolean showname,gchar *pfx) {
   }
 }
 
-void print_props(GstProps *properties,gchar *pfx) {
+static void 
+print_props (GstProps *properties, gchar *pfx) 
+{
   GList *props;
   GstPropsEntry *prop;
 
@@ -94,7 +98,7 @@ output_hierarchy (GType type, gint level, gint *maxlevel)
     g_print ("\n");
 }
 
-gint
+static gint
 print_element_info (GstElementFactory *factory)
 {
   GstElement *element;
@@ -394,88 +398,110 @@ print_element_info (GstElementFactory *factory)
   return 0;
 }
 
-void print_element_list() {
-  GList *plugins, *factories;
-  GstPlugin *plugin;
-  GstElementFactory *factory;
+static void 
+print_element_list (void) 
+{
+  GList *plugins;
 
   plugins = gst_plugin_get_list();
   while (plugins) {
+    GList *features;
+    GstPlugin *plugin;
+    
     plugin = (GstPlugin*)(plugins->data);
     plugins = g_list_next (plugins);
 
-//    printf("%s:\n",plugin->name);
+    features = gst_plugin_get_feature_list (plugin);
+    while (features) {
+      GstPluginFeature *feature;
 
-    factories = gst_plugin_get_factory_list(plugin);
-    while (factories) {
-      factory = (GstElementFactory*)(factories->data);
-      factories = g_list_next (factories);
+      feature = GST_PLUGIN_FEATURE (features->data);
 
-      printf("%s: %s: %s\n",plugin->name,factory->name,factory->details->longname);
+      if (GST_IS_ELEMENTFACTORY (feature)) {
+        GstElementFactory *factory;
+
+        factory = GST_ELEMENTFACTORY (feature);
+        printf("%s:  %s: %s\n",plugin->name, GST_OBJECT_NAME (factory) ,factory->details->longname);
+      }
+      else if (GST_IS_AUTOPLUGFACTORY (feature)) {
+        GstAutoplugFactory *factory;
+
+        factory = GST_AUTOPLUGFACTORY (feature);
+        printf("%s:  %s: %s\n", plugin->name, GST_OBJECT_NAME (factory), factory->longdesc);
+      }
+      else if (GST_IS_TYPEFACTORY (feature)) {
+        GstTypeFactory *factory;
+
+        factory = GST_TYPEFACTORY (feature);
+        printf("%s:  %s: %s\n", plugin->name, factory->mime, factory->exts);
+
+        if (factory->typefindfunc)
+          printf("      Has typefind function: %s\n",GST_DEBUG_FUNCPTR_NAME(factory->typefindfunc));
+      }
+      else {
+        printf("%s:  %s (%s)\n", plugin->name, gst_object_get_name (GST_OBJECT (feature)), 
+	  	      g_type_name (G_OBJECT_TYPE (feature)));
+      }
+
+      features = g_list_next (features);
     }
-
-//    printf("\n");
   }
 }
 
-void
+static void
 print_plugin_info (GstPlugin *plugin)
 {
+  GList *features;
+  
   printf("Plugin Details:\n");
   printf("  Name:\t\t%s\n",plugin->name);
   printf("  Long Name:\t%s\n",plugin->longname);
   printf("  Filename:\t%s\n",plugin->filename);
   printf("\n");
 
-  if (plugin->numelements) {
-    GList *factories;
-    GstElementFactory *factory;
+  features = gst_plugin_get_feature_list (plugin);
 
-    printf("Element Factories:\n");
+  while (features) {
+    GstPluginFeature *feature;
 
-    factories = gst_plugin_get_factory_list(plugin);
-    while (factories) {
-      factory = (GstElementFactory*)(factories->data);
-      factories = g_list_next(factories);
+    feature = GST_PLUGIN_FEATURE (features->data);
 
-      printf("  %s: %s\n",factory->name,factory->details->longname);
+    if (GST_IS_ELEMENTFACTORY (feature)) {
+      GstElementFactory *factory;
+
+      factory = GST_ELEMENTFACTORY (feature);
+      printf("  %s: %s\n", GST_OBJECT_NAME (factory) ,factory->details->longname);
     }
-  }
-  if (plugin->numautopluggers) {
-    GList *factories;
-    GstAutoplugFactory *factory;
+    else if (GST_IS_AUTOPLUGFACTORY (feature)) {
+      GstAutoplugFactory *factory;
 
-    printf("Autpluggers:\n");
-
-    factories = gst_plugin_get_autoplug_list(plugin);
-    while (factories) {
-      factory = (GstAutoplugFactory*)(factories->data);
-      factories = g_list_next(factories);
-
-      printf("  %s: %s\n", factory->name, factory->longdesc);
+      factory = GST_AUTOPLUGFACTORY (feature);
+      printf("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
     }
-  }
-  if (plugin->numtypes) {
-    GList *factories;
-    GstTypeFactory *factory;
+    else if (GST_IS_TYPEFACTORY (feature)) {
+      GstTypeFactory *factory;
 
-    printf("Types:\n");
-
-    factories = gst_plugin_get_type_list(plugin);
-    while (factories) {
-      factory = (GstTypeFactory*)(factories->data);
-      factories = g_list_next(factories);
-
+      factory = GST_TYPEFACTORY (feature);
       printf("  %s: %s\n", factory->mime, factory->exts);
+
       if (factory->typefindfunc)
         printf("      Has typefind function: %s\n",GST_DEBUG_FUNCPTR_NAME(factory->typefindfunc));
     }
+    else {
+      printf("  %s (%s)\n", gst_object_get_name (GST_OBJECT (feature)), 
+		      g_type_name (G_OBJECT_TYPE (feature)));
+    }
+
+
+    features = g_list_next (features);
   }
   printf("\n");
 }
 
 
-int main(int argc,char *argv[]) {
+int 
+main (int argc, char *argv[]) 
+{
   GstElementFactory *factory;
   GstPlugin *plugin;
   gchar *so;

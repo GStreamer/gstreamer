@@ -841,6 +841,7 @@ GST_SUBSYSTEM_DISABLE(TYPEFIND,[typefind plugin],)
 GST_SUBSYSTEM_DISABLE(AUTOPLUG,[autoplugger subsystem])
 GST_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
 GST_SUBSYSTEM_DISABLE(TRACE,[tracing subsystem])
+GST_SUBSYSTEM_DISABLE(REGISTRY,[plugin registry])
 
 GST_DEFINE_CFLAGS="$GST_DEFINE_CFLAGS $GST_SUBSYSTEM_DISABLE_DEFINES"
 
@@ -1224,6 +1225,7 @@ tests/muxing/Makefile
 testsuite/Makefile
 testsuite/capsnego/Makefile
 testsuite/refcounting/Makefile
+testsuite/plugin/Makefile
 tests/nego/Makefile
 examples/Makefile
 examples/autoplug/Makefile

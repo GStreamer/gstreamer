@@ -51,8 +51,10 @@ static void			gst_element_class_init		(GstElementClass *klass);
 static void			gst_element_init		(GstElement *element);
 static void			gst_element_base_class_init	(GstElementClass *klass);
 
-static void			gst_element_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void			gst_element_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void			gst_element_set_property	(GObject *object, guint prop_id, 
+								 const GValue *value, GParamSpec *pspec);
+static void			gst_element_get_property	(GObject *object, guint prop_id, GValue *value, 
+								 GParamSpec *pspec);
 
 static void 			gst_element_shutdown 		(GObject *object);
 static void			gst_element_real_destroy	(GObject *object);
@@ -205,19 +207,6 @@ gst_element_get_property (GObject *object, guint prop_id, GValue *value, GParamS
   GST_SCHEDULE_UNLOCK_ELEMENT (GST_ELEMENT_SCHED(object), GST_ELEMENT(object) );
 }
 
-
-/**
- * gst_element_new:
- *
- * Create a new element.  Should never be used, as it does no good.
- *
- * Returns: new element
- */
-GstElement*
-gst_element_new(void)
-{
-  return GST_ELEMENT (g_object_new(GST_TYPE_ELEMENT,NULL));
-}
 
 /**
  * gst_element_set_name:
@@ -1004,9 +993,7 @@ gst_element_save_thyself (GstObject *object,
 //  GType type;
   GstElement *element;
 
-  g_return_val_if_fail (object != NULL, parent);
   g_return_val_if_fail (GST_IS_ELEMENT (object), parent);
-  g_return_val_if_fail (parent != NULL, parent);
 
   element = GST_ELEMENT (object);
 
@@ -1017,7 +1004,7 @@ gst_element_save_thyself (GstObject *object,
   if (oclass->elementfactory != NULL) {
     GstElementFactory *factory = (GstElementFactory *)oclass->elementfactory;
 
-    xmlNewChild (parent, NULL, "type", factory->name);
+    xmlNewChild (parent, NULL, "type", GST_OBJECT_NAME (factory));
     xmlNewChild (parent, NULL, "version", factory->details->version);
   }
 
@@ -1261,7 +1248,7 @@ gst_element_signal_eos (GstElement *element)
 }
 
 
-const gchar *gst_element_statename(int state) {
+const gchar *gst_element_statename(GstElementState state) {
   switch (state) {
 #ifdef GST_DEBUG_COLOR
     case GST_STATE_VOID_PENDING: return "NONE_PENDING";break;

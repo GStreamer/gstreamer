@@ -1,0 +1,59 @@
+The following plugin modes are supported:
+
+1) registry based 
+-----------------
+
+All known plugins are listed in the registry file.
+
+  gst_plugin_find ("pluginname");
+
+Works right after gst_init (), along with the elements in it.
+dynamic loading of the plugin is performed when a feature inside 
+it is requested.
+
+example: registry.c. (You might want to run gstreamer-register with
+the --gst-plugin-path=. to added the test dir to the plugin path so
+that the testplugins can be found)
+
+
+2) non registry based, dynmic loading
+-------------------------------------
+
+Plugins are know after a gst_plugin_load ("pluginname"). This 
+function will scan de plugin paths, so you might want to perform
+a gst_plugin_add_path ("path").
+
+After the gst_plugin_load(), the features are available without any
+further actions.
+
+example: dynamic.c
+
+
+3) non registry based, shared linking
+-------------------------------------
+
+You can add the plugin .so (or equivalent) file to the LDFLAGS at 
+compile time. The plugin will be known after the gst_init() without
+any further actions.
+
+example: linked.c
+
+
+4) non registry based, static linking
+-------------------------------------
+
+Plugin compiled with the GST_PLUGIN_STATIC defined can be statically
+linked to the executable. The plugin is available after gst_init () 
+without any further actions.
+
+example: static.c (plugins are statically linked from another file)
+         static2.c (plugins are included in the main file)
+
+
+Any combination of the above is possible too, for example, you can use
+a registry, have some plugins load dynamically and have another few
+linked in as a shared lib. 
+
+You cannot statically link multiple plugins that are compiled without the
+GST_PLUGIN_STATIC symbol defined (this will cause multiple defined at link
+time for obvious reasons)

@@ -594,7 +594,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
                                     &gst_autoplugger_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
-  gst_plugin_add_factory (plugin, factory);
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
   return TRUE;
 }
