@@ -352,7 +352,7 @@ make_avi_pipeline (const gchar *location)
   gst_bin_add (GST_BIN (audio_bin), audio_thread);
   gst_bin_add (GST_BIN (audio_thread), a_queue);
   gst_bin_add (GST_BIN (audio_thread), audiosink);
-  gst_element_set_state (audio_bin, GST_STATE_READY);
+  gst_element_set_state (audio_bin, GST_STATE_PAUSED);
 
   setup_dynamic_connection (demux, "audio_00", gst_element_get_pad (a_decoder, "sink"), audio_bin);
 
@@ -377,7 +377,7 @@ make_avi_pipeline (const gchar *location)
   gst_bin_add (GST_BIN (video_thread), v_queue);
   gst_bin_add (GST_BIN (video_thread), videosink);
 
-  gst_element_set_state (video_bin, GST_STATE_READY);
+  gst_element_set_state (video_bin, GST_STATE_PAUSED);
 
   setup_dynamic_connection (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
 
@@ -442,19 +442,6 @@ make_mpeg_pipeline (const gchar *location)
   videosink = gst_element_factory_make_or_warn ("xvideosink", "v_sink");
   gst_element_connect_many (v_decoder, v_queue, v_filter, NULL);
   
-  /*
-  gst_element_connect_pads_filtered (v_filter, "src", videosink, "sink",
-		  			GST_CAPS_NEW ("filtercaps",
-						      "video/raw",
-						      "format", GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
-				                      "bpp",        GST_PROPS_INT (16),
-				                      "depth",      GST_PROPS_INT (16),
-				                      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-				                      "red_mask",   GST_PROPS_INT (0xf800),
-				                      "green_mask", GST_PROPS_INT (0x07e0),
-				                      "blue_mask",  GST_PROPS_INT (0x001f)
-						     ));
-						     */
   gst_element_connect_pads (v_filter, "src", videosink, "sink");
   gst_bin_add_many (GST_BIN (video_bin), v_decoder, video_thread, NULL);
   gst_bin_add_many (GST_BIN (video_thread), v_queue, v_filter, videosink, NULL);
@@ -462,6 +449,70 @@ make_mpeg_pipeline (const gchar *location)
   setup_dynamic_connection (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
 
   seekable = gst_element_get_pad (v_queue, "src");
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (v_decoder, "sink"));
+
+  return pipeline;
+}
+
+static GstElement*
+make_mpegnt_pipeline (const gchar *location) 
+{
+  GstElement *pipeline, *audio_bin, *video_bin;
+  GstElement *src, *demux, *a_decoder, *v_decoder, *v_filter;
+  GstElement *audiosink, *videosink;
+  GstElement *a_queue, *audio_thread;
+  GstPad *seekable;
+  
+  pipeline = gst_pipeline_new ("app");
+
+  src = gst_element_factory_make_or_warn (SOURCE, "src");
+  g_object_set (G_OBJECT (src), "location", location, NULL);
+
+  demux = gst_element_factory_make_or_warn ("mpegdemux", "demux");
+  //g_object_set (G_OBJECT (demux), "sync", FALSE, NULL);
+  //g_object_set (G_OBJECT (demux), "sync", TRUE, NULL);
+
+  seekable_elements = g_list_prepend (seekable_elements, demux);
+
+  gst_bin_add (GST_BIN (pipeline), src);
+  gst_bin_add (GST_BIN (pipeline), demux);
+  gst_element_connect (src, demux);
+
+  audio_bin = gst_bin_new ("a_decoder_bin");
+  a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
+  audio_thread = gst_thread_new ("a_decoder_thread");
+  a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
+  audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
+  //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
+  g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
+  gst_element_connect (a_decoder, a_queue);
+  gst_element_connect (a_queue, audiosink);
+  gst_bin_add (GST_BIN (audio_bin), a_decoder);
+  gst_bin_add (GST_BIN (audio_bin), audio_thread);
+  gst_bin_add (GST_BIN (audio_thread), a_queue);
+  gst_bin_add (GST_BIN (audio_thread), audiosink);
+
+  setup_dynamic_connection (demux, "audio_00", gst_element_get_pad (a_decoder, "sink"), audio_bin);
+
+  seekable = gst_element_get_pad (a_queue, "src");
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (a_decoder, "sink"));
+
+  video_bin = gst_bin_new ("v_decoder_bin");
+  v_decoder = gst_element_factory_make_or_warn ("mpeg2dec", "v_dec");
+  v_filter = gst_element_factory_make_or_warn ("colorspace", "v_filter");
+  videosink = gst_element_factory_make_or_warn ("xvideosink", "v_sink");
+  gst_element_connect_many (v_decoder, v_filter, NULL);
+  
+  gst_element_connect_pads (v_filter, "src", videosink, "sink");
+  gst_bin_add_many (GST_BIN (video_bin), v_decoder, v_filter, videosink, NULL);
+
+  setup_dynamic_connection (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
+
+  seekable = gst_element_get_pad (v_decoder, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (v_decoder, "sink"));
@@ -739,7 +790,7 @@ main (int argc, char **argv)
   gtk_init (&argc, &argv);
 
   if (argc != 3) {
-    g_print ("usage: %s <type 0=mp3 1=avi 2=mpeg1 3=mpegparse 4=vorbis 5=sid 6=flac 7=wav 8=mod 9=dv> <filename>\n", argv[0]);
+    g_print ("usage: %s <type 0=mp3 1=avi 2=mpeg1 3=mpegparse 4=vorbis 5=sid 6=flac 7=wav 8=mod 9=dv 10=mpeg1nothreads> <filename>\n", argv[0]);
     exit (-1);
   }
 
@@ -763,6 +814,8 @@ main (int argc, char **argv)
     pipeline = make_mod_pipeline (argv[2]);
   else if (atoi (argv[1]) == 9) 
     pipeline = make_dv_pipeline (argv[2]);
+  else if (atoi (argv[1]) == 10) 
+    pipeline = make_mpegnt_pipeline (argv[2]);
 
   /* initialize gui elements ... */
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
