@@ -28,6 +28,7 @@
 #include <sys/soundcard.h>
 #include <unistd.h>
 #include <errno.h>
+#include <string.h>
 
 #include <gstosssink.h>
 
@@ -810,6 +811,7 @@ gst_osssink_open_audio (GstOssSink *sink)
   GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: attempting to open sound device");
 
   /* first try to open the sound card */
+  /* FIXME: this code is dubious, why do we need to open and close this ?*/
   sink->fd = open (sink->device, O_WRONLY | O_NONBLOCK);
   if (errno == EBUSY) {
     g_warning ("osssink: unable to open the sound device (in use ?)\n");
@@ -822,10 +824,38 @@ gst_osssink_open_audio (GstOssSink *sink)
   sink->fd = open (sink->device, O_WRONLY);
 
   if (sink->fd < 0) {
-    g_warning ("osssink: unable to open the sound device (errno=%d)\n", errno); 
+    switch (errno) {
+      case EISDIR:
+        gst_element_error (GST_ELEMENT (sink),
+		           "osssink: Device %s is a directory",
+			   sink->device);
+	break;
+      case EACCES:
+      case ETXTBSY:
+        gst_element_error (GST_ELEMENT (sink),
+		           "osssink: Cannot access %s, check permissions",
+			   sink->device);
+	break;
+      case ENXIO:
+      case ENODEV:
+      case ENOENT:
+        gst_element_error (GST_ELEMENT (sink),
+		           "osssink: Cannot access %s, does it exist ?",
+			   sink->device);
+	break;
+      case EROFS:
+        gst_element_error (GST_ELEMENT (sink),
+		           "osssink: Cannot access %s, read-only filesystem ?",
+			   sink->device);
+      default:
+	/* FIXME: strerror is not threadsafe */
+	gst_element_error (GST_ELEMENT (sink),
+			   "osssink: Cannot open %s, generic error: %s",
+			   sink->device, strerror (errno));
+	break;
+    }
     return FALSE;
   }
-	
   /* we have it, set the default parameters and go have fun */
   /* set card state */
   ioctl (sink->fd, SNDCTL_DSP_GETCAPS, &caps);
