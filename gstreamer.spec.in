@@ -128,7 +128,7 @@ rm -rf $RPM_BUILD_ROOT
 %files -f gstreamer-%{majorminor}.lang
 %defattr(-, root, root, -)
 %doc AUTHORS COPYING NEWS README TODO RELEASE
-%doc COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING
+%doc ABOUT-NLS REQUIREMENTS DOCBUILDING
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstcontrol-%{majorminor}.so.*
 %dir %{_libdir}/gstreamer-%{majorminor}
@@ -141,7 +141,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstgetbits*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstspider*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstindexers.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstbytestream.so
+%{_libdir}/gstreamer-%{majorminor}/libgstbytestream.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstdataprotocol.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstentrygthreadscheduler.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstentryomegascheduler.so*
 %{_bindir}/gst-xmlinspect-%{majorminor}
 %{_bindir}/gst-complete-%{majorminor}
 %{_bindir}/gst-compprep-%{majorminor}
@@ -186,6 +189,8 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_includedir}/gstreamer-%{majorminor}/gst/getbits
 %{_includedir}/gstreamer-%{majorminor}/gst/getbits/getbits.h
 %{_includedir}/gstreamer-%{majorminor}/gst/bytestream/bytestream.h
+%{_includedir}/gstreamer-%{majorminor}/gst/bytestream/adapter.h
+%{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol/dataprotocol.h
 %{_libdir}/libgstreamer-%{majorminor}.so
 %{_libdir}/libgstcontrol-%{majorminor}.so
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
