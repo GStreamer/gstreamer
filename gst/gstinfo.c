@@ -89,7 +89,7 @@ static GSList *__log_functions = NULL;
 
 static GstAtomicInt __default_level;
 static GstAtomicInt __use_color;
-static GstAtomicInt __enabled;
+gboolean __gst_debug_enabled = TRUE;
 
 
 GstDebugCategory *GST_CAT_DEFAULT = NULL;
@@ -134,7 +134,6 @@ void _gst_debug_init (void)
 {
   gst_atomic_int_init (&__default_level, GST_LEVEL_DEFAULT);
   gst_atomic_int_init (&__use_color, 1);
-  gst_atomic_int_init (&__enabled, 1);
 
   /* do NOT use a single debug function before this line has been run */
   GST_CAT_DEFAULT	= _gst_debug_category_new ("default", 
@@ -289,14 +288,12 @@ void gst_debug_logv (GstDebugCategory *category, GstDebugLevel level,
   g_return_if_fail (format != NULL);
 
   message = g_strdup_vprintf (format, args);
-  g_static_mutex_lock (&__log_func_mutex);
   handler = __log_functions;
   while (handler) {
     entry = handler->data;
     handler = g_slist_next (handler);
     entry->func (category, level, file, function, line, object, message, entry->user_data);
   }
-  g_static_mutex_unlock (&__log_func_mutex);
   g_free (message);
 }
 /**
@@ -436,14 +433,22 @@ void
 gst_debug_add_log_function (GstLogFunction func, gpointer data)
 {
   LogFuncEntry *entry;
+  GSList *list;
 
   g_return_if_fail (func != NULL);
 
   entry = g_new (LogFuncEntry, 1);
   entry->func = func;
   entry->user_data = data;
+  /* FIXME: we leak the old list here - other threads might access it right now
+   * in gst_debug_logv. Another solution is to lock the mutex in gst_debug_logv,
+   * but that is waaay costly.
+   * It'd probably be clever to use some kind of RCU here, but I don't know 
+   * anything about that.
+   */
   g_static_mutex_lock (&__log_func_mutex);
-  __log_functions = g_slist_prepend (__log_functions, entry);
+  list = g_slist_copy (__log_functions);
+  __log_functions = g_slist_prepend (list, entry);
   g_static_mutex_unlock (&__log_func_mutex);
 
   GST_DEBUG ("prepended log function %p (user data %p) to log functions",
@@ -463,6 +468,29 @@ gst_debug_compare_log_function_by_data (gconstpointer entry, gconstpointer data)
   
   return (entrydata < data) ? -1 : (entrydata > data) ? 1 : 0;
 }
+static guint
+gst_debug_remove_with_compare_func (GCompareFunc func, gpointer data)
+{
+  GSList *found;
+  GSList *new;
+  guint removals = 0;
+  g_static_mutex_lock (&__log_func_mutex);
+  new = __log_functions;
+  while ((found = g_slist_find_custom (new, func, 
+                                       gst_debug_compare_log_function_by_func))) {
+    g_free (found->data);
+    if (removals == 0) {
+      new = g_slist_copy (new);
+    }
+    new = g_slist_delete_link (new, found);
+    removals++;
+  }
+  /* FIXME: We leak the old list here. See _add_log_function for why. */
+  __log_functions = new;
+  g_static_mutex_unlock (&__log_func_mutex);
+
+  return removals;
+}
 /**
  * gst_debug_remove_log_function:
  * @func: the log function to remove
@@ -474,19 +502,11 @@ gst_debug_compare_log_function_by_data (gconstpointer entry, gconstpointer data)
 guint
 gst_debug_remove_log_function (GstLogFunction func)
 {
-  GSList *found;
-  guint removals = 0;
-
+  guint removals;
+  
   g_return_val_if_fail (func != NULL, 0);
 
-  g_static_mutex_lock (&__log_func_mutex);
-  while ((found = g_slist_find_custom (__log_functions, func, 
-                                       gst_debug_compare_log_function_by_func))) {
-    g_free (found->data);
-    __log_functions = g_slist_delete_link (__log_functions, found);
-    removals++;
-  }
-  g_static_mutex_unlock (&__log_func_mutex);
+  removals = gst_debug_remove_with_compare_func (gst_debug_compare_log_function_by_func, func);
   GST_DEBUG ("removed log function %p %d times from log function list",
              func, removals);
 
@@ -503,17 +523,9 @@ gst_debug_remove_log_function (GstLogFunction func)
 guint
 gst_debug_remove_log_function_by_data (gpointer data)
 {
-  GSList *found;
-  guint removals = 0;
+  guint removals;
 
-  g_static_mutex_lock (&__log_func_mutex);
-  while ((found = g_slist_find_custom (__log_functions, data, 
-                                       gst_debug_compare_log_function_by_data))) {
-    g_free (found->data);
-    __log_functions = g_slist_delete_link (__log_functions, found);
-    removals++;
-  }
-  g_static_mutex_unlock (&__log_func_mutex);
+  removals = gst_debug_remove_with_compare_func (gst_debug_compare_log_function_by_data, data);
   GST_DEBUG ("removed %d log functions with user data %p from log function list",
              removals, data);
 
@@ -549,11 +561,13 @@ gst_debug_is_colored (void)
  * If activated, debugging messages are sent to the debugging
  * handlers.
  * It makes sense to deactivate it for speed issues.
+ * <note><para>This function is not threadsafe. It makes sense to only call it
+ * during initialization.</para></note>
  */
 void
 gst_debug_set_active (gboolean active)
 {
-  gst_atomic_int_set (&__enabled, active ? 1 : 0);
+  __gst_debug_enabled = active;
 }
 /**
  * gst_debug_is_active:
@@ -565,7 +579,7 @@ gst_debug_set_active (gboolean active)
 gboolean
 gst_debug_is_active (void)
 {
-  return gst_atomic_int_read (&__enabled) == 0 ? FALSE : TRUE;
+  return __gst_debug_enabled;
 }
 /**
  * gst_debug_set_default_threshold:
