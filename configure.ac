@@ -193,7 +193,7 @@ dnl ==========================================================================
 dnl *** DXR3 card ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DXR3, true)
 GST_CHECK_FEATURE(DXR3, [DXR3 hardware mpeg video decoder], dxr3videosink, [
-  AC_CHECK_HEADER(linux/em8000.h, HAVE_DXR3="yes", HAVE_DXR3="no")
+  AC_CHECK_HEADER(linux/em8300.h, HAVE_DXR3="yes", HAVE_DXR3="no")
 ])
 
 dnl *** OSS audio ***
