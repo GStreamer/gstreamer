@@ -46,7 +46,7 @@ struct _GstDVDec {
   /* We need to keep track of our pads, so we do so here. */
   GstPad 	*sinkpad,
   		*videosrcpad,
-		*audiosrcpad;
+		  *audiosrcpad;
 
   dv_decoder_t 	*decoder;
   gboolean	 clamp_luma;
@@ -56,14 +56,19 @@ struct _GstDVDec {
   GstByteStream *bs;
   dv_color_space_t space;
   gint 		 bpp;
-  gboolean	 PAL;
-  gint		 framerate;
+  gboolean PAL;
+  gdouble	 framerate;
   gint		 height;
+  gint     frequency;
+  gint     channels;
+  
   gint 		 length;
   guint64	 next_ts;
   guint64	 end_position;
   gboolean	 need_discont;
   gboolean	 loop;
+  
+  gboolean found_header;
 
   gint16 	*audio_buffers[4];
 };
