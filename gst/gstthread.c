@@ -130,6 +130,8 @@ gst_thread_class_init (GstThreadClass *klass)
 static void
 gst_thread_init (GstThread *thread)
 {
+  int i;
+
   GST_DEBUG (0,"initializing thread '%s'\n",GST_ELEMENT_NAME (thread));
 
   // we're a manager by default
@@ -137,8 +139,10 @@ gst_thread_init (GstThread *thread)
 
   // default is to create a thread
   GST_FLAG_SET (thread, GST_THREAD_CREATE);
-
-  thread->lock = g_mutex_new();
+  
+  for(i=0;i<4;i++)
+    thread->lock[i] = g_mutex_new();
+  
   thread->cond = g_cond_new();
 
   GST_ELEMENT_SCHED(thread) = gst_schedule_new(GST_ELEMENT(thread));
@@ -278,9 +282,9 @@ gst_thread_change_state (GstElement *element)
       GST_DEBUG(0,"sync: done telling thread to start spinning\n");
       GST_INFO(GST_CAT_THREAD, "waiting for thread to start up");
       gst_thread_wait_thread (thread,GST_THREAD_STATE_ELEMENT_CHANGED,TRUE);
-      g_mutex_lock(thread->lock);
+      g_mutex_lock(thread->lock[GST_THREAD_STATE_ELEMENT_CHANGED - GST_THREAD_STATE_STARTED]);
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_ELEMENT_CHANGED);
-      g_mutex_unlock(thread->lock);
+      g_mutex_unlock(thread->lock[GST_THREAD_STATE_ELEMENT_CHANGED - GST_THREAD_STATE_STARTED]);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       GST_INFO (GST_CAT_THREAD,"pausing thread \"%s\"",
@@ -378,15 +382,15 @@ gst_thread_main_loop (void *arg)
 static void
 gst_thread_signal_thread (GstThread *thread, guint syncflag, gboolean set)
 {
-  g_mutex_lock (thread->lock);
+  g_mutex_lock (thread->lock[syncflag-GST_THREAD_STATE_STARTED]);
   GST_DEBUG (0,"sync: signaling thread setting %u to %d\n",syncflag,set);
   if (set)
     GST_FLAG_SET(thread,syncflag);
   else
     GST_FLAG_UNSET(thread,syncflag);
   g_cond_signal (thread->cond);
-  g_mutex_unlock (thread->lock);
-  GST_DEBUG (0,"sync: done signaling thread\n");
+  g_mutex_unlock (thread->lock[syncflag-GST_THREAD_STATE_STARTED]);
+  GST_DEBUG (0,"sync: done signaling thread with %u set to %d\n",syncflag,set);
 }
 
 // the set flag is to see what flag to wait for
@@ -395,7 +399,7 @@ gst_thread_wait_thread (GstThread *thread, guint syncflag, gboolean set)
 {
 //  if (!thread->signaling) {
   GTimeVal finaltime;  
-  g_mutex_lock (thread->lock);
+  g_mutex_lock (thread->lock[syncflag-GST_THREAD_STATE_STARTED]);
   GST_DEBUG (0,"sync: waiting for thread for %u to be set %d\n",
 	     syncflag,set);
   while (GST_FLAG_IS_SET(thread,syncflag)!=set) {
@@ -407,10 +411,11 @@ gst_thread_wait_thread (GstThread *thread, guint syncflag, gboolean set)
     else {
       finaltime.tv_usec+=5000;
     }
-    g_cond_timed_wait (thread->cond, thread->lock,&finaltime);
+    g_cond_timed_wait (thread->cond, thread->lock[syncflag-GST_THREAD_STATE_STARTED],&finaltime);
   }
-  g_mutex_unlock (thread->lock);
-    GST_DEBUG (0, "sync: done waiting for thread\n");
+  g_mutex_unlock (thread->lock[syncflag-GST_THREAD_STATE_STARTED]);
+  GST_DEBUG (0, "sync: done waiting for thread for %u to be set %d\n",
+	     syncflag,set);
 //  }
 }
 
