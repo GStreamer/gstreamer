@@ -1,3 +1,9 @@
+2004-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_parse_fmt),
+	(gst_wavparse_pad_convert), (gst_wavparse_pad_query):
+          debug updates
+
 2004-03-06  Christophe Fergeau  <teuf@gnome.org>
 
 	* ext/mad/gstid3tag.c: (gst_mad_id3_to_tag_list):
