@@ -686,13 +686,8 @@ gst_object_set_name_prefix (GstObject * object, const gchar * name_prefix)
 
   GST_LOCK (object);
 
-  if (object->name_prefix != NULL)
-    g_free (object->name_prefix);
-
-  if (name_prefix == NULL)
-    object->name_prefix = NULL;
-  else
-    object->name_prefix = g_strdup (name_prefix);
+  g_free (object->name_prefix);
+  object->name_prefix = g_strdup (name_prefix); /* NULL gives NULL */
 
   GST_UNLOCK (object);
 }
