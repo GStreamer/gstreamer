@@ -8,7 +8,7 @@ print_prop (GstPropsEntry *prop, gboolean showname, const gchar *pfx)
   GstPropsType type;
 
   if (showname)
-    g_print("%s%s: ", pfx, gst_props_entry_get_name (prop));
+    g_print("%s%-20.20s: ", pfx, gst_props_entry_get_name (prop));
   else
     g_print(pfx);
 
@@ -54,7 +54,7 @@ print_prop (GstPropsEntry *prop, gboolean showname, const gchar *pfx)
     {
       const gchar *val;
       gst_props_entry_get_string (prop, &val);
-      g_print("String: %s\n", val);
+      g_print("String: \"%s\"\n", val);
       break;
     }
     case GST_PROPS_FOURCC_TYPE:
@@ -75,7 +75,7 @@ print_prop (GstPropsEntry *prop, gboolean showname, const gchar *pfx)
 
       gst_props_entry_get_list (prop, &list);
       g_print ("List:\n");
-      longprefix = g_strdup_printf ("%s  ", pfx);
+      longprefix = g_strdup_printf ("%s ", pfx);
       while (list) {
         GstPropsEntry *listentry;
 
@@ -247,6 +247,8 @@ print_element_properties (GstElement *element)
 {
   GParamSpec **property_specs;
   gint num_properties,i;
+  gboolean readable;
+  
 
   property_specs = g_object_class_list_properties 
 	             (G_OBJECT_GET_CLASS (element), &num_properties);
@@ -255,10 +257,12 @@ print_element_properties (GstElement *element)
   for (i = 0; i < num_properties; i++) {
     GValue value = { 0, };
     GParamSpec *param = property_specs[i];
+    readable = FALSE;
 
+    g_value_init (&value, param->value_type);
     if (param->flags & G_PARAM_READABLE) {
-      g_value_init (&value, param->value_type);
       g_object_get_property (G_OBJECT (element), param->name, &value);
+      readable = TRUE;
     }
 
     g_print("  %-20s: %s\n", g_param_spec_get_name (param),
@@ -266,50 +270,58 @@ print_element_properties (GstElement *element)
 
     switch (G_VALUE_TYPE (&value)) {
       case G_TYPE_STRING: 
-	g_print ("%-23.23s String (Default \"%s\")", "", g_value_get_string (&value));
+	g_print ("%-23.23s String. ", "");
+	if (readable) g_print ("(Default \"%s\")", g_value_get_string (&value));
 	break;
       case G_TYPE_BOOLEAN: 
-	g_print ("%-23.23s Boolean (Default %s)", "", (g_value_get_boolean (&value) ? "true" : "false"));
+	g_print ("%-23.23s Boolean. ", "");
+	if (readable) g_print ("(Default %s)", (g_value_get_boolean (&value) ? "true" : "false"));
 	break;
       case G_TYPE_ULONG: 
       {
 	GParamSpecULong *pulong = G_PARAM_SPEC_ULONG (param);
-	g_print("%-23.23s Unsigned Long. Range: %lu - %lu (Default %lu)", "", 
+	g_print("%-23.23s Unsigned Long. ", ""); 
+	if (readable) g_print("Range: %lu - %lu (Default %lu)",  
 			pulong->minimum, pulong->maximum, g_value_get_ulong (&value));
 	break;
       }
       case G_TYPE_LONG: 
       {
 	GParamSpecLong *plong = G_PARAM_SPEC_LONG (param);
-	g_print("%-23.23s Long. Range: %ld - %ld (Default %ld)", "", 
+	g_print("%-23.23s Long. ", ""); 
+	if (readable) g_print("Range: %ld - %ld (Default %ld)",  
 			plong->minimum, plong->maximum, g_value_get_long (&value));
 	break;
       }
       case G_TYPE_UINT: 
       {
 	GParamSpecUInt *puint = G_PARAM_SPEC_UINT (param);
-	g_print("%-23.23s Unsigned Integer. Range: %u - %u (Default %u)", "", 
+	g_print("%-23.23s Unsigned Integer. ", "");
+	if (readable) g_print("Range: %u - %u (Default %u)",  
 			puint->minimum, puint->maximum, g_value_get_uint (&value));
 	break;
       }
       case G_TYPE_INT: 
       {
 	GParamSpecInt *pint = G_PARAM_SPEC_INT (param);
-	g_print("%-23.23s Integer. Range: %d - %d (Default %d)", "", 
+	g_print("%-23.23s Integer. ", ""); 
+	if (readable) g_print("Range: %d - %d (Default %d)", 
 			pint->minimum, pint->maximum, g_value_get_int (&value));
 	break;
       }
       case G_TYPE_UINT64: 
       {
 	GParamSpecUInt64 *puint64 = G_PARAM_SPEC_UINT64 (param);
-	g_print("%-23.23s Unsigned Integer64. Range: %llu - %llu (Default %llu)", "", 
+	g_print("%-23.23s Unsigned Integer64. ", ""); 
+	if (readable) g_print("Range: %llu - %llu (Default %llu)", 
 			puint64->minimum, puint64->maximum, g_value_get_uint64 (&value));
 	break;
       }
       case G_TYPE_INT64: 
       {
 	GParamSpecInt64 *pint64 = G_PARAM_SPEC_INT64 (param);
-	g_print("%-23.23s Integer64. Range: %lld - %lld (Default %lld)", "", 
+	g_print("%-23.23s Integer64. ", ""); 
+	if (readable) g_print("Range: %lld - %lld (Default %lld)", 
 			pint64->minimum, pint64->maximum, g_value_get_int64 (&value));
 	break;
       }
@@ -405,11 +417,16 @@ print_element_properties (GstElement *element)
 	  if (flags)
 	    g_string_free (flags, TRUE);
 	}
-        else
-          g_print ("unknown type %ld \"%s\"", param->value_type, g_type_name(param->value_type));
+        else {
+          g_print ("%-23.23s Unknown type %ld \"%s\"", "",param->value_type, 
+			  g_type_name(param->value_type));
+	}
         break;
     }
-    g_print ("\n");
+    if (!readable) 
+      g_print ("Write only\n");
+    else 
+      g_print ("\n");
   }
   if (num_properties == 0) 
     g_print ("  none\n");
