@@ -187,7 +187,7 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
       if (state == GST_STATE_PLAYING)
         gst_element_set_state (GST_ELEMENT (gst_element_get_parent (src)), GST_STATE_PAUSED);
 	
-      if ((connected = gst_pad_connect (pad, sinkpad))) {
+      if ((connected = gst_pad_try_connect (pad, sinkpad))) {
         if (state == GST_STATE_PLAYING)
           gst_element_set_state (GST_ELEMENT (gst_element_get_parent (src)), GST_STATE_PLAYING);
 	break;

@@ -555,9 +555,28 @@ gst_pad_disconnect (GstPad *srcpad,
  *
  * Returns: TRUE if the pad could be connected
  */
-gboolean
+void
 gst_pad_connect (GstPad *srcpad,
 		 GstPad *sinkpad)
+{
+  if (!gst_pad_try_connect (srcpad, sinkpad))
+    g_critical ("couldn't connect %s:%s and %s:%s",
+		GST_DEBUG_PAD_NAME (srcpad),
+		GST_DEBUG_PAD_NAME (sinkpad));
+}
+
+/**
+ * gst_pad_try_connect:
+ * @srcpad: the source pad to connect
+ * @sinkpad: the sink pad to connect
+ *
+ * Connects the source pad to the sink pad.
+ *
+ * Returns: TRUE if the pad could be connected
+ */
+gboolean
+gst_pad_try_connect (GstPad *srcpad,
+		     GstPad *sinkpad)
 {
   GstRealPad *realsrc, *realsink;
   gboolean negotiated = FALSE;
