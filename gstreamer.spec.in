@@ -39,6 +39,10 @@ This package contains the libraries and includes files necessary to develop
 applications and plugins for GStreamer.
 
 %changelog
+* Sat Jun 02 2001 Christian Schaller <Uraeus@linuxrising.org>
+* Small fix to RPM group statement
+* Fri Jun 01 2001 Christian Schaller <Uraeus@linuxrising.org>
+- Included fix suggestions from Dennis Bjorklund
 * Tue Jan 09 2001 Erik Walthinsen <omega@cse.ogi.edu>
 - updated to build -devel package as well
 
