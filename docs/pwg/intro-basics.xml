@@ -279,8 +279,8 @@
         included in <xref linkend="section-types-definitions"/>.
       </para>
 
-      <table frame="all" id="table-basictypes" xreflabel="Table of Basic Types">
-        <title>Table of Basic Types</title>
+      <table frame="all" id="table-basictypes" xreflabel="Table of Example Types">
+        <title>Table of Example Types</title>
         <tgroup cols="6" align="left" colsep="1" rowsep="1">
 
         <thead>

@@ -1,8 +1,10 @@
 $Id$
 
 * cleanup of dparams
-  * even though it is long try to stick to the prefix "dparam" for the whole library
-      * e.g. avoid namespace clashes with "dataprotocol" which is using "dp" as well :-(
+  * library "namespace"
+    * even though it is long try to stick to the prefix "dparam" for the whole library
+    * e.g. avoid namespace clashes with "dataprotocol" which is using "dp" as well :-(
+    * use a new namespace "ctrl" for control
   * resolve g_return_if_fail() into GST_WARNING and return()
     in cases where the caller has to handle the problem
   * rename
@@ -13,13 +15,20 @@ $Id$
     dparam_mode_synchronous
     dparam_mode_asynchronous
     dparam_mode_disabled
-  * split dparam manager api
-    * plugin api
-    * application api
+  * split dparam manager api (like e.g. GConf does it)
+    * plugin api : GstCtrlManagerServer
+    * application api  : GstCtrlManagerClient
+  * remove "value-changed" signal from DParam?
+    * one can connect to e.g. "notify::value-double" as well
+  * dparam update callback needs to pass more info
+    * GstElement as the first arg
+    * GstDPram as the second arg
 
 * documentation
   * state of unitconvert
   * state of sychronous params
+  * dpman_set/get_rate
+    if element_sampling_rate is 44100 and dpman_rate is 22050, dparams are updated twice a second
 
 * dparams ng
   * concept for global, voice params
@@ -27,4 +36,8 @@ $Id$
     different parameter sets (sound synthesizers, effects)
   * based on gobject params, so that e.g. the GUI can connect to "notify:param"
     events and update the GUI
+  * implement timelined dparams via queues
+    * the queue contains dparams and timestamps
+    * GST_DPARAM_DO_UPDATE() checks the head of the queue for events that are due now
+      and sets the values
 

@@ -674,7 +674,7 @@ gst_dpman_bypass_dparam (GstDParamManager * dpman, const gchar * dparam_name)
   g_return_if_fail (dpwrap != NULL);
 
   if (dpwrap->dparam != NULL) {
-    g_warning ("Bypassing attached dparam '%s'. It will be detached",
+    GST_WARNING ("Bypassing attached dparam '%s'. It will be detached",
         dparam_name);
     gst_dpman_detach_dparam (dpman, dparam_name);
   }
@@ -860,7 +860,7 @@ gst_dpman_preprocess_asynchronous (GstDParamManager * dpman, guint frames,
 
 
   if (GST_DPMAN_RATE (dpman) == 0) {
-    g_warning ("The element hasn't given GstDParamManager a frame rate");
+    GST_WARNING ("The element hasn't given GstDParamManager a frame rate");
     return FALSE;
   }
   dpman->rate_ratio = (guint) (1000000000LL / (gint64) GST_DPMAN_RATE (dpman));
@@ -975,14 +975,14 @@ gst_dpman_process_asynchronous (GstDParamManager * dpman, guint frame_count)
   GST_DEBUG ("in gst_dpman_process_asynchronous");
 
   if (frame_count >= dpman->num_frames) {
-    g_warning ("there is no more buffer to process");
+    GST_WARNING ("there is no more buffer to process");
     dpman->next_update_frame = dpman->num_frames;
     dpman->frames_to_process = 0;
     return FALSE;
   }
 
   if (frame_count != dpwrap->next_update_frame) {
-    g_warning ("frame count %u does not match update frame %u",
+    GST_WARNING ("frame count %u does not match update frame %u",
         frame_count, dpwrap->next_update_frame);
   }
 
@@ -1065,7 +1065,7 @@ gst_dpman_preprocess_noop (GstDParamManager * dpman, guint frames,
 static gboolean
 gst_dpman_process_noop (GstDParamManager * dpman, guint frame_count)
 {
-  g_warning
+  GST_WARNING
       ("gst_dpman_process_noop should never be called - something might be wrong with your processing loop");
   return FALSE;
 }

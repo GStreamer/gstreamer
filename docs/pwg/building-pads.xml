@@ -137,7 +137,7 @@ gst_my_filter_link (GstPad        *pad,
   <sect1 id="section-pads-getcapsfn" xreflabel="The getcaps function">
   <title>The getcaps function</title>
   <para>
-    The <function>_getcaps ()</function> funtion is used to request the list
+    The <function>_getcaps ()</function> function is used to request the list
     of supported formats and properties from the element. In some cases, this
     will be equal to the formats provided by the pad template, in which case
     this function can be omitted. In some cases, too, it will not depend on
@@ -184,8 +184,9 @@ gst_my_filter_getcaps (GstPad *pad)
   <sect1 id="section-pads-explicitcaps" xreflabel="Explicit caps">
   <title>Explicit caps</title>
   <para>
-    Obviously, many elements will not need this complex mechanism, because they
-    are much simpler than that. They only support one format, or their format
+    Obviously, many elements will not need the complex mechanism described in
+    the previous sections, because they are much simpler than that.
+    Such elements only support one format, or their format
     is fixed but the contents of the format depend on the stream or something
     else. In those cases, <emphasis>explicit caps</emphasis> are an easy way
     of handling caps. Explicit caps are an easy way of specifying one, fixed,

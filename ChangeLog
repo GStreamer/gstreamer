@@ -1,3 +1,17 @@
+2005-02-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/pwg/building-pads.xml:
+	* docs/pwg/intro-basics.xml:
+      fixed a few typos, relabeled introductionary list of types
+	* docs/random/ensonic/dparams.txt:
+      more notes abut dparam changes
+	* libs/gst/control/dparam.c: (gst_dparam_attach):
+	* libs/gst/control/dparammanager.c:
+	* libs/gst/control/dparammanager.h:
+      - many comments and notes on dparam implementation
+      - new dparams are were not initialized to the default value
+        from param spec
+
 2005-02-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	submitted by: Peter Astakhov

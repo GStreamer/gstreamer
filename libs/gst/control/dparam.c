@@ -321,6 +321,7 @@ void
 gst_dparam_attach (GstDParam * dparam, GstDParamManager * manager,
     GParamSpec * param_spec, gchar * unit_name)
 {
+  GValue value = { 0, };
 
   g_return_if_fail (dparam != NULL);
   g_return_if_fail (GST_IS_DPARAM (dparam));
@@ -339,6 +340,29 @@ gst_dparam_attach (GstDParam * dparam, GstDParamManager * manager,
   GST_DPARAM_IS_LOG (dparam) = gst_unitconv_unit_is_logarithmic (unit_name);
   GST_DEBUG ("attaching %s to dparam %p", GST_DPARAM_NAME (dparam), dparam);
 
+  // get default value from param-spec and set in dparam
+  g_value_init (&value, param_spec->value_type);
+  g_param_value_set_default (param_spec, &value);
+  switch (G_PARAM_SPEC_VALUE_TYPE (param_spec)) {
+    case G_TYPE_FLOAT:
+      dparam->value_float = g_value_get_float (&value);
+      break;
+
+    case G_TYPE_DOUBLE:
+      dparam->value_double = g_value_get_double (&value);
+      break;
+
+    case G_TYPE_INT:
+      dparam->value_int = g_value_get_int (&value);
+      break;
+
+    case G_TYPE_INT64:
+      dparam->value_int64 = g_value_get_int64 (&value);
+      break;
+
+    default:
+      break;
+  }
 }
 
 /**
