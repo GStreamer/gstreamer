@@ -1,0 +1,57 @@
+On Thu, Jan 08, 2004 at 04:10:00PM +0100, Julien MOUTTE wrote:
+> 
+> Hi David,
+> 
+> I'd like to implement bufferpools again in x[v]imagesink asap.. Could
+> you please point me to a template/doc on how to do that ?
+> 
+> The best for me would be a simple testcase showing how to use the buffer
+> free methods to replace bufferpools.
+
+
+x[v]imagesink should call gst_pad_set_bufferalloc_function() on
+their sink pads with a bufferalloc implementation.  This bufferalloc
+function is to allocate buffers that _peers_ will send _to_ that pad.
+
+A trivial version of a bufferalloc function, i.e., one that just
+allocates normal buffers:
+
+static GstBuffer *
+gst_ximagesink_sink_bufferalloc (GstPad *pad, guint64 offset, guint
+size)
+{
+  GstBuffer *buffer;
+
+  buffer = gst_buffer_new_and_alloc (size);
+  GST_DATA_FREE_FUNC (data) = gst_ximagesink_buffer_free;
+  GST_BUFFER_POOL_PRIVATE (data) = ximagesink; /* whatever */
+
+  return buffer;
+}
+
+static void
+gst_ximagesink_buffer_free (GstData *data)
+{
+  g_free (GST_BUFFER_DATA (data));
+}
+
+The hard part is going through each element, and every time it
+allocates a buffer using gst_buffer_new_and_alloc () that is then
+sent to a sink pad, the call should be replaced with
+gst_pad_alloc_buffer (sinkpad, offset, size).
+
+
+
+dave...
+
+
+
+-------------------------------------------------------
+This SF.net email is sponsored by: Perforce Software.
+Perforce is the Fast Software Configuration Management System offering
+advanced branching capabilities and atomic changes on 50+ platforms.
+Free Eval! http://www.perforce.com/perforce/loadprog.html
+_______________________________________________
+gstreamer-devel mailing list
+gstreamer-devel@lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/gstreamer-devel
