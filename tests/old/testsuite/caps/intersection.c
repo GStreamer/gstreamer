@@ -80,6 +80,26 @@ GST_CAPS_FACTORY (rawcaps5,
       "height",   GST_PROPS_INT_RANGE (16, 4096)
   )
 );
+
+GST_CAPS_FACTORY (rawcaps6,
+  GST_CAPS_NEW (
+    "raw6_sink_caps",
+    "video/raw",
+      "fourcc",   GST_PROPS_FOURCC (GST_STR_FOURCC ("YUYV")),
+      "height",   GST_PROPS_INT (640),
+      "width",    GST_PROPS_INT (480),
+      "framerate",GST_PROPS_FLOAT (30.0)
+  ),
+  GST_CAPS_NEW (
+    "raw6_sink_caps",
+    "video/raw",
+      "fourcc",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
+      "height",   GST_PROPS_INT (640),
+      "width",    GST_PROPS_INT (480),
+      "framerate",GST_PROPS_FLOAT (30.0)
+  )
+);
+
 int 
 main (int argc, char *argv[]) 
 {
@@ -115,6 +135,11 @@ main (int argc, char *argv[])
 
   caps = gst_caps_intersect (GST_CAPS_GET (rawcaps3), GST_CAPS_GET (rawcaps5));
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities4", NULL);
+  gst_caps_save_thyself (caps, parent);
+
+  caps = gst_caps_intersect (GST_CAPS_GET (rawcaps6),
+      gst_caps_copy_1(GST_CAPS_GET (rawcaps6)));
+  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities5", NULL);
   gst_caps_save_thyself (caps, parent);
 
   xmlDocDump(stdout, doc);
