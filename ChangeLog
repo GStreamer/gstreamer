@@ -1,5 +1,11 @@
 2004-03-20  Colin Walters  <walters@verbum.org>
 
+	* gst/registries/gstxmlregistry.c:
+	(gst_xml_registry_open_func, gst_xml_registry_close_func): Make
+	registry saving atomic.
+
+2004-03-20  Colin Walters  <walters@verbum.org>
+
 	* gst/registries/gstxmlregistry.c (gst_xml_registry_get_perms_func): Just use
 	access() instead of actually creating and deleting files.
 

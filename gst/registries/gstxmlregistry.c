@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <utime.h>
 
 #include <gst/gst_private.h>
@@ -513,11 +514,22 @@ gst_xml_registry_open_func (GstXMLRegistry * registry, GstXMLRegistryMode mode)
         registry->location);
     registry->regfile = fopen (registry->location, "r");
   } else if (mode == GST_XML_REGISTRY_WRITE) {
+    char *tmploc;
+    int fd;
+
     g_return_val_if_fail (gst_registry->flags & GST_REGISTRY_WRITABLE, FALSE);
 
-    GST_CAT_DEBUG (GST_CAT_GST_INIT, "opening registry %s for writing",
-        registry->location);
-    registry->regfile = fopen (registry->location, "w");
+    tmploc = g_strconcat (registry->location, ".tmp", NULL);
+
+    GST_CAT_DEBUG (GST_CAT_GST_INIT, "opening registry %s for writing", tmploc);
+
+    if ((fd = open (tmploc, O_WRONLY | O_CREAT | O_EXCL, 0644)) < 0) {
+      g_free (tmploc);
+      return FALSE;
+    }
+    g_free (tmploc);
+
+    registry->regfile = fdopen (fd, "w");
   }
 
   if (!registry->regfile)
@@ -554,8 +566,16 @@ gst_xml_registry_save_func (GstXMLRegistry * registry, gchar * format, ...)
 static gboolean
 gst_xml_registry_close_func (GstXMLRegistry * registry)
 {
+  char *tmploc;
+
   GST_CAT_DEBUG (GST_CAT_GST_INIT, "closing registry %s", registry->location);
   fclose (registry->regfile);
+
+  /* If we opened for writing, rename our temporary file. */
+  tmploc = g_strconcat (registry->location, ".tmp", NULL);
+  if (g_file_test (tmploc, G_FILE_TEST_EXISTS))
+    rename (tmploc, registry->location);
+  g_free (tmploc);
 
   registry->open = FALSE;
 
