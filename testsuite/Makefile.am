@@ -11,5 +11,5 @@ check_PROGRAMS = $(testprogs)
 LIBS = $(GST_LIBS)
 CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
 
-
-DIST_SUBDIRS = capsnego plugin bytestream threads
+# FIXME : refcounting threadds
+DIST_SUBDIRS = capsnego plugin bytestream
