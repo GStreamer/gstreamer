@@ -22,7 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
-#include <musepack/mpc_dec.h>
+#include <musepack/musepack.h>
 #include "gstmusepackreader.h"
 
 G_BEGIN_DECLS
@@ -48,8 +48,9 @@ typedef struct _GstMusepackDec {
   GstByteStream *bs;
 
   /* MUSEPACK_DEC object */
-  MPC_decoder *dec;
-  GstMusepackReader *reader;
+  mpc_decoder *d;
+  mpc_reader *r;
+  gboolean init;
 
   /* bytes-per-sample */
   int bps, rate;

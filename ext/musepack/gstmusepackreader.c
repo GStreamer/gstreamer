@@ -26,32 +26,23 @@
 
 #include "gstmusepackreader.h"
 
-GstMusepackReader::GstMusepackReader (GstByteStream *bs)
+static mpc_int32_t
+gst_musepack_reader_peek (void *this, void *ptr, mpc_int32_t size)
 {
-  this->bs = bs;
-  this->eos = false;
-}
-
-GstMusepackReader::~GstMusepackReader (void)
-{
-}
-
-mpc_int32_t
-GstMusepackReader::read (void * ptr, mpc_int32_t size)
-{
+  GstByteStream *bs = this;
   guint8 *data;
   gint read;
 
   do {
-    read = gst_bytestream_peek_bytes (this->bs, &data, size);
+    read = gst_bytestream_peek_bytes (bs, &data, size);
 
     if (read != size) {
       GstEvent *event;
       guint32 remaining;
 
-      gst_bytestream_get_status (this->bs, &remaining, &event);
+      gst_bytestream_get_status (bs, &remaining, &event);
       if (!event) {
-        GST_ELEMENT_ERROR (gst_pad_get_parent (this->bs->pad),
+        GST_ELEMENT_ERROR (gst_pad_get_parent (bs->pad),
             RESOURCE, READ, (NULL), (NULL));
         goto done;
       }
@@ -61,14 +52,16 @@ GstMusepackReader::read (void * ptr, mpc_int32_t size)
           gst_event_unref (event);
           goto done;
         case GST_EVENT_EOS:
-          this->eos = true;
           gst_event_unref (event);
           goto done;
         case GST_EVENT_FLUSH:
           gst_event_unref (event);
           break;
+        case GST_EVENT_DISCONTINUOUS:
+          gst_event_unref (event);
+          break;
         default:
-          gst_pad_event_default (this->bs->pad, event);
+          gst_pad_event_default (bs->pad, event);
           break;
       }
     }
@@ -77,75 +70,76 @@ GstMusepackReader::read (void * ptr, mpc_int32_t size)
 done:
   if (read != 0) {
     memcpy (ptr, data, read);
-    gst_bytestream_flush_fast (this->bs, read);
   }
 
   return read;
 }
 
-bool
-GstMusepackReader::seek (mpc_int32_t offset)
+static mpc_int32_t
+gst_musepack_reader_read (void *this, void *ptr, mpc_int32_t size)
 {
-  guint8 *dummy;
+  GstByteStream *bs = this;
+  gint read;
+
+  /* read = peek + flush */
+  if ((read = gst_musepack_reader_peek (this, ptr, size)) > 0) {
+    gst_bytestream_flush_fast (bs, read);
+  }
+
+  return read;
+}
+
+static BOOL
+gst_musepack_reader_seek (void *this, mpc_int32_t offset)
+{
+  GstByteStream *bs = this;
+  guint8 dummy;
 
   /* hacky hack - if we're after typefind, we'll fail because
    * typefind is still typefinding (heh :) ). So read first. */
-  if (this->tell () != this->get_size ()) {
-    guint8 dummy2[1];
-    this->read (dummy2, 1);
-  }
+  gst_musepack_reader_peek (this, &dummy, 1);
 
-  if (!gst_bytestream_seek (this->bs, offset, GST_SEEK_METHOD_SET))
+  /* seek */
+  if (!gst_bytestream_seek (bs, offset, GST_SEEK_METHOD_SET))
     return FALSE;
 
   /* get discont */
-  while (gst_bytestream_peek_bytes (this->bs, &dummy, 1) != 1) {
-    GstEvent *event;
-    guint32 remaining;
+  if (gst_musepack_reader_peek (this, &dummy, 1) != 1)
+    return FALSE;
 
-    gst_bytestream_get_status (this->bs, &remaining, &event);
-    if (!event) {
-      GST_ELEMENT_ERROR (gst_pad_get_parent (this->bs->pad),
-          RESOURCE, SEEK, (NULL), (NULL));
-      return false;
-    }
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_EOS:
-        g_warning ("EOS!");
-        gst_event_unref (event);
-        return false;
-      case GST_EVENT_DISCONTINUOUS:
-        gst_event_unref (event);
-        return true;
-      case GST_EVENT_INTERRUPT:
-        g_warning ("interrupt!");
-        return false;
-      case GST_EVENT_FLUSH:
-        gst_event_unref (event);
-        break;
-      default:
-        gst_pad_event_default (this->bs->pad, event);
-        break;
-    }
-  }
-
-  return false;
+  return TRUE;
 }
 
-mpc_int32_t
-GstMusepackReader::tell (void)
+static mpc_int32_t
+gst_musepack_reader_tell (void *this)
 {
-  return gst_bytestream_tell (this->bs);
+  GstByteStream *bs = this;
+
+  return gst_bytestream_tell (bs);
 }
 
-mpc_int32_t
-GstMusepackReader::get_size (void)
+static mpc_int32_t
+gst_musepack_reader_get_size (void *this)
 {
-  return gst_bytestream_length (this->bs);
+  GstByteStream *bs = this;
+
+  return gst_bytestream_length (bs);
 }
 
-bool
-GstMusepackReader::canseek (void)
+static BOOL
+gst_musepack_reader_canseek (void *this)
 {
-  return true;
+  return TRUE;
+}
+
+void
+gst_musepack_init_reader (mpc_reader * r, GstByteStream * bs)
+{
+  r->data = bs;
+
+  r->read = gst_musepack_reader_read;
+  r->seek = gst_musepack_reader_seek;
+  r->tell = gst_musepack_reader_tell;
+  r->get_size = gst_musepack_reader_get_size;
+  r->canseek = gst_musepack_reader_canseek;
 }

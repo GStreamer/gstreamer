@@ -1469,7 +1469,7 @@ dnl *** musepack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MUSEPACK, true)
 GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
   AC_LANG_CPLUSPLUS
-  AC_CHECK_HEADER([musepack/mpc_dec.h], [
+  AC_CHECK_HEADER([musepack/musepack.h], [
     HAVE_MUSEPACK="yes"
     MUSEPACK_LIBS="-lmusepack"
     AC_SUBST(MUSEPACK_LIBS)

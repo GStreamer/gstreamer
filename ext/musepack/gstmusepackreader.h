@@ -20,24 +20,9 @@
 #ifndef __GST_MUSEPACK_READER_H__
 #define __GST_MUSEPACK_READER_H__
 
-#include <musepack/mpc_dec.h>
+#include <musepack/musepack.h>
 #include <gst/bytestream/bytestream.h>
 
-class GstMusepackReader : public MPC_reader {
-public:
-  GstMusepackReader (GstByteStream *bs);
-  virtual ~GstMusepackReader (void);
-
-  mpc_int32_t read (void * ptr, mpc_int32_t size);
-  bool seek (mpc_int32_t offset);
-  mpc_int32_t tell (void);
-  mpc_int32_t get_size (void);
-  bool canseek (void);
-
-  bool eos;
-
-private:
-  GstByteStream *bs;
-};
+void gst_musepack_init_reader (mpc_reader * r, GstByteStream * bs);
 
 #endif /* __GST_MUSEPACK_READER_H__ */
