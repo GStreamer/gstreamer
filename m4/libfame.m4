@@ -3,7 +3,7 @@ dnl Test for libfame, and define LIBFAME_CFLAGS and LIBFAME_LIBS
 dnl Vivien Chappelier 12/11/00
 dnl stolen from ORBit autoconf
 dnl
-AC_DEFUN(AM_PATH_LIBFAME,
+AC_DEFUN([AM_PATH_LIBFAME],
 [dnl 
 dnl Get the cflags and libraries from the libfame-config script
 dnl

@@ -15,7 +15,7 @@ dnl EXTRA-CPPFLAGS      - extra C preprocessor flags, i.e. -I/usr/X11R6/include
 dnl
 dnl Based on GST_CHECK_LIBHEADER from gstreamer plugins 0.3.1.
 dnl
-AC_DEFUN(A52_CHECK_LIBHEADER,
+AC_DEFUN([A52_CHECK_LIBHEADER],
 [
   AC_CHECK_LIB([$2], [$3], HAVE_[$1]=yes, HAVE_[$1]=no, [$7])
   check_libheader_feature_name=translit([$1], A-Z, a-z)
@@ -49,7 +49,7 @@ dnl
 dnl Based on GST_CHECK_A52DEC from gstreamer plugins 0.3.3.1
 dnl Thomas Vander Stichele <thomas@apestaart.org>, Andy Wingo <wingo@pobox.com>
 dnl
-AC_DEFUN(AC_CHECK_A52DEC, 
+AC_DEFUN([AC_CHECK_A52DEC], 
 [dnl
 AC_ARG_WITH(a52dec-prefix,
     AC_HELP_STRING([--with-a52dec-prefix=PFX],

@@ -12,7 +12,7 @@ dnl Defines FFMPEG_LIBS
 dnl FIXME: should define FFMPEG_VERSION
 dnl
 
-AC_DEFUN(AM_PATH_FFMPEG,
+AC_DEFUN([AM_PATH_FFMPEG],
 [
   dnl allow for specification of a source path (for uninstalled)
   AC_ARG_WITH(ffmpeg-source,

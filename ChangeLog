@@ -1,5 +1,35 @@
 2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* m4/a52.m4:
+	* m4/aalib.m4:
+	* m4/as-ffmpeg.m4:
+	* m4/as-liblame.m4:
+	* m4/as-slurp-ffmpeg.m4:
+	* m4/check-libheader.m4:
+	* m4/esd.m4:
+	* m4/freetype2.m4:
+	* m4/gconf-2.m4:
+	* m4/glib.m4:
+	* m4/gst-alsa.m4:
+	* m4/gst-artsc.m4:
+	* m4/gst-ivorbis.m4:
+	* m4/gst-matroska.m4:
+	* m4/gst-sdl.m4:
+	* m4/gst-shout2.m4:
+	* m4/gst-sid.m4:
+	* m4/gtk.m4:
+	* m4/libdv.m4:
+	* m4/libfame.m4:
+	* m4/libmikmod.m4:
+	* m4/ogg.m4:
+	* m4/vorbis.m4:
+          fix underquotedness of macros (#133800)
+	* m4/as-avifile.m4:
+	* m4/xmms.m4:
+          removed because no longer used
+
+2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
           require gettext 0.11.5 so ulonglong.m4 gets checked out and copied
           by autopoint (fixes #132996)

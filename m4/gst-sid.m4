@@ -1,6 +1,6 @@
 dnl check for sidplay
 
-AC_DEFUN(GST_PATH_SIDPLAY,
+AC_DEFUN([GST_PATH_SIDPLAY],
 [
 AC_MSG_CHECKING([for libsidplay])
 

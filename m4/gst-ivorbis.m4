@@ -3,7 +3,7 @@
 dnl XIPH_PATH_IVORBIS([ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
 dnl Test for libivorbis, and define IVORBIS_CFLAGS and IVORBIS_LIBS
 dnl
-AC_DEFUN(XIPH_PATH_IVORBIS,
+AC_DEFUN([XIPH_PATH_IVORBIS],
 [dnl 
 dnl Get the cflags and libraries
 dnl
