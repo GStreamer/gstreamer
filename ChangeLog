@@ -1,3 +1,13 @@
+2005-02-08  Francis Labonte  <francis_labonte@hotmail.com>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/law/alaw-decode.c: (alawdec_link):
+	* gst/law/alaw-encode.c: (alawenc_link):
+	* gst/law/mulaw-decode.c: (mulawdec_link):
+	* gst/law/mulaw-encode.c: (mulawenc_link):
+	  Fix caps memleaks (#166600).
+
 2005-02-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/tarkin/mem.h:
