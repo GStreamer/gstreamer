@@ -1,6 +1,5 @@
 #include <gst/gst.h>
 
-extern gboolean _gst_plugin_spew;
 
 void eof(GstSrc *src) {
    g_print("have eof, quitting\n");
@@ -15,10 +14,9 @@ int main(int argc,char *argv[]) {
 
   g_print("have %d args\n",argc);
 
-  _gst_plugin_spew = TRUE;
   gst_init(&argc,&argv);
-// gst_plugin_load("mp3parse");
-  gst_plugin_load_all();
+  gst_plugin_load("mp3parse");
+  gst_plugin_load("mpg123");
 
   pipeline = gst_pipeline_new("pipeline");
   g_return_if_fail(pipeline != NULL);

@@ -301,6 +301,7 @@ gst/xml/Makefile
 libs/Makefile
 libs/riff/Makefile
 libs/colorspace/Makefile
+libs/getbits/Makefile
 plugins/Makefile
 plugins/au/Makefile
 plugins/wav/Makefile

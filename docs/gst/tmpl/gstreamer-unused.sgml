@@ -167,13 +167,6 @@
 
 @Returns: 
 
-<!-- ##### FUNCTION gst_object_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### MACRO GST_SINESRC ##### -->
 <para>
 
@@ -181,18 +174,18 @@
 
 @obj: 
 
-<!-- ##### SECTION ./tmpl/plugin.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_audiosrc_get_type ##### -->
+<!-- ##### FUNCTION gst_object_get_type ##### -->
 <para>
 
 </para>
 
 @Returns: 
+
+<!-- ##### SECTION ./tmpl/plugin.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### MACRO GST_QUEUE_CLASS ##### -->
 <para>
@@ -200,6 +193,13 @@
 </para>
 
 @klass: 
+
+<!-- ##### FUNCTION gst_audiosrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### MACRO GST_IS_QUEUE ##### -->
 <para>
@@ -339,18 +339,18 @@
 </para>
 
 
-<!-- ##### STRUCT GstFakeSink ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_THREAD_CLASS ##### -->
 <para>
 
 </para>
 
 @klass: 
+
+<!-- ##### STRUCT GstFakeSink ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### MACRO GST_BIN_CLASS ##### -->
 <para>
@@ -660,14 +660,14 @@ The frequency.
 </para>
 
 
-<!-- ##### MACRO GST_ASYNCDISKSRC_CLASS ##### -->
+<!-- ##### MACRO GST_ESDSINK_CLASS ##### -->
 <para>
 
 </para>
 
 @klass: 
 
-<!-- ##### MACRO GST_ESDSINK_CLASS ##### -->
+<!-- ##### MACRO GST_ASYNCDISKSRC_CLASS ##### -->
 <para>
 
 </para>
@@ -1267,19 +1267,19 @@ plugin
 </para>
 
 
-<!-- ##### MACRO GST_META ##### -->
-<para>
-
-</para>
-
-@meta: 
-
 <!-- ##### FUNCTION gst_audiosink_get_type ##### -->
 <para>
 
 </para>
 
 @Returns: 
+
+<!-- ##### MACRO GST_META ##### -->
+<para>
+
+</para>
+
+@meta: 
 
 <!-- ##### FUNCTION gst_httpsrc_get_type ##### -->
 <para>
@@ -1322,18 +1322,18 @@ plugin
 </para>
 
 
+<!-- ##### MACRO GST_TYPE_FILTER ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_IS_SINESRC_CLASS ##### -->
 <para>
 
 </para>
 
 @obj: 
-
-<!-- ##### MACRO GST_TYPE_FILTER ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### MACRO GST_IS_AUDIOSRC_CLASS ##### -->
 <para>
@@ -1412,16 +1412,16 @@ GstElement
 
 @obj: 
 
+<!-- ##### SECTION ./tmpl/plugin.sgml:Short_Description ##### -->
+
+
+
 <!-- ##### FUNCTION gst_audiosrc_push ##### -->
 <para>
 
 </para>
 
 @src: 
-
-<!-- ##### SECTION ./tmpl/plugin.sgml:Short_Description ##### -->
-
-
 
 <!-- ##### MACRO GST_HTTPSRC_CLASS ##### -->
 <para>

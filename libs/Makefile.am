@@ -1,3 +1,3 @@
-SUBDIRS = riff colorspace
+SUBDIRS = riff colorspace getbits
 
-DIST_SUBDIRS = riff colorspace
+DIST_SUBDIRS = riff colorspace getbits
