@@ -118,7 +118,7 @@ with some more specialized elements.</para>
     &GstFakeSrc;
     &GstFakeSink;
 
-    <!-- &GstFileSrc; -->
+    &GstFileSrc;
     &GstDiskSrc;
     &GstDiskSink;
 
@@ -136,7 +136,7 @@ with some more specialized elements.</para>
   </chapter>
 
   <chapter id="autopluggers">
-    <title>GStreamer Autoppluggers</title>
+    <title>GStreamer Autopluggers</title>
 
     <para>the autopluggers provide a way to automatically construct elements based on
     sink and src capabilities</para>

@@ -1,110 +1,151 @@
 ## Process this file with automake to produce Makefile.in
 
-# The name of the module.
+# The name of the module, e.g. 'glib'.
 DOC_MODULE=gstreamer
 
-# The top-level SGML file.
+# The top-level SGML file. Change it if you want.
 DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 
-# The directory containing the source code (if it contains documentation).
+# The directory containing the source code. Relative to $(top_srcdir).
+# gtk-doc will search all .c & .h files beneath here for inline comments
+# documenting functions and macros.
 DOC_SOURCE_DIR=$(top_srcdir)/gst
+
+# Extra options to supply to gtkdoc-scan.
+SCAN_OPTIONS=
 
 # FIXME :
 # there's something wrong with gstreamer-sections.txt not being in the dist
 # maybe it doesn't resolve; we're adding it below for now
-EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
+#EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
 
-HTML_DIR=$(datadir)/gstreamer/html
+# Extra options to supply to gtkdoc-mkdb.
+MKDB_OPTIONS=
 
-GST_LIBS += $(top_builddir)/gst/elements/libgstelements.la \
-	    $(top_builddir)/gst/autoplug/libgststaticautoplug.la \
-	    $(top_builddir)/gst/autoplug/libgststaticautoplugrender.la
+# Extra options to supply to gtkdoc-fixref.
+FIXXREF_OPTIONS=
 
+# Used for dependencies.
+# FIXME deal with the subdirs too...
+HFILE_GLOB=$(DOC_SOURCE_DIR)/*.h
+CFILE_GLOB=$(DOC_SOURCE_DIR)/*.c
+
+# this is a wingo addition
+SCANOBJ_DEPS = $(top_builddir)/gst/elements/libgstelements.la \
+	$(top_builddir)/gst/schedulers/libgstbasicscheduler.la
+
+# Header files to ignore when scanning.
+IGNORE_HFILES=
+
+# Images to copy into HTML directory.
+HTML_IMAGES =
+
+# Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
+content_files =
+
+# Other files to distribute.
+extra_files =
+
+# CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
+# contains GtkObjects/GObjects and you want to document signals and properties.
+GTKDOC_CFLAGS = $(GST_CFLAGS) $(GLIB_CFLAGS) $(XML_CFLAGS)
+GTKDOC_LIBS = $(GST_LIBS) $(GLIB_LIBS) $(XML_LIBS) $(SCANOBJ_DEPS)
+
+#	$(shell echo $(top_builddir)/gst/autoplug/*.la) \
+#	$(top_builddir)/gst/types/libgsttypes.la \
+
+GTKDOC_CC=$(LIBTOOL) --mode=compile $(CC)
+GTKDOC_LD=$(LIBTOOL) --mode=link $(CC)
+
+# If you need to override some of the declarations, place them in this file
+# and uncomment this line.
+#DOC_OVERRIDES = $(DOC_MODULE)-overrides.txt
+
+
+
+###########################################################################
+# Everything below here is generic and you shouldn't need to change it.
+###########################################################################
 
 TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)
 
-tmpl_sources =				\
-	tmpl/cothreads.sgml             \
-	tmpl/gst.sgml                   \
-	tmpl/gstinfo.sgml               \
-	tmpl/gstautoplug.sgml           \
-	tmpl/gstscheduler.sgml          \
-	tmpl/gstprops.sgml              \
-	tmpl/gstcaps.sgml               \
-	tmpl/gstbin.sgml                \
-	tmpl/gstbuffer.sgml             \
-	tmpl/gstbufferpool.sgml         \
-	tmpl/gstdisksrc.sgml            \
-	tmpl/gstelement.sgml            \
-	tmpl/gstfakesink.sgml           \
-	tmpl/gstfakesrc.sgml            \
-	tmpl/gstfdsink.sgml             \
-	tmpl/gstfdsrc.sgml              \
-	tmpl/gsthttpsrc.sgml            \
-	tmpl/gstidentity.sgml           \
-	tmpl/gstlog.sgml                \
-	tmpl/gstobject.sgml             \
-	tmpl/gstpad.sgml                \
-	tmpl/gstpipeline.sgml           \
-	tmpl/gstplugin.sgml             \
-	tmpl/gstqueue.sgml              \
-	tmpl/gstreamer-unused.sgml      \
-	tmpl/gstsinesrc.sgml            \
-	tmpl/gsttee.sgml                \
-	tmpl/gstthread.sgml             \
-	tmpl/gsttrace.sgml              \
-	tmpl/gsttype.sgml               \
-	tmpl/gstutils.sgml              \
-	tmpl/gstxml.sgml                \
-	tmpl/spectrum.sgml              
+EXTRA_DIST = 				\
+	$(content_files)		\
+	$(extra_files)			\
+	$(HTML_IMAGES)			\
+	$(DOC_MAIN_SGML_FILE)		\
+	$(DOC_MODULE).types		\
+	$(DOC_MODULE)-sections.txt
 
-gstreamer_docdir = $(HTML_DIR)
-gstreamer_doc_DATA =		\
-	gstreamer.types		\
-	gstreamer.hierarchy	\
-	gstreamer-sections.txt
+DOC_STAMPS=scan-build.stamp tmpl-build.stamp sgml-build.stamp html-build.stamp \
+	   $(srcdir)/tmpl.stamp $(srcdir)/sgml.stamp $(srcdir)/html.stamp
 
-SCANOBJS_FILES =		\
-	$(DOC_MODULE).signals	\
-	$(DOC_MODULE).hierarchy	\
-	$(DOC_MODULE).args
+SCANOBJ_FILES = 		\
+	$(DOC_MODULE).args 	\
+	$(DOC_MODULE).hierarchy \
+	$(DOC_MODULE).signals
 
-# FIXME: the dependencies here are rather broken.  Really, html/book1.html
-# should be rebuilt if any file in $(top_srcdir)/gst is updated.
 if HAVE_GTK_DOC
-html/book1.html: 
-	$(MAKE) html
-else
-html/book1.html:
+all-local: html-build.stamp
+
+#### scan ####
+
+# wingo addition
+scan-build.stamp: $(HFILE_GLOB) $(SCANOBJ_DEPS)
+	@echo '*** Scanning header files ***'
+	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types > /dev/null ; then \
+	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" $(GTK_DOC_SCANOBJ) --module=$(DOC_MODULE) --output-dir=$(srcdir) ; \
+	else \
+	    cd $(srcdir) ; \
+	    for i in $(SCANOBJ_FILES) ; do \
+               test -f $$i || touch $$i ; \
+	    done \
+	fi
+	cd $(srcdir) && \
+	  gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers="$(IGNORE_HFILES)" $(SCAN_OPTIONS) $(EXTRA_HFILES)
+	touch scan-build.stamp
+
+$(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
+	@true
+
+#### templates ####
+
+tmpl-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections.txt $(DOC_OVERRIDES)
+	@echo '*** Rebuilding template files ***'
+	cd $(srcdir) && gtkdoc-mktmpl --module=$(DOC_MODULE)
+	touch tmpl-build.stamp
+
+tmpl.stamp: tmpl-build.stamp
+	@true
+
+#### sgml ####
+
+sgml-build.stamp: tmpl.stamp $(CFILE_GLOB) $(srcdir)/tmpl/*.sgml
+	@echo '*** Building SGML ***'
+	cd $(srcdir) && \
+	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --main-sgml-file=$(DOC_MAIN_SGML_FILE) $(MKDB_OPTIONS)
+	touch sgml-build.stamp
+
+sgml.stamp: sgml-build.stamp
+	@true
+
+#### html ####
+
+html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
+	@echo '*** Building HTML ***'
+	test -d $(srcdir)/html || mkdir $(srcdir)/html
+	cd $(srcdir)/html && gtkdoc-mkhtml $(DOC_MODULE) ../$(DOC_MAIN_SGML_FILE)
+	test "x$(HTML_IMAGES)" = "x" || ( cd $(srcdir) && cp $(HTML_IMAGES) html )
+	@echo '-- Fixing Crossreferences' 
+	cd $(srcdir) && gtkdoc-fixxref --module-dir=html --html-dir=$(HTML_DIR) $(FIXXREF_OPTIONS)
+	touch html-build.stamp
 endif
 
-gstreamer-decl.txt:
-	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers=""
-
-# The LD env-var below is a nasty hack to make this work on versions of
-# gtkdoc-scanobj which don't understand libtool
-scanobj: $(srcdir)/$(DOC_MODULE).types
-	cd $(top_builddir)/gst/;$(MAKE) libgst.la
-	cd $(top_builddir)/gst/elements/;$(MAKE) libgstelements.la
-	rm gstreamer-scan.o; ln -s gstreamer-scan.lo gstreamer-scan.o
-	env CC="$(LIBTOOL) $(CC)" LD="cp gstreamer-scan.lo gstreamer-scan.o;$(LIBTOOL) $(CC)" CFLAGS="$(LIBGST_CFLAGS) $(GLIB_CFLAGS) $(XML_CFLAGS) -I../../" LDFLAGS="$(GST_LIBS)"\
-	gtkdoc-scanobj --module=$(DOC_MODULE) 
-	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR)
-
-# FIXME: this is nasty, we shouldn't have to do this, HELP
-tmpl: scanobj gstreamer-decl.txt
-	if test ! -e gstreamer-sections.txt; then cp $(top_srcdir)/docs/gst/gstreamer-sections.txt .; fi
-	gtkdoc-mktmpl --module=$(DOC_MODULE)
-
-sgml: tmpl
-	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR)
-
-html: sgml
-	if ! test -d html ; then mkdir html ; fi
-	-cd html && gtkdoc-mkhtml $(DOC_MODULE) ../$(DOC_MAIN_SGML_FILE)
-
 clean-local:
-	rm -rf *~ *.bak *.signals *-unused.txt *.args *.o *.lo .libs sgml html
+	rm -f *~ *.bak $(SCANOBJ_FILES) *-unused.txt $(DOC_STAMPS)
+
+maintainer-clean-local: clean
+	cd $(srcdir) && rm -rf sgml html $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt
 
 # FIXME : thomas added all sgml files and some other things to make
 # make distcheck work
@@ -115,7 +156,7 @@ distclean-local: clean
 	rm gstreamer.hierarchy
 	rm *.stamp	
 
-install-data-local: html/book1.html
+install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR)
 	(installfiles=`echo $(srcdir)/html/*.html`; \
 	if test "$$installfiles" = '$(srcdir)/html/*.html'; \
@@ -127,12 +168,31 @@ install-data-local: html/book1.html
 	  done; \
 	  echo '-- Installing $(srcdir)/html/index.sgml' ; \
 	  $(INSTALL_DATA) $(srcdir)/html/index.sgml $(DESTDIR)$(TARGET_DIR); \
-	  echo '-- Fixing Crossreferences' ; \
-	  gtkdoc-fixxref --module=$(DOC_MODULE) --html-dir=$(HTML_DIR)|| true; \
 	fi)
 
-dist-hook: html/book1.html
-	if ! test -d $(distdir)/tmpl ; then mkdir $(distdir)/tmpl ; fi
-	-cp $(srcdir)/tmpl/*.sgml $(distdir)/tmpl
+#
+# Require gtk-doc when making dist
+#
+if HAVE_GTK_DOC
+dist-check-gtkdoc:
+else
+dist-check-gtkdoc:
+	@echo "*** gtk-doc must be installed and enabled in order to make dist"
+	@false
+endif
 
-.PHONY : html sgml tmpl
+dist-hook: dist-check-gtkdoc dist-hook-local
+	mkdir $(distdir)/tmpl
+	mkdir $(distdir)/sgml
+	mkdir $(distdir)/html
+	-cp $(srcdir)/tmpl/*.sgml $(distdir)/tmpl
+	-cp $(srcdir)/sgml/*.sgml $(distdir)/sgml
+	-cp $(srcdir)/html/index.sgml $(distdir)/html
+	-cp $(srcdir)/html/*.html $(srcdir)/html/*.css $(distdir)/html
+
+	images=$(HTML_IMAGES) ;    	      \
+	for i in $$images ; do		      \
+	  cp $(srcdir)/$$i $(distdir)/html ;  \
+	done
+
+.PHONY : dist-hook-local

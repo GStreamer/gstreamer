@@ -49,7 +49,6 @@ sgml/$(DOC_MODULE)-doc.bottom: $(tmpl_sources)
 scanobj:
        env CC="$(LIBTOOL) $(CC)" CFLAGS="$(LIBGST_CFLAGS) $(GLIB_CFLAGS) $(XML_CFLAGS) -I../../" LDFLAGS="$(GST_LIBS)"\
        ./gstdoc-scanobj --module=$(DOC_MODULE)
-			
 
 tmpl: scanobj 
 	./gstdoc-mktmpl --module=$(DOC_MODULE)

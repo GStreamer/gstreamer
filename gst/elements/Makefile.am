@@ -39,7 +39,8 @@ noinst_HEADERS =		\
 	gstpipefilter.h		\
 	gsttee.h		\
 	gstaggregator.h		\
-	gststatistics.h	
+	gststatistics.h	        \
+	gstfilesrc.h
 
 libgstelements_la_CFLAGS = $(GHTTP_CFLAGS) $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
 libgstelements_la_LIBADD = $(GHTTP_LIBS) $(GLIB_LIBS) $(XML_LIBS)

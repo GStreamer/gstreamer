@@ -90,14 +90,36 @@ export PKG_CONFIG_PATH
 dnl Check for pkgconfig
 AC_CHECK_PROG(HAVE_PKGCONFIG, pkg-config, true, false)
 
-dnl check for gtkdoc
+dnl check for gtk-doc
+AC_ARG_WITH(html-dir, [  --with-html-dir=PATH path to installed docs ])
+
+if test "x$with_html_dir" = "x" ; then
+  HTML_DIR='${datadir}/gst/html'
+else
+  HTML_DIR=$with_html_dir
+fi
+
+AC_SUBST(HTML_DIR)
+
 AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, true, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scanobj, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scan, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mktmpl, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkhtml, :, false)
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-fixxref, :, false)
+gtk_doc_min_version=0.6
+if $HAVE_GTK_DOC ; then 
+    gtk_doc_version=`gtkdoc-mkdb --version`
+    AC_MSG_CHECKING([gtk-doc version ($gtk_doc_version) >= $gtk_doc_min_version])
+    if perl <<EOF ; then
+      exit (("$gtk_doc_version" =~ /^[[0-9]]+\.[[0-9]]+$/) &&
+            ("$gtk_doc_version" >= "$gtk_doc_min_version") ? 0 : 1);
+EOF
+      AC_MSG_RESULT(yes)
+   else
+      AC_MSG_RESULT(no)
+      HAVE_GTK_DOC=false
+   fi
+fi
+GTK_DOC_SCANOBJ=gtkdoc-scanobj
+
+AC_SUBST(HAVE_GTK_DOC)
+AC_SUBST(GTK_DOC_SCANOBJ)
 
 dnl check for docbook tools
 AC_CHECK_PROG(HAVE_DB2HTML, db2html, true, false)
@@ -238,6 +260,13 @@ else
 
   GTK_FLAGS=$GTK2_CFLAGS
   GTK_LIBS=$GTK2_LIBS
+  
+  if $HAVE_GTK_DOC; then  
+    AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scangobj, true, false)
+    if $HAVE_GTK_DOC; then
+      GTK_DOC_SCANOBJ=gtkdoc-scangobj
+    fi;
+  fi
 
   dnl FIXME: check for  gnome2 - this conditional is currently
   dnl always false.
@@ -825,7 +854,7 @@ esac],
 AC_ARG_ENABLE(docs-build,
 [  --enable-docs-build          enable building of documentation],
 [case "${enableval}" in
-  yes) BUILD_DOCS=yes ;;
+  yes) if $HAVE_GTK_DOC; then BUILD_DOCS=yes; else AC_MSG_ERROR([you don't have gtk-doc, so don't use --docs-build]); fi; ;;
   no)  BUILD_DOCS=no ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-docs-build) ;;
 esac], 

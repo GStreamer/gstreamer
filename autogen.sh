@@ -35,7 +35,7 @@ version_check ()
   if test ! -z "$MICRO"; then VERSION=$VERSION.$MICRO; else MICRO=0; fi
 
   debug "major $MAJOR minor $MINOR micro $MICRO"
-  echo -n "+ checking for $1 > $VERSION ... "
+  echo -n "+ checking for $1 >= $VERSION ... "
   ($PACKAGE --version) < /dev/null > /dev/null 2>&1 || 
   {
 	echo
