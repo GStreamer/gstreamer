@@ -1209,7 +1209,7 @@ no_difference:
 	  int samples = MIN (bytes, samplestamp - this->transmitted) * 
 	             (element->numpads == 1 ? this->format->channels : 1);
 	  int size = samples * snd_pcm_format_physical_width (this->format->format) / 8;
-	  g_print ("Allocating %d bytes (%ld silent samples) now to resync to timestamp\n", size, MIN (bytes, samplestamp - this->transmitted));
+	  g_printerr ("Allocating %d bytes (%ld silent samples) now to resync to timestamp\n", size, MIN (bytes, samplestamp - this->transmitted));
 	  pad->data = g_malloc (size);
 	  if (!pad->data) {
 	    g_warning ("GstAlsa: error allocating %d bytes, buffers unsynced now.", size);
@@ -1221,14 +1221,14 @@ no_difference:
 	  }
 	  pad->behaviour = 1;
 	} else if (gst_alsa_samples_to_bytes (this, this->transmitted - samplestamp) >= pad->buf->size) {
-	  g_print ("Skipping %lu samples to resync (complete buffer)\n", gst_alsa_bytes_to_samples (this, pad->buf->size));
+	  g_printerr ("Skipping %lu samples to resync (complete buffer)\n", gst_alsa_bytes_to_samples (this, pad->buf->size));
 	  /* this buffer is way behind */
 	  gst_buffer_unref (pad->buf);
 	  pad->buf = NULL;
 	  continue;
 	} else if (this->transmitted > samplestamp) {
 	  gint difference = gst_alsa_samples_to_bytes (this, this->transmitted - samplestamp);	
-	  g_print ("Skipping %lu samples to resync\n", (gulong) this->transmitted - samplestamp);
+	  g_printerr ("Skipping %lu samples to resync\n", (gulong) this->transmitted - samplestamp);
 	  /* this buffer is only a bit behind */
           pad->size = pad->buf->size - difference;
           pad->data = pad->buf->data + difference;
