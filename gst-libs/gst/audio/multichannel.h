@@ -23,6 +23,8 @@
 #include <gst/audio/audio.h>
 #include <gst/audio/multichannel-enumtypes.h>
 
+G_BEGIN_DECLS
+
 typedef enum {
   GST_AUDIO_CHANNEL_POSITION_INVALID = -1,
 
@@ -82,5 +84,7 @@ void	gst_audio_set_caps_channel_positions_list
  * to be) unfixed. */
 GstAudioChannelPosition *
 	gst_audio_fixate_channel_positions (GstStructure *str);
+
+G_END_DECLS
 
 #endif /* __GST_AUDIO_MULTICHANNEL_H__ */

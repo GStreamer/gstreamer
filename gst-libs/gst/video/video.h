@@ -23,6 +23,8 @@
 
 #include <gst/gst.h>
 
+G_BEGIN_DECLS
+
 #define GST_VIDEO_BYTE1_MASK_32  "0xFF000000"
 #define GST_VIDEO_BYTE2_MASK_32  "0x00FF0000"
 #define GST_VIDEO_BYTE3_MASK_32  "0x0000FF00"
@@ -186,5 +188,7 @@ gdouble  gst_video_frame_rate (GstPad *pad);
 gboolean gst_video_get_size   (GstPad *pad,
                                gint   *width,
                                gint   *height);
+
+G_END_DECLS
 
 #endif /* __GST_VIDEO_H__ */

@@ -25,6 +25,8 @@
 #include <gst/gst.h>
 #include <glib/gprintf.h>
 
+G_BEGIN_DECLS
+
 /* debug */
 GST_DEBUG_CATEGORY_EXTERN (gst_media_info_debug);
 #define GST_CAT_DEFAULT gst_media_info_debug
@@ -151,5 +153,7 @@ gboolean	gmip_find_track_streaminfo	(GstMediaInfoPriv *priv);
 gboolean	gmip_find_track_format_pre	(GstMediaInfoPriv *priv);
 gboolean	gmip_find_track_format_post	(GstMediaInfoPriv *priv);
 gboolean	gmip_find_track_format		(GstMediaInfoPriv *priv);
+
+G_END_DECLS
 
 #endif /* __GST_MEDIA_INFO_PRIV_H__ */

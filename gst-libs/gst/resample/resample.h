@@ -21,6 +21,10 @@
 #ifndef __GST_RESAMPLE_H__
 #define __GST_RESAMPLE_H__
 
+#include <glib.h>
+
+G_BEGIN_DECLS
+
 typedef enum {
 	GST_RESAMPLE_NEAREST = 0,
 	GST_RESAMPLE_BILINEAR,
@@ -101,5 +105,7 @@ void gst_resample_reinit(gst_resample_t *r);
 void gst_resample_close (gst_resample_t * r);
 
 void gst_resample_scale(gst_resample_t *r, void *i_buf, unsigned int size);
+
+G_END_DECLS
 
 #endif /* __GST_RESAMPLE_H__ */

@@ -24,9 +24,7 @@
 
 #include <gst/gst.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
   
 #define GST_TYPE_VIDEOSINK (gst_videosink_get_type())
 #define GST_VIDEOSINK(obj) \
@@ -68,8 +66,6 @@ struct _GstVideoSinkClass {
 
 GType gst_videosink_get_type (void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif  /* __GST_VIDEOSINK_H__ */

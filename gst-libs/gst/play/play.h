@@ -24,6 +24,8 @@
 #include <gst/xoverlay/xoverlay.h>
 #include <gst/play/play-enumtypes.h>
 
+G_BEGIN_DECLS
+
 /* GError stuff */
 
 #define GST_PLAY_ERROR		gst_play_error_quark ()
@@ -96,5 +98,7 @@ GList *               gst_play_get_all_by_interface   (GstPlay *play,
                                                       GType interface);
 
 gdouble               gst_play_get_framerate         (GstPlay *play);
+
+G_END_DECLS
 
 #endif /* __GST_PLAY_H__ */

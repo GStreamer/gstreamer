@@ -23,6 +23,8 @@
 
 #include "resample.h"
 
+G_BEGIN_DECLS
+
 void gst_resample_nearest_s16(gst_resample_t *r);
 void gst_resample_bilinear_s16(gst_resample_t *r);
 void gst_resample_sinc_s16(gst_resample_t *r);
@@ -110,5 +112,7 @@ void conv_double_float_ref(double *dest, float *src, int n);
 void conv_float_double_ref(float *dest, double *src, int n);
 void conv_double_float_dstr(double *dest, float *src, int n, int dstr);
 void conv_float_double_sstr(float *dest, double *src, int n, int sstr);
+
+G_END_DECLS
 
 #endif /* __PRIVATE_H__ */
