@@ -29,7 +29,7 @@
 GstElementDetails gst_rtjpegdec_details = {
   "RTjpeg decoder",
   "Codec/Video/Decoder",
-  "LGPL",
+  "GPL",
   "Decodes video in RTjpeg format",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

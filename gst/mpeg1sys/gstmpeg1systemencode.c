@@ -34,7 +34,7 @@
 static GstElementDetails system_encode_details = {
   "MPEG1 Multiplexer",
   "Codec/Muxer",
-  "LGPL",
+  "GPL",
   "Multiplexes MPEG-1 Streams",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

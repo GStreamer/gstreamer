@@ -107,6 +107,7 @@ static guint gst_cdaudio_signals[LAST_SIGNAL] = { 0 };
 static GstElementDetails gst_cdaudio_details = {
   "CD Player",
   "Generic/Bin",
+  "LGPL",
   "Play CD audio through the CD Drive",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
