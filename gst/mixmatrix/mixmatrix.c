@@ -33,7 +33,7 @@ struct _GstMixMatrix {
   GstPad **srcpads;
   gint srcpadalloc;
 
-  gfloat *matrix;
+  gfloat **matrix;
 };
 
 struct _GstMixMatrixClass {
@@ -169,6 +169,31 @@ gst_mixmatrix_class_init (GstMixMatrixClass *klass)
   gstelement_class->request_new_pad = gst_mixmatrix_request_new_pad;
 }
 
+static gfloat **
+mixmatrix_alloc_matrix (int x,int y)
+{
+  gfloat **matrix;
+  int i;
+  fprintf(stderr,"allocating a %dx%d matrix of floats\n",x,y);
+  matrix = g_new(gfloat *,x);
+  fprintf(stderr,"%p: ",matrix);
+  for (i=0;i<x;i++) {
+    matrix[i] = g_new(gfloat,y);
+    fprintf(stderr,"%p, ",matrix[i]);
+  }
+  fprintf(stderr,"\n");
+  return matrix;
+}
+
+static void
+mixmatrix_free_matrix (gfloat **matrix,int x)
+{
+  int i;
+  for (i=0;i<x;i++)
+    g_free(matrix[i]);
+  g_free(matrix);
+}
+
 static void
 gst_mixmatrix_init (GstMixMatrix *mix)
 {
@@ -186,7 +211,7 @@ gst_mixmatrix_init (GstMixMatrix *mix)
   mix->srcpads = g_new(GstPad *,mix->srcpadalloc);
 
   // allocate a similarly sized matrix
-  mix->matrix = g_new(gfloat, mix->sinkpadalloc * mix->srcpadalloc);
+  mix->matrix = mixmatrix_alloc_matrix(mix->sinkpadalloc,mix->srcpadalloc);
 
   // set the loop function that does all the work
   gst_element_set_loop_function(GST_ELEMENT(mix), gst_mixmatrix_loop);
@@ -207,8 +232,10 @@ mixmatrix_resize(GstMixMatrix *mix, int sinkpads, int srcpads)
   int sinkresize = (sinkpads != mix->sinkpadalloc);
   int srcresize = (srcpads != mix->srcpadalloc);
 
-  gfloat *newmatrix;
+  gfloat **newmatrix;
   int i;
+
+  fprintf(stderr,"resizing matrix!!!!\n");
 
   // check the sinkpads list
   if (sinkresize) {
@@ -224,20 +251,20 @@ mixmatrix_resize(GstMixMatrix *mix, int sinkpads, int srcpads)
   // now resize the matrix if either has changed
   if (sinkresize || srcresize) {
     // allocate the new matrix
-    newmatrix = g_new(gfloat, sinkpads * srcpads);
+    newmatrix = mixmatrix_alloc_matrix(sinkpads,srcpads);
     // if only the srcpad count changed (y axis), we can just copy
     if (!sinkresize) {
-      memcpy(newmatrix,mix->matrix, sizeof(gfloat) * sinkpads * mix->srcpadalloc);
+      memcpy(newmatrix,mix->matrix,sizeof(gfloat *)*sinkpads);
     // otherwise we have to copy line by line
     } else {
       for (i=0;i<mix->srcpadalloc;i++)
-        memcpy(&newmatrix[i*sinkpads], &mix->matrix[i*mix->sinkpadalloc], mix->srcpadalloc);
+        memcpy(newmatrix[i], mix->matrix[i], sizeof(gfloat) * mix->srcpadalloc);
     }
 
     // would signal here!
 
     // free old matrix and replace it
-    g_free(mix->matrix);
+    mixmatrix_free_matrix(mix->matrix, mix->sinkpadalloc);
     mix->matrix = newmatrix;
   }
 
@@ -385,7 +412,18 @@ gst_mixmatrix_loop (GstElement *element)
       // loop through each src pad
       for (j=0;j<mix->srcpadalloc;j++) {
         if (mix->srcpads[j] != NULL) {
-          gain = mix->matrix[j + i*mix->srcpadalloc];
+/*
+{
+  int z;
+  fprintf(stderr,"matrix is %p: ",mix->matrix);
+  for (z=0;z<mix->sinkpadalloc;z++)
+    fprintf(stderr,"%p, ",mix->matrix[i]);
+  fprintf(stderr,"\n");
+}
+fprintf(stderr,"attempting to get gain for %dx%d\n",i,j);
+*/
+          gain = mix->matrix[i][j];
+//          fprintf(stderr,"%d->%d=%0.2f ",i,j,gain);
           for (k=0;k<mix->outsize;k++) {
             outfloats[j][k] += infloats[i][k] * gain;
           }
@@ -393,6 +431,7 @@ gst_mixmatrix_loop (GstElement *element)
       }
     }
   }
+//  fprintf(stderr,"\n");
 
   for (i=0;i<mix->srcpadalloc;i++) {
     if (mix->srcpads[i] != NULL) {
