@@ -24,6 +24,7 @@
 
 #include <config.h>
 #include <gst/gst.h>
+#include <gst/bytestream/bytestream.h>
 
 #include <FLAC/all.h>
 
@@ -42,17 +43,25 @@ typedef struct _FlacDec FlacDec;
 typedef struct _FlacDecClass FlacDecClass;
 
 struct _FlacDec {
-  GstElement element;
+  GstElement 	 element;
 
-  GstPad *sinkpad,*srcpad;
+  GstPad 	*sinkpad,*srcpad;
+  GstByteStream *bs;
 
-  FLAC__StreamDecoder *decoder;
+  FLAC__SeekableStreamDecoder *decoder;
+  gint		 channels;
+  gint		 depth;
+  gint		 frequency;
 
-  gint offset_left;
-  GstBuffer *data_left;
+  gboolean	 need_discont;
+  gboolean 	 seek_pending;
+  gint64	 seek_value;
 
-  gboolean eos;
-  guint state;
+  gboolean	 init;
+  guint64	 total_samples;
+  guint64	 stream_samples;
+
+  gboolean	 eos;
 };
 
 struct _FlacDecClass {

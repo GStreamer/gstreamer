@@ -132,10 +132,15 @@ gst_flacenc_init (FlacEnc *flacenc)
   flacenc->srcpad = gst_pad_new_from_template (enc_src_template, "src");
   gst_element_add_pad(GST_ELEMENT(flacenc),flacenc->srcpad);
 
+  flacenc->first = TRUE;
+  flacenc->first_buf = NULL;
   flacenc->encoder = FLAC__stream_encoder_new();
+
   FLAC__stream_encoder_set_write_callback (flacenc->encoder, gst_flacenc_write_callback);
   FLAC__stream_encoder_set_metadata_callback (flacenc->encoder, gst_flacenc_metadata_callback);
   FLAC__stream_encoder_set_client_data (flacenc->encoder, flacenc);
+
+  GST_FLAG_SET (flacenc, GST_ELEMENT_EVENT_AWARE);
 }
 
 static FLAC__StreamEncoderWriteStatus 
@@ -153,6 +158,12 @@ gst_flacenc_write_callback (const FLAC__StreamEncoder *encoder, const FLAC__byte
 
   memcpy (GST_BUFFER_DATA (outbuf), buffer, bytes);
 
+  if (flacenc->first) {
+    flacenc->first_buf = outbuf;
+    gst_buffer_ref (outbuf);
+    flacenc->first = FALSE;
+  }
+
   gst_pad_push (flacenc->srcpad, outbuf);
 
   return FLAC__STREAM_ENCODER_WRITE_OK;
@@ -161,10 +172,49 @@ gst_flacenc_write_callback (const FLAC__StreamEncoder *encoder, const FLAC__byte
 static void 
 gst_flacenc_metadata_callback (const FLAC__StreamEncoder *encoder, const FLAC__StreamMetaData *metadata, void *client_data)
 {
+  GstEvent *event;
+  FlacEnc *flacenc;
+
+  flacenc = GST_FLACENC (client_data);
+
+  event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, 0, NULL);
+  gst_pad_push (flacenc->srcpad, GST_BUFFER (event));
+
+  if (flacenc->first_buf) {
+    const FLAC__uint64 samples = metadata->data.stream_info.total_samples;
+    const unsigned min_framesize = metadata->data.stream_info.min_framesize;
+    const unsigned max_framesize = metadata->data.stream_info.max_framesize;
+
+    guint8 *data = GST_BUFFER_DATA (flacenc->first_buf);
+    GstBuffer *outbuf = flacenc->first_buf;
+
+    /* this looks evil but is actually how one is supposed to write
+     * the stream stats according to the FLAC examples */
+
+    memcpy (&data[26], metadata->data.stream_info.md5sum, 16);
+    
+    data[21] = (data[21] & 0xf0) | 
+	       (FLAC__byte)((samples >> 32) & 0x0f);
+    data[22] = (FLAC__byte)((samples >> 24) & 0xff);
+    data[23] = (FLAC__byte)((samples >> 16) & 0xff);
+    data[24] = (FLAC__byte)((samples >> 8 ) & 0xff);
+    data[25] = (FLAC__byte)((samples      ) & 0xff);
+
+    data[12] = (FLAC__byte)((min_framesize >> 16) & 0xFF);
+    data[13] = (FLAC__byte)((min_framesize >> 8 ) & 0xFF);
+    data[14] = (FLAC__byte)((min_framesize      ) & 0xFF);
+
+    data[15] = (FLAC__byte)((max_framesize >> 16) & 0xFF);
+    data[16] = (FLAC__byte)((max_framesize >> 8 ) & 0xFF);
+    data[17] = (FLAC__byte)((max_framesize      ) & 0xFF);
+
+    flacenc->first_buf = NULL;
+    gst_pad_push (flacenc->srcpad, outbuf);
+  }
 }
 
 static void
-gst_flacenc_chain (GstPad *pad,GstBuffer *buf)
+gst_flacenc_chain (GstPad *pad, GstBuffer *buf)
 {
   FlacEnc *flacenc;
   gint32 *data[FLAC__MAX_CHANNELS];
@@ -178,6 +228,19 @@ gst_flacenc_chain (GstPad *pad,GstBuffer *buf)
   g_return_if_fail(buf != NULL);
 
   flacenc = GST_FLACENC (gst_pad_get_parent (pad));
+
+  if (GST_IS_EVENT (buf)) {
+    GstEvent *event = GST_EVENT (buf);
+
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_EOS:
+	FLAC__stream_encoder_finish(flacenc->encoder);
+      default:
+	gst_pad_event_default (pad, event);
+        break;
+    }
+    return;
+  }
 
   channels = flacenc->channels;
   depth = flacenc->depth;

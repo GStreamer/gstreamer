@@ -41,14 +41,16 @@ typedef struct _FlacEnc FlacEnc;
 typedef struct _FlacEncClass FlacEncClass;
 
 struct _FlacEnc {
-  GstElement element;
+  GstElement 	 element;
 
   GstPad *sinkpad,*srcpad;
 
-  gboolean eos;
-  gint channels;
-  gint depth;
-  gint sample_rate;
+  gboolean 	 first;
+  GstBuffer	*first_buf;
+  gboolean 	 eos;
+  gint 		 channels;
+  gint 		 depth;
+  gint 		 sample_rate;
 
   FLAC__StreamEncoder *encoder;
 };
