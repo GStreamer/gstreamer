@@ -56,7 +56,7 @@ gst_play_typefind (GstBin *bin, GstElement *element)
 int main(int argc,char *argv[]) 
 {
   GstElement *disksrc, *osssink, *videosink;
-  GstElement *bin;
+  GstElement *pipeline;
   GtkWidget *appwindow;
   GstCaps *srccaps;
   GstElement *new_element;
@@ -72,18 +72,18 @@ int main(int argc,char *argv[])
     exit(-1);
   }
 
-  /* create a new bin to hold the elements */
-  bin = gst_pipeline_new("pipeline");
-  g_assert(bin != NULL);
+  /* create a new pipeline to hold the elements */
+  pipeline = gst_pipeline_new("pipeline");
+  g_assert(pipeline != NULL);
 
   /* create a disk reader */
   disksrc = gst_elementfactory_make("disksrc", "disk_source");
   g_assert(disksrc != NULL);
   gtk_object_set(GTK_OBJECT(disksrc),"location", argv[1],NULL);
 
-  gst_bin_add (GST_BIN (bin), disksrc);
+  gst_bin_add (GST_BIN (pipeline), disksrc);
 
-  srccaps = gst_play_typefind (GST_BIN (bin), disksrc);
+  srccaps = gst_play_typefind (GST_BIN (pipeline), disksrc);
 
   if (!srccaps) {
     g_print ("could not autoplug, unknown media type...\n");
@@ -112,12 +112,7 @@ int main(int argc,char *argv[])
     exit (-1);
   }
 
-  gst_bin_remove (GST_BIN (bin), disksrc);
-  // FIXME hack, reparent the disksrc so the scheduler doesn't break
-  bin = gst_pipeline_new("pipeline");
-
-  gst_bin_add (GST_BIN (bin), disksrc);
-  gst_bin_add (GST_BIN (bin), new_element);
+  gst_bin_add (GST_BIN (pipeline), new_element);
 
   gst_element_connect (disksrc, "src", new_element, "sink");
 
@@ -135,19 +130,19 @@ int main(int argc,char *argv[])
 
   gtk_widget_show_all(appwindow);
 
-  xmlSaveFile("xmlTest.gst", gst_xml_write(GST_ELEMENT(bin)));
+  xmlSaveFile("xmlTest.gst", gst_xml_write(GST_ELEMENT(pipeline)));
 
   /* start playing */
-  gst_element_set_state(GST_ELEMENT(bin), GST_STATE_PLAYING);
+  gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
 
-  gtk_idle_add(idle_func, bin);
+  gtk_idle_add(idle_func, pipeline);
 
   gst_main();
 
-  /* stop the bin */
-  gst_element_set_state(GST_ELEMENT(bin), GST_STATE_NULL);
+  /* stop the pipeline */
+  gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);
 
-  gst_pipeline_destroy(bin);
+  gst_pipeline_destroy(pipeline);
 
   exit(0);
 }
