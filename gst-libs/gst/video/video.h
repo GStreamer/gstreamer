@@ -18,11 +18,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_VIDEO_CONVENIENCE_H__
-#define __GST_VIDEO_CONVENIENCE_H__
+#ifndef __GST_VIDEO_H__
+#define __GST_VIDEO_H__
 
 #include <gst/gst.h>
 
 gdouble gst_video_frame_rate (GstPad *pad);
 
-#endif /* __GST_VIDEO_CONVENIENCE_H__ */
+#endif /* __GST_VIDEO_H__ */
