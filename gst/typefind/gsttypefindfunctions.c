@@ -863,6 +863,54 @@ tiff_type_find (GstTypeFind *tf, gpointer ununsed)
   }
 }
 
+/*** video/x-matroska ********************/
+static GstStaticCaps matroska_caps = GST_STATIC_CAPS ("video/x-matroska" );
+#define MATROSKA_CAPS gst_caps_copy(gst_static_caps_get(&matroska_caps))
+static void
+matroska_type_find (GstTypeFind *tf, gpointer ununsed)
+{
+  /* 4 bytes for EBML ID, 1 byte for header length identifier */
+  guint8 *data = gst_type_find_peek (tf, 0, 4 + 1);
+  gint len_mask = 0x80, size = 1, n = 1, total;
+  guint8 probe_data[] = { 'm', 'a', 't', 'r', 'o', 's', 'k', 'a' };
+
+  if (!data)
+    return;
+
+  /* ebml header? */
+  if (data[0] != 0x1A || data[1] != 0x45 ||
+      data[2] != 0xDF || data[3] != 0xA3)
+    return;
+
+  /* length of header */
+  total = data[4];
+  while (size <= 8 && !(total & len_mask)) {
+    size++;
+    len_mask >>= 1;
+  }
+  if (size > 8)
+    return;
+  total &= (len_mask - 1);
+  while (n < size)
+    total = (total << 8) | data[4 + n++];
+
+  /* get new data for full header, 4 bytes for EBML ID,
+   * EBML length tag and the actual header */
+  data = gst_type_find_peek (tf, 0, 4 + size + total);
+  if (!data)
+    return;
+
+  /* the header must contain the document type 'matroska'. For now,
+   * we don't parse the whole header but simply check for the
+   * availability of that array of characters inside the header.
+   * Not fully fool-proof, but good enough. */
+  for (n = 4 + size; n < 4 + size + total - sizeof (probe_data); n++)
+    if (!memcmp (&data[n], probe_data, sizeof (probe_data))) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MATROSKA_CAPS);
+      break;
+    }
+}
+
 /*** video/x-dv ***************************************************************/
 
 static GstStaticCaps dv_caps = GST_STATIC_CAPS ("video/x-dv, "
@@ -1093,8 +1141,8 @@ plugin_init (GstPlugin *plugin)
 	  bmp_type_find, bmp_exts, BMP_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "image/tiff", GST_RANK_PRIMARY,
 	  tiff_type_find, tiff_exts, TIFF_CAPS, NULL);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-matroska", GST_RANK_SECONDARY,
-	  matroska_exts, "\032\105\337\243\223\102\202\210matroska", 16, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER (plugin, "video/x-matroska", GST_RANK_PRIMARY,
+	  matroska_type_find, matroska_exts, MATROSKA_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-dv", GST_RANK_SECONDARY,
 	  dv_type_find, dv_exts, DV_CAPS, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-sid", GST_RANK_MARGINAL,
