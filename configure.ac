@@ -987,10 +987,6 @@ if test "x$HAVE_OSS" = xyes; then
   AC_DEFINE(HAVE_OSS)
 fi
 
-if test "x$HAVE_XAUDIO" = xyes; then
-  AC_DEFINE(HAVE_XAUDIO)
-fi
-
 if test "x$HAVE_LIBMAD" = xyes; then
   AC_DEFINE(HAVE_LIBMAD)
 fi
@@ -1153,13 +1149,6 @@ GST_LIBS="\$(top_builddir)/gst/libgst.la $LIBGST_LIBS"
 GST_CFLAGS="-I\$(top_srcdir) -I\$(top_srcdir)/include $LIBGST_CFLAGS"
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
-
-dnl #############################
-dnl # Configure the subpackages #
-dnl #############################
-
-dnl AC_CONFIG_SUBDIRS(gist)
-dnl AC_CONFIG_SUBDIRS(plugins/mp3decode/xing/libxing)
 
 dnl ##################################################
 dnl # Prepare informative messages to display at end #
