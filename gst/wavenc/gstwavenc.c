@@ -64,7 +64,7 @@ struct wave_header {
 
 static GstElementDetails gst_wavenc_details = {
   "WAV encoder",
-  "Codec/Encoder",
+  "Codec/Audio/Encoder",
   "LGPL",
   "Encode raw audio into WAV",
   VERSION,
