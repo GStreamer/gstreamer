@@ -460,7 +460,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
       gint size = GST_BUFFER_SIZE (buf);
 
       if (osssink->clock) {
-        gint delay;
+        gint delay = 0;
 	gint64 queued;
 	GstClockTimeDiff jitter;
     
