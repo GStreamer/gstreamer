@@ -569,8 +569,9 @@ gst_ffmpegenc_register (GstPlugin *plugin)
       goto next;
     }
 
-    /* create the gtk type now */
+    /* create the glib type now */
     type = g_type_register_static(GST_TYPE_ELEMENT, type_name , &typeinfo, 0);
+    g_return_val_if_fail(type != 0, FALSE);
 
     /* construct the element details struct */
     details = g_new0 (GstElementDetails,1);
