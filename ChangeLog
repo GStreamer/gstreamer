@@ -1,3 +1,14 @@
+2004-01-11  Julien MOUTTE  <julien@moutte.net>
+
+	* configure.ac: Adding examples/switch/Makefile
+	* examples/Makefile.am: Adding examples/switch
+	* examples/switch/Makefile.am: Adding switcher example.
+	* examples/switch/switcher.c: (got_eos), (idle_iterate),
+	(switch_timer), (main): Adding an example demonstrating switch usage
+	with 2 videotestsrc showing different patterns.
+	* gst/switch/gstswitch.c: (gst_switch_request_new_pad),
+	(gst_switch_init): Fixing switch with the new caps system.
+
 2004-01-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst-libs/gst/video/video.h:
