@@ -1,6 +1,7 @@
 
 /* Generated data (by glib-mkenums) */
 
+#include "gst_private.h"
 #include <gst/gst.h>
 
 /* enumerations from "gstobject.h" */
@@ -16,7 +17,6 @@ gst_object_flags_get_type (void)
       {GST_OBJECT_FLAG_LAST, "GST_OBJECT_FLAG_LAST", "object-flag-last"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstObjectFlags", values);
   }
   return etype;
@@ -33,15 +33,14 @@ gst_bin_flags_get_type (void)
     static const GEnumValue values[] = {
       {GST_BIN_FLAG_MANAGER, "GST_BIN_FLAG_MANAGER", "flag-manager"},
       {GST_BIN_SELF_SCHEDULABLE, "GST_BIN_SELF_SCHEDULABLE",
-            "self-schedulable"},
+          "self-schedulable"},
       {GST_BIN_FLAG_PREFER_COTHREADS, "GST_BIN_FLAG_PREFER_COTHREADS",
-            "flag-prefer-cothreads"},
+          "flag-prefer-cothreads"},
       {GST_BIN_FLAG_FIXED_CLOCK, "GST_BIN_FLAG_FIXED_CLOCK",
-            "flag-fixed-clock"},
+          "flag-fixed-clock"},
       {GST_BIN_FLAG_LAST, "GST_BIN_FLAG_LAST", "flag-last"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstBinFlags", values);
   }
   return etype;
@@ -62,10 +61,11 @@ gst_buffer_flag_get_type (void)
       {GST_BUFFER_DONTFREE, "GST_BUFFER_DONTFREE", "dontfree"},
       {GST_BUFFER_KEY_UNIT, "GST_BUFFER_KEY_UNIT", "key-unit"},
       {GST_BUFFER_DONTKEEP, "GST_BUFFER_DONTKEEP", "dontkeep"},
+      {GST_BUFFER_IN_CAPS, "GST_BUFFER_IN_CAPS", "in-caps"},
+      {GST_BUFFER_DELTA_UNIT, "GST_BUFFER_DELTA_UNIT", "delta-unit"},
       {GST_BUFFER_FLAG_LAST, "GST_BUFFER_FLAG_LAST", "flag-last"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstBufferFlag", values);
   }
   return etype;
@@ -85,7 +85,6 @@ gst_clock_entry_status_get_type (void)
       {GST_CLOCK_ENTRY_RESTART, "GST_CLOCK_ENTRY_RESTART", "restart"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstClockEntryStatus", values);
   }
   return etype;
@@ -102,7 +101,6 @@ gst_clock_entry_type_get_type (void)
       {GST_CLOCK_ENTRY_PERIODIC, "GST_CLOCK_ENTRY_PERIODIC", "periodic"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstClockEntryType", values);
   }
   return etype;
@@ -122,7 +120,6 @@ gst_clock_return_get_type (void)
       {GST_CLOCK_UNSUPPORTED, "GST_CLOCK_UNSUPPORTED", "unsupported"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstClockReturn", values);
   }
   return etype;
@@ -136,20 +133,19 @@ gst_clock_flags_get_type (void)
   if (etype == 0) {
     static const GFlagsValue values[] = {
       {GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC, "GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC",
-            "do-single-sync"},
+          "do-single-sync"},
       {GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC, "GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC",
-            "do-single-async"},
+          "do-single-async"},
       {GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC,
-            "GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC", "do-periodic-sync"},
+          "GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC", "do-periodic-sync"},
       {GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC,
-            "GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC", "do-periodic-async"},
+          "GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC", "do-periodic-async"},
       {GST_CLOCK_FLAG_CAN_SET_RESOLUTION, "GST_CLOCK_FLAG_CAN_SET_RESOLUTION",
-            "set-resolution"},
+          "set-resolution"},
       {GST_CLOCK_FLAG_CAN_SET_SPEED, "GST_CLOCK_FLAG_CAN_SET_SPEED",
-            "set-speed"},
+          "set-speed"},
       {0, NULL, NULL}
     };
-
     etype = g_flags_register_static ("GstClockFlags", values);
   }
   return etype;
@@ -170,7 +166,6 @@ gst_cpu_flags_get_type (void)
       {GST_CPU_FLAG_3DNOW, "GST_CPU_FLAG_3DNOW", "3dnow"},
       {0, NULL, NULL}
     };
-
     etype = g_flags_register_static ("GstCPUFlags", values);
   }
   return etype;
@@ -189,7 +184,6 @@ gst_data_flags_get_type (void)
       {GST_DATA_FLAG_LAST, "GST_DATA_FLAG_LAST", "flag-last"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstDataFlags", values);
   }
   return etype;
@@ -207,23 +201,22 @@ gst_element_flags_get_type (void)
       {GST_ELEMENT_COMPLEX, "GST_ELEMENT_COMPLEX", "complex"},
       {GST_ELEMENT_DECOUPLED, "GST_ELEMENT_DECOUPLED", "decoupled"},
       {GST_ELEMENT_THREAD_SUGGESTED, "GST_ELEMENT_THREAD_SUGGESTED",
-            "thread-suggested"},
+          "thread-suggested"},
       {GST_ELEMENT_INFINITE_LOOP, "GST_ELEMENT_INFINITE_LOOP", "infinite-loop"},
       {GST_ELEMENT_NEW_LOOPFUNC, "GST_ELEMENT_NEW_LOOPFUNC", "new-loopfunc"},
       {GST_ELEMENT_EVENT_AWARE, "GST_ELEMENT_EVENT_AWARE", "event-aware"},
       {GST_ELEMENT_USE_THREADSAFE_PROPERTIES,
             "GST_ELEMENT_USE_THREADSAFE_PROPERTIES",
-            "use-threadsafe-properties"},
+          "use-threadsafe-properties"},
       {GST_ELEMENT_SCHEDULER_PRIVATE1, "GST_ELEMENT_SCHEDULER_PRIVATE1",
-            "scheduler-private1"},
+          "scheduler-private1"},
       {GST_ELEMENT_SCHEDULER_PRIVATE2, "GST_ELEMENT_SCHEDULER_PRIVATE2",
-            "scheduler-private2"},
+          "scheduler-private2"},
       {GST_ELEMENT_LOCKED_STATE, "GST_ELEMENT_LOCKED_STATE", "locked-state"},
       {GST_ELEMENT_IN_ERROR, "GST_ELEMENT_IN_ERROR", "in-error"},
       {GST_ELEMENT_FLAG_LAST, "GST_ELEMENT_FLAG_LAST", "flag-last"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstElementFlags", values);
   }
   return etype;
@@ -241,9 +234,9 @@ gst_core_error_get_type (void)
       {GST_CORE_ERROR_FAILED, "GST_CORE_ERROR_FAILED", "failed"},
       {GST_CORE_ERROR_TOO_LAZY, "GST_CORE_ERROR_TOO_LAZY", "too-lazy"},
       {GST_CORE_ERROR_NOT_IMPLEMENTED, "GST_CORE_ERROR_NOT_IMPLEMENTED",
-            "not-implemented"},
+          "not-implemented"},
       {GST_CORE_ERROR_STATE_CHANGE, "GST_CORE_ERROR_STATE_CHANGE",
-            "state-change"},
+          "state-change"},
       {GST_CORE_ERROR_PAD, "GST_CORE_ERROR_PAD", "pad"},
       {GST_CORE_ERROR_THREAD, "GST_CORE_ERROR_THREAD", "thread"},
       {GST_CORE_ERROR_SCHEDULER, "GST_CORE_ERROR_SCHEDULER", "scheduler"},
@@ -255,7 +248,6 @@ gst_core_error_get_type (void)
       {GST_CORE_ERROR_NUM_ERRORS, "GST_CORE_ERROR_NUM_ERRORS", "num-errors"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstCoreError", values);
   }
   return etype;
@@ -275,10 +267,9 @@ gst_library_error_get_type (void)
       {GST_LIBRARY_ERROR_SETTINGS, "GST_LIBRARY_ERROR_SETTINGS", "settings"},
       {GST_LIBRARY_ERROR_ENCODE, "GST_LIBRARY_ERROR_ENCODE", "encode"},
       {GST_LIBRARY_ERROR_NUM_ERRORS, "GST_LIBRARY_ERROR_NUM_ERRORS",
-            "num-errors"},
+          "num-errors"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstLibraryError", values);
   }
   return etype;
@@ -294,14 +285,14 @@ gst_resource_error_get_type (void)
       {GST_RESOURCE_ERROR_FAILED, "GST_RESOURCE_ERROR_FAILED", "failed"},
       {GST_RESOURCE_ERROR_TOO_LAZY, "GST_RESOURCE_ERROR_TOO_LAZY", "too-lazy"},
       {GST_RESOURCE_ERROR_NOT_FOUND, "GST_RESOURCE_ERROR_NOT_FOUND",
-            "not-found"},
+          "not-found"},
       {GST_RESOURCE_ERROR_BUSY, "GST_RESOURCE_ERROR_BUSY", "busy"},
       {GST_RESOURCE_ERROR_OPEN_READ, "GST_RESOURCE_ERROR_OPEN_READ",
-            "open-read"},
+          "open-read"},
       {GST_RESOURCE_ERROR_OPEN_WRITE, "GST_RESOURCE_ERROR_OPEN_WRITE",
-            "open-write"},
+          "open-write"},
       {GST_RESOURCE_ERROR_OPEN_READ_WRITE, "GST_RESOURCE_ERROR_OPEN_READ_WRITE",
-            "open-read-write"},
+          "open-read-write"},
       {GST_RESOURCE_ERROR_CLOSE, "GST_RESOURCE_ERROR_CLOSE", "close"},
       {GST_RESOURCE_ERROR_READ, "GST_RESOURCE_ERROR_READ", "read"},
       {GST_RESOURCE_ERROR_WRITE, "GST_RESOURCE_ERROR_WRITE", "write"},
@@ -309,10 +300,9 @@ gst_resource_error_get_type (void)
       {GST_RESOURCE_ERROR_SYNC, "GST_RESOURCE_ERROR_SYNC", "sync"},
       {GST_RESOURCE_ERROR_SETTINGS, "GST_RESOURCE_ERROR_SETTINGS", "settings"},
       {GST_RESOURCE_ERROR_NUM_ERRORS, "GST_RESOURCE_ERROR_NUM_ERRORS",
-            "num-errors"},
+          "num-errors"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstResourceError", values);
   }
   return etype;
@@ -328,23 +318,22 @@ gst_stream_error_get_type (void)
       {GST_STREAM_ERROR_FAILED, "GST_STREAM_ERROR_FAILED", "failed"},
       {GST_STREAM_ERROR_TOO_LAZY, "GST_STREAM_ERROR_TOO_LAZY", "too-lazy"},
       {GST_STREAM_ERROR_NOT_IMPLEMENTED, "GST_STREAM_ERROR_NOT_IMPLEMENTED",
-            "not-implemented"},
+          "not-implemented"},
       {GST_STREAM_ERROR_TYPE_NOT_FOUND, "GST_STREAM_ERROR_TYPE_NOT_FOUND",
-            "type-not-found"},
+          "type-not-found"},
       {GST_STREAM_ERROR_WRONG_TYPE, "GST_STREAM_ERROR_WRONG_TYPE",
-            "wrong-type"},
+          "wrong-type"},
       {GST_STREAM_ERROR_CODEC_NOT_FOUND, "GST_STREAM_ERROR_CODEC_NOT_FOUND",
-            "codec-not-found"},
+          "codec-not-found"},
       {GST_STREAM_ERROR_DECODE, "GST_STREAM_ERROR_DECODE", "decode"},
       {GST_STREAM_ERROR_ENCODE, "GST_STREAM_ERROR_ENCODE", "encode"},
       {GST_STREAM_ERROR_DEMUX, "GST_STREAM_ERROR_DEMUX", "demux"},
       {GST_STREAM_ERROR_MUX, "GST_STREAM_ERROR_MUX", "mux"},
       {GST_STREAM_ERROR_FORMAT, "GST_STREAM_ERROR_FORMAT", "format"},
       {GST_STREAM_ERROR_NUM_ERRORS, "GST_STREAM_ERROR_NUM_ERRORS",
-            "num-errors"},
+          "num-errors"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstStreamError", values);
   }
   return etype;
@@ -377,7 +366,6 @@ gst_event_type_get_type (void)
       {GST_EVENT_TAG, "GST_EVENT_TAG", "tag"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstEventType", values);
   }
   return etype;
@@ -394,7 +382,6 @@ gst_event_flag_get_type (void)
       {GST_RATE_FLAG_NEGATIVE, "GST_RATE_FLAG_NEGATIVE", "rate-flag-negative"},
       {0, NULL, NULL}
     };
-
     etype = g_flags_register_static ("GstEventFlag", values);
   }
   return etype;
@@ -414,10 +401,9 @@ gst_seek_type_get_type (void)
       {GST_SEEK_FLAG_ACCURATE, "GST_SEEK_FLAG_ACCURATE", "flag-accurate"},
       {GST_SEEK_FLAG_KEY_UNIT, "GST_SEEK_FLAG_KEY_UNIT", "flag-key-unit"},
       {GST_SEEK_FLAG_SEGMENT_LOOP, "GST_SEEK_FLAG_SEGMENT_LOOP",
-            "flag-segment-loop"},
+          "flag-segment-loop"},
       {0, NULL, NULL}
     };
-
     etype = g_flags_register_static ("GstSeekType", values);
   }
   return etype;
@@ -434,7 +420,6 @@ gst_seek_accuracy_get_type (void)
       {GST_SEEK_FUZZY, "GST_SEEK_FUZZY", "fuzzy"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstSeekAccuracy", values);
   }
   return etype;
@@ -457,7 +442,6 @@ gst_format_get_type (void)
       {GST_FORMAT_PERCENT, "GST_FORMAT_PERCENT", "percent"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstFormat", values);
   }
   return etype;
@@ -477,7 +461,6 @@ gst_index_certainty_get_type (void)
       {GST_INDEX_FUZZY, "GST_INDEX_FUZZY", "fuzzy"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstIndexCertainty", values);
   }
   return etype;
@@ -492,12 +475,11 @@ gst_index_entry_type_get_type (void)
     static const GEnumValue values[] = {
       {GST_INDEX_ENTRY_ID, "GST_INDEX_ENTRY_ID", "id"},
       {GST_INDEX_ENTRY_ASSOCIATION, "GST_INDEX_ENTRY_ASSOCIATION",
-            "association"},
+          "association"},
       {GST_INDEX_ENTRY_OBJECT, "GST_INDEX_ENTRY_OBJECT", "object"},
       {GST_INDEX_ENTRY_FORMAT, "GST_INDEX_ENTRY_FORMAT", "format"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstIndexEntryType", values);
   }
   return etype;
@@ -515,7 +497,6 @@ gst_index_lookup_method_get_type (void)
       {GST_INDEX_LOOKUP_AFTER, "GST_INDEX_LOOKUP_AFTER", "after"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstIndexLookupMethod", values);
   }
   return etype;
@@ -530,11 +511,12 @@ gst_assoc_flags_get_type (void)
     static const GFlagsValue values[] = {
       {GST_ASSOCIATION_FLAG_NONE, "GST_ASSOCIATION_FLAG_NONE", "none"},
       {GST_ASSOCIATION_FLAG_KEY_UNIT, "GST_ASSOCIATION_FLAG_KEY_UNIT",
-            "key-unit"},
+          "key-unit"},
+      {GST_ASSOCIATION_FLAG_DELTA_UNIT, "GST_ASSOCIATION_FLAG_DELTA_UNIT",
+          "delta-unit"},
       {GST_ASSOCIATION_FLAG_LAST, "GST_ASSOCIATION_FLAG_LAST", "last"},
       {0, NULL, NULL}
     };
-
     etype = g_flags_register_static ("GstAssocFlags", values);
   }
   return etype;
@@ -552,7 +534,6 @@ gst_index_resolver_method_get_type (void)
       {GST_INDEX_RESOLVER_PATH, "GST_INDEX_RESOLVER_PATH", "path"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstIndexResolverMethod", values);
   }
   return etype;
@@ -570,7 +551,6 @@ gst_index_flags_get_type (void)
       {GST_INDEX_FLAG_LAST, "GST_INDEX_FLAG_LAST", "flag-last"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstIndexFlags", values);
   }
   return etype;
@@ -594,7 +574,6 @@ gst_debug_level_get_type (void)
       {GST_LEVEL_COUNT, "GST_LEVEL_COUNT", "count"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstDebugLevel", values);
   }
   return etype;
@@ -627,7 +606,6 @@ gst_debug_color_flags_get_type (void)
       {GST_DEBUG_UNDERLINE, "GST_DEBUG_UNDERLINE", "underline"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstDebugColorFlags", values);
   }
   return etype;
@@ -648,7 +626,6 @@ gst_pad_link_return_get_type (void)
       {GST_PAD_LINK_DONE, "GST_PAD_LINK_DONE", "done"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstPadLinkReturn", values);
   }
   return etype;
@@ -666,7 +643,6 @@ gst_pad_direction_get_type (void)
       {GST_PAD_SINK, "GST_PAD_SINK", "sink"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstPadDirection", values);
   }
   return etype;
@@ -681,10 +657,10 @@ gst_pad_flags_get_type (void)
     static const GEnumValue values[] = {
       {GST_PAD_DISABLED, "GST_PAD_DISABLED", "disabled"},
       {GST_PAD_NEGOTIATING, "GST_PAD_NEGOTIATING", "negotiating"},
+      {GST_PAD_DISPATCHING, "GST_PAD_DISPATCHING", "dispatching"},
       {GST_PAD_FLAG_LAST, "GST_PAD_FLAG_LAST", "flag-last"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstPadFlags", values);
   }
   return etype;
@@ -702,7 +678,6 @@ gst_pad_presence_get_type (void)
       {GST_PAD_REQUEST, "GST_PAD_REQUEST", "request"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstPadPresence", values);
   }
   return etype;
@@ -719,7 +694,6 @@ gst_pad_template_flags_get_type (void)
       {GST_PAD_TEMPLATE_FLAG_LAST, "GST_PAD_TEMPLATE_FLAG_LAST", "flag-last"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstPadTemplateFlags", values);
   }
   return etype;
@@ -736,12 +710,11 @@ gst_plugin_error_get_type (void)
     static const GEnumValue values[] = {
       {GST_PLUGIN_ERROR_MODULE, "GST_PLUGIN_ERROR_MODULE", "module"},
       {GST_PLUGIN_ERROR_DEPENDENCIES, "GST_PLUGIN_ERROR_DEPENDENCIES",
-            "dependencies"},
+          "dependencies"},
       {GST_PLUGIN_ERROR_NAME_MISMATCH, "GST_PLUGIN_ERROR_NAME_MISMATCH",
-            "name-mismatch"},
+          "name-mismatch"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstPluginError", values);
   }
   return etype;
@@ -766,7 +739,6 @@ gst_query_type_get_type (void)
       {GST_QUERY_RATE, "GST_QUERY_RATE", "rate"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstQueryType", values);
   }
   return etype;
@@ -782,12 +754,11 @@ gst_scheduler_flags_get_type (void)
   if (etype == 0) {
     static const GEnumValue values[] = {
       {GST_SCHEDULER_FLAG_FIXED_CLOCK, "GST_SCHEDULER_FLAG_FIXED_CLOCK",
-            "fixed-clock"},
+          "fixed-clock"},
       {GST_SCHEDULER_FLAG_NEW_API, "GST_SCHEDULER_FLAG_NEW_API", "new-api"},
       {GST_SCHEDULER_FLAG_LAST, "GST_SCHEDULER_FLAG_LAST", "last"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstSchedulerFlags", values);
   }
   return etype;
@@ -806,7 +777,6 @@ gst_scheduler_state_get_type (void)
       {GST_SCHEDULER_STATE_ERROR, "GST_SCHEDULER_STATE_ERROR", "error"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstSchedulerState", values);
   }
   return etype;
@@ -831,7 +801,6 @@ gst_tag_merge_mode_get_type (void)
       {GST_TAG_MERGE_COUNT, "GST_TAG_MERGE_COUNT", "count"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstTagMergeMode", values);
   }
   return etype;
@@ -851,7 +820,6 @@ gst_tag_flag_get_type (void)
       {GST_TAG_FLAG_COUNT, "GST_TAG_FLAG_COUNT", "count"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstTagFlag", values);
   }
   return etype;
@@ -867,13 +835,12 @@ gst_thread_state_get_type (void)
   if (etype == 0) {
     static const GEnumValue values[] = {
       {GST_THREAD_STATE_SPINNING, "GST_THREAD_STATE_SPINNING",
-            "state-spinning"},
+          "state-spinning"},
       {GST_THREAD_STATE_REAPING, "GST_THREAD_STATE_REAPING", "state-reaping"},
-      {GST_THREAD_MUTEX_LOCKED, "GST_THREAD_MUTEX_LOCKED", "mutex-locked"},
+      {GST_THREAD_STATE_WAITING, "GST_THREAD_STATE_WAITING", "state-waiting"},
       {GST_THREAD_FLAG_LAST, "GST_THREAD_FLAG_LAST", "flag-last"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstThreadState", values);
   }
   return etype;
@@ -892,7 +859,6 @@ gst_alloc_trace_flags_get_type (void)
       {GST_ALLOC_TRACE_MEM_LIVE, "GST_ALLOC_TRACE_MEM_LIVE", "mem-live"},
       {0, NULL, NULL}
     };
-
     etype = g_flags_register_static ("GstAllocTraceFlags", values);
   }
   return etype;
@@ -911,11 +877,10 @@ gst_type_find_probability_get_type (void)
       {GST_TYPE_FIND_POSSIBLE, "GST_TYPE_FIND_POSSIBLE", "possible"},
       {GST_TYPE_FIND_LIKELY, "GST_TYPE_FIND_LIKELY", "likely"},
       {GST_TYPE_FIND_NEARLY_CERTAIN, "GST_TYPE_FIND_NEARLY_CERTAIN",
-            "nearly-certain"},
+          "nearly-certain"},
       {GST_TYPE_FIND_MAXIMUM, "GST_TYPE_FIND_MAXIMUM", "maximum"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstTypeFindProbability", values);
   }
   return etype;
@@ -937,7 +902,6 @@ gst_element_state_get_type (void)
       {GST_STATE_PLAYING, "GST_STATE_PLAYING", "playing"},
       {0, NULL, NULL}
     };
-
     etype = g_flags_register_static ("GstElementState", values);
   }
   return etype;
@@ -955,7 +919,6 @@ gst_element_state_return_get_type (void)
       {GST_STATE_ASYNC, "GST_STATE_ASYNC", "async"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstElementStateReturn", values);
   }
   return etype;
@@ -973,8 +936,25 @@ gst_result_get_type (void)
       {GST_RESULT_NOT_IMPL, "GST_RESULT_NOT_IMPL", "not-impl"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstResult", values);
+  }
+  return etype;
+}
+
+GType
+gst_rank_get_type (void)
+{
+  static GType etype = 0;
+
+  if (etype == 0) {
+    static const GEnumValue values[] = {
+      {GST_RANK_NONE, "GST_RANK_NONE", "none"},
+      {GST_RANK_MARGINAL, "GST_RANK_MARGINAL", "marginal"},
+      {GST_RANK_SECONDARY, "GST_RANK_SECONDARY", "secondary"},
+      {GST_RANK_PRIMARY, "GST_RANK_PRIMARY", "primary"},
+      {0, NULL, NULL}
+    };
+    etype = g_enum_register_static ("GstRank", values);
   }
   return etype;
 }
@@ -993,7 +973,6 @@ gst_uri_type_get_type (void)
       {GST_URI_SRC, "GST_URI_SRC", "src"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstURIType", values);
   }
   return etype;
@@ -1012,12 +991,11 @@ gst_registry_return_get_type (void)
       {GST_REGISTRY_LOAD_ERROR, "GST_REGISTRY_LOAD_ERROR", "load-error"},
       {GST_REGISTRY_SAVE_ERROR, "GST_REGISTRY_SAVE_ERROR", "save-error"},
       {GST_REGISTRY_PLUGIN_LOAD_ERROR, "GST_REGISTRY_PLUGIN_LOAD_ERROR",
-            "plugin-load-error"},
+          "plugin-load-error"},
       {GST_REGISTRY_PLUGIN_SIGNATURE_ERROR,
-            "GST_REGISTRY_PLUGIN_SIGNATURE_ERROR", "plugin-signature-error"},
+          "GST_REGISTRY_PLUGIN_SIGNATURE_ERROR", "plugin-signature-error"},
       {0, NULL, NULL}
     };
-
     etype = g_flags_register_static ("GstRegistryReturn", values);
   }
   return etype;
@@ -1035,10 +1013,9 @@ gst_registry_flags_get_type (void)
       {GST_REGISTRY_EXISTS, "GST_REGISTRY_EXISTS", "exists"},
       {GST_REGISTRY_REMOTE, "GST_REGISTRY_REMOTE", "remote"},
       {GST_REGISTRY_DELAYED_LOADING, "GST_REGISTRY_DELAYED_LOADING",
-            "delayed-loading"},
+          "delayed-loading"},
       {0, NULL, NULL}
     };
-
     etype = g_flags_register_static ("GstRegistryFlags", values);
   }
   return etype;
@@ -1055,17 +1032,16 @@ gst_parse_error_get_type (void)
     static const GEnumValue values[] = {
       {GST_PARSE_ERROR_SYNTAX, "GST_PARSE_ERROR_SYNTAX", "syntax"},
       {GST_PARSE_ERROR_NO_SUCH_ELEMENT, "GST_PARSE_ERROR_NO_SUCH_ELEMENT",
-            "no-such-element"},
+          "no-such-element"},
       {GST_PARSE_ERROR_NO_SUCH_PROPERTY, "GST_PARSE_ERROR_NO_SUCH_PROPERTY",
-            "no-such-property"},
+          "no-such-property"},
       {GST_PARSE_ERROR_LINK, "GST_PARSE_ERROR_LINK", "link"},
       {GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
-            "GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY", "could-not-set-property"},
+          "GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY", "could-not-set-property"},
       {GST_PARSE_ERROR_EMPTY_BIN, "GST_PARSE_ERROR_EMPTY_BIN", "empty-bin"},
       {GST_PARSE_ERROR_EMPTY, "GST_PARSE_ERROR_EMPTY", "empty"},
       {0, NULL, NULL}
     };
-
     etype = g_enum_register_static ("GstParseError", values);
   }
   return etype;

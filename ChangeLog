@@ -1,3 +1,9 @@
+2004-12-16  David Schleef  <ds@schleef.org>
+
+	* win32/gstenumtypes.c: Update from gst/gstenumtypes.c (See
+	bug #153882)
+	* win32/gstenumtypes.h: same
+
 2004-12-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstpad.c: (gst_pad_query):
