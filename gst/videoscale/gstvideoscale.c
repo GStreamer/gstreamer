@@ -191,9 +191,9 @@ gst_videoscale_sinkconnect (GstPad *pad, GstCaps *caps)
     return GST_PAD_CONNECT_DELAYED;
   }
 
+  gst_caps_get_fourcc_int (caps, "format", &videoscale->format);
   gst_caps_get_int (caps, "width", &videoscale->width);
   gst_caps_get_int (caps, "height", &videoscale->height);
-  gst_caps_get_int (caps, "format", &videoscale->format);
 
   gst_videoscale_setup(videoscale);
 

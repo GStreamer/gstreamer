@@ -58,7 +58,7 @@ struct _GstVideoscale {
   GstPad *sinkpad,*srcpad;
 
   /* video state */
-  gint format;
+  guint32 format;
   gint width;
   gint height;
   gint targetwidth;
