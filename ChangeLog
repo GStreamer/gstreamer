@@ -1,5 +1,10 @@
 2004-10-31  Benjamin Otte  <otte@gnome.org>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_push):
+	  another memleak crushed
+
+2004-10-31  Benjamin Otte  <otte@gnome.org>
+
 	* gst/tags/gstvorbistag.c: (gst_tag_to_vorbis_comments):
 	  fix memleak
 
