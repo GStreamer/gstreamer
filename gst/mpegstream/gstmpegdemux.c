@@ -19,6 +19,9 @@
 
 
 /*#define GST_DEBUG_ENABLED*/
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gstmpegdemux.h>
 
 /* elementfactory information */
@@ -296,7 +299,7 @@ gst_mpeg_demux_handle_discont (GstMPEGParse *mpeg_parse)
   gint64 current_time = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr);
   gint i;
 
-  GST_DEBUG (GST_CAT_EVENT, "discont %" G_GUINT64_FORMAT "\n", current_time);
+  GST_DEBUG ("discont %" G_GUINT64_FORMAT "\n", current_time);
 
   for (i=0;i<NUM_VIDEO_STREAMS;i++) {
     if (mpeg_demux->video_stream[i] && 
@@ -329,7 +332,7 @@ gst_mpeg_demux_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 
   parent_class->parse_packhead (mpeg_parse, buffer);
 
-  GST_DEBUG (0, "in parse_packhead");
+  GST_DEBUG ("in parse_packhead");
 
   buf = GST_BUFFER_DATA (buffer);
   /* do something usefull here */
@@ -344,13 +347,13 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   guint16 header_length;
   guchar *buf;
 
-  GST_DEBUG (0, "in parse_syshead");
+  GST_DEBUG ("in parse_syshead");
 
   buf = GST_BUFFER_DATA (buffer);
   buf += 4;
 
   header_length = GUINT16_FROM_BE (*(guint16 *) buf);
-  GST_DEBUG (0, "header_length %d", header_length);
+  GST_DEBUG ("header_length %d", header_length);
   buf += 2;
 
   /* marker:1==1 ! rate_bound:22 | marker:1==1*/
@@ -369,7 +372,7 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     gint stream_count = (header_length - 6) / 3;
     gint i, j=0;
 
-    GST_DEBUG (0, "number of streams=%d ",
+    GST_DEBUG ("number of streams=%d ",
 	       stream_count);
 
     for (i = 0; i < stream_count; i++) {
@@ -383,13 +386,13 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 
       stream_id = *buf++;
       if (!(stream_id & 0x80)) {
-	GST_DEBUG (0, "error in system header length");
+	GST_DEBUG ("error in system header length");
 	return FALSE;
       }
 
       /* check marker bits */
       if ((*buf & 0xC0) != 0xC0) {
-	GST_DEBUG (0, "expecting placeholder bit values '11' after stream id\n");
+	GST_DEBUG ("expecting placeholder bit values '11' after stream id\n");
 	return FALSE;
       }
 
@@ -428,12 +431,12 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 	  newtemp = GST_PAD_TEMPLATE_GET (video_mpeg2_factory);
 	}
       } else {
-	GST_DEBUG (0, "unkown stream id %d", stream_id);
+	GST_DEBUG ("unkown stream id %d", stream_id);
       }
 
-      GST_DEBUG (0, "stream ID 0x%02X (%s)", stream_id, name);
-      GST_DEBUG (0, "STD_buffer_bound_scale %d", STD_buffer_bound_scale);
-      GST_DEBUG (0, "STD_buffer_size_bound %d or %d bytes",
+      GST_DEBUG ("stream ID 0x%02X (%s)", stream_id, name);
+      GST_DEBUG ("STD_buffer_bound_scale %d", STD_buffer_bound_scale);
+      GST_DEBUG ("STD_buffer_size_bound %d or %d bytes",
 		 STD_buffer_size_bound, buf_byte_size_bound);
 
       /* create the pad and add it to self if it does not yet exist
@@ -517,7 +520,7 @@ gst_mpeg_demux_parse_packet (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   guint8 *buf, *basebuf;
   gint64 timestamp;
 
-  GST_DEBUG (0, "in parse_packet");
+  GST_DEBUG ("in parse_packet");
 
   basebuf = buf = GST_BUFFER_DATA (buffer);
   id = *(buf+3);
@@ -526,7 +529,7 @@ gst_mpeg_demux_parse_packet (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   /* start parsing */
   packet_length = GUINT16_FROM_BE (*((guint16 *)buf));
 
-  GST_DEBUG (0, "got packet_length %d", packet_length);
+  GST_DEBUG ("got packet_length %d", packet_length);
   headerlen = 2;
   buf += 2;
 
@@ -538,14 +541,14 @@ gst_mpeg_demux_parse_packet (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     switch (bits & 0xC0) {
       case 0xC0:
         if (bits == 0xff) {
-          GST_DEBUG (0, "have stuffing byte");
+          GST_DEBUG ("have stuffing byte");
         } else {
-          GST_DEBUG (0, "expected stuffing byte");
+          GST_DEBUG ("expected stuffing byte");
         }
         headerlen++;
 	break;
       case 0x40:
-        GST_DEBUG (0, "have STD");
+        GST_DEBUG ("have STD");
 
         STD_buffer_bound_scale =  bits & 0x20;
         STD_buffer_size_bound  = (bits & 0x1F) << 8;
@@ -563,7 +566,7 @@ gst_mpeg_demux_parse_packet (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
             pts |=  *buf++         <<  7;
             pts |= (*buf++ & 0xFE) >>  1;
 
-            GST_DEBUG (0, "PTS = %" G_GUINT64_FORMAT, pts);
+            GST_DEBUG ("PTS = %" G_GUINT64_FORMAT, pts);
             headerlen += 5;
 	    goto done;
 	  case 0x30:
@@ -581,14 +584,14 @@ gst_mpeg_demux_parse_packet (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
             dts |=  *buf++         <<  7;
             dts |= (*buf++ & 0xFE) >>  1;
 
-            GST_DEBUG (0, "PTS = %" G_GUINT64_FORMAT ", DTS = %" G_GUINT64_FORMAT, pts, dts);
+            GST_DEBUG ("PTS = %" G_GUINT64_FORMAT ", DTS = %" G_GUINT64_FORMAT, pts, dts);
             headerlen += 10;
 	    goto done;
 	  case 0x00:
-            GST_DEBUG (0, "have no pts/dts");
-            GST_DEBUG (0, "got trailer bits %x", (bits & 0x0f));
+            GST_DEBUG ("have no pts/dts");
+            GST_DEBUG ("got trailer bits %x", (bits & 0x0f));
             if ((bits & 0x0f) != 0xf) {
-              GST_DEBUG (0, "not a valid packet time sequence");
+              GST_DEBUG ("not a valid packet time sequence");
     	      return FALSE;
             }
             headerlen++;
@@ -599,13 +602,13 @@ gst_mpeg_demux_parse_packet (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 	goto done;
     } 
   } while (1);
-  GST_DEBUG (0, "done with header loop");
+  GST_DEBUG ("done with header loop");
 
 done:
 
   /* calculate the amount of real data in this packet */
   datalen = packet_length - headerlen+2;
-  GST_DEBUG (0, "headerlen is %d, datalen is %d",
+  GST_DEBUG ("headerlen is %d, datalen is %d",
         headerlen,datalen);
 
   if (id == 0xBD) {
@@ -615,7 +618,7 @@ done:
 
     if (ps_id_code >= 0x80 && ps_id_code <= 0x87) {
       /* make sure it's valid */
-      GST_DEBUG (0, "0x%02X: we have a private_stream_1 (AC3) packet, track %d",
+      GST_DEBUG ("0x%02X: we have a private_stream_1 (AC3) packet, track %d",
                  id, ps_id_code - 0x80);
       outstream = &mpeg_demux->private_1_stream[ps_id_code - 0x80];
       /* scrap first 4 bytes (so-called "mystery AC3 tag") */
@@ -624,21 +627,21 @@ done:
     }
   } else if (id == 0xBF) {
     /* private_stream_2 */
-    GST_DEBUG (0, "0x%02X: we have a private_stream_2 packet", id);
+    GST_DEBUG ("0x%02X: we have a private_stream_2 packet", id);
     outstream = &mpeg_demux->private_2_stream;
   } else if (id >= 0xC0 && id <= 0xDF) {
     /* audio */
-    GST_DEBUG (0, "0x%02X: we have an audio packet", id);
+    GST_DEBUG ("0x%02X: we have an audio packet", id);
     outstream = &mpeg_demux->audio_stream[id & 0x1F];
   } else if (id >= 0xE0 && id <= 0xEF) {
     /* video */
-    GST_DEBUG (0, "0x%02X: we have a video packet", id);
+    GST_DEBUG ("0x%02X: we have a video packet", id);
     outstream = &mpeg_demux->video_stream[id & 0x0F];
   }
 
   /* if we don't know what it is, bail */
   if (outstream == NULL) {
-    GST_DEBUG (0, "unknown packet id 0x%02X !!", id);
+    GST_DEBUG ("unknown packet id 0x%02X !!", id);
     return FALSE;
   }
 
@@ -646,7 +649,7 @@ done:
 
   /* the pad should have been created in parse_syshead */
   if (outpad == NULL) {
-    GST_DEBUG (0, "unexpected packet id 0x%02X!!", id);
+    GST_DEBUG ("unexpected packet id 0x%02X!!", id);
     return FALSE;
   }
 
@@ -669,7 +672,7 @@ done:
 
   /* create the buffer and send it off to the Other Side */
   if (GST_PAD_IS_LINKED (outpad) && datalen > 0) {
-    GST_DEBUG (0, "creating subbuffer len %d", datalen);
+    GST_DEBUG ("creating subbuffer len %d", datalen);
 
     /* if this is part of the buffer, create a subbuffer */
     outbuf = gst_buffer_create_sub (buffer, headerlen + 4, datalen);
@@ -677,7 +680,7 @@ done:
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
     GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer) + headerlen + 4;
 
-    GST_DEBUG (0, "pushing buffer of len %d id %d, ts %" G_GINT64_FORMAT, 
+    GST_DEBUG ("pushing buffer of len %d id %d, ts %" G_GINT64_FORMAT, 
 		    datalen, id, GST_BUFFER_TIMESTAMP (outbuf));
 
     gst_pad_push (outpad, outbuf);
@@ -706,7 +709,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   GstPadTemplate *newtemp = NULL;
   guint8 *buf, *basebuf;
 
-  GST_DEBUG (0, "in parse_pes");
+  GST_DEBUG ("in parse_pes");
 
   basebuf = buf = GST_BUFFER_DATA (buffer);
   id = *(buf+3);
@@ -715,7 +718,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   /* start parsing */
   packet_length = GUINT16_FROM_BE (*((guint16 *)buf));
 
-  GST_DEBUG (0, "got packet_length %d", packet_length);
+  GST_DEBUG ("got packet_length %d", packet_length);
   buf += 2;
 
   /* we don't operate on: program_stream_map, padding_stream, */
@@ -732,7 +735,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 
     header_data_length = *buf++;
 
-    GST_DEBUG (0, "header_data_length is %d",header_data_length);
+    GST_DEBUG ("header_data_length is %d",header_data_length);
 
     /* check for PTS */
     if ((flags2 & 0x80)) {
@@ -743,16 +746,16 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       pts |=  *buf++         <<  7;
       pts |= (*buf++ & 0xFE) >>  1;
 
-      GST_DEBUG (0, "%x PTS = %" G_GUINT64_FORMAT, 
+      GST_DEBUG ("%x PTS = %" G_GUINT64_FORMAT, 
 		      id, MPEGTIME_TO_GSTTIME (pts));
 
     }
     if ((flags2 & 0x40)) {
-      GST_DEBUG (0, "%x DTS found", id);
+      GST_DEBUG ("%x DTS found", id);
       buf += 5;
     }
     if ((flags2 & 0x20)) {
-      GST_DEBUG (0, "%x ESCR found", id);
+      GST_DEBUG ("%x ESCR found", id);
       buf += 6;
     }
     if ((flags2 & 0x10)) {
@@ -761,7 +764,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       es_rate  = (*buf++ & 0x07) << 14;
       es_rate |= (*buf++       ) << 7;
       es_rate |= (*buf++ & 0xFE) >> 1;
-      GST_DEBUG (0, "%x ES Rate found", id);
+      GST_DEBUG ("%x ES Rate found", id);
     }
     /* FIXME: lots of PES parsing missing here... */
 
@@ -772,7 +775,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   headerlen = 5 + header_data_length;
   /* constant is 2 bytes of bits, 1 byte header len */
   datalen = packet_length - (3 + header_data_length);
-  GST_DEBUG (0, "headerlen is %d, datalen is %d",
+  GST_DEBUG ("headerlen is %d, datalen is %d",
         headerlen, datalen);
 
   if (id == 0xBD) {
@@ -781,14 +784,14 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     ps_id_code = *(basebuf + headerlen + 4);
 
     if (ps_id_code >= 0x80 && ps_id_code <= 0x87) {
-      GST_DEBUG (0, "we have a private_stream_1 (AC3) packet, track %d",
+      GST_DEBUG ("we have a private_stream_1 (AC3) packet, track %d",
                  ps_id_code - 0x80);
       outstream = &mpeg_demux->private_1_stream[ps_id_code - 0x80];
       /* scrap first 4 bytes (so-called "mystery AC3 tag") */
       headerlen += 4;
       datalen -= 4;
     } else if (ps_id_code >= 0xA0 && ps_id_code <= 0xA7) {
-      GST_DEBUG (0, "we have a pcm_stream packet, track %d",
+      GST_DEBUG ("we have a pcm_stream packet, track %d",
                  ps_id_code - 0xA0);
       outstream = &mpeg_demux->pcm_stream[ps_id_code - 0xA0];
 
@@ -808,29 +811,29 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       headerlen += 7;
       datalen -= 7;
     } else if (ps_id_code >= 0x20 && ps_id_code <= 0x2F) {
-      GST_DEBUG (0, "we have a subtitle_stream packet, track %d",
+      GST_DEBUG ("we have a subtitle_stream packet, track %d",
                  ps_id_code - 0x20);
       outstream = &mpeg_demux->subtitle_stream[ps_id_code - 0x20];
       headerlen += 1;
       datalen -= 1;
     } else {
-      GST_DEBUG (0, "0x%02X: unkonwn id %x",
+      GST_DEBUG ("0x%02X: unkonwn id %x",
                  id, ps_id_code);
     }
   } else if (id == 0xBF) {
     /* private_stream_2 */
-    GST_DEBUG (0, "we have a private_stream_2 packet");
+    GST_DEBUG ("we have a private_stream_2 packet");
     outstream = &mpeg_demux->private_2_stream;
   } else if (id >= 0xC0 && id <= 0xDF) {
     /* audio */
-    GST_DEBUG (0, "we have an audio packet");
+    GST_DEBUG ("we have an audio packet");
     outstream = &mpeg_demux->audio_stream[id - 0xC0];
   } else if (id >= 0xE0 && id <= 0xEF) {
     /* video */
-    GST_DEBUG (0, "we have a video packet");
+    GST_DEBUG ("we have a video packet");
     outstream = &mpeg_demux->video_stream[id - 0xE0];
   } else {
-    GST_DEBUG (0, "we have a unkown packet");
+    GST_DEBUG ("we have a unkown packet");
   }
 
   /* if we don't know what it is, bail */
@@ -947,7 +950,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     /* create the buffer and send it off to the Other Side */
     if (*outpad && GST_PAD_IS_USABLE(*outpad)) {
       /* if this is part of the buffer, create a subbuffer */
-      GST_DEBUG (0,"creating subbuffer len %d", datalen);
+      GST_DEBUG ("creating subbuffer len %d", datalen);
 
       outbuf = gst_buffer_create_sub (buffer, headerlen+4, datalen);
 
@@ -1081,7 +1084,7 @@ normal_seek (GstPad *pad, GstEvent *event, gint64 *offset)
   res = gst_pad_convert (pad, GST_FORMAT_BYTES, mpeg_demux->total_size_bound,
 		         &format, &adjust);
 
-  GST_DEBUG (0, "seek adjusted from %" G_GINT64_FORMAT " bytes to %" G_GINT64_FORMAT "\n", mpeg_demux->total_size_bound, adjust);
+  GST_DEBUG ("seek adjusted from %" G_GINT64_FORMAT " bytes to %" G_GINT64_FORMAT "\n", mpeg_demux->total_size_bound, adjust);
 
   if (res) 
     *offset = MAX (GST_EVENT_SEEK_OFFSET (event) - adjust, 0);

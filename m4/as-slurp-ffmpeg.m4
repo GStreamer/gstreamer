@@ -18,6 +18,7 @@ dnl a date spec)
 AC_DEFUN(AS_SLURP_FFMPEG,
 [
   # save original dir
+  FAILED=""
   DIRECTORY=`pwd`
   # get/update cvs
   if test ! -d $1; then mkdir -p $1; fi
@@ -27,18 +28,17 @@ AC_DEFUN(AS_SLURP_FFMPEG,
     # check out cvs code
     AC_MSG_NOTICE(checking out ffmpeg cvs code from $2 into $1)
     cvs -Q -d:pserver:anonymous@cvs.ffmpeg.sourceforge.net:/cvsroot/ffmpeg co -D '$2' ffmpeg || FAILED=yes
-    cd ffmpeg
+    echo "$2" > Tag
   else
     # compare against Tag file and see if it needs updating
-    if diff -q Tag ffmpeg/CVS/Tag > /dev/null 2> /dev/null
-    then
-      # diff returned no problem
+    if test "`cat Tag`" == "$2"; then
       AC_MSG_NOTICE(ffmpeg cvs code in sync)
     else
-      # diff says they differ
       cd ffmpeg 
-      AC_MSG_NOTICE(updating ffmpeg cvs code)
+      AC_MSG_NOTICE(updating ffmpeg cvs code to $2)
       cvs -Q update -dP -D '$2' || FAILED=yes
+      cd ..
+      echo "$2" > Tag
     fi
   fi
   

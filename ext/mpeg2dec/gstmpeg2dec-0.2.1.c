@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 
 #include <inttypes.h>
@@ -218,7 +221,7 @@ gst_mpeg2dec_vo_frame_draw (vo_frame_t * frame)
 
   GST_BUFFER_TIMESTAMP (_frame->buffer) = pts;
 
-  GST_DEBUG (0, "out: %lld %d %lld", GST_BUFFER_TIMESTAMP (_frame->buffer),
+  GST_DEBUG ("out: %lld %d %lld", GST_BUFFER_TIMESTAMP (_frame->buffer),
 		  mpeg2dec->decoder->frame_rate_code,
                   (long long)(GST_SECOND / video_rates[mpeg2dec->decoder->frame_rate_code]));
 
@@ -240,7 +243,7 @@ gst_mpeg2dec_vo_setup (vo_instance_t * instance, int width, int height)
 
   g_return_val_if_fail (instance != NULL, -1);
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "VO: setup w=%d h=%d", width, height);
+  GST_INFO ( "VO: setup w=%d h=%d", width, height);
 
   _instance = (gst_mpeg2dec_vo_instance_t*)instance;
   mpeg2dec = _instance->mpeg2dec;
@@ -269,7 +272,7 @@ gst_mpeg2dec_vo_close (vo_instance_t * instance)
 {
   gst_mpeg2dec_vo_instance_t * _instance;
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "VO: close");
+  GST_INFO ( "VO: close");
 
   _instance = (gst_mpeg2dec_vo_instance_t*)instance;
   /* FIXME */
@@ -286,7 +289,7 @@ gst_mpeg2dec_vo_get_frame (vo_instance_t * instance, int flags)
 
   g_return_val_if_fail (instance != NULL, NULL);
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "VO: get_frame");
+  GST_INFO ( "VO: get_frame");
 
   _instance = (gst_mpeg2dec_vo_instance_t *)instance;
 
@@ -349,7 +352,7 @@ gst_mpeg2dec_vo_open (GstMpeg2dec *mpeg2dec)
   gst_mpeg2dec_vo_instance_t * instance;
   gint i,j;
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "VO: open");
+  GST_INFO ( "VO: open");
 
   instance = g_new (gst_mpeg2dec_vo_instance_t, 1);
   
@@ -378,7 +381,7 @@ gst_mpeg2dec_vo_destroy (GstMpeg2dec *mpeg2dec)
   gst_mpeg2dec_vo_instance_t * instance;
   gint i;
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "VO: destroy");
+  GST_INFO ( "VO: destroy");
 
   instance = (gst_mpeg2dec_vo_instance_t *) mpeg2dec->vo;
   
@@ -439,7 +442,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
   guint num_frames;
   gint64 pts;
 
-  GST_DEBUG (0, "MPEG2DEC: chain called");
+  GST_DEBUG ("MPEG2DEC: chain called");
 
   if (GST_IS_EVENT (buf)) {
     GstEvent *event = GST_EVENT (buf);
@@ -449,7 +452,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
       {
 	//gint64 value = GST_EVENT_DISCONT_OFFSET (event, 0).value;
 	//mpeg2dec->decoder->is_sequence_needed = 1;
-	GST_DEBUG (GST_CAT_EVENT, "mpeg2dec: discont\n"); 
+	GST_DEBUG ("mpeg2dec: discont\n"); 
         mpeg2dec->first = TRUE;
         mpeg2dec->frames_per_PTS = 0;
         mpeg2dec->last_PTS = -1;
@@ -484,7 +487,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
      * - if the PTS and our own counter are adrift bu more than 10 frames, we assume
      *   a discontinuity in the PTS and adjust our own counter.
      */
-  GST_DEBUG (GST_CAT_CLOCK, "mpeg2dec: pts %llu\n", pts);
+  GST_DEBUG ("mpeg2dec: pts %llu\n", pts);
   if (!mpeg2dec->first) {
     if (mpeg2dec->last_PTS < pts) {
 
@@ -801,7 +804,7 @@ gst_mpeg2dec_change_state (GstElement *element)
       /* try to get a bufferpool */
       mpeg2dec->peerpool = gst_pad_get_bufferpool (mpeg2dec->srcpad);
       if (mpeg2dec->peerpool)
-        GST_INFO (GST_CAT_PLUGIN_INFO, "got pool %p", mpeg2dec->peerpool);
+        GST_INFO ( "got pool %p", mpeg2dec->peerpool);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       /* need to clear things we get from other plugins, since we could be reconnected */

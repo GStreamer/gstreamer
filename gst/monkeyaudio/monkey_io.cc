@@ -76,7 +76,7 @@ int sinkpad_CIO::Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * 
 
       switch (GST_EVENT_TYPE (event)) {
         case GST_EVENT_EOS:
-          GST_DEBUG (0, "eos");
+          GST_DEBUG ("eos");
           eos = TRUE; 
 	        gst_event_unref (event);
           if (avail == 0) {
@@ -84,7 +84,7 @@ int sinkpad_CIO::Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * 
           }
           break;
         case GST_EVENT_DISCONTINUOUS:
-          GST_DEBUG (0, "discont");
+          GST_DEBUG ("discont");
    	      /* we are not yet sending the discont, we'll do that in the next write operation */
 	        need_discont = TRUE;
 	        gst_event_unref (event);

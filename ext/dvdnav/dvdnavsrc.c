@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -847,14 +850,14 @@ dvdnavsrc_get (GstPad *pad)
     GstEvent *event;
 
     src->did_seek = FALSE;
-    GST_DEBUG (GST_CAT_EVENT, "dvdnavsrc sending discont");
+    GST_DEBUG ("dvdnavsrc sending discont");
     event = gst_event_new_discontinuous (FALSE, 0);
     src->need_flush = FALSE;
     return GST_BUFFER (event);
   }
   if (src->need_flush) {
     src->need_flush = FALSE;
-    GST_DEBUG (GST_CAT_EVENT, "dvdnavsrc sending flush");
+    GST_DEBUG ("dvdnavsrc sending flush");
     return GST_BUFFER (gst_event_new_flush());
   }
 
@@ -896,7 +899,7 @@ dvdnavsrc_get (GstPad *pad)
         }
         break;
       case DVDNAV_STOP:
-        GST_DEBUG (GST_CAT_EVENT, "dvdnavsrc sending eos");
+        GST_DEBUG ("dvdnavsrc sending eos");
         gst_element_set_eos (GST_ELEMENT (src));
         dvdnavsrc_close(src);
         buf = GST_BUFFER (gst_event_new (GST_EVENT_EOS));

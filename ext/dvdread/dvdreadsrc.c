@@ -35,6 +35,9 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -745,7 +748,7 @@ dvdreadsrc_change_state (GstElement *element)
 {
   g_return_val_if_fail (GST_IS_DVDREADSRC (element), GST_STATE_FAILURE);
 
-  GST_DEBUG (0,"gstdvdreadsrc: state pending %d", GST_STATE_PENDING (element));
+  GST_DEBUG ("gstdvdreadsrc: state pending %d", GST_STATE_PENDING (element));
 
   /* if going down into NULL state, close the file if it's open */
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {

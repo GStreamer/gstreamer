@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gst/gst.h>
 
 #include <string.h>
@@ -1178,14 +1181,14 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	                          mad->stream.bufend - mad->stream.this_frame);
 
 	  if (tagsize > mad->tempsize) {
-            GST_INFO (GST_CAT_PLUGIN_INFO,
+            GST_INFO (
 		      "mad: got partial id3 tag in buffer, skipping");
 	  }
 	  else if (tagsize > 0) {
 	    struct id3_tag *tag;
 	    id3_byte_t const *data;
 
-            GST_INFO (GST_CAT_PLUGIN_INFO,
+            GST_INFO (
 		      "mad: got ID3 tag size %ld", tagsize);
 
 	    data = mad->stream.this_frame;

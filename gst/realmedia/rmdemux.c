@@ -18,6 +18,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "rmdemux.h"
 
 #include <string.h>
@@ -251,7 +254,7 @@ static gboolean gst_rmdemux_handle_sink_event (GstRMDemux *rmdemux)
   gst_bytestream_get_status(rmdemux->bs, &remaining, &event);
 
   type = event ? GST_EVENT_TYPE(event) : GST_EVENT_UNKNOWN;
-  GST_DEBUG(0,"rmdemux: event %p %d", event, type);
+  GST_DEBUG ("rmdemux: event %p %d", event, type);
 
   switch(type){
     case GST_EVENT_EOS:
@@ -262,7 +265,7 @@ static gboolean gst_rmdemux_handle_sink_event (GstRMDemux *rmdemux)
       g_warning("flush event");
       break;
     case GST_EVENT_DISCONTINUOUS:
-      GST_DEBUG(0,"discontinuous event\n");
+      GST_DEBUG ("discontinuous event\n");
       //gst_bytestream_flush_fast(rmdemux->bs, remaining);
       break;
     default:
@@ -320,7 +323,7 @@ static void gst_rmdemux_loop (GstElement *element)
   //cur_offset = gst_bytestream_tell(rmdemux->bs);
   
   cur_offset = rmdemux->offset;
-  GST_DEBUG(0,"loop at position %d, state %d",cur_offset, rmdemux->state);
+  GST_DEBUG ("loop at position %d, state %d",cur_offset, rmdemux->state);
 
   if(rmdemux->length == 0){
     rmdemux->length = gst_bytestream_length(rmdemux->bs);
@@ -491,14 +494,14 @@ static GstCaps *gst_rmdemux_src_getcaps(GstPad *pad, GstCaps *caps)
   GstRMDemuxStream *stream;
   int i;
 
-  GST_DEBUG(0,"gst_rmdemux_src_getcaps");
+  GST_DEBUG ("gst_rmdemux_src_getcaps");
 
   rmdemux = GST_RMDEMUX(gst_pad_get_parent(pad));
 
   g_return_val_if_fail(GST_IS_RMDEMUX(rmdemux), NULL);
 
-  GST_DEBUG(0, "looking for pad %p in rmdemux %p", pad, rmdemux);
-  GST_DEBUG(0, "n_streams is %d", rmdemux->n_streams);
+  GST_DEBUG ("looking for pad %p in rmdemux %p", pad, rmdemux);
+  GST_DEBUG ("n_streams is %d", rmdemux->n_streams);
   for(i=0;i<rmdemux->n_streams;i++){
     stream = rmdemux->streams[i];
     if(stream->pad == pad){
@@ -506,7 +509,7 @@ static GstCaps *gst_rmdemux_src_getcaps(GstPad *pad, GstCaps *caps)
     }
   }
 
-  GST_DEBUG(0,"Couldn't find stream cooresponding to pad\n");
+  GST_DEBUG ("Couldn't find stream cooresponding to pad\n");
 
   return NULL;
 }
@@ -518,23 +521,23 @@ gst_rmdemux_src_link(GstPad *pad, GstCaps *caps)
   GstRMDemuxStream *stream;
   int i;
 
-  GST_DEBUG(0,"gst_rmdemux_src_link");
+  GST_DEBUG ("gst_rmdemux_src_link");
 
   rmdemux = GST_RMDEMUX(gst_pad_get_parent(pad));
 
-  GST_DEBUG(0, "looking for pad %p in rmdemux %p", pad, rmdemux);
+  GST_DEBUG ("looking for pad %p in rmdemux %p", pad, rmdemux);
   g_return_val_if_fail(GST_IS_RMDEMUX(rmdemux), GST_PAD_LINK_REFUSED);
 
-  GST_DEBUG(0, "n_streams is %d\n", rmdemux->n_streams);
+  GST_DEBUG ("n_streams is %d\n", rmdemux->n_streams);
   for(i=0;i<rmdemux->n_streams;i++){
     stream = rmdemux->streams[i];
-    GST_DEBUG(0, "pad[%d] is %p\n", i, stream->pad);
+    GST_DEBUG ("pad[%d] is %p\n", i, stream->pad);
     if(stream->pad == pad){
       return GST_PAD_LINK_OK;
     }
   }
 
-  GST_DEBUG(0,"Couldn't find stream cooresponding to pad\n");
+  GST_DEBUG ("Couldn't find stream cooresponding to pad\n");
 
   return GST_PAD_LINK_REFUSED;
 }

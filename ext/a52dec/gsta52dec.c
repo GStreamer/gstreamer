@@ -18,6 +18,9 @@
  */
 
 #ifdef HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "config.h"
 #endif
 
@@ -365,7 +368,7 @@ gst_a52dec_push (GstPad * srcpad, int flags, sample_t * _samples, gint64 timesta
 static void
 gst_a52dec_reneg (GstPad * pad, int channels, int rate)
 {
-  GST_INFO (GST_CAT_PLUGIN_INFO, "a52dec: reneg channels:%d rate:%d\n", channels, rate);
+  GST_INFO ( "a52dec: reneg channels:%d rate:%d\n", channels, rate);
 
   if (gst_pad_try_set_caps (pad, 
 		  GST_CAPS_NEW ("a52dec_src_caps",
@@ -503,7 +506,7 @@ gst_a52dec_loop (GstElement *element)
   }
 
   if (need_reneg == TRUE) {
-    GST_DEBUG (0, "a52dec reneg: sample_rate:%d stream_chans:%d using_chans:%d\n",
+    GST_DEBUG ("a52dec reneg: sample_rate:%d stream_chans:%d using_chans:%d\n",
         a52dec->sample_rate, a52dec->stream_channels, a52dec->using_channels);
     gst_a52dec_reneg (a52dec->srcpad,
         gst_a52dec_channels (a52dec->using_channels), a52dec->sample_rate);

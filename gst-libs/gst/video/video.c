@@ -43,7 +43,7 @@ gst_video_frame_rate (GstPad *pad)
 
   fps = ((gdouble) dest_value) / NUM_UNITS;
 
-  GST_DEBUG(GST_CAT_ELEMENT_PADS, "Framerate request on pad %s:%s - %f fps",
+  GST_DEBUG ("Framerate request on pad %s:%s - %f fps",
             GST_ELEMENT_NAME(gst_pad_get_parent (pad)), GST_PAD_NAME(pad), fps);
 
   return fps;
@@ -75,7 +75,7 @@ gst_video_get_size (GstPad *pad,
   if (height)
     gst_caps_get_int(caps, "height", height);
 
-  GST_DEBUG(GST_CAT_ELEMENT_PADS, "size request on pad %s:%s: %dx%d",
+  GST_DEBUG ("size request on pad %s:%s: %dx%d",
 	    GST_ELEMENT_NAME(gst_pad_get_parent (pad)), GST_PAD_NAME(pad),
             width?*width:0, height?*height:0);
 

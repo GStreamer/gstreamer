@@ -18,6 +18,9 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "gstasfdemux.h"
 #include "asfheaders.h"
 
@@ -410,7 +413,7 @@ gst_asf_demux_loop (GstElement *element)
 
   /* this is basically an infinite loop */
   while (gst_asf_demux_process_object (asf_demux, &filepos)) { }
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "Ending loop");
+  GST_DEBUG ("Ending loop");
   if (!asf_demux->restart) {
     /* if we exit the loop we are EOS */
     gst_pad_event_default (asf_demux->sinkpad, gst_event_new (GST_EVENT_EOS));
@@ -487,7 +490,7 @@ gst_asf_demux_process_file (GstASFDemux *asf_demux, guint64 *filepos, guint64 *o
   asf_demux->play_time = (guint32) GUINT64_FROM_LE (object->play_time) / 10;
   asf_demux->preroll = GUINT64_FROM_LE (object->preroll);
   
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Object is a file with %" G_GUINT64_FORMAT " data packets", packets);
+  GST_INFO ( "Object is a file with %" G_GUINT64_FORMAT " data packets", packets);
 
   return TRUE;
 }
@@ -505,7 +508,7 @@ gst_asf_demux_process_bitrate_props_object (GstASFDemux *asf_demux, guint64 *fil
   got_bytes = gst_bytestream_read (asf_demux->bs, &buf, 2);
   num_streams = GUINT16_FROM_LE (*GST_BUFFER_DATA (buf));
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Object is a bitrate properties object with %u streams.", num_streams);
+  GST_INFO ( "Object is a bitrate properties object with %u streams.", num_streams);
 
   for (i = 0; i < num_streams; i++) {
     gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&bitrate_record, 6);
@@ -527,7 +530,7 @@ gst_asf_demux_process_comment (GstASFDemux *asf_demux, guint64 *filepos, guint64
   guint16 rating_length;
   GstByteStream *bs = asf_demux->bs;
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Object is a comment.");  
+  GST_INFO ( "Object is a comment.");  
 
   /* Get the rest of the comment's header */
   gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&object, 10);
@@ -536,7 +539,7 @@ gst_asf_demux_process_comment (GstASFDemux *asf_demux, guint64 *filepos, guint64
   copyright_length = GUINT16_FROM_LE (object->copyright_length);
   description_length = GUINT16_FROM_LE (object->description_length);
   rating_length = GUINT16_FROM_LE (object->rating_length);
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "Comment lengths: title=%d author=%d copyright=%d description=%d rating=%d", title_length, author_length, copyright_length, description_length, rating_length); 
+  GST_DEBUG ("Comment lengths: title=%d author=%d copyright=%d description=%d rating=%d", title_length, author_length, copyright_length, description_length, rating_length); 
 
   /* We don't do anything with them at the moment so just skip them */
   gst_bytestream_flush (bs, title_length);
@@ -561,7 +564,7 @@ gst_asf_demux_process_header (GstASFDemux *asf_demux, guint64 *filepos, guint64 
   gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&object, 6);
   num_objects = GUINT32_FROM_LE (object->num_objects);
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Object is a header with %u parts", num_objects);  
+  GST_INFO ( "Object is a header with %u parts", num_objects);  
 
   /* Loop through the header's objects, processing those */  
   for (i = 0; i < num_objects; i++) {
@@ -590,11 +593,11 @@ gst_asf_demux_process_segment (GstASFDemux       *asf_demux,
   segment_info.stream_number = *byte & 0x7f;
   key_frame = (*byte & 0x80) >> 7;
   
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Processing segment for stream %u", segment_info.stream_number);
+  GST_INFO ( "Processing segment for stream %u", segment_info.stream_number);
   segment_info.sequence = gst_asf_demux_read_var_length (asf_demux, packet_info->seqtype, &rsize);
   segment_info.frag_offset = gst_asf_demux_read_var_length (asf_demux, packet_info->fragoffsettype, &rsize);
   replic_size = gst_asf_demux_read_var_length (asf_demux, packet_info->replicsizetype, &rsize);
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "sequence = %x, frag_offset = %x, replic_size = %x", segment_info.sequence, segment_info.frag_offset, replic_size);
+  GST_DEBUG ("sequence = %x, frag_offset = %x, replic_size = %x", segment_info.sequence, segment_info.frag_offset, replic_size);
   
   if (replic_size > 1) {
     asf_replicated_data *replicated_data_header;
@@ -622,7 +625,7 @@ gst_asf_demux_process_segment (GstASFDemux       *asf_demux,
       segment_info.compressed = TRUE;
       gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&byte, 1); rsize++;
       time_delta = *byte;
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "time_delta %u", time_delta);
+      GST_DEBUG ("time_delta %u", time_delta);
     } else {
       segment_info.compressed = FALSE;
     }
@@ -632,7 +635,7 @@ gst_asf_demux_process_segment (GstASFDemux       *asf_demux,
     segment_info.frag_timestamp = asf_demux->timestamp;
   }
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "multiple = %u compressed = %u", packet_info->multiple, segment_info.compressed);
+  GST_DEBUG ("multiple = %u compressed = %u", packet_info->multiple, segment_info.compressed);
 
   if (packet_info->multiple) {
     frag_size = gst_asf_demux_read_var_length (asf_demux, packet_info->segsizetype, &rsize);
@@ -642,7 +645,7 @@ gst_asf_demux_process_segment (GstASFDemux       *asf_demux,
 
   packet_info->size_left -= rsize;
   
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "size left = %u frag size = %u rsize = %u", packet_info->size_left, frag_size, rsize);
+  GST_DEBUG ("size left = %u frag size = %u rsize = %u", packet_info->size_left, frag_size, rsize);
 
   if (segment_info.compressed) {
     while (frag_size > 0) {
@@ -692,10 +695,10 @@ gst_asf_demux_process_data (GstASFDemux *asf_demux, guint64 *filepos, guint64 *o
   gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&object, 26);
   packets = GUINT64_FROM_LE (object->packets);
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Object is data with %" G_GUINT64_FORMAT " packets", packets); 
+  GST_INFO ( "Object is data with %" G_GUINT64_FORMAT " packets", packets); 
 
   for (packet = 0; packet < packets; packet++) {
-    GST_INFO (GST_CAT_PLUGIN_INFO, "\n\nProcess packet %" G_GUINT64_FORMAT, packet);
+    GST_INFO ( "\n\nProcess packet %" G_GUINT64_FORMAT, packet);
     
     gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&buf, 1); rsize=1;
     if (*buf & 0x80) {
@@ -703,7 +706,7 @@ gst_asf_demux_process_data (GstASFDemux *asf_demux, guint64 *filepos, guint64 *o
       
       /* Uses error correction */
       correction = TRUE;
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "Data has error correction (%x)", *buf);
+      GST_DEBUG ("Data has error correction (%x)", *buf);
       gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&correction_object, 2); rsize += 2;
     }
     
@@ -721,7 +724,7 @@ gst_asf_demux_process_data (GstASFDemux *asf_demux, guint64 *filepos, guint64 *o
     if (packet_length == 0)
       packet_length = asf_demux->packet_size;
     
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "Multiple = %u, Sequence = %u, Padsize = %u, Packet length = %u", packet_info.multiple, sequence, packet_info.padsize, packet_length);
+    GST_DEBUG ("Multiple = %u, Sequence = %u, Padsize = %u, Packet length = %u", packet_info.multiple, sequence, packet_info.padsize, packet_length);
     
     /* Read the property flags */
     packet_info.replicsizetype = property & 0x03;
@@ -734,7 +737,7 @@ gst_asf_demux_process_data (GstASFDemux *asf_demux, guint64 *filepos, guint64 *o
     
     rsize += 6;
     
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "Timestamp = %x, Duration = %x", asf_demux->timestamp, *duration);
+    GST_DEBUG ("Timestamp = %x, Duration = %x", asf_demux->timestamp, *duration);
     
     if (packet_info.multiple) {
       /* There are multiple payloads */
@@ -749,7 +752,7 @@ gst_asf_demux_process_data (GstASFDemux *asf_demux, guint64 *filepos, guint64 *o
     
     packet_info.size_left = packet_length - packet_info.padsize - rsize;
 
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "rsize: %u size left: %u", rsize, packet_info.size_left);
+    GST_DEBUG ("rsize: %u size left: %u", rsize, packet_info.size_left);
     
     for (segment = 0; segment < segments; segment++) {
       if (!gst_asf_demux_process_segment (asf_demux, &packet_info))
@@ -761,7 +764,7 @@ gst_asf_demux_process_data (GstASFDemux *asf_demux, guint64 *filepos, guint64 *o
       gst_bytestream_flush (asf_demux->bs, packet_info.padsize);
       
 
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "Remaining size left: %u", packet_info.size_left);
+    GST_DEBUG ("Remaining size left: %u", packet_info.size_left);
     
     if (packet_info.size_left > 0)
       gst_bytestream_flush (asf_demux->bs, packet_info.size_left);
@@ -799,21 +802,21 @@ gst_asf_demux_process_stream (GstASFDemux *asf_demux, guint64 *filepos, guint64 
     gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&audio_object, 18);
     size = GUINT16_FROM_LE (audio_object->size);
 
-    GST_INFO (GST_CAT_PLUGIN_INFO, "Object is an audio stream with %u bytes of additional data.", size);
+    GST_INFO ( "Object is an audio stream with %u bytes of additional data.", size);
 
     if (!gst_asf_demux_add_audio_stream (asf_demux, audio_object, id))
       return FALSE;
 
     switch (correction) {
     case ASF_CORRECTION_ON:
-      GST_INFO (GST_CAT_PLUGIN_INFO, "Using error correction");
+      GST_INFO ( "Using error correction");
 
       /* Have to read the first byte seperately to avoid endian problems */
       got_bytes = gst_bytestream_read (asf_demux->bs, &buf, 1);
       asf_demux->span = *GST_BUFFER_DATA (buf);
 
       gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&correction_object, 7);
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "Descrambling: ps:%d cs:%d ds:%d s:%d sd:%d", GUINT16_FROM_LE(correction_object->packet_size), GUINT16_FROM_LE(correction_object->chunk_size), GUINT16_FROM_LE(correction_object->data_size), asf_demux->span, correction_object->silence_data);
+      GST_DEBUG ("Descrambling: ps:%d cs:%d ds:%d s:%d sd:%d", GUINT16_FROM_LE(correction_object->packet_size), GUINT16_FROM_LE(correction_object->chunk_size), GUINT16_FROM_LE(correction_object->data_size), asf_demux->span, correction_object->silence_data);
 
       if (asf_demux->span > 1) {
 	if (!correction_object->chunk_size || ((correction_object->packet_size / correction_object->chunk_size) <= 1))
@@ -843,7 +846,7 @@ gst_asf_demux_process_stream (GstASFDemux *asf_demux, guint64 *filepos, guint64 
     size = GUINT16_FROM_BE(video_object->size) - 40; /* Byte order gets 
 						      * offset by single 
 						      * byte */
-    GST_INFO (GST_CAT_PLUGIN_INFO, "Object is a video stream with %u bytes of additional data.", size);
+    GST_INFO ( "Object is a video stream with %u bytes of additional data.", size);
     gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&video_format_object, 40);
 
     if (!gst_asf_demux_add_video_stream (asf_demux, video_format_object, id))
@@ -877,7 +880,7 @@ gst_asf_demux_skip_object (GstASFDemux *asf_demux, guint64 *filepos, guint64 *ob
 {
   GstByteStream *bs = asf_demux->bs;
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Skipping object...");
+  GST_INFO ( "Skipping object...");
 
   gst_bytestream_flush (bs, *obj_size - 24);
 
@@ -910,7 +913,7 @@ gst_asf_demux_read_object_header (GstASFDemux *asf_demux, guint32 *obj_id, guint
   gst_bytestream_flush (bs, sizeof (ASFGuid));
 
   if (*obj_id == ASF_OBJ_UNDEFINED) {
-    GST_INFO (GST_CAT_PLUGIN_INFO, "Object found with unknown GUID %08x %08x %08x %08x", guid->v1, guid->v2, guid->v3, guid->v4);
+    GST_INFO ( "Object found with unknown GUID %08x %08x %08x %08x", guid->v1, guid->v2, guid->v3, guid->v4);
     gst_element_error (GST_ELEMENT (asf_demux), "Could not identify object");
     return FALSE;
   }
@@ -945,7 +948,7 @@ gst_asf_demux_process_object    (GstASFDemux *asf_demux,
     return FALSE;
   }
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Found object %u with size %" G_GUINT64_FORMAT, obj_id, obj_size);
+  GST_INFO ( "Found object %u with size %" G_GUINT64_FORMAT, obj_id, obj_size);
 
   switch (obj_id) {
   case ASF_OBJ_STREAM:
@@ -1057,26 +1060,26 @@ gst_asf_demux_process_chunk (GstASFDemux *asf_demux,
   if (!(stream = gst_asf_demux_get_stream (asf_demux, segment_info->stream_number)))
     return FALSE;
   
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "Processing chunk of size %u (fo = %d)", segment_info->chunk_size, stream->frag_offset);
+  GST_DEBUG ("Processing chunk of size %u (fo = %d)", segment_info->chunk_size, stream->frag_offset);
   
   if (stream->frag_offset == 0) {
     /* new packet */
     stream->sequence = segment_info->sequence;
     asf_demux->pts = segment_info->frag_timestamp - asf_demux->preroll;
     got_bytes = gst_bytestream_peek (bs, &buffer, segment_info->chunk_size);
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "BUFFER: Copied stream to buffer (%p - %d)", buffer, GST_BUFFER_REFCOUNT_VALUE(buffer));
+    GST_DEBUG ("BUFFER: Copied stream to buffer (%p - %d)", buffer, GST_BUFFER_REFCOUNT_VALUE(buffer));
     stream->payload = buffer;
   } else {
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "segment_info->sequence = %d, stream->sequence = %d, segment_info->frag_offset = %d, stream->frag_offset = %d", segment_info->sequence, stream->sequence, segment_info->frag_offset, stream->frag_offset);
+    GST_DEBUG ("segment_info->sequence = %d, stream->sequence = %d, segment_info->frag_offset = %d, stream->frag_offset = %d", segment_info->sequence, stream->sequence, segment_info->frag_offset, stream->frag_offset);
     if (segment_info->sequence == stream->sequence && 
 	segment_info->frag_offset == stream->frag_offset) {
       GstBuffer *new_buffer;
       /* continuing packet */
-      GST_INFO (GST_CAT_PLUGIN_INFO, "A continuation packet");
+      GST_INFO ( "A continuation packet");
       got_bytes = gst_bytestream_peek (bs, &buffer, segment_info->chunk_size);
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "Copied stream to buffer (%p - %d)", buffer, GST_BUFFER_REFCOUNT_VALUE(buffer));
+      GST_DEBUG ("Copied stream to buffer (%p - %d)", buffer, GST_BUFFER_REFCOUNT_VALUE(buffer));
       new_buffer = gst_buffer_merge (stream->payload, buffer);
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "BUFFER: Merged new_buffer (%p - %d) from stream->payload(%p - %d) and buffer (%p - %d)", new_buffer, GST_BUFFER_REFCOUNT_VALUE(new_buffer), stream->payload, GST_BUFFER_REFCOUNT_VALUE(stream->payload), buffer, GST_BUFFER_REFCOUNT_VALUE(buffer));
+      GST_DEBUG ("BUFFER: Merged new_buffer (%p - %d) from stream->payload(%p - %d) and buffer (%p - %d)", new_buffer, GST_BUFFER_REFCOUNT_VALUE(new_buffer), stream->payload, GST_BUFFER_REFCOUNT_VALUE(stream->payload), buffer, GST_BUFFER_REFCOUNT_VALUE(buffer));
       gst_buffer_unref (stream->payload);
       gst_buffer_unref (buffer);
       stream->payload = new_buffer;
@@ -1085,7 +1088,7 @@ gst_asf_demux_process_chunk (GstASFDemux *asf_demux,
       stream->frag_offset = 0;
       if (segment_info->frag_offset != 0) {
 	/* cannot create new packet */
-	GST_DEBUG (GST_CAT_PLUGIN_INFO, "BUFFER: Freeing stream->payload (%p)", stream->payload);
+	GST_DEBUG ("BUFFER: Freeing stream->payload (%p)", stream->payload);
 	gst_buffer_free(stream->payload);
 	gst_bytestream_flush (bs, segment_info->chunk_size);
 	packet_info->size_left -= segment_info->chunk_size;
@@ -1099,7 +1102,7 @@ gst_asf_demux_process_chunk (GstASFDemux *asf_demux,
 
   stream->frag_offset +=segment_info->chunk_size;
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "frag_offset = %d  segment_size = %d ", stream->frag_offset, segment_info->segment_size);
+  GST_DEBUG ("frag_offset = %d  segment_size = %d ", stream->frag_offset, segment_info->segment_size);
 
   if (stream->frag_offset < segment_info->segment_size) {
     /* We don't have the whole packet yet */
@@ -1112,14 +1115,14 @@ gst_asf_demux_process_chunk (GstASFDemux *asf_demux,
     }
 
     if (GST_PAD_IS_USABLE (stream->pad)) {
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "New buffer is at: %p size: %u", GST_BUFFER_DATA(stream->payload), GST_BUFFER_SIZE(stream->payload));
+      GST_DEBUG ("New buffer is at: %p size: %u", GST_BUFFER_DATA(stream->payload), GST_BUFFER_SIZE(stream->payload));
       
       GST_BUFFER_TIMESTAMP (stream->payload) = (GST_SECOND / 1000) * asf_demux->pts;
 
       /*!!! Should handle flush events here? */
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "Sending strem %d of size %d", stream->id , segment_info->chunk_size);
+      GST_DEBUG ("Sending strem %d of size %d", stream->id , segment_info->chunk_size);
       
-      GST_INFO (GST_CAT_PLUGIN_INFO, "Pushing pad");
+      GST_INFO ( "Pushing pad");
       gst_pad_push (stream->pad, stream->payload);
     }
 
@@ -1129,7 +1132,7 @@ gst_asf_demux_process_chunk (GstASFDemux *asf_demux,
   gst_bytestream_flush (bs, segment_info->chunk_size);  
   packet_info->size_left -= segment_info->chunk_size;
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, " ");
+  GST_DEBUG (" ");
 
   return TRUE;
 }
@@ -1166,7 +1169,7 @@ gst_asf_demux_handle_sink_event (GstASFDemux *asf_demux)
         asf_stream_context *stream = &asf_demux->stream[i];
 
 	if (GST_PAD_IS_USABLE (stream->pad)) {
-	  GST_DEBUG (GST_CAT_EVENT, "sending discont on %d %" G_GINT64_FORMAT " + %" G_GINT64_FORMAT " = %" G_GINT64_FORMAT, i, 
+	  GST_DEBUG ("sending discont on %d %" G_GINT64_FORMAT " + %" G_GINT64_FORMAT " = %" G_GINT64_FORMAT, i, 
 			asf_demux->last_seek, stream->delay, asf_demux->last_seek + stream->delay);
          discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
 			asf_demux->last_seek + stream->delay , NULL);
@@ -1188,7 +1191,7 @@ gst_asf_demux_handle_sink_event (GstASFDemux *asf_demux)
 static gboolean
 gst_asf_demux_handle_src_event (GstPad *pad, GstEvent *event)
 {
-  GST_DEBUG (0,"asfdemux: handle_src_event");
+  GST_DEBUG ("asfdemux: handle_src_event");
   return FALSE;
 }
 
@@ -1434,7 +1437,7 @@ gst_asf_demux_add_audio_stream (GstASFDemux *asf_demux,
   
   if (new_caps) caps_list = gst_caps_append(caps_list, new_caps);
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Adding audio stream %u codec %u (0x%x)", asf_demux->num_video_streams, GUINT16_FROM_LE(audio->codec_tag), GUINT16_FROM_LE(audio->codec_tag));
+  GST_INFO ( "Adding audio stream %u codec %u (0x%x)", asf_demux->num_video_streams, GUINT16_FROM_LE(audio->codec_tag), GUINT16_FROM_LE(audio->codec_tag));
   
    asf_demux->num_audio_streams++;
 
@@ -1514,7 +1517,7 @@ gst_asf_demux_add_video_stream (GstASFDemux *asf_demux,
 
   if (new_caps) caps_list = gst_caps_append(caps_list, new_caps);
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Adding video stream %u", asf_demux->num_video_streams);
+  GST_INFO ( "Adding video stream %u", asf_demux->num_video_streams);
 
   
   asf_demux->num_video_streams++;
@@ -1547,7 +1550,7 @@ gst_asf_demux_setup_pad (GstASFDemux *asf_demux,
 
   gst_pad_set_element_private (src_pad, stream);
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Adding pad for stream %u", asf_demux->num_streams);
+  GST_INFO ( "Adding pad for stream %u", asf_demux->num_streams);
 
   asf_demux->num_streams++;
   

@@ -19,6 +19,9 @@
 
 
 /*#define GST_DEBUG_ENABLED*/
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "gstrfc2250enc.h"
 
 /* elementfactory information */
@@ -217,7 +220,7 @@ gst_rfc2250_enc_loop (GstElement *element)
   if (GST_IS_BUFFER (data)) {
     GstBuffer *buffer = GST_BUFFER (data);
 
-    GST_DEBUG (0, "rfc2250enc: have chunk 0x%02X", id);
+    GST_DEBUG ("rfc2250enc: have chunk 0x%02X", id);
 
     switch (id) {
       case SEQUENCE_START_CODE:

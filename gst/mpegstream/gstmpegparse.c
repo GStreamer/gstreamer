@@ -19,6 +19,9 @@
 
 
 /*#define GST_DEBUG_ENABLED*/
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "gstmpegparse.h"
 #include "gstmpegclock.h"
 
@@ -278,7 +281,7 @@ gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data, GstClockTime 
     }
 
     GST_BUFFER_TIMESTAMP (data) = time;
-    GST_DEBUG (0, "current_scr %" G_GINT64_FORMAT, time);
+    GST_DEBUG ("current_scr %" G_GINT64_FORMAT, time);
 
     if (GST_PAD_IS_USABLE (mpeg_parse->srcpad))
       gst_pad_push (mpeg_parse->srcpad, GST_BUFFER (data));
@@ -309,7 +312,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   guint32 scr1, scr2;
   guint32 new_rate;
 
-  GST_DEBUG (0, "in parse_packhead");
+  GST_DEBUG ("in parse_packhead");
 
   buf = GST_BUFFER_DATA (buffer);
   buf += 4;
@@ -330,7 +333,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 
     scr = (scr * 300 + scr_ext % 300) / 300;
 
-    GST_DEBUG (0, "%" G_GINT64_FORMAT " %d, %08x %08x %" G_GINT64_FORMAT " diff: %" G_GINT64_FORMAT, 
+    GST_DEBUG ("%" G_GINT64_FORMAT " %d, %08x %08x %" G_GINT64_FORMAT " diff: %" G_GINT64_FORMAT, 
 		    scr, scr_ext, scr1, scr2, mpeg_parse->bytes_since_scr, 
 		    scr - mpeg_parse->current_scr);
 
@@ -359,7 +362,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     mpeg_parse->next_scr = scr;
   }
 
-  GST_DEBUG (0, "SCR is %" G_GUINT64_FORMAT " (%" G_GUINT64_FORMAT ") next: %" 
+  GST_DEBUG ("SCR is %" G_GUINT64_FORMAT " (%" G_GUINT64_FORMAT ") next: %" 
 	     G_GINT64_FORMAT " (%" G_GINT64_FORMAT ") diff: %" G_GINT64_FORMAT " (%" 
 	     G_GINT64_FORMAT ")", 
 		  scr, 
@@ -371,7 +374,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 		  MPEGTIME_TO_GSTTIME (mpeg_parse->next_scr));
 
   if (ABS ((gint64)mpeg_parse->next_scr - (gint64)(scr_adj)) > mpeg_parse->max_discont) {
-    GST_DEBUG (0, "discontinuity detected; expected: %" 
+    GST_DEBUG ("discontinuity detected; expected: %" 
 	       G_GUINT64_FORMAT " got: %" G_GUINT64_FORMAT " real:%" 
 	       G_GINT64_FORMAT " adjust:%" G_GINT64_FORMAT, 
            mpeg_parse->next_scr, scr_adj, scr, mpeg_parse->adjust);
@@ -379,7 +382,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     mpeg_parse->adjust = mpeg_parse->next_scr - scr;
     scr = mpeg_parse->next_scr;
 
-    GST_DEBUG (0, "new adjust: %" G_GINT64_FORMAT, mpeg_parse->adjust);
+    GST_DEBUG ("new adjust: %" G_GINT64_FORMAT, mpeg_parse->adjust);
   }
   else {
     scr = scr_adj;
@@ -400,7 +403,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     mpeg_parse->mux_rate = new_rate;
 
     gst_mpeg_parse_update_streaminfo (mpeg_parse);
-    GST_DEBUG (0, "stream is %1.3fMbs", (mpeg_parse->mux_rate * 400) / 1000000.0);
+    GST_DEBUG ("stream is %1.3fMbs", (mpeg_parse->mux_rate * 400) / 1000000.0);
   }
 
   return TRUE;
@@ -425,7 +428,7 @@ gst_mpeg_parse_loop (GstElement *element)
   if (GST_IS_BUFFER (data)) {
     GstBuffer *buffer = GST_BUFFER (data);
 
-    GST_DEBUG (0, "have chunk 0x%02X", id);
+    GST_DEBUG ("have chunk 0x%02X", id);
 
     switch (id) {
       case 0xb9:
@@ -466,7 +469,7 @@ gst_mpeg_parse_loop (GstElement *element)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
-        GST_DEBUG (GST_CAT_EVENT, "event: %d\n", GST_EVENT_TYPE (data));
+        GST_DEBUG ("event: %d\n", GST_EVENT_TYPE (data));
 
         mpeg_parse->discont_pending = TRUE;
         mpeg_parse->packetize->resync = TRUE;
@@ -495,7 +498,7 @@ gst_mpeg_parse_loop (GstElement *element)
         mpeg_parse->discont_pending = FALSE;
       }
       else {
-	GST_DEBUG (0, "waiting for SCR\n");
+	GST_DEBUG ("waiting for SCR\n");
       }
       gst_buffer_unref (GST_BUFFER (data));
       return;
@@ -528,7 +531,7 @@ gst_mpeg_parse_loop (GstElement *element)
     if (mpeg_parse->clock && mpeg_parse->sync && !mpeg_parse->discont_pending) {
       mpeg_parse->id = gst_clock_new_single_shot_id (mpeg_parse->clock, time);
 
-      GST_DEBUG (GST_CAT_CLOCK, "syncing mpegparse");
+      GST_DEBUG ("syncing mpegparse");
       gst_element_clock_wait (GST_ELEMENT (mpeg_parse), mpeg_parse->id, NULL);
       gst_clock_id_free (mpeg_parse->id);
       mpeg_parse->id = NULL;
@@ -561,7 +564,7 @@ gst_mpeg_parse_loop (GstElement *element)
         mpeg_parse->next_scr = scr;
       }
 
-      GST_DEBUG (0, "size: %" G_GINT64_FORMAT ", total since SCR: %" G_GINT64_FORMAT ", next SCR: %" G_GINT64_FORMAT, 
+      GST_DEBUG ("size: %" G_GINT64_FORMAT ", total since SCR: %" G_GINT64_FORMAT ", next SCR: %" G_GINT64_FORMAT, 
 		       size, bss, mpeg_parse->next_scr);
     }
   }
@@ -765,7 +768,7 @@ gst_mpeg_parse_handle_src_event (GstPad *pad, GstEvent *event)
       if (!res)
 	break;
 	      
-      GST_DEBUG (0, "sending seek to %" G_GINT64_FORMAT, desired_offset);
+      GST_DEBUG ("sending seek to %" G_GINT64_FORMAT, desired_offset);
       if (gst_bytestream_seek (mpeg_parse->packetize->bs, desired_offset, GST_SEEK_METHOD_SET)) {
         mpeg_parse->discont_pending = TRUE;
         mpeg_parse->scr_pending = TRUE;
