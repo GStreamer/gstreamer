@@ -153,7 +153,7 @@ gst_fakesrc_filltype_get_type (void)
 static void		gst_fakesrc_class_init		(GstFakeSrcClass *klass);
 static void		gst_fakesrc_init		(GstFakeSrc *fakesrc);
 
-static GstPad* 		gst_fakesrc_request_new_pad 	(GstElement *element, GstPadTemplate *templ);
+static GstPad* 		gst_fakesrc_request_new_pad 	(GstElement *element, GstPadTemplate *templ,const gchar *unused);
 static void 		gst_fakesrc_update_functions 	(GstFakeSrc *src);
 static void		gst_fakesrc_set_property	(GObject *object, guint prop_id, 
 							 const GValue *value, GParamSpec *pspec);
@@ -293,7 +293,7 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
 }
 
 static GstPad*
-gst_fakesrc_request_new_pad (GstElement *element, GstPadTemplate *templ)
+gst_fakesrc_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar *unused)
 {
   gchar *name;
   GstPad *srcpad;

@@ -49,7 +49,7 @@ static void 			gst_bin_dispose 		(GObject * object);
 static GstElementStateReturn	gst_bin_change_state		(GstElement *element);
 static GstElementStateReturn	gst_bin_change_state_norecurse	(GstBin *bin);
 
-static void 			gst_bin_set_index 		(GstBin *bin, GstIndex *index);
+static void 			gst_bin_set_index 		(GstElement *element, GstIndex *index);
 
 static void 			gst_bin_add_func 		(GstBin *bin, GstElement *element);
 static void 			gst_bin_remove_func 		(GstBin *bin, GstElement *element);
@@ -224,9 +224,10 @@ gst_bin_auto_clock (GstBin *bin)
 }
 
 static void
-gst_bin_set_index (GstBin *bin, GstIndex *index)
+gst_bin_set_index (GstElement *element, GstIndex *index)
 {
   GList *children;
+  GstBin *bin = GST_BIN (element);
   
   g_return_if_fail (GST_IS_BIN (bin));
 
