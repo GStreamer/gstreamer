@@ -230,7 +230,7 @@ SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
         $(ARTS_DIR) $(ARTSC_DIR) $(AUDIOFILE_DIR) \
 	$(AVIFILE_DIR) $(CDPARANOIA_DIR) $(DV_DIR) \
 	$(DVDREAD_DIR) $(DVDNAV_DIR) $(ESD_DIR) \
-	$(FLAC_DIR) $(GNOMEVFS_DIR) $(GSM_DIR) \
+	$(FESTIVAL_DIR) $(FLAC_DIR) $(GNOMEVFS_DIR) $(GSM_DIR) \
 	$(HERMES_DIR) $(HTTP_DIR) $(JACK_DIR) $(JPEG_DIR) \
 	$(LADSPA_DIR) $(LAME_DIR) $(LCS_DIR) $(LIBFAME_DIR) \
 	$(MAD_DIR) $(MIKMOD_DIR) $(MJPEGTOOLS_DIR) $(MPEG2DEC_DIR) \
@@ -242,7 +242,7 @@ DIST_SUBDIRS=\
 	a52dec aalib alsa \
 	arts artsd avifile \
 	audiofile cdparanoia dv \
-	dvdread dvdnav esd ffmpeg \
+	dvdread dvdnav esd festival ffmpeg \
 	flac gnomevfs gsm \
 	hermes http jack jpeg \
 	ladspa lame lcs libfame \
