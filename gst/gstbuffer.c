@@ -398,18 +398,31 @@ gst_buffer_remove_meta (GstBuffer *buffer, GstMeta *meta)
 
 
 
+/**
+ * gst_buffer_copy:
+ * @buffer: the orignal GstBuffer to make a copy of
+ *
+ * Make a full copy of the give buffer, data and all.
+ *
+ * Returns: new buffer
+ */
 GstBuffer *
-gst_buffer_copy (GstBuffer *buf)
+gst_buffer_copy (GstBuffer *buffer)
 {
   GstBuffer *newbuf;
 
-/***** FIXME: this is not complete, it doesn't copy everything it should *****/
   newbuf = gst_buffer_new();
-  GST_BUFFER_SIZE(newbuf) = GST_BUFFER_DATA(buf);
-  GST_BUFFER_DATA(newbuf) = malloc(GST_BUFFER_SIZE(buf));
-  memcpy(GST_BUFFER_DATA(newbuf),GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
-  GST_BUFFER_OFFSET(newbuf) = GST_BUFFER_OFFSET(buf);
-  GST_BUFFER_TIMESTAMP(newbuf) = GST_BUFFER_TIMESTAMP(buf);
+  GST_BUFFER_SIZE(newbuf) = GST_BUFFER_SIZE(buffer);
+  GST_BUFFER_DATA(newbuf) = malloc(GST_BUFFER_SIZE(buffer));
+  memcpy(GST_BUFFER_DATA(newbuf),GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buffer));
+  GST_BUFFER_MAXSIZE(newbuf) = GST_BUFFER_MAXSIZE(buffer);
+  GST_BUFFER_OFFSET(newbuf) = GST_BUFFER_OFFSET(buffer);
+  GST_BUFFER_TIMESTAMP(newbuf) = GST_BUFFER_TIMESTAMP(buffer);
+  GST_BUFFER_MAXAGE(newbuf) = GST_BUFFER_MAXAGE(buffer);
+
+  // since we just created a new buffer, so we have no ties to old stuff
+  GST_BUFFER_PARENT(newbuf) = NULL;
+  GST_BUFFER_POOL(newbuf) = NULL;
 
   return newbuf;
 }
