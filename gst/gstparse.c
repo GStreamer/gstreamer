@@ -600,8 +600,8 @@ gst_parse_launch (const gchar * pipeline_description)
   g_slist_free (string_list);
 
   /* print them out */
-  while (argvn[i]) {
-    GST_DEBUG (0, "arg %d is: %s\n", i, argvn[i++]);
+  while (argvn[i++]) {
+    GST_DEBUG (0, "arg %d is: %s\n", i-1, argvn[i-1]);
   }
 
   /* do it! */
