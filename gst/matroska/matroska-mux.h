@@ -62,6 +62,11 @@ typedef enum {
   GST_MATROSKA_MUX_STATE_DATA,
 } GstMatroskaMuxState;
 
+typedef struct _GstMatroskaMetaSeekIndex {
+  guint32  id;
+  guint64  pos;
+} GstMatroskaMetaSeekIndex;
+
 typedef struct _GstMatroskaMux {
   GstEbmlWrite   parent;
 
@@ -101,13 +106,18 @@ typedef struct _GstMatroskaMux {
 #endif
 		 info_pos,
 		 tracks_pos,
-		 duration_pos;
+		 duration_pos,
+     meta_pos;
   guint64        segment_master;
 
   /* current cluster */
   guint64        cluster,
                  cluster_time,
                  cluster_pos;
+
+  /* meta-seek info */
+  GstMatroskaMetaSeekIndex *meta_index;
+  guint          num_meta_indexes;
 } GstMatroskaMux;
 
 typedef struct _GstMatroskaMuxClass {

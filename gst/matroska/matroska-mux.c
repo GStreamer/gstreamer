@@ -328,6 +328,11 @@ gst_matroska_mux_reset (GstElement * element)
   mux->cluster = 0;
   mux->cluster_time = 0;
   mux->cluster_pos = 0;
+
+  /* reset meta-seek index */
+  mux->num_meta_indexes = 0;
+  g_free (mux->meta_index);
+  mux->meta_index = NULL;
 }
 
 static GstPadLinkReturn
@@ -734,6 +739,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   guint32 seekhead_id[] = { GST_MATROSKA_ID_INFO,
     GST_MATROSKA_ID_TRACKS,
     GST_MATROSKA_ID_CUES,
+    GST_MATROSKA_ID_SEEKHEAD,
 #if 0
     GST_MATROSKA_ID_TAGS,
 #endif
@@ -870,6 +876,28 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
     gst_ebml_write_flush_cache (ebml);
   }
 
+  if (mux->meta_index != NULL) {
+    guint n;
+    guint64 master, seekentry_master;
+
+    mux->meta_pos = ebml->pos;
+    gst_ebml_write_set_cache (ebml, 12 + 28 * mux->num_meta_indexes);
+    master = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_SEEKHEAD);
+
+    for (n = 0; n < mux->num_meta_indexes; n++) {
+      GstMatroskaMetaSeekIndex *idx = &mux->meta_index[n];
+
+      seekentry_master = gst_ebml_write_master_start (ebml,
+          GST_MATROSKA_ID_SEEKENTRY);
+      gst_ebml_write_uint (ebml, GST_MATROSKA_ID_SEEKID, idx->id);
+      gst_ebml_write_uint (ebml, GST_MATROSKA_ID_SEEKPOSITION,
+          idx->pos - mux->segment_master);
+      gst_ebml_write_master_finish (ebml, seekentry_master);
+    }
+    gst_ebml_write_master_finish (ebml, master);
+  }
+  gst_ebml_write_flush_cache (ebml);
+
   /* FIXME: tags */
 
   /* update seekhead. We know that:
@@ -894,6 +922,17 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
     guint64 my_pos = ebml->pos;
 
     gst_ebml_write_seek (ebml, mux->seekhead_pos + 68);
+    gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, 26);
+    gst_ebml_write_seek (ebml, my_pos);
+  }
+  if (mux->meta_index != NULL) {
+    gst_ebml_replace_uint (ebml, mux->seekhead_pos + 116,
+        mux->meta_pos - mux->segment_master);
+  } else {
+    /* void'ify */
+    guint64 my_pos = ebml->pos;
+
+    gst_ebml_write_seek (ebml, mux->seekhead_pos + 96);
     gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, 26);
     gst_ebml_write_seek (ebml, my_pos);
   }
@@ -977,6 +1016,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux)
   if (mux->cluster) {
     /* start a new cluster every two seconds */
     if (mux->cluster_time + GST_SECOND * 2 < GST_BUFFER_TIMESTAMP (buf)) {
+      GstMatroskaMetaSeekIndex *idx;
+
       gst_ebml_write_master_finish (ebml, mux->cluster);
       mux->cluster_pos = ebml->pos;
       mux->cluster =
@@ -984,14 +1025,32 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux)
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CLUSTERTIMECODE,
           GST_BUFFER_TIMESTAMP (buf) / mux->time_scale);
       mux->cluster_time = GST_BUFFER_TIMESTAMP (buf);
+
+      if (mux->num_meta_indexes % 32 == 0) {
+        mux->meta_index = g_renew (GstMatroskaMetaSeekIndex, mux->meta_index,
+            mux->num_meta_indexes + 32);
+      }
+      idx = &mux->meta_index[mux->num_meta_indexes++];
+      idx->id = GST_MATROSKA_ID_CLUSTER;
+      idx->pos = mux->cluster_pos;
     }
   } else {
     /* first cluster */
+    GstMatroskaMetaSeekIndex *idx;
+
     mux->cluster_pos = ebml->pos;
     mux->cluster = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_CLUSTER);
     gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CLUSTERTIMECODE,
         GST_BUFFER_TIMESTAMP (buf) / mux->time_scale);
     mux->cluster_time = GST_BUFFER_TIMESTAMP (buf);
+
+    if (mux->num_meta_indexes % 32 == 0) {
+      mux->meta_index = g_renew (GstMatroskaMetaSeekIndex, mux->meta_index,
+          mux->num_meta_indexes + 32);
+    }
+    idx = &mux->meta_index[mux->num_meta_indexes++];
+    idx->id = GST_MATROSKA_ID_CLUSTER;
+    idx->pos = mux->cluster_pos;
   }
   cluster = mux->cluster;
 
