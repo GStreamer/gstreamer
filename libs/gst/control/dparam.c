@@ -237,7 +237,7 @@ gst_dparam_dispose (GObject *object)
 	GstDParam *dparam = GST_DPARAM(object);
 	gchar *dparam_name = g_strdup(GST_DPARAM_NAME(dparam));
 	
-	g_print("disposing of %s\n", dparam_name);
+	GST_DEBUG (GST_CAT_PLUGIN_INFO, "disposing of %s", dparam_name);
 	if (GST_DPARAM_MANAGER(dparam)){
 		gst_dpman_detach_dparam(GST_DPARAM_MANAGER(dparam), dparam_name);
 	}
