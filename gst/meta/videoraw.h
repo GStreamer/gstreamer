@@ -65,7 +65,7 @@ struct _MetaVideoRaw {
   GstMeta meta;
 
   /* formatting information */
-  gint format;
+  GstColorSpaceType format;
   GdkVisual *visual;
   // dimensions of the video buffer
   gint width;

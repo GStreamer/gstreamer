@@ -44,7 +44,7 @@ GstElementDetails gst_bin_details;
 #define GST_IS_BIN(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_BIN))
 #define GST_IS_BIN_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_BIN)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_BIN))
 
 typedef struct _GstBin GstBin;
 typedef struct _GstBinClass GstBinClass;
@@ -62,6 +62,7 @@ struct _GstBin {
   gint numentries;
 
   cothread_context *threadcontext;
+  gboolean use_cothreads;
 };
 
 struct _GstBinClass {
@@ -99,6 +100,9 @@ gboolean gst_bin_set_state_type(GstBin *bin,
 
 void gst_bin_iterate(GstBin *bin);
 void gst_bin_create_plan(GstBin *bin);
+
+// hack FIXME
+void gst_bin_use_cothreads(GstBin *bin, gboolean enabled);
 
 #ifdef __cplusplus
 }

@@ -190,7 +190,7 @@ void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
   audiosink = GST_AUDIOSINK(pad->parent);
 //  g_return_if_fail(GST_FLAG_IS_SET(audiosink,GST_STATE_RUNNING));
 
-  if (in_flush = GST_BUFFER_FLAG_IS_SET(buf, GST_BUFFER_FLUSH)) {
+  if ((in_flush = GST_BUFFER_FLAG_IS_SET(buf, GST_BUFFER_FLUSH))) {
     DEBUG("audiosink: flush\n");
     ioctl(audiosink->fd,SNDCTL_DSP_RESET,0);
   }
@@ -217,20 +217,13 @@ void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
     //g_print("audiosink: writing to soundcard\n");
     if (audiosink->fd > 2) {
       if (!audiosink->mute) {
-        //if (gst_clock_current_diff(audiosink->clock, GST_BUFFER_TIMESTAMP(buf)) > 500000) {
-	//}
-	//else {
-          gst_clock_wait(audiosink->clock, GST_BUFFER_TIMESTAMP(buf), GST_OBJECT(audiosink));
-          ioctl(audiosink->fd,SNDCTL_DSP_GETOSPACE,&ospace);
-          DEBUG("audiosink: (%d bytes buffer)\n", ospace.bytes);
-          write(audiosink->fd,GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
-	//}
-          //gst_clock_set(audiosink->clock, GST_BUFFER_TIMESTAMP(buf));
-	//}
+        gst_clock_wait(audiosink->clock, GST_BUFFER_TIMESTAMP(buf), GST_OBJECT(audiosink));
+        ioctl(audiosink->fd,SNDCTL_DSP_GETOSPACE,&ospace);
+        DEBUG("audiosink: (%d bytes buffer)\n", ospace.bytes);
+        write(audiosink->fd,GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
       }
     }
   }
-end:
   //g_print("a unref\n");
   gst_buffer_unref(buf);
   //g_print("a done\n");
@@ -314,6 +307,7 @@ static gboolean gst_audiosink_open_audio(GstAudioSink *sink) {
     if (sink->caps & DSP_CAP_TRIGGER)  g_print("audiosink:   Trigger\n");
     if (sink->caps & DSP_CAP_MMAP)     g_print("audiosink:   Direct access\n");
     g_print("audiosink: opened audio\n");
+    GST_FLAG_SET(sink,GST_AUDIOSINK_OPEN);
     return TRUE;
   }
 
@@ -325,9 +319,9 @@ static void gst_audiosink_close_audio(GstAudioSink *sink) {
 
   close(sink->fd);
   sink->fd = -1;
+  GST_FLAG_UNSET(sink,GST_AUDIOSINK_OPEN);
   g_print("audiosink: closed sound device\n");
 }
-
 
 static GstElementStateReturn gst_audiosink_change_state(GstElement *element) {
   g_return_val_if_fail(GST_IS_AUDIOSINK(element), FALSE);
@@ -346,5 +340,5 @@ static GstElementStateReturn gst_audiosink_change_state(GstElement *element) {
       
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
     return GST_ELEMENT_CLASS(parent_class)->change_state(element);
-  return TRUE;
+  return GST_STATE_SUCCESS;
 }

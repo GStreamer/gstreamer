@@ -195,17 +195,18 @@ void gst_pad_push(GstPad *pad,GstBuffer *buffer) {
 
   // first check to see if there's a push handler
   if (pad->pushfunc != NULL) {
-//    g_print("-- gst_pad_push(): putting buffer in pen and calling push handler\n");
+    //g_print("-- gst_pad_push(): putting buffer in pen and calling push handler\n");
     // put the buffer in peer's holding pen
     pad->peer->bufpen = buffer;
     // now inform the handler that the peer pad has something
     (pad->pushfunc)(pad->peer);
   // otherwise we assume we're chaining directly
   } else if (pad->chainfunc != NULL) {
+    //g_print("-- gst_pad_push(): calling chain handler\n");
     (pad->chainfunc)(pad->peer,buffer);
   // else we squawk
   } else {
-//    g_print("-- gst_pad_push(): houston, we have a problem, no way of talking to peer\n");
+    //g_print("-- gst_pad_push(): houston, we have a problem, no way of talking to peer\n");
   }
 
 #ifdef OLD_STUFF

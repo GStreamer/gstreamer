@@ -241,7 +241,7 @@ static GstElementStateReturn gst_audiosrc_change_state(GstElement *element) {
 
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
     return GST_ELEMENT_CLASS(parent_class)->change_state(element);
-  return TRUE;
+  return GST_STATE_SUCCESS;
 }
 
 static gboolean gst_audiosrc_open_audio(GstAudioSrc *src) {

@@ -286,6 +286,8 @@ static void gst_disksrc_close_file(GstDiskSrc *src) {
 static GstElementStateReturn gst_disksrc_change_state(GstElement *element) {
   g_return_val_if_fail(GST_IS_DISKSRC(element),GST_STATE_FAILURE);
 
+  DEBUG("gstdisksrc: state pending %d\n", GST_STATE_PENDING(element));
+
   /* if going down into NULL state, close the file if it's open */
   if (GST_STATE_PENDING(element) == GST_STATE_NULL) {
     if (GST_FLAG_IS_SET(element,GST_DISKSRC_OPEN))

@@ -63,7 +63,13 @@ GstBuffer *gst_buffer_new() {
   buffer->timestamp = 0;
   buffer->metas = NULL;
   buffer->parent = NULL;
+  buffer->pool = NULL;
   return buffer;
+}
+
+GstBuffer *gst_buffer_new_from_pool(GstBufferPool *pool)
+{
+  return gst_buffer_pool_new_buffer(pool);
 }
 
 
@@ -101,7 +107,7 @@ GstBuffer *gst_buffer_create_sub(GstBuffer *parent,guint32 offset,guint32 size) 
   // set the data pointer, size, offset, and maxsize
   buffer->data = parent->data + offset;
   buffer->size = size;
-  buffer->offset = offset;
+  buffer->offset = parent->offset + offset;
   buffer->maxsize = parent->size - offset;
 
   // again, for lack of better, copy parent's timestamp
@@ -114,7 +120,50 @@ GstBuffer *gst_buffer_create_sub(GstBuffer *parent,guint32 offset,guint32 size) 
   buffer->parent = parent;
   gst_buffer_ref(parent);
 
+  buffer->pool = NULL;
   // return the new subbuffer
+  return buffer;
+}
+
+/**
+ * gst_buffer_append_:
+ * @buffer: a buffer
+ * @append: the buffer to append
+ *
+ * Creates a new buffer by appending the data of eppend to the
+ *  existing data of buffer.
+ *
+ * Returns: new buffer
+ */
+GstBuffer *gst_buffer_append(GstBuffer *buffer, GstBuffer *append) {
+  guint size;
+  GstBuffer *newbuf;
+
+  g_return_val_if_fail(buffer != NULL, NULL);
+  g_return_val_if_fail(append != NULL, NULL);
+  g_return_val_if_fail(buffer->pool == NULL, NULL);
+
+  GST_BUFFER_LOCK(buffer);
+  // the buffer is not used by anyone else
+  if (GST_BUFFER_REFCOUNT(buffer) == 1 && buffer->parent == NULL) {
+    // save the old size
+    size = buffer->size;
+    buffer->size += append->size;
+    buffer->data = g_realloc(buffer->data, buffer->size);
+    memcpy(buffer->data + size, append->data, append->size);
+    GST_BUFFER_UNLOCK(buffer);
+  }
+  // the buffer is used, create a new one 
+  else {
+    newbuf = gst_buffer_new();
+    newbuf->size = buffer->size+append->size;
+    newbuf->data = g_malloc(newbuf->size);
+    memcpy(newbuf->data, buffer->data, buffer->size);
+    memcpy(newbuf->data+buffer->size, append->data, append->size);
+    GST_BUFFER_UNLOCK(buffer);
+    gst_buffer_unref(buffer);
+    buffer = newbuf;
+  }
   return buffer;
 }
 
@@ -131,10 +180,10 @@ void gst_buffer_destroy(GstBuffer *buffer) {
 
   if (buffer->parent != NULL) {
     DEBUG("BUF: freeing subbuffer %p\n",buffer);
-	}
+  }
   else {
     DEBUG("BUF: freeing buffer %p\n",buffer);
-	}
+  }
 
   // free the data only if there is some, DONTFREE isn't set, and not sub
   if (GST_BUFFER_DATA(buffer) &&
@@ -233,8 +282,16 @@ void gst_buffer_unref(GstBuffer *buffer) {
 #endif
 
   /* if we ended up with the refcount at zero, destroy the buffer */
-  if (zero)
-    gst_buffer_destroy(buffer);
+  if (zero) {
+    // if it came from a pool, give it back
+    if (buffer->pool != NULL) {
+      gst_buffer_pool_destroy_buffer(buffer->pool, buffer);
+      return;
+    }
+    else {
+      gst_buffer_destroy(buffer);
+    }
+  }
 }
 
 /**

@@ -13,6 +13,7 @@ libgst_la_SOURCES =	\
 	$(GSTOBJECT_SRCS)	\
 	gstpad.c	\
 	gstbuffer.c	\
+	gstbufferpool.c	\
 	gstclock.c	\
 	gstelement.c	\
 	gstelementfactory.c	\
@@ -39,6 +40,7 @@ libgstinclude_HEADERS =	\
 	$(GSTOBJECT_INCLUDES)	\
 	gstpad.h	\
 	gstbuffer.h	\
+	gstbufferpool.h	\
 	gstclock.h	\
 	gstelement.h	\
 	gstbin.h	\

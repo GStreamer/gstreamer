@@ -170,17 +170,19 @@ static void gst_thread_prepare(GstThread *thread) {
   GstPad *pad, *peer;
   GstElement *outside;
 
-  thread->numentries = 0;
+  GST_BIN(thread)->numentries = 0;
 
   /* first we need to find all the entry points into the thread */
   elements = GST_BIN(thread)->children;
   while (elements) {
     element = GST_ELEMENT(elements->data);
+    gst_info("gstthread: element \"%s\" found in thread\n",
+             gst_element_get_name(GST_ELEMENT(element)));
     if (GST_IS_SRC(element)) {
       gst_info("gstthread: element \"%s\" is a source entry point for the thread\n",
                gst_element_get_name(GST_ELEMENT(element)));
-      thread->entries = g_list_prepend(thread->entries,element);
-      thread->numentries++;
+      GST_BIN(thread)->entries = g_list_prepend(GST_BIN(thread)->entries,element);
+      GST_BIN(thread)->numentries++;
     } else {
       /* go through the list of pads to see if there's a Connection */
       pads = gst_element_get_pad_list(element);
@@ -201,8 +203,8 @@ static void gst_thread_prepare(GstThread *thread) {
 for internal element \"%s\"\n",
                     gst_element_get_name(GST_ELEMENT(outside)),
                     gst_element_get_name(GST_ELEMENT(element)));
-            thread->entries = g_list_prepend(thread->entries,outside);
-            thread->numentries++;
+            GST_BIN(thread)->entries = g_list_prepend(GST_BIN(thread)->entries,outside);
+            GST_BIN(thread)->numentries++;
           }
         }
         pads = g_list_next(pads);
@@ -210,7 +212,7 @@ for internal element \"%s\"\n",
     }
     elements = g_list_next(elements);
   }
-  gst_info("gstthread: have %d entries into thread\n",thread->numentries);
+  gst_info("gstthread: have %d entries into thread\n",GST_BIN(thread)->numentries);
 }
 #endif
 
@@ -218,28 +220,36 @@ for internal element \"%s\"\n",
 static GstElementStateReturn gst_thread_change_state(GstElement *element) {
   GstThread *thread;
   gboolean stateset = TRUE;
+  gint pending;
 
-/*
   g_return_val_if_fail(GST_IS_THREAD(element), FALSE);
   thread = GST_THREAD(element);
 
-  if (GST_ELEMENT_CLASS(parent_class)->change_state)
-    stateset = GST_ELEMENT_CLASS(parent_class)->change_state(element,state);
+  gst_info("gstthread: thread \"%s\" change state %d\n",
+               gst_element_get_name(GST_ELEMENT(element)), GST_STATE_PENDING(element));
 
-  switch (state) {
+  pending = GST_STATE_PENDING(element);
+
+  if (GST_ELEMENT_CLASS(parent_class)->change_state)
+    stateset = GST_ELEMENT_CLASS(parent_class)->change_state(element);
+  
+  gst_info("gstthread: stateset %d %d\n", stateset, GST_STATE_PENDING(element));
+
+  switch (pending) {
     case GST_STATE_READY:
       if (!stateset) return FALSE;
       // we want to prepare our internal state for doing the iterations
-      gst_info("preparing thread \"%s\" for iterations:\n",
+      gst_info("gstthread: preparing thread \"%s\" for iterations:\n",
                gst_element_get_name(GST_ELEMENT(element)));
-//      gst_thread_prepare(thread);
+      //gst_thread_prepare(thread);
+      
       gst_bin_create_plan(GST_BIN(thread));
 //      if (thread->numentries == 0)
 //        return FALSE;
       // set the state to idle
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
       // create the thread if that's what we're supposed to do
-      gst_info("flags are 0x%08x\n",GST_FLAGS(thread));
+      gst_info("gstthread: flags are 0x%08x\n",GST_FLAGS(thread));
       if (GST_FLAG_IS_SET(thread,GST_THREAD_CREATE)) {
         gst_info("gstthread: starting thread \"%s\"\n",
                  gst_element_get_name(GST_ELEMENT(element)));
@@ -249,7 +259,7 @@ static GstElementStateReturn gst_thread_change_state(GstElement *element) {
         gst_info("gstthread: NOT starting thread \"%s\"\n",
                 gst_element_get_name(GST_ELEMENT(element)));
       }
-      return TRUE;
+      return GST_STATE_SUCCESS;
       break;
 #if OLDSTATE
     case ~GST_STATE_RUNNING:
@@ -259,7 +269,7 @@ static GstElementStateReturn gst_thread_change_state(GstElement *element) {
       gst_thread_signal_thread(thread);
       pthread_join(thread->thread_id,0);
       // tear down the internal state
-      gst_info("tearing down thread's iteration state\n");
+      gst_info("gstthread: tearing down thread's iteration state\n");
       // FIXME do stuff
       break;
 #endif
@@ -269,9 +279,8 @@ static GstElementStateReturn gst_thread_change_state(GstElement *element) {
               gst_element_get_name(GST_ELEMENT(element)));
       GST_FLAG_SET(thread,GST_THREAD_STATE_SPINNING);
       gst_thread_signal_thread(thread);
-      return TRUE;
       break;  
-    case ~GST_STATE_PLAYING:
+    case GST_STATE_PAUSED:
       gst_info("gstthread: stopping thread \"%s\"\n",
               gst_element_get_name(GST_ELEMENT(element)));
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
@@ -280,7 +289,6 @@ static GstElementStateReturn gst_thread_change_state(GstElement *element) {
     default:
       break;
   }
-*/
 
   return stateset;
 }

@@ -66,6 +66,8 @@ typedef enum {
 
 typedef struct _GstBuffer GstBuffer;
 
+#include "gstbufferpool.h"
+
 struct _GstBuffer {
   /* locking */
   GMutex *lock;
@@ -100,15 +102,22 @@ struct _GstBuffer {
 
   /* subbuffer support, who's my parent? */
   GstBuffer *parent;
+
+  /* this is a pointer to the buffer pool (if any) */
+  GstBufferPool *pool;
 };
 
 /* initialisation */
 void _gst_buffer_initialize();
 /* creating a new buffer from scratch */
 GstBuffer *gst_buffer_new();
+GstBuffer *gst_buffer_new_from_pool(GstBufferPool *pool);
 
 /* creating a subbuffer */
 GstBuffer *gst_buffer_create_sub(GstBuffer *parent,guint32 offset,guint32 size);
+
+/* adding data to a buffer */
+GstBuffer *gst_buffer_append(GstBuffer *buffer, GstBuffer *append);
 
 /* refcounting */
 void gst_buffer_ref(GstBuffer *buffer);

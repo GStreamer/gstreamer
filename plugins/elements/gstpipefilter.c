@@ -138,9 +138,9 @@ static gboolean gst_pipefilter_read_and_push(GstPipefilter *pipefilter) {
   g_return_val_if_fail(GST_BUFFER_DATA(newbuf) != NULL, FALSE);
 
   /* read it in from the file */
-  DEBUG("attemting to read %d bytes\n", pipefilter->bytes_per_read);
+  DEBUG("attemting to read %ld bytes\n", pipefilter->bytes_per_read);
   readbytes = read(pipefilter->fdout[0],GST_BUFFER_DATA(newbuf),pipefilter->bytes_per_read);
-  DEBUG("read %d bytes\n", readbytes);
+  DEBUG("read %ld bytes\n", readbytes);
   if (readbytes < 0) {
     if (errno == EAGAIN) {
       DEBUG("no input yet\n");
@@ -185,9 +185,9 @@ void gst_pipefilter_chain(GstPad *pad,GstBuffer *buf) {
   data = GST_BUFFER_DATA(buf);
   size = GST_BUFFER_SIZE(buf);
 
-  DEBUG("attemting to write %d bytes\n", size);
+  DEBUG("attemting to write %ld bytes\n", size);
   writebytes = write(pipefilter->fdin[1],data,size);
-  DEBUG("written %d bytes\n", writebytes);
+  DEBUG("written %ld bytes\n", writebytes);
   if (writebytes < 0) {
     perror("write");
     gst_element_error(GST_ELEMENT(pipefilter),"writing");
@@ -296,12 +296,12 @@ static GstElementStateReturn gst_pipefilter_change_state(GstElement *element) {
   /* otherwise (READY or higher) we need to open the file */
   } else {
     if (!GST_FLAG_IS_SET(element,GST_PIPEFILTER_OPEN)) {
-      if (!gst_disksrc_open_file(GST_PIPEFILTER(element)))
+      if (!gst_pipefilter_open_file(GST_PIPEFILTER(element)))
         return GST_STATE_FAILURE;
     }
   }
       
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
     return GST_ELEMENT_CLASS(parent_class)->change_state(element);
-  return TRUE;
+  return GST_STATE_SUCCESS;
 }

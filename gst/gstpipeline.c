@@ -111,31 +111,24 @@ static void gst_pipeline_prepare(GstPipeline *pipeline) {
 static GstElementStateReturn gst_pipeline_change_state(GstElement *element) {
   GstPipeline *pipeline;
 
-/*
   g_return_val_if_fail(GST_IS_PIPELINE(element), FALSE);
   pipeline = GST_PIPELINE(element);
 
-  switch (state) {
+
+  switch (GST_STATE_PENDING(pipeline)) {
     case GST_STATE_READY:
       // we need to set up internal state
       g_print("preparing pipeline \"%s\" for iterations:\n",
               gst_element_get_name(GST_ELEMENT(element)));
       gst_pipeline_prepare(pipeline);
       break;
-#if OLDSTATE
-    case ~GST_STATE_RUNNING:
-      // tear down the internal state
-      g_print("tearing down pipelines's iteration state\n");
-      break;
-#endif
     default:
       break;
   }
     
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
-    return GST_ELEMENT_CLASS(parent_class)->change_state(element,state);
-*/
-  return TRUE;
+    return GST_ELEMENT_CLASS(parent_class)->change_state(element);
+  return GST_STATE_SUCCESS;
 }
 
 

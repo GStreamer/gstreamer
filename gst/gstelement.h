@@ -111,7 +111,7 @@ _gst_print_statename(flag)); \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT))
 
 typedef enum {
-  GST_ELEMENT_MULTI_IN		= (1 << 16),
+  GST_ELEMENT_MULTI_IN		= (1 << 0),
 } GstElementFlags;
 
 #define GST_ELEMENT_IS_MULTI_IN(obj)	(GST_FLAGS(obj) & GST_ELEMENT_MULTI_IN)
