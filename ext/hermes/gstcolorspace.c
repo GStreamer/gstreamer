@@ -405,7 +405,7 @@ gst_colorspace_chain (GstPad *pad,GstData *_data)
   dest_bytes = ((space->destbpp+7)/8);
   src_bytes = ((space->srcbpp+7)/8);
 
-  outbuf = gst_pad_alloc_buffer (gst_pad_get_peer (pad), GST_BUFFER_OFFSET_NONE,
+  outbuf = gst_pad_alloc_buffer (space->srcpad, GST_BUFFER_OFFSET_NONE,
                                  (size * space->destbpp)/8);
   
   if (space->type == GST_COLORSPACE_YUV_RGB) {
