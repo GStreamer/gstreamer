@@ -382,7 +382,6 @@ gst_gdk_pixbuf_type_find (GstTypeFind *tf, gpointer ignore)
   guint8 *data;
   GdkPixbufLoader *pixbuf_loader;
   GdkPixbufFormat *format;
-  GError *error = NULL;
 
   data = gst_type_find_peek (tf, 0, GST_GDK_PIXBUF_TYPE_FIND_SIZE);
   if (data == NULL) return;
@@ -392,18 +391,18 @@ gst_gdk_pixbuf_type_find (GstTypeFind *tf, gpointer ignore)
   pixbuf_loader = gdk_pixbuf_loader_new();
   
   gdk_pixbuf_loader_write (pixbuf_loader, data, GST_GDK_PIXBUF_TYPE_FIND_SIZE,
-      &error);
+      NULL);
   
   format = gdk_pixbuf_loader_get_format (pixbuf_loader);
 
   if (format != NULL) {
     gchar **mlist = gdk_pixbuf_format_get_mime_types(format);
 
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MINIMUM,
         gst_caps_new ("gdk_pixbuf_type_find", mlist[0], NULL));
   }
 
-  gdk_pixbuf_loader_close (pixbuf_loader, &error);
+  gdk_pixbuf_loader_close (pixbuf_loader, NULL);
   g_object_unref (G_OBJECT (pixbuf_loader));
 }
 
