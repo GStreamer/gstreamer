@@ -448,8 +448,7 @@ gst_ogg_demux_src_event (GstPad * pad, GstEvent * event)
 
       GST_OGG_SET_STATE (ogg, GST_OGG_STATE_SEEK);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
-          );
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
       GST_DEBUG_OBJECT (ogg, "initiating seeking to offset %" G_GUINT64_FORMAT,
           offset);
       ogg->seek_pad = cur;
@@ -500,8 +499,7 @@ gst_ogg_demux_handle_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       GST_FLAG_UNSET (ogg, GST_OGG_FLAG_WAIT_FOR_DISCONT);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
-          );
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
       break;
     default:
       gst_pad_event_default (pad, event);
@@ -690,9 +688,22 @@ static gboolean
 gst_ogg_demux_seek_before (GstOggDemux * ogg, gint64 offset, gint64 min_offset)
 {
   gint64 before;
+  GstOggChain *chain;
+  gint streams;
 
+  /* figure out how many streams are in this chain */
+  chain = CURRENT_CHAIN (ogg);
+  if (chain) {
+    streams = g_slist_length (chain->pads);
+  } else {
+    streams = 1;
+  }
+
+  /* need to multiply the expected page size with the numer of streams we
+   * detected to have a good chance of finding all pages */
   before = ogg->seek_skipped ? ogg->seek_skipped * SETUP_SEEK_MULTIPLIER :
-      SETUP_EXPECTED_PAGE_SIZE;
+      SETUP_EXPECTED_PAGE_SIZE * streams;
+
   GST_DEBUG_OBJECT (ogg,
       "seeking to %" G_GINT64_FORMAT " bytes before %" G_GINT64_FORMAT,
       before, offset);
@@ -758,8 +769,7 @@ _find_chain_get_unknown_part (GstOggDemux * ogg, gint64 * start, gint64 * end)
   *end = G_MAXINT64;
 
   g_assert (ogg->current_chain >= 0);
-  FOR_PAD_IN_CURRENT_CHAIN (ogg, pad, *start = MAX (*start, pad->end_offset);
-      );
+  FOR_PAD_IN_CURRENT_CHAIN (ogg, pad, *start = MAX (*start, pad->end_offset););
 
   if (ogg->setup_state == SETUP_FIND_LAST_CHAIN) {
     *end = gst_file_pad_get_length (ogg->sinkpad);
@@ -889,8 +899,7 @@ _find_streams_check (GstOggDemux * ogg)
   } else {
     endpos = G_MAXINT64;
     FOR_PAD_IN_CHAIN (ogg, pad, ogg->chains->len - 1,
-        endpos = MIN (endpos, pad->start_offset);
-        );
+        endpos = MIN (endpos, pad->start_offset););
   }
   if (!ogg->seek_skipped || gst_ogg_demux_position (ogg) >= endpos) {
     /* have we found the endposition for all streams yet? */
