@@ -14,8 +14,6 @@ int main(int argc,char *argv[]) {
   g_print("have %d args\n",argc);
 
   gst_init(&argc,&argv);
-  gst_plugin_load("mp3parse");
-  gst_plugin_load("mpg123");
 
   pipeline = gst_pipeline_new("pipeline");
   g_return_if_fail(pipeline != NULL);
