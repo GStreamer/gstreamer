@@ -52,6 +52,8 @@
 #include <gst/gstevent.h>
 #include <gst/gstclock.h>
 #include <gst/gstsystemclock.h>
+#include <gst/gstqueue.h>
+#include <gst/gsttypefind.h>
 
 #include <gst/gstparse.h>
 #include <gst/gstregistry.h>
