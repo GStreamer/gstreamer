@@ -241,16 +241,18 @@ gst_switch_loop (GstElement *element)
   switchpad = g_list_nth_data (gstswitch->sinkpads, gstswitch->active_sinkpad);
   
   if (switchpad && switchpad->data) {
+    GstData *data = switchpad->data;
     
     /* Loose our reference to that data */
     gst_data_unref (switchpad->data);
+    switchpad->data = NULL;
     
     GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
                         "using data from active pad %p",
                         switchpad->sinkpad);
     
-    if (GST_IS_EVENT (switchpad->data)) {
-      GstEvent *event = GST_EVENT (switchpad->data);
+    if (GST_IS_EVENT (data)) {
+      GstEvent *event = GST_EVENT (data);
       GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
                           "handling event from active pad %p",
                           switchpad->sinkpad);
@@ -262,12 +264,11 @@ gst_switch_loop (GstElement *element)
       GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, gstswitch,
                           "pushing data from active pad %p to %p",
                           switchpad->sinkpad, gstswitch->srcpad);
-      gst_pad_push (gstswitch->srcpad, switchpad->data);
+      gst_pad_push (gstswitch->srcpad, data);
     }
     
     /* Mark this data as forwarded so that it won't get unrefed on next poll */
     switchpad->forwarded = TRUE;
-    switchpad->data = NULL;
   }
 }
 
