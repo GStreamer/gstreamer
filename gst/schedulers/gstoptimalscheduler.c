@@ -1765,15 +1765,16 @@ gst_opt_scheduler_show (GstScheduler *sched)
     GSList *groups = chain->groups;
     chains = g_slist_next (chains);
 
-    g_print ("+- chain %p: %d groups, %d enabled, flags %d\n", chain, chain->num_groups, chain->num_enabled, chain->flags);
+    g_print ("+- chain %p: refcount %d, %d groups, %d enabled, flags %d\n", 
+		    chain, chain->refcount, chain->num_groups, chain->num_enabled, chain->flags);
 
     while (groups) {
       GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) groups->data;
       GSList *elements = group->elements;
       groups = g_slist_next (groups);
 
-      g_print (" +- group %p: %d elements, %d enabled, flags %d, entry %s, %s\n", 
-		      group, group->num_elements, group->num_enabled, group->flags,
+      g_print (" +- group %p: refcount %d, %d elements, %d enabled, flags %d, entry %s, %s\n", 
+		      group, group->refcount, group->num_elements, group->num_enabled, group->flags,
 		      (group->entry ? GST_ELEMENT_NAME (group->entry): "(none)"),
 		      (group->type == GST_OPT_SCHEDULER_GROUP_GET ? "get-based" : "loop-based") );
 
