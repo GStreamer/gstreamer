@@ -96,7 +96,8 @@ _gst_library_errors_init (void)
           "to this error.  Please file a bug."));
   TABLE (t, LIBRARY, INIT, N_("Could not initialize supporting library."));
   TABLE (t, LIBRARY, SHUTDOWN, N_("Could not close supporting library."));
-  TABLE (t, LIBRARY, SETTINGS, N_("Could not close supporting library."));
+  TABLE (t, LIBRARY, SETTINGS, N_("Could not set settings."));
+  TABLE (t, LIBRARY, ENCODE, N_("Failed to encode image."));
 
   return t;
 }

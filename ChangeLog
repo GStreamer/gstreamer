@@ -1,3 +1,8 @@
+2005-03-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gsterror.c: (_gst_library_errors_init):
+	  Fix descriptions (#164479).
+
 2005-03-12  Benjamin Otte  <otte@gnome.org>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
