@@ -1,3 +1,16 @@
+2004-05-09  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_video_caps_with_data),
+	(gst_riff_create_audio_caps),
+	(gst_riff_create_audio_template_caps):
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_peek_head):
+	  Fix for unaligned RIFF files (i.e. where all the chunks together
+	  in a LIST chunk are not of the same size as the size given in
+	  the LIST chunk header). Fixes several odd WAVE files. Also fix
+	  ADPCM (block_align property) in audio, so that wavparse based
+	  on this works now as it used to stand-alone.
+
 2004-05-09  Edward Hervey  <bilboed@bilboed.com>
 
 	reviewed by Benjamin Otte  <otte@gnome.org>

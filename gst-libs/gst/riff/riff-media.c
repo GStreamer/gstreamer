@@ -323,6 +323,7 @@ GstCaps *
 gst_riff_create_audio_caps (guint16 codec_id,
     gst_riff_strh * strh, gst_riff_strf_auds * strf, char **codec_name)
 {
+  gboolean block_align = FALSE;
   GstCaps *caps = NULL;
 
   switch (codec_id) {
@@ -365,6 +366,15 @@ gst_riff_create_audio_caps (guint16 codec_id,
           "layout", G_TYPE_STRING, "microsoft", NULL);
       if (codec_name)
         *codec_name = g_strdup ("ADPCM audio");
+      block_align = TRUE;
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_DVI_ADPCM:
+      caps = gst_caps_new_simple ("audio/x-adpcm",
+          "layout", G_TYPE_STRING, "dvi", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("DVI ADPCM audio");
+      block_align = TRUE;
       break;
 
     case GST_RIFF_WAVE_FORMAT_MULAW:
@@ -413,10 +423,16 @@ gst_riff_create_audio_caps (guint16 codec_id,
     gst_caps_set_simple (caps,
         "rate", G_TYPE_INT, strf->rate,
         "channels", G_TYPE_INT, strf->channels, NULL);
+    if (block_align)
+      gst_caps_set_simple (caps,
+          "block_align", G_TYPE_INT, strf->blockalign, NULL);
   } else {
     gst_caps_set_simple (caps,
         "rate", GST_TYPE_INT_RANGE, 8000, 96000,
         "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+    if (block_align)
+      gst_caps_set_simple (caps,
+          "block_align", GST_TYPE_INT_RANGE, 1, 8192, NULL);
   }
 
   return caps;
@@ -501,6 +517,7 @@ gst_riff_create_audio_template_caps (void)
     GST_RIFF_WAVE_FORMAT_ALAW,
     GST_RIFF_WAVE_FORMAT_MULAW,
     GST_RIFF_WAVE_FORMAT_ADPCM,
+    GST_RIFF_WAVE_FORMAT_DVI_ADPCM,
     /* FILL ME */
     0
   };
