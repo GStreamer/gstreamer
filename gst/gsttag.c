@@ -560,7 +560,7 @@ gst_tag_list_get_tag_size (const GstTagList *list, const gchar *tag)
  * @list: list to set tags in
  * @mode: the mode to use
  * @tag: tag
- * @...: values to set
+ * @...: NULL-terminated list of values to set
  *
  * Sets the values for the given tags using the specified mode.
  */
