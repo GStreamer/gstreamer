@@ -1107,6 +1107,37 @@ theora_type_find (GstTypeFind *tf, gpointer private)
   gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, THEORA_CAPS);
 }
 
+/*** audio/x-speex ***********************************************************/
+
+static GstStaticCaps speex_caps = GST_STATIC_CAPS ("audio/x-speex");
+#define SPEEX_CAPS (gst_static_caps_get(&speex_caps))
+static void
+speex_type_find (GstTypeFind *tf, gpointer private)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 80);
+
+  if (data) {
+    /* 8 byte string "Speex   "
+       24 byte speex version string + int */
+    if (memcmp (data, "Speex   ", 8) != 0) return;
+    data += 32;
+
+    /* 4 byte header size >= 80 */
+    if (GINT32_FROM_LE (*((gint32 *) data)) < 80) return;
+    data += 4;
+
+    /* 4 byte sample rate <= 48000 */
+    if (GINT32_FROM_LE (*((gint32 *) data)) > 48000) return;
+    data += 4;
+
+    /* currently there are only 3 speex modes. */
+    if (GINT32_FROM_LE (*((gint32 *) data)) > 3) return;
+    data += 12;
+
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, SPEEX_CAPS);
+  } 
+}
+
 /*** generic typefind for streams that have some data at a specific position***/
 
 typedef struct {
@@ -1301,6 +1332,8 @@ plugin_init (GstPlugin *plugin)
 	  vorbis_type_find, NULL, VORBIS_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-theora", GST_RANK_PRIMARY,
 	  theora_type_find, NULL, THEORA_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "audio/x-speex", GST_RANK_PRIMARY,
+	  speex_type_find, NULL, SPEEX_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-m4a", GST_RANK_PRIMARY,
 	  m4a_type_find, m4a_exts, AAC_CAPS, NULL);
   
