@@ -24,8 +24,8 @@
 
 #include <config.h>
 #include <gst/gst.h>
-#include <gst/riff/riff.h>
-
+#include <riff.h>
+#include <gst/gstbytestream.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,10 +45,9 @@ extern "C" {
 
 
 #define GST_WAVPARSE_UNKNOWN	0	/* initialized state */
-#define GST_WAVPARSE_CHUNK_FMT	1	/* searching for fmt */
-#define GST_WAVPARSE_CHUNK_DATA	2	/* searching for data */
-#define GST_WAVPARSE_DATA	3	/* in data region */
-#define GST_WAVPARSE_OTHER	4	/* in unknown region */
+#define GST_WAVPARSE_START      1       /* At the start */
+#define GST_WAVPARSE_DATA	2	/* in data region */
+#define GST_WAVPARSE_OTHER	3	/* in unknown region */
   
 typedef struct _GstWavParse GstWavParse;
 typedef struct _GstWavParseClass GstWavParseClass;
@@ -56,18 +55,12 @@ typedef struct _GstWavParseClass GstWavParseClass;
 struct _GstWavParse {
   GstElement element;
 
+  GstByteStream *bs;
   /* pads */
   GstPad *sinkpad,*srcpad;
 
   /* WAVE decoding state */
   gint state;
-
-  /* RIFF decoding state */
-  GstRiff *riff;
-  gulong riff_nextlikely;
-
-  /* expected length of audio */
-  gulong size;
 
   /* format of audio, see defines below */
   gint format;
@@ -78,10 +71,12 @@ struct _GstWavParse {
   gint channels;
   gint width;
 
-  gint64 offset;
-  gint64 datastart;
-  gboolean need_discont;
-
+  int dataleft;
+  int byteoffset;
+  
+  gboolean seek_pending;
+  guint64 seek_offset;
+  
   GstBuffer *buf;
 
   GstCaps *metadata;
