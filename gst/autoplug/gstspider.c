@@ -182,8 +182,10 @@ gst_spider_init (GstSpider * spider)
 {
   /* use only elements which have sources and sinks and where the sinks have caps */
   /* FIXME: How do we handle factories that are added after the spider was constructed? */
-  spider->factories = gst_autoplug_factories_filters_with_sink_caps ((GList *)
-      gst_registry_pool_feature_list (GST_TYPE_ELEMENT_FACTORY));
+  GList *list = gst_registry_pool_feature_list (GST_TYPE_ELEMENT_FACTORY);
+
+  spider->factories = gst_autoplug_factories_filters_with_sink_caps (list);
+  g_list_free (list);
 
   spider->links = NULL;
 
@@ -198,10 +200,20 @@ static void
 gst_spider_dispose (GObject * object)
 {
   GstSpider *spider;
+  GList *list;
 
   spider = GST_SPIDER (object);
   g_list_free (spider->factories);
   spider->factories = NULL;
+
+  for (list = spider->links; list; list = list->next) {
+    GstSpiderConnection *conn = list->data;
+
+    g_list_free (conn->path);
+    g_free (conn);
+  }
+  g_list_free (spider->links);
+  spider->links = NULL;
 
   ((GObjectClass *) parent_class)->dispose (object);
 }

@@ -1,5 +1,13 @@
 2004-07-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	patch by: Sebastien Cote <sc5 at hermes.usherb.ca>
+
+	* gst/autoplug/gstspider.c: (gst_spider_init),
+	(gst_spider_dispose):
+	  fix spider memleaks.  fixes #137863
+
+2004-07-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	patch by: Joe Marcus Clarke <marcus at freebsd dot org>
 
 	* gst/schedulers/gstoptimalscheduler.c:
