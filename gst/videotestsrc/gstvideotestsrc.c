@@ -268,7 +268,7 @@ gst_videotestsrc_getcaps (GstPad * pad, GstCaps * caps)
 			 "width", GST_PROPS_INT (640),
 			 "height", GST_PROPS_INT (480));
   } else {
-    return gst_videotestsrc_get_capslist ();
+    return gst_caps_ref (gst_videotestsrc_get_capslist ());
   }
 }
 
