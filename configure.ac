@@ -3,7 +3,7 @@ AC_CANONICAL_TARGET
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gstreamer, GST_VERSION, 0, 8, 7, 1, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gstreamer-threaded, GST_VERSION, 0, 9, 0, 0, GST_CVS="no", GST_CVS="yes")
 
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
@@ -660,7 +660,6 @@ include/Makefile
 gst/Makefile
 gst/gstconfig.h
 gst/gstversion.h
-gst/autoplug/Makefile
 gst/indexers/Makefile
 gst/elements/Makefile
 gst/parse/Makefile
@@ -668,7 +667,6 @@ gst/schedulers/Makefile
 gst/registries/Makefile
 libs/Makefile
 libs/gst/Makefile
-libs/gst/bytestream/Makefile
 libs/gst/control/Makefile
 libs/gst/dataprotocol/Makefile
 libs/gst/getbits/Makefile

@@ -198,7 +198,8 @@ gst_headers =			\
 	gstregistry.h		\
 	gstregistrypool.h	\
 	gstparse.h		\
-	gstxml.h
+	gstxml.h		\
+	gsttask.h
 
 libgstreamer_@GST_MAJORMINOR@include_HEADERS = $(gst_headers)
 nodist_libgstreamer_@GST_MAJORMINOR@include_HEADERS = \

@@ -1,4 +1,4 @@
-Name: 		gstreamer
+Name: 		gstreamer-threaded
 Version: 	@VERSION@
 Release: 	@GST_VERSION_RELEASE@
 Summary: 	GStreamer streaming media framework runtime.
@@ -7,7 +7,7 @@ Group: 		Libraries/Multimedia
 License: 	LGPL
 URL:		http://gstreamer.net/
 Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
-Source: 	http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-%{version}.tar.gz
+Source: 	http://gstreamer.freedesktop.org/src/gstreamer/%{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 %define		majorminor	@GST_MAJORMINOR@
@@ -89,7 +89,7 @@ This package contains wrapper scripts for the command-line tools that work
 with different major/minor versions of GStreamer.
                                                                                 
 %prep
-%setup -n gstreamer-%{version}
+%setup -n %{name}-%{version}
 
 %build
 %configure \
@@ -132,20 +132,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstcontrol-%{majorminor}.so.*
 %dir %{_libdir}/gstreamer-%{majorminor}
-%{_libdir}/gstreamer-%{majorminor}/libgstbasicomega*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstoptscheduler.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstoptomega*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstbasicgthreadscheduler*.so
-%{_libdir}/gstreamer-%{majorminor}/libgstoptgthreadscheduler*.so
-%{_libdir}/gstreamer-%{majorminor}/libgstfairgthreadscheduler*.so
 %{_libdir}/gstreamer-%{majorminor}/libgstelements*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstgetbits*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstspider*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstindexers.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstbytestream.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstdataprotocol.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstentrygthreadscheduler.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstentryomegascheduler.so*
+%{_libdir}/gstreamer-%{majorminor}/libthreadscheduler.so*
 %{_bindir}/gst-xmlinspect-%{majorminor}
 %{_bindir}/gst-complete-%{majorminor}
 %{_bindir}/gst-compprep-%{majorminor}
@@ -190,7 +181,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/gstreamer-%{majorminor}/gst/control/*.h
 %dir %{_includedir}/gstreamer-%{majorminor}/gst/getbits
 %{_includedir}/gstreamer-%{majorminor}/gst/getbits/getbits.h
-%{_includedir}/gstreamer-%{majorminor}/gst/bytestream/*.h
 %{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol/dataprotocol.h
 %{_libdir}/libgstreamer-%{majorminor}.so
 %{_libdir}/libgstcontrol-%{majorminor}.so
