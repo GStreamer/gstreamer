@@ -1,3 +1,10 @@
+2004-07-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/theora/theoradec.c: (gst_theora_dec_class_init),
+	(theora_dec_src_query), (theora_dec_event):
+	* ext/theora/theoraenc.c: (gst_theora_enc_class_init):
+	  add debugging categories.  Remove \n's.
+
 2004-07-13  Johan Dahlin  <johan@gnome.org>
 
 	* gst/playback/gstplaybin.c (gst_play_bin_set_property) 

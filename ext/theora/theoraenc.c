@@ -26,6 +26,8 @@
 #include <string.h>
 #include <gst/tag/tag.h>
 
+GST_DEBUG_CATEGORY (theoraenc_debug);
+#define GST_CAT_DEFAULT theoraenc_debug
 
 #define GST_TYPE_THEORA_ENC \
   (gst_theora_enc_get_type())
@@ -195,6 +197,7 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
           (GParamFlags) G_PARAM_READWRITE));
 
   gstelement_class->change_state = theora_enc_change_state;
+  GST_DEBUG_CATEGORY_INIT (theoraenc_debug, "theoraenc", 0, "Theora encoder");
 }
 
 static void

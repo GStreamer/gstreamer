@@ -26,6 +26,8 @@
 #include <string.h>
 #include <gst/tag/tag.h>
 
+GST_DEBUG_CATEGORY (theoradec_debug);
+#define GST_CAT_DEFAULT theoradec_debug
 
 #define GST_TYPE_THEORA_DEC \
   (gst_theora_dec_get_type())
@@ -114,6 +116,8 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gstelement_class->change_state = theora_dec_change_state;
+
+  GST_DEBUG_CATEGORY_INIT (theoradec_debug, "theoradec", 0, "Theora decoder");
 }
 
 static void
@@ -230,7 +234,7 @@ theora_dec_src_query (GstPad * pad, GstQueryType query, GstFormat * format,
     return FALSE;
 
   GST_LOG_OBJECT (dec,
-      "query %u: peer returned granulepos: %llu - we return %llu (format %u)\n",
+      "query %u: peer returned granulepos: %llu - we return %llu (format %u)",
       query, granulepos, *value, *format);
   return TRUE;
 }
@@ -281,7 +285,7 @@ theora_dec_event (GstTheoraDec * dec, GstEvent * event)
       if (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT, &value)) {
         dec->granulepos = value;
         GST_DEBUG_OBJECT (dec,
-            "setting granuleposition to %" G_GUINT64_FORMAT " after discont\n",
+            "setting granuleposition to %" G_GUINT64_FORMAT " after discont",
             value);
       } else {
         GST_WARNING_OBJECT (dec,
