@@ -100,7 +100,7 @@ static GstStaticPadTemplate gst_rmdemux_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-pn-realvideo")
+    GST_STATIC_CAPS ("application/vnd.rn-realmedia")
     );
 
 static GstStaticPadTemplate gst_rmdemux_videosrc_template =
@@ -307,7 +307,7 @@ gst_rmdemux_loop (GstElement * element)
   //int size;
   int ret;
   int rlen;
-  int debug = 0;
+  int debug = 1;
 
   /* FIXME _tell gets the offset wrong */
   //cur_offset = gst_bytestream_tell(rmdemux->bs);
@@ -339,7 +339,7 @@ gst_rmdemux_loop (GstElement * element)
       g_print ("fourcc " GST_FOURCC_FORMAT "\n", GST_FOURCC_ARGS (fourcc));
       g_print ("length %08x\n", length);
 
-      rlen = MIN (length, 4096);
+      rlen = MIN (length, 4096) - 8;
 
       switch (fourcc) {
         case GST_MAKE_FOURCC ('.', 'R', 'M', 'F'):
@@ -520,7 +520,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         gst_pad_new_from_template (gst_static_pad_template_get
         (&gst_rmdemux_audiosrc_template), g_strdup_printf ("audio_%02d",
             rmdemux->n_audio_streams));
-    stream->caps = gst_caps_new_simple ("audio/x-ac3", NULL);
+    stream->caps = gst_caps_new_simple ("audio/x-pn-realaudio", NULL);
     gst_caps_set_simple (stream->caps,
         "rate", G_TYPE_INT, (int) stream->rate,
         "channels", G_TYPE_INT, stream->n_channels, NULL);
@@ -686,9 +686,11 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, void *data, int length)
   offset += re_skip_pascal_string (data + offset);
   stream2_type_string = re_get_pascal_string (data + offset);
   offset += re_skip_pascal_string (data + offset);
-  if (strcmp (stream1_type_string, "Video Stream") == 0) {
+  /* It could either be "Video Stream" or "The Video Stream",
+     same thing for Audio */
+  if (strstr (stream1_type_string, "Video Stream")) {
     stream_type = GST_RMDEMUX_STREAM_VIDEO;
-  } else if (strcmp (stream1_type_string, "Audio Stream") == 0) {
+  } else if (strstr (stream1_type_string, "Audio Stream")) {
     stream_type = GST_RMDEMUX_STREAM_AUDIO;
   } else if (strcmp (stream1_type_string, "") == 0 &&
       strcmp (stream2_type_string, "logical-fileinfo") == 0) {
@@ -706,35 +708,56 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, void *data, int length)
   stream->subtype = stream_type;
   switch (stream_type) {
     case GST_RMDEMUX_STREAM_VIDEO:
+      /* VIDO[RV10/RV30/RV40] */
       stream->fourcc = RMDEMUX_FOURCC_GET (data + offset + 8);
+
       stream->width = RMDEMUX_GUINT16_GET (data + offset + 12);
       stream->height = RMDEMUX_GUINT16_GET (data + offset + 14);
       stream->rate = RMDEMUX_GUINT16_GET (data + offset + 16);
       break;
     case GST_RMDEMUX_STREAM_AUDIO:
+      /* .ra4, .ra5 */
       stream->fourcc = RMDEMUX_FOURCC_GET (data + offset + 8);
+
       stream->rate = RMDEMUX_GUINT32_GET (data + offset + 48);
+      /* cook (cook), sipro (sipr), dnet (dnet) */
       break;
     case GST_RMDEMUX_STREAM_FILEINFO:
     {
-      int end;
-      int length;
+      int element_nb;
 
-      length = RMDEMUX_GUINT32_GET (data + offset);
-      end = offset + length;
+      /* Length of this section */
+      g_print ("length2: 0x%08x\n", RMDEMUX_GUINT32_GET (data + offset));
       offset += 4;
-      //re_hexdump_bytes(data + offset,14,offset);
-      offset += 14;
-      offset += re_dump_pascal_string (data + offset);
-      //re_hexdump_bytes(data + offset,10,offset);
-      offset += 10;
-      while (offset < end) {
-        //re_hexdump_bytes(data + offset,6,offset);
+
+      /* Unknown : 00 00 00 00 */
+      re_hexdump_bytes (data + offset, 4, offset);
+      offset += 4;
+
+      /* Number of variables that would follow (loop iterations) */
+      element_nb = RMDEMUX_GUINT32_GET (data + offset);
+      offset += 4;
+
+      while (element_nb) {
+        printf ("\n");
+
+        /* Category Id : 00 00 00 XX 00 00 */
+        re_hexdump_bytes (data + offset, 6, offset);
         offset += 6;
+
+        /* Variable Name */
         offset += re_dump_pascal_string (data + offset);
-        //re_hexdump_bytes(data + offset,5,offset);
+
+        /* Variable Value Type */
+        /*   00 00 00 00 00 => integer/boolean, preceded by length */
+        /*   00 00 00 02 00 => pascal string, preceded by length, no trailing \0 */
+        re_hexdump_bytes (data + offset, 5, offset);
         offset += 5;
+
+        /* Variable Value */
         offset += re_dump_pascal_string (data + offset);
+
+        element_nb--;
       }
     }
       break;
@@ -769,7 +792,8 @@ gst_rmdemux_dump_mdpr (GstRMDemux * rmdemux, void *data, int length)
   offset += re_dump_pascal_string (data + offset);
   g_print ("length: 0x%08x\n", RMDEMUX_GUINT32_GET (data + offset));
   offset += 4;
-  if (strcmp (stream_type, "Video Stream") == 0) {
+
+  if (strstr (stream_type, "Video Stream")) {
     g_print ("unknown: 0x%08x\n", RMDEMUX_GUINT32_GET (data + offset + 0));
     g_print ("unknown: 0x%08x\n", RMDEMUX_GUINT32_GET (data + offset + 4));
     fourcc = RMDEMUX_FOURCC_GET (data + offset + 8);
@@ -778,7 +802,7 @@ gst_rmdemux_dump_mdpr (GstRMDemux * rmdemux, void *data, int length)
     g_print ("height: %d\n", RMDEMUX_GUINT16_GET (data + offset + 14));
     g_print ("rate: %d\n", RMDEMUX_GUINT16_GET (data + offset + 16));
     offset += 18;
-  } else if (strcmp (stream_type, "Audio Stream") == 0) {
+  } else if (strstr (stream_type, "Audio Stream")) {
     g_print ("unknown: 0x%08x\n", RMDEMUX_GUINT32_GET (data + offset + 0));
     g_print ("unknown: 0x%08x\n", RMDEMUX_GUINT32_GET (data + offset + 4));
     fourcc = RMDEMUX_FOURCC_GET (data + offset + 8);
@@ -792,25 +816,42 @@ gst_rmdemux_dump_mdpr (GstRMDemux * rmdemux, void *data, int length)
     g_print ("rate2: %d\n", RMDEMUX_GUINT32_GET (data + offset + 52));
     offset += 56;
   } else if (strcmp (stream_type, "") == 0) {
-    int end;
 
-    end = offset + RMDEMUX_GUINT32_GET (data + offset);
+    int element_nb;
+
+    /* Length of this section */
     g_print ("length2: 0x%08x\n", RMDEMUX_GUINT32_GET (data + offset));
     offset += 4;
-    re_hexdump_bytes (data + offset, 14, offset);
-    offset += 14;
-    offset += re_dump_pascal_string (data + offset);
-    re_hexdump_bytes (data + offset, 10, offset);
-    offset += 10;
-    while (offset < end) {
+
+    /* Unknown : 00 00 00 00 */
+    re_hexdump_bytes (data + offset, 4, offset);
+    offset += 4;
+
+    /* Number of variables that would follow (loop iterations) */
+    element_nb = RMDEMUX_GUINT32_GET (data + offset);
+    offset += 4;
+
+    while (element_nb) {
+      printf ("\n");
+
+      /* Category Id : 00 00 00 XX 00 00 */
       re_hexdump_bytes (data + offset, 6, offset);
       offset += 6;
+
+      /* Variable Name */
       offset += re_dump_pascal_string (data + offset);
+
+      /* Variable Value Type */
+      /*   00 00 00 00 00 => integer/boolean, preceded by length */
+      /*   00 00 00 02 00 => pascal string, preceded by length, no trailing \0 */
       re_hexdump_bytes (data + offset, 5, offset);
       offset += 5;
-      offset += re_dump_pascal_string (data + offset);
-    }
 
+      /* Variable Value */
+      offset += re_dump_pascal_string (data + offset);
+
+      element_nb--;
+    }
   }
   re_hexdump_bytes (data + offset, length - offset, offset);
   g_print ("\n");
