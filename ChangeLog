@@ -1,5 +1,12 @@
 2004-12-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_video_caps_with_data),
+	(gst_riff_create_video_template_caps):
+	  Add h264.
+
+2004-12-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst-libs/gst/audio/Makefile.am:
 	  Try to fix buildbot.
 
