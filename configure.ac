@@ -107,16 +107,12 @@ if test "x$broken-plugins" = "$xyes"; then
   USE_ARTSC="yes"
   USE_LIBGSM="yes"
   USE_FLACLIB="yes"
-  USE_LIBAVIFILE="yes"
-  USE_LIBMAD="yes"
 else
   AC_MSG_NOTICE(not building broken plugins)
   USE_ARTS="no"
   USE_ARTSC="no"
   USE_LIBGSM="no"
   USE_FLACLIB="no"
-  USE_LIBAVIFILE="no"
-  USE_LIBMAD="no"
 fi
 
 
