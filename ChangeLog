@@ -1,3 +1,11 @@
+2004-12-16  Edward Hervey  <bilboed@bilboed.com>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/gst/tmpl/gstprobe.sgml:
+	  Fix documentation of probe callback - it is supposed to return
+	  FALSE, not TRUE, to remove data from the stream (#159087).
+
 2004-12-16  Daniel Gazard  <dany42@free.fr>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

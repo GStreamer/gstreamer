@@ -36,7 +36,7 @@ The function that will be called when a probe is activated.
 @probe: The probe that signalled the callback
 @data: The GstData that triggered the probe
 @user_data: user data
-@Returns: TRUE if the GstData should be removed from the stream.
+@Returns: FALSE if the GstData should be removed from the stream.
 
 
 <!-- ##### FUNCTION gst_probe_new ##### -->
