@@ -37,7 +37,11 @@ GST_DEBUG_CATEGORY_EXTERN (alsa_debug);
 /* NOTE: these functions require a GObject *this and can only be used in 
    functions that return TRUE on success and FALSE on error */
 #define SIMPLE_ERROR_CHECK(value) G_STMT_START{ \
-  int err = (value); if (err < 0) { return FALSE; } \
+  int err = (value); \
+  if (err < 0) { \
+    GST_WARNING_OBJECT (this, "\"" #value "\": %s", snd_strerror (err)); \
+    return FALSE; \
+  } \
 }G_STMT_END
 
 

@@ -1,5 +1,12 @@
 2004-03-24  Benjamin Otte  <otte@gnome.org>
 
+	* ext/alsa/gstalsa.c: (gst_alsa_open_audio),
+	(gst_alsa_probe_hw_params):
+	* ext/alsa/gstalsa.h:
+	  debugging output fixes
+
+2004-03-24  Benjamin Otte  <otte@gnome.org>
+
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_set_property):
 	  don't g_return_if_fail if element is PLAYING, fail silently as every
 	  other element.

@@ -1114,7 +1114,7 @@ gst_alsa_open_audio (GstAlsa * this)
   if (!gst_element_get_pad_list (GST_ELEMENT (this)))
     return TRUE;
 
-  GST_INFO ("Opening alsa device \"%s\"...\n", this->device);
+  GST_INFO ("Opening alsa device \"%s\"...", this->device);
 
 #if 0
   /* enable this to get better debugging */
@@ -1151,7 +1151,7 @@ gst_alsa_probe_hw_params (GstAlsa * this, GstAlsaFormat * format)
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (format != NULL, FALSE);
 
-  GST_INFO ("Probing format: %s %dHz, %d channels\n",
+  GST_INFO ("Probing format: %s %dHz, %d channels",
       snd_pcm_format_name (format->format), format->rate, format->channels);
 
   snd_pcm_hw_params_alloca (&hw_params);
@@ -1159,8 +1159,10 @@ gst_alsa_probe_hw_params (GstAlsa * this, GstAlsaFormat * format)
   SIMPLE_ERROR_CHECK (snd_pcm_hw_params_set_periods_integer (this->handle,
           hw_params));
 
+#if 0
   /* enable this for soundcard specific debugging */
-  /* snd_pcm_hw_params_dump (hw_params, this->out); */
+  snd_pcm_hw_params_dump (hw_params, this->out);
+#endif
 
   mask = alloca (snd_pcm_access_mask_sizeof ());
   snd_pcm_access_mask_none (mask);
