@@ -52,38 +52,40 @@ extern gchar *_gst_progname;
 
 
 /***** Categories and colorization *****/
+/* be careful with these, make them match the enum */
 static gchar *_gst_info_category_strings[] = {
-  "GST_INIT",
-  "COTHREADS",
-  "COTHREAD_SWITCH",
-  "AUTOPLUG",
-  "AUTOPLUG_ATTEMPT",
-  "PARENTAGE",
-  "STATES",
-  "PLANNING",
-  "SCHEDULING",
-  "DATAFLOW",
-  "BUFFER",
-  "CAPS",
-  "CLOCK",
-  "ELEMENT_PADS",
-  "ELEMENTFACTORY",
-  "PADS",
-  "PIPELINE",
-  "PLUGIN_LOADING",
-  "PLUGIN_ERRORS",
-  "PLUGIN_INFO",
-  "PROPERTIES",
-  "THREAD",
-  "TYPES",
-  "XML",
-  "NEGOTIATION",
-  "REFCOUNTING",
-  "EVENT",
-  "PARAMS",
+  /* [GST_CAT_GST_INIT]		= */ "GST_INIT",
+  /* [GST_CAT_COTHREADS]	= */ "COTHREADS",
+  /* [GST_CAT_COTHREAD_SWITCH]	= */ "COTHREAD_SWITCH",
+  /* [GST_CAT_AUTOPLUG]		= */ "AUTOPLUG",
+  /* [GST_CAT_AUTOPLUG_ATTEMPT]	= */ "AUTOPLUG_ATTEMPT",
+  /* [GST_CAT_PARENTAGE]	= */ "PARENTAGE",
+  /* [GST_CAT_STATES]		= */ "STATES",
+  /* [GST_CAT_PLANNING]		= */ "PLANNING",
+  /* [GST_CAT_SCHEDULING]	= */ "SCHEDULING",
+  /* [GST_CAT_DATAFLOW]		= */ "DATAFLOW",
+  /* [GST_CAT_BUFFER]		= */ "BUFFER",
+  /* [GST_CAT_CAPS]		= */ "CAPS",
+  /* [GST_CAT_CLOCK]		= */ "CLOCK",
+  /* [GST_CAT_ELEMENT_PADS]	= */ "ELEMENT_PADS",
+  /* [GST_CAT_ELEMENT_FACTORY]	= */ "ELEMENTFACTORY",
+  /* [GST_CAT_PADS]		= */ "PADS",
+  /* [GST_CAT_PIPELINE]		= */ "PIPELINE",
+  /* [GST_CAT_PLUGIN_LOADING]	= */ "PLUGIN_LOADING",
+  /* [GST_CAT_PLUGIN_ERRORS]	= */ "PLUGIN_ERRORS",
+  /* [GST_CAT_PLUGIN_INFO]	= */ "PLUGIN_INFO",
+  /* [GST_CAT_PROPERTIES]	= */ "PROPERTIES",
+  /* [GST_CAT_THREAD]		= */ "THREAD",
+  /* [GST_CAT_TYPES]		= */ "TYPES",
+  /* [GST_CAT_XML]		= */ "XML",
+  /* [GST_CAT_NEGOTIATION]	= */ "NEGOTIATION",
+  /* [GST_CAT_REFCOUNTING]	= */ "REFCOUNTING",
+  /* [GST_CAT_EVENT]		= */ "EVENT",
+  /* [GST_CAT_PARAMS]		= */ "PARAMS",
   "",
   "",
-  "CALL_TRACE",
+  /* [GST_CAT_CALL_TRACE]	= */ "CALL_TRACE",
+  /* [31]			= */ 
 };
 
 /**
@@ -111,38 +113,40 @@ gst_get_category_name (gint category) {
  * Background color codes:
  * 40=black 41=red 42=green 43=yellow 44=blue 45=magenta 46=cyan 47=white
  */
+/* be careful with these, make them match the enum */
 const gchar *_gst_category_colors[32] = {
-  [GST_CAT_GST_INIT]		= "07;37",
-  [GST_CAT_COTHREADS]		= "00;32",
-  [GST_CAT_COTHREAD_SWITCH]	= "00;37;42",
-  [GST_CAT_AUTOPLUG]		= "00;34",
-  [GST_CAT_AUTOPLUG_ATTEMPT]	= "00;36;44",
-  [GST_CAT_PARENTAGE]		= "01;37;41",		/* !! */
-  [GST_CAT_STATES]		= "00;31",
-  [GST_CAT_PLANNING]		= "07;35",
-  [GST_CAT_SCHEDULING]		= "00;35",
-  [GST_CAT_DATAFLOW]		= "00;32",
-  [GST_CAT_BUFFER]		= "00;32",
-  [GST_CAT_CAPS]		= "04;34",
-  [GST_CAT_CLOCK]		= "00;33",		/* !! */
-  [GST_CAT_ELEMENT_PADS]	= "01;37;41",		/* !! */
-  [GST_CAT_ELEMENT_FACTORY]	= "01;37;41",		/* !! */
-  [GST_CAT_PADS]		= "01;37;41",		/* !! */
-  [GST_CAT_PIPELINE]		= "01;37;41",		/* !! */
-  [GST_CAT_PLUGIN_LOADING]	= "00;36",
-  [GST_CAT_PLUGIN_ERRORS]	= "05;31",
-  [GST_CAT_PLUGIN_INFO]		= "00;36",
-  [GST_CAT_PROPERTIES]		= "00;37;44",		/* !! */
-  [GST_CAT_THREAD]		= "00;31",
-  [GST_CAT_TYPES]		= "01;37;41",		/* !! */
-  [GST_CAT_XML]			= "01;37;41",		/* !! */
-  [GST_CAT_NEGOTIATION]		= "07;34",
-  [GST_CAT_REFCOUNTING]		= "00;34:42",
-  [GST_CAT_EVENT]		= "01;37;41",		/* !! */
-  [GST_CAT_PARAMS]		= "00;30;43",		/* !! */
-
-  [GST_CAT_CALL_TRACE]		= "",
-  [31]				= "05;31",
+  /* [GST_CAT_GST_INIT]		= */ "07;37",
+  /* [GST_CAT_COTHREADS]	= */ "00;32",
+  /* [GST_CAT_COTHREAD_SWITCH]	= */ "00;37;42",
+  /* [GST_CAT_AUTOPLUG]		= */ "00;34",
+  /* [GST_CAT_AUTOPLUG_ATTEMPT]	= */ "00;36;44",
+  /* [GST_CAT_PARENTAGE]	= */ "01;37;41",	/* !! */
+  /* [GST_CAT_STATES]		= */ "00;31",
+  /* [GST_CAT_PLANNING]		= */ "07;35",
+  /* [GST_CAT_SCHEDULING]	= */ "00;35",
+  /* [GST_CAT_DATAFLOW]		= */ "00;32",
+  /* [GST_CAT_BUFFER]		= */ "00;32",
+  /* [GST_CAT_CAPS]		= */ "04;34",
+  /* [GST_CAT_CLOCK]		= */ "00;33",		/* !! */
+  /* [GST_CAT_ELEMENT_PADS]	= */ "01;37;41",	/* !! */
+  /* [GST_CAT_ELEMENT_FACTORY]	= */ "01;37;41",	/* !! */
+  /* [GST_CAT_PADS]		= */ "01;37;41",	/* !! */
+  /* [GST_CAT_PIPELINE]		= */ "01;37;41",	/* !! */
+  /* [GST_CAT_PLUGIN_LOADING]	= */ "00;36",
+  /* [GST_CAT_PLUGIN_ERRORS]	= */ "05;31",
+  /* [GST_CAT_PLUGIN_INFO]	= */ "00;36",
+  /* [GST_CAT_PROPERTIES]	= */ "00;37;44",	/* !! */
+  /* [GST_CAT_THREAD]		= */ "00;31",
+  /* [GST_CAT_TYPES]		= */ "01;37;41",	/* !! */
+  /* [GST_CAT_XML]		= */ "01;37;41",	/* !! */
+  /* [GST_CAT_NEGOTIATION]	= */ "07;34",
+  /* [GST_CAT_REFCOUNTING]	= */ "00;34:42",
+  /* [GST_CAT_EVENT]		= */ "01;37;41",	/* !! */
+  /* [GST_CAT_PARAMS]		= */ "00;30;43",	/* !! */
+  				     "",
+  				     "",
+  /* [GST_CAT_CALL_TRACE]	= */ "",
+  /* [31]			= */ "05;31",
 };
 
 /* colorization hash - DEPRACATED in favor of above */
@@ -152,7 +156,6 @@ inline gint _gst_debug_stringhash_color(gchar *file) {
   filecolor = (filecolor % 6) + 31;
   return filecolor;
 }
-
 
 
 /***** DEBUG system *****/
