@@ -182,15 +182,17 @@ gst_identity_loop (GstElement *element)
   identity = GST_IDENTITY (element);
 
   do {
-    g_print("\n");
+//    g_print("\n");
 
     for (i=0;i<identity->count;i++) {
-      g_print("bstest: getting a buffer of %d bytes\n",identity->byte_size);
+//      g_print("bstest: getting a buffer of %d bytes\n",identity->byte_size);
       buf = gst_bytestream2_read(identity->bs,identity->byte_size);
       if (!buf) g_print("BUFFER IS BOGUS\n");
-      g_print("pushing the buffer, %d bytes at %d\n",GST_BUFFER_SIZE(buf),GST_BUFFER_OFFSET(buf));
+//      g_print("pushing the buffer, %d bytes at %d\n",GST_BUFFER_SIZE(buf),GST_BUFFER_OFFSET(buf));
       gst_pad_push(identity->srcpad,buf);
-      g_print("\n");
+//      g_print("\n");
+      gst_bytestream2_print_status(identity->bs);
+//      g_print("\n\n");
     }
 
     exit(1);
