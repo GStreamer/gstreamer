@@ -1,0 +1,76 @@
+-*- Mode: text -*-
+
+Sometimes it's difficult to use GStreamer in real applications where the GUI and
+the GStreamer pipeline are in different threads. You have to somehow make sure
+that the object is not modifying its properties while you get and set them. This
+document is a brief outline of a potential fix to this issue.
+
+* When is it safe to get or set properties?
+
+Well, it is only safe to do so when other threads are not accessing an object.
+So, from the main thread, it is only safe to query or modify properties on an
+object when it is not in the RUNNING state, because when it is RUNNING its
+properties are potentially changing in the thread of execution.
+
+The only place that it is safe to get or set properties while in the RUNNING
+state is from within the thread of execution. Thus, something within the
+iteration loop of the thread must check to see if there are pending property
+changes or queries. There are two places this could be done, from within
+gstthread itself and from within the scheduler. Doing it from gstthread sounds
+like a good idea because it keeps more code out of the scheduler, but is also
+bad in a way because it requires a gstthread-specific api to proxy prop_set and
+prop_get. Setting it in the scheduler sounds good because of its finer
+granularity, but might be bad because it would clutter the scheduler a bit more.
+
+I propose to go with the scheduler-based solution based on system response time
+and out of potentials for integration with gst_clock_wait.
+
+* Implementation
+
+We do want to preserve some measure of generality, however. Considering that
+more threadsafety issues could pop up in the future, it would be nice to have
+one function to call from the scheduler, in the interests of code
+simplification. This function will be present in some elements and not in
+others, and will be modified at run time, so we will make it a function pointer
+within the GstElement struct.
+
+struct _GstElement {
+  ...
+  void (*pre_run_func) (GstElement *);
+  void (*post_run_func) (GstElement *);
+}
+
+Only the managing bin of an element is allowed to set that function, because
+presumably that bin would know something about how to schedule the element.
+Then, in the scheduler, before we call chain functions and before we switch into
+loop functions:
+
+if (element->pre_run_func)
+  element->pre_run_func (element);
+
+Then, to get or set properties, we use the new functions gst_element_get or
+gst_element_set. _set would add the property name and a gvalue onto a queue
+(probably a GAsyncQueue). Then the pre_run_func would go ahead and set the
+properties. _get is a little more tricky; _set doesn't hardly block at all,
+although it's not instantaneous. With _get though, you really don't know what
+the properties are until you query them. The best thing would be to connect to
+the ::notify signal, which executes within the thread of interest. However, say
+you really want to use _get. Hmm. I think that it would have to block. On what?
+Well, probably on an element's mutex. So it seems we might need a
+post_run_func too, to unlock the mutex. We can use the GstObject lock for this.
+
+But we need a little more. How do we know whether or not just calling
+g_object_get/set is ok? I'm thinking this whole prop set/get proxy thing should
+not be abstracted away, that it should be contained in gstelement.c. There are
+more kinds of bins that need threadsafety than just gstthread (I'm thinking
+about jack here). So, we can add on a GAsyncQueue *prop_set_queue; to the
+GstElement struct, and only initialize it in certain managing bins. Then, we can
+set a flag on gstelement, GST_ELEMENT_USE_THREADSAFE_PROPERTIES. If this flag is
+set (by the managing bin), do all this complicated mess; otherwise use the
+gobject native functionality.
+
+So, this is the plan. We'll see how the implementation goes. This should make MT
+gst programming much easier.
+
+wingo.
+25 May 2002.
