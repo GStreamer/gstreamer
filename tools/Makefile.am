@@ -13,6 +13,7 @@ endif
 bin_PROGRAMS = 	gst-launch 		\
 		$(GST_REGISTRY_SRC) 	\
 		gst-inspect 		\
+		gst-xmlinspect 		\
 		$(GST_LOADSAVE_SRC) 	\
 		gst-md5sum 		
 
@@ -32,6 +33,10 @@ gst_md5sum_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
 
 gst_inspect_LDADD = $(GST_LIBS) ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
 gst_inspect_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
+	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
+
+gst_xmlinspect_LDADD = $(GST_LIBS) ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
+gst_xmlinspect_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
 	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
 
 if !GST_DISABLE_REGISTRY
