@@ -7,6 +7,10 @@ check_PROGRAMS = $(testprogs)
 
 noinst_PROGRAMS = $(testsfailing)
 
+GST_PLUGIN_PATH=$(shell cd $(top_builddir) && pwd)
+
+TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(GST_PLUGIN_PATH) GST_REGISTRY=`pwd`test-registry.xml
+
 LDADD = $(GST_LIBS) 
 AM_CFLAGS = $(GST_CFLAGS)
 
