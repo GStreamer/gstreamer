@@ -8,8 +8,9 @@ static GList *rate_pads = NULL;
 static GList *seekable_elements = NULL;
 
 static GstElement *pipeline;
-static guint64 duration, position;
+static guint64 duration;
 static GtkAdjustment *adjustment;
+static gboolean stats = FALSE;
 
 static guint update_id;
 
@@ -55,6 +56,37 @@ setup_dynamic_connection (GstElement *element, const gchar *padname, GstPad *tar
   connect->bin 		= bin;
 
   g_signal_connect (G_OBJECT (element), "new_pad", G_CALLBACK (dynamic_connect), connect);
+}
+
+static GstElement*
+make_mod_pipeline (const gchar *location) 
+{
+  GstElement *pipeline;
+  GstElement *src, *decoder, *audiosink;
+  GstPad *seekable;
+  
+  pipeline = gst_pipeline_new ("app");
+
+  src = gst_element_factory_make (SOURCE, "src");
+  decoder = gst_element_factory_make ("modplug", "decoder");
+  audiosink = gst_element_factory_make ("osssink", "sink");
+  //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
+
+  g_object_set (G_OBJECT (src), "location", location, NULL);
+
+  gst_bin_add (GST_BIN (pipeline), src);
+  gst_bin_add (GST_BIN (pipeline), decoder);
+  gst_bin_add (GST_BIN (pipeline), audiosink);
+
+  gst_element_connect (src, decoder);
+  gst_element_connect (decoder, audiosink);
+
+  seekable = gst_element_get_pad (decoder, "src");
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (decoder, "sink"));
+
+  return pipeline;
 }
 
 static GstElement*
@@ -452,76 +484,89 @@ query_rates (void)
 }
 
 G_GNUC_UNUSED static void
-query_durations (GstPad *pad)
+query_durations ()
 {
-  gint i = 0;
+  GList *walk = seekable_pads;
 
-  g_print ("durations %8.8s: ", GST_PAD_NAME (pad));
-  while (seek_formats[i].name) {
-    gboolean res;
-    gint64 value;
-    GstFormat format;
+  while (walk) {
+    GstPad *pad = GST_PAD (walk->data);
+    gint i = 0;
 
-    format = seek_formats[i].format;
-    res = gst_pad_query (pad, GST_PAD_QUERY_TOTAL, &format, &value);
-    if (res) {
-      g_print ("%s %13lld | ", seek_formats[i].name, value);
-      if (seek_formats[i].format == GST_FORMAT_TIME)
-	duration = value;
+    g_print ("durations %8.8s: ", GST_PAD_NAME (pad));
+    while (seek_formats[i].name) {
+      gboolean res;
+      gint64 value;
+      GstFormat format;
+
+      format = seek_formats[i].format;
+      res = gst_pad_query (pad, GST_PAD_QUERY_TOTAL, &format, &value);
+      if (res) {
+        g_print ("%s %13lld | ", seek_formats[i].name, value);
+      }
+      else {
+        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
+      }
+      i++;
     }
-    else {
-      g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
-    }
-    i++;
+    g_print (" %s:%s\n", GST_DEBUG_PAD_NAME (pad));
+  
+    walk = g_list_next (walk);
   }
-  g_print (" %s:%s\n", GST_DEBUG_PAD_NAME (pad));
 }
 
 G_GNUC_UNUSED static void
-query_positions (GstPad *pad)
+query_positions ()
 {
-  gint i = 0;
+  GList *walk = seekable_pads;
 
-  g_print ("positions %8.8s: ", GST_PAD_NAME (pad));
-  while (seek_formats[i].name) {
-    gboolean res;
-    gint64 value;
-    GstFormat format;
+  while (walk) {
+    GstPad *pad = GST_PAD (walk->data);
+    gint i = 0;
 
-    format = seek_formats[i].format;
-    res = gst_pad_query (pad, GST_PAD_QUERY_POSITION, &format, &value);
-    if (res) {
-      g_print ("%s %13lld | ", seek_formats[i].name, value);
-      if (seek_formats[i].format == GST_FORMAT_TIME)
-	position = value;
+    g_print ("positions %8.8s: ", GST_PAD_NAME (pad));
+    while (seek_formats[i].name) {
+      gboolean res;
+      gint64 value;
+      GstFormat format;
+
+      format = seek_formats[i].format;
+      res = gst_pad_query (pad, GST_PAD_QUERY_POSITION, &format, &value);
+      if (res) {
+        g_print ("%s %13lld | ", seek_formats[i].name, value);
+      }
+      else {
+        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
+      }
+      i++;
     }
-    else {
-      g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
-    }
-    i++;
+    g_print (" %s:%s\n", GST_DEBUG_PAD_NAME (pad));
+
+    walk = g_list_next (walk);
   }
-  g_print (" %s:%s\n", GST_DEBUG_PAD_NAME (pad));
 }
 
 static gboolean
 update_scale (gpointer data) 
 {
-  GList *walk = seekable_pads;
   GstClock *clock;
+  guint64 position;
+  GstFormat format = GST_FORMAT_TIME;
 
+  duration = 0;
   clock = gst_bin_get_clock (GST_BIN (pipeline));
 
-  g_print ("clock:                  %13llu  (%s)\n", gst_clock_get_time (clock), gst_object_get_name (GST_OBJECT (clock)));
-
-  while (walk) {
-    GstPad *pad = GST_PAD (walk->data);
-
-    query_durations (pad);
-    query_positions (pad);
-
-    walk = g_list_next (walk);
+  if (seekable_pads) {
+    GstPad *pad = GST_PAD (seekable_pads->data);
+    gst_pad_query (pad, GST_PAD_QUERY_TOTAL, &format, &duration);
   }
-  query_rates ();
+  position = gst_clock_get_time (clock);
+
+  if (stats) {
+    g_print ("clock:                  %13llu  (%s)\n", position, gst_object_get_name (GST_OBJECT (clock)));
+    query_durations ();
+    query_positions ();
+    query_rates ();
+  }
 
   if (duration > 0) {
     gtk_adjustment_set_value (adjustment, position * 100.0 / duration);
@@ -633,12 +678,17 @@ main (int argc, char **argv)
   GtkWidget *window, *hbox, *vbox, 
             *play_button, *pause_button, *stop_button, 
 	    *hscale;
-
-  gst_init (&argc, &argv);
+  struct poptOption options[] = {
+    {"stats",  's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &stats,   0,
+           "Show pad stats", NULL},
+    POPT_TABLEEND
+  };
+	        
+  gst_init_with_popt_table (&argc, &argv, options);
   gtk_init (&argc, &argv);
 
   if (argc != 3) {
-    g_print ("usage: %s <type 0=mp3 1=avi 2=mpeg1 3=mpegparse 4=vorbis 5=sid 6=flac> <filename>\n", argv[0]);
+    g_print ("usage: %s <type 0=mp3 1=avi 2=mpeg1 3=mpegparse 4=vorbis 5=sid 6=flac 7=wav> <filename>\n", argv[0]);
     exit (-1);
   }
 
@@ -658,6 +708,8 @@ main (int argc, char **argv)
     pipeline = make_flac_pipeline (argv[2]);
   else if (atoi (argv[1]) == 7) 
     pipeline = make_wav_pipeline (argv[2]);
+  else if (atoi (argv[1]) == 8) 
+    pipeline = make_mod_pipeline (argv[2]);
 
   /* initialize gui elements ... */
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
