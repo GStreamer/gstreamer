@@ -4,8 +4,14 @@ else
 ALSA_DIR=
 endif
 
+if HAVE_GTK
+EMBED_DIR=embed
+else
+EMBED_DIR=
+endif
+
 SUBDIRS = \
-	embed \
+	$(EMBED_DIR) \
 	spider \
 	multifilesink \
 	$(ALSA_DIR) #seeking
