@@ -1,3 +1,8 @@
+2004-10-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_link):
+	  Fix negotiation.
+
 2004-10-01  Francis Labonte  <francis_labonte@hotmail.com>
 
 	Reviewed by: Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

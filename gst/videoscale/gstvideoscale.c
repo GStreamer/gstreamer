@@ -212,13 +212,11 @@ gst_videoscale_link (GstPad * pad, const GstCaps * caps)
   GstVideoscale *videoscale;
   GstPadLinkReturn ret;
   GstPad *otherpad;
-  GstCaps *othercaps;
-  GstStructure *otherstructure;
-  GstStructure *structure;
+  GstCaps *othercaps, *newcaps;
+  GstStructure *otherstructure, *structure, *newstructure;
   struct videoscale_format_struct *format;
-  int height = 0, width = 0;
-  const GValue *par = NULL;
-  const GValue *otherpar;
+  int height = 0, width = 0, newwidth, newheight;
+  const GValue *par = NULL, *otherpar;
 
   GST_DEBUG_OBJECT (pad, "_link with caps %" GST_PTR_FORMAT, caps);
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
@@ -241,15 +239,13 @@ gst_videoscale_link (GstPad * pad, const GstCaps * caps)
       caps, GST_DEBUG_PAD_NAME (otherpad));
 
   ret = gst_pad_try_set_caps (otherpad, caps);
-  if (ret == GST_PAD_LINK_OK) {
+  if (GST_PAD_LINK_SUCCESSFUL (ret)) {
     /* cool, we can use passthru */
     GST_DEBUG_OBJECT (videoscale, "passthru works");
 
-    videoscale->format = format;
-    videoscale->to_width = width;
-    videoscale->to_height = height;
-    videoscale->from_width = width;
-    videoscale->from_height = height;
+    videoscale->passthru = TRUE;
+    newwidth = width;
+    newheight = height;
 
     goto beach;
   }
@@ -257,132 +253,96 @@ gst_videoscale_link (GstPad * pad, const GstCaps * caps)
   /* no passthru, so try to convert */
   GST_DEBUG_OBJECT (videoscale, "no passthru");
 
-  if (gst_pad_is_negotiated (otherpad)) {
-    GstCaps *newcaps = gst_caps_copy (caps);
+  /* copy caps to find which one works for the otherpad */
+  newcaps = gst_caps_copy (caps);
+  newstructure = gst_caps_get_structure (newcaps, 0);
 
-    GST_DEBUG_OBJECT (videoscale, "otherpad %s:%s is negotiated",
-        GST_DEBUG_PAD_NAME (otherpad));
+  /* iterate over other pad's caps, find a nice conversion.
+   * For calculations, we only use the first because we
+   * (falsely) assume that all caps have the same PAR and
+   * size values. */
+  othercaps = gst_pad_get_allowed_caps (otherpad);
+  otherstructure = gst_caps_get_structure (othercaps, 0);
+  otherpar = gst_structure_get_value (otherstructure, "pixel-aspect-ratio");
+  if (par && otherpar) {
+    gint num = gst_value_get_fraction_numerator (par),
+        den = gst_value_get_fraction_denominator (par),
+        onum = gst_value_get_fraction_numerator (otherpar),
+        oden = gst_value_get_fraction_denominator (otherpar);
+    gboolean keep_h,
+        w_align = (width * num * oden % (den * onum) == 0),
+        h_align = (height * den * onum % (num * oden) == 0),
+        w_inc = (num * oden > den * onum);
 
-    if (pad == videoscale->srcpad) {
-      gst_caps_set_simple (newcaps,
-          "width", G_TYPE_INT, videoscale->from_width,
-          "height", G_TYPE_INT, videoscale->from_height, NULL);
-      if (videoscale->from_par) {
-        GST_DEBUG_OBJECT (videoscale, "from par %d/%d",
-            gst_value_get_fraction_numerator (videoscale->from_par),
-            gst_value_get_fraction_denominator (videoscale->from_par));
-        gst_structure_set (gst_caps_get_structure (newcaps, 0),
-            "pixel-aspect-ratio", GST_TYPE_FRACTION,
-            gst_value_get_fraction_numerator (videoscale->from_par),
-            gst_value_get_fraction_denominator (videoscale->from_par), NULL);
-      }
+    /* decide whether to change width or height */
+    if (w_align && w_inc)
+      keep_h = TRUE;
+    else if (h_align && !w_inc)
+      keep_h = FALSE;
+    else if (w_align)
+      keep_h = TRUE;
+    else if (h_align)
+      keep_h = FALSE;
+    else
+      keep_h = w_inc;
+
+    /* take par into effect */
+    if (keep_h) {
+      newwidth = width * num / den;
+      newheight = height;
     } else {
-      GST_DEBUG_OBJECT (videoscale, "negotiating, checking PAR's");
-      /* sink pad is being negotiated, so if there is a PAR,
-       * convert w/h/PAR to new src
-       * values and try to set them */
-      if (par && videoscale->to_par) {
-        GValue to_ratio = { 0, };
-        gint from_par_n, from_par_d;
-        gint to_par_n, to_par_d;
-        gint num, den;
-
-        GST_DEBUG_OBJECT (videoscale, "both pads have PAR, calculating");
-        from_par_n = gst_value_get_fraction_numerator (par);
-        from_par_d = gst_value_get_fraction_denominator (par);
-        to_par_n = gst_value_get_fraction_numerator (videoscale->to_par);
-        to_par_d = gst_value_get_fraction_denominator (videoscale->to_par);
-        g_value_init (&to_ratio, GST_TYPE_FRACTION);
-        gst_value_set_fraction (&to_ratio,
-            width * from_par_n * to_par_d, height * from_par_d * to_par_n);
-        num = gst_value_get_fraction_numerator (&to_ratio);
-        den = gst_value_get_fraction_denominator (&to_ratio);
-        GST_DEBUG_OBJECT (videoscale, "need to scale to a ratio of %d/%d",
-            num, den);
-        if (height % den == 0) {
-          GST_DEBUG_OBJECT (videoscale, "keeping height %d constant", height);
-          videoscale->to_width = height * num / den;
-          videoscale->to_height = height;
-        } else if (width % num == 0) {
-          GST_DEBUG_OBJECT (videoscale, "keeping width %d constant", height);
-          videoscale->to_width = width;
-          videoscale->to_height = width * den / num;
-        } else {
-          /* approximate keeping height constant */
-          GST_DEBUG_OBJECT (videoscale,
-              "approximating while keeping height %d constant", height);
-          videoscale->to_width = height * num / den;
-          videoscale->to_height = height;
-        }
-      }
-
-      GST_DEBUG_OBJECT (videoscale, "scaling to %dx%d", videoscale->to_width,
-          videoscale->to_height);
-      gst_caps_set_simple (newcaps,
-          "width", G_TYPE_INT, videoscale->to_width,
-          "height", G_TYPE_INT, videoscale->to_height, NULL);
-      if (videoscale->to_par) {
-        GST_DEBUG_OBJECT (videoscale, "to par %d/%d",
-            gst_value_get_fraction_numerator (videoscale->to_par),
-            gst_value_get_fraction_denominator (videoscale->to_par));
-        gst_structure_set (gst_caps_get_structure (newcaps, 0),
-            "pixel-aspect-ratio", GST_TYPE_FRACTION,
-            gst_value_get_fraction_numerator (videoscale->to_par),
-            gst_value_get_fraction_denominator (videoscale->to_par), NULL);
-      }
+      newwidth = width;
+      newheight = height * den / num;
     }
-    GST_DEBUG_OBJECT (videoscale, "trying to set caps %" GST_PTR_FORMAT
-        " on pad %s:%s", newcaps, GST_DEBUG_PAD_NAME (otherpad));
-    ret = gst_pad_try_set_caps (otherpad, newcaps);
-    if (GST_PAD_LINK_FAILED (ret)) {
-      return GST_PAD_LINK_REFUSED;
-    }
+  } else {
+    /* (at least) one has no par, so it should accept the other */
+    newwidth = width;
+    newheight = height;
   }
+
+  /* size: don't check return values. We honestly don't care. */
+  gst_structure_set_value (newstructure, "width",
+      gst_structure_get_value (otherstructure, "width"));
+  gst_structure_set_value (newstructure, "height",
+      gst_structure_get_value (otherstructure, "height"));
+  gst_caps_structure_fixate_field_nearest_int (newstructure, "width", newwidth);
+  gst_caps_structure_fixate_field_nearest_int (newstructure,
+      "height", newheight);
+  gst_structure_get_int (newstructure, "width", &newwidth);
+  gst_structure_get_int (newstructure, "height", &newheight);
+
+  /* obviously, keep PAR if we got one */
+  if (otherpar)
+    gst_structure_set_value (newstructure, "pixel-aspect-ratio", otherpar);
+  GST_DEBUG_OBJECT (videoscale,
+      "trying to set caps %" GST_PTR_FORMAT " on pad %s:%s for non-passthru",
+      caps, GST_DEBUG_PAD_NAME (otherpad));
+
+  /* try - bail out if fail */
+  ret = gst_pad_try_set_caps (otherpad, newcaps);
+  if (GST_PAD_LINK_FAILED (ret))
+    return ret;
 
   videoscale->passthru = FALSE;
-  GST_DEBUG_OBJECT (videoscale,
-      "no passthru, otherpad %s:%s is not negotiated",
-      GST_DEBUG_PAD_NAME (otherpad));
 
 beach:
-  /* since we're accepting these caps on this pad, we can store the
-   * values we're using in conversion, like from/to w,h,PAR */
-  othercaps = gst_pad_get_caps (otherpad);
-  otherstructure = gst_caps_get_structure (othercaps, 0);
-  structure = gst_caps_get_structure (caps, 0);
-
-  par = gst_structure_get_value (structure, "pixel-aspect-ratio");
-  otherpar = gst_structure_get_value (otherstructure, "pixel-aspect-ratio");
-  GST_DEBUG ("othercaps: %" GST_PTR_FORMAT, othercaps);
-  if (par && otherpar) {
-    GST_DEBUG_OBJECT (videoscale, "par %d/%d, otherpar %d/%d",
-        gst_value_get_fraction_numerator (par),
-        gst_value_get_fraction_denominator (par),
-        gst_value_get_fraction_numerator (otherpar),
-        gst_value_get_fraction_denominator (otherpar));
-  }
+  /* whee, works. Save for use in _chain and get moving. */
   if (pad == videoscale->srcpad) {
     videoscale->to_width = width;
     videoscale->to_height = height;
-    if (par) {
-      g_free (videoscale->to_par);
-      videoscale->to_par = g_new0 (GValue, 1);
-      gst_value_init_and_copy (videoscale->to_par, par);
-    }
+    videoscale->from_width = newwidth;
+    videoscale->from_height = newheight;
   } else {
     videoscale->from_width = width;
     videoscale->from_height = height;
-    if (par) {
-      g_free (videoscale->from_par);
-      videoscale->from_par = g_new0 (GValue, 1);
-      gst_value_init_and_copy (videoscale->from_par, par);
-    }
+    videoscale->to_width = newwidth;
+    videoscale->to_height = newheight;
   }
   videoscale->format = format;
+  gst_videoscale_setup (videoscale);
 
-  if (gst_pad_is_negotiated (otherpad)) {
-    gst_videoscale_setup (videoscale);
-  }
+  GST_DEBUG_OBJECT (videoscale, "work completed");
+
   return GST_PAD_LINK_OK;
 }
 
