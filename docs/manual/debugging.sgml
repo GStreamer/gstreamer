@@ -28,6 +28,17 @@
        </listitem>
        <listitem>
          <para>
+          <option>--gst-plugin-spew</option> 
+	  Enable printout of errors while loading GST plugins.
+         </para>
+       </listitem>
+       <listitem>
+         <para>
+          <option>--gst-plugin-path=<replaceable>PATH</replaceable></option> 
+	  Add a directory to the plugin search path.
+         </para>
+       <listitem>
+         <para>
            <option>--help</option> Print the a short desciption of the
 	   options and an overview of the current debugging/info masks
 	   set.

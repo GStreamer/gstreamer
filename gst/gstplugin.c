@@ -99,6 +99,12 @@ _gst_plugin_initialize (void)
   xmlFreeDoc (doc);
 }
 
+/**
+ * gst_plugin_add_path:
+ * @path: the directory to add to the search path
+ *
+ * Add a directory to the path searched for plugins.
+ */
 void
 gst_plugin_add_path (const gchar *path)
 {

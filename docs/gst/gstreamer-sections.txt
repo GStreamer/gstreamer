@@ -509,6 +509,7 @@ gst_plugin_is_loaded
 gst_plugin_load_all
 gst_plugin_load
 gst_plugin_load_absolute
+gst_plugin_add_path
 gst_library_load
 gst_plugin_add_factory
 gst_plugin_add_type
