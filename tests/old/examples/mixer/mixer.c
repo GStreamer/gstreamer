@@ -15,6 +15,7 @@
 #include "mixer.h"
 #include <unistd.h>
 
+//#define WITH_BUG
 //#define DEBUG
 //#define AUTOPLUG	/* define if you want autoplugging of input channels */
 /* function prototypes */
@@ -35,33 +36,21 @@ void eos(GstElement *element)
 //  playing = FALSE;
 }
 
-static void
-gst_play_have_type (GstElement *sink, GstElement *sink2, gpointer data)
-{
-  GST_DEBUG (0,"GstPipeline: play have type %p\n", (gboolean *)data);
- 
-  *(gboolean *)data = TRUE;
-}
-
 static GstCaps*
 gst_play_typefind (GstBin *bin, GstElement *element)
 {
-  gboolean found = FALSE;
   GstElement *typefind;
   GstElement *pipeline;
   GstCaps *caps = NULL;
 
-  GST_DEBUG (0,"GstPipeline: typefind for element \"%s\" %p\n",
-             GST_ELEMENT_NAME(element), &found);
+  GST_DEBUG (0,"GstPipeline: typefind for element \"%s\"\n",
+             GST_ELEMENT_NAME(element));
 
   pipeline = gst_pipeline_new ("autoplug_pipeline");
  
   typefind = gst_elementfactory_make ("typefind", "typefind");
   g_return_val_if_fail (typefind != NULL, FALSE);
 
-  gtk_signal_connect (GTK_OBJECT (typefind), "have_type",  
-                      GTK_SIGNAL_FUNC (gst_play_have_type), &found);
- 
   gst_pad_connect (gst_element_get_pad (element, "src"),
                    gst_element_get_pad (typefind, "sink"));
   gst_bin_add (bin, typefind);
@@ -189,7 +178,6 @@ int main(int argc,char *argv[])
     }   
     env_register_cp (channel_in->volenv,  num_channels * 10.0      , 1.0 / num_channels); /* to end level */
 
-  // write the pipeline to XML for visualization
     xmlSaveFile("mixer.xml", gst_xml_write(GST_ELEMENT(main_bin)));
 
     /* start playing */
@@ -246,6 +234,7 @@ create_input_channel (int id, char* location)
   GstAutoplug *autoplug;
   GstCaps *srccaps;
   GstElement *new_element;  
+  GstElement *decoder;
 
   GST_DEBUG (0, "c_i_p : creating channel with id %d for file %s\n",
   		  id, location);
@@ -295,14 +284,16 @@ create_input_channel (int id, char* location)
   g_assert(channel->volenv != NULL);    
 
   /* autoplug the pipe */
-#ifdef AUTOPLUG
 
 #ifdef DEBUG
   printf ("DEBUG : c_i_p : getting srccaps\n");
 #endif
 
+#ifdef WITH_BUG
   srccaps = gst_play_typefind (GST_BIN (channel->pipe), channel->disksrc);
+#endif
 
+#ifdef AUTOPLUG
   if (!srccaps) {
     g_print ("could not autoplug, unknown media type...\n");
     exit (-1);
@@ -328,21 +319,27 @@ create_input_channel (int id, char* location)
   }
 
 #else
+
+  new_element = gst_bin_new ("autoplug_bin");
+
   /* static plug, use mad plugin and assume mp3 input */
-  new_element = gst_elementfactory_make ("mad", "mp3decode");
+  decoder =  gst_elementfactory_make ("mad", "mad");
+
+  gst_bin_add (GST_BIN (new_element), decoder);
+
+  gst_element_add_ghost_pad (new_element, 
+		  gst_element_get_pad (decoder, "sink"), "sink");
+  gst_element_add_ghost_pad (new_element, 
+		  gst_element_get_pad (decoder, "src"), "src_00");
+  
 #endif  
+  xmlSaveFile ("mixer.gst", gst_xml_write (new_element));
 
   gst_bin_add (GST_BIN(channel->pipe), channel->volenv);
   gst_bin_add (GST_BIN (channel->pipe), new_element);
   
   gst_element_connect (channel->disksrc, "src", new_element, "sink");
-  gst_element_connect (new_element, 
-#ifdef AUTOPLUG
-"src_00",
-#else
-"src",
-#endif
-channel->volenv, "sink");
+  gst_element_connect (new_element, "src_00", channel->volenv, "sink");
   
   /* add a ghost pad */
   sprintf (buffer, "channel%d", id);
