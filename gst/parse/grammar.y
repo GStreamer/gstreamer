@@ -316,7 +316,7 @@ gst_parse_element_lock (GstElement *element, gboolean lock)
       GST_CAT_DEBUG (GST_CAT_PIPELINE, "trying to sync state of element with parent");
       /* FIXME: it would be nice if we can figure out why it failed
          (e.g. caps nego) and give an error about that instead. */
-      if (!gst_element_sync_state_with_parent (element))
+      if (gst_element_set_state (element, GST_STATE_PLAYING) == GST_STATE_FAILURE)
         GST_ELEMENT_ERROR (element, CORE, STATE_CHANGE, (NULL), (NULL));
     }
   } else {

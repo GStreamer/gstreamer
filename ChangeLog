@@ -1,5 +1,15 @@
 2004-07-22  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstelementfactory.c: (gst_element_register):
+	  set the factory in the class struct, so gst_element_get_factory
+	  actually works
+	* gst/parse/grammar.y:
+	  set element to playing when it gets unlocked as we can't rely on the
+	  bin state - all elements in the bin state might still be locked in
+	  NULL)
+
+2004-07-22  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gstelement.c: (gst_element_set_state_func):
 	  make this a static function
 

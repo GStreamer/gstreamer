@@ -233,6 +233,7 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   factory->padtemplates = g_list_copy (klass->padtemplates);
   g_list_foreach (factory->padtemplates, (GFunc) gst_object_ref, NULL);
   factory->numpadtemplates = klass->numpadtemplates;
+  klass->elementfactory = factory;
 
   /* special stuff for URI handling */
   if (g_type_is_a (type, GST_TYPE_URI_HANDLER)) {
