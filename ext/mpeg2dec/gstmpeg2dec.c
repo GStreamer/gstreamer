@@ -217,7 +217,6 @@ gst_mpeg2dec_vo_frame_draw (vo_frame_t * frame)
 
   GST_BUFFER_TIMESTAMP (_frame->buffer) = pts;
 
-  /* g_print ("out: %lld\n", GST_BUFFER_TIMESTAMP (_frame->buffer)); */
   GST_DEBUG (0, "out: %lld %d %lld", GST_BUFFER_TIMESTAMP (_frame->buffer),
 		  mpeg2dec->decoder->frame_rate_code,
                   (long long)(GST_SECOND / video_rates[mpeg2dec->decoder->frame_rate_code]));
@@ -444,12 +443,12 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
   if (GST_IS_EVENT (buf)) {
     GstEvent *event = GST_EVENT (buf);
 
-    switch (event->type) {
+    switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
       {
 	//gint64 value = GST_EVENT_DISCONT_OFFSET (event, 0).value;
 	//mpeg2dec->decoder->is_sequence_needed = 1;
-	/* g_print ("mpeg2dec: discont %lld\n", value); */
+	GST_DEBUG (GST_CAT_EVENT, "mpeg2dec: discont\n"); 
         mpeg2dec->first = TRUE;
         mpeg2dec->frames_per_PTS = 0;
         mpeg2dec->last_PTS = -1;
@@ -508,11 +507,18 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
   if (mpeg2dec->next_time < pts) {
     mpeg2dec->next_time = pts;
   }
+  /*
+  if (mpeg2dec->last_PTS < pts) {
+    mpeg2dec->next_time = pts;
+    g_print ("** adjust next_time %lld %lld\n", mpeg2dec->last_PTS, pts);
+  }
+  */
+	    
   mpeg2dec->last_PTS = pts;
 
 
-/*fprintf(stderr, "MPEG2DEC: in timestamp=%llu\n",GST_BUFFER_TIMESTAMP(buf));*/
-/*fprintf(stderr, "MPEG2DEC: have buffer of %d bytes\n",size);		*/
+/* fprintf(stderr, "MPEG2DEC: in timestamp=%llu\n",GST_BUFFER_TIMESTAMP(buf)); */
+/* fprintf(stderr, "MPEG2DEC: have buffer of %d bytes\n",size);		*/
   num_frames = mpeg2_decode_data(mpeg2dec->decoder, data, data + size);
 /*fprintf(stderr, "MPEG2DEC: decoded %d frames\n", num_frames);*/
 
@@ -588,16 +594,14 @@ gst_mpeg2dec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
 	  *dest_value = src_value * 6 * (mpeg2dec->width * mpeg2dec->height >> 2) *  
 		  video_rates[mpeg2dec->decoder->frame_rate_code] / GST_SECOND;
 	  break;
-        case GST_FORMAT_FRAMES:
-        case GST_FORMAT_FIELDS:
+        case GST_FORMAT_UNIT:
 	  *dest_value = src_value * video_rates[mpeg2dec->decoder->frame_rate_code] / GST_SECOND;
 	  break;
         default:
           res = FALSE;
       }
       break;
-    case GST_FORMAT_FRAMES:
-    case GST_FORMAT_FIELDS:
+    case GST_FORMAT_UNIT:
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
           *dest_format = GST_FORMAT_TIME;
@@ -612,8 +616,7 @@ gst_mpeg2dec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_BYTES:
 	  *dest_value = src_value * 6 * (mpeg2dec->width * mpeg2dec->height >> 2);
 	  break;
-        case GST_FORMAT_FRAMES:
-        case GST_FORMAT_FIELDS:
+        case GST_FORMAT_UNIT:
 	  *dest_value = src_value;
 	  break;
         default:
@@ -647,8 +650,7 @@ gst_mpeg2dec_src_query (GstPad *pad, GstPadQueryType type,
           /* fallthrough */
         case GST_FORMAT_TIME:
         case GST_FORMAT_BYTES:
-        case GST_FORMAT_FRAMES:
-        case GST_FORMAT_FIELDS:
+        case GST_FORMAT_UNIT:
 	{
           res = FALSE;
 
