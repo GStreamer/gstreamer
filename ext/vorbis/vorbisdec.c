@@ -257,7 +257,7 @@ vorbis_dec_src_query (GstPad * pad, GstQueryType query, GstFormat * format,
     return FALSE;
 
   GST_LOG_OBJECT (dec,
-      "query %u: peer returned granulepos: %llu - we return %llu (format %u)\n",
+      "query %u: peer returned granulepos: %llu - we return %llu (format %u)",
       query, granulepos, *value, *format);
   return TRUE;
 }

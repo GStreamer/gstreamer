@@ -556,8 +556,10 @@ theora_dec_chain (GstPad * pad, GstData * data)
   packet.b_o_s = (packet.packetno == 0) ? 1 : 0;
   packet.e_o_s = 0;
 
-  GST_DEBUG_OBJECT (dec, "header=%d packetno=%d, outtime=%" GST_TIME_FORMAT,
-      packet.packet[0], packet.packetno, GST_TIME_ARGS (outtime));
+  GST_DEBUG_OBJECT (dec, "outtime=%" GST_TIME_FORMAT " (%"
+      G_GUINT64_FORMAT ") header=0x%02x packetno=%d",
+      GST_TIME_ARGS (outtime), outtime,
+      (gint) packet.packet[0], packet.packetno);
 
   /* switch depending on packet type */
   if (packet.packet[0] & 0x80) {
@@ -702,6 +704,9 @@ theora_dec_chain (GstPad * pad, GstData * data)
       if (add_one) {
         outtime = GST_SECOND * theora_granule_time (&dec->state,
             dec->granulepos);
+        GST_DEBUG_OBJECT (dec,
+            "Correcting output time to %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (outtime));
       }
     } else if (dec->need_keyframe) {
       GST_WARNING_OBJECT (dec, "dropping frame because we need a keyframe");

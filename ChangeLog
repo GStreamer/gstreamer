@@ -1,3 +1,10 @@
+2005-01-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/theora/theoradec.c: (theora_dec_chain):
+	  Fix broken code generation by gcc by swapping arguments.
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query):
+	  Fix \n in debug.
+
 2005-01-10  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
 
 	* TODO:
