@@ -564,7 +564,7 @@ gst_videoscale_scale_nearest (GstVideoscale * scale,
   guchar *destp;
   guchar *srcp;
 
-  GST_DEBUG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
+  GST_LOG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
 
 
   ypos = 0;
@@ -605,7 +605,7 @@ gst_videoscale_scale_nearest_str2 (GstVideoscale * scale,
   guchar *destp;
   guchar *srcp;
 
-  GST_DEBUG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
+  GST_LOG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
 
 
   ypos = 0;
@@ -648,7 +648,7 @@ gst_videoscale_scale_nearest_str4 (GstVideoscale * scale,
   guchar *destp;
   guchar *srcp;
 
-  GST_DEBUG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
+  GST_LOG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
 
 
   ypos = 0;
@@ -691,7 +691,7 @@ gst_videoscale_scale_nearest_32bit (GstVideoscale * scale,
   guchar *destp;
   guchar *srcp;
 
-  GST_DEBUG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
+  GST_LOG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
 
 
   ypos = 0;
@@ -734,7 +734,7 @@ gst_videoscale_scale_nearest_24bit (GstVideoscale * scale,
   guchar *destp;
   guchar *srcp;
 
-  GST_DEBUG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
+  GST_LOG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
 
 
   ypos = 0;
@@ -779,7 +779,7 @@ gst_videoscale_scale_nearest_16bit (GstVideoscale * scale,
   guchar *destp;
   guchar *srcp;
 
-  GST_DEBUG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
+  GST_LOG_OBJECT (scale, "scaling nearest %p %p %d", src, dest, dw);
 
 
   ypos = 0;

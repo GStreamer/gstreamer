@@ -394,7 +394,7 @@ gst_videoscale_chain (GstPad * pad, GstData * _data)
 
   videoscale->format->scale (videoscale, GST_BUFFER_DATA (outbuf), data);
 
-  GST_DEBUG_OBJECT (videoscale, "pushing buffer of %d bytes in '%s'",
+  GST_LOG_OBJECT (videoscale, "pushing buffer of %d bytes in '%s'",
       GST_BUFFER_SIZE (outbuf), GST_OBJECT_NAME (videoscale));
 
   gst_pad_push (videoscale->srcpad, GST_DATA (outbuf));
