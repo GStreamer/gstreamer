@@ -1,4 +1,4 @@
-dnl autoconf configuration file for gst-plugins 
+dnl autoconf configuration file for gst-ffmpeg 
 AC_INIT
 AC_CANONICAL_TARGET([])
 
@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-ffmpeg, GST_FFMPEG_VERSION, 0, 7, 2, 1, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gst-ffmpeg, GST_FFMPEG_VERSION, 0, 7, 0, 1, GST_CVS="no", GST_CVS="yes")
 dnl we cheat here so we don't have to change the actual configure code bit
 GST_PLUGINS_VERSION_NANO=$GST_FFMPEG_VERSION_NANO
 
@@ -28,6 +28,7 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 AS_LIBTOOL(GST_FFMPEG, 1, 0, 0)
+AM_PROG_LIBTOOL()
 
 AC_CONFIG_SRCDIR(configure.ac)
 AM_CONFIG_HEADER(config.h)
@@ -91,35 +92,7 @@ GST_CHECK_FEATURE(FFMPEG, [ffmpeg plug-ins], ffmpeg, [
 ])
 
 dnl Determine CPU
-case "x${target_cpu}" in
-  xi?86 | k?) HAVE_CPU_I386=yes
-              AC_DEFINE(HAVE_CPU_I386, 1, [Define if the target CPU is an x86])
-              dnl FIXME could use some better detection
-              dnl       (ie CPUID)
-              case "x${target_cpu}" in
-                xi386 | xi486) ;;
-                *)             AC_DEFINE(HAVE_RDTSC, 1, [Define if RDTSC is available]) ;;
-              esac ;;
-  xpowerpc)   HAVE_CPU_PPC=yes
-              AC_DEFINE(HAVE_CPU_PPC, 1, [Define if the target CPU is a PPC]) ;;  xalpha)     HAVE_CPU_ALPHA=yes
-              AC_DEFINE(HAVE_CPU_ALPHA, 1, [Define if the target CPU is an Alpha]) ;;
-  xarm*)      HAVE_CPU_ARM=yes
-              AC_DEFINE(HAVE_CPU_ARM, 1, [Define if the target CPU is an ARM]) ;;
-  xsparc*)    HAVE_CPU_SPARC=yes
-              AC_DEFINE(HAVE_CPU_SPARC, 1, [Define if the target CPU is a PPC]) ;;
-
-  xmips*)     HAVE_CPU_MIPS=yes
-              AC_DEFINE(HAVE_CPU_MIPS, 1, [Define if the target CPU is a MIPS]) ;;
-  xhppa*)     HAVE_CPU_HPPA=yes
-              AC_DEFINE(HAVE_CPU_HPPA, 1, [Define if the target CPU is a HPPA]) ;;
-esac
-
-AM_CONDITIONAL(HAVE_CPU_I386,       test "x$HAVE_CPU_I386" = "xyes")
-AM_CONDITIONAL(HAVE_CPU_PPC,        test "x$HAVE_CPU_PPC" = "xyes")
-AM_CONDITIONAL(HAVE_CPU_ALPHA,      test "x$HAVE_CPU_ALPHA" = "xyes")
-AM_CONDITIONAL(HAVE_CPU_ARM,        test "x$HAVE_CPU_ARM" = "xyes")
-AM_CONDITIONAL(HAVE_CPU_SPARC,      test "x$HAVE_CPU_SPARC" = "xyes")
-
+GST_ARCH()
 
 dnl ###########################
 dnl # Configure external libs #
