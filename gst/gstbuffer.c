@@ -403,7 +403,7 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
   // allocate space for the copy
   newbuf->data = (guchar *)g_malloc(len);
   // copy the first buffer's data across
-  memcpy(newbuf->data, buffer->data + offset, buf1->size - offset);
+  memcpy(newbuf->data, buf1->data + offset, buf1->size - offset);
   // copy the second buffer's data across
   memcpy(newbuf->data + offset, buf2->data, len - (buf1->size - offset));
 
