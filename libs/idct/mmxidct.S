@@ -4,7 +4,17 @@
  * for example in 11...1110000 format
  * If the iDCT is of I macroblock then 0.5 needs to be added to the;DC Component
  * (element[0][0] of the matrix)
+ *
+ * Notes:
+ *  - the scratchN variables should be put on the stack to avoid
+ *    reentrancy problems
  */
+
+#ifdef PIC
+#define pic_offset(a) a@GOTOFF(%ebx)
+#else
+#define pic_offset(a) a
+#endif
 
 /* extrn re_matrix */
 
@@ -95,9 +105,14 @@ gst_idct_mmx_idct:
 	pushl %edx
 	pushl %esi
 	pushl %edi
+#ifdef PIC
+	call here
+here:	popl %ebx
+	addl $_GLOBAL_OFFSET_TABLE_+[.-here],%ebx
+#endif
 	movl 8(%ebp),%esi		/* source matrix */
 	movq (%esi), %mm0
-	paddw x0000000000000004, %mm0
+	paddw pic_offset(x0000000000000004), %mm0
 	movq 8(%esi), %mm1
 	psllw $4, %mm0
 	movq 16(%esi), %mm2
@@ -145,7 +160,7 @@ gst_idct_mmx_idct:
 	movq %mm5,104(%esi)
 	movq %mm6,112(%esi)
 	movq %mm7,120(%esi)
-	leal preSC, %ecx
+	leal pic_offset(preSC), %ecx
 /* column 0: even part
  * use V4, V12, V0, V8 to produce V22..V25
  */
@@ -161,7 +176,7 @@ gst_idct_mmx_idct:
 	movq %mm1, %mm2			/* added 11/1/96 */
 	pmulhw 8*8(%esi),%mm5		/* V8 */
 	psubsw %mm0, %mm1		/* V16 */
-	pmulhw x5a825a825a825a82, %mm1	/* 23170 ->V18 */
+	pmulhw pic_offset(x5a825a825a825a82), %mm1	/* 23170 ->V18 */
 	paddsw %mm0, %mm2		/* V17 */
 	movq %mm2, %mm0			/* duplicate V17 */
 	psraw $1, %mm2			/* t75=t82 */
@@ -202,7 +217,7 @@ gst_idct_mmx_idct:
 	paddsw %mm0, %mm3		/* V29 ; free mm0 */
 	movq %mm7, %mm1			/* duplicate V26 */
 	psraw $1, %mm3			/* t91=t94 */
-	pmulhw x539f539f539f539f,%mm7	/* V33 */
+	pmulhw pic_offset(x539f539f539f539f),%mm7	/* V33 */
 	psraw $1, %mm1			/* t96 */
 	movq %mm5, %mm0			/* duplicate V2 */
 	psraw $2, %mm4			/* t85=t87 */
@@ -210,15 +225,15 @@ gst_idct_mmx_idct:
 	psubsw %mm4, %mm0		/* V28 ; free mm4 */
 	movq %mm0, %mm2			/* duplicate V28 */
 	psraw $1, %mm5			/* t90=t93 */
-	pmulhw x4546454645464546,%mm0	/* V35 */
+	pmulhw pic_offset(x4546454645464546),%mm0	/* V35 */
 	psraw $1, %mm2			/* t97 */
 	movq %mm5, %mm4			/* duplicate t90=t93 */
 	psubsw %mm2, %mm1		/* V32 ; free mm2 */
-	pmulhw x61f861f861f861f8,%mm1	/* V36 */
+	pmulhw pic_offset(x61f861f861f861f8),%mm1	/* V36 */
 	psllw $1, %mm7			/* t107 */
 	paddsw %mm3, %mm5		/* V31 */
 	psubsw %mm3, %mm4		/* V30 ; free mm3 */
-	pmulhw x5a825a825a825a82,%mm4	/* V34 */
+	pmulhw pic_offset(x5a825a825a825a82),%mm4	/* V34 */
 	nop
 	psubsw %mm1, %mm0		/* V38 */
 	psubsw %mm7, %mm1		/* V37 ; free mm7 */
@@ -285,7 +300,7 @@ gst_idct_mmx_idct:
 	psubsw %mm7, %mm1		/* V50 */
 	pmulhw 8*9(%esi), %mm5		/* V9 */
 	paddsw %mm7, %mm2		/* V51 */
-	pmulhw x5a825a825a825a82, %mm1	/* 23170 ->V52 */
+	pmulhw pic_offset(x5a825a825a825a82), %mm1	/* 23170 ->V52 */
 	movq %mm2, %mm6			/* duplicate V51 */
 	psraw $1, %mm2			/* t138=t144 */
 	movq %mm3, %mm4			/* duplicate V1 */
@@ -326,11 +341,11 @@ gst_idct_mmx_idct:
  * even more by doing the correction step in a later stage when the number
  * is actually multiplied by 16
  */
-	paddw x0005000200010001, %mm4
+	paddw pic_offset(x0005000200010001), %mm4
 	psubsw %mm6, %mm3		/* V60 ; free mm6 */
 	psraw $1, %mm0			/* t154=t156 */
 	movq %mm3, %mm1			/* duplicate V60 */
-	pmulhw x539f539f539f539f, %mm1	/* V67 */
+	pmulhw pic_offset(x539f539f539f539f), %mm1	/* V67 */
 	movq %mm5, %mm6			/* duplicate V3 */
 	psraw $2, %mm4			/* t148=t150 */
 	paddsw %mm4, %mm5		/* V61 */
@@ -339,13 +354,13 @@ gst_idct_mmx_idct:
 	psllw $1, %mm1			/* t169 */
 	paddsw %mm0, %mm5		/* V65 -> result */
 	psubsw %mm0, %mm4		/* V64 ; free mm0 */
-	pmulhw x5a825a825a825a82, %mm4	/* V68 */
+	pmulhw pic_offset(x5a825a825a825a82), %mm4	/* V68 */
 	psraw $1, %mm3			/* t158 */
 	psubsw %mm6, %mm3		/* V66 */
 	movq %mm5, %mm2			/* duplicate V65 */
-	pmulhw x61f861f861f861f8, %mm3	/* V70 */
+	pmulhw pic_offset(x61f861f861f861f8), %mm3	/* V70 */
 	psllw $1, %mm6			/* t165 */
-	pmulhw x4546454645464546, %mm6	/* V69 */
+	pmulhw pic_offset(x4546454645464546), %mm6	/* V69 */
 	psraw $1, %mm2			/* t172 */
 /* moved from next block */
 	movq 8*5(%esi), %mm0		/* V56 */
@@ -470,7 +485,7 @@ gst_idct_mmx_idct:
 *	movq 8*13(%esi), %mm4		tmt13
 */
 	psubsw %mm4, %mm3		/* V134 */
-	pmulhw x5a825a825a825a82, %mm3	/* 23170 ->V136 */
+	pmulhw pic_offset(x5a825a825a825a82), %mm3	/* 23170 ->V136 */
 	movq 8*9(%esi), %mm6		/* tmt9 */
 	paddsw %mm4, %mm5		/* V135 ; mm4 free */
 	movq %mm0, %mm4			/* duplicate tmt1 */
@@ -499,17 +514,17 @@ gst_idct_mmx_idct:
 	psubsw %mm7, %mm0		/* V144 */
 	movq %mm0, %mm3			/* duplicate V144 */
 	paddsw %mm7, %mm2		/* V147 ; free mm7 */
-	pmulhw x539f539f539f539f, %mm0	/* 21407-> V151 */
+	pmulhw pic_offset(x539f539f539f539f), %mm0	/* 21407-> V151 */
 	movq %mm1, %mm7			/* duplicate tmt3 */
 	paddsw %mm5, %mm7		/* V145 */
 	psubsw %mm5, %mm1		/* V146 ; free mm5 */
 	psubsw %mm1, %mm3		/* V150 */
 	movq %mm7, %mm5			/* duplicate V145 */
-	pmulhw x4546454645464546, %mm1	/* 17734-> V153 */
+	pmulhw pic_offset(x4546454645464546), %mm1	/* 17734-> V153 */
 	psubsw %mm2, %mm5		/* V148 */
-	pmulhw x61f861f861f861f8, %mm3	/* 25080-> V154 */
+	pmulhw pic_offset(x61f861f861f861f8), %mm3	/* 25080-> V154 */
 	psllw $2, %mm0			/* t311 */
-	pmulhw x5a825a825a825a82, %mm5	/* 23170-> V152 */
+	pmulhw pic_offset(x5a825a825a825a82), %mm5	/* 23170-> V152 */
 	paddsw %mm2, %mm7		/* V149 ; free mm2 */
 	psllw $1, %mm1			/* t313 */
 	nop	/* without the nop - freeze here for one clock */
@@ -535,7 +550,7 @@ gst_idct_mmx_idct:
 	paddsw %mm3, %mm6		/* V164 ; free mm3 */
 	movq %mm4, %mm3			/* duplicate V142 */
 	psubsw %mm5, %mm4		/* V165 ; free mm5 */
-	movq %mm2, scratch7		/* out7 */
+	movq %mm2, pic_offset(scratch7)		/* out7 */
 	psraw $4, %mm6
 	psraw $4, %mm4
 	paddsw %mm5, %mm3		/* V162 */
@@ -546,11 +561,11 @@ gst_idct_mmx_idct:
  */
 	movq %mm6, 8*9(%esi)		/* out9 */
 	paddsw %mm1, %mm0		/* V161 */
-	movq %mm3, scratch5		/* out5 */
+	movq %mm3, pic_offset(scratch5)		/* out5 */
 	psubsw %mm1, %mm5		/* V166 ; free mm1 */
 	movq %mm4, 8*11(%esi)		/* out11 */
 	psraw $4, %mm5
-	movq %mm0, scratch3		/* out3 */
+	movq %mm0, pic_offset(scratch3)		/* out3 */
 	movq %mm2, %mm4			/* duplicate V140 */
 	movq %mm5, 8*13(%esi)		/* out13 */
 	paddsw %mm7, %mm2		/* V160 */
@@ -560,7 +575,7 @@ gst_idct_mmx_idct:
 /* moved from the next block */
 	movq 8*3(%esi), %mm7
 	psraw $4, %mm4
-	movq %mm2, scratch1		/* out1 */
+	movq %mm2, pic_offset(scratch1)		/* out1 */
 /* moved from the next block */
 	movq %mm0, %mm1
 	movq %mm4, 8*15(%esi)		/* out15 */
@@ -617,15 +632,15 @@ gst_idct_mmx_idct:
 	paddsw %mm4, %mm3		/* V113 ; free mm4 */
 	movq %mm0, %mm4			/* duplicate V110 */
 	paddsw %mm1, %mm2		/* V111 */
-	pmulhw x539f539f539f539f, %mm0	/* 21407-> V117 */
+	pmulhw pic_offset(x539f539f539f539f), %mm0	/* 21407-> V117 */
 	psubsw %mm1, %mm5		/* V112 ; free mm1 */
 	psubsw %mm5, %mm4		/* V116 */
 	movq %mm2, %mm1			/* duplicate V111 */
-	pmulhw x4546454645464546, %mm5	/* 17734-> V119 */
+	pmulhw pic_offset(x4546454645464546), %mm5	/* 17734-> V119 */
 	psubsw %mm3, %mm2		/* V114 */
-	pmulhw x61f861f861f861f8, %mm4	/* 25080-> V120 */
+	pmulhw pic_offset(x61f861f861f861f8), %mm4	/* 25080-> V120 */
 	paddsw %mm3, %mm1		/* V115 ; free mm3 */
-	pmulhw x5a825a825a825a82, %mm2	/* 23170-> V118 */
+	pmulhw pic_offset(x5a825a825a825a82), %mm2	/* 23170-> V118 */
 	psllw $2, %mm0			/* t266 */
 	movq %mm1, (%esi)		/* save V115 */
 	psllw $1, %mm5			/* t268 */
@@ -643,7 +658,7 @@ gst_idct_mmx_idct:
 	movq %mm6, %mm3			/* duplicate tmt4 */
 	psubsw %mm0, %mm6		/* V100 */
 	paddsw %mm0, %mm3		/* V101 ; free mm0 */
-	pmulhw x5a825a825a825a82, %mm6	/* 23170 ->V102 */
+	pmulhw pic_offset(x5a825a825a825a82), %mm6	/* 23170 ->V102 */
 	movq %mm7, %mm5			/* duplicate tmt0 */
 	movq 8*8(%esi), %mm1		/* tmt8 */
 	paddsw %mm1, %mm7		/* V103 */
@@ -677,10 +692,10 @@ gst_idct_mmx_idct:
 	movq 8*2(%esi), %mm3		/* V123 */
 	paddsw %mm4, %mm7		/* out0 */
 /* moved up from next block */
-	movq scratch3, %mm0
+	movq pic_offset(scratch3), %mm0
 	psraw $4, %mm7
 /* moved up from next block */
-	movq scratch5, %mm6 
+	movq pic_offset(scratch5), %mm6 
 	psubsw %mm4, %mm1		/* out14 ; free mm4 */
 	paddsw %mm3, %mm5		/* out2 */
 	psraw $4, %mm1
@@ -691,7 +706,7 @@ gst_idct_mmx_idct:
 	movq %mm5, 8*2(%esi)		/* out2 ; free mm5 */
 	psraw $4, %mm2
 /* moved up to the prev block */
-	movq scratch7, %mm4
+	movq pic_offset(scratch7), %mm4
 /* moved up to the prev block */
 	psraw $4, %mm0
 	movq %mm2, 8*12(%esi)		/* out12 ; free mm2 */
@@ -699,13 +714,13 @@ gst_idct_mmx_idct:
 	psraw $4, %mm6
 /* move back the data to its correct place
 * moved up to the prev block
- *	movq scratch3, %mm0
- *	movq scratch5, %mm6
- *	movq scratch7, %mm4
+ *	movq pic_offset(scratch3), %mm0
+ *	movq pic_offset(scratch5), %mm6
+ *	movq pic_offset(scratch7), %mm4
  *	psraw $4, %mm0
  *	psraw $4, %mm6
 */
-	movq scratch1, %mm1
+	movq pic_offset(scratch1), %mm1
 	psraw $4, %mm4
 	movq %mm0, 8*3(%esi)		/* out3 */
 	psraw $4, %mm1
