@@ -59,7 +59,7 @@ struct _Audioscale {
   gboolean passthru;
   gint64 offset;
 
-  resample_t *resample;
+  gst_resample_t *gst_resample;
 
   GstBuffer *outbuf;
 };
