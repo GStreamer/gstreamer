@@ -1,4 +1,4 @@
-noinst_PROGRAMS = init loadall simplefake states caps queue registry
+noinst_PROGRAMS = init loadall simplefake states caps queue registry paranoia
 
 LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la
 CFLAGS = -Wall

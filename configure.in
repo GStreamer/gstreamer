@@ -469,6 +469,7 @@ plugins/rtjpeg/Makefile
 plugins/vorbis/Makefile
 plugins/capture/Makefile
 plugins/capture/v4l/Makefile
+plugins/cdparanoia/Makefile
 gstplay/Makefile
 components/bonobo-gstmediaplay/Makefile
 test/Makefile

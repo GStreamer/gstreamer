@@ -200,9 +200,9 @@ GstElementFactory *element_select_dialog() {
   elements = gst_elementfactory_get_list();
   while (elements) {
     element = (GstElementFactory *)(elements->data);
-    printf("%s %s\n", element->name, element->details->class);
+    printf("%s %s\n", element->name, element->details->klass);
     /* split up the factory's class */
-    classes = g_strsplit(element->details->class,"/",0);
+    classes = g_strsplit(element->details->klass,"/",0);
     class = classes;
     curlist = &classtree;
     /* walk down the class tree to find where to place this element */
