@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/audio/audio.h>
+#include "audio.h"
 
 int
 gst_audio_frame_byte_size (GstPad* pad)
