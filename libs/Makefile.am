@@ -1,9 +1,4 @@
-if HAVE_CPU_I386
-GSTARCH_SUBDS = winloader
-else
-GSTARCH_SUBDS =
-endif
 
-SUBDIRS = riff colorspace getbits putbits idct videoscale audio $(GSTARCH_SUBDS)
+SUBDIRS = riff getbits putbits idct audio 
 
-DIST_SUBDIRS = riff colorspace getbits putbits videoscale winloader audio idct
+DIST_SUBDIRS = riff getbits putbits audio idct
