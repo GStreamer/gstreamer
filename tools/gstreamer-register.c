@@ -114,8 +114,7 @@ int main(int argc,char *argv[])
     gst_plugin_save_thyself(doc->root);
 
     // Save the registry to a tmp file.
-    // FIXME; check for failure.
-    if (xmlSaveFile(GLOBAL_REGISTRY_FILE_TMP, doc)) {
+    if (xmlSaveFile(GLOBAL_REGISTRY_FILE_TMP, doc) <= 0) {
 	g_print("Cannot save new registry `%s'",
 		GLOBAL_REGISTRY_FILE_TMP);
 	error_perm();
