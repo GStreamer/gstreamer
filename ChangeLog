@@ -1,5 +1,14 @@
 2004-07-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_handle_src_event),
+	(gst_matroska_demux_parse_blockgroup):
+	* gst/matroska/matroska-ids.h:
+	  add BlockReference tag and ignore it to clear out log.
+	  ignore NAVIGATION events to clear out log.
+
+2004-07-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_class_init),
 	(gst_matroska_demux_add_stream):
 	* gst/matroska/matroska-mux.c: (gst_matroska_mux_class_init):
