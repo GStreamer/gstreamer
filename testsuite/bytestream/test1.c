@@ -185,7 +185,7 @@ main (int argc, char *argv[])
   bs = gst_element_factory_make ("bstest", "bs");
   g_assert (bs);
 
-  gst_element_connect_many (src, bs, sink);
+  gst_element_link_many (src, bs, sink);
 
   gst_bin_add_many (GST_BIN (pipeline), src, bs, sink);
 

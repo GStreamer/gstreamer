@@ -36,7 +36,7 @@ create_thread_ghostpads (void)
   gst_element_set_name (element2, "test2");
   gst_element_add_pad (element2, gst_pad_new ("sink1", GST_PAD_SINK));
   gst_bin_add (GST_BIN (thread), element2);
-  gst_element_connect (element1, "src1", element2, "sink1");
+  gst_element_link (element1, "src1", element2, "sink1");
   gst_element_add_ghost_pad (thread, gst_element_get_pad (element2, "sink1"), "sink1");
 
   return thread;

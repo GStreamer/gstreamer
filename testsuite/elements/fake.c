@@ -54,14 +54,14 @@ main (int argc, char *argv[])
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), sink);
 
-  /* connect */
-  g_print ("Connecting elements\n");
+  /* link */
+  g_print ("Linking elements\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   /* we expect this to give an error */
   if (gst_bin_iterate (GST_BIN (pipeline)) != FALSE)
   {
-    g_warning ("Iterating a bin with unconnected elements should return FALSE !\n");
+    g_warning ("Iterating a bin with unlinked elements should return FALSE !\n");
     retval = 1;
   }
 
@@ -75,7 +75,7 @@ main (int argc, char *argv[])
   /* we expect this to work */
   if (gst_bin_iterate (GST_BIN (pipeline)) != TRUE)
   {
-    g_error ("Iterating a bin with connected elements should return TRUE !\n");
+    g_error ("Iterating a bin with linked elements should return TRUE !\n");
     retval = 1;
   }
 

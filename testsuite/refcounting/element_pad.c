@@ -42,28 +42,28 @@ main (int argc, gchar *argv[])
   for (i=0; i<iters/2; i++) {
     element = gst_element_factory_make ("fakesink", NULL);
     element2 = gst_element_factory_make ("fakesrc", NULL);
-    gst_element_connect_pads (element, "sink", element2, "src");
-    g_assert (GST_PAD_IS_CONNECTED (gst_element_get_pad (element2, "src")));
-    g_assert (GST_PAD_IS_CONNECTED (gst_element_get_pad (element, "sink")));
+    gst_element_link_pads (element, "sink", element2, "src");
+    g_assert (GST_PAD_IS_LINKED (gst_element_get_pad (element2, "src")));
+    g_assert (GST_PAD_IS_LINKED (gst_element_get_pad (element, "sink")));
     gst_object_unref (GST_OBJECT (element));
-    g_assert (!GST_PAD_IS_CONNECTED (gst_element_get_pad (element2, "src")));
+    g_assert (!GST_PAD_IS_LINKED (gst_element_get_pad (element2, "src")));
     gst_object_unref (GST_OBJECT (element2));
   }
-  g_print ("create/connect/unref %d elements %ld\n", iters/2, vmsize()-usage1);
+  g_print ("create/link/unref %d elements %ld\n", iters/2, vmsize()-usage1);
 
   for (i=0; i<iters/2; i++) {
     element = gst_element_factory_make ("fakesink", NULL);
     element2 = gst_element_factory_make ("fakesrc", NULL);
-    gst_element_connect_pads (element, "sink", element2, "src");
-    g_assert (GST_PAD_IS_CONNECTED (gst_element_get_pad (element2, "src")));
-    g_assert (GST_PAD_IS_CONNECTED (gst_element_get_pad (element, "sink")));
+    gst_element_link_pads (element, "sink", element2, "src");
+    g_assert (GST_PAD_IS_LINKED (gst_element_get_pad (element2, "src")));
+    g_assert (GST_PAD_IS_LINKED (gst_element_get_pad (element, "sink")));
     gst_object_destroy (GST_OBJECT (element));
     g_assert (GST_OBJECT_DESTROYED (element));
-    g_assert (!GST_PAD_IS_CONNECTED (gst_element_get_pad (element2, "src")));
+    g_assert (!GST_PAD_IS_LINKED (gst_element_get_pad (element2, "src")));
     gst_object_unref (GST_OBJECT (element2));
     gst_object_unref (GST_OBJECT (element));
   }
-  g_print ("create/connect/destroy %d elements %ld\n", iters/2, vmsize()-usage1);
+  g_print ("create/link/destroy %d elements %ld\n", iters/2, vmsize()-usage1);
 
   element = gst_element_factory_make ("fakesink", NULL);;
   pad = gst_element_get_pad (element, "sink");

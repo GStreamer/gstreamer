@@ -21,7 +21,7 @@ construct_pipeline (GstElement *pipeline)
   g_assert (identity);
   g_assert (sink);
 
-  gst_element_connect_many (src, identity, sink, NULL);
+  gst_element_link_many (src, identity, sink, NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), src, identity, sink, NULL);
 

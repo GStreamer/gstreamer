@@ -29,8 +29,8 @@ main (int argc, char *argv[])
   sinkpad = gst_element_get_pad (sink, "sink");
   g_return_val_if_fail (srcpad != NULL, -1);
 
-  g_print ("--- connecting\n");
-  gst_pad_connect (srcpad, sinkpad);
+  g_print ("--- linking\n");
+  gst_pad_link (srcpad, sinkpad);
 
   g_print ("--- setting up\n");
   gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);

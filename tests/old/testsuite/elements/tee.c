@@ -70,16 +70,16 @@ main (int argc, char *argv[])
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), tee);
 
-  /* connect input part */
-  g_print ("Connecting input elements\n");
-  gst_pad_connect (gst_element_get_pad (src, "src"),
-      		   gst_element_get_pad (tee, "sink"));
+  /* link input part */
+  g_print ("Linking input elements\n");
+  gst_pad_link (gst_element_get_pad (src, "src"),
+                gst_element_get_pad (tee, "sink"));
    
   /* request one pad from tee */
   g_print ("Requesting first pad\n");
   tee_src1 = gst_element_get_request_pad (tee, "src%d");
   gst_bin_add (GST_BIN (pipeline), sink1);
-  gst_pad_connect (tee_src1, gst_element_get_pad (sink1, "sink"));
+  gst_pad_link (tee_src1, gst_element_get_pad (sink1, "sink"));
 
   /* set to play */
   g_print ("Doing 1 iteration\n");
@@ -91,9 +91,9 @@ main (int argc, char *argv[])
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
   tee_src2 = gst_element_get_request_pad (tee, "src%d");
   gst_bin_add (GST_BIN (pipeline), sink2);
-  gst_pad_connect (tee_src2, gst_element_get_pad (sink2, "sink"));
+  gst_pad_link (tee_src2, gst_element_get_pad (sink2, "sink"));
   
-  /* now we have two fakesinks connected, iterate */
+  /* now we have two fakesinks linked, iterate */
   g_print ("Doing 1 iteration\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   gst_bin_iterate (GST_BIN (pipeline));
@@ -146,11 +146,11 @@ main (int argc, char *argv[])
   /* remove the first one, iterate */
   g_print ("Removing first sink\n");
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
-  gst_pad_disconnect (tee_src1, gst_element_get_pad (sink1, "sink"));
+  gst_pad_unlink (tee_src1, gst_element_get_pad (sink1, "sink"));
   gst_pad_destroy (tee_src1);
   gst_bin_remove (GST_BIN (pipeline), sink1);
 
-  /* only second fakesink connected, iterate */
+  /* only second fakesink linked, iterate */
   g_print ("Doing 1 iteration\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   gst_bin_iterate (GST_BIN (pipeline));

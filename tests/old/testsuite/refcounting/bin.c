@@ -32,7 +32,7 @@ create_bin_ghostpads (void)
   gst_bin_add (GST_BIN (bin), element1);
   element2 = gst_element_factory_make ("fakesink", NULL);
   gst_bin_add (GST_BIN (bin), element2);
-  gst_element_connect_pads (element1, "src", element2, "sink");
+  gst_element_link_pads (element1, "src", element2, "sink");
   gst_element_add_ghost_pad (bin, gst_element_get_pad (element1, "sink"), "ghost_sink");
 
   return bin;

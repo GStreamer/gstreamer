@@ -15,7 +15,7 @@ create_pipeline (void)
   gst_bin_add (GST_BIN (bin), fakesink);
   gst_element_add_ghost_pad (bin, gst_element_get_pad (fakesink, "sink"), "sink");
 
-  gst_element_connect (fakesrc, bin);
+  gst_element_link (fakesrc, bin);
 
   gst_bin_add_many (GST_BIN (pipeline), fakesrc, bin, NULL);
 

@@ -52,8 +52,8 @@ int main(int argc,char *argv[])
 
   gst_bin_add(GST_BIN(thread), osssink);
 
-  gst_pad_connect(gst_element_get_pad(queue,"src"),
-                  gst_element_get_pad(osssink,"sink"));
+  gst_pad_link(gst_element_get_pad(queue,"src"),
+               gst_element_get_pad(osssink,"sink"));
 
   if (!gst_pipeline_autoplug(GST_PIPELINE(pipeline))) {
     g_print("cannot autoplug pipeline\n");

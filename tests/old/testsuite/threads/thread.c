@@ -29,7 +29,7 @@ construct_pipeline (GstElement *pipeline)
   queue    = gst_element_factory_make ("queue",    NULL);
   thread   = gst_element_factory_make ("thread",   NULL);
 
-  gst_element_connect_many (src, queue, identity, sink, NULL);
+  gst_element_link_many (src, queue, identity, sink, NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), src, queue, thread, NULL);
   gst_bin_add_many (GST_BIN (thread), identity, sink, NULL);

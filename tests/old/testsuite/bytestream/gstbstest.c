@@ -160,17 +160,17 @@ gst_bstest_class_init (GstBsTestClass * klass)
 
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_bstest_negotiate_src (GstPad * pad, GstCaps ** caps, gpointer * data)
 {
   GstBsTest *bstest = GST_BSTEST (gst_pad_get_parent (pad));
 
   /* thomas: I was trying to fix this old test, one of these two pads
    * needs to be dropped according to the new api, which one ? */
-  return gst_pad_proxy_connect (pad, bstest->sinkpad, caps);
+  return gst_pad_proxy_link (pad, bstest->sinkpad, caps);
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_bstest_negotiate_sink (GstPad * pad, GstCaps ** caps, gpointer * data)
 {
   GstBsTest *bstest = GST_BSTEST (gst_pad_get_parent (pad));

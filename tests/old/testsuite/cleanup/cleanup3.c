@@ -15,10 +15,10 @@ create_pipeline (void)
   queue = gst_element_factory_make ("queue", "queue");
   gst_bin_add (GST_BIN (thread), fakesink);
   gst_bin_add (GST_BIN (thread), queue);
-  gst_element_connect (queue, fakesink); 
+  gst_element_link (queue, fakesink); 
   gst_element_add_ghost_pad (thread, gst_element_get_pad (queue, "sink"), "sink");
 
-  gst_element_connect (fakesrc, thread);
+  gst_element_link (fakesrc, thread);
 
   gst_bin_add (GST_BIN (pipeline), fakesrc);
   gst_bin_add (GST_BIN (pipeline), thread);

@@ -223,8 +223,8 @@ int main(int argc,char *argv[]) {
   testelement = gst_element_factory_make ("dptest", "testelement");
   g_assert (testelement);
 
-  gst_element_connect (src, testelement);
-  gst_element_connect (testelement, sink);
+  gst_element_link (src, testelement);
+  gst_element_link (testelement, sink);
 
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), testelement);
