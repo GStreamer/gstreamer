@@ -567,7 +567,8 @@ cothread_switch (cothread_state * thread)
 
 
   /* find the number of the thread to switch to */
-  GST_INFO (GST_CAT_COTHREAD_SWITCH, "switching from cothread #%d to cothread #%d",
+  GST_INFO (GST_CAT_COTHREAD_SWITCH, 
+            "switching from cothread #%d to cothread #%d",
 	    ctx->current, thread->threadnum);
   ctx->current = thread->threadnum;
 
@@ -577,12 +578,15 @@ cothread_switch (cothread_state * thread)
 #endif
   enter = setjmp (current->jmp);
   if (enter != 0) {
-    GST_DEBUG (GST_CAT_COTHREADS, "enter thread #%d %d %p<->%p (%d) %p", current->threadnum, enter,
-	       current->sp, current->top_sp, (char*)current->top_sp - (char*)current->sp, current->jmp);
+    GST_DEBUG (GST_CAT_COTHREADS, 
+	       "enter thread #%d %d %p<->%p (%d) %p", 
+	       current->threadnum, enter, current->sp, current->top_sp, 
+	       (char*) current->top_sp - (char*) current->sp, current->jmp);
     return;
   }
-  GST_DEBUG (GST_CAT_COTHREADS, "exit thread #%d %d %p<->%p (%d) %p", current->threadnum, enter,
-	       current->sp, current->top_sp, (char*)current->top_sp - (char*)current->sp, current->jmp);
+  GST_DEBUG (GST_CAT_COTHREADS, "exit thread #%d %d %p<->%p (%d) %p", 
+             current->threadnum, enter, current->sp, current->top_sp, 
+	     (char*) current->top_sp - (char*) current->sp, current->jmp);
   enter = 1;
 
   if (current->flags & COTHREAD_DESTROYED) {
