@@ -63,9 +63,9 @@ struct _GstV4lMjpegSink {
 
   /* thread to keep track of synced frames */
   gint8 *isqueued_queued_frames; /* 1 = queued, 0 = unqueued, -1 = error */
-  pthread_t thread_queued_frames;
-  pthread_mutex_t mutex_queued_frames;
-  pthread_cond_t *cond_queued_frames;
+  GThread *thread_queued_frames;
+  GMutex *mutex_queued_frames;
+  GCond **cond_queued_frames;
   gint current_frame;
 
   /* something to get our buffers from */

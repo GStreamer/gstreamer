@@ -25,7 +25,6 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <errno.h>
-#include <pthread.h>
 #include "v4lmjpegsink_calls.h"
 
 /* On some systems MAP_FAILED seems to be missing */
@@ -52,24 +51,26 @@ gst_v4lmjpegsink_sync_thread (void *arg)
 
   DEBUG("starting sync thread");
 
+#if 0
   /* Allow easy shutting down by other processes... */
   pthread_setcancelstate( PTHREAD_CANCEL_ENABLE, NULL );
   pthread_setcanceltype( PTHREAD_CANCEL_ASYNCHRONOUS, NULL );
+#endif
 
   while (1)
   {
-    pthread_mutex_lock(&(v4lmjpegsink->mutex_queued_frames));
+    g_mutex_lock(v4lmjpegsink->mutex_queued_frames);
     if (!v4lmjpegsink->isqueued_queued_frames[frame])
     {
-      pthread_cond_wait(&(v4lmjpegsink->cond_queued_frames[frame]),
-        &(v4lmjpegsink->mutex_queued_frames));
+      g_cond_wait(v4lmjpegsink->cond_queued_frames[frame],
+        v4lmjpegsink->mutex_queued_frames);
     }
     if (v4lmjpegsink->isqueued_queued_frames[frame] != 1)
     {
-      pthread_mutex_unlock(&(v4lmjpegsink->mutex_queued_frames));
+      g_mutex_unlock(v4lmjpegsink->mutex_queued_frames);
       goto end;
     }
-    pthread_mutex_unlock(&(v4lmjpegsink->mutex_queued_frames));
+    g_mutex_unlock(v4lmjpegsink->mutex_queued_frames);
 
     DEBUG("thread-syncing on next frame");
     if (ioctl(GST_V4LELEMENT(v4lmjpegsink)->video_fd, MJPIOC_SYNC,
@@ -78,10 +79,10 @@ gst_v4lmjpegsink_sync_thread (void *arg)
       gst_element_error(GST_ELEMENT(v4lmjpegsink),
         "Failed to sync on frame %d: %s",
          frame, g_strerror(errno));
-      pthread_mutex_lock(&(v4lmjpegsink->mutex_queued_frames));
+      g_mutex_lock(v4lmjpegsink->mutex_queued_frames);
       v4lmjpegsink->isqueued_queued_frames[frame] = -1;
-      pthread_cond_broadcast(&(v4lmjpegsink->cond_queued_frames[frame]));
-      pthread_mutex_unlock(&(v4lmjpegsink->mutex_queued_frames));
+      g_cond_broadcast(v4lmjpegsink->cond_queued_frames[frame]);
+      g_mutex_unlock(v4lmjpegsink->mutex_queued_frames);
       goto end;
     }
     else
@@ -93,10 +94,10 @@ gst_v4lmjpegsink_sync_thread (void *arg)
           "Internal error: frame number confusion");
         goto end;
       }
-      pthread_mutex_lock(&(v4lmjpegsink->mutex_queued_frames));
+      g_mutex_lock(v4lmjpegsink->mutex_queued_frames);
       v4lmjpegsink->isqueued_queued_frames[frame] = 0;
-      pthread_cond_broadcast(&(v4lmjpegsink->cond_queued_frames[frame]));
-      pthread_mutex_unlock(&(v4lmjpegsink->mutex_queued_frames));
+      g_cond_broadcast(v4lmjpegsink->cond_queued_frames[frame]);
+      g_mutex_unlock(v4lmjpegsink->mutex_queued_frames);
     }
 
     frame = (frame+1)%v4lmjpegsink->breq.count;
@@ -104,7 +105,8 @@ gst_v4lmjpegsink_sync_thread (void *arg)
 
 end:
   DEBUG("Sync thread got signalled to exit");
-  pthread_exit(NULL);
+  g_thread_exit(NULL);
+  return NULL;
 }
 
 
@@ -129,10 +131,10 @@ gst_v4lmjpegsink_queue_frame (GstV4lMjpegSink *v4lmjpegsink,
     return FALSE;
   }
 
-  pthread_mutex_lock(&(v4lmjpegsink->mutex_queued_frames));
+  g_mutex_lock(v4lmjpegsink->mutex_queued_frames);
   v4lmjpegsink->isqueued_queued_frames[num] = 1;
-  pthread_cond_broadcast(&(v4lmjpegsink->cond_queued_frames[num]));
-  pthread_mutex_unlock(&(v4lmjpegsink->mutex_queued_frames));
+  g_cond_broadcast(v4lmjpegsink->cond_queued_frames[num]);
+  g_mutex_unlock(v4lmjpegsink->mutex_queued_frames);
 
   return TRUE;
 }
@@ -154,19 +156,19 @@ gst_v4lmjpegsink_sync_frame (GstV4lMjpegSink *v4lmjpegsink,
   v4lmjpegsink->current_frame = (v4lmjpegsink->current_frame+1)%v4lmjpegsink->breq.count;
   *num = v4lmjpegsink->current_frame;
 
-  pthread_mutex_lock(&(v4lmjpegsink->mutex_queued_frames));
+  g_mutex_lock(v4lmjpegsink->mutex_queued_frames);
   if (v4lmjpegsink->isqueued_queued_frames[*num] == 1)
   {
-    pthread_cond_wait(&(v4lmjpegsink->cond_queued_frames[*num]),
-      &(v4lmjpegsink->mutex_queued_frames));
+    g_cond_wait(v4lmjpegsink->cond_queued_frames[*num],
+      v4lmjpegsink->mutex_queued_frames);
   }
   if (v4lmjpegsink->isqueued_queued_frames[*num] != 0)
   {
-    pthread_mutex_unlock(&(v4lmjpegsink->mutex_queued_frames));
+    g_mutex_unlock(v4lmjpegsink->mutex_queued_frames);
     return FALSE;
   }
   else
-    pthread_mutex_unlock(&(v4lmjpegsink->mutex_queued_frames));
+    g_mutex_unlock(v4lmjpegsink->mutex_queued_frames);
 
   return TRUE;
 }
@@ -365,8 +367,8 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink *v4lmjpegsink)
     return FALSE;
   }
 
-  /* allocate/init the pthread thingies */
-  pthread_mutex_init(&(v4lmjpegsink->mutex_queued_frames), NULL);
+  /* allocate/init the GThread thingies */
+  v4lmjpegsink->mutex_queued_frames = g_mutex_new();
   v4lmjpegsink->isqueued_queued_frames = (gint8 *)
     malloc(sizeof(gint8) * v4lmjpegsink->breq.count);
   if (!v4lmjpegsink->isqueued_queued_frames)
@@ -376,8 +378,8 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink *v4lmjpegsink)
       g_strerror(errno));
     return FALSE;
   }
-  v4lmjpegsink->cond_queued_frames = (pthread_cond_t *)
-    malloc(sizeof(pthread_cond_t) * v4lmjpegsink->breq.count);
+  v4lmjpegsink->cond_queued_frames = (GCond **)
+    malloc(sizeof(GCond *) * v4lmjpegsink->breq.count);
   if (!v4lmjpegsink->cond_queued_frames)
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsink),
@@ -386,7 +388,7 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink *v4lmjpegsink)
     return FALSE;
   }
   for (n=0;n<v4lmjpegsink->breq.count;n++)
-    pthread_cond_init(&(v4lmjpegsink->cond_queued_frames[n]), NULL);
+    v4lmjpegsink->cond_queued_frames[n] = g_cond_new();
 
   return TRUE;
 }
@@ -401,6 +403,7 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink *v4lmjpegsink)
 gboolean
 gst_v4lmjpegsink_playback_start (GstV4lMjpegSink *v4lmjpegsink)
 {
+  GError *error;
   gint n;
 
   DEBUG("starting playback");
@@ -414,12 +417,12 @@ gst_v4lmjpegsink_playback_start (GstV4lMjpegSink *v4lmjpegsink)
   v4lmjpegsink->current_frame = -1;
 
   /* create sync() thread */
-  if (pthread_create(&(v4lmjpegsink->thread_queued_frames), NULL,
-      gst_v4lmjpegsink_sync_thread, (void *) v4lmjpegsink))
+  v4lmjpegsink->thread_queued_frames = g_thread_create(
+      gst_v4lmjpegsink_sync_thread, (void *) v4lmjpegsink, TRUE, &error);
+  if(!v4lmjpegsink->thread_queued_frames)
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsink),
-      "Failed to create sync thread: %s",
-      g_strerror(errno));
+      "Failed to create sync thread: %s", error->message);
     return FALSE;
   }
 
@@ -515,7 +518,7 @@ gst_v4lmjpegsink_playback_stop (GstV4lMjpegSink *v4lmjpegsink)
   }
 
   /* .. and wait for all buffers to be queued on */
-  pthread_join(v4lmjpegsink->thread_queued_frames, NULL);
+  g_thread_join(v4lmjpegsink->thread_queued_frames);
 
   return TRUE;
 }
@@ -530,11 +533,16 @@ gst_v4lmjpegsink_playback_stop (GstV4lMjpegSink *v4lmjpegsink)
 gboolean
 gst_v4lmjpegsink_playback_deinit (GstV4lMjpegSink *v4lmjpegsink)
 {
+  int n;
+
   DEBUG("quitting playback subsystem");
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsink));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lmjpegsink));
 
-  /* free pthread thingies */
+  /* free GThread thingies */
+  g_mutex_free(v4lmjpegsink->mutex_queued_frames);
+  for (n=0;n<v4lmjpegsink->breq.count;n++)
+    g_cond_free(v4lmjpegsink->cond_queued_frames[n]);
   free(v4lmjpegsink->cond_queued_frames);
   free(v4lmjpegsink->isqueued_queued_frames);
 
