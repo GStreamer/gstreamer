@@ -1195,6 +1195,15 @@ main (int   argc,
   fi
 ])
 
+dnl *** musicbrainz ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MUSICBRAINZ, true)
+GST_CHECK_FEATURE(MUSICBRAINZ, [musicbrainz], musicbrainz, [
+  PKG_CHECK_MODULES(MUSICBRAINZ, libmusicbrainz,
+      HAVE_MUSICBRAINZ="yes", HAVE_MUSICBRAINZ="no")
+  AC_SUBST(MUSICBRAINZ_CFLAGS)
+  AC_SUBST(MUSICBRAINZ_LIBS)
+])
+
 dnl *** pango ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_PANGO, true)
 GST_CHECK_FEATURE(PANGO, [pango], pango, [
@@ -1634,6 +1643,7 @@ ext/mikmod/Makefile
 ext/mpeg2dec/Makefile
 ext/mpeg2enc/Makefile
 ext/mplex/Makefile
+ext/musicbrainz/Makefile
 ext/ogg/Makefile
 ext/pango/Makefile
 ext/raw1394/Makefile
