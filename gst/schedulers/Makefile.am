@@ -5,7 +5,6 @@ plugin_LTLIBRARIES = \
 	libgstbasicgthreadscheduler.la \
 	libgstentrygthreadscheduler.la \
 	libgstentryomegascheduler.la \
-	libgstfairgthreadscheduler.la \
 	libgstoptscheduler.la \
 	libgstoptomegascheduler.la \
 	libgstoptgthreadscheduler.la
