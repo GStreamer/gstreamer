@@ -156,11 +156,11 @@ else
 SDL_DIR=
 endif
 
-## if USE_SIDPLAY
-## SIDPLAY_DIR=sidplay
-## else
-SIDPLAY_DIR=
-## endif
+if USE_SIDPLAY
+SIDPLAY_DIR=sidplay
+else
+SIDDPLAY_DIR=
+endif
 
 if USE_SHOUT
 SHOUT_DIR=shout
