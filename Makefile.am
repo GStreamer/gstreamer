@@ -1,18 +1,20 @@
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
 
-# if libglade is present, build the player and editor
+# if libglade and gnome1 are present, build the player and editor
+# if libglade and gnome2, only the player
+# otherwise none
+
 if HAVE_LIBGLADE_GNOME
 if HAVE_GNOME
-	SUBDIRS_LGG = gstplay editor
+SUBDIRS_LGG = gstplay editor
 else
-# Gnome 2.0 ...
-	SUBDIRS_LGG = gstplay
+SUBDIRS_LGG = gstplay
 endif
 else
 SUBDIRS_LGG =
 endif
-
+ 
 if BUILD_DOCS
 SUBDIRS_DOCS = docs
 else
