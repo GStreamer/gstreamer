@@ -1,3 +1,33 @@
+2004-11-02  Kjartan Maraas <as at gnome.org>
+
+	reviewed by: Wim Taymans, Ronald Bultje.
+
+	* gst/cothreads.c: (cothread_create):
+	* gst/gstbin.c: (gst_bin_add_func), (gst_bin_remove_func),
+	(gst_bin_child_state_change_func):
+	* gst/gstbuffer.c: (gst_buffer_span):
+	* gst/gstelement.c: (gst_element_get_index),
+	(gst_element_get_event_masks), (gst_element_get_query_types),
+	(gst_element_get_formats):
+	* gst/gsterror.c: (_gst_core_errors_init),
+	(_gst_library_errors_init), (_gst_resource_errors_init),
+	(_gst_stream_errors_init):
+	* gst/gstobject.c: (gst_object_default_deep_notify):
+	* gst/gstpad.c: (gst_pad_get_event_masks),
+	(gst_pad_get_internal_links_default):
+	* gst/gstplugin.c: (gst_plugin_register_func),
+	(gst_plugin_get_module):
+	* gst/gststructure.c: (gst_structure_get_string),
+	(gst_structure_get_abbrs), (gst_structure_from_abbr),
+	(gst_structure_to_abbr):
+	* gst/gstutils.c: (gst_print_element_args):
+	* gst/schedulers/gstoptimalscheduler.c: (add_to_group),
+	(setup_group_scheduler), (gst_opt_scheduler_iterate):
+	Aplied part of patch #157127: Cleanup of issues reported by 
+	sparse.
+	Also do not try to use cothreads when there is no cothread
+	context yet.
+
 2004-11-02  Sebastien Cote <sc5 at hermes.usherb.ca>
 
 	* gst/schedulers/gstoptimalscheduler.c: (add_to_group),

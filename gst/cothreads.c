@@ -224,7 +224,7 @@ cothread_state *
 cothread_create (cothread_context * ctx)
 {
   cothread_state *cothread;
-  void *mmaped = 0;
+  void *mmaped = NULL;
   gint slot = 0;
   unsigned long page_size;
 

@@ -1058,7 +1058,7 @@ gst_element_get_index (GstElement * element)
 {
   GstElementClass *oclass;
 
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
@@ -2255,7 +2255,7 @@ gst_element_get_event_masks (GstElement * element)
 {
   GstElementClass *oclass;
 
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
@@ -2268,7 +2268,7 @@ gst_element_get_event_masks (GstElement * element)
       return gst_pad_get_event_masks (GST_PAD_PEER (pad));
   }
 
-  return FALSE;
+  return NULL;
 }
 
 /**
@@ -2341,7 +2341,7 @@ gst_element_get_query_types (GstElement * element)
 {
   GstElementClass *oclass;
 
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
@@ -2354,7 +2354,7 @@ gst_element_get_query_types (GstElement * element)
       return gst_pad_get_query_types (GST_PAD_PEER (pad));
   }
 
-  return FALSE;
+  return NULL;
 }
 
 /**
@@ -2414,7 +2414,7 @@ gst_element_get_formats (GstElement * element)
 {
   GstElementClass *oclass;
 
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
@@ -2427,7 +2427,7 @@ gst_element_get_formats (GstElement * element)
       return gst_pad_get_formats (GST_PAD_PEER (pad));
   }
 
-  return FALSE;
+  return NULL;
 }
 
 /**

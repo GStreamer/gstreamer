@@ -626,7 +626,7 @@ gst_pad_get_event_masks (GstPad * pad)
 
   rpad = GST_PAD_REALIZE (pad);
 
-  g_return_val_if_fail (rpad, FALSE);
+  g_return_val_if_fail (rpad, NULL);
 
   if (GST_RPAD_EVENTMASKFUNC (rpad))
     return GST_RPAD_EVENTMASKFUNC (rpad) (GST_PAD (pad));
@@ -3897,7 +3897,7 @@ gst_pad_get_internal_links_default (GstPad * pad)
   GstPadDirection direction;
   GstRealPad *rpad;
 
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   rpad = GST_PAD_REALIZE (pad);
   direction = rpad->direction;

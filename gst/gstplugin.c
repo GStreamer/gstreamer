@@ -50,10 +50,10 @@ static GList *_gst_plugin_static = NULL;
 
 /* static variables for segfault handling of plugin loading */
 static char *_gst_plugin_fault_handler_filename = NULL;
-extern gboolean *_gst_disable_segtrap;  /* see gst.c */
+extern gboolean _gst_disable_segtrap;   /* see gst.c */
 
 #ifndef HAVE_WIN32
-static gboolean *_gst_plugin_fault_handler_is_setup = FALSE;
+static gboolean _gst_plugin_fault_handler_is_setup = FALSE;
 #endif
 
 /* list of valid licenses.
@@ -187,21 +187,21 @@ gst_plugin_register_func (GstPlugin * plugin, GModule * module,
     if (GST_CAT_DEFAULT)
       GST_INFO ("plugin \"%s\" has incompatible version, not loading",
           plugin->filename);
-    return FALSE;
+    return NULL;
   }
 
   if (!desc->license || !desc->description || !desc->package || !desc->origin) {
     if (GST_CAT_DEFAULT)
       GST_INFO ("plugin \"%s\" has incorrect GstPluginDesc, not loading",
           plugin->filename);
-    return FALSE;
+    return NULL;
   }
 
   if (!gst_plugin_check_license (desc->license)) {
     if (GST_CAT_DEFAULT)
       GST_INFO ("plugin \"%s\" has invalid license \"%s\", not loading",
           plugin->filename, desc->license);
-    return FALSE;
+    return NULL;
   }
 
   if (GST_CAT_DEFAULT)
@@ -214,7 +214,7 @@ gst_plugin_register_func (GstPlugin * plugin, GModule * module,
     if (GST_CAT_DEFAULT)
       GST_INFO ("plugin \"%s\" failed to initialise", plugin->filename);
     plugin->module = NULL;
-    return FALSE;
+    return NULL;
   }
 
   if (GST_CAT_DEFAULT)
@@ -639,7 +639,7 @@ gst_plugin_get_origin (GstPlugin * plugin)
 GModule *
 gst_plugin_get_module (GstPlugin * plugin)
 {
-  g_return_val_if_fail (plugin != NULL, FALSE);
+  g_return_val_if_fail (plugin != NULL, NULL);
 
   return plugin->module;
 }

@@ -332,7 +332,7 @@ gst_print_element_args (GString * buf, gint indent, GstElement * element)
 {
   guint width;
   GValue value = { 0, };        /* the important thing is that value.type = 0 */
-  gchar *str = 0;
+  gchar *str = NULL;
   GParamSpec *spec, **specs, **walk;
 
   specs = g_object_class_list_properties (G_OBJECT_GET_CLASS (element), NULL);

@@ -46,7 +46,7 @@ gst_g_error_get_type (void)
 
 /* initialize the dynamic table of translated core errors */
 static gchar **
-_gst_core_errors_init ()
+_gst_core_errors_init (void)
 {
   gchar **t = NULL;
 
@@ -83,7 +83,7 @@ _gst_core_errors_init ()
 
 /* initialize the dynamic table of translated library errors */
 static gchar **
-_gst_library_errors_init ()
+_gst_library_errors_init (void)
 {
   gchar **t = NULL;
 
@@ -103,7 +103,7 @@ _gst_library_errors_init ()
 
 /* initialize the dynamic table of translated resource errors */
 static gchar **
-_gst_resource_errors_init ()
+_gst_resource_errors_init (void)
 {
   gchar **t = NULL;
 
@@ -133,7 +133,7 @@ _gst_resource_errors_init ()
 
 /* initialize the dynamic table of translated stream errors */
 static gchar **
-_gst_stream_errors_init ()
+_gst_stream_errors_init (void)
 {
   gchar **t = NULL;
 

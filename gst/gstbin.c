@@ -485,7 +485,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
 
   /* bump our internal state counter */
   state = GST_STATE (element);
-  while (state >>= 1)
+  while ((state >>= 1) != 0)
     state_idx++;
   bin->child_states[state_idx]++;
 
@@ -558,7 +558,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
 
   /* bump our internal state counter */
   state = GST_STATE (element);
-  while (state >>= 1)
+  while ((state >>= 1) != 0)
     state_idx++;
   bin->child_states[state_idx]--;
 
@@ -691,9 +691,9 @@ gst_bin_child_state_change_func (GstBin * bin, GstElementState oldstate,
 
   old = oldstate;
   new = newstate;
-  while (old >>= 1)
+  while ((old >>= 1) != 0)
     old_idx++;
-  while (new >>= 1)
+  while ((new >>= 1) != 0)
     new_idx++;
 
   GST_LOCK (bin);

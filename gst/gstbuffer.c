@@ -435,7 +435,7 @@ gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
 {
   GstBuffer *newbuf;
 
-  g_return_val_if_fail (buf1 != NULL && buf2 != NULL, FALSE);
+  g_return_val_if_fail (buf1 != NULL && buf2 != NULL, NULL);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buf1) > 0, NULL);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buf2) > 0, NULL);
   g_return_val_if_fail (len > 0, NULL);

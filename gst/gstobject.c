@@ -395,7 +395,7 @@ gst_object_default_deep_notify (GObject * object, GstObject * orig,
     GParamSpec * pspec, gchar ** excluded_props)
 {
   GValue value = { 0, };        /* the important thing is that value.type = 0 */
-  gchar *str = 0;
+  gchar *str = NULL;
   gchar *name = NULL;
 
   if (pspec->flags & G_PARAM_READABLE) {

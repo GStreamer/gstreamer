@@ -973,9 +973,9 @@ gst_structure_get_string (const GstStructure * structure,
   field = gst_structure_get_field (structure, fieldname);
 
   if (field == NULL)
-    return FALSE;
+    return NULL;
   if (!G_VALUE_HOLDS_STRING (&field->value))
-    return FALSE;
+    return NULL;
 
   return g_value_get_string (&field->value);
 }

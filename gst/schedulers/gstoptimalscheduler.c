@@ -1017,12 +1017,16 @@ setup_group_scheduler (GstOptScheduler * osched, GstOptSchedulerGroup * group)
     wrapper = loop_group_schedule_function;
 
 #ifdef USE_COTHREADS
-  if (!(group->flags & GST_OPT_SCHEDULER_GROUP_SCHEDULABLE)) {
-    do_cothread_create (group->cothread, osched->context,
-        (cothread_func) wrapper, 0, (char **) group);
-  } else {
-    do_cothread_setfunc (group->cothread, osched->context,
-        (cothread_func) wrapper, 0, (char **) group);
+  /* we can only initialize the cothread stuff when we have
+   * a cothread context */
+  if (osched->context) {
+    if (!(group->flags & GST_OPT_SCHEDULER_GROUP_SCHEDULABLE)) {
+      do_cothread_create (group->cothread, osched->context,
+          (cothread_func) wrapper, 0, (char **) group);
+    } else {
+      do_cothread_setfunc (group->cothread, osched->context,
+          (cothread_func) wrapper, 0, (char **) group);
+    }
   }
 #else
   group->schedulefunc = wrapper;
