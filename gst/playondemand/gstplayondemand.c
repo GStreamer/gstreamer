@@ -45,11 +45,8 @@
 static GstElementDetails play_on_demand_details = {
   "Play On Demand",
   "Filter/Audio/Effect",
-  "LGPL",
   "Plays a stream at specific times, or when it receives a signal",
-  VERSION,
-  "Leif Morgan Johnson <leif@ambient.2y.net>",
-  "(C) 2002",
+  "Leif Morgan Johnson <leif@ambient.2y.net>"
 };
 
 
@@ -91,6 +88,7 @@ play_on_demand_src_factory (void)
 
 /* GObject functionality */
 static void play_on_demand_class_init   (GstPlayOnDemandClass *klass);
+static void play_on_demand_base_init    (GstPlayOnDemandClass *klass);
 static void play_on_demand_init         (GstPlayOnDemand *filter);
 static void play_on_demand_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void play_on_demand_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
@@ -119,7 +117,7 @@ gst_play_on_demand_get_type (void)
   if (! play_on_demand_type) {
     static const GTypeInfo play_on_demand_info = {
       sizeof(GstPlayOnDemandClass),
-      NULL,
+      (GBaseInitFunc) play_on_demand_base_init,
       NULL,
       (GClassInitFunc) play_on_demand_class_init,
       NULL,
@@ -160,6 +158,16 @@ enum {
 static guint gst_pod_filter_signals[LAST_SIGNAL] = { 0 };
 
 static GstElementClass *parent_class = NULL;
+
+static void
+play_on_demand_base_init (GstPlayOnDemandClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template(element_class, play_on_demand_src_factory());
+  gst_element_class_add_pad_template(element_class, play_on_demand_sink_factory());
+  gst_element_class_set_details(element_class, &play_on_demand_details);
+}
 
 static void
 play_on_demand_class_init (GstPlayOnDemandClass *klass)
@@ -548,26 +556,22 @@ play_on_demand_resize_buffer (GstPlayOnDemand *filter)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("playondemand",
-                                    GST_TYPE_PLAYONDEMAND,
-                                    &play_on_demand_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template(factory, play_on_demand_src_factory());
-  gst_element_factory_add_pad_template(factory, play_on_demand_sink_factory());
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE(factory));
-
-  return TRUE;
+  return gst_element_register(plugin, "playondemand",
+			      GST_RANK_NONE,
+                              GST_TYPE_PLAYONDEMAND);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "playondemand",
-  plugin_init
-};
+  "Plays a stream at specific times, or when it receives a signal",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
