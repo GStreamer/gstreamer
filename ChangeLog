@@ -1,3 +1,10 @@
+2004-05-14  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
+	* gst-libs/gst/riff/riff-read.c :
+	  - fix INFO tag extraction in RIFF/AVI files
+            because gst_event_unref (event) also freed taglist
+          - avoid a mem leak
+
 2004-05-13  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* ext/mad/gstid3tag.c : move from "Codec/(Dem/M)uxer" to "Codec/(Dem/M)uxer/Audio"

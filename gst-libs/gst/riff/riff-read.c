@@ -879,8 +879,12 @@ gst_riff_read_info (GstRiffRead * riff)
         gst_pad_push (GST_PAD (padlist->data), GST_DATA (event));
       }
     }
+
+    gst_element_found_tags (element, taglist);
+
     gst_event_unref (event);
-    gst_element_found_tags (GST_ELEMENT (riff), taglist);
+  } else {
+    gst_tag_list_free (taglist);
   }
 
   return TRUE;
