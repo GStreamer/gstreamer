@@ -69,6 +69,11 @@ typedef enum {
   GST_BASIC_SCHEDULER_STATE_RUNNING,
 } GstBasicSchedulerState;
 
+typedef enum {
+  /* something important has changed inside the scheduler */
+  GST_BASIC_SCHEDULER_CHANGE	= GST_OBJECT_FLAG_LAST,
+} GstBasicSchedulerFlags;
+
 struct _GstBasicScheduler {
   GstScheduler parent;
 
@@ -644,6 +649,9 @@ gst_basic_scheduler_chain_new (GstBasicScheduler * sched)
   sched->chains = g_list_prepend (sched->chains, chain);
   sched->num_chains++;
 
+  /* notify the scheduler that something changed */
+  GST_FLAG_SET(sched, GST_BASIC_SCHEDULER_CHANGE);
+
   GST_INFO (GST_CAT_SCHEDULING, "created new chain %p, now are %d chains in sched %p",
 	    chain, sched->num_chains, sched);
 
@@ -667,6 +675,9 @@ gst_basic_scheduler_chain_destroy (GstSchedulerChain * chain)
 	    sched->num_chains, sched);
 
   g_free (chain);
+
+  /* notify the scheduler that something changed */
+  GST_FLAG_SET(sched, GST_BASIC_SCHEDULER_CHANGE);
 }
 
 static void
@@ -681,6 +692,9 @@ gst_basic_scheduler_chain_add_element (GstSchedulerChain * chain, GstElement * e
   /* add the element to the list of 'disabled' elements */
   chain->disabled = g_list_prepend (chain->disabled, element);
   chain->num_elements++;
+
+  /* notify the scheduler that something changed */
+  GST_FLAG_SET(chain->sched, GST_BASIC_SCHEDULER_CHANGE);
 }
 
 static gboolean
@@ -694,6 +708,9 @@ gst_basic_scheduler_chain_enable_element (GstSchedulerChain * chain, GstElement 
 
   /* add to elements list */
   chain->elements = g_list_prepend (chain->elements, element);
+
+  /* notify the scheduler that something changed */
+  GST_FLAG_SET(chain->sched, GST_BASIC_SCHEDULER_CHANGE);
 
   /* reschedule the chain */
   return gst_basic_scheduler_cothreaded_chain (GST_BIN (GST_SCHEDULER (chain->sched)->parent), chain);
@@ -710,6 +727,9 @@ gst_basic_scheduler_chain_disable_element (GstSchedulerChain * chain, GstElement
 
   /* add to disabled list */
   chain->disabled = g_list_prepend (chain->disabled, element);
+
+  /* notify the scheduler that something changed */
+  GST_FLAG_SET(chain->sched, GST_BASIC_SCHEDULER_CHANGE);
 
   /* reschedule the chain */
 /* FIXME this should be done only if manager state != NULL */
@@ -736,9 +756,13 @@ gst_basic_scheduler_chain_remove_element (GstSchedulerChain * chain, GstElement 
   chain->disabled = g_list_remove (chain->disabled, element);
   chain->num_elements--;
 
+  /* notify the scheduler that something changed */
+  GST_FLAG_SET(chain->sched, GST_BASIC_SCHEDULER_CHANGE);
+
   /* if there are no more elements in the chain, destroy the chain */
   if (chain->num_elements == 0)
     gst_basic_scheduler_chain_destroy (chain);
+
 }
 
 static void
@@ -1204,6 +1228,9 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
 
   GST_DEBUG_ENTER ("(\"%s\")", GST_ELEMENT_NAME (bin));
 
+  /* clear the changes flag */
+  GST_FLAG_UNSET(bsched, GST_BASIC_SCHEDULER_CHANGE);
+  
   /* step through all the chains */
   chains = bsched->chains;
 
@@ -1247,6 +1274,9 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
 		   GST_ELEMENT_NAME (entry), entry);
 	if (GST_ELEMENT_THREADSTATE (entry)) {
 	  cothread_switch (GST_ELEMENT_THREADSTATE (entry));
+	  /* if something changed, return - go on else */
+	  if (GST_FLAG_IS_SET(bsched, GST_BASIC_SCHEDULER_CHANGE))
+	    return GST_SCHEDULER_STATE_RUNNING;
 	}
 	else {
 	  GST_DEBUG (GST_CAT_DATAFLOW, "cothread switch not possible, element has no threadstate\n");
