@@ -4,14 +4,13 @@ import gst
 
 def decode(filename):
     output = filename + '.wav'
-    pipeline = ('filesrc location="%s" ! spider ! audio/x-raw-int,rate=44100,stereo=2 ! wavenc ! '
-                'filesink location="%s"') % (filename, output)
+    pipeline = ('{ filesrc location="%s" ! spider ! audio/x-raw-int,rate=44100,stereo=2 ! wavenc ! '
+                'filesink location="%s" }') % (filename, output)
     
     bin = gst.parse_launch(pipeline)
     bin.set_state(gst.STATE_PLAYING)
-    while bin.iterate():
-        pass
-    bin.set_state(gst.STATE_NULL)
+    bin.connect('eos', lambda bin: gst.main_quit())
+    gst.main()
     
 def main(args):
     for arg in args[1:]:
