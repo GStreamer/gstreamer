@@ -2,7 +2,7 @@
 # I really don't like this hack, but automake doesn't seem to want to
 # install directory trees :(
 
-install-data-local:
+install-data-local: html
 	mkdir -p $(docdir)
 	cp -pr $(HTML_DAT) $(docdir)
 
