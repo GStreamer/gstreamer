@@ -1,3 +1,18 @@
+2003-01-04  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* gstreamer/gstreamer.override, gstreamer/gstreamer-extra.defs: add
+	GstPropsEntry and wrappers for most of get_* methods
+
+	* gstreamer/gstreamer-arg-types.py: add GstClockID as a pointer arg
+	type (not too useful, really need to make it a boxed type)
+
+2003-01-02  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* gstreamer/__init__.py: add threads_init() function
+
+	* gstreamer/gstreamer.override: add pad and element query and convert
+	methods
+
 2002-12-31  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* configure.ac: require PyGTK 1.99.14

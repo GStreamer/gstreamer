@@ -32,6 +32,12 @@
   (gtype-id "GST_TYPE_PROPS")
 )
 
+(define-boxed PropsEntry
+  (in-module "Gst")
+  (c-name "GstPropsEntry")
+  (gtype-id "GST_TYPE_PROPS_ENTRY")
+)
+
 ;;
 ;; HACK
 ;;

@@ -272,17 +272,13 @@ _wrap_gst_pad_query(PyGObject *self, PyObject *args, PyObject *kwargs)
 	GstQueryType type;
 	GstFormat format;
 	gint64 value;
-	gboolean gret;
-	PyObject *ret;
+	gboolean ret;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ii:GstPad.query", kwlist, &type, &format))
 		return NULL;
 	value = 0;
-	gret = gst_pad_query(GST_PAD(self->obj), type, &format, &value);
-	ret = PyTuple_New(2);
-	PyTuple_SetItem(ret, 0, PyInt_FromLong(gret));
-	PyTuple_SetItem(ret, 1, PyLong_FromLongLong(value));
-	return ret;
+	ret = gst_pad_query(GST_PAD(self->obj), type, &format, &value);
+	return Py_BuildValue("(bl)", ret, value);
 }
 %%
 override gst_element_query kwargs
@@ -294,17 +290,13 @@ _wrap_gst_element_query(PyGObject *self, PyObject *args, PyObject *kwargs)
 	GstQueryType type;
 	GstFormat format;
 	gint64 value;
-	gboolean gret;
-	PyObject *ret;
+	gboolean ret;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ii:GstElement.query", kwlist, &type, &format))
 		return NULL;
 	value = 0;
-	gret = gst_element_query(GST_ELEMENT(self->obj), type, &format, &value);
-	ret = PyTuple_New(2);
-	PyTuple_SetItem(ret, 0, PyInt_FromLong(gret));
-	PyTuple_SetItem(ret, 1, PyLong_FromLongLong(value));
-	return ret;
+	ret = gst_element_query(GST_ELEMENT(self->obj), type, &format, &value);
+	return Py_BuildValue("(bl)", ret, value);
 }
 %%
 override gst_pad_convert kwargs
@@ -316,18 +308,14 @@ _wrap_gst_pad_convert(PyGObject *self, PyObject *args, PyObject *kwargs)
 	GstFormat src_format, dest_format;
 	PyObject *src_value_obj;
 	gint64 src_value, dest_value;
-	gboolean gret;
-	PyObject *ret;
+	gboolean ret;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "iOi:GstPad.convert", kwlist, &src_format, &src_value_obj, &dest_format))
 		return NULL;
 	src_value = PyLong_AsLongLong(src_value_obj);
 	dest_value = 0;
-	gret = gst_pad_convert(GST_PAD(self->obj), src_format, src_value, &dest_format, &dest_value);
-	ret = PyTuple_New(2);
-	PyTuple_SetItem(ret, 0, PyInt_FromLong(gret));
-	PyTuple_SetItem(ret, 1, PyLong_FromLongLong(dest_value));
-	return ret;
+	ret = gst_pad_convert(GST_PAD(self->obj), src_format, src_value, &dest_format, &dest_value);
+	return Py_BuildValue("(bl)", ret, dest_value);
 }
 %%
 override gst_element_convert kwargs
@@ -339,16 +327,110 @@ _wrap_gst_element_convert(PyGObject *self, PyObject *args, PyObject *kwargs)
 	GstFormat src_format, dest_format;
 	PyObject *src_value_obj;
 	gint64 src_value, dest_value;
-	gboolean gret;
-	PyObject *ret;
+	gboolean ret;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "iOi:GstElement.convert", kwlist, &src_format, &src_value_obj, &dest_format))
 		return NULL;
 	src_value = PyLong_AsLongLong(src_value_obj);
 	dest_value = 0;
-	gret = gst_element_convert(GST_ELEMENT(self->obj), src_format, src_value, &dest_format, &dest_value);
-	ret = PyTuple_New(2);
-	PyTuple_SetItem(ret, 0, PyInt_FromLong(gret));
-	PyTuple_SetItem(ret, 1, PyLong_FromLongLong(dest_value));
-	return ret;
+	ret = gst_element_convert(GST_ELEMENT(self->obj), src_format, src_value, &dest_format, &dest_value);
+	return Py_BuildValue("(bl)", ret, dest_value);
+}
+%%
+override gst_props_entry_get_int
+
+static PyObject *
+_wrap_gst_props_entry_get_int(PyObject *self)
+{
+	gboolean ret;
+	gint val;
+
+	val = 0;
+	ret = gst_props_entry_get_int(pyg_boxed_get(self, GstPropsEntry), &val);
+	return Py_BuildValue("(bi)", ret, val);
+}
+%%
+override gst_props_entry_get_float
+
+static PyObject *
+_wrap_gst_props_entry_get_float(PyObject *self)
+{
+	gboolean ret;
+	gfloat val;
+
+	val = 0.0f;
+	ret = gst_props_entry_get_float(pyg_boxed_get(self, GstPropsEntry), &val);
+	return Py_BuildValue("(bf)", ret, val);
+}
+%%
+override gst_props_entry_get_fourcc_int
+
+static PyObject *
+_wrap_gst_props_entry_get_fourcc_int(PyObject *self)
+{
+	gboolean ret;
+	gint32 val;
+
+	val = 0;
+	ret = gst_props_entry_get_fourcc_int(pyg_boxed_get(self, GstPropsEntry), &val);
+	return Py_BuildValue("(bi)", ret, val);
+}
+%%
+override gst_props_entry_get_boolean
+
+static PyObject *
+_wrap_gst_props_entry_get_boolean(PyObject *self)
+{
+	gboolean ret;
+	gboolean val;
+	PyObject *py_val;
+
+	val = FALSE;
+	ret = gst_props_entry_get_boolean(pyg_boxed_get(self, GstPropsEntry), &val);
+	
+	py_val = val ? Py_True : Py_False;
+	return Py_BuildValue("(bO)", ret, py_val);
+}
+%%
+override gst_props_entry_get_string
+
+static PyObject *
+_wrap_gst_props_entry_get_string(PyObject *self)
+{
+	gboolean ret;
+	const gchar *val;
+
+	val = NULL;
+	ret = gst_props_entry_get_string(pyg_boxed_get(self, GstPropsEntry), &val);
+	if (ret) {
+		return Py_BuildValue("(bs)", ret, val);
+	} else {
+		return Py_BuildValue("(bO)", ret, Py_None);
+	}
+}
+%%
+override gst_props_entry_get_int_range
+
+static PyObject *
+_wrap_gst_props_entry_get_int_range(PyObject *self)
+{
+	gboolean ret;
+	gint min, max;
+
+	min = max = 0;
+	ret = gst_props_entry_get_int_range(pyg_boxed_get(self, GstPropsEntry), &min, &max);
+	return Py_BuildValue("(bii)", ret, min, max);
+}
+%%
+override gst_props_entry_get_float_range
+
+static PyObject *
+_wrap_gst_props_entry_get_float_range(PyObject *self)
+{
+	gboolean ret;
+	gfloat min, max;
+
+	min = max = 0.0f;
+	ret = gst_props_entry_get_float_range(pyg_boxed_get(self, GstPropsEntry), &min, &max);
+	return Py_BuildValue("(bff)", ret, min, max);
 }
