@@ -1,5 +1,10 @@
 #!/bin/sh
 
+LANG=C
+export LANG
+LC_COLLATE=C
+export LC_COLLATE
+
 Template=$1;
 srcfile=$2;
 
@@ -18,8 +23,8 @@ id=`echo '$Id$' | sed \
 	-e 's/\$I[d]: \([^$]*\)\$/\1/g'`
 echo $id
 
-TEMPLATE=`echo $Template | tr a-z A-Z`
-template=`echo $Template | tr A-Z a-z`
+TEMPLATE=`echo $Template | tr [:lower:] [:upper:]`
+template=`echo $Template | tr [:upper:] [:lower:]`
 
 # remember to break up the Id: in the line below
 sed \
