@@ -74,9 +74,6 @@ struct _CDParanoia {
 
   gchar *device;
   gchar *generic_device;
-  gint start_track, end_track;
-  gint start_sector, end_sector;
-  gint last_track;
   gint default_sectors;
   gint search_overlap;
   gint endian;
@@ -90,14 +87,20 @@ struct _CDParanoia {
   cdrom_drive *d;
   cdrom_paranoia *p;
 
-  gulong cur_sector;			/* current offset in file */
-  gulong seq;				/* buffer sequence number */
+  gint cur_sector;
+  gint segment_start_sector;
+  gint segment_end_sector;
+
+  gint first_sector;
+  gint last_sector;
 
   /* hacks by Gordon Irving */
-  gint no_tracks;
   gchar discid[20];
   gint64 offsets[MAXTRK];
   gint64 total_seconds;
+
+  gint seq;
+  gboolean discont_pending;
 };
 
 struct _CDParanoiaClass {
