@@ -9,4 +9,4 @@ libgstfloatcastinclude_HEADERS = floatcast.h
 
 libgstfloatcast_la_LIBADD =
 libgstfloatcast_la_CFLAGS = 
-libgstfloatcast_la_LDFLAGS = 
+libgstfloatcast_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
