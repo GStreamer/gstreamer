@@ -196,8 +196,8 @@ xmlNsPtr ns;
   ns = xmlNewNs (NULL, "http://gstreamer.net/gst-test/1.0/", "test");
     ...
   thread = gst_elementfactory_make ("thread", "thread");
-  g_signal_connectc (G_OBJECT (thread), "object_saved", 
-  		     G_CALLBACK (object_saved), g_strdup ("decoder thread"), FALSE);
+  g_signal_connect (G_OBJECT (thread), "object_saved", 
+  		     G_CALLBACK (object_saved), g_strdup ("decoder thread"));
     ...
     </programlisting>
     <para>
@@ -246,7 +246,7 @@ object_saved (GstObject *object, xmlNodePtr parent, gpointer data)
     <programlisting>
   xml = gst_xml_new ();
 
-  g_signal_connectc (G_OBJECT (xml), "object_loaded", 
+  g_signal_connect (G_OBJECT (xml), "object_loaded", 
   		     G_CALLBACK (xml_loaded), xml);
 
   ret = gst_xml_parse_file (xml, "xmlTest.gst", NULL);

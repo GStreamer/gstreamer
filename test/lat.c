@@ -58,8 +58,8 @@ GstElement *fakesrc() {
   g_return_val_if_fail(src != NULL,NULL);
   g_object_set(G_OBJECT(src),"silent",TRUE,NULL);
   g_object_set(G_OBJECT(src),"num_buffers",iterations,NULL);
-  g_signal_connectc(G_OBJECT(src),
-      "handoff",G_CALLBACK(handoff_src),NULL,FALSE);
+  g_signal_connect(G_OBJECT(src),
+      "handoff",G_CALLBACK(handoff_src),NULL);
 
   return src;
 }
@@ -70,8 +70,8 @@ GstElement *fakesink() {
   sink = gst_elementfactory_make("fakesink","fakesink");
   g_return_val_if_fail(sink != NULL,NULL);
   g_object_set(G_OBJECT(sink),"silent",TRUE,NULL);
-  g_signal_connectc(G_OBJECT(sink),
-      "handoff",G_CALLBACK(handoff_sink),NULL,FALSE);
+  g_signal_connect(G_OBJECT(sink),
+      "handoff",G_CALLBACK(handoff_sink),NULL);
 
   return sink;
 }

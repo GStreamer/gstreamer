@@ -105,7 +105,7 @@ main(int argc, char *argv[])
   ...
   
   mpeg2parser = gst_elementfactory_make ("mpeg2parse", "mpeg2parse");
-  g_signal_connectc (G_OBJECT (mpeg2parser), "new_pad", pad_connect_func, pipeline, FALSE);  
+  g_signal_connect (G_OBJECT (mpeg2parser), "new_pad", pad_connect_func, pipeline);  
   ...
 
   // start the pipeline

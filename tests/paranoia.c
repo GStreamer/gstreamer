@@ -40,8 +40,8 @@ int main(int argc,char *argv[]) {
   gst_element_connect(paranoia,"src",queue,"sink");
   gst_element_connect(queue,"src",audio_thread,"sink");
 
-  g_signal_connectc(G_OBJECT(gst_element_get_pad(paranoia,"src")),"eos",
-    G_CALLBACK(paranoia_eos),NULL,FALSE);
+  g_signal_connect(G_OBJECT(gst_element_get_pad(paranoia,"src")),"eos",
+    G_CALLBACK(paranoia_eos),NULL);
 
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
   if (GST_STATE(paranoia) != GST_STATE_PLAYING) fprintf(stderr,"error: state not set\n");

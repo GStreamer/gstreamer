@@ -276,8 +276,8 @@ create_input_channel (int id, char* location)
   gst_bin_add(GST_BIN(channel->pipe), channel->disksrc);
 
   /* connect signal to eos of disksrc */
-  g_signal_connectc (G_OBJECT(channel->disksrc),"eos",
-                     G_CALLBACK(eos),NULL,FALSE);
+  g_signal_connect (G_OBJECT(channel->disksrc),"eos",
+                     G_CALLBACK(eos),NULL);
 
 
 #ifdef DEBUG

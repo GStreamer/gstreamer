@@ -111,7 +111,7 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
                           FALSE, G_PARAM_READWRITE)); 
 
   gst_fakesink_signals[SIGNAL_HANDOFF] =
-    g_signal_newc ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstFakeSinkClass, handoff), NULL, NULL,
                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);

@@ -32,12 +32,12 @@ int main(int argc,char *argv[])
   //thread = gst_thread_new("thread");
   thread = gst_elementfactory_make("thread", "thread");
   g_assert(thread != NULL);
-  g_signal_connectc (G_OBJECT (thread), "object_saved", object_saved, g_strdup ("decoder thread"), FALSE);
+  g_signal_connect (G_OBJECT (thread), "object_saved", object_saved, g_strdup ("decoder thread"));
 
   thread2 = gst_elementfactory_make("thread", "thread2");
   //thread2 = gst_thread_new("thread2");
   g_assert(thread2 != NULL);
-  g_signal_connectc (G_OBJECT (thread2), "object_saved", object_saved, g_strdup ("render thread"), FALSE);
+  g_signal_connect (G_OBJECT (thread2), "object_saved", object_saved, g_strdup ("render thread"));
 
   /* create a new bin to hold the elements */
   bin = gst_bin_new("bin");

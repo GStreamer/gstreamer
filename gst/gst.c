@@ -65,7 +65,7 @@ gst_init (int *argc, char **argv[])
   if (!g_thread_supported ()) g_thread_init (NULL);
 
 #ifdef USE_GLIB2
-  g_type_init(0);
+  g_type_init();
 #else
   {
     gchar *display;

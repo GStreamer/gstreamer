@@ -77,8 +77,8 @@ int main(int argc,char *argv[]) {
 //  gst_pad_connect(gst_element_get_pad(queue,"src"),
                   gst_element_get_pad(playthread,"sink"));
 
-  g_signal_connectc(G_OBJECT(src),"eof",
-                     G_CALLBACK(eof),NULL, FALSE);
+  g_signal_connect(G_OBJECT(src),"eof",
+                     G_CALLBACK(eof),NULL);
 
   g_print("\nsetting up the decode thread to *NOT* thread\n");
 //  gtk_object_set(GTK_OBJECT(decodethread),"create_thread",TRUE,NULL);

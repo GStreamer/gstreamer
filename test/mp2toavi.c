@@ -153,7 +153,7 @@ mp2tomp1_new_pad (GstElement *parser,GstPad *pad, GstElement *pipeline)
     g_object_set(G_OBJECT(smooth),"active",FALSE,NULL);
     encode = gst_elementfactory_make("winenc","encode");
     g_return_if_fail(encode != NULL);
-    g_signal_connectc(G_OBJECT(encode),"frame_encoded",G_CALLBACK(frame_encoded),NULL,FALSE);
+    g_signal_connect(G_OBJECT(encode),"frame_encoded",G_CALLBACK(frame_encoded),NULL);
     g_object_set(G_OBJECT(encode),"bitrate",800*4,NULL);
     g_object_set(G_OBJECT(encode),"quality",10000,NULL);
     //g_object_set(G_OBJECT(encode),"compression",NULL,NULL);
@@ -229,7 +229,7 @@ main (int argc,char *argv[])
     src = gst_elementfactory_make ("disksrc", "src");
   }
   g_return_val_if_fail (src != NULL, -1);
-  gtk_object_set (GTK_OBJECT (src), "location", argv[1], NULL);
+  g_object_set (G_OBJECT (src), "location", argv[1], NULL);
   g_print ("should be using file '%s'\n", argv[1]);
 
 
@@ -247,16 +247,16 @@ main (int argc,char *argv[])
   fd = open (argv[2], O_CREAT|O_RDWR|O_TRUNC, S_IREAD|S_IWRITE);
   fdsink = gst_elementfactory_make ("fdsink", "fdsink");
   g_return_val_if_fail (fdsink != NULL, -1);
-  gtk_object_set (GTK_OBJECT (fdsink), "fd", fd, NULL);
+  g_object_set (G_OBJECT (fdsink), "fd", fd, NULL);
 
   gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (src));
   gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (parse));
   gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (mux));
   gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (fdsink));
 
-  gtk_signal_connect (GTK_OBJECT (parse), "new_pad", mp2tomp1_new_pad, pipeline);
+  g_signal_connect (G_OBJECT (parse), "new_pad", mp2tomp1_new_pad, pipeline);
 
-  gtk_signal_connect (GTK_OBJECT (src), "eos", GTK_SIGNAL_FUNC (eof), NULL);
+  g_signal_connect (G_OBJECT (src), "eos", eof, NULL);
 
   gst_element_connect (src, "src", parse, "sink");
   gst_element_connect (mux, "src", fdsink, "sink");

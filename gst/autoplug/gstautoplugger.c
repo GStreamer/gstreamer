@@ -138,7 +138,7 @@ gst_autoplugger_class_init (GstAutopluggerClass *klass)
 
 /*
   gst_autoplugger_signals[_EMPTY] =
-    g_signal_newc ("_empty", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+    g_signal_new ("_empty", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstAutopluggerClass, _empty), NULL, NULL,
                     g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 */
@@ -171,8 +171,8 @@ gst_autoplugger_init (GstAutoplugger *autoplugger)
   g_object_set(G_OBJECT(autoplugger->cache),"caps_proxy",TRUE,NULL);
 
   // attach signals to the cache
-  g_signal_connectc (G_OBJECT (autoplugger->cache), "first_buffer",
-                     G_CALLBACK (gst_autoplugger_cache_first_buffer), autoplugger, FALSE);
+  g_signal_connect (G_OBJECT (autoplugger->cache), "first_buffer",
+                     G_CALLBACK (gst_autoplugger_cache_first_buffer), autoplugger);
 
   // add the cache to self
   gst_bin_add (GST_BIN(autoplugger), autoplugger->cache);
@@ -182,18 +182,18 @@ gst_autoplugger_init (GstAutoplugger *autoplugger)
   autoplugger->cache_srcpad = gst_element_get_pad (autoplugger->cache, "src");
 
   // attach handlers to the typefind pads
-  g_signal_connectc (G_OBJECT (autoplugger->cache_sinkpad), "caps_changed",
-                     G_CALLBACK (gst_autoplugger_external_sink_caps_changed), autoplugger,FALSE);
-  g_signal_connectc (G_OBJECT (autoplugger->cache_srcpad), "caps_changed",
-                     G_CALLBACK (gst_autoplugger_external_src_caps_changed), autoplugger,FALSE);
-  g_signal_connectc (G_OBJECT (autoplugger->cache_sinkpad), "caps_nego_failed",
-                     G_CALLBACK (gst_autoplugger_external_sink_caps_nego_failed), autoplugger,FALSE);
-  g_signal_connectc (G_OBJECT (autoplugger->cache_srcpad), "caps_nego_failed",
-                     G_CALLBACK (gst_autoplugger_external_src_caps_nego_failed), autoplugger,FALSE);
-//  g_signal_connectc (G_OBJECT (autoplugger->cache_sinkpad), "connected",
-//                     gst_autoplugger_external_sink_connected, autoplugger,FALSE);
-//  g_signal_connectc (G_OBJECT (autoplugger->cache_srcpad), "connected",
-//                     gst_autoplugger_external_src_connected, autoplugger,FALSE);
+  g_signal_connect (G_OBJECT (autoplugger->cache_sinkpad), "caps_changed",
+                     G_CALLBACK (gst_autoplugger_external_sink_caps_changed), autoplugger);
+  g_signal_connect (G_OBJECT (autoplugger->cache_srcpad), "caps_changed",
+                     G_CALLBACK (gst_autoplugger_external_src_caps_changed), autoplugger);
+  g_signal_connect (G_OBJECT (autoplugger->cache_sinkpad), "caps_nego_failed",
+                     G_CALLBACK (gst_autoplugger_external_sink_caps_nego_failed), autoplugger);
+  g_signal_connect (G_OBJECT (autoplugger->cache_srcpad), "caps_nego_failed",
+                     G_CALLBACK (gst_autoplugger_external_src_caps_nego_failed), autoplugger);
+//  g_signal_connect (G_OBJECT (autoplugger->cache_sinkpad), "connected",
+//                     gst_autoplugger_external_sink_connected, autoplugger);
+//  g_signal_connect (G_OBJECT (autoplugger->cache_srcpad), "connected",
+//                     gst_autoplugger_external_src_connected, autoplugger);
 
   // ghost both of these pads to the outside world
   gst_element_add_ghost_pad (GST_ELEMENT(autoplugger), autoplugger->cache_sinkpad, "sink");
@@ -488,8 +488,8 @@ gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
 
   // attach the cache_empty handler
   // FIXME this is the wrong place, it shouldn't be done until we get successful caps nego!
-  g_signal_connectc (G_OBJECT(autoplugger->cache),"cache_empty",
-                     G_CALLBACK (gst_autoplugger_cache_empty), autoplugger, FALSE);
+  g_signal_connect (G_OBJECT(autoplugger->cache),"cache_empty",
+                     G_CALLBACK (gst_autoplugger_cache_empty), autoplugger);
 
   autoplugger->paused--;
   if (autoplugger->paused == 0)
@@ -532,8 +532,8 @@ gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
       GST_DEBUG(GST_CAT_AUTOPLUG, "creating typefind and setting signal handler\n");
       autoplugger->typefind = gst_elementfactory_make("typefind","unnamed_typefind");
       autoplugger->typefind_sinkpad = gst_element_get_pad(autoplugger->typefind,"sink");
-      g_signal_connectc (G_OBJECT(autoplugger->typefind),"have_type",
-                         G_CALLBACK (gst_autoplugger_typefind_have_type), autoplugger, FALSE);
+      g_signal_connect (G_OBJECT(autoplugger->typefind),"have_type",
+                         G_CALLBACK (gst_autoplugger_typefind_have_type), autoplugger);
     }
     // add it to self and attach it
     GST_DEBUG(GST_CAT_AUTOPLUG, "adding typefind to self and connecting to cache\n");
@@ -553,8 +553,8 @@ gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
 gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
   } else {
 //    // attach the cache_empty handler, since the cache simply isn't needed
-//    g_signal_connectc (G_OBJECT(autoplugger->cache),"cache_empty",
-//                       gst_autoplugger_cache_empty,autoplugger,FALSE);
+//    g_signal_connect (G_OBJECT(autoplugger->cache),"cache_empty",
+//                       gst_autoplugger_cache_empty,autoplugger);
   }
 }
 

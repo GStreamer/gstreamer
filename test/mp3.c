@@ -49,8 +49,8 @@ int main(int argc,char *argv[]) {
   gst_pad_connect(gst_element_get_pad(mp3,"src"),
                   gst_element_get_pad(sink,"sink"));
 
-  g_signal_connectc(G_OBJECT(src),"eof",
-                    G_CALLBACK(eof),NULL,FALSE);   
+  g_signal_connect(G_OBJECT(src),"eof",
+                    G_CALLBACK(eof),NULL);   
 
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_READY);
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_PLAYING);

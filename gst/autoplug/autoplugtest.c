@@ -73,9 +73,9 @@ int main (int argc,char *argv[]) {
 
   autobin = gst_bin_new("autobin");
   cache = gst_elementfactory_make ("autoplugcache","cache");
-  g_signal_connectc (G_OBJECT(cache),"cache_empty",(GCallback)cache_empty,NULL,FALSE);
+  g_signal_connect (G_OBJECT(cache),"cache_empty",(GCallback)cache_empty,NULL);
   typefind = gst_elementfactory_make ("typefind", "typefind");
-  g_signal_connectc (G_OBJECT(typefind),"have_type",(GCallback)have_type,&caps,FALSE);
+  g_signal_connect (G_OBJECT(typefind),"have_type",(GCallback)have_type,&caps);
   gst_bin_add (GST_BIN(autobin),cache);
   gst_bin_add (GST_BIN(autobin),typefind);
   gst_element_connect(cache,"src",typefind,"sink");

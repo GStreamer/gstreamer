@@ -43,8 +43,8 @@ main(int argc, char *argv[])
   gst_bin_add(GST_BIN(bin), disksrc);
   gst_bin_add(GST_BIN(bin), typefind);
 
-  g_signal_connectc (G_OBJECT (typefind), "have_type", 
-		  type_found, NULL, FALSE);
+  g_signal_connect (G_OBJECT (typefind), "have_type", 
+		  type_found, NULL);
 
   gst_pad_connect(gst_element_get_pad(disksrc,"src"),
                   gst_element_get_pad(typefind,"sink"));

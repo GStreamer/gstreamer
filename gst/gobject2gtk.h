@@ -138,9 +138,9 @@ gpointer g2g_object_new(GtkType type,gpointer blah_varargs_stuff);
 #define GCallback					gpointer	// FIXME?
 #define G_CALLBACK(f)					((gpointer)(f))
 
-#define g_signal_newc					g2g_signal_newc
+#define g_signal_new					g2g_signal_new
 guint
-g2g_signal_newc (const gchar       *signal_name,
+g2g_signal_new (const gchar       *signal_name,
                GtkType            object_type,
                GtkSignalRunType   signal_flags,
                guint              function_offset,
@@ -156,7 +156,7 @@ g_signal_emit(object,signal,detail,args...) \
 gtk_signal_emit((GtkObject *)object,signal, ## args )
 
 #define \
-g_signal_connectc(object,name,func,func_data,swap) \
+g_signal_connect(object,name,func,func_data) \
 gtk_signal_connect((GtkObject *)object,name,func,func_data)
 
 #define \

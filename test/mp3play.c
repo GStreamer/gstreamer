@@ -37,8 +37,8 @@ int main(int argc,char *argv[]) {
   play = gst_elementfactory_create(playfactory,"play");
   g_return_val_if_fail(play != NULL, -1);
 
-  g_signal_connectc(G_OBJECT(src),"eos",
-	            G_CALLBACK(eof),NULL, FALSE);
+  g_signal_connect(G_OBJECT(src),"eos",
+	            G_CALLBACK(eof),NULL);
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));

@@ -371,8 +371,8 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
           srcpadname,
           GST_DEBUG_PAD_NAME(GST_PARSE_LISTPAD(sinkpads)));
 
-        g_signal_connectc (G_OBJECT (previous), "new_pad", dynamic_connect, connect, FALSE);
-        g_signal_connectc (G_OBJECT (previous), "new_ghost_pad", dynamic_connect, connect, FALSE);
+        g_signal_connect (G_OBJECT (previous), "new_pad", dynamic_connect, connect);
+        g_signal_connect (G_OBJECT (previous), "new_ghost_pad", dynamic_connect, connect);
       }
       else {
         for (j=0; (j<numsrcpads) && (j<numsinkpads); j++){
@@ -394,7 +394,7 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
       // thomas: if we're the first element, connect eos signal
       if (elementcount == 1) 
       {
-        g_signal_connectc (G_OBJECT (element), "eos", have_eos, NULL, FALSE);
+        g_signal_connect (G_OBJECT (element), "eos", have_eos, NULL);
 
       }
       // if we're the first element, ghost all the sinkpads

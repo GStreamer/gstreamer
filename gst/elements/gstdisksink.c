@@ -103,7 +103,7 @@ gst_disksink_class_init (GstDiskSinkClass *klass)
                         NULL,G_PARAM_READWRITE)); // CHECKME!
 
   gst_disksink_signals[SIGNAL_HANDOFF] =
-    g_signal_newc ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstDiskSinkClass, handoff), NULL, NULL,
                     g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 

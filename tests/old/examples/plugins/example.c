@@ -169,7 +169,7 @@ gst_example_class_init (GstExampleClass *klass)
    * called asdf. The signal will also pass a pointer to the listeners
    * which happens to be the example element itself */
   gst_example_signals[ASDF] =
-    g_signal_newc("asdf", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new("asdf", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                    G_STRUCT_OFFSET (GstExampleClass, asdf), NULL, NULL,
                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                    GST_TYPE_EXAMPLE);

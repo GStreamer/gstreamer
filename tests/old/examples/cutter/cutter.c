@@ -169,10 +169,10 @@ int main (int argc, char *argv[])
 
   /* set signal handlers */
   g_print ("setting signal handlers\n");
-  g_signal_connectc (G_OBJECT(cutter), "cut_start",
-                     (GCallback)cut_start_signal, NULL, FALSE);
-  g_signal_connectc (G_OBJECT(cutter), "cut_stop",
-                     (GCallback)cut_stop_signal, NULL, FALSE);
+  g_signal_connect (G_OBJECT(cutter), "cut_start",
+                     (GCallback)cut_start_signal, NULL);
+  g_signal_connect (G_OBJECT(cutter), "cut_stop",
+                     (GCallback)cut_stop_signal, NULL);
 
   /* start playing */
   g_print ("setting to play\n");

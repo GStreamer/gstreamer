@@ -28,8 +28,8 @@ int main(int argc,char *argv[])
   /* create a disk reader */
   disksrc = gst_elementfactory_make("disksrc", "disk_source");
   g_object_set(G_OBJECT(disksrc),"location", argv[1],NULL);
-  g_signal_connectc(G_OBJECT(disksrc),"eos",
-                     G_CALLBACK(eos),NULL,FALSE);
+  g_signal_connect(G_OBJECT(disksrc),"eos",
+                     G_CALLBACK(eos),NULL);
 
   /* now it's time to get the parser */
   parse = gst_elementfactory_make("mp3parse","parse");

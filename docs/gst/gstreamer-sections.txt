@@ -73,8 +73,8 @@ G_SIGNAL_RUN_LAST
 G_SIGNAL_RUN_FIRST
 GCallback
 G_CALLBACK
-g_signal_newc
-g2g_signal_newc
+g_signal_new
+g2g_signal_new
 g_signal_lookup
 g_signal_handler_block
 g_signal_handler_unblock

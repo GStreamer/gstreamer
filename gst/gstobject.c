@@ -94,13 +94,13 @@ gst_object_class_init (GstObjectClass *klass)
   parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
   gst_object_signals[PARENT_SET] =
-    g_signal_newc("parent_set", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new("parent_set", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
                   g_cclosure_marshal_VOID__OBJECT,G_TYPE_NONE,1,
                   G_TYPE_OBJECT);
 #ifndef GST_DISABLE_LOADSAVE
   gst_object_signals[OBJECT_SAVED] =
-    g_signal_newc("object_saved", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new("object_saved", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, object_saved), NULL, NULL,
                   g_cclosure_marshal_VOID__POINTER,G_TYPE_NONE,1,
                   G_TYPE_POINTER);
@@ -110,7 +110,7 @@ gst_object_class_init (GstObjectClass *klass)
 // FIXME!!!
 //  klass->signal_object = g_object_new(gst_signal_object_get_type (,NULL));
 
-  gobject_class->shutdown = gst_object_shutdown;
+//  gobject_class->shutdown = gst_object_shutdown;
 //  gobject_class->destroy = gst_object_real_destroy;
   gobject_class->finalize = gst_object_finalize;
 }
@@ -214,7 +214,7 @@ gst_object_destroy (GstObject *object)
      * invocations.
      */
     gst_object_ref (object);
-    G_OBJECT_GET_CLASS (object)->shutdown (G_OBJECT (object));
+//    G_OBJECT_GET_CLASS (object)->shutdown (G_OBJECT (object));
     gst_object_unref (object);
   }
 }
@@ -224,7 +224,7 @@ gst_object_shutdown (GObject *object)
 {
   GST_DEBUG (GST_CAT_REFCOUNTING, "shutdown '%s'\n",GST_OBJECT_NAME(object));
   GST_FLAG_SET (GST_OBJECT (object), GST_DESTROYED);
-  parent_class->shutdown (object);
+//  parent_class->shutdown (object);
 }
 
 /* finilize is called when the object has to free its resources */
@@ -618,7 +618,7 @@ gst_signal_object_class_init (GstSignalObjectClass *klass)
 
 #ifndef GST_DISABLE_LOADSAVE
   gst_signal_object_signals[SO_OBJECT_LOADED] =
-    g_signal_newc("object_loaded", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new("object_loaded", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
                   gst_marshal_VOID__OBJECT_POINTER,G_TYPE_NONE,2,
                   G_TYPE_OBJECT,G_TYPE_POINTER);
@@ -647,7 +647,7 @@ gst_class_signal_connect (GstObjectClass *klass,
 			  gpointer  func,
 		          gpointer       func_data)
 {
-  return g_signal_connectc (klass->signal_object, name, func, func_data, FALSE);
+  return g_signal_connect (klass->signal_object, name, func, func_data);
 }
 
 #ifndef GST_DISABLE_LOADSAVE

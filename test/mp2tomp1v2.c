@@ -21,16 +21,16 @@ new_pad (GstElement *element, GstPad *pad, GstElement *pipeline)
 		      "disksink[dv] location=%s", video_out), 
 		      GST_BIN (pipeline));
 
-    g_signal_connectc (gst_bin_get_by_name (GST_BIN (pipeline), "venc"), "frame_encoded", 
-		    G_CALLBACK (frame_encoded), pipeline, FALSE); 
+    g_signal_connect (gst_bin_get_by_name (GST_BIN (pipeline), "venc"), "frame_encoded", 
+		    G_CALLBACK (frame_encoded), pipeline); 
     gst_pad_connect (pad, gst_element_get_pad (gst_bin_get_by_name (GST_BIN (pipeline), "vdec"), "sink")); 
   } 
   else if (strcmp(gst_pad_get_name(pad), "private_stream_1.0") == 0) {
     gst_parse_launch (g_strdup_printf ("ac3dec[adec] ! ffmpegenc_mp2[aenc] ! "
 		      "disksink[da] location=%s", audio_out), GST_BIN (pipeline));
 
-    g_signal_connectc (gst_bin_get_by_name (GST_BIN (pipeline), "aenc"), "frame_encoded", 
-		    G_CALLBACK (frame_encoded), pipeline, FALSE); 
+    g_signal_connect (gst_bin_get_by_name (GST_BIN (pipeline), "aenc"), "frame_encoded", 
+		    G_CALLBACK (frame_encoded), pipeline); 
     gst_pad_connect (pad, gst_element_get_pad (gst_bin_get_by_name (GST_BIN (pipeline), "adec"), "sink")); 
   }
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -58,7 +58,7 @@ main (int argc, char *argv[])
   parser = gst_bin_get_by_name (GST_BIN (pipeline), "parser");
   g_assert (parser != NULL);
 
-  g_signal_connectc (G_OBJECT (parser), "new_pad", G_CALLBACK (new_pad), pipeline, FALSE);
+  g_signal_connect (G_OBJECT (parser), "new_pad", G_CALLBACK (new_pad), pipeline);
   
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   while (gst_bin_iterate (GST_BIN (pipeline)));

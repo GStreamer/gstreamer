@@ -52,9 +52,9 @@ main(int argc,char *argv[])
   gst_element_connect(src, "src", identity, "sink");
   gst_element_connect(identity, "src", sink, "sink");
 
-  g_signal_connectc (G_OBJECT (src), "eos", eos_signal_element, NULL, FALSE);
-  g_signal_connectc (G_OBJECT (bin), "eos", eos_signal_element, NULL, FALSE);
-  g_signal_connectc (G_OBJECT (thread), "eos", eos_signal, NULL, FALSE);
+  g_signal_connect (G_OBJECT (src), "eos", eos_signal_element, NULL);
+  g_signal_connect (G_OBJECT (bin), "eos", eos_signal_element, NULL);
+  g_signal_connect (G_OBJECT (thread), "eos", eos_signal, NULL);
 
   gst_element_set_state (GST_ELEMENT (thread), GST_STATE_PLAYING);
 

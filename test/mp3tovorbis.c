@@ -50,8 +50,8 @@ int main(int argc,char *argv[]) {
   fd = open(argv[2], O_CREAT|O_RDWR|O_TRUNC);
   g_object_set(G_OBJECT(sink),"fd",fd,NULL);
 
-  g_signal_connectc(G_OBJECT(src),"eos",
-	                       G_CALLBACK(eof),NULL,FALSE);
+  g_signal_connect(G_OBJECT(src),"eos",
+	                       G_CALLBACK(eof),NULL);
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));

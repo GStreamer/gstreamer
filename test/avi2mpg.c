@@ -160,11 +160,11 @@ int main(int argc,char *argv[]) {
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(mux));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(fdsink));
 
-  g_signal_connectc(G_OBJECT(parse),"new_pad",
-                      G_CALLBACK(new_pad_created),pipeline, FALSE);
+  g_signal_connect(G_OBJECT(parse),"new_pad",
+                      G_CALLBACK(new_pad_created),pipeline);
 
-  g_signal_connectc(G_OBJECT(src),"eos",
-                      G_CALLBACK(eof),NULL, FALSE);
+  g_signal_connect(G_OBJECT(src),"eos",
+                      G_CALLBACK(eof),NULL);
 
   gst_pad_connect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(parse,"sink"));

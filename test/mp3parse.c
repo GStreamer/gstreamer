@@ -46,8 +46,8 @@ int main(int argc,char *argv[]) {
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));
 
-  g_signal_connectc(G_OBJECT(src),"eos",
-                    G_CALLBACK(eof),NULL, FALSE);
+  g_signal_connect(G_OBJECT(src),"eos",
+                    G_CALLBACK(eof),NULL);
 
   gst_pad_connect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(parse,"sink"));

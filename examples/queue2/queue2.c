@@ -36,8 +36,8 @@ int main(int argc,char *argv[])
   disksrc = gst_elementfactory_make("disksrc", "disk_source");
   g_assert(disksrc != NULL);
   g_object_set(G_OBJECT(disksrc),"location", argv[1],NULL);
-  g_signal_connectc (G_OBJECT(disksrc),"eos",
-                     G_CALLBACK(eos), thread, FALSE);
+  g_signal_connect (G_OBJECT(disksrc),"eos",
+                     G_CALLBACK(eos), thread);
 
   queue = gst_elementfactory_make("queue", "queue");
 

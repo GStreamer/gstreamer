@@ -98,7 +98,7 @@ gst_typefind_class_init (GstTypeFindClass *klass)
     g_param_spec_pointer("caps", "Caps", "Found capabilities", G_PARAM_READABLE));
 
   gst_typefind_signals[HAVE_TYPE] =
-      g_signal_newc ("have_type", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+      g_signal_new ("have_type", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                      G_STRUCT_OFFSET (GstTypeFindClass, have_type), NULL, NULL,
                      g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                      G_TYPE_POINTER);

@@ -226,8 +226,8 @@ gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
   if (!connected) {
     GST_DEBUG (0,"gstpipeline: delaying pad connections for \"%s\" to \"%s\"\n",
 		    GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
-    g_signal_connectc (G_OBJECT(src), "new_pad", 
-		    G_CALLBACK (gst_autoplug_pads_autoplug_func), sink, FALSE);
+    g_signal_connect (G_OBJECT(src), "new_pad", 
+		    G_CALLBACK (gst_autoplug_pads_autoplug_func), sink);
   }
 }
 
@@ -460,10 +460,10 @@ differ:
 	data->i = i;
 
         GST_DEBUG (0,"delaying the creation of a ghostpad for %s\n", GST_ELEMENT_NAME (thesrcelement));
-	g_signal_connectc (G_OBJECT (thesrcelement), "new_pad", 
-			G_CALLBACK (autoplug_dynamic_pad), data, FALSE);
-        g_signal_connectc (G_OBJECT (thesrcelement), "new_ghost_pad", 
-			G_CALLBACK (autoplug_dynamic_pad), data, FALSE);
+	g_signal_connect (G_OBJECT (thesrcelement), "new_pad", 
+			G_CALLBACK (autoplug_dynamic_pad), data);
+  g_signal_connect (G_OBJECT (thesrcelement), "new_ghost_pad", 
+			G_CALLBACK (autoplug_dynamic_pad), data);
       }
     }
   }

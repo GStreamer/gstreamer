@@ -49,8 +49,8 @@ int main(int argc,char *argv[]) {
   g_object_set(G_OBJECT(src),"location","/home/omega/media/AlienSong.mpg",NULL);
   parse = gst_elementfactory_make("mpeg1parse","parse");
 
-  g_signal_connectc(G_OBJECT(parse),"new_pad",
-                      G_CALLBACK(new_pad),pipeline,FALSE);
+  g_signal_connect(G_OBJECT(parse),"new_pad",
+                      G_CALLBACK(new_pad),pipeline);
 
   gst_bin_add(GST_BIN(sourcethread),src);
   gst_bin_add(GST_BIN(sourcethread),parse);

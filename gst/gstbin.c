@@ -108,7 +108,7 @@ gst_bin_class_init (GstBinClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gst_bin_signals[OBJECT_ADDED] =
-    g_signal_newc ("object_added", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_FIRST,
+    g_signal_new ("object_added", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_FIRST,
                     G_STRUCT_OFFSET (GstBinClass, object_added), NULL, NULL,
                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     GST_TYPE_ELEMENT);

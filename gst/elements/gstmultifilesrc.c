@@ -101,7 +101,7 @@ gst_multidisksrc_class_init (GstMultiDiskSrcClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gst_multidisksrc_signals[NEW_FILE] =
-    g_signal_newc ("new_file", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("new_file", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstMultiDiskSrcClass, new_file), NULL, NULL,
                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);

@@ -249,7 +249,7 @@ g2g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *def,gint flags
 
 
 guint
-g2g_signal_newc (const gchar       *name,
+g2g_signal_new (const gchar       *name,
                GtkType            object_type,
                GtkSignalRunType   signal_flags,
                guint              function_offset,

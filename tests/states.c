@@ -25,16 +25,16 @@ int main(int argc,char *argv[]) {
   bin = gst_bin_new("bin");
   g_return_val_if_fail(1,bin != NULL);
 
-  g_signal_connectc (G_OBJECT(src),"state_change",
-                     G_CALLBACK(state_change),NULL,FALSE);
-  g_signal_connectc (G_OBJECT(subbin),"state_change",
-                     G_CALLBACK(state_change),NULL,FALSE);
-  g_signal_connectc (G_OBJECT(filter),"state_change",
-                     G_CALLBACK(state_change),NULL,FALSE);
-  g_signal_connectc (G_OBJECT(sink),"state_change",
-                     G_CALLBACK(state_change),NULL,FALSE);
-  g_signal_connectc (G_OBJECT(bin),"state_change",
-                     G_CALLBACK(state_change),NULL,FALSE);
+  g_signal_connect (G_OBJECT(src),"state_change",
+                     G_CALLBACK(state_change),NULL);
+  g_signal_connect (G_OBJECT(subbin),"state_change",
+                     G_CALLBACK(state_change),NULL);
+  g_signal_connect (G_OBJECT(filter),"state_change",
+                     G_CALLBACK(state_change),NULL);
+  g_signal_connect (G_OBJECT(sink),"state_change",
+                     G_CALLBACK(state_change),NULL);
+  g_signal_connect (G_OBJECT(bin),"state_change",
+                     G_CALLBACK(state_change),NULL);
 
   g_print("STATES: element '%s' starts at state %d(%s)\n",gst_element_get_name(src),
 	GST_STATE(src),gst_element_statename(GST_STATE(src)));

@@ -151,7 +151,7 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
                          FALSE, G_PARAM_READWRITE)); // CHECKME
 
   gst_fakesrc_signals[SIGNAL_HANDOFF] =
-    g_signal_newc ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstFakeSrcClass, handoff), NULL, NULL,
                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);

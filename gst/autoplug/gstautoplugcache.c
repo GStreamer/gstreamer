@@ -143,12 +143,12 @@ gst_autoplugcache_class_init (GstAutoplugCacheClass *klass)
                          FALSE,G_PARAM_WRITABLE)); // CHECKME!
 
   gst_autoplugcache_signals[FIRST_BUFFER] =
-    g_signal_newc ("first_buffer", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("first_buffer", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstAutoplugCacheClass, first_buffer), NULL, NULL,
                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
   gst_autoplugcache_signals[CACHE_EMPTY] =
-    g_signal_newc ("cache_empty", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("cache_empty", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstAutoplugCacheClass, cache_empty), NULL, NULL,
                     g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
