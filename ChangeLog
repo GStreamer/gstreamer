@@ -1,3 +1,10 @@
+2004-01-31  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gstxml.sgml:
+	* gst/gstelement.c: (gst_element_error_full):
+          add element path to error
+
 2004-01-31  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* docs/random/mimetypes:

@@ -2393,6 +2393,7 @@ gst_element_error_full
  const gchar *file, const gchar *function, gint line)
 {
   GError *error = NULL;
+  gchar *name;
   gchar *sent_message;
   gchar *sent_debug;
 
@@ -2435,13 +2436,15 @@ gst_element_error_full
 
   /* emit the signal, make sure the element stays available */
   gst_object_ref (GST_OBJECT (element));
+  name = gst_object_get_path_string (GST_OBJECT (element));
   if (debug)
-    sent_debug = g_strdup_printf ("%s(%d):%s:\n%s",
-                                  file, line, function,
+    sent_debug = g_strdup_printf ("%s(%d): %s: %s:\n%s",
+                                  file, line, function, name,
                                   debug ? debug : "");
   else
     sent_debug = NULL;
   g_free (debug);
+  g_free (name);
   g_signal_emit (G_OBJECT (element), gst_element_signals[ERROR], 0, element,
                  error, sent_debug);
   GST_CAT_INFO (GST_CAT_ERROR_SYSTEM, "signalled error in %s: %s",
