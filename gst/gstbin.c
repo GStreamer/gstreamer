@@ -278,7 +278,7 @@ gst_bin_add (GstBin *bin,
 
   // set the element's parent and add the element to the bin's list of children
   gst_object_set_parent (GST_OBJECT (element), GST_OBJECT (bin));
-  g_signal_connect_object (G_OBJECT (element), "state_change", gst_bin_child_state_change, G_OBJECT (bin));
+  g_signal_connect (G_OBJECT (element), "state_change", gst_bin_child_state_change, G_OBJECT (bin));
 
   bin->children = g_list_append (bin->children, element);
   bin->numchildren++;
