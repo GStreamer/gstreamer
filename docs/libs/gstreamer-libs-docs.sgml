@@ -12,7 +12,7 @@
 
 <book>
   <bookinfo>
-    <title>GStreamer Library Reference Manual (Libraries)</title>
+    <title>GStreamer Library Reference Manual</title>
   </bookinfo>
   <chapter id="gstreamer-libs">
     <title>GStreamer Libraries</title>

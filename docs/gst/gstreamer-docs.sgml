@@ -58,7 +58,7 @@
 
 <book>
   <bookinfo>
-    <title>GStreamer Library Reference Manual (Core)</title>
+    <title>GStreamer Core Reference Manual</title>
   </bookinfo>
   <chapter id="gstreamer">
     <title>GStreamer Core Library</title>
