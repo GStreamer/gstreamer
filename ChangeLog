@@ -1,3 +1,8 @@
+2004-02-05  David Schleef  <ds@schleef.org>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_chain):
+	Unref leaked buffer.  (Noticed by Ronald)
+
 2004-02-05  David I. Lehn  <dlehn@users.sourceforge.net>
 
 	* pkgconfig/gstreamer-libs-uninstalled.pc.in:
