@@ -1,3 +1,11 @@
+2004-02-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_pcm_wait),
+	(gst_alsa_xrun_recovery):
+	* ext/alsa/gstalsa.h:
+	  try xrun recovery when wait failed. Make xrun recovery function
+	  return TRUE/FALSE to indicate success. (might fix #134354)
+
 2004-02-13  David Schleef  <ds@schleef.org>
 
 	* gst/sine/demo-dparams.c: (dynparm_log_value_changed),
