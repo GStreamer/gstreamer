@@ -258,6 +258,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_MPEG2DEC_TRUE@Group: Libraries/Multimedia
 @USE_MPEG2DEC_TRUE@Requires: gstreamer = %{ver}
 @USE_MPEG2DEC_TRUE@Requires: mpeg2dec => 0.2.0
+@USE_MPEG2DEC_TRUE@Requires: gst-plugins => %{ver}
 @USE_MPEG2DEC_TRUE@Obsoletes: gstreamer-mpeg1
 @USE_MPEG2DEC_TRUE@Obsoletes: gstreamer-mpeg2
 @USE_MPEG2DEC_TRUE@
