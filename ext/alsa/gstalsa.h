@@ -35,6 +35,17 @@ GST_DEBUG_CATEGORY_EXTERN (alsa_debug);
 #define GST_CAT_DEFAULT alsa_debug
 
 
+#define ALSA_DEBUG_FLUSH(this) G_STMT_START{ \
+  gchar *__str; \
+  ssize_t __size; \
+  __size = snd_output_buffer_string (this->out, &__str); \
+  if (__size > 0) { \
+    GST_INFO_OBJECT (this, "%*s", __size, __str); \
+    if (snd_output_flush (this->out) != 0) \
+      GST_ERROR_OBJECT (this, "error flushing output buffer"); \
+  } \
+}G_STMT_END
+
 /* error checking for standard alsa functions */
 /* NOTE: these functions require a GObject *this and can only be used in 
    functions that return TRUE on success and FALSE on error */

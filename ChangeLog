@@ -1,3 +1,25 @@
+2004-06-06  Benjamin Otte  <otte@gnome.org>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_probe_hw_params), 
+	(gst_alsa_set_hw_params), (gst_alsa_set_sw_params), 
+	(gst_alsa_start_audio):
+	  - don't call set_periods_integer anymore, it breaks the
+	  configuration randomly
+	  - call snd_pcm_hw_params_set_access directly instead of using masks
+	  - don't fail if the sw_params can't be set, just use the default
+	  params and hope it works. Alsalib has weird issues when you touch
+	  sw_params and does no proper error reporting about what failed.
+	* ext/alsa/gstalsa.c: (gst_alsa_open_audio),
+	(gst_alsa_close_audio):
+	  make our alsa debugging go via gst debugging and not conditionally
+	  defined
+	* ext/alsa/gstalsa.h:
+	  add ALSA_DEBUG_FLUSH macro
+	* ext/alsa/gstalsaplugin.c: (gst_alsa_error_wrapper),
+	(plugin_init):
+	  wrap alsa errors to be printed via the gst debugging system and not
+	  spammed to stderr
+
 2004-06-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_init),

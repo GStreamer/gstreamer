@@ -1186,11 +1186,8 @@ gst_alsa_open_audio (GstAlsa * this)
 
   GST_INFO ("Opening alsa device \"%s\"...", this->device);
 
-#if 0
-  /* enable this to get better debugging */
-  ERROR_CHECK (snd_output_stdio_attach (&this->out, stderr, 0),
+  ERROR_CHECK (snd_output_buffer_open (&this->out),
       "error opening log output: %s");
-#endif
 
   if ((ret = snd_pcm_open (&this->handle, this->device,
               GST_ALSA_GET_CLASS (this)->stream, SND_PCM_NONBLOCK)) < 0) {
@@ -1237,7 +1234,6 @@ static gboolean
 gst_alsa_probe_hw_params (GstAlsa * this, GstAlsaFormat * format)
 {
   snd_pcm_hw_params_t *hw_params;
-  snd_pcm_access_mask_t *mask;
   snd_pcm_uframes_t period_size;
   unsigned int period_count;
 
@@ -1249,28 +1245,21 @@ gst_alsa_probe_hw_params (GstAlsa * this, GstAlsaFormat * format)
 
   snd_pcm_hw_params_alloca (&hw_params);
   SIMPLE_ERROR_CHECK (snd_pcm_hw_params_any (this->handle, hw_params));
-  SIMPLE_ERROR_CHECK (snd_pcm_hw_params_set_periods_integer (this->handle,
-          hw_params));
 
-#if 0
-  /* enable this for soundcard specific debugging */
   snd_pcm_hw_params_dump (hw_params, this->out);
-#endif
+  ALSA_DEBUG_FLUSH (this);
 
-  mask = alloca (snd_pcm_access_mask_sizeof ());
-  snd_pcm_access_mask_none (mask);
   if (GST_ELEMENT (this)->numpads == 1) {
-    snd_pcm_access_mask_set (mask,
-        this->
-        mmap ? SND_PCM_ACCESS_MMAP_INTERLEAVED : SND_PCM_ACCESS_RW_INTERLEAVED);
+    SIMPLE_ERROR_CHECK (snd_pcm_hw_params_set_access (this->handle,
+            hw_params, this->
+            mmap ? SND_PCM_ACCESS_MMAP_INTERLEAVED :
+            SND_PCM_ACCESS_RW_INTERLEAVED));
   } else {
-    snd_pcm_access_mask_set (mask,
-        this->
-        mmap ? SND_PCM_ACCESS_MMAP_NONINTERLEAVED :
-        SND_PCM_ACCESS_RW_NONINTERLEAVED);
+    SIMPLE_ERROR_CHECK (snd_pcm_hw_params_set_access (this->handle,
+            hw_params, this->
+            mmap ? SND_PCM_ACCESS_MMAP_NONINTERLEAVED :
+            SND_PCM_ACCESS_RW_NONINTERLEAVED));
   }
-  SIMPLE_ERROR_CHECK (snd_pcm_hw_params_set_access_mask (this->handle,
-          hw_params, mask));
 
   SIMPLE_ERROR_CHECK (snd_pcm_hw_params_set_format (this->handle, hw_params,
           format->format));
@@ -1298,7 +1287,6 @@ static gboolean
 gst_alsa_set_hw_params (GstAlsa * this)
 {
   snd_pcm_hw_params_t *hw_params;
-  snd_pcm_access_mask_t *mask;
 
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (this->handle != NULL, FALSE);
@@ -1314,27 +1302,21 @@ gst_alsa_set_hw_params (GstAlsa * this)
   snd_pcm_hw_params_alloca (&hw_params);
   ERROR_CHECK (snd_pcm_hw_params_any (this->handle, hw_params),
       "Broken configuration for this PCM: %s");
-  ERROR_CHECK (snd_pcm_hw_params_set_periods_integer (this->handle, hw_params),
-      "cannot restrict period size to integral value: %s");
 
-  /* enable this for soundcard specific debugging */
-  /* snd_pcm_hw_params_dump (hw_params, this->out); */
+  snd_pcm_hw_params_dump (hw_params, this->out);
+  ALSA_DEBUG_FLUSH (this);
 
-  mask = alloca (snd_pcm_access_mask_sizeof ());
-  snd_pcm_access_mask_none (mask);
   if (GST_ELEMENT (this)->numpads == 1) {
-    snd_pcm_access_mask_set (mask,
-        this->
-        mmap ? SND_PCM_ACCESS_MMAP_INTERLEAVED : SND_PCM_ACCESS_RW_INTERLEAVED);
+    ERROR_CHECK (snd_pcm_hw_params_set_access (this->handle, hw_params, this->
+            mmap ? SND_PCM_ACCESS_MMAP_INTERLEAVED :
+            SND_PCM_ACCESS_RW_INTERLEAVED),
+        "This plugin does not support your harware: %s");
   } else {
-    snd_pcm_access_mask_set (mask,
-        this->
-        mmap ? SND_PCM_ACCESS_MMAP_NONINTERLEAVED :
-        SND_PCM_ACCESS_RW_NONINTERLEAVED);
+    ERROR_CHECK (snd_pcm_hw_params_set_access (this->handle, hw_params, this->
+            mmap ? SND_PCM_ACCESS_MMAP_NONINTERLEAVED :
+            SND_PCM_ACCESS_RW_NONINTERLEAVED),
+        "This plugin does not support your harware: %s");
   }
-  ERROR_CHECK (snd_pcm_hw_params_set_access_mask (this->handle, hw_params,
-          mask),
-      "The Gstreamer ALSA plugin does not support your hardware. Error: %s");
 
   if (this->format) {
     ERROR_CHECK (snd_pcm_hw_params_set_format (this->handle, hw_params,
@@ -1349,7 +1331,7 @@ gst_alsa_set_hw_params (GstAlsa * this)
   }
 
   ERROR_CHECK (snd_pcm_hw_params_set_periods_near (this->handle, hw_params,
-          &this->period_count, 0), "error setting buffer size to %u: %s",
+          &this->period_count, 0), "error setting period count to %u: %s",
       (guint) this->period_count);
   ERROR_CHECK (snd_pcm_hw_params_set_period_size_near (this->handle, hw_params,
           &this->period_size, 0), "error setting period size to %u frames: %s",
@@ -1384,6 +1366,9 @@ gst_alsa_set_sw_params (GstAlsa * this)
   ERROR_CHECK (snd_pcm_sw_params_current (this->handle, sw_params),
       "Could not get current software parameters: %s");
 
+  snd_pcm_sw_params_dump (sw_params, this->out);
+  ALSA_DEBUG_FLUSH (this);
+
   ERROR_CHECK (snd_pcm_sw_params_set_silence_size (this->handle, sw_params, 0),
       "could not set silence size: %s");
   ERROR_CHECK (snd_pcm_sw_params_set_silence_threshold (this->handle, sw_params,
@@ -1401,7 +1386,6 @@ gst_alsa_set_sw_params (GstAlsa * this)
       "Unable to set transfer align for playback: %s");
   ERROR_CHECK (snd_pcm_sw_params (this->handle, sw_params),
       "could not set sw_params: %s");
-
   return TRUE;
 }
 
@@ -1413,7 +1397,8 @@ gst_alsa_start_audio (GstAlsa * this)
   if (!gst_alsa_set_hw_params (this))
     return FALSE;
   if (!gst_alsa_set_sw_params (this))
-    return FALSE;
+    GST_WARNING_OBJECT (this,
+        "setting software parameters failed, we'll trust the defaults");
 
   GST_FLAG_SET (this, GST_ALSA_RUNNING);
   return TRUE;
@@ -1475,6 +1460,8 @@ gst_alsa_stop_audio (GstAlsa * this)
 static gboolean
 gst_alsa_close_audio (GstAlsa * this)
 {
+  gint err;
+
   /* if there's no pads, we never open. So we don't close either. */
   if (!gst_element_get_pad_list (GST_ELEMENT (this)))
     return TRUE;
@@ -1482,6 +1469,11 @@ gst_alsa_close_audio (GstAlsa * this)
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (this->handle != NULL, FALSE);
 
+  ALSA_DEBUG_FLUSH (this);
+  err = snd_output_close (this->out);
+  if (err != 0)
+    GST_ERROR_OBJECT (this, "failed to close debugging output: %s",
+        snd_strerror (err));
   ERROR_CHECK (snd_pcm_close (this->handle), "Error closing device: %s");
 
   this->handle = NULL;

@@ -29,9 +29,31 @@
 
 GST_DEBUG_CATEGORY (alsa_debug);
 
+/* ALSA debugging wrapper */
+static void
+gst_alsa_error_wrapper (const char *file, int line, const char *function,
+    int err, const char *fmt, ...)
+{
+  va_list args;
+  gchar *str;
+
+  va_start (args, fmt);
+  str = g_strdup_vprintf (fmt, args);
+  va_end (args);
+  /* FIXME: use GST_LEVEL_ERROR here? Currently warning is used because we're 
+   * able to catch enough of the errors that would be printed otherwise
+   */
+  gst_debug_log (alsa_debug, GST_LEVEL_WARNING, file, function, line, NULL,
+      "alsalib error: %s%s%s", str, err ? ": " : "",
+      err ? snd_strerror (err) : "");
+  g_free (str);
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  int err;
+
   if (!gst_element_register (plugin, "alsamixer", GST_RANK_NONE,
           GST_TYPE_ALSA_MIXER))
     return FALSE;
@@ -43,6 +65,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (alsa_debug, "alsa", 0, "alsa plugins");
+  err = snd_lib_error_set_handler (gst_alsa_error_wrapper);
+  if (err != 0)
+    GST_WARNING ("failed to set alsa error handler");
 
   return TRUE;
 }
