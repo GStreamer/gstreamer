@@ -76,7 +76,7 @@ static GstData *gst_videotestsrc_get (GstPad * pad);
 static GstElementClass *parent_class = NULL;
 
 static GstCaps * gst_videotestsrc_get_capslist (void);
-static GstCaps * gst_videotestsrc_get_capslist_size (int height, int width, float rate);
+static GstCaps * gst_videotestsrc_get_capslist_size (int width, int height, float rate);
 
 
 static GstPadTemplate *
@@ -311,7 +311,7 @@ gst_videotestsrc_get_capslist (void)
 }
 
 static GstCaps *
-gst_videotestsrc_get_capslist_size (int height, int width, float rate)
+gst_videotestsrc_get_capslist_size (int width, int height, float rate)
 {
   GstCaps *capslist;
   GstCaps *caps;
