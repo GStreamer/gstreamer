@@ -120,6 +120,16 @@ gst_tuner_class_init (GstTunerClass *klass)
   klass->signal_strength = NULL;
 }
 
+/**
+ * gst_tuner_list_channels:
+ * @tuner: the #GstTuner (a #GstElement) to get the channels from.
+ *
+ * Retrieve a list of channels (e.g. 'composite', 's-video', ...)
+ * from the given tuner object.
+ *
+ * Returns: a list of channels available on this tuner.
+ */
+
 const GList *
 gst_tuner_list_channels (GstTuner *tuner)
 {
@@ -132,6 +142,14 @@ gst_tuner_list_channels (GstTuner *tuner)
   return NULL;
 }
 
+/**
+ * gst_tuner_set_channel:
+ * @tuner: the #GstTuner (a #GstElement) that owns the channel.
+ * @channel: the channel to tune to.
+ *
+ * Tunes the object to the given channel.
+ */
+
 void
 gst_tuner_set_channel (GstTuner        *tuner,
 		       GstTunerChannel *channel)
@@ -142,6 +160,15 @@ gst_tuner_set_channel (GstTuner        *tuner,
     klass->set_channel (tuner, channel);
   }
 }
+
+/**
+ * gst_Tuner_get_channel:
+ * @tuner: the #GstTuner (a #GstElement) to get the current channel from.
+ *
+ * Retrieve the current channel from the tuner.
+ *
+ * Returns: the current channel of the tuner object.
+ */
 
 GstTunerChannel *
 gst_tuner_get_channel (GstTuner *tuner)
@@ -155,6 +182,17 @@ gst_tuner_get_channel (GstTuner *tuner)
   return NULL;
 }
 
+/**
+ * gst_tuner_get_norms_list:
+ * @tuner: the #GstTuner (*a #GstElement) to get the list of norms from.
+ *
+ * Retrieve a list of available norms on the currently tuned channel
+ * from the given tuner object.
+ *
+ * Returns: A list of norms available on the current channel for this
+ *          tuner object.
+ */
+
 const GList *
 gst_tuner_list_norms (GstTuner *tuner)
 {
@@ -167,6 +205,14 @@ gst_tuner_list_norms (GstTuner *tuner)
   return NULL;
 }
 
+/**
+ * gst_tuner_set_norm:
+ * @tuner: the #GstTuner (a #GstElement) to set the norm on.
+ * @norm: the norm to use for the current channel.
+ *
+ * Changes the video norm on this tuner to the given norm.
+ */
+
 void
 gst_tuner_set_norm (GstTuner     *tuner,
 		    GstTunerNorm *norm)
@@ -177,6 +223,16 @@ gst_tuner_set_norm (GstTuner     *tuner,
     klass->set_norm (tuner, norm);
   }
 }
+
+/**
+ * gst_tuner_get_norm:
+ * @tuner: the #GstTuner (a #GstElement) to get the current norm from.
+ *
+ * Get the current video norm from the given tuner object for the
+ * currently selected channel.
+ *
+ * Returns: the current norm.
+ */
 
 GstTunerNorm *
 gst_tuner_get_norm (GstTuner *tuner)
@@ -189,6 +245,18 @@ gst_tuner_get_norm (GstTuner *tuner)
 
   return NULL;
 }
+
+/**
+ * gst_tuner_set_frequency:
+ * @tuner: the #Gsttuner (a #GstElement) that owns the given channel.
+ * @channel: the #GstTunerChannel to set the frequency on.
+ * @frequency: the frequency to tune in to.
+ *
+ * Sets a tuning frequency on the given tuner/channel. Note that this
+ * requires the given channel to be a "tuning" channel, which can be
+ * checked using GST_TUNER_CHANNEL_HAS_FLAG (), with the proper flag
+ * being GST_TUNER_CHANNEL_FREQUENCY.
+ */
 
 void
 gst_tuner_set_frequency (GstTuner        *tuner,
@@ -205,6 +273,17 @@ gst_tuner_set_frequency (GstTuner        *tuner,
   }
 }
 
+/**
+ * gst_tuner_get_frequency:
+ * @tuner: the #GstTuner (a #GstElement) that owns the given channel.
+ * @channel: the #GstTunerChannel to retrieve the frequency from.
+ *
+ * Retrieve the current frequency from the given channel. The same
+ * applies as for set_frequency (): check the flag.
+ *
+ * Returns: the current frequency, or 0 on error.
+ */
+
 gulong
 gst_tuner_get_frequency (GstTuner        *tuner,
 			 GstTunerChannel *channel)
@@ -220,6 +299,20 @@ gst_tuner_get_frequency (GstTuner        *tuner,
 
   return 0;
 }
+
+/**
+ * gst_tuner_get_signal_strength:
+ * @tuner: the #GstTuner (a #GstElement) that owns the given channel.
+ * @channel: the #GstTunerChannel to get the signal strength from.
+ *
+ * get the strength of the signal on this channel. Note that this
+ * requires the current channel to be a "tuning" channel, e.g. a
+ * channel on which frequency can be set. This can be checked using
+ * GST_TUNER_CHANNEL_HAS_FLAG (), and the appropriate flag to check
+ * for is GST_TUNER_CHANNEL_FREQUENCY.
+ *
+ * Returns: signal strength, or 0 on error.
+ */
 
 gint
 gst_tuner_signal_strength (GstTuner        *tuner,
@@ -238,7 +331,8 @@ gst_tuner_signal_strength (GstTuner        *tuner,
 }
 
 GstTunerNorm *
-gst_tuner_find_norm_by_name (GstTuner *tuner, gchar *norm)
+gst_tuner_find_norm_by_name (GstTuner *tuner,
+			     gchar    *norm)
 {
   GList *walk;
 
@@ -255,7 +349,8 @@ gst_tuner_find_norm_by_name (GstTuner *tuner, gchar *norm)
 }
 
 GstTunerChannel *
-gst_v4l2_find_channel_by_name (GstTuner *tuner, gchar *channel)
+gst_tuner_find_channel_by_name (GstTuner *tuner,
+				gchar    *channel)
 {
   GList *walk;
 
