@@ -268,7 +268,6 @@ gst_musicbrainz_chain (GstPad * pad, GstData * data)
     trm_FinalizeSignature (musicbrainz->trm, musicbrainz->signature, NULL);
     trm_ConvertSigToASCII (musicbrainz->trm, musicbrainz->signature,
         musicbrainz->ascii_signature);
-    g_print ("Signature : %s\n", musicbrainz->ascii_signature);
     musicbrainz->signature_available = TRUE;
     g_signal_emit (G_OBJECT (musicbrainz),
         gst_musicbrainz_signals[SIGNAL_SIGNATURE_AVAILABLE], 0);
