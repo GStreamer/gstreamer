@@ -11,6 +11,7 @@
 2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/elements/Makefile.am:
+	* gst/elements/gstelements.c:
 	* gst/elements/gsttypefindelement.c:
 	* gst/elements/gsttypefindelement.h:
           renamed gsttypefindelement to gsttypefind, conserving CVS history

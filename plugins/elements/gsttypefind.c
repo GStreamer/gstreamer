@@ -38,7 +38,7 @@
 #  include "config.h"
 #endif
 
-#include "gsttypefindelement.h"
+#include "gsttypefind.h"
 #include "gst/gst_private.h"
 #include "gst/gst-i18n-lib.h"
 

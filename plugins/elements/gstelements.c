@@ -41,7 +41,7 @@
 #include "gstshaper.h"
 #include "gststatistics.h"
 #include "gsttee.h"
-#include "gsttypefindelement.h"
+#include "gsttypefind.h"
 
 
 struct _elements_entry {
