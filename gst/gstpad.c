@@ -1149,61 +1149,20 @@ gst_pad_link_ready_for_negotiation (GstPadLink * link)
   return TRUE;
 }
 
-static const GstStructure *
-gst_pad_link_get_preferred (GstPadLink * link)
-{
-  const GstStructure *pref;
-
-  if (link->filtercaps) {
-    pref = gst_caps_get_preferred (link->filtercaps);
-    if (pref)
-      return pref;
-  }
-
-  if (link->srccaps) {
-    pref = gst_caps_get_preferred (link->srccaps);
-    if (pref)
-      return pref;
-  }
-
-  if (link->sinkcaps) {
-    pref = gst_caps_get_preferred (link->sinkcaps);
-    if (pref)
-      return pref;
-  }
-
-  return NULL;
-}
-
 static void
 gst_pad_link_fixate (GstPadLink * link)
 {
   GstCaps *caps;
   GstCaps *newcaps;
-  const GstStructure *pref;
 
   caps = link->caps;
 
   g_return_if_fail (caps != NULL);
   g_return_if_fail (!gst_caps_is_empty (caps));
 
-  gst_caps_do_simplify (caps);
-
-  pref = gst_pad_link_get_preferred (link);
-  GST_DEBUG ("link had preferred format %" GST_PTR_FORMAT, pref);
-  if (pref) {
-    GstCaps *caps2;
-
-    gst_caps_set_preferred (caps, pref);
-    caps2 = gst_caps_use_preferred (caps);
-    GST_DEBUG ("using preferred format %" GST_PTR_FORMAT, caps2);
-    if (caps2) {
-      gst_caps_free (caps);
-      caps = caps2;
-    }
-  }
-
   GST_DEBUG ("trying to fixate caps %" GST_PTR_FORMAT, caps);
+
+  gst_caps_do_simplify (caps);
   while (!gst_caps_is_fixed (caps)) {
     int i;
 
@@ -1346,8 +1305,6 @@ gst_pad_link_call_link_functions (GstPadLink * link)
     }
   }
 
-  g_assert (GST_IS_PAD (link->srcpad));
-  g_assert (GST_IS_PAD (link->sinkpad));
   GST_FLAG_UNSET (link->srcpad, GST_PAD_NEGOTIATING);
   GST_FLAG_UNSET (link->sinkpad, GST_PAD_NEGOTIATING);
   return res;
@@ -1478,8 +1435,8 @@ gst_pad_renegotiate (GstPad * pad)
 
   link = gst_pad_link_new ();
 
-  link->srcpad = GST_PAD (GST_PAD_REALIZE (GST_PAD_LINK_SRC (pad)));
-  link->sinkpad = GST_PAD (GST_PAD_REALIZE (GST_PAD_LINK_SINK (pad)));
+  link->srcpad = GST_PAD_LINK_SRC (pad);
+  link->sinkpad = GST_PAD_LINK_SINK (pad);
 
   if (!gst_pad_link_ready_for_negotiation (link)) {
     gst_pad_link_free (link);
@@ -2643,52 +2600,6 @@ gst_pad_get_negotiated_caps (GstPad * pad)
   return GST_RPAD_LINK (pad)->caps;
 }
 
-static GstStructure *
-gst_pad_guess_preferred (GstPad * pad, const GstCaps * caps)
-{
-  GstCaps *prefcaps;
-  GstStructure *pref = NULL;
-
-  if (caps->preferred != NULL)
-    return NULL;
-  if (GST_RPAD_FIXATEFUNC (pad) == NULL)
-    return NULL;
-
-  GST_DEBUG ("guessing preferred format of %" GST_PTR_FORMAT, caps);
-  prefcaps = gst_caps_copy (caps);
-
-  /* help things along a bit */
-  if (!gst_caps_is_simple (prefcaps)) {
-    GstCaps *newpref;
-
-    newpref =
-        gst_caps_new_full (gst_structure_copy (gst_caps_get_structure (caps,
-                0)), NULL);
-    gst_caps_free (prefcaps);
-    prefcaps = newpref;
-  }
-
-  while (!gst_caps_is_fixed (prefcaps)) {
-    GstCaps *newpref;
-
-    newpref = GST_RPAD_FIXATEFUNC (pad) (pad, prefcaps);
-    GST_DEBUG ("fixated to %" GST_PTR_FORMAT, newpref);
-    if (newpref) {
-      gst_caps_free (prefcaps);
-      prefcaps = newpref;
-    } else {
-      break;
-    }
-  }
-
-  if (gst_caps_is_fixed (prefcaps)) {
-    pref = gst_structure_copy (gst_caps_get_structure (prefcaps, 0));
-  }
-
-  gst_caps_free (prefcaps);
-  return pref;
-}
-
 /**
  * gst_pad_get_caps:
  * @pad: a  #GstPad to get the capabilities of.
@@ -2749,16 +2660,6 @@ gst_pad_get_caps (GstPad * pad)
         }
       }
 #endif
-
-      if (caps->preferred == NULL && GST_RPAD_FIXATEFUNC (pad)) {
-        GstStructure *pref;
-
-        pref = gst_pad_guess_preferred (pad, caps);
-        if (pref) {
-          gst_caps_set_preferred (caps, pref);
-        }
-      }
-
       return caps;
     }
   }
@@ -3298,7 +3199,7 @@ gst_pad_push (GstPad * pad, GstData * data)
     if (!GST_IS_EVENT (data) && !GST_PAD_IS_ACTIVE (peer)) {
       g_warning ("push on peer of pad %s:%s but peer is not active",
           GST_DEBUG_PAD_NAME (pad));
-      //return;
+      return;
     }
 
     if (peer->chainhandler) {

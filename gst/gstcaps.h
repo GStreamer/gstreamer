@@ -26,7 +26,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_CAPS             (gst_caps_get_type())
-#define GST_CAPS(object)          ((GstCaps*)(object))
+#define GST_CAPS(object)          ((GstCaps*)object)
 #define GST_IS_CAPS(object)       ((object) && (GST_CAPS(object)->type == GST_TYPE_CAPS))
 
 #define GST_CAPS_FLAGS_ANY	  (1 << 0)
@@ -51,13 +51,6 @@ G_BEGIN_DECLS
   /* string */ string, \
 }
 
-#define GST_STATIC_CAPS_PREFERRED(string, preferred) \
-{ \
-  /* caps */ { 0 }, \
-  /* string */ string, \
-  /* preferred */ preferred, \
-}
-
 typedef struct _GstCaps GstCaps;
 typedef struct _GstStaticCaps GstStaticCaps;
 
@@ -66,17 +59,14 @@ struct _GstCaps {
 
   guint16 flags;
   GPtrArray *structs;
-  GstStructure *preferred;
 
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstStaticCaps {
   GstCaps caps;
   const char *string;
-  const char *preferred;
-
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType                    gst_caps_get_type                              (void) G_GNUC_CONST;
@@ -158,12 +148,6 @@ gboolean                 gst_caps_structure_fixate_field_nearest_int    (GstStru
 gboolean                 gst_caps_structure_fixate_field_nearest_double (GstStructure *structure,
 									 const char   *field_name,
 									 double        target);
-
-const GstStructure *     gst_caps_get_preferred                         (const GstCaps *caps);
-void                     gst_caps_set_preferred                         (GstCaps *caps,
-                                                                         const GstStructure *structure);
-GstCaps *                gst_caps_use_preferred                         (const GstCaps *caps);
-
 
 G_END_DECLS
 

@@ -90,15 +90,6 @@ templates.
 @Returns: a new #GstCaps instance
 
 
-<!-- ##### MACRO GST_STATIC_CAPS_PREFERRED ##### -->
-<para>
-
-</para>
-
-@string: 
-@preferred: 
-
-
 <!-- ##### STRUCT GstCaps ##### -->
 <para>
 
@@ -107,7 +98,6 @@ templates.
 @type: 
 @flags: 
 @structs: 
-@preferred: 
 @_gst_reserved: 
 
 <!-- ##### STRUCT GstStaticCaps ##### -->
@@ -117,7 +107,6 @@ templates.
 
 @caps: 
 @string: 
-@preferred: 
 @_gst_reserved: 
 
 <!-- ##### FUNCTION gst_caps_new_empty ##### -->
@@ -470,33 +459,6 @@ templates.
 
 @minuend: 
 @subtrahend: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_get_preferred ##### -->
-<para>
-
-</para>
-
-@caps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_set_preferred ##### -->
-<para>
-
-</para>
-
-@caps: 
-@structure: 
-
-
-<!-- ##### FUNCTION gst_caps_use_preferred ##### -->
-<para>
-
-</para>
-
-@caps: 
 @Returns: 
 
 

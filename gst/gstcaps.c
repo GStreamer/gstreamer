@@ -210,10 +210,6 @@ gst_caps_copy (const GstCaps * caps)
     gst_caps_append_structure (newcaps, gst_structure_copy (structure));
   }
 
-  if (caps->preferred) {
-    newcaps->preferred = gst_structure_copy (caps->preferred);
-  }
-
   return newcaps;
 }
 
@@ -232,9 +228,6 @@ gst_caps_free (GstCaps * caps)
 
   g_return_if_fail (GST_IS_CAPS (caps));
 
-  if (caps->preferred) {
-    gst_structure_free (caps->preferred);
-  }
   for (i = 0; i < caps->structs->len; i++) {
     structure = gst_caps_get_structure (caps, i);
     gst_structure_free (structure);
@@ -309,15 +302,6 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
       gst_caps_append_structure (caps1, structure);
     }
   }
-
-  if (caps2->preferred) {
-    if (caps1->preferred) {
-      gst_structure_free (caps2->preferred);
-    } else {
-      caps1->preferred = caps2->preferred;
-    }
-  }
-
   g_ptr_array_free (caps2->structs, TRUE);
 #ifdef USE_POISONING
   memset (caps2, 0xff, sizeof (GstCaps));
@@ -456,10 +440,6 @@ gst_caps_copy_1 (const GstCaps * caps)
   if (caps->structs->len > 0) {
     structure = gst_caps_get_structure (caps, 0);
     gst_caps_append_structure (newcaps, gst_structure_copy (structure));
-  }
-
-  if (caps->preferred) {
-    newcaps->preferred = gst_structure_copy (caps->preferred);
   }
 
   return newcaps;
@@ -869,12 +849,6 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
     }
   }
 
-  if (caps1->preferred) {
-    dest->preferred = gst_structure_copy (caps1->preferred);
-  } else if (caps2->preferred) {
-    dest->preferred = gst_structure_copy (caps2->preferred);
-  }
-
   gst_caps_do_simplify (dest);
   return dest;
 }
@@ -1035,12 +1009,6 @@ gst_caps_union (const GstCaps * caps1, const GstCaps * caps2)
   dest1 = gst_caps_copy (caps1);
   dest2 = gst_caps_copy (caps2);
   gst_caps_append (dest1, dest2);
-
-  if (caps1->preferred) {
-    dest1->preferred = gst_structure_copy (caps1->preferred);
-  } else if (caps2->preferred) {
-    dest1->preferred = gst_structure_copy (caps2->preferred);
-  }
 
   gst_caps_do_simplify (dest1);
   return dest1;
@@ -1643,108 +1611,4 @@ gst_caps_structure_fixate_field_nearest_double (GstStructure * structure,
 
   return FALSE;
 
-}
-
-
-const GstStructure *
-gst_caps_get_preferred (const GstCaps * caps)
-{
-  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
-
-  return caps->preferred;
-}
-
-void
-gst_caps_set_preferred (GstCaps * caps, const GstStructure * structure)
-{
-  g_return_if_fail (GST_IS_CAPS (caps));
-  g_return_if_fail (GST_IS_STRUCTURE (structure));
-
-  if (caps->preferred)
-    gst_structure_free (caps->preferred);
-  caps->preferred = gst_structure_copy (structure);
-}
-
-GstStructure *
-gst_caps_get_structure_by_id (const GstCaps * caps, GQuark id)
-{
-  int i;
-  GstStructure *structure;
-
-  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
-
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    structure = gst_caps_get_structure (caps, i);
-    if (structure->name == id) {
-      return structure;
-    }
-  }
-
-  return NULL;
-}
-
-static gboolean
-gst_caps_prefer_foreach (GQuark name, GValue * value, gpointer user_data)
-{
-  GstStructure *structure = (GstStructure *) user_data;
-  const GValue *svalue;
-  GValue ivalue = { 0 };
-  gboolean ret;
-
-  svalue = gst_structure_id_get_value (structure, name);
-  if (svalue == NULL)
-    return TRUE;
-
-  if (G_VALUE_TYPE (value) == G_TYPE_INT) {
-    int target = g_value_get_int (value);
-
-    gst_caps_structure_fixate_field_nearest_int (structure,
-        g_quark_to_string (name), target);
-  } else if (G_VALUE_TYPE (value) == G_TYPE_DOUBLE) {
-    double target = g_value_get_double (value);
-
-    gst_caps_structure_fixate_field_nearest_double (structure,
-        g_quark_to_string (name), target);
-  } else {
-    ret = gst_value_intersect (&ivalue, value, svalue);
-    if (ret) {
-      gst_structure_id_set_value (structure, name, &ivalue);
-      g_value_unset (&ivalue);
-    }
-  }
-  return TRUE;
-}
-
-GstCaps *
-gst_caps_use_preferred (const GstCaps * caps)
-{
-  GstCaps *pcaps;
-  GstStructure *structure;
-
-  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
-
-  if (!caps->preferred || gst_caps_is_any (caps) || gst_caps_is_empty (caps)
-      || gst_caps_is_fixed (caps)) {
-    return gst_caps_copy (caps);
-  }
-
-  if (gst_caps_is_simple (caps)) {
-    structure = gst_caps_get_structure (caps, 0);
-  } else {
-    structure = gst_caps_get_structure_by_id (caps, caps->preferred->name);
-  }
-
-  if (structure) {
-    structure = gst_structure_copy (structure);
-
-    gst_structure_foreach (caps->preferred, gst_caps_prefer_foreach, structure);
-
-    pcaps = gst_caps_new_full (structure, NULL);
-
-    return pcaps;
-  }
-
-  /* FIXME */
-
-  return NULL;
 }
