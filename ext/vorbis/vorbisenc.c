@@ -460,7 +460,7 @@ gst_vorbisenc_add_metadata (VorbisEnc *vorbisenc, GstCaps *caps)
     prop = (GstPropsEntry*)(props->data);
     props = g_list_next(props);
 
-    if (gst_props_entry_get_type (prop) == GST_PROPS_STRING_TYPE) {
+    if (gst_props_entry_get_props_type (prop) == GST_PROPS_STRING_TYPE) {
       const gchar *name = gst_props_entry_get_name (prop);
       const gchar *value;
 
