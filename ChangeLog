@@ -1,3 +1,10 @@
+2004-07-27  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* win32/gst.sln:
+	* gst-libs/gst/*/*.vcproj:
+	* gst/*/*.vcproj:
+	  more working plugins
+    
 2004-07-27  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* testsuite/alsa/Makefile.am:
