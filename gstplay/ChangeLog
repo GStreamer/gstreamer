@@ -1,5 +1,12 @@
 2001-08-15  Arik Devens  <arik@gnome.org>
 
+	* gstmediaplay.c (gst_media_play_set_fullscreen): Added a hacky
+	check to determine if we are even playing a video. workaround till
+	the new libgstplay gets here and makes all of this hackishness
+	unnecessary and foolish. ;-)
+
+2001-08-15  Arik Devens  <arik@gnome.org>
+
 	* main.c (main): Disabled the showing of the playlist till it
 	works. ;-)
 

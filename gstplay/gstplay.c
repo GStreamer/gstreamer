@@ -165,8 +165,8 @@ gst_play_init (GstPlay *play)
 	priv->bit_rate_element = NULL;
 	priv->media_time_element = NULL;
 
-	priv->source_width = 100;
-	priv->source_height = 100;
+	priv->source_width = 0;
+	priv->source_height = 0;
 }
 
 GstPlay *
@@ -387,51 +387,51 @@ gst_play_set_uri (GstPlay *play, const guchar *uri)
 
 	if (priv->uri)
 		g_free (priv->uri);
-
+	
 	/* see if it looks like an URI */
 	if ((uriloc = strstr (uri, ":/"))) {
-	  priv->src = gst_elementfactory_make ("gnomevfssrc", "srcelement");
-
-	  if (!priv->src) {
-	    if (strstr (uri, "file:/")) {
+		priv->src = gst_elementfactory_make ("gnomevfssrc", "srcelement");
+		
+		if (!priv->src) {
+			if (strstr (uri, "file:/")) {
 	      uri += strlen ("file:/");
-	    }
-	    else
-	      return GST_PLAY_CANNOT_PLAY;
-	  }
+			}
+			else
+				return GST_PLAY_CANNOT_PLAY;
+		}
 	}
-
+	
 	if (priv->src == NULL) {
-	  priv->src = gst_elementfactory_make ("disksrc", "srcelement");
+		priv->src = gst_elementfactory_make ("disksrc", "srcelement");
 	}
-
+	
 	priv->uri = g_strdup (uri);
-
+	
 	//priv->src = gst_elementfactory_make ("dvdsrc", "disk_src");
 	priv->offset_element = priv->src;
 	g_return_val_if_fail (priv->src != NULL, GST_PLAY_CANNOT_PLAY);
-
+	
 	gtk_object_set (G_OBJECT (priv->src), "location", priv->uri, NULL);
-
+	
 	priv->cache = gst_elementfactory_make ("autoplugcache", "cache");
 	g_return_val_if_fail (priv->cache != NULL, GST_PLAY_CANNOT_PLAY);
-
+	
 	gtk_signal_connect (GTK_OBJECT (priv->cache), "cache_empty", 
-			GTK_SIGNAL_FUNC (gst_play_cache_empty), play);
-
+			    GTK_SIGNAL_FUNC (gst_play_cache_empty), play);
+	
 	priv->typefind = gst_elementfactory_make ("typefind", "typefind");
 	g_return_val_if_fail (priv->typefind != NULL, GST_PLAY_CANNOT_PLAY);
 	gtk_signal_connect (GTK_OBJECT (priv->typefind), "have_type", 
-				GTK_SIGNAL_FUNC (gst_play_have_type), play);
-
-
+			    GTK_SIGNAL_FUNC (gst_play_have_type), play);
+	
+	
 	gst_bin_add (GST_BIN (priv->pipeline), priv->src);
 	gst_bin_add (GST_BIN (priv->pipeline), priv->cache);
 	gst_bin_add (GST_BIN (priv->pipeline), priv->typefind);
-
+	
 	gst_element_connect (priv->src, "src", priv->cache, "sink");
 	gst_element_connect (priv->cache, "src", priv->typefind, "sink");
-
+	
 	return GST_PLAY_OK;
 }
 
@@ -451,7 +451,7 @@ gst_play_realize (GtkWidget *widget)
 	priv->video_widget = gtk_socket_new ();
 
 	gtk_container_add (GTK_CONTAINER (widget), priv->video_widget);
-
+	
 	if (GTK_WIDGET_CLASS (parent_class)->realize) {
 		GTK_WIDGET_CLASS (parent_class)->realize (widget);
 	}
