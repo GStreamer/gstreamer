@@ -3443,6 +3443,7 @@ gst_element_found_tags_for_pad (GstElement * element, GstPad * pad,
   g_return_if_fail (list != NULL);
 
   tag_event = gst_event_new_tag (list);
+  GST_EVENT_SRC (tag_event) = gst_object_ref (GST_OBJECT (element));
   GST_EVENT_TIMESTAMP (tag_event) = timestamp;
   gst_element_found_tags (element, gst_event_tag_get_list (tag_event));
   if (GST_PAD_IS_USABLE (pad)) {
