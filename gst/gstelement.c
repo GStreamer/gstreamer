@@ -29,7 +29,6 @@
 #include "gstscheduler.h"
 #include "gstutils.h"
 
-
 /* Element signals and args */
 enum {
   STATE_CHANGE,
@@ -49,10 +48,10 @@ enum {
 static void			gst_element_class_init		(GstElementClass *klass);
 static void			gst_element_init		(GstElement *element);
 
-static void			gst_element_set_arg	(GtkObject *object, GtkArg *arg, guint id);
-static void			gst_element_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void			gst_element_set_arg		(GtkObject *object, GtkArg *arg, guint id);
+static void			gst_element_get_arg		(GtkObject *object, GtkArg *arg, guint id);
 
-static void			gst_element_real_destroy	(GtkObject *object);
+static void			gst_element_finalize		(GtkObject *object);
 
 static GstElementStateReturn	gst_element_change_state	(GstElement *element);
 
@@ -121,7 +120,7 @@ gst_element_class_init (GstElementClass *klass)
 
   gtkobject_class->set_arg =		GST_DEBUG_FUNCPTR(gst_element_set_arg);
   gtkobject_class->get_arg =		GST_DEBUG_FUNCPTR(gst_element_get_arg);
-  gtkobject_class->destroy =		GST_DEBUG_FUNCPTR(gst_element_real_destroy);
+  gtkobject_class->finalize =		GST_DEBUG_FUNCPTR(gst_element_finalize);
 
   gstobject_class->save_thyself =	GST_DEBUG_FUNCPTR(gst_element_save_thyself);
   gstobject_class->restore_thyself =	GST_DEBUG_FUNCPTR(gst_element_restore_thyself);
@@ -837,13 +836,13 @@ GST_ELEMENT_NAME(element),GST_ELEMENT_NAME(GST_ELEMENT_PARENT(element)),GST_ELEM
 }
 
 static void
-gst_element_real_destroy (GtkObject *object)
+gst_element_finalize (GtkObject *object)
 {
   GstElement *element = GST_ELEMENT (object);
   GList *pads;
   GstPad *pad;
 
-//  g_print("in gst_element_real_destroy()\n");
+  //g_print("element_finalize()\n");
 
   pads = element->pads;
   while (pads) {
@@ -853,6 +852,8 @@ gst_element_real_destroy (GtkObject *object)
   }
 
   g_list_free (element->pads);
+
+  GTK_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /*

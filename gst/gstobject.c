@@ -53,6 +53,10 @@ static guint gst_signal_object_signals[SO_LAST_SIGNAL] = { 0 };
 static void		gst_object_class_init		(GstObjectClass *klass);
 static void		gst_object_init			(GstObject *object);
 
+static void 		gst_object_real_destroy 	(GtkObject *gtk_object);
+static void 		gst_object_shutdown 		(GtkObject *gtk_object);
+static void 		gst_object_finalize 		(GtkObject *gtk_object);
+
 static GtkObjectClass *parent_class = NULL;
 static guint gst_object_signals[LAST_SIGNAL] = { 0 };
 
@@ -105,6 +109,10 @@ gst_object_class_init (GstObjectClass *klass)
 
   klass->path_string_separator = "/";
   klass->signal_object = gtk_type_new (gst_signal_object_get_type ());
+
+  gtkobject_class->shutdown = gst_object_shutdown;
+  gtkobject_class->destroy = gst_object_real_destroy;
+  gtkobject_class->finalize = gst_object_finalize;
 }
 
 static void
@@ -118,9 +126,12 @@ gst_object_init (GstObject *object)
 #ifdef HAVE_ATOMIC_H
   atomic_set(&(object->refcount),1);
 #else
-  object->refcount++;
+  object->refcount = 1;
 #endif
   object->parent = NULL;
+
+  object->flags = 0;
+  GST_FLAG_SET (object, GST_FLOATING);
 }
 
 /**
@@ -134,6 +145,113 @@ GstObject*
 gst_object_new (void)
 {
   return GST_OBJECT (gtk_type_new (gst_object_get_type ()));
+}
+
+/**
+ * gst_object_ref:
+ * @object: GstObject to reference
+ *
+ * Increments the refence count on the object.
+ */
+GstObject*
+gst_object_ref (GstObject *object)
+{
+  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
+
+  //g_print ("object_ref\n");
+  gtk_object_ref (GTK_OBJECT (object));
+
+  return object;
+}
+#define gst_object_ref gst_object_ref
+
+/**
+ * gst_object_unref:
+ * @object: GstObject to unreference
+ *
+ * Decrements the refence count on the object.  If reference count hits
+ * zero, destroy the object.
+ */
+void
+gst_object_unref (GstObject *object)
+{
+  g_return_if_fail (GST_IS_OBJECT (object));
+
+  //g_print ("object_unref\n");
+  gtk_object_unref (GTK_OBJECT (object));
+}
+#define gst_object_unref gst_object_unref
+
+/**
+ * gst_object_sink:
+ * @object: GstObject to sink
+ *
+ * Removes floating reference on an object.  Any newly created object has
+ * a refcount of 1 and is FLOATING.  This function should be used when
+ * creating a new object to symbolically 'take ownership of' the object.
+ */
+void
+gst_object_sink (GstObject *object)
+{
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (GST_IS_OBJECT (object));
+
+  //g_print ("object_sink\n");
+  if (GST_OBJECT_FLOATING (object))
+  {
+    GST_FLAG_UNSET (object, GST_FLOATING);
+    gst_object_unref (object);
+  }
+}
+
+void
+gst_object_destroy (GstObject *object)
+{
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (GST_IS_OBJECT (object));
+
+  //g_print ("object_destroy\n");
+  if (!GST_OBJECT_DESTROYED (object))
+  {
+    /* need to hold a reference count around all class method
+     * invocations.
+     */
+    gst_object_ref (object);
+    GTK_OBJECT (object)->klass->shutdown (GTK_OBJECT (object));
+    gst_object_unref (object);
+  }
+}
+
+static void
+gst_object_shutdown (GtkObject *object)
+{
+  //g_print ("object_shutdown\n");
+  GST_FLAG_SET (GST_OBJECT (object), GST_DESTROYED);
+  parent_class->shutdown (GTK_OBJECT (object));
+}
+
+/* finilize is called when the object has to free its resources */
+static void
+gst_object_real_destroy (GtkObject *gtk_object)
+{
+  parent_class->destroy (gtk_object);
+}
+
+/* finilize is called when the object has to free its resources */
+static void
+gst_object_finalize (GtkObject *gtk_object)
+{
+  GstObject *object;
+
+  object = GST_OBJECT (gtk_object);
+
+  //g_print ("object_finalize\n");
+  if (object->name != NULL)
+    g_free (object->name);
+
+  g_mutex_free (object->lock);
+
+  parent_class->finalize (gtk_object);
 }
 
 /**
@@ -313,28 +431,6 @@ gst_object_unref (GstObject *object)
   }
 }
 #endif /* gst_object_unref */
-
-/**
- * gst_object_sink:
- * @object: GstObject to sink
- *
- * Removes floating reference on an object.  Any newly created object has
- * a refcount of 1 and is FLOATING.  This function should be used when
- * creating a new object to symbolically 'take ownership of' the object.
- */
-#ifndef gst_object_sink
-void
-gst_object_sink (GstObject *object)
-{
-  g_return_if_fail (object != NULL);
-  g_return_if_fail (GST_IS_OBJECT (object));
-
-  if (GTK_OBJECT_FLOATING (object)) {
-    GTK_OBJECT_UNSET_FLAGS (object, GTK_FLOATING);
-    gst_object_unref (object);
-  }
-}
-#endif /* gst_object_sink */
 
 /**
  * gst_object_check_uniqueness:

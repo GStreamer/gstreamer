@@ -510,6 +510,9 @@ gst_bin_real_destroy (GtkObject *object)
   }
 
   g_list_free (bin->children);
+
+  if (GTK_OBJECT_CLASS (parent_class)->destroy)
+    GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 /**
@@ -915,7 +918,7 @@ static gboolean
 gst_bin_iterate_func (GstBin *bin)
 {
   // only iterate if this is the manager bin
-  if (GST_ELEMENT_SCHED(bin)->parent == (GstElement *)bin) {
+  if (GST_ELEMENT_SCHED(bin)->parent == GST_ELEMENT (bin)) {
     return GST_SCHEDULE_ITERATE(GST_ELEMENT_SCHED(bin));
   } else {
     GST_DEBUG (GST_CAT_SCHEDULING, "this bin can't be iterated on!\n");

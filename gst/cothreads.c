@@ -29,7 +29,7 @@
 #include <sys/mman.h>
 
 /* we make too much noise for normal debugging... */
-#define GST_DEBUG_FORCE_DISABLE
+//#define GST_DEBUG_FORCE_DISABLE
 #include "gst_private.h"
 
 #include "cothreads.h"

@@ -180,7 +180,8 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
 
       GST_DEBUG (0,"try type :%d \"%s\"\n", type->id, type->mime);
       if (typefindfunc && (caps = typefindfunc (buf, type))) {
-        GST_DEBUG (0,"found type :%d \"%s\"\n", caps->id, type->mime);
+        GST_DEBUG (0,"found type :%d \"%s\" \"%s\"\n", caps->id, type->mime, 
+			gst_caps_get_name (caps));
 	typefind->caps = caps;
         gtk_signal_emit (GTK_OBJECT (typefind), gst_typefind_signals[HAVE_TYPE],
 	                      typefind->caps);
