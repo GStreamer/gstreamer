@@ -315,7 +315,7 @@ AC_ARG_ENABLE(plugin-srcdir,
   no)  PLUGINS_USE_SRCDIR=no ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-plugin-srcdir) ;;
 esac], 
-[PLUGINS_USE_SRCDIR=yes]) dnl Default value
+[PLUGINS_USE_SRCDIR=no]) dnl Default value
 
 AC_ARG_ENABLE(debug,
 [  --enable-debug               compile with -g debugging info],
@@ -538,6 +538,15 @@ test/cothreads/Makefile
 tests/Makefile
 tests/sched/Makefile
 examples/Makefile
+examples/autoplug
+examples/helloworld
+examples/helloworld2
+examples/queue
+examples/queue2
+examples/queue3
+examples/queue4
+examples/thread
+examples/xml
 editor/Makefile
 tools/Makefile
 docs/Makefile

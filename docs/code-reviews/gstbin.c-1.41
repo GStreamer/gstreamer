@@ -115,3 +115,68 @@ Lines 204-206: (gst_bin_remove)
 
 Also suspect from the state management perspective, except this one isn't
 commented out.
+
+
+-----
+Line 226: (gst_bin_change_state)
+//  g_return_val_if_fail(bin->numchildren != 0, GST_STATE_FAILURE);
+
+Should this be uncommented?  It makes sense that a bin can't change state unless it's got children,
+though we probably should check to see what state change is actually occuring before blindly failing.
+
+
+-----
+Lines 241-243 (gst_bin_change_state)
+      case GST_STATE_ASYNC:
+        g_print("gstbin: child '%s' is changing state asynchronously\n", gst_element_get_name (child));
+        break;
+
+Obviously some work needs to be done on async state management.  Probably need to have the Bin attach to
+one of the element's signals.  This assumes that the element will get to run at some point in the
+future, or is capable of doing things in a separate context.
+
+
+-----
+Lines 250-257: (gst_bin_change_state)
+  if (GST_STATE_PENDING (element) == GST_STATE_READY) {
+    GstObject *parent;
+ 
+    parent = gst_object_get_parent (GST_OBJECT (element));
+  
+    if (!parent || !GST_IS_BIN (parent))
+      gst_bin_create_plan (bin);
+  }
+
+First of all, this code is run even if there is a failed or async reply from one of the child elements.
+Second problem is that it will call create_plan only in the NULL->READY and PLAYING->READY cases.  If
+PAUSED is going to be a time for allowing changes to the pipeline, we need to update the plan somehow on
+PAUSED->PLAYING state.  And calling create_plan in the PLAYING->READY case isn't actually that useful...
+
+
+-----
+Line 263-271: (gst_bin_change_state_norecurse)
+. . .
+
+Is this really necessary?  Are any users going to want to call this function?  If not, then we can move
+the body of this function into gst_bin_change_state.
+
+
+-----
+Line 273-305: (gst_bin_set_state_type)
+. . .
+
+Is this function ever going to be used by anything?  I tend to think not...
+
+
+-----
+Line 356-393: (gst_bin_get_by_name)
+. . .
+
+Should this be renamed to gst_bin_get_child_by_name() ?
+
+
+-----
+Line 464-471: (gst_bin_use_cothreads)
+. . .
+
+This should be removed in favor of an argument or two?  I think so.

@@ -1,17 +1,13 @@
+SUBDIRS = include gst libs plugins tools test tests examples docs
 
+# if libglade is present, build the player and editor
 if HAVE_LIBGLADE_GNOME
-# The following line mustn't be indented - automake is _very_ fussy..
-libglade_subdir=gstplay editor
-else
-# The following line mustn't be indented - automake is _very_ fussy..
-libglade_subdir=
+SUBDIRS += gstplay editor
 endif
 
-# These are the subdirs which might get used.
-SUBDIRS = include gst libs plugins . test $(libglade_subdir) tools docs # tests
-
 # These are all the possible subdirs
-DIST_SUBDIRS = include gst libs plugins . gstplay test editor tools docs tests
+DIST_SUBDIRS = include gst libs plugins tools test tests examples docs gstplay editor
+
 
 bin_SCRIPTS = gstreamer-config
 

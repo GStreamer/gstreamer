@@ -22,14 +22,15 @@ int main(int argc,char *argv[])
   GstElement *pipeline;
   GtkWidget *appwindow;
 
+  g_thread_init(NULL);
+  gst_init(&argc,&argv);
+  gnome_init("autoplug","0.0.1", argc,argv);
+
   if (argc != 2) {
     g_print("usage: %s <filename>\n", argv[0]);
     exit(-1);
   }
 
-  g_thread_init(NULL);
-  gst_init(&argc,&argv);
-  gnome_init("autoplug","0.0.1", argc,argv);
 
 
   /* create a new bin to hold the elements */

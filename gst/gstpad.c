@@ -456,6 +456,8 @@ gst_pad_disconnect (GstPad *srcpad,
   srcpad->peer = NULL;
   sinkpad->peer = NULL;
 
+  GST_INFO (GST_CAT_ELEMENT_PADS, "disconnected %s:%s and %s:%s",
+            GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
 }
 
 /**
