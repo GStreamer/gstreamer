@@ -551,38 +551,26 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
         buf_byte_size_bound = STD_buffer_size_bound * 1024;
       }
 
-      switch (stream_id) {
-        case 0xBD:
-          /* Private stream 1. */
-          outstream = CLASS (mpeg_demux)->get_private_stream (mpeg_demux,
-              0, GST_MPEG_DEMUX_PRIVATE_UNKNOWN, NULL);
-          break;
+      if (stream_id == 0xBD) {
+        /* Private stream 1. */
+        outstream = CLASS (mpeg_demux)->get_private_stream (mpeg_demux,
+            0, GST_MPEG_DEMUX_PRIVATE_UNKNOWN, NULL);
+      } else if (stream_id == 0xBF) {
+        /* Private stream 2. */
+        outstream = CLASS (mpeg_demux)->get_private_stream (mpeg_demux,
+            1, GST_MPEG_DEMUX_PRIVATE_UNKNOWN, NULL);
+      } else if (stream_id >= 0xC0 && stream_id <= 0xDF) {
+        /* Audio. */
+        outstream = CLASS (mpeg_demux)->get_audio_stream (mpeg_demux,
+            stream_id - 0xC0, GST_MPEG_DEMUX_AUDIO_MPEG, NULL);
+      } else if (stream_id >= 0xE0 && stream_id <= 0xEF) {
+        /* Video. */
+        gint mpeg_version = !GST_MPEG_PARSE_IS_MPEG2 (mpeg_demux) ? 1 : 2;
 
-        case 0xBF:
-          /* Private stream 2. */
-          outstream = CLASS (mpeg_demux)->get_private_stream (mpeg_demux,
-              1, GST_MPEG_DEMUX_PRIVATE_UNKNOWN, NULL);
-          break;
-
-        case 0xC0...0xDF:
-          /* Audio. */
-          outstream = CLASS (mpeg_demux)->get_audio_stream (mpeg_demux,
-              stream_id - 0xC0, GST_MPEG_DEMUX_AUDIO_MPEG, NULL);
-          break;
-
-        case 0xE0...0xEF:
-          /* Video. */
-        {
-          gint mpeg_version = !GST_MPEG_PARSE_IS_MPEG2 (mpeg_demux) ? 1 : 2;
-
-          outstream = CLASS (mpeg_demux)->get_video_stream (mpeg_demux,
-              stream_id - 0xE0, GST_MPEG_DEMUX_VIDEO_MPEG, &mpeg_version);
-        }
-          break;
-
-        default:
-          GST_WARNING ("unkown stream id 0x%02x", stream_id);
-          break;
+        outstream = CLASS (mpeg_demux)->get_video_stream (mpeg_demux,
+            stream_id - 0xE0, GST_MPEG_DEMUX_VIDEO_MPEG, &mpeg_version);
+      } else {
+        GST_WARNING_OBJECT (mpeg_demux, "unkown stream id 0x%02x", stream_id);
       }
 
       GST_DEBUG_OBJECT (mpeg_demux, "STD_buffer_bound_scale %d",
@@ -736,46 +724,35 @@ done:
     timestamp = GST_CLOCK_TIME_NONE;
   }
 
-  switch (id) {
-    case 0xBD:
-      /* Private stream 1. */
-      GST_DEBUG_OBJECT (mpeg_demux, "we have a private 1 packet");
-      CLASS (mpeg_demux)->process_private (mpeg_demux, buffer, 0, timestamp,
-          headerlen, datalen);
-      break;
+  if (id == 0xBD) {
+    /* Private stream 1. */
+    GST_DEBUG_OBJECT (mpeg_demux, "we have a private 1 packet");
+    CLASS (mpeg_demux)->process_private (mpeg_demux, buffer, 0, timestamp,
+        headerlen, datalen);
+  } else if (id == 0xBF) {
+    /* Private stream 2. */
+    GST_DEBUG_OBJECT (mpeg_demux, "we have a private 2 packet");
+    CLASS (mpeg_demux)->process_private (mpeg_demux, buffer, 1, timestamp,
+        headerlen, datalen);
+  } else if (id >= 0xC0 && id <= 0xDF) {
+    /* Audio. */
+    GST_DEBUG_OBJECT (mpeg_demux, "we have an audio packet");
+    outstream = CLASS (mpeg_demux)->get_audio_stream (mpeg_demux,
+        id - 0xC0, GST_MPEG_DEMUX_AUDIO_MPEG, NULL);
+    CLASS (mpeg_demux)->send_subbuffer (mpeg_demux, outstream, buffer,
+        timestamp, headerlen + 4, datalen);
+  } else if (id >= 0xE0 && id <= 0xEF) {
+    /* Video. */
+    gint mpeg_version = !GST_MPEG_PARSE_IS_MPEG2 (mpeg_demux) ? 1 : 2;
 
-    case 0xBF:
-      /* Private stream 2. */
-      GST_DEBUG_OBJECT (mpeg_demux, "we have a private 2 packet");
-      CLASS (mpeg_demux)->process_private (mpeg_demux, buffer, 1, timestamp,
-          headerlen, datalen);
-      break;
+    GST_DEBUG_OBJECT (mpeg_demux, "we have a video packet");
 
-    case 0xC0...0xDF:
-      /* Audio. */
-      GST_DEBUG_OBJECT (mpeg_demux, "we have an audio packet");
-      outstream = CLASS (mpeg_demux)->get_audio_stream (mpeg_demux,
-          id - 0xC0, GST_MPEG_DEMUX_AUDIO_MPEG, NULL);
-      CLASS (mpeg_demux)->send_subbuffer (mpeg_demux, outstream, buffer,
-          timestamp, headerlen + 4, datalen);
-      break;
-
-    case 0xE0...0xEF:
-      /* Video. */
-      GST_DEBUG_OBJECT (mpeg_demux, "we have a video packet");
-      {
-        gint mpeg_version = !GST_MPEG_PARSE_IS_MPEG2 (mpeg_demux) ? 1 : 2;
-
-        outstream = CLASS (mpeg_demux)->get_video_stream (mpeg_demux,
-            id - 0xE0, GST_MPEG_DEMUX_VIDEO_MPEG, &mpeg_version);
-      }
-      CLASS (mpeg_demux)->send_subbuffer (mpeg_demux, outstream, buffer,
-          timestamp, headerlen + 4, datalen);
-      break;
-
-    default:
-      GST_WARNING ("unkown stream id 0x%02x", id);
-      break;
+    outstream = CLASS (mpeg_demux)->get_video_stream (mpeg_demux,
+        id - 0xE0, GST_MPEG_DEMUX_VIDEO_MPEG, &mpeg_version);
+    CLASS (mpeg_demux)->send_subbuffer (mpeg_demux, outstream, buffer,
+        timestamp, headerlen + 4, datalen);
+  } else {
+    GST_WARNING_OBJECT (mpeg_demux, "unkown stream id 0x%02x", id);
   }
 
   return TRUE;
@@ -876,46 +853,35 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
   GST_DEBUG_OBJECT (mpeg_demux, "headerlen is %d, datalen is %d",
       headerlen, datalen);
 
-  switch (id) {
-    case 0xBD:
-      /* Private stream 1. */
-      GST_DEBUG_OBJECT (mpeg_demux, "we have a private 1 packet");
-      CLASS (mpeg_demux)->process_private (mpeg_demux, buffer, 0, timestamp,
-          headerlen, datalen);
-      break;
+  if (id == 0xBD) {
+    /* Private stream 1. */
+    GST_DEBUG_OBJECT (mpeg_demux, "we have a private 1 packet");
+    CLASS (mpeg_demux)->process_private (mpeg_demux, buffer, 0, timestamp,
+        headerlen, datalen);
+  } else if (id == 0xBF) {
+    /* Private stream 2. */
+    GST_DEBUG_OBJECT (mpeg_demux, "we have a private 2 packet");
+    CLASS (mpeg_demux)->process_private (mpeg_demux, buffer, 1, timestamp,
+        headerlen, datalen);
+  } else if (id >= 0xC0 && id <= 0xDF) {
+    /* Audio. */
+    GST_DEBUG_OBJECT (mpeg_demux, "we have an audio packet");
+    outstream = CLASS (mpeg_demux)->get_audio_stream (mpeg_demux,
+        id - 0xC0, GST_MPEG_DEMUX_AUDIO_MPEG, NULL);
+    CLASS (mpeg_demux)->send_subbuffer (mpeg_demux, outstream, buffer,
+        timestamp, headerlen + 4, datalen);
+  } else if (id >= 0xE0 && id <= 0xEF) {
+    /* Video. */
+    gint mpeg_version = !GST_MPEG_PARSE_IS_MPEG2 (mpeg_demux) ? 1 : 2;
 
-    case 0xBF:
-      /* Private stream 2. */
-      GST_DEBUG_OBJECT (mpeg_demux, "we have a private 2 packet");
-      CLASS (mpeg_demux)->process_private (mpeg_demux, buffer, 1, timestamp,
-          headerlen, datalen);
-      break;
+    GST_DEBUG_OBJECT (mpeg_demux, "we have a video packet");
 
-    case 0xC0...0xDF:
-      /* Audio. */
-      GST_DEBUG_OBJECT (mpeg_demux, "we have an audio packet");
-      outstream = CLASS (mpeg_demux)->get_audio_stream (mpeg_demux,
-          id - 0xC0, GST_MPEG_DEMUX_AUDIO_MPEG, NULL);
-      CLASS (mpeg_demux)->send_subbuffer (mpeg_demux, outstream, buffer,
-          timestamp, headerlen + 4, datalen);
-      break;
-
-    case 0xE0...0xEF:
-      /* Video. */
-      GST_DEBUG_OBJECT (mpeg_demux, "we have a video packet");
-      {
-        gint mpeg_version = !GST_MPEG_PARSE_IS_MPEG2 (mpeg_demux) ? 1 : 2;
-
-        outstream = CLASS (mpeg_demux)->get_video_stream (mpeg_demux,
-            id - 0xE0, GST_MPEG_DEMUX_VIDEO_MPEG, &mpeg_version);
-      }
-      CLASS (mpeg_demux)->send_subbuffer (mpeg_demux, outstream, buffer,
-          timestamp, headerlen + 4, datalen);
-      break;
-
-    default:
-      GST_WARNING ("unkown stream id 0x%02x", id);
-      break;
+    outstream = CLASS (mpeg_demux)->get_video_stream (mpeg_demux,
+        id - 0xE0, GST_MPEG_DEMUX_VIDEO_MPEG, &mpeg_version);
+    CLASS (mpeg_demux)->send_subbuffer (mpeg_demux, outstream, buffer,
+        timestamp, headerlen + 4, datalen);
+  } else {
+    GST_WARNING_OBJECT (mpeg_demux, "unkown stream id 0x%02x", id);
   }
 
   return TRUE;

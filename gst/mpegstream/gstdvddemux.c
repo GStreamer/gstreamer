@@ -636,52 +636,44 @@ gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
     case 0:
       /* Private stream 1. */
 
-      switch (ps_id_code) {
-        case 0x80...0x87:
-          GST_LOG_OBJECT (dvd_demux,
-              "we have an audio (AC3) packet, track %d", ps_id_code - 0x80);
-          outstream = DEMUX_CLASS (dvd_demux)->get_audio_stream (mpeg_demux,
-              ps_id_code - 0x80, GST_DVD_DEMUX_AUDIO_AC3, NULL);
+      if (ps_id_code >= 0x80 && ps_id_code <= 0x87) {
+        GST_LOG_OBJECT (dvd_demux,
+            "we have an audio (AC3) packet, track %d", ps_id_code - 0x80);
+        outstream = DEMUX_CLASS (dvd_demux)->get_audio_stream (mpeg_demux,
+            ps_id_code - 0x80, GST_DVD_DEMUX_AUDIO_AC3, NULL);
 
-          /* Determine the position of the "first access".  This
-             should always be the beginning of an AC3 frame. */
-          first_access = *(basebuf + headerlen + 6) * 256 +
-              *(basebuf + headerlen + 7);
+        /* Determine the position of the "first access".  This
+           should always be the beginning of an AC3 frame. */
+        first_access = *(basebuf + headerlen + 6) * 256 +
+            *(basebuf + headerlen + 7);
 
-          headerlen += 4;
-          datalen -= 4;
-          break;
+        headerlen += 4;
+        datalen -= 4;
+      } else if (ps_id_code >= 0xA0 && ps_id_code <= 0xA7) {
+        GST_LOG_OBJECT (dvd_demux,
+            "we have an audio (LPCM) packet, track %d", ps_id_code - 0xA0);
+        lpcm_sample_info = basebuf[headerlen + 9];
+        outstream = DEMUX_CLASS (dvd_demux)->get_audio_stream (mpeg_demux,
+            ps_id_code - 0xA0, GST_DVD_DEMUX_AUDIO_LPCM, &lpcm_sample_info);
 
-        case 0xA0...0xA7:
-          GST_LOG_OBJECT (dvd_demux,
-              "we have an audio (LPCM) packet, track %d", ps_id_code - 0xA0);
-          lpcm_sample_info = basebuf[headerlen + 9];
-          outstream = DEMUX_CLASS (dvd_demux)->get_audio_stream (mpeg_demux,
-              ps_id_code - 0xA0, GST_DVD_DEMUX_AUDIO_LPCM, &lpcm_sample_info);
+        /* Determine the position of the "first access". */
+        first_access = *(basebuf + headerlen + 6) * 256 +
+            *(basebuf + headerlen + 7);
 
-          /* Determine the position of the "first access". */
-          first_access = *(basebuf + headerlen + 6) * 256 +
-              *(basebuf + headerlen + 7);
+        /* Get rid of the LPCM header. */
+        headerlen += 7;
+        datalen -= 7;
+      } else if (ps_id_code >= 0x20 && ps_id_code <= 0x3F) {
+        GST_LOG_OBJECT (dvd_demux,
+            "we have a subpicture packet, track %d", ps_id_code - 0x20);
+        outstream = CLASS (dvd_demux)->get_subpicture_stream (mpeg_demux,
+            ps_id_code - 0x20, GST_DVD_DEMUX_SUBP_DVD, NULL);
 
-          /* Get rid of the LPCM header. */
-          headerlen += 7;
-          datalen -= 7;
-          break;
-
-        case 0x20...0x3f:
-          GST_LOG_OBJECT (dvd_demux,
-              "we have a subpicture packet, track %d", ps_id_code - 0x20);
-          outstream = CLASS (dvd_demux)->get_subpicture_stream (mpeg_demux,
-              ps_id_code - 0x20, GST_DVD_DEMUX_SUBP_DVD, NULL);
-
-          headerlen += 1;
-          datalen -= 1;
-          break;
-
-        default:
-          GST_ERROR_OBJECT (dvd_demux,
-              "unknown DVD (private 1) id 0x%02x", ps_id_code);
-          break;
+        headerlen += 1;
+        datalen -= 1;
+      } else {
+        GST_ERROR_OBJECT (dvd_demux,
+            "unknown DVD (private 1) id 0x%02x", ps_id_code);
       }
       break;
 

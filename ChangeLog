@@ -1,3 +1,10 @@
+2004-03-28  Benjamin Otte  <otte@gnome.org>
+
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_process_private):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_parse_syshead),
+	(gst_mpeg_demux_parse_packet), (gst_mpeg_demux_parse_pes):
+	  get rid of non-standard "..." ranges in case statements.
+
 2004-03-27  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/mpegstream/gstmpegdemux.c: 
