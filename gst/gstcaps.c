@@ -695,8 +695,6 @@ GstCaps *gst_caps_load_thyself (xmlNodePtr parent)
 /* utility */
 void gst_caps_replace (GstCaps **caps, GstCaps *newcaps)
 {
-  /* FIXME */
-
   if (*caps) gst_caps_free(*caps);
   *caps = newcaps;
 }
