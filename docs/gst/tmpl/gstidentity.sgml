@@ -14,12 +14,25 @@ Pass data without modification.
 
 </para>
 
+<!-- ##### SIGNAL GstIdentity::handoff ##### -->
+<para>
+
+</para>
+
+@gstidentity: the object which received the signal.
+@arg1: 
+
 <!-- ##### ARG GstIdentity:loop_based ##### -->
 <para>
 
 </para>
 
 <!-- ##### ARG GstIdentity:sleep_time ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstIdentity:duplicate ##### -->
 <para>
 
 </para>

@@ -19,3 +19,8 @@ A tee can be used to split out the filter graph.
 
 </para>
 
+<!-- ##### ARG GstTee:silent ##### -->
+<para>
+
+</para>
+

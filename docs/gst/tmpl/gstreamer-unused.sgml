@@ -2466,6 +2466,12 @@ The start point of a filter graph
 @counter: 
 @Returns: 
 
+<!-- ##### ARG GstFakeSink:num_sources ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_PROPS_FLOAT_RANGE_STRING ##### -->
 <para>
 

@@ -125,9 +125,9 @@ the pool.
 
 </para>
 
-@pool: 
-<!-- # Unused Parameters # -->
 @buffer: 
+<!-- # Unused Parameters # -->
+@pool: 
 
 
 <!-- ##### FUNCTION gst_buffer_pool_set_create_function ##### -->

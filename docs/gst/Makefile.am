@@ -38,7 +38,6 @@ tmpl_sources =				\
 	tmpl/gsthttpsrc.sgml            \
 	tmpl/gstidentity.sgml           \
 	tmpl/gstlog.sgml                \
-	tmpl/gstmeta.sgml               \
 	tmpl/gstobject.sgml             \
 	tmpl/gstpad.sgml                \
 	tmpl/gstpipeline.sgml           \
@@ -68,14 +67,11 @@ SCANOBJS_FILES =		\
 # FIXME: the dependencies here are rather broken.  Really, html/book1.html
 # should be rebuilt if any file in $(top_srcdir)/gst is updated.
 if HAVE_GTK_DOC
-html/book1.html: sgml/gstreamer-doc.bottom
+html/book1.html: 
 	$(MAKE) html
 else
 html/book1.html:
 endif
-
-sgml/gstreamer-doc.bottom: $(tmpl_sources)
-	$(MAKE) sgml
 
 gstreamer-decl.txt:
 	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers=""
