@@ -138,14 +138,22 @@ gst_play_init (GstPlay *play)
 	gtk_signal_connect (GTK_OBJECT (priv->video_show), "have_size",
 			    GTK_SIGNAL_FUNC (gst_play_have_size), play);
 
-	colorspace = gst_elementfactory_make ("colorspace", "colorspace");
-	gst_bin_add (GST_BIN (priv->video_element), colorspace);
 	gst_bin_add (GST_BIN (priv->video_element), priv->video_show);
 
-	gst_element_connect (colorspace, "src", priv->video_show, "sink");
-	gst_element_add_ghost_pad (priv->video_element, 
+	colorspace = gst_elementfactory_make ("colorspace", "colorspace");
+	if (colorspace == NULL) {
+	  g_warning ("could not create a colorspace element, doing without");
+	  gst_element_add_ghost_pad (priv->video_element, 
+				   gst_element_get_pad (priv->video_show, "sink"),
+				   "sink");
+	}
+	else {
+	  gst_bin_add (GST_BIN (priv->video_element), colorspace);
+	  gst_element_connect (colorspace, "src", priv->video_show, "sink");
+	  gst_element_add_ghost_pad (priv->video_element, 
 				   gst_element_get_pad (colorspace, "sink"),
 				   "sink");
+	}
 
 	play->state = GST_PLAY_STOPPED;
 	play->flags = 0;
