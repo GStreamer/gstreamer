@@ -1837,6 +1837,7 @@ gst_pad_link_unnegotiate (GstPadLink *link)
 {
   if (link->caps) {
     gst_caps_free (link->caps);
+    link->caps = NULL;
     if (GST_RPAD_LINK (link->srcpad) != link) {
       g_warning ("unnegotiating unset link");
     } else {
