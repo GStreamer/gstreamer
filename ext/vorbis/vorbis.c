@@ -65,12 +65,11 @@ raw_caps2_factory (void)
   	"vorbis_raw_float",
   	"audio/x-raw-float",
 	gst_props_new (
-	    "depth",		GST_PROPS_INT (32),
+	    "width",		GST_PROPS_INT (32),
 	    "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
-	    "slope",		GST_PROPS_FLOAT (1.),
-	    "intercept",	GST_PROPS_FLOAT (0.),
     	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
-    	    "channels", 	GST_PROPS_INT (2),
+    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
+            "buffer-frames",    GST_PROPS_INT_RANGE (1, G_MAXINT),
 	    NULL));
 }
 
@@ -81,8 +80,8 @@ static GstTypeDefinition vorbisdefinition = {
   vorbis_type_find,
 };
 
-static GstCaps* 
-vorbis_type_find (GstBuffer *buf, gpointer private) 
+static GstCaps*
+vorbis_type_find (GstBuffer *buf, gpointer private)
 {
   guint32 head;
   gint offset;
