@@ -734,11 +734,11 @@ gst_alsa_change_state (GstElement *element)
           return GST_STATE_FAILURE;
         }
       }
-      break;
+    } else {
+      /* if device doesn't know how to pause, we just stop */
+      if (GST_FLAG_IS_SET (element, GST_ALSA_RUNNING)) gst_alsa_stop_audio (this);
     }
     gst_alsa_clock_stop (this->clock);
-    /* if device doesn't know how to pause, we just stop */
-    if (GST_FLAG_IS_SET (element, GST_ALSA_RUNNING)) gst_alsa_stop_audio (this);
     break;
   case GST_STATE_PAUSED_TO_READY:
     if (GST_FLAG_IS_SET (element, GST_ALSA_RUNNING)) gst_alsa_stop_audio (this);
