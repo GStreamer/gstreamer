@@ -443,6 +443,8 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   /* locking pad to look at the name */
   GST_LOCK (pad);
   pad_name = g_strdup (GST_PAD_NAME (pad));
+  GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element, "adding pad '%s'",
+      GST_STR_NULL (pad_name));
   GST_UNLOCK (pad);
 
   /* then check to see if there's already a pad by that name here */
@@ -454,9 +456,6 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   if (G_UNLIKELY (!gst_object_set_parent (GST_OBJECT_CAST (pad),
               GST_OBJECT_CAST (element))))
     goto had_parent;
-
-  GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element, "adding pad '%s'",
-      GST_STR_NULL (GST_PAD_NAME (pad)));
 
   /* add it to the list */
   switch (gst_pad_get_direction (pad)) {
@@ -486,6 +485,8 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
 
   /* emit the NEW_PAD signal */
   g_signal_emit (G_OBJECT (element), gst_element_signals[NEW_PAD], 0, pad);
+
+  g_free (pad_name);
 
   return TRUE;
 
@@ -558,16 +559,21 @@ gst_element_add_ghost_pad (GstElement * element, GstPad * pad,
 gboolean
 gst_element_remove_pad (GstElement * element, GstPad * pad)
 {
-  GstElement *current_parent;
+  gchar *pad_name;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
-  current_parent = gst_pad_get_parent (pad);
-  if (G_UNLIKELY (current_parent != element))
-    goto not_our_pad;
+  /* locking pad to look at the name and parent */
+  GST_LOCK (pad);
+  pad_name = g_strdup (GST_PAD_NAME (pad));
 
-  gst_object_unref (GST_OBJECT_CAST (current_parent));
+  GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element, "removing pad '%s'",
+      GST_STR_NULL (pad_name));
+
+  if (G_UNLIKELY (GST_PAD_PARENT (pad) != element))
+    goto not_our_pad;
+  GST_UNLOCK (pad);
 
   /* FIXME, is this redundant with pad disposal? */
   if (GST_IS_REAL_PAD (pad)) {
@@ -613,20 +619,19 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
 
   gst_object_unparent (GST_OBJECT (pad));
 
+  g_free (pad_name);
+
   return TRUE;
 
 not_our_pad:
   {
-    gchar *parent_name = gst_element_get_name (current_parent);
-
-    gst_object_unref (GST_OBJECT (current_parent));
-    GST_LOCK (pad);
     GST_LOCK (element);
     g_critical ("Padname %s:%s does not belong to element %s when removing",
-        parent_name, GST_PAD_NAME (pad), GST_ELEMENT_NAME (element));
+        GST_ELEMENT_NAME (GST_PAD_PARENT (pad)), GST_PAD_NAME (pad),
+        GST_ELEMENT_NAME (element));
     GST_UNLOCK (element);
     GST_UNLOCK (pad);
-    g_free (parent_name);
+    g_free (pad_name);
     return FALSE;
   }
 }
@@ -2009,6 +2014,8 @@ gst_element_dispose (GObject * object)
   element->state_cond = NULL;
   GST_STATE_UNLOCK (element);
 
+  g_mutex_free (element->state_lock);
+
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose parent");
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -2246,6 +2253,8 @@ gst_element_get_manager (GstElement * element)
  *
  * Sets the bus of the element.  For internal use only, unless you're
  * testing elements.
+ *
+ * MT safe.
  */
 void
 gst_element_set_bus (GstElement * element, GstBus * bus)
@@ -2267,6 +2276,8 @@ gst_element_set_bus (GstElement * element, GstBus * bus)
  * Returns the bus of the element.
  *
  * Returns: the element's #GstBus.
+ *
+ * MT safe.
  */
 GstBus *
 gst_element_get_bus (GstElement * element)
@@ -2289,6 +2300,8 @@ gst_element_get_bus (GstElement * element)
  *
  * Sets the scheduler of the element.  For internal use only, unless you're
  * testing elements.
+ *
+ * MT safe.
  */
 void
 gst_element_set_scheduler (GstElement * element, GstScheduler * scheduler)
@@ -2310,6 +2323,8 @@ gst_element_set_scheduler (GstElement * element, GstScheduler * scheduler)
  * Returns the scheduler of the element.
  *
  * Returns: the element's #GstScheduler.
+ *
+ * MT safe.
  */
 GstScheduler *
 gst_element_get_scheduler (GstElement * element)
