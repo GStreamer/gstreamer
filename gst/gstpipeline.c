@@ -122,7 +122,6 @@ gst_pipeline_dispose (GObject *object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 
   if (GST_ELEMENT_SCHED (pipeline)) {
-    gst_scheduler_reset (GST_ELEMENT_SCHED (pipeline));
     gst_object_unref (GST_OBJECT (GST_ELEMENT_SCHED (pipeline)));
     GST_ELEMENT_SCHED (pipeline) = NULL;
   }
@@ -153,7 +152,11 @@ gst_pipeline_change_state (GstElement *element)
     case GST_STATE_PAUSED_TO_PLAYING:
     case GST_STATE_PLAYING_TO_PAUSED:
     case GST_STATE_PAUSED_TO_READY:
+      break;
     case GST_STATE_READY_TO_NULL:
+      if (GST_ELEMENT_SCHED (element)) {
+        gst_scheduler_reset (GST_ELEMENT_SCHED (element));
+      }
       break;
   }
 
