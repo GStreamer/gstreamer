@@ -21,6 +21,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "gst_private.h"
 
@@ -114,13 +115,13 @@ void
 gst_init (int *argc, char **argv[]) 
 {
   poptContext context;
-  gint nextopt;
+  gint nextopt, i, j, nstrip;
   const struct poptOption *options = gst_init_get_popt_table ();
+  gchar **temp;
 
   context = poptGetContext ("GStreamer", *argc, (const char**)*argv, options, 0);
   
-  while ((nextopt = poptGetNextOpt (context)) > 0 || nextopt == POPT_ERROR_BADOPT)
-    /* do nothing */ ;
+  while ((nextopt = poptGetNextOpt (context)) > 0); /* do nothing, it's all callbacks */
   
   if (nextopt != -1) {
     g_print ("Error on option %s: %s.\nRun '%s --help' to see a full list of available command line options.\n",
@@ -129,7 +130,23 @@ gst_init (int *argc, char **argv[])
              (*argv)[0]);
     exit (1);
   }
-  *argc = poptStrippedArgv (context, *argc, *argv);
+
+  /* let's do this once there are 1.6.3 popt debs out
+     *argc = poptStrippedArgv (context, *argc, *argv); */
+  
+  /* until then we'll do a very basic arg permutation
+     this will break gst-launch -o */
+  temp = *argv + 1;
+  i = 1;
+  nstrip = 0;
+  g_assert (*argc > 0);
+  while (i++ < *argc && *temp[0]=='-') {
+    for (j = 1; j < *argc - 1; j++)
+      (*argv)[j] = (*argv)[j+1];
+    (*argv)[*argc-1] = *temp;
+    nstrip++;
+  }
+  *argc -= nstrip;
 }
 
 static void 
