@@ -486,7 +486,7 @@ gst_wavparse_get_formats (GstPad *pad)
   static GstFormat formats[] = {
     GST_FORMAT_TIME,
     GST_FORMAT_BYTES,
-    GST_FORMAT_UNITS,	/* a "frame", ie a set of samples per Hz */
+    GST_FORMAT_DEFAULT,	/* a "frame", ie a set of samples per Hz */
     0,
     0
   };
@@ -503,9 +503,6 @@ gst_wavparse_pad_convert (GstPad *pad,
   GstWavParse *wavparse;
 
   wavparse = GST_WAVPARSE (gst_pad_get_parent (pad));
-  /* FIXME default should be samples in this case IMO */
-  if (*dest_format == GST_FORMAT_DEFAULT)
-    *dest_format = GST_FORMAT_TIME;
   
   bytes_per_sample = wavparse->channels * wavparse->width / 8;
   if (bytes_per_sample == 0) {
@@ -522,14 +519,14 @@ gst_wavparse_pad_convert (GstPad *pad,
 
   switch (src_format) {
     case GST_FORMAT_BYTES:
-      if (*dest_format == GST_FORMAT_UNITS)
+      if (*dest_format == GST_FORMAT_DEFAULT)
         *dest_value = src_value / bytes_per_sample;
       else if (*dest_format == GST_FORMAT_TIME)
         *dest_value = src_value * GST_SECOND / byterate;
       else
         return FALSE;
       break;
-    case GST_FORMAT_UNITS:
+    case GST_FORMAT_DEFAULT:
       if (*dest_format == GST_FORMAT_BYTES)
         *dest_value = src_value * bytes_per_sample;
       else if (*dest_format == GST_FORMAT_TIME)
@@ -540,7 +537,7 @@ gst_wavparse_pad_convert (GstPad *pad,
     case GST_FORMAT_TIME:
       if (*dest_format == GST_FORMAT_BYTES)
 	*dest_value = src_value * byterate / GST_SECOND;
-      else if (*dest_format == GST_FORMAT_UNITS)
+      else if (*dest_format == GST_FORMAT_DEFAULT)
 	*dest_value = src_value * wavparse->rate / GST_SECOND;
       else
         return FALSE;

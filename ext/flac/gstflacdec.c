@@ -436,14 +436,14 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder *decoder,
     GST_DEBUG (0, "send discont");
 
     format = GST_FORMAT_TIME;
-    gst_pad_convert (flacdec->srcpad, GST_FORMAT_UNITS, flacdec->total_samples,
+    gst_pad_convert (flacdec->srcpad, GST_FORMAT_DEFAULT, flacdec->total_samples,
 		  &format, &time);
     format = GST_FORMAT_BYTES;
-    gst_pad_convert (flacdec->srcpad, GST_FORMAT_UNITS, flacdec->total_samples,
+    gst_pad_convert (flacdec->srcpad, GST_FORMAT_DEFAULT, flacdec->total_samples,
 		  &format, &bytes);
     discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time,
 		                         GST_FORMAT_BYTES, bytes,
-		                         GST_FORMAT_UNITS, flacdec->total_samples, 
+		                         GST_FORMAT_DEFAULT, flacdec->total_samples, 
 					 NULL);
 	  
     gst_pad_push (flacdec->srcpad, GST_BUFFER (discont));
@@ -552,11 +552,11 @@ gst_flacdec_loop (GstElement *element)
     gst_pad_push (flacdec->srcpad, GST_BUFFER (event));
     gst_element_set_eos (element);
   }
-   GST_DEBUG (GST_CAT_PLUGIN_INFO, "flacdec: _loop end");
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "flacdec: _loop end");
 }
 
 GST_PAD_FORMATS_FUNCTION (gst_flacdec_get_src_formats,
-  GST_FORMAT_UNITS,
+  GST_FORMAT_DEFAULT,
   GST_FORMAT_BYTES,
   GST_FORMAT_TIME
 )
@@ -575,13 +575,11 @@ gst_flacdec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
           if (bytes_per_sample == 0)
             return FALSE;
           *dest_value = src_value / bytes_per_sample;
           break;
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
 	{
           gint byterate = bytes_per_sample * flacdec->frequency;
@@ -595,13 +593,11 @@ gst_flacdec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
           res = FALSE;
       }
       break;
-    case GST_FORMAT_UNITS:
+    case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
 	  *dest_value = src_value * bytes_per_sample;
           break;
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
 	  if (flacdec->frequency == 0)
 	    return FALSE;
@@ -613,11 +609,9 @@ gst_flacdec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_BYTES;
         case GST_FORMAT_BYTES:
           scale = bytes_per_sample;
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
 	  *dest_value = src_value * scale * flacdec->frequency / GST_SECOND;
           break;
         default:
@@ -653,14 +647,14 @@ gst_flacdec_src_query (GstPad *pad, GstQueryType type,
         samples = flacdec->stream_samples;
 
       gst_pad_convert (flacdec->srcpad, 
-		       GST_FORMAT_UNITS, 
+		       GST_FORMAT_DEFAULT, 
 		       samples, 
 		       format, value);
       break;
     }
     case GST_QUERY_POSITION:
       gst_pad_convert (flacdec->srcpad, 
-		       GST_FORMAT_UNITS, 
+		       GST_FORMAT_DEFAULT, 
 		       flacdec->total_samples, 
 		       format, value);
       break;
@@ -685,7 +679,7 @@ gst_flacdec_src_event (GstPad *pad, GstEvent *event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      format = GST_FORMAT_UNITS;
+      format = GST_FORMAT_DEFAULT;
 
       if (gst_pad_convert (flacdec->srcpad, 
 			   GST_EVENT_SEEK_FORMAT (event), 
@@ -716,6 +710,7 @@ gst_flacdec_change_state (GstElement *element)
       flacdec->total_samples = 0;
       flacdec->init = TRUE;
       flacdec->eos = FALSE;
+      FLAC__seekable_stream_decoder_reset (flacdec->decoder);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       flacdec->eos = FALSE;

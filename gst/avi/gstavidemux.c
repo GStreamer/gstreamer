@@ -1048,7 +1048,7 @@ gst_avi_demux_parse_index (GstAviDemux *avi_demux,
     }
     /* VBR stream */
     else {
-      gst_pad_convert (stream->pad, GST_FORMAT_UNITS, stream->total_frames,
+      gst_pad_convert (stream->pad, GST_FORMAT_DEFAULT, stream->total_frames,
 		                 &format, &target->ts);
     }
     gst_avi_debug_entry ("index", target);
@@ -1122,12 +1122,12 @@ gst_avi_demux_get_src_formats (GstPad *pad)
   static const GstFormat src_a_formats[] = {
     GST_FORMAT_TIME,
     GST_FORMAT_BYTES,
-    GST_FORMAT_UNITS,
+    GST_FORMAT_DEFAULT,
     0
   };
   static const GstFormat src_v_formats[] = {
     GST_FORMAT_TIME,
-    GST_FORMAT_UNITS,
+    GST_FORMAT_DEFAULT,
     0
   };
 
@@ -1152,8 +1152,6 @@ gst_avi_demux_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
           *dest_value = src_value * stream->strh.rate / (stream->strh.scale * GST_SECOND);
           break;
         case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_UNITS;
-	case GST_FORMAT_UNITS:
           *dest_value = src_value * stream->strh.rate / (stream->strh.scale * GST_SECOND);
           break;
 	default:
@@ -1162,7 +1160,16 @@ gst_avi_demux_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
       }
       break;
     case GST_FORMAT_BYTES:
-    case GST_FORMAT_UNITS:
+      switch (*dest_format) {
+	case GST_FORMAT_TIME:
+          *dest_value = ((gfloat)src_value) * GST_SECOND / stream->strh.rate;
+	  break;
+	default:
+	  res = FALSE;
+	  break;
+      }
+      break;
+    case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
 	case GST_FORMAT_TIME:
           *dest_value = ((((gfloat)src_value) * stream->strh.scale)  / stream->strh.rate) * GST_SECOND;
@@ -1202,9 +1209,6 @@ gst_avi_demux_handle_src_query (GstPad *pad, GstQueryType type,
   switch (type) {
     case GST_QUERY_TOTAL:
       switch (*format) {
-        case GST_FORMAT_DEFAULT:
-          *format = GST_FORMAT_TIME;
-          /* fall through */
         case GST_FORMAT_TIME:
           *value = (((gfloat)stream->strh.scale) * stream->strh.length / stream->strh.rate) * GST_SECOND;
 	  break;
@@ -1215,7 +1219,7 @@ gst_avi_demux_handle_src_query (GstPad *pad, GstQueryType type,
 	  else
 	    res = FALSE;
 	  break;
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
           if (stream->strh.type == GST_RIFF_FCC_auds)
             *value = stream->strh.length * stream->strh.samplesize;
 	  else if (stream->strh.type == GST_RIFF_FCC_vids)
@@ -1230,12 +1234,10 @@ gst_avi_demux_handle_src_query (GstPad *pad, GstQueryType type,
       break;
     case GST_QUERY_POSITION:
       switch (*format) {
-        case GST_FORMAT_DEFAULT:
-          *format = GST_FORMAT_TIME;
-          /* fall through */
         case GST_FORMAT_TIME:
           if (stream->strh.samplesize && stream->strh.type == GST_RIFF_FCC_auds) {
-            *value = (((gfloat)stream->current_byte) * stream->strh.scale / stream->strh.rate) * GST_SECOND;
+            //*value = (((gfloat)stream->current_byte) * stream->strh.scale / stream->strh.rate) * GST_SECOND;
+            *value = ((gfloat)stream->current_byte) * GST_SECOND / stream->strh.rate;
 	  }
 	  else {
             *value = (((gfloat)stream->current_frame) * stream->strh.scale / stream->strh.rate) * GST_SECOND;
@@ -1244,7 +1246,7 @@ gst_avi_demux_handle_src_query (GstPad *pad, GstQueryType type,
         case GST_FORMAT_BYTES:
           *value = stream->current_byte;
 	  break;
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
           if (stream->strh.samplesize && stream->strh.type == GST_RIFF_FCC_auds) 
             *value = stream->current_byte * stream->strh.samplesize;
 	  else 
@@ -1363,7 +1365,7 @@ gst_avi_demux_handle_src_event (GstPad *pad, GstEvent *event)
       GST_DEBUG (0, "seek format %d, %08x", GST_EVENT_SEEK_FORMAT (event), stream->strh.type);
       switch (GST_EVENT_SEEK_FORMAT (event)) {
 	case GST_FORMAT_BYTES:
-	case GST_FORMAT_UNITS:
+	case GST_FORMAT_DEFAULT:
 	  break;
 	case GST_FORMAT_TIME:
         {
@@ -1646,7 +1648,7 @@ gst_avi_demux_loop (GstElement *element)
           format = GST_FORMAT_TIME;
           gst_pad_query (stream->pad, GST_QUERY_POSITION, &format, &next_ts);
 
-          if (stream->strh.init_frames == stream->current_frame && stream->delay==0)
+          if (stream->strh.init_frames == stream->current_frame && stream->delay == 0)
             stream->delay = next_ts;
 
           stream->current_frame++;
