@@ -27,3 +27,6 @@ argtypes.matcher.register('GstClockTime', arg)
 
 arg = argtypes.Int64Arg()
 argtypes.matcher.register('GstClockTimeDiff', arg)
+
+arg = argtypes.PointerArg('gpointer', 'G_TYPE_POINTER')
+argtypes.matcher.register('GstClockID', arg)
