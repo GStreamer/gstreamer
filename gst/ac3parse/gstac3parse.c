@@ -73,6 +73,7 @@ static struct frmsize_s frmsizecod_tbl[] = {
 static GstElementDetails ac3parse_details = {
   "AC3 Parser",
   "Codec/Parser",
+  "LGPL",
   "Parses and frames AC3 audio streams, provides seek",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

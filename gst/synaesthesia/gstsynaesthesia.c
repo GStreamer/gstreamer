@@ -60,6 +60,7 @@ GType gst_synaesthesia_get_type(void);
 static GstElementDetails gst_synaesthesia_details = {
   "Synaesthesia",
   "Visualization",
+  "GPL",
   "Creates video visualizations of audio input, using stereo and pitch information",
   VERSION,
   "Richard Boulton <richard@tartarus.org>",

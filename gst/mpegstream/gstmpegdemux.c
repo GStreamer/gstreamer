@@ -25,6 +25,7 @@
 static GstElementDetails mpeg_demux_details = {
   "MPEG Demuxer",
   "Codec/Demuxer",
+  "LGPL",
   "Demultiplexes MPEG1 and MPEG2 System Streams",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>\n"

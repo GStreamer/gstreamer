@@ -26,6 +26,7 @@
 static GstElementDetails gst_siddec_details = {
   "Sid decoder",
   "Codec/Audio/Decoder",
+  "GPL",
   "Use sidplay to decode SID audio tunes",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be> ",

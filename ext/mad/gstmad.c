@@ -79,6 +79,7 @@ struct _GstMadClass {
 static GstElementDetails gst_mad_details = {
   "mad mp3 decoder",
   "Codec/Audio/Decoder",
+  "GPL",
   "Uses mad code to decode mp3 streams",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

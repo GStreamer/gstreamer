@@ -25,6 +25,7 @@
 static GstElementDetails rfc2250_enc_details = {
   "RFC 2250 packet encoder",
   "Codec/Parser",
+  "LGPL",
   "transforms MPEG1/2 video to an RFC 2250 compliant format",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

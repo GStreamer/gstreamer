@@ -25,6 +25,7 @@
 static GstElementDetails mp3parse_details = {
   "MPEG1 Audio Parser",
   "Codec/Parser",
+  "LGPL",
   "Parses and frames mpeg1 audio streams (levels 1-3), provides seek",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

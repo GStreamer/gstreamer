@@ -63,9 +63,11 @@ struct _DVDNavSrcClass {
   GstElementClass parent_class;
 };
 
+/* elementfactory information */
 GstElementDetails dvdnavsrc_details = {
   "DVD Source",
   "Source/File/DVD",
+  "GPL",
   "Access a DVD with navigation features using libdvdnav",
   VERSION,
   "David I. Lehn <dlehn@users.sourceforge.net>",

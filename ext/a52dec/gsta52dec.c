@@ -30,6 +30,7 @@
 static GstElementDetails gst_a52dec_details = {
   "ATSC A/52 audio decoder",
   "Codec/Audio/Decoder",
+  "GPL",
   "Decodes ATSC A/52 encoded audio streams",
   VERSION,
   "David I. Lehn <dlehn@users.sourceforge.net>",

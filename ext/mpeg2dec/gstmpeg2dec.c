@@ -29,6 +29,7 @@
 static GstElementDetails gst_mpeg2dec_details = {
   "mpeg1 and mpeg2 video decoder",
   "Codec/Video/Decoder",
+  "GPL",
   "Uses libmpeg2 to decode MPEG video streams",
   VERSION,
   "David I. Lehn <dlehn@users.sourceforge.net>",

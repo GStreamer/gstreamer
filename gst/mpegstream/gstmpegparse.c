@@ -26,6 +26,7 @@
 static GstElementDetails mpeg_parse_details = {
   "MPEG System Parser",
   "Codec/Parser",
+  "LGPL",
   "Parses MPEG1 and MPEG2 System Streams",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>\n"
