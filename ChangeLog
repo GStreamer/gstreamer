@@ -1,3 +1,14 @@
+2004-05-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_init), (gst_dvdec_get_formats),
+	(gst_dvdec_src_convert), (gst_dvdec_sink_convert):
+	  Fix format conversion and position querying.
+	* gst/debug/progressreport.c: (gst_progressreport_report):
+	  Don't output a bogus total value that we didn't query.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support):
+	  Always set XV_AUTOPAINT_COLORKEY to true. Fixes xvimagesink showing
+	  only a blank window after xine has been used.
+
 2004-05-21  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* m4/as-arts.m4:
