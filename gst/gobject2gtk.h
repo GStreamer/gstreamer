@@ -220,6 +220,27 @@ struct _GParamSpec {
 
 #define g_value_init(value,t)			((value)->type = (t))
 
+#define g_value_set_char(value,c)			(GTK_VALUE_CHAR(value) = c)
+#define g_value_get_char(value)			(GTK_VALUE_CHAR(value))
+#define g_value_set_uchar(value,c)			(GTK_VALUE_UCHAR(value) = c)
+#define g_value_get_uchar(value)			(GTK_VALUE_UCHAR(value))
+#define g_value_set_boolean(value,c)			(GTK_VALUE_BOOL(value) = c)
+#define g_value_get_boolean(value)			(GTK_VALUE_BOOL(value))
+#define g_value_set_int(value,c)			(GTK_VALUE_INT(value) = c)
+#define g_value_get_int(value)			(GTK_VALUE_INT(value))
+#define g_value_set_uint(value,c)			(GTK_VALUE_UINT(value) = c)
+#define g_value_get_uint(value)			(GTK_VALUE_UINT(value))
+#define g_value_set_long(value,c)			(GTK_VALUE_LONG(value) = c)
+#define g_value_get_long(value)			(GTK_VALUE_LONG(value))
+#define g_value_set_ulong(value,c)			(GTK_VALUE_ULONG(value) = c)
+#define g_value_get_ulong(value)			(GTK_VALUE_ULONG(value))
+#define g_value_set_float(value,c)			(GTK_VALUE_FLOAT(value) = c)
+#define g_value_get_float(value)			(GTK_VALUE_FLOAT(value))
+#define g_value_set_double(value,c)			(GTK_VALUE_DOUBLE(value) = c)
+#define g_value_get_double(value)			(GTK_VALUE_DOUBLE(value))
+#define g_value_set_string(value,c)			(GTK_VALUE_STRING(value) = c)
+#define g_value_get_string(value)			(GTK_VALUE_STRING(value))
+
 #define g_object_class_install_property		g2g_object_class_install_property
 void g2g_object_class_install_property(GObjectClass *oclass,guint property_id,GParamSpec *pspec);
 #define g_object_class_find_property		g2g_object_class_find_property
