@@ -3,12 +3,12 @@
 
 void play (GtkButton *button, gpointer data)
 {
-  g_signal_emit_by_name(G_OBJECT(data), "play");
+  g_signal_emit_by_name(G_OBJECT(data), "play", NULL, NULL);
 }
   
 void reset (GtkButton *button, gpointer data)
 {
-  g_signal_emit_by_name(G_OBJECT(data), "reset");
+  g_signal_emit_by_name(G_OBJECT(data), "reset", NULL, NULL);
 }
   
 int main(int argc, char **argv) 
@@ -75,4 +75,6 @@ int main(int argc, char **argv)
   gtk_idle_add((GtkFunction)gst_bin_iterate, pipeline);
     
   gtk_main();
+
+  return 0;
 }
