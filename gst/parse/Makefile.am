@@ -11,6 +11,8 @@ noinst_HEADERS = grammar.tab.h
 
 BUILT_SOURCES = grammar.tab.h grammar.tab.c lex.yy.c 
 
+EXTRA_DIST = grammar.y parse.l types.h
+
 grammar.tab.h: grammar.y
 	$(BISON) grammar.y
 
