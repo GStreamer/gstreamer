@@ -1,3 +1,13 @@
+2004-02-02  Jon Trowbridge  <trow@gnu.org>
+
+	reviewed by: David Schleef  <ds@schleef.org>
+
+	Fix memory leaks:
+	* gst/gstcaps.c: (gst_caps_to_string):
+	* gst/registries/gstxmlregistry.c:
+	(gst_xml_registry_add_path_list_func),
+	(gst_xml_registry_parse_padtemplate):
+
 2004-02-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstelement.c: (gst_element_default_error):

@@ -375,9 +375,9 @@ gst_xml_registry_get_perms_func (GstXMLRegistry *registry)
 static void
 gst_xml_registry_add_path_list_func (GstXMLRegistry *registry)
 {
-  FILE *reg;
+  FILE *reg = NULL;
   GMarkupParseContext *context;
-  gchar *text;
+  gchar *text = NULL;
   gssize size;
   GError *error = NULL;
 
@@ -385,7 +385,7 @@ gst_xml_registry_add_path_list_func (GstXMLRegistry *registry)
                                         registry, NULL);
 
   if (! (reg = fopen (registry->location, "r"))) {
-    return;
+    goto finished;
   }
 
   /* slightly allocate more as gmarkup reads too much */
@@ -399,9 +399,7 @@ gst_xml_registry_add_path_list_func (GstXMLRegistry *registry)
     if (error) {
       GST_ERROR ("parsing registry %s: %s\n", 
 	         registry->location, error->message);
-      g_free (text);
-      fclose (reg);
-      return;
+      goto finished;
     }
 
     if (registry->state == GST_XML_REGISTRY_PATHS_DONE)
@@ -410,7 +408,12 @@ gst_xml_registry_add_path_list_func (GstXMLRegistry *registry)
     size = fread (text, 1, BLOCK_SIZE, reg);
   }
 
-  fclose (reg);
+ finished:
+
+  g_markup_parse_context_free (context);
+
+  if (reg)
+    fclose (reg);
 
   g_free (text);
 }
@@ -837,6 +840,7 @@ gst_xml_registry_parse_padtemplate (GMarkupParseContext *context, const gchar *t
     char *s;
 
     s = g_strndup (text, text_len);
+    g_assert (registry->caps == NULL);
     registry->caps = gst_caps_from_string (s);
     if (registry->caps == NULL) {
       g_critical ("Could not parse caps: length %d, content: %*s\n", text_len, text_len, text);
