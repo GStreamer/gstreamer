@@ -386,6 +386,9 @@ gst_ogg_mux_next_buffer (GstOggPad * pad)
         case GST_EVENT_EOS:
           gst_event_unref (event);
           return NULL;
+        case GST_EVENT_DISCONTINUOUS:
+          gst_event_unref (event);
+          break;
         default:
           gst_pad_event_default (pad->pad, event);
           break;

@@ -249,6 +249,7 @@ gst_alsa_mixer_build_list (GstAlsaMixer * mixer)
   GstMixerOptions *opts;
   const GList *templates;
   GstPadDirection dir = GST_PAD_UNKNOWN;
+  gboolean first = TRUE;
 
   g_return_if_fail (mixer->mixer_handle != NULL);
 
@@ -278,6 +279,10 @@ gst_alsa_mixer_build_list (GstAlsaMixer * mixer)
     if (snd_mixer_selem_has_capture_volume (element)) {
       while (snd_mixer_selem_has_capture_channel (element, channels))
         channels++;
+      if (first) {
+        first = FALSE;
+        flags |= GST_MIXER_TRACK_MASTER;
+      }
       track = gst_alsa_mixer_track_new (element, i, channels,
           flags, GST_ALSA_MIXER_TRACK_CAPTURE);
       mixer->tracklist = g_list_append (mixer->tracklist, track);
@@ -286,6 +291,10 @@ gst_alsa_mixer_build_list (GstAlsaMixer * mixer)
     if (snd_mixer_selem_has_playback_volume (element)) {
       while (snd_mixer_selem_has_playback_channel (element, channels))
         channels++;
+      if (first) {
+        first = FALSE;
+        flags |= GST_MIXER_TRACK_MASTER;
+      }
       track = gst_alsa_mixer_track_new (element, i, channels,
           flags, GST_ALSA_MIXER_TRACK_PLAYBACK);
       mixer->tracklist = g_list_append (mixer->tracklist, track);
