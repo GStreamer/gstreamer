@@ -118,14 +118,4 @@ gboolean	gst_v4l2_set_attribute		(GstV4l2Element *v4l2element,
 						 int             attribute,
 						 const int       value);
 
-/* overlay */
-gboolean	gst_v4l2_set_display		(GstV4l2Element *v4l2element);
-gboolean	gst_v4l2_set_window		(GstElement     *element,
-						 gint x,         gint y,
-						 gint w,         gint h,
-						 struct v4l2_clip *clips,
-						 gint            num_clips);
-gboolean	gst_v4l2_enable_overlay		(GstV4l2Element *v4l2element,
-						 gboolean        enable);
-
 #endif /* __V4L2_CALLS_H__ */

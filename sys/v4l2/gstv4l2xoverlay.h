@@ -31,11 +31,6 @@ G_BEGIN_DECLS
 
 void	gst_v4l2_xoverlay_interface_init (GstXOverlayClass *klass);
 
-GstXWindowListener *
-	gst_v4l2_xoverlay_new		(GstV4l2Element  *v4l2element);
-void	gst_v4l2_xoverlay_free		(GstV4l2Element  *v4l2element);
-
-/* signal handlers */
 void	gst_v4l2_xoverlay_open		(GstV4l2Element  *v4l2element);
 void	gst_v4l2_xoverlay_close		(GstV4l2Element  *v4l2element);
 

@@ -31,11 +31,6 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  /* actually, we can survive without it, but I'll create
-   * that handling later on. */
-  if (!gst_library_load ("xwindowlistener"))
-    return FALSE;
-
   if (!gst_element_register (plugin, "v4l2element",
           GST_RANK_NONE, GST_TYPE_V4L2ELEMENT) ||
       !gst_element_register (plugin, "v4l2src",
