@@ -143,10 +143,17 @@ gst_caps_destroy (GstCaps *caps)
     gst_caps_unref (next);
 }
 
+/**
+ * gst_caps_debug:
+ * @caps: the caps to print out
+ * @label: a label to put on the printout, or NULL
+ *
+ * Print out the contents of the caps structure. Useful for debugging.
+ */
 void
-gst_caps_debug (GstCaps *caps)
+gst_caps_debug (GstCaps *caps, const gchar *label)
 {
-  GST_DEBUG_ENTER ("caps debug");
+  GST_DEBUG_ENTER ("caps debug: %s", label);
   while (caps) {
     GST_DEBUG (GST_CAT_CAPS, "caps: %p %s %s\n", caps, caps->name, gst_caps_get_mime (caps));
 

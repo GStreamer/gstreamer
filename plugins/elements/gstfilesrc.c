@@ -89,11 +89,11 @@ enum {
 
 enum {
   ARG_0,
+  ARG_OFFSET,
   ARG_LOCATION,
   ARG_FILESIZE,
   ARG_FD,
   ARG_BLOCKSIZE,
-  ARG_OFFSET,
   ARG_MAPSIZE,
   ARG_TOUCH,
 };

@@ -727,7 +727,7 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
 
     return FALSE;
   }
-    
+
   /* fire off a signal to each of the pads telling them that they've been connected */
   g_signal_emit (G_OBJECT (realsrc), gst_real_pad_signals[REAL_CONNECTED], 0, realsink);
   g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_CONNECTED], 0, realsrc);
@@ -740,6 +740,7 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
 
   GST_INFO (GST_CAT_PADS, "connected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+  gst_caps_debug (gst_pad_get_caps (GST_PAD_CAST (realsrc)), "caps of newly connected src pad");
 
   return TRUE;
 }
@@ -956,6 +957,7 @@ static GstPadConnectReturn
 gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
 {
   GstCaps *oldcaps;
+  GstPadTemplate *template;
   GstElement *parent = GST_PAD_PARENT (pad);
 
   /* thomas: FIXME: is this the right result to return ? */
@@ -973,6 +975,18 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
 	  
   GST_INFO (GST_CAT_CAPS, "trying to set caps %p on pad %s:%s",
             caps, GST_DEBUG_PAD_NAME (pad));
+  
+  if ((template = gst_pad_get_padtemplate (GST_PAD_CAST (pad)))) {
+    if (!gst_caps_intersect (caps, gst_padtemplate_get_caps (template))) {
+      GST_INFO (GST_CAT_CAPS, "caps did not intersect with %s:%s's padtemplate",
+                GST_DEBUG_PAD_NAME (pad));
+      gst_caps_debug (gst_padtemplate_get_caps (template),
+                      "pad template caps that did not agree with caps");
+      return GST_PAD_CONNECT_REFUSED;
+    }
+    /* given that the caps are fixed, we know that their intersection with the
+     * padtemplate caps is the same as caps itself */
+  }
 
   /* we need to notify the connect function */
   if (notify && GST_RPAD_CONNECTFUNC (pad)) {
@@ -1058,15 +1072,18 @@ gst_pad_try_set_caps (GstPad *pad, GstCaps *caps)
   GST_INFO (GST_CAT_CAPS, "trying to set caps %p on pad %s:%s",
             caps, GST_DEBUG_PAD_NAME (realpad));
 
+  gst_caps_debug (caps, "caps that we are trying to set");
+
   /* setting non fixed caps on a pad is not allowed */
   if (!GST_CAPS_IS_FIXED (caps)) {
   GST_INFO (GST_CAT_CAPS, "trying to set unfixed caps on pad %s:%s, not allowed",
 		  GST_DEBUG_PAD_NAME (realpad));
     g_warning ("trying to set non fixed caps on pad %s:%s, not allowed",
             GST_DEBUG_PAD_NAME (realpad));
-    gst_caps_debug (caps);
+    gst_caps_debug (caps, "unfixed caps");
     return FALSE;
   }
+
   /* if we have a peer try to set the caps, notifying the peerpad
    * if it has a connect function */
   if (peer && (gst_pad_try_set_caps_func (peer, caps, TRUE) != GST_PAD_CONNECT_OK))
@@ -1075,6 +1092,7 @@ gst_pad_try_set_caps (GstPad *pad, GstCaps *caps)
 	      GST_DEBUG_PAD_NAME (peer));
     return FALSE;
   }
+
   /* then try to set our own caps, we don't need to be notified */
   if (gst_pad_try_set_caps_func (realpad, caps, FALSE) != GST_PAD_CONNECT_OK)
   {
@@ -1084,7 +1102,6 @@ gst_pad_try_set_caps (GstPad *pad, GstCaps *caps)
   }
   GST_INFO (GST_CAT_CAPS, "succeeded setting caps %p on pad %s:%s",
 	    caps, GST_DEBUG_PAD_NAME (realpad));
-  gst_caps_debug (caps);
   g_assert (GST_PAD_CAPS (pad));
 			  
   return TRUE;
@@ -1127,10 +1144,10 @@ gst_pad_try_reconnect_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad, Gs
 
   srccaps = gst_pad_get_caps (GST_PAD (realsrc));
   GST_INFO (GST_CAT_PADS, "dumping caps of pad %s:%s", GST_DEBUG_PAD_NAME (realsrc));
-  gst_caps_debug (srccaps);
+  gst_caps_debug (srccaps, "caps of src pad (pre-reconnect)");
   sinkcaps = gst_pad_get_caps (GST_PAD (realsink));
   GST_INFO (GST_CAT_PADS, "dumping caps of pad %s:%s", GST_DEBUG_PAD_NAME (realsink));
-  gst_caps_debug (sinkcaps);
+  gst_caps_debug (sinkcaps, "caps of sink pad (pre-reconnect)");
 
   /* first take the intersection of the pad caps */
   intersection = gst_caps_intersect (srccaps, sinkcaps);
@@ -1168,7 +1185,7 @@ gst_pad_try_reconnect_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad, Gs
     }
   }
   GST_DEBUG (GST_CAT_CAPS, "setting filter for connection to:\n");
-  gst_caps_debug (intersection);
+  gst_caps_debug (intersection, "filter for connection");
 
   GST_RPAD_FILTER (realsrc) = intersection; 
   GST_RPAD_FILTER (realsink) = intersection; 
@@ -1204,13 +1221,13 @@ gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad)
   /* calculate the new caps here */
   srccaps = gst_pad_get_caps (GST_PAD (realsrc));
   GST_INFO (GST_CAT_PADS, "dumping caps of pad %s:%s", GST_DEBUG_PAD_NAME (realsrc));
-  gst_caps_debug (srccaps);
+  gst_caps_debug (srccaps, "src caps, awaiting negotiation");
   sinkcaps = gst_pad_get_caps (GST_PAD (realsink));
   GST_INFO (GST_CAT_PADS, "dumping caps of pad %s:%s", GST_DEBUG_PAD_NAME (realsink));
-  gst_caps_debug (sinkcaps);
+  gst_caps_debug (sinkcaps, "sink caps, awaiting negotiation");
   intersection = gst_caps_intersect (srccaps, sinkcaps);
 
-  /* no negotiation is performed it the pads have filtercaps */
+  /* no negotiation is performed if the pads have filtercaps */
   if (intersection) {
     GstPadConnectReturn res;
 

@@ -185,7 +185,6 @@ gst_standard_scheduler_init (GstStandardScheduler *scheduler)
   scheduler->num_elements = 0;
   scheduler->chains = NULL;
   scheduler->num_chains = 0;
-  scheduler->main = cothread_create (NULL, 0, NULL, NULL);
 }
 
 static void
@@ -220,6 +219,19 @@ GstPluginDesc plugin_desc = {
   "gststandardscheduler",
   plugin_init
 };
+
+static inline cothread* sched_create (GstStandardScheduler *scheduler, GstElement *element, cothread_func func)
+{
+  cothread *ret = NULL;
+
+  GST_DEBUG (GST_CAT_COTHREADS, "calling cothread_create (%p, %d, %p, %p)\n", func, 1, element, scheduler->main);
+
+  ret = cothread_create (func, 1, (void**) element, scheduler->main);
+  
+  GST_INFO (GST_CAT_COTHREADS, "created new cothread %p", ret);
+  
+  return ret;
+}
 
 static inline void sched_switch (cothread *to)
 {
@@ -575,7 +587,7 @@ gst_standard_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain
     /* need to set up the cothread now */
     if (wrapper_function != NULL) {
       if (!GST_ELEMENT_THREADSTATE (element)) {
-        GST_ELEMENT_THREADSTATE (element) = cothread_create (wrapper_function, 1, (void **) element, chain->sched->main);
+        GST_ELEMENT_THREADSTATE (element) = sched_create (chain->sched, element, wrapper_function);
         if (GST_ELEMENT_THREADSTATE (element) == NULL) {
           gst_element_error (element, "could not create cothread for \"%s\"", 
                              GST_ELEMENT_NAME (element), NULL);
@@ -900,7 +912,14 @@ gst_standard_scheduler_chain_recursive_add (GstSchedulerChain * chain, GstElemen
 static void
 gst_standard_scheduler_setup (GstScheduler *sched)
 {
-  /* bling blau */
+  GstStandardScheduler *scheduler = GST_STANDARD_SCHEDULER (sched);
+
+  /* initialize the main cothread here. this way we know that we're within the
+     gthread that the sched will be running */
+  if (!scheduler->main)
+    scheduler->main = cothread_create (NULL, 0, NULL, NULL);
+
+  g_return_if_fail (scheduler->main != NULL);
 }
 
 static void

@@ -529,8 +529,7 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
     {
       element = (GstElement *) (endelements == NULL ? conn->src : endelements->data);
     } else {
-      element = gst_elementfactory_create ((GstElementFactory *) plugpath->data, 
-                             gst_spider_unused_elementname (GST_BIN (spider), GST_OBJECT_NAME (plugpath->data)));
+      element = gst_elementfactory_create ((GstElementFactory *) plugpath->data, NULL);
       gst_bin_add (GST_BIN (spider), element);
     }
     /* insert and connect new element */

@@ -494,9 +494,13 @@ gst_props_newv (const gchar *firstname, va_list var_args)
  * gst_props_set:
  * @props: the props to modify
  * @name: the name of the entry to modify
- * @...: More property entries.
+ * @...: The prop entry.
  *
  * Modifies the value of the given entry in the props struct.
+ * For the optional args, use GST_PROPS_FOO, where FOO is INT,
+ * STRING, etc. This macro expands to a variable number of arguments,
+ * hence the lack of precision in the function prototype. No
+ * terminating NULL is necessary.
  *
  * Returns: the new modified property structure.
  */

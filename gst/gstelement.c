@@ -831,7 +831,7 @@ gst_element_get_compatible_pad (GstElement *element, GstPad *pad)
 }
 
 /**
- * gst_element_connect_elements:
+ * gst_element_connect_elements_filtered:
  * @src: the element containing source pad
  * @dest: the element containing destination pad
  * @filtercaps: the caps to use as filter

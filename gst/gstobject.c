@@ -271,8 +271,8 @@ static void
 gst_object_set_name_default (GstObject *object)
 {
   gint count;
-  gchar *name;
-  const gchar *type_name, *subname;
+  gchar *name, *tmp;
+  const gchar *type_name;
   
   type_name = G_OBJECT_TYPE_NAME (object);
 
@@ -286,12 +286,12 @@ gst_object_set_name_default (GstObject *object)
   
   G_UNLOCK (object_name_mutex);
 
-  /* GstFooSink -> sinkN */
-  subname = type_name + strlen (type_name) - 1;
-  while (g_ascii_islower (*subname) && subname > type_name)
-    subname--;
-  name = g_strdup_printf ("%s%d", subname, count);
-  *name = g_ascii_tolower (*name);
+  /* GstFooSink -> foosinkN */
+  if (strncmp (type_name, "Gst", 3) == 0)
+    type_name += 3;
+  tmp = g_strdup_printf ("%s%d", type_name, count);
+  name = g_ascii_strdown (tmp, strlen (tmp));
+  g_free (tmp);
   
   gst_object_set_name (object, name);
   g_free (name);
