@@ -4,6 +4,7 @@ Makefile.in
 *.lo
 *.la
 *.so
+*.pyc
 .libs
 .deps
 gstreamer.c
