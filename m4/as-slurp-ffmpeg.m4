@@ -17,7 +17,7 @@ AC_DEFUN(AS_SLURP_FFMPEG,
   if test ! -d $1; then mkdir -p $1; fi
   cd $1
 
-  if test ! -d ffmpeg; then
+  if test ! -d ffmpeg/CVS; then
     # check out cvs code
     AC_MSG_NOTICE(checking out ffmpeg cvs code from $2 into $1)
     cvs -Q -d:pserver:anonymous@cvs.ffmpeg.sourceforge.net:/cvsroot/ffmpeg co -D $2 ffmpeg || FAILED=yes
@@ -29,6 +29,7 @@ AC_DEFUN(AS_SLURP_FFMPEG,
   fi
   
   # now configure it
+    AC_MSG_NOTICE(configuring ffmpeg cvs code)
   ./configure
 
   # now go back
