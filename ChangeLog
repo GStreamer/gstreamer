@@ -1,3 +1,17 @@
+2005-01-01  Johan Dahlin  <johan@gnome.org>
+
+	* gst/Makefile.am:
+	* gst/gst.override:
+	* gst/gstcaps.override:
+	* gst/gstelement.override:
+	* gst/gstpad-handlers.override:
+	* gst/gstpad.override:
+	* gst/gststructure.override:
+
+	Split out gst.override to a few more files.
+	Rename gstpad-handlers.override to gstpad.override
+	Include more information for some LinkError exceptions
+	
 2004-12-14  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gst-types.defs:
