@@ -89,6 +89,13 @@ gst_scheduler_dispose (GObject *object)
 {
   GstScheduler *sched = GST_SCHEDULER (object);
 
+  /* thse lists should all be NULL */
+  GST_DEBUG (0, "scheduler %p dispose %p %p %p",
+		  object,
+		  sched->clock_providers,
+		  sched->clock_receivers,
+		  sched->schedulers);
+
   gst_object_swap ((GstObject **)&sched->current_clock, NULL);
   gst_object_swap ((GstObject **)&sched->clock, NULL);
 
@@ -378,6 +385,12 @@ gst_scheduler_add_scheduler (GstScheduler *sched, GstScheduler *sched2)
 
   g_return_if_fail (GST_IS_SCHEDULER (sched));
   g_return_if_fail (GST_IS_SCHEDULER (sched2));
+  g_return_if_fail (sched2->parent_sched == NULL);
+
+  GST_DEBUG (0,"gstscheduler: %p add scheduler %p", sched, sched2);
+
+  gst_object_ref (GST_OBJECT (sched2));
+  gst_object_ref (GST_OBJECT (sched));
 
   sched->schedulers = g_list_prepend (sched->schedulers, sched2);
   sched2->parent_sched = sched;
@@ -402,14 +415,20 @@ gst_scheduler_remove_scheduler (GstScheduler *sched, GstScheduler *sched2)
 
   g_return_if_fail (GST_IS_SCHEDULER (sched));
   g_return_if_fail (GST_IS_SCHEDULER (sched2));
+  g_return_if_fail (sched2->parent_sched == sched);
 
-  sched->schedulers = g_list_remove (sched->schedulers, sched2);
-  sched2->parent_sched = NULL;
+  GST_DEBUG (0,"gstscheduler: %p remove scheduler %p", sched, sched2);
 
   sclass = GST_SCHEDULER_GET_CLASS (sched);
 
   if (sclass->remove_scheduler)
     sclass->remove_scheduler (sched, sched2);
+
+  sched->schedulers = g_list_remove (sched->schedulers, sched2);
+  sched2->parent_sched = NULL;
+
+  gst_object_unref (GST_OBJECT (sched2));
+  gst_object_unref (GST_OBJECT (sched));
 }
 
 /**

@@ -200,6 +200,7 @@ void
 gst_object_unref (GstObject *object)
 {
   g_return_if_fail (GST_IS_OBJECT (object));
+  g_return_if_fail (G_OBJECT (object)->ref_count > 0);
 
   GST_DEBUG (GST_CAT_REFCOUNTING, "unref %p '%s' %d->%d", object,
 	     GST_OBJECT_NAME (object),
