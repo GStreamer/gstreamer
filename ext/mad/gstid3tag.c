@@ -468,6 +468,12 @@ gst_mad_id3_to_tag_list(const struct id3_tag *tag)
       utf8 = id3_ucs4_utf8duplicate(ucs4);
       if (utf8 == 0)
 	continue;
+      
+      if (!g_utf8_validate (utf8, -1, NULL)) {
+	g_warning ("converted string is not valid utf-8");
+	free (utf8);
+	continue;
+      }
 
       /* be sure to add non-string tags here */
       switch (gst_tag_get_type (tag_name)) {
