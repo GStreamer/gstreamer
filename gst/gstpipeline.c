@@ -29,6 +29,7 @@
 GstElementDetails gst_pipeline_details = {
   "Pipeline object",
   "Generic/Bin",
+  "LGPL",
   "Complete pipeline object",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

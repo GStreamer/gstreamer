@@ -36,7 +36,7 @@ GstElementDetails gst_thread_details = {
   "LGPL",
   "Container that creates/manages a thread",
   VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>,"
+  "Erik Walthinsen <omega@cse.ogi.edu>, "
   "Benjamin Otte <in7y118@informatik.uni-hamburg.de",
   "(C) 1999-2003",
 };
