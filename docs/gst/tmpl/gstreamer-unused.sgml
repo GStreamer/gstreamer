@@ -6023,16 +6023,6 @@ Query the element for the current mime type
 </para>
 
 
-<!-- ##### SIGNAL GstXML::object-loaded ##### -->
-<para>
-
-</para>
-
-@: 
-@: 
-@:
-
-
 <!-- ##### USER_FUNCTION GstXMLRegistryAddPathList ##### -->
 <para>
 

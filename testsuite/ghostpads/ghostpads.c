@@ -44,7 +44,7 @@ main (gint argc, gchar *argv[])
                                    gst_element_get_pad (identity, "src"),
                                    "src");
 
-  gst_element_link_many (fakesrc, bin, fakesink);
+  gst_element_link_many (fakesrc, bin, fakesink, NULL);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   
   if (!gst_bin_iterate (GST_BIN (pipeline)))

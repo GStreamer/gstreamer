@@ -1,5 +1,10 @@
 2004-02-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* testsuite/ghostpads/ghostpads.c: (main):
+          fix testsuite from segfaulting
+
+2004-02-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* Makefile.am: add release target
 	* configure.ac: bump nano to 1
 	* docs/random/release:
