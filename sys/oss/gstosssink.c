@@ -83,9 +83,6 @@ enum {
   ARG_0,
   ARG_DEVICE,
   ARG_MUTE,
-  ARG_FORMAT,
-  ARG_CHANNELS,
-  ARG_FREQUENCY,
   ARG_FRAGMENT,
   ARG_BUFFER_SIZE,
   ARG_SYNC
@@ -118,46 +115,6 @@ GST_PAD_TEMPLATE_FACTORY (osssink_sink_factory,
       "channels",   GST_PROPS_INT_RANGE (1, 2)
   )
 );
-
-#define GST_TYPE_OSSSINK_CHANNELS (gst_osssink_channels_get_type())
-static GType 
-gst_osssink_channels_get_type(void) {
-  static GType osssink_channels_type = 0;
-  static GEnumValue osssink_channels[] = {
-    {0, "0", "Silence"},
-    {1, "1", "Mono"},
-    {2, "2", "Stereo"},
-    {0, NULL, NULL},
-  };
-  if (!osssink_channels_type) {
-    osssink_channels_type = g_enum_register_static("GstAudiosinkChannels", osssink_channels);
-  }
-  return osssink_channels_type;
-}
-
-#define GST_TYPE_OSSSINK_FORMAT (gst_osssink_format_get_type())
-static GType 
-gst_osssink_format_get_type(void) {
-  static GType osssink_format_type = 0;
-  static GEnumValue osssink_format[] = {
-    {AFMT_MU_LAW,     G_STRINGIFY(AFMT_MU_LAW),    "mulaw"},
-    {AFMT_A_LAW,      G_STRINGIFY(AFMT_A_LAW),     "alaw"},
-    {AFMT_IMA_ADPCM,  G_STRINGIFY(AFMT_IMA_ADPCM), "IMA ADPCM"},
-    {AFMT_U8,         G_STRINGIFY(AFMT_U8),        "Unsigned 8 bits"},
-    {AFMT_S16_LE,     G_STRINGIFY(AFMT_S16_LE),    "Signed 16 bits little endian"},
-    {AFMT_S16_BE,     G_STRINGIFY(AFMT_S16_BE),    "Signed 16 bits big endian"},
-    {AFMT_S8,         G_STRINGIFY(AFMT_S8),        "Signed 8 bits"},
-    {AFMT_U16_LE,     G_STRINGIFY(AFMT_U16_LE),    "Unsigned 16 bits little endian"},
-    {AFMT_U16_BE,     G_STRINGIFY(AFMT_U16_BE),    "Unsigned 16 bits big endian"},
-    {AFMT_MPEG,       G_STRINGIFY(AFMT_MPEG),      "MPEG"},
-    {AFMT_AC3,        G_STRINGIFY(AFMT_AC3),       "AC3"},
-    {0, NULL, NULL},
-  };
-  if (!osssink_format_type) {
-    osssink_format_type = g_enum_register_static("GstAudiosinkFormat", osssink_format);
-  }
-  return osssink_format_type;
-}
 
 static GstElementClass *parent_class = NULL;
 static guint gst_osssink_signals[LAST_SIGNAL] = { 0 };
@@ -229,15 +186,6 @@ gst_osssink_class_init (GstOssSinkClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
     g_param_spec_boolean ("sync", "Sync", "If syncing on timestamps should be enabled",
                           TRUE, G_PARAM_READWRITE)); 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FORMAT,
-    g_param_spec_enum ("format", "Format", "The format the device is configured for",
-                       GST_TYPE_OSSSINK_FORMAT, AFMT_S16_LE, G_PARAM_READWRITE)); 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CHANNELS,
-    g_param_spec_enum ("channels", "Channels", "The number of channels used for playback",
-                       GST_TYPE_OSSSINK_CHANNELS, 2, G_PARAM_READWRITE)); 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREQUENCY,
-    g_param_spec_int ("frequency", "Frequency", "The frequency of the device",
-                      0, 48000, 44100, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAGMENT,
     g_param_spec_int ("fragment", "Fragment", 
 	    	      "The fragment as 0xMMMMSSSS (MMMM = total fragments, 2^SSSS = fragment size)",
@@ -468,10 +416,7 @@ gst_osssink_sync_parms (GstOssSink *osssink)
 
   object = G_OBJECT (osssink);
   g_object_freeze_notify (object);
-  g_object_notify (object, "channels");
-  g_object_notify (object, "frequency");
   g_object_notify (object, "fragment");
-  g_object_notify (object, "format");
   g_object_thaw_notify (object);
 
   osssink->fragment_time = (GST_SECOND * osssink->fragment_size) / osssink->bps;
@@ -804,18 +749,6 @@ gst_osssink_set_property (GObject *object, guint prop_id, const GValue *value, G
       osssink->mute = g_value_get_boolean (value);
       g_object_notify (G_OBJECT (osssink), "mute");
       break;
-    case ARG_FORMAT:
-      osssink->format = g_value_get_enum (value);
-      gst_osssink_sync_parms (osssink);
-      break;
-    case ARG_CHANNELS:
-      osssink->channels = g_value_get_enum (value);
-      gst_osssink_sync_parms (osssink);
-      break;
-    case ARG_FREQUENCY:
-      osssink->frequency = g_value_get_int (value);
-      gst_osssink_sync_parms (osssink);
-      break;
     case ARG_FRAGMENT:
       osssink->fragment = g_value_get_int (value);
       gst_osssink_sync_parms (osssink);
@@ -852,15 +785,6 @@ gst_osssink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
       break;
     case ARG_MUTE:
       g_value_set_boolean (value, osssink->mute);
-      break;
-    case ARG_FORMAT:
-      g_value_set_enum (value, osssink->format);
-      break;
-    case ARG_CHANNELS:
-      g_value_set_enum (value, osssink->channels);
-      break;
-    case ARG_FREQUENCY:
-      g_value_set_int (value, osssink->frequency);
       break;
     case ARG_FRAGMENT:
       g_value_set_int (value, osssink->fragment);
