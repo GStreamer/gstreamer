@@ -202,6 +202,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstsubparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstswitch.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsynaesthesia.so
+%{_libdir}/gstreamer-%{majorminor}/libgstlibvisual.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttagedit.so
 %{_libdir}/gstreamer-%{majorminor}/libgstapetag.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttta.so
@@ -235,6 +236,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgsttheora.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmng.so
 %{_libdir}/gstreamer-%{majorminor}/libgstequalizer.so
+%{_libdir}/gstreamer-%{majorminor}/libgstrfbsrc.so
 
 # gstreamer-plugins with external dependencies but in the main package
 @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
@@ -384,6 +386,7 @@ This package contains dvd plugins for GStreamer, including
 @USE_A52DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsta52dec.so
 @USE_DVDNAV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdnavsrc.so
 @USE_DVDREAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdreadsrc.so
+%{_libdir}/gstreamer-0.8/libgstdvdlpcmdec.so
 
 %package video
 Summary:        Additional video plugins for GStreamer
@@ -409,6 +412,7 @@ This package contains additional video plugins for GStreamer, including
 %defattr(-, root, root, -)
 @USE_AALIB_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaasink.so
 @USE_LIBDV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdec.so
+@USE_DV1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
 @USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
 @USE_DIRAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdirac.so
 @USE_OPENGL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstglimagesink.so
@@ -702,6 +706,12 @@ GStreamer support libraries header files.
 
 
 %changelog
+* Mon Feb 14 2005 Christian Schaller <christian at fluendo dot com>
+- Add vnc plugin 
+
+* Wed Jan 19 2005 Christian Schaller <christian at fluendo dot com>
+- add dv1394 plugin
+
 * Wed Dec 22 2004 Christian Schaller <christian at fluendo dot com>
 - Add -plugins- to plugin names
 
