@@ -142,18 +142,24 @@ EXTRA_DIST = 				\
 	$(DOC_MODULE).types		\
 	$(DOC_MODULE)-sections.txt
 
-DOC_STAMPS=scan-build.stamp tmpl-build.stamp sgml-build.stamp html-build.stamp \
-	   $(srcdir)/tmpl.stamp $(srcdir)/sgml.stamp $(srcdir)/html.stamp
+DOC_STAMPS =				\
+	scan-build.stamp		\
+	tmpl-build.stamp		\
+	sgml-build.stamp		\
+	html-build.stamp		\
+	$(srcdir)/tmpl.stamp		\
+	$(srcdir)/sgml.stamp		\
+	$(srcdir)/html.stamp
 
-SCANOBJ_FILES = 		\
-	$(DOC_MODULE).args 	\
-	$(DOC_MODULE).hierarchy \
-	$(DOC_MODULE).interfaces \
-	$(DOC_MODULE).prerequisites \
-	$(DOC_MODULE)-scan.o	\
+SCANOBJ_FILES =				\
+	$(DOC_MODULE).args		\
+	$(DOC_MODULE).hierarchy		\
+	$(DOC_MODULE).interfaces	\
+	$(DOC_MODULE).prerequisites	\
+	$(DOC_MODULE)-scan.o		\
 	$(DOC_MODULE).signals
 
-CLEANFILES =  $(SCANOBJ_FILES) $(DOC_MODULE)-unused.txt $(DOC_STAMPS)
+CLEANFILES = $(SCANOBJ_FILES) $(DOC_MODULE)-unused.txt $(DOC_STAMPS)
 
 if HAVE_GTK_DOC
 all-local: html-build.stamp
