@@ -429,6 +429,8 @@ plugins/mp3decode/xa/Makefile
 plugins/mp3decode/xing/Makefile
 plugins/mp3decode/mpg123/Makefile
 plugins/mp3decode/parse/Makefile
+plugins/mp3encode/Makefile
+plugins/mp3encode/lame/Makefile
 plugins/mpeg2/Makefile
 plugins/mpeg2/parse/Makefile
 plugins/mpeg2/ac3parse/Makefile

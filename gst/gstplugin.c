@@ -270,6 +270,7 @@ gboolean gst_plugin_load_absolute(gchar *name) {
 GstPlugin *gst_plugin_new(gchar *name) {
   GstPlugin *plugin = (GstPlugin *)g_malloc(sizeof(GstPlugin));
 
+  // FIXME need to make sure the plugin hasn't already loaded
   plugin->name = g_strdup(name);
   plugin->longname = NULL;
   plugin->types = NULL;

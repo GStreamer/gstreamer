@@ -116,8 +116,10 @@ gst_fdsink_chain (GstPad *pad, GstBuffer *buf)
   
   g_return_if_fail (fdsink->fd >= 0);
   
-  if (GST_BUFFER_DATA (buf))
+  if (GST_BUFFER_DATA (buf)) {
+    DEBUG("writing %d bytes to file descriptor %d\n",GST_BUFFER_SIZE (buf), fdsink->fd);
     write (fdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  }
   
   gst_buffer_unref (buf);
 }

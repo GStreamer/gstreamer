@@ -794,7 +794,7 @@ gst_bin_create_plan_func (GstBin *bin)
         gst_bin_create_plan (GST_BIN (element));
 
       } else if (GST_IS_SRC (element)) {
-        DEBUG("adding '%s' as entry point\n",gst_element_get_name (element));
+        DEBUG("adding '%s' as entry point, because it's a source\n",gst_element_get_name (element));
         bin->entries = g_list_prepend (bin->entries,element);
         bin->numentries++;
         cothread_setfunc(element->threadstate,gst_bin_src_wrapper,0,(char **)element);
@@ -859,7 +859,7 @@ GST_DEBUG_PAD_NAME(pad->peer),GST_DEBUG_PAD_NAME(pad),&pad->pullfunc);
         gst_bin_create_plan (GST_BIN (element));	
       }
       if (GST_IS_SRC (element)) {
-        g_print("gstbin: adding '%s' as entry point\n",gst_element_get_name (element));
+        g_print("adding '%s' as entry point, because it's a source\n",gst_element_get_name (element));
         bin->entries = g_list_prepend (bin->entries, element);
         bin->numentries++;
       } else {
