@@ -223,6 +223,8 @@ gst_thread_dispose (GObject * object)
 
   g_assert (GST_STATE (thread) == GST_STATE_NULL);
 
+  GST_CAT_DEBUG (GST_CAT_REFCOUNTING, "GstThread: dispose, freeing locks");
+
   g_mutex_free (thread->lock);
   g_cond_free (thread->cond);
 
@@ -369,12 +371,14 @@ gst_thread_catch (GstThread * thread)
   if (thread == gst_thread_get_current ()) {
     /* we're trying to catch ourself */
     if (!GST_FLAG_IS_SET (thread, GST_THREAD_MUTEX_LOCKED)) {
+      GST_DEBUG_OBJECT (thread, "catching itself, grabbing lock");
       g_mutex_lock (thread->lock);
       GST_FLAG_SET (thread, GST_THREAD_MUTEX_LOCKED);
     }
     GST_DEBUG_OBJECT (thread, "catching itself");
     GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
   } else {
+    GST_DEBUG_OBJECT (thread, "catching thread, grabbing lock");
     /* another thread is trying to catch us */
     g_mutex_lock (thread->lock);
     wait = !GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING);
@@ -555,6 +559,7 @@ gst_thread_main_loop (void *arg)
 {
   GstThread *thread = NULL;
   gboolean status;
+  GstScheduler *sched;
 
   thread = GST_THREAD (arg);
   g_mutex_lock (thread->lock);
@@ -595,7 +600,9 @@ gst_thread_main_loop (void *arg)
 
   /* we need to destroy the scheduler here because it has mapped it's
    * stack into the threads stack space */
-  gst_scheduler_reset (GST_ELEMENT_SCHED (thread));
+  sched = GST_ELEMENT_SCHED (thread);
+  if (sched)
+    gst_scheduler_reset (sched);
 
   /* must do that before releasing the lock - we might get disposed before being done */
   g_signal_emit (G_OBJECT (thread), gst_thread_signals[SHUTDOWN], 0);

@@ -588,7 +588,6 @@ gst_bin_remove (GstBin * bin, GstElement * element)
 
   g_return_if_fail (GST_IS_BIN (bin));
   g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (bin->children != NULL);
 
   bclass = GST_BIN_GET_CLASS (bin);
 
@@ -833,8 +832,7 @@ gst_bin_dispose (GObject * object)
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
-  if (gst_element_get_state (GST_ELEMENT (object)) == GST_STATE_PLAYING)
-    gst_element_set_state (GST_ELEMENT (object), GST_STATE_PAUSED);
+  gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
 
   while (bin->children) {
     gst_bin_remove (bin, GST_ELEMENT (bin->children->data));
