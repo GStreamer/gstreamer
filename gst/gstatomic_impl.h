@@ -383,6 +383,7 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
 
 /***** S/390 *****/
 #elif defined(HAVE_CPU_S390) && defined(__GNUC__)
+typedef struct { volatile int counter; } atomic_t __attribute__ ((aligned (4)));
 
 GST_INLINE_FUNC void 	gst_atomic_int_init 	(GstAtomicInt *aint, gint val) { aint->counter = val; }
 GST_INLINE_FUNC void 	gst_atomic_int_destroy 	(GstAtomicInt *aint) { } 
