@@ -302,12 +302,12 @@ gst_mpeg_parse_change_state (GstElement *element)
   GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (element);
 
   switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_READY_TO_PAUSED:
       if (!mpeg_parse->packetize) {
         mpeg_parse->packetize = gst_mpeg_packetize_new (mpeg_parse->sinkpad, GST_MPEG_PACKETIZE_SYSTEM);
       }
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_PAUSED_TO_READY:
       if (mpeg_parse->packetize) {
         gst_mpeg_packetize_destroy (mpeg_parse->packetize);
         mpeg_parse->packetize = NULL;
@@ -317,9 +317,7 @@ gst_mpeg_parse_change_state (GstElement *element)
       break;
   }
 
-  GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 }
 
 static void
