@@ -1241,6 +1241,8 @@ gst_string_wrap (const char *s)
 
   len = 0;
   t = s;
+  if (!s)
+    return g_strdup ("");
   while (*t) {
     if (GST_ASCII_IS_STRING (*t)) {
       len++;

@@ -1,3 +1,10 @@
+2005-01-28  Edward Hervey  <bilboed@bilboed.com>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstvalue.c: (gst_string_wrap):
+	  Allow NULL-strings as argument (#165365).
+
 2005-01-27  Stephane Wirtel  <stephane.wirtel@belgacom.net>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
