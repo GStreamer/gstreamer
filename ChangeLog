@@ -1,5 +1,13 @@
 2004-01-12  Julien MOUTTE <julien@moutte.net>
 
+	* gst-libs/gst/play/gstplay.c: (gst_play_get_sink_element): When
+	analyzing the pads of an element the bin is mostly in READY state so
+	no caps were negotiated. This helper function needs to work with
+	_get_caps directly then. I was not freeing them though, added that to
+	fix the mem leak.
+
+2004-01-12  Julien MOUTTE <julien@moutte.net>
+
 	* sys/ximage/ximagesink.c: (gst_ximagesink_chain):
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_chain): Fixing the
 	direct put buffers detection. I prefer checking GST_BUFFER_PRIVATE
