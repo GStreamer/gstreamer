@@ -270,18 +270,17 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
       gchar *endptr = NULL;
       GEnumClass *klass = (GEnumClass *) g_type_class_peek (G_PARAM_SPEC_VALUE_TYPE (pspec));
       if (klass == NULL) goto error;
-      if (!(en = g_enum_get_value_by_name (klass, pos)))
-        en = g_enum_get_value_by_nick (klass, pos);
-      if (en) {
-        g_value_set_enum (&v, en->value);
-      } else {
-        gint i = strtol (value, &endptr, 0);
-	if (endptr && *endptr == '\0') {
-          g_value_set_enum (&v, i);
-	} else {
-	  goto error;
-	} 
-      }        
+      if (!(en = g_enum_get_value_by_name (klass, pos))) {
+        if (!(en = g_enum_get_value_by_nick (klass, pos))) {
+          gint i = strtol (pos, &endptr, 0);
+	  if (endptr && *endptr == '\0') {
+	    en = g_enum_get_value (klass, i);
+	  }
+        }
+      }
+      if (!en)
+	goto error;
+      g_value_set_enum (&v, en->value);
       break;
     }
     case G_TYPE_INT:
