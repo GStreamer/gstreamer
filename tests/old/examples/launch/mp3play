@@ -1,0 +1,2 @@
+#/usr/bin/sh
+gstreamer-launch disksrc $1 ! mp3parse ! mpg123 ! audiosink
