@@ -1,3 +1,10 @@
+2004-11-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_change_state):
+	  Only set hardware parameters *after* negotiation. Before
+	  negotiation, it will set ANY and that seems to cause crashes
+	  (see e.g. #151288, #153227).
+
 2004-11-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/alsa/gstalsasink.c: (gst_alsa_sink_get_time):
