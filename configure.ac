@@ -455,8 +455,8 @@ GST_CHECK_FEATURE(HTTP, [http plugins], gsthttpsrc, [
 
 dnl *** Jack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_JACK, true)
-GST_CHECK_FEATURE(JACK, Jack, jack > 0.29.0, [
-  PKG_CHECK_MODULES(JACK, jack, HAVE_JACK="yes", HAVE_JACK="no")
+GST_CHECK_FEATURE(JACK, Jack, jack, [
+  PKG_CHECK_MODULES(JACK, jack >= 0.29.0, HAVE_JACK="yes", HAVE_JACK="no")
   AC_SUBST(JACK_CFLAGS)
   AC_SUBST(JACK_LIBS)
 ])
