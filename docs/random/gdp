@@ -15,8 +15,8 @@ IDEAS
 
 PROTOCOL
 --------
-* 1 byte   GDP major version
-* 1 byte   GDP minor version
+* 1 byte   GDP major version (0)
+* 1 byte   GDP minor version (1)
 * 1 byte   GDP flags
 * 1 byte   GDP data type
            1 for buffer, 2 caps, 65+ for events
@@ -25,11 +25,16 @@ PROTOCOL
 * 8 byte   duration  of buffer
 * 8 byte   offset
 * 8 byte   offset_end
-* 16 byte  future extension (ABI padding)
+* 2 byte   buffer data flags
+* 14 byte  future extension (ABI padding)
 * 2 byte   optional header crc
 * 2 byte   optional payload crc
 * (length) payload
 
 header: 60 bytes
+
+PROTOCOL CHANGELOG
+------------------
+0.1: added two bytes for buffer flags
 
 all numbers use network byte ordering.

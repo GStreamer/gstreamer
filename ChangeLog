@@ -1,3 +1,14 @@
+2004-06-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/random/gdp:
+	* libs/gst/dataprotocol/dataprotocol-test.c: (buffer_test):
+	* libs/gst/dataprotocol/dataprotocol.c:
+	(gst_dp_header_from_buffer), (gst_dp_packet_from_caps),
+	(gst_dp_buffer_from_header):
+	* libs/gst/dataprotocol/dataprotocol.h:
+	* libs/gst/dataprotocol/dp-private.h:
+          rev version to 0.1, add buffer flags and copy them
+
 2004-06-09  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gstbuffer.c (gst_buffer_default_copy): Don't forget to merge
