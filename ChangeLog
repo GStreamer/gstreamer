@@ -1,3 +1,9 @@
+2004-01-02  David Schleef  <ds@schleef.org>
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_fixate),
+	(gst_xvimagesink_sinkconnect), (gst_xvimagesink_init):
+	Add fixate function and a check for bad formats.
+
 2004-01-01  David Schleef  <ds@schleef.org>
 
 	Negotiation fixes:
