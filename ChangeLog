@@ -1,5 +1,9 @@
 2005-02-24  Andy Wingo  <wingo@pobox.com>
 
+	* tests/Makefile.am:
+	* tests/complexity.c: New test, sets up N elements, at each level
+	teeing into M streams per element. Eeeenteresting.
+
 	* tests/mass_elements.gnuplot: gnuplot file for the mass_elements
 	benchmark. Run as gnuplot mass_elements.gnuplot > foo.ps, after
 	running bench-mass_elements.scm.

@@ -8,7 +8,7 @@ LAT = lat
 
 endif
 
-noinst_PROGRAMS = $(LAT) spidey_bench mass_elements
+noinst_PROGRAMS = $(LAT) spidey_bench mass_elements complexity
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS)
 LIBS = $(GST_OBJ_LIBS)
