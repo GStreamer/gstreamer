@@ -1,3 +1,10 @@
+2004-12-06  Arwed v. Merkatz <v.merkatz@gmx.net>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_chain):
+	  set BUFFER_DURATION to correct values (mpeg1 audio frame length is fixed)
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_audio_pad_link):
+	  set default_duration for mpeg1 audio
+
 2004-12-06  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_get_caps), (gst_alsa_close_audio):
