@@ -70,6 +70,7 @@ struct _GstModPlug {
   gint32 length;
   gboolean restart;
   gint64 seek_at;
+  guint64 total_samples;
 
   CSoundFile *mSoundFile;
 };
