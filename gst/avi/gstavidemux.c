@@ -487,6 +487,26 @@ gst_avi_demux_streaminfo (GstAviDemux *avi_demux)
 
 /* video/audio pad/caps stuff */
 
+#ifdef G_HAVE_ISO_VARARGS
+
+#define GST_AVI_VID_CAPS_NEW(name, mimetype, ...)		\
+	(strf != NULL) ?					\
+	GST_CAPS_NEW (name,					\
+		      mimetype,					\
+		      "width",  GST_PROPS_INT (width),		\
+		      "height", GST_PROPS_INT (height),		\
+		      "framerate", GST_PROPS_FLOAT (framerate), \
+		      __VA_ARGS__)				\
+	:							\
+	GST_CAPS_NEW (name,					\
+		      mimetype,					\
+		      "width",  GST_PROPS_INT_RANGE (16, 4096),	\
+		      "height", GST_PROPS_INT_RANGE (16, 4096),	\
+		      "framerate", GST_PROPS_FLOAT_RANGE (0., G_MAXFLOAT), \
+		      __VA_ARGS__)
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 #define GST_AVI_VID_CAPS_NEW(name, mimetype, props...)		\
 	(strf != NULL) ?					\
 	GST_CAPS_NEW (name,					\
@@ -502,6 +522,7 @@ gst_avi_demux_streaminfo (GstAviDemux *avi_demux)
 		      "height", GST_PROPS_INT_RANGE (16, 4096),	\
 		      "framerate", GST_PROPS_FLOAT_RANGE (0., G_MAXFLOAT), \
 		      ##props)
+#endif
 
 static GstCaps *
 gst_avi_demux_video_caps (guint32 codec_fcc,
@@ -761,6 +782,25 @@ gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
   gst_element_add_pad (GST_ELEMENT (avi_demux), srcpad);
 }
 
+#ifdef G_HAVE_ISO_VARARGS
+
+#define GST_AVI_AUD_CAPS_NEW(name, mimetype, ...)			\
+	(strf != NULL) ?						\
+	GST_CAPS_NEW (name,						\
+		      mimetype,						\
+		      "rate",     GST_PROPS_INT (rate),			\
+		      "channels", GST_PROPS_INT (channels),		\
+		      __VA_ARGS__)					\
+	:								\
+	GST_CAPS_NEW (name,						\
+		      mimetype,						\
+		      "rate",     GST_PROPS_INT_RANGE (8000, 96000),	\
+		      "channels", GST_PROPS_INT_RANGE (1, 2),		\
+		      __VA_ARGS__)
+
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 #define GST_AVI_AUD_CAPS_NEW(name, mimetype, props...)			\
 	(strf != NULL) ?						\
 	GST_CAPS_NEW (name,						\
@@ -774,7 +814,7 @@ gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
 		      "rate",     GST_PROPS_INT_RANGE (8000, 96000),	\
 		      "channels", GST_PROPS_INT_RANGE (1, 2),		\
 		      ##props)
-
+#endif
 
 static GstCaps *
 gst_avi_demux_audio_caps (guint16 codec_id,
