@@ -534,8 +534,8 @@ gst_audio_convert_link (GstPad *pad, const GstCaps *caps)
     this->sinkcaps = other_ac_caps;
   }
 
-  GST_DEBUG ("negotiated sink to %" GST_PTR_FORMAT, this->sinkcaps);
-  GST_DEBUG ("negotiated src to %" GST_PTR_FORMAT, this->srccaps);
+  GST_DEBUG ("negotiated pad to %" GST_PTR_FORMAT, caps);
+  GST_DEBUG ("negotiated otherpad to %" GST_PTR_FORMAT, othercaps);
   return GST_PAD_LINK_OK;
 }
 
