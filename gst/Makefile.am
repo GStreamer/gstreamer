@@ -65,8 +65,6 @@ libgst_la_SOURCES =		\
 	gstcaps.c		\
 	gstclock.c		\
 	gstcpu.c		\
-	gstdparam.c		\
-	gstdparammanager.c	\
 	gstelement.c		\
 	gstelementfactory.c	\
 	gstextratypes.c		\
@@ -166,8 +164,6 @@ libgstinclude_HEADERS =		\
 	gstcaps.h		\
 	gstclock.h		\
 	gstcpu.h		\
-	gstdparam.h		\
-	gstdparammanager.h	\
 	gstelement.h		\
 	gstevent.h		\
 	gstextratypes.h		\

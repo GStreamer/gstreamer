@@ -49,8 +49,6 @@
 #include <gst/gstxml.h>
 #include <gst/cothreads.h>
 #include <gst/gstscheduler.h>
-#include <gst/gstdparam.h>
-#include <gst/gstdparammanager.h>
 #include <gst/gsttimecache.h>
 
 #include <gst/gstparse.h>
