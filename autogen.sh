@@ -9,17 +9,56 @@ srcfile=gst/gstobject.h
 	echo
 	echo "You must have autoconf installed to compile $package."
 	echo "Download the appropriate package for your distribution,"
-	echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/"
+	echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/autoconf/"
 	DIE=1
 }
 
 (automake --version) < /dev/null > /dev/null 2>&1 || {
 	echo
 	echo "You must have automake installed to compile $package."
-	echo "Get ftp://ftp.cygnus.com/pub/home/tromey/automake-1.2d.tar.gz"
-	echo "(or a newer version if it is available)"
+	echo "Download the appropriate package for your distribution,"
+	echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/automake/"
 	DIE=1
 }
+automakevermin=`(automake --version|head -n 1|sed 's/^.* //;s/\./ /g;';echo "1 4")|sort -n|head -n 1`
+automakevergood=`(automake --version|head -n 1|sed 's/^.* //;s/\./ /g;';echo "1 4f")|sort -n|head -n 1`
+if test "x$automakevermin" != "x1 4"; then
+# version is less than 1.4, the minimum suitable version
+	echo
+	echo "You must have automake version 1.4 or greater installed."
+	echo "Download the appropriate package for your distribution,"
+	echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/automake/"
+	DIE=1
+else
+if test "x$automakevergood" != "x1 4f"; then
+echo "Checking for patched automake"
+# version is less than 1.4f, the version with the patch applied
+# check that patch is applied
+cat > autogen.patch.tmp <<EOF
+--- 1
++++ 2
+@@ -2383,8 +2383,8 @@
+ 	# to all possible directories, and use it.  If DIST_SUBDIRS is
+ 	# defined, just use it.
+ 	local (\$dist_subdir_name);
+-	if (&variable_defined ('DIST_SUBDIRS')
+-	    || &variable_conditions ('SUBDIRS'))
++	if (&variable_conditions ('SUBDIRS')
++	    || &variable_defined ('DIST_SUBDIRS'))
+ 	{
+ 	    \$dist_subdir_name = 'DIST_SUBDIRS';
+ 	    if (! &variable_defined ('DIST_SUBDIRS'))
+EOF
+	patch -s -f --dry-run `which automake` <autogen.patch.tmp || {
+		echo "Detected automake version 1.4 (or near) without patch."
+		echo "Your version of automake needs a patch applied in order to operate correctly."
+		echo "Read the README file for an explanation."
+		DIE=1
+	}
+rm autogen.patch.tmp
+fi
+fi
+
 
 (libtool --version) < /dev/null > /dev/null 2>&1 || {
 	echo
@@ -72,12 +111,25 @@ fi
 
 libtoolize --copy --force
 aclocal $ACLOCAL_FLAGS || {
+	echo
 	echo "aclocal failed - check that all needed development files are present on system"
 	exit 1
 }
-autoheader
-autoconf
-automake --add-missing
+autoheader || {
+	echo
+	echo "autoheader failed"
+	exit 1
+}
+autoconf || {
+	echo
+	echo "autoconf failed"
+	exit 1
+}
+automake --add-missing || {
+	echo
+	echo "automake failed"
+	exit 1
+}
 
 # now remove the cache, because it can be considered dangerous in this case
 rm -f config.cache
@@ -85,7 +137,11 @@ rm -f config.cache
 # The new configure options for busy application developers (Hadess)
 #./configure --enable-maintainer-mode --enable-debug --enable-debug-verbose 
 
-./configure --enable-maintainer-mode --enable-plugin-srcdir --enable-debug --enable-debug-verbose "$@"
+./configure --enable-maintainer-mode --enable-plugin-srcdir --enable-debug --enable-debug-verbose "$@" || {
+	echo
+	echo "configure failed"
+	exit 1
+}
 
 echo 
 echo "Now type 'make' to compile $package."
