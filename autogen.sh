@@ -13,8 +13,9 @@ then
   cvs co common 
 fi
 
-if test ! -d gst-libs/ext/ffmpeg; 
+if test ! -f gst-libs/ext/ffmpeg/autogen.sh
 then 
+  rm -rf gst-libs/ext/ffmpeg
   echo "+ getting ffmpeg from cvs"
   cvs co mirror-ffmpeg 
 fi
