@@ -97,14 +97,6 @@ gst_info_get_categories () {
   return _gst_info_categories;
 }
 
-const gchar *
-gst_get_category_name (gint category) {
-  if ((category >= 0) && (category < GST_CAT_MAX_CATEGORY))
-    return _gst_info_category_strings[category];
-  else
-    return NULL;
-}
-
 void
 gst_info_enable_category (gint category) {
   _gst_info_categories |= (1 << category);
@@ -113,6 +105,34 @@ gst_info_enable_category (gint category) {
 void
 gst_info_disable_category (gint category) {
   _gst_info_categories &= ~ (1 << category);
+}
+
+void
+gst_debug_set_categories (guint32 categories) {
+  _gst_debug_categories = categories;
+}
+
+guint32
+gst_debug_get_categories () {
+  return _gst_debug_categories;
+}
+
+void
+gst_debug_enable_category (gint category) {
+  _gst_debug_categories |= (1 << category);
+}
+
+void
+gst_debug_disable_category (gint category) {
+  _gst_debug_categories &= ~ (1 << category);
+}
+
+const gchar *
+gst_get_category_name (gint category) {
+  if ((category >= 0) && (category < GST_CAT_MAX_CATEGORY))
+    return _gst_info_category_strings[category];
+  else
+    return NULL;
 }
 
 
@@ -177,13 +197,4 @@ gst_default_error_handler (gchar *file, gchar *function,
   g_on_error_stack_trace (_gst_progname);
 
   exit(1);
-}
-
-gst_info_init (int    *argc,
-	       char ***argv)
-{
-
-  if (argc && argv) {
-    
-  }
 }

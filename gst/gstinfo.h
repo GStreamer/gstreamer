@@ -237,7 +237,14 @@ void		gst_info_set_categories		(guint32 categories);
 guint32		gst_info_get_categories		(void);
 void		gst_info_enable_category	(gint category);
 void		gst_info_disable_category	(gint category);
+
+void		gst_debug_set_categories	(guint32 categories);
+guint32		gst_debug_get_categories	(void);
+void		gst_debug_enable_category	(gint category);
+void		gst_debug_disable_category	(gint category);
+
 const gchar *	gst_get_category_name	(gint category);
+
 
 enum {
   GST_CAT_GST_INIT = 0,		// Library initialization

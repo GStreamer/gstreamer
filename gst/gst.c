@@ -120,8 +120,7 @@ gst_init_check (int     *argc,
           sscanf ((*argv)[i]+16, "%d", &val);
         }
 
-	//FIXME
-	//gst_info_set_categories (val);
+	gst_debug_set_categories (val);
 
 	(*argv)[i] = NULL;
       }
