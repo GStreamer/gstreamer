@@ -261,8 +261,8 @@ sub check_deprecated()
 	if (grep { /GstEventFlags/; } @lines) {
 		print "W: who uses GstEventFlags\n";
 	}
-	if (grep { /gst_type_class_ref/; } @lines) {
-		print "W: gst_type_class_ref should be changed to gst_type_class_peek_parent\n";
+	if (grep { /g_type_class_ref/ } @lines) {
+		print "W: g_type_class_ref should be changed to g_type_class_peek_parent\n";
 	}
 
 }
