@@ -1,3 +1,8 @@
+2004-05-19  Johan Dahlin  <johan@gnome.org>
+
+	* ext/dv/gstdvdec.c (gst_dvdec_quality_get_type): Add proper
+	ending of the array. Fixes gst-inspect segfault on ppc.
+
 2004-05-18  David Schleef  <ds@schleef.org>
 
 	* gst/ffmpegcolorspace/imgconvert.c: (img_convert): Fixes for

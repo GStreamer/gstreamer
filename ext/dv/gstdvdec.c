@@ -73,7 +73,7 @@ const gint qualities[] = {
   DV_QUALITY_AC_2,
   DV_QUALITY_DC | DV_QUALITY_COLOR,
   DV_QUALITY_AC_1 | DV_QUALITY_COLOR,
-  DV_QUALITY_AC_2 | DV_QUALITY_COLOR
+  DV_QUALITY_AC_2 | DV_QUALITY_COLOR,
 };
 
 #define DV_QUALITY_DEFAULT 5
@@ -157,6 +157,7 @@ gst_dvdec_quality_get_type (void)
       {4, "DV_QUALITY_AC_1|DV_QUALITY_COLOUR",
           "Colour, using only the first AC coefficient"},
       {5, "DV_QUALITY_BEST", "Highest quality colour decoding"},
+      {0, NULL, NULL},
     };
 
     qtype = g_enum_register_static ("GstDVDecQualityEnum", values);
