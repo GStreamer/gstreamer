@@ -520,6 +520,13 @@ GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink-Xv, [
   fi
 ])
 
+dnl check for XShm
+translit(dnm, m, l) AM_CONDITIONAL(USE_XSHM, true)
+GST_CHECK_FEATURE(XSHM, [X11 Shared Memory], ximage, [
+  AC_CHECK_HEADER(X11/extensions/XShm.h,
+                  HAVE_XSHM=yes, HAVE_XSHM=no)
+])
+
 dnl Next, check for the optional libraries:
 dnl These are all libraries used in building plug-ins
 dnl ================================================
@@ -1330,6 +1337,7 @@ sys/v4l/Makefile
 sys/v4l2/Makefile
 sys/vcd/Makefile
 sys/xvideo/Makefile
+sys/ximage/Makefile
 sys/glsink/Makefile
 ext/Makefile
 ext/a52dec/Makefile
