@@ -23,7 +23,7 @@
 #include "config.h"
 #endif
 
-#include <gst/mixer/mixer.h>
+#include "mixer.h"
 
 static void 	gst_mixer_class_init	(GstMixerClass *klass);
 
@@ -67,7 +67,7 @@ gst_mixer_class_init (GstMixerClass *klass)
 }
 
 const GList *
-gst_mixer_list_tracks	(GstMixer *mixer)
+gst_mixer_list_tracks (GstMixer *mixer)
 {
   GstMixerClass *klass = GST_MIXER_GET_CLASS (mixer);
 
