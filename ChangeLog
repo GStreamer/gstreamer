@@ -1,3 +1,10 @@
+2004-10-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstplaybin.c: (gen_video_element),
+	(gen_vis_element), (remove_sinks), (setup_sinks):
+	Added vis plugin support, need to configure the vis
+	element to activate it.
+
 2004-10-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_get),
