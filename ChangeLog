@@ -1,6 +1,26 @@
 2005-01-08  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
 
 	* ext/dv/gstdvdec.c:
+	 remove unneeded comment from dvdec
+	  (related to DV 4CC codes in AVI files)
+	  moved them in gstreamer/docs/random/mimetypes
+	* gst/asfdemux/gstasfdemux.c:
+	(gst_asf_demux_process_ext_content_desc):
+	 don't send text tags if they are empty
+	 fix mem leak on error path
+	* gst/ffmpegcolorspace/avcodec.h:
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_caps_to_pixfmt),
+	(gst_ffmpegcsp_avpicture_fill):
+	* gst/ffmpegcolorspace/imgconvert.c: (img_get_alpha_info):
+	* gst/ffmpegcolorspace/imgconvert_template.h:
+	 adds BGR32 and BGRA32 to ffmpegcolorspace
+	  (still bad colors, fixing it on next commit)
+	  helps with dvdec outputing BGR32
+
+2005-01-08  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
+
+	* ext/dv/gstdvdec.c:
 	 Fix audio caps i just broke (missing ',')
 	* gst/matroska/matroska-mux.c: (gst_matroska_mux_get_type),
 	(gst_matroska_mux_reset):

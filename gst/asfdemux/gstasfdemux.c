@@ -656,6 +656,7 @@ IsVBR
   GstTagList *taglist;
   GValue tag_value = { 0 };
   gboolean have_tags = FALSE;
+  guint8 *name = NULL;
 
   GST_INFO ("Object is an extended content description.");
 
@@ -669,7 +670,7 @@ IsVBR
     guint16 name_length;
     guint16 datatype;
     guint16 value_length;
-    guint8 *tmpname, *name;
+    guint8 *tmpname;
     guint8 *tmpvalue, *value;
 
     /* Descriptor Name Length */
@@ -713,7 +714,6 @@ IsVBR
       while (tags_label[j] != NULL) {
         if (!strcmp (name, tags_label[j])) {
           tag = j;
-          have_tags = TRUE;
 
           /* 0000 = UTF-16 String */
           if (datatype == 0) {
@@ -723,12 +723,17 @@ IsVBR
                 NULL);
             value[out] = 0;
 
-            g_value_init (&tag_value, G_TYPE_STRING);
-            g_value_set_string (&tag_value, value);
+            /* get rid of tags with empty value */
+            if (strlen (value)) {
+              have_tags = TRUE;
+              g_value_init (&tag_value, G_TYPE_STRING);
+              g_value_set_string (&tag_value, value);
+            }
           }
 
           /* 0003 = DWORD */
           if (datatype == 3) {
+            have_tags = TRUE;
             g_value_init (&tag_value, G_TYPE_INT);
             g_value_set_int (&tag_value, GUINT32_FROM_LE ((guint32) * value));
           }
@@ -770,6 +775,9 @@ IsVBR
   return TRUE;
 
 fail:
+  if (name) {
+    g_free (name);
+  };
   return FALSE;
 }
 
