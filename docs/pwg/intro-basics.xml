@@ -37,14 +37,16 @@
       A <emphasis>filter</emphasis> is an important type of element that
       processes a stream of data. Producers and consumers of data are called
       <emphasis>source</emphasis> and <emphasis>sink</emphasis> elements,
-      respectively. Elements that link other elements together are called
-      <emphasis>autoplugger</emphasis> elements, and a <emphasis>bin</emphasis>
-      element contains other elements. Bins are often responsible for scheduling
-      the elements that they contain so that data flows smoothly.
+      respectively. <emphasis>Bin</emphasis> elements contain other elements.
+      One type of bin is responsible for scheduling the elements that they
+      contain so that data flows smoothly. Another type of bin, called
+      <emphasis>autoplugger</emphasis> elements, automatically add other
+      elements to the bin and link them together so that they act as a
+      filter between two arbitary stream types.
     </para>
     <para>
       The plugin mechanism is used everywhere in &GStreamer;, even if only the
-      standard package is being used. A few very basic functions reside in the
+      standard packages are being used. A few very basic functions reside in the
       core library, and all others are implemented in plugins. A plugin registry
       is used to store the details of the plugins in an XML file. This way, a
       program using &GStreamer; does not have to load all plugins to determine
@@ -68,10 +70,11 @@
       <emphasis>Pads</emphasis> are used to negotiate links and data flow
       between elements in &GStreamer;. A pad can be viewed as a
       <quote>place</quote> or <quote>port</quote> on an element where
-      links may be made with other elements. Pads have specific data
-      handling capabilities: A pad only knows how to give or receive certain
-      types of data. Links are only allowed when the capabilities of two
-      pads are compatible.
+      links may be made with other elements, and through which data can
+      flow to or from those elements.  Pads have specific data handling
+      capabilities: A pad can restrict the type of data that flows
+      through it.  Links are only allowed between two pads when the
+      allowed data types of the two pads are compatible.
     </para>
     <para>
       An analogy may be helpful here. A pad is similar to a plug or jack on a
@@ -85,7 +88,7 @@
       same purpose as the jacks in the home theater system.
     </para>
     <para>
-      For the moment, all data in &GStreamer; flows one way through a link
+      For the most part, all data in &GStreamer; flows one way through a link
       between elements. Data flows out of one element through one or more
       <emphasis>source pads</emphasis>, and elements accept incoming data through
       one or more <emphasis>sink pads</emphasis>. Source and sink elements have
