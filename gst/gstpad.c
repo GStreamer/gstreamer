@@ -2302,7 +2302,6 @@ gst_pad_pull (GstPad *pad)
 restart:
     if (peer->gethandler) {
       GstBuffer *buf;
-      gboolean active = GST_PAD_IS_ACTIVE (peer);
 
       GST_DEBUG (GST_CAT_DATAFLOW, "calling gethandler %s of peer pad %s:%s",
                  GST_DEBUG_FUNCPTR_NAME (peer->gethandler), 
@@ -2313,12 +2312,6 @@ restart:
       if (buf) {
         if (!gst_probe_dispatcher_dispatch (&peer->probedisp, (GstData **) &buf))
           goto restart;
-
-        if (!GST_IS_EVENT (buf) && !active) {
-          g_warning ("pull on pad %s:%s but it is not active", 
-	         GST_DEBUG_PAD_NAME (peer));
-          return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
-        }
         return buf;
       }
 
