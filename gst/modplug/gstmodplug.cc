@@ -530,7 +530,7 @@ gst_modplug_loop (GstElement *element)
 /*    GstBuffer *buf;*/
        
     modplug->seek_at = -1;
-    modplug->need_discont = FALSE;
+    modplug->need_discont = TRUE;
     modplug->eos = FALSE;
 /*            
     buf = gst_pad_pull (modplug->sinkpad);
@@ -621,29 +621,36 @@ gst_modplug_loop (GstElement *element)
       modplug->seek_at = -1;
     }
         
+    if (modplug->need_discont && GST_PAD_IS_USABLE (modplug->srcpad))
+    {
+      GstEvent *discont;
+      gint64 value;
+      GstFormat format = GST_FORMAT_TIME;
+  
+      if (gst_modplug_src_query (modplug->srcpad, GST_QUERY_POSITION, &format, &value)) {
+	discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, value, GST_FORMAT_UNDEFINED);
+	modplug->timestamp = value;
+      } else {
+	modplug->timestamp = GST_CLOCK_TIME_NONE;
+	discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_UNDEFINED);
+      }
+      gst_pad_push (modplug->srcpad, GST_DATA (discont));        
+      modplug->need_discont= FALSE;
+    }
+	
     if (modplug->mSoundFile->Read (modplug->audiobuffer, modplug->length) != 0)
     {         
       GstBuffer *buffer_out;
-      GstFormat format;
-      gint64 value;
  
-      format = GST_FORMAT_TIME;
-      gst_modplug_src_query (modplug->srcpad, GST_QUERY_POSITION, &format, &value);
-      
-      if (modplug->need_discont && GST_PAD_IS_USABLE (modplug->srcpad))
-      {
-        GstEvent *discont;
-    
-        discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, value, NULL);
-        gst_pad_push (modplug->srcpad, GST_DATA (discont));        
-      
-        modplug->need_discont= FALSE;
-      }
- 	  
       buffer_out = gst_buffer_new ();
       GST_BUFFER_DATA (buffer_out) = (guchar *) g_memdup (modplug->audiobuffer, modplug->length);
       GST_BUFFER_SIZE (buffer_out) = modplug->length;
-      GST_BUFFER_TIMESTAMP (buffer_out) = value;
+      GST_BUFFER_TIMESTAMP (buffer_out) = modplug->timestamp;
+      
+      if (GST_CLOCK_TIME_IS_VALID (modplug->timestamp)) {
+	GST_BUFFER_DURATION (buffer_out) = modplug->length * GST_SECOND / modplug->frequency / modplug->channel / (modplug->_16bit ? 2 : 1) ;
+	modplug->timestamp += GST_BUFFER_DURATION (buffer_out);
+      }
       
       if (GST_PAD_IS_USABLE (modplug->srcpad))
         gst_pad_push (modplug->srcpad, GST_DATA (buffer_out));   

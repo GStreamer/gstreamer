@@ -70,6 +70,7 @@ struct _GstModPlug {
   gboolean eos;
   gint64 seek_at;
   guint64 song_size;
+  guint64 timestamp;
 
   CSoundFile *mSoundFile;
   gboolean opened; /* set to TRUE when mSoundFile is created */
