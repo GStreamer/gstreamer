@@ -1,4 +1,4 @@
-testprogs = seek1 ## autoplug3 ## autoplug4 # autoplug2
+testprogs = seek1 seek2
 
 TESTS = $(testprogs)
 
