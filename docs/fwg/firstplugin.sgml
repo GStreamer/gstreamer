@@ -28,6 +28,7 @@
     <programlisting>
   /* Definition of structure storing data for this element. */
   typedef struct _GstExample GstExample;
+
   struct _GstExample {
     GstElement element;
 
@@ -123,7 +124,7 @@
     </para>
   </sect1>
 	
-  <sect1 id="sect-idfilter-fns">
+  <sect1 id="sect-idfilter-chainfn">
     <title>The chain function</title>
     <para>
     </para>

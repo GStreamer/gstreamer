@@ -20,6 +20,8 @@
 <!ENTITY STATEMANAGE SYSTEM ".sgml">
 
 <!ENTITY CHECKLIST SYSTEM ".sgml">
+
+<!ENTITY GStreamer "<application>GStreamer</application>">
 ]>
 
 <book id="index">
@@ -30,22 +32,22 @@
   <part id="introduction"><title>Introduction</title>
     <partintro>
       <para>
-	<application>GStreamer</application> is a framework for creating
+	&GStreamer; is a framework for creating
 	streaming media applications.  It is extremely powerful and versatile,
 	and this versatility stems in part from its modularity, and its ability
 	to incorporate new modules seamlessly into its framework.
 	This document describes how to extend the capabilities of
-	<application>GStreamer</application> by creating new plugins.
+	&GStreamer; by creating new plugins.
       </para>
       <para>
 	It first describes the concepts required and the ways in which
-	<application>GStreamer</application> can be extended. It then goes
+	&GStreamer; can be extended. It then goes
 	through a worked example of how to write a simple filter (for data
 	processing), and how to test and debug it.  More advanced concepts are
 	then introduced, with worked examples of each.  Next, writing source
 	and sink elements (for performing input and output) is discussed.
 	Finally, checklists of things to be sure to do when extending
-	<application>GStreamer</application> are presented.
+	&GStreamer; are presented.
       </para>
     </partintro>
 
@@ -59,7 +61,7 @@
       <para>
 
 	This section introduces the basic concepts required to understand the
-	issues involved in extending <application>GStreamer</application>
+	issues involved in extending &GStreamer;
 
       </para>
     </partintro>
