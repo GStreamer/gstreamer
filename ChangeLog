@@ -1,3 +1,16 @@
+2004-01-26  David Schleef  <ds@schleef.org>
+
+	reviewed by: <delete if not using a buddy>
+
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gstplugin.sgml:
+	* docs/gst/tmpl/gstreamer-unused.sgml:
+	* docs/gst/tmpl/gstxml.sgml:
+	* gst/gstelement.h:
+	* gst/gstpad.c: (gst_pad_try_set_caps):
+	* gst/gstqueue.c: (gst_queue_chain):
+	* testsuite/caps/Makefile.am:
+
 2004-01-26  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/advanced_types.xml:
