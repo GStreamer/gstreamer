@@ -315,6 +315,8 @@ GstPad*			gst_element_get_compatible_pad	(GstElement *element, GstPad *pad);
 GstPad*			gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, 
 							 GstCaps *filtercaps);
 
+GstPadTemplate*		gst_element_class_get_pad_template	(GstElementClass *element_class, const gchar *name);
+GList*                  gst_element_class_get_pad_template_list (GstElementClass *element_class);
 GstPadTemplate*		gst_element_get_pad_template		(GstElement *element, const gchar *name);
 GList*			gst_element_get_pad_template_list	(GstElement *element);
 GstPadTemplate*		gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *compattempl);

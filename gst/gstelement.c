@@ -1178,12 +1178,16 @@ void
 gst_element_class_add_pad_template (GstElementClass *klass, 
                                     GstPadTemplate *templ)
 {
+  GstPadTemplate *templ_copy;
+
   g_return_if_fail (klass != NULL);
   g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
   g_return_if_fail (templ != NULL);
   g_return_if_fail (GST_IS_PAD_TEMPLATE (templ));
   
-  klass->padtemplates = g_list_append (klass->padtemplates, templ);
+  templ_copy = g_memdup(templ, sizeof(GstPadTemplate));
+
+  klass->padtemplates = g_list_append (klass->padtemplates, templ_copy);
   klass->numpadtemplates++;
 }
 
@@ -1205,10 +1209,62 @@ gst_element_class_set_details (GstElementClass *klass, GstElementDetails *detail
 }
 
 /**
+ * gst_element_class_get_pad_template_list:
+ * @element: a #GstElementClass to get pad templates of.
+ *
+ * Retrieves a list of the pad templates associated with the element.
+ *
+ * Returns: the #GList of padtemplates.
+ */
+GList*
+gst_element_class_get_pad_template_list (GstElementClass *element_class)
+{
+  g_return_val_if_fail (element_class != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT_CLASS (element_class), NULL);
+
+  return element_class->padtemplates;
+}
+
+/**
+ * gst_element_class_get_pad_template:
+ * @element: a #GstElementClass to get the pad template of.
+ * @name: the name of the #GstPadTemplate to get.
+ *
+ * Retrieves a padtemplate from this element with the
+ * given name.
+ *
+ * Returns: the #GstPadTemplate with the given name, or NULL if none was found. 
+ * No unreferencing is necessary.
+ */
+GstPadTemplate*
+gst_element_class_get_pad_template (GstElementClass *element_class, const gchar *name)
+{
+  GList *padlist;
+
+  g_return_val_if_fail (element_class != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT_CLASS (element_class), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  padlist = gst_element_class_get_pad_template_list (element_class);
+
+  while (padlist) {
+    GstPadTemplate *padtempl = (GstPadTemplate*) padlist->data;
+
+    if (strcmp (padtempl->name_template, name) == 0)
+      return padtempl;
+
+    padlist = g_list_next (padlist);
+  }
+
+  return NULL;
+}
+
+/**
  * gst_element_get_pad_template_list:
  * @element: a #GstElement to get pad templates of.
  *
  * Retrieves a list of the pad templates associated with the element.
+ * (FIXME: Should be deprecated in favor of gst_element_class_get_pad_template_list).
  *
  * Returns: the #GList of padtemplates.
  */
@@ -1228,6 +1284,7 @@ gst_element_get_pad_template_list (GstElement *element)
  *
  * Retrieves a padtemplate from this element with the
  * given name.
+ * (FIXME: Should be deprecated in favor of gst_element_class_get_pad_template).
  *
  * Returns: the #GstPadTemplate with the given name, or NULL if none was found. 
  * No unreferencing is necessary.
