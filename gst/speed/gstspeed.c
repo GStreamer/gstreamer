@@ -110,16 +110,18 @@ static GstElementClass *parent_class = NULL;
 //static guint gst_filter_signals[LAST_SIGNAL] = { 0 };
 
 static GstPadConnectReturn
-speed_connect_sink (GstPad *pad, GstCaps *caps)
+speed_connect (GstPad *pad, GstCaps *caps)
 {
   GstSpeed *filter;
+  GstPad *otherpad;
   
   filter = GST_SPEED (gst_pad_get_parent (pad));
   g_return_val_if_fail (filter != NULL, GST_PAD_CONNECT_REFUSED);
   g_return_val_if_fail (GST_IS_SPEED (filter), GST_PAD_CONNECT_REFUSED);
-
+  otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
+  
   if (GST_CAPS_IS_FIXED (caps)) {
-    if (!speed_parse_caps (filter, caps) || !gst_pad_try_set_caps (filter->srcpad, caps))
+    if (!speed_parse_caps (filter, caps) || !gst_pad_try_set_caps (otherpad, caps))
       return GST_PAD_CONNECT_REFUSED;
     
     return GST_PAD_CONNECT_OK;
@@ -219,9 +221,10 @@ static void
 speed_init (GstSpeed *filter)
 {
   filter->sinkpad = gst_pad_new_from_template(speed_sink_factory (),"sink");
-  gst_pad_set_connect_function(filter->sinkpad,speed_connect_sink);
+  gst_pad_set_connect_function(filter->sinkpad,speed_connect);
   gst_pad_set_bufferpool_function (filter->sinkpad, speed_sink_get_bufferpool);
   filter->srcpad = gst_pad_new_from_template(speed_src_factory (),"src");
+  gst_pad_set_connect_function(filter->srcpad,speed_connect);
   
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
   gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);
