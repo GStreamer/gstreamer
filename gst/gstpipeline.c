@@ -279,7 +279,7 @@ gst_pipeline_add_src (GstPipeline *pipeline, GstElement *src)
  * @sink: the sink to add to the pipeline
  *
  * Adds a sink element to the pipeline. This element
- * will be used as a sink for autoplugging
+ * will be used as a sink for autoplugging.
  */
 void 
 gst_pipeline_add_sink (GstPipeline *pipeline, GstElement *sink) 
@@ -523,7 +523,7 @@ gst_pipeline_change_state (GstElement *element)
 
 /**
  * gst_pipeline_iterate:
- * @pipeline: GstPipeline to iterate
+ * @pipeline: #GstPipeline to iterate
  *
  * Cause the pipeline's contents to be run through one full 'iteration'.
  */

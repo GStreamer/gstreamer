@@ -65,7 +65,7 @@ performed by a plugin.
 
 <!-- ##### STRUCT GstType ##### -->
 <para>
-A type
+A type.
 </para>
 
 @id: 
@@ -75,7 +75,7 @@ A type
 
 <!-- ##### STRUCT GstTypeFactory ##### -->
 <para>
-The struct with the typefactory information
+The struct with the typefactory information.
 </para>
 
 @mime: 

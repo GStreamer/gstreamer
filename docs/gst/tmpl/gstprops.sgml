@@ -36,7 +36,7 @@ GstCaps
 
 <!-- ##### MACRO GST_PROPS_LIST ##### -->
 <para>
-Create a list of properties
+Create a list of properties.
 </para>
 
 @a...: the list of GstProps
@@ -44,7 +44,7 @@ Create a list of properties
 
 <!-- ##### MACRO GST_PROPS_INT ##### -->
 <para>
-Create an integer property
+Create an integer property.
 </para>
 
 @a: the integer property
@@ -52,7 +52,7 @@ Create an integer property
 
 <!-- ##### MACRO GST_PROPS_INT_RANGE ##### -->
 <para>
-Create an integer range property
+Create an integer range property.
 </para>
 
 @a: the min value for the range
@@ -61,7 +61,7 @@ Create an integer range property
 
 <!-- ##### MACRO GST_PROPS_FOURCC ##### -->
 <para>
-Construct a fourcc property out of four bytes
+Construct a fourcc property out of four bytes.
 </para>
 
 @a: first byte
@@ -72,7 +72,7 @@ Construct a fourcc property out of four bytes
 
 <!-- ##### MACRO GST_PROPS_FOURCC_INT ##### -->
 <para>
-Create a fourcc property out of an integer value
+Create a fourcc property out of an integer value.
 </para>
 
 @a: the integer value
@@ -80,7 +80,7 @@ Create a fourcc property out of an integer value
 
 <!-- ##### MACRO GST_PROPS_BOOLEAN ##### -->
 <para>
-Create a boolean property
+Create a boolean property.
 </para>
 
 @a: the boolean property

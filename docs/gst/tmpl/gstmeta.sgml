@@ -109,7 +109,7 @@ it, is there?
 
 <!-- ##### MACRO GST_META_FLAGS ##### -->
 <para>
-Retrieve the flags of the given meta information
+Retrieve the flags of the given meta information.
 </para>
 
 @meta: the meta information
@@ -117,7 +117,7 @@ Retrieve the flags of the given meta information
 
 <!-- ##### MACRO GST_META_FLAG_IS_SET ##### -->
 <para>
-Check if a given flag is set
+Check if a given flag is set.
 </para>
 
 @meta: the meta data to test
@@ -126,7 +126,7 @@ Check if a given flag is set
 
 <!-- ##### MACRO GST_META_FLAG_SET ##### -->
 <para>
-Set a flag in the meta data
+Set a flag in the meta data.
 </para>
 
 @meta: the meta data
@@ -135,7 +135,7 @@ Set a flag in the meta data
 
 <!-- ##### MACRO GST_META_FLAG_UNSET ##### -->
 <para>
-Clear a flag in the meta data
+Clear a flag in the meta data.
 </para>
 
 @meta: the meta data
@@ -144,7 +144,7 @@ Clear a flag in the meta data
 
 <!-- ##### ENUM GstMetaFlags ##### -->
 <para>
-Flags indicating properties about the meta data
+Flags indicating properties about the meta data.
 </para>
 
 @GST_META_FREEABLE: the meta data can be freed
@@ -170,7 +170,7 @@ Flags indicating properties about the meta data
 
 <!-- ##### MACRO gst_meta_new ##### -->
 <para>
-Create new meta data
+Create new meta data.
 </para>
 
 @type: the type of the meta data to create

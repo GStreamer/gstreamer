@@ -91,7 +91,7 @@ gst_buffer_pool_set_destroy_function (GstBufferPool *pool,
  * gst_buffer_pool_destroy:
  * @pool: the pool to destroy
  *
- * frees the memory for this bufferpool
+ * Frees the memory for this bufferpool.
  */
 void 
 gst_buffer_pool_destroy (GstBufferPool *pool) 
@@ -105,7 +105,7 @@ gst_buffer_pool_destroy (GstBufferPool *pool)
  * gst_buffer_pool_new_buffer:
  * @pool: the pool to create the buffer from
  *
- * uses the given pool to create a new buffer.
+ * Uses the given pool to create a new buffer.
  *
  * Returns: The new buffer
  */

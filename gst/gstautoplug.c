@@ -200,7 +200,7 @@ gst_autoplug_caps_list (GList *srccaps, GList *sinkcaps)
  * @srcpad: the source pad
  * @sinkpad: the sink pad
  *
- * Perform autoplugging between the two given pads
+ * Perform autoplugging between the two given pads.
  *
  * Returns: a list of elementfactories that can connect
  * the two pads

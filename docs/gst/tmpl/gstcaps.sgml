@@ -20,7 +20,7 @@ a mime-type and a set of properties.
 
 </para>
 
-@name: 
+@name: the name of the capability, for the application
 @id: the typeid of the capability
 @properties: the properties of the capability
 

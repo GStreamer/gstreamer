@@ -20,7 +20,7 @@ to be dealt with in the separate thread.
 
 <!-- ##### ENUM GstThreadState ##### -->
 <para>
-thread flags
+Thread flags:
 </para>
 
 @GST_THREAD_CREATE: The thread is being created.
@@ -42,10 +42,4 @@ thread flags
 @name: 
 @Returns: 
 
-
-<!-- ##### ARG GstThread:create_thread ##### -->
-<para>
-TRUE if the thread should be created.
-
-</para>
 

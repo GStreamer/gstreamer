@@ -244,7 +244,7 @@ void gst_buffer_destroy (GstBuffer *buffer)
  * gst_buffer_ref:
  * @buffer: the GstBuffer to reference
  *
- * increment the refcount of this buffer
+ * Increment the refcount of this buffer.
  */
 void 
 gst_buffer_ref (GstBuffer *buffer) 
@@ -269,7 +269,7 @@ gst_buffer_ref (GstBuffer *buffer)
  * @buffer: the GstBuffer to reference
  * @count: a number
  *
- * increment the refcount of this buffer with count
+ * Increment the refcount of this buffer by the given number.
  */
 void 
 gst_buffer_ref_by_count (GstBuffer *buffer, int count) 
@@ -292,7 +292,7 @@ gst_buffer_ref_by_count (GstBuffer *buffer, int count)
  * gst_buffer_unref:
  * @buffer: the GstBuffer to unref
  *
- * decrement the refcount of this buffer. If the refcount is
+ * Decrement the refcount of this buffer. If the refcount is
  * zero, the buffer will be destroyed.
  */
 void 
@@ -333,7 +333,7 @@ gst_buffer_unref (GstBuffer *buffer)
  * @buffer: the GstBuffer to add the metadata to
  * @meta: the metadata to add to this buffer
  *
- * add the meta data to the buffer
+ * Add the meta data to the buffer.
  */
 void 
 gst_buffer_add_meta (GstBuffer *buffer, GstMeta *meta) 
@@ -349,7 +349,7 @@ gst_buffer_add_meta (GstBuffer *buffer, GstMeta *meta)
  * gst_buffer_get_metas:
  * @buffer: the GstBuffer to get the metadata from
  *
- * get the metadatas from the buffer
+ * Get the metadatas from the buffer.
  *
  * Returns: a GSList of metadata
  */
@@ -365,7 +365,7 @@ gst_buffer_get_metas (GstBuffer *buffer)
  * gst_buffer_get_first_meta:
  * @buffer: the GstBuffer to get the metadata from
  *
- * get the first metadata from the buffer
+ * Get the first metadata from the buffer.
  *
  * Returns: the first metadata from the buffer
  */
@@ -384,7 +384,7 @@ gst_buffer_get_first_meta (GstBuffer *buffer)
  * @buffer: the GstBuffer to remove the metadata from
  * @meta: the metadata to remove
  *
- * remove the given metadata from the buffer
+ * Remove the given metadata from the buffer.
  */
 void 
 gst_buffer_remove_meta (GstBuffer *buffer, GstMeta *meta) 

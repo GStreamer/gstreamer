@@ -385,7 +385,7 @@ gst_bin_real_destroy (GtkObject *object)
  * @bin: #Gstbin to search
  * @name: the element name to search for
  *
- * get the element with the given name from this bin
+ * Get the element with the given name from this bin.
  *
  * Returns: the element with the given name
  */
@@ -422,7 +422,7 @@ gst_bin_get_by_name (GstBin *bin,
  * gst_bin_get_list:
  * @bin: #Gstbin to get the list from
  *
- * get the list of elements in this bin
+ * Get the list of elements in this bin.
  *
  * Returns: a GList of elements
  */
@@ -503,7 +503,7 @@ gst_bin_use_cothreads (GstBin *bin,
  * gst_bin_iterate:
  * @bin: #Gstbin to iterate
  *
- * iterates over the elements in this bin
+ * Iterates over the elements in this bin.
  */
 void 
 gst_bin_iterate (GstBin *bin) 
@@ -524,7 +524,7 @@ gst_bin_iterate (GstBin *bin)
  * gst_bin_create_plan:
  * @bin: #GstBin to create the plan for
  *
- * let the bin figure out how to handle the plugins in it.
+ * Let the bin figure out how to handle its children.
  */
 void 
 gst_bin_create_plan (GstBin *bin) 
@@ -541,7 +541,7 @@ gst_bin_create_plan (GstBin *bin)
  * gst_bin_schedule:
  * @bin: #GstBin to schedule
  *
- * let the bin figure out how to handle the plugins in it.
+ * Let the bin figure out how to handle its children.
  */
 void 
 gst_bin_schedule (GstBin *bin) 

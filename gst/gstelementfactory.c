@@ -224,7 +224,7 @@ gst_elementfactory_add_padtemplate (GstElementFactory *factory,
  * @factory: factory to query
  * @caps: the caps list to check
  *
- * Checks if the factory can source the given capability list
+ * Checks if the factory can source the given capability list.
  *
  * Returns: true if it can src the capabilities
  */
@@ -257,7 +257,7 @@ gst_elementfactory_can_src_caps_list (GstElementFactory *factory,
  * @factory: factory to query
  * @caps: the caps list to check
  *
- * Checks if the factory can sink the given capability list
+ * Checks if the factory can sink the given capability list.
  *
  * Returns: true if it can sink the capabilities
  */
@@ -290,7 +290,7 @@ gst_elementfactory_can_sink_caps_list (GstElementFactory *factory,
  * @factory: factory to query
  * @caps: the caps to check
  *
- * Checks if the factory can src the given capability
+ * Checks if the factory can src the given capability.
  *
  * Returns: true if it can sink the capability
  */
@@ -315,7 +315,7 @@ gst_elementfactory_can_src_caps (GstElementFactory *factory,
  * @factory: factory to query
  * @caps: the caps to check
  *
- * Checks if the factory can sink the given capability
+ * Checks if the factory can sink the given capability.
  *
  * Returns: true if it can sink the capability
  */
@@ -340,7 +340,7 @@ gst_elementfactory_can_sink_caps (GstElementFactory *factory,
  * @factory: factory to save
  * @parent: the parent xmlNodePtr 
  *
- * Saves the factory into an XML tree
+ * Saves the factory into an XML tree.
  * 
  * Returns: the new xmlNodePtr
  */
@@ -379,7 +379,7 @@ gst_elementfactory_save_thyself (GstElementFactory *factory,
  * gst_elementfactory_load_thyself:
  * @parent: the parent xmlNodePtr 
  *
- * Creates a new factory from an xmlNodePtr
+ * Creates a new factory from an xmlNodePtr.
  * 
  * Returns: the new factory
  */

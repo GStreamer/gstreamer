@@ -192,7 +192,7 @@ gst_thread_get_arg (GtkObject *object,
  * gst_thread_new:
  * @name: the name of the thread
  *
- * Create a new thrad with the given name
+ * Create a new thread with the given name.
  *
  * Returns: The new thread
  */

@@ -220,7 +220,7 @@ gst_pad_new_from_template (GstPadTemplate *temp,
  * gst_pad_get_direction:
  * @pad: the Pad to get the direction from
  *
- * get the direction of the pad
+ * Get the direction of the pad.
  *
  * Returns: the direction of the pad
  */
@@ -238,7 +238,7 @@ gst_pad_get_direction (GstPad *pad)
  * @pad: the pad to set the name of
  * @name: the name of the pad
  *
- * set the name of a pad
+ * Set the name of a pad.
  */
 void 
 gst_pad_set_name (GstPad *pad, 
@@ -257,7 +257,7 @@ gst_pad_set_name (GstPad *pad,
  * gst_pad_get_name:
  * @pad: the pad to get the name of
  *
- * get the name of a pad
+ * Get the name of a pad.
  *
  * Returns: the name of the pad, don't free.
  */
@@ -275,7 +275,7 @@ gst_pad_get_name (GstPad *pad)
  * @pad: the pad to set the chain function for
  * @chain: the chain function
  *
- * Set the given chain function for the pad
+ * Set the given chain function for the pad.
  */
 void gst_pad_set_chain_function (GstPad *pad,
 		                 GstPadChainFunction chain) 
@@ -291,7 +291,7 @@ void gst_pad_set_chain_function (GstPad *pad,
  * @pad: the pad to set the get function for
  * @get: the get function
  *
- * Set the given get function for the pad
+ * Set the given get function for the pad.
  */
 void 
 gst_pad_set_get_function (GstPad *pad,
@@ -312,7 +312,7 @@ gst_pad_set_get_function (GstPad *pad,
  * @pad: the pad to set the getregion function for
  * @getregion: the getregion function
  *
- * Set the given getregion function for the pad
+ * Set the given getregion function for the pad.
  */
 void 
 gst_pad_set_getregion_function (GstPad *pad,
@@ -331,7 +331,7 @@ gst_pad_set_getregion_function (GstPad *pad,
  * @pad: the pad to set the qos function for
  * @qos: the qos function
  *
- * Set the given qos function for the pad
+ * Set the given qos function for the pad.
  */
 void 
 gst_pad_set_qos_function (GstPad *pad,
@@ -348,7 +348,7 @@ gst_pad_set_qos_function (GstPad *pad,
  * @pad: the pad to set the eos function for
  * @eos: the eos function
  *
- * Set the given EOS function for the pad
+ * Set the given EOS function for the pad.
  */
 void 
 gst_pad_set_eos_function (GstPad *pad,
@@ -377,7 +377,7 @@ gst_pad_push_func(GstPad *pad, GstBuffer *buf)
  * gst_pad_chain:
  * @pad: the pad to chain
  *
- * call the chain function of the given pad
+ * Call the chain function of the given pad.
  */
 void 
 gst_pad_chain (GstPad *pad) 
@@ -397,7 +397,7 @@ gst_pad_chain (GstPad *pad)
  * @pad: the pad to handle the QoS message
  * @qos_message: the QoS message to handle
  *
- * pass the qos message downstream
+ * Pass the qos message downstream.
  */
 void 
 gst_pad_handle_qos(GstPad *pad,
@@ -434,7 +434,7 @@ gst_pad_handle_qos(GstPad *pad,
  * @srcpad: the source pad to disconnect
  * @sinkpad: the sink pad to disconnect
  *
- * disconnects the source pad from the sink pad
+ * Disconnects the source pad from the sink pad.
  */
 void 
 gst_pad_disconnect (GstPad *srcpad,
@@ -464,7 +464,7 @@ gst_pad_disconnect (GstPad *srcpad,
  * @srcpad: the source pad to connect
  * @sinkpad: the sink pad to connect
  *
- * connects the source pad to the sink pad
+ * Connects the source pad to the sink pad.
  */
 void 
 gst_pad_connect (GstPad *srcpad,
@@ -521,7 +521,7 @@ gst_pad_connect (GstPad *srcpad,
  * @pad: the pad to set the parent 
  * @parent: the object to set the parent to
  *
- * sets the parent object of a pad.
+ * Sets the parent object of a pad.
  */
 void 
 gst_pad_set_parent (GstPad *pad,
@@ -544,7 +544,7 @@ gst_pad_set_parent (GstPad *pad,
  * @pad: the pad to set the ghost parent 
  * @parent: the object to set the ghost parent to
  *
- * add a ghost parent object to a pad.
+ * Add a ghost parent object to a pad.
  */
 void 
 gst_pad_add_ghost_parent (GstPad *pad,
@@ -564,7 +564,7 @@ gst_pad_add_ghost_parent (GstPad *pad,
  * @pad: the pad to remove the ghost parent 
  * @parent: the object to remove the ghost parent from
  *
- * remove a ghost parent object from a pad.
+ * Remove a ghost parent object from a pad.
  */
 void 
 gst_pad_remove_ghost_parent (GstPad *pad,
@@ -582,7 +582,7 @@ gst_pad_remove_ghost_parent (GstPad *pad,
  * gst_pad_get_parent:
  * @pad: the pad to get the parent from
  *
- * get the parent object of this pad
+ * Get the parent object of this pad.
  *
  * Returns: the parent object
  */
@@ -599,9 +599,9 @@ gst_pad_get_parent (GstPad *pad)
  * gst_pad_get_ghost_parents:
  * @pad: the pad to get the ghost parents from
  *
- * get the ghost parents of this pad
+ * Get the ghost parents of this pad.
  *
- * Returns: a list of ghost parent objects
+ * Returns: a GList of ghost parent objects
  */
 GList*
 gst_pad_get_ghost_parents (GstPad *pad) 
@@ -617,7 +617,7 @@ gst_pad_get_ghost_parents (GstPad *pad)
  * @pad: the pad to set the caps to
  * @caps: the capslist to attach to this pad 
  *
- * set the capabilities of this pad
+ * Set the capabilities of this pad.
  */
 void 
 gst_pad_set_caps_list (GstPad *pad, 
@@ -633,7 +633,7 @@ gst_pad_set_caps_list (GstPad *pad,
  * gst_pad_get_caps_list:
  * @pad: the pad to get the capabilities from
  *
- * get the capabilities of this pad
+ * Get the capabilities of this pad.
  *
  * Returns: a list of capabilities of this pad
  */
@@ -651,7 +651,7 @@ gst_pad_get_caps_list (GstPad *pad)
  * @pad: the pad to get the capabilities from
  * @name: the name of the capability to get
  *
- * get the capabilities  with the given name from this pad
+ * Get the capabilities  with the given name from this pad.
  *
  * Returns: a capability or NULL if not found
  */
@@ -682,9 +682,9 @@ gst_pad_get_caps_by_name (GstPad *pad, gchar *name)
  * @srcpad: the srcpad to check
  * @sinkpad: the sinkpad to check against
  *
- * check if two pads have compatible capabilities
+ * Check if two pads have compatible capabilities.
  *
- * Returns: TRUE if they are compatible ot the capabilities
+ * Returns: TRUE if they are compatible or the capabilities
  * could not be checked
  */
 gboolean  
@@ -714,7 +714,7 @@ gst_pad_check_compatibility (GstPad *srcpad, GstPad *sinkpad)
  * gst_pad_get_peer:
  * @pad: the pad to get the peer from
  *
- * Get the peer pad of this pad
+ * Get the peer pad of this pad.
  *
  * Returns: the peer pad
  */
@@ -828,7 +828,7 @@ gst_pad_save_thyself (GstPad *pad,
  * @bin: the bin
  * @parent: the parent XML node to save the description in
  *
- * Saves the ghost pad into an xml representation
+ * Saves the ghost pad into an xml representation.
  *
  * Returns: the xml representation of the pad
  */
@@ -897,7 +897,7 @@ GstBuffer *gst_pad_pullregion(GstPad *pad,gulong offset,gulong size) {
  * gst_padtemplate_new:
  * @factory: the padfactory to use
  *
- * creates a new padtemplate from the factory
+ * Creates a new padtemplate from the factory.
  *
  * Returns: the new padtemplate
  */
@@ -941,7 +941,7 @@ gst_padtemplate_new (GstPadFactory *factory)
  * @presence: the presence of the pad
  * @caps: a list of capabilities for the template
  *
- * creates a new padtemplate from the given arguments
+ * Creates a new padtemplate from the given arguments.
  *
  * Returns: the new padtemplate
  */
@@ -968,7 +968,7 @@ gst_padtemplate_create (gchar *name_template,
  * @pad: the padtemplate to save
  * @parent: the parent XML tree
  *
- * saves the padtemplate into XML
+ * Saves the padtemplate into XML.
  *
  * Returns: the new XML tree
  */
@@ -999,7 +999,7 @@ gst_padtemplate_save_thyself (GstPadTemplate *pad, xmlNodePtr parent)
  * gst_padtemplate_load_thyself:
  * @parent: the source XML tree
  *
- * loads a padtemplate from the XML tree
+ * Loads a padtemplate from the XML tree.
  *
  * Returns: the new padtemplate
  */
@@ -1083,7 +1083,7 @@ gst_pad_eos_func(GstPad *pad)
  * gst_pad_set_eos:
  * @pad: the pad to set to eos
  *
- * sets the given pad to the  eos state
+ * Sets the given pad to the EOS state.
  *
  * Returns: TRUE if it succeeded
  */

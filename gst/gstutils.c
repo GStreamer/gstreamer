@@ -28,7 +28,7 @@
  * @object: the object to query
  * @argname: the name of the argument
  *
- * retrieves a property of an object as an integer
+ * Retrieves a property of an object as an integer.
  *
  * Returns: the property of the object
  */
@@ -45,7 +45,7 @@ gint gst_util_get_int_arg(GtkObject *object,guchar *argname) {
  * @object: the object to query
  * @argname: the name of the argument
  *
- * retrieves a property of an object as a boolean
+ * Retrieves a property of an object as a boolean.
  *
  * Returns: the property of the object
  */
@@ -62,7 +62,7 @@ gint gst_util_get_bool_arg(GtkObject *object,guchar *argname) {
  * @object: the object to query
  * @argname: the name of the argument
  *
- * retrieves a property of an object as a long
+ * Retrieves a property of an object as a long.
  *
  * Returns: the property of the object
  */
@@ -79,7 +79,7 @@ glong gst_util_get_long_arg(GtkObject *object,guchar *argname) {
  * @object: the object to query
  * @argname: the name of the argument
  *
- * retrieves a property of an object as a float
+ * Retrieves a property of an object as a float.
  *
  * Returns: the property of the object
  */
@@ -96,7 +96,7 @@ gfloat gst_util_get_float_arg(GtkObject *object,guchar *argname) {
  * @object: the object to query
  * @argname: the name of the argument
  *
- * retrieves a property of an object as a double
+ * Retrieves a property of an object as a double.
  *
  * Returns: the property of the object
  */
@@ -113,7 +113,7 @@ gdouble gst_util_get_double_arg(GtkObject *object,guchar *argname) {
  * @object: the object to query
  * @argname: the name of the argument
  *
- * retrieves a property of an object as a string
+ * Retrieves a property of an object as a string.
  *
  * Returns: the property of the object
  */
@@ -130,7 +130,7 @@ guchar *gst_util_get_string_arg(GtkObject *object,guchar *argname) {
  * @object: the object to query
  * @argname: the name of the argument
  *
- * retrieves a property of an object as a pointer
+ * Retrieves a property of an object as a pointer.
  *
  * Returns: the property of the object
  */
@@ -147,7 +147,7 @@ gpointer gst_util_get_pointer_arg(GtkObject *object,guchar *argname) {
  * @object: the object to query
  * @argname: the name of the argument
  *
- * retrieves a property of an object as a widget
+ * Retrieves a property of an object as a widget.
  *
  * Returns: the property of the object
  */
@@ -164,8 +164,7 @@ GtkWidget *gst_util_get_widget_arg(GtkObject *object,guchar *argname) {
  * @mem: a pointer to the memory to dump
  * @size: the size of the memory block to dump
  *
- * dumps the memory block into a hex representation. usefull
- * for debugging.
+ * Dumps the memory block into a hex representation. Useful for debugging.
  */
 void gst_util_dump_mem(guchar *mem, guint size) {
   guint i, j;

@@ -15,8 +15,3 @@ buffers from its output.
 
 </para>
 
-<!-- ##### ARG GstPipefilter:command ##### -->
-<para>
-Sets the command to be executed.
-</para>
-

@@ -23,7 +23,7 @@ of data out of their src element.
 
 <!-- ##### MACRO COTHREAD_STACKSIZE ##### -->
 <para>
-The default stack size of a cothread
+The default stack size of a cothread.
 </para>
 
 
@@ -89,7 +89,7 @@ it.
 
 <!-- ##### MACRO COTHREAD_STARTED ##### -->
 <para>
-Indicates the cothread is started
+Indicates the cothread is started.
 </para>
 
 

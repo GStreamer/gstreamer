@@ -595,7 +595,7 @@ static gchar *_gst_element_type_names[] = {
  * @element: GstElement to save
  * @parent: the xml parent node
  *
- * saves the element 
+ * Saves the element as part of the given XML structure
  *
  * Returns: the new xml node
  */
@@ -707,7 +707,7 @@ gst_element_save_thyself (GstElement *element,
  * @elements: a hashtable to store the elements in. This is used
  *    to resolve inter element dependecies during the loading.
  *
- * load the element based on the XML description
+ * Load the element from the XML description
  *
  * Returns: the new element
  */
@@ -907,8 +907,7 @@ gst_element_set_loop_function(GstElement *element,
  * gst_element_signal_eos:
  * @element: element to trigger the eos signal of
  * 
- * singals the eos signal to indicate that the end of the stream
- * is reached.
+ * Throws the eos signal to indicate that the end of the stream is reached.
  */
 void
 gst_element_signal_eos (GstElement *element)

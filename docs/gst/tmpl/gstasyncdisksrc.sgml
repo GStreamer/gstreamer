@@ -32,23 +32,3 @@ the offset.
 @GST_ASYNCDISKSRC_OPEN: 
 @GST_ASYNCDISKSRC_FLAG_LAST: 
 
-<!-- ##### ARG GstAsyncDiskSrc:location ##### -->
-<para>
-Specify the location of the file to read.
-</para>
-
-<!-- ##### ARG GstAsyncDiskSrc:bytesperread ##### -->
-<para>
-Specify how many bytes to read at a time.
-</para>
-
-<!-- ##### ARG GstAsyncDiskSrc:offset ##### -->
-<para>
-Specify the current offset in the file.
-</para>
-
-<!-- ##### ARG GstAsyncDiskSrc:size ##### -->
-<para>
-
-</para>
-

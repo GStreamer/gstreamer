@@ -33,23 +33,3 @@ with seeking capabilities use a <classname>GstAsynDiskSrc</classname> instead.
 @GST_DISKSRC_OPEN: 
 @GST_DISKSRC_FLAG_LAST: 
 
-<!-- ##### ARG GstDiskSrc:location ##### -->
-<para>
-Specify the location of the file to read.
-</para>
-
-<!-- ##### ARG GstDiskSrc:bytesperread ##### -->
-<para>
-Specify how many bytes to read at a time.
-</para>
-
-<!-- ##### ARG GstDiskSrc:offset ##### -->
-<para>
-Get the current offset in the file.
-</para>
-
-<!-- ##### ARG GstDiskSrc:size ##### -->
-<para>
-
-</para>
-

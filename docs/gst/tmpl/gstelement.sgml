@@ -55,7 +55,7 @@ can return after a state change.
 
 <!-- ##### MACRO GST_STATE ##### -->
 <para>
-This macro returns the entire state of the element.
+This macro returns the current state of the element.
 </para>
 
 @obj: Element to return state for.
@@ -71,58 +71,57 @@ This macro returns the currently pending state of the element.
 
 <!-- ##### MACRO GST_STATE_TRANSITION ##### -->
 <para>
-Returns the state transition this object is going through
+Returns the state transition this object is going through.
 </para>
 
-@obj: the Element to return the tate transition for
+@obj: the Element to return the state transition for
 
 
 <!-- ##### MACRO GST_STATE_NULL_TO_READY ##### -->
 <para>
-The Element is going from the NULL state to the READY state
+The Element is going from the NULL state to the READY state.
 </para>
 
 
 
 <!-- ##### MACRO GST_STATE_READY_TO_PLAYING ##### -->
 <para>
-The Element is going from the READY state to the PLAYING state
+The Element is going from the READY state to the PLAYING state.
 </para>
 
 
 
 <!-- ##### MACRO GST_STATE_PLAYING_TO_PAUSED ##### -->
 <para>
-The Element is going from the PLAYING state to the PAUSED state
+The Element is going from the PLAYING state to the PAUSED state.
 </para>
 
 
 
 <!-- ##### MACRO GST_STATE_PAUSED_TO_PLAYING ##### -->
 <para>
-The Element is going from the PAUSED state to the PLAYING state
+The Element is going from the PAUSED state to the PLAYING state.
 </para>
 
 
 
 <!-- ##### MACRO GST_STATE_PLAYING_TO_READY ##### -->
 <para>
-The Element is going from the PLAYING state to the READY state
+The Element is going from the PLAYING state to the READY state.
 </para>
 
 
 
 <!-- ##### MACRO GST_STATE_READY_TO_NULL ##### -->
 <para>
-The Element is going from the READY state to the NULL state
+The Element is going from the READY state to the NULL state.
 </para>
 
 
 
 <!-- ##### ENUM GstElementFlags ##### -->
 <para>
-This enum defines the standard flags that an element
-may have.
+This enum defines the standard flags that an element may have.
 </para>
 
 @GST_ELEMENT_COMPLEX: 
@@ -136,7 +135,7 @@ may have.
 
 <!-- ##### MACRO GST_ELEMENT_IS_THREAD_SUGGESTED ##### -->
 <para>
-Queries whether the Element should be placed in a thread
+Queries whether the Element should be placed in a thread.
 </para>
 
 @obj: The element to query
@@ -144,7 +143,7 @@ Queries whether the Element should be placed in a thread
 
 <!-- ##### MACRO GST_ELEMENT_IS_COTHREAD_STOPPING ##### -->
 <para>
-Queries whether the cothread holding this element needs to be stopped
+Queries whether the cothread holding this element needs to be stopped.
 </para>
 
 @obj: The element to query
@@ -511,45 +510,4 @@ circumstances.
 @parent: 
 @Returns: 
 
-
-<!-- ##### SIGNAL GstElement::state-change ##### -->
-<para>
-Is trigered whenever the state of an element changes
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: the new state of the object
-
-<!-- ##### SIGNAL GstElement::new-pad ##### -->
-<para>
-Is trigered whenever a new pad is added to an element
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: the new pad that was added
-
-<!-- ##### SIGNAL GstElement::new-ghost-pad ##### -->
-<para>
-
-Is trigered whenever a new ghost pad is added to an element
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: the new ghost pad that was added
-
-<!-- ##### SIGNAL GstElement::error ##### -->
-<para>
-Is trigered whenever an error occured
-
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: the error message
-
-<!-- ##### SIGNAL GstElement::eos ##### -->
-<para>
-
-</para>
-
-@gstelement: the object which received the signal.
 

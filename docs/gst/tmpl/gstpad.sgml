@@ -18,7 +18,7 @@ connections.
 
 <!-- ##### MACRO GST_PAD_CONNECTED ##### -->
 <para>
-is this pad connected
+Is this pad connected.
 </para>
 
 @pad: the pad to check
@@ -26,7 +26,7 @@ is this pad connected
 
 <!-- ##### MACRO GST_PAD_CAN_PULL ##### -->
 <para>
-can this pad be used to pull a buffer
+Can this pad be used to pull a buffer.
 </para>
 
 @pad: the pad to check
@@ -53,7 +53,7 @@ The function that will be called when pulling a buffer.
 </para>
 
 @pad: the pad to get a buffer from
-@Returns: a GstBuffer
+@Returns: a #GstBuffer
 
 
 <!-- ##### USER_FUNCTION GstPadGetRegionFunction ##### -->
@@ -64,12 +64,12 @@ The function that will be called when pulling a region buffer.
 @pad: the pad to get a buffer from
 @offset: the offset of the region to get
 @size: the size of the region to get
-@Returns: a GstBuffer
+@Returns: a #GstBuffer
 
 
 <!-- ##### USER_FUNCTION GstPadQoSFunction ##### -->
 <para>
-the function that will be called when a QoS message is sent.
+The function that will be called when a QoS message is sent.
 </para>
 
 @pad: the pad that sent the QoS message
@@ -78,11 +78,11 @@ the function that will be called when a QoS message is sent.
 
 <!-- ##### USER_FUNCTION GstPadEOSFunction ##### -->
 <para>
-
+The function that will be called in an EOS case.
 </para>
 
-@pad: 
-@Returns: 
+@pad: the pad that needs to be set to EOS state
+@Returns: TRUE if EOS was successful, FALSE otherwise
 
 
 <!-- ##### USER_FUNCTION GstPadPushFunction ##### -->
@@ -117,7 +117,7 @@ The function that will be called when pulling a region buffer.
 
 <!-- ##### ENUM GstPadDirection ##### -->
 <para>
-The direction this pad is
+The direction this pad is.
 </para>
 
 @GST_PAD_UNKNOWN: direction is unknown
@@ -126,7 +126,7 @@ The direction this pad is
 
 <!-- ##### ENUM GstPadFlags ##### -->
 <para>
-Flags for the pad
+Flags for the pad.
 </para>
 
 @GST_PAD_DISABLED: the pad is disabled
@@ -145,7 +145,7 @@ Flags for the pad
 
 <!-- ##### MACRO gst_pad_destroy ##### -->
 <para>
-Destroy the pad
+Destroy the pad.
 </para>
 
 @pad: the pad to destroy
@@ -449,20 +449,20 @@ Destroy the pad
 
 <!-- ##### TYPEDEF GstPadFactoryEntry ##### -->
 <para>
-Defines an entry for a padfactory
+Defines an entry for a padfactory.
 </para>
 
 
 <!-- ##### TYPEDEF GstPadFactory[] ##### -->
 <para>
-The padfactory
+The padfactory.
 </para>
 
 
 <!-- ##### MACRO GST_PAD_FACTORY_SOMETIMES ##### -->
 <para>
 Indicate that this pad will become available depending
-on the media type. Use this in the factory definition
+on the media type. Use this in the factory definition.
 </para>
 
 
@@ -470,7 +470,7 @@ on the media type. Use this in the factory definition
 <!-- ##### MACRO GST_PAD_FACTORY_ALWAYS ##### -->
 <para>
 Indicate that this pad will always be available.
-Use this in the factory definition
+Use this in the factory definition.
 </para>
 
 
@@ -491,7 +491,7 @@ Indicates a srcpad for the padfactory.
 
 <!-- ##### MACRO GST_PAD_FACTORY_CAPS ##### -->
 <para>
-Starts the declaration of a the capabilities for this padtemplate
+Starts the declaration of a the capabilities for this padtemplate.
 </para>
 
 @a...: a capability factory
@@ -499,7 +499,7 @@ Starts the declaration of a the capabilities for this padtemplate
 
 <!-- ##### ENUM GstPadPresence ##### -->
 <para>
-Indicates when this pad will become available
+Indicates when this pad will become available.
 </para>
 
 @GST_PAD_ALWAYS: the pad is always available
@@ -555,9 +555,4 @@ Indicates when this pad will become available
 @parent: 
 @Returns: 
 
-
-<!-- ##### ARG GstPad:active ##### -->
-<para>
-Indicates this pad is active
-</para>
 

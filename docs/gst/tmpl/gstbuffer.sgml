@@ -21,7 +21,7 @@ pointers to arbitrary metadata.
 
 <!-- ##### MACRO GST_BUFFER_FLAGS ##### -->
 <para>
-get the flags from this buffer
+Get the flags from this buffer.
 </para>
 
 @buf: GstBuffer to retrieve the flags from
@@ -29,7 +29,7 @@ get the flags from this buffer
 
 <!-- ##### MACRO GST_BUFFER_FLAG_IS_SET ##### -->
 <para>
-gives the status of a given flag
+Gives the status of a given flag.
 </para>
 
 @buf: GstBuffer to query
@@ -38,7 +38,7 @@ gives the status of a given flag
 
 <!-- ##### MACRO GST_BUFFER_FLAG_SET ##### -->
 <para>
-set a flag in a buffer
+Set a flag in a buffer.
 </para>
 
 @buf: GstBuffer to query
@@ -47,7 +47,7 @@ set a flag in a buffer
 
 <!-- ##### MACRO GST_BUFFER_FLAG_UNSET ##### -->
 <para>
-clear a flag in a buffer
+Clear a flag in a buffer.
 </para>
 
 @buf: GstBuffer to modify
@@ -64,7 +64,7 @@ Retrieves the type id of the data in the buffer.
 
 <!-- ##### MACRO GST_BUFFER_DATA ##### -->
 <para>
-retrieves a pointer to the data element of this buffer
+Retrieves a pointer to the data element of this buffer
 </para>
 
 @buf: GstBuffer
@@ -72,7 +72,7 @@ retrieves a pointer to the data element of this buffer
 
 <!-- ##### MACRO GST_BUFFER_SIZE ##### -->
 <para>
-get the size of the data in this buffer
+Get the size of the data in this buffer.
 </para>
 
 @buf: GstBuffer
@@ -80,7 +80,7 @@ get the size of the data in this buffer
 
 <!-- ##### MACRO GST_BUFFER_OFFSET ##### -->
 <para>
-
+Get the offset in the source file of this buffer.
 </para>
 
 @buf: GstBuffer
@@ -96,7 +96,7 @@ get the size of the data in this buffer
 
 <!-- ##### MACRO GST_BUFFER_TIMESTAMP ##### -->
 <para>
-get the timestamp for this buffer
+Get the timestamp for this buffer.
 </para>
 
 @buf: GstBuffer
@@ -124,7 +124,7 @@ FALSE if it can't get it immediately.
 
 <!-- ##### MACRO GST_BUFFER_UNLOCK ##### -->
 <para>
-this macro releases a lock on the object.
+This macro releases a lock on the object.
 
 </para>
 
@@ -133,6 +133,8 @@ this macro releases a lock on the object.
 
 <!-- ##### ENUM GstBufferFlags ##### -->
 <para>
+
+FIXME this is strange.
 
 <informaltable pgwide=1 frame="none" role="enum">
 <tgroup cols="2"><colspec colwidth="2*"><colspec colwidth="8*">

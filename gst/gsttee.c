@@ -96,7 +96,7 @@ static void gst_tee_init(GstTee *tee) {
  * gst_tee_new:
  * @name: the name of the new tee
  *
- * create a new tee element
+ * Create a new tee element.
  *
  * Returns: the new tee element
  */
@@ -110,7 +110,7 @@ GstElement *gst_tee_new(gchar *name) {
  * gst_tee_new_pad:
  * @tee: the tee to create the new pad on
  *
- * create a new pad on a given tee
+ * Create a new pad on a given tee.
  *
  * Returns: the name of the new pad
  */
@@ -134,7 +134,7 @@ gchar *gst_tee_new_pad(GstTee *tee) {
  * @pad: the pad to follow
  * @buf: the buffer to pass
  *
- * chain a buffer on a pad
+ * Chain a buffer on a pad.
  */
 void gst_tee_chain(GstPad *pad,GstBuffer *buf) {
   GstTee *tee;

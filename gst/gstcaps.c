@@ -57,7 +57,7 @@ get_type_for_mime (const gchar *mime)
  * @name: the name of this capability
  * @mime: the mime type to attach to the capability
  *
- * create a new capability with the given mime type
+ * Create a new capability with the given mime type.
  *
  * Returns: a new capability
  */
@@ -82,8 +82,7 @@ gst_caps_new (const gchar *name, const gchar *mime)
  * @mime: the mime type to attach to the capability
  * @props: the properties for this capability
  *
- * create a new capability with the given mime type
- * and the given properties
+ * Create a new capability with the given mime type and the given properties.
  *
  * Returns: a new capability
  */
@@ -104,7 +103,7 @@ gst_caps_new_with_props (const gchar *name, const gchar *mime, GstProps *props)
  *
  * Register the factory. 
  *
- * Returns: The registered capability
+ * Returns: the registered capability
  */
 GstCaps*
 gst_caps_register (GstCapsFactory *factory)
@@ -119,9 +118,9 @@ gst_caps_register (GstCapsFactory *factory)
  * @factory: the factory to register
  * @counter: count how many entries were consumed
  *
- * Register the factory. 
+ * Register the factory.
  *
- * Returns: The registered capability
+ * Returns: the registered capability
  */
 GstCaps*
 gst_caps_register_count (GstCapsFactory *factory, guint *counter)
@@ -160,9 +159,9 @@ gst_caps_register_count (GstCapsFactory *factory, guint *counter)
  * gst_caps_get_name:
  * @caps: the caps to get the name from
  *
- * get the name of a GstCaps structure
+ * Get the name of a GstCaps structure.
  *
- * Returns: The name of the caps
+ * Returns: the name of the caps
  */
 const gchar*    
 gst_caps_get_name (GstCaps *caps)
@@ -177,7 +176,7 @@ gst_caps_get_name (GstCaps *caps)
  * @caps: the caps to set the name to 
  * @name: the name to set
  *
- * set the name of a caps
+ * Set the name of a caps.
  */
 void
 gst_caps_set_name (GstCaps *caps, const gchar *name)
@@ -194,9 +193,9 @@ gst_caps_set_name (GstCaps *caps, const gchar *name)
  * gst_caps_get_mime:
  * @caps: the caps to get the mime type from
  *
- * get the mime type of the caps as a string
+ * Get the mime type of the caps as a string.
  *
- * Returns: The mime type of the caps
+ * Returns: the mime type of the caps
  */
 const gchar*    
 gst_caps_get_mime (GstCaps *caps)
@@ -218,7 +217,7 @@ gst_caps_get_mime (GstCaps *caps)
  * @caps: the caps to set the mime type to
  * @mime: the mime type to attach to the caps
  *
- * set the mime type of the caps as a string
+ * Set the mime type of the caps as a string.
  */
 void
 gst_caps_set_mime (GstCaps *caps, const gchar *mime)
@@ -233,9 +232,9 @@ gst_caps_set_mime (GstCaps *caps, const gchar *mime)
  * gst_caps_get_type_id:
  * @caps: the caps to get the type id from
  *
- * get the type id of the caps
+ * Get the type id of the caps.
  *
- * Returns: The type id of the caps
+ * Returns: the type id of the caps
  */
 guint16         
 gst_caps_get_type_id (GstCaps *caps)
@@ -250,7 +249,7 @@ gst_caps_get_type_id (GstCaps *caps)
  * @caps: the caps to set the type id to
  * @typeid: the type id to set 
  *
- * set the type id of the caps
+ * Set the type id of the caps.
  */
 void
 gst_caps_set_type_id (GstCaps *caps, guint16 typeid)
@@ -265,9 +264,9 @@ gst_caps_set_type_id (GstCaps *caps, guint16 typeid)
  * @caps: the caps to attach the properties to
  * @props: the properties to attach
  *
- * set the properties to the given caps
+ * Set the properties to the given caps.
  *
- * Returns: The new caps structure
+ * Returns: the new caps structure
  */
 GstCaps*
 gst_caps_set_props (GstCaps *caps, GstProps *props)
@@ -285,9 +284,9 @@ gst_caps_set_props (GstCaps *caps, GstProps *props)
  * gst_caps_get_props:
  * @caps: the caps to get the properties from
  *
- * get the properties of the given caps
+ * Get the properties of the given caps.
  *
- * Returns: The properties of the caps
+ * Returns: the properties of the caps
  */
 GstProps*
 gst_caps_get_props (GstCaps *caps)
@@ -302,9 +301,9 @@ gst_caps_get_props (GstCaps *caps)
  * @fromcaps: a capabilty
  * @tocaps: a capabilty
  *
- * Checks whether two capabilities are compatible
+ * Checks whether two capabilities are compatible.
  *
- * Returns: true if compatible, false otherwise
+ * Returns: TRUE if compatible, FALSE otherwise
  */
 gboolean
 gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
@@ -338,9 +337,9 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
  * @fromcaps: a capabilty
  * @tocaps: a capabilty
  *
- * Checks whether two capability lists are compatible
+ * Checks whether two capability lists are compatible.
  *
- * Returns: true if compatible, false otherwise
+ * Returns: TRUE if compatible, FALSE otherwise
  */
 gboolean
 gst_caps_list_check_compatibility (GList *fromcaps, GList *tocaps)
@@ -367,7 +366,7 @@ gst_caps_list_check_compatibility (GList *fromcaps, GList *tocaps)
  * @caps: a capabilty to save
  * @parent: the parent XML node pointer
  *
- * save the capability into an XML representation
+ * Save the capability into an XML representation.
  *
  * Returns: a new XML node pointer
  */
@@ -393,7 +392,7 @@ gst_caps_save_thyself (GstCaps *caps, xmlNodePtr parent)
  * gst_caps_load_thyself:
  * @parent: the parent XML node pointer
  *
- * load a new caps from the XML representation
+ * Load a new caps from the XML representation.
  *
  * Returns: a new capability
  */

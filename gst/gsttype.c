@@ -56,7 +56,7 @@ _gst_type_initialize (void)
  * gst_type_register:
  * @factory: the type factory to register
  *
- * register a new type factory to the system
+ * Register a new type factory to the system.
  *
  * Returns: the new type id
  */
@@ -138,7 +138,7 @@ guint16 gst_type_find_by_mime_func (const gchar *mime)
  * gst_type_find_by_mime:
  * @mime: the mime type to find
  *
- * find the type id of a given mime type
+ * Find the type id of a given mime type.
  *
  * Returns: the type id
  */
@@ -152,7 +152,7 @@ gst_type_find_by_mime (const gchar *mime)
  * gst_type_find_by_ext:
  * @ext: the extension to find
  *
- * find the type id of a given extention
+ * Find the type id of a given extention.
  *
  * Returns: the type id
  */
@@ -168,7 +168,7 @@ gst_type_find_by_ext (const gchar *ext)
  * gst_type_find_by_id:
  * @id: the type id to lookup
  *
- * find the type of a given type id
+ * Find the type of a given type id.
  *
  * Returns: the type
  */
@@ -191,7 +191,7 @@ gst_type_find_by_id (guint16 id)
 /**
  * gst_type_get_list:
  *
- * return a list of all registered types
+ * Return a list of all registered types.
  *
  * Returns: a list of GstTypes
  */
@@ -206,7 +206,7 @@ gst_type_get_list (void)
  * @factory: the type factory to save
  * @parent: the parent node to save into
  *
- * save a typefactory into an XML representation
+ * Save a typefactory into an XML representation.
  *
  * Returns: the new xmlNodePtr
  */
@@ -258,7 +258,7 @@ gst_type_typefind_dummy (GstBuffer *buffer, gpointer priv)
  * gst_typefactory_load_thyself:
  * @parent: the parent node to load from
  *
- * load a typefactory from an XML representation
+ * Load a typefactory from an XML representation.
  *
  * Returns: the new typefactory
  */

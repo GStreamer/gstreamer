@@ -12,9 +12,11 @@ including threading, as well as provide simple interfaces to common
 functions, like 'Play'.
 </para>
 
-<para>the pipeline also has the capability to autoplug. This feature
+<para>
+The pipeline also has the capability to autoplug. This feature
 allows you to only define the input/output plugins and let the
-pipeline figure out what plugins to use.</para>
+pipeline figure out what plugins to use.
+</para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
@@ -65,10 +67,10 @@ pipeline figure out what plugins to use.</para>
 
 <!-- ##### MACRO gst_pipeline_destroy ##### -->
 <para>
-destroys the pipeline
+Destroys the pipeline.
 </para>
 
-@pipeline: GstPipeline to destroy
+@pipeline: #GstPipeline to destroy
 
 
 <!-- ##### FUNCTION gst_pipeline_iterate ##### -->

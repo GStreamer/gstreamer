@@ -2,7 +2,7 @@
 GstAutoplug
 
 <!-- ##### SECTION Short_Description ##### -->
-Provide automatic element selection
+Provide automatic element selection.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -17,14 +17,14 @@ to convert a certain GstCaps to another one.
 
 <!-- ##### MACRO GST_AUTOPLUG_MAX_COST ##### -->
 <para>
-The max cost of a certain connection
+The maximum cost of a certain connection.
 </para>
 
 
 
 <!-- ##### USER_FUNCTION GstAutoplugCostFunction ##### -->
 <para>
-Calculate the cost between two elements
+Calculate the cost between two elements.
 </para>
 
 @src: the source element
@@ -35,7 +35,7 @@ Calculate the cost between two elements
 
 <!-- ##### USER_FUNCTION GstAutoplugListFunction ##### -->
 <para>
-Get a list of all elements. These elements will be used in autoplugging
+Get a list of all elements. These elements will be used in autoplugging.
 </para>
 
 @data: user data

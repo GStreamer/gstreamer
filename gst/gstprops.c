@@ -103,7 +103,7 @@ props_compare_func (gconstpointer a,
  *
  * Register the factory. 
  *
- * Returns: The new property created from the factory
+ * Returns: the new property created from the factory
  */
 GstProps *
 gst_props_register (GstPropsFactory factory)
@@ -120,7 +120,7 @@ gst_props_register (GstPropsFactory factory)
  *
  * Register the factory. 
  *
- * Returns: The new property created from the factory
+ * Returns: the new property created from the factory
  */
 GstProps *
 gst_props_register_count (GstPropsFactory factory, guint *counter)
@@ -200,9 +200,9 @@ end:
  * @entry: the property entries for the property
  * @...: the property entries for the property
  *
- * Create a new property from the list of entries
+ * Create a new property from the list of entries.
  *
- * Returns: The new property created from the list of entries
+ * Returns: the new property created from the list of entries
  */
 GstProps *
 gst_props_new (GstPropsFactoryEntry entry, ...)
@@ -277,9 +277,9 @@ gst_props_new (GstPropsFactoryEntry entry, ...)
  * @props: the property to merge into
  * @tomerge: the property to merge 
  *
- * Merge the properties of tomerge into props
+ * Merge the properties of tomerge into props.
  *
- * Returns: The new merged property 
+ * Returns: the new merged property 
  */
 GstProps*
 gst_props_merge (GstProps *props, GstProps *tomerge)
@@ -405,9 +405,9 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
  * @fromprops: a property
  * @toprops: a property
  *
- * Checks whether two capabilities are compatible
+ * Checks whether two capabilities are compatible.
  *
- * Returns: true if compatible, false otherwise
+ * Returns: TRUE if compatible, FALSE otherwise
  */
 gboolean
 gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
@@ -505,7 +505,7 @@ gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
  * @props: a property to save
  * @parent: the parent XML tree
  *
- * saves the property into an XML representation
+ * Saves the property into an XML representation.
  *
  * Returns: the new XML tree
  */
@@ -574,7 +574,7 @@ gst_props_load_thyself_func (xmlNodePtr field)
  * gst_props_load_thyself:
  * @parent: the XML tree to load from
  *
- * creates a new property out of an XML tree
+ * Creates a new property out of an XML tree.
  *
  * Returns: the new property
  */
