@@ -78,6 +78,8 @@ static void                     gst_spider_identity_src_loop		(GstSpiderIdentity
 static void                     gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident);
 static void                     gst_spider_identity_sink_loop_emptycache (GstSpiderIdentity *ident);
 
+static gboolean 		gst_spider_identity_handle_src_event 	(GstPad *pad, GstEvent *event);
+
 /* set/get functions */
 static void			gst_spider_identity_set_caps		(GstSpiderIdentity *identity, GstCaps *caps);
 
@@ -151,6 +153,7 @@ gst_spider_identity_init (GstSpiderIdentity *ident)
   gst_element_add_pad (GST_ELEMENT (ident), ident->src);
   gst_pad_set_connect_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_connect));
   gst_pad_set_getcaps_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_getcaps));
+  gst_pad_set_event_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_handle_src_event));
 
   /* variables */
   ident->plugged = FALSE;
@@ -294,6 +297,7 @@ gst_spider_identity_request_new_pad  (GstElement *element, GstPadTemplate *templ
       gst_element_add_pad (GST_ELEMENT (ident), ident->src);
       gst_pad_set_connect_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_connect));
       gst_pad_set_getcaps_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_getcaps));
+      gst_pad_set_event_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_handle_src_event));
       return ident->src;
     default:
       break;
@@ -534,5 +538,33 @@ gst_spider_identity_sink_loop_emptycache (GstSpiderIdentity *ident)
   }  
 }
 
+static gboolean
+gst_spider_identity_handle_src_event (GstPad *pad, GstEvent *event)
+{
+  gboolean res = TRUE;
+  GstSpiderIdentity *ident;
+
+  GST_DEBUG (0, "spider_identity src_event\n");
+
+  ident = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH:
+    case GST_EVENT_SEEK:
+      /* see if there's something cached */
+      if (ident->cache_start && ident->cache_start->data) {
+        GST_DEBUG (0, "spider_identity seek in cache\n");
+	/* FIXME we need to find the right position in the cache, make sure we 
+	 * push from that offset and send out a discont event on the 
+	 * next buffer */
+	return TRUE;
+      }
+    default:
+      gst_pad_event_default (pad, event);
+      break;
+  }
+
+  return res;
+}
 
 
