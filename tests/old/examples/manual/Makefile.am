@@ -36,4 +36,4 @@ EXTRA_DIST = extract.pl
 # triggers a rebuild of all examples
 #%.c:
 dynamic.c gnome.c helloworld.c helloworld2.c queue.c threads.c xml-mp3.c: $(top_srcdir)/docs/manual/*.xml
-	$(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/*.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/*.xml
