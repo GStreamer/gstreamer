@@ -782,7 +782,7 @@ gst_lame_chain (GstPad * pad, GstData * _data)
         } else {
           g_assert_not_reached ();
         }
-        //      gst_pad_event_default (pad, GST_EVENT (buf));
+        gst_pad_event_default (pad, GST_EVENT (buf));
         break;
       default:
         gst_pad_event_default (pad, GST_EVENT (buf));
