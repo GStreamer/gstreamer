@@ -1,3 +1,17 @@
+2004-11-08  Wim Taymans  <wim@fluendo.com>
+
+	* gst/ffmpegcolorspace/avcodec.h:
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_caps_to_pixfmt),
+	(gst_ffmpegcsp_avpicture_fill):
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_caps_remove_format_info):
+	* gst/ffmpegcolorspace/imgconvert.c: (avpicture_get_size),
+	(shrink12), (img_get_alpha_info), (deinterlace_line),
+	(deinterlace_line_inplace):
+	* gst/ffmpegcolorspace/imgconvert_template.h:
+	Added AYUV colorspace and handle RGBA a bit more respectful.
+
 2004-11-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_push):
