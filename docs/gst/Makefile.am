@@ -82,11 +82,12 @@ sgml/gstreamer-doc.bottom: $(tmpl_sources)
 gstreamer-decl.txt:
 	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers=""
 
+# The LD env-var below is a nasty hack to make this work on versions of
+# gtkdoc-scanobj which don't understand libtool
 scanobj: $(srcdir)/$(DOC_MODULE).types
-	rm gstreamer-scan.o; ln -s gstreamer-scan.lo gstreamer-scan.o
 	cd ../../gst/;$(MAKE) libgst.la
 	cd ../../gst/elements/;$(MAKE) libgstelements.la
-	# The LD env-var below is a nasty hack to make this work on versions of gtkdoc-scanobj which don't understand libtool
+	rm gstreamer-scan.o; ln -s gstreamer-scan.lo gstreamer-scan.o
 	env CC="$(LIBTOOL) $(CC)" LD="cp gstreamer-scan.lo gstreamer-scan.o;$(LIBTOOL) $(CC)" CFLAGS="$(LIBGST_CFLAGS) $(GLIB_CFLAGS) $(XML_CFLAGS) -I../../" LDFLAGS="$(GST_LIBS)"\
 	gtkdoc-scanobj --module=$(DOC_MODULE) 
 	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR)

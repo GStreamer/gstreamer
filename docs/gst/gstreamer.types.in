@@ -1,8 +1,6 @@
 #include <gtk/gtk.h>
 #include <gst/gst.h>
 
-#include <libs/colorspace/gstcolorspace.h>
-
 gst_object_get_type
 gst_xml_get_type
 gst_element_get_type
