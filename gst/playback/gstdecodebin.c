@@ -523,7 +523,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
         }
       }
       /* make sure we catch unlink signals */
-      sig = g_signal_connect (G_OBJECT (pad), "unlinked",
+      sig = g_signal_connect (G_OBJECT (GST_PAD_REALIZE (pad)), "unlinked",
           G_CALLBACK (unlinked), decode_bin);
       /* keep a ref to the signal id so that we can disconnect the signal callback */
       g_object_set_data (G_OBJECT (pad), "unlinked_id", GINT_TO_POINTER (sig));
