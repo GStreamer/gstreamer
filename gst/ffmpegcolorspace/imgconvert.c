@@ -880,7 +880,7 @@ yuv420p_to_yuv422 (AVPicture * dst, const AVPicture * src,
       *line1++ = *line2++ = *cr1++;
     }
     /* odd width */
-    if (w) {
+    if (width % 2 != 0) {
       *line1++ = *lum1++;
       *line2++ = *lum2++;
       *line1++ = *line2++ = *cb1++;
@@ -892,7 +892,7 @@ yuv420p_to_yuv422 (AVPicture * dst, const AVPicture * src,
     cr2 += src->linesize[2];
   }
   /* odd height */
-  if (h) {
+  if (height % 2 != 0) {
     line1 = linesrc;
     lum1 = lumsrc;
     cb1 = cb2;
@@ -905,7 +905,7 @@ yuv420p_to_yuv422 (AVPicture * dst, const AVPicture * src,
       *line1++ = *cr1++;
     }
     /* odd width */
-    if (w) {
+    if (width % 2 != 0) {
       *line1++ = *lum1++;
       *line1++ = *cb1++;
     }
