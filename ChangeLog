@@ -1,3 +1,8 @@
+2004-01-08  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_create): Using XOverlay
+	public method to fire size signal.
+
 2004-01-07  Julien MOUTTE  <julien@moutte.net>
 
 	* examples/gstplay/Makefile.am: Adding the interface library.
