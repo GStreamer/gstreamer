@@ -375,9 +375,9 @@ channels = 1 - MAXINT (INT, number of audio channels)
     Encoder: rawvorbisenc (vorbisenc does rawvorbisenc+oggmux)
     Decoder: vorbisdec
 
-5 - Windows Media Audio 1,2 and 9 (WMA)
+5 - Windows Media Audio 1,2 and 3 (WMA)
     MIME type: audio/x-wma
-    Properties: wmaversion = 1/2/9 (INT)
+    Properties: wmaversion = 1/2/3 (INT)
     Encoder:
     Decoder: ffdec_wmav1, ffdec_wmav2, none
 
