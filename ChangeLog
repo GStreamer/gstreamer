@@ -1,3 +1,8 @@
+2004-07-26  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_check_xshm_calls),
+	(gst_ximagesink_ximage_new): Some more fixes to image size calculation.
+
 2004-07-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/level/gstlevel.c: (gst_level_link), (gst_level_chain),
