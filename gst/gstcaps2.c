@@ -389,6 +389,17 @@ gst_caps2_is_always_compatible (const GstCaps2 *caps1, const GstCaps2 *caps2)
 {
   int i;
 
+  g_return_val_if_fail (caps1 != NULL, FALSE);
+  g_return_val_if_fail (caps2 != NULL, FALSE);
+  /* FIXME: is this right ? */
+  g_return_val_if_fail (!gst_caps2_is_empty (caps1), FALSE);
+  g_return_val_if_fail (!gst_caps2_is_empty (caps2), FALSE);
+  
+  if (gst_caps2_is_any (caps2))
+    return TRUE;
+  if (gst_caps2_is_any (caps1))
+    return FALSE;
+  
   for(i=0;i<caps1->structs->len;i++) {
     GstStructure *struct1 = gst_caps2_get_nth_cap (caps1, i);
 
@@ -676,6 +687,7 @@ static void _gst_caps2_value_free (GValue *value)
 
 static void _gst_caps2_value_copy (const GValue *src, GValue *dest)
 {
+  gst_caps2_free (dest->data[0].v_pointer);
   dest->data[0].v_pointer = gst_caps2_copy (src->data[0].v_pointer);
 }
 
