@@ -156,6 +156,8 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_libdir}/gstreamer-%{majorminor}/libgstoptomega*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstbasicwingo*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstoptwingoscheduler*.so
+%{_libdir}/gstreamer-%{majorminor}/libgstbasicgthreadscheduler*.so
+%{_libdir}/gstreamer-%{majorminor}/libgstoptgthreadscheduler*.so
 %{_libdir}/gstreamer-%{majorminor}/libgstelements*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgsttypes*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgststaticautoplug*.so*
@@ -258,6 +260,9 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 
 
 %changelog
+* Sun Mar 16 2003 Christian F.K. Schaller <Uraeus@gnome.org>
+- Add gthread scheduler
+
 * Sat Dec 07 2002 Thomas Vander Stichele <thomas at apestaart dot org>
 - define majorminor and use it everywhere
 - full parallel installability
