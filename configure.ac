@@ -1040,6 +1040,7 @@ gst-libs/gst/gconf/Makefile
 gst-libs/gst/idct/Makefile
 gst-libs/gst/resample/Makefile
 gst-libs/gst/riff/Makefile
+gst-libs/gst/video/Makefile
 examples/dynparams/Makefile
 examples/capsfilter/Makefile
 examples/seeking/Makefile
