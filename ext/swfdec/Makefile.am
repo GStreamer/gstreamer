@@ -1,6 +1,4 @@
 
-plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
-
 plugin_LTLIBRARIES = libgstswfdec.la
 
 libgstswfdec_la_SOURCES = gstswfdec.c
