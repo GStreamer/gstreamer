@@ -1,6 +1,11 @@
 2004-01-29  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/advanced-tagging.xml:
+	  Add docs about tag writing.
+
+2004-01-29  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/advanced-tagging.xml:
 	  Add a part about tag reading and application signalling... Tag
 	  writing still needs to be documented.
 	* gst/elements/gstfilesrc.c: (gst_filesrc_set_location):

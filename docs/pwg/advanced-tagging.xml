@@ -148,7 +148,134 @@ gst_my_filter_class_init (GstMyFilterClass *klass)
   <sect1 id="section-tagging-write" xreflabel="Writing Tags to Streams">
     <title>Writing Tags to Streams</title>
     <para>
-      WRITEME
+      Tag writers are the opposite of tag readers. Tag writers only take
+      metadata tags into account, since that's the only type of tags that have
+      to be written into a stream. Tag writers can receive tags in three ways:
+      internal, application and pipeline. Internal tags are tags read by the
+      element itself, which means that the tag writer is - in that case - a tag
+      reader, too. Application tags are tags provided to the element via the
+      TagSetter interface (which is just a layer). Pipeline tags are tags
+      provided to the element from within the pipeline. The element receives
+      such tags via the <classname>GST_EVENT_TAG</classname> event, which means
+      that tags writers should automatically be event aware. The tag writer is
+      responsible for combining all these three into one list and writing them
+      to the output stream.
+    </para>
+    <para>
+      The example below will receive tags from both application and pipeline,
+      combine them and write them to the output stream. It implements the tag
+      setter so applications can set tags, and retrieves pipeline tags from
+      incoming events.
+    </para>
+    <programlisting>
+GType
+gst_my_filter_get_type (void)
+{
+[..]
+    static const GInterfaceInfo tag_setter_info = {
+      NULL,
+      NULL,
+      NULL
+    };
+[..]
+    g_type_add_interface_static (my_filter_type,
+				 GST_TYPE_TAG_SETTER,
+				 &amp;tag_setter_info);
+[..]
+}
+
+static void
+gst_my_filter_init (GstMyFilter *filter)
+{
+  GST_FLAG_SET (filter, GST_ELEMENT_EVENT_AWARE);
+[..]
+}
+
+/*
+ * Write one tag.
+ */
+
+static void
+gst_my_filter_write_tag (const GstTagList *taglist,
+			 const gchar      *tagname,
+			 gpointer          data)
+{
+  GstMyFilter *filter = GST_MY_FILTER (data);
+  GstBuffer *buffer;
+  guint num_values = gst_tag_list_get_tag_size (list, tag_name), n;
+  const GValue *from;
+  GValue to = { 0 };
+
+  g_value_init (&amp;to, G_TYPE_STRING);
+
+  for (n = 0; n < num_values; n++) {
+    from = gst_tag_list_get_value_index (taglist, tagname, n);
+    g_value_transform (from, &amp;to);
+
+    buf = gst_buffer_new ();
+    GST_BUFFER_DATA (buf) = g_strdup_printf ("%s:%s", tagname,
+					     g_value_get_string (&amp;to));
+    GST_BUFFER_SIZE (buf) = strlen (GST_BUFFER_DATA (buf));
+    gst_pad_push (filter->srcpad, GST_DATA (buf));
+  }
+
+  g_value_unset (&amp;to);
+}
+
+static void
+gst_my_filter_loopfunc (GstElement *element)
+{
+  GstMyFilter *filter = GST_MY_FILTER (element);
+  GstTagSetter *tagsetter = GST_TAG_SETTER (element);
+  GstData *data;
+  GstEvent *event;
+  gboolean eos = FALSE;
+  GstTagList *taglist = gst_tag_list_new ();
+
+  while (!eos) {
+    data = gst_pad_pull (filter->sinkpad);
+
+    /* We're not very much interested in data right now */
+    if (GST_IS_BUFFER (data))
+      gst_buffer_unref (GST_BUFFER (data));
+    event = GST_EVENT (data);
+
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_TAG:
+        gst_tag_list_insert (taglist, gst_event_tag_get_list (event),
+			     GST_TAG_MERGE_PREPEND);
+        gst_event_unref (event);
+        break;
+      case GST_EVENT_EOS:
+        eos = TRUE;
+        gst_event_unref (event);
+        break;
+      default:
+        gst_pad_event_default (filter->sinkpad, event);
+        break;
+    }
+  }
+
+  /* merge tags with the ones retrieved from the application */
+  if (gst_tag_setter_get_list (tagsetter)) {
+    gst_tag_list_insert (taglist,
+			 gst_tag_setter_get_list (tagsetter),
+			 gst_tag_setter_get_merge_mode (tagsetter));
+  }
+
+  /* write tags */
+  gst_tag_list_foreach (taglist, gst_my_filter_write_tag, filter);
+
+  /* signal EOS */
+  gst_pad_push (filter->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
+  gst_element_set_eos (element);
+}
+    </programlisting>
+    <para>
+      Note that normally, elements would not read the full stream before
+      processing tags. Rather, they would read from each sinkpad until they've
+      received data (since tags usually come in before the first data buffer)
+      and process that.
     </para>
   </sect1>
 </chapter>
