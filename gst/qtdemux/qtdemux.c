@@ -1504,11 +1504,23 @@ done2:
   gst_qtdemux_add_stream(qtdemux,stream);
 }
 
+#ifdef G_HAVE_ISO_VARARGS
+
+#define GST_QT_CAPS_NEW(name, mime, ...) \
+  GST_CAPS_NEW (name, mime, \
+                "width",  GST_PROPS_INT (width), \
+                "height", GST_PROPS_INT (height), \
+                __VA_ARGS__)
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 #define GST_QT_CAPS_NEW(name, mime, props...) \
   GST_CAPS_NEW (name, mime, \
                 "width",  GST_PROPS_INT (width), \
                 "height", GST_PROPS_INT (height), \
                 props)
+
+#endif
 
 static GstCaps *qtdemux_video_caps(GstQTDemux *qtdemux, guint32 fourcc,
                                    gint width, gint height)
