@@ -96,13 +96,17 @@ struct _GstObjectClass {
 
   /* signals */
   void		(*parent_set)		(GstObject *object, GstObject *parent);
+#ifndef GST_DISABLE_XML
   void		(*object_saved)		(GstObject *object, xmlNodePtr parent);
+#endif
 
   /* functions go here */
   void		(*destroy)		(GstObject *object);
 
+#ifndef GST_DISABLE_XML
   xmlNodePtr	(*save_thyself)		(GstObject *object, xmlNodePtr parent);
   void		(*restore_thyself)	(GstObject *object, xmlNodePtr self);
+#endif
 };
 
 #define GST_FLAGS(obj)			(GST_OBJECT (obj)->flags)
@@ -138,7 +142,9 @@ void		gst_object_unparent		(GstObject *object);
 
 gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
 
+#ifndef GST_DISABLE_XML
 xmlNodePtr	gst_object_save_thyself		(GstObject *object, xmlNodePtr parent);
+#endif
 
 /* refcounting */
 GstObject *	gst_object_ref			(GstObject *object);		
@@ -156,9 +162,11 @@ guint		gst_class_signal_connect	(GstObjectClass	*klass,
 						 GtkSignalFunc	func,
 						 gpointer	func_data);
 
+#ifndef GST_DISABLE_XML
 void		gst_class_signal_emit_by_name	(GstObject	*object,
 		                                 const gchar	*name,
 						 xmlNodePtr self);
+#endif
 
 
 #ifdef __cplusplus

@@ -59,8 +59,6 @@ gst_init (int *argc, char **argv[])
   GstTrace *gst_trace;
   gchar *display;
 
-  GST_INFO (GST_CAT_GST_INIT, "Initializing GStreamer Core Library");
-
   if (!g_thread_supported ()) g_thread_init (NULL);
 
   /* Only initialise gtk fully if we have an X display.
@@ -75,8 +73,10 @@ gst_init (int *argc, char **argv[])
   }
 
   if (!gst_init_check (argc,argv)) {
-    exit (0);
+    exit (0);				// FIXME!
   }
+
+  GST_INFO (GST_CAT_GST_INIT, "Initializing GStreamer Core Library");
 
   _gst_cpu_initialize ();
   _gst_type_initialize ();
@@ -134,7 +134,7 @@ gst_init_check (int     *argc,
   gboolean showhelp = FALSE;
 
   _gst_progname = NULL;
-  
+
   if (argc && argv) {
     gint i, j, k;
 

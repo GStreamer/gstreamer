@@ -27,7 +27,9 @@
 /* Object signals and args */
 enum {
   PARENT_SET,
+#ifndef GST_DISABLE_XML
   OBJECT_SAVED,
+#endif
   LAST_SIGNAL
 };
 
@@ -100,11 +102,13 @@ gst_object_class_init (GstObjectClass *klass)
                     GTK_SIGNAL_OFFSET (GstObjectClass, parent_set),
                     gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
                     GST_TYPE_OBJECT);
+#ifndef GST_DISABLE_XML
   gst_object_signals[OBJECT_SAVED] =
     gtk_signal_new ("object_saved", GTK_RUN_LAST, gtkobject_class->type,
                     GTK_SIGNAL_OFFSET (GstObjectClass, object_saved),
                     gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
                     GTK_TYPE_POINTER);
+#endif
   gtk_object_class_add_signals (gtkobject_class, gst_object_signals, LAST_SIGNAL);
 
   klass->path_string_separator = "/";
@@ -474,6 +478,8 @@ gst_object_check_uniqueness (GList *list, const gchar *name)
 }
 
 
+#ifndef GST_DISABLE_XML
+
 /**
  * gst_object_save_thyself:
  * @object: GstObject to save
@@ -497,10 +503,14 @@ gst_object_save_thyself (GstObject *object, xmlNodePtr parent)
   if (oclass->save_thyself)
     oclass->save_thyself (object, parent);
 
+#ifndef GST_DISABLE_XML
   gtk_signal_emit (GTK_OBJECT (object), gst_object_signals[OBJECT_SAVED], parent);
+#endif
 
   return parent;
 }
+
+#endif // GST_DISABLE_XML
 
 /**
  * gst_object_get_path_string:
@@ -581,7 +591,9 @@ struct _GstSignalObjectClass {
   GtkObjectClass        parent_class;
 
   /* signals */
+#ifndef GST_DISABLE_XML
   void          (*object_loaded)           (GstSignalObject *object, GstObject *new, xmlNodePtr self);
+#endif GST_DISABLE_XML
 };
 
 static GtkType
@@ -614,12 +626,14 @@ gst_signal_object_class_init (GstSignalObjectClass *klass)
 
   parent_class = gtk_type_class (gtk_object_get_type ());
 
+#ifndef GST_DISABLE_XML
   gst_signal_object_signals[SO_OBJECT_LOADED] =
     gtk_signal_new ("object_loaded", GTK_RUN_LAST, gtkobject_class->type,
                     GTK_SIGNAL_OFFSET (GstSignalObjectClass, object_loaded),
                     gtk_marshal_NONE__POINTER_POINTER, GTK_TYPE_NONE, 2,
                     GST_TYPE_OBJECT, GTK_TYPE_POINTER);
   gtk_object_class_add_signals (gtkobject_class, gst_signal_object_signals, LAST_SIGNAL);
+#endif
 }
 
 static void
@@ -647,6 +661,7 @@ gst_class_signal_connect (GstObjectClass *klass,
   return gtk_signal_connect (klass->signal_object, name, func, func_data);
 }
 
+#ifndef GST_DISABLE_XML
 /**
  * gst_class_signal_emit_by_name:
  * @object: the object that sends the signal
@@ -666,3 +681,5 @@ gst_class_signal_emit_by_name (GstObject *object,
 
   gtk_signal_emit_by_name (oclass->signal_object, name, object, self);
 }
+
+#endif // GST_DISABLE_XML

@@ -68,8 +68,10 @@ static void			gst_thread_get_arg		(GtkObject *object, GtkArg *arg, guint id);
 
 static GstElementStateReturn	gst_thread_change_state		(GstElement *element);
 
+#ifndef GST_DISABLE_XML
 static xmlNodePtr		gst_thread_save_thyself		(GstObject *object, xmlNodePtr parent);
 static void			gst_thread_restore_thyself	(GstObject *object, xmlNodePtr self);
+#endif
 
 static void			gst_thread_signal_thread	(GstThread *thread, gboolean spinning);
 
@@ -118,8 +120,10 @@ gst_thread_class_init (GstThreadClass *klass)
 
   gtkobject_class->destroy =		gst_thread_real_destroy;
 
+#ifndef GST_DISABLE_XML
   gstobject_class->save_thyself =	gst_thread_save_thyself;
   gstobject_class->restore_thyself =	gst_thread_restore_thyself;
+#endif
 
   gstelement_class->change_state =	gst_thread_change_state;
 
@@ -668,6 +672,16 @@ gst_thread_signal_thread (GstThread *thread, gboolean spinning)
 }
 
 
+#ifndef GST_DISABLE_XML
+static xmlNodePtr
+gst_thread_save_thyself (GstObject *object,
+		         xmlNodePtr self)
+{
+  if (GST_OBJECT_CLASS (parent_class)->save_thyself)
+    GST_OBJECT_CLASS (parent_class)->save_thyself (object, self);
+  return NULL;
+}
+
 static void
 gst_thread_restore_thyself (GstObject *object,
 		            xmlNodePtr self)
@@ -677,12 +691,4 @@ gst_thread_restore_thyself (GstObject *object,
   if (GST_OBJECT_CLASS (parent_class)->restore_thyself)
     GST_OBJECT_CLASS (parent_class)->restore_thyself (object, self);
 }
-
-static xmlNodePtr
-gst_thread_save_thyself (GstObject *object,
-		         xmlNodePtr self)
-{
-  if (GST_OBJECT_CLASS (parent_class)->save_thyself)
-    GST_OBJECT_CLASS (parent_class)->save_thyself (object, self);
-  return NULL;
-}
+#endif // GST_DISABLE_XML

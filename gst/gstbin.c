@@ -48,8 +48,10 @@ static gboolean			gst_bin_change_state_type	(GstBin *bin,
 
 static gboolean			gst_bin_iterate_func		(GstBin *bin);
 
+#ifndef GST_DISABLE_XML
 static xmlNodePtr		gst_bin_save_thyself		(GstObject *object, xmlNodePtr parent);
 static void			gst_bin_restore_thyself		(GstObject *object, xmlNodePtr self);
+#endif
 
 /* Bin signals and args */
 enum {
@@ -114,8 +116,10 @@ gst_bin_class_init (GstBinClass *klass)
   klass->change_state_type =		gst_bin_change_state_type;
   klass->iterate =			gst_bin_iterate_func;
 
+#ifndef GST_DISABLE_XML
   gstobject_class->save_thyself =	gst_bin_save_thyself;
   gstobject_class->restore_thyself =	gst_bin_restore_thyself;
+#endif
 
   gstelement_class->change_state =	gst_bin_change_state;
 
@@ -590,6 +594,7 @@ gst_bin_get_list (GstBin *bin)
   return bin->children;
 }
 
+#ifndef GST_DISABLE_XML
 static xmlNodePtr
 gst_bin_save_thyself (GstObject *object,
 		      xmlNodePtr parent)
@@ -641,6 +646,7 @@ gst_bin_restore_thyself (GstObject *object,
     field = field->next;
   }
 }
+#endif // GST_DISABLE_XML
 
 
 /**

@@ -39,9 +39,9 @@ libgst_la_SOURCES =		\
 	gsttype.c		\
 	gsttypefind.c		\
 	gstutils.c		\
-	gstxml.c		\
 	gstparse.c		\
-	$(GSTARCH_SRCS)
+	$(GSTARCH_SRCS)		\
+	gstxml.c
 
 
 ##### Oh this sucks so badly.  This isn't funny. #####
@@ -117,8 +117,8 @@ libgstinclude_HEADERS =		\
 	gsttypefind.h		\
 	gstutils.h		\
 	gstparse.h		\
-	gstxml.h		\
-	gstversion.h
+	gstversion.h		\
+	gstxml.h
 
 noinst_HEADERS = 	\
 	gst_private.h	\

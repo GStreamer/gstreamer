@@ -623,6 +623,3 @@ gst_caps_load_thyself (xmlNodePtr parent)
 
   return result;
 }
-
-
-
