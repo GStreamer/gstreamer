@@ -408,12 +408,13 @@ Function signature to handle a new link on the pad.
 
 <!-- ##### USER_FUNCTION GstPadGetCapsFunction ##### -->
 <para>
-Returns the capabilities of the specified pad. By default this function
-will return the pad template capabilities, but can optionally be overridden.
+Returns a copy of the capabilities of the specified pad. By default this
+function will return the pad template capabilities, but can optionally
+be overridden.
 </para>
 
 @pad: the #GstPad to get the capabilities of.
-@Returns: the #GstCaps of the pad.
+@Returns: a newly allocated copy #GstCaps of the pad.
 <!-- # Unused Parameters # -->
 @caps: the peer's #GstCaps, can be used to filter the capabilities.
 
