@@ -28,9 +28,7 @@
 
 #include <gst/gstelement.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GST_TYPE_AUTOPLUG \
   (gst_autoplug_get_type())
@@ -118,9 +116,7 @@ GstAutoplugFactory*	gst_autoplug_factory_find		(const gchar *name);
 GstAutoplug*		gst_autoplug_factory_create		(GstAutoplugFactory *factory);
 GstAutoplug*		gst_autoplug_factory_make		(const gchar *name);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #else /* GST_DISABLE_AUTOPLUG */
 

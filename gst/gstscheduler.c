@@ -26,6 +26,7 @@
 
 #include "gstsystemclock.h"
 #include "gstscheduler.h"
+#include "gstlog.h"
 #include "gstregistry.h"
 
 static void 	gst_scheduler_class_init 	(GstSchedulerClass *klass);

@@ -24,11 +24,9 @@
 #ifndef __GST_PLUGIN_FEATURE_H__
 #define __GST_PLUGIN_FEATURE_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include <glib-object.h>
 
-#include <gst/gstobject.h>
+G_BEGIN_DECLS
 
 #define GST_TYPE_PLUGIN_FEATURE \
   (gst_plugin_feature_get_type())
@@ -67,9 +65,7 @@ GType		gst_plugin_feature_get_type		(void);
 gboolean	gst_plugin_feature_ensure_loaded 	(GstPluginFeature *feature);
 void		gst_plugin_feature_unload_thyself 	(GstPluginFeature *feature);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /* __GST_PLUGIN_FEATURE_H__ */

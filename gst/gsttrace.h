@@ -28,6 +28,7 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
 
 typedef struct _GstTrace 	GstTrace;
 typedef struct _GstTraceEntry 	GstTraceEntry;
@@ -92,5 +93,7 @@ extern gint _gst_trace_on;
 #pragma GCC poison 	gst_trace_add_entry
 
 #endif /* GST_DISABLE_TRACE */
+
+G_END_DECLS
 
 #endif /* __GST_TRACE_H__ */

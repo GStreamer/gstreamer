@@ -31,6 +31,8 @@
 
 #include "gsttype.h"
 #include "gstregistry.h"
+#include "gstobject.h"
+#include "gstlog.h"
 
 
 /* global list of registered types */

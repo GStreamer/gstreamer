@@ -24,18 +24,13 @@
 #ifndef __GST_EXTRA_TYPES_H__
 #define __GST_EXTRA_TYPES_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_FILENAME (gst_extra_get_filename_type())
 	
 GType gst_extra_get_filename_type(void);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_EXTRA_TYPES_H__ */

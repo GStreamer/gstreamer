@@ -26,9 +26,7 @@
 
 #include <gst/gstelement.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 extern GstElementDetails gst_bin_details;
 extern GType _gst_bin_type;
@@ -133,9 +131,8 @@ void 		gst_bin_child_state_change 	(GstBin *bin, GstElementState oldstate,
 
 void		gst_bin_set_pre_iterate_function (GstBin *bin, GstBinPrePostIterateFunction func, gpointer func_data);
 void		gst_bin_set_post_iterate_function (GstBin *bin, GstBinPrePostIterateFunction func, gpointer func_data);
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+
+G_END_DECLS
 
 
 #endif /* __GST_BIN_H__ */

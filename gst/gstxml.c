@@ -23,6 +23,7 @@
 #include "gst_private.h"
 
 #include "gstxml.h"
+#include "gstlog.h"
 #include "gstbin.h"
 
 enum {

@@ -24,11 +24,9 @@
 #ifndef __GST_CLOCK_H__
 #define __GST_CLOCK_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 #include <gst/gstobject.h>
+
+G_BEGIN_DECLS
 
 #define GST_TYPE_CLOCK \
   (gst_clock_get_type())
@@ -130,8 +128,6 @@ GstClockTime		gst_clock_id_get_time		(GstClockID id);
 void 			gst_clock_set_resolution	(GstClock *clock, guint64 resolution);
 guint64			gst_clock_get_resolution	(GstClock *clock);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_CLOCK_H__ */

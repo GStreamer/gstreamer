@@ -26,9 +26,7 @@
 
 #include <gst/gstbin.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 extern GstElementDetails gst_pipeline_details;
 
@@ -59,10 +57,7 @@ GstElement*	gst_pipeline_new		(const gchar *name);
 #define		gst_pipeline_destroy(pipeline)	gst_object_destroy(GST_OBJECT(pipeline))
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_PIPELINE_H__ */
 

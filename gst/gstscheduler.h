@@ -28,10 +28,7 @@
 #include <gst/gstelement.h>
 #include <gst/gstbin.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_SCHEDULER \
   (gst_scheduler_get_type())
@@ -184,8 +181,6 @@ void			gst_scheduler_factory_set_default_name	(const gchar* name);
 const gchar*		gst_scheduler_factory_get_default_name	(void);
 
 
-#ifdef __cplusplus   
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_SCHEDULER_H__ */

@@ -30,9 +30,7 @@
 #include <gst/gstbin.h>
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 extern GstElementDetails gst_thread_details;
 
@@ -62,30 +60,33 @@ typedef struct _GstThread 	GstThread;
 typedef struct _GstThreadClass 	GstThreadClass;
 
 struct _GstThread {
-  GstBin bin;
+  GstBin 	 bin;
 
-  pthread_t thread_id;		/* id of the thread, if any */
-  pthread_attr_t attr;		/* attributes for the stack space */
-  void *stack;			/* set with gst_scheduler_get_preferred_stack */
-  gint pid;			/* the pid of the thread */
-  gint ppid;			/* the pid of the thread's parent process */
-  GMutex *lock;			/* thread lock/condititon pair ... */
-  GCond *cond;			/* .... used to control the thread */
+  pthread_t 	 thread_id;		/* id of the thread, if any */
+  pthread_attr_t attr;			/* attributes for the stack space */
+  int 		 sched_policy;
+  int 		 priority;
+  void 		*stack;			/* set with gst_scheduler_get_preferred_stack */
+  gint		 pid;			/* the pid of the thread */
+  gint		 ppid;			/* the pid of the thread's parent process */
+  GMutex 	*lock;			/* thread lock/condititon pair ... */
+  GCond 	*cond;			/* .... used to control the thread */
 
-  gint transition;		/* the current state transition */
+  gint		 transition;		/* the current state transition */
 };
 
 struct _GstThreadClass {
   GstBinClass parent_class;
+
+  /* signals */
+  void	(*shutdown)	(GstThread *thread);
 };
 
 GType 	gst_thread_get_type	(void);
 
 GstElement*	gst_thread_new		(const gchar *name);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /* __GST_THREAD_H__ */     

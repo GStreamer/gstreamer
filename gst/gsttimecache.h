@@ -25,11 +25,7 @@
 
 #include <gst/gstobject.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_TIME_CACHE		(gst_time_cache_get_type ())
 #define GST_TIME_CACHE(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TIME_CACHE, GstTimeCache))
@@ -100,9 +96,7 @@ void			gst_time_cache_add_entry	(GstTimeCache *tc, guint64 location, gint64 time
 gboolean		gst_time_cache_find_location	(GstTimeCache *tc, guint64 location, gint64 *timestamp);
 gboolean		gst_time_cache_find_timestamp	(GstTimeCache *tc, gint64 timestamp, guint64 *location);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 
+G_END_DECLS
 
 #endif /* __GST_TIME_CACHE_H__ */

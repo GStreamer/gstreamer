@@ -29,6 +29,7 @@
 #include "gstplugin.h"
 #include "gstversion.h"
 #include "gstregistry.h"
+#include "gstlog.h"
 #include "config.h"
 
 static GModule *main_module;

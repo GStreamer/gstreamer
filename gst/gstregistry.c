@@ -30,6 +30,8 @@
 
 #include "gstinfo.h"
 #include "gstregistry.h"
+#include "gstlog.h"
+#include "gstmarshal.h"
 
 #define CLASS(registry)  GST_REGISTRY_CLASS (G_OBJECT_GET_CLASS (registry))
 

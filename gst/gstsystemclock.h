@@ -26,9 +26,7 @@
 
 #include <gst/gstclock.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GST_TYPE_SYSTEM_CLOCK \
   (gst_system_clock_get_type())
@@ -57,9 +55,6 @@ GType 			gst_system_clock_get_type 	(void);
 
 GstClock*		gst_system_clock_obtain		(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_SYSTEM_CLOCK_H__ */

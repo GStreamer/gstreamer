@@ -24,11 +24,12 @@
 #include "gstpluginfeature.h"
 #include "gstplugin.h"
 #include "gstregistry.h"
+#include "gstlog.h"
 
 static void		gst_plugin_feature_class_init		(GstPluginFeatureClass *klass);
 static void		gst_plugin_feature_init			(GstPluginFeature *feature);
 
-static GstObjectClass *parent_class = NULL;
+static GObjectClass *parent_class = NULL;
 /* static guint gst_plugin_feature_signals[LAST_SIGNAL] = { 0 }; */
 
 GType

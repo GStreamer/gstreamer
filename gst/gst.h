@@ -58,9 +58,7 @@
 #include <gst/gstextratypes.h>
 #include <gst/gstenumtypes.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 /* initialize GST */
 void 			 	gst_init		 	(int *argc, char **argv[]);
@@ -74,9 +72,7 @@ gboolean			gst_has_threads			(void);
 void 			 	gst_main		 	(void);
 void 			 	gst_main_quit		 	(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #include <gst/gstlog.h>
 

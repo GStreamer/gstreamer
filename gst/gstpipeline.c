@@ -23,6 +23,7 @@
 #include "gst_private.h"
 
 #include "gstpipeline.h"
+#include "gstlog.h"
 #include "gstscheduler.h"
 
 GstElementDetails gst_pipeline_details = {

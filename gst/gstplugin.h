@@ -27,8 +27,9 @@
 #include <gst/gstconfig.h>
 
 #include <gmodule.h>
-
 #include <gst/gstpluginfeature.h>
+
+G_BEGIN_DECLS
 
 GQuark gst_plugin_error_quark (void);
 #define GST_PLUGIN_ERROR gst_plugin_error_quark ()
@@ -119,5 +120,6 @@ void			gst_plugin_add_feature		(GstPlugin *plugin, GstPluginFeature *feature);
 gboolean 		gst_plugin_load			(const gchar *name);
 gboolean 		gst_library_load		(const gchar *name);
 
+G_END_DECLS
 
 #endif /* __GST_PLUGIN_H__ */

@@ -20,7 +20,6 @@
  */
 
 #include <gst/gst.h>
-#include "../cothreads.h"
 
 GstElementDetails gst_autoplugcache_details = {
   "AutoplugCache",

@@ -28,6 +28,7 @@
 
 #include "gstautoplug.h"
 #include "gstregistry.h"
+#include "gstlog.h"
 
 enum {
   NEW_OBJECT,

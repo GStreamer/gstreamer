@@ -23,6 +23,7 @@
 #include "gst_private.h"
 
 #include "gstobject.h"
+#include "gstlog.h"
 
 /* Object signals and args */
 enum {
@@ -165,7 +166,6 @@ gst_object_ref (GstObject *object)
   g_object_ref (G_OBJECT (object));
   return object;
 }
-#define gst_object_ref gst_object_ref
 
 /**
  * gst_object_unref:
@@ -184,7 +184,6 @@ gst_object_unref (GstObject *object)
 
   g_object_unref (G_OBJECT (object));
 }
-#define gst_object_unref gst_object_unref
 
 /**
  * gst_object_sink:
@@ -394,87 +393,6 @@ gst_object_unparent (GstObject *object)
   object->parent = NULL;
   gst_object_unref (object);
 }
-
-/**
- * gst_object_ref:
- * @object: GstObject to reference
- *
- * Increments the refence count on the object.
- *
- * Returns: Apointer to the Object
- */
-#ifndef gst_object_ref
-GstObject*
-gst_object_ref (GstObject *object)
-{
-  g_return_if_fail (object != NULL, NULL);
-  g_return_if_fail (GST_IS_OBJECT (object), NULL);
-
-/* #ifdef HAVE_ATOMIC_H */
-/*  g_return_if_fail (atomic_read (&(object->refcount)) > 0); */
-/*  atomic_inc (&(object->refcount)) */
-/* #else */
-  g_return_if_fail (object->refcount > 0);
-  GST_LOCK (object);
-/*  object->refcount++; */
-  g_object_ref((GObject *)object);
-  GST_UNLOCK (object);
-/* #endif */
-
-  return object;
-}
-#endif /* gst_object_ref */
-
-/**
- * gst_object_unref:
- * @object: GstObject to unreference
- *
- * Decrements the refence count on the object.  If reference count hits
- * zero, destroy the object.
- */
-#ifndef gst_object_unref
-void
-gst_object_unref (GstObject *object)
-{
-  int reftest;
-
-  g_return_if_fail (object != NULL);
-  g_return_if_fail (GST_IS_OBJECT (object));
-
-#ifdef HAVE_ATOMIC_H
-  g_return_if_fail (atomic_read (&(object->refcount)) > 0);
-  reftest = atomic_dec_and_test (&(object->refcount))
-#else
-  g_return_if_fail (object->refcount > 0);
-  GST_LOCK (object);
-  object->refcount--;
-  reftest = (object->refcount == 0);
-  GST_UNLOCK (object);
-#endif
-
-  /* if we ended up with the refcount at zero */
-  if (reftest) {
-    /* get the count to 1 for gtk_object_destroy() */
-#ifdef HAVE_ATOMIC_H
-    atomic_set (&(object->refcount),1);
-#else
-    object->refcount = 1;
-#endif
-    /* destroy it */
-    gtk_object_destroy (G_OBJECT (object));
-    /* drop the refcount back to zero */
-#ifdef HAVE_ATOMIC_H
-    atomic_set (&(object->refcount),0);
-#else
-    object->refcount = 0;
-#endif
-    /* finalize the object */
-    /* FIXME this is an evil hack that should be killed */
-/* FIXMEFIXMEFIXMEFIXME */
-/*    gtk_object_finalize(G_OBJECT(object)); */
-  }
-}
-#endif /* gst_object_unref */
 
 /**
  * gst_object_check_uniqueness:

@@ -25,6 +25,7 @@
 
 #include "gstelement.h"
 #include "gstregistry.h"
+#include "gstlog.h"
 
 static void 		gst_element_factory_class_init 		(GstElementFactoryClass *klass);
 static void 		gst_element_factory_init 		(GstElementFactory *factory);

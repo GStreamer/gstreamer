@@ -25,6 +25,7 @@
 
 #include "gstcaps.h"
 #include "gsttype.h"
+#include "gstlog.h"
 
 static GMemChunk *_gst_caps_chunk;
 static GMutex *_gst_caps_chunk_lock;

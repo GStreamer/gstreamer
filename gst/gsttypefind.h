@@ -28,10 +28,7 @@
 
 #include <gst/gstelement.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 extern GstElementDetails gst_type_find_details;
 
@@ -67,9 +64,7 @@ struct _GstTypeFindClass {
 GType gst_type_find_get_type (void);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* GST_DISABLE_TYPE_FIND */
 

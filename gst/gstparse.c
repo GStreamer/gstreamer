@@ -25,6 +25,7 @@
 
 #include "gstparse.h"
 #include "gstinfo.h"
+#include "gstlog.h"
 #include "parse/types.h"
 
 typedef struct _gst_parse_delayed_pad gst_parse_delayed_pad;

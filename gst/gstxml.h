@@ -29,9 +29,7 @@
 
 #include <gst/gstelement.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GST_TYPE_XML \
   (gst_xml_get_type())
@@ -84,9 +82,7 @@ GList*		gst_xml_get_topelements (GstXML *xml);
 
 GstElement*	gst_xml_make_element	(xmlNodePtr cur, GstObject *parent);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #else /* GST_DISABLE_LOADSAVE */
 

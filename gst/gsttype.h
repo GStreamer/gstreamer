@@ -28,6 +28,7 @@
 #include <gst/gstcaps.h>
 #include <gst/gstpluginfeature.h>
 
+G_BEGIN_DECLS
 
 /* type of function used to check a stream for equality with type */
 typedef GstCaps *(*GstTypeFindFunc) (GstBuffer *buf, gpointer priv);
@@ -96,5 +97,7 @@ GstType*		gst_type_find_by_id		(guint16 id);
 
 /* get the list of registered types (returns list of GstType!) */
 const GList*		gst_type_get_list		(void);
+
+G_END_DECLS
 
 #endif /* __GST_TYPE_H__ */

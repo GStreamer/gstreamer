@@ -25,6 +25,7 @@
 
 #include "gsttype.h"
 
+#include "gstlog.h"
 #include "gsttypefind.h"
 
 /* #define GST_DEBUG_ENABLED */

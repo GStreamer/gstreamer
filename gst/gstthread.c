@@ -42,6 +42,7 @@ GstElementDetails gst_thread_details = {
 
 /* Thread signals and args */
 enum {
+  SHUTDOWN,
   /* FILL ME */
   LAST_SIGNAL
 };
@@ -54,6 +55,8 @@ enum {
 
 enum {
   ARG_0,
+  ARG_SCHEDPOLICY,
+  ARG_PRIORITY,
 };
 
 
@@ -75,8 +78,24 @@ static void			gst_thread_restore_thyself	(GstObject *object, xmlNodePtr self);
 
 static void*			gst_thread_main_loop		(void *arg);
 
+#define GST_TYPE_THREAD_SCHEDPOLICY (gst_thread_schedpolicy_get_type())
+static GType
+gst_thread_schedpolicy_get_type(void) {
+  static GType thread_schedpolicy_type = 0;
+  static GEnumValue thread_schedpolicy[] = {
+    {SCHED_OTHER, "SCHED_OTHER", "Normal Scheduling"},
+    {SCHED_FIFO,  "SCHED_FIFO",  "FIFO Scheduling (requires root)"},
+    {SCHED_RR,    "SCHED_RR",    "Round-Robin Scheduling (requires root)"},
+    {0, NULL, NULL},
+  };
+  if (!thread_schedpolicy_type) {
+    thread_schedpolicy_type = g_enum_register_static("GstThreadSchedPolicy", thread_schedpolicy);
+  }
+  return thread_schedpolicy_type;
+}
+
 static GstBinClass *parent_class = NULL;
-/* static guint gst_thread_signals[LAST_SIGNAL] = { 0 }; */
+static guint gst_thread_signals[LAST_SIGNAL] = { 0 }; 
 
 GType
 gst_thread_get_type(void) {
@@ -115,6 +134,18 @@ gst_thread_class_init (GstThreadClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_BIN);
 
+  g_object_class_install_property(G_OBJECT_CLASS (klass), ARG_SCHEDPOLICY,
+    g_param_spec_enum("schedpolicy", "Scheduling Policy", "The scheduling policy of the thread",
+                      GST_TYPE_THREAD_SCHEDPOLICY, SCHED_OTHER, G_PARAM_READWRITE));
+  g_object_class_install_property(G_OBJECT_CLASS (klass), ARG_PRIORITY,
+    g_param_spec_int("priority", "Scheduling Priority", "The scheduling priority of the thread",
+                     0, 99, 0, G_PARAM_READWRITE));
+
+  gst_thread_signals[SHUTDOWN] =
+    g_signal_new ("shutdown", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (GstThreadClass, shutdown), NULL, NULL,
+                  gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
   gobject_class->dispose =		gst_thread_dispose;
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -148,6 +179,8 @@ gst_thread_init (GstThread *thread)
 
   thread->ppid = getpid ();
   thread->thread_id = -1;
+  thread->sched_policy = SCHED_OTHER;
+  thread->priority = 0;
 }
 
 static void
@@ -170,10 +203,20 @@ gst_thread_dispose (GObject *object)
 static void
 gst_thread_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
+  GstThread *thread;
+
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_THREAD (object));
 
+  thread = GST_THREAD (object);
+
   switch (prop_id) {
+    case ARG_SCHEDPOLICY:
+      thread->sched_policy = g_value_get_enum (value);
+      break;
+    case ARG_PRIORITY:
+      thread->priority = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -183,10 +226,20 @@ gst_thread_set_property (GObject *object, guint prop_id, const GValue *value, GP
 static void
 gst_thread_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
+  GstThread *thread;
+
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_THREAD (object));
 
+  thread = GST_THREAD (object);
+
   switch (prop_id) {
+    case ARG_SCHEDPOLICY:
+      g_value_set_enum (value, thread->sched_policy);
+      break;
+    case ARG_PRIORITY:
+      g_value_set_int (value, thread->priority);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -275,6 +328,7 @@ gst_thread_change_state (GstElement * element)
 
       if (pthread_attr_init (&thread->attr) != 0)
 	g_warning ("pthread_attr_init returned an error !");
+
       if (gst_scheduler_get_preferred_stack (GST_ELEMENT_SCHED (element), &thread->stack, &stacksize)) {
         if (pthread_attr_setstack (&thread->attr, thread->stack, stacksize) != 0) {
           g_warning ("pthread_attr_setstack failed");
@@ -465,6 +519,20 @@ gst_thread_main_loop (void *arg)
   thread = GST_THREAD (arg);
   g_mutex_lock (thread->lock);
 
+  if (thread->sched_policy != SCHED_OTHER) {
+    struct sched_param sched_param;
+
+    memset (&sched_param, 0, sizeof (sched_param));
+    if (thread->priority == 0) {
+      thread->priority = sched_get_priority_max (thread->sched_policy);
+    }
+    sched_param.sched_priority = thread->priority;
+
+    if (sched_setscheduler (0, thread->sched_policy, &sched_param) != 0) {
+      GST_DEBUG (GST_CAT_THREAD, "not running with real-time priority");
+    }
+  }
+
   gst_scheduler_setup (GST_ELEMENT_SCHED (thread));
   GST_FLAG_UNSET (thread, GST_THREAD_STATE_REAPING);
 
@@ -600,6 +668,9 @@ gst_thread_main_loop (void *arg)
 
   GST_INFO (GST_CAT_THREAD, "gstthread: thread \"%s\" is stopped",
 		  GST_ELEMENT_NAME (thread));
+
+  g_signal_emit (G_OBJECT (thread), gst_thread_signals[SHUTDOWN], 0);
+
   return NULL;
 }
 

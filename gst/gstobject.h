@@ -36,12 +36,7 @@
 #include <gst/gsttrace.h>
 #include <gst/gsttypes.h>
 
-/* FIXME */
-#include "gstlog.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 extern GType _gst_object_type;
 
@@ -75,14 +70,8 @@ struct _GstObject {
   GObject 	object;
 
   gchar 	*name;
-  /* have to have a refcount for the object */
-#ifdef HAVE_ATOMIC_H
-  atomic_t 	refcount;
-#else
-  gint 		refcount;
-#endif
 
-  /* locking for all sorts of things (like the refcount) */
+  /* locking for all sorts of things */
   GMutex 	*lock;
   /* this object's parent */
   GstObject 	*parent;
@@ -176,10 +165,7 @@ void		gst_class_signal_emit_by_name	(GstObject	*object,
 #endif
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_OBJECT_H__ */
 

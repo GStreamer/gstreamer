@@ -25,11 +25,9 @@
 #define __GST_UTILS_H__
 
 #include <glib.h>
-#include <gst/gstobject.h>
+#include <gst/gstelement.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 gboolean        gst_util_has_arg                (GObject *object, const gchar *argname,
 						 GType    arg_type);
@@ -50,8 +48,6 @@ void 		gst_util_dump_mem		(guchar *mem, guint size);
 void 		gst_print_pad_caps 		(GString *buf, gint indent, GstPad *pad);
 void 		gst_print_element_args 		(GString *buf, gint indent, GstElement *element);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_UTILS_H__ */

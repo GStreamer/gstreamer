@@ -25,7 +25,6 @@
 #define __GST_ELEMENT_H__
 
 #include <gst/gstconfig.h>
-
 #include <gst/gsttypes.h>
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
