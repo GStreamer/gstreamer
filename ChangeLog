@@ -1,5 +1,13 @@
 2004-10-25  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_remove),
+	(gst_ogg_demux_push), (gst_ogg_chains_clear):
+	Make sure to remove the pad when a new chain is
+	encountered. Set some vars to NULL so we don't try
+	to reference freed memory.
+
+2004-10-25  Wim Taymans  <wim@fluendo.com>
+
 	* examples/seeking/Makefile.am:
 	* examples/seeking/cdplayer.c: (update_scale):
 	* examples/seeking/chained.c: (unlinked), (new_pad), (main):
