@@ -1,3 +1,15 @@
+2004-06-07  Benjamin Otte  <otte@gnome.org>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_samples_to_timestamp):
+	  cast to GstClockTime to get higher granularity
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event):
+	  use gst_element_set_time_delay to get the exact time
+	* ext/mad/gstmad.c: (gst_mad_chain):
+	  use the negotiated rate instead of the current frame's rate which
+	  might be wrong because of bit errors. This avoids emitting totally
+	  bogus timestamps and screwing sync.
+	(fixes #143454)
+
 2004-06-07  Tim-Philipp Müller  <t.i.m@zen.co.uk>
 
 	reviewed by Benjamin Otte  <otte@gnome.org>
