@@ -3,6 +3,11 @@ import os
 import sys
 import unittest
 
+import pygtk
+pygtk.require('2.0')
+
+import gobject
+
 # Don't insert before .
 sys.path.insert(1, os.path.join('..'))
 

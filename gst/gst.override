@@ -1,5 +1,5 @@
 /* -*- Mode: C; ; c-file-style: "python" -*- */
-/* gst-python
+so/* gst-python
  * Copyright (C) 2002 David I. Lehn
  * Copyright (C) 2004 Johan Dahlin
  *
@@ -39,6 +39,7 @@ static PyObject *_wrap_gst_element_factory_make(PyObject *self, PyObject *args, 
 
 %%
 include
+  gstbin.override
   gstbuffer.override
   gstpad-handlers.override
 %%
@@ -94,38 +95,6 @@ ignore
   gst_tag_list_add_valist_values
   gst_tag_list_copy_value
   gst_trace_read_tsc
-%%
-override gst_bin_iterate
-static PyObject *
-_wrap_gst_bin_iterate(PyGObject *self)
-{
-	int ret;
-
-	pyg_unblock_threads();
-	ret = gst_bin_iterate(GST_BIN(self->obj));
-	pyg_block_threads();
-	return PyInt_FromLong(ret);
-}
-%%
-override gst_bin_get_list
-static PyObject *
-_wrap_gst_bin_get_list(PyGObject *self)
-{
-	GList *elements, *l;
-	PyObject *tuple;
-	int i;
-	
-	elements = (GList*)gst_bin_get_list(GST_BIN(self->obj));
-	tuple = PyTuple_New(g_list_length(elements));
-	for (i = 0, l = elements; l; l = l->next, i++) {
-		GstElement *element = (GstElement*)l->data;
-		if (!element)
-			continue;
-		PyTuple_SetItem(tuple, i, pygobject_new(G_OBJECT(element)));
-	}
-		
-	return tuple;
-}
 %%
 override gst_element_get_pad_list noargs
 static PyObject *
@@ -266,70 +235,6 @@ _wrap_gst_element_convert(PyGObject *self, PyObject *args, PyObject *kwargs)
 	dest_value = 0;
 	ret = gst_element_convert(GST_ELEMENT(self->obj), src_format, src_value, &dest_format, &dest_value);
 	return Py_BuildValue("(bL)", ret, dest_value);
-}
-%%
-override gst_bin_add_many args
-static PyObject *
-_wrap_gst_bin_add_many(PyGObject *self, PyObject *args)
-{
-	PyGObject *element;
-	int i, len;
-
-	len = PyTuple_Size(args);
-	if (len == 0) {
-		PyErr_SetString(PyExc_TypeError, "GstBin.add_many requires at least one argument");
-		return NULL;
-	}
-       
-    
-	for (i = 0; i < len; i++) {
-		element = (PyGObject*)PyTuple_GetItem(args, i);
-		if (!pygobject_check(element, &PyGstElement_Type))
-		{
-			PyErr_SetString(PyExc_TypeError, "argument must be a GstElement");
-			return NULL;
-		}
-	}
-	
-	for (i = 0; i < len; i++) {
-		element = (PyGObject*)PyTuple_GetItem(args, i);
-		gst_bin_add(GST_BIN(self->obj), GST_ELEMENT(element->obj));
-	}
-
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-%%
-override gst_bin_remove_many args
-static PyObject *
-_wrap_gst_bin_remove_many(PyGObject *self, PyObject *args)
-{
-	PyGObject *element;
-	int i, len;
-
-	len = PyTuple_Size(args);
-	if (len == 0) {
-		PyErr_SetString(PyExc_TypeError, "GstBin.remove_many requires at least one argument");
-		return NULL;
-	}
-       
-    
-	for (i = 0; i < len; i++) {
-		element = (PyGObject*)PyTuple_GetItem(args, i);
-		if (!pygobject_check(element, &PyGstElement_Type))
-		{
-			PyErr_SetString(PyExc_TypeError, "argument must be a GstElement");
-			return NULL;
-		}
-	}
-	
-	for (i = 0; i < len; i++) {
-		element = (PyGObject*)PyTuple_GetItem(args, i);
-		gst_bin_remove(GST_BIN(self->obj), GST_ELEMENT(element->obj));
-	}
-
-	Py_INCREF(Py_None);
-	return Py_None;
 }
 %%
 override gst_element_link_many args

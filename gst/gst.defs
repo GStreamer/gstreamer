@@ -70,7 +70,7 @@
   (is-constructor-of "GstBin")
   (return-type "GstElement*")
   (parameters
-    '("const-gchar*" "name")
+    '("const-gchar*" "name" (null-ok) (default "NULL"))
   )
 )
 
@@ -185,17 +185,6 @@
   (of-object "GstBin")
   (c-name "gst_bin_sync_children_state")
   (return-type "GstElementStateReturn")
-)
-
-(define-method child_state_change
-  (of-object "GstBin")
-  (c-name "gst_bin_child_state_change")
-  (return-type "none")
-  (parameters
-    '("GstElementState" "oldstate")
-    '("GstElementState" "newstate")
-    '("GstElement*" "child")
-  )
 )
 
 (define-method set_pre_iterate_function

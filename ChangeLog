@@ -1,3 +1,22 @@
+2004-05-24  Johan Dahlin  <johan@gnome.org>
+
+	* testsuite/interface.py (Availability.testXOverlay): Extend to
+	test method calling on interfaces
+
+	* testsuite/common.py: call pygtk.require first
+
+	* gst/gstbin.override (_wrap_gst_bin_get_by_name): Add a 
+	keyword argument recurse and remove
+	_wrap_gst_bin_get_by_name_recurse_up. 
+
+	* gst/gst.override (_wrap_gst_element_get_pad_list): Split out bin
+	functions to ...
+
+	* gst/gstbin.override: .. this file
+
+	* gst/gst.defs (bin_new): allow NULL for first argument.
+	(child_state_change): Remove, it's private.
+
 2004-05-04  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gst-types.defs (Buffer): Add some fields
