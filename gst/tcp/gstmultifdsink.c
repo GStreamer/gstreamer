@@ -1096,10 +1096,10 @@ gst_multifdsink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
       if (newpos != client->bufpos) {
         client->bufpos = newpos;
         client->discont = TRUE;
-        GST_WARNING_OBJECT (sink, "client %p with fd %d position reset to %d",
+        GST_INFO_OBJECT (sink, "client %p with fd %d position reset to %d",
             client, client->fd.fd, client->bufpos);
       } else {
-        GST_WARNING_OBJECT (sink,
+        GST_INFO_OBJECT (sink,
             "client %p with fd %d not recovering position", client,
             client->fd.fd);
       }
@@ -1216,6 +1216,7 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
         /* interrupted system call, just redo the select */
         try_again = TRUE;
       } else {
+        /* this is quite bad... */
         GST_ELEMENT_ERROR (sink, RESOURCE, READ, (NULL),
             ("select failed: %s", g_strerror (errno)));
         return;
@@ -1552,6 +1553,10 @@ gst_multifdsink_change_state (GstElement * element)
 
   g_return_val_if_fail (GST_IS_MULTIFDSINK (element), GST_STATE_FAILURE);
   sink = GST_MULTIFDSINK (element);
+
+  /* we disallow changing the state from the streaming thread */
+  if (g_thread_self () == sink->thread)
+    return GST_STATE_FAILURE;
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
