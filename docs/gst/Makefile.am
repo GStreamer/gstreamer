@@ -128,7 +128,7 @@ scan-build.stamp: $(HFILE_GLOB) $(SCANOBJ_DEPS) $(basefiles)
 	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types > /dev/null ; then \
 	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" $(GTK_DOC_SCANOBJ) --module=$(DOC_MODULE) --output-dir=$(srcdir) ; \
 	mv $(DOC_MODULE)-scan.c $(DOC_MODULE)-presed-scan.c ; \
-	sed -e 's/g_strdown/g_ascii_strdown/g' $(DOC_MODULE)-presed-scan.c > $(DOC_MODULE)-scan.c ; \
+	sed -e 's/g_strdown/\/\/g_strdown/g' $(DOC_MODULE)-presed-scan.c > $(DOC_MODULE)-scan.c ; \
 	else \
 	    cd $(srcdir) ; \
 	    for i in $(SCANOBJ_FILES) ; do \
