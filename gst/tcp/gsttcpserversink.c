@@ -304,8 +304,6 @@ gst_tcpserversink_init_send (GstMultiFdSink * parent)
   gst_fdset_add_fd (parent->fdset, &this->server_sock);
   gst_fdset_fd_ctl_read (parent->fdset, &this->server_sock, TRUE);
 
-  //FD_SET (this->server_sock_fd, &parent->readfds);
-
   return TRUE;
 }
 
@@ -315,10 +313,10 @@ gst_tcpserversink_close (GstMultiFdSink * parent)
   GstTCPServerSink *this = GST_TCPSERVERSINK (parent);
 
   if (this->server_sock.fd != -1) {
+    gst_fdset_remove_fd (parent->fdset, &this->server_sock);
+
     close (this->server_sock.fd);
     this->server_sock.fd = -1;
-
-    gst_fdset_remove_fd (parent->fdset, &this->server_sock);
   }
   return TRUE;
 }

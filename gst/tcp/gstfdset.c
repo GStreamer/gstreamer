@@ -443,7 +443,7 @@ gst_fdset_wait (GstFDSet * set, int timeout)
     case GST_FDSET_MODE_SELECT:
     {
       struct timeval tv;
-      struct timeval *tvptr = NULL;
+      struct timeval *tvptr;
 
       set->testreadfds = set->readfds;
       set->testwritefds = set->writefds;
@@ -453,6 +453,8 @@ gst_fdset_wait (GstFDSet * set, int timeout)
         tv.tv_usec = timeout % 1000;
 
         tvptr = &tv;
+      } else {
+        tvptr = NULL;
       }
       res =
           select (FD_SETSIZE, &set->testreadfds, &set->testwritefds,

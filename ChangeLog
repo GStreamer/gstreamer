@@ -1,3 +1,11 @@
+2004-09-17  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstfdset.c: (gst_fdset_wait):
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_close):
+	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_init_send),
+	(gst_tcpserversink_close):
+	Be a bit more paranoid when freeing memory.
+
 2004-09-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream),

@@ -1435,26 +1435,28 @@ gst_multifdsink_close (GstMultiFdSink * this)
   this->running = FALSE;
 
   SEND_COMMAND (this, CONTROL_STOP);
-  g_thread_join (this->thread);
+  if (this->thread) {
+    g_thread_join (this->thread);
+    this->thread = NULL;
+  }
 
   close (READ_SOCKET (this).fd);
   close (WRITE_SOCKET (this).fd);
-  gst_fdset_remove_fd (this->fdset, &READ_SOCKET (this));
 
   if (this->streamheader) {
-    GSList *l;
-
-    for (l = this->streamheader; l; l = l->next) {
-      gst_buffer_unref (l->data);
-    }
+    g_slist_foreach (this->streamheader, (GFunc) gst_data_unref, NULL);
     g_slist_free (this->streamheader);
+    this->streamheader = NULL;
   }
 
   if (fclass->close)
     fclass->close (this);
 
-  gst_fdset_free (this->fdset);
-  this->fdset = NULL;
+  if (this->fdset) {
+    gst_fdset_remove_fd (this->fdset, &READ_SOCKET (this));
+    gst_fdset_free (this->fdset);
+    this->fdset = NULL;
+  }
 }
 
 static GstElementStateReturn
