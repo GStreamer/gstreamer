@@ -1,6 +1,6 @@
 %define name    gst-plugins  
 %define ver     @VERSION@
-%define rel     @GST_VERSION_RELEASE@
+%define rel     @GST_PLUGINS_RELEASE@
 %define prefix  /usr
 %define sysconfdir /etc
 
