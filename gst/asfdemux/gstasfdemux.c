@@ -35,123 +35,41 @@ static GstElementDetails gst_asf_demux_details = {
   "(C) 2002",
 };
 
-static GstCaps* asf_asf_type_find (GstBuffer *buf, gpointer private);
-static GstCaps* asf_wma_type_find (GstBuffer *buf, gpointer private);
-static GstCaps* asf_wax_type_find (GstBuffer *buf, gpointer private);
-static GstCaps* asf_wmv_type_find (GstBuffer *buf, gpointer private);
-static GstCaps* asf_wvx_type_find (GstBuffer *buf, gpointer private);
-static GstCaps* asf_wm_type_find (GstBuffer *buf, gpointer private);
+static GstCaps* asf_type_find (GstByteStream *bs, gpointer private);
 
 /* typefactory for 'asf' */
-static GstTypeDefinition asf_type_definitions[] = {
-  { "asfdemux_video/asf",
-    "video/x-ms-asf",
-    ".asf .asx",
-    asf_asf_type_find },
-  { "asfdemux_video/wma",
-    "video/x-ms-wma",
-    ".wma",
-    asf_wma_type_find },
-  { "asfdemux_video/wax",
-    "video/x-ms-wax",
-    ".wax",
-    asf_wax_type_find },
-  { "asfdemux_video/wmv",
-    "video/x-ms-wmv",
-    ".wmv",
-    asf_wmv_type_find },
-  { "asfdemux_video/wvx",
-    "video/x-ms-wvx",
-    ".wvx",
-    asf_wvx_type_find },
-  { "asfdemux_video/wm",
-    "video/x-ms-wm",
-    ".wm",
-    asf_wm_type_find },
-  { NULL, NULL, NULL, NULL }
+static GstTypeDefinition asf_type_definition = {
+  "asfdemux_video/asf",
+  "video/x-ms-asf",
+  /* note: asx/wax/wmx are XML files, we don't handle them */
+  ".asf .wma .wmv .wm",
+  asf_type_find,
 };
 
 static GstCaps*
-asf_asf_type_find (GstBuffer *buf, gpointer private)
+asf_type_find (GstByteStream *bs, gpointer private)
 {
-  GstCaps *new;
+  GstCaps *new = NULL;
+  GstBuffer *buf = NULL;
 
-  new = gst_caps_new (
-                  "asf_type_find",
-                  "video/x-ms-asf",
-                  gst_props_new ("asfversion",
-				 GST_PROPS_INT (1),
-				 NULL));
-  return new;
-}
+  if (gst_bytestream_peek (bs, &buf, 16) == 16) {
+    guint32 uid1 = GUINT32_FROM_LE (((guint32 *) GST_BUFFER_DATA (buf))[0]),
+	    uid2 = GUINT32_FROM_LE (((guint32 *) GST_BUFFER_DATA (buf))[1]),
+	    uid3 = GUINT32_FROM_LE (((guint32 *) GST_BUFFER_DATA (buf))[2]),
+	    uid4 = GUINT32_FROM_LE (((guint32 *) GST_BUFFER_DATA (buf))[3]);
 
-static GstCaps*
-asf_wma_type_find (GstBuffer *buf, gpointer private)
-{
-  GstCaps *new;
+    if (uid1 == 0x75B22630 && uid2 == 0x11CF668E &&
+        uid3 == 0xAA00D9A6 && uid4 == 0x6CCE6200) {
+      new = GST_CAPS_NEW ("asf_type_find",
+			  "video/x-ms-asf",
+			    NULL);
+    }
+  }
 
-  new = gst_caps_new (
-                  "asf_type_find",
-                  "video/x-ms-asf",
-                  gst_props_new ("asfversion",
-				 GST_PROPS_INT (1),
-				 NULL));
-  return new;
-}
+  if (buf != NULL) {
+    gst_buffer_unref (buf);
+  }
 
-static GstCaps*
-asf_wax_type_find (GstBuffer *buf, gpointer private)
-{
-  GstCaps *new;
-
-  new = gst_caps_new (
-                  "asf_type_find",
-                  "video/x-ms-asf",
-                  gst_props_new ("asfversion",
-				 GST_PROPS_INT (1),
-				 NULL));
-  return new;
-}
-
-static GstCaps*
-asf_wmv_type_find (GstBuffer *buf, gpointer private)
-{
-  GstCaps *new;
-
-  new = gst_caps_new (
-                  "asf_type_find",
-                  "video/x-ms-asf",
-                  gst_props_new ("asfversion",
-				 GST_PROPS_INT (1),
-				 NULL));
-  return new;
-}
-
-static GstCaps*
-asf_wvx_type_find (GstBuffer *buf, gpointer private)
-{
-  GstCaps *new;
-
-  new = gst_caps_new (
-                  "asf_type_find",
-                  "video/x-ms-asf",
-                  gst_props_new ("asfversion",
-				 GST_PROPS_INT (1),
-				 NULL));
-  return new;
-}
-
-static GstCaps*
-asf_wm_type_find (GstBuffer *buf, gpointer private)
-{
-  GstCaps *new;
-
-  new = gst_caps_new (
-                  "asf_type_find",
-                  "video/x-ms-asf",
-                  gst_props_new ("asfversion",
-				 GST_PROPS_INT (1),
-				 NULL));
   return new;
 }
 
@@ -1644,6 +1562,7 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
+  GstTypeFactory *type;
   gint i = 0;
   GstCaps *audcaps = NULL, *vidcaps = NULL, *temp;
   guint32 vid_list[] = {
@@ -1670,23 +1589,13 @@ plugin_init (GModule *module, GstPlugin *plugin)
     -1 /* end */
   };
 
-  /* this filter needs bytestream */
-  if (!gst_library_load ("gstbytestream")) {
-    GST_INFO ("asfdemux: could not load support library: 'gstbytestream'\n");
-    return FALSE;
-  }
-  
   /* create an elementfactory for the asf_demux element */
   factory = gst_element_factory_new ("asfdemux",GST_TYPE_ASF_DEMUX,
                                     &gst_asf_demux_details);
 
-  while (asf_type_definitions[i].name) {
-    GstTypeFactory *type;
-
-    type = gst_type_factory_new (&asf_type_definitions[i]);
-    //gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
-    i++;
-  }
+  /* type finding */
+  type = gst_type_factory_new (&asf_type_definition);
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   g_return_val_if_fail (factory != NULL, FALSE);
   gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_NONE);

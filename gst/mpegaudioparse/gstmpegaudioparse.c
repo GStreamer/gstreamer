@@ -35,6 +35,15 @@ static GstElementDetails mp3parse_details = {
   "(C) 1999",
 };
 
+static GstCaps * mp3_type_find (GstByteStream *bs, gpointer data);
+
+static GstTypeDefinition mp3type_definition = {
+  "mp3_audio/mpeg",
+  "audio/mpeg",
+  ".mp3 .mp2 .mp1 .mpga",
+  mp3_type_find,
+};
+
 static GstPadTemplate*
 mp3_src_factory (void)
 {
@@ -115,9 +124,219 @@ gst_mp3parse_get_type(void) {
       0,
       (GInstanceInitFunc)gst_mp3parse_init,
     };
-    mp3parse_type = g_type_register_static(GST_TYPE_ELEMENT, "GstMPEGAudioParse", &mp3parse_info, 0);
+    mp3parse_type = g_type_register_static (GST_TYPE_ELEMENT,
+					    "GstMPEGAudioParse",
+					    &mp3parse_info, 0);
   }
   return mp3parse_type;
+}
+
+static guint mp3types_bitrates[2][3][16] =
+{ { {0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, },
+    {0, 32, 48, 56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 384, },
+    {0, 32, 40, 48,  56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, } },
+  { {0, 32, 48, 56,  64,  80,  96, 112, 128, 144, 160, 176, 192, 224, 256, },
+    {0,  8, 16, 24,  32,  40,  48,  56,  64,  80,  96, 112, 128, 144, 160, },
+    {0,  8, 16, 24,  32,  40,  48,  56,  64,  80,  96, 112, 128, 144, 160, } },
+};
+
+static guint mp3types_freqs[3][3] =
+{ {44100, 48000, 32000},
+  {22050, 24000, 16000}, 
+  {11025, 12000,  8000}};
+
+static inline guint
+mp3_type_frame_length_from_header (guint32 header, guint *put_layer,
+				   guint *put_channels, guint *put_bitrate,
+				   guint *put_samplerate)
+{
+  guint length;
+  gulong mode, samplerate, bitrate, layer, version, channels;
+
+  /* we don't need extension, copyright, original or
+   * emphasis for the frame length */
+  header >>= 6;
+
+  /* mode */
+  mode = header & 0x3;
+  header >>= 3;
+
+  /* padding */
+  length = header & 0x1;
+  header >>= 1;
+
+  /* sampling frequency */
+  samplerate = header & 0x3;
+  if (samplerate == 3)
+    return 0;
+  header >>= 2;
+
+  /* bitrate index */
+  bitrate = header & 0xF;
+  if (bitrate == 15 || bitrate == 0)
+    return 0;
+
+  /* ignore error correction, too */
+  header >>= 5;
+
+  /* layer */
+  layer = 4 - (header & 0x3);
+  if (layer == 4)
+    return 0;
+  header >>= 2;
+
+  /* version */
+  version = header & 0x3;
+  if (version == 1)
+    return 0;
+
+  /* lookup */
+  channels = (mode == 3) ? 1 : 2;
+  bitrate = mp3types_bitrates[version == 3 ? 0 : 1][layer - 1][bitrate];
+  samplerate = mp3types_freqs[version > 0 ? version - 1 : 0][samplerate];
+
+  /* calculating */
+  if (layer == 1) {
+    length = ((12000 * bitrate / samplerate) + length) * 4;
+  } else {
+    length += ((layer == 3 && version == 0) ? 144000 : 72000) * bitrate / samplerate;
+  }
+
+  GST_DEBUG ("Calculated mp3 frame length of %u bytes", length);
+  GST_DEBUG ("samplerate = %lu - bitrate = %lu - layer = %lu - version = %lu"
+	     " - channels = %lu",
+	     samplerate, bitrate, layer, version, channels);
+
+  if (put_layer)
+    *put_layer = layer;
+  if (put_channels)
+    *put_channels = channels;
+  if (put_bitrate)
+    *put_bitrate = bitrate;
+  if (put_samplerate)
+    *put_samplerate = samplerate;
+
+  return length;
+}
+
+/**
+ * The chance that random data is identified as a valid mp3 header is 63 / 2^18
+ * (0.024%) per try. This makes the function for calculating false positives
+ *   1 - (1 - ((63 / 2 ^18) ^ GST_MP3_TYPEFIND_MIN_HEADERS)) ^ buffersize)
+ * This has the following probabilities of false positives:
+ * bufsize	          MIN_HEADERS
+ * (bytes)	1	2	3	4
+ * 4096		62.6%	 0.02%	 0%	 0%
+ * 16384	98%	 0.09%	 0%	 0%
+ * 1 MiB       100%	 5.88%	 0%	 0%
+ * 1 GiB       100%    100%	 1.44%   0%
+ * 1 TiB       100%    100%    100%      0.35%
+ * This means that the current choice (3 headers by most of the time 4096 byte
+ * buffers is pretty safe for now.
+ *
+ * The max. size of each frame is 1440 bytes, which means that for N frames
+ * to be detected, we need 1440 * GST_MP3_TYPEFIND_MIN_HEADERS + 3 of data.
+ * Assuming we step into the stream right after the frame header, this
+ * means we need 1440 * (GST_MP3_TYPEFIND_MIN_HEADERS + 1) - 1 + 3 bytes
+ * of data (5762) to always detect any mp3.
+ */
+
+/* increase this value when this function finds too many false positives */
+#define GST_MP3_TYPEFIND_MIN_HEADERS 3
+#define GST_MP3_TYPEFIND_MIN_DATA (1440 * (GST_MP3_TYPEFIND_MIN_HEADERS + 1) - 1 + 3)
+
+static GstCaps *
+mp3_caps_create (guint layer, guint channels,
+		 guint bitrate, guint samplerate)
+{
+  GstCaps *new;
+
+  g_assert (layer);
+  g_assert (samplerate);
+  g_assert (bitrate);
+  g_assert (channels);
+
+  new = GST_CAPS_NEW ("mp3_type_find",
+		      "audio/mpeg",
+			"mpegversion", GST_PROPS_INT (1),
+			"layer",       GST_PROPS_INT (layer),
+			/*"bitrate",     GST_PROPS_INT (bitrate),*/
+			"rate",        GST_PROPS_INT (samplerate),
+			"channels",    GST_PROPS_INT (channels));
+
+  return new;
+}
+
+static GstCaps *
+mp3_type_find (GstByteStream *bs, gpointer private)
+{
+  GstBuffer *buf = NULL;
+  GstCaps *new = NULL;
+  guint8 *data;
+  guint size;
+  guint32 head;
+  guint layer = 0, bitrate = 0, samplerate = 0, channels = 0;
+
+  /* note that even if we don't get the requested size,
+   * it might still be a (very small) mp3 */
+  gst_bytestream_peek (bs, &buf, GST_MP3_TYPEFIND_MIN_DATA);
+  if (!buf) {
+    goto done;
+  }
+  
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
+  
+  while (size >= 4) {
+    head = GUINT32_FROM_BE(*((guint32 *)data));
+    if ((head & 0xffe00000) == 0xffe00000) {
+      guint length;
+      guint prev_layer = 0, prev_bitrate = 0,
+	    prev_channels = 0, prev_samplerate = 0;
+      guint found = 0; /* number of valid headers found */
+      guint pos = 0;
+
+      do {
+        if (!(length = mp3_type_frame_length_from_header (head, &layer,
+							  &channels, &bitrate,
+							  &samplerate))) {
+          break;
+	}
+	if ((prev_layer && prev_layer != layer) || !layer ||
+	    (prev_bitrate && prev_bitrate != bitrate) || !bitrate ||
+	    (prev_samplerate && prev_samplerate != samplerate) || !samplerate ||
+	    (prev_channels && prev_channels != channels) || !channels) {
+          /* this means an invalid property, or a change, which likely
+	   * indicates that this is not a mp3 but just a random bytestream */
+	  break;
+	}
+	prev_layer = layer;
+	prev_bitrate = bitrate;
+	prev_channels = channels;
+	prev_samplerate = samplerate;
+	pos += length;
+	if (++found >= GST_MP3_TYPEFIND_MIN_HEADERS) {
+          /* we're pretty sure that this is mp3 now */
+          new = mp3_caps_create (layer, channels, bitrate, samplerate);
+	  goto done;
+        }
+
+        /* and now, find a new head */
+        head = GUINT32_FROM_BE(*((guint32 *) &(data[pos])));  
+        if ((head & 0xffe00000) != 0xffe00000)
+	  break;
+      } while (TRUE);
+    }
+    data++;
+    size--;
+  }
+
+done:
+  if (buf != NULL) {
+    gst_buffer_unref (buf);
+  }
+
+  return new;
 }
 
 static void
@@ -247,7 +466,10 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
         header2 = GUINT32_FROM_BE(*((guint32 *)(data+offset+bpf)));
         GST_DEBUG ("mp3parse: header=%08X, header2=%08X, bpf=%d", (unsigned int)header, (unsigned int)header2, bpf );
 
-        #define HDRMASK ~( (0xF<<12)/*bitrate*/ | (1<<9)/*padding*/ | (3<<4)/*mode extension*/ ) /* mask the bits which are allowed to differ between frames */
+/* mask the bits which are allowed to differ between frames */
+#define HDRMASK ~((0xF << 12)  /* bitrate */ | \
+		  (0x1 <<  9)  /* padding */ | \
+		  (0x3 <<  4)) /*mode extension*/
 
         if ( (header2&HDRMASK) != (header&HDRMASK) ) { /* require 2 matching headers in a row */
            GST_DEBUG ("mp3parse: next header doesn't match (header=%08X, header2=%08X, bpf=%d)", (unsigned int)header, (unsigned int)header2, bpf );
@@ -309,56 +531,23 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
   }
 }
 
-static int mp3parse_tabsel[2][3][16] =
-{ { {0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, },
-    {0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, },
-    {0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, } },
-  { {0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256, },
-    {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, },
-    {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, } },
-};
-
-static long mp3parse_freqs[9] =
-{44100, 48000, 32000, 22050, 24000, 16000, 11025, 12000, 8000};
-
-
 static long
 bpf_from_header (GstMPEGAudioParse *parse, unsigned long header)
 {
-  int layer_index,layer,lsf,samplerate_index,padding,mode;
-  long bpf;
-  gint channels, rate;
+  guint bitrate, layer, rate, channels, length;
 
-  /*mpegver = (header >> 19) & 0x3; // don't need this for bpf */
-  layer_index = (header >> 17) & 0x3;
-  layer = 4 - layer_index;
-  lsf = (header & (1 << 20)) ? ((header & (1 << 19)) ? 0 : 1) : 1;
-  parse->bit_rate = mp3parse_tabsel[lsf][layer - 1][((header >> 12) & 0xf)];
-  samplerate_index = (header >> 10) & 0x3;
-  padding = (header >> 9) & 0x1;
-  mode = (header >> 6) & 0x3;
-
-  if (layer == 1) {
-    bpf = parse->bit_rate * 12000;
-    bpf /= mp3parse_freqs[samplerate_index];
-    bpf = ((bpf + padding) << 2);
-  } else {
-    bpf = parse->bit_rate * 144000;
-    bpf /= mp3parse_freqs[samplerate_index];
-    bpf += padding;
+  if (!(length = mp3_type_frame_length_from_header (header, &layer,
+						    &channels,
+						    &bitrate, &rate))) {
+    return 0;
   }
 
-  channels = (mode == 3) ? 1 : 2;
-  rate = mp3parse_freqs[samplerate_index];
   if (channels != parse->channels ||
       rate     != parse->rate     ||
-      layer    != parse->layer) {
-    GstCaps *caps = GST_CAPS_NEW ("mp3parse_src",
-                                  "audio/mpeg",
-                                    "mpegversion", GST_PROPS_INT (1),
-                                    "layer",    GST_PROPS_INT (layer),
-                                    "channels", GST_PROPS_INT (channels),
-                                    "rate",     GST_PROPS_INT (rate));
+      layer    != parse->layer    ||
+      bitrate  != parse->bit_rate) {
+    GstCaps *caps = mp3_caps_create (layer, channels, bitrate, rate);
+
     if (gst_pad_try_set_caps(parse->srcpad, caps) <= 0) {
       gst_element_error (GST_ELEMENT (parse),
                          "mp3parse: failed to negotiate format with next element");
@@ -367,12 +556,10 @@ bpf_from_header (GstMPEGAudioParse *parse, unsigned long header)
     parse->channels = channels;
     parse->layer    = layer;
     parse->rate     = rate;
+    parse->bit_rate = bitrate;
   }
 
-  /*g_print("%08x: layer %d lsf %d bitrate %d samplerate_index %d padding %d - bpf %d\n", */
-/*header,layer,lsf,bitrate,samplerate_index,padding,bpf); */
-
-  return bpf;
+  return length;
 }
 
 static gboolean
@@ -470,6 +657,7 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
+  GstTypeFactory *type;
 
   /* create an elementfactory for the mp3parse element */
   factory = gst_element_factory_new ("mp3parse",
@@ -484,6 +672,10 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (factory, src_temp);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+
+  /* type finding */
+  type = gst_type_factory_new (&mp3type_definition);
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   return TRUE;
 }

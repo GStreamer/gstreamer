@@ -87,7 +87,7 @@ gst_rmdemux_details =
   "(C) 2003",
 };
 
-static GstCaps* realmedia_type_find (GstBuffer *buf, gpointer private);
+static GstCaps* realmedia_type_find (GstByteStream *bs, gpointer private);
 
 static GstTypeDefinition realmediadefinition = {
   "rmdemux_video/realmedia",
@@ -195,21 +195,26 @@ gst_rmdemux_init (GstRMDemux *rmdemux)
 }
 
 static GstCaps*
-realmedia_type_find (GstBuffer *buf, gpointer private)
+realmedia_type_find (GstByteStream *bs, gpointer private)
 {
-  gchar *data = GST_BUFFER_DATA (buf);
+  GstBuffer *buf = NULL;
+  GstCaps *new = NULL;
 
-  g_return_val_if_fail (data != NULL, NULL);
-  
-  if(GST_BUFFER_SIZE(buf) < 4){
-    return NULL;
+  if (gst_bytestream_peek (bs, &buf, 4) == 4) {
+    gchar *data = GST_BUFFER_DATA (buf);
+
+    if (!strncmp (data, ".RMF", 4)) {
+      new = GST_CAPS_NEW ("realmedia_type_find",
+			  "application/vnd.rn-realmedia", 
+			    NULL);
+    }
   }
-  if (strncmp (data, ".RMF", 4)==0) {
-    return gst_caps_new ("realmedia_type_find",
-		         "application/vnd.rn-realmedia", 
-			 NULL);
+
+  if (buf != NULL) {
+    gst_buffer_unref (buf);
   }
-  return NULL;
+
+  return new;
 }
 
 static gboolean
@@ -217,9 +222,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
   GstTypeFactory *type;
-
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
 
   factory = gst_element_factory_new ("rmdemux", GST_TYPE_RMDEMUX,
                                      &gst_rmdemux_details);

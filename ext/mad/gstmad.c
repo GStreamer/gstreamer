@@ -139,6 +139,7 @@ GST_PAD_TEMPLATE_FACTORY (mad_sink_template_factory,
     "mad_sink",
     "audio/mpeg",
       /* we don't need channel/rate ... */
+      "mpegversion", GST_PROPS_INT (1),
       "layer", GST_PROPS_INT_RANGE (1, 3)
   )
 )
@@ -1184,15 +1185,13 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	                          mad->stream.bufend - mad->stream.this_frame);
 
 	  if (tagsize > mad->tempsize) {
-            GST_INFO (
-		      "mad: got partial id3 tag in buffer, skipping");
+            GST_INFO ("mad: got partial id3 tag in buffer, skipping");
 	  }
 	  else if (tagsize > 0) {
 	    struct id3_tag *tag;
 	    id3_byte_t const *data;
 
-            GST_INFO (
-		      "mad: got ID3 tag size %ld", tagsize);
+            GST_INFO ("mad: got ID3 tag size %ld", tagsize);
 
 	    data = mad->stream.this_frame;
 

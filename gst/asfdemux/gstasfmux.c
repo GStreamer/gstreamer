@@ -414,6 +414,7 @@ gst_asfmux_vidsinkconnect (GstPad *pad, GstCaps *vscaps)
   return GST_PAD_LINK_REFUSED;
 
 done:
+  stream->bitrate = 1024 * 1024;
   stream->header.video.format.size = stream->header.video.stream.size;
   stream->header.video.format.width = stream->header.video.stream.width;
   stream->header.video.format.height = stream->header.video.stream.height;
@@ -465,7 +466,6 @@ gst_asfmux_audsinkconnect (GstPad *pad, GstCaps *vscaps)
 
     stream->header.audio.sample_rate = rate;
     stream->header.audio.channels    = channels;
-    stream->bitrate = 0; /* TODO */
 
     if (!strcmp (mimetype, "audio/x-raw-int")) {
       gint block, size;
@@ -507,7 +507,7 @@ gst_asfmux_audsinkconnect (GstPad *pad, GstCaps *vscaps)
       }
 
       stream->header.audio.block_align = 1;
-      stream->header.audio.byte_rate   = 0;
+      stream->header.audio.byte_rate   = 8 * 1024;
       stream->header.audio.word_size   = 16;
       stream->header.audio.size        = 0;
 
@@ -521,6 +521,7 @@ gst_asfmux_audsinkconnect (GstPad *pad, GstCaps *vscaps)
   return GST_PAD_LINK_REFUSED;
 
 done:
+  stream->bitrate = stream->header.audio.byte_rate * 8;
   return GST_PAD_LINK_OK;
 }
 
@@ -632,9 +633,11 @@ gst_asfmux_can_seek (GstAsfMux *asfmux)
   const GstEventMask *masks = gst_pad_get_event_masks (GST_PAD_PEER (asfmux->srcpad));
 
   /* this is for stream or file-storage */
-  while (masks->type != 0) {
+  while (masks != NULL && masks->type != 0) {
     if (masks->type == GST_EVENT_SEEK) {
       return TRUE;
+    } else {
+      masks++;
     }
   }
 
@@ -724,7 +727,7 @@ gst_asfmux_put_buffer (GstBuffer *packet,
 		       guint8    *data,
 		       guint      length)
 {
-  if ((GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet)) > length) {
+  if ((GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet)) >= length) {
     guint8 *pos = GST_BUFFER_DATA (packet) + GST_BUFFER_SIZE (packet);
     memcpy (pos, data, length);
     GST_BUFFER_SIZE (packet) += length;
@@ -737,7 +740,7 @@ static void
 gst_asfmux_put_byte (GstBuffer *packet,
 		     guint8     data)
 {
-  if ((GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet)) > sizeof (data)) {
+  if ((GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet)) >= sizeof (data)) {
     guint8 *pos = GST_BUFFER_DATA (packet) + GST_BUFFER_SIZE (packet);
     * (guint8 *) pos = data;
     GST_BUFFER_SIZE (packet) += 1;
@@ -750,7 +753,7 @@ static void
 gst_asfmux_put_le16 (GstBuffer *packet,
 		     guint16    data)
 {
-  if ((GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet)) > sizeof (data)) {
+  if ((GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet)) >= sizeof (data)) {
     guint8 *pos = GST_BUFFER_DATA (packet) + GST_BUFFER_SIZE (packet);
     * (guint16 *) pos = GUINT16_TO_LE (data);
     GST_BUFFER_SIZE (packet) += 2;
@@ -763,7 +766,7 @@ static void
 gst_asfmux_put_le32 (GstBuffer *packet,
 		     guint32    data)
 {
-  if ((GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet)) > sizeof (data)) {
+  if ((GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet)) >= sizeof (data)) {
     guint8 *pos = GST_BUFFER_DATA (packet) + GST_BUFFER_SIZE (packet);
     * (guint32 *) pos = GUINT32_TO_LE (data);
     GST_BUFFER_SIZE (packet) += 4;
@@ -776,7 +779,7 @@ static void
 gst_asfmux_put_le64 (GstBuffer *packet,
 		     guint64    data)
 {
-  if ((GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet)) > sizeof (data)) {
+  if ((GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet)) >= sizeof (data)) {
     guint8 *pos = GST_BUFFER_DATA (packet) + GST_BUFFER_SIZE (packet);
     * (guint64 *) pos = GUINT64_TO_LE (data);
     GST_BUFFER_SIZE (packet) += 8;
