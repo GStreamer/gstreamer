@@ -122,8 +122,26 @@ GST_PAD_TEMPLATE_FACTORY (pcm_factory,
   GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
     "mpeg_demux_pcm",
-    "audio/x-lpcm",
-    NULL
+    "audio/raw",
+      "format",            GST_PROPS_STRING ("int"),
+       "law",              GST_PROPS_INT (0),
+       "endianness",       GST_PROPS_INT (G_BIG_ENDIAN),
+       "signed",           GST_PROPS_BOOLEAN (TRUE),
+       "width",            GST_PROPS_LIST (
+	                     GST_PROPS_INT (16),
+	                     GST_PROPS_INT (20),
+	                     GST_PROPS_INT (24)
+                           ),
+       "depth",            GST_PROPS_LIST (
+	                     GST_PROPS_INT (16),
+	                     GST_PROPS_INT (20),
+	                     GST_PROPS_INT (24)
+                           ),
+       "rate",             GST_PROPS_LIST (
+	                     GST_PROPS_INT (48000),
+	                     GST_PROPS_INT (96000)
+                           ),
+       "channels",         GST_PROPS_INT_RANGE (1, 8)
   )
 );
 
@@ -147,6 +165,9 @@ static gboolean 	gst_mpeg_demux_parse_packet 	(GstMPEGParse *mpeg_parse, GstBuff
 static gboolean 	gst_mpeg_demux_parse_pes 	(GstMPEGParse *mpeg_parse, GstBuffer *buffer);
 static void		gst_mpeg_demux_send_data 	(GstMPEGParse *mpeg_parse, 
 							 GstData *data, GstClockTime time);
+
+static void		gst_mpeg_demux_lpcm_set_caps	(GstPad *pad, guint8 sample_info);
+static void		gst_mpeg_demux_dvd_audio_clear	(GstMPEGDemux *mpeg_demux, int channel);
 
 static void		gst_mpeg_demux_handle_discont 	(GstMPEGParse *mpeg_parse);
 static gboolean 	gst_mpeg_demux_handle_src_event (GstPad *pad, GstEvent *event);
@@ -223,6 +244,9 @@ gst_mpeg_demux_init (GstMPEGDemux *mpeg_demux)
   for (i=0;i<NUM_PRIVATE_1_STREAMS;i++) {
     mpeg_demux->private_1_stream[i] = NULL;
   }
+  for (i=0;i<NUM_PCM_STREAMS;i++) {
+    mpeg_demux->pcm_stream[i] = NULL;
+  }
   for (i=0;i<NUM_SUBTITLE_STREAMS;i++) {
     mpeg_demux->subtitle_stream[i] = NULL;
   }
@@ -265,7 +289,6 @@ gst_mpeg_demux_send_data (GstMPEGParse *mpeg_parse, GstData *data, GstClockTime 
     }
   }
 }
-
 static void
 gst_mpeg_demux_handle_discont (GstMPEGParse *mpeg_parse)
 {
@@ -788,6 +811,22 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
           GST_DEBUG (0, "we have a pcm_stream packet, track %d",
                      ps_id_code - 0xA0);
           outstream = &mpeg_demux->pcm_stream[ps_id_code - 0xA0];
+
+          /* Check for changes in the sample format. */
+          if (*outstream != NULL &&
+              basebuf[headerlen + 9] !=
+                mpeg_demux->lpcm_sample_info[ps_id_code - 0xA0]) {
+            /* Change the pad caps.*/
+            gst_mpeg_demux_lpcm_set_caps((*outstream)->pad, basebuf[headerlen + 9]);
+          }
+
+          /* Store the sample info. */
+          mpeg_demux->lpcm_sample_info[ps_id_code - 0xA0] =
+            basebuf[headerlen + 9];
+
+          /* Get rid of the LPCM header. */
+          headerlen += 7;
+          datalen -= 7;
           break;
 	case 0x20 ... 0x2f:
           GST_DEBUG (0, "we have a subtitle_stream packet, track %d",
@@ -838,10 +877,16 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       case 0xBD:
 	switch (ps_id_code) {
 	  case 0x80 ... 0x87:
-            name = g_strdup_printf ("private_stream_1.%d",ps_id_code - 0x80);
+            /* Erase any DVD audio pads. */
+            gst_mpeg_demux_dvd_audio_clear (mpeg_demux, ps_id_code - 0x80);
+
+            name = g_strdup_printf ("private_stream_1_%d",ps_id_code - 0x80);
 	    newtemp = GST_PAD_TEMPLATE_GET (private1_factory);
             break;
           case 0xA0 ... 0xA7:
+            /* Erase any DVD audio pads. */
+            gst_mpeg_demux_dvd_audio_clear (mpeg_demux, ps_id_code - 0xA0);
+
             name = g_strdup_printf ("pcm_stream_%d", ps_id_code - 0xA0);
 	    newtemp = GST_PAD_TEMPLATE_GET (pcm_factory);
             break;
@@ -883,9 +928,16 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 
       /* create the pad and add it to self */
       *outpad = gst_pad_new_from_template (newtemp, name);
-      caps = gst_pad_template_get_caps (newtemp);
-      gst_pad_try_set_caps (*outpad, caps);
-      gst_caps_unref (caps);
+      if (ps_id_code < 0xA0 || ps_id_code > 0xA7) {
+        caps = gst_pad_template_get_caps (newtemp);
+        gst_pad_try_set_caps (*outpad, caps);
+        gst_caps_unref (caps);
+      }
+      else {
+        gst_mpeg_demux_lpcm_set_caps(*outpad,
+                                     mpeg_demux->lpcm_sample_info[ps_id_code
+                                                                  - 0xA0]);
+      }
 
       gst_pad_set_formats_function (*outpad, gst_mpeg_demux_get_src_formats);
       gst_pad_set_convert_function (*outpad, gst_mpeg_parse_convert_src);
@@ -946,6 +998,82 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 
   return TRUE;
 }
+
+/**
+ * Set the capabilities of the given pad based on the provided LPCM
+ * sample information.
+ */
+static void
+gst_mpeg_demux_lpcm_set_caps (GstPad *pad, guint8 sample_info)
+{
+  gint width, rate, channels;
+  GstCaps *caps;
+
+  /* Determine the sample width. */
+  switch (sample_info & 0xC0) {
+  case 0x80:
+    width = 24;
+    break;
+  case 0x40:
+    width = 20;
+    break;
+  default:
+    width = 16;
+    break;
+  }
+
+  /* Determine the rate. */
+  if (sample_info & 0x10) {
+    rate = 96000;
+  }
+  else {
+    rate = 48000;
+  }
+
+  /* Determine the number of channels. */
+  channels = (sample_info & 0x7) + 1;
+
+  caps = GST_CAPS_NEW (
+          "mpeg_demux_pcm",
+          "audio/raw",
+            "format",            GST_PROPS_STRING ("int"),
+             "law",              GST_PROPS_INT (0),
+             "endianness",       GST_PROPS_INT (G_BIG_ENDIAN),
+             "signed",           GST_PROPS_BOOLEAN (TRUE),
+             "width",            GST_PROPS_INT (width),
+             "depth",            GST_PROPS_INT (width),
+             "rate",             GST_PROPS_INT (rate),
+             "channels",         GST_PROPS_INT (channels)
+	  );
+  gst_pad_try_set_caps (pad, caps);
+}
+
+/**
+ * Erase the DVD audio pad (if any) associated to the given channel.
+ */
+static void
+gst_mpeg_demux_dvd_audio_clear (GstMPEGDemux *mpeg_demux, int channel)
+{
+  GstMPEGStream **stream = NULL;
+
+  if (mpeg_demux->private_1_stream[channel] != NULL) {
+    stream = &mpeg_demux->private_1_stream[channel];
+  }
+  else if (mpeg_demux->pcm_stream[channel] != NULL) {
+    stream = &mpeg_demux->pcm_stream[channel];
+  }
+
+  if (stream == NULL) {
+    return;
+  }
+
+  gst_pad_unlink ((*stream)->pad, gst_pad_get_peer((*stream)->pad));
+  gst_element_remove_pad (GST_ELEMENT (mpeg_demux), (*stream)->pad);
+
+  g_free (*stream);
+  *stream = NULL;
+}
+
 
 const GstFormat*
 gst_mpeg_demux_get_src_formats (GstPad *pad)

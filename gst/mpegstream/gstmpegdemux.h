@@ -89,6 +89,11 @@ struct _GstMPEGDemux {
   GstMPEGStream *video_stream[NUM_VIDEO_STREAMS];
   GstMPEGStream *audio_stream[NUM_AUDIO_STREAMS];
 
+  /* The type of linear PCM samples associated to each channel. The
+     values are bit fields with the same format of the sample_info
+     field in the linear PCM header. */
+  guint8	 lpcm_sample_info[NUM_PCM_STREAMS];		
+
   GstIndex	*index;
 };
 
