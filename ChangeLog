@@ -1,5 +1,10 @@
 2002-10-04  David I. Lehn <dlehn@vt.edu>
 
+	* gstreamer/gstreamer.override, gstreamer/gstreamer-fixes.h: add
+	temporary hack to fix 0.4.1 s/gst/get/ typo in GST_TYPE_CAPS/PROPS()
+
+2002-10-04  David I. Lehn <dlehn@vt.edu>
+
 	* README: basic info.
 
 	* COPYING: remove the literal "^L" strings.

@@ -23,10 +23,10 @@
 headers
 #include <Python.h>
 
-#include "gstreamer-fixes.h"
-
 #include "pygobject.h"
 #include <gst/gst.h>
+
+#include "gstreamer-fixes.h"
 
 typedef struct {
 	PyGObject *pad;

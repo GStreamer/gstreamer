@@ -24,3 +24,7 @@
 
 #include <gst/gstqueue.h>
 #include <gst/gsttypefind.h>
+
+/* 0.4.1 headers had typo: s/gst/get/ */
+#define GST_TYPE_CAPS (_gst_caps_type)
+#define GST_TYPE_PROPS (_gst_props_type)
