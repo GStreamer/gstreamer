@@ -284,19 +284,17 @@ gst_cdaudio_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-print_track_info (GstCDAudio * cdaudio)
+debug_track_info (GstCDAudio * cdaudio)
 {
   gint i;
 
-  /*
-     for (i = 0; i < cdaudio->info.disc_total_tracks; i++) {
-     g_print ("%d %d %d %d:%02d\n", i,
-     cdaudio->info.disc_track[i].track_length.frames,
-     cdaudio->info.disc_track[i].track_pos.frames,
-     cdaudio->info.disc_track[i].track_length.minutes,
-     cdaudio->info.disc_track[i].track_length.seconds);
-     }
-   */
+  for (i = 0; i < cdaudio->info.disc_total_tracks; i++) {
+    GST_DEBUG_OBJECT (cdaudio, "%d %d %d %d:%02d", i,
+        cdaudio->info.disc_track[i].track_length.frames,
+        cdaudio->info.disc_track[i].track_pos.frames,
+        cdaudio->info.disc_track[i].track_length.minutes,
+        cdaudio->info.disc_track[i].track_length.seconds);
+  }
 }
 
 static GstElementStateReturn
@@ -321,7 +319,7 @@ gst_cdaudio_change_state (GstElement * element)
       if (cd_stat (cdaudio->cd_desc, &cdaudio->info) < 0)
         return GST_STATE_FAILURE;
 
-      print_track_info (cdaudio);
+      debug_track_info (cdaudio);
 
       cdaudio->discid = cddb_discid (cdaudio->cd_desc);
       g_object_notify (G_OBJECT (cdaudio), "discid");

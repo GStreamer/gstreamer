@@ -34,6 +34,12 @@ else
 AUDIOFILE_DIR=
 endif
 
+if USE_CDAUDIO
+CDAUDIO_DIR=cdaudio
+else
+CDAUDIO_DIR=
+endif
+
 if USE_CDPARANOIA
 CDPARANOIA_DIR=cdparanoia
 else
@@ -359,6 +365,7 @@ SUBDIRS=\
 	$(ARTS_DIR) \
 	$(ARTSC_DIR) \
 	$(AUDIOFILE_DIR) \
+	$(CDAUDIO_DIR) \
 	$(CDPARANOIA_DIR) \
 	$(DIRAC_DIR) \
 	$(DIVX_DIR) \
@@ -418,6 +425,7 @@ DIST_SUBDIRS=\
 	arts \
 	artsd \
 	audiofile \
+	cdaudio \
 	cdparanoia \
 	dirac \
 	divx \
