@@ -524,16 +524,20 @@ gst_audio_convert_passthrough (GstAudioConvert * this)
   return TRUE;
 }
 
+/* IMPORTANT: out_data == in_data is possible, make sure to not overwrite data
+ * you might need later on! */
 void
 gst_audio_convert_mix (GstAudioConvert * this,
     gint32 * in_data, gint32 * out_data, gint samples)
 {
   gint in, out, n;
   gint64 res;
+  gboolean backwards = this->srccaps.channels > this->sinkcaps.channels;
 
   /* FIXME: use liboil here? */
-  for (out = 0; out < this->srccaps.channels; out++) {
-    for (n = 0; n < samples; n++) {
+  for (n = (backwards ? samples - 1 : 0); n < samples && n >= 0;
+      backwards ? n-- : n++) {
+    for (out = 0; out < this->srccaps.channels; out++) {
       /* convert */
       res = 0;
       for (in = 0; in < this->sinkcaps.channels; in++) {
