@@ -346,15 +346,19 @@ gst_modplug_src_query (GstPad * pad, GstQueryType type,
       break;
     case GST_QUERY_POSITION:
       switch (*format) {
-        default:
+        case GST_FORMAT_TIME:
           tmp =
               ((float) (modplug->mSoundFile->GetSongTime () *
                   modplug->mSoundFile->GetCurrentPos ()) /
               (float) modplug->mSoundFile->GetMaxPosition ());
           *value = (gint64) (tmp * GST_SECOND);
           break;
+        default:
+          res = FALSE;
+          break;
       }
     default:
+      res = FALSE;
       break;
   }
 
