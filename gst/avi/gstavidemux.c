@@ -74,7 +74,7 @@ GST_PADTEMPLATE_FACTORY (sink_templ,
 GST_PADTEMPLATE_FACTORY (src_video_templ,
   "video_[00-32]",
   GST_PAD_SRC,
-  GST_PAD_ALWAYS,
+  GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
     "avidemux_src_video",
     "video/avi",
@@ -117,7 +117,7 @@ GST_PADTEMPLATE_FACTORY (src_video_templ,
 GST_PADTEMPLATE_FACTORY (src_audio_templ,
   "audio_[00-32]",
   GST_PAD_SRC,
-  GST_PAD_ALWAYS,
+  GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
     "avidemux_src_audio",
     "video/avi",
@@ -207,8 +207,8 @@ gst_avi_demux_class_init (GstAviDemuxClass *klass)
     g_param_spec_long ("current_time","current_time","current_time",
                        G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_FRAME_RATE,
-    g_param_spec_long ("frame-rate","frame rate","Current (non-averaged) frame rate",
-                       0, G_MAXINT, 0, G_PARAM_READABLE));
+    g_param_spec_int ("frame-rate","frame rate","Current (non-averaged) frame rate",
+                      0, G_MAXINT, 0, G_PARAM_READABLE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
   
