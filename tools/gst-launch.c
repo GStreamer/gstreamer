@@ -181,14 +181,14 @@ int
 main(int argc, char *argv[])
 {
   /* options */
-  gboolean silent = FALSE;
+  gboolean verbose = FALSE;
   gboolean no_fault = FALSE;
   gboolean trace = FALSE;
   gchar *savefile = NULL;
   gchar *exclude_args = NULL;
   struct poptOption options[] = {
-    {"silent",	's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &silent,   0,
-     "do not output status information", NULL},
+    {"verbose",	'v',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &verbose,   0,
+     "output status information and property notifications", NULL},
     {"exclude", 'X',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &exclude_args,  0,
      "do not output status information of TYPE", "TYPE1,TYPE2,..."},
     {"output",	'o',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &savefile, 0,
@@ -214,8 +214,12 @@ main(int argc, char *argv[])
   if (!no_fault)
     fault_setup();
   
-  if (trace)
+  if (trace) {
+    if (!gst_alloc_trace_available()) {
+      g_warning ("trace not available (recompile with trace enabled)");
+    }
     gst_alloc_trace_print_all ();
+  }
 
   /* make a null-terminated version of argv */
   argvn = g_new0 (char*, argc);
@@ -235,8 +239,7 @@ main(int argc, char *argv[])
     exit(1);
   }
   
-  if (!silent)
-  {
+  if (verbose) {
     gchar **exclude_list = exclude_args ? g_strsplit (exclude_args, ",", 0) : NULL;
     g_signal_connect (pipeline, "deep_notify", G_CALLBACK (gst_element_default_deep_notify), exclude_list);
   }
