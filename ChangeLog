@@ -1,5 +1,16 @@
 2004-05-27  Wim Taymans  <wim@fluendo.com>
 
+	* gst/schedulers/gstoptimalscheduler.c: (remove_from_chain),
+	(chain_group_set_enabled), (create_group), (add_to_group),
+	(merge_groups), (setup_group_scheduler), (group_elements),
+	(gst_opt_scheduler_iterate), (gst_opt_scheduler_show):
+	Don't try to follow the pad connections with other groups
+	when a loop based element is added to the scheduler because
+	the bin will inform the scheduler about the pad links a little
+	later.
+
+2004-05-27  Wim Taymans  <wim@fluendo.com>
+
 	* gst/schedulers/gstoptimalscheduler.c: (add_to_chain),
 	(remove_from_chain), (chain_group_set_enabled),
 	(setup_group_scheduler), (group_element_set_enabled),

@@ -213,7 +213,7 @@ static GstOptSchedulerGroup *create_group (GstOptSchedulerChain * chain,
     GstElement * element, GstOptSchedulerGroupType type);
 static void destroy_group (GstOptSchedulerGroup * group);
 static GstOptSchedulerGroup *add_to_group (GstOptSchedulerGroup * group,
-    GstElement * element);
+    GstElement * element, gboolean with_links);
 static GstOptSchedulerGroup *remove_from_group (GstOptSchedulerGroup * group,
     GstElement * element);
 static void group_dec_links_for_element (GstOptSchedulerGroup * group,
@@ -823,7 +823,7 @@ create_group (GstOptSchedulerChain * chain, GstElement * element,
   group->flags = GST_OPT_SCHEDULER_GROUP_DISABLED;
   group->type = type;
 
-  add_to_group (group, element);
+  add_to_group (group, element, FALSE);
   add_to_chain (chain, group);
   group = unref_group (group);  /* ...and sink. */
 
@@ -849,7 +849,8 @@ destroy_group (GstOptSchedulerGroup * group)
 }
 
 static GstOptSchedulerGroup *
-add_to_group (GstOptSchedulerGroup * group, GstElement * element)
+add_to_group (GstOptSchedulerGroup * group, GstElement * element,
+    gboolean with_links)
 {
   g_assert (group != NULL);
   g_assert (element != NULL);
@@ -867,7 +868,8 @@ add_to_group (GstOptSchedulerGroup * group, GstElement * element)
 
   /* first increment the links that this group has with other groups through
    * this element */
-  group_inc_links_for_element (group, element);
+  if (with_links)
+    group_inc_links_for_element (group, element);
 
   /* Ref the group... */
   GST_ELEMENT_SCHED_GROUP (element) = ref_group (group);
@@ -883,8 +885,6 @@ add_to_group (GstOptSchedulerGroup * group, GstElement * element)
   return group;
 }
 
-/* if the element is linked to elements from other groups, you must decrement
-   the link count prior to calling this function */
 static GstOptSchedulerGroup *
 remove_from_group (GstOptSchedulerGroup * group, GstElement * element)
 {
@@ -946,7 +946,7 @@ merge_groups (GstOptSchedulerGroup * group1, GstOptSchedulerGroup * group2)
     GstElement *element = (GstElement *) group2->elements->data;
 
     group2 = remove_from_group (group2, element);
-    add_to_group (group1, element);
+    add_to_group (group1, element, TRUE);
   }
 
   return group1;
@@ -1591,7 +1591,7 @@ group_elements (GstOptScheduler * osched, GstElement * element1,
 
     chain = create_chain (osched);
     group = create_group (chain, element1, type);
-    add_to_group (group, element2);
+    add_to_group (group, element2, TRUE);
   }
   /* the first element has a group */
   else if (group1) {
@@ -1604,7 +1604,7 @@ group_elements (GstOptScheduler * osched, GstElement * element1,
     /* the second element has no group, add it to the group
      * of the first element */
     else
-      add_to_group (group1, element2);
+      add_to_group (group1, element2, TRUE);
 
     group = group1;
   }
@@ -1613,7 +1613,7 @@ group_elements (GstOptScheduler * osched, GstElement * element1,
   else {
     GST_DEBUG ("adding \"%s\" to \"%s\"'s group",
         GST_ELEMENT_NAME (element1), GST_ELEMENT_NAME (element2));
-    add_to_group (group2, element1);
+    add_to_group (group2, element1, TRUE);
     group = group2;
   }
   return group;
