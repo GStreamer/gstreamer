@@ -1,3 +1,11 @@
+2004-10-11  Johan Dahlin  <johan@gnome.org>
+
+	* gst/arg-types.py:
+	* gst/gst.defs:
+	* gst/gst.override:
+	
+	GstXML support, based on patch by poelzi.
+
 2004-10-10  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/gstmodule.c: (init_gst):

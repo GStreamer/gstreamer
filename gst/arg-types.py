@@ -48,10 +48,66 @@ class GstDataPtrArg(ArgType):
             info.arglist.append(pname)
             info.codebefore.append(self.normal % {'name':  pname})
 
+class XmlNodeArg(ArgType):
+	"""libxml2 node generator"""
+	
+	names = {"xobj":"xmlNode",
+			"xptr":"xmlNodePtr",
+			"xwrap":"libxml_xmlNodePtrWrap"}
+	
+	parm = ('    if(xml == NULL) return NULL;\n'
+			'    xobj = PyObject_GetAttrString(xml, "%(xobj)s");\n'
+			'    if(!PyObject_IsInstance(py%(name)s, xobj)) {\n'
+			'        PyErr_Clear();\n'
+			'        PyErr_SetString(PyExc_RuntimeError,"%(name)s is not a %(xobj)s instance");\n'
+			'        Py_DECREF(xobj);Py_DECREF(xml);\n'
+			'        return NULL;\n'
+			'    }\n'
+			'    o = PyObject_GetAttrString(py%(name)s, "_o");\n'
+			'    %(name)s = PyCObject_AsVoidPtr(o);\n')
+	parmp = ('    Py_DECREF(o); Py_DECREF(xobj);Py_DECREF(xml);\n')
+	
+	ret =  ('    if(xml == NULL) return NULL;\n')
+	retp = ('    xargs = PyTuple_New(1);\n'
+			'    xobj = PyObject_GetAttrString(xml, "%(xobj)s");\n'
+			'    o = %(xwrap)s(ret);\n'
+			'    PyTuple_SetItem(xargs, 0, o);\n'
+			'    return PyInstance_New(xobj, xargs, PyDict_New());\n')
+	
+	def write_param(self, ptype, pname, pdflt, pnull, info):
+		info.varlist.add('PyObject', '*xml = _gst_get_libxml2_module()')
+		info.varlist.add('PyObject', '*o')
+		info.varlist.add('PyObject', '*xobj')
+		info.varlist.add('PyObject', '*py' + pname)
+		info.varlist.add(self.names["xptr"], pname)
+		#if pnull:
+		info.add_parselist('O', ['&py'+pname], [pname])
+		info.arglist.append(pname)
+		self.names["name"] = pname
+		info.codebefore.append(self.parm %self.names)
+		info.codeafter.append(self.parmp % self.names);
+	def write_return(self, ptype, ownsreturn, info):
+		info.varlist.add('PyObject', '*xml = _gst_get_libxml2_module()')
+		info.varlist.add('PyObject', '*xargs')
+		info.varlist.add('PyObject', '*xobj')
+		info.varlist.add('PyObject', '*o')
+		info.varlist.add(self.names["xptr"], 'ret')
+		info.codebefore.append(self.ret % self.names)
+		info.codeafter.append(self.retp % self.names)
+	
+class XmlDocArg(XmlNodeArg):
+	"""libxml2 doc generator"""
+	names = {"xobj":"xmlDoc",
+			"xptr":"xmlDocPtr",
+			"xwrap":"libxml_xmlDocPtrWrap"}
+			
+			
 arg = GstDataPtrArg()
 matcher.register('GstData*', arg)
 matcher.register('GstClockTime', UInt64Arg())
 matcher.register('GstClockTimeDiff', Int64Arg())
+matcher.register('xmlNodePtr', XmlNodeArg())
+matcher.register('xmlDocPtr', XmlDocArg())
 
 arg = PointerArg('gpointer', 'G_TYPE_POINTER')
 matcher.register('GstClockID', arg)

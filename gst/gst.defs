@@ -6024,7 +6024,7 @@
 
 (define-function xml_new
   (c-name "gst_xml_new")
-  (is-constructor-of "GstXml")
+  (is-constructor-of "GstXML")
   (return-type "GstXML*")
 )
 

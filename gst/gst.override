@@ -27,7 +27,6 @@ headers
 #endif
 
 #include "common.h"
-#include "gstmain.h"
 
 #include <gst/gst.h>
 #include <gst/gsterror.h>
@@ -89,7 +88,6 @@ ignore-glob
   gst_interface_*
   gst_tag_list_get_*
   gst_value_*
-  gst_xml_*
 %%
 ignore
   gst_alloc_trace_list
@@ -1166,4 +1164,81 @@ _wrap_gst_registry_pool_feature_list(PyGObject *self, PyObject *args)
 	g_list_free(features);
 		
 	return list;
+}
+%%
+override gst_xml_new noargs
+
+/* libxml2 available check */
+static PyObject *
+_gst_get_libxml2_module(void)
+{
+    PyObject *xml = NULL;
+    
+    xml = PyImport_ImportModule("libxml2");
+    if (!xml) {
+	PyErr_Clear();
+	PyErr_SetString(PyExc_RuntimeError,"libxml2 bindings required");
+	return NULL;
+    }
+    
+    return xml;
+ }
+
+static int
+_wrap_gst_xml_new(PyGObject *self)
+{
+    PyObject *xml = _gst_get_libxml2_module();
+    
+    if(!xml)
+	return -1;
+       
+    self->obj = (GObject *)gst_xml_new();
+    
+    if (!self->obj) {
+	PyErr_SetString(PyExc_RuntimeError, "could not create GstXML object");
+	return -1;
+    }
+    
+    pygobject_register_wrapper((PyObject *)self);
+    
+    return 0;
+}
+%%
+override gst_xml_get_topelements noargs
+static PyObject *
+_wrap_gst_xml_get_topelements(PyGObject *self)
+{
+    GList *l, *xml_elements;
+    PyObject *py_list;
+
+    py_list = PyList_New(0);
+
+    xml_elements = gst_xml_get_topelements(GST_XML(self->obj));
+    for (l = xml_elements; l; l = l->next) {
+	GstElement *element = (GstElement*)l->data;
+	
+	PyList_Append(py_list, pygobject_new(G_OBJECT(element)));
+    }
+       
+    return py_list;
+}
+%%
+override gst_xml_parse_memory kwargs
+static PyObject * 
+_wrap_gst_xml_parse_memory(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "buffer", "root", NULL };
+    int buffer_len, ret;
+    char *root = NULL;
+    guchar *buffer;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+                                    "s#|s:GstXML.parse_memory",
+                                    kwlist, &buffer, &buffer_len, &root))
+        return NULL;
+    
+    ret = gst_xml_parse_memory(GST_XML(self->obj),
+			       buffer, buffer_len, root);
+    
+    return PyBool_FromLong(ret);
 }
