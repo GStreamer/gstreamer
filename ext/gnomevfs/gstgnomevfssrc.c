@@ -540,7 +540,6 @@ static void gst_gnomevfssrc_close_file(GstGnomeVFSSrc *src)
 		close(src->fd);
 	} else {
 		gnome_vfs_close(src->handle);
-		gnome_vfs_handle_destroy(src->handle);
 	}
 
 	/* zero out a lot of our state */
