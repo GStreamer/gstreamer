@@ -1,7 +1,15 @@
+2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame),
+	(gst_ffmpegdec_chain):
+	  Separate buffer handling from actual decoding, handle pending
+	  frames (for B-frames and so on) so we catch the last frames
+	  before EOS, prepare for some timestamp changes to make playback
+	  of movies with B-frames smoother (not done yet).
+
 2005-01-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
-	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),
-	(gst_ffmpegdec_query), (gst_ffmpegdec_event), (gst_ffmpegdec_open),
+
 	(gst_ffmpegdec_negotiate), (gst_ffmpegdec_chain):
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_init),
 	(gst_ffmpegdemux_close), (gst_ffmpegdemux_src_query),

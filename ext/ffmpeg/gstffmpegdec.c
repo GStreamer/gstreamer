@@ -536,17 +536,125 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
   return TRUE;
 }
 
+static gint
+gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
+    guint8 * data, guint size, gint * got_data, guint64 * expected_ts)
+{
+  GstFFMpegDecClass *oclass =
+      (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  GstBuffer *outbuf = NULL;
+  gint have_data, len = 0;
+
+  ffmpegdec->context->frame_number++;
+
+  switch (oclass->in_plugin->type) {
+    case CODEC_TYPE_VIDEO:
+      len = avcodec_decode_video (ffmpegdec->context,
+          ffmpegdec->picture, &have_data, data, size);
+      GST_DEBUG ("Decode video: len=%d, have_data=%d", len, have_data);
+
+      if (len >= 0 && have_data > 0) {
+        /* libavcodec constantly crashes on stupid buffer allocation
+         * errors inside. This drives me crazy, so we let it allocate
+         * it's own buffers and copy to our own buffer afterwards... */
+        AVPicture pic;
+        gint fsize = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
+            ffmpegdec->context->width, ffmpegdec->context->height);
+
+        outbuf = gst_buffer_new_and_alloc (fsize);
+
+        /* original ffmpeg code does not handle odd sizes correctly.
+         * This patched up version does */
+        gst_ffmpeg_avpicture_fill (&pic, GST_BUFFER_DATA (outbuf),
+            ffmpegdec->context->pix_fmt,
+            ffmpegdec->context->width, ffmpegdec->context->height);
+
+        /* the original convert function did not do the right thing, this
+         * is a patched up version that adjust widht/height so that the
+         * ffmpeg one works correctly. */
+        gst_ffmpeg_img_convert (&pic, ffmpegdec->context->pix_fmt,
+            (AVPicture *) ffmpegdec->picture,
+            ffmpegdec->context->pix_fmt,
+            ffmpegdec->context->width, 
+            ffmpegdec->context->height);
+
+        /* note that ffmpeg sometimes gets the FPS wrong */
+        if (GST_CLOCK_TIME_IS_VALID (*expected_ts) &&
+            ffmpegdec->context->frame_rate > 0) {
+          GST_BUFFER_TIMESTAMP (outbuf) = *expected_ts;
+          GST_BUFFER_DURATION (outbuf) = GST_SECOND *
+              ffmpegdec->context->frame_rate_base /
+              ffmpegdec->context->frame_rate;
+          *expected_ts += GST_BUFFER_DURATION (outbuf);
+        }
+      } else {
+        gst_buffer_unref (outbuf);
+      }
+      break;
+
+    case CODEC_TYPE_AUDIO:
+      outbuf = gst_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
+      len = avcodec_decode_audio (ffmpegdec->context,
+          (int16_t *) GST_BUFFER_DATA (outbuf), &have_data, data, size);
+      GST_DEBUG ("Decode audio: len=%d, have_data=%d", len, have_data);
+
+      if (len >= 0 && have_data > 0) {
+        GST_BUFFER_SIZE (outbuf) = have_data;
+        if (GST_CLOCK_TIME_IS_VALID (*expected_ts)) {
+          GST_BUFFER_TIMESTAMP (outbuf) = *expected_ts;
+          GST_BUFFER_DURATION (outbuf) = (have_data * GST_SECOND) /
+              (2 * ffmpegdec->context->channels *
+              ffmpegdec->context->sample_rate);
+          *expected_ts += GST_BUFFER_DURATION (outbuf);
+        }
+      } else {
+        gst_buffer_unref (outbuf);
+      }
+      break;
+    default:
+      g_assert (0);
+      break;
+  }
+
+  if (len < 0 || have_data < 0) {
+    GST_ERROR_OBJECT (ffmpegdec,
+        "ffdec_%s: decoding error (len: %d, have_data: %d)",
+        oclass->in_plugin->name, len, have_data);
+    *got_data = 0;
+    return len;
+  } else if (len == 0 && have_data == 0) {
+    *got_data = 0;
+    return 0;
+  } else {
+    *got_data = 1;
+  }
+
+  if (have_data) {
+    GST_DEBUG ("Decoded data, now pushing");
+
+    if (!gst_ffmpegdec_negotiate (ffmpegdec)) {
+      gst_buffer_unref (outbuf);
+      return -1;
+    }
+
+    if (GST_PAD_IS_USABLE (ffmpegdec->srcpad))
+      gst_pad_push (ffmpegdec->srcpad, GST_DATA (outbuf));
+    else
+      gst_buffer_unref (outbuf);
+  }
+
+  return len;
+}
+
 static void
 gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *inbuf = GST_BUFFER (_data);
-  GstBuffer *outbuf = NULL;
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) (gst_pad_get_parent (pad));
   GstFFMpegDecClass *oclass =
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
   guint8 *bdata, *data;
-  gint bsize, size, len = 0;
-  gint have_data;
+  gint bsize, size, len, have_data;
   guint64 expected_ts = GST_BUFFER_TIMESTAMP (inbuf);
 
   if (!ffmpegdec->opened) {
@@ -586,7 +694,10 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
 
   do {
     /* parse, if at all possible */
-    if (ffmpegdec->pctx) {
+    if (bsize == 0) {
+      data = NULL;
+      size = 0;
+    } else if (ffmpegdec->pctx) {
       gint res;
 
       res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
@@ -605,111 +716,19 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
       size = bsize;
     }
 
-    ffmpegdec->context->frame_number++;
-
-    switch (oclass->in_plugin->type) {
-      case CODEC_TYPE_VIDEO:
-        len = avcodec_decode_video (ffmpegdec->context,
-            ffmpegdec->picture, &have_data, data, size);
-        GST_DEBUG ("Decode video: len=%d, have_data=%d", len, have_data);
-
-        if (len >= 0 && have_data) {
-          /* libavcodec constantly crashes on stupid buffer allocation
-           * errors inside. This drives me crazy, so we let it allocate
-           * it's own buffers and copy to our own buffer afterwards... */
-          AVPicture pic;
-          gint fsize = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
-              ffmpegdec->context->width, ffmpegdec->context->height);
-
-          outbuf = gst_buffer_new_and_alloc (fsize);
-	  /* original ffmpeg code does not handle odd sizes correctly. This patched
-	   * up version does */
-          gst_ffmpeg_avpicture_fill (&pic, GST_BUFFER_DATA (outbuf),
-              ffmpegdec->context->pix_fmt,
-              ffmpegdec->context->width, ffmpegdec->context->height);
-
-	  /* the original convert function did not do the right thing, this
-	   * is a patched up version that adjust widht/height so that the
-	   * ffmpeg one works correctly. */
-          gst_ffmpeg_img_convert (&pic, ffmpegdec->context->pix_fmt,
-              (AVPicture *) ffmpegdec->picture,
-              ffmpegdec->context->pix_fmt,
-              ffmpegdec->context->width, 
-	      ffmpegdec->context->height);
-
-          /* note that ffmpeg sometimes gets the FPS wrong */
-          if (GST_CLOCK_TIME_IS_VALID (expected_ts) &&
-              ffmpegdec->context->frame_rate > 0) {
-            GST_BUFFER_TIMESTAMP (outbuf) = expected_ts;
-            GST_BUFFER_DURATION (outbuf) = GST_SECOND *
-                ffmpegdec->context->frame_rate_base /
-                ffmpegdec->context->frame_rate;
-          } else {
-            GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
-          }
-        }
-        break;
-
-      case CODEC_TYPE_AUDIO:
-        outbuf = gst_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
-        len = avcodec_decode_audio (ffmpegdec->context,
-            (int16_t *) GST_BUFFER_DATA (outbuf), &have_data, data, size);
-        GST_DEBUG ("Decode audio: len=%d, have_data=%d", len, have_data);
-
-        if (have_data < 0) {
-          GST_WARNING_OBJECT (ffmpegdec,
-              "FFmpeg error: len %d, have_data: %d < 0 !",
-              len, have_data);
-          gst_buffer_unref (inbuf);
-          return;
-        }
-
-        if (len >= 0 && have_data) {
-          GST_BUFFER_SIZE (outbuf) = have_data;
-          if (GST_CLOCK_TIME_IS_VALID (expected_ts)) {
-            GST_BUFFER_TIMESTAMP (outbuf) = expected_ts;
-            GST_BUFFER_DURATION (outbuf) = (have_data * GST_SECOND) /
-                (2 * ffmpegdec->context->channels *
-                ffmpegdec->context->sample_rate);
-            expected_ts += GST_BUFFER_DURATION (outbuf);
-          }
-        } else {
-          gst_buffer_unref (outbuf);
-        }
-        break;
-      default:
-        g_assert (0);
-        break;
-    }
-
-    if (len < 0) {
-      GST_ERROR_OBJECT (ffmpegdec, "ffdec_%s: decoding error",
-          oclass->in_plugin->name);
+    if ((len = gst_ffmpegdec_frame (ffmpegdec, data, size,
+             &have_data, &expected_ts)) < 0)
       break;
-    } else if (len == 0) {
-      break;
-    }
 
-    if (have_data) {
-      GST_DEBUG ("Decoded data, now pushing");
-
-      if (!gst_ffmpegdec_negotiate (ffmpegdec)) {
-        gst_buffer_unref (outbuf);
-        return;
-      }
-
-      if (GST_PAD_IS_USABLE (ffmpegdec->srcpad))
-        gst_pad_push (ffmpegdec->srcpad, GST_DATA (outbuf));
-      else
-        gst_buffer_unref (outbuf);
-    }
-
-    if (!ffmpegdec->pctx || ffmpegdec->context->codec_id == CODEC_ID_MP3 || 
-	ffmpegdec->context->codec_id == CODEC_ID_MJPEG) {
+    if (!ffmpegdec->pctx) {
       bsize -= len;
       bdata += len;
     }
-  } while (bsize > 0);
+
+    if (!have_data) {
+      break;
+    }
+  } while (1);
 
   if ((ffmpegdec->pctx || oclass->in_plugin->id == CODEC_ID_MP3) &&
       bsize > 0) {
