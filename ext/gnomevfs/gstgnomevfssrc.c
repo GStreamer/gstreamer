@@ -2,6 +2,8 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2001 Bastien Nocera <hadess@hadess.net>
+ *                    2002 Kristian Rietveld <kris@gtk.org>
+ *                    2002 Colin Walters <walters@gnu.org>
  *
  * gnomevfssrc.c:
  *
@@ -25,6 +27,11 @@
 /*#undef BROKEN_SIG */
 
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -34,6 +41,8 @@
 
 #include <gst/gst.h>
 #include <libgnomevfs/gnome-vfs.h>
+/* gnome-vfs.h doesn't include the following header, which we need: */
+#include <libgnomevfs/gnome-vfs-standard-callbacks.h>
 
 GstElementDetails gst_gnomevfssrc_details;
 
@@ -89,6 +98,27 @@ struct _GstGnomeVFSSrc {
 	GnomeVFSFileOffset curoffset;	/* current offset in file */
 	gulong bytes_per_read;		/* bytes per read */
 	gboolean new_seek;
+
+	/* icecast/audiocast metadata extraction handling */
+	gboolean iradio_mode;
+	gboolean iradio_callbacks_pushed;
+
+	gint icy_metaint;
+	GnomeVFSFileSize icy_count;
+
+	gchar *iradio_name;
+	gchar *iradio_genre;
+	gchar *iradio_url;
+	gchar *iradio_title;
+
+	GThread *audiocast_thread;
+	GList *audiocast_notify_queue;
+	GMutex *audiocast_queue_mutex;
+	GMutex *audiocast_title_mutex;
+	gint audiocast_thread_die_infd;
+	gint audiocast_thread_die_outfd;
+	gint audiocast_port;
+	gint audiocast_fd;
 };
 
 struct _GstGnomeVFSSrcClass {
@@ -133,6 +163,11 @@ enum {
 	ARG_BYTESPERREAD,
 	ARG_OFFSET,
 	ARG_FILESIZE,
+	ARG_IRADIO_MODE,
+	ARG_IRADIO_NAME,
+	ARG_IRADIO_GENRE,
+	ARG_IRADIO_URL,
+	ARG_IRADIO_TITLE,
 };
 
 GType gst_gnomevfssrc_get_type(void);
@@ -156,6 +191,13 @@ static gboolean 	gst_gnomevfssrc_open_file	(GstGnomeVFSSrc *src);
 static gboolean 	gst_gnomevfssrc_srcpad_event 	(GstPad *pad, GstEvent *event);
 static gboolean 	gst_gnomevfssrc_srcpad_query 	(GstPad *pad, GstPadQueryType type,
 		              				 GstFormat *format, gint64 *value);
+
+static int audiocast_init(GstGnomeVFSSrc *src);
+static int audiocast_register_listener(gint *port, gint *fd);
+static void audiocast_do_notifications(GstGnomeVFSSrc *src);
+static gpointer audiocast_thread_run(GstGnomeVFSSrc *src);
+static void audiocast_thread_kill(GstGnomeVFSSrc *src);
+
 static GstElementClass *parent_class = NULL;
 
 GType gst_gnomevfssrc_get_type(void)
@@ -202,6 +244,44 @@ static void gst_gnomevfssrc_class_init(GstGnomeVFSSrcClass *klass)
 
 	gobject_class->dispose         = gst_gnomevfssrc_dispose;
 
+	/* icecast stuff */
+	g_object_class_install_property (gobject_class,
+					 ARG_IRADIO_MODE,
+					 g_param_spec_boolean ("iradio-mode",
+							       "iradio-mode",
+							       "Enable internet radio mode (extraction of icecast/audiocast metadata)",
+							       FALSE,
+							       G_PARAM_READWRITE));
+	g_object_class_install_property (gobject_class,
+					 ARG_IRADIO_NAME,
+					 g_param_spec_string ("iradio-name",
+							      "iradio-name",
+							      "Name of the stream",
+							      NULL,
+							      G_PARAM_READABLE));
+	g_object_class_install_property (gobject_class,
+					 ARG_IRADIO_GENRE,
+					 g_param_spec_string ("iradio-genre",
+							      "iradio-genre",
+							      "Genre of the stream",
+
+							      NULL,
+							      G_PARAM_READABLE));
+	g_object_class_install_property (gobject_class,
+					 ARG_IRADIO_URL,
+					 g_param_spec_string ("iradio-url",
+							      "iradio-url",
+							      "Homepage URL for radio stream",
+							      NULL,
+							      G_PARAM_READABLE));
+	g_object_class_install_property (gobject_class,
+					 ARG_IRADIO_TITLE,
+					 g_param_spec_string ("iradio-title",
+							      "iradio-title",
+							      "Name of currently playing song",
+							      NULL,
+							      G_PARAM_READABLE));
+
 	gstelement_class->set_property = gst_gnomevfssrc_set_property;
 	gstelement_class->get_property = gst_gnomevfssrc_get_property;
 
@@ -234,6 +314,21 @@ static void gst_gnomevfssrc_init(GstGnomeVFSSrc *gnomevfssrc)
 	gnomevfssrc->bytes_per_read = 4096;
 	gnomevfssrc->new_seek = FALSE;
 
+	gnomevfssrc->icy_metaint = 0;
+
+	gnomevfssrc->iradio_mode = FALSE;
+	gnomevfssrc->iradio_callbacks_pushed = FALSE;
+	gnomevfssrc->icy_count = 0;
+	gnomevfssrc->iradio_name = NULL;
+	gnomevfssrc->iradio_genre = NULL;
+	gnomevfssrc->iradio_url = NULL;
+	gnomevfssrc->iradio_title = NULL;
+
+	gnomevfssrc->audiocast_title_mutex = g_mutex_new(); 
+	gnomevfssrc->audiocast_queue_mutex = g_mutex_new(); 
+	gnomevfssrc->audiocast_notify_queue = NULL;
+	gnomevfssrc->audiocast_thread = NULL;
+		
 	g_static_mutex_lock (&count_lock);
 	if (ref_count == 0) {
 		/* gnome vfs engine init */
@@ -315,7 +410,11 @@ static void gst_gnomevfssrc_set_property(GObject *object, guint prop_id, const G
 		src->curoffset = g_value_get_int64 (value);
 		src->new_seek = TRUE;
 		break;
+	case ARG_IRADIO_MODE:
+		src->iradio_mode = g_value_get_boolean (value);
+		break;
 	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
 	}
 }
@@ -342,11 +441,400 @@ static void gst_gnomevfssrc_get_property(GObject *object, guint prop_id, GValue 
 	case ARG_FILESIZE:
 		g_value_set_int64 (value, src->size);
 		break;
+	case ARG_IRADIO_MODE:
+		g_value_set_boolean (value, src->iradio_mode);
+		break;
+	case ARG_IRADIO_NAME:
+		g_value_set_string (value, src->iradio_name);
+		break;
+	case ARG_IRADIO_GENRE:
+		g_value_set_string (value, src->iradio_genre);
+		break;
+	case ARG_IRADIO_URL:
+		g_value_set_string (value, src->iradio_url);
+		break;
+	case ARG_IRADIO_TITLE:
+		g_mutex_lock(src->audiocast_title_mutex);
+		g_value_set_string (value, src->iradio_title);
+		g_mutex_unlock(src->audiocast_title_mutex);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
 	}
 }
+
+
+/*
+ * icecast/audiocast metadata extraction support code
+ */
+
+static int audiocast_init(GstGnomeVFSSrc *src)
+{
+	int pipefds[2];
+	GError *error = NULL;
+	if (!src->iradio_mode)
+		return TRUE;
+	GST_DEBUG (0,"audiocast: registering listener");
+	if (audiocast_register_listener(&src->audiocast_port, &src->audiocast_fd) < 0)
+	{
+		gst_element_error(GST_ELEMENT(src),
+				  "opening vfs file \"%s\" (%s)",
+				  src->filename, 
+				  "unable to register UDP port");
+		close(src->audiocast_fd);
+		return FALSE;
+	}
+	GST_DEBUG (0,"audiocast: creating pipe");
+	src->audiocast_notify_queue = NULL;
+	if (pipe(pipefds) < 0)
+	{
+		close(src->audiocast_fd);
+		return FALSE;
+	}
+	src->audiocast_thread_die_infd = pipefds[0];
+	src->audiocast_thread_die_outfd = pipefds[1];
+	GST_DEBUG (0,"audiocast: creating audiocast thread");
+	src->audiocast_thread = g_thread_create((GThreadFunc) audiocast_thread_run, src, TRUE, &error);
+	if (error != NULL) {
+		gst_element_error(GST_ELEMENT(src),
+				  "opening vfs file \"%s\" (unable to create thread: %s)",
+				  src->filename, 
+				  error->message);
+		close(src->audiocast_fd);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static int audiocast_register_listener(gint *port, gint *fd)
+{
+	struct sockaddr_in sin;
+	int sock;
+	socklen_t sinlen = sizeof (struct sockaddr_in);
+
+	GST_DEBUG (0,"audiocast: estabilishing UDP listener");
+
+	if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+		goto lose;
+	
+	memset(&sin, 0, sinlen);
+	sin.sin_family = AF_INET;
+	sin.sin_addr.s_addr = g_htonl(INADDR_ANY);
+			
+	if (bind(sock, (struct sockaddr *)&sin, sinlen) < 0)
+		goto lose_and_close;
+
+	memset(&sin, 0, sinlen);
+	if (getsockname(sock, (struct sockaddr *)&sin, &sinlen) < 0)
+		goto lose_and_close;
+
+	GST_DEBUG (0,"audiocast: listening on local %s:%d", inet_ntoa(sin.sin_addr), g_ntohs(sin.sin_port));
+
+	*port = g_ntohs(sin.sin_port);
+	*fd = sock;
+
+	return 0;
+lose_and_close:
+	close(sock);
+lose:
+	return -1;
+}
+
+static void audiocast_do_notifications(GstGnomeVFSSrc *src)
+{
+	/* Send any pending notifications we got from the UDP thread. */
+	if (src->iradio_mode)
+	{
+		GList *entry;
+		g_mutex_lock(src->audiocast_queue_mutex);
+		for (entry = src->audiocast_notify_queue; entry; entry = entry->next)
+			g_object_notify(G_OBJECT (src), (const gchar *) entry->data);
+		g_list_free(src->audiocast_notify_queue);
+		src->audiocast_notify_queue = NULL;
+		g_mutex_unlock(src->audiocast_queue_mutex);
+	}		
+}
+
+static gpointer audiocast_thread_run(GstGnomeVFSSrc *src)
+{
+	char buf[1025], **lines;
+	char *valptr;
+	gsize len;
+	fd_set fdset, readset;
+	struct sockaddr_in from;
+	socklen_t fromlen = sizeof(struct sockaddr_in);
+
+	FD_ZERO(&fdset);
+
+	FD_SET(src->audiocast_fd, &fdset);
+	FD_SET(src->audiocast_thread_die_infd, &fdset);
+
+	while (1)
+	{
+		GST_DEBUG (0,"audiocast thread: dropping into select");
+		readset = fdset;
+		if (select(FD_SETSIZE, &readset, NULL, NULL, NULL) < 0) {
+			perror("select");
+			return NULL;
+		}
+		if (FD_ISSET(src->audiocast_thread_die_infd, &readset)) {
+			char buf[1];
+			GST_DEBUG (0,"audiocast thread: got die character");
+			read(src->audiocast_thread_die_infd, buf, 1);
+			close(src->audiocast_thread_die_infd);
+			close(src->audiocast_fd);
+			return NULL;
+		}
+		GST_DEBUG (0,"audiocast thread: reading data");
+		len = recvfrom(src->audiocast_fd, buf, sizeof(buf) - 1, 0, (struct sockaddr *) &from, &fromlen);
+		if (len < 0 && errno == EAGAIN)
+			continue;
+		else if (len >= 0)
+		{
+			int i;
+			buf[len] = '\0';
+			lines = g_strsplit(buf, "\n", 0);
+			if (!lines)
+				continue;
+	
+			for (i = 0; lines[i]; i++) {
+				while ((lines[i][strlen(lines[i]) - 1] == '\n') ||
+				       (lines[i][strlen(lines[i]) - 1] == '\r'))
+					lines[i][strlen(lines[i]) - 1] = '\0';
+			
+				valptr = strchr(lines[i], ':');
+			
+				if (!valptr)
+					continue;
+				else
+					valptr++;
+		
+				g_strstrip(valptr);
+				if (!strlen(valptr))
+					continue;
+		
+				if (!strncmp(lines[i], "x-audiocast-streamtitle", 23)) {
+					g_mutex_lock(src->audiocast_title_mutex);
+					if (src->iradio_title)
+						g_free(src->iradio_title);
+					src->iradio_title = g_strdup(valptr);
+					g_mutex_unlock(src->audiocast_title_mutex);
+					g_mutex_lock(src->audiocast_queue_mutex);
+					src->audiocast_notify_queue = g_list_append(src->audiocast_notify_queue, "iradio-title");
+					GST_DEBUG(0,"audiocast title: %s\n", src->iradio_title);
+					g_mutex_unlock(src->audiocast_queue_mutex);
+				} else if (!strncmp(lines[i], "x-audiocast-udpseqnr", 20)) {
+					gchar outbuf[120];
+					sprintf(outbuf, "x-audiocast-ack: %ld \r\n", atol(valptr));
+					if (sendto(src->audiocast_fd, outbuf, strlen(outbuf), 0, (struct sockaddr *) &from, fromlen) <= 0) {
+						fprintf(stderr, "Error sending response to server: %s\n", strerror(errno));
+						continue;
+					}
+					GST_DEBUG(0,"sent audiocast ack: %s\n", outbuf);
+				}
+			}
+			g_strfreev(lines);
+		}
+	}
+	return NULL;
+}
+
+static void audiocast_thread_kill(GstGnomeVFSSrc *src)
+{
+	if (!src->audiocast_thread)
+		return;
+	
+	/*
+	  We rely on this hack to kill the
+	  audiocast thread.  If we get icecast
+	  metadata, then we don't need the
+	  audiocast metadata too.
+	*/
+	GST_DEBUG (0,"audiocast: writing die character");
+	write(src->audiocast_thread_die_outfd, "q", 1);
+	close(src->audiocast_thread_die_outfd);
+	GST_DEBUG (0,"audiocast: joining thread");
+	g_thread_join(src->audiocast_thread);
+	src->audiocast_thread = NULL;
+}
+
+static void
+gst_gnomevfssrc_send_additional_headers_callback (gconstpointer in,
+						  gsize         in_size,
+						  gpointer      out,
+						  gsize         out_size,
+						  gpointer      callback_data)
+{
+	GstGnomeVFSSrc *src = GST_GNOMEVFSSRC (callback_data);
+	GnomeVFSModuleCallbackAdditionalHeadersOut *out_args =
+                (GnomeVFSModuleCallbackAdditionalHeadersOut *)out;
+
+	if (!src->iradio_mode)
+		return;
+	GST_DEBUG(0,"sending headers\n");
+
+        out_args->headers = g_list_append (out_args->headers,
+                                           g_strdup ("icy-metadata:1\r\n"));
+        out_args->headers = g_list_append (out_args->headers,
+                                           g_strdup_printf ("x-audiocast-udpport: %d\r\n", src->audiocast_port));
+}
+
+static void
+gst_gnomevfssrc_received_headers_callback (gconstpointer in,
+					   gsize         in_size,
+					   gpointer      out,
+					   gsize         out_size,
+					   gpointer      callback_data)
+{
+	GList *i;
+	gint icy_metaint;
+	GstGnomeVFSSrc *src = GST_GNOMEVFSSRC (callback_data);
+        GnomeVFSModuleCallbackReceivedHeadersIn *in_args =
+                (GnomeVFSModuleCallbackReceivedHeadersIn *)in;
+
+	if (!src->iradio_mode)
+		return;
+
+        for (i = in_args->headers; i; i = i->next) {
+		char *data = (char *) i->data;
+		char *key;
+		char *value = strchr(data, ':');
+		if (!value)
+			continue;
+
+		value++;
+		g_strstrip(value);
+		if (!strlen(value))
+			continue;
+
+		/* Icecast stuff */
+                if (!strncmp (data, "icy-metaint:", 12)) /* ugh */
+		{ 
+                        sscanf (data + 12, "%d", &icy_metaint);
+			src->icy_metaint = icy_metaint;
+			GST_DEBUG (0,"got icy-metaint, killing audiocast thread");
+			audiocast_thread_kill(src);
+			continue;
+		}
+
+		if (!strncmp(data, "icy-", 4))
+			key = data + 4;
+		else if (!strncmp(data, "x-audiocast-", 12))
+			key = data + 12;
+		else
+			continue;
+
+                if (!strncmp (key, "name", 4)) {
+			if (src->iradio_name)
+				g_free (src->iradio_name);
+			src->iradio_name = g_strdup (value);
+			g_object_notify (G_OBJECT (src), "iradio-name");
+                } else if (!strncmp (key, "genre", 5)) {
+			if (src->iradio_genre)
+				g_free (src->iradio_genre);
+			src->iradio_genre = g_strdup (value);
+			g_object_notify (G_OBJECT (src), "iradio-genre");
+                } else if (!strncmp (data, "url", 3)) {
+			if (src->iradio_url)
+				g_free (src->iradio_url);
+			src->iradio_url = g_strdup (value);
+			g_object_notify (G_OBJECT (src), "iradio-url");
+		}
+        }
+}
+
+static void
+gst_gnomevfssrc_push_callbacks (GstGnomeVFSSrc *gnomevfssrc)
+{
+	if (gnomevfssrc->iradio_callbacks_pushed)
+		return;
+
+	GST_DEBUG (0,"pushing callbacks");
+	gnome_vfs_module_callback_push (GNOME_VFS_MODULE_CALLBACK_HTTP_SEND_ADDITIONAL_HEADERS,
+					gst_gnomevfssrc_send_additional_headers_callback,
+					gnomevfssrc,
+					NULL);
+	gnome_vfs_module_callback_push (GNOME_VFS_MODULE_CALLBACK_HTTP_RECEIVED_HEADERS,
+					gst_gnomevfssrc_received_headers_callback,
+					gnomevfssrc,
+					NULL);
+
+	gnomevfssrc->iradio_callbacks_pushed = TRUE;
+}
+
+static void
+gst_gnomevfssrc_pop_callbacks (GstGnomeVFSSrc *gnomevfssrc)
+{
+	if (!gnomevfssrc->iradio_callbacks_pushed)
+		return;
+
+	GST_DEBUG (0,"popping callbacks");
+	gnome_vfs_module_callback_pop (GNOME_VFS_MODULE_CALLBACK_HTTP_SEND_ADDITIONAL_HEADERS);
+	gnome_vfs_module_callback_pop (GNOME_VFS_MODULE_CALLBACK_HTTP_RECEIVED_HEADERS);
+}
+
+static void
+gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc *src)
+{
+	GnomeVFSFileSize length = 0;
+        GnomeVFSResult res;
+        gint metadata_length;
+        guchar foobyte;
+        guchar *data;
+        guchar *pos;
+	gchar **tags;
+	int i;
+
+	GST_DEBUG (0,"reading icecast metadata");
+
+        while (length == 0) {
+                res = gnome_vfs_read (src->handle, &foobyte, 1, &length);
+                if (res != GNOME_VFS_OK)
+                        return;
+        }
+
+        metadata_length = foobyte * 16;
+
+        if (metadata_length == 0)
+                return;
+
+	data = g_new (gchar, metadata_length + 1);
+        pos = data;
+
+        while (pos - data < metadata_length) {
+                res = gnome_vfs_read (src->handle, pos,
+                                      metadata_length - (pos - data),
+                                      &length);
+		/* FIXME: better error handling here? */
+                if (res != GNOME_VFS_OK) {
+                        g_free (data);
+                        return;
+                }
+
+                pos += length;
+        }
+
+        data[metadata_length] = 0;
+	tags = g_strsplit(data, "';", 0);
+	
+	for (i = 0; tags[i]; i++)
+	{
+		if (!g_strncasecmp(tags[i], "StreamTitle=", 12))
+		{
+			if (src->iradio_title)
+				g_free (src->iradio_title);
+			src->iradio_title = g_strdup(tags[i]+13);
+			GST_DEBUG(0, "sending notification on icecast title");
+			g_object_notify (G_OBJECT (src), "iradio-title");
+		}
+		
+	}
+
+	g_strfreev(tags);
+}
+
+/* end of icecast/audiocast metadata extraction support code */
 
 /**
  * gst_gnomevfssrc_get:
@@ -377,6 +865,8 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 	/* FIXME: should eventually use a bufferpool for this */
 	buf = gst_buffer_new();
 	g_return_val_if_fail(buf, NULL);
+
+	audiocast_do_notifications(src);
 
 	/* read it in from the file */
 	if (src->is_local)
@@ -411,7 +901,33 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 		src->curoffset += GST_BUFFER_SIZE (buf);
 
                 g_object_notify ((GObject*) src, "offset");
+	} else if (src->iradio_mode && src->icy_metaint > 0) {
+		GST_BUFFER_DATA (buf) = g_malloc0 (src->icy_metaint);
+		g_return_val_if_fail (GST_BUFFER_DATA (buf) != NULL, NULL);
 
+		result = gnome_vfs_read (src->handle, GST_BUFFER_DATA (buf),
+					 src->icy_metaint - src->icy_count,
+					 &readbytes);
+
+		/* EOS? */
+		if (readbytes == 0) {
+			gst_buffer_unref (buf);
+			gst_element_set_eos (GST_ELEMENT (src));
+
+			return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+		}
+
+		src->icy_count += readbytes;
+		GST_BUFFER_OFFSET (buf) = src->curoffset;
+		GST_BUFFER_SIZE (buf) = readbytes;
+		src->curoffset += readbytes;
+
+		if (src->icy_count == src->icy_metaint) {
+			gst_gnomevfssrc_get_icy_metadata (src);
+			src->icy_count = 0;
+		}
+
+		g_object_notify (G_OBJECT (src), "offset");
 	} else {
 		/* allocate the space for the buffer data */
 		GST_BUFFER_DATA(buf) = g_malloc(src->bytes_per_read);
@@ -509,11 +1025,19 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 
 		src->new_seek = TRUE;
 	} else {
+
+		if (!audiocast_init(src))
+			return FALSE;
+			
+		gst_gnomevfssrc_push_callbacks (src);
+
 		result =
 		    gnome_vfs_open_uri(&(src->handle), src->uri,
 				       GNOME_VFS_OPEN_READ);
 		if (result != GNOME_VFS_OK)
 		{
+			gst_gnomevfssrc_pop_callbacks (src);
+			audiocast_thread_kill(src);
 			gst_element_error(GST_ELEMENT(src),
 				  "opening vfs file \"%s\" (%s)",
 				      src->filename, 
@@ -529,7 +1053,7 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 			info = gnome_vfs_file_info_new ();
 			size_result = gnome_vfs_get_file_info_uri(src->uri,
 					info, GNOME_VFS_FILE_INFO_DEFAULT);
-			
+
 			if (size_result != GNOME_VFS_OK)
 				src->size = 0;
 			else
@@ -541,6 +1065,8 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 			gnome_vfs_file_info_unref(info);
 		}
 
+		audiocast_do_notifications(src);
+	
 		GST_DEBUG(0, "open %s", gnome_vfs_result_to_string(result));
 	}
 
@@ -553,6 +1079,9 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 static void gst_gnomevfssrc_close_file(GstGnomeVFSSrc *src)
 {
 	g_return_if_fail(GST_FLAG_IS_SET(src, GST_GNOMEVFSSRC_OPEN));
+
+	gst_gnomevfssrc_pop_callbacks (src);
+	audiocast_thread_kill(src);
 
 	/* close the file */
 	if (src->is_local)
@@ -726,3 +1255,9 @@ GstPluginDesc plugin_desc = {
 	"gnomevfssrc",
 	plugin_init
 };
+
+/*
+  Local Variables:
+  c-file-style: "linux"
+  End:
+*/
