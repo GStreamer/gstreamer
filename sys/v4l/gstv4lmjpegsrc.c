@@ -102,6 +102,8 @@ static void                  gst_v4lmjpegsrc_set_clock    (GstElement     *eleme
 /* state handling */
 static GstElementStateReturn gst_v4lmjpegsrc_change_state (GstElement     *element);
 
+/* requeue buffer after use */
+static void                  gst_v4lmjpegsrc_buffer_free  (GstData        *data);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_v4lmjpegsrc_signals[LAST_SIGNAL] = { 0 };
@@ -576,9 +578,12 @@ gst_v4lmjpegsrc_get (GstPad *pad)
   }
 
   buf = gst_buffer_new ();
+  GST_DATA (buf)->free = gst_v4lmjpegsrc_buffer_free;
+  buf->pool = v4lmjpegsrc;
   GST_BUFFER_DATA(buf) = gst_v4lmjpegsrc_get_buffer(v4lmjpegsrc, num);
   GST_BUFFER_SIZE(buf) = v4lmjpegsrc->last_size;
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY);
+  GST_BUFFER_MAXSIZE(buf) = v4lmjpegsrc->breq.size;
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY | GST_BUFFER_DONTFREE);
   if (v4lmjpegsrc->use_fixed_fps)
     GST_BUFFER_TIMESTAMP(buf) = v4lmjpegsrc->handled * GST_SECOND / fps;
   else /* calculate time based on our own clock */
@@ -786,11 +791,11 @@ gst_v4lmjpegsrc_buffer_new (GstBufferPool *pool,
 }
 #endif
 
-#if 0
 static void
-gst_v4lmjpegsrc_buffer_free (GstBufferPool *pool, GstBuffer *buf, gpointer user_data)
+gst_v4lmjpegsrc_buffer_free (GstData *data)
 {
-  GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC (user_data);
+  GstBuffer *buf = GST_BUFFER (data);
+  GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC (buf->pool);
   int n;
 
   if (gst_element_get_state(GST_ELEMENT(v4lmjpegsrc)) != GST_STATE_PLAYING)
@@ -813,4 +818,3 @@ gst_v4lmjpegsrc_buffer_free (GstBufferPool *pool, GstBuffer *buf, gpointer user_
   /* free the buffer struct et all */
   gst_buffer_default_free(buf);
 }
-#endif

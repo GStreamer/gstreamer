@@ -95,6 +95,9 @@ static GstElementStateReturn gst_v4lsrc_change_state (GstElement     *element);
 static void                  gst_v4lsrc_set_clock    (GstElement     *element,
                                                       GstClock       *clock);
 
+/* requeue buffer if it's back available */
+static void                  gst_v4lsrc_buffer_free  (GstData        *data);
+
 static GstElementClass *parent_class = NULL;
 static guint gst_v4lsrc_signals[LAST_SIGNAL] = { 0 };
 
@@ -341,8 +344,17 @@ gst_v4lsrc_palette_to_caps (int            palette)
     case VIDEO_PALETTE_UYVY:
       fourcc = GST_MAKE_FOURCC('U','Y','V','Y');
       break;
+    case VIDEO_PALETTE_YUV411P:
+      fourcc = GST_MAKE_FOURCC('Y','4','1','B');
+      break;
     case VIDEO_PALETTE_YUV411:
       fourcc = GST_MAKE_FOURCC('Y','4','1','P');
+      break;
+    case VIDEO_PALETTE_YUV422P:
+      fourcc = GST_MAKE_FOURCC('Y','4','2','B');
+      break;
+    case VIDEO_PALETTE_YUV410P:
+      fourcc = GST_MAKE_FOURCC('Y','U','V','9');
       break;
     case VIDEO_PALETTE_RGB555:
     case VIDEO_PALETTE_RGB565:
@@ -408,12 +420,10 @@ gst_v4lsrc_palette_to_caps (int            palette)
 static GstPadLinkReturn
 gst_v4lsrc_srcconnect (GstPad  *pad, const GstCaps *vscapslist)
 {
-  GstPadLinkReturn ret_val;
   GstV4lSrc *v4lsrc;
-  GstCaps *newcaps;
-  gint palette;
   guint32 fourcc;
-  gint depth, w, h;
+  gint bpp, depth, w, h, palette = -1;
+  gdouble fps;
   GstStructure *structure;
 
   v4lsrc = GST_V4LSRC (gst_pad_get_parent (pad));
@@ -439,11 +449,14 @@ gst_v4lsrc_srcconnect (GstPad  *pad, const GstCaps *vscapslist)
 
   gst_structure_get_int (structure, "width", &w);
   gst_structure_get_int (structure, "height", &h);
+  gst_structure_get_double (structure, "framerate", &fps);
+
+  if (fps != gst_v4lsrc_get_fps(v4lsrc))
+    return GST_PAD_LINK_REFUSED;
 
   switch (fourcc)
   {
     case GST_MAKE_FOURCC('I','4','2','0'):
-    case GST_MAKE_FOURCC('I','Y','U','V'):
       palette = VIDEO_PALETTE_YUV420P;
       v4lsrc->buffer_size = ((w+1)&~1) * ((h+1)&~1) * 1.5;
       break;
@@ -455,12 +468,24 @@ gst_v4lsrc_srcconnect (GstPad  *pad, const GstCaps *vscapslist)
       palette = VIDEO_PALETTE_UYVY;
       v4lsrc->buffer_size = ((w+1)&~1) * h * 2;
       break;
+    case GST_MAKE_FOURCC('Y','4','1','B'):
+      palette = VIDEO_PALETTE_YUV411P;
+      v4lsrc->buffer_size = ((w+3)&~3) * h * 1.5;
+      break;
     case GST_MAKE_FOURCC('Y','4','1','P'):
       palette = VIDEO_PALETTE_YUV411;
       v4lsrc->buffer_size = ((w+3)&~3) * h * 1.5;
       break;
+    case GST_MAKE_FOURCC('Y','U','V','9'):
+      palette = VIDEO_PALETTE_YUV410P;
+      v4lsrc->buffer_size = ((w+3)&~3) * ((h+3)&~3) * 1.125;
+      break;
+    case GST_MAKE_FOURCC('Y','4','2','B'):
+      palette = VIDEO_PALETTE_YUV422P;
+      v4lsrc->buffer_size = ((w+1)&~1) * h * 2;
+      break;
     case GST_MAKE_FOURCC('R','G','B',' '):
-      depth = gst_structure_get_int (structure, "depth", &depth);
+      gst_structure_get_int (structure, "depth", &depth);
       switch (depth)
       {
 	case 15:
@@ -472,39 +497,30 @@ gst_v4lsrc_srcconnect (GstPad  *pad, const GstCaps *vscapslist)
 	  v4lsrc->buffer_size = w * h * 2;
           break;
 	case 24:
-	  palette = VIDEO_PALETTE_RGB24;
-	  v4lsrc->buffer_size = w * h * 3;
-          break;
-	case 32:
-	  palette = VIDEO_PALETTE_RGB32;
-	  v4lsrc->buffer_size = w * h * 4;
+          gst_structure_get_int (structure, "bpp", &bpp);
+          switch (bpp) {
+            case 24:
+	      palette = VIDEO_PALETTE_RGB24;
+	      v4lsrc->buffer_size = w * h * 3;
+              break;
+	    case 32:
+	      palette = VIDEO_PALETTE_RGB32;
+	      v4lsrc->buffer_size = w * h * 4;
+              break;
+            default:
+              break;
+          }
           break;
 	default:
-          return GST_PAD_LINK_REFUSED;
+          break;
       }
+      break;
     default:
-      return GST_PAD_LINK_REFUSED;
-    }
+      break;
+  }
 
-  /* try the current 'palette' out on the video device */
-  if (!gst_v4lsrc_try_palette(v4lsrc, palette))
+  if (palette == -1)
     return GST_PAD_LINK_REFUSED;
-
-  /* try to connect the pad/caps with the actual width/height */
-  //newcaps = gst_v4lsrc_palette_to_caps_fixed(palette);
-  newcaps = gst_v4lsrc_palette_to_caps (palette);
-  gst_caps_set_simple (newcaps,
-      "width", G_TYPE_INT, w,
-      "height", G_TYPE_INT, h,
-      "framerate", G_TYPE_DOUBLE, gst_v4lsrc_get_fps(v4lsrc),
-      NULL);
-
-  GST_DEBUG_CAPS ("new caps to set on v4lsrc's src pad", newcaps);
-
-  if ((ret_val = gst_pad_try_set_caps(v4lsrc->srcpad, newcaps)) == GST_PAD_LINK_REFUSED)
-    return GST_PAD_LINK_REFUSED;
-  else if (ret_val == GST_PAD_LINK_DELAYED)
-    return GST_PAD_LINK_DELAYED;
 
   if (!gst_v4lsrc_set_capture(v4lsrc, w, h, palette))
     return GST_PAD_LINK_REFUSED;
@@ -512,7 +528,7 @@ gst_v4lsrc_srcconnect (GstPad  *pad, const GstCaps *vscapslist)
   if (!gst_v4lsrc_capture_init(v4lsrc))
     return GST_PAD_LINK_REFUSED;
 
-  return GST_PAD_LINK_DONE;
+  return GST_PAD_LINK_OK;
 }
 
 
@@ -526,6 +542,9 @@ gst_v4lsrc_getcaps (GstPad  *pad)
     VIDEO_PALETTE_YUV420P,
     VIDEO_PALETTE_UYVY,
     VIDEO_PALETTE_YUV411P,
+    VIDEO_PALETTE_YUV422P,
+    VIDEO_PALETTE_YUV410P,
+    VIDEO_PALETTE_YUV411,
     VIDEO_PALETTE_RGB555,
     VIDEO_PALETTE_RGB565,
     VIDEO_PALETTE_RGB24,
@@ -534,17 +553,25 @@ gst_v4lsrc_getcaps (GstPad  *pad)
   struct video_capability *vcap = &GST_V4LELEMENT(v4lsrc)->vcap;
 
   if (!GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lsrc))) {
-    return NULL;
+    return gst_caps_new_any ();
+  } else if (GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lsrc))) {
+    return gst_caps_copy(GST_PAD_CAPS(v4lsrc->srcpad));
   }
 
   list = gst_caps_new_empty();
   for (i = 0; i < 8; i++) {
     GstCaps *one;
 
+    /* try palette out */
+    if (!gst_v4lsrc_try_palette(v4lsrc, palette[i]))
+      continue;
+
     one = gst_v4lsrc_palette_to_caps(palette[i]);
+    if (!one) g_print ("Palette %d gave no caps\n", palette[i]);
     gst_caps_set_simple (one,
 	"width", GST_TYPE_INT_RANGE, vcap->minwidth,  vcap->maxwidth,
 	"height", GST_TYPE_INT_RANGE, vcap->minheight, vcap->maxheight,
+        "framerate", G_TYPE_DOUBLE, gst_v4lsrc_get_fps(v4lsrc),
 	NULL);
     gst_caps_append(list, one);
   }
@@ -627,8 +654,11 @@ gst_v4lsrc_get (GstPad *pad)
   }
 
   buf = gst_buffer_new ();
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY);
+  GST_DATA (buf)->free = gst_v4lsrc_buffer_free;
+  buf->pool = v4lsrc; /* hack to re-queue buffer on free */
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY | GST_BUFFER_DONTFREE);
   GST_BUFFER_DATA(buf) = gst_v4lsrc_get_buffer(v4lsrc, num);
+  GST_BUFFER_MAXSIZE (buf) = v4lsrc->mbuf.size / v4lsrc->mbuf.frames;
   GST_BUFFER_SIZE(buf) = v4lsrc->buffer_size;
   if (v4lsrc->use_fixed_fps)
     GST_BUFFER_TIMESTAMP(buf) = v4lsrc->handled * GST_SECOND / fps;
@@ -780,11 +810,11 @@ gst_v4lsrc_buffer_new (GstBufferPool *pool,
 }
 #endif
 
-#if 0
 static void
-gst_v4lsrc_buffer_free (GstBufferPool *pool, GstBuffer *buf, gpointer user_data)
+gst_v4lsrc_buffer_free (GstData *data)
 {
-  GstV4lSrc *v4lsrc = GST_V4LSRC (user_data);
+  GstBuffer *buf = GST_BUFFER (data);
+  GstV4lSrc *v4lsrc = GST_V4LSRC (buf->pool);
   int n;
 
   if (gst_element_get_state(GST_ELEMENT(v4lsrc)) != GST_STATE_PLAYING)
@@ -807,7 +837,6 @@ gst_v4lsrc_buffer_free (GstBufferPool *pool, GstBuffer *buf, gpointer user_data)
   /* free struct */
   gst_buffer_default_free(buf);
 }
-#endif
 
 
 static void
