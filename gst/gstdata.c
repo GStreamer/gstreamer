@@ -191,8 +191,9 @@ gst_data_unref (GstData *data)
 
   g_return_if_fail (data != NULL);
 
-  GST_INFO (GST_CAT_BUFFER, "unref data %p, current count is %d", data,GST_DATA_REFCOUNT_VALUE(data));
-  g_return_if_fail (GST_DATA_REFCOUNT_VALUE(data) > 0);
+  GST_INFO (GST_CAT_BUFFER, "unref data %p, count before unref is %d", 
+            data, GST_DATA_REFCOUNT_VALUE (data));
+  g_return_if_fail (GST_DATA_REFCOUNT_VALUE (data) > 0);
 
   GST_ATOMIC_INT_DEC_AND_TEST (&data->refcount, &zero);
 
