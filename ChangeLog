@@ -1,6 +1,8 @@
 2004-05-10  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* gst/law/alaw.c : alawdec should be registered with type ALAWDEC, not ALAWENC
+	* gst/law/alaw-decode.c : put audio/x-alaw on pads, instead of audio/x-mulaw
+	* gst/law/alaw-encode.c : (idem)
 
 2004-05-09  Benjamin Otte  <otte@gnome.org>
 
