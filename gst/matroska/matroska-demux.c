@@ -868,12 +868,6 @@ gst_matroska_demux_add_stream (GstMatroskaDemux *demux)
   /* the pad in here */
   context->pad =  gst_pad_new_from_template (templ, padname);
 
-  if (caps != NULL) {
-    if (gst_pad_try_set_caps (context->pad, caps) <= 0) {
-      GST_WARNING ("Failed to set caps on next element for %s",
-		   padname); 
-    }
-  }
   g_free (padname);
 
   /* set some functions */
@@ -887,8 +881,11 @@ gst_matroska_demux_add_stream (GstMatroskaDemux *demux)
 				   gst_matroska_demux_get_src_query_types);
   gst_pad_set_query_function (context->pad,
 			      gst_matroska_demux_handle_src_query);
+  gst_pad_use_explicit_caps (context->pad);
 
   gst_element_add_pad (GST_ELEMENT (demux), context->pad);
+
+  gst_pad_set_explicit_caps (context->pad, caps);
 
   /* tadaah! */
   return TRUE;

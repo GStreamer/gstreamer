@@ -200,6 +200,7 @@ gst_esdmon_init(GTypeInstance *instance, gpointer g_class)
       gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (esdmon), "src"),
       "src");
   gst_pad_set_get_function(esdmon->srcpad, gst_esdmon_get);
+  gst_pad_use_explicit_caps (esdmon->srcpad);
   gst_element_add_pad(GST_ELEMENT(esdmon), esdmon->srcpad);
 
   esdmon->fd = -1;
@@ -256,8 +257,7 @@ gst_esdmon_get (GstPad *pad)
   if (!GST_PAD_CAPS (pad)) {
     gint sign = (esdmon->depth == 8 ? FALSE : TRUE);
     /* set caps on src pad */
-    /* FIXME: do this dynamically */
-    if (gst_pad_try_set_caps (esdmon->srcpad,
+    if (gst_pad_set_explicit_caps (esdmon->srcpad,
 	gst_caps_new_simple ("audio/x-raw-int",
 	  "endianness", G_TYPE_INT,	G_BYTE_ORDER,
           "signed",     G_TYPE_BOOLEAN, sign,

@@ -504,7 +504,7 @@ static void gst_qtdemux_loop_header (GstElement *element)
 	  gst_caps_set_simple (stream->caps, "framerate", G_TYPE_DOUBLE, fps,
 	      NULL);
           stream->fps = fps;
-          gst_pad_try_set_caps(stream->pad, stream->caps);
+          gst_pad_set_explicit_caps(stream->pad, stream->caps);
         }
       }
 
@@ -521,52 +521,6 @@ static void gst_qtdemux_loop_header (GstElement *element)
   }
 
 }
-
-static GstCaps *gst_qtdemux_src_getcaps(GstPad *pad)
-{
-  GstQTDemux *qtdemux;
-  QtDemuxStream *stream;
-
-  GST_DEBUG ("gst_qtdemux_src_getcaps");
-
-  qtdemux = GST_QTDEMUX(gst_pad_get_parent(pad));
-
-  g_return_val_if_fail(GST_IS_QTDEMUX(qtdemux), NULL);
-
-  stream = GST_PAD_ELEMENT_PRIVATE (pad);
-  return gst_caps_copy(stream->caps);
-}
-
-#if 0
-/* This function doesn't do anything useful, but might be useful later */
-static GstPadLinkReturn
-gst_qtdemux_src_link(GstPad *pad, GstCaps *caps)
-{
-  GstQTDemux *qtdemux;
-  QtDemuxStream *stream;
-  int i;
-
-  GST_DEBUG ("gst_qtdemux_src_link");
-
-  qtdemux = GST_QTDEMUX(gst_pad_get_parent(pad));
-
-  GST_DEBUG ("looking for pad %p in qtdemux %p", pad, qtdemux);
-  g_return_val_if_fail(GST_IS_QTDEMUX(qtdemux), GST_PAD_LINK_REFUSED);
-
-  GST_DEBUG ("n_streams is %d", qtdemux->n_streams);
-  for(i=0;i<qtdemux->n_streams;i++){
-    stream = qtdemux->streams[i];
-    GST_DEBUG ("pad[%d] is %p", i, stream->pad);
-    if(stream->pad == pad){
-      return GST_PAD_LINK_OK;
-    }
-  }
-
-  GST_DEBUG ("Couldn't find stream cooresponding to pad\n");
-
-  return GST_PAD_LINK_REFUSED;
-}
-#endif
 
 void gst_qtdemux_add_stream(GstQTDemux *qtdemux, QtDemuxStream *stream)
 {
@@ -594,10 +548,7 @@ void gst_qtdemux_add_stream(GstQTDemux *qtdemux, QtDemuxStream *stream)
     qtdemux->n_audio_streams++;
   }
 
-  gst_pad_set_getcaps_function(stream->pad, gst_qtdemux_src_getcaps);
-#ifdef unused
-  gst_pad_set_link_function(stream->pad, gst_qtdemux_src_link);
-#endif
+  gst_pad_use_explicit_caps (stream->pad);
 
   GST_PAD_ELEMENT_PRIVATE(stream->pad) = stream;
   qtdemux->streams[qtdemux->n_streams] = stream;
@@ -607,12 +558,7 @@ void gst_qtdemux_add_stream(GstQTDemux *qtdemux, QtDemuxStream *stream)
   GST_DEBUG ("adding pad %p to qtdemux %p", stream->pad, qtdemux);
   gst_element_add_pad(GST_ELEMENT (qtdemux), stream->pad);
 
-  /* Note: we need to have everything set up before calling try_set_caps */
-  if(stream->caps){
-    GST_DEBUG_CAPS ("setting caps",stream->caps);
-
-    gst_pad_try_set_caps(stream->pad, stream->caps);
-  }
+  gst_pad_set_explicit_caps(stream->pad, stream->caps);
 }
 
 

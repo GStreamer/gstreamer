@@ -138,6 +138,7 @@ gst_speexdec_init (GstSpeexDec *speexdec)
   gst_pad_set_link_function (speexdec->sinkpad, gst_speexdec_sinkconnect);
 
   speexdec->srcpad = gst_pad_new_from_template (speexdec_src_template, "src");
+  gst_pad_use_explicit_caps (speexdec->srcpad);
   gst_element_add_pad (GST_ELEMENT (speexdec), speexdec->srcpad);
 
 }
@@ -154,7 +155,7 @@ gst_speexdec_sinkconnect (GstPad *pad, const GstCaps *caps)
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int  (structure, "rate", &rate);
 
-  if (gst_pad_try_set_caps (speexdec->srcpad, 
+  if (gst_pad_set_explicit_caps (speexdec->srcpad, 
         gst_caps_new_simple ("audio/x-raw-int",
           "endianness", G_TYPE_INT, G_BYTE_ORDER,
           "signed",     G_TYPE_BOOLEAN, TRUE,

@@ -188,6 +188,7 @@ gst_mikmod_init (GstMikMod *filter)
       gst_static_pad_template_get (&mikmod_sink_factory),"sink");
   filter->srcpad = gst_pad_new_from_template(
     gst_static_pad_template_get (&mikmod_src_factory),"src");
+  gst_pad_use_explicit_caps (filter->srcpad);
 
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
   gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);
@@ -226,7 +227,7 @@ gst_mikmod_negotiate (GstMikMod *mikmod)
     sign = FALSE;
   }
 
-  return gst_pad_try_set_caps (mikmod->srcpad,
+  return gst_pad_set_explicit_caps (mikmod->srcpad,
       gst_caps_new_simple ( "audio/x-raw-int",
 	"endianness",  G_TYPE_INT, G_BYTE_ORDER,
 	"signed",      G_TYPE_BOOLEAN, sign,

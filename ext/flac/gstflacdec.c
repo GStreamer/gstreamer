@@ -190,6 +190,7 @@ gst_flacdec_init (FlacDec *flacdec)
   gst_pad_set_query_function (flacdec->srcpad, gst_flacdec_src_query);
   gst_pad_set_event_mask_function (flacdec->srcpad, gst_flacdec_get_src_event_masks);
   gst_pad_set_event_function (flacdec->srcpad, gst_flacdec_src_event);
+  gst_pad_use_explicit_caps (flacdec->srcpad);
 
   flacdec->decoder = FLAC__seekable_stream_decoder_new ();
   flacdec->total_samples = 0;
@@ -473,7 +474,7 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder *decoder,
   }
   
   if (!GST_PAD_CAPS (flacdec->srcpad)) {
-    gst_pad_try_set_caps (flacdec->srcpad,
+    gst_pad_set_explicit_caps (flacdec->srcpad,
         gst_caps_new_simple ("audio/x-raw-int",
           "endianness",  G_TYPE_INT, G_BYTE_ORDER,
           "signed",      G_TYPE_BOOLEAN, TRUE,

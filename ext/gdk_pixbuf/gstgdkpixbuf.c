@@ -228,6 +228,7 @@ gst_gdk_pixbuf_init (GstGdkPixbuf *filter)
   gst_pad_set_getcaps_function (filter->sinkpad, gst_gdk_pixbuf_sink_getcaps);
   filter->srcpad = gst_pad_new_from_template (
       gst_static_pad_template_get( &gst_gdk_pixbuf_src_template), "src");
+  gst_pad_use_explicit_caps (filter->srcpad);
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
@@ -278,7 +279,7 @@ gst_gdk_pixbuf_chain (GstPad *pad, GstData *_data)
         "height", G_TYPE_INT, filter->height,
         "framerate", G_TYPE_DOUBLE, 0., NULL);
 
-    gst_pad_try_set_caps(filter->srcpad, caps);
+    gst_pad_set_explicit_caps (filter->srcpad, caps);
   }
 
   outbuf = gst_buffer_new();

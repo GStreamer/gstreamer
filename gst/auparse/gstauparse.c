@@ -135,6 +135,7 @@ gst_auparse_init (GstAuParse *auparse)
   auparse->srcpad = gst_pad_new_from_template (
       gst_static_pad_template_get (&gst_auparse_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad);
+  gst_pad_use_explicit_caps (auparse->srcpad);
 
   auparse->offset = 0;
   auparse->size = 0;
@@ -251,9 +252,8 @@ gst_auparse_chain (GstPad *pad, GstData *_data)
 	  "signed",     G_TYPE_BOOLEAN, sign, NULL);
     }
 
-    if (gst_pad_try_set_caps (auparse->srcpad, tempcaps) <= 0) {
+    if (!gst_pad_set_explicit_caps (auparse->srcpad, tempcaps)) {
       gst_buffer_unref (buf);
-      gst_element_error (GST_ELEMENT (auparse), "could not set audio caps");
       return;
     }
 

@@ -202,6 +202,7 @@ gst_wavparse_init (GstWavParse *wavparse)
   gst_pad_set_query_function (wavparse->srcpad, gst_wavparse_pad_query);
   gst_pad_set_event_function (wavparse->srcpad, gst_wavparse_srcpad_event);
   gst_pad_set_event_mask_function (wavparse->srcpad, gst_wavparse_get_event_masks);
+  gst_pad_use_explicit_caps (wavparse->srcpad);
 
   gst_element_set_loop_function (GST_ELEMENT (wavparse), gst_wavparse_loop);
 
@@ -656,11 +657,8 @@ gst_wavparse_parse_fmt (GstWavParse *wavparse)
       return;
     }
 		
-    if (gst_pad_try_set_caps (wavparse->srcpad, caps) <= 0) {
-      gst_element_error (GST_ELEMENT (wavparse), "Could not set caps");
-      return;
-    }
-		
+    gst_pad_set_explicit_caps (wavparse->srcpad, caps);
+
     GST_DEBUG ("frequency %d, channels %d",
 							 wavparse->rate, wavparse->channels);
   }

@@ -167,6 +167,7 @@ gst_jpegdec_init (GstJpegDec *jpegdec)
   gst_pad_set_chain_function(jpegdec->sinkpad,gst_jpegdec_chain);
   gst_pad_set_link_function(jpegdec->sinkpad, gst_jpegdec_link);
   jpegdec->srcpad = gst_pad_new_from_template (jpegdec_src_template, "src");
+  gst_pad_use_explicit_caps (jpegdec->srcpad);
   gst_element_add_pad(GST_ELEMENT(jpegdec),jpegdec->srcpad);
 
   /* initialize the jpegdec decoder state */
@@ -201,6 +202,7 @@ gst_jpegdec_link (GstPad *pad, const GstCaps *caps)
 {
   GstJpegDec *jpegdec = GST_JPEGDEC (gst_pad_get_parent (pad));
   GstStructure *structure;
+  GstCaps *srccaps;
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -208,14 +210,18 @@ gst_jpegdec_link (GstPad *pad, const GstCaps *caps)
   gst_structure_get_int (structure, "width",     &jpegdec->width);
   gst_structure_get_int (structure, "height",    &jpegdec->height);
 
-  caps = gst_caps_new_simple ("video/x-raw-yuv",
+  srccaps = gst_caps_new_simple ("video/x-raw-yuv",
       "format",    GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I','4','2','0'),
       "width",     G_TYPE_INT, jpegdec->width,
       "height",    G_TYPE_INT, jpegdec->height,
       "framerate", G_TYPE_DOUBLE, jpegdec->fps,
       NULL);
 
-  return gst_pad_try_set_caps (jpegdec->srcpad, caps);
+  /* at this point, we're pretty sure that this will be the output
+   * format, so we'll set it. */
+  gst_pad_set_explicit_caps (jpegdec->srcpad, srccaps);
+
+  return GST_PAD_LINK_OK;
 }
 
 /* shamelessly ripped from jpegutils.c in mjpegtools */
@@ -404,7 +410,7 @@ gst_jpegdec_chain (GstPad *pad, GstData *_data)
     jpegdec->line[2] = g_realloc(jpegdec->line[2], height*sizeof(char*));
     jpegdec->height = height;
 
-    gst_pad_try_set_caps (jpegdec->srcpad,
+    gst_pad_set_explicit_caps (jpegdec->srcpad,
         gst_caps_new_simple ("video/x-raw-yuv",
           "format",    GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I','4','2','0'),
           "width",     G_TYPE_INT, width,
