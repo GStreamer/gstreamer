@@ -111,7 +111,7 @@ queue_leaky_get_type(void) {
 }
 
 static GstElementClass *parent_class = NULL;
-/* static guint gst_queue_signals[LAST_SIGNAL] = { 0 }; */
+static guint gst_queue_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gst_queue_get_type(void) 
@@ -146,6 +146,12 @@ gst_queue_class_init (GstQueueClass *klass)
   gstelement_class = (GstElementClass*)klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+
+  gst_queue_signals[HIGH_WATERMARK] =
+    g_signal_new ("high_watermark", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
+                  G_STRUCT_OFFSET (GstQueueClass, high_watermark), NULL, NULL,
+                  g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1,
+                  G_TYPE_INT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LEAKY,
     g_param_spec_enum ("leaky", "Leaky", "Where the queue leaks, if at all.",
@@ -350,6 +356,11 @@ restart:
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "adding buffer %p of size %d",buf,GST_BUFFER_SIZE(buf));
 
   if (queue->level_buffers == queue->size_buffers) {
+    g_mutex_unlock (queue->qlock);
+    g_signal_emit (G_OBJECT (queue), gst_queue_signals[HIGH_WATERMARK], 0,
+                   queue->level_buffers);
+    g_mutex_lock (queue->qlock);
+
     /* if this is a leaky queue... */
     if (queue->leaky) {
       /* FIXME don't want to leak events! */
