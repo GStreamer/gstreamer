@@ -11,6 +11,21 @@
   </para>
 
   <variablelist>
+
+    <varlistentry>
+      <term>14 Oct 2004</term>
+      <listitem>
+        <para>
+          <emphasis>* zaheerm</emphasis>
+wonders how he can break gstreamer today :)
+	</para>
+	<para>
+	  <emphasis>ensonic</emphasis>:
+zaheerm, spider is always a good starting point
+	</para>
+      </listitem>
+    </varlistentry>
+
     <varlistentry>
       <term>14 Jun 2004</term>
       <listitem>
