@@ -29,14 +29,13 @@
 //#define BS_DEBUG
 
 #ifdef BS_DEBUG
-# define bs_print(format,args...) 	GST_DEBUG (GST_CAT_BUFFER,  format, ## args)
-# define bs_status(bs) 			gst_bytestream_print_status(bs)
+# define bs_print(format,args...)	GST_DEBUG (GST_CAT_BUFFER,  format, ## args)
+# define bs_status(bs)			gst_bytestream_print_status(bs)
 #else
 # define bs_print(format,args...)
 # define bs_status(bs)
 #endif
 
-//static void gst_bytestream_print_status(GstByteStream *bs);
 guint8 *gst_bytestream_assemble (GstByteStream * bs, guint32 len);
 
 /**
@@ -52,7 +51,7 @@ gst_bytestream_new (GstPad * pad)
 {
   GstByteStream *bs = g_new (GstByteStream, 1);
 
-  bs->pad = pad;   // need to refcnt?
+  bs->pad = pad;
 
   bs->buflist = NULL;
   bs->headbufavail = 0;
@@ -66,14 +65,11 @@ gst_bytestream_destroy (GstByteStream * bs)
 {
   GSList *walk;
 
-  // release bs->pad ??
-
   walk = bs->buflist;
   while (walk) {
-    gst_buffer_unref( GST_BUFFER (walk->data) );
+    gst_buffer_unref (GST_BUFFER (walk->data));
     walk = g_slist_next (walk);
   }
-
   g_slist_free (bs->buflist);
   g_free (bs);
 }
@@ -119,38 +115,6 @@ gst_bytestream_get_next_buf (GstByteStream * bs)
 
   bs_print ("get_next_buf: pulling buffer\n");
   nextbuf = gst_pad_pull (bs->pad);
-
-  // g_assert (nextbuf);  ??
-  if (!nextbuf)
-    return FALSE;
-
-  if (GST_IS_EVENT (nextbuf)) {
-    GstEvent *ev = GST_EVENT (nextbuf);
-    gint ret=0;
-    gboolean result = FALSE;
-
-    switch (ev->type) {
-    case GST_EVENT_EOS:
-      // do something
-      ret = TRUE;
-      break;
-
-    case GST_EVENT_DISCONTINUOUS:
-      gst_bytestream_flush_fast (bs, bs->listavail);
-      ret = TRUE;
-      break;
-
-    default:
-      g_warning ("Ignoring unknown event %d", ev->type);
-      break;
-    }
-
-    gst_event_free (ev);
-
-    if (ret)
-      return result;
-  }
-
   bs_print ("get_next_buf: got buffer of %d bytes\n", GST_BUFFER_SIZE (nextbuf));
 
   // first see if there are any buffers in the list at all
@@ -208,8 +172,7 @@ gst_bytestream_fill_bytes (GstByteStream * bs, guint32 len)
   // as long as we don't have enough, we get more buffers
   while (bs->listavail < len) {
     bs_print ("fill_bytes: there are %d bytes in the list, we need %d\n", bs->listavail, len);
-    if (!gst_bytestream_get_next_buf (bs))
-      return FALSE;
+    gst_bytestream_get_next_buf (bs);
   }
 
   return TRUE;
@@ -217,7 +180,7 @@ gst_bytestream_fill_bytes (GstByteStream * bs, guint32 len)
 
 
 GstBuffer *
-gst_bytestream_peek_loc (GST_WHERE_ARGS_ GstByteStream * bs, guint32 len)
+gst_bytestream_peek (GstByteStream * bs, guint32 len)
 {
   GstBuffer *headbuf, *retbuf = NULL;
 
@@ -229,11 +192,10 @@ gst_bytestream_peek_loc (GST_WHERE_ARGS_ GstByteStream * bs, guint32 len)
   // make sure we have enough
   bs_print ("peek: there are %d bytes in the list\n", bs->listavail);
   if (len > bs->listavail) {
-    if (!gst_bytestream_fill_bytes (bs, len))
-      return NULL;
+    gst_bytestream_fill_bytes (bs, len);
     bs_print ("peek: there are now %d bytes in the list\n", bs->listavail);
   }
-  bs_status (bs);
+  bs_status (bs)
 
   // extract the head buffer
   headbuf = GST_BUFFER (bs->buflist->data);
@@ -243,14 +205,14 @@ gst_bytestream_peek_loc (GST_WHERE_ARGS_ GstByteStream * bs, guint32 len)
   if (len <= bs->headbufavail) {
     bs_print ("peek: there are enough bytes in headbuf (need %d, have %d)\n", len, bs->headbufavail);
     // create a sub-buffer of the headbuf
-    retbuf = gst_buffer_create_sub_loc (GST_WHERE_VARS_ headbuf, GST_BUFFER_SIZE (headbuf) - bs->headbufavail, len);
+    retbuf = gst_buffer_create_sub (headbuf, GST_BUFFER_SIZE (headbuf) - bs->headbufavail, len);
 
     // otherwise we need to figure out how to assemble one
   }
   else {
     bs_print ("peek: current buffer is not big enough for len %d\n", len);
 
-    retbuf = gst_buffer_new_loc (GST_WHERE_VARS);
+    retbuf = gst_buffer_new ();
     GST_BUFFER_SIZE (retbuf) = len;
     GST_BUFFER_DATA (retbuf) = gst_bytestream_assemble (bs, len);
     if (GST_BUFFER_OFFSET (headbuf) != -1)
@@ -274,11 +236,10 @@ gst_bytestream_peek_bytes (GstByteStream * bs, guint32 len)
   // make sure we have enough
   bs_print ("peek_bytes: there are %d bytes in the list\n", bs->listavail);
   if (len > bs->listavail) {
-    if (!gst_bytestream_fill_bytes (bs, len))
-      return NULL;
+    gst_bytestream_fill_bytes (bs, len);
     bs_print ("peek_bytes: there are now %d bytes in the list\n", bs->listavail);
   }
-  bs_status (bs);
+  bs_status (bs)
 
   // extract the head buffer
   headbuf = GST_BUFFER (bs->buflist->data);
@@ -309,8 +270,6 @@ gst_bytestream_assemble (GstByteStream * bs, guint32 len)
   guint32 copied = 0;
   GstBuffer *buf;
 
-  g_assert (len <= bs->listavail);
-
   // copy the data from the curbuf
   buf = GST_BUFFER (bs->buflist->data);
   bs_print ("assemble: copying %d bytes from curbuf at %d to *data\n", bs->headbufavail,
@@ -321,8 +280,6 @@ gst_bytestream_assemble (GstByteStream * bs, guint32 len)
   // asumption is made that the buffers all exist in the list
   walk = g_slist_next (bs->buflist);
   while (copied < len) {
-    g_assert (walk);
-
     buf = GST_BUFFER (walk->data);
     if (GST_BUFFER_SIZE (buf) < (len - copied)) {
       bs_print ("assemble: copying %d bytes from buf to output offset %d\n", GST_BUFFER_SIZE (buf), copied);
@@ -343,32 +300,18 @@ gst_bytestream_assemble (GstByteStream * bs, guint32 len)
 gboolean
 gst_bytestream_flush (GstByteStream * bs, guint32 len)
 {
+  GstBuffer *headbuf;
+
   bs_print ("flush: flushing %d bytes\n", len);
 
   // make sure we have enough
   bs_print ("flush: there are %d bytes in the list\n", bs->listavail);
   if (len > bs->listavail) {
-    if (!gst_bytestream_fill_bytes (bs, len))
-      {
-	gst_bytestream_flush_fast (bs, bs->listavail);
-	return FALSE;
-      }
+    gst_bytestream_fill_bytes (bs, len);
     bs_print ("flush: there are now %d bytes in the list\n", bs->listavail);
   }
 
-  gst_bytestream_flush_fast (bs, len);
-
-  return TRUE;
-}
-
-void
-gst_bytestream_flush_fast (GstByteStream * bs, guint32 len)
-{
-  GstBuffer *headbuf;
-
-  g_return_if_fail (bs);
-  g_assert (len <= bs->listavail);
-
+  // repeat until we've flushed enough data
   while (len > 0) {
     headbuf = GST_BUFFER (bs->buflist->data);
 
@@ -408,14 +351,15 @@ gst_bytestream_flush_fast (GstByteStream * bs, guint32 len)
 
     bs_print ("flush: bottom of while(), len is now %d\n", len);
   }
+
+  return TRUE;
 }
 
 GstBuffer *
-gst_bytestream_read_loc (GST_WHERE_ARGS_ GstByteStream * bs, guint32 len)
+gst_bytestream_read (GstByteStream * bs, guint32 len)
 {
-  GstBuffer *buf = gst_bytestream_peek_loc (GST_WHERE_VARS_ bs, len);
-  if (buf)
-    gst_bytestream_flush_fast (bs, len);
+  GstBuffer *buf = gst_bytestream_peek (bs, len);
+  gst_bytestream_flush (bs, len);
   return buf;
 }
 
