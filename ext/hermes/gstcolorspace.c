@@ -392,11 +392,6 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
   }
   gst_caps_unref (try_peercaps);
 
-  if (gst_pad_recover_caps_error (space->srcpad, NULL)) {
-    res = GST_PAD_LINK_DONE;
-    goto success;
-  }
-  
   /* we disable ourself here */
   space->disabled = TRUE;
   goto done;
