@@ -303,9 +303,9 @@ void
 gst_buffer_ref (GstBuffer *buffer) 
 {
   g_return_if_fail (buffer != NULL);
-  g_return_if_fail (GST_BUFFER_REFCOUNT(buffer) > 0);
 
-  GST_INFO (GST_CAT_BUFFER, "ref buffer %p\n", buffer);
+  GST_INFO (GST_CAT_BUFFER, "ref buffer %p, current count is %d", buffer,GST_BUFFER_REFCOUNT(buffer));
+  g_return_if_fail (GST_BUFFER_REFCOUNT(buffer) > 0);
 
 #ifdef HAVE_ATOMIC_H
   atomic_inc (&(buffer->refcount));
@@ -353,9 +353,9 @@ gst_buffer_unref (GstBuffer *buffer)
   gint zero;
 
   g_return_if_fail (buffer != NULL);
-  g_return_if_fail (GST_BUFFER_REFCOUNT(buffer) > 0);
 
-  GST_INFO (GST_CAT_BUFFER, "unref buffer %p\n", buffer);
+  GST_INFO (GST_CAT_BUFFER, "unref buffer %p, current count is %d", buffer,GST_BUFFER_REFCOUNT(buffer));
+  g_return_if_fail (GST_BUFFER_REFCOUNT(buffer) > 0);
 
 #ifdef HAVE_ATOMIC_H
   zero = atomic_dec_and_test (&(buffer->refcount));
