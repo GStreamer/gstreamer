@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 import sys
-from unittest import TestLoader, TextTestRunner
+from unittest import TestSuite, TestLoader, TextTestRunner
 from types import ClassType
 
 loader = TestLoader()
 testRunner = TextTestRunner()
 
+test = TestSuite()
 for name in ('element', 'interface', 'pipeline'):
-    print 'Testing', name
-    tests = loader.loadTestsFromName(name)
-    testRunner.run(tests)
+    test.addTest(loader.loadTestsFromName(name))
+testRunner.run(tests)

@@ -32,7 +32,8 @@ class FakeSinkTest(ElementTest):
     def setUp(self):
         self.element = gst.Element('fakesink', 'sink')
 
-    def testStateError(self):
+    # Disabled - since it outputs junks
+    def _testStateError(self):
         self.element.set_property('state-error',
                                   self.FAKESINK_STATE_ERROR_NULL_READY)
         def error_cb(element, source, error, debug):
