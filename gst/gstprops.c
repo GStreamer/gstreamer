@@ -170,6 +170,9 @@ gst_props_newv (const gchar *firstname, va_list var_args)
   const gchar *prop_name;
   GstPropsEntry *list_entry = NULL;
 
+  if (firstname == NULL)
+    return NULL;
+
   g_mutex_lock (_gst_props_chunk_lock);
   props = g_mem_chunk_alloc (_gst_props_chunk);
   g_mutex_unlock (_gst_props_chunk_lock);
