@@ -100,16 +100,18 @@ else
 HTTP_DIR=
 endif
 
-if USE_LAME
-LAME_DIR=lame
-else
-LAME_DIR=
-endif
-
 if USE_JPEG
 JPEG_DIR=jpeg
 else
 JPEG_DIR=
+endif
+
+LADSPA_DIR=ladspa
+
+if USE_LAME
+LAME_DIR=lame
+else
+LAME_DIR=
 endif
 
 if USE_MAD
@@ -154,6 +156,12 @@ else
 SDL_DIR=
 endif
 
+## if USE_SIDPLAY
+## SIDPLAY_DIR=sidplay
+## else
+SIDPLAY_DIR=
+## endif
+
 if USE_SHOUT
 SHOUT_DIR=shout
 else
@@ -180,15 +188,25 @@ endif
 
 SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
         $(ARTS_DIR) $(ARTSC_DIR) $(AUDIOFILE_DIR) \
-	$(AVIFILE_DIR) $(CDPARANOIA_DIR) $(DV_DIR) $(DVDREAD_DIR) $(ESD_DIR) \
-        $(FESTIVAL_DIR) $(FLAC_DIR) $(GNOMEVFS_DIR) $(GSM_DIR) $(HERMES_DIR) \
-	$(HTTP_DIR) $(JPEG_DIR) $(LAME_DIR) $(MAD_DIR) $(MIKMOD_DIR) $(MPEG2DEC_DIR) \
-	$(OPENQUICKTIME_DIR) $(RTP_DIR) $(SDL_DIR) $(SHOUT_DIR) \
-	$(SMOOTHWAVE_DIR) $(VORBIS_DIR) $(XMMS_DIR)
+	$(AVIFILE_DIR) $(CDPARANOIA_DIR) $(DV_DIR) \
+	$(DVDREAD_DIR) $(ESD_DIR) $(FESTIVAL_DIR) \
+	$(FLAC_DIR) $(GNOMEVFS_DIR) $(GSM_DIR) \
+	$(HERMES_DIR) $(HTTP_DIR) $(JPEG_DIR) \
+	$(LADSPA_DIR) $(LAME_DIR) $(MAD_DIR) \
+	$(MIKMOD_DIR) $(MPEG2DEC_DIR) $(OPENQUICKTIME_DIR) \
+	$(RAW1394_DIR) $(RTP_DIR) $(SDL_DIR) \
+	$(SHOUT_DIR) $(SIDPLAY_DIR) $(SMOOTHWAVE_DIR) \
+	$(VORBIS_DIR) $(XMMS_DIR)
 
-DIST_SUBDIRS=a52dec aalib alsa arts artsd avifile audiofile cdparanoia \
-             dv dvdread esd \
-	     festival flac gnomevfs gsm hermes http jpeg lame mad mikmod mpeg2dec \
-	     openquicktime rtp sdl shout smoothwave vorbis xmms
-	     festival flac gnomevfs gsm hermes http jpeg ladspa lame mad mikmod mpeg2dec \
-	     openquicktime raw1394 rtp sdl shout sidplay smoothwave vorbis xmms
+DIST_SUBDIRS=\
+	a52dec aalib alsa \
+	arts artsd avifile \
+	audiofile cdparanoia dv \
+	dvdread esd festival \
+	flac gnomevfs gsm \
+	hermes http jpeg \
+	ladspa lame mad \
+	mikmod mpeg2dec openquicktime \
+	raw1394 rtp sdl \
+	shout sidplay smoothwave \
+	vorbis xmms

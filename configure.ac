@@ -126,63 +126,9 @@ if test "x$HAVE_GST" = "xno"; then
   PKG_CHECK_MODULES(GST, gstreamer >= 0.3.0, HAVE_GST="yes", HAVE_GST="no")
 fi
 
-dnl dnl check for gtk-doc
-dnl AC_ARG_WITH(html-dir, [  --with-html-dir=PATH path to installed docs ])
-dnl 
-dnl if test "x$with_html_dir" = "x" ; then
-dnl   HTML_DIR='${datadir}/gst/html'
-dnl else
-dnl   HTML_DIR=$with_html_dir
-dnl fi
-dnl 
-dnl AC_SUBST(HTML_DIR)
-dnl 
-dnl AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, true, false)
-dnl gtk_doc_min_version=0.6
-dnl if $HAVE_GTK_DOC ; then 
-dnl     gtk_doc_version=`gtkdoc-mkdb --version`
-dnl     AC_MSG_CHECKING([gtk-doc version ($gtk_doc_version) >= $gtk_doc_min_version])
-dnl     if perl <<EOF ; then
-dnl       exit (("$gtk_doc_version" =~ /^[[0-9]]+\.[[0-9]]+$/) &&
-dnl             ("$gtk_doc_version" >= "$gtk_doc_min_version") ? 0 : 1);
-dnl EOF
-dnl       AC_MSG_RESULT(yes)
-dnl    else
-dnl       AC_MSG_RESULT(no)
-dnl       HAVE_GTK_DOC=false
-dnl    fi
-dnl fi
-dnl GTK_DOC_SCANOBJ=gtkdoc-scanobj
-dnl 
-dnl AC_SUBST(HAVE_GTK_DOC)
-dnl AC_SUBST(GTK_DOC_SCANOBJ)
-dnl 
-dnl dnl check for docbook tools
-dnl AC_CHECK_PROG(HAVE_XSLTPROC, xsltproc, true, false)
-dnl AC_CHECK_PROG(HAVE_PDFTOPS, pdftops, true, false)
-dnl dnl this does not yet work properly, at least on debain -- wingo
-dnl HAVE_PDFXMLTEX=false
-dnl 
-dnl dnl check for image conversion tool
-dnl AC_CHECK_PROG(HAVE_FIG2DEV, fig2dev, true, false)
-dnl 
-dnl dnl The following is a hack: if fig2dev doesn't display an error message
-dnl dnl for the desired type, we assume it supports it.
-dnl HAVE_FIG2DEV_PNG=false
-dnl if test "x$HAVE_FIG2DEV" = "xtrue" ; then
-dnl   fig2dev_quiet=`fig2dev -L png </dev/null 2>&1 >/dev/null`
-dnl   if test "x$fig2dev_quiet" = "x" ; then
-dnl     HAVE_FIG2DEV_PNG=true
-dnl   fi
-dnl fi
-dnl HAVE_FIG2DEV_PDF=false
-dnl if test "x$HAVE_FIG2DEV" = "xtrue" ; then
-dnl   fig2dev_quiet=`fig2dev -L pdf </dev/null 2>&1 >/dev/null`
-dnl   if test "x$fig2dev_quiet" = "x" ; then
-dnl     HAVE_FIG2DEV_PDF=true
-dnl   fi
-dnl fi
-dnl 
+if test "x$HAVE_GST" = "xno"; then
+  AC_MSG_ERROR(no GStreamer found)
+fi
 
 dnl Set up conditionals for (target) architecture:
 dnl ==============================================
@@ -479,7 +425,7 @@ GST_CHECK_CONFIGPROG(GNOME_VFS, gnome-config vfs)
 dnl *** gsm ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GSM, true)
 GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
-  GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm/gsm.h, GSM_LIBS="-lgsm")
+  GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm.h, GSM_LIBS="-lgsm")
   AC_SUBST(GSM_LIBS)
 ])
 
