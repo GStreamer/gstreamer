@@ -1,5 +1,12 @@
 2004-05-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_set_header_on_caps),
+	(gst_vorbisenc_chain):
+          put the codec headers on the caps as streamheader as well as
+          pushing them out
+
+2004-05-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* ext/vorbis/vorbisenc.c: (vorbis_granule_time_copy),
 	(gst_vorbisenc_buffer_from_packet), (gst_vorbisenc_push_buffer),
 	(gst_vorbisenc_push_packet), (gst_vorbisenc_chain):
