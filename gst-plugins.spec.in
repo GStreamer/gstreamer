@@ -752,7 +752,7 @@ Plugin for playback of wav, au and mp3 audio files
 %files -n gstreamer-audio-formats
 %defattr(-, root, root)
 %{prefix}/lib/gst/libgstwavparse*
-%{prefix}/lib/gst/libgstparseau*
+%{prefix}/lib/gst/libgstauparse*
 %{prefix}/lib/gst/libgstmp3types*
 
 %post -n gstreamer-audio-formats
