@@ -271,14 +271,19 @@ gst_colorspace_getcaps (GstPad *pad, GstCaps *caps)
   GstColorspace *space;
   GstCaps *result;
   GstCaps *peercaps;
-  GstCaps *ourcaps;
+  GstCaps *ourcaps, *temp;
   
   space = GST_COLORSPACE (gst_pad_get_parent (pad));
 
   /* we can do everything our peer can... */
-  peercaps = gst_caps_copy (gst_pad_get_allowed_caps (space->srcpad));
+  temp = gst_pad_get_allowed_caps (space->srcpad);
+  peercaps = gst_caps_copy (temp);
+  gst_caps_unref (temp);
+
   /* and our own template of course */
-  ourcaps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  temp = gst_pad_get_pad_template_caps (pad);
+  ourcaps = gst_caps_copy (temp);
+  gst_caps_unref (temp);
 
   /* merge them together, we prefer the peercaps first */
   result = gst_caps_prepend (ourcaps, peercaps);
@@ -303,14 +308,17 @@ gst_colorspace_sinkconnect (GstPad *pad, GstCaps *caps)
 
   GST_INFO (GST_CAT_PROPERTIES, "size: %dx%d", space->width, space->height);
 
-  space->sinkcaps = caps;
+  gst_caps_replace_sink (&space->sinkcaps, caps);
 
   peer = gst_pad_get_peer (pad);
   if (peer) {
-    if (gst_colorspace_srcconnect_func (pad, gst_pad_get_allowed_caps (space->srcpad), FALSE) < 1) {
+    GstCaps *allowed = gst_pad_get_allowed_caps (space->srcpad);
+    if (gst_colorspace_srcconnect_func (pad, allowed, FALSE) < 1) {
       space->sinkcaps = NULL;
+      gst_caps_unref (allowed);
       return GST_PAD_LINK_REFUSED;
     }
+    gst_caps_unref (allowed);
   }
 
   return GST_PAD_LINK_OK;
@@ -327,7 +335,7 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
 {
   GstColorspace *space;
   GstCaps *peercaps;
-  GstCaps *ourcaps;
+  GstCaps *ourcaps, *to_intersect, *try_peercaps;
   
   space = GST_COLORSPACE (gst_pad_get_parent (pad));
 
@@ -348,20 +356,27 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
     if (gst_pad_try_set_caps (space->srcpad, peercaps) > 0) {
       space->type = GST_COLORSPACE_NONE;
       space->disabled = FALSE;
+      gst_caps_unref (peercaps);
       return GST_PAD_LINK_DONE;
     }
+    gst_caps_unref (peercaps);
   }
-  /* then see what the peer has that matches the size */
-  peercaps = gst_caps_intersect (caps,
-		  GST_CAPS_NEW (
+
+  to_intersect = GST_CAPS_NEW (
 		   "colorspace_filter",
 		   "video/raw",
 		     "width",   GST_PROPS_INT (space->width),
 		     "height",  GST_PROPS_INT (space->height)
-		  ));
+		 );
+
+  /* then see what the peer has that matches the size */
+  peercaps = gst_caps_intersect (caps, to_intersect);
+  gst_caps_unref (to_intersect);
 
   /* we are looping over the caps, so we have to get rid of the lists */
-  peercaps = gst_caps_normalize (peercaps);
+  try_peercaps = gst_caps_normalize (peercaps);
+  gst_caps_unref (peercaps);
+  peercaps = try_peercaps;
 
   /* loop over all possibilities and select the first one we can convert and
    * is accepted by the peer */
@@ -369,11 +384,13 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
     if (colorspace_setup_converter (space, ourcaps, peercaps)) {
       if (gst_pad_try_set_caps (space->srcpad, peercaps) > 0) {
         space->disabled = FALSE;
+        gst_caps_unref (try_peercaps);
         return GST_PAD_LINK_DONE;
       }
     }
     peercaps = peercaps->next;
   }
+  gst_caps_unref (try_peercaps);
   
   /* we disable ourself here */
   space->disabled = TRUE;
@@ -549,7 +566,7 @@ gst_colorspace_change_state (GstElement *element)
       space->converter = NULL;
       space->disabled = TRUE;
       space->type = GST_COLORSPACE_NONE;
-      space->sinkcaps = NULL;
+      gst_caps_replace (&space->sinkcaps, NULL);
       break;
   }
 
