@@ -1,5 +1,10 @@
 2005-01-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_negotiate):
+	  <insert rant about why gcc should support parsing errors>.
+
+2005-01-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
 	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_caps_to_pixfmt):
 	  Add extradata to huffyuv, sync RGBA32 up with gst-plugins.

@@ -509,7 +509,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
           ffmpegdec->format.audio.samplerate, ffmpegdec->format.audio.channels,
           ffmpegdec->context->sample_rate, ffmpegdec->context->channels);
       ffmpegdec->format.audio.samplerate = ffmpegdec->context->sample_rate;
-      ffmpegdec->format.audio.channels == ffmpegdec->context->channels;
+      ffmpegdec->format.audio.channels = ffmpegdec->context->channels;
       break;
     default:
       break;
