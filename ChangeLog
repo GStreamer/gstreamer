@@ -1,3 +1,14 @@
+2004-02-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* common/m4/ax_create_stdint_h.m4:
+	* configure.ac:
+	  add AX_CREATE_STDINT_H to get correct type definitions for a52dec in
+	  _stdint.h.
+	* Makefile.am:
+	  remove generated _stdint.h in DISTCLEANFILES
+	* ext/a52dec/gsta52dec.c:
+	  include _stdint.h for a52dec. (should fix #133064)
+
 2004-02-02  Jeremy Simon  <jesimon@libertysurf.fr>
 
 	* gst/tags/gstvorbistag.c: (gst_vorbis_tag_add),
