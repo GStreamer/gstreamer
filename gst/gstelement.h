@@ -108,6 +108,9 @@ typedef enum {
   GST_ELEMENT_SCHEDULER_PRIVATE1,
   GST_ELEMENT_SCHEDULER_PRIVATE2,
 
+  /* ignore state changes from parent */
+  GST_ELEMENT_LOCKED_STATE,
+
   /* use some padding for future expansion */
   GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 16
 } GstElementFlags;
@@ -292,18 +295,20 @@ GList*			gst_element_get_pad_template_list	(GstElement *element);
 GstPadTemplate*		gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *compattempl);
 
 gboolean		gst_element_link		(GstElement *src, GstElement *dest);
-gboolean		gst_element_link_many 	(GstElement *element_1, GstElement *element_2, ...);
+gboolean		gst_element_link_many 		(GstElement *element_1, 
+							 GstElement *element_2, ...);
 gboolean		gst_element_link_filtered 	(GstElement *src, GstElement *dest,
 							 GstCaps *filtercaps);
 void			gst_element_unlink 		(GstElement *src, GstElement *dest);
-void			gst_element_unlink_many 	(GstElement *element_1, GstElement *element_2, ...);
+void			gst_element_unlink_many 	(GstElement *element_1, 
+							 GstElement *element_2, ...);
 
-gboolean		gst_element_link_pads	(GstElement *src, const gchar *srcpadname,
+gboolean		gst_element_link_pads		(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
-gboolean		gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
+gboolean		gst_element_link_pads_filtered 	(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname,
 							 GstCaps *filtercaps);
-void			gst_element_unlink_pads	(GstElement *src, const gchar *srcpadname,
+void			gst_element_unlink_pads		(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
 
 const GstEventMask*	gst_element_get_event_masks	(GstElement *element);

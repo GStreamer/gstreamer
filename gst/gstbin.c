@@ -431,6 +431,12 @@ gst_bin_add_func (GstBin *bin, GstElement *element)
   GstElementState state;
   GstScheduler *sched;
 
+  /* the element must not already have a parent */
+  g_return_if_fail (GST_ELEMENT_PARENT (element) == NULL);
+
+  /* must be not be in PLAYING state in order to modify bin */
+  g_return_if_fail (GST_STATE (bin) != GST_STATE_PLAYING);
+
   /* then check to see if the element's name is already taken in the bin */
   if (gst_object_check_uniqueness (bin->children, 
 	                           GST_ELEMENT_NAME (element)) == FALSE)
@@ -484,12 +490,6 @@ gst_bin_add (GstBin *bin, GstElement *element)
 
   GST_DEBUG (GST_CAT_PARENTAGE, "adding element \"%s\" to bin \"%s\"",
 	     GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (bin));
-
-  /* the element must not already have a parent */
-  g_return_if_fail (GST_ELEMENT_PARENT (element) == NULL);
-
-  /* must be not be in PLAYING state in order to modify bin */
-  g_return_if_fail (GST_STATE (bin) != GST_STATE_PLAYING);
 
   bclass = GST_BIN_GET_CLASS (bin);
 
@@ -693,6 +693,9 @@ gst_bin_change_state (GstElement * element)
 
     child = GST_ELEMENT (children->data);
     children = g_list_next (children);
+
+    if (GST_FLAG_IS_SET (child, GST_ELEMENT_LOCKED_STATE))
+      continue;
 
     old_child_state = GST_STATE (child);
 
