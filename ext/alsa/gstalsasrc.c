@@ -329,11 +329,19 @@ gst_alsa_src_loop (GstElement * element)
     }
   }
 
-  while ((avail = gst_alsa_update_avail (this)) < this->period_size) {
-    if (avail == -EPIPE)
+  /* the cast to long is explicitly needed;
+   * with avail = -32 and period_size = 100, avail < period_size is false */
+  while ((avail = gst_alsa_update_avail (this)) < (long) this->period_size) {
+    if (avail == -EPIPE) {
+      GST_DEBUG_OBJECT (this, "got EPIPE when checking for available bytes");
       continue;
-    if (avail < 0)
+    }
+    if (avail < 0) {
+      GST_DEBUG_OBJECT (this,
+          "got error %s (%d) when checking for available bytes",
+          snd_strerror (avail));
       return;
+    }
     if (snd_pcm_state (this->handle) != SND_PCM_STATE_RUNNING) {
       if (!gst_alsa_start (this))
         return;
