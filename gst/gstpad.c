@@ -2703,11 +2703,13 @@ gst_pad_get_allowed_caps (GstPad * pad)
 
   g_return_val_if_fail (GST_IS_REAL_PAD (pad), NULL);
 
-  GST_CAT_DEBUG (GST_CAT_PROPERTIES, "get allowed caps of %s:%s",
+  GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%s:%s: getting allowed caps",
       GST_DEBUG_PAD_NAME (pad));
 
   mycaps = gst_pad_get_pad_template_caps (pad);
   if (GST_RPAD_PEER (pad) == NULL) {
+    GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%s:%s: no peer, returning template",
+        GST_DEBUG_PAD_NAME (pad));
     return gst_caps_copy (mycaps);
   }
 
@@ -2719,8 +2721,14 @@ gst_pad_get_allowed_caps (GstPad * pad)
   if (link->filtercaps) {
     icaps = gst_caps_intersect (caps, link->filtercaps);
     gst_caps_free (caps);
+    GST_CAT_DEBUG (GST_CAT_PROPERTIES,
+        "%s:%s: returning filtered intersection with peer",
+        GST_DEBUG_PAD_NAME (pad));
     return icaps;
   } else {
+    GST_CAT_DEBUG (GST_CAT_PROPERTIES,
+        "%s:%s: returning unfiltered intersection with peer",
+        GST_DEBUG_PAD_NAME (pad));
     return caps;
   }
 }
