@@ -781,14 +781,20 @@ gst_alsa_fixate (GstPad * pad, const GstCaps * caps)
   if (gst_caps_structure_fixate_field_nearest_int (structure, "rate", 44100)) {
     return newcaps;
   }
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "depth", 16)) {
-    return newcaps;
-  }
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 16)) {
-    return newcaps;
-  }
   if (gst_caps_structure_fixate_field_nearest_int (structure, "channels", 2)) {
     return newcaps;
+  }
+  if (strcmp (gst_structure_get_name (structure), "audio/x-raw-int") == 0) {
+    if (gst_caps_structure_fixate_field_nearest_int (structure, "depth", 16)) {
+      return newcaps;
+    }
+    if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 16)) {
+      return newcaps;
+    }
+  } else {
+    if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 32)) {
+      return newcaps;
+    }
   }
 
   gst_caps_free (newcaps);

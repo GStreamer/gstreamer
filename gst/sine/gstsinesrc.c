@@ -65,8 +65,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "endianness = (int) BYTE_ORDER, "
         "signed = (boolean) true, "
         "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) [ 8000, 48000 ], " "channels = (int) 1")
+        "depth = (int) 16, " "rate = (int) [ 1, MAX ], " "channels = (int) 1")
     );
 
 static void gst_sinesrc_class_init (GstSineSrcClass * klass);
