@@ -28,14 +28,7 @@
 
 #include "avcodec.h"
 
-/* here we can use OS dependant allocation functions */
-#undef malloc
-#undef free
-#undef realloc
-
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
+#include <stdlib.h>
 
 /* you can redefine av_malloc and av_free in your project to use your
    memory allocator. You do not need to suppress this file because the

@@ -1,3 +1,7 @@
+2004-05-25  David Schleef  <ds@schleef.org>
+
+	* gst/ffmpegcolorspace/mem.c:  malloc() is in stdlib.h, not malloc.h
+
 2004-05-24  Benjamin Otte  <otte@gnome.org>
 
 	* ext/vorbis/oggvorbisenc.c: (gst_oggvorbisenc_sinkconnect),
