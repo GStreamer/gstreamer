@@ -913,12 +913,12 @@ gst_vorbisenc_change_state (GstElement *element)
     case GST_STATE_NULL_TO_READY:
     case GST_STATE_READY_TO_PAUSED:
       vorbisenc->eos = FALSE;
-      vorbisenc->setup = FALSE;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      vorbisenc->setup = FALSE;
       break;
     case GST_STATE_READY_TO_NULL:
     default:
