@@ -5,8 +5,8 @@ gst\-feedback - generate debug info for GStreamer bug reports
 .B  gst-feedback
 .SH DESCRIPTION
 .PP
-\fIgst\-feedback\fP is a utility to scan the system for various
-information that is useful for GStreamer developers to help diagnose
+\fIgst\-feedback\fP is a utility that scans the system for various
+information that is useful to GStreamer developers to help diagnose
 user problem.
 .PP
 Depending on the type of bug report, it may be useful to attach the
@@ -23,7 +23,12 @@ Generate the feedback information by running \fIgst\-feedback\fP:
 .TP -8
 Possibly redirect output and errors to a file:
 .TP 8
-.B  gst\-feedback > myfeedback 2>&1
+.B  gst\-feedback &> myfeedback
+.SH WARNING
+The \fIgst\-feedback\fP dumps a lot of information about a system, some
+of which may be considered sensitive.  If this is a concern, review the
+information before posting to a public forum, such as the GStreamer bug
+tracking system.
 .SH SEE ALSO
 .BR gst\-launch (1),
 .BR gst\-register (1),
