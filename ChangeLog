@@ -1,5 +1,13 @@
 2004-08-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_videotestsrc_src_link),
+	(gst_videotestsrc_change_state), (gst_videotestsrc_src_query),
+	(gst_videotestsrc_handle_src_event), (gst_videotestsrc_get):
+	  decouple running_time and n_frames so it can handle changing
+	  framerate while running
+
+2004-08-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* po/nl.po:
 	* po/sv.po:
 	  updated translations
