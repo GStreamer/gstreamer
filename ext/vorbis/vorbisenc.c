@@ -32,7 +32,7 @@ extern GstPadTemplate *enc_src_template, *enc_sink_template;
 /* elementfactory information */
 GstElementDetails vorbisenc_details = {
   "Ogg Vorbis encoder",
-  "Filter/Audio/Encoder",
+  "Codec/Audio/Encoder",
   "Encodes audio in OGG Vorbis format",
   VERSION,
   "Monty <monty@xiph.org>, " 

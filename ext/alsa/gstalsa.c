@@ -24,7 +24,7 @@
 static GstElementDetails gst_alsa_sink_details = {  
     "Alsa Sink",
     "Sink/Audio",
-    "Output to a sound card via ALSA: see plugins/alsa/README for more info",
+    "Output to a sound card via ALSA",
     VERSION,
     "Thomas Nyberg <thomas@codefactory.se>, "
     "Andy Wingo <apwingo@eos.ncsu.edu>",
@@ -34,11 +34,11 @@ static GstElementDetails gst_alsa_sink_details = {
 static GstElementDetails gst_alsa_src_details = {  
     "Alsa Src",
     "Source/Audio",
-    "Read from a sound card via ALSA: see plugins/alsa/README for more info",
+    "Read from a sound card via ALSA",
     VERSION,
     "Thomas Nyberg <thomas@codefactory.se>, "
-    "Andy Wingo <apwingo@eos.ncsu.edu>"
-    "(C) 2001",
+    "Andy Wingo <apwingo@eos.ncsu.edu>",
+    "(C) 2001"
 };
 
 static GstElement *parent_class = NULL;

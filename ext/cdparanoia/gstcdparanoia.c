@@ -37,7 +37,7 @@
 
 static GstElementDetails cdparanoia_details = {
   "CD Audio (cdda) Source, Paranoia IV",
-  "Source/File/CDDA",
+  "Source/File",
   "Read audio from CD in paranoid mode",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

@@ -26,7 +26,7 @@
 /* elementfactory information */
 static GstElementDetails videoscale_details = {
   "Video scaler",
-  "Filter/Video/Scaler",
+  "Filter/Video",
   "Resizes video",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

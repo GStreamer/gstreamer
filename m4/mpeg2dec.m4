@@ -57,12 +57,12 @@ AC_ARG_WITH(mpeg2dec-prefix,
 
 if test x$mpeg2dec_config_prefix = x ; then
     MPEG2DEC_CHECK_LIBHEADER(MPEG2DEC, mpeg2, mpeg2_init, mpeg2dec/mpeg2.h,
-        MPEG2DEC_LIBS="-lmpeg2 -lcpuaccel")
+    MPEG2DEC_LIBS="-lmpeg2 -lcpuaccel",, -lcpuaccel)
 else
     MPEG2DEC_CHECK_LIBHEADER(MPEG2DEC, mpeg2, mpeg2_init, mpeg2dec/mpeg2.h, [
             MPEG2DEC_LIBS="-lmpeg2 -lcpuaccel -L$mpeg2dec_config_prefix/lib"
             MPEG2DEC_CFLAGS="-I$mpeg2dec_config_prefix/include"
-        ], , -L$mpeg2dec_config_prefix/lib, -I$mpeg2dec_config_prefix/include)
+        ], , -L$mpeg2dec_config_prefix/lib -lcpuaccel, -I$mpeg2dec_config_prefix/include)
 fi
  
 if test "x$HAVE_MPEG2DEC" = "xyes"; then

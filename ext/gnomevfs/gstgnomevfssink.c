@@ -75,8 +75,8 @@ GType gst_gnomevfssink_get_type(void);
 
 GstElementDetails gst_gnomevfssink_details = {
   "GnomeVFS Sink",
-  "Sink",
-  "GnomeVFS hole for data",
+  "Sink/File",
+  "Write stream to a GnomeVFS URI",
   VERSION,
   "Bastien Nocera <hadess@hadess.net>",
   "(C) 2001"

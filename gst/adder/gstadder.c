@@ -29,7 +29,7 @@
 
 GstElementDetails adder_details = {
   "Adder",
-  "Filter/Effect",
+  "Filter/Audio",
   "2-to-1 audio adder/mixer",
   VERSION,
   "Thomas <thomas@apestaart.org>",

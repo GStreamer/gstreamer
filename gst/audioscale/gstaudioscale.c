@@ -29,8 +29,8 @@
 /* elementfactory information */
 static GstElementDetails audioscale_details = {
   "Audio scaler",
-  "Filter/Audio/Scaler",
-  "Resizes audio",
+  "Filter/Audio",
+  "Audio resampler",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
   "(C) 2000",

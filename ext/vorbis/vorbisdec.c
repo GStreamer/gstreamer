@@ -29,7 +29,7 @@ extern GstPadTemplate *dec_src_template, *dec_sink_template;
 GstElementDetails vorbisdec_details = 
 {
   "Ogg Vorbis decoder",
-  "Filter/Audio/Decoder",
+  "Codec/Audio/Decoder",
   "Decodes OGG Vorbis audio",
   VERSION,
   "Monty <monty@xiph.org>, " 
