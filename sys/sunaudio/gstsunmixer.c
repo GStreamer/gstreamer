@@ -130,8 +130,7 @@ fill_labels (void)
   {
     gchar *given, *wanted;
   }
-  cases[] =
-  {
+  cases[] = {
     {
     "Vol  ", N_("Volume")}
     , {
@@ -279,13 +278,10 @@ gst_sunaudiomixer_set_mute (GstMixer * mixer,
     return;
 
   AUDIO_INITINFO (&audioinfo);
-  ioctl (sunaudio->mixer_fd, AUDIO_GETINFO, &audioinfo);
 
   if (mute) {
-    audioinfo.play.port = audioinfo.play.avail_ports;
     audioinfo.output_muted = 1;
   } else {
-    audioinfo.play.port = 0;
     audioinfo.output_muted = 0;
   }
 

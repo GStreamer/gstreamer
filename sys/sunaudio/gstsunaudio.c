@@ -276,6 +276,19 @@ gst_sunaudiosink_setparams (GstSunAudioSink * sunaudiosink)
 {
   audio_info_t ainfo;
   int ret;
+  int ports;
+
+  ret = ioctl (sunaudiosink->fd, AUDIO_GETINFO, &ainfo);
+  if (ret == -1) {
+    GST_ELEMENT_ERROR (sunaudiosink, RESOURCE, SETTINGS, (NULL), ("%s",
+            strerror (errno)));
+    return FALSE;
+  }
+
+  ports = ainfo.play.port;
+  if (!(ports & AUDIO_SPEAKER) && (ainfo.play.avail_ports & AUDIO_SPEAKER)) {
+    ports = ports | AUDIO_SPEAKER;
+  }
 
   AUDIO_INITINFO (&ainfo);
 
@@ -283,7 +296,7 @@ gst_sunaudiosink_setparams (GstSunAudioSink * sunaudiosink)
   ainfo.play.channels = sunaudiosink->channels;
   ainfo.play.precision = sunaudiosink->width;
   ainfo.play.encoding = AUDIO_ENCODING_LINEAR;
-  ainfo.play.port = AUDIO_SPEAKER;
+  ainfo.play.port = ports;
   ainfo.play.buffer_size = sunaudiosink->buffer_size;
   ainfo.output_muted = 0;
 
