@@ -1,6 +1,6 @@
 %define name    gstreamer
 %define ver     @VERSION@
-%define rel     1
+%define rel     2
 %define prefix  /usr
 
 Summary: GStreamer Streaming-media framework runtime
@@ -215,7 +215,8 @@ Video CD playback plugin
 %setup
 
 %build
-CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%prefix
+FLAGS="$RPM_OPT_FLAGS" ./autogen.sh --prefix=%{prefix}
+CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix}
 
 if [ "$SMP" != "" ]; then
   (make "MAKE=make -k -j $SMP"; exit 0)
@@ -253,7 +254,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %{prefix}/bin/gstreamer-inspect
 %{prefix}/bin/gstreamer-launch
 %{prefix}/bin/gstreamer-register
-%{prefix}/lib/lib*.so.*
+%{prefix}/lib/lib*.so*
 %{prefix}/lib/gst/libadder*
 %{prefix}/lib/gst/libalaw*
 %{prefix}/lib/gst/libaudioscale*
@@ -263,6 +264,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %{prefix}/lib/gst/libgstelements*
 %{prefix}/lib/gst/libgstgetbits*
 %{prefix}/lib/gst/libgstidct*
+%{prefix}/lib/gst/libgstriff*
 %{prefix}/lib/gst/libgstjpeg*
 %{prefix}/lib/gst/libintfloatconvert*
 %{prefix}/lib/gst/liblevel*
@@ -274,7 +276,9 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %{prefix}/lib/gst/libsmooth*
 %{prefix}/lib/gst/libstereo*
 %{prefix}/lib/gst/libsystem_*
+%{prefix}/lib/gst/libgstputbits*
 %{prefix}/lib/gst/libvideoscale*
+%{prefix}/lib/gst/libgstvideoscale*
 %{prefix}/lib/gst/libvol*
 %{prefix}/lib/gst/libvu*
 %{prefix}/lib/gst/libxvideosink*
@@ -287,7 +291,6 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %defattr(-, root, root)
 %{prefix}/bin/gstreamer-config
 %{prefix}/include/*
-%{prefix}/include/gstplay/*
 %{prefix}/lib/lib*.la
 %{prefix}/lib/lib*.so
 %{prefix}/lib/pkgconfig/*
