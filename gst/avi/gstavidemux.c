@@ -1191,6 +1191,7 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
   guint32 tag;
   guint index_size;
   gst_avi_index_entry *index_entries = NULL;
+  gboolean first = TRUE;
 
   /* first, we need to know the current position (to seek back
    * when we're done) and the total length of the file. */
@@ -1277,11 +1278,12 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
     target->offset = entry.offset + 8;
 
     /* figure out if the index is 0 based or relative to the MOVI start */
-    if (i == 0) {
+    if (first) {
       if (target->offset < pos_before)
         avi->index_offset = pos_before + 8;
       else
         avi->index_offset = 0;
+      first = FALSE;
     }
 
     target->bytes_before = stream->total_bytes;
@@ -1587,9 +1589,10 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
     stream->total_frames++;
 
     list = g_list_prepend (list, entry);
-    GST_DEBUG ("Added index entry %d (in stream: %d), time %"
-        GST_TIME_FORMAT " for stream %d", index_size - 1,
-        entry->frames_before, GST_TIME_ARGS (entry->ts), entry->stream_nr);
+    GST_DEBUG ("Added index entry %d (in stream: %d), offset %"
+        G_GUINT64_FORMAT ", time %" GST_TIME_FORMAT " for stream %d",
+        index_size - 1, entry->frames_before, entry->offset,
+        GST_TIME_ARGS (entry->ts), entry->stream_nr);
 
   next:
     if (!gst_avi_demux_skip (avi, TRUE))
