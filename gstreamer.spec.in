@@ -76,17 +76,20 @@ applications and plugins for GStreamer.
 
 %files devel
 %defattr(-, root, root)
-%doc html
 %{_includedir}/gst
 %{_libdir}/libgstreamer.a
 %{_libdir}/libgstreamer.la
 %{_libdir}/libgstreamer.so
 %{_libdir}/pkgconfig/*
+%{_datadir}/gtk-doc/html/*
 %{_datadir}/devhelp/specs/gstreamer.devhelp
 %{_datadir}/devhelp/specs/gstreamer-libs.devhelp
 
 
 %changelog
+* Mon Apr 29 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- moved html docs to gtk-doc standard directory
+
 * Tue Mar 5 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - move version defines of glib2 and libxml2 to configure.ac
 - add BuildRequires for these two libs
@@ -176,7 +179,7 @@ FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
   --enable-debug \
   --with-configdir=/etc/gstreamer \
   --disable-tests --disable-examples --disable-debug-color \
-  --enable-docs-build --with-html-dir=$RPM_BUILD_DIR/%{name}-%{version}/html
+  --enable-docs-build
 if [ "$SMP" != "" ]; then
   (make "MAKE=make -k -j $SMP"; exit 0)
 else
@@ -202,8 +205,8 @@ cp $RPM_BUILD_DIR/%{name}-%{version}/docs/devhelp/*.devhelp $RPM_BUILD_ROOT/usr/
 %post devel
 # adding devhelp links to work around different base not working
 mkdir -p %{_datadir}/devhelp/books
-ln -sf %{_datadir}/doc/%{name}-devel-%{version}/html/gstreamer %{_datadir}/devhelp/books
-ln -sf %{_datadir}/doc/%{name}-devel-%{version}/html/gstreamer-libs %{_datadir}/devhelp/books
+ln -sf %{_datadir}/gtk-doc/html/gstreamer %{_datadir}/devhelp/books
+ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 
 %postun
 /sbin/ldconfig
