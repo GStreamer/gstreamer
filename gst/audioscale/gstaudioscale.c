@@ -571,9 +571,11 @@ gst_audioscale_chain (GstPad * pad, GstData * _data)
 
     switch (GST_EVENT_TYPE (e)) {
       case GST_EVENT_DISCONTINUOUS:{
-        gint64 new_off;
+        gint64 new_off = 0;
 
-        if (gst_event_discont_get_value (e, GST_FORMAT_TIME, &new_off)) {
+        if (!audioscale->gst_resample) {
+          GST_LOG ("Discont before negotiation took place - ignoring");
+        } else if (gst_event_discont_get_value (e, GST_FORMAT_TIME, &new_off)) {
           /* time -> out-sample */
           new_off = new_off * audioscale->gst_resample->o_rate / GST_SECOND;
         } else if (gst_event_discont_get_value (e,
@@ -589,7 +591,7 @@ gst_audioscale_chain (GstPad * pad, GstData * _data)
           new_off /= audioscale->gst_resample->i_rate;
         } else {
           /* *sigh* */
-          new_off = 0;
+          GST_DEBUG ("Discont without value - ignoring");
         }
         audioscale->gst_resample_offset = new_off;
         /* fall-through */

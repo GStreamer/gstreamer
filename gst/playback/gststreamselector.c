@@ -233,6 +233,8 @@ gst_stream_selector_request_new_pad (GstElement * element,
 
   name = g_strdup_printf ("sink%d", sel->nb_sinkpads++);
   sinkpad = gst_pad_new_from_template (templ, name);
+  if (sel->nb_sinkpads == 1)
+    sel->last_active_sinkpad = sinkpad;
   g_free (name);
 
   gst_pad_set_link_function (sinkpad,
