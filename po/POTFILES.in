@@ -1,5 +1,6 @@
 ext/audiofile/gstafsink.c
 ext/audiofile/gstafsrc.c
+ext/cdparanoia/gstcdparanoia.c
 ext/gnomevfs/gstgnomevfssrc.c
 ext/gnomevfs/gstgnomevfssink.c
 ext/sndfile/gstsf.c
