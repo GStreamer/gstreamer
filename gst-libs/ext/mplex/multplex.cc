@@ -1085,9 +1085,11 @@ OutputStream::OutputDVDPriv2 ()
 {
   uint8_t *packet_size_field;
   uint8_t *index;
-  uint8_t sector_buf[sector_size];
+  uint8_t *sector_buf;
   unsigned int tozero;
 
+  sector_buf = new uint8_t[sector_size];
+  
   assert (sector_size == 2048);
   PS_Stream::BufferSectorHeader (sector_buf, pack_header_ptr, &sys_header, index);
   PS_Stream::BufferPacketHeader (index, PRIVATE_STR_2, 2,	// MPEG 2
@@ -1109,6 +1111,8 @@ OutputStream::OutputDVDPriv2 ()
   PS_Stream::BufferPacketSize (packet_size_field, index);
 
   WriteRawSector (sector_buf, sector_size);
+
+  delete sector_buf;
 }
 
 
