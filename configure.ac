@@ -328,7 +328,7 @@ dnl ===========================================================================
 plugindir="\$(libdir)/gstreamer-$GST_MAJORMINOR"
 AC_SUBST(plugindir)
 
-GST_PLUGIN_LDFLAGS='-module -avoid-version -export-symbols-regex [_]*{gst_,Gst,GST_}.*'
+GST_PLUGIN_LDFLAGS='-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*'
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl these are all the gst plug-ins, compilable without additional libs
