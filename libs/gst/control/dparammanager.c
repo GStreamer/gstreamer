@@ -43,7 +43,7 @@ static GstDParamWrapper *gst_dpman_new_wrapper (GstDParamManager * dpman,
     GParamSpec * param_spec, gchar * unit_name,
     GstDPMUpdateMethod update_method);
 static GstDParamWrapper *gst_dpman_get_wrapper (GstDParamManager * dpman,
-    gchar * dparam_name);
+    const gchar * dparam_name);
 static void gst_dpman_state_change (GstElement * element, gint old_state,
     gint new_state, GstDParamManager * dpman);
 static gboolean gst_dpman_preprocess_synchronous (GstDParamManager * dpman,
@@ -179,6 +179,8 @@ gst_dpman_dispose (GObject * object)
 /**
  * gst_dpman_add_required_dparam_callback:
  * @dpman: GstDParamManager instance
+ * @param_spec: the spacification of the new dparam
+ * @unit_name: the unit name of the dparam
  * @update_func: callback to update the element with the new value
  * @update_data: will be included in the call to update_func
  *
@@ -215,6 +217,8 @@ gst_dpman_add_required_dparam_callback (GstDParamManager * dpman,
 /**
  * gst_dpman_add_required_dparam_direct:
  * @dpman: GstDParamManager instance
+ * @param_spec: the spacification of the new dparam
+ * @unit_name: the unit name of the dparam
  * @update_data: pointer to the member to be updated
  *
  * Returns: true if it was successfully added
@@ -248,7 +252,8 @@ gst_dpman_add_required_dparam_direct (GstDParamManager * dpman,
 /**
  * gst_dpman_add_required_dparam_array:
  * @dpman: GstDParamManager instance
- * @dparam_name: a parameter name unique to this GstDParamManager
+ * @param_spec: the spacification of the new dparam
+ * @unit_name: the unit name of the dparam
  * @update_data: pointer to where the array will be stored
  *
  * Returns: true if it was successfully added
@@ -286,7 +291,8 @@ gst_dpman_add_required_dparam_array (GstDParamManager * dpman,
  *
  */
 void
-gst_dpman_remove_required_dparam (GstDParamManager * dpman, gchar * dparam_name)
+gst_dpman_remove_required_dparam (GstDParamManager * dpman,
+    const gchar * dparam_name)
 {
   GstDParamWrapper *dpwrap;
 
@@ -318,7 +324,7 @@ gst_dpman_remove_required_dparam (GstDParamManager * dpman, gchar * dparam_name)
  * Returns: true if it was successfully attached
  */
 gboolean
-gst_dpman_attach_dparam (GstDParamManager * dpman, gchar * dparam_name,
+gst_dpman_attach_dparam (GstDParamManager * dpman, const gchar * dparam_name,
     GstDParam * dparam)
 {
   GstDParamWrapper *dpwrap;
@@ -350,7 +356,7 @@ gst_dpman_attach_dparam (GstDParamManager * dpman, gchar * dparam_name,
  *
  */
 void
-gst_dpman_detach_dparam (GstDParamManager * dpman, gchar * dparam_name)
+gst_dpman_detach_dparam (GstDParamManager * dpman, const gchar * dparam_name)
 {
   GstDParamWrapper *dpwrap;
 
@@ -359,7 +365,6 @@ gst_dpman_detach_dparam (GstDParamManager * dpman, gchar * dparam_name)
   g_return_if_fail (dparam_name != NULL);
 
   dpwrap = gst_dpman_get_wrapper (dpman, dparam_name);
-
   g_return_if_fail (dpwrap);
 
   gst_dparam_detach (dpwrap->dparam);
@@ -370,20 +375,20 @@ gst_dpman_detach_dparam (GstDParamManager * dpman, gchar * dparam_name)
 /**
  * gst_dpman_get_dparam:
  * @dpman: GstDParamManager instance
- * @name: the name of an existing dparam instance
+ * @dparam_name: the name of an existing dparam instance
  *
  * Returns: the dparam with the given name - or NULL otherwise
  */
 GstDParam *
-gst_dpman_get_dparam (GstDParamManager * dpman, gchar * name)
+gst_dpman_get_dparam (GstDParamManager * dpman, const gchar * dparam_name)
 {
   GstDParamWrapper *dpwrap;
 
   g_return_val_if_fail (dpman != NULL, NULL);
   g_return_val_if_fail (GST_IS_DPMAN (dpman), NULL);
-  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (dparam_name != NULL, NULL);
 
-  dpwrap = g_hash_table_lookup (GST_DPMAN_DPARAMS (dpman), name);
+  dpwrap = gst_dpman_get_wrapper (dpman, dparam_name);
   g_return_val_if_fail (dpwrap != NULL, NULL);
 
   return dpwrap->dparam;
@@ -392,25 +397,31 @@ gst_dpman_get_dparam (GstDParamManager * dpman, gchar * name)
 /**
  * gst_dpman_get_dparam_type:
  * @dpman: GstDParamManager instance
- * @name: the name of dparam
+ * @dparam_name: the name of dparam
  *
  * Returns: the type that this dparam requires/uses
  */
 GType
-gst_dpman_get_dparam_type (GstDParamManager * dpman, gchar * name)
+gst_dpman_get_dparam_type (GstDParamManager * dpman, const gchar * dparam_name)
 {
   GstDParamWrapper *dpwrap;
 
   g_return_val_if_fail (dpman != NULL, 0);
   g_return_val_if_fail (GST_IS_DPMAN (dpman), 0);
-  g_return_val_if_fail (name != NULL, 0);
+  g_return_val_if_fail (dparam_name != NULL, 0);
 
-  dpwrap = g_hash_table_lookup (GST_DPMAN_DPARAMS (dpman), name);
+  dpwrap = gst_dpman_get_wrapper (dpman, dparam_name);
   g_return_val_if_fail (dpwrap != NULL, 0);
 
   return G_VALUE_TYPE (dpwrap->value);
 }
 
+/**
+ * gst_dpman_list_dparam_specs:
+ * @dpman: GstDParamManager instance
+ *
+ * Returns: the the parameter specifications this managers maintains as a NULL terminated array
+ */
 GParamSpec **
 gst_dpman_list_dparam_specs (GstDParamManager * dpman)
 {
@@ -434,8 +445,15 @@ gst_dpman_list_dparam_specs (GstDParamManager * dpman)
   return param_specs;
 }
 
+/**
+ * gst_dpman_get_param_spec:
+ * @dpman: GstDParamManager instance
+ * @dparam_name: the name of dparam
+ *
+ * Returns: the the parameter specifications for a given name
+ */
 GParamSpec *
-gst_dpman_get_param_spec (GstDParamManager * dpman, gchar * dparam_name)
+gst_dpman_get_param_spec (GstDParamManager * dpman, const gchar * dparam_name)
 {
   GstDParamWrapper *dpwrap;
 
@@ -447,6 +465,11 @@ gst_dpman_get_param_spec (GstDParamManager * dpman, gchar * dparam_name)
   return dpwrap->param_spec;
 }
 
+/**
+ * gst_dpman_set_rate:
+ * @dpman: GstDParamManager instance
+ * @rate: the new the frame/sample rate
+ */
 void
 gst_dpman_set_rate (GstDParamManager * dpman, gint rate)
 {
@@ -578,7 +601,7 @@ gst_dpman_get_manager (GstElement * parent)
  * 
  */
 void
-gst_dpman_bypass_dparam (GstDParamManager * dpman, gchar * dparam_name)
+gst_dpman_bypass_dparam (GstDParamManager * dpman, const gchar * dparam_name)
 {
   GstDParamWrapper *dpwrap;
 
@@ -597,7 +620,7 @@ gst_dpman_bypass_dparam (GstDParamManager * dpman, gchar * dparam_name)
 }
 
 static GstDParamWrapper *
-gst_dpman_get_wrapper (GstDParamManager * dpman, gchar * dparam_name)
+gst_dpman_get_wrapper (GstDParamManager * dpman, const gchar * dparam_name)
 {
   g_return_val_if_fail (dpman != NULL, NULL);
   g_return_val_if_fail (GST_IS_DPMAN (dpman), NULL);

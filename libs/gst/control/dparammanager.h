@@ -90,7 +90,7 @@ struct _GstDParamManagerClass {
 	GstObjectClass parent_class;
 	GHashTable *modes;
 	/* signal callbacks */
-	void (*new_required_dparam) (GstDParamManager *dpman, gchar* dparam_name);
+	void (*new_required_dparam) (GstDParamManager *dpman, const gchar* dparam_name);
 };
 
 struct _GstDPMMode {
@@ -157,18 +157,18 @@ gboolean gst_dpman_add_required_dparam_array (GstDParamManager *dpman,
                                               gchar *unit_name,
                                               gpointer update_data);
                                      
-void gst_dpman_remove_required_dparam (GstDParamManager *dpman, gchar *dparam_name);
-gboolean gst_dpman_attach_dparam (GstDParamManager *dpman, gchar *dparam_name, GstDParam *dparam);
-void gst_dpman_detach_dparam (GstDParamManager *dpman, gchar *dparam_name);                         
-GstDParam* gst_dpman_get_dparam(GstDParamManager *dpman, gchar *name);
-GType gst_dpman_get_dparam_type (GstDParamManager *dpman, gchar *name);
+void gst_dpman_remove_required_dparam (GstDParamManager *dpman, const gchar *dparam_name);
+gboolean gst_dpman_attach_dparam (GstDParamManager *dpman, const gchar *dparam_name, GstDParam *dparam);
+void gst_dpman_detach_dparam (GstDParamManager *dpman, const gchar *dparam_name);                         
+GstDParam* gst_dpman_get_dparam(GstDParamManager *dpman, const gchar *dparam_name);
+GType gst_dpman_get_dparam_type (GstDParamManager *dpman, const gchar *dparam_name);
 
 GParamSpec** gst_dpman_list_dparam_specs(GstDParamManager *dpman);
-GParamSpec* gst_dpman_get_param_spec (GstDParamManager *dpman, gchar *dparam_name);
-void gst_dpman_dparam_spec_has_changed (GstDParamManager *dpman, gchar *dparam_name);
+GParamSpec* gst_dpman_get_param_spec (GstDParamManager *dpman, const gchar *dparam_name);
+void gst_dpman_dparam_spec_has_changed (GstDParamManager *dpman, const gchar *dparam_name);
 
 void gst_dpman_set_rate(GstDParamManager *dpman, gint rate);
-void gst_dpman_bypass_dparam(GstDParamManager *dpman, gchar *dparam_name);
+void gst_dpman_bypass_dparam(GstDParamManager *dpman, const gchar *dparam_name);
 
 gboolean gst_dpman_set_mode(GstDParamManager *dpman, gchar *modename);
 void gst_dpman_register_mode (GstDParamManagerClass *klass,
