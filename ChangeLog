@@ -1,3 +1,18 @@
+2004-08-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstfdset.c: (gst_fdset_add_fd), (gst_fdset_remove_fd),
+	(gst_fdset_fd_ctl_write), (gst_fdset_fd_ctl_read),
+	(gst_fdset_fd_has_closed), (gst_fdset_fd_has_error),
+	(gst_fdset_fd_can_read), (gst_fdset_fd_can_write),
+	(gst_fdset_wait):
+	Add more locking and bounds checking.
+
+2004-08-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstfdset.c: (ensure_size), (gst_fdset_wait):
+	Realloc test fdset in the lock and right before starting
+	the poll call. Bump the limit to 4096.
+
 2004-08-17  David Schleef  <ds@schleef.org>
 
 	* sys/sunaudio/Makefile.am:
