@@ -84,6 +84,8 @@ typedef enum {
 #define GST_INDEX_FORMAT_FORMAT(entry)		((entry)->data.format.format)
 #define GST_INDEX_FORMAT_KEY(entry)		((entry)->data.format.key)
 
+#define GST_INDEX_ID_INVALID			(-1)
+
 #define GST_INDEX_ID_DESCRIPTION(entry)		((entry)->data.id.description)
 
 struct _GstIndexEntry {
@@ -131,7 +133,6 @@ typedef gboolean 	(*GstIndexFilter)	 	(GstIndex *index,
 
 typedef gboolean 	(*GstIndexResolver) 		(GstIndex *index, 
 						   	 GstObject *writer, 
-						   	 gint *writer_id,
 						   	 gchar **writer_string,
 						   	 gpointer user_data);
 typedef enum {
@@ -166,8 +167,7 @@ struct _GstIndex {
 struct _GstIndexClass {
   GstObjectClass parent_class;
 
-  gboolean	(*resolve_writer)	(GstIndex *index, GstObject *writer, 
-		  			 gint *writer_id, gchar **writer_string);
+  gboolean	(*get_writer_id)	(GstIndex *index, gint *writer_id, gchar *writer_string);
 
   void		(*commit)		(GstIndex *index, gint id);
 

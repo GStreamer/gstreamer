@@ -39,6 +39,8 @@ enum {
 
 static void		gst_index_class_init	(GstIndexClass *klass);
 static void		gst_index_init		(GstIndex *index);
+static gboolean 	gst_index_default_path_resolver (GstIndex *index, GstObject *writer,
+		                			 gchar **writer_string, gpointer data);
 
 static GstObject *parent_class = NULL;
 static guint gst_index_signals[LAST_SIGNAL] = { 0 };
@@ -107,6 +109,8 @@ gst_index_init (GstIndex *index)
 
   index->writers = g_hash_table_new (NULL, NULL);
   index->last_id = 0;
+
+  gst_index_set_resolver (index, gst_index_default_path_resolver, NULL);
 
   GST_FLAG_SET (index, GST_INDEX_WRITABLE);
   GST_FLAG_SET (index, GST_INDEX_READABLE);
@@ -320,7 +324,7 @@ gst_index_add_format (GstIndex *index, gint id, GstFormat format)
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
   g_return_val_if_fail (format != 0, NULL);
 
-  if (!GST_INDEX_IS_WRITABLE (index))
+  if (!GST_INDEX_IS_WRITABLE (index) || id == -1)
     return NULL;
   
   entry = g_new0 (GstIndexEntry, 1);
@@ -360,7 +364,7 @@ gst_index_add_id (GstIndex *index, gint id, gchar *description)
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
   g_return_val_if_fail (description != NULL, NULL);
   
-  if (!GST_INDEX_IS_WRITABLE (index))
+  if (!GST_INDEX_IS_WRITABLE (index) || id == -1)
     return NULL;
   
   entry = g_new0 (GstIndexEntry, 1);
@@ -378,6 +382,15 @@ gst_index_add_id (GstIndex *index, gint id, gchar *description)
   return entry;
 }
 
+static gboolean
+gst_index_default_path_resolver (GstIndex *index, GstObject *writer,
+		                 gchar **writer_string, gpointer data) 
+{
+  *writer_string = gst_object_get_path_string (writer);
+
+  return TRUE;
+}
+
 /**
  * gst_index_get_writer_id:
  * @index: the index to get a unique write id for
@@ -388,8 +401,9 @@ gst_index_add_id (GstIndex *index, gint id, gchar *description)
  * should obtain a unique id. The methods to add new entries
  * to the index require this id as an argument. 
  *
- * The application or a GstIndex subclass can implement
- * custom functions to map the writer object to an id.
+ * The application can implement a custom function to map the writer object 
+ * to a string. That string will be used to register or look up an id
+ * in the index.
  *
  * Returns: TRUE if the writer would be mapped to an id.
  */
@@ -397,9 +411,9 @@ gboolean
 gst_index_get_writer_id (GstIndex *index, GstObject *writer, gint *id)
 {
   gchar *writer_string = NULL;
-  gboolean success = FALSE;
   GstIndexEntry *entry;
   GstIndexClass *iclass;
+  gboolean success = FALSE;
 
   g_return_val_if_fail (GST_IS_INDEX (index), FALSE);
   g_return_val_if_fail (GST_IS_OBJECT (writer), FALSE);
@@ -407,28 +421,50 @@ gst_index_get_writer_id (GstIndex *index, GstObject *writer, gint *id)
 
   *id = -1;
 
+  /* first try to get a previously cached id */
   entry = g_hash_table_lookup (index->writers, writer);
   if (entry == NULL) { 
-    *id = index->last_id;
 
-    writer_string = gst_object_get_path_string (writer);
-    
-    gst_index_add_id (index, *id, writer_string);
-    index->last_id++;
+    iclass = GST_INDEX_GET_CLASS (index);
+
+    /* let the app make a string */
+    if (index->resolver) {
+      gboolean res;
+
+      res = index->resolver (index, writer, &writer_string, index->resolver_user_data);
+      if (!res) 
+        return FALSE;
+    }
+    else {
+      g_warning ("no resolver found");
+      return FALSE;
+    }
+
+    /* if the index has a resolver, make it map this string to an id */
+    if (iclass->get_writer_id) {
+      success = iclass->get_writer_id (index, id, writer_string);
+    }
+    /* if the index could not resolve, we allocate one ourselves */
+    if (!success) {
+      *id = index->last_id++;
+    }
+
+    entry = gst_index_add_id (index, *id, writer_string);
+    if (!entry) {
+      /* index is probably not writable, make an entry anyway
+       * to keep it in our cache */
+      entry = g_new0 (GstIndexEntry, 1);
+      entry->type = GST_INDEX_ENTRY_ID;
+      entry->id = *id;
+      entry->data.id.description = writer_string;
+    }
     g_hash_table_insert (index->writers, writer, entry);
   }
-
-  iclass = GST_INDEX_GET_CLASS (index);
-
-  if (index->resolver) {
-    success = index->resolver (index, writer, id, &writer_string, index->resolver_user_data);
+  else {
+    *id = entry->id;
   }
 
-  if (iclass->resolve_writer) {
-    success = iclass->resolve_writer (index, writer, id, &writer_string);
-  }
-
-  return success;
+  return TRUE;
 }
 
 /**
@@ -462,7 +498,7 @@ gst_index_add_association (GstIndex *index, gint id, GstAssocFlags flags,
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
   g_return_val_if_fail (format != 0, NULL);
   
-  if (!GST_INDEX_IS_WRITABLE (index))
+  if (!GST_INDEX_IS_WRITABLE (index) || id == -1)
     return NULL;
   
   va_start (args, value);
@@ -528,7 +564,7 @@ GstIndexEntry*
 gst_index_add_object (GstIndex *index, gint id, gchar *key,
 		      GType type, gpointer object)
 {
-  if (!GST_INDEX_IS_WRITABLE (index))
+  if (!GST_INDEX_IS_WRITABLE (index) || id == -1)
     return NULL;
   
   return NULL;
@@ -563,6 +599,9 @@ gst_index_get_assoc_entry (GstIndex *index, gint id,
 {
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
 
+  if (id == -1)
+    return NULL;
+
   return gst_index_get_assoc_entry_full (index, id, method, flags, format, value, 
 		                  gst_index_compare_func, NULL);
 }
@@ -594,6 +633,9 @@ gst_index_get_assoc_entry_full (GstIndex *index, gint id,
   GstIndexClass *iclass;
 
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
+
+  if (id == -1)
+    return NULL;
 
   iclass = GST_INDEX_GET_CLASS (index);
 

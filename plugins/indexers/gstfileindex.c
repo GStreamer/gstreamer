@@ -126,8 +126,7 @@ gst_file_index_get_property (GObject *object,
 			     GParamSpec *pspec);
 
 static gboolean
-gst_file_index_resolve_writer (GstIndex *_index, GstObject *writer,
-			       gint *id, gchar **writer_string);
+gst_file_index_get_writer_id  (GstIndex *_index, gint *id, gchar *writer_string);
 
 static void             gst_file_index_commit           (GstIndex *index, gint writer_id);
 static void 		gst_file_index_add_entry 	(GstIndex *index, GstIndexEntry *entry);
@@ -182,7 +181,7 @@ gst_file_index_class_init (GstFileIndexClass *klass)
   gstindex_class->add_entry 	  = gst_file_index_add_entry;
   gstindex_class->get_assoc_entry = gst_file_index_get_assoc_entry;
   gstindex_class->commit 	  = gst_file_index_commit;
-  gstindex_class->resolve_writer  = gst_file_index_resolve_writer;
+  gstindex_class->get_writer_id   = gst_file_index_get_writer_id ;
 
   g_object_class_install_property (gobject_class, ARG_LOCATION,
    g_param_spec_string ("location", "File Location",
@@ -212,8 +211,8 @@ gst_file_index_dispose (GObject *object)
 }
 
 static gboolean
-gst_file_index_resolve_writer (GstIndex *_index, GstObject *writer,
-			       gint *id, gchar **writer_string)
+gst_file_index_get_writer_id  (GstIndex *_index, 
+			       gint *id, gchar *writer_string)
 {
   GstFileIndex *index = GST_FILE_INDEX (_index);
   GSList *pending = index->unresolved;
@@ -225,23 +224,22 @@ gst_file_index_resolve_writer (GstIndex *_index, GstObject *writer,
 
   g_return_val_if_fail (id, FALSE);
   g_return_val_if_fail (writer_string, FALSE);
-  g_return_val_if_fail (*writer_string, FALSE);
 
   index->unresolved = NULL;
 
   for (elem = pending; elem; elem = g_slist_next (elem)) {
     GstFileIndexId *ii = elem->data;
-    if (strcmp (ii->id_desc, *writer_string) != 0) {
+    if (strcmp (ii->id_desc, writer_string) != 0) {
       index->unresolved = g_slist_prepend (index->unresolved, ii);
       continue;
     }
     
     if (match) {
-      g_warning ("Duplicate matches for writer '%s'", *writer_string);
+      g_warning ("Duplicate matches for writer '%s'", writer_string);
       continue;
     }
 
-    //g_warning ("resolve %d %s", *id, *writer_string);
+    //g_warning ("resolve %d %s", *id, writer_string);
     ii->id = *id;
     g_hash_table_insert (index->id_index, id, ii);
     match = TRUE;
