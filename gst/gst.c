@@ -109,63 +109,6 @@ enum
 #define NUL '\0'
 #endif
 
-/* default scheduler, can be changed in gstscheduler.h with
- * the GST_SCHEDULER_DEFAULT_NAME define.
- */
-static const GstPoptOption gstreamer_options[] = {
-  {NULL, NUL, POPT_ARG_CALLBACK | POPT_CBFLAG_PRE | POPT_CBFLAG_POST,
-      (void *) &init_popt_callback, 0, NULL, NULL},
-  /* make sure we use our GETTEXT_PACKAGE as the domain for popt translations */
-  {NULL, NUL, POPT_ARG_INTL_DOMAIN, GETTEXT_PACKAGE, 0, NULL, NULL},
-  {"gst-version", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL, ARG_VERSION,
-      N_("Print the GStreamer version"), NULL},
-  {"gst-fatal-warnings", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
-      ARG_FATAL_WARNINGS, N_("Make all warnings fatal"), NULL},
-
-#ifndef GST_DISABLE_GST_DEBUG
-  {"gst-debug-help", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
-      ARG_DEBUG_HELP, N_("Print available debug categories and exit"), NULL},
-  {"gst-debug-level", NUL, POPT_ARG_INT | POPT_ARGFLAG_STRIP, NULL,
-        ARG_DEBUG_LEVEL,
-        N_
-        ("Default debug level from 1 (only error) to 5 (anything) or 0 for no output"),
-      N_("LEVEL")},
-  {"gst-debug", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL, ARG_DEBUG,
-        N_
-        ("Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"),
-      N_("LIST")},
-  {"gst-debug-no-color", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
-      ARG_DEBUG_NO_COLOR, N_("Disable colored debugging output"), NULL},
-  {"gst-debug-disable", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
-      ARG_DEBUG_DISABLE, N_("Disable debugging")},
-#endif
-
-  {"gst-disable-cpu-opt", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
-      ARG_DISABLE_CPU_OPT, N_("Disable accelerated CPU instructions"), NULL},
-  {"gst-plugin-spew", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
-      ARG_PLUGIN_SPEW, N_("Enable verbose plugin loading diagnostics"), NULL},
-  {"gst-plugin-path", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
-        ARG_PLUGIN_PATH,
-      N_("path list for loading plugins (separated by '"
-            G_SEARCHPATH_SEPARATOR_S "')"), N_("PATHS")},
-  {"gst-plugin-load", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
-        ARG_PLUGIN_LOAD,
-        N_
-        ("Comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH"),
-      N_("PLUGINS")},
-  {"gst-disable-segtrap", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
-        ARG_SEGTRAP_DISABLE,
-        N_("Disable trapping of segmentation faults during plugin loading"),
-      NULL},
-  {"gst-scheduler", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
-        ARG_SCHEDULER,
-      N_("Scheduler to use ('" GST_SCHEDULER_DEFAULT_NAME
-            "' is the default)"), N_("SCHEDULER")},
-  {"gst-registry", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
-      ARG_REGISTRY, N_("Registry to use"), N_("REGISTRY")},
-  POPT_TABLEEND
-};
-
 /**
  * gst_init_get_popt_table:
  *
@@ -183,6 +126,78 @@ static const GstPoptOption gstreamer_options[] = {
 const GstPoptOption *
 gst_init_get_popt_table (void)
 {
+  static GstPoptOption gstreamer_options[] = {
+    {NULL, NUL, POPT_ARG_CALLBACK | POPT_CBFLAG_PRE | POPT_CBFLAG_POST,
+        (void *) &init_popt_callback, 0, NULL, NULL},
+    /* make sure we use our GETTEXT_PACKAGE as the domain for popt translations */
+    {NULL, NUL, POPT_ARG_INTL_DOMAIN, GETTEXT_PACKAGE, 0, NULL, NULL},
+    {"gst-version", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL, ARG_VERSION,
+        N_("Print the GStreamer version"), NULL},
+    {"gst-fatal-warnings", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
+        ARG_FATAL_WARNINGS, N_("Make all warnings fatal"), NULL},
+
+#ifndef GST_DISABLE_GST_DEBUG
+    {"gst-debug-help", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
+        ARG_DEBUG_HELP, N_("Print available debug categories and exit"), NULL},
+    {"gst-debug-level", NUL, POPT_ARG_INT | POPT_ARGFLAG_STRIP, NULL,
+          ARG_DEBUG_LEVEL,
+          N_("Default debug level from 1 (only error) to 5 (anything) or "
+              "0 for no output"),
+        N_("LEVEL")},
+    {"gst-debug", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL, ARG_DEBUG,
+          N_("Comma-separated list of category_name:level pairs to set "
+              "specific levels for the individual categories. Example: "
+              "GST_AUTOPLUG:5,GST_ELEMENT_*:3"),
+        N_("LIST")},
+    {"gst-debug-no-color", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
+        ARG_DEBUG_NO_COLOR, N_("Disable colored debugging output"), NULL},
+    {"gst-debug-disable", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
+        ARG_DEBUG_DISABLE, N_("Disable debugging")},
+#endif
+
+    {"gst-disable-cpu-opt", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
+        ARG_DISABLE_CPU_OPT, N_("Disable accelerated CPU instructions"), NULL},
+    {"gst-plugin-spew", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
+        ARG_PLUGIN_SPEW, N_("Enable verbose plugin loading diagnostics"), NULL},
+    {"gst-plugin-path", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
+        ARG_PLUGIN_PATH, NULL, N_("PATHS")},
+    {"gst-plugin-load", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
+          ARG_PLUGIN_LOAD,
+          N_("Comma-separated list of plugins to preload in addition to the "
+              "list stored in env variable GST_PLUGIN_PATH"),
+        N_("PLUGINS")},
+    {"gst-disable-segtrap", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
+          ARG_SEGTRAP_DISABLE,
+          N_("Disable trapping of segmentation faults during plugin loading"),
+        NULL},
+    {"gst-scheduler", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
+        ARG_SCHEDULER, NULL, N_("SCHEDULER")},
+    {"gst-registry", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
+        ARG_REGISTRY, N_("Registry to use"), N_("REGISTRY")},
+    POPT_TABLEEND
+  };
+  static gboolean inited = FALSE;
+
+  if (!inited) {
+    int i;
+
+    for (i = 0; i < G_N_ELEMENTS (gstreamer_options); i++) {
+      if (gstreamer_options[i].longName == NULL) {
+      } else if (strcmp (gstreamer_options[i].longName, "gst-plugin-path") == 0) {
+        gstreamer_options[i].descrip =
+            g_strdup_printf (_
+            ("path list for loading plugins (separated by '%s')"),
+            G_SEARCHPATH_SEPARATOR_S);
+      } else if (strcmp (gstreamer_options[i].longName, "gst-scheduler") == 0) {
+        gstreamer_options[i].descrip =
+            g_strdup_printf (_("Scheduler to use (default is '%s')"),
+            GST_SCHEDULER_DEFAULT_NAME);
+      }
+    }
+
+    inited = TRUE;
+  }
+
   return gstreamer_options;
 }
 
@@ -270,7 +285,8 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
   GstPoptOption options_with[] = {
     {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 0, "Help options:",
         NULL},
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (GstPoptOption *) gstreamer_options, 0,
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE,
+          (GstPoptOption *) gst_init_get_popt_table (), 0,
         "GStreamer options:", NULL},
     {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (GstPoptOption *) popt_options, 0,
         "Application options:", NULL},
@@ -279,7 +295,8 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
   GstPoptOption options_without[] = {
     {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 0, "Help options:",
         NULL},
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (GstPoptOption *) gstreamer_options, 0,
+    {NULL, NUL, POPT_ARG_INCLUDE_TABLE,
+          (GstPoptOption *) gst_init_get_popt_table (), 0,
         "GStreamer options:", NULL},
     POPT_TABLEEND
   };

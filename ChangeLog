@@ -1,3 +1,10 @@
+2004-03-16  David Schleef  <ds@schleef.org>
+
+	* gst/gst.c: (gst_get_popt_options), (gst_init_get_popt_table),
+	(gst_init_check_with_popt_table):  Fix some gettext strings to
+	make them easier to translate.  Required making the strings
+	non-const.
+
 2004-03-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: bump nano to 1
