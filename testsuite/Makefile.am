@@ -1,4 +1,5 @@
 tests =  \
+	caps.py \
 	common.py \
 	element.py \
 	interface.py \
