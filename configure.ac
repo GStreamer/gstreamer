@@ -23,7 +23,7 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 dnl - major/minor got increased -> reset to 0,0,0
-AS_LIBTOOL(GST, 0, 1, 0)
+AS_LIBTOOL(GST, 0, 2, 1)
 
 AC_CONFIG_SRCDIR([gst/gst.c])
 AM_CONFIG_HEADER(config.h)
