@@ -625,7 +625,6 @@ gst_ximagesink_chain (GstPad *pad, GstData *_data)
       switch (e.type)
         {
           case ConfigureNotify:
-
             /* Window got resized or moved. We do caps negotiation
                again to get video scaler to fit that new size */
             GST_DEBUG ("ximagesink window is at %d, %d with geometry : %d,%d",
