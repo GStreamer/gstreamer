@@ -200,7 +200,7 @@
     &THREADS;
     &SCHEDULERS;
     &AUTOPLUGGING;
-<!--    &DATAACCESS; -->
+    &DATAACCESS;
 
   </part>
 
