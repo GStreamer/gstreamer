@@ -710,7 +710,7 @@ gst_bin_iterate_func (GstBin *bin)
     chain = (_GstBinChain *)(chains->data);
     chains = g_list_next (chains);
 
-    if (chain->use_cothreads) {
+    if (chain->need_cothreads) {
       // all we really have to do is switch to the first child
       // FIXME this should be lots more intelligent about where to start
       DEBUG("starting iteration via cothreads\n");

@@ -261,6 +261,37 @@ gst_schedule_cothreaded_chain (GstBin *bin, _GstBinChain *chain) {
   }
 }
 
+static void
+gst_schedule_chained_chain (GstBin *bin, _GstBinChain *chain) {
+  GList *elements;
+  GstElement *element;
+  GList *pads;
+  GstPad *pad;
+
+  // walk through all the elements
+  elements = chain->elements;
+  while (elements) {
+    element = GST_ELEMENT (elements->data);
+    elements = g_list_next (elements);
+
+    // walk through all the pads
+    pads = gst_element_get_pad_list (element);
+    while (pads) {
+      pad = GST_PAD (pads->data);
+      pads = g_list_next (pads);
+
+      if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
+        DEBUG("copying chain function into push proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
+        pad->pushfunc = pad->chainfunc; 
+      } else {
+        DEBUG("copying get function into pull proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
+        pad->pullfunc = pad->getfunc;
+        pad->pullregionfunc = pad->getregionfunc;
+      }
+    }
+  }
+}
+
 void gst_bin_schedule_func(GstBin *bin) {
 //  GstElement *manager;
   GList *elements;
@@ -315,15 +346,23 @@ void gst_bin_schedule_func(GstBin *bin) {
       chain->num_elements++;
       // set the cothreads flag as appropriate
       if (GST_FLAG_IS_SET (element, GST_ELEMENT_USE_COTHREAD))
-        chain->use_cothreads = TRUE;
+        chain->need_cothreads = TRUE;
+      if (bin->use_cothreads == TRUE)
+        chain->need_cothreads = TRUE;
 
       // if we're managed by the current bin, and we're not decoupled,
       // go find all the peers and add them to the list of elements to check
       if ((element->manager == GST_ELEMENT(bin)) && 
           !GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
         // remove ourselves from the outer list of all managed elements
-        DEBUG("removing '%s' from list of possible elements\n",gst_element_get_name(element));
+//        DEBUG("removing '%s' from list of possible elements\n",gst_element_get_name(element));
         elements = g_list_remove (elements, element);
+
+        // if this element is a source, add it as an entry
+        if (element->numsinkpads == 0) {
+          chain->entries = g_list_prepend (chain->entries, element);
+          DEBUG("added '%s' as SRC entry into the chain\n",gst_element_get_name(element));
+        }
 
         // now we have to walk the pads to find peers
         pads = gst_element_get_pad_list (element);
@@ -339,6 +378,13 @@ void gst_bin_schedule_func(GstBin *bin) {
             // add the peer element to the pending list
             DEBUG("adding '%s' to list of pending elements\n",gst_element_get_name(GST_ELEMENT(pad->peer->parent)));
             pending = g_slist_prepend (pending, GST_ELEMENT(pad->peer->parent));
+
+            // if this is a sink pad, then the element on the other side is an entry
+            if ((gst_pad_get_direction (pad) == GST_PAD_SINK) &&
+                (GST_FLAG_IS_SET (pad->peer->parent, GST_ELEMENT_DECOUPLED))) {
+              chain->entries = g_list_prepend (chain->entries, pad->peer->parent);
+              DEBUG("added '%s' as DECOUPLED entry into the chain\n",gst_element_get_name(GST_ELEMENT(pad->peer->parent))); 
+            }
           } else
             DEBUG("element '%s' has already been dealt with\n",gst_element_get_name(GST_ELEMENT(pad->peer->parent)));
         }
@@ -370,10 +416,10 @@ void gst_bin_schedule_func(GstBin *bin) {
     chains = g_list_next (chains);
 
     // schedule as appropriate
-    if (chain->use_cothreads) {
+    if (chain->need_cothreads) {
       gst_schedule_cothreaded_chain (bin,chain);
     } else {
-      DEBUG("non-cothreaded case not coded yet\n");
+      gst_schedule_chained_chain (bin,chain);
     }
   }
 
