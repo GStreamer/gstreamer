@@ -34,17 +34,12 @@
 #include "qcamip.h"
 
 /* elementfactory information */
-static GstElementDetails 
-gst_qcamsrc_details = 
-{
+static GstElementDetails gst_qcamsrc_details = GST_ELEMENT_DETAILS (
   "QCam Source",
   "Source/Video",
-  "LGPL",
   "Read from a QuickCam device",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 #define AE_NONE			3
 
@@ -111,6 +106,7 @@ enum {
   ARG_AUTOEXP,
 };
 
+static void			gst_qcamsrc_base_init		(gpointer g_class);
 static void			gst_qcamsrc_class_init		(GstQCamSrcClass *klass);
 static void			gst_qcamsrc_init		(GstQCamSrc *qcamsrc);
 
@@ -136,7 +132,7 @@ gst_qcamsrc_get_type (void)
   if (!qcamsrc_type) {
     static const GTypeInfo qcamsrc_info = {
       sizeof(GstQCamSrcClass),      
-      NULL,
+      gst_qcamsrc_base_init,
       NULL,
       (GClassInitFunc)gst_qcamsrc_class_init,
       NULL,
@@ -150,7 +146,14 @@ gst_qcamsrc_get_type (void)
   }
   return qcamsrc_type;
 }
-
+static void
+gst_qcamsrc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_qcamsrc_src_factory));
+  gst_element_class_set_details (element_class, &gst_qcamsrc_details);
+}
 static void
 gst_qcamsrc_class_init (GstQCamSrcClass *klass)
 {
@@ -424,27 +427,24 @@ gst_qcamsrc_close (GstQCamSrc *src)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the qcamsrcparse element */
-  factory = gst_element_factory_new("qcamsrc",GST_TYPE_QCAMSRC,
-                                   &gst_qcamsrc_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory,
-	     GST_PAD_TEMPLATE_GET (gst_qcamsrc_src_factory));
-  
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "qcamsrc", GST_RANK_NONE, GST_TYPE_QCAMSRC))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "qcamsrc",
-  plugin_init
-};
+  "Read from a QuickCam device",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
 

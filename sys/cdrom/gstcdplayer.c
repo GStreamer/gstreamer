@@ -41,6 +41,7 @@ enum
   LAST_SIGNAL,
 };
 
+static void 		cdplayer_base_init 		(gpointer g_class);
 static void 		cdplayer_class_init 		(CDPlayerClass *klass);
 static void 		cdplayer_init 			(CDPlayer *cdp);
 static void 		cdplayer_dispose 		(GObject *object);
@@ -57,16 +58,13 @@ static GstElementStateReturn
 static GstElementClass *parent_class;
 static guint cdplayer_signals[LAST_SIGNAL] = { 0 };
 
-static GstElementDetails cdplayer_details = {
+static GstElementDetails cdplayer_details = GST_ELEMENT_DETAILS (
   "CD Player",
   "Generic/Bin",
-  "LGPL", /* ? */
   "Play CD audio through the CD Drive",
-  VERSION,
-  "Charles Schmidt <cbschmid@uiuc.edu>\n"
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2002",
-};
+  "Charles Schmidt <cbschmid@uiuc.edu>, "
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 
 GType
@@ -77,7 +75,7 @@ cdplayer_get_type (void)
   if (!cdplayer_type) {
     static const GTypeInfo cdplayer_info = {
       sizeof (CDPlayerClass),
-      NULL,
+      cdplayer_base_init,
       NULL,
       (GClassInitFunc) cdplayer_class_init,
       NULL,
@@ -94,6 +92,13 @@ cdplayer_get_type (void)
   return cdplayer_type;
 }
 
+static void
+cdplayer_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &cdplayer_details);
+}
 static void
 cdplayer_class_init (CDPlayerClass * klass)
 {
@@ -349,23 +354,20 @@ cdplayer_change_state (GstElement * element)
 
 
 static gboolean
-plugin_init (GModule * module, GstPlugin * plugin)
+plugin_init (GstPlugin * plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new ("cdplayer", GST_TYPE_CDPLAYER, &cdplayer_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  gst_plugin_set_longname (plugin, "CD Player");
-
-  return TRUE;
-
+  return gst_element_register (plugin, "cdplayer", GST_RANK_NONE, GST_TYPE_CDPLAYER);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "cdplayer",
-  plugin_init
-};
+  "CD Player",
+  plugin_init,
+  VERSION,
+  GST_LICENSE, /* ? */
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+);

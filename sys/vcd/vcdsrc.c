@@ -37,15 +37,12 @@
 #include <vcdsrc.h>
 
 
-static GstElementDetails vcdsrc_details = {
+static GstElementDetails vcdsrc_details = GST_ELEMENT_DETAILS (
   "VCD Source",
   "Source/File",
-  "LGPL",
   "Asynchronous read from VCD disk",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
-};
+  "Erik Walthinsen <omega@cse.ogi.edu>"
+);
 
 
 /* VCDSrc signals and args */
@@ -63,6 +60,7 @@ enum {
   ARG_MAX_ERRORS,
 };
 
+static void			vcdsrc_base_init	(gpointer g_class);
 static void			vcdsrc_class_init	(VCDSrcClass *klass);
 static void			vcdsrc_init		(VCDSrc *vcdsrc);
 static void			vcdsrc_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -85,7 +83,8 @@ vcdsrc_get_type (void)
 
   if (!vcdsrc_type) {
     static const GTypeInfo vcdsrc_info = {
-      sizeof(VCDSrcClass),      NULL,
+      sizeof(VCDSrcClass),
+      vcdsrc_base_init,
       NULL,
       (GClassInitFunc)vcdsrc_class_init,
       NULL,
@@ -100,6 +99,13 @@ vcdsrc_get_type (void)
 }
 
 static void
+vcdsrc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (element_class, &vcdsrc_details);
+}
+static void
 vcdsrc_class_init (VCDSrcClass *klass)
 {
   GObjectClass *gobject_class;
@@ -108,7 +114,7 @@ vcdsrc_class_init (VCDSrcClass *klass)
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATION,
     g_param_spec_string("location","location","location",
@@ -391,22 +397,20 @@ vcdsrc_recalculate (VCDSrc *vcdsrc)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the vcdsrc element */
-  factory = gst_element_factory_new("vcdsrc",GST_TYPE_VCDSRC,
-                                   &vcdsrc_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "vcdsrc", GST_RANK_NONE, GST_TYPE_VCDSRC);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "vcdsrc",
-  plugin_init
-};
+  "Asynchronous read from VCD disk",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
