@@ -183,6 +183,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %{_libdir}/gstreamer-%{majorminor}/libgstriff.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideo.so
 %{_libdir}/libgstmixer.so
+%{_libdir}/gstreamer-%{majorminor}/libgstid3types.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpegtypes.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideodrop.so
 # non-core plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstresample.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsinesrc.so
@@ -204,7 +207,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %{_libdir}/gstreamer-%{majorminor}/libgstoneton.so
 %{_libdir}/gstreamer-%{majorminor}/libgstwavparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstauparse.so
-%{_libdir}/gstreamer-%{majorminor}/libgstmp3types.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmodplug.so
 %{_libdir}/gstreamer-%{majorminor}/libgstwavenc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfestival.so
@@ -240,7 +242,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %{_libdir}/gstreamer-%{majorminor}/libgstvideobalance.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideofilter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoflip.so
-%{_libdir}/gstreamer-%{majorminor}/libgstmpeg1types.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpeg1systemencode.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegaudio.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegaudioparse.so
@@ -249,7 +250,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %{_libdir}/gstreamer-%{majorminor}/libgstmpeg2enc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpeg2dec.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpeg2subt.so
-%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2types.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmplex.so
 %{_libdir}/gstreamer-%{majorminor}/libgstoverlay.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsmoothwave.so
