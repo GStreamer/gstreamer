@@ -149,6 +149,8 @@ main (int argc, char *argv[])
 
   g_main_loop_run (loop);
 
+  gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
+  
   /* unref */
   gst_object_unref (GST_OBJECT (play));
 
