@@ -464,10 +464,12 @@ gst_v4lsrc_get (GstPad *pad)
   GST_BUFFER_SIZE(buf) = v4lsrc->buffer_size;
 
   if (!v4lsrc->first_timestamp)
-    v4lsrc->first_timestamp = v4lsrc->timestamp_soft_sync[num].tv_sec * GST_SECOND +
-      v4lsrc->timestamp_soft_sync[num].tv_usec * GST_SECOND/1000000;
-  GST_BUFFER_TIMESTAMP(buf) = v4lsrc->timestamp_soft_sync[num].tv_sec * GST_SECOND +
-    v4lsrc->timestamp_soft_sync[num].tv_usec * GST_SECOND/1000000 - v4lsrc->first_timestamp;
+    v4lsrc->first_timestamp =
+      GST_TIMEVAL_TO_TIME(v4lsrc->timestamp_soft_sync[num]);
+
+  GST_BUFFER_TIMESTAMP(buf) =
+    GST_TIMEVAL_TO_TIME(v4lsrc->timestamp_soft_sync[num]) -
+      v4lsrc->first_timestamp;
 
   return buf;
 }
