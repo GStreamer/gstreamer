@@ -85,11 +85,13 @@ debug_log_handler (const gchar *log_domain,
 enum {
   ARG_VERSION=1,
   ARG_FATAL_WARNINGS,
+#ifndef GST_DISABLE_GST_DEBUG 
   ARG_DEBUG_LEVEL,
   ARG_DEBUG,
   ARG_DEBUG_DISABLE,
   ARG_DEBUG_NO_COLOR,
   ARG_DEBUG_HELP,
+#endif
   ARG_DISABLE_CPU_OPT,
   ARG_PLUGIN_SPEW,
   ARG_PLUGIN_PATH,
@@ -576,20 +578,48 @@ init_post (void)
   return TRUE;
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
+static gint
+sort_by_category_name (gconstpointer a, gconstpointer b)
+{
+  return strcmp (gst_debug_category_get_name ((GstDebugCategory *) a),
+		 gst_debug_category_get_name ((GstDebugCategory *) b));
+}
 static void
 gst_debug_help (void) 
 {
-  GSList *cats, *walk;
+  GSList *list, *walk;
+  GList *list2, *walk2;
   
-  walk = cats = gst_debug_get_all_categories ();
-
+  if (!init_post ())
+    exit (1);
+  
+  walk2 = list2 = gst_registry_pool_plugin_list ();
+  while (walk2) {
+    GstPlugin *plugin = GST_PLUGIN (walk2->data);
+    walk2 = g_list_next (walk2);
+    
+    if (!gst_plugin_is_loaded (plugin)) {
+#ifndef GST_DISABLE_REGISTRY 
+      if (GST_IS_REGISTRY (plugin->manager)) {
+	GST_CAT_LOG (GST_CAT_PLUGIN_LOADING, "loading plugin %s", plugin->desc.name);
+	if (gst_registry_load_plugin (GST_REGISTRY (plugin->manager), plugin) != GST_REGISTRY_OK)
+	  GST_CAT_WARNING (GST_CAT_PLUGIN_LOADING, "loading plugin %s failed", plugin->desc.name);
+      }
+#endif /* GST_DISABLE_REGISTRY */
+    }
+  }
+  g_list_free (list2);
+      
+  list = gst_debug_get_all_categories ();
+  walk = list = g_slist_sort (list, sort_by_category_name);
+  
   g_print ("\n");
   g_print ("name                  level    description\n");
   g_print ("---------------------+--------+--------------------------------\n");
 
   while (walk) {
-    /* unused when debugging is disabled */
-    G_GNUC_UNUSED GstDebugCategory *cat = (GstDebugCategory *) walk->data;
+    GstDebugCategory *cat = (GstDebugCategory *) walk->data;
   
     if (gst_debug_is_colored ()) {
       gchar *color = gst_debug_construct_term_color (cat->color);
@@ -609,9 +639,10 @@ gst_debug_help (void)
     }
     walk = g_slist_next (walk);
   }   
+  g_slist_free (list);
   g_print ("\n");
 }
-  
+#endif  
 
 static void
 init_popt_callback (poptContext context, enum poptCallbackReason reason,
@@ -635,6 +666,7 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
       fatal_mask |= G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL;
       g_log_set_always_fatal (fatal_mask);
       break;
+#ifndef GST_DISABLE_GST_DEBUG 
     case ARG_DEBUG_LEVEL: {
       gint tmp = 0;
       tmp = strtol (arg, NULL, 0);
@@ -655,6 +687,7 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
     case ARG_DEBUG_HELP:
       gst_debug_help ();
       exit (0);
+#endif
     case ARG_DISABLE_CPU_OPT:
       _gst_enable_cpu_opt = FALSE;
       break;
