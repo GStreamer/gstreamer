@@ -158,11 +158,31 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_AVIFILE_TRUE@%post -n gstreamer-avi
 @USE_AVIFILE_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
 
+### CDPARANOIA ###
+@USE_CDPARANOIA_TRUE@%package -n gstreamer-cdparanoia
+@USE_CDPARANOIA_TRUE@Summary: Gstreamer plugin for CD audio input using CDParanoia IV
+@USE_CDPARANOIA_TRUE@Group: Libraries/Multimedia
+@USE_CDPARANOIA_TRUE@Requires: cdparanoia >= alpha9.7
+@USE_CDPARANOIA_TRUE@Requires: gstreamer-plugins >= %{ver}
+@USE_CDPARANOIA_TRUE@BuildRequires: cdparanoia-devel >= alpha9.7
+@USE_CDPARANOIA_TRUE@
+@USE_CDPARANOIA_TRUE@%description -n gstreamer-cdparanoia
+@USE_CDPARANOIA_TRUE@Plugin for ripping audio tracks using cdparanoia under GStreamer
+@USE_CDPARANOIA_TRUE@
+@USE_CDPARANOIA_TRUE@%files -n gstreamer-cdparanoia
+@USE_CDPARANOIA_TRUE@%defattr(-, root, root)
+@USE_CDPARANOIA_TRUE@%{prefix}/lib/gst/libgstcdparanoia*
+@USE_CDPARANOIA_TRUE@
+@USE_CDPARANOIA_TRUE@%post -n gstreamer-cdparanoia
+@USE_CDPARANOIA_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+
 ### DVDREAD ###
 @USE_DVDREAD_TRUE@%package -n gstreamer-libdvd
 @USE_DVDREAD_TRUE@Summary: GStreamer plugins for DVD playback
 @USE_DVDREAD_TRUE@Group: Libraries/Multimedia
 @USE_DVDREAD_TRUE@Requires: gstreamer-plugins >= %{ver}
+@USE_DVDREAD_TRUE@Requires: libdvdread >= 0.9.0
+@USE_DVDREAD_TRUE@BuildRequires: libdvdread-devel >= 0.9.0
 @USE_DVDREAD_TRUE@
 @USE_DVDREAD_TRUE@%description -n gstreamer-libdvd
 @USE_DVDREAD_TRUE@Input and output plugin for the ALSA soundcard driver architecture.
@@ -195,30 +215,13 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_ESD_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
 @USE_ESD_TRUE@/sbin/ldconfig
 
-### CDPARANOIA ###
-@USE_CDPARANOIA_TRUE@%package -n gstreamer-cdparanoia
-@USE_CDPARANOIA_TRUE@Summary: Gstreamer plugin for CD audio input using CDParanoia IV
-@USE_CDPARANOIA_TRUE@Group: Libraries/Multimedia
-@USE_CDPARANOIA_TRUE@Requires: cdparanoia >= alpha9.7
-@USE_CDPARANOIA_TRUE@Requires: gstreamer-plugins >= %{ver}
-@USE_CDPARANOIA_TRUE@BuildRequires: cdparanoia-devel >= alpha9.7
-@USE_CDPARANOIA_TRUE@
-@USE_CDPARANOIA_TRUE@%description -n gstreamer-cdparanoia
-@USE_CDPARANOIA_TRUE@Plugin for ripping audio tracks using cdparanoia under GStreamer
-@USE_CDPARANOIA_TRUE@
-@USE_CDPARANOIA_TRUE@%files -n gstreamer-cdparanoia
-@USE_CDPARANOIA_TRUE@%defattr(-, root, root)
-@USE_CDPARANOIA_TRUE@%{prefix}/lib/gst/libgstcdparanoia*
-@USE_CDPARANOIA_TRUE@
-@USE_CDPARANOIA_TRUE@%post -n gstreamer-cdparanoia
-@USE_CDPARANOIA_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
-
 ### FESTIVAL ###
 @USE_FESTIVAL_TRUE@%package -n gstreamer-festival
 @USE_FESTIVAL_TRUE@Summary: GStreamer plugin for text-to-speech support using Festival
 @USE_FESTIVAL_TRUE@Group: Libraries/Multimedia
 @USE_FESTIVAL_TRUE@Requires: gstreamer-plugins >= %{ver}
 @USE_FESTIVAL_TRUE@Requires: festival >= 1.4.1
+@USE_FESTIVAL_TRUE@BuildRequires: festival-devel >= 1.4.1
 @USE_FESTIVAL_TRUE@
 @USE_FESTIVAL_TRUE@%description -n gstreamer-festival
 @USE_FESTIVAL_TRUE@Element for text-to-speech using the festival server.
@@ -235,6 +238,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_FLAC_TRUE@Summary: Gstreamer plugin for FLAC lossless audio format
 @USE_FLAC_TRUE@Group: Libraries/Multimedia
 @USE_FLAC_TRUE@Requires: gstreamer-plugins >= %{ver}
+@USE_FLAC_TRUE@Requires: flac >= 1.0.0
 @USE_FLAC_TRUE@
 @USE_FLAC_TRUE@%description -n gstreamer-flac
 @USE_FLAC_TRUE@Plugin for the free FLAC lossless audio format.
@@ -270,6 +274,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_GSM_TRUE@Group: Libraries/Multimedia
 @USE_GSM_TRUE@Requires: gsm >= 1.0.10
 @USE_GSM_TRUE@Requires: gstreamer-plugins >= %{ver}
+@USE_GSM_TRUE@BuildRequires: gsm-devel >= 1.0.10
 @USE_GSM_TRUE@
 @USE_GSM_TRUE@%description -n gstreamer-gsm
 @USE_GSM_TRUE@Output plugin for GStreamer to convert to GSM lossy audio format.
@@ -287,6 +292,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_HERMES_TRUE@Group: Libraries/Multimedia
 @USE_HERMES_TRUE@Requires: gstreamer-plugins >= %{ver}
 @USE_HERMES_TRUE@Requires: Hermes => 1.3.0
+@USE_HERMES_TRUE@BuildRequires: Hermes-devel => 1.3.0
 @USE_HERMES_TRUE@%description -n gstreamer-colorspace
 @USE_HERMES_TRUE@Colorspace plugin based on Hermes library
 @USE_HERMES_TRUE@
@@ -303,6 +309,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_JPEG_TRUE@Group: Libraries/Multimedia
 @USE_JPEG_TRUE@Requires: libjpeg
 @USE_JPEG_TRUE@Requires: gstreamer-plugins >= %{ver}
+@USE_JPEG_TRUE@BuildRequires: libjpeg-devel
 @USE_JPEG_TRUE@
 @USE_JPEG_TRUE@%description -n gstreamer-jpeg
 @USE_JPEG_TRUE@Output plugin for GStreamer using libjpeg
@@ -319,6 +326,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_LAME_TRUE@Summary: GStreamer plugin encoding mp3 songs
 @USE_LAME_TRUE@Group: Libraries/Multimedia
 @USE_LAME_TRUE@Requires: gstreamer-plugins >= %{ver}
+@USE_LAME_TRUE@Requires: lame >= 3.89
 @USE_LAME_TRUE@
 @USE_LAME_TRUE@%description -n gstreamer-lame
 @USE_LAME_TRUE@Plugin for encoding mp3 with lame
@@ -337,6 +345,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_MAD_TRUE@Requires: gstreamer-plugins >= %{ver}
 @USE_MAD_TRUE@Requires: gstreamer-plugin-libs = %{ver}
 @USE_MAD_TRUE@Requires: mad >= 0.13.0
+@USE_MAD_TRUE@BuildRequires: mad-devel >= 0.13.0
 @USE_MAD_TRUE@
 @USE_MAD_TRUE@%description -n gstreamer-mad
 @USE_MAD_TRUE@Plugin for playback of mp3 songs using the very good MAD library
@@ -373,6 +382,8 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_MJPEGTOOLS_TRUE@Summary: Gstreamer mjpegtools
 @USE_MJPEGTOOLS_TRUE@Group: Libraries/Multimedia
 @USE_MJPEGTOOLS_TRUE@Requires: gstreamer-plugins >= %{ver}
+@USE_MJPEGTOOLS_TRUE@Requires: mjpegtools >= %{ver}
+@USE_MJPEGTOOLS_TRUE@BuildRequires: mjpegtools-devel >= %{ver}
 @USE_MJPEGTOOLS_TRUE@
 @USE_MJPEGTOOLS_TRUE@%description -n gstreamer-jpegmmx
 @USE_MJPEGTOOLS_TRUE@Mgpegtools based encoding and decoding plugin
@@ -509,6 +520,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_SIDPLAY_TRUE@Group: Libraries/Multimedia
 @USE_SIDPLAY_TRUE@Requires: gstreamer-plugins >= %{ver}
 @USE_SIDPLAY_TRUE@Requires: libsidplay => 1.36.0
+@USE_SIDPLAY_TRUE@BuildRequires: libsidplay-devel => 1.36.0
 @USE_SIDPLAY_TRUE@%description -n gstreamer-sid
 @USE_SIDPLAY_TRUE@Plugin for playback of C64 SID format music files
 @USE_SIDPLAY_TRUE@
@@ -545,6 +557,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_SHOUT_TRUE@Requires: gstreamer-plugins >= %{ver}
 @USE_SHOUT_TRUE@Requires: gstreamer-plugin-libs = %{ver}
 @USE_SHOUT_TRUE@Requires: libshout >= 1.0.5
+@USE_SHOUT_TRUE@BuildRequires: libshout-devel >= 1.0.5
 @USE_SHOUT_TRUE@%description -n gstreamer-icecast
 @USE_SHOUT_TRUE@Plugin for broadcasting audio with the Icecast server
 @USE_SHOUT_TRUE@
@@ -562,6 +575,8 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_VORBIS_TRUE@Requires: libogg >= 1.0beta4
 @USE_VORBIS_TRUE@Requires: libvorbis >= 1.0beta4
 @USE_VORBIS_TRUE@Requires: gstreamer-plugins >= %{ver}
+@USE_VORBIS_TRUE@BuildRequires: libogg-devel >= 1.0beta4
+@USE_VORBIS_TRUE@BuildRequires: libvorbis-devel >= 1.0beta4
 @USE_VORBIS_TRUE@
 @USE_VORBIS_TRUE@%description -n gstreamer-vorbis
 @USE_VORBIS_TRUE@Plugins for creating and playing Ogg Vorbis audio files.
@@ -829,4 +844,8 @@ Plugin for playback of wav, au and mp3 audio files
 %post -n gstreamer-audio-formats
 %{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
 
-
+%changelog
+* Wed Mar 13 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- added more BuildRequires and Requires
+- rearranged some plugins
+- added changelog ;)
