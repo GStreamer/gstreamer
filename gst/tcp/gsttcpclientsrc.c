@@ -218,6 +218,15 @@ gst_tcpclientsrc_get (GstPad * pad)
   src = GST_TCPCLIENTSRC (GST_OBJECT_PARENT (pad));
   g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_TCPCLIENTSRC_OPEN), NULL);
 
+  /* try to negotiate here */
+  if (!gst_pad_is_negotiated (pad)) {
+    if (GST_PAD_LINK_FAILED (gst_pad_renegotiate (pad))) {
+      GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL), GST_ERROR_SYSTEM);
+      gst_buffer_unref (buf);
+      return GST_DATA (gst_event_new (GST_EVENT_EOS));
+    }
+  }
+
   /* if we have a left over buffer after a discont, return that */
   if (src->buffer_after_discont) {
     buf = src->buffer_after_discont;

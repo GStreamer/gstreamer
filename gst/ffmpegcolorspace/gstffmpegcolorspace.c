@@ -192,6 +192,7 @@ gst_ffmpegcolorspace_pad_link (GstPad * pad, const GstCaps * caps)
     return GST_PAD_LINK_REFUSED;
   }
 
+
   /* set the size on the otherpad */
   othercaps = gst_pad_get_negotiated_caps (otherpad);
   if (othercaps) {
@@ -307,6 +308,14 @@ gst_ffmpegcolorspace_chain (GstPad * pad, GstData * data)
   if (!GST_PAD_IS_USABLE (space->srcpad)) {
     gst_buffer_unref (inbuf);
     return;
+  }
+
+  if (!gst_pad_is_negotiated (space->srcpad)) {
+    if (GST_PAD_LINK_FAILED (gst_pad_renegotiate (space->srcpad))) {
+      GST_ELEMENT_ERROR (space, CORE, NEGOTIATION, (NULL), GST_ERROR_SYSTEM);
+      gst_buffer_unref (inbuf);
+      return;
+    }
   }
 
   if (space->from_pixfmt == PIX_FMT_NB || space->to_pixfmt == PIX_FMT_NB) {
