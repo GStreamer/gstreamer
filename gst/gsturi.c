@@ -139,6 +139,26 @@ gst_uri_handler_find (const gchar *name)
 }
 
 /**
+ * this is a straight copy from glib 2.2
+ * remove this function when glib 2.2 is sufficiently widespread and
+ * then change to using the regular g_str_has_prefix
+ */
+static gboolean
+g_str_has_prefix_glib22 (gchar *haystack, gchar *needle)
+{
+  if (haystack == NULL && needle == NULL) {
+    return TRUE;
+  }
+  if (haystack == NULL || needle == NULL) {
+    return FALSE;
+  }
+  if (strncmp (haystack, needle, strlen (needle)) == 0) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
  * gst_uri_handler_find_by_uri:
  * @uri: the uri to find a handler for
  *
@@ -159,7 +179,7 @@ gst_uri_handler_find_by_uri (const gchar *uri)
   while (walk) {
     handler = GST_URI_HANDLER (walk->data);
 
-    if (g_str_has_prefix (uri, handler->uri))
+    if (g_str_has_prefix_glib22 ((gchar *) uri, handler->uri))
       break;
 
     walk = g_list_next (walk);
