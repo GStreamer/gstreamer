@@ -2377,8 +2377,9 @@ gst_pad_set_explicit_caps (GstPad * pad, const GstCaps * caps)
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
-  GST_CAT_DEBUG (GST_CAT_PADS, "setting explicit caps to %" GST_PTR_FORMAT,
-      caps);
+  GST_CAT_DEBUG (GST_CAT_PADS,
+      "setting explicit caps on %s:%s to %" GST_PTR_FORMAT,
+      GST_DEBUG_PAD_NAME (pad), caps);
 
   if (caps == NULL) {
     GST_CAT_DEBUG (GST_CAT_PADS, "caps is NULL");
