@@ -1304,6 +1304,7 @@ testsuite/spider/Makefile
 testsuite/alsa/Makefile
 testsuite/Makefile
 tools/Makefile
+tools/gst-launch-ext
 gconf/Makefile
 pkgconfig/Makefile
 )
