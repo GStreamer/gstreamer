@@ -130,11 +130,13 @@ cothreads.o: $(srcdir)/cothreads.c $(srcdir)/cothreads.h $(srcdir)/gst_private.h
 # Generate both marshal files together.  Makes dependency work easier.
 gstmarshal.h: gstmarshal.list
 	glib-genmarshal --header --prefix=gst gstmarshal.list > gstmarshal.h
-	glib-genmarshal --body --prefix=gst gstmarshal.list > gstmarshal.c
+	echo "#include \"glib-object.h\"" >gstmarshal.c
+	glib-genmarshal --body --prefix=gst gstmarshal.list >> gstmarshal.c
 
 gstmarshal.c: gstmarshal.list
 	glib-genmarshal --header --prefix=gst gstmarshal.list > gstmarshal.h
-	glib-genmarshal --body --prefix=gst gstmarshal.list > gstmarshal.c
+	echo "#include \"glib-object.h\"" >gstmarshal.c
+	glib-genmarshal --body --prefix=gst gstmarshal.list >> gstmarshal.c
 
 ##### end built sources #####
 
