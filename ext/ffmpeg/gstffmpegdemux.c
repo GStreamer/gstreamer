@@ -688,6 +688,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     gchar *p, *name = NULL;
     GstCaps *sinkcaps, *audiosrccaps, *videosrccaps;
     gint rank = GST_RANK_MARGINAL;
+    gboolean register_typefind_func = TRUE;
 
     /* no emulators */
     if (!strncmp (in_plugin->long_name, "raw ", 4) ||
@@ -708,7 +709,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "wav") ||
         !strcmp (in_plugin->name, "au") ||
         !strcmp (in_plugin->name, "rm"))
-      rank = GST_RANK_NONE;
+      register_typefind_func = FALSE;
 
     p = name = g_strdup (in_plugin->name);
     while (*p) {
@@ -781,7 +782,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
       extensions = NULL;
 
     if (!gst_element_register (plugin, type_name, rank, type) ||
-        (rank != GST_RANK_NONE &&
+        (register_typefind_func == TRUE &&
          !gst_type_find_register (plugin, typefind_name, rank,
              gst_ffmpegdemux_type_find, extensions, sinkcaps, params))) {
       g_warning ("Register of type ffdemux_%s failed", name);

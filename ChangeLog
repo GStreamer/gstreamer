@@ -1,3 +1,10 @@
+2004-12-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
+	  Don't cripple rank as a hack to not register typefind functions.
+	  Instead, just use a boolean for that. This makes ID3-tagged MP3
+	  files play even if mad is not installed.
+
 2004-12-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
