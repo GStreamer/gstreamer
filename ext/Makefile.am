@@ -132,6 +132,12 @@ else
 LCS_DIR=
 endif
 
+if USE_LIBFAME
+LIBFAME_DIR=libfame
+else
+LIBFAME_DIR=
+endif
+
 if USE_MAD
 MAD_DIR=mad
 else
@@ -235,7 +241,7 @@ DIST_SUBDIRS=\
 	dvdread dvdnav esd ffmpeg \
 	flac gnomevfs gsm \
 	hermes http jack jpeg \
-	ladspa lame lcs \
+	ladspa lame lcs libfame \
 	mad mikmod mjpegtools mpeg2dec \
 	openquicktime raw1394 rtp \
 	sdl shout sidplay \
