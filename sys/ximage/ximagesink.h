@@ -22,20 +22,17 @@
 
 #include <gst/gst.h>
 
-/* FIXME : We should have a configure test for shm support */
-#define HAVE_XSHM
-
-#ifdef HAVE_XSHM
+#ifdef HAVE_SHM
 #include <sys/ipc.h>
 #include <sys/shm.h>
-#endif /* HAVE_XSHM */
+#endif /* HAVE_SHM */
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-#ifdef HAVE_XSHM
+#ifdef HAVE_SHM
 #include <X11/extensions/XShm.h>
-#endif /* HAVE_XSHM */
+#endif /* HAVE_SHM */
 
 #include <string.h>
 #include <math.h>
@@ -93,9 +90,9 @@ struct _GstXWindow {
 struct _GstXImage {
   XImage *ximage;
   
-#ifdef HAVE_XSHM
+#ifdef HAVE_SHM
   XShmSegmentInfo SHMInfo;
-#endif /* HAVE_XSHM */
+#endif /* HAVE_SHM */
   
   char *data;
   gint width, height, size;
@@ -128,7 +125,7 @@ struct _GstXImageSinkClass {
   GstElementClass parent_class;
 };
 
-GType gst_ximagesink_get_type(void);
+GType gst_ximagesink_get_type (void);
 
 G_END_DECLS
 
