@@ -1316,7 +1316,7 @@ gst_asf_demux_audio_caps (guint16 codec_id,
       if (audio != NULL) {
 	gst_caps_set_simple (caps,
 	    "flags1", G_TYPE_INT, flags1,
-	    "flags2", G_TYPE_INT, flags1,
+	    "flags2", G_TYPE_INT, flags2,
 	    "block_align", G_TYPE_INT, audio->block_align,
 	    "bitrate", G_TYPE_INT, audio->byte_rate * 8,
 	    NULL);
@@ -1339,7 +1339,7 @@ gst_asf_demux_audio_caps (guint16 codec_id,
       if (audio != NULL) {
 	gst_caps_set_simple (caps,
 	    "flags1", G_TYPE_INT, flags1,
-	    "flags2", G_TYPE_INT, flags1,
+	    "flags2", G_TYPE_INT, flags2,
 	    "block_align", G_TYPE_INT, audio->block_align,
 	    "bitrate", G_TYPE_INT, audio->byte_rate * 8,
 	    NULL);
