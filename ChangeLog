@@ -1,5 +1,10 @@
 2005-02-11  David Schleef  <ds@schleef.org>
 
+	* ext/mpeg2dec/gstmpeg2dec.c: (crop_buffer): Change uint to
+	unsigned int. (fixes #167128)
+
+2005-02-11  David Schleef  <ds@schleef.org>
+
 	* gst/librfb/Makefile.am: Testing stuff before committing is
 	  for wimps... and people with fast machines.  Fix stupid
 	  mistake.

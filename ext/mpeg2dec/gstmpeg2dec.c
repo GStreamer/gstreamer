@@ -428,9 +428,9 @@ crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer * input)
 {
   unsigned char *in_data;
   unsigned char *out_data;
-  uint h_subsample;
-  uint v_subsample;
-  uint line;
+  unsigned int h_subsample;
+  unsigned int v_subsample;
+  unsigned int line;
   GstBuffer *outbuf = input;
 
   /*We crop only if the target region is smaller than the input one */
