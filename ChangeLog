@@ -1,3 +1,14 @@
+2004-07-16  Wim Taymans  <wim@fluendo.com>
+
+	* ext/libpng/Makefile.am:
+	* ext/libpng/gstpng.c: (plugin_init):
+	* ext/libpng/gstpngdec.c: (user_error_fn), (user_warning_fn),
+	(gst_pngdec_get_type), (gst_pngdec_base_init),
+	(gst_pngdec_class_init), (gst_pngdec_sinklink), (gst_pngdec_init),
+	(gst_pngdec_src_getcaps), (user_read_data), (gst_pngdec_chain):
+	* ext/libpng/gstpngdec.h:
+	Added png decoder.
+
 2004-07-16  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xerror),
@@ -14,6 +25,16 @@
 	again. Using internal data pointer of the x(v)image to store image's
 	data to be coherent with the buffer alloc mechanism. Investigated the
 	image destruction code to be sure that everything gets freed correctly.
+
+2004-07-16  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/riff/riff-read.c:
+	(gst_riff_read_strf_vids_with_data),
+	(gst_riff_read_strf_auds_with_data):
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query),
+	(gst_avi_demux_add_stream), (gst_avi_demux_stream_header):
+	Make sure we don't create 0 sized subbufers in riff-read.
+	Signal the no more pads signal after reading the avi header.
 
 2004-07-16  Wim Taymans  <wim@fluendo.com>
 
