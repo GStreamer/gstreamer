@@ -59,7 +59,6 @@ struct _GstFFMpegCsp {
   AVFrame	*from_frame,
 		*to_frame;
   GstCaps	*sinkcaps;
-  gboolean      passthru;
 };
 
 struct _GstFFMpegCspClass {
@@ -193,13 +192,7 @@ gst_ffmpegcsp_pad_link (GstPad        *pad,
   gst_structure_get_int (structure, "height", &height);
   gst_structure_get_double (structure, "framerate", &framerate);
 
-  ret = gst_pad_try_set_caps (otherpad, caps);
-  if (GST_PAD_LINK_SUCCESSFUL (ret)) {
-    space->passthru = TRUE;
-    return ret;
-  }
-
-  space->passthru = FALSE;
+  /* FIXME attempt and/or check for passthru */
 
   /* loop over all possibilities and select the first one we can convert and
    * is accepted by the peer */
@@ -249,8 +242,8 @@ gst_ffmpegcsp_pad_link (GstPad        *pad,
   if (space->to_frame)
     av_free (space->to_frame);
 
-  space->width = width & ~3;
-  space->height = height & ~3;
+  space->width = width;
+  space->height = height;
 
   space->from_frame = avcodec_alloc_frame ();
   space->to_frame = avcodec_alloc_frame ();
@@ -345,11 +338,6 @@ gst_ffmpegcsp_chain (GstPad  *pad,
   
   g_return_if_fail (space != NULL);
   g_return_if_fail (GST_IS_FFMPEGCSP (space));
-
-  if (space->passthru) {
-    gst_pad_push (space->srcpad, data);
-    return;
-  }
 
   if (space->from_pixfmt == PIX_FMT_NB ||
       space->to_pixfmt == PIX_FMT_NB) {
