@@ -252,6 +252,37 @@ gst_alsa_sink_check_event (GstAlsaSink * sink, gint pad_nr)
 
         break;
       }
+      case GST_EVENT_FILLER:{
+        guint64 dur = gst_event_filler_get_duration (event);
+
+        if (GST_CLOCK_TIME_IS_VALID (dur)) {
+          gint samples;
+          GstBuffer *buf;
+
+          buf = gst_buffer_new ();
+          GST_BUFFER_TIMESTAMP (buf) = GST_EVENT_TIMESTAMP (event);
+          GST_BUFFER_DURATION (buf) = dur;
+
+          samples = gst_alsa_timestamp_to_samples (this,
+              GST_BUFFER_DURATION (buf));
+          if (GST_ELEMENT (this)->numsinkpads == 1)
+            samples *= this->format->channels;
+          GST_BUFFER_SIZE (buf) = samples *
+              snd_pcm_format_physical_width (this->format->format) / 8;
+          GST_BUFFER_DATA (buf) = g_malloc (GST_BUFFER_SIZE (buf));
+          if (0 != snd_pcm_format_set_silence (this->format->format,
+                  GST_BUFFER_DATA (buf), samples)) {
+            GST_WARNING_OBJECT (this, "error silencing buffer, may hang");
+            gst_buffer_unref (buf);
+          } else {
+            GST_DEBUG_OBJECT (this, "adding %" GST_TIME_FORMAT " silence at %"
+                GST_TIME_FORMAT, GST_TIME_ARGS (dur),
+                GST_TIME_ARGS (GST_EVENT_TIMESTAMP (event)));
+            sink->gst_data[pad_nr] = GST_DATA (buf);
+          }
+        }
+        break;
+      }
       case GST_EVENT_TAG:
         break;
       default:
@@ -262,7 +293,6 @@ gst_alsa_sink_check_event (GstAlsaSink * sink, gint pad_nr)
     GST_LOG_OBJECT (sink, "unreffing event %p of type %d with refcount %d",
         event, GST_EVENT_TYPE (event), GST_DATA_REFCOUNT (event));
     gst_event_unref (event);
-    sink->gst_data[pad_nr] = NULL;
   } else {
     /* the element at the top of the chain did not emit an event. */
     g_assert_not_reached ();
