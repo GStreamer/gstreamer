@@ -1,5 +1,10 @@
 2004-04-01  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* ext/dvdnav/gst-dvd:
+	Add a really simple sample DVD player
+
+2004-04-01  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* ext/a52dec/gsta52dec.c: (gst_a52dec_get_type), (gst_a52dec_init),
 	(gst_a52dec_push), (gst_a52dec_handle_event),
 	(gst_a52dec_update_streaminfo), (gst_a52dec_loop),
