@@ -134,7 +134,6 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_libdir}/gst/libgstelements*.so*
 %{_libdir}/gst/libgsttypes*.so*
 %{_libdir}/gst/libgststaticautoplug*.so*
-%{_libdir}/gst/libgstcontrol*.so*
 %{_libdir}/gst/libgstbytestream*.so*
 %{_libdir}/gst/libgstgetbits*.so*
 %{_libdir}/gst/libgstputbits*.so*
@@ -144,6 +143,8 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_mandir}/man1/gst-inspect.*
 %{_mandir}/man1/gst-launch.*
 %{_mandir}/man1/gst-register.*
+
+%{_libdir}/libgstcontrol*.so*
 
 %files devel
 %defattr(-, root, root)
