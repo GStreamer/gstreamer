@@ -167,10 +167,8 @@ gst_afsrc_class_init (GstAFSrcClass *klass)
 static void 
 gst_afsrc_init (GstAFSrc *afsrc) 
 {
-  // GstPad *pad;   this is now done in the struct
-
   /* no need for a template, caps are set based on file, right ? */
-  afsrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  afsrc->srcpad = gst_pad_new_from_template (afsrc_src_factory (), "src");
   gst_element_add_pad (GST_ELEMENT (afsrc), afsrc->srcpad);
   gst_pad_set_get_function (afsrc->srcpad, gst_afsrc_get);
 
