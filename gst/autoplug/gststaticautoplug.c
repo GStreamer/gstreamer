@@ -354,6 +354,7 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
   while (factories[0]) {
     GstElementFactory *factory;
     GstElement *element;
+    gchar *name;
 
     // fase 3: add common elements
     factory = (GstElementFactory *) (factories[0]->data);
@@ -366,8 +367,18 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
     }
 
     GST_DEBUG (0,"common factory \"%s\"\n", GST_OBJECT_NAME (factory));
-
-    element = gst_elementfactory_create (factory, GST_OBJECT_NAME (factory));
+    
+    /* it is likely that the plugin is not loaded yet. thus when it loads it
+     * will replace the elementfactory that gst built from the cache, and the
+     * GST_OBJECT_NAME will no longer be valid. thus we must g_strdup its name.
+     *
+     * this might be an implementation problem, i don't know, if a program keeps
+     * a reference to a cached factory after a factory has been added on plugin
+     * initialization. i raelly don't know though.
+     */
+    name = g_strdup (GST_OBJECT_NAME (factory));
+    element = gst_elementfactory_create (factory, name);
+    g_free(name);
     gst_bin_add (GST_BIN(result), element);
 
     if (srcelement != NULL) {
