@@ -481,9 +481,10 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
       GstTypeFactory *factory = GST_TYPE_FACTORY (factories->data);
       GstTypeFindFunc typefindfunc = (GstTypeFindFunc)factory->typefindfunc;
 
-      GST_DEBUG (0, "trying typefind function %s", GST_PLUGIN_FEATURE_NAME (factory));
+      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "trying typefind function %s", GST_PLUGIN_FEATURE_NAME (factory));
       if (typefindfunc && (caps = typefindfunc (buf, factory))) {
-        if (gst_pad_try_set_caps (ident->sink, caps) <= 0) {
+        GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT, "typefind function %s found caps", GST_PLUGIN_FEATURE_NAME (factory));
+        if (gst_pad_try_set_caps (ident->src, caps) <= 0) {
           g_warning ("typefind: found type but peer didn't accept it");
 	  gst_caps_sink (caps);
         } else {
@@ -539,5 +540,3 @@ gst_spider_identity_handle_src_event (GstPad *pad, GstEvent *event)
 
   return res;
 }
-
-

@@ -196,8 +196,7 @@ gst_spider_request_new_pad (GstElement *element, GstPadTemplate *templ, const gc
   
   /* FIXME: use the requested name for the pad */
 
-  gst_object_ref (GST_OBJECT (templ));
-  GST_PAD_PAD_TEMPLATE (returnpad) = templ;
+  gst_object_replace ((GstObject **) &returnpad->padtemplate, (GstObject *) templ);
   
   gst_bin_add (GST_BIN (element), GST_ELEMENT (identity));
   
@@ -439,19 +438,7 @@ gst_spider_identity_plug (GstSpiderIdentity *ident)
         }
 	if ((GstElement *) spider->sink_ident == conn->current)
 	{
-          gboolean restart = FALSE;
-          /* check if restarting is necessary */
-          if (gst_element_get_state ((GstElement *) spider) == GST_STATE_PLAYING)
-          {
-            restart = TRUE;
-            gst_element_set_state ((GstElement *) spider, GST_STATE_PAUSED);
-          }
 	  gst_spider_plug (conn);
-          /* restart if needed */
-          if (restart)
-          {
-            gst_element_set_state ((GstElement *) spider, GST_STATE_PLAYING);
-          }
 	}
       }
     }
@@ -515,6 +502,8 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
       element = (GstElement *) (endelements == NULL ? conn->src : endelements->data);
     } else {
       element = gst_element_factory_create ((GstElementFactory *) plugpath->data, NULL);
+      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "Adding element %s of type %s and syncing state with autoplugger", 
+                 GST_ELEMENT_NAME (element), GST_PLUGIN_FEATURE_NAME (plugpath->data));    
       gst_bin_add (GST_BIN (spider), element);
       gst_element_sync_state_with_parent (element);
     }
@@ -609,14 +598,7 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
 	     GST_DEBUG_PAD_NAME (srcpad), GST_ELEMENT_NAME (conn->src));
   
   /* find a path from src to sink */
-  /* FIXME: make that if go away and work anyway */
-  if (srcpad == spider->sink_ident->src)
-  {
-    g_assert (GST_RPAD_PEER (spider->sink_ident->sink) != NULL);
-    plugpath = gst_autoplug_sp (gst_pad_get_caps ((GstPad *) GST_RPAD_PEER (spider->sink_ident->sink)), gst_pad_get_caps (conn->src->sink), spider->factories);
-  } else {
-    plugpath = gst_autoplug_sp (gst_pad_get_caps (srcpad), gst_pad_get_caps (conn->src->sink), spider->factories);
-  }
+  plugpath = gst_autoplug_sp (gst_pad_get_caps (srcpad), gst_pad_get_caps (conn->src->sink), spider->factories);
   
   /* prints out the path that was found for plugging */
   /* g_print ("found path from %s to %s:\n", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
@@ -696,6 +678,3 @@ GstPluginDesc plugin_desc = {
   "gstspider",
   plugin_init
 };
-
-  
-  
