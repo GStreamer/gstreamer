@@ -467,22 +467,3 @@ theora_dec_change_state (GstElement * element)
 
   return parent_class->change_state (element);
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_library_load ("gsttags"))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "theoradec", GST_RANK_SECONDARY,
-          gst_theora_dec_get_type ()))
-    return FALSE;
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "gsttheora",
-    "Theora plugin library",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
