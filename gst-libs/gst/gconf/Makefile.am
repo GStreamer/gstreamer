@@ -10,7 +10,7 @@ libgstgconfinclude_HEADERS = gconf.h
 noinst_PROGRAMS = test-gconf
 
 test_gconf_CFLAGS = $(GST_CFLAGS) $(GCONF_CFLAGS)
-test_gconf_LDADD = $(GST_LIBS) $(GCONF_LIBS) -lgstgconf
+test_gconf_LDADD = $(GST_LIBS) $(GCONF_LIBS) libgstgconf.la
 
 libgstgconf_la_LIBADD = $(GCONF_LIBS)
 libgstgconf_la_CFLAGS = $(GST_CFLAGS) $(GCONF_CFLAGS)

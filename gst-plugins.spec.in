@@ -19,9 +19,10 @@ BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 
 Requires:       glib2 >= %_glib2
 BuildRequires:  glib2-devel >= %_glib2
-Requires: 	gstreamer >= %{version}
+Requires: 	gstreamer = %{version}
 BuildRequires: 	nasm => 0.90
-BuildRequires: 	gstreamer-devel >= %{version} 
+BuildRequires: 	gstreamer-devel = %{version} 
+Obsoletes:	gstreamer-plugin-libs
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -52,6 +53,7 @@ FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
   --sharedstatedir=%{_sharedstatedir} \
   --mandir=%{_mandir} \
   --infodir=%{_infodir} \
+  --enable-debug \
   --enable-DEBUG 
 
 if [ "$SMP" != "" ]; then
@@ -85,7 +87,7 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 
 %files
 %defattr(-, root, root)
-%doc AUTHORS COPYING README  
+%doc AUTHORS COPYING README RELEASE
 %{_bindir}/gst-launch-ext
 %{_bindir}/gst-visualise
 %{_mandir}/man1/gst-launch-ext.*
@@ -99,7 +101,7 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 %package -n gstreamer-plugins-devel
 Summary: 	GStreamer Plugin Library Headers.
 Group: 		Development/Libraries
-Requires: 	gstreamer-plugins >= %{version}
+Requires: 	gstreamer-plugins = %{version}
 
 %description -n gstreamer-plugins-devel
 GStreamer support libraries header files.
@@ -110,6 +112,7 @@ GStreamer support libraries header files.
 %{_includedir}/gst-plugins-%{version}/gst/idct/idct.h
 %{_includedir}/gst-plugins-%{version}/gst/resample/resample.h
 %{_includedir}/gst-plugins-%{version}/gst/riff/riff.h
+%{_libdir}/pkgconfig/gstreamer-libs.pc
 
 # Here are all the packages depending on external libs #
 
@@ -117,7 +120,7 @@ GStreamer support libraries header files.
 @USE_A52DEC_TRUE@%package -n gstreamer-a52dec
 @USE_A52DEC_TRUE@Summary:       GStreamer VOB decoder plug-in.
 @USE_A52DEC_TRUE@Group:         Libraries/Multimedia
-@USE_A52DEC_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_A52DEC_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_A52DEC_TRUE@Requires:      a52dec >= 0.7.3
 @USE_A52DEC_TRUE@BuildRequires: a52dec-devel >= 0.7.3
 @USE_A52DEC_TRUE@
@@ -128,18 +131,12 @@ GStreamer support libraries header files.
 @USE_A52DEC_TRUE@%defattr(-, root, root)
 @USE_A52DEC_TRUE@%{_libdir}/gst/libgsta52dec.so
 @USE_A52DEC_TRUE@%{_libdir}/gst/libgstac3parse.so
-@USE_A52DEC_TRUE@
-@USE_A52DEC_TRUE@%post -n gstreamer-a52dec
-@USE_A52DEC_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_A52DEC_TRUE@
-@USE_A52DEC_TRUE@%postun -n gstreamer-a52dec
-@USE_A52DEC_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### AALIB ###
 @USE_AALIB_TRUE@%package -n gstreamer-aalib
 @USE_AALIB_TRUE@Summary:       GStreamer plug-in for Ascii-art output.
 @USE_AALIB_TRUE@Group:         Libraries/Multimedia
-@USE_AALIB_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_AALIB_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_AALIB_TRUE@Requires:      aalib >= 1.3
 @USE_AALIB_TRUE@BuildRequires: aalib-devel >= 1.3
 @USE_AALIB_TRUE@
@@ -149,18 +146,12 @@ GStreamer support libraries header files.
 @USE_AALIB_TRUE@%files -n gstreamer-aalib
 @USE_AALIB_TRUE@%defattr(-, root, root)
 @USE_AALIB_TRUE@%{_libdir}/gst/libgstaasink.so
-@USE_AALIB_TRUE@
-@USE_AALIB_TRUE@%post -n gstreamer-aalib
-@USE_AALIB_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_AALIB_TRUE@
-@USE_AALIB_TRUE@%postun -n gstreamer-aalib
-@USE_AALIB_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### ALSA ###
 @USE_ALSA_TRUE@%package -n gstreamer-alsa
 @USE_ALSA_TRUE@Summary:  GStreamer plug-ins for the ALSA sound system.
 @USE_ALSA_TRUE@Group:    Libraries/Multimedia
-@USE_ALSA_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_ALSA_TRUE@Requires: gstreamer-plugins = %{version}
 @USE_ALSA_TRUE@
 @USE_ALSA_TRUE@%description -n gstreamer-alsa
 @USE_ALSA_TRUE@Input and output plug-in for the ALSA soundcard driver system. 
@@ -170,18 +161,12 @@ GStreamer support libraries header files.
 @USE_ALSA_TRUE@%defattr(-, root, root)
 @USE_ALSA_TRUE@%{_libdir}/gst/libgstalsa.so
 @USE_ALSA_TRUE@%{_mandir}/man1/gstalsa*
-@USE_ALSA_TRUE@
-@USE_ALSA_TRUE@%post -n gstreamer-alsa
-@USE_ALSA_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_ALSA_TRUE@
-@USE_ALSA_TRUE@%postun -n gstreamer-alsa
-@USE_ALSA_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### ARTS WRAPPER ###
 @USE_ARTS_TRUE@%package -n gstreamer-arts
 @USE_ARTS_TRUE@Summary:       GStreamer arts wrapper plug-in.
 @USE_ARTS_TRUE@Group:         Libraries/Multimedia
-@USE_ARTS_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_ARTS_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_ARTS_TRUE@Requires:      kdelibs-sound >= 2
 @USE_ARTS_TRUE@BuildRequires: kdelibs-sound-devel >= 2
 @USE_ARTS_TRUE@BuildRequires: gcc-c++
@@ -192,18 +177,12 @@ GStreamer support libraries header files.
 @USE_ARTS_TRUE@%files -n gstreamer-arts
 @USE_ARTS_TRUE@%defattr(-, root, root)
 @USE_ARTS_TRUE@%{_libdir}/gst/libgstarts.so
-@USE_ARTS_TRUE@
-@USE_ARTS_TRUE@%post -n gstreamer-arts
-@USE_ARTS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_ARTS_TRUE@
-@USE_ARTS_TRUE@%postun -n gstreamer-arts
-@USE_ARTS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### ARTSD SOUND SERVER ###
 @USE_ARTSC_TRUE@%package -n gstreamer-artsd
 @USE_ARTSC_TRUE@Summary:  GStreamer artsd output plug-in.
 @USE_ARTSC_TRUE@Group:    Libraries/Multimedia
-@USE_ARTSC_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_ARTSC_TRUE@Requires: gstreamer-plugins = %{version}
 @USE_ARTSC_TRUE@
 @USE_ARTSC_TRUE@%description -n gstreamer-artsd
 @USE_ARTSC_TRUE@Plug-in for outputting to artsd sound server.
@@ -211,18 +190,12 @@ GStreamer support libraries header files.
 @USE_ARTSC_TRUE@%files -n gstreamer-artsd
 @USE_ARTSC_TRUE@%defattr(-, root, root)
 @USE_ARTSC_TRUE@%{_libdir}/gst/libgstartsdsink.so
-@USE_ARTSC_TRUE@
-@USE_ARTSC_TRUE@%post -n gstreamer-artsd
-@USE_ARTSC_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_ARTSC_TRUE@
-@USE_ARTSC_TRUE@%postun -n gstreamer-artsd
-@USE_ARTSC_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### AUDIOFILE ###
 @USE_AUDIOFILE_TRUE@%package -n gstreamer-audiofile
 @USE_AUDIOFILE_TRUE@Summary:       GStreamer plug-in for audiofile support.
 @USE_AUDIOFILE_TRUE@Group:         Libraries/Multimedia
-@USE_AUDIOFILE_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_AUDIOFILE_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_AUDIOFILE_TRUE@Requires:      audiofile >= 0.2.1
 @USE_AUDIOFILE_TRUE@BuildRequires: audiofile-devel >= 0.2.1
 @USE_AUDIOFILE_TRUE@
@@ -232,19 +205,13 @@ GStreamer support libraries header files.
 @USE_AUDIOFILE_TRUE@%files -n gstreamer-audiofile
 @USE_AUDIOFILE_TRUE@%defattr(-, root, root)
 @USE_AUDIOFILE_TRUE@%{_libdir}/gst/libgstaudiofile.so
-@USE_AUDIOFILE_TRUE@
-@USE_AUDIOFILE_TRUE@%post -n  gstreamer-audiofile
-@USE_AUDIOFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_AUDIOFILE_TRUE@
-@USE_AUDIOFILE_TRUE@%postun -n  gstreamer-audiofile
-@USE_AUDIOFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### AVIFILE ###
 @USE_AVIFILE_TRUE@%package -n gstreamer-avi
 @USE_AVIFILE_TRUE@Summary:       GStreamer plug-in for AVI movie playback.
 @USE_AVIFILE_TRUE@Group:         Libraries/Multimedia
-@USE_AVIFILE_TRUE@Requires:      gstreamer-plugins >= %{version}
-@USE_AVIFILE_TRUE@Requires:      gstreamer-colorspace >= %{version}
+@USE_AVIFILE_TRUE@Requires:      gstreamer-plugins = %{version}
+@USE_AVIFILE_TRUE@Requires:      gstreamer-colorspace = %{version}
 @USE_AVIFILE_TRUE@Requires:      avifile
 @USE_AVIFILE_TRUE@BuildRequires: avifile-devel
 @USE_AVIFILE_TRUE@
@@ -256,18 +223,12 @@ GStreamer support libraries header files.
 @USE_AVIFILE_TRUE@%{_libdir}/gst/libgstavidemux.so
 @USE_AVIFILE_TRUE@%{_libdir}/gst/libgstavimux.so
 @USE_AVIFILE_TRUE@%{_libdir}/gst/libgstwincodec.so
-@USE_AVIFILE_TRUE@
-@USE_AVIFILE_TRUE@%post -n gstreamer-avi
-@USE_AVIFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_AVIFILE_TRUE@
-@USE_AVIFILE_TRUE@%postun -n gstreamer-avi
-@USE_AVIFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### CDPARANOIA ###
 @USE_CDPARANOIA_TRUE@%package -n gstreamer-cdparanoia
 @USE_CDPARANOIA_TRUE@Summary:       GStreamer plug-in for CD audio input using CDParanoia IV.
 @USE_CDPARANOIA_TRUE@Group:         Libraries/Multimedia
-@USE_CDPARANOIA_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_CDPARANOIA_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_CDPARANOIA_TRUE@Requires:      cdparanoia-libs >= alpha9.7
 @USE_CDPARANOIA_TRUE@BuildRequires: cdparanoia-devel >= alpha9.7
 @USE_CDPARANOIA_TRUE@
@@ -277,18 +238,12 @@ GStreamer support libraries header files.
 @USE_CDPARANOIA_TRUE@%files -n gstreamer-cdparanoia
 @USE_CDPARANOIA_TRUE@%defattr(-, root, root)
 @USE_CDPARANOIA_TRUE@%{_libdir}/gst/libgstcdparanoia.so
-@USE_CDPARANOIA_TRUE@
-@USE_CDPARANOIA_TRUE@%post -n gstreamer-cdparanoia
-@USE_CDPARANOIA_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_CDPARANOIA_TRUE@
-@USE_CDPARANOIA_TRUE@%postun -n gstreamer-cdparanoia
-@USE_CDPARANOIA_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### DVDREAD ###
 @USE_DVDREAD_TRUE@%package -n gstreamer-libdvdread
 @USE_DVDREAD_TRUE@Summary:       GStreamer plug-in for DVD playback using libdvdread.
 @USE_DVDREAD_TRUE@Group:         Libraries/Multimedia
-@USE_DVDREAD_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_DVDREAD_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_DVDREAD_TRUE@Requires:      libdvdread >= 0.9.0
 @USE_DVDREAD_TRUE@BuildRequires: libdvdread-devel >= 0.9.0
 @USE_DVDREAD_TRUE@Obsoletes:     gstreamer-libdvd
@@ -299,18 +254,12 @@ GStreamer support libraries header files.
 @USE_DVDREAD_TRUE@%files -n gstreamer-libdvdread
 @USE_DVDREAD_TRUE@%defattr(-, root, root)
 @USE_DVDREAD_TRUE@%{_libdir}/gst/libgstdvdreadsrc.so
-@USE_DVDREAD_TRUE@
-@USE_DVDREAD_TRUE@%post -n gstreamer-libdvdread
-@USE_DVDREAD_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_DVDREAD_TRUE@
-@USE_DVDREAD_TRUE@%postun -n gstreamer-libdvdread
-@USE_DVDREAD_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ## DXR3 ###
 @USE_DXR3_TRUE@%package -n gstreamer-dxr3
 @USE_DXR3_TRUE@Summary:       GStreamer plug-in for playback using dxr3 card.
 @USE_DXR3_TRUE@Group:         Libraries/Multimedia
-@USE_DXR3_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_DXR3_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_DXR3_TRUE@Requires:      em8300 => 0.12.0
 @USE_DXR3_TRUE@BuildRequires: em8300-devel => 0.12.0
 @USE_DXR3_TRUE@
@@ -322,18 +271,12 @@ GStreamer support libraries header files.
 @USE_DXR3_TRUE@%files -n gstreamer-dxr3
 @USE_DXR3_TRUE@%defattr(-, root, root)
 @USE_DXR3_TRUE@%{_libdir}/gst/libgstdxr3.so
-@USE_DXR3_TRUE@
-@USE_DXR3_TRUE@%post -n gstreamer-dxr3
-@USE_DXR3_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_DXR3_TRUE@
-@USE_DXR3_TRUE@%postun -n gstreamer-dxr3
-@USE_DXR3_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### ESD ###
 @USE_ESD_TRUE@%package -n gstreamer-esound
 @USE_ESD_TRUE@Summary:       GStreamer plug-in for ESD sound output.
 @USE_ESD_TRUE@Group:         Libraries/Multimedia
-@USE_ESD_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_ESD_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_ESD_TRUE@Requires:      esound >= 0.2.8
 @USE_ESD_TRUE@BuildRequires: esound-devel >= 0.2.8
 @USE_ESD_TRUE@Obsoletes:     gstreamer-esd
@@ -345,18 +288,12 @@ GStreamer support libraries header files.
 @USE_ESD_TRUE@%defattr(-, root, root)
 @USE_ESD_TRUE@%{_libdir}/gst/libgstesdmon.so
 @USE_ESD_TRUE@%{_libdir}/gst/libgstesdsink.so
-@USE_ESD_TRUE@
-@USE_ESD_TRUE@%post -n gstreamer-esound
-@USE_ESD_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_ESD_TRUE@
-@USE_ESD_TRUE@%postun -n gstreamer-esound
-@USE_ESD_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### FLAC ###
 @USE_FLAC_TRUE@%package -n gstreamer-flac
 @USE_FLAC_TRUE@Summary:       GStreamer plug-in for FLAC lossless audio.
 @USE_FLAC_TRUE@Group:         Libraries/Multimedia
-@USE_FLAC_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_FLAC_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_FLAC_TRUE@Requires:      flac >= 1.0.0
 @USE_FLAC_TRUE@BuildRequires: flac-devel >= 1.0.0
 @USE_FLAC_TRUE@
@@ -366,18 +303,12 @@ GStreamer support libraries header files.
 @USE_FLAC_TRUE@%files -n gstreamer-flac
 @USE_FLAC_TRUE@%defattr(-, root, root)
 @USE_FLAC_TRUE@%{_libdir}/gst/libgstflac.so
-@USE_FLAC_TRUE@
-@USE_FLAC_TRUE@%post -n gstreamer-flac
-@USE_FLAC_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_FLAC_TRUE@
-@USE_FLAC_TRUE@%postun -n gstreamer-flac
-@USE_FLAC_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### GNOME VFS 2 ###
 @USE_GNOME_VFS_TRUE@%package -n gstreamer-gnomevfs
 @USE_GNOME_VFS_TRUE@Summary:       GStreamer plug-ins for Gnome-VFS input and output.
 @USE_GNOME_VFS_TRUE@Group:         Libraries/Multimedia
-@USE_GNOME_VFS_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_GNOME_VFS_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_GNOME_VFS_TRUE@Requires:      gnome-vfs2 > 1.9.4.00
 @USE_GNOME_VFS_TRUE@BuildRequires: gnome-vfs2-devel > 1.9.4.00
 @USE_GNOME_VFS_TRUE@
@@ -388,18 +319,12 @@ GStreamer support libraries header files.
 @USE_GNOME_VFS_TRUE@%defattr(-, root, root)
 @USE_GNOME_VFS_TRUE@%{_libdir}/gst/libgstgnomevfssrc.so
 @USE_GNOME_VFS_TRUE@%{_libdir}/gst/libgstgnomevfssink.so
-@USE_GNOME_VFS_TRUE@
-@USE_GNOME_VFS_TRUE@%post -n gstreamer-gnomevfs
-@USE_GNOME_VFS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_GNOME_VFS_TRUE@
-@USE_GNOME_VFS_TRUE@%postun -n gstreamer-gnomevfs
-@USE_GNOME_VFS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### GSM ###
 @USE_GSM_TRUE@%package -n gstreamer-gsm
 @USE_GSM_TRUE@Summary:       GStreamer plug-in for GSM lossy audio format.
 @USE_GSM_TRUE@Group:         Libraries/Multimedia
-@USE_GSM_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_GSM_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_GSM_TRUE@Requires:      gsm >= 1.0.10
 @USE_GSM_TRUE@BuildRequires: gsm-devel >= 1.0.10
 @USE_GSM_TRUE@
@@ -409,18 +334,12 @@ GStreamer support libraries header files.
 @USE_GSM_TRUE@%files -n gstreamer-gsm
 @USE_GSM_TRUE@%defattr(-, root, root)
 @USE_GSM_TRUE@%{_libdir}/gst/libgstgsm.so
-@USE_GSM_TRUE@
-@USE_GSM_TRUE@%post -n gstreamer-gsm
-@USE_GSM_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_GSM_TRUE@
-@USE_GSM_TRUE@%postun -n gstreamer-gsm
-@USE_GSM_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### HERMES ###
 @USE_HERMES_TRUE@%package -n gstreamer-colorspace
 @USE_HERMES_TRUE@Summary:       GStreamer colorspace conversion plug-in.
 @USE_HERMES_TRUE@Group:         Libraries/Multimedia
-@USE_HERMES_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_HERMES_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_HERMES_TRUE@Requires:      Hermes => 1.3.0
 @USE_HERMES_TRUE@BuildRequires: Hermes-devel => 1.3.0
 @USE_HERMES_TRUE@%description -n gstreamer-colorspace
@@ -429,18 +348,12 @@ GStreamer support libraries header files.
 @USE_HERMES_TRUE@%files -n gstreamer-colorspace
 @USE_HERMES_TRUE@%defattr(-, root, root)
 @USE_HERMES_TRUE@%{_libdir}/gst/libgstcolorspace.so
-@USE_HERMES_TRUE@
-@USE_HERMES_TRUE@%post -n gstreamer-colorspace
-@USE_HERMES_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_HERMES_TRUE@
-@USE_HERMES_TRUE@%postun -n gstreamer-colorspace
-@USE_HERMES_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### HTTP ###
 @USE_HTTP_TRUE@%package -n gstreamer-httpsrc
 @USE_HTTP_TRUE@Summary:       GStreamer plug-in for http using libghttp.
 @USE_HTTP_TRUE@Group:         Libraries/Multimedia
-@USE_HTTP_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_HTTP_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_HTTP_TRUE@Requires:      libghttp => 1.0.9
 @USE_HTTP_TRUE@BuildRequires: libghttp-devel => 1.0.9
 @USE_HTTP_TRUE@
@@ -451,18 +364,12 @@ GStreamer support libraries header files.
 @USE_HTTP_TRUE@%files -n gstreamer-httpsrc
 @USE_HTTP_TRUE@%defattr(-, root, root)
 @USE_HTTP_TRUE@%{_libdir}/gst/libgsthttpsrc.so
-@USE_HTTP_TRUE@
-@USE_HTTP_TRUE@%post -n gstreamer-httpsrc
-@USE_HTTP_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_HTTP_TRUE@
-@USE_HTTP_TRUE@%postun -n gstreamer-httpsrc
-@USE_HTTP_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 #### JACK AUDIO CONNECTION KIT ###
 @USE_JACK_TRUE@%package -n gstreamer-jack
 @USE_JACK_TRUE@Summary:  GStreamer plug-in for the Jack Sound Server.
 @USE_JACK_TRUE@Group:    Libraries/Multimedia
-@USE_JACK_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_JACK_TRUE@Requires: gstreamer-plugins = %{version}
 @USE_JACK_TRUE@Requires: jack-audio-connection-kit => 0.28.0
 @USE_JACK_TRUE@
 @USE_JACK_TRUE@%description -n gstreamer-jack
@@ -471,18 +378,12 @@ GStreamer support libraries header files.
 @USE_JACK_TRUE@%files -n gstreamer-jack
 @USE_JACK_TRUE@%defattr(-, root, root)
 @USE_JACK_TRUE@%{_libdir}/gst/libgstjack.so
-@USE_JACK_TRUE@
-@USE_JACK_TRUE@%post -n gstreamer-jack
-@USE_JACK_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_JACK_TRUE@
-@USE_JACK_TRUE@%postun -n gstreamer-jack
-@USE_JACK_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### JPEG ###
 @USE_JPEG_TRUE@%package -n gstreamer-jpeg
 @USE_JPEG_TRUE@Summary:       GStreamer plug-in for JPEG images.
 @USE_JPEG_TRUE@Group:         Libraries/Multimedia
-@USE_JPEG_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_JPEG_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_JPEG_TRUE@Requires:      libjpeg
 @USE_JPEG_TRUE@BuildRequires: libjpeg-devel
 @USE_JPEG_TRUE@
@@ -492,18 +393,12 @@ GStreamer support libraries header files.
 @USE_JPEG_TRUE@%files -n gstreamer-jpeg
 @USE_JPEG_TRUE@%defattr(-, root, root)
 @USE_JPEG_TRUE@%{_libdir}/gst/libgstjpeg.so
-@USE_JPEG_TRUE@
-@USE_JPEG_TRUE@%post -n gstreamer-jpeg
-@USE_JPEG_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_JPEG_TRUE@
-@USE_JPEG_TRUE@%postun -n gstreamer-jpeg
-@USE_JPEG_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### LADSPA ###
 @USE_LADSPA_TRUE@%package -n gstreamer-ladspa
 @USE_LADSPA_TRUE@Summary:       GStreamer wrapper for LADSPA plug-ins.
 @USE_LADSPA_TRUE@Group:         Libraries/Multimedia
-@USE_LADSPA_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_LADSPA_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_LADSPA_TRUE@Requires:      ladspa
 @USE_LADSPA_TRUE@BuildRequires: ladspa-devel
 @USE_LADSPA_TRUE@
@@ -515,18 +410,12 @@ GStreamer support libraries header files.
 @USE_LADSPA_TRUE@%files -n gstreamer-ladspa
 @USE_LADSPA_TRUE@%defattr(-, root, root)
 @USE_LADSPA_TRUE@%{_libdir}/gst/libgstladspa.so
-@USE_LADSPA_TRUE@
-@USE_LADSPA_TRUE@%post -n gstreamer-ladspa
-@USE_LADSPA_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_LADSPA_TRUE@
-@USE_LADSPA_TRUE@%postun -n gstreamer-ladspa
-@USE_LADSPA_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### LAME ###
 @USE_LAME_TRUE@%package -n gstreamer-lame
 @USE_LAME_TRUE@Summary:       GStreamer plug-in encoding mp3 songs using lame.
 @USE_LAME_TRUE@Group:         Libraries/Multimedia
-@USE_LAME_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_LAME_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_LAME_TRUE@Requires:      lame >= 3.89
 @USE_LAME_TRUE@BuildRequires: lame-devel >= 3.89
 @USE_LAME_TRUE@
@@ -536,18 +425,12 @@ GStreamer support libraries header files.
 @USE_LAME_TRUE@%files -n gstreamer-lame
 @USE_LAME_TRUE@%defattr(-, root, root)
 @USE_LAME_TRUE@%{_libdir}/gst/libgstlame.so
-@USE_LAME_TRUE@
-@USE_LAME_TRUE@%post -n gstreamer-lame
-@USE_LAME_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_LAME_TRUE@
-@USE_LAME_TRUE@%postun -n gstreamer-lame
-@USE_LAME_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### LIBDV ###
 @USE_DV_TRUE@%package -n gstreamer-dv
 @USE_DV_TRUE@Summary:       GStreamer DV plug-in.
 @USE_DV_TRUE@Group:         Libraries/Multimedia
-@USE_DV_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_DV_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_DV_TRUE@Requires:      libdv >= 0.9.5
 @USE_DV_TRUE@BuildRequires: libdv-devel >= 0.9.5
 @USE_DV_TRUE@
@@ -557,18 +440,12 @@ GStreamer support libraries header files.
 @USE_DV_TRUE@%files -n gstreamer-dv
 @USE_DV_TRUE@%defattr(-, root, root)
 @USE_DV_TRUE@%{_libdir}/gst/libgstdvdec.so
-@USE_DV_TRUE@
-@USE_DV_TRUE@%post -n gstreamer-dv
-@USE_DV_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_DV_TRUE@
-@USE_DV_TRUE@%postun -n gstreamer-dv
-@USE_DV_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### LIBFAME ###
 @USE_LIBFAME_TRUE@%package -n gstreamer-libfame
 @USE_LIBFAME_TRUE@Summary:       GStreamer plug-in to encode MPEG1/MPEG4 video.
 @USE_LIBFAME_TRUE@Group:         Libraries/Multimedia
-@USE_LIBFAME_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_LIBFAME_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_LIBFAME_TRUE@Requires:      libfame >= 0.9.0 
 @USE_LIBFAME_TRUE@BuildRequires: libfame-devel >= 0.9.0 
 @USE_LIBFAME_TRUE@
@@ -578,18 +455,12 @@ GStreamer support libraries header files.
 @USE_LIBFAME_TRUE@%files -n gstreamer-libfame
 @USE_LIBFAME_TRUE@%defattr(-, root, root)
 @USE_LIBFAME_TRUE@%{_libdir}/gst/libgstlibfame.so
-@USE_LIBFAME_TRUE@
-@USE_LIBFAME_TRUE@%post -n gstreamer-libfame
-@USE_LIBFAME_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_LIBFAME_TRUE@
-@USE_LIBFAME_TRUE@%postun -n gstreamer-libfame
-@USE_LIBFAME_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### MAD ###
 @USE_MAD_TRUE@%package -n gstreamer-mad  
 @USE_MAD_TRUE@Summary:       GStreamer plug-in using MAD for mp3 decoding.
 @USE_MAD_TRUE@Group:         Libraries/Multimedia
-@USE_MAD_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_MAD_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_MAD_TRUE@Requires:      mad >= 0.13.0
 @USE_MAD_TRUE@BuildRequires: mad-devel >= 0.13.0
 @USE_MAD_TRUE@
@@ -599,18 +470,12 @@ GStreamer support libraries header files.
 @USE_MAD_TRUE@%files -n gstreamer-mad
 @USE_MAD_TRUE@%defattr(-, root, root)  
 @USE_MAD_TRUE@%{_libdir}/gst/libgstmad.so
-@USE_MAD_TRUE@
-@USE_MAD_TRUE@%post -n gstreamer-mad
-@USE_MAD_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_MAD_TRUE@
-@USE_MAD_TRUE@%postun -n gstreamer-mad
-@USE_MAD_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### MIKMOD ###
 @USE_MIKMOD_TRUE@%package -n gstreamer-mikmod
 @USE_MIKMOD_TRUE@Summary:       GStreamer Mikmod plug-in.
 @USE_MIKMOD_TRUE@Group:         Libraries/Multimedia
-@USE_MIKMOD_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_MIKMOD_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_MIKMOD_TRUE@Requires:      mikmod
 @USE_MIKMOD_TRUE@BuildRequires: mikmod
 @USE_MIKMOD_TRUE@
@@ -620,18 +485,12 @@ GStreamer support libraries header files.
 @USE_MIKMOD_TRUE@%files -n gstreamer-mikmod
 @USE_MIKMOD_TRUE@%defattr(-, root, root)
 @USE_MIKMOD_TRUE@%{_libdir}/gst/libgstmikmod.so
-@USE_MIKMOD_TRUE@
-@USE_MIKMOD_TRUE@%post -n gstreamer-mikmod
-@USE_MIKMOD_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_MIKMOD_TRUE@
-@USE_MIKMOD_TRUE@%post-un -n gstreamer-mikmod
-@USE_MIKMOD_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### MJPEGTOOLS ###
 @USE_MJPEGTOOLS_TRUE@%package -n gstreamer-jpegmmx
 @USE_MJPEGTOOLS_TRUE@Summary:       GStreamer mjpegtools plug-in for mmx jpeg.
 @USE_MJPEGTOOLS_TRUE@Group:         Libraries/Multimedia
-@USE_MJPEGTOOLS_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_MJPEGTOOLS_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_MJPEGTOOLS_TRUE@Requires:      mjpegtools
 @USE_MJPEGTOOLS_TRUE@BuildRequires: mjpegtools-devel
 @USE_MJPEGTOOLS_TRUE@
@@ -642,18 +501,12 @@ GStreamer support libraries header files.
 @USE_MJPEGTOOLS_TRUE@%defattr(-, root, root)
 @USE_MJPEGTOOLS_TRUE@%{_libdir}/gst/libgstjpegmmxenc.so
 @USE_MJPEGTOOLS_TRUE@%{_libdir}/gst/libgstjpegmmxdec.so
-@USE_MJPEGTOOLS_TRUE@
-@USE_MJPEGTOOLS_TRUE@%post -n gstreamer-jpegmmx
-@USE_MJPEGTOOLS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_MJPEGTOOLS_TRUE@
-@USE_MJPEGTOOLS_TRUE@%postun -n gstreamer-jpegmmx
-@USE_MJPEGTOOLS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### MPEG2DEC ###
 @USE_MPEG2DEC_TRUE@%package -n gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@Summary:GStreamer plug-ins for MPEG video playback and encoding.
 @USE_MPEG2DEC_TRUE@Group:         Libraries/Multimedia
-@USE_MPEG2DEC_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_MPEG2DEC_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_MPEG2DEC_TRUE@Requires:      mpeg2dec => 0.2.1
 @USE_MPEG2DEC_TRUE@BuildRequires: mpeg2dec-devel => 0.2.1
 @USE_MPEG2DEC_TRUE@Obsoletes:     gstreamer-mpeg1
@@ -676,18 +529,12 @@ GStreamer support libraries header files.
 @USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg2dec.so
 @USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg2subt.so
 @USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg2types.so
-@USE_MPEG2DEC_TRUE@
-@USE_MPEG2DEC_TRUE@%post -n  gstreamer-mpeg
-@USE_MPEG2DEC_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_MPEG2DEC_TRUE@
-@USE_MPEG2DEC_TRUE@%postun -n  gstreamer-mpeg
-@USE_MPEG2DEC_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### OPENQUICKTIME ###
 @USE_OPENQUICKTIME_TRUE@%package -n gstreamer-openquicktime
 @USE_OPENQUICKTIME_TRUE@Summary:       GStreamer OpenQuicktime video Plug-in.
 @USE_OPENQUICKTIME_TRUE@Group:         Libraries/Multimedia
-@USE_OPENQUICKTIME_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_OPENQUICKTIME_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_OPENQUICKTIME_TRUE@Requires:      openquicktime => 1.0
 @USE_OPENQUICKTIME_TRUE@BuildRequires: openquicktime-devel => 1.0
 @USE_OPENQUICKTIME_TRUE@
@@ -701,18 +548,12 @@ GStreamer support libraries header files.
 @USE_OPENQUICKTIME_TRUE@%{_libdir}/gst/libgstopenquicktimedemux.so
 @USE_OPENQUICKTIME_TRUE@%{_libdir}/gst/libgstopenquicktimetypes.so
 @USE_OPENQUICKTIME_TRUE@%{_libdir}/gst/libgstopenquicktimedecoder.so
-@USE_OPENQUICKTIME_TRUE@
-@USE_OPENQUICKTIME_TRUE@%post -n gstreamer-openquicktime
-@USE_OPENQUICKTIME_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_OPENQUICKTIME_TRUE@
-@USE_OPENQUICKTIME_TRUE@%postun -n gstreamer-openquicktime
-@USE_OPENQUICKTIME_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### OSS ###
 @USE_OSS_TRUE@%package -n gstreamer-oss
 @USE_OSS_TRUE@Summary:  GStreamer plug-ins for input and output using OSS.
 @USE_OSS_TRUE@Group:    Libraries/Multimedia
-@USE_OSS_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_OSS_TRUE@Requires: gstreamer-plugins = %{version}
 @USE_OSS_TRUE@Requires: glibc-devel
 @USE_OSS_TRUE@
 @USE_OSS_TRUE@%description -n gstreamer-oss 
@@ -724,18 +565,12 @@ GStreamer support libraries header files.
 @USE_OSS_TRUE@%defattr(-, root, root)
 @USE_OSS_TRUE@%{_libdir}/gst/libgstossaudio.so
 # @USE_OSS_TRUE@%{_libdir}/gst/libgstosshelper*
-@USE_OSS_TRUE@
-@USE_OSS_TRUE@%post -n gstreamer-oss
-@USE_OSS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_OSS_TRUE@
-@USE_OSS_TRUE@%postun -n gstreamer-oss
-@USE_OSS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### RAW1394 ###
 @USE_RAW1394_TRUE@%package -n gstreamer-raw1394
 @USE_RAW1394_TRUE@Summary:       GStreamer raw1394 Firewire plug-in.
 @USE_RAW1394_TRUE@Group:         Libraries/Multimedia
-@USE_RAW1394_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_RAW1394_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_RAW1394_TRUE@Requires:      libraw1394
 @USE_RAW1394_TRUE@BuildRequires: libraw1394-devel
 @USE_RAW1394_TRUE@
@@ -745,18 +580,12 @@ GStreamer support libraries header files.
 @USE_RAW1394_TRUE@%files -n gstreamer-raw1394
 @USE_RAW1394_TRUE@%defattr(-, root, root)
 @USE_RAW1394_TRUE@%{_libdir}/gst/libgst1394.so
-@USE_RAW1394_TRUE@
-@USE_RAW1394_TRUE@%post -n gstreamer-raw1394
-@USE_RAW1394_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_RAW1394_TRUE@
-@USE_RAW1394_TRUE@%postun -n gstreamer-raw1394
-@USE_RAW1394_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### RTP ###
 @USE_RTP_TRUE@%package -n gstreamer-rtp
 @USE_RTP_TRUE@Summary:  GStreamer RTP plug-in.
 @USE_RTP_TRUE@Group:    Libraries/Multimedia
-@USE_RTP_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_RTP_TRUE@Requires: gstreamer-plugins = %{version}
 @USE_RTP_TRUE@Requires: librtp >= 0.1
 @USE_RTP_TRUE@
 @USE_RTP_TRUE@%description -n gstreamer-rtp
@@ -765,18 +594,12 @@ GStreamer support libraries header files.
 @USE_RTP_TRUE@%files -n gstreamer-rtp
 @USE_RTP_TRUE@%defattr(-, root, root)
 @USE_RTP_TRUE@%{_libdir}/gst/libgstrtp.so
-@USE_RTP_TRUE@
-@USE_RTP_TRUE@%post -n gstreamer-rtp
-@USE_RTP_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_RTP_TRUE@
-@USE_RTP_TRUE@%postun -n gstreamer-rtp
-@USE_RTP_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### SIDPLAY ###
 @USE_SIDPLAY_TRUE@%package -n gstreamer-sid
 @USE_SIDPLAY_TRUE@Summary:       GStreamer Sid C64 music plug-in.
 @USE_SIDPLAY_TRUE@Group:         Libraries/Multimedia
-@USE_SIDPLAY_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_SIDPLAY_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_SIDPLAY_TRUE@Requires:      libsidplay => 1.36.0
 @USE_SIDPLAY_TRUE@BuildRequires: libsidplay-devel => 1.36.0
 @USE_SIDPLAY_TRUE@
@@ -786,23 +609,19 @@ GStreamer support libraries header files.
 @USE_SIDPLAY_TRUE@%files -n gstreamer-sid
 @USE_SIDPLAY_TRUE@%defattr(-, root, root)
 @USE_SIDPLAY_TRUE@%{_libdir}/gst/libgstsid.so
-@USE_SIDPLAY_TRUE@
-@USE_SIDPLAY_TRUE@%post -n gstreamer-sid
-@USE_SIDPLAY_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_SIDPLAY_TRUE@
-@USE_SIDPLAY_TRUE@%postun -n gstreamer-sid
-@USE_SIDPLAY_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### SDL ###
 @USE_SDL_TRUE@%package -n gstreamer-SDL
 @USE_SDL_TRUE@Summary:       GStreamer plug-in for outputting video to SDL.
 @USE_SDL_TRUE@Group:         Libraries/Multimedia
-@USE_SDL_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_SDL_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_SDL_TRUE@Requires:      SDL >= 1.2.0
 @USE_SDL_TRUE@BuildRequires: SDL-devel >= 1.2.0
 @USE_SDL_TRUE@#SDL-devel should require XFree86-devel because it links to it
 @USE_SDL_TRUE@#only it doesn't seem to do that currently
 @USE_SDL_TRUE@BuildRequires: 	XFree86-devel
+@USE_SDL_TRUE@#it used to be called gstreamer-sdl
+@USE_SDL_TRUE@Obsoletes: 	gstreamer-sdl
 @USE_SDL_TRUE@
 @USE_SDL_TRUE@%description -n gstreamer-SDL
 @USE_SDL_TRUE@Plug-in for sending video output to the Simple Direct Media architecture.
@@ -811,18 +630,12 @@ GStreamer support libraries header files.
 @USE_SDL_TRUE@%files -n gstreamer-SDL
 @USE_SDL_TRUE@%defattr(-, root, root)
 @USE_SDL_TRUE@%{_libdir}/gst/libgstsdlvideosink.so
-@USE_SDL_TRUE@
-@USE_SDL_TRUE@%post -n gstreamer-SDL
-@USE_SDL_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_SDL_TRUE@
-@USE_SDL_TRUE@%postun -n gstreamer-SDL
-@USE_SDL_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### SHOUT ###
 @USE_SHOUT_TRUE@%package -n gstreamer-icecast
 @USE_SHOUT_TRUE@Summary:       GStreamer Icecast plug-in using libshout.
 @USE_SHOUT_TRUE@Group:         Libraries/Multimedia
-@USE_SHOUT_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_SHOUT_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_SHOUT_TRUE@Requires:      libshout >= 1.0.5
 @USE_SHOUT_TRUE@BuildRequires: libshout-devel >= 1.0.5
 @USE_SHOUT_TRUE@
@@ -832,18 +645,12 @@ GStreamer support libraries header files.
 @USE_SHOUT_TRUE@%files -n gstreamer-icecast
 @USE_SHOUT_TRUE@%defattr(-, root, root)
 @USE_SHOUT_TRUE@%{_libdir}/gst/libgstshout.so
-@USE_SHOUT_TRUE@
-@USE_SHOUT_TRUE@%post -n gstreamer-icecast
-@USE_SHOUT_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_SHOUT_TRUE@
-@USE_SHOUT_TRUE@%postun -n gstreamer-icecast
-@USE_SHOUT_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### VORBIS ###
 @USE_VORBIS_TRUE@%package -n gstreamer-vorbis
 @USE_VORBIS_TRUE@Summary:       GStreamer plug-in for encoding and decoding Ogg Vorbis audio files.
 @USE_VORBIS_TRUE@Group:         Libraries/Multimedia
-@USE_VORBIS_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_VORBIS_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_VORBIS_TRUE@Requires:      libogg >= 1.0beta4
 @USE_VORBIS_TRUE@Requires:      libvorbis >= 1.0beta4
 @USE_VORBIS_TRUE@BuildRequires: libogg-devel >= 1.0beta4
@@ -855,19 +662,13 @@ GStreamer support libraries header files.
 @USE_VORBIS_TRUE@%files -n gstreamer-vorbis  
 @USE_VORBIS_TRUE@%defattr(-, root, root)
 @USE_VORBIS_TRUE@%{_libdir}/gst/libgstvorbis.so
-@USE_VORBIS_TRUE@
-@USE_VORBIS_TRUE@%post -n gstreamer-vorbis
-@USE_VORBIS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_VORBIS_TRUE@
-@USE_VORBIS_TRUE@%postun -n gstreamer-vorbis
-@USE_VORBIS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### VIDEO 4 LINUX ###
 @USE_V4L_TRUE@%package -n gstreamer-v4l
 @USE_V4L_TRUE@Summary:       GStreamer Video for Linux plug-in.
 @USE_V4L_TRUE@Group:         Libraries/Multimedia
-@USE_V4L_TRUE@Requires:      gstreamer-plugins >= %{version}
-@USE_V4L_TRUE@BuildRequires: glibc-kernheaders
+@USE_V4L_TRUE@Requires:      gstreamer-plugins = %{version}
+@USE_V4L_TRUE@BuildRequires: glibc-devel
 @USE_V4L_TRUE@
 @USE_V4L_TRUE@%description -n gstreamer-v4l
 @USE_V4L_TRUE@Plug-in for accessing Video for Linux devices.
@@ -878,36 +679,24 @@ GStreamer support libraries header files.
 @USE_V4L_TRUE@%{_libdir}/gst/libgstv4lsrc.so
 @USE_V4L_TRUE@%{_libdir}/gst/libgstv4lmjpegsrc.so
 @USE_V4L_TRUE@%{_libdir}/gst/libgstv4lmjpegsink.so
-@USE_V4L_TRUE@
-@USE_V4L_TRUE@%post -n gstreamer-v4l
-@USE_V4L_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_V4L_TRUE@
-@USE_V4L_TRUE@%postun -n gstreamer-v4l
-@USE_V4L_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### XVIDEO ###
 @USE_XVIDEO_TRUE@%package -n gstreamer-xvideosink
 @USE_XVIDEO_TRUE@Summary: GStreamer XFree output plug-in
 @USE_XVIDEO_TRUE@Group: Libraries/Multimedia
-@USE_XVIDEO_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_XVIDEO_TRUE@Requires: gstreamer-plugins = %{version}
 @USE_XVIDEO_TRUE@Requires: Hermes => 1.3.0
 @USE_XVIDEO_TRUE@%description -n gstreamer-xvideosink
 @USE_XVIDEO_TRUE@Xfree86 video sink
 @USE_XVIDEO_TRUE@
 @USE_XVIDEO_TRUE@%files -n gstreamer-xvideosink
 @USE_XVIDEO_TRUE@%defattr(-, root, root)
-@USE_XVIDEO_TRUE@%{_libdir}/gst/libgstxvideosink*
-@USE_XVIDEO_TRUE@
-@USE_XVIDEO_TRUE@%post -n gstreamer-xvideosink
-@USE_XVIDEO_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_XVIDEO_TRUE@
-@USE_XVIDEO_TRUE@%postun -n gstreamer-xvideosink
-@USE_XVIDEO_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
+@USE_XVIDEO_TRUE@%{_libdir}/gst/libgstxvideosink.so
 
 @USE_XVIDEO_TRUE@%package -n gstreamer-videosink
 @USE_XVIDEO_TRUE@Summary:       GStreamer Video Sink
 @USE_XVIDEO_TRUE@Group:         Libraries/Multimedia
-@USE_XVIDEO_TRUE@Requires:      gstreamer-plugins >= %{version}
+@USE_XVIDEO_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_XVIDEO_TRUE@Requires:      XFree86
 @USE_XVIDEO_TRUE@BuildRequires: XFree86-devel
 @USE_XVIDEO_TRUE@
@@ -917,12 +706,6 @@ GStreamer support libraries header files.
 @USE_XVIDEO_TRUE@%files -n gstreamer-videosink
 @USE_XVIDEO_TRUE@%defattr(-, root, root)
 @USE_XVIDEO_TRUE@%{_libdir}/gst/libgstvideosink.so
-@USE_XVIDEO_TRUE@
-@USE_XVIDEO_TRUE@%post -n gstreamer-videosink
-@USE_XVIDEO_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-@USE_XVIDEO_TRUE@
-@USE_XVIDEO_TRUE@%postun -n gstreamer-videosink
-@USE_XVIDEO_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### packages without external dependencies ###
 
@@ -930,7 +713,7 @@ GStreamer support libraries header files.
 %package -n gstreamer-audio-effects
 Summary: 	GStreamer audio effects plug-in.
 Group: 		Libraries/Multimedia
-Requires: 	gstreamer-plugins >= %{version}
+Requires: 	gstreamer-plugins = %{version}
 Obsoletes:	gstreamer-misc
 
 %description -n gstreamer-audio-effects
@@ -961,17 +744,11 @@ integer to float conversion, LAW conversion and level detection plug-ins.
 %{_libdir}/gst/libgstcutter.so
 %{_libdir}/gst/libgstfilter.so
 
-%post -n gstreamer-audio-effects
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
-%postun -n gstreamer-audio-effects
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
 ### audio-formats ###
 %package -n gstreamer-audio-formats
 Summary: 	GStreamer audio format plug-ins.
 Group: 		Libraries/Multimedia
-Requires: 	gstreamer-plugins >= %{version}
+Requires: 	gstreamer-plugins = %{version}
 BuildRequires: 	gcc-c++
 
 %description -n gstreamer-audio-formats
@@ -984,17 +761,11 @@ Plug-in for playback of wav, au and mod audio files as well as mp3 type.
 %{_libdir}/gst/libgstmp3types.so
 %{_libdir}/gst/libgstmodplug.so
 
-%post -n gstreamer-audio-formats
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
-%postun -n gstreamer-audio-formats
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
 ### festival ###
 %package -n gstreamer-festival
 Summary: 	GStreamer plug-in for text-to-speech support using a festival server.
 Group: 		Libraries/Multimedia
-Requires: 	gstreamer-plugins >= %{version}
+Requires: 	gstreamer-plugins = %{version}
 
 %description -n gstreamer-festival
 Plug-in for text-to-speech using the festival server.
@@ -1003,18 +774,12 @@ Plug-in for text-to-speech using the festival server.
 %defattr(-, root, root)
 %{_libdir}/gst/libgstfestival.so
 
-%post -n gstreamer-festival
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
-%postun -n gstreamer-festival
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
 ### flx ###
 %package -n gstreamer-flx
 Summary: 	GStreamer plug-in for FLI/FLX animation format.
 Group: 		Libraries/Multimedia
-Requires: 	gstreamer-plugins >= %{version}
-Requires: 	gstreamer-colorspace >= %{version}
+Requires: 	gstreamer-plugins = %{version}
+Requires: 	gstreamer-colorspace = %{version}
 %description -n gstreamer-flx
 Plug-in for playing FLI/FLX animations under GStreamer.
 
@@ -1022,17 +787,11 @@ Plug-in for playing FLI/FLX animations under GStreamer.
 %defattr(-, root, root)
 %{_libdir}/gst/libgstflxdec.so
 
-%post -n gstreamer-flx
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
-%postun -n gstreamer-flx
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
 ### qcam ###
 %package -n gstreamer-qcam
 Summary: 	GStreamer QuickCam plug-in.
 Group: 		Libraries/Multimedia
-Requires: 	gstreamer-plugins >= %{version}
+Requires: 	gstreamer-plugins = %{version}
 
 %description -n gstreamer-qcam
 Plug-in for accessing a Quickcam video source.
@@ -1041,17 +800,11 @@ Plug-in for accessing a Quickcam video source.
 %defattr(-, root, root)
 %{_libdir}/gst/libgstqcam.so
 
-%post -n gstreamer-qcam
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
-%postun -n gstreamer-qcam
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
 ### udp ###
 %package -n gstreamer-udp
 Summary: 	GStreamer plug-ins for UDP tranport.
 Group: 		Libraries/Multimedia
-Requires: 	gstreamer-plugins >= %{version}
+Requires: 	gstreamer-plugins = %{version}
 
 %description -n gstreamer-udp
 Plug-ins for UDP transport under GStreamer.
@@ -1060,17 +813,11 @@ Plug-ins for UDP transport under GStreamer.
 %defattr(-, root, root)
 %{_libdir}/gst/libgstudp.so
 
-%post -n gstreamer-udp
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
-%postun -n gstreamer-udp
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
 ### vcd ###
 %package -n gstreamer-vcd
 Summary: 	GStreamer Video CD plug-in.
 Group: 		Libraries/Multimedia
-Requires: 	gstreamer-plugins >= %{version}
+Requires: 	gstreamer-plugins = %{version}
 
 %description -n gstreamer-vcd
 Video CD parsing and playback plug-in for GStreamer.
@@ -1080,17 +827,11 @@ Video CD parsing and playback plug-in for GStreamer.
 %{_libdir}/gst/libgstvcdsrc.so
 %{_libdir}/gst/libgstcdxaparse.so
 
-%post -n gstreamer-vcd
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
-%postun -n gstreamer-vcd
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
 ### video-effects ###
 %package -n gstreamer-video-effects
 Summary: 	GStreamer video effects plug-in.
 Group: 		Libraries/Multimedia
-Requires: 	gstreamer-plugins >= %{version}
+Requires: 	gstreamer-plugins = %{version}
 Obsoletes:	gstreamer-deinterlace
 Obsoletes:	gstreamer-misc
 
@@ -1105,17 +846,11 @@ plug-ins.
 %{_libdir}/gst/libgstmedian.so
 %{_libdir}/gst/libgstrtjpeg.so
 
-%post -n gstreamer-video-effects
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
-%postun -n gstreamer-video-effects
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
 ### visualisation ###
 %package -n gstreamer-visualisation
 Summary: 	GStreamer visualisations plug-ins.
 Group: 		Libraries/Multimedia
-Requires: 	gstreamer-plugins >= %{version}
+Requires: 	gstreamer-plugins = %{version}
 
 %description -n gstreamer-visualisation
 Various plug-ins for visual effects to use with audio.
@@ -1132,17 +867,11 @@ and vumeter.
 %{_libdir}/gst/libgstmonoscope.so
 %{_libdir}/gst/libgstsynaesthesia.so
 
-%post -n gstreamer-visualisation
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
-%postun -n gstreamer-visualisation
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
 ### yuv4mjpeg ###
 %package -n gstreamer-yuv4mjpeg
 Summary: 	GStreamer plug-in for YUV to MJPEG conversion.
 Group: 		Libraries/Multimedia
-Requires: 	gstreamer-plugins >= %{version}
+Requires: 	gstreamer-plugins = %{version}
 Obsoletes: 	gstreamer-lavencode
 
 %description -n gstreamer-yuv4mjpeg
@@ -1153,17 +882,11 @@ processed with the lavtools from mjpegtools.
 %defattr(-, root, root)
 %{_libdir}/gst/libgsty4menc.so
 
-%post -n gstreamer-yuv4mjpeg
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
-%postun -n gstreamer-yuv4mjpeg
-%{_bindir}/gst-register --gst-mask=0 2> /dev/null
-
 # package supporting GConf
 @USE_GCONF_TRUE@%package -n gstreamer-GConf
 @USE_GCONF_TRUE@Summary: 	GStreamer GConf schemas.
 @USE_GCONF_TRUE@Group: 		Libraries/Multimedia
-@USE_GCONF_TRUE@Requires: 	gstreamer-plugins >= %{version}
+@USE_GCONF_TRUE@Requires: 	gstreamer-plugins = %{version}
 @USE_GCONF_TRUE@Requires: 	GConf2
 @USE_GCONF_TRUE@BuildRequires: 	GConf2-devel
 
@@ -1182,6 +905,22 @@ processed with the lavtools from mjpegtools.
 %changelog
 * Mon Jul 08 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - fixed -devel package group
+
+* Fri Jul 05 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- release 0.4.0 !
+- added gstreamer-libs.pc
+- removed all gst-register calls since this should be done automatically now
+
+* Thu Jul 04 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- fix issue with SDL package
+- make all packages STRICTLY require the right version to avoid
+  ABI issues
+- make gst-plugins obsolete gst-plugin-libs
+- also send output of gst-register to /dev/null to lower the noise
+
+* Wed Jul 03 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- require glibc-devel instead of glibc-kernheaders since the latter is only
+  since 7.3 and glibc-devel pulls in the right package anyway
 
 * Sun Jun 23 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - changed header location of plug-in libs
