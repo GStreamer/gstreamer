@@ -109,6 +109,9 @@ gst_object_class_init (GstObjectClass *klass)
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_object_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_object_get_property);
+
+  /* CR1: we override the signal property so that an object can propagate the
+   * signal to the parent object */
   gobject_class->dispatch_properties_changed = GST_DEBUG_FUNCPTR (gst_object_dispatch_properties_changed);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NAME,
@@ -202,6 +205,7 @@ gst_object_unref (GstObject *object)
  * Removes floating reference on an object.  Any newly created object has
  * a refcount of 1 and is FLOATING.  This function should be used when
  * creating a new object to symbolically 'take ownership of' the object.
+ * Use #gst_object_set_parent to have this done for you.
  */
 void
 gst_object_sink (GstObject *object)
@@ -222,6 +226,7 @@ gst_object_sink (GstObject *object)
  * @object: GstObject to destroy
  *
  * Destroy the object.
+ * 
  */
 void
 gst_object_destroy (GstObject *object)
@@ -330,7 +335,8 @@ gst_object_set_name (GstObject *object, const gchar *name)
 const gchar*
 gst_object_get_name (GstObject *object)
 {
-  g_return_val_if_fail (object != NULL, NULL);
+  /* CR1: GLib checks for NULL */
+  //FIXME: _REDUNDANT g_return_val_if_fail (object != NULL, NULL);
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
   return object->name;
@@ -503,9 +509,9 @@ gst_object_check_uniqueness (GList *list, const gchar *name)
   while (list) {
     GstObject *child = GST_OBJECT (list->data);
 
-    list = g_list_next(list);
+    list = g_list_next (list);
       
-    if (strcmp(GST_OBJECT_NAME(child), name) == 0) 
+    if (strcmp (GST_OBJECT_NAME (child), name) == 0) 
       return FALSE;
   }
 
@@ -615,6 +621,10 @@ gst_object_get_property (GObject* object, guint prop_id,
       break;
   }
 }
+
+/* CR1: the GObject changing a property emits signals to it's parents
+ * so that the app can connect a listener to the top-level bin */
+
 static void
 gst_object_dispatch_properties_changed (GObject     *object,
 				      guint        n_pspecs,
@@ -644,7 +654,7 @@ gst_object_dispatch_properties_changed (GObject     *object,
  * @object: GstObject to get the path from
  *
  * Generates a string describing the path of the object in
- * the object hierarchy. Usefull for debugging
+ * the object hierarchy. Only useful (or used) for debugging
  *
  * Returns: a string describing the path of the object
  */

@@ -139,6 +139,7 @@ gst_thread_init (GstThread *thread)
   GST_DEBUG (GST_CAT_THREAD, "initializing thread");
 
   /* we're a manager by default */
+  /* CR1: the GstBin code checks these flags */
   GST_FLAG_SET (thread, GST_BIN_FLAG_MANAGER);
   GST_FLAG_SET (thread, GST_BIN_SELF_SCHEDULABLE);
 
@@ -434,7 +435,7 @@ gst_thread_change_state (GstElement * element)
  * @arg: the thread to start
  *
  * The main loop of the thread. The thread will iterate
- * while the state is GST_THREAD_STATE_SPINNING
+ * while the state is GST_THREAD_STATE_SPINNING.
  */
 static void *
 gst_thread_main_loop (void *arg)
@@ -467,6 +468,8 @@ gst_thread_main_loop (void *arg)
 
   /***** THREAD IS NOW IN READY STATE *****/
 
+  /* CR1: most of this code is handshaking */
+  /* do this while the thread lives */
   while (!GST_FLAG_IS_SET (thread, GST_THREAD_STATE_REAPING)) {
     /* NOTE we hold the thread lock at this point */
     /* what we do depends on what state we're in */
@@ -503,7 +506,7 @@ gst_thread_main_loop (void *arg)
                        gst_element_statename (GST_STATE_PAUSED),
                        gst_element_statename (GST_STATE_READY),
                        gst_element_statename (GST_STATE_PLAYING));
-        g_cond_wait (thread->cond,thread->lock);
+        g_cond_wait (thread->cond, thread->lock);
 
 	/* this must have happened by a state change in the thread context */
 	if (GST_STATE_PENDING (thread) != GST_STATE_READY &&
@@ -568,7 +571,7 @@ gst_thread_main_loop (void *arg)
         break;
     }
   }
-  /* we need to destroy the scheduler here bacause it has mapped it's
+  /* we need to destroy the scheduler here because it has mapped it's
    * stack into the threads stack space */
   gst_scheduler_reset (GST_ELEMENT_SCHED (thread));
 

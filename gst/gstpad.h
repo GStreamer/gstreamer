@@ -178,6 +178,7 @@ struct _GstRealPad {
   GstRealPad 			*peer;
 
   GstBuffer 			*bufpen;
+  //CR1: FIXME: regiontype should go away
   GstRegionType 		regiontype;
   guint64 			offset;
   guint64 			len;
@@ -311,6 +312,7 @@ struct _GstPadTemplateClass {
   void (*pad_created)	(GstPadTemplate *templ, GstPad *pad);
 };
 
+/* CR1: the space after 'a' is necessary because of preprocessing in gcc */
 #define GST_PAD_TEMPLATE_NEW(padname, dir, pres, a...) \
   gst_pad_template_new (                         \
     padname,                                    \

@@ -45,17 +45,22 @@ extern GType _gst_caps_type;
 #define GST_CAPS_IS_FIXED(caps)		((caps)->fixed)
 #define GST_CAPS_IS_CHAINED(caps)  	((caps)->next)
 
+/* CR1: id is an int corresponding to the quark for the mime type because
+ * it's really fast when doing a first-pass check for caps compatibility */
 struct _GstCaps {
   gchar 	*name;			/* the name of this caps */
-  guint16 	id;			/* type id (major type) */
+  guint16 	id;			/* type id (major type) representing 
+					   the mime type */
 
   guint 	refcount;		
   gboolean 	fixed;			/* this caps doesn't contain variable properties */
 
   GstProps 	*properties;		/* properties for this capability */
 
-  GstCaps 	*next;
+  GstCaps 	*next;			/* not with a GList for efficiency */
 };
+
+/* factory macros which make it easier for plugins to instantiate */
 
 #define GST_CAPS_NEW(name, type, a...)          \
 gst_caps_new (                                  \
@@ -92,7 +97,7 @@ void		gst_caps_destroy			(GstCaps *caps);
 void		gst_caps_debug				(GstCaps *caps, const gchar *label);
 
 GstCaps*	gst_caps_copy				(GstCaps *caps);
-GstCaps*	gst_caps_copy_1				(GstCaps *caps);
+GstCaps*	gst_caps_copy_first			(GstCaps *caps);
 GstCaps*	gst_caps_copy_on_write			(GstCaps *caps);
 
 const gchar*	gst_caps_get_name			(GstCaps *caps);

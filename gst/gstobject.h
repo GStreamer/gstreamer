@@ -90,6 +90,7 @@ struct _GstObject {
   guint32 	flags;
 };
 
+/* signal_object is used to signal to the whole class */
 struct _GstObjectClass {
   GObjectClass	parent_class;
 
@@ -123,7 +124,7 @@ struct _GstObjectClass {
 #define GST_OBJECT_DESTROYED(obj)	(GST_FLAG_IS_SET (obj, GST_DESTROYED))
 #define GST_OBJECT_FLOATING(obj)	(GST_FLAG_IS_SET (obj, GST_FLOATING))
 
-/* object locking */
+/* CR1: object locking - GObject 2.0 doesn't have threadsafe locking */
 #define GST_LOCK(obj)		(g_mutex_lock(GST_OBJECT_CAST(obj)->lock))
 #define GST_TRYLOCK(obj)	(g_mutex_trylock(GST_OBJECT_CAST(obj)->lock))
 #define GST_UNLOCK(obj)		(g_mutex_unlock(GST_OBJECT_CAST(obj)->lock))

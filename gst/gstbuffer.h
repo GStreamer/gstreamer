@@ -113,7 +113,7 @@ struct _GstBuffer {
 #endif
 
   /* flags */
-  guint16 		flags;
+  guint16 		flags; /* boolean properties of buffer */
 
   /* pointer to data, its size, and offset in original source if known */
   guchar 		*data;
@@ -122,8 +122,8 @@ struct _GstBuffer {
   guint32 		offset;
 
   /* timestamp */
-  gint64 		timestamp;
-  gint64 		maxage;
+  gint64 		timestamp; /* nanoseconds since zero */
+  gint64 		maxage;    /* FIXME: not used yet */
 
   /* subbuffer support, who's my parent? */
   GstBuffer 		*parent;
@@ -132,7 +132,7 @@ struct _GstBuffer {
   GstBufferPool 	*pool;
   gpointer 		pool_private;
 
-  /* utility function pointers */
+  /* utility function pointers, can override default */
   GstBufferFreeFunc 	free;		/* free the data associated with the buffer */
   GstBufferCopyFunc 	copy;		/* copy the data from one buffer to another */
 };

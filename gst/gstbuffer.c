@@ -439,7 +439,8 @@ gst_buffer_copy (GstBuffer *buffer)
  * @buf1: first source buffer
  * @buf2: second source buffer
  *
- * Determines whether a gst_buffer_span is free, or requires a memcpy. 
+ * Determines whether a gst_buffer_span is free (as in free beer), 
+ * or requires a memcpy. 
  *
  * Returns: TRUE if the buffers are contiguous, FALSE if a copy would be required.
  */
