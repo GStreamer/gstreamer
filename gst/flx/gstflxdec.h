@@ -23,7 +23,7 @@
 #include <gst/gst.h>
 
 #include "flx_color.h"
-#include <gst/bytestream.h>
+#include <gst/bytestream/bytestream.h>
 
 
 #ifdef __cplusplus
