@@ -1,3 +1,21 @@
+2004-11-02  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_class_init),
+	(try_to_link_1), (get_our_ghost_pad), (remove_element_chain),
+	(unlinked), (no_more_pads), (close_link):
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_init),
+	(unknown_type), (add_element_stream), (new_decoded_pad),
+	(removed_decoded_pad), (setup_source):
+	* gst/playback/gststreaminfo.c: (gst_stream_info_get_type),
+	(gst_stream_info_class_init), (gst_stream_info_init),
+	(gst_stream_info_new), (gst_stream_info_dispose),
+	(stream_info_mute_pad), (gst_stream_info_set_property),
+	(gst_stream_info_get_property):
+	* gst/playback/gststreaminfo.h:
+	Fix playback of multiple files.
+	a slightly different approach to handling dynamic pad removals.
+	This one only looks at pads that we have linked.
+
 2004-11-01  Christophe Fergeau  <teuf@gnome.org>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_finalize): fix an "invalid
