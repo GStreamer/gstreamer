@@ -565,10 +565,8 @@ AC_MSG_CHECKING(mpeg2dec library)
 AC_CHECK_LIB(mpeg2, mpeg2_init, HAVE_MPEG2DEC=yes, HAVE_MPEG2DEC=no, )
 AC_CHECK_HEADER(mpeg2dec/mpeg2.h, :, HAVE_MPEG2DEC=no)
 
-dnl Check for flac
-AC_MSG_CHECKING(FLAC library)
-AC_CHECK_LIB(FLAC, FLAC__stream_decoder_new, HAVE_FLAC=yes, HAVE_FLAC=no, -lm)
-AC_CHECK_HEADER(FLAC/all.h, :, HAVE_FLAC=no)
+dnl Check for sidplay
+AC_PATH_LIBSIDPLAY
 
 dnl Check for librtp
 AC_MSG_CHECKING(rtp library)
@@ -976,6 +974,7 @@ AM_CONDITIONAL(HAVE_AVIFILE,        test "x$HAVE_AVIFILE" = "xyes")
 AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME, test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGSM,         test "x$HAVE_LIBGSM" = "xyes")
 AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
+AM_CONDITIONAL(HAVE_SIDPLAY,        test "x$have_sidplay" = "xyes")
 
 
 dnl ############################
