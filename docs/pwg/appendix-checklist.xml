@@ -1,4 +1,14 @@
-<chapter id="cha-checklist-filter">
+<chapter id="cha-checklist-element">
+  <title>
+    Things to check when writing an element
+  </title>
+  <para>
+  Make sure the state of an element gets reset when going to NULL.
+  Ideally, this should set all object properties to their original state.
+  This function should also be called from _init.
+  </para>
+</chapter>
+<<chapter id="cha-checklist-filter">
   <title>
     Things to check when writing a filter
   </title>
