@@ -251,7 +251,7 @@ gst_event_new_discontinuous (gboolean new_media, GstFormat format1, ...)
 
   va_start (var_args, format1);
 
-  event = gst_event_new_discontinuousv (new_media, format1, var_args);
+  event = gst_event_new_discontinuous_valist (new_media, format1, var_args);
 
   va_end (var_args);
 
