@@ -509,12 +509,28 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
   }
 }
 
+/**
+ * gst_use_threads:
+ * @use_threads: flag indicating threads should be used
+ *
+ * Instructs the core to turn on/off threading. When threading
+ * is turned off, all thread operations such as mutexes and conditionals
+ * are turned into NOPs. use this if you want absolute minimal overhead
+ * and you don't use any threads in the pipeline.
+ */
 void
 gst_use_threads (gboolean use_threads)
 {
   _gst_use_threads = use_threads;
 }
 
+/**
+ * gst_has_threads:
+ * 
+ * Query if GStreamer has threads enabled.
+ *
+ * Returns: TRUE if threads are enabled.
+ */
 gboolean
 gst_has_threads (void)
 {

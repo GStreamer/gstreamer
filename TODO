@@ -9,7 +9,7 @@ before changes are accepted.
 
 target release ! description
                !
-    ?          ! expose and API to query the supported seek formats/flags on
+  0.4.1        ! expose and API to query the supported seek formats/flags on
                ! pads, somthing like an extra arg to gst_pad_set_convert_function
                ! and gst_pad_set_event_function with some function to query the 
                ! flags and formats. more ideas in docs/random/wtay/query_events
