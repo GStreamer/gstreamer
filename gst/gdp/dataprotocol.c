@@ -163,6 +163,7 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
 {
   guint8 *h;
   guint16 crc;
+  guint16 flags_mask;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buffer) > 0, FALSE);
@@ -184,8 +185,16 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
   GST_WRITE_UINT64_BE (h + 24, GST_BUFFER_OFFSET (buffer));
   GST_WRITE_UINT64_BE (h + 32, GST_BUFFER_OFFSET_END (buffer));
 
+  /* data flags */
+  /* we only copy KEY_UNIT and IN_CAPS flags */
+  flags_mask = GST_DATA_FLAG_SHIFT (GST_BUFFER_KEY_UNIT) |
+      GST_DATA_FLAG_SHIFT (GST_BUFFER_IN_CAPS);
+
+  GST_WRITE_UINT16_BE (h + 40, GST_BUFFER_FLAGS (buffer) & flags_mask);
+
   /* ABI padding */
-  GST_WRITE_UINT64_BE (h + 40, (guint64) 0);
+  GST_WRITE_UINT16_BE (h + 42, (guint64) 0);
+  GST_WRITE_UINT32_BE (h + 44, (guint64) 0);
   GST_WRITE_UINT64_BE (h + 48, (guint64) 0);
 
   /* CRC */
@@ -419,6 +428,7 @@ gst_dp_buffer_from_header (guint header_length, const guint8 * header)
   GST_BUFFER_DURATION (buffer) = GST_DP_HEADER_DURATION (header);
   GST_BUFFER_OFFSET (buffer) = GST_DP_HEADER_OFFSET (header);
   GST_BUFFER_OFFSET_END (buffer) = GST_DP_HEADER_OFFSET_END (header);
+  GST_BUFFER_FLAGS (buffer) = GST_DP_HEADER_BUFFER_FLAGS (header);
 
   return buffer;
 }
