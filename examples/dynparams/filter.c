@@ -183,8 +183,9 @@ ui_control_create (GstElement * element, GtkWidget * control, _filter_ui_t * ui)
       /* create the dparam object */
       dparam = gst_dpsmooth_new (G_PARAM_SPEC_VALUE_TYPE (specs[i]));
       g_object_set (G_OBJECT (dparam), "update_period", 2000000LL, NULL);
-      g_assert (gst_dpman_attach_dparam (dpman,
-              (gchar *) g_param_spec_get_name (specs[i]), dparam));
+      if (!gst_dpman_attach_dparam (dpman,
+              (gchar *) g_param_spec_get_name (specs[i]), dparam))
+        g_assert_not_reached ();
       gst_dpman_set_mode (dpman, "asynchronous");
       g_signal_connect (widget, "value-changed",
           G_CALLBACK (cb_dynparm_value_changed), dparam);

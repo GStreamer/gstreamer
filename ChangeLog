@@ -1,3 +1,28 @@
+2004-08-03  Benjamin Otte  <otte@gnome.org>
+
+	* examples/dynparams/filter.c: (ui_control_create):
+	* examples/gstplay/player.c: (print_tag):
+	* ext/alsa/gstalsa.c: (gst_alsa_request_new_pad):
+	* ext/gdk_pixbuf/gstgdkanimation.c:
+	(gst_gdk_animation_iter_may_advance):
+	* ext/jack/gstjack.c: (gst_jack_request_new_pad):
+	* ext/mad/gstid3tag.c: (gst_mad_id3_to_tag_list),
+	(tag_list_to_id3_tag_foreach), (gst_id3_tag_handle_event):
+	* ext/vorbis/oggvorbisenc.c: (gst_oggvorbisenc_get_tag_value):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_get_tag_value):
+	* ext/xine/xineaudiodec.c: (gst_xine_audio_dec_chain):
+	* gst-libs/gst/media-info/media-info-test.c: (print_tag):
+	* gst/sine/demo-dparams.c: (main):
+	* gst/tags/gstvorbistag.c: (gst_tag_to_vorbis_comments):
+	* testsuite/alsa/formats.c: (create_pipeline):
+	* testsuite/alsa/sinesrc.c: (sinesrc_force_caps), (sinesrc_get):
+	  fixes for G_DISABLE_ASSERT and friends
+	* gst/typefind/gsttypefindfunctions.c: (aac_type_find),
+	(mp3_type_frame_length_from_header), (mp3_type_find),
+	(plugin_init):
+	  require mp3 typefinding to have at least MIN_HEADERS valid headers
+	  add typefinding for AAC adts files
+
 2004-08-04  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* sys/ximage/ximagesink.c:

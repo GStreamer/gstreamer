@@ -622,7 +622,7 @@ gst_mad_id3_to_tag_list (const struct id3_tag * tag)
         {
           guint64 tmp;
 
-          g_assert ((strcmp (tag_name, GST_TAG_DURATION) == 0));
+          g_assert (strcmp (tag_name, GST_TAG_DURATION) == 0);
           tmp = strtoul (utf8, NULL, 10);
           if (tmp == 0) {
             break;
@@ -678,7 +678,8 @@ tag_list_to_id3_tag_foreach (const GstTagList * list, const gchar * tag_name,
       guint u;
       GDate *d;
 
-      g_assert (gst_tag_list_get_uint_index (list, tag_name, values, &u));
+      if (!gst_tag_list_get_uint_index (list, tag_name, values, &u))
+        g_assert_not_reached ();
       d = g_date_new_julian (u);
       str = g_strdup_printf ("%u", (guint) (g_date_get_year (d)));
       put = g_utf8_to_ucs4_fast (str, -1, NULL);
@@ -688,7 +689,8 @@ tag_list_to_id3_tag_foreach (const GstTagList * list, const gchar * tag_name,
       gchar *str;
       guint u;
 
-      g_assert (gst_tag_list_get_uint_index (list, tag_name, values, &u));
+      if (!gst_tag_list_get_uint_index (list, tag_name, values, &u))
+        g_assert_not_reached ();
       str = g_strdup_printf ("%u", u);
       put = g_utf8_to_ucs4_fast (str, -1, NULL);
       g_free (str);
@@ -699,7 +701,8 @@ tag_list_to_id3_tag_foreach (const GstTagList * list, const gchar * tag_name,
         GST_WARNING ("unhandled GStreamer tag %s", tag_name);
         return;
       }
-      g_assert (gst_tag_list_get_string_index (list, tag_name, values, &str));
+      if (!gst_tag_list_get_string_index (list, tag_name, values, &str))
+        g_assert_not_reached ();
       put = g_utf8_to_ucs4_fast (str, -1, NULL);
       g_free (str);
     }
@@ -840,7 +843,8 @@ gst_id3_tag_handle_event (GstPad * pad, GstEvent * event)
 
             id3_tag_options (id3, ID3_TAG_OPTION_ID3V1, ID3_TAG_OPTION_ID3V1);
             tag_buffer = gst_buffer_new_and_alloc (128);
-            g_assert (128 == id3_tag_render (id3, tag_buffer->data));
+            if (128 != id3_tag_render (id3, tag_buffer->data))
+              g_assert_not_reached ();
             gst_pad_push (tag->srcpad, GST_DATA (tag_buffer));
             id3_tag_delete (id3);
           }
