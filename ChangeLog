@@ -1,5 +1,23 @@
 2004-11-07  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/musepack/Makefile.am:
+	* ext/musepack/gstmusepackdec.cpp:
+	* ext/musepack/gstmusepackdec.h:
+	* ext/musepack/gstmusepackreader.cpp:
+	* ext/musepack/gstmusepackreader.h:
+	  Add musepack decoder.
+	* ext/faad/gstfaad.c: (gst_faad_base_init):
+	  Make pad templates static.
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find),
+	(plugin_init):
+	  Add musepack typefinder, make mp3 typefinding work halfway stream,
+	  which doesn't actually work yet because id3demux doesn't implement
+	  _get_length().
+
+2004-11-07  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_next_buffer),
 	(gst_ogg_mux_queue_pads), (gst_ogg_mux_loop):
 	  Fix interrupt event handling (#144436).

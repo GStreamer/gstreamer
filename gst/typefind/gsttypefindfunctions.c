@@ -367,105 +367,117 @@ static GstStaticCaps mp3_caps = GST_STATIC_CAPS ("audio/mpeg, "
 static void
 mp3_type_find (GstTypeFind * tf, gpointer unused)
 {
+  guint64 length = gst_type_find_get_length (tf);
+  gint try;
   guint8 *data = NULL;
-  guint size = 0;
-  guint64 skipped = 0;
+  guint size;
+  guint64 skipped;
 
-  while (skipped < GST_MP3_TYPEFIND_TRY_SYNC) {
-    if (size <= 0) {
-      size = GST_MP3_TYPEFIND_SYNC_SIZE * 2;
-      do {
-        size /= 2;
-        data = gst_type_find_peek (tf, skipped, size);
-      } while (size > 10 && !data);
-      if (!data)
-        break;
-    }
-    if (*data == 0xFF) {
-      guint8 *head_data = NULL;
-      guint layer, bitrate, samplerate, channels;
-      guint found = 0;          /* number of valid headers found */
-      guint64 offset = skipped;
+  for (try = 0; try < 2; try++) {
+    guint64 start_off = (try == 0) ? 0 : length / 2;
 
-      while (found < GST_MP3_TYPEFIND_TRY_HEADERS) {
-        guint32 head;
-        guint length;
-        guint prev_layer = 0, prev_bitrate = 0,
-            prev_channels = 0, prev_samplerate = 0;
+    if (try != 0 && start_off == 0)
+      return;
 
-        if (offset + 4 <= skipped + size) {
-          head_data = data + offset - skipped;
-        } else {
-          head_data = gst_type_find_peek (tf, offset, 4);
-        }
-        if (!head_data)
+    size = 0;
+    skipped = 0;
+    while (skipped < GST_MP3_TYPEFIND_TRY_SYNC) {
+      if (size <= 0) {
+        size = GST_MP3_TYPEFIND_SYNC_SIZE * 2;
+        do {
+          size /= 2;
+          data = gst_type_find_peek (tf, skipped + start_off, size);
+        } while (size > 10 && !data);
+        if (!data)
           break;
-        head = GST_READ_UINT32_BE (head_data);
-        if (!(length = mp3_type_frame_length_from_header (head, &layer,
-                    &channels, &bitrate, &samplerate))) {
-          GST_LOG ("%d. header at offset %" G_GUINT64_FORMAT
-              " (0x%X) was not an mp3 header", found + 1, offset,
-              (guint) offset);
-          break;
-        }
-        if ((prev_layer && prev_layer != layer) ||
-            /* (prev_bitrate && prev_bitrate != bitrate) || <-- VBR */
-            (prev_samplerate && prev_samplerate != samplerate) ||
-            (prev_channels && prev_channels != channels)) {
-          /* this means an invalid property, or a change, which might mean
-           * that this is not a mp3 but just a random bytestream. It could
-           * be a freaking funky encoded mp3 though. We'll just not count
-           * this header*/
-          prev_layer = layer;
-          prev_bitrate = bitrate;
-          prev_channels = channels;
-          prev_samplerate = samplerate;
-        } else {
-          found++;
-          GST_LOG ("found %d. header at offset %" G_GUINT64_FORMAT " (0x%X)",
-              found, offset, (guint) offset);
-        }
-        offset += length;
       }
-      g_assert (found <= GST_MP3_TYPEFIND_TRY_HEADERS);
-      if (found == GST_MP3_TYPEFIND_TRY_HEADERS ||
-          (found >= GST_MP3_TYPEFIND_MIN_HEADERS && head_data == NULL)) {
-        /* we can make a valid guess */
-        guint probability = found * GST_TYPE_FIND_MAXIMUM *
-            (GST_MP3_TYPEFIND_TRY_SYNC - skipped) /
-            GST_MP3_TYPEFIND_TRY_HEADERS / GST_MP3_TYPEFIND_TRY_SYNC;
+      if (*data == 0xFF) {
+        guint8 *head_data = NULL;
+        guint layer, bitrate, samplerate, channels;
+        guint found = 0;        /* number of valid headers found */
+        guint64 offset = skipped;
 
-        if (probability < GST_TYPE_FIND_MINIMUM)
-          probability = GST_TYPE_FIND_MINIMUM;
-        GST_INFO
-            ("audio/mpeg calculated %u  =  %u  *  %u / %u  *  (%u - %u) / %u",
-            probability, GST_TYPE_FIND_MAXIMUM, found,
-            GST_MP3_TYPEFIND_TRY_HEADERS, GST_MP3_TYPEFIND_TRY_SYNC, skipped,
-            GST_MP3_TYPEFIND_TRY_SYNC);
-        /* make sure we're not id3 tagged */
-        head_data = gst_type_find_peek (tf, -128, 3);
-        if (!head_data) {
-          probability = probability * 4 / 5;
-        } else if (memcmp (head_data, "TAG", 3) == 0) {
-          probability = 0;
-        }
-        g_assert (probability <= GST_TYPE_FIND_MAXIMUM);
-        if (probability > 0) {
-          GstCaps *caps;
+        while (found < GST_MP3_TYPEFIND_TRY_HEADERS) {
+          guint32 head;
+          guint length;
+          guint prev_layer = 0, prev_bitrate = 0,
+              prev_channels = 0, prev_samplerate = 0;
 
-          g_assert (layer > 0);
-          caps = gst_caps_copy (MP3_CAPS);
-          gst_structure_set (gst_caps_get_structure (caps, 0), "layer",
-              G_TYPE_INT, layer, 0);
-          gst_type_find_suggest (tf, probability, caps);
-          gst_caps_free (caps);
+          if (offset + 4 <= skipped + size) {
+            head_data = data + offset - skipped;
+          } else {
+            head_data = gst_type_find_peek (tf, offset + start_off, 4);
+          }
+          if (!head_data)
+            break;
+          head = GST_READ_UINT32_BE (head_data);
+          if (!(length = mp3_type_frame_length_from_header (head, &layer,
+                      &channels, &bitrate, &samplerate))) {
+            GST_LOG ("%d. header at offset %" G_GUINT64_FORMAT
+                " (0x%X) was not an mp3 header", found + 1, offset,
+                (guint) offset);
+            break;
+          }
+          if ((prev_layer && prev_layer != layer) ||
+              /* (prev_bitrate && prev_bitrate != bitrate) || <-- VBR */
+              (prev_samplerate && prev_samplerate != samplerate) ||
+              (prev_channels && prev_channels != channels)) {
+            /* this means an invalid property, or a change, which might mean
+             * that this is not a mp3 but just a random bytestream. It could
+             * be a freaking funky encoded mp3 though. We'll just not count
+             * this header*/
+            prev_layer = layer;
+            prev_bitrate = bitrate;
+            prev_channels = channels;
+            prev_samplerate = samplerate;
+          } else {
+            found++;
+            GST_LOG ("found %d. header at offset %" G_GUINT64_FORMAT " (0x%X)",
+                found, offset, (guint) offset);
+          }
+          offset += length;
         }
-        return;
+        g_assert (found <= GST_MP3_TYPEFIND_TRY_HEADERS);
+        if (found == GST_MP3_TYPEFIND_TRY_HEADERS ||
+            (found >= GST_MP3_TYPEFIND_MIN_HEADERS && head_data == NULL)) {
+          /* we can make a valid guess */
+          guint probability = found * GST_TYPE_FIND_MAXIMUM *
+              (GST_MP3_TYPEFIND_TRY_SYNC - skipped) /
+              GST_MP3_TYPEFIND_TRY_HEADERS / GST_MP3_TYPEFIND_TRY_SYNC;
+
+          if (probability < GST_TYPE_FIND_MINIMUM)
+            probability = GST_TYPE_FIND_MINIMUM;
+          probability /= (try + 1);
+          GST_INFO
+              ("audio/mpeg calculated %u  =  %u  *  %u / %u  *  (%u - %u) / %u",
+              probability, GST_TYPE_FIND_MAXIMUM, found,
+              GST_MP3_TYPEFIND_TRY_HEADERS, GST_MP3_TYPEFIND_TRY_SYNC, skipped,
+              GST_MP3_TYPEFIND_TRY_SYNC);
+          /* make sure we're not id3 tagged */
+          head_data = gst_type_find_peek (tf, -128, 3);
+          if (!head_data) {
+            probability = probability * 4 / 5;
+          } else if (memcmp (head_data, "TAG", 3) == 0) {
+            probability = 0;
+          }
+          g_assert (probability <= GST_TYPE_FIND_MAXIMUM);
+          if (probability > 0) {
+            GstCaps *caps;
+
+            g_assert (layer > 0);
+            caps = gst_caps_copy (MP3_CAPS);
+            gst_structure_set (gst_caps_get_structure (caps, 0), "layer",
+                G_TYPE_INT, layer, 0);
+            gst_type_find_suggest (tf, probability, caps);
+            gst_caps_free (caps);
+          }
+          return;
+        }
       }
+      data++;
+      skipped++;
+      size--;
     }
-    data++;
-    skipped++;
-    size--;
   }
 }
 
@@ -1399,6 +1411,7 @@ plugin_init (GstPlugin * plugin)
   };
   static gchar *mp3_exts[] = { "mp3", "mp2", "mp1", "mpga", NULL };
   static gchar *ac3_exts[] = { "ac3", NULL };
+  static gchar *musepack_exts[] = { "mpc", NULL };
   static gchar *mpeg_sys_exts[] = { "mpe", "mpeg", "mpg", NULL };
   static gchar *mpeg_video_exts[] = { "mpv", "mpeg", "mpg", NULL };
   static gchar *ogg_exts[] = { "ogg", "ogm", NULL };
@@ -1439,6 +1452,8 @@ plugin_init (GstPlugin * plugin)
       asf_exts,
       "\060\046\262\165\216\146\317\021\246\331\000\252\000\142\316\154", 16,
       GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-musepack", GST_RANK_PRIMARY,
+      musepack_exts, "MP+", 3, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-au", GST_RANK_MARGINAL,
       au_exts, ".snd", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER_RIFF (plugin, "video/x-msvideo", GST_RANK_PRIMARY,

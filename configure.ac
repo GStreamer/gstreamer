@@ -1359,6 +1359,23 @@ main (int   argc,
   fi
 ])
 
+dnl *** musepack ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MUSEPACK, true)
+GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
+  AC_LANG_CPLUSPLUS
+  OLD_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I/usr/include/musepack $CPPFLAGS"
+  AC_CHECK_HEADER(mpc_dec.h, [
+    HAVE_MUSEPACK="yes"
+    MUSEPACK_LIBS="-lmusepack"
+    MUSEPACK_CFLAGS="-I/usr/include/musepack"
+    AC_SUBST(MUSEPACK_CFLAGS)
+    AC_SUBST(MUSEPACK_LIBS)
+    ], [HAVE_MUSEPACK="no"])
+  CPPFLAGS="$OLD_CPPFLAGS"
+  AC_LANG_C
+])
+
 dnl *** musicbrainz ***
 dnl libmusicbrainz <= 2.0.2 has symbol clashes with ffmpeg
 dnl however, our ffmpeg patch was accepted upstream
@@ -1948,6 +1965,7 @@ ext/mikmod/Makefile
 ext/mpeg2dec/Makefile
 ext/mpeg2enc/Makefile
 ext/mplex/Makefile
+ext/musepack/Makefile
 ext/musicbrainz/Makefile
 ext/nas/Makefile
 ext/ogg/Makefile
