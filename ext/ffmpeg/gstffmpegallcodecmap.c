@@ -520,16 +520,17 @@ gst_ffmpeg_caps_to_codecid (GstCaps        *caps,
         case GST_MAKE_FOURCC('D','I','V','4'):
         case GST_MAKE_FOURCC('D','I','V','5'):
         case GST_MAKE_FOURCC('D','X','5','0'):
+        case GST_MAKE_FOURCC('M','P','4','3'):
           id = CODEC_ID_MSMPEG4V3;
+          break;
+        case GST_MAKE_FOURCC('X','V','I','D'):
+          id = CODEC_ID_MPEG4;
           break;
         case GST_MAKE_FOURCC('M','P','G','4'):
           id = CODEC_ID_MSMPEG4V1;
           break;
         case GST_MAKE_FOURCC('M','P','4','2'):
           id = CODEC_ID_MSMPEG4V2;
-          break;
-        case GST_MAKE_FOURCC('M','P','4','3'):
-          id = CODEC_ID_MSMPEG4V3;
           break;
         case GST_MAKE_FOURCC('W','M','V','1'):
           id = CODEC_ID_WMV1;
