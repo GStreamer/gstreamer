@@ -18,7 +18,7 @@ AC_DEFUN(AM_PATH_FFMPEG,
   AC_ARG_WITH(ffmpeg-source,
     AC_HELP_STRING([--with-ffmpeg-source=DIR],
                    [Directory where FFmpeg source is (optional)]),
-    ffmpeg_source="$withval", ffmpeg_source="")
+    ffmpeg_source="$withval")
 
   dnl save CFLAGS and LIBS here
   CFLAGS_save=$CFLAGS
