@@ -2,7 +2,7 @@
 noinst_LTLIBRARIES = libgstparse.la
 
 BUILT_SOURCES = grammar.tab.h grammar.tab.c lex._gst_parse_yy.c 
-CLEANFILES = grammar.tab.h grammar.tab.c lex._gst_parse_yy.c 
+CLEANFILES = grammar.tab.h grammar.tab.c lex._gst_parse_yy.c grammar.output
 
 EXTRA_DIST = grammar.y parse.l types.h
 
