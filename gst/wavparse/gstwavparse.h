@@ -23,8 +23,8 @@
 
 
 #include <gst/gst.h>
-#include <riff.h>
-#include <gst/bytestream/bytestream.h>
+#include "gst/riff/riff-ids.h"
+#include "gst/riff/riff-read.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,41 +42,39 @@ extern "C" {
 #define GST_IS_WAVPARSE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_WAVPARSE))
 
+typedef enum {
+  GST_WAVPARSE_START,
+  GST_WAVPARSE_FMT,
+  GST_WAVPARSE_OTHER,
+  GST_WAVPARSE_DATA,
+} GstWavParseState;
 
-#define GST_WAVPARSE_UNKNOWN	0	/* initialized state */
-#define GST_WAVPARSE_START      1       /* At the start */
-#define GST_WAVPARSE_DATA	2	/* in data region */
-#define GST_WAVPARSE_OTHER	3	/* in unknown region */
-  
 typedef struct _GstWavParse GstWavParse;
 typedef struct _GstWavParseClass GstWavParseClass;
 
 struct _GstWavParse {
-  GstElement element;
+  GstRiffRead parent;
 
-  GstByteStream *bs;
   /* pads */
   GstPad *sinkpad,*srcpad;
 
   /* WAVE decoding state */
-  gint state;
+  GstWavParseState state;
 
   /* format of audio, see defines below */
   gint format;
 
   /* useful audio data */
-  gint bps;
+  guint16 depth;
   gint rate;
-  gint channels;
-  gint width;
+  guint16 channels;
+  guint16 width;
 
-  int dataleft;
+  guint64 dataleft;
   int byteoffset;
   
   gboolean seek_pending;
   guint64 seek_offset;
-  
-  GstBuffer *buf;
 };
 
 struct _GstWavParseClass {
@@ -85,16 +83,14 @@ struct _GstWavParseClass {
 
 GType gst_wavparse_get_type(void);
 
-typedef struct _GstWavParseFormat GstWavParseFormat;
-
-struct _GstWavParseFormat {
+typedef struct _gst_riff_fmt {
   gint16 wFormatTag;
   guint16 wChannels;
   guint32 dwSamplesPerSec;
   guint32 dwAvgBytesPerSec;
   guint16 wBlockAlign;
   guint16 wBitsPerSample;
-};
+} gst_riff_fmt;
   
   
 /**** from public Microsoft RIFF docs ******/
