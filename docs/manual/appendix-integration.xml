@@ -70,5 +70,7 @@ main (int argc, char **argv)
     <para>
       FIXME: flesh this out more.  How do we get the GStreamer arguments
       at the end ?
+      FIXME: add a GConf bit.
+    </para>
   </sect1>
 </chapter>

@@ -12,6 +12,19 @@
 
   <variablelist>
     <varlistentry>
+      <term>14 Sep 2002</term>
+      <listitem>
+        <para>
+          --- <emphasis>wingo-party</emphasis> is now known as 
+          <emphasis>wingo</emphasis>
+        </para>
+        <para>
+         * <emphasis>wingo</emphasis> holds head
+        </para>
+      </listitem>
+    </varlistentry>
+
+    <varlistentry>
       <term>16 Feb 2001</term>
       <listitem>
         <para>
