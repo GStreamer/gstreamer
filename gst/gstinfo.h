@@ -230,26 +230,28 @@ GstDebugCategory *_gst_debug_category_new	(gchar *		name,
 						 gchar *		description);
 /**
  * GST_DEBUG_CATEGORY_INIT:
- * @cat: the category to initialize
- * @name: the name of the category
- * @color: the colors to use for a color representation or 0 for no color
- * @description: optional description of the category
- * 
- * Creates a new #GstDebugCategory cat with the given properties and sets it to
+ * @cat: the category to initialize.
+ * @name: the name of the category.
+ * @color: the colors to use for a color representation or 0 for no color.
+ * @description: optional description of the category.
+ *
+ * Returns: a new #GstDebugCategory with the given properties and set to
  * the default threshold.
- * This macro expands to nothing if debugging is disabled.
  * <note>
  * <para>
- * When naming your category, please follow the following definitions to ensure
+ * This macro expands to nothing if debugging is disabled.
+ * </para>
+ * <para>
+ * When naming your category, please follow the following conventions to ensure
  * that the pattern matching for categories works as expected. It is not
  * earth-shattering if you don't follow these conventions, but it would be nice
  * for everyone.
  * </para>
  * <para>
- * If you define a category for a plugin or a feature of it, name the category 
- * like the feature. So if you wanted to write a "filesrc" element, you would 
+ * If you define a category for a plugin or a feature of it, name the category
+ * like the feature. So if you wanted to write a "filesrc" element, you would
  * name the category "filesrc". Use lowercase letters only.
- * If you define more than one category for the same element, append an 
+ * If you define more than one category for the same element, append an
  * underscore and an identifier to your categories, like this: "filesrc_cache"
  * </para>
  * <para>
@@ -264,6 +266,7 @@ GstDebugCategory *_gst_debug_category_new	(gchar *		name,
   if (cat == NULL)								\
     cat = _gst_debug_category_new (name,color,description);			\
 }G_STMT_END
+
 void		gst_debug_category_free		(GstDebugCategory *	category);
 void		gst_debug_category_set_threshold (GstDebugCategory *	category,
 						 GstDebugLevel		level);
