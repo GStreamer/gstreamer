@@ -21,12 +21,9 @@
 #ifndef __MPEG_PARSE_H__
 #define __MPEG_PARSE_H__
 
-
-#include <config.h>
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
 #include "gstmpegpacketize.h"
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,10 +65,14 @@ struct _GstMPEGParse {
 
   gboolean	 discont_pending;
   gboolean	 scr_pending;
+  gint		 max_discont;
 
   GstClock 	*provided_clock;
   GstClock 	*clock;
   gboolean	 sync;
+
+  GstCache	*cache;
+  gint		 cache_id;
 };
 
 struct _GstMPEGParseClass {

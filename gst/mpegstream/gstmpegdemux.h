@@ -46,41 +46,23 @@ extern "C" {
 typedef struct _GstMPEGDemux GstMPEGDemux;
 typedef struct _GstMPEGDemuxClass GstMPEGDemuxClass;
 
-typedef struct _MPEG1Stream MPEG1Stream;
+typedef struct _GstMPEGStream GstMPEGStream;
 
-struct _MPEG1Stream {
-  guchar stream_id;
-  gint8 STD_buffer_bound_scale;
-  gint16 STD_buffer_size_bound;
-};
-
-typedef struct _GstMPEG1StreamContext GstMPEG1StreamContext;
-
-struct _GstMPEGStreamContext {
-  GstPad *pad;
-  guint64 pts;
+struct _GstMPEGStream {
+  gint8 	 STD_buffer_bound_scale;
+  gint16 	 STD_buffer_size_bound;
+  GstPad 	*pad;
+  guint64	 pts;
+  gint	 	 cache_id;
 };
 
 struct _GstMPEGDemux {
   GstMPEGParse parent;
 
-  /* current parse state */
-  guchar id;
-
   /* previous partial chunk and bytes remaining in it */
   gboolean in_flush;
 
-  /* counters */
-  gulong packs;
-
-  /* pack header values */
-  gboolean have_packhead;
-  guint64 scr_base;
-  guint16 scr_extension;
-  guint32 bit_rate;
-
   /* program stream header values */
-  gboolean have_syshead;
   guint16 header_length;
   guint32 rate_bound;
   guint8 audio_bound;
@@ -90,19 +72,20 @@ struct _GstMPEGDemux {
   gboolean video_lock;
   guint8 video_bound;
   gboolean packet_rate_restriction;
-  struct _MPEG1Stream STD_buffer_info[48];
 
-#define NUM_PRIVATE_1_PADS 8
-#define NUM_SUBTITLE_PADS 16
-#define NUM_VIDEO_PADS 16
-#define NUM_AUDIO_PADS 32
+#define NUM_PRIVATE_1_STREAMS 	 8
+#define NUM_SUBTITLE_STREAMS 	16
+#define NUM_VIDEO_STREAMS 	16
+#define NUM_AUDIO_STREAMS 	32
 
-  /* stream output pads */
-  GstPad *private_1_pad[NUM_PRIVATE_1_PADS];	/* up to 8 ac3 audio tracks */
-  GstPad *subtitle_pad[NUM_SUBTITLE_PADS];
-  GstPad *private_2_pad;
-  GstPad *video_pad[NUM_VIDEO_PADS];
-  GstPad *audio_pad[NUM_AUDIO_PADS];
+  /* stream output */
+  GstMPEGStream *private_1_stream[NUM_PRIVATE_1_STREAMS];	/* up to 8 ac3 audio tracks */
+  GstMPEGStream *subtitle_stream[NUM_SUBTITLE_STREAMS];
+  GstMPEGStream *private_2_stream;
+  GstMPEGStream *video_stream[NUM_VIDEO_STREAMS];
+  GstMPEGStream *audio_stream[NUM_AUDIO_STREAMS];
+
+  GstCache	*cache;
 };
 
 struct _GstMPEGDemuxClass {

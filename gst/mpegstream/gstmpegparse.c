@@ -22,6 +22,8 @@
 #include "gstmpegparse.h"
 #include "gstmpegclock.h"
 
+static GstFormat scr_format;
+
 /* elementfactory information */
 static GstElementDetails mpeg_parse_details = {
   "MPEG System Parser",
@@ -36,6 +38,8 @@ static GstElementDetails mpeg_parse_details = {
 
 #define CLASS(o)	GST_MPEG_PARSE_CLASS (G_OBJECT_GET_CLASS (o))
 
+#define DEFAULT_MAX_DISCONT	10000
+
 /* GstMPEGParse signals and args */
 enum {
   /* FILL ME */
@@ -47,6 +51,7 @@ enum {
   ARG_BIT_RATE,
   ARG_MPEG2,
   ARG_SYNC,
+  ARG_MAX_DISCONT,
   /* FILL ME */
 };
 
@@ -94,6 +99,8 @@ static void 		gst_mpeg_parse_get_property	(GObject *object, guint prop_id,
 							 GValue *value, GParamSpec *pspec);
 static void 		gst_mpeg_parse_set_property	(GObject *object, guint prop_id, 
 							 const GValue *value, GParamSpec *pspec);
+static void 		gst_mpeg_parse_set_cache 	(GstElement *element, GstCache *tc);
+static GstCache*	gst_mpeg_parse_get_cache 	(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_mpeg_parse_signals[LAST_SIGNAL] = { 0 };*/
@@ -139,11 +146,19 @@ gst_mpeg_parse_class_init (GstMPEGParseClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
     g_param_spec_boolean ("sync", "Sync", "Synchronize on the stream SCR",
                           FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_DISCONT,
+    g_param_spec_int ("max_discont", "Max Discont", "The maximun allowed SCR discontinuity",
+                      0, G_MAXINT, DEFAULT_MAX_DISCONT, G_PARAM_READWRITE));
 
   gobject_class->get_property = gst_mpeg_parse_get_property;
   gobject_class->set_property = gst_mpeg_parse_set_property;
 
   gstelement_class->change_state = gst_mpeg_parse_change_state;
+  gstelement_class->get_clock    = gst_mpeg_parse_get_clock;
+  gstelement_class->set_clock    = gst_mpeg_parse_set_clock;
+  gstelement_class->get_cache    = gst_mpeg_parse_get_cache;
+  gstelement_class->set_cache    = gst_mpeg_parse_set_cache;
+
 
   klass->parse_packhead = gst_mpeg_parse_parse_packhead;
   klass->parse_syshead 	= NULL;
@@ -182,11 +197,9 @@ gst_mpeg_parse_init (GstMPEGParse *mpeg_parse)
   mpeg_parse->mux_rate = 0;
   mpeg_parse->discont_pending = FALSE;
   mpeg_parse->scr_pending = TRUE;
+  mpeg_parse->max_discont = DEFAULT_MAX_DISCONT;
   mpeg_parse->provided_clock = gst_mpeg_clock_new ("MPEGParseClock", 
 		  gst_mpeg_parse_get_time, mpeg_parse);
-
-  GST_ELEMENT (mpeg_parse)->getclockfunc    = gst_mpeg_parse_get_clock;
-  GST_ELEMENT (mpeg_parse)->setclockfunc    = gst_mpeg_parse_set_clock;
 
   GST_FLAG_SET (mpeg_parse, GST_ELEMENT_EVENT_AWARE);
 }
@@ -270,7 +283,7 @@ static gboolean
 gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 {
   guint8 *buf;
-  guint64 scr, scr_adj;
+  guint64 scr, scr_adj, scr_orig;
   guint32 scr1, scr2;
   guint32 new_rate;
 
@@ -299,8 +312,6 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 		    scr, scr_ext, scr1, scr2, mpeg_parse->bytes_since_scr, 
 		    scr - mpeg_parse->current_scr);
 
-    mpeg_parse->bytes_since_scr = 0;
-
     buf += 6;
     new_rate = (GUINT32_FROM_BE ((*(guint32 *) buf)) & 0xfffffc00) >> 10;
   }
@@ -309,13 +320,13 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     scr |= (scr1 & 0x00fffe00) << 6;
     scr |= (scr1 & 0x000000ff) << 7;
     scr |= (scr2 & 0xfe000000) >> 25;
-
-    mpeg_parse->bytes_since_scr = 0;
     
     buf += 5;
     new_rate = (GUINT32_FROM_BE ((*(guint32 *) buf)) & 0x7ffffe00) >> 9;
   }
 
+  scr_orig = scr;
+  mpeg_parse->bytes_since_scr = 0;
   scr_adj = scr + mpeg_parse->adjust;
 
   GST_DEBUG (0, "SCR is %llu (%llu) next: %lld (%lld) diff: %lld (%lld)", 
@@ -327,7 +338,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 		  MPEGTIME_TO_GSTTIME (scr) -
 		  MPEGTIME_TO_GSTTIME (mpeg_parse->next_scr));
 
-  if (ABS ((gint64)mpeg_parse->next_scr - (gint64)(scr_adj)) > 10000) {
+  if (ABS ((gint64)mpeg_parse->next_scr - (gint64)(scr_adj)) > mpeg_parse->max_discont) {
     GST_DEBUG (0, "discontinuity detected; expected: %llu got: %llu real:%lld adjust:%lld", 
            mpeg_parse->next_scr, scr_adj, scr, mpeg_parse->adjust);
 
@@ -340,8 +351,16 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     scr = scr_adj;
   }
 
+  if (mpeg_parse->cache) {
+    /* update cache if any */
+    gst_cache_add_association (mpeg_parse->cache, mpeg_parse->cache_id, 
+		    	       GST_ACCOCIATION_FLAG_KEY_UNIT,
+		               GST_FORMAT_BYTES, GST_BUFFER_OFFSET (buffer), 
+			       GST_FORMAT_TIME, MPEGTIME_TO_GSTTIME (scr), 
+			       scr_format, scr_orig, 0);
+  }
+
   mpeg_parse->current_scr = scr;
-		  
   mpeg_parse->scr_pending = FALSE;
 
   if (mpeg_parse->mux_rate != new_rate) {
@@ -466,17 +485,23 @@ gst_mpeg_parse_loop (GstElement *element)
       bss = mpeg_parse->bytes_since_scr;
       br = mpeg_parse->mux_rate * 50;
       
-      if (GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize)) {
-        /* 
-	 * The mpeg spec says something like this, but that doesn't really work:
-	 *
-	 * mpeg_parse->next_scr = (scr * br + bss * 90000LL) / (90000LL + br);
-	 */
-        mpeg_parse->next_scr = scr + (bss * 90000LL) / br;
+      if (br) {
+        if (GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize)) {
+          /* 
+	   * The mpeg spec says something like this, but that doesn't really work:
+	   *
+	   * mpeg_parse->next_scr = (scr * br + bss * 90000LL) / (90000LL + br);
+	   */
+          mpeg_parse->next_scr = scr + (bss * 90000LL) / br;
+        }
+        else {
+          /* we are interpolating the scr here */
+          mpeg_parse->next_scr = scr + (bss * 90000LL) / br;
+        }
       }
       else {
-        /* we are interpolating the scr here */
-        mpeg_parse->next_scr = scr + (bss * 90000LL) / br;
+	/* no bitrate known */
+        mpeg_parse->next_scr = scr;
       }
 
       GST_DEBUG (0, "size: %lld, total since SCR: %lld, next SCR: %lld", 
@@ -660,6 +685,9 @@ gst_mpeg_parse_get_property (GObject *object, guint prop_id, GValue *value, GPar
     case ARG_SYNC: 
       g_value_set_boolean (value, mpeg_parse->sync);
       break;
+    case ARG_MAX_DISCONT: 
+      g_value_set_int (value, mpeg_parse->max_discont);
+      break;
     default: 
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -672,12 +700,14 @@ gst_mpeg_parse_set_property (GObject *object, guint prop_id,
 {
   GstMPEGParse *mpeg_parse;
 
-  /* it's not null if we got it, but it might not be ours */
-  mpeg_parse = GST_MPEG_PARSE(object);
+  mpeg_parse = GST_MPEG_PARSE (object);
 
   switch (prop_id) {
     case ARG_SYNC: 
       mpeg_parse->sync = g_value_get_boolean (value); 
+      break;
+    case ARG_MAX_DISCONT: 
+      mpeg_parse->max_discont = g_value_get_int (value); 
       break;
     default: 
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -685,6 +715,29 @@ gst_mpeg_parse_set_property (GObject *object, guint prop_id,
   }
 }
 
+static void
+gst_mpeg_parse_set_cache (GstElement *element, GstCache *cache)
+{
+  GstMPEGParse *mpeg_parse;
+
+  mpeg_parse = GST_MPEG_PARSE (element);
+  
+  mpeg_parse->cache = cache;
+
+  gst_cache_get_writer_id (cache, GST_OBJECT (mpeg_parse->sinkpad),
+		           &mpeg_parse->cache_id);
+  gst_cache_add_format (cache, mpeg_parse->cache_id, scr_format);
+}
+
+static GstCache*
+gst_mpeg_parse_get_cache (GstElement *element)
+{
+  GstMPEGParse *mpeg_parse;
+
+  mpeg_parse = GST_MPEG_PARSE (element);
+  
+  return mpeg_parse->cache;
+}
 
 gboolean
 gst_mpeg_parse_plugin_init (GModule *module, GstPlugin *plugin)
@@ -699,6 +752,8 @@ gst_mpeg_parse_plugin_init (GModule *module, GstPlugin *plugin)
   factory = gst_element_factory_new ("mpegparse", GST_TYPE_MPEG_PARSE,
                                      &mpeg_parse_details);
   g_return_val_if_fail(factory != NULL, FALSE);
+
+  scr_format = gst_format_register ("scr", "The MPEG system clock reference time");
 
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory));
