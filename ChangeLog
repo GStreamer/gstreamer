@@ -1,3 +1,8 @@
+2004-07-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_pad_link):
+	  whoops, last checkin broke normal build
+
 2004-08-03  Benjamin Otte  <otte@gnome.org>
 
 	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_get_volume),
