@@ -254,6 +254,7 @@ gst_object_finalize (GtkObject *gtk_object)
   object = GST_OBJECT (gtk_object);
 
   GST_DEBUG (GST_CAT_REFCOUNTING, "finalize '%s'\n",GST_OBJECT_NAME(object));
+
   if (object->name != NULL)
     g_free (object->name);
 

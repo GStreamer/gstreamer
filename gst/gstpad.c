@@ -1035,7 +1035,22 @@ gst_real_pad_destroy (GtkObject *object)
     gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (pad)), pad);
 
   // FIXME we should destroy the ghostpads, because they are nothing without the real pad
-  g_list_free (GST_REAL_PAD(pad)->ghostpads);
+  if (GST_REAL_PAD (pad)->ghostpads) {
+    GList *orig, *ghostpads;
+
+    orig = ghostpads = g_list_copy (GST_REAL_PAD (pad)->ghostpads);
+
+    while (ghostpads) {
+      GstPad *ghostpad = GST_PAD (ghostpads->data);
+
+      if (GST_IS_ELEMENT (GST_OBJECT_PARENT (ghostpad)))
+        gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (ghostpad)), ghostpad);
+
+      ghostpads = g_list_next (ghostpads);
+    }
+    g_list_free (orig);
+    g_list_free (GST_REAL_PAD(pad)->ghostpads);
+  }
 
   if (GTK_OBJECT_CLASS (real_pad_parent_class)->destroy)
     GTK_OBJECT_CLASS (real_pad_parent_class)->destroy (object);
