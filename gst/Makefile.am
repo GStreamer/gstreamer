@@ -135,6 +135,7 @@ gst_headers =			\
 	gstsystemclock.h	\
 	gstthread.h		\
 	gsttrace.h		\
+	gsttrashstack.h		\
 	gsttype.h		\
 	gsttypefind.h		\
 	gstutils.h		\

@@ -20,22 +20,43 @@
 #include <string.h>		/* memset */
 
 #include "gstlog.h"
-#include "gstmemchunk.h"
 #include "gstutils.h"
+#include "gstmemchunk.h"
+#define __GST_TRASH_STACK_C__
+#include "gsttrashstack.h"
 
 #define GST_MEM_CHUNK_AREA(chunk) 	(((GstMemChunkElement*)(chunk))->area)
 #define GST_MEM_CHUNK_DATA(chunk) 	((gpointer)(((GstMemChunkElement*)(chunk)) + 1))
 #define GST_MEM_CHUNK_LINK(mem) 	((GstMemChunkElement*)((guint8*)(mem) - sizeof (GstMemChunkElement)))
 
+typedef struct _GstMemChunkElement GstMemChunkElement;
+
+struct _GstMemChunkElement
+{
+  GstTrashStackElement   elem;		/* make sure we can safely push it on the trashstack */
+  gpointer	 	 area;		/* pointer to data areas */
+};
+
+struct _GstMemChunk
+{
+  GstTrashStack  stack;
+
+  gchar         *name;
+  gulong         area_size;
+  gulong         chunk_size;
+  gulong         atom_size;
+  gboolean       cleanup;
+};
+
 /*******************************************************
  *         area size
- * +-----------------------------------------+
+ * +-------------------------------------------------------+
  *   chunk size
- * +------------+
+ * +-----------------+
  *
- * !next!data... !next!data.... !next!data...
- *  !             ^ !            ^ !
- *  +-------------+ +------------+ +---> NULL
+ * !next!area|data... !next!area!data.... !next!area!data...
+ *  !                  ^ !                 ^ !
+ *  +------------------+ +-----------------+ +--------> NULL
  *
  */
 static gboolean
@@ -46,12 +67,12 @@ populate (GstMemChunk *mem_chunk)
 
   if (mem_chunk->cleanup)
     return FALSE;
-
+ 
   area = (guint8 *) g_malloc0 (mem_chunk->area_size);
 
   for (i=0; i < mem_chunk->area_size; i += mem_chunk->chunk_size) { 
-    GST_MEM_CHUNK_AREA (area + i) = (GstMemChunkElement *)area;
-    gst_mem_chunk_free (mem_chunk, GST_MEM_CHUNK_DATA (area + i));
+    GST_MEM_CHUNK_AREA (area + i) = area;
+    gst_trash_stack_push (&mem_chunk->stack, area + i);
   }
 
   return TRUE;
@@ -87,7 +108,7 @@ gst_mem_chunk_new (gchar* name, gint atom_size, gulong area_size, gint type)
   mem_chunk->atom_size = atom_size;
   mem_chunk->area_size = area_size;
   mem_chunk->cleanup = FALSE;
-  GST_ATOMIC_SWAP_INIT (&mem_chunk->swap, NULL);
+  gst_trash_stack_init (&mem_chunk->stack);
 
   populate (mem_chunk);
 
@@ -144,21 +165,20 @@ gst_mem_chunk_destroy (GstMemChunk *mem_chunk)
 gpointer
 gst_mem_chunk_alloc (GstMemChunk *mem_chunk)
 {
-  GstMemChunkElement *chunk = NULL;
+  GstMemChunkElement *chunk;
   
   g_return_val_if_fail (mem_chunk != NULL, NULL);
 
 again:
-  GST_ATOMIC_SWAP_GET (&mem_chunk->swap, 
-		       GST_ATOMIC_SWAP_VALUE (&mem_chunk->swap), 
-		       &chunk);
-
+  chunk = gst_trash_stack_pop (&mem_chunk->stack);
+  /* chunk is empty, try to refill */
   if (!chunk) {
     if (populate (mem_chunk))
       goto again;
     else 
       return NULL;
   }
+
   return GST_MEM_CHUNK_DATA (chunk);
 }
 
@@ -200,5 +220,5 @@ gst_mem_chunk_free (GstMemChunk *mem_chunk, gpointer mem)
 
   chunk = GST_MEM_CHUNK_LINK (mem);
 
-  GST_ATOMIC_SWAP (&mem_chunk->swap, &chunk->link);
+  gst_trash_stack_push (&mem_chunk->stack, chunk);
 }

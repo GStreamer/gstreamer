@@ -21,30 +21,10 @@
 #define __GST_MEM_CHUNK_H__
 
 #include <glib.h>
-#include <gst/gstatomic.h>
 
 G_BEGIN_DECLS
 
 typedef struct _GstMemChunk GstMemChunk;
-typedef struct _GstMemChunkElement GstMemChunkElement;
-
-struct _GstMemChunkElement
-{
-  GstMemChunkElement *link;		/* next cell in the lifo */
-  GstMemChunkElement *area;
-};
-
-struct _GstMemChunk
-{
-  GstAtomicSwap	 swap;
-
-  gchar 	*name;
-  gulong 	 area_size;
-  gulong 	 chunk_size;
-  gulong 	 atom_size;
-  gboolean 	 cleanup;
-  GMutex	*lock;
-};
 
 GstMemChunk*	gst_mem_chunk_new 	(gchar *name,
 					 gint atom_size,
