@@ -1,3 +1,12 @@
+2004-03-14  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):
+	  Fix for obvious mistake, where we first shift the offset and then
+	  read a samplesize element assuming the old offset. Note that this
+	  part still has something weird, i.e. my movies containing those
+	  don't actually play well, but at least there's something that looks
+	  like sound now.
+
 2004-03-14  Jan Schmidt  <thaytan@mad.scientist.com>
 	* gst/typefind/gsttypefindfunctions.c: (speex_type_find),
 	(plugin_init):
