@@ -29,7 +29,7 @@ An extra set of tools is required if you wish to build GStreamer out of
 CVS (using autogen.sh):
 
 autoconf 2.52
-automake 1.5
+automake 1.6
 libtool v1.4 or better
 pkgconfig 0.9.0 (http://www.freedesktop.org/software/pkgconfig/)
 
