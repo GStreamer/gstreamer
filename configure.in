@@ -251,7 +251,6 @@ AC_CHECK_LIB(ghttp, ghttp_request_new,
   $LIBS)
 AC_SUBST(GST_HTTPSRC_GET_TYPE)
 
-
 dnl Check for libglade
 HAVE_LIBGLADE_GNOME="no"
 AC_PATH_PROG(LIBGLADE_CONFIG_PATH, libglade-config, no)
@@ -367,6 +366,10 @@ dnl Check for mpeg2dec
 AC_MSG_CHECKING(mpeg2dec library)
 AC_CHECK_LIB(mpeg2, mpeg2_init, HAVE_MPEG2DEC=yes, HAVE_MPEG2DEC=no, )
 AC_CHECK_HEADER(mpeg2dec/mpeg2.h, :, HAVE_MPEG2DEC=no)
+
+dnl Check for librtp
+AC_MSG_CHECKING(rtp library)
+AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
 
 
 dnl check if css-auth.c exists (FIXME)
@@ -601,6 +604,7 @@ AM_CONDITIONAL(HAVE_LIBESD,         test "x$HAVE_LIBESD" = "xyes")
 AM_CONDITIONAL(HAVE_LIBASOUND,      test "x$HAVE_LIBASOUND" = "xyes")
 AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
 AM_CONDITIONAL(HAVE_LIBXMMS,        test "x$HAVE_LIBXMMS" = "xyes")
+AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
 
 
 
