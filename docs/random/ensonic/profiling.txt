@@ -1,0 +1,26 @@
+$Id$
+
+Could schedulers do a little profiling?
+
+* scheduler keeps a list of usecs the process function of each element was
+  running
+* process functions are: loop, chain, get
+* scheduler keeps a sum of all times
+* each gst-element has a profile_percentage field
+
+* when going to play
+  * scheduler sets sum and all usecs in the list to 0
+* when handling an element
+  * remember old usecs t_old
+  * take time t1
+  * call elements processing function
+  * take time t2
+  * t_new=t2-t1
+  * sum+=(t_new-t_old)
+  * profile_percentage=t_new/sum;
+  * should the percentage be averaged?
+     * profile_percentage=(profile_percentage+(t_new/sum))/2.0;
+
+* the profile_percentage shows how much CPU time the element uses in relation
+  to the whole pipeline
+
