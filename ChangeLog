@@ -1,5 +1,16 @@
 2004-11-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybin.c: (gen_video_element),
+	(gen_audio_element), (setup_sinks), (gst_play_bin_change_state):
+	  Don't reference all sinks, but only the video- and audiosinks.
+	  The vis. element should be disposed when we're done with it.
+	  We don't have any reason to keep it around. This fixes warnings
+	  when reusing playbin for playing multiple audio files with
+	  vis. enabled. Also release audio device on pause - idea stolen
+	  from Rhythmbox.
+
+2004-11-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/a52dec/gsta52dec.c: (gst_a52dec_channels), (gst_a52dec_push),
 	(gst_a52dec_reneg), (gst_a52dec_loop), (plugin_init):
 	* ext/alsa/gstalsa.c: (gst_alsa_get_caps):
