@@ -3,6 +3,7 @@
 <!ENTITY MOTIVATION SYSTEM "motivation.sgml">
 <!ENTITY GOALS SYSTEM "goals.sgml">
 
+<!ENTITY INIT SYSTEM "init.sgml">
 <!ENTITY ELEMENTS SYSTEM "elements.sgml">
 <!ENTITY PADS SYSTEM "pads.sgml">
 <!ENTITY CONNECTIONS SYSTEM "connections.sgml">
@@ -98,6 +99,8 @@
     </partintro>
 
 <!-- ############ Basic concepts - chapter ############# -->
+      &INIT;
+
       &ELEMENTS;
 
       &PLUGINS;

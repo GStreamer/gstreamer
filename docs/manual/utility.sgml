@@ -64,6 +64,20 @@
     </itemizedlist>
   </para> 
   <para> 
+    One usually sets object properties using g_object_set (). The problem with this
+    method is that you need to know the type of the property. A convenience function,
+    gst_utils_set_object_arg () is therefore provided so that you can always set 
+    the property with a string value. for example:
+  </para>
+  <programlisting>
+  gst_util_set_object_arg (someobject, "int_property", "1000");
+  </programlisting>
+  <para>
+    Will do The Right Thing(tm), converting the string to the type of the property when
+    needed.
+  </para>
+
+  <para> 
     There is also another utility function that can be used to dump a block
     of memory on the console. This function is very usefull for plugin
     developers. The function will dump size bytes of the memory pointed

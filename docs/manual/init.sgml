@@ -1,0 +1,38 @@
+<chapter id="cha-initialisation">
+  <title>Initializing <application>GStreamer</application></title>
+  <para> 
+    When writing a <application>GStreamer</application> application, you can
+    simply include gst/gst.h to get access to the library functions.
+  </para> 
+  <para> 
+    Before the <application>GStreamer</application> libraries can be used
+    gst_init () has to be performed from the main app. this call will perform
+    first initialisation and will parse the GStreamer specific command line 
+    options. 
+  </para>
+  <para> 
+    A typical program would start like this:
+  </para>
+
+  <programlisting>
+#include &lt;gst/gst.h&gt;
+
+...
+
+int
+main (int argc, char *argv[])
+{
+  ...
+  gst_init (&amp;argc, &amp;argv);
+  ...
+}
+  </programlisting>
+  <para>
+    It is also possible to call the gst_init method with two NULL argumants.
+  </para>
+  <para> 
+    Use the GST_VERSION_MAJOR, GST_VERSION_MINOR and GST_VERSION_MICRO macros to
+    get the <application>GStreamer</application> version you are building against.
+  </para>
+
+</chapter>
