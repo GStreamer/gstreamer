@@ -364,8 +364,6 @@ gst_spider_link_reset (GstSpiderConnection * conn, GstElement * to)
 static void
 gst_spider_link_add (GstSpiderConnection * conn, GstElement * element)
 {
-  gst_object_ref ((GstObject *) element);
-  gst_object_sink ((GstObject *) element);
   conn->path = g_list_prepend (conn->path, element);
   conn->current = element;
 }

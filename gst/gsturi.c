@@ -280,7 +280,7 @@ gst_element_make_from_uri (const GstURIType type, const gchar * uri,
 
       if (gst_uri_handler_set_uri (handler, uri))
         break;
-      g_object_unref (ret);
+      gst_object_unref (GST_OBJECT (ret));
       ret = NULL;
     }
   }

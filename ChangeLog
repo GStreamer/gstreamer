@@ -1,3 +1,14 @@
+2004-04-06  Benjamin Otte  <otte@gnome.org>
+
+	* gst/autoplug/gstspider.c: (gst_spider_link_add):
+	  don't ref the element, adding already reffed it. And we didn't unref
+	  it later anyway... (huge memleak when you used many spider elements)
+	* gst/gstelement.c: (gst_element_base_class_finalize):
+	* gst/gstelementfactory.c: (gst_element_factory_cleanup),
+	(gst_element_register):
+	* gst/gsturi.c: (gst_element_make_from_uri):
+	  use gst_object_(un)ref instead of g_object(un)ref
+
 2004-04-06  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstbuffer.h:

@@ -159,7 +159,7 @@ gst_element_factory_cleanup (GstElementFactory * factory)
     factory->type = 0;
   }
 
-  g_list_foreach (factory->padtemplates, (GFunc) g_object_unref, NULL);
+  g_list_foreach (factory->padtemplates, (GFunc) gst_object_unref, NULL);
   g_list_free (factory->padtemplates);
   factory->padtemplates = NULL;
   factory->numpadtemplates = 0;
@@ -218,7 +218,7 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   factory->type = type;
   __gst_element_details_copy (&factory->details, &klass->details);
   factory->padtemplates = g_list_copy (klass->padtemplates);
-  g_list_foreach (factory->padtemplates, (GFunc) g_object_ref, NULL);
+  g_list_foreach (factory->padtemplates, (GFunc) gst_object_ref, NULL);
   factory->numpadtemplates = klass->numpadtemplates;
 
   /* special stuff for URI handling */
