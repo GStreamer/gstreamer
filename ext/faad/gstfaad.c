@@ -404,6 +404,7 @@ gst_faad_chain (GstPad  *pad,
     gst_buffer_unref (buf);
     return;
   }
+
   if (info.samplerate != faad->samplerate ||
       info.channels != faad->channels) {
     faad->samplerate = info.samplerate;

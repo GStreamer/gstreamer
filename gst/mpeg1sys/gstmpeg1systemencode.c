@@ -79,7 +79,9 @@ GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
   GST_CAPS_NEW (
     "sink_audio",
     "audio/mpeg",
-    NULL /* well, "don't care" */
+      "mpegversion", GST_PROPS_INT (1),
+      "layer", GST_PROPS_INT_RANGE (1, 2)
+      /* "don't care" about samplerate/channels */
   )
 )
 

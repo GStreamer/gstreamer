@@ -77,6 +77,7 @@ sink_template_factory (void)
         "icecastsend_sink",
         "audio/mpeg",
 	gst_props_new (
+	  "mpegversion", GST_PROPS_INT (1),
 	  "layer", GST_PROPS_INT_RANGE (1, 3),
 	  NULL
 	)),

@@ -26,6 +26,8 @@
 #include <string.h>
 #include <zlib.h>
 
+#define g_print(x...)
+
 #define QTDEMUX_GUINT32_GET(a) GUINT32_FROM_BE(*(guint32 *)(a))
 #define QTDEMUX_GUINT16_GET(a) GUINT16_FROM_BE(*(guint16 *)(a))
 #define QTDEMUX_GUINT8_GET(a) (*(guint8 *)(a))
@@ -1711,6 +1713,7 @@ static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc)
     case GST_MAKE_FOURCC('.','m','p','3'):
       /* MPEG layer 3, CBR & VBR (QT4.1 and later) */
       return GST_CAPS_NEW("_mp3_caps","audio/mpeg",
+	  "mpegversion", GST_PROPS_INT(1),
 	  "layer", GST_PROPS_INT(3),
 	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
 	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT),
