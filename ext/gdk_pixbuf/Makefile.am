@@ -5,7 +5,6 @@ libgstgdkpixbuf_la_CFLAGS = $(GST_CFLAGS) $(GTK_CFLAGS)
 libgstgdkpixbuf_la_LIBADD = $(GTK_LIBS)
 libgstgdkpixbuf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-
 if HAVE_GDK_LOADERS
 loaderdir = $(DESTDIR)$(GDK_PIXBUF_LOADER_DIR)
 loader_LTLIBRARIES = gst_loader.la
@@ -17,11 +16,6 @@ install-data-hook:
 	  $(mkinstalldirs) $(DESTDIR)$(GDK_PIXBUF_CONF_DIR) ; \
 	  $(QUERYLOADERS) > $(DESTDIR)$(GDK_PIXBUF_CONF_DIR)/gdk-pixbuf.loaders ; \
 	fi
-else
-gst_loader_headers =
-install-data-hook:
-	true
-endif
 
 gst_loader_la_CFLAGS = $(GST_CFLAGS) $(GTK_CFLAGS) -DGDK_PIXBUF_ENABLE_BACKEND
 gst_loader_la_SOURCES = 	\
@@ -29,6 +23,13 @@ gst_loader_la_SOURCES = 	\
 	gst_loader.c
 gst_loader_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) --avoid-version --module
 gst_loader_la_LIBADD = $(GTK_LIBS) $(GST_LIBS)
+else
+gst_loader_headers =
+loader_LTLIBRARIES =
+loaderdir =
+install-data-hook:
+	true
+endif
 
 noinst_HEADERS = gstgdkpixbuf.h \
 	$(gst_loader_headers)
