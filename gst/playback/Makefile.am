@@ -12,7 +12,9 @@ libgstdecodebin_la_CFLAGS = $(GST_CFLAGS)
 libgstdecodebin_la_LIBADD =
 libgstdecodebin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_PROGRAMS = test decodetest test2 test3
+noinst_HEADERS = gstplaybasebin.h gststreaminfo.h
+
+noinst_PROGRAMS = test decodetest test2 test3 test4
 
 test_LDADD = $(GST_LIBS) 
 test_CFLAGS = $(GST_CFLAGS)
@@ -22,6 +24,9 @@ test2_CFLAGS = $(GST_CFLAGS)
 
 test3_LDADD = $(GST_LIBS) 
 test3_CFLAGS = $(GST_CFLAGS)
+
+test4_LDADD = $(GST_LIBS) 
+test4_CFLAGS = $(GST_CFLAGS)
 
 decodetest_LDADD = $(GST_LIBS) 
 decodetest_CFLAGS = $(GST_CFLAGS)
