@@ -103,6 +103,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gstelement.c		\
 	gstelementfactory.c	\
 	gstevent.c		\
+	gstfilter.c		\
 	gstformat.c		\
 	$(GST_INDEX_SRC)	\
 	gstinfo.c		\
@@ -143,7 +144,6 @@ libgstreamer_@GST_MAJORMINOR@_la_LIBADD = $(LIBGST_LIBS) $(GST_PARSE_LIBADD) $(G
 libgstreamer_@GST_MAJORMINOR@_la_LDFLAGS = @GST_LT_LDFLAGS@ -version-info @GST_LIBVERSION@ 
 
 
-
 libgstreamer_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst
 
 gst_headers =			\
@@ -163,6 +163,7 @@ gst_headers =			\
 	gstdata.h		\
 	gstelement.h		\
 	gstevent.h		\
+	gstfilter.h		\
 	gstformat.h		\
 	gstindex.h		\
 	gstinfo.h		\
