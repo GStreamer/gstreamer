@@ -1,4 +1,4 @@
-SUBDIRS = gstreamer pkgconfig examples
+SUBDIRS = gstreamer pkgconfig examples docs
 
 EXTRA_DIST = \
   gst-python.spec.in gst-python.spec
