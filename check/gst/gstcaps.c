@@ -72,7 +72,6 @@ END_TEST Suite * gst_caps_suite (void)
   return s;
 }
 
-
 int
 main (int argc, char **argv)
 {
