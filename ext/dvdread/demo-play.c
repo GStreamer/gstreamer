@@ -21,11 +21,11 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
   g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
 
   if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
-    gst_pad_connect(pad, gst_element_get_pad(v_queue,"sink"));
+    gst_pad_link(pad, gst_element_get_pad(v_queue,"sink"));
     gst_bin_add(GST_BIN(pipeline),v_thread);
     gst_element_set_state(v_thread,GST_STATE_PLAYING);
   } else if (strcmp(gst_pad_get_name(pad), "private_stream_1.0") == 0) {
-    gst_pad_connect(pad, gst_element_get_pad(a_queue,"sink"));
+    gst_pad_link(pad, gst_element_get_pad(a_queue,"sink"));
     gst_bin_add(GST_BIN(pipeline),a_thread);
     gst_element_set_state(a_thread,GST_STATE_PLAYING);
   }
@@ -67,7 +67,7 @@ int main(int argc,char *argv[]) {
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));
 
-  gst_element_connect(src,"src",parse,"sink");
+  gst_element_link(src,"src",parse,"sink");
 
 
   /* ***** pre-construct the video thread ***** */
@@ -91,9 +91,9 @@ int main(int argc,char *argv[]) {
   gst_bin_add(GST_BIN(v_thread),GST_ELEMENT(color));
   gst_bin_add(GST_BIN(v_thread),GST_ELEMENT(show));
 
-  gst_element_connect(v_queue,"src",v_decode,"sink");
-  gst_element_connect(v_decode,"src",color,"sink");
-  gst_element_connect(color,"src",show,"sink");
+  gst_element_link(v_queue,"src",v_decode,"sink");
+  gst_element_link(v_decode,"src",color,"sink");
+  gst_element_link(color,"src",show,"sink");
 
 
   /* ***** pre-construct the audio thread ***** */
@@ -113,8 +113,8 @@ int main(int argc,char *argv[]) {
   gst_bin_add(GST_BIN(a_thread),GST_ELEMENT(a_decode));
   gst_bin_add(GST_BIN(a_thread),GST_ELEMENT(osssink));
 
-  gst_element_connect(a_queue,"src",a_decode,"sink");
-  gst_element_connect(a_decode,"src",osssink,"sink");
+  gst_element_link(a_queue,"src",a_decode,"sink");
+  gst_element_link(a_decode,"src",osssink,"sink");
 
 
   /* ***** construct the GUI ***** */

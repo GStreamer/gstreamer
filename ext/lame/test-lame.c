@@ -44,7 +44,7 @@ main (int argc, char *argv[])
   g_print ("setting up input\n");
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), tee);
-  gst_pad_connect (gst_element_get_pad (src, "src"),
+  gst_pad_link (gst_element_get_pad (src, "src"),
                    gst_element_get_pad (tee, "sink"));
 
   /* set up fakesrc */
@@ -79,8 +79,8 @@ main (int argc, char *argv[])
 
   gst_bin_add (GST_BIN (pipeline), encoder1);
   gst_bin_add (GST_BIN (pipeline), sink1);
-  gst_pad_connect (teepad1, gst_element_get_pad (encoder1, "sink"));
-  gst_pad_connect (gst_element_get_pad (encoder1, "src"),
+  gst_pad_link (teepad1, gst_element_get_pad (encoder1, "sink"));
+  gst_pad_link (gst_element_get_pad (encoder1, "src"),
                    gst_element_get_pad (sink1, "sink"));
       
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -95,8 +95,8 @@ main (int argc, char *argv[])
 
   gst_bin_add (GST_BIN (pipeline), encoder2);
   gst_bin_add (GST_BIN (pipeline), sink2);
-  gst_pad_connect (teepad2, gst_element_get_pad (encoder2, "sink"));
-  gst_pad_connect (gst_element_get_pad (encoder2, "src"),
+  gst_pad_link (teepad2, gst_element_get_pad (encoder2, "sink"));
+  gst_pad_link (gst_element_get_pad (encoder2, "src"),
                    gst_element_get_pad (sink2, "sink"));
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
