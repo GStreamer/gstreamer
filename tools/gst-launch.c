@@ -236,7 +236,7 @@ main(int argc, char *argv[])
     gst_event_print_stats();
 
     fprintf(stderr,"RUNNING pipeline\n");
-    if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS) {
+    if (gst_element_set_state (pipeline, GST_STATE_PLAYING) == GST_STATE_FAILURE) {
       fprintf(stderr,"pipeline doesn't want to play\n");
       res = -1;
       goto end;
