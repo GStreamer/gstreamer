@@ -17,16 +17,16 @@
 #include <gst/gst.h>
 #include "gsteffectv.h"
 
-#define GST_TYPE_EFFECTV \
+#define GST_TYPE_EDGETV \
   (gst_edgetv_get_type())
-#define GST_EFFECTV(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_EFFECTV,GstEdgeTV))
-#define GST_EFFECTV_CLASS(klass) \
+#define GST_EDGETV(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_EDGETV,GstEdgeTV))
+#define GST_EDGETV_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstEdgeTV))
-#define GST_IS_EFFECTV(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_EFFECTV))
-#define GST_IS_EFFECTV_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EFFECTV))
+#define GST_IS_EDGETV(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_EDGETV))
+#define GST_IS_EDGETV_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EDGETV))
 
 typedef struct _GstEdgeTV GstEdgeTV;
 typedef struct _GstEdgeTVClass GstEdgeTVClass;
@@ -125,7 +125,7 @@ gst_edgetv_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   GstEdgeTV *filter;
 
-  filter = GST_EFFECTV (gst_pad_get_parent (pad));
+  filter = GST_EDGETV (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_CONNECT_DELAYED;
@@ -173,7 +173,7 @@ gst_edgetv_chain (GstPad * pad, GstBuffer * buf)
   guint32 v0, v1, v2, v3;
   GstBuffer *outbuf;
 
-  filter = GST_EFFECTV (gst_pad_get_parent (pad));
+  filter = GST_EDGETV (gst_pad_get_parent (pad));
 
   src = (guint32 *) GST_BUFFER_DATA (buf);
 
@@ -270,9 +270,9 @@ gst_edgetv_set_property (GObject * object, guint prop_id, const GValue * value, 
   GstEdgeTV *filter;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_EFFECTV (object));
+  g_return_if_fail (GST_IS_EDGETV (object));
 
-  filter = GST_EFFECTV (object);
+  filter = GST_EDGETV (object);
 
   switch (prop_id) {
     default:
@@ -286,9 +286,9 @@ gst_edgetv_get_property (GObject * object, guint prop_id, GValue * value, GParam
   GstEdgeTV *filter;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_EFFECTV (object));
+  g_return_if_fail (GST_IS_EDGETV (object));
 
-  filter = GST_EFFECTV (object);
+  filter = GST_EDGETV (object);
 
   switch (prop_id) {
     default:

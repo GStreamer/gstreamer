@@ -21,5 +21,8 @@ extern GstElementDetails gst_edgetv_details;
 GType gst_agingtv_get_type (void);
 extern GstElementDetails gst_agingtv_details;
 
+GType gst_dicetv_get_type (void);
+extern GstElementDetails gst_dicetv_details;
+
 extern GstPadTemplate *gst_effectv_sink_factory ();
 extern GstPadTemplate *gst_effectv_src_factory ();

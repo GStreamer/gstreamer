@@ -28,6 +28,7 @@ struct _elements_entry {
 static struct _elements_entry _elements[] = {
   { "edgeTV",  gst_edgetv_get_type,  &gst_edgetv_details,  NULL },
   { "agingTV", gst_agingtv_get_type, &gst_agingtv_details, NULL },
+  { "diceTV",  gst_dicetv_get_type,  &gst_dicetv_details,  NULL },
   { NULL, 0 },
 };
 
