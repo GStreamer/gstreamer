@@ -68,6 +68,7 @@ static void                  gst_v4lmjpegsink_get_property (GObject             
                                                             GParamSpec           *pspec);
 static void                  gst_v4lmjpegsink_close        (GstV4lMjpegSink      *v4lmjpegsink);
 static GstElementStateReturn gst_v4lmjpegsink_change_state (GstElement           *element);
+static void		     gst_v4lmjpegsink_set_clock    (GstElement *element, GstClock *clock);
 
 
 static GstCaps *capslist = NULL;
@@ -159,8 +160,8 @@ gst_v4lmjpegsink_init (GstV4lMjpegSink *v4lmjpegsink)
   gst_pad_set_chain_function (v4lmjpegsink->sinkpad, gst_v4lmjpegsink_chain);
   gst_pad_set_connect_function (v4lmjpegsink->sinkpad, gst_v4lmjpegsink_sinkconnect);
 
-  v4lmjpegsink->clock = gst_system_clock_obtain ();
-  gst_clock_register(v4lmjpegsink->clock, GST_OBJECT(v4lmjpegsink));
+  v4lmjpegsink->clock = NULL;
+  GST_ELEMENT (v4lmjpegsink)->setclockfunc    = gst_v4lmjpegsink_set_clock;
 
   v4lmjpegsink->width = -1;
   v4lmjpegsink->height = -1;
@@ -211,6 +212,15 @@ gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
 
 
 static void
+gst_v4lmjpegsink_set_clock (GstElement *element, GstClock *clock)
+{
+  GstV4lMjpegSink *v4mjpegsink = GST_V4LMJPEGSINK (element);
+
+  v4mjpegsink->clock = clock;
+}
+
+
+static void
 gst_v4lmjpegsink_chain (GstPad    *pad,
                         GstBuffer *buf)
 {
@@ -224,20 +234,17 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
 
   v4lmjpegsink = GST_V4LMJPEGSINK (gst_pad_get_parent (pad));
 
-  GST_DEBUG (0,"videosink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP(buf));
+  if (v4lmjpegsink->clock) {
+    GST_DEBUG (0,"videosink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP(buf));
 
-  jitter = gst_clock_current_diff(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP (buf));
+    jitter = gst_clock_current_diff(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP (buf));
 
-  if (jitter > 500000 || jitter < -500000)
-  {
-    GST_DEBUG (0, "jitter: %lld\n", jitter);
-    gst_clock_set (v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP (buf));
+    if (jitter > 500000 || jitter < -500000)
+      GST_DEBUG (0, "jitter: %lld\n", jitter);
+
+    gst_element_clock_wait(GST_ELEMENT(v4lmjpegsink), v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf));
   }
-  else {
-    //gst_clock_wait(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf), GST_OBJECT(v4lmjpegsink));
-    gst_clock_wait(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf));
-  }
-
+  
   /* check size */
   if (GST_BUFFER_SIZE(buf) > v4lmjpegsink->breq.size)
   {
