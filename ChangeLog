@@ -1,3 +1,8 @@
+2005-01-02  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/random/bbb/streamselection:
+	  Add some notes on how to handle multi-subtitle/-audio streams.
+
 2004-12-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-docs.sgml:
@@ -8,12 +13,14 @@
 	* docs/gst/tmpl/gstpad.sgml:
 	* docs/gst/tmpl/gstpadtemplate.sgml:
 	* docs/gst/tmpl/gstthread.sgml:
-      removed gstenumtypes section from docs and put all the enums into their sections
+	  removed gstenumtypes section from docs and put all the enums into
+	  their sections
 
 2004-12-27  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
 
 	* gst/gstplugin.c:
-	  document gst_library_load a bit more (riff special case + return value if already loaded)
+	  document gst_library_load a bit more (riff special case + return
+	  value if already loaded)
 	* testsuite/bytestream/filepadsink.c:
 	  plugin name is 'gstbytestream', not 'bytestream'
 
