@@ -104,8 +104,16 @@ struct _GstAudioConvertClass {
   GstElementClass parent_class;
 };
 
+static GstElementDetails audio_convert_details = {
+  "Audio Conversion",
+  "Filter/Convert",
+  "Convert audio to different formats",
+  "Benjamin Otte <in7y118@public.uni-hamburg.de",
+};
+
 /* type functions */
 static GType gst_audio_convert_get_type     (void);
+static void  gst_audio_convert_base_init    (gpointer g_class);
 static void  gst_audio_convert_class_init   (GstAudioConvertClass *klass);
 static void  gst_audio_convert_init         (GstAudioConvert *audio_convert);
 static void  gst_audio_convert_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -183,7 +191,8 @@ gst_audio_convert_get_type(void) {
 
   if (!audio_convert_type) {
     static const GTypeInfo audio_convert_info = {
-      sizeof(GstAudioConvertClass),      NULL,
+      sizeof(GstAudioConvertClass),
+      gst_audio_convert_base_init,
       NULL,
       (GClassInitFunc)gst_audio_convert_class_init,
       NULL,
@@ -197,6 +206,18 @@ gst_audio_convert_get_type(void) {
                                                 &audio_convert_info, 0);
   }
   return audio_convert_type;
+}
+
+static void
+gst_audio_convert_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class,
+				      GST_PAD_TEMPLATE_GET (audio_convert_src_template_factory));
+  gst_element_class_add_pad_template (element_class,
+				      GST_PAD_TEMPLATE_GET (audio_convert_sink_template_factory));
+  gst_element_class_set_details (element_class, &audio_convert_details);
 }
 
 static void
@@ -721,38 +742,23 @@ gst_audio_convert_channels (GstAudioConvert *this, GstBuffer *buf)
 
 /*** PLUGIN DETAILS ***********************************************************/
 
-static GstElementDetails audio_convert_details = {
-  "Audio Conversion",
-  "Filter/Convert",
-  "LGPL",
-  "Convert audio to different formats",
-  VERSION,
-  "Benjamin Otte <in7y118@public.uni-hamburg.de",
-  "(C) 2003",
-};
-
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("audioconvert", GST_TYPE_AUDIO_CONVERT,
-                                    &audio_convert_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory,
-                  GST_PAD_TEMPLATE_GET (audio_convert_src_template_factory));
-  gst_element_factory_add_pad_template (factory,
-                  GST_PAD_TEMPLATE_GET (audio_convert_sink_template_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
+  if (!gst_element_register (plugin, "audioconvert", GST_RANK_NONE, GST_TYPE_AUDIO_CONVERT))
+    return FALSE;
+  
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gstaudioconvert",
-  plugin_init
-};
+  "Convert audio to different formats",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
