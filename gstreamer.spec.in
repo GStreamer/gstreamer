@@ -1,6 +1,6 @@
 %define name    gstreamer
 %define ver     @VERSION@
-%define rel     SNAP
+%define rel     0.2.0
 %define prefix  /usr
 
 Summary: GStreamer Streaming-media framework runtime
@@ -8,7 +8,7 @@ Name: %name
 Version: %ver
 Release: %rel
 Copyright: LGPL
-Group: Libraries
+Group: Libraries/Multimedia
 Source: %{name}-%{ver}.tar.gz
 BuildRoot: /var/tmp/%{name}-%{ver}-root
 Docdir: %{prefix}/doc
