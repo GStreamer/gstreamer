@@ -36,21 +36,24 @@ G_BEGIN_DECLS
  */
 /**
  * GstCoreError:
- * @GST_CORE_ERROR_FAILED: GStreamer encountered a general core library error.
- * @GST_CORE_ERROR_TOO_LAZY: GStreamer developers were too lazy to assign an error code to this error.  Please file a bug.
- * @GST_CORE_ERROR_NOT_IMPLEMENTED: Internal GStreamer error: code not implemented.  File a bug.
- * @GST_CORE_ERROR_STATE_CHANGE: Internal GStreamer error: state change failed.  File a bug.
- * @GST_CORE_ERROR_PAD: Internal GStreamer error: pad problem.  File a bug.
- * @GST_CORE_ERROR_THREAD: Internal GStreamer error: thread problem.  File a bug.
- * @GST_CORE_ERROR_SCHEDULER: Internal GStreamer error: scheduler problem.  File a bug.
- * @GST_CORE_ERROR_NEGOTIATION: Internal GStreamer error: negotiation problem.  File a bug.
- * @GST_CORE_ERROR_EVENT: Internal GStreamer error: event problem.  File a bug.
- * @GST_CORE_ERROR_SEEK: Internal GStreamer error: seek problem.  File a bug.
- * @GST_CORE_ERROR_CAPS: Internal GStreamer error: caps problem.  File a bug.
- * @GST_CORE_ERROR_TAG: Internal GStreamer error: tag problem.  File a bug.
- * @GST_CORE_ERROR_NUM_ERRORS: the error count
+ * @GST_CORE_ERROR_FAILED: a general error which doesn't fit in any other
+ * category.  Make sure you add a custom message to the error call.
+ * @GST_CORE_ERROR_TOO_LAZY: do not use this except as a placeholder for
+ * deciding where to go while developing code.
+ * @GST_CORE_ERROR_NOT_IMPLEMENTED: use this when you do not want to implement
+ * this functionality yet.
+ * @GST_CORE_ERROR_STATE_CHANGE: used for state change errors.
+ * @GST_CORE_ERROR_PAD: used for pad-related errors.
+ * @GST_CORE_ERROR_THREAD: used for thread-related errors.
+ * @GST_CORE_ERROR_SCHEDULER: used for scheduler-related errors.
+ * @GST_CORE_ERROR_NEGOTIATION: used for negotiation-related errors.
+ * @GST_CORE_ERROR_EVENT: used for event-related errors.
+ * @GST_CORE_ERROR_SEEK: used for seek-related errors.
+ * @GST_CORE_ERROR_CAPS: used for caps-related errors.
+ * @GST_CORE_ERROR_TAG: used for negotiation-related errors.
+ * @GST_CORE_ERROR_NUM_ERRORS: the number of core error types.
  *
- * Core errors are anything that can go wrong in or using
+ * Core errors are errors inside the core GStreamer library.
  * the core GStreamer library
  */
 /* FIXME: should we divide in numerical blocks so we can easily add
@@ -74,16 +77,18 @@ typedef enum
 
 /**
  * GstLibraryError:
- * @GST_LIBRARY_ERROR_FAILED: GStreamer encountered a general supporting library error.
- * @GST_LIBRARY_ERROR_TOO_LAZY: GStreamer developers were too lazy to assign an error code to this error.  Please file a bug.
- * @GST_LIBRARY_ERROR_INIT: Could not initialize supporting library.
- * @GST_LIBRARY_ERROR_SHUTDOWN: Could not close supporting library.
- * @GST_LIBRARY_ERROR_SETTINGS: Could not close supporting library.
- * @GST_LIBRARY_ERROR_ENCODE:
- * @GST_LIBRARY_ERROR_NUM_ERRORS: the error count
+ * @GST_LIBRARY_ERROR_FAILED: a general error which doesn't fit in any other
+ * category.  Make sure you add a custom message to the error call.
+ * @GST_LIBRARY_ERROR_TOO_LAZY: do not use this except as a placeholder for
+ * deciding where to go while developing code.
+ * @GST_LIBRARY_ERROR_INIT: used when the library could not be opened.
+ * @GST_LIBRARY_ERROR_SHUTDOWN: used when the library could not be closed.
+ * @GST_LIBRARY_ERROR_SETTINGS: used when the library doesn't accept settings.
+ * @GST_LIBRARY_ERROR_ENCODE: used when the library generated an encoding error.
+ * @GST_LIBRARY_ERROR_NUM_ERRORS: the number of library error types.
  *
  * Library errors are for errors from the library being used by elements
- * initializing, closing, ...
+ * (initializing, finalizing, settings, ...)
  */
 typedef enum
 {
@@ -98,24 +103,27 @@ typedef enum
 
 /**
  * GstResourceError:
- * @GST_RESOURCE_ERROR_FAILED: GStreamer encountered a general resource error
- * @GST_RESOURCE_ERROR_TOO_LAZY: GStreamer developers were too lazy to assign an error code to this error.  Please file a bug.
- * @GST_RESOURCE_ERROR_NOT_FOUND: Resource not found
- * @GST_RESOURCE_ERROR_BUSY: Resource busy or not available
- * @GST_RESOURCE_ERROR_OPEN_READ: Could not open resource for reading
- * @GST_RESOURCE_ERROR_OPEN_WRITE: Could not open resource for writing
- * @GST_RESOURCE_ERROR_OPEN_READ_WRITE: Could not open resource for reading and writing
- * @GST_RESOURCE_ERROR_CLOSE: Could not close resource
- * @GST_RESOURCE_ERROR_READ: Could not read from resource
- * @GST_RESOURCE_ERROR_WRITE: Could not write to resource
- * @GST_RESOURCE_ERROR_SEEK: Could not perform seek on resource
- * @GST_RESOURCE_ERROR_SYNC: Could not synchronize on resource
- * @GST_RESOURCE_ERROR_SETTINGS: Could not get/set settings from/on resource
- * @GST_RESOURCE_ERROR_NUM_ERRORS: the error count
+ * @GST_RESOURCE_ERROR_FAILED: a general error which doesn't fit in any other
+ * category.  Make sure you add a custom message to the error call.
+ * @GST_RESOURCE_ERROR_TOO_LAZY: do not use this except as a placeholder for
+ * deciding where to go while developing code.
+ * @GST_RESOURCE_ERROR_NOT_FOUND: used when the resource could not be found.
+ * @GST_RESOURCE_ERROR_BUSY: used when resource is busy.
+ * @GST_RESOURCE_ERROR_OPEN_READ: used when resource fails to open for reading.
+ * @GST_RESOURCE_ERROR_OPEN_WRITE: used when resource fails to open for writing.
+ * @GST_RESOURCE_ERROR_OPEN_READ_WRITE: used when resource cannot be opened for
+ * both reading and writing, or either (but unspecified which).
+ * @GST_RESOURCE_ERROR_CLOSE: used when the resource can't be closed.
+ * @GST_RESOURCE_ERROR_READ: used when the resource can't be read from.
+ * @GST_RESOURCE_ERROR_WRITE: used when the resource can't be written to.
+ * @GST_RESOURCE_ERROR_SEEK: used when a seek on the resource fails.
+ * @GST_RESOURCE_ERROR_SYNC: used when a synchronize on the resource fails.
+ * @GST_RESOURCE_ERROR_SETTINGS: used when settings can't be manipulated on
+ * @GST_RESOURCE_ERROR_NUM_ERRORS: the number of library error types.
  *
- * Resource errors are for anything external used by an element:
+ * Resource errors are for any resource used by an element:
  * memory, files, network connections, process space, ...
- * They're typically used by source and sink elements
+ * They're typically used by source and sink elements.
  */
 typedef enum
 {
@@ -137,18 +145,25 @@ typedef enum
 
 /**
  * GstStreamError:
- * @GST_STREAM_ERROR_FAILED: GStreamer encountered a general stream error
- * @GST_STREAM_ERROR_TOO_LAZY: GStreamer developers were too lazy to assign an error code to this error.  Please file a bug
- * @GST_STREAM_ERROR_NOT_IMPLEMENTED: Element doesn't implement handling of this stream. Please file a bug.
- * @GST_STREAM_ERROR_TYPE_NOT_FOUND: Could not determine type of stream
- * @GST_STREAM_ERROR_WRONG_TYPE: The stream is of a different type than handled by this element
- * @GST_STREAM_ERROR_CODEC_NOT_FOUND: There is no codec present that can handle the stream's type
- * @GST_STREAM_ERROR_DECODE: Could not decode stream
- * @GST_STREAM_ERROR_ENCODE: Could not encode stream
- * @GST_STREAM_ERROR_DEMUX: Could not demultiplex stream
- * @GST_STREAM_ERROR_MUX: Could not multiplex stream
- * @GST_STREAM_ERROR_FORMAT: Stream is of the wrong format
- * @GST_STREAM_ERROR_NUM_ERRORS: the error count
+ * @GST_STREAM_ERROR_FAILED: a general error which doesn't fit in any other
+ * category.  Make sure you add a custom message to the error call.
+ * @GST_STREAM_ERROR_TOO_LAZY: do not use this except as a placeholder for
+ * deciding where to go while developing code.
+ * @GST_STREAM_ERROR_NOT_IMPLEMENTED: use this when you do not want to implement
+ * this functionality yet.
+ * @GST_STREAM_ERROR_TYPE_NOT_FOUND: used when the element doesn't know the
+ * stream's type.
+ * @GST_STREAM_ERROR_WRONG_TYPE: used when the element doesn't handle this type
+ * of stream.
+ * @GST_STREAM_ERROR_CODEC_NOT_FOUND: used when there's no codec to handle the
+ * stream's type.
+ * @GST_STREAM_ERROR_DECODE: used when decoding fails.
+ * @GST_STREAM_ERROR_ENCODE: used when encoding fails.
+ * @GST_STREAM_ERROR_DEMUX: used when demuxing fails.
+ * @GST_STREAM_ERROR_MUX: used when muxing fails.
+ * @GST_STREAM_ERROR_FORMAT: used when the stream is of the wrong format
+ * (for example, wrong caps).
+ * @GST_STREAM_ERROR_NUM_ERRORS: the number of library error types.
  *
  * Stream errors are for anything related to the stream being processed:
  * format errors, media type errors, ...
