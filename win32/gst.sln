@@ -4,7 +4,20 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "matroska", "..\gst\matroska
 		{979C216F-0ACF-4956-AE00-055A42D67890} = {979C216F-0ACF-4956-AE00-055A42D67890}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libs", "..\gst-libs\gst\gst-libs.vcproj", "{979C216F-0ACF-4956-AE00-055A42D67890}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "avi", "..\gst\avi\avi.vcproj", "{979C216F-0ACF-4956-AE00-055A42D67892}"
+	ProjectSection(ProjectDependencies) = postProject
+		{979C216F-0ACF-4956-AE00-055A42D67890} = {979C216F-0ACF-4956-AE00-055A42D67890}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "audio", "..\gst-libs\gst\audio\audio.vcproj", "{979C216F-0ACF-4956-AE00-055A42D67893}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "riff", "..\gst-libs\gst\riff\riff.vcproj", "{979C216F-0ACF-4956-AE00-055A42D67890}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "audiofilter", "..\gst-libs\gst\audio\audiofilter.vcproj", "{979C216F-0ACF-4956-AE00-055A42D67894}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
@@ -18,10 +31,22 @@ Global
 		{979C216F-0ACF-4956-AE00-055A42D67891}.Debug.Build.0 = Debug|Win32
 		{979C216F-0ACF-4956-AE00-055A42D67891}.Release.ActiveCfg = Release|Win32
 		{979C216F-0ACF-4956-AE00-055A42D67891}.Release.Build.0 = Release|Win32
+		{979C216F-0ACF-4956-AE00-055A42D67892}.Debug.ActiveCfg = Debug|Win32
+		{979C216F-0ACF-4956-AE00-055A42D67892}.Debug.Build.0 = Debug|Win32
+		{979C216F-0ACF-4956-AE00-055A42D67892}.Release.ActiveCfg = Release|Win32
+		{979C216F-0ACF-4956-AE00-055A42D67892}.Release.Build.0 = Release|Win32
+		{979C216F-0ACF-4956-AE00-055A42D67893}.Debug.ActiveCfg = Debug|Win32
+		{979C216F-0ACF-4956-AE00-055A42D67893}.Debug.Build.0 = Debug|Win32
+		{979C216F-0ACF-4956-AE00-055A42D67893}.Release.ActiveCfg = Release|Win32
+		{979C216F-0ACF-4956-AE00-055A42D67893}.Release.Build.0 = Release|Win32
 		{979C216F-0ACF-4956-AE00-055A42D67890}.Debug.ActiveCfg = Debug|Win32
 		{979C216F-0ACF-4956-AE00-055A42D67890}.Debug.Build.0 = Debug|Win32
 		{979C216F-0ACF-4956-AE00-055A42D67890}.Release.ActiveCfg = Release|Win32
 		{979C216F-0ACF-4956-AE00-055A42D67890}.Release.Build.0 = Release|Win32
+		{979C216F-0ACF-4956-AE00-055A42D67894}.Debug.ActiveCfg = Debug|Win32
+		{979C216F-0ACF-4956-AE00-055A42D67894}.Debug.Build.0 = Debug|Win32
+		{979C216F-0ACF-4956-AE00-055A42D67894}.Release.ActiveCfg = Release|Win32
+		{979C216F-0ACF-4956-AE00-055A42D67894}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
