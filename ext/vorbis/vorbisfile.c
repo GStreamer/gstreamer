@@ -38,28 +38,30 @@ typedef struct _VorbisFile VorbisFile;
 typedef struct _VorbisFileClass VorbisFileClass;
 
 struct _VorbisFile {
-  GstElement element;
+  GstElement 	 element;
 
-  GstPad *sinkpad,*srcpad;
+  GstPad 	*sinkpad,
+  		*srcpad;
   GstByteStream *bs;
 
   OggVorbis_File vf;
-  gint current_link;
+  gint 		 current_link;
 
-  gboolean restart;
-  gboolean need_discont;
-  gboolean eos;
-  gboolean seek_pending;
-  gint64 seek_value;
-  GstFormat seek_format;
-  gboolean seek_accurate;
+  gboolean 	 restart;
+  gboolean 	 need_discont;
+  gboolean 	 eos;
+  gboolean 	 seek_pending;
+  gint64 	 seek_value;
+  GstFormat 	 seek_format;
+  gboolean 	 seek_accurate;
 
-  gboolean may_eos;
-  guint64 total_bytes;
-  guint64 offset;
+  gboolean 	 may_eos;
+  guint64 	 total_bytes;
+  guint64 	 offset;
+  gulong	 blocksize;
 
-  GstCaps *metadata;
-  GstCaps *streaminfo;
+  GstCaps 	*metadata;
+  GstCaps 	*streaminfo;
 };
 
 struct _VorbisFileClass {
@@ -90,9 +92,12 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_BLOCKSIZE 4096
+
 enum
 {
   ARG_0,
+  ARG_BLOCKSIZE,
   ARG_METADATA,
   ARG_STREAMINFO
 };
@@ -175,6 +180,9 @@ gst_vorbisfile_class_init (VorbisFileClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BLOCKSIZE,
+    g_param_spec_ulong ("blocksize", "Block size", "Size in bytes to read per buffer",
+                        1, G_MAXULONG, DEFAULT_BLOCKSIZE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_METADATA,
     g_param_spec_boxed ("metadata", "Metadata", "(logical) Stream metadata",
                          GST_TYPE_CAPS, G_PARAM_READABLE));
@@ -217,6 +225,7 @@ gst_vorbisfile_init (VorbisFile * vorbisfile)
   vorbisfile->metadata = NULL;
   vorbisfile->streaminfo = NULL;
   vorbisfile->current_link = -1;
+  vorbisfile->blocksize = DEFAULT_BLOCKSIZE;
 }
 
 /* the next four functions are the ov callbacks we provide to vorbisfile
@@ -564,9 +573,7 @@ gst_vorbisfile_loop (GstElement *element)
     return;
   }
 
-  outbuf = gst_buffer_new ();
-  GST_BUFFER_DATA (outbuf) = g_malloc (4096);
-  GST_BUFFER_SIZE (outbuf) = 4096;
+  outbuf = gst_buffer_new_and_alloc (vorbisfile->blocksize);
 
   /* get current time for discont and buffer timestamp */
   time = (GstClockTime) (ov_time_tell (&vorbisfile->vf) * GST_SECOND);
@@ -615,6 +622,7 @@ gst_vorbisfile_loop (GstElement *element)
 
     GST_BUFFER_SIZE (outbuf) = ret;
     GST_BUFFER_TIMESTAMP (outbuf) = time;
+    GST_BUFFER_OFFSET (outbuf) = ov_pcm_tell (&vorbisfile->vf);
 
     vorbisfile->may_eos = TRUE;
 
@@ -1039,6 +1047,9 @@ gst_vorbisfile_set_property (GObject *object, guint prop_id,
   vorbisfile = GST_VORBISFILE (object);
 
   switch (prop_id) {
+    case ARG_BLOCKSIZE:
+      vorbisfile->blocksize = g_value_get_ulong (value);
+      break;
     default:
       g_warning ("Unknown property id\n");
   }
@@ -1055,6 +1066,9 @@ gst_vorbisfile_get_property (GObject *object, guint prop_id,
   vorbisfile = GST_VORBISFILE (object);
 
   switch (prop_id) {
+    case ARG_BLOCKSIZE:
+      g_value_set_ulong (value, vorbisfile->blocksize);
+      break;
     case ARG_METADATA:
       g_value_set_boxed (value, vorbisfile->metadata);
       break;
