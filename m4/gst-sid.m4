@@ -2,7 +2,7 @@ dnl check for sidplay
 
 AC_DEFUN([GST_PATH_SIDPLAY],
 [
-AC_MSG_CHECKING([for libsidplay])
+AC_MSG_CHECKING([for libsidplay 1.36.x])
 
 AC_LANG_PUSH(C++)
 
