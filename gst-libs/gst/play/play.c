@@ -160,12 +160,7 @@ gst_play_pipeline_setup (GstPlay *play, GError **error)
   
   /* Make sure we convert audio to the needed format */
   GST_PLAY_MAKE_OR_ERROR (audioconvert, "audioconvert", "audioconvert", error);
-  /* FIXME: why are volume and audioconvert switched around for the insert ) */
-  g_hash_table_insert (play->priv->elements, "volume", audioconvert);
-  
-  /* Volume control */
-  GST_PLAY_MAKE_OR_ERROR (volume, "volume", "volume", error);
-  g_hash_table_insert (play->priv->elements, "audioconvert", volume);
+  g_hash_table_insert (play->priv->elements, "audioconvert", audioconvert);
   
   /* Duplicate audio signal to audio sink and visualization thread */
   GST_PLAY_MAKE_OR_ERROR (tee, "tee", "tee", error);
@@ -175,9 +170,8 @@ gst_play_pipeline_setup (GstPlay *play, GError **error)
   g_hash_table_insert (play->priv->elements, "tee_pad2", tee_pad2);
   g_hash_table_insert (play->priv->elements, "tee", tee);
   
-  gst_bin_add_many (GST_BIN (work_thread), source, autoplugger,/* audioconvert,*/
-                    volume, tee, NULL);
-  if (!gst_element_link_many (source, autoplugger,/* audioconvert,*/ volume, tee, NULL))
+  gst_bin_add_many (GST_BIN (work_thread), source, autoplugger, audioconvert, tee, NULL);
+  if (!gst_element_link_many (source, autoplugger, audioconvert, tee, NULL))
     GST_PLAY_ERROR_RETURN (error, "Could not link source thread elements");
   
   /* identity ! colorspace ! switch  */
@@ -309,12 +303,16 @@ gst_play_pipeline_setup (GstPlay *play, GError **error)
   GST_PLAY_MAKE_OR_ERROR (audio_queue, "queue", "audio_queue", error);
   g_hash_table_insert (play->priv->elements, "audio_queue", audio_queue);
   
+  /* Volume control */
+  GST_PLAY_MAKE_OR_ERROR (volume, "volume", "volume", error);
+  g_hash_table_insert (play->priv->elements, "volume", volume);
+    
   /* Placeholder for future audio sink bin */
   GST_PLAY_MAKE_OR_ERROR (audio_sink, "fakesink", "audio_sink", error);
   g_hash_table_insert (play->priv->elements, "audio_sink", audio_sink);
   
-  gst_bin_add_many (GST_BIN (audio_thread), audio_queue, audio_sink, NULL);
-  if (!gst_element_link (audio_queue, audio_sink))
+  gst_bin_add_many (GST_BIN (audio_thread), audio_queue, volume, audio_sink, NULL);
+  if (!gst_element_link_many (audio_queue, volume, audio_sink, NULL))
     GST_PLAY_ERROR_RETURN (error, "Could not link audio output thread elements");
   gst_element_add_ghost_pad (audio_thread,
                              gst_element_get_pad (audio_queue, "sink"),
@@ -829,7 +827,7 @@ gst_play_set_video_sink (GstPlay *play, GstElement *video_sink)
 gboolean
 gst_play_set_audio_sink (GstPlay *play, GstElement *audio_sink)
 {
-  GstElement *old_audio_sink, *audio_thread, *audio_queue, *audio_sink_element;
+  GstElement *old_audio_sink, *audio_thread, *volume, *audio_sink_element;
   
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
@@ -847,16 +845,16 @@ gst_play_set_audio_sink (GstPlay *play, GstElement *audio_sink)
   audio_thread = g_hash_table_lookup (play->priv->elements, "audio_thread");
   if (!GST_IS_ELEMENT (audio_thread))
     return FALSE;
-  audio_queue = g_hash_table_lookup (play->priv->elements, "audio_queue");
-  if (!GST_IS_ELEMENT (audio_queue))
+  volume = g_hash_table_lookup (play->priv->elements, "volume");
+  if (!GST_IS_ELEMENT (volume))
     return FALSE;
   
   /* Unlinking old audiosink, removing it from pipeline, putting the new one
      and linking it */
-  gst_element_unlink (audio_queue, old_audio_sink);
+  gst_element_unlink (volume, old_audio_sink);
   gst_bin_remove (GST_BIN (audio_thread), old_audio_sink);
   gst_bin_add (GST_BIN (audio_thread), audio_sink);
-  gst_element_link (audio_queue, audio_sink);
+  gst_element_link (volume, audio_sink);
   
   g_hash_table_replace (play->priv->elements, "audio_sink", audio_sink);
   
