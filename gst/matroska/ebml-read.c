@@ -464,7 +464,7 @@ gst_ebml_read_sint (GstEbmlRead *ebml,
 {
   GstBuffer *buf;
   guint8 *data;
-  guint size;
+  guint size, negative = 0, n = 0;
 
   if (!gst_ebml_read_buffer (ebml, id, &buf))
     return FALSE;
@@ -478,14 +478,19 @@ gst_ebml_read_sint (GstEbmlRead *ebml,
     gst_buffer_unref (buf);
     return FALSE;
   }
+  if (data[0] & 0x80) {
+    negative = 1;
+    data[0] &= ~0x80;
+  }
   *num = 0;
-  while (size > 0) {
-    *num = (*num << 8) | data[GST_BUFFER_SIZE (buf) - size];
-    size--;
+  while (n < size) {
+    *num = (*num << 8) | data[n++];
   }
 
   /* make signed */
-  *num -= (1LL << ((8 * GST_BUFFER_SIZE (buf)) - 1));
+  if (negative) {
+    *num = *num - (1LL << ((8 * size) - 1));
+  }
 
   gst_buffer_unref (buf);
 

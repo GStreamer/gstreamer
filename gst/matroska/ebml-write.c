@@ -391,7 +391,13 @@ gst_ebml_write_sint (GstEbmlWrite *ebml,
   guint size = gst_ebml_write_get_uint_size (unum);
 
   /* make unsigned */
-  unum = (num < 0 ? -num : num) + (1LLU << ((8 * size) - 1));
+  if (num >= 0) {
+    unum = num;
+  } else {
+    unum = 0x80 << (size - 1);
+    unum += num;
+    unum |= 0x80 << (size - 1);
+  }
 
   /* write */
   gst_ebml_write_element_id (buf, id);
