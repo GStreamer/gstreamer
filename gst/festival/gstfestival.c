@@ -226,6 +226,7 @@ gst_festival_chain (GstPad * pad, GstData * _data)
   size = GST_BUFFER_SIZE (buf);
 
   /* Copy text over to server, escaping any quotes */
+  fprintf (fd, "(Parameter.set 'Audio_Required_Rate 16000)\n");
   fprintf (fd, "(tts_textall \"\n");
   for (p = GST_BUFFER_DATA (buf); p && (*p != '\0') && size; p++, size--) {
     if ((*p == '"') || (*p == '\\'))
