@@ -972,7 +972,7 @@ gst_pad_can_link (GstPad *srcpad, GstPad *sinkpad)
  * @filtercaps: the filter #GstCaps.
  *
  * Links the source pad and the sink pad, constrained
- * by the given filter caps.
+ * by the given filter caps. This function sinks the caps.
  *
  * Returns: TRUE if the pads have been linked, FALSE otherwise.
  */
@@ -1521,7 +1521,6 @@ gst_pad_try_relink_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad,
 	      "start relink filtered %s:%s and %s:%s, clearing caps",
               GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
 
-    /* FIXME does this leak? */
     gst_caps_replace (&GST_PAD_CAPS (GST_PAD (realsrc)), NULL);
     gst_caps_replace (&GST_PAD_CAPS (GST_PAD (realsink)), NULL);
     gst_caps_replace (&GST_RPAD_FILTER (realsrc), NULL); 
@@ -1573,7 +1572,7 @@ gst_pad_try_relink_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad,
       filtered_intersection = gst_caps_intersect (intersection, 
 	                                          filtercaps);
 
-      gst_caps_unref (intersection);
+      gst_caps_sink (intersection);
 
       if (!filtered_intersection) {
         GST_INFO (GST_CAT_PADS, 
@@ -1595,7 +1594,7 @@ gst_pad_try_relink_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad,
    * are equal to the same thing on both */
   gst_caps_replace_sink (&GST_RPAD_FILTER (realsrc), intersection); 
   gst_caps_replace_sink (&GST_RPAD_FILTER (realsink), intersection); 
-  gst_caps_unref (intersection);
+  gst_caps_sink (intersection);
 
   return gst_pad_perform_negotiate (GST_PAD (realsrc), GST_PAD (realsink));
 }
