@@ -39,7 +39,7 @@ version_check "pkg-config" "" \
 
 die_check $DIE
 
-autoconf_2.52d_check || DIE=1
+autoconf_2_52d_check || DIE=1
 aclocal_check || DIE=1
 autoheader_check || DIE=1
 
