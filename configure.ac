@@ -8,10 +8,10 @@ dnl *NOTE*: dnl this line before release, so release does static too
 AM_DISABLE_STATIC
 
 dnl when going to/from release please set the nano (fourth number) right !
-AS_VERSION(gst-plugins, GST_PLUGINS, 0, 3, 2, 1)
-AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 dnl We disable static building for development, for time savings
 AM_DISABLE_STATIC
+AS_VERSION(gst-plugins, GST_PLUGINS, 0, 3, 2, 1)
+AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(GST_PLUGINS, 0, 0, 0, yes)
 
 dnl FIXME take something else ?
@@ -587,6 +587,8 @@ fi
 dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
 dnl ######################################################################
+
+GST_DEBUGINFO
 
 AC_ARG_ENABLE(libmmx,
 [  --enable-libmmx              use libmmx, if available],
