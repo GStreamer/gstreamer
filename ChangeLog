@@ -1,3 +1,8 @@
+2004-04-06  Johan Dahlin  <johan@gnome.org>
+
+	* examples/gstplay/videoplayer.py: New example, simple video
+	player embedded in a gtk+ widget.
+
 2004-03-31  Johan Dahlin  <johan@gnome.org>
 
 	* configure.ac (ACLOCAL): Bump version
