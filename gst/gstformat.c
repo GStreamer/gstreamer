@@ -54,6 +54,7 @@ _gst_format_initialize (void)
   while (standards->nick) {
     _gst_formats = g_list_prepend (_gst_formats, standards);
     standards++;
+    _n_values++;
   }
 }
 
