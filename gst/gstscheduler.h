@@ -128,8 +128,6 @@ void			gst_scheduler_error		(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_pad_connect	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 void			gst_scheduler_pad_disconnect	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 GstPad*                 gst_scheduler_pad_select 	(GstScheduler *sched, GList *padlist);
-GstClock*		gst_scheduler_get_clock		(GstScheduler *sched);
-GstClock*		gst_scheduler_get_clock		(GstScheduler *sched);
 GstClockReturn		gst_scheduler_clock_wait	(GstScheduler *sched, GstElement *element,
 							 GstClock *clock, GstClockTime time);
 gboolean		gst_scheduler_iterate		(GstScheduler *sched);

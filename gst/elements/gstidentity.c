@@ -141,6 +141,18 @@ gst_identity_get_bufferpool (GstPad *pad)
   return gst_pad_get_bufferpool (identity->srcpad);
 }
 
+static GstCaps*
+gst_identity_getcaps (GstPad *pad, GstCaps *caps)
+{
+  GstIdentity *identity;
+  GstPad *otherpad;
+  
+  identity = GST_IDENTITY (gst_pad_get_parent (pad));
+  otherpad = (pad == identity->srcpad ? identity->sinkpad : identity->srcpad);
+
+  return gst_pad_get_allowed_caps (otherpad);
+}
+
 static GstPadConnectReturn
 gst_identity_connect (GstPad *pad, GstCaps *caps)
 {
@@ -167,10 +179,12 @@ gst_identity_init (GstIdentity *identity)
   gst_pad_set_chain_function (identity->sinkpad, GST_DEBUG_FUNCPTR (gst_identity_chain));
   gst_pad_set_bufferpool_function (identity->sinkpad, gst_identity_get_bufferpool);
   gst_pad_set_connect_function (identity->sinkpad, gst_identity_connect);
+  gst_pad_set_getcaps_function (identity->sinkpad, gst_identity_getcaps);
   
   identity->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (identity), identity->srcpad);
   gst_pad_set_connect_function (identity->srcpad, gst_identity_connect);
+  gst_pad_set_getcaps_function (identity->srcpad, gst_identity_getcaps);
 
   identity->loop_based = FALSE;
   identity->sleep_time = 0;

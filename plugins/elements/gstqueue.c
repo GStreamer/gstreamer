@@ -223,7 +223,7 @@ gst_queue_init (GstQueue *queue)
   queue->writer = FALSE;
   queue->not_empty = g_cond_new ();
   queue->not_full = g_cond_new ();
-  GST_DEBUG_ELEMENT (GST_CAT_THREAD, queue, "initialized queue's not_empty & not_full conditions\n");
+  GST_DEBUG_ELEMENT (GST_CAT_THREAD, queue, "initialized queue's not_empty & not_full conditions");
 }
 
 static void
@@ -251,7 +251,7 @@ gst_queue_get_bufferpool (GstPad *pad)
 static void
 gst_queue_cleanup_buffers (gpointer data, const gpointer user_data)
 {
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, user_data, "cleaning buffer %p\n", data);
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, user_data, "cleaning buffer %p", data);
 
   if (GST_IS_BUFFER (data)) {
     gst_buffer_unref (GST_BUFFER (data));
@@ -287,9 +287,9 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
 
 restart:
   /* we have to lock the queue since we span threads */
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%ld\n", pthread_self ());
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%ld", pthread_self ());
   g_mutex_lock (queue->qlock);
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locked t:%ld\n", pthread_self ());
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locked t:%ld", pthread_self ());
 
   if (GST_IS_EVENT (buf)) {
     switch (GST_EVENT_TYPE (buf)) {
@@ -307,7 +307,7 @@ restart:
     }
   }
 
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "adding buffer %p of size %d\n",buf,GST_BUFFER_SIZE(buf));
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "adding buffer %p of size %d",buf,GST_BUFFER_SIZE(buf));
 
   if (queue->level_buffers == queue->size_buffers) {
     /* if this is a leaky queue... */
@@ -315,12 +315,12 @@ restart:
       /* FIXME don't want to leak events! */
       /* if we leak on the upstream side, drop the current buffer */
       if (queue->leaky == GST_QUEUE_LEAK_UPSTREAM) {
-        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue is full, leaking buffer on upstream end\n");
+        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue is full, leaking buffer on upstream end");
         if (GST_IS_EVENT (buf))
           fprintf(stderr, "Error: queue [%s] leaked an event, type:%d\n",
               GST_ELEMENT_NAME(GST_ELEMENT(queue)),
               GST_EVENT_TYPE(GST_EVENT(buf)));
-          GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue is full, leaking buffer on upstream end\n");
+          GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue is full, leaking buffer on upstream end");
         gst_buffer_unref(buf);
         /* now we have to clean up and exit right away */
         g_mutex_unlock (queue->qlock);
@@ -330,7 +330,7 @@ restart:
       else {
         GList *front;
         GstBuffer *leakbuf;
-        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue is full, leaking buffer on downstream end\n");
+        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue is full, leaking buffer on downstream end");
         front = queue->queue;
         leakbuf = (GstBuffer *)(front->data);
         if (GST_IS_EVENT (leakbuf))
@@ -345,13 +345,13 @@ restart:
       }
     }
 
-    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "pre full wait, level:%d/%d\n",
+    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "pre full wait, level:%d/%d",
         queue->level_buffers, queue->size_buffers);
     while (queue->level_buffers == queue->size_buffers) {
       /* if there's a pending state change for this queue or its manager, switch */
       /* back to iterator so bottom half of state change executes */
       while (GST_STATE_PENDING (queue) != GST_STATE_VOID_PENDING) {
-        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!\n");
+        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!");
         g_mutex_unlock (queue->qlock);
 	if (gst_element_interrupt (GST_ELEMENT (queue)))
           return;
@@ -372,15 +372,16 @@ restart:
 	}
       }
 
-      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "waiting for not_full, level:%d/%d\n", queue->level_buffers, queue->size_buffers);
+      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "waiting for not_full, level:%d/%d", 
+		      queue->level_buffers, queue->size_buffers);
       if (queue->writer)
-        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "WARNING: multiple writers on queue!\n");
+        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "WARNING: multiple writers on queue!");
       queue->writer = TRUE;
       g_cond_wait (queue->not_full, queue->qlock);
       queue->writer = FALSE;
-      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "got not_full signal\n");
+      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "got not_full signal");
     }
-    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "post full wait, level:%d/%d\n",
+    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "post full wait, level:%d/%d",
         queue->level_buffers, queue->size_buffers);
   }
 
@@ -389,7 +390,7 @@ restart:
   queue->level_buffers++;
   queue->level_bytes += GST_BUFFER_SIZE(buf);
 
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "(%s:%s)+ level:%d/%d\n",
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "(%s:%s)+ level:%d/%d",
       GST_DEBUG_PAD_NAME(pad),
       queue->level_buffers, queue->size_buffers);
 
@@ -403,7 +404,7 @@ restart:
 
   if (reader)
   {
-    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "signalling not_empty\n");
+    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "signalling not_empty");
     g_cond_signal (queue->not_empty);
   }
 }
@@ -425,17 +426,17 @@ gst_queue_get (GstPad *pad)
 
 restart:
   /* have to lock for thread-safety */
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%ld\n", pthread_self ());
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%ld", pthread_self ());
   g_mutex_lock (queue->qlock);
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locked t:%ld %p\n", pthread_self (), queue->not_empty);
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locked t:%ld %p", pthread_self (), queue->not_empty);
 
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "pre empty wait, level:%d/%d\n", queue->level_buffers, queue->size_buffers);
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "pre empty wait, level:%d/%d", queue->level_buffers, queue->size_buffers);
   while (queue->level_buffers == 0) {
     /* if there's a pending state change for this queue or its manager, switch
      * back to iterator so bottom half of state change executes
      */ 
     while (GST_STATE_PENDING (queue) != GST_STATE_VOID_PENDING) {
-      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!\n");
+      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!");
       g_mutex_unlock (queue->qlock);
       if (gst_element_interrupt (GST_ELEMENT (queue)))
         return NULL;
@@ -453,26 +454,26 @@ restart:
       }
     }
 
-    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "waiting for not_empty, level:%d/%d\n", queue->level_buffers, queue->size_buffers);
+    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "waiting for not_empty, level:%d/%d", queue->level_buffers, queue->size_buffers);
     if (queue->reader)
-      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "WARNING: multiple readers on queue!\n");
+      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "WARNING: multiple readers on queue!");
     queue->reader = TRUE;
     g_cond_wait (queue->not_empty, queue->qlock);
     queue->reader = FALSE;
-    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "got not_empty signal\n");
+    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "got not_empty signal");
   }
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "post empty wait, level:%d/%d\n", queue->level_buffers, queue->size_buffers);
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "post empty wait, level:%d/%d", queue->level_buffers, queue->size_buffers);
 
   front = queue->queue;
   buf = (GstBuffer *)(front->data);
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "retrieved buffer %p from queue\n", buf);
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "retrieved buffer %p from queue", buf);
   queue->queue = g_list_remove_link (queue->queue, front);
   g_list_free (front);
 
   queue->level_buffers--;
   queue->level_bytes -= GST_BUFFER_SIZE(buf);
 
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "(%s:%s)- level:%d/%d\n",
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "(%s:%s)- level:%d/%d",
       GST_DEBUG_PAD_NAME(pad),
       queue->level_buffers, queue->size_buffers);
 
@@ -486,7 +487,7 @@ restart:
 
   if (writer)
   {
-    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "signalling not_full\n");
+    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "signalling not_full");
     g_cond_signal (queue->not_full);
   }
 
@@ -495,7 +496,7 @@ restart:
     GstEvent *event = GST_EVENT(buf);
     switch (GST_EVENT_TYPE(event)) {
       case GST_EVENT_EOS:
-        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue \"%s\" eos\n", GST_ELEMENT_NAME (queue));
+        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue \"%s\" eos", GST_ELEMENT_NAME (queue));
         gst_element_set_eos (GST_ELEMENT (queue));
         break;
       default:

@@ -392,7 +392,7 @@ gst_bin_remove (GstBin *bin, GstElement *element)
   gint state_idx = 0;
   GstElementState state;
 
-  GST_DEBUG_ELEMENT (GST_CAT_PARENTAGE, bin, "trying to remove child %s\n", GST_ELEMENT_NAME (element));
+  GST_DEBUG_ELEMENT (GST_CAT_PARENTAGE, bin, "trying to remove child %s", GST_ELEMENT_NAME (element));
 
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
@@ -553,7 +553,7 @@ gst_bin_change_state_norecurse (GstBin * bin)
   GstElementStateReturn ret;
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {
-    GST_DEBUG_ELEMENT (GST_CAT_STATES, bin, "setting bin's own state\n");
+    GST_DEBUG_ELEMENT (GST_CAT_STATES, bin, "setting bin's own state");
     ret = GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT (bin));
 
     return ret;
@@ -845,9 +845,9 @@ gst_bin_iterate (GstBin * bin)
   if (!running) {
     if (GST_STATE (bin) == GST_STATE_PLAYING && GST_STATE_PENDING (bin) == GST_STATE_VOID_PENDING) {
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, bin,
-			 "waiting for child shutdown after useless iteration\n");
+			 "waiting for child shutdown after useless iteration");
       gst_element_wait_state_change (GST_ELEMENT (bin));
-      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, bin, "child shutdown\n");
+      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, bin, "child shutdown");
     }
   }
 

@@ -1248,7 +1248,7 @@ gst_element_set_state (GstElement *element, GstElementState state)
   /* start with the current state */
   curpending = GST_STATE(element);
 
-  GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "setting state from %s to %s\n",
+  GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "setting state from %s to %s",
                      gst_element_statename (curpending),
                      gst_element_statename (state));
 
@@ -1265,7 +1265,7 @@ gst_element_set_state (GstElement *element, GstElementState state)
     GST_STATE_PENDING (element) = curpending;
 
     if (curpending != state) {
-      GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "intermediate: setting state to %s\n",
+      GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "intermediate: setting state to %s",
                          gst_element_statename (curpending));
     }
 
@@ -1276,17 +1276,17 @@ gst_element_set_state (GstElement *element, GstElementState state)
 
     switch (return_val) {
       case GST_STATE_FAILURE:
-        GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "have failed change_state return\n");
+        GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "have failed change_state return");
 	return return_val;
       case GST_STATE_ASYNC:
-        GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "element will change state async\n");
+        GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "element will change state async");
 	return return_val;
       default:
         /* Last thing we do is verify that a successful state change really
          * did change the state... */
         if (GST_STATE (element) != curpending) {
           GST_DEBUG_ELEMENT (GST_CAT_STATES, element, 
-			  "element claimed state-change success, but state didn't change %s, %s <-> %s\n",
+			  "element claimed state-change success, but state didn't change %s, %s <-> %s",
                      	  gst_element_statename (GST_STATE (element)),
                      	  gst_element_statename (GST_STATE_PENDING (element)),
                      	  gst_element_statename (curpending));
@@ -1304,7 +1304,7 @@ gst_element_negotiate_pads (GstElement *element)
 {
   GList *pads = GST_ELEMENT_PADS (element);
 
-  GST_DEBUG_ELEMENT (GST_CAT_CAPS, element, "negotiating pads\n");
+  GST_DEBUG_ELEMENT (GST_CAT_CAPS, element, "negotiating pads");
 
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
@@ -1344,13 +1344,13 @@ gst_element_negotiate_pads (GstElement *element)
 
       /* only try to negotiate if the peer element is in PAUSED or higher too */
       if (otherstate >= GST_STATE_READY) {
-        GST_DEBUG_ELEMENT (GST_CAT_CAPS, element, "perform negotiate for %s:%s and %s:%s\n",
+        GST_DEBUG_ELEMENT (GST_CAT_CAPS, element, "perform negotiate for %s:%s and %s:%s",
 		      GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
         if (!gst_pad_perform_negotiate (GST_PAD (srcpad), GST_PAD (sinkpad)))
 	  return FALSE;
       }
       else {
-        GST_DEBUG_ELEMENT (GST_CAT_CAPS, element, "not negotiatiating %s:%s and %s:%s, not in READY yet\n",
+        GST_DEBUG_ELEMENT (GST_CAT_CAPS, element, "not negotiatiating %s:%s and %s:%s, not in READY yet",
 		      GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
       }
     }
@@ -1364,7 +1364,7 @@ gst_element_clear_pad_caps (GstElement *element)
 {
   GList *pads = GST_ELEMENT_PADS (element);
 
-  GST_DEBUG_ELEMENT (GST_CAT_CAPS, element, "clearing pad caps\n");
+  GST_DEBUG_ELEMENT (GST_CAT_CAPS, element, "clearing pad caps");
 
   while (pads) {
     GstRealPad *pad = GST_PAD_REALIZE (pads->data);
@@ -1473,7 +1473,7 @@ gst_element_dispose (GObject *object)
   GList *pads;
   GstPad *pad;
   
-  GST_DEBUG_ELEMENT (GST_CAT_REFCOUNTING, element, "dispose\n");
+  GST_DEBUG_ELEMENT (GST_CAT_REFCOUNTING, element, "dispose");
 
   gst_element_set_state (element, GST_STATE_NULL);
 
