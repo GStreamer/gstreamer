@@ -7,5 +7,5 @@ Name: GStreamer Uninstalled
 Description: Streaming-media framework, Not Installed
 Version: @VERSION@
 Requires: glib >= 1.2.0, gtk+ >= 1.2.0, libxml >= 1.8.1
-Libs: ${pcbuilddir}/${pcfiledir}/gst/libgst.la
-Cflags: -I${pcbuilddir}/${pcfiledir} @GST_DEFINE_CFLAGS@
+Libs: ${pc_top_builddir}/${pcfiledir}/gst/libgst.la
+Cflags: -I${pc_top_builddir}/${pcfiledir} @GST_DEFINE_CFLAGS@
