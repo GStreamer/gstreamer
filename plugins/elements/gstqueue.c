@@ -67,7 +67,7 @@ static void 			gst_queue_flush		(GstQueue *queue);
 static GstElementStateReturn 	gst_queue_change_state	(GstElement *element);
 
 
-static GstConnectionClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 //static guint gst_queue_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
@@ -85,7 +85,7 @@ gst_queue_get_type(void) {
       (GtkArgGetFunc)gst_queue_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    queue_type = gtk_type_unique (GST_TYPE_CONNECTION, &queue_info);
+    queue_type = gtk_type_unique (GST_TYPE_ELEMENT, &queue_info);
   }
   return queue_type;
 }
@@ -95,13 +95,11 @@ gst_queue_class_init (GstQueueClass *klass)
 {
   GtkObjectClass *gtkobject_class;
   GstElementClass *gstelement_class;
-  GstConnectionClass *gstconnection_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
-  gstconnection_class = (GstConnectionClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_CONNECTION);
+  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
 
   gtk_object_add_arg_type ("GstQueue::level", GTK_TYPE_INT,
                            GTK_ARG_READABLE, ARG_LEVEL);

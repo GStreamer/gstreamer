@@ -48,16 +48,16 @@ GstElementDetails gst_httpsrc_details;
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_HTTPSRC))
 
 typedef enum {
-  GST_HTTPSRC_OPEN		= GST_SRC_FLAG_LAST,
+  GST_HTTPSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
 
-  GST_HTTPSRC_FLAG_LAST		= GST_SRC_FLAG_LAST+2,
+  GST_HTTPSRC_FLAG_LAST		= GST_ELEMENT_FLAG_LAST+2,
 } GstHttpSrcFlags;
 
 typedef struct _GstHttpSrc GstHttpSrc;
 typedef struct _GstHttpSrcClass GstHttpSrcClass;
 
 struct _GstHttpSrc {
-  GstSrc src;
+  GstElement element;
   /* pads */
   GstPad *srcpad;
 
@@ -70,7 +70,7 @@ struct _GstHttpSrc {
 };
 
 struct _GstHttpSrcClass {
-  GstSrcClass parent_class;
+  GstElementClass parent_class;
 };
 
 GtkType gst_httpsrc_get_type(void);

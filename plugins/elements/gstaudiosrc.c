@@ -66,7 +66,7 @@ static void 			gst_audiosrc_sync_parms		(GstAudioSrc *audiosrc);
 
 static GstBuffer *		gst_audiosrc_get		(GstPad *pad);
 
-static GstSrcClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 //static guint gst_audiosrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
@@ -85,7 +85,7 @@ gst_audiosrc_get_type (void)
       (GtkArgGetFunc)gst_audiosrc_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    audiosrc_type = gtk_type_unique (GST_TYPE_SRC, &audiosrc_info);
+    audiosrc_type = gtk_type_unique (GST_TYPE_ELEMENT, &audiosrc_info);
   }
   return audiosrc_type;
 }
@@ -95,13 +95,11 @@ gst_audiosrc_class_init (GstAudioSrcClass *klass)
 {
   GtkObjectClass *gtkobject_class;
   GstElementClass *gstelement_class;
-  GstSrcClass *gstsrc_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
-  gstsrc_class = (GstSrcClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_SRC);
+  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
 
   gtk_object_add_arg_type ("GstAudioSrc::bytes_per_read", GTK_TYPE_ULONG,
                            GTK_ARG_READWRITE, ARG_BYTESPERREAD);
@@ -161,7 +159,7 @@ gst_audiosrc_get (GstPad *pad)
                     src->bytes_per_read);
 
   if (readbytes == 0) {
-    gst_src_signal_eos (GST_SRC (src));
+    gst_element_signal_eos (GST_ELEMENT (src));
     return NULL;
   }
 

@@ -51,7 +51,7 @@ static void gst_fdsink_get_arg		(GtkObject *object, GtkArg *arg, guint id);
 
 static void gst_fdsink_chain		(GstPad *pad,GstBuffer *buf);
 
-static GstSinkClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 //static guint gst_fdsink_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
@@ -70,7 +70,7 @@ gst_fdsink_get_type (void)
       (GtkArgGetFunc)gst_fdsink_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    fdsink_type = gtk_type_unique (GST_TYPE_SINK, &fdsink_info);
+    fdsink_type = gtk_type_unique (GST_TYPE_ELEMENT, &fdsink_info);
   }
   return fdsink_type;
 }
@@ -79,12 +79,10 @@ static void
 gst_fdsink_class_init (GstFdSinkClass *klass) 
 {
   GtkObjectClass *gtkobject_class;
-  GstSinkClass *gstsink_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
-  gstsink_class = (GstSinkClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_SINK);
+  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
 
   gtk_object_add_arg_type ("GstFdSink::fd", GTK_TYPE_INT,
                            GTK_ARG_READWRITE, ARG_FD);

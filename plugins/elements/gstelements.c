@@ -29,13 +29,14 @@
 #include <gstfakesrc.h>
 #include <gstfdsink.h>
 #include <gstfdsrc.h>
-#if HAVE_LIBGHTTP
-#include <gsthttpsrc.h>
-#endif /* HAVE_LIBGHTTP */
 #include <gstpipefilter.h>
 #include <gstqueue.h>
 #include <gstsinesrc.h>
 #include <gsttypefind.h>
+
+#if HAVE_LIBGHTTP
+#include <gsthttpsrc.h>
+#endif /* HAVE_LIBGHTTP */
 
 
 struct _elements_entry {
@@ -55,13 +56,14 @@ static struct _elements_entry _elements[] = {
   { "identity",     gst_identity_get_type,  	&gst_identity_details,     NULL },
   { "fdsink",       gst_fdsink_get_type, 	&gst_fdsink_details,       NULL },
   { "fdsrc", 	    gst_fdsrc_get_type, 	&gst_fdsrc_details,        NULL },
-#if HAVE_LIBGHTTP
-  { "httpsrc", 	    gst_httpsrc_get_type, 	&gst_httpsrc_details,      NULL },
-#endif /* HAVE_LIBGHTTP */
   { "pipefilter",   gst_pipefilter_get_type, 	&gst_pipefilter_details,   NULL },
   { "queue", 	    gst_queue_get_type, 	&gst_queue_details,        NULL },
   { "sinesrc", 	    gst_sinesrc_get_type, 	&gst_sinesrc_details,      NULL },
   { "typefind",     gst_typefind_get_type, 	&gst_typefind_details,     NULL },
+
+#if HAVE_LIBGHTTP
+  { "httpsrc", 	    gst_httpsrc_get_type, 	&gst_httpsrc_details,      NULL },
+#endif /* HAVE_LIBGHTTP */
   
   { NULL, 0 },
 };

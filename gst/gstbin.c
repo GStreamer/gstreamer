@@ -24,8 +24,6 @@
 #include "gst_private.h"
 
 #include "gstbin.h"
-#include "gstsrc.h"
-#include "gstconnection.h"
 
 #include "gstscheduler.h"
 
@@ -729,7 +727,9 @@ gst_bin_iterate_func (GstBin *bin)
 
         DEBUG("have entry \"%s\"\n",gst_element_get_name(entry));
 
-        if (GST_IS_SRC (entry) || GST_IS_CONNECTION (entry)) {
+        if (GST_IS_BIN (entry)) {
+          gst_bin_iterate (GST_BIN (entry));
+        } else {
           pads = entry->pads;
           while (pads) {
             pad = GST_PAD (pads->data);
@@ -743,13 +743,6 @@ gst_bin_iterate_func (GstBin *bin)
             }
             pads = g_list_next (pads);
           }
-//        } else if (GST_IS_CONNECTION (entry)) {
-//          gst_connection_push (GST_CONNECTION (entry));
-        } else if (GST_IS_BIN (entry))
-          gst_bin_iterate (GST_BIN (entry));
-        else {
-          fprintf(stderr, "gstbin: entry \"%s\" cannot be handled\n", gst_element_get_name (entry));
-//          g_assert_not_reached ();
         }
       }
     }

@@ -24,7 +24,7 @@
 #ifndef __GST_TEE_H__
 #define __GST_TEE_H__
 
-#include <gst/gstfilter.h>
+#include "gstelement.h"
 
 
 #ifdef __cplusplus
@@ -47,7 +47,7 @@ typedef struct _GstTee 		GstTee;
 typedef struct _GstTeeClass 	GstTeeClass;
 
 struct _GstTee {
-  GstFilter filter;
+  GstElement element;
 
   GstPad *sinkpad;
 
@@ -56,7 +56,7 @@ struct _GstTee {
 };
 
 struct _GstTeeClass {
-  GstFilterClass parent_class;
+  GstElementClass parent_class;
 };
 
 GtkType 	gst_tee_get_type	(void);

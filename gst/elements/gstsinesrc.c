@@ -64,7 +64,7 @@ void gst_sinesrc_sync_parms(GstSineSrc *sinesrc);
 
 static GstBuffer * gst_sinesrc_get(GstPad *pad);
 
-static GstSrcClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 //static guint gst_sinesrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
@@ -82,7 +82,7 @@ gst_sinesrc_get_type(void) {
       (GtkArgGetFunc)gst_sinesrc_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    sinesrc_type = gtk_type_unique(GST_TYPE_SRC,&sinesrc_info);
+    sinesrc_type = gtk_type_unique(GST_TYPE_ELEMENT,&sinesrc_info);
   }
   return sinesrc_type;
 }
@@ -91,13 +91,11 @@ static void
 gst_sinesrc_class_init(GstSineSrcClass *klass) {
   GtkObjectClass *gtkobject_class;
   GstElementClass *gstelement_class;
-  GstSrcClass *gstsrc_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
-  gstsrc_class = (GstSrcClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_SRC);
+  parent_class = gtk_type_class(GST_TYPE_ELEMENT);
 
   gtk_object_add_arg_type("GstSineSrc::volume", GTK_TYPE_DOUBLE,
                           GTK_ARG_READWRITE, ARG_VOLUME);

@@ -33,6 +33,7 @@ enum {
   NEW_PAD,
   NEW_GHOST_PAD,
   ERROR,
+  EOS,
   LAST_SIGNAL
 };
 
@@ -100,6 +101,10 @@ gst_element_class_init (GstElementClass *klass)
                     GTK_SIGNAL_OFFSET (GstElementClass, error),
                     gtk_marshal_NONE__STRING, GTK_TYPE_NONE,1,
                     GTK_TYPE_STRING);
+  gst_element_signals[EOS] =
+    gtk_signal_new ("eos", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstElementClass,eos),
+                    gtk_marshal_NONE__NONE, GTK_TYPE_NONE, 0);
 
 
   gtk_object_class_add_signals (gtkobject_class, gst_element_signals, LAST_SIGNAL);
@@ -824,4 +829,20 @@ gst_element_set_loop_function(GstElement *element,
 
   /* set the NEW_LOOPFUNC flag so everyone knows to go try again */
   GST_FLAG_SET(element,GST_ELEMENT_NEW_LOOPFUNC);
+}
+
+/**
+ * gst_src_signal_eos:
+ * @src: source to trigger the eos signal of
+ * 
+ * singals the eos signal to indicate that the end of the stream
+ * is reached.
+ */
+void
+gst_element_signal_eos (GstElement *element)
+{  
+  g_return_if_fail (element != NULL);
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[EOS]);
 }

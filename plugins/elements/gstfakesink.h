@@ -49,13 +49,13 @@ typedef struct _GstFakeSink GstFakeSink;
 typedef struct _GstFakeSinkClass GstFakeSinkClass;
 
 struct _GstFakeSink {
-  GstSink sink;
+  GstElement element;
 
   GstPad *sinkpad;
 };
 
 struct _GstFakeSinkClass {
-  GstSinkClass parent_class;
+  GstElementClass parent_class;
 
   /* signals */
   void (*handoff) (GstElement *element,GstPad *pad);

@@ -76,7 +76,7 @@ static void		gst_fakesrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 static GstBuffer*	gst_fakesrc_get		(GstPad *pad);
 static void 		gst_fakesrc_loop	(GstElement *element);
 
-static GstSrcClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
@@ -95,7 +95,7 @@ gst_fakesrc_get_type (void)
       (GtkArgGetFunc)NULL,
       (GtkClassInitFunc)NULL,
     };
-    fakesrc_type = gtk_type_unique (GST_TYPE_SRC, &fakesrc_info);
+    fakesrc_type = gtk_type_unique (GST_TYPE_ELEMENT, &fakesrc_info);
   }
   return fakesrc_type;
 }
@@ -104,12 +104,10 @@ static void
 gst_fakesrc_class_init (GstFakeSrcClass *klass) 
 {
   GtkObjectClass *gtkobject_class;
-  GstSrcClass *gstsrc_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
-  gstsrc_class = (GstSrcClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_SRC);
+  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
 
   gtk_object_add_arg_type ("GstFakeSrc::num_sources", GTK_TYPE_INT,
                            GTK_ARG_READWRITE, ARG_NUM_SOURCES);

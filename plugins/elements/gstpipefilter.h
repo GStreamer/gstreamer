@@ -45,16 +45,16 @@ GstElementDetails gst_pipefilter_details;
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_PIPEFILTER))
 
 typedef enum {
-  GST_PIPEFILTER_OPEN		= GST_FILTER_FLAG_LAST,
+  GST_PIPEFILTER_OPEN		= GST_ELEMENT_FLAG_LAST,
 
-  GST_PIPEFILTER_FLAG_LAST	= GST_FILTER_FLAG_LAST,
+  GST_PIPEFILTER_FLAG_LAST	= GST_ELEMENT_FLAG_LAST,
 } GstPipeFilterFlags;
 
 typedef struct _GstPipefilter GstPipefilter;
 typedef struct _GstPipefilterClass GstPipefilterClass;
 
 struct _GstPipefilter {
-  GstFilter filter;
+  GstElement element;
 
   GstPad *sinkpad;
   GstPad *srcpad;
@@ -74,7 +74,7 @@ struct _GstPipefilter {
 };
 
 struct _GstPipefilterClass {
-  GstFilterClass parent_class;
+  GstElementClass parent_class;
 };
 
 GtkType gst_pipefilter_get_type(void);

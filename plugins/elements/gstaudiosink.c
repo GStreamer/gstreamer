@@ -115,7 +115,7 @@ gst_audiosink_channels_get_type(void) {
 }
 
 
-static GstSinkClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 static guint gst_audiosink_signals[LAST_SIGNAL] = { 0 };
 
 static GstPadTemplate *gst_audiosink_sink_template;
@@ -136,7 +136,7 @@ gst_audiosink_get_type (void)
       (GtkArgGetFunc)NULL,
       (GtkClassInitFunc)NULL,
     };
-    audiosink_type = gtk_type_unique (GST_TYPE_SINK, &audiosink_info);
+    audiosink_type = gtk_type_unique (GST_TYPE_ELEMENT, &audiosink_info);
   }
 
   return audiosink_type;
@@ -151,7 +151,7 @@ gst_audiosink_class_init (GstAudioSinkClass *klass)
   gtkobject_class = (GtkObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_FILTER);
+  parent_class = gtk_type_class(GST_TYPE_ELEMENT);
 
   gtk_object_add_arg_type ("GstAudioSink::mute", GTK_TYPE_BOOL,
                            GTK_ARG_READWRITE, ARG_MUTE);

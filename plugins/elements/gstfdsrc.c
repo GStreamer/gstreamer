@@ -60,7 +60,7 @@ static void		gst_fdsrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 static GstBuffer *	gst_fdsrc_get		(GstPad *pad);
 
 
-static GstSrcClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 //static guint gst_fdsrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
@@ -79,7 +79,7 @@ gst_fdsrc_get_type (void)
       (GtkArgGetFunc)gst_fdsrc_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    fdsrc_type = gtk_type_unique (GST_TYPE_SRC, &fdsrc_info);
+    fdsrc_type = gtk_type_unique (GST_TYPE_ELEMENT, &fdsrc_info);
   }
   return fdsrc_type;
 }
@@ -88,12 +88,10 @@ static void
 gst_fdsrc_class_init (GstFdSrcClass *klass) 
 {
   GtkObjectClass *gtkobject_class;
-  GstSrcClass *gstsrc_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
-  gstsrc_class = (GstSrcClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_SRC);
+  parent_class = gtk_type_class(GST_TYPE_ELEMENT);
 
   gtk_object_add_arg_type ("GstFdSrc::location", GST_TYPE_FILENAME,
                            GTK_ARG_WRITABLE, ARG_LOCATION);
@@ -197,7 +195,7 @@ gst_fdsrc_get(GstPad *pad)
   /* read it in from the file */
   readbytes = read(src->fd,GST_BUFFER_DATA(buf),src->bytes_per_read);
   if (readbytes == 0) {
-    gst_src_signal_eos(GST_SRC(src));
+    gst_element_signal_eos(GST_ELEMENT(src));
     return NULL;
   }
 

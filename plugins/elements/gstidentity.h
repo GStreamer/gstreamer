@@ -49,7 +49,7 @@ typedef struct _GstIdentity GstIdentity;
 typedef struct _GstIdentityClass GstIdentityClass;
 
 struct _GstIdentity {
-  GstFilter filter;
+  GstElement element;
 
   GstPad *sinkpad;
   GstPad *srcpad;
@@ -58,7 +58,7 @@ struct _GstIdentity {
 };
 
 struct _GstIdentityClass {
-  GstFilterClass parent_class;
+  GstElementClass parent_class;
 };
 
 GtkType gst_identity_get_type(void);

@@ -63,7 +63,7 @@ static GstBuffer *		gst_disksrc_get			(GstPad *pad);
 static GstElementStateReturn 	gst_disksrc_change_state	(GstElement *element);
 
 
-static GstSrcClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 //static guint gst_disksrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
@@ -81,7 +81,7 @@ gst_disksrc_get_type(void) {
       (GtkArgGetFunc)gst_disksrc_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    disksrc_type = gtk_type_unique(GST_TYPE_SRC,&disksrc_info);
+    disksrc_type = gtk_type_unique(GST_TYPE_ELEMENT,&disksrc_info);
   }
   return disksrc_type;
 }
@@ -91,13 +91,11 @@ gst_disksrc_class_init (GstDiskSrcClass *klass)
 {
   GtkObjectClass *gtkobject_class;
   GstElementClass *gstelement_class;
-  GstSrcClass *gstsrc_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
-  gstsrc_class = (GstSrcClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_SRC);
+  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
 
   gtk_object_add_arg_type ("GstDiskSrc::location", GST_TYPE_FILENAME,
                            GTK_ARG_READWRITE, ARG_LOCATION);
@@ -227,7 +225,7 @@ gst_disksrc_get (GstPad *pad)
     gst_buffer_unref (buf);
     return NULL;
   } else if (readbytes == 0) {
-    gst_src_signal_eos (GST_SRC (src));
+    gst_element_signal_eos (GST_ELEMENT (src));
     gst_buffer_unref (buf);
     return NULL;
   }

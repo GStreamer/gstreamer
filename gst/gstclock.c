@@ -25,8 +25,8 @@
 //#define GST_DEBUG_ENABLED
 #include "gst_private.h"
 
+#include "gstelement.h"
 #include "gstclock.h"
-#include "gstsink.h"
 
 
 static GstClock *the_system_clock = NULL;
@@ -70,7 +70,7 @@ gst_clock_get_system(void)
 void 
 gst_clock_register (GstClock *clock, GstObject *obj) 
 {
-  if (GST_IS_SINK (obj)) {
+  if ((GST_ELEMENT(obj))->numsrcpads == 0) {
     DEBUG("gst_clock: setting registered sink object 0x%p\n", obj);
     clock->sinkobjects = g_list_append (clock->sinkobjects, obj);
     clock->num++;

@@ -51,7 +51,7 @@ static void gst_tee_init(GstTee *tee);
 
 //static xmlNodePtr gst_tee_save_thyself(GstElement *element,xmlNodePtr parent);
 
-static GstFilterClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 //static guint gst_tee_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
@@ -69,18 +69,18 @@ gst_tee_get_type(void) {
       (GtkArgGetFunc)NULL,
       (GtkClassInitFunc)NULL,
     };
-    tee_type = gtk_type_unique(GST_TYPE_FILTER,&tee_info);
+    tee_type = gtk_type_unique(GST_TYPE_ELEMENT,&tee_info);
   }
   return tee_type;
 }
 
 static void
 gst_tee_class_init(GstTeeClass *klass) {
-  GstFilterClass *gstfilter_class;
+  GstElementClass *gstelement_class;
 
-  gstfilter_class = (GstFilterClass*)klass;
+  gstelement_class = (GstElementClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_FILTER);
+  parent_class = gtk_type_class(GST_TYPE_ELEMENT);
 }
 
 static void gst_tee_init(GstTee *tee) {

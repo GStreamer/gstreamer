@@ -148,6 +148,7 @@ struct _GstElementClass {
   void (*new_pad) 	(GstElement *element,GstPad *pad);
   void (*new_ghost_pad) (GstElement *element,GstPad *pad);
   void (*error) 	(GstElement *element,gchar *error);
+  void (*eos)		(GstElement *element);
 
   /* change the element state */
   GstElementStateReturn (*change_state) (GstElement *element);
@@ -196,6 +197,9 @@ void 			gst_element_add_ghost_pad	(GstElement *element, GstPad *pad);
 
 void 			gst_element_connect		(GstElement *src, gchar *srcpadname,
                          				 GstElement *dest, gchar *destpadname);
+
+void			gst_element_signal_eos		(GstElement *element);
+
 
 /* called by the app to set the state of the element */
 gint 			gst_element_set_state		(GstElement *element, GstElementState state);

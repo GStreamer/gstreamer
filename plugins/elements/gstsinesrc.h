@@ -50,7 +50,7 @@ typedef struct _GstSineSrc GstSineSrc;
 typedef struct _GstSineSrcClass GstSineSrcClass;
 
 struct _GstSineSrc {
-  GstSrc src;
+  GstElement element;
 
   /* pads */
   GstPad *srcpad;
@@ -71,7 +71,7 @@ struct _GstSineSrc {
 };
 
 struct _GstSineSrcClass {
-  GstSrcClass parent_class;
+  GstElementClass parent_class;
 };
 
 GtkType gst_sinesrc_get_type(void);

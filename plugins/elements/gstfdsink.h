@@ -49,7 +49,7 @@ typedef struct _GstFdSink GstFdSink;
 typedef struct _GstFdSinkClass GstFdSinkClass;
 
 struct _GstFdSink {
-  GstSink sink;
+  GstElement element;
 
   GstPad *sinkpad;
 
@@ -57,7 +57,7 @@ struct _GstFdSink {
 };
 
 struct _GstFdSinkClass {
-  GstSinkClass parent_class;
+  GstElementClass parent_class;
 };
 
 GtkType gst_fdsink_get_type(void);

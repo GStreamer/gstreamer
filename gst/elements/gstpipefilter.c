@@ -61,7 +61,7 @@ void gst_pipefilter_chain(GstPad *pad,GstBuffer *buf);
 
 static GstElementStateReturn gst_pipefilter_change_state(GstElement *element);
 
-static GstFilterClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 //static guint gst_pipefilter_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
@@ -79,21 +79,19 @@ gst_pipefilter_get_type(void) {
       (GtkArgGetFunc)gst_pipefilter_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    pipefilter_type = gtk_type_unique(GST_TYPE_FILTER,&pipefilter_info);
+    pipefilter_type = gtk_type_unique(GST_TYPE_ELEMENT,&pipefilter_info);
   }
   return pipefilter_type;
 }
 
 static void gst_pipefilter_class_init(GstPipefilterClass *klass) {
   GtkObjectClass *gtkobject_class;
-  GstFilterClass *gstfilter_class;
   GstElementClass *gstelement_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
-  gstfilter_class = (GstFilterClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_FILTER);
+  parent_class = gtk_type_class(GST_TYPE_ELEMENT);
 
   gstelement_class->change_state = gst_pipefilter_change_state;
 

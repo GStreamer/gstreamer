@@ -46,16 +46,16 @@ extern GstElementDetails gst_disksrc_details;
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_DISKSRC))
 
 typedef enum {
-  GST_DISKSRC_OPEN		= GST_SRC_FLAG_LAST,
+  GST_DISKSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
 
-  GST_DISKSRC_FLAG_LAST		= GST_SRC_FLAG_LAST+2,
+  GST_DISKSRC_FLAG_LAST		= GST_ELEMENT_FLAG_LAST+2,
 } GstDiskSrcFlags;
 
 typedef struct _GstDiskSrc GstDiskSrc;
 typedef struct _GstDiskSrcClass GstDiskSrcClass;
 
 struct _GstDiskSrc {
-  GstSrc src;
+  GstElement element;
   /* pads */
   GstPad *srcpad;
 
@@ -72,7 +72,7 @@ struct _GstDiskSrc {
 };
 
 struct _GstDiskSrcClass {
-  GstSrcClass parent_class;
+  GstElementClass parent_class;
 };
 
 GtkType gst_disksrc_get_type(void);

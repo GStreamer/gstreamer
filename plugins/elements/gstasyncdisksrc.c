@@ -63,7 +63,7 @@ static GstBuffer *		gst_asyncdisksrc_get_region	(GstPad *pad, gulong offset, gul
 static GstElementStateReturn 	gst_asyncdisksrc_change_state	(GstElement *element);
 
 
-static GstSrcClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 //static guint gst_asyncdisksrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
@@ -82,7 +82,7 @@ gst_asyncdisksrc_get_type(void)
       (GtkArgGetFunc)gst_asyncdisksrc_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    asyncdisksrc_type = gtk_type_unique (GST_TYPE_SRC, &asyncdisksrc_info);
+    asyncdisksrc_type = gtk_type_unique (GST_TYPE_ELEMENT, &asyncdisksrc_info);
   }
   return asyncdisksrc_type;
 }
@@ -92,13 +92,11 @@ gst_asyncdisksrc_class_init (GstAsyncDiskSrcClass *klass)
 {
   GtkObjectClass *gtkobject_class;
   GstElementClass *gstelement_class;
-  GstSrcClass *gstsrc_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
-  gstsrc_class = (GstSrcClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_SRC);
+  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
 
   gtk_object_add_arg_type ("GstAsyncDiskSrc::location", GST_TYPE_FILENAME,
                            GTK_ARG_READWRITE, ARG_LOCATION);
@@ -118,7 +116,7 @@ gst_asyncdisksrc_class_init (GstAsyncDiskSrcClass *klass)
 static void 
 gst_asyncdisksrc_init (GstAsyncDiskSrc *asyncdisksrc) 
 {
-  GST_FLAG_SET (asyncdisksrc, GST_SRC_ASYNC);
+//  GST_FLAG_SET (asyncdisksrc, GST_SRC_ASYNC);
 
   g_print("init\n");
   asyncdisksrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
@@ -221,7 +219,7 @@ gst_asyncdisksrc_get (GstPad *pad)
 
   /* deal with EOF state */
   if (src->curoffset >= src->size) {
-    gst_src_signal_eos (GST_SRC (src));
+    gst_element_signal_eos (GST_ELEMENT (src));
     return NULL;
   }
 
@@ -276,7 +274,7 @@ gst_asyncdisksrc_get_region (GstPad *pad, gulong offset, gulong size)
   
   /* deal with EOF state */
   if (offset >= src->size) {
-    gst_src_signal_eos (GST_SRC (src));
+    gst_element_signal_eos (GST_ELEMENT (src));
     return NULL;
   }
 

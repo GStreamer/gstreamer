@@ -51,7 +51,7 @@ static void gst_identity_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 
 static void gst_identity_chain		(GstPad *pad, GstBuffer *buf);
 
-static GstFilterClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 //static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
@@ -70,7 +70,7 @@ gst_identity_get_type (void)
       (GtkArgGetFunc)gst_identity_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    identity_type = gtk_type_unique (GST_TYPE_FILTER, &identity_info);
+    identity_type = gtk_type_unique (GST_TYPE_ELEMENT, &identity_info);
   }
   return identity_type;
 }
@@ -79,12 +79,10 @@ static void
 gst_identity_class_init (GstIdentityClass *klass) 
 {
   GtkObjectClass *gtkobject_class;
-  GstFilterClass *gstfilter_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
-  gstfilter_class = (GstFilterClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_FILTER);
+  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
 
   gtk_object_add_arg_type ("GstIdentity::loop_based", GTK_TYPE_BOOL,
                            GTK_ARG_READWRITE, ARG_LOOP_BASED);

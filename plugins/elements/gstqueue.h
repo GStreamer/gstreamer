@@ -49,7 +49,7 @@ typedef struct _GstQueue GstQueue;
 typedef struct _GstQueueClass GstQueueClass;
 
 struct _GstQueue {
-  GstConnection Connection;
+  GstElement element;
 
   GstPad *sinkpad;
   GstPad *srcpad;
@@ -71,7 +71,7 @@ struct _GstQueue {
 };
 
 struct _GstQueueClass {
-  GstConnectionClass parent_class;
+  GstElementClass parent_class;
 };
 
 GtkType gst_queue_get_type (void);

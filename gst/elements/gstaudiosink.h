@@ -46,16 +46,16 @@ GstElementDetails gst_audiosink_details;
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOSINK))
 
 typedef enum {
-  GST_AUDIOSINK_OPEN		= GST_SINK_FLAG_LAST,
+  GST_AUDIOSINK_OPEN		= GST_ELEMENT_FLAG_LAST,
 
-  GST_AUDIOSINK_FLAG_LAST	= GST_SINK_FLAG_LAST+2,
+  GST_AUDIOSINK_FLAG_LAST	= GST_ELEMENT_FLAG_LAST+2,
 } GstAudioSinkFlags;
 
 typedef struct _GstAudioSink GstAudioSink;
 typedef struct _GstAudioSinkClass GstAudioSinkClass;
 
 struct _GstAudioSink {
-  GstSink sink;
+  GstElement element;
 
   GstPad *sinkpad;
 
@@ -71,7 +71,7 @@ struct _GstAudioSink {
 };
 
 struct _GstAudioSinkClass {
-  GstSinkClass parent_class;
+  GstElementClass parent_class;
 
   /* signals */
   void (*handoff) (GstElement *element,GstPad *pad);

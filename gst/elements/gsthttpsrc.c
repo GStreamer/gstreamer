@@ -61,7 +61,7 @@ static gboolean			gst_httpsrc_open_url	(GstHttpSrc *src);
 static void			gst_httpsrc_close_url	(GstHttpSrc *src);
 
 
-static GstSrcClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 //static guint gst_httpsrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
@@ -80,7 +80,7 @@ gst_httpsrc_get_type (void)
       (GtkArgGetFunc)gst_httpsrc_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    httpsrc_type = gtk_type_unique (GST_TYPE_SRC, &httpsrc_info);
+    httpsrc_type = gtk_type_unique (GST_TYPE_ELEMENT, &httpsrc_info);
   }
   return httpsrc_type;
 }
@@ -90,13 +90,11 @@ gst_httpsrc_class_init (GstHttpSrcClass *klass)
 {
   GtkObjectClass *gtkobject_class;
   GstElementClass *gstelement_class;
-  GstSrcClass *gstsrc_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
-  gstsrc_class = (GstSrcClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_SRC);
+  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
 
 
   gtk_object_add_arg_type ("GstHttpSrc::location", GTK_TYPE_STRING,
@@ -137,7 +135,7 @@ gst_httpsrc_get(GstPad *pad)
   readbytes = read(src->fd,GST_BUFFER_DATA(buf),src->bytes_per_read);
 
   if (readbytes == 0) {
-    gst_src_signal_eos(GST_SRC(src));
+    gst_element_signal_eos(GST_ELEMENT(src));
     return NULL;
   }
 

@@ -47,16 +47,16 @@ GstElementDetails gst_audiosrc_details;
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOSRC))
 
 typedef enum {
-  GST_AUDIOSRC_OPEN		= GST_SRC_FLAG_LAST,
+  GST_AUDIOSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
 
-  GST_AUDIOSRC_FLAG_LAST	= GST_SRC_FLAG_LAST+2,
+  GST_AUDIOSRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST+2,
 } GstAudioSrcFlags;
 
 typedef struct _GstAudioSrc GstAudioSrc;
 typedef struct _GstAudioSrcClass GstAudioSrcClass;
 
 struct _GstAudioSrc {
-  GstSrc src;
+  GstElement element;
 
   /* pads */
   GstPad *srcpad;
@@ -79,7 +79,7 @@ struct _GstAudioSrc {
 };
 
 struct _GstAudioSrcClass {
-  GstSrcClass parent_class;
+  GstElementClass parent_class;
 };
 
 GtkType gst_audiosrc_get_type(void);

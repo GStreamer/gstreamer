@@ -59,7 +59,7 @@ typedef struct _GstFakeSrc GstFakeSrc;
 typedef struct _GstFakeSrcClass GstFakeSrcClass;
 
 struct _GstFakeSrc {
-  GstSrc src;
+  GstElement element;
 
   gboolean loop_based;
   gint numsrcpads;
@@ -70,7 +70,7 @@ struct _GstFakeSrc {
 };
 
 struct _GstFakeSrcClass {
-  GstSrcClass parent_class;
+  GstElementClass parent_class;
 
   /* signals */
   void (*handoff) (GstElement *element,GstPad *pad);

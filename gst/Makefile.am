@@ -33,10 +33,6 @@ libgst_la_SOURCES =	\
 	gstbin.c	\
 	gstpipeline.c	\
 	gstthread.c	\
-	gstsrc.c	\
-	gstfilter.c	\
-	gstsink.c	\
-	gstconnection.c	\
 	gsttype.c	\
 	gstcaps.c	\
 	gstprops.c	\
@@ -65,10 +61,6 @@ libgstinclude_HEADERS =	\
 	gstbin.h	\
 	gstpipeline.h	\
 	gstthread.h	\
-	gstsrc.h	\
-	gstfilter.h	\
-	gstsink.h	\
-	gstconnection.h	\
 	gsttype.h	\
 	gstcaps.h	\
 	gstprops.h	\

@@ -25,7 +25,6 @@
 
 #include "gstpipeline.h"
 #include "gstthread.h"
-#include "gstsink.h"
 #include "gstutils.h"
 #include "gsttype.h"
 #include "gstautoplug.h"
@@ -60,7 +59,7 @@ static GstElementStateReturn 	gst_pipeline_change_state	(GstElement *element);
 
 static void 			gst_pipeline_prepare		(GstPipeline *pipeline);
 
-static void 			gst_pipeline_have_type		(GstSink *sink, GstSink *sink2, gpointer data);
+static void 			gst_pipeline_have_type		(GstElement *sink, GstElement *sink2, gpointer data);
 static void 			gst_pipeline_pads_autoplug	(GstElement *src, GstElement *sink);
 
 static GstBinClass *parent_class = NULL;
@@ -131,7 +130,7 @@ gst_pipeline_prepare (GstPipeline *pipeline)
 }
 
 static void 
-gst_pipeline_have_type (GstSink *sink, GstSink *sink2, gpointer data) 
+gst_pipeline_have_type (GstElement *sink, GstElement *sink2, gpointer data) 
 {
   DEBUG("GstPipeline: pipeline have type %p\n", (gboolean *)data);
 

@@ -44,16 +44,16 @@ GstElementDetails gst_asyncdisksrc_details;
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ASYNCDISKSRC))
 
 typedef enum {
-  GST_ASYNCDISKSRC_OPEN		= GST_SRC_FLAG_LAST,
+  GST_ASYNCDISKSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
 
-  GST_ASYNCDISKSRC_FLAG_LAST	= GST_SRC_FLAG_LAST + 2,
+  GST_ASYNCDISKSRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST + 2,
 } GstAsyncDiskSrcFlags;
 
 typedef struct _GstAsyncDiskSrc GstAsyncDiskSrc;
 typedef struct _GstAsyncDiskSrcClass GstAsyncDiskSrcClass;
 
 struct _GstAsyncDiskSrc {
-  GstSrc src;
+  GstElement element;
   /* pads */
   GstPad *srcpad;
 
@@ -75,7 +75,7 @@ struct _GstAsyncDiskSrc {
 };
 
 struct _GstAsyncDiskSrcClass {
-  GstSrcClass parent_class;
+  GstElementClass parent_class;
 };
 
 GtkType gst_asyncdisksrc_get_type(void);
