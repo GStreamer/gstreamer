@@ -93,7 +93,9 @@ gst_fakesrc_get_type (void)
 
   if (!fakesrc_type) {
     static const GTypeInfo fakesrc_info = {
-      sizeof(GstFakeSrcClass),      NULL,      NULL,
+      sizeof(GstFakeSrcClass),
+      NULL,
+      NULL,
       (GClassInitFunc)gst_fakesrc_class_init,
       NULL,
       NULL,

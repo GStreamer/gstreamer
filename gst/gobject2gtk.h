@@ -117,9 +117,17 @@ gpointer g_object_new(GtkType type,gpointer blah_varargs_stuff);
 #define GCallback					gpointer	// FIXME?
 #define G_CALLBACK(f)					((gpointer)(f))
 
-#define \
-g_signal_newc(name,type,location,offset,null1,null2,marshal,ret,count,args...) \
-gtk_signal_new(name,location,type,offset,marshal,ret,count, ## args )
+guint
+g_signal_newc (const gchar       *signal_name,
+               GtkType            object_type,
+               GtkSignalRunType   signal_flags,
+               guint              function_offset,
+               gpointer           accumulator,  // GSignalAccumulator   
+               gpointer           accu_data,
+               GtkSignalMarshaller  marshaller,
+               GType              return_type,
+               guint              nparams,
+               ...);
 
 #define \
 g_signal_emit(object,signal,detail,args...) \

@@ -218,3 +218,55 @@ g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *def,gint flags) 
   return spec;
 }
 
+
+
+guint
+g_signal_newc (const gchar       *name,
+               GtkType            object_type,
+               GtkSignalRunType   signal_flags,
+               guint              function_offset,
+               gpointer           accumulator,  // GSignalAccumulator
+               gpointer           accu_data,
+               GtkSignalMarshaller  marshaller,
+               GType              return_val,
+               guint              nparams,
+               ...)
+{
+  GtkType *params;
+  guint i;
+  va_list args;
+  guint signal_id;
+
+#define MAX_SIGNAL_PARAMS		(31)		// from gtksignal.c
+  g_return_val_if_fail (nparams < MAX_SIGNAL_PARAMS, 0);
+     
+  if (nparams > 0) 
+    {
+      params = g_new (GtkType, nparams);
+
+      va_start (args, nparams);
+                   
+      for (i = 0; i < nparams; i++)
+        params[i] = va_arg (args, GtkType);
+  
+      va_end (args);
+    }           
+  else
+    params = NULL;
+ 
+  signal_id = gtk_signal_newv (name,
+                               signal_flags,
+                               object_type,
+                               function_offset,
+                               marshaller,
+                               return_val,
+                               nparams,
+                               params);
+          
+  g_free (params);
+
+  // now register it.
+  gtk_object_class_add_signals(gtk_type_class(object_type), &signal_id, 1);
+    
+  return signal_id;
+}
