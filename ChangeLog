@@ -1,3 +1,9 @@
+2004-11-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_add_element):
+	  Re-add clock distribution hack (until new core is released).
+	  Fixes #158125.
+
 2004-11-13  Arwed v. Merkatz  <v.merkatz@gmx.net>
 	* configure.ac:
 	  fix mplex configure check segfaulting on some systems (bug #140994)
