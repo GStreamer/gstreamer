@@ -1,3 +1,21 @@
+2004-10-28  Benjamin Otte  <otte@gnome.org>
+
+	* gst-libs/gst/audio/gstaudiofilter.c: (gst_audiofilter_link):
+	  fix link function to always query channels and query width for
+	  floats
+	* configure.ac:
+	  add equalizer dir
+	* gst/equalizer/Makefile.am:
+	* gst/equalizer/gstiirequalizer.c: (gst_iir_equalizer_get_type),
+	(gst_iir_equalizer_base_init), (gst_iir_equalizer_class_init),
+	(gst_iir_equalizer_init), (gst_iir_equalizer_finalize),
+	(arg_to_scale), (setup_filter),
+	(gst_iir_equalizer_compute_frequencies),
+	(gst_iir_equalizer_set_property), (gst_iir_equalizer_get_property),
+	(gst_iir_equalizer_filter_inplace), (gst_iir_equalizer_setup),
+	(plugin_init):
+	  add an equalizer  
+
 2004-10-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	Submitted by: Kjartan Maraas <kmaraas@broadpark.no>
