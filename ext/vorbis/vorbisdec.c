@@ -52,9 +52,11 @@ GST_STATIC_PAD_TEMPLATE (
       "rate = (int) [ 11025, 48000 ], "
       "channels = (int) [ 1, 2 ], "
       "endianness = (int) BYTE_ORDER, "
+/* no ifdef in macros, please
 #ifdef GST_VORBIS_DEC_SEQUENTIAL
       "layout = \"sequential\", "
 #endif
+*/
       "width = (int) 32, "
       "buffer-frames = (int) 0"
   )
