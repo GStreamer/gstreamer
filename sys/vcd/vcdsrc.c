@@ -303,7 +303,7 @@ vcdsrc_open_file(VCDSrc *src)
   /* open the device */
   src->fd = open(src->device,O_RDONLY);
   if (src->fd < 0) {
-    gst_element_error (src, RESOURCE, OPEN_READ, NULL, GST_ERROR_SYSTEM);
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, NULL, GST_ERROR_SYSTEM);
     return FALSE;
   }
 

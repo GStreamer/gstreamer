@@ -346,7 +346,7 @@ gst_afsink_open_file (GstAFSink *sink)
   sink->file = afOpenFile (sink->filename, "w", outfilesetup);
   if (sink->file == AF_NULL_FILEHANDLE)
   {
-   gst_element_error (sink, RESOURCE, OPEN_WRITE,
+   GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
                          (_("Could not open file \"%s\" for writing"), sink->filename),
                          ("system error: %s", strerror (errno)));
     return FALSE;
@@ -369,7 +369,7 @@ gst_afsink_close_file (GstAFSink *sink)
 /*  if (fclose (sink->file) != 0) */
   if (afCloseFile (sink->file) != 0)
   {
-    gst_element_error (sink, RESOURCE, CLOSE,
+    GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
                        (_("Error closing file \"%s\""), sink->filename),
                        GST_ERROR_SYSTEM);
   }

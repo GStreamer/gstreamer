@@ -575,7 +575,7 @@ gst_modplug_loop (GstElement *element)
     
     if (!GST_PAD_CAPS (modplug->srcpad) &&
         modplug_negotiate (modplug) <= 0) {
-      gst_element_error (modplug, CORE, NEGOTIATION, (NULL), (NULL));
+      GST_ELEMENT_ERROR (modplug, CORE, NEGOTIATION, (NULL), (NULL));
       return;
     }
         

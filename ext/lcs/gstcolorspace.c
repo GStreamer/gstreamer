@@ -316,7 +316,7 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
     peercaps = peercaps->next;
   }
   
-  gst_element_error (space, CORE, NEGOTIATION, NULL, NULL);
+  GST_ELEMENT_ERROR (space, CORE, NEGOTIATION, NULL, NULL);
   /* we disable ourself here */
   space->disabled = TRUE;
 

@@ -295,7 +295,7 @@ gst_divxenc_setup (GstDivxEnc *divxenc)
   output.temporal_level = 1.0;
 
   if ((ret = encore(&handle, ENC_OPT_INIT, &input, &output))) {
-    gst_element_error (divxenc, LIBRARY, SETTINGS, NULL,
+    GST_ELEMENT_ERROR (divxenc, LIBRARY, SETTINGS, NULL,
                        ("Error setting up divx encoder: %s (%d)",
                         gst_divxenc_error(ret), ret));
     return FALSE;
@@ -357,7 +357,7 @@ gst_divxenc_chain (GstPad    *pad,
 
   if ((ret = encore(divxenc->handle, ENC_OPT_ENCODE,
                     &xframe, &xres))) {
-    gst_element_error (divxenc, LIBRARY, ENCODE, NULL,
+    GST_ELEMENT_ERROR (divxenc, LIBRARY, ENCODE, NULL,
                        ("Error encoding divx frame: %s (%d)",
                         gst_divxenc_error(ret), ret));
     gst_buffer_unref(buf);

@@ -316,7 +316,7 @@ gst_afsrc_open_file (GstAFSrc *src)
   src->file = afOpenFile (src->filename, "r", AF_NULL_FILESETUP);
   if (src->file == AF_NULL_FILEHANDLE)
   {
-     gst_element_error (src, RESOURCE, OPEN_READ,
+     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
                         (_("Could not open file \"%s\" for reading"), src->filename),
                         ("system error: %s", strerror (errno)));
     return FALSE;
@@ -374,7 +374,7 @@ gst_afsrc_close_file (GstAFSrc *src)
 /*  if (fclose (src->file) != 0) 	*/
   if (afCloseFile (src->file) != 0)
   {
-    gst_element_error (src, RESOURCE, CLOSE,
+    GST_ELEMENT_ERROR (src, RESOURCE, CLOSE,
                        (_("Error closing file \"%s\""), src->filename),
                        GST_ERROR_SYSTEM);
   } else {

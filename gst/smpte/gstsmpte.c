@@ -371,7 +371,7 @@ gst_smpte_loop (GstElement *element)
 	  "framerate", G_TYPE_DOUBLE, smpte->fps, NULL);
 
       if (!gst_pad_try_set_caps (smpte->srcpad, caps)) {
-        gst_element_error (smpte, CORE, NEGOTIATION, NULL, NULL);
+        GST_ELEMENT_ERROR (smpte, CORE, NEGOTIATION, NULL, NULL);
         return;
       }
     }
