@@ -168,6 +168,25 @@ AC_MSG_RESULT(no)
 )
 
 
+AC_MSG_CHECKING(for large file support)
+AC_TRY_RUN([
+#define _LARGEFILE_SOURCE
+#define _FILE_OFFSET_BITS 64
+#include <sys/types.h>
+int main () { return !(sizeof(off_t) == 8); }
+],
+[
+AC_MSG_RESULT(yes)
+CORE_CFLAGS="$CORE_CFLAGS -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
+GST_DEFINE_CFLAGS="$GST_DEFINE_CFLAGS -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
+],
+[
+AC_MSG_RESULT(no)
+],
+[
+AC_MSG_RESULT(no)
+])
+
 
 dnl Check for essential libraries first:
 dnl ====================================
