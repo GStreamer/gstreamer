@@ -57,6 +57,8 @@ struct _GstOssClock {
   GstClockTime prev1, prev2;
   GstClockTimeDiff adjust;
 
+  GSList *async_entries;
+
   gboolean active;
 };
 
@@ -64,11 +66,13 @@ struct _GstOssClockClass {
   GstSystemClockClass parent_class;
 };
 
-GType                   gst_oss_clock_get_type 		(void);
-GstOssClock*		gst_oss_clock_new		(gchar *name, GstOssClockGetTimeFunc func,
-							 gpointer user_data);
-void			gst_oss_clock_set_active 	(GstClock *clock, gboolean active);
-void 			gst_oss_clock_set_time 		(GstClock *clock, GstClockTime time);
+GType           gst_oss_clock_get_type 		(void);
+GstOssClock*	gst_oss_clock_new		(gchar *name, GstOssClockGetTimeFunc func,
+                                                 gpointer user_data);
+void		gst_oss_clock_set_active 	(GstClock *clock, gboolean active);
+void 		gst_oss_clock_set_time 		(GstClock *clock, GstClockTime time);
+
+void		gst_oss_clock_update_time	(GstClock *clock, GstClockTime time);
 
 #ifdef __cplusplus
 }

@@ -25,7 +25,11 @@
 static void 		gst_oss_clock_class_init 	(GstOssClockClass *klass);
 static void 		gst_oss_clock_init 		(GstOssClock *clock);
 
-static GstClockTime	gst_oss_clock_get_internal_time 		(GstClock *clock);
+static GstClockTime	gst_oss_clock_get_internal_time (GstClock *clock);
+static GstClockReturn	gst_oss_clock_id_wait_async	(GstClock *clock,
+                                                         GstClockEntry *entry);
+static void		gst_oss_clock_id_unschedule	(GstClock *clock,
+                                                         GstClockEntry *entry);
 
 static GstSystemClockClass *parent_class = NULL;
 /* static guint gst_oss_clock_signals[LAST_SIGNAL] = { 0 }; */
@@ -68,7 +72,9 @@ gst_oss_clock_class_init (GstOssClockClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_SYSTEM_CLOCK);
 
-  gstclock_class->get_internal_time =	gst_oss_clock_get_internal_time;
+  gstclock_class->get_internal_time	= gst_oss_clock_get_internal_time;
+  gstclock_class->wait_async		= gst_oss_clock_id_wait_async;
+  gstclock_class->unschedule		= gst_oss_clock_id_unschedule;
 }
 
 static void
@@ -137,3 +143,49 @@ gst_oss_clock_get_internal_time (GstClock *clock)
   }
 }
 
+void
+gst_oss_clock_update_time (GstClock *clock, GstClockTime time)
+{
+  GstOssClock *oss_clock = (GstOssClock*)clock;
+
+  while (oss_clock->async_entries) {
+    GstClockEntry *entry = (GstClockEntry*)oss_clock->async_entries->data;
+    
+    if (entry->time > time)
+      break;
+
+    entry->func (clock, time, entry, entry->user_data);
+
+    oss_clock->async_entries = g_slist_delete_link (oss_clock->async_entries,
+                                                    oss_clock->async_entries);
+    /* do I need to free the entry? */
+  }
+}
+
+static gint
+compare_clock_entries (GstClockEntry *entry1, GstClockEntry *entry2)
+{
+  return entry1->time - entry2->time;
+}
+
+static GstClockReturn
+gst_oss_clock_id_wait_async (GstClock *clock, GstClockEntry *entry)
+{
+  GstOssClock *oss_clock = (GstOssClock*)clock;
+  
+  oss_clock->async_entries = g_slist_insert_sorted (oss_clock->async_entries,
+                                                    entry,
+                                                    (GCompareFunc)compare_clock_entries);
+
+  /* is this the proper return val? */
+  return GST_CLOCK_EARLY;
+}
+
+static void
+gst_oss_clock_id_unschedule (GstClock *clock, GstClockEntry *entry)
+{
+  GstOssClock *oss_clock = (GstOssClock*)clock;
+  
+  oss_clock->async_entries = g_slist_remove (oss_clock->async_entries,
+                                             entry);
+}

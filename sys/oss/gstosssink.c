@@ -61,7 +61,7 @@ static gboolean 		gst_osssink_query 		(GstElement *element, GstQueryType type,
 static gboolean 		gst_osssink_sink_query 		(GstPad *pad, GstQueryType type,
 								 GstFormat *format, gint64 *value);
 
-static GstPadLinkReturn	gst_osssink_sinkconnect		(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn		gst_osssink_sinkconnect		(GstPad *pad, GstCaps *caps);
 
 static void 			gst_osssink_set_property	(GObject *object, guint prop_id, const GValue *value, 
 		  						 GParamSpec *pspec);
@@ -187,10 +187,10 @@ gst_osssink_class_init (GstOssSinkClass *klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DEVICE,
     g_param_spec_string ("device", "Device", "The device to use for output",
-                         "/dev/dsp", G_PARAM_READWRITE)); /* CHECKME! */
+                         "/dev/dsp", G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MUTE,
     g_param_spec_boolean ("mute", "Mute", "Mute the audio",
-                          TRUE, G_PARAM_READWRITE)); 
+                          FALSE, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
     g_param_spec_boolean ("sync", "Sync", "If syncing on timestamps should be enabled",
                           TRUE, G_PARAM_READWRITE)); 
@@ -199,7 +199,7 @@ gst_osssink_class_init (GstOssSinkClass *klass)
 	    	      "The fragment as 0xMMMMSSSS (MMMM = total fragments, 2^SSSS = fragment size)",
                       0, G_MAXINT, 6, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFER_SIZE,
-    g_param_spec_uint ("buffer_size", "Buffer size", "The buffer size",
+    g_param_spec_uint ("buffer_size", "Buffer size", "Size of buffers in osssink's bufferpool (bytes)",
                        0, G_MAXINT, 4096, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CHUNK_SIZE,
     g_param_spec_uint ("chunk_size", "Chunk size", "Write data in chunk sized buffers",
@@ -242,6 +242,7 @@ gst_osssink_init (GstOssSink *osssink)
   osssink->bufsize = 4096;
   osssink->chunk_size = 4096;
   osssink->resync = FALSE;
+  osssink->mute = FALSE;
   osssink->sync = TRUE;
   osssink->sinkpool = NULL;
   osssink->provided_clock = GST_CLOCK (gst_oss_clock_new ("ossclock", gst_osssink_get_time, osssink));
@@ -439,6 +440,10 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
       }
     }
   }
+
+  if (osssink->clock)
+    gst_oss_clock_update_time (osssink->clock, buftime);
+
   gst_buffer_unref (buf);
 }
 
