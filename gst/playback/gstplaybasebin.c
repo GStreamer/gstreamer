@@ -398,6 +398,20 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
     no_more_pads (NULL, play_base_bin);
 }
 
+/*
+ * Cache errors...
+ */
+
+static void
+thread_error (GstElement * element,
+    GstElement * orig, GError * error, const gchar * debug, gpointer data)
+{
+  GError **_error = data;
+
+  if (!*_error)
+    *_error = g_error_copy (error);
+}
+
 /* signal fired when the internal thread performed an unexpected  
  * state change. This usually indicated an error occured. We stop the
  * preroll stage.
@@ -423,7 +437,7 @@ state_change (GstElement * element,
  * all the streams or until a preroll queue has been filled.
  */
 static gboolean
-setup_source (GstPlayBaseBin * play_base_bin)
+setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
 {
   GstElement *old_src;
   GstElement *old_dec;
@@ -521,7 +535,7 @@ setup_source (GstPlayBaseBin * play_base_bin)
 
   {
     gboolean res;
-    gint sig1, sig2, sig3, sig4;
+    gint sig1, sig2, sig3, sig4, sig5;
 
     /* now create the decoder element */
     play_base_bin->decoder = gst_element_factory_make ("decodebin", "decoder");
@@ -547,6 +561,8 @@ setup_source (GstPlayBaseBin * play_base_bin)
         G_CALLBACK (no_more_pads), play_base_bin);
     sig3 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "unknown-type",
         G_CALLBACK (unknown_type), play_base_bin);
+    sig4 = g_signal_connect (G_OBJECT (play_base_bin->thread), "error",
+        G_CALLBACK (thread_error), error);
 
     /* either when the queues are filled or when the decoder element has no more
      * dynamic streams, the cond is unlocked. We can remove the signal handlers then
@@ -557,7 +573,7 @@ setup_source (GstPlayBaseBin * play_base_bin)
       GList *prerolls;
 
       GST_DEBUG ("waiting for preroll...");
-      sig4 = g_signal_connect (G_OBJECT (play_base_bin->thread),
+      sig5 = g_signal_connect (G_OBJECT (play_base_bin->thread),
           "state-change", G_CALLBACK (state_change), play_base_bin);
       g_cond_wait (play_base_bin->preroll_cond, play_base_bin->preroll_lock);
       GST_DEBUG ("preroll done !");
@@ -577,12 +593,13 @@ setup_source (GstPlayBaseBin * play_base_bin)
       }
     } else {
       GST_DEBUG ("state change failed, media cannot be loaded");
-      sig4 = 0;
+      sig5 = 0;
     }
     g_mutex_unlock (play_base_bin->preroll_lock);
 
-    if (sig4 != 0)
-      g_signal_handler_disconnect (G_OBJECT (play_base_bin->thread), sig4);
+    if (sig5 != 0)
+      g_signal_handler_disconnect (G_OBJECT (play_base_bin->thread), sig5);
+    g_signal_handler_disconnect (G_OBJECT (play_base_bin->thread), sig4);
     g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig3);
     g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig2);
     g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig1);
@@ -707,19 +724,72 @@ gst_play_base_bin_change_state (GstElement * element)
     }
     case GST_STATE_READY_TO_PAUSED:
     {
-      if (!setup_source (play_base_bin)) {
-        GST_ELEMENT_ERROR (GST_ELEMENT (play_base_bin), STREAM,
-            CODEC_NOT_FOUND,
-            ("cannot open file \"%s\"", play_base_bin->uri), (NULL));
-        ret = GST_STATE_FAILURE;
-      } else if (!play_base_bin->streaminfo) {
-        GST_ELEMENT_ERROR (GST_ELEMENT (play_base_bin), STREAM,
-            CODEC_NOT_FOUND,
-            ("Failed to find any supported stream in file \"%s\"",
-                play_base_bin->uri), (NULL));
+      GError *error = NULL;
+
+      if (!setup_source (play_base_bin, &error) || error != NULL) {
+        if (!error) {
+          /* opening failed but no error - hellup */
+          GST_ELEMENT_ERROR (GST_ELEMENT (play_base_bin), STREAM,
+              NOT_IMPLEMENTED,
+              ("cannot open file \"%s\"", play_base_bin->uri), (NULL));
+        } else {
+          /* just copy the cached error - type doesn't matter */
+          GST_ELEMENT_ERROR (play_base_bin, STREAM, TOO_LAZY,
+              (error->message), (NULL));
+          g_error_free (error);
+        }
         ret = GST_STATE_FAILURE;
       } else {
-        ret = gst_element_set_state (play_base_bin->thread, GST_STATE_PAUSED);
+        const GList *item;
+        gboolean stream_found = FALSE, no_media = FALSE;
+
+        /* check if we found any supported stream... if not, then
+         * we detected stream type (or the above would've failed),
+         * but linking/decoding failed - plugin probably missing. */
+        for (item = play_base_bin->streaminfo; item != NULL; item = item->next) {
+          GstStreamInfo *info = GST_STREAM_INFO (item->data);
+
+          if (info->type != GST_STREAM_TYPE_UNKNOWN) {
+            stream_found = TRUE;
+            break;
+          } else if (!item->prev && !item->next) {
+            /* We're no audio/video and the only stream... We could
+             * be something not-media that's detected because then our
+             * typefind doesn't mess up with mp3 (bz2, gz, elf, ...) */
+            if (GST_IS_PAD (info->object)) {
+              const GstCaps *caps = GST_PAD_CAPS (GST_PAD (info->object));
+
+              if (caps) {
+                const gchar *mime =
+                    gst_structure_get_name (gst_caps_get_structure (caps, 0));
+
+                if (!strcmp (mime, "application/x-executable") ||
+                    !strcmp (mime, "application/x-bzip") ||
+                    !strcmp (mime, "application/x-gzip") ||
+                    !strcmp (mime, "application/zip") ||
+                    !strcmp (mime, "application/x-compress")) {
+                  no_media = TRUE;
+                }
+              }
+            }
+          }
+        }
+
+        if (!stream_found) {
+          if (!no_media) {
+            GST_ELEMENT_ERROR (play_base_bin, STREAM, CODEC_NOT_FOUND,
+                ("There were no decoders found to handle the stream in file "
+                    "\"%s\", you might need to install the corresponding plugins",
+                    play_base_bin->uri), (NULL));
+          } else {
+            GST_ELEMENT_ERROR (play_base_bin, STREAM, WRONG_TYPE,
+                ("File \"%s\" is not a media file", play_base_bin->uri),
+                (NULL));
+          }
+          ret = GST_STATE_FAILURE;
+        } else {
+          ret = gst_element_set_state (play_base_bin->thread, GST_STATE_PAUSED);
+        }
       }
       if (ret == GST_STATE_SUCCESS) {
         /* error forwarding:
