@@ -1288,6 +1288,7 @@ test/xml/Makefile
 test/bindings/Makefile
 test/misc/Makefile
 test/memchunk/Makefile
+test/events/Makefile
 tests/Makefile
 tests/sched/Makefile
 tests/eos/Makefile
