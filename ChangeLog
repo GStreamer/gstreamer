@@ -1,3 +1,8 @@
+2004-12-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	  Fix up.
+
 2004-12-22  Archana Shah  <archana.shah@wipro.com>
 
 	Reviewed by:  Ronald S. Bultje <rbultje@ronald.bitfreak.net>
