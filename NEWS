@@ -20,7 +20,7 @@ Changes since 0.7.4:
       * fixed navigation event handling
       * added codec and volume tags
 
-Bugs fixed since 0.7.5:
+Bugs fixed since 0.7.4:
     
       * 105844 : --disable-loadsave --disable-registry still check for libxml
       * 118310 : Timeout support added for fdsrc
