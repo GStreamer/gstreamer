@@ -299,9 +299,10 @@ gst_bytestream_peek (GstByteStream *bs, GstBuffer **buf, guint32 len)
     bs_print ("peek: there are enough bytes in headbuf (need %d, have %d)", len, bs->headbufavail);
     /* create a sub-buffer of the headbuf */
     retbuf = gst_buffer_create_sub (headbuf, GST_BUFFER_SIZE (headbuf) - bs->headbufavail, len);
+    GST_BUFFER_OFFSET (retbuf) = GST_BUFFER_OFFSET (headbuf) + GST_BUFFER_SIZE (headbuf) - bs->headbufavail;
 
-    /* otherwise we need to figure out how to assemble one */
   }
+  /* otherwise we need to figure out how to assemble one */
   else {
     bs_print ("peek: current buffer is not big enough for len %d", len);
 
@@ -380,8 +381,8 @@ gst_bytestream_peek_bytes (GstByteStream *bs, guint8** data, guint32 len)
     /* create a sub-buffer of the headbuf */
     *data = GST_BUFFER_DATA (headbuf) + (GST_BUFFER_SIZE (headbuf) - bs->headbufavail);
 
-    /* otherwise we need to figure out how to assemble one */
   }
+  /* otherwise we need to figure out how to assemble one */
   else {
     bs_print ("peek_bytes: current buffer is not big enough for len %d", len);
 

@@ -60,12 +60,18 @@ extern GType _gst_buffer_pool_type;
 #define GST_BUFFER_SIZE(buf)			(GST_BUFFER(buf)->size)
 #define GST_BUFFER_MAXSIZE(buf)			(GST_BUFFER(buf)->maxsize)
 #define GST_BUFFER_TIMESTAMP(buf)		(GST_BUFFER(buf)->timestamp)
+#define GST_BUFFER_DURATION(buf)		(GST_BUFFER(buf)->duration)
 #define GST_BUFFER_FORMAT(buf)			(GST_BUFFER(buf)->format)
 #define GST_BUFFER_OFFSET(buf)			(GST_BUFFER(buf)->offset)
 #define GST_BUFFER_BUFFERPOOL(buf)		(GST_BUFFER(buf)->pool)
 #define GST_BUFFER_POOL_PRIVATE(buf)		(GST_BUFFER(buf)->pool_private)
 
+#define GST_BUFFER_OFFSET_NONE	((guint64)-1)
+#define GST_BUFFER_MAXSIZE_NONE	((guint)0)
+
 #define GST_BUFFER_TIMESTAMP_IS_VALID(buffer)	(GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer)))
+#define GST_BUFFER_OFFSET_IS_VALID(buffer)	(GST_BUFFER_OFFSET (buffer) != GST_BUFFER_OFFSET_NONE)
+#define GST_BUFFER_MAXSIZE_IS_VALID(buffer)	(GST_BUFFER_MAXSIZE (buffer) != GST_BUFFER_MAXSIZE_NONE)
 
 typedef enum {
   GST_BUFFER_READONLY   = GST_DATA_READONLY,
@@ -84,11 +90,17 @@ struct _GstBuffer {
   /* pointer to data and its size */
   guint8 		*data;			/* pointer to buffer data */
   guint 		 size;			/* size of buffer data */
-  guint64		 maxsize;		/* max size of this buffer */
+  guint			 maxsize;		/* max size of this buffer */
 
   /* timestamp */
   GstClockTime		 timestamp;		
-  /* media specific offset */
+  GstClockTime		 duration;		
+
+  /* media specific offset
+   * for video frames, this could be the number of frames,
+   * for audio data, this could be the number of audio samples,
+   * for file data or compressed data, this could be the number of bytes
+   */
   guint64		 offset;
 
   /* this is a pointer to the buffer pool (if any) */

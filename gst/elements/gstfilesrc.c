@@ -450,6 +450,7 @@ gst_filesrc_map_small_region (GstFileSrc *src, off_t offset, size_t size)
       return NULL;
 
     ret = gst_buffer_create_sub (map, offset - mapbase, size);
+    GST_BUFFER_OFFSET (ret) = GST_BUFFER_OFFSET (map) + offset - mapbase;
 
     gst_buffer_unref (map);
 
@@ -489,7 +490,7 @@ gst_filesrc_get (GstPad *pad)
 {
   GstFileSrc *src;
   GstBuffer *buf = NULL, *map;
-  size_t readsize;
+  size_t readsize, mapsize;
   off_t readend,mapstart,mapend;
   GstFileSrcRegion region;
   int i;
@@ -526,8 +527,9 @@ gst_filesrc_get (GstPad *pad)
   /* calculate end pointers so we don't have to do so repeatedly later */
   readsize = src->block_size;
   readend = src->curoffset + src->block_size;		/* note this is the byte *after* the read */
-  mapstart = GST_BUFFER_OFFSET(src->mapbuf);
-  mapend = mapstart + GST_BUFFER_SIZE(src->mapbuf);	/* note this is the byte *after* the map */
+  mapstart = GST_BUFFER_OFFSET (src->mapbuf);
+  mapsize = GST_BUFFER_SIZE (src->mapbuf);
+  mapend = mapstart + mapsize;			/* note this is the byte *after* the map */
 
   /* check to see if we're going to overflow the end of the file */
   if (readend > src->filelen) {
@@ -545,14 +547,15 @@ gst_filesrc_get (GstPad *pad)
     /* ('cause by definition if readend is in the buffer, so's readstart) */
     if (readend <= mapend) {
       fs_print ("read buf %llu+%d lives in current mapbuf %lld+%d, creating subbuffer of mapbuf\n",
-             src->curoffset, readsize, mapstart, GST_BUFFER_SIZE(src->mapbuf));
-      buf = gst_buffer_create_sub (src->mapbuf, src->curoffset - GST_BUFFER_OFFSET(src->mapbuf),
+             src->curoffset, readsize, mapstart, mapsize);
+      buf = gst_buffer_create_sub (src->mapbuf, src->curoffset - mapstart,
                                    readsize);
+      GST_BUFFER_OFFSET (buf) = src->curoffset;
 
     /* if the start actually is within the current mmap region, map an overlap buffer */
     } else if (src->curoffset < mapend) {
       fs_print ("read buf %llu+%d starts in mapbuf %d+%d but ends outside, creating new mmap\n",
-             src->curoffset,readsize,GST_BUFFER_OFFSET(src->mapbuf),GST_BUFFER_SIZE(src->mapbuf));
+             src->curoffset, readsize, mapstart, mapsize);
       buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
       if (buf == NULL)
         return NULL;
@@ -567,7 +570,7 @@ gst_filesrc_get (GstPad *pad)
     /* or the read buffer fully contains the current mmap region    */
     /* either way, it's really not relevant, we just create a new region anyway*/
     fs_print ("read buf %llu+%d starts before mapbuf %d+%d, but overlaps it\n",
-             src->curoffset,readsize,GST_BUFFER_OFFSET(src->mapbuf),GST_BUFFER_SIZE(src->mapbuf));
+             src->curoffset,readsize, mapstart, mapsize);
     buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
     if (buf == NULL)
       return NULL;
@@ -587,6 +590,7 @@ gst_filesrc_get (GstPad *pad)
     if (map != NULL) {
       fs_print ("found mapbuf at %d+%d, creating subbuffer\n",GST_BUFFER_OFFSET(map),GST_BUFFER_SIZE(map));
       buf = gst_buffer_create_sub (map, src->curoffset - GST_BUFFER_OFFSET(map), readsize);
+      GST_BUFFER_OFFSET (buf) = src->curoffset;
 
     /* otherwise we need to create something out of thin air */
     } else {
@@ -621,6 +625,7 @@ gst_filesrc_get (GstPad *pad)
 
         /* subbuffer it */
         buf = gst_buffer_create_sub (src->mapbuf, src->curoffset - nextmap, readsize);
+        GST_BUFFER_OFFSET (buf) = mapstart + src->curoffset - nextmap;
       }
     }
   }

@@ -165,8 +165,9 @@ gst_buffer_default_copy (GstBuffer *buffer)
   GST_BUFFER_DATA (copy) 	 = g_memdup (GST_BUFFER_DATA (buffer), 
                                              GST_BUFFER_SIZE (buffer));
   GST_BUFFER_SIZE (copy)  	 = GST_BUFFER_SIZE (buffer);
-  GST_BUFFER_MAXSIZE (copy) 	 = GST_BUFFER_MAXSIZE (buffer);
+  GST_BUFFER_MAXSIZE (copy) 	 = GST_BUFFER_SIZE (buffer);
   GST_BUFFER_TIMESTAMP (copy) 	 = GST_BUFFER_TIMESTAMP (buffer);
+  GST_BUFFER_DURATION (copy) 	 = GST_BUFFER_DURATION (buffer);
   GST_BUFFER_OFFSET (copy) 	 = GST_BUFFER_OFFSET (buffer);
   GST_BUFFER_BUFFERPOOL (copy)   = NULL;
   GST_BUFFER_POOL_PRIVATE (copy) = NULL;
@@ -184,30 +185,31 @@ gst_buffer_default_copy (GstBuffer *buffer)
 GstBuffer*
 gst_buffer_new (void)
 {
-  GstBuffer *buf;
+  GstBuffer *newbuf;
   
-  buf = gst_mem_chunk_alloc (chunk);
+  newbuf = gst_mem_chunk_alloc (chunk);
 #ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_new (_gst_buffer_trace, buf);
+  gst_alloc_trace_new (_gst_buffer_trace, newbuf);
 #endif
 
-  GST_DEBUG (GST_CAT_BUFFER, "new %p", buf);
+  GST_DEBUG (GST_CAT_BUFFER, "new %p", newbuf);
 
-  _GST_DATA_INIT (GST_DATA (buf), 
+  _GST_DATA_INIT (GST_DATA (newbuf), 
 		  _gst_buffer_type,
 		  0,
 		  (GstDataFreeFunction) gst_buffer_default_free,
 		  (GstDataCopyFunction) gst_buffer_default_copy);
 
-  GST_BUFFER_DATA (buf)         = NULL;
-  GST_BUFFER_SIZE (buf)         = 0;
-  GST_BUFFER_MAXSIZE (buf)      = 0;
-  GST_BUFFER_TIMESTAMP (buf)    = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_OFFSET (buf)       = 0;
-  GST_BUFFER_BUFFERPOOL (buf)   = NULL;
-  GST_BUFFER_POOL_PRIVATE (buf) = NULL;
+  GST_BUFFER_DATA (newbuf)         = NULL;
+  GST_BUFFER_SIZE (newbuf)         = 0;
+  GST_BUFFER_MAXSIZE (newbuf)      = GST_BUFFER_MAXSIZE_NONE;
+  GST_BUFFER_TIMESTAMP (newbuf)    = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DURATION (newbuf)     = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET (newbuf)       = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_BUFFERPOOL (newbuf)   = NULL;
+  GST_BUFFER_POOL_PRIVATE (newbuf) = NULL;
 
-  return buf;
+  return newbuf;
 }
 
 /**
@@ -221,14 +223,15 @@ gst_buffer_new (void)
 GstBuffer*
 gst_buffer_new_and_alloc (guint size)
 {
-  GstBuffer *new;
+  GstBuffer *newbuf;
 
-  new = gst_buffer_new ();
+  newbuf = gst_buffer_new ();
 
-  GST_BUFFER_DATA (new) = g_malloc (size);
-  GST_BUFFER_SIZE (new) = size;
+  GST_BUFFER_DATA (newbuf)    = g_malloc (size);
+  GST_BUFFER_SIZE (newbuf)    = size;
+  GST_BUFFER_MAXSIZE (newbuf) = size;
 
-  return new;
+  return newbuf;
 }
 
 /**
@@ -275,6 +278,9 @@ gst_buffer_new_from_pool (GstBufferPool *pool,
  *
  * Creates a sub-buffer from the parent at a given offset.
  * This sub-buffer uses the actual memory space of the parent buffer.
+ * This function will copy the offset and timestamp field when the 
+ * offset is 0, else they are set to _NONE.
+ * The duration field of the new buffer are set to GST_CLOCK_TIME_NONE.
  *
  * Returns: the new #GstBuffer, or NULL if there was an error.
  */
@@ -283,7 +289,6 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
 {
   GstBuffer *buffer;
   gpointer buffer_data;
-  guint64 parent_offset;
 	      
   g_return_val_if_fail (parent != NULL, NULL);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (parent) > 0, NULL);
@@ -292,7 +297,6 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
 
   /* remember the data for the new buffer */
   buffer_data = parent->data + offset;
-  parent_offset = GST_BUFFER_OFFSET (parent);
   /* make sure we're child not child from a child buffer */
   while (GST_BUFFER_FLAG_IS_SET (parent, GST_BUFFER_SUBBUFFER)) {
     parent = GST_BUFFER (parent->pool_private);
@@ -323,10 +327,20 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
   GST_BUFFER_DATA (buffer)         = buffer_data;
   GST_BUFFER_SIZE (buffer)         = size;
   GST_BUFFER_MAXSIZE (buffer)      = size;
-  GST_BUFFER_TIMESTAMP (buffer)    = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_OFFSET (buffer)       = parent_offset + offset;
   GST_BUFFER_BUFFERPOOL (buffer)   = NULL;
   GST_BUFFER_POOL_PRIVATE (buffer) = parent;
+  /* we can copy the timestamp and offset if the new buffer starts at
+   * offset 0 */
+  if (offset == 0) {
+    GST_BUFFER_TIMESTAMP (buffer)    = GST_BUFFER_TIMESTAMP (parent);
+    GST_BUFFER_OFFSET (buffer)       = GST_BUFFER_OFFSET (parent);
+  }
+  else {
+    GST_BUFFER_TIMESTAMP (buffer)    = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_OFFSET (buffer)       = GST_BUFFER_OFFSET_NONE;
+  }
+
+  GST_BUFFER_DURATION (buffer)     = GST_CLOCK_TIME_NONE;
 
   return buffer;
 }
@@ -411,6 +425,7 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
   g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buf1) > 0, NULL);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buf2) > 0, NULL);
   g_return_val_if_fail (len > 0, NULL);
+  g_return_val_if_fail (len <= buf1->size + buf2->size - offset, NULL);
 
   /* if the two buffers have the same parent and are adjacent */
   if (gst_buffer_is_span_fast (buf1, buf2)) {
@@ -425,18 +440,24 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
     /* otherwise we simply have to brute-force copy the buffers */
     newbuf = gst_buffer_new_and_alloc (len);
 
-    /* copy relevant stuff from data struct of buffer1 */
-    GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET (buf1) + offset;
-
     /* copy the first buffer's data across */
     memcpy (newbuf->data, buf1->data + offset, buf1->size - offset);
     /* copy the second buffer's data across */
     memcpy (newbuf->data + (buf1->size - offset), buf2->data, 
 	    len - (buf1->size - offset));
+    /* if the offset is 0, the new buffer has the same timestamp as buf1 */
+    if (offset == 0) {
+      GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET (buf1);
+      GST_BUFFER_TIMESTAMP (newbuf) = GST_BUFFER_TIMESTAMP (buf1);
+    }
   }
-  /* if the offset is 0, the new buffer has the same timestamp as buf1 */
-  if (offset == 0)
-    GST_BUFFER_TIMESTAMP (newbuf) = GST_BUFFER_TIMESTAMP (buf1);
+  /* if we completely merged the two buffers (appended), we can
+   * calculate the duration too */
+  if (offset == 0 && buf1->size + buf2->size == len) {
+    /* add duration */
+    GST_BUFFER_DURATION (newbuf) = GST_BUFFER_DURATION (buf1) + 
+                                   GST_BUFFER_DURATION (buf2);
+  }
 
   return newbuf;
 }
