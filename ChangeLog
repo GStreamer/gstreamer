@@ -1,4 +1,10 @@
+2004-09-12  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
+
+	* configure.ac : change speex detection as 1.1.6 now uses
+	  .pc/pkg-config and they changed their headers location.
+
 2004-09-09  Arwed v. Merkatz  <v.merkatz@gmx.net>
+
 	* gst/matroska/matroska-mux.h:
 	* gst/matroska/matroska-mux.c: (gst_matroska_mux_reset),
 	(gst_matroska_mux_start), (gst_matroska_mux_finish),
