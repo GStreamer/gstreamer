@@ -611,16 +611,40 @@ gst_v4lmjpegsrc_getcaps (GstPad * pad)
   GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));
   struct video_capability *vcap = &GST_V4LELEMENT (v4lmjpegsrc)->vcap;
   gdouble fps;
+  GstCaps *caps;
+  GstStructure *str;
+  gint i;
+  GValue w = { 0 }, h = {
+  0}, w1 = {
+  0}, h1 = {
+  0};
 
   if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lmjpegsrc))) {
     return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   }
 
   fps = gst_v4lmjpegsrc_get_fps (v4lmjpegsrc);
-  return gst_caps_new_simple ("image/jpeg",
-      "width", GST_TYPE_INT_RANGE, vcap->maxwidth / 4, vcap->maxwidth,
-      "height", GST_TYPE_INT_RANGE, vcap->maxheight / 4, vcap->maxheight,
+  caps = gst_caps_new_simple ("image/jpeg",
       "framerate", G_TYPE_DOUBLE, fps, NULL);
+  str = gst_caps_get_structure (caps, 0);
+  g_value_init (&w, GST_TYPE_LIST);
+  g_value_init (&h, GST_TYPE_LIST);
+  g_value_init (&w1, G_TYPE_INT);
+  g_value_init (&h1, G_TYPE_INT);
+  for (i = 0; i <= 2; i++) {
+    g_value_set_int (&w1, vcap->maxwidth / (1 << i));
+    g_value_set_int (&h1, vcap->maxheight / (1 << i));
+    gst_value_list_append_value (&w, &w1);
+    gst_value_list_append_value (&h, &h1);
+  }
+  g_value_unset (&h1);
+  g_value_unset (&w1);
+  gst_structure_set_value (str, "width", &w);
+  gst_structure_set_value (str, "height", &h);
+  g_value_unset (&w);
+  g_value_unset (&h);
+
+  return caps;
 }
 
 
