@@ -344,8 +344,8 @@ group_destroy (GstPlayBaseGroup * group)
      * from the thread */
     if (get_active_group (play_base_bin) == group) {
       GST_LOG ("removing preroll element %s", gst_element_get_name (element));
-      gst_bin_remove (GST_BIN (play_base_bin->thread), element);
-      gst_bin_remove (GST_BIN (play_base_bin->thread), group->type[n].selector);
+      gst_bin_remove (group->type[n].bin, element);
+      gst_bin_remove (group->type[n].bin, group->type[n].selector);
     } else {
       /* else we can just unref it */
       gst_object_unref (GST_OBJECT (element));
@@ -354,6 +354,7 @@ group_destroy (GstPlayBaseGroup * group)
 
     group->type[n].preroll = NULL;
     group->type[n].selector = NULL;
+    group->type[n].bin = NULL;
   }
 
   /* free the streaminfo too */
@@ -505,10 +506,12 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
   group->type[type - 1].selector = selector;
   group->type[type - 1].preroll = preroll;
   if (type == GST_STREAM_TYPE_TEXT && play_base_bin->subtitle) {
+    group->type[type - 1].bin = GST_BIN (play_base_bin->subtitle);
     gst_bin_add (GST_BIN (play_base_bin->subtitle), selector);
     gst_bin_add (GST_BIN (play_base_bin->subtitle), preroll);
     gst_element_set_state (selector, GST_STATE_PAUSED);
   } else {
+    group->type[type - 1].bin = GST_BIN (play_base_bin->thread);
     gst_bin_add (GST_BIN (play_base_bin->thread), selector);
     gst_bin_add (GST_BIN (play_base_bin->thread), preroll);
     gst_element_set_state (selector, GST_STATE_PLAYING);
@@ -1740,7 +1743,6 @@ gst_play_base_bin_add_element (GstBin * bin, GstElement * element)
     sched = gst_element_get_scheduler (GST_ELEMENT (play_base_bin->thread));
     clock = gst_scheduler_get_clock (sched);
     gst_scheduler_set_clock (sched, clock);
-
   } else {
     g_warning ("adding elements is not allowed in NULL");
   }

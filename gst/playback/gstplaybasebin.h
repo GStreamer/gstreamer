@@ -54,6 +54,7 @@ typedef struct
 
   struct {
     gint	 npads;
+    GstBin      *bin;
     GstElement	*preroll;
     GstElement	*selector;
     gboolean	 done;

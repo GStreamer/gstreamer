@@ -443,7 +443,8 @@ gst_textoverlay_video_chain (GstPad * pad, GstData * _data)
      GST_BUFFER_TIMESTAMP (GST_BUFFER (data)))
 #define GST_DATA_DURATION(data) \
   (GST_IS_EVENT (data) ? \
-     gst_event_filler_get_duration (GST_EVENT (data)) : \
+     ((GST_EVENT_TYPE (data) == GST_EVENT_FILLER) ? gst_event_filler_get_duration (GST_EVENT (data)) : \
+      GST_CLOCK_TIME_NONE) : \
      GST_BUFFER_DURATION (GST_BUFFER (data)))
 
 #define PAST_END(data, time) \
@@ -631,6 +632,11 @@ gst_textoverlay_finalize (GObject * object)
 {
   GstTextOverlay *overlay = GST_TEXTOVERLAY (object);
 
+  if (overlay->default_text) {
+    g_free (overlay->default_text);
+    overlay->default_text = NULL;
+  }
+
   if (overlay->layout) {
     g_object_unref (overlay->layout);
     overlay->layout = NULL;
@@ -751,12 +757,12 @@ gst_textoverlay_set_property (GObject * object, guint prop_id,
 
       desc = pango_font_description_from_string (g_value_get_string (value));
       if (desc) {
-        g_message ("font description set: %s", g_value_get_string (value));
+        GST_LOG ("font description set: %s", g_value_get_string (value));
         pango_layout_set_font_description (overlay->layout, desc);
         pango_font_description_free (desc);
         render_text (overlay);
       } else
-        g_warning ("font description parse failed: %s",
+        GST_WARNING ("font description parse failed: %s",
             g_value_get_string (value));
       break;
     }

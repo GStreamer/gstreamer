@@ -252,6 +252,8 @@ gst_alsa_sink_check_event (GstAlsaSink * sink, gint pad_nr)
 
         break;
       }
+      case GST_EVENT_TAG:
+        break;
       default:
         GST_INFO_OBJECT (this, "got an unknown event (Type: %d)",
             GST_EVENT_TYPE (event));
@@ -449,8 +451,8 @@ sink_restart:
 
           if (size / (width / 8) != samples || samples > max_discont) {
             GST_WARNING_OBJECT (this,
-                "Integer overflow for size=%d/samples=%d - broken stream",
-                size, samples);
+                "Integer overflow for size=%d/samples=%d (sample_diff=%ld) - broken stream",
+                size, samples, sample_diff);
             goto no_difference;
           }
           GST_INFO_OBJECT (this,

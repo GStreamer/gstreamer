@@ -232,11 +232,21 @@ convert_encoding (GstSubparse * self, const gchar * str, gsize len)
 
   converted = g_string_new (NULL);
   while (len) {
-    GST_DEBUG ("Trying to convert '%s'", g_strndup (str, len));
+#ifndef GST_DISABLE_GST_DEBUG
+    gchar *dbg = g_strndup (str, len);
+
+    GST_DEBUG ("Trying to convert '%s'", dbg);
+    g_free (dbg);
+#endif
+
     rv = g_locale_to_utf8 (str, len, &bytes_read, &bytes_written, NULL);
-    g_string_append_len (converted, rv, bytes_written);
-    len -= bytes_read;
-    str += bytes_read;
+    if (rv) {
+      g_string_append_len (converted, rv, bytes_written);
+      g_free (rv);
+
+      len -= bytes_read;
+      str += bytes_read;
+    }
     if (len) {
       /* conversion error ocurred => skip one char */
       len--;
@@ -438,7 +448,6 @@ parse_subrip (GstSubparse * self, guint64 * out_start_time,
           *out_end_time = self->state.subrip.time2;
           rv = g_markup_escape_text (self->state.subrip.buf->str,
               self->state.subrip.buf->len);
-          rv = g_strdup (self->state.subrip.buf->str);
           g_string_truncate (self->state.subrip.buf, 0);
           self->state.subrip.state = 0;
           return rv;
@@ -546,7 +555,15 @@ gst_subparse_buffer_format_autodetect (GstBuffer * buf)
   static gboolean need_init_regexps = TRUE;
   static regex_t mdvd_rx;
   static regex_t subrip_rx;
-  const gchar *str = GST_BUFFER_DATA (buf);
+
+  /* Copy out chars to guard against short non-null-terminated buffers */
+  const gint match_chars = 35;
+  gchar *match_str =
+      g_strndup ((const gchar *) GST_BUFFER_DATA (buf), MIN (match_chars,
+          GST_BUFFER_SIZE (buf)));
+
+  if (!match_str)
+    return GST_SUB_PARSE_FORMAT_UNKNOWN;
 
   /* initialize the regexps used the first time around */
   if (need_init_regexps) {
@@ -554,9 +571,9 @@ gst_subparse_buffer_format_autodetect (GstBuffer * buf)
     char errstr[128];
 
     need_init_regexps = FALSE;
-    regcomp (&mdvd_rx, "^\\{[0-9]+\\}\\{[0-9]+\\}",
-        REG_EXTENDED | REG_NEWLINE | REG_NOSUB);
-    if ((err = regcomp (&subrip_rx, "^1\x0d\x0a"
+    if ((err = regcomp (&mdvd_rx, "^\\{[0-9]+\\}\\{[0-9]+\\}",
+                REG_EXTENDED | REG_NEWLINE | REG_NOSUB) != 0) ||
+        (err = regcomp (&subrip_rx, "^1(\x0d)?\x0a"
                 "[0-9][0-9]:[0-9][0-9]:[0-9][0-9],[0-9]{3}"
                 " --> [0-9][0-9]:[0-9][0-9]:[0-9][0-9],[0-9]{3}",
                 REG_EXTENDED | REG_NEWLINE | REG_NOSUB)) != 0) {
@@ -565,19 +582,24 @@ gst_subparse_buffer_format_autodetect (GstBuffer * buf)
     }
   }
 
-  if (regexec (&mdvd_rx, str, 0, NULL, 0) == 0) {
+  if (regexec (&mdvd_rx, match_str, 0, NULL, 0) == 0) {
     GST_LOG ("subparse: MicroDVD (frame based) format detected");
+    g_free (match_str);
     return GST_SUB_PARSE_FORMAT_MDVDSUB;
   }
-  if (regexec (&subrip_rx, str, 0, NULL, 0) == 0) {
+  if (regexec (&subrip_rx, match_str, 0, NULL, 0) == 0) {
     GST_LOG ("subparse: SubRip (time based) format detected");
+    g_free (match_str);
     return GST_SUB_PARSE_FORMAT_SUBRIP;
   }
-  if (!strncmp (str, "FORMAT=TIME", 11)) {
+  if (!strncmp (match_str, "FORMAT=TIME", 11)) {
     GST_LOG ("subparse: MPSub (time based) format detected");
+    g_free (match_str);
     return GST_SUB_PARSE_FORMAT_MPSUB;
   }
+
   GST_WARNING ("subparse: subtitle format autodetection failed!");
+  g_free (match_str);
   return GST_SUB_PARSE_FORMAT_UNKNOWN;
 }
 
@@ -719,7 +741,8 @@ gst_subparse_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PAUSED_TO_READY:
-      self->parser.deinit (self);
+      if (self->parser.deinit)
+        self->parser.deinit (self);
       self->parser.type = GST_SUB_PARSE_FORMAT_UNKNOWN;
       self->parser_detected = FALSE;
       self->seek_time = GST_CLOCK_TIME_NONE;

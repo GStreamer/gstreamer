@@ -1322,8 +1322,36 @@ dv_type_find (GstTypeFind * tf, gpointer private)
   }
 }
 
-/*** audio/x-vorbis ***********************************************************/
 
+/*** application/ogg and application/x-annodex *****************************/
+static GstStaticCaps ogg_caps = GST_STATIC_CAPS ("application/ogg");
+static GstStaticCaps annodex_caps = GST_STATIC_CAPS ("application/x-annodex");
+static GstStaticCaps ogganx_caps =
+    GST_STATIC_CAPS ("application/ogg; application/x-annodex");
+#define OGGANX_CAPS (gst_static_caps_get(&ogganx_caps))
+
+static void
+ogganx_type_find (GstTypeFind * tf, gpointer private)
+{
+  guint8 *data = gst_type_find_peek (tf, 28, 8);
+  gboolean is_annodex = FALSE;
+
+  if ((data != NULL) && (memcmp (data, "fishead\0", 8) == 0)) {
+    is_annodex = TRUE;
+  }
+
+  data = gst_type_find_peek (tf, 0, 4);
+  if ((data != NULL) && (memcmp (data, "OggS", 4) == 0)) {
+    if (is_annodex == TRUE) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
+          gst_static_caps_get (&annodex_caps));
+    }
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
+        gst_static_caps_get (&ogg_caps));
+  }
+}
+
+/*** audio/x-vorbis ***********************************************************/
 static GstStaticCaps vorbis_caps = GST_STATIC_CAPS ("audio/x-vorbis");
 
 #define VORBIS_CAPS (gst_static_caps_get(&vorbis_caps))
@@ -1471,8 +1499,59 @@ speex_type_find (GstTypeFind * tf, gpointer private)
   }
 }
 
-/*** generic typefind for streams that have some data at a specific position***/
+/*** application/x-ogg-skeleton ***********************************************************/
+static GstStaticCaps ogg_skeleton_caps =
+GST_STATIC_CAPS ("application/x-ogg-skeleton");
+#define OGG_SKELETON_CAPS (gst_static_caps_get(&ogg_skeleton_caps))
+static void
+oggskel_type_find (GstTypeFind * tf, gpointer private)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 12);
 
+  if (data) {
+    /* 8 byte string "fishead\0" for the ogg skeleton stream */
+    if (memcmp (data, "fishead\0", 8) != 0)
+      return;
+    data += 8;
+
+    /* Require that the header contains version 3.0 */
+    if (GST_READ_UINT16_LE (data) != 3)
+      return;
+    data += 2;
+    if (GST_READ_UINT16_LE (data) != 0)
+      return;
+
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, OGG_SKELETON_CAPS);
+  }
+}
+
+static GstStaticCaps cmml_caps = GST_STATIC_CAPS ("text/x-cmml");
+
+#define CMML_CAPS (gst_static_caps_get(&cmml_caps))
+static void
+cmml_type_find (GstTypeFind * tf, gpointer private)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 12);
+
+  if (data) {
+    /* 8 byte string "CMML\0\0\0\0" for the magic number */
+    if (memcmp (data, "CMML\0\0\0\0", 8) != 0)
+      return;
+    data += 8;
+
+    /* Require that the header contains at least version 2.0 */
+    if (GST_READ_UINT16_LE (data) < 2)
+      return;
+    data += 2;
+
+    if (GST_READ_UINT16_LE (data) != 0)
+      return;
+
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, CMML_CAPS);
+  }
+}
+
+/*** generic typefind for streams that have some data at a specific position***/
 typedef struct
 {
   guint8 *data;
@@ -1564,7 +1643,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *musepack_exts[] = { "mpc", NULL };
   static gchar *mpeg_sys_exts[] = { "mpe", "mpeg", "mpg", NULL };
   static gchar *mpeg_video_exts[] = { "mpv", "mpeg", "mpg", NULL };
-  static gchar *ogg_exts[] = { "ogg", "ogm", NULL };
+  static gchar *ogg_exts[] = { "anx", "ogg", "ogm", NULL };
   static gchar *qt_exts[] = { "mov", NULL };
   static gchar *rm_exts[] = { "ra", "ram", "rm", "rmvb", NULL };
   static gchar *swf_exts[] = { "swf", "swfl", NULL };
@@ -1644,8 +1723,8 @@ plugin_init (GstPlugin * plugin)
       mpeg1_sys_type_find, mpeg_sys_exts, MPEG_SYS_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpeg2", GST_RANK_SECONDARY,
       mpeg2_sys_type_find, mpeg_sys_exts, MPEG_SYS_CAPS, NULL);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "application/ogg", GST_RANK_PRIMARY,
-      ogg_exts, "OggS", 4, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER (plugin, "application/ogg", GST_RANK_PRIMARY,
+      ogganx_type_find, ogg_exts, OGGANX_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpeg", GST_RANK_SECONDARY,
       mpeg_video_type_find, mpeg_video_exts, MPEG_VIDEO_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpeg-stream", GST_RANK_MARGINAL,
@@ -1731,6 +1810,10 @@ plugin_init (GstPlugin * plugin)
       ogmtext_type_find, NULL, OGMTEXT_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-speex", GST_RANK_PRIMARY,
       speex_type_find, NULL, SPEEX_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/x-ogg-skeleton", GST_RANK_PRIMARY,
+      oggskel_type_find, NULL, OGG_SKELETON_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "text/x-cmml", GST_RANK_PRIMARY,
+      cmml_type_find, NULL, CMML_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-m4a", GST_RANK_PRIMARY, m4a_type_find,
       m4a_exts, M4A_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-3gp", GST_RANK_PRIMARY,
