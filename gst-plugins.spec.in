@@ -241,7 +241,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %{_libdir}/gstreamer-%{majorminor}/libgstvideofilter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoflip.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpeg1types.so
-%{_libdir}/gstreamer-%{majorminor}/libgstmpeg1encoder.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpeg1systemencode.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegaudio.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegaudioparse.so
