@@ -12,3 +12,8 @@ gstreamer-scan.c
 gstreamer-scan
 gstreamer.args
 *.tgz
+*.tex
+*.log
+*.aux
+*.dvi
+*.ps
