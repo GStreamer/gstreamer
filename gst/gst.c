@@ -320,12 +320,7 @@ load_plugin_func (gpointer data, gpointer user_data)
 static void 
 parse_number (const gchar *number, gint32 *val)
 {
-  /* handle either 0xHEX or dec */
-  if (*(number+1) == 'x') {
-    sscanf (number+2, "%08x", val);
-  } else {
-    sscanf (number, "%d", val);
-  }
+  *val = strtol(number,NULL,0);
 }
 
 static void
