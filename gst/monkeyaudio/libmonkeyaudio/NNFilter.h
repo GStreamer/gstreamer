@@ -4,6 +4,10 @@
 #include "RollBuffer.h"
 #define NN_WINDOW_ELEMENTS  512
 
+#ifndef __inline
+#define __inline
+#endif
+
 #ifdef __GNUC_IA32__
 extern "C" {
     __inline void   Adapt                    ( short* pM, const short* pAdapt, int nDirection, int nOrder );

@@ -1,6 +1,10 @@
 #ifndef APE_SMARTPTR_H
 #define APE_SMARTPTR_H
 
+#ifndef __inline
+#define __inline
+#endif
+
 // disable the operator -> on UDT warning
 #ifdef _WIN32
 # pragma warning( push )

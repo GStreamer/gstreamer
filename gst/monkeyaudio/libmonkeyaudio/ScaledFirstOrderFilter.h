@@ -1,6 +1,10 @@
 #ifndef APE_SCALEFIRSTORDERFILER_H
 #define APE_SCALEFIRSTORDERFILER_H
 
+#ifndef __inline
+#define __inline
+#endif
+
 template <int MULTIPLY, int SHIFT> class CScaledFirstOrderFilter
 {
 public:

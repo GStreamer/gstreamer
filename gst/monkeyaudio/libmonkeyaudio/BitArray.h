@@ -3,6 +3,10 @@
 
 #include "IO.h"
 
+#ifndef __inline
+#define __inline
+#endif
+
 //#define BUILD_RANGE_TABLE
 
 struct RANGE_CODER_STRUCT_COMPRESS

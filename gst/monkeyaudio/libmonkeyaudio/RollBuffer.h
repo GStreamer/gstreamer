@@ -1,6 +1,10 @@
 #ifndef APE_ROLLBUFFER_H
 #define APE_ROLLBUFFER_H
 
+#ifndef __inline
+#define __inline
+#endif
+
 template <class TYPE> class CRollBuffer
 {
 public:

@@ -4,6 +4,10 @@
 #include "UnBitArrayBase.h"
 #include "BitArray.h"
 
+#ifndef __inline
+#define __inline
+#endif
+
 class IAPEDecompress;
 
 struct RANGE_CODER_STRUCT_DECOMPRESS
