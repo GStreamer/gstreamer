@@ -1,9 +1,8 @@
-testprogs = parse2
-#testprogs = parse1 parse2
 
-TESTS = $(testprogs)
+check_PROGRAMS = parse1 parse2
 
-check_PROGRAMS = $(testprogs)
+# parse1 is broken
+TESTS = parse2
 
 parse1_SOURCES = parse1.c
 parse2_SOURCES = parse2.c
