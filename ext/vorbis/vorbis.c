@@ -22,117 +22,30 @@
 
 extern GType vorbisfile_get_type(void);
 
-extern GstElementDetails vorbisfile_details;
-extern GstElementDetails vorbisenc_details;
-
-GstPadTemplate *gst_vorbisdec_src_template, *gst_vorbisdec_sink_template; 
-GstPadTemplate *gst_vorbisenc_src_template, *gst_vorbisenc_sink_template;
-
-static GstCaps*
-vorbis_caps_factory (void)
-{
-  return
-   gst_caps_new (
-  	"vorbis_vorbis",
-  	"application/ogg",
-  	NULL);
-}
-
-static GstCaps*
-raw_caps_factory (void)
-{
-  return
-   gst_caps_new (
-  	"vorbis_raw",
-  	"audio/x-raw-int",
-	gst_props_new (
-    	    "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
-    	    "signed", 		GST_PROPS_BOOLEAN (TRUE),
-    	    "width", 		GST_PROPS_INT (16),
-    	    "depth",    	GST_PROPS_INT (16),
-    	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
-    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
-	    NULL));
-}
-
-static GstCaps*
-raw_caps2_factory (void)
-{
-  return
-   gst_caps_new (
-  	"vorbis_raw_float",
-  	"audio/x-raw-float",
-	gst_props_new (
-	    "width",		GST_PROPS_INT (32),
-	    "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
-    	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
-    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
-            "buffer-frames",    GST_PROPS_INT_RANGE (1, G_MAXINT),
-	    NULL));
-}
-
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *enc, *file;
-  GstCaps *raw_caps, *vorbis_caps, *raw_caps2;
 
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
-  gst_plugin_set_longname (plugin, "The OGG Vorbis Codec");
+  if (!gst_element_register (plugin, "vorbisenc", GST_RANK_NONE, GST_TYPE_VORBISENC))
+    return FALSE;
 
-  /* create an elementfactory for the vorbisenc element */
-  enc = gst_element_factory_new ("vorbisenc", GST_TYPE_VORBISENC,
-                                 &vorbisenc_details);
-  g_return_val_if_fail (enc != NULL, FALSE);
-
-  raw_caps = raw_caps_factory ();
-  raw_caps2 = raw_caps2_factory ();
-  vorbis_caps = vorbis_caps_factory ();
-
-  /* register sink pads */
-  gst_vorbisenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
-		                                      GST_PAD_ALWAYS, 
-					              raw_caps, NULL);
-  gst_element_factory_add_pad_template (enc, gst_vorbisenc_sink_template);
-
-  /* register src pads */
-  gst_vorbisenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
-		                                     GST_PAD_ALWAYS, 
-					             vorbis_caps, NULL);
-  gst_element_factory_add_pad_template (enc, gst_vorbisenc_src_template);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (enc));
-
-  /* register sink pads */
-  gst_vorbisdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
-		                                      GST_PAD_ALWAYS, 
-					              vorbis_caps, NULL);
-  raw_caps = gst_caps_prepend (raw_caps, raw_caps2);
-  /* register src pads */
-  gst_vorbisdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
-		                                     GST_PAD_ALWAYS, 
-					             raw_caps, NULL);
-  /* create an elementfactory for the vorbisfile element */
-  file = gst_element_factory_new ("vorbisfile", vorbisfile_get_type(),
-                                  &vorbisfile_details);
-  g_return_val_if_fail(file != NULL, FALSE);
-  gst_element_factory_set_rank (file, GST_ELEMENT_RANK_PRIMARY);
- 
-  /* register sink pads */
-  gst_element_factory_add_pad_template (file, gst_vorbisdec_sink_template);
-  /* register src pads */
-  gst_element_factory_add_pad_template (file, gst_vorbisdec_src_template);
-  
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (file));
+  if (!gst_element_register (plugin, "vorbisfile", GST_RANK_PRIMARY, vorbisfile_get_type ()))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "vorbis",
-  plugin_init
-};
+  "Vorbis plugin library",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)

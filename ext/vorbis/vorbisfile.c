@@ -77,19 +77,16 @@ struct _VorbisFileClass {
 
 GType vorbisfile_get_type (void);
 
-extern GstPadTemplate *gst_vorbisdec_src_template, *gst_vorbisdec_sink_template;
+GstPadTemplate *gst_vorbisdec_src_template, *gst_vorbisdec_sink_template;
 
 /* elementfactory information */
 GstElementDetails vorbisfile_details = 
 {
   "Ogg Vorbis decoder",
   "Codec/Audio/Decoder",
-  "LGPL",
   "Decodes OGG Vorbis audio using the vorbisfile API",
-  VERSION,
   "Monty <monty@xiph.org>, " 
   "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2000",
 };
 
 /* VorbisFile signals and args */
@@ -108,6 +105,7 @@ enum
   ARG_STREAMINFO
 };
 
+static void     gst_vorbisfile_base_init        (gpointer g_class);
 static void
 		gst_vorbisfile_class_init 	(VorbisFileClass *klass);
 static void 	gst_vorbisfile_init 		(VorbisFile *vorbisfile);
@@ -161,7 +159,9 @@ vorbisfile_get_type (void)
 
   if (!vorbisfile_type) {
     static const GTypeInfo vorbisfile_info = {
-      sizeof (VorbisFileClass), NULL, NULL,
+      sizeof (VorbisFileClass),
+      gst_vorbisfile_base_init,
+      NULL,
       (GClassInitFunc) gst_vorbisfile_class_init, NULL, NULL,
       sizeof (VorbisFile), 0,
       (GInstanceInitFunc) gst_vorbisfile_init,
@@ -175,6 +175,71 @@ vorbisfile_get_type (void)
     GST_DEBUG_CATEGORY_INIT (vorbisfile_debug, "vorbisfile", 0, "vorbis in ogg decoding element");
   }
   return vorbisfile_type;
+}
+
+static GstCaps*
+vorbis_caps_factory (void)
+{
+  return
+   gst_caps_new (
+  	"vorbis_vorbis",
+  	"application/ogg",
+  	NULL);
+}
+
+static GstCaps*
+raw_caps_factory (void)
+{
+  return
+   gst_caps_new (
+  	"vorbis_raw",
+  	"audio/x-raw-int",
+	gst_props_new (
+    	    "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
+    	    "signed", 		GST_PROPS_BOOLEAN (TRUE),
+    	    "width", 		GST_PROPS_INT (16),
+    	    "depth",    	GST_PROPS_INT (16),
+    	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
+    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
+	    NULL));
+}
+
+static GstCaps*
+raw_caps2_factory (void)
+{
+  return
+   gst_caps_new (
+  	"vorbis_raw_float",
+  	"audio/x-raw-float",
+	gst_props_new (
+	    "width",		GST_PROPS_INT (32),
+	    "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
+    	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
+    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
+            "buffer-frames",    GST_PROPS_INT_RANGE (1, G_MAXINT),
+	    NULL));
+}
+
+static void
+gst_vorbisfile_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstCaps *raw_caps, *vorbis_caps, *raw_caps2;
+
+  raw_caps = raw_caps_factory ();
+  raw_caps2 = raw_caps2_factory ();
+  vorbis_caps = vorbis_caps_factory ();
+
+  gst_vorbisdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
+		                                      GST_PAD_ALWAYS, 
+					              vorbis_caps, NULL);
+  raw_caps = gst_caps_prepend (raw_caps, raw_caps2);
+  gst_vorbisdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
+		                                     GST_PAD_ALWAYS, 
+					             raw_caps, NULL);
+  gst_element_class_add_pad_template (element_class, gst_vorbisdec_sink_template);
+  gst_element_class_add_pad_template (element_class, gst_vorbisdec_src_template);
+  gst_element_class_set_details (element_class, &vorbisfile_details);
 }
 
 static void

@@ -28,18 +28,15 @@
 
 #include "vorbisenc.h"
 
-extern GstPadTemplate *gst_vorbisenc_src_template, *gst_vorbisenc_sink_template;
+static GstPadTemplate *gst_vorbisenc_src_template, *gst_vorbisenc_sink_template;
 
 /* elementfactory information */
 GstElementDetails vorbisenc_details = {
   "Ogg Vorbis encoder",
   "Codec/Audio/Encoder",
-  "LGPL",
   "Encodes audio in OGG Vorbis format",
-  VERSION,
   "Monty <monty@xiph.org>, " 
   "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2000",
 };
 
 /* VorbisEnc signals and args */
@@ -85,6 +82,7 @@ gst_vorbisenc_get_formats (GstPad *pad)
 #define MIN_BITRATE_DEFAULT 	-1
 #define QUALITY_DEFAULT 	0.3
 
+static void             gst_vorbisenc_base_init         (gpointer g_class);
 static void 		gst_vorbisenc_class_init 	(VorbisEncClass *klass);
 static void 		gst_vorbisenc_init 		(VorbisEnc *vorbisenc);
 
@@ -109,7 +107,7 @@ vorbisenc_get_type (void)
   if (!vorbisenc_type) {
     static const GTypeInfo vorbisenc_info = {
       sizeof (VorbisEncClass), 
-      NULL,
+      gst_vorbisenc_base_init,
       NULL,
       (GClassInitFunc) gst_vorbisenc_class_init,
       NULL,
@@ -122,6 +120,53 @@ vorbisenc_get_type (void)
     vorbisenc_type = g_type_register_static (GST_TYPE_ELEMENT, "VorbisEnc", &vorbisenc_info, 0);
   }
   return vorbisenc_type;
+}
+
+static GstCaps*
+vorbis_caps_factory (void)
+{
+  return
+   gst_caps_new (
+  	"vorbis_vorbis",
+  	"application/ogg",
+  	NULL);
+}
+
+static GstCaps*
+raw_caps_factory (void)
+{
+  return
+   gst_caps_new (
+  	"vorbis_raw",
+  	"audio/x-raw-int",
+	gst_props_new (
+    	    "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
+    	    "signed", 		GST_PROPS_BOOLEAN (TRUE),
+    	    "width", 		GST_PROPS_INT (16),
+    	    "depth",    	GST_PROPS_INT (16),
+    	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
+    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
+	    NULL));
+}
+
+static void
+gst_vorbisenc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstCaps *raw_caps, *vorbis_caps;
+
+  raw_caps = raw_caps_factory ();
+  vorbis_caps = vorbis_caps_factory ();
+
+  gst_vorbisenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
+		                                      GST_PAD_ALWAYS, 
+					              raw_caps, NULL);
+  gst_vorbisenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
+		                                     GST_PAD_ALWAYS, 
+					             vorbis_caps, NULL);
+  gst_element_class_add_pad_template (element_class, gst_vorbisenc_sink_template);
+  gst_element_class_add_pad_template (element_class, gst_vorbisenc_src_template);
+  gst_element_class_set_details (element_class, &vorbisenc_details);
 }
 
 static void
