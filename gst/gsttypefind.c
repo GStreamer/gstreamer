@@ -184,6 +184,7 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
 	typefind->caps = caps;
         gtk_signal_emit (GTK_OBJECT (typefind), gst_typefind_signals[HAVE_TYPE],
 	                      typefind->caps);
+	gst_pad_set_caps (pad, caps);
         goto end;
       }
       funcs = g_slist_next (funcs);
