@@ -550,8 +550,8 @@ gst_mpeg2dec_change_state (GstElement *element)
       if (!mpeg2dec->closed) {
         //mpeg2_close (mpeg2dec->decoder);
 	mpeg2dec->closed = TRUE;
-        gst_mpeg2dec_vo_destroy (mpeg2dec);
       }
+      gst_mpeg2dec_vo_destroy (mpeg2dec);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
