@@ -845,7 +845,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
 
       pointentry_master = gst_ebml_write_master_start (ebml,
           GST_MATROSKA_ID_POINTENTRY);
-      gst_ebml_write_date (ebml, GST_MATROSKA_ID_CUETIME,
+      gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CUETIME,
           idx->time / mux->time_scale);
       trackpos_master = gst_ebml_write_master_start (ebml,
           GST_MATROSKA_ID_CUETRACKPOSITION);
@@ -969,12 +969,25 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux)
     mux->sink[i].duration += GST_BUFFER_DURATION (buf);
 
   /* We currently write an index entry for each keyframe in a
-   * video track. This can be largely improved, such as doing
+   * video track or one entry for each cluster in an audio track
+   * for audio only files. This can be largely improved, such as doing
    * one for each keyframe or each second (for all-keyframe
-   * streams), only the *first* video track or the audio track
-   * if we have no video tracks. But that'll come later... */
+   * streams), only the *first* video track. But that'll come later... */
   if (mux->sink[i].track->type == GST_MATROSKA_TRACK_TYPE_VIDEO &&
       GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_KEY_UNIT)) {
+    GstMatroskaIndex *idx;
+
+    if (mux->num_indexes % 32 == 0) {
+      mux->index = g_renew (GstMatroskaIndex, mux->index,
+          mux->num_indexes + 32);
+    }
+    idx = &mux->index[mux->num_indexes++];
+
+    idx->pos = ebml->pos;
+    idx->time = GST_BUFFER_TIMESTAMP (buf);
+    idx->track = mux->sink[i].track->num;
+  } else if ((mux->sink[i].track->type == GST_MATROSKA_TRACK_TYPE_AUDIO) &&
+      (mux->num_streams == 1)) {
     GstMatroskaIndex *idx;
 
     if (mux->num_indexes % 32 == 0) {
