@@ -73,11 +73,11 @@ enum {
   ARG_LAST_MESSAGE,
 };
 
-GST_PAD_TEMPLATE_FACTORY (fakesrc_src_factory,
+GstStaticPadTemplate fakesrc_src_template = GST_STATIC_PAD_TEMPLATE (
   "src%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
-  GST_CAPS2_ANY
+  GST_STATIC_CAPS2_ANY
 );
 
 #define GST_TYPE_FAKESRC_OUTPUT (gst_fakesrc_output_get_type())
@@ -204,8 +204,10 @@ gst_fakesrc_base_init (gpointer g_class)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class); 
   
   gst_element_class_set_details (gstelement_class, &gst_fakesrc_details);
-  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (fakesrc_src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&fakesrc_src_template));
 }
+
 static void
 gst_fakesrc_class_init (GstFakeSrcClass *klass) 
 {

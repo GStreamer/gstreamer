@@ -53,11 +53,11 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (tee_src_factory,
+GstStaticPadTemplate tee_src_template = GST_STATIC_PAD_TEMPLATE (
   "src%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
-  GST_CAPS2_ANY
+  GST_STATIC_CAPS2_ANY
 );
 
 static void	gst_tee_base_init	(gpointer g_class);
@@ -106,7 +106,8 @@ gst_tee_base_init (gpointer g_class)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
   
   gst_element_class_set_details (gstelement_class, &gst_tee_details);
-  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (tee_src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&tee_src_template));
 }
 static void
 gst_tee_class_init (GstTeeClass *klass) 

@@ -54,17 +54,18 @@ GstElementDetails gst_type_find_element_details = GST_ELEMENT_DETAILS (
 );
 
 /* generic templates */
-GST_PAD_TEMPLATE_FACTORY (type_find_element_sink_factory,
+GstStaticPadTemplate type_find_element_sink_template = GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS2_ANY
+  GST_STATIC_CAPS2_ANY
 );
-GST_PAD_TEMPLATE_FACTORY (type_find_element_src_factory,
+
+GstStaticPadTemplate type_find_element_src_template = GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS2_ANY
+  GST_STATIC_CAPS2_ANY
 );
 
 /* TypeFind signals and args */
@@ -206,13 +207,13 @@ gst_type_find_element_init (GTypeInstance *instance, gpointer g_class)
   
   /* sinkpad */
   typefind->sink = gst_pad_new_from_template (
-		GST_PAD_TEMPLATE_GET (type_find_element_sink_factory), "sink");
+      gst_static_pad_template_get (&type_find_element_sink_template), "sink");
   gst_pad_set_chain_function (typefind->sink,
 			      gst_type_find_element_chain);
   gst_element_add_pad (GST_ELEMENT (typefind), typefind->sink);
   /* srcpad */
   typefind->src = gst_pad_new_from_template (
-		GST_PAD_TEMPLATE_GET (type_find_element_src_factory), "src");
+      gst_static_pad_template_get (&type_find_element_src_template), "src");
   gst_pad_set_event_function (typefind->src, gst_type_find_element_src_event);
   gst_pad_set_event_mask_function (typefind->src, gst_type_find_element_src_event_mask);
   gst_element_add_pad (GST_ELEMENT (typefind), typefind->src);

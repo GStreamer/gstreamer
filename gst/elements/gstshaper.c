@@ -60,18 +60,18 @@ typedef struct
   GstBuffer	*buffer;
 } GstShaperConnection;
 
-GST_PAD_TEMPLATE_FACTORY (shaper_src_factory,
+GstStaticPadTemplate shaper_src_template = GST_STATIC_PAD_TEMPLATE (
   "src%d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  GST_CAPS2_ANY
+  GST_STATIC_CAPS2_ANY
 );
 
-GST_PAD_TEMPLATE_FACTORY (shaper_sink_factory,
+GstStaticPadTemplate shaper_sink_template = GST_STATIC_PAD_TEMPLATE (
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
-  GST_CAPS2_ANY
+  GST_STATIC_CAPS2_ANY
 );
 
 #define GST_TYPE_SHAPER_POLICY (gst_shaper_policy_get_type())
@@ -137,9 +137,12 @@ gst_shaper_base_init (gpointer g_class)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
   
   gst_element_class_set_details (gstelement_class, &gst_shaper_details);
-  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (shaper_src_factory));
-  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (shaper_sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&shaper_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&shaper_sink_template));
 }
+
 static void 
 gst_shaper_class_init (GstShaperClass *klass) 
 {
@@ -230,7 +233,8 @@ gst_shaper_create_connection (GstShaper *shaper)
   connection = g_new0 (GstShaperConnection, 1);
 
   padname = g_strdup_printf ("sink%d", shaper->nconnections);
-  connection->sinkpad = gst_pad_new_from_template (shaper_sink_factory (), padname);
+  connection->sinkpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&shaper_sink_template), padname);
   g_free (padname);
   gst_pad_set_bufferpool_function (connection->sinkpad, gst_shaper_get_bufferpool);
   gst_pad_set_getcaps_function (connection->sinkpad, gst_shaper_getcaps);
@@ -240,7 +244,8 @@ gst_shaper_create_connection (GstShaper *shaper)
   gst_element_add_pad (GST_ELEMENT (shaper), connection->sinkpad);
 
   padname = g_strdup_printf ("src%d", shaper->nconnections);
-  connection->srcpad = gst_pad_new_from_template (shaper_src_factory (), padname);
+  connection->srcpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&shaper_src_template), padname);
   g_free (padname);
   gst_pad_set_getcaps_function (connection->srcpad, gst_shaper_getcaps);
   gst_pad_set_internal_link_function (connection->srcpad, gst_shaper_get_internal_link);
