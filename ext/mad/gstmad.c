@@ -366,8 +366,8 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 
     mad_input_buffer = mad->tempbuffer;
 
-    /* it we have enough data we can proceed */
-    while (mad->tempsize >= MAD_BUFFER_MDLEN) {
+    /* if we have data we can try to proceed */
+    while (mad->tempsize >= 0) {
       gint consumed;
       guint nchannels, nsamples;
       mad_fixed_t const *left_ch, *right_ch;
@@ -377,6 +377,10 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       mad_stream_buffer (&mad->stream, mad_input_buffer, mad->tempsize);
 
       if (mad_frame_decode (&mad->frame, &mad->stream) == -1) {
+	/* not enough data, need to wait for next buffer? */
+	if (mad->stream.error == MAD_ERROR_BUFLEN) {
+	  break;
+	} 
         if (!MAD_RECOVERABLE (mad->stream.error)) {
           gst_element_error (GST_ELEMENT (mad), "fatal error decoding stream");
           return;
