@@ -169,6 +169,7 @@ FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
   --sharedstatedir=%{_sharedstatedir} \
   --mandir=%{_mandir} \
   --infodir=%{_infodir} \
+  --enable-debug \
   --with-configdir=/etc/gstreamer \
   --disable-tests --disable-examples --disable-debug-color \
   --enable-docs-build --with-html-dir=$RPM_BUILD_DIR/%{name}-%{version}/html
