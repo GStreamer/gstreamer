@@ -1,5 +1,11 @@
 2004-04-26  Benjamin Otte  <otte@gnome.org>
 
+	* ext/mad/gstid3tag.c: (plugin_init):
+	  set id3mux rank to NONE so it doesn't confuse spider
+	  require audio/mpeg,mpegversion=1 in id3mux
+
+2004-04-26  Benjamin Otte  <otte@gnome.org>
+
 	* configure.ac:
 	  detect faad correctly as non-working if it's indeed non-working
 
