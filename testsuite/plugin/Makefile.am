@@ -18,3 +18,7 @@ static_SOURCES = static.c testplugin_s.c testplugin2_s.c
 TESTS = $(testprogs)
 
 check_PROGRAMS = $(testprogs)
+
+LIBS = $(GST_LIBS)
+CFLAGS = $(GST_CFLAGS)
+

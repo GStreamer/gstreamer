@@ -98,7 +98,7 @@ _gst_plugin_initialize (void)
       !plugin_times_older_than(get_time(GST_CONFIG_DIR"/reg.xml"))) 
   {
     if (_gst_warn_old_registry)
-	g_error ("gstplugin: registry needs rebuild: run gstreamer-register\n");
+	g_warning ("gstplugin: registry needs rebuild: run gstreamer-register\n");
     _gst_plugin_paths = g_list_concat (_gst_plugin_paths, gst_plugin_default_paths);
     gst_plugin_load_all ();
     /* gst_plugin_unload_all (); */

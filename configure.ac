@@ -663,13 +663,13 @@ AC_SUBST(PLUGINS_BUILDDIR)
 
 dnl Private vars for libgst only
 LIBGST_LIBS="$GST_LIBS $XML_LIBS $GLIB_LIBS"
-LIBGST_CFLAGS="$GST_CFLAGS $XML_CFLAGS $GLIB_CFLAGS"
+LIBGST_CFLAGS="$GST_CFLAGS $XML_CFLAGS $GLIB_CFLAGS -I\$(top_srcdir)"
 AC_SUBST(LIBGST_LIBS)
 AC_SUBST(LIBGST_CFLAGS)
 
 dnl Vars for everyone else
 GST_LIBS="\$(top_builddir)/gst/libgst.la $LIBGST_LIBS"
-GST_CFLAGS="-I\$(top_srcdir) -I\$(top_srcdir)/libs -I\$(top_srcdir)/include $LIBGST_CFLAGS"
+GST_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir)/include $LIBGST_CFLAGS"
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
 

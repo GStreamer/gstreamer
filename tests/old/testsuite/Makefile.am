@@ -9,7 +9,7 @@ check_PROGRAMS = $(testprogs)
 
 # we have nothing but apps here, we can do this safely
 LIBS = $(GST_LIBS)
-CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
+CFLAGS = $(GST_CFLAGS)
 
 # FIXME : refcounting threadds
 DIST_SUBDIRS = capsnego plugin bytestream cleanup
