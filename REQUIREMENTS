@@ -1,0 +1,7 @@
+This file lists supporting libraries for which gst-plugins contains plugins,
+as well as their minimum version.  You can find the corresponding plugins in
+ext/(library)
+
+a52dec 			0.7.3
+avifile 	>= 	0.6.0 (cvs)
+

@@ -81,14 +81,14 @@ read_config ();
 ###  "ac3", "ac3parse ! $cfg{AUDIOSINK}",
 %pipes = ( 
   "au", "auparse ! $cfg{AUDIOSINK}",
-  "avi", "avidemux video_00! { queue ! windec ! $cfg{VIDEOSINK} } avidemux0.audio_00! { queue ! mad ! $cfg{AUDIOSINK} }",
+  "avi", "avidemux video_%02d! { queue ! windec ! $cfg{VIDEOSINK} } avidemux0.audio_00! { queue ! mad ! $cfg{AUDIOSINK} }",
   "fli", "flxdec ! colorspace ! $cfg{VIDEOSINK}",
   "mod", "modplug !  $cfg{AUDIOSINK}",
   "mp3", "mad ! $cfg{AUDIOSINK}",
-  "mpg", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_00! { queue ! mad ! $cfg{AUDIOSINK} }",
+  "mpg", "mpegdemux video_%02d! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_%02d! { queue ! mad ! $cfg{AUDIOSINK} }",
   "ogg", "vorbisdec ! $cfg{AUDIOSINK}",
   "sid", "siddec ! $cfg{AUDIOSINK}",
-  "vob", "mpegdemux video_00! { queue max_level=500 ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.private_stream_1.0! { queue max_level=500 ! a52dec ! $cfg{AUDIOSINK} }",
+  "vob", "mpegdemux video_%02d! { queue max_level=500 ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.private_stream_1_%02d! { queue max_level=500 ! a52dec ! $cfg{AUDIOSINK} }",
 );
 
 if ($cfg{VISUALIZER}) {

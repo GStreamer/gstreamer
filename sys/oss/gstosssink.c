@@ -474,9 +474,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
         }
 	
 	
-	/* FIXME: reverted wtay's patch.
-	   The way that's commented out isn't working on BE machines.
-	   I guess it should be sample accurate and not capped inbetween.
+	/* this doesn't work on BE machines, apparently
 	while (size) {
           gint tosend = MIN (size, frag);
           write (osssink->fd, data, tosend);
