@@ -132,13 +132,17 @@
     usually need to do so in only a couple of places:
     <itemizedlist>
       <listitem>
+        <para>
         In the element <filename>init</filename> function, just after the call
         to <filename>gst_dpman_new</filename>
+        </para>
       </listitem>
       <listitem>
+        <para>
         Whenever a new pad is created so that parameters can affect data going
         into or out of a specific pad. An example of this would be a mixer
         element where a seperate volume parameter is needed on every pad.
+        </para>
       </listitem>
     </itemizedlist>
   </para>
@@ -148,9 +152,10 @@
     used within your element. Each of these methods has its own function to
     define a required dparam:
     <itemizedlist>
-      <listitem><filename>gst_dpman_add_required_dparam_direct</filename></listitem>
-      <listitem><filename>gst_dpman_add_required_dparam_callback</filename></listitem>
-      <listitem><filename>gst_dpman_add_required_dparam_array</filename></listitem>
+<!-- FIXME: are we sure we need to use filename for function calls ??? -->
+      <listitem><para><filename>gst_dpman_add_required_dparam_direct</filename></para></listitem>
+      <listitem><para><filename>gst_dpman_add_required_dparam_callback</filename></para></listitem>
+      <listitem><para><filename>gst_dpman_add_required_dparam_array</filename></para></listitem>
     </itemizedlist>
     These functions will return TRUE if the required dparam was added
     successfully.
@@ -168,25 +173,33 @@
     The common parameters to these functions are:
     <itemizedlist>
       <listitem>
+        <para>
         <filename>GstDParamManager *dpman</filename> the element's dparam
         manager
+        </para>
       </listitem>
       <listitem>
+        <para>
         <filename>GParamSpec *param_spec</filename> the param spec which defines
         the required dparam
+        </para>
       </listitem>
       <listitem>
+        <para>
         <filename>gboolean is_log</filename> whether this dparam value should be
         interpreted on a log scale (such as a frequency or a decibel value)
+        </para>
       </listitem>
       <listitem>
+        <para>
         <filename>gboolean is_rate</filename> whether this dparam value is a
         proportion of the sample rate. For example with a sample rate of 44100,
         0.5 would be 22050 Hz and 0.25 would be 11025 Hz.
+        </para>
       </listitem>
     </itemizedlist>
   </para>
-  <sect2 id="sect-dparam-direct">
+  <sect1 id="sect-dparam-direct">
     <title>Direct Method</title>
     <para>
       This method is the simplest and has the lowest overhead for parameters
@@ -224,8 +237,8 @@
       You can now use <filename>example-&gt;volume</filename> anywhere in your
       element knowing that it will always contain the correct value to use.
     </para>
-  </sect2>
-  <sect2 id="sect-dparam-callback">
+  </sect1>
+  <sect1 id="sect-dparam-callback">
     <title>Callback Method</title>
     <para>
       This should be used if the you have other values to calculate whenever a
@@ -293,8 +306,8 @@ gst_example_update_volume(GValue *value, gpointer data)
       Now <filename>example-&gt;volume_i</filename> can be used elsewhere and it
       will always contain the correct value.
     </para>
-  </sect2>
-  <sect2 id="sect-dparam-array">
+  </sect1>
+  <sect1 id="sect-dparam-array">
     <title>Array Method</title>
     <para>
       This method is quite different from the other two. It could be thought of
@@ -307,14 +320,18 @@ gst_example_update_volume(GValue *value, gpointer data)
 
     <itemizedlist>
       <listitem>
+        <para>
         Certain optimisations may be possible since you can iterate over your
         dparams array and your buffer data together.
+        </para>
       </listitem>
       <listitem>
+        <para>
         Some dparams may be able to interpolate changing values at the sample
         rate. This would allow the array to contain very smoothly changing
         values which may be required for the stability and quality of some DSP
         algorithms.
+        </para>
       </listitem>
     </itemizedlist>
     <para>
@@ -322,7 +339,7 @@ gst_example_update_volume(GValue *value, gpointer data)
       not yet ready to be used in elements, but plugin writers should be aware
       of its existance for the future.
     </para>
-  </sect2>
+  </sect1>
 </chapter>
 
 <chapter id="cha-dparam-loop">
@@ -403,22 +420,28 @@ example_chain (GstPad *pad, GstBuffer *buf)
     The macro <filename>GST_DPMAN_PREPROCESS</filename> will do the following:
     <itemizedlist>
       <listitem>
+        <para>
         Update any dparams which are due to be updated.
+        </para>
       </listitem>
       <listitem>
+        <para>
         Calculate how many samples should be processed before the next required
         update
+        </para>
       </listitem>
       <listitem>
+        <para>
         Return the number of samples until next update, or the number of samples
         in the buffer - whichever is less.
+        </para>
       </listitem>
     </itemizedlist>
     In fact <filename>GST_DPMAN_PROCESS</filename> may do the same things as
     <filename>GST_DPMAN_PREPROCESS</filename> depending on the mode that the
     dparam manager is running in (see below).
   </para>
-  <sect2 id="sect-dparam-modes">
+  <sect1 id="sect-dparam-modes">
     <title>DParam Manager Modes</title>
     <para>
       A brief explanation of dparam manager modes might be useful here even
@@ -427,13 +450,17 @@ example_chain (GstPad *pad, GstBuffer *buf)
       element's parameters be updated in differently. These include:
       <itemizedlist>
         <listitem>
+          <para>
           <emphasis>Timelined</emphasis> - all parameter changes are known in
           advance before the pipeline is run.
+          </para>
         </listitem>
         <listitem>
+          <para>
           <emphasis>Realtime low-latency</emphasis> - Nothing is known ahead of
           time about when a parameter might change. Changes need to be
           propagated to the element as soon as possible.
+          </para>
         </listitem>
       </itemizedlist>
       When a dparam-aware application gets the dparam manager for an element,
@@ -464,8 +491,8 @@ example_chain (GstPad *pad, GstBuffer *buf)
       mode this could be done without affecting the sample accuracy of the
       parameter updates
     </para>
-  </sect2>
-  <sect2 id="sect-dparam-audio-video">
+  </sect1>
+  <sect1 id="sect-dparam-audio-video">
     <title>DParam Manager Modes</title>
     <para>
       All of the explanation so far has presumed that the buffer contains audio
@@ -477,5 +504,5 @@ example_chain (GstPad *pad, GstBuffer *buf)
       required. For more than one frame per buffer, treat it the same as the
       audio case.
     </para>
-  </sect2>
+  </sect1>
 </chapter>

@@ -43,8 +43,8 @@
       This guide is not relevant to you if you only want to use the existing
       functionality of &GStreamer;, or if you just want to use an application
       that uses &GStreamer;. If you are only interested in using existing
-      plugins to write a new application &mdash; and there are quite a lot of
-      plugins already &mdash; you might want to check the &GstAppDevMan;. If you
+      plugins to write a new application - and there are quite a lot of
+      plugins already - you might want to check the &GstAppDevMan;. If you
       are just trying to get help with a &GStreamer; application, then you
       should check with the user manual for that particular application.
     </para>
@@ -86,7 +86,7 @@
     <itemizedlist>
       <listitem>
         <para>
-          <guilabel><xref linkend="part-building"/></guilabel> &mdash;
+          <xref linkend="part-building"/> -
           Introduction to the structure of a plugin, using an example audio
           filter for illustration.
         </para>
@@ -97,23 +97,26 @@
           you will learn how to write the code to get a basic filter plugin
           working: These steps include chapters on <xref
           linkend="cha-building-types"/>, <xref linkend="cha-building-pads"/>,
-          <xref linkend="cha-building-chainfn"/>, and <xref
-          linkend="cha-building-state"/>.
+          <xref linkend="cha-building-chainfn"/>, and <!-- <xref
+          linkend="cha-building-state"/>--> (WRITEME: building state).
         </para>
         <para>
           After you have finished the first steps, you will be able to create a
           working plugin, but your new plugin might not have all the
           functionality you need. To provide some standard functionality, you
           will learn how to add more features to a new plugin. These features
-          are described in the chapters on <xref linkend="cha-building-props"/>
+          are described in the chapters on 
+          <!--FIXME: WRITEME <xref linkend="cha-building-props"/> -->
+          (WRITEME)
           and <xref linkend="cha-building-signals"/>. Finally, you will see in
-          <xref linkend="cha-building-testapp"/> how to write a short test
+          <!--<xref linkend="cha-building-testapp"/>-->(WRITEME) 
+          how to write a short test
           application to try out your new plugin.
         </para>
       </listitem>
       <listitem>
         <para>
-          <guilabel><xref linkend="part-advanced"/></guilabel> &mdash;
+          <xref linkend="part-advanced"/> -
           Information on advanced features of &GStreamer; plugin development.
         </para>
         <para>
@@ -121,18 +124,18 @@
           functional audio or video filter plugin with some nice features.
           However, &GStreamer; offers more for plugin writers. This part of the
           guide includes chapters on more advanced topics, such as <xref
-          linkend="cha-advanced-scheduling"/>, <xref
-          linkend="cha-advanced-request"/>, <xref
+          linkend="cha-advanced-request"/>, <!-- <xref
           linkend="cha-advanced-clock"/>, <xref
+          linkend="cha-advanced-scheduling"/>, <xref
           linkend="cha-advanced-dparams"/>, and <xref
-          linkend="cha-advanced-midi"/>. Since these features are more advanced,
+          linkend="cha-advanced-midi"/>-->. Since these features are more advanced,
           the chapters can basically be read in any order, as you find that your
           plugins require these features.
         </para>
       </listitem>
       <listitem>
         <para>
-          <guilabel><xref linkend="part-other"/></guilabel> &mdash; Explanation
+          <xref linkend="part-other"/> - Explanation
           of writing other plugin types.
         </para>
         <para>
@@ -142,20 +145,23 @@
           sinks, and autopluggers. This part of the guide presents the issues
           that arise when working on these more specialized plugin types. The
           part includes chapters on <xref linkend="cha-other-source"/>, <xref
-          linkend="cha-other-sink"/>, <xref linkend="cha-other-scheduler"/>, and
+          linkend="cha-other-sink"/>, <!-- FIXME: WRITEME 
+          <xref linkend="cha-other-scheduler"/>,--> and
           <xref linkend="cha-other-autoplugger"/>.
         </para>
       </listitem>
       <listitem>
         <para>
-          <guilabel><xref linkend="part-appendix"/></guilabel> &mdash; Further
+          <xref linkend="part-appendix"/> - Further
           information for plugin developers.
         </para>
         <para>
           The appendices contain some information that stubbornly refuses to fit
           cleanly in other sections of the guide. This information includes
-          <xref linkend="cha-appendix-checklist"/> and <xref
-          linkend="cha-appendix-python"/>. FIXME: organize better.
+          <!-- FIXME: WRITEME
+          <xref linkend="cha-appendix-checklist"/>--> (WRITEME) and 
+          <!-- <xref
+          linkend="cha-appendix-python"/>.--> FIXME: organize better.
         </para>
       </listitem>
     </itemizedlist>

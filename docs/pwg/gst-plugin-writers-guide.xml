@@ -58,7 +58,7 @@
         This guide is intended to help you understand the &GStreamer; framework
         (version &GstVersion;) so you can develop new plugins to extend the
         existing functionality. The guide addresses most issues by following the
-        development of an example plugin &mdash; an audio filter plugin &mdash;
+        development of an example plugin - an audio filter plugin -
         written in C. However, the later parts of the guide also present some
         issues involved in writing other types of plugins, and the end of the
         guide describes some of the Python bindings for &GStreamer;.

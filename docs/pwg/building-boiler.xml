@@ -115,7 +115,7 @@ U gst-template/gst-app/src/Makefile.am
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 name="sect1-boiler-examine" xreflabel="Examining the Basic Code">
+  <sect1 id="sect1-boiler-examine">
     <title>Examining the Basic Code</title>
     <para>
       First we will examine the code you would be likely to place in a header
@@ -127,7 +127,7 @@ U gst-template/gst-app/src/Makefile.am
       <filename>examples/pwg/examplefilter/boiler/gstexamplefilter.h</filename>.
     </para>
 
-    <example name="ex-boiler-examine-h" xreflabel="Example Plugin Header File">
+    <example id="ex-boiler-examine-h">
       <title>Example Plugin Header File</title>
       <programlisting>
   /* Definition of structure storing data for this element. */
