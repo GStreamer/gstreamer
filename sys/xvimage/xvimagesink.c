@@ -838,8 +838,9 @@ gst_xvimagesink_calculate_pixel_aspect_ratio (GstXContext * xcontext)
 
   /* first calculate the "real" ratio based on the X values;
    * which is the "physical" w/h divided by the w/h in pixels of the display */
-  ratio = xcontext->widthmm * xcontext->height
+  ratio = (gdouble) (xcontext->widthmm * xcontext->height)
       / (xcontext->heightmm * xcontext->width);
+
   /* DirectFB's X in 720x576 reports the physical dimensions wrong, so
    * override here */
   if (xcontext->width == 720 && xcontext->height == 576) {
