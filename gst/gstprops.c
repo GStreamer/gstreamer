@@ -969,7 +969,8 @@ gst_props_remove_entry_by_id (GstProps *props, GQuark propid)
 
     if (lentry->propid == propid) {
       found = TRUE;
-      g_list_delete_link (props->properties, current);
+      props->properties = g_list_delete_link (props->properties, current);
+      gst_props_entry_destroy (lentry);
     }
     else if (GST_PROPS_ENTRY_IS_VARIABLE (lentry)) {
       GST_PROPS_FLAG_UNSET (props, GST_PROPS_FIXED);
