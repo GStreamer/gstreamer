@@ -11,6 +11,7 @@ EXTRA_DIST = grammar.y parse.l types.h
 
 # uncomment these lines to _NOT_ dist the generated sources
 nodist_libgstparse_la_SOURCES = lex._gst_parse_yy.c grammar.tab.c
+CLEANFILES += grammar.tab.c lex._gst_parse_yy.c 
 
 libgstparse_la_CFLAGS = $(GST_CFLAGS) $(DISABLE_FLEX_WARNING)
 libgstparse_la_LIBADD = $(LIBGST_LIBS)
