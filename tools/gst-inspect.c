@@ -235,7 +235,7 @@ print_element_properties (GstElement *element)
       g_object_get_property (G_OBJECT (element), param->name, &value);
     }
 
-    g_print("  %-20.20s: %s\n", g_param_spec_get_name (param),
+    g_print("  %-20s: %s\n", g_param_spec_get_name (param),
 		               g_param_spec_get_blurb (param));
 
     switch (G_VALUE_TYPE (&value)) {
@@ -873,8 +873,15 @@ main (int argc, char *argv[])
   GstElementFactory *factory;
   GstPlugin *plugin;
   gchar *so;
+  struct poptOption options[] = {
+    {"gst-inspect-plugin",  'p',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP,   NULL,   0,
+	           "Show plugin details", NULL},
+    {"gst-inspect-scheduler",  's',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP,   NULL,   0,
+	           "Show scheduler details", NULL},
+    POPT_TABLEEND
+  };
 
-  gst_init (&argc, &argv);
+  gst_init_with_popt_table (&argc, &argv, options);
   gst_control_init (&argc, &argv);
   
   /* if no arguments, print out list of elements */
