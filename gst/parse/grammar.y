@@ -123,7 +123,7 @@ rconnection:   '!'                   { $$ = g_new0 (connection_t, 1); }
 
 %%
 
-extern FILE *yyin;
+extern FILE *_gst_parse_yyin;
 int _gst_parse_yylex (YYSTYPE *lvalp);
 
 static int yylex (void *lvalp) {
@@ -137,7 +137,7 @@ yyerror (const char *s)
   return -1;
 }
 
-int yy_scan_string (char*);
+int _gst_parse_yy_scan_string (char*);
 
 graph_t * _gst_parse_launch (const gchar *str, GError **error)
 {
@@ -147,10 +147,10 @@ graph_t * _gst_parse_launch (const gchar *str, GError **error)
     g_return_val_if_fail (str != NULL, NULL);
 
     dstr = g_strdup (str);
-    yy_scan_string (dstr);
+    _gst_parse_yy_scan_string (dstr);
 
 #ifdef DEBUG
-    yydebug = 1;
+    _gst_parse_yydebug = 1;
 #endif
 
     if (yyparse (&g) != 0) {
