@@ -1144,6 +1144,7 @@ plugins/rtp/Makefile
 plugins/rtp/rtpsend/Makefile
 plugins/mulaw/Makefile
 plugins/alaw/Makefile
+plugins/ffmpeg/Makefile
 plugins/filters/Makefile
 plugins/filters/smooth/Makefile
 plugins/filters/median/Makefile
