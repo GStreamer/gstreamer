@@ -57,6 +57,12 @@ fi
 GST_DOC()
 GST_ARCH()
 
+dnl we require bison for building of some of the marshal files
+AC_PATH_PROG(BISON_PATH, bison, no)
+if test x$BISON_PATH = xno; then
+  AC_MSG_ERROR(Could not find bison)
+fi
+
 dnl
 dnl We should really use AC_SYS_LARGEFILE, but the problem is
 dnl many of the plugins don't include "config.h".  To assure
