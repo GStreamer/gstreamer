@@ -25,7 +25,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <gststereo.h>
+#include "gststereo.h"
 
 /* elementfactory information */
 static GstElementDetails stereo_details = GST_ELEMENT_DETAILS ("Stereo effect",

@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 #include <string.h>
-#include <gstsmooth.h>
+#include "gstsmooth.h"
 #include <gst/video/video.h>
 
 /* elementfactory information */

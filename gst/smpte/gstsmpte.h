@@ -22,7 +22,7 @@
 #define __GST_SMPTE_H__
 
 #include <gst/gst.h>
-#include <gstmask.h>
+#include "gstmask.h"
 
 #define GST_TYPE_SMPTE \
   (gst_smpte_get_type())

@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 #include <string.h>
-#include <gstsmpte.h>
+#include "gstsmpte.h"
 #include <gst/video/video.h>
 #include "paint.h"
 

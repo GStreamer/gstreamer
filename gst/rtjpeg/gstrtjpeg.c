@@ -21,8 +21,8 @@
 #include "config.h"
 #endif
 
-#include <gstrtjpegenc.h>
-#include <gstrtjpegdec.h>
+#include "gstrtjpegenc.h"
+#include "gstrtjpegdec.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)

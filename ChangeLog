@@ -1,5 +1,33 @@
 2004-07-27  Steve Lhomme  <steve.lhomme@free.fr>
 
+	* gst/median/gstmedian.c:
+	* gst/mpeg2subt/gstmpeg2subt.c:
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/mpegstream/gstdvddemux.c:
+	* gst/mpegstream/gstmpegdemux.c:
+	* gst/mpegstream/gstmpegpacketize.c:
+	* gst/rtjpeg/gstrtjpeg.c:
+	* gst/rtjpeg/gstrtjpegdec.c:
+	* gst/rtjpeg/gstrtjpegenc.c:
+	* gst/sine/gstsinesrc.c:
+	* gst/smooth/gstsmooth.c:
+	* gst/smpte/gstsmpte.c:
+	* gst/smpte/gstsmpte.h:
+	* gst/stereo/gststereo.c:
+	* gst/videofilter/gstgamma.c:
+	* gst/videofilter/gstvideobalance.c:
+	* gst/videofilter/gstvideofilter.c:
+	* gst/videofilter/gstvideoflip.c:
+	* gst/videoscale/gstvideoscale.c:
+	* gst/videoscale/videoscale.c:
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/videotestsrc/videotestsrc.c:
+	* gst/wavenc/gstwavenc.c:
+	* gst/wavparse/gstwavparse.c:
+	  fix local includes and 64 bits constants
+    
+2004-07-27  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* win32/gst.sln:
 	* gst-libs/gst/*/*.vcproj:
 	* gst/*/*.vcproj:

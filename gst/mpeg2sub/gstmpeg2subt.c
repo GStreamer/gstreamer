@@ -22,7 +22,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <gstmpeg2subt.h>
+#include "gstmpeg2subt.h"
 #include <string.h>
 
 static void gst_mpeg2subt_class_init (GstMpeg2SubtClass * klass);
