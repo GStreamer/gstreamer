@@ -71,6 +71,9 @@ struct _GstGnomeVFSSrc {
 
 	/* handle */
 	GnomeVFSHandle *handle;
+	/* Seek stuff */
+	gboolean seek_happened;
+	gboolean need_flush;
 
 	/* local filename */
 	gchar *local_name;
@@ -126,6 +129,7 @@ static GstElementStateReturn gst_gnomevfssrc_change_state(GstElement *element);
 
 static void gst_gnomevfssrc_close_file(GstGnomeVFSSrc *src);
 static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src);
+static gboolean gst_gnomevfssrc_srcpad_event (GstPad *pad, GstEvent *event);
 
 
 static GstElementClass *parent_class = NULL;
@@ -136,17 +140,20 @@ GType gst_gnomevfssrc_get_type(void)
 
 	if (!gnomevfssrc_type) {
 		static const GTypeInfo gnomevfssrc_info = {
-      sizeof(GstGnomeVFSSrcClass),      NULL,
-      NULL,
-      (GClassInitFunc) gst_gnomevfssrc_class_init,
-      NULL,
-      NULL,
-      sizeof(GstGnomeVFSSrc),
-      0,
-      (GInstanceInitFunc) gst_gnomevfssrc_init,
+			sizeof(GstGnomeVFSSrcClass),      NULL,
+			NULL,
+			(GClassInitFunc) gst_gnomevfssrc_class_init,
+			NULL,
+			NULL,
+			sizeof(GstGnomeVFSSrc),
+			0,
+			(GInstanceInitFunc) gst_gnomevfssrc_init,
 		};
 		gnomevfssrc_type =
-		    g_type_register_static(GST_TYPE_ELEMENT, "GstGnomeVFSSrc", &gnomevfssrc_info, 0);
+			g_type_register_static(GST_TYPE_ELEMENT,
+					"GstGnomeVFSSrc",
+					&gnomevfssrc_info,
+					0);
 	}
 	return gnomevfssrc_type;
 }
@@ -184,6 +191,8 @@ static void gst_gnomevfssrc_init(GstGnomeVFSSrc *gnomevfssrc)
 
 	gnomevfssrc->srcpad = gst_pad_new("src", GST_PAD_SRC);
 	gst_pad_set_get_function(gnomevfssrc->srcpad, gst_gnomevfssrc_get);
+	gst_pad_set_event_function (gnomevfssrc->srcpad,
+			gst_gnomevfssrc_srcpad_event);
 	gst_element_add_pad(GST_ELEMENT(gnomevfssrc), gnomevfssrc->srcpad);
 
 	gnomevfssrc->filename = NULL;
@@ -214,8 +223,7 @@ static void gst_gnomevfssrc_set_property(GObject *object, guint prop_id, const G
 		g_return_if_fail((GST_STATE(src) < GST_STATE_PLAYING)
 				 || (GST_STATE(src) == GST_STATE_PAUSED));
 
-		if (src->filename)
-			g_free(src->filename);
+		g_free(src->filename);
 
 		/* clear the filename if we get a NULL (is that possible?) */
 		if (g_value_get_string (value) == NULL) {
@@ -483,12 +491,9 @@ static void gst_gnomevfssrc_close_file(GstGnomeVFSSrc *src)
 
 	/* zero out a lot of our state */
 	src->is_local = FALSE;
-	if (src->uri)
-		g_free(src->uri);
-	if (src->handle)
-		g_free(src->handle);
-	if (src->local_name)
-		g_free(src->local_name);
+	g_free(src->uri);
+	g_free(src->handle);
+	g_free(src->local_name);
 	src->fd = 0;
 	src->map = NULL;
 	src->size = 0;
@@ -503,17 +508,23 @@ static GstElementStateReturn gst_gnomevfssrc_change_state(GstElement *element)
 	g_return_val_if_fail(GST_IS_GNOMEVFSSRC(element),
 			     GST_STATE_FAILURE);
 
-	if (GST_STATE_TRANSITION(element) == GST_STATE_NULL_TO_READY) {
+	switch (GST_STATE_TRANSITION (element)) {
+	case GST_STATE_NULL_TO_READY:
 		if (!GST_FLAG_IS_SET(element, GST_GNOMEVFSSRC_OPEN)) {
 			if (!gst_gnomevfssrc_open_file
-			    (GST_GNOMEVFSSRC(element)))
+					(GST_GNOMEVFSSRC(element)))
 				return GST_STATE_FAILURE;
 		}
-	} else if (GST_STATE_TRANSITION(element) ==
-		   GST_STATE_READY_TO_NULL) {
+		break;
+	case GST_STATE_READY_TO_NULL:
 		if (GST_FLAG_IS_SET(element, GST_GNOMEVFSSRC_OPEN))
 			gst_gnomevfssrc_close_file(GST_GNOMEVFSSRC
-						   (element));
+					(element));
+		break;
+	case GST_STATE_READY_TO_PAUSED:
+	case GST_STATE_PAUSED_TO_READY:
+	default:
+		break;
 	}
 
 	if (GST_ELEMENT_CLASS(parent_class)->change_state)
@@ -534,6 +545,44 @@ static gboolean plugin_init(GModule *module, GstPlugin *plugin)
 	g_return_val_if_fail(factory != NULL, FALSE);
 
 	gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+
+	return TRUE;
+}
+
+static gboolean
+gst_gnomevfssrc_srcpad_event (GstPad *pad, GstEvent *event)
+{
+	GstGnomeVFSSrc *src = GST_GNOMEVFSSRC(GST_PAD_PARENT(pad));
+
+	switch (GST_EVENT_TYPE (event)) {
+	case GST_EVENT_SEEK:
+		switch (GST_EVENT_SEEK_TYPE (event)) {
+		case GST_SEEK_BYTEOFFSET_SET:
+			src->curoffset = (guint64) GST_EVENT_SEEK_OFFSET (event);
+			break;
+		case GST_SEEK_BYTEOFFSET_CUR:
+			src->curoffset += GST_EVENT_SEEK_OFFSET (event);
+			break;
+		case GST_SEEK_BYTEOFFSET_END:
+			src->curoffset = src->size - ABS (GST_EVENT_SEEK_OFFSET (event));
+			break;
+		default:
+			return FALSE;
+			break;
+		}
+		g_object_notify (G_OBJECT (src), "offset");
+		src->seek_happened = TRUE;
+		src->need_flush = GST_EVENT_SEEK_FLUSH(event);
+		gst_event_free (event);
+		/* push a discontinuous event? */
+		break;
+	case GST_EVENT_FLUSH:
+		src->need_flush = TRUE;
+		break;
+	default:
+		return FALSE;
+		break;
+	}
 
 	return TRUE;
 }
