@@ -243,9 +243,9 @@ enum
   ARG_PERIODCOUNT,
   ARG_PERIODSIZE,
   ARG_BUFFERSIZE,
-  ARG_DEBUG,
   ARG_AUTORECOVER,
-  ARG_MMAP
+  ARG_MMAP,
+  ARG_MAXDISCONT
 };
 
 static GstElement *parent_class = NULL;
@@ -284,6 +284,9 @@ gst_alsa_class_init (GstAlsaClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MMAP,
     g_param_spec_boolean ("mmap", "Use mmap'ed access", "Wether to use mmap (faster) or standard read/write (more compatible)",
                           TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAXDISCONT,
+    g_param_spec_uint64 ("max-discont", "Maximum Discontinuity", "GStreamer timeunits before the timestamp syncing starts dropping/insertting samples",
+   /* rounding errors */ 1000, GST_SECOND, GST_ALSA_DEFAULT_DISCONT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   element_class->change_state    = gst_alsa_change_state;
   element_class->request_new_pad = gst_alsa_request_new_pad;
@@ -379,6 +382,9 @@ gst_alsa_set_property (GObject *object, guint prop_id, const GValue *value,
   case ARG_MMAP:
     this->mmap = g_value_get_boolean (value);
     return;
+  case ARG_MAXDISCONT:
+    this->max_discont = (GstClockTime) g_value_get_uint64 (value);
+    return;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     return;
@@ -420,6 +426,9 @@ gst_alsa_get_property (GObject *object, guint prop_id, GValue *value,
   case ARG_MMAP:
     g_value_set_boolean (value, this->mmap);
     break;
+  case ARG_MAXDISCONT:
+    g_value_set_uint64 (value, (guint64) this->max_discont);
+    return;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     break;
@@ -1189,8 +1198,8 @@ sink_restart:
         samplestamp = gst_alsa_timestamp_to_samples (this, GST_BUFFER_TIMESTAMP (pad->buf));
         if (!GST_BUFFER_TIMESTAMP_IS_VALID (pad->buf) || 
 	     /* difference between them is < GST_ALSA_DEVIATION */
-	    ((this->transmitted + GST_ALSA_DEVIATION > samplestamp) &&
-	     (this->transmitted < GST_ALSA_DEVIATION + samplestamp))) {
+	    ((this->transmitted + gst_alsa_timestamp_to_samples (this, this->max_discont) >= samplestamp) &&
+	     (this->transmitted <= gst_alsa_timestamp_to_samples (this, this->max_discont) + samplestamp))) {
 no_difference:
 	  pad->size = pad->buf->size;
           pad->data = pad->buf->data;
@@ -1200,7 +1209,7 @@ no_difference:
 	  int samples = MIN (bytes, samplestamp - this->transmitted) * 
 	             (element->numpads == 1 ? this->format->channels : 1);
 	  int size = samples * snd_pcm_format_physical_width (this->format->format) / 8;
-	  g_print ("Allocating %d bytes (%d silent samples) now to resync to timestamp\n", size, samples);
+	  g_print ("Allocating %d bytes (%ld silent samples) now to resync to timestamp\n", size, MIN (bytes, samplestamp - this->transmitted));
 	  pad->data = g_malloc (size);
 	  if (!pad->data) {
 	    g_warning ("GstAlsa: error allocating %d bytes, buffers unsynced now.", size);
@@ -1212,12 +1221,14 @@ no_difference:
 	  }
 	  pad->behaviour = 1;
 	} else if (gst_alsa_samples_to_bytes (this, this->transmitted - samplestamp) >= pad->buf->size) {
+	  g_print ("Skipping %lu samples to resync (complete buffer)\n", gst_alsa_bytes_to_samples (this, pad->buf->size));
 	  /* this buffer is way behind */
 	  gst_buffer_unref (pad->buf);
 	  pad->buf = NULL;
 	  continue;
 	} else if (this->transmitted > samplestamp) {
 	  gint difference = gst_alsa_samples_to_bytes (this, this->transmitted - samplestamp);	
+	  g_print ("Skipping %lu samples to resync\n", (gulong) this->transmitted - samplestamp);
 	  /* this buffer is only a bit behind */
           pad->size = pad->buf->size - difference;
           pad->data = pad->buf->data + difference;
@@ -1808,7 +1819,7 @@ gst_alsa_clock_wait (GstClock *clock, GstClockEntry *entry)
   GstClockTimeDiff diff;
   GstAlsaClock *this = GST_ALSA_CLOCK (clock);
 
-  entry_time = this->get_time (this->owner);
+  entry_time = gst_alsa_clock_get_internal_time (clock);
   diff = GST_CLOCK_ENTRY_TIME (entry) - gst_clock_get_time (clock);
 
   if (diff < 0)
@@ -1827,7 +1838,7 @@ gst_alsa_clock_wait (GstClock *clock, GstClockEntry *entry)
 			    " now %" G_GUINT64_FORMAT,
                             target, GST_CLOCK_ENTRY_TIME (entry), entry_time);
 
-  while (this->get_time (this->owner) < target && this->last_unlock < entry_time) {
+  while (gst_alsa_clock_get_internal_time (clock) < target && this->last_unlock < entry_time) {
     g_usleep (gst_alsa_clock_get_resolution (clock) * G_USEC_PER_SEC / GST_SECOND);
   }
 

@@ -31,9 +31,10 @@
 #define GST_ALSA_MAX_CHANNELS 64 /* we don't support more than 64 channels */
 #define GST_ALSA_MIN_RATE 8000
 #define GST_ALSA_MAX_RATE 192000
-/* max allowed deviation between timestamp and playback pointer before killing/inserting samples 
-   should be >= 1 to allow rounding errors on timestamp <=> samplerate conversions */
-#define GST_ALSA_DEVIATION 2 
+/* max allowed discontinuity in time units between timestamp and playback pointer 
+   before killing/inserting samples 
+   should be big enough to allow smoothing errors on different video formats */
+#define GST_ALSA_DEFAULT_DISCONT (GST_SECOND / 10)
 
 #define GST_ALSA(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_ALSA, GstAlsa)
 #define GST_ALSA_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_ALSA, GstAlsaClass)
@@ -139,6 +140,9 @@ struct _GstAlsa {
 						   We will event insert silent samples or
 						   drop some to sync to incoming timestamps.
                                                  */
+  GstClockTime		max_discont;		/* max difference between current
+  						   playback timestamp and buffers timestamps
+						 */
 };
 struct _GstAlsaClass {
   GstElementClass parent_class;
