@@ -10,11 +10,11 @@ gst-complete
 gst-compprep
 gst-inspect
 gst-launch
+gst-md5sum
 gst-register
 gst-typefind
 gst-xmlinspect
 gst-xmllaunch
-gst-md5sum
 gst-complete.1
 gst-compprep.1
 gst-feedback.1

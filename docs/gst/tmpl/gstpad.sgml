@@ -1034,35 +1034,6 @@ Remove the probe from the pad
 The realpad object
 </para>
 
-@pad: 
-@caps: 
-@appfixatefunc: 
-@appfilter: 
-@getcapsfunc: 
-@fixatefunc: 
-@direction: 
-@linkfunc: 
-@unlinkfunc: 
-@peer: 
-@sched_private: 
-@chainfunc: 
-@chainhandler: 
-@getfunc: 
-@gethandler: 
-@eventfunc: 
-@eventhandler: 
-@eventmaskfunc: 
-@ghostpads: 
-@convertfunc: 
-@queryfunc: 
-@formatsfunc: 
-@querytypefunc: 
-@intlinkfunc: 
-@bufferallocfunc: 
-@probedisp: 
-@link: 
-@explicit_caps: 
-@_gst_reserved: 
 
 <!-- ##### MACRO GST_RPAD_DIRECTION ##### -->
 <para>

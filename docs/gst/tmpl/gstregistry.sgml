@@ -41,15 +41,6 @@ Flags for the registry
 The registry object
 </para>
 
-@object: 
-@priority: 
-@flags: 
-@name: 
-@details: 
-@loaded: 
-@plugins: 
-@paths: 
-@_gst_reserved: 
 
 <!-- ##### FUNCTION gst_registry_load ##### -->
 <para>
