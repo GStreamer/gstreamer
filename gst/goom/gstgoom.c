@@ -359,9 +359,9 @@ gst_goom_change_state (GstElement *element)
     case GST_STATE_READY_TO_PAUSED:
       goom->next_time = 0;
       goom->srcnegotiated = FALSE;
-      goom->channels = 0;
       break;
     case GST_STATE_PAUSED_TO_READY:
+      goom->channels = 0;
       break;
     default:
       break;
