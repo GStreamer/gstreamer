@@ -27,9 +27,9 @@ DIST_SUBDIRS = include libs gst tools tests testsuite examples docs
 
 all-local: gstreamer-@GST_MAJORMINOR@.pc gstreamer-@GST_MAJORMINOR@-uninstalled.pc
 
-gstreamer-@GST_MAJORMINOR@.pc: gstreamer.pc
+gstreamer-@GST_MAJORMINOR@.pc: gstreamer.pc gstreamer.pc.in
 	cp gstreamer.pc gstreamer-@GST_MAJORMINOR@.pc
-gstreamer-@GST_MAJORMINOR@-uninstalled.pc: gstreamer.pc
+gstreamer-@GST_MAJORMINOR@-uninstalled.pc: gstreamer-uninstalled.pc gstreamer-uninstalled.pc.in
 	cp gstreamer-uninstalled.pc gstreamer-@GST_MAJORMINOR@-uninstalled.pc
 
 pkgconfigdir = $(libdir)/pkgconfig
