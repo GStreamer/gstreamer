@@ -14,6 +14,7 @@ EXTRA_DIST = \
 	gst-python.spec.in \
 	gst-python.spec \
 	README-docs \
+	RELEASE \
 	examples/gst/bps.py \
 	examples/gst/cp.py \
 	examples/gst/dvdplay.py \

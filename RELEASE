@@ -1,0 +1,47 @@
+
+GStreamer: Release notes for GStreamer Python 0.7.92 "I stick my neck out for nobody"
+        
+
+This is the 0.7.92 release of the GStreamer Python bindings.
+It should be used with the 0.8.x series of GStreamer and GStreamer Plugins.
+
+
+This release adds an automated testsuite and some examples as well as
+improved coverage and bug fixes.
+
+  
+Features of this release
+    
+      * automated testsuite
+      * new video player example
+      * GstBuffer wrapping
+
+Download
+
+You can find source releases of gst-python in the download directory:
+http://gstreamer.freedesktop.org/src/gst-python/
+
+GStreamer Homepage
+
+More details can be found on the project's website:
+http://gstreamer.freedesktop.org/
+
+Support and Bugs
+
+We use GNOME's bugzilla for bug reports and feature requests:
+http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+
+Developers
+
+CVS is hosted on cvs.freedesktop.org.
+All code is in CVS and can be checked out from there.
+Interested developers of the core library, plug-ins, and applications should
+subscribe to the gstreamer-devel list. If there is sufficient interest we
+will create more lists as necessary.
+
+        
+Maintainers
+    
+      * Johan Dahlin
+      * David Lehn
+ 
