@@ -394,9 +394,10 @@ static void
 gst_queue_handle_pending_events (GstQueue * queue)
 {
   /* check for events to send upstream */
+  /* g_queue_get_length is glib 2.4, so don't depend on it yet, use ->length */
   GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
       "handling pending events, events queue of size %d",
-      g_queue_get_length (queue->events));
+      queue->events->length);
   g_mutex_lock (queue->event_lock);
   while (!g_queue_is_empty (queue->events)) {
     GstQueueEventResponse *er;

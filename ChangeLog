@@ -1,3 +1,8 @@
+2004-06-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstqueue.c:
+          don't use g_queue_get_length () because it's 2.4, use ->length
+
 2004-06-11  Steve Lhomme  <steve.lhomme@free.fr>
 
 	reviewed by Benjamin Otte  <in7y118@public.uni-hamburg.de>
