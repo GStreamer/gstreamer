@@ -319,7 +319,6 @@ dnl                     if any other value, the feature is enabled by default.
 dnl
 AC_DEFUN(GST_CHECK_FEATURE,
 [dnl
-builtin(undefine, [gst_endisable])dnl
 builtin(define, [gst_endisable], ifelse($5, [disabled], [enable], [disable]))dnl
 AC_ARG_ENABLE(translit([$1], A-Z, a-z),
   [  ]builtin(format, --%-26s gst_endisable %s: %s, gst_endisable-translit([$1], A-Z, a-z), [$2], [$3]),
@@ -358,7 +357,6 @@ if test x$USE_[$1] = xno; then
 fi
 dnl *** Define the conditional as appropriate
 AM_CONDITIONAL(USE_[$1], test x$USE_[$1] = xyes)
-builtin(undefine, [gst_endisable])dnl
 ])
 
 dnl Perform a check for existence of ARTSC
