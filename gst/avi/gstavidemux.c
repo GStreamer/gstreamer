@@ -687,7 +687,7 @@ gst_avi_demux_stream_init (GstAviDemux *avi)
   if (!gst_riff_read_header (riff, &doctype))
     return FALSE;
   if (doctype != GST_RIFF_RIFF_AVI) {
-    gst_element_error (avi, STREAM, WRONG_TYPE, NULL, NULL);
+    GST_ELEMENT_ERROR (avi, STREAM, WRONG_TYPE, NULL, NULL);
     return FALSE;
   }
 
@@ -802,7 +802,7 @@ gst_avi_demux_add_stream (GstAviDemux *avi)
   if (!(tag = gst_riff_peek_tag (riff, NULL)))
     return FALSE;
   if (tag != GST_RIFF_TAG_strf) {
-    gst_element_error (avi, STREAM, DEMUX, NULL,
+    GST_ELEMENT_ERROR (avi, STREAM, DEMUX, NULL,
 		       ("Invalid AVI header (no strf as second tag)"));
     goto skip_stream;
   }
@@ -1157,7 +1157,7 @@ gst_avi_demux_stream_header (GstAviDemux *avi)
   if (!(tag = gst_riff_peek_tag (riff, NULL)))
     return FALSE;
   if (tag != GST_RIFF_TAG_LIST) {
-    gst_element_error (avi, STREAM, DEMUX, NULL,
+    GST_ELEMENT_ERROR (avi, STREAM, DEMUX, NULL,
 		       ("Invalid AVI header (no LIST at start): "
 		       GST_FOURCC_FORMAT, GST_FOURCC_ARGS (tag)));
     return FALSE;
@@ -1165,7 +1165,7 @@ gst_avi_demux_stream_header (GstAviDemux *avi)
   if (!gst_riff_read_list (riff, &tag))
     return FALSE;
   if (tag != GST_RIFF_LIST_hdrl) {
-    gst_element_error (avi, STREAM, DEMUX, NULL,
+    GST_ELEMENT_ERROR (avi, STREAM, DEMUX, NULL,
 		       ("Invalid AVI header (no hdrl at start): "
 		       GST_FOURCC_FORMAT, GST_FOURCC_ARGS (tag)));
     return FALSE;
@@ -1175,7 +1175,7 @@ gst_avi_demux_stream_header (GstAviDemux *avi)
   if (!(tag = gst_riff_peek_tag (riff, NULL)))
     return FALSE;
   if (tag != GST_RIFF_TAG_avih) {
-    gst_element_error (avi, STREAM, DEMUX, NULL,
+    GST_ELEMENT_ERROR (avi, STREAM, DEMUX, NULL,
 		       ("Invalid AVI header (no avih at start): "
 		       GST_FOURCC_FORMAT, GST_FOURCC_ARGS (tag)));
     return FALSE;

@@ -490,7 +490,7 @@ gst_aasink_open (GstAASink *aasink)
 
   aasink->context = aa_autoinit (&aasink->ascii_surf);
   if (aasink->context == NULL) {
-    gst_element_error (GST_ELEMENT (aasink), LIBRARY, TOO_LAZY, NULL,
+    GST_ELEMENT_ERROR (GST_ELEMENT (aasink), LIBRARY, TOO_LAZY, NULL,
 		         ("error opening aalib context"));
     return FALSE;
   }

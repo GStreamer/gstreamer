@@ -1130,7 +1130,7 @@ gst_matroska_demux_init_stream (GstMatroskaDemux *demux)
     return FALSE;
 
   if (!doctype || strcmp (doctype, "matroska") != 0) {
-    gst_element_error (demux, STREAM, WRONG_TYPE, NULL,
+    GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE, NULL,
 		       ("Input is not a matroska stream (doctype=%s)",
 		       doctype ? doctype : "none"));
     g_free (doctype);
@@ -1138,7 +1138,7 @@ gst_matroska_demux_init_stream (GstMatroskaDemux *demux)
   }
   g_free (doctype);
   if (version > 1) {
-    gst_element_error (demux, STREAM, DEMUX, NULL,
+    GST_ELEMENT_ERROR (demux, STREAM, DEMUX, NULL,
 		       ("Demuxer version (1) is too old to read stream version %d",
 		       version));
     return FALSE;
@@ -1634,7 +1634,7 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux *demux,
 
         /* first byte(s): blocknum */
         if ((n = gst_matroska_ebmlnum_uint (data, size, &num)) < 0) {
-          gst_element_error (demux, STREAM, DEMUX, NULL, ("Data error"));
+          GST_ELEMENT_ERROR (demux, STREAM, DEMUX, NULL, ("Data error"));
           gst_buffer_unref (buf);
           res = FALSE;
           break;
@@ -1705,7 +1705,7 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux *demux,
               case 0x3: /* EBML lacing */ {
                 guint total;
                 if ((n = gst_matroska_ebmlnum_uint (data, size, &num)) < 0) {
-                  gst_element_error (demux, STREAM, DEMUX, NULL, ("Data error"));
+                  GST_ELEMENT_ERROR (demux, STREAM, DEMUX, NULL, ("Data error"));
                   res = FALSE;
                   break;
                 }
@@ -1715,7 +1715,7 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux *demux,
                   gint64 snum;
                   gint r;
                   if ((r = gst_matroska_ebmlnum_sint (data, size, &snum)) < 0) {
-                    gst_element_error (demux, STREAM, DEMUX, NULL, ("Data error"));
+                    GST_ELEMENT_ERROR (demux, STREAM, DEMUX, NULL, ("Data error"));
                     res = FALSE;
                     break;
                   }

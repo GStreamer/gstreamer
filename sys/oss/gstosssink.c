@@ -350,7 +350,7 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
 
   if (!GST_OSSELEMENT (osssink)->bps) {
     gst_buffer_unref (buf);
-    gst_element_error (osssink, CORE, NEGOTIATION, NULL, ("format wasn't negotiated before chain function"));
+    GST_ELEMENT_ERROR (osssink, CORE, NEGOTIATION, NULL, ("format wasn't negotiated before chain function"));
     return;
   }
 

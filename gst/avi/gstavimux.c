@@ -985,7 +985,7 @@ gst_avimux_stop_file (GstAviMux *avimux)
       if (avimux->audio_time) {
         avimux->auds_hdr.rate = (GST_SECOND * avimux->audio_size) / avimux->audio_time;
       } else {
-        gst_element_error (avimux, STREAM, MUX,
+        GST_ELEMENT_ERROR (avimux, STREAM, MUX,
                            (_("No or invalid input audio, AVI stream will be corrupt")), NULL);
         avimux->auds_hdr.rate = 0;
       }

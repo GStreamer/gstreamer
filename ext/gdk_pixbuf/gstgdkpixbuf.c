@@ -288,7 +288,7 @@ gst_gdk_pixbuf_chain (GstPad *pad, GstData *_data)
       GError *error;
 
       if (gdk_pixbuf_loader_close (filter->pixbuf_loader, &error)) {
-        gst_element_error (filter, LIBRARY, SHUTDOWN, NULL, (error->message));
+        GST_ELEMENT_ERROR (filter, LIBRARY, SHUTDOWN, NULL, (error->message));
         g_error_free (error);
         return;
       }

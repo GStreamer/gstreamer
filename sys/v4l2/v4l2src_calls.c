@@ -72,7 +72,7 @@ gst_v4l2src_fill_format_list (GstV4l2Src *v4l2src)
       if (errno == EINVAL) {
 	break; /* end of enumeration */
       } else {
-	gst_element_error (v4l2src, RESOURCE, SETTINGS, NULL,
+	GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS, NULL,
 	    ("failed to get number %d in pixelformat enumeration for %s: %s",
 	    n, GST_V4L2ELEMENT(v4l2src)->device, g_strerror (errno)));
 	g_free (format);
@@ -117,7 +117,7 @@ gst_v4l2src_queue_frame (GstV4l2Src *v4l2src,
   GST_LOG_OBJECT (v4l2src, "queueing frame %u", i);
 
   if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_QBUF, &v4l2src->pool->buffers[i].buffer) < 0) {
-    gst_element_error (v4l2src, RESOURCE, WRITE,
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, WRITE,
                        (_("Could not write to device \"%s\""), GST_V4L2ELEMENT(v4l2src)->device),
                        ("Error queueing buffer %u on device %s", i, g_strerror(errno)));
     return FALSE;
@@ -142,7 +142,7 @@ gst_v4l2src_grab_frame (GstV4l2Src *v4l2src)
   while (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_DQBUF, &buffer) < 0) {
     /* if the sync() got interrupted, we can retry */
     if (errno != EINTR) {
-      gst_element_error (v4l2src, RESOURCE, SYNC, NULL, ("could not sync on a buffer on device %s: %s",
+      GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC, NULL, ("could not sync on a buffer on device %s: %s",
 	  GST_V4L2ELEMENT(v4l2src)->device, g_strerror (errno)));
       return -1;
     }
@@ -170,7 +170,7 @@ gst_v4l2src_get_capture (GstV4l2Src *v4l2src)
 
 	v4l2src->format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_G_FMT, &v4l2src->format) < 0) {
-		gst_element_error (v4l2src, RESOURCE, SETTINGS, NULL,
+		GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS, NULL,
 				   ("failed to get pixelformat for device %s: %s",
 				    GST_V4L2ELEMENT(v4l2src)->device, g_strerror (errno)));
 		return FALSE;
@@ -206,7 +206,7 @@ gst_v4l2src_set_capture (GstV4l2Src          *v4l2src,
 	v4l2src->format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
 	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_S_FMT, &v4l2src->format) < 0) {
-		gst_element_error (v4l2src, RESOURCE, SETTINGS, NULL,
+		GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS, NULL,
 				   ("failed to set pixelformat to %s @ %dx%d for device %s: %s",
 				   fmt->description, width, height, GST_V4L2ELEMENT(v4l2src)->device, g_strerror (errno)));
 		return FALSE;
@@ -245,14 +245,14 @@ gst_v4l2src_capture_init (GstV4l2Src *v4l2src)
   v4l2src->breq.type = v4l2src->format.type;
   v4l2src->breq.memory = V4L2_MEMORY_MMAP;
   if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_REQBUFS, &v4l2src->breq) < 0) {
-    gst_element_error (v4l2src, RESOURCE, READ,
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
                        (_("Could not get buffers from device \"%s\""), GST_V4L2ELEMENT(v4l2src)->device),
                        ("error requesting %d buffers: %s", v4l2src->breq.count, g_strerror (errno)));
     return FALSE;
   }
 
   if (v4l2src->breq.count < GST_V4L2_MIN_BUFFERS) {
-    gst_element_error (v4l2src, RESOURCE, READ,
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
                        (_("Could not get enough buffers from device \"%s\""), GST_V4L2ELEMENT(v4l2src)->device),
                        ("we received %d, we want at least %d", v4l2src->breq.count, GST_V4L2_MIN_BUFFERS));
     v4l2src->breq.count = buffers;
@@ -280,7 +280,7 @@ gst_v4l2src_capture_init (GstV4l2Src *v4l2src)
     buffer->buffer.index = n;
     buffer->buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_QUERYBUF, &buffer->buffer) < 0) {
-    gst_element_error (v4l2src, RESOURCE, READ, NULL,
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ, NULL,
                        ("Could not get buffer properties of buffer %d: %s", n, g_strerror (errno)));
       gst_v4l2src_capture_deinit(v4l2src);
       return FALSE;
@@ -288,7 +288,7 @@ gst_v4l2src_capture_init (GstV4l2Src *v4l2src)
     buffer->start = mmap (0, buffer->buffer.length, PROT_READ|PROT_WRITE, MAP_SHARED, 
 	GST_V4L2ELEMENT(v4l2src)->video_fd, buffer->buffer.m.offset);
     if (buffer->start == MAP_FAILED) {
-    gst_element_error (v4l2src, RESOURCE, READ, NULL,
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ, NULL,
                        ("Could not mmap video buffer %d: %s", n, g_strerror (errno)));
       buffer->start = 0;
       gst_v4l2src_capture_deinit (v4l2src);
@@ -328,7 +328,7 @@ gst_v4l2src_capture_start (GstV4l2Src *v4l2src)
   v4l2src->quit = FALSE;
 
   if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_STREAMON, &type) < 0) {
-    gst_element_error (v4l2src, RESOURCE, OPEN_READ, NULL,
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, OPEN_READ, NULL,
                        ("Error starting streaming capture from device %s: %s",
 	                GST_V4L2ELEMENT(v4l2src)->device, g_strerror(errno)));
     return FALSE;
@@ -356,7 +356,7 @@ gst_v4l2src_capture_stop (GstV4l2Src *v4l2src)
   /* we actually need to sync on all queued buffers but not
    * on the non-queued ones */
   if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd, VIDIOC_STREAMOFF, &type) < 0) {
-    gst_element_error (v4l2src, RESOURCE, CLOSE, NULL,
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, CLOSE, NULL,
                        ("Error stopping streaming capture from device %s: %s",
 	                GST_V4L2ELEMENT(v4l2src)->device, g_strerror (errno)));
     return FALSE;

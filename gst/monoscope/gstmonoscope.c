@@ -230,7 +230,7 @@ gst_monoscope_chain (GstPad *pad, GstData *_data)
     GST_DEBUG ("making new pad");
     if (!gst_pad_is_negotiated (monoscope->srcpad)) {
       if (gst_pad_renegotiate (monoscope->srcpad) <= 0) {
-        gst_element_error (monoscope, CORE, NEGOTIATION, NULL, NULL);
+        GST_ELEMENT_ERROR (monoscope, CORE, NEGOTIATION, NULL, NULL);
         return;
       }
     }

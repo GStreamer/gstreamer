@@ -252,6 +252,12 @@ gst_esdsink_chain (GstPad *pad, GstData *_data)
 
   esdsink = GST_ESDSINK (gst_pad_get_parent (pad));
 
+  if (!esdsink->negotiated) {
+    GST_ELEMENT_ERROR (esdsink, CORE, NEGOTIATION, NULL,
+                       ("element wasn't negotiated before chain function"));
+    goto done;
+  }
+
   if (GST_IS_EVENT(buf)){
     GstEvent *event = GST_EVENT(buf);
 
@@ -386,7 +392,7 @@ gst_esdsink_open_audio (GstEsdsink *sink)
   if (sink->depth == 16) esdformat |= ESD_BITS16;
   else if (sink->depth == 8) esdformat |= ESD_BITS8;
   else {
-    gst_element_error (sink, STREAM, FORMAT, NULL,
+    GST_ELEMENT_ERROR (sink, STREAM, FORMAT, NULL,
                        ("invalid bit depth (%d)", sink->depth));
     return FALSE;
   }
@@ -394,7 +400,7 @@ gst_esdsink_open_audio (GstEsdsink *sink)
   if (sink->channels == 2) esdformat |= ESD_STEREO;
   else if (sink->channels == 1) esdformat |= ESD_MONO;
   else {
-    gst_element_error (sink, STREAM, FORMAT, NULL,
+    GST_ELEMENT_ERROR (sink, STREAM, FORMAT, NULL,
                        ("invalid number of channels (%d)", sink->channels));
     return FALSE;
   }
@@ -406,7 +412,7 @@ gst_esdsink_open_audio (GstEsdsink *sink)
     sink->fd = esd_play_stream(esdformat, sink->frequency, sink->host, connname);
   }
   if ( sink->fd < 0 ) {
-    gst_element_error (sink, RESOURCE, OPEN_WRITE, NULL,
+    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, NULL,
                        ("can't open connection to esound server"));
     return FALSE;
   }
