@@ -9,7 +9,7 @@
 #ifdef HAVE_CPU_PPC
 #include "gstppc.h"
 #else
-#warn Need to know about this architecture, or have a generic implementation
+#error Need to know about this architecture, or have a generic implementation
 #endif
 #endif
 

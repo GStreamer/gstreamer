@@ -1,18 +1,13 @@
 #ifndef GST_HGUARD_GSTPPC_H
 #define GST_HGUARD_GSTPPC_H
 
-/* Hmm - does this work, or do the braces cause other stack manipulation?
- * XXX
+/* FIXME: Hmm - does this work?
  */
-#define GET_SP(target) { \
-	register unsigned long r1 __asm__("r1"); \
-	target = r1; \
-}
+#define GET_SP(target) \
+	__asm__("stw 1,%0" : "=m"(target) : : "r1");
 
-#define SET_SP(source) { \
-	register unsigned long r1 __asm__("r1"); \
-	r1 = source; \
-}
+#define SET_SP(source) \
+	__asm__("lwz 1,%0" : "=m"(source))
 
 #define JUMP(target) \
     __asm__("b " SYMBOL_NAME_STR(cothread_stub))

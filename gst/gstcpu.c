@@ -28,7 +28,7 @@ void gst_cpuid_i386(int,long *,long *,long *,long *);
 #define gst_cpuid gst_cpuid_i386
 
 #else
-#define gst_cpuid(o,a,b,c,d)
+#define gst_cpuid(o,a,b,c,d) (void)(a);(void)(b);(void)(c);
 #endif
 
 void _gst_cpu_initialize(void) 

@@ -12,7 +12,7 @@ if HAVE_CPU_I386
 GSTARCH_SRCS = gstcpuid_i386.s
 else
 if HAVE_CPU_PPC
-GSTARCH_SRCS = gstppc.c
+GSTARCH_SRCS = 
 else
 GSTARCH_SRCS = 
 endif
@@ -55,6 +55,9 @@ libgstinclude_HEADERS =	\
 	gstbufferpool.h	\
 	gstclock.h	\
 	gstcpu.h	\
+	gstarch.h       \
+	gsti386.h       \
+	gstppc.h        \
 	gstelement.h	\
 	gstbin.h	\
 	gstpipeline.h	\
