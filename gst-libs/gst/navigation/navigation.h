@@ -30,26 +30,22 @@ G_BEGIN_DECLS
 #define GST_TYPE_NAVIGATION \
   (gst_navigation_get_type ())
 #define GST_NAVIGATION(obj) \
-  (G_INTERFACE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_NAVIGATION, GstNavigation))
-#define GST_NAVIGATION_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_NAVIGATION, GstNavigationClass))
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_NAVIGATION, GstNavigation))
 #define GST_IS_NAVIGATION(obj) \
-  (G_INTERFACE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_NAVIGATION))
-#define GST_IS_NAVIGATION_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_NAVIGATION))
-#define GST_NAVIGATION_GET_CLASS(inst) \
-  (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_NAVIGATION, GstNavigationClass))
+      (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_NAVIGATION))
+#define GST_NAVIGATION_GET_IFACE(obj) \
+    (G_TYPE_INSTANCE_GET_INTERFACE ((obj), GST_TYPE_NAVIGATION, GstNavigationIface))
 
 typedef struct _GstNavigation GstNavigation;
 
-typedef struct _GstNavigationClass {
-  GTypeInterface klass;
+typedef struct _GstNavigationIface {
+  GTypeInterface g_iface;
 
   /* virtual functions */
   void (*send_event) (GstNavigation *navigation, GstCaps *caps);
   
   GST_CLASS_PADDING
-} GstNavigationClass;
+} GstNavigationIface;
 
 GType		gst_navigation_get_type	(void);
 
