@@ -1,0 +1,53 @@
+This is GStreamer Plugins 0.7.5
+
+Changes since 0.7.5: 
+    
+      * Compatible with gstreamer 0.7.5
+      * ffmpeg plugin moved to gst-ffmpeg module
+      * DV fixes
+      * mikmod fixes
+      * OSX build fixes
+      * jpeg fixes
+      * gdk_pixbuf fixes
+      * automake 1.8 underquotedness fixes
+      * rfb server/port addition
+      * colorspace fixes
+      * liboil usage in videofilter and videotestsrc
+      * better LADSPA classification
+      * ALSA xrun recovery fixes
+      * switch fixes
+      * xvimagesink fixes
+      * moved out MAS sink
+      * experimental xine lib plugin
+      * intfloat and oneton removed in favour of audioconvert and interleave
+      * only export gst_* from plugins
+      * lame tag writing fixed
+      * added reporting of codecs used
+      * version gconf schemas and install locations
+      * qtdemux fixes
+      * gamma correction fixes
+
+Bugs fixed since 0.7.5:
+    
+      * 129740 : MP4/M4A files not recognized properly
+      * 130507 : Silence/sine don't have a sync property
+      * 131050 : avi-demux plays audio, but funky colors as video
+      * 131534 : jhbuild build failure with Debian sid
+      * 131948 : xoverlay and gstplay sample fails to build - missing include
+      * 133219 : missing include in ./gst/effectv/gstedge.c
+      * 133316 : gst/vbidec/vbiscreen missing cast
+      * 133410 : gstid3tag doesnt handle track-count
+      * 133508 : [oggdemux] Can't play files with multiple streams
+      * 133528 : sincesrc seems not to register its dparams correctly
+      * 133562 : Build breaks on dvdec
+      * 133663 : ext/ladspa categorises all plugins as Filter/Effect
+      * 133886 : libtool error while compiling alsamixer plug-in
+      * 134255 : vbidec won't compile
+      * 134318 : GConf schemas should be in versioned files, and install in v
+      * 134322 : gst/intfloat/gstint2float.c forgets to include "inttypes.h"
+      * 134612 : ext/gdk_pixbuf/Makefile: error in target install-loaderLTLIB
+      * 134750 : Problem building gst-plugins on Solaris
+      * 134894 : vorbisdec signals tags with bitrate < 1 (ie not set)
+      * 135038 : port gst-shorten to the new caps system
+      * 135042 : fix tag writing in lame
+      * 135116 : gstflacenc.c fails to build in NetBSD
