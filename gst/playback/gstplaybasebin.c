@@ -1044,10 +1044,12 @@ setup_substreams (GstPlayBaseBin * play_base_bin)
     }
   }
 
-  /* now check if the requested current streams exist */
+  /* now check if the requested current streams exist. If
+   * current >= num_streams, decrease current so at least
+   * we have output. Always keep it enabled. */
   for (n = 0; n < NUM_TYPES; n++) {
     if (play_base_bin->current[n] >= group->type[n].npads) {
-      play_base_bin->current[n] = group->type[n].npads > 0 ? 0 : -1;
+      play_base_bin->current[n] = 0;
     }
   }
 
