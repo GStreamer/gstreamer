@@ -366,11 +366,13 @@ gst_thread_change_state (GstElement *element)
       thread->thread_id = g_thread_create_full(gst_thread_main_loop,
 	  thread, STACK_SIZE, TRUE, TRUE, G_THREAD_PRIORITY_NORMAL,
 	  &error);
+
       if (!thread->thread_id){
         GST_DEBUG (GST_CAT_THREAD, "g_thread_create_full failed");
 	g_mutex_unlock (thread->lock);
         GST_DEBUG (GST_CAT_THREAD, "could not create thread \"%s\"",
 	           GST_ELEMENT_NAME (element));
+
 	return GST_STATE_FAILURE;
       }
       GST_DEBUG (GST_CAT_THREAD, "GThread created");
@@ -408,6 +410,11 @@ gst_thread_change_state (GstElement *element)
       g_cond_wait (thread->cond, thread->lock);
       THR_DEBUG ("got ack");
       g_mutex_unlock (thread->lock);
+
+      /* we're actually doing async notification, the state could
+       * have changed already (eg. EOS) here. commented out as
+       * it needs more thinking... */
+      /* stateset = GST_STATE_ASYNC; */
       break;
     }
     case GST_STATE_PLAYING_TO_PAUSED:
@@ -495,6 +502,7 @@ gst_thread_change_state (GstElement *element)
       THR_DEBUG ("waiting for ack");
       g_cond_wait (thread->cond, thread->lock);
       THR_DEBUG ("got ack");
+
 
       /* this block of code is very tricky
        * basically, we try to clean up the whole thread and
@@ -618,15 +626,15 @@ gst_thread_main_loop (void *arg)
 
         /* been signaled, we need to state transition now and signal back */
         gst_thread_update_state (thread);
-        THR_DEBUG_MAIN ("done with state transition, "
-	                "signaling back to parent process");
-        g_cond_signal (thread->cond);
         /* now we decide what to do next */
         if (GST_STATE (thread) == GST_STATE_NULL) {
           /* REAPING must be set, we can simply break this iteration */
           THR_DEBUG_MAIN ("set GST_THREAD_STATE_REAPING");
           GST_FLAG_SET (thread, GST_THREAD_STATE_REAPING);
 	}
+        THR_DEBUG_MAIN ("done with state transition, "
+	                "signaling back to parent process");
+        g_cond_signal (thread->cond);
         continue;
 
       case GST_STATE_PAUSED:
@@ -646,6 +654,7 @@ gst_thread_main_loop (void *arg)
 
         /* been signaled, we need to state transition now and signal back */
         gst_thread_update_state (thread);
+
         /* now we decide what to do next */
         if (GST_STATE (thread) != GST_STATE_PLAYING) {
           /* either READY or the state change failed for some reason */
