@@ -42,14 +42,41 @@ execution ended after 5 iterations (sum 301479000 ns, average 60295800 ns, min 3
 (Some parts of output have been removed for clarity)  If it looks similar, then
 GStreamer itself is running correctly.
         </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="using-sound">
+        <para>Can my system play sound through GStreamer ?</para>
+      </question>
+
+      <answer>
         <para>
-After this, you might want to try and see if GStreamer can play audio on your
-system.  You need to combine two plug-ins for this test : sinesrc (which
-produces a pure tone) and an audio output plug-in.  You should choose one
-that matches your current sound output and you should make sure you have
-it installed.
+You can test this by trying to play a sine tone.  For this, you need to
+connect the sinesrc plug-in to an output plug-in that matches your hardware.
+A (non-complete) list of output plug-ins for audio is
+<itemizedlist>
+<listitem>osssink for OSS output</listitem>
+<listitem>esdsink for ESound output</listitem>
+<listitem>artssink for aRTs output</listitem>
+<listitem>alsasink for ALSA output</listitem>
+<listitem>jacksink for JACK output</listitem>
+</itemizedlist>
+First of all, run gst-inspect on the output plug-in you want to use to
+make sure you have it installed.  For example, if you use OSS, run
+<programlisting>
+$ gst-inspect osssink
+</programlisting>
+and see if that prints out a bunch of properties for the plug-in.
         </para>
-   
+        <para>
+Then try to play the sine tone by running
+<programlisting>
+$ gst-launch sinesrc ! osssink
+</programlisting>
+and see if you hear something.  Make sure your volume is turned up,
+but also make sure it is not too loud and you are not wearing your headphones.
+        </para>
       </answer>
     </qandaentry>
 

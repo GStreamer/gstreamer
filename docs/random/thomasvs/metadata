@@ -1,4 +1,4 @@
-I'll use this doc to describe how I think metadata should work from the
+I'll use this doc to describe how I think media info should work from the
 perspective of the application developer and end user, and from that
 extrapolate what we need to provide that.
 
@@ -9,16 +9,16 @@ away.  A user is free to choose whatever plug-ins he has, and a developer
 can code to the general API that GStreamer provides without having to deal
 with the underlying codecs.
 
-It is important that GStreamer also handles metadata well and efficiently,
+It is important that GStreamer also handles media info well and efficiently,
 since more often than not the same libraries are needed to do this.  So
-to avoid applications depending on these libs just to do the metadata,
+to avoid applications depending on these libs just to do the media info,
 we should make sure GStreamer provides a reasonable and fast abstraction
 for this as well.
 
 GOALS
 -----
-- quickly read and write content metadata
-- quickly read stream metadata
+- quickly read and write "tags"
+- quickly read stream metadata (technical properties, length, audio props, ...)
 - cache both kinds of data transparently
 - (possibly) provide bins that do this
 - provide a simple API to do this
@@ -29,7 +29,7 @@ The user or developer using GStreamer is interested in all information that
 describes the stream.  The library handles these two types differently
 however, so I will use the following terms to describe this :
 
-- content metadata
+- metadata :
   every kind of information that is tied to the "concept" of the stream,
   and not tied to the actual encoding or representation of the stream.
   - it can be altered without transcoding the stream
@@ -40,41 +40,68 @@ however, so I will use the following terms to describe this :
     - year, track order, album
     - comments
 
-- stream metadata
-  every kind of information that is tied to the "codec" or "representation"
-  used.
+- mediainfo
+  every kind of information that is tied to the "codec" used.
   - cannot be altered without transcoding
   - is the set of parameters the stream has been encoded with
-  - describes properties of the stream itself
+  - describes properties of the encoded stream itself
+  - examples:
+    - bitrate targets (e.g. nominal), encoding mode (e.g. joint stereo)
+  - to this we also add "bitrate", but we query this through the pad_query
+    interface
+    
+- format
+  every kind of information that is tied to the "raw" bitstream
+  - cannot be altered without decoding and changing the raw bitstream
   - examples:
     - samplerate, bit depth/width, channels
-    - bitrate, encoding mode (e.g. joint stereo)
-    - video size, frames per second, colorspace used
     - length in time
-    
+    - video size, frames per second, colorspace used
+  - the format is queried by getting the GstCaps of the pad that sources
+    the buffers
+
+- length in time and tracks for the whole stream
+  - gotten through pad queries
+  - stored in variables in the struct
+
+- immediate info
+  - examples:
+    - position in time
+    - current bitrate
+
+- tracks :
+  a media file or stream can contain multiple consecutive streams, which
+  we will call "tracks".  GStreamer has a format for track used in querying
+  and seeking as well.
+  A track should be thought of as the whole of one single piece of media 
+  inside a physical stream.
+  A track can have at most one set of tags, and has fixed "raw" properties.
 
 EXAMPLE PIPELINES
 -----------------
-reading content metadata : filesrc ! id3v1
+reading metadata : filesrc ! id3v1
   - would read metadata from file
   - id3v1 immediately causes filesrc to seek until it has found
     - the (first) metadata
     - that there is no metadata present
+  - id3v1 sends out a property notification with name "metadata" and
+    a GstCaps structure
 
 resetting and writing content metadata :
-	filesrc ! id3v1 reset=true artist="Arid" ! filesink
+	id3v1 reset=true artist="Arid" ! filesink
 
   - effect: clear the current tag and reset it to only have Arid as artist
   - id3v1 seeks to the right location, clears the tag, and writes the new one
-  - filesrc might not be necessary here
-  - this probably only works when doing an in-place edit
 
 COST
 ----
-Querying metadata can be expensive.
-Any application querying for metadata should take this into account and
+Querying media info can be expensive.
+Any application querying for media info should take this into account and
 make sure that it doesn't block the app unnecessarily while the querying
 happens.
+
+The app should create an object, hand it a bunch of locations to query,
+and connect to the signal the app is going to send out.
 
 In most cases, querying content data should be fast since it doesn't involve
 decoding
@@ -83,25 +110,28 @@ Technical data could be harder and thus might be better done only when needed.
 
 CACHE
 -----
-Getting metadata can be an expensive operation.  It makes sense to cache
-the metadata queried on-disk to provide rapid access to this data.
+Getting media info can be an expensive operation.  It makes sense to cache
+the dia info queried on-disk to provide rapid access to this data.
 It is important however that this is done transparently - the system should
 be able to keep working without it, or keep working when you delete this cache.
 
 The API would provide a function like 
-	gst_metadata_content_read_cached (location) 
-or even 
-	gst_metadata_read_cached (location, GST_METADATA_CONTENT, GST_METADATA_READ_CACHED)
-to try and get the cached metadata.
+	gst_media_info_read_cached (media_info, location, 
+                                    GST_MEDIA_INFO_METADATA, 
+                                    GST_MEDIA_INFO_READ_CACHED);
 
-- check if the file is cached in the metadata cache
-  - if no, then read the metadata and store it in the cache
+to try and get the cached metadata using the media info object.
+
+- check if the file is cached in the media info cache
+  - if no, then read the media info and store it in the cache
   - if yes, then check the file against it's timestamp (or (part of) md5sum ?)
     - if it was changed, force a new read and store it in the cache
-    - if it wasn't changed, just return the cached metadata
+    - if it wasn't changed, just return the cached media info
+
 
 For optimizations, it might also make sense to do 
-	GList * gst_metadata_read_many (GList *locations, ...)
+	GList * gst_metadata_read_many (media_info, GList *locations, ...)
+
 which would allow the back-end to implement this more efficiently.
 Suppose an application loads a playlist, for example, then this playlist
 could be handed to this function, and a GList of metadata types could
@@ -131,13 +161,13 @@ so that we can drop the old ones.
 The cache should use standard glibc.
 FIXME: is it worth it to use gnome-vfs for this ?
 
-STANDARDIZATION OF METADATA
----------------------------
+STANDARDIZATION OF MEDIAINFO
+----------------------------
 Different file formats have different "tags".  It is not always possible
 to map metadata to tags.  Some level of agreement on metadata names is also
 required.
 
-For technical metadata, the names or properties should be fairly standard.
+For media info, the names or properties should be fairly standard.
 We also use the same names as used for properties and capabilities in 
 GStreamer.
 
@@ -168,13 +198,13 @@ audio and video (-> bitrate) or multiple audio or video streams.  One way
 to do this might be to make a metadata set for a stream a GList of metadata
 for elementary streams.
 
-For content metadata, the standards are less clear.
+For metadata and tags, the standards are less clear.
 Some nice ones to standardize on might be
   - artist
   - title
   - author
   - year
-  - genre (touchy though)
+  - genre (messy though)
   - RMS, inpoint, outpoint (calculated through some formula, used for mixing)
 
 TESTING

@@ -9,14 +9,35 @@
 
       <answer>
         <para>
-	You have multiple options available. Our primary method of distribution is by providing tarballs of our releases. You find these tarballs on our
-<ulink url="http://sourceforge.net/project/showfiles.php?group_id=1936">Sourceforge files page.</ulink>
+Generally speaking, you have three options, ranging from easy to hard :
+<itemizedlist>
+<item><link linkend="getting-gstreamer-packages">
+distribution-specific packages</link></item>
+<item><link linkend="getting-gstreamer-source">
+source tarballs</link></item>
+<item><link linkend="getting-gstreamer-packages">
+CVS</link></item>
+</itemizedlist>
         </para>
       </answer>
     </qandaentry>
 
  <qandaentry>
-      <question id="getting-gstreamer">
+      <question id="getting-gstreamer-source">
+        <para>How can I install GStreamer from source ?</para>
+      </question>
+
+      <answer>
+         <para>
+We provide tarballs of our releases on our 
+<ulink url="http://sourceforge.net/project/showfiles.php?group_id=1936">
+Sourceforge files page.</ulink>
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="getting-gstreamer-packages">
         <para>Are there premade binaries available ?</para>
       </question>
 
@@ -34,7 +55,7 @@
     </qandaentry>
 
  <qandaentry>
-      <question id="getting-gstreamer">
+      <question id="getting-gstreamer3">
         <para>Why don't you provide premade binaries for distribution XY ?</para>
       </question>
 
@@ -46,7 +67,7 @@
     </qandaentry>
 
 <qandaentry>
-      <question id="getting-gstreamer">
+      <question id="getting-gstreamer4">
         <para>I am having trouble compiling GStreamer on my LFS installation, why ?</para>
       </question>
 
@@ -58,5 +79,16 @@ neither can or want to know enough, about how your unique system is configured, 
       </answer>
     </qandaentry>
 
+    <qandaentry>
+      <question id="getting-gstreamer-cvs">
+        <para>How do I get GStreamer through CVS ?</para>
+      </question>
+
+      <answer>
+        <para>
+        </para>
+      </answer>
+    </qandaentry>
+	
   </qandaset>
 </sect1>

@@ -3,6 +3,69 @@
   <qandaset>
 
     <qandaentry>
+      <question id="troubleshooting-missing-plug-in">
+        <para>
+Some application is telling me that I am missing a plug-in.  What do I do ?
+        </para>
+      </question>
+
+      <answer>
+        <para>
+Well, start by checking if you really are missing the plug-in.
+  <programlisting>
+gst-inspect (plug-in)
+  </programlisting>
+and replace (plug-in) with the plug-in you think is missing.
+If this doesn't return any result, then you either don't have it or your
+registry cannot find it.
+        </para>
+        <para>
+If you're not sure either way, then chances are good that you don't have
+it.  You should get the plug-in and run gst-register to register it.
+How to get the plug-in depends on your distribution.
+<itemizedlist>
+<listitem>if you run GStreamer using packages for your distribution, you
+should check what packages are available for your distribution and see
+if any of the available packages contains the plug-in.
+</listitem>
+<listitem>if you run GStreamer from a source install, there's a good chance
+the plug-in didn't get built because you are missing an external library.
+When you ran configure, you should have gotten output of what plug-ins are
+going to be built.  You can re-run configure to see if it's there.
+If it isn't, there is a good reason why it is not getting built.
+The most likely is that you're missing the library you need for it.
+Check the README file in gst-plugins to see what library you need.
+Make sure to remember to re-run configure after installing the supporting
+library !
+</listitem>
+<listitem>
+if you run GStreamer from CVS, the same logic applies as for a source install.
+Go over the reasons why the plug-in didn't get configured for build.
+Check output of config.log for a clue as to why it doesn't get built if
+you're sure you have the library needed installed in a sane place.
+</listitem>
+</itemizedlist>
+
+        </para>
+      </answer>
+     </qandaentry>
+
+     <qandaentry>
+      <question id="troubleshooting-old-plug-ins">
+        <para>
+I get an error that says something like
+
+(process:26626): GLib-GObject-WARNING **: specified instance size for type 
+`DVDReadSrc' is smaller than the parent type's `GstElement' instance size
+What's  wrong ?
+        </para>
+      </question>
+
+      <answer>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
       <question id="troubleshooting-segfault">
         <para>
 The GStreamer application I used stops with a segmentation fault.  What can
