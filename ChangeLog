@@ -1,3 +1,9 @@
+2004-03-24  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/xvid/gstxvidenc.c: (gst_xvidenc_set_property),
+	(gst_xvidenc_get_property):
+	  ulong/int mess-up.
+
 2004-03-24  David Schleef  <ds@schleef.org>
 
 	* ext/speex/gstspeexdec.c: (gst_speexdec_base_init),
