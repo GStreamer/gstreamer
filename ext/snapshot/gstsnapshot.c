@@ -40,14 +40,14 @@ static GstStaticPadTemplate snapshot_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGR)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
     );
 
 static GstStaticPadTemplate snapshot_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGR)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
     );
 
 /* Snapshot signals and args */
@@ -76,7 +76,7 @@ static void gst_snapshot_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_snapshot_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-
+static void snapshot_handler (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_snapshot_signals[LAST_SIGNAL] = { 0 };
@@ -155,13 +155,20 @@ gst_snapshot_class_init (GstSnapshotClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSnapshotClass, snapshot),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
-  klass->snapshot = NULL;
+  klass->snapshot = snapshot_handler;
 
   gobject_class->set_property = gst_snapshot_set_property;
   gobject_class->get_property = gst_snapshot_get_property;
 }
 
+static void
+snapshot_handler (GstElement * element)
+{
+  GstSnapshot *snapshot;
 
+  snapshot = GST_SNAPSHOT (element);
+  snapshot->snapshot_asked = TRUE;
+}
 
 static gboolean
 gst_snapshot_sinkconnect (GstPad * pad, const GstCaps * caps)
@@ -178,17 +185,6 @@ gst_snapshot_sinkconnect (GstPad * pad, const GstCaps * caps)
   gst_structure_get_double (structure, "framerate", &fps);
   gst_structure_get_fourcc (structure, "format", &filter->format);
   filter->to_bpp = 24;
-
-  filter->png_struct_ptr =
-      png_create_write_struct (PNG_LIBPNG_VER_STRING, (png_voidp) NULL,
-      user_error_fn, user_warning_fn);
-  if (filter->png_struct_ptr == NULL)
-    g_warning ("Failed to initialize png structure");
-
-  filter->png_info_ptr = png_create_info_struct (filter->png_struct_ptr);
-
-  if (setjmp (filter->png_struct_ptr->jmpbuf))
-    png_destroy_write_struct (&filter->png_struct_ptr, &filter->png_info_ptr);
 
   gst_pad_try_set_caps (filter->srcpad, caps);
 
@@ -248,6 +244,19 @@ gst_snapshot_chain (GstPad * pad, GstData * _data)
     if (fp == NULL)
       g_warning (" Can not open %s\n", snapshot->location);
     else {
+      snapshot->png_struct_ptr =
+          png_create_write_struct (PNG_LIBPNG_VER_STRING, (png_voidp) NULL,
+          user_error_fn, user_warning_fn);
+      if (snapshot->png_struct_ptr == NULL)
+        g_warning ("Failed to initialize png structure");
+
+      snapshot->png_info_ptr =
+          png_create_info_struct (snapshot->png_struct_ptr);
+
+      if (setjmp (snapshot->png_struct_ptr->jmpbuf))
+        png_destroy_write_struct (&snapshot->png_struct_ptr,
+            &snapshot->png_info_ptr);
+
       png_set_filter (snapshot->png_struct_ptr, 0,
           PNG_FILTER_NONE | PNG_FILTER_VALUE_NONE);
       png_init_io (snapshot->png_struct_ptr, fp);
@@ -271,10 +280,6 @@ gst_snapshot_chain (GstPad * pad, GstData * _data)
           &snapshot->png_info_ptr);
       png_destroy_write_struct (&snapshot->png_struct_ptr, (png_infopp) NULL);
       fclose (fp);
-      g_signal_emit (G_OBJECT (snapshot),
-          gst_snapshot_signals[SNAPSHOT_SIGNAL], 0);
-
-
     }
   }
 
