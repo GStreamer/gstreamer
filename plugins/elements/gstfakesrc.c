@@ -345,7 +345,7 @@ gst_fakesrc_loop(GstElement *element)
       if (src->eos) {
         GST_INFO (0, "fakesrc is setting eos on pad");
         gst_pad_set_eos (pad);
-        return NULL;
+        return;
       }
 
       buf = gst_buffer_new();

@@ -320,7 +320,7 @@ gst_bin_remove (GstBin *bin,
   g_return_if_fail (GST_STATE (bin) != GST_STATE_PLAYING);
 
   // the element must have its parent set to the current bin
-  g_return_if_fail (GST_ELEMENT_PARENT(element) == (GstElement *)bin);
+  g_return_if_fail (GST_ELEMENT_PARENT(element) == (GstObject *)bin);
 
   // the element must be in the bin's list of children
   if (g_list_find(bin->children, element) == NULL) {
@@ -351,7 +351,6 @@ gst_bin_change_state (GstElement *element)
   GstBin *bin;
   GList *children;
   GstElement *child;
-  GstElementStateReturn ret;
 
   GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME  (element));
 
@@ -643,7 +642,7 @@ gst_bin_restore_thyself (GstObject *object,
       childlist = field->xmlChildrenNode;
       while (childlist) {
         if (!strcmp (childlist->name, "element")) {
-          GstElement *element = gst_element_load_thyself (childlist, GST_OBJECT (bin));
+          GstElement *element = gst_element_restore_thyself (childlist, GST_OBJECT (bin));
 
 	  gst_bin_add (bin, element);
 	}
@@ -916,7 +915,7 @@ static gboolean
 gst_bin_iterate_func (GstBin *bin)
 {
   // only iterate if this is the manager bin
-  if (GST_ELEMENT_SCHED(bin)->parent == bin) {
+  if (GST_ELEMENT_SCHED(bin)->parent == (GstElement *)bin) {
     return GST_SCHEDULE_ITERATE(GST_ELEMENT_SCHED(bin));
   } else {
     GST_DEBUG (GST_CAT_SCHEDULING, "this bin can't be iterated on!\n");

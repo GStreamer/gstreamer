@@ -77,13 +77,15 @@ enum {
 
 
 static void			gst_autoplugcache_class_init	(GstAutoplugCacheClass *klass);
-static void			gst_autoplugcache_init		(GstAutoplugCache *queue);
+static void			gst_autoplugcache_init		(GstAutoplugCache *cache);
 
 static void			gst_autoplugcache_set_arg	(GtkObject *object, GtkArg *arg, guint id);
 static void			gst_autoplugcache_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 
 static void			gst_autoplugcache_loop		(GstElement *element);
 
+static GstPadNegotiateReturn    gst_autoplugcache_nego_src	(GstPad *pad, GstCaps **caps, gpointer *data);
+static GstPadNegotiateReturn    gst_autoplugcache_nego_sink	(GstPad *pad, GstCaps **caps, gpointer *data);
 static GstElementStateReturn	gst_autoplugcache_change_state	(GstElement *element);
 
 
@@ -144,9 +146,11 @@ gst_autoplugcache_init (GstAutoplugCache *cache)
   gst_element_set_loop_function(GST_ELEMENT(cache), GST_DEBUG_FUNCPTR(gst_autoplugcache_loop));
 
   cache->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  gst_pad_set_negotiate_function (cache->sinkpad, gst_autoplugcache_nego_sink);
   gst_element_add_pad (GST_ELEMENT(cache), cache->sinkpad);
 
   cache->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_pad_set_negotiate_function (cache->sinkpad, gst_autoplugcache_nego_src);
   gst_element_add_pad (GST_ELEMENT(cache), cache->srcpad);
 
   // provide a zero basis for the cache
@@ -236,11 +240,27 @@ gst_autoplugcache_loop (GstElement *element)
   } while (!GST_FLAG_IS_SET (element, GST_ELEMENT_COTHREAD_STOPPING));
 }
 
+static GstPadNegotiateReturn
+gst_autoplugcache_nego_src (GstPad *pad, GstCaps **caps, gpointer *data)
+{
+  GstAutoplugCache *cache = GST_AUTOPLUGCACHE (GST_PAD_PARENT (pad));
+
+  return gst_pad_negotiate_proxy (pad, cache->sinkpad, caps);
+}
+
+static GstPadNegotiateReturn
+gst_autoplugcache_nego_sink (GstPad *pad, GstCaps **caps, gpointer *data)
+{
+  GstAutoplugCache *cache = GST_AUTOPLUGCACHE (GST_PAD_PARENT (pad));
+
+  return gst_pad_negotiate_proxy (pad, cache->srcpad, caps);
+}
+
+
 static GstElementStateReturn
 gst_autoplugcache_change_state (GstElement *element)
 {
-  GstAutoplugCache *cache;
-
+  // FIXME this should do something like free the cache on ->NULL
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 

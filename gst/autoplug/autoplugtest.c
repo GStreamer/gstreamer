@@ -1,4 +1,5 @@
 #include <gst/gst.h>
+#include <string.h>
 
 GstElement *pipeline, *src, *autobin, *cache, *typefind, *decoder, *sink;
 

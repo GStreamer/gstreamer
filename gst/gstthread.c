@@ -69,7 +69,6 @@ static xmlNodePtr		gst_thread_save_thyself		(GstObject *object, xmlNodePtr paren
 static void			gst_thread_restore_thyself	(GstObject *object, xmlNodePtr self);
 
 static void			gst_thread_signal_thread	(GstThread *thread, gboolean spinning);
-static void			gst_thread_schedule_dummy	(GstBin *bin);
 
 static void*			gst_thread_main_loop		(void *arg);
 
@@ -148,14 +147,6 @@ gst_thread_init (GstThread *thread)
 //  gst_element_set_manager(GST_ELEMENT(thread),GST_ELEMENT(thread));
 }
 
-static void
-gst_thread_schedule_dummy (GstBin *bin)
-{
-  g_return_if_fail (GST_IS_THREAD (bin));
-
-  if (!GST_FLAG_IS_SET (GST_THREAD (bin), GST_THREAD_STATE_SPINNING))
-    GST_INFO (GST_CAT_THREAD,"scheduling delayed until thread starts");
-}
 
 static void
 gst_thread_set_arg (GtkObject *object,
@@ -228,7 +219,7 @@ gst_thread_change_state (GstElement *element)
   GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME(element));
 
   thread = GST_THREAD (element);
-  GST_DEBUG (GST_CAT_THREAD, "**** THREAD %d changing THREAD %d ****\n",self,thread->thread_id);
+  GST_DEBUG (GST_CAT_THREAD, "**** THREAD %ld changing THREAD %ld ****\n",self,thread->thread_id);
   GST_DEBUG (GST_CAT_THREAD, "**** current pid=%d\n",getpid());
 
   transition = GST_STATE_TRANSITION (element);

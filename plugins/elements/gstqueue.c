@@ -290,7 +290,7 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
 
   /* put the buffer on the tail of the list */
   queue->queue = g_slist_append (queue->queue, buf);
-  GST_DEBUG (GST_CAT_DATAFLOW,"(%s:%s)+ ",GST_DEBUG_PAD_NAME(pad));
+  GST_DEBUG (GST_CAT_DATAFLOW,"(%s:%s)+\n",GST_DEBUG_PAD_NAME(pad));
 
   /* if we were empty, but aren't any more, signal a condition */
   queue->level_buffers++;

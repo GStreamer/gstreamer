@@ -248,7 +248,7 @@ void			gst_element_error		(GstElement *element, const gchar *error);
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
 
 /* XML write and read */
-GstElement*		gst_element_load_thyself	(xmlNodePtr self, GstObject *parent);
+GstElement*		gst_element_restore_thyself	(xmlNodePtr self, GstObject *parent);
 
 
 /*
@@ -279,6 +279,7 @@ GstElement*		gst_elementfactory_create		(GstElementFactory *factory,
 								 const gchar *name);
 /* FIXME this name is wrong, probably so is the one above it */
 GstElement*		gst_elementfactory_make			(const gchar *factoryname, const gchar *name);
+
 
 xmlNodePtr		gst_elementfactory_save_thyself		(GstElementFactory *factory, xmlNodePtr parent);
 GstElementFactory*	gst_elementfactory_load_thyself		(xmlNodePtr parent);

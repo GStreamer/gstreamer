@@ -119,13 +119,14 @@ gst_element_class_init (GstElementClass *klass)
 
   gtk_object_class_add_signals (gtkobject_class, gst_element_signals, LAST_SIGNAL);
 
-  gtkobject_class->set_arg =		gst_element_set_arg;
-  gtkobject_class->get_arg =		gst_element_get_arg;
-  gtkobject_class->destroy =		gst_element_real_destroy;
+  gtkobject_class->set_arg =		GST_DEBUG_FUNCPTR(gst_element_set_arg);
+  gtkobject_class->get_arg =		GST_DEBUG_FUNCPTR(gst_element_get_arg);
+  gtkobject_class->destroy =		GST_DEBUG_FUNCPTR(gst_element_real_destroy);
 
-  gstobject_class->save_thyself =	gst_element_save_thyself;
+  gstobject_class->save_thyself =	GST_DEBUG_FUNCPTR(gst_element_save_thyself);
+  gstobject_class->restore_thyself =	GST_DEBUG_FUNCPTR(gst_element_restore_thyself);
 
-  klass->change_state = gst_element_change_state;
+  klass->change_state =			GST_DEBUG_FUNCPTR(gst_element_change_state);
   klass->elementfactory = NULL;
 }
 
@@ -988,7 +989,7 @@ gst_element_save_thyself (GstObject *object,
 }
 
 /**
- * gst_element_load_thyself:
+ * gst_element_restore_thyself:
  * @self: the xml node
  * @parent: the parent of this object when it's loaded
  *
@@ -997,7 +998,7 @@ gst_element_save_thyself (GstObject *object,
  * Returns: the new element
  */
 GstElement*
-gst_element_load_thyself (xmlNodePtr self, GstObject *parent)
+gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
 {
   xmlNodePtr children = self->xmlChildrenNode;
   GstElement *element;

@@ -434,10 +434,6 @@ gst_default_error_handler (gchar *file, gchar *function,
 
 
 
-#ifdef __USE_GNU
-#warning __USE_GNU is defined
-#endif
-
 /***** DEBUG system *****/
 GHashTable *__gst_function_pointers = NULL;
 
@@ -447,11 +443,12 @@ _gst_debug_nameof_funcptr (void *ptr)
   gchar *ptrname;
   Dl_info dlinfo;
   if (__gst_function_pointers) {
-    if (ptrname = g_hash_table_lookup(__gst_function_pointers,ptr))
+    if ((ptrname = g_hash_table_lookup(__gst_function_pointers,ptr)))
       return g_strdup(ptrname);
   } else if (dladdr(ptr,&dlinfo)) {
     return g_strdup(dlinfo.dli_sname);
   } else {
     return g_strdup_printf("%p",ptr);
   }
+  return NULL;
 }
