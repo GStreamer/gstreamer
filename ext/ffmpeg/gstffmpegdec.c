@@ -114,11 +114,14 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass *klass)
   gobject_class->get_property = gst_ffmpegdec_get_property;
 }
 
-static void
-gst_ffmpegdec_newcaps (GstPad *pad, GstCaps *caps)
+static GstPadConnectReturn
+gst_ffmpegdec_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *)(gst_pad_get_parent (pad));
   GstFFMpegDecClass *oclass = (GstFFMpegDecClass*)(G_OBJECT_GET_CLASS (ffmpegdec));
+
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_CONNECT_DELAYED;
 
   ffmpegdec->context->width = gst_caps_get_int (caps, "width");
   ffmpegdec->context->height = gst_caps_get_int (caps, "height");
@@ -129,11 +132,14 @@ gst_ffmpegdec_newcaps (GstPad *pad, GstCaps *caps)
   /* FIXME bug in ffmpeg */
   if (avcodec_open (ffmpegdec->context, avcodec_find_encoder(CODEC_ID_MPEG1VIDEO)) <0 ) {
     g_warning ("ffmpegdec: could not open codec");
+    return GST_PAD_CONNECT_REFUSED;
   }
 
   if (avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0) {
     g_warning ("ffmpegdec: could not open codec");
+    return GST_PAD_CONNECT_REFUSED;
   }
+  return GST_PAD_CONNECT_OK;
 }
 
 static void
@@ -145,7 +151,7 @@ gst_ffmpegdec_init(GstFFMpegDec *ffmpegdec)
 
   ffmpegdec->sinkpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (gst_ffmpegdec_sink_factory), "sink");
-  gst_pad_set_newcaps_function (ffmpegdec->sinkpad, gst_ffmpegdec_newcaps);
+  gst_pad_set_connect_function (ffmpegdec->sinkpad, gst_ffmpegdec_sinkconnect);
 
   if (oclass->in_plugin->type == CODEC_TYPE_VIDEO) {
     ffmpegdec->srcpad = gst_pad_new_from_template (
@@ -210,7 +216,7 @@ gst_ffmpegdec_chain_video (GstPad *pad, GstBuffer *inbuf)
       height = ffmpegdec->context->height;
 
       if (!GST_PAD_CAPS (ffmpegdec->srcpad)) {
-        gst_pad_set_caps (ffmpegdec->srcpad, 
+        gst_pad_try_set_caps (ffmpegdec->srcpad, 
 		      GST_CAPS_NEW (
 			"ffmpegdec_src",
 			"video/raw",
