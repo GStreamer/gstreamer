@@ -1,3 +1,15 @@
+2004-04-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnomevfssink_base_init),
+	(_gst_boolean_did_something_accumulator),
+	(gst_gnomevfssink_class_init), (gst_gnomevfssink_dispose),
+	(gst_gnomevfssink_init), (gst_gnomevfssink_set_property),
+	(gst_gnomevfssink_get_property), (gst_gnomevfssink_open_file),
+	(gst_gnomevfssink_close_file), (gst_gnomevfssink_chain),
+	(gst_gnomevfssink_change_state):
+	  Fix erase signal. Don't erase by default. Remove handoff signal.
+	  Remove erase property. Don't segfault. General cleanup.
+
 2004-04-07  Benjamin Otte  <otte@gnome.org>
 
 	* gst-libs/gst/gconf/test-gconf.c: (main):
