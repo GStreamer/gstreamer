@@ -1,3 +1,12 @@
+2004-02-27  Benjamin Otte  <otte@gnome.org>
+
+	* gst-libs/gst/audio/audio.h:
+	  add macro to make sure header isn't included twice
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_chunk):
+	  don't use gst_buffer_free
+	* gst/playondemand/filter.func:
+	  don't usae gst_data_free. Free data only once.
+
 2004-02-26  David Schleef  <ds@schleef.org>
 
 	* gst-libs/gst/colorbalance/Makefile.am:
