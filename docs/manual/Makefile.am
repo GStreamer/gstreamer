@@ -1,4 +1,5 @@
 manualname = gstreamer-manual
+htmlname = gstreamer.html
 
 sgml_files = gstreamer-manual.sgml \
 	     advanced.sgml \
@@ -37,29 +38,29 @@ fig_files =  bin-element.fig \
              state-diagram.fig \
              thread.fig
 
-eps_files =  bin-element.eps \
-             connected-elements.eps \
-             filter-element-multi.eps \
-             filter-element.eps \
-             hello-world.eps \
-             mime-world.eps \
-             queue.eps \
-             sink-element.eps \
-             src-element.eps \
-             state-diagram.eps \
-             thread.eps
+eps_files =  images/bin-element.eps \
+             images/connected-elements.eps \
+             images/filter-element-multi.eps \
+             images/filter-element.eps \
+             images/hello-world.eps \
+             images/mime-world.eps \
+             images/queue.eps \
+             images/sink-element.eps \
+             images/src-element.eps \
+             images/state-diagram.eps \
+             images/thread.eps
 
-png_files =  bin-element.png \
-             connected-elements.png \
-             filter-element-multi.png \
-             filter-element.png \
-             hello-world.png \
-             mime-world.png \
-             queue.png \
-             sink-element.png \
-             src-element.png \
-             state-diagram.png \
-             thread.png
+png_files =  images/bin-element.png \
+             images/connected-elements.png \
+             images/filter-element-multi.png \
+             images/filter-element.png \
+             images/hello-world.png \
+             images/mime-world.png \
+             images/queue.png \
+             images/sink-element.png \
+             images/src-element.png \
+             images/state-diagram.png \
+             images/thread.png
 
 
 EXTRA_DIST = $(sgml_files) $(fig_files)
@@ -67,7 +68,7 @@ EXTRA_DIST = $(sgml_files) $(fig_files)
 PDFFILES=$(manualname).pdf
 PSFILES=$(manualname).ps
 
-$(manualname)/gstreamer.html: $(sgml_files) $(png_files)
+$(manualname)/$(htmlname): $(sgml_files) $(png_files)
 	db2html $(manualname).sgml
 
 $(manualname).pdf: $(manualname).ps
@@ -76,23 +77,26 @@ $(manualname).pdf: $(manualname).ps
 $(manualname).ps: $(sgml_files) $(eps_files)
 	db2ps $(manualname).sgml
 
-%.png : %.fig
+images :
+	mkdir images
+
+images/%.png : %.fig images
 	fig2dev -L png -s 16 $< $@
 
-%.eps : %.fig
+images/%.eps : %.fig images
 	fig2dev -L eps -s 16 -m 0.5 $< $@
 
 $(manualname)/images:
-	ln -s .. $(manualname)/images
+	ln -s ../images $(manualname)/images
 
-htmldocs: $(manualname)/gstreamer.html $(manualname)/images
+htmldocs: $(manualname)/$(htmlname) $(manualname)/images
 htmldist: htmldocs
-	@if [ -r $(manualname)/gstreamer.html ] ; then \
-	    echo "Adding $(manualname)/gstreamer.html to distribution" ; \
+	@if [ -r $(manualname)/$(htmlname) ] ; then \
+	    echo "Adding $(manualname)/$(htmlname) to distribution" ; \
 	    $(mkinstalldirs) $(distdir)/$(manualname) ; \
 	    cp -a $(manualname)/*.html $(distdir)/$(manualname)/ ; \
 	else \
-	    echo "Skipping HTML manual from distribution: can't build" ; \
+	    echo "Skipping $(manualname)/$(htmlname) from distribution: can't build" ; \
 	fi
 
 pdfdocs: $(PDFFILES)
@@ -124,12 +128,12 @@ pngdatadir   = $(datadir)/gstreamer/gstreamer-manual/images
 pngdata_DATA = $(png_files)
 
 htmlinst:
-	@if [ -r $(manualname)/gstreamer.html ] ; then \
+	@if [ -r $(manualname)/$(htmlname) ] ; then \
 	echo "Installing $(manualname)/*.html" ; \
 	    $(mkinstalldirs) $(DESTDIR)$(docdatadir)/$(manualname) ; \
 	    $(INSTALL_DATA) $(manualname)/*.html $(DESTDIR)$(docdatadir)/$(manualname) ; \
 	else \
-	    if [ -r $(srcdir)/$(manualname)/gstreamer.html ] ; then \
+	    if [ -r $(srcdir)/$(manualname)/$(htmlname) ] ; then \
 	        echo "Installing $(srcdir)/$(manualname)/*.html" ; \
 	        $(mkinstalldirs) $(DESTDIR)$(docdatadir)/$(manualname) ; \
 	        $(INSTALL_DATA) $(srcdir)/$(manualname)/*.html $(DESTDIR)$(docdatadir)/$(manualname) ; \
@@ -143,7 +147,7 @@ htmluninst:
 
 all-local: htmldocs pdfdocs psdocs
 clean-local:
-	$(RM) -rf *.png *.eps $(manualname)/ $(manualname).ps $(manualname).pdf
+	$(RM) -rf $(manualname)/ images/*.eps images/*.png *.eps *.png *.ps *.pdf *.aux *.dvi *.log *.tex
 dist-hook: htmldist pdfdist psdist
 install-data-local: htmlinst
 uninstall-local: htmluninst
