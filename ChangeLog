@@ -1,12 +1,15 @@
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gst-i18n-app.h:
+	* gst/gst-i18n-lib.h:
+          remove inclusion of config.h
 	* po/POTFILES.in:
 	* po/nl.po:
           add gst/gstelement.c
 
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
-        * po/nl.po: updated Dutch translation
+	* po/nl.po: updated Dutch translation
 
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 

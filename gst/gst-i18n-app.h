@@ -23,10 +23,6 @@
 #ifndef __GST_I18N_APP_H__
 #define __GST_I18N_APP_H__
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
-
 #include "gettext.h" /* included with gettext distribution and copied */
 
 /* we want to use shorthand _() for translating and N_() for marking */
