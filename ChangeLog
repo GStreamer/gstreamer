@@ -1,5 +1,10 @@
 2004-01-07  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* ext/mad/gstid3tag.c: (gst_mad_id3_to_tag_list):
+	  Add guard against invalid utf-8 conversions in mad. Just in case.
+
+2004-01-07  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* sys/oss/gstosssink.c: (gst_osssink_sink_fixate):
 	  Fix for bug shown by poisoning
 
