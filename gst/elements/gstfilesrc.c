@@ -258,13 +258,12 @@ gst_filesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       g_object_notify (G_OBJECT (src), "offset");
       break;
     case ARG_MAPSIZE:
-      if ((src->mapsize % src->pagesize) == 0)
-      {
+      if ((src->mapsize % src->pagesize) == 0) {
         src->mapsize = g_value_get_ulong (value);
         g_object_notify (G_OBJECT (src), "mmapsize");
-      }
-      else
+      } else {
         GST_INFO(0, "invalid mapsize, must a multiple of pagesize, which is %d\n",src->pagesize);
+      }
       break;
     case ARG_TOUCH:
       src->touch = g_value_get_boolean (value);
