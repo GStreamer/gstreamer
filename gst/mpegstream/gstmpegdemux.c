@@ -114,7 +114,11 @@ GST_PAD_TEMPLATE_FACTORY (private2_factory,
   "private_stream_2",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  NULL
+  GST_CAPS_NEW (
+    "mpeg_demux_private_2",
+    "unknown/unknown",
+      NULL
+  )
 );
 
 GST_PAD_TEMPLATE_FACTORY (pcm_factory,
