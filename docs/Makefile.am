@@ -14,7 +14,9 @@ endif
 SUBDIRS = $(SUBDIRS_DOCS) $(SUBDIRS_PLUGINS)
 DIST_SUBDIRS = faq manual pwg gst libs plugins xsl
 
-EXTRA_DIST = slides manuals.mak htmlinstall.mak image-png image-pdf image-eps
+EXTRA_DIST = \
+	slides manuals.mak htmlinstall.mak \
+	image-png image-pdf image-eps version.entities.in
 
 dist-hook:
 	$(RM) -rf $(distdir)/random/CVS

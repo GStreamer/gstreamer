@@ -4,6 +4,8 @@
 
 <!ENTITY % image-entities SYSTEM "image.entities">
 %image-entities;
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
 
 <!ENTITY START SYSTEM "start.xml">
 <!ENTITY GENERAL SYSTEM "general.xml">

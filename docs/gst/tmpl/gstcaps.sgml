@@ -471,25 +471,27 @@ The name used for tracing
 @Returns: 
 
 
-<!-- ##### MACRO gst_caps_has_property ##### -->
+<!-- ##### FUNCTION gst_caps_has_property ##### -->
 <para>
 Check if the GstCaps has a property with the given name
 </para>
 
 @caps: the caps to query
 @name: the name of the property
+@Returns: 
 
 
-<!-- ##### MACRO gst_caps_has_fixed_property ##### -->
+<!-- ##### FUNCTION gst_caps_has_fixed_property ##### -->
 <para>
 Check if the GstCaps has a fixed property with the given name
 </para>
 
 @caps: the caps to query
 @name: the name of the property
+@Returns: 
 
 
-<!-- ##### MACRO gst_caps_has_property_typed ##### -->
+<!-- ##### FUNCTION gst_caps_has_property_typed ##### -->
 <para>
 Check if the GstCaps has a property with the given type
 </para>
@@ -497,6 +499,7 @@ Check if the GstCaps has a property with the given type
 @caps: the caps to query
 @name: the name of the property
 @type: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_caps_normalize ##### -->

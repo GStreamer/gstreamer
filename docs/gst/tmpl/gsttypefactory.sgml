@@ -73,10 +73,12 @@ This is the function that will be called when a typefind has to be
 performed by a plugin.
 </para>
 
-@buf: the buffer with media on which to perform the typefind
+@bs: 
 @priv: private; don't touch
 @Returns: A #GstCaps structure describing the type or NULL if the
 	  type was not recognized by this function;
+<!-- # Unused Parameters # -->
+@buf: the buffer with media on which to perform the typefind
 
 
 <!-- ##### FUNCTION gst_type_factory_new ##### -->

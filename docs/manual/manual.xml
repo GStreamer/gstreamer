@@ -3,6 +3,8 @@
                   "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
 <!ENTITY % image-entities SYSTEM "image.entities">
 %image-entities;
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
 
 <!ENTITY INTRO SYSTEM "intro.xml">
 <!ENTITY MOTIVATION SYSTEM "motivation.xml">

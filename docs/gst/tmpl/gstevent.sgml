@@ -47,6 +47,7 @@ The different major types of events.
 @GST_EVENT_TS_OFFSET: an event to set the time offset on buffers
 @GST_EVENT_INTERRUPT: mainly used by _get based elements when they were interrupted
                       while waiting for a buffer.
+@GST_EVENT_NAVIGATION: 
 
 <!-- ##### MACRO GST_EVENT_TYPE ##### -->
 <para>

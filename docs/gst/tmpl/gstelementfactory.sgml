@@ -147,7 +147,7 @@ describes the element, mostly for the benefit of editors.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_factory_set_rank ##### -->
+<!-- ##### MACRO gst_element_factory_set_rank ##### -->
 <para>
 
 </para>
