@@ -109,7 +109,7 @@ gst_icecastsend_get_type (void)
   if (!icecastsend_type) {
     static const GTypeInfo icecastsend_info = {
       sizeof (GstIcecastSendClass),
-      (GBaseInitFunc gst_icecastsend_base_init, NULL,
+      (GBaseInitFunc) gst_icecastsend_base_init, NULL,
       (GClassInitFunc) gst_icecastsend_class_init, NULL, NULL,
       sizeof (GstIcecastSend), 0,
       (GInstanceInitFunc) gst_icecastsend_init,
