@@ -56,7 +56,7 @@ struct _GstDecodeBin
   GstElement *typefind;
 
   gboolean threaded;
-  gboolean dynamic;
+  GList *dynamics;
 
   GList *factories;
   gint numpads;
@@ -71,6 +71,7 @@ struct _GstDecodeBinClass
   GstBinClass parent_class;
 
   void (*new_stream) (GstElement * element, GstPad * pad, gboolean last);
+  void (*unknown_type) (GstElement * element, GstCaps * caps);
 };
 
 /* props */
@@ -84,8 +85,18 @@ enum
 enum
 {
   SIGNAL_NEW_STREAM,
+  SIGNAL_UNKNOWN_TYPE,
   LAST_SIGNAL
 };
+
+typedef struct
+{
+  gint np_sig_id;
+  gint nmp_sig_id;
+  GstElement *element;
+  GstDecodeBin *decode_bin;
+}
+GstDynamic;
 
 static void gst_decode_bin_class_init (GstDecodeBinClass * klass);
 static void gst_decode_bin_init (GstDecodeBin * decode_bin);
@@ -168,6 +179,10 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       G_STRUCT_OFFSET (GstDecodeBinClass, new_stream), NULL, NULL,
       gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2, G_TYPE_OBJECT,
       G_TYPE_BOOLEAN);
+  gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE] =
+      g_signal_new ("unknown-type", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, unknown_type),
+      NULL, NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_CAPS);
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_decode_bin_dispose);
 
@@ -178,6 +193,12 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_decode_bin_change_state);
+}
+
+static gboolean
+gst_decode_bin_is_dynamic (GstDecodeBin * decode_bin)
+{
+  return decode_bin->dynamics != NULL;
 }
 
 static gboolean
@@ -238,21 +259,31 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
       g_signal_connect (G_OBJECT (decode_bin->typefind), "have_type",
       G_CALLBACK (type_found), decode_bin);
 
+  decode_bin->dynamics = NULL;
 }
 
 static void
 gst_decode_bin_dispose (GObject * object)
 {
   GstDecodeBin *decode_bin;
+  GList *dyns;
 
   decode_bin = GST_DECODE_BIN (object);
 
-  g_signal_handlers_disconnect_matched (G_OBJECT (decode_bin->typefind),
-      G_SIGNAL_MATCH_ID, decode_bin->have_type_id, 0, NULL, NULL, NULL);
+  g_signal_handler_disconnect (G_OBJECT (decode_bin->typefind),
+      decode_bin->have_type_id);
 
   gst_bin_remove (GST_BIN (decode_bin), decode_bin->typefind);
 
   g_list_free (decode_bin->factories);
+
+  for (dyns = decode_bin->dynamics; dyns; dyns = g_list_next (dyns)) {
+    GstDynamic *dynamic = (GstDynamic *) dyns->data;
+
+    g_free (dynamic);
+  }
+  g_list_free (decode_bin->dynamics);
+  decode_bin->dynamics = NULL;
 
   if (G_OBJECT_CLASS (parent_class)->dispose) {
     G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -298,6 +329,12 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
   GstStructure *structure;
   const gchar *mimetype;
 
+  if (gst_caps_is_empty (caps)) {
+    g_signal_emit (G_OBJECT (decode_bin),
+        gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE], 0, caps);
+    return;
+  }
+
   structure = gst_caps_get_structure (caps, 0);
   mimetype = gst_structure_get_name (structure);
 
@@ -306,6 +343,7 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
       g_str_has_prefix (mimetype, "audio/x-raw")) {
     gchar *padname;
     GstPad *ghost;
+    gboolean dynamic;
 
     padname = g_strdup_printf ("src%d", decode_bin->numpads);
     decode_bin->numpads++;
@@ -314,10 +352,11 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
 
     ghost = gst_element_get_pad (GST_ELEMENT (decode_bin), padname);
 
+    dynamic = gst_decode_bin_is_dynamic (decode_bin);
+
     /* our own signal with an extra flag that this is the only pad */
     g_signal_emit (G_OBJECT (decode_bin),
-        gst_decode_bin_signals[SIGNAL_NEW_STREAM], 0,
-        ghost, !decode_bin->dynamic);
+        gst_decode_bin_signals[SIGNAL_NEW_STREAM], 0, ghost, !dynamic);
 
     g_free (padname);
     return;
@@ -326,10 +365,8 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
   /* then continue plugging */
   to_try = find_compatibles (decode_bin, caps);
   if (to_try == NULL) {
-    gchar *capsstr = gst_caps_to_string (caps);
-
-    g_warning ("don't know how to handle %s", capsstr);
-    g_free (capsstr);
+    g_signal_emit (G_OBJECT (decode_bin),
+        gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE], 0, caps);
     return;
   }
 
@@ -353,6 +390,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
     if (element == NULL)
       continue;
 
+    GST_DEBUG ("adding %s\n", gst_element_get_name (element));
     gst_bin_add (GST_BIN (decode_bin), element);
     decode_bin->elements = g_list_prepend (decode_bin->elements, element);
 
@@ -380,9 +418,27 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
 }
 
 static void
-new_pad (GstElement * element, GstPad * pad, GstDecodeBin * decode_bin)
+new_pad (GstElement * element, GstPad * pad, GstDynamic * dynamic)
 {
-  close_pad_link (element, pad, gst_pad_get_caps (pad), decode_bin);
+  close_pad_link (element, pad, gst_pad_get_caps (pad), dynamic->decode_bin);
+}
+
+static void
+no_more_pads (GstElement * element, GstDynamic * dynamic)
+{
+  GstDecodeBin *decode_bin = dynamic->decode_bin;
+
+  GST_DEBUG ("decodebin: no more pads\n");
+
+  g_signal_handler_disconnect (G_OBJECT (dynamic->element), dynamic->np_sig_id);
+  g_signal_handler_disconnect (G_OBJECT (dynamic->element),
+      dynamic->nmp_sig_id);
+
+  decode_bin->dynamics = g_list_remove (decode_bin->dynamics, dynamic);
+  g_free (dynamic);
+
+  if (decode_bin->dynamics == NULL)
+    gst_element_no_more_pads (GST_ELEMENT (decode_bin));
 }
 
 static void
@@ -427,9 +483,17 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
     }
   }
   if (dynamic) {
-    g_signal_connect (G_OBJECT (element), "new_pad",
-        G_CALLBACK (new_pad), decode_bin);
-    decode_bin->dynamic = TRUE;
+    GstDynamic *dyn;
+
+    dyn = g_new0 (GstDynamic, 1);
+    dyn->np_sig_id = g_signal_connect (G_OBJECT (element), "new-pad",
+        G_CALLBACK (new_pad), dyn);
+    dyn->nmp_sig_id = g_signal_connect (G_OBJECT (element), "no-more-pads",
+        G_CALLBACK (no_more_pads), dyn);
+    dyn->element = element;
+    dyn->decode_bin = decode_bin;
+
+    decode_bin->dynamics = g_list_prepend (decode_bin->dynamics, dyn);
   }
 
   for (pads = to_connect; pads; pads = g_list_next (pads)) {
@@ -444,12 +508,13 @@ static void
 type_found (GstElement * typefind, guint probability, GstCaps * caps,
     GstDecodeBin * decode_bin)
 {
-  decode_bin->dynamic = FALSE;
+  gboolean dynamic;
 
   close_pad_link (typefind, gst_element_get_pad (typefind, "src"), caps,
       decode_bin);
 
-  if (decode_bin->dynamic == FALSE) {
+  dynamic = gst_decode_bin_is_dynamic (decode_bin);
+  if (dynamic == FALSE) {
     gst_element_no_more_pads (GST_ELEMENT (decode_bin));
   }
 }
@@ -514,6 +579,7 @@ gst_decode_bin_change_state (GstElement * element)
     case GST_STATE_NULL_TO_READY:
       decode_bin->numpads = 0;
       decode_bin->threaded = FALSE;
+      decode_bin->dynamics = NULL;
       break;
     case GST_STATE_READY_TO_PAUSED:
     case GST_STATE_PAUSED_TO_PLAYING:

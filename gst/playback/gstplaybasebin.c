@@ -27,6 +27,8 @@
 GST_DEBUG_CATEGORY_STATIC (gst_play_base_bin_debug);
 #define GST_CAT_DEFAULT gst_play_base_bin_debug
 
+#define DEFAULT_QUEUE_SIZE  (3 * GST_SECOND)
+
 /* props */
 enum
 {
@@ -34,6 +36,7 @@ enum
   ARG_URI,
   ARG_THREADED,
   ARG_NSTREAMS,
+  ARG_QUEUE_SIZE,
   ARG_STREAMINFO,
 };
 
@@ -113,6 +116,10 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
   g_object_class_install_property (gobject_klass, ARG_NSTREAMS,
       g_param_spec_int ("nstreams", "NStreams", "number of streams",
           0, G_MAXINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_klass, ARG_QUEUE_SIZE,
+      g_param_spec_uint64 ("queue-size", "Queue size",
+          "Size of internal queues in nanoseconds", 0, G_MAXINT64,
+          DEFAULT_QUEUE_SIZE, G_PARAM_READABLE));
   g_object_class_install_property (gobject_klass, ARG_STREAMINFO,
       g_param_spec_pointer ("stream-info", "Stream info", "List of streaminfo",
           G_PARAM_READABLE));
@@ -161,6 +168,7 @@ gst_play_base_bin_init (GstPlayBaseBin * play_base_bin)
   play_base_bin->preroll_lock = g_mutex_new ();
   play_base_bin->preroll_cond = g_cond_new ();
   play_base_bin->preroll_elems = NULL;
+  play_base_bin->queue_size = DEFAULT_QUEUE_SIZE;
 
   GST_FLAG_SET (play_base_bin, GST_BIN_SELF_SCHEDULABLE);
 }
@@ -184,8 +192,6 @@ queue_overrun (GstElement * element, GstPlayBaseBin * play_base_bin)
   g_mutex_lock (play_base_bin->preroll_lock);
   g_cond_signal (play_base_bin->preroll_cond);
   g_mutex_unlock (play_base_bin->preroll_lock);
-  //g_signal_handlers_disconnect_by_func(G_OBJECT (element),
-//                G_CALLBACK (queue_overrun), play_base_bin);
 }
 
 static GstElement *
@@ -196,6 +202,9 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin, GstPad * pad)
 
   name = g_strdup_printf ("preroll_%s", gst_pad_get_name (pad));
   element = gst_element_factory_make ("queue", name);
+  g_object_set (G_OBJECT (element), "max-size-buffers", 0, NULL);
+  g_object_set (G_OBJECT (element), "max-size-bytes", 0, NULL);
+  g_object_set (G_OBJECT (element), "max-size-time", 3 * GST_SECOND, NULL);
   g_signal_connect (G_OBJECT (element), "overrun",
       G_CALLBACK (queue_overrun), play_base_bin);
   g_free (name);
@@ -229,8 +238,19 @@ remove_prerolls (GstPlayBaseBin * play_base_bin)
 }
 
 static void
+unknown_type (GstElement * element, GstCaps * caps,
+    GstPlayBaseBin * play_base_bin)
+{
+  gchar *capsstr = gst_caps_to_string (caps);
+
+  g_warning ("don't know how to handle %s", capsstr);
+  g_free (capsstr);
+}
+
+static void
 no_more_pads (GstElement * element, GstPlayBaseBin * play_base_bin)
 {
+  GST_DEBUG ("no more pads\n");
   g_mutex_lock (play_base_bin->preroll_lock);
   g_cond_signal (play_base_bin->preroll_cond);
   g_mutex_unlock (play_base_bin->preroll_lock);
@@ -248,7 +268,14 @@ new_stream (GstElement * element, GstPad * pad, gboolean last,
   GstStreamType type;
   GstPad *srcpad;
 
+  GST_DEBUG ("play base: new stream\n");
+
   caps = gst_pad_get_caps (pad);
+
+  if (gst_caps_is_empty (caps)) {
+    g_warning ("no type on pad %s:%s\n", GST_DEBUG_PAD_NAME (pad));
+    return;
+  }
 
   structure = gst_caps_get_structure (caps, 0);
   mimetype = gst_structure_get_name (structure);
@@ -310,7 +337,7 @@ setup_source (GstPlayBaseBin * play_base_bin)
 
   {
     gboolean res;
-    gint sig1, sig2;
+    gint sig1, sig2, sig3;
     GstElement *old_dec;
 
     old_dec = play_base_bin->decoder;
@@ -342,16 +369,20 @@ setup_source (GstPlayBaseBin * play_base_bin)
         G_CALLBACK (new_stream), play_base_bin);
     sig2 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "no-more-pads",
         G_CALLBACK (no_more_pads), play_base_bin);
+    sig3 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "unknown-type",
+        G_CALLBACK (unknown_type), play_base_bin);
 
+    /* either when the queues are filled or when the decoder element has no more
+     * dynamic streams, the cond is unlocked. We can remove the signal handlers then
+     */
     g_mutex_lock (play_base_bin->preroll_lock);
     gst_element_set_state (play_base_bin->thread, GST_STATE_PLAYING);
     g_cond_wait (play_base_bin->preroll_cond, play_base_bin->preroll_lock);
     g_mutex_unlock (play_base_bin->preroll_lock);
 
-    g_signal_handlers_disconnect_matched (G_OBJECT (play_base_bin->decoder),
-        G_SIGNAL_MATCH_ID, sig1, 0, NULL, NULL, NULL);
-    g_signal_handlers_disconnect_matched (G_OBJECT (play_base_bin->decoder),
-        G_SIGNAL_MATCH_ID, sig2, 0, NULL, NULL, NULL);
+    g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig3);
+    g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig2);
+    g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig1);
 
     play_base_bin->need_rebuild = FALSE;
   }
@@ -386,6 +417,9 @@ gst_play_base_bin_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case ARG_QUEUE_SIZE:
+      play_base_bin->queue_size = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -409,6 +443,9 @@ gst_play_base_bin_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_NSTREAMS:
       g_value_set_int (value, play_base_bin->nstreams);
       break;
+    case ARG_QUEUE_SIZE:
+      g_value_set_uint64 (value, play_base_bin->queue_size);
+      break;
     case ARG_STREAMINFO:
       g_value_set_pointer (value, play_base_bin->streaminfo);
       break;
@@ -421,7 +458,8 @@ gst_play_base_bin_get_property (GObject * object, guint prop_id, GValue * value,
 static void
 play_base_eos (GstBin * bin, GstPlayBaseBin * play_base_bin)
 {
-  g_print ("eos\n");
+  no_more_pads (GST_ELEMENT (bin), play_base_bin);
+
   gst_element_set_eos (GST_ELEMENT (play_base_bin));
 }
 
@@ -561,7 +599,7 @@ void
 gst_play_base_bin_mute_stream (GstPlayBaseBin * play_base_bin,
     GstStreamInfo * info, gboolean mute)
 {
-  g_print ("mute\n");
+  GST_DEBUG ("mute\n");
 }
 
 void
@@ -586,10 +624,11 @@ gst_play_base_bin_link_stream (GstPlayBaseBin * play_base_bin,
   }
   if (info) {
     if (!gst_pad_link (info->pad, pad)) {
-      g_print ("could not link\n");
+      GST_DEBUG ("could not link\n");
+      gst_play_base_bin_mute_stream (play_base_bin, info, TRUE);
     }
   } else {
-    g_print ("could not find pad to link\n");
+    GST_DEBUG ("could not find pad to link\n");
   }
 }
 
@@ -597,7 +636,7 @@ void
 gst_play_base_bin_unlink_stream (GstPlayBaseBin * play_base_bin,
     GstStreamInfo * info)
 {
-  g_print ("unlink\n");
+  GST_DEBUG ("unlink\n");
 }
 
 const GList *

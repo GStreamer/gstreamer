@@ -43,6 +43,7 @@ struct _GstPlayBaseBin {
   GMutex	*preroll_lock;
   GCond		*preroll_cond;
   GList		*preroll_elems;
+  guint64	 queue_size;
 
   /* internal thread */
   GstElement	*thread;
