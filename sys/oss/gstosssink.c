@@ -27,6 +27,7 @@
 #include <sys/soundcard.h>
 #include <errno.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "gstosssink.h"
 
@@ -207,7 +208,7 @@ gst_osssink_init (GstOssSink *osssink)
   osssink->chunk_size = 4096;
   osssink->mute = FALSE;
   osssink->sync = TRUE;
-  osssink->resync = FALSE;
+  osssink->resync = TRUE;
   osssink->provided_clock = gst_audio_clock_new ("ossclock", gst_osssink_get_time, osssink);
   gst_object_set_parent (GST_OBJECT (osssink->provided_clock), GST_OBJECT (osssink));
   osssink->handled = 0;
@@ -290,7 +291,7 @@ gst_osssink_get_time (GstClock *clock, gpointer data)
 {
   GstOssSink *osssink = GST_OSSSINK (data);
   gint delay;
-  GstClockTime res;
+  GstClockTimeDiff res;
 
   if (!GST_OSSELEMENT (osssink)->bps)
     return 0;
@@ -302,15 +303,15 @@ gst_osssink_get_time (GstClock *clock, gpointer data)
    * in the device then
    * thomas: with proper handling of the return value, this doesn't seem to
    * happen anymore, so remove the second code path after april 2004 */
-  if (delay < 0) {
-    delay = 0;
-  } else if ((guint64) delay > osssink->handled) {
-    g_warning ("Delay %d > osssink->handled %" G_GUINT64_FORMAT
+  if (delay > (gint64) osssink->handled) {
+    /*g_warning ("Delay %d > osssink->handled %" G_GUINT64_FORMAT
                ", setting to osssink->handled",
-               delay, osssink->handled);
+               delay, osssink->handled);*/
     delay = osssink->handled;
   }
-  res =  (osssink->handled - delay) * GST_SECOND / GST_OSSELEMENT (osssink)->bps;
+  res = ((gint64) osssink->handled - delay) * GST_SECOND / GST_OSSELEMENT (osssink)->bps;
+  if (res < 0)
+    res = 0;
 
   return res;
 }
@@ -340,7 +341,7 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstOssSink *osssink;
-  GstClockTime buftime, elementtime, soundtime;
+  GstClockTimeDiff buftime, soundtime, elementtime;
   guchar *data;
   guint to_write;
   gint delay;
@@ -357,17 +358,9 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
 	gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssink->provided_clock), FALSE);
 	gst_pad_event_default (pad, event);
         return;
-      case GST_EVENT_DISCONTINUOUS: {
+      case GST_EVENT_DISCONTINUOUS:
         osssink->resync = TRUE;
-        gint64 offset;
-        if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &offset)) {
-          gst_audio_clock_update_time ((GstAudioClock*)osssink->provided_clock,
-				       offset);
-          osssink->handled = offset * GST_OSSELEMENT(osssink)->bps / GST_SECOND;
-        }
-        gst_pad_event_default (pad, event);
-        return;
-      }
+        /* pass-through */
       default:
 	gst_pad_event_default (pad, event);
         return;
@@ -381,19 +374,10 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
     return;
   }
 
-  if (osssink->resync) {
-    if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-      gst_audio_clock_update_time ((GstAudioClock*)osssink->provided_clock,
-                                   GST_BUFFER_TIMESTAMP (buf));
-      osssink->handled = GST_BUFFER_TIMESTAMP (buf) *
-				GST_OSSELEMENT(osssink)->bps / GST_SECOND;
-    }
-    osssink->resync = FALSE;
-  }
-
   data = GST_BUFFER_DATA (buf);
   to_write = GST_BUFFER_SIZE (buf);
-  /* sync audio with buffers timestamp */
+  /* sync audio with buffers timestamp. elementtime is the *current* time.
+   * soundtime is the time if the soundcard has processed all queued data. */
   elementtime = gst_element_get_time (GST_ELEMENT (osssink));
   delay = gst_osssink_get_delay (osssink);
   if (delay < 0)
@@ -404,30 +388,42 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
   } else {
     buftime = soundtime;
   }
-  GST_LOG_OBJECT (osssink, "time: element %"G_GUINT64_FORMAT", real %"G_GUINT64_FORMAT", buffer: %"G_GUINT64_FORMAT,
-      elementtime, soundtime, buftime);
+  GST_LOG_OBJECT (osssink, "time: real %"G_GUINT64_FORMAT", buffer: %"G_GUINT64_FORMAT,
+      soundtime, buftime);
   if (MAX (buftime, soundtime) - MIN (buftime, soundtime) > (GST_SECOND / 10)) {
     /* we need to adjust to the buffers here */
-    GST_INFO_OBJECT (osssink, "need sync: element %"G_GUINT64_FORMAT", real %"G_GUINT64_FORMAT", buffer: %"G_GUINT64_FORMAT, 
-	elementtime, soundtime, buftime);
+    GST_INFO_OBJECT (osssink, "need sync: real %"G_GUINT64_FORMAT", buffer: %"G_GUINT64_FORMAT, 
+	soundtime, buftime);
     if (soundtime > buftime) {
-      /* full frames */
-      guint64 throw_away = (soundtime - buftime) * GST_OSSELEMENT (osssink)->bps / GST_SECOND;
-      throw_away &= ~(GST_OSSELEMENT (osssink)->width * GST_OSSELEMENT (osssink)->channels);
-      if (throw_away > to_write) {
-        gst_buffer_unref (buf);
-        return;
-      }
-      to_write -= throw_away;
-      data += throw_away;
+      /* do *not* throw frames out. It's useless. The next frame will come in
+       * too late. And the next one. And so on. We don't want to lose sound.
+       * This is a placeholder for what - some day - should become QoS, i.e.
+       * sending events upstream to drop buffers. */
     } else {
-      guint64 to_handle = (buftime - soundtime) / (GST_SECOND / G_USEC_PER_SEC);
-      to_handle &= ~(GST_OSSELEMENT (osssink)->width * GST_OSSELEMENT (osssink)->channels);
-      /* FIXME: we really should output silence here */
-      /* round to full frames */
-      g_usleep (to_handle);
-      osssink->handled += ((buftime - soundtime) * GST_OSSELEMENT (osssink)->bps / GST_SECOND) &~
-	(GST_OSSELEMENT (osssink)->width / GST_OSSELEMENT (osssink)->channels);
+      guint64 to_handle = (((buftime - soundtime) * GST_OSSELEMENT(osssink)->bps / GST_SECOND) /
+		((GST_OSSELEMENT (osssink)->width / 8) * GST_OSSELEMENT (osssink)->channels)) *
+		(GST_OSSELEMENT (osssink)->width / 8) * GST_OSSELEMENT (osssink)->channels;
+
+      if (!osssink->resync) {
+        guint8 *buf = g_new (guint8, to_handle);
+
+        memset (buf, (GST_OSSELEMENT (osssink)->width == 8) ? 0 : 128, to_handle);
+        while (to_handle > 0) {
+          gint done = write (GST_OSSELEMENT (osssink)->fd, buf,
+			     MIN (to_handle, osssink->chunk_size));
+          if (done == -1 && errno != EINTR) { 
+            break;
+          } else {
+            to_handle -= done;
+            osssink->handled += done;
+          }
+        }
+        g_free(buf);
+      } else {
+        /* Timestamps at start-of-stream (MPEG) or after seek (hey,
+         * again MPEG!) can be borken, therefore this hacklet. */
+        osssink->handled += to_handle;
+      }
     }
   }
 
@@ -619,7 +615,7 @@ gst_osssink_change_state (GstElement *element)
         ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_RESET, 0);
       gst_osselement_reset (GST_OSSELEMENT (osssink));
       osssink->handled = 0;
-      osssink->resync = FALSE;
+      osssink->resync = TRUE;
       break;
     default:
       break;
