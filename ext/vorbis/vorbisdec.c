@@ -27,7 +27,7 @@
 
 static GstElementDetails vorbis_dec_details = {
   "VorbisDec",
-  "Filter/Decoder/Audio",
+  "Codec/Decoder/Audio",
   "decode raw vorbis streams to float audio",
   "Benjamin Otte <in7y118@public.uni-hamburg.de>",
 };

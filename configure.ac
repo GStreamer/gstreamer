@@ -254,18 +254,26 @@ else
   HAVE_GDK_LOADERS=no
 fi
 
+# we set the defaults always to make sure we have non-empty variables
+# for the Makefile
+
+# by default, stick to prefix
+GDK_PIXBUF_LOADER_DIR=${libdir}/gtk-2.0/\${GTK_VERSION}/loaders
+GDK_PIXBUF_CONF_DIR=${sysconfdir}/gtk-2.0
+
+
 AC_ARG_ENABLE(gdk-pixbuf-loader,
   AC_HELP_STRING([--enable-gdk-pixbuf-loader],
               [whether to enable building of gdk_pixbuf loader]),
               :, HAVE_GDK_LOADERS="no")
 
-# allow customization of pixbuf loader install location
-# when nothing specified, adhere to prefix settings
-# when called without any option with this argument, autodetect
-# when called with a path, set to the given path
-
-if test "x$HAVE_GDK_LOADERS" == "xyes"; then
+if test "x$HAVE_GDK_LOADERS" = "xyes"; then
   AC_PATH_PROG(QUERYLOADERS, gdk-pixbuf-query-loaders, no)
+  # allow customization of pixbuf loader install location
+  # when nothing specified, adhere to prefix settings
+  # when called without any option with this argument, autodetect
+  # when called with a path, set to the given path
+
   AC_ARG_WITH(gdk-pixbuf-loader-dir, 
      AC_HELP_STRING([--with-gdk-pixbuf-loader-dir],
      	[directory to install the gdk_pixbuf loader (none for pkg-config default)]),
@@ -275,9 +283,7 @@ if test "x$HAVE_GDK_LOADERS" == "xyes"; then
       else
         GDK_PIXBUF_LOADER_DIR="$GDK_PIXBUF_LIBDIR/gtk-2.0/\$GTK_VERSION/loaders"
       fi
-     ],
-     # nothing specified
-     GDK_PIXBUF_LOADER_DIR=${libdir}/gtk-2.0/\$GTK_VERSION/loaders
+     ]
   )
   AS_AC_EXPAND(GDK_PIXBUF_LOADER_DIR, $GDK_PIXBUF_LOADER_DIR)
   AC_SUBST(GDK_PIXBUF_LOADER_DIR)
@@ -287,6 +293,7 @@ if test "x$HAVE_GDK_LOADERS" == "xyes"; then
   # when nothing specified, adhere to prefix settings
   # when called without any option with this argument, autodetect
   # when called with a path, set to the given path
+
   AC_ARG_WITH(gdk-pixbuf-conf-dir, 
      AC_HELP_STRING([--with-gdk-pixbuf-conf-dir],
      	[directory to install the gdk_pixbuf config (none for pkg-config default)]),
@@ -296,10 +303,7 @@ if test "x$HAVE_GDK_LOADERS" == "xyes"; then
       else
         GDK_PIXBUF_CONF_DIR="$GDK_PIXBUF_PREFIXDIR/etc/gtk-2.0/"
       fi
-     ],
-     # nothing specified
-     GDK_PIXBUF_LOADER_DIR=${libdir}/gtk-2.0/\$GTK_VERSION/loaders
-     GDK_PIXBUF_CONF_DIR=${sysconfdir}/gtk-2.0
+     ]
   )
   AS_AC_EXPAND(GDK_PIXBUF_CONF_DIR, $GDK_PIXBUF_CONF_DIR)
   AC_SUBST(GDK_PIXBUF_CONF_DIR)
