@@ -38,7 +38,7 @@ vorbis_caps_factory (void)
   return
    gst_caps_new (
   	"vorbis_vorbis",
-  	"audio/x-ogg",
+  	"application/x-ogg",
   	NULL);
 }
 
@@ -78,7 +78,7 @@ raw_caps2_factory (void)
 
 static GstTypeDefinition vorbisdefinition = {
   "vorbis_audio/x-ogg",
-  "audio/x-ogg",
+  "application/x-ogg",
   ".ogg",
   vorbis_type_find,
 };
@@ -91,7 +91,7 @@ vorbis_type_find (GstBuffer *buf, gpointer private)
   if (head  != 0x4F676753)
     return NULL;
 
-  return gst_caps_new ("vorbis_type_find", "audio/x-ogg", NULL);
+  return gst_caps_new ("vorbis_type_find", "application/x-ogg", NULL);
 }
 
 
