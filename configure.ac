@@ -341,6 +341,14 @@ GST_CHECK_FEATURE(ALSA, [alsa plugins], gstalsa, [
 ])
 
 dnl *** arts ***
+
+dnl if mcopidl can't be found there's no use in compiling it
+AC_CHECK_PROG(MCOPIDL, mcopidl, yes, no)
+if test "xHAVE_MCOPIDL" = "xno";
+then
+  USE_ARTS=no
+fi
+
 translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
 GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [
   AM_PATH_ARTS(, HAVE_ARTS=yes, HAVE_ARTS=no)
@@ -408,6 +416,14 @@ dnl **** ESound ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
 GST_CHECK_FEATURE(ESD, [esound plugins], esdsrc esdsink, [
   AM_PATH_ESD(0.2.12, HAVE_ESD=yes, HAVE_ESD=no)
+])
+
+dnl **** festival ****
+dnl FIXME until thomas can be bothered to download the 20 MB festival sources
+dnl this will not go in
+translit(dnm, m, l) AM_CONDITIONAL(USE_FESTIVAL, true)
+GST_CHECK_FEATURE(FESTIVAL, [festival plugins], festivalsink, [
+  HAVE_FESTIVAL=no
 ])
 
 dnl *** FLAC ***
@@ -549,16 +565,19 @@ GST_CHECK_FEATURE(SHOUT, [shout plugin], icecastsend, [
   AC_SUBST(SHOUT_LIBS)
 ])
 
+dnl *** sidplay ***
+dnl FIXME : make this work
+translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
+GST_CHECK_FEATURE(SIDPLAY, [sidplay plugin], sidplay, [
+  GST_CHECK_LIBHEADER(SIDPLAY, sidplay, sidTune(), ,sidplay/sidtune.h,SIDPLAY_LIBS="-lsidplay")
+  AC_SUBST(SIDPLAY_LIBS)
+])
+
 dnl *** smoothwave ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SMOOTHWAVE, true)
 GST_CHECK_FEATURE(SMOOTHWAVE, [smoothwave plugin], smoothwave, [
   if test $HAVE_GTK = "yes"; then HAVE_SMOOTHWAVE=yes; fi;
 ])
-
-dnl for sidplay
-dnl FIXME : make this work
-dnl AC_PATH_LIBSIDPLAY
-
 
 dnl *** vorbis ***
 dnl AM_PATH_VORBIS only takes two options
