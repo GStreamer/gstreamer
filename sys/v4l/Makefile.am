@@ -1,6 +1,6 @@
-filterdir = $(libdir)/gst
+plugindir = $(libdir)/gst
 
-filter_LTLIBRARIES = libv4lelement.la libv4lsrc.la \
+plugin_LTLIBRARIES = libv4lelement.la libv4lsrc.la \
 	libv4lmjpegsrc.la libv4lmjpegsink.la
 
 libv4lelement_la_SOURCES = \
@@ -36,4 +36,4 @@ libv4lmjpegsink_la_CFLAGS = \
 noinst_HEADERS = gstv4lelement.h v4l_calls.h \
 		gstv4lsrc.h v4lsrc_calls.h \
 		gstv4lmjpegsrc.h v4lmjpegsrc_calls.h \
-		gstv4lmjpegsink.h v4lmjpegsink_calls.h
+		gstv4lmjpegsink.h v4lmjpegsink_calls.h videodev_mjpeg.h
