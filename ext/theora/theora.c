@@ -26,7 +26,7 @@
 extern GType gst_theora_dec_get_type (void);
 extern GType gst_theora_enc_get_type (void);
 
-gboolean
+static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_library_load ("gsttags"))
