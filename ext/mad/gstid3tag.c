@@ -387,13 +387,13 @@ gst_id3_tag_src_event (GstPad *pad, GstEvent *event)
 	  tag->state == GST_ID3_TAG_STATE_NORMAL && 
 	  GST_PAD_PEER (tag->sinkpad)) {
 	GstEvent *new;
-	gint diff;
+	gint diff = 0;
 
 	switch (GST_EVENT_SEEK_METHOD (event)) {
-	  case GST_SEEK_METHOD_SET: diff = tag->v2tag_size_new - tag->v2tag_size;
-	  case GST_SEEK_METHOD_CUR: diff = 0;
-	  case GST_SEEK_METHOD_END: diff = GST_EVENT_SEEK_OFFSET(event) ? tag->v1tag_size_new - tag->v1tag_size : 0;
-	  default: g_assert_not_reached();
+	  case GST_SEEK_METHOD_SET: diff = tag->v2tag_size_new - tag->v2tag_size; break;
+	  case GST_SEEK_METHOD_CUR: break;
+	  case GST_SEEK_METHOD_END: diff = GST_EVENT_SEEK_OFFSET(event) ? tag->v1tag_size_new - tag->v1tag_size : 0; break;
+	  default: g_assert_not_reached(); break;
 	}
 	new = gst_event_new_seek (GST_EVENT_SEEK_TYPE (event), 
 				  GST_EVENT_SEEK_OFFSET(event) + diff);
