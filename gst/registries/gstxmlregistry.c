@@ -668,30 +668,46 @@ gst_xml_registry_parse_element_factory (GMarkupParseContext *context, const gcha
   GstElementFactory *factory = GST_ELEMENT_FACTORY (registry->current_feature);
 
   if (!strcmp (tag, "name")) {
+    g_free (registry->current_feature->name);
     registry->current_feature->name = g_strndup (text, text_len);
   }
   else if (!strcmp (tag, "longname")) {
+    g_free (factory->details->longname);
     factory->details->longname = g_strndup (text, text_len);
   }
   else if (!strcmp(tag, "class")) {
+    g_free (factory->details->klass);
     factory->details->klass = g_strndup (text, text_len);
   }
   else if (!strcmp(tag, "description")) {
+    g_free (factory->details->description);
     factory->details->description = g_strndup (text, text_len);
   }
   else if (!strcmp(tag, "license")) {
+    g_free (factory->details->license);
     factory->details->license = g_strndup (text, text_len);
   }
   else if (!strcmp(tag, "version")) {
+    g_free (factory->details->version);
     factory->details->version = g_strndup (text, text_len);
   }
   else if (!strcmp(tag, "author")) {
+    g_free (factory->details->author);
     factory->details->author = g_strndup (text, text_len);
   }
   else if (!strcmp(tag, "copyright")) {
+    g_free (factory->details->copyright);
     factory->details->copyright = g_strndup (text, text_len);
   }
-
+  else if (!strcmp(tag, "rank")) {
+    gint rank;
+    gchar *ret;
+     rank = strtol (text, &ret, 0);
+    if (ret == text + text_len) {
+     gst_element_factory_set_rank (factory, rank);
+    }
+  }
+  
   return TRUE;
 }
 
