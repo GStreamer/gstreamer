@@ -81,10 +81,14 @@ mpeg2dec/a52dec	(for mpeg2 related plugins and dvd playback)
 swfdec		(for the swfdec plugin)
 			http://swfdec.sourceforge.net
 		>=	0.2.0
-
 flac		(for the FLAC lossless audio format)
 			http://flac.sourceforge.net
                 >= 1.0.3 preferred, 1.0.2 should work
+gtk		(for the gdk_pixbuf plugin)
+			http://www.gtk.org/
+		>= 2.2.1 preferred, 2.0 ok
+pango		(for the textoverlay plugins)
+			http://www.pango.org/
 
 Optional debian packages:
 =========================
