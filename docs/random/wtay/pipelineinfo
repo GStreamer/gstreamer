@@ -131,6 +131,10 @@ can loop over the array to see what is supported or do
 
 to see if a specific format is contained in the list.
 
+The value reported by a pad query can be considered correct or 
+as-good-as-can-be. Elements that support pad queries must do the best
+they can to report correct values.
+
 
 Convert
 -------
