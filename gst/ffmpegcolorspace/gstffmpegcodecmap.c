@@ -124,6 +124,9 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
     case PIX_FMT_YUV420P:
       fmt = GST_MAKE_FOURCC ('I', '4', '2', '0');
       break;
+    case PIX_FMT_YVU420P:
+      fmt = GST_MAKE_FOURCC ('Y', 'V', '1', '2');
+      break;
     case PIX_FMT_YUV422:
       fmt = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
       break;
@@ -461,6 +464,9 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
         case GST_MAKE_FOURCC ('I', '4', '2', '0'):
           context->pix_fmt = PIX_FMT_YUV420P;
           break;
+        case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
+          context->pix_fmt = PIX_FMT_YVU420P;
+          break;
         case GST_MAKE_FOURCC ('Y', '4', '1', 'B'):
           context->pix_fmt = PIX_FMT_YUV411P;
           break;
@@ -621,6 +627,22 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
       picture->linesize[0] = stride;
       picture->linesize[1] = stride2;
       picture->linesize[2] = stride2;
+      return size + 2 * size2;
+      /* PIX_FMT_YVU420P = YV12: same as PIX_FMT_YUV420P, but
+       *  with U and V plane swapped. Strides as in videotestsrc */
+    case PIX_FMT_YVU420P:
+      stride = ROUND_UP_4 (width);
+      h2 = ROUND_UP_2 (height);
+      size = stride * h2;
+      stride2 = ROUND_UP_8 (stride) / 2;
+      h2 = ROUND_UP_2 (height) / 2;
+      size2 = stride2 * h2;
+      picture->data[0] = ptr;
+      picture->data[2] = picture->data[0] + size;
+      picture->data[1] = picture->data[2] + size2;
+      picture->linesize[0] = stride;
+      picture->linesize[1] = ROUND_UP_8 (stride) / 2;
+      picture->linesize[2] = ROUND_UP_8 (stride) / 2;
       return size + 2 * size2;
     case PIX_FMT_RGB24:
     case PIX_FMT_BGR24:
