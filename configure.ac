@@ -253,7 +253,7 @@ AC_SUBST(GLIB2_REQ)
 dnl Check for glib2 with sugar on top
 PKG_CHECK_MODULES(GLIB2, glib-2.0 >= $GLIB2_REQ gobject-2.0 gthread-2.0 gmodule-2.0,HAVE_GLIB2=yes,HAVE_GLIB2=no)
 dnl for the poor souls who for example have glib in /usr/local
-AS_SCRUB_CFLAGS(GLIB2_CFLAGS)
+AS_SCRUB_INCLUDE(GLIB2_CFLAGS)
 GLIB_LIBS=$GLIB2_LIBS
 GLIB_CFLAGS=$GLIB2_CFLAGS
 AC_SUBST(GLIB_LIBS)
