@@ -45,7 +45,7 @@ gst_bytestream_new (GstPad * pad)
 {
   GstByteStream *bs = g_new (GstByteStream, 1);
 
-  bs->pad = pad;
+  bs->pad = pad;   // need to refcnt?
 
   bs->buflist = NULL;
   bs->headbufavail = 0;
@@ -59,12 +59,15 @@ gst_bytestream_destroy (GstByteStream * bs)
 {
   GSList *walk;
 
+  // release bs->pad ??
+
   walk = bs->buflist;
   while (walk) {
     gst_buffer_unref( GST_BUFFER (walk->data) );
     walk = g_slist_next (walk);
   }
 
+  g_slist_free (bs->buflist);
   g_free (bs);
 }
 
