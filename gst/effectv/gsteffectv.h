@@ -30,5 +30,8 @@ extern GstElementDetails gst_warptv_details;
 GType gst_shagadelictv_get_type (void);
 extern GstElementDetails gst_shagadelictv_details;
 
+GType gst_vertigotv_get_type (void);
+extern GstElementDetails gst_vertigotv_details;
+
 extern GstPadTemplate *gst_effectv_sink_factory ();
 extern GstPadTemplate *gst_effectv_src_factory ();

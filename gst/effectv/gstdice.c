@@ -59,7 +59,7 @@ struct _GstDiceTVClass
 {
   GstElementClass parent_class;
 
-  void (*reset) (GstElement *elem);
+  void (*reset) (GstElement *element);
 };
 
 GstElementDetails gst_dicetv_details = {
@@ -196,9 +196,9 @@ gst_dicetv_init (GstDiceTV * filter)
 }
 
 static void
-gst_dicetv_reset_handler (GstElement *elem)
+gst_dicetv_reset_handler (GstElement *element)
 {
-  GstDiceTV *filter = GST_DICETV (elem);
+  GstDiceTV *filter = GST_DICETV (element);
 
   gst_dicetv_create_map (filter);
 }
