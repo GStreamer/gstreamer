@@ -1,3 +1,8 @@
+2004-03-20  Colin Walters  <walters@verbum.org>
+
+	* gst/registries/gstxmlregistry.c (gst_xml_registry_get_perms_func): Just use
+	access() instead of actually creating and deleting files.
+
 2004-03-18  David Schleef  <ds@schleef.org>
 
 	* configure.ac:  Remove HAVE_ATOMIC_H test, since it's unused.

@@ -327,8 +327,7 @@ make_dir (gchar * filename)
 static void
 gst_xml_registry_get_perms_func (GstXMLRegistry * registry)
 {
-  time_t mod_time = 0;
-  FILE *temp;
+  gchar *dirname;
 
   /* if the dir does not exist, make it. if that can't be done, flags = 0x0.
      if the file can be appended to, it's writable. if it can then be read,
@@ -340,33 +339,21 @@ gst_xml_registry_get_perms_func (GstXMLRegistry * registry)
     return;
   }
 
-  mod_time = get_time (registry->location);
-
-  if ((temp = fopen (registry->location, "a"))) {
-    GST_REGISTRY (registry)->flags |= GST_REGISTRY_WRITABLE;
-    fclose (temp);
-  }
-
-  if ((temp = fopen (registry->location, "r"))) {
-    GST_REGISTRY (registry)->flags |= GST_REGISTRY_READABLE;
-    fclose (temp);
-  }
+  dirname = g_path_get_dirname (registry->location);
 
   if (g_file_test (registry->location, G_FILE_TEST_EXISTS)) {
     GST_REGISTRY (registry)->flags |= GST_REGISTRY_EXISTS;
   }
 
-  if (mod_time) {
-    struct utimbuf utime_buf;
-
-    /* set the modification time back to its previous value */
-    utime_buf.actime = mod_time;
-    utime_buf.modtime = mod_time;
-    utime (registry->location, &utime_buf);
-  } else if (GST_REGISTRY (registry)->flags & GST_REGISTRY_WRITABLE) {
-    /* it did not exist before, so delete it */
-    unlink (registry->location);
+  if (!access (dirname, W_OK)) {
+    GST_REGISTRY (registry)->flags |= GST_REGISTRY_WRITABLE;
   }
+
+  if (!access (dirname, R_OK)) {
+    GST_REGISTRY (registry)->flags |= GST_REGISTRY_READABLE;
+  }
+
+  g_free (dirname);
 }
 
 static void
