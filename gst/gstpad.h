@@ -98,12 +98,11 @@ struct _GstPad {
   GstPadGetFunction getfunc;
   GstPadGetRegionFunction getregionfunc;
   GstPadQoSFunction qosfunc;
+  GstPadEOSFunction eosfunc;
 
   GstPadPushFunction pushfunc;
   GstPadPullFunction pullfunc;
   GstPadPullRegionFunction pullregionfunc;
-
-  GstPadEOSFunction eosfunc;
 
   GstObject *parent;
   GList *ghostparents;
@@ -214,6 +213,7 @@ GstBuffer*		gst_pad_pull_region		(GstPad *pad, gulong offset, gulong size);
 #define			gst_pad_eos(pad)		((pad)->peer->eosfunc((pad)->peer))
 gboolean		gst_pad_set_eos			(GstPad *pad);
 
+gboolean		gst_pad_eos_func		(GstPad *pad);
 void 			gst_pad_handle_qos		(GstPad *pad, glong qos_message);
 
 xmlNodePtr 		gst_pad_save_thyself		(GstPad *pad, xmlNodePtr parent);

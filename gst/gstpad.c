@@ -52,7 +52,6 @@ static void 	gst_pad_get_arg			(GtkObject *object,GtkArg *arg,guint id);
 static void 	gst_pad_real_destroy		(GtkObject *object);
 
 static void 	gst_pad_push_func		(GstPad *pad, GstBuffer *buf);
-static gboolean	gst_pad_eos_func		(GstPad *pad);
 
 static GstObject *pad_parent_class = NULL;
 static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
@@ -1044,7 +1043,7 @@ gst_padtemplate_load_thyself (xmlNodePtr parent)
 }
 
 
-static gboolean
+gboolean
 gst_pad_eos_func(GstPad *pad)
 {
   GstElement *element;
