@@ -115,7 +115,7 @@ case "x${target_cpu}" in
               dnl       (ie CPUID)
               case "x${target_cpu}" in
                 xi386 | xi486) ;;
-                *)             AC_DEFINE(HAVE_RDTSC) ;;
+                *)             AC_DEFINE(HAVE_RDTSC, 1, [Define if RDTSC is available]) ;;
               esac ;;
   xpowerpc)   HAVE_CPU_PPC=yes
               AC_DEFINE(HAVE_CPU_PPC, 1, [Define if the target CPU is a PPC]) ;;
@@ -395,7 +395,7 @@ GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
   if test $HAVE_GSM != "yes"; then
     GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm/gsm.h, GSM_LIBS="-lgsm")
     if test $HAVE_GSM = "yes"; then 
-      AC_DEFINE(GSM_HEADER_IN_SUBDIR)
+      AC_DEFINE(GSM_HEADER_IN_SUBDIR, 1, [Define if GSM header in gsm/ subdir])
     fi
   fi
   AC_SUBST(GSM_LIBS)
