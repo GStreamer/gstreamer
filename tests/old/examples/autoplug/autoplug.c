@@ -9,8 +9,10 @@ gst_play_have_type (GstElement *sink, GstElement *sink2, gpointer data)
   *(gboolean *)data = TRUE;
 }
 
-gboolean idle_func(gpointer data) {
-  return gst_bin_iterate(GST_BIN(data));
+gboolean 
+idle_func (gpointer data)
+{
+  return gst_bin_iterate (GST_BIN (data));
 }
 
 static GstCaps*
