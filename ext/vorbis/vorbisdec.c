@@ -164,14 +164,17 @@ gst_vorbisdec_pull (VorbisDec * vorbisdec, ogg_sync_state * oy)
 	case GST_EVENT_FLUSH:
 	  ogg_sync_reset (oy);
 	case GST_EVENT_EOS:
+	  gst_pad_event_default (vorbisdec->sinkpad, GST_EVENT (buf));
+	  buf = NULL;
+	  goto end;
 	default:
 	  gst_pad_event_default (vorbisdec->sinkpad, GST_EVENT (buf));
-	  break;
       }
       buf = NULL;
     }
   } while (buf == NULL);
 
+end:
   GST_DEBUG (0, "vorbisdec: pull done");
 
   return buf;
@@ -215,6 +218,8 @@ gst_vorbisdec_loop (GstElement * element)
 
     /* submit a 4k block to libvorbis' Ogg layer */
     buf = gst_vorbisdec_pull (vorbisdec, &oy);
+    if (!buf)
+      break;
 
     bytes = GST_BUFFER_SIZE (buf);
     buffer = ogg_sync_buffer (&oy, bytes);
@@ -302,6 +307,8 @@ gst_vorbisdec_loop (GstElement * element)
       gst_element_yield (GST_ELEMENT (vorbisdec));
 
       buf = gst_vorbisdec_pull (vorbisdec, &oy);
+      if (!buf)
+        goto end;
       bytes = GST_BUFFER_SIZE (buf);
       buffer = ogg_sync_buffer (&oy, bytes);
       memcpy (buffer, GST_BUFFER_DATA (buf), bytes);
@@ -447,14 +454,21 @@ gst_vorbisdec_loop (GstElement * element)
         gst_element_yield (GST_ELEMENT (vorbisdec));
 
 	buf = gst_vorbisdec_pull (vorbisdec, &oy);
-	bytes = GST_BUFFER_SIZE (buf);
-	buffer = ogg_sync_buffer (&oy, bytes);
-	memcpy (buffer, GST_BUFFER_DATA (buf), bytes);
-	gst_buffer_unref (buf);
+	if (buf) {
+	  bytes = GST_BUFFER_SIZE (buf);
+ 	  buffer = ogg_sync_buffer (&oy, bytes);
+	  memcpy (buffer, GST_BUFFER_DATA (buf), bytes);
+	  gst_buffer_unref (buf);
 
-	ogg_sync_wrote (&oy, bytes);
-	if (bytes == 0) {
-	  eos = 1;
+	  ogg_sync_wrote (&oy, bytes);
+	  if (bytes == 0) {
+	    gst_pad_push (vorbisdec->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+	    gst_element_set_eos (GST_ELEMENT (vorbisdec));
+	    eos = 1;
+	  }
+	}
+	else {
+          eos = 1;
 	}
       }
     }
@@ -471,6 +485,7 @@ gst_vorbisdec_loop (GstElement * element)
     vorbis_dsp_clear (&vd);
     vorbis_info_clear (&vorbisdec->vi);	/* must be called last */
   }
+end:
 
   /* OK, clean up the framer */
   ogg_sync_clear (&oy);
