@@ -129,3 +129,55 @@ diff -u -u -r1.23 wav.c
      fourxm_init();
  #ifdef CONFIG_ENCODERS
      flvenc_init();
+Index: ffmpeg/libavcodec/avcodec.h
+===================================================================
+RCS file: /cvsroot/ffmpeg/ffmpeg/libavcodec/avcodec.h,v
+retrieving revision 1.237
+diff -a -u -r1.237 avcodec.h
+--- ffmpeg/libavcodec/avcodec.h	22 Oct 2003 18:26:38 -0000	1.237
++++ ffmpeg/libavcodec/avcodec.h	5 Nov 2003 22:54:53 -0000
+@@ -1341,6 +1341,9 @@
+      * - decoding: unused
+      */
+     int lmax;
++
++    /* Added for ffmpeg gstreamer plugin (ffdec_wmav1 & ffdec_wmav2) */
++    int wma_flags1, wma_flags2;
+     
+ } AVCodecContext;
+ 
+Index: ffmpeg/libavcodec/wmadec.c
+===================================================================
+RCS file: /cvsroot/ffmpeg/ffmpeg/libavcodec/wmadec.c,v
+retrieving revision 1.18
+diff -a -u -r1.18 wmadec.c
+--- ffmpeg/libavcodec/wmadec.c	4 Jul 2003 20:32:04 -0000	1.18
++++ ffmpeg/libavcodec/wmadec.c	5 Nov 2003 22:56:01 -0000
+@@ -214,9 +214,15 @@
+         s->version = 2;
+     }
+     
+-    /* extract flag infos */
+-    flags1 = 0;
+-    flags2 = 0;
++    /* extract flag infos 
++     * Get wma flags from context : modification for gstreamer
++     * ffmpegdec get these values from sink caps and put them in the context 
++     */
++    flags1 = avctx->wma_flags1;
++    flags2 = avctx->wma_flags2;
++
++    /* The gstreamer asfdemux computed already these flags */
++    /*
+     extradata = avctx->extradata;
+     if (s->version == 1 && avctx->extradata_size >= 4) {
+         flags1 = extradata[0] | (extradata[1] << 8);
+@@ -225,7 +231,7 @@
+         flags1 = extradata[0] | (extradata[1] << 8) | 
+             (extradata[2] << 16) | (extradata[3] << 24);
+         flags2 = extradata[4] | (extradata[5] << 8);
+-    }
++    }*/
+     s->use_exp_vlc = flags2 & 0x0001;
+     s->use_bit_reservoir = flags2 & 0x0002;
+     s->use_variable_block_len = flags2 & 0x0004;
