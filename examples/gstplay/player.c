@@ -127,13 +127,18 @@ main (int argc, char *argv[])
   data_src = gst_element_factory_make ("gnomevfssrc", "source");
 
   /* Let's send them to GstPlay object */
-  gst_play_set_audio_sink (play, audio_sink);
-  gst_play_set_video_sink (play, video_sink);
-  gst_play_set_data_src (play, data_src);
-  gst_play_set_visualization (play, vis_element);
+  if (!gst_play_set_audio_sink (play, audio_sink))
+    g_warning ("Could not set audio sink");
+  if (!gst_play_set_video_sink (play, video_sink))
+    g_warning ("Could not set video sink");
+  if (!gst_play_set_data_src (play, data_src))
+    g_warning ("Could not set data src");
+  if (!gst_play_set_visualization (play, vis_element))
+    g_warning ("Could not set visualisation");
 
   /* Setting location we want to play */
-  gst_play_set_location (play, argv[1]);
+  if (!gst_play_set_location (play, argv[1]))
+    g_warning ("Could not set location");
 
   /* Uncomment that line to get an XML dump of the pipeline */
   /* gst_xml_write_file (GST_ELEMENT (play), stdout); */
@@ -151,7 +156,9 @@ main (int argc, char *argv[])
   g_signal_connect (G_OBJECT (play), "eos", G_CALLBACK (got_eos), NULL);
 
   /* Change state to PLAYING */
-  gst_element_set_state (GST_ELEMENT (play), GST_STATE_PLAYING);
+  if (gst_element_set_state (GST_ELEMENT (play),
+          GST_STATE_PLAYING) == GST_STATE_FAILURE)
+    g_warning ("Could not set state to PLAYING");
 
   g_idle_add ((GSourceFunc) idle_iterate, play);
   g_timeout_add (20000, (GSourceFunc) seek_timer, play);
