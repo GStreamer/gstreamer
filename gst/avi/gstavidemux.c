@@ -435,23 +435,6 @@ gst_avidemux_parse_index (GstAviDemux *avi_demux,
   buf = gst_pad_pullregion(avi_demux->sinkpad, GST_REGION_OFFSET_LEN, avi_demux->index_offset, 0);
 }
 
-static inline gboolean 
-gst_avidemux_read_chunk (GstByteStream *bs, guint32 *id, guint32 *size)
-{
-  gst_riff_chunk *chunk;
-
-  chunk = (gst_riff_chunk *) gst_bytestream_peek_bytes (bs, sizeof (gst_riff_chunk));
-  if (chunk) {
-    *id =   GUINT32_FROM_LE (chunk->id);
-    *size = GUINT32_FROM_LE (chunk->size);
-
-    gst_bytestream_flush (bs, sizeof (gst_riff_chunk));
-
-    return TRUE;
-  }
-  return FALSE;
-}
-
 static void
 gst_avidemux_forall_pads (GstAviDemux *avi_demux, GFunc func, gpointer user_data)
 {
@@ -505,6 +488,24 @@ gst_avidemux_handle_event (GstAviDemux *avi_demux)
   return TRUE;
 }
 
+static inline gboolean 
+gst_avidemux_read_chunk (GstAviDemux *avi_demux, guint32 *id, guint32 *size)
+{
+  gst_riff_chunk *chunk;
+  GstByteStream *bs = avi_demux->bs;
+
+  chunk = (gst_riff_chunk *) gst_bytestream_peek_bytes (bs, sizeof (gst_riff_chunk));
+  if (chunk) {
+    *id =   GUINT32_FROM_LE (chunk->id);
+    *size = GUINT32_FROM_LE (chunk->size);
+
+    gst_bytestream_flush (bs, sizeof (gst_riff_chunk));
+
+    return TRUE;
+  }
+  return gst_avidemux_handle_event (avi_demux);
+}
+
 static gboolean
 gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
 			     guint32 desired_tag,
@@ -513,7 +514,7 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
   guint32 chunkid;	
   GstByteStream *bs = avi_demux->bs;
 
-  if (!gst_avidemux_read_chunk (bs, &chunkid, chunksize)) {
+  if (!gst_avidemux_read_chunk (avi_demux, &chunkid, chunksize)) {
     g_print ("  *****  Error reading chunk at filepos 0x%08llx\n", *filepos);
     return FALSE;
   }
