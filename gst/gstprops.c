@@ -504,15 +504,25 @@ gst_props_destroy (GstProps *props)
   while (entries) {
     GstPropsEntry *entry = (GstPropsEntry *)entries->data;
 
-    /* FIXME also free the lists */
+    switch (entry->propstype) {
+      case GST_PROPS_STRING_ID:		
+        g_free (entry->data.string_data.string);
+        break;				
+      /* FIXME also free the lists */
+      default:			
+        break;		
+    }
     g_mutex_lock (_gst_props_entries_chunk_lock);
     g_mem_chunk_free (_gst_props_entries_chunk, entry);
     g_mutex_unlock (_gst_props_entries_chunk_lock);
 
     entries = g_list_next (entries);
   }
-
   g_list_free (props->properties);
+
+  g_mutex_lock (_gst_props_chunk_lock);
+  g_mem_chunk_free (_gst_props_chunk, props);
+  g_mutex_unlock (_gst_props_chunk_lock);
 }
 
 /**
