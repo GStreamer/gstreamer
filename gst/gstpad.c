@@ -232,6 +232,10 @@ gst_real_pad_init (GstRealPad *pad)
   pad->convertfunc 	= gst_pad_convert_default;
   pad->queryfunc 	= gst_pad_query_default;
   pad->intconnfunc 	= gst_pad_get_internal_connections_default;
+
+  pad->eventmaskfunc 	= gst_pad_get_event_masks_default;
+  pad->formatsfunc 	= gst_pad_get_formats_default;
+  pad->querytypefunc 	= gst_pad_get_query_types_default;
 }
 
 static void
@@ -241,15 +245,7 @@ gst_real_pad_set_property (GObject *object, guint prop_id, const GValue *value, 
 
   switch (prop_id) {
     case REAL_ARG_ACTIVE:
-      if (g_value_get_boolean (value)) {
-        GST_DEBUG (GST_CAT_PADS, "activating pad %s:%s", GST_DEBUG_PAD_NAME (object));
-        GST_FLAG_UNSET (object, GST_PAD_DISABLED);
-      } else {
-        GST_DEBUG (GST_CAT_PADS, "de-activating pad %s:%s", GST_DEBUG_PAD_NAME (object));
-        GST_FLAG_SET (object, GST_PAD_DISABLED);
-      }
-      g_signal_emit (G_OBJECT (object), gst_real_pad_signals[REAL_SET_ACTIVE], 0,
-                      !GST_FLAG_IS_SET (object, GST_PAD_DISABLED));
+      gst_pad_set_active (GST_PAD (object), g_value_get_boolean (value));
       break;
     default:
       break;
@@ -377,6 +373,36 @@ gst_pad_get_direction (GstPad *pad)
 }
 
 /**
+ * gst_pad_set_active:
+ * @pad: the Pad to activate or deactivate
+ *
+ * Activate or deactivate the given pad
+ */
+void
+gst_pad_set_active (GstPad *pad, gboolean active)
+{
+  GstRealPad *realpad;
+
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  if (GST_PAD_IS_ACTIVE (pad) == active)
+    return;
+
+  realpad = GST_PAD_REALIZE (pad);
+
+  if (active) {
+    GST_DEBUG (GST_CAT_PADS, "activating pad %s:%s", GST_DEBUG_PAD_NAME (realpad));
+    GST_FLAG_UNSET (realpad, GST_PAD_DISABLED);
+  } else {
+    GST_DEBUG (GST_CAT_PADS, "de-activating pad %s:%s", GST_DEBUG_PAD_NAME (realpad));
+    GST_FLAG_SET (realpad, GST_PAD_DISABLED);
+  }
+  g_signal_emit (G_OBJECT (realpad), gst_real_pad_signals[REAL_SET_ACTIVE], 0,
+                      !GST_FLAG_IS_SET (realpad, GST_PAD_DISABLED));
+}
+
+/**
  * gst_pad_set_name:
  * @pad: the pad to set the name of
  * @name: the name of the pad
@@ -443,7 +469,8 @@ gst_pad_set_get_function (GstPad *pad,
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
-  GST_RPAD_GETFUNC(pad) = get;
+  GST_RPAD_GETFUNC (pad) = get;
+  
   GST_DEBUG (GST_CAT_PADS, "getfunc for %s:%s  set to %s",
              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (get));
 }
@@ -462,9 +489,81 @@ gst_pad_set_event_function (GstPad *pad,
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
-  GST_RPAD_EVENTFUNC(pad) = event;
+  GST_RPAD_EVENTFUNC (pad) = event;
+
   GST_DEBUG (GST_CAT_PADS, "eventfunc for %s:%s  set to %s",
              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (event));
+}
+
+void
+gst_pad_set_event_mask_function (GstPad *pad, GstPadEventMaskFunction mask_function)
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+
+  GST_RPAD_EVENTMASKFUNC (pad) = mask_function;
+
+  GST_DEBUG (GST_CAT_PADS, "eventmaskfunc for %s:%s  set to %s",
+             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (mask_function));
+}
+
+const GstEventMask*
+gst_pad_get_event_masks (GstPad *pad)
+{
+  GstRealPad *rpad;
+  
+  if (pad == NULL)
+    return FALSE;
+
+  rpad = GST_PAD_REALIZE (pad);
+
+  g_return_val_if_fail (rpad, FALSE);
+
+  if (GST_RPAD_EVENTMASKFUNC (rpad))
+    return GST_RPAD_EVENTMASKFUNC (rpad) (GST_PAD_CAST (pad));
+
+  return NULL;
+}
+
+static gboolean
+gst_pad_get_event_masks_dispatcher (GstPad *pad, const GstFormat **data)
+{
+  *data = gst_pad_get_formats (pad);
+
+  return TRUE;
+}
+
+const GstEventMask* 
+gst_pad_get_event_masks_default (GstPad *pad)
+{
+  GstEventMask *result = NULL;
+
+  gst_pad_dispatcher (pad, (GstPadDispatcherFunction) gst_pad_get_event_masks_dispatcher, &result);
+
+  return result;
+}
+
+gboolean
+gst_pad_handles_event (GstPad *pad, GstEventMask *mask)
+{
+  const GstEventMask *masks;
+
+  g_return_val_if_fail (pad != NULL, FALSE);
+  g_return_val_if_fail (mask != NULL, FALSE);
+
+  masks = gst_pad_get_event_masks (pad);
+  if (!masks)
+    return FALSE;
+
+  while (masks->type) {
+    if (masks->type == mask->type &&
+        (masks->flags & mask->flags) == mask->flags)
+      return TRUE;
+
+    masks++;
+  }
+
+  return FALSE;
 }
 
 /**
@@ -481,7 +580,8 @@ gst_pad_set_convert_function (GstPad *pad,
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
-  GST_RPAD_CONVERTFUNC(pad) = convert;
+  GST_RPAD_CONVERTFUNC (pad) = convert;
+
   GST_DEBUG (GST_CAT_PADS, "convertfunc for %s:%s  set to %s",
              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (convert));
 }
@@ -500,8 +600,57 @@ gst_pad_set_query_function (GstPad *pad, GstPadQueryFunction query)
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
   GST_RPAD_QUERYFUNC(pad) = query;
+
   GST_DEBUG (GST_CAT_PADS, "queryfunc for %s:%s  set to %s",
              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (query));
+}
+
+void
+gst_pad_set_query_type_function (GstPad *pad, GstPadQueryTypeFunction type_func)
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+
+  GST_RPAD_QUERYTYPEFUNC (pad) = type_func;
+
+  GST_DEBUG (GST_CAT_PADS, "querytypefunc for %s:%s  set to %s",
+             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (type_func));
+}
+
+const GstPadQueryType*
+gst_pad_get_query_types (GstPad *pad)
+{
+  GstRealPad *rpad;
+  
+  if (pad == NULL)
+    return FALSE;
+
+  rpad = GST_PAD_REALIZE (pad);
+
+  g_return_val_if_fail (rpad, FALSE);
+
+  if (GST_RPAD_QUERYTYPEFUNC (rpad))
+    return GST_RPAD_QUERYTYPEFUNC (rpad) (GST_PAD_CAST (pad));
+
+  return NULL;
+}
+
+static gboolean
+gst_pad_get_query_types_dispatcher (GstPad *pad, const GstPadQueryType **data)
+{
+  *data = gst_pad_get_query_types (pad);
+
+  return TRUE;
+}
+
+const GstPadQueryType*
+gst_pad_get_query_types_default (GstPad *pad)
+{
+  GstPadQueryType *result = NULL;
+
+  gst_pad_dispatcher (pad, (GstPadDispatcherFunction) gst_pad_get_query_types_dispatcher, &result);
+
+  return result;
 }
 
 /**
@@ -520,6 +669,24 @@ gst_pad_set_internal_connection_function (GstPad *pad, GstPadIntConnFunction int
   GST_RPAD_INTCONNFUNC(pad) = intconn;
   GST_DEBUG (GST_CAT_PADS, "internal connection for %s:%s  set to %s",
              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (intconn));
+}
+
+/**
+ * gst_pad_set_formats_function:
+ * @pad: the pad to set the formats function for
+ * @formats: the formats function to set
+ *
+ * Set the given formats function to the pad
+ */
+void
+gst_pad_set_formats_function (GstPad *pad, GstPadFormatsFunction formats)
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+
+  GST_RPAD_FORMATSFUNC(pad) = formats;
+  GST_DEBUG (GST_CAT_PADS, "formats function for %s:%s  set to %s",
+             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (formats));
 }
 
 /**
@@ -1049,11 +1216,11 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
   g_return_val_if_fail (pad != NULL, GST_PAD_CONNECT_REFUSED);
   g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_CONNECT_REFUSED);
   
-  /* if this pad has a parent and the parent is not READY, delay the
+  /* if this pad has a parent and the parent is not PAUSED, delay the
    * negotiation */
-  if (parent && GST_STATE (parent) < GST_STATE_READY)
+  if (parent && GST_STATE (parent) < GST_STATE_PAUSED)
   {
-    GST_DEBUG (GST_CAT_CAPS, "parent %s of pad %s:%s is not ready",
+    GST_DEBUG (GST_CAT_CAPS, "parent %s of pad %s:%s is not paused",
 	       GST_ELEMENT_NAME (parent), GST_DEBUG_PAD_NAME (pad));
     return GST_PAD_CONNECT_DELAYED;
   }
@@ -1823,7 +1990,6 @@ gst_pad_ghost_save_thyself (GstPad *pad,
 }
 #endif /* GST_DISABLE_LOADSAVE */
 
-#ifndef gst_pad_push
 /**
  * gst_pad_push:
  * @pad: the pad to push
@@ -1865,9 +2031,7 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
     gst_data_unref (GST_DATA (buf));
   }
 }
-#endif
 
-#ifndef gst_pad_pull
 /**
  * gst_pad_pull:
  * @pad: the pad to pull
@@ -1918,7 +2082,6 @@ gst_pad_pull (GstPad *pad)
   }
   return NULL;
 }
-#endif
 
 /**
  * gst_pad_peek:
@@ -2342,7 +2505,7 @@ gst_pad_event_default_dispatch (GstPad *pad, GstElement *element, GstEvent *even
     pads = g_list_next (pads);
 
     /* for all pads in the opposite direction that are connected */
-    if (GST_PAD_DIRECTION (eventpad) != GST_PAD_DIRECTION (pad) && GST_PAD_IS_CONNECTED (eventpad)) {
+    if (GST_PAD_DIRECTION (eventpad) != GST_PAD_DIRECTION (pad) && GST_PAD_IS_USABLE (eventpad)) {
       if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
 	/* increase the refcount */
         gst_event_ref (event);
@@ -2428,7 +2591,7 @@ gst_pad_dispatcher (GstPad *pad, GstPadDispatcherFunction dispatch, gpointer dat
     GstRealPad *int_rpad = GST_PAD_REALIZE (int_pads->data);
     GstRealPad *int_peer = GST_RPAD_PEER (int_rpad);
 
-    if (int_peer && GST_PAD_IS_CONNECTED (int_peer)) {
+    if (int_peer && GST_PAD_IS_USABLE (int_peer)) {
       res = dispatch (GST_PAD_CAST (int_peer), data);
       if (res)
         break;
@@ -2457,7 +2620,7 @@ gst_pad_send_event (GstPad *pad, GstEvent *event)
 
   g_return_val_if_fail (event, FALSE);
 
-  if (!pad || (GST_PAD_IS_SINK (pad) && !GST_PAD_IS_CONNECTED (pad))) 
+  if (!pad || (GST_PAD_IS_SINK (pad) && !GST_PAD_IS_USABLE (pad))) 
     return FALSE;
 
   if (GST_EVENT_SRC (event) == NULL)
@@ -2636,3 +2799,59 @@ gst_pad_query (GstPad *pad, GstPadQueryType type,
 
   return FALSE;
 }
+
+gboolean
+gst_pad_handles_format (GstPad *pad, GstFormat format)
+{
+  const GstFormat *formats;
+
+  formats = gst_pad_get_formats (pad);
+  if (!formats)
+    return FALSE;
+
+  while (*formats) {
+    if (*formats == format)
+      return TRUE;
+
+    formats++;
+  }
+
+  return FALSE;
+}
+
+static gboolean
+gst_pad_get_formats_dispatcher (GstPad *pad, const GstFormat **data)
+{
+  *data = gst_pad_get_formats (pad);
+
+  return TRUE;
+}
+
+const GstFormat*
+gst_pad_get_formats_default (GstPad *pad)
+{
+  GstFormat *result = NULL;
+
+  gst_pad_dispatcher (pad, (GstPadDispatcherFunction) gst_pad_get_formats_dispatcher, &result);
+
+  return result;
+}
+
+const GstFormat*
+gst_pad_get_formats (GstPad *pad)
+{
+  GstRealPad *rpad;
+  
+  if (pad == NULL)
+    return FALSE;
+
+  rpad = GST_PAD_REALIZE (pad);
+
+  g_return_val_if_fail (rpad, FALSE);
+
+  if (GST_RPAD_FORMATSFUNC (rpad))
+    return GST_RPAD_FORMATSFUNC (rpad) (GST_PAD_CAST (pad));
+
+  return NULL;
+}
+
