@@ -222,7 +222,7 @@ plugin_init (GstPlugin *plugin)
 					videocaps, NULL);
 
   return gst_element_register (plugin, "qtdemux",
-			       GST_RANK_NONE, GST_TYPE_QTDEMUX);
+			       GST_RANK_PRIMARY, GST_TYPE_QTDEMUX);
 }
 
 GST_PLUGIN_DEFINE (
