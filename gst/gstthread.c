@@ -363,8 +363,9 @@ gst_thread_change_state (GstElement * element)
 
 	  if (GST_ELEMENT_SCHED (peerelement) != GST_ELEMENT_SCHED (thread)) {
 	    THR_DEBUG ("  element \"%s\" has pad cross sched boundary", GST_ELEMENT_NAME (element));
-	    if (!gst_element_release_locks (element)) {
-              g_warning ("element %s could not release locks", GST_ELEMENT_NAME (element));
+	    THR_DEBUG ("  waking element \"%s\"", GST_ELEMENT_NAME (peerelement));
+	    if (!gst_element_release_locks (peerelement)) {
+              g_warning ("element %s could not release locks", GST_ELEMENT_NAME (peerelement));
 	    }
 	  }
 	}
