@@ -102,6 +102,8 @@ static void 		gst_mpeg_parse_set_property	(GObject *object, guint prop_id,
 static void 		gst_mpeg_parse_set_index 	(GstElement *element, GstIndex *index);
 static GstIndex*	gst_mpeg_parse_get_index 	(GstElement *element);
 
+static gboolean 	gst_mpeg_parse_release_locks 	(GstElement *element);
+
 static GstElementClass *parent_class = NULL;
 /*static guint gst_mpeg_parse_signals[LAST_SIGNAL] = { 0 };*/
 
@@ -153,11 +155,12 @@ gst_mpeg_parse_class_init (GstMPEGParseClass *klass)
   gobject_class->get_property = gst_mpeg_parse_get_property;
   gobject_class->set_property = gst_mpeg_parse_set_property;
 
-  gstelement_class->change_state = gst_mpeg_parse_change_state;
-  gstelement_class->get_clock    = gst_mpeg_parse_get_clock;
-  gstelement_class->set_clock    = gst_mpeg_parse_set_clock;
-  gstelement_class->get_index    = gst_mpeg_parse_get_index;
-  gstelement_class->set_index    = gst_mpeg_parse_set_index;
+  gstelement_class->change_state  = gst_mpeg_parse_change_state;
+  gstelement_class->get_clock     = gst_mpeg_parse_get_clock;
+  gstelement_class->set_clock     = gst_mpeg_parse_set_clock;
+  gstelement_class->get_index     = gst_mpeg_parse_get_index;
+  gstelement_class->set_index     = gst_mpeg_parse_set_index;
+  gstelement_class->release_locks = gst_mpeg_parse_release_locks;
 
   klass->parse_packhead = gst_mpeg_parse_parse_packhead;
   klass->parse_syshead 	= NULL;
@@ -190,6 +193,7 @@ gst_mpeg_parse_init (GstMPEGParse *mpeg_parse)
 
   mpeg_parse->packetize = NULL;
   mpeg_parse->sync = FALSE;
+  mpeg_parse->id = NULL;
   mpeg_parse->max_discont = DEFAULT_MAX_DISCONT;
   mpeg_parse->provided_clock = gst_mpeg_clock_new ("MPEGParseClock", 
 		  gst_mpeg_parse_get_time, mpeg_parse);
@@ -468,11 +472,12 @@ gst_mpeg_parse_loop (GstElement *element)
       CLASS (mpeg_parse)->send_data (mpeg_parse, data, time);
 
     if (mpeg_parse->clock && mpeg_parse->sync && !mpeg_parse->discont_pending) {
-      GstClockID id = gst_clock_new_single_shot_id (mpeg_parse->clock, time);
+      mpeg_parse->id = gst_clock_new_single_shot_id (mpeg_parse->clock, time);
 
       GST_DEBUG (GST_CAT_CLOCK, "syncing mpegparse");
-      gst_element_clock_wait (GST_ELEMENT (mpeg_parse), id, NULL);
-      gst_clock_id_free (id);
+      gst_element_clock_wait (GST_ELEMENT (mpeg_parse), mpeg_parse->id, NULL);
+      gst_clock_id_free (mpeg_parse->id);
+      mpeg_parse->id = NULL;
     }
 
     if (mpeg_parse->current_scr != -1)
@@ -830,6 +835,20 @@ gst_mpeg_parse_get_index (GstElement *element)
   mpeg_parse = GST_MPEG_PARSE (element);
   
   return mpeg_parse->index;
+}
+
+static gboolean
+gst_mpeg_parse_release_locks (GstElement *element)
+{
+  GstMPEGParse *mpeg_parse;
+
+  mpeg_parse = GST_MPEG_PARSE (element);
+
+  if (mpeg_parse->id) {
+    gst_clock_id_unlock (mpeg_parse->id);
+  }
+
+  return TRUE;
 }
 
 gboolean

@@ -71,6 +71,7 @@ struct _GstMPEGParse {
   GstClock 	*provided_clock;
   GstClock 	*clock;
   gboolean	 sync;
+  GstClockID	 id;
 
   GstIndex	*index;
   gint		 index_id;
