@@ -1,3 +1,9 @@
+2004-04-29  Benjamin Otte  <otte@gnome.org>
+
+	* ext/mad/gstid3tag.c: (gst_id3_tag_handle_event),
+	(gst_id3_tag_chain):
+	  rewrite buffer offset
+
 2004-04-28  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
