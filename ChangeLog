@@ -1,3 +1,25 @@
+2004-08-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  bump libtool versioning
+	* gst/gststructure.c:
+	  mark function as static
+	* po/af.po:
+	* po/az.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/en_GB.po:
+	* po/fr.po:
+	* po/nl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	  translations update
+	* win32/README.txt:
+	  trademark protection
+
 2004-08-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

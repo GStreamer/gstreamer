@@ -71,7 +71,7 @@ gst_structure_get_type (void)
   return gst_structure_type;
 }
 
-GstStructure *
+static GstStructure *
 gst_structure_id_empty_new_with_size (GQuark quark, guint prealloc)
 {
   GstStructure *structure;

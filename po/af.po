@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-07-15 22:30+0200\n"
+"POT-Creation-Date: 2004-08-12 14:02+0200\n"
 "PO-Revision-Date: 2004-03-24 11:28+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -584,21 +584,21 @@ msgstr "Fout met toemaak van lêer \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Fout tydens skryf na lêer \"%s\"."
 
-#: gst/elements/gstfilesrc.c:754 gst/elements/gstmultifilesrc.c:248
+#: gst/elements/gstfilesrc.c:757 gst/elements/gstmultifilesrc.c:289
 msgid "No file name specified for reading."
 msgstr "Geen lêernaam om uit te lees nie."
 
-#: gst/elements/gstfilesrc.c:769 gst/elements/gstmultifilesrc.c:256
+#: gst/elements/gstfilesrc.c:772 gst/elements/gstmultifilesrc.c:297
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie."
 
-#: gst/elements/gstfilesrc.c:780
+#: gst/elements/gstfilesrc.c:783
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:786
+#: gst/elements/gstfilesrc.c:789
 #, fuzzy, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Lêer \"%s\" is nie 'n gewone lêer nie."
@@ -607,19 +607,19 @@ msgstr "Lêer \"%s\" is nie 'n gewone lêer nie."
 msgid "Failed after iterations as requested."
 msgstr "Mislukking na die vasgestelde aantal probeerslae."
 
-#: gst/elements/gsttypefindelement.c:148
+#: gst/elements/gsttypefindelement.c:152
 msgid "caps"
 msgstr "caps"
 
-#: gst/elements/gsttypefindelement.c:149
+#: gst/elements/gsttypefindelement.c:153
 msgid "detected capabilities in stream"
 msgstr "vermoëns wat bespeur kon word in die stroom"
 
-#: gst/elements/gsttypefindelement.c:152
+#: gst/elements/gsttypefindelement.c:156
 msgid "minimum"
 msgstr "minimum"
 
-#: gst/elements/gsttypefindelement.c:156
+#: gst/elements/gsttypefindelement.c:160
 msgid "maximum"
 msgstr "maksimum"
 
@@ -691,136 +691,119 @@ msgstr "kon nie aan bestemming-element vir  URI \"%s\" verbind nie"
 msgid "empty pipeline not allowed"
 msgstr "leë pyplyn word nie toegelaat nie"
 
-#: tools/gst-inspect.c:1115
+#: tools/gst-inspect.c:1122
 #, fuzzy
 msgid "Print all elements"
 msgstr "geen element \"%s\""
 
-#: tools/gst-launch.c:91
-msgid "Execution ended after %"
-msgstr "Uitvoering het geëindig na %"
+#: tools/gst-launch.c:107
+#, c-format
+msgid ""
+"Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
+"max %s ns).\n"
+msgstr ""
 
-#: tools/gst-launch.c:91
-msgid " iterations (sum %"
-msgstr " iterasies (som %"
-
-#: tools/gst-launch.c:92
-msgid " ns, average %"
-msgstr " ns, gemiddelde %"
-
-#: tools/gst-launch.c:92
-msgid " ns, min %"
-msgstr " ns, min %"
-
-#: tools/gst-launch.c:93
-msgid " ns, max %"
-msgstr " ns, maks %"
-
-#: tools/gst-launch.c:93
-msgid " ns).\n"
-msgstr " ns).\n"
-
-#: tools/gst-launch.c:114
+#: tools/gst-launch.c:134
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr "Gebruik so: gst-xmllaunch <lêer.xml> [ element.eienskap=waarde ... ]\n"
 
-#: tools/gst-launch.c:122
+#: tools/gst-launch.c:142
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "FOUT: ontleding van xml-lêer '%s' het misluk.\n"
 
-#: tools/gst-launch.c:128
+#: tools/gst-launch.c:148
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "FOUT: geen topvlak pyplynelement in lêer '%s' nie.\n"
 
-#: tools/gst-launch.c:135
+#: tools/gst-launch.c:155
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "WAARSKUWING: slegs een topvlak element word tans ondersteun."
 
-#: tools/gst-launch.c:146
+#: tools/gst-launch.c:166
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr "FOUT: onverstaanbare bevellynparameter %d: %s.\n"
 
-#: tools/gst-launch.c:157
+#: tools/gst-launch.c:177
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "WAARSKUWING: element genaamd '%s' nie gevind nie.\n"
 
-#: tools/gst-launch.c:294
+#: tools/gst-launch.c:316
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ETIKET GEVIND  : gevind by element \"%s\".\n"
 
-#: tools/gst-launch.c:374
+#: tools/gst-launch.c:403
 msgid "Output tags (also known as metadata)"
 msgstr "Wys etikette (ook bekend as metadata)"
 
-#: tools/gst-launch.c:376
+#: tools/gst-launch.c:405
 msgid "Output status information and property notifications"
 msgstr "Wys statusinligting en kennisgewings van eienskappe"
 
-#: tools/gst-launch.c:378
+#: tools/gst-launch.c:407
 msgid "Do not output status information of TYPE"
 msgstr "Moenie statusinligting van TIPE wys nie"
 
-#: tools/gst-launch.c:378
+#: tools/gst-launch.c:407
 msgid "TYPE1,TYPE2,..."
 msgstr "TIPE1, TIPE2,..."
 
-#: tools/gst-launch.c:381
+#: tools/gst-launch.c:410
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Stoor xml-voorstelling van pyplyn na LÊER en stop"
 
-#: tools/gst-launch.c:381
+#: tools/gst-launch.c:410
 msgid "FILE"
 msgstr "LÊER"
 
-#: tools/gst-launch.c:384
+#: tools/gst-launch.c:413
 msgid "Do not install a fault handler"
 msgstr "Moenie 'n fouthanteerder installeer nie"
 
-#: tools/gst-launch.c:386
+#: tools/gst-launch.c:415
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Druk \"alloc trace\" (indien aangeskakel tydens kompilering)"
 
-#: tools/gst-launch.c:388
+#: tools/gst-launch.c:417
 msgid "Number of times to iterate pipeline"
 msgstr "Aantal kere wat pyplyn herhaal moet word"
 
-#: tools/gst-launch.c:458
+#: tools/gst-launch.c:487
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FOUT: pyplyn kon nie opgestel word nie: %s.\n"
 
-#: tools/gst-launch.c:462
+#: tools/gst-launch.c:491
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FOUT: pyplyn kon nie opgestel word nie.\n"
 
-#: tools/gst-launch.c:466
+#: tools/gst-launch.c:495
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "WAARSKUWING: foutiewe pyplyn: %s\n"
 
-#: tools/gst-launch.c:467
+#: tools/gst-launch.c:496
 #, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Probeer om weg te hardloop.\n"
 
-#: tools/gst-launch.c:495
+#: tools/gst-launch.c:523
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FOUT: die pyplynelement kon nie gevind word nie.\n"
 
-#: tools/gst-launch.c:502
+#: tools/gst-launch.c:530
 #, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "LOOP pyplyn ...\n"
 
-#: tools/gst-launch.c:505
+#: tools/gst-launch.c:533
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FOUT: pyplyn wil nie speel nie.\n"
@@ -830,7 +813,7 @@ msgstr "FOUT: pyplyn wil nie speel nie.\n"
 msgid "Added plugin %s with %d %s.\n"
 msgstr ""
 
-#: tools/gst-register.c:51 tools/gst-register.c:167
+#: tools/gst-register.c:51 tools/gst-register.c:169
 msgid "feature"
 msgid_plural "features"
 msgstr[0] ""
@@ -856,10 +839,28 @@ msgstr ""
 msgid "Error loading %s\n"
 msgstr "Fout met toemaak van lêer \"%s\"."
 
-#: tools/gst-register.c:166
+#: tools/gst-register.c:168
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr ""
+
+#~ msgid "Execution ended after %"
+#~ msgstr "Uitvoering het geëindig na %"
+
+#~ msgid " iterations (sum %"
+#~ msgstr " iterasies (som %"
+
+#~ msgid " ns, average %"
+#~ msgstr " ns, gemiddelde %"
+
+#~ msgid " ns, min %"
+#~ msgstr " ns, min %"
+
+#~ msgid " ns, max %"
+#~ msgstr " ns, maks %"
+
+#~ msgid " ns).\n"
+#~ msgstr " ns).\n"
 
 #~ msgid "')"
 #~ msgstr "')"

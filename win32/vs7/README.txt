@@ -36,10 +36,10 @@ for convenience (people who don't want to install GNU tools).
 
 == Installation on the system ==
 
-By default, GSTreamer needs a registry. You have to generate it using "gst-register.exe". It will create
+By default, GStreamer needs a registry. You have to generate it using "gst-register.exe". It will create
 the file in c:\gstreamer\registry.xml that will hold all the plugins you can use.
 
-You should install the GSTreamer core in c:\gstreamer\bin and the plugins in c:\gstreamer\plugins. Both
+You should install the GStreamer core in c:\gstreamer\bin and the plugins in c:\gstreamer\plugins. Both
 directories should be added to your system PATH. The library dependencies should be installed in c:\usr.
 
 For example, my current setup is :

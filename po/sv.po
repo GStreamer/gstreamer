@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-07-15 22:30+0200\n"
+"POT-Creation-Date: 2004-08-12 14:02+0200\n"
 "PO-Revision-Date: 2004-08-03 20:48+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -30,16 +30,23 @@ msgid "Print available debug categories and exit"
 msgstr "Skriv ut tillgängliga felsökningskategorier och avsluta"
 
 #: gst/gst.c:169
-msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
-msgstr "Standardfelsökningsnivå från 1 (endast fel) till 5 (allting) eller 0 för ingen utmatning"
+msgid ""
+"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr ""
+"Standardfelsökningsnivå från 1 (endast fel) till 5 (allting) eller 0 för "
+"ingen utmatning"
 
 #: gst/gst.c:171
 msgid "LEVEL"
 msgstr "NIVÅ"
 
 #: gst/gst.c:173
-msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr "Kommaseparerad lista med kategorinamn:nivå-par för att ställa in specifika nivåer för de enskilda kategorierna. Exempel: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Kommaseparerad lista med kategorinamn:nivå-par för att ställa in specifika "
+"nivåer för de enskilda kategorierna. Exempel: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 #: gst/gst.c:176
 msgid "LIST"
@@ -66,8 +73,12 @@ msgid "PATHS"
 msgstr "SÖKVÄGAR"
 
 #: gst/gst.c:191
-msgid "Comma-separated list of plugins to preload in addition to the list stored in envronment variable GST_PLUGIN_PATH"
-msgstr "Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan som lagras i miljövariabeln GST_PLUGIN_PATH"
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"envronment variable GST_PLUGIN_PATH"
+msgstr ""
+"Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan "
+"som lagras i miljövariabeln GST_PLUGIN_PATH"
 
 #: gst/gst.c:193
 msgid "PLUGINS"
@@ -75,7 +86,8 @@ msgstr "INSTICKSMODULER"
 
 #: gst/gst.c:196
 msgid "Disable trapping of segmentation faults during plugin loading"
-msgstr "Inaktivera fångst av segmenteringsfel under inläsning av insticksmoduler"
+msgstr ""
+"Inaktivera fångst av segmenteringsfel under inläsning av insticksmoduler"
 
 #: gst/gst.c:199
 msgid "SCHEDULER"
@@ -118,8 +130,12 @@ msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer stötte på ett allmänt fel i kärnbibliotek."
 
 #: gst/gsterror.c:58 gst/gsterror.c:95 gst/gsterror.c:115 gst/gsterror.c:145
-msgid "GStreamer developers were too lazy to assign an error code to this error.  Please file a bug."
-msgstr "Utvecklarna av GStreamer var för lata för att tilldela detta fel ett felnummer. Skicka en felrapport."
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error.  "
+"Please file a bug."
+msgstr ""
+"Utvecklarna av GStreamer var för lata för att tilldela detta fel ett "
+"felnummer. Skicka en felrapport."
 
 #: gst/gsterror.c:61
 msgid "Internal GStreamer error: code not implemented.  File a bug."
@@ -127,7 +143,8 @@ msgstr "Internt GStreamer-fel: koden inte implementerad. Skicka en felrapport."
 
 #: gst/gsterror.c:63
 msgid "Internal GStreamer error: state change failed.  File a bug."
-msgstr "Internt GStreamer-fel: tillståndsändring misslyckades. Skicka en felrapport."
+msgstr ""
+"Internt GStreamer-fel: tillståndsändring misslyckades. Skicka en felrapport."
 
 # Richard Hult säger: "Pad" i gstreamer betyder ungefär "kontakt", man
 # kopplar ihop två element via deras "pads".
@@ -545,7 +562,8 @@ msgstr ", "
 #: gst/autoplug/gstspider.c:458
 #, c-format
 msgid "There is no element present to handle the stream's mime type %s."
-msgstr "Det finns inget element tillgängligt för att hantera flödets mime-typ %s."
+msgstr ""
+"Det finns inget element tillgängligt för att hantera flödets mime-typ %s."
 
 #: gst/elements/gstfilesink.c:259
 msgid "No file name specified for writing."
@@ -567,21 +585,21 @@ msgstr "Fel vid stängning av filen \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Fel vid skrivning till filen \"%s\"."
 
-#: gst/elements/gstfilesrc.c:754 gst/elements/gstmultifilesrc.c:248
+#: gst/elements/gstfilesrc.c:757 gst/elements/gstmultifilesrc.c:289
 msgid "No file name specified for reading."
 msgstr "Inget filnamn angivet för läsning."
 
-#: gst/elements/gstfilesrc.c:769 gst/elements/gstmultifilesrc.c:256
+#: gst/elements/gstfilesrc.c:772 gst/elements/gstmultifilesrc.c:297
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunde inte öppna filen \"%s\" för läsning."
 
-#: gst/elements/gstfilesrc.c:780
+#: gst/elements/gstfilesrc.c:783
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" är en katalog."
 
-#: gst/elements/gstfilesrc.c:786
+#: gst/elements/gstfilesrc.c:789
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Filen \"%s\" är ett uttag."
@@ -591,19 +609,19 @@ msgid "Failed after iterations as requested."
 msgstr "Misslyckades efter iterationer som begärt."
 
 # Osäker. Jag tror "caps" är kort för "capabilities".
-#: gst/elements/gsttypefindelement.c:148
+#: gst/elements/gsttypefindelement.c:152
 msgid "caps"
 msgstr "förmågor"
 
-#: gst/elements/gsttypefindelement.c:149
+#: gst/elements/gsttypefindelement.c:153
 msgid "detected capabilities in stream"
 msgstr "detekterade förmågor i flödet"
 
-#: gst/elements/gsttypefindelement.c:152
+#: gst/elements/gsttypefindelement.c:156
 msgid "minimum"
 msgstr "minimum"
 
-#: gst/elements/gsttypefindelement.c:156
+#: gst/elements/gsttypefindelement.c:160
 msgid "maximum"
 msgstr "maximum"
 
@@ -677,143 +695,120 @@ msgstr "kunde inte länka utgångselementet för URI:n \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "tom rörledning är inte tillåtet"
 
-#: tools/gst-inspect.c:1115
+#: tools/gst-inspect.c:1122
 msgid "Print all elements"
 msgstr "Skriv ut alla element"
 
-# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:91
-msgid "Execution ended after %"
-msgstr "Körning avslutades efter %"
+#: tools/gst-launch.c:107
+#, c-format
+msgid ""
+"Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
+"max %s ns).\n"
+msgstr ""
 
-# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:91
-msgid " iterations (sum %"
-msgstr " iterationer (totalt %"
-
-# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:92
-msgid " ns, average %"
-msgstr " ns, medel %"
-
-# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:92
-msgid " ns, min %"
-msgstr " ns, min %"
-
-# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:93
-msgid " ns, max %"
-msgstr " ns, max %"
-
-# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:93
-msgid " ns).\n"
-msgstr " ns).\n"
-
-#: tools/gst-launch.c:114
+#: tools/gst-launch.c:134
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr "Användning: gst-xmllaunch <fil.xml> [ element.egenskap=värde ... ]\n"
 
-#: tools/gst-launch.c:122
+#: tools/gst-launch.c:142
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "FEL: tolkning av xml-filen \"%s\" misslyckades.\n"
 
-#: tools/gst-launch.c:128
+#: tools/gst-launch.c:148
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "FEL: inget rörledningselement på översta nivån i filen \"%s\".\n"
 
-#: tools/gst-launch.c:135
+#: tools/gst-launch.c:155
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "VARNING: endast ett element på översta nivån stöds just nu."
 
-#: tools/gst-launch.c:146
+#: tools/gst-launch.c:166
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr "FEL: kunde inte tolka kommandoradsargumentet %d: %s.\n"
 
-#: tools/gst-launch.c:157
+#: tools/gst-launch.c:177
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "VARNING: elementet med namnet \"%s\" hittades inte.\n"
 
-#: tools/gst-launch.c:294
+#: tools/gst-launch.c:316
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "HITTADE TAGG   : hittat av elementet \"%s\".\n"
 
-#: tools/gst-launch.c:374
+#: tools/gst-launch.c:403
 msgid "Output tags (also known as metadata)"
 msgstr "Utmatningstaggar (även känt som metadata)"
 
-#: tools/gst-launch.c:376
+#: tools/gst-launch.c:405
 msgid "Output status information and property notifications"
 msgstr "Skriv ut statusinformation och egenskapsnotifieringar"
 
-#: tools/gst-launch.c:378
+#: tools/gst-launch.c:407
 msgid "Do not output status information of TYPE"
 msgstr "Skriv inte ut statusinformation av TYP"
 
-#: tools/gst-launch.c:378
+#: tools/gst-launch.c:407
 msgid "TYPE1,TYPE2,..."
 msgstr "TYP1,TYP2,..."
 
-#: tools/gst-launch.c:381
+#: tools/gst-launch.c:410
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Spara xml-representation av rörledningen i FIL och avsluta"
 
-#: tools/gst-launch.c:381
+#: tools/gst-launch.c:410
 msgid "FILE"
 msgstr "FIL"
 
-#: tools/gst-launch.c:384
+#: tools/gst-launch.c:413
 msgid "Do not install a fault handler"
 msgstr "Installera inte en felhanterare"
 
-#: tools/gst-launch.c:386
+#: tools/gst-launch.c:415
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Skriv ut alloc-spår (om aktiverat vid kompileringen)"
 
-#: tools/gst-launch.c:388
+#: tools/gst-launch.c:417
 msgid "Number of times to iterate pipeline"
 msgstr "Antalet gånger som rörledningen ska itereras"
 
-#: tools/gst-launch.c:458
+#: tools/gst-launch.c:487
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FEL: rörledningen kunde inte konstrueras: %s.\n"
 
-#: tools/gst-launch.c:462
+#: tools/gst-launch.c:491
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FEL: rörledningen kunde inte konstrueras.\n"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:466
+#: tools/gst-launch.c:495
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "VARNING: felaktig rörledning: %s\n"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:467
+#: tools/gst-launch.c:496
 #, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Försöker köra ändå.\n"
 
-#: tools/gst-launch.c:495
+#: tools/gst-launch.c:523
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FEL: \"pipeline\"-elementet hittades inte.\n"
 
-#: tools/gst-launch.c:502
+#: tools/gst-launch.c:530
 #, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "KÖR rörledning...\n"
 
-#: tools/gst-launch.c:505
+#: tools/gst-launch.c:533
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FEL: rörledningen vill inte spela.\n"
@@ -823,7 +818,7 @@ msgstr "FEL: rörledningen vill inte spela.\n"
 msgid "Added plugin %s with %d %s.\n"
 msgstr "Lade till insticksmodul %s med %d %s.\n"
 
-#: tools/gst-register.c:51 tools/gst-register.c:167
+#: tools/gst-register.c:51 tools/gst-register.c:169
 msgid "feature"
 msgid_plural "features"
 msgstr[0] "funktion"
@@ -849,10 +844,34 @@ msgstr "Försöker läsa in %s...\n"
 msgid "Error loading %s\n"
 msgstr "Fel vid inläsning av %s\n"
 
-#: tools/gst-register.c:166
+#: tools/gst-register.c:168
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr "Läste in %d insticksmoduler med %d %s.\n"
+
+# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
+#~ msgid "Execution ended after %"
+#~ msgstr "Körning avslutades efter %"
+
+# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
+#~ msgid " iterations (sum %"
+#~ msgstr " iterationer (totalt %"
+
+# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
+#~ msgid " ns, average %"
+#~ msgstr " ns, medel %"
+
+# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
+#~ msgid " ns, min %"
+#~ msgstr " ns, min %"
+
+# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
+#~ msgid " ns, max %"
+#~ msgstr " ns, max %"
+
+# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
+#~ msgid " ns).\n"
+#~ msgstr " ns).\n"
 
 #~ msgid "Added path %s to %s \n"
 #~ msgstr "Lade till sökväg %s till %s \n"
@@ -860,8 +879,12 @@ msgstr "Läste in %d insticksmoduler med %d %s.\n"
 #~ msgid "Added path %s to %s\n"
 #~ msgstr "Lade till sökväg %s till %s\n"
 
-#~ msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
-#~ msgstr "Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan som lagras i miljövariabeln GST_PLUGIN_PATH"
+#~ msgid ""
+#~ "Comma-separated list of plugins to preload in addition to the list stored "
+#~ "in environment variable GST_PLUGIN_PATH"
+#~ msgstr ""
+#~ "Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan "
+#~ "som lagras i miljövariabeln GST_PLUGIN_PATH"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
 #~ msgid "')"
@@ -871,8 +894,11 @@ msgstr "Läste in %d insticksmoduler med %d %s.\n"
 #~ msgid "' is the default)"
 #~ msgstr "\" är standardalternativet)"
 
-#~ msgid "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
-#~ msgstr "kunde inte konvertera \"%s\" så att det passar egenskapen \"%s\" i elementet \"%s\""
+#~ msgid ""
+#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+#~ msgstr ""
+#~ "kunde inte konvertera \"%s\" så att det passar egenskapen \"%s\" i "
+#~ "elementet \"%s\""
 
 #~ msgid "Show plugin details"
 #~ msgstr "Visa detaljer för insticksmodul"
@@ -952,8 +978,12 @@ msgstr "Läste in %d insticksmoduler med %d %s.\n"
 #~ msgid "The port that the server is running the database on"
 #~ msgstr "Porten som servern kör databasen på"
 
-#~ msgid "The type of the server to contact for CD queries. Possible values are 0 (FreeDB round robin server), 1 (other freedb server) and 2 (other server)."
-#~ msgstr "Typen av server att ansluta till för cd-frågor. Möjliga värden är 0 (FreeDB-roundrobinserver), 1 (annan freedb-server) och 2 (annan server)."
+#~ msgid ""
+#~ "The type of the server to contact for CD queries. Possible values are 0 "
+#~ "(FreeDB round robin server), 1 (other freedb server) and 2 (other server)."
+#~ msgstr ""
+#~ "Typen av server att ansluta till för cd-frågor. Möjliga värden är 0 "
+#~ "(FreeDB-roundrobinserver), 1 (annan freedb-server) och 2 (annan server)."
 
 #~ msgid "The username"
 #~ msgstr "Användarnamnet"
@@ -961,8 +991,14 @@ msgstr "Läste in %d insticksmoduler med %d %s.\n"
 #~ msgid "The username that will be sent with all queries"
 #~ msgstr "Användarnamnet som kommer att skickas med alla frågor"
 
-#~ msgid "This key specifies which user information will be sent to the server to contact for CD queries. Possible values are 0 (no information), 1 (real information) and 3 (other information)."
-#~ msgstr "Denna nyckel anger vilken användarinformation som kommer att skickas till servern som kontaktas för cd-frågor. Möjliga värden är 0 (ingen information), 1 (verklig information) och 3 (annan information)."
+#~ msgid ""
+#~ "This key specifies which user information will be sent to the server to "
+#~ "contact for CD queries. Possible values are 0 (no information), 1 (real "
+#~ "information) and 3 (other information)."
+#~ msgstr ""
+#~ "Denna nyckel anger vilken användarinformation som kommer att skickas till "
+#~ "servern som kontaktas för cd-frågor. Möjliga värden är 0 (ingen "
+#~ "information), 1 (verklig information) och 3 (annan information)."
 
 #~ msgid "Your hostname"
 #~ msgstr "Ditt värdnamn"
@@ -1549,8 +1585,12 @@ msgstr "Läste in %d insticksmoduler med %d %s.\n"
 #~ msgid "CD Display"
 #~ msgstr "Cd-display"
 
-#~ msgid "Displays information about the currently playing album, artist and time elapsed"
-#~ msgstr "Visar information om det album och artist som för tillfället spelas, och tiden som gått"
+#~ msgid ""
+#~ "Displays information about the currently playing album, artist and time "
+#~ "elapsed"
+#~ msgstr ""
+#~ "Visar information om det album och artist som för tillfället spelas, och "
+#~ "tiden som gått"
 
 #~ msgid "Time Line"
 #~ msgstr "Tidslinje"
@@ -2085,10 +2125,15 @@ msgstr "Läste in %d insticksmoduler med %d %s.\n"
 #~ msgstr "<inte beskriven>"
 
 #~ msgid "There was an error getting the list of gm_audio profiles. (%s)\n"
-#~ msgstr "Det uppstod ett fel vid hämtandet av listan med gm_audio-profiler. (%s)\n"
+#~ msgstr ""
+#~ "Det uppstod ett fel vid hämtandet av listan med gm_audio-profiler. (%s)\n"
 
-#~ msgid "There was an error subscribing to notification of terminal profile list changes. (%s)\n"
-#~ msgstr "Det uppstod ett problem vid prenumeration på notifiering av ändringar i terminalprofilslistan. (%s)\n"
+#~ msgid ""
+#~ "There was an error subscribing to notification of terminal profile list "
+#~ "changes. (%s)\n"
+#~ msgstr ""
+#~ "Det uppstod ett problem vid prenumeration på notifiering av ändringar i "
+#~ "terminalprofilslistan. (%s)\n"
 
 #~ msgid "There was an error forgetting profile dir %s. (%s)\n"
 #~ msgstr "Det uppstod ett fel vid glömmandet av profilkatalogen %s. (%s)\n"
@@ -2129,8 +2174,12 @@ msgstr "Läste in %d insticksmoduler med %d %s.\n"
 #~ msgid "GConf Error (FIXME): %s\n"
 #~ msgstr "GConf-fel (FIXAMIG): %s\n"
 
-#~ msgid "The file \"%s\" is missing. This indicates that the application is installed incorrectly, so the dialog can't be displayed."
-#~ msgstr "Filen \"%s\" saknas. Detta tyder på att programmet är felaktigt installerat så att dialogfönstret därför inte kan visas."
+#~ msgid ""
+#~ "The file \"%s\" is missing. This indicates that the application is "
+#~ "installed incorrectly, so the dialog can't be displayed."
+#~ msgstr ""
+#~ "Filen \"%s\" saknas. Detta tyder på att programmet är felaktigt "
+#~ "installerat så att dialogfönstret därför inte kan visas."
 
 #~ msgid "Edit Audio Profile"
 #~ msgstr "Redigera ljudprofil"
@@ -2165,23 +2214,40 @@ msgstr "Läste in %d insticksmoduler med %d %s.\n"
 #~ msgid "A description for the audio profile"
 #~ msgstr "En beskrivning för ljudprofilen"
 
-#~ msgid "A description of the profile, containing more information and describing when to use this profile."
-#~ msgstr "En beskrivning av profilen som innehåller mer information och beskriver när profilen ska användas."
+#~ msgid ""
+#~ "A description of the profile, containing more information and describing "
+#~ "when to use this profile."
+#~ msgstr ""
+#~ "En beskrivning av profilen som innehåller mer information och beskriver "
+#~ "när profilen ska användas."
 
-#~ msgid "A filename extension to be used when storing files encoded with this profile."
-#~ msgstr "En filändelse som ska användas då filer som är kodade med denna profil lagras."
+#~ msgid ""
+#~ "A filename extension to be used when storing files encoded with this "
+#~ "profile."
+#~ msgstr ""
+#~ "En filändelse som ska användas då filer som är kodade med denna profil "
+#~ "lagras."
 
 #~ msgid "A partial GStreamer pipeline to use for this profile."
-#~ msgstr "En ofullständig GStreamer-rörledning som ska användas för denna profil."
+#~ msgstr ""
+#~ "En ofullständig GStreamer-rörledning som ska användas för denna profil."
 
 #~ msgid "A short name for the audio profile"
 #~ msgstr "Ett kort namn för ljudprofilen"
 
-#~ msgid "A short name for the audio profile, to be used in selections and uniquely identifying the profile."
-#~ msgstr "Ett kort namn för ljudprofilen som kan användas i markeringar och som unikt identifierar profilen."
+#~ msgid ""
+#~ "A short name for the audio profile, to be used in selections and uniquely "
+#~ "identifying the profile."
+#~ msgstr ""
+#~ "Ett kort namn för ljudprofilen som kan användas i markeringar och som "
+#~ "unikt identifierar profilen."
 
-#~ msgid "List of audio recording profiles. The list contains strings naming subdirectories relative to /system/gstreamer/audio/profiles."
-#~ msgstr "Lista med ljudinspelningsprofiler. Listan innehåller strängar som anger underkataloger relativa till /system/gstreamer/audio/profiles."
+#~ msgid ""
+#~ "List of audio recording profiles. The list contains strings naming "
+#~ "subdirectories relative to /system/gstreamer/audio/profiles."
+#~ msgstr ""
+#~ "Lista med ljudinspelningsprofiler. Listan innehåller strängar som anger "
+#~ "underkataloger relativa till /system/gstreamer/audio/profiles."
 
 #~ msgid "List of profiles"
 #~ msgstr "Lista med profiler"
@@ -2540,9 +2606,11 @@ msgstr "Läste in %d insticksmoduler med %d %s.\n"
 #~ "If you don't have sox, you will not be able to record or do any effects."
 #~ msgstr ""
 #~ "Kunde inte hitta \"%s\".\n"
-#~ "Ställ in korrekt sökväg till sox i inställningarna under fliken \"sökvägar\".\n"
+#~ "Ställ in korrekt sökväg till sox i inställningarna under fliken \"sökvägar"
+#~ "\".\n"
 #~ "\n"
-#~ "Om du inte har sox kommer du inte att kunna spela in eller göra några effekter."
+#~ "Om du inte har sox kommer du inte att kunna spela in eller göra några "
+#~ "effekter."
 
 #~ msgid "Converting file..."
 #~ msgstr "Konverterar fil..."
@@ -2723,7 +2791,8 @@ msgstr "Läste in %d insticksmoduler med %d %s.\n"
 #~ msgstr "Storlek"
 
 #~ msgid "Show warning _message if size (MB) of sample becomes bigger than:"
-#~ msgstr "Visa varnings_meddelande om ljudklippets storlek (MB) blir större än:"
+#~ msgstr ""
+#~ "Visa varnings_meddelande om ljudklippets storlek (MB) blir större än:"
 
 #~ msgid "Sto_p recording if size (MB) of sample becomes bigger than:"
 #~ msgstr "Sta_nna inspelning om ljudklippets storlek (MB) blir större än:"
@@ -2842,8 +2911,14 @@ msgstr "Läste in %d insticksmoduler med %d %s.\n"
 #~ msgid "Info to send to server"
 #~ msgstr "Information att skicka till server"
 
-#~ msgid "This key specifies which user info will be sent to the server to contact for CD queries. Possible values are 0 (no info), 1 (real info) and 3 (other info)."
-#~ msgstr "Denna nyckel anger vilken användarinformation som kommer att skickas till servern som kontaktas för cd-frågor. Möjliga värden är 0 (ingen information), 1 (verklig information) och 3 (annan information)."
+#~ msgid ""
+#~ "This key specifies which user info will be sent to the server to contact "
+#~ "for CD queries. Possible values are 0 (no info), 1 (real info) and 3 "
+#~ "(other info)."
+#~ msgstr ""
+#~ "Denna nyckel anger vilken användarinformation som kommer att skickas till "
+#~ "servern som kontaktas för cd-frågor. Möjliga värden är 0 (ingen "
+#~ "information), 1 (verklig information) och 3 (annan information)."
 
 #~ msgid "Send _no info"
 #~ msgstr "Skicka in_gen information"
@@ -3115,10 +3190,12 @@ msgstr "Läste in %d insticksmoduler med %d %s.\n"
 #~ "Vill du använda det ändå?"
 
 #~ msgid ""
-#~ "You havn't entered a mixer command; you will not be able to start the mixer.\n"
+#~ "You havn't entered a mixer command; you will not be able to start the "
+#~ "mixer.\n"
 #~ "Do you want to use it anyway?"
 #~ msgstr ""
-#~ "Du har inte angivit ett mixerkommando; du kommer inte att kunna starta mixern.\n"
+#~ "Du har inte angivit ett mixerkommando; du kommer inte att kunna starta "
+#~ "mixern.\n"
 #~ "Vill du använda det ändå?"
 
 #~ msgid ""
@@ -3143,10 +3220,12 @@ msgstr "Läste in %d insticksmoduler med %d %s.\n"
 #~ "Vill du använda den ändå?"
 
 #~ msgid ""
-#~ "You don't have the correct permissions (read & write) for temp directory %s.\n"
+#~ "You don't have the correct permissions (read & write) for temp directory %"
+#~ "s.\n"
 #~ "Do you want to use it anyway?"
 #~ msgstr ""
-#~ "Du har inte rätt läs- och skrivrättigheter för den temporära katalogen %s.\n"
+#~ "Du har inte rätt läs- och skrivrättigheter för den temporära katalogen %"
+#~ "s.\n"
 #~ "Vill du använda den ändå?"
 
 #~ msgid ""
@@ -3292,7 +3371,9 @@ msgstr "Läste in %d insticksmoduler med %d %s.\n"
 #~ msgstr "Kan inte läsa in begärt typsnitt. Läser om standardtypsnittet."
 
 #~ msgid "Cannot load default Helvetica font. Loading any fixed width font."
-#~ msgstr "Kan inte läsa in standardtypsnittet Helvetica. Läser in något typsnitt med fast breddsteg."
+#~ msgstr ""
+#~ "Kan inte läsa in standardtypsnittet Helvetica. Läser in något typsnitt "
+#~ "med fast breddsteg."
 
 #~ msgid "Cannot load fixed width font. Exiting."
 #~ msgstr "Kan inte läsa in typsnitt med fast breddsteg. Avslutar."
