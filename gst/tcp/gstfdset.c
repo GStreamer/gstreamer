@@ -55,6 +55,7 @@ struct _GstFDSet
 
   /* for poll */
   struct pollfd *testpollfds;
+  gint last_testpollfds;
   gint testsize;
 
   struct pollfd *pollfds;
@@ -183,7 +184,7 @@ gst_fdset_add_fd (GstFDSet * set, GstFD * fd)
       nfd = &set->pollfds[idx];
 
       nfd->fd = fd->fd;
-      nfd->events = 0;
+      nfd->events = POLLERR | POLLNVAL | POLLHUP;
       nfd->revents = 0;
 
       /* see if we have one fd more */
@@ -211,6 +212,7 @@ gst_fdset_remove_fd (GstFDSet * set, GstFD * fd)
     case GST_FDSET_MODE_POLL:
     {
       g_mutex_lock (set->poll_lock);
+
       set->pollfds[fd->idx].fd = -1;
       set->pollfds[fd->idx].events = 0;
       set->pollfds[fd->idx].revents = 0;
@@ -246,7 +248,14 @@ gst_fdset_fd_ctl_write (GstFDSet * set, GstFD * fd, gboolean active)
       break;
     case GST_FDSET_MODE_POLL:
     {
-      set->pollfds[fd->idx].events = (active ? POLLOUT : 0);
+      gint events = set->pollfds[fd->idx].events;
+
+      if (active)
+        events |= POLLOUT;
+      else
+        events &= ~POLLOUT;
+
+      set->pollfds[fd->idx].events = events;
       break;
     }
     case GST_FDSET_MODE_EPOLL:
@@ -266,7 +275,14 @@ gst_fdset_fd_ctl_read (GstFDSet * set, GstFD * fd, gboolean active)
       break;
     case GST_FDSET_MODE_POLL:
     {
-      set->pollfds[fd->idx].events = (active ? (POLLIN | POLLPRI) : 0);
+      gint events = set->pollfds[fd->idx].events;
+
+      if (active)
+        events |= (POLLIN | POLLPRI);
+      else
+        events &= ~(POLLIN | POLLPRI);
+
+      set->pollfds[fd->idx].events = events;
       break;
     }
     case GST_FDSET_MODE_EPOLL:
@@ -287,8 +303,10 @@ gst_fdset_fd_has_closed (GstFDSet * set, GstFD * fd)
     {
       gint idx = fd->idx;
 
-      if (idx >= 0)
+      g_mutex_lock (set->poll_lock);
+      if (idx >= 0 && idx < set->last_testpollfds)
         res = (set->testpollfds[idx].revents & POLLHUP) != 0;
+      g_mutex_unlock (set->poll_lock);
       break;
     }
     case GST_FDSET_MODE_EPOLL:
@@ -310,8 +328,10 @@ gst_fdset_fd_has_error (GstFDSet * set, GstFD * fd)
     {
       gint idx = fd->idx;
 
-      if (idx >= 0)
+      g_mutex_lock (set->poll_lock);
+      if (idx >= 0 && idx < set->last_testpollfds)
         res = (set->testpollfds[idx].revents & (POLLERR | POLLNVAL)) != 0;
+      g_mutex_unlock (set->poll_lock);
       break;
     }
     case GST_FDSET_MODE_EPOLL:
@@ -333,8 +353,10 @@ gst_fdset_fd_can_read (GstFDSet * set, GstFD * fd)
     {
       gint idx = fd->idx;
 
-      if (idx >= 0)
+      g_mutex_lock (set->poll_lock);
+      if (idx >= 0 && idx < set->last_testpollfds)
         res = (set->testpollfds[idx].revents & (POLLIN | POLLPRI)) != 0;
+      g_mutex_unlock (set->poll_lock);
       break;
     }
     case GST_FDSET_MODE_EPOLL:
@@ -356,8 +378,10 @@ gst_fdset_fd_can_write (GstFDSet * set, GstFD * fd)
     {
       gint idx = fd->idx;
 
-      if (idx >= 0)
+      g_mutex_lock (set->poll_lock);
+      if (idx >= 0 && idx < set->last_testpollfds)
         res = (set->testpollfds[idx].revents & POLLOUT) != 0;
+      g_mutex_unlock (set->poll_lock);
       break;
     }
     case GST_FDSET_MODE_EPOLL:
@@ -393,19 +417,18 @@ gst_fdset_wait (GstFDSet * set, int timeout)
     }
     case GST_FDSET_MODE_POLL:
     {
-      gint last_pollfds;
-
       g_mutex_lock (set->poll_lock);
       if (set->testsize != set->size) {
         set->testpollfds = g_realloc (set->testpollfds, set->size);
         set->testsize = set->size;
       }
-      last_pollfds = set->last_pollfds;
+      set->last_testpollfds = set->last_pollfds;
       memcpy (set->testpollfds, set->pollfds,
-          sizeof (struct pollfd) * last_pollfds);
+          sizeof (struct pollfd) * set->last_testpollfds);
       g_mutex_unlock (set->poll_lock);
 
-      res = poll (set->testpollfds, last_pollfds, timeout);
+      res = poll (set->testpollfds, set->last_testpollfds, timeout);
+
       break;
     }
     case GST_FDSET_MODE_EPOLL:
