@@ -68,6 +68,15 @@ static gchar *_gst_info_category_strings[] = {
   "NEGOTIATION",
 };
 
+/*
+ * Attribute codes:
+ * 00=none 01=bold 04=underscore 05=blink 07=reverse 08=concealed
+ * Text color codes:
+ * 30=black 31=red 32=green 33=yellow 34=blue 35=magenta 36=cyan 37=white
+ * Background color codes:
+ * 40=black 41=red 42=green 43=yellow 44=blue 45=magenta 46=cyan 47=white
+ */
+
 const gchar *_gst_category_colors[32] = {
   [GST_CAT_GST_INIT]		= "07;37",
   [GST_CAT_COTHREADS]		= "00;32",
@@ -129,8 +138,10 @@ gst_default_info_handler (gint category, gchar *file, gchar *function,
 {
   gchar *empty = "";
   gchar *elementname = empty,*location = empty;
+  int pthread_id = getpid();
   int cothread_id = cothread_getcurrent();
 #ifdef GST_DEBUG_COLOR
+  int pthread_color = pthread_id%6 + 31;
   int cothread_color = (cothread_id < 0) ? 37 : (cothread_id%6 + 31);
 #endif
 
@@ -142,11 +153,12 @@ gst_default_info_handler (gint category, gchar *file, gchar *function,
 
 #ifdef GST_DEBUG_ENABLED
   #ifdef GST_DEBUG_COLOR
-    fprintf(stderr,"INFO(%d:\033[00;%dm%d\033[00m):\033[" GST_DEBUG_CHAR_MODE ";%sm%s%s\033[00m %s\n",
-            getpid(),cothread_color,cothread_id,
+    fprintf(stderr,"INFO (\033[00;%dm%5d\033[00m:\033[00;%dm%2d\033[00m):\033["
+            GST_DEBUG_CHAR_MODE ";%sm%s%s\033[00m %s\n",
+            pthread_color,pthread_id,cothread_color,cothread_id,
             _gst_category_colors[category],location,elementname,string);
   #else
-    fprintf(stderr,"INFO(%d:%d):%s%s %s\n",
+    fprintf(stderr,"INFO (%5d:%2d):%s%s %s\n",
             getpid(),cothread_id,location,elementname,string);
   #endif /* GST_DEBUG_COLOR */
 #else

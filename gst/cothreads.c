@@ -54,6 +54,11 @@ cothread_init (void)
 {
   cothread_context *ctx = (cothread_context *)malloc(sizeof(cothread_context));
 
+  // we consider the initiating process to be cothread 0
+  ctx->nthreads = 1;
+  ctx->current = 0;
+  ctx->data = g_hash_table_new(g_str_hash, g_str_equal);
+
   GST_INFO (GST_CAT_COTHREADS,"initializing cothreads");
 
   if (_cothread_key == -1) {
@@ -84,11 +89,6 @@ cothread_init (void)
 #endif
 
   GST_INFO (GST_CAT_COTHREADS,"0th thread is %p at sp:%p",ctx->threads[0], ctx->threads[0]->sp);
-
-  // we consider the initiating process to be cothread 0
-  ctx->nthreads = 1;
-  ctx->current = 0;
-  ctx->data = g_hash_table_new(g_str_hash, g_str_equal);
 
   return ctx;
 }
@@ -345,7 +345,7 @@ cothread_switch (cothread_state *thread)
 
 #ifdef COTHREAD_PARANOID
 nothread:
-  g_print("cothread: there's no thread, strange...\n");
+  g_print("cothread: can't switch to NULL cothread!\n");
   return;
 nocontext:
   g_print("cothread: there's no context, help!\n");

@@ -153,6 +153,7 @@ gst_queue_init (GstQueue *queue)
 
   queue->emptycond = g_cond_new ();
   queue->fullcond = g_cond_new ();
+  GST_DEBUG(GST_CAT_THREAD, "initialized queue's emptycond and fullcond\n");
 }
 
 static GstBufferPool*
