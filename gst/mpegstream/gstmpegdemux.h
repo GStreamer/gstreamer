@@ -54,6 +54,13 @@ struct _MPEG1Stream {
   gint16 STD_buffer_size_bound;
 };
 
+typedef struct _GstMPEG1StreamContext GstMPEG1StreamContext;
+
+struct _GstMPEGStreamContext {
+  GstPad *pad;
+  guint64 pts;
+};
+
 struct _GstMPEGDemux {
   GstMPEGParse parent;
 
@@ -92,7 +99,7 @@ struct _GstMPEGDemux {
 
   /* stream output pads */
   GstPad *private_1_pad[NUM_PRIVATE_1_PADS];	/* up to 8 ac3 audio tracks */
-  gulong private_1_offset[NUM_PRIVATE_1_PADS];
+  gulong private_1_PTS[NUM_PRIVATE_1_PADS];
 
   GstPad *subtitle_pad[NUM_SUBTITLE_PADS];
   gulong subtitle_offset[NUM_SUBTITLE_PADS];

@@ -201,7 +201,7 @@ gst_mpeg_demux_init (GstMPEGDemux *mpeg_demux)
   /* i think everything is already zero'd, but oh well*/
   for (i=0;i<NUM_PRIVATE_1_PADS;i++) {
     mpeg_demux->private_1_pad[i] = NULL;
-    mpeg_demux->private_1_offset[i] = 0;
+    mpeg_demux->private_1_PTS[i] = 0;
   }
   for (i=0;i<NUM_SUBTITLE_PADS;i++) {
     mpeg_demux->subtitle_pad[i] = NULL;
@@ -582,14 +582,12 @@ done:
   /* if we don't know what it is, bail */
   if (outpad == NULL) {
     GST_DEBUG (0,"mpeg_demux::parse_packet: unknown packet id 0x%02X !!", id);
-    /* return total number of bytes */
     return FALSE;
   }
 
   /* FIXME, this should be done in parse_syshead */
   if ((*outpad) == NULL) {
     GST_DEBUG (0,"mpeg_demux::parse_packet: unexpected packet id 0x%02X!!", id);
-    /* return total number of bytes */
     return FALSE;
   }
 
@@ -712,6 +710,10 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       /* scrap first 4 bytes (so-called "mystery AC3 tag") */
       headerlen += 4;
       datalen -= 4;
+      if (pts == -1) 
+        pts = mpeg_demux->private_1_PTS[ps_id_code - 0x80];
+      else 
+        mpeg_demux->private_1_PTS[ps_id_code - 0x80] = pts;
     }
     else if ((ps_id_code >= 0x20) && (ps_id_code <= 0x2f)) {
       GST_DEBUG (0,"mpeg_demux: we have a subtitle_stream packet, track %d",
@@ -808,7 +810,6 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     gst_pad_push((*outpad),outbuf);
   }
 
-  /* return total number of bytes */
   return TRUE;
 }
 

@@ -416,7 +416,7 @@ gst_mpeg_parse_loop (GstElement *element)
     size = GST_BUFFER_SIZE (data);
     
     /* we are interpolating the scr here */
-    mpeg_parse->current_scr += ((size * 90000LL) / (mpeg_parse->bit_rate));
+    /* mpeg_parse->current_scr += ((size * 90000LL) / (mpeg_parse->bit_rate)); */
   }
 }
 
