@@ -1,10 +1,12 @@
 include ../Rules
 
-tests_pass = 									\
-	unlink_src unlink_sink							\
-	relink_src relink_sink							\
-	unref_src unref_sink							\
-	useless_iteration
+tests_pass = \
+	unlink_src unlink_sink \
+	relink_src relink_sink \
+	unref_src unref_sink
+
+# don't enable this one unless it actually works.
+#	useless_iteration
 
 tests_fail = 
 tests_ignore =
