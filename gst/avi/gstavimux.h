@@ -77,6 +77,9 @@ struct _GstAviMux {
   gst_riff_strh auds_hdr;
   gst_riff_strf_auds auds;
 
+  /* tags */
+  GstTagList *tags;
+
   /* information about the AVI index ('idx') */
   gst_riff_index_entry *idx;
   gint idx_index, idx_count;

@@ -178,9 +178,16 @@ gst_avimux_get_type (void)
       0,
       (GInstanceInitFunc) gst_avimux_init,
     };
+    static const GInterfaceInfo tag_setter_info = {
+      NULL,
+      NULL,
+      NULL
+    };
 
     avimux_type =
         g_type_register_static (GST_TYPE_ELEMENT, "GstAviMux", &avimux_info, 0);
+    g_type_add_interface_static (avimux_type, GST_TYPE_TAG_SETTER,
+        &tag_setter_info);
   }
   return avimux_type;
 }
@@ -274,6 +281,7 @@ gst_avimux_init (GstAviMux * avimux)
   avimux->auds_hdr.type = GST_MAKE_FOURCC ('a', 'u', 'd', 's');
   avimux->vids_hdr.quality = 0xFFFFFFFF;
   avimux->auds_hdr.quality = 0xFFFFFFFF;
+  avimux->tags = NULL;
 
   avimux->idx = NULL;
 
@@ -565,302 +573,236 @@ gst_avimux_release_pad (GstElement * element, GstPad * pad)
 
 /* DISCLAIMER: this function is ugly. So be it (i.e. it makes the rest easier) */
 
+static void
+gst_avimux_write_tag (const GstTagList * list, const gchar * tag, gpointer data)
+{
+  const struct
+  {
+    guint32 fcc;
+    gchar *tag;
+  } rifftags[] = {
+    {
+    GST_RIFF_INFO_ICMT, GST_TAG_COMMENT}, {
+    GST_RIFF_INFO_INAM, GST_TAG_TITLE}, {
+    GST_RIFF_INFO_ISFT, GST_TAG_ENCODER}, {
+    GST_RIFF_INFO_IGNR, GST_TAG_GENRE}, {
+    GST_RIFF_INFO_ICOP, GST_TAG_COPYRIGHT}, {
+    GST_RIFF_INFO_IART, GST_TAG_ARTIST}, {
+    GST_RIFF_INFO_IARL, GST_TAG_LOCATION}, {
+    0, NULL}
+  };
+  gint n, len;
+  GstBuffer *buf = data;
+  gchar *str;
+
+  for (n = 0; rifftags[n].fcc != 0; n++) {
+    if (!strcmp (rifftags[n].tag, tag) &&
+        gst_tag_list_get_string (list, tag, &str)) {
+      len = strlen (str);
+      if (GST_BUFFER_MAXSIZE (buf) >= GST_BUFFER_SIZE (buf) + 8 + len + 1) {
+        GST_WRITE_UINT32_LE (GST_BUFFER_DATA (buf), rifftags[n].fcc);
+        GST_WRITE_UINT32_LE (GST_BUFFER_DATA (buf) + 4, len + 1);
+        memcpy (GST_BUFFER_DATA (buf) + 8, str, len);
+        GST_BUFFER_DATA (buf)[8 + len] = 0;
+        GST_BUFFER_SIZE (buf) += 8 + len + 1;
+      }
+    }
+    break;
+  }
+}
+
 static GstBuffer *
 gst_avimux_riff_get_avi_header (GstAviMux * avimux)
 {
+  GstTagList *tags;
+  const GstTagList *iface_tags;
   GstBuffer *buffer;
   guint8 *buffdata;
-  guint16 temp16;
-  guint32 temp32;
-
-  buffer = gst_buffer_new ();
+  guint size = 0;
 
   /* first, let's see what actually needs to be in the buffer */
-  GST_BUFFER_SIZE (buffer) = 0;
-  GST_BUFFER_SIZE (buffer) += 32 + sizeof (gst_riff_avih);      /* avi header */
+  size += 32 + sizeof (gst_riff_avih);  /* avi header */
   if (avimux->video_pad_connected) {    /* we have video */
-    GST_BUFFER_SIZE (buffer) += 28 + sizeof (gst_riff_strh) + sizeof (gst_riff_strf_vids);      /* vid hdr */
-    GST_BUFFER_SIZE (buffer) += 24;     /* odml header */
+    size += 28 + sizeof (gst_riff_strh) + sizeof (gst_riff_strf_vids);  /* vid hdr */
+    size += 24;                 /* odml header */
   }
   if (avimux->audio_pad_connected) {    /* we have audio */
-    GST_BUFFER_SIZE (buffer) += 28 + sizeof (gst_riff_strh) + sizeof (gst_riff_strf_auds);      /* aud hdr */
+    size += 28 + sizeof (gst_riff_strh) + sizeof (gst_riff_strf_auds);  /* aud hdr */
   }
   /* this is the "riff size" */
-  avimux->header_size = GST_BUFFER_SIZE (buffer);
-  GST_BUFFER_SIZE (buffer) += 12;       /* avi data header */
+  avimux->header_size = size;
+  size += 12;                   /* avi data header */
+
+  /* tags */
+  iface_tags = gst_tag_setter_get_list (GST_TAG_SETTER (avimux));
+  if (iface_tags || avimux->tags) {
+    size += 1024;
+    if (iface_tags && avimux->tags) {
+      tags = gst_tag_list_merge (iface_tags, avimux->tags,
+          GST_TAG_MERGE_APPEND);
+    } else if (iface_tags) {
+      tags = gst_tag_list_copy (iface_tags);
+    } else {
+      tags = gst_tag_list_copy (avimux->tags);
+    }
+  } else {
+    tags = NULL;
+  }
 
   /* allocate the buffer */
-  buffdata = GST_BUFFER_DATA (buffer) = g_malloc (GST_BUFFER_SIZE (buffer));
+  buffer = gst_buffer_new_and_alloc (size);
+  buffdata = GST_BUFFER_DATA (buffer);
+  GST_BUFFER_SIZE (buffer) = 0;
 
   /* avi header metadata */
-  memcpy (buffdata, "RIFF", 4);
-  buffdata += 4;
-  temp32 =
-      LE_FROM_GUINT32 (avimux->header_size + avimux->idx_size +
-      avimux->data_size);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  memcpy (buffdata, "AVI ", 4);
-  buffdata += 4;
-  memcpy (buffdata, "LIST", 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (avimux->header_size - 4 * 5);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  memcpy (buffdata, "hdrl", 4);
-  buffdata += 4;
-  memcpy (buffdata, "avih", 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (sizeof (gst_riff_avih));
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
+  memcpy (buffdata + 0, "RIFF", 4);
+  GST_WRITE_UINT32_LE (buffdata + 4,
+      avimux->header_size + avimux->idx_size + avimux->data_size);
+  memcpy (buffdata + 8, "AVI ", 4);
+  memcpy (buffdata + 12, "LIST", 4);
+  GST_WRITE_UINT32_LE (buffdata + 16, avimux->header_size - 4 * 5);
+  memcpy (buffdata + 20, "hdrl", 4);
+  memcpy (buffdata + 24, "avih", 4);
+  GST_WRITE_UINT32_LE (buffdata + 28, sizeof (gst_riff_avih));
+  buffdata += 32;
+  GST_BUFFER_SIZE (buffer) += 32;
+
   /* the AVI header itself */
-  temp32 = LE_FROM_GUINT32 (avimux->avi_hdr.us_frame);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (avimux->avi_hdr.max_bps);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (avimux->avi_hdr.pad_gran);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (avimux->avi_hdr.flags);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (avimux->avi_hdr.tot_frames);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (avimux->avi_hdr.init_frames);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (avimux->avi_hdr.streams);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (avimux->avi_hdr.bufsize);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (avimux->avi_hdr.width);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (avimux->avi_hdr.height);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (avimux->avi_hdr.scale);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (avimux->avi_hdr.rate);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (avimux->avi_hdr.start);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (avimux->avi_hdr.length);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
+  GST_WRITE_UINT32_LE (buffdata + 0, avimux->avi_hdr.us_frame);
+  GST_WRITE_UINT32_LE (buffdata + 4, avimux->avi_hdr.max_bps);
+  GST_WRITE_UINT32_LE (buffdata + 8, avimux->avi_hdr.pad_gran);
+  GST_WRITE_UINT32_LE (buffdata + 12, avimux->avi_hdr.flags);
+  GST_WRITE_UINT32_LE (buffdata + 16, avimux->avi_hdr.tot_frames);
+  GST_WRITE_UINT32_LE (buffdata + 20, avimux->avi_hdr.init_frames);
+  GST_WRITE_UINT32_LE (buffdata + 24, avimux->avi_hdr.streams);
+  GST_WRITE_UINT32_LE (buffdata + 28, avimux->avi_hdr.bufsize);
+  GST_WRITE_UINT32_LE (buffdata + 32, avimux->avi_hdr.width);
+  GST_WRITE_UINT32_LE (buffdata + 36, avimux->avi_hdr.height);
+  GST_WRITE_UINT32_LE (buffdata + 40, avimux->avi_hdr.scale);
+  GST_WRITE_UINT32_LE (buffdata + 44, avimux->avi_hdr.rate);
+  GST_WRITE_UINT32_LE (buffdata + 48, avimux->avi_hdr.start);
+  GST_WRITE_UINT32_LE (buffdata + 52, avimux->avi_hdr.length);
+  buffdata += 56;
+  GST_BUFFER_SIZE (buffer) += 56;
 
   if (avimux->video_pad_connected) {
     /* video header metadata */
-    memcpy (buffdata, "LIST", 4);
-    buffdata += 4;
-    temp32 =
-        LE_FROM_GUINT32 (sizeof (gst_riff_strh) + sizeof (gst_riff_strf_vids) +
-        4 * 5);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    memcpy (buffdata, "strl", 4);
-    buffdata += 4;
+    memcpy (buffdata + 0, "LIST", 4);
+    GST_WRITE_UINT32_LE (buffdata + 4,
+        sizeof (gst_riff_strh) + sizeof (gst_riff_strf_vids) + 4 * 5);
+    memcpy (buffdata + 8, "strl", 4);
     /* generic header */
-    memcpy (buffdata, "strh", 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (sizeof (gst_riff_strh));
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
+    memcpy (buffdata + 12, "strh", 4);
+    GST_WRITE_UINT32_LE (buffdata + 16, sizeof (gst_riff_strh));
     /* the actual header */
-    temp32 = LE_FROM_GUINT32 (avimux->vids_hdr.type);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids_hdr.fcc_handler);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids_hdr.flags);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids_hdr.priority);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids_hdr.init_frames);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids_hdr.scale);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids_hdr.rate);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids_hdr.start);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids_hdr.length);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids_hdr.bufsize);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids_hdr.quality);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids_hdr.samplesize);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
+    GST_WRITE_UINT32_LE (buffdata + 20, avimux->vids_hdr.type);
+    GST_WRITE_UINT32_LE (buffdata + 24, avimux->vids_hdr.fcc_handler);
+    GST_WRITE_UINT32_LE (buffdata + 28, avimux->vids_hdr.flags);
+    GST_WRITE_UINT32_LE (buffdata + 32, avimux->vids_hdr.priority);
+    GST_WRITE_UINT32_LE (buffdata + 36, avimux->vids_hdr.init_frames);
+    GST_WRITE_UINT32_LE (buffdata + 40, avimux->vids_hdr.scale);
+    GST_WRITE_UINT32_LE (buffdata + 44, avimux->vids_hdr.rate);
+    GST_WRITE_UINT32_LE (buffdata + 48, avimux->vids_hdr.start);
+    GST_WRITE_UINT32_LE (buffdata + 52, avimux->vids_hdr.length);
+    GST_WRITE_UINT32_LE (buffdata + 56, avimux->vids_hdr.bufsize);
+    GST_WRITE_UINT32_LE (buffdata + 60, avimux->vids_hdr.quality);
+    GST_WRITE_UINT32_LE (buffdata + 64, avimux->vids_hdr.samplesize);
     /* the video header */
-    memcpy (buffdata, "strf", 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (sizeof (gst_riff_strf_vids));
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
+    memcpy (buffdata + 68, "strf", 4);
+    GST_WRITE_UINT32_LE (buffdata + 72, sizeof (gst_riff_strf_vids));
     /* the actual header */
-    temp32 = LE_FROM_GUINT32 (avimux->vids.size);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids.width);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids.height);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp16 = LE_FROM_GUINT16 (avimux->vids.planes);
-    memcpy (buffdata, &temp16, 2);
-    buffdata += 2;
-    temp16 = LE_FROM_GUINT16 (avimux->vids.bit_cnt);
-    memcpy (buffdata, &temp16, 2);
-    buffdata += 2;
-    temp32 = LE_FROM_GUINT32 (avimux->vids.compression);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids.image_size);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids.xpels_meter);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids.ypels_meter);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids.num_colors);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->vids.imp_colors);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
+    GST_WRITE_UINT32_LE (buffdata + 76, avimux->vids.size);
+    GST_WRITE_UINT32_LE (buffdata + 80, avimux->vids.width);
+    GST_WRITE_UINT32_LE (buffdata + 84, avimux->vids.height);
+    GST_WRITE_UINT16_LE (buffdata + 88, avimux->vids.planes);
+    GST_WRITE_UINT16_LE (buffdata + 90, avimux->vids.bit_cnt);
+    GST_WRITE_UINT32_LE (buffdata + 92, avimux->vids.compression);
+    GST_WRITE_UINT32_LE (buffdata + 96, avimux->vids.image_size);
+    GST_WRITE_UINT32_LE (buffdata + 100, avimux->vids.xpels_meter);
+    GST_WRITE_UINT32_LE (buffdata + 104, avimux->vids.ypels_meter);
+    GST_WRITE_UINT32_LE (buffdata + 108, avimux->vids.num_colors);
+    GST_WRITE_UINT32_LE (buffdata + 112, avimux->vids.imp_colors);
+    buffdata += 116;
+    GST_BUFFER_SIZE (buffer) += 116;
   }
 
   if (avimux->audio_pad_connected) {
     /* audio header */
-    memcpy (buffdata, "LIST", 4);
-    buffdata += 4;
-    temp32 =
-        LE_FROM_GUINT32 (sizeof (gst_riff_strh) + sizeof (gst_riff_strf_auds) +
-        4 * 5);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    memcpy (buffdata, "strl", 4);
-    buffdata += 4;
+    memcpy (buffdata + 0, "LIST", 4);
+    GST_WRITE_UINT32_LE (buffdata + 4,
+        sizeof (gst_riff_strh) + sizeof (gst_riff_strf_auds) + 4 * 5);
+    memcpy (buffdata + 8, "strl", 4);
     /* generic header */
-    memcpy (buffdata, "strh", 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (sizeof (gst_riff_strh));
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
+    memcpy (buffdata + 12, "strh", 4);
+    GST_WRITE_UINT32_LE (buffdata + 16, sizeof (gst_riff_strh));
     /* the actual header */
-    temp32 = LE_FROM_GUINT32 (avimux->auds_hdr.type);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->auds_hdr.fcc_handler);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->auds_hdr.flags);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->auds_hdr.priority);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->auds_hdr.init_frames);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->auds_hdr.scale);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->auds_hdr.rate);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->auds_hdr.start);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->auds_hdr.length);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->auds_hdr.bufsize);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->auds_hdr.quality);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->auds_hdr.samplesize);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
+    GST_WRITE_UINT32_LE (buffdata + 20, avimux->auds_hdr.type);
+    GST_WRITE_UINT32_LE (buffdata + 24, avimux->auds_hdr.fcc_handler);
+    GST_WRITE_UINT32_LE (buffdata + 28, avimux->auds_hdr.flags);
+    GST_WRITE_UINT32_LE (buffdata + 32, avimux->auds_hdr.priority);
+    GST_WRITE_UINT32_LE (buffdata + 36, avimux->auds_hdr.init_frames);
+    GST_WRITE_UINT32_LE (buffdata + 40, avimux->auds_hdr.scale);
+    GST_WRITE_UINT32_LE (buffdata + 44, avimux->auds_hdr.rate);
+    GST_WRITE_UINT32_LE (buffdata + 48, avimux->auds_hdr.start);
+    GST_WRITE_UINT32_LE (buffdata + 52, avimux->auds_hdr.length);
+    GST_WRITE_UINT32_LE (buffdata + 56, avimux->auds_hdr.bufsize);
+    GST_WRITE_UINT32_LE (buffdata + 60, avimux->auds_hdr.quality);
+    GST_WRITE_UINT32_LE (buffdata + 64, avimux->auds_hdr.samplesize);
     /* the audio header */
-    memcpy (buffdata, "strf", 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (sizeof (gst_riff_strf_auds));
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
+    memcpy (buffdata + 68, "strf", 4);
+    GST_WRITE_UINT32_LE (buffdata + 72, sizeof (gst_riff_strf_auds));
     /* the actual header */
-    temp16 = LE_FROM_GUINT16 (avimux->auds.format);
-    memcpy (buffdata, &temp16, 2);
-    buffdata += 2;
-    temp16 = LE_FROM_GUINT16 (avimux->auds.channels);
-    memcpy (buffdata, &temp16, 2);
-    buffdata += 2;
-    temp32 = LE_FROM_GUINT32 (avimux->auds.rate);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->auds.av_bps);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp16 = LE_FROM_GUINT16 (avimux->auds.blockalign);
-    memcpy (buffdata, &temp16, 2);
-    buffdata += 2;
-    temp16 = LE_FROM_GUINT16 (avimux->auds.size);
-    memcpy (buffdata, &temp16, 2);
-    buffdata += 2;
+    GST_WRITE_UINT16_LE (buffdata + 76, avimux->auds.format);
+    GST_WRITE_UINT16_LE (buffdata + 78, avimux->auds.channels);
+    GST_WRITE_UINT32_LE (buffdata + 80, avimux->auds.rate);
+    GST_WRITE_UINT32_LE (buffdata + 84, avimux->auds.av_bps);
+    GST_WRITE_UINT16_LE (buffdata + 88, avimux->auds.blockalign);
+    GST_WRITE_UINT16_LE (buffdata + 90, avimux->auds.size);
+    buffdata += 92;
+    GST_BUFFER_SIZE (buffer) += 92;
   }
 
   if (avimux->video_pad_connected) {
     /* odml header */
-    memcpy (buffdata, "LIST", 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (sizeof (guint32) + 4 * 3);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    memcpy (buffdata, "odml", 4);
-    buffdata += 4;
-    memcpy (buffdata, "dmlh", 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (sizeof (guint32));
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
-    temp32 = LE_FROM_GUINT32 (avimux->total_frames);
-    memcpy (buffdata, &temp32, 4);
-    buffdata += 4;
+    memcpy (buffdata + 0, "LIST", 4);
+    GST_WRITE_UINT32_LE (buffdata + 4, sizeof (guint32) + 4 * 3);
+    memcpy (buffdata + 8, "odml", 4);
+    memcpy (buffdata + 12, "dmlh", 4);
+    GST_WRITE_UINT32_LE (buffdata + 16, sizeof (guint32));
+    GST_WRITE_UINT32_LE (buffdata + 20, avimux->total_frames);
+    buffdata += 24;
+    GST_BUFFER_SIZE (buffer) += 24;
+  }
+
+  /* tags */
+  if (tags) {
+    guint8 *ptr;
+    guint startsize;
+
+    memcpy (buffdata + 0, "LIST", 4);
+    ptr = buffdata + 4;         /* fill in later */
+    startsize = GST_BUFFER_SIZE (buffer) + 4;
+    memcpy (buffdata + 8, "INFO", 4);
+    buffdata += 12;
+    GST_BUFFER_SIZE (buffer) += 12;
+
+    /* 12 bytes is needed for data header */
+    GST_BUFFER_MAXSIZE (buffer) -= 12;
+    gst_tag_list_foreach (tags, gst_avimux_write_tag, buffer);
+    gst_tag_list_free (tags);
+    GST_BUFFER_MAXSIZE (buffer) += 12;
+    buffdata = GST_BUFFER_DATA (buffer) + GST_BUFFER_SIZE (buffer);
+
+    /* update list size */
+    GST_WRITE_UINT32_LE (ptr, GST_BUFFER_SIZE (buffer) - startsize);
   }
 
   /* avi data header */
-  memcpy (buffdata, "LIST", 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (avimux->data_size);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  memcpy (buffdata, "movi", 4);
+  memcpy (buffdata + 0, "LIST", 4);
+  GST_WRITE_UINT32_LE (buffdata + 4, avimux->data_size);
+  memcpy (buffdata + 12, "movi", 4);
+  buffdata += 12;
+  GST_BUFFER_SIZE (buffer) += 12;
 
   return buffer;
 }
@@ -870,25 +812,16 @@ gst_avimux_riff_get_avix_header (guint32 datax_size)
 {
   GstBuffer *buffer;
   guint8 *buffdata;
-  guint32 temp32;
 
-  buffer = gst_buffer_new ();
-  GST_BUFFER_SIZE (buffer) = 24;
-  buffdata = GST_BUFFER_DATA (buffer) = g_malloc (GST_BUFFER_SIZE (buffer));
+  buffer = gst_buffer_new_and_alloc (24);
+  buffdata = GST_BUFFER_DATA (buffer);
 
-  memcpy (buffdata, "LIST", 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (datax_size + 4 * 4);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  memcpy (buffdata, "AVIX", 4);
-  buffdata += 4;
-  memcpy (buffdata, "LIST", 4);
-  buffdata += 4;
-  temp32 = LE_FROM_GUINT32 (datax_size);
-  memcpy (buffdata, &temp32, 4);
-  buffdata += 4;
-  memcpy (buffdata, "movi", 4);
+  memcpy (buffdata + 0, "LIST", 4);
+  GST_WRITE_UINT32_LE (buffdata + 4, datax_size + 4 * 4);
+  memcpy (buffdata + 8, "AVIX", 4);
+  memcpy (buffdata + 12, "LIST", 4);
+  GST_WRITE_UINT32_LE (buffdata + 16, datax_size);
+  memcpy (buffdata + 20, "movi", 4);
 
   return buffer;
 }
@@ -897,14 +830,12 @@ static GstBuffer *
 gst_avimux_riff_get_video_header (guint32 video_frame_size)
 {
   GstBuffer *buffer;
-  guint32 temp32;
+  guint8 *buffdata;
 
-  buffer = gst_buffer_new ();
-  GST_BUFFER_DATA (buffer) = g_malloc (8);
-  GST_BUFFER_SIZE (buffer) = 8;
-  memcpy (GST_BUFFER_DATA (buffer), "00db", 4);
-  temp32 = LE_FROM_GUINT32 (video_frame_size);
-  memcpy (GST_BUFFER_DATA (buffer) + 4, &temp32, 4);
+  buffer = gst_buffer_new_and_alloc (8);
+  buffdata = GST_BUFFER_DATA (buffer);
+  memcpy (buffdata + 0, "00db", 4);
+  GST_WRITE_UINT32_LE (buffdata + 4, video_frame_size);
 
   return buffer;
 }
@@ -913,14 +844,12 @@ static GstBuffer *
 gst_avimux_riff_get_audio_header (guint32 audio_sample_size)
 {
   GstBuffer *buffer;
-  guint32 temp32;
+  guint8 *buffdata;
 
-  buffer = gst_buffer_new ();
-  GST_BUFFER_DATA (buffer) = g_malloc (8);
-  GST_BUFFER_SIZE (buffer) = 8;
-  memcpy (GST_BUFFER_DATA (buffer), "01wb", 4);
-  temp32 = LE_FROM_GUINT32 (audio_sample_size);
-  memcpy (GST_BUFFER_DATA (buffer) + 4, &temp32, 4);
+  buffer = gst_buffer_new_and_alloc (8);
+  buffdata = GST_BUFFER_DATA (buffer);
+  memcpy (buffdata + 0, "01wb", 4);
+  GST_WRITE_UINT32_LE (buffdata + 4, audio_sample_size);
 
   return buffer;
 }
@@ -948,21 +877,20 @@ static void
 gst_avimux_write_index (GstAviMux * avimux)
 {
   GstBuffer *buffer;
-  guint32 temp32;
+  guint8 *buffdata;
 
-  buffer = gst_buffer_new ();
-  GST_BUFFER_SIZE (buffer) = 8;
-  GST_BUFFER_DATA (buffer) = g_malloc (8);
-  memcpy (GST_BUFFER_DATA (buffer), "idx1", 4);
-  temp32 = LE_FROM_GUINT32 (avimux->idx_index * sizeof (gst_riff_index_entry));
-  memcpy (GST_BUFFER_DATA (buffer) + 4, &temp32, 4);
+  buffer = gst_buffer_new_and_alloc (8);
+  buffdata = GST_BUFFER_DATA (buffer);
+  memcpy (buffdata + 0, "idx1", 4);
+  GST_WRITE_UINT32_LE (buffdata + 4,
+      avimux->idx_index * sizeof (gst_riff_index_entry));
   gst_pad_push (avimux->srcpad, GST_DATA (buffer));
 
   buffer = gst_buffer_new ();
   GST_BUFFER_SIZE (buffer) = avimux->idx_index * sizeof (gst_riff_index_entry);
-  GST_BUFFER_DATA (buffer) = (unsigned char *) avimux->idx;
+  GST_BUFFER_DATA (buffer) = (guint8 *) avimux->idx;
   avimux->idx = NULL;           /* will be free()'ed by gst_buffer_unref() */
-  avimux->total_data += GST_BUFFER_SIZE (buffer);
+  avimux->total_data += GST_BUFFER_SIZE (buffer) + 8;
   gst_pad_push (avimux->srcpad, GST_DATA (buffer));
 
   avimux->idx_size += avimux->idx_index * sizeof (gst_riff_index_entry) + 8;
@@ -1038,8 +966,9 @@ gst_avimux_start_file (GstAviMux * avimux)
 
   header = gst_avimux_riff_get_avi_header (avimux);
   avimux->total_data += GST_BUFFER_SIZE (header);
-  avimux->idx_offset = avimux->total_data;
   gst_pad_push (avimux->srcpad, GST_DATA (header));
+
+  avimux->idx_offset = avimux->total_data;
 
   avimux->write_header = FALSE;
   avimux->restart = FALSE;
@@ -1139,6 +1068,14 @@ gst_avimux_handle_event (GstPad * pad, GstEvent * event)
         avimux->audio_pad_eos = TRUE;
       } else {
         g_warning ("Unknown pad for EOS!");
+      }
+      break;
+    case GST_EVENT_TAG:
+      if (avimux->tags) {
+        gst_tag_list_insert (avimux->tags, gst_event_tag_get_list (event),
+            GST_TAG_MERGE_PREPEND);
+      } else {
+        avimux->tags = gst_tag_list_copy (gst_event_tag_get_list (event));
       }
       break;
     default:
@@ -1382,6 +1319,12 @@ gst_avimux_change_state (GstElement * element)
   switch (transition) {
     case GST_STATE_PAUSED_TO_PLAYING:
       avimux->video_pad_eos = avimux->audio_pad_eos = FALSE;
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      if (avimux->tags) {
+        gst_tag_list_free (avimux->tags);
+        avimux->tags = NULL;
+      }
       break;
   }
 
