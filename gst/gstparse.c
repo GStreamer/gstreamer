@@ -342,8 +342,7 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
       numsinkpads = 0;
       tempname = NULL;
 
-      /
- find sink pads
+      /* find sink pads */
       if (sinkpadname != NULL) {
 	while (1) {
 	  /* split name at commas */

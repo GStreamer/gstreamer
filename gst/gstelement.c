@@ -1015,7 +1015,8 @@ gst_element_save_thyself (GstObject *object,
 {
   GList *pads;
   GstElementClass *oclass;
-/*  GType type; */
+  /* FIXME : this is needed for glib2 */
+  /* GType type; */
   GstElement *element;
 
   g_return_val_if_fail (GST_IS_ELEMENT (object), parent);
@@ -1038,6 +1039,7 @@ gst_element_save_thyself (GstObject *object,
 
 /* FIXME FIXME FIXME! */
   /* output all args to the element */
+  /*
   type = G_OBJECT_TYPE (element);
   while (type != G_TYPE_INVALID) {
     GtkArg *args;
@@ -1062,7 +1064,7 @@ gst_element_save_thyself (GstObject *object,
             xmlNewChild (arg, NULL, "value",
                          g_strdup_printf ("%d", G_VALUE_UCHAR (args[i])));
             break;
-          case G_TYPE_BOOL:
+          case G_TYPE_BOOLEAN:
             xmlNewChild (arg, NULL, "value",
                         G_VALUE_BOOL (args[i]) ? "true" : "false");
             break;

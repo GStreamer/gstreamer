@@ -324,7 +324,7 @@ gst_thread_change_state (GstElement * element)
 	THR_DEBUG ("  element \"%s\"\n", GST_ELEMENT_NAME (e));
 	elements = g_list_next (elements);
 	if (GST_IS_QUEUE (e)) {
-  /* FIXME make this more efficient by only waking queues that are asleep */
+  /* FIXME make this more efficient by only waking queues that are asleep
    *  FIXME and only waking the appropriate condition (depending on if it's
    *  FIXME on up- or down-stream side)
    * FIXME also make this more efficient by keeping list of managed queues

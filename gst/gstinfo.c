@@ -317,6 +317,7 @@ gst_default_info_handler (gint category, gboolean incore,
     fprintf(stderr,"INFO:%s%s %s\n",
             location,elementname,string);
   #endif /* GST_DEBUG_COLOR */
+/*
 #endif
 */
 
