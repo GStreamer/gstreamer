@@ -1,5 +1,10 @@
 2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
 
+	* win32/GStreamer.vcproj:
+	  rename GStreamer-0.8.lib to libgstreamer.lib
+
+2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* win32/gstelements.vcproj:
 	* win32/gstoptimalscheduler.vcproj:
 	  fixes for the Release build

@@ -49,7 +49,7 @@
 				SubSystem="2"
 				OptimizeReferences="0"
 				EnableCOMDATFolding="0"
-				ImportLibrary="$(OutDir)/GStreamer-0.8.lib"
+				ImportLibrary="$(OutDir)/libgstreamer.lib"
 				TargetMachine="1"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -124,7 +124,7 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				ImportLibrary="$(OutDir)/GStreamer-0.8.lib"
+				ImportLibrary="$(OutDir)/libgstreamer.lib"
 				TargetMachine="1"/>
 			<Tool
 				Name="VCMIDLTool"/>
