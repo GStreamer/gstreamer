@@ -28,7 +28,7 @@ typedef void (*GstDataFreeFunction) (GstData *data);
 
 struct _GstData
 {
-  /* inheritance */
+  /* is a */
   GstDataClass *	klass;
   
   /* refcounting */
@@ -62,20 +62,20 @@ struct _GstMyData {
 You can even enhance the class struct, if you want to. This works just like inheritance in GLib.
 
 If it can be a parent class, it should implement these three functions publically:
-void gst_my_data_init (GstData *data) {
+void gst_my_data_init (GstMyData *data) {
   /* call the parent's init function, eg: */
-  gst_data_init (data);
+  gst_data_init (GST_DATA (data));
   /* initialize your data now */
 }
-void gst_my_data_dispose (GstData *data) {
+void gst_my_data_dispose (GstMyData *data) {
   /* free every data, that needs to be freed */
   /* call the parent's dispose function, eg: */
-  gst_data_dispose (data);
+  gst_data_dispose (GST_DATA (data));
   /* do NOT free the data */
 }
-GstData *gst_my_data_do_copy (GstData *to, GstData *from) {
+GstData *gst_my_data_do_copy (GstMyData *to, GstMyData *from) {
   /* call the parent's copy function, eg: */
-  gst_data_do_copy (to, from);
+  gst_data_do_copy (GST_DATA (to), GST_DATA (from));
   /* copy relevant stuff from your struct now */
   /* note: the copy function must return a writable object, you may not set GST_DATA_READONLY here */
 }
@@ -90,15 +90,15 @@ FIXME: At the moment all types need to be specified in a big enum in gstdata.h.
 The two functions above should look something like this:
 GstData *gst_my_data_copy_func (GstData *from) {
   /* allocate memory */
-  GstMyData *copy = g_new (GstData, 1);
+  GstMyData *copy = g_new (GstMyData, 1);
   /* copy relevant variables or initialize them */
-  gst_my_data_copy (copy, from);
+  gst_my_data_copy (copy, GST_MY_DATA (from));
   
   return copy;
 }
 void gst_my_data_free_func (GstData *data) {
   /* first dispose all data */
-  gst_my_data_dispose (data);
+  gst_my_data_dispose (GST_MY_DATA (data));
   /* now free the struct */
   g_free (data);
 }
@@ -106,9 +106,9 @@ void gst_my_data_free_func (GstData *data) {
 Now you just need a function that can be called from the real world:
 GstMyData *gst_my_data_new (void) {
   /* allocate memory */
-  GstMyData *my_data = g_new (GstData, 1);
+  GstMyData *my_data = g_new (GstMyData, 1);
   /* initialize the variables */
-  gst_my_data_init (GST_DATA (my_data));
+  gst_my_data_init (my_data);
   /* set the right type */
   GST_DATA (my_data)->type = &my_data_class;
   
