@@ -1,3 +1,26 @@
+2005-02-22  Andy Wingo  <wingo@pobox.com>
+
+	* gst/elements/gstidentity.h
+	* gst/elements/gstidentity.c (gst_identity_handle_buffer): New
+	proc, factored out of the old chain func.
+	(gst_identity_chain): Use handle_buffer. Lock the stream.
+	(gst_identity_getrange): Lock the stream. Still doesn't do any
+	reporting tho.
+	(gst_identity_event): Handle flush events in the loop-based and
+	decoupled cases.
+	(identity_queue_flush, identity_queue_pop, identity_queue_push):
+	New procs, implement a 1-data buffer pen between threads in
+	decoupled operation.
+	(gst_identity_class_init, gst_identity_get_property)
+	(gst_identity_set_property): Use PROP_FOO instead of ARG_FOO. It's
+	not null if we get it, but I might remove five year old code. Add
+	has-src-loop, has-sink-loop, has-chain, has-getrange properties,
+	remove loop-based.
+	(gst_identity_finalize): Free mutex and cond.
+	(gst_identity_init): Alloc mutex and cond.
+	(gst_identity_sink_loop, gst_identity_src_loop): New procs.
+	(gst_identity_set_dataflow_funcs): New proc.
+
 2005-02-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/elements/gstfakesink.c: (gst_fakesink_get_property),
@@ -23,7 +46,6 @@
 	preroll sample is queued.
 	Add more info in gst-launch regarding state changes.
 	
-
 2005-02-21  Andy Wingo  <wingo@pobox.com>
 
 	* gst/elements/gstfakesink.c:
