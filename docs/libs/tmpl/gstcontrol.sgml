@@ -9,12 +9,10 @@ gstcontrol
 
 </para>
 
-
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
-
 
 <!-- ##### FUNCTION gst_control_init ##### -->
 <para>
@@ -107,8 +105,10 @@ gstcontrol
 </para>
 
 @dpman: 
-@name: 
+@dparam_name: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@name: 
 
 
 <!-- ##### FUNCTION gst_dpman_get_dparam_type ##### -->
@@ -117,8 +117,38 @@ gstcontrol
 </para>
 
 @dpman: 
-@name: 
+@dparam_name: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@name: 
+
+
+<!-- ##### FUNCTION gst_dpman_list_dparam_specs ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_dpman_get_param_spec ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@dparam_name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_dpman_set_rate ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@rate: 
 
 
 <!-- ##### FUNCTION gst_dpman_register_mode ##### -->
@@ -208,5 +238,14 @@ gstcontrol
 @timestamp: 
 @value: 
 @update_info: 
+
+
+<!-- ##### FUNCTION gst_dpsmooth_new ##### -->
+<para>
+
+</para>
+
+@type: 
+@Returns: 
 
 

@@ -1,3 +1,13 @@
+2005-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/Makefile.am:
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/tmpl/gstbuffer.sgml:
+	* docs/libs/Makefile.am:
+	* docs/libs/tmpl/gstcontrol.sgml:
+	* docs/libs/tmpl/gstgetbits.sgml:
+	  make core finish "make" nicely for now
+
 2005-02-11  Andy Wingo  <wingo@pobox.com>
 
 	* tools/gst-launch.c (check_intr): New timeout to check the
