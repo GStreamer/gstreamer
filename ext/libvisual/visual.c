@@ -296,6 +296,7 @@ gst_visual_chain (GstPad * pad, GstData * _data)
     ret = gst_pad_alloc_buffer (visual->srcpad, GST_BUFFER_OFFSET_NONE,
         visual->video->width * visual->video->width * visual->video->bpp);
     visual_video_set_buffer (visual->video, GST_BUFFER_DATA (ret));
+    visual_audio_analyze (&visual->audio);
     visual_actor_run (visual->actor, &visual->audio);
     GST_BUFFER_TIMESTAMP (ret) = GST_SECOND * visual->count++ / visual->fps;
     GST_BUFFER_DURATION (ret) = GST_SECOND / visual->fps;

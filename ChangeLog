@@ -1,3 +1,8 @@
+2004-05-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/libvisual/visual.c: (gst_visual_chain):
+	  add missing visual_audio_analyze
+
 2004-05-14  David Schleef  <ds@schleef.org>
 
 	* ext/esd/esdsink.c: (gst_esdsink_chain): Fix crash when ESD
