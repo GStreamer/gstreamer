@@ -32,7 +32,11 @@ AC_PROG_CC
 AM_PROG_CC_STDC
 AM_PROG_AS
 AS="${CC}"
+dnl determine c++ compiler
 AC_PROG_CXX
+dnl determine if c++ is available on this system
+AC_CHECK_PROG(HAVE_CXX, $CXX, yes, no)
+dnl determine c++ preprocessor
 AC_PROG_CXXCPP
 AC_ISC_POSIX
 
@@ -131,7 +135,6 @@ GST_CHECK_FEATURE(GCONF, [GConf libraries], , [
   AC_SUBST(GCONF_CFLAGS)
   AC_SUBST(GCONF_LIBS)
 ])
-AC_SUBST(HAVE_GCONF)
 
 dnl check for gstreamer; uninstalled is selected preferentially -- see pkg-config(1)
 PKG_CHECK_MODULES(GST, gstreamer >= $GST_PLUGINS_MAJOR.$GST_PLUGINS_MINOR.$GST_PLUGINS_MICRO,
@@ -213,10 +216,19 @@ GST_PLUGINS_ALL="\
         cutter deinterlace effectv festival filter flx goom\
         intfloat law level\
         median mixmatrix mpeg1enc mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub\
-        mpegaudio mpegaudioparse mpegstream mpegtypes modplug\
+        mpegaudio mpegaudioparse mpegstream mpegtypes\
         monoscope passthrough playondemand qtdemux rtjpeg silence sine\
         smooth spectrum speed stereo stereomono\
-        synaesthesia udp videocrop videoscale videotestsrc volenv volume vumeter wavparse y4m"
+        synaesthesia udp videocrop videoscale videotestsrc volenv volume\ 
+        vumeter wavparse y4m"
+
+dnl see if we can build C++ plug-ins
+if test "x$HAVE_CXX" = "xyes"; then
+  GST_PLUGINS_ALL="$GST_PLUGINS_ALL \
+                  modplug"
+else
+  echo "Not compiling plug-ins requiring C++ compiler"
+fi
 
 AC_SUBST(GST_PLUGINS_ALL)
 
