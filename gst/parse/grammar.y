@@ -547,7 +547,7 @@ element:	IDENTIFIER     		      { $$ = gst_element_factory_make ($1, NULL);
 	
 assignments:	/* NOP */		      { $$ = NULL; }
 	|	assignments ASSIGNMENT	      { $$ = g_slist_prepend ($1, $2); }
-			
+	;		
 bin:	        '{' assignments chain '}'     { GST_BIN_MAKE ($$, "thread", $3, $2); }
         |       '(' assignments chain ')'     { GST_BIN_MAKE ($$, "bin", $3, $2); }
         |       BINREF assignments chain ')'  { GST_BIN_MAKE ($$, $1, $3, $2); 
@@ -568,8 +568,8 @@ bin:	        '{' assignments chain '}'     { GST_BIN_MAKE ($$, "thread", $3, $2)
 pads:		PADREF 			      { $$ = g_slist_prepend (NULL, $1); }
 	|	PADREF padlist		      { $$ = $2;
 						$$ = g_slist_prepend ($$, $1);
-					      }
-
+					      }				     
+	;
 padlist:	',' IDENTIFIER		      { $$ = g_slist_prepend (NULL, $2); }
 	|	',' IDENTIFIER padlist	      { $$ = g_slist_prepend ($3, $2); }
 	;
