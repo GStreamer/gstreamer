@@ -46,7 +46,7 @@
 		"V4LSRC: " format, ##args)
 
 /* palette names */
-char *palette_name[] = {
+static const char *palette_name[] = {
   "",                          /* 0 */
   "grayscale",                 /* VIDEO_PALETTE_GREY */
   "Hi-420",                    /* VIDEO_PALETTE_HI420 */
