@@ -1,6 +1,6 @@
 === release 0.8.6 ===
 
-2004-09-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+2004-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
 	* NEWS:
@@ -8,7 +8,7 @@
 	* configure.ac:
 	  releasing 0.8.6, "Narc"
 
-	2004-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+2004-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
 	  prerel bump
