@@ -1,3 +1,13 @@
+gst-plugins (0.4.1-1) unstable; urgency=low
+
+  * New upstream
+  * Update FLAC dependency to 1.0.4 and use support patch from CVS
+  * Build gconf code as a library rather than a plugin
+  * Improved plugin descriptions
+  * Added to -misc: cdplayer, videocrop, videotestsrc, mixmatrix
+
+ -- David I. Lehn <dlehn@vt.edu>  Wed,  2 Oct 2002 14:48:28 -0400
+
 gst-plugins (0.4.0.2-cvs20020919-1) unstable; urgency=low
 
   * CVS snapshot, release branch
@@ -8,6 +18,13 @@ gst-plugins (0.4.0.2-cvs20020919-1) unstable; urgency=low
     easier to diff build dependencies.
 
  -- David Schleef <ds@schleef.org>  Thu, 19 Sep 2002 15:18:41 -0700
+
+gst-plugins (0.4.0-5) unstable; urgency=low
+
+  * Update Build-Depends
+  * Use pkg-config checking vs m4 macros for libdv
+
+ -- David I. Lehn <dlehn@vt.edu>  Fri, 23 Aug 2002 10:33:29 -0400
 
 gst-plugins (0.4.0-4) unstable; urgency=low
 
