@@ -1,3 +1,11 @@
+2004-12-07  Christian Fredrik Kalager Schaller  <set EMAIL_ADDRESS environment variable>
+
+	Woooho Monoscope is now effectivly LGPL licensed
+
+	* gst/monoscope/README: remove blurb about files being GPL
+	* gst/monoscope/gstmonoscope.c: Change license field to LGPL
+	* gst/monoscope/monoscope.c: Change license to BSD with explanation
+
 2004-12-07  Christian Fredrik Kalager Schaller  <uraeus@gnome.org>
 
 	* gst/monoscope/README: Update information to be more correct
