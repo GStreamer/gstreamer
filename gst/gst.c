@@ -190,8 +190,11 @@ gst_init_with_popt_table (int *argc, char **argv[], const struct poptOption *pop
              poptBadOption (context, 0),
              poptStrerror (nextopt),
              (*argv)[0]);
+
+    poptFreeContext (context);
     exit (1);
   }
+  poptFreeContext (context);
 
   /* let's do this once there are 1.6.3 popt debs out
      *argc = poptStrippedArgv (context, *argc, *argv); */
@@ -600,6 +603,7 @@ gst_main_quit (void)
     GMainLoop *loop = mainloops->data;
     mainloops = g_slist_delete_link (mainloops, mainloops);
     g_main_loop_quit (loop);
+    g_main_loop_unref (loop);
   }
 }
 

@@ -839,6 +839,8 @@ gst_fakesrc_change_state (GstElement *element)
         gst_buffer_pool_unref (fakesrc->pool);
         fakesrc->pool = NULL;
       }
+      if (fakesrc->last_message)
+        g_free (fakesrc->last_message);
       break;
     default:
       g_assert_not_reached ();

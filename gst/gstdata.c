@@ -99,7 +99,8 @@ gst_data_copy (const GstData *data)
  * Copies the given #GstData if the refcount is greater than 1 so that the
  * #GstData object can be written to safely.
  *
- * Returns: a copy of the data if the refcount is > 1, data if the refcount == 1
+ * Returns: a copy of the data if the refcount is > 1 or the buffer is 
+ * marked READONLY, data if the refcount == 1,
  * or NULL if the data could not be copied. The refcount of the original buffer
  * is decreased when a copy is made, so you are not supposed to use it after a
  * call to this function.

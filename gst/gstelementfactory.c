@@ -144,7 +144,7 @@ gst_element_factory_new (const gchar *name, GType type,
 {
   GstElementFactory *factory;
 
-  g_return_val_if_fail(name != NULL, NULL);
+  g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (type, NULL);
   g_return_val_if_fail (details, NULL);
 

@@ -608,6 +608,7 @@ gst_xml_registry_load (GstRegistry *registry)
   g_timer_stop (timer);
 
   seconds = g_timer_elapsed (timer, NULL);
+  g_timer_destroy (timer);
 
   g_print ("registry: loaded %s in %f seconds\n          (%s)\n", 
 	   registry->name, seconds, xmlregistry->location);
@@ -1059,6 +1060,8 @@ gst_xml_registry_end_element (GMarkupParseContext *context,
 	xmlregistry->parser = gst_xml_registry_parse_padtemplate;
 
 	caps = gst_caps_new (xmlregistry->caps_name, xmlregistry->caps_mime, xmlregistry->props);
+	g_free (xmlregistry->caps_mime);
+	g_free (xmlregistry->caps_name);
 
 	xmlregistry->caps = gst_caps_append (xmlregistry->caps, caps);
 	xmlregistry->props = NULL;
