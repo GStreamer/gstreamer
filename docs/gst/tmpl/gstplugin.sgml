@@ -28,16 +28,18 @@ objects factories:
  </itemizedlist>
 </para>
 <para>
-A new plugin is created with gst_plugin_new(). this function will return a handle
+A plugin should export a symbol plugin_desc that is a struct of type #GstPluginDesc. 
+the plugin loader will check the version of the core library the plugin was linked against
+and will create a new #GstPlugin. It will then call the #GstPluginInitFunc function
+that was provided in the plugin_desc.
+</para>
+<para>
+Optionally a new plugin is created with gst_plugin_new(). this function will return a handle
 to the GstPlugin or NULL if the plugin could not be created.
 </para>
 <para>
-Once a GstPlugin element has been created, you can add the different types of factories
+Once you have a handle to a #GstPlugin, you can add the different types of factories
 to it with gst_plugin_add_factory(), gst_plugin_add_type(), gst_plugin_add_autoplugger().
-</para>
-<para>
-<application>Gstreamer</application> plugins should have a method plugin_init that is called
-by the loader.
 </para>
 <para>
 use gst_plugin_find(), gst_plugin_get_list(), gst_plugin_get_factory_list(), gst_plugin_get_type_list() and
@@ -71,24 +73,25 @@ to bring it into memory.
 
 <!-- ##### USER_FUNCTION GstPluginInitFunc ##### -->
 <para>
-A plugin should implement this function called plugin_init. It will be called
-by the loader at statup.
+A plugin should provide a pointer to a function of this type in the plugin_desc struct.
+It will be called by the loader at statup.
 </para>
 
 @module: The <classname>GModule</classname> it was loaded from
-@plugin: 
-@Returns: The plugin or NULL is an error was detected.
+@plugin: The plugin object that can be used to register stuff for this plugin.
+@Returns: A boolean indicating success or failure.
 
 
 <!-- ##### STRUCT GstPluginDesc ##### -->
 <para>
-
+A plugins should export a variable of this type called plugin_desc. This plugin
+loaded will use this variable to initialize the plugin.
 </para>
 
-@major_version: 
-@minor_version: 
-@name: 
-@plugin_init: 
+@major_version: The minor version of the gstreamer library this plugin was created with
+@minor_version: The minor version of the gstreamer library this plugin was created with
+@name: The name of the plugin
+@plugin_init: The init function of this plugin.
 
 <!-- ##### FUNCTION gst_plugin_new ##### -->
 <para>

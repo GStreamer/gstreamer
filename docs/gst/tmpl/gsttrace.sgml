@@ -69,6 +69,14 @@ Tracing functionality
 @trace: 
 
 
+<!-- ##### FUNCTION gst_trace_text_flush ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+
 <!-- ##### MACRO gst_trace_get_size ##### -->
 <para>
 

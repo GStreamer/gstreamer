@@ -20,6 +20,7 @@ The <classname>GstFakeSrc</classname> generates empty buffers. (fakesrc)
 </para>
 
 @gstfakesrc: the object which received the signal.
+@arg1: 
 
 <!-- ##### ARG GstFakeSrc:num_sources ##### -->
 <para>
@@ -47,6 +48,11 @@ The <classname>GstFakeSrc</classname> generates empty buffers. (fakesrc)
 </para>
 
 <!-- ##### ARG GstFakeSrc:eos ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:silent ##### -->
 <para>
 
 </para>

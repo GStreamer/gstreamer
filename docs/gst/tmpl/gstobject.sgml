@@ -25,12 +25,14 @@ down <classname>GtkObject</classname> to re-parent the hierarchy.
 
 </para>
 
-<!-- ##### MACRO GST_OBJECT_FLAG_LAST ##### -->
+<!-- ##### ENUM GstObjectFlags ##### -->
 <para>
-subclasses can use this value to start the enumeration of their flags
+
 </para>
 
-
+@GST_DESTROYED: 
+@GST_FLOATING: 
+@GST_OBJECT_FLAG_LAST: 
 
 <!-- ##### STRUCT GstObject ##### -->
 <para>
@@ -123,11 +125,37 @@ Get the name of this object
 @obj: Object to get the name of.
 
 
+<!-- ##### MACRO GST_OBJECT_FLOATING ##### -->
+<para>
+Check if the object is floating.
+</para>
+
+@obj: The Object to check
+
+
+<!-- ##### MACRO GST_OBJECT_DESTROYED ##### -->
+<para>
+Check if the object has been destroyed.
+</para>
+
+@obj: The Object to check
+
+
 <!-- ##### FUNCTION gst_object_new ##### -->
 <para>
 
 </para>
 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_object_check_uniqueness ##### -->
+<para>
+
+</para>
+
+@list: 
+@name: 
 @Returns: 
 
 
@@ -175,7 +203,16 @@ Get the name of this object
 @object: 
 
 
-<!-- ##### MACRO gst_object_ref ##### -->
+<!-- ##### FUNCTION gst_object_ref ##### -->
+<para>
+
+</para>
+
+@object: the object
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_object_unref ##### -->
 <para>
 
 </para>
@@ -183,7 +220,7 @@ Get the name of this object
 @object: the object
 
 
-<!-- ##### MACRO gst_object_unref ##### -->
+<!-- ##### FUNCTION gst_object_sink ##### -->
 <para>
 
 </para>
@@ -191,15 +228,7 @@ Get the name of this object
 @object: the object
 
 
-<!-- ##### MACRO gst_object_sink ##### -->
-<para>
-
-</para>
-
-@object: the object
-
-
-<!-- ##### MACRO gst_object_destroy ##### -->
+<!-- ##### FUNCTION gst_object_destroy ##### -->
 <para>
 
 </para>

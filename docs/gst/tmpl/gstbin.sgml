@@ -49,6 +49,7 @@ Flags for a bin.
 </para>
 
 @GST_BIN_FLAG_MANAGER: 
+@GST_BIN_SELF_SCHEDULABLE: 
 @GST_BIN_FLAG_PREFER_COTHREADS: 
 @GST_BIN_FLAG_LAST: 
 
@@ -140,22 +141,6 @@ Free the memory allocated by this bin
 
 @bin: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_bin_create_plan ##### -->
-<para>
-
-</para>
-
-@bin: 
-
-
-<!-- ##### FUNCTION gst_bin_schedule ##### -->
-<para>
-
-</para>
-
-@bin: 
 
 
 <!-- ##### SIGNAL GstBin::object-added ##### -->

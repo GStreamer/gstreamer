@@ -15,6 +15,10 @@ cothread_getcurrent
 cothread_main
 cothread_set_data
 cothread_get_data
+cothread_unlock
+cothread_current_main
+cothread_lock
+cothread_trylock
 <SUBSECTION Standard>
 </SECTION>
 
@@ -46,23 +50,22 @@ gst_debug_get_categories
 gst_debug_set_categories
 gst_debug_enable_category
 gst_debug_disable_category
-GST_DEBUG_SET_STRING
 GST_DEBUG_ENTER
-GST_DEBUG_ENTER_STRING
 GST_DEBUG_LEAVE
-GST_DEBUG_LEAVE_STRING
-GST_DEBUG_NOPREFIX
 GST_DEBUG
 GST_DEBUG_ENABLE_CATEGORIES
 GST_DEBUG_FUNCPTR
-GST_DEBUG_PREFIX
 GST_DEBUG_ENABLED
 GST_DEBUG_FUNCPTR_NAME
 GST_DEBUG_PAD_NAME
+GST_DEBUG_THREAD_ARGS
+GST_DEBUG_THREAD_FORMAT
+GST_DEBUG_ELEMENT
+GST_DEBUG_CHAR_MODE
 GST_ERROR
 GST_ERROR_OBJECT
-GST_DEBUG_CHAR_MODE
-
+GstDebugHandler
+gst_default_debug_handler
 gst_default_error_handler
 GstInfoHandler
 GstErrorHandler
@@ -78,8 +81,36 @@ gst_extra_get_filename_type
 
 <SECTION>
 <FILE>gstscheduler</FILE>
-<TITLE>GstScheduler</TITLE>
-gst_bin_schedule_func
+<TITLE>GstSchedule</TITLE>
+GST_SCHED_PARENT
+GstScheduleChain
+GST_SCHEDULE_SAFETY
+GST_SCHEDULE_ADD_ELEMENT
+GST_SCHEDULE_REMOVE_ELEMENT
+GST_SCHEDULE_ENABLE_ELEMENT
+GST_SCHEDULE_DISABLE_ELEMENT
+GST_SCHEDULE_LOCK_ELEMENT
+GST_SCHEDULE_UNLOCK_ELEMENT
+GST_SCHEDULE_PAD_CONNECT
+GST_SCHEDULE_PAD_DISCONNECT
+GST_SCHEDULE_ITERATE
+gst_schedule_new
+gst_schedule_add_element
+gst_schedule_remove_element
+gst_schedule_enable_element
+gst_schedule_disable_element
+gst_schedule_pad_connect
+gst_schedule_pad_disconnect
+gst_schedule_iterate
+gst_schedule_show
+<SUBSECTION Standard>
+GstSchedule
+GST_SCHEDULE
+GST_IS_SCHEDULE
+GST_TYPE_SCHEDULE
+gst_schedule_get_type
+GST_SCHEDULE_CLASS
+GST_IS_SCHEDULE_CLASS
 </SECTION>
 
 <SECTION>
@@ -96,8 +127,6 @@ gst_bin_get_by_name_recurse_up
 gst_bin_get_list
 gst_bin_set_state_type
 gst_bin_iterate
-gst_bin_create_plan
-gst_bin_schedule
 <SUBSECTION Standard>
 GstBinClass
 gst_bin_get_type
@@ -107,7 +136,6 @@ GST_BIN_CLASS
 GST_IS_BIN
 GST_IS_BIN_CLASS
 gst_bin_details
-gst_bin_use_cothreads
 _GstBinChain
 </SECTION>
 
@@ -187,10 +215,10 @@ GST_STATE
 GST_STATE_PENDING
 GST_STATE_TRANSITION
 GST_STATE_NULL_TO_READY
-GST_STATE_READY_TO_PLAYING
+GST_STATE_READY_TO_PAUSED
+GST_STATE_PAUSED_TO_READY
 GST_STATE_PLAYING_TO_PAUSED
 GST_STATE_PAUSED_TO_PLAYING
-GST_STATE_PLAYING_TO_READY
 GST_STATE_READY_TO_NULL
 GstElementFlags
 GST_ELEMENT_IS_THREAD_SUGGESTED
@@ -199,6 +227,8 @@ GST_ELEMENT_IS_EOS
 GST_ELEMENT_PARENT
 GST_ELEMENT_NAME
 GST_ELEMENT_PADS
+GST_ELEMENT_SCHED
+GST_ELEMENT_MANAGER
 GstElement
 GstElementDetails
 GstElementFactory
@@ -208,11 +238,12 @@ gst_element_destroy
 gst_element_set_loop_function
 gst_element_set_name
 gst_element_get_name
-gst_element_set_manager
-gst_element_get_manager
+gst_element_get_sched
+gst_element_set_sched
 gst_element_set_parent
 gst_element_get_parent
 gst_element_add_pad
+gst_element_remove_pad
 gst_element_get_pad
 gst_element_get_pad_list
 gst_element_get_padtemplate_list
@@ -224,10 +255,11 @@ gst_element_request_pad_by_name
 gst_element_connect
 gst_element_disconnect
 gst_element_set_state
+gst_element_statename
 gst_element_error
 gst_element_get_factory
 gst_element_signal_eos
-gst_element_load_thyself
+gst_element_restore_thyself
 gst_elementfactory_new
 gst_elementfactory_destroy
 gst_elementfactory_add_padtemplate
@@ -248,6 +280,7 @@ GST_IS_ELEMENT
 GST_IS_ELEMENT_CLASS
 gst_element_get_type
 </SECTION>
+
 
 <SECTION>
 <FILE>gstautoplug</FILE>
@@ -316,7 +349,7 @@ GST_META
 <SECTION>
 <FILE>gstobject</FILE>
 <TITLE>GstObject</TITLE>
-GST_OBJECT_FLAG_LAST
+GstObjectFlags
 GstObject
 GST_FLAGS
 GST_FLAG_IS_SET
@@ -328,7 +361,10 @@ GST_UNLOCK
 GST_GET_LOCK
 GST_OBJECT_PARENT
 GST_OBJECT_NAME
+GST_OBJECT_FLOATING
+GST_OBJECT_DESTROYED
 gst_object_new
+gst_object_check_uniqueness
 gst_object_set_parent
 gst_object_get_parent
 gst_object_set_name
@@ -406,6 +442,8 @@ gst_pad_set_element_private
 gst_pad_get_element_private
 gst_pad_set_parent
 gst_pad_get_parent
+gst_pad_get_sched
+gst_pad_set_sched
 gst_pad_get_real_parent
 gst_pad_add_ghost_pad
 gst_pad_remove_ghost_pad
@@ -425,13 +463,14 @@ gst_pad_negotiate_proxy
 gst_pad_renegotiate
 gst_pad_get_padtemplate
 gst_pad_get_padtemplate_caps
+gst_pad_eos_func
 
-
-GST_RPAD_LEN
-GST_RPAD_OFFSET
-GST_RPAD_REGIONTYPE
 
 GstRealPad
+GST_RPAD_LEN
+GST_RPAD_OFFSET
+GST_RPAD_SCHED
+GST_RPAD_REGIONTYPE
 GST_RPAD_DIRECTION
 GST_RPAD_CAPS
 GST_RPAD_PEER

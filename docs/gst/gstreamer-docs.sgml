@@ -17,6 +17,7 @@
 <!entity GstParse SYSTEM "sgml/gstparse.sgml">
 <!entity GstPlugin SYSTEM "sgml/gstplugin.sgml">
 <!entity GstThread SYSTEM "sgml/gstthread.sgml">
+<!entity GstScheduler SYSTEM "sgml/gstscheduler.sgml">
 <!entity GstTrace SYSTEM "sgml/gsttrace.sgml">
 <!entity GstType SYSTEM "sgml/gsttype.sgml">
 <!entity GstCaps SYSTEM "sgml/gstcaps.sgml">
@@ -77,6 +78,7 @@ with some more specialized elements.</para>
     &GstProps;
     &GstQueue;
     &GstThread;
+    &GstScheduler;
     &GstTrace;
     &GstType;
     &GstTypeFind;

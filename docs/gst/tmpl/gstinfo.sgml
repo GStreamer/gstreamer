@@ -78,6 +78,7 @@ before aborting the application.
 </para>
 
 @category: 
+@incore: 
 @file: 
 @function: 
 @line: 
@@ -146,16 +147,6 @@ Print out information like #GST_INFO, but with an element pointer to clarify thi
 @category: 
 
 
-<!-- ##### MACRO GST_DEBUG_SET_STRING ##### -->
-<para>
-Set the debug string for the current function, typically containing the arguments
-to the current function, i.e. "('element')"
-</para>
-
-@format: printf-style format string
-@args...: printf arguments
-
-
 <!-- ##### MACRO GST_DEBUG_ENTER ##### -->
 <para>
 Called at the beginning of a function, it simply prints out a DEBUG string of "entering"
@@ -166,35 +157,11 @@ in addition to the given string.
 @args...: printf arguments
 
 
-<!-- ##### MACRO GST_DEBUG_ENTER_STRING ##### -->
-<para>
-Combine #GST_DEBUG_ENTER and #GST_DEBUG_SET_STRING.
-</para>
-
-
-
 <!-- ##### MACRO GST_DEBUG_LEAVE ##### -->
 <para>
 
 </para>
 
-@format: 
-@args...: 
-
-
-<!-- ##### MACRO GST_DEBUG_LEAVE_STRING ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GST_DEBUG_NOPREFIX ##### -->
-<para>
-
-</para>
-
-@cat: 
 @format: 
 @args...: 
 
@@ -224,16 +191,6 @@ Print out debugging information.
 @ptr: 
 
 
-<!-- ##### MACRO GST_DEBUG_PREFIX ##### -->
-<para>
-
-</para>
-
-@cat: 
-@format: 
-@args...: 
-
-
 <!-- ##### MACRO GST_DEBUG_ENABLED ##### -->
 <para>
 
@@ -257,6 +214,39 @@ Print out debugging information.
 @pad: 
 
 
+<!-- ##### MACRO GST_DEBUG_THREAD_ARGS ##### -->
+<para>
+
+</para>
+
+@id: 
+
+
+<!-- ##### MACRO GST_DEBUG_THREAD_FORMAT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DEBUG_ELEMENT ##### -->
+<para>
+
+</para>
+
+@cat: 
+@element: 
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO GST_DEBUG_CHAR_MODE ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### MACRO GST_ERROR ##### -->
 <para>
 Print out an error condition and abort the application.
@@ -278,11 +268,34 @@ Print out an error condition and abort the application.
 @args...: printf arguments
 
 
-<!-- ##### MACRO GST_DEBUG_CHAR_MODE ##### -->
+<!-- ##### USER_FUNCTION GstDebugHandler ##### -->
 <para>
 
 </para>
 
+@category: 
+@core: 
+@file: 
+@function: 
+@line: 
+@debug_string: 
+@element: 
+@string: 
+
+
+<!-- ##### FUNCTION gst_default_debug_handler ##### -->
+<para>
+
+</para>
+
+@category: 
+@incore: 
+@file: 
+@function: 
+@line: 
+@debug_string: 
+@element: 
+@string: 
 
 
 <!-- ##### FUNCTION gst_default_error_handler ##### -->
@@ -305,6 +318,7 @@ Print out an error condition and abort the application.
 </para>
 
 @category: 
+@incore: 
 @file: 
 @function: 
 @line: 

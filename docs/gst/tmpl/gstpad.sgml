@@ -502,6 +502,24 @@ Destroy the pad.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_pad_get_sched ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_set_sched ##### -->
+<para>
+
+</para>
+
+@pad: 
+@sched: 
+
+
 <!-- ##### FUNCTION gst_pad_get_real_parent ##### -->
 <para>
 
@@ -688,28 +706,13 @@ Call the EOS function of the pad
 @Returns: 
 
 
-<!-- ##### MACRO GST_RPAD_LEN ##### -->
+<!-- ##### FUNCTION gst_pad_eos_func ##### -->
 <para>
-Get the length of the region that is being pulled.
+
 </para>
 
-@pad: the real pad to query.
-
-
-<!-- ##### MACRO GST_RPAD_OFFSET ##### -->
-<para>
-Get the offset of the region that is being pulled.
-</para>
-
-@pad: the real pad to query.
-
-
-<!-- ##### MACRO GST_RPAD_REGIONTYPE ##### -->
-<para>
-Get the type of the region that is being pulled.
-</para>
-
-@pad: the real pad to query.
+@pad: 
+@Returns: 
 
 
 <!-- ##### STRUCT GstRealPad ##### -->
@@ -726,6 +729,7 @@ Get the type of the region that is being pulled.
 @regiontype: 
 @offset: 
 @len: 
+@sched: 
 @chainfunc: 
 @getfunc: 
 @getregionfunc: 
@@ -738,6 +742,38 @@ Get the type of the region that is being pulled.
 @newcapsfunc: 
 @bufferpoolfunc: 
 @ghostpads: 
+
+<!-- ##### MACRO GST_RPAD_LEN ##### -->
+<para>
+Get the length of the region that is being pulled.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_OFFSET ##### -->
+<para>
+Get the offset of the region that is being pulled.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_SCHED ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_RPAD_REGIONTYPE ##### -->
+<para>
+Get the type of the region that is being pulled.
+</para>
+
+@pad: the real pad to query.
+
 
 <!-- ##### MACRO GST_RPAD_DIRECTION ##### -->
 <para>

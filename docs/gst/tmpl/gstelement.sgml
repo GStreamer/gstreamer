@@ -39,8 +39,8 @@ use gst_element_set_state() to change the state of an element.
 @GST_STATE_NULL: Reset the state of an element.
 @GST_STATE_READY: will make the element ready to start processing data. some
 elements might have a non trivial way to initialize themselves.
-@GST_STATE_PLAYING: means there really is data flowing through the graph.
 @GST_STATE_PAUSED: means there really is data flowing temporary stops the data flow.
+@GST_STATE_PLAYING: means there really is data flowing through the graph.
 
 <!-- ##### ENUM GstElementStateReturn ##### -->
 <para>
@@ -84,9 +84,16 @@ The Element is going from the NULL state to the READY state.
 
 
 
-<!-- ##### MACRO GST_STATE_READY_TO_PLAYING ##### -->
+<!-- ##### MACRO GST_STATE_READY_TO_PAUSED ##### -->
 <para>
-The Element is going from the READY state to the PLAYING state.
+
+</para>
+
+
+
+<!-- ##### MACRO GST_STATE_PAUSED_TO_READY ##### -->
+<para>
+
 </para>
 
 
@@ -101,13 +108,6 @@ The Element is going from the PLAYING state to the PAUSED state.
 <!-- ##### MACRO GST_STATE_PAUSED_TO_PLAYING ##### -->
 <para>
 The Element is going from the PAUSED state to the PLAYING state.
-</para>
-
-
-
-<!-- ##### MACRO GST_STATE_PLAYING_TO_READY ##### -->
-<para>
-The Element is going from the PLAYING state to the READY state.
 </para>
 
 
@@ -128,6 +128,7 @@ This enum defines the standard flags that an element may have.
 @GST_ELEMENT_DECOUPLED: 
 @GST_ELEMENT_THREAD_SUGGESTED: 
 @GST_ELEMENT_NO_SEEK: 
+@GST_ELEMENT_NO_ENTRY: 
 @GST_ELEMENT_NEW_LOOPFUNC: 
 @GST_ELEMENT_COTHREAD_STOPPING: 
 @GST_ELEMENT_USE_COTHREAD: 
@@ -180,6 +181,22 @@ Get the pads of this elements.
 </para>
 
 @obj: The element to query
+
+
+<!-- ##### MACRO GST_ELEMENT_SCHED ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_ELEMENT_MANAGER ##### -->
+<para>
+
+</para>
+
+@obj: 
 
 
 <!-- ##### STRUCT GstElement ##### -->
@@ -267,6 +284,24 @@ circumstances.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_element_get_sched ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_set_sched ##### -->
+<para>
+
+</para>
+
+@element: 
+@sched: 
+
+
 <!-- ##### FUNCTION gst_element_set_parent ##### -->
 <para>
 
@@ -286,6 +321,15 @@ circumstances.
 
 
 <!-- ##### FUNCTION gst_element_add_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@pad: 
+
+
+<!-- ##### FUNCTION gst_element_remove_pad ##### -->
 <para>
 
 </para>
@@ -403,6 +447,15 @@ circumstances.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_element_statename ##### -->
+<para>
+
+</para>
+
+@state: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_element_error ##### -->
 <para>
 
@@ -429,7 +482,7 @@ circumstances.
 @element: 
 
 
-<!-- ##### FUNCTION gst_element_load_thyself ##### -->
+<!-- ##### FUNCTION gst_element_restore_thyself ##### -->
 <para>
 
 </para>
@@ -437,8 +490,6 @@ circumstances.
 @self: 
 @parent: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@elements: 
 
 
 <!-- ##### FUNCTION gst_elementfactory_new ##### -->
@@ -564,6 +615,14 @@ Is trigered whenever a new pad is added to an element
 @gstelement: the object which received the signal.
 @arg1: the new pad that was added
 
+<!-- ##### SIGNAL GstElement::pad-removed ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: 
+
 <!-- ##### SIGNAL GstElement::new-ghost-pad ##### -->
 <para>
 
@@ -572,6 +631,14 @@ Is trigered whenever a new ghost pad is added to an element
 
 @gstelement: the object which received the signal.
 @arg1: the new ghost pad that was added
+
+<!-- ##### SIGNAL GstElement::ghost-pad-removed ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: 
 
 <!-- ##### SIGNAL GstElement::error ##### -->
 <para>

@@ -22,6 +22,7 @@ with the buffer. (fakesink)
 </para>
 
 @gstfakesink: the object which received the signal.
+@arg1: 
 
 <!-- ##### ARG GstFakeSink:num_sources ##### -->
 <para>

@@ -2,7 +2,7 @@
 GstScheduler
 
 <!-- ##### SECTION Short_Description ##### -->
-
+An abstract class for plugable schedulers.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -14,11 +14,196 @@ GstScheduler
 
 </para>
 
-<!-- ##### FUNCTION gst_bin_schedule_func ##### -->
+<!-- ##### MACRO GST_SCHED_PARENT ##### -->
 <para>
 
 </para>
 
-@bin: 
+@sched: 
+
+
+<!-- ##### STRUCT GstScheduleChain ##### -->
+<para>
+
+</para>
+
+@sched: 
+@disabled: 
+@elements: 
+@num_elements: 
+@entry: 
+@cothreaded_elements: 
+@schedule: 
+
+<!-- ##### MACRO GST_SCHEDULE_SAFETY ##### -->
+<para>
+
+</para>
+
+@sched: 
+
+
+<!-- ##### MACRO GST_SCHEDULE_ADD_ELEMENT ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+
+<!-- ##### MACRO GST_SCHEDULE_REMOVE_ELEMENT ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+
+<!-- ##### MACRO GST_SCHEDULE_ENABLE_ELEMENT ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+
+<!-- ##### MACRO GST_SCHEDULE_DISABLE_ELEMENT ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+
+<!-- ##### MACRO GST_SCHEDULE_LOCK_ELEMENT ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+
+<!-- ##### MACRO GST_SCHEDULE_UNLOCK_ELEMENT ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+
+<!-- ##### MACRO GST_SCHEDULE_PAD_CONNECT ##### -->
+<para>
+
+</para>
+
+@sched: 
+@srcpad: 
+@sinkpad: 
+
+
+<!-- ##### MACRO GST_SCHEDULE_PAD_DISCONNECT ##### -->
+<para>
+
+</para>
+
+@sched: 
+@srcpad: 
+@sinkpad: 
+
+
+<!-- ##### MACRO GST_SCHEDULE_ITERATE ##### -->
+<para>
+
+</para>
+
+@sched: 
+
+
+<!-- ##### FUNCTION gst_schedule_new ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_schedule_add_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+
+<!-- ##### FUNCTION gst_schedule_remove_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+
+<!-- ##### FUNCTION gst_schedule_enable_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+
+<!-- ##### FUNCTION gst_schedule_disable_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+
+<!-- ##### FUNCTION gst_schedule_pad_connect ##### -->
+<para>
+
+</para>
+
+@sched: 
+@srcpad: 
+@sinkpad: 
+
+
+<!-- ##### FUNCTION gst_schedule_pad_disconnect ##### -->
+<para>
+
+</para>
+
+@sched: 
+@srcpad: 
+@sinkpad: 
+
+
+<!-- ##### FUNCTION gst_schedule_iterate ##### -->
+<para>
+
+</para>
+
+@sched: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_schedule_show ##### -->
+<para>
+
+</para>
+
+@sched: 
 
 

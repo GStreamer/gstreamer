@@ -21,27 +21,6 @@ of data out of their src element.
 
 </para>
 
-<!-- ##### MACRO COTHREAD_STACKSIZE ##### -->
-<para>
-The default stack size of a cothread.
-</para>
-
-
-
-<!-- ##### MACRO COTHREAD_MAXTHREADS ##### -->
-<para>
-The maximum number of cothreads we are going to support.
-</para>
-
-
-
-<!-- ##### MACRO STACK_SIZE ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### MACRO CURRENT_STACK_FRAME ##### -->
 <para>
 
@@ -70,10 +49,6 @@ The maximum number of cothreads we are going to support.
 
 </para>
 
-@threads: 
-@nthreads: 
-@current: 
-@data: 
 
 <!-- ##### USER_FUNCTION cothread_func ##### -->
 <para>
@@ -163,6 +138,39 @@ Indicates the cothread is started.
 
 @thread: 
 @key: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cothread_unlock ##### -->
+<para>
+
+</para>
+
+@thread: 
+
+
+<!-- ##### FUNCTION cothread_current_main ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION cothread_lock ##### -->
+<para>
+
+</para>
+
+@thread: 
+
+
+<!-- ##### FUNCTION cothread_trylock ##### -->
+<para>
+
+</para>
+
+@thread: 
 @Returns: 
 
 
