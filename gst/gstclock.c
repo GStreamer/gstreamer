@@ -293,7 +293,7 @@ gst_clock_handle_discont (GstClock *clock, guint64 time)
 {
   GstClockTime itime = 0LL;
   
-  GST_DEBUG (GST_CAT_CLOCK, "clock discont %llu %llu %d\n", time, clock->start_time, clock->accept_discont);
+  GST_DEBUG (GST_CAT_CLOCK, "clock discont %llu %llu %d", time, clock->start_time, clock->accept_discont);
 
   GST_LOCK (clock);
   if (clock->accept_discont) {
@@ -303,7 +303,7 @@ gst_clock_handle_discont (GstClock *clock, guint64 time)
   }
   else {
     GST_UNLOCK (clock);
-    GST_DEBUG (GST_CAT_CLOCK, "clock discont refused %llu %llu\n", time, clock->start_time);
+    GST_DEBUG (GST_CAT_CLOCK, "clock discont refused %llu %llu", time, clock->start_time);
     return FALSE;
   }
 
@@ -312,7 +312,7 @@ gst_clock_handle_discont (GstClock *clock, guint64 time)
   clock->accept_discont = FALSE;
   GST_UNLOCK (clock);
 
-  GST_DEBUG (GST_CAT_CLOCK, "new time %llu\n", gst_clock_get_time (clock));
+  GST_DEBUG (GST_CAT_CLOCK, "new time %llu", gst_clock_get_time (clock));
 
   g_mutex_lock (clock->active_mutex);	
   g_cond_broadcast (clock->active_cond);	
@@ -365,7 +365,7 @@ gst_clock_wait_async_func (GstClock *clock, GstClockTime time,
   g_return_val_if_fail (GST_IS_CLOCK (clock), NULL);
 
   if (!clock->active) {
-    GST_DEBUG (GST_CAT_CLOCK, "blocking on clock\n");
+    GST_DEBUG (GST_CAT_CLOCK, "blocking on clock");
     g_mutex_lock (clock->active_mutex);	
     g_cond_wait (clock->active_cond, clock->active_mutex);	
     g_mutex_unlock (clock->active_mutex);	
@@ -515,7 +515,7 @@ gst_clock_wait_id (GstClock *clock, GstClockID id, GstClockTimeDiff *jitter)
   entry->func = gst_clock_unlock_func;
   target = GST_CLOCK_ENTRY_TIME (entry) - current + current_real;
 
-  GST_DEBUG (GST_CAT_CLOCK, "real_target %llu, current_real %llu, target %llu, now %llu\n", 
+  GST_DEBUG (GST_CAT_CLOCK, "real_target %llu, current_real %llu, target %llu, now %llu", 
 		  target, current_real, GST_CLOCK_ENTRY_TIME (entry), current); 
   
   if (target > current_real) {
