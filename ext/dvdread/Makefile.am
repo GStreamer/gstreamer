@@ -8,6 +8,7 @@ plugin_LTLIBRARIES = libdvdsrc.la
 libdvdsrc_la_SOURCES = dvdsrc.c
 libdvdsrc_la_CFLAGS = $(GST_CFLAGS)
 libdvdsrc_la_LIBADD = $(GST_LIBS) $(DVDREAD_LIBS)
+libdvdsrc_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
 
 noinst_HEADERS = dvdsrc.h
 
