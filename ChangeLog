@@ -1,5 +1,17 @@
 2003-12-23  David Schleef  <ds@schleef.org>
 
+	* gst/elements/gstaggregator.c:
+	* gst/elements/gsttee.c:
+	  Use gst_pad_proxy_getcaps().
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	  Add gst_pad_proxy_getcaps(), which filter elements can use
+	  as a generic getcaps implementation.
+	  Fix gst_pad_get_allowed_caps().  It just wasn't doing what
+	  was advertised.
+
+2003-12-23  David Schleef  <ds@schleef.org>
+
 	* gst/gstpad.c:
 	  Rearrange/rewrite much of the pad negotiation code, since it
 	  resembled pasta.  This actually changes the way some

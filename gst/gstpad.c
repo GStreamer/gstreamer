@@ -1740,6 +1740,47 @@ gst_pad_relink_filtered (GstPad *srcpad, GstPad *sinkpad,
 }
 
 /**
+ * gst_pad_proxy_getcaps:
+ * @pad: a #GstPad to proxy.
+ *
+ * Calls gst_pad_get_allowed_caps() for every other pad belonging to the
+ * same element as @pad, and returns the intersection of the results.
+ *
+ * This function is useful as a default getcaps function for an element
+ * that can handle any stream format, but requires all its pads to have
+ * the same caps.  Two such elements are tee and aggregator.
+ *
+ * Returns: the intersection of the other pads' allowed caps.
+ */
+GstCaps *
+gst_pad_proxy_getcaps (GstPad *pad)
+{
+  GstElement *element;
+  const GList *pads;
+  GstCaps *caps;
+
+  element = gst_pad_get_parent (pad);
+
+  pads = gst_element_get_pad_list (element);
+  
+  caps = gst_caps_new_any ();
+  while (pads) {
+    GstPad *otherpad = GST_PAD (pads->data);
+    GstCaps *temp;
+
+    if (otherpad != pad) {
+      temp = gst_caps_intersect (caps, gst_pad_get_allowed_caps (pad));
+      gst_caps_free (caps);
+      caps = temp;
+    }
+
+    pads = g_list_next (pads);
+  }
+
+  return caps;
+}
+
+/**
  * gst_pad_proxy_link:
  * @pad: a #GstPad to proxy to.
  * @caps: the #GstCaps to use in proxying.
@@ -1928,10 +1969,11 @@ GstCaps*
 gst_pad_get_allowed_caps (GstPad *pad)
 {
   GstRealPad *realpad;
-  GstCaps *mycaps;
+  const GstCaps *mycaps;
   GstCaps *caps;
-  GstCaps *filtercaps;
   GstCaps *peercaps;
+  GstCaps *icaps;
+  GstPadLink *link;
 
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
@@ -1941,21 +1983,22 @@ gst_pad_get_allowed_caps (GstPad *pad)
   GST_CAT_DEBUG (GST_CAT_PROPERTIES, "get allowed caps of %s:%s", 
              GST_DEBUG_PAD_NAME (pad));
 
-  mycaps = gst_pad_get_caps (pad);
+  mycaps = gst_pad_get_pad_template_caps (pad);
   if (GST_RPAD_PEER (realpad) == NULL) {
-    return mycaps;
+    return gst_caps_copy (mycaps);
   }
 
   peercaps = gst_pad_get_caps (GST_PAD_PEER (realpad));
   caps = gst_caps_intersect (mycaps, peercaps);
-  gst_caps_free (mycaps);
   gst_caps_free (peercaps);
 
-  filtercaps = GST_RPAD_APPFILTER (realpad);
-  if (filtercaps) {
-    return gst_caps_intersect (caps, filtercaps);
+  link = GST_RPAD_LINK (realpad);
+  if (link->filtercaps) {
+    icaps = gst_caps_intersect (caps, link->filtercaps);
+    gst_caps_free (caps);
+    return icaps;
   } else {
-    return gst_caps_copy (caps);
+    return caps;
   }
 }
 

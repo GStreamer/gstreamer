@@ -162,6 +162,7 @@ static void
 gst_aggregator_init (GstAggregator *aggregator) 
 {
   aggregator->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_pad_set_getcaps_function (aggregator->srcpad, gst_pad_proxy_getcaps);
   gst_element_add_pad (GST_ELEMENT (aggregator), aggregator->srcpad);
 
   aggregator->numsinkpads = 0;
@@ -196,6 +197,7 @@ gst_aggregator_request_new_pad (GstElement *element, GstPadTemplate *templ, cons
   if (!AGGREGATOR_IS_LOOP_BASED (aggregator)) {
     gst_pad_set_chain_function (sinkpad, gst_aggregator_chain);
   }
+  gst_pad_set_getcaps_function (sinkpad, gst_pad_proxy_getcaps);
   gst_element_add_pad (GST_ELEMENT (aggregator), sinkpad);
   
   aggregator->sinkpads = g_list_prepend (aggregator->sinkpads, sinkpad);

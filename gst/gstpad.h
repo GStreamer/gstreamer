@@ -408,6 +408,7 @@ gboolean		gst_pad_check_compatibility		(GstPad *srcpad, GstPad *sinkpad);
 
 void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps);
 void			gst_pad_set_fixate_function		(GstPad *pad, GstPadFixateFunction fixate);
+GstCaps *	        gst_pad_proxy_getcaps          		(GstPad *pad);
 GstPadLinkReturn	gst_pad_proxy_link          		(GstPad *pad, const GstCaps *caps);
 gboolean		gst_pad_relink_filtered			(GstPad *srcpad, GstPad *sinkpad, const GstCaps *filtercaps);
 gboolean		gst_pad_perform_negotiate		(GstPad *srcpad, GstPad *sinkpad);
