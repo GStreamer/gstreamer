@@ -33,11 +33,8 @@
 GstElementDetails gst_divxenc_details = {
   "Divx encoder",
   "Codec/Video/Encoder",
-  "Commercial",
   "Divx encoder based on divxencore",
-  VERSION,
-  "Ronald Bultje <rbultje@ronald.bitfreak.net>",
-  "(C) 2003",
+  "Ronald Bultje <rbultje@ronald.bitfreak.net>"
 };
 
 GST_PAD_TEMPLATE_FACTORY(sink_template,
@@ -100,6 +97,7 @@ enum {
 
 
 static void             gst_divxenc_class_init   (GstDivxEncClass *klass);
+static void             gst_divxenc_base_init    (GstDivxEncClass *klass);
 static void             gst_divxenc_init         (GstDivxEnc      *divxenc);
 static void             gst_divxenc_dispose      (GObject         *object);
 static void             gst_divxenc_chain        (GstPad          *pad,
@@ -163,7 +161,7 @@ gst_divxenc_get_type(void)
   {
     static const GTypeInfo divxenc_info = {
       sizeof(GstDivxEncClass),
-      NULL,
+      (GBaseInitFunc) gst_divxenc_base_init,
       NULL,
       (GClassInitFunc) gst_divxenc_class_init,
       NULL,
@@ -177,6 +175,20 @@ gst_divxenc_get_type(void)
                                           &divxenc_info, 0);
   }
   return divxenc_type;
+}
+
+
+static void
+gst_divxenc_base_init (GstDivxEncClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (sink_template));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (src_template));
+
+  gst_element_class_set_details (element_class, &gst_divxenc_details);
 }
 
 
@@ -547,10 +559,8 @@ gst_divxenc_get_property (GObject    *object,
 
 
 static gboolean
-plugin_init (GModule   *module,
-             GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
   int lib_version;
 
   lib_version = encore(NULL, ENC_OPT_VERSION, 0, 0);
@@ -558,31 +568,24 @@ plugin_init (GModule   *module,
     g_warning("Version mismatch! This plugin was compiled for "
               "DivX version %d, while your library has version %d!",
               ENCORE_VERSION, lib_version);
+    return FALSE;
   }
 
-  if (!gst_library_load("gstvideo"))
-    return FALSE;
-
-  /* create an elementfactory for the element */
-  factory = gst_element_factory_new("divxenc", GST_TYPE_DIVXENC,
-                                    &gst_divxenc_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  /* add pad templates */
-  gst_element_factory_add_pad_template(factory,
-    GST_PAD_TEMPLATE_GET(sink_template));
-  gst_element_factory_add_pad_template(factory,
-    GST_PAD_TEMPLATE_GET(src_template));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  /* create an elementfactory for the v4lmjpegsrcparse element */
+  return gst_element_register(plugin, "divxenc",
+			      GST_RANK_PRIMARY, GST_TYPE_DIVXENC);
 }
 
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "divxenc",
-  plugin_init
-};
+  "DivX encoder",
+  plugin_init,
+  "5.03",
+  GST_LICENSE_UNKNOWN,
+  "(c) 2002 DivX Networks",
+  "divx4linux",
+  "http://www.divx.com/"
+)

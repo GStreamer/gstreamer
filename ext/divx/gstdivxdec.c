@@ -32,11 +32,8 @@
 GstElementDetails gst_divxdec_details = {
   "Divx decoder",
   "Codec/Video/Decoder",
-  "Commercial",
   "Divx decoder based on divxdecore",
-  VERSION,
-  "Ronald Bultje <rbultje@ronald.bitfreak.net>",
-  "(C) 2003",
+  "Ronald Bultje <rbultje@ronald.bitfreak.net>"
 };
 
 GST_PAD_TEMPLATE_FACTORY(sink_template,
@@ -94,6 +91,7 @@ enum {
 };
 
 
+static void             gst_divxdec_base_init    (GstDivxDecClass *klass);
 static void             gst_divxdec_class_init   (GstDivxDecClass *klass);
 static void             gst_divxdec_init         (GstDivxDec      *divxdec);
 static void             gst_divxdec_dispose      (GObject         *object);
@@ -145,7 +143,7 @@ gst_divxdec_get_type(void)
   {
     static const GTypeInfo divxdec_info = {
       sizeof(GstDivxDecClass),
-      NULL,
+      (GBaseInitFunc) gst_divxdec_base_init,
       NULL,
       (GClassInitFunc) gst_divxdec_class_init,
       NULL,
@@ -159,6 +157,20 @@ gst_divxdec_get_type(void)
                                           &divxdec_info, 0);
   }
   return divxdec_type;
+}
+
+
+static void
+gst_divxdec_base_init (GstDivxDecClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (sink_template));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (src_template));
+
+  gst_element_class_set_details (element_class, &gst_divxdec_details);
 }
 
 
@@ -444,10 +456,8 @@ gst_divxdec_connect (GstPad  *pad,
 
 
 static gboolean
-plugin_init (GModule   *module,
-             GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
   int lib_version;
 
   lib_version = decore(NULL, DEC_OPT_VERSION, 0, 0);
@@ -455,30 +465,24 @@ plugin_init (GModule   *module,
     g_warning("Version mismatch! This plugin was compiled for "
               "DivX version %d, while your library has version %d!",
               DECORE_VERSION, lib_version);
+    return FALSE;
   }
 
   /* create an elementfactory for the v4lmjpegsrcparse element */
-  factory = gst_element_factory_new("divxdec", GST_TYPE_DIVXDEC,
-                                    &gst_divxdec_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  /* add pad templates */
-  gst_element_factory_add_pad_template(factory,
-    GST_PAD_TEMPLATE_GET(sink_template));
-  gst_element_factory_add_pad_template(factory,
-    GST_PAD_TEMPLATE_GET(src_template));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  gst_element_factory_set_rank(factory, GST_ELEMENT_RANK_PRIMARY);
-
-  return TRUE;
+  return gst_element_register(plugin, "divxdec",
+			      GST_RANK_PRIMARY, GST_TYPE_DIVXDEC);
 }
 
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "divxdec",
-  plugin_init
-};
+  "DivX decoder",
+  plugin_init,
+  "5.03",
+  GST_LICENSE_UNKNOWN,
+  "(c) 2002 DivX Networks",
+  "divx4linux",
+  "http://www.divx.com/"
+)
