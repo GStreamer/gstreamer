@@ -61,7 +61,7 @@ typedef struct _GstColorBalanceClass {
 			  GstColorBalanceChannel *channel,
 			  gint                    value);
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 } GstColorBalanceClass;
 
 GType	gst_color_balance_get_type	(void);

@@ -47,7 +47,7 @@ typedef struct _GstTunerNorm {
 typedef struct _GstTunerNormClass {
   GObjectClass parent;
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 } GstTunerNormClass;
 
 GType		gst_tuner_norm_get_type		(void);

@@ -56,7 +56,7 @@ typedef struct _GstPropertyProbeInterface {
 				   guint             prop_id,
 				   const GParamSpec *pspec);
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 } GstPropertyProbeInterface;
 
 GType	     gst_property_probe_get_type       (void);

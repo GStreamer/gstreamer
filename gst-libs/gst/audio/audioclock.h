@@ -60,13 +60,13 @@ struct _GstAudioClock {
 
   gboolean active;
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstAudioClockClass {
   GstSystemClockClass parent_class;
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType           gst_audio_clock_get_type 	(void);

@@ -79,7 +79,7 @@ typedef struct _GstTunerClass {
 			     GstTunerChannel *channel,
 			     gint             signal);
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 } GstTunerClass;
 
 GType		gst_tuner_get_type		(void);

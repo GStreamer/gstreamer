@@ -35,7 +35,7 @@ struct _GstMediaInfo
 
   GstMediaInfoPriv *priv;
 
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstMediaInfoClass
@@ -45,7 +45,7 @@ struct _GstMediaInfoClass
   /* signals */
   void (*media_info_signal) 		(GstMediaInfo *gst_media_info);
 
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* structure for "physical" stream,

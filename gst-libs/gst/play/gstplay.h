@@ -55,7 +55,7 @@ struct _GstPlay
   guint tick_id;
   guint length_id;
   
-  GST_OBJECT_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstPlayClass
@@ -66,7 +66,7 @@ struct _GstPlayClass
   void (*stream_length)   (GstPlay *play, gint64 length_nanos);
   void (*have_video_size) (GstPlay *play, gint width, gint height);
   
-  GST_CLASS_PADDING
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType                 gst_play_get_type              (void);
