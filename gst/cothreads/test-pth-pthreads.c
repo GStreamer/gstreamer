@@ -5,10 +5,6 @@
 #include <pthread.h>
 #include "linuxthreads-internals.h"
 
-#ifndef CURRENT_STACK_FRAME
-#define CURRENT_STACK_FRAME  ({ char __csf; &__csf; })
-#endif /* CURRENT_STACK_FRAME */
-
 pth_mctx_t main_context;
 int threadnum = 0;
 

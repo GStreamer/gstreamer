@@ -4,6 +4,14 @@
 #include <bits/local_lim.h> /* PTHREAD_THREADS_MAX */
 #include <sys/types.h>      /* _pthread_fastlock */
 
+#ifndef CURRENT_STACK_FRAME
+#define CURRENT_STACK_FRAME  ({ char __csf; &__csf; })
+#endif /* CURRENT_STACK_FRAME */
+
+#ifndef STACK_SIZE
+#define STACK_SIZE 0x20000 /* 2 M linuxthreads default stack size */
+#endif
+
 typedef void * pthread_descr;
 
 /* Global array of thread handles, used for validating a thread id
