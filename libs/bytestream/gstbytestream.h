@@ -35,17 +35,17 @@ typedef struct _GstByteStream GstByteStream;
 struct _GstByteStream 
 {
   GstPad *pad;
-  guint8 *data;
-  guint64 size;
+  GstBuffer *buffer;
   guint64 index;
   guint64 pos;
+  guint64 size;
 };
 
 GstByteStream*		gst_bytestream_new		(GstPad *pad);
 void			gst_bytestream_destroy		(GstByteStream *bs);
 
-gint			gst_bytestream_bytes_peek	(GstByteStream *bs, guint8 **buf, guint64 len);
-gint			gst_bytestream_bytes_read	(GstByteStream *bs, guint8 **buf, guint64 len);
+GstBuffer*		gst_bytestream_bytes_peek	(GstByteStream *bs, guint64 len);
+GstBuffer*		gst_bytestream_bytes_read	(GstByteStream *bs, guint64 len);
 gboolean		gst_bytestream_bytes_seek	(GstByteStream *bs, guint64 offset);
 gint			gst_bytestream_bytes_flush	(GstByteStream *bs, guint64 len);
 

@@ -24,6 +24,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <gst/gstinfo.h>
 #include "gstbytestream.h"
 
 /**
@@ -34,16 +35,16 @@
  *
  * Returns: a new #GstByteStream object
  */
-GstByteStream *
-gst_bytestream_new (GstPad * pad)
+GstByteStream*
+gst_bytestream_new (GstPad *pad)
 {
   GstByteStream *bs = g_new (GstByteStream, 1);
 
   bs->pad = pad;
-  bs->data = NULL;
-  bs->size = 0;
+  bs->buffer = NULL;
   bs->index = 0;
   bs->pos = 0;
+  bs->size = 0;
 
   return bs;
 }
@@ -51,55 +52,44 @@ gst_bytestream_new (GstPad * pad)
 void
 gst_bytestream_destroy (GstByteStream *bs)
 {
-  if (bs->data) {
-    g_free (bs->data);
+  if (bs->buffer) {
+    gst_buffer_unref (bs->buffer);
   }
   g_free (bs);
 }
 
-static guint64
-gst_bytestream_bytes_fill (GstByteStream *bs, guint64 len)
+GstBuffer*
+gst_bytestream_bytes_peek (GstByteStream *bs, guint64 len)
 {
-  size_t oldlen;
   GstBuffer *buf;
 
   while ((bs->index + len) > bs->size) {
     buf = gst_pad_pull (bs->pad);
-    oldlen = bs->size - bs->index;
-    memmove (bs->data, bs->data + bs->index, oldlen);
-    bs->size = oldlen + GST_BUFFER_SIZE (buf);
-    bs->index = 0;
-    bs->data = realloc (bs->data, bs->size);
-    if (!bs->data) {
-      fprintf (stderr, "realloc failed: d:%p s:%llu\n", bs->data, bs->size);
+    
+    if (!bs->buffer) {
+      bs->buffer = buf;
     }
-    memcpy (bs->data + oldlen, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+    else {
+      bs->buffer = gst_buffer_merge (bs->buffer, buf);
+    }
+    bs->size = GST_BUFFER_SIZE (bs->buffer);
   }
-  g_assert ((bs->index + len) <= bs->size);
 
-  return len;
+  buf = gst_buffer_create_sub (bs->buffer, bs->index, len);
+
+  return buf;
 }
 
-gint
-gst_bytestream_bytes_peek (GstByteStream *bs, guint8 **buf, guint64 len)
+GstBuffer*                    
+gst_bytestream_bytes_read (GstByteStream *bs, guint64 len)
 {
-  g_return_val_if_fail (len > 0, 0);
-  g_return_val_if_fail (buf, 0);
+  GstBuffer *buf;
 
-  gst_bytestream_bytes_fill (bs, len);
-  *buf = bs->data + bs->index;
-
-  return len;
-}
-
-gint                    
-gst_bytestream_bytes_read (GstByteStream *bs, guint8 **buf, guint64 len)
-{
-  len = gst_bytestream_bytes_peek (bs, buf, len);
+  buf = gst_bytestream_bytes_peek (bs, len);
   bs->index += len;
   bs->pos += len;
 
-  return len;
+  return buf;
 }
 
 gboolean
@@ -111,12 +101,8 @@ gst_bytestream_bytes_seek (GstByteStream *bs, guint64 offset)
 gint
 gst_bytestream_bytes_flush (GstByteStream *bs, guint64 len)
 {
-  guint8 *buf;
-  
   if (len == 0)
     return len;
   
-  len = gst_bytestream_bytes_read (bs, &buf, len);
-
-  return len;
+  return GST_BUFFER_SIZE (gst_bytestream_bytes_read (bs, len));
 }
