@@ -56,7 +56,7 @@ fi
 
 toplevel_check $srcfile
 
-if test -e acinclude.m4; then rm acinclude.m4; fi
+if test -f acinclude.m4; then rm acinclude.m4; fi
 tool_run "$aclocal" "-I common/m4 $ACLOCAL_FLAGS"
 
 tool_run "libtoolize" "--copy --force"
