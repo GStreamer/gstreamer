@@ -1,0 +1,110 @@
+EOS as implemented on Jan 21 2001:
+
+1) terminology
+--------------
+
+EOS: end of stream. The problem we are trying to solve here is 
+     detecting when the processing of a piece of media data has
+     ended. 
+
+     This problem can get complicated because the pipeline might
+     contain an arbitrary number of threads and other ASYNC and
+     DECOUPLED elements like queues. We are trying to solve the
+     obvious cases first by making some assumptions (see limitations)
+     in order to avoid the exponentially growing complexity.
+
+     The trick is to detect when all the elements/subbins/threads
+     and done processing their data. This involves monitoring the
+     threads and elements.
+
+     Catching the EOS signals from an element is easy. We are focusing
+     here on the EOS signal propagation to the manager bin up to the
+     toplevel bin.
+
+EOS call: the pads have a method gst_pad_set_eos () that will
+     be called by an element that cannot send any more data on the
+     pad. 
+
+EOS signals: elements fires the EOS signal when all it's pads are in
+    EOS.
+
+chains: at plan generation, the bin will find the elements it has to
+    manage. The elements that are managed together are called a chain.
+    This is typically a set of elements that need input from their
+    peer element before they can output data. When one of those elements
+    cannot provide more data and goes into EOS, the other elements
+    are basically worthless and there is no point in trying to schedule
+    them anymore.
+
+    Chains are typically broken up on DECOUPLED elements. Those elements
+    have no clear relation between their input/output behaviour, like
+    the queue.
+
+EOS denial: An element can deny an EOS call by returning FALSE on the
+    overridden EOS call. This behaviour is typical for an element that 
+    performs _get_region on its sinkpad and basically does not care
+    about the EOS because it knows it will pull a specific region
+    anyway.
+    
+
+2) EOS implementation
+---------------------
+
+EOS is currently implemented by selectively disabling scheduling of
+the chains. This procedure continues untill a bin/thread has no more
+chains left to schedule, at which point it will fire the EOS signal.
+
+A gboolean was added to the chain structure to indicate if this chain
+need scheduling. Initially this will gboolean will be set to TRUE.
+
+the gst_bin_iterate_func will only schedule those chains that have 
+their need_scheduling flag to TRUE. 
+
+All elements are treated as potential EOS signal providers. When we add
+the elements to a chain, we attach the eos signal to them and hand
+the chain they were added to as an argument to the signal handler.
+When an element goes to EOS, we mark the chain as need_scheduling=FALSE.
+This removes the chain from the scheduling loop.
+
+Since plain bins in bins are flattened during the chain creation, we do 
+not need to worry about the bin EOS. 
+
+Other elements that do their own managing (like threads) are treated
+differently, they are added to a list of EOS-providers. Since they
+have their own chains and use the same iterate_func, they will eventually
+fire EOS on their own when they run out of schedulable chains. 
+The EOS signal of the EOS providers is caught by the parent bin which 
+will then remove the bin from the list of possible EOS providers.
+
+Combining the EOS providers list and the chains, the bin will fire
+and EOS signal when 1) it has no more chains to schedule, 2) all its
+EOS providers have signaled EOS.
+
+3) queue EOS handling
+---------------------
+
+The queue overrides the eos call and performs the following:
+
+Set the sinkpad to EOS and signal its internal g_cond to unlock any
+waiting threads on the srcpad.
+
+The scrpad _get function performs the EOS call when no more buffers
+are queued and the sinkpad is in EOS. This causes the EOS call to
+propagate downstream and effectively causes all chains and threads
+to become EOS.
+
+
+4) limitations
+--------------
+
+We assume a chain is a single schedualable entity. Rescheduling of
+the bins and chains are not performed. 
+
+No provisions for changing the state of the elements in EOS, although 
+this probably isn't hard to do.
+
+No provisions for undoing the EOS state. This is probably related to
+the state change, where a chain should become schedulable again when the
+element goes back to the PLAYING state.
+
+
