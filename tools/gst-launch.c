@@ -18,7 +18,7 @@ idle_func (gpointer data)
   GstClockTimeDiff diff;
 
   if (s_clock) {
-    //g_print ("%lld\n", gst_clock_get_time (s_clock));
+    //g_print ("%" G_GINT64_FORMAT "\n", gst_clock_get_time (s_clock));
   }
 
   g_get_current_time (&tfthen);
@@ -35,7 +35,7 @@ idle_func (gpointer data)
 
   if (!busy) {
     gst_main_quit ();
-    g_print ("execution ended after %llu iterations (sum %llu ns, average %llu ns, min %llu ns, max %llu ns)\n", 
+    g_print ("execution ended after %" G_GUINT64_FORMAT " iterations (sum %" G_GUINT64_FORMAT " ns, average %" G_GUINT64_FORMAT " ns, min %" G_GUINT64_FORMAT " ns, max %" G_GUINT64_FORMAT " ns)\n", 
 		    iterations, sum, sum/iterations, min, max);
   }
 

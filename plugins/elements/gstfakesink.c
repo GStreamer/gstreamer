@@ -291,7 +291,8 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
   if (!fakesink->silent) { 
     g_free (fakesink->last_message);
 
-    fakesink->last_message = g_strdup_printf ("chain   ******* (%s:%s)< (%d bytes, %lld, %d) %p",
+    fakesink->last_message = g_strdup_printf ("chain   ******* (%s:%s)< (%d bytes, %"
+                                              G_GINT64_FORMAT ", %d) %p",
 		GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), 
 		GST_BUFFER_FLAGS (buf), buf);
     

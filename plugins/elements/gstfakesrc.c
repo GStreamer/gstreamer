@@ -763,7 +763,8 @@ gst_fakesrc_get(GstPad *pad)
   if (!src->silent) {
     g_free (src->last_message);
 
-    src->last_message = g_strdup_printf ("get      ******* (%s:%s)> (%d bytes, %llu) %p",
+    src->last_message = g_strdup_printf ("get      ******* (%s:%s)> (%d bytes, %"
+                                         G_GUINT64_FORMAT " ) %p",
                       GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
 
     g_object_notify (G_OBJECT (src), "last_message");

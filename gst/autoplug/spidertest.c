@@ -45,7 +45,7 @@ property_change_callback (GObject *object, GstObject *orig, GParamSpec *pspec)
     else if (G_IS_PARAM_SPEC_ENUM (pspec))
       str = g_strdup_printf ("%d", g_value_get_enum (&value));
     else if (G_IS_PARAM_SPEC_INT64 (pspec))
-      str = g_strdup_printf ("%lld", g_value_get_int64 (&value));
+      str = g_strdup_printf ("%" G_GINT64_FORMAT, g_value_get_int64 (&value));
     else
       str = g_strdup_value_contents (&value);
       

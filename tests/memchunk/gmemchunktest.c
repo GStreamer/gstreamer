@@ -68,7 +68,7 @@ main (gint argc, gchar *argv[])
 
   for(t=0; t < num_threads; t++) {
     error = NULL;
-    threads[t] = g_thread_create (run_test, (void *)t, TRUE, &error);
+    threads[t] = g_thread_create (run_test, GINT_TO_POINTER(t), TRUE, &error);
     if (error) {
       printf ("ERROR: g_thread_create () is %s\n", error->message);
       exit (-1);
