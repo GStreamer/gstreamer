@@ -40,13 +40,16 @@ struct _GstMonoscope {
 
   // the timestamp of the next frame
   guint64 next_time;
-  gint16 datain[2][512];
+  gint16 datain[512];
 
   // video state
   gint fps;
   gint width;
   gint height;
   gboolean first_buffer;
+
+  // visualisation state
+  struct monoscope_state * visstate;
 };
 
 struct _GstMonoscopeClass {
@@ -244,16 +247,16 @@ gst_monoscope_chain (GstPad *pad, GstBuffer *bufin)
   }
 
   data = (gint16 *) GST_BUFFER_DATA (bufin);
+  // FIXME: get rid of this: waste of effort.
   for (i=0; i < 512; i++) {
-    monoscope->datain[0][i] = *data++;
-    monoscope->datain[1][i] = *data++;
+    monoscope->datain[i] = *data++;
   }
 
   if (monoscope->first_buffer) {
     GstCaps *caps;
 
-    monoscope_init (monoscope->width, monoscope->height);
-	
+    monoscope->visstate = monoscope_init (monoscope->width, monoscope->height);
+    g_assert(monoscope->visstate != 0);
     GST_DEBUG (0, "making new pad\n");
 
     caps = GST_CAPS_NEW (
@@ -279,7 +282,7 @@ gst_monoscope_chain (GstPad *pad, GstBuffer *bufin)
 
   bufout = gst_buffer_new ();
   GST_BUFFER_SIZE (bufout) = monoscope->width * monoscope->height * 4;
-  GST_BUFFER_DATA (bufout) = (guchar *) monoscope_update (monoscope->datain);
+  GST_BUFFER_DATA (bufout) = (guchar *) monoscope_update (monoscope->visstate, monoscope->datain);
   GST_BUFFER_TIMESTAMP (bufout) = monoscope->next_time;
   GST_BUFFER_FLAG_SET (bufout, GST_BUFFER_DONTFREE);
 

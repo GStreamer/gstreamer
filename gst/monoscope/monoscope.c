@@ -20,18 +20,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 #include "monoscope.h"
-#include "convolve.h"
 
-#define scope_width 256
-#define scope_height 128
-
-static gint16 copyEq[CONVOLVE_BIG];
-static int avgEq[CONVOLVE_SMALL];      // a running average of the last few.
-static int avgMax;                     // running average of max sample.
-static guint32 display[(scope_width + 1) * (scope_height + 1)];
-
-static convolve_state *state = NULL;
-static guint32 colors[64];
+#include <string.h>
+#include <stdlib.h>
 
 static void colors_init(guint32 * colors)
 {
@@ -43,13 +34,18 @@ static void colors_init(guint32 * colors)
     colors[63] = (40 << 16) + (75 << 8);
 }
 
-void monoscope_init (guint32 resx, guint32 resy)
+struct monoscope_state * monoscope_init (guint32 resx, guint32 resy)
 {
-    state = convolve_init();
-    colors_init(colors);
+    struct monoscope_state * stateptr;
+    stateptr = calloc(1, sizeof(struct monoscope_state));
+    if (stateptr == 0) return 0;
+    stateptr->cstate = convolve_init();
+    colors_init(stateptr->colors);
+    return stateptr;
 }
 
-guint32 * monoscope_update (gint16 data [512])
+guint32 * monoscope_update (struct monoscope_state * stateptr, 
+			    gint16 data [512])
 {
     /* Note that CONVOLVE_BIG must == data size here, ie 512. */
     /* Really, we want samples evenly spread over the available data.
@@ -65,32 +61,32 @@ guint32 * monoscope_update (gint16 data [512])
 	int max = 1;
 	short * thisEq;
 
-	memcpy (copyEq, data, sizeof (short) * CONVOLVE_BIG);
-	thisEq = copyEq;
+	memcpy (stateptr->copyEq, data, sizeof (short) * CONVOLVE_BIG);
+	thisEq = stateptr->copyEq;
 #if 1					
-	val = convolve_match (avgEq, copyEq, state);
+	val = convolve_match (stateptr->avgEq, stateptr->copyEq, stateptr->cstate);
 	thisEq += val;
 #endif					
-	memset(display, 0, 256 * 128 * sizeof(guint32));
+	memset(stateptr->display, 0, 256 * 128 * sizeof(guint32));
 	for (i=0; i < 256; i++) {
-	    foo = thisEq[i] + (avgEq[i] >> 1);
-	    avgEq[i] = foo;
+	    foo = thisEq[i] + (stateptr->avgEq[i] >> 1);
+	    stateptr->avgEq[i] = foo;
 	    if (foo < 0)
 		foo = -foo;
 	    if (foo > max)
 		max = foo;
 	}
-	avgMax += max - (avgMax >> 8);
-	if (avgMax < max)
-	    avgMax = max; /* Avoid overflow */
-	factor = 0x7fffffff / avgMax;
+	stateptr->avgMax += max - (stateptr->avgMax >> 8);
+	if (stateptr->avgMax < max)
+	    stateptr->avgMax = max; /* Avoid overflow */
+	factor = 0x7fffffff / stateptr->avgMax;
 	/* Keep the scaling sensible. */
 	if (factor > (1 << 18))
 	    factor = 1 << 18;
 	if (factor < (1 << 8))
 	    factor = 1 << 8;
 	for (i=0; i < 256; i++) {
-	    foo = avgEq[i] * factor;
+	    foo = stateptr->avgEq[i] * factor;
 	    foo >>= 18;
 	    if (foo > 63)
 		foo = 63;
@@ -99,15 +95,15 @@ guint32 * monoscope_update (gint16 data [512])
 	    val = (i + ((foo+64) << 8));
 	    bar = val;
 	    if ((bar > 0) && (bar < (256 * 128))) {
-		loc = display + bar;
+		loc = stateptr->display + bar;
 		if (foo < 0) {
 		    for (h = 0; h <= (-foo); h++) {
-			*loc = colors[h];
+			*loc = stateptr->colors[h];
 			loc+=256; 
 		    }
 		} else {
 		    for (h = 0; h <= foo; h++) {
-			*loc = colors[h];
+			*loc = stateptr->colors[h];
 			loc-=256;
 		    }
 		}
@@ -117,21 +113,21 @@ guint32 * monoscope_update (gint16 data [512])
 	/* Draw grid. */
 	for (i=16;i < 128; i+=16) {
 	    for (h = 0; h < 256; h+=2) {
-		display[(i << 8) + h] = colors[63];
+		stateptr->display[(i << 8) + h] = stateptr->colors[63];
 		if (i == 64)
-		    display[(i << 8) + h + 1] = colors[63];
+		    stateptr->display[(i << 8) + h + 1] = stateptr->colors[63];
 	    }
 	}
 	for (i = 16; i < 256; i+=16) {
 	    for (h = 0; h < 128; h+=2) {
-		display[i + (h << 8)] = colors[63];
+		stateptr->display[i + (h << 8)] = stateptr->colors[63];
 	    }
 	}
 
-    return display;
+    return stateptr->display;
 }
 
-void monoscope_close ()
+void monoscope_close (struct monoscope_state * stateptr)
 {
 }
 
