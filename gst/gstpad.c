@@ -54,7 +54,9 @@ static void		gst_pad_init			(GstPad *pad);
 static void		gst_pad_dispose			(GObject *object);
 
 static void		gst_pad_set_pad_template	(GstPad *pad, GstPadTemplate *templ);
-static GstCaps *       _gst_pad_default_fixate_func    (GstPad *pad, GstCaps *caps, gpointer unused);
+static GstCaps *        _gst_pad_default_fixate_func    (GstPad *pad, GstCaps *caps, gpointer unused);
+
+static void             gst_pad_link_free               (GstPadLink *link);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr	gst_pad_save_thyself		(GstObject *object, xmlNodePtr parent);
@@ -897,9 +899,13 @@ gst_pad_unlink (GstPad *srcpad,
   src_sched = gst_pad_get_scheduler (GST_PAD (realsrc));
   sink_sched = gst_pad_get_scheduler (GST_PAD (realsink));
 
+  gst_pad_link_free (GST_RPAD_LINK (realsrc));
+
   /* first clear peers */
   GST_RPAD_PEER (realsrc) = NULL;
   GST_RPAD_PEER (realsink) = NULL;
+  GST_RPAD_LINK (realsrc) = NULL;
+  GST_RPAD_LINK (realsink) = NULL;
 
   /* now tell the scheduler */
   if (src_sched && src_sched == sink_sched) {
@@ -1173,6 +1179,9 @@ gst_pad_renegotiate (GstPad *pad)
   g_return_val_if_fail (pad != NULL, GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_LINK_REFUSED);
 
+  g_return_val_if_fail (GST_PAD_LINK_SRC (pad), GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_PAD_LINK_SINK (pad), GST_PAD_LINK_REFUSED);
+
   link = gst_pad_link_new ();
 
   link->srcpad = GST_PAD_LINK_SRC (pad);
@@ -1206,6 +1215,7 @@ gst_pad_try_set_caps (GstPad *pad, const GstCaps *caps)
 
   g_return_val_if_fail (pad != NULL, GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_PAD_PEER (pad), GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (!GST_FLAG_IS_SET (pad, GST_PAD_NEGOTIATING),
       GST_PAD_LINK_REFUSED);
 
@@ -1220,6 +1230,9 @@ gst_pad_try_set_caps (GstPad *pad, const GstCaps *caps)
     gst_caps_debug (caps, "unfixed caps");
     return GST_PAD_LINK_REFUSED;
   }
+
+  g_return_val_if_fail (GST_PAD_LINK_SRC (pad), GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_PAD_LINK_SINK (pad), GST_PAD_LINK_REFUSED);
 
   link = gst_pad_link_new ();
 
@@ -1364,6 +1377,9 @@ gst_pad_link_filtered (GstPad *srcpad, GstPad *sinkpad,
     return FALSE;
   }
   
+  g_return_val_if_fail (realsrc != NULL, GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (realsink != NULL, GST_PAD_LINK_REFUSED);
+
   link = gst_pad_link_new ();
 
   if (GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC) {
