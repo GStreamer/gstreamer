@@ -35,8 +35,7 @@ enum {
   ARG_SPLIT_SEQUENCE,
   ARG_SEGMENT_SIZE,
   ARG_PACKETS_PER_PACK,
-  ARG_SECTOR_SIZE,
-  ARG_WORKAROUND_MPLAYER_HDR
+  ARG_SECTOR_SIZE
   /* FILL ME */
 };
 
@@ -142,12 +141,6 @@ GstMplexJob::initProperties (GObjectClass *klass)
     g_param_spec_int ("sector-size", "Sector size",
 		      "Specify sector size in bytes for generic formats",
                        256, 16384, 2048, (GParamFlags) G_PARAM_READWRITE));
-
-  /* workarounds */
-  g_object_class_install_property (klass, ARG_WORKAROUND_MPLAYER_HDR,
-    g_param_spec_boolean ("mplayer-hdr-workaround", "MPlayer header workaround",
-			  "Enable a workaround for bugs in MPlayer LCPM header parsing",
-                	  FALSE, (GParamFlags) G_PARAM_READWRITE));
 }
 
 /*
@@ -182,9 +175,6 @@ GstMplexJob::getProperty (guint   prop_id,
       break;
     case ARG_SECTOR_SIZE:
       g_value_set_int (value, sector_size);
-      break;
-    case ARG_WORKAROUND_MPLAYER_HDR:
-      g_value_set_boolean (value, workarounds.mplayer_pes_headers);
       break;
     default:
       break;
@@ -222,9 +212,6 @@ GstMplexJob::setProperty (guint         prop_id,
       break;
     case ARG_SECTOR_SIZE:
       sector_size = g_value_get_int (value);
-      break;
-    case ARG_WORKAROUND_MPLAYER_HDR:
-      workarounds.mplayer_pes_headers = g_value_get_boolean (value);
       break;
     default:
       break;
