@@ -24,6 +24,7 @@
 #include "gst_private.h"
 #include "gstregistry.h"
 
+#include "gstpad.h"
 #include "gstindex.h"
 
 /* Index signals and args */
@@ -34,16 +35,58 @@ enum {
 
 enum {
   ARG_0,
+  ARG_RESOLVER,
   /* FILL ME */
 };
 
-static void		gst_index_class_init	(GstIndexClass *klass);
-static void		gst_index_init		(GstIndex *index);
-static gboolean 	gst_index_default_path_resolver (GstIndex *index, GstObject *writer,
+static void		gst_index_class_init		(GstIndexClass *klass);
+static void		gst_index_init			(GstIndex *index);
+
+static void             gst_index_set_property        	(GObject *object, guint prop_id,
+                                                         const GValue *value, GParamSpec *pspec);
+static void             gst_index_get_property        	(GObject *object, guint prop_id, 
+                                                         GValue *value, GParamSpec *pspec);
+
+static GstIndexGroup* 	gst_index_group_new		(guint groupnum);
+
+static gboolean 	gst_index_path_resolver 	(GstIndex *index, GstObject *writer,
+		                			 gchar **writer_string, gpointer data);
+static gboolean 	gst_index_gtype_resolver 	(GstIndex *index, GstObject *writer,
 		                			 gchar **writer_string, gpointer data);
 
 static GstObject *parent_class = NULL;
 static guint gst_index_signals[LAST_SIGNAL] = { 0 };
+
+typedef struct
+{
+  GstIndexResolverMethod method;
+  GstIndexResolver 	 resolver;
+  gpointer		 user_data;
+} ResolverEntry;
+
+static const ResolverEntry resolvers[] =
+{
+  { GST_INDEX_RESOLVER_CUSTOM, NULL, NULL },
+  { GST_INDEX_RESOLVER_GTYPE,  gst_index_gtype_resolver, NULL },
+  { GST_INDEX_RESOLVER_PATH,   gst_index_path_resolver, NULL },
+};
+
+#define GST_TYPE_INDEX_RESOLVER (gst_index_resolver_get_type())
+static GType
+gst_index_resolver_get_type (void)
+{
+  static GType index_resolver_type = 0;
+  static GEnumValue index_resolver[] = {
+    { GST_INDEX_RESOLVER_CUSTOM, "GST_INDEX_RESOLVER_CUSTOM",  "Use a custom resolver"},
+    { GST_INDEX_RESOLVER_GTYPE,  "GST_INDEX_RESOLVER_GTYPE",   "Resolve an object to its GType[.padname]"},
+    { GST_INDEX_RESOLVER_PATH,   "GST_INDEX_RESOLVER_PATH",    "Resolve an object to its path in the pipeline"},
+    {0, NULL, NULL},
+  };
+  if (!index_resolver_type) {
+    index_resolver_type = g_enum_register_static ("GstIndexResolver", index_resolver);
+  }
+  return index_resolver_type;
+}
 
 GType
 gst_index_get_type(void) {
@@ -83,6 +126,71 @@ gst_index_class_init (GstIndexClass *klass)
                   G_STRUCT_OFFSET (GstIndexClass, entry_added), NULL, NULL,
                   gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                   G_TYPE_POINTER);
+
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_index_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_index_get_property);
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RESOLVER,
+    g_param_spec_enum ("resolver", "Resolver", "Select a predefined object to string mapper",
+	               GST_TYPE_INDEX_RESOLVER, GST_INDEX_RESOLVER_PATH, G_PARAM_READWRITE));
+}
+
+static void
+gst_index_init (GstIndex *index)
+{
+  index->curgroup = gst_index_group_new(0);
+  index->maxgroup = 0;
+  index->groups = g_list_prepend(NULL, index->curgroup);
+
+  index->writers = g_hash_table_new (NULL, NULL);
+  index->last_id = 0;
+
+  index->method = GST_INDEX_RESOLVER_PATH;
+  index->resolver = resolvers[index->method].resolver;
+  index->resolver_user_data = resolvers[index->method].user_data;
+
+  GST_FLAG_SET (index, GST_INDEX_WRITABLE);
+  GST_FLAG_SET (index, GST_INDEX_READABLE);
+  
+  GST_DEBUG(0, "created new index");
+}
+
+static void
+gst_index_set_property (GObject *object, guint prop_id,
+                        const GValue *value, GParamSpec *pspec)
+{
+  GstIndex *index;
+
+  index = GST_INDEX (object);
+
+  switch (prop_id) {
+    case ARG_RESOLVER:
+      index->method = g_value_get_enum (value);
+      index->resolver = resolvers[index->method].resolver;
+      index->resolver_user_data = resolvers[index->method].user_data;
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_index_get_property (GObject *object, guint prop_id, 
+                        GValue *value, GParamSpec *pspec)
+{
+  GstIndex *index;
+
+  index = GST_INDEX (object);
+
+  switch (prop_id) {
+    case ARG_RESOLVER:
+      g_value_set_enum (value, index->method);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static GstIndexGroup *
@@ -98,24 +206,6 @@ gst_index_group_new(guint groupnum)
   GST_DEBUG(0, "created new index group %d",groupnum);
 
   return indexgroup;
-}
-
-static void
-gst_index_init (GstIndex *index)
-{
-  index->curgroup = gst_index_group_new(0);
-  index->maxgroup = 0;
-  index->groups = g_list_prepend(NULL, index->curgroup);
-
-  index->writers = g_hash_table_new (NULL, NULL);
-  index->last_id = 0;
-
-  gst_index_set_resolver (index, gst_index_default_path_resolver, NULL);
-
-  GST_FLAG_SET (index, GST_INDEX_WRITABLE);
-  GST_FLAG_SET (index, GST_INDEX_READABLE);
-  
-  GST_DEBUG(0, "created new index");
 }
 
 /**
@@ -288,6 +378,7 @@ gst_index_set_resolver (GstIndex *index,
 
   index->resolver = resolver;
   index->resolver_user_data = user_data;
+  index->method = GST_INDEX_RESOLVER_CUSTOM;
 }
 
 /**
@@ -383,10 +474,28 @@ gst_index_add_id (GstIndex *index, gint id, gchar *description)
 }
 
 static gboolean
-gst_index_default_path_resolver (GstIndex *index, GstObject *writer,
-		                 gchar **writer_string, gpointer data) 
+gst_index_path_resolver (GstIndex *index, GstObject *writer,
+	                 gchar **writer_string, gpointer data) 
 {
   *writer_string = gst_object_get_path_string (writer);
+
+  return TRUE;
+}
+
+static gboolean
+gst_index_gtype_resolver (GstIndex *index, GstObject *writer,
+	                  gchar **writer_string, gpointer data) 
+{
+  if (GST_IS_PAD (writer)) {
+    GstElement *element = gst_pad_get_parent (GST_PAD (writer));
+
+    *writer_string = g_strdup_printf ("%s.%s", 
+		     g_type_name (G_OBJECT_TYPE (element)),
+		     gst_object_get_name (writer));
+  }
+  else {
+    *writer_string = g_strdup_printf ("%s", g_type_name (G_OBJECT_TYPE (writer)));
+  }
 
   return TRUE;
 }

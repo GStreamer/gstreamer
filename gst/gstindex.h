@@ -131,6 +131,12 @@ struct _GstIndexGroup {
 typedef gboolean 	(*GstIndexFilter)	 	(GstIndex *index, 
 							 GstIndexEntry *entry);
 
+typedef enum {
+  GST_INDEX_RESOLVER_CUSTOM,
+  GST_INDEX_RESOLVER_GTYPE,
+  GST_INDEX_RESOLVER_PATH
+} GstIndexResolverMethod;
+
 typedef gboolean 	(*GstIndexResolver) 		(GstIndex *index, 
 						   	 GstObject *writer, 
 						   	 gchar **writer_string,
@@ -152,6 +158,7 @@ struct _GstIndex {
   GstIndexGroup		*curgroup;
   gint			 maxgroup;
 
+  GstIndexResolverMethod method;
   GstIndexResolver 	 resolver;
   gpointer		 resolver_user_data;
 
