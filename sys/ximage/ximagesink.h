@@ -22,9 +22,6 @@
 
 #include <gst/video/gstvideosink.h>
 
-/* FIXME : We should have a configure test for shm support */
-#define HAVE_XSHM
-
 #ifdef HAVE_XSHM
 #include <sys/ipc.h>
 #include <sys/shm.h>
