@@ -411,7 +411,11 @@ gboolean		gst_pad_check_compatibility		(GstPad *srcpad, GstPad *sinkpad);
 void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps);
 void			gst_pad_set_fixate_function		(GstPad *pad, GstPadFixateFunction fixate);
 GstCaps *	        gst_pad_proxy_getcaps          		(GstPad *pad);
+GstPadLinkReturn        gst_pad_proxy_pad_link                  (GstPad *pad, const GstCaps *caps);
+GstCaps *               gst_pad_proxy_fixate                    (GstPad *pad, const GstCaps *caps, gpointer unused);
+#ifndef GST_DISABLE_DEPRECATED
 GstPadLinkReturn	gst_pad_proxy_link          		(GstPad *pad, const GstCaps *caps);
+#endif
 gboolean		gst_pad_relink_filtered			(GstPad *srcpad, GstPad *sinkpad, const GstCaps *filtercaps);
 #ifndef GST_DISABLE_DEPRECATED
 gboolean		gst_pad_perform_negotiate		(GstPad *srcpad, GstPad *sinkpad);

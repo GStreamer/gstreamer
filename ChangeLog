@@ -1,3 +1,9 @@
+2003-12-31  David Schleef  <ds@schleef.org>
+
+	* gst/gstpad.c: (gst_pad_proxy_pad_link), (gst_pad_proxy_fixate):
+	* gst/gstpad.h: Add functions that are useful as default pad
+	link and fixate functions for elements.
+
 2003-12-30  David Schleef  <ds@schleef.org>
 
 	* gst/gstpad.c: (gst_pad_link_try):

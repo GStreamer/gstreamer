@@ -2014,6 +2014,91 @@ gst_pad_proxy_getcaps (GstPad *pad)
 }
 
 /**
+ * gst_pad_proxy_pad_link:
+ * @pad: a #GstPad to proxy.
+ *
+ * Calls gst_pad_try_set_caps() for every other pad belonging to the
+ * same element as @pad.  If gst_pad_try_set_caps() fails on any pad,
+ * the proxy link fails.
+ *
+ * Returns: GST_PAD_LINK_OK if sucessful
+ */
+GstPadLinkReturn
+gst_pad_proxy_pad_link (GstPad *pad, const GstCaps *caps)
+{
+  GstElement *element;
+  const GList *pads;
+  GstPadLinkReturn ret;
+
+  GST_DEBUG ("proxying pad link for %s:%s\n", GST_DEBUG_PAD_NAME (pad));
+
+  element = gst_pad_get_parent (pad);
+
+  pads = gst_element_get_pad_list (element);
+  
+  while (pads) {
+    GstPad *otherpad = GST_PAD (pads->data);
+
+    if (otherpad != pad) {
+      ret = gst_pad_try_set_caps (otherpad, caps);
+      if (GST_PAD_LINK_FAILED (ret)) {
+        return ret;
+      }
+    }
+    pads = g_list_next (pads);
+  }
+
+  return GST_PAD_LINK_OK;
+}
+
+/**
+ * gst_pad_proxy_fixate:
+ * @pad: a #GstPad to proxy.
+ *
+ * Implements a default fixate function based on the caps set on the other
+ * pads in the element.  This function should only be used if every pad
+ * has the same pad template caps.
+ *
+ * Returns: a fixated caps, or NULL if caps cannot be fixed
+ */
+GstCaps *
+gst_pad_proxy_fixate (GstPad *pad, const GstCaps *caps, gpointer unused)
+{
+  GstElement *element;
+  const GList *pads;
+  const GstCaps *othercaps;
+
+  GST_DEBUG ("proxying fixate for %s:%s\n", GST_DEBUG_PAD_NAME (pad));
+
+  element = gst_pad_get_parent (pad);
+
+  pads = gst_element_get_pad_list (element);
+
+  while (pads) {
+    GstPad *otherpad = GST_PAD (pads->data);
+
+    /* FIXME check that each pad has the same pad template caps */
+
+    if (otherpad != pad) {
+      othercaps = gst_pad_get_negotiated_caps (otherpad);
+
+      if (othercaps) {
+        GstCaps *icaps;
+        icaps = gst_caps_intersect (othercaps, caps);
+        if (!gst_caps_is_empty (icaps)) {
+          return icaps;
+        } else {
+          gst_caps_free (icaps);
+        }
+      }
+    }
+    pads = g_list_next (pads);
+  }
+  
+  return NULL;
+}
+
+/**
  * gst_pad_proxy_link:
  * @pad: a #GstPad to proxy to.
  * @caps: the #GstCaps to use in proxying.
