@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <vorbis/vorbisenc.h>
 
 #include "vorbisenc.h"
