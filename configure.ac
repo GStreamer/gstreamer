@@ -466,6 +466,7 @@ include/Makefile
 gst/Makefile
 gst/gstversion.h
 gst/autoplug/Makefile
+gst/caches/Makefile
 gst/elements/Makefile
 gst/parse/Makefile
 gst/schedulers/Makefile
