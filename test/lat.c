@@ -33,11 +33,13 @@ void handoff_sink(GstElement *sink, GstBuffer *buf, gpointer user_data) {
 GstElement *identity_add(GstPipeline *pipeline, GstElement *first, int count) {
   GstElement *last, *ident;
   int i;
+  char buf[20];
 
   last = first;
 
   for (i=0; i<count; i++) {
-    ident = gst_elementfactory_make("identity","identity");
+    snprintf(buf, 20, "identity_%03d", i);
+    ident = gst_elementfactory_make("identity",buf);
     g_return_val_if_fail(ident != NULL,NULL);
     gtk_object_set(GTK_OBJECT(ident),"silent",TRUE,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(ident));
