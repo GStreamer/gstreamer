@@ -4,9 +4,9 @@
   <title>Basic Concepts</title>
   <para>
     This chapter of the guide introduces the basic concepts of &GStreamer;.
-    Understanding these concepts will help you see the issues involved in
+    Understanding these concepts will help you grok the issues involved in
     extending &GStreamer;. Many of these concepts are explained in greater
-    detail in the &GstAppDevMan;. The basic concepts presented here serve mainly
+    detail in the &GstAppDevMan;; the basic concepts presented here serve mainly
     to refresh your memory.
   </para>
 
@@ -17,29 +17,30 @@
     <para>
       Elements are at the core of &GStreamer;. In the context of plugin
       development, an <emphasis>element</emphasis> is an object derived from the
-      <classname>GstElement</classname> class. An element provides some sort of
-      functionality when connected with other elements. Without elements,
-      &GStreamer; is just a bunch of conceptual pipe fittings with nothing to
-      connect. A large number of elements ship with &GStreamer;, but extra
-      elements can also be written. The purpose of this guide is to help you
-      learn to create new elements, which are encapsulated in plugins as
-      described below.
-    </para>
-    <para>
-      A <emphasis>filter</emphasis> is an important type of element that
-      processes a stream of data, as opposed to producing or consuming streams
-      of data. Producers and consumers of data are called
-      <emphasis>source</emphasis> and <emphasis>sink</emphasis> elements,
-      respectively.
+      <classname>GstElement</classname> class. Elements provide some sort of
+      functionality when connected with other elements: For example, a source
+      element provides data to a stream, and a filter element acts on the data
+      in a stream. Without elements, &GStreamer; is just a bunch of conceptual
+      pipe fittings with nothing to connect. A large number of elements ship
+      with &GStreamer;, but extra elements can also be written.
     </para>
     <para>
       Just writing a new element is not entirely enough, however: You will need
-      to encapsulate your element in a plugin to enable &GStreamer; to use it. A
-      <emphasis>plugin</emphasis> is essentially a loadable block of code,
-      usually a shared object file or dynamically linked library. A single
-      plugin may contain the implementation of several elements, or just a
-      single one. For simplicity, this guide concentrates primarily on plugins
-      containing one filter type element.
+      to encapsulate your element in a <emphasis>plugin</emphasis> to enable
+      &GStreamer; to use it. A plugin is essentially a loadable block of code,
+      usually called a shared object file or a dynamically linked library. A
+      single plugin may contain the implementation of several elements, or just
+      a single one. For simplicity, this guide concentrates primarily on plugins
+      containing one element.
+    </para>
+    <para>
+      A <emphasis>filter</emphasis> is an important type of element that
+      processes a stream of data. Producers and consumers of data are called
+      <emphasis>source</emphasis> and <emphasis>sink</emphasis> elements,
+      respectively. Elements that connect other elements together are called
+      <emphasis>autoplugger</emphasis> elements, and a <emphasis>bin</emphasis>
+      element contains other elements. Bins are often responsible for scheduling
+      the elements that they contain so that data flows smoothly.
     </para>
     <para>
       The plugin mechanism is used everywhere in &GStreamer;, even if only the
@@ -66,19 +67,29 @@
     <para>
       <emphasis>Pads</emphasis> are used to negotiate connections and data flow
       between elements in &GStreamer;. A pad can be viewed as a
-      <quote>place</quote> on an element where connections may be made with
-      other elements. Pads have specific data handling capabilities: That is, a
-      pad only knows how to give or receive certain types of data. Connections
-      are only allowed when the capabilities of two pads are compatible.
+      <quote>place</quote> or <quote>port</quote> on an element where
+      connections may be made with other elements. Pads have specific data
+      handling capabilities: A pad only knows how to give or receive certain
+      types of data. Connections are only allowed when the capabilities of two
+      pads are compatible.
     </para>
     <para>
       An analogy may be helpful here. A pad is similar to a plug or jack on a
       physical device. Consider, for example, a home theater system consisting
-      of an amplifier, a DVD player, and a television. Connecting the DVD player
-      to the amplifier is allowed only because both devices have audio jacks,
-      and connecting the television to the DVD player is allowed because both
-      devices have compatible video jacks. Pads in &GStreamer; serve the same
-      purpose as the jacks in the home theater system.
+      of an amplifier, a DVD player, and a (silent) video projector. Connecting
+      the DVD player to the amplifier is allowed because both devices have audio
+      jacks, and connecting the projector to the DVD player is allowed because
+      both devices have compatible video jacks. Connections between the
+      projector and the amplifier may not be made because the projector and
+      amplifier have different types of jacks. Pads in &GStreamer; serve the
+      same purpose as the jacks in the home theater system.
+    </para>
+    <para>
+      For the moment, all data in &GStreamer; flows one way through a connection
+      between elements. Data flows out of one element through one or more
+      <emphasis>source pads</emphasis>, and elements accept incoming data through
+      one or more <emphasis>sink pads</emphasis>. Source and sink elements have
+      only source and sink pads, respectively.
     </para>
     <para>
       See the &GstLibRef; for the current implementation details of a <ulink
@@ -95,8 +106,8 @@
       All streams of data in &GStreamer; are chopped up into chunks that are
       passed from a source pad on one element to a sink pad on another element.
       <emphasis>Buffers</emphasis> are structures used to hold these chunks of
-      data. Buffers can be of any size, theoretically. Buffers may contain any
-      sort of data that the two pads involved know how to handle: Normally, a
+      data. Buffers can be of any size, theoretically, and they may contain any
+      sort of data that the two connected pads know how to handle. Normally, a
       buffer contains a chunk of some sort of audio or video data that flows
       from one element to another.
     </para>
@@ -125,8 +136,7 @@
             A reference count indicating the number of elements currently
             holding a reference to the buffer. When the buffer reference count
             falls to zero, the buffer will be unlinked, and its memory will be
-            freed in some sense (see the next part about <xref
-            linkend="sect2-buffers-bufferpools"/> for more details).
+            freed in some sense (see below for more details).
           </para>
         </listitem>
       </itemizedlist>
@@ -143,15 +153,29 @@
       <para>
         Buffers can be allocated using various schemes, and they may either be
         passed on by an element or unreferenced, thus freeing the memory used by
-        the buffer.
+        the buffer. Buffer allocation and unlinking are important concepts when
+        dealing with real time media processing, since memory allocation is
+        relatively slow on most systems.
       </para>
       <para>
-        Normally, filter elements in &GStreamer; deal with a buffer in place,
-        meaning that they do not create or destroy buffers. Sometimes, however,
-        elements might need to alter the reference count of a buffer to copy or
-        destroy the buffer, or to create a new buffer. For the most part, this
-        guide does not deal with elements that alter a buffer's reference count,
-        but buffer referencing is an important concept to know.
+        To improve the latency in a media pipeline, many &GStreamer; elements
+        use a <emphasis>buffer pool</emphasis> to handle buffer allocation and
+        unlinking. A buffer pool is a relatively large chunk of memory that is
+        the &GStreamer; process requests early on from the operating system.
+        Later, when elements request memory for a new buffer, the buffer pool
+        can serve the request quickly by giving out a piece of the allocated
+        memory. This saves a call to the operating system and lowers latency.
+        [If it seems at this point like &GStreamer; is acting like an operating
+        system (doing memory management, etc.), don't worry: &GStreamer;OS isn't
+        due out for quite a few years!]
+      </para>
+      <para>
+        Normally in a media pipeline, most filter elements in &GStreamer; deal
+        with a buffer in place, meaning that they do not create or destroy
+        buffers. Sometimes, however, elements might need to alter the reference
+        count of a buffer, either by copying or destroying the buffer, or by
+        creating a new buffer. These topics are generally reserved for
+        non-filter elements, so they will be addressed at that point.
       </para>
     </sect2>
   </sect1>
@@ -456,12 +480,14 @@
   <sect1 id="sect1-basics-events" xreflabel="Events">
     <title>Events</title>
     <para>
-      Events are a special type of data in &GStreamer;.
-      <emphasis>Events</emphasis> indicate some sort of notable event that has
-      happened somewhere in an element's pipeline. Just like any other data
-      type, an event comes to an element through its pads. Events are contained
-      in a <classname>GstBuffer</classname>, so an event buffer will contain
-      only an event, not any other type of data.
+      Sometimes elements in a media processing pipeline need to know that
+      something has happened. An <emphasis>event</emphasis> is a special type of
+      data in &GStreamer; designed to serve this purpose. Events describe some
+      sort of activity that has happened somewhere in an element's pipeline, for
+      example, the end of the media stream or a clock discontinuity. Just like
+      any other data type, an event comes to an element on a sink pad and is
+      contained in a normal buffer. Unlike normal stream buffers, though, an
+      event buffer contains only an event, not any media stream data.
     </para>
     <para>
       See the &GstLibRef; for the current implementation details of a <ulink

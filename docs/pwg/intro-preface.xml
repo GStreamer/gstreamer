@@ -87,76 +87,89 @@
       <listitem>
         <para>
           <guilabel><xref linkend="part-building"/></guilabel> &mdash;
-          Introduction to the structure of a plugin. This part covers all the
-          different steps you have to perform to build a basic audio filter
-          plugin. The discussion begins by giving examples of generating the
-          basic structures with <xref linkend="cha-building-boiler"/>. Then you
-          will learn how to write the code to get a basic filter plugin working.
-          Several chapters cover these concepts, including <xref
+          Introduction to the structure of a plugin, using an example audio
+          filter for illustration.
+        </para>
+        <para>
+          This part covers all the basic steps you generally need to perform to
+          build a plugin. The discussion begins by giving examples of generating
+          the basic structures with <xref linkend="cha-building-boiler"/>. Then
+          you will learn how to write the code to get a basic filter plugin
+          working: These steps include chapters on <xref
           linkend="cha-building-types"/>, <xref linkend="cha-building-pads"/>,
           <xref linkend="cha-building-chainfn"/>, and <xref
           linkend="cha-building-state"/>.
         </para>
         <para>
-          After you have finished these chapters, you will have a working
-          plugin, but your new plugin might not have all the functionality you
-          need. To provide some standard functionality, you will learn how to
-          add features to a filter in the chapters on <xref
-          linkend="cha-building-props"/> and <xref
-          linkend="cha-building-signals"/>. Finally, you will learn to test your
-          new plugin in <xref linkend="cha-building-testapp"/>.
+          After you have finished the first steps, you will be able to create a
+          working plugin, but your new plugin might not have all the
+          functionality you need. To provide some standard functionality, you
+          will learn how to add more features to a new plugin. These features
+          are described in the chapters on <xref linkend="cha-building-props"/>
+          and <xref linkend="cha-building-signals"/>. Finally, you will see in
+          <xref linkend="cha-building-testapp"/> how to write a short test
+          application to try out your new plugin.
         </para>
       </listitem>
       <listitem>
         <para>
           <guilabel><xref linkend="part-advanced"/></guilabel> &mdash;
           Information on advanced features of &GStreamer; plugin development.
+        </para>
+        <para>
           After learning about the basic steps, you should be able to create a
           functional audio or video filter plugin with some nice features.
           However, &GStreamer; offers more for plugin writers. This part of the
-          guide includes chapters on <xref linkend="cha-advanced-scheduling"/>,
-          <xref linkend="cha-advanced-request"/>, <xref
+          guide includes chapters on more advanced topics, such as <xref
+          linkend="cha-advanced-scheduling"/>, <xref
+          linkend="cha-advanced-request"/>, <xref
           linkend="cha-advanced-clock"/>, <xref
           linkend="cha-advanced-dparams"/>, and <xref
           linkend="cha-advanced-midi"/>. Since these features are more advanced,
-          the chapters can basically be read in any order, as you need the
-          features for your custom plugins.
+          the chapters can basically be read in any order, as you find that your
+          plugins require these features.
         </para>
       </listitem>
       <listitem>
         <para>
           <guilabel><xref linkend="part-other"/></guilabel> &mdash; Explanation
-          of writing source and sink plugins. Although the concepts introduced
-          in the two previous parts of this guide apply to filter plugins, many
-          of the concepts apply equally to source and sink plugins. This part
-          will take a look at creating source and sink type plugins for
-          &GStreamer; in the chapters on <xref linkend="cha-other-source"/> and
-          <xref linkend="cha-other-sink"/>. The chapter on <xref
-          linkend="cha-other-autoplugger"/> describes writing autoplugger
-          plugins.
+          of writing other plugin types.
+        </para>
+        <para>
+          Because the first two parts of the guide use an audio filter as an
+          example, the concepts introduced apply to filter plugins. But many of
+          the concepts apply equally to other plugin types, including sources,
+          sinks, and autopluggers. This part of the guide presents the issues
+          that arise when working on these more specialized plugin types. The
+          part includes chapters on <xref linkend="cha-other-source"/>, <xref
+          linkend="cha-other-sink"/>, <xref linkend="cha-other-scheduler"/>, and
+          <xref linkend="cha-other-autoplugger"/>.
         </para>
       </listitem>
       <listitem>
         <para>
-          <guilabel><xref linkend="part-appendix"/></guilabel> &mdash; The
-          appendices contain some information that stubbornly refused to fit
-          cleanly in other sections of this guide, like the <xref
-          linkend="cha-appendix-checklist"/> and <xref
+          <guilabel><xref linkend="part-appendix"/></guilabel> &mdash; Further
+          information for plugin developers.
+        </para>
+        <para>
+          The appendices contain some information that stubbornly refuses to fit
+          cleanly in other sections of the guide. This information includes
+          <xref linkend="cha-appendix-checklist"/> and <xref
           linkend="cha-appendix-python"/>. FIXME: organize better.
         </para>
       </listitem>
     </itemizedlist>
 
     <para>
-      The remainder of this introductory part presents a short overview of the
-      basic concepts involved in &GStreamer; plugin development. People familiar
-      with the &GstAppDevMan; can use this short overview to refresh their
-      memory. Topics covered include <xref linkend="sect1-basics-elements"/>,
-      <xref linkend="sect1-basics-pads"/>, <xref
-      linkend="sect1-basics-buffers"/>, <xref linkend="sect1-basics-types"/>,
-      and <xref linkend="sect1-basics-events"/>.
+      The remainder of this introductory part of the guide presents a short
+      overview of the basic concepts involved in &GStreamer; plugin development.
+      Topics covered include <xref linkend="sect1-basics-elements"/>, <xref
+      linkend="sect1-basics-pads"/>, <xref linkend="sect1-basics-buffers"/>,
+      <xref linkend="sect1-basics-types"/>, and <xref
+      linkend="sect1-basics-events"/>. If you are already familiar with this
+      information, you can use this short overview to refresh your memory, or
+      you can skip to <xref linkend="part-building"/>.
     </para>
-
     <para>
       As you can see, there a lot to learn, so let's get started!
     </para>
@@ -173,18 +186,6 @@
         <para>
           Adding new mime-types to the registry along with typedetect functions.
           This will allow your plugin to operate on a completely new media type.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          Creating custom schedulers when the default schedulers are
-          insufficient.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          Creating custom autopluggers when the default ones are insufficient
-          for your needs.
         </para>
       </listitem>
     </itemizedlist>

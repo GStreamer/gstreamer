@@ -5,10 +5,11 @@
   <para>
     In this chapter you will learn how to construct the bare minimum code for a
     new plugin. Starting from ground zero, you will see how to get the
-    &GStreamer; template source. Then you will learn how to use a few simple
-    command line tools to copy and modify a template plugin and thus create your
-    new plugin. By the end of all this, you will have a functional audio filter
-    plugin that you can compile and test.
+    &GStreamer; template source. Then you will learn how to use a few basic
+    tools to copy and modify a template plugin to create a new plugin. If you
+    follow the examples here, then by the end of this chapter you will have a
+    functional audio filter plugin that you can compile and use in &GStreamer;
+    applications.
   </para>
 
   <!-- ############ sect1 ############# -->
@@ -20,16 +21,18 @@
       can write the entire plugin by hand, or you can copy an existing plugin
       template and write the plugin code you need. The second method is by far
       the simpler of the two, so the first method will not even be described
-      here.
+      here. (Errm, that is, <quote>it is left as an exercise to the
+      reader.</quote>)
     </para>
     <para>
       The first step is to check out a copy of the
       <filename>gst-template</filename> CVS module to get an important tool and
-      the source code template for the basic &GStreamer; plugin. To check out
-      the <filename>gst-template</filename> module, type the following two
-      commands on a command line:
+      the source code template for a basic &GStreamer; plugin. To check out the
+      <filename>gst-template</filename> module, make sure you are connected to
+      the internet, and type the following commands at a command console:
     </para>
     <screen>
+<prompt>shell $ </prompt><userinput>cd .</userinput>
 <prompt>shell $ </prompt><userinput>cvs -d:pserver:anonymous@cvs.gstreamer.sourceforge.net:/cvsroot/gstreamer login</userinput>
 Logging in to :pserver:anonymous@cvs.gstreamer.sourceforge.net:2401/cvsroot/gstreamer
 CVS password:
@@ -47,7 +50,7 @@ U gst-template/gst-app/src/Makefile.am
     </screen>
     <para>
       After the first command, you will have to press <keycap>ENTER</keycap> to
-      log in to the CVS server. You might have to log in twice. The second
+      log in to the CVS server. (You might have to log in twice.) The second
       command will check out a series of files and directories into <filename
       class="directory">./gst-template</filename>. The template you will be
       using is in <filename
@@ -59,8 +62,8 @@ U gst-template/gst-app/src/Makefile.am
 
   <!-- ############ sect1 ############# -->
 
-  <sect1 id="sect1-boiler-filterstamp" xreflabel="Using Filterstamp">
-    <title>Using Filterstamp</title>
+  <sect1 id="sect1-boiler-project-stamp" xreflabel="Using the Project Stamp">
+    <title>Using the Project Stamp</title>
     <para>
       The first thing to do when making a new element is to specify some basic
       details about it: what its name is, who wrote it, what version number it
@@ -72,10 +75,12 @@ U gst-template/gst-app/src/Makefile.am
       The standard way of defining the boilerplate is simply to write some code,
       and fill in some structures. As mentioned in the previous section, the
       easiest way to do this is to copy a template and add functionality
-      according to your needs. To help you do so, there is a script called
-      <command>pluginstamp.sh</command> in the <filename
-      class="directory">tools/</filename> directory of the
-      <filename>gst-template</filename> source tree that does exactly this.
+      according to your needs. To help you do so, there are some tools in the
+      <filename class="directory">./gst-template/tools/</filename> directory.
+      One tool, <filename>gst-quick-stamp</filename>, is a quick command line
+      tool. The other, <filename>gst-project-stamp</filename>, is a full GNOME
+      druid application that takes you through the steps of creating a new
+      project (either a plugin or an application).
     </para>
     <para>
       To use <command>pluginstamp.sh</command>, first open up a terminal window.
@@ -97,9 +102,9 @@ U gst-template/gst-app/src/Makefile.am
     <para>
       Note that capitalization is important for the name of the plugin. Under
       some operating systems, capitalization is also important when specifying
-      directory names. For example, the
-      following commands create the ExampleFilter plugin based on the plugin
-      template and put the output files in a new directory called <filename
+      directory names. For example, the following commands create the
+      ExampleFilter plugin based on the plugin template and put the output files
+      in a new directory called <filename
       class="directory">~/src/examplefilter/</filename>:
     </para>
     <screen>

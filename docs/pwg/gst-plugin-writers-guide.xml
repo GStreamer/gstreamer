@@ -32,7 +32,7 @@
 <!ENTITY APPENDIX_PYTHON      SYSTEM "appendix_python.xml">
 
 <!ENTITY GStreamer    "<application>GStreamer</application>">
-<!ENTITY GstVersion   "0.4.1">
+<!ENTITY GstVersion   "0.4.2.2">
 <!ENTITY GstAppDevMan "<emphasis>GStreamer Application Development Manual</emphasis>">
 <!ENTITY GstLibRef    "<emphasis>GStreamer Library Reference</emphasis>">
 ]>
@@ -56,13 +56,12 @@
       </para>
       <para>
         This guide is intended to help you understand the &GStreamer; framework
-        so you can develop new plugins to extend &GStreamer;'s functionality.
-        This guide introduces most of the basic plugin writing issues in version
-        &GstVersion; of &GStreamer;. This guide presents most issues in the
-        context of an example audio filter plugin written in C. However, the
-        guide also addresses some issues involved in writing other types of
-        plugins, and the end of the guide also describes some of the Python
-        bindings for &GStreamer;.
+        (version &GstVersion;) so you can develop new plugins to extend the
+        existing functionality. The guide addresses most issues by following the
+        development of an example plugin &mdash; an audio filter plugin &mdash;
+        written in C. However, the later parts of the guide also present some
+        issues involved in writing other types of plugins, and the end of the
+        guide describes some of the Python bindings for &GStreamer;.
       </para>
     </partintro>
 
@@ -76,22 +75,22 @@
     <title>Building a Filter</title>
     <partintro>
       <para>
-        You now have the neccessary concepts to build your first plugin. In this
-        part of the guide, you will learn how to apply these concepts to write a
-        simple audio filter plugin. The previous parts of the guide have
-        contained no explicit example code, perhaps making things a bit abstract
-        and difficult to understand. In contrast, this section will present both
-        applications and code by following the development of an example audio
-        filter plugin called <quote>ExampleFilter</quote>.
+        You are now ready to learn how to build a plugin. In this part of the
+        guide, you will learn how to apply basic &GStreamer; and GNOME
+        programming concepts to write a simple plugin. The previous parts of the
+        guide have contained no explicit example code, perhaps making things a
+        bit abstract and difficult to understand. In contrast, this section will
+        present both applications and code by following the development of an
+        example audio filter plugin called <quote>ExampleFilter</quote>.
       </para>
       <para>
         The example filter will begin with a single input pad and a single
-        output pad. The filter will, at first, simply pass data through without
-        modification. But by the end of this part of the guide, you will learn
-        to add some more interesting functionality, including properties and
-        signal handlers. And after reading the next part of the guide, <xref
-        linkend="part-advanced"/>, you will be able to add even more
-        functionality to your plugins.
+        output pad. The filter will, at first, simply pass media and event data
+        from its sink pad to its source pad without modification. But by the end
+        of this part of the guide, you will learn to add some more interesting
+        functionality, including properties and signal handlers. And after
+        reading the next part of the guide, <xref linkend="part-advanced"/>, you
+        will be able to add even more functionality to your plugins.
       </para>
       <para>
         The example code used in this part of the guide can be found in
