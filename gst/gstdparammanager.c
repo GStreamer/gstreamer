@@ -540,23 +540,27 @@ gst_dpman_state_change (GstElement *element, gint state, GstDParamManager *dpman
 	GSList *dwraps;
 	GstDParam *dparam;
 	GstDParamWrapper *dpwrap;
-	
-	if (state == GST_STATE_PLAYING) return;
-	GST_DEBUG(GST_CAT_PARAMS, "initialising params\n");
-	
+
 	g_return_if_fail (dpman != NULL);
 	g_return_if_fail (GST_IS_DPMAN (dpman));
-
-	// force all params to be updated
-	dwraps = GST_DPMAN_DPARAMS_LIST(dpman);
-	while (dwraps){
-		dpwrap = (GstDParamWrapper*)dwraps->data;
-		dparam = dpwrap->dparam;
-		
-		if (dparam){
-			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
+	
+	if (state == GST_STATE_PLAYING){
+		GST_DEBUG(GST_CAT_PARAMS, "initialising params\n");
+			
+		// force all params to be updated
+		dwraps = GST_DPMAN_DPARAMS_LIST(dpman);
+		while (dwraps){
+			dpwrap = (GstDParamWrapper*)dwraps->data;
+			dparam = dpwrap->dparam;
+			
+			if (dparam){
+				GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
+				if (dparam->spec){
+					g_value_copy(dparam->spec->default_val, GST_DPARAM_VALUE(dparam));
+				}
+			}
+			dwraps = g_slist_next(dwraps);
 		}
-		dwraps = g_slist_next(dwraps);
 	}
 }
 
