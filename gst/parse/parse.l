@@ -17,8 +17,8 @@
 #define YY_NO_UNPUT
 %}
 
-_integer [[:digit:]]+
-_double [[:digit:]]+"."*[[:digit:]]*
+_integer [-+]?[[:digit:]]+
+_double [-+]?[[:digit:]]+"."*[[:digit:]]*
 _number {_integer}|{_double}
 _boolean "true"|"false"|"TRUE"|"FALSE"
 _identifier [[:alpha:]][[:alnum:]\-_%:]*
