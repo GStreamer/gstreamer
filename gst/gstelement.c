@@ -2131,11 +2131,11 @@ gst_element_set_locked_state (GstElement *element, gboolean locked_state)
     return;
 
   if (locked_state) {
-    GST_DEBUG (GST_CAT_STATES, "locking state of element %s\n", 
+    GST_DEBUG (GST_CAT_STATES, "locking state of element %s", 
                GST_ELEMENT_NAME (element));
     GST_FLAG_SET (element, GST_ELEMENT_LOCKED_STATE);
   } else {
-    GST_DEBUG (GST_CAT_STATES, "unlocking state of element %s\n", 
+    GST_DEBUG (GST_CAT_STATES, "unlocking state of element %s", 
                GST_ELEMENT_NAME (element));
     GST_FLAG_UNSET (element, GST_ELEMENT_LOCKED_STATE);
   }
