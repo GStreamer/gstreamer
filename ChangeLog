@@ -1,4 +1,18 @@
-2004-07-24  Steve Lhomme  <steve.lhomme@free.fr>
+2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* win32/gst.sln:
+	* gst-libs/gst/audio/audio.def:
+	* gst-libs/gst/audio/audio.vcproj:
+	* gst-libs/gst/audio/audiofilter.vcproj:
+	* gst-libs/gst/audio/riff.def:
+	* gst-libs/gst/audio/riff.vcproj:
+	* gst-libs/gst/gst-libs.def:
+	* gst-libs/gst/gst-libs.vcproj:
+	* gst/avi/avi.vcproj:
+	* gst/avi/avi.vcproj:
+	  Copy the files where needed after building, cleaner projects
+
+2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* gst/matroska/ebml-write.c:
 	  Fix some 64 bits constants to be glib friendly
