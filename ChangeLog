@@ -1,5 +1,14 @@
 2004-01-03  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_parse_pes):
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_class_init),
+	(gst_mpeg_parse_init):
+	* gst/mpegstream/gstmpegparse.h:
+	  Remove clock (which was never provided, i.e. dead code), and
+	  also fix integer overflows at high PTS values (see #126967).
+
+2004-01-03  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/flac/gstflacdec.c:
 	* ext/libpng/gstpngenc.h:
 	* ext/mikmod/gstmikmod.h:
