@@ -1884,7 +1884,8 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
                   lace_size[n] = lace_size[n - 1] + snum;
                   total += lace_size[n];
                 }
-                lace_size[n] = size - total;
+                if (n < laces)
+                  lace_size[n] = size - total;
                 break;
               }
             }
