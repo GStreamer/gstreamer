@@ -1988,6 +1988,50 @@ gst_pad_recalc_allowed_caps (GstPad *pad)
 }
 
 /**
+ * gst_pad_recover_caps_error:
+ * @pad: a #GstPad that had a failed capsnego
+ * @allowed: possible caps for the link
+ *
+ * Attempt to recover from a failed caps negotiation. This function
+ * is typically called by a plugin that exhausted its list of caps
+ * and wants the application to resolve the issue. The application
+ * should connect to the pad's caps_nego_failed signal and should
+ * resolve the issue by connecting another element for example.
+ *
+ * Returns: TRUE when the issue was resolved, dumps detailed information
+ * on the console and returns FALSE otherwise.
+ */
+gboolean
+gst_pad_recover_caps_error (GstPad *pad, GstCaps *allowed)
+{
+  GstElement *parent;
+  
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  /* see if someone can resolve this */
+  if (g_signal_has_handler_pending (G_OBJECT (pad), 
+	gst_real_pad_signals[REAL_CAPS_NEGO_FAILED], 0, FALSE))
+  {
+    /* clear pad caps first */
+    gst_caps_replace (&GST_PAD_CAPS (pad), NULL);
+
+    /* lets hope some signal manages to set the caps again */
+    g_signal_emit (G_OBJECT (pad), gst_real_pad_signals[REAL_CAPS_NEGO_FAILED], 0, allowed);
+
+    /* if the pad has caps now or is disabled, it's ok */
+    if (GST_PAD_CAPS (pad) != NULL || !GST_PAD_IS_ACTIVE (pad))
+      return TRUE;
+  }
+
+  /* report error */
+  parent = gst_pad_get_parent (pad);
+  gst_element_error (parent, "negotiation failed on pad %s:%s",
+		  GST_DEBUG_PAD_NAME (pad));
+
+  return FALSE;
+}
+
+/**
  * gst_pad_get_bufferpool:
  * @pad: a #GstPad to get the bufferpool from.
  *

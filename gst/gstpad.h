@@ -217,12 +217,13 @@ struct _GstRealPad {
 };
 
 struct _GstRealPadClass {
-  GstPadClass parent_class;
+  GstPadClass 	parent_class;
 
   /* signal callbacks */
-  void (*caps_nego_failed)	(GstPad *pad);
-  void (*linked)		(GstPad *pad, GstPad *peer);
-  void (*unlinked)		(GstPad *pad, GstPad *peer);
+  void		(*caps_nego_failed)	(GstPad *pad, GstCaps *caps);
+
+  void 		(*linked)		(GstPad *pad, GstPad *peer);
+  void 		(*unlinked)		(GstPad *pad, GstPad *peer);
 };
 
 struct _GstGhostPad {
@@ -445,6 +446,8 @@ gboolean		gst_pad_perform_negotiate		(GstPad *srcpad, GstPad *sinkpad);
 gboolean		gst_pad_try_relink_filtered		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
 GstCaps*	     	gst_pad_get_allowed_caps       		(GstPad *pad);
 gboolean	     	gst_pad_recalc_allowed_caps    		(GstPad *pad);
+
+gboolean	     	gst_pad_recover_caps_error    		(GstPad *pad, GstCaps *allowed);
 
 /* data passing functions */
 void			gst_pad_push				(GstPad *pad, GstBuffer *buf);
