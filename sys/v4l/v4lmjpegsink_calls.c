@@ -328,7 +328,7 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink * v4lmjpegsink)
     return FALSE;
   }
 
-  GST_INFO ("Got %ld buffers of size %ld KB\n",
+  GST_INFO ("Got %ld buffers of size %ld KB",
       v4lmjpegsink->breq.count, v4lmjpegsink->breq.size / 1024);
 
   /* Map the buffers */

@@ -665,6 +665,7 @@ gst_v4lsrc_get (GstPad * pad)
   gint num;
   gdouble fps = 0.;
   v4lsrc_private_t *v4lsrc_private = NULL;
+  GstClockTime now, until;
 
   g_return_val_if_fail (pad != NULL, NULL);
 
@@ -745,16 +746,58 @@ gst_v4lsrc_get (GstPad * pad)
   GST_BUFFER_DATA (buf) = gst_v4lsrc_get_buffer (v4lsrc, num);
   GST_BUFFER_MAXSIZE (buf) = v4lsrc->mbuf.size / v4lsrc->mbuf.frames;
   GST_BUFFER_SIZE (buf) = v4lsrc->buffer_size;
-  if (v4lsrc->use_fixed_fps)
+  if (v4lsrc->use_fixed_fps) {
     GST_BUFFER_TIMESTAMP (buf) = v4lsrc->handled * GST_SECOND / fps;
-  else                          /* calculate time based on our own clock */
+    GST_BUFFER_DURATION (buf) = GST_SECOND / fps;
+  } else {
+    /* calculate time based on our own clock */
     GST_BUFFER_TIMESTAMP (buf) =
         v4lsrc->timestamp_sync - v4lsrc->substract_time;
+    /* FIXME: in this case we might calculate from the delta with last frame ? */
+    GST_BUFFER_DURATION (buf) = GST_SECOND / fps;
+  }
+  GST_LOG_OBJECT (v4lsrc, "outgoing buffer duration: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+
 
   v4lsrc->handled++;
   g_signal_emit (G_OBJECT (v4lsrc),
       gst_v4lsrc_signals[SIGNAL_FRAME_CAPTURE], 0);
 
+  now = gst_element_get_time (GST_ELEMENT (v4lsrc));
+  until = GST_BUFFER_TIMESTAMP (buf) + v4lsrc->last_discont;
+
+  GST_LOG_OBJECT (v4lsrc, "Current time %" GST_TIME_FORMAT
+      ", buffer timestamp %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (now), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+  if (now < until) {
+    GST_LOG_OBJECT (v4lsrc, "waiting until %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (until));
+    if (!gst_element_wait (GST_ELEMENT (v4lsrc), until))
+      g_warning ("gst_element_wait failed");
+  }
+  /* check for discont; we do it after grabbing so that we drop the
+   * first frame grabbed, but get an accurate discont event  */
+  if (v4lsrc->need_discont) {
+    GstEvent *event;
+
+    v4lsrc->need_discont = FALSE;
+
+    /* drop the buffer we made */
+    gst_buffer_unref (buf);
+
+    /* get time for discont */
+    now = gst_element_get_time (GST_ELEMENT (v4lsrc));
+    GST_DEBUG_OBJECT (v4lsrc, "sending time discont with %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (now));
+
+    /* store discont internally so we can wait when sending buffers too soon */
+    v4lsrc->last_discont = now;
+
+    /* return event */
+    event = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, now, NULL);
+    return GST_DATA (event);
+  }
   return GST_DATA (buf);
 }
 
@@ -831,6 +874,8 @@ gst_v4lsrc_change_state (GstElement * element)
       break;
     case GST_STATE_READY_TO_PAUSED:
       v4lsrc->handled = 0;
+      v4lsrc->need_discont = TRUE;
+      v4lsrc->last_discont = 0;
       v4lsrc->need_writes = 0;
       v4lsrc->last_frame = 0;
       v4lsrc->substract_time = 0;

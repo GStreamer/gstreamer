@@ -198,7 +198,7 @@ gst_v4lsrc_capture_init (GstV4lSrc * v4lsrc)
     return FALSE;
   }
 
-  GST_INFO ("Got %d buffers (\'%s\') of size %d KB\n",
+  GST_INFO ("Got %d buffers (\'%s\') of size %d KB",
       v4lsrc->mbuf.frames, palette_name[v4lsrc->mmap.format],
       v4lsrc->mbuf.size / (v4lsrc->mbuf.frames * 1024));
 
@@ -276,7 +276,8 @@ gst_v4lsrc_capture_start (GstV4lSrc * v4lsrc)
 gboolean
 gst_v4lsrc_grab_frame (GstV4lSrc * v4lsrc, gint * num)
 {
-  LOG ("grabbing frame");
+  LOG ("(%" GST_TIME_FORMAT ") grabbing frame",
+      GST_TIME_ARGS (gst_clock_get_time (v4lsrc->clock)));
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lsrc));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lsrc));
 
@@ -311,7 +312,8 @@ gst_v4lsrc_grab_frame (GstV4lSrc * v4lsrc, gint * num)
   }
   v4lsrc->sync_frame = (v4lsrc->sync_frame + 1) % v4lsrc->mbuf.frames;
 
-  GST_LOG ("grabbed frame %d", *num);
+  LOG ("(%" GST_TIME_FORMAT ") grabbed frame %d",
+      GST_TIME_ARGS (gst_clock_get_time (v4lsrc->clock)), *num);
 
   g_mutex_unlock (v4lsrc->mutex_queue_state);
 
