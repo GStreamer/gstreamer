@@ -806,7 +806,6 @@ gst_v4lsrc_getcaps (GstPad * pad)
 
   /* FIXME: cache this on gst_v4l_open() */
   fps_list = gst_v4lsrc_get_fps_list (v4lsrc);
-  g_print ("FPS list: %p\n", fps_list);
   if (!fps_list)
     fps = gst_v4lsrc_get_fps (v4lsrc);
 
