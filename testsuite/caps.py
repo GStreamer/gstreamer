@@ -5,6 +5,7 @@ class CapsTest(unittest.TestCase):
     def setUp(self):
 	self.caps = gst.caps_from_string('video/x-raw-yuv,width=10,framerate=5.0;video/x-raw-rgb,width=15,framerate=10.0')
 	self.structure = self.caps.get_structure(0)
+
     def testCapsMime(self):
 	mime = self.structure.get_name()
 	assert mime == 'video/x-raw-yuv'
@@ -18,7 +19,7 @@ class CapsTest(unittest.TestCase):
 	mime = structure.get_name()
 	assert mime == 'video/x-raw-rgb'
 
-    def _testCapsStructureChange(self):
+    def testCapsStructureChange(self):
 	'test if changing the structure of the caps works by reference'
 	assert self.structure['width'] == 10
         self.structure['width'] = 5
