@@ -149,10 +149,10 @@ static gboolean 	gst_mad_src_event 	(GstPad *pad, GstEvent *event);
 static const GstFormat* gst_mad_get_formats 	(GstPad *pad);
 static const GstEventMask* 
 			gst_mad_get_event_masks (GstPad *pad);
-static const GstPadQueryType* 
+static const GstQueryType* 
 			gst_mad_get_query_types (GstPad *pad);
 
-static gboolean 	gst_mad_src_query 	(GstPad *pad, GstPadQueryType type,
+static gboolean 	gst_mad_src_query 	(GstPad *pad, GstQueryType type,
 		  				 GstFormat *format, gint64 *value);
 static gboolean 	gst_mad_convert_sink 	(GstPad *pad, GstFormat src_format, gint64 src_value, 
 		     				 GstFormat *dest_format, gint64 *dest_value);
@@ -473,19 +473,19 @@ gst_mad_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   return res;
 }
 
-static const GstPadQueryType*
+static const GstQueryType*
 gst_mad_get_query_types (GstPad *pad)
 {
-  static const GstPadQueryType gst_mad_src_query_types[] = {
-    GST_PAD_QUERY_TOTAL,
-    GST_PAD_QUERY_POSITION,
+  static const GstQueryType gst_mad_src_query_types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
     0
   };
   return gst_mad_src_query_types;
 }
 
 static gboolean
-gst_mad_src_query (GstPad *pad, GstPadQueryType type,
+gst_mad_src_query (GstPad *pad, GstQueryType type,
 		   GstFormat *format, gint64 *value)
 {
   gboolean res = TRUE;
@@ -494,7 +494,7 @@ gst_mad_src_query (GstPad *pad, GstPadQueryType type,
   mad = GST_MAD (gst_pad_get_parent (pad));
 
   switch (type) {
-    case GST_PAD_QUERY_TOTAL:
+    case GST_QUERY_TOTAL:
     {
       switch (*format) {
 	case GST_FORMAT_DEFAULT:
@@ -516,7 +516,7 @@ gst_mad_src_query (GstPad *pad, GstPadQueryType type,
 	    GstFormat peer_format = *peer_formats;
 
 	    /* do the probe */
-            if (gst_pad_query (GST_PAD_PEER (mad->sinkpad), GST_PAD_QUERY_TOTAL,
+            if (gst_pad_query (GST_PAD_PEER (mad->sinkpad), GST_QUERY_TOTAL,
 			       &peer_format, &peer_value)) 
 	    {
               GstFormat conv_format;
@@ -540,7 +540,7 @@ gst_mad_src_query (GstPad *pad, GstPadQueryType type,
       }
       break;
     }
-    case GST_PAD_QUERY_POSITION:
+    case GST_QUERY_POSITION:
       switch (*format) {
 	case GST_FORMAT_DEFAULT:
           *format = GST_FORMAT_TIME;
@@ -946,8 +946,10 @@ gst_mad_handle_event (GstPad *pad, GstBuffer *buffer)
 
       for (i = 0; i < n; i++)
       {
-        if (gst_pad_handles_format (pad,
-			            GST_EVENT_DISCONT_OFFSET(event, i).format))
+	const GstFormat *formats;
+	formats = gst_pad_get_formats (pad);
+
+        if (gst_formats_contains (formats, GST_EVENT_DISCONT_OFFSET(event, i).format))
         {
           gint64 value = GST_EVENT_DISCONT_OFFSET (event, i).value;
           gint64 time;
@@ -1144,7 +1146,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	mad->rate = rate;
       }
 
-      if (GST_PAD_IS_CONNECTED (mad->srcpad)) {
+      if (GST_PAD_IS_USABLE (mad->srcpad)) {
         GstBuffer *outbuffer;
         gint16 *outdata;
         mad_fixed_t const *left_ch, *right_ch;

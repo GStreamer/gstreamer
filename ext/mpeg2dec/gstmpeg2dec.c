@@ -110,9 +110,9 @@ static const GstFormat*
 static const GstEventMask*
 			gst_mpeg2dec_get_src_event_masks (GstPad *pad);
 static gboolean 	gst_mpeg2dec_src_event       	(GstPad *pad, GstEvent *event);
-static const GstPadQueryType*
+static const GstQueryType*
 			gst_mpeg2dec_get_src_query_types (GstPad *pad);
-static gboolean 	gst_mpeg2dec_src_query 		(GstPad *pad, GstPadQueryType type,
+static gboolean 	gst_mpeg2dec_src_query 		(GstPad *pad, GstQueryType type,
 			       				 GstFormat *format, gint64 *value);
 
 static const GstFormat*
@@ -777,19 +777,19 @@ gst_mpeg2dec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   return res;
 }
 
-static const GstPadQueryType*
+static const GstQueryType*
 gst_mpeg2dec_get_src_query_types (GstPad *pad)
 {
-  static const GstPadQueryType types[] = {
-    GST_PAD_QUERY_TOTAL,
-    GST_PAD_QUERY_POSITION,
+  static const GstQueryType types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
     0
   };
   return types;
 }
 
 static gboolean 
-gst_mpeg2dec_src_query (GstPad *pad, GstPadQueryType type,
+gst_mpeg2dec_src_query (GstPad *pad, GstQueryType type,
 		        GstFormat *format, gint64 *value)
 {
   gboolean res = TRUE;
@@ -799,7 +799,7 @@ gst_mpeg2dec_src_query (GstPad *pad, GstPadQueryType type,
   mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
 
   switch (type) {
-    case GST_PAD_QUERY_TOTAL:
+    case GST_QUERY_TOTAL:
     {
       switch (*format) {
         case GST_FORMAT_DEFAULT:
@@ -822,7 +822,7 @@ gst_mpeg2dec_src_query (GstPad *pad, GstPadQueryType type,
 	    peer_format = *formats;
 	  
             /* do the probe */
-            if (gst_pad_query (GST_PAD_PEER (mpeg2dec->sinkpad), GST_PAD_QUERY_TOTAL,
+            if (gst_pad_query (GST_PAD_PEER (mpeg2dec->sinkpad), GST_QUERY_TOTAL,
 			       &peer_format, &peer_value)) 
 	    {
               GstFormat conv_format;
@@ -847,7 +847,7 @@ gst_mpeg2dec_src_query (GstPad *pad, GstPadQueryType type,
       }
       break;
     }
-    case GST_PAD_QUERY_POSITION:
+    case GST_QUERY_POSITION:
     {
       switch (*format) {
         case GST_FORMAT_DEFAULT:

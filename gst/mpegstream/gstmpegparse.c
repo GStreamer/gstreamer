@@ -564,19 +564,19 @@ gst_mpeg_parse_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   return res;
 }
 
-const GstPadQueryType*
+const GstQueryType*
 gst_mpeg_parse_get_src_query_types (GstPad *pad)
 {
-  static const GstPadQueryType types[] = {
-    GST_PAD_QUERY_TOTAL,
-    GST_PAD_QUERY_POSITION,
+  static const GstQueryType types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
     0 
   };
   return types;
 }
 
 gboolean
-gst_mpeg_parse_handle_src_query (GstPad *pad, GstPadQueryType type, 
+gst_mpeg_parse_handle_src_query (GstPad *pad, GstQueryType type, 
 			         GstFormat *format, gint64 *value)
 {
   gboolean res = TRUE;
@@ -585,7 +585,7 @@ gst_mpeg_parse_handle_src_query (GstPad *pad, GstPadQueryType type,
   gint64 src_value;
 
   switch (type) {
-    case GST_PAD_QUERY_TOTAL:
+    case GST_QUERY_TOTAL:
     {
       switch (*format) {
         case GST_FORMAT_DEFAULT:
@@ -594,7 +594,7 @@ gst_mpeg_parse_handle_src_query (GstPad *pad, GstPadQueryType type,
 	default:
 	  src_format = GST_FORMAT_BYTES;
 	  if (!gst_pad_query (GST_PAD_PEER (mpeg_parse->sinkpad),
-			      GST_PAD_QUERY_TOTAL, &src_format, &src_value)) 
+			      GST_QUERY_TOTAL, &src_format, &src_value)) 
 	  {
 	    res = FALSE;
 	  }
@@ -602,7 +602,7 @@ gst_mpeg_parse_handle_src_query (GstPad *pad, GstPadQueryType type,
       }
       break;
     }
-    case GST_PAD_QUERY_POSITION:
+    case GST_QUERY_POSITION:
     {
       switch (*format) {
         case GST_FORMAT_DEFAULT:

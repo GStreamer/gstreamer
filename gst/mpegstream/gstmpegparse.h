@@ -104,9 +104,9 @@ const GstEventMask*
 		gst_mpeg_parse_get_src_event_masks 	(GstPad *pad);
 gboolean 	gst_mpeg_parse_handle_src_event 	(GstPad *pad, GstEvent *event);
 
-const GstPadQueryType*
+const GstQueryType*
 		gst_mpeg_parse_get_src_query_types 	(GstPad *pad);
-gboolean 	gst_mpeg_parse_handle_src_query		(GstPad *pad, GstPadQueryType type,
+gboolean 	gst_mpeg_parse_handle_src_query		(GstPad *pad, GstQueryType type,
 		                         		 GstFormat *format, gint64 *value);
 
 #ifdef __cplusplus

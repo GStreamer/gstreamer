@@ -147,7 +147,7 @@ static void 	gst_siddec_loop 		(GstElement *element);
 
 static gboolean gst_siddec_src_convert 		(GstPad *pad, GstFormat src_format, gint64 src_value,
                        				 GstFormat *dest_format, gint64 *dest_value);
-static gboolean gst_siddec_src_query 		(GstPad *pad, GstPadQueryType type,
+static gboolean gst_siddec_src_query 		(GstPad *pad, GstQueryType type,
                      				 GstFormat *format, gint64 *value);
 
 static void     gst_siddec_get_property         (GObject *object, guint prop_id, 
@@ -451,7 +451,7 @@ gst_siddec_loop (GstElement *element)
  		      GST_BUFFER_DATA (out), GST_BUFFER_SIZE (out));
 
     format = GST_FORMAT_TIME;
-    gst_siddec_src_query (siddec->srcpad, GST_PAD_QUERY_POSITION, &format, &value);
+    gst_siddec_src_query (siddec->srcpad, GST_QUERY_POSITION, &format, &value);
     GST_BUFFER_TIMESTAMP (out) = value;
 
     siddec->total_bytes += 4096;
@@ -534,7 +534,7 @@ gst_siddec_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
 }
 
 static gboolean
-gst_siddec_src_query (GstPad *pad, GstPadQueryType type,
+gst_siddec_src_query (GstPad *pad, GstQueryType type,
                       GstFormat *format, gint64 *value)
 {
   gboolean res = TRUE;
@@ -543,7 +543,7 @@ gst_siddec_src_query (GstPad *pad, GstPadQueryType type,
   siddec = GST_SIDDEC (gst_pad_get_parent (pad));
 
   switch (type) {
-    case GST_PAD_QUERY_POSITION:
+    case GST_QUERY_POSITION:
       /* we only know about our bytes, convert to requested format */
       res &= gst_pad_convert (pad,
                         GST_FORMAT_BYTES, siddec->total_bytes,

@@ -519,7 +519,7 @@ gst_media_info_get_stream (GstMediaInfo *info, GstMediaInfoStream *stream)
     format = *formats;
 
     g_assert (GST_IS_PAD (priv->decoder_pad));
-    res = gst_pad_query (priv->decoder_pad, GST_PAD_QUERY_TOTAL,
+    res = gst_pad_query (priv->decoder_pad, GST_QUERY_TOTAL,
                          &format, &value);
 
     definition = gst_format_get_details (*formats);
@@ -554,7 +554,7 @@ gst_media_info_get_stream (GstMediaInfo *info, GstMediaInfoStream *stream)
   /* now get number of bytes from the sink pad to get the bitrate */
   format = GST_FORMAT_BYTES;
   g_assert (GST_IS_PAD (priv->source_pad));
-  res = gst_pad_query (priv->source_pad, GST_PAD_QUERY_TOTAL,
+  res = gst_pad_query (priv->source_pad, GST_QUERY_TOTAL,
                        &format, &value);
   if (!res) g_warning ("Failed to query on sink pad !");
   bytes = value;
@@ -622,7 +622,7 @@ gst_media_info_find_streaminfo (GstMediaInfo *info)
     gint64 value_start, value_end;
     gboolean res;
 
-    res = gst_pad_query (priv->decoder_pad, GST_PAD_QUERY_POSITION,
+    res = gst_pad_query (priv->decoder_pad, GST_QUERY_POSITION,
 		         &track_format, &value_start);
     if (res)
     {

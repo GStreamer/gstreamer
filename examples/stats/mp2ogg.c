@@ -71,11 +71,11 @@ main (gint argc, gchar *argv[])
 
     format = GST_FORMAT_TIME;
     /* get the position */
-    gst_pad_query (enc_src, GST_PAD_QUERY_POSITION, 
+    gst_pad_query (enc_src, GST_QUERY_POSITION, 
 		   &format, &position);
 
     /* get the total duration */
-    gst_pad_query (enc_src, GST_PAD_QUERY_TOTAL, 
+    gst_pad_query (enc_src, GST_QUERY_TOTAL, 
 		   &format, &duration);
 
     format = GST_FORMAT_BYTES;

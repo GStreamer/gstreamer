@@ -432,9 +432,9 @@ static const GstEventMask* gst_asf_demux_get_src_event_mask (GstPad *pad);
 static gboolean 	   gst_asf_demux_handle_src_event (GstPad *pad,
 							   GstEvent *event);
 static const GstFormat*    gst_asf_demux_get_src_formats  (GstPad *pad); 
-static const GstPadQueryType* gst_asf_demux_get_src_query_types (GstPad *pad);
+static const GstQueryType* gst_asf_demux_get_src_query_types (GstPad *pad);
 static gboolean 	   gst_asf_demux_handle_src_query (GstPad *pad,
-							   GstPadQueryType type,
+							   GstQueryType type,
 							   GstFormat *format, gint64 *value);
 
 static GstElementStateReturn
@@ -1136,7 +1136,7 @@ static gboolean gst_asf_demux_process_chunk (GstASFDemux *asf_demux,
   }
   
   format = GST_FORMAT_TIME;
-  gst_pad_query (stream->pad, GST_PAD_QUERY_POSITION, &format, &next_ts);
+  gst_pad_query (stream->pad, GST_QUERY_POSITION, &format, &next_ts);
 
   if (GST_PAD_IS_CONNECTED (stream->pad)) {
     GstBuffer *buf;
@@ -1182,11 +1182,11 @@ gst_asf_demux_get_src_formats  (GstPad *pad) {
   return formats;
 }
 
-static const GstPadQueryType* 
+static const GstQueryType* 
 gst_asf_demux_get_src_query_types (GstPad *pad) {
-  static const GstPadQueryType types[] = {
-    GST_PAD_QUERY_TOTAL,
-    GST_PAD_QUERY_POSITION,
+  static const GstQueryType types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
     0
   };
 
@@ -1195,7 +1195,7 @@ gst_asf_demux_get_src_query_types (GstPad *pad) {
 
 static gboolean
 gst_asf_demux_handle_src_query (GstPad *pad,
-				GstPadQueryType type,
+				GstQueryType type,
 				GstFormat *format, gint64 *value)
 {
   GstASFDemux *asf_demux;
@@ -1204,7 +1204,7 @@ gst_asf_demux_handle_src_query (GstPad *pad,
   asf_demux = GST_ASF_DEMUX (gst_pad_get_parent (pad));
 
   switch (type) {
-  case GST_PAD_QUERY_TOTAL:
+  case GST_QUERY_TOTAL:
     switch (*format) {
     case GST_FORMAT_DEFAULT:
       *format = GST_FORMAT_TIME;
@@ -1216,7 +1216,7 @@ gst_asf_demux_handle_src_query (GstPad *pad,
       res = FALSE;
     }
     break;
-  case GST_PAD_QUERY_POSITION:
+  case GST_QUERY_POSITION:
     switch (*format) {
     case GST_FORMAT_DEFAULT:
       *format = GST_FORMAT_TIME;
