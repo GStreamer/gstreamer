@@ -1,5 +1,14 @@
 2004-07-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/libs/Makefile.am:
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/control/dparam.c:
+	  more doc fixes.  gst-libs docs now build the same way as gst.
+
+2004-07-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	* testsuite/Makefile.am:
 	* testsuite/bins/Makefile.am:

@@ -310,8 +310,11 @@ gst_dparam_dispose (GObject * object)
  * gst_dparam_attach
  * @dparam: GstDParam instance
  * @manager: the GstDParamManager that this dparam belongs to
+ * @param_spec: the specification for the parameter
+ * @unit_name: the name of the unit
  *
- * Adding the parameter controller to the manager using the supplied specs and unit.
+ * Adding the parameter controller to the manager using the
+ * supplied specs and unit.
  * See also gst_dpman_attach_dparam().
  */
 void
@@ -341,7 +344,6 @@ gst_dparam_attach (GstDParam * dparam, GstDParamManager * manager,
 /**
  * gst_dparam_detach
  * @dparam: GstDParam instance
- * @manager: the GstDParamManager that this dparam belongs to
  *
  * Removes a previousely added parameter controller.
  */

@@ -189,8 +189,10 @@ tmpl.stamp: tmpl-build.stamp
 #### sgml ####
 
 sgml-build.stamp: tmpl.stamp $(CFILE_GLOB)
-	@echo '*** Building SGML ***'
-	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --main-sgml-file=$(srcdir)/$(DOC_MAIN_SGML_FILE) $(MKDB_OPTIONS)
+	@echo '*** Building XML ***'
+	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --main-sgml-file=$(srcdir)/$(DOC_MAIN_SGML_FILE) --output-format=xml $(MKDB_OPTIONS) | tee sgml-build.log
+	@if grep "WARNING:" sgml-build.log > /dev/null; then exit 1; fi
+	rm sgml-build.log
 	touch sgml-build.stamp
 
 sgml.stamp: sgml-build.stamp

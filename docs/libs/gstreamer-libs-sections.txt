@@ -75,7 +75,6 @@ gst_showbitsX
 gst_flushbitsX
 gst_backbitsX
 swab32
-DEBUG
 </SECTION>
 
 <SECTION>
