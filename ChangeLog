@@ -1,3 +1,7 @@
+2004-06-23  Colin Walters  <walters@redhat.com>
+
+	* m4/Makefile.am: Distribute gst-fionread.m4.
+
 2004-06-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: back to dev
