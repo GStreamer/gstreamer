@@ -818,12 +818,30 @@ schedule_group (GstOptSchedulerGroup *group)
     g_warning ("(internal error): trying to schedule group without cothread");
   return TRUE;
 #else
+  /* cothreads automatically call the pre- and post-run functions for us;
+   * without cothreads we need to call them manually */
   if (group->schedulefunc == NULL) {
     GST_INFO ( "not scheduling group %p without schedulefunc", 
 		    group);
     return FALSE;
+  } else {
+    GSList *l;
+
+    for (l=group->elements; l; l=l->next) {
+      GstElement *e = (GstElement*)l->data;
+      if (e->pre_run_func)
+        e->pre_run_func (e);
+    }
+
+    group->schedulefunc (group->argc, group->argv);
+
+    for (l=group->elements; l; l=l->next) {
+      GstElement *e = (GstElement*)l->data;
+      if (e->post_run_func)
+        e->post_run_func (e);
+    }
+
   }
-  group->schedulefunc (group->argc, group->argv);
   return TRUE;
 #endif
 }
@@ -916,7 +934,8 @@ static int
 get_group_schedule_function (int argc, char *argv[])
 {
   GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) argv;
-  const GList *pads = gst_element_get_pad_list (group->entry);
+  GstElement *entry = group->entry;
+  const GList *pads = gst_element_get_pad_list (entry);
 
   GST_LOG ("get wrapper of group %p", group);
 
@@ -977,13 +996,13 @@ loop_group_schedule_function (int argc, char *argv[])
 
 }
 
-/* the function to schedule an unkown group, which just gives an error */
+/* the function to schedule an unknown group, which just gives an error */
 static int
-unkown_group_schedule_function (int argc, char *argv[])
+unknown_group_schedule_function (int argc, char *argv[])
 {
   GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) argv;
 
-  g_warning ("(internal error) unkown group type %d, disabling\n", group->type);
+  g_warning ("(internal error) unknown group type %d, disabling\n", group->type);
   group_error_handler (group);
 
   return 0;
@@ -1181,7 +1200,7 @@ setup_group_scheduler (GstOptScheduler *osched, GstOptSchedulerGroup *group)
 {
   GroupScheduleFunction wrapper;
 
-  wrapper = unkown_group_schedule_function;
+  wrapper = unknown_group_schedule_function;
 
   /* figure out the wrapper function for this group */
   if (group->type == GST_OPT_SCHEDULER_GROUP_GET)
