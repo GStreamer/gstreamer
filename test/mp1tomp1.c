@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <string.h>
 #include <glib.h>
 #include <gst/gst.h>
 
@@ -17,7 +18,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
   GstElement *parse_audio, *parse_video, *decode, *decode_video, *play, *encode;
   GstElement *audio_queue, *video_queue;
   GstElement *audio_thread, *video_thread;
-  GstElement *videoscale;
+  //GstElement *videoscale;
   GstElement *fdsink;
   GstElementFactory *fdsinkfactory;
 
@@ -170,9 +171,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 }
 
 int main(int argc,char *argv[]) {
-  GstElement *pipeline, *src, *parse, *out;
-  GstPad *infopad;
-  int i,c;
+  GstElement *pipeline, *src, *parse;
 
   g_print("have %d args\n",argc);
 
@@ -180,7 +179,7 @@ int main(int argc,char *argv[]) {
   gst_plugin_load("mpeg1parse");
 
   pipeline = gst_pipeline_new("pipeline");
-  g_return_if_fail(pipeline != NULL);
+  g_return_val_if_fail(pipeline != NULL, -1);
 
   if (strstr(argv[1],"video_ts")) {
     src = gst_elementfactory_make("dvdsrc","src");
@@ -188,7 +187,7 @@ int main(int argc,char *argv[]) {
   } else
     src = gst_elementfactory_make("disksrc","src");
 
-  g_return_if_fail(src != NULL);
+  g_return_val_if_fail(src != NULL, -1);
   gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
   g_print("should be using file '%s'\n",argv[1]);
 
@@ -196,7 +195,7 @@ int main(int argc,char *argv[]) {
   outfile = argv[2];
 
   parse = gst_elementfactory_make("mpeg1parse","parse");
-  g_return_if_fail(parse != NULL);
+  g_return_val_if_fail(parse != NULL, -1);
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));

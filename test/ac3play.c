@@ -5,10 +5,9 @@
 extern gboolean _gst_plugin_spew;
 
 int main(int argc,char *argv[]) {
-  GstElement *pipeline, *decodethread, *playthread;
+  GstElement *pipeline, *decodethread;
   GstElement *src, *parse, *decode, *play;
   GstElement *queue;
-  GstPad *infopad;
 
 //  g_print("have %d args\n",argc);
 
@@ -16,22 +15,22 @@ int main(int argc,char *argv[]) {
   gst_init(&argc,&argv);
 
   pipeline = gst_elementfactory_make("pipeline","ac3player");
-  g_return_if_fail(pipeline != NULL);
+  g_return_val_if_fail(pipeline != NULL, -1);
   decodethread = gst_elementfactory_make("thread","decodethread");
-  g_return_if_fail(decodethread != NULL);
+  g_return_val_if_fail(decodethread != NULL, -1);
   queue = gst_elementfactory_make("queue","queue");
-  g_return_if_fail(queue != NULL);
+  g_return_val_if_fail(queue != NULL, -1);
 
   src = gst_elementfactory_make("disksrc","src");
-  g_return_if_fail(src != NULL);
+  g_return_val_if_fail(src != NULL, -1);
   gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
 //  g_print("should be using file '%s'\n",argv[1]);
   parse = gst_elementfactory_make("ac3parse","parse");
-  g_return_if_fail(parse != NULL);
+  g_return_val_if_fail(parse != NULL, -1);
   decode = gst_elementfactory_make("ac3dec","decode");
-  g_return_if_fail(decode != NULL);
+  g_return_val_if_fail(decode != NULL, -1);
   play = gst_elementfactory_make("osssink","play");
-  g_return_if_fail(play != NULL);
+  g_return_val_if_fail(play != NULL, -1);
 
   // construct the decode thread
   g_print("constructing the decode thread\n");

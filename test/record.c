@@ -8,7 +8,6 @@ int main(int argc,char *argv[]) {
   int fd;
   GstElement *pipeline, *osssrc, *fdsink;
   GstElementFactory *osssrcfactory, *fdsinkfactory;
-  GList *padlist;
 
   gst_init(&argc,&argv);
 

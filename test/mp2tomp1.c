@@ -7,7 +7,7 @@
 #include <gst/gst.h>
 
 static GstElement *mux = NULL;
-static GstElement *merge_subtitles;
+//static GstElement *merge_subtitles;
 static GstElement *fdsink;
 
 static void 

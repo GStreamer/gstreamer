@@ -11,15 +11,15 @@ int main(int argc,char *argv[]) {
   gst_plugin_load_all();
 
   bin = gst_elementfactory_make("bin","bin");
-  g_return_if_fail(bin != NULL);
+  g_return_val_if_fail(bin != NULL, -1);
 
   g_print("--- creating src and sink elements\n");
   src = gst_elementfactory_make("fakesrc","src");
-  g_return_if_fail(src != NULL);
+  g_return_val_if_fail(src != NULL, -1);
   identity = gst_elementfactory_make(argv[1],"identity");
-  g_return_if_fail(identity != NULL);
+  g_return_val_if_fail(identity != NULL, -1);
   sink = gst_elementfactory_make("fakesink","sink");
-  g_return_if_fail(sink != NULL);
+  g_return_val_if_fail(sink != NULL, -1);
 
   g_print("--- about to add the elements to the pipeline\n");
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(src));
@@ -37,4 +37,6 @@ int main(int argc,char *argv[]) {
   gst_bin_iterate(GST_BIN(bin));
 
   g_print("\n");
+
+  return 0;
 }

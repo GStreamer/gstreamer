@@ -20,20 +20,20 @@ int main(int argc,char *argv[]) {
 // gst_plugin_load("ac3parse");
   gst_plugin_load_all();
 
-  pipeline = gst_pipeline_new("pipeline");
-  g_return_if_fail(pipeline != NULL);
+  pipeline = GST_PIPELINE (gst_pipeline_new("pipeline"));
+  g_return_val_if_fail(pipeline != NULL, -1);
 
   srcfactory = gst_elementfactory_find("disksrc");
-  g_return_if_fail(srcfactory != NULL);
+  g_return_val_if_fail(srcfactory != NULL, -1);
   parsefactory = gst_elementfactory_find("ac3parse");
-  g_return_if_fail(parsefactory != NULL);
+  g_return_val_if_fail(parsefactory != NULL, -1);
 
   src = gst_elementfactory_create(srcfactory,"src");
-  g_return_if_fail(src != NULL);
+  g_return_val_if_fail(src != NULL, -1);
   gtk_object_set(GTK_OBJECT(src),"location",argv[1],"bytesperread",4096,NULL);
   g_print("should be using file '%s'\n",argv[1]);
   parse = gst_elementfactory_create(parsefactory,"parse");
-  g_return_if_fail(parse != NULL);
+  g_return_val_if_fail(parse != NULL, -1);
 
   infopad = gst_pad_new("sink",GST_PAD_SINK);
   gst_pad_set_chain_function(infopad,ac3parse_info_chain);

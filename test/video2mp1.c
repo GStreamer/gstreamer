@@ -121,11 +121,9 @@ int main(int argc,char *argv[])
   GstElement *muxthread_video, *muxer, *fdsink_video;
   GstElement *muxthread_audio, *fdsink_audio;
   GstElement *bin;
-  GtkWidget *appwindow;
   GstCaps *srccaps;
   GstElement *new_element;
   GstAutoplug *autoplug;
-  GtkWidget *socket;
   gint fd_video;
   gint fd_audio;
 

@@ -10,14 +10,14 @@ int main(int argc,char *argv[]) {
 //  _gst_plugin_spew = TRUE;
   gst_init(&argc,&argv);
 
-  bin = gst_pipeline_new("pipeline");
-  g_return_if_fail(bin != NULL);
+  bin = GST_BIN (gst_pipeline_new("pipeline"));
+  g_return_val_if_fail(bin != NULL,-1);
 
   g_print("--- creating src and sink elements\n");
   src = gst_elementfactory_make("fakesrc","src");
-  g_return_if_fail(src != NULL);
+  g_return_val_if_fail(src != NULL,-1);
   sink = gst_elementfactory_make("fakesink","sink");
-  g_return_if_fail(sink != NULL);
+  g_return_val_if_fail(sink != NULL,-1);
 
   g_print("--- about to add the elements to the bin\n");
   gst_bin_add(bin,GST_ELEMENT(src));
@@ -25,9 +25,9 @@ int main(int argc,char *argv[]) {
 
   g_print("--- getting pads\n");
   srcpad = gst_element_get_pad(src,"src");
-  g_return_if_fail(srcpad != NULL);
+  g_return_val_if_fail(srcpad != NULL,-1);
   sinkpad = gst_element_get_pad(sink,"sink");
-  g_return_if_fail(srcpad != NULL);
+  g_return_val_if_fail(srcpad != NULL,-1);
 
   g_print("--- connecting\n");
   gst_pad_connect(srcpad,sinkpad);
@@ -37,4 +37,6 @@ int main(int argc,char *argv[]) {
 
   g_print("--- iterating\n");
   gst_bin_iterate(bin);
+
+  return 0;
 }

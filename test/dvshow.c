@@ -15,7 +15,7 @@ main (int argc,char *argv[])
   GstElement *bin;
   GstElement *src;
   GstElement *dvdec;
-  GstElement *cspace;
+  //GstElement *cspace;
   GstElement *videosink;
 
   GtkWidget *appwindow;

@@ -10,7 +10,6 @@ int main(int argc,char *argv[]) {
   GstElement *osssrc, *videosrc, *fdsink, *encoder, *compress, *video_queue, *video_thread;
   GstElementFactory *osssrcfactory, *fdsinkfactory, *encoderfactory, *compressfactory;
   GstElementFactory *videosrcfactory;
-  GList *padlist;
 
   gst_init(&argc,&argv);
 
@@ -18,7 +17,7 @@ int main(int argc,char *argv[]) {
   gst_plugin_load("aviencoder");
   gst_plugin_load("wincodec");
 
-  pipeline = gst_pipeline_new("pipeline");
+  pipeline = GST_PIPELINE (gst_pipeline_new("pipeline"));
 
   osssrcfactory = gst_elementfactory_find("osssrc");
   osssrc = gst_elementfactory_create(osssrcfactory,"osssrc");
@@ -45,7 +44,7 @@ int main(int argc,char *argv[]) {
 
   /* add objects to the main pipeline */
   video_thread = gst_thread_new("video_thread");
-  g_return_if_fail(video_thread != NULL);
+  g_return_val_if_fail(video_thread != NULL, -1);
   gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(compress));
   gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(encoder));
   gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(fdsink));

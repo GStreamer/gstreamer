@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdlib.h>
 
 #include <gst/gst.h>
 
@@ -18,17 +19,17 @@ int main(int argc,char *argv[]) {
   fd = creat("output.vob",0644);
 
   pipeline = gst_elementfactory_make("pipeline","dvdcat");
-  g_return_if_fail(pipeline != NULL);
+  g_return_val_if_fail(pipeline != NULL, -1);
 
   src = gst_elementfactory_make("dvdsrc","src");
-  g_return_if_fail(src != NULL);
+  g_return_val_if_fail(src != NULL, -1);
 
   gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
   if (argc >= 3)
     gtk_object_set(GTK_OBJECT(src),"offset",atoi(argv[2]),NULL);
 
   sink = gst_elementfactory_make("fdsink","sink");
-  g_return_if_fail(sink != NULL);
+  g_return_val_if_fail(sink != NULL, -1);
   gtk_object_set(GTK_OBJECT(sink),"fd",fd,NULL);
 
   // construct the outer pipeline

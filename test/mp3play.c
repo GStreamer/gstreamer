@@ -9,34 +9,33 @@ void eof(GstElement *src) {
 int main(int argc,char *argv[]) {
   GstElementFactory *srcfactory, *parsefactory, *decodefactory, *playfactory;
   GstElement *pipeline, *src, *parse, *decode, *play;
-  GstPad *infopad;
 
   g_print("have %d args\n",argc);
 
   gst_init(&argc,&argv);
 
   pipeline = gst_pipeline_new("pipeline");
-  g_return_if_fail(pipeline != NULL);
+  g_return_val_if_fail(pipeline != NULL, -1);
 
   srcfactory = gst_elementfactory_find("disksrc");
-  g_return_if_fail(srcfactory != NULL);
+  g_return_val_if_fail(srcfactory != NULL, -1);
   parsefactory = gst_elementfactory_find("mp3parse");
-  g_return_if_fail(parsefactory != NULL);
+  g_return_val_if_fail(parsefactory != NULL, -1);
   decodefactory = gst_elementfactory_find("mpg123");
-  g_return_if_fail(decodefactory != NULL);
+  g_return_val_if_fail(decodefactory != NULL, -1);
   playfactory = gst_elementfactory_find("osssink");
-  g_return_if_fail(playfactory != NULL);
+  g_return_val_if_fail(playfactory != NULL, -1);
 
   src = gst_elementfactory_create(srcfactory,"src");
-  g_return_if_fail(src != NULL);
+  g_return_val_if_fail(src != NULL, -1);
   gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
   g_print("should be using file '%s'\n",argv[1]);
   parse = gst_elementfactory_create(parsefactory,"parse");
-  g_return_if_fail(parse != NULL);
+  g_return_val_if_fail(parse != NULL, -1);
   decode = gst_elementfactory_create(decodefactory,"decode");
-  g_return_if_fail(decode != NULL);
+  g_return_val_if_fail(decode != NULL, -1);
   play = gst_elementfactory_create(playfactory,"play");
-  g_return_if_fail(play != NULL);
+  g_return_val_if_fail(play != NULL, -1);
 
   gtk_signal_connect(GTK_OBJECT(src),"eos",
 	                       GTK_SIGNAL_FUNC(eof),NULL);

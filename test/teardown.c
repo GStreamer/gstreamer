@@ -1,5 +1,6 @@
 #include <gst/gst.h>
 
+#include <stdlib.h>
 #include "mem.h"
 
 extern gboolean _gst_plugin_spew;
@@ -10,25 +11,25 @@ GstPipeline *teardown_create_pipeline() {
   GstElement *src, *sink;
   GstPad *srcpad, *sinkpad;
 
-  pipeline = gst_pipeline_new("pipeline");
-  g_return_if_fail(pipeline != NULL);
+  pipeline = GST_PIPELINE (gst_pipeline_new("pipeline"));
+  g_return_val_if_fail(pipeline != NULL, NULL);
 
   srcfactory = gst_elementfactory_find("fakesrc");
-  g_return_if_fail(srcfactory != NULL);
+  g_return_val_if_fail(srcfactory != NULL, NULL);
   sinkfactory = gst_elementfactory_find("fakesink");
-  g_return_if_fail(sinkfactory != NULL);
+  g_return_val_if_fail(sinkfactory != NULL, NULL);
   src = gst_elementfactory_create(srcfactory,"src");
-  g_return_if_fail(src != NULL);
+  g_return_val_if_fail(src != NULL, NULL);
   sink = gst_elementfactory_create(sinkfactory,"sink");
-  g_return_if_fail(sink != NULL);
+  g_return_val_if_fail(sink != NULL, NULL);
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(sink));
 
   srcpad = gst_element_get_pad(src,"src");
-  g_return_if_fail(srcpad != NULL);
+  g_return_val_if_fail(srcpad != NULL, NULL);
   sinkpad = gst_element_get_pad(sink,"sink");
-  g_return_if_fail(srcpad != NULL);
+  g_return_val_if_fail(srcpad != NULL, NULL);
 
   gst_pad_connect(srcpad,sinkpad);
 
@@ -42,7 +43,7 @@ void teardown_destroy_pipeline(GstPipeline *pipeline) {
 
 int main(int argc,char *argv[]) {
   GstElement *pipeline, *src;
-  int i,j,max = 1;
+  int i,max = 1;
   long usage1,usage2;
 
 //  _gst_plugin_spew = TRUE;
@@ -54,7 +55,7 @@ int main(int argc,char *argv[]) {
 
   usage1 = vmsize();
   for (i=0;i<max;i++) {
-    pipeline = teardown_create_pipeline();
+    pipeline = GST_ELEMENT (teardown_create_pipeline());
     src = gst_bin_get_by_name(GST_BIN(pipeline),"src");
 //    g_print("got source %p, pushing",src);
 //    for (j=0;j<max;j++) {
@@ -62,8 +63,10 @@ int main(int argc,char *argv[]) {
 //      g_print(".");
 //    }
 //    g_print("\n");
-    teardown_destroy_pipeline(pipeline);
+    teardown_destroy_pipeline(GST_PIPELINE (pipeline));
   }
   usage2 = vmsize();
-  g_print("uses %d bytes\n",usage2-usage1);
+  g_print("uses %ld bytes\n",usage2-usage1);
+
+  return 0;
 }
