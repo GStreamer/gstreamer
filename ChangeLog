@@ -1,5 +1,11 @@
 2004-12-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpeg.h:
+	  Add header.
+
+2004-12-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ffmpeg/gstffmpeg.c:
 	* ext/ffmpeg/gstffmpegcodecmap.c:
 	* ext/ffmpeg/gstffmpegcodecmap.h:

@@ -19,4 +19,6 @@ libgstffmpeg_la_LIBADD = \
 
 libgstffmpeg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gstffmpegcodecmap.h
+noinst_HEADERS = \
+	gstffmpeg.h \
+	gstffmpegcodecmap.h
