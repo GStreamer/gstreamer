@@ -423,13 +423,8 @@ _read_obj_data_packet (GstASFDemux * asf_demux, asf_obj_data_packet * object)
 static gboolean
 _read_stream_audio (GstASFDemux * asf_demux, asf_stream_audio * audio)
 {
-  return (_read_uint16 (asf_demux, &audio->codec_tag) &&
-      _read_uint16 (asf_demux, &audio->channels) &&
-      _read_uint32 (asf_demux, &audio->sample_rate) &&
-      _read_uint32 (asf_demux, &audio->byte_rate) &&
-      _read_uint16 (asf_demux, &audio->block_align) &&
-      _read_uint16 (asf_demux, &audio->word_size) &&
-      _read_uint16 (asf_demux, &audio->size));
+  /* WAVEFORMATEX Structure */
+  return (_read_uint16 (asf_demux, &audio->codec_tag) && _read_uint16 (asf_demux, &audio->channels) && _read_uint32 (asf_demux, &audio->sample_rate) && _read_uint32 (asf_demux, &audio->byte_rate) && _read_uint16 (asf_demux, &audio->block_align) && _read_uint16 (asf_demux, &audio->word_size) && _read_uint16 (asf_demux, &audio->size)); /* Codec specific data size */
 }
 
 static gboolean
@@ -1570,12 +1565,13 @@ gst_asf_demux_add_audio_stream (GstASFDemux * asf_demux,
 
   gst_pad_use_explicit_caps (src_pad);
 
-  /* Swallow up any left over data and set up the standard propertis from the header info */
+  /* Swallow up any left over data and set up the standard properties from the header info */
   if (size_left) {
     guint8 *extradata;
 
     GST_WARNING_OBJECT (asf_demux,
-        "asfdemux: Audio header contains %d bytes of surplus data", size_left);
+        "asfdemux: Audio header contains %d bytes of codec specific data",
+        size_left);
     gst_bytestream_peek_bytes (asf_demux->bs, &extradata, size_left);
     caps = gst_asf_demux_audio_caps (audio->codec_tag, audio, extradata,
         &codec_name);
