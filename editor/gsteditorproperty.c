@@ -468,6 +468,21 @@ gst_editor_property_create (GstEditorProperty *property, GstEditorElement *eleme
   table = gtk_table_new(1, 2, FALSE);
   gtk_table_set_row_spacings(GTK_TABLE(table), 2);
 
+  count = 0;
+
+  label = gtk_label_new(_("Type:"));
+  gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
+  gtk_object_set(GTK_OBJECT(label), "width", 100, NULL);
+  gtk_widget_show(label);
+  entry = gtk_entry_new();
+  gtk_widget_show(entry);
+  gtk_entry_set_editable(GTK_ENTRY(entry), FALSE);
+  gtk_entry_set_text(GTK_ENTRY(entry),
+		     gst_element_get_factory(element->element)->name);
+  gtk_table_attach(GTK_TABLE(table), label, 0, 1, count, count+1, GTK_FILL, 0, 0, 0);
+  gtk_table_attach(GTK_TABLE(table), entry, 1, 2, count, count+1, GTK_FILL|GTK_EXPAND, 0, 0, 0);
+  count++;
+
   label = gtk_label_new(_("Name:"));
   gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
   gtk_object_set(GTK_OBJECT(label), "width", 100, NULL);
@@ -475,13 +490,13 @@ gst_editor_property_create (GstEditorProperty *property, GstEditorElement *eleme
   entry = gtk_entry_new();
   gtk_widget_show(entry);
   gtk_entry_set_text(GTK_ENTRY(entry), gst_element_get_name(element->element));
-  gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 0, 0);
-  gtk_table_attach(GTK_TABLE(table), entry, 1, 2, 0, 1, GTK_FILL|GTK_EXPAND, 0, 0, 0);
+  gtk_table_attach(GTK_TABLE(table), label, 0, 1, count, count+1, GTK_FILL, 0, 0, 0);
+  gtk_table_attach(GTK_TABLE(table), entry, 1, 2, count, count+1, GTK_FILL|GTK_EXPAND, 0, 0, 0);
+  count++;
 
   gtk_signal_connect(GTK_OBJECT(entry), "changed", on_name_changed, element);
 
   args = gtk_object_query_args(type, &flags, &num_args);
-  count = 1;
   for (i=0; i<num_args; i++) {
     if (flags[i] & GTK_ARG_READABLE) {
       gtk_object_getv(GTK_OBJECT(element->element), 1, &args[i]);
@@ -496,7 +511,6 @@ gst_editor_property_create (GstEditorProperty *property, GstEditorElement *eleme
 
         gtk_table_attach(GTK_TABLE(table), label, 0, 1, count, count+1, GTK_FILL, 0, 0, 0);
         gtk_table_attach(GTK_TABLE(table), entry, 1, 2, count, count+1, GTK_FILL|GTK_EXPAND, 0, 0, 0);
-
 	count++;
       }
     }
