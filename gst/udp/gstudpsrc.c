@@ -42,8 +42,25 @@ enum {
 enum {
   ARG_0,
   ARG_PORT,
+  ARG_CONTROL
   /* FILL ME */
 };
+
+#define GST_TYPE_UDPSRC_CONTROL	(gst_udpsrc_control_get_type())
+static GType
+gst_udpsrc_control_get_type(void) {
+  static GType udpsrc_control_type = 0;
+  static GEnumValue udpsrc_control[] = {
+    {CONTROL_NONE, "1", "none"},
+    {CONTROL_UDP, "2", "udp"},
+    {CONTROL_TCP, "3", "tcp"},
+    {CONTROL_ZERO, NULL, NULL},
+  };
+  if (!udpsrc_control_type) {
+    udpsrc_control_type = g_enum_register_static("GstUDPSrcControl", udpsrc_control);
+  }
+  return udpsrc_control_type;
+}
 
 static void		gst_udpsrc_class_init		(GstUDPSrc *klass);
 static void		gst_udpsrc_init			(GstUDPSrc *udpsrc);
@@ -98,6 +115,9 @@ gst_udpsrc_class_init (GstUDPSrc *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
     g_param_spec_int ("port", "port", "The port to receive the packets from",
                        0, 32768, UDP_DEFAULT_PORT, G_PARAM_READWRITE)); 
+  g_object_class_install_property (gobject_class, ARG_CONTROL,
+    g_param_spec_enum ("control", "control", "The type of control",
+                       GST_TYPE_UDPSRC_CONTROL, CONTROL_UDP, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_udpsrc_set_property;
   gobject_class->get_property = gst_udpsrc_get_property;
@@ -115,6 +135,7 @@ gst_udpsrc_init (GstUDPSrc *udpsrc)
   gst_pad_set_get_function (udpsrc->srcpad, gst_udpsrc_get);
 
   udpsrc->port = UDP_DEFAULT_PORT;
+  udpsrc->control = CONTROL_UDP;
 }
 
 static GstBuffer*
@@ -126,6 +147,7 @@ gst_udpsrc_get (GstPad *pad)
   socklen_t len;
   gint numbytes;
   fd_set read_fds;
+  guint max_sock;
 
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
@@ -133,10 +155,18 @@ gst_udpsrc_get (GstPad *pad)
   udpsrc = GST_UDPSRC (GST_OBJECT_PARENT (pad));
 
   FD_ZERO (&read_fds);
-  FD_SET (udpsrc->control_sock, &read_fds);
   FD_SET (udpsrc->sock, &read_fds);
+  
+  if (udpsrc->control != CONTROL_NONE) {
+     FD_SET (udpsrc->control_sock, &read_fds);
+     max_sock = udpsrc->control_sock;
+  }
 
-  if (select (udpsrc->control_sock+1, &read_fds, NULL, NULL, NULL) > 0) {
+  else {
+     max_sock = udpsrc->sock;
+  }
+
+  if (select (max_sock+1, &read_fds, NULL, NULL, NULL) > 0) {
     if (FD_ISSET (udpsrc->control_sock, &read_fds)) {
 #ifndef GST_DISABLE_LOADSAVE
       guchar *buf;
@@ -148,16 +178,29 @@ gst_udpsrc_get (GstPad *pad)
 
       buf = g_malloc (1024*10);
 
-      len = sizeof (struct sockaddr);
-      fdread = accept (udpsrc->control_sock, &addr, &len);
-      if (fdread < 0) {
-	perror ("accept");
-      }
+      switch (udpsrc->control) {
+    	case CONTROL_TCP:
+      	    len = sizeof (struct sockaddr);
+      	    fdread = accept (udpsrc->control_sock, &addr, &len);
+      	    if (fdread < 0) {
+		perror ("accept");
+      	    }
       
-      ret = read (fdread, buf, 1024*10);
-      if (ret < 0) {
-	perror ("read");
+      	    ret = read (fdread, buf, 1024*10);
+	    break;
+    	case CONTROL_UDP:
+      	    ret = recvfrom (udpsrc->control_sock, buf, 1024*10, 0, (struct sockaddr *)&tmpaddr, &len);
+      	    if (ret < 0) {
+		perror ("recvfrom");
+      	    }
+	    break;
+    	case CONTROL_NONE:
+	default:
+	    g_free (buf);
+      	    return NULL;
+	    break;
       }
+
       buf[ret] = '\0';
       doc = xmlParseMemory(buf, ret);
       caps = gst_caps_load_thyself(doc->xmlRootNode);
@@ -165,6 +208,7 @@ gst_udpsrc_get (GstPad *pad)
       gst_pad_try_set_caps (udpsrc->srcpad, caps);
 
 #endif
+      g_free (buf);
       outbuf = NULL;
     }
     else {
@@ -207,6 +251,9 @@ gst_udpsrc_set_property (GObject *object, guint prop_id, const GValue *value, GP
     case ARG_PORT:
         udpsrc->port = g_value_get_int (value);
       break;
+    case ARG_CONTROL:
+        udpsrc->control = g_value_get_enum (value);
+      break;
     default:
       break;
   }
@@ -225,6 +272,9 @@ gst_udpsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
     case ARG_PORT:
       g_value_set_int (value, udpsrc->port);
       break;
+    case ARG_CONTROL:
+      g_value_set_enum (value, udpsrc->control);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -235,6 +285,7 @@ gst_udpsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 static gboolean
 gst_udpsrc_init_receive (GstUDPSrc *src)
 {
+  guint bc_val;
   bzero (&src->myaddr, sizeof (src->myaddr));
   src->myaddr.sin_family = AF_INET;         /* host byte order */
   src->myaddr.sin_port = htons (src->port);     /* short, network byte order */
@@ -245,25 +296,58 @@ gst_udpsrc_init_receive (GstUDPSrc *src)
     return FALSE;
   }
 
-  if (bind (src->sock, (struct sockaddr *) &src->myaddr, sizeof (src->myaddr)) == -1) {
+  if (bind (src->sock, (struct sockaddr *) &src->myaddr, sizeof (src->myaddr)) == -1)  {
     perror("bind");
     return FALSE;
   }
 
-  if ((src->control_sock = socket (AF_INET, SOCK_STREAM, 0)) == -1) {
-    perror("control_socket");
-    return FALSE;
-  }
+  bc_val = 1;
+  setsockopt (src->sock, SOL_SOCKET, SO_BROADCAST, &bc_val, sizeof (bc_val));
+  src->myaddr.sin_port = htons (src->port+1);  /* short, network byte order */
+  
+  switch (src->control) {
+    case CONTROL_TCP:
+  	if ((src->control_sock = socket (AF_INET, SOCK_STREAM, 0)) == -1) {
+    	   perror("control_socket");
+    	   return FALSE;
+        }
 
-  if (bind (src->control_sock, (struct sockaddr *) &src->myaddr, sizeof (src->myaddr)) == -1) {
-    perror("control_bind");
-    return FALSE;
+  	if (bind (src->control_sock, (struct sockaddr *) &src->myaddr, sizeof (src->myaddr)) == -1) {
+    	   perror("control_bind");
+    	   return FALSE;
+  	}
+  
+	if (listen (src->control_sock, 5) == -1) {
+    	   perror("listen");
+    	   return FALSE;
+  	}
+  	
+	fcntl (src->control_sock, F_SETFL, O_NONBLOCK);
+  
+	break;
+    case CONTROL_UDP:
+  	if ((src->control_sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1) {
+    	   perror("socket");
+    	   return FALSE;
+  	}
+
+  	if (bind (src->control_sock, (struct sockaddr *) &src->myaddr, sizeof (src->myaddr)) == -1) 
+	{
+    	    perror("control_bind");
+    	    return FALSE;
+  	}
+	/* We can only do broadcast in udp */
+  	bc_val = 1;
+  	setsockopt (src->control_sock, SOL_SOCKET, SO_BROADCAST, &bc_val, sizeof (bc_val));
+	break;
+    case CONTROL_NONE:
+        GST_FLAG_SET (src, GST_UDPSRC_OPEN);
+  	return TRUE;
+	break;
+    default:
+    	return FALSE;
+	break;
   }
-  if (listen (src->control_sock, 5) == -1) {
-    perror("listen");
-    return FALSE;
-  }
-  fcntl (src->control_sock, F_SETFL, O_NONBLOCK);
 
   GST_FLAG_SET (src, GST_UDPSRC_OPEN);
   
@@ -274,6 +358,7 @@ static void
 gst_udpsrc_close (GstUDPSrc *src)
 {
   close (src->sock);
+  close (src->control_sock);
 
   GST_FLAG_UNSET (src, GST_UDPSRC_OPEN);
 }

@@ -41,6 +41,7 @@ extern "C" {
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include "gstudp.h"
 
 #define GST_TYPE_UDPSINK \
   (gst_udpsink_get_type())
@@ -72,6 +73,7 @@ struct _GstUDPSink {
   struct sockaddr_in theiraddr;
 
   gint port;
+  Gst_UDP_Control control;
   gchar *host;
     
   GstClock *clock;

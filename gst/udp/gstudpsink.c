@@ -22,6 +22,7 @@
 
 #define UDP_DEFAULT_HOST	"localhost"
 #define UDP_DEFAULT_PORT	4951
+#define UDP_DEFAULT_CONTROL	1
 
 /* elementfactory information */
 GstElementDetails gst_udpsink_details = {
@@ -45,8 +46,25 @@ enum {
   ARG_0,
   ARG_HOST,
   ARG_PORT,
+  ARG_CONTROL
   /* FILL ME */
 };
+
+#define GST_TYPE_UDPSINK_CONTROL	(gst_udpsink_control_get_type())
+static GType
+gst_udpsink_control_get_type(void) {
+  static GType udpsink_control_type = 0;
+  static GEnumValue udpsink_control[] = {
+    {CONTROL_NONE, "1", "none"},
+    {CONTROL_UDP, "2", "udp"},
+    {CONTROL_TCP, "3", "tcp"},
+    {CONTROL_ZERO, NULL, NULL},
+  };
+  if (!udpsink_control_type) {
+    udpsink_control_type = g_enum_register_static("GstUDPSinkControl", udpsink_control);
+  }
+  return udpsink_control_type;
+}
 
 static void		gst_udpsink_class_init		(GstUDPSink *klass);
 static void		gst_udpsink_init		(GstUDPSink *udpsink);
@@ -104,6 +122,9 @@ gst_udpsink_class_init (GstUDPSink *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
     g_param_spec_int ("port", "port", "The port to send the packets to",
                        0, 32768, UDP_DEFAULT_PORT, G_PARAM_READWRITE)); 
+  g_object_class_install_property (gobject_class, ARG_CONTROL,
+    g_param_spec_enum ("control", "control", "The type of control",
+                       GST_TYPE_UDPSINK_CONTROL, CONTROL_UDP, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_udpsink_set_property;
   gobject_class->get_property = gst_udpsink_get_property;
@@ -120,47 +141,82 @@ gst_udpsink_sinkconnect (GstPad *pad, GstCaps *caps)
   struct hostent *serverhost;
   int fd;
   FILE *f;
+  guint bc_val;
 #ifndef GST_DISABLE_LOADSAVE
   xmlDocPtr doc;
-#endif
+  xmlChar *buf;
+  int buf_size;
 
   udpsink = GST_UDPSINK (gst_pad_get_parent (pad));
-
-  fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if (fd < 0) {
-    perror("socket");
-    return GST_PAD_CONNECT_REFUSED;
-  }
+  
   memset(&serv_addr, 0, sizeof(serv_addr));
+  
   /* its a name rather than an ipnum */
   serverhost = gethostbyname(udpsink->host);
   if (serverhost == (struct hostent *)0) {
-    perror("gethostbyname");
-    return GST_PAD_CONNECT_REFUSED;
+	perror("gethostbyname");
+    	return GST_PAD_CONNECT_REFUSED;
   }
+  
   memmove(&serv_addr.sin_addr,serverhost->h_addr, serverhost->h_length);
 
   serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(udpsink->port);
-
-  if (connect(fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) != 0) {
-    g_printerr ("udpsink: connect to %s port %d failed: %s\n",
-		udpsink->host, udpsink->port, g_strerror(errno));
-    return GST_PAD_CONNECT_REFUSED;
-  }
-  f = fdopen (dup (fd), "wb");
-
-#ifndef GST_DISABLE_LOADSAVE
+  serv_addr.sin_port = htons(udpsink->port+1);
+  	    
   doc = xmlNewDoc ("1.0");
   doc->xmlRootNode = xmlNewDocNode (doc, NULL, "NewCaps", NULL);
 
   gst_caps_save_thyself (caps, doc->xmlRootNode);
-  xmlDocDump(f, doc);
+
+  switch (udpsink->control) {
+    case CONTROL_UDP:
+  	    if ((fd = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
+    		perror("socket");
+    	    	return GST_PAD_CONNECT_REFUSED;
+  	    }
+
+	    /* We can only do broadcast in udp */
+	    bc_val = 1;
+	    setsockopt (fd,SOL_SOCKET, SO_BROADCAST, &bc_val, sizeof (bc_val));
+  	    
+	    xmlDocDumpMemory(doc, &buf, &buf_size);
+
+	    if (sendto (fd, buf, buf_size, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) == -1)
+  	    {
+		perror("sending");
+    	    	return GST_PAD_CONNECT_REFUSED;
+  	    } 
+
+	    close (fd);
+	    break;
+    case CONTROL_TCP:
+  	    if ((fd = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
+    		perror("socket");
+    	    	return GST_PAD_CONNECT_REFUSED;
+  	    }
+  
+  	    if (connect(fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) != 0) {
+    		g_printerr ("udpsink: connect to %s port %d failed: %s\n",
+			     udpsink->host, udpsink->port, g_strerror(errno));
+    		return GST_PAD_CONNECT_REFUSED;
+  	    }
+  
+	    f = fdopen (dup (fd), "wb");
+
+  	    xmlDocDump(f, doc);
+  	    fclose (f);
+	    close (fd);
+  	    
+	    break;
+    case CONTROL_NONE:
+    	    return GST_PAD_CONNECT_OK;
+	    break;
+    default:
+    	    return GST_PAD_CONNECT_REFUSED;
+	    break;
+  }
 #endif
-
-  fclose (f);
-  close (fd);
-
+  
   return GST_PAD_CONNECT_OK;
 }
 
@@ -185,6 +241,7 @@ gst_udpsink_init (GstUDPSink *udpsink)
 
   udpsink->host = g_strdup (UDP_DEFAULT_HOST);
   udpsink->port = UDP_DEFAULT_PORT;
+  udpsink->control = CONTROL_UDP;
   
   udpsink->clock = NULL;
 
@@ -240,6 +297,9 @@ gst_udpsink_set_property (GObject *object, guint prop_id, const GValue *value, G
     case ARG_PORT:
         udpsink->port = g_value_get_int (value);
       break;
+    case ARG_CONTROL:
+        udpsink->control = g_value_get_enum (value);
+      break;
     default:
       break;
   }
@@ -261,6 +321,9 @@ gst_udpsink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
     case ARG_PORT:
       g_value_set_int (value, udpsink->port);
       break;
+    case ARG_CONTROL:
+      g_value_set_enum (value, udpsink->control);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -273,6 +336,7 @@ static gboolean
 gst_udpsink_init_send (GstUDPSink *sink)
 {
   struct hostent *he;
+  guint bc_val;
 
   bzero (&sink->theiraddr, sizeof (sink->theiraddr));
   sink->theiraddr.sin_family = AF_INET;         /* host byte order */
@@ -284,10 +348,13 @@ gst_udpsink_init_send (GstUDPSink *sink)
   sink->theiraddr.sin_addr = *((struct in_addr *) he->h_addr);
 
   if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1) {
-    perror("socket");
-    return FALSE;
+     perror("socket");
+     return FALSE;
   }
 
+  bc_val = 1;
+  setsockopt (sink->sock, SOL_SOCKET, SO_BROADCAST, &bc_val, sizeof (bc_val));
+  
   GST_FLAG_SET (sink, GST_UDPSINK_OPEN);
 
   return TRUE;

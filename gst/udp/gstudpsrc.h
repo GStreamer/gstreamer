@@ -34,6 +34,7 @@ extern "C" {
 #include <netdb.h>
 #include <sys/socket.h>
 #include <fcntl.h>
+#include "gstudp.h"
 
 #define GST_TYPE_UDPSRC \
   (gst_udpsrc_get_type())
@@ -64,6 +65,7 @@ struct _GstUDPSrc {
   int port;
   int sock;
   int control_sock;
+  Gst_UDP_Control control;
   struct sockaddr_in myaddr;
 };
 
