@@ -36,7 +36,7 @@ main (int argc, char *argv[])
   gst_bin_add (GST_BIN (pipeline), filesrc);
   gst_bin_add (GST_BIN (pipeline), element);
 
-  gst_element_connect (filesrc, "src", element, "sink");
+  gst_element_link_pads (filesrc, "src", element, "sink");
 
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
