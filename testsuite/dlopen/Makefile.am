@@ -1,3 +1,5 @@
+# ../Rules is not included because we specifically don't want the normal
+# AM_CFLAGS, etc.
 
 plugin_LTLIBRARIES = libloadgst.la
 
@@ -9,15 +11,10 @@ libloadgst_la_SOURCES = loadgst.c
 libloadgst_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libloadgst_la_LDFLAGS = -module -avoid-version $(GST_OBJ_LIBS)
 
-dlopen_gst_SOURCES = dlopen_gst.c
 dlopen_gst_CFLAGS = $(GLIB_CFLAGS)
 dlopen_gst_LDFLAGS = $(GLIB_LIBS)
 
-
-# ../Rules is included because we specifically don't want the normal
-# AM_CFLAGS, etc.
-
-TESTS_ENVIRONMENT=\
+TESTS_ENVIRONMENT= \
 	G_DEBUG=fatal_warnings \
 	GST_PLUGIN_PATH=$(top_builddir)/gst:. \
 	GST_REGISTRY=$(top_builddir)/testsuite/test-registry.xml
@@ -42,4 +39,3 @@ install-pluginLTLIBRARIES:
 # This rule is here so make distcheck works on machines where core
 # dumps have PIDs appended
 CLEANFILES = core.*
-

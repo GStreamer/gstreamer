@@ -12,5 +12,3 @@ bin_SOURCES = bin.c mem.c
 EXTRA_DIST = thread.c object.c
 
 noinst_HEADERS = mem.h
-
-

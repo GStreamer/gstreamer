@@ -1,5 +1,33 @@
 2004-07-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	* testsuite/Makefile.am:
+	* testsuite/bins/Makefile.am:
+	* testsuite/caps/Makefile.am:
+	* testsuite/cleanup/Makefile.am:
+	* testsuite/clock/Makefile.am:
+	* testsuite/debug/Makefile.am:
+	* testsuite/dlopen/Makefile.am:
+	* testsuite/dynparams/Makefile.am:
+	* testsuite/elements/.cvsignore:
+	* testsuite/elements/Makefile.am:
+	* testsuite/enumcaps/Makefile.am:
+	* testsuite/enumcaps/enumcaps.c:
+	* testsuite/ghostpads/Makefile.am:
+	* testsuite/indexers/Makefile.am:
+	* testsuite/negotiation/Makefile.am:
+	* testsuite/parse/Makefile.am:
+	* testsuite/plugin/Makefile.am:
+	* testsuite/refcounting/Makefile.am:
+	* testsuite/schedulers/.cvsignore:
+	* testsuite/states/Makefile.am:
+	* testsuite/tags/Makefile.am:
+	* testsuite/threads/Makefile.am:
+	  fold enumcaps into caps dir
+	  clean up Makefile.am's for testsuite
+
+2004-07-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/Makefile.am:
 	* docs/libs/Makefile.am:
 	  clean up docs build.  Fixes needless rebuilding of template files.

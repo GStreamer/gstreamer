@@ -1,13 +1,11 @@
 include ../Rules
 
-
 # disable gst-compprep-check until it doesn't leave stray files for distcheck
 tests_pass = name tee property fake gst-inspect-check
 tests_fail =
 tests_ignore =
 
 noinst_HEADERS = property.h
-
 
 gst_inspect_check_SOURCES =
 gst-inspect-check$(EXEEXT): $(srcdir)/gst-inspect-check.in
@@ -20,4 +18,3 @@ gst-inspect-check$(EXEEXT): $(srcdir)/gst-inspect-check.in
 #	cp $(srcdir)/gst-compprep-check.in gst-compprep-check$(EXEEXT)
 	
 EXTRA_DIST = gst-inspect-check.in gst-compprep-check.in
-

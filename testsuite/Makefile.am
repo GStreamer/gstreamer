@@ -17,7 +17,7 @@ SUBDIRS = \
 	bins bytestream caps cleanup clock \
 	$(GST_DEBUG_DIRS) \
 	dlopen dynparams \
-	elements enumcaps ghostpads indexers negotiation \
+	elements ghostpads indexers negotiation \
 	$(GST_PARSE_DIRS) \
 	plugin refcounting schedulers states tags threads
 

@@ -5,9 +5,6 @@ tests_fail = thread5 threadd threadg
 
 tests_ignore = queue threade threadb threadc
 
-queue_SOURCES = queue.c
-queue_CFLAGS = $(AM_CFLAGS)
-
 thread1_SOURCES = thread.c
 thread1_CFLAGS = -DTESTNUM=1 $(AM_CFLAGS)
 thread2_SOURCES = thread.c
