@@ -116,7 +116,7 @@ gst_lavencode_class_init (GstLavEncodeClass *klass)
   gobject_class->get_property = gst_lavencode_get_property;
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_lavencode_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstLavEncode *filter;
