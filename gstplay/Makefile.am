@@ -4,23 +4,31 @@ INCLUDES = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir) \
 	           $(shell gnome-config --cflags gnomeui) $(shell gstreamer-config --cflags)
 
 
-bin_PROGRAMS = gstmediaplay
+bin_PROGRAMS = gstmediaplay 
+
+lib_LTLIBRARIES = libgstmediaplay.la
 
 gladedir = $(datadir)/gstmediaplay
 glade_DATA = gstmediaplay.glade play.xpm stop.xpm pause.xpm
 
-gstmediaplay_SOURCES = \
-	gstplay.c main.c \
+libgstmediaplay_la_SOURCES = \
+	gstplay.c \
 	gstmediaplay.c gstmediaplay.h \
 	gststatusarea.c gststatusarea.h \
 	callbacks.c callbacks.h 
+
+gstmediaplay_SOURCES = \
+	main.c 
+
 
 CFLAGS += -O2 -Wall -DDATADIR=\""$(gladedir)/"\"
 
 gstmediaplay_CFLAGS = $(shell gnome-config --cflags gnomeui) $(shell libglade-config --cflags gnome) \
 		 $(shell gstreamer-config --cflags ) 
+
 gstmediaplay_LDFLAGS = $(shell gnome-config --libs gnomeui) $(shell libglade-config --libs gnome) \
-		 $(shell gstreamer-config --libs ) 
+		 $(shell gstreamer-config --libs ) ./libgstmediaplay.la
+
 
 if HAVE_LIBXV
 xvlibs=-lXv

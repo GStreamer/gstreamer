@@ -33,15 +33,15 @@ enum {
 };
 
 
-static void gst_sink_class_init(GstSinkClass *klass);
-static void gst_sink_init(GstSink *sink);
-
+static void gst_sink_class_init	(GstSinkClass *klass);
+static void gst_sink_init	(GstSink *sink);
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_sink_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
-gst_sink_get_type(void) {
+gst_sink_get_type (void) 
+{
   static GtkType sink_type = 0;
 
   if (!sink_type) {
@@ -55,21 +55,24 @@ gst_sink_get_type(void) {
       (GtkArgGetFunc)NULL,
       (GtkClassInitFunc)NULL,
     };
-    sink_type = gtk_type_unique(GST_TYPE_ELEMENT,&sink_info);
+    sink_type = gtk_type_unique (GST_TYPE_ELEMENT, &sink_info);
   }
   return sink_type;
 }
 
 static void
-gst_sink_class_init(GstSinkClass *klass) {
+gst_sink_class_init (GstSinkClass *klass) 
+{
   GtkObjectClass *gtkobject_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_ELEMENT);
+  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
 }
 
-static void gst_sink_init(GstSink *sink) {
+static void 
+gst_sink_init (GstSink *sink) 
+{
 }
 
 /**
@@ -81,8 +84,11 @@ static void gst_sink_init(GstSink *sink) {
  * Returns: new sink
  */
 
-GstObject *gst_sink_new(gchar *name) {
-  GstObject *sink = GST_OBJECT(gtk_type_new(GST_TYPE_SINK));
-  gst_element_set_name(GST_ELEMENT(sink),name);
+GstObject*
+gst_sink_new (gchar *name) 
+{
+  GstObject *sink = GST_OBJECT (gtk_type_new (GST_TYPE_SINK));
+  gst_element_set_name (GST_ELEMENT (sink), name);
+
   return sink;
 }

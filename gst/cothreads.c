@@ -1,3 +1,22 @@
+/* GStreamer
+ * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
 #include <pthread.h>
 #include <sys/time.h>
 #include <linux/linkage.h>
@@ -15,6 +34,14 @@
 
 pthread_key_t _cothread_key = -1;
 
+/**
+ * cothread_create:
+ * @ctx: the cothread context
+ *
+ * create a new cotread state in the given context
+ *
+ * Returns: the new cothread state
+ */
 cothread_state*
 cothread_create (cothread_context *ctx) 
 {
@@ -52,6 +79,15 @@ cothread_create (cothread_context *ctx)
   return s;
 }
 
+/**
+ * cothread_setfunc:
+ * @thread: the cothread state
+ * @func: the function to call
+ * @argc: the argument count for the cothread function
+ * @argv: the arguments for the cothread function
+ *
+ * Set the cothread function
+ */
 void 
 cothread_setfunc (cothread_state *thread,
 		  cothread_func func,
@@ -64,6 +100,13 @@ cothread_setfunc (cothread_state *thread,
   thread->pc = (int *)func;
 }
 
+/**
+ * cothread_init:
+ *
+ * create and initialize a new cotread context 
+ *
+ * Returns: the new cothread context
+ */
 cothread_context*
 cothread_init (void) 
 {
@@ -99,6 +142,12 @@ cothread_init (void)
   return ctx;
 }
 
+/**
+ * cothread_main:
+ * @ctx: the cothread context
+ *
+ * Returns: the new cothread state
+ */
 cothread_state*
 cothread_main(cothread_context *ctx) 
 {
@@ -123,6 +172,14 @@ cothread_stub (void)
   //printf("uh, yeah, we shouldn't be here, but we should deal anyway\n");
 }
 
+/**
+ * cothread_set_data:
+ * @thread: the cothread state
+ * @key: a key for the data
+ * @data: the data
+ *
+ * adds data to a cothread
+ */
 void
 cothread_set_data (cothread_state *thread, 
 		   gchar *key,
@@ -133,6 +190,15 @@ cothread_set_data (cothread_state *thread,
   g_hash_table_insert(ctx->data, key, data);
 }
 
+/**
+ * cothread_get_data:
+ * @thread: the cothread state
+ * @key: a key for the data
+ *
+ * get data from the cothread
+ *
+ * Returns: the data assiciated with the key
+ */
 gpointer
 cothread_get_data (cothread_state *thread, 
 		   gchar *key)
@@ -142,6 +208,12 @@ cothread_get_data (cothread_state *thread,
   return g_hash_table_lookup(ctx->data, key);
 }
 
+/**
+ * cothread_switch:
+ * @thread: the cothread state
+ *
+ * switches to the given cothread state
+ */
 void 
 cothread_switch (cothread_state *thread) 
 {

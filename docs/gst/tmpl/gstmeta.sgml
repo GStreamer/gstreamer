@@ -109,57 +109,55 @@ it, is there?
 
 <!-- ##### MACRO GST_META_FLAGS ##### -->
 <para>
-
+Retrieve the flags of the given meta information
 </para>
 
-@meta: 
-<!-- # Unused Parameters # -->
-@buf: 
+@meta: the meta information
 
 
 <!-- ##### MACRO GST_META_FLAG_IS_SET ##### -->
 <para>
-
+Check if a given flag is set
 </para>
 
-@meta: 
-@flag: 
+@meta: the meta data to test
+@flag: the flag to test
 
 
 <!-- ##### MACRO GST_META_FLAG_SET ##### -->
 <para>
-
+Set a flag in the meta data
 </para>
 
-@meta: 
-@flag: 
+@meta: the meta data
+@flag: the flag to set
 
 
 <!-- ##### MACRO GST_META_FLAG_UNSET ##### -->
 <para>
-
+Clear a flag in the meta data
 </para>
 
-@meta: 
-@flag: 
+@meta: the meta data
+@flag: the flag to clear
 
 
 <!-- ##### ENUM GstMetaFlags ##### -->
 <para>
-
+Flags indicating properties about the meta data
 </para>
 
-@GST_META_FREEABLE: 
+@GST_META_FREEABLE: the meta data can be freed
 
 <!-- ##### STRUCT GstMeta ##### -->
 <para>
 
 </para>
 
-@lock: 
-@flags: 
-@data: 
-@size: 
+@lock: for locking purposes
+@flags: the flags of the meta data
+@data: the meta data
+@size: the size of the meta data
 
 <!-- ##### FUNCTION gst_meta_new_size ##### -->
 <para>
@@ -172,10 +170,10 @@ it, is there?
 
 <!-- ##### MACRO gst_meta_new ##### -->
 <para>
-
+Create new meta data
 </para>
 
-@type: 
+@type: the type of the meta data to create
 
 
 <!-- ##### FUNCTION gst_meta_ref ##### -->

@@ -32,9 +32,8 @@ enum {
 };
 
 
-static void gst_filter_class_init(GstFilterClass *klass);
-static void gst_filter_init(GstFilter *filter);
-
+static void gst_filter_class_init	(GstFilterClass *klass);
+static void gst_filter_init		(GstFilter *filter);
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_filter_signals[LAST_SIGNAL] = { 0 };
@@ -60,15 +59,18 @@ gst_filter_get_type(void) {
 }
 
 static void
-gst_filter_class_init(GstFilterClass *klass) {
+gst_filter_class_init (GstFilterClass *klass) 
+{
   GtkObjectClass *gtkobject_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_ELEMENT);
+  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
 }
 
-static void gst_filter_init(GstFilter *filter) {
+static void 
+gst_filter_init (GstFilter *filter) 
+{
 }
 
 /**
@@ -79,8 +81,12 @@ static void gst_filter_init(GstFilter *filter) {
  *
  * Returns: new filter
  */
-GstElement *gst_filter_new(gchar *name) {
-  GstElement *filter = GST_ELEMENT(gtk_type_new(gst_filter_get_type()));
-  gst_element_set_name(GST_ELEMENT(filter),name);
+GstElement*
+gst_filter_new (gchar *name) 
+{
+  GstElement *filter = GST_ELEMENT (gtk_type_new (gst_filter_get_type()));
+
+  gst_element_set_name (GST_ELEMENT (filter), name);
+
   return filter;
 }

@@ -30,11 +30,13 @@
  *
  * Returns: new meta object
  */
-GstMeta *gst_meta_new_size(gint size) {
+GstMeta*
+gst_meta_new_size (gint size) 
+{
   GstMeta *meta;
 
-  meta = g_malloc0(size);
-  gst_meta_ref(meta);
+  meta = g_malloc0 (size);
+  gst_meta_ref (meta);
 
   return meta;
 }
@@ -45,10 +47,13 @@ GstMeta *gst_meta_new_size(gint size) {
  *
  * increases the refcount of a meta object
  */
-void gst_meta_ref(GstMeta *meta) {
-  g_return_if_fail(meta != NULL);
+void 
+gst_meta_ref (GstMeta *meta) 
+{
+  g_return_if_fail (meta != NULL);
 
-  gst_trace_add_entry(NULL,0,meta,"ref meta");
+  gst_trace_add_entry (NULL, 0, meta, "ref meta");
+  
   meta->refcount++;
 }
 
@@ -59,15 +64,17 @@ void gst_meta_ref(GstMeta *meta) {
  * decreases the refcount of a meta object. if the refcount is zero, the
  * meta object is freed.
  */
-void gst_meta_unref(GstMeta *meta) {
-  g_return_if_fail(meta != NULL);
+void 
+gst_meta_unref (GstMeta *meta) 
+{
+  g_return_if_fail (meta != NULL);
 
-  gst_trace_add_entry(NULL,0,meta,"unref meta");
+  gst_trace_add_entry (NULL, 0, meta, "unref meta");
   meta->refcount--;
 
   if (meta->refcount == 0) {
 //    gst_trace_add_entry(NULL,0,meta,"destroy meta");
-    g_free(meta);
+    g_free (meta);
 //    g_print("freeing metadata\n");
   }
 }
@@ -82,7 +89,10 @@ void gst_meta_unref(GstMeta *meta) {
  *
  * Returns: the meta object or a copy.
  */
-GstMeta *gst_meta_cow(GstMeta *meta) {
-  g_return_val_if_fail(meta != NULL, NULL);
-	return NULL;
+GstMeta*
+gst_meta_cow (GstMeta *meta) 
+{
+  g_return_val_if_fail (meta != NULL, NULL);
+
+  return NULL;
 }

@@ -30,15 +30,17 @@
  *
  * Returns: new buffer pool
  */
-GstBufferPool *gst_buffer_pool_new()
+GstBufferPool*
+gst_buffer_pool_new (void)
 {
   GstBufferPool *pool;
 
-  pool = g_malloc(sizeof(GstBufferPool));
+  pool = g_malloc (sizeof(GstBufferPool));
   DEBUG("BUF: allocating new buffer pool %p\n", pool);
 
   pool->new_buffer = NULL;
   pool->destroy_buffer = NULL;
+  
   return pool;
 }
 
@@ -51,9 +53,12 @@ GstBufferPool *gst_buffer_pool_new()
  * Sets the function that will be called when a buffer is created 
  * from this pool.
  */
-void gst_buffer_pool_set_create_function(GstBufferPool *pool, GstBufferPoolCreateFunction create, gpointer user_data) 
+void 
+gst_buffer_pool_set_create_function (GstBufferPool *pool, 
+		                     GstBufferPoolCreateFunction create, 
+				     gpointer user_data) 
 {
-  g_return_if_fail(pool != NULL);
+  g_return_if_fail (pool != NULL);
 
   pool->new_buffer = create;
   pool->new_user_data = user_data;
@@ -68,9 +73,12 @@ void gst_buffer_pool_set_create_function(GstBufferPool *pool, GstBufferPoolCreat
  * Sets the function that will be called when a buffer is destroyed 
  * from this pool.
  */
-void gst_buffer_pool_set_destroy_function(GstBufferPool *pool, GstBufferPoolDestroyFunction destroy, gpointer user_data) 
+void 
+gst_buffer_pool_set_destroy_function (GstBufferPool *pool, 
+		                      GstBufferPoolDestroyFunction destroy, 
+				      gpointer user_data) 
 {
-  g_return_if_fail(pool != NULL);
+  g_return_if_fail (pool != NULL);
 
   pool->destroy_buffer = destroy;
   pool->destroy_user_data = user_data;
@@ -82,9 +90,10 @@ void gst_buffer_pool_set_destroy_function(GstBufferPool *pool, GstBufferPoolDest
  *
  * frees the memory for this bufferpool
  */
-void gst_buffer_pool_destroy(GstBufferPool *pool) 
+void 
+gst_buffer_pool_destroy (GstBufferPool *pool) 
 {
-  g_return_if_fail(pool != NULL);
+  g_return_if_fail (pool != NULL);
 
   g_free(pool);
 }
@@ -97,13 +106,14 @@ void gst_buffer_pool_destroy(GstBufferPool *pool)
  *
  * Returns: The new buffer
  */
-GstBuffer *gst_buffer_pool_new_buffer(GstBufferPool *pool) 
+GstBuffer*
+gst_buffer_pool_new_buffer (GstBufferPool *pool) 
 {
   GstBuffer *buffer;
 
-  g_return_val_if_fail(pool != NULL, NULL);
+  g_return_val_if_fail (pool != NULL, NULL);
 
-  buffer = pool->new_buffer(pool, pool->new_user_data);
+  buffer = pool->new_buffer (pool, pool->new_user_data);
   buffer->pool = pool;
 
   return buffer;
@@ -116,10 +126,12 @@ GstBuffer *gst_buffer_pool_new_buffer(GstBufferPool *pool)
  *
  * Gives a buffer back to the given pool.
  */
-void gst_buffer_pool_destroy_buffer(GstBufferPool *pool, GstBuffer *buffer) 
+void 
+gst_buffer_pool_destroy_buffer (GstBufferPool *pool, 
+		                GstBuffer *buffer) 
 {
-  g_return_if_fail(pool != NULL);
-  g_return_if_fail(buffer != NULL);
+  g_return_if_fail (pool != NULL);
+  g_return_if_fail (buffer != NULL);
 
-  pool->destroy_buffer(pool, buffer, pool->new_user_data);
+  pool->destroy_buffer (pool, buffer, pool->new_user_data);
 }

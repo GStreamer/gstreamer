@@ -165,8 +165,9 @@ gst_thread_get_arg (GtkObject *object,
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_THREAD (object));
 
-  switch(id) {
+  switch (id) {
     case ARG_CREATE_THREAD:
+      g_print("gstthread: query thread %d\n", GST_FLAG_IS_SET (object, GST_THREAD_CREATE));
       GTK_VALUE_BOOL (*arg) = GST_FLAG_IS_SET (object, GST_THREAD_CREATE);
       break;
     default:
@@ -327,7 +328,7 @@ gst_thread_restore_thyself (GstElement *element,
 		            xmlNodePtr parent, 
 			    GHashTable *elements) 
 {
-   g_print("gstthread: restore\n");
+  g_print("gstthread: restore\n");
 
   if (GST_ELEMENT_CLASS (parent_class)->restore_thyself)
     GST_ELEMENT_CLASS (parent_class)->restore_thyself (element,parent, elements);

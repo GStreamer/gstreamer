@@ -77,12 +77,14 @@ The maximum number of cothreads we are going to support.
 
 <!-- ##### USER_FUNCTION cothread_func ##### -->
 <para>
-the function that will be called when the cothread starts.
+the function that will be called when the cothread starts. The function
+prototype is like a main() function, so you can do whatever you want with
+it.
 </para>
 
-@argc: 
-@argv: 
-@Returns: 
+@argc: a main-like argument count
+@argv: a main-like array of arguments
+@Returns: a return code
 
 
 <!-- ##### MACRO COTHREAD_STARTED ##### -->

@@ -31,7 +31,8 @@ void gst_cpuid_i386(int,long *,long *,long *,long *);
 #define gst_cpuid(o,a,b,c,d) (void)(a);(void)(b);(void)(c);
 #endif
 
-void _gst_cpu_initialize(void) 
+void 
+_gst_cpu_initialize (void) 
 {
   long eax=0, ebx=0, ecx=0, edx=0;
 
@@ -55,7 +56,8 @@ void _gst_cpu_initialize(void)
 
 }
 
-GstCPUFlags gst_cpu_get_flags(void) 
+GstCPUFlags 
+gst_cpu_get_flags (void) 
 {
   return _gst_cpu_flags;
 }

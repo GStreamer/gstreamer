@@ -516,7 +516,7 @@ gst_bin_loopfunc_wrapper (int argc,char *argv[])
   GList *pads;
   GstPad *pad;
   GstBuffer *buf;
-  G_GNUC_UNUSED gchar *name = gst_element_get_name (element);
+  G_GNUC_UNUSED const gchar *name = gst_element_get_name (element);
 
   DEBUG("** gst_bin_loopfunc_wrapper(%d,\"%s\")\n",
           argc,gst_element_get_name (element));

@@ -66,9 +66,6 @@ int main(int argc,char *argv[])
     exit(-1);
   }
 
-  /* find out how to handle this bin */
-  gst_bin_create_plan(GST_BIN(pipeline));
-
   /* make it ready */
   gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_READY);
   /* start playing */

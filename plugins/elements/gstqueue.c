@@ -139,14 +139,15 @@ GstElement *gst_queue_new(gchar *name) {
   return queue;
 }
 
-static void gst_queue_cleanup_buffers(gpointer data, gpointer user_data) 
+static void gst_queue_cleanup_buffers(gpointer data, const gpointer user_data) 
 {
   DEBUG("queue: %s cleaning buffer %p\n", (gchar *)user_data, data);
-  gst_buffer_unref(GST_BUFFER(data));
+  
+  gst_buffer_unref (GST_BUFFER (data));
 }
 
 static void gst_queue_flush(GstQueue *queue) {
-  g_slist_foreach(queue->queue, gst_queue_cleanup_buffers, gst_element_get_name(GST_ELEMENT(queue))); 
+  g_slist_foreach(queue->queue, gst_queue_cleanup_buffers, (char *)gst_element_get_name(GST_ELEMENT(queue))); 
   g_slist_free(queue->queue);
   queue->queue = NULL;
   queue->level_buffers = 0;
@@ -155,7 +156,7 @@ static void gst_queue_flush(GstQueue *queue) {
 static void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
   GstQueue *queue;
   gboolean tosignal = FALSE;
-  guchar *name;
+  const guchar *name;
 
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
@@ -215,7 +216,7 @@ static void gst_queue_push(GstConnection *connection) {
   GstBuffer *buf = NULL;
   GSList *front;
   gboolean tosignal = FALSE;
-  guchar *name;
+  const guchar *name;
   
   name = gst_element_get_name(GST_ELEMENT(queue));
 

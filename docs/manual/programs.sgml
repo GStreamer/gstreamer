@@ -103,4 +103,11 @@ gstreamer-launch disksrc redpill.vob ! css-descramble ! private_stream_1.0 ! \
     </para>
   </sect1>
 
+  <sect1>
+    <title><command>gstmediaplay</command></title>
+    <para> 
+      A sample media player.
+    </para>
+  </sect1>
+
 </chapter>

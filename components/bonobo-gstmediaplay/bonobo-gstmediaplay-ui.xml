@@ -1,0 +1,19 @@
+<Root>
+	<commands>
+		<cmd name="NewGame" _label="New game" _tip="Start a new game"/>
+
+		<cmd name="OpenGame" _label="Open game" _tip="Load a saved game"/>
+	</commands>
+
+	<menu>
+		<submenu name="Game" _label="_Game">
+			<menuitem name="NewGame" verb=""/>
+			<menuitem name="OpenGame" verb=""/>
+		</submenu>
+	</menu>
+
+	<dockitem name="Game">
+		<toolitem name="NewGame" verb=""/>
+	</dockitem>
+
+</Root>;

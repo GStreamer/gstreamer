@@ -160,7 +160,7 @@ void 			gst_element_set_loop_function	(GstElement *element,
                                    			 GstElementLoopFunction loop);
 
 void 			gst_element_set_name		(GstElement *element, gchar *name);
-gchar*			gst_element_get_name		(GstElement *element);
+const gchar*		gst_element_get_name		(GstElement *element);
 
 void 			gst_element_set_manager		(GstElement *element, GstElement *manager);
 GstElement*		gst_element_get_manager		(GstElement *element);

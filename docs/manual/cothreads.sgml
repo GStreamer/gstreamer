@@ -1,6 +1,97 @@
 <chapter id="cha-cothreads">
   <title>Cothreads</title>
   <para> 
+    Cothreads are user-space threads that greatly reduce context
+    switching overhead introduced by regular kernel threads.
+    Cothreads are also used to handle the more complex elements.
+  </para>
+  <para> 
+    A cothread is created by a <classname>GstBin</classname> whenever an element is found
+    inside the bin that has one or more of the following properties:
+    <itemizedlist>
+      <listitem>
+        <para>
+	  The element is loop-based instead of chain-based
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+	  The element has multiple input pads
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+	  The element has the MULTI_IN flag set
+        </para>
+      </listitem>
+    </itemizedlist>
+    The <classname>GstBin</classname> will create a cothread context for all the elements
+    in the bin so that the elements will interact in cooperative
+    multithreading.
+  </para>
+  <para> 
+    Before proceding to the concept of loop-based elements we will first
+    explain the chain-based elements
   </para>
 
+  <sect1 id="sec-chain-based">
+    <title>Chain-based elements</title>
+    <para>
+      Chain based elements receive a buffer of data and are supposed
+      to handle the data and perform a gst_pad_push.
+    </para>
+    <para>
+      The basic main function of a chain-based element is like:
+    </para>
+    <programlisting>
+static void chain_function (GstPad *pad, GstBuffer *buffer)
+{
+  GstBuffer *outbuffer;
+
+  ....
+  // process the buffer, create a new outbuffer
+  ...
+
+  gst_pad_push (srcpad, outbuffer);
+}
+    </programlisting>
+
+  </sect1>
+
+  <sect1 id="sec-loop-based">
+    <title>Loop-based elements</title>
+    <para>
+     As opposed to chain-based elements, Loop-based elements enter an 
+     infinite loop that looks like this:
+
+    <programlisting>
+  GstBuffer *buffer, *outbuffer;
+ 
+  while (1) {
+    buffer = gst_pad_pull (sinkpad);
+    ...
+    // process buffer, create outbuffer
+    ...
+    gst_pad_push (srcpad, outbuffer);
+  }
+    </programlisting>
+
+     The loop-based elements request a buffer whenever they need one.
+    </para>
+
+    <para>
+      When the request for a buffer cannot immedialty satisfied, the control
+      will be given to the source element of the loop-based element until it
+      performs a push on its source pad. At that time the control is handed back
+      to the loop-based element, etc... The the execution trace can get fairly
+      complex using cothreads when there are multiple input/output pads for the
+      loop-based element.
+    </para>
+    <para>
+      There is no problem in putting cothreaded elements into a 
+      <classname>GstThread</classname> to create even more complex pipelines with
+      both user and kernel space threads.
+    </para>
+
+  </sect1>
 </chapter>

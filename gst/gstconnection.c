@@ -32,8 +32,8 @@ enum {
 };
 
 
-static void gst_connection_class_init(GstConnectionClass *klass);
-static void gst_connection_init(GstConnection *connection);
+static void gst_connection_class_init	(GstConnectionClass *klass);
+static void gst_connection_init		(GstConnection *connection);
 
 
 static GstElementClass *parent_class = NULL;
@@ -54,21 +54,24 @@ gst_connection_get_type(void) {
       (GtkArgGetFunc)NULL,
       (GtkClassInitFunc)NULL,
     };
-    connection_type = gtk_type_unique(GST_TYPE_ELEMENT,&connection_info);
+    connection_type = gtk_type_unique (GST_TYPE_ELEMENT, &connection_info);
   }
   return connection_type;
 }
 
 static void
-gst_connection_class_init(GstConnectionClass *klass) {
+gst_connection_class_init (GstConnectionClass *klass) 
+{
   GtkObjectClass *gtkobject_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_ELEMENT);
+  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
 }
 
-static void gst_connection_init(GstConnection *connection) {
+static void 
+gst_connection_init (GstConnection *connection) 
+{
 }
 
 /**
@@ -79,9 +82,13 @@ static void gst_connection_init(GstConnection *connection) {
  *
  * Returns: new connection
  */
-GstElement *gst_connection_new(gchar *name) {
-  GstElement *connection = GST_ELEMENT(gtk_type_new(gst_connection_get_type()));
-  gst_element_set_name(GST_ELEMENT(connection),name);
+GstElement*
+gst_connection_new (gchar *name) 
+{
+  GstElement *connection = GST_ELEMENT (gtk_type_new (gst_connection_get_type ()));
+  
+  gst_element_set_name (GST_ELEMENT (connection), name);
+  
   return connection;
 }
 
@@ -91,15 +98,17 @@ GstElement *gst_connection_new(gchar *name) {
  *
  * Push a buffer along a connection
  */
-void gst_connection_push(GstConnection *connection) {
+void 
+gst_connection_push (GstConnection *connection) 
+{
   GstConnectionClass *oclass;
 
-  g_return_if_fail(connection != NULL);
-  g_return_if_fail(GST_IS_CONNECTION(connection));
+  g_return_if_fail (connection != NULL);
+  g_return_if_fail (GST_IS_CONNECTION (connection));
 
-  oclass = (GstConnectionClass *)(GTK_OBJECT(connection)->klass);
+  oclass = (GstConnectionClass *)(GTK_OBJECT (connection)->klass);
 
-  g_return_if_fail(oclass->push != NULL);
+  g_return_if_fail (oclass->push != NULL);
 
   (oclass->push)(connection);
 }

@@ -19,7 +19,9 @@
 
 #include <gst/gstextratypes.h>
 
-GtkType gst_extra_get_filename_type(void) {
+GtkType 
+gst_extra_get_filename_type (void) 
+{
   static GtkType filename_type = 0;
 
   if (!filename_type) {
@@ -33,7 +35,7 @@ GtkType gst_extra_get_filename_type(void) {
       (GtkArgGetFunc)NULL,
       (GtkClassInitFunc)NULL,
     };
-    filename_type = gtk_type_unique(GTK_TYPE_STRING,&filename_info);
+    filename_type = gtk_type_unique (GTK_TYPE_STRING, &filename_info);
   }
   return filename_type;
 }
