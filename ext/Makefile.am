@@ -160,6 +160,12 @@ else
 SHOUT_DIR=
 endif
 
+if USE_SMOOTHWAVE
+SMOOTHWAVE_DIR=smoothwave
+else
+SMOOTHWAVE_DIR=
+endif
+
 if USE_VORBIS
 VORBIS_DIR=vorbis
 else
@@ -176,12 +182,13 @@ SUBDIRS=$(A52_DIR) $(AALIB_DIR) $(ALSA_DIR) \
         $(ARTS_DIR) $(ARTSC_DIR) $(AUDIOFILE_DIR) \
 	$(AVIFILE_DIR) $(CDPARANOIA_DIR) $(DV_DIR) $(DVDREAD_DIR) $(ESD_DIR) \
         $(FESTIVAL_DIR) $(FLAC_DIR) $(GNOMEVFS_DIR) $(GSM_DIR) $(HERMES_DIR) \
-	$(HTTP_DIR) $(JPEG_DIR) $(LAME_DIR) $(MAD_DIR) \
-	$(MIKMOD_DIR) $(MPEG2DEC_DIR) $(OPENQUICKTIME_DIR) \
-	$(RAW1394_DIR) $(RTP_DIR) $(SDL_DIR) $(SHOUT_DIR) $(VORBIS_DIR) \
-	$(XMMS_DIR)
+	$(HTTP_DIR) $(JPEG_DIR) $(LAME_DIR) $(MAD_DIR) $(MIKMOD_DIR) $(MPEG2DEC_DIR) \
+	$(OPENQUICKTIME_DIR) $(RTP_DIR) $(SDL_DIR) $(SHOUT_DIR) \
+	$(SMOOTHWAVE_DIR) $(VORBIS_DIR) $(XMMS_DIR)
 
 DIST_SUBDIRS=a52 aalib alsa arts artsd avifile audiofile cdparanoia \
              dv dvdread esd \
+	     festival flac gnomevfs gsm hermes http jpeg lame mad mikmod mpeg2dec \
+	     openquicktime rtp sdl shout smoothwave vorbis xmms
 	     festival flac gnomevfs gsm hermes http jpeg ladspa lame mad mikmod mpeg2dec \
-	     openquicktime raw1394 rtp sdl shout sidplay vorbis xmms
+	     openquicktime raw1394 rtp sdl shout sidplay smoothwave vorbis xmms
