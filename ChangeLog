@@ -1,5 +1,13 @@
 2004-01-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-libs/gst/play/Makefile.am:
+	* gst-libs/gst/play/gstplay.c:
+	* gst-libs/gst/play/gstplay.h:
+	* gst-libs/gst/play/play.c:
+          more surgery, operation complete
+
+2004-01-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/gst/play/play.old.c:
 	* gst-libs/gst/play/play.old.h:
           after CVS surgery by moving, remove
