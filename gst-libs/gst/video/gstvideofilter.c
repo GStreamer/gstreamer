@@ -49,6 +49,7 @@ enum {
   /* FILL ME */
 };
 
+static void gst_videofilter_base_init (GstVideofilterClass *klass);
 static void	gst_videofilter_class_init	(GstVideofilterClass *klass);
 static void	gst_videofilter_init		(GstVideofilter *videofilter);
 
@@ -68,7 +69,8 @@ gst_videofilter_get_type (void)
 
   if (!videofilter_type) {
     static const GTypeInfo videofilter_info = {
-      sizeof(GstVideofilterClass),      NULL,
+      sizeof(GstVideofilterClass),
+      (GBaseInitFunc)gst_videofilter_base_init,
       NULL,
       (GClassInitFunc)gst_videofilter_class_init,
       NULL,
@@ -83,8 +85,12 @@ gst_videofilter_get_type (void)
   return videofilter_type;
 }
 
-static void
-gst_videofilter_class_init (GstVideofilterClass *klass)
+static void gst_videofilter_base_init (GstVideofilterClass *klass)
+{
+  klass->formats = g_ptr_array_new();
+}
+
+static void gst_videofilter_class_init (GstVideofilterClass *klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -96,8 +102,6 @@ gst_videofilter_class_init (GstVideofilterClass *klass)
 
   gobject_class->set_property = gst_videofilter_set_property;
   gobject_class->get_property = gst_videofilter_get_property;
-
-  klass->formats = g_ptr_array_new();
 }
 
 #if 0
