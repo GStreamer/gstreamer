@@ -315,6 +315,7 @@ gst_multifdsink_add (GstMultiFdSink * sink, int fd)
   /* update start time */
   g_get_current_time (&now);
   client->connect_time = GST_TIMEVAL_TO_TIME (now);
+  client->disconnect_time = 0;
   /* send last activity time to connect time */
   client->last_activity_time = GST_TIMEVAL_TO_TIME (now);
 
@@ -382,6 +383,7 @@ gst_multifdsink_get_stats (GstMultiFdSink * sink, int fd)
 
     if (client->fd == fd) {
       GValue value = { 0 };
+      guint64 interval;
 
       result = g_value_array_new (4);
 
@@ -393,12 +395,25 @@ gst_multifdsink_get_stats (GstMultiFdSink * sink, int fd)
       g_value_set_uint64 (&value, client->connect_time);
       result = g_value_array_append (result, &value);
       g_value_unset (&value);
+      if (client->disconnect_time == 0) {
+        GTimeVal nowtv;
+
+        g_get_current_time (&nowtv);
+
+        interval = GST_TIMEVAL_TO_TIME (nowtv) - client->connect_time;
+      } else {
+        interval = client->disconnect_time - client->connect_time;
+      }
       g_value_init (&value, G_TYPE_UINT64);
       g_value_set_uint64 (&value, client->disconnect_time);
       result = g_value_array_append (result, &value);
       g_value_unset (&value);
       g_value_init (&value, G_TYPE_UINT64);
-      g_value_set_uint64 (&value, client->connect_interval);
+      g_value_set_uint64 (&value, interval);
+      result = g_value_array_append (result, &value);
+      g_value_unset (&value);
+      g_value_init (&value, G_TYPE_UINT64);
+      g_value_set_uint64 (&value, client->last_activity_time);
       result = g_value_array_append (result, &value);
       break;
     }
@@ -413,6 +428,7 @@ gst_multifdsink_get_stats (GstMultiFdSink * sink, int fd)
   return result;
 }
 
+/* should be called with the clientslock held */
 static void
 gst_multifdsink_client_remove (GstMultiFdSink * sink, GstTCPClient * client)
 {
@@ -430,10 +446,13 @@ gst_multifdsink_client_remove (GstMultiFdSink * sink, GstTCPClient * client)
 
   g_get_current_time (&now);
   client->disconnect_time = GST_TIMEVAL_TO_TIME (now);
-  client->connect_interval = client->disconnect_time = client->connect_time;
+
+  g_mutex_unlock (sink->clientslock);
 
   g_signal_emit (G_OBJECT (sink),
       gst_multifdsink_signals[SIGNAL_CLIENT_REMOVED], 0, fd);
+
+  g_mutex_lock (sink->clientslock);
 
   sink->clients = g_list_remove (sink->clients, client);
 

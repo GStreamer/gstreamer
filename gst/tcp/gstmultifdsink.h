@@ -95,7 +95,6 @@ typedef struct {
   guint64 bytes_sent;
   guint64 connect_time;
   guint64 disconnect_time;
-  guint64 connect_interval;
   guint64 last_activity_time;
   guint64 dropped_buffers;
   guint64 avg_queue_size;
