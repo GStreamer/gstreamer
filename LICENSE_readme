@@ -72,6 +72,7 @@ ladspa                            (http://www.ladspa.org/)
 lame             libmp3lame       (http://lame.sourceforge.net/)
 libvisual        libvisual        (http://libvisual.sourceforge.net/)
 matroska                          (http://www.matroska.org/)
+mikmod           libmikmod        (http://mikmod.raphnet.net/)
 ossaudio                          (http://www.opensound.com/)
 qcamsrc
 rfbenc           librfb
@@ -81,6 +82,9 @@ smoothwave
 swfdec                            (http://swfdec.sourceforge.net/)
 tarkin                            (http://svn.xiph.org/trunk/tarkin/)
 textoverlay      pango            (http://www.pango.org/)
+dirac                             (http://www.bbc.co.uk/rd/projects/dirac/)
+effectv (Our ports was relicensed)(http://effectv.sourceforge.net/)
+
 
 Plugins which use a BSD covered library are as follows:
 
@@ -118,10 +122,6 @@ sunaudiosink                            (http://www.sun.com/)
 
 Unsure:
 
-mikmod           libmikmod        (http://mikmod.raphnet.net/)
-Seems a newer release of mikmod is LGPL, though it's listed as GPL by
-GStreamer.
-
 faad             libfaad          (http://www.audiocoding.com/)
 faad's license depends on its major version :
   - for FAAD1 : it is LGPL
@@ -132,12 +132,3 @@ http://www.audiocoding.com/modules/wiki/?page=FAAC
 
 by default, GStreamer faad plugin would compile against FAAD2 if available.
 it falls back to FAAD1 if not.
-
-dirac                             (http://www.bbc.co.uk/rd/projects/dirac/)
-The sourceforge website claims it uses GPL, LGPL, and the Mozilla Public
-License 1.1.  Not sure which parts GStreamer uses, and what licenses are
-inherited.
-
-effectv          effectv          (http://effectv.sourceforge.net/)
-The sourceforge website claims it uses GPL, though it is currently
-listed as an LGPL library in GStreamer.
