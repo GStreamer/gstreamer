@@ -24,6 +24,8 @@
 
 #include "play.h"
 
+#define TICK_INTERVAL_MSEC 200
+
 enum
 {
   TIME_TICK,
@@ -42,6 +44,9 @@ struct _GstPlayPrivate {
   
   gint get_length_attempt;
   
+  gint     tick_unblock_remaining; /* how many msecs left
+                                      to unblock due to seeking */
+
   guint tick_id;
   guint length_id;
   
@@ -338,6 +343,12 @@ gst_play_tick_callback (GstPlay *play)
   GstElement *audio_sink_element = NULL;
   
   g_return_val_if_fail (play != NULL, FALSE);
+  /* just return without updating the UI when we are in the middle of seeking */
+  if (play->priv->tick_unblock_remaining > 0)
+  {
+    play->priv->tick_unblock_remaining -= TICK_INTERVAL_MSEC;
+    return TRUE;
+  }
   
   if (!GST_IS_PLAY (play)) {
     play->priv->tick_id = 0;
@@ -433,7 +444,7 @@ gst_play_state_change (GstElement *element, GstElementState old,
       play->priv->tick_id = 0;
     }
         
-    play->priv->tick_id = g_timeout_add (200,
+    play->priv->tick_id = g_timeout_add (TICK_INTERVAL_MSEC,
                                          (GSourceFunc) gst_play_tick_callback,
                                          play);
       
@@ -444,7 +455,7 @@ gst_play_state_change (GstElement *element, GstElementState old,
       play->priv->length_id = 0;
     }
         
-    play->priv->length_id = g_timeout_add (200,
+    play->priv->length_id = g_timeout_add (TICK_INTERVAL_MSEC,
                                    (GSourceFunc) gst_play_get_length_callback,
                                    play);
   }
@@ -671,9 +682,10 @@ gst_play_seek_to_time (GstPlay * play, gint64 time_nanos)
       GST_IS_ELEMENT (audio_sink_element)) {
     gboolean s = FALSE;
    
-    /* We block the tick signal while seeking */
-    if (play->priv->tick_id)
-      g_signal_handler_block (G_OBJECT (play), play->priv->tick_id);
+    /* HACK: block tick signal from idler for 500 msec */
+    /* GStreamer can't currently report when seeking is finished,
+       so we just chose a .5 sec default block time */
+    play->priv->tick_unblock_remaining = 500;
     
     s = gst_element_seek (video_seek_element, GST_FORMAT_TIME |
                           GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH,
@@ -683,10 +695,6 @@ gst_play_seek_to_time (GstPlay * play, gint64 time_nanos)
                             GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH,
                             time_nanos);
     }
-    
-    /* We unblock the tick signal after seeking */
-    if (play->priv->tick_id)
-      g_signal_handler_unblock (G_OBJECT (play), play->priv->tick_id);
     
     if (s) {
       GstFormat format = GST_FORMAT_TIME;
