@@ -1,3 +1,13 @@
+2004-06-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_get_fps_list),
+	(gst_v4lsrc_get_fps), (gst_v4lsrc_srcconnect),
+	(gst_v4lsrc_getcaps):
+	* sys/v4l/v4l_calls.c: (gst_v4l_set_window_properties),
+	(gst_v4l_get_picture), (gst_v4l_get_audio), (gst_v4l_set_audio):
+	  add querying of fps lists for webcams.  Negotiating to a framerate
+	  now works.
+
 2004-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/theora/theoraenc.c: (theora_buffer_from_packet),
