@@ -101,7 +101,7 @@ gst_element_factory_init (GstElementFactory *factory)
  * gst_element_factory_find:
  * @name: name of factory to find
  *
- * Search for an elementfactory of the given name.
+ * Search for an element factory of the given name.
  *
  * Returns: #GstElementFactory if found, NULL otherwise
  */
@@ -129,7 +129,7 @@ gst_element_factory_find (const gchar *name)
 /**
  * gst_element_factory_get_list:
  *
- * Get the global list of elementfactories.
+ * Get the global list of element factories.
  *
  * Returns: GList of type #GstElementFactory
  */

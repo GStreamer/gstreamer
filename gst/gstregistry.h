@@ -25,12 +25,12 @@
 #define __GST_REGISTRY_H__
 
 #define GLOBAL_REGISTRY_DIR      GST_CONFIG_DIR
-#define GLOBAL_REGISTRY_FILE     GLOBAL_REGISTRY_DIR"/reg.xml"
-#define GLOBAL_REGISTRY_FILE_TMP GLOBAL_REGISTRY_DIR"/.reg.xml.tmp"
+#define GLOBAL_REGISTRY_FILE     GLOBAL_REGISTRY_DIR"/registry.xml"
+#define GLOBAL_REGISTRY_FILE_TMP GLOBAL_REGISTRY_DIR"/.registry.xml.tmp"
 
 #define LOCAL_REGISTRY_DIR       ".gstreamer"
-#define LOCAL_REGISTRY_FILE      LOCAL_REGISTRY_DIR"/reg.xml"
-#define LOCAL_REGISTRY_FILE_TMP  LOCAL_REGISTRY_DIR"/.reg.xml.tmp"
+#define LOCAL_REGISTRY_FILE      LOCAL_REGISTRY_DIR"/registry.xml"
+#define LOCAL_REGISTRY_FILE_TMP  LOCAL_REGISTRY_DIR"/.registry.xml.tmp"
 
 #define REGISTRY_DIR_PERMS (S_ISGID | \
                             S_IRUSR | S_IWUSR | S_IXUSR | \
