@@ -159,7 +159,7 @@ enum
   ARG_CWLIMIT,
   ARG_ALLOW_DIFF_SHORT,
   ARG_NO_SHORT_BLOCKS,
-  ARG_EMPHASIS,
+  ARG_EMPHASIS
 };
 
 static void gst_lame_base_init (gpointer g_class);
