@@ -22,7 +22,7 @@
 #ifndef __GST_DPSMOOTH_H__
 #define __GST_DPSMOOTH_H__
 
-#include <gst/control/dparam.h>
+#include "dparam.h"
 
 #ifdef __cplusplus
 extern "C" {

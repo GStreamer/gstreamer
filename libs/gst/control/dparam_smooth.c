@@ -23,8 +23,8 @@
 #include <string.h>
 #include <gst/gstinfo.h>
 
-#include <gst/control/dparam_smooth.h>
-#include <gst/control/dparammanager.h>
+#include "dparam_smooth.h"
+#include "dparammanager.h"
 
 static void gst_dpsmooth_class_init (GstDParamSmoothClass *klass);
 static void gst_dpsmooth_init (GstDParamSmooth *dparam);

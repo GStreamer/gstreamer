@@ -19,7 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/control/dplinearinterp.h>
+#include "dplinearinterp.h"
 
 static void gst_dp_linint_class_init (GstDParamClass *klass);
 static void gst_dp_linint_base_class_init (GstDParamClass *klass);

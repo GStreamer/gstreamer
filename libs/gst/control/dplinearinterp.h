@@ -24,7 +24,7 @@
 #define __GST_DP_LININT_H__
 
 #include <gst/gstobject.h>
-#include <gst/control/dparam.h>
+#include "dparam.h"
 
 #ifdef __cplusplus
 extern "C" {

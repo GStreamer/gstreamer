@@ -21,7 +21,7 @@
  */
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+#include "bytestream.h"
 
 #define GST_TYPE_IDENTITY \
   (gst_identity_get_type())

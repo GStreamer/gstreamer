@@ -29,7 +29,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <gst/putbits/putbits.h>
+#include "putbits.h"
 #include <gst/gstplugin.h>
 #include <gst/gstversion.h>
 

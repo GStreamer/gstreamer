@@ -1,4 +1,4 @@
-#include <gst/getbits/getbits.h>
+#include "getbits.h"
 
 unsigned long _gst_getbits_int_cb(gst_getbits_t *gb, unsigned long bits);
 unsigned long _gst_get1bit_int(gst_getbits_t *gb, unsigned long bits);

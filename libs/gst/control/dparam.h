@@ -24,7 +24,7 @@
 
 #include <gst/gstobject.h>
 #include <gst/gstprops.h>
-#include <gst/control/dparamcommon.h>
+#include "dparamcommon.h"
 
 #ifdef __cplusplus
 extern "C" {

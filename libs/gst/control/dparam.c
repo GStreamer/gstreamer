@@ -23,8 +23,8 @@
 #include <string.h>
 #include <gst/gstinfo.h>
 
-#include <gst/control/dparam.h>
-#include <gst/control/dparammanager.h>
+#include "dparam.h"
+#include "dparammanager.h"
 
 static void gst_dparam_class_init (GstDParamClass *klass);
 static void gst_dparam_init (GstDParam *dparam);
