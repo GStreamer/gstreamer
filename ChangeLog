@@ -1,3 +1,9 @@
+2004-01-20  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/divx/gstdivxdec.c: (gst_divxdec_setup), (gst_divxdec_chain):
+	* ext/divx/gstdivxenc.c: (gst_divxenc_setup), (gst_divxenc_chain):
+	  Fix for new error system.
+
 2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/divx/gstdivxenc.c: (gst_divxenc_setup), (gst_divxenc_chain):
