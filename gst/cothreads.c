@@ -244,7 +244,8 @@ cothread_destroy (cothread_state *thread)
     g_free (thread);
   }
   else {
-    munmap ((void *) thread, COTHREAD_STACKSIZE);
+    /* this doesn't seem to work very well */
+    /* munmap ((void *) thread, COTHREAD_STACKSIZE); */
   }
 
   ctx->threads[threadnum] = NULL;
