@@ -115,7 +115,8 @@ libgstinclude_HEADERS =		\
 	gsttypefind.h		\
 	gstutils.h		\
 	gstparse.h		\
-	gstxml.h
+	gstxml.h		\
+	gstversion.h
 
 noinst_HEADERS = 	\
 	gst_private.h	\
