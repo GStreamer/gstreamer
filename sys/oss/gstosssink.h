@@ -59,7 +59,6 @@ struct _GstOssSink {
 
   GstClock 	*provided_clock;
   GstClock 	*clock;
-  gboolean	 resync;
   gboolean	 sync;
   guint64	 handled;
 

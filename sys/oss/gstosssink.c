@@ -218,7 +218,6 @@ gst_osssink_init (GstOssSink * osssink)
   osssink->chunk_size = 4096;
   osssink->mute = FALSE;
   osssink->sync = TRUE;
-  osssink->resync = TRUE;
   osssink->provided_clock =
       gst_audio_clock_new ("ossclock", gst_osssink_get_time, osssink);
   gst_object_set_parent (GST_OBJECT (osssink->provided_clock),
@@ -392,9 +391,6 @@ gst_osssink_chain (GstPad * pad, GstData * _data)
             FALSE);
         gst_pad_event_default (pad, event);
         return;
-      case GST_EVENT_DISCONTINUOUS:
-        osssink->resync = TRUE;
-        /* pass-through */
       default:
         gst_pad_event_default (pad, event);
         return;
@@ -424,13 +420,13 @@ gst_osssink_chain (GstPad * pad, GstData * _data)
     buftime = soundtime;
   }
   GST_LOG_OBJECT (osssink,
-      "time: real %" G_GUINT64_FORMAT ", buffer: %" G_GUINT64_FORMAT, soundtime,
-      buftime);
+      "time: real %" GST_TIME_FORMAT ", buffer: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (soundtime), GST_TIME_ARGS (buftime));
   if (MAX (buftime, soundtime) - MIN (buftime, soundtime) > (GST_SECOND / 10)) {
     /* we need to adjust to the buffers here */
     GST_INFO_OBJECT (osssink,
-        "need sync: real %" G_GUINT64_FORMAT ", buffer: %" G_GUINT64_FORMAT,
-        soundtime, buftime);
+        "need sync: real %" GST_TIME_FORMAT ", buffer: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (soundtime), GST_TIME_ARGS (buftime));
     if (soundtime > buftime) {
       /* do *not* throw frames out. It's useless. The next frame will come in
        * too late. And the next one. And so on. We don't want to lose sound.
@@ -444,29 +440,22 @@ gst_osssink_chain (GstPad * pad, GstData * _data)
               GST_OSSELEMENT (osssink)->channels)) *
           (GST_OSSELEMENT (osssink)->width / 8) *
           GST_OSSELEMENT (osssink)->channels;
+      guint8 *sbuf = g_new (guint8, to_handle);
 
-      if (!osssink->resync) {
-        guint8 *buf = g_new (guint8, to_handle);
+      memset (sbuf, (GST_OSSELEMENT (osssink)->width == 8) ? 0 : 128,
+          to_handle);
+      while (to_handle > 0) {
+        gint done = write (GST_OSSELEMENT (osssink)->fd, sbuf,
+            MIN (to_handle, osssink->chunk_size));
 
-        memset (buf, (GST_OSSELEMENT (osssink)->width == 8) ? 0 : 128,
-            to_handle);
-        while (to_handle > 0) {
-          gint done = write (GST_OSSELEMENT (osssink)->fd, buf,
-              MIN (to_handle, osssink->chunk_size));
-
-          if (done == -1 && errno != EINTR) {
-            break;
-          } else {
-            to_handle -= done;
-            osssink->handled += done;
-          }
+        if (done == -1 && errno != EINTR) {
+          break;
+        } else {
+          to_handle -= done;
+          osssink->handled += done;
         }
-        g_free (buf);
-      } else {
-        /* Timestamps at start-of-stream (MPEG) or after seek (hey,
-         * again MPEG!) can be borken, therefore this hacklet. */
-        osssink->handled += to_handle;
       }
+      g_free (sbuf);
     }
   }
 
@@ -666,7 +655,6 @@ gst_osssink_change_state (GstElement * element)
         ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_RESET, 0);
       gst_osselement_reset (GST_OSSELEMENT (osssink));
       osssink->handled = 0;
-      osssink->resync = TRUE;
       break;
     default:
       break;

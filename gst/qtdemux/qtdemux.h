@@ -74,6 +74,9 @@ struct _GstQTDemux {
 
   /* track stuff */
 
+  guint64 last_ts;
+  gboolean need_discont;
+  gboolean need_flush;
 };
 
 struct _GstQTDemuxClass {

@@ -231,6 +231,10 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   gst_element_set_loop_function (GST_ELEMENT (qtdemux),
       gst_qtdemux_loop_header);
   gst_element_add_pad (GST_ELEMENT (qtdemux), qtdemux->sinkpad);
+
+  qtdemux->last_ts = GST_CLOCK_TIME_NONE;
+  qtdemux->need_discont = FALSE;
+  qtdemux->need_flush = FALSE;
 }
 
 static const GstFormat *
@@ -332,7 +336,8 @@ static gboolean
 gst_qtdemux_handle_src_query (GstPad * pad, GstQueryType type,
     GstFormat * format, gint64 * value)
 {
-  gboolean res = TRUE;
+  gboolean res = FALSE;
+  GstQTDemux *qtdemux = GST_QTDEMUX (gst_pad_get_parent (pad));
 
   //QtDemuxStream *stream = gst_pad_get_element_private(pad);
 
@@ -340,7 +345,11 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQueryType type,
     case GST_QUERY_TOTAL:
       switch (*format) {
         case GST_FORMAT_TIME:
-          *value = 0;           /* FIXME */
+          if (qtdemux->duration != 0 && qtdemux->timescale != 0) {
+            *value =
+                (guint64) qtdemux->duration * GST_SECOND / qtdemux->timescale;
+            res = TRUE;
+          }
           break;
         case GST_FORMAT_BYTES:
           *value = 0;           /* FIXME */
@@ -356,7 +365,10 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQueryType type,
     case GST_QUERY_POSITION:
       switch (*format) {
         case GST_FORMAT_TIME:
-          *value = 0;           /* FIXME */
+          if (GST_CLOCK_TIME_IS_VALID (qtdemux->last_ts)) {
+            *value = qtdemux->last_ts;
+            res = TRUE;
+          }
           break;
         case GST_FORMAT_BYTES:
           *value = 0;           /* FIXME */
@@ -381,8 +393,7 @@ static gboolean
 gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
-
-  //QtDemuxStream *stream = gst_pad_get_element_private(pad);
+  GstQTDemux *qtdemux = GST_QTDEMUX (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -391,13 +402,35 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
       switch (GST_EVENT_SEEK_FORMAT (event)) {
         case GST_FORMAT_BYTES:
         case GST_FORMAT_DEFAULT:
+          res = FALSE;
+          break;
         case GST_FORMAT_TIME:
         {
           gint64 desired_offset = GST_EVENT_SEEK_OFFSET (event);
+          gint i = 0, n;
+          QtDemuxStream *stream = gst_pad_get_element_private (pad);
 
           GST_DEBUG ("seeking to %" G_GINT64_FORMAT, desired_offset);
 
-          res = FALSE;
+          if (!stream->n_samples) {
+            res = FALSE;
+            break;
+          }
+
+          /* resync to new time */
+          for (n = 0; n < qtdemux->n_streams; n++) {
+            QtDemuxStream *str = qtdemux->streams[n];
+
+            for (i = 0; i < str->n_samples; i++) {
+              if (str->samples[i].timestamp > desired_offset)
+                break;
+            }
+            str->sample_index = i;
+          }
+          qtdemux->need_discont = TRUE;
+          if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH)
+            qtdemux->need_flush = TRUE;
+          break;
         }
         default:
           res = FALSE;
@@ -456,7 +489,6 @@ gst_qtdemux_handle_sink_event (GstQTDemux * qtdemux)
       gst_pad_event_default (qtdemux->sinkpad, event);
       return FALSE;
     case GST_EVENT_FLUSH:
-      //g_warning("flush event");
       break;
     case GST_EVENT_DISCONTINUOUS:
       GST_DEBUG ("discontinuous event");
@@ -490,6 +522,9 @@ gst_qtdemux_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      qtdemux->last_ts = GST_CLOCK_TIME_NONE;
+      qtdemux->need_discont = FALSE;
+      qtdemux->need_flush = FALSE;
       break;
     case GST_STATE_READY_TO_NULL:
       gst_bytestream_destroy (qtdemux->bs);
@@ -727,8 +762,29 @@ gst_qtdemux_loop_header (GstElement * element)
 
         GST_BUFFER_TIMESTAMP (buf) =
             stream->samples[stream->sample_index].timestamp;
+        qtdemux->last_ts = GST_BUFFER_TIMESTAMP (buf);
         GST_BUFFER_DURATION (buf) =
             stream->samples[stream->sample_index].duration;
+        if (qtdemux->need_flush) {
+          gst_pad_event_default (qtdemux->sinkpad,
+              gst_event_new (GST_EVENT_FLUSH));
+          qtdemux->need_flush = FALSE;
+        }
+        if (qtdemux->need_discont) {
+          GstEvent *event = gst_event_new_discontinuous (FALSE,
+              GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf),
+              GST_FORMAT_UNDEFINED);
+          gint n;
+
+          qtdemux->need_discont = FALSE;
+          for (n = 0; n < qtdemux->n_streams; n++) {
+            gst_event_ref (event);
+            gst_pad_push (qtdemux->streams[n]->pad, GST_DATA (event));
+          }
+          gst_event_unref (event);
+        }
+        g_print ("Pushing buf with time=%" GST_TIME_FORMAT "\n",
+            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
         gst_pad_push (stream->pad, GST_DATA (buf));
 
         GST_INFO ("pushing buffer on %" GST_PTR_FORMAT, stream->pad);
@@ -1307,6 +1363,8 @@ qtdemux_dump_mvhd (GstQTDemux * qtdemux, void *buffer, int depth)
       QTDEMUX_GUINT32_GET (buffer + 20));
   GST_LOG ("%*s  duration:      %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 24));
+  qtdemux->duration = QTDEMUX_GUINT32_GET (buffer + 24);
+  qtdemux->timescale = QTDEMUX_GUINT32_GET (buffer + 20);
   GST_LOG ("%*s  pref. rate:    %g", depth, "", QTDEMUX_FP32_GET (buffer + 28));
   GST_LOG ("%*s  pref. volume:  %g", depth, "", QTDEMUX_FP16_GET (buffer + 32));
   GST_LOG ("%*s  preview time:  %u", depth, "",
@@ -2077,30 +2135,31 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         sample_index += samples_per_chunk;
       }
     }
-/*
-done2:
-    n_sample_times = QTDEMUX_GUINT32_GET(stts->data + 12);
-    GST_LOG("n_sample_times = %d",n_sample_times);
+#if 0
+  done2:
+    n_sample_times = QTDEMUX_GUINT32_GET (stts->data + 12);
+    GST_LOG ("n_sample_times = %d", n_sample_times);
     timestamp = 0;
     index = 0;
     sample_index = 0;
-    for(i=0;i<n_sample_times;i++){
+    for (i = 0; i < n_sample_times; i++) {
       int duration;
       guint64 time;
-  
-      sample_index += QTDEMUX_GUINT32_GET(stts->data + 16 + 8*i);
-      duration = QTDEMUX_GUINT32_GET(stts->data + 16 + 8*i + 4);
-      for(;index < n_samples && samples[index].sample_index < sample_index;index++){
-	int size;
+
+      sample_index += QTDEMUX_GUINT32_GET (stts->data + 16 + 8 * i);
+      duration = QTDEMUX_GUINT32_GET (stts->data + 16 + 8 * i + 4);
+      for (; index < n_samples && samples[index].sample_index < sample_index;
+          index++) {
+        int size;
 
         samples[index].timestamp = timestamp;
-	size = samples[index+1].sample_index - samples[index].sample_index;
-	time = GST_SECOND / stream->rate; //(GST_SECOND * duration * samples[index].size)/stream->timescale ;
+        size = samples[index + 1].sample_index - samples[index].sample_index;
+        time = GST_SECOND / stream->rate;       //(GST_SECOND * duration * samples[index].size)/stream->timescale ;
         timestamp += time;
         samples[index].duration = time;
       }
     }
-*/
+#endif
   }
 done2:
 #if 0
