@@ -1,3 +1,10 @@
+2004-01-29  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/random/mimetypes:
+	  Update docs to point to correct elements for various mimetypes, and
+	  some more errors pointed out by Stéphane LOEUILLET (aka LeRoutier)
+	  <stephane.loeuillet@tiscali.fr>.
+
 2004-01-28  David Schleef  <ds@schleef.org>
 
 	* docs/pwg/intro-basics.xml: rewrite bufferpool stuff.

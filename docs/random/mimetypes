@@ -22,20 +22,14 @@ key/value pairs).
 An example of a MIME type is 'video/mpeg'. A corresponding GstCaps could be
 created using code:
 
-GstCaps *caps = gst_caps_new("video_mpeg_type",
-                             "video/mpeg",
-                             gst_props_new("width",  GST_PROPS_INT(384),
-                                           "height", GST_PROPS_INT(288),
-                                           NULL));
-or by using a macro:
+GstCaps *caps = gst_caps_new_simple ("video/mpeg",
+				     "width",  G_TYPE_INT, 384,
+				     "height", G_TYPE_INT, 288,
+				     NULL);
 
-GstCaps *caps = GST_CAPS_NEW("video_mpeg_type",
-                             "video/mpeg",
-                               "width",  GST_PROPS_INT(384),
-                               "height", GST_PROPS_INT(288));
-
-Obviously, MIME types and their corresponding properties are of major importance
-in GStreamer for uniquely identifying media streams.
+MIME types and their corresponding properties are of major importance in
+GStreamer for uniquely identifying media streams. Therefore, we define them
+per media type. All GStreamer plugins should keep to this definition.
 
 Official MIME media types are assigned by the IANA. Current assignments are at
 http://www.iana.org/assignments/media-types/.
@@ -100,14 +94,14 @@ Container formats
 3 - MPEG (MPEG LA)
     MIME type: video/mpeg
     Properties: 'systemstream' = TRUE (BOOLEAN)
-    Parser: mp1videoparse
-    Formatter:
+    Parser: mpegdemux
+    Formatter: mplex
 
 4 - ASF (Microsoft)
     MIME type: video/x-ms-asf
     Properties:
     Parser: asfdemux
-    Formatter:
+    Formatter: asfmux
 
 5 - WAV (PCM)
     MIME type: audio/x-wav
@@ -130,14 +124,14 @@ Container formats
 8 - Ogg (Xiph)
     MIME type: application/ogg
     Properties:
-    Parser: vorbisfile
-    Formatter: vorbisenc
+    Parser: oggdemux
+    Formatter:
 
 9 - Matroska
     MIME type: video/x-mkv
     Properties:
-    Parser:
-    Formatter:
+    Parser: matroskademux
+    Formatter: matroskamux
 
 10 - Shockwave (Macromedia)
      MIME type: application/x-shockwave-flash
@@ -183,7 +177,8 @@ Container formats
 
 Please note that we try to keep these MIME types as similar as possible to the
 MIME types used as standards in Gnome (Gnome-VFS/Nautilus) and KDE
-(Konqueror).
+(Konqueror). Both will (in future) stick to a shared-mime-info database that
+is hosted on freedesktop.org, and bases itself on IANA.
 
 Also, there is a very thin line between audio codecs and audio containers
 (take mp3 vs. sid, etc.). This is just a per-case thing right now and needs to
@@ -216,8 +211,8 @@ framerate = 0 - MAXFLOAT (FLOAT)
     Properties:
     Optional properties: divxversion = 3/4/5 (INT)
     Known fourccs: DIV3, DIV4, DIV5, DIVX, DX50, DIVX, divx
-    Encoder:
-    Decoder: dvdreadsrc, dvdnavsrc
+    Encoder: divxenc
+    Decoder: divxdec, ffdec_mpeg4
 
 3 - Microsoft MPEG 4.1, 4.2 and 4.3
     MIME type: video/x-msmpeg
@@ -231,14 +226,14 @@ framerate = 0 - MAXFLOAT (FLOAT)
     MIME type: video/x-jpeg
     Properties:
     Known fourccs: MJPG (YUY2 MJPEG), JPEG (any), PIXL (Pinnacle/Miro), VIXL
-    Encoder:
-    Decoder:
+    Encoder: jpegenc
+    Decoder: jpegdec, ffdec_mjpeg
 
 5 - Sorensen (Quicktime - SVQ1/SVQ3)
     MIME types: video/x-svq
     Properties: svqversion = 1/3 (INT)
     Encoder:
-    Decoder:
+    Decoder: ffdec_svq1, ffdec_svq3
 
 6 - H263 and related codecs
     MIME type: video/x-h263
@@ -252,7 +247,7 @@ framerate = 0 - MAXFLOAT (FLOAT)
     Properties: systemstream = FALSE (BOOLEAN)
     Known fourccs: RV10, RV20, RV30
     Encoder:
-    Decoder: rmdemux
+    Decoder:
 
 8 - Digital Video (DV)
     MIME type: video/x-dv
@@ -265,14 +260,14 @@ framerate = 0 - MAXFLOAT (FLOAT)
     MIME type: video/x-wmv
     Properties: wmvversion = 1/2 (INT)
     Encoder:
-    Decoder:
+    Decoder: ffdec_wmv1, ffdec_wmv2
 
 10 - XviD (xvid.org)
      MIME type: video/x-xvid
      Properties:
      Known fourccs: xvid, XVID
-     Encoder:
-     Decoder:
+     Encoder: xvidenc
+     Decoder: xviddec, ffdec_mpeg4
 
 11 - 3IVX (3ixv.org)
      MIME type: video/x-3ivx
@@ -291,26 +286,26 @@ framerate = 0 - MAXFLOAT (FLOAT)
      MIME type: video/x-vp3
      Properties:
      Encoder:
-     Decoder:
+     Decoder: ffdec_vp3
 
 14 - Ogg/Theora (Xiph, VP3-like)
      MIME type: video/x-theora
      Properties:
      Encoder:
-     Decoder:
+     Decoder: ffdec_vp3
 
 15 - Huffyuv
      MIME type: video/x-huffyuv
      Properties:
      Known fourccs: HFYU
      Encoder:
-     Decoder:
+     Decoder: ffdec_hfyu
 
 16 - FF Video 1 (FFMPEG)
      MIME type: video/x-ffv
      Properties: ffvversion = 1 (INT)
      Encoder:
-     Decoder:
+     Decoder: ffdec_ffv1
 
 17 - H264
      MIME type: video/x-h264
@@ -341,76 +336,6 @@ TODO: divx4/divx5/xvid/3ivx/mpeg-4 - how to make them overlap? (all
 
 3c) Audio Codecs
 ----------------
-for convenience, the two-byte hexcodes (as are being used for identification
-in AVI files) are also given
-
-Preface - (optional) properties for all audio formats:
-  'rate' = X (int) <- sampling rate
-  'channels' = X (int) <- number of audio channels
-
-1 - Raw Audio (integer format)
-  mimetype: audio/x-raw-int
-  properties: 'width' = X (INT) <- memory bits per sample
-              'depth' = X (INT) <- used bits per sample
-              'signed' = X (BOOLEAN)
-              'endianness' = 1234/4321 (INT)
-
-2 - Raw Audio (floating point format)
-  mimetype: audio/x-raw-float
-  properties: 'width' = X (INT) <- 32=float, 64=double
-              'endianness' = 1234/4321 (INT) <- use G_BIG/LITTLE_ENDIAN!
-              'buffer-frames' = (INT)
-		  number of samples per buffer, 0 means undefined
-  With regards to the signal: 0.0 represents no signal, +/- 1.0 is 0 dB.
-
-3 - Alaw Raw Audio
-  mimetype: audio/x-alaw
-
-4 - Mulaw Raw Audio
-  mimetype: audio/x-mulaw
-
-5 - MPEG-1 layer 1/2/3 audio
-  mimetype: audio/mpeg
-  properties: 'mpegversion' = 1 (INT)
-              'layer' = 1/2/3 (INT)
-
-6 - Ogg/Vorbis
-  mimetype: audio/x-vorbis
-
-7 - Windows Media Audio 1 and 2 (WMA)
-  mimetype: audio/x-wma
-  properties: 'wmaversion' = 1/2 (INT)
-
-8 - AC3
-  mimetype: audio/x-ac3
-
-9 - FLAC (Free Lossless Audio Codec)
-  mimetype: audio/x-flac
-
-10 - MACE 3/6 (Quicktime audio)
-  mimetype: audio/x-mace
-  properties: 'maceversion' = 3/6 (INT)
-
-11 - MPEG-4 AAC
-  mimetype: audio/mpeg
-  properties: 'mpegversion' = 4 (INT)
-
-12 - (IMA) ADPCM (Quicktime/WAV/Microsoft/4XM)
-  mimetype: audio/x-adpcm
-  properties: 'layout' = "quicktime"/"wav"/"microsoft"/"4xm" (STRING)
-
-  Note: the difference between each of these is the number of
-        samples packaed together per channel. For WAV, for
-        example, each sample is 4 bit, and 8 samples are packed
-        together per channel in the bytestream. For the others,
-        refer to technical documentation.
-        We probably want to distinguish these differently, but
-        I don't know how, yet.
-
-13 - RealAudio (Real)
-  mimetype: audio/x-pn-realaudio
-  properties: 'bitrate' = 14400/28800 (INT)
-
 For convenience, the two-byte hexcodes (as used for identification in AVI files)
 are also given.
 
@@ -447,13 +372,13 @@ channels = 1 - MAXINT (INT, number of audio channels)
     MIME type: audio/x-wma
     Properties: wmaversion = 1/2 (INT)
     Encoder:
-    Decoder:
+    Decoder: ffdec_wmav1, ffdec_wmav2
 
 6 - AC3
     MIME type: audio/x-ac3
     Properties:
-    Encoder:
-    Decoder:
+    Encoder: ffenc_ac3
+    Decoder: a52dec
 
 7 - FLAC (Free Lossless Audio Codec)
     MIME type: audio/x-flac
@@ -470,8 +395,8 @@ channels = 1 - MAXINT (INT, number of audio channels)
 9 - MPEG-4 AAC
     MIME type: audio/mpeg
     Properties: mpegversion = 4 (INT)
-    Encoder:
-    Decoder:
+    Encoder: faac
+    Decoder: faad
 
 10 - (IMA) ADPCM (Quicktime/WAV/Microsoft/4XM)
      MIME type: audio/x-adpcm
@@ -619,6 +544,8 @@ endianness = 1234/4321 (INT) <- use G_BIG/LITTLE_ENDIAN
 4 - Raw audio (floating point format)
     MIME type: audio/x-raw-float
     Properties: width = 32/64 (INT)
+                endianness: 1234/4321 (INT)
+                buffer-frames: number of audio frames per buffer, 0=undefined
 
 Plugin Guidelines
 =================
