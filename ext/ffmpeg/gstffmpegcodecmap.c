@@ -168,7 +168,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
                                  ));
       caps = gst_caps_append(caps,
              GST_FF_VID_CAPS_NEW ("ffmpeg_3ivx",
-                                  "video/x-3ivx",
+                                  "video/x-3ivx"
                                  ));
       break;
 
@@ -329,7 +329,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
     case CODEC_ID_4XM:
       caps = GST_FF_VID_CAPS_NEW ("ffmpeg_4xmvideo",
-                                  "video/x-4xm",
+                                  "video/x-4xm"
                                  );
       break;
 
@@ -945,7 +945,7 @@ gst_ffmpeg_caps_to_codecid (GstCaps        *caps,
       guint32 fmt_fcc = 0;
       enum PixelFormat pix_fmt = -1;
 
-      if (gst_caps_has_property)
+      if (gst_caps_has_property (caps, "format"))
         gst_caps_get_fourcc_int (caps, "format", &fmt_fcc);
       else
         fmt_fcc = GST_MAKE_FOURCC ('R','G','B',' ');
