@@ -1,0 +1,36 @@
+GStreamer is developed under the terms of the LGPL (see LICENSE file for details). Some of our plugins however rely on libraries which are available under i other licenses. This means that if you are using an applications which has a non-GPL compatible license, for instance a closed-source application with GStreamer you have to make sure not to use GPL linked plugins.
+When using GPL linked plugins GStreamer is for all practical reasons under the GPL itself. 
+
+The plugins which use a GPL library are as follows:
+cdparanoia      libcdparanoia   (http://www.xiph.org/paranoia/)
+aasink		aalib		(http://aa-project.sourceforge.net/aalib/)
+xmms		libxmms		(http://www.xmms.org)
+decdvd		ac3dec,mpeg2dec	(http://linuxvideo.org/mpeg2dec/,http://linuxvideo.org/ac3dec/)a
+
+Plugins which use library a LGPL are as follows:
+Colorspace 	Hermes 		(http://www.clanlib.org/hermes/)
+httpsrc		libghttp	(ftp.gnome.org/pub/GNOME/stable/sources/libghttp/)
+alsasink	alsa		(http://alsa-project.org)
+aRts		aRts		(http://arts-project.org)
+sdlsink		libsdl		(http://www.libsdl.org)
+gnomevfssource  gnome-vfs       (ftp.gnome.org//pub/GNOME/stable/sources/gnome-vfs)
+gnomevfssink    gnome-vfs
+esdsink         libesd          (ftp.gnome.org/pub/GNOME/stable/sources/esound)
+icastsend       libshout        (http://www.icecast.org)
+lame            libmp3lame      (http://www.mp3dev.org/mp3/)
+gst1394         libraw1394      (http://linux1394.sourceforge.net)
+flac		libFLAC		(http://flac.sourceforge.net)
+RTP		ortp		(http://www.linphone.org/ortp/)
+
+Plugins which use a BSD covered library are as follows:
+vorbisenc	libogg/libvorbis	(http://www.xiph.org/ogg/vorbis)
+vorbisdec	libogg/libvorbis
+
+Plugins based on libraries with other free licenses:
+xsink		libXv		(MIT X11 / X Consortium license)
+gsm		libgsm		(MIT license http://kbs.cs.tu-berlin.de/~jutta/toast.html)
+
+Plugins using non-free libraries:
+xamp3 decoder 	libxaudio       (http://www.xaudio.com/)
+wincodec	win32ddl	(http://divx.euro.ru/)
+
