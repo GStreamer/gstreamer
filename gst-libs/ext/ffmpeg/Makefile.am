@@ -77,7 +77,12 @@ checkout:
 install:
 	cd ffmpeg && make
 
+# we don't install stuff so no need to uninstall
+uninstall:
+	@true
+
 # override recursive targets
+# FIXME: maybe this can be prettier, so it doesn't generate warnings
 dvi-recursive:
 	true
 check-recursive:
