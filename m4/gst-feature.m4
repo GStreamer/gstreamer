@@ -1,5 +1,6 @@
 dnl Perform a check for a feature for GStreamer
 dnl Richard Boulton <richard-alsa@tartarus.org>
+dnl Thomas Vander Stichele <thomas@apestaart.org> added useful stuff
 dnl Last modification: 25/06/2001
 dnl GST_CHECK_FEATURE(FEATURE-NAME, FEATURE-DESCRIPTION,
 dnl                   DEPENDENT-PLUGINS, TEST-FOR-FEATURE,
@@ -12,7 +13,7 @@ dnl
 dnl The test should define HAVE_<FEATURE-NAME> to "yes" or "no" depending
 dnl on whether the feature is available.
 dnl
-dnl The macro will set USE_<<FEATURE-NAME> to "yes" or "no" depending on
+dnl The macro will set USE_<FEATURE-NAME> to "yes" or "no" depending on
 dnl whether the feature is to be used.
 dnl
 dnl The macro will call AM_CONDITIONAL(USE_<<FEATURE-NAME>, ...) to allow
@@ -35,6 +36,13 @@ dnl                     used.
 dnl ACTION-IF-NOTUSE    any extra actions to perform if the feature is not to
 dnl                     be used.
 dnl
+dnl
+dnl thomas :
+dnl we also added a history.  
+dnl GST_PLUGINS_YES will contain all plugins to be built
+dnl                 that were checked through GST_CHECK_FEATURE
+dnl GST_PLUGINS_NO will contain those that won't be built
+
 AC_DEFUN(GST_CHECK_FEATURE,
 [dnl
 builtin(define, [gst_endisable], ifelse($5, [disabled], [enable], [disable]))dnl
@@ -70,10 +78,12 @@ fi
 dnl *** Warn if it's disabled or not found
 if test x$USE_[$1] = xyes; then
   ifelse([$6], , :, [$6])
+  GST_PLUGINS_YES="$GST_PLUGINS_YES \n\t[$3]"
 else
   ifelse([$3], , :, [AC_MSG_WARN(
 ***** NOTE: These plugins won't be built: [$3]
 )])
+  GST_PLUGINS_NO="$GST_PLUGINS_NO \n\t[$3]"
   ifelse([$7], , :, [$7])
 fi
 dnl *** Define the conditional as appropriate
@@ -104,3 +114,31 @@ AC_DEFUN(GST_CHECK_CONFIGPROG,
   AC_SUBST([$1]_LIBS)
   AC_SUBST([$1]_CFLAGS)
 ])
+
+dnl Use AC_CHECK_LIB and AC_CHECK_HEADER to do both tests at once
+dnl sets HAVE_module if we have it
+dnl Richard Boulton <richard-alsa@tartarus.org>
+dnl Last modification: 26/06/2001
+dnl GST_CHECK_LIBHEADER(FEATURE-NAME, LIB NAME, LIB FUNCTION, EXTRA LD FLAGS, 
+dnl                     HEADER NAME, ACTION-IF-FOUND, ACTION-IF-NOT-FOUND)
+dnl
+dnl This check was written for GStreamer: it should be renamed and checked
+dnl for portability if you decide to use it elsewhere.
+dnl
+AC_DEFUN(GST_CHECK_LIBHEADER,
+[
+  AC_CHECK_LIB([$2], [$3], HAVE_[$1]=yes, HAVE_[$1]=no,[$4])
+  if test "x$HAVE_[$1]" = "xyes"; then
+    AC_CHECK_HEADER([$5], :, HAVE_[$1]=no)
+    if test "x$HAVE_[$1]" = "xyes"; then
+      dnl execute what needs to be
+      ifelse([$6], , :, [$6])
+    else
+      ifelse([$7], , :, [$7])
+    fi
+  else
+    AC_MSG_WARN([$1] not found)
+  fi
+  AC_SUBST(HAVE_[$1])
+]
+)
