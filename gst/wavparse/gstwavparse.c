@@ -545,6 +545,10 @@ gst_wavparse_fmt (GstWavParse * wav)
     return FALSE;
   }
 
+  /* Note: gst_riff_create_audio_caps might nedd to fix values in
+   * the header header depending on the format, so call it first */
+  caps = gst_riff_create_audio_caps (header->format, NULL, header, NULL);
+
   wav->format = header->format;
   wav->rate = header->rate;
   wav->channels = header->channels;
@@ -553,7 +557,6 @@ gst_wavparse_fmt (GstWavParse * wav)
   wav->depth = header->size;
   wav->bps = header->av_bps;
 
-  caps = gst_riff_create_audio_caps (header->format, NULL, header, NULL);
   g_free (header);
 
   if (caps) {
