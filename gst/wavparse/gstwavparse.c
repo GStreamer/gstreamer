@@ -740,7 +740,7 @@ gst_wavparse_loop (GstElement * element)
         guint32 remaining;
 
         gst_bytestream_get_status (bs, &remaining, &event);
-        if (event && GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+        if (event) {
           gst_pad_event_default (wavparse->sinkpad, event);
         } else {
           GST_ELEMENT_ERROR (element, RESOURCE, READ, (NULL), (NULL));
