@@ -72,6 +72,7 @@ dnl
 AC_TRY_RUN([
 #include <gst/gst.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 int 
 main ()
@@ -165,15 +166,4 @@ dnl
 	AC_SUBST(GSTREAMER_LIBS)
 	rm -f conf.gstreamertest
 ])
-
-
-
-
-
-
-
-
-
-
-
 
