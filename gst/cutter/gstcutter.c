@@ -25,7 +25,7 @@
 
 static GstElementDetails cutter_details = {
   "Cutter",
-  "Filter/Effect",
+  "Filter/Audio/Effect",
   "Audio Cutter to split audio into non-silent bits",
   VERSION,
   "Thomas <thomas@apestaart.org>",

@@ -26,7 +26,7 @@
 /* elementfactory information */
 GstElementDetails gst_udpsink_details = {
   "UDP packet sender",
-  "Transport/",
+  "Sink/Network",
   "",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

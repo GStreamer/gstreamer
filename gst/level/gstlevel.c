@@ -24,7 +24,7 @@
 
 static GstElementDetails level_details = {
   "Level",
-  "Filter/Effect",
+  "Filter/Audio/Analysis",
   "RMS Level indicator for audio/raw",
   VERSION,
   "Thomas <thomas@apestaart.org>",

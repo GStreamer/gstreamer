@@ -3,7 +3,7 @@
 
 static GstElementDetails mulawenc_details = {
   "PCM to Mu Law conversion",
-  "Filter/Effect",
+  "Filter/Audio/Conversion",
   "Convert 16bit PCM to 8bit mu law",
   VERSION,
   "Zaheer Merali <zaheer@bellworldwide.net>",
@@ -12,7 +12,7 @@ static GstElementDetails mulawenc_details = {
 
 static GstElementDetails mulawdec_details = {
   "Mu Law to PCM conversion",
-  "Filter/Effect",
+  "Filter/Audio/Conversion",
   "Convert 8bit mu law to 16bit PCM",
   VERSION,
   "Zaheer Merali <zaheer@bellworldwide.net>",

@@ -25,7 +25,7 @@
 /* elementfactory information */
 GstElementDetails gst_udpsrc_details = {
   "UDP packet receiver",
-  "Transport/",
+  "Source/Network",
   "",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

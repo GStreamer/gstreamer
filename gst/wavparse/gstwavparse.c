@@ -32,7 +32,7 @@ static void		gst_wavparse_chain	(GstPad *pad, GstBuffer *buf);
 /* elementfactory information */
 static GstElementDetails gst_wavparse_details = {
   ".wav parser",
-  "Parser/Audio",
+  "Codec/Parser",
   "Parse a .wav file into raw audio",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

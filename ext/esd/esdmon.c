@@ -70,7 +70,7 @@ GType gst_esdmon_get_type(void);
 /* elementfactory information */
 static GstElementDetails esdmon_details = {
   "Esound audio monitor",
-  "Src/Esdmon",
+  "Source/Audio",
   "Monitors audio from an esound server",
   VERSION,
   "Richard Boulton <richard-gst@tartarus.org>",

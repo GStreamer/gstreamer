@@ -25,7 +25,7 @@
 /* elementfactory information */
 GstElementDetails gst_jpegenc_details = {
   "jpeg image encoder",
-  "Filter/Encoder/Image",
+  "Codec/Image/Encoder",
   ".jpeg",
   VERSION,
   "Wim Taymans <wim.taymans@tvd.be>",

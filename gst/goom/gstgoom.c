@@ -59,7 +59,7 @@ GType gst_goom_get_type(void);
 /* elementfactory information */
 static GstElementDetails gst_goom_details = {
   "GOOM: what a GOOM!",
-  "Filter/Visualization",
+  "Visualization",
   "Takes frames of data and outputs video frames using the GOOM filter",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",

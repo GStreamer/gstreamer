@@ -45,8 +45,8 @@
 static GstElementDetails 
 gst_avimux_details = 
 {
-  ".avi mux",
-  "Mux/Video",
+  "Avi multiplexer",
+  "Codec/Muxer",
   "Muxes audio and video into an avi stream",
   VERSION,
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",

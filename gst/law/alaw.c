@@ -3,7 +3,7 @@
 
 static GstElementDetails alawenc_details = {
   "PCM to A Law conversion",
-  "Filter/Effect",
+  "Filter/Audio/Conversion",
   "Convert 16bit PCM to 8bit A law",
   VERSION,
   "Zaheer Merali <zaheer@bellworldwide.net>",
@@ -12,7 +12,7 @@ static GstElementDetails alawenc_details = {
 
 static GstElementDetails alawdec_details = {
   "A Law to PCM conversion",
-  "Filter/Effect",
+  "Filter/Audio/Conversion",
   "Convert 8bit A law to 16bit PCM",
   VERSION,
   "Zaheer Merali <zaheer@bellworldwide.net>",

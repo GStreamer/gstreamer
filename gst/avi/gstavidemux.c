@@ -26,9 +26,9 @@
 
 /* elementfactory information */
 static GstElementDetails gst_avi_demux_details = {
-  ".avi parser",
-  "Parser/Video",
-  "Parse a .avi file into audio and video",
+  "Avi demuxer",
+  "Codec/Demuxer",
+  "Demultiplex an avi file into audio and video",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>\n"
   "Wim Taymans <wim.taymans@tvd.be>",

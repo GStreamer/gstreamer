@@ -23,8 +23,8 @@
 
 static GstElementDetails median_details = {
   "Median effect",
-  "Filter/Effect",
-  "apply a median filter to an image",
+  "Filter/Video",
+  "Apply a median filter to an image",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
   "(C) 2000",

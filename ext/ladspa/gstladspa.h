@@ -66,7 +66,7 @@ struct _GstLADSPA {
 
   gint samplerate, buffersize, numbuffers;
   gint64 timestamp;
-
+  gboolean inplace_broken;
 };
 
 struct _GstLADSPAClass {
