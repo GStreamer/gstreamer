@@ -1,3 +1,9 @@
+2004-05-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/kio/kioreceiver.cpp:
+	* ext/kio/kioreceiver.h:
+          fix sign comparison issues
+
 2004-05-21  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* gst/cdxaparse/gstcdxaparse.c:
