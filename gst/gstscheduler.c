@@ -1130,13 +1130,12 @@ gst_schedule_pad_disconnect (GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad
   GstElement *element1, *element2;
   GstScheduleChain *chain1, *chain2;
 
-  GST_INFO (GST_CAT_SCHEDULING, "have pad disconnected callback on %s:%s",GST_DEBUG_PAD_NAME(srcpad));
+  GST_INFO (GST_CAT_SCHEDULING, "disconnecting pads %s:%s and %s:%s",
+            GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
 
   // we need to have the parent elements of each pad
   element1 = GST_ELEMENT(GST_PAD_PARENT(srcpad));
   element2 = GST_ELEMENT(GST_PAD_PARENT(sinkpad));
-  GST_INFO (GST_CAT_SCHEDULING, "disconnecting elements \"%s\" and \"%s\"",
-            GST_ELEMENT_NAME(element1), GST_ELEMENT_NAME(element2));
 
   // first task is to remove the old chain they belonged to.
   // this can be accomplished by taking either of the elements,

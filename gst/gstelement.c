@@ -811,13 +811,15 @@ gst_element_change_state (GstElement *element)
   GST_DEBUG (GST_CAT_STATES, "default handler sets '%s' state to %s\n",
              GST_ELEMENT_NAME (element), _gst_print_statename(GST_STATE_PENDING(element)));
 
-  if (GST_STATE_TRANSITION(element) == GST_STATE_READY_TO_PLAYING) {
+  if ((GST_STATE_TRANSITION(element) == GST_STATE_READY_TO_PLAYING) ||
+      (GST_STATE_TRANSITION(element) == GST_STATE_PAUSED_TO_PLAYING)) {
     if (GST_ELEMENT_PARENT(element))
     fprintf(stderr,"READY->PLAYING: element \"%s\" has parent \"%s\" and sched %p\n",
 GST_ELEMENT_NAME(element),GST_ELEMENT_NAME(GST_ELEMENT_PARENT(element)),GST_ELEMENT_SCHED(element));
     GST_SCHEDULE_ENABLE_ELEMENT (element->sched,element);
   }
-  else if (GST_STATE_TRANSITION(element) == GST_STATE_PLAYING_TO_READY)
+  else if ((GST_STATE_TRANSITION(element) == GST_STATE_PLAYING_TO_READY) ||
+           (GST_STATE_TRANSITION(element) == GST_STATE_PLAYING_TO_READY))
     GST_SCHEDULE_DISABLE_ELEMENT (element->sched,element);
 
   GST_STATE (element) = GST_STATE_PENDING (element);

@@ -201,8 +201,13 @@ gst_autoplugcache_loop (GstElement *element)
 
       // if we've been told to fire an empty signal (after a reset)
       if (cache->fire_empty) {
+        int oldstate = GST_STATE(cache);
         fprintf(stderr,"at front of cache, about to pull, but firing signal\n");
         gtk_signal_emit (GTK_OBJECT(cache), gst_autoplugcache_signals[CACHE_EMPTY], NULL);
+        if (GST_STATE(cache) != oldstate) {
+          GST_DEBUG(GST_CAT_AUTOPLUG, "state changed during signal, aborting\n");
+          cothread_switch(cothread_current_main());
+        }
       }
 
       // get a buffer

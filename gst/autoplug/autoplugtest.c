@@ -2,6 +2,26 @@
 
 GstElement *pipeline, *src, *autobin, *cache, *typefind, *decoder, *sink;
 
+void cache_empty(GstElement *element, gpointer private) {
+  fprintf(stderr,"have cache empty\n");
+
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+
+  gst_element_disconnect(src,"src",cache,"sink");
+  gst_schedule_show (GST_ELEMENT_SCHED(pipeline));
+  gst_element_disconnect(cache,"src",decoder,"sink");
+  gst_schedule_show (GST_ELEMENT_SCHED(pipeline));
+  gst_bin_remove (GST_BIN(autobin), cache);
+  gst_schedule_show (GST_ELEMENT_SCHED(pipeline));
+  gst_element_connect(src,"src",decoder,"sink");
+  gst_schedule_show (GST_ELEMENT_SCHED(pipeline));
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  gst_schedule_show (GST_ELEMENT_SCHED(pipeline));
+
+  fprintf(stderr,"done with cache_empty\n");
+}
+
 void have_type(GstElement *element, GstCaps *caps, GstCaps **private_caps) {
   fprintf(stderr,"have caps, mime type is %s\n",gst_caps_get_mime(caps));
 
@@ -15,10 +35,12 @@ void have_type(GstElement *element, GstCaps *caps, GstCaps **private_caps) {
 
   if (strstr(gst_caps_get_mime(caps),"mp3")) {
     decoder = gst_elementfactory_make ("mad","decoder");
-    sink = gst_elementfactory_make ("esdsink","sink");
+    sink = gst_elementfactory_make ("osssink","sink");
     gst_bin_add(GST_BIN(autobin),decoder);
     gst_bin_add(GST_BIN(autobin),sink);
     gst_element_connect(decoder,"src",sink,"sink");
+
+    gtk_object_set (GTK_OBJECT(cache), "reset", TRUE, NULL);
 
     gst_element_connect(cache,"src",decoder,"sink");
   }
@@ -28,6 +50,8 @@ void have_type(GstElement *element, GstCaps *caps, GstCaps **private_caps) {
     gst_bin_add(GST_BIN(autobin),decoder);
     gst_bin_add(GST_BIN(autobin),sink);
     gst_element_connect(decoder,"src",sink,"sink");
+
+    gtk_object_set (GTK_OBJECT(cache), "reset", TRUE, NULL);
 
     gst_element_connect(cache,"src",decoder,"sink");
   }
@@ -49,6 +73,7 @@ int main (int argc,char *argv[]) {
 
   autobin = gst_bin_new("autobin");
   cache = gst_elementfactory_make ("autoplugcache","cache");
+  gtk_signal_connect (GTK_OBJECT(cache),"cache_empty",GTK_SIGNAL_FUNC(cache_empty),NULL);
   typefind = gst_elementfactory_make ("typefind", "typefind");
   gtk_signal_connect (GTK_OBJECT(typefind),"have_type",GTK_SIGNAL_FUNC(have_type),&caps);
   gst_bin_add (GST_BIN(autobin),cache);
