@@ -1,5 +1,13 @@
 2005-01-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_update),
+	(gst_alsa_mixer_get_volume), (gst_alsa_mixer_set_volume),
+	(gst_alsa_mixer_set_mute), (gst_alsa_mixer_set_record),
+	(gst_alsa_mixer_set_option), (gst_alsa_mixer_get_option):
+	  Update flags when requested.
+
+2005-01-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/alsa/gstalsa.c: (gst_alsa_rates_probe):
 	  Fix dmix.
 
