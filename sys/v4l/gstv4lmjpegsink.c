@@ -155,6 +155,7 @@ gst_v4lmjpegsink_class_init (GstV4lMjpegSinkClass *klass)
 
 
   gstelement_class->change_state = gst_v4lmjpegsink_change_state;
+  gstelement_class->set_clock    = gst_v4lmjpegsink_set_clock;
 }
 
 
@@ -168,7 +169,6 @@ gst_v4lmjpegsink_init (GstV4lMjpegSink *v4lmjpegsink)
   gst_pad_set_connect_function (v4lmjpegsink->sinkpad, gst_v4lmjpegsink_sinkconnect);
 
   v4lmjpegsink->clock = NULL;
-  GST_ELEMENT (v4lmjpegsink)->setclockfunc    = gst_v4lmjpegsink_set_clock;
 
   v4lmjpegsink->width = -1;
   v4lmjpegsink->height = -1;
