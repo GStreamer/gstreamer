@@ -20,12 +20,57 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_OSSFORMAT_H__
-#define __GST_OSSFORMAT_H__
+#ifndef __GST_OSSCOMMON_H__
+#define __GST_OSSCOMMON_H__
 
 #include <gst/gst.h>
 
-gboolean 	gst_ossformat_get 	(gint law, gint endianness, gboolean sign, 
-					 gint width, gint depth, gint *format, gint *bps);
+typedef struct _GstOssCommon	GstOssCommon;
 
-#endif /* __GST_OSSFORMAT_H__ */
+typedef enum {
+  GST_OSSCOMMON_READ,
+  GST_OSSCOMMON_WRITE,
+} GstOssOpenMode;
+
+struct _GstOssCommon
+{
+  gchar		*device;
+  /* device state */
+  int		 fd;
+  int		 caps; /* the capabilities */
+  gint		 format;
+  gint		 fragment;
+  guint64	 fragment_time;
+  gint		 fragment_size;
+  GstOssOpenMode mode;
+  /* stats */
+  guint		 bps;
+
+  /* parameters */
+  gint 		 law;
+  gint 		 endianness;
+  gboolean	 sign;
+  gint		 width;
+  gint		 depth;
+  gint		 channels;
+  gint		 rate;
+};
+
+void       	gst_osscommon_init 		(GstOssCommon *common);
+
+gboolean 	gst_osscommon_open_audio 	(GstOssCommon *common, 
+		                                 GstOssOpenMode mode, gchar **error);
+void	 	gst_osscommon_close_audio 	(GstOssCommon *common);
+
+gboolean 	gst_osscommon_parse_caps 	(GstOssCommon *common, GstCaps *caps);
+gboolean	gst_osscommon_merge_fixed_caps 	(GstOssCommon *common, GstCaps *caps);
+	
+gboolean 	gst_osscommon_sync_parms 	(GstOssCommon *common);
+
+gboolean 	gst_osscommon_convert 		(GstOssCommon *common, 
+						 GstFormat src_format, gint64 src_value,
+		                       		 GstFormat *dest_format, gint64 *dest_value);
+
+	
+
+#endif /* __GST_OSSCOMMON_H__ */

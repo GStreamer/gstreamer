@@ -20,18 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <fcntl.h>
 #include <sys/soundcard.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
 
 #include <gstosssink.h>
-#include <gstosscommon.h>
 
 /* elementfactory information */
 static GstElementDetails gst_osssink_details = {  
@@ -49,9 +41,6 @@ static void 			gst_osssink_class_init		(GstOssSinkClass *klass);
 static void 			gst_osssink_init		(GstOssSink *osssink);
 static void 			gst_osssink_finalize		(GObject *object);
 
-static gboolean 		gst_osssink_open_audio		(GstOssSink *sink);
-static void 			gst_osssink_close_audio		(GstOssSink *sink);
-static gboolean 		gst_osssink_sync_parms 		(GstOssSink *osssink);
 static GstElementStateReturn 	gst_osssink_change_state	(GstElement *element);
 static void		 	gst_osssink_set_clock		(GstElement *element, GstClock *clock);
 static GstClock* 		gst_osssink_get_clock 		(GstElement *element);
@@ -163,7 +152,7 @@ gst_osssink_finalize (GObject *object)
 {
   GstOssSink *osssink = (GstOssSink *) object;
 
-  g_free (osssink->device);
+  g_free (osssink->common.device);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -227,19 +216,9 @@ gst_osssink_init (GstOssSink *osssink)
 
   gst_pad_set_chain_function (osssink->sinkpad, gst_osssink_chain);
 
-  osssink->device = g_strdup ("/dev/dsp");
-  osssink->fd = -1;
-  osssink->channels = 1;
-  osssink->frequency = 11025;
-  osssink->fragment = 6;
-/* AFMT_*_BE not available on all OSS includes (e.g. FBSD) */
-#ifdef WORDS_BIGENDIAN
-  osssink->format = AFMT_S16_BE;
-#else
-  osssink->format = AFMT_S16_LE;
-#endif /* WORDS_BIGENDIAN */  
+  gst_osscommon_init (&osssink->common);
+
   osssink->bufsize = 4096;
-  osssink->bps = 0;
   osssink->resync = FALSE;
   osssink->sync = TRUE;
   osssink->sinkpool = NULL;
@@ -254,128 +233,19 @@ gst_osssink_init (GstOssSink *osssink)
 static GstPadConnectReturn 
 gst_osssink_sinkconnect (GstPad *pad, GstCaps *caps) 
 {
-  gint law, endianness, width, depth, bps;
-  gboolean sign;
-  gint format = -1;
   GstOssSink *osssink = GST_OSSSINK (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_CONNECT_DELAYED;
-  
-  gst_caps_get_int (caps, "width", &width);
-  gst_caps_get_int (caps, "depth", &depth);
 
-  if (width != depth) 
+  if (!gst_osscommon_parse_caps (&osssink->common, caps))
     return GST_PAD_CONNECT_REFUSED;
 
-  osssink->width = width;
-
-  /* laws 1 and 2 are 1 bps anyway */
-  osssink->bps = 1;
-
-  gst_caps_get_int (caps, "law", &law);
-  gst_caps_get_int (caps, "endianness", &endianness);
-  gst_caps_get_boolean (caps, "signed", &sign);
-
-  if (!gst_ossformat_get (law, endianness, sign,
-		          width, depth, &format, &bps)) 
-  {
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "could not get format");
-    return GST_PAD_CONNECT_REFUSED;
-  }
-
-  osssink->bps = bps;
-  osssink->format = format;
-
-  gst_caps_get_int (caps, "channels", &osssink->channels);
-  gst_caps_get_int (caps, "rate", &osssink->frequency);
-
-  osssink->bps *= osssink->channels;
-  osssink->bps *= osssink->frequency;
-
-  if (!gst_osssink_sync_parms (osssink)) {
+  if (!gst_osscommon_sync_parms (&osssink->common)) {
     return GST_PAD_CONNECT_REFUSED;
   }
 
   return GST_PAD_CONNECT_OK;
-}
-
-static gboolean 
-gst_osssink_sync_parms (GstOssSink *osssink) 
-{
-  audio_buf_info ospace;
-  int frag;
-  gint target_format;
-  gint target_channels;
-  gint target_frequency;
-  GObject *object;
-  gint fragscale, frag_ln;
-
-  g_return_val_if_fail (osssink != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_OSSSINK (osssink), FALSE);
-
-  if (osssink->fd == -1)
-    return FALSE;
-  
-  if (osssink->fragment >> 16)
-    frag = osssink->fragment;
-  else
-    frag = 0x7FFF0000 | osssink->fragment;
-  
-  GST_INFO (GST_CAT_PLUGIN_INFO, 
-            "osssink: setting sound card to %dHz %d format %s (%08x fragment)",
-            osssink->frequency, osssink->format,
-            (osssink->channels == 2) ? "stereo" : "mono", frag);
-
-  ioctl (osssink->fd, SNDCTL_DSP_SETFRAGMENT, &frag);
-
-  ioctl (osssink->fd, SNDCTL_DSP_RESET, 0);
-
-  target_format = osssink->format;
-  target_channels = osssink->channels;
-  target_frequency = osssink->frequency;
-
-  ioctl (osssink->fd, SNDCTL_DSP_SETFMT, &osssink->format);
-  ioctl (osssink->fd, SNDCTL_DSP_CHANNELS, &osssink->channels);
-  ioctl (osssink->fd, SNDCTL_DSP_SPEED, &osssink->frequency);
-
-  ioctl (osssink->fd, SNDCTL_DSP_GETBLKSIZE, &osssink->fragment_size);
-  ioctl (osssink->fd, SNDCTL_DSP_GETOSPACE, &ospace);
-
-  /* calculate new fragment using a poor man's logarithm function */
-  fragscale = 1;
-  frag_ln = 0;
-  while (fragscale < ospace.fragsize) {
-    fragscale <<= 1;
-    frag_ln++;
-  }
-  osssink->fragment = ospace.fragstotal << 16 | frag_ln;
-	  
-  GST_INFO (GST_CAT_PLUGIN_INFO, 
-            "osssink: set sound card to %dHz %d format %s "
-	    "(%d bytes buffer, %08x fragment)",
-            osssink->frequency, osssink->format,
-            (osssink->channels == 2) ? "stereo" : "mono", 
-	    ospace.bytes, osssink->fragment);
-
-  object = G_OBJECT (osssink);
-  g_object_freeze_notify (object);
-  g_object_notify (object, "fragment");
-  g_object_thaw_notify (object);
-
-  osssink->fragment_time = (GST_SECOND * osssink->fragment_size) / osssink->bps;
-  GST_INFO (GST_CAT_PLUGIN_INFO, "fragment time %u %llu\n", 
-            osssink->bps, osssink->fragment_time);
-
-  if (target_format != osssink->format ||
-      target_channels != osssink->channels ||
-      target_frequency != osssink->frequency) 
-  {
-    g_warning ("couldn't set requested OSS parameters, enjoy the noise :)");
-    /* we could eventually return FALSE here, or just do some additional tests
-     * to see that the frequencies don't differ too much etc.. */
-  }
-  return TRUE;
 }
 
 static inline gint64 
@@ -383,12 +253,12 @@ gst_osssink_get_delay (GstOssSink *osssink)
 {
   gint delay = 0;
 
-  if (osssink->fd == -1)
+  if (osssink->common.fd == -1)
     return 0;
 
-  if (ioctl (osssink->fd, SNDCTL_DSP_GETODELAY, &delay) < 0) {
+  if (ioctl (osssink->common.fd, SNDCTL_DSP_GETODELAY, &delay) < 0) {
     audio_buf_info info;
-    if (ioctl (osssink->fd, SNDCTL_DSP_GETOSPACE, &info) < 0) {
+    if (ioctl (osssink->common.fd, SNDCTL_DSP_GETOSPACE, &info) < 0) {
       delay = 0;
     }
     else {
@@ -405,7 +275,7 @@ gst_osssink_get_time (GstClock *clock, gpointer data)
   gint delay;
   GstClockTime res;
 
-  if (!osssink->bps)
+  if (!osssink->common.bps)
     return 0;
 
   delay = gst_osssink_get_delay (osssink);
@@ -416,7 +286,7 @@ gst_osssink_get_time (GstClock *clock, gpointer data)
   if (((guint64)delay) > osssink->handled) {
     delay = osssink->handled;
   }
-  res =  (osssink->handled - delay) * GST_SECOND / osssink->bps;
+  res =  (osssink->handled - delay) * GST_SECOND / osssink->common.bps;
 
   return res;
 }
@@ -455,7 +325,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
-        ioctl (osssink->fd, SNDCTL_DSP_SYNC);
+        ioctl (osssink->common.fd, SNDCTL_DSP_SYNC);
 	gst_oss_clock_set_active (osssink->provided_clock, FALSE);
 	gst_pad_event_default (pad, event);
         return;
@@ -466,7 +336,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
       {
 	gint64 value;
 
-        ioctl (osssink->fd, SNDCTL_DSP_RESET);
+        ioctl (osssink->common.fd, SNDCTL_DSP_RESET);
 	if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
           if (!gst_clock_handle_discont (osssink->clock, value))
 	    gst_oss_clock_set_active (osssink->provided_clock, FALSE);
@@ -483,7 +353,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
     return;
   }
 
-  if (!osssink->bps) {
+  if (!osssink->common.bps) {
     gst_buffer_unref (buf);
     gst_element_error (GST_ELEMENT (osssink), "capsnego was never performed, unknown data type");
     return;
@@ -491,7 +361,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 
   buftime = GST_BUFFER_TIMESTAMP (buf);
 
-  if (osssink->fd >= 0) {
+  if (osssink->common.fd >= 0) {
     if (!osssink->mute) {
       guchar *data = GST_BUFFER_DATA (buf);
       gint size = GST_BUFFER_SIZE (buf);
@@ -502,7 +372,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 	GstClockTimeDiff jitter;
     
 	delay = gst_osssink_get_delay (osssink);
-	queued = delay * GST_SECOND / osssink->bps;
+	queued = delay * GST_SECOND / osssink->common.bps;
 
 	if  (osssink->resync && osssink->sync) {
 	  gst_element_clock_wait (GST_ELEMENT (osssink), osssink->clock, 
@@ -510,14 +380,14 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 
 	  if (jitter >= 0) {
             gst_clock_handle_discont (osssink->clock, buftime - queued + jitter);
-	    write (osssink->fd, data, size);
+	    write (osssink->common.fd, data, size);
 	    gst_oss_clock_set_active (osssink->provided_clock, TRUE);
 	    osssink->resync = FALSE;
 	    osssink->handled += size;
 	  }
 	}
 	else {
-	  write (osssink->fd, data, size);
+	  write (osssink->common.fd, data, size);
 	  osssink->handled += size;
         }
       }
@@ -525,10 +395,10 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
       else {
         audio_buf_info ospace;
 
-        ioctl (osssink->fd, SNDCTL_DSP_GETOSPACE, &ospace);
+        ioctl (osssink->common.fd, SNDCTL_DSP_GETOSPACE, &ospace);
 
         if (ospace.bytes >= size) {
-          write (osssink->fd, data, size);
+          write (osssink->common.fd, data, size);
 	}
       }
     }
@@ -552,68 +422,12 @@ static gboolean
 gst_osssink_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
 	             GstFormat *dest_format, gint64 *dest_value)
 {
-  gboolean res = TRUE;
-	      
   GstOssSink *osssink;
 
-  if (src_format == *dest_format) {
-    *dest_value = src_value;
-    return TRUE;
-  }
-
   osssink = GST_OSSSINK (gst_pad_get_parent (pad));
-
-  if (osssink->bps == 0 || osssink->channels == 0 || osssink->width == 0)
-    return FALSE;
-
-  switch (src_format) {
-    case GST_FORMAT_BYTES:
-      switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
-        case GST_FORMAT_TIME:
-	  *dest_value = src_value * GST_SECOND / osssink->bps;
-          break;
-        case GST_FORMAT_UNITS:
-	  *dest_value = src_value / (osssink->channels * osssink->width);
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    case GST_FORMAT_TIME:
-      switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_BYTES;
-        case GST_FORMAT_BYTES:
-	  *dest_value = src_value * osssink->bps / GST_SECOND;
-          break;
-        case GST_FORMAT_UNITS:
-	  *dest_value = src_value * osssink->frequency / GST_SECOND;
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    case GST_FORMAT_UNITS:
-      switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
-        case GST_FORMAT_TIME:
-	  *dest_value = src_value * GST_SECOND / osssink->frequency;
-          break;
-        case GST_FORMAT_BYTES:
-	  *dest_value = src_value * osssink->channels * osssink->width;
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    default:
-      res = FALSE;
-  }
-
-  return res;
+  
+  return gst_osscommon_convert (&osssink->common, src_format, src_value,
+		                dest_format, dest_value);
 }
 
 static const GstPadQueryType*
@@ -673,9 +487,6 @@ gst_osssink_set_property (GObject *object, guint prop_id, const GValue *value, G
 {
   GstOssSink *osssink;
 
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_OSSSINK (object));
-  
   osssink = GST_OSSSINK (object);
 
   switch (prop_id) {
@@ -684,8 +495,8 @@ gst_osssink_set_property (GObject *object, guint prop_id, const GValue *value, G
          get_property("device") should return the right one */
       if (!GST_FLAG_IS_SET (osssink, GST_OSSSINK_OPEN))
       {
-	g_free (osssink->device);
-        osssink->device = g_strdup (g_value_get_string (value));
+	g_free (osssink->common.device);
+        osssink->common.device = g_strdup (g_value_get_string (value));
 	g_object_notify (object, "device");
       }
       break;
@@ -694,8 +505,8 @@ gst_osssink_set_property (GObject *object, guint prop_id, const GValue *value, G
       g_object_notify (G_OBJECT (osssink), "mute");
       break;
     case ARG_FRAGMENT:
-      osssink->fragment = g_value_get_int (value);
-      gst_osssink_sync_parms (osssink);
+      osssink->common.fragment = g_value_get_int (value);
+      gst_osscommon_sync_parms (&osssink->common);
       break;
     case ARG_BUFFER_SIZE:
       if (osssink->bufsize == g_value_get_int (value)) break;
@@ -718,20 +529,17 @@ gst_osssink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 {
   GstOssSink *osssink;
 
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_OSSSINK (object));
-  
   osssink = GST_OSSSINK (object);
 
   switch (prop_id) {
     case ARG_DEVICE:
-      g_value_set_string (value, osssink->device);
+      g_value_set_string (value, osssink->common.device);
       break;
     case ARG_MUTE:
       g_value_set_boolean (value, osssink->mute);
       break;
     case ARG_FRAGMENT:
-      g_value_set_int (value, osssink->fragment);
+      g_value_set_int (value, osssink->common.fragment);
       break;
     case ARG_BUFFER_SIZE:
       g_value_set_int (value, osssink->bufsize);
@@ -745,132 +553,24 @@ gst_osssink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
   }
 }
 
-static gboolean
-gst_osssink_open_audio (GstOssSink *sink)
-{
-  gint caps;
-  g_return_val_if_fail (sink->fd == -1, FALSE);
-
-  GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: attempting to open sound device");
-
-  /* first try to open the sound card */
-  /* FIXME: this code is dubious, why do we need to open and close this ?*/
-  sink->fd = open (sink->device, O_WRONLY | O_NONBLOCK);
-  if (errno == EBUSY) {
-    g_warning ("osssink: unable to open the sound device (in use ?)\n");
-  }
-
-  if (sink->fd >= 0)
-    close (sink->fd);
-  
-  /* re-open the sound device in blocking mode */
-  sink->fd = open (sink->device, O_WRONLY);
-
-  if (sink->fd < 0) {
-    switch (errno) {
-      case EISDIR:
-        gst_element_error (GST_ELEMENT (sink),
-		           "osssink: Device %s is a directory",
-			   sink->device);
-	break;
-      case EACCES:
-      case ETXTBSY:
-        gst_element_error (GST_ELEMENT (sink),
-		           "osssink: Cannot access %s, check permissions",
-			   sink->device);
-	break;
-      case ENXIO:
-      case ENODEV:
-      case ENOENT:
-        gst_element_error (GST_ELEMENT (sink),
-		           "osssink: Cannot access %s, does it exist ?",
-			   sink->device);
-	break;
-      case EROFS:
-        gst_element_error (GST_ELEMENT (sink),
-		           "osssink: Cannot access %s, read-only filesystem ?",
-			   sink->device);
-      default:
-	/* FIXME: strerror is not threadsafe */
-	gst_element_error (GST_ELEMENT (sink),
-			   "osssink: Cannot open %s, generic error: %s",
-			   sink->device, strerror (errno));
-	break;
-    }
-    return FALSE;
-  }
-  /* we have it, set the default parameters and go have fun */
-  /* set card state */
-  ioctl (sink->fd, SNDCTL_DSP_GETCAPS, &caps);
-
-  GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: Capabilities %08x", caps);
-
-  if (caps & DSP_CAP_DUPLEX)	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Full duplex");
-  if (caps & DSP_CAP_REALTIME) 	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Realtime");
-  if (caps & DSP_CAP_BATCH)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Batch");
-  if (caps & DSP_CAP_COPROC)   	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Has coprocessor");
-  if (caps & DSP_CAP_TRIGGER)  	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Trigger");
-  if (caps & DSP_CAP_MMAP)     	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Direct access");
-
-#ifdef DSP_CAP_MULTI
-  if (caps & DSP_CAP_MULTI)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Multiple open");
-#endif /* DSP_CAP_MULTI */
-
-#ifdef DSP_CAP_BIND
-  if (caps & DSP_CAP_BIND)     	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   Channel binding");
-#endif /* DSP_CAP_BIND */
-
-  ioctl(sink->fd, SNDCTL_DSP_GETFMTS, &caps);
-
-  GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: Formats %08x", caps);
-  if (caps & AFMT_MU_LAW)   		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   MU_LAW");
-  if (caps & AFMT_A_LAW)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   A_LAW");
-  if (caps & AFMT_IMA_ADPCM)    	GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   IMA_ADPCM");
-  if (caps & AFMT_U8)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   U8");
-  if (caps & AFMT_S16_LE)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   S16_LE");
-  if (caps & AFMT_S16_BE)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   S16_BE");
-  if (caps & AFMT_S8)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   S8");
-  if (caps & AFMT_U16_LE)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   U16_LE");
-  if (caps & AFMT_U16_BE)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   U16_BE");
-  if (caps & AFMT_MPEG)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   MPEG");
-#ifdef AFMT_AC3
-  if (caps & AFMT_AC3)    		GST_INFO (GST_CAT_PLUGIN_INFO, "osssink:   AC3");
-#endif
-
-  GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: opened audio (%s) with fd=%d", sink->device, sink->fd);
-  GST_FLAG_SET (sink, GST_OSSSINK_OPEN);
-
-  return TRUE;
-}
-
-static void
-gst_osssink_close_audio (GstOssSink *sink)
-{
-  if (sink->fd < 0) return;
-
-  close(sink->fd);
-  sink->fd = -1;
-
-  GST_FLAG_UNSET (sink, GST_OSSSINK_OPEN);
-
-  GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: closed sound device");
-}
-
 static GstElementStateReturn 
 gst_osssink_change_state (GstElement *element) 
 {
   GstOssSink *osssink;
-
-  g_return_val_if_fail (GST_IS_OSSSINK (element), FALSE);
 
   osssink = GST_OSSSINK (element);
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       if (!GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN)) {
-        if (!gst_osssink_open_audio (osssink)) {
+	gchar *error;
+
+        if (!gst_osscommon_open_audio (&osssink->common, GST_OSSCOMMON_WRITE, &error)) {
+	  gst_element_error (GST_ELEMENT (osssink), error);
+	  g_free (error);
           return GST_STATE_FAILURE;
         }
+	GST_FLAG_SET (element, GST_OSSSINK_OPEN);
       }
       break;
     case GST_STATE_READY_TO_PAUSED:
@@ -881,18 +581,23 @@ gst_osssink_change_state (GstElement *element)
     case GST_STATE_PLAYING_TO_PAUSED:
     {
       if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN)) 
-        ioctl (osssink->fd, SNDCTL_DSP_RESET, 0);
+        ioctl (osssink->common.fd, SNDCTL_DSP_RESET, 0);
       gst_oss_clock_set_active (osssink->provided_clock, FALSE);
       osssink->resync = TRUE;
       break;
     }
     case GST_STATE_PAUSED_TO_READY:
       if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN))
-        ioctl (osssink->fd, SNDCTL_DSP_RESET, 0);
+        ioctl (osssink->common.fd, SNDCTL_DSP_RESET, 0);
+      gst_osscommon_init (&osssink->common);
       break;
     case GST_STATE_READY_TO_NULL:
-      if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN))
-        gst_osssink_close_audio (osssink);
+      if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN)) {
+        gst_osscommon_close_audio (&osssink->common);
+        GST_FLAG_UNSET (osssink, GST_OSSSINK_OPEN);
+
+        GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: closed sound device");
+      }
       break;
   }
       

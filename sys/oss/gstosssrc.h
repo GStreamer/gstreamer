@@ -25,8 +25,8 @@
 #define __GST_OSSSRC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
+#include "gstosscommon.h"
 
 G_BEGIN_DECLS
 
@@ -51,34 +51,18 @@ typedef struct _GstOssSrc GstOssSrc;
 typedef struct _GstOssSrcClass GstOssSrcClass;
 
 struct _GstOssSrc {
-  GstElement element;
+  GstElement 	 element;
 
   /* pads */
-  GstPad *srcpad;
+  GstPad 	*srcpad;
 
-  /* device */
-  gchar *device;
+  GstOssCommon	 common;
 
-  /* sound card */
-  gint fd;
-
-  /* audio parameters */
-  gint law;
-  gint endianness;
-  gint sign;
-  gint width;
-  gint depth;
-  gint rate;
-  gint channels;
-
-  gboolean need_eos; /* Do we need to emit an EOS? */
+  gboolean	 need_eos; /* Do we need to emit an EOS? */
   
   /* blocking */
-  guint64 basetime;
-  guint64 samples_since_basetime;
-  gulong curoffset;
-  gulong bytes_per_read;
-
+  gulong 	 curoffset;
+  gulong 	 buffersize;
 };
 
 struct _GstOssSrcClass {

@@ -25,15 +25,12 @@
 #define __GST_OSSSINK_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
+#include "gstosscommon.h"
 #include "gstossclock.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_OSSSINK \
   (gst_osssink_get_type())
@@ -67,23 +64,11 @@ struct _GstOssSink {
   gboolean	 sync;
   guint64	 handled;
 
-  /* device */
-  gchar 	*device;
+  GstOssCommon	 common;
 
-  /* soundcard state */
-  int 		 fd;
-  int 		 caps; /* the capabilities */
-  gint 		 format;
-  gint 		 width;
-  gint 		 channels;
-  gint 		 frequency;
-  gint 		 fragment;
-  gint		 fragment_size;
   gboolean 	 mute;
   guint 	 bufsize;
-  guint 	 bps;
 
-  guint64 	 fragment_time;
 };
 
 struct _GstOssSinkClass {
@@ -97,9 +82,6 @@ GType gst_osssink_get_type(void);
 
 gboolean gst_osssink_factory_init(GstPlugin *plugin);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_OSSSINK_H__ */
