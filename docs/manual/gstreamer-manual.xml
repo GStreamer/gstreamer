@@ -27,6 +27,7 @@
 <!ENTITY DYNAMIC SYSTEM "dynamic.xml">
 <!ENTITY TYPEDETECTION SYSTEM "typedetection.xml">
 <!ENTITY UTILITY SYSTEM "utility.xml">
+<!ENTITY DPARAMS SYSTEM "dparams-app.xml">
 
 <!ENTITY XML SYSTEM "xml.xml">
 <!ENTITY PLUGINS SYSTEM "plugins.xml">
@@ -46,6 +47,15 @@
 	<authorblurb>
 	  <para>
 	    <email>wim.taymans@chello.be</email>
+	  </para>
+	</authorblurb>
+      </author>
+      <author>
+	<firstname>Steve</firstname>
+	<surname>Baker</surname>
+	<authorblurb>
+	  <para>
+	    <email>stevebaker_org@yahoo.co.uk</email>
 	  </para>
 	</authorblurb>
       </author>
@@ -168,6 +178,8 @@
       &AUTOPLUGGING;
 
       &HELLOWORLD2;
+      
+      &DPARAMS;
 
       &UTILITY;
   </part>
