@@ -1,5 +1,10 @@
 2004-12-13  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
 
+	* gst-libs/gst/riff/riff-media.c:
+	  forgot to add h2.64 to avidemux template caps
+
+2004-12-13  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
+
 	* gst/wavenc/riff.h:
 	* gst-libs/gst/riff/riff-media.c:
 	* gst-libs/gst/riff/riff-ids.h:
