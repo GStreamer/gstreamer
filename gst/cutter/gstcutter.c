@@ -271,13 +271,11 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
       GST_DEBUG (GST_CAT_PLUGIN_INFO, "DEBUG: cutter: flushing buffer");
       while (filter->pre_buffer)
       {
-        g_print (".");
         prebuf = (g_list_first (filter->pre_buffer))->data;
         filter->pre_buffer = g_list_remove (filter->pre_buffer, prebuf);
         gst_pad_push (filter->srcpad, prebuf);
         filter->pre_run_length = 0.0;
       }
-      g_print ("\n");
     } 
   }
   /* now check if we have to add the new buffer to the cache or to the pad */
