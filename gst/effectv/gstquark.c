@@ -34,7 +34,7 @@
 #define GST_QUARKTV(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_QUARKTV,GstQuarkTV))
 #define GST_QUARKTV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstQuarkTV))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_QUARKTV,GstQuarkTVClass))
 #define GST_IS_QUARKTV(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_QUARKTV))
 #define GST_IS_QUARKTV_CLASS(obj) \
@@ -168,29 +168,37 @@ gst_quarktv_class_init (GstQuarkTVClass * klass)
 }
 
 static GstPadLinkReturn
-gst_quarktv_sinkconnect (GstPad * pad, const GstCaps * caps)
+gst_quarktv_link (GstPad * pad, const GstCaps * caps)
 {
   GstQuarkTV *filter;
+  GstPad *otherpad;
   gint i;
   GstStructure *structure;
+  GstPadLinkReturn res;
 
   filter = GST_QUARKTV (gst_pad_get_parent (pad));
+  g_return_val_if_fail (GST_IS_QUARKTV (filter), GST_PAD_LINK_REFUSED);
+
+  otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
+
+  res = gst_pad_try_set_caps (otherpad, caps);
+  if (GST_PAD_LINK_FAILED (res))
+    return res;
 
   structure = gst_caps_get_structure (caps, 0);
-
-  gst_structure_get_int  (structure, "width", &filter->width);
-  gst_structure_get_int  (structure, "height", &filter->height);
+  if (!gst_structure_get_int (structure, "width", &filter->width) ||
+      !gst_structure_get_int (structure, "height", &filter->height))
+    return GST_PAD_LINK_REFUSED;
 
   filter->area = filter->width * filter->height;
 
-  g_free (filter->planetable);
-  filter->planetable = (GstBuffer **) g_malloc(filter->planes * sizeof(GstBuffer *));
-
   for(i = 0; i < filter->planes; i++) {
+    if (filter->planetable[i]) 
+      gst_buffer_unref (filter->planetable[i]);
     filter->planetable[i] = NULL;
   }
 
-  return gst_pad_try_set_caps (filter->srcpad, caps);
+  return GST_PAD_LINK_OK;
 }
 
 static void
@@ -198,17 +206,21 @@ gst_quarktv_init (GstQuarkTV * filter)
 {
   filter->sinkpad = gst_pad_new_from_template (
       gst_static_pad_template_get(&gst_effectv_sink_template), "sink");
+  gst_pad_set_getcaps_function (filter->sinkpad, gst_pad_proxy_getcaps);
   gst_pad_set_chain_function (filter->sinkpad, gst_quarktv_chain);
-  gst_pad_set_link_function (filter->sinkpad, gst_quarktv_sinkconnect);
+  gst_pad_set_link_function (filter->sinkpad, gst_quarktv_link);
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
   filter->srcpad = gst_pad_new_from_template (
       gst_static_pad_template_get(&gst_effectv_src_template), "src");
+  gst_pad_set_getcaps_function (filter->srcpad, gst_pad_proxy_getcaps);
+  gst_pad_set_link_function (filter->srcpad, gst_quarktv_link);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
   filter->planes = PLANES;
   filter->current_plane = filter->planes - 1;
-  filter->planetable = NULL;
+  filter->planetable = (GstBuffer **) g_malloc(filter->planes * sizeof(GstBuffer *));
+  memset (filter->planetable, 0, filter->planes * sizeof(GstBuffer *));
 }
 
 static void
@@ -292,8 +304,29 @@ gst_quarktv_set_property (GObject * object, guint prop_id, const GValue * value,
 
   switch (prop_id) {
     case ARG_PLANES:
-      filter->planes = g_value_get_int (value);
-      filter->current_plane = filter->planes - 1;
+      {
+        gint new_n_planes = g_value_get_int (value);
+	GstBuffer **new_planetable;
+	gint i;
+
+        /* If the number of planes changed, copy across any existing planes */
+	if (new_n_planes != filter->planes)
+        {
+          new_planetable = (GstBuffer **) g_malloc(new_n_planes * sizeof(GstBuffer *));
+
+          for(i = 0; (i < new_n_planes) && (i < filter->planes); i++) {
+            new_planetable[i] = filter->planetable[i];
+          }
+          for(; i < filter->planes; i++) {
+            if (filter->planetable[i]) 
+              gst_buffer_unref (filter->planetable[i]);
+          }
+          g_free (filter->planetable);
+          filter->planetable = new_planetable;
+          filter->current_plane = filter->planes - 1;
+          filter->planes = new_n_planes;
+        }
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

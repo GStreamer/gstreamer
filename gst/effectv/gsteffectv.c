@@ -54,7 +54,10 @@ GST_STATIC_PAD_TEMPLATE (
     "src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ( GST_VIDEO_CAPS_xRGB_HOST_ENDIAN )
+    GST_STATIC_CAPS ( 
+	    		GST_VIDEO_CAPS_BGRx "; "
+	    		GST_VIDEO_CAPS_RGBx
+	    	    )
 );
 
 GstStaticPadTemplate gst_effectv_sink_template =
@@ -62,7 +65,10 @@ GST_STATIC_PAD_TEMPLATE (
     "sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ( GST_VIDEO_CAPS_xRGB_HOST_ENDIAN )
+    GST_STATIC_CAPS ( 
+	    		GST_VIDEO_CAPS_BGRx "; "
+	    		GST_VIDEO_CAPS_RGBx
+	    	    )
 );
 
 static gboolean

@@ -132,7 +132,6 @@ static GstVideofilterFormat gst_warptv_formats[] = {
   { "RGB ", 32, gst_warptv_rgb32, 24, G_BIG_ENDIAN, 0x0000ff00, 0x00ff0000, 0xff000000 },
 };
 
-  
 static void
 gst_warptv_base_init (gpointer g_class)
 {

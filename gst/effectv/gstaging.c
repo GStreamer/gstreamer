@@ -41,9 +41,6 @@
 #include <gstvideofilter.h>
 #include <string.h>
 #include <math.h>
-#include "gsteffectv.h"
-
-
 
 #define GST_TYPE_AGINGTV \
   (gst_agingtv_get_type())
@@ -89,7 +86,6 @@ struct _GstAgingTVClass {
   GstVideofilterClass parent_class;
 };
 
-
 /* GstAgingTV signals and args */
 enum {
   /* FILL ME */
@@ -103,12 +99,12 @@ enum {
 
 static void	gst_agingtv_base_init	(gpointer g_class);
 static void	gst_agingtv_class_init	(gpointer g_class, gpointer class_data);
-static void	gst_agingtv_init		(GTypeInstance *instance, gpointer g_class);
-static void     gst_agingtv_setup(GstVideofilter *videofilter);
+static void	gst_agingtv_init	(GTypeInstance *instance, gpointer g_class);
+static void     gst_agingtv_setup	(GstVideofilter *videofilter);
 
 static void	gst_agingtv_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_agingtv_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
-static void     gst_agingtv_rgb32 (GstVideofilter *videofilter, void *d, void *s);
+static void     gst_agingtv_rgb32 	(GstVideofilter *videofilter, void *d, void *s);
 
 GType
 gst_agingtv_get_type (void)
@@ -134,12 +130,8 @@ gst_agingtv_get_type (void)
 }
 
 static GstVideofilterFormat gst_agingtv_formats[] = {
-  { "RGB ", 32, gst_agingtv_rgb32, 24, G_BIG_ENDIAN, 0x00ff0000, 0x0000ff00, 0x000000ff },
-  { "RGB ", 32, gst_agingtv_rgb32, 24, G_BIG_ENDIAN, 0xff000000, 0x00ff0000, 0x0000ff00 },
-  { "RGB ", 32, gst_agingtv_rgb32, 24, G_BIG_ENDIAN, 0x000000ff, 0x0000ff00, 0x00ff0000 },
-  { "RGB ", 32, gst_agingtv_rgb32, 24, G_BIG_ENDIAN, 0x0000ff00, 0x00ff0000, 0xff000000 },
+  { "RGB ", 32, gst_agingtv_rgb32, 24, G_BIG_ENDIAN, 0x0000ff00, 0x00ff0000, 0xff000000 }
 };
-
   
 static void
 gst_agingtv_base_init (gpointer g_class)
@@ -147,7 +139,7 @@ gst_agingtv_base_init (gpointer g_class)
   static GstElementDetails agingtv_details = GST_ELEMENT_DETAILS (
     "AgingTV",
     "Filter/Effect/Video",
-    "AgingTV does realtime goo'ing of the video input",
+    "AgingTV adds age to video input using scratches and dust",
     "Sam Lantinga <slouken@devolution.com>"
   );
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
@@ -212,7 +204,6 @@ static void gst_agingtv_setup(GstVideofilter *videofilter)
 
   agingtv->width = width;
   agingtv->height = height;
-
 }
 
 static unsigned int 
