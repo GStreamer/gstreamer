@@ -400,7 +400,7 @@ gst_monkeydec_loop (GstElement *element)
 		      "audio/raw",
 		      "format", 	GST_PROPS_STRING ("int"),
           "law",         GST_PROPS_INT (0),
-          "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
+          "endianness",  GST_PROPS_INT (G_LITTLE_ENDIAN),
           "signed",      GST_PROPS_BOOLEAN (TRUE),
           "width",       GST_PROPS_INT (monkeydec->depth),
           "depth",       GST_PROPS_INT (monkeydec->depth),
