@@ -12,11 +12,13 @@
 <!entity GstCpu SYSTEM "sgml/gstcpu.sgml">
 <!entity GstElement SYSTEM "sgml/gstelement.sgml">
 <!entity GstElementFactory SYSTEM "sgml/gstelementfactory.sgml">
+<!entity GstFormat SYSTEM "sgml/gstformat.sgml">
 <!entity GstLog SYSTEM "sgml/gstlog.sgml">
 <!entity GstObject SYSTEM "sgml/gstobject.sgml">
 <!entity GstPad SYSTEM "sgml/gstpad.sgml">
 <!entity GstPadTemplate SYSTEM "sgml/gstpadtemplate.sgml">
 <!entity GstParse SYSTEM "sgml/gstparse.sgml">
+<!entity GstProbe SYSTEM "sgml/gstprobe.sgml">
 <!entity GstPipeline SYSTEM "sgml/gstpipeline.sgml">
 <!entity GstPlugin SYSTEM "sgml/gstplugin.sgml">
 <!entity GstPluginFeature SYSTEM "sgml/gstpluginfeature.sgml">
@@ -35,7 +37,8 @@
 <!entity GstXML SYSTEM "sgml/gstxml.sgml">
 <!entity GstQueue SYSTEM "sgml/gstqueue.sgml">
 <!entity GstTypeFind SYSTEM "sgml/gsttypefind.sgml">
-<!entity GstTimeCache SYSTEM "sgml/gsttimecache.sgml">
+<!entity GstIndex SYSTEM "sgml/gstindex.sgml">
+<!entity GstIndexFactory SYSTEM "sgml/gstindexfactory.sgml">
 <!entity cothreads SYSTEM "sgml/cothreads.sgml">
 
 <!entity GstStaticAutoplug SYSTEM "sgml/gststaticautoplug.sgml">
@@ -82,6 +85,7 @@ with some more specialized elements.</para>
     &GstElement;
     &GstElementFactory;
     &GstEvent;
+    &GstFormat;
     &GstInfo;
     &GstObject;
     &GstPad;
@@ -90,6 +94,7 @@ with some more specialized elements.</para>
     &GstPipeline;
     &GstPlugin;
     &GstPluginFeature;
+    &GstProbe;
     &GstProps;
     &GstQueue;
     &GstRegistry;
@@ -97,7 +102,8 @@ with some more specialized elements.</para>
     &GstSchedulerFactory;
     &GstSystemClock;
     &GstThread;
-    &GstTimeCache;
+    &GstIndex;
+    &GstIndexFactory;
     &GstType;
     &GstTypeFactory;
     &GstTypeFind;
@@ -115,6 +121,7 @@ with some more specialized elements.</para>
       g_object_set() functions and the GStreamer Core Library functions.
     </para>
 
+<!--
     &GstAggregator;
 
     &GstFakeSrc;
@@ -133,6 +140,7 @@ with some more specialized elements.</para>
     &GstMD5Sink;
 
     &GstTee;
+    -->
   </chapter>
 
   <chapter id="autopluggers">

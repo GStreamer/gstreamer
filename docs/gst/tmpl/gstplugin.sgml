@@ -59,7 +59,7 @@ The plugin loading errors
 
 <!-- ##### STRUCT GstPlugin ##### -->
 <para>
-
+The plugin object
 </para>
 
 @name: 

@@ -59,7 +59,7 @@ The struct with the typefactory information.
 
 <!-- ##### STRUCT GstTypeDefinition ##### -->
 <para>
-
+The typedefinition structure.
 </para>
 
 @name: The name of this factory

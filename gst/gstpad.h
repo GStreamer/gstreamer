@@ -285,9 +285,6 @@ struct _GstGhostPadClass {
 #define GST_RPAD_QUERYTYPEFUNC(pad)	(((GstRealPad *)(pad))->querytypefunc)
 #define GST_RPAD_EVENTMASKFUNC(pad)	(((GstRealPad *)(pad))->eventmaskfunc)
 
-#define GST_RPAD_EVENT_MASKS(pad)	(((GstRealPad *)(pad))->event_masks)
-#define GST_RPAD_QUERY_TYPES(pad)	(((GstRealPad *)(pad))->query_types)
-
 #define GST_RPAD_CONNECTFUNC(pad)	(((GstRealPad *)(pad))->connectfunc)
 #define GST_RPAD_GETCAPSFUNC(pad)	(((GstRealPad *)(pad))->getcapsfunc)
 #define GST_RPAD_BUFFERPOOLFUNC(pad)	(((GstRealPad *)(pad))->bufferpoolfunc)
@@ -480,7 +477,8 @@ GstPad*			gst_pad_selectv				(GstPad *pad, ...);
 
 
 /* convert/query/format functions */
-void			gst_pad_set_formats_function		(GstPad *pad, GstPadFormatsFunction format);
+void			gst_pad_set_formats_function		(GstPad *pad, 
+								 GstPadFormatsFunction formats);
 gboolean		gst_pad_handles_format			(GstPad *pad, GstFormat format);
 const GstFormat*	gst_pad_get_formats			(GstPad *pad);
 const GstFormat*	gst_pad_get_formats_default		(GstPad *pad);
@@ -494,7 +492,7 @@ gboolean		gst_pad_convert_default 		(GstPad *pad,
 					                         GstFormat *dest_format, gint64 *dest_value);
 
 void			gst_pad_set_query_function		(GstPad *pad, GstPadQueryFunction query);
-void			gst_pad_set_query_type_function		(GstPad *pad, GstPadQueryTypeFunction type_function);
+void			gst_pad_set_query_type_function		(GstPad *pad, GstPadQueryTypeFunction type_func);
 const GstPadQueryType*	gst_pad_get_query_types			(GstPad *pad);
 const GstPadQueryType*	gst_pad_get_query_types_default		(GstPad *pad);
 gboolean		gst_pad_query				(GstPad *pad, GstPadQueryType type,
@@ -511,10 +509,9 @@ gboolean 		gst_pad_dispatcher 			(GstPad *pad, GstPadDispatcherFunction dispatch
 								 gpointer data);
 
 #define			gst_pad_add_probe(pad, probe) \
-				(gst_probe_dispatcher_add_probe (&(GST_REAL_PAD (pad)-probedisp), probe))
+			(gst_probe_dispatcher_add_probe (&(GST_REAL_PAD (pad)-probedisp), probe))
 #define			gst_pad_remove_probe(pad, probe) \
-				(gst_probe_dispatcher_remove_probe (&(GST_REAL_PAD (pad)-probedisp), probe))
-
+			(gst_probe_dispatcher_remove_probe (&(GST_REAL_PAD (pad)-probedisp), probe))
 
 #ifndef GST_DISABLE_LOADSAVE
 void			gst_pad_load_and_connect		(xmlNodePtr self, GstObject *parent);

@@ -267,7 +267,7 @@ Print out an error condition and abort the application.
 
 <!-- ##### USER_FUNCTION GstDebugHandler ##### -->
 <para>
-
+The debug handler
 </para>
 
 @category: 
@@ -311,7 +311,7 @@ Print out an error condition and abort the application.
 
 <!-- ##### USER_FUNCTION GstInfoHandler ##### -->
 <para>
-
+The info handler
 </para>
 
 @category: 
@@ -326,7 +326,7 @@ Print out an error condition and abort the application.
 
 <!-- ##### USER_FUNCTION GstErrorHandler ##### -->
 <para>
-
+The error handler
 </para>
 
 @file: 

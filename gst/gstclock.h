@@ -61,17 +61,18 @@ typedef struct _GstClockEntry 	GstClockEntry;
 typedef struct _GstClock 	GstClock;
 typedef struct _GstClockClass 	GstClockClass;
 
-typedef gboolean (*GstClockCallback) (GstClock *clock, GstClockTime time, GstClockID id, gpointer user_data);
+typedef gboolean 	(*GstClockCallback) 	(GstClock *clock, GstClockTime time, 
+						 GstClockID id, gpointer user_data);
 
 typedef enum {
-  /*< protected >*/
+  /* --- protected --- */
   GST_CLOCK_ENTRY_OK,
   GST_CLOCK_ENTRY_EARLY,
   GST_CLOCK_ENTRY_RESTART,
 } GstClockEntryStatus;
 
 typedef enum {
-  /*< protected >*/
+  /* --- protected --- */
   GST_CLOCK_ENTRY_SINGLE,
   GST_CLOCK_ENTRY_PERIODIC,
 } GstClockEntryType;
@@ -84,7 +85,7 @@ typedef enum {
 #define GST_CLOCK_ENTRY_STATUS(entry)	((entry)->status)
 
 struct _GstClockEntry {
-  /*< protected >*/
+  /* --- protected --- */
   GstClock	 	*clock;
   GstClockEntryType 	 type;
   GstClockTime 		 time;

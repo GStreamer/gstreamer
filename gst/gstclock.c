@@ -92,7 +92,7 @@ gst_clock_new_single_shot_id (GstClock *clock, GstClockTime time)
 }
 
 /**
- * gst_clock_new_periodic__id
+ * gst_clock_new_periodic_id
  * @clock: The clockid to get a periodic notification id from
  * @start_time: the requested start time
  * @interval: the requested interval
@@ -191,15 +191,13 @@ done:
 }
 
 /**
- * gst_clock_wait_async
- * @clock: a #GstClock to wait on
- * @time: The #GstClockTime to wait for
+ * gst_clock_id_wait_async:
+ * @id: a #GstClockID to wait on
  * @func: The callback function 
  * @user_data: User data passed in the calback
  *
- * Register a callback on the given clock that will be triggered 
- * when the clock has reached the given time. A ClockID is returned
- * that can be used to cancel the request.
+ * Register a callback on the given clockid with the given
+ * function and user_data.
  *
  * Returns: the result of the non blocking wait.
  */
@@ -230,13 +228,10 @@ gst_clock_id_wait_async (GstClockID id,
 }
 
 /**
- * gst_clock_remove_id
- * @clock: The clock to cancel the request on
- * @id: The id to cancel
+ * gst_clock_id_unschedule:
+ * @id: The id to unschedule
  *
  * Cancel an outstanding async notification request with the given ID.
- * This can be an ID generated with gst_clock_wait_async() or 
- * gst_clock_notify_async().
  */
 void
 gst_clock_id_unschedule (GstClockID id)
@@ -254,7 +249,7 @@ gst_clock_id_unschedule (GstClockID id)
 }
 
 /**
- * gst_clock_id_free
+ * gst_clock_id_free:
  * @id: The clockid to free
  *
  * Free the resources held by the given id
@@ -268,7 +263,7 @@ gst_clock_id_free (GstClockID id)
 }
 
 /**
- * gst_clock_unlock_id
+ * gst_clock_id_unlock:
  * @id: The clockid to unlock
  *
  * Unlock the givan ClockID.

@@ -308,21 +308,21 @@ cothread_create (cothread_context *ctx)
 
 /**
  * cothread_free:
- * @cothread: the cothread state
+ * @thread: the cothread state
  *
  * Free the given cothread state
  */
 void
-cothread_free (cothread_state *cothread)
+cothread_free (cothread_state *thread)
 {
-  g_return_if_fail (cothread != NULL);
+  g_return_if_fail (thread != NULL);
 
   GST_INFO (GST_CAT_COTHREADS, "flag cothread %d for destruction", 
-            cothread->cothreadnum);
+            thread->cothreadnum);
 
   /* we simply flag the cothread for destruction here */
-  if (cothread)
-    cothread->flags |= COTHREAD_DESTROYED;
+  if (thread)
+    thread->flags |= COTHREAD_DESTROYED;
   else
     g_warning ("somebody set up us the bomb");
 }

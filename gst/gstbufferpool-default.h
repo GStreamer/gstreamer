@@ -29,7 +29,7 @@
 G_BEGIN_DECLS
 
 /* a default pool */
-GstBufferPool*	gst_buffer_pool_get_default		(guint size, guint numbuffers);
+GstBufferPool*	gst_buffer_pool_get_default		(guint buffer_size, guint pool_size);
 
 G_END_DECLS
 

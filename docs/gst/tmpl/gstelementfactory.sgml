@@ -137,6 +137,16 @@ describes the element, mostly for the benefit of editors.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_element_factory_make_or_warn ##### -->
+<para>
+
+</para>
+
+@factoryname: 
+@name: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_element_factory_set_rank ##### -->
 <para>
 

@@ -41,8 +41,6 @@ on the pads.
 <para>
 GstElements will use gst_pad_push() and gst_pad_pull() to push out 
 or pull in a buffer. 
-The gst_pad_pullregion() function can be used to request for a buffer 
-with a specific offset (in time or in bytes). 
 gst_pad_select() and gst_pad_selectv() are used by plugins to wait for the
 first incoming buffer or event on any of the given set of pads.
 </para>
@@ -51,7 +49,7 @@ To send a #GstEvent on a pad, use gst_pad_send_event().
 </para>
 
 <para>
-Last reviewed on September 1st, 2002 (0.4.0.1)
+Last reviewed on December 13th, 2002 (0.5.0.1)
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -165,9 +163,25 @@ Checks if the pad is connected.
 @pad: a #GstPad to check.
 
 
+<!-- ##### MACRO GST_PAD_IS_ACTIVE ##### -->
+<para>
+Checks if the pad is active.
+</para>
+
+@pad: a #GstPad to check
+
+
+<!-- ##### MACRO GST_PAD_IS_USABLE ##### -->
+<para>
+Checks if a pad is usable. A usable pad both connected and active.
+</para>
+
+@pad: a #GstPad to check
+
+
 <!-- ##### STRUCT GstPad ##### -->
 <para>
-
+The GstPad object
 </para>
 
 
@@ -288,10 +302,10 @@ The different supported query types.
 @GST_PAD_QUERY_LATENCY: Query the latency on the pad.
 @GST_PAD_QUERY_JITTER: Query the average jitter beteen optimal processing 
                        and current processing.
-@GST_PAD_QUERY_START: 
+@GST_PAD_QUERY_START: Query for the configured start time for segmented seek
 @GST_PAD_QUERY_SEGMENT_END: Query the end position of the currently 
                             executing segment.
-@GST_PAD_QUERY_RATE: 
+@GST_PAD_QUERY_RATE: Query at which rate this pad will process data.
 
 <!-- ##### USER_FUNCTION GstPadQueryFunction ##### -->
 <para>
@@ -303,6 +317,42 @@ The signature of the query function.
 @format: a pointer to the target #GstFormat.
 @value: a pointer to the target value.
 @Returns: TRUE if the query could be performed.
+
+
+<!-- ##### USER_FUNCTION GstPadEventMaskFunction ##### -->
+<para>
+The signature of the eventmask function.
+</para>
+
+@pad: the #GstPad to query
+@Returns: an array of event masks
+
+
+<!-- ##### USER_FUNCTION GstPadFormatsFunction ##### -->
+<para>
+The signature of the formats function.
+</para>
+
+@pad: a #GstPad to query
+@Returns: an array of formats
+
+
+<!-- ##### USER_FUNCTION GstPadQueryTypeFunction ##### -->
+<para>
+The signature of the query types function.
+</para>
+
+@pad: a #GstPad to query
+@Returns: an array of query types
+
+
+<!-- ##### MACRO GST_PAD_QUERY_TYPE_FUNCTION ##### -->
+<para>
+A convenience macro to construct query type functions
+</para>
+
+@functionname: the name of the function
+@...: query types, 0 to mark the last element
 
 
 <!-- ##### ENUM GstPadDirection ##### -->
@@ -504,15 +554,6 @@ Destroy the pad.
 
 
 <!-- ##### FUNCTION gst_pad_get_parent ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_get_scheduler ##### -->
 <para>
 
 </para>
@@ -740,6 +781,16 @@ Destroy the pad.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_ghost_pad_save_thyself ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_pad_select ##### -->
 <para>
 
@@ -799,6 +850,43 @@ Destroy the pad.
 @event: 
 
 
+<!-- ##### FUNCTION gst_pad_get_event_masks ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_event_masks_default ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_handles_event ##### -->
+<para>
+
+</para>
+
+@pad: 
+@mask: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_set_event_mask_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@mask_func: 
+
+
 <!-- ##### FUNCTION gst_pad_set_convert_function ##### -->
 <para>
 
@@ -832,6 +920,45 @@ Destroy the pad.
 @dest_format: 
 @dest_value: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_formats ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_formats_default ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_handles_format ##### -->
+<para>
+
+</para>
+
+@pad: 
+@format: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_set_formats_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@formats: 
+<!-- # Unused Parameters # -->
+@format: 
 
 
 <!-- ##### FUNCTION gst_pad_get_internal_connections ##### -->
@@ -894,9 +1021,83 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### STRUCT GstRealPad ##### -->
+<!-- ##### FUNCTION gst_pad_get_query_types ##### -->
 <para>
 
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_query_types_default ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_set_query_type_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@type_func: 
+<!-- # Unused Parameters # -->
+@type_function: 
+
+
+<!-- ##### MACRO gst_pad_add_probe ##### -->
+<para>
+Adds the probe to the given pad
+</para>
+
+@pad: The pad to add the probe to
+@probe: The probe to add to the pad
+
+
+<!-- ##### MACRO gst_pad_remove_probe ##### -->
+<para>
+Remove the probe from the pad
+</para>
+
+@pad: The pad to remove the probe of
+@probe: The probe to remove
+
+
+<!-- ##### FUNCTION gst_pad_is_active ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_set_active ##### -->
+<para>
+
+</para>
+
+@pad: 
+@active: 
+
+
+<!-- ##### FUNCTION gst_pad_get_scheduler ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### STRUCT GstRealPad ##### -->
+<para>
+The realpad object
 </para>
 
 @pad: 
@@ -1060,6 +1261,30 @@ Get the query function of this pad
 @pad: the pad to query
 
 
+<!-- ##### MACRO GST_RPAD_EVENTMASKFUNC ##### -->
+<para>
+Get the event mask function of this pad
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_RPAD_FORMATSFUNC ##### -->
+<para>
+Get the formats function of this pad
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_RPAD_QUERYTYPEFUNC ##### -->
+<para>
+Get the query types function of this pad
+</para>
+
+@pad: the pad to query
+
+
 <!-- ##### MACRO GST_GPAD_REALPAD ##### -->
 <para>
 Get the real pad of this ghost pad.
@@ -1070,7 +1295,7 @@ Get the real pad of this ghost pad.
 
 <!-- ##### STRUCT GstGhostPad ##### -->
 <para>
-
+The Ghostpad object
 </para>
 
 

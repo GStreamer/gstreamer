@@ -83,7 +83,7 @@ gst_element_request_pad_by_name() or gst_element_request_compatible_pad().
 
 <!-- ##### STRUCT GstPadTemplate ##### -->
 <para>
-
+The padtemplate object.
 </para>
 
 
@@ -205,9 +205,10 @@ Check if the properties of the padtemplate are fixed
 
 <!-- ##### SIGNAL GstPadTemplate::pad-created ##### -->
 <para>
-
+This signal is fired when an element creates a pad from this 
+template.
 </para>
 
 @gstpadtemplate: the object which received the signal.
-@arg1: 
+@arg1: The pad that was created.
 

@@ -46,7 +46,7 @@ can be made with <option>{}</option>.
 
 <!-- ##### ENUM GstParseError ##### -->
 <para>
-
+The parsing errors.
 </para>
 
 @GST_PARSE_ERROR_SYNTAX: A syntax error was detected
@@ -56,7 +56,7 @@ can be made with <option>{}</option>.
 
 <!-- ##### MACRO GST_PARSE_ERROR ##### -->
 <para>
-The error querk
+The error quark
 </para>
 
 

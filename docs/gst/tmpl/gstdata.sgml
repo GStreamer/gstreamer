@@ -200,6 +200,15 @@ Get access to the free function of the data
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_data_needs_copy_on_write ##### -->
+<para>
+
+</para>
+
+@data: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_data_copy_on_write ##### -->
 <para>
 

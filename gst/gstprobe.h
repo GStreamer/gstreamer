@@ -44,12 +44,12 @@ struct _GstProbe {
 };
 
 
-GstProbe*		gst_pad_probe_new 		(gboolean single_shot, 
+GstProbe*		gst_probe_new 			(gboolean single_shot, 
 							 GstProbeCallback callback, 
 							 gpointer user_data);
-void			gst_pad_probe_destroy		(GstProbe *probe);
+void			gst_probe_destroy		(GstProbe *probe);
 
-gboolean		gst_pad_probe_perform 		(GstProbe *probe, GstData *data);
+gboolean		gst_probe_perform 		(GstProbe *probe, GstData *data);
 
 typedef struct _GstProbeDispatcher GstProbeDispatcher;
 

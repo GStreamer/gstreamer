@@ -766,14 +766,29 @@ gst_element_clock_wait (GstElement *element, GstClock *clock, GstClockTime time,
   return res;
 }
 
+/**
+ * gst_element_is_indexable:
+ * @element: a #GstElement.
+ *
+ * Queries if the element can be indexed/
+ *
+ * Returns: TRUE if the element can be indexed.
+ */
 gboolean
-gst_element_is_cachable (GstElement *element)
+gst_element_is_indexable (GstElement *element)
 {
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   return (CLASS (element)->set_index != NULL);
 }
 
+/**
+ * gst_element_set_index:
+ * @element: a #GstElement.
+ * @index: a #GstIndex.
+ *
+ * Set the specified GstIndex on the element.
+ */
 void
 gst_element_set_index (GstElement *element, GstIndex *index)
 {
@@ -784,6 +799,15 @@ gst_element_set_index (GstElement *element, GstIndex *index)
     CLASS (element)->set_index (element, index);
 }
 
+/**
+ * gst_element_get_index:
+ * @element: a #GstElement.
+ *
+ * Gets the index from the element.
+ *
+ * Returns: a #GstIndex or NULL when no index was set on the
+ * element.
+ */
 GstIndex*
 gst_element_get_index (GstElement *element)
 {
@@ -794,7 +818,6 @@ gst_element_get_index (GstElement *element)
 
   return NULL;
 }
-
 
 /**
  * gst_element_release_locks:

@@ -17,7 +17,7 @@ are usually used in conjunction with GstCaps.
 
 <!-- ##### STRUCT GstProps ##### -->
 <para>
-
+The props structure
 </para>
 
 @refcount: a refcount for this struct
@@ -26,7 +26,7 @@ are usually used in conjunction with GstCaps.
 
 <!-- ##### ENUM GstPropsType ##### -->
 <para>
-
+The property type
 </para>
 
 @GST_PROPS_END_TYPE: 
@@ -85,9 +85,15 @@ Create a FOURCC value from a string. example:
 Create a list of properties.
 </para>
 
-@...: 
-<!-- # Unused Parameters # -->
-@a...: the list of GstProps
+@...: the list of GstProps
+
+
+<!-- ##### MACRO GST_PROPS_GLIST ##### -->
+<para>
+Create a list from a GList of #GstPropsEntry.
+</para>
+
+@a: A GList of props entries
 
 
 <!-- ##### MACRO GST_PROPS_INT ##### -->
@@ -263,9 +269,6 @@ An entry hols one key/value pair.
 @fromprops: 
 @toprops: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@props1: 
-@props2: 
 
 
 <!-- ##### FUNCTION gst_props_has_property ##### -->

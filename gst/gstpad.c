@@ -357,7 +357,6 @@ gst_pad_new_from_template (GstPadTemplate *templ, const gchar *name)
 GstPadDirection
 gst_pad_get_direction (GstPad *pad)
 {
-  g_return_val_if_fail (pad != NULL, GST_PAD_UNKNOWN);
   g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_UNKNOWN);
 
   return GST_PAD_DIRECTION (pad);
@@ -366,6 +365,7 @@ gst_pad_get_direction (GstPad *pad)
 /**
  * gst_pad_set_active:
  * @pad: the #GstPad to activate or deactivate.
+ * @active: TRUE to activate the pad.
  *
  * Activates or deactivates the given pad.
  */
@@ -375,7 +375,6 @@ gst_pad_set_active (GstPad *pad, gboolean active)
   GstRealPad *realpad;
   gboolean old;
 
-  g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
 
   if (GST_PAD_IS_ACTIVE (pad) == active)
@@ -399,6 +398,22 @@ gst_pad_set_active (GstPad *pad, gboolean active)
 }
 
 /**
+ * gst_pad_is_active:
+ * @pad: the #GstPad to query
+ *
+ * Query if a pad is active
+ *
+ * Returns: TRUE if the pad is active.
+ */
+gboolean
+gst_pad_is_active (GstPad *pad)
+{
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  return !GST_FLAG_IS_SET (pad, GST_PAD_DISABLED);
+}
+
+/**
  * gst_pad_set_name:
  * @pad: a #GstPad to set the name of.
  * @name: the name of the pad.
@@ -409,7 +424,6 @@ gst_pad_set_active (GstPad *pad, gboolean active)
 void
 gst_pad_set_name (GstPad *pad, const gchar *name)
 {
-  g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
 
   gst_object_set_name (GST_OBJECT (pad), name);
@@ -482,7 +496,6 @@ void
 gst_pad_set_event_function (GstPad *pad,
                             GstPadEventFunction event)
 {
-  g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
   GST_RPAD_EVENTFUNC (pad) = event;
@@ -491,19 +504,34 @@ gst_pad_set_event_function (GstPad *pad,
              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (event));
 }
 
+/**
+ * gst_pad_set_event_mask_function:
+ * @pad: a #GstPad to set the event mask function for.
+ * @mask_func: the #GstPadEventMaskFunction to set.
+ *
+ * Sets the given event mask function for the pad.
+ */
 void
 gst_pad_set_event_mask_function (GstPad *pad, 
-                                 GstPadEventMaskFunction mask_function)
+                                 GstPadEventMaskFunction mask_func)
 {
-  g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
-  GST_RPAD_EVENTMASKFUNC (pad) = mask_function;
+  GST_RPAD_EVENTMASKFUNC (pad) = mask_func;
 
   GST_DEBUG (GST_CAT_PADS, "eventmaskfunc for %s:%s  set to %s",
-             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (mask_function));
+             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (mask_func));
 }
 
+/**
+ * gst_pad_get_event_masks:
+ * @pad: a #GstPad to get the event mask for.
+ *
+ * Gets the array of eventmasks from the given pad.
+ *
+ * Returns: an array with eventmasks, the list is ended 
+ * with 0
+ */
 const GstEventMask*
 gst_pad_get_event_masks (GstPad *pad)
 {
@@ -523,13 +551,22 @@ gst_pad_get_event_masks (GstPad *pad)
 }
 
 static gboolean
-gst_pad_get_event_masks_dispatcher (GstPad *pad, const GstFormat **data)
+gst_pad_get_event_masks_dispatcher (GstPad *pad, const GstEventMask **data)
 {
-  *data = gst_pad_get_formats (pad);
+  *data = gst_pad_get_event_masks (pad);
 
   return TRUE;
 }
 
+/**
+ * gst_pad_get_event_masks_default:
+ * @pad: a #GstPad to get the event mask for.
+ *
+ * Invokes the default event masks dispatcher on the pad.
+ *
+ * Returns: an array with eventmasks, the list is ended 
+ * with 0
+ */
 const GstEventMask* 
 gst_pad_get_event_masks_default (GstPad *pad)
 {
@@ -541,6 +578,15 @@ gst_pad_get_event_masks_default (GstPad *pad)
   return result;
 }
 
+/**
+ * gst_pad_handles_event:
+ * @pad: a #GstPad to check
+ * @mask: the mask to check
+ *
+ * Checks if the pad can handle the given eventmask.
+ *
+ * Returns: TRUE if the pad can handle the given eventmask
+ */
 gboolean
 gst_pad_handles_event (GstPad *pad, GstEventMask *mask)
 {
@@ -603,6 +649,13 @@ gst_pad_set_query_function (GstPad *pad, GstPadQueryFunction query)
              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (query));
 }
 
+/**
+ * gst_pad_set_query_type_function:
+ * @pad: the #GstPad to set the query type function for.
+ * @type_func: the #GstPadQueryTypeFunction to set.
+ *
+ * Set the given query type function for the pad.
+ */
 void
 gst_pad_set_query_type_function (GstPad *pad, GstPadQueryTypeFunction type_func)
 {
@@ -615,6 +668,15 @@ gst_pad_set_query_type_function (GstPad *pad, GstPadQueryTypeFunction type_func)
              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (type_func));
 }
 
+/**
+ * gst_pad_get_query_types:
+ * @pad: the #GstPad to query
+ *
+ * Get an array of supported queries that can be performed
+ * on this pad.
+ *
+ * Returns: an array of querytypes anded with 0.
+ */
 const GstPadQueryType*
 gst_pad_get_query_types (GstPad *pad)
 {
@@ -641,6 +703,15 @@ gst_pad_get_query_types_dispatcher (GstPad *pad, const GstPadQueryType **data)
   return TRUE;
 }
 
+/**
+ * gst_pad_get_query_types_default:
+ * @pad: the #GstPad to query
+ *
+ * Invoke the default dispatcher for the query types on
+ * the pad.
+ *
+ * Returns: an array of querytypes anded with 0.
+ */
 const GstPadQueryType*
 gst_pad_get_query_types_default (GstPad *pad)
 {
@@ -1100,7 +1171,6 @@ gst_pad_get_parent (GstPad *pad)
 GstPadTemplate*
 gst_pad_get_pad_template (GstPad *pad)
 {
-  g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   return GST_PAD_PAD_TEMPLATE (pad); 
@@ -1111,7 +1181,10 @@ gst_pad_get_pad_template (GstPad *pad)
  * gst_pad_get_scheduler:
  * @pad: a #GstPad to get the scheduler of.
  *
- * Gets the scheduler of the pad.
+ * Gets the scheduler of the pad. Since the pad does not
+ * have a scheduler of its own, the scheduler of the parent
+ * is taken. For decoupled pads, the scheduler of the peer
+ * parent is taken.
  *
  * Returns: the #GstScheduler of the pad.
  */
@@ -1121,7 +1194,6 @@ gst_pad_get_scheduler (GstPad *pad)
   GstScheduler *scheduler = NULL;
   GstElement *parent;
   
-  g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
   
   parent = gst_pad_get_parent (pad);
@@ -2041,12 +2113,10 @@ gst_pad_save_thyself (GstObject *object, xmlNodePtr parent)
 }
 
 /* FIXME: shouldn't pad and ghost be switched ?
- * FIXME: shouldn't the bin argument be dumped ?
  */
 /**
  * gst_ghost_pad_save_thyself:
  * @pad: a ghost #GstPad to save.
- * @bin: the #bin
  * @parent: the parent #xmlNodePtr to save the description in.
  *
  * Saves the ghost pad into an xml representation.
@@ -2469,7 +2539,7 @@ gst_ghost_pad_init (GstGhostPad *pad)
  *
  * Creates a new ghost pad associated with the given pad, and names it with
  * the given name.  If name is NULL, a guaranteed unique name (across all
- * ghost pads) will be assigned (most likely of the form ghostpad%d).
+ * ghost pads) will be assigned (most likely of the form ghostpad&perc;d).
  *
  * Returns: a new ghost #GstPad, or NULL in case of an error.
  */
@@ -2887,6 +2957,15 @@ gst_pad_query (GstPad *pad, GstPadQueryType type,
   return FALSE;
 }
 
+/**
+ * gst_pad_handles_format:
+ * @pad: a #GstPad to check
+ * @format: the format to check
+ *
+ * Checks if the pad can handle the given format.
+ *
+ * Returns: TRUE if the pad can handle the given format
+ */
 gboolean
 gst_pad_handles_format (GstPad *pad, GstFormat format)
 {
@@ -2914,6 +2993,14 @@ gst_pad_get_formats_dispatcher (GstPad *pad, const GstFormat **data)
   return TRUE;
 }
 
+/**
+ * gst_pad_get_formats_default:
+ * @pad: a #GstPad to query
+ *
+ * Invoke the default format dispatcher for the pad.
+ *
+ * Returns: An array of GstFormats ended with a 0 value.
+ */
 const GstFormat*
 gst_pad_get_formats_default (GstPad *pad)
 {
@@ -2925,6 +3012,14 @@ gst_pad_get_formats_default (GstPad *pad)
   return result;
 }
 
+/**
+ * gst_pad_get_formats:
+ * @pad: a #GstPad to query
+ *
+ * Gets the list of supported formats from the pad.
+ *
+ * Returns: An array of GstFormats ended with a 0 value.
+ */
 const GstFormat*
 gst_pad_get_formats (GstPad *pad)
 {

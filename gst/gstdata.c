@@ -103,6 +103,8 @@ gst_data_copy (const GstData *data)
  * gst_data_needs_copy_on_write:
  * @data: a #GstData to copy
  *
+ * Query if the gstdata needs to be copied before it can safely be modified.
+ *
  * Returns: TRUE if the given #GstData is potentially shared and needs to
  * be copied before it can be modified safely.
  */

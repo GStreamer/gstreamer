@@ -76,7 +76,7 @@ Check if the given pointer is a bufferpool
 
 <!-- ##### STRUCT GstBufferPool ##### -->
 <para>
-
+The bufferpool structure
 </para>
 
 @data: 
@@ -206,20 +206,18 @@ Free the given pool. This is dangerous, use gst_buffer_pool_unref() instead.
 
 <!-- ##### FUNCTION gst_buffer_pool_set_user_data ##### -->
 <para>
-Set the specified user data to the bufferpool.
 </para>
 
-@pool: The pool to set the user_data of
-@user_data: The user data to set on the pool
+@pool: 
+@user_data: 
 
 
 <!-- ##### FUNCTION gst_buffer_pool_get_user_data ##### -->
 <para>
-Get the user_data of the pool
 </para>
 
-@pool: The pool to get the user data of
-@Returns: The user data of the pool
+@pool: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_buffer_pool_get_default ##### -->
@@ -227,8 +225,28 @@ Get the user_data of the pool
 
 </para>
 
+@buffer_size: 
+@pool_size: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @size: 
 @numbuffers: 
-@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_pool_default_free ##### -->
+<para>
+
+</para>
+
+@pool: 
+
+
+<!-- ##### MACRO gst_buffer_pool_needs_copy_on_write ##### -->
+<para>
+Checks if a copy needs to be made of the bufferpool before it can
+safely be modified.
+</para>
+
+@pool: The pool to query
 
 

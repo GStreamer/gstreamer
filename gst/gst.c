@@ -140,8 +140,9 @@ gst_init_get_popt_table (void)
  * This function will return %FALSE if GStreamer could not be initialized
  * for some reason.  If you want your program to fail fatally,
  * use gst_init() instead.
+ *
+ * Returns: TRUE if GStreamer coul be initialized
  */
-
 gboolean
 gst_init_check (int *argc, char **argv[])
 {
@@ -176,6 +177,8 @@ gst_init (int *argc, char **argv[])
  * Initializes the GStreamer library, parsing the options,
  * setting up internal path lists,
  * registering built-in elements, and loading standard plugins.
+ *
+ * Returns: TRUE when the initialization succeeded.
  */
 gboolean
 gst_init_with_popt_table (int *argc, char **argv[],

@@ -412,6 +412,12 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
   return newbuf;
 }
 
+/**
+ * gst_buffer_pool_default_free:
+ * @pool: a #GstBufferPool to free.
+ *
+ * Frees the memory associated with the bufferpool.
+ */
 void
 gst_buffer_pool_default_free (GstBufferPool *pool)
 {

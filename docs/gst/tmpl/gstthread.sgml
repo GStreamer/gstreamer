@@ -30,7 +30,7 @@ Thread flags:
 
 <!-- ##### STRUCT GstThread ##### -->
 <para>
-
+The GstThread object
 </para>
 
 
@@ -50,13 +50,8 @@ Thread flags:
 
 @gstthread: the object which received the signal.
 
-<!-- ##### ARG GstThread:schedpolicy ##### -->
-<para>
-
-</para>
-
 <!-- ##### ARG GstThread:priority ##### -->
 <para>
-
+The thread priority
 </para>
 

@@ -63,7 +63,7 @@ Flags for a bin.
 
 <!-- ##### STRUCT GstBin ##### -->
 <para>
-
+The GstBin object
 </para>
 
 

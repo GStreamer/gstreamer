@@ -51,7 +51,7 @@ static GHashTable *_default_pools = NULL;
 
 
 /**
- * _gst_buffer_pool_get_default:
+ * gst_buffer_pool_get_default:
  * @buffer_size: the number of bytes this buffer will store
  * @pool_size: the default number of buffers to be preallocated
  *
@@ -60,7 +60,7 @@ static GHashTable *_default_pools = NULL;
  * already exists this will be returned, otherwise a new instance will
  * be created.
  * 
- * Returns: an instance of GstBufferPool
+ * Returns: an instance of #GstBufferPool
  */
 GstBufferPool*
 gst_buffer_pool_get_default (guint buffer_size, guint pool_size)

@@ -24,7 +24,16 @@
 #include "gstlog.h"
 #include "gstprobe.h"
 
-
+/**
+ * gst_probe_new:
+ * @single_shot: TRUE if a single shot probe is required
+ * @callback: the function to call when the probe is triggered
+ * @user_data: data passed to the callback function
+ *
+ * Create a new probe with the specified parameters
+ *
+ * Returns: a new #GstProbe.
+ */
 GstProbe*
 gst_probe_new (gboolean single_shot, 
 	       GstProbeCallback callback, 
@@ -43,6 +52,12 @@ gst_probe_new (gboolean single_shot,
   return probe;
 }
 
+/**
+ * gst_probe_destroy:
+ * @probe: The probe to destroy
+ *
+ * Free the memeory associated with the probe.
+ */
 void
 gst_probe_destroy (GstProbe *probe)
 {
@@ -51,6 +66,15 @@ gst_probe_destroy (GstProbe *probe)
   g_free (probe);
 }
 
+/**
+ * gst_probe_perform:
+ * @probe: The probe to trigger
+ * @data: the GstData that triggered the probe.
+ *
+ * Perform the callback associated with the given probe.
+ *
+ * Returns: the result of the probe callback function.
+ */
 gboolean
 gst_probe_perform (GstProbe *probe, GstData *data)
 {
@@ -64,6 +88,13 @@ gst_probe_perform (GstProbe *probe, GstData *data)
   return res;
 }
 
+/**
+ * gst_probe_dispatcher_new:
+ *
+ * Create a new probe dispatcher
+ *
+ * Returns: a new probe dispatcher.
+ */
 GstProbeDispatcher*
 gst_probe_dispatcher_new (void)
 {
@@ -76,11 +107,29 @@ gst_probe_dispatcher_new (void)
   return disp;
 }
 
+/**
+ * gst_probe_dispatcher_destroy:
+ * @disp: the dispatcher to destroy
+ *
+ * Free the memory allocated by the probe dispatcher. All pending
+ * probes are removed first.
+ */
 void		
 gst_probe_dispatcher_destroy (GstProbeDispatcher *disp)
 {
+  g_return_if_fail (disp);
+  
+  /* FIXME, free pending probes */
+  g_free (disp);
 }
 
+/**
+ * gst_probe_dispatcher_init:
+ * @disp: the dispatcher to initialize
+ *
+ * Initialize the dispatcher. Useful for statically allocated probe
+ * dispatchers.
+ */
 void
 gst_probe_dispatcher_init (GstProbeDispatcher *disp)
 {
@@ -90,6 +139,14 @@ gst_probe_dispatcher_init (GstProbeDispatcher *disp)
   disp->probes = NULL;
 }
 
+/**
+ * gst_probe_dispatcher_set_active:
+ * @disp: the dispatcher to activate
+ * @active: boolean to indicate activation or deactivation
+ *
+ * Activate or deactivate the given dispatcher
+ * dispatchers.
+ */
 void		
 gst_probe_dispatcher_set_active (GstProbeDispatcher *disp, gboolean active)
 {
@@ -98,6 +155,13 @@ gst_probe_dispatcher_set_active (GstProbeDispatcher *disp, gboolean active)
   disp->active = active;
 }
 
+/**
+ * gst_probe_dispatcher_add_probe:
+ * @disp: the dispatcher to add the probe to
+ * @probe: the probe to add to the dispatcher
+ *
+ * Adds the given probe to the dispatcher.
+ */
 void
 gst_probe_dispatcher_add_probe (GstProbeDispatcher *disp, GstProbe *probe)
 {
@@ -107,6 +171,13 @@ gst_probe_dispatcher_add_probe (GstProbeDispatcher *disp, GstProbe *probe)
   disp->probes = g_slist_prepend (disp->probes, probe);
 }
 
+/**
+ * gst_probe_dispatcher_remove_probe:
+ * @disp: the dispatcher to remove the probe from
+ * @probe: the probe to remove from the dispatcher
+ *
+ * Removes the given probe from the dispatcher.
+ */
 void
 gst_probe_dispatcher_remove_probe (GstProbeDispatcher *disp, GstProbe *probe)
 {
@@ -116,6 +187,15 @@ gst_probe_dispatcher_remove_probe (GstProbeDispatcher *disp, GstProbe *probe)
   disp->probes = g_slist_remove (disp->probes, probe);
 }
 
+/**
+ * gst_probe_dispatcher_dispatch:
+ * @disp: the dispatcher to dispatch
+ * @data: the data that triggered the dispatch
+ *
+ * Trigger all registered probes on the given dispatcher.
+ *
+ * Returns: TRUE if all callbacks returned TRUE.
+ */
 gboolean	
 gst_probe_dispatcher_dispatch (GstProbeDispatcher *disp, GstData *data)
 {

@@ -295,15 +295,13 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
 }
 
 /**
- * gst_scheduler_state_transition:
+ * gst_scheduler_scheduling_change:
  * @sched: the scheduler
- * @element: the element with the state transition
- * @transition: the state transition
+ * @element: the element that changed its scheduling strategy
  *
- * Tell the scheduler that an element changed its state.
- *
- * Returns: a GstElementStateReturn indicating success or failure
- * of the state transition.
+ * Tell the scheduler that an element changed its scheduling strategy.
+ * An element could, for example, change its loop function or changes
+ * from a loop based element to a chain based element.
  */
 void
 gst_scheduler_scheduling_change (GstScheduler *sched, GstElement *element)

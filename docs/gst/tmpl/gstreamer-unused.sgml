@@ -605,26 +605,6 @@ Take data in and spit data out
 GstFilter
 
 
-<!-- ##### SECTION ./tmpl/gstformat.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstformat.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstformat.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gstformat.sgml:Title ##### -->
-gstformat
-
-
 <!-- ##### SECTION ./tmpl/gstgetbits.sgml:Long_Description ##### -->
 <para>
 
@@ -919,26 +899,6 @@ A wrapper around every stdin/stdout capable program
 GstPipefilter
 
 
-<!-- ##### SECTION ./tmpl/gstprobe.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstprobe.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstprobe.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gstprobe.sgml:Title ##### -->
-gstprobe
-
-
 <!-- ##### SECTION ./tmpl/gstqueue.sgml:Long_Description ##### -->
 <para>
 Simple data queue. Data is queued till max_level buffers any subsequent buffers
@@ -1113,6 +1073,47 @@ Provide statistics about data that passes this plugin
 
 <!-- ##### SECTION ./tmpl/gststatistics.sgml:Title ##### -->
 GstStatistics
+
+
+<!-- ##### SECTION ./tmpl/gsttee.sgml:Long_Description ##### -->
+<para>
+A tee can be used to split out the filter graph.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gsttee.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gsttee.sgml:Short_Description ##### -->
+1-to-N pipe fitting
+
+
+<!-- ##### SECTION ./tmpl/gsttee.sgml:Title ##### -->
+GstTee
+
+
+<!-- ##### SECTION ./tmpl/gsttimecache.sgml:Long_Description ##### -->
+<para>
+This class is used by plugins to manage time vs byte offsets. It is mainly
+used for efficient seeking.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gsttimecache.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gsttimecache.sgml:Short_Description ##### -->
+Cache time and byteoffsets.
+
+
+<!-- ##### SECTION ./tmpl/gsttimecache.sgml:Title ##### -->
+GstTimeCache
 
 
 <!-- ##### SECTION ./tmpl/gsttypefind.sgml:Long_Description ##### -->
@@ -1808,55 +1809,6 @@ Unlock the caps structure
 
 @caps: The caps structure to unlock
 
-<!-- ##### MACRO GST_CLOCK_ENTRY ##### -->
-<para>
-
-</para>
-
-@entry: 
-
-<!-- ##### MACRO GST_CLOCK_ENTRY_CLOCK ##### -->
-<para>
-
-</para>
-
-@entry: 
-
-<!-- ##### MACRO GST_CLOCK_ENTRY_INTERVAL ##### -->
-<para>
-
-</para>
-
-@entry: 
-
-<!-- ##### MACRO GST_CLOCK_ENTRY_STATUS ##### -->
-<para>
-
-</para>
-
-@entry: 
-
-<!-- ##### MACRO GST_CLOCK_ENTRY_TIME ##### -->
-<para>
-
-</para>
-
-@entry: 
-
-<!-- ##### MACRO GST_CLOCK_ENTRY_TYPE ##### -->
-<para>
-
-</para>
-
-@entry: 
-
-<!-- ##### MACRO GST_CLOCK_FLAGS ##### -->
-<para>
-
-</para>
-
-@clock: 
-
 <!-- ##### MACRO GST_CONNECTION ##### -->
 <para>
 
@@ -2045,14 +1997,6 @@ The properties of the info event
 
 @event: The event to query
 
-<!-- ##### MACRO GST_EVENT_MASK_FUNCTION ##### -->
-<para>
-
-</para>
-
-@functionname: 
-@...: 
-
 <!-- ##### MACRO GST_EVENT_SEEK_FLUSH ##### -->
 <para>
 Qeury wether the seek event also needs a flush.
@@ -2135,14 +2079,6 @@ Qeury wether the seek event also needs a flush.
 subclass use this to start their flag enumeration
 </para>
 
-
-<!-- ##### MACRO GST_FORMATS_FUNCTION ##### -->
-<para>
-
-</para>
-
-@functionname: 
-@...: 
 
 <!-- ##### MACRO GST_GHOST_PAD ##### -->
 <para>
@@ -2809,28 +2745,6 @@ Indicates a srcpad for the padfactory.
 </para>
 
 
-<!-- ##### MACRO GST_PAD_IS_ACTIVE ##### -->
-<para>
-
-</para>
-
-@pad: 
-
-<!-- ##### MACRO GST_PAD_IS_USABLE ##### -->
-<para>
-
-</para>
-
-@pad: 
-
-<!-- ##### MACRO GST_PAD_QUERY_TYPE_FUNCTION ##### -->
-<para>
-
-</para>
-
-@functionname: 
-@...: 
-
 <!-- ##### MACRO GST_PAD_TEMPLATE ##### -->
 <para>
 
@@ -2907,13 +2821,6 @@ Create a fourcc property out of an integer value.
 
 @a: the integer value
 
-<!-- ##### MACRO GST_PROPS_GLIST ##### -->
-<para>
-
-</para>
-
-@a: 
-
 <!-- ##### MACRO GST_PROPS_INT_ID ##### -->
 <para>
 
@@ -2981,27 +2888,6 @@ Get the EOS function of the real pad.
 
 @pad: the real pad to query.
 
-<!-- ##### MACRO GST_RPAD_EVENTMASKFUNC ##### -->
-<para>
-
-</para>
-
-@pad: 
-
-<!-- ##### MACRO GST_RPAD_EVENT_MASKS ##### -->
-<para>
-
-</para>
-
-@pad: 
-
-<!-- ##### MACRO GST_RPAD_FORMATSFUNC ##### -->
-<para>
-
-</para>
-
-@pad: 
-
 <!-- ##### MACRO GST_RPAD_GETREGIONFUNC ##### -->
 <para>
 Get the getregion function of the real pad.
@@ -3064,20 +2950,6 @@ Get the QoS function of the real pad.
 </para>
 
 @pad: the real pad to query.
-
-<!-- ##### MACRO GST_RPAD_QUERYTYPEFUNC ##### -->
-<para>
-
-</para>
-
-@pad: 
-
-<!-- ##### MACRO GST_RPAD_QUERY_TYPES ##### -->
-<para>
-
-</para>
-
-@pad: 
 
 <!-- ##### MACRO GST_RPAD_REGIONTYPE ##### -->
 <para>
@@ -3731,7 +3603,11 @@ A type that can be used to indicate a filename.
 </para>
 
 
+<<<<<<< gstreamer-unused.sgml
+
+
 <!-- ##### MACRO GST_TYPE_SINESRC ##### -->
+>>>>>>> 1.66
 <para>
 
 </para>
@@ -3761,7 +3637,11 @@ A type that can be used to indicate a filename.
 </para>
 
 
+<<<<<<< gstreamer-unused.sgml
+
+
 <!-- ##### MACRO GST_TYPE_THREAD_STATE ##### -->
+>>>>>>> 1.66
 <para>
 
 </para>
@@ -4196,6 +4076,9 @@ A type that can be used to indicate a filename.
 </para>
 
 
+<<<<<<< gstreamer-unused.sgml
+
+
 <!-- ##### ARG GstAggregator:sched ##### -->
 <para>
 
@@ -4203,6 +4086,7 @@ A type that can be used to indicate a filename.
 
 
 <!-- ##### ARG GstAggregator:silent ##### -->
+>>>>>>> 1.66
 <para>
 
 </para>
@@ -4216,14 +4100,6 @@ A type that can be used to indicate a filename.
 @AGGREGATOR_LOOP: 
 @AGGREGATOR_LOOP_SELECT: 
 @AGGREGATOR_CHAIN: 
-
-<!-- ##### ENUM GstAssocFlags ##### -->
-<para>
-
-</para>
-
-@GST_ACCOCIATION_FLAG_NONE: 
-@GST_ACCOCIATION_FLAG_KEY_UNIT: 
 
 <!-- ##### STRUCT GstAsyncDiskSrc ##### -->
 <para>
@@ -4549,41 +4425,6 @@ can perform necessary cleanup.
 </para>
 
 
-<!-- ##### STRUCT GstClockEntry ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ENUM GstClockEntryStatus ##### -->
-<para>
-
-</para>
-
-@GST_CLOCK_ENTRY_OK: 
-@GST_CLOCK_ENTRY_EARLY: 
-@GST_CLOCK_ENTRY_RESTART: 
-
-<!-- ##### ENUM GstClockEntryType ##### -->
-<para>
-
-</para>
-
-@GST_CLOCK_ENTRY_SINGLE: 
-@GST_CLOCK_ENTRY_PERIODIC: 
-
-<!-- ##### ENUM GstClockFlags ##### -->
-<para>
-
-</para>
-
-@GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC: 
-@GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC: 
-@GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC: 
-@GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC: 
-@GST_CLOCK_FLAG_CAN_SET_RESOLUTION: 
-@GST_CLOCK_FLAG_CAN_SET_SPEED: 
-
 <!-- ##### STRUCT GstConnection ##### -->
 <para>
 
@@ -4722,7 +4563,10 @@ Is trigered whenever a new ghost pad is added to an element
 @gstelement: the object which received the signal.
 @arg1: the new ghost pad that was added
 
+<<<<<<< gstreamer-unused.sgml
+
 <!-- ##### STRUCT GstElementClass ##### -->
+>>>>>>> 1.66
 <para>
 
 </para>
@@ -4763,14 +4607,6 @@ The function to set the clock on a clock receiving element.
 
 </para>
 
-
-<!-- ##### ENUM GstEventFlag ##### -->
-<para>
-
-</para>
-
-@GST_EVENT_FLAG_NONE: 
-@GST_RATE_FLAG_NEGATIVE: 
 
 <!-- ##### STRUCT GstFakeSink ##### -->
 <para>
@@ -5105,28 +4941,6 @@ Indicates the mmapped area should be touched to bring it into memory.
 </para>
 
 
-<!-- ##### ENUM GstFormat ##### -->
-<para>
-
-</para>
-
-@GST_FORMAT_UNDEFINED: 
-@GST_FORMAT_DEFAULT: 
-@GST_FORMAT_BYTES: 
-@GST_FORMAT_TIME: 
-@GST_FORMAT_BUFFERS: 
-@GST_FORMAT_PERCENT: 
-@GST_FORMAT_UNITS: 
-
-<!-- ##### STRUCT GstFormatDefinition ##### -->
-<para>
-
-</para>
-
-@value: 
-@nick: 
-@description: 
-
 <!-- ##### STRUCT GstHttpSrc ##### -->
 <para>
 
@@ -5316,14 +5130,6 @@ The function that will be called in an EOS case.
 @pad: the pad that needs to be set to EOS state
 @Returns: TRUE if EOS was successful, FALSE otherwise
 
-<!-- ##### USER_FUNCTION GstPadEventMaskFunction ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
 <!-- ##### TYPEDEF GstPadFactoryEntry ##### -->
 <para>
 Defines an entry for a padfactory.
@@ -5335,14 +5141,6 @@ Defines an entry for a padfactory.
 The padfactory.
 </para>
 
-
-<!-- ##### USER_FUNCTION GstPadFormatsFunction ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
 
 <!-- ##### USER_FUNCTION GstPadGetRegionFunction ##### -->
 <para>
@@ -5423,14 +5221,6 @@ The function that will be called when a QoS message is sent.
 @pad: the pad that sent the QoS message
 @qos_message: the message
 
-<!-- ##### USER_FUNCTION GstPadQueryTypeFunction ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
 <!-- ##### STRUCT GstPadTemplateClass ##### -->
 <para>
 
@@ -5473,33 +5263,6 @@ Sets the command to be executed.
 
 </para>
 
-
-<!-- ##### STRUCT GstProbe ##### -->
-<para>
-
-</para>
-
-@single_shot: 
-@callback: 
-@user_data: 
-
-<!-- ##### USER_FUNCTION GstProbeCallback ##### -->
-<para>
-
-</para>
-
-@probe: 
-@data: 
-@user_data: 
-@Returns: 
-
-<!-- ##### STRUCT GstProbeDispatcher ##### -->
-<para>
-
-</para>
-
-@active: 
-@probes: 
 
 <!-- ##### TYPEDEF GstPropsFactoryEntry ##### -->
 <para>
@@ -7584,20 +7347,6 @@ must be defined to activate the tracing functionality.
 @buffer: 
 @Returns: 
 
-<!-- ##### MACRO gst_buffer_needs_copy_on_write ##### -->
-<para>
-
-</para>
-
-@buf: 
-
-<!-- ##### FUNCTION gst_buffer_pool_default_free ##### -->
-<para>
-
-</para>
-
-@pool: 
-
 <!-- ##### FUNCTION gst_buffer_pool_destroy ##### -->
 <para>
 
@@ -7612,13 +7361,6 @@ must be defined to activate the tracing functionality.
 
 @pool: 
 @buffer: 
-
-<!-- ##### MACRO gst_buffer_pool_needs_copy_on_write ##### -->
-<para>
-
-</para>
-
-@pool: 
 
 <!-- ##### FUNCTION gst_buffer_pool_new_buffer ##### -->
 <para>
@@ -7685,15 +7427,6 @@ must be defined to activate the tracing functionality.
 
 @buffer: 
 @meta: 
-
-<!-- ##### MACRO gst_buffer_set_data ##### -->
-<para>
-
-</para>
-
-@buf: 
-@data: 
-@size: 
 
 <!-- ##### FUNCTION gst_cache_add_association ##### -->
 <para>
@@ -7990,13 +7723,8 @@ must be defined to activate the tracing functionality.
 @id: 
 
 <!-- ##### FUNCTION gst_clock_current_diff ##### -->
-<para>
+=======
 
-</para>
-
-@clock: 
-@time: 
-@Returns: 
 
 <!-- ##### FUNCTION gst_clock_entry_status_get_type ##### -->
 <para>
@@ -8026,71 +7754,12 @@ must be defined to activate the tracing functionality.
 
 @Returns: 
 
-<!-- ##### FUNCTION gst_clock_id_free ##### -->
-<para>
-
-</para>
-
-@id: 
-
-<!-- ##### FUNCTION gst_clock_id_unlock ##### -->
-<para>
-
-</para>
-
-@id: 
-
-<!-- ##### FUNCTION gst_clock_id_unschedule ##### -->
-<para>
-
-</para>
-
-@id: 
-
-<!-- ##### FUNCTION gst_clock_id_wait ##### -->
-<para>
-
-</para>
-
-@id: 
-@jitter: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_clock_id_wait_async ##### -->
-<para>
-
-</para>
-
-@id: 
-@func: 
-@user_data: 
-@Returns: 
-
 <!-- ##### FUNCTION gst_clock_new ##### -->
 <para>
 
 </para>
 
 @name: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_clock_new_periodic_id ##### -->
-<para>
-
-</para>
-
-@clock: 
-@start_time: 
-@interval: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_clock_new_single_shot_id ##### -->
-<para>
-
-</para>
-
-@clock: 
-@time: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_clock_notify_async ##### -->
@@ -8105,12 +7774,8 @@ must be defined to activate the tracing functionality.
 @Returns: 
 
 <!-- ##### FUNCTION gst_clock_register ##### -->
-<para>
+=======
 
-</para>
-
-@clock: 
-@obj: 
 
 <!-- ##### FUNCTION gst_clock_remove_notify_async ##### -->
 <para>
@@ -8128,12 +7793,8 @@ must be defined to activate the tracing functionality.
 @Returns: 
 
 <!-- ##### FUNCTION gst_clock_set ##### -->
-<para>
+=======
 
-</para>
-
-@clock: 
-@time: 
 
 <!-- ##### FUNCTION gst_clock_unlock_id ##### -->
 <para>
@@ -8175,11 +7836,8 @@ must be defined to activate the tracing functionality.
 @Returns: 
 
 <!-- ##### FUNCTION gst_connection_get_type ##### -->
-<para>
+=======
 
-</para>
-
-@Returns: 
 
 <!-- ##### FUNCTION gst_connection_new ##### -->
 <para>
@@ -8223,14 +7881,6 @@ must be defined to activate the tracing functionality.
 
 </para>
 
-@Returns: 
-
-<!-- ##### FUNCTION gst_data_needs_copy_on_write ##### -->
-<para>
-
-</para>
-
-@data: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_debug_print_stack_trace ##### -->
@@ -8292,21 +7942,6 @@ must be defined to activate the tracing functionality.
 @element_2: 
 @Varargs: 
 @Returns: 
-
-<!-- ##### MACRO gst_element_default_deep_notify ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_element_default_error ##### -->
-<para>
-
-</para>
-
-@object: 
-@orig: 
-@error: 
 
 <!-- ##### FUNCTION gst_element_disconnect_elements ##### -->
 <para>
@@ -8370,15 +8005,6 @@ must be defined to activate the tracing functionality.
 </para>
 
 @parent: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_element_factory_make_or_warn ##### -->
-<para>
-
-</para>
-
-@factoryname: 
-@name: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_element_factory_register ##### -->
@@ -8497,14 +8123,6 @@ must be defined to activate the tracing functionality.
 
 @Returns: 
 
-<!-- ##### FUNCTION gst_element_provides_clock ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
 <!-- ##### FUNCTION gst_element_request_compatible_pad ##### -->
 <para>
 
@@ -8531,14 +8149,6 @@ must be defined to activate the tracing functionality.
 
 @element: 
 @name: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_element_requires_clock ##### -->
-<para>
-
-</para>
-
-@element: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_element_restore_thyself ##### -->
@@ -8603,7 +8213,10 @@ must be defined to activate the tracing functionality.
 
 @Returns: 
 
+<<<<<<< gstreamer-unused.sgml
+
 <!-- ##### FUNCTION gst_esdsink_new ##### -->
+>>>>>>> 1.66
 <para>
 
 </para>
@@ -8627,7 +8240,10 @@ must be defined to activate the tracing functionality.
 @esdsink: 
 @format: 
 
+<<<<<<< gstreamer-unused.sgml
+
 <!-- ##### FUNCTION gst_esdsink_set_frequency ##### -->
+>>>>>>> 1.66
 <para>
 
 </para>
@@ -8635,14 +8251,20 @@ must be defined to activate the tracing functionality.
 @esdsink: 
 @frequency: 
 
+<<<<<<< gstreamer-unused.sgml
+
 <!-- ##### FUNCTION gst_esdsink_sync_parms ##### -->
+>>>>>>> 1.66
 <para>
 
 </para>
 
 @esdsink: 
 
+<<<<<<< gstreamer-unused.sgml
+
 <!-- ##### FUNCTION gst_event_flag_get_type ##### -->
+>>>>>>> 1.66
 <para>
 
 </para>
@@ -8794,29 +8416,6 @@ must be defined to activate the tracing functionality.
 @name: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_format_get_by_nick ##### -->
-<para>
-
-</para>
-
-@nick: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_format_get_definitions ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_format_get_details ##### -->
-<para>
-
-</para>
-
-@format: 
-@Returns: 
-
 <!-- ##### FUNCTION gst_format_get_type ##### -->
 <para>
 
@@ -8824,29 +8423,11 @@ must be defined to activate the tracing functionality.
 
 @Returns: 
 
-<!-- ##### FUNCTION gst_format_register ##### -->
-<para>
-
-</para>
-
-@nick: 
-@description: 
-@Returns: 
-
 <!-- ##### FUNCTION gst_ghost_pad_get_type ##### -->
 <para>
 
 </para>
 
-@Returns: 
-
-<!-- ##### FUNCTION gst_ghost_pad_save_thyself ##### -->
-<para>
-
-</para>
-
-@pad: 
-@parent: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_httpsrc_get_type ##### -->
@@ -8887,22 +8468,6 @@ must be defined to activate the tracing functionality.
 @...: 
 @format: 
 @args...: 
-
-<!-- ##### FUNCTION gst_init_check ##### -->
-<para>
-
-</para>
-
-@argc: 
-@argv: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_init_get_popt_table ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 <!-- ##### MACRO gst_marshal_VOID__BOOLEAN ##### -->
 <para>
@@ -9079,16 +8644,6 @@ Create new meta data.
 
 @meta: 
 
-<!-- ##### FUNCTION gst_object_default_deep_notify ##### -->
-<para>
-
-</para>
-
-@object: 
-@orig: 
-@pspec: 
-@excluded_props: 
-
 <!-- ##### FUNCTION gst_object_flags_get_type ##### -->
 <para>
 
@@ -9117,14 +8672,6 @@ Create new meta data.
 
 @pad: 
 @parent: 
-
-<!-- ##### MACRO gst_pad_add_probe ##### -->
-<para>
-
-</para>
-
-@pad: 
-@probe: 
 
 <!-- ##### FUNCTION gst_pad_connect_return_get_type ##### -->
 <para>
@@ -9198,55 +8745,7 @@ Call the EOS function of the pad
 @pad: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_pad_get_event_masks ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_pad_get_event_masks_default ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_pad_get_formats ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_pad_get_formats_default ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
 <!-- ##### FUNCTION gst_pad_get_ghost_parents ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_pad_get_query_types ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_pad_get_query_types_default ##### -->
 <para>
 
 </para>
@@ -9276,32 +8775,6 @@ Call the EOS function of the pad
 
 @pad: 
 @qos_message: 
-
-<!-- ##### FUNCTION gst_pad_handles_event ##### -->
-<para>
-
-</para>
-
-@pad: 
-@mask: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_pad_handles_format ##### -->
-<para>
-
-</para>
-
-@pad: 
-@format: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_pad_is_active ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
 
 <!-- ##### FUNCTION gst_pad_negotiate_proxy ##### -->
 <para>
@@ -9385,14 +8858,6 @@ Call the EOS function of the pad
 @pad: 
 @parent: 
 
-<!-- ##### MACRO gst_pad_remove_probe ##### -->
-<para>
-
-</para>
-
-@pad: 
-@probe: 
-
 <!-- ##### FUNCTION gst_pad_renegotiate ##### -->
 <para>
 
@@ -9409,14 +8874,6 @@ Call the EOS function of the pad
 @pad: 
 @parent: 
 @Returns: 
-
-<!-- ##### FUNCTION gst_pad_set_active ##### -->
-<para>
-
-</para>
-
-@pad: 
-@active: 
 
 <!-- ##### FUNCTION gst_pad_set_caps ##### -->
 <para>
@@ -9450,22 +8907,6 @@ Call the EOS function of the pad
 
 @pad: 
 @eos: 
-
-<!-- ##### FUNCTION gst_pad_set_event_mask_function ##### -->
-<para>
-
-</para>
-
-@pad: 
-@mask_func: 
-
-<!-- ##### FUNCTION gst_pad_set_formats_function ##### -->
-<para>
-
-</para>
-
-@pad: 
-@format: 
 
 <!-- ##### FUNCTION gst_pad_set_getregion_function ##### -->
 <para>
@@ -9506,14 +8947,6 @@ Call the EOS function of the pad
 
 @pad: 
 @qos: 
-
-<!-- ##### FUNCTION gst_pad_set_query_type_function ##### -->
-<para>
-
-</para>
-
-@pad: 
-@type_function: 
 
 <!-- ##### FUNCTION gst_pad_set_type_id ##### -->
 <para>
@@ -9741,60 +9174,6 @@ Call the EOS function of the pad
 
 </para>
 
-
-<!-- ##### FUNCTION gst_probe_dispatcher_add_probe ##### -->
-<para>
-
-</para>
-
-@disp: 
-@probe: 
-
-<!-- ##### FUNCTION gst_probe_dispatcher_destroy ##### -->
-<para>
-
-</para>
-
-@disp: 
-
-<!-- ##### FUNCTION gst_probe_dispatcher_dispatch ##### -->
-<para>
-
-</para>
-
-@disp: 
-@data: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_probe_dispatcher_init ##### -->
-<para>
-
-</para>
-
-@disp: 
-
-<!-- ##### FUNCTION gst_probe_dispatcher_new ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_probe_dispatcher_remove_probe ##### -->
-<para>
-
-</para>
-
-@disp: 
-@probe: 
-
-<!-- ##### FUNCTION gst_probe_dispatcher_set_active ##### -->
-<para>
-
-</para>
-
-@disp: 
-@active: 
 
 <!-- ##### FUNCTION gst_props_get_boolean ##### -->
 <para>
@@ -10079,14 +9458,6 @@ Call the EOS function of the pad
 @size: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_scheduler_scheduling_change ##### -->
-<para>
-
-</para>
-
-@sched: 
-@element: 
-
 <!-- ##### FUNCTION gst_scheduler_state_get_type ##### -->
 <para>
 
@@ -10293,6 +9664,8 @@ Call the EOS function of the pad
 
 @arg: 
 
+<<<<<<< gstreamer-unused.sgml
+
 <!-- ##### FUNCTION gst_thread_state_get_type ##### -->
 <para>
 
@@ -10376,6 +9749,8 @@ Call the EOS function of the pad
 @tc: 
 @groupnum: 
 @Returns: 
+
+>>>>>>> 1.66
 
 <!-- ##### MACRO gst_trace_add_entry ##### -->
 <para>

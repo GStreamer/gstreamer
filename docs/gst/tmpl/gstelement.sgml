@@ -67,7 +67,7 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 
 <!-- ##### STRUCT GstElement ##### -->
 <para>
-
+The element object
 </para>
 
 
@@ -81,24 +81,29 @@ of an element he doesn't need anymore.
 @element: a #GstElement to destroy
 
 
-<!-- ##### MACRO gst_element_set_name ##### -->
-<para>
-Sets the name of the element, getting rid of the old name if there was one.
-</para>
-
-@element: a #GstElement to set the name of.
-@name: the new name of the element.
-
 <!-- ##### MACRO gst_element_get_name ##### -->
 <para>
 Gets the name of the element.
 </para>
 
-@element: a #GstElement to get the name of.
+@elem: 
 @Returns: the name of the element.
 
 
 <!-- connection -->
+<!-- # Unused Parameters # -->
+@element: a #GstElement to get the name of.
+
+
+<!-- ##### MACRO gst_element_set_name ##### -->
+<para>
+Sets the name of the element, getting rid of the old name if there was one.
+</para>
+
+@elem: 
+@name: the new name of the element.
+<!-- # Unused Parameters # -->
+@element: a #GstElement to set the name of.
 
 
 <!-- ##### FUNCTION gst_element_get_factory ##### -->
@@ -469,6 +474,51 @@ Gets the name of the element.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_element_provides_clock ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_requires_clock ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_set_index ##### -->
+<para>
+
+</para>
+
+@element: 
+@index: 
+
+
+<!-- ##### FUNCTION gst_element_get_index ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_is_indexable ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_element_set_loop_function ##### -->
 <para>
 
@@ -511,8 +561,10 @@ circumstances.
 Gets the parent of an element.
 </para>
 
-@element: a #GstElement to get the parent of.
+@elem: 
 @Returns: the #GstObject parent of the element.
+<!-- # Unused Parameters # -->
+@element: a #GstElement to get the parent of.
 
 
 <!-- ##### MACRO gst_element_set_parent ##### -->
@@ -520,8 +572,10 @@ Gets the parent of an element.
 Sets the parent of an element.
 </para>
 
-@element: a #GstElement to set the parent of.
+@elem: 
 @parent:  the new #GstObject parent of the object.
+<!-- # Unused Parameters # -->
+@element: a #GstElement to set the parent of.
 
 
 <!-- ##### FUNCTION gst_element_get_managing_bin ##### -->
@@ -657,6 +711,24 @@ is scheduled.
 @element: 
 @event: 
 @Returns: 
+
+
+<!-- ##### MACRO gst_element_default_deep_notify ##### -->
+<para>
+The default deep notify handler that prints out the property change
+notifications to stdout.
+</para>
+
+
+
+<!-- ##### FUNCTION gst_element_default_error ##### -->
+<para>
+
+</para>
+
+@object: 
+@orig: 
+@error: 
 
 
 <!-- ##### ENUM GstElementState ##### -->

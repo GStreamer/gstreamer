@@ -33,7 +33,7 @@ Use gst_autoplug_factory_destroy() to remove the factory from the global list.
 
 <!-- ##### STRUCT GstAutoplugFactory ##### -->
 <para>
-
+The autoplugfactory object
 </para>
 
 

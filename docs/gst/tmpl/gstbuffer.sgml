@@ -274,6 +274,16 @@ The basic structure of a buffer.
 @Returns: 
 
 
+<!-- ##### MACRO gst_buffer_set_data ##### -->
+<para>
+A convenience function to set the data and size on a buffer
+</para>
+
+@buf: The buffer to modify
+@data: The data to set on the buffer
+@size: The size to set on the buffer
+
+
 <!-- ##### FUNCTION gst_buffer_new_from_pool ##### -->
 <para>
 
@@ -335,6 +345,15 @@ Copies the given buffer using the copy function of the parent GstData structure.
 
 @buf: a #GstBuffer to copy.
 @Returns: a new #GstBuffer copy of the buffer.
+
+
+<!-- ##### MACRO gst_buffer_needs_copy_on_write ##### -->
+<para>
+Queries if a copy needs to be ade of the buffer in order to safely write
+to its data.
+</para>
+
+@buf: The buffer to query.
 
 
 <!-- ##### MACRO gst_buffer_copy_on_write ##### -->

@@ -30,7 +30,7 @@ Get the current stack frame.
 
 <!-- ##### STRUCT cothread_state ##### -->
 <para>
-
+The cothread state structure
 </para>
 
 @ctx: 
@@ -48,7 +48,7 @@ Get the current stack frame.
 
 <!-- ##### STRUCT cothread_context ##### -->
 <para>
-
+The cothread context structure
 </para>
 
 

@@ -95,7 +95,7 @@ Use the regular gst_object_destroy() call to destroy the autoplugger.
 
 <!-- ##### STRUCT GstAutoplug ##### -->
 <para>
-
+The autoplug object
 </para>
 
 

@@ -100,6 +100,24 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_init_check ##### -->
+<para>
+
+</para>
+
+@argc: 
+@argv: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_init_get_popt_table ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_version ##### -->
 <para>
 
@@ -142,7 +160,7 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 
 <!-- ##### VARIABLE g_log_domain_gstreamer ##### -->
 <para>
-
+The variable that holds the GStreamer log domain
 </para>
 
 

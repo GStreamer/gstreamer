@@ -32,21 +32,22 @@ Get the state of the scheduler.
 
 <!-- ##### ENUM GstSchedulerState ##### -->
 <para>
-
+The state of the scheduler
 </para>
 
-@GST_SCHEDULER_STATE_NONE: 
-@GST_SCHEDULER_STATE_RUNNING: 
-@GST_SCHEDULER_STATE_STOPPED: 
-@GST_SCHEDULER_STATE_ERROR: 
+@GST_SCHEDULER_STATE_NONE: no state
+@GST_SCHEDULER_STATE_RUNNING: the scheduler is running
+@GST_SCHEDULER_STATE_STOPPED: the scheduler is stopped
+@GST_SCHEDULER_STATE_ERROR: the scheduler is in error
 
 <!-- ##### ENUM GstSchedulerFlags ##### -->
 <para>
-
+Flags for the scheduler
 </para>
 
-@GST_SCHEDULER_FLAG_FIXED_CLOCK: 
-@GST_SCHEDULER_FLAG_LAST: 
+@GST_SCHEDULER_FLAG_FIXED_CLOCK: The scheduler has a fixed clock
+@GST_SCHEDULER_FLAG_LAST: subclasses can start numbering their flags starting
+                          from here.
 
 <!-- ##### MACRO gst_scheduler_destroy ##### -->
 <para>
@@ -99,6 +100,15 @@ Destroy the scheduler
 @element: 
 @transition: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_scheduler_scheduling_change ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
 
 
 <!-- ##### FUNCTION gst_scheduler_lock_element ##### -->

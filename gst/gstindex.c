@@ -226,6 +226,15 @@ gst_index_get_certainty(GstIndex *index)
   return index->curgroup->certainty;
 }
 
+/**
+ * gst_index_set_filter:
+ * @index: the index to register the filter on
+ * @filter: the filter to register
+ * @user_data: data passed to the filter function
+ *
+ * Lets the app register a custom filter function so that
+ * it can select what entries should be stored in the index.
+ */
 void
 gst_index_set_filter (GstIndex *index, 
 		      GstIndexFilter filter, gpointer user_data)
@@ -236,6 +245,15 @@ gst_index_set_filter (GstIndex *index,
   index->filter_user_data = user_data;
 }
 
+/**
+ * gst_index_set_resolver:
+ * @index: the index to register the resolver on
+ * @resolver: the resolver to register
+ * @user_data: data passed to the resolver function
+ *
+ * Lets the app register a custom function to map index
+ * ids to writer descriptions.
+ */
 void
 gst_index_set_resolver (GstIndex *index, 
 		        GstIndexResolver resolver, gpointer user_data)
@@ -246,6 +264,12 @@ gst_index_set_resolver (GstIndex *index,
   index->resolver_user_data = user_data;
 }
 
+/**
+ * gst_index_entry_free:
+ * @entry: the entry to free
+ *
+ * Free the memory used by the given entry.
+ */
 void
 gst_index_entry_free (GstIndexEntry *entry)
 {
@@ -293,6 +317,8 @@ gst_index_add_format (GstIndex *index, gint id, GstFormat format)
  * @index: the index to add the entry to
  * @id: the id of the index writer
  * @description: the description of the index writer
+ *
+ * Add an id entry into the index.
  *
  * Returns: a pointer to the newly added entry in the index.
  */
@@ -371,6 +397,7 @@ gst_index_get_writer_id (GstIndex *index, GstObject *writer, gint *id)
  * gst_index_add_association:
  * @index: the index to add the entry to
  * @id: the id of the index writer
+ * @flags: optinal flags for this entry
  * @format: the format of the value
  * @value: the value 
  * @...: other format/value pairs or 0 to end the list
@@ -441,6 +468,25 @@ gst_index_add_association (GstIndex *index, gint id, GstAssocFlags flags,
   return entry;
 }
 
+/**
+ * gst_index_add_object:
+ * @index: the index to add the object to
+ * @id: the id of the index writer
+ * @key: a key for the object
+ * @type: the GType of the object
+ * @object: a pointer to the object to add
+ *
+ * Add the given object to the index with the given key.
+ * 
+ * Returns: a pointer to the newly added entry in the index.
+ */
+GstIndexEntry*
+gst_index_add_object (GstIndex *index, gint id, gchar *key,
+		      GType type, gpointer object)
+{
+  return NULL;
+}
+
 static gint
 gst_index_compare_func (gconstpointer a,
                         gconstpointer b,
@@ -449,6 +495,19 @@ gst_index_compare_func (gconstpointer a,
   return a - b;  
 }
 
+/**
+ * gst_index_get_assoc_entry:
+ * @index: the index to search
+ * @id: the id of the index writer
+ * @method: The lookup method to use
+ * @format: the format of the value
+ * @value: the value to find
+ *
+ * Finds the given format/value in the index
+ *
+ * Returns: the entry associated with the value or NULL if the
+ *   value was not found.
+ */
 GstIndexEntry*
 gst_index_get_assoc_entry (GstIndex *index, gint id,
 		           GstIndexLookupMethod method,
@@ -460,6 +519,22 @@ gst_index_get_assoc_entry (GstIndex *index, gint id,
 		                  gst_index_compare_func, NULL);
 }
 
+/**
+ * gst_index_get_assoc_entry_full:
+ * @index: the index to search
+ * @id: the id of the index writer
+ * @method: The lookup method to use
+ * @format: the format of the value
+ * @value: the value to find
+ * @func: the function used to compare entries
+ * @user_data: user data passed to the compare function
+ *
+ * Finds the given format/value in the index with the given
+ * compare function and user_data.
+ *
+ * Returns: the entry associated with the value or NULL if the
+ *   value was not found.
+ */
 GstIndexEntry*
 gst_index_get_assoc_entry_full (GstIndex *index, gint id,
 		                GstIndexLookupMethod method,
@@ -475,6 +550,17 @@ gst_index_get_assoc_entry_full (GstIndex *index, gint id,
   return NULL;
 }
 
+/**
+ * gst_index_entry_assoc_map:
+ * @entry: the index to search
+ * @format: the format of the value the find
+ * @value: a pointer to store the value
+ *
+ * Gets alternative formats associated with the indexentry.
+ *
+ * Returns: TRUE if there was a value associated with the given 
+ * format.
+ */
 gboolean
 gst_index_entry_assoc_map (GstIndexEntry *entry,
 		           GstFormat format, gint64 *value)

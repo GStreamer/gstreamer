@@ -27,7 +27,7 @@ object.
 
 <!-- ##### ENUM GstObjectFlags ##### -->
 <para>
-
+Flags for an object
 </para>
 
 @GST_DESTROYED: The object is flagged for destruction
@@ -36,7 +36,7 @@ object.
 
 <!-- ##### STRUCT GstObject ##### -->
 <para>
-
+The GstObject
 </para>
 
 
@@ -258,6 +258,17 @@ Check if the object has been destroyed.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_object_default_deep_notify ##### -->
+<para>
+
+</para>
+
+@object: 
+@orig: 
+@pspec: 
+@excluded_props: 
+
+
 <!-- ##### FUNCTION gst_class_signal_emit_by_name ##### -->
 <para>
 
@@ -282,12 +293,14 @@ Check if the object has been destroyed.
 
 <!-- ##### SIGNAL GstObject::deep-notify ##### -->
 <para>
-
+The deep notify signal is used to be notified of property changes.
+it is typically attached to the toplevel bin to receive notifications
+from all the elements contained in that bin.
 </para>
 
 @gstobject: the object which received the signal.
-@arg1: 
-@arg2: 
+@arg1: the object that originated the signal
+@arg2: the property that changed
 
 <!-- ##### SIGNAL GstObject::object-saved ##### -->
 <para>
@@ -300,7 +313,7 @@ this signal to insert custom XML tags into the core XML.
 
 <!-- ##### SIGNAL GstObject::parent-set ##### -->
 <para>
-
+Is emitted when the parent of an object is set.
 </para>
 
 @gstobject: the object which received the signal.
@@ -308,11 +321,11 @@ this signal to insert custom XML tags into the core XML.
 
 <!-- ##### SIGNAL GstObject::parent-unset ##### -->
 <para>
-
+Is emitted when the parent of an object is unset.
 </para>
 
 @gstobject: the object which received the signal.
-@arg1: 
+@arg1: the old parent
 
 <!-- ##### ARG GstObject:name ##### -->
 <para>

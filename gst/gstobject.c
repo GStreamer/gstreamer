@@ -315,7 +315,8 @@ gst_object_dispatch_properties_changed (GObject     *object,
  * @object: the #GObject that signalled the notify.
  * @orig: a #GstObject that initiated the notify.
  * @pspec: a #GParamSpec of the property.
- * @excluded_props: a set of user-specified properties to exclude.
+ * @excluded_props: a set of user-specified properties to exclude or
+ *  NULL to show all changes.
  *
  * Adds a default deep_notify signal callback to an
  * element. The user data should contain a pointer to an array of

@@ -43,7 +43,6 @@ typedef enum {
   GST_THREAD_FLAG_LAST 		= GST_BIN_FLAG_LAST + 4
 } GstThreadState;
 
-
 #define GST_TYPE_THREAD \
   (gst_thread_get_type())
 #define GST_THREAD(obj) \
@@ -62,8 +61,7 @@ struct _GstThread {
   GstBin 	 bin;
 
   GThread 	*thread_id;		/* id of the thread, if any */
-  int 		 sched_policy;
-  int 		 priority;
+  GThreadPriority priority;
   gpointer	*stack;
   guint 	 stack_size;		/* stack size */
   gint		 pid;			/* the pid of the thread */
@@ -84,6 +82,8 @@ struct _GstThreadClass {
 GType 	gst_thread_get_type	(void);
 
 GstElement*	gst_thread_new		(const gchar *name);
+
+void		gst_thread_set_priority (GstThread *thread, GThreadPriority priority);
 
 G_END_DECLS
 

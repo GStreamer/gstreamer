@@ -168,7 +168,7 @@ Check if the GstCaps has fixed properties, ie. it has no ranges or lists.
 
 <!-- ##### STRUCT GstCaps ##### -->
 <para>
-
+The gstcaps structure
 </para>
 
 @name: the name of the capability, for the application

@@ -44,8 +44,8 @@ The different major types of events.
 @GST_EVENT_SEGMENT_DONE: the event that will be emited when the segment seek has ended
 @GST_EVENT_SIZE: a size suggestion for a peer element
 @GST_EVENT_RATE: adjust the output rate of an element
-@GST_EVENT_FILLER: a dummy element that should be ignored by plugins
-@GST_EVENT_TS_OFFSET: 
+@GST_EVENT_FILLER: a dummy event that should be ignored by plugins
+@GST_EVENT_TS_OFFSET: an event to set the time offset on buffers
 
 <!-- ##### MACRO GST_EVENT_TYPE ##### -->
 <para>
@@ -70,6 +70,14 @@ Get the timestamp of the event.
 
 @event: The event to query.
 
+
+<!-- ##### ENUM GstEventFlag ##### -->
+<para>
+Event flags are used when querying for supported events
+</para>
+
+@GST_EVENT_FLAG_NONE: no value
+@GST_RATE_FLAG_NEGATIVE: indicates negative rates are supported
 
 <!-- ##### ENUM GstSeekType ##### -->
 <para>
@@ -244,7 +252,7 @@ The value of the size event
 
 <!-- ##### STRUCT GstEvent ##### -->
 <para>
-
+The event structure
 </para>
 
 @data: 
@@ -367,5 +375,14 @@ Create a new flush event.
 
 </para>
 
+
+
+<!-- ##### MACRO GST_EVENT_MASK_FUNCTION ##### -->
+<para>
+A convenience macro to create event mask functions
+</para>
+
+@functionname: the name of the function
+@...: event masks, the last element is marked with 0
 
 

@@ -23,7 +23,7 @@ the pipeline, use gst_element_unref() to free its resources.
 
 <!-- ##### STRUCT GstPipeline ##### -->
 <para>
-
+The pipeline object
 </para>
 
 

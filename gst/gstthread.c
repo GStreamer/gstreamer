@@ -60,7 +60,6 @@ enum {
 
 enum {
   ARG_0,
-  ARG_SCHEDPOLICY,
   ARG_PRIORITY,
 };
 
@@ -71,9 +70,10 @@ static void		gst_thread_init			(GstThread *thread);
 
 static void		gst_thread_dispose		(GObject *object);
 
-static void		gst_thread_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void		gst_thread_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
-
+static void		gst_thread_set_property		(GObject *object, guint prop_id, 
+							 const GValue *value, GParamSpec *pspec);
+static void		gst_thread_get_property		(GObject *object, guint prop_id,
+							 GValue *value, GParamSpec *pspec);
 static
 GstElementStateReturn	gst_thread_change_state		(GstElement *element);
 
@@ -86,21 +86,23 @@ static void		gst_thread_restore_thyself	(GstObject *object,
 
 static void*		gst_thread_main_loop		(void *arg);
 
-#define GST_TYPE_THREAD_SCHEDPOLICY (gst_thread_schedpolicy_get_type())
+#define GST_TYPE_THREAD_PRIORITY (gst_thread_priority_get_type())
 static GType
-gst_thread_schedpolicy_get_type(void) {
-  static GType thread_schedpolicy_type = 0;
-  static GEnumValue thread_schedpolicy[] = {
-    {G_THREAD_PRIORITY_LOW,    "LOW", "Low Priority Scheduling"},
-    {G_THREAD_PRIORITY_NORMAL, "NORMAL",  "Normal Scheduling"},
-    {G_THREAD_PRIORITY_HIGH,   "HIGH",  "High Priority Scheduling"},
-    {G_THREAD_PRIORITY_URGENT, "URGENT", "Urgent Scheduling"},
-    {0, NULL, NULL},
+gst_thread_priority_get_type(void) 
+{
+  static GType thread_priority_type = 0;
+  static GEnumValue thread_priority[] = 
+  {
+    { G_THREAD_PRIORITY_LOW,    "LOW",     "Low Priority Scheduling" },
+    { G_THREAD_PRIORITY_NORMAL, "NORMAL",  "Normal Scheduling" },
+    { G_THREAD_PRIORITY_HIGH,   "HIGH",    "High Priority Scheduling" },
+    { G_THREAD_PRIORITY_URGENT, "URGENT",  "Urgent Scheduling" },
+    { 0, NULL, NULL },
   };
-  if (!thread_schedpolicy_type) {
-    thread_schedpolicy_type = g_enum_register_static("GstThreadSchedPolicy", thread_schedpolicy);
+  if (!thread_priority_type) {
+    thread_priority_type = g_enum_register_static("GstThreadPriority", thread_priority);
   }
-  return thread_schedpolicy_type;
+  return thread_priority_type;
 }
 
 static GstBinClass *parent_class = NULL;
@@ -140,12 +142,9 @@ gst_thread_class_init (GstThreadClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_BIN);
 
-  g_object_class_install_property(G_OBJECT_CLASS (klass), ARG_SCHEDPOLICY,
-    g_param_spec_enum("schedpolicy", "Scheduling Policy", "The scheduling policy of the thread",
-                      GST_TYPE_THREAD_SCHEDPOLICY, G_THREAD_PRIORITY_NORMAL, G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS (klass), ARG_PRIORITY,
-    g_param_spec_int("priority", "Scheduling Priority", "The scheduling priority of the thread",
-                     0, 99, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PRIORITY,
+    g_param_spec_enum ("priority", "Scheduling Policy", "The scheduling priority of the thread",
+                       GST_TYPE_THREAD_PRIORITY, G_THREAD_PRIORITY_NORMAL, G_PARAM_READWRITE));
 
   gst_thread_signals[SHUTDOWN] =
     g_signal_new ("shutdown", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -186,8 +185,7 @@ gst_thread_init (GstThread *thread)
 
   thread->ppid = getpid ();
   thread->thread_id = (GThread *) NULL; /* set in NULL -> READY */
-  thread->sched_policy = G_THREAD_PRIORITY_NORMAL;
-  thread->priority = 0;
+  thread->priority = G_THREAD_PRIORITY_NORMAL;
   thread->stack = NULL;
 }
 
@@ -216,22 +214,31 @@ gst_thread_dispose (GObject *object)
   }
 }
 
+/**
+ * gst_thread_set_priority:
+ * @thread: the thread to change 
+ * @priority: the new priority for the thread
+ *
+ * change the thread's priority
+ */
+void
+gst_thread_set_priority (GstThread *thread, GThreadPriority priority)
+{
+  g_return_if_fail (GST_IS_THREAD (thread));
+
+  thread->priority = priority;
+}
+
 static void
 gst_thread_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstThread *thread;
 
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_THREAD (object));
-
   thread = GST_THREAD (object);
 
   switch (prop_id) {
-    case ARG_SCHEDPOLICY:
-      thread->sched_policy = g_value_get_enum (value);
-      break;
     case ARG_PRIORITY:
-      thread->priority = g_value_get_int (value);
+      thread->priority = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -244,17 +251,11 @@ gst_thread_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 {
   GstThread *thread;
 
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_THREAD (object));
-
   thread = GST_THREAD (object);
 
   switch (prop_id) {
-    case ARG_SCHEDPOLICY:
-      g_value_set_enum (value, thread->sched_policy);
-      break;
     case ARG_PRIORITY:
-      g_value_set_int (value, thread->priority);
+      g_value_set_enum (value, thread->priority);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -365,7 +366,7 @@ gst_thread_change_state (GstElement *element)
        */
       GST_DEBUG (GST_CAT_THREAD, "going to g_thread_create_full...");
       thread->thread_id = g_thread_create_full(gst_thread_main_loop,
-	  thread, STACK_SIZE, TRUE, TRUE, G_THREAD_PRIORITY_NORMAL,
+	  thread, STACK_SIZE, TRUE, TRUE, thread->priority,
 	  &error);
 
       if (!thread->thread_id){
