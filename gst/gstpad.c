@@ -1520,21 +1520,34 @@ gst_pad_pull (GstPad *pad)
 GstBuffer*
 gst_pad_pullregion (GstPad *pad, GstRegionType type, guint64 offset, guint64 len) 
 {
-  GstRealPad *peer = GST_RPAD_PEER(pad);
+  GstRealPad *peer;
+  GstBuffer *result = NULL;
   
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, NULL);
-  g_return_val_if_fail (peer != NULL, NULL);
 
-  GST_DEBUG_ENTER("(%s:%s,%d,%lld,%lld)",GST_DEBUG_PAD_NAME(pad),type,offset,len);
+  do {
+    peer = GST_RPAD_PEER(pad);
+    g_return_val_if_fail (peer != NULL, NULL);
 
-  if (peer->pullregionfunc) {
-    GST_DEBUG (GST_CAT_DATAFLOW,"calling pullregionfunc &%s of peer pad %s:%s\n",
+    if (result) 
+      gst_buffer_unref (result);
+
+    GST_DEBUG_ENTER("(%s:%s,%d,%lld,%lld)",GST_DEBUG_PAD_NAME(pad),type,offset,len);
+
+    if (peer->pullregionfunc) {
+      GST_DEBUG (GST_CAT_DATAFLOW,"calling pullregionfunc &%s of peer pad %s:%s\n",
           GST_DEBUG_FUNCPTR_NAME(peer->pullregionfunc),GST_DEBUG_PAD_NAME(((GstPad*)peer)));
-    return (peer->pullregionfunc)(((GstPad*)peer),type,offset,len);
-  } else {
-    GST_DEBUG (GST_CAT_DATAFLOW,"no pullregionfunc\n");
-    return NULL;
+      result = (peer->pullregionfunc)(((GstPad*)peer),type,offset,len);
+    } else {
+      GST_DEBUG (GST_CAT_DATAFLOW,"no pullregionfunc\n");
+      result = NULL;
+      break;
+    }
   }
+  while (!(GST_BUFFER_OFFSET (result) == offset && 
+	   GST_BUFFER_SIZE (result) == len));
+
+  return result;
 }
 #endif
 
