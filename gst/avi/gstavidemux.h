@@ -73,6 +73,7 @@ typedef struct
   guint32 	current_byte;
   guint64 	delay;
   gboolean 	need_flush;
+  guint32	av_bps;
 
   guint64	total_bytes;
   gint32	total_frames;

@@ -357,6 +357,8 @@ gst_avi_demux_strh (GstAviDemux *avi_demux)
 
     target->skip = 0;
 
+    avi_demux->avih.bufsize = MAX (avi_demux->avih.bufsize, target->strh.bufsize);
+
     return TRUE;
   }
   return FALSE;
@@ -644,6 +646,8 @@ gst_avi_demux_parse_index (GstAviDemux *avi_demux,
   index_size = GUINT32_FROM_LE(*(guint32 *)(GST_BUFFER_DATA (buf) + 4));
   gst_buffer_unref (buf);
 
+  gst_bytestream_size_hint (avi_demux->bs, index_size);
+
   got_bytes = gst_bytestream_read (avi_demux->bs, &buf, index_size);
   if (got_bytes < index_size) {
     GST_INFO (GST_CAT_PLUGIN_INFO, "avidemux: error reading index");
@@ -684,19 +688,28 @@ gst_avi_demux_parse_index (GstAviDemux *avi_demux,
     if (stream->strh.type == GST_RIFF_FCC_auds) {
       /* all audio frames are keyframes */
       target->flags |= GST_RIFF_IF_KEYFRAME;
+    }
       
+    /* constant rate stream */
+    if (stream->strh.samplesize) {
       gst_pad_convert (stream->pad, GST_FORMAT_BYTES, stream->total_bytes,
 		                 &format, &target->ts);
     }
+    /* VBR stream */
     else {
       gst_pad_convert (stream->pad, GST_FORMAT_UNITS, stream->total_frames,
 		                 &format, &target->ts);
     }
-
     gst_avi_debug_entry ("index", target);
 
     stream->total_bytes += target->size;
     stream->total_frames++;
+  }
+  for (i = 0; i < avi_demux->num_streams; i++) {
+    avi_stream_context *stream;
+
+    stream = &avi_demux->stream[i];
+    GST_DEBUG (GST_CAT_PLUGIN_INFO, "stream %i: %d frames, %lld bytes", i, stream->total_frames, stream->total_bytes);
   }
   gst_buffer_unref (buf);
 
@@ -780,7 +793,7 @@ gst_avi_demux_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
       switch (*dest_format) {
 	case GST_FORMAT_TIME:
           if (stream->strh.type == GST_RIFF_FCC_auds)
-            *dest_value = src_value * GST_SECOND * stream->strh.scale / stream->strh.rate;
+            *dest_value = src_value * GST_SECOND * stream->strh.scale  / stream->strh.rate;
 	  else
 	    res = FALSE;
 	default:
@@ -847,21 +860,21 @@ gst_avi_demux_handle_src_query (GstPad *pad, GstPadQueryType type,
           *format = GST_FORMAT_TIME;
           /* fall through */
         case GST_FORMAT_TIME:
-          if (stream->strh.type == GST_RIFF_FCC_vids) 
-            *value = stream->current_frame * GST_SECOND * stream->strh.scale / stream->strh.rate;
-          else 
+          if (stream->strh.samplesize) {
             *value = stream->current_byte * GST_SECOND * stream->strh.scale / stream->strh.rate;
+	  }
+	  else {
+            *value = stream->current_frame * GST_SECOND * stream->strh.scale / stream->strh.rate;
+	  }
 	  break;
         case GST_FORMAT_BYTES:
           *value = stream->current_byte;
 	  break;
         case GST_FORMAT_UNITS:
-          if (stream->strh.type == GST_RIFF_FCC_auds)
+          if (stream->strh.samplesize) 
             *value = stream->current_byte * stream->strh.samplesize;
-	  else if (stream->strh.type == GST_RIFF_FCC_vids)
+	  else 
             *value = stream->current_frame;
-	  else
-	    res = FALSE;
 	  break;
 	default:
           res = FALSE;
@@ -1118,6 +1131,8 @@ gst_avi_demux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
 
             gst_bytestream_get_status (avi_demux->bs, &remaining, &event);
 	  }
+	  if  (avi_demux->avih.bufsize)
+	    gst_bytestream_size_hint (avi_demux->bs, avi_demux->avih.bufsize);
           break;
 	default:
           /* flush the form type */
