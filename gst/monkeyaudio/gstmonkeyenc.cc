@@ -45,12 +45,15 @@ enum
 };
 
 
-static void	gst_monkeyenc_class_init	(GstMonkeyEncClass *klass);
-static void	gst_monkeyenc_init		    (GstMonkeyEnc *monkeyenc);
-static void gst_monkeyenc_loop        (GstElement *element);
+static void	gst_monkeyenc_class_init	 (GstMonkeyEncClass *klass);
+static void	gst_monkeyenc_init		     (GstMonkeyEnc *monkeyenc);
+static void	gst_monkeyenc_chain		     (GstPad *pad, GstBuffer *buffer);
+static void gst_monkeyenc_handle_event (GstPad *pad, GstBuffer *buffer);
 
+static GstPadLinkReturn
+    gst_monkeyenc_sinklink             (GstPad *pad, GstCaps *caps);
 static GstElementStateReturn
-		gst_monkeyenc_change_state        (GstElement *element);
+		gst_monkeyenc_change_state         (GstElement *element);
 
 static GstElementClass *parent_class = NULL;
 
@@ -90,7 +93,7 @@ gst_monkeyenc_class_init (GstMonkeyEncClass *klass)
   parent_class = GST_ELEMENT_CLASS( g_type_class_ref(GST_TYPE_ELEMENT));
 }
 
-/*
+
 static GstPadLinkReturn
 gst_monkeyenc_sinklink (GstPad *pad, GstCaps *caps)
 {
@@ -105,10 +108,9 @@ gst_monkeyenc_sinklink (GstPad *pad, GstCaps *caps)
   gst_caps_get_int (caps, "rate", &monkeyenc->rate);
   gst_caps_get_int (caps, "depth", &monkeyenc->depth);
 
-  monkeyenc->linked = TRUE;
-
   return GST_PAD_LINK_OK;
-}*/
+}
+
 
 static void
 gst_monkeyenc_init (GstMonkeyEnc * monkeyenc)
@@ -119,54 +121,55 @@ gst_monkeyenc_init (GstMonkeyEnc * monkeyenc)
   monkeyenc->srcpad = gst_pad_new_from_template (monkeyenc_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (monkeyenc), monkeyenc->srcpad);
 
-  /*gst_pad_set_link_function (monkeyenc->sinkpad, gst_monkeyenc_sinklink);*/
+  gst_pad_set_link_function (monkeyenc->sinkpad, gst_monkeyenc_sinklink);
 
-  gst_element_set_loop_function (GST_ELEMENT (monkeyenc), gst_monkeyenc_loop);
-
-  monkeyenc->linked = FALSE;
+  gst_pad_set_chain_function (monkeyenc->sinkpad, gst_monkeyenc_chain);
 }
 
 
 static void
-gst_monkeyenc_loop (GstElement *element)
+gst_monkeyenc_handle_event (GstPad *pad, GstBuffer *buffer)
+{
+  GstEvent *event = GST_EVENT (buffer);
+
+  switch (GST_EVENT_TYPE (event))
+  {
+    default:
+      gst_pad_event_default (pad, event);
+      break;
+  }
+
+  return;
+}
+
+static void
+gst_monkeyenc_chain (GstPad *pad, GstBuffer *buffer)
 {
   GstMonkeyEnc *monkeyenc;
-  gint retval, size;
+  gint retval;
+
  
-  g_return_if_fail (element != NULL);
-  g_return_if_fail (GST_IS_MONKEYENC (element));
-	
-  monkeyenc = GST_MONKEYENC (element);
-	
+  monkeyenc = GST_MONKEYENC (gst_pad_get_parent (pad));
+  g_return_if_fail (GST_IS_MONKEYENC (monkeyenc));
+
+  /* handle events */
+  if (GST_IS_EVENT (buffer))
+  {
+    gst_monkeyenc_handle_event (pad, buffer);
+    return;
+  }
+  
   if (!GST_PAD_IS_USABLE (monkeyenc->srcpad))
     return;
 
   if (monkeyenc->init)
   {    
-    unsigned char *wav_header;
-
     monkeyenc->src_io = new srcpad_CIO;
     monkeyenc->src_io->Open("");
-    monkeyenc->src_io->srcpad = monkeyenc->srcpad; 
+    monkeyenc->src_io->srcpad = monkeyenc->srcpad;
 
-    monkeyenc->sink_io = new sinkpad_CIO;
-    monkeyenc->sink_io->sinkpad = monkeyenc->sinkpad;
-    monkeyenc->sink_io->bs = gst_bytestream_new (monkeyenc->sinkpad);
-    if (monkeyenc->sink_io->bs == NULL)
-    {
-      gst_element_error(element, "Failed to initiliaze bytestream from sinkpad");
-      return;
-    }  
-
-    monkeyenc->inputsrc = new CWAVInputSource (monkeyenc->sink_io, &(monkeyenc->waveformatex), &(monkeyenc->total_blocks), 
-                                               &(monkeyenc->header_size), &(monkeyenc->terminating), &retval); 
-
-    monkeyenc->audiobytes = monkeyenc->total_blocks * monkeyenc->waveformatex.nBlockAlign;
-    monkeyenc->audiobytesleft = monkeyenc->audiobytes;
-
-    wav_header = (unsigned char*) g_malloc0 (monkeyenc->header_size);
-    retval = monkeyenc->inputsrc->GetHeaderData (wav_header);
-    
+    FillWaveFormatEx(&monkeyenc->waveformatex, monkeyenc->rate, monkeyenc->depth, monkeyenc->channels);
+  
     monkeyenc->compress_engine = CreateIAPECompress (&retval);
 
     if (monkeyenc->compress_engine == NULL)
@@ -175,30 +178,15 @@ gst_monkeyenc_loop (GstElement *element)
       return;
     }
 
-    retval = monkeyenc->compress_engine->StartEx (monkeyenc->src_io, &(monkeyenc->waveformatex), monkeyenc->audiobytes,
-                                         COMPRESSION_LEVEL_NORMAL, wav_header, monkeyenc->header_size);
+    retval = monkeyenc->compress_engine->StartEx (monkeyenc->src_io, &(monkeyenc->waveformatex), MAX_AUDIO_BYTES_UNKNOWN,
+                                         COMPRESSION_LEVEL_NORMAL, NULL, CREATE_WAV_HEADER_ON_DECOMPRESSION);
+    
     monkeyenc->init = FALSE;
   }
 
-  retval = monkeyenc->compress_engine->AddDataFromInputSource (monkeyenc->inputsrc, monkeyenc->audiobytesleft, &size);
-  monkeyenc->audiobytesleft -= size;
-
-  if (monkeyenc->audiobytesleft <= 0)
-  {
-     unsigned char *terminating_data;
-
-    terminating_data = (unsigned char *) g_malloc0 (monkeyenc->terminating);
-    retval = monkeyenc->inputsrc->GetTerminatingData (terminating_data);
-
-    retval = monkeyenc->compress_engine->Finish (terminating_data, monkeyenc->terminating, monkeyenc->terminating);
-
-    monkeyenc->sink_io->SetEOF();
-    monkeyenc->src_io->SetEOF();
-    monkeyenc->sink_io->Close();
-    gst_element_set_eos (element);
-  }
-}  
-
+  retval = monkeyenc->compress_engine->AddData ((unsigned char *)GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
+  monkeyenc->audiobytesleft -= GST_BUFFER_SIZE (buffer);
+}
 
 
 static GstElementStateReturn
@@ -218,6 +206,7 @@ gst_monkeyenc_change_state (GstElement *element)
       /* do something to get out of the chain function faster */
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
+      monkeyenc->compress_engine->Finish (NULL, 0, 0);
       break;
     case GST_STATE_PAUSED_TO_READY:    
       break;

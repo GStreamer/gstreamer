@@ -122,7 +122,7 @@ plugin_init (GModule * module, GstPlugin * plugin)
   /* register sink pads */
   monkeyenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
 						                                      GST_PAD_ALWAYS,
-                                    						  wav_caps, NULL);
+                                    						  raw_caps, NULL);
   gst_element_factory_add_pad_template (monkey_enc, monkeyenc_sink_template);
   
 

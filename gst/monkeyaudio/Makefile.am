@@ -18,8 +18,5 @@ noinst_HEADERS = gstmonkeyaudio.h gstmonkeydec.h monkey_io.h gstmonkeyenc.h
 # I appreciate any help into fixing this mess definitively
 # I suspect a libtool bug, because in the end it doesn't even *use* the .c
 # file; my libtool version when seeing this bug was 1.4.2
-#gstmonkeyaudio.c: gstmonkeyaudio.cc
-#	cp $(srcdir)/gstmonkeyaudio.cc gstmonkeyaudio.c
-
-#monkeyaudio_types.c: monkeyaudio_types.cc
-#	cp $(srcdir)/monkeyaudio_types.cc monkeyaudio_types.c
+gstmonkeyaudio.c: gstmonkeyaudio.cc
+	cp $(srcdir)/gstmonkeyaudio.cc gstmonkeyaudio.c

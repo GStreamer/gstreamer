@@ -58,20 +58,13 @@ struct _GstMonkeyEnc
   gint channels;
   gint rate;
   gint depth;
-  gboolean linked;
   gint total_blocks;
-  gint header_size;
-  gint terminating;
   guint64 audiobytes;
   guint64 audiobytesleft;
 
   IAPECompress *compress_engine;
   WAVEFORMATEX waveformatex;
-  WAVE_HEADER pWAVHeader;
   srcpad_CIO *src_io;
-  sinkpad_CIO *sink_io;
-  CWAVInputSource *inputsrc;
-
 };
 
 struct _GstMonkeyEncClass
