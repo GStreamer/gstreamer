@@ -46,9 +46,11 @@ GType _gst_pad_type = 0;
 /***** Start with the base GstPad class *****/
 static void		gst_pad_class_init		(GstPadClass *klass);
 static void		gst_pad_init			(GstPad *pad);
+static void		gst_pad_dispose			(GObject *object);
 
 static gboolean 	gst_pad_try_relink_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad, 
 							 GstCaps *caps, gboolean clear);
+static void		gst_pad_set_pad_template	(GstPad *pad, GstPadTemplate *templ);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr	gst_pad_save_thyself		(GstObject *object, xmlNodePtr parent);
@@ -76,15 +78,28 @@ gst_pad_get_type (void)
 static void
 gst_pad_class_init (GstPadClass *klass)
 {
+  GObjectClass *gobject_class;
+
+  gobject_class = (GObjectClass*) klass;
+
   pad_parent_class = g_type_class_ref (GST_TYPE_OBJECT);
+
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pad_dispose);
 }
 
 static void
 gst_pad_init (GstPad *pad)
 {
-  pad->element_private = NULL;
+  /* all structs are initialized to NULL by glib */
+}
+static void
+gst_pad_dispose (GObject *object)
+{
+  GstPad *pad = GST_PAD (object);
 
-  pad->padtemplate = NULL;
+  gst_pad_set_pad_template (pad, NULL);
+
+  G_OBJECT_CLASS (pad_parent_class)->dispose (object);
 }
 
 
@@ -108,6 +123,7 @@ enum {
 
 static void	gst_real_pad_class_init		(GstRealPadClass *klass);
 static void	gst_real_pad_init		(GstRealPad *pad);
+static void	gst_real_pad_dispose		(GObject *object);
 
 static void	gst_real_pad_set_property	(GObject *object, guint prop_id,
                                                  const GValue *value, 
@@ -115,8 +131,6 @@ static void	gst_real_pad_set_property	(GObject *object, guint prop_id,
 static void	gst_real_pad_get_property	(GObject *object, guint prop_id,
                                                  GValue *value, 
 						 GParamSpec *pspec);
-
-static void	gst_real_pad_dispose		(GObject *object);
 
 GType _gst_real_pad_type = 0;
 
@@ -322,12 +336,8 @@ gst_pad_custom_new_from_template (GType type, GstPadTemplate *templ,
   g_return_val_if_fail (templ != NULL, NULL);
 
   pad = gst_pad_new (name, templ->direction);
-  
-  gst_object_ref (GST_OBJECT (templ));
-  GST_PAD_PAD_TEMPLATE (pad) = templ;
+  gst_pad_set_pad_template (pad, templ);
 
-  g_signal_emit (G_OBJECT (templ), gst_pad_template_signals[TEMPL_PAD_CREATED], 0, pad);
-  
   return pad;
 }
 
@@ -980,7 +990,7 @@ gst_pad_can_link (GstPad *srcpad, GstPad *sinkpad)
  * @filtercaps: the filter #GstCaps.
  *
  * Links the source pad and the sink pad, constrained
- * by the given filter caps.
+ * by the given filter caps. This function sinks the caps.
  *
  * Returns: TRUE if the pads have been linked, FALSE otherwise.
  */
@@ -1147,6 +1157,16 @@ gst_pad_get_parent (GstPad *pad)
   return GST_PAD_PARENT (pad);
 }
 
+static void
+gst_pad_set_pad_template (GstPad *pad, GstPadTemplate *templ)
+{
+  /* this function would need checks if it weren't static */
+
+  gst_object_swap ((GstObject **) &pad->padtemplate, (GstObject *) templ);
+  
+  if (templ)
+    g_signal_emit (G_OBJECT (templ), gst_pad_template_signals[TEMPL_PAD_CREATED], 0, pad);
+} 
 /**
  * gst_pad_get_pad_template:
  * @pad: a #GstPad to get the pad template of.
@@ -1256,14 +1276,13 @@ gst_pad_remove_ghost_pad (GstPad *pad,
 {
   GstRealPad *realpad;
 
-  g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (ghostpad != NULL);
   g_return_if_fail (GST_IS_GHOST_PAD (ghostpad));
-
   realpad = GST_PAD_REALIZE (pad);
+  g_return_if_fail (GST_GPAD_REALPAD (ghostpad) == realpad);
 
   realpad->ghostpads = g_list_remove (realpad->ghostpads, ghostpad);
+  GST_GPAD_REALPAD (ghostpad) = NULL;
 }
 
 /**
@@ -1513,7 +1532,6 @@ gst_pad_try_relink_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad,
 	      "start relink filtered %s:%s and %s:%s, clearing caps",
               GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
 
-    /* FIXME does this leak? */
     gst_caps_replace (&GST_PAD_CAPS (GST_PAD (realsrc)), NULL);
     gst_caps_replace (&GST_PAD_CAPS (GST_PAD (realsink)), NULL);
     gst_caps_replace (&GST_RPAD_FILTER (realsrc), NULL);
@@ -1566,7 +1584,7 @@ gst_pad_try_relink_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad,
 	                                          filtercaps);
 
       /* get rid of the old intersection here */
-      gst_caps_unref (intersection);
+      gst_caps_sink (intersection);
 
       if (!filtered_intersection) {
         GST_INFO (GST_CAT_PADS, 
@@ -1579,6 +1597,7 @@ gst_pad_try_relink_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad,
       /* keep a reference to the app caps */
       gst_caps_replace_sink (&GST_RPAD_APPFILTER (realsink), filtercaps);
       gst_caps_replace_sink (&GST_RPAD_APPFILTER (realsrc), filtercaps);
+      gst_caps_sink (intersection);
     }
   }
   GST_DEBUG (GST_CAT_CAPS, "setting filter for link to:");
@@ -2042,13 +2061,6 @@ gst_real_pad_dispose (GObject *object)
 
   GST_DEBUG (GST_CAT_REFCOUNTING, "dispose %s:%s", GST_DEBUG_PAD_NAME(pad));
 
-  if (GST_PAD_PAD_TEMPLATE (pad)){
-    GST_DEBUG (GST_CAT_REFCOUNTING, "unreffing padtemplate'%s'", 
-	       GST_OBJECT_NAME (GST_PAD_PAD_TEMPLATE (pad)));
-    gst_object_unref (GST_OBJECT (GST_PAD_PAD_TEMPLATE (pad)));
-    GST_PAD_PAD_TEMPLATE (pad) = NULL;
-  }
-  
   /* we destroy the ghostpads, because they are nothing without the real pad */
   if (GST_REAL_PAD (pad)->ghostpads) {
     GList *orig, *ghostpads;
@@ -2602,8 +2614,9 @@ gst_pad_get_element_private (GstPad *pad)
 /***** ghost pads *****/
 GType _gst_ghost_pad_type = 0;
 
-static void     gst_ghost_pad_class_init         (GstGhostPadClass *klass);
-static void     gst_ghost_pad_init               (GstGhostPad *pad);
+static void     gst_ghost_pad_class_init        (GstGhostPadClass *klass);
+static void     gst_ghost_pad_init              (GstGhostPad *pad);
+static void     gst_ghost_pad_dispose		(GObject *object);
 
 static GstPad *ghost_pad_parent_class = NULL;
 /* static guint gst_ghost_pad_signals[LAST_SIGNAL] = { 0 }; */
@@ -2634,12 +2647,24 @@ gst_ghost_pad_class_init (GstGhostPadClass *klass)
   gobject_class = (GObjectClass*) klass;
 
   ghost_pad_parent_class = g_type_class_ref (GST_TYPE_PAD);
+
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_ghost_pad_dispose);
 }
 
 static void
 gst_ghost_pad_init (GstGhostPad *pad)
 {
-  pad->realpad = NULL;
+  /* zeroed by glib */
+}
+static void
+gst_ghost_pad_dispose (GObject *object)
+{
+  GstGhostPad *pad = GST_GHOST_PAD (object);
+
+  if (pad->realpad)
+    gst_pad_remove_ghost_pad((GstPad *) pad->realpad, (GstPad *) pad);
+
+  G_OBJECT_CLASS (ghost_pad_parent_class)->dispose (object);
 }
 
 /**
@@ -2672,7 +2697,7 @@ gst_ghost_pad_new (const gchar *name,
     realpad = GST_PAD_REALIZE (realpad);
   }
   GST_GPAD_REALPAD (ghostpad) = realpad;
-  GST_PAD_PAD_TEMPLATE (ghostpad) = GST_PAD_PAD_TEMPLATE (pad);
+  gst_pad_set_pad_template (GST_PAD (ghostpad), GST_PAD_PAD_TEMPLATE (pad));
 
   /* add ourselves to the real pad's list of ghostpads */
   gst_pad_add_ghost_pad (pad, GST_PAD (ghostpad));

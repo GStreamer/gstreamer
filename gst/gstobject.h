@@ -147,7 +147,9 @@ GstObject *	gst_object_ref			(GstObject *object);
 void 		gst_object_unref		(GstObject *object);
 void 		gst_object_sink			(GstObject *object);
 
+/* replace object pointer */
 void 		gst_object_swap			(GstObject **oldobj, GstObject *newobj);
+
 /* destroying an object */
 void 		gst_object_destroy		(GstObject *object);
 

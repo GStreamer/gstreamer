@@ -1,3 +1,14 @@
+2003-05-31  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* gst/gstelement.c: (gst_element_remove_ghost_pad):
+	* gst/gstpad.c: (gst_pad_class_init), (gst_pad_init),
+	(gst_pad_dispose), (gst_pad_custom_new_from_template),
+	(gst_pad_set_pad_template), (gst_pad_remove_ghost_pad),
+	(gst_pad_try_relink_filtered_func), (gst_real_pad_dispose),
+	(gst_ghost_pad_class_init), (gst_ghost_pad_init),
+	(gst_ghost_pad_dispose), (gst_ghost_pad_new):
+        Backport Company's refcounting fixes to fix libgstplay
+
 2003-02-02  Thomas Vander Stichele <thomas at apestaart dot org>
 
         * configure.ac:
