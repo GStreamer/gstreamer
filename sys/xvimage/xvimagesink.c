@@ -529,7 +529,8 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
 {
   GstXContext *xcontext = NULL;
   XPixmapFormatValues *px_formats = NULL;
-  gint nb_formats = 0, i;
+  gint nb_formats = 0, i, j, N_attr;
+  XvAttribute *xv_attr;
   char *channels[4] = { "XV_HUE", "XV_SATURATION",
                         "XV_BRIGHTNESS", "XV_CONTRAST" };
   
@@ -616,21 +617,38 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
       g_free (xcontext);
       return NULL;
     }
-    
-  g_mutex_unlock (xvimagesink->x_lock);
+
+  xv_attr = XvQueryPortAttributes (xcontext->disp,
+                                   xcontext->xv_port_id,
+                                   &N_attr);
   
+ 
   /* Generate the channels list */
   for (i = 0; i < (sizeof (channels) / sizeof (char *)); i++)
     {
       GstColorBalanceChannel *channel;
-    
+      XvAttribute *matching_attr = NULL;
+
+      if (xv_attr != NULL) 
+        {
+          for (j = 0; j < N_attr && matching_attr == NULL; ++j)
+            if (! g_ascii_strcasecmp (channels[i], xv_attr[j].name))
+              matching_attr = xv_attr + j;
+        }
+      
       channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
       channel->label = g_strdup (channels[i]);
-      channel->min_value = -1000;
-      channel->max_value = 1000;
+      channel->min_value = matching_attr ? matching_attr->min_value : -1000;
+      channel->max_value = matching_attr ? matching_attr->max_value : 1000;
+      
       xcontext->channels_list = g_list_append (xcontext->channels_list,
                                                channel);
     }
+
+  if (xv_attr)
+    XFree (xv_attr);
+
+  g_mutex_unlock (xvimagesink->x_lock);
     
   return xcontext;
 }
@@ -1283,6 +1301,7 @@ gst_xvimagesink_colorbalance_get_value (GstColorBalance        *balance,
 static void
 gst_xvimagesink_colorbalance_init (GstColorBalanceClass *iface)
 {
+  iface->balance_type = GST_COLOR_BALANCE_HARDWARE;
   iface->list_channels = gst_xvimagesink_colorbalance_list_channels;
   iface->set_value = gst_xvimagesink_colorbalance_set_value;
   iface->get_value = gst_xvimagesink_colorbalance_get_value;

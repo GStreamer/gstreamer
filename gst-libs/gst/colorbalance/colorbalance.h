@@ -43,10 +43,18 @@ G_BEGIN_DECLS
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_COLOR_BALANCE, GstColorBalanceClass))
 
 typedef struct _GstColorBalance GstColorBalance;
+  
+typedef enum
+{
+  GST_COLOR_BALANCE_HARDWARE,
+  GST_COLOR_BALANCE_SOFTWARE
+} GstColorBalanceType;
 
 typedef struct _GstColorBalanceClass {
   GTypeInterface klass;
 
+  GstColorBalanceType balance_type;
+  
   /* virtual functions */
   const GList * (* list_channels) (GstColorBalance        *balance);
 
