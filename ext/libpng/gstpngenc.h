@@ -53,6 +53,8 @@ struct _GstPngEnc
   gint width;
   gint height;
   gint bpp;
+
+  gboolean snapshot;
 };
 
 struct _GstPngEncClass

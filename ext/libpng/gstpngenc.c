@@ -42,14 +42,21 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_SNAPSHOT	TRUE
+
 enum
 {
-  ARG_0
+  ARG_0,
+  ARG_SNAPSHOT
 };
 
 static void gst_pngenc_base_init (gpointer g_class);
 static void gst_pngenc_class_init (GstPngEncClass * klass);
 static void gst_pngenc_init (GstPngEnc * pngenc);
+static void gst_pngenc_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_pngenc_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
 
 static void gst_pngenc_chain (GstPad * pad, GstData * _data);
 
@@ -141,6 +148,14 @@ gst_pngenc_class_init (GstPngEncClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+
+  g_object_class_install_property (gobject_class, ARG_SNAPSHOT,
+      g_param_spec_boolean ("snapshot", "Snapshot",
+          "Send EOS after encoding a frame, usefull for snapshots",
+          DEFAULT_SNAPSHOT, (GParamFlags) G_PARAM_READWRITE));
+
+  gstelement_class->get_property = gst_pngenc_get_property;
+  gstelement_class->set_property = gst_pngenc_set_property;
 }
 
 
@@ -182,9 +197,10 @@ gst_pngenc_init (GstPngEnc * pngenc)
   pngenc->png_struct_ptr = NULL;
   pngenc->png_info_ptr = NULL;
 
+  pngenc->snapshot = DEFAULT_SNAPSHOT;
 }
 
-void
+static void
 user_flush_data (png_structp png_ptr)
 {
   GstPngEnc *pngenc;
@@ -195,7 +211,7 @@ user_flush_data (png_structp png_ptr)
 }
 
 
-void
+static void
 user_write_data (png_structp png_ptr, png_bytep data, png_uint_32 length)
 {
   GstBuffer *buffer;
@@ -225,7 +241,6 @@ gst_pngenc_chain (GstPad * pad, GstData * _data)
   GstPngEnc *pngenc;
   gint row_index;
   png_byte *row_pointers[MAX_HEIGHT];
-  GstEvent *event;
 
   pngenc = GST_PNGENC (gst_pad_get_parent (pad));
 
@@ -283,12 +298,53 @@ gst_pngenc_chain (GstPad * pad, GstData * _data)
 
   png_destroy_info_struct (pngenc->png_struct_ptr, &pngenc->png_info_ptr);
   png_destroy_write_struct (&pngenc->png_struct_ptr, (png_infopp) NULL);
+  gst_buffer_unref (buf);
 
   gst_pad_push (pngenc->srcpad, GST_DATA (pngenc->buffer_out));
 
-  /* send EOS event, since a frame has been pushed out */
-  event = gst_event_new (GST_EVENT_EOS);
-  gst_pad_push (pngenc->srcpad, GST_DATA (event));
+  if (pngenc->snapshot) {
+    /* send EOS event, since a frame has been pushed out */
+    GstEvent *event = gst_event_new (GST_EVENT_EOS);
 
-  gst_buffer_unref (buf);
+    gst_pad_push (pngenc->srcpad, GST_DATA (event));
+    gst_element_set_eos (GST_ELEMENT (pngenc));
+  }
+}
+
+
+static void
+gst_pngenc_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec)
+{
+  GstPngEnc *pngenc;
+
+  pngenc = GST_PNGENC (object);
+
+  switch (prop_id) {
+    case ARG_SNAPSHOT:
+      g_value_set_boolean (value, pngenc->snapshot);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+
+static void
+gst_pngenc_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
+{
+  GstPngEnc *pngenc;
+
+  pngenc = GST_PNGENC (object);
+
+  switch (prop_id) {
+    case ARG_SNAPSHOT:
+      pngenc->snapshot = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }

@@ -210,7 +210,6 @@ gst_pngdec_src_getcaps (GstPad * pad)
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     GstStructure *structure = gst_caps_get_structure (caps, i);
 
-    g_print ("%d %d\n", pngdec->width, pngdec->height);
     if (pngdec->width != -1) {
       gst_structure_set (structure, "width", G_TYPE_INT, pngdec->width, NULL);
     }
