@@ -959,18 +959,10 @@ dnl #########################
 dnl # Make the output files #
 dnl #########################
 
-dnl gstreamer.pc
-dnl gstreamer-uninstalled.pc
-dnl gstreamer.spec,
-dnl until ffmpeg is handled by configure plugins/ffmpeg/Makefile
-dnl components/bonobo-gstmediaplay/Makefile
-dnl someone should fix this test/misc/Makefile
-dnl wtay fix this: testsuite/threads/Makefile
-dnl testsuite/refcounting/Makefile
-dnl stamp.h
-dnl echo "$infomessages", infomessages="$infomessages"
 AC_OUTPUT(
 Makefile
+gstreamer-libs.pc
+gstreamer-libs-uninstalled.pc
 gst/Makefile
 gst/ac3parse/Makefile
 gst/adder/Makefile
