@@ -67,7 +67,7 @@ struct _GstOssSrc {
 };
 
 struct _GstOssSrcClass {
-  GstElementClass parent_class;
+  GstOssElementClass parent_class;
 };
 
 GType gst_osssrc_get_type(void);

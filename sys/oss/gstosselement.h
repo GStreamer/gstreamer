@@ -37,6 +37,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSSELEMENT))
 #define GST_IS_OSSELEMENT_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSSELEMENT))
+#define GST_OSSELEMENT_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_OSSELEMENT, GstOssElementClass))
 
 typedef struct _GstOssElement GstOssElement;
 typedef struct _GstOssElementClass GstOssElementClass;
@@ -45,6 +47,10 @@ typedef enum {
   GST_OSSELEMENT_READ,
   GST_OSSELEMENT_WRITE,
 } GstOssOpenMode;
+
+typedef struct _GstOssDeviceCombination {
+  gchar *dsp, *mixer;
+} GstOssDeviceCombination;
 
 struct _GstOssElement
 {
@@ -87,6 +93,8 @@ struct _GstOssElement
 
 struct _GstOssElementClass {
   GstElementClass klass;
+
+  GList		*device_combinations;
 };
 
 GType		gst_osselement_get_type		(void);

@@ -70,7 +70,7 @@ struct _GstOssSink {
 };
 
 struct _GstOssSinkClass {
-  GstElementClass parent_class;
+  GstOssElementClass parent_class;
 
   /* signals */
   void (*handoff) (GstElement *element,GstPad *pad);

@@ -33,6 +33,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include <gst/propertyprobe/propertyprobe.h>
+
 #include "gstosselement.h"
 #include "gstossmixer.h"
 
@@ -53,6 +55,8 @@ static GstElementDetails gst_osselement_details = GST_ELEMENT_DETAILS (
 
 static void			gst_osselement_base_init	(GstOssElementClass *klass);
 static void 			gst_osselement_class_init	(GstOssElementClass *klass);
+
+static void			gst_ossprobe_interface_init	(GstPropertyProbeInterface *iface);
 static void 			gst_osselement_init		(GstOssElement *oss);
 static void 			gst_osselement_dispose		(GObject *object);
 
@@ -96,6 +100,11 @@ gst_osselement_get_type (void)
       NULL,
       NULL,
     };
+    static const GInterfaceInfo ossprobe_info = {
+      (GInterfaceInitFunc) gst_ossprobe_interface_init,
+      NULL,
+      NULL,
+    };
 
     osselement_type = g_type_register_static (GST_TYPE_ELEMENT,
 					      "GstOssElement",
@@ -106,6 +115,9 @@ gst_osselement_get_type (void)
     g_type_add_interface_static (osselement_type,
 				 GST_TYPE_MIXER,
 				 &ossmixer_info);
+    g_type_add_interface_static (osselement_type,
+				 GST_TYPE_PROPERTY_PROBE,
+				 &ossprobe_info);
   }
 
   return osselement_type;
@@ -146,6 +158,197 @@ gst_osselement_class_init (GstOssElementClass *klass)
   gobject_class->dispose      = gst_osselement_dispose;
 
   gstelement_class->change_state = gst_osselement_change_state;
+}
+
+static const GList *
+gst_ossprobe_get_properties (GstPropertyProbe *probe)
+{
+  GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
+  static GList *list = NULL;
+
+  if (!list) {
+    list = g_list_append (NULL, g_object_class_find_property (klass, "device"));
+  }
+
+  return list;
+}
+
+static void
+gst_osselement_probe (gchar  *device_base,
+		      gint    device_num,
+		      gchar **put)
+{
+  gchar *device;
+  struct stat s;
+
+  /* only if yet unfilled */
+  if (*put != NULL)
+    return;
+
+  if (device_num == 0)
+    device = g_strdup (device_base);
+  else
+    device = g_strdup_printf ("%s%d", device_base, device_num);
+
+  if (lstat (device, &s) || !S_ISCHR (s.st_mode))
+    goto end;
+
+  *put = device;
+  return;
+
+end:
+  g_free (device);
+}
+
+static gboolean
+gst_osselement_class_probe_devices (GstOssElementClass *klass,
+				    gboolean            check)
+{
+  static gboolean init = FALSE;
+
+  if (!init && !check) {
+    gchar *dsp_base[] = { "/dev/dsp", "/dev/sound/dsp", NULL };
+    gchar *mixer_base[] = { "/dev/mixer", "/dev/sound/mixer", NULL };
+    GstOssDeviceCombination devices[16];
+    gint n;
+
+    klass->device_combinations = NULL;
+
+    /* probe for all /dev entries */
+    memset (devices, 0, sizeof (devices));
+
+    /* OSS (without devfs) allows at max. 16 devices */
+    for (n = 0; n < 16; n++) {
+      gint base;
+
+      for (base = 0; dsp_base[base] != NULL; base++)
+        gst_osselement_probe (dsp_base[base], n, &devices[n].dsp);
+
+      for (base = 0; mixer_base[base] != NULL; base++)
+        gst_osselement_probe (mixer_base[base], n, &devices[n].mixer);
+    }
+
+    /* does the device exist (can we open them)? */
+    for (n = 0; n < 16; n++) {
+      gint fd;
+
+      if (!devices[n].dsp)
+        continue;
+
+      /* we just check the dsp. we assume the mixer always works.
+       * we don't need a mixer anyway (says OSS)... */
+      if ((fd = open (devices[n].dsp, O_RDONLY)) > 0 || errno == EBUSY) {
+        GstOssDeviceCombination *combi;
+
+        if (fd > 0)
+          close (fd);
+
+        /* yay! \o/ */
+        combi = g_new0 (GstOssDeviceCombination, 1);
+        combi->dsp   = devices[n].dsp;
+        combi->mixer = devices[n].mixer;
+        devices[n].dsp = devices[n].mixer = NULL;
+
+        klass->device_combinations =
+		g_list_append (klass->device_combinations, combi);
+      }
+    }
+
+    /* free */
+    for (n = 0; n < 16; n++) {
+      if (devices[n].dsp)
+        g_free (devices[n].dsp);
+
+      if (devices[n].mixer)
+        g_free (devices[n].mixer);
+    }
+
+    init = TRUE;
+  }
+
+  return init;
+}
+
+static GValueArray *
+gst_osselement_class_list_devices (GstOssElementClass *klass)
+{
+  GValueArray *array;
+  GValue value = { 0 };
+  GList *item;
+
+  if (!klass->device_combinations)
+    return NULL;
+
+  array = g_value_array_new (g_list_length (klass->device_combinations));
+  item = klass->device_combinations;
+  g_value_init (&value, G_TYPE_STRING);
+  while (item) {
+    GstOssDeviceCombination *combi = item->data;
+
+    g_value_set_string (&value, combi->dsp);
+    g_value_array_append (array, &value);
+
+    item = item->next;
+  }
+  g_value_unset (&value);
+
+  return array;
+}
+
+static void
+gst_ossprobe_probe_property (GstPropertyProbe *probe,
+			     guint             prop_id,
+			     const GParamSpec *pspec)
+{
+  GstOssElementClass *klass = GST_OSSELEMENT_GET_CLASS (probe);
+
+  switch (prop_id) {
+    case ARG_DEVICE:
+      gst_osselement_class_probe_devices (klass, FALSE);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+}
+
+static gboolean
+gst_ossprobe_needs_probe (GstPropertyProbe *probe,
+			  guint             prop_id,
+			  const GParamSpec *pspec)
+{
+  GstOssElementClass *klass = GST_OSSELEMENT_GET_CLASS (probe);
+
+  return !gst_osselement_class_probe_devices (klass, TRUE);
+}
+
+static GValueArray *
+gst_ossprobe_get_values (GstPropertyProbe *probe,
+			 guint             prop_id,
+			 const GParamSpec *pspec)
+{
+  GstOssElementClass *klass = GST_OSSELEMENT_GET_CLASS (probe);
+  GValueArray *array = NULL;
+
+  switch (prop_id) {
+    case ARG_DEVICE:
+      array = gst_osselement_class_list_devices (klass);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+
+  return array;
+}
+
+static void
+gst_ossprobe_interface_init (GstPropertyProbeInterface *iface)
+{
+  iface->get_properties = gst_ossprobe_get_properties;
+  iface->probe_property = gst_ossprobe_probe_property;
+  iface->needs_probe    = gst_ossprobe_needs_probe;
+  iface->get_values     = gst_ossprobe_get_values;
 }
 
 static void 
@@ -617,6 +820,24 @@ gst_osselement_set_property (GObject *object,
       if (gst_element_get_state (GST_ELEMENT (oss)) == GST_STATE_NULL) {
         g_free (oss->device);
         oss->device = g_strdup (g_value_get_string (value));
+
+        /* let's assume that if we have a device map for the mixer,
+	 * we're allowed to do all that automagically here */
+        if (GST_OSSELEMENT_GET_CLASS (oss)->device_combinations != NULL) {
+          GList *list = GST_OSSELEMENT_GET_CLASS (oss)->device_combinations;
+
+          while (list) {
+            GstOssDeviceCombination *combi = list->data;
+
+            if (!strcmp (combi->dsp, oss->device)) {
+              g_free (oss->mixer_dev);
+              oss->mixer_dev = g_strdup (combi->mixer);
+              break;
+            }
+
+            list = list->next;
+          }
+        }
       }
       break;
     case ARG_MIXERDEV:
