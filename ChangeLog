@@ -1,3 +1,12 @@
+2004-12-16  Sebastien Cote  <sc5@hermes.usherb.ca>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/resample/resample.c: (gst_resample_close):
+	* gst-libs/gst/resample/resample.h:
+	* gst/audioscale/gstaudioscale.c:
+	  Fix memleak (#159215).
+
 2004-12-16  Toni Willberg  <toniw@iki.fi>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
