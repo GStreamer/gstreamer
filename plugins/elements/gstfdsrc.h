@@ -52,14 +52,18 @@ struct _GstFdSrc {
   /* fd */
   gint fd;
 
-  gulong curoffset;			/* current offset in file */
-  gulong blocksize;		/* bytes per read */
-
-  gulong seq;				/* buffer sequence number */
+  gulong curoffset; /* current offset in file */
+  gulong blocksize; /* bytes per read */
+  guint64 timeout;  /* read timeout, in nanoseconds */
+  
+  gulong seq;       /* buffer sequence number */
 };
 
 struct _GstFdSrcClass {
   GstElementClass parent_class;
+
+  /* signals */
+  void (*timeout) (GstElement *element);
 };
 
 GType gst_fdsrc_get_type(void);

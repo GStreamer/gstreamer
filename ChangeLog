@@ -1,3 +1,13 @@
+2004-02-13  Mattias Wadman  <mattias@sudac.org>
+
+	reviewed by: David Schleef  <ds@schleef.org>
+
+	* gst/elements/gstfdsrc.c: (gst_fdsrc_class_init),
+	(gst_fdsrc_init), (gst_fdsrc_set_property),
+	(gst_fdsrc_get_property), (gst_fdsrc_get):
+	* gst/elements/gstfdsrc.h:  Adds timeout property to fdsrc,
+	and sends an EOS event if file descriptor reading times out.
+
 2004-02-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
