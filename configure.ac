@@ -718,6 +718,12 @@ GST_CHECK_FEATURE(SHOUT, [shout plug-in], icecastsend, [
   AC_SUBST(SHOUT_LIBS)
 ])
 
+dnl *** shout2 *** 
+translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT2, true)
+GST_CHECK_FEATURE(SHOUT, [shout2 plug-in], shout2send, [
+  AM_PATH_SHOUT2([USE_SHOUT2="true" [, USE_SHOUT2="false"]])
+])
+
 dnl *** sidplay ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
 GST_CHECK_FEATURE(SIDPLAY, [sidplay plug-in], sidplay, [
@@ -1022,6 +1028,7 @@ ext/raw1394/Makefile
 ext/rtp/Makefile
 ext/sdl/Makefile
 ext/shout/Makefile
+ext/shout2/Makefile
 ext/sidplay/Makefile
 ext/smoothwave/Makefile
 ext/snapshot/Makefile
