@@ -62,6 +62,14 @@ GstStaticCaps rawcaps6 = GST_STATIC_CAPS (
     "framerate=(double)30.0"
 );
 
+GstStaticCaps rawcaps7 = GST_STATIC_CAPS (
+    "video/x-raw-yuv, format=(fourcc)YUY2, width=(int)[1,2147483647], height=(int)[1,2147483647], framerate=(double)[0,1.79769e+308]"
+);
+
+GstStaticCaps rawcaps8 = GST_STATIC_CAPS (
+    "video/x-raw-yuv, format=(fourcc){ I420, YV12, YUY2 }, width=(int)[16,4096], height=(int)[16,4096], framerate=(double)[0,1.79769e+308]"
+);
+
 int 
 main (int argc, char *argv[]) 
 {
@@ -107,6 +115,10 @@ main (int argc, char *argv[])
       gst_caps_copy_1(gst_static_caps_get (&rawcaps6)));
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities5", NULL);
   gst_caps_save_thyself (caps, parent);
+
+  caps = gst_caps_intersect (gst_static_caps_get (&rawcaps7),
+      gst_static_caps_get (&rawcaps8));
+  g_print("intersection: %s\n", gst_caps_to_string (caps));
 
   xmlDocDump(stdout, doc);
 
