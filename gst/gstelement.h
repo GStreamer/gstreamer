@@ -386,8 +386,6 @@ struct _GstElementFactory {
 
   GList *padtemplates;
   guint16 numpadtemplates;
-
-  guint16 rank;			/* used by autoplug to prioritise elements to try */
 };
 
 struct _GstElementFactoryClass {
@@ -412,8 +410,6 @@ GstElement*		gst_element_factory_create		(GstElementFactory *factory,
 								 const gchar *name);
 GstElement*		gst_element_factory_make		(const gchar *factoryname, const gchar *name);
 GstElement*		gst_element_factory_make_or_warn	(const gchar *factoryname, const gchar *name);
-
-void			gst_element_factory_set_rank		(GstElementFactory *factory, guint16 rank);
 
 G_END_DECLS
 

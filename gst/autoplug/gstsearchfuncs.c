@@ -236,8 +236,8 @@ gst_autoplug_factories_filters (GList *factories)
 static gint 
 gst_autoplug_rank_compare (const GstElementFactory *a, const GstElementFactory *b)
 {
-	if (a->rank > b->rank) return -1;
-	return (a->rank < b->rank) ? 1 : 0;
+	if (GST_PLUGIN_FEATURE (a)->rank > GST_PLUGIN_FEATURE (b)->rank) return -1;
+	return (GST_PLUGIN_FEATURE (a)->rank < GST_PLUGIN_FEATURE (b)->rank) ? 1 : 0;
 }
 
 /* returns all factories which have sinks with non-NULL caps and srcs with
@@ -255,7 +255,7 @@ gst_autoplug_factories_filters_with_sink_caps (GList *factories)
   {
     factory = (GstElementFactory *) factories->data;
     templs = factory->padtemplates;
-    if (factory->rank > 0){
+    if (GST_PLUGIN_FEATURE (factory)->rank > 0){
       gboolean have_src = FALSE;
       gboolean have_sink = FALSE;
 
