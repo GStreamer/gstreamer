@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#define MIN_POLLFDS	64
+#define MIN_POLLFDS	4096
 #define INIT_POLLFDS	MIN_POLLFDS
 
 #include <sys/poll.h>
@@ -55,10 +55,12 @@ struct _GstFDSet
 
   /* for poll */
   struct pollfd *testpollfds;
+  gint testsize;
+
   struct pollfd *pollfds;
-  gint last_pollfds;
   gint size;
   gint free;
+  gint last_pollfds;
   GMutex *poll_lock;
 
   /* for select */
@@ -87,7 +89,6 @@ ensure_size (GstFDSet * set, gint len)
     need = MAX (need, MIN_POLLFDS * sizeof (struct pollfd));
 
     set->pollfds = g_realloc (set->pollfds, need);
-    set->testpollfds = g_realloc (set->testpollfds, need);
 
     set->size = need;
   }
@@ -395,6 +396,10 @@ gst_fdset_wait (GstFDSet * set, int timeout)
       gint last_pollfds;
 
       g_mutex_lock (set->poll_lock);
+      if (set->testsize != set->size) {
+        set->testpollfds = g_realloc (set->testpollfds, set->size);
+        set->testsize = set->size;
+      }
       last_pollfds = set->last_pollfds;
       memcpy (set->testpollfds, set->pollfds,
           sizeof (struct pollfd) * last_pollfds);
