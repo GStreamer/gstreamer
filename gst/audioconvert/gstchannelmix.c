@@ -140,7 +140,7 @@ gst_audio_convert_fill_compatible (GstAudioConvert * this)
     }
 
     if (pos1_0 != -1 && pos1_1 != -1 && pos2_0 != -1) {
-      this->matrix[pos1_0][pos2_0] = -1.0;
+      this->matrix[pos1_0][pos2_0] = 1.0;
       this->matrix[pos1_1][pos2_0] = 1.0;
     }
 
@@ -161,7 +161,7 @@ gst_audio_convert_fill_compatible (GstAudioConvert * this)
     }
 
     if (pos1_0 != -1 && pos1_1 != -1 && pos2_0 != -1) {
-      this->matrix[pos2_0][pos1_0] = -1.0;
+      this->matrix[pos2_0][pos1_0] = 1.0;
       this->matrix[pos2_0][pos1_1] = 1.0;
     }
   }
