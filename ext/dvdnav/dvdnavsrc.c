@@ -31,7 +31,7 @@
 #include <gst/gst.h>
 
 #include <dvdnav/dvdnav.h>
-#include <dvdread/nav_print.h>
+#include <dvdnav/nav_print.h>
 
 #define GST_TYPE_DVDNAVSRC \
   (dvdnavsrc_get_type())
