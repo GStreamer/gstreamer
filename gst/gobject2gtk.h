@@ -86,6 +86,8 @@ G_STMT_START{ \
 #define g_enum_register_static			gtk_type_register_enum
 
 
+GType g2g_object_get_type (void);
+
 /*********************************
  * FIXME API NOT in glib2.0
  ***********************************/

@@ -107,7 +107,7 @@ gst_init (int *argc, char **argv[])
 }
 
 static void
-gst_add_paths_func (gchar *pathlist) 
+gst_add_paths_func (const gchar *pathlist) 
 {
   gchar **paths;
   gint j = 0;

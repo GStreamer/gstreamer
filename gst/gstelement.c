@@ -51,8 +51,8 @@ static void			gst_element_class_init		(GstElementClass *klass);
 static void			gst_element_init		(GstElement *element);
 static void			gst_element_base_class_init	(GstElementClass *klass);
 
-static void			gst_element_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void			gst_element_get_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void			gst_element_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void			gst_element_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static void 			gst_element_shutdown 		(GObject *object);
 static void			gst_element_real_destroy	(GObject *object);
@@ -191,7 +191,7 @@ gst_element_set_property (GObject *object, guint prop_id, const GValue *value, G
 
 
 static void
-gst_element_get_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_element_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstElementClass *oclass = (GstElementClass *)G_OBJECT_GET_CLASS(object);
 
@@ -900,7 +900,7 @@ gst_element_shutdown (GObject *object)
     gst_bin_remove (GST_BIN (GST_OBJECT_PARENT (element)), element);
 
   if (G_OBJECT_CLASS (parent_class)->shutdown)
-    G_OBJECT_CLASS (parent_class)->shutdown (object);
+    G_OBJECT_CLASS (parent_class)->shutdown ((GObject *)object);
 }
 
 static void
