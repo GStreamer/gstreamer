@@ -1,0 +1,66 @@
+#: gst/gst.c:113
+msgid "Print the GStreamer version"
+msgstr "druck die GStreamer Version"
+
+#: gst/gst.c:114
+msgid "Make all warnings fatal"
+msgstr "macht alle Achtunge tdlchc"
+
+#: gst/gst.c:116
+msgid ""
+"default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr ""
+
+#: gst/gst.c:117
+msgid "colon-seperated list of category=name pairs to use specific levels"
+msgstr ""
+
+#: gst/gst.c:118
+msgid "disable color debugging output"
+msgstr "abschalt Farbe in Fehlersucheausgabe"
+
+#: gst/gst.c:119
+msgid "disable debugging"
+msgstr "abschalt die Fehlersuche"
+
+#: gst/gst.c:120
+msgid "print available debug categories and exit"
+msgstr ""
+
+#: gst/gst.c:122
+msgid "Disable accelerated CPU instructions"
+msgstr ""
+
+#: gst/gst.c:123
+msgid "enable verbose plugin loading diagnostics"
+msgstr ""
+
+#: gst/gst.c:124
+msgid "'"
+msgstr ""
+
+#: gst/gst.c:124
+msgid "'--separated path list for loading plugins"
+msgstr ""
+
+#: gst/gst.c:125
+msgid ""
+"comma-separated list of plugins to preload in addition to the list stored in "
+"env variable GST_PLUGIN_PATH"
+msgstr ""
+
+#: gst/gst.c:126
+msgid "scheduler to use ('"
+msgstr ""
+
+#: gst/gst.c:126
+msgid "' is the default)"
+msgstr ""
+
+#: gst/gst.c:127
+msgid "registry to use"
+msgstr ""
+
+#: gst/gst.c:208
+msgid "This is a test\n"
+msgstr "moo\n"
