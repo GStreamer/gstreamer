@@ -315,6 +315,7 @@ gst_vorbisfile_seek (void *datasource, int64_t offset, int whence)
   if (!gst_bytestream_seek (vorbisfile->bs, offset, method))
     return -1;
 
+  vorbisfile->eos = FALSE;
   vorbisfile->offset = pending_offset;
   if (need_total)
     vorbisfile->total_bytes = gst_bytestream_tell (vorbisfile->bs) + offset;
