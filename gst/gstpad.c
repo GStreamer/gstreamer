@@ -1939,14 +1939,36 @@ gst_pad_event (GstPad *pad, GstEventType event, gint64 timestamp, guint32 data)
   GST_DEBUG(GST_CAT_EVENT, "have event %d on pad %s:%s\n",(gint)event,GST_DEBUG_PAD_NAME(pad));
 
   peer = GST_RPAD_PEER(pad);
-  if (GST_RPAD_EVENTFUNC(peer))
-    handled = GST_RPAD_EVENTFUNC(peer) (peer, event, timestamp, data);
+  if (GST_RPAD_EVENTFUNC(peer)) {
+    //handled = GST_RPAD_EVENTFUNC(peer) (peer, event, timestamp, data);
+  }
   else {
     GST_DEBUG(GST_CAT_EVENT, "there's no event function for peer %s:%s\n",GST_DEBUG_PAD_NAME(peer));
   }
 
   if (!handled) {
     GST_DEBUG(GST_CAT_EVENT, "would proceed with default behavior here\n");
-    gst_pad_event_default(peer,event, timestamp, data);
+    //gst_pad_event_default(peer,event, timestamp, data);
   }
 }
+
+gboolean
+gst_pad_send_event (GstPad *pad, GstEvent *event)
+{
+  gboolean handled = FALSE;
+
+  GST_DEBUG (GST_CAT_EVENT, "have event %d on pad %s:%s\n",
+		  GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (pad));
+
+  if (GST_RPAD_EVENTFUNC (pad))
+    handled = GST_RPAD_EVENTFUNC (pad) (pad, event);
+  else {
+    GST_DEBUG(GST_CAT_EVENT, "there's no event function for pad %s:%s\n", GST_DEBUG_PAD_NAME (pad));
+  }
+
+  if (!handled) {
+    GST_DEBUG(GST_CAT_EVENT, "would proceed with default behavior here\n");
+    //gst_pad_event_default (pad, event);
+  }
+}
+

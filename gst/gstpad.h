@@ -130,7 +130,7 @@ typedef enum {
  * buf is the buffer being passed */
 typedef void 		(*GstPadChainFunction) 		(GstPad *pad,GstBuffer *buf);
 typedef GstBuffer*	(*GstPadGetFunction) 		(GstPad *pad);
-typedef gboolean	(*GstPadEventFunction)		(GstPad *pad, GstEventType event, gint64 timestamp, guint32 data);
+typedef gboolean	(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
 
 typedef GstBuffer*	(*GstPadGetRegionFunction) 	(GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
 typedef GstBuffer*	(*GstPadPullRegionFunction) 	(GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
@@ -412,6 +412,7 @@ FALSE )
 }G_STMT_END
 #endif
 
+gboolean		gst_pad_send_event		(GstPad *pad, GstEvent *event);
 
 GstBuffer*		gst_pad_peek			(GstPad *pad);
 GstPad*			gst_pad_select			(GList *padlist);

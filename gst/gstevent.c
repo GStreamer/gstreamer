@@ -80,3 +80,17 @@ gst_event_free (GstEvent* event)
   g_mem_chunk_free (_gst_event_chunk, event);
   g_mutex_unlock (_gst_event_chunk_lock);
 }
+
+/* seek stuff */
+GstEvent*       
+gst_event_new_seek (GstSeekType type, guint64 offset, gboolean flush)
+{
+  GstEvent *event;
+
+  event = gst_event_new (GST_EVENT_SEEK);
+  GST_EVENT_SEEK_TYPE (event) = type;
+  GST_EVENT_SEEK_OFFSET (event) = offset;
+  GST_EVENT_SEEK_FLUSH (event) = flush;
+
+  return event;
+}

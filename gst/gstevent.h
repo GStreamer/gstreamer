@@ -46,20 +46,47 @@ extern GType _gst_event_type;
 #define GST_EVENT(event)	((GstEvent*)(event))
 #define GST_IS_EVENT(event)	(GST_DATA_TYPE(event) == GST_TYPE_EVENT)
 
-#define GST_EVENT_TYPE(event)	(GST_EVENT(event)->type)
+#define GST_EVENT_TYPE(event)		(GST_EVENT(event)->type)
+#define GST_EVENT_TIMESTAMP(event)	(GST_EVENT(event)->timstamp)
+
+/* seek events */
+typedef enum {
+  GST_SEEK_ANY,
+  GST_SEEK_TIMEOFFSET,
+  GST_SEEK_BYTEOFFSET
+} GstSeekType;
+
+#define GST_EVENT_SEEK_TYPE(event)	(GST_EVENT(event)->event_data.seek.type)
+#define GST_EVENT_SEEK_OFFSET(event)	(GST_EVENT(event)->event_data.seek.offset)
+#define GST_EVENT_SEEK_FLUSH(event)	(GST_EVENT(event)->event_data.seek.flush)
 
 typedef struct _GstEvent GstEvent;
 
 struct _GstEvent {
   GstData data;
 
-  GstEventType type;
+  GstEventType  type;
+  guint64	timestamp;
+
+  union {
+    struct {
+      GstSeekType type;
+      guint64     offset;
+      gboolean	  flush;
+    } seek;
+  } event_data;
 };
 
 void 		_gst_event_initialize 	(void);
 	
 GstEvent*	gst_event_new	        (GstEventType type);
 void		gst_event_free 		(GstEvent* event);
+
+/* seek events */
+GstEvent*	gst_event_new_seek	(GstSeekType type, guint64 offset, gboolean flush);
+
+/* flush events */
+#define		gst_event_new_flush()	gst_event_new(GST_EVENT_FLUSH)
 
 #ifdef __cplusplus
 }

@@ -74,6 +74,7 @@ struct _GstFakeSrc {
   gint num_buffers;
   guint64 buffer_count;
   gboolean silent;
+  gboolean need_flush;
 };
 
 struct _GstFakeSrcClass {
