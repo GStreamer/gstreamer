@@ -207,6 +207,7 @@ GTK_LIBS=$GTK2_LIBS
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_CFLAGS)
 
+
 dnl Check for X11 extensions
 AC_PATH_XTRA
 if test "-DX_DISPLAY_MISSING" = "$X_CFLAGS"; then
@@ -522,7 +523,10 @@ GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flacenc flacdec, [
 dnl *** FFMPEG ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_FFMPEG, true)
 GST_CHECK_FEATURE(FFMPEG, [ffmpeg plug-ins], ffmpeg, [
-  AM_PATH_FFMPEG(0.4.6, HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
+  AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, "2002-12-14 12:00 GMT",
+                  HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
+  AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, 1, 
+                     [defined if we use uninstalled ffmpeg])
 ])
 
 dnl *** Gnome VFS ***
@@ -1089,6 +1093,8 @@ gst-libs/gst/play/Makefile
 gst-libs/gst/resample/Makefile
 gst-libs/gst/riff/Makefile
 gst-libs/gst/video/Makefile
+gst-libs/ext/Makefile
+gst-libs/ext/ffmpeg/Makefile
 examples/dynparams/Makefile
 examples/capsfilter/Makefile
 examples/seeking/Makefile
@@ -1100,7 +1106,6 @@ testsuite/Makefile
 tools/Makefile
 gconf/Makefile
 )
-
 AC_OUTPUT
 
 echo -e "configure: *** Plug-ins that will be built : $GST_PLUGINS_YES"
