@@ -272,17 +272,16 @@ gst_divxenc_setup (GstDivxEnc *divxenc)
   input.biCompression = divxenc->csp;
 
   memset(&output, 0, sizeof(SETTINGS));
-  output.vbr_mode = 0;
+  output.vbr_mode = RCMODE_VBV_1PASS;
   output.bitrate = divxenc->bitrate;
   output.quantizer = 0;
-  output.use_bidirect = 0;
+  output.use_bidirect = 1;
   output.input_clock = 0;
   output.input_frame_period = 1000000;
   output.internal_timescale = divxenc->fps * 1000000;
   output.max_key_interval = (divxenc->max_key_interval == -1) ?
-                              (2 * divxenc->fps) :
-                              divxenc->max_key_interval;
-  output.key_frame_threshold = 0;
+                              150 : divxenc->max_key_interval;
+  output.key_frame_threshold = 50;
   output.vbv_bitrate = 0;
   output.vbv_size = 0;
   output.vbv_occupancy = 0;
@@ -290,16 +289,18 @@ gst_divxenc_setup (GstDivxEnc *divxenc)
   output.deinterlace = 0;
   output.quality = divxenc->quality;
   output.data_partitioning = 0;
-  output.quarter_pel = 0;
-  output.use_gmc = 0; 
+  output.quarter_pel = 1;
+  output.use_gmc = 1; 
   output.psychovisual = 0;
   output.pv_strength_frame = 0;
   output.pv_strength_MB = 0;
   output.interlace_mode = 0;
   output.enable_crop = 0;
   output.enable_resize = 0;
-  output.temporal_enable = 0;
-  output.spatial_passes = 0;
+  output.temporal_enable = 1;
+  output.spatial_passes = 3;
+  output.spatial_level = 1.0;
+  output.temporal_level = 1.0;
 
   if ((ret = encore(&handle, ENC_OPT_INIT, &input, &output))) {
     gst_element_error(GST_ELEMENT(divxenc),

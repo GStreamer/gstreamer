@@ -220,6 +220,8 @@ gst_divxdec_setup (GstDivxDec *divxdec)
 
   /* initialize the handle */
   memset(&xinit, 0, sizeof(DEC_INIT));
+  xinit.smooth_playback = 0;
+  xinit.codec_version = 500;
   if ((ret = decore(&handle, DEC_OPT_INIT, &xinit, NULL)) != 0) {
     gst_element_error(GST_ELEMENT(divxdec),
                       "Error initializing divx decoding library: %s (%d)",
