@@ -43,7 +43,6 @@
     /* essential headers */
 #include <sys/types.h>     /* for ssize_t, off_t */
 #include <sys/signal.h>    /* for sigset_t       */
-@EXTRA_INCLUDE_SYS_SELECT_H@
 
     /* essential values */
 #ifndef FALSE

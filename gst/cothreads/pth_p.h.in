@@ -27,6 +27,9 @@
 #define _PTH_P_H_
 
 /* mandatory system headers */
+
+#include <errno.h>
+/*
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -35,7 +38,6 @@
 #include <signal.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <errno.h>
 #include <ctype.h>
 #include <time.h>
 #include <sys/types.h>
@@ -43,6 +45,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
+*/
 
 /* library version */
 #define _PTH_VERS_C_AS_HEADER_
@@ -57,48 +60,6 @@
 /* autoconf defines and macros */
 #include "pth_acdef.h"
 #include "pth_acmac.h"
-
-/* optional system headers */
-#ifdef HAVE_SYS_RESOURCE_H
-#include <sys/resource.h>
-#endif
-#ifdef HAVE_NET_ERRNO_H
-#include <net/errno.h>
-#endif
-
-/* dmalloc support */
-#ifdef PTH_DMALLOC
-#include <dmalloc.h>
-#endif
-
-/* paths */
-#ifdef HAVE_PATHS_H
-#include <paths.h>
-#endif
-#ifdef _PATH_BSHELL
-#define PTH_PATH_BINSH _PATH_BSHELL
-#else
-#define PTH_PATH_BINSH "/bin/sh"
-#endif
-
-/* non-blocking flags */
-#ifdef  O_NONBLOCK
-#define O_NONBLOCKING O_NONBLOCK
-#else
-#ifdef  O_NDELAY
-#define O_NONBLOCKING O_NDELAY
-#else
-#ifdef  FNDELAY
-#define O_NONBLOCKING FNDELAY
-#else
-#error "No O_NONBLOCK, O_NDELAY or FNDELAY flag available!"
-#endif
-#endif
-#endif
-
-/* compiler happyness: avoid ``empty compilation unit'' problem */
-#define COMPILER_HAPPYNESS(name) \
-    int __##name##_unit = 0;
 
 /* generated contents */
 BEGIN_DECLARATION

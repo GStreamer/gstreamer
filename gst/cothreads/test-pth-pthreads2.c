@@ -1,34 +1,6 @@
-#define __USE_GNU /* non-posix functions */
-#include <pthread.h>
-#undef __USE_GNU
 #include <stdio.h>
-#include "linuxthreads-internals.h"
+#include "linuxthreads.h"
 #include "pth_p.h"
-
-/* this function is only really necessary to get the main thread's
- * pthread_descr, as the other threads store the pthread_descr (actually the
- * first member of struct _pthread_descr_struct, which points to itself for the
- * default (non-indirected) case) at the top of the stack. */
-static _pthread_descr linuxthreads_self() 
-{
-  pthread_mutexattr_t mutexattr;
-  pthread_mutex_t mutex;
-  _pthread_descr self;
-  
-  pthread_mutexattr_init (&mutexattr);
-  pthread_mutexattr_setkind_np (&mutexattr, PTHREAD_MUTEX_ERRORCHECK_NP);
-  pthread_mutex_init (&mutex, &mutexattr);
-
-  pthread_mutex_lock (&mutex);
-  self = mutex.__m_owner;
-  pthread_mutex_unlock (&mutex);
-  
-  printf ("pthread_self: %d\n", pthread_self());
-  printf ("descr: %p\n", self);
-  printf ("*descr: %p\n", *(int*)self);
-  
-  return self;
-}
 
 pth_mctx_t main_context;
 int threadnum = 0;
@@ -49,7 +21,7 @@ void *pthread (void *unused)
   pth_mctx_t ctx;
   _pthread_descr descr;
   
-  descr = linuxthreads_self();
+  descr = __linuxthreads_self();
   printf ("sp: %p\n", sp);
   printf ("STACK_SIZE: %p\n", STACK_SIZE);
   printf ("sp | STACK_SIZE: 0x%x\n", (int) sp | STACK_SIZE );
@@ -84,7 +56,7 @@ int main (int argc, char *argv[])
   pthread_create (&tid, NULL, pthread, NULL);
   pthread_join (tid, NULL);
   
-  linuxthreads_self();
+  __linuxthreads_self();
   
   exit (0);
 }

@@ -93,156 +93,27 @@ AC_MSG_PART(Mandatory Platform Environment)
 
 dnl # check for standard headers
 AC_HEADER_STDC
+# FIXME
 AC_HAVE_HEADERS(dnl
    stdio.h stdlib.h stdarg.h string.h signal.h unistd.h setjmp.h fcntl.h dnl
-   errno.h sys/types.h sys/time.h sys/wait.h sys/socket.h sys/socketcall.h)
+   errno.h sys/types.h)
 AC_CHECK_FUNCTIONS(dnl
-   gettimeofday select sigaction sigprocmask sigpending sigsuspend)
+   sigaction sigprocmask sigpending sigsuspend)
 AC_BEGIN_DECISION([mandatory system headers and functions])
 AC_IFALLYES(dnl
    header:stdio.h header:stdlib.h header:stdarg.h header:string.h dnl
    header:signal.h header:unistd.h header:setjmp.h header:fcntl.h header:errno.h dnl
-   header:sys/types.h header:sys/time.h header:sys/wait.h header:sys/socket.h dnl
-   func:gettimeofday func:select func:sigaction func:sigprocmask dnl
+   header:sys/types.h dnl
+   func:sigaction func:sigprocmask dnl
    func:sigpending func:sigsuspend,
    AC_DECIDE(fine, [all fine]))
 AC_END_DECISION
 
 AC_MSG_PART(Optional Platform Environment)
 
-dnl #  check for the number of signals
-dnl AC_CHECK_NSIG(PTH_NSIG)
-
-dnl # check whether poll(2)'s input stuff has to be faked
-AC_CHECK_FUNCTIONS(poll)
-AC_CHECK_DEFINE(POLLIN, poll.h)
-AC_MSG_CHECKING(whether poll(2) facility has to be faked)
-AC_IFALLYES(func:poll define:POLLIN, PTH_FAKE_POLL=0, PTH_FAKE_POLL=1)
-if test .$PTH_FAKE_POLL = .1; then
-    msg="yes"
-else
-    msg="no"
-fi
-AC_SUBST(PTH_FAKE_POLL)
-AC_MSG_RESULT([$msg])
-
-dnl # check for readv/writev environment
-AC_HAVE_HEADERS(sys/uio.h)
-AC_CHECK_FUNCTIONS(readv writev)
-AC_MSG_CHECKING(whether readv(2)/writev(2) facility has to be faked)
-AC_IFALLYES(func:readv func:writev header:sys/uio.h, PTH_FAKE_RWV=0, PTH_FAKE_RWV=1)
-if test .$PTH_FAKE_RWV = .1; then
-    msg="yes"
-else
-    msg="no"
-fi
-AC_SUBST(PTH_FAKE_RWV)
-AC_MSG_RESULT([$msg])
-
-dnl # check for various other functions which would be nice to have
-AC_CHECK_FUNCTIONS(usleep strerror)
-
-dnl # check for various other headers which we might need
-AC_HAVE_HEADERS(sys/resource.h net/errno.h)
-
-dnl # check whether we've to use a non-standard #include <sys/select.h>  to get
-dnl # the definition for fd_set under AIX and other brain-dead platforms.
-AC_HAVE_HEADERS(sys/select.h)
-EXTRA_INCLUDE_SYS_SELECT_H="#include <sys/select.h>"
-if test ".$ac_cv_header_sys_select_h" != .yes; then
-    EXTRA_INCLUDE_SYS_SELECT_H="/* $EXTRA_INCLUDE_SYS_SELECT_H */"
-fi
-AC_SUBST(EXTRA_INCLUDE_SYS_SELECT_H)
-
-dnl # check whether we've to define sig_atomic_t
-AC_CHECK_TYPEDEF(sig_atomic_t, signal.h)
-FALLBACK_SIG_ATOMIC_T="typedef int sig_atomic_t;"
-if test ".$ac_cv_typedef_sig_atomic_t" = .yes; then
-    FALLBACK_SIG_ATOMIC_T="/* $FALLBACK_SIG_ATOMIC_T */"
-fi
-AC_SUBST(FALLBACK_SIG_ATOMIC_T)
-
-dnl # check whether we've to define pid_t
-AC_CHECK_TYPEDEF(pid_t, sys/types.h)
-FALLBACK_PID_T="typedef int pid_t;"
-if test ".$ac_cv_typedef_pid_t" = .yes; then
-    FALLBACK_PID_T="/* $FALLBACK_PID_T */"
-fi
-AC_SUBST(FALLBACK_PID_T)
-
-dnl # check whether we've to define size_t
-AC_CHECK_TYPEDEF(size_t, stdlib.h)
-FALLBACK_SIZE_T="typedef unsigned int size_t;"
-if test ".$ac_cv_typedef_size_t" = .yes; then
-    FALLBACK_SIZE_T="/* $FALLBACK_SIZE_T */"
-fi
-AC_SUBST(FALLBACK_SIZE_T)
-
-dnl # check whether we've to define ssize_t
-AC_CHECK_TYPEDEF(ssize_t, sys/types.h)
-FALLBACK_SSIZE_T="typedef unsigned int ssize_t;"
-if test ".$ac_cv_typedef_ssize_t" = .yes; then
-    FALLBACK_SSIZE_T="/* $FALLBACK_SSIZE_T */"
-fi
-AC_SUBST(FALLBACK_SSIZE_T)
-
-dnl # check whether we've to define off_t
-AC_CHECK_TYPEDEF(off_t, sys/types.h)
-FALLBACK_OFF_T="typedef int off_t;"
-if test ".$ac_cv_typedef_off_t" = .yes; then
-    FALLBACK_OFF_T="/* $FALLBACK_OFF_T */"
-fi
-AC_SUBST(FALLBACK_OFF_T)
-
-dnl # check whether stack_t exists instead of sigaltstack
-AC_CHECK_TYPEDEF(stack_t, signal.h)
-
 dnl # check whether ss_base instead of ss_sp attribute exists
 AC_CHECK_STRUCTATTR(ss_base, sigaltstack, sys/signal.h)
 AC_CHECK_STRUCTATTR(ss_sp,   sigaltstack, sys/signal.h)
-
-dnl # check for gettimeofday() variant
-AC_MSG_CHECKING(for a single-argument based gettimeofday)
-cross_compile=no
-AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <sys/time.h>
-#include <unistd.h>
-],[
-struct timeval tv;
-(void)gettimeofday(&tv);
-],
-msg="yes"
-,
-msg="no"
-)
-case $PLATFORM in
-    *-*-mvs* )  msg="no" ;; # on OS/390 the compiler test doesn't work
-    *-*-aix4* ) msg="no" ;; # on AIX the compiler test doesn't work
-    *-*-isc* )  msg="no" ;; # on ISC the compiler test doesn't work
-esac
-if test ".$msg" = .yes; then
-    AC_DEFINE(HAVE_GETTIMEOFDAY_ARGS1)
-fi
-AC_MSG_RESULT([$msg])
-
-dnl # check for struct timespec
-AC_MSG_CHECKING(for struct timespec)
-cross_compile=no
-AC_TRY_COMPILE([
-#include <time.h>
-#include <sys/time.h>
-],[
-struct timespec ts;
-],
-msg="yes"
-,
-msg="no"
-)
-if test ".$msg" = .yes; then
-    AC_DEFINE(HAVE_STRUCT_TIMESPEC)
-fi
-AC_MSG_RESULT([$msg])
 
 dnl ##
 dnl ##  MACHINE CONTEXT IMPLEMENTATION
@@ -406,4 +277,3 @@ Makefile
 pth.h
 pth_acmac.h
 )
-
