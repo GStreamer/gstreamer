@@ -1,5 +1,14 @@
 2004-03-05  David Schleef  <ds@schleef.org>
 
+	* gst/mpegstream/gstrfc2250enc.c: (gst_rfc2250_enc_add_slice):
+	Fix code that ignores return value of gst_buffer_merge().
+	(bug #114560)
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_descramble_segment):
+	* gst/mpegstream/gstrfc2250enc.c: (gst_rfc2250_enc_add_slice): same
+	* testsuite/gst-lint:  Check for above.
+
+2004-03-05  David Schleef  <ds@schleef.org>
+
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_get):  Check for unfixed
 	caps and throw an element error.  (bug #136334)
 
