@@ -76,6 +76,13 @@ else
 LAME_DIR=
 endif
 
+if USE_JPEG
+JPEG_DIR=jpeg
+else
+JPEG_DIR=
+endif
+
+
 if USE_MAD
 MAD_DIR=mad
 else
@@ -94,6 +101,12 @@ else
 SDL_DIR=
 endif
 
+if USE_SHOUT
+SHOUT_DIR=shout
+else
+SHOUT_DIR=
+endif
+
 if USE_VORBIS
 VORBIS_DIR=vorbis
 else
@@ -103,8 +116,8 @@ endif
 SUBDIRS=$(A52_DIR) $(AALIB_DIR) $(ALSA_DIR) $(AUDIOFILE_DIR) \
 	$(AVIFILE_DIR) $(CDPARANOIA_DIR) $(DVDREAD_DIR) $(ESD_DIR) \
         $(FESTIVAL_DIR) $(FLAC_DIR) $(GSM_DIR) $(HERMES_DIR) \
-	$(LAME_DIR) $(MAD_DIR) $(MPEG2DEC_DIR) \
-	$(SDL_DIR) $(VORBIS_DIR)
+	$(JPEG_DIR) $(LAME_DIR) $(MAD_DIR) $(MPEG2DEC_DIR) \
+	$(SDL_DIR) $(SHOUT_DIR) $(VORBIS_DIR)
 
 DIST_SUBDIRS=a52 aalib alsa avifile audiofile cdparanoia dvdread esd \
-	     festival flac gsm hermes lame mad mpeg2dec sdl vorbis
+	     festival flac gsm hermes jpeg lame mad mpeg2dec sdl shout vorbis

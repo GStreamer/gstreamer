@@ -504,11 +504,13 @@ dnl CPPFLAGS="$CPPFLAGS $GLIB_CFLAGS"
 dnl AC_CHECK_HEADER(libdv/dv.h, :, HAVE_LIBDV=no)
 dnl CPPFLAGS="$libdvcheck_save_CPPFLAGS"
 
-dnl *** libjpeg ***
+dnl *** jpeg ***
 dnl FIXME: we could use header checks here as well IMO
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBJPEG, true)
-GST_CHECK_FEATURE(LIBJPEG, [libjpeg], jpegenc jpegdec, [
-  AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_LIBJPEG="yes", HAVE_LIBJPEG="no")
+translit(dnm, m, l) AM_CONDITIONAL(USE_JPEG, true)
+GST_CHECK_FEATURE(JPEG, [jpeg], jpegenc jpegdec, [
+  AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
+  JPEG_LIBS="-ljpeg"
+  AC_SUBST(JPEG_LIBS)
 ])
 
 dnl *** mad ***
@@ -565,9 +567,10 @@ GST_CHECK_FEATURE(SDL, [SDL plugin], sdlvideosink, [
 ])
 
 dnl *** shout ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBSHOUT, true)
-GST_CHECK_FEATURE(LIBSHOUT, [shout plugin], icecastsend, [
-  GST_CHECK_LIBHEADER(LIBSHOUT, shout, shout_init_connection,, shout/shout.h, LIBSHOUT_LIBS="-lshout")
+translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT, true)
+GST_CHECK_FEATURE(SHOUT, [shout plugin], icecastsend, [
+  GST_CHECK_LIBHEADER(SHOUT, shout, shout_init_connection,, shout/shout.h, SHOUT_LIBS="-lshout")
+  AC_SUBST(SHOUT_LIBS)
 ])
 
 dnl for sidplay
@@ -861,14 +864,6 @@ if test "x$HAVE_LIBMIKMOD" = xyes; then
   AC_DEFINE(HAVE_LIBMIKMOD)
 fi
 
-if test "x$HAVE_LIBJPEG" = xyes; then
-  AC_DEFINE(HAVE_LIBJPEG)
-fi
-
-if test "x$HAVE_LIBHERMES" = "xyes"; then
-  AC_DEFINE(HAVE_LIBHERMES)
-fi
-
 if test "x$HAVE_A52DEC" = xyes; then
   AC_DEFINE(HAVE_A52DEC)
 fi
@@ -896,9 +891,7 @@ AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
 AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
 
 AM_CONDITIONAL(HAVE_LIBMIKMOD,      test "x$HAVE_LIBMIKMOD" = "xyes")
-AM_CONDITIONAL(HAVE_LIBJPEG,        test "x$HAVE_LIBJPEG" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSDL,         test "x$HAVE_LIBSDL" = "xyes")
-AM_CONDITIONAL(HAVE_LIBHERMES,      test "x$HAVE_LIBHERMES" = "xyes")
 AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGLADE_GNOME, test "x$HAVE_LIBGLADE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
@@ -913,7 +906,6 @@ AM_CONDITIONAL(HAVE_PDFTOPS,        $HAVE_PDFTOPS)
 AM_CONDITIONAL(HAVE_XSLTPROC,       $HAVE_XSLTPROC)
 AM_CONDITIONAL(HAVE_FIG2DEV_PNG,    $HAVE_FIG2DEV_PNG)
 AM_CONDITIONAL(HAVE_FIG2DEV_PDF,    $HAVE_FIG2DEV_PDF)
-AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
 AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
 AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
 AM_CONDITIONAL(HAVE_XMMS,           test "x$HAVE_XMMS" = "xyes")
@@ -1079,9 +1071,11 @@ ext/esd/Makefile
 ext/flac/Makefile
 ext/gsm/Makefile
 ext/hermes/Makefile
+ext/jpeg/Makefile
 ext/lame/Makefile
 ext/mad/Makefile
 ext/mpeg2dec/Makefile
+ext/shout/Makefile
 ext/sdl/Makefile
 ext/vorbis/Makefile
 gst-libs/Makefile
