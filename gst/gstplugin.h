@@ -116,7 +116,7 @@ _gst_plugin_static_init__ ##init (void)			\
     copyright,						\
     package,						\
     origin,						\
-    GST_STRUCT_PAD_ING_INIT				\
+    GST_STRUCT_PADDING_INIT				\
   };							\
   _gst_plugin_register_static (&plugin_desc_);		\
 }			
