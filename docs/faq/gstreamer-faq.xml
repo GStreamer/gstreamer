@@ -28,7 +28,13 @@
     
     <revhistory>
       <revision>
-        <revnumber>0.1</revnumber>
+        <revnumber>0.1.1</revnumber>
+        <date>2003-04-24</date>
+        <revremark>Added Q&A about developing with uninstalled copy.</revremark>
+      </revision>
+
+      <revision>
+        <revnumber>0.1.0</revnumber>
         <date>2002-10-01</date>
         <revremark>Initial conversion from FAQ database.</revremark>
       </revision>

@@ -37,6 +37,62 @@ or integrate with autoconf using the pkg.m4 macro.
       </answer>
     </qandaentry>
 
+    <qandaentry>
+      <question id="developing-uninstalled-gstreamer">
+        <para>How do I develop against an uninstalled GStreamer copy ?</para>
+      </question>
+
+      <answer>
+        <para>
+It is possible to develop and compile against an uninstalled copy of
+gstreamer and gst-plugins (for example, against CVS copies).
+The easiest way to do this is to use a script like this (for bash):
+
+<programlisting>
+#!/bin/bash -i
+# set up environment to use and develop gstreamer from uninstalled
+# this is run -i so that PS1 doesn't get cleared
+                                                                                
+# extract version from $0
+# gst-cvs -> cvs
+VERSION=`echo $0 | sed s/.*gst-//g`
+echo $VERSION
+                                                                                
+# base path under which dirs are installed
+GST=~/gst/$VERSION
+if test ! -e $GST; then
+  echo "$GST does not exist !"
+  exit
+fi
+                                                                                
+# set up a bunch of paths
+PATH=$GST/gstreamer/tools:$GST/gst-plugins/tools:$PATH
+export PKG_CONFIG_PATH=$GST/gstreamer/pkgconfig:$GST/gst-plugins/pkgconfig
+export GST_PLUGIN_PATH=$GST/gstreamer:$GST/gst-plugins
+                                                                                
+# set up prompt to help us remember we're in a subshell and start bash
+PS1="[gst-$VERSION] $PS1" bash
+</programlisting>
+If you put this script in your path, and symlink it to gst-cvs (if you want
+to develop against cvs HEAD) or to gst-0.6 (if you want to develop against the
+0.6 branch), it will automatically use the uninstalled version from that
+directory.
+        </para>
+        <para>
+This requires you to have put your checkouts of gstreamer and gst-plugins
+under ~/gst/cvs (for the HEAD version).  The program is easily modifiable
+if this isn't the case.
+        </para>
+        <para>
+After running this script, you'll be in an environment where you can
+use the uninstalled tools, and where gst-register registers the uninstalled
+plugins by default.  Also, pkg-config wil detect the uninstalled copies
+before any installed copies.
+        </para>
+      </answer>
+    </qandaentry>
+
+     
      <qandaentry>
       <question id="developing-gconf">
         <para>How can I use GConf to get the system-wide defaults ?</para>
