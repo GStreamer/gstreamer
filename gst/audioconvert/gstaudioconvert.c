@@ -403,7 +403,8 @@ gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
         gst_structure_set (structure, "buffer-frames", G_TYPE_INT,
             ac_caps.buffer_frames, NULL);
       } else {
-        gst_structure_set (structure, "buffer-frames", G_TYPE_INT, 0, NULL);
+        gst_structure_set (structure, "buffer-frames", GST_TYPE_INT_RANGE, 0,
+            G_MAXINT, NULL);
       }
     }
   }
