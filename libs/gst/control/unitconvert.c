@@ -214,11 +214,11 @@ _gst_unitconv_initialize (void)
 	                     0.0, 1.0, 0.0, 0));
 
 	gst_unitconv_register_unit("frequency", FALSE, FALSE,
-	  g_param_spec_string("twelve_tone_scale", "note", "Name of the note from the western twelve tone scale",
+	  g_param_spec_string("twelve-tone-scale", "note", "Name of the note from the western twelve tone scale",
 	                     "C", 0));
 
 	gst_unitconv_register_unit("frequency", FALSE, FALSE,
-	  g_param_spec_int("midi_note", "midi note", "MIDI note value of the frequency",
+	  g_param_spec_int("midi-note", "midi note", "MIDI note value of the frequency",
 	                     1, 127, 1, 0));
 
 	/* time based units */
