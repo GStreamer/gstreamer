@@ -20,13 +20,9 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <gst/gst.h>
-
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_SEEK);
 
 #include <string.h>
-#include <mad.h>
-#include "id3tag.h"
+#include "gstmad.h"
 
 #define GST_TYPE_MAD \
   (gst_mad_get_type())
@@ -73,8 +69,7 @@ struct _GstMad {
   gboolean	half;
   gboolean	ignore_crc;
 
-  GstCaps	*metadata;
-  GstCaps	*streaminfo;
+  GstTagList *	tags;
 
   /* negotiated format */
   gint		rate;
@@ -294,12 +289,6 @@ gst_mad_class_init (GstMadClass *klass)
   g_object_class_install_property (gobject_class, ARG_IGNORE_CRC,
     g_param_spec_boolean ("ignore_crc", "Ignore CRC", "Ignore CRC errors",
 		          FALSE, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_METADATA,
-    g_param_spec_boxed ("metadata", "Metadata", "Metadata",
-                        GST_TYPE_CAPS, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_STREAMINFO,
-    g_param_spec_boxed ("streaminfo", "Streaminfo", "Streaminfo",
-                        GST_TYPE_CAPS, G_PARAM_READABLE));
 }
 
 static void
@@ -337,8 +326,7 @@ gst_mad_init (GstMad *mad)
   mad->segment_start = 0;
   mad->header.mode = -1;
   mad->header.emphasis = -1;
-  mad->metadata = NULL;
-  mad->streaminfo = NULL;
+  mad->tags = NULL;
 
   mad->half = FALSE;
   mad->ignore_crc = FALSE;
@@ -625,7 +613,7 @@ index_seek (GstMad *mad, GstPad *pad, GstEvent *event)
     if (gst_index_entry_assoc_map (entry, *try_formats, &value)) {
       /* lookup succeeded, create the seek */
 
-      GST_CAT_DEBUG (GST_CAT_SEEK, "index %s %" G_GINT64_FORMAT
+      GST_DEBUG ("index %s %" G_GINT64_FORMAT
 		     " -> %s %" G_GINT64_FORMAT,
 		     gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
 		     GST_EVENT_SEEK_OFFSET (event),
@@ -799,52 +787,10 @@ gst_mad_get_property (GObject *object, guint prop_id,
     case ARG_IGNORE_CRC:
       g_value_set_boolean (value, mad->ignore_crc);
       break;
-    case ARG_METADATA:
-      g_value_set_boxed (value, mad->metadata);
-      break;
-    case ARG_STREAMINFO:
-      g_value_set_boxed (value, mad->streaminfo);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static GstCaps*
-gst_mad_get_streaminfo (GstMad *mad)
-{
-  GstCaps *caps;
-  GstProps *props;
-  GstPropsEntry *entry;
-  GEnumValue *value;
-  GEnumClass *klass;
-
-  props = gst_props_empty_new ();
-
-  entry = gst_props_entry_new ("layer", GST_PROPS_INT (mad->header.layer));
-  gst_props_add_entry (props, (GstPropsEntry *) entry);
-
-  klass = g_type_class_ref (GST_TYPE_MAD_MODE);
-  value = g_enum_get_value (klass,
-		            mad->header.mode);
-  if (value)
-    entry = gst_props_entry_new ("mode", GST_PROPS_STRING (value->value_nick));
-  g_type_class_unref (klass);
-  gst_props_add_entry (props, (GstPropsEntry *) entry);
-
-  klass = g_type_class_ref (GST_TYPE_MAD_EMPHASIS);
-  value = g_enum_get_value (klass,
-		            mad->header.emphasis);
-  if (value)
-    entry = gst_props_entry_new ("emphasis", GST_PROPS_STRING (value->value_nick));
-  g_type_class_unref (klass);
-  gst_props_add_entry (props, (GstPropsEntry *) entry);
-
-  caps = gst_caps_new ("mad_streaminfo",
-		       "application/x-gst-streaminfo",
-		       props);
-  return caps;
 }
 
 static void
@@ -882,146 +828,8 @@ G_STMT_START{							\
   }
   mad->new_header = FALSE;
 
-  if (changed) {
-    gst_caps_replace_sink (&mad->streaminfo, gst_mad_get_streaminfo (mad));
-    g_object_notify (G_OBJECT (mad), "streaminfo");
-  }
 #undef CHECK_HEADER
 
-}
-
-/* gracefuly ripped from madplay */
-static GstCaps*
-id3_to_caps(struct id3_tag const *tag)
-{
-  unsigned int i;
-  struct id3_frame const *frame;
-  id3_ucs4_t const *ucs4;
-  id3_utf8_t *utf8;
-  GstProps *props;
-  GstPropsEntry *entry;
-  GstCaps *caps;
-  GList *values;
-
-  struct {
-    char const *id;
-    char const *name;
-  } const info[] = {
-    { ID3_FRAME_TITLE,   "Title"        },
-    { "TIT3",            "Subtitle"     },
-    { "TCOP",            "Copyright"    },
-    { "TPRO",            "Produced"     },
-    { "TCOM",            "Composer"     },
-    { ID3_FRAME_ARTIST,  "Artist"       },
-    { "TPE2",            "Orchestra"    },
-    { "TPE3",            "Conductor"    },
-    { "TEXT",            "Lyricist"     },
-    { ID3_FRAME_ALBUM,   "Album"        },
-    { ID3_FRAME_YEAR,    "Year"         },
-    { ID3_FRAME_TRACK,   "Track"        },
-    { "TPUB",            "Publisher"    },
-    { ID3_FRAME_GENRE,   "Genre"        },
-    { "TRSN",            "Station"      },
-    { "TENC",            "Encoder"      },
-  };
-
-  /* text information */
-  props = gst_props_empty_new ();
-
-  for (i = 0; i < sizeof(info) / sizeof(info[0]); ++i) {
-    union id3_field const *field;
-    unsigned int nstrings, namelen, j;
-    char const *name;
-
-    frame = id3_tag_findframe(tag, info[i].id, 0);
-    if (frame == 0)
-      continue;
-
-    field    = &frame->fields[1];
-    nstrings = id3_field_getnstrings(field);
-
-    name = info[i].name;
-
-    if (name) {
-      namelen = name ? strlen(name) : 0;
-
-      values = NULL;
-      for (j = 0; j < nstrings; ++j) {
-        ucs4 = id3_field_getstrings(field, j);
-        g_assert(ucs4);
-
-        if (strcmp(info[i].id, ID3_FRAME_GENRE) == 0)
-	  ucs4 = id3_genre_name(ucs4);
-
-        utf8 = id3_ucs4_utf8duplicate(ucs4);
-        if (utf8 == 0)
-	  goto fail;
-
-        entry = gst_props_entry_new (name, GST_PROPS_STRING_TYPE, utf8);
-	values = g_list_prepend (values, entry);
-        free(utf8);
-      }
-      if (values) {
-        values = g_list_reverse (values);
-
-        if (g_list_length (values) == 1) {
-          gst_props_add_entry (props, (GstPropsEntry *) values->data);
-        }
-        else {
-          entry = gst_props_entry_new(name, GST_PROPS_GLIST_TYPE, values);
-          gst_props_add_entry (props, (GstPropsEntry *) entry);
-        }
-        g_list_free (values);
-      }
-    }
-  }
-
-  values = NULL;
-  i = 0;
-  while ((frame = id3_tag_findframe(tag, ID3_FRAME_COMMENT, i++))) {
-    ucs4 = id3_field_getstring(&frame->fields[2]);
-    g_assert(ucs4);
-
-    if (*ucs4)
-      continue;
-
-    ucs4 = id3_field_getfullstring(&frame->fields[3]);
-    g_assert(ucs4);
-
-    utf8 = id3_ucs4_utf8duplicate(ucs4);
-    if (utf8 == 0)
-      goto fail;
-
-    entry = gst_props_entry_new ("Comment", GST_PROPS_STRING_TYPE, utf8);
-    values = g_list_prepend (values, entry);
-    free(utf8);
-  }
-  if (values) {
-    values = g_list_reverse (values);
-
-    if (g_list_length (values) == 1) {
-      gst_props_add_entry (props, (GstPropsEntry *) values->data);
-    }
-    else {
-      entry = gst_props_entry_new("Comment", GST_PROPS_GLIST_TYPE, values);
-      gst_props_add_entry (props, (GstPropsEntry *) entry);
-    }
-    g_list_free (values);
-  }
-
-  gst_props_debug (props);
-
-  caps = gst_caps_new ("mad_metadata",
-		       "application/x-gst-metadata",
-		       props);
-  if (0) {
-fail:
-    g_warning ("mad: could not parse ID3 tag");
-
-    return NULL;
-  }
-
-  return caps;
 }
 
 static void
@@ -1212,9 +1020,22 @@ gst_mad_chain (GstPad *pad, GstData *_data)
 
 	    tag = id3_tag_parse (data, tagsize);
 	    if (tag) {
-              gst_caps_replace_sink (&mad->metadata, id3_to_caps (tag));
+	      GstTagList *list;
+
+	      list = gst_mad_id3_to_tag_list (tag);
 	      id3_tag_delete (tag);
-	      g_object_notify (G_OBJECT (mad), "metadata");
+	      GST_DEBUG_OBJECT (mad, "found tag");
+	      gst_element_found_tags (GST_ELEMENT (mad), list);
+	      if (mad->tags) {
+		gst_tag_list_insert (mad->tags, list, GST_TAG_MERGE_PREPEND);
+	      } else {
+		mad->tags = gst_tag_list_copy (list);
+	      }
+	      if (GST_PAD_IS_USABLE (mad->srcpad)) {
+		gst_pad_push (mad->srcpad, GST_DATA (gst_event_new_tag (list)));
+	      } else {
+		gst_tag_list_free (list);
+	      }
 	    }
 	  }
 	}
@@ -1405,8 +1226,10 @@ gst_mad_change_state (GstElement *element)
       mad_frame_finish (&mad->frame);
       mad_stream_finish (&mad->stream);
       mad->restart = TRUE;
-      gst_caps_replace (&mad->metadata, NULL);
-      gst_caps_replace (&mad->streaminfo, NULL);
+      if (mad->tags) {
+	gst_tag_list_free (mad->tags);
+	mad->tags = NULL;
+      }
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -1418,8 +1241,13 @@ gst_mad_change_state (GstElement *element)
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
+  /* we need the gsttags plugin for metadata querying */
+  if (!gst_plugin_load ("gsttags"))
+    return FALSE;
+  
   /* create an elementfactory for the mad element */
-  if (!gst_element_register (plugin, "mad", GST_RANK_PRIMARY, GST_TYPE_MAD))
+  if (!gst_element_register (plugin, "mad", GST_RANK_PRIMARY, GST_TYPE_MAD) ||
+      !gst_element_register (plugin, "id3tag", GST_RANK_PRIMARY, gst_id3_tag_get_type ()))
     return FALSE;
 
   return TRUE;
@@ -1429,7 +1257,7 @@ GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "mad",
-  "mp3 decoding based on the mad library",
+  "mp3 decoding and tag editing based on the mad library",
   plugin_init,
   VERSION,
   "GPL",

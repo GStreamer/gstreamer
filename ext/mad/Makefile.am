@@ -1,8 +1,9 @@
+plugin_LTLIBRARIES = libgstmad.la 
 
-plugin_LTLIBRARIES = libgstmad.la
+libgstmad_la_SOURCES = gstmad.c gstid3tag.c
 
-libgstmad_la_SOURCES = gstmad.c
 libgstmad_la_CFLAGS = $(GST_CFLAGS)
-libgstmad_la_LIBADD = $(MAD_LIBS) 
+libgstmad_la_LIBADD = $(MAD_LIBS) $(ID3_LIBS)
 libgstmad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
+noinst_HEADERS = gstmad.h
