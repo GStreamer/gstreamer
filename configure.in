@@ -249,7 +249,14 @@ dnl check for cdparanoia
 AC_MSG_CHECKING(CDparanoia library)
 HAVE_CDPARANOIA=yes
 AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, )
+AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 AC_CHECK_LIB(cdda_interface, cdda_open, : , HAVE_CDPARANOIA=no, )
+AC_CHECK_HEADER(cdda_interface.h, :, HAVE_CDPARANOIA=no)
+
+dnl check for liblame
+AC_MSG_CHECKING(LAME library)
+AC_CHECK_LIB(mp3lame, lame_init, HAVE_LIBLAME=yes, HAVE_LIBLAME=no, )
+AC_CHECK_HEADER(lame.h, :, HAVE_LIBLAME=no)
 
 dnl check for gtkdoc
 AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, true, false)
@@ -389,6 +396,7 @@ AM_CONDITIONAL(HAVE_DB2HTML,        $HAVE_DB2HTML)
 AM_CONDITIONAL(HAVE_DB2PDF,         $HAVE_DB2PDF)
 AM_CONDITIONAL(HAVE_DB2PS,          $HAVE_DB2PS)
 AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
+AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 
 
 dnl FIXME: having to AC_SUBST these is messy.  Not sure if CPPFLAGS and LDFLAGS
