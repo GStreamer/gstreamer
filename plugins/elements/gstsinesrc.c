@@ -83,11 +83,9 @@ static void 			gst_sinesrc_get_property	(GObject *object, guint prop_id,
 //static void gst_sinesrc_close_audio(GstSineSrc *src);
 //static gboolean gst_sinesrc_open_audio(GstSineSrc *src);
 
-static void gst_sinesrc_update_volume(GValue *value, gpointer data);
 static void gst_sinesrc_update_freq(GValue *value, gpointer data);
 static void 			gst_sinesrc_populate_sinetable	(GstSineSrc *src);
 static inline void 		gst_sinesrc_update_table_inc	(GstSineSrc *src);
-static inline void 		gst_sinesrc_update_vol_scale	(GstSineSrc *src);
 static void 			gst_sinesrc_force_caps		(GstSineSrc *src);
 
 static GstBuffer* 		gst_sinesrc_get			(GstPad *pad);
@@ -174,6 +172,7 @@ gst_sinesrc_init (GstSineSrc *src)
   src->seq = 0;
 
   dpman = gst_dpman_new ("sinesrc_dpman", GST_ELEMENT(src));
+  
   gst_dpman_add_required_dparam_callback (dpman, "freq", G_TYPE_FLOAT, gst_sinesrc_update_freq, src);
   spec = gst_dpman_get_dparam_spec (dpman, "freq");
   g_value_set_float(spec->min_val, 10.0);
@@ -181,22 +180,20 @@ gst_sinesrc_init (GstSineSrc *src)
   g_value_set_float(spec->default_val, 350.0);
   spec->unit_name = "frequency";
   spec->is_log = TRUE;
- 
-  gst_dpman_add_required_dparam_callback (dpman, "volume", G_TYPE_FLOAT, gst_sinesrc_update_volume, src);
+
+  gst_dpman_add_required_dparam_direct (dpman, "volume", G_TYPE_FLOAT, &(src->volume));
   spec = gst_dpman_get_dparam_spec (dpman, "volume");
   g_value_set_float(spec->min_val, 0.0);
-  g_value_set_float(spec->max_val, 2.0);
+  g_value_set_float(spec->max_val, 1.0);
   g_value_set_float(spec->default_val, 0.8);
   spec->unit_name = "scalar";
-
+  
   src->volume = 0.0;
   
   gst_dpman_set_rate_change_pad(dpman, src->srcpad);
   
   GST_ELEMENT_DPARAM_MANAGER(element) = dpman;
   
-  gst_sinesrc_update_vol_scale(src);
-
   gst_sinesrc_populate_sinetable(src);
   gst_sinesrc_update_table_inc(src);
 
@@ -241,7 +238,6 @@ gst_sinesrc_get(GstPad *pad)
   frame_countdown = GST_DPMAN_PREPROCESS(dpman, src->buffer_size, src->timestamp);
   
   src->timestamp += (gint64)src->buffer_size * 1000000000LL / (gint64)src->samplerate;
-//  GST_DEBUG(GST_CAT_PARAMS, "vol_scale = %f\n", src->vol_scale);
   
   while(GST_DPMAN_PROCESS_COUNTDOWN(dpman, frame_countdown, i)) {
 
@@ -262,7 +258,7 @@ gst_sinesrc_get(GstPad *pad)
 
     //no interpolation
     //samples[i] = src->table_data[src->table_lookup]
-    //               * src->vol_scale;
+    //               * src->volume * 32767.0;
 
     //linear interpolation
     samples[i++] = ((src->table_interp
@@ -270,7 +266,7 @@ gst_sinesrc_get(GstPad *pad)
                     -src->table_data[src->table_lookup]
                     )
                   )+src->table_data[src->table_lookup]
-                 )* src->vol_scale;
+                 )* src->volume * 32767.0;
   }
 
   if (src->newcaps) {
@@ -378,18 +374,6 @@ gst_sinesrc_populate_sinetable (GstSineSrc *src)
 }
 
 static void
-gst_sinesrc_update_volume(GValue *value, gpointer data)
-{
-  GstSineSrc *src = (GstSineSrc*)data;
-  g_return_if_fail(GST_IS_SINESRC(src));
-
-  src->volume = g_value_get_float(value);
-  src->vol_scale = 32767.0 * src->volume;
-  //GST_DEBUG(GST_CAT_PARAMS, "volume %f\n", src->volume);
-
-}
-
-static void
 gst_sinesrc_update_freq(GValue *value, gpointer data)
 {
   GstSineSrc *src = (GstSineSrc*)data;
@@ -405,12 +389,6 @@ static inline void
 gst_sinesrc_update_table_inc (GstSineSrc *src)
 {
   src->table_inc = src->table_size * src->freq / src->samplerate;
-}
-
-static inline void 
-gst_sinesrc_update_vol_scale (GstSineSrc *src)
-{
-  src->vol_scale = 32767.0 * src->volume;
 }
 
 static void 

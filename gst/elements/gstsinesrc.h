@@ -59,7 +59,6 @@ struct _GstSineSrc {
   /* parameters */
   gfloat volume;
   gfloat freq;
-  gfloat vol_scale;
   
   /* lookup table data */
   gfloat *table_data;
