@@ -1001,6 +1001,8 @@ dnl wtay fix this: testsuite/threads/Makefile
 dnl testsuite/refcounting/Makefile
 dnl stamp.h
 dnl echo "$infomessages", infomessages="$infomessages"
+dnl ext/arts/Makefile
+dnl ext/artsd/Makefile
 AC_OUTPUT(
 Makefile
 gst/Makefile
@@ -1055,8 +1057,6 @@ ext/Makefile
 ext/a52/Makefile
 ext/aalib/Makefile
 ext/alsa/Makefile
-ext/arts/Makefile
-ext/artsd/Makefile
 ext/audiofile/Makefile
 ext/avifile/Makefile
 ext/cdparanoia/Makefile
