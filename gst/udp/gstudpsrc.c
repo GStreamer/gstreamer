@@ -347,6 +347,7 @@ static gboolean
 gst_udpsrc_init_receive (GstUDPSrc *src)
 {
   guint bc_val;
+  gint reuse=1;
   bzero (&src->myaddr, sizeof (src->myaddr));
   src->myaddr.sin_family = AF_INET;           /* host byte order */
   src->myaddr.sin_port = htons (src->port);   /* short, network byte order */
@@ -355,6 +356,11 @@ gst_udpsrc_init_receive (GstUDPSrc *src)
   if ((src->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1) {
     perror("socket");
     return FALSE;
+  }
+  
+  if (setsockopt(src->sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1) {
+   perror("setsockopt");
+   return FALSE;
   }
 
   if (bind (src->sock, (struct sockaddr *) &src->myaddr, sizeof (src->myaddr)) == -1)  {
