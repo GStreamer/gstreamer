@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-02 13:00+0200\n"
+"POT-Creation-Date: 2004-08-27 14:17+0200\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -67,8 +67,14 @@ msgstr "Input audio i gabuar ose mungon, stream AVI mund të jetë i dëmtuar."
 
 #: gst-libs/gst/play/play.c:110
 #, c-format
-msgid "The %s element could not be found. This element is essential for playback. Please install the right plug-in and verify that it works by running 'gst-inspect %s'"
-msgstr "E pamundur gjetja e elementit %s. Ky element është thelbësor për playback. Ju lutem instaloni plug-in e duhur dhe kontrollo funksionimin duke ekzekutuar 'gst-inspect %s'"
+msgid ""
+"The %s element could not be found. This element is essential for playback. "
+"Please install the right plug-in and verify that it works by running 'gst-"
+"inspect %s'"
+msgstr ""
+"E pamundur gjetja e elementit %s. Ky element është thelbësor për playback. "
+"Ju lutem instaloni plug-in e duhur dhe kontrollo funksionimin duke "
+"ekzekutuar 'gst-inspect %s'"
 
 #: gst-libs/gst/play/play.c:139
 msgid ""
@@ -133,7 +139,7 @@ msgstr "Dispozitivi OSS \"%s\" është duke u përdorur nga një tjetër program
 msgid "Could not access device \"%s\", check its permissions."
 msgstr "E pamundur futja në dispozitivin \"%s\", kontrollo të drejtat e tij."
 
-#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:167
+#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:168
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Dispozitivi \"%s\" nuk ekziston."
@@ -252,11 +258,11 @@ msgstr "Radio"
 msgid "Monitor"
 msgstr "Ekrani"
 
-#: sys/v4l/v4l_calls.c:158
+#: sys/v4l/v4l_calls.c:159
 msgid "No device specified."
 msgstr "Nuk është përcaktuar asnjë dispozitiv."
 
-#: sys/v4l/v4l_calls.c:171 sys/v4l2/v4l2_calls.c:397
+#: sys/v4l/v4l_calls.c:172 sys/v4l2/v4l2_calls.c:397
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim dhe shkrim."

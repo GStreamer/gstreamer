@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-02 13:00+0200\n"
+"POT-Creation-Date: 2004-08-27 14:17+0200\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -136,7 +136,7 @@ msgstr "OSS-toestel \"%s\" is reeds in gebruik deur 'n ander program."
 msgid "Could not access device \"%s\", check its permissions."
 msgstr "Kon nie toegang kry tot toestel \"%s\" nie, kyk na toegangsregte."
 
-#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:167
+#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:168
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Toestel \"%s\" bestaan nie."
@@ -255,11 +255,11 @@ msgstr "Radio"
 msgid "Monitor"
 msgstr "Monitor"
 
-#: sys/v4l/v4l_calls.c:158
+#: sys/v4l/v4l_calls.c:159
 msgid "No device specified."
 msgstr "Geen toestel gespesifiseer"
 
-#: sys/v4l/v4l_calls.c:171 sys/v4l2/v4l2_calls.c:397
+#: sys/v4l/v4l_calls.c:172 sys/v4l2/v4l2_calls.c:397
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kon nie toestel \"%s\" oopmaak vir lees en skryf nie."
