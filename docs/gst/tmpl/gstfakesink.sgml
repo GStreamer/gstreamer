@@ -21,6 +21,14 @@ with the buffer. (fakesink)
 
 </para>
 
+@element: 
+@silent: 
+@dump: 
+@sync: 
+@signal_handoffs: 
+@clock: 
+@state_error: 
+@last_message: 
 
 <!-- ##### ENUM GstFakeSinkStateError ##### -->
 <para>

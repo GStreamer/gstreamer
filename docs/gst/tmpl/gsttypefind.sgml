@@ -21,4 +21,15 @@ GstTypeFindElement
 
 </para>
 
+@element: 
+@sink: 
+@src: 
+@min_probability: 
+@max_probability: 
+@caps: 
+@mode: 
+@store: 
+@stream_length: 
+@stream_length_available: 
+@possibilities: 
 

@@ -19,6 +19,11 @@ GstSpiderIdentity
 
 </para>
 
+@element: 
+@sink: 
+@src: 
+@plugged: 
+@caps: 
 
 <!-- ##### FUNCTION gst_spider_identity_new_sink ##### -->
 <para>

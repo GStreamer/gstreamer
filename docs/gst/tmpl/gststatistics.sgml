@@ -20,6 +20,18 @@ the data stream, such as buffers/bytes/events etc.
 
 </para>
 
+@element: 
+@sinkpad: 
+@srcpad: 
+@timer: 
+@last_timer: 
+@stats: 
+@last_stats: 
+@update_count: 
+@update_freq: 
+@update_on_eos: 
+@update: 
+@silent: 
 
 <!-- ##### STRUCT stats ##### -->
 <para>

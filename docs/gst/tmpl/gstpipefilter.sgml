@@ -20,6 +20,17 @@ buffers from its output.
 
 </para>
 
+@element: 
+@sinkpad: 
+@srcpad: 
+@command: 
+@orig_command: 
+@fdout: 
+@fdin: 
+@childpid: 
+@curoffset: 
+@bytes_per_read: 
+@seq: 
 
 <!-- ##### ENUM GstPipeFilterFlags ##### -->
 <para>

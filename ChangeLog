@@ -1,5 +1,27 @@
 2004-04-13  David Schleef  <ds@schleef.org>
 
+	* docs/gst/tmpl/gstaggregator.sgml: Random checkin because gtk-doc
+	seems to think it needs to be done.
+	* docs/gst/tmpl/gstfakesink.sgml:
+	* docs/gst/tmpl/gstfakesrc.sgml:
+	* docs/gst/tmpl/gstfdsink.sgml:
+	* docs/gst/tmpl/gstfdsrc.sgml:
+	* docs/gst/tmpl/gstfilesink.sgml:
+	* docs/gst/tmpl/gstfilesrc.sgml:
+	* docs/gst/tmpl/gstidentity.sgml:
+	* docs/gst/tmpl/gstmd5sink.sgml:
+	* docs/gst/tmpl/gstmultifilesrc.sgml:
+	* docs/gst/tmpl/gstpipefilter.sgml:
+	* docs/gst/tmpl/gstshaper.sgml:
+	* docs/gst/tmpl/gstspider.sgml:
+	* docs/gst/tmpl/gstspideridentity.sgml:
+	* docs/gst/tmpl/gststatistics.sgml:
+	* docs/gst/tmpl/gsttee.sgml:
+	* docs/gst/tmpl/gsttypefind.sgml:
+	* docs/gst/tmpl/gstutils.sgml:
+
+2004-04-13  David Schleef  <ds@schleef.org>
+
 	* configure.ac: Changes to remove POSIXisms (mmap in this case)
 	and to build DLLs on Windows.
 	* gst/Makefile.am:

@@ -20,6 +20,21 @@ and subbuffers.
 
 </para>
 
+@element: 
+@srcpad: 
+@pagesize: 
+@filename: 
+@uri: 
+@fd: 
+@filelen: 
+@curoffset: 
+@block_size: 
+@touch: 
+@using_mmap: 
+@mapbuf: 
+@mapsize: 
+@seek_happened: 
+@need_flush: 
 
 <!-- ##### ENUM GstFileSrcFlags ##### -->
 <para>

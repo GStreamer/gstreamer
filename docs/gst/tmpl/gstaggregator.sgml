@@ -29,4 +29,11 @@ methods to request buffers from its pads.
 
 </para>
 
+@element: 
+@srcpad: 
+@silent: 
+@sched: 
+@numsinkpads: 
+@sinkpads: 
+@last_message: 
 

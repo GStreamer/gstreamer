@@ -19,6 +19,32 @@ The <classname>GstFakeSrc</classname> generates empty buffers. (fakesrc)
 
 </para>
 
+@element: 
+@loop_based: 
+@eos: 
+@output: 
+@data: 
+@sizetype: 
+@filltype: 
+@sizemin: 
+@sizemax: 
+@parent: 
+@parentsize: 
+@parentoffset: 
+@pattern_byte: 
+@pattern: 
+@patternlist: 
+@segment_start: 
+@segment_end: 
+@segment_loop: 
+@num_buffers: 
+@rt_num_buffers: 
+@buffer_count: 
+@silent: 
+@signal_handoffs: 
+@dump: 
+@need_flush: 
+@last_message: 
 
 <!-- ##### ENUM GstFakeSrcOutputType ##### -->
 <para>

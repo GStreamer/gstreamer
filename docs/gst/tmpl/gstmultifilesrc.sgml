@@ -19,6 +19,14 @@ GstMultiFileSrc
 
 </para>
 
+@element: 
+@srcpad: 
+@currentfilename: 
+@listptr: 
+@fd: 
+@size: 
+@map: 
+@new_seek: 
 
 <!-- ##### ENUM GstMultiFileSrcFlags ##### -->
 <para>

@@ -19,6 +19,10 @@ GstSpider
 
 </para>
 
+@parent: 
+@sink_ident: 
+@factories: 
+@links: 
 
 <!-- ##### TYPEDEF GstSpiderConnection ##### -->
 <para>

@@ -19,4 +19,16 @@ Pass data without modification.
 
 </para>
 
+@element: 
+@sinkpad: 
+@srcpad: 
+@loop_based: 
+@duplicate: 
+@error_after: 
+@drop_probability: 
+@sleep_time: 
+@silent: 
+@dump: 
+@last_message: 
+@srccaps: 
 
