@@ -60,10 +60,12 @@ static gchar *_gst_info_category_strings[] = {
   "PIPELINE",
   "PLUGIN_LOADING",
   "PLUGIN_ERRORS",
+  "PLUGIN_INFO",
   "PROPERTIES",
   "THREAD",
   "TYPES",
   "XML",
+  "NEGOTIATION",
 };
 
 /**
