@@ -47,7 +47,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <errno.h>
-#include <linux/cdrom.h>
+//#include <linux/cdrom.h>
 #include <assert.h>
 
 #include <dvdreadsrc.h>
