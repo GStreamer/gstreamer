@@ -120,6 +120,7 @@ GStreamer support libraries header files.
 %{_includedir}/gst-plugins-%{version}/gst/audio/audio.h
 %{_includedir}/gst-plugins-%{version}/gst/floatcast/floatcast.h
 %{_includedir}/gst-plugins-%{version}/gst/gconf/gconf.h
+%{_includedir}/gst-plugins-%{version}/gst/play/play.h
 %{_includedir}/gst-plugins-%{version}/gst/idct/idct.h
 %{_includedir}/gst-plugins-%{version}/gst/resample/resample.h
 %{_includedir}/gst-plugins-%{version}/gst/riff/riff.h
