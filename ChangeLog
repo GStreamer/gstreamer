@@ -339,6 +339,23 @@
 	* gst/gstelement.c: (gst_element_get_compatible_pad_filtered):
 	Make the 'Could not find compatible pad' message more informative.
 
+2004-01-07  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+                                                                                
+        * gst/elements/gstfilesink.c: (gst_filesink_set_location):
+          Fix for if we pass NULL as property to location.
+        * gst/elements/gstpipefilter.c: (gst_pipefilter_init),
+        (gst_pipefilter_handle_event), (gst_pipefilter_chain):
+          Fix for instantiate-test (see below).
+        * gst/gststructure.c: (_gst_structure_parse_value):
+          Fix compile error on gcc-2.96.
+        * configure.ac:
+        * tests/Makefile.am:
+        * tests/instantiate/Makefile.am:
+        * tests/instantiate/create.c: (create_all_elements), (main):
+          Add a test that instantiates all elements. This makes it easy to
+          track dead code for old API/design (like setting event functions
+          on sink pads and so on).
+
 2004-01-06  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstcaps.c: (gst_caps_append_structure):
