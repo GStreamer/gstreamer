@@ -64,6 +64,7 @@ struct _GstNassink {
 
   AuServer *audio;
   AuFlowID flow;
+  AuDeviceID device;
 
   /* buffer */
 

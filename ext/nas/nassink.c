@@ -56,13 +56,13 @@ GST_STATIC_PAD_TEMPLATE (
       "signed = (boolean) TRUE, "
       "width = (int) 16, "
       "depth = (int) 16, "
-      "rate = (int) [ 8000, 96000 ], "
+      "rate = (int) [ 1000, 96000 ], "
       "channels = (int) [ 1, 2 ]; "
     "audio/x-raw-int, "
       "signed = (boolean) FALSE, "
       "width = (int) 8, "
       "depth = (int) 8, "
-      "rate = (int) [ 8000, 96000 ], "
+      "rate = (int) [ 1000, 96000 ], "
       "channels = (int) [ 1, 2 ]"
   )
 );
@@ -74,6 +74,7 @@ static void			gst_nassink_init		(GstNassink *nassink);
 static gboolean			gst_nassink_open_audio		(GstNassink *sink);
 static void			gst_nassink_close_audio		(GstNassink *sink);
 static GstElementStateReturn	gst_nassink_change_state	(GstElement *element);
+static GstCaps*                 gst_nassink_getcaps             (GstPad *pad);
 static gboolean			gst_nassink_sync_parms		(GstNassink *nassink);
 static GstPadLinkReturn		gst_nassink_sinkconnect		(GstPad *pad, const GstCaps *caps);
 
@@ -168,6 +169,7 @@ gst_nassink_init(GstNassink *nassink)
   gst_element_add_pad(GST_ELEMENT(nassink), nassink->sinkpad);
   gst_pad_set_chain_function(nassink->sinkpad, GST_DEBUG_FUNCPTR(gst_nassink_chain));
   gst_pad_set_link_function(nassink->sinkpad, gst_nassink_sinkconnect);
+  gst_pad_set_getcaps_function(nassink->sinkpad, gst_nassink_getcaps);
 
   nassink->mute = FALSE;
   nassink->depth = 16;
@@ -182,6 +184,31 @@ gst_nassink_init(GstNassink *nassink)
   nassink->size = 0;
   nassink->pos = 0;
   nassink->buf = NULL;
+}
+
+static GstCaps*
+gst_nassink_getcaps (GstPad *pad)
+{
+  GstNassink *nassink = GST_NASSINK(gst_pad_get_parent(pad));
+  GstCaps *templatecaps = gst_caps_copy(gst_pad_get_pad_template_caps(pad));
+  GstCaps *caps;
+  int i;
+  AuServer *server;
+
+  server = AuOpenServer(nassink->host, 0, NULL, 0, NULL, NULL);
+  if (!server)
+    return templatecaps;
+  
+  for (i = 0; i < gst_caps_get_size (templatecaps); i++) {
+    GstStructure *structure = gst_caps_get_structure (templatecaps, i);
+
+    gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE, AuServerMinSampleRate(server), AuServerMaxSampleRate(server), NULL);
+  }
+  caps = gst_caps_intersect(templatecaps, gst_pad_get_pad_template_caps(pad));
+  gst_caps_free(templatecaps);
+
+  return caps;
+  
 }
 
 static gboolean
@@ -373,6 +400,11 @@ gst_nassink_open_audio (GstNassink *sink)
   sink->audio = AuOpenServer(sink->host, 0, NULL, 0, NULL, NULL);
   if (sink->audio == NULL)
     return FALSE;
+  sink->device = NAS_getDevice(sink->audio, sink->tracks);
+  if (sink->device == AuNone) {
+    GST_CAT_DEBUG(NAS,"no device with %i tracks found", sink->tracks);
+    return FALSE;
+  }
 
   sink->flow = AuNone;
   sink->size = 0;
@@ -583,21 +615,34 @@ NAS_allocBuffer(GstNassink *sink)
 static int
 NAS_createFlow(GstNassink *sink, unsigned char format, unsigned short rate, int numTracks)
 {
-  AuDeviceID device;
   AuElement elements[2];
   AuUint32 buf_samples;
-
-  GST_CAT_DEBUG(NAS,"getting device");
-  device = NAS_getDevice(sink->audio, numTracks);
-  if (device == AuNone) {
-    GST_CAT_DEBUG(NAS,"no device found");
-    return -1;
-  }
 
   sink->flow = AuGetScratchFlow(sink->audio, NULL);
   if (sink->flow == 0) {
     GST_CAT_DEBUG(NAS,"couldn't get flow");
     return -1;
+  }
+
+  /* free old Elements and reconnet to server, needed to change samplerate */
+  {
+    AuBool clocked;
+    int num_elements;
+    AuStatus status;
+    AuElement *oldelems;
+    oldelems = AuGetElements(sink->audio, sink->flow, &clocked, &num_elements, &status);
+    if (num_elements > 0) {
+      GST_CAT_DEBUG(NAS,"GetElements status: %i", status);
+      if (oldelems)
+        AuFreeElements(sink->audio, num_elements, oldelems);
+      gst_nassink_close_audio(sink);
+      gst_nassink_open_audio(sink);
+      sink->flow = AuGetScratchFlow(sink->audio, NULL);
+      if (sink->flow == 0) {
+        GST_CAT_DEBUG(NAS,"couldn't get flow");
+        return -1;
+      }
+    }
   }
 
   /* free old Elements and reconnet to server, needed to change samplerate */
@@ -638,7 +683,7 @@ NAS_createFlow(GstNassink *sink, unsigned char format, unsigned short rate, int 
 
   AuMakeElementExportDevice( &elements[1],		/* element */
                              0,				/* input */
-                             device,			/* device */
+                             sink->device,		/* device */
                              rate,			/* rate */
                              AuUnlimitedSamples,	/* num samples */
                              0,				/* num actions */

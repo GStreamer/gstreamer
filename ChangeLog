@@ -6,6 +6,12 @@
 
 2004-03-08  Christian Schaller <Uraeus@gnome.org>
 
+	* ext/nas/nassink.c and /ext/nas/nassink.h:
+	More NAS love from Arwed von Merkatz
+	So lets all sing 'Can you feel the NAS tonight'	
+
+2004-03-08  Christian Schaller <Uraeus@gnome.org>
+
 	* tools/gst-launch-ext.in: 
 	Replace vorbisfile with oggdemux/vorbisdec/audioconvert
 
