@@ -383,6 +383,7 @@ gst_bin_details
 <TITLE>GstParse</TITLE>
 GstParseErrors
 gst_parse_launch
+gst_parse_launchv
 </SECTION>
 
 <SECTION>
@@ -541,6 +542,7 @@ gst_element_remove_ghost_pad
 gst_element_request_compatible_pad
 gst_element_request_pad_by_name
 gst_element_connect
+gst_element_connect_filtered
 gst_element_disconnect
 gst_element_set_state
 gst_element_get_state
@@ -550,7 +552,6 @@ gst_element_info
 gst_element_error
 gst_element_get_factory
 gst_element_set_eos
-gst_element_restore_thyself
 gst_element_install_std_props
 gst_element_send_event
 gst_element_interrupt
@@ -705,25 +706,27 @@ GST_PAD_REALIZE
 GST_PAD_DIRECTION
 GST_PAD_CAPS
 GST_PAD_PEER
-GST_PAD_CONNECTED
 GST_PAD_CAN_PULL
+GST_PAD_IS_SINK
+GST_PAD_IS_SRC
+GST_PAD_IS_CONNECTED
 
 GstPad
 GstPadChainFunction
 GstPadGetFunction
 GstPadGetRegionFunction
-GstPadNewCapsFunction
 GstPadBufferPoolFunction
-
-GstPadNegotiateReturn
-GstPadNegotiateFunction
+GstPadGetCapsFunction
 
 GstRegionType
 GstPadPullRegionFunction
 GstPadEventFunction
+GstPadConnectFunction
+GstPadConnectReturn
 
 GstPadDirection
 GstPadFlags
+
 gst_pad_new
 gst_pad_destroy
 gst_pad_new_from_template
@@ -731,10 +734,10 @@ gst_pad_get_direction
 gst_pad_set_chain_function
 gst_pad_set_get_function
 gst_pad_set_getregion_function
-gst_pad_set_negotiate_function
-gst_pad_set_newcaps_function
 gst_pad_set_bufferpool_function
-gst_pad_set_caps
+gst_pad_set_connect_function
+gst_pad_set_getcaps_function
+gst_pad_try_set_caps
 gst_pad_get_caps
 gst_pad_check_compatibility
 gst_pad_set_name
@@ -751,17 +754,20 @@ gst_pad_remove_ghost_pad
 gst_pad_get_ghost_pad_list
 gst_pad_get_peer
 gst_pad_connect
-gst_pad_try_connect
+gst_pad_connect_filtered
+gst_pad_reconnect_filtered
+gst_pad_try_reconnect_filtered
 gst_pad_disconnect
 gst_pad_push
 gst_pad_pull
 gst_pad_pullregion
 gst_pad_get_bufferpool
 gst_pad_load_and_connect
-gst_pad_negotiate_proxy
-gst_pad_renegotiate
+gst_pad_proxy_connect
 gst_pad_get_padtemplate
 gst_pad_get_padtemplate_caps
+gst_pad_get_allowed_caps
+gst_pad_recalc_allowed_caps
 gst_pad_ghost_save_thyself
 gst_pad_peek
 gst_pad_select
@@ -769,7 +775,6 @@ gst_pad_selectv
 gst_pad_send_event
 gst_pad_event_default
 gst_pad_set_event_function
-
 
 
 GstRealPad
@@ -782,17 +787,18 @@ GST_RPAD_CAPS
 GST_RPAD_PEER
 GST_RPAD_BUFPEN
 GST_RPAD_CHAINFUNC
+GST_RPAD_FILTER
+GST_RPAD_APPFILTER
 GST_RPAD_GETFUNC
 GST_RPAD_GETREGIONFUNC
 GST_RPAD_PULLREGIONFUNC
-GST_RPAD_NEGOTIATEFUNC
-GST_RPAD_NEWCAPSFUNC
 GST_RPAD_BUFFERPOOLFUNC
 GST_RPAD_CHAINHANDLER
 GST_RPAD_EVENTFUNC
 GST_RPAD_EVENTHANDLER
 GST_RPAD_GETHANDLER
-
+GST_RPAD_CONNECTFUNC
+GST_RPAD_GETCAPSFUNC
 
 GST_GPAD_REALPAD
 GstGhostPad
@@ -845,6 +851,8 @@ GST_PADTEMPLATE_PRESENCE
 GST_PADTEMPLATE_NEW
 GST_PADTEMPLATE_FACTORY
 GST_PADTEMPLATE_GET
+GST_PADTEMPLATE_FIXED
+GST_PADTEMPLATE_IS_FIXED
 gst_padtemplate_new
 gst_padtemplate_load_thyself
 gst_padtemplate_save_thyself
@@ -1015,8 +1023,11 @@ GST_CAPS_UNLOCK
 GST_CAPS_NEW
 GST_CAPS_FACTORY
 GST_CAPS_GET
+GST_CAPS_IS_CHAINED
+GST_CAPS_IS_FIXED
 GstCaps
 gst_caps_new
+gst_caps_new_id
 gst_caps_destroy
 gst_caps_ref
 gst_caps_unref
@@ -1034,8 +1045,11 @@ gst_caps_get_mime
 gst_caps_set_props
 gst_caps_get_props
 gst_caps_check_compatibility
+gst_caps_has_property
+gst_caps_normalize
 
 gst_caps_set
+gst_caps_intersect
 gst_caps_get_boolean
 gst_caps_get_by_name
 gst_caps_get_fourcc_int
@@ -1046,6 +1060,7 @@ gst_caps_get_float
 
 gst_caps_save_thyself
 gst_caps_load_thyself
+gst_caps_debug
 <SUBSECTION Standard>
 GST_CAPS
 </SECTION>
@@ -1058,12 +1073,16 @@ GST_MAKE_FOURCC
 GST_STR_FOURCC
 GST_PROPS_LIST
 GST_PROPS_INT
+GST_PROPS_INT_ANY
 GST_PROPS_INT_RANGE
+GST_PROPS_INT_NEGATIVE
 GST_PROPS_FOURCC
 GST_PROPS_BOOLEAN
 GST_PROPS_STRING
 GST_PROPS_FLOAT
 GST_PROPS_FLOAT_RANGE
+GST_PROPS_INT_POSITIVE
+GST_PROPS_ENTRY_IS_VARIABLE
 gst_props_new
 gst_props_newv
 gst_props_merge
@@ -1073,12 +1092,16 @@ gst_props_destroy
 gst_props_ref
 gst_props_unref
 gst_props_check_compatibility
+gst_props_has_property
+gst_props_normalize
 gst_props_set
 gst_props_get_boolean
 gst_props_get_fourcc_int
 gst_props_get_int
 gst_props_get_string
 gst_props_get_float
+gst_props_intersect
+gst_props_debug
 gst_props_save_thyself
 gst_props_load_thyself
 <SUBSECTION Standard>
@@ -1114,6 +1137,7 @@ gst_xml_parse_doc
 gst_xml_parse_memory
 gst_xml_parse_file
 gst_xml_write
+gst_xml_write_file
 gst_xml_get_element
 gst_xml_get_topelements
 <SUBSECTION Standard>

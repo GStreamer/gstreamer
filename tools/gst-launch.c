@@ -80,6 +80,34 @@ event_func (GstElement *element, GstEvent *event)
   }
 }
 
+static GstElement*
+xmllaunch_parse_cmdline (gint argc, const gchar **argv) 
+{
+  GstElement *pipeline = NULL;
+  GstXML *xml;
+  gboolean err;
+  GList *l;
+  
+  if (argc < 2) {
+    g_print ("usage: %s <file.xml> [ element.property=value ... ]\n", argv[0]);
+    exit (1);
+  }
+  
+  xml = gst_xml_new ();
+  err = gst_xml_parse_file(xml, argv[1], NULL);
+  
+  if (err != TRUE) {
+    fprintf (stderr, "ERROR: parse of xml file '%s' failed\n", argv[1]);
+    exit (1);
+  }
+  
+  l = gst_xml_get_topelements (xml);
+  if (!l)
+    return NULL;
+  else
+    return l->data;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -107,13 +135,12 @@ main(int argc, char *argv[])
   launch_argc = argc;
   launch_argv = argv;
 
-  /* make a null-terminated version of argv */
-  argvn = g_new0 (char *,argc);
-  memcpy (argvn, argv+1, sizeof (char*) * (argc-1));
-
   if (strstr (argv[0], "gst-xmllaunch")) {
-//    pipeline = gst_xmllaunch_parse_cmdline (argc, argv);
+    pipeline = xmllaunch_parse_cmdline (argc, argv);
   } else {
+    /* make a null-terminated version of argv */
+    argvn = g_new0 (char *,argc);
+    memcpy (argvn, argv+1, sizeof (char*) * (argc-1));
     pipeline = (GstElement*) gst_parse_launchv (argvn);
   }
 

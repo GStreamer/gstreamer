@@ -90,7 +90,7 @@ else AC_DEFINE(HAVE_NASM, 1, [Define if NASM, the netwide assembler, is availabl
 fi
 
 dnl check for gtk-doc
-AC_ARG_WITH(html-dir, [  --with-html-dir=PATH path to installed docs ])
+AC_ARG_WITH(html-dir, AC_HELP_STRING([--with-html-dir=PATH], [path to installed docs]))
 
 if test "x$with_html_dir" = "x" ; then
   HTML_DIR='${datadir}/gst/html'
@@ -123,7 +123,7 @@ AC_SUBST(GTK_DOC_SCANOBJ)
 dnl check for docbook tools
 AC_CHECK_PROG(HAVE_XSLTPROC, xsltproc, true, false)
 AC_CHECK_PROG(HAVE_PDFTOPS, pdftops, true, false)
-dnl this does not yet work properly, at least on debain -- wingo
+dnl this does not yet work properly, at least on debian -- wingo
 HAVE_PDFXMLTEX=false
 
 dnl check for image conversion tool
@@ -241,6 +241,11 @@ GST_CHECK_FEATURE(GLIB2, [use of glib-2.0 and GObject], , [
   GLIB_CFLAGS=$GLIB2_CFLAGS
   AC_SUBST(GLIB_LIBS)
   AC_SUBST(GLIB_CFLAGS)
+  # if we've gotten this far, the user has specifically asked that glib2 be
+  # used. if we have no glib2, that is an error.
+  if test "x$HAVE_GLIB2" = "xno"; then
+    AC_MSG_ERROR(no glib2 found)
+  fi
 ], disabled, [
   AC_DEFINE(USE_GLIB2)
   GST_EXT_CFLAGS="$GST_EXT_CFLAGS -DUSE_GLIB2"
