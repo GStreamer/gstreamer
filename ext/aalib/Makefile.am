@@ -7,6 +7,6 @@ libgstaasink_la_SOURCES =  gstaasink.c
 libgstaasink_la_LIBADD = $(AALIB_LIBS)
 libgstaasink_la_CFLAGS =  $(GST_CFLAGS) $(AALIB_CFLAGS)
 
-noinst_HEADERS = aasink.h
+noinst_HEADERS = gstaasink.h
 
 
