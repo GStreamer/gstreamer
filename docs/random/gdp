@@ -1,0 +1,35 @@
+GStreamer data protocol
+
+Intended to wrap GstData objects in a line protocol for use with
+pipe/network elements.
+
+IDEAS
+-----
+* for transporting buffers, have a function that creates a header for
+  a given buffer to be written before the buffer.  This way, you don't lose
+  time creating a GDP buffer from the buffer
+* allow for CRC'ing of the GstBuffer, optionally
+* have a version number of the protocol
+* optimizing the header for size is not useful since the GstData structure
+  already contains more than 32 bytes anyway, making up half the header size
+
+PROTOCOL
+--------
+* 1 byte   GDP major version
+* 1 byte   GDP minor version
+* 1 byte   GDP flags
+* 1 byte   GDP data type
+           1 for buffer, 2 caps, 65+ for events
+* 4 byte   length of "payload"
+* 8 byte   timestamp of buffer/event
+* 8 byte   duration  of buffer
+* 8 byte   offset
+* 8 byte   offset_end
+* 16 byte  future extension (ABI padding)
+* 2 byte   optional header crc
+* 2 byte   optional payload crc
+* (length) payload
+
+header: 60 bytes
+
+all numbers use network byte ordering.
