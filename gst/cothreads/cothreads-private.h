@@ -24,12 +24,20 @@
 
 #include <cothreads.h>
 
+typedef struct _cothread_private cothread_private;
+
+struct _cothread_private {
+  int argc;
+  char **argv;
+  void (*func) (int argc, char **argv);
+};
 
 extern cothread_attr *_cothread_attr_global;
 
-gboolean cothread_stack_alloc_on_gthread_stack (char **low, char **high);
-gboolean cothread_stack_alloc_linuxthreads (char **low, char **high);
-gboolean cothread_stack_alloc_on_heap (char **low, char **high);
+
+gboolean	cothread_stack_alloc_on_gthread_stack	(char **low, char **high);
+gboolean	cothread_stack_alloc_linuxthreads	(char **low, char **high);
+gboolean	cothread_stack_alloc_on_heap		(char **low, char **high);
 
 
 #endif /* __COTHREAD_PRIVATE_H__ */

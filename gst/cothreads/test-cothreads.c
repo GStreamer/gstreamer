@@ -1,49 +1,66 @@
 #include <cothreads.h>
 
-cothread *main_context;
-cothread *ctx;
-int threadnum = 0;
-
-void co_thread (void)
+void co_thread (int argc, void **argv)
 {
-  printf ("1.%d: sleeping 1s in thread %d...\n", threadnum, threadnum);
+  int pthreadnum =  *(int*)argv[0];
+  int cothreadnum = *(int*)argv[1];
+  cothread *main = argv[2];
+  cothread *self = argv[3];
+  
+  printf ("%d.%d: sleeping 1s...\n", pthreadnum, cothreadnum);
   sleep (1);
-  printf ("1.%d: returning to cothread 0\n", threadnum);
-  cothread_switch (ctx, main_context);
+  printf ("%d.%d: returning to cothread 0\n", pthreadnum, cothreadnum);
+  
+  cothread_switch (self, main);
 }
 
-void pthread (void* unused) 
+void pthread (void* _pthreadnum) 
 {
-  char *skaddr;
+  int pthreadnum = *(int*) _pthreadnum;
+  int cothreadnum = 0;
+  cothread *main, *new;
+  char *argv[4];
   
-  printf ("1: saving the main context\n");
-  main_context = cothread_init(NULL);
+  main = cothread_create (NULL, 0, NULL);
   
-  while (threadnum < 25) {
-    printf ("1: spawning a new cothread\n");
-    ctx = cothread_create (co_thread);
+  while (cothreadnum++ < 25) {
+    printf ("%d: spawning a new cothread\n", pthreadnum);
     
-    printf ("1: switching to cothread %d...\n", ++threadnum);
-    cothread_switch (main_context, ctx);
-  
-    printf ("1: back now, looping\n");
+    argv[0] = &pthreadnum;
+    argv[1] = &cothreadnum;
+    argv[2] = main;
+    argv[3] = cothread_create (co_thread, 4, argv);
+    new = argv[3];
+    
+    printf ("%d: switching to cothread %d...\n", pthreadnum, cothreadnum);
+    cothread_switch (main, new);
+    
+    printf ("%d: back now, looping\n", pthreadnum);
   }
 }
 
+#define NTHREADS 2
 
 int main (int argc, char *argv[])
 {
-  GThread *thread;
+  GThread *thread[NTHREADS];
+  int pthreadnum[4], i;
   
   g_thread_init(NULL);
+  cothreads_init(NULL);
   
-  printf ("0: creating the gthread\n");
-
-  thread = g_thread_create (pthread, NULL, TRUE, NULL);
-
-  printf ("joining the gthread\n");
-  g_thread_join (thread);
-
+  printf ("0: creating the gthreads\n");
+  
+  for (i=0; i<NTHREADS; i++) {
+    pthreadnum[i] = i+1;
+    thread[i] = g_thread_create (pthread, &pthreadnum[i], TRUE, NULL);
+  }
+  
+  printf ("0: joining the gthreads\n");
+  for (i=0; i<NTHREADS; i++) {
+    g_thread_join (thread[i]);
+  }
+  
   printf ("exiting\n");
   
   exit (0);

@@ -52,7 +52,12 @@ static cothread_chunk*	cothread_chunk_new_linuxthreads	(cothread_chunk* old);
 gboolean
 cothread_stack_alloc_on_heap (char **low, char **high)
 {
-  *low = g_malloc (_cothread_attr_global->chunk_size / _cothread_attr_global->blocks_per_chunk);
+  if (posix_memalign (low, _cothread_attr_global->chunk_size / _cothread_attr_global->blocks_per_chunk,
+                      _cothread_attr_global->chunk_size / _cothread_attr_global->blocks_per_chunk) != NULL) {
+    g_error ("could not memalign stack");
+    return FALSE;
+  }
+  
   *high = *low + sizeof (*low) - 1;
   return TRUE;
 }
@@ -79,6 +84,7 @@ cothread_stack_alloc_linuxthreads (char **low, char **high)
   
   if (!(chunk = g_static_private_get(&chunk_key))) {
     chunk = cothread_chunk_new (_cothread_attr_global->chunk_size, FALSE);
+    g_message ("created new chunk, %p, size=0x%x", chunk->chunk, chunk->size);
     g_static_private_set (&chunk_key, chunk, cothread_chunk_free);
   }
   
@@ -98,7 +104,7 @@ cothread_chunk_new (unsigned long size, gboolean allocate)
   ret->block_states = g_new0 (cothread_block_state, ret->nblocks);
   
   if (allocate) {
-    if (!posix_memalign(&ret->chunk, size, size))
+    if (posix_memalign(&ret->chunk, size, size))
       g_error ("memalign operation failed");
   } else {
     /* if we don't allocate the chunk, we must already be in it. */
@@ -107,7 +113,7 @@ cothread_chunk_new (unsigned long size, gboolean allocate)
 #if PTH_STACK_GROWTH > 0
     ret->reserved_bottom = sp - ret->chunk;
 #else
-    ret->reserved_bottom = sp + size - ret->chunk;
+    ret->reserved_bottom = ret->chunk + size - sp;
 #endif
   }
   
@@ -148,10 +154,11 @@ cothread_stack_alloc_chunked (cothread_chunk *chunk, char **low, char **high,
     
     for (block = 1; block < walk->nblocks; block++) {
       if (walk->block_states[block] == COTHREAD_BLOCK_STATE_UNUSED) {
+      walk->block_states[block] = COTHREAD_BLOCK_STATE_IN_USE;
 #if PTH_STACK_GROWTH > 0
-        *low  = walk->chunk + walk->size * (walk->nblocks - block - 1) / walk->nblocks;
+        *low  = walk->chunk + walk->size * block / walk->nblocks;
 #else
-        *low  = walk->chunk + walk->size * (block - 1) / walk->nblocks;
+        *low  = walk->chunk + walk->size * (walk->nblocks - block - 1) / walk->nblocks;
 #endif
         *high = *low + walk->size / walk->nblocks;
         return TRUE;

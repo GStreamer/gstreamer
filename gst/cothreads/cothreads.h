@@ -26,6 +26,11 @@
 #include <pth_p.h>
 
 
+#ifndef CURRENT_STACK_FRAME
+#define CURRENT_STACK_FRAME  ({ char __csf; &__csf; })
+#endif /* CURRENT_STACK_FRAME */
+
+
 typedef pth_mctx_t cothread;
 typedef enum _cothread_attr_method cothread_attr_method;
 typedef struct _cothread_attr cothread_attr;
@@ -39,17 +44,21 @@ enum _cothread_attr_method
 };
 
 struct _cothread_attr {
-  cothread_attr_method method;
-  int chunk_size;
-  int blocks_per_chunk;
-  gboolean alloc_cothread_0;
+  cothread_attr_method method;        /* the method of allocating new cothread stacks */
+  int chunk_size;                     /* size of contiguous chunk of memory for cothread stacks */
+  int blocks_per_chunk;               /* cothreads per chunk */
+  gboolean alloc_cothread_0;          /* if the first cothread needs to be allocated */
 };
 
 
-cothread*	cothread_init		(cothread_attr *attr);
-cothread*	cothread_create		(void (*func)(void));
+gboolean	cothreads_initialized	(void);
+void		cothreads_init		(cothread_attr *attr);
+
+cothread*	cothread_create		(void (*func)(int, void**), int argc, void **argv);
 void		cothread_destroy	(cothread *thread);
 
+/* 'old' and 'new' are of type (cothread*) */
 #define cothread_switch(old,new) pth_mctx_switch(old,new)
+#define	cothread_yield(new) pth_mctx_restore(new);
 
 #endif /* __COTHREAD_H__ */
