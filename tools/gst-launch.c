@@ -192,6 +192,8 @@ main(int argc, char *argv[])
   
   if (!savefile) {
     gst_buffer_print_stats();
+    gst_event_print_stats();
+
     fprintf(stderr,"RUNNING pipeline\n");
     if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS) {
       fprintf(stderr,"pipeline doesn't want to play\n");
@@ -210,6 +212,7 @@ main(int argc, char *argv[])
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
     gst_buffer_print_stats();
+    gst_event_print_stats();
 
   }
   gst_object_unref (GST_OBJECT (pipeline));
