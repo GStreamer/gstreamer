@@ -405,6 +405,7 @@ gst_sdlvideosink_set_property (GObject *object, guint prop_id, const GValue *val
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SDLVIDEOSINK (object));
+  sdlvideosink = GST_SDLVIDEOSINK(object);
 
   switch (prop_id)
   {
@@ -429,6 +430,7 @@ gst_sdlvideosink_get_property (GObject *object, guint prop_id, GValue *value, GP
   GstSDLVideoSink *sdlvideosink;
 
   /* it's not null if we got it, but it might not be ours */
+  g_return_if_fail (GST_IS_SDLVIDEOSINK (object));
   sdlvideosink = GST_SDLVIDEOSINK(object);
 
   switch (prop_id) {
