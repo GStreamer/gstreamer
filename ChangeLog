@@ -1,3 +1,9 @@
+2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+          require gettext 0.11.5 so ulonglong.m4 gets checked out and copied
+          by autopoint (fixes #132996)
+
 2004-02-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_base_init):
