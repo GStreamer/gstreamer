@@ -1,0 +1,66 @@
+<!-- ##### SECTION Title ##### -->
+gstparse
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_parse_error_quark ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_PARSE_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### ENUM GstParseError ##### -->
+<para>
+
+</para>
+
+@GST_PARSE_ERROR_SYNTAX: 
+@GST_PARSE_ERROR_NO_SUCH_ELEMENT: 
+@GST_PARSE_ERROR_NO_SUCH_PROPERTY: 
+@GST_PARSE_ERROR_LINK: 
+@GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY: 
+@GST_PARSE_ERROR_EMPTY_BIN: 
+@GST_PARSE_ERROR_EMPTY: 
+
+<!-- ##### FUNCTION gst_parse_launch ##### -->
+<para>
+
+</para>
+
+@pipeline_description: 
+@error: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_parse_launchv ##### -->
+<para>
+
+</para>
+
+@argv: 
+@error: 
+@Returns: 
+
+

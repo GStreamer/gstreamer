@@ -1,0 +1,246 @@
+<!-- ##### SECTION Title ##### -->
+gsttypes
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstObject ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstObjectClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@path_string_separator: 
+@signal_object: 
+@parent_set: 
+@parent_unset: 
+@object_saved: 
+@deep_notify: 
+@destroy: 
+@save_thyself: 
+@restore_thyself: 
+@_gst_reserved: 
+
+<!-- ##### STRUCT GstPad ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstPadClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@_gst_reserved: 
+
+<!-- ##### STRUCT GstPadTemplate ##### -->
+<para>
+The padtemplate object.
+</para>
+
+
+<!-- ##### STRUCT GstPadTemplateClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@pad_created: 
+@_gst_reserved: 
+
+<!-- ##### STRUCT GstElement ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstElementClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@details: 
+@elementfactory: 
+@padtemplates: 
+@numpadtemplates: 
+@state_change: 
+@new_pad: 
+@pad_removed: 
+@error: 
+@eos: 
+@found_tag: 
+@set_property: 
+@get_property: 
+@release_locks: 
+@get_event_masks: 
+@send_event: 
+@get_formats: 
+@convert: 
+@get_query_types: 
+@query: 
+@change_state: 
+@request_new_pad: 
+@release_pad: 
+@get_clock: 
+@set_clock: 
+@get_index: 
+@set_index: 
+@set_state: 
+@_gst_reserved: 
+
+<!-- ##### STRUCT GstBin ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstBinClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@add_element: 
+@remove_element: 
+@child_state_change: 
+@iterate: 
+@element_added: 
+@element_removed: 
+@_gst_reserved: 
+
+<!-- ##### STRUCT GstScheduler ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstSchedulerClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@setup: 
+@reset: 
+@add_element: 
+@remove_element: 
+@add_scheduler: 
+@remove_scheduler: 
+@state_transition: 
+@scheduling_change: 
+@lock_element: 
+@unlock_element: 
+@yield: 
+@interrupt: 
+@error: 
+@pad_link: 
+@pad_unlink: 
+@pad_select: 
+@clock_wait: 
+@iterate: 
+@show: 
+@object_sync: 
+@_gst_reserved: 
+
+<!-- ##### STRUCT GstEvent ##### -->
+<para>
+
+</para>
+
+@data: 
+@type: 
+@timestamp: 
+@src: 
+
+<!-- ##### ENUM GstElementState ##### -->
+<para>
+
+</para>
+
+@GST_STATE_VOID_PENDING: 
+@GST_STATE_NULL: 
+@GST_STATE_READY: 
+@GST_STATE_PAUSED: 
+@GST_STATE_PLAYING: 
+
+<!-- ##### ENUM GstElementStateReturn ##### -->
+<para>
+
+</para>
+
+@GST_STATE_FAILURE: 
+@GST_STATE_SUCCESS: 
+@GST_STATE_ASYNC: 
+
+<!-- ##### ENUM GstResult ##### -->
+<para>
+
+</para>
+
+@GST_RESULT_OK: 
+@GST_RESULT_NOK: 
+@GST_RESULT_NOT_IMPL: 
+
+<!-- ##### MACRO GST_RANK_PRIMARY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_RANK_SECONDARY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_RANK_MARGINAL ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_RANK_NONE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_PADDING ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_PADDING_INIT ##### -->
+<para>
+
+</para>
+
+
+
