@@ -1,3 +1,13 @@
+2005-01-14  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
+
+	* ext/dv/gstdvdec.c:
+	* ext/libfame/gstlibfame.c:
+	* gst/subparse/gstsubparse.c: (parse_mdvdsub):
+	* gst/y4m/gsty4mencode.c: (gst_y4mencode_sinkconnect):
+          replace framerate aproximations by their real value
+          (24000/1001, 30000/1001, 60000/1001)
+          Finish fixing bug #164049
+
 2005-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ogg/gstoggmux.c:
