@@ -76,8 +76,6 @@ typedef enum {
   GST_ELEMENT_DECOUPLED,
   /* this element should be placed in a thread if at all possible */
   GST_ELEMENT_THREAD_SUGGESTED,
-  /* this element is incable of seeking (FIXME: does this apply to filters?) */
-  GST_ELEMENT_NO_SEEK,
   /* this element, for some reason, has a loop function that performs
    * an infinite loop without calls to gst_element_yield () */
   GST_ELEMENT_INFINITE_LOOP,
