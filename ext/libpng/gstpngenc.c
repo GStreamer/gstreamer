@@ -18,44 +18,11 @@
 
 #include <string.h>
 #include <gst/gst.h>
-#include "gstpng.h"
-
-#define GST_TYPE_PNGENC \
-  (gst_pngenc_get_type())
-#define GST_PNGENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PNGENC,GstPngEnc))
-#define GST_PNGENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstPngEnc))
-#define GST_IS_PNGENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PNGENC))
-#define GST_IS_PNGENC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PNGENC))
+#include "gstpngenc.h"
 
 #define MAX_HEIGHT     		4096 
 
-typedef struct _GstPngEnc GstPngEnc;
-typedef struct _GstPngEncClass GstPngEncClass;
 gint frame=0;
-
-struct _GstPngEnc
-{
-  GstElement element;
-
-  GstPad *sinkpad, *srcpad;
-  GstBuffer *buffer_out;
-  
-  png_structp png_struct_ptr;
-  png_infop png_info_ptr;
-
-  gint width;
-  gint height;
-  gint bpp;
-};
-
-struct _GstPngEncClass
-{
-  GstElementClass parent_class;
-};
 
 GstElementDetails gst_pngenc_details = {
   "",
@@ -80,7 +47,7 @@ enum
   ARG_0
 };
 
-static void 	gst_pngenc_class_init 	(GstPngEncClass * klass);
+static void 	gst_pngenc_class_init 	        (GstPngEncClass * klass);
 static void 	gst_pngenc_init 		(GstPngEnc * pngenc);
 
 static void 	gst_pngenc_set_property 	(GObject * object, guint prop_id,
@@ -161,51 +128,51 @@ gst_pngenc_sinkconnect (GstPad * pad, GstCaps * caps)
 static void
 gst_pngenc_init (GstPngEnc * pngenc)
 {
-  pngenc->sinkpad = gst_pad_new_from_template (gst_png_sink_factory (), "sink");
+  pngenc->sinkpad = gst_pad_new_from_template (pngenc_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (pngenc), pngenc->sinkpad);
   
-  pngenc->srcpad = gst_pad_new_from_template (gst_png_src_factory (), "src");
+  pngenc->srcpad = gst_pad_new("src",GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (pngenc), pngenc->srcpad);
 
   gst_pad_set_chain_function (pngenc->sinkpad, gst_pngenc_chain);
   gst_pad_set_connect_function (pngenc->sinkpad, gst_pngenc_sinkconnect);
 
-  pngenc->png_struct_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, (png_voidp)NULL, user_error_fn, user_warning_fn);
+  pngenc->png_struct_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING, (png_voidp)NULL, user_error_fn, user_warning_fn);
   if ( pngenc->png_struct_ptr == NULL )
-     g_warning( "Failed to initialize png structure");
+     g_warning ("Failed to initialize png structure");
 
-  pngenc->png_info_ptr = png_create_info_struct( pngenc->png_struct_ptr );
+  pngenc->png_info_ptr = png_create_info_struct (pngenc->png_struct_ptr);
 
-  if (setjmp( pngenc->png_struct_ptr->jmpbuf))
-      png_destroy_write_struct(&pngenc->png_struct_ptr, &pngenc->png_info_ptr);
+  if (setjmp(pngenc->png_struct_ptr->jmpbuf))
+      png_destroy_write_struct (&pngenc->png_struct_ptr, &pngenc->png_info_ptr);
 
 }
 
-void user_flush_data(png_structp png_ptr)
+
+void user_flush_data (png_structp png_ptr)
 {
 GstPngEnc *pngenc;
 
-  g_print("FLUSH\n");
-
-  pngenc = (GstPngEnc *) png_get_io_ptr(png_ptr);
+  pngenc = (GstPngEnc *) png_get_io_ptr (png_ptr);
   
   gst_pad_push (pngenc->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_FLUSH)));
 }
 
-void user_write_data(png_structp png_ptr, png_bytep data, png_uint_32 length)
+
+void user_write_data (png_structp png_ptr, png_bytep data, png_uint_32 length)
 {
 GstBuffer *buffer;
 GstPngEnc *pngenc;
 
-  pngenc = (GstPngEnc *) png_get_io_ptr(png_ptr);
+  pngenc = (GstPngEnc *) png_get_io_ptr (png_ptr);
 
   buffer = gst_buffer_new();
-  GST_BUFFER_DATA (buffer) = g_memdup( data, length );
+  GST_BUFFER_DATA (buffer) = g_memdup (data, length);
   GST_BUFFER_SIZE (buffer) = length;
 
-  if ( pngenc->buffer_out ) 
+  if (pngenc->buffer_out) 
   {    
-    pngenc->buffer_out = gst_buffer_merge( pngenc->buffer_out, buffer );
+    pngenc->buffer_out = gst_buffer_merge (pngenc->buffer_out, buffer);
     gst_buffer_unref( buffer );
   }
   else
@@ -219,7 +186,7 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
   gint row_indice;
   png_byte *row_pointers[ MAX_HEIGHT ];
 
-  if ( frame != 300 )
+  if (frame != 300)
   {
     frame++;
     gst_buffer_unref (buf);
@@ -230,8 +197,8 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
 
   pngenc->buffer_out = NULL;
 
-  png_set_filter( pngenc->png_struct_ptr, 0, PNG_FILTER_NONE  | PNG_FILTER_VALUE_NONE );
-  png_set_compression_level( pngenc->png_struct_ptr, 9);
+  png_set_filter (pngenc->png_struct_ptr, 0, PNG_FILTER_NONE | PNG_FILTER_VALUE_NONE);
+  png_set_compression_level (pngenc->png_struct_ptr, 9);
 
   png_set_IHDR(
     pngenc->png_struct_ptr,
@@ -245,20 +212,22 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
     PNG_FILTER_TYPE_DEFAULT
   );
 
-  png_set_write_fn(pngenc->png_struct_ptr, pngenc, (png_rw_ptr)user_write_data, user_flush_data);
+  png_set_write_fn (pngenc->png_struct_ptr, pngenc, (png_rw_ptr)user_write_data, user_flush_data);
 
-  for ( row_indice = 0; row_indice < pngenc->height; row_indice++ )
-    row_pointers[row_indice] = GST_BUFFER_DATA(buf) + (pngenc->width * row_indice * pngenc->bpp/8 );
+  for (row_indice = 0; row_indice < pngenc->height; row_indice++)
+    row_pointers[row_indice] = GST_BUFFER_DATA (buf) + (pngenc->width * row_indice * pngenc->bpp/8);
   
-  png_write_info( pngenc->png_struct_ptr, pngenc->png_info_ptr );
-  png_write_image( pngenc->png_struct_ptr, row_pointers );
-  png_write_end( pngenc->png_struct_ptr, NULL );
-  png_destroy_info_struct (  pngenc->png_struct_ptr, &pngenc->png_info_ptr );
-  png_destroy_write_struct( &pngenc->png_struct_ptr, (png_infopp)NULL );
+  png_write_info (pngenc->png_struct_ptr, pngenc->png_info_ptr);
+  png_write_image (pngenc->png_struct_ptr, row_pointers);
+  png_write_end (pngenc->png_struct_ptr, NULL);
 
   gst_pad_push (pngenc->srcpad, pngenc->buffer_out );
+  user_flush_data (pngenc->png_struct_ptr);
+  
+  png_destroy_info_struct (pngenc->png_struct_ptr, &pngenc->png_info_ptr);
+  png_destroy_write_struct (&pngenc->png_struct_ptr, (png_infopp)NULL);
 
-  g_print("Frame %d dumped\n", frame );
+  g_print ("Frame %d dumped\n", frame);
   frame++;
 
   gst_buffer_unref (buf);

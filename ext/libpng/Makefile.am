@@ -7,5 +7,5 @@ libgstpng_la_CFLAGS = $(GST_CFLAGS)
 libgstpng_la_LIBADD = $(GST_LIBS) $(LIBPNG_LIBS)
 libgstpng_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gstpng.h
+noinst_HEADERS = gstpngenc.h
 

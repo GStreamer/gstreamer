@@ -18,94 +18,63 @@
 
 #include <string.h>
 #include <gst/gst.h>
-#include "gstpng.h"
 
+#include "gstpngenc.h"
 
-struct _elements_entry {
-  gchar *name;
-  GType (*type) (void);
-  GstElementDetails *details;
-  gboolean (*factoryinit) (GstElementFactory *factory);
-};
+extern GstElementDetails gst_pngenc_details;
 
-static struct _elements_entry _elements[] = {
-  { "pngenc",  	gst_pngenc_get_type, 		&gst_pngenc_details, 		NULL },
-  { NULL, 0 },
-};
-
-
-GstPadTemplate* 
-gst_png_src_factory (void)
+static GstCaps*
+png_caps_factory (void)
 {
-  static GstPadTemplate *templ = NULL;
-  if (!templ) {
-    templ = GST_PAD_TEMPLATE_NEW ( 
-  		"src",
-  		GST_PAD_SRC,
-  		GST_PAD_ALWAYS,
-  		GST_CAPS_NEW (
-  		  "png_src",
-  		  "video/raw",
-		  NULL
-		)
-  	     );
-  }
-  return templ;
+  return gst_caps_new ( "png_png", "video/png", NULL);
 }
 
-GstPadTemplate* 
-gst_png_sink_factory (void)
-{
-  static GstPadTemplate *templ = NULL;
-  if (!templ) {
-    templ = GST_PAD_TEMPLATE_NEW ( 
-  		"sink",
-  		GST_PAD_SINK,
-  		GST_PAD_ALWAYS,
-  		GST_CAPS_NEW (
-  		  "png_sink",
-  		  "video/raw",
-  		    "format",         GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
-  		    "bpp",            GST_PROPS_INT (24),
-		    "red_mask",       GST_PROPS_INT (0xff0000),
-                    "green_mask",     GST_PROPS_INT (0xff00),
-                    "blue_mask",      GST_PROPS_INT (0xff),
-  		    "width",          GST_PROPS_INT_RANGE (16, 4096),
-  		    "height",         GST_PROPS_INT_RANGE (16, 4096)
-		)
-  	     );
-  }
-  return templ;
-}
 
+static GstCaps*
+raw_caps_factory (void)
+{ 
+  return gst_caps_new ( "png_raw", 
+  			"video/raw",
+			 gst_props_new (
+			  "format",         GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
+	                  "bpp",            GST_PROPS_INT (24),
+			  "red_mask",       GST_PROPS_INT (0xff),
+			  "green_mask",     GST_PROPS_INT (0xff00),
+			  "blue_mask",      GST_PROPS_INT (0xff0000),
+			  "width",          GST_PROPS_INT_RANGE (16, 4096),
+			  "height",         GST_PROPS_INT_RANGE (16, 4096),
+			  NULL )
+	             );
+}
 
 static gboolean
 plugin_init (GModule * module, GstPlugin * plugin)
 {
-  GstElementFactory *factory;
-  gint i = 0;
+  GstElementFactory *png_enc;
+  GstCaps *raw_caps, *png_caps;
 
-  while (_elements[i].name) {
-    factory = gst_element_factory_new (_elements[i].name,
-                                      (_elements[i].type) (),
-                                       _elements[i].details);
+  /* create an elementfactory for the jpegdec element */
+  png_enc = gst_element_factory_new("pngenc", GST_TYPE_PNGENC, &gst_pngenc_details);
+  g_return_val_if_fail(png_enc != NULL, FALSE);
 
-    if (!factory) {
-      g_warning ("gst_png_new failed for `%s'",
-                 _elements[i].name);
-      continue;
-    }
-    
-    gst_element_factory_add_pad_template (factory, gst_png_src_factory ());
-    gst_element_factory_add_pad_template (factory, gst_png_sink_factory ());
+  raw_caps = raw_caps_factory ();
+  png_caps = png_caps_factory ();
 
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-    if (_elements[i].factoryinit) {
-      _elements[i].factoryinit (factory);
-    }
-    i++;
-  }
+  /* register sink pads */
+  pngenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
+						       GST_PAD_ALWAYS,
+						       raw_caps, NULL);
+  gst_element_factory_add_pad_template (png_enc, pngenc_sink_template);
+  
 
+  /* register src pads */
+  pngenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC,
+					             GST_PAD_ALWAYS,
+					             png_caps, NULL);
+  gst_element_factory_add_pad_template (png_enc, pngenc_src_template);
+  
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (png_enc));
+  
   return TRUE;
 }
 
