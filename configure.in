@@ -729,6 +729,7 @@ examples/thread/Makefile
 examples/launch/Makefile
 examples/xml/Makefile
 examples/plugins/Makefile
+examples/typefind/Makefile
 editor/Makefile
 editor/pixmaps/Makefile
 tools/Makefile
