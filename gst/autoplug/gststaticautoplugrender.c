@@ -105,6 +105,29 @@ GstPluginDesc plugin_desc = {
   plugin_init
 };
 
+static GstPadTemplate*
+gst_autoplug_match_caps (GstElementFactory *factory, GstPadDirection direction, GstCaps *caps)
+{
+  GList *templates;
+
+  templates = factory->padtemplates;
+
+  while (templates) {
+    GstPadTemplate *template = (GstPadTemplate *)templates->data;
+
+    if (template->direction == direction && direction == GST_PAD_SRC) {
+      if (gst_caps_check_compatibility (GST_PADTEMPLATE_CAPS (template), caps))
+        return template;
+    }
+    else if (template->direction == direction && direction == GST_PAD_SINK) {
+      if (gst_caps_check_compatibility (caps, GST_PADTEMPLATE_CAPS (template)))
+        return template;
+    }
+    templates = g_list_next (templates);
+  }
+  return NULL;
+}
+
 static gboolean
 gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
 {
@@ -114,14 +137,18 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
 
   while (srctemps) {
     GstPadTemplate *srctemp = (GstPadTemplate *)srctemps->data;
+    srctemps = g_list_next (srctemps);
+
+    if (srctemp->direction != GST_PAD_SRC)
+      continue;
 
     desttemps = dest->padtemplates;
 
     while (desttemps) {
       GstPadTemplate *desttemp = (GstPadTemplate *)desttemps->data;
+      desttemps = g_list_next (desttemps);
 
-      if (srctemp->direction == GST_PAD_SRC &&
-          desttemp->direction == GST_PAD_SINK) {
+      if (desttemp->direction == GST_PAD_SINK && desttemp->presence != GST_PAD_REQUEST) {
 	if (gst_caps_check_compatibility (GST_PADTEMPLATE_CAPS (srctemp), GST_PADTEMPLATE_CAPS (desttemp))) {
 	  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
 			  "factory \"%s\" can connect with factory \"%s\"\n", src->name, dest->name);
@@ -129,9 +156,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
 	}
       }
 
-      desttemps = g_list_next (desttemps);
     }
-    srctemps = g_list_next (srctemps);
   }
   GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
 		  "factory \"%s\" cannot connect with factory \"%s\"\n", src->name, dest->name);
@@ -222,7 +247,6 @@ typedef struct {
 } caps_struct;
 
 #define IS_CAPS(cap) (((cap) == caps->src) || (cap) == caps->sink)
-
 static guint
 gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
 {
@@ -234,17 +258,32 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
     //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"caps %d to caps %d %d", ((GstCaps *)src)->id, ((GstCaps *)dest)->id, res);
   }
   else if (IS_CAPS (src)) {
-    res = gst_elementfactory_can_sink_caps ((GstElementFactory *)dest, (GstCaps *)src);
+    GstPadTemplate *templ;
+    
+    templ = gst_autoplug_match_caps ((GstElementFactory *)dest, GST_PAD_SINK, (GstCaps *)src);
+
+    if (templ && templ->presence != GST_PAD_REQUEST) 
+      res = TRUE;
+    else
+      res = FALSE;
+    
     //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to src caps %d %d", ((GstElementFactory *)dest)->name, ((GstCaps *)src)->id, res);
   }
   else if (IS_CAPS (dest)) {
-    res = gst_elementfactory_can_src_caps ((GstElementFactory *)src, (GstCaps *)dest);
+    GstPadTemplate *templ;
+    
+    templ = gst_autoplug_match_caps ((GstElementFactory *)src, GST_PAD_SRC, (GstCaps *)dest);
+
+    if (templ && templ->presence != GST_PAD_REQUEST) 
+      res = TRUE;
+    else
+      res = FALSE;
     //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to sink caps %d %d", ((GstElementFactory *)src)->name, ((GstCaps *)dest)->id, res);
   }
   else {
     res = gst_autoplug_can_match ((GstElementFactory *)src, (GstElementFactory *)dest);
-    //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to factory %s %d", 
-//		    ((GstElementFactory *)src)->name, ((GstElementFactory *)dest)->name, res);
+    GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to factory %s %d", 
+		    ((GstElementFactory *)src)->name, ((GstElementFactory *)dest)->name, res);
   }
 
   if (res)
