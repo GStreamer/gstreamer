@@ -21,6 +21,7 @@
 #define __GST_V4L2ELEMENT_H__
 
 #include <gst/gst.h>
+#include <gst/xwindowlistener/xwindowlistener.h>
 
 /* Because of some really cool feature in video4linux1, also known as
  * 'not including sys/types.h and sys/time.h', we had to include it
@@ -71,17 +72,16 @@ struct _GstV4l2Element {
 	struct v4l2_capability vcap;
 
 	/* the toys available to us */
-	GList /*v4l2_input*/ *inputs, *input_names;
-	GList /*v4l2_output*/ *outputs, *output_names;
-	GList /*v4l2_enumstd*/ *norms, *norm_names;
-	GList /*v4l2_queryctrl*/ *controls, *control_specs;
-	GList /*GList:v4l2_querymenu*/ *menus;
+	GList *channels;
+	GList *norms;
+	GList *colors;
+
+	/* X-overlay */
+	GstXWindowListener *overlay;
+	XID xwindow_id;
 
 	/* caching values */
-	gint channel;
-	gint output;
-	gint norm;
-	gulong frequency;
+	gchar *display;
 };
 
 struct _GstV4l2ElementClass {
@@ -92,21 +92,6 @@ struct _GstV4l2ElementClass {
 	                             const gchar *device);
 	void     (*close)           (GstElement  *element,
 	                             const gchar *device);
-
-	/* actions */
-	gboolean (*set_videowindow) (GstElement  *element,
-	                             gint         x_offset,
-	                             gint         y_offset,
-	                             gint         height,
-	                             gint         width,
-	                             struct v4l2_clip *clips,
-	                             gint         num_clips);
-	gboolean (*get_attribute)   (GstElement  *element,
-	                             const gchar *attr_name,
-	                             int         *value);
-	gboolean (*set_attribute)   (GstElement  *element,
-	                             const gchar *attr_name,
-	                             const int    value);
 };
 
 

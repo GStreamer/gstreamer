@@ -43,28 +43,33 @@
  ******************************************************/
 
 gboolean
-gst_v4l2_set_display (GstV4l2Element *v4l2element,
-                      const gchar    *display)
+gst_v4l2_set_display (GstV4l2Element *v4l2element)
 {
 	gchar *buff;
 
-	DEBUG("trying to set overlay to '%s'", display);
+	if (v4l2element->display)
+		g_free(v4l2element->display);
+	v4l2element->display = g_strdup(g_getenv("DISPLAY"));
+
+	DEBUG("trying to set overlay to '%s'", v4l2element->display);
 
 	/* start v4l-conf */
 	buff = g_strdup_printf("v4l-conf -q -c %s -d %s",
-		v4l2element->device?v4l2element->device:"/dev/video", display);
+		v4l2element->device, v4l2element->display);
 
 	switch (system(buff)) {
 		case -1:
 			gst_element_error(GST_ELEMENT(v4l2element),
-				"Could not start v4l-conf: %s", g_strerror(errno));
+				"Could not start v4l-conf: %s",
+				g_strerror(errno));
 			g_free(buff);
 			return FALSE;
 		case 0:
 			break;
 		default:
 			gst_element_error(GST_ELEMENT(v4l2element),
-				"v4l-conf failed to run correctly: %s", g_strerror(errno));
+				"v4l-conf failed to run correctly: %s",
+				g_strerror(errno));
 			g_free(buff);
 			return FALSE;
 	}
