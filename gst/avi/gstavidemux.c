@@ -798,6 +798,25 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
       codecname = g_strdup_printf("Raw PCM/WAV (0x%04x)",
                                   strf->format);
       break;
+    case GST_RIFF_WAVE_FORMAT_MULAW:
+    case GST_RIFF_WAVE_FORMAT_ALAW:
+      if (strf->size != 8)
+        g_warning ("invalid depth (%d) of mulaw/alaw audio, overwriting.", strf->size);
+      newcaps = gst_caps_new ("avidemux_audio_src",
+                              "audio/raw",
+                              gst_props_new (
+			        "format",	GST_PROPS_STRING ("int"),
+			        "law",		GST_PROPS_INT (GUINT16_FROM_LE(strf->format) == GST_RIFF_WAVE_FORMAT_ALAW ? 2 : 1),
+			      	"endianness",	GST_PROPS_INT (G_LITTLE_ENDIAN),
+			 	"width",	GST_PROPS_INT (8),
+			 	"depth",	GST_PROPS_INT (8),
+			  	"rate",		GST_PROPS_INT (GUINT32_FROM_LE (strf->rate)),
+                                "channels",	GST_PROPS_INT (GUINT16_FROM_LE (strf->channels)),
+                                NULL
+                              ));
+      codecname = g_strdup_printf("%s-law encoded (0x%04x)",
+                                  GUINT16_FROM_LE(strf->format) == GST_RIFF_WAVE_FORMAT_ALAW ? "A" : "Mu", strf->format);    
+      break;
     case GST_RIFF_WAVE_FORMAT_VORBIS1: /* ogg/vorbis mode 1 */
     case GST_RIFF_WAVE_FORMAT_VORBIS2: /* ogg/vorbis mode 2 */
     case GST_RIFF_WAVE_FORMAT_VORBIS3: /* ogg/vorbis mode 3 */
