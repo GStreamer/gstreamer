@@ -155,15 +155,12 @@ gst_ximagesink_ximage_destroy (GstXImageSink *ximagesink, GstXImage *ximage)
         shmctl (ximage->SHMInfo.shmid, IPC_RMID, 0);
     }
   else
+#endif /* HAVE_XSHM */ 
     {
       if (ximage->ximage)
         XDestroyImage (ximage->ximage);
     }
-#else
-  if (ximage->ximage)
-    XDestroyImage (ximage->ximage);
-#endif /* HAVE_XSHM */ 
-  
+
   g_mutex_unlock (ximagesink->x_lock);
   
   g_free (ximage);
@@ -193,16 +190,12 @@ gst_ximagesink_ximage_put (GstXImageSink *ximagesink, GstXImage *ximage)
                     FALSE);
     }
   else
+#endif /* HAVE_XSHM */
     {
       XPutImage (ximagesink->xcontext->disp, ximagesink->xwindow->win, 
                  ximagesink->xwindow->gc, ximage->ximage,  
                  0, 0, x, y, ximage->width, ximage->height);
     }
-#else
-  XPutImage (ximagesink->xcontext->disp, ximagesink->xwindow->win, 
-             ximagesink->xwindow->gc, ximage->ximage,  
-             0, 0, x, y, ximage->width, ximage->height);
-#endif /* HAVE_XSHM */
   
   XSync(ximagesink->xcontext->disp, FALSE);
   
@@ -311,7 +304,7 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
                 r = gst_pad_try_set_caps (GST_VIDEOSINK_PAD (ximagesink),
                                           GST_CAPS_NEW ("ximagesink_ximage_caps", "video/x-raw-rgb",
                                                        "bpp",        GST_PROPS_INT (ximagesink->xcontext->bpp),
-                                                       //"depth",      GST_PROPS_INT (ximagesink->xcontext->depth),
+                                                       "depth",      GST_PROPS_INT (ximagesink->xcontext->depth),
                                                        "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
                                                        "red_mask",   GST_PROPS_INT (GINT_FROM_BE (ximagesink->xcontext->visual->red_mask)),
                                                        "green_mask", GST_PROPS_INT (GINT_FROM_BE (ximagesink->xcontext->visual->green_mask)),
@@ -458,7 +451,7 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
   
   xcontext->caps = GST_CAPS_NEW ("ximagesink_ximage_caps", "video/x-raw-rgb",
       "bpp",        GST_PROPS_INT (xcontext->bpp),
-      //"depth",      GST_PROPS_INT (xcontext->depth),
+      "depth",      GST_PROPS_INT (xcontext->depth),
       "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
       "red_mask",   GST_PROPS_INT (GINT_FROM_BE (xcontext->visual->red_mask)),
       "green_mask", GST_PROPS_INT (GINT_FROM_BE (xcontext->visual->green_mask)),
@@ -517,8 +510,7 @@ static GstPadLinkReturn
 gst_ximagesink_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstXImageSink *ximagesink;
-  gint check;
-  G_GNUC_UNUSED gchar *str;
+  char *caps_str1, *caps_str2;
 
   ximagesink = GST_XIMAGESINK (gst_pad_get_parent (pad));
 
@@ -530,27 +522,16 @@ gst_ximagesink_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!ximagesink->xcontext)
     return GST_PAD_LINK_DELAYED;
   
-  str = gst_caps_to_string(ximagesink->xcontext->caps);
-  GST_DEBUG ("sinkconnect %s with %s", gst_caps_to_string(caps),
-             str);
-  g_free (str);
-  if (!gst_caps_get_int (caps, "blue_mask", &check) ||
-      check != GINT_FROM_BE (ximagesink->xcontext->visual->blue_mask))
-    return GST_PAD_LINK_REFUSED;
-  if (!gst_caps_get_int (caps, "green_mask", &check) ||
-      check != GINT_FROM_BE (ximagesink->xcontext->visual->green_mask))
-    return GST_PAD_LINK_REFUSED;
-  if (!gst_caps_get_int (caps, "red_mask", &check) ||
-      check != GINT_FROM_BE (ximagesink->xcontext->visual->red_mask))
-    return GST_PAD_LINK_REFUSED;
-  if (!gst_caps_get_int (caps, "bpp", &check) ||
-      check != ximagesink->xcontext->bpp)
-    return GST_PAD_LINK_REFUSED;
-  /* disable, because bpp check is enough
-  if (!gst_caps_get_int (caps, "depth", &check) ||
-      check != ximagesink->xcontext->depth)
-    return GST_PAD_LINK_REFUSED;
-    */
+  caps_str1 = gst_caps_to_string (ximagesink->xcontext->caps);
+  caps_str2 = gst_caps_to_string (caps);
+
+  GST_DEBUG ("sinkconnect %s with %s", caps_str1, caps_str2);
+
+  if (caps_str1)
+    g_free (caps_str1);
+  if (caps_str2)
+    g_free (caps_str2);
+
   if (!gst_caps_get_int (caps, "width", &(GST_VIDEOSINK_WIDTH (ximagesink))))
     return GST_PAD_LINK_REFUSED;
   if (!gst_caps_get_int (caps, "height", &(GST_VIDEOSINK_HEIGHT (ximagesink))))

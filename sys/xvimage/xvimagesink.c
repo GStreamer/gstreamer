@@ -102,6 +102,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink *xvimagesink,
       XShmAttach (xvimagesink->xcontext->disp, &xvimage->SHMInfo);
     }
   else
+#endif /* HAVE_XSHM */
     {
       xvimage->xvimage = XvCreateImage (xvimagesink->xcontext->disp,
                                         xvimagesink->xcontext->xv_port_id,
@@ -111,16 +112,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink *xvimagesink,
       
       xvimage->data = g_malloc (xvimage->xvimage->data_size);
     }
-#else
-  xvimage->xvimage = XvCreateImage (xvimagesink->xcontext->disp,
-                                    xvimagesink->xcontext->xv_port_id,
-                                    xvimagesink->xcontext->im_format,
-                                    xvimage->data,
-                                    xvimage->width, xvimage->height);
-  
-  xvimage->data = g_malloc (xvimage->xvimage->data_size);
-#endif /* HAVE_XSHM */
-  
+
   if (xvimage->xvimage)
     {
       XSync(xvimagesink->xcontext->disp, 0);
@@ -167,15 +159,12 @@ gst_xvimagesink_xvimage_destroy (GstXvImageSink *xvimagesink,
         shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
     }
   else
+#endif /* HAVE_XSHM */ 
     {
       if (xvimage->xvimage)
         XFree (xvimage->xvimage);
     }
-#else
-  if (xvimage->xvimage)
-    XFree (xvimage->xvimage);
-#endif /* HAVE_XSHM */ 
-  
+
   g_mutex_unlock (xvimagesink->x_lock);
   
   g_free (xvimage);
@@ -204,6 +193,7 @@ gst_xvimagesink_xvimage_put (GstXvImageSink *xvimagesink, GstXvImage *xvimage)
                      xvimagesink->xwindow->height, FALSE);
     }
   else
+#endif /* HAVE_XSHM */
     {
       XvPutImage (xvimagesink->xcontext->disp,
                   xvimagesink->xcontext->xv_port_id,
@@ -213,15 +203,6 @@ gst_xvimagesink_xvimage_put (GstXvImageSink *xvimagesink, GstXvImage *xvimage)
                   0, 0, xvimagesink->xwindow->width,
                   xvimagesink->xwindow->height);
     }
-#else
-  XvPutImage (xvimagesink->xcontext->disp,
-              xvimagesink->xcontext->xv_port_id,
-              xvimagesink->xwindow->win, 
-              xvimagesink->xwindow->gc, xvimage->xvimage,
-              0, 0, xvimage->width, xvimage->height,
-              0, 0, xvimagesink->xwindow->width,
-              xvimagesink->xwindow->height);
-#endif /* HAVE_XSHM */
   
   XSync(xvimagesink->xcontext->disp, FALSE);
   
@@ -604,6 +585,7 @@ static GstPadLinkReturn
 gst_xvimagesink_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstXvImageSink *xvimagesink;
+  char *caps_str1, *caps_str2;
 
   xvimagesink = GST_XVIMAGESINK (gst_pad_get_parent (pad));
 
@@ -612,9 +594,16 @@ gst_xvimagesink_sinkconnect (GstPad *pad, GstCaps *caps)
     return GST_PAD_LINK_DELAYED;
   if (GST_CAPS_IS_CHAINED (caps))
     return GST_PAD_LINK_DELAYED;
-  
-  GST_DEBUG ("sinkconnect %s with %s", gst_caps_to_string(caps),
-             gst_caps_to_string(xvimagesink->xcontext->caps));
+
+  caps_str1 = gst_caps_to_string (xvimagesink->xcontext->caps);
+  caps_str2 = gst_caps_to_string (caps);
+                                                                                
+  GST_DEBUG ("sinkconnect %s with %s", caps_str1, caps_str2);
+                                                                                
+  if (caps_str1)
+    g_free (caps_str1);
+  if (caps_str2)
+    g_free (caps_str2);
   
   if (!gst_caps_get_int (caps, "width", &(GST_VIDEOSINK_WIDTH (xvimagesink))))
     return GST_PAD_LINK_REFUSED;
