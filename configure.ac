@@ -383,6 +383,7 @@ GST_PLUGINS_ALL="\
 	synaesthesia \
 	tags \
 	tcp \
+  tta \
 	typefind \
 	udp \
 	vbidec \
@@ -1903,6 +1904,7 @@ gst/switch/Makefile
 gst/synaesthesia/Makefile
 gst/tags/Makefile
 gst/tcp/Makefile
+gst/tta/Makefile
 gst/typefind/Makefile
 gst/udp/Makefile
 gst/vbidec/Makefile
