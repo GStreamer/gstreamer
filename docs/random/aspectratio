@@ -1,0 +1,54 @@
+1) playing DVD on 4:3 screen
+
+PAL DVD:
+ - video size in pixels: 720x576
+ - intended physical aspect ratio: 4/3
+ - pixel aspect ratio: 16/15
+
+normal 4:3 computer screen:
+  - screen size in pixels: 1024x768
+  - physical aspect ratio: 4/3
+  - pixel aspect ratio: 1/1
+
+  -> scale to video size 720 . 16 / 576 . 15 =  11520 / 8640 = 144 / 108
+     = 4 / 3
+
+2) playing PAL DVD on PAL TV
+
+PAL DVD:
+ - video size in pixels: 720x576
+ - pixel aspect ratio: 16/15
+
+ => intended display aspect ratio: 4/3
+
+   w/h = DAR/PAR (with w and h of pixel video size)
+
+DirectFB PAL TV output:
+  - screen size in pixels: 720x576
+  - pixel aspect ratio: 16/15
+
+  => display aspect ratio: 4/3
+
+  (v = video, source material - d = display)
+  DARv = DARd <=> wv / hv * PARv = wd / hd * PARd
+              <=> wd / hd = wv / hv * (PARv / PARd)
+  no scaling necessary
+
+
+4) playing an NTSC vob on PAL TV
+
+NTSC VOB:
+  - video size: 720x480
+  - pixel aspect ratio: 8/9
+
+  => intended DAR: DAR = 720/480 * 8/9 = 80 / 60 = 4 /3
+
+  wd / hd = wv / hv * PARv / PARd
+          = 720/480 * 8/9 / (16/15)
+          = 720 * 8 * 15 / (480 * 9 * 16)
+          = 120 * 1 * 5  / (80 * 3 * 2)
+          = 15 / 12
+          = 5 / 4
+
+  --> 720 x ( 720 * 4 / 5) = 720 x 576
+
