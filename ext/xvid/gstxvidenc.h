@@ -74,6 +74,9 @@ GType gst_xvidenc_get_type(void);
 gboolean gst_xvidenc_plugin_init (GModule   *module,
                                   GstPlugin *plugin);
 
+/* in gstxvid.c */
+extern gchar * gst_xvid_error (int errorcode);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

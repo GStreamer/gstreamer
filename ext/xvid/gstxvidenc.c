@@ -131,7 +131,6 @@ gst_xvidenc_get_type(void)
 static void
 gst_xvidenc_class_init (GstXvidEncClass *klass)
 {
-  XVID_INIT_PARAM xinit;
   GstElementClass *gstelement_class;
   GObjectClass *gobject_class;
 
@@ -139,17 +138,6 @@ gst_xvidenc_class_init (GstXvidEncClass *klass)
   gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
-
-  /* set up xvid initially (function pointers, CPU flags) */
-  memset(&xinit, 0, sizeof(xinit));
-  xinit.cpu_flags = 0;
-  xvid_init(NULL, 0, &xinit, NULL);
-  if (xinit.api_version != API_VERSION) {
-    g_error("Xvid API version mismatch! %d.%d (that's us) != %d.%d (lib)",
-            (API_VERSION >> 8) & 0xff, API_VERSION & 0xff,
-            (xinit.api_version >> 8) & 0xff, xinit.api_version & 0xff);
-    return;
-  }
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BITRATE,
     g_param_spec_ulong("bitrate","Bitrate",
@@ -237,7 +225,8 @@ gst_xvidenc_setup (GstXvidEnc *xvidenc)
   if ((ret = xvid_encore(NULL, XVID_ENC_CREATE,
                          &xenc, NULL)) != XVID_ERR_OK) {
     gst_element_error(GST_ELEMENT(xvidenc),
-                      "Error setting up xvid encoder: %d\n", ret);
+                      "Error setting up xvid encoder: %s (%d)",
+		      gst_xvid_error(ret), ret);
     return FALSE;
   }
 
@@ -291,7 +280,8 @@ gst_xvidenc_chain (GstPad    *pad,
   if ((ret = xvid_encore(xvidenc->handle, XVID_ENC_ENCODE,
                          &xframe, NULL)) != XVID_ERR_OK) {
     gst_element_error(GST_ELEMENT(xvidenc),
-                      "Error encoding xvid frame: %d\n", ret);
+                      "Error encoding xvid frame: %s (%d)",
+		      gst_xvid_error(ret), ret);
     gst_buffer_unref(buf);
     return;
   }

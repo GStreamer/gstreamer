@@ -65,6 +65,9 @@ GType gst_xviddec_get_type(void);
 gboolean gst_xviddec_plugin_init (GModule   *module,
                                   GstPlugin *plugin);
 
+/* in gstxvid.c */
+extern gchar * gst_xvid_error (int errorcode);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

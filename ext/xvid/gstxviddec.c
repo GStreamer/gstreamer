@@ -120,18 +120,6 @@ static void
 gst_xviddec_class_init (GstXvidDecClass *klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
-  XVID_INIT_PARAM xinit;
-
-  /* set up xvid initially (function pointers, CPU flags) */
-  memset(&xinit, 0, sizeof(xinit));
-  xinit.cpu_flags = 0;
-  xvid_init(NULL, 0, &xinit, NULL);
-  if (xinit.api_version != API_VERSION) {
-    g_error("Xvid API version mismatch! %d.%d (that's us) != %d.%d (lib)",
-            (API_VERSION >> 8) & 0xff, API_VERSION & 0xff,
-            (xinit.api_version >> 8) & 0xff, xinit.api_version & 0xff);
-    return;
-  }
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
@@ -187,21 +175,10 @@ gst_xviddec_setup (GstXvidDec *xviddec)
 
   if ((ret = xvid_decore(NULL, XVID_DEC_CREATE,
                          &xdec, NULL)) != XVID_ERR_OK) {
-    char *error;
-    switch (ret) {
-      case XVID_ERR_MEMORY:
-        error = "Memory allocation error";
-        break;
-      case XVID_ERR_FORMAT:
-        error = "Bad format";
-        break;
-      default:
-        error = "Internal failure";
-        break;
-    }
-    GST_DEBUG(GST_CAT_PLUGIN_INFO,
-              "Setting parameters %dx%d@%d failed: %s",
-              xviddec->width, xviddec->height, xviddec->csp, error);
+    gst_element_error(GST_ELEMENT(xviddec),
+		      "Setting parameters %dx%d@%d failed: %s (%d)",
+	              xviddec->width, xviddec->height, xviddec->csp,
+		      gst_xvid_error(ret), ret);
     return FALSE;
   }
 
@@ -260,7 +237,8 @@ gst_xviddec_chain (GstPad    *pad,
   if ((ret = xvid_decore(xviddec->handle, XVID_DEC_DECODE,
                          &xframe, NULL))) {
     gst_element_error(GST_ELEMENT(xviddec),
-                      "Error decoding xvid frame: %d\n", ret);
+                      "Error decoding xvid frame: %s (%d)\n",
+		      gst_xvid_error(ret), ret);
     gst_buffer_unref(buf);
     return;
   }
