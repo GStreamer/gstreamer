@@ -71,7 +71,9 @@ main (int argc, char *argv[])
 
   if (error != NULL) {
     g_print
-        ("oops, couldn't build pipeline.  You probably don't have audioconvert or sinesrc\n");
+        ("oops, couldn't build pipeline.  You probably don't have audioconvert or sinesrc\n"
+        "the error was: %s\n", error->message);
+    g_error_free (error);
     exit (0);
   }
 
