@@ -53,6 +53,7 @@ static void			gst_element_init		(GstElement *element);
 static void			gst_element_set_arg		(GtkObject *object, GtkArg *arg, guint id);
 static void			gst_element_get_arg		(GtkObject *object, GtkArg *arg, guint id);
 
+static void 			gst_element_shutdown 		(GtkObject *object);
 static void			gst_element_real_destroy	(GtkObject *object);
 
 static GstElementStateReturn	gst_element_change_state	(GstElement *element);
@@ -132,6 +133,7 @@ gst_element_class_init (GstElementClass *klass)
 
   gtkobject_class->set_arg =		GST_DEBUG_FUNCPTR(gst_element_set_arg);
   gtkobject_class->get_arg =		GST_DEBUG_FUNCPTR(gst_element_get_arg);
+  gtkobject_class->shutdown =		GST_DEBUG_FUNCPTR(gst_element_shutdown);
   gtkobject_class->destroy =		GST_DEBUG_FUNCPTR(gst_element_real_destroy);
 
   gstobject_class->save_thyself =	GST_DEBUG_FUNCPTR(gst_element_save_thyself);
@@ -333,7 +335,7 @@ gst_element_remove_pad (GstElement *element, GstPad *pad)
   else
     element->numsinkpads--;
 
-  gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[NEW_PAD], pad);
+  gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[PAD_REMOVED], pad);
 
   gst_object_unparent (GST_OBJECT (pad));
 }
@@ -878,18 +880,32 @@ GST_ELEMENT_NAME(element),GST_ELEMENT_NAME(GST_ELEMENT_PARENT(element)),GST_ELEM
 }
 
 static void
+gst_element_shutdown (GtkObject *object)
+{
+  GstElement *element = GST_ELEMENT (object);
+
+  GST_DEBUG_ELEMENT (GST_CAT_REFCOUNTING, element, "shutdown\n");
+
+  if (GST_IS_BIN (GST_OBJECT_PARENT (element)))
+    gst_bin_remove (GST_BIN (GST_OBJECT_PARENT (element)), element);
+
+  if (GTK_OBJECT_CLASS (parent_class)->shutdown)
+    GTK_OBJECT_CLASS (parent_class)->shutdown (object);
+}
+
+static void
 gst_element_real_destroy (GtkObject *object)
 {
   GstElement *element = GST_ELEMENT (object);
   GList *pads;
   GstPad *pad;
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy\n");
+  GST_DEBUG_ELEMENT (GST_CAT_REFCOUNTING, element, "destroy\n");
 
   pads = element->pads;
   while (pads) {
     pad = GST_PAD (pads->data);
-    gst_object_unref (GST_OBJECT (pad));
+    gst_object_unparent (GST_OBJECT (pad));
     pads = g_list_next (pads);
   }
 

@@ -333,14 +333,15 @@ gst_bin_remove (GstBin *bin,
   gst_bin_unset_element_sched (element);
 
   // now remove the element from the list of elements
-  gst_object_unparent (GST_OBJECT (element));
   bin->children = g_list_remove (bin->children, element);
   bin->numchildren--;
 
   GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "removed child %s", GST_ELEMENT_NAME (element));
 
+  gst_object_unparent (GST_OBJECT (element));
+
   /* if we're down to zero children, force state to NULL */
-  if (bin->numchildren == 0)
+  if (bin->numchildren == 0 && GST_ELEMENT_SCHED (bin) != NULL)
     gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
 }
 
@@ -505,7 +506,8 @@ gst_bin_real_destroy (GtkObject *object)
   children = bin->children;
   while (children) {
     child = GST_ELEMENT (children->data);
-    gst_object_unref (GST_OBJECT (child));
+    //gst_object_unref (GST_OBJECT (child));
+    gst_object_unparent (GST_OBJECT (child));
     children = g_list_next (children);
   }
 

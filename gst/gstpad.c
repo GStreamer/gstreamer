@@ -97,6 +97,7 @@ static void		gst_real_pad_init		(GstRealPad *pad);
 static void		gst_real_pad_set_arg		(GtkObject *object,GtkArg *arg,guint id);
 static void		gst_real_pad_get_arg		(GtkObject *object,GtkArg *arg,guint id);
 
+static void 		gst_real_pad_shutdown 		(GtkObject *object);
 static void		gst_real_pad_destroy		(GtkObject *object);
 
 static void		gst_pad_push_func		(GstPad *pad, GstBuffer *buf);
@@ -161,9 +162,10 @@ gst_real_pad_class_init (GstRealPadClass *klass)
   gtk_object_add_arg_type ("GstRealPad::active", GTK_TYPE_BOOL,
                            GTK_ARG_READWRITE, REAL_ARG_ACTIVE);
 
-  gtkobject_class->destroy = GST_DEBUG_FUNCPTR(gst_real_pad_destroy);
-  gtkobject_class->set_arg = GST_DEBUG_FUNCPTR(gst_real_pad_set_arg);
-  gtkobject_class->get_arg = GST_DEBUG_FUNCPTR(gst_real_pad_get_arg);
+  gtkobject_class->shutdown = GST_DEBUG_FUNCPTR(gst_real_pad_shutdown);
+  gtkobject_class->destroy  = GST_DEBUG_FUNCPTR(gst_real_pad_destroy);
+  gtkobject_class->set_arg  = GST_DEBUG_FUNCPTR(gst_real_pad_set_arg);
+  gtkobject_class->get_arg  = GST_DEBUG_FUNCPTR(gst_real_pad_get_arg);
 
   gstobject_class->save_thyself = GST_DEBUG_FUNCPTR(gst_pad_save_thyself);
   gstobject_class->path_string_separator = ".";
@@ -1007,6 +1009,20 @@ gst_pad_get_bufferpool (GstPad *pad)
     GST_DEBUG (GST_CAT_PADS,"no bufferpoolfunc for peer pad %s:%s at %p\n",GST_DEBUG_PAD_NAME(((GstPad*)peer)),&peer->bufferpoolfunc);
     return NULL;
   }
+}
+
+static void
+gst_real_pad_shutdown (GtkObject *object)
+{
+  GstPad *pad = GST_PAD (object);
+
+  GST_DEBUG (GST_CAT_REFCOUNTING, "shutdown\n");
+
+  if (GST_IS_ELEMENT (GST_OBJECT_PARENT (pad)))
+    gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (pad)), pad);
+
+  if (GTK_OBJECT_CLASS (real_pad_parent_class)->shutdown)
+    GTK_OBJECT_CLASS (real_pad_parent_class)->shutdown (object);
 }
 
 
