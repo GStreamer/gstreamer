@@ -1,3 +1,8 @@
+2004-03-19  David Schleef  <ds@schleef.org>
+
+	* gst-libs/gst/Makefile.am:  Enable xoverlay unconditionally,
+	since it doesn't depend on X, and it's part of our ABI.
+
 2004-03-19  Iain <iain@prettypeople.org>
 
 	* gst/interleave/deinterleave.c (deinterleave_sink_link): Use the 
