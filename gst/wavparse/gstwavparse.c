@@ -63,7 +63,7 @@ GST_STATIC_PAD_TEMPLATE ("wavparse_sink",
 static GstStaticPadTemplate src_template_factory =
     GST_STATIC_PAD_TEMPLATE ("wavparse_src",
     GST_PAD_SRC,
-    GST_PAD_ALWAYS,
+    GST_PAD_SOMETIMES,          /* FIXME: spider */
     GST_STATIC_CAPS ("audio/x-raw-int, "
         "endianness = (int) little_endian, "
         "signed = (boolean) { true, false }, "
@@ -171,7 +171,7 @@ gst_wavparse_init (GstWavParse * wavparse)
   gst_pad_set_query_type_function (wavparse->sinkpad,
       gst_wavparse_get_query_types);
   gst_pad_set_query_function (wavparse->sinkpad, gst_wavparse_pad_query);
-
+#if 0
   /* source */
   wavparse->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
@@ -186,13 +186,42 @@ gst_wavparse_init (GstWavParse * wavparse)
   gst_pad_set_event_function (wavparse->srcpad, gst_wavparse_srcpad_event);
   gst_pad_set_event_mask_function (wavparse->srcpad,
       gst_wavparse_get_event_masks);
-
+#endif
   gst_element_set_loop_function (GST_ELEMENT (wavparse), gst_wavparse_loop);
 
   wavparse->state = GST_WAVPARSE_UNKNOWN;
   wavparse->bps = 0;
   wavparse->seek_pending = FALSE;
   wavparse->seek_offset = 0;
+}
+
+static void
+gst_wavparse_destroy_sourcepad (GstWavParse * wavparse)
+{
+  gst_element_remove_pad (GST_ELEMENT (wavparse), wavparse->srcpad);
+  wavparse->srcpad = NULL;
+}
+
+static void
+gst_wavparse_create_sourcepad (GstWavParse * wavparse)
+{
+  if (wavparse->srcpad)
+    gst_wavparse_destroy_sourcepad (wavparse);
+
+  /* source */
+  wavparse->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&src_template_factory), "src");
+  gst_pad_use_explicit_caps (wavparse->srcpad);
+  /*gst_element_add_pad (GST_ELEMENT (wavparse), wavparse->srcpad); */
+  gst_pad_set_formats_function (wavparse->srcpad, gst_wavparse_get_formats);
+  gst_pad_set_convert_function (wavparse->srcpad, gst_wavparse_pad_convert);
+  gst_pad_set_query_type_function (wavparse->srcpad,
+      gst_wavparse_get_query_types);
+  gst_pad_set_query_function (wavparse->srcpad, gst_wavparse_pad_query);
+  gst_pad_set_event_function (wavparse->srcpad, gst_wavparse_srcpad_event);
+  gst_pad_set_event_mask_function (wavparse->srcpad,
+      gst_wavparse_get_event_masks);
 }
 
 static void
@@ -597,6 +626,8 @@ gst_wavparse_parse_fmt (GstWavParse * wavparse, guint size)
     wavparse->width = GUINT16_FROM_LE (format->wBitsPerSample);
     wavparse->format = GINT16_FROM_LE (format->wFormatTag);
 
+    gst_wavparse_create_sourcepad (wavparse);
+
     /* set the caps on the src pad */
     /* FIXME: handle all of the other formats as well */
     switch (wavparse->format) {
@@ -655,6 +686,7 @@ gst_wavparse_parse_fmt (GstWavParse * wavparse, guint size)
       gst_pad_set_explicit_caps (wavparse->srcpad, caps);
       gst_caps_free (caps);
     }
+    gst_element_add_pad (GST_ELEMENT (wavparse), wavparse->srcpad);
 
     GST_DEBUG ("frequency %d, channels %d", wavparse->rate, wavparse->channels);
   }
@@ -1118,6 +1150,7 @@ gst_wavparse_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      gst_wavparse_destroy_sourcepad (wavparse);
       gst_bytestream_destroy (wavparse->bs);
       wavparse->state = GST_WAVPARSE_UNKNOWN;
       wavparse->bps = 0;
