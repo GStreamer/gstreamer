@@ -351,15 +351,23 @@ gst_xvimagesink_get_xv_support (GstXContext *xcontext)
   
   /* First let's check that XVideo extension is available */
   if (!XQueryExtension (xcontext->disp, "XVideo", &i, &i, &i))
-    return NULL;
+    {
+      GST_DEBUG ("XVideo extension is not available");
+      return NULL;
+    }
   
   /* Then we get adaptors list */
   if (Success != XvQueryAdaptors (xcontext->disp, xcontext->root,
                                   &nb_adaptors, &adaptors))
-    return NULL;
+    {
+      GST_DEBUG ("Failed getting XV adaptors list");
+      return NULL;
+    }
   
   xcontext->xv_port_id = 0;
   
+  GST_DEBUG ("Found %d XV adaptor(s)", nb_adaptors);
+    
   /* Now search for an adaptor that supports XvImageMask */
   for (i = 0; i < nb_adaptors && !xcontext->xv_port_id; i++)
     {
@@ -401,18 +409,37 @@ gst_xvimagesink_get_xv_support (GstXContext *xcontext)
           switch (formats[i].type)
             {
               case XvRGB:
-                format_caps = GST_CAPS_NEW ("xvimagesink_caps",
-                                            "video/x-raw-rgb", 
-                                            "endianness", GST_PROPS_INT (xcontext->endianness),
-                                            "depth", GST_PROPS_INT (xcontext->depth),
-                                            "bpp", GST_PROPS_INT (xcontext->bpp),
-                                            "blue_mask", GST_PROPS_INT (formats[i].red_mask),
-                                            "green_mask", GST_PROPS_INT (formats[i].green_mask),
-                                            "red_mask", GST_PROPS_INT (formats[i].blue_mask),
-                                            "width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-                                            "height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-                                            "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
-                break;
+                {
+                  format_caps = GST_CAPS_NEW ("xvimagesink_caps",
+                                              "video/x-raw-rgb",
+                                              "endianness", GST_PROPS_INT (xcontext->endianness),
+                                              "depth", GST_PROPS_INT (xcontext->depth),
+                                              "bpp", GST_PROPS_INT (xcontext->bpp),
+                                              "blue_mask", GST_PROPS_INT (formats[i].red_mask),
+                                              "green_mask", GST_PROPS_INT (formats[i].green_mask),
+                                              "red_mask", GST_PROPS_INT (formats[i].blue_mask),
+                                              "width", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                                              "height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                                              "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
+                  
+                  /* For RGB caps we store them and the image 
+                 format so that we can get back the format
+                 when sinkconnect will give us a caps without
+                 format property */
+                  if (format_caps)
+                    {
+                      GstXvImageFormat *format = NULL;
+                      format = g_new0 (GstXvImageFormat, 1);
+                      if (format)
+                        {
+                          format->format = formats[i].id;
+                          format->caps = gst_caps_copy (format_caps);
+                          xcontext->formats_list = g_list_append (
+                                                xcontext->formats_list, format);
+                        }
+                    }
+                  break;
+                }
               case XvYUV:
                 format_caps = GST_CAPS_NEW ("xvimagesink_caps",
                                             "video/x-raw-yuv", 
@@ -540,9 +567,24 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
 static void
 gst_xvimagesink_xcontext_clear (GstXvImageSink *xvimagesink)
 {
+  GList *list;
+  
   g_return_if_fail (xvimagesink != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   
+  list = xvimagesink->xcontext->formats_list;
+  
+  while (list)
+    {
+      GstXvImageFormat *format = list->data;
+      gst_caps_unref (format->caps);
+      g_free (format);
+      list = g_list_next (list);
+    }
+    
+  if (xvimagesink->xcontext->formats_list)
+    g_list_free (xvimagesink->xcontext->formats_list);
+    
   gst_caps_unref (xvimagesink->xcontext->caps);
   
   g_mutex_lock (xvimagesink->x_lock);
@@ -558,6 +600,35 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink *xvimagesink)
 }
 
 /* Element stuff */
+
+static gint
+gst_xvimagesink_get_fourcc_from_caps (GstXvImageSink *xvimagesink,
+                                      GstCaps *caps)
+{
+  gint fourcc = 0;
+  GList *list = NULL;
+  
+  g_return_val_if_fail (xvimagesink != NULL, 0);
+  g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), 0);
+  
+  list = xvimagesink->xcontext->formats_list;
+  
+  while (list)
+    {
+      GstXvImageFormat *format = list->data;
+      
+      if (format)
+        {
+          GstCaps *icaps = NULL;
+          icaps = gst_caps_intersect (caps, format->caps);
+          if (icaps)
+            fourcc = format->format;
+        }
+      list = g_list_next (list);
+    }
+  
+  return fourcc;
+}
 
 static GstCaps *
 gst_xvimagesink_getcaps (GstPad *pad, GstCaps *caps)
@@ -614,6 +685,9 @@ gst_xvimagesink_sinkconnect (GstPad *pad, GstCaps *caps)
   
   if (gst_caps_has_fixed_property (caps, "format"))
     gst_caps_get_fourcc_int (caps, "format", &xvimagesink->xcontext->im_format);
+  else
+    xvimagesink->xcontext->im_format = gst_xvimagesink_get_fourcc_from_caps (
+                                                             xvimagesink, caps);
   
   if (gst_caps_has_fixed_property (caps, "pixel_width"))
     gst_caps_get_int (caps, "pixel_width", &xvimagesink->pixel_width);

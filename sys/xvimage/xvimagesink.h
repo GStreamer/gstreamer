@@ -56,7 +56,8 @@ G_BEGIN_DECLS
 typedef struct _GstXContext GstXContext;
 typedef struct _GstXWindow GstXWindow;
 typedef struct _GstXvImage GstXvImage;
-
+typedef struct _GstXvImageFormat GstXvImageFormat;
+  
 typedef struct _GstXvImageSink GstXvImageSink;
 typedef struct _GstXvImageSinkClass GstXvImageSinkClass;
 
@@ -82,6 +83,8 @@ struct _GstXContext {
   XvPortID xv_port_id;
   gint im_format;
   
+  GList *formats_list;
+  
   GstCaps *caps;
 };
 
@@ -93,7 +96,13 @@ struct _GstXWindow {
   GC gc;
 };
 
-/* XImage stuff */
+/* XvImage format stuff */
+struct _GstXvImageFormat {
+  gint format;
+  GstCaps *caps;
+};
+
+/* XvImage stuff */
 struct _GstXvImage {
   XvImage *xvimage;
   
