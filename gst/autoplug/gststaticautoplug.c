@@ -80,14 +80,10 @@ gst_static_autoplug_class_init(GstStaticAutoplugClass *klass)
 static void gst_static_autoplug_init(GstStaticAutoplug *autoplug) {
 }
 
-GstPlugin*
-plugin_init (GModule *module)
+static gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
 {
-  GstPlugin *plugin;
   GstAutoplugFactory *factory;
-
-  plugin = gst_plugin_new("gststaticautoplug");
-  g_return_val_if_fail(plugin != NULL,NULL);
 
   gst_plugin_set_longname (plugin, "A static autoplugger");
 
@@ -98,8 +94,15 @@ plugin_init (GModule *module)
   if (factory != NULL) {
      gst_plugin_add_autoplugger (plugin, factory);
   }
-  return plugin;
+  return TRUE;
 }
+
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "gststaticautoplug",
+  plugin_init
+};
 
 static gboolean
 gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)

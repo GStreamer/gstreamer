@@ -363,6 +363,15 @@ gst_object_check_uniqueness (GList *list, const gchar *name)
 }
 
 
+/**
+ * gst_object_save_thyself:
+ * @object: GstObject to save
+ * @parent: The parent XML node to save the object into
+ *
+ * Saves the given object into the parent XML node.
+ *
+ * Returns: the new xmlNodePtr with the saved object
+ */
 xmlNodePtr
 gst_object_save_thyself (GstObject *object, xmlNodePtr parent)
 {
@@ -546,6 +555,3 @@ gst_class_signal_emit_by_name (GstObject *object,
 
   gtk_signal_emit_by_name (oclass->signal_object, name, object, self);
 }
-
-
-

@@ -4,36 +4,51 @@
 GstPad *srcconvpad, *sinkconvpad;
 GstPadTemplate *srcconvtempl, *sinkconvtempl;
 
-static GstPadFactory src_conv_factory = {
-  "src",
-  GST_PAD_FACTORY_SRC,
-  GST_PAD_FACTORY_ALWAYS,
-  GST_PAD_FACTORY_CAPS(
-  "test_src",
-    "audio/raw",
-    "rate",    GST_PROPS_INT_RANGE (16, 20000)
-  ),
-  NULL,
-};
+static GstPadTemplate*
+src_conv_factory (void)
+{
+  return 
+    gst_padtemplate_new (
+      "src",
+      GST_PAD_SRC,
+      GST_PAD_ALWAYS,
+      gst_caps_new (
+        "test_src",
+        "audio/raw",
+	gst_props_new (
+          "rate",    GST_PROPS_INT_RANGE (16, 20000),
+	  NULL)),
+      NULL);
+}
 
-static GstPadFactory sink_conv_factory = {
-  "src",
-  GST_PAD_FACTORY_SINK,
-  GST_PAD_FACTORY_ALWAYS,
-  GST_PAD_FACTORY_CAPS(
-  "test_src",
-    "audio/raw",
-    "rate",    GST_PROPS_INT_RANGE (16, 20000)
-  ),
-  NULL,
-};
+static GstPadTemplate*
+sink_conv_factory (void)
+{
+  return 
+    gst_padtemplate_new (
+      "sink",
+      GST_PAD_SINK,
+      GST_PAD_ALWAYS,
+      gst_caps_new (
+        "test_src",
+        "audio/raw",
+	gst_props_new (
+          "rate",    GST_PROPS_INT_RANGE (16, 20000),
+	  NULL)),
+      NULL);
+}
 
-static GstCapsFactory src_caps = {
-  "src_caps",
-  "audio/raw",
-  "rate",     GST_PROPS_INT (3000),
-  NULL
-};
+static GstCaps*
+src_caps (void)
+{
+  return
+    gst_caps_new (
+      "src_caps",
+      "audio/raw",
+      gst_props_new (
+        "rate",     GST_PROPS_INT (3000),
+	NULL));
+}
 
 static GstCaps *srccaps, *sinkcaps;
 
@@ -41,14 +56,14 @@ static gint src_rate = 140;
 static gint sink_rate = 100;
 
 static GstPadNegotiateReturn
-negotiate_src (GstPad *pad, GstCaps **caps, gint counter)
+negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
 {
   g_print (">(%d:%d)", src_rate, (*caps)->refcount);
   src_rate++;
 
-  if (counter == 0 || caps == NULL) {
+  if (*data == NULL || caps == NULL) {
     g_print ("*");
-    *caps = gst_caps_new_with_props (
+    *caps = gst_caps_new (
 		    "src_caps",
 		    "audio/raw",
 		    gst_props_new (
@@ -77,15 +92,15 @@ negotiate_src (GstPad *pad, GstCaps **caps, gint counter)
 }
 
 static GstPadNegotiateReturn
-negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
+negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
 {
 
   g_print ("<(%d:%d:%p)", sink_rate, (*caps)->refcount, *caps);
   sink_rate++;
 
-  if (counter == 0 || *caps == NULL) {
+  if (*data == NULL || *caps == NULL) {
     g_print ("*");
-    *caps = gst_caps_new_with_props (
+    *caps = gst_caps_new (
 		    "sink_caps",
 		    "audio/raw",
 		    gst_props_new (
@@ -126,15 +141,15 @@ main (int argc, char *argv[])
 
   g_mem_chunk_info();
 
-  srcconvtempl = gst_padtemplate_new (&src_conv_factory);
-  sinkconvtempl = gst_padtemplate_new (&sink_conv_factory);
+  srcconvtempl = src_conv_factory ();
+  sinkconvtempl = sink_conv_factory ();
   srcconvpad = gst_pad_new_from_template (srcconvtempl, "src");
   sinkconvpad = gst_pad_new_from_template (sinkconvtempl, "sink");
 
   gst_pad_set_negotiate_function (srcconvpad, negotiate_src);
   gst_pad_set_negotiate_function (sinkconvpad, negotiate_sink);
 
-  srccaps  = gst_caps_register (&src_caps);
+  srccaps  = src_caps ();
   sinkcaps  = gst_caps_copy (srccaps);
 
   g_print ("The wild goose chase...\n");

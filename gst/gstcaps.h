@@ -56,13 +56,35 @@ struct _GstCaps {
   GstCaps *next;
 };
 
+#define GST_CAPS_NEW(name, type, a...)          \
+gst_caps_new (                                  \
+  name,                                         \
+  type,                                         \
+  gst_props_new (                               \
+    a,                                          \
+    NULL))
+
+#define GST_CAPS_FACTORY(factoryname, a...) 	\
+static GstCaps* 				\
+factoryname (void)                              \
+{                                               \
+  static GstCaps *caps = NULL;			\
+  if (!caps) {                              	\
+    caps = gst_caps_chain (a, NULL);      	\
+  }                                             \
+  return caps;                              	\
+}
+
+#define GST_CAPS_GET(fact) (fact)()
+
+
 /* initialize the subsystem */
 void		_gst_caps_initialize			(void);
 
 GstCaps*	gst_caps_new				(const gchar *name, const gchar *mime, GstProps *props);
 
-void		gst_caps_unref				(GstCaps *caps);
-void		gst_caps_ref				(GstCaps *caps);
+GstCaps*	gst_caps_unref				(GstCaps *caps);
+GstCaps*	gst_caps_ref				(GstCaps *caps);
 void		gst_caps_destroy			(GstCaps *caps);
 
 GstCaps*	gst_caps_copy				(GstCaps *caps);
@@ -89,6 +111,7 @@ GstProps*	gst_caps_get_props			(GstCaps *caps);
 
 GstCaps*	gst_caps_get_by_name			(GstCaps *caps, const gchar *name);
 
+GstCaps*	gst_caps_chain				(GstCaps *caps, ...); 
 GstCaps*	gst_caps_append				(GstCaps *caps, GstCaps *capstoadd); 
 GstCaps*	gst_caps_prepend			(GstCaps *caps, GstCaps *capstoadd); 
 

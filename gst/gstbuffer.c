@@ -33,8 +33,13 @@ static GMutex *_gst_buffer_chunk_lock;
 void 
 _gst_buffer_initialize (void) 
 {
-  _gst_buffer_chunk = g_mem_chunk_new ("GstBuffer", sizeof(GstBuffer),
-    sizeof(GstBuffer) * 16, G_ALLOC_AND_FREE);
+  int buffersize = sizeof(GstBuffer);
+
+  // round up to the nearest 32 bytes for cache-line and other efficiencies
+  buffersize = ((buffersize-1 / 32) + 1) * 32;
+
+  _gst_buffer_chunk = g_mem_chunk_new ("GstBuffer", buffersize,
+    buffersize * 32, G_ALLOC_AND_FREE);
 
   _gst_buffer_chunk_lock = g_mutex_new ();
 }
@@ -56,7 +61,6 @@ gst_buffer_new(void)
   g_mutex_unlock (_gst_buffer_chunk_lock);
   GST_INFO (GST_CAT_BUFFER,"creating new buffer %p",buffer);
 
-//  g_print("allocating new mutex\n");
   buffer->lock = g_mutex_new ();
 #ifdef HAVE_ATOMIC_H
   atomic_set (&buffer->refcount, 1);
@@ -64,15 +68,16 @@ gst_buffer_new(void)
   buffer->refcount = 1;
 #endif
   buffer->flags = 0;
-  buffer->type = 0;
   buffer->data = NULL;
   buffer->size = 0;
   buffer->maxsize = 0;
   buffer->offset = 0;
   buffer->timestamp = 0;
-  buffer->metas = NULL;
+//  buffer->metas = NULL;
   buffer->parent = NULL;
   buffer->pool = NULL;
+  buffer->free = NULL;
+  buffer->copy = NULL;
   
   return buffer;
 }
@@ -126,7 +131,6 @@ gst_buffer_create_sub (GstBuffer *parent,
 
   // copy flags and type from parent, for lack of better
   buffer->flags = parent->flags;
-  buffer->type = parent->type;
 
   // set the data pointer, size, offset, and maxsize
   buffer->data = parent->data + offset;
@@ -136,9 +140,14 @@ gst_buffer_create_sub (GstBuffer *parent,
 
   // again, for lack of better, copy parent's timestamp
   buffer->timestamp = parent->timestamp;
+  buffer->maxage = parent->maxage;
 
   // no metas, this is sane I think
-  buffer->metas = NULL;
+//  buffer->metas = NULL;
+
+  // if the parent buffer is a subbuffer itself, use its parent, a real buffer
+  if (parent->parent != NULL)
+    parent = parent->parent;
 
   // set parentage and reference the parent
   buffer->parent = parent;
@@ -205,7 +214,7 @@ gst_buffer_append (GstBuffer *buffer,
  */
 void gst_buffer_destroy (GstBuffer *buffer) 
 {
-  GSList *metas;
+//  GSList *metas;
 
   g_return_if_fail (buffer != NULL);
 
@@ -215,10 +224,15 @@ void gst_buffer_destroy (GstBuffer *buffer)
   if (GST_BUFFER_DATA (buffer) &&
       !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DONTFREE) &&
       (buffer->parent == NULL)) {
-    g_free (GST_BUFFER_DATA (buffer));
-//    g_print("freed data in buffer\n");
+    // if there's a free function, use it
+    if (buffer->free != NULL) {
+      (buffer->free)(buffer);
+    } else {
+      g_free (GST_BUFFER_DATA (buffer));
+    }
   }
 
+/* DEPRACATED!!!
   // unreference any metadata attached to this buffer
   metas = buffer->metas;
   while (metas) {
@@ -226,6 +240,7 @@ void gst_buffer_destroy (GstBuffer *buffer)
     metas = g_slist_next (metas);
   }
   g_slist_free (buffer->metas);
+*/
 
   // unreference the parent if there is one
   if (buffer->parent != NULL)
@@ -334,7 +349,9 @@ gst_buffer_unref (GstBuffer *buffer)
  * @meta: the metadata to add to this buffer
  *
  * Add the meta data to the buffer.
+ * DEPRACATED!!!
  */
+/* DEPRACATED!!!
 void 
 gst_buffer_add_meta (GstBuffer *buffer, GstMeta *meta) 
 {
@@ -344,15 +361,18 @@ gst_buffer_add_meta (GstBuffer *buffer, GstMeta *meta)
   gst_meta_ref (meta);
   buffer->metas = g_slist_append (buffer->metas,meta);
 }
+*/
 
 /**
  * gst_buffer_get_metas:
  * @buffer: the GstBuffer to get the metadata from
  *
  * Get the metadatas from the buffer.
+ * DEPRACATED!!!
  *
  * Returns: a GSList of metadata
  */
+/* DEPRACATED!!!
 GSList*
 gst_buffer_get_metas (GstBuffer *buffer) 
 {
@@ -360,15 +380,18 @@ gst_buffer_get_metas (GstBuffer *buffer)
 
   return buffer->metas;
 }
+*/
 
 /**
  * gst_buffer_get_first_meta:
  * @buffer: the GstBuffer to get the metadata from
  *
  * Get the first metadata from the buffer.
+ * DEPRACATED!!!
  *
  * Returns: the first metadata from the buffer
  */
+/* DEPRACATED!!!
 GstMeta*
 gst_buffer_get_first_meta (GstBuffer *buffer) 
 {
@@ -378,6 +401,7 @@ gst_buffer_get_first_meta (GstBuffer *buffer)
     return NULL;
   return GST_META (buffer->metas->data);
 }
+*/
 
 /**
  * gst_buffer_remove_meta:
@@ -385,7 +409,9 @@ gst_buffer_get_first_meta (GstBuffer *buffer)
  * @meta: the metadata to remove
  *
  * Remove the given metadata from the buffer.
+ * DEPRACATED!!!
  */
+/* DEPRACATED!!!
 void 
 gst_buffer_remove_meta (GstBuffer *buffer, GstMeta *meta) 
 {
@@ -394,4 +420,47 @@ gst_buffer_remove_meta (GstBuffer *buffer, GstMeta *meta)
 
   buffer->metas = g_slist_remove (buffer->metas, meta);
   gst_meta_unref (meta);
+}
+*/
+
+
+
+/**
+ * gst_buffer_copy:
+ * @buffer: the orignal GstBuffer to make a copy of
+ *
+ * Make a full copy of the give buffer, data and all.
+ *
+ * Returns: new buffer
+ */
+GstBuffer *
+gst_buffer_copy (GstBuffer *buffer)
+{
+  GstBuffer *newbuf;
+
+  // allocate a new buffer
+  newbuf = gst_buffer_new();
+
+  // if a copy function exists, use it, else copy the bytes
+  if (buffer->copy != NULL) {
+    (buffer->copy)(buffer,newbuf);
+  } else {
+    // copy the absolute size
+    newbuf->size = buffer->size;
+    // allocate space for the copy
+    newbuf->data = (guchar *)g_malloc (buffer->data);
+    // copy the data straight across
+    memcpy(newbuf,buffer->data,buffer->size);
+    // the new maxsize is the same as the size, since we just malloc'd it
+    newbuf->maxsize = newbuf->size;
+  }
+  newbuf->offset = buffer->offset;
+  newbuf->timestamp = buffer->timestamp;
+  newbuf->maxage = buffer->maxage;
+
+  // since we just created a new buffer, so we have no ties to old stuff
+  newbuf->parent = NULL;
+  newbuf->pool = NULL;
+
+  return newbuf;
 }

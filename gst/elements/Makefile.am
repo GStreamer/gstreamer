@@ -15,6 +15,7 @@ libgstelements_la_SOURCES =	\
 	gstidentity.c		\
 	gstfakesink.c		\
 	gstdisksrc.c		\
+	gstdisksink.c		\
 	gstfdsrc.c		\
 	gstfdsink.c		\
 	gstmultidisksrc.c	\
@@ -28,6 +29,7 @@ noinst_HEADERS =		\
 	gstidentity.h		\
 	gstfakesink.h		\
 	gstdisksrc.h		\
+	gstdisksink.h		\
 	gstfdsrc.h		\
 	gstmultidisksrc.h	\
 	gsthttpsrc.h		\
@@ -39,4 +41,4 @@ noinst_HEADERS =		\
 CFLAGS += -O2 -Wall
 
 libgstelements_la_LIBADD = $(GHTTP_LIBS)
-libgstelements_la_LDFLAGS = -version-info $(GSTREAMER_LIBVERSION)
+libgstelements_la_LDFLAGS = -version-info $(GST_LIBVERSION)

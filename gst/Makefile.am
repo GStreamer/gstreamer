@@ -116,7 +116,8 @@ libgstinclude_HEADERS =		\
 	gsttypefind.h		\
 	gstutils.h		\
 	gstparse.h		\
-	gstxml.h
+	gstxml.h		\
+	gstversion.h
 
 noinst_HEADERS = 	\
 	gst_private.h	\
@@ -130,6 +131,6 @@ noinst_HEADERS = 	\
 
 CFLAGS = $(LIBGST_CFLAGS)
 LIBS = $(LIBGST_LIBS)
-libgst_la_LDFLAGS = -version-info $(GSTREAMER_LIBVERSION)
+libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 
 EXTRA_DIST = ROADMAP

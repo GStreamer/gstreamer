@@ -7,12 +7,92 @@ Automatically create and connect elements
 <!-- ##### SECTION Long_Description ##### -->
 <para>
 GstAutoplug is an abstract class that is used for constructing and 
-connecting elements. 
+connecting elements. Two types og autopluggers exist: renderer ones and non
+renderer ones. the renderer autopluggers will not have any src pads while the
+non renderer ones do.
+</para>
+
+<para>
+You first need to create a suitable autoplugger with gst_autoplugfactory_make().
+The name of the autoplugger must be one of the registered autopluggers 
+(see #GstStaticAutoplug and #GstStaticAutoplugRender).
+</para>
+<para>
+A list of all available autopluggers can be obtained with gst_autoplugfactory_get_list().
+</para>
+<para>
+If the autoplugger supports the RENDERER API, use gst_autoplug_to_renderers() call to
+create a bin that connectes the src caps to the specified rendrer elements. You can 
+then add the bin to a pipeline and run it.
+
+  <programlisting>
+  GstAutoplug *autoplug;
+  GstElement  *element;
+  GstElement  *sink;
+
+  /* create a static autoplugger */
+  autoplug = gst_autoplugfactory_make ("staticrender");
+
+  /* create an osssink */
+  sink = gst_elementfactory_make ("osssink", "our_sink");
+
+  /* create an element that can play audio/mp3 through osssink */
+  element = gst_autoplug_to_renderers (autoplug, 
+   				       gst_caps_new (
+				         "sink_audio_caps",
+				         "audio/mp3",
+					 NULL
+				       ),
+				       sink,
+				       NULL);
+
+  /* add the element to a bin and connect the sink pad */
+  ...
+  </programlisting>
+</para>
+<para>
+If the autoplugger supports the CAPS API, use gst_autoplug_to_caps() call to
+connect the src caps to the destination caps. The created bin will have src pads 
+compatible with the provided sink caps.
+
+  <programlisting>
+  GstAutoplug *autoplug;
+  GstElement  *element;
+
+  /* create a static autoplugger */
+  autoplug = gst_autoplugfactory_make ("static");
+
+  /* create an element that converts audio/mp3 to audio/raw */
+  element = gst_autoplug_to_caps (autoplug, 
+   				  gst_caps_new (
+				    "sink_audio_caps",
+				    "audio/mp3",
+				    NULL
+				  ),
+   				  gst_caps_new (
+				    "src_audio_caps",
+				    "audio/raw",
+				    NULL
+				  ),
+				  NULL);
+
+  /* add the element to a bin and connect the src/sink pads */
+  ...
+  </programlisting>
+</para>
+
+<para>
+Optionally you can get a notification when a new object is added to the created
+pipeline with a gtk_signal_connect to the "new_object" signal.
+</para>
+
+<para>
+Use the regular gst_object_destroy() call to destroy the autoplugger.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+GstStaticAutoplug, GstStaticAutoplugRender
 </para>
 
 <!-- ##### STRUCT GstAutoplug ##### -->
@@ -24,7 +104,7 @@ connecting elements.
 
 <!-- ##### ENUM GstAutoplugFlags ##### -->
 <para>
-
+The type of the autoplugger.
 </para>
 
 @GST_AUTOPLUG_TO_CAPS: 

@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 
 #include "gstdisksrc.h"
+#include "gstdisksink.h"
 #include "gstidentity.h"
 #include "gstfakesink.h"
 #include "gstfakesrc.h"
@@ -50,6 +51,7 @@ static struct _elements_entry _elements[] = {
   { "fakesrc", 	    gst_fakesrc_get_type, 	&gst_fakesrc_details,		NULL },
   { "fakesink",     gst_fakesink_get_type, 	&gst_fakesink_details,		NULL },
   { "disksrc", 	    gst_disksrc_get_type, 	&gst_disksrc_details,		NULL },
+  { "disksink",	    gst_disksink_get_type,      &gst_disksink_details, 		NULL },
   { "identity",     gst_identity_get_type,  	&gst_identity_details,		NULL },
   { "fdsink",       gst_fdsink_get_type, 	&gst_fdsink_details,		NULL },
   { "fdsrc", 	    gst_fdsrc_get_type, 	&gst_fdsrc_details,		NULL },
@@ -65,14 +67,11 @@ static struct _elements_entry _elements[] = {
   { NULL, 0 },
 };
 
-GstPlugin *plugin_init (GModule *module)
+static gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
 {
-  GstPlugin *plugin;
   GstElementFactory *factory;
   gint i = 0;
-
-  plugin = gst_plugin_new("gstelements");
-  g_return_val_if_fail(plugin != NULL,NULL);
 
   gst_plugin_set_longname (plugin, "Standard GST Elements");
 
@@ -92,5 +91,13 @@ GstPlugin *plugin_init (GModule *module)
 
 //  INFO (GST_INFO_PLUGIN_LOAD,"gstelements: loaded %d standard elements", i);
 
-  return plugin;
+  return TRUE;
 }
+
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "gstelements",
+  plugin_init
+};
+

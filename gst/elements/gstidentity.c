@@ -44,6 +44,7 @@ enum {
   ARG_0,
   ARG_LOOP_BASED,
   ARG_SLEEP_TIME,
+  ARG_SILENT,
 };
 
 
@@ -92,9 +93,41 @@ gst_identity_class_init (GstIdentityClass *klass)
                            GTK_ARG_READWRITE, ARG_LOOP_BASED);
   gtk_object_add_arg_type ("GstIdentity::sleep_time", GTK_TYPE_UINT,
                            GTK_ARG_READWRITE, ARG_SLEEP_TIME);
+  gtk_object_add_arg_type ("GstIdentity::silent", GTK_TYPE_BOOL,
+                           GTK_ARG_READWRITE, ARG_SILENT);
 
   gtkobject_class->set_arg = gst_identity_set_arg;  
   gtkobject_class->get_arg = gst_identity_get_arg;
+}
+
+static GstBufferPool*
+gst_identity_get_bufferpool (GstPad *pad)
+{
+  GstIdentity *identity;
+
+  identity = GST_IDENTITY (gst_pad_get_parent (pad));
+
+  return gst_pad_get_bufferpool (identity->srcpad);
+}
+
+static GstPadNegotiateReturn
+gst_identity_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
+{
+  GstIdentity *identity;
+
+  identity = GST_IDENTITY (gst_pad_get_parent (pad));
+
+  return gst_pad_negotiate_proxy (pad, identity->sinkpad, caps);
+}
+
+static GstPadNegotiateReturn
+gst_identity_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
+{
+  GstIdentity *identity;
+
+  identity = GST_IDENTITY (gst_pad_get_parent (pad));
+
+  return gst_pad_negotiate_proxy (pad, identity->srcpad, caps);
 }
 
 static void 
@@ -103,13 +136,16 @@ gst_identity_init (GstIdentity *identity)
   identity->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (identity), identity->sinkpad);
   gst_pad_set_chain_function (identity->sinkpad, gst_identity_chain);
+  gst_pad_set_bufferpool_function (identity->sinkpad, gst_identity_get_bufferpool);
+  gst_pad_set_negotiate_function (identity->sinkpad, gst_identity_negotiate_sink);
   
   identity->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (identity), identity->srcpad);
+  gst_pad_set_negotiate_function (identity->srcpad, gst_identity_negotiate_src);
 
   identity->loop_based = FALSE;
-//  identity->sleep_time = 10000;
   identity->sleep_time = 0;
+  identity->silent = FALSE;
 }
 
 static void 
@@ -122,7 +158,9 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (buf != NULL);
 
   identity = GST_IDENTITY (gst_pad_get_parent (pad));
-  g_print("identity: ******* (%s:%s)i \n",GST_DEBUG_PAD_NAME(pad));
+
+  if (!identity->silent)
+    g_print("identity: ******* (%s:%s)i \n",GST_DEBUG_PAD_NAME(pad));
   
   gst_pad_push (identity->srcpad, buf);
 
@@ -147,7 +185,8 @@ gst_identity_loop (GstElement *element)
 
     gst_pad_push (identity->srcpad, buf);
 
-    usleep (identity->sleep_time);
+    if (identity->sleep_time)
+      usleep (identity->sleep_time);
 
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
 }
@@ -177,6 +216,9 @@ gst_identity_set_arg (GtkObject *object, GtkArg *arg, guint id)
     case ARG_SLEEP_TIME:
       identity->sleep_time = GTK_VALUE_UINT (*arg);
       break;
+    case ARG_SILENT:
+      identity->silent = GTK_VALUE_BOOL (*arg);
+      break;
     default:
       break;
   }
@@ -196,6 +238,9 @@ static void gst_identity_get_arg(GtkObject *object,GtkArg *arg,guint id) {
       break;
     case ARG_SLEEP_TIME:
       GTK_VALUE_UINT (*arg) = identity->sleep_time;
+      break;
+    case ARG_SILENT:
+      GTK_VALUE_BOOL (*arg) = identity->silent;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;

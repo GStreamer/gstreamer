@@ -312,8 +312,8 @@ gst_disksrc_get_region (GstPad *pad, GstRegionType type,guint64 offset,guint64 l
 
 
 /* open the file and mmap it, necessary to go to READY state */
-static
-gboolean gst_disksrc_open_file (GstDiskSrc *src)
+static gboolean 
+gst_disksrc_open_file (GstDiskSrc *src)
 {
   g_return_val_if_fail (!GST_FLAG_IS_SET (src ,GST_DISKSRC_OPEN), FALSE);
 

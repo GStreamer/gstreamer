@@ -6,13 +6,51 @@ Dynamically loadable Elements
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-GStreamer is extensible so <classname>GstElements</classname> can be loaded at runtime.
-
+GStreamer is extensible so <classname>GstElements</classname> can be loaded at runtime. A plugin
+system can provide one or more of the following basic <application>GStreamer</application> 
+objects factories:
+ <itemizedlist>
+  <listitem>
+   <para>
+    A #GstElementFactory: the components to build a pipeline.
+   </para>
+  </listitem>
+  <listitem>
+   <para>
+    A #GstTypeFactory: A MIME type and an optional typefind function.
+   </para>
+  </listitem>
+  <listitem>
+   <para>
+    A #GstAutoplugFactory: An object used to automatically construct pipelines.
+   </para>
+  </listitem>
+ </itemizedlist>
+</para>
+<para>
+A new plugin is created with gst_plugin_new(). this function will return a handle
+to the GstPlugin or NULL if the plugin could not be created.
+</para>
+<para>
+Once a GstPlugin element has been created, you can add the different types of factories
+to it with gst_plugin_add_factory(), gst_plugin_add_type(), gst_plugin_add_autoplugger().
+</para>
+<para>
+<application>Gstreamer</application> plugins should have a method plugin_init that is called
+by the loader.
+</para>
+<para>
+use gst_plugin_find(), gst_plugin_get_list(), gst_plugin_get_factory_list(), gst_plugin_get_type_list() and
+gst_plugin_get_autoplug_list() to query the plugin repository.
+</para>
+<para>
+Plugins are always automaticlly loaded  so you don't need to call gst_plugin_load() explicitly 
+to bring it into memory. 
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+#GstElement, #GstType, #GstAutoplug
 </para>
 
 <!-- ##### STRUCT GstPlugin ##### -->
@@ -31,12 +69,6 @@ GStreamer is extensible so <classname>GstElements</classname> can be loaded at r
 @numautopluggers: 
 @loaded: 
 
-<!-- ##### STRUCT GstPluginElement ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### USER_FUNCTION GstPluginInitFunc ##### -->
 <para>
 A plugin should implement this function called plugin_init. It will be called
@@ -44,8 +76,19 @@ by the loader at statup.
 </para>
 
 @module: The <classname>GModule</classname> it was loaded from
+@plugin: 
 @Returns: The plugin or NULL is an error was detected.
 
+
+<!-- ##### STRUCT GstPluginDesc ##### -->
+<para>
+
+</para>
+
+@major_version: 
+@minor_version: 
+@name: 
+@plugin_init: 
 
 <!-- ##### FUNCTION gst_plugin_new ##### -->
 <para>
@@ -53,6 +96,8 @@ by the loader at statup.
 </para>
 
 @name: 
+@major: 
+@minor: 
 @Returns: 
 
 

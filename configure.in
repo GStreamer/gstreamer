@@ -4,44 +4,45 @@ AC_CANONICAL_SYSTEM
 
 AM_CONFIG_HEADER(config.h)
 
-dnl FIXME this should be GSTREAMER_ now
-STREAMER_MAJOR_VERSION=0
-STREAMER_MINOR_VERSION=1
-STREAMER_MICRO_VERSION=1
-STREAMER_VERSION=$STREAMER_MAJOR_VERSION.$STREAMER_MINOR_VERSION.$STREAMER_MICRO_VERSION
+GST_VERSION_MAJOR=0
+GST_VERSION_MINOR=1
+GST_VERSION_MICRO=1
+GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
 
 PACKAGE=gstreamer
-VERSION=$STREAMER_VERSION
+VERSION=$GST_VERSION
 AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
 AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
 AC_SUBST(PACKAGE)
 AC_SUBST(VERSION)
 
 dnl libtool
-STREAMER_CURRENT=0
-STREAMER_REVISION=0
-STREAMER_AGE=0
-GSTREAMER_LIBVERSION=$STREAMER_CURRENT:$STREAMER_REVISION:$STREAMER_AGE
+GST_CURRENT=0
+GST_REVISION=0
+GST_AGE=0
+GST_LIBVERSION=$GST_CURRENT:$GST_REVISION:$GST_AGE
 
 AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
 ACLOCAL="$ACLOCAL $ACLOCAL_FLAGS"
 
-AC_SUBST(STREAMER_MAJOR_VERSION)
-AC_SUBST(STREAMER_MINOR_VERSION)
-AC_SUBST(STREAMER_MICRO_VERSION)
-AC_SUBST(STREAMER_VERSION)
+AC_SUBST(GST_VERSION_MAJOR)
+AC_SUBST(GST_VERSION_MINOR)
+AC_SUBST(GST_VERSION_MICRO)
+AC_SUBST(GST_VERSION)
 
-AC_SUBST(STREAMER_CURRENT)
-AC_SUBST(STREAMER_REVISION)
-AC_SUBST(STREAMER_AGE)
-AC_SUBST(GSTREAMER_LIBVERSION)
+AC_SUBST(GST_CURRENT)
+AC_SUBST(GST_REVISION)
+AC_SUBST(GST_AGE)
+AC_SUBST(GST_LIBVERSION)
 
 
 AM_MAINTAINER_MODE
 
 AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_CXXCPP
 AC_ISC_POSIX
 AC_STDC_HEADERS
 AC_ARG_PROGRAM
@@ -432,6 +433,26 @@ dnl Check for librtp
 AC_MSG_CHECKING(rtp library)
 AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
 
+dnl Check for arts
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_MSG_CHECKING(arts library)
+dnl AC_CHECK_LIB(artsflow, convert_stereo_ifloat_2float, HAVE_ARTS=yes, HAVE_ARTS=no, -lmcop -lartsflow_idl)
+AC_CHECK_HEADER(arts/artsflow.h, HAVE_ARTS=yes, HAVE_ARTS=no)
+AC_LANG_RESTORE
+
+dnl Check for libraw1394
+AC_MSG_CHECKING(raw1394 library)
+AC_CHECK_LIB(raw1394, raw1394_get_handle, HAVE_RAW1394=yes, HAVE_RAW1394=no, )
+
+dnl Check for libdv
+AC_MSG_CHECKING(libdv)
+AC_CHECK_LIB(dv, dv_init, HAVE_LIBDV=yes, HAVE_LIBDV=no, -lm $GLIB_LIBS $GLIB_CFLAGS)
+
+dnl Check for aalib
+AC_MSG_CHECKING(aalib)
+AC_CHECK_LIB(aa, aa_init, HAVE_LIBAA=yes, HAVE_LIBAA=no, )
+
 
 dnl check if css-auth.c exists (FIXME)
 AC_MSG_CHECKING(DVD CSS code)
@@ -695,6 +716,10 @@ AM_CONDITIONAL(HAVE_LIBASOUND,      test "x$HAVE_LIBASOUND" = "xyes")
 AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
 AM_CONDITIONAL(HAVE_LIBXMMS,        test "x$HAVE_LIBXMMS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
+AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
+AM_CONDITIONAL(HAVE_RAW1394,        test "x%HAVE_RAW1394" = "xyes")
+AM_CONDITIONAL(HAVE_LIBDV,          test "x%HAVE_LIBDV" = "xyes")
+AM_CONDITIONAL(HAVE_LIBAA,          test "x%HAVE_LIBAA" = "xyes")
 
 
 
@@ -779,6 +804,7 @@ AC_OUTPUT([Makefile
 include/Makefile
 include/wine/Makefile
 gst/Makefile
+gst/gstversion.h
 gst/types/Makefile
 gst/meta/Makefile
 gst/elements/Makefile
@@ -792,6 +818,7 @@ libs/putbits/Makefile
 libs/winloader/Makefile
 libs/idct/Makefile
 plugins/Makefile
+plugins/aasink/Makefile
 plugins/alsa/Makefile
 plugins/au/Makefile
 plugins/audioscale/Makefile
@@ -837,8 +864,10 @@ plugins/filters/median/Makefile
 plugins/filters/ladspa/Makefile
 plugins/filters/stereo2mono/Makefile
 plugins/filters/passthrough/Makefile
+plugins/filters/adder/Makefile
 plugins/filters/colorspace/Makefile
 plugins/filters/volenv/Makefile
+plugins/filters/adder/Makefile
 plugins/icecast/Makefile
 plugins/icecast/icecastsend/Makefile
 plugins/effects/Makefile
@@ -864,7 +893,9 @@ plugins/esd/Makefile
 plugins/esd/esdsink/Makefile
 plugins/artsd/Makefile
 plugins/xmms/Makefile
-plugins/mulaw/Makefile
+plugins/arts/Makefile
+plugins/1394/Makefile
+plugins/dv/Makefile
 gstplay/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
 test/Makefile
@@ -886,10 +917,12 @@ examples/queue2/Makefile
 examples/queue3/Makefile
 examples/queue4/Makefile
 examples/thread/Makefile
+examples/mixer/Makefile
 examples/launch/Makefile
 examples/xml/Makefile
 examples/plugins/Makefile
 examples/typefind/Makefile
+examples/mixer/Makefile
 editor/Makefile
 editor/pixmaps/Makefile
 tools/Makefile

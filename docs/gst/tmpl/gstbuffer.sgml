@@ -10,13 +10,54 @@ Buffers are the basic unit of data transfer in GST.  The GstBuffer type
 provides all the state necessary to define a region of memory as part of a
 stream.  Sub-buffer are also supported, allowing a smaller region of a
 buffer to become its own buffer, with mechanisms in place to ensure that
-nither memory space goes away.  Metadata is supported as a list of
+neither memory space goes away.  Metadata is supported as a list of
 pointers to arbitrary metadata.
+</para>
+<para>
+Buffers are usually created with gst_buffer_new(). After a buffer has been 
+created one will typically allocate memory for it and set the size of the 
+buffer data.
+<programlisting>
+  GstBuffer *buffer;
+  gint size, widht, height, bpp;
+
+  size = width * height * bpp;
+
+  buffer = gst_buffer_new ();
+  GST_BUFFER_SIZE (buffer) = size;
+  GST_BUFFER_DATA (buffer) = g_alloc (size);
+  ...
+  
+</programlisting>
+</para>
+<para>
+GstBuffers can also be created from a GstBufferPool with 
+gst_buffer_new_from_pool(). The bufferpool can be obtained from a
+peer element with gst_pad_get_bufferpool().
+</para>
+<para>
+gst_buffer_ref() is used to increase the refcount of a buffer. This must be
+done when you want to keep a handle to the buffer after pushing it to the
+next element.
+</para>
+<para>
+To efficiently create a smaller buffer out of an existing one, you can
+use gst_buffer_create_sub().
+</para>
+<para>
+Several flags of the buffer can be set and unset with the GST_BUFFER_FLAG_SET()
+and GST_BUFFER_FLAG_UNSET() macros. Use GST_BUFFER_FLAG_IS_SET() to test it
+a certain flag is set.
+</para>
+<para>
+Buffers usually are freed by unreffing them with gst_buffer_unref().
+gst_buffer_destroy() can also be used to effectively destroy the buffer
+regardless of the refcount (dangerous).
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+#GstBufferPool, #GstPad
 </para>
 
 <!-- ##### MACRO GST_BUFFER_FLAGS ##### -->
@@ -54,14 +95,6 @@ Clear a flag in a buffer.
 @flag: the flag to clear
 
 
-<!-- ##### MACRO GST_BUFFER_TYPE ##### -->
-<para>
-Retrieves the type id of the data in the buffer.
-</para>
-
-@buf: GstBuffer
-
-
 <!-- ##### MACRO GST_BUFFER_DATA ##### -->
 <para>
 Retrieves a pointer to the data element of this buffer
@@ -88,7 +121,7 @@ Get the offset in the source file of this buffer.
 
 <!-- ##### MACRO GST_BUFFER_MAXSIZE ##### -->
 <para>
-
+Gets the maximun size of this buffer.
 </para>
 
 @buf: GstBuffer
@@ -97,6 +130,22 @@ Get the offset in the source file of this buffer.
 <!-- ##### MACRO GST_BUFFER_TIMESTAMP ##### -->
 <para>
 Get the timestamp for this buffer.
+</para>
+
+@buf: GstBuffer
+
+
+<!-- ##### MACRO GST_BUFFER_BUFFERPOOL ##### -->
+<para>
+Get the bufferpool for this buffer.
+</para>
+
+@buf: GstBuffer
+
+
+<!-- ##### MACRO GST_BUFFER_POOL_PRIVATE ##### -->
+<para>
+Get the bufferpool private data.
 </para>
 
 @buf: GstBuffer
@@ -131,6 +180,22 @@ This macro releases a lock on the object.
 @buf: GstBuffer to unlock.
 
 
+<!-- ##### MACRO GST_BUFFER_PARENT ##### -->
+<para>
+Get the parent of this buffer. The parent is set on subbuffers.
+</para>
+
+@buf: GstBuffer to get the parent of.
+
+
+<!-- ##### MACRO GST_BUFFER_MAXAGE ##### -->
+<para>
+Get the maximun age of a buffer.
+</para>
+
+@buf: GstBuffer to get the maxage of.
+
+
 <!-- ##### ENUM GstBufferFlags ##### -->
 <para>
 
@@ -150,7 +215,6 @@ used when data in a stream has been skipped
 </para>
 
 @lock: 
-@flags: 
 @data: 
 @size: 
 @maxsize: 
@@ -160,6 +224,7 @@ used when data in a stream has been skipped
 @metas: 
 @parent: 
 @pool: 
+@pool_private: 
 
 <!-- ##### FUNCTION gst_buffer_new ##### -->
 <para>
@@ -175,6 +240,15 @@ used when data in a stream has been skipped
 </para>
 
 @pool: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_copy ##### -->
+<para>
+
+</para>
+
+@buffer: 
 @Returns: 
 
 

@@ -80,7 +80,8 @@ libgstinclude_HEADERS =		\
 	gsttypefind.h		\
 	gstutils.h		\
 	gstparse.h		\
-	gstxml.h
+	gstxml.h		\
+	gstversion.h
 
 noinst_HEADERS = 	\
 	gst_private.h	\
@@ -92,7 +93,7 @@ noinst_HEADERS = 	\
 	gstsparc.h	\
 	gstpropsprivate.h
 
-libgst_la_LDFLAGS = -version-info $(GSTREAMER_LIBVERSION) $(LIBGST_LIBS)
+libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION) $(LIBGST_LIBS)
 libgst_la_LIBADD = libcothreads.la
 
 EXTRA_DIST = ROADMAP

@@ -11,6 +11,32 @@ become children of itself.  Pads from the child elements can be ghosted to
 the bin, making the bin itself look transparently like any other element,
 allowing for deep nesting of predefined sub-pipelines.
 </para>
+<para>
+A new GstBin is created with gst_bin_new()
+</para>
+<para>
+After the bin has been created you will typically add elements to it with
+gst_bin_add(). You can remove elements with gst_bin_remove().
+</para>
+<para>
+An element can be retrieved from a bin with gst_bin_get_by_name(), using the
+elements name. gst_bin_get_by_name_recurse_up() is mainly used for internal
+purposes and will query the parent bins when the element is not found in the
+current bin.
+</para>
+<para>
+The list of elements in a bin can be retrieved with gst_bin_get_list().
+</para>
+<para>
+After the bin has been set to the PLAYING state (with gst_element_set_state()), 
+gst_bin_iterate() is used to process the elements in the bin.
+</para>
+<para>
+The "object_added" signal is fired whenever a new object is added to the bin.
+</para>
+<para>
+gst_bin_destroy() is used to destroy the bin. 
+</para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
@@ -43,10 +69,10 @@ Flags for a bin.
 
 <!-- ##### MACRO gst_bin_destroy ##### -->
 <para>
-
+Free the memory allocated by this bin
 </para>
 
-@bin: 
+@bin: the bin to free
 
 
 <!-- ##### FUNCTION gst_bin_add ##### -->

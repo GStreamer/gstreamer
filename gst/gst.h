@@ -26,8 +26,8 @@
 
 #include <glib.h>
 
+#include <gst/gstversion.h>
 #include <gst/gsttypes.h>
-
 #include <gst/gstinfo.h>
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>

@@ -21,6 +21,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #include "gstextratypes.h"
 
@@ -254,7 +255,7 @@ gst_util_set_object_arg (GtkObject *object, guchar *name, gchar *value)
 	}
         case GTK_TYPE_BOOL: {
 	  gboolean i = FALSE;
-	  if (!strcmp ("true", value)) i = TRUE;
+	  if (!strncmp ("true", value, 4)) i = TRUE;
           gtk_object_set (GTK_OBJECT (object), name, i, NULL);
 	  break;
 	}

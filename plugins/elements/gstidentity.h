@@ -60,6 +60,7 @@ struct _GstIdentity {
   gboolean loop_based;
 
   guint sleep_time;
+  gboolean silent;
 };
 
 struct _GstIdentityClass {

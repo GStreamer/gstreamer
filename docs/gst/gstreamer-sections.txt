@@ -27,6 +27,9 @@ cothread_get_data
 gst_init
 gst_main
 gst_main_quit
+GST_VERSION_MICRO
+GST_VERSION_MAJOR
+GST_VERSION_MINOR
 <SUBSECTION Standard>
 </SECTION>
 
@@ -130,19 +133,25 @@ GST_BUFFER_FLAGS
 GST_BUFFER_FLAG_IS_SET
 GST_BUFFER_FLAG_SET
 GST_BUFFER_FLAG_UNSET
-GST_BUFFER_TYPE
 GST_BUFFER_DATA
 GST_BUFFER_SIZE
 GST_BUFFER_OFFSET
 GST_BUFFER_MAXSIZE
 GST_BUFFER_TIMESTAMP
+GST_BUFFER_BUFFERPOOL
+GST_BUFFER_POOL_PRIVATE
 GST_BUFFER_LOCK
 GST_BUFFER_TRYLOCK
 GST_BUFFER_UNLOCK
+GST_BUFFER_PARENT
+GST_BUFFER_MAXAGE
+
+
 GstBufferFlags
 GstBuffer
 gst_buffer_new
 gst_buffer_new_from_pool
+gst_buffer_copy
 gst_buffer_create_sub
 gst_buffer_append
 gst_buffer_ref
@@ -367,11 +376,10 @@ GstPadGetRegionFunction
 GstPadQoSFunction
 GstPadEOSFunction
 GstPadNewCapsFunction
-
+GstPadBufferPoolFunction
 
 GstPadNegotiateReturn
 GstPadNegotiateFunction
-
 
 GstPadPushFunction
 GstPadPullFunction
@@ -391,6 +399,7 @@ gst_pad_set_negotiate_function
 gst_pad_set_qos_function
 gst_pad_set_eos_function
 gst_pad_set_newcaps_function
+gst_pad_set_bufferpool_function
 gst_pad_set_caps
 gst_pad_get_caps
 gst_pad_check_compatibility
@@ -410,6 +419,7 @@ gst_pad_disconnect
 gst_pad_push
 gst_pad_pull
 gst_pad_pullregion
+gst_pad_get_bufferpool
 gst_pad_set_eos
 gst_pad_handle_qos
 gst_pad_eos
@@ -439,6 +449,7 @@ GST_RPAD_QOSFUNC
 GST_RPAD_EOSFUNC
 GST_RPAD_NEGOTIATEFUNC
 GST_RPAD_NEWCAPSFUNC
+GST_RPAD_BUFFERPOOLFUNC
 
 GST_GPAD_REALPAD
 GstGhostPad
@@ -450,6 +461,9 @@ GST_PADTEMPLATE_CAPS
 GST_PADTEMPLATE_DIRECTION
 GST_PADTEMPLATE_NAME_TEMPLATE
 GST_PADTEMPLATE_PRESENCE
+GST_PADTEMPLATE_NEW
+GST_PADTEMPLATE_FACTORY
+GST_PADTEMPLATE_GET
 gst_padtemplate_new
 gst_padtemplate_load_thyself
 gst_padtemplate_save_thyself
@@ -512,8 +526,8 @@ gst_pipeline_details
 <FILE>gstplugin</FILE>
 <TITLE>GstPlugin</TITLE>
 GstPlugin
-GstPluginElement
 GstPluginInitFunc
+GstPluginDesc
 gst_plugin_new
 gst_plugin_set_name
 gst_plugin_get_name
@@ -615,6 +629,9 @@ gst_typefactory_save_thyself
 GST_CAPS_LOCK
 GST_CAPS_TRYLOCK
 GST_CAPS_UNLOCK
+GST_CAPS_NEW
+GST_CAPS_FACTORY
+GST_CAPS_GET
 GstCaps
 gst_caps_new
 gst_caps_destroy
@@ -622,6 +639,7 @@ gst_caps_ref
 gst_caps_unref
 gst_caps_copy
 gst_caps_copy_on_write
+gst_caps_chain
 gst_caps_append
 gst_caps_prepend
 gst_caps_set_name
@@ -652,6 +670,7 @@ GST_CAPS
 <TITLE>GstProps</TITLE>
 GstProps
 GST_MAKE_FOURCC
+GST_STR_FOURCC
 GST_PROPS_LIST
 GST_PROPS_INT
 GST_PROPS_INT_RANGE
@@ -909,6 +928,20 @@ GST_TYPEFIND
 GST_TYPEFIND_CLASS
 GST_IS_TYPEFIND
 GST_IS_TYPEFIND_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gstdisksink</FILE>
+<TITLE>GstDiskSink</TITLE>
+GstDiskSinkFlags
+<SUBSECTION Standard>
+GstDiskSink
+GST_DISKSINK
+GST_IS_DISKSINK
+GST_TYPE_DISKSINK
+gst_disksink_get_type
+GST_DISKSINK_CLASS
+GST_IS_DISKSINK_CLASS
 </SECTION>
 
 <SECTION>

@@ -10,17 +10,40 @@ A bufferpool is used to create buffers in an efficient way. En element
 can maintain a bufferpool with a fixed number of buffers. This will reduce
 the g_malloc and g_free overhead.
 </para>
-
 <para>
 A bufferpool can also be used to implement direct access. A bufferpool can be
 sent from one element to another so that the latter can directly write into
 the memory of the element that maintains the bufferpool. This can greatly reduce
 the number of memcpy operations.
 </para>
+<para>
+A bufferpool is created with gst_buffer_pool_new(). You'll have to set the
+buffer allocation and destroy function afterwards with gst_buffer_pool_set_create_function() and
+gst_buffer_pool_set_destroy_function().
+</para>
+<para>
+To create a buffer from the bufferpool use gst_buffer_pool_new_buffer(), which is 
+functionally equivalent to gst_buffer_new_from_pool().
+</para>
+<para>
+When the buffer is unreffed and has reached a refcount of 0, the bufferpools destroy
+function is called with the buffer as an argument.
+</para>
+<para>
+A bufferpool can store private data in the buffer it creates with the GST_BUFFER_POOL_PRIVATE()
+macro. To check it a buffer was made by a specific bufferpool, use the GST_BUFFER_BUFFERPOOL()
+macro to get it's bufferpool.
+</para>
+<para>
+Destroy the bufferpool with gst_buffer_pool_destroy().
+</para>
+<para>
+A bufferpool can be requested from a pad with the gst_pad_get_bufferpool() function.
+</para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+#GstBuffer, #GstPad
 </para>
 
 <!-- ##### STRUCT GstBufferPool ##### -->

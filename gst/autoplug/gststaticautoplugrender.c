@@ -80,14 +80,10 @@ gst_static_autoplug_render_class_init(GstStaticAutoplugRenderClass *klass)
 static void gst_static_autoplug_render_init(GstStaticAutoplugRender *autoplug) {
 }
 
-GstPlugin*
-plugin_init (GModule *module)
+static gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
 {
-  GstPlugin *plugin;
   GstAutoplugFactory *factory;
-
-  plugin = gst_plugin_new("gststaticautoplugrender");
-  g_return_val_if_fail(plugin != NULL,NULL);
 
   gst_plugin_set_longname (plugin, "A static autoplugger");
 
@@ -98,8 +94,15 @@ plugin_init (GModule *module)
   if (factory != NULL) {
      gst_plugin_add_autoplugger (plugin, factory);
   }
-  return plugin;
+  return TRUE;
 }
+
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "gststaticautoplugrender",
+  plugin_init
+};
 
 static gboolean
 gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
@@ -267,7 +270,10 @@ gst_static_autoplug_to_render (GstAutoplug *autoplug, GstCaps *srccaps, GstEleme
     pad = GST_PAD_REALIZE (gst_element_get_pad_list (targetelement)->data);
     templ = GST_PAD_PADTEMPLATE (pad);
 
-    caps.sink = GST_PADTEMPLATE_CAPS (templ);
+    if (templ)
+      caps.sink = GST_PADTEMPLATE_CAPS (templ);
+    else 
+      goto next;
 
     GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"autoplugging two caps structures");
 
@@ -283,7 +289,7 @@ gst_static_autoplug_to_render (GstAutoplug *autoplug, GstCaps *srccaps, GstEleme
     }
     else {
     }
-
+next:
     targetelement = va_arg (args, GstElement *);
   }
 

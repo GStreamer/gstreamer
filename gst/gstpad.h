@@ -100,6 +100,7 @@ typedef GstBuffer*	(*GstPadPullRegionFunction) 	(GstPad *pad, GstRegionType type
 typedef gboolean 	(*GstPadEOSFunction) 		(GstPad *pad);
 typedef GstPadNegotiateReturn (*GstPadNegotiateFunction) 	(GstPad *pad, GstCaps **caps, gpointer *data);
 typedef void 		(*GstPadNewCapsFunction) 	(GstPad *pad, GstCaps *caps);
+typedef GstBufferPool*	(*GstPadBufferPoolFunction) 	(GstPad *pad);
 
 typedef enum {
   GST_PAD_UNKNOWN,
@@ -155,6 +156,7 @@ struct _GstRealPad {
 
   GstPadNegotiateFunction 	negotiatefunc;
   GstPadNewCapsFunction 	newcapsfunc;
+  GstPadBufferPoolFunction 	bufferpoolfunc;
 
   GList *ghostpads;
 };
@@ -205,6 +207,7 @@ struct _GstGhostPadClass {
 #define GST_RPAD_EOSFUNC(pad)		(((GstRealPad *)(pad))->eosfunc)
 #define GST_RPAD_NEGOTIATEFUNC(pad)	(((GstRealPad *)(pad))->negotiatefunc)
 #define GST_RPAD_NEWCAPSFUNC(pad)	(((GstRealPad *)(pad))->newcapsfunc)
+#define GST_RPAD_BUFFERPOOLFUNC(pad)	(((GstRealPad *)(pad))->bufferpoolfunc)
 
 #define GST_RPAD_REGIONTYPE(pad)	(((GstRealPad *)(pad))->regiontype)
 #define GST_RPAD_OFFSET(pad)		(((GstRealPad *)(pad))->offset)
@@ -258,6 +261,31 @@ struct _GstPadTemplateClass {
   void (*pad_created)	(GstPadTemplate *templ, GstPad *pad);
 };
 
+#define GST_PADTEMPLATE_NEW(padname, dir, pres, a...) \
+  gst_padtemplate_new (                         \
+    padname,                                    \
+    dir,                                        \
+    pres,                                       \
+    a ,						\
+    NULL)
+
+#define GST_PADTEMPLATE_FACTORY(name, padname, dir, pres, a...)         \
+static GstPadTemplate*                          \
+name (void)                                     \
+{                                               \
+  static GstPadTemplate *templ = NULL;       	\
+  if (!templ) {                              	\
+    templ = GST_PADTEMPLATE_NEW (            	\
+      padname,                          	\
+      dir,                                      \
+      pres,                                     \
+      a );                                     \
+  }                                             \
+  return templ;                              	\
+}
+
+#define GST_PADTEMPLATE_GET(fact) (fact)()
+
 
 GtkType			gst_pad_get_type		(void);
 GtkType			gst_real_pad_get_type		(void);
@@ -276,6 +304,7 @@ void			gst_pad_set_qos_function	(GstPad *pad, GstPadQoSFunction qos);
 void			gst_pad_set_eos_function	(GstPad *pad, GstPadEOSFunction eos);
 void			gst_pad_set_negotiate_function	(GstPad *pad, GstPadNegotiateFunction nego);
 void			gst_pad_set_newcaps_function	(GstPad *pad, GstPadNewCapsFunction newcaps);
+void			gst_pad_set_bufferpool_function	(GstPad *pad, GstPadBufferPoolFunction bufpool);
 
 gboolean		gst_pad_set_caps		(GstPad *pad, GstCaps *caps);
 GstCaps*		gst_pad_get_caps		(GstPad *pad);
@@ -302,6 +331,8 @@ GList*			gst_pad_get_ghost_pad_list	(GstPad *pad);
 GstPadTemplate*		gst_pad_get_padtemplate		(GstPad *pad);
 
 GstPad*			gst_pad_get_peer		(GstPad *pad);
+
+GstBufferPool*		gst_pad_get_bufferpool		(GstPad *pad);
 
 gboolean		gst_pad_connect			(GstPad *srcpad, GstPad *sinkpad);
 void			gst_pad_disconnect		(GstPad *srcpad, GstPad *sinkpad);

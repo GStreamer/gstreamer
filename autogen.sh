@@ -71,6 +71,9 @@ fi
 #  popd > /dev/null
 #done
 
+# now remove the cache, because it can be considered dangerous in this case
+rm -f config.cache
+
 ./configure --enable-maintainer-mode --enable-plugin-srcdir --enable-debug --enable-debug-verbose "$@"
 
 echo 
