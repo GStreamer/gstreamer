@@ -70,6 +70,9 @@ GstPlugin *plugin_init(GModule *module) {
   GstElementFactory *factory;
   int i = 0;
 
+  /* we depend on having the usual types loaded first */
+  gst_plugin_load("gsttypes");
+
   plugin = gst_plugin_new("gstelements");
   g_return_val_if_fail(plugin != NULL,NULL);
 
