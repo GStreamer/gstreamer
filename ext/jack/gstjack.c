@@ -39,7 +39,7 @@
 static GstElementDetails gst_jack_bin_details = {  
     "Jack Bin",
     "Generic/Bin",
-    "LGPL",
+    "GPL",
     "Jack processing bin: see README for more info",
     VERSION,
     "Andy Wingo <wingo@pobox.com>",
@@ -49,6 +49,7 @@ static GstElementDetails gst_jack_bin_details = {
 static GstElementDetails gst_jack_sink_details = {  
     "Jack Sink",
     "Sink/Audio",
+    "GPL",
     "Output to a Jack processing network: see README for more info",
     VERSION,
     "Andy Wingo <wingo@pobox.com>",
@@ -58,6 +59,7 @@ static GstElementDetails gst_jack_sink_details = {
 static GstElementDetails gst_jack_src_details = {  
     "Jack Src",
     "Source/Audio",
+    "GPL",
     "Input from a Jack processing network: see README for more info",
     VERSION,
     "Andy Wingo <wingo@pobox.com>",
