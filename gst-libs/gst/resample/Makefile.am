@@ -13,7 +13,7 @@ endif
 endif
 
 libgstresample_la_SOURCES = dtos.c functable.c resample.c resample.h
-libgstresample_la_LIBADD = $(GST_LIBS)
+libgstresample_la_LIBADD =
 libgstresample_la_CFLAGS = $(GST_CFLAGS) -ffast-math $(ARCHCFLAGS)
 libgstresample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 

@@ -131,7 +131,7 @@ gst_audio_highest_sample_value (GstPad* pad)
   GstCaps *caps = NULL;
   
   caps = GST_PAD_CAPS (pad);
-    // FIXME : Please change this to a better warning method !
+    /* FIXME : Please change this to a better warning method ! */
   if (caps == NULL)
     printf ("WARNING: gstaudio: could not get caps of pad !\n");
   width = gst_caps_get_int (caps, "width");

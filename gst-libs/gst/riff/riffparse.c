@@ -19,7 +19,7 @@
 
 #include <string.h>
 
-//#define DEBUG_ENABLED
+/*#define DEBUG_ENABLED */
 #include <riff.h>
 
 GstRiff*
@@ -71,33 +71,33 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
     GST_BUFFER_DATA(buf) = riff->dataleft;
     size = GST_BUFFER_SIZE(buf) = newsize;
     off -= riff->dataleft_size;
-    //last -= riff->dataleft_size;
+    /*last -= riff->dataleft_size; */
     riff->dataleft = NULL;
   }
 
   if (off == 0) {
     guint32 *words = (guint32 *)GST_BUFFER_DATA(buf);
 
-    // don't even try to parse the head if it's not there FIXME
+    /* don't even try to parse the head if it's not there FIXME */
     if (last < 12) {
       riff->state = GST_RIFF_ENOTRIFF;
       return riff->state;
     }
 
-    //g_print("testing is 0x%08lx '%s'\n",words[0],gst_riff_id_to_fourcc(words[0]));
+    /*g_print("testing is 0x%08lx '%s'\n",words[0],gst_riff_id_to_fourcc(words[0])); */
     /* verify this is a valid RIFF file, first of all */
     if (GUINT32_FROM_LE (words[0]) != GST_RIFF_TAG_RIFF) {
       riff->state = GST_RIFF_ENOTRIFF;
       return riff->state;
     }
     riff->form = GUINT32_FROM_LE (words[2]);
-    //g_print("form is 0x%08lx '%s'\n",words[2],gst_riff_id_to_fourcc(words[2]));
+    /*g_print("form is 0x%08lx '%s'\n",words[2],gst_riff_id_to_fourcc(words[2])); */
     riff->nextlikely = 12;	/* skip 'RIFF', length, and form */
-		// all OK here
+		/* all OK here */
     riff->incomplete_chunk = NULL;
   }
 
-  // if we have an incomplete chunk from the previous buffer
+  /* if we have an incomplete chunk from the previous buffer */
   if (riff->incomplete_chunk) {
     guint leftover;
     GST_DEBUG (0,"gst_riff_parser: have incomplete chunk %08x filled\n", riff->incomplete_chunk_size);
@@ -130,7 +130,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
   while ((riff->nextlikely+12) <= last) {
     guint32 *words = (guint32 *)((guchar *)GST_BUFFER_DATA(buf) + riff->nextlikely - off );
 
-    // loop over all of the chunks to check which one is finished
+    /* loop over all of the chunks to check which one is finished */
     while (riff->chunks) {
       chunk = g_list_nth_data(riff->chunks, 0);
 
@@ -138,7 +138,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
 		      chunk->offset, chunk->size);
       if (riff->nextlikely >= chunk->offset+chunk->size) {
         GST_DEBUG (0,"gst_riff_parser: found END LIST\n");
-        // we have the end of the chunk on the stack, remove it
+        /* we have the end of the chunk on the stack, remove it */
         riff->chunks = g_list_remove(riff->chunks, chunk);
       }
       else break;
@@ -153,17 +153,17 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
     chunk->id = GUINT32_FROM_LE (words[0]);
     chunk->size = GUINT32_FROM_LE (words[1]);
     chunk->data = (gchar *)(words+2);
-    // we need word alignment
-    //if (chunk->size & 0x01) chunk->size++;
+    /* we need word alignment */
+    /*if (chunk->size & 0x01) chunk->size++; */
     chunk->form = GUINT32_FROM_LE (words[2]); /* fill in the form,  might not be valid */
 
 
     if (chunk->id == GST_RIFF_TAG_LIST) {
       GST_DEBUG (0,"found LIST %s\n", gst_riff_id_to_fourcc(chunk->form));
       riff->nextlikely += 12;	
-      // we push the list chunk on our 'stack'
+      /* we push the list chunk on our 'stack' */
       riff->chunks = g_list_prepend(riff->chunks,chunk);
-      // send the buffer to the listener if we have received a function
+      /* send the buffer to the listener if we have received a function */
       if (riff->new_tag_found) {
         riff->new_tag_found(chunk, riff->callback_data);
       }
@@ -175,7 +175,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
             	gst_riff_id_to_fourcc(GUINT32_FROM_LE (words[0])), GUINT32_FROM_LE (words[1]));
 
       riff->nextlikely += 8 + chunk->size;	/* doesn't include hdr */
-      // if this buffer is incomplete
+      /* if this buffer is incomplete */
       if (riff->nextlikely > last) {
         guint left = size - (riff->nextlikely - chunk->size - off);
 
@@ -186,7 +186,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
 	     riff->incomplete_chunk_size = left;
       }
       else {
-        // send the buffer to the listener if we have received a function
+        /* send the buffer to the listener if we have received a function */
         if (riff->new_tag_found) {
           riff->new_tag_found(chunk, riff->callback_data);
         }
@@ -194,7 +194,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
       }
       if (riff->nextlikely & 0x01) riff->nextlikely++;
 
-      //riff->chunks = g_list_prepend(riff->chunks,chunk);
+      /*riff->chunks = g_list_prepend(riff->chunks,chunk); */
     }
   }
   if ((riff->nextlikely+12) > last && !riff->incomplete_chunk) {

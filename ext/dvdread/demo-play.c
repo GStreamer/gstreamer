@@ -49,7 +49,7 @@ int main(int argc,char *argv[]) {
   gst_init(&argc,&argv);
   gnome_init("MPEG2 Video player","0.0.1",argc,argv);
 
-  // ***** construct the main pipeline *****
+  /* ***** construct the main pipeline ***** */
   pipeline = GST_PIPELINE(gst_pipeline_new("pipeline"));
   g_return_val_if_fail(pipeline != NULL, -1);
 
@@ -61,7 +61,7 @@ int main(int argc,char *argv[]) {
   gtk_object_set(GTK_OBJECT(src),"angle",atoi(argv[4]),NULL);
 
   parse = gst_elementfactory_make("mpeg2parse","parse");
-  //parse = gst_elementfactory_make("mpeg1parse","parse");
+  /*parse = gst_elementfactory_make("mpeg1parse","parse"); */
   g_return_val_if_fail(parse != NULL, -1);
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
@@ -70,7 +70,7 @@ int main(int argc,char *argv[]) {
   gst_element_connect(src,"src",parse,"sink");
 
 
-  // ***** pre-construct the video thread *****
+  /* ***** pre-construct the video thread ***** */
   v_thread = GST_ELEMENT(gst_thread_new("v_thread"));
   g_return_val_if_fail(v_thread != NULL, -1);
 
@@ -96,7 +96,7 @@ int main(int argc,char *argv[]) {
   gst_element_connect(color,"src",show,"sink");
 
 
-  // ***** pre-construct the audio thread *****
+  /* ***** pre-construct the audio thread ***** */
   a_thread = GST_ELEMENT(gst_thread_new("a_thread"));
   g_return_val_if_fail(a_thread != NULL, -1);
 
@@ -117,7 +117,7 @@ int main(int argc,char *argv[]) {
   gst_element_connect(a_decode,"src",osssink,"sink");
 
 
-  // ***** construct the GUI *****
+  /* ***** construct the GUI ***** */
   appwindow = gnome_app_new("DVD Player","DVD Player");
 
   gtk_socket = gtk_socket_new ();

@@ -243,7 +243,7 @@ void resample_bilinear(resample_t * r)
 	b = r->i_start;
 	for (i = 0; i < r->i_samples; i++) {
 		b += r->i_inc;
-		//printf("in %d\n",i_ptr[0]);
+		/*printf("in %d\n",i_ptr[0]); */
 		if(b>=2){
 			printf("not expecting b>=2\n");
 		}
@@ -252,7 +252,7 @@ void resample_bilinear(resample_t * r)
 			acc1 += (1.0 - (b-r->i_inc)) * i_ptr[1];
 
 			o_ptr[0] = rint(acc0);
-			//printf("out %d\n",o_ptr[0]);
+			/*printf("out %d\n",o_ptr[0]); */
 			o_ptr[1] = rint(acc1);
 			o_ptr += 2;
 			o_count++;
@@ -319,8 +319,8 @@ void resample_sinc_slow(resample_t * r)
 			c1 = 0;
 			for (j = 0; j < r->filter_length; j++) {
 				weight = (x==0)?1:(sinx/x);
-//printf("j %d sin %g cos %g\n",j,sinx,cosx);
-//printf("j %d sin %g x %g sinc %g\n",j,sinx,x,weight);
+/*printf("j %d sin %g cos %g\n",j,sinx,cosx); */
+/*printf("j %d sin %g x %g sinc %g\n",j,sinx,x,weight); */
 				c0 += weight * GETBUF((start + j), 0);
 				c1 += weight * GETBUF((start + j), 1);
 				t = cosx * cosd - sinx * sind;
@@ -368,11 +368,11 @@ void resample_sinc(resample_t * r)
 	for (i = 0; i < r->o_samples; i++) {
 		a = r->o_start + i * r->o_inc;
 		start = floor(a - r->halftaps);
-//printf("%d: a=%g start=%d end=%d\n",i,a,start,start+r->filter_length-1);
+/*printf("%d: a=%g start=%d end=%d\n",i,a,start,start+r->filter_length-1); */
 		center = a;
-		//x = M_PI * (start - center) * r->o_inc;
-		//d = M_PI * r->o_inc;
-		//x = (start - center) * r->o_inc;
+		/*x = M_PI * (start - center) * r->o_inc; */
+		/*d = M_PI * r->o_inc; */
+		/*x = (start - center) * r->o_inc; */
 		x0 = (start - center) * r->o_inc;
 		d = r->o_inc;
 		c0 = 0;
@@ -439,20 +439,20 @@ static void resample_sinc_ft(resample_t * r)
 	double *ptr;
 	signed short *o_ptr;
 	int i;
-	//int j;
+	/*int j; */
 	double c0, c1;
-	//double a;
+	/*double a; */
 	double start_f, start_x;
 	int start;
 	double center;
-	//double weight;
+	/*double weight; */
 	double x, d;
 	double scale;
 	int n = 4;
 
-	scale = r->i_inc;	// cutoff at 22050
-	//scale = 1.0;		// cutoff at 24000
-	//scale = r->i_inc * 0.5;	// cutoff at 11025
+	scale = r->i_inc;	/* cutoff at 22050 */
+	/*scale = 1.0;		// cutoff at 24000 */
+	/*scale = r->i_inc * 0.5;	// cutoff at 11025 */
 
 	if(!ft){
 		ft = malloc(sizeof(*ft));
@@ -472,7 +472,7 @@ static void resample_sinc_ft(resample_t * r)
 	
 		functable_init(ft);
 
-		//printf("len=%d offset=%g start=%g\n",ft->len,ft->offset,ft->start);
+		/*printf("len=%d offset=%g start=%g\n",ft->len,ft->offset,ft->start); */
 	}
 
 	ptr = r->buffer;
@@ -484,18 +484,18 @@ static void resample_sinc_ft(resample_t * r)
 	start_x -= start_f;
 	start = start_f;
 	for (i = 0; i < r->o_samples; i++) {
-		//start_f = floor(center - r->halftaps);
-//printf("%d: a=%g start=%d end=%d\n",i,a,start,start+r->filter_length-1);
+		/*start_f = floor(center - r->halftaps); */
+/*printf("%d: a=%g start=%d end=%d\n",i,a,start,start+r->filter_length-1); */
 		x = start_f - center;
 		d = 1;
 		c0 = 0;
 		c1 = 0;
-//#define slow
+/*#define slow */
 #ifdef slow
 		for (j = 0; j < r->filter_length; j++) {
 			weight = functable_eval(ft,x)*scale;
-			//weight = sinc(M_PI * scale * x)*scale*r->i_inc;
-			//weight *= window_func(x / r->halftaps);
+			/*weight = sinc(M_PI * scale * x)*scale*r->i_inc; */
+			/*weight *= window_func(x / r->halftaps); */
 			c0 += weight * ptr[(start + j + r->filter_length)*2 + 0];
 			c1 += weight * ptr[(start + j + r->filter_length)*2 + 1];
 			x += d;

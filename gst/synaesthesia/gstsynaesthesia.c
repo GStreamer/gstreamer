@@ -38,11 +38,11 @@ struct _GstSynaesthesia {
   GstPad *sinkpad,*srcpad;
   GstBufferPool *peerpool;
 
-  // the timestamp of the next frame
+  /* the timestamp of the next frame */
   guint64 next_time;
   gint16 datain[2][512];
 
-  // video state
+  /* video state */
   gint fps;
   gint width;
   gint height;
@@ -198,11 +198,11 @@ gst_synaesthesia_init (GstSynaesthesia *synaesthesia)
   synaesthesia->next_time = 0;
   synaesthesia->peerpool = NULL;
 
-  // reset the initial video state
+  /* reset the initial video state */
   synaesthesia->first_buffer = TRUE;
   synaesthesia->width = 320;
   synaesthesia->height = 200;
-  synaesthesia->fps = 25; // desired frame rate
+  synaesthesia->fps = 25; /* desired frame rate */
 
 }
 

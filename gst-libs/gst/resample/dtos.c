@@ -23,13 +23,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//#include <ml.h>
+/*#include <ml.h> */
 #include <resample.h>
 
 
 
 #define short_to_double_table
-//#define short_to_double_altivec
+/*#define short_to_double_altivec */
 #define short_to_double_unroll
 
 #ifdef short_to_double_table

@@ -552,7 +552,7 @@ gst_mpeg2dec_change_state (GstElement *element)
       /* if we are not closed by an EOS event do so now, this cen send a few frames but
        * we are prepared to not really send them (see above) */
       if (!mpeg2dec->closed) {
-        //mpeg2_close (mpeg2dec->decoder);
+        /*mpeg2_close (mpeg2dec->decoder); */
 	mpeg2dec->closed = TRUE;
       }
       gst_mpeg2dec_vo_destroy (mpeg2dec);

@@ -10,7 +10,7 @@ BUILT_SOURCES =                                         \
 
 libgstidentity2_la_SOURCES = gst-identity2.gob $(GOB_FILES_ID)
 libgstidentity2_la_CFLAGS = $(GST_CFLAGS)
-libgstidentity2_la_LIBADD = $(GST_LIBS)
+libgstidentity2_la_LIBADD =
 
 %.c %.h %-private.h: %.gob
 	gob $<

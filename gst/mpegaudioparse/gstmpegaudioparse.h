@@ -50,7 +50,7 @@ struct _GstMPEGAudioParse {
 
   GstPad *sinkpad,*srcpad;
 
-  GstBuffer *partialbuf;	// previous buffer (if carryover)
+  GstBuffer *partialbuf;	/* previous buffer (if carryover) */
   guint skip; /* number of frames to skip */
   guint bit_rate;
   gboolean in_flush;

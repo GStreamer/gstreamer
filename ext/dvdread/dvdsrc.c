@@ -114,15 +114,15 @@ static void 		dvdsrc_init		(DVDSrc *dvdsrc);
 static void 		dvdsrc_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void 		dvdsrc_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-//static GstBuffer *	dvdsrc_get		(GstPad *pad);
+/*static GstBuffer *	dvdsrc_get		(GstPad *pad); */
 static void     	dvdsrc_loop		(GstElement *element);
-//static GstBuffer *	dvdsrc_get_region	(GstPad *pad,gulong offset,gulong size);
+/*static GstBuffer *	dvdsrc_get_region	(GstPad *pad,gulong offset,gulong size); */
 
 static GstElementStateReturn 	dvdsrc_change_state 	(GstElement *element);
 
 
 static GstElementClass *parent_class = NULL;
-//static guint dvdsrc_signals[LAST_SIGNAL] = { 0 };
+/*static guint dvdsrc_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 dvdsrc_get_type (void) 
@@ -193,7 +193,7 @@ dvdsrc_init (DVDSrc *dvdsrc)
 static void
 dvdsrc_destory (DVDSrc *dvdsrc)
 {
-  // FIXME
+  /* FIXME */
   g_print("FIXME\n");
   g_free(dvdsrc->priv);
 }
@@ -213,7 +213,7 @@ dvdsrc_set_property (GObject *object, guint prop_id, const GValue *value, GParam
   switch (prop_id) {
     case ARG_LOCATION:
       /* the element must be stopped in order to do this */
-      //g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING));
+      /*g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING)); */
 
       if (priv->location)
         g_free (priv->location);
@@ -462,7 +462,7 @@ dvdsrc_loop (GstElement *element)
           int len;
 
           /* create the buffer */
-          // FIXME: should eventually use a bufferpool for this
+          /* FIXME: should eventually use a bufferpool for this */
           buf = gst_buffer_new ();
           g_return_if_fail (buf);
 
@@ -490,7 +490,7 @@ dvdsrc_loop (GstElement *element)
            */
           navRead_DSI( &dsi_pack, &(data[ DSI_START_BYTE ]) );
           assert( priv->cur_pack == dsi_pack.dsi_gi.nv_pck_lbn );
-          //navPrint_DSI(&dsi_pack);
+          /*navPrint_DSI(&dsi_pack); */
 
 
           /**
@@ -679,7 +679,7 @@ dvdsrc_get (GstPad *pad)
   g_return_val_if_fail (GST_FLAG_IS_SET (dvdsrc, DVDSRC_OPEN),NULL);
 
   /* create the buffer */
-  // FIXME: should eventually use a bufferpool for this
+  /* FIXME: should eventually use a bufferpool for this */
   buf = gst_buffer_new ();
   g_return_val_if_fail (buf, NULL);
 

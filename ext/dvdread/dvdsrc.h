@@ -45,7 +45,7 @@ GstElementDetails dvdsrc_details;
 #define GST_IS_DVDSRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DVDSRC))
 
-// NOTE: per-element flags start with 16 for now
+/* NOTE: per-element flags start with 16 for now */
 typedef enum {
   DVDSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
 
