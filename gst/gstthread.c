@@ -154,8 +154,6 @@ static void
 gst_thread_dispose (GObject *object)
 {
   GstThread *thread = GST_THREAD (object);
-  void *stack;
-  long stacksize;
 
   GST_DEBUG (GST_CAT_REFCOUNTING, "dispose");
 
@@ -164,12 +162,6 @@ gst_thread_dispose (GObject *object)
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 
-  GST_DEBUG (GST_CAT_THREAD, "Disposing of thread");
-  pthread_attr_getstack (&thread->attr, &stack,  (size_t *) &stacksize);
-  GST_DEBUG (GST_CAT_THREAD, "undoing posix_memalign at %p of size %ld",
-            stack, stacksize);
-  free (stack);
- 
   if (GST_ELEMENT_SCHED (thread)) {
     gst_object_unref (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
   }
@@ -252,7 +244,6 @@ gst_thread_change_state (GstElement * element)
   gboolean stateset = GST_STATE_SUCCESS;
   gint transition;
   pthread_t self = pthread_self ();
-  void *stack;
   glong stacksize;
 
   g_return_val_if_fail (GST_IS_THREAD (element), GST_STATE_FAILURE);
@@ -284,15 +275,14 @@ gst_thread_change_state (GstElement * element)
 
       if (pthread_attr_init (&thread->attr) != 0)
 	g_warning ("pthread_attr_init returned an error !");
-      if (gst_scheduler_get_prefered_stack (GST_ELEMENT_SCHED (element), &stack, &stacksize)) {
-        if (pthread_attr_setstack (&thread->attr, stack, stacksize) != 0)
-	  g_warning ("pthread_attr_setstack failed !\n");
-	GST_DEBUG (GST_CAT_THREAD, 
-	           "pthread attr set stack at %p of size %ld", 
-		   stack, stacksize);
+      if (gst_scheduler_get_preferred_stack (GST_ELEMENT_SCHED (element), &thread->stack, &stacksize)) {
+        if (pthread_attr_setstack (&thread->attr, thread->stack, stacksize) != 0) {
+          g_warning ("pthread_attr_setstack failed");
+          return GST_STATE_FAILURE;
+        }
+	GST_DEBUG (GST_CAT_THREAD, "pthread attr set stack at %p of size %ld", 
+		   thread->stack, stacksize);
       }
-      else
-	g_warning ("_get_prefered_stack failed !\n");
 
       /* create the thread */
       THR_DEBUG ("going to pthread_create...");
@@ -428,15 +418,12 @@ gst_thread_change_state (GstElement * element)
       thread->thread_id = -1;
       g_mutex_unlock (thread->lock);
 
-      /*
-       * FIXME: we moved this code to the scheduler dispose function
-      pthread_attr_getstack (&thread->attr, &stack,  (size_t *) &stacksize);
-      GST_DEBUG (GST_CAT_THREAD, "undng posix_memalign at %p of size %ld\n",
-	       stack, stacksize);
-	       stack, stacksize);
-      free (thread->stack);
-      thread->stack = 0;
-*/
+      if (thread->stack) {
+        GST_DEBUG (GST_CAT_THREAD, "freeing allocated stack (%p)", thread->stack);
+        free (thread->stack);
+        thread->stack = NULL;
+      }
+ 
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_REAPING);
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_STARTED);
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);

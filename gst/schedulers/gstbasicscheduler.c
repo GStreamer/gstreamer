@@ -109,7 +109,7 @@ static void 		gst_basic_scheduler_init 		(GstBasicScheduler * scheduler);
 static void 		gst_basic_scheduler_dispose 		(GObject *object);
 
 static void 		gst_basic_scheduler_setup 		(GstScheduler *sched);
-static gboolean 	gst_basic_scheduler_get_prefered_stack 	(GstScheduler *sched, gpointer *stack, gulong *size);
+static gboolean 	gst_basic_scheduler_get_preferred_stack (GstScheduler *sched, gpointer *stack, gulong *size);
 static void 		gst_basic_scheduler_reset 		(GstScheduler *sched);
 static void		gst_basic_scheduler_add_element		(GstScheduler *sched, GstElement *element);
 static void     	gst_basic_scheduler_remove_element	(GstScheduler *sched, GstElement *element);
@@ -201,7 +201,7 @@ gst_basic_scheduler_class_init (GstBasicSchedulerClass * klass)
   gobject_class->dispose	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_dispose);
 
   gstscheduler_class->setup 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_setup);
-  gstscheduler_class->get_prefered_stack= GST_DEBUG_FUNCPTR (gst_basic_scheduler_get_prefered_stack);
+  gstscheduler_class->get_preferred_stack= GST_DEBUG_FUNCPTR (gst_basic_scheduler_get_preferred_stack);
   gstscheduler_class->reset	 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_reset);
   gstscheduler_class->add_element 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_add_element);
   gstscheduler_class->remove_element 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_remove_element);
@@ -952,10 +952,10 @@ gst_basic_scheduler_setup (GstScheduler *sched)
 }
 
 static gboolean
-gst_basic_scheduler_get_prefered_stack (GstScheduler *sched, gpointer *stack, gulong *size)
+gst_basic_scheduler_get_preferred_stack (GstScheduler *sched, gpointer *stack, gulong *size)
 {
   if (do_cothreads_stackquery (stack, size)) {
-    GST_DEBUG (GST_CAT_SCHEDULING, "getting prefered stack size as %p and %lu", *stack, *size);
+    GST_DEBUG (GST_CAT_SCHEDULING, "getting preferred stack size as %p and %lu", *stack, *size);
     return TRUE;
   }
   return FALSE;
