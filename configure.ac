@@ -93,6 +93,18 @@ else
   HAVE_NASM="yes"
 fi
 
+dnl check for gconf
+translit(dnm, m, l) AM_CONDITIONAL(HAVE_GCONF, true)
+AC_PATH_PROG(GCONFTOOL, gconftool-2, no)
+if test x$GCONFTOOL = xno; then
+  AC_MSG_WARN(Not installing GConf schemas)
+  HAVE_GCONF="no"
+else
+  AM_GCONF_SOURCE_2
+  HAVE_GCONF="yes"
+fi
+AC_SUBST(HAVE_GCONF)
+
 dnl check for gstreamer; uninstalled is selected preferentially -- see pkg-config(1)
 PKG_CHECK_MODULES(GST, gstreamer >= $GST_PLUGINS_MAJOR.$GST_PLUGINS_MINOR.$GST_PLUGINS_MICRO,
   HAVE_GST="yes", HAVE_GST="no")
@@ -842,7 +854,6 @@ ext/sdl/Makefile
 ext/shout/Makefile
 ext/sidplay/Makefile
 ext/smoothwave/Makefile
-ext/snapshot/Makefile
 ext/vorbis/Makefile
 ext/tarkin/Makefile
 ext/xmms/Makefile
@@ -856,6 +867,7 @@ gst-libs/gst/floatcast/Makefile
 examples/capsfilter/Makefile
 examples/Makefile
 tools/Makefile
+gconf/Makefile
 testsuite/seeking/Makefile
 )
 

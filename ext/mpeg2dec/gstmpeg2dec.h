@@ -25,6 +25,7 @@
 #include <config.h>
 #include <gst/gst.h>
 #include <mpeg2dec/mpeg2.h>
+#include <mpeg2dec/mm_accel.h>
 
 #ifdef __cplusplus
 extern "C" {
