@@ -526,8 +526,12 @@ gst_bin_change_state (GstElement * element)
   children = bin->children;
 
   while (children) {
+    GstElementState old_child_state;
+
     child = GST_ELEMENT (children->data);
     children = g_list_next (children);
+
+    old_child_state = GST_STATE (child);
 
     switch (gst_element_set_state (child, pending)) {
       case GST_STATE_FAILURE:
@@ -535,11 +539,17 @@ gst_bin_change_state (GstElement * element)
 	GST_DEBUG (GST_CAT_STATES, "child '%s' failed to go to state %d(%s)",
 		   GST_ELEMENT_NAME (child), pending, gst_element_state_get_name (pending));
 
-	gst_element_set_state (child, old_state);
+	gst_element_set_state (child, old_child_state);
 	if (GST_ELEMENT_SCHED (child) == GST_ELEMENT_SCHED (element)) {
           /* reset to what is was */
           GST_STATE_PENDING (element) = old_state;
+	  
           gst_bin_change_state (element);
+	  /* see if the old state was set */
+	  if (GST_STATE (element) == old_state) 
+	    return GST_STATE_SUCCESS;
+
+	  /* something wacky happened, we can't even go back */
 	  return GST_STATE_FAILURE;
 	}
 	break;
