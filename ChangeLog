@@ -2045,7 +2045,7 @@
 	(_gst_real_pad_fixate_accumulator):
 	Revert POINTER->BOXED change in signal marshaller.
 
-=== gstreamer 0.7.4 ===
+=== release 0.7.4 ===
                                                                                 
 2004-02-06  Thomas Vander Stichele  <thomas at apestaart dot org>
                                                                                 
