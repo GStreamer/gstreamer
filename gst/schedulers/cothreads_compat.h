@@ -40,6 +40,8 @@ typedef cothread_state cothread;
  */
 #define do_cothreads_init(x) 			/* NOP */
 
+#define do_cothreads_stackquery(stack,size)	FALSE
+
 #define do_cothread_switch(to)			cothread_switch(to)
 
 #define do_cothread_create(new_thread, context, func, argc, argv)	\
@@ -90,6 +92,9 @@ typedef cothread cothread_context;
     if (!cothreads_initialized())	\
       cothreads_init(x);	\
   }G_STMT_END
+
+#define do_cothreads_stackquery(stack,size)	\
+  cothreads_alloc_thread_stack (stack, size)
 
 #define do_cothread_switch(to)	G_STMT_START{	\
   cothread *from = cothread_self ();	\

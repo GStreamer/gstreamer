@@ -243,6 +243,8 @@ gst_thread_change_state (GstElement * element)
   gboolean stateset = GST_STATE_SUCCESS;
   gint transition;
   pthread_t self = pthread_self ();
+  void *stack;
+  glong stacksize;
 
   g_return_val_if_fail (GST_IS_THREAD (element), FALSE);
 
@@ -270,8 +272,12 @@ gst_thread_change_state (GstElement * element)
 
       g_mutex_lock (thread->lock);
 
+      pthread_attr_init (&thread->attr);
+      if (gst_scheduler_get_prefered_stack (GST_ELEMENT_SCHED (element), &stack, &stacksize)) {
+        pthread_attr_setstack (&thread->attr, stack, stacksize);
+      }
       /* create the thread */
-      if (pthread_create (&thread->thread_id, NULL, gst_thread_main_loop, thread) != 0) {
+      if (pthread_create (&thread->thread_id, &thread->attr, gst_thread_main_loop, thread) != 0) {
 	g_mutex_unlock (thread->lock);
         THR_DEBUG ("could not create thread \"%s\"", GST_ELEMENT_NAME (element));
 	return GST_STATE_FAILURE;

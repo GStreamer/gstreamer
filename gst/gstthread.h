@@ -65,6 +65,7 @@ struct _GstThread {
   GstBin bin;
 
   pthread_t thread_id;		/* id of the thread, if any */
+  pthread_attr_t attr;		/* attributes for the stack space */
   gint pid;			/* the pid of the thread */
   gint ppid;			/* the pid of the thread's parent process */
   GMutex *lock;			/* thread lock/condititon pair ... */

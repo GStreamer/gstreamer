@@ -122,6 +122,7 @@ typedef enum {
   GST_PAD_QUERY_TOTAL,
   GST_PAD_QUERY_POSITION,
   GST_PAD_QUERY_LATENCY,
+  GST_PAD_QUERY_JITTER,
 } GstPadQueryType;
  
 /* this defines the functions used to chain buffers
