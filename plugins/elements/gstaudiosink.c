@@ -25,6 +25,8 @@
 #include <sys/soundcard.h>
 #include <unistd.h>
 
+//#define DEBUG_ENABLED
+
 #include <gstaudiosink.h>
 #include <gst/meta/audioraw.h>
 
@@ -184,6 +186,7 @@ void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
   g_return_if_fail(GST_IS_PAD(pad));
   g_return_if_fail(buf != NULL);
 
+
   /* this has to be an audio buffer */
 //  g_return_if_fail(((GstMeta *)buf->meta)->type !=
 //gst_audiosink_type_audio);
@@ -212,6 +215,7 @@ void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
 
   gtk_signal_emit(GTK_OBJECT(audiosink),gst_audiosink_signals[SIGNAL_HANDOFF],
                   audiosink);
+
   if (GST_BUFFER_DATA(buf) != NULL) {
     gst_trace_add_entry(NULL,0,buf,"audiosink: writing to soundcard");
     //g_print("audiosink: writing to soundcard\n");
@@ -219,8 +223,9 @@ void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
       if (!audiosink->mute) {
         gst_clock_wait(audiosink->clock, GST_BUFFER_TIMESTAMP(buf), GST_OBJECT(audiosink));
         ioctl(audiosink->fd,SNDCTL_DSP_GETOSPACE,&ospace);
-        DEBUG("audiosink: (%d bytes buffer)\n", ospace.bytes);
+        DEBUG("audiosink: (%d bytes buffer) %d %p %d\n", ospace.bytes, audiosink->fd, GST_BUFFER_DATA(buf), GST_BUFFER_SIZE(buf));
         write(audiosink->fd,GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
+        //write(STDOUT_FILENO,GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
       }
     }
   }
@@ -288,7 +293,7 @@ static gboolean gst_audiosink_open_audio(GstAudioSink *sink) {
   g_print("audiosink: attempting to open sound device\n");
 
   /* first try to open the sound card */
-  sink->fd = open("/dev/dsp",O_RDWR);
+  sink->fd = open("/dev/dsp",O_WRONLY);
 
   /* if we have it, set the default parameters and go have fun */
   if (sink->fd > 0) {
@@ -306,7 +311,7 @@ static gboolean gst_audiosink_open_audio(GstAudioSink *sink) {
     if (sink->caps & DSP_CAP_COPROC)   g_print("audiosink:   Has coprocessor\n");
     if (sink->caps & DSP_CAP_TRIGGER)  g_print("audiosink:   Trigger\n");
     if (sink->caps & DSP_CAP_MMAP)     g_print("audiosink:   Direct access\n");
-    g_print("audiosink: opened audio\n");
+    g_print("audiosink: opened audio with fd=%d\n", sink->fd);
     GST_FLAG_SET(sink,GST_AUDIOSINK_OPEN);
     return TRUE;
   }

@@ -93,7 +93,7 @@
 /* External declarations for bitstream i/o operations. */
 extern unsigned long gst_getbits_nBitMask[];
 
-#define gst_getbits_init(gb)
+#define gst_getbits_init(gb, callback, data)
 
 #define gst_getbits_newbuf(gb, buffer, len)				\
 {									\

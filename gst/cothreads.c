@@ -1,10 +1,10 @@
+#include <pthread.h>
 #include <sys/time.h>
 #include <linux/linkage.h>
 #include <stdio.h>   
 #include <stdlib.h>
 #include <signal.h>   
 #include <setjmp.h>
-#include <pthread.h>
 #include <unistd.h>
 #include <sys/mman.h>
 
@@ -15,8 +15,11 @@ pthread_key_t _cothread_key = -1;
 cothread_state *cothread_create(cothread_context *ctx) {
   cothread_state *s;
 
-  if (pthread_self() == 0) {
+  printf("pthread_self() %ld\n",pthread_self());
+  //if (pthread_self() == 0) {
+  if (0) {
     s = (cothread_state *)malloc(sizeof(int) * COTHREAD_STACKSIZE);
+    printf("new stack at %p\n",s);
   } else {
     char *sp = CURRENT_STACK_FRAME;
     unsigned long *stack_end = (unsigned long *)((unsigned long)sp &
@@ -34,11 +37,11 @@ cothread_state *cothread_create(cothread_context *ctx) {
   s->ctx = ctx;
   s->threadnum = ctx->nthreads;
   s->flags = 0;
-  s->sp = (int *)(s + COTHREAD_STACKSIZE);
+  s->sp = ((int *)s + COTHREAD_STACKSIZE);
 
   ctx->threads[ctx->nthreads++] = s;
 
-//  printf("created cothread at %p\n",s);
+  printf("created cothread at %p %p\n",s, s->sp);
 
   return s;
 }
@@ -70,10 +73,10 @@ cothread_context *cothread_init() {
   ctx->threads[0]->argc = 0;
   ctx->threads[0]->argv = NULL;
   ctx->threads[0]->flags = COTHREAD_STARTED;
-  ctx->threads[0]->sp = CURRENT_STACK_FRAME;
+  ctx->threads[0]->sp = (int *)CURRENT_STACK_FRAME;
   ctx->threads[0]->pc = 0;
 
-//  fprintf(stderr,"0th thread is at %p\n",ctx->threads[0]);
+  fprintf(stderr,"0th thread is at %p %p\n",ctx->threads[0], ctx->threads[0]->sp);
 
   // we consider the initiating process to be cothread 0
   ctx->nthreads = 1;
@@ -91,11 +94,13 @@ void cothread_stub() {
   cothread_context *ctx = pthread_getspecific(_cothread_key);
   register cothread_state *thread = ctx->threads[ctx->current];
 
+  printf("cothread_stub() entered\n");
   thread->flags |= COTHREAD_STARTED;
-  thread->func(thread->argc,thread->argv);
+  if (thread->func)
+    thread->func(thread->argc,thread->argv);
   thread->flags &= ~COTHREAD_STARTED;
   thread->pc = 0;
-//  printf("uh, yeah, we shouldn't be here, but we should deal anyway\n");
+  //printf("uh, yeah, we shouldn't be here, but we should deal anyway\n");
 }
 
 void cothread_switch(cothread_state *thread) {
@@ -122,7 +127,7 @@ void cothread_switch(cothread_state *thread) {
 
   // find the number of the thread to switch to
   ctx->current = thread->threadnum;
-//  fprintf(stderr,"about to switch to thread #%d\n",ctx->current);
+  fprintf(stderr,"about to switch to thread #%d\n",ctx->current);
 
   /* save the current stack pointer, frame pointer, and pc */
   __asm__("movl %%esp, %0" : "=m"(current->sp) : : "esp", "ebp");
@@ -131,12 +136,15 @@ void cothread_switch(cothread_state *thread) {
     return;
   enter = 1;
 
+  fprintf(stderr,"set stack to %p\n", thread->sp);
   /* restore stack pointer and other stuff of new cothread */
-  __asm__("movl %0, %%esp\n" : "=m"(thread->sp));
   if (thread->flags & COTHREAD_STARTED) {
+    fprintf(stderr,"in thread \n");
+    __asm__("movl %0, %%esp\n" : "=m"(thread->sp));
     // switch to it
     longjmp(thread->jmp,1);
   } else {
+    __asm__("movl %0, %%esp\n" : "=m"(thread->sp));
     // start it
     __asm__("jmp " SYMBOL_NAME_STR(cothread_stub));
   }

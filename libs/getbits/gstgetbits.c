@@ -1,5 +1,37 @@
-#include <byteswap.h>
+#include <glib.h>
+
 #include "gstgetbits.h"
+
+extern unsigned long _gst_get1bit_i386(gst_getbits_t *gb, unsigned long bits);
+extern unsigned long _gst_getbits_i386(gst_getbits_t *gb, unsigned long bits);
+extern unsigned long _gst_getbits_fast_i386(gst_getbits_t *gb, unsigned long bits);
+extern unsigned long _gst_showbits_i386(gst_getbits_t *gb, unsigned long bits);
+extern void _gst_flushbits_i386(gst_getbits_t *gb, unsigned long bits);
+extern void _gst_getbits_back_i386(gst_getbits_t *gb, unsigned long bits);
+
+//#define DEBUG_ENABLED
+#ifdef DEBUG_ENABLED
+#define DEBUG(format, args...) g_print("DEBUG:(%d) " format, getpid() , ##args)
+#else
+#define DEBUG(format, args...)
+#endif
+
+#ifdef WORDS_BIGENDIAN
+#  define swab32(x) (x)
+#else
+#  if defined (__i386__)
+#    define swab32(x) __i386_swab32(x)
+     static inline const guint32 __i386_swab32(guint32 x)
+      {
+         __asm__("bswap %0" : "=r" (x) : "0" (x));
+         return x;
+      }
+#  else
+#    define swab32(x)\
+     ((((guint8*)&x)[0] << 24) | (((guint8*)&x)[1] << 16) |  \
+     (((guint8*)&x)[2] << 8)  | (((guint8*)&x)[3]))
+#  endif
+#endif
 
 unsigned long gst_getbits_nBitMask[] = { 
   0x00000000, 0x80000000, 0xc0000000, 0xe0000000,
@@ -35,7 +67,7 @@ unsigned long _getbits_64_minus_index[] = {
 
    this isn't as cycle-efficient, due to the simple fact that I must call
    emms() at the end.  all state must be kept in *gb, not in registers */
-unsigned long getbits_mmx(gst_getbits_t *gb,unsigned long bits) {
+unsigned long _gst_getbits_mmx(gst_getbits_t *gb,unsigned long bits) {
   signed long remaining;
   unsigned long result;
 
@@ -63,9 +95,9 @@ unsigned long getbits_mmx(gst_getbits_t *gb,unsigned long bits) {
     remaining += 64;
 
     /* grab the first 32 bits from the buffer and swap them around */
-    dword1 = bswap_32(*(gb->ptr-8));
+    dword1 = swab32(*(gb->ptr-8));
     /* grab the second 32 bits, swap */
-    dword2 = bswap_32(*(gb->ptr-4));
+    dword2 = swab32(*(gb->ptr-4));
 
     /* put second dword in mm4 */
     movd_m2r(dword2,mm4);
@@ -130,96 +162,121 @@ unsigned long getbits_mmx(gst_getbits_t *gb,unsigned long bits) {
 }
 #endif /* HAVE_LIBMMX */
 
-unsigned long getbits_int(gst_getbits_t *gb,unsigned long bits) {
-  int remaining;
-  int result = 0;
+unsigned long _gst_getbits_int_cb(gst_getbits_t *gb, unsigned long bits) {
+  int result;
+  int bitsleft;
 
-  if (bits == 0) {
-//    fprintf(stderr,"getbits(0) = 0\n");
-    return 0;
-  }
+  //printf("gst_getbits%lu %ld %p %08x\n", bits, gb->bits, gb->ptr, gb->dword);
 
-  remaining = gb->bits - bits;
-  if (remaining < 0) {
-    /* how many bits are left to get? */
-    remaining = -remaining;
-//    printf("have to get %d more bits from next dword\n",remaining);
-    /* move what's left over to accomodate the new stuff */
-    result = gb->dword >> (32 - bits);
-//    printf("have \t\t%s from previous dword\n",print_bits(result));
-    /* get the new word into the buffer */
-//    fprintf(stderr,"getbits: incrementing %p by 4\n",gb->ptr);
+  if (!bits) return 0;
+
+  gb->bits -= bits;
+  result = gb->dword >> (32-bits);
+
+  if (gb->bits < 0) {
+    
     gb->ptr += 4;
-    gb->dword = bswap_32(*((unsigned long *)(gb->ptr)));
-//    gb->dword = *((unsigned char *)(gb->ptr)) << 24 |
-//                *((unsigned char *)(gb->ptr)+1) << 16 |
-//                *((unsigned char *)(gb->ptr)+2) << 8 |
-//                *((unsigned char *)(gb->ptr)+3);
-//    gb->dword = *((unsigned long *)(gb->ptr));
-    gb->bits = 32;
-//    fprintf(stderr,"got new dword %08x\n",gb->dword);
-    /* & in the right number of bits */
-    result |= (gb->dword >> (32 - remaining));
-    /* shift the buffer over */
-    gb->dword <<= remaining;
-    /* record how many bits are left */
-    gb->bits -= remaining;
-  } else {
-    result = gb->dword >> (32 - bits);
-    gb->dword <<= bits;
-    gb->bits -= bits;
-//    printf("have %d bits left\n",gb->bits);
+
+    bitsleft = (gb->endptr - gb->ptr)*8;
+    bits = -gb->bits;
+    gb->bits += (bitsleft>32? 32 : bitsleft); 
+    
+    if (gb->endptr <= gb->ptr) {
+      (gb->callback)(gb, gb->data);
+      gb->bits -= bits;
+    }
+    gb->dword = swab32(*((unsigned long *)(gb->ptr)));
+
+    result |= (gb->dword >> (32-bits));
   }
-//  printf("have \t\t%s left\n",print_bits(gb->dword));
-//  fprintf(stderr,"getbits.c:getbits(%ld) = %d\n",bits,result);
+  gb->dword <<= bits;
+
   return result;
 }
 
-void getbits_back_int(gst_getbits_t *gb,unsigned long bits) {
-  fprintf(stderr,"getbits.c:getbits_back(%lu)\n",bits);
-  // moving within the same dword...
-  if ((bits + gb->bits) <= 32) {
-    fprintf(stderr,"moving back %lu bits in the same dword\n",bits);
-    gb->bits += bits;
-  // otherwise we're going to have move the pointer (ick)
-  } else {
-    // rare case where we're moving a multiple of 32 bits...
-    if ((bits % 32) == 0) {
-      fprintf(stderr,"moving back exactly %lu dwords\n",bits/32);
-      gb->ptr -= (bits / 8);
-    // we have to both shift bits and the pointer (NOOOOOOO!)
-    } else {
-      // strip off the first dword
-      bits -= (32 - gb->bits);
-      gb->ptr -= 4;
-      // now strip off as many others as necessary
-      gb->ptr -= 4 * (bits/32);
-      // and set the bits to what's left
-      gb->bits = bits % 32;
-      fprintf(stderr,"moved back %lu bytes to %p\n",4 * ((bits/32)+1),gb->ptr);
-    }
-  }
-  gb->dword = bswap_32(*((unsigned long *)(gb->ptr)));
-  fprintf(stderr,"orignal new loaded word is %08lx\n",gb->dword);
-  gb->dword <<= (32 - gb->bits);
-  fprintf(stderr,"shifted (by %lu) word is %08lx\n",gb->bits,gb->dword);
+void _gst_getbits_back_int(gst_getbits_t *gb, unsigned long bits) {
+  gb->bits -= bits;
+  gb->ptr += (gb->bits>>3);
+  gb->bits &= 0x7;
 }
 
-void getbits_byteback_int(gst_getbits_t *gb,unsigned long bytes) {
-  fprintf(stderr,"getbits.c:getbits_byteback(%lu)\n",bytes);
-  getbits_back_int(gb,bytes*8);
-  gb->bits = gb->bits & ~0x07;
+unsigned long _gst_showbits_int(gst_getbits_t *gb, unsigned long bits) {
+  unsigned long rval;
+
+  if (bits == 0) return 0;
+
+  rval = swab32(*((unsigned long *)(gb->ptr)));
+  rval <<= gb->bits;
+  rval >>= (32-bits);
+
+  DEBUG("showbits%d, %08x\n", bits, rval);
+  return rval;
 }
 
-int getbits_offset(gst_getbits_t *gb) {
-  fprintf(stderr,"getbits.c:getbits_offset() = %lu\n",gb->bits % 8);
-  return gb->bits % 8;
+unsigned long _gst_getbyte(gst_getbits_t *gb, unsigned long bits) {
+  return *gb->ptr++;
+}
+
+unsigned long _gst_get1bit_int(gst_getbits_t *gb, unsigned long bits) {
+  unsigned char rval;
+
+  rval = *gb->ptr << gb->bits;
+
+  gb->bits++;
+  gb->ptr += (gb->bits>>3);
+  gb->bits &= 0x7;
+
+  DEBUG("getbits%d, %08x\n", bits, rval);
+  return rval>>7;
+}
+
+unsigned long _gst_getbits_fast_int(gst_getbits_t *gb, unsigned long bits) {
+  unsigned long rval;
+
+  rval = (unsigned char) (gb->ptr[0] << gb->bits);
+  rval |= ((unsigned int) gb->ptr[1] << gb->bits)>>8;
+  rval <<= bits;
+  rval >>= 8;
+
+  gb->bits += bits;
+  gb->ptr += (gb->bits>>3);
+  gb->bits &= 0x7;
+
+  DEBUG("getbits%d, %08x\n", bits, rval);
+  return rval;
+}
+
+unsigned long _gst_getbits_int(gst_getbits_t *gb, unsigned long bits) {
+  unsigned long rval;
+
+  if (bits == 0) return 0;
+
+  rval = swab32(*((unsigned long *)(gb->ptr)));
+  rval <<= gb->bits;
+
+  gb->bits += bits;
+
+  rval >>= (32-bits);
+  gb->ptr += (gb->bits>>3);
+  gb->bits &= 0x7;
+
+  DEBUG("getbits%d, %08x\n", bits, rval);
+  return rval;
+}
+
+void _gst_flushbits_int(gst_getbits_t *gb, unsigned long bits) {
+  gb->bits += bits;
+  gb->ptr += (gb->bits>>3);
+  gb->bits &= 0x7;
+  DEBUG("flushbits%d\n", bits);
 }
 
 /* initialize the getbits structure with the proper getbits func */
-void getbits_init(gst_getbits_t *gb) {
+void gst_getbits_init(gst_getbits_t *gb, GstGetbitsCallback callback, void *data) {
   gb->ptr = NULL;
   gb->bits = 0;
+  gb->callback = callback;
+  gb->data = data;
 
 #ifdef HAVE_LIBMMX
   if (1) {
@@ -229,18 +286,30 @@ void getbits_init(gst_getbits_t *gb) {
   } else
 #endif /* HAVE_LIBMMX */
   {
-    gb->getbits = getbits_int;
-    gb->backbits = getbits_back_int;
-    gb->backbytes = getbits_byteback_int;
+    if (gb->callback) {
+      gb->getbits = _gst_getbits_int_cb;
+      gb->showbits = _gst_showbits_int;
+      gb->flushbits = _gst_flushbits_int;
+      gb->backbits = _gst_getbits_back_int;
+    }
+    else {
+      gb->get1bit = _gst_get1bit_i386;
+      gb->getbits = _gst_getbits_i386;
+      gb->getbits_fast = _gst_getbits_fast_i386;
+      gb->getbyte = _gst_getbyte;
+      gb->show1bit = _gst_showbits_i386;
+      gb->showbits = _gst_showbits_i386;
+      gb->flushbits = _gst_flushbits_i386;
+      gb->backbits = _gst_getbits_back_i386;
+    }
   }
 }
 
 /* set up the getbits structure with a new buffer */
-void getbits_newbuf(gst_getbits_t *gb,unsigned char *buffer) {
-  gb->ptr = buffer - 4;
-//  fprintf(stderr,"setting ptr to %p\n",gb->ptr);
+void gst_getbits_newbuf(gst_getbits_t *gb,unsigned char *buffer, unsigned long len) {
+  gb->ptr = buffer;
+  gb->endptr = buffer+len;
   gb->bits = 0;
-  gb->dword = 0;
 #ifdef HAVE_LIBMMX
 //  gb->qword = 0;
 #endif /* HAVE_LIBMMX */

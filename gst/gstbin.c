@@ -603,8 +603,8 @@ void gst_bin_iterate_func(GstBin *bin) {
   if (bin->need_cothreads) {
     // all we really have to do is switch to the first child
     // FIXME this should be lots more intelligent about where to start
-//  g_print("** in gst_bin_iterate_func()==================================%s\n",
-//          gst_element_get_name(GST_ELEMENT(bin->children->data)));
+  //g_print("** in gst_bin_iterate_func()==================================%s\n",
+  //        gst_element_get_name(GST_ELEMENT(bin->children->data)));
     cothread_switch(GST_ELEMENT(bin->children->data)->threadstate);
   } else {
     entries = bin->entries;
