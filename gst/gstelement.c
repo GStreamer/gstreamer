@@ -719,6 +719,7 @@ gst_element_request_pad_by_name (GstElement *element, const gchar *name)
 
   if (strstr (name, "%d")) {
       templ = gst_element_get_padtemplate_by_name (element, name);
+      templ_found = (templ != NULL);
       req_name = NULL;
   } else {
       list = gst_element_get_padtemplate_list(element);
