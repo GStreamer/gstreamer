@@ -31,8 +31,6 @@ gst_ffmpeg_pix_fmt_to_caps (void);
 /* Disect a GstCaps */
 
 enum PixelFormat
-gst_ffmpeg_caps_to_pix_fmt (const GstCaps *caps,
-			    int *width, int *height,
-			    double *fps);
+gst_ffmpeg_caps_to_pix_fmt (const GstCaps *caps);
 
 #endif /* __GST_FFMPEG_CODECMAP_H__ */

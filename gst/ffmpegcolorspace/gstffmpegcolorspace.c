@@ -165,14 +165,21 @@ static GstPadLinkReturn
 gst_ffmpegcolorspace_pad_link (GstPad * pad, const GstCaps * caps)
 {
   GstFFMpegColorspace *space;
+  GstStructure *structure;
   const GstCaps *othercaps;
   GstPad *otherpad;
   GstPadLinkReturn ret;
+  enum PixelFormat pix_fmt;
   int height, width;
   double framerate;
-  enum PixelFormat pix_fmt;
 
   space = GST_FFMPEGCOLORSPACE (gst_pad_get_parent (pad));
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  gst_structure_get_int (structure, "width", &width);
+  gst_structure_get_int (structure, "height", &height);
+  gst_structure_get_double (structure, "framerate", &framerate);
 
   otherpad = (pad == space->srcpad) ? space->sinkpad : space->srcpad;
 
@@ -183,7 +190,7 @@ gst_ffmpegcolorspace_pad_link (GstPad * pad, const GstCaps * caps)
 
   /* loop over all possibilities and select the first one we can convert and
    * is accepted by the peer */
-  pix_fmt = gst_ffmpeg_caps_to_pix_fmt (caps, &width, &height, &framerate);
+  pix_fmt = gst_ffmpeg_caps_to_pix_fmt (caps);
   if (pix_fmt == PIX_FMT_NB) {
     /* we disable ourself here */
     if (pad == space->srcpad) {
@@ -199,13 +206,13 @@ gst_ffmpegcolorspace_pad_link (GstPad * pad, const GstCaps * caps)
   /* set the size on the otherpad */
   othercaps = gst_pad_get_negotiated_caps (otherpad);
   if (othercaps) {
-    GstCaps *caps = gst_caps_copy (othercaps);
+    GstCaps *newothercaps = gst_caps_copy (othercaps);
 
-    gst_caps_set_simple (caps,
+    gst_caps_set_simple (newothercaps,
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
         "framerate", G_TYPE_DOUBLE, framerate, NULL);
-    ret = gst_pad_try_set_caps (otherpad, caps);
+    ret = gst_pad_try_set_caps (otherpad, newothercaps);
     if (GST_PAD_LINK_FAILED (ret)) {
       return ret;
     }

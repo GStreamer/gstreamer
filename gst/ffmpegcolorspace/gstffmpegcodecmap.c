@@ -191,18 +191,13 @@ gst_ffmpeg_pix_fmt_to_caps (void)
  */
 
 enum PixelFormat
-gst_ffmpeg_caps_to_pix_fmt (const GstCaps * caps,
-    int *width, int *height, double *framerate)
+gst_ffmpeg_caps_to_pix_fmt (const GstCaps * caps)
 {
   GstStructure *structure;
   enum PixelFormat pix_fmt = PIX_FMT_NB;
 
   g_return_val_if_fail (gst_caps_get_size (caps) == 1, PIX_FMT_NB);
   structure = gst_caps_get_structure (caps, 0);
-
-  gst_structure_get_int (structure, "width", width);
-  gst_structure_get_int (structure, "height", height);
-  gst_structure_get_double (structure, "framerate", framerate);
 
   if (strcmp (gst_structure_get_name (structure), "video/x-raw-yuv") == 0) {
     guint32 fourcc;
