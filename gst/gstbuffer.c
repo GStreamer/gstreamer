@@ -75,6 +75,7 @@ gst_buffer_new(void)
   buffer->timestamp = 0;
   buffer->parent = NULL;
   buffer->pool = NULL;
+  buffer->pool_private = NULL;
   buffer->free = NULL;
   buffer->copy = NULL;
   
@@ -380,6 +381,25 @@ gst_buffer_copy (GstBuffer *buffer)
 }
 
 
+/**
+ * gst_buffer_span:
+ * @buf1: first source buffer to merge
+ * @offset: offset in first buffer to start new buffer
+ * @buf2: second source buffer to merge
+ * @len: length of new buffer
+ *
+ * Create a new buffer that consists of part of buf1 and buf2.
+ * Logically, buf1 and buf2 are concatenated into a single larger
+ * buffer, and a new buffer is created at the given offset inside
+ * this space, with a given length.
+ *
+ * If the two source buffers are children of the same larger buffer,
+ * and are contiguous, the new buffer will be a child of the shared
+ * parent, and thus no copying is necessary.
+ *
+ * Returns: new buffer that spans the two source buffers
+ */
+// FIXME need to think about CoW and such...
 GstBuffer *
 gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
 {
@@ -424,6 +444,20 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
 }
 
 
+/**
+ * gst_buffer_merge:
+ * @buf1: first source buffer to merge
+ * @buf2: second source buffer to merge
+ *
+ * Create a new buffer that is the concatenation of the two source
+ * buffers.  The original source buffers will not be modified or
+ * unref'd.
+ *
+ * Internally is nothing more than a specialized gst_buffer_span,
+ * so the same optimizations can occur.
+ *
+ * Returns: new buffer that's the concatenation of the source buffers
+ */
 GstBuffer *
 gst_buffer_merge (GstBuffer *buf1, GstBuffer *buf2)
 {
