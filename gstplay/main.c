@@ -24,6 +24,8 @@ main (int argc, char *argv[])
     gst_media_play_start_uri (play, argv[1]);
   }
 
+  xmlSaveFile("gstmediaplay.gst", gst_xml_write(gst_play_get_pipeline(play->play)));
+
   gdk_threads_enter ();
   gst_main ();
   gdk_threads_leave ();
