@@ -46,6 +46,7 @@ struct _FlacDec {
   GstElement 	 element;
 
   GstPad 	*sinkpad,*srcpad;
+	GstCaps *metadata;
   GstByteStream *bs;
 
   FLAC__SeekableStreamDecoder *decoder;

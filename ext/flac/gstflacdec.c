@@ -46,6 +46,7 @@ enum {
 
 enum {
   ARG_0,
+	ARG_METADATA
 };
 
 static void 		gst_flacdec_class_init		(FlacDecClass *klass);
@@ -64,6 +65,14 @@ static gboolean		gst_flacdec_src_query 		(GstPad *pad, GstQueryType type,
 static const GstEventMask* 
 			gst_flacdec_get_src_event_masks (GstPad *pad);
 static gboolean 	gst_flacdec_src_event 		(GstPad *pad, GstEvent *event);
+static void 	gst_flacdec_get_property 	(GObject *object, 
+		            			 guint prop_id, 
+						 GValue *value, 
+						 GParamSpec *pspec);
+static void 	gst_flacdec_set_property 	(GObject *object, 
+		            			 guint prop_id, 
+						 const GValue *value, 
+						 GParamSpec *pspec);
 
 static FLAC__SeekableStreamDecoderReadStatus 	
 			gst_flacdec_read 		(const FLAC__SeekableStreamDecoder *decoder, 
@@ -120,11 +129,20 @@ static void
 gst_flacdec_class_init (FlacDecClass *klass) 
 {
   GstElementClass *gstelement_class;
+	GObjectClass *gobject_class;
 
   gstelement_class = (GstElementClass*)klass;
+	gobject_class = (GObjectClass*) klass;
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+	
+	g_object_class_install_property (gobject_class, ARG_METADATA,
+    g_param_spec_boxed ("metadata", "Metadata", "(logical) Stream metadata",
+                         GST_TYPE_CAPS, G_PARAM_READABLE));
 
+	gobject_class->get_property = gst_flacdec_get_property;
+  gobject_class->set_property = gst_flacdec_set_property;
+	
   gstelement_class->change_state = gst_flacdec_change_state;
 }
 
@@ -150,6 +168,7 @@ gst_flacdec_init (FlacDec *flacdec)
   flacdec->init = TRUE;
   flacdec->eos = FALSE;
   flacdec->seek_pending = FALSE;
+	flacdec->metadata = NULL;
 
   FLAC__seekable_stream_decoder_set_read_callback (flacdec->decoder, gst_flacdec_read);
   FLAC__seekable_stream_decoder_set_seek_callback (flacdec->decoder, gst_flacdec_seek);
@@ -167,20 +186,80 @@ gst_flacdec_init (FlacDec *flacdec)
 		 void *client_data))
 		(gst_flacdec_write));
 #endif
+  FLAC__seekable_stream_decoder_set_metadata_respond (flacdec->decoder, FLAC__METADATA_TYPE_VORBIS_COMMENT);
   FLAC__seekable_stream_decoder_set_metadata_callback (flacdec->decoder, gst_flacdec_metadata_callback);
   FLAC__seekable_stream_decoder_set_error_callback (flacdec->decoder, gst_flacdec_error_callback);
   FLAC__seekable_stream_decoder_set_client_data (flacdec->decoder, flacdec);
 }
+
+static gboolean
+gst_flacdec_update_metadata (FlacDec *flacdec, const FLAC__StreamMetadata *metadata)
+{
+  guint32 number_of_comments, cursor, str_len;
+  gchar *p_value, *value, *name, *str_ptr;
+  GstProps *props = NULL;
+  GstPropsEntry *entry;
+	
+  /* clear old one */
+  if (flacdec->metadata) {
+    gst_caps_unref (flacdec->metadata);
+    flacdec->metadata = NULL;
+  }
+
+  /* create props to hold the key/value pairs */
+  props = gst_props_empty_new ();
+  
+  number_of_comments = metadata->data.vorbis_comment.num_comments;
+  value = NULL;
+  GST_DEBUG (GST_CAT_CAPS, "%d tag(s) found",  number_of_comments);
+  for (cursor = 0; cursor < number_of_comments; cursor++)
+  {			
+    str_ptr = metadata->data.vorbis_comment.comments[cursor].entry;
+    str_len = GUINT32_FROM_LE (metadata->data.vorbis_comment.comments[cursor].length);
+    p_value = g_strstr_len ( str_ptr, str_len , "=" );
+    if (p_value)
+    {			
+      name = g_strndup (str_ptr, p_value - str_ptr);
+      value = g_strndup (p_value + 1, str_ptr + str_len - p_value);
+			
+      entry = gst_props_entry_new (name, GST_PROPS_STRING_TYPE, value);
+      gst_props_add_entry (props, (GstPropsEntry *) entry);
+
+      GST_DEBUG (GST_CAT_CAPS, "%s : %s", name, value);
+
+      g_free (name);
+      g_free (value);
+    }
+  }
+	
+  flacdec->metadata = gst_caps_new ("vorbisfile_metadata",
+                                    "application/x-gst-metadata",
+                                    props);
+  g_object_notify (G_OBJECT (flacdec), "metadata");
+	
+  return TRUE;
+}
+
 
 static void 
 gst_flacdec_metadata_callback (const FLAC__SeekableStreamDecoder *decoder,
 			       const FLAC__StreamMetadata *metadata, void *client_data)
 {
   FlacDec *flacdec;
-
+	
   flacdec = GST_FLACDEC (client_data);
 
-  flacdec->stream_samples = metadata->data.stream_info.total_samples;
+  switch (metadata->type)
+  {
+    case FLAC__METADATA_TYPE_STREAMINFO:
+         flacdec->stream_samples = metadata->data.stream_info.total_samples;
+ 	 break;
+    case FLAC__METADATA_TYPE_VORBIS_COMMENT:
+         gst_flacdec_update_metadata (flacdec, metadata);		  
+	 break;
+    default:
+         break;
+  }
 }
 
 static void 
@@ -656,3 +735,37 @@ gst_flacdec_change_state (GstElement *element)
   return GST_STATE_SUCCESS;
 }
 
+static void
+gst_flacdec_set_property (GObject *object, guint prop_id, 
+		             const GValue *value, GParamSpec *pspec)
+{
+  FlacDec *flacdec;
+	      
+  g_return_if_fail (GST_IS_FLACDEC (object));
+
+  flacdec = GST_FLACDEC (object);
+
+  switch (prop_id) {
+    default:
+      g_warning ("Unknown property id\n");
+  }
+}
+
+static void 
+gst_flacdec_get_property (GObject *object, guint prop_id, 
+		             GValue *value, GParamSpec *pspec)
+{
+  FlacDec *flacdec;
+	      
+  g_return_if_fail (GST_IS_FLACDEC(object));
+
+  flacdec = GST_FLACDEC (object);
+
+  switch (prop_id) {
+    case ARG_METADATA:
+      g_value_set_boxed (value, flacdec->metadata);
+      break;
+    default:
+      g_warning ("Unknown property id\n");
+  }
+}
