@@ -106,6 +106,18 @@ gst_mixer_class_init (GstMixerClass *klass)
   klass->set_record = NULL;
 }
 
+/**
+ *agst_mixer_list_tracks:
+ * @mixer: the #GstMixer (a #GstElement) to get the tracks from.
+ *
+ * Returns a list of avialable tracks for this mixer/element. Note
+ * that it is allowed for sink (output) elements to only provide
+ * the output tracks in this list. Likewise, for sources (inputs),
+ * it is allowed to only provide input elements in this list.
+ *
+ * Returns: A #GList consisting of zero or more #GstMixerTracks.
+ */
+
 const GList *
 gst_mixer_list_tracks (GstMixer *mixer)
 {
@@ -118,6 +130,21 @@ gst_mixer_list_tracks (GstMixer *mixer)
   return NULL;
 }
 
+/**
+ * gst_mixer_set_volume:
+ * @mixer: The #GstMixer (a #GstElement) that owns the track.
+ * @track: The #GstMixerTrack to set the volume on.
+ * @volumes: an array of integers (of size track->num_channels)
+ *           that gives the wanted volume for each channel in
+ *           this track.
+ *
+ * Sets the volume on each channel in a track. Short note about
+ * naming: a track is defined as one separate stream owned by
+ * the mixer/element, such as 'Line-in' or 'Microphone'. A
+ * channel is said to be a mono-stream inside this track. A
+ * stereo track thus contains two channels.
+ */
+
 void
 gst_mixer_set_volume (GstMixer      *mixer,
 		      GstMixerTrack *track,
@@ -129,6 +156,17 @@ gst_mixer_set_volume (GstMixer      *mixer,
     klass->set_volume (mixer, track, volumes);
   }
 }
+
+/*
+ * gst_mixer_get_volume:
+ * @mixer: the #GstMixer (a #GstElement) that owns the track
+ * @track: the GstMixerTrack to get the volume from.
+ * @volumes: a pre-allocated array of integers (of size
+ *           track->num_channels) to store the current volume
+ *           of each channel in the given track in.
+ *
+ * Get the current volume(s) on the given track.
+ */
 
 void
 gst_mixer_get_volume (GstMixer      *mixer,
@@ -148,6 +186,17 @@ gst_mixer_get_volume (GstMixer      *mixer,
   }
 }
 
+/**
+ * gst_mixer_set_mute:
+ * @mixer: the #GstMixer (a #GstElement) that owns the track.
+ * @track: the #GstMixerTrack to operate on.
+ * @mute: a boolean value indicating whether to turn on or off
+ *        muting.
+ *
+ * Mutes or unmutes the given channel. To find out whether a
+ * track is currently muted, use GST_MIXER_TRACK_HAS_FLAG ().
+ */
+
 void
 gst_mixer_set_mute (GstMixer      *mixer,
 		    GstMixerTrack *track,
@@ -159,6 +208,19 @@ gst_mixer_set_mute (GstMixer      *mixer,
     klass->set_mute (mixer, track, mute);
   }
 }
+
+/**
+ * gst_mixer_set_record:
+ * @mixer: The #GstMixer (a #GstElement) that owns the track.
+ * @track: the #GstMixerTrack to operate on.
+ * @record: a boolean value that indicates whether to turn on
+ *          or off recording.
+ *
+ * Enables or disables recording on the given track. Note that
+ * this is only possible on input tracks, not on output tracks
+ * (see GST_MIXER_TRACK_HAS_FLAG () and the GST_MIXER_TRACK_INPUT
+ * flag).
+ */
 
 void
 gst_mixer_set_record (GstMixer      *mixer,

@@ -82,6 +82,16 @@ gst_property_probe_iface_init (GstPropertyProbeInterface *iface)
   iface->get_values     = NULL;
 }
 
+/**
+ * gst_property_probe_get_properties:
+ * @probe: the #GstPropertyProbe to get the properties for.
+ *
+ * Get a list of properties for which probing is supported.
+ *
+ * Returns the list of properties for which probing is supported
+ * by this element.
+ */
+
 const GList *
 gst_property_probe_get_properties (GstPropertyProbe *probe)
 {
@@ -133,6 +143,18 @@ gst_property_probe_probe_property (GstPropertyProbe *probe,
     iface->probe_property (probe, pspec->param_id, pspec);
 }
 
+/**
+ * gst_property_probe_probe_property_name:
+ * @probe: the #GstPropertyProbe to check.
+ * @name: name of the property to return.
+ *
+ * Returns the #GParamSpec for the given property. It's similar to
+ * g_object_class_find_property (), except that this function only
+ * takes "probe'able" properties into account.
+ *
+ * Returns: the #GParamSpec that belongs to the given property.
+ */
+
 void
 gst_property_probe_probe_property_name (GstPropertyProbe *probe,
 					const gchar      *name)
@@ -151,6 +173,20 @@ gst_property_probe_probe_property_name (GstPropertyProbe *probe,
   gst_property_probe_probe_property (probe, pspec);
 }
 
+/**
+ * gst_property_probe_needs_probe:
+ * @probe: the #GstPropertyProbe object to which the given property belongs.
+ * @pspec: a #GParamSpec that identifies the property to check.
+ *
+ * Checks whether a property needs a probe. This might be because
+ * the property wasn't initialized before, or because host setup
+ * changed. This might be, for example, because a new device was
+ * added, and thus device probing needs to be refreshed to display
+ * the new device.
+ *
+ * Returns: TRUE if the property needs a new probe, FALSE if not.
+ */
+
 gboolean
 gst_property_probe_needs_probe (GstPropertyProbe *probe,
 				const GParamSpec *pspec)
@@ -167,6 +203,16 @@ gst_property_probe_needs_probe (GstPropertyProbe *probe,
 
   return FALSE;
 }
+
+/**
+ * gst_property_probe_needs_probe_name:
+ * @probe: the #GstPropertyProbe object to which the given property belongs.
+ * @name: the name of the property to check.
+ *
+ * Same as gst_property_probe_needs_probe ().
+ *
+ * Returns: TRUE if the property needs a new probe, FALSE if not.
+ */
 
 gboolean
 gst_property_probe_needs_probe_name (GstPropertyProbe *probe,
@@ -185,6 +231,17 @@ gst_property_probe_needs_probe_name (GstPropertyProbe *probe,
 
   return gst_property_probe_needs_probe (probe, pspec);
 }
+
+/**
+ * gst_property_probe_get_values:
+ * @probe: the #GstPropertyProbe object.
+ * @pspec: the #GParamSpec property identifier.
+ *
+ * Gets the possible (probed) values for the given property,
+ * requires the property to have been probed before.
+ *
+ * Returns: A list of valid values for the given property.
+ */
                                                                                
 GValueArray *
 gst_property_probe_get_values (GstPropertyProbe *probe,
@@ -202,6 +259,16 @@ gst_property_probe_get_values (GstPropertyProbe *probe,
 
   return NULL;
 }
+
+/**
+ * gst_property_probe_get_values_name:
+ * @probe: the #GstPropertyProbe object.
+ * @name: the name of the property to get values for.
+ *
+ * Same as gst_property_probe_get_values ().
+ *
+ * Returns: A list of valid values for the given property.
+ */
 
 GValueArray *
 gst_property_probe_get_values_name (GstPropertyProbe *probe,
@@ -221,6 +288,17 @@ gst_property_probe_get_values_name (GstPropertyProbe *probe,
   return gst_property_probe_get_values (probe, pspec);
 }
 
+/**
+ * gst_property_probe_probe_and_get_values:
+ * @probe: the #GstPropertyProbe object.
+ * @pspec: The #GParamSpec property identifier.
+ *
+ * Check whether the given property requires a new probe. If so,
+ * fo the probe. After that, retrieve a value list. Meant as a
+ * utility function that wraps the above functions.
+ *
+ * Return: the list of valid values for this property.
+ */
 
 GValueArray *
 gst_property_probe_probe_and_get_values (GstPropertyProbe *probe,
@@ -238,6 +316,16 @@ gst_property_probe_probe_and_get_values (GstPropertyProbe *probe,
 
   return gst_property_probe_get_values (probe, pspec);
 }
+
+/**
+ * gst_property_probe_probe_and_get_values_name:
+ * @probe: the #GstPropertyProbe object.
+ * @name: the name of the property to get values for.
+ *
+ * Same as gst_property_probe_probe_and_get_values ().
+ *
+ * Return: the list of valid values for this property.
+ */
 
 GValueArray *
 gst_property_probe_probe_and_get_values_name (GstPropertyProbe *probe,
