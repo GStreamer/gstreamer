@@ -1,3 +1,19 @@
+2004-05-08  Jan Schmidt  <thaytan@mad.scientist.com>
+	* ext/dv/gstdvdec.c: (gst_dvdec_video_link):
+	  Fix caps nego and pad templates. RGB mode caps should
+	  work now.
+	* ext/dvdnav/gst-dvd:
+	  Move mpeg2dec inside the thread because otherwise the
+	  queue rejects cap changes mid-stream
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_get_type),
+	(gst_mpeg2dec_flush_decoder):
+	  For mpeg2dec > 0.4.0, call the flush function instead of
+	  manually extracting all in-flight frames.
+	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_factory),
+	(gst_dv1394src_init), (gst_dv1394src_iso_receive):
+	  Change mime type video/dv go video/x-dv to match the
+	  rest of gst-plugins
+
 2004-05-07  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_build_list):

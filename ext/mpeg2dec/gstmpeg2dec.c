@@ -479,10 +479,10 @@ update_streaminfo (GstMpeg2dec * mpeg2dec)
 static void
 gst_mpeg2dec_flush_decoder (GstMpeg2dec * mpeg2dec)
 {
-  mpeg2_state_t state;
-
   if (mpeg2dec->decoder) {
+#if MPEG2_RELEASE < MPEG2_VERSION(0,4,0)
     const mpeg2_info_t *info = mpeg2_info (mpeg2dec->decoder);
+    mpeg2_state_t state;
 
     do {
       state = mpeg2_parse (mpeg2dec->decoder);
@@ -493,6 +493,9 @@ gst_mpeg2dec_flush_decoder (GstMpeg2dec * mpeg2dec)
       }
     }
     while (state != STATE_BUFFER && state != -1);
+#else
+    mpeg2_reset (mpeg2dec->decoder, 1);
+#endif
   }
 }
 
@@ -1016,7 +1019,7 @@ index_seek (GstPad * pad, GstEvent * event)
   if (entry) {
     const GstFormat *peer_formats, *try_formats;
 
-    /* since we know the exaxt byteoffset of the frame, make sure to seek on bytes first */
+    /* since we know the exact byteoffset of the frame, make sure to seek on bytes first */
     const GstFormat try_all_formats[] = {
       GST_FORMAT_BYTES,
       GST_FORMAT_TIME,
@@ -1042,7 +1045,7 @@ index_seek (GstPad * pad, GstEvent * event)
         seek_event =
             gst_event_new_seek (*try_formats | GST_SEEK_METHOD_SET |
             GST_SEEK_FLAG_FLUSH, value);
-        /* do the seekk */
+        /* do the seek */
         if (gst_pad_send_event (GST_PAD_PEER (mpeg2dec->sinkpad), seek_event)) {
           /* seek worked, we're done, loop will exit */
           gst_mpeg2dec_flush_decoder (mpeg2dec);
