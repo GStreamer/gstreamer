@@ -30,6 +30,18 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+  GST_VIDEOFLIP_METHOD_IDENTITY,
+  GST_VIDEOFLIP_METHOD_90R,
+  GST_VIDEOFLIP_METHOD_180,
+  GST_VIDEOFLIP_METHOD_90L,
+  GST_VIDEOFLIP_METHOD_HORIZ,
+  GST_VIDEOFLIP_METHOD_VERT,
+  GST_VIDEOFLIP_METHOD_TRANS,
+  GST_VIDEOFLIP_METHOD_OTHER,
+} GstVideoflipMethod;
+
+
 #define GST_TYPE_VIDEOFLIP \
   (gst_videoflip_get_type())
 #define GST_VIDEOFLIP(obj) \
@@ -47,6 +59,7 @@ typedef struct _GstVideoflipClass GstVideoflipClass;
 struct _GstVideoflip {
   GstVideofilter videofilter;
 
+  GstVideoflipMethod method;
 };
 
 struct _GstVideoflipClass {
