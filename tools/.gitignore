@@ -9,4 +9,6 @@ Makefile.in
 gstreamer-launch
 gstreamer-register
 gstreamer-inspect
+gstreamer-compprep
+gstreamer-complete
 *.xml
