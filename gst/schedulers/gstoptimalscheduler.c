@@ -2014,6 +2014,23 @@ group_can_reach_group (GstOptSchedulerGroup *group, GstOptSchedulerGroup *target
 }
 
 static void
+group_dec_links_for_element (GstOptSchedulerGroup* group, GstElement *element)
+{
+  GList *l;
+  GstPad *pad;
+  GstOptSchedulerGroup *peer_group;
+  
+  for (l=GST_ELEMENT_PADS(element); l; l=l->next) {
+    pad = (GstPad*)l->data;
+    if (GST_IS_REAL_PAD (pad) && GST_PAD_PEER (pad)) {
+      get_group (GST_PAD_PARENT (GST_PAD_PEER (pad)), &peer_group);
+      if (peer_group && peer_group != group)
+	group_dec_link (group, peer_group);
+    }
+  }
+}
+
+static void
 gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
 {
   GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
@@ -2080,6 +2097,7 @@ gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
   else {
     gboolean still_link1, still_link2;
     GstOptSchedulerGroup *group;
+    GstElement *element;
     
     /* since group1 == group2, it doesn't matter which group we take */
     group = group1;
@@ -2094,75 +2112,84 @@ gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
      * elements to a new group. */
     still_link1 = element_has_link_with_group (element1, group, srcpad);
     still_link2 = element_has_link_with_group (element2, group, sinkpad);
-
     /* if there is still a link, we don't need to break this group */
     if (still_link1 && still_link2) {
+      GSList *l;
+      GList *m;;
+      int linkcount;
+      
       GST_LOG ( "elements still have links with other elements in the group");
-      /* FIXME it's possible that we have to break the group/chain. This heppens when
-       * the src element recursiveley has links with other elements in the group but not 
-       * with all elements. */
-      g_warning ("opt: unlink elements in same group: implement me");
+      
+      while (group->elements)
+	for (l = group->elements; l && l->data; l = l->next)  {
+	  element = (GstElement*)l->data;
+	  if (GST_ELEMENT_IS_DECOUPLED (element))
+	    continue;
+	    
+	  linkcount = 0;
+	  GST_LOG ("Examining %s\n", GST_ELEMENT_NAME (element));
+	  for (m = GST_ELEMENT_PADS (element); m; m = m->next) {
+	    GstPad *peer, *pad;
+	    GstElement *parent;
+	    GstOptSchedulerGroup *peer_group;
+
+	    pad = (GstPad*)m->data;
+	    if (!pad || !GST_IS_REAL_PAD (pad))
+	      continue;
+
+	    peer = GST_PAD_PEER (pad);
+	    if (!peer || !GST_IS_REAL_PAD (peer))
+	      continue;
+		
+	    parent = GST_PAD_PARENT (GST_PAD_PEER (pad));
+	    get_group (parent, &peer_group);
+	    if (peer_group && peer_group != group) {
+	      GST_LOG ("pad %s is linked with %s\n",
+		       GST_PAD_NAME (pad),
+		       GST_ELEMENT_NAME (parent));
+	      linkcount++;
+	    }
+	  }
+
+	  if (linkcount < 2) {
+	    group_dec_links_for_element  (group, element);
+	    remove_from_group (group, element);
+	  }
+	  /* if linkcount == 2, it will be unlinked later on */
+	  else if (linkcount > 2) {
+	    g_warning ("opt: Can't handle element %s with 3 or more links, aborting",
+		       GST_ELEMENT_NAME (element));
+	    return;
+	  }
+	}	    
+      /* Peer element will be catched during next iteration */
       return;
     }
 
+    if (!still_link1 && !still_link2)
+      return;
+    
     /* now check which one of the elements we can remove from the group */
-    if (!still_link1) {
-      /* we only remove elements that are not the entry point of a loop based
-       * group and are not decoupled */
-      if (!(group->entry == element1 &&
-	   group->type == GST_OPT_SCHEDULER_GROUP_LOOP) &&
-	  !GST_ELEMENT_IS_DECOUPLED (element1)) 
-      {
-        GList *l;
-        GstPad *pad;
-        GstOptSchedulerGroup *peer_group;
-        
-        GST_LOG ("element1 is separated from the group");
-
-        /* have to decrement links to other groups from other pads */
-        for (l=element1->pads; l; l=l->next) {
-          pad = (GstPad*)l->data;
-          if (GST_IS_REAL_PAD (pad) && GST_PAD_PEER (pad)) {
-            get_group (GST_PAD_PARENT (GST_PAD_PEER (pad)), &peer_group);
-            if (peer_group && peer_group != group)
-              group_dec_link (group, peer_group);
-          }
-        }
-          
-        remove_from_group (group, element1);
-      }
-      else {
-        GST_LOG ("element1 is decoupled or entry in loop based group");
-      }
+    if (still_link1) {
+      element = element2;
     }
-    if (!still_link2) {
-      /* we only remove elements that are not the entry point of a loop based
-       * group and are not decoupled */
-      if (!(group->entry == element2 &&
-	   group->type == GST_OPT_SCHEDULER_GROUP_LOOP) &&
-	  !GST_ELEMENT_IS_DECOUPLED (element2)) 
-      {
-        GList *l;
-        GstPad *pad;
-        GstOptSchedulerGroup *peer_group;
-        
-        GST_LOG ("element2 is separated from the group");
+    else if (still_link2) {
+      element = element1;
+    }
 
-        /* have to decrement links to other groups from other pads */
-        for (l=element2->pads; l; l=l->next) {
-          pad = (GstPad*)l->data;
-          if (GST_IS_REAL_PAD (pad) && GST_PAD_PEER (pad)) {
-            get_group (GST_PAD_PARENT (GST_PAD_PEER (pad)), &peer_group);
-            if (peer_group && peer_group != group)
-              group_dec_link (group, peer_group);
-          }
-        }
-          
-        remove_from_group (group, element2);
-      }
-      else {
-        GST_LOG ("element2 is decoupled or entry in loop based group");
-      }
+    /* we only remove elements that are not the entry point of a loop based
+     * group and are not decoupled */
+    if (!(group->entry == element &&
+	  group->type == GST_OPT_SCHEDULER_GROUP_LOOP) &&
+	!GST_ELEMENT_IS_DECOUPLED (element)) {        
+      GST_LOG ("element is separated from the group");
+      
+      /* have to decrement links to other groups from other pads */
+      group_dec_links_for_element  (group, element);
+      remove_from_group (group, element);
+    }
+    else {
+      GST_LOG ("element is decoupled or entry in loop based group");
     }
   }
 }
