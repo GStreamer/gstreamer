@@ -2,6 +2,7 @@ noinst_LTLIBRARIES = libmodplug.la
 
 libmodplug_la_CXXFLAGS = -fno-exceptions -Wall -ffast-math -D_REENTRANT
 libmodplug_la_LDFLAGS = -module -avoid-version
+libmodplug_la_LIBS = -lstdc++
 libmodplug_la_SOURCES = tables.cpp         \
                         sndmix.cpp         \
                         sndfile.cpp        \
