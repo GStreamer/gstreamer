@@ -89,6 +89,9 @@ struct _GstXWindow {
 
 /* XImage stuff */
 struct _GstXImage {
+  /* Reference to the ximagesink we belong to */
+  GstXImageSink *ximagesink;
+  
   XImage *ximage;
   
 #ifdef HAVE_XSHM

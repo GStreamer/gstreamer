@@ -104,6 +104,9 @@ struct _GstXvImageFormat {
 
 /* XvImage stuff */
 struct _GstXvImage {
+  /* Reference to the xvimagesink we belong to */
+  GstXvImageSink *xvimagesink;
+  
   XvImage *xvimage;
   
 #ifdef HAVE_XSHM
