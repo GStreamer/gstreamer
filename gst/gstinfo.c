@@ -482,6 +482,7 @@ gst_default_error_handler (gchar *file, gchar *function,
 
 
 /***** DEBUG system *****/
+#ifdef GST_DEBUG_ENABLED
 GHashTable *__gst_function_pointers = NULL;
 /* FIXME make this thread specific */
 /* static GSList *stack_trace = NULL; */
@@ -502,6 +503,7 @@ _gst_debug_nameof_funcptr (void *ptr)
   }
   return NULL;
 }
+#endif
 
 
 #ifdef GST_ENABLE_FUNC_INSTRUMENTATION
