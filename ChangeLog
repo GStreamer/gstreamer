@@ -1,3 +1,9 @@
+2005-01-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* po/LINGUAS:
+	* po/vi.po:
+	  Adding Vietnamese translation (submitted by Clytie Siddall)
+
 2005-01-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstdecodebin.c: (try_to_link_1):
