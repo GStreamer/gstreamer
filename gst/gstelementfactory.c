@@ -133,8 +133,6 @@ gst_element_factory_cleanup (GstElementFactory *factory)
   padtemplates = factory->padtemplates;
 
   while (padtemplates) {
-    GstPadTemplate *oldtempl = GST_PAD_TEMPLATE (padtemplates->data);
-
     /* We leak the padtemplates, since they're generally not properly
      * ref'ed by the factories */
     /* gst_object_unref (GST_OBJECT (oldtempl)); */

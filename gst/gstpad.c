@@ -1311,7 +1311,7 @@ gst_pad_get_ghost_pad_list (GstPad *pad)
 static GstPadLinkReturn
 gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
 {
-  GstCaps *oldcaps, *allowed = NULL;
+  GstCaps *allowed = NULL;
   GstPadTemplate *template;
   GstElement *parent = GST_PAD_PARENT (pad);
 
