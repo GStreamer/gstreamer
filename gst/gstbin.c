@@ -141,8 +141,6 @@ gst_bin_class_init (GstBinClass * klass)
 #ifndef GST_DISABLE_INDEX
   gstelement_class->set_index	 	= GST_DEBUG_FUNCPTR (gst_bin_set_index);
 #endif
-  gstelement_class->set_clock	 	= GST_DEBUG_FUNCPTR (gst_bin_set_clock_func);
-  gstelement_class->get_clock	 	= GST_DEBUG_FUNCPTR (gst_bin_get_clock_func);
 
   klass->add_element 			= GST_DEBUG_FUNCPTR (gst_bin_add_func);
   klass->remove_element 		= GST_DEBUG_FUNCPTR (gst_bin_remove_func);
