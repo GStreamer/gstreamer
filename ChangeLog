@@ -1,3 +1,9 @@
+2004-04-06  Benjamin Otte  <otte@gnome.org>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
+	  fix memleaks
+
 2004-04-05  Benjamin Otte  <otte@gnome.org>
 
 	* configure.ac:

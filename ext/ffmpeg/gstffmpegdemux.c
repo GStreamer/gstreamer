@@ -744,6 +744,8 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !gst_type_find_register (plugin, typefind_name, GST_RANK_MARGINAL,
             gst_ffmpegdemux_type_find, extensions, sinkcaps, params)) {
       g_warning ("Register of type ffdemux_%s failed", name);
+      g_free (type_name);
+      g_free (typefind_name);
       return FALSE;
     }
 

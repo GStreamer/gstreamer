@@ -495,8 +495,11 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     /* first make sure we've got a supported type */
     sinkcaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, FALSE);
     srccaps = gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL);
-    if (!sinkcaps || !srccaps)
+    if (!sinkcaps || !srccaps) {
+      if (sinkcaps) gst_caps_free (sinkcaps);
+      if (srccaps) gst_caps_free (srccaps);
       goto next;
+    }
 
     /* construct the type */
     type_name = g_strdup_printf ("ffdec_%s", in_plugin->name);
