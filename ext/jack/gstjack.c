@@ -451,7 +451,7 @@ gst_jack_loop (GstElement *element)
                              * also, for sample accuracy etc, we should play avail
                              * bytes, but hey. */
                             gst_element_set_eos (element);
-                            gst_event_free (event);
+                            gst_event_unref (event);
                             gst_element_yield (element); /* shouldn't return */
                             return;
                         }
