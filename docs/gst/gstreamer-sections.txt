@@ -1889,7 +1889,6 @@ gst_version
 <FILE>gstxml</FILE>
 <TITLE>GstXML</TITLE>
 GstXML
-GstXMLNs
 gst_xml_write
 gst_xml_write_file
 gst_xml_new
