@@ -507,6 +507,10 @@ channels = 1 - MAXINT (INT, number of audio channels)
      MIME type: audio/x-speex
      Properties:
 
+15 - QDM2
+     MIME type: audio/x-qdm2
+     Properties:
+
 TODO: adpcm/dv needs confirmation from someone with knowledge...
 
 Raw formats
