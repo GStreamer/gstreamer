@@ -49,6 +49,9 @@ struct _GstVideorate
   guint64 next_ts;
   GstBuffer *prevbuf;
   guint64 in, out, dup, drop;
+
+  gboolean silent;
+  gdouble new_pref;
 };
 
 struct _GstVideorateClass
@@ -70,6 +73,9 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_SILENT		TRUE
+#define DEFAULT_NEW_PREF	1.0
+
 enum
 {
   ARG_0,
@@ -77,6 +83,8 @@ enum
   ARG_OUT,
   ARG_DUP,
   ARG_DROP,
+  ARG_SILENT,
+  ARG_NEW_PREF,
   /* FILL ME */
 };
 
@@ -169,6 +177,14 @@ gst_videorate_class_init (GstVideorateClass * klass)
   g_object_class_install_property (object_class, ARG_DROP,
       g_param_spec_uint64 ("drop", "Drop",
           "Number of dropped frames", 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, ARG_SILENT,
+      g_param_spec_boolean ("silent", "silent",
+          "Don't emit notify for dropped and duplicated frames",
+          DEFAULT_SILENT, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, ARG_NEW_PREF,
+      g_param_spec_double ("new_pref", "New Pref",
+          "Value indicating how much to prefer new frames",
+          0.0, 1.0, DEFAULT_NEW_PREF, G_PARAM_READWRITE));
 
   object_class->set_property = gst_videorate_set_property;
   object_class->get_property = gst_videorate_get_property;
@@ -293,6 +309,7 @@ gst_videorate_init (GstVideorate * videorate)
   videorate->out = 0;
   videorate->drop = 0;
   videorate->dup = 0;
+  videorate->silent = DEFAULT_SILENT;
 }
 
 static void
@@ -326,7 +343,7 @@ gst_videorate_chain (GstPad * pad, GstData * data)
     /* got 2 buffers, see which one is the best */
     do {
       diff1 = abs (prevtime - videorate->next_ts);
-      diff2 = abs (intime - videorate->next_ts);
+      diff2 = abs (intime - videorate->next_ts) * videorate->new_pref;
 
       /* output first one when its the best */
       if (diff1 <= diff2) {
@@ -350,12 +367,14 @@ gst_videorate_chain (GstPad * pad, GstData * data)
     /* if we outputed the first buffer more then once, we have dups */
     if (count > 1) {
       videorate->dup += count - 1;
-      g_object_notify (G_OBJECT (videorate), "duplicate");
+      if (!videorate->silent)
+        g_object_notify (G_OBJECT (videorate), "duplicate");
     }
     /* if we didn't output the first buffer, we have a drop */
     else if (count == 0) {
       videorate->drop++;
-      g_object_notify (G_OBJECT (videorate), "drop");
+      if (!videorate->silent)
+        g_object_notify (G_OBJECT (videorate), "drop");
     }
 //    g_print ("swap: diff1 %lld, diff2 %lld, in %d, out %d, drop %d, dup %d\n", diff1, diff2, 
 //                  videorate->in, videorate->out, videorate->drop, videorate->dup);
@@ -370,9 +389,15 @@ static void
 gst_videorate_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  //GstVideorate *videorate = GST_VIDEORATE (object);
+  GstVideorate *videorate = GST_VIDEORATE (object);
 
   switch (prop_id) {
+    case ARG_SILENT:
+      videorate->silent = g_value_get_boolean (value);
+      break;
+    case ARG_NEW_PREF:
+      videorate->new_pref = g_value_get_double (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -397,6 +422,12 @@ gst_videorate_get_property (GObject * object,
       break;
     case ARG_DROP:
       g_value_set_uint64 (value, videorate->drop);
+      break;
+    case ARG_SILENT:
+      g_value_set_boolean (value, videorate->silent);
+      break;
+    case ARG_NEW_PREF:
+      g_value_set_double (value, videorate->new_pref);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -1,3 +1,11 @@
+2004-06-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst/videorate/gstvideorate.c: (gst_videorate_class_init),
+	(gst_videorate_init), (gst_videorate_chain),
+	(gst_videorate_set_property), (gst_videorate_get_property):
+	Add property to make videorate silent.
+	Add property to prefer new frames over old ones.
+
 2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali.org>
 
 	* sys/osxvideo/Makefile.am:
