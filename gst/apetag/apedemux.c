@@ -721,12 +721,17 @@ gst_ape_demux_stream_data (GstApeDemux * ape)
         new = gst_event_new_discontinuous (GST_EVENT_DISCONT_NEW_MEDIA (event),
             GST_FORMAT_BYTES, new_off, GST_FORMAT_UNDEFINED);
         gst_event_unref (event);
+        event = new;
         data = GST_DATA (new);
         break;
       }
       default:
         break;
     }
+
+    gst_pad_event_default (ape->sinkpad, event);
+
+    return;
   } else {
     GstBuffer *buf = GST_BUFFER (data), *kid;
     gint64 pos, len;

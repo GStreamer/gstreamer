@@ -416,6 +416,7 @@ gst_musepackdec_loop (GstElement * element)
   GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (element);
   GstBuffer *out;
   GstFormat fmt;
+  gint ret;
 
   if (!musepackdec->dec) {
     if (!gst_musepack_stream_init (musepackdec))
@@ -444,9 +445,8 @@ gst_musepackdec_loop (GstElement * element)
   }
 
   out = gst_buffer_new_and_alloc (MPC_decoder::DecodeBufferLength * 4);
-  GST_BUFFER_SIZE (out) =
-      musepackdec->dec->Decode ((MPC_SAMPLE_FORMAT *) GST_BUFFER_DATA (out));
-  if (GST_BUFFER_SIZE (out) == 0) {
+  ret = musepackdec->dec->Decode ((MPC_SAMPLE_FORMAT *) GST_BUFFER_DATA (out));
+  if (ret <= 0) {
     if (musepackdec->reader->eos == true) {
       gst_element_set_eos (element);
       gst_pad_push (musepackdec->srcpad,
@@ -455,6 +455,7 @@ gst_musepackdec_loop (GstElement * element)
     gst_buffer_unref (out);
     return;
   }
+  GST_BUFFER_SIZE (out) = ret;
   /* note that the size is still in samples */
   fmt = GST_FORMAT_TIME;
   gst_pad_query (musepackdec->srcpad,
