@@ -301,28 +301,6 @@ gst_type_find_element_src_event (GstPad *pad, GstEvent *event)
   }
   return gst_pad_event_default (pad, event);
 }
-static void
-start_typefinding (GstTypeFindElement *typefind)
-{
-  g_assert (typefind->caps == NULL);
-  
-  GST_DEBUG_OBJECT (typefind, "starting typefinding");
-  typefind->mode = MODE_TYPEFIND; 
-  typefind->stream_length_available = TRUE; 
-  typefind->stream_length = 0; 
-}
-static void
-gst_type_find_element_handle_event (GstPad *pad, GstEvent *event)
-{
-  GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
-
-  if (typefind->mode == MODE_TYPEFIND) {
-    /* need to do more? */
-    gst_data_unref (GST_DATA (event));
-  } else {
-    gst_pad_event_default (pad, event);
-  }
-}
 typedef struct {
   GstTypeFindFactory *	factory;
   gint			probability;
@@ -350,6 +328,16 @@ free_entry (TypeFindEntry *entry)
   g_free (entry);
 }
 static void
+start_typefinding (GstTypeFindElement *typefind)
+{
+  g_assert (typefind->caps == NULL);
+  
+  GST_DEBUG_OBJECT (typefind, "starting typefinding");
+  typefind->mode = MODE_TYPEFIND; 
+  typefind->stream_length_available = TRUE; 
+  typefind->stream_length = 0; 
+}
+static void
 stop_typefinding (GstTypeFindElement *typefind)
 {
   /* stop all typefinding and set mode back to normal */
@@ -357,9 +345,8 @@ stop_typefinding (GstTypeFindElement *typefind)
   
   GST_DEBUG_OBJECT (typefind, "stopping typefinding%s", push_cached_buffers ? " and pushing cached buffers" : "");
   if (typefind->possibilities != NULL) {
-    /* this can only happen on PAUSED => READY */
+    /* this should only happen on PAUSED => READY or EOS */
     GST_LOG_OBJECT (typefind, "freeing remaining %u typefind functions", g_list_length (typefind->possibilities));
-    g_assert (push_cached_buffers == FALSE); 
     g_list_foreach (typefind->possibilities, (GFunc) free_entry, NULL);
     g_list_free (typefind->possibilities);
     typefind->possibilities = NULL;
@@ -411,6 +398,34 @@ find_element_get_length (gpointer data)
   }
   
   return entry->self->stream_length;
+}
+static void
+gst_type_find_element_handle_event (GstPad *pad, GstEvent *event)
+{
+  TypeFindEntry *entry;
+  GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
+
+  if (typefind->mode == MODE_TYPEFIND) {
+    /* need to do more? */
+    switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      /* this should only happen when we got all available data */
+      entry = (TypeFindEntry *) typefind->possibilities ? typefind->possibilities->data : NULL;
+      if (entry && entry->probability >= typefind->min_probability) {
+	GST_INFO_OBJECT (typefind, "'%s' is the best typefind left after we got all data, using it now (probability %u)", 
+		GST_PLUGIN_FEATURE_NAME (entry->factory), entry->probability);
+	g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE], 0, entry->probability, entry->caps);
+      }
+      stop_typefinding (typefind);
+      gst_pad_event_default (pad, event);
+      break;
+    default:
+      gst_data_unref (GST_DATA (event));
+      break;
+    }
+  } else {
+    gst_pad_event_default (pad, event);
+  }
 }
 static guint8 *
 find_peek (gpointer data, gint64 offset, guint size)
@@ -612,7 +627,7 @@ gst_type_find_element_chain (GstPad *pad, GstData *data)
 	}
 	if (g_list_next (typefind->possibilities) == NULL) {
 	  entry = (TypeFindEntry *) typefind->possibilities->data;
-	  if (entry->probability > 0) {
+	  if (entry->probability > typefind->min_probability) {
 	    GST_INFO_OBJECT (typefind, "'%s' is the only typefind left, using it now (probability %u)", 
 		    GST_PLUGIN_FEATURE_NAME (entry->factory), entry->probability);
 	    g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE], 0, entry->probability, entry->caps);

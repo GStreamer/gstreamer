@@ -140,7 +140,7 @@ gst_buffer_store_add_buffer_func (GstBufferStore *store, GstBuffer *buffer)
     GST_DEBUG_OBJECT (store, "attempting to add buffer %p with invalid offset to store with valid offset, abort",
 	    buffer);
     return FALSE;
-  } else if (store->buffers && !GST_BUFFER_OFFSET_IS_VALID (store->buffers->data)) {
+  } else if (!store->buffers || !GST_BUFFER_OFFSET_IS_VALID (store->buffers->data)) {
     /* the starting buffer had an invalid offset, in that case we assume continuous buffers */
     GST_LOG_OBJECT (store, "adding buffer %p with invalid offset and size %u",
 	    buffer, GST_BUFFER_SIZE (buffer));
@@ -287,6 +287,11 @@ gst_buffer_store_add_buffer (GstBufferStore *store, GstBuffer *buffer)
   g_return_val_if_fail (GST_IS_BUFFER_STORE (store), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
 
+  if (store->buffers &&
+      GST_BUFFER_OFFSET_IS_VALID (store->buffers->data) &&
+      !GST_BUFFER_OFFSET_IS_VALID (buffer))
+    return FALSE;
+  
   g_signal_emit (store, gst_buffer_store_signals [BUFFER_ADDED], 0, buffer, &ret);
   
   return ret;
