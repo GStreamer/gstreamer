@@ -45,18 +45,25 @@ struct _GstDParamSmooth {
 	gfloat start_float;
 	gfloat diff_float;
 	gfloat current_float;
+	gdouble start_double;
+	gdouble diff_double;
+	gdouble current_double;
 
 	gint64 update_period;
 	gint64 slope_time;
 	gfloat slope_delta_float;
+	gdouble slope_delta_double;
 
 	gboolean need_interp_times;
+
+        gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstDParamSmoothClass {
 	GstDParamClass parent_class;
 
 	/* signal callbacks */
+        gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_dpsmooth_get_type (void);

@@ -1,5 +1,20 @@
 2004-02-13  David Schleef  <ds@schleef.org>
 
+	* libs/gst/control/dparam.c: (gst_dparam_class_init),
+	(gst_dparam_get_property), (gst_dparam_set_property),
+	(gst_dparam_do_update_default):
+	* libs/gst/control/dparam.h:
+	* libs/gst/control/dparam_smooth.c: (gst_dpsmooth_class_init),
+	(gst_dpsmooth_new), (gst_dpsmooth_set_property),
+	(gst_dpsmooth_get_property), (gst_dpsmooth_value_changed_double),
+	(gst_dpsmooth_do_update_double):
+	* libs/gst/control/dparam_smooth.h:
+	* libs/gst/control/dparammanager.c:
+	(gst_dpman_inline_direct_update):
+	Add support for double dparams.
+
+2004-02-13  David Schleef  <ds@schleef.org>
+
 	* gst/elements/gstfdsrc.c: (gst_fdsrc_get): Use GST_TIME_TO_TIMEVAL()
 	* gst/gstclock.h: Avoid using 64-bit % operator (slow!)
 

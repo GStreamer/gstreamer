@@ -42,6 +42,7 @@ static void gst_dparam_set_property (GObject *object, guint prop_id, const GValu
 enum {
 	ARG_0,
 	ARG_VALUE_FLOAT,
+	ARG_VALUE_DOUBLE,
 	ARG_VALUE_INT,
 	ARG_VALUE_INT64,
 };
@@ -92,6 +93,10 @@ gst_dparam_class_init (GstDParamClass *klass)
 		g_param_spec_float("value_float","Float Value",
 		             "The value that should be changed if gfloat is the type",
                      -G_MAXFLOAT, G_MAXFLOAT, 0.0F, G_PARAM_READWRITE));
+	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VALUE_DOUBLE,
+		g_param_spec_float("value_double","Double Value",
+		             "The value that should be changed if gdouble is the type",
+                     -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
 	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VALUE_INT,
 		g_param_spec_int("value_int","Integer Value",
 		             "The value that should be changed if gint is the type",
@@ -154,6 +159,10 @@ gst_dparam_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 			g_value_set_float (value, dparam->value_float);
 			break;
 			
+		case ARG_VALUE_DOUBLE:
+			g_value_set_double (value, dparam->value_double);
+			break;
+			
 		case ARG_VALUE_INT:
 			g_value_set_int (value, dparam->value_int);
 			break;
@@ -177,9 +186,18 @@ gst_dparam_set_property (GObject *object, guint prop_id, const GValue *value, GP
 
 	switch (prop_id) {
 		case ARG_VALUE_FLOAT:
-			GST_DEBUG ("setting value from %f to %f", dparam->value_float, g_value_get_float (value));
+			GST_DEBUG ("setting value from %g to %g", dparam->value_float, g_value_get_float (value));
 			dparam->value_float = g_value_get_float (value);
 			GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam);
+			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
+			break;
+			
+		case ARG_VALUE_DOUBLE:
+			GST_DEBUG ("setting value from %g to %g",
+                            dparam->value_double, g_value_get_double (value));
+			dparam->value_double = g_value_get_double (value);
+			GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) =
+                          GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam);
 			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
 			break;
 			
@@ -220,6 +238,10 @@ gst_dparam_do_update_default (GstDParam *dparam, gint64 timestamp, GValue *value
 	switch (G_VALUE_TYPE(value)) {
 		case G_TYPE_FLOAT:
 			g_value_set_float(value, dparam->value_float);
+			break;
+			
+                case G_TYPE_DOUBLE:
+			g_value_set_double(value, dparam->value_double);
 			break;
 			
 		case G_TYPE_INT:

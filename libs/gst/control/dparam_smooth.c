@@ -38,12 +38,15 @@ static void gst_dpsmooth_set_property (GObject *object, guint prop_id, const GVa
 static void gst_dpsmooth_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static void gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value, GstDParamUpdateInfo update_info);
 static void gst_dpsmooth_value_changed_float (GstDParam *dparam);
+static void gst_dpsmooth_do_update_double (GstDParam *dparam, gint64 timestamp, GValue *value, GstDParamUpdateInfo update_info);
+static void gst_dpsmooth_value_changed_double (GstDParam *dparam);
 
 enum {
 	ARG_0,
 	ARG_UPDATE_PERIOD,
 	ARG_SLOPE_TIME,
 	ARG_SLOPE_DELTA_FLOAT,
+	ARG_SLOPE_DELTA_DOUBLE,
 	ARG_SLOPE_DELTA_INT,
 	ARG_SLOPE_DELTA_INT64,
 };
@@ -101,6 +104,12 @@ gst_dpsmooth_class_init (GstDParamSmoothClass *klass)
 		                   "The amount a float value can change for a given slope_time",
 		                   0.0F, G_MAXFLOAT, 0.2F, G_PARAM_READWRITE));
 	
+	g_object_class_install_property(G_OBJECT_CLASS(klass),
+            ARG_SLOPE_DELTA_FLOAT,
+            g_param_spec_float("slope_delta_double", "Slope Delta double", 
+              "The amount a double value can change for a given slope_time",
+              0.0, G_MAXDOUBLE, 0.2, G_PARAM_READWRITE));
+	
 	/*gstobject_class->save_thyself = gst_dparam_save_thyself; */
 
 }
@@ -132,6 +141,12 @@ gst_dpsmooth_new (GType type)
 		case G_TYPE_FLOAT: {
 			dparam->do_update_func = gst_dpsmooth_do_update_float;
 			g_signal_connect (G_OBJECT (dpsmooth), "value_changed", G_CALLBACK (gst_dpsmooth_value_changed_float), NULL);
+			break;
+		}
+		case G_TYPE_DOUBLE: {
+			dparam->do_update_func = gst_dpsmooth_do_update_double;
+			g_signal_connect (G_OBJECT (dpsmooth), "value_changed",
+                            G_CALLBACK (gst_dpsmooth_value_changed_double), NULL);
 			break;
 		}
 		default:
@@ -174,6 +189,11 @@ gst_dpsmooth_set_property (GObject *object, guint prop_id, const GValue *value, 
 			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
 			break;
 			
+		case ARG_SLOPE_DELTA_DOUBLE:
+			dpsmooth->slope_delta_double = g_value_get_double (value);
+			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
+			break;
+			
 		default:
 			break;
 	}
@@ -200,6 +220,9 @@ gst_dpsmooth_get_property (GObject *object, guint prop_id, GValue *value, GParam
 			break;
 		case ARG_SLOPE_DELTA_FLOAT:
 			g_value_set_float (value, dpsmooth->slope_delta_float);
+			break;
+                case ARG_SLOPE_DELTA_DOUBLE:
+			g_value_set_double (value, dpsmooth->slope_delta_double);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -305,6 +328,108 @@ gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value
 	}
 
 	GST_DEBUG ("post start:%f current:%f target:%f", dpsmooth->start_float, dpsmooth->current_float, dparam->value_float);
+
+	GST_DPARAM_UNLOCK(dparam);
+}
+
+static void 
+gst_dpsmooth_value_changed_double (GstDParam *dparam)
+{
+	GstDParamSmooth *dpsmooth;
+	gdouble time_ratio;
+
+	g_return_if_fail(GST_IS_DPSMOOTH(dparam));
+	dpsmooth = GST_DPSMOOTH(dparam);
+
+	if (GST_DPARAM_IS_LOG(dparam)){
+		dparam->value_double = log(dparam->value_double);
+	}
+	dpsmooth->start_double = dpsmooth->current_double;
+	dpsmooth->diff_double = dparam->value_double - dpsmooth->start_double;
+
+	time_ratio = ABS(dpsmooth->diff_double) / dpsmooth->slope_delta_double;
+	dpsmooth->duration_interp = (gint64)(time_ratio * (gdouble)dpsmooth->slope_time);
+
+	dpsmooth->need_interp_times = TRUE;
+
+	GST_DEBUG ("%f to %f ratio:%f duration:%"
+				  G_GINT64_FORMAT "\n", 
+	          dpsmooth->start_double, dparam->value_double, time_ratio, dpsmooth->duration_interp);
+}
+
+static void
+gst_dpsmooth_do_update_double (GstDParam *dparam, gint64 timestamp, GValue *value, GstDParamUpdateInfo update_info)
+{
+	gdouble time_ratio;
+	GstDParamSmooth *dpsmooth = GST_DPSMOOTH(dparam);
+
+	GST_DPARAM_LOCK(dparam);
+
+	if (dpsmooth->need_interp_times){
+		dpsmooth->start_interp = timestamp;
+		dpsmooth->end_interp = timestamp + dpsmooth->duration_interp;
+		dpsmooth->need_interp_times = FALSE;
+	}
+
+	if ((update_info == GST_DPARAM_UPDATE_FIRST) || (timestamp >= dpsmooth->end_interp)){
+		if (GST_DPARAM_IS_LOG(dparam)){
+			g_value_set_double(value, exp(dparam->value_double)); 
+		}
+		else {
+			g_value_set_double(value, dparam->value_double); 
+		}
+		dpsmooth->current_double = dparam->value_double;
+		
+		GST_DEBUG ("interp finished at %"
+					  G_GINT64_FORMAT, timestamp); 
+
+		GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam) = timestamp;  
+		GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = timestamp;
+		
+		GST_DPARAM_READY_FOR_UPDATE(dparam) = FALSE;
+		GST_DPARAM_UNLOCK(dparam);
+		return;
+	}
+
+	if (timestamp <= dpsmooth->start_interp){
+		if (GST_DPARAM_IS_LOG(dparam)){
+			g_value_set_double(value, exp(dpsmooth->start_double)); 
+		}
+		else {
+			g_value_set_double(value, dpsmooth->start_double); 
+		}
+		GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam) = timestamp;  
+		GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = dpsmooth->start_interp + dpsmooth->update_period; 
+		
+		GST_DEBUG ("interp started at %" G_GINT64_FORMAT, timestamp); 
+
+		GST_DPARAM_UNLOCK(dparam);
+		return;
+		
+	}
+
+	time_ratio = (gdouble)(timestamp - dpsmooth->start_interp) / (gdouble)dpsmooth->duration_interp;
+
+	GST_DEBUG ("start:%" G_GINT64_FORMAT " current:%" G_GINT64_FORMAT " end:%" G_GINT64_FORMAT " ratio%f", dpsmooth->start_interp, timestamp, dpsmooth->end_interp, time_ratio); 
+	GST_DEBUG ("pre  start:%f current:%f target:%f", dpsmooth->start_double, dpsmooth->current_double, dparam->value_double);
+	                           
+	dpsmooth->current_double = dpsmooth->start_double + (dpsmooth->diff_double * time_ratio);
+
+	GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = timestamp + dpsmooth->update_period; 
+	if (GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) > dpsmooth->end_interp){
+		GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = dpsmooth->end_interp;	
+	}
+
+	GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam) = timestamp;
+
+	if (GST_DPARAM_IS_LOG(dparam)){
+		g_value_set_double(value, exp(dpsmooth->current_double)); 
+	}
+	else {
+		g_value_set_double(value, dpsmooth->current_double); 
+	}
+
+	GST_DEBUG ("post start:%f current:%f target:%f", dpsmooth->start_double, dpsmooth->current_double, dparam->value_double);
 
 	GST_DPARAM_UNLOCK(dparam);
 }

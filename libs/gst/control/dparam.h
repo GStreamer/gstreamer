@@ -71,6 +71,7 @@ struct _GstDParam {
 	GMutex *lock;
 
 	gfloat value_float;
+        gdouble value_double;
 	gint value_int;
 	gint64 value_int64;
 	
@@ -83,6 +84,8 @@ struct _GstDParam {
 	gint64 last_update_timestamp;
 	gchar *unit_name;
 	gboolean is_log;
+
+        gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstDParamClass {
@@ -90,6 +93,8 @@ struct _GstDParamClass {
 
 	/* signal callbacks */
 	void (*value_changed) (GstDParam *dparam);
+
+        gpointer _gst_reserved[GST_PADDING];
 };
 
 

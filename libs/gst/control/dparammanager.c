@@ -659,6 +659,9 @@ gst_dpman_inline_direct_update(GValue *value, gpointer data){
 		case G_TYPE_FLOAT:
 			*(gfloat*)data = g_value_get_float(value);
 			break;
+                case G_TYPE_DOUBLE:
+			*(double*)data = g_value_get_double(value);
+			break;
 		default:
 			break;
 	}
