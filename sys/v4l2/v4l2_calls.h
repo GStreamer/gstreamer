@@ -21,7 +21,7 @@
 #define __V4L2_CALLS_H__
 
 #include "gstv4l2element.h"
-#include "gst-libs/gst/gst-i18n-plugin.h"
+#include "gst/gst-i18n-plugin.h"
 
 
 /* simple check whether the device is open */
