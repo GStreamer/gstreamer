@@ -1,3 +1,10 @@
+2004-04-20  Benjamin Otte  <otte@gnome.org>
+
+	* gst/schedulers/entryscheduler.c: 
+	(gst_entry_scheduler_yield):
+	  refuse to yield when decoupled elements insist on doing that.
+	  At least it's better than crashing
+
 2004-04-19  David Schleef  <ds@schleef.org>
 
 	* docs/libs/Makefile.am: Change sinclude to include

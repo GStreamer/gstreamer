@@ -887,7 +887,10 @@ gst_entry_scheduler_state_transition (GstScheduler * scheduler,
 static gboolean
 gst_entry_scheduler_yield (GstScheduler * sched, GstElement * element)
 {
-  g_assert (ELEMENT_PRIVATE (element));
+  /* g_assert (ELEMENT_PRIVATE (element)); */
+  /* FIXME: queue thinks it may just interrupt, is that ok? */
+  if (!ELEMENT_PRIVATE (element))
+    return TRUE;
   ELEMENT_PRIVATE (element)->wait = WAIT_FOR_NOTHING;
   schedule_next_element (GST_ENTRY_SCHEDULER (sched));
   return FALSE;
