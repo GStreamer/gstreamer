@@ -89,6 +89,7 @@ read_config ();
   "vob", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_00! { queue ! a52dec ! $cfg{AUDIOSINK} }",
   "wav", "wavparse ! $cfg{AUDIOSINK}",
   "vis.wav", "wavparse ! tee silent=true 'tee0.src0!' queue ! { $cfg{VISUALIZER} ! colorspace ! $cfg{VIDEOSINK} } 'tee0.src1!' $cfg{AUDIOSINK}",
+  "fli", "flxdec ! colorspace ! $cfg{VIDEOSINK}"
 
 );
 
