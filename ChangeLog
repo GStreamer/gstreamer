@@ -1,3 +1,7 @@
+2004-06-23  David I. Lehn  <dlehn@users.sourceforge.net>
+
+	* ext/Makefile.am: s/DTS_DIR=dvdread/DTS_DIR=dts/
+
 2004-06-23  Colin Walters  <walters@redhat.com>
 
 	* m4/Makefile.am: Distribute gst-fionread.m4.
