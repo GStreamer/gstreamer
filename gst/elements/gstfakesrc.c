@@ -686,10 +686,10 @@ gst_fakesrc_get(GstPad *pad)
     g_object_notify (G_OBJECT (src), "last_message");
   }
 
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, src, "pre handoff emit\n");
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, src, "pre handoff emit");
   g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
                    buf, pad);
-  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, src, "post handoff emit\n");
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, src, "post handoff emit");
 
   return buf;
 }
