@@ -540,6 +540,8 @@ gst_colorspace_change_state (GstElement *element)
       space->pool = gst_pad_get_bufferpool (space->srcpad);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
+      if (space->pool)
+	gst_buffer_pool_unref (space->pool);
       space->pool = NULL;
       break;
     case GST_STATE_PAUSED_TO_READY:
