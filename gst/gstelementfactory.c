@@ -108,43 +108,7 @@ gst_element_factory_find (const gchar *name)
   GST_DEBUG ("no such elementfactory \"%s\"", name);
   return NULL;
 }
-typedef struct {
-  GType type;
-} MyGTypeData;
-static gboolean
-find_type_filter (GstPluginFeature *feature, gpointer data)
-{
-  GstElementFactory *factory;
-  
-  if (!GST_IS_ELEMENT_FACTORY (feature))
-    return FALSE;
 
-  factory = GST_ELEMENT_FACTORY (feature);
-
-  return factory->type == ((MyGTypeData *) data)->type;
-}
-GstElementFactory *
-gst_element_factory_find_from_element (GstElement *element)
-{
-  GstElementFactory *factory;
-  GList *list;
-  MyGTypeData data;
-  
-  g_return_val_if_fail(GST_IS_ELEMENT (element), NULL);
-  
-  data.type = G_OBJECT_TYPE (element);
-  
-  list = gst_registry_pool_feature_filter (find_type_filter, TRUE, &data);
-
-  if (!list)
-    return NULL;
-  
-  g_assert (g_list_next (list) == NULL);
-  factory = GST_ELEMENT_FACTORY (list->data);
-  g_list_free (list);
-
-  return factory;
-}
 void
 __gst_element_details_clear (GstElementDetails *dp)
 {
@@ -248,6 +212,7 @@ gst_element_factory_create (GstElementFactory *factory,
                            const gchar *name)
 {
   GstElement *element;
+  GstElementClass *oclass;
 
   g_return_val_if_fail (factory != NULL, NULL);
 
@@ -265,9 +230,17 @@ gst_element_factory_create (GstElementFactory *factory,
       return NULL;
   }
 
+  oclass = GST_ELEMENT_CLASS (g_type_class_ref (factory->type)); 	 
+  if (oclass->elementfactory == NULL) { 	 
+    GST_DEBUG ("class %s", GST_PLUGIN_FEATURE_NAME (factory)); 	 
+    oclass->elementfactory = factory;
+  }
+
   /* create an instance of the element */
   element = GST_ELEMENT (g_object_new (factory->type, NULL));
   g_assert (element != NULL);
+
+  g_type_class_unref (oclass);
 
   gst_object_set_name (GST_OBJECT (element), name);
 
@@ -363,7 +336,7 @@ gst_element_factory_get_longname (GstElementFactory *factory)
  * Returns: the class
  */
 G_CONST_RETURN gchar *
-gst_element_factory_get_class (GstElementFactory *factory)
+gst_element_factory_get_klass (GstElementFactory *factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
 

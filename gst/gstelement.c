@@ -147,6 +147,8 @@ gst_element_class_init (GstElementClass *klass)
   klass->error	 			= GST_DEBUG_FUNCPTR (gst_element_error_func);
   klass->padtemplates 			= NULL;
   klass->numpadtemplates 		= 0;
+
+  klass->elementfactory			= NULL;
 }
 
 static void
@@ -2549,6 +2551,22 @@ failure:
   return GST_STATE_FAILURE;
 }
 
+/**
+ * gst_element_get_factory:
+ * @element: a #GstElement to request the element factory of.
+ *
+ * Retrieves the factory that was used to create this element.
+ *
+ * Returns: the #GstElementFactory used for creating this element.
+ */
+GstElementFactory*
+gst_element_get_factory (GstElement *element)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+                                                                                
+  return GST_ELEMENT_GET_CLASS (element)->elementfactory;
+}
+
 static void
 gst_element_dispose (GObject *object)
 {
@@ -2627,6 +2645,13 @@ gst_element_save_thyself (GstObject *object,
   oclass = GST_ELEMENT_GET_CLASS (element);
 
   xmlNewChild(parent, NULL, "name", GST_ELEMENT_NAME(element));
+
+  if (oclass->elementfactory != NULL) {
+    GstElementFactory *factory = (GstElementFactory *)oclass->elementfactory;
+
+    xmlNewChild (parent, NULL, "type",
+		 GST_PLUGIN_FEATURE (factory)->name);
+  }
 
 /* FIXME: what is this? */  
 /*  if (element->manager) */

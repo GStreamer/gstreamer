@@ -192,6 +192,10 @@ struct _GstElementClass {
 
   /* the element details */
   GstElementDetails 	details;
+
+  /* factory that the element was created from */
+  GstElementFactory	*elementfactory;
+
   /* templates for our pads */
   GList 		*padtemplates;
   gint 			numpadtemplates;
@@ -359,6 +363,8 @@ void 			gst_element_wait_state_change 	(GstElement *element);
 	
 const gchar*		gst_element_state_get_name	(GstElementState state);
 
+GstElementFactory*	gst_element_get_factory		(GstElement *element);
+
 GstBin*			gst_element_get_managing_bin	(GstElement *element);
 
 
@@ -403,7 +409,6 @@ gboolean		gst_element_register			(GstPlugin *plugin,
 								 GType type);
 
 GstElementFactory *	gst_element_factory_find		(const gchar *name);
-GstElementFactory *	gst_element_factory_find_from_element	(GstElement *element);
 GType			gst_element_factory_get_element_type	(GstElementFactory *factory);
 G_CONST_RETURN gchar *	gst_element_factory_get_longname	(GstElementFactory *factory);
 G_CONST_RETURN gchar *	gst_element_factory_get_klass		(GstElementFactory *factory);
