@@ -1,3 +1,10 @@
+2004-08-10  Colin Walters  <walters@redhat.com>
+
+	* gst/registries/gstxmlregistry.c (gst_xml_registry_open_func):
+	Don't use O_EXCL to open temporary registry.  It will prevent
+	registry creation if a temporary one already exists, which
+	is unnecessary.
+
 2004-08-09  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* docs/gst/gstreamer-sections.txt:

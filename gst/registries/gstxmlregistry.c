@@ -581,7 +581,7 @@ gst_xml_registry_open_func (GstXMLRegistry * registry, GstXMLRegistryMode mode)
 
     GST_CAT_DEBUG (GST_CAT_GST_INIT, "opening registry %s for writing", tmploc);
 
-    if ((fd = open (tmploc, O_WRONLY | O_CREAT | O_EXCL, 0644)) < 0) {
+    if ((fd = open (tmploc, O_WRONLY | O_CREAT, 0644)) < 0) {
       g_free (tmploc);
       return FALSE;
     }
