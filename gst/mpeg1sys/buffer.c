@@ -19,7 +19,6 @@
 
 #include <string.h>
 
-/*#define DEBUG_ENABLED */
 #include <gst/gst.h>
 #include <gst/getbits/getbits.h>
 
@@ -58,13 +57,16 @@ static double picture_rates [16] =
 	0,
 	0
 };
-/* deined but not used
+/* defined but not used
 static double ratio [16] = { 0., 1., 0.6735, 0.7031, 0.7615, 0.8055,
 	0.8437, 0.8935, 0.9157, 0.9815, 1.0255, 1.0695, 1.0950, 1.1575,
 	1.2015, 0.};
 */
+
+#ifdef GST_DEBUG_ENABLED
 static char picture_types [4][3] = 
     { "I", "P", "B", "D" };
+#endif
 
 static int bitrate_index[2][3][16] =
 { { {0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, },
