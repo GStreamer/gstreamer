@@ -33,12 +33,8 @@
 static GstElementDetails gst_fameenc_details = {
   "MPEG1 and MPEG4 video encoder using the libfame library",
   "Codec/Video/Encoder",
-  "LGPL",
   "Uses fameenc to encode MPEG video streams",
-  VERSION,
-  "fameenc: (C) 2000-2001, Vivien Chappelier\n"
-  "Thomas Vander Stichele <thomas@apestaart.org>",
-  "(C) 2002",
+  "Thomas Vander Stichele <thomas@apestaart.org>"
 };
 
 static GQuark fame_object_name;
@@ -160,6 +156,7 @@ framerate_to_index (gfloat fps)
 }
 
 static void	gst_fameenc_class_init		(GstFameEncClass *klass);
+static void	gst_fameenc_base_init		(GstFameEncClass *klass);
 static void	gst_fameenc_init		(GstFameEnc *fameenc);
 static void	gst_fameenc_dispose		(GObject *object);
 
@@ -181,7 +178,7 @@ gst_fameenc_get_type (void)
   if (!fameenc_type) {
     static const GTypeInfo fameenc_info = {
       sizeof (GstFameEncClass),      
-      NULL,
+      (GBaseInitFunc) gst_fameenc_base_init,
       NULL,
       (GClassInitFunc) gst_fameenc_class_init,
       NULL,
@@ -200,6 +197,19 @@ static int
 gst_fameenc_item_compare (fame_list_t *item1, fame_list_t *item2)
 {
   return strcmp (item1->type, item2->type);
+}
+
+static void
+gst_fameenc_base_init (GstFameEncClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (sink_template_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (src_template_factory));
+
+  gst_element_class_set_details (element_class, &gst_fameenc_details);
 }
 
 static void
@@ -588,28 +598,21 @@ gst_fameenc_get_property (GObject *object, guint prop_id,
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the fameenc element */
-  factory = gst_element_factory_new ("fameenc", GST_TYPE_FAMEENC,
-                                     &gst_fameenc_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, 
-      GST_PAD_TEMPLATE_GET (sink_template_factory));
-  gst_element_factory_add_pad_template (factory, 
-      GST_PAD_TEMPLATE_GET (src_template_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "fameenc",
+			       GST_RANK_NONE, GST_TYPE_FAMEENC);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "fameenc",
-  plugin_init
-};
+  "Fast Assembly MPEG Encoder",
+  plugin_init,
+  LIBFAME_VERSION,
+  "LGPL",
+  "(c) 2000-2001, Vivien Chappelier",
+  "libfame",
+  "http://fame.sourceforge.net/"
+)
