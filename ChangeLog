@@ -1,3 +1,8 @@
+2004-07-30  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* ext/libpng/gstpngenc.c: (gst_pngenc_class_init):
+	fix default for newmedia flag
+
 2004-07-30  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/theoradec.c: (gst_theora_dec_class_init),
