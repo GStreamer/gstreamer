@@ -183,6 +183,16 @@ AC_MSG_RESULT(no)
 AC_MSG_RESULT(no)
 ])
 
+dnl check for mmap
+AC_FUNC_MMAP()
+if test "$ac_cv_func_mmap_fixed_mapped" = "yes" ; then
+  GST_DISABLE_OMEGA_COTHREADS=no
+else
+  GST_DISABLE_OMEGA_COTHREADS=yes
+fi
+dnl for future --disabling, maybe.  Right now, it depends on HAVE_MMAP
+AM_CONDITIONAL(GST_DISABLE_OMEGA_COTHREADS, test "x$GST_DISABLE_OMEGA_COTHREADS" = "xyes")
+
 dnl check for makecontext and define HAVE_MAKECONTEXT if we have it
 AC_CHECK_MCSC()
 if test "$ac_cv_check_mcsc" = "yes"; then
@@ -217,6 +227,11 @@ if test x$enable_gcov = xyes ; then
 fi
 AM_CONDITIONAL(GST_GCOV_ENABLED, test x$enable_gcov = xyes)
 
+dnl Check for some compiler flags that optimize our code.
+dnl Only enable this for CVS builds for now
+if test "x$GST_CVS" = "xyes"; then
+  AS_COMPILER_FLAG(-fno-common,GST_INT_CFLAGS="$GST_INT_CFLAGS -fno-common",)
+fi
 
 dnl Check for essential libraries first:
 dnl ====================================
@@ -550,7 +565,7 @@ GST_INT_CFLAGS="$GST_INT_CFLAGS -I\$(top_srcdir)/libs -I\$(top_srcdir)/include"
 AC_SUBST(GST_CFLAGS, "$LIBGST_CFLAGS $GST_INT_CFLAGS")
 AC_SUBST(GST_LIBS, "$LIBGST_LIBS $GST_INT_LIBS")
 
-GST_PLUGIN_LDFLAGS="-module -avoid-version"
+GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*"
 AC_SUBST(GST_PLUGIN_LDFLAGS, "$GST_PLUGIN_LDFLAGS")
 
 

@@ -31,7 +31,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#ifdef HAVE_MMAP
 #include <sys/mman.h>
+#endif
 #include <errno.h>
 #include <string.h>
 
@@ -357,6 +359,7 @@ gst_filesrc_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+#ifdef HAVE_MMAP
 static void
 gst_filesrc_free_parent_mmap (GstBuffer * buf)
 {
@@ -377,7 +380,9 @@ gst_filesrc_free_parent_mmap (GstBuffer * buf)
 
   GST_BUFFER_DATA (buf) = NULL;
 }
+#endif
 
+#ifdef HAVE_MMAP
 static GstBuffer *
 gst_filesrc_map_region (GstFileSrc * src, off_t offset, size_t size)
 {
@@ -425,7 +430,9 @@ gst_filesrc_map_region (GstFileSrc * src, off_t offset, size_t size)
 
   return buf;
 }
+#endif
 
+#ifdef HAVE_MMAP
 static GstBuffer *
 gst_filesrc_map_small_region (GstFileSrc * src, off_t offset, size_t size)
 {
@@ -457,7 +464,9 @@ gst_filesrc_map_small_region (GstFileSrc * src, off_t offset, size_t size)
 
   return gst_filesrc_map_region (src, offset, size);
 }
+#endif
 
+#ifdef HAVE_MMAP
 /**
  * gst_filesrc_get_mmap:
  * @pad: #GstPad to push a buffer from
@@ -593,6 +602,7 @@ gst_filesrc_get_mmap (GstFileSrc * src)
   src->curoffset += GST_BUFFER_SIZE (buf);
   return buf;
 }
+#endif
 
 static GstBuffer *
 gst_filesrc_get_read (GstFileSrc * src)
@@ -669,12 +679,15 @@ gst_filesrc_get (GstPad * pad)
       return GST_DATA (gst_event_new (GST_EVENT_EOS));
     }
   }
-
+#ifdef HAVE_MMAP
   if (src->using_mmap) {
     return GST_DATA (gst_filesrc_get_mmap (src));
   } else {
     return GST_DATA (gst_filesrc_get_read (src));
   }
+#else
+  return GST_DATA (gst_filesrc_get_read (src));
+#endif
 }
 
 /* TRUE if the filesize of the file was updated */
@@ -736,13 +749,15 @@ gst_filesrc_open_file (GstFileSrc * src)
     /* find the file length */
     src->filelen = stat_results.st_size;
 
+    src->using_mmap = FALSE;
+#ifdef HAVE_MMAP
     /* allocate the first mmap'd region */
     src->mapbuf = gst_filesrc_map_region (src, 0, src->mapsize);
-    if (src->mapbuf == NULL) {
-      src->using_mmap = FALSE;
-    } else {
+    if (src->mapbuf != NULL) {
       src->using_mmap = TRUE;
     }
+#endif
+
 
     src->curoffset = 0;
 

@@ -1,5 +1,14 @@
 2004-04-13  David Schleef  <ds@schleef.org>
 
+	* configure.ac: Changes to remove POSIXisms (mmap in this case)
+	and to build DLLs on Windows.
+	* gst/Makefile.am:
+	* gst/elements/gstfilesrc.c: (gst_filesrc_get),
+	(gst_filesrc_open_file):
+	* gst/schedulers/Makefile.am:
+
+2004-04-13  David Schleef  <ds@schleef.org>
+
 	* gst/gstcaps.c: (gst_caps_structure_fixate_field_nearest_int),
 	(gst_caps_structure_fixate_field_nearest_double):  Fix bug in
 	fixating lists.
