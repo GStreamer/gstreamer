@@ -112,6 +112,10 @@ gst_bytestream_get_next_buf (GstByteStream * bs)
 
   bs_print ("get_next_buf: pulling buffer\n");
   nextbuf = gst_pad_pull (bs->pad);
+
+  if (!nextbuf)
+    return FALSE;
+
   bs_print ("get_next_buf: got buffer of %d bytes\n", GST_BUFFER_SIZE (nextbuf));
 
   // first see if there are any buffers in the list at all
@@ -169,7 +173,8 @@ gst_bytestream_fill_bytes (GstByteStream * bs, guint32 len)
   // as long as we don't have enough, we get more buffers
   while (bs->listavail < len) {
     bs_print ("fill_bytes: there are %d bytes in the list, we need %d\n", bs->listavail, len);
-    gst_bytestream_get_next_buf (bs);
+    if (!gst_bytestream_get_next_buf (bs))
+      return FALSE;
   }
 
   return TRUE;
@@ -189,7 +194,8 @@ gst_bytestream_peek_loc (GST_WHERE_ARGS_ GstByteStream * bs, guint32 len)
   // make sure we have enough
   bs_print ("peek: there are %d bytes in the list\n", bs->listavail);
   if (len > bs->listavail) {
-    gst_bytestream_fill_bytes (bs, len);
+    if (!gst_bytestream_fill_bytes (bs, len))
+      return NULL;
     bs_print ("peek: there are now %d bytes in the list\n", bs->listavail);
   }
   gst_bytestream_print_status (bs);
@@ -233,7 +239,8 @@ gst_bytestream_peek_bytes (GstByteStream * bs, guint32 len)
   // make sure we have enough
   bs_print ("peek_bytes: there are %d bytes in the list\n", bs->listavail);
   if (len > bs->listavail) {
-    gst_bytestream_fill_bytes (bs, len);
+    if (!gst_bytestream_fill_bytes (bs, len))
+      return NULL;
     bs_print ("peek_bytes: there are now %d bytes in the list\n", bs->listavail);
   }
   gst_bytestream_print_status (bs);
@@ -267,6 +274,8 @@ gst_bytestream_assemble (GstByteStream * bs, guint32 len)
   guint32 copied = 0;
   GstBuffer *buf;
 
+  g_assert (len <= bs->listavail);
+
   // copy the data from the curbuf
   buf = GST_BUFFER (bs->buflist->data);
   bs_print ("assemble: copying %d bytes from curbuf at %d to *data\n", bs->headbufavail,
@@ -277,6 +286,8 @@ gst_bytestream_assemble (GstByteStream * bs, guint32 len)
   // asumption is made that the buffers all exist in the list
   walk = g_slist_next (bs->buflist);
   while (copied < len) {
+    g_assert (walk);
+
     buf = GST_BUFFER (walk->data);
     if (GST_BUFFER_SIZE (buf) < (len - copied)) {
       bs_print ("assemble: copying %d bytes from buf to output offset %d\n", GST_BUFFER_SIZE (buf), copied);
@@ -304,7 +315,8 @@ gst_bytestream_flush (GstByteStream * bs, guint32 len)
   // make sure we have enough
   bs_print ("flush: there are %d bytes in the list\n", bs->listavail);
   if (len > bs->listavail) {
-    gst_bytestream_fill_bytes (bs, len);
+    if (!gst_bytestream_fill_bytes (bs, len))
+      return FALSE;
     bs_print ("flush: there are now %d bytes in the list\n", bs->listavail);
   }
 
