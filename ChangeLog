@@ -1,3 +1,25 @@
+2004-04-28  David Schleef  <ds@schleef.org>
+
+	Several new files from Steve Lhomme's MSVC patch (bug #141317):
+	* win32/GStreamer.vcproj:
+	* win32/Makefile:
+	* win32/config.h:
+	* win32/dirent.c: (_topendir), (_treaddir), (_tclosedir),
+	(_trewinddir), (_ttelldir), (_tseekdir):
+	* win32/dirent.h:
+	* win32/gst-inspect.vcproj:
+	* win32/gst-launch.vcproj:
+	* win32/gst-register.vcproj:
+	* win32/gstbytestream.vcproj:
+	* win32/gstelements.vcproj:
+	* win32/gstoptimalscheduler.vcproj:
+	* win32/gstspider.vcproj:
+	* win32/gtchar.h:
+	* win32/mman.c: (mmap), (mprotect), (msync), (munmap):
+	* win32/mman.h:
+	* win32/mman.inl:
+	* win32/msvc71.sln:
+
 2004-04-29  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gst.c: (init_post):
