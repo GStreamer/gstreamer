@@ -33,6 +33,7 @@
 static GstElementDetails gst_fameenc_details = {
   "MPEG1 and MPEG4 video encoder using the libfame library",
   "Codec/Video/Encoder",
+  "LGPL",
   "Uses fameenc to encode MPEG video streams",
   VERSION,
   "fameenc: (C) 2000-2001, Vivien Chappelier\n"
