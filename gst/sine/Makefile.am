@@ -13,4 +13,4 @@ endif
 
 demo_dparams_SOURCES = demo-dparams.c
 demo_dparams_CFLAGS  = $(GST_CFLAGS) $(GTK_CFLAGS)
-demo_dparams_LDFLAGS = $(GST_LIBS) $(GTK_LIBS) -lcontrol
+demo_dparams_LDFLAGS = $(GST_LIBS) $(GTK_LIBS) -lgstcontrol
