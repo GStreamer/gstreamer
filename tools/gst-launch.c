@@ -106,7 +106,7 @@ xmllaunch_parse_cmdline (const gchar **argv)
     value = strchr (element, '=');
     
     if (!(element < property && property < value)) {
-      fprintf (stderr, _("ERROR: could not parse command line argument %d: %s"), i, element);
+      fprintf (stderr, _("ERROR: could not parse command line argument %d: %s.\n"), i, element);
       g_free (element);
       exit (1);
     }
@@ -116,7 +116,7 @@ xmllaunch_parse_cmdline (const gchar **argv)
     
     e = gst_bin_get_by_name (GST_BIN (pipeline), element);
     if (!e) {
-      fprintf (stderr, _("WARNING: element named '%s' not found."), element);
+      fprintf (stderr, _("WARNING: element named '%s' not found.\n"), element);
     } else {
       gst_util_set_object_arg (G_OBJECT (e), property, value);
     }
@@ -407,7 +407,7 @@ main(int argc, char *argv[])
 
   if (!pipeline) {
     if (error) {
-      fprintf(stderr, _("ERROR: pipeline could not be constructed: %s\n"),
+      fprintf(stderr, _("ERROR: pipeline could not be constructed: %s.\n"),
               error->message);
       g_error_free (error);
     } else {

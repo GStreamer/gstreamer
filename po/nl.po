@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2004-01-13 14:29+0100\n"
+"POT-Creation-Date: 2004-01-13 15:14+0100\n"
 "PO-Revision-Date: 2004-01-13 12:03+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -310,6 +310,82 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maximum"
 
+#: gst/parse/grammar.y:164
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "lege ton \"%s\", niet toegelaten"
+
+#: gst/parse/grammar.y:169
+#, c-format
+msgid "no bin \"%s\", skipping"
+msgstr "geen ton \"%s\", overgeslagen"
+
+#: gst/parse/grammar.y:313
+#, c-format
+msgid "no property \"%s\" in element \"%s\""
+msgstr "geen eigenschap \"%s\" in element \"%s\""
+
+#: gst/parse/grammar.y:322
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "kon eigenschap \"%s\" in element \"%s\" niet op \"%s\" instellen"
+
+#: gst/parse/grammar.y:327
+#, c-format
+msgid ""
+"could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+msgstr ""
+"kon \"%s\" niet omzetten zodat het in eigenschap \"%s\" in element \"%s\" "
+"past"
+
+#: gst/parse/grammar.y:506
+#, c-format
+msgid "could not link %s to %s"
+msgstr "kon %s niet verbinden met %s"
+
+#: gst/parse/grammar.y:551
+#, c-format
+msgid "no element \"%s\""
+msgstr "geen element \"%s\""
+
+#: gst/parse/grammar.y:602
+#, c-format
+msgid "could not parse caps \"%s\""
+msgstr "kon mogelijkheden \"%s\" niet verwerken"
+
+#: gst/parse/grammar.y:624 gst/parse/grammar.y:678 gst/parse/grammar.y:694
+#: gst/parse/grammar.y:752
+msgid "link without source element"
+msgstr "verbinding zonder bronelement"
+
+#: gst/parse/grammar.y:630 gst/parse/grammar.y:675 gst/parse/grammar.y:761
+msgid "link without sink element"
+msgstr "verbinding zonder doelelement"
+
+#: gst/parse/grammar.y:712
+#, c-format
+msgid "no source element for URI \"%s\""
+msgstr "geen bronelement voor URI \"%s\""
+
+#: gst/parse/grammar.y:722
+#, c-format
+msgid "no element to link URI \"%s\" to"
+msgstr "geen element om URI \"%s\" mee te verbinden"
+
+#: gst/parse/grammar.y:730
+#, c-format
+msgid "no sink element for URI \"%s\""
+msgstr "geen doelelement voor URI \"%s\""
+
+#: gst/parse/grammar.y:734
+#, c-format
+msgid "could not link sink element for URI \"%s\""
+msgstr "kon doelelement niet verbinden voor URI \"%s\""
+
+#: gst/parse/grammar.y:746
+msgid "empty pipeline not allowed"
+msgstr "lege pijplijn niet toegelaten"
+
 #: tools/gst-launch.c:60
 msgid "Execution ended after %"
 msgstr "Uitvoering beëindigd na %"
@@ -356,14 +432,13 @@ msgstr ""
 "moment."
 
 #: tools/gst-launch.c:109
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s"
-msgstr "FOUT: versta argument %d op commandoregel niet: %s"
+msgid "ERROR: could not parse command line argument %d: %s.\n"
+msgstr "FOUT: versta argument %d op commandoregel niet: %s.\n"
 
 #: tools/gst-launch.c:119
 #, c-format
-msgid "WARNING: element named '%s' not found."
-msgstr "WAARSCHUWING: element met naam '%s' niet gevonden."
+msgid "WARNING: element named '%s' not found.\n"
+msgstr "WAARSCHUWING: element met naam '%s' niet gevonden.\n"
 
 #: tools/gst-launch.c:254
 #, c-format
@@ -408,8 +483,8 @@ msgstr "Aantal keren om de pijplijn te herhalen"
 
 #: tools/gst-launch.c:410
 #, c-format
-msgid "ERROR: pipeline could not be constructed: %s\n"
-msgstr "FOUT: pijplijn kon niet gemaakt worden: %s\n"
+msgid "ERROR: pipeline could not be constructed: %s.\n"
+msgstr "FOUT: pijplijn kon niet gemaakt worden: %s.\n"
 
 #: tools/gst-launch.c:414
 msgid "ERROR: pipeline could not be constructed.\n"

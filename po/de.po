@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.7 0.7.0.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2004-01-13 14:29+0100\n"
+"POT-Creation-Date: 2004-01-13 15:14+0100\n"
 "PO-Revision-Date: 2003-10-08 15:36-0700\n"
 "Last-Translator: David Schleef <ds@schleef.org>\n"
 "Language-Team: Gnome Translators <i18n@gnome.org>\n"
@@ -303,6 +303,80 @@ msgstr ""
 msgid "maximum"
 msgstr ""
 
+#: gst/parse/grammar.y:164
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr ""
+
+#: gst/parse/grammar.y:169
+#, c-format
+msgid "no bin \"%s\", skipping"
+msgstr ""
+
+#: gst/parse/grammar.y:313
+#, c-format
+msgid "no property \"%s\" in element \"%s\""
+msgstr ""
+
+#: gst/parse/grammar.y:322
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr ""
+
+#: gst/parse/grammar.y:327
+#, c-format
+msgid ""
+"could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+msgstr ""
+
+#: gst/parse/grammar.y:506
+#, c-format
+msgid "could not link %s to %s"
+msgstr ""
+
+#: gst/parse/grammar.y:551
+#, c-format
+msgid "no element \"%s\""
+msgstr ""
+
+#: gst/parse/grammar.y:602
+#, c-format
+msgid "could not parse caps \"%s\""
+msgstr ""
+
+#: gst/parse/grammar.y:624 gst/parse/grammar.y:678 gst/parse/grammar.y:694
+#: gst/parse/grammar.y:752
+msgid "link without source element"
+msgstr ""
+
+#: gst/parse/grammar.y:630 gst/parse/grammar.y:675 gst/parse/grammar.y:761
+msgid "link without sink element"
+msgstr ""
+
+#: gst/parse/grammar.y:712
+#, c-format
+msgid "no source element for URI \"%s\""
+msgstr ""
+
+#: gst/parse/grammar.y:722
+#, c-format
+msgid "no element to link URI \"%s\" to"
+msgstr ""
+
+#: gst/parse/grammar.y:730
+#, c-format
+msgid "no sink element for URI \"%s\""
+msgstr ""
+
+#: gst/parse/grammar.y:734
+#, c-format
+msgid "could not link sink element for URI \"%s\""
+msgstr ""
+
+#: gst/parse/grammar.y:746
+msgid "empty pipeline not allowed"
+msgstr ""
+
 #: tools/gst-launch.c:60
 msgid "Execution ended after %"
 msgstr ""
@@ -347,12 +421,12 @@ msgstr ""
 
 #: tools/gst-launch.c:109
 #, c-format
-msgid "ERROR: could not parse command line argument %d: %s"
+msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr ""
 
 #: tools/gst-launch.c:119
 #, c-format
-msgid "WARNING: element named '%s' not found."
+msgid "WARNING: element named '%s' not found.\n"
 msgstr ""
 
 #: tools/gst-launch.c:254
@@ -398,7 +472,7 @@ msgstr ""
 
 #: tools/gst-launch.c:410
 #, c-format
-msgid "ERROR: pipeline could not be constructed: %s\n"
+msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr ""
 
 #: tools/gst-launch.c:414

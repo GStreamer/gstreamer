@@ -1,5 +1,13 @@
 2004-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/parse/grammar.y:
+	* po/POTFILES.in:
+	* po/nl.po:
+	* tools/gst-launch.c: (xmllaunch_parse_cmdline), (main):
+          translate parsing error messages
+
+2004-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* po/POTFILES.in: adding gst-launch
 	* po/nl.po: updated translation, all 99 strings translated
 	* tools/gst-launch.c: (idle_func), (xmllaunch_parse_cmdline),

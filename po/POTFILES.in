@@ -3,4 +3,5 @@
 gst/gst.c
 gst/gsttag.c
 gst/elements/gsttypefindelement.c
+gst/parse/grammar.y
 tools/gst-launch.c
