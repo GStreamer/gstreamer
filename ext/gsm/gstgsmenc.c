@@ -103,7 +103,7 @@ gst_gsmenc_init (GstGSMEnc *gsmenc)
   gsmenc->sinkpad = gst_pad_new_from_template (gsmenc_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (gsmenc), gsmenc->sinkpad);
   gst_pad_set_chain_function (gsmenc->sinkpad, gst_gsmenc_chain);
-  gst_pad_set_connect_function (gsmenc->sinkpad, gst_gsmenc_sinkconnect);
+  gst_pad_set_link_function (gsmenc->sinkpad, gst_gsmenc_sinkconnect);
 
   gsmenc->srcpad = gst_pad_new_from_template (gsmenc_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (gsmenc), gsmenc->srcpad);
@@ -122,7 +122,7 @@ gst_gsmenc_sinkconnect (GstPad *pad, GstCaps *caps)
   gsmenc = GST_GSMENC (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps)) 
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   gst_caps_get_int (caps, "rate", &gsmenc->rate);
   if (gst_pad_try_set_caps (gsmenc->srcpad, GST_CAPS_NEW (
@@ -131,9 +131,9 @@ gst_gsmenc_sinkconnect (GstPad *pad, GstCaps *caps)
                                 "rate",       GST_PROPS_INT (gsmenc->rate)
                                )) > 0)
   {
-    return GST_PAD_CONNECT_OK;
+    return GST_PAD_LINK_OK;
   }
-  return GST_PAD_CONNECT_REFUSED;
+  return GST_PAD_LINK_REFUSED;
 
 }
 

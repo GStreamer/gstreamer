@@ -306,11 +306,11 @@ gst_famedec_sinkconnect (GstPad *pad, GstCaps *caps)
   famedec = GST_FAMEENC (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps)) 
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   if (famedec->initialized) {
     GST_DEBUG(0, "error: famedec decoder already initialized !");
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   }
 
   gst_caps_get_int (caps, "width", &width);
@@ -318,7 +318,7 @@ gst_famedec_sinkconnect (GstPad *pad, GstCaps *caps)
   
   /* famedec requires width and height to be multiples of 16 */
   if (width % 16 != 0 || height % 16 != 0)
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
 
   famedec->fp.width = width;
   famedec->fp.height = height;
@@ -337,7 +337,7 @@ gst_famedec_sinkconnect (GstPad *pad, GstCaps *caps)
 
   famedec->initialized = TRUE;
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void
@@ -355,7 +355,7 @@ gst_famedec_init (GstFameEnc *famedec)
 		  GST_PAD_TEMPLATE_GET (sink_template_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (famedec), famedec->sinkpad);
   gst_pad_set_chain_function (famedec->sinkpad, gst_famedec_chain);
-  gst_pad_set_connect_function (famedec->sinkpad, gst_famedec_sinkconnect);
+  gst_pad_set_link_function (famedec->sinkpad, gst_famedec_sinkconnect);
 
   famedec->srcpad = gst_pad_new_from_template (
                       GST_PAD_TEMPLATE_GET (src_template_factory), "src");

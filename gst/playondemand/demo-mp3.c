@@ -53,7 +53,7 @@ setup_pipeline (gchar *filename)
   pipeline = gst_pipeline_new("app");
 
   gst_bin_add_many(GST_BIN(pipeline), src, mad, pod, osssink, NULL);
-  gst_element_connect_many(src, mad, pod, osssink, NULL);
+  gst_element_link_many(src, mad, pod, osssink, NULL);
 
   element_clock = gst_bin_get_clock(GST_BIN(pipeline));
   gst_element_set_clock(GST_ELEMENT(pod), element_clock);

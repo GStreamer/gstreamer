@@ -185,7 +185,7 @@ gst_v4l2src_init (GstV4l2Src *v4l2src)
 	gst_element_add_pad(GST_ELEMENT(v4l2src), v4l2src->srcpad);
 
 	gst_pad_set_get_function(v4l2src->srcpad, gst_v4l2src_get);
-	gst_pad_set_connect_function(v4l2src->srcpad, gst_v4l2src_srcconnect);
+	gst_pad_set_link_function(v4l2src->srcpad, gst_v4l2src_srcconnect);
 	gst_pad_set_convert_function (v4l2src->srcpad, gst_v4l2src_srcconvert);
 	gst_pad_set_getcaps_function (v4l2src->srcpad, gst_v4l2src_getcaps);
 
@@ -594,9 +594,9 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 	 * capture session */
 	if (GST_V4L2_IS_ACTIVE(v4l2element)) {
 		if (!gst_v4l2src_capture_deinit(v4l2src))
-			return GST_PAD_CONNECT_REFUSED;
+			return GST_PAD_LINK_REFUSED;
 	} else if (!GST_V4L2_IS_OPEN(v4l2element)) {
-		return GST_PAD_CONNECT_DELAYED;
+		return GST_PAD_LINK_DELAYED;
 	}
 
 	/* build our own capslist */
@@ -604,11 +604,11 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 
 	/* and now, get the caps that we have in common */
 	if (!(caps = gst_v4l2src_caps_intersect(owncapslist, vscapslist)))
-		return GST_PAD_CONNECT_REFUSED;
+		return GST_PAD_LINK_REFUSED;
 
 	/* and get them back to V4L2-compatible fourcc codes */
 	if (!(fourccs = gst_v4l2_caps_to_v4l2fourcc(v4l2src, caps)))
-		return GST_PAD_CONNECT_REFUSED;
+		return GST_PAD_LINK_REFUSED;
 
 	/* we now have the fourcc codes. try out each of them */
 	for (i=0;i<g_list_length(fourccs);i++) {
@@ -622,7 +622,7 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 				            v4l2src->width, v4l2src->height)) {
 					/* it fits! Now, get the proper counterpart and retry
 					 * it on the other side (again...) - if it works, we're
-					 * done -> GST_PAD_CONNECT_OK */
+					 * done -> GST_PAD_LINK_OK */
 					GstCaps *lastcaps = gst_v4l2src_v4l2fourcc_to_caps(format->pixelformat,
 								v4l2src->format.fmt.pix.width, v4l2src->format.fmt.pix.height,
 					                        format->flags & V4L2_FMT_FLAG_COMPRESSED);
@@ -632,9 +632,9 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 						onecaps = gst_caps_copy_1(lastcaps);
 						if ((ret_val = gst_pad_try_set_caps(v4l2src->srcpad, onecaps)) > 0) {
 							if (gst_v4l2src_capture_init(v4l2src))
-								return GST_PAD_CONNECT_DONE;
-						} else if (ret_val == GST_PAD_CONNECT_DELAYED) {
-							return GST_PAD_CONNECT_DELAYED;
+								return GST_PAD_LINK_DONE;
+						} else if (ret_val == GST_PAD_LINK_DELAYED) {
+							return GST_PAD_LINK_DELAYED;
 						}
 					}
 				}
@@ -642,7 +642,7 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 		}
 	}
 
-	return GST_PAD_CONNECT_REFUSED;
+	return GST_PAD_LINK_REFUSED;
 }
 
 

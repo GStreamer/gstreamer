@@ -307,20 +307,20 @@ gst_mixmatrix_connect (GstPad *pad, GstCaps *caps)
   gint i;
 
   if (!GST_CAPS_IS_FIXED(caps) || GST_PAD_IS_SRC (pad)) {
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   }
 
   for (i=0;i<mix->srcpadalloc;i++) {
     if (mix->srcpads[i]) {
       if (GST_PAD_CAPS(mix->srcpads[i]) == NULL)
         if (gst_pad_try_set_caps(mix->srcpads[i], caps) <= 0) 
-	  return GST_PAD_CONNECT_REFUSED;
+	  return GST_PAD_LINK_REFUSED;
     }
   }
 
   mix->caps = caps;
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static GstPad *
@@ -348,8 +348,8 @@ gst_mixmatrix_request_new_pad (GstElement *element, GstPadTemplate *templ, const
     pad = gst_pad_new_from_template(sinktempl, name);
     GST_PAD_ELEMENT_PRIVATE(pad) = GINT_TO_POINTER(padnum);
     gst_element_add_pad(GST_ELEMENT(mix), pad);
-//    g_signal_connect(G_OBJECT(pad), "disconnect", G_CALLBACK(sink_disconnected), mix);
-    gst_pad_set_connect_function (pad, gst_mixmatrix_connect);
+//    g_signal_connect(G_OBJECT(pad), "unlink", G_CALLBACK(sink_unlinked), mix);
+    gst_pad_set_link_function (pad, gst_mixmatrix_connect);
 
     // create a bytestream for it
     mix->sinkbs[padnum] = gst_bytestream_new(pad);
@@ -371,8 +371,8 @@ gst_mixmatrix_request_new_pad (GstElement *element, GstPadTemplate *templ, const
     pad = gst_pad_new_from_template(srctempl, name);
     GST_PAD_ELEMENT_PRIVATE(pad) = GINT_TO_POINTER(padnum);
     gst_element_add_pad(GST_ELEMENT(mix), pad);
-//    g_signal_connect(G_OBJECT(pad), "disconnect", G_CALLBACK(sink_disconnected), mix);
-    //gst_pad_set_connect_function (pad, gst_mixmatrix_connect);
+//    g_signal_connect(G_OBJECT(pad), "unlink", G_CALLBACK(sink_unlinked), mix);
+    //gst_pad_set_link_function (pad, gst_mixmatrix_connect);
 
     // store away the pad and account for it  
     mix->srcpads[padnum] = pad;

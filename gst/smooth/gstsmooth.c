@@ -136,12 +136,12 @@ gst_smooth_sinkconnect (GstPad *pad, GstCaps *caps)
   filter = GST_SMOOTH (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   gst_caps_get_int (caps, "width", &filter->width);
   gst_caps_get_int (caps, "height", &filter->height);
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void
@@ -149,7 +149,7 @@ gst_smooth_init (GstSmooth *smooth)
 {
   smooth->sinkpad = gst_pad_new_from_template (
                   GST_PAD_TEMPLATE_GET (smooth_sink_factory), "sink");
-  gst_pad_set_connect_function (smooth->sinkpad, gst_smooth_sinkconnect);
+  gst_pad_set_link_function (smooth->sinkpad, gst_smooth_sinkconnect);
   gst_pad_set_chain_function (smooth->sinkpad, gst_smooth_chain);
   gst_element_add_pad (GST_ELEMENT (smooth), smooth->sinkpad);
 

@@ -228,7 +228,7 @@ gst_smpte_sinkconnect (GstPad *pad, GstCaps *caps)
   smpte = GST_SMPTE (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   gst_caps_get_int (caps, "width", &smpte->width);
   gst_caps_get_int (caps, "height", &smpte->height);
@@ -244,12 +244,12 @@ gst_smpte_init (GstSMPTE *smpte)
 {
   smpte->sinkpad1 = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (smpte_sink1_factory), "sink1");
-  gst_pad_set_connect_function (smpte->sinkpad1, gst_smpte_sinkconnect);
+  gst_pad_set_link_function (smpte->sinkpad1, gst_smpte_sinkconnect);
   gst_element_add_pad (GST_ELEMENT (smpte), smpte->sinkpad1);
 
   smpte->sinkpad2 = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (smpte_sink2_factory), "sink2");
-  gst_pad_set_connect_function (smpte->sinkpad2, gst_smpte_sinkconnect);
+  gst_pad_set_link_function (smpte->sinkpad2, gst_smpte_sinkconnect);
   gst_element_add_pad (GST_ELEMENT (smpte), smpte->sinkpad2);
 
   smpte->srcpad = gst_pad_new_from_template (

@@ -175,7 +175,7 @@ gst_sdlvideosink_init (GstSDLVideoSink *sdlvideosink)
   gst_element_add_pad (GST_ELEMENT (sdlvideosink), sdlvideosink->sinkpad);
 
   gst_pad_set_chain_function (sdlvideosink->sinkpad, gst_sdlvideosink_chain);
-  gst_pad_set_connect_function (sdlvideosink->sinkpad, gst_sdlvideosink_sinkconnect);
+  gst_pad_set_link_function (sdlvideosink->sinkpad, gst_sdlvideosink_sinkconnect);
 
   sdlvideosink->window_width = -1;
   sdlvideosink->window_height = -1;
@@ -367,7 +367,7 @@ gst_sdlvideosink_sinkconnect (GstPad  *pad,
 
   /* we are not going to act on variable caps */
   if (!GST_CAPS_IS_FIXED (vscapslist))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   for (caps = vscapslist; caps != NULL; caps = vscapslist = vscapslist->next)
   {
@@ -390,14 +390,14 @@ gst_sdlvideosink_sinkconnect (GstPad  *pad,
 
         /* try it out */
         if (!gst_sdlvideosink_create(sdlvideosink, TRUE))
-          return GST_PAD_CONNECT_REFUSED;
+          return GST_PAD_LINK_REFUSED;
 
-        return GST_PAD_CONNECT_OK;
+        return GST_PAD_LINK_OK;
     }
   }
 
   /* if we got here - it's not good */
-  return GST_PAD_CONNECT_REFUSED;
+  return GST_PAD_LINK_REFUSED;
 }
 
 

@@ -94,7 +94,7 @@ gst_gsmdec_init (GstGSMDec *gsmdec)
   gsmdec->sinkpad = gst_pad_new_from_template (gsmdec_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (gsmdec), gsmdec->sinkpad);
   gst_pad_set_chain_function (gsmdec->sinkpad, gst_gsmdec_chain);
-  gst_pad_set_connect_function (gsmdec->sinkpad, gst_gsmdec_sinkconnect);
+  gst_pad_set_link_function (gsmdec->sinkpad, gst_gsmdec_sinkconnect);
 
   gsmdec->srcpad = gst_pad_new_from_template (gsmdec_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (gsmdec), gsmdec->srcpad);
@@ -112,7 +112,7 @@ gst_gsmdec_sinkconnect (GstPad *pad, GstCaps *caps)
   gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   
   gst_caps_get_int (caps, "rate", &rate);
 
@@ -130,9 +130,9 @@ gst_gsmdec_sinkconnect (GstPad *pad, GstCaps *caps)
 			    "channels",   GST_PROPS_INT (1)
 			   )) > 0)
   {
-    return GST_PAD_CONNECT_OK;
+    return GST_PAD_LINK_OK;
   }
-  return GST_PAD_CONNECT_REFUSED;
+  return GST_PAD_LINK_REFUSED;
 }
 
 static void

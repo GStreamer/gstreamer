@@ -388,13 +388,13 @@ gst_swfdec_vo_destroy (GstSwfdec *swfdec)
 static GstPadConnectReturn
 gst_swfdec_connect(GstPad *pad, GstCaps *caps)
 {
-	return GST_PAD_CONNECT_DELAYED;
+	return GST_PAD_LINK_DELAYED;
 }
 #endif
 
 #if 0
 static void
-src_disconnected(GstPad *srcpad, GstPad *sinkpad, GstSwfdec *plugin)
+src_unlinked(GstPad *srcpad, GstPad *sinkpad, GstSwfdec *plugin)
 {
 	GST_DEBUG(GST_CAT_PADS, "removing pad %s:%s",
 		GST_DEBUG_PAD_NAME(srcpad));
@@ -433,9 +433,9 @@ gst_swfdec_request_new_pad (GstElement *element, GstPadTemplate *templ,
 		srcpad = gst_pad_new_from_template(templ, "audio_00");
 		gst_element_add_pad(GST_ELEMENT(plugin), srcpad);
 
-		g_signal_connect(G_OBJECT(srcpad), "disconnected",
-			G_CALLBACK(src_disconnected), plugin);
-		gst_pad_set_connect_function(srcpad, gst_swfdec_connect);
+		g_signal_connect(G_OBJECT(srcpad), "unlinked",
+			G_CALLBACK(src_unlinked), plugin);
+		gst_pad_set_link_function(srcpad, gst_swfdec_connect);
 		plugin->audiopad = srcpad;
 	}else if(strcmp("video", template) == 0){
 #endif
@@ -445,9 +445,9 @@ gst_swfdec_request_new_pad (GstElement *element, GstPadTemplate *templ,
 		srcpad = gst_pad_new_from_template(templ, "video_00");
 		gst_element_add_pad(GST_ELEMENT(plugin), srcpad);
 
-		g_signal_connect(G_OBJECT(srcpad), "disconnected",
-			G_CALLBACK(src_disconnected), plugin);
-		gst_pad_set_connect_function(srcpad, gst_swfdec_connect);
+		g_signal_connect(G_OBJECT(srcpad), "unlinked",
+			G_CALLBACK(src_unlinked), plugin);
+		gst_pad_set_link_function(srcpad, gst_swfdec_connect);
 		plugin->videopad = srcpad;
 	}else{
 		g_warning("swfdec: request new pad with bad template\n");

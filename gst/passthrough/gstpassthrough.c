@@ -115,12 +115,12 @@ passthrough_connect_sink (GstPad *pad, GstCaps *caps)
   const gchar *format;
   GstPassthrough *filter;
   
-  g_return_val_if_fail (pad  != NULL, GST_PAD_CONNECT_DELAYED);
-  g_return_val_if_fail (caps != NULL, GST_PAD_CONNECT_DELAYED);
+  g_return_val_if_fail (pad  != NULL, GST_PAD_LINK_DELAYED);
+  g_return_val_if_fail (caps != NULL, GST_PAD_LINK_DELAYED);
 
   filter = GST_PASSTHROUGH (gst_pad_get_parent (pad));
-  g_return_val_if_fail (filter != NULL, GST_PAD_CONNECT_REFUSED);
-  g_return_val_if_fail (GST_IS_PASSTHROUGH (filter), GST_PAD_CONNECT_REFUSED);
+  g_return_val_if_fail (filter != NULL, GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_IS_PASSTHROUGH (filter), GST_PAD_LINK_REFUSED);
 
   gst_caps_get_string(caps, "format", &format);
   
@@ -157,7 +157,7 @@ passthrough_connect_sink (GstPad *pad, GstCaps *caps)
 
   if (GST_CAPS_IS_FIXED (caps))
     return gst_pad_try_set_caps (filter->srcpad, caps);
-  return GST_PAD_CONNECT_DELAYED;
+  return GST_PAD_LINK_DELAYED;
 }
 
 GType
@@ -208,7 +208,7 @@ passthrough_init (GstPassthrough *filter)
   filter->sinkpad = gst_pad_new_from_template (passthrough_sink_factory (),"sink");
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
-  gst_pad_set_connect_function    (filter->sinkpad, passthrough_connect_sink);
+  gst_pad_set_link_function    (filter->sinkpad, passthrough_connect_sink);
   gst_pad_set_bufferpool_function (filter->sinkpad, passthrough_get_bufferpool);  
   gst_pad_set_chain_function      (filter->sinkpad, passthrough_chain);
 

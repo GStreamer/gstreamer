@@ -173,7 +173,7 @@ gst_snapshot_sinkconnect (GstPad *pad, GstCaps *caps)
   filter = GST_SNAPSHOT (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   gst_caps_get_int (caps, "width", &filter->width);
   gst_caps_get_int (caps, "height", &filter->height);
@@ -223,14 +223,14 @@ gst_snapshot_sinkconnect (GstPad *pad, GstCaps *caps)
       
   gst_pad_try_set_caps (filter->srcpad, caps);
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void
 gst_snapshot_init (GstSnapshot *snapshot)
 {
   snapshot->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (snapshot_sink_factory), "sink");
-  gst_pad_set_connect_function (snapshot->sinkpad, gst_snapshot_sinkconnect);
+  gst_pad_set_link_function (snapshot->sinkpad, gst_snapshot_sinkconnect);
   gst_pad_set_chain_function (snapshot->sinkpad, gst_snapshot_chain);
   gst_element_add_pad (GST_ELEMENT (snapshot), snapshot->sinkpad);
 

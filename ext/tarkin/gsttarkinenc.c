@@ -124,7 +124,7 @@ gst_tarkinenc_sinkconnect (GstPad *pad, GstCaps *caps)
   tarkinenc = GST_TARKINENC (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   gst_caps_debug (caps, "caps to be set on tarkin sink pad");
 
@@ -139,9 +139,9 @@ gst_tarkinenc_sinkconnect (GstPad *pad, GstCaps *caps)
   gst_tarkinenc_setup (tarkinenc);
 
   if (tarkinenc->setup)
-    return GST_PAD_CONNECT_OK;
+    return GST_PAD_LINK_OK;
 
-  return GST_PAD_CONNECT_REFUSED;
+  return GST_PAD_LINK_REFUSED;
 }
 
 static void
@@ -150,7 +150,7 @@ gst_tarkinenc_init (TarkinEnc * tarkinenc)
   tarkinenc->sinkpad = gst_pad_new_from_template (enc_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (tarkinenc), tarkinenc->sinkpad);
   gst_pad_set_chain_function (tarkinenc->sinkpad, gst_tarkinenc_chain);
-  gst_pad_set_connect_function (tarkinenc->sinkpad, gst_tarkinenc_sinkconnect);
+  gst_pad_set_link_function (tarkinenc->sinkpad, gst_tarkinenc_sinkconnect);
 
   tarkinenc->srcpad = gst_pad_new_from_template (enc_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (tarkinenc), tarkinenc->srcpad);

@@ -256,12 +256,12 @@ gst_mplex_video_connect (GstPad *pad, GstCaps *caps)
   mplex = GST_MPLEX (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   stream = (GstMPlexStream *) gst_pad_get_element_private (pad);
   
   if (!gst_caps_get_int (caps, "mpegversion", &version)){
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   }
 
   if (version == 2) {
@@ -271,7 +271,7 @@ gst_mplex_video_connect (GstPad *pad, GstCaps *caps)
     stream->type = GST_MPLEX_STREAM_VIDEO;
   }
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 

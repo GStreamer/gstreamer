@@ -139,7 +139,7 @@ gst_xsharpen_sinkconnect (GstPad * pad, GstCaps * caps)
   sharpen = GST_XSHARPEN (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   gst_caps_get_int (caps, "width", &sharpen->width);
   gst_caps_get_int (caps, "height", &sharpen->height);
@@ -156,7 +156,7 @@ gst_xsharpen_init (GstXsharpen * sharpen)
 {
   sharpen->sinkpad = gst_pad_new_from_template (gst_virtualdub_sink_factory (), "sink");
   gst_pad_set_chain_function (sharpen->sinkpad, gst_xsharpen_chain);
-  gst_pad_set_connect_function (sharpen->sinkpad, gst_xsharpen_sinkconnect);
+  gst_pad_set_link_function (sharpen->sinkpad, gst_xsharpen_sinkconnect);
   gst_element_add_pad (GST_ELEMENT (sharpen), sharpen->sinkpad);
 
   sharpen->srcpad = gst_pad_new_from_template (gst_virtualdub_src_factory (), "src");

@@ -252,7 +252,7 @@ gst_colorspace_sinkconnect (GstPad *pad, GstCaps *caps)
   space = GST_COLORSPACE (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   }
 
   gst_caps_get_int (caps, "width", &space->width);
@@ -266,11 +266,11 @@ gst_colorspace_sinkconnect (GstPad *pad, GstCaps *caps)
   if (peer) {
     if (gst_colorspace_srcconnect_func (pad, gst_pad_get_allowed_caps (space->srcpad), FALSE) < 1) {
       space->sinkcaps = NULL;
-      return GST_PAD_CONNECT_REFUSED;
+      return GST_PAD_LINK_REFUSED;
     }
   }
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static GstPadConnectReturn
@@ -294,7 +294,7 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
     if (newcaps)
       gst_pad_recalc_allowed_caps (space->sinkpad);
 
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   }
 
   /* first see if we can do the format natively by filtering the peer caps 
@@ -305,7 +305,7 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
     if (gst_pad_try_set_caps (space->srcpad, peercaps) > 0) {
       space->type = GST_COLORSPACE_NONE;
       space->disabled = FALSE;
-      return GST_PAD_CONNECT_DONE;
+      return GST_PAD_LINK_DONE;
     }
   }
   /* then see what the peer has that matches the size */
@@ -326,7 +326,7 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
     if (colorspace_setup_converter (space, ourcaps, peercaps)) {
       if (gst_pad_try_set_caps (space->srcpad, peercaps) > 0) {
         space->disabled = FALSE;
-        return GST_PAD_CONNECT_DONE;
+        return GST_PAD_LINK_DONE;
       }
     }
     peercaps = peercaps->next;
@@ -336,7 +336,7 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
   /* we disable ourself here */
   space->disabled = TRUE;
 
-  return GST_PAD_CONNECT_REFUSED;
+  return GST_PAD_LINK_REFUSED;
 }
 
 static GType
@@ -383,7 +383,7 @@ gst_colorspace_init (GstColorspace *space)
 {
   space->sinkpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (colorspace_sink_template_factory), "sink");
-  gst_pad_set_connect_function (space->sinkpad, gst_colorspace_sinkconnect);
+  gst_pad_set_link_function (space->sinkpad, gst_colorspace_sinkconnect);
   gst_pad_set_getcaps_function (space->sinkpad, gst_colorspace_getcaps);
   gst_pad_set_bufferpool_function (space->sinkpad, colorspace_get_bufferpool);
   gst_pad_set_chain_function(space->sinkpad,gst_colorspace_chain);
@@ -392,7 +392,7 @@ gst_colorspace_init (GstColorspace *space)
   space->srcpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (colorspace_src_template_factory), "src");
   gst_element_add_pad(GST_ELEMENT(space),space->srcpad);
-  gst_pad_set_connect_function (space->srcpad, gst_colorspace_srcconnect);
+  gst_pad_set_link_function (space->srcpad, gst_colorspace_srcconnect);
 
   space->pool = NULL;
   space->disabled = TRUE;

@@ -146,7 +146,7 @@ gst_deinterlace_sinkconnect (GstPad *pad, GstCaps *caps)
   filter = GST_DEINTERLACE(gst_pad_get_parent (pad));
   
   if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
 
   gst_caps_get_int (caps, "width", &filter->width);
   gst_caps_get_int (caps, "height", &filter->height);
@@ -165,7 +165,7 @@ gst_deinterlace_init (GstDeInterlace *filter)
 {
   filter->sinkpad = gst_pad_new_from_template(deinterlace_sink_factory (),"sink");
   gst_pad_set_chain_function(filter->sinkpad,gst_deinterlace_chain);
-  gst_pad_set_connect_function(filter->sinkpad,gst_deinterlace_sinkconnect);
+  gst_pad_set_link_function(filter->sinkpad,gst_deinterlace_sinkconnect);
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
 
   filter->srcpad = gst_pad_new_from_template(deinterlace_src_factory (),"src");

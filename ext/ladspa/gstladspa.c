@@ -447,13 +447,13 @@ gst_ladspa_init (GstLADSPA *ladspa)
 
     ladspa->newcaps = TRUE;
 
-    gst_pad_set_connect_function (ladspa->srcpads[0], gst_ladspa_connect_get);
+    gst_pad_set_link_function (ladspa->srcpads[0], gst_ladspa_connect_get);
     gst_pad_set_get_function (ladspa->srcpads[0], gst_ladspa_get);
   } else if (sinkcount==1){
     /* with one sink we can use the chain function */
     GST_DEBUG (0, "chain mode");
 
-    gst_pad_set_connect_function (ladspa->sinkpads[0], gst_ladspa_connect);
+    gst_pad_set_link_function (ladspa->sinkpads[0], gst_ladspa_connect);
     gst_pad_set_chain_function (ladspa->sinkpads[0], gst_ladspa_chain);
     gst_pad_set_bufferpool_function (ladspa->sinkpads[0], gst_ladspa_get_bufferpool);
   } else if (sinkcount > 1){
@@ -461,7 +461,7 @@ gst_ladspa_init (GstLADSPA *ladspa)
     GST_DEBUG (0, "loop mode with %d sink pads and %d src pads", sinkcount, srccount);
 
     for (i=0;i<sinkcount;i++) {
-      gst_pad_set_connect_function (ladspa->sinkpads[i], gst_ladspa_connect);
+      gst_pad_set_link_function (ladspa->sinkpads[i], gst_ladspa_connect);
       gst_pad_set_bufferpool_function (ladspa->sinkpads[i], gst_ladspa_get_bufferpool);
     }
     gst_element_set_loop_function (GST_ELEMENT (ladspa), gst_ladspa_loop);
@@ -490,8 +490,8 @@ gst_ladspa_connect (GstPad *pad, GstCaps *caps)
   guint i;
   gint rate;
 
-  g_return_val_if_fail (caps != NULL, GST_PAD_CONNECT_DELAYED);
-  g_return_val_if_fail (pad  != NULL, GST_PAD_CONNECT_DELAYED);
+  g_return_val_if_fail (caps != NULL, GST_PAD_LINK_DELAYED);
+  g_return_val_if_fail (pad  != NULL, GST_PAD_LINK_DELAYED);
 
   if (gst_caps_get_int (caps, "rate", &rate)){
     /* have to instantiate ladspa plugin when samplerate changes (groan) */
@@ -499,7 +499,7 @@ gst_ladspa_connect (GstPad *pad, GstCaps *caps)
       ladspa->samplerate = rate;
   
       if (! gst_ladspa_instantiate(ladspa))
-        return GST_PAD_CONNECT_REFUSED;
+        return GST_PAD_LINK_REFUSED;
     }
   }
 
@@ -509,11 +509,11 @@ gst_ladspa_connect (GstPad *pad, GstCaps *caps)
   if (GST_CAPS_IS_FIXED (caps)) {
     for (i=0;i<oclass->numsrcpads;i++) {
       if (gst_pad_try_set_caps (ladspa->srcpads[i], caps) <= 0)
-        return GST_PAD_CONNECT_REFUSED;
+        return GST_PAD_LINK_REFUSED;
     }
   }
   
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static GstPadConnectReturn 
@@ -522,18 +522,18 @@ gst_ladspa_connect_get (GstPad *pad, GstCaps *caps)
   GstLADSPA *ladspa = (GstLADSPA*)GST_OBJECT_PARENT (pad);
   gint rate;
  
-  g_return_val_if_fail (caps != NULL, GST_PAD_CONNECT_DELAYED);
-  g_return_val_if_fail (pad  != NULL, GST_PAD_CONNECT_DELAYED);
+  g_return_val_if_fail (caps != NULL, GST_PAD_LINK_DELAYED);
+  g_return_val_if_fail (pad  != NULL, GST_PAD_LINK_DELAYED);
   
   if (gst_caps_get_int (caps, "rate", &rate)){
     if (ladspa->samplerate != rate) {
       ladspa->samplerate = rate;
       if (! gst_ladspa_instantiate(ladspa))
-        return GST_PAD_CONNECT_REFUSED;
+        return GST_PAD_LINK_REFUSED;
     }
   }
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void

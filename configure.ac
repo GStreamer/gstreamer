@@ -922,6 +922,9 @@ if test "x$USE_ATOMIC_H" = xyes; then
   AC_DEFINE(HAVE_ATOMIC_H, 1, [Define if atomic.h header file is available])
 fi
 
+# do not use deprecated stuff
+GST_CFLAGS="$GST_CFLAGS -DGST_DISABLE_DEPRECATED"
+
 if test "x$USE_DEBUG" = xyes; then
   GST_CFLAGS="$GST_CFLAGS -g"
 fi

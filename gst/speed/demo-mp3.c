@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     
     pipeline = gst_pipeline_new("app");
     gst_bin_add_many (GST_BIN(pipeline), filesrc, mad, stereo2mono, speed, osssink, NULL);
-    gst_element_connect_many (filesrc, mad, stereo2mono, speed, osssink, NULL);
+    gst_element_link_many (filesrc, mad, stereo2mono, speed, osssink, NULL);
     g_object_set(G_OBJECT(filesrc), "location", argv[1], NULL);
     
     gst_element_set_state(pipeline, GST_STATE_PLAYING);

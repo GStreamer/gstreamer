@@ -213,7 +213,7 @@ gst_chart_init (GstChart *chart)
   gst_element_add_pad (GST_ELEMENT (chart), chart->srcpad);
 
   gst_pad_set_chain_function (chart->sinkpad, gst_chart_chain);
-  gst_pad_set_connect_function (chart->sinkpad, gst_chart_sinkconnect);
+  gst_pad_set_link_function (chart->sinkpad, gst_chart_sinkconnect);
 
   chart->next_time = 0;
   chart->peerpool = NULL;
@@ -244,7 +244,7 @@ gst_chart_sinkconnect (GstPad *pad, GstCaps *caps)
 	     chart->samplerate);
   /*gst_chart_sync_parms (chart); */
   /* */
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void

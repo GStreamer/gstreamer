@@ -141,8 +141,8 @@ play_on_demand_pad_connect (GstPad *pad, GstCaps *caps)
   const gchar *format;
   GstPlayOnDemand *filter;
 
-  g_return_val_if_fail(caps != NULL, GST_PAD_CONNECT_DELAYED);
-  g_return_val_if_fail(pad  != NULL, GST_PAD_CONNECT_DELAYED);
+  g_return_val_if_fail(caps != NULL, GST_PAD_LINK_DELAYED);
+  g_return_val_if_fail(pad  != NULL, GST_PAD_LINK_DELAYED);
 
   filter = GST_PLAYONDEMAND(GST_PAD_PARENT(pad));
 
@@ -188,7 +188,7 @@ play_on_demand_pad_connect (GstPad *pad, GstCaps *caps)
 
   if (GST_CAPS_IS_FIXED (caps))
     return gst_pad_try_set_caps (filter->srcpad, caps);
-  return GST_PAD_CONNECT_DELAYED;
+  return GST_PAD_LINK_DELAYED;
 }
 
 GType
@@ -282,7 +282,7 @@ play_on_demand_init (GstPlayOnDemand *filter)
   filter->sinkpad = gst_pad_new_from_template(play_on_demand_sink_factory(), "sink");
 
   gst_pad_set_bufferpool_function(filter->sinkpad, play_on_demand_get_bufferpool);
-  gst_pad_set_connect_function(filter->sinkpad, play_on_demand_pad_connect);
+  gst_pad_set_link_function(filter->sinkpad, play_on_demand_pad_connect);
 
   gst_element_add_pad(GST_ELEMENT(filter), filter->sinkpad);
   gst_element_add_pad(GST_ELEMENT(filter), filter->srcpad);
