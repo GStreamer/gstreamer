@@ -123,10 +123,10 @@ enum
 };
 
 static GstStaticPadTemplate gst_qtdemux_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("video/quicktime")
+    GST_STATIC_CAPS ("video/quicktime; audio/x-m4a")
     );
 
 static GstStaticPadTemplate gst_qtdemux_videosrc_template =
