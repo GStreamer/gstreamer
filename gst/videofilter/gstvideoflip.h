@@ -40,7 +40,6 @@ typedef enum {
   GST_VIDEOFLIP_METHOD_OTHER,
 } GstVideoflipMethod;
 
-
 #define GST_TYPE_VIDEOFLIP \
   (gst_videoflip_get_type())
 #define GST_VIDEOFLIP(obj) \

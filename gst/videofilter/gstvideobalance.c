@@ -18,6 +18,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ * This file was (probably) generated from gstvideobalance.c,
+ * $Id$
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -26,15 +31,6 @@
 #include <gstvideobalance.h>
 #include <string.h>
 #include <math.h>
-
-
-/* elementfactory information */
-static GstElementDetails videobalance_details = {
-  "Video Balance control",
-  "Filter/Video",
-  "Adjusts brightness, contrast, hue, saturation on a video stream",
-  "David Schleef <ds@schleef.org>"
-};
 
 /* GstVideobalance signals and args */
 enum {
@@ -51,19 +47,15 @@ enum {
   /* FILL ME */
 };
 
-static void	gst_videobalance_class_init	(GstVideobalanceClass *klass);
-static void	gst_videobalance_base_init	(GstVideobalanceClass *klass);
-static void	gst_videobalance_init		(GstVideobalance *videobalance);
+static void	gst_videobalance_base_init	(gpointer g_class);
+static void	gst_videobalance_class_init	(gpointer g_class, gpointer class_data);
+static void	gst_videobalance_init		(GTypeInstance *instance, gpointer g_class);
 
 static void	gst_videobalance_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_videobalance_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static void gst_videobalance_planar411(GstVideofilter *videofilter, void *dest, void *src);
 static void gst_videobalance_setup(GstVideofilter *videofilter);
-
-static GstVideobalanceClass *this_class = NULL;
-static GstVideofilterClass *parent_class = NULL;
-static GstElementClass *element_class = NULL;
 
 GType
 gst_videobalance_get_type (void)
@@ -73,16 +65,17 @@ gst_videobalance_get_type (void)
   if (!videobalance_type) {
     static const GTypeInfo videobalance_info = {
       sizeof(GstVideobalanceClass),
-      (GBaseInitFunc)gst_videobalance_base_init,
+      gst_videobalance_base_init,
       NULL,
-      (GClassInitFunc)gst_videobalance_class_init,
+      gst_videobalance_class_init,
       NULL,
       NULL,
       sizeof(GstVideobalance),
       0,
-      (GInstanceInitFunc)gst_videobalance_init,
+      gst_videobalance_init,
     };
-    videobalance_type = g_type_register_static(GST_TYPE_VIDEOFILTER, "GstVideobalance", &videobalance_info, 0);
+    videobalance_type = g_type_register_static(GST_TYPE_VIDEOFILTER,
+        "GstVideobalance", &videobalance_info, 0);
   }
   return videobalance_type;
 }
@@ -91,129 +84,74 @@ static GstVideofilterFormat gst_videobalance_formats[] = {
   { "I420", 12, gst_videobalance_planar411, },
 };
 
-static GstPadTemplate *gst_videobalance_sink_template_factory (void);
-static GstPadTemplate *gst_videobalance_src_template_factory (void);
-
+  
 static void
-gst_videobalance_base_init (GstVideobalanceClass *klass)
+gst_videobalance_base_init (gpointer g_class)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (gst_videobalance_sink_template_factory));
-  gst_element_class_add_pad_template (element_class,
-	GST_PAD_TEMPLATE_GET (gst_videobalance_src_template_factory));
+  static GstElementDetails videobalance_details = GST_ELEMENT_DETAILS (
+    "Video Balance Control",
+    "Filter/Video",
+    "Adjusts brightness, contrast, hue, saturation on a video stream",
+    "David Schleef <ds@schleef.org>"
+  );
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstVideofilterClass *videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
+  int i;
+  
   gst_element_class_set_details (element_class, &videobalance_details);
+
+  for(i=0;i<G_N_ELEMENTS(gst_videobalance_formats);i++){
+    gst_videofilter_class_add_format(videofilter_class,
+	gst_videobalance_formats + i);
+  }
+
+  gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
 }
 
 static void
-gst_videobalance_class_init (GstVideobalanceClass *klass)
+gst_videobalance_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstVideofilterClass *gstvideofilter_class;
-  int i;
+  GstVideofilterClass *videofilter_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
-  gstvideofilter_class = (GstVideofilterClass *)klass;
+  gobject_class = G_OBJECT_CLASS (g_class);
+  videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CONTRAST,
+  g_object_class_install_property(gobject_class, ARG_CONTRAST,
       g_param_spec_double("contrast","Contrast","contrast",
       0, 2, 1, G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BRIGHTNESS,
+  g_object_class_install_property(gobject_class, ARG_BRIGHTNESS,
       g_param_spec_double("brightness","Brightness","brightness",
       -1, 1, 0, G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HUE,
+  g_object_class_install_property(gobject_class, ARG_HUE,
       g_param_spec_double("hue","Hue","hue",
       -1, 1, 0, G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SATURATION,
+  g_object_class_install_property(gobject_class, ARG_SATURATION,
       g_param_spec_double("saturation","Saturation","saturation",
       0, 2, 1, G_PARAM_READWRITE));
-
-  this_class = klass;
-  parent_class = g_type_class_ref(GST_TYPE_VIDEOFILTER);
-  element_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
   gobject_class->set_property = gst_videobalance_set_property;
   gobject_class->get_property = gst_videobalance_get_property;
 
-  gstvideofilter_class->setup = gst_videobalance_setup;
-
-  for(i=0;i<G_N_ELEMENTS(gst_videobalance_formats);i++){
-    gst_videofilter_class_add_format(gstvideofilter_class,
-	gst_videobalance_formats + i);
-  }
-}
-
-static GstCaps *gst_videobalance_get_capslist(void)
-{
-  GstVideofilterClass *klass;
-
-  klass = g_type_class_ref(GST_TYPE_VIDEOFILTER);
-
-  return gst_videofilter_class_get_capslist(klass);
-}
-
-static GstPadTemplate *
-gst_videobalance_src_template_factory(void)
-{
-  static GstPadTemplate *templ = NULL;
-
-  if(!templ){
-    GstCaps *caps = GST_CAPS_NEW("src","video/x-raw-yuv",
-		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
-
-    caps = gst_caps_intersect(caps, gst_videobalance_get_capslist ());
-
-    templ = GST_PAD_TEMPLATE_NEW("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
-  }
-  return templ;
-}
-
-static GstPadTemplate *
-gst_videobalance_sink_template_factory(void)
-{
-  static GstPadTemplate *templ = NULL;
-
-  if(!templ){
-    GstCaps *caps = GST_CAPS_NEW("src","video/x-raw-yuv",
-		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
-
-    caps = gst_caps_intersect(caps, gst_videobalance_get_capslist ());
-
-    templ = GST_PAD_TEMPLATE_NEW("src", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
-  }
-  return templ;
+  videofilter_class->setup = gst_videobalance_setup;
 }
 
 static void
-gst_videobalance_init (GstVideobalance *videobalance)
+gst_videobalance_init (GTypeInstance *instance, gpointer g_class)
 {
+  GstVideobalance *videobalance = GST_VIDEOBALANCE (instance);
   GstVideofilter *videofilter;
 
   GST_DEBUG("gst_videobalance_init");
 
   videofilter = GST_VIDEOFILTER(videobalance);
 
-  videofilter->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (gst_videobalance_sink_template_factory),
-		  "sink");
-
-  videofilter->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (gst_videobalance_src_template_factory),
-		  "src");
-
+  /* do stuff */
   videobalance->contrast = 1;
   videobalance->brightness = 0;
   videobalance->saturation = 1;
   videobalance->hue = 0;
 
-  gst_videofilter_postinit(GST_VIDEOFILTER(videobalance));
 }
 
 static void
@@ -277,8 +215,8 @@ static gboolean plugin_init (GstPlugin *plugin)
   if(!gst_library_load("gstvideofilter"))
     return FALSE;
 
-  return gst_element_register(plugin, "videobalance",
-			      GST_RANK_NONE, GST_TYPE_VIDEOBALANCE);
+  return gst_element_register (plugin, "videobalance", GST_RANK_NONE,
+      GST_TYPE_VIDEOBALANCE);
 }
 
 GST_PLUGIN_DEFINE (
@@ -288,7 +226,7 @@ GST_PLUGIN_DEFINE (
   "Changes hue, saturation, brightness etc. on video images",
   plugin_init,
   VERSION,
-  "LGPL",
+  GST_LICENSE,
   GST_COPYRIGHT,
   GST_PACKAGE,
   GST_ORIGIN
@@ -300,6 +238,8 @@ static void gst_videobalance_setup(GstVideofilter *videofilter)
 
   g_return_if_fail(GST_IS_VIDEOBALANCE(videofilter));
   videobalance = GST_VIDEOBALANCE(videofilter);
+
+  /* if any setup needs to be done, do it here */
 
 }
 
@@ -373,5 +313,6 @@ static void gst_videobalance_planar411(GstVideofilter *videofilter,
       }
     }
   }
+
 }
 

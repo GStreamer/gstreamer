@@ -27,16 +27,6 @@
 
 
 
-#if 0
-/* elementfactory information */
-static GstElementDetails videofilter_details = {
-  "Video scaler",
-  "Filter/Video",
-  "Resizes video",
-  "David Schleef <ds@schleef.org>"
-};
-#endif
-
 /* GstVideofilter signals and args */
 enum {
   /* FILL ME */
@@ -49,9 +39,9 @@ enum {
   /* FILL ME */
 };
 
-static void     gst_videofilter_base_init       (GstVideofilterClass *klass);
-static void	gst_videofilter_class_init	(GstVideofilterClass *klass);
-static void	gst_videofilter_init		(GstVideofilter *videofilter);
+static void     gst_videofilter_base_init       (gpointer g_class);
+static void	gst_videofilter_class_init	(gpointer g_class, gpointer class_data);
+static void	gst_videofilter_init		(GTypeInstance *instance, gpointer g_class);
 
 static void	gst_videofilter_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_videofilter_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
@@ -70,14 +60,14 @@ gst_videofilter_get_type (void)
   if (!videofilter_type) {
     static const GTypeInfo videofilter_info = {
       sizeof(GstVideofilterClass),
-      (GBaseInitFunc)gst_videofilter_base_init,
+      gst_videofilter_base_init,
       NULL,
-      (GClassInitFunc)gst_videofilter_class_init,
+      gst_videofilter_class_init,
       NULL,
       NULL,
       sizeof(GstVideofilter),
       0,
-      (GInstanceInitFunc)gst_videofilter_init,
+      gst_videofilter_init,
     };
     videofilter_type = g_type_register_static(GST_TYPE_ELEMENT,
 	"GstVideofilter", &videofilter_info, G_TYPE_FLAG_ABSTRACT);
@@ -85,26 +75,29 @@ gst_videofilter_get_type (void)
   return videofilter_type;
 }
 
-static void gst_videofilter_base_init (GstVideofilterClass *klass)
+static void gst_videofilter_base_init (gpointer g_class)
 {
-  klass->formats = g_ptr_array_new();
-
-#if 0
+  static GstElementDetails videofilter_details = {
+    "Video scaler",
+    "Filter/Video",
+    "Resizes video",
+    "David Schleef <ds@schleef.org>"
+  };
+  GstVideofilterClass *klass = (GstVideofilterClass *) g_class;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      GST_PAD_TEMPLATE_GET (gst_videofilter_sink_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      GST_PAD_TEMPLATE_GET (gst_videofilter_src_template_factory));
+  klass->formats = g_ptr_array_new();
+
   gst_element_class_set_details (element_class, &videofilter_details);
-#endif
 }
 
-static void gst_videofilter_class_init (GstVideofilterClass *klass)
+static void gst_videofilter_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstVideofilterClass *klass;
 
+  klass = (GstVideofilterClass *)g_class;
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
@@ -113,44 +106,6 @@ static void gst_videofilter_class_init (GstVideofilterClass *klass)
   gobject_class->set_property = gst_videofilter_set_property;
   gobject_class->get_property = gst_videofilter_get_property;
 }
-
-#if 0
-static GstPadTemplate *
-gst_videofilter_src_template_factory(void)
-{
-  static GstPadTemplate *templ = NULL;
-
-  if(!templ){
-    GstCaps *caps = GST_CAPS_NEW("src","video/x-raw-yuv",
-		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
-
-    caps = gst_caps_intersect(caps, gst_videofilter_get_capslist ());
-
-    templ = GST_PAD_TEMPLATE_NEW("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
-  }
-  return templ;
-}
-
-static GstPadTemplate *
-gst_videofilter_sink_template_factory(void)
-{
-  static GstPadTemplate *templ = NULL;
-
-  if(!templ){
-    GstCaps *caps = GST_CAPS_NEW("src","video/x-raw-yuv",
-		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
-
-    caps = gst_caps_intersect(caps, gst_videofilter_get_capslist ());
-
-    templ = GST_PAD_TEMPLATE_NEW("src", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
-  }
-  return templ;
-}
-#endif
 
 static GstCaps *gst_videofilter_format_get_caps(GstVideofilterFormat *format)
 {
@@ -347,33 +302,48 @@ gst_videofilter_sink_link (GstPad *pad, GstCaps *caps)
 }
 
 static void
-gst_videofilter_init (GstVideofilter *videofilter)
+gst_videofilter_init (GTypeInstance *instance, gpointer g_class)
 {
+  GstVideofilter *videofilter = GST_VIDEOFILTER (instance);
+  GstPadTemplate *pad_template;
+
   GST_DEBUG("gst_videofilter_init");
 
-}
+  {
+    GList *list;
 
-void
-gst_videofilter_postinit (GstVideofilter *videofilter)
-{
-  /* sinkpad and srcpad should be inited by subclass */
+    list = gst_element_class_get_pad_template_list (GST_ELEMENT_CLASS(g_class));
+g_print("getting pad templates from %s\n",
+      g_type_name(G_TYPE_FROM_CLASS(g_class)));
+    g_print("pad template list:");
+    while(list){
+      GstPadTemplate *padtempl = (GstPadTemplate*) list->data;
+      g_print(" %p \"%s\",", padtempl, padtempl->name_template);
+      list = g_list_next(list);
+    }
+    g_print("\n");
+  }
 
-  /* FIXME */
-  //videofilter->sinkpad = NULL;
+
+  pad_template = gst_element_class_get_pad_template(GST_ELEMENT_CLASS(g_class),
+      "sink");
+  g_return_if_fail(pad_template != NULL);
+  videofilter->sinkpad = gst_pad_new_from_template(pad_template, "sink");
   gst_element_add_pad(GST_ELEMENT(videofilter),videofilter->sinkpad);
   gst_pad_set_chain_function(videofilter->sinkpad,gst_videofilter_chain);
   gst_pad_set_link_function(videofilter->sinkpad,gst_videofilter_sink_link);
   gst_pad_set_getcaps_function(videofilter->sinkpad,gst_videofilter_sink_getcaps);
 
-  /* FIXME */
-  //videofilter->srcpad = NULL;
+  pad_template = gst_element_class_get_pad_template(GST_ELEMENT_CLASS(g_class),
+      "src");
+  g_return_if_fail(pad_template != NULL);
+  videofilter->srcpad = gst_pad_new_from_template(pad_template, "src");
   gst_element_add_pad(GST_ELEMENT(videofilter),videofilter->srcpad);
   gst_pad_set_link_function(videofilter->srcpad,gst_videofilter_src_link);
-  //gst_pad_set_getcaps_function(videofilter->srcpad,gst_videofilter_getcaps);
+  //gst_pad_set_getcaps_function(videofilter->srcpad,gst_videofilter_src_getcaps);
 
   videofilter->inited = FALSE;
 }
-
 
 static void
 gst_videofilter_chain (GstPad *pad, GstData *_data)
@@ -574,14 +544,32 @@ void gst_videofilter_class_add_format(GstVideofilterClass *videofilterclass,
   g_ptr_array_add(videofilterclass->formats, format);
 }
 
+void gst_videofilter_class_add_pad_templates (GstVideofilterClass *videofilter_class)
+{
+  GstCaps *caps;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (videofilter_class);
+
+g_print("adding pad templates to %s\n",g_type_name(G_TYPE_FROM_CLASS(videofilter_class)));
+
+  caps = GST_CAPS_NEW("src","video/x-raw-yuv",
+		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
+
+  gst_element_class_add_pad_template (element_class,
+      GST_PAD_TEMPLATE_NEW("src", GST_PAD_SRC, GST_PAD_ALWAYS, 
+        gst_caps_intersect(caps,
+          gst_videofilter_class_get_capslist (videofilter_class))));
+
+  gst_element_class_add_pad_template (element_class,
+      GST_PAD_TEMPLATE_NEW("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+        gst_caps_intersect(caps,
+          gst_videofilter_class_get_capslist (videofilter_class))));
+}
+
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
-#if 0
-  return gst_element_register(plugin, "videofilter",
-			      GST_RANK_NONE, GST_TYPE_VIDEOFILTER);
-#endif
-
   return TRUE;
 }
 
