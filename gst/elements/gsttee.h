@@ -53,6 +53,7 @@ struct _GstTee {
   GstPad *sinkpad;
 
   gboolean silent;
+  gchar    *last_message;
 };
 
 struct _GstTeeClass {

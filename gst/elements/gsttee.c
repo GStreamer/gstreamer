@@ -43,6 +43,7 @@ enum {
   ARG_0,
   ARG_SILENT,
   ARG_NUM_PADS,
+  ARG_LAST_MESSAGE,
   /* FILL ME */
 };
 
@@ -107,7 +108,10 @@ gst_tee_class_init (GstTeeClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
     g_param_spec_boolean ("silent", "silent", "silent",
                       FALSE, G_PARAM_READWRITE));
-
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
+    g_param_spec_string ("last_message", "last_message", "last_message",
+			 NULL, G_PARAM_READABLE));
+  
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR(gst_tee_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR(gst_tee_get_property);
@@ -153,6 +157,7 @@ gst_tee_init (GstTee *tee)
   gst_pad_set_connect_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_sinkconnect));
 
   tee->silent = FALSE;
+  tee->last_message = NULL;
 }
 
 /* helper compare function */
@@ -199,9 +204,16 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
       name = NULL;
     }
   }
-  gst_element_info (GST_ELEMENT (tee), "new pad %s", name);
+  /* FIXME: thomas: does tee also have to notify a new pad ? */
+    if (!tee->silent) {
+      if (tee->last_message) g_free (tee->last_message);
+      tee->last_message = g_strdup_printf ("new pad %s", name);
+      g_object_notify (G_OBJECT (tee), "last_message");
+    }
+  /* g_object_notify (G_OBJECT (element), "new pad"); */
   
   srcpad = gst_pad_new_from_template (templ, name);
+  g_free (name);
   gst_element_add_pad (GST_ELEMENT (tee), srcpad);
   gst_pad_set_event_function (srcpad, gst_tee_event_handler);
   GST_PAD_ELEMENT_PRIVATE (srcpad) = NULL;
@@ -244,6 +256,9 @@ gst_tee_set_property (GObject *object, guint prop_id, const GValue *value, GPara
   switch (prop_id) {
     case ARG_SILENT:
       tee->silent = g_value_get_boolean (value);
+      break;
+    case ARG_LAST_MESSAGE:
+      g_value_set_string ((GValue *) value, tee->last_message);
       break;
     default:
       break;
@@ -314,8 +329,10 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
     }
 
     if (!tee->silent) {
-      gst_element_info (GST_ELEMENT (tee), "chain        ******* (%s:%s)t (%d bytes, %llu)",
-              GST_DEBUG_PAD_NAME (outpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+      if (tee->last_message) g_free (tee->last_message);
+      tee->last_message = g_strdup_printf ("chain        ******* (%s:%s)t (%d bytes, %llu) %p",
+              GST_DEBUG_PAD_NAME (outpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
+      g_object_notify (G_OBJECT (tee), "last_message");
     }
 
     if (GST_PAD_IS_CONNECTED (outpad))
