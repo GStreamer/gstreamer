@@ -77,11 +77,6 @@ struct _GstBin {
 
   GstElementState child_states[GST_NUM_STATES];
 
-  GstBinPrePostIterateFunction  pre_iterate_func;
-  GstBinPrePostIterateFunction post_iterate_func;
-  gpointer	            pre_iterate_data;
-  gpointer	            post_iterate_data;
-
   GST_OBJECT_PADDING
 };
 

@@ -43,6 +43,9 @@ GstElementDetails gst_bin_details = {
 
 GType _gst_bin_type = 0;
 
+static gboolean _gst_boolean_did_something_accumulator (GSignalInvocationHint *ihint,
+    GValue *return_accu, const GValue *handler_return, gpointer dummy);
+
 static void 			gst_bin_dispose 		(GObject * object);
 
 static GstElementStateReturn	gst_bin_change_state		(GstElement *element);
@@ -72,6 +75,7 @@ enum
 {
   ELEMENT_ADDED,
   ELEMENT_REMOVED,
+  ITERATE,
   LAST_SIGNAL
 };
 
@@ -130,6 +134,11 @@ gst_bin_class_init (GstBinClass * klass)
     g_signal_new ("element_removed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
 		  G_STRUCT_OFFSET (GstBinClass, element_removed), NULL, NULL,
 		  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
+  gst_bin_signals[ITERATE] =
+    g_signal_new ("iterate", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+		  G_STRUCT_OFFSET (GstBinClass, iterate),
+                  _gst_boolean_did_something_accumulator, NULL,
+		  gst_marshal_BOOLEAN__VOID, G_TYPE_BOOLEAN, 0);
 
   gobject_class->dispose 		= GST_DEBUG_FUNCPTR (gst_bin_dispose);
 
@@ -149,6 +158,21 @@ gst_bin_class_init (GstBinClass * klass)
   klass->iterate 			= GST_DEBUG_FUNCPTR (gst_bin_iterate_func);
 }
 
+static gboolean
+_gst_boolean_did_something_accumulator (GSignalInvocationHint *ihint,
+    GValue *return_accu, const GValue *handler_return, gpointer dummy)
+{
+  gboolean did_something;
+
+  did_something = g_value_get_boolean (handler_return);
+  if (did_something) {
+    g_value_set_boolean (return_accu, TRUE);
+  }
+
+  /* always continue emission */
+  return TRUE;
+}
+
 static void
 gst_bin_init (GstBin * bin)
 {
@@ -157,11 +181,6 @@ gst_bin_init (GstBin * bin)
 
   bin->numchildren = 0;
   bin->children = NULL;
-  
-  bin->pre_iterate_func = NULL;
-  bin->post_iterate_func = NULL;
-  bin->pre_iterate_data = NULL;
-  bin->post_iterate_data = NULL;
 }
 
 /**
@@ -1010,26 +1029,17 @@ gst_bin_iterate_func (GstBin * bin)
 gboolean
 gst_bin_iterate (GstBin *bin)
 {
-  GstBinClass *oclass;
-  gboolean running = TRUE;
-
-  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, bin, "starting iteration");
+  gboolean running;
 
   g_return_val_if_fail (bin != NULL, FALSE);
   g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
 
-  oclass = GST_BIN_GET_CLASS (bin);
+  GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, bin, "starting iteration");
 
   gst_object_ref (GST_OBJECT (bin));
 
-  if (bin->pre_iterate_func)
-    (bin->pre_iterate_func) (bin, bin->pre_iterate_data);
-
-  if (oclass->iterate)
-    running = (oclass->iterate) (bin);
-
-  if (bin->post_iterate_func)
-    (bin->post_iterate_func) (bin, bin->post_iterate_data);
+  running = FALSE;
+  g_signal_emit (G_OBJECT (bin), gst_bin_signals[ITERATE], 0, &running);
 
   GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, bin, "finished iteration");
 
@@ -1047,44 +1057,3 @@ gst_bin_iterate (GstBin *bin)
   return running;
 }
 
-/**
- * gst_bin_set_pre_iterate_function:
- * @bin: #Gstbin to attach to
- * @func: callback function to call
- * @user_data: user data to put in the function call
- *
- * Attaches a callback which will be run before every iteration of the bin
- *
- */
-void
-gst_bin_set_pre_iterate_function (GstBin *bin, GstBinPrePostIterateFunction func, gpointer user_data)
-{
-  g_return_if_fail (GST_IS_BIN (bin));
-
-  if (!GST_FLAG_IS_SET (bin, GST_BIN_FLAG_MANAGER))
-    g_warning ("setting pre_iterate on a non MANAGER bin has no effect");
-  
-  bin->pre_iterate_func = func;
-  bin->pre_iterate_data = user_data;
-}
-
-/**
- * gst_bin_set_post_iterate_function:
- * @bin: #Gstbin to attach to
- * @func: callback function to call
- * @user_data: user data to put in the function call
- *
- * Attaches a callback which will be run after every iteration of the bin
- *
- */
-void
-gst_bin_set_post_iterate_function (GstBin *bin, GstBinPrePostIterateFunction func, gpointer user_data)
-{
-  g_return_if_fail (GST_IS_BIN (bin));
-
-  if (!GST_FLAG_IS_SET (bin, GST_BIN_FLAG_MANAGER))
-    g_warning ("setting post_iterate on a non MANAGER bin has no effect");
-
-  bin->post_iterate_func = func;
-  bin->post_iterate_data = user_data;
-}
