@@ -42,13 +42,54 @@ idle_func (gpointer data)
   return busy;
 }
 
+/* TODO: write more outputs for ParamSpecs*/
+static void
+property_change_callback (GObject *object, GstObject *orig, GParamSpec *pspec)
+{
+#ifdef USE_GLIB2
+  if (G_IS_PARAM_SPEC_STRING (pspec))
+  {
+    gchar *str = NULL;
+    g_object_get (orig, pspec->name, &str, NULL);
+    g_print ("%s: %s = \"%s\"\n", GST_OBJECT_NAME (orig), pspec->name, str);
+    g_free (str);
+  } else if (G_IS_PARAM_SPEC_CHAR (pspec)) {
+    gchar str;
+    g_object_get (orig, pspec->name, &str, NULL);
+    g_print ("%s: %s = \"%c\"\n", GST_OBJECT_NAME (orig), pspec->name, str);
+  } else if (G_IS_PARAM_SPEC_INT (pspec) || G_IS_PARAM_SPEC_INT64 (pspec)) {
+    gint64 i;
+    g_object_get (orig, pspec->name, &i, NULL);
+    g_print ("%s: %s = %lld\n", GST_OBJECT_NAME (orig), pspec->name, i);
+  } else if (G_IS_PARAM_SPEC_UINT (pspec) || G_IS_PARAM_SPEC_UINT64 (pspec)) {
+    guint64 i;
+    g_object_get (orig, pspec->name, &i, NULL);
+    g_print ("%s: %s = %llu\n", GST_OBJECT_NAME (orig), pspec->name, i);
+  } else if (G_IS_PARAM_SPEC_ENUM (pspec)) {
+    guint64 i;
+    g_object_get (orig, pspec->name, &i, NULL);
+    g_print ("%s: %s = \"%llu\"\n", GST_OBJECT_NAME (orig), pspec->name, i);
+  } else if (G_IS_PARAM_SPEC_FLOAT (pspec)) {
+    gfloat i;
+    g_object_get (orig, pspec->name, &i, NULL);
+    g_print ("%s: %s = %f\n", GST_OBJECT_NAME (orig), pspec->name, i);
+  } else if (G_IS_PARAM_SPEC_DOUBLE (pspec)) {
+    gdouble i;
+    g_object_get (orig, pspec->name, &i, NULL);
+    g_print ("%s: %s = %f\n", GST_OBJECT_NAME (orig), pspec->name, i);
+  } else {
+    g_print ("%s: changed \"%s\"\n", GST_OBJECT_NAME (orig), pspec->name);
+  }
+#endif /* USE_GLIB2 */
+}
+
 static void 
 print_props (gpointer data, gpointer user_data)
 {
   GstPropsEntry *entry = (GstPropsEntry *)data;
   GstElement *element = GST_ELEMENT (user_data);
 
-  g_print ("%s: %s: ", gst_element_get_name (element), 
+  g_print ("deprecated: %s: %s: ", gst_element_get_name (element), 
 		  g_quark_to_string (entry->propid));
   switch (entry->propstype) {
     case GST_PROPS_INT_ID:
@@ -186,6 +227,8 @@ main(int argc, char *argv[])
   }
   
   g_signal_connect (G_OBJECT (pipeline), "event", G_CALLBACK (event_func), NULL);
+  
+  g_signal_connect (pipeline, "deep_notify", G_CALLBACK (property_change_callback), NULL);
   
 #ifndef GST_DISABLE_LOADSAVE
   if (save_pipeline) {
