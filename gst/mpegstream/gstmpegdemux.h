@@ -53,7 +53,7 @@ struct _GstMPEGStream {
   gint16 	 STD_buffer_size_bound;
   GstPad 	*pad;
   guint64	 pts;
-  gint	 	 cache_id;
+  gint	 	 index_id;
 };
 
 struct _GstMPEGDemux {
@@ -85,7 +85,7 @@ struct _GstMPEGDemux {
   GstMPEGStream *video_stream[NUM_VIDEO_STREAMS];
   GstMPEGStream *audio_stream[NUM_AUDIO_STREAMS];
 
-  GstCache	*cache;
+  GstIndex	*index;
 };
 
 struct _GstMPEGDemuxClass {

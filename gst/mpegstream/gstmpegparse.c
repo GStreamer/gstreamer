@@ -99,8 +99,8 @@ static void 		gst_mpeg_parse_get_property	(GObject *object, guint prop_id,
 							 GValue *value, GParamSpec *pspec);
 static void 		gst_mpeg_parse_set_property	(GObject *object, guint prop_id, 
 							 const GValue *value, GParamSpec *pspec);
-static void 		gst_mpeg_parse_set_cache 	(GstElement *element, GstCache *tc);
-static GstCache*	gst_mpeg_parse_get_cache 	(GstElement *element);
+static void 		gst_mpeg_parse_set_index 	(GstElement *element, GstIndex *index);
+static GstIndex*	gst_mpeg_parse_get_index 	(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_mpeg_parse_signals[LAST_SIGNAL] = { 0 };*/
@@ -156,8 +156,8 @@ gst_mpeg_parse_class_init (GstMPEGParseClass *klass)
   gstelement_class->change_state = gst_mpeg_parse_change_state;
   gstelement_class->get_clock    = gst_mpeg_parse_get_clock;
   gstelement_class->set_clock    = gst_mpeg_parse_set_clock;
-  gstelement_class->get_cache    = gst_mpeg_parse_get_cache;
-  gstelement_class->set_cache    = gst_mpeg_parse_set_cache;
+  gstelement_class->get_index    = gst_mpeg_parse_get_index;
+  gstelement_class->set_index    = gst_mpeg_parse_set_index;
 
 
   klass->parse_packhead = gst_mpeg_parse_parse_packhead;
@@ -351,9 +351,9 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     scr = scr_adj;
   }
 
-  if (mpeg_parse->cache) {
-    /* update cache if any */
-    gst_cache_add_association (mpeg_parse->cache, mpeg_parse->cache_id, 
+  if (mpeg_parse->index) {
+    /* update index if any */
+    gst_index_add_association (mpeg_parse->index, mpeg_parse->index_id, 
 		    	       GST_ACCOCIATION_FLAG_KEY_UNIT,
 		               GST_FORMAT_BYTES, GST_BUFFER_OFFSET (buffer), 
 			       GST_FORMAT_TIME, MPEGTIME_TO_GSTTIME (scr), 
@@ -716,27 +716,27 @@ gst_mpeg_parse_set_property (GObject *object, guint prop_id,
 }
 
 static void
-gst_mpeg_parse_set_cache (GstElement *element, GstCache *cache)
+gst_mpeg_parse_set_index (GstElement *element, GstIndex *index)
 {
   GstMPEGParse *mpeg_parse;
 
   mpeg_parse = GST_MPEG_PARSE (element);
   
-  mpeg_parse->cache = cache;
+  mpeg_parse->index = index;
 
-  gst_cache_get_writer_id (cache, GST_OBJECT (mpeg_parse->sinkpad),
-		           &mpeg_parse->cache_id);
-  gst_cache_add_format (cache, mpeg_parse->cache_id, scr_format);
+  gst_index_get_writer_id (index, GST_OBJECT (mpeg_parse->sinkpad),
+		           &mpeg_parse->index_id);
+  gst_index_add_format (index, mpeg_parse->index_id, scr_format);
 }
 
-static GstCache*
-gst_mpeg_parse_get_cache (GstElement *element)
+static GstIndex*
+gst_mpeg_parse_get_index (GstElement *element)
 {
   GstMPEGParse *mpeg_parse;
 
   mpeg_parse = GST_MPEG_PARSE (element);
   
-  return mpeg_parse->cache;
+  return mpeg_parse->index;
 }
 
 gboolean

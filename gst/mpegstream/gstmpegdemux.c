@@ -139,8 +139,8 @@ static void		gst_mpeg_demux_send_data 	(GstMPEGParse *mpeg_parse,
 
 static void		gst_mpeg_demux_handle_discont 	(GstMPEGParse *mpeg_parse);
 
-static void 		gst_mpeg_demux_set_cache 	(GstElement *element, GstCache *cache);
-static GstCache* 	gst_mpeg_demux_get_cache 	(GstElement *element);
+static void 		gst_mpeg_demux_set_index 	(GstElement *element, GstIndex *index);
+static GstIndex* 	gst_mpeg_demux_get_index 	(GstElement *element);
 
 static GstElementStateReturn
 		gst_mpeg_demux_change_state 	(GstElement *element);
@@ -182,8 +182,8 @@ gst_mpeg_demux_class_init (GstMPEGDemuxClass *klass)
   gstelement_class = (GstElementClass *) klass;
 
   gstelement_class->change_state = gst_mpeg_demux_change_state;
-  gstelement_class->set_cache 	 = gst_mpeg_demux_set_cache;
-  gstelement_class->get_cache 	 = gst_mpeg_demux_get_cache;
+  gstelement_class->set_index 	 = gst_mpeg_demux_set_index;
+  gstelement_class->get_index 	 = gst_mpeg_demux_get_index;
 
   mpeg_parse_class->parse_packhead	= gst_mpeg_demux_parse_packhead;
   mpeg_parse_class->parse_syshead	= gst_mpeg_demux_parse_syshead;
@@ -428,9 +428,9 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 
 	gst_element_add_pad (GST_ELEMENT (mpeg_demux), (*outpad));
 
-	if (mpeg_demux->cache) {
-          gst_cache_get_writer_id (mpeg_demux->cache, GST_OBJECT (*outpad),
-                           &(*outstream)->cache_id);
+	if (mpeg_demux->index) {
+          gst_index_get_writer_id (mpeg_demux->index, GST_OBJECT (*outpad),
+                           &(*outstream)->index_id);
 	}
 
 	if (GST_PAD_IS_USABLE (*outpad)) {
@@ -629,9 +629,9 @@ done:
     pts += mpeg_parse->adjust;
     timestamp = MPEGTIME_TO_GSTTIME (pts);
 
-    if (mpeg_demux->cache) {
-      gst_cache_add_association (mpeg_demux->cache, 
-                                 (*outstream)->cache_id, 0,
+    if (mpeg_demux->index) {
+      gst_index_add_association (mpeg_demux->index, 
+                                 (*outstream)->index_id, 0,
 				 GST_FORMAT_BYTES, GST_BUFFER_OFFSET (buffer),
 				 GST_FORMAT_TIME,  timestamp,
 				 0);
@@ -861,9 +861,9 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 
       gst_element_add_pad(GST_ELEMENT(mpeg_demux), *outpad);
 
-      if (mpeg_demux->cache) {
-        gst_cache_get_writer_id (mpeg_demux->cache, GST_OBJECT (*outpad),
-                                 &(*outstream)->cache_id);
+      if (mpeg_demux->index) {
+        gst_index_get_writer_id (mpeg_demux->index, GST_OBJECT (*outpad),
+                                 &(*outstream)->index_id);
       }
     }
     else {
@@ -883,9 +883,9 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       pts += mpeg_parse->adjust;
       timestamp = MPEGTIME_TO_GSTTIME (pts);
 
-      if (mpeg_demux->cache) {
-        gst_cache_add_association (mpeg_demux->cache, 
-                                   (*outstream)->cache_id, 0,
+      if (mpeg_demux->index) {
+        gst_index_add_association (mpeg_demux->index, 
+                                   (*outstream)->index_id, 0,
 				   GST_FORMAT_BYTES, GST_BUFFER_OFFSET (buffer),
 				   GST_FORMAT_TIME,  timestamp,
 				   0);
@@ -931,25 +931,25 @@ gst_mpeg_demux_change_state (GstElement *element)
 }
 
 static void
-gst_mpeg_demux_set_cache (GstElement *element, GstCache *cache)
+gst_mpeg_demux_set_index (GstElement *element, GstIndex *index)
 {
   GstMPEGDemux *mpeg_demux;
 
-  GST_ELEMENT_CLASS (parent_class)->set_cache (element, cache);
+  GST_ELEMENT_CLASS (parent_class)->set_index (element, index);
 
   mpeg_demux = GST_MPEG_DEMUX (element);
 
-  mpeg_demux->cache = cache;
+  mpeg_demux->index = index;
 }
 
-static GstCache*
-gst_mpeg_demux_get_cache (GstElement *element)
+static GstIndex*
+gst_mpeg_demux_get_index (GstElement *element)
 {
   GstMPEGDemux *mpeg_demux;
 
   mpeg_demux = GST_MPEG_DEMUX (element);
 
-  return mpeg_demux->cache;
+  return mpeg_demux->index;
 }
 
 
