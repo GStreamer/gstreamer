@@ -180,7 +180,7 @@ gst_ffmpegdec_chain_audio (GstPad *pad, GstBuffer *inbuf)
   data = GST_BUFFER_DATA (inbuf);
   size = GST_BUFFER_SIZE (inbuf);
 
-  GST_DEBUG (0, "got buffer %p %d\n", data, size);
+  GST_DEBUG (0, "got buffer %p %d", data, size);
 
   gst_buffer_unref (inbuf);
 }
