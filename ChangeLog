@@ -1,5 +1,16 @@
 2005-01-06  Benjamin Otte  <otte@gnome.org>
 
+	* gst/games/gstpuzzle.c: (gst_puzzle_get_type),
+	(gst_puzzle_class_init), (gst_puzzle_finalize):
+	  no memleaks, please
+	(gst_puzzle_create), (gst_puzzle_init),
+	(gst_puzzle_set_property), (gst_puzzle_setup):
+	  change initialization code around so we don't reshuffle on resize
+	(draw_puzzle):
+	  fix another stupid typo
+
+2005-01-06  Benjamin Otte  <otte@gnome.org>
+
 	* gst/games/gstvideoimage.c: (copy_hline_YUY2):
 	  fix stupid typo that borked copying on YUY2
 
