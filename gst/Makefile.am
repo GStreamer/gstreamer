@@ -32,7 +32,7 @@ gst.c: $(srcdir)/gst.defs $(srcdir)/arg-types.py $(GST_OVERRIDES)
 	        --register $(srcdir)/gst-types.defs \
 		--override $(srcdir)/gst.override \
 		--prefix pygst $(srcdir)/gst.defs > gen-gst.c \
-        && rm -fr gtreamer.c \
+        && rm -fr gst.c \
         && echo '/* GENERATED FILE - DO NOT EDIT */' >> gst.c \
 	&& cat gen-gst.c >> gst.c \
 	&& rm -f gen-gst.c
