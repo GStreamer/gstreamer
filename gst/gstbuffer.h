@@ -58,11 +58,12 @@ extern "C" {
 #define GST_BUFFER_OFFSET(buf)		(GST_BUFFER(buf)->offset)
 #define GST_BUFFER_MAXSIZE(buf)		(GST_BUFFER(buf)->maxsize)
 #define GST_BUFFER_TIMESTAMP(buf)	(GST_BUFFER(buf)->timestamp)
-#define GST_BUFFER_FREE_FUNC(buf)	(GST_BUFFER(buf)->free)
 #define GST_BUFFER_MAXAGE(buf)		(GST_BUFFER(buf)->maxage)
 #define GST_BUFFER_BUFFERPOOL(buf)	(GST_BUFFER(buf)->pool)
 #define GST_BUFFER_PARENT(buf)		(GST_BUFFER(buf)->parent)
 #define GST_BUFFER_POOL_PRIVATE(buf)	(GST_BUFFER(buf)->pool_private)
+#define GST_BUFFER_COPY_FUNC(buf)	(GST_BUFFER(buf)->copy)
+#define GST_BUFFER_FREE_FUNC(buf)	(GST_BUFFER(buf)->free)
 
 
 #define GST_BUFFER_LOCK(buf)	(g_mutex_lock(GST_BUFFER(buf)->lock))
@@ -74,6 +75,7 @@ typedef enum {
   GST_BUFFER_READONLY,
   GST_BUFFER_ORIGINAL,
   GST_BUFFER_DONTFREE,
+
   GST_BUFFER_FLUSH,
   GST_BUFFER_EOS,
   GST_BUFFER_DISCONTINUOUS,
@@ -138,9 +140,6 @@ GstBuffer*	gst_buffer_new_from_pool	(GstBufferPool *pool);
 /* creating a subbuffer */
 GstBuffer*	gst_buffer_create_sub		(GstBuffer *parent, guint32 offset, guint32 size);
 
-/* adding data to a buffer */
-GstBuffer*	gst_buffer_append		(GstBuffer *buffer, GstBuffer *append);
-
 /* refcounting */
 void 		gst_buffer_ref			(GstBuffer *buffer);
 void 		gst_buffer_ref_by_count		(GstBuffer *buffer, int count);
@@ -152,9 +151,10 @@ void 		gst_buffer_destroy		(GstBuffer *buffer);
 /* copy buffer */
 GstBuffer*	gst_buffer_copy			(GstBuffer *buffer);
 
-/* merge or span two buffers, intelligently */
+/* merge, span, or append two buffers, intelligently */
 GstBuffer*	gst_buffer_merge		(GstBuffer *buf1, GstBuffer *buf2);
 GstBuffer*	gst_buffer_span			(GstBuffer *buf1,guint32 offset,GstBuffer *buf2,guint32 len);
+GstBuffer*	gst_buffer_append		(GstBuffer *buf, GstBuffer *buf2);
 
 #ifdef __cplusplus
 }
