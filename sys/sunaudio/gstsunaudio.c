@@ -60,7 +60,7 @@ GType gst_gst_sunaudiosink_get_type (void);
 
 static GstElementDetails plugin_details = {
   "SunAudioSink",
-  "Audio/Sink",
+  "Sink/Audio",
   "This element acts like identity, except that one can control how "
       "sunaudiosink works",
   "David A. Schleef <ds@schleef.org>",
