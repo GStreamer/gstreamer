@@ -74,9 +74,9 @@ applications based on GStreamer.
 %defattr(-, root, root)
 %doc AUTHORS COPYING
 %{_bindir}/gsteditor
-%{_bindir}/gstmediaplay
+# %{_bindir}/gstmediaplay
 %{_bindir}/gstreamer-guilaunch
-%{_libdir}/libgstmediaplay.so.*
+# %{_libdir}/libgstmediaplay.so.*
 %{_libdir}/libgsteditor.so.*
 %{_datadir}/gsteditor
 %{_datadir}/gstmediaplay
