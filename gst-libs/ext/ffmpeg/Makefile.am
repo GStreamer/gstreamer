@@ -1,4 +1,4 @@
-REVISION = 
+EXTRA_DIST = Tag
 
 # this doesn't trigger the distdir target in the ffmpeg checkout
 DIST_SUBDIRS =
