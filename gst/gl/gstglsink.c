@@ -43,12 +43,25 @@
 static GstElementDetails gst_glsink_details = {
   "OpenGL Sink/GLX",
   "Sink/GLVideo",
-  "LGPL",
   "An OpenGL based video sink - uses OpenGL and GLX to draw video, utilizing different acceleration options",
-  VERSION,
-  "Gernot Ziegler <gz@lysator.liu.se>",
-  "(C) 2002",
+  "Gernot Ziegler <gz@lysator.liu.se>"
 };
+
+/* default template - initiated with class struct to allow gst-register to work
+   with X running */
+GST_PAD_TEMPLATE_FACTORY (gst_glsink_sink_template_factory,
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW ( "glsink_rgbsink", "video/x-raw-rgb",
+    "framerate", GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT),
+    "width", GST_PROPS_INT_RANGE(0, G_MAXINT),
+    "height", GST_PROPS_INT_RANGE(0, G_MAXINT)),
+  GST_CAPS_NEW ( "glsink_yuvsink", "video/x-raw-yuv",
+    "framerate", GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT),
+    "width", GST_PROPS_INT_RANGE(0, G_MAXINT),
+    "height", GST_PROPS_INT_RANGE(0, G_MAXINT))
+)
 
 /* glsink signals and args */
 enum {
@@ -116,6 +129,7 @@ struct _GstGLSinkClass {
 
 
 static GType 			gst_glsink_get_type		(void);
+static void		gst_glsink_base_init	(gpointer g_class);
 static void			gst_glsink_class_init	(GstGLSinkClass *klass);
 static void			gst_glsink_init		(GstGLSink *sink);
 /* static void 			gst_glsink_dispose 		(GObject *object); */
@@ -165,7 +179,7 @@ gst_glsink_get_type (void)
   if (!videosink_type) {
     static const GTypeInfo videosink_info = {
       sizeof(GstGLSinkClass),
-      NULL,
+      gst_glsink_base_init,
       NULL,
       (GClassInitFunc) gst_glsink_class_init,
       NULL,
@@ -180,13 +194,25 @@ gst_glsink_get_type (void)
 }
 
 static void
+gst_glsink_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (element_class, &gst_glsink_details);
+
+  gst_element_class_add_pad_template (
+    element_class, 
+    GST_PAD_TEMPLATE_GET (gst_glsink_sink_template_factory));
+}
+
+static void
 gst_glsink_class_init (GstGLSinkClass *klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  gstelement_class = (GstElementClass*) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -728,39 +754,12 @@ gst_glsink_change_state (GstElement *element)
   return GST_STATE_SUCCESS;
 }
 
-#if 1
-/* default template - initiated with class struct to allow gst-register to work
-   with X running */
-GST_PAD_TEMPLATE_FACTORY (gst_glsink_sink_template_factory,
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_CAPS_NEW ( "glsink_rgbsink", "video/x-raw-rgb",
-    "framerate", GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT),
-    "width", GST_PROPS_INT_RANGE(0, G_MAXINT),
-    "height", GST_PROPS_INT_RANGE(0, G_MAXINT)),
-  GST_CAPS_NEW ( "glsink_yuvsink", "video/x-raw-yuv",
-    "framerate", GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT),
-    "width", GST_PROPS_INT_RANGE(0, G_MAXINT),
-    "height", GST_PROPS_INT_RANGE(0, G_MAXINT))
-)
-#endif
-
-
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   /* Loading the library containing GstVideoSink, our parent object */
   if (!gst_library_load ("gstvideo"))
     return FALSE;
-
-  /* create an elementfactory for the xvideosink element */
-  factory = gst_element_factory_new("glsink",GST_TYPE_GLSINK,
-                                   &gst_glsink_details);
-
-  g_return_val_if_fail(factory != NULL, FALSE);
 
   /* this is needed later on in the _real_ init (during a gst-launch) */
   sink_template = gst_pad_template_new (
@@ -769,22 +768,21 @@ plugin_init (GModule *module, GstPlugin *plugin)
   		  GST_PAD_ALWAYS,
 		  NULL);
 
-#if 0
-  gst_element_factory_add_pad_template (factory, sink_template);
-#else
-  gst_element_factory_add_pad_template (
-    factory, 
-    GST_PAD_TEMPLATE_GET (gst_glsink_sink_template_factory));
-#endif
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "glsink", GST_RANK_NONE, GST_TYPE_GLSINK))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "glsink",
-  plugin_init
-};
+  "An OpenGL based video sink - uses OpenGL and GLX to draw video, utilizing different acceleration options",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+);
