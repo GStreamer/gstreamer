@@ -543,7 +543,6 @@ theora_dec_chain (GstPad * pad, GstData * data)
 
     /* granulepos to time */
     outtime = GST_SECOND * theora_granule_time (&dec->state, dec->granulepos);
-    dec->granulepos++;
   } else {
     /* we don't know yet */
     outtime = -1;
@@ -564,15 +563,13 @@ theora_dec_chain (GstPad * pad, GstData * data)
   if (packet.packet[0] & 0x80) {
     if (packet.packetno > 3) {
       GST_WARNING_OBJECT (GST_OBJECT (dec), "Ignoring header");
-      gst_data_unref (data);
-      return;
+      goto done;
     }
     /* header packet */
     if (theora_decode_header (&dec->info, &dec->comment, &packet)) {
       GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
           (NULL), ("couldn't read header packet"));
-      gst_data_unref (data);
-      return;
+      goto done;
     }
 
     if (packet.packetno == 0) {
@@ -678,32 +675,48 @@ theora_dec_chain (GstPad * pad, GstData * data)
     dec->packetno++;
 
     if (!dec->initialized) {
-      gst_data_unref (data);
-      return;
+      goto done;
     }
 
     /* the second most significant bit of the first data byte is cleared 
      * for keyframes */
     keyframe = (packet.packet[0] & 0x40) == 0;
     if (keyframe) {
+      guint ilog;
+      guint64 framecount;
+      gboolean add_one = FALSE;
+
       dec->need_keyframe = FALSE;
+      ilog = _theora_ilog (dec->info.keyframe_frequency_force - 1);
+      if (dec->granulepos % (1 << ilog) == 0 &&
+          dec->granulepos > 0 && GST_BUFFER_OFFSET_END (buf) == -1) {
+        dec->granulepos--;
+        add_one = TRUE;
+      }
+      framecount = dec->granulepos >> ilog;
+      framecount += dec->granulepos - (framecount << ilog);
+      if (add_one) {
+        framecount++;
+      }
+      dec->granulepos = framecount << ilog;
+      if (add_one) {
+        outtime = GST_SECOND * theora_granule_time (&dec->state,
+            dec->granulepos);
+      }
     } else if (dec->need_keyframe) {
       GST_WARNING_OBJECT (dec, "dropping frame because we need a keyframe");
       /* drop frames if we're looking for a keyframe */
-      gst_data_unref (data);
-      return;
+      goto done;
     }
     if (theora_decode_packetin (&dec->state, &packet)) {
       GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
           (NULL), ("theora decoder did not read data packet"));
-      gst_data_unref (data);
-      return;
+      goto done;
     }
     if (theora_decode_YUVout (&dec->state, &yuv) < 0) {
       GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
           (NULL), ("couldn't read out YUV image"));
-      gst_data_unref (data);
-      return;
+      goto done;
     }
 
     g_return_if_fail (yuv.y_width == dec->info.width);
@@ -774,7 +787,9 @@ theora_dec_chain (GstPad * pad, GstData * data)
 
     gst_pad_push (dec->srcpad, GST_DATA (out));
   }
+done:
   gst_data_unref (data);
+  dec->granulepos++;
 }
 
 static GstElementStateReturn
