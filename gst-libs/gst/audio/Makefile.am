@@ -25,7 +25,9 @@ libgstaudioinclude_HEADERS = \
 	audio.h \
 	audioclock.h \
 	gstaudiofilter.h \
-	multichannel.h \
+	multichannel.h
+
+nodist_libgstaudioinclude_HEADERS = \
 	multichannel-enumtypes.h
 
 libgstaudio_la_LIBADD =
