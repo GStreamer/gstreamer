@@ -183,13 +183,14 @@ void gst_caps2_free (GstCaps2 *caps)
 const GstCaps2 *gst_static_caps2_get (GstStaticCaps2 *static_caps)
 {
   GstCaps2 *caps = (GstCaps2 *)static_caps;
+  gboolean ret;
 
   if (caps->type == 0) {
     caps->type = _gst_caps2_type;
     caps->structs = g_ptr_array_new();
-    _gst_caps2_from_string_inplace (caps, static_caps->string);
+    ret = _gst_caps2_from_string_inplace (caps, static_caps->string);
 
-    if (caps->type == 0) {
+    if (!ret) {
       g_critical ("Could not convert static caps \"%s\"", static_caps->string);
     }
   }
@@ -214,8 +215,6 @@ void gst_caps2_append (GstCaps2 *caps1, GstCaps2 *caps2)
 void gst_caps2_append_cap (GstCaps2 *caps, GstStructure *structure)
 {
   g_return_if_fail(caps != NULL);
-
-g_print("appending cap %p to caps %p\n", structure, caps);
 
   if (structure){
     g_ptr_array_add (caps->structs, structure);
@@ -271,7 +270,7 @@ void gst_caps2_set_simple (GstCaps2 *caps, char *field, ...)
   va_list var_args;
 
   g_return_if_fail (caps != NULL);
-  g_return_if_fail (caps->structs->len != 1);
+  g_return_if_fail (caps->structs->len == 1);
 
   structure = gst_caps2_get_nth_cap (caps, 0);
 
@@ -616,7 +615,6 @@ static gboolean _gst_caps2_from_string_inplace (GstCaps2 *caps,
 
   structure = gst_structure_from_string(string, &s);
   if (structure == NULL) {
-g_print("caps returning NULL\n");
     return FALSE;
   }
   gst_caps2_append_cap (caps, structure);
@@ -626,7 +624,6 @@ g_print("caps returning NULL\n");
     while (g_ascii_isspace(*s))s++;
     structure = gst_structure_from_string(s, &s);
     if (structure == NULL) {
-g_print("caps returning NULL (2)\n");
       return FALSE;
     }
     gst_caps2_append_cap (caps, structure);
