@@ -254,17 +254,27 @@ print_element_info (GstElementFactory *factory)
   } else
     printf("  none\n");
 
+#ifdef USE_GLIB2
   // FIXME accessing private data of GObjectClass !!!
   num_properties = G_OBJECT_GET_CLASS (element)->n_property_specs;
   property_specs = G_OBJECT_GET_CLASS (element)->property_specs;
-  if (num_properties)
-    printf("\nElement Arguments:\n");
-  else
-    printf("\nNo Element Arguments.\n");
+#else
+  property_specs = (GParamSpec **)gtk_object_query_args (GTK_OBJECT_TYPE (element), &flags, &num_properties);
+#endif
+  printf("\nElement Arguments:\n");
 
   for (i=0;i<num_properties;i++) {
-    GParamSpec *param = property_specs[i];
     GValue value = { 0, };
+#ifdef USE_GLIB2
+    GParamSpec *param = property_specs[i];
+#else
+    // gtk doesn't have a paramspec, so we create one here
+    GParamSpec rparm, *param = &rparm;
+    GtkArg *args = (GtkArg *)property_specs; // ugly typecast here 
+
+    param->value_type = args[i].type;
+    param->name = args[i].name;
+#endif
 
     g_value_init (&value, param->value_type);
     g_object_get_property (G_OBJECT (element), param->name, &value);
@@ -282,15 +292,17 @@ print_element_info (GstElementFactory *factory)
       default:
         if (param->value_type == GST_TYPE_FILENAME)
           printf("Filename");
-        else if (G_TYPE_IS_ENUM (param->value_type)) {
+        else if (G_IS_PARAM_SPEC_ENUM (param)) {
           GEnumValue *values;
-	  GEnumClass *ec = G_ENUM_CLASS (g_type_class_ref (param->value_type));
 	  guint j = 0;
 
           printf("Enum \"%s\" (default %d)", g_type_name (G_VALUE_TYPE (&value)),
 				  g_value_get_enum (&value));
-
-	  values = ec->values;
+#ifdef USE_GLIB2
+	  values = G_ENUM_CLASS (g_type_class_ref (param->value_type))->values;
+#else
+	  values = gtk_type_enum_get_values (param->value_type);
+#endif
 	  while (values[j].value_name) {
             printf("\n    (%d): \t%s", values[j].value, values[j].value_nick);
 	    j++; 
@@ -305,10 +317,9 @@ print_element_info (GstElementFactory *factory)
   }
     /*
   g_free (args);
-  if (num_args == 0) g_print ("  none");
-  printf("\n");
-
   */
+  if (num_properties == 0) g_print ("  none");
+  printf("\n");
 
 
   // for compound elements
