@@ -65,6 +65,9 @@ struct _GstMad {
   gint		 vbr_average; /* average bitrate */
   guint64	 vbr_rate; /* average * framecount */
 
+  gboolean	 half;
+  gboolean	 ignore_crc;
+
   GstCaps	*metadata;
 
   /* caps */
@@ -98,6 +101,8 @@ enum {
   ARG_LAYER,
   ARG_MODE,
   ARG_EMPHASIS,
+  ARG_HALF,
+  ARG_IGNORE_CRC,
   ARG_METADATA,
   /* FILL ME */
 };
@@ -267,6 +272,12 @@ gst_mad_class_init (GstMadClass *klass)
   g_object_class_install_property (gobject_class, ARG_EMPHASIS,
     g_param_spec_enum ("emphasis", "Emphasis", "Emphasis",
 		       GST_TYPE_MAD_EMPHASIS, -1, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_HALF,
+    g_param_spec_boolean ("half", "Half", "Generate PCM at 1/2 sample rate",
+		          FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_IGNORE_CRC,
+    g_param_spec_boolean ("ignore_crc", "Ignore CRC", "Ignore CRC errors",
+		          FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_METADATA,
     g_param_spec_boxed ("metadata", "Metadata", "Metadata",
                         GST_TYPE_CAPS, G_PARAM_READABLE));
@@ -306,6 +317,9 @@ gst_mad_init (GstMad *mad)
   mad->restart = FALSE;
   mad->header.mode = -1;
   mad->header.emphasis = -1;
+
+  mad->half = FALSE;
+  mad->ignore_crc = FALSE;
 
   GST_FLAG_SET (mad, GST_ELEMENT_EVENT_AWARE);
 }
@@ -669,6 +683,12 @@ gst_mad_set_property (GObject *object, guint prop_id, const GValue *value, GPara
   mad = GST_MAD (object);
 
   switch (prop_id) {
+    case ARG_HALF:
+      mad->half = g_value_get_boolean (value);
+      break;
+    case ARG_IGNORE_CRC:
+      mad->ignore_crc = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -693,6 +713,12 @@ gst_mad_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec 
       break;
     case ARG_EMPHASIS:
       g_value_set_enum (value, mad->header.emphasis);
+      break;
+    case ARG_HALF:
+      g_value_set_boolean (value, mad->half);
+      break;
+    case ARG_IGNORE_CRC:
+      g_value_set_boolean (value, mad->ignore_crc);
       break;
     case ARG_METADATA:
       g_value_set_boxed (value, mad->metadata);
@@ -978,10 +1004,8 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
     /* if we have data we can try to proceed */
     while (mad->tempsize >= 0) {
       gint consumed;
-      guint nchannels, nsamples;
-      mad_fixed_t const *left_ch, *right_ch;
-      GstBuffer *outbuffer;
-      gint16 *outdata;
+      guint nchannels;
+      guint nsamples;
 
       mad_stream_buffer (&mad->stream, mad_input_buffer, mad->tempsize);
 
@@ -1021,26 +1045,59 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	    }
 	  }
 	}
-	mad_frame_mute (&mad->frame);
-	mad_synth_mute (&mad->synth);
 	mad_stream_sync (&mad->stream);
 	/* recoverable errors pass */
 	goto next;
       }
 
-      mad_synth_frame (&mad->synth, &mad->frame);
-
       nchannels = MAD_NCHANNELS (&mad->frame.header);
-      nsamples  = mad->synth.pcm.length;
-      left_ch   = mad->synth.pcm.samples[0];
-      right_ch  = mad->synth.pcm.samples[1];
+      nsamples  = MAD_NSBSAMPLES (&mad->frame.header) * 
+         (mad->stream.options & MAD_OPTION_HALFSAMPLERATE ? 16 : 32);  
 
       /* at this point we can accept seek events */
       mad->can_seek = TRUE;
 
       gst_mad_update_info (mad);
 
+      if (mad->caps_set == FALSE) {
+#if MAD_VERSION_MINOR <= 12
+	gint rate = mad->header.sfreq;
+#else
+	gint rate = mad->frame.header.samplerate;
+#endif
+        if (mad->stream.options & MAD_OPTION_HALFSAMPLERATE) 
+	  rate >>=1;
+
+        if (gst_pad_try_set_caps (mad->srcpad,
+  	    gst_caps_new (
+  	      "mad_src",
+              "audio/raw",
+              gst_props_new (
+    	        "format",   GST_PROPS_STRING ("int"),
+                "law",         GST_PROPS_INT (0),
+                "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
+                "signed",      GST_PROPS_BOOLEAN (TRUE),
+                "width",       GST_PROPS_INT (16),
+                "depth",       GST_PROPS_INT (16),
+                "rate",        GST_PROPS_INT (rate),
+                "channels",    GST_PROPS_INT (nchannels),
+                NULL))) <= 0) 
+	{
+	  gst_buffer_unref (buffer);
+          gst_element_error (GST_ELEMENT (mad), "could not set caps on source pad, aborting...");
+	  return;
+        }
+        mad->caps_set = TRUE;
+      }
+
       if (GST_PAD_IS_CONNECTED (mad->srcpad)) {
+        GstBuffer *outbuffer;
+        gint16 *outdata;
+        mad_fixed_t const *left_ch, *right_ch;
+
+        mad_synth_frame (&mad->synth, &mad->frame);
+        left_ch   = mad->synth.pcm.samples[0];
+        right_ch  = mad->synth.pcm.samples[1];
 
         outbuffer = gst_buffer_new_and_alloc (nsamples * nchannels * 2);
         outdata = (gint16 *) GST_BUFFER_DATA (outbuffer);
@@ -1053,53 +1110,25 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 			 mad->total_samples * GST_SECOND / mad->frame.header.samplerate;
         }
 
-        mad->total_samples += nsamples;
-
         /* output sample(s) in 16-bit signed native-endian PCM */
         if (nchannels == 1) {
-          while (nsamples--) {
+          gint count = nsamples;
+          while (count--) {
             *outdata++ = scale(*left_ch++) & 0xffff;
           }
 	}
 	else {
-          while (nsamples--) {
+          gint count = nsamples;
+          while (count--) {
             *outdata++ = scale(*left_ch++) & 0xffff;
             *outdata++ = scale(*right_ch++) & 0xffff;
           }
         }
-        if (mad->caps_set == FALSE) {
-          if (gst_pad_try_set_caps (mad->srcpad,
-  	      gst_caps_new (
-  	        "mad_src",
-                "audio/raw",
-                gst_props_new (
-    	          "format",   GST_PROPS_STRING ("int"),
-                  "law",         GST_PROPS_INT (0),
-                  "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
-                  "signed",      GST_PROPS_BOOLEAN (TRUE),
-                  "width",       GST_PROPS_INT (16),
-                  "depth",       GST_PROPS_INT (16),
-#if MAD_VERSION_MINOR <= 12
-                  "rate",        GST_PROPS_INT (mad->header.sfreq),
-#else
-                  "rate",        GST_PROPS_INT (mad->frame.header.samplerate),
-#endif
-                  "channels",    GST_PROPS_INT (nchannels),
-                  NULL))) <= 0) 
-	  {
-	    gst_buffer_unref (outbuffer);
-	    gst_buffer_unref (buffer);
-            gst_element_error (GST_ELEMENT (mad), "could not set caps on source pad, aborting...");
-	    return;
-          }
-          mad->caps_set = TRUE;
-        }
 
         gst_pad_push (mad->srcpad, outbuffer);
       }
-      else {
-        mad->total_samples += nsamples;
-      }
+
+      mad->total_samples += nsamples;
 
       /* we have a queued timestamp on the incomming buffer that we should
        * use for the next frame */
@@ -1141,6 +1170,9 @@ gst_mad_change_state (GstElement *element)
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
+    {
+      guint options = 0;
+
       mad_stream_init (&mad->stream);
       mad_frame_init (&mad->frame);
       mad_synth_init (&mad->synth);
@@ -1150,7 +1182,11 @@ gst_mad_change_state (GstElement *element)
       mad->caps_set = FALSE;
       mad->vbr_average = 0;
       mad->frame.header.samplerate = 0;
+      if (mad->ignore_crc) options |= MAD_OPTION_IGNORECRC;
+      if (mad->half) options |= MAD_OPTION_HALFSAMPLERATE;
+      mad_stream_options (&mad->stream, options);
       break;
+    }
     case GST_STATE_PAUSED_TO_PLAYING:
       /* do something to get out of the chain function faster */
       break;
