@@ -1,3 +1,14 @@
+2004-11-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_class_init),
+	(get_unconnected_element), (remove_starting_from), (pad_removed),
+	(close_link):
+	  Implement support for dynamic pad changing. We listen to "live"
+	  pad removals (i.e. while playing) and re-setup autoplugging
+	  after that. Playbasebin/playbin need some more work for this
+	  to finally work, but decodebin supports (and replugs) chained
+	  ogg now.
+
 2004-11-02  Jan Schmidt  <thaytan@mad.scientist.com>
 	* ext/alsa/gstalsa.c: (gst_alsa_class_init), (gst_alsa_dispose),
 	(gst_alsa_finalize):
