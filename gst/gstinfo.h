@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstinfo.h: 
+ * gstinfo.h:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -458,13 +458,8 @@ extern GHashTable *__gst_function_pointers;
 #if GST_DEBUG_ENABLED
 #define GST_DEBUG_FUNCPTR(ptr) _gst_debug_register_funcptr((void *)(ptr), #ptr)
 #define GST_DEBUG_FUNCPTR_NAME(ptr) _gst_debug_nameof_funcptr((void *)ptr)
-#else
-#define GST_DEBUG_FUNCPTR(ptr) (ptr)
-#define GST_DEBUG_FUNCPTR_NAME(ptr) ""
-#endif
-
 static inline void *
-_gst_debug_register_funcptr (void *ptr, gchar *ptrname) 
+_gst_debug_register_funcptr (void *ptr, gchar *ptrname)
 {
   if (!__gst_function_pointers) __gst_function_pointers = g_hash_table_new(g_direct_hash,g_direct_equal);
   if (!g_hash_table_lookup(__gst_function_pointers,ptr))
@@ -473,6 +468,10 @@ _gst_debug_register_funcptr (void *ptr, gchar *ptrname)
 }
 
 gchar *_gst_debug_nameof_funcptr (void *ptr);
+#else
+#define GST_DEBUG_FUNCPTR(ptr) (ptr)
+#define GST_DEBUG_FUNCPTR_NAME(ptr) ""
+#endif
 
 void gst_debug_print_stack_trace (void);
 
