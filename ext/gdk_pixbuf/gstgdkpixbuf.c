@@ -73,7 +73,8 @@ static GstStaticPadTemplate gst_gdk_pixbuf_sink_template =
         "image/bmp; "
         "image/x-bmp; "
         "image/x-MS-bmp; "
-        "image/vnd.wap.wbmp; " "image/x-bitmap; " "image/x-tga")
+        "image/vnd.wap.wbmp; " "image/x-bitmap; " "image/x-tga; "
+        "image/x-pcx; image/svg; image/svg+xml")
     );
 
 static GstStaticPadTemplate gst_gdk_pixbuf_src_template =
@@ -139,6 +140,7 @@ gst_gdk_pixbuf_get_capslist (void)
   char **mimetypes;
   char **mimetype;
   GstCaps *capslist = NULL;
+  GstCaps *return_caps = NULL;
 
   capslist = gst_caps_new_empty ();
   slist0 = gdk_pixbuf_get_formats ();
@@ -153,7 +155,11 @@ gst_gdk_pixbuf_get_capslist (void)
   }
   g_slist_free (slist0);
 
-  return capslist;
+  return_caps = gst_caps_intersect (capslist,
+      gst_static_caps_get (&gst_gdk_pixbuf_sink_template.static_caps));
+
+  gst_caps_free (capslist);
+  return return_caps;
 }
 #endif
 
@@ -304,7 +310,10 @@ gst_gdk_pixbuf_chain (GstPad * pad, GstData * _data)
 
         filter->width = gdk_pixbuf_get_width (pixbuf);
         filter->height = gdk_pixbuf_get_height (pixbuf);
-        filter->rowstride = gdk_pixbuf_get_rowstride (pixbuf);
+        /* gdk_pixbuf likes to pad rowstride to 4 byte boundaries which we can't do
+         * at the moment
+         */
+        filter->rowstride = filter->width * 3;
         filter->image_size = filter->rowstride * filter->height;
 
         caps = gst_caps_copy (gst_pad_get_pad_template_caps (filter->srcpad));
@@ -321,8 +330,22 @@ gst_gdk_pixbuf_chain (GstPad * pad, GstData * _data)
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
       GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
 
-      memcpy (GST_BUFFER_DATA (outbuf), gdk_pixbuf_get_pixels (pixbuf),
-          filter->image_size);
+      {
+        int y;
+        guint8 *out_pix;
+        guint8 *in_pix;
+        int in_rowstride;
+
+        in_pix = gdk_pixbuf_get_pixels (pixbuf);
+        in_rowstride = gdk_pixbuf_get_rowstride (pixbuf);
+        out_pix = GST_BUFFER_DATA (outbuf);
+
+        for (y = 0; y < filter->height; y++) {
+          memcpy (out_pix, in_pix, filter->rowstride);
+          in_pix += in_rowstride;
+          out_pix += filter->rowstride;
+        }
+      }
 
       gst_pad_push (filter->srcpad, GST_DATA (outbuf));
 
