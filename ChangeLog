@@ -1,3 +1,9 @@
+2004-09-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query),
+	(gst_avi_demux_stream_data):
+	  Try to fix a/v sync issues.
+
 2004-09-15  David Schleef  <ds@schleef.org>
 
 	* configure.ac: remove NASM check, since we don't use it.  Update
