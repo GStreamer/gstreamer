@@ -217,7 +217,6 @@ GstCaps*
 gst_caps_unref (GstCaps *caps)
 {
   gboolean zero;
-  GstCaps **next;
 
   if (caps == NULL)
     return NULL;
@@ -226,10 +225,6 @@ gst_caps_unref (GstCaps *caps)
 
   caps->refcount--;
   zero = (caps->refcount == 0);
-  next = &caps->next;
-
-  if (*next)
-    *next = gst_caps_unref (*next);
 
   if (zero) {
     gst_caps_destroy (caps);
