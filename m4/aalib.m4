@@ -16,17 +16,17 @@ dnl Get the cflags and libraries from the aalib-config script
 dnl
 AC_ARG_WITH(aalib-prefix,
   AC_HELP_STRING([--with-aalib-prefix=PFX],
-                 [Prefix where AALIB is installed (optional)]),
+                 [prefix where AALIB is installed (optional)]),
   aalib_prefix="$withval", aalib_prefix="")
 
 AC_ARG_WITH(aalib-exec-prefix,
   AC_HELP_STRING([--with-aalib-exec-prefix=PFX],
-                 [Exec prefix where AALIB is installed (optional)]),
+                 [exec prefix where AALIB is installed (optional)]),
   aalib_exec_prefix="$withval", aalib_exec_prefix="")
 
 AC_ARG_ENABLE(aalibtest, 
   AC_HELP_STRING([--disable-aalibtest],
-                 [Do not try to compile and run a test AALIB program]),
+                 [do not try to compile and run a test AALIB program]),
   , enable_aalibtest=yes)
 
   if test x$aalib_exec_prefix != x ; then
