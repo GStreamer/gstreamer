@@ -401,9 +401,8 @@ if test x$USE_GLIB2 = xyes; then
   LIBGLADE_GNOME_CFLAGS=
   AC_MSG_WARN(libglade disabled for glib2.0)
 else
-  AM_PATH_LIBGLADE(HAVE_LIBGLADE="yes", HAVE_LIBGLADE="no")
-  AC_PATH_PROG(LIBGLADE_CONFIG_PATH, libglade-config, no)
-  if test x$LIBGLADE_CONFIG_PATH = xno; then
+  AM_PATH_LIBGLADE(HAVE_LIBGLADE="yes", HAVE_LIBGLADE="no", gnome)
+  if test x$HAVE_LIBGLADE = xno; then
     AC_MSG_WARN(Couldn't find libglade-config - Can't build gstplay)
     LIBGLADE_GNOME_LIBS=
     LIBGLADE_GNOME_CFLAGS=
