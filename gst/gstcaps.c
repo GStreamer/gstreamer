@@ -516,13 +516,13 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
       return TRUE;
     }
     else {
-      GST_DEBUG (GST_CAT_CAPS,"gstcaps: no src but destination caps\n");
+      GST_DEBUG (GST_CAT_CAPS,"no source but destination caps\n");
       return FALSE;
     }
   }
   else {
     if (tocaps == NULL) {
-      GST_DEBUG (GST_CAT_CAPS,"src caps and no dest caps\n");
+      GST_DEBUG (GST_CAT_CAPS,"source caps and no destination caps\n");
       return TRUE;
     }
   }

@@ -615,7 +615,7 @@ gst_pad_connect (GstPad *srcpad,
   g_return_val_if_fail(sinkpad != NULL, FALSE);
   g_return_val_if_fail(GST_IS_PAD(sinkpad), FALSE);
 
-  GST_INFO (GST_CAT_ELEMENT_PADS, "connecting %s:%s and %s:%s",
+  GST_INFO (GST_CAT_PADS, "connecting %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
 
   // now we need to deal with the real/ghost stuff
@@ -643,16 +643,20 @@ gst_pad_connect (GstPad *srcpad,
   GST_RPAD_PEER(realsink) = realsrc;
 
   if (GST_PAD_CAPS (srcpad)) {
+    GST_DEBUG(GST_CAT_PADS, "renegotiation from srcpad\n");
     negotiated = gst_pad_renegotiate (srcpad);
   }
   else if (GST_PAD_CAPS (sinkpad)) {
+    GST_DEBUG(GST_CAT_PADS, "renegotiation from sinkpad\n");
     negotiated = gst_pad_renegotiate (sinkpad);
   }
-  else 
+  else {
+    GST_DEBUG(GST_CAT_PADS, "not renegotiating connection\n");
     negotiated = TRUE;
+  }
 
   if (!negotiated) {
-    GST_INFO(GST_CAT_ELEMENT_PADS, "pads %s:%s and %s:%s failed to negotiate, disconnecting",
+    GST_INFO(GST_CAT_PADS, "pads %s:%s and %s:%s failed to negotiate, disconnecting",
              GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
     gst_pad_disconnect (GST_PAD (realsrc), GST_PAD (realsink));
     return FALSE;
@@ -668,7 +672,7 @@ gst_pad_connect (GstPad *srcpad,
   else if (realsink->sched)
     GST_SCHEDULE_PAD_CONNECT (realsink->sched, (GstPad *)realsrc, (GstPad *)realsink);
 
-  GST_INFO (GST_CAT_ELEMENT_PADS, "connected %s:%s and %s:%s",
+  GST_INFO (GST_CAT_PADS, "connected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
   return TRUE;
 }

@@ -642,10 +642,13 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
       switch (entry2->propstype) {
 	// b   <--->   a - d
         case GST_PROPS_INT_RANGE_ID:
+          GST_DEBUG(GST_CAT_PROPERTIES,"%d <= %d <= %d ?\n",entry2->data.int_range_data.min,
+                    entry1->data.int_data,entry2->data.int_range_data.max);
 	  return (entry2->data.int_range_data.min <= entry1->data.int_data &&
 	          entry2->data.int_range_data.max >= entry1->data.int_data);
 	// b   <--->   a
         case GST_PROPS_INT_ID:
+          GST_DEBUG(GST_CAT_PROPERTIES,"%d == %d ?\n",entry1->data.int_data,entry2->data.int_data);
 	  return (entry2->data.int_data == entry1->data.int_data);
 	// b   <--->   a,b,c
         case GST_PROPS_LIST_ID:
