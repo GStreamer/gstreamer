@@ -276,28 +276,26 @@ print_element_info (GstElementFactory *factory)
       case G_TYPE_UINT: printf("Unsigned Integer (Default %u)", g_value_get_uint (&value));break;
       case G_TYPE_INT: printf("Integer (Default %d)", g_value_get_int (&value));break;
       case G_TYPE_FLOAT: printf("Float (Default %f)", g_value_get_float (&value));break;
-      case G_TYPE_DOUBLE: printf("Double (Default %lf)", g_value_get_double (&value));break;
+      case G_TYPE_DOUBLE: printf("Double (Default %f)", g_value_get_double (&value));break;
       default:
-			  /*
-        if (args[i].type == GST_TYPE_FILENAME)
+        if (param->value_type == GST_TYPE_FILENAME)
           printf("Filename");
-        else if (G_FUNDAMENTAL_TYPE (args[i].type) == G_TYPE_ENUM) {
-          GtkEnumValue *values;
+        else if (G_TYPE_FUNDAMENTAL (param->value_type) == G_TYPE_ENUM) {
+          GEnumValue *values;
 	  guint j = 0;
 
-          printf("Enum (default %d)", G_VALUE_ENUM (args[i]));
-	  values = gtk_type_enum_get_values (args[i].type);
+          printf("Enum (default %d)", g_value_get_enum (&value));
+	  /*
+	  values = g_type_enum_get_values (args[i].type);
 	  while (values[j].value_name) {
             printf("\n    (%d): \t%s", values[j].value, values[j].value_nick);
 	    j++; 
 	  }
+	  */
 	}
-        else if (args[i].type == GTK_TYPE_WIDGET)
-          printf("GtkWidget");
         else
-          printf("unknown %d", args[i].type);
+          printf("unknown %d", param->value_type);
         break;
-	*/
     }
     printf("\n");
   }
