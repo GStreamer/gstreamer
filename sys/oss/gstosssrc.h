@@ -28,11 +28,7 @@
 #include <config.h>
 #include <gst/gst.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_OSSSRC \
   (gst_osssrc_get_type())
@@ -67,11 +63,14 @@ struct _GstOssSrc {
   gint fd;
 
   /* audio parameters */
-  gint format;
+  gint law;
+  gint endianness;
+  gint sign;
+  gint width;
+  gint depth;
+  gint rate;
   gint channels;
-  gint frequency;
 
-  gboolean need_sync; /* Do the parameters need resynced? */
   gboolean need_eos; /* Do we need to emit an EOS? */
   
   /* blocking */
@@ -90,9 +89,6 @@ GType gst_osssrc_get_type(void);
 
 gboolean gst_osssrc_factory_init (GstPlugin *plugin);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_OSSSRC_H__ */

@@ -28,6 +28,7 @@
 #include <unistd.h>
 
 #include <gstosssrc.h>
+#include <gstosscommon.h>
 
 /* elementfactory information */
 static GstElementDetails gst_osssrc_details = {
@@ -51,10 +52,6 @@ enum {
   ARG_0,
   ARG_DEVICE,
   ARG_BYTESPERREAD,
-  ARG_CUROFFSET,
-  ARG_FORMAT,
-  ARG_CHANNELS,
-  ARG_FREQUENCY
 };
 
 GST_PAD_TEMPLATE_FACTORY (osssrc_src_factory,
@@ -87,15 +84,17 @@ GST_PAD_TEMPLATE_FACTORY (osssrc_src_factory,
 static void 			gst_osssrc_class_init	(GstOssSrcClass *klass);
 static void 			gst_osssrc_init		(GstOssSrc *osssrc);
 
-static void 			gst_osssrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void 			gst_osssrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static GstPadConnectReturn 	gst_osssrc_srcconnect 	(GstPad *pad, GstCaps *caps);
+static void 			gst_osssrc_set_property	(GObject *object, guint prop_id, 
+							 const GValue *value, GParamSpec *pspec);
+static void 			gst_osssrc_get_property	(GObject *object, guint prop_id,
+							 GValue *value, GParamSpec *pspec);
 static GstElementStateReturn 	gst_osssrc_change_state	(GstElement *element);
 
-static GstPadConnectReturn      gst_osssrc_connect (GstPad *pad, GstCaps *caps);
 static gboolean                 gst_osssrc_send_event (GstElement *element, GstEvent *event);
 static void 			gst_osssrc_close_audio	(GstOssSrc *src);
 static gboolean 		gst_osssrc_open_audio	(GstOssSrc *src);
-static void 			gst_osssrc_sync_parms	(GstOssSrc *osssrc);
+static gboolean			gst_osssrc_sync_parms	(GstOssSrc *osssrc);
 
 static GstBuffer *		gst_osssrc_get		(GstPad *pad);
 
@@ -138,18 +137,6 @@ gst_osssrc_class_init (GstOssSrcClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BYTESPERREAD,
     g_param_spec_ulong("bytes_per_read","bytes_per_read","bytes_per_read",
                        0,G_MAXULONG,0,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CUROFFSET,
-    g_param_spec_ulong("curoffset","curoffset","curoffset",
-                       0,G_MAXULONG,0,G_PARAM_READABLE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FORMAT,
-    g_param_spec_int("format","format","format",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNELS,
-    g_param_spec_int("channels","channels","channels",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQUENCY,
-    g_param_spec_int("frequency","frequency","frequency",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE,
     g_param_spec_string("device","device","oss device (/dev/dspN usually)",
                         "default",G_PARAM_READWRITE));
@@ -166,20 +153,22 @@ gst_osssrc_init (GstOssSrc *osssrc)
 {
   osssrc->srcpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (osssrc_src_factory), "src");
-  gst_pad_set_get_function(osssrc->srcpad,gst_osssrc_get);
-  gst_pad_set_connect_function (osssrc->srcpad, gst_osssrc_connect);
+  gst_pad_set_get_function (osssrc->srcpad, gst_osssrc_get);
+  gst_pad_set_connect_function (osssrc->srcpad, gst_osssrc_srcconnect);
   gst_element_add_pad (GST_ELEMENT (osssrc), osssrc->srcpad);
 
   osssrc->device = g_strdup ("/dev/dsp");
   osssrc->fd = -1;
 
   /* adding some default values */
-  osssrc->format = AFMT_S16_LE;
+  osssrc->law = 0;
+  osssrc->endianness = G_BYTE_ORDER;
+  osssrc->sign = TRUE;
+  osssrc->depth = 16;
+  osssrc->width = 16;
   osssrc->channels = 2;
-  osssrc->frequency = 44100;
-
+  osssrc->rate = 44100;
   osssrc->need_eos = FALSE;
-  osssrc->need_sync = FALSE;
   
   osssrc->bytes_per_read = 4096;
   osssrc->curoffset = 0;
@@ -187,6 +176,82 @@ gst_osssrc_init (GstOssSrc *osssrc)
   osssrc->samples_since_basetime = 0;
 }
 
+static GstPadConnectReturn 
+gst_osssrc_srcconnect (GstPad *pad, GstCaps *caps)
+{
+  GstOssSrc *src;
+
+  src = GST_OSSSRC(gst_pad_get_parent (pad));
+
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_CONNECT_DELAYED;
+
+  gst_caps_get_int 	(caps, "law", 		&src->law);
+  gst_caps_get_int 	(caps, "endianness", 	&src->endianness);
+  gst_caps_get_boolean 	(caps, "signed", 	&src->sign);
+  gst_caps_get_int 	(caps, "width", 	&src->width);
+  gst_caps_get_int 	(caps, "depth", 	&src->depth);
+  gst_caps_get_int 	(caps, "rate", 		&src->rate);
+  gst_caps_get_int 	(caps, "channels", 	&src->channels);
+
+  if (!gst_osssrc_sync_parms (src))
+    return GST_PAD_CONNECT_REFUSED;
+
+  return GST_PAD_CONNECT_OK;
+}
+#define GET_FIXED_INT(caps, name, dest) 	\
+G_STMT_START {					\
+  if (gst_caps_has_fixed_property (caps, name))	\
+    gst_caps_get_int (caps, name, dest);	\
+} G_STMT_END
+#define GET_FIXED_BOOLEAN(caps, name, dest) 	\
+G_STMT_START {					\
+  if (gst_caps_has_fixed_property (caps, name))	\
+    gst_caps_get_boolean (caps, name, dest);	\
+} G_STMT_END
+
+static gboolean
+gst_osssrc_negotiate (GstPad *pad)
+{
+  GstOssSrc *src;
+  GstCaps *allowed;
+
+  src = GST_OSSSRC(gst_pad_get_parent (pad));
+
+  allowed = gst_pad_get_allowed_caps (pad);
+
+  /* peel off fixed stuff from the allowed caps */
+  GET_FIXED_INT 	(allowed, "law", 	&src->law);
+  GET_FIXED_INT 	(allowed, "endianness", &src->endianness);
+  GET_FIXED_BOOLEAN 	(allowed, "signed", 	&src->sign);
+  GET_FIXED_INT 	(allowed, "width", 	&src->width);
+  GET_FIXED_INT 	(allowed, "depth", 	&src->depth);
+  GET_FIXED_INT 	(allowed, "rate", 	&src->rate);
+  GET_FIXED_INT 	(allowed, "channels", 	&src->channels);
+
+  if (!gst_osssrc_sync_parms (src))
+    return FALSE;
+    
+  /* set caps on src pad */
+  if (gst_pad_try_set_caps (src->srcpad, 
+	GST_CAPS_NEW (
+    	  "oss_src",
+	  "audio/raw",
+            "format",       GST_PROPS_STRING ("int"),
+	      "law",        GST_PROPS_INT (src->law),
+	      "endianness", GST_PROPS_INT (src->endianness),
+	      "signed",     GST_PROPS_BOOLEAN (src->sign),
+	      "width",      GST_PROPS_INT (src->width),
+	      "depth",      GST_PROPS_INT (src->depth),
+	      "rate",       GST_PROPS_INT (src->rate),
+	      "channels",   GST_PROPS_INT (src->channels)
+        )) <= 0) 
+  {
+    return FALSE;
+  }
+  return TRUE;
+}
+	
 static GstBuffer *
 gst_osssrc_get (GstPad *pad)
 {
@@ -195,22 +260,17 @@ gst_osssrc_get (GstPad *pad)
   glong readbytes;
   glong readsamples;
 
-  g_return_val_if_fail (pad != NULL, NULL);
   src = GST_OSSSRC(gst_pad_get_parent (pad));
 
   GST_DEBUG (GST_CAT_PLUGIN_INFO, "attempting to read something from the soundcard");
 
   if (src->need_eos) {
-/*     gst_element_set_eos (GST_ELEMENT (src)); */
     src->need_eos = FALSE;
     return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
   }
   
-  buf = gst_buffer_new ();
-  g_return_val_if_fail (buf, NULL);
+  buf = gst_buffer_new_and_alloc (src->bytes_per_read);
   
-  GST_BUFFER_DATA (buf) = (gpointer)g_malloc (src->bytes_per_read);
-
   readbytes = read (src->fd,GST_BUFFER_DATA (buf),
                     src->bytes_per_read);
 
@@ -218,43 +278,28 @@ gst_osssrc_get (GstPad *pad)
     gst_element_set_eos (GST_ELEMENT (src));
     return NULL;
   }
+
   if (!GST_PAD_CAPS (pad)) {
-    /* set caps on src pad */
-    if (gst_pad_try_set_caps (src->srcpad, 
-		    GST_CAPS_NEW (
-    		      "oss_src",
-		      "audio/raw",
-        		"format",       GST_PROPS_STRING ("int"),
-		          "law",        GST_PROPS_INT (0),              /*FIXME */
-		          "endianness", GST_PROPS_INT (G_BYTE_ORDER),   /*FIXME */
-		          "signed",     GST_PROPS_BOOLEAN (TRUE),	/*FIXME */
-		          "width",      GST_PROPS_INT (src->format),
-		          "depth",      GST_PROPS_INT (src->format),
-		          "rate",       GST_PROPS_INT (src->frequency),
-		          "channels",   GST_PROPS_INT (src->channels)
-        	   )) <= 0) 
-    {
-      gst_element_error (GST_ELEMENT (src), "could not set caps");
+    /* nothing was negotiated, we can decide on a format */
+    if (!gst_osssrc_negotiate (pad)) {
+      gst_element_error (GST_ELEMENT (src), "could not negotiate format");
       return NULL;
     }
-  }
-  else
-  {
-    /* where did they come from ? */
-    gst_caps_debug (gst_pad_get_caps (src->srcpad), "caps were already set on oss");
   }
 
   GST_BUFFER_SIZE (buf) = readbytes;
   GST_BUFFER_OFFSET (buf) = src->curoffset;
   GST_BUFFER_TIMESTAMP (buf) = src->basetime +
-	  src->samples_since_basetime * GST_SECOND / src->frequency;
+	  src->samples_since_basetime * GST_SECOND / src->rate;
 
   src->curoffset += readbytes;
   readsamples = readbytes / src->channels;
-  if (src->format == 16) readsamples /= 2;
+  if (src->width == 16) readsamples /= 2;
   src->samples_since_basetime += readsamples;
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "pushed buffer from soundcard of %ld bytes, timestamp %lld", readbytes, GST_BUFFER_TIMESTAMP (buf));
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "pushed buffer from soundcard of %ld bytes, timestamp %lld", 
+		  readbytes, GST_BUFFER_TIMESTAMP (buf));
+
   return buf;
 }
 
@@ -271,22 +316,6 @@ gst_osssrc_set_property (GObject *object, guint prop_id, const GValue *value, GP
   switch (prop_id) {
     case ARG_BYTESPERREAD:
       src->bytes_per_read = g_value_get_ulong (value);
-      break;
-    case ARG_FORMAT:
-      src->format = g_value_get_int (value);
-      break;
-    case ARG_CHANNELS:
-      src->channels = g_value_get_int (value);
-      break;
-    case ARG_FREQUENCY:
-      /* Preserve the timestamps */
-      src->basetime = src->samples_since_basetime * GST_SECOND / src->frequency;
-      src->samples_since_basetime = 0;
-
-      src->frequency = g_value_get_int (value);
-      break;
-    case ARG_CUROFFSET:
-      src->curoffset = g_value_get_ulong (value);
       break;
     case ARG_DEVICE:
       g_free(src->device);
@@ -311,18 +340,6 @@ gst_osssrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
     case ARG_BYTESPERREAD:
       g_value_set_ulong (value, src->bytes_per_read);
       break;
-    case ARG_FORMAT:
-      g_value_set_int (value, src->format);
-      break;
-    case ARG_CHANNELS:
-      g_value_set_int (value, src->channels);
-      break;
-    case ARG_FREQUENCY:
-      g_value_set_int (value, src->frequency);
-      break;
-    case ARG_CUROFFSET:
-      g_value_set_ulong (value, src->curoffset);
-      break;
     case ARG_DEVICE:
       g_value_set_string (value, src->device);
       break;
@@ -337,67 +354,33 @@ gst_osssrc_change_state (GstElement *element)
 {
   GstOssSrc *osssrc = GST_OSSSRC (element);
   
-  g_return_val_if_fail (GST_IS_OSSSRC (element), FALSE);
   GST_DEBUG (GST_CAT_PLUGIN_INFO, "osssrc: state change");
 
   switch (GST_STATE_TRANSITION (element)) {
-  case GST_STATE_READY_TO_NULL:
-    break;
-
-  case GST_STATE_NULL_TO_READY:
-    break;
-
-  case GST_STATE_READY_TO_PAUSED:
-    /* Paused state: open device */
-    if (!GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN)) {
-      if (!gst_osssrc_open_audio (GST_OSSSRC (element)))
-	return GST_STATE_FAILURE;
-    }
-
-    break;
-
-  case GST_STATE_PAUSED_TO_READY:
-    /* Going down to ready: close device */
-    if (GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN))
-      gst_osssrc_close_audio (GST_OSSSRC (element));
-    
-    break;
-
-  case GST_STATE_PAUSED_TO_PLAYING:
-    if (osssrc->need_sync) {
-      gst_osssrc_sync_parms (GST_OSSSRC (element));
-      osssrc->need_sync = FALSE;
-    }
-    
-    break;
-
-  case GST_STATE_PLAYING_TO_PAUSED:
-    break;
+    case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+      if (!GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN)) { 
+        if (!gst_osssrc_open_audio (osssrc))
+          return GST_STATE_FAILURE;
+      }
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      if (GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN))
+        gst_osssrc_close_audio (osssrc);
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
   
   return GST_STATE_SUCCESS;
-}
-
-static GstPadConnectReturn
-gst_osssrc_connect (GstPad *pad,
-		    GstCaps *caps)
-{
-  GstOssSrc *osssrc;
-
-  osssrc = GST_OSSSRC (GST_PAD_PARENT (pad));
-
-  if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_CONNECT_DELAYED;
-  }
-
-  gst_caps_get_int (caps, "rate", &osssrc->frequency);
-  gst_caps_get_int (caps, "channels", &osssrc->channels);
-
-  osssrc->need_sync = TRUE;
-  return GST_PAD_CONNECT_OK;
 }
 
 static gboolean
@@ -410,13 +393,12 @@ gst_osssrc_send_event (GstElement *element,
   osssrc = GST_OSSSRC (element);
 
   switch (GST_EVENT_TYPE (event)) {
-  case GST_EVENT_EOS:
-    osssrc->need_eos = TRUE;
-    retval = TRUE;
-    break;
-
-  default:
-    break;
+    case GST_EVENT_EOS:
+      osssrc->need_eos = TRUE;
+      retval = TRUE;
+      break;
+    default:
+      break;
   }
 
   gst_event_unref (event);
@@ -435,7 +417,6 @@ gst_osssrc_open_audio (GstOssSrc *src)
   if (src->fd > 0) {
 
     /* set card state */
-    gst_osssrc_sync_parms (src);
     GST_DEBUG (GST_CAT_PLUGIN_INFO,"opened audio: %s",src->device);
     
     GST_FLAG_SET (src, GST_OSSSRC_OPEN);
@@ -456,7 +437,7 @@ gst_osssrc_close_audio (GstOssSrc *src)
   GST_FLAG_UNSET (src, GST_OSSSRC_OPEN);
 }
 
-static void 
+static gboolean 
 gst_osssrc_sync_parms (GstOssSrc *osssrc) 
 {
   audio_buf_info ispace;
@@ -465,32 +446,39 @@ gst_osssrc_sync_parms (GstOssSrc *osssrc)
    * is actually set to ! Setting it to 44101 Hz could cause it to
    * be set to 44101, for example
    */
+  guint rate;
+  gint format;
+  gint bps;
 
-  guint frequency;
-
-  g_return_if_fail (osssrc != NULL);
-  g_return_if_fail (GST_IS_OSSSRC (osssrc));
-  g_return_if_fail (osssrc->fd > 0);
+  g_return_val_if_fail (osssrc->fd > 0, FALSE);
  
-  frequency = osssrc->frequency;
+  /* get rate, we don't modify the original rate as the audio device
+   * might not exactly give us the requested value */
+  rate = osssrc->rate;
 
+  /* transform format parameters to oss format */
+  if (!gst_ossformat_get (osssrc->law, osssrc->endianness, osssrc->sign, 
+			  osssrc->width, osssrc->depth, &format, &bps)) 
+  {
+    return FALSE;
+  }
+  
   frag = 0x7fff0006;
 
   ioctl(osssrc->fd, SNDCTL_DSP_SETFRAGMENT, &frag);
   ioctl(osssrc->fd, SNDCTL_DSP_RESET, 0);
  
-  ioctl(osssrc->fd, SNDCTL_DSP_SETFMT, &osssrc->format);
+  ioctl(osssrc->fd, SNDCTL_DSP_SETFMT, &format);
   ioctl(osssrc->fd, SNDCTL_DSP_CHANNELS, &osssrc->channels);
-  ioctl(osssrc->fd, SNDCTL_DSP_SPEED, &osssrc->frequency);
-  osssrc->frequency = frequency;
-  ioctl(osssrc->fd, SNDCTL_DSP_SPEED, &frequency);
+  ioctl(osssrc->fd, SNDCTL_DSP_SPEED, &rate);
   ioctl(osssrc->fd, SNDCTL_DSP_GETISPACE, &ispace);
   ioctl(osssrc->fd, SNDCTL_DSP_GETBLKSIZE, &frag);
  
   g_print("setting sound card to %dHz %d bit %s (%d bytes buffer, %d fragment)\n",
-          osssrc->frequency, osssrc->format,
+          rate, osssrc->width,
           (osssrc->channels == 2) ? "stereo" : "mono", ispace.bytes, frag);
 
+  return TRUE;
 }
 
 gboolean
@@ -498,10 +486,13 @@ gst_osssrc_factory_init (GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_element_factory_new ("osssrc", GST_TYPE_OSSSRC, &gst_osssrc_details);
+  factory = gst_element_factory_new ("osssrc", 
+		  		     GST_TYPE_OSSSRC, 
+				     &gst_osssrc_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (osssrc_src_factory));
+  gst_element_factory_add_pad_template (factory, 
+		  			GST_PAD_TEMPLATE_GET (osssrc_src_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

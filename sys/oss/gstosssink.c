@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include <gstosssink.h>
+#include <gstosscommon.h>
 
 /* elementfactory information */
 static GstElementDetails gst_osssink_details = {  
@@ -253,7 +254,7 @@ gst_osssink_init (GstOssSink *osssink)
 static GstPadConnectReturn 
 gst_osssink_sinkconnect (GstPad *pad, GstCaps *caps) 
 {
-  gint law, endianness, depth;
+  gint law, endianness, width, depth, bps;
   gboolean sign;
   gint format = -1;
   GstOssSink *osssink = GST_OSSSINK (gst_pad_get_parent (pad));
@@ -261,11 +262,13 @@ gst_osssink_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_CONNECT_DELAYED;
   
-  gst_caps_get_int (caps, "width", &osssink->width);
+  gst_caps_get_int (caps, "width", &width);
   gst_caps_get_int (caps, "depth", &depth);
 
-  if (osssink->width != depth) 
+  if (width != depth) 
     return GST_PAD_CONNECT_REFUSED;
+
+  osssink->width = width;
 
   /* laws 1 and 2 are 1 bps anyway */
   osssink->bps = 1;
@@ -274,76 +277,16 @@ gst_osssink_sinkconnect (GstPad *pad, GstCaps *caps)
   gst_caps_get_int (caps, "endianness", &endianness);
   gst_caps_get_boolean (caps, "signed", &sign);
 
-  if (law == 0) {
-    if (osssink->width == 16) {
-      if (sign == TRUE) {
-        if (endianness == G_LITTLE_ENDIAN)
-	{
-	  format = AFMT_S16_LE;
-	  GST_DEBUG (GST_CAT_PLUGIN_INFO, 
-	             "gst_osssink_sinkconnect: 16 bit signed LE, no law (%d)",
-		     format);
-	}
-        else if (endianness == G_BIG_ENDIAN)
-	{
-	  format = AFMT_S16_BE;
-	  GST_DEBUG (GST_CAT_PLUGIN_INFO, 
-	             "gst_osssink_sinkconnect: 16 bit signed BE, no law (%d)",
-		     format);
-	}
-      }
-      else {
-        if (endianness == G_LITTLE_ENDIAN)
-	{
-	  format = AFMT_U16_LE;
-	  GST_DEBUG (GST_CAT_PLUGIN_INFO, 
-	             "gst_osssink_sinkconnect: 16 bit unsigned LE, no law (%d)",
-		     format);
-	}
-        else if (endianness == G_BIG_ENDIAN)
-	{
-	  format = AFMT_U16_BE;
-	  GST_DEBUG (GST_CAT_PLUGIN_INFO, 
-	             "gst_osssink_sinkconnect: 16 bit unsigned BE, no law (%d)",
-		     format);
-	}
-      }
-      osssink->bps = 2;
-    }
-    else if (osssink->width == 8) {
-      if (sign == TRUE) {
-	format = AFMT_S8;
-	GST_DEBUG (GST_CAT_PLUGIN_INFO, 
-	           "gst_osssink_sinkconnect: 8 bit signed, no law (%d)",
-	           format);
-      }
-      else {
-        format = AFMT_U8;
-	GST_DEBUG (GST_CAT_PLUGIN_INFO, 
-	           "gst_osssink_sinkconnect: 8 bit unsigned, no law (%d)",
-	           format);
-      }
-      osssink->bps = 1;
-    }
-  } else if (law == 1) {
-    format = AFMT_MU_LAW;
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, 
-	       "gst_osssink_sinkconnect: mu law (%d)",
-	       format);
-  } else if (law == 2) {
-    format = AFMT_A_LAW;
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, 
-	       "gst_osssink_sinkconnect: a law (%d)",
-	       format);
-  } else {
-    g_critical ("unknown law");
+  if (!gst_ossformat_get (law, endianness, sign,
+		          width, depth, &format, &bps)) 
+  {
+    GST_DEBUG (GST_CAT_PLUGIN_INFO, "could not get format");
     return GST_PAD_CONNECT_REFUSED;
   }
 
-  if (format == -1) 
-    return GST_PAD_CONNECT_REFUSED;
-
+  osssink->bps = bps;
   osssink->format = format;
+
   gst_caps_get_int (caps, "channels", &osssink->channels);
   gst_caps_get_int (caps, "rate", &osssink->frequency);
 
