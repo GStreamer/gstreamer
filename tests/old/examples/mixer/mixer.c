@@ -1,12 +1,13 @@
 /*
  * mixer.c - stereo audio mixer - thomas@apestaart.org
- * example based on helloworld by
+ * example based on helloworld
  * demonstrates the adder plugin and the volume envelope plugin 
  * work in progress but do try it out 
  * 
  * Latest change : 	16/04/2001
- * 					mixer & adder plugin now work with variable-size input buffers 
- * Version :		0.2
+ * 					multiple input channels allowed
+ * 					volume envelope adapted 
+ * Version :		0.3
  */
 
 #include <stdlib.h>
@@ -20,6 +21,7 @@
 
 input_channel_t*	create_input_channel (int id, char* location);
 void				destroy_input_channel (input_channel_t *pipe);
+void 				env_register_cp (GstElement *volenv, double cp_time, double cp_level);
 
 
 gboolean playing;
@@ -80,8 +82,14 @@ gst_play_typefind (GstBin *bin, GstElement *element)
 
 int main(int argc,char *argv[]) 
 {
-  input_channel_t *channel_in1;
-  input_channel_t *channel_in2;
+  int i;
+  int num_channels;
+  
+  char buffer[20];
+  
+  GList *input_channels;		/* structure holding all the input channels */
+  
+  input_channel_t *channel_in;
   
   GstElement *main_bin;
   GstElement *adder;
@@ -91,68 +99,93 @@ int main(int argc,char *argv[])
 
   gst_init(&argc,&argv);
 
-  if (argc != 3) {
-    g_print("usage: %s <filename1> <filename2>\n", argv[0]);
+  if (argc == 1) {
+    g_print("usage: %s <filename1> <filename2> <...>\n", argv[0]);
     exit(-1);
   }
-
-  /* create input channels */
-
-  channel_in1 = create_input_channel (1, argv[1]);
-  channel_in2 = create_input_channel (2, argv[2]);
-
-
+  num_channels = argc - 1;
+  
+  /* set up output channel and main bin */
+  
   /* create adder */
   adder = gst_elementfactory_make("adder", "adderel");
 
   /* create an audio sink */
   audiosink = gst_elementfactory_make("esdsink", "play_audio");
 
-  /* now create main bin */
+  /* create main bin */
   main_bin = gst_bin_new("bin");
 
-  gst_bin_add(GST_BIN(main_bin), channel_in1->pipe);
-  gst_bin_add(GST_BIN(main_bin), channel_in2->pipe);
+  /* connect adder and output to bin */
+
   gst_bin_add(GST_BIN(main_bin), adder);
   gst_bin_add(GST_BIN(main_bin), audiosink);
-
-  /* request pads and connect to adder */
-
-  pad = gst_element_request_pad_by_name (adder, "sink%d");
-  g_print ("new pad %s\n", gst_pad_get_name (pad));
-  gst_pad_connect (gst_element_get_pad (channel_in1->pipe, "channel1"), pad);
-  pad = gst_element_request_pad_by_name (adder, "sink%d");
-  g_print ("new pad %s\n", gst_pad_get_name (pad));
-  gst_pad_connect (gst_element_get_pad (channel_in2->pipe, "channel2"), pad);
 
   /* connect adder and audiosink */
 
   gst_pad_connect(gst_element_get_pad(adder,"src"),
                   gst_element_get_pad(audiosink,"sink"));
+  
+  /* create input channels, add to bin and connect */
 
-  /* register the volume envelope */
+  input_channels = NULL;
+  
+  for (i = 1; i < argc; ++i)
+  {
+    printf ("Opening channel %d from file %s...\n", i, argv[i]);
+    channel_in = create_input_channel (i, argv[i]);
+    input_channels = g_list_append (input_channels, channel_in);  
+    gst_bin_add(GST_BIN(main_bin), channel_in->pipe);
 
-  gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "0:0.000001", NULL);
-  gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "5:0.000001", NULL);
-  gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "10:1", NULL);
-  gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "15:1", NULL);
-  gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "20:0.000001", NULL);
-  gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "40:0.000001", NULL);
-  gtk_object_set(GTK_OBJECT(channel_in1->volenv), "controlpoint", "45:0.5", NULL);
+    /* request pads and connect to adder */
+    pad = gst_element_request_pad_by_name (adder, "sink%d");
+    g_print ("\tGot new adder sink pad %s\n", gst_pad_get_name (pad));
+    sprintf (buffer, "channel%d", i);
+    gst_pad_connect (gst_element_get_pad (channel_in->pipe, buffer), pad);
 
-  gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "0:1", NULL);
-  gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "5:1", NULL);
-  gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "10:0.000001", NULL);
-  gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "15:0.000001", NULL);
-  gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "20:1", NULL);
-  gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "40:1", NULL);
-  gtk_object_set(GTK_OBJECT(channel_in2->volenv), "controlpoint", "45:0.5", NULL);
+    /* register a volume envelope */
+    printf ("\tregistering volume envelope...\n");
 
-  /* sleep a few seconds */
+    /* 
+     * this is the volenv :
+     * each song gets a slot of 5 seconds, with a 5 second fadeout
+     * at the end of that, all audio streams play simultaneously
+     * at a level ensuring no distortion
+     * example for three songs :
+     * song1 : starts at full level, plays 5 seconds, faded out at 10 seconds,
+     * 		   sleep until 25, fade to end level at 30
+     * song2 : starts silent, fades in at 5 seconds, full blast at 10 seconds,
+     *		   full level until 15, faded out at 20, sleep until 25, fade to end at 30
+     * song3 : starts muted, fades in from 15, full at 20, until 25, fade to end level
+     */
+
+    if (i == 1)
+    {
+      /* first song gets special treatment for end style */
+      env_register_cp (channel_in->volenv,  0.0, 1.0);
+    }
+    else
+    {
+      env_register_cp (channel_in->volenv,  0.0            , 0.0000001); /* start muted */
+      env_register_cp (channel_in->volenv,  i * 10.0 - 15.0, 0.0000001); /* start fade in */
+      env_register_cp (channel_in->volenv,  i * 10.0 - 10.0, 1.0);
+    }
+    env_register_cp (channel_in->volenv,  i * 10.0 -  5.0, 1.0); /* end of full level */
+
+    if (i != num_channels)
+    {
+      env_register_cp (channel_in->volenv,  i * 10.0         , 0.0000001); /* fade to black */
+      env_register_cp (channel_in->volenv,  num_channels * 10.0 - 5.0, 0.0000001); /* start fade in */
+    }   
+    env_register_cp (channel_in->volenv,  num_channels * 10.0      , 1.0 / num_channels); /* to end level */
+  }
+
+  /* sleep a few seconds doesn't seem to help anyway */
 
   printf ("Sleeping a few seconds ...\n");
   sleep (2);
   printf ("Waking up ...\n");
+
   
   /* start playing */
   gst_element_set_state(main_bin, GST_STATE_PLAYING);
@@ -166,8 +199,12 @@ int main(int argc,char *argv[])
   /* stop the bin */
   gst_element_set_state(main_bin, GST_STATE_NULL);
 
-  destroy_input_channel (channel_in1);
-  destroy_input_channel (channel_in2);
+  while (input_channels)
+  {
+    destroy_input_channel (input_channels->data);
+    input_channels = g_list_next (input_channels);
+  }
+  g_list_free (input_channels);
   
   gst_object_destroy(GST_OBJECT(audiosink));
 
@@ -312,6 +349,12 @@ destroy_input_channel (input_channel_t *channel)
   free (channel);
 }
 
+void env_register_cp (GstElement *volenv, double cp_time, double cp_level)
+{
+  char buffer[30];
 
+  sprintf (buffer, "%f:%f", cp_time, cp_level);
+  gtk_object_set(GTK_OBJECT(volenv), "controlpoint", buffer, NULL);
 
+}
 
