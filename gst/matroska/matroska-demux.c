@@ -313,6 +313,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
   context->index = demux->num_streams;
   context->type = 0;            /* no type yet */
   context->default_duration = 0;
+  context->pos = 0;
   demux->num_streams++;
 
   /* start with the master */
@@ -1099,7 +1100,9 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux)
       gst_event_ref (event);
       gst_pad_push (demux->src[i]->pad, GST_DATA (event));
     }
+    demux->src[i]->pos = entry->time;
   }
+  demux->pos = entry->time;
 
   gst_event_unref (event);
 
@@ -1741,6 +1744,47 @@ gst_matroska_ebmlnum_sint (guint8 * data, guint size, gint64 * num)
   return res;
 }
 
+/*
+ * Mostly used for subtitles. We add void filler data for each
+ * lagging stream to make sure we don't deadlock.
+ */
+
+static void
+gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
+{
+  gint stream_nr;
+  GstMatroskaTrackContext *context;
+
+  GST_DEBUG ("Sync to %" GST_TIME_FORMAT, GST_TIME_ARGS (demux->pos));
+
+  for (stream_nr = 0; stream_nr < demux->num_streams; stream_nr++) {
+    context = demux->src[stream_nr];
+    if (context->type != GST_MATROSKA_TRACK_TYPE_SUBTITLE)
+      continue;
+    GST_DEBUG ("Checking for resync on stream %d (%" GST_TIME_FORMAT ")",
+        stream_nr, GST_TIME_ARGS (context->pos));
+
+    /* does it lag? 1 second is a random treshold... */
+    if (context->pos + (GST_SECOND / 2) < demux->pos) {
+      /* send filler */
+      GstEvent *event;
+
+      event = gst_event_new_filler_stamped (context->pos,
+          demux->pos - context->pos);
+      context->pos = demux->pos;
+
+      /* sync */
+      GST_DEBUG ("Synchronizing stream %d with others by sending filler "
+          "at time %" GST_TIME_FORMAT " and duration %" GST_TIME_FORMAT
+          " to time %" GST_TIME_FORMAT, stream_nr,
+          GST_TIME_ARGS (context->pos),
+          GST_TIME_ARGS (demux->pos - context->pos),
+          GST_TIME_ARGS (demux->pos));
+      gst_pad_push (context->pad, GST_DATA (event));
+    }
+  }
+}
+
 static gboolean
 gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
     guint64 cluster_time)
@@ -1982,13 +2026,22 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
           GST_BUFFER_TIMESTAMP (sub) = cluster_time;
         else
           GST_BUFFER_TIMESTAMP (sub) = cluster_time + time;
+
         demux->pos = GST_BUFFER_TIMESTAMP (sub);
       }
+      gst_matroska_demux_sync_streams (demux);
+      demux->src[stream]->pos = demux->pos;
 
-      /* do all laces have the same lenght? */
+      /* FIXME: do all laces have the same lenght? */
       if (duration) {
         GST_BUFFER_DURATION (sub) = duration / laces;
+        demux->src[stream]->pos += GST_BUFFER_DURATION (sub);
       }
+      GST_DEBUG ("Pushing data of size %d for stream %d, time=%"
+          GST_TIME_FORMAT " and duration=%" GST_TIME_FORMAT,
+          GST_BUFFER_SIZE (sub), stream,
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (sub)),
+          GST_TIME_ARGS (GST_BUFFER_DURATION (sub)));
       gst_pad_push (demux->src[stream]->pad, GST_DATA (sub));
 
       size -= lace_size[n];
@@ -2800,9 +2853,13 @@ static GstCaps *
 gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
     subtitlecontext, const gchar * codec_id, gpointer data, guint size)
 {
+  /*GstMatroskaTrackContext *context =
+     (GstMatroskaTrackContext *) subtitlecontext; */
   GstCaps *caps = NULL;
 
-  //..
+  if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8)) {
+    caps = gst_caps_new_simple ("text/plain", NULL);
+  }
 
   return caps;
 }
@@ -2862,7 +2919,8 @@ gst_matroska_demux_plugin_init (GstPlugin * plugin)
     /* FILLME */
   NULL,}
   , *subtitle_id[] = {
-    /* FILLME */
+    GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8,
+        /* FILLME */
   NULL,};
 
   /* this filter needs the riff parser */

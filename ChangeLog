@@ -1,5 +1,55 @@
 2005-01-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* configure.ac:
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_new):
+	* ext/ogg/gstogmparse.c: (gst_ogm_text_parse_get_type),
+	(gst_ogm_text_parse_base_init), (gst_ogm_text_parse_init),
+	(gst_ogm_parse_get_sink_querytypes), (gst_ogm_parse_sink_convert),
+	(gst_ogm_parse_sink_query), (gst_ogm_parse_chain),
+	(gst_ogm_parse_plugin_init):
+	* ext/pango/gsttextoverlay.c: (gst_textoverlay_linkedpads),
+	(gst_textoverlay_link), (gst_textoverlay_getcaps),
+	(gst_textoverlay_event), (gst_textoverlay_video_chain),
+	(gst_textoverlay_loop), (gst_textoverlay_init), (plugin_init):
+	* ext/pango/gsttextoverlay.h:
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_add_stream),
+	(gst_matroska_demux_handle_seek_event),
+	(gst_matroska_demux_sync_streams),
+	(gst_matroska_demux_parse_blockgroup),
+	(gst_matroska_demux_subtitle_caps),
+	(gst_matroska_demux_plugin_init):
+	* gst/matroska/matroska-ids.h:
+	* gst/playback/gstdecodebin.c: (close_pad_link):
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_init),
+	(gen_preroll_element), (remove_groups), (add_stream),
+	(new_decoded_pad), (setup_subtitles), (gen_source_element),
+	(setup_source):
+	* gst/playback/gstplaybasebin.h:
+	* gst/playback/gstplaybin.c: (gen_text_element), (setup_sinks):
+	* gst/subparse/Makefile.am:
+	* gst/subparse/gstsubparse.c: (gst_subparse_get_type),
+	(gst_subparse_base_init), (gst_subparse_class_init),
+	(gst_subparse_init), (gst_subparse_formats),
+	(gst_subparse_eventmask), (gst_subparse_event),
+	(gst_subparse_handle_event), (convert_encoding), (get_next_line),
+	(parse_mdvdsub), (parse_mdvdsub_init), (parse_subrip),
+	(parse_subrip_deinit), (parse_subrip_init), (parse_mpsub),
+	(parse_mpsub_deinit), (parse_mpsub_init),
+	(gst_subparse_buffer_format_autodetect),
+	(gst_subparse_format_autodetect), (gst_subparse_loop),
+	(gst_subparse_change_state), (gst_subparse_type_find),
+	(plugin_init):
+	* gst/subparse/gstsubparse.h:
+	* gst/typefind/gsttypefindfunctions.c: (ogmtext_type_find),
+	(plugin_init):
+	  Add subtitle support, .sub parser (supports SRT and MPsub),
+	  OGM text support, Matroska UTF-8 text support, deadlock fixes
+	  all over the place, subtitle awareness in decodebin/playbin
+	  and some fixes to textoverlay to handle subtitles in a stream
+	  correctly. Fixes #100931.
+
+2005-01-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query):
 	  Check for pad availability before doing a query on it.
 

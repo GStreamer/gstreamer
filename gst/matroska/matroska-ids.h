@@ -153,6 +153,8 @@
 #define GST_MATROSKA_CODEC_ID_AUDIO_TTA          "A_TTA1"
 /* TODO: AC3-9/10 (?), Real, Musepack, Quicktime */
 
+#define GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8      "S_TEXT/UTF8"
+
 /*
  * Matrodka tags. Strings.
  */
@@ -223,6 +225,7 @@ typedef struct _GstMatroskaTrackContext {
   guint         uid, num;
   GstMatroskaTrackFlags flags;
   guint64       default_duration;
+  guint64       pos;
 } GstMatroskaTrackContext;
 
 typedef struct _GstMatroskaTrackVideoContext {
