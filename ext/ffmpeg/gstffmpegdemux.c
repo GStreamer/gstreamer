@@ -161,24 +161,27 @@ gst_ffmpegdemux_dispose (GObject *object)
 }
 
 static GstCaps*
-gst_ffmpegdemux_typefind (GstBuffer *buffer,
-			  gpointer   priv)
+gst_ffmpegdemux_typefind (GstByteStream *bs,
+			  gpointer       priv)
 {
   GstFFMpegDemuxClassParams *params;
   AVInputFormat *in_plugin;
   gint res = 0;
   gint required = AVPROBE_SCORE_MAX * 0.8; /* 80% certainty enough? */
+  gint size_required = 4096;
+  GstBuffer *buf = NULL;
   
   params = g_hash_table_lookup (typefind, priv);
 
   in_plugin = params->in_plugin;
 
-  if (in_plugin->read_probe) {
+  if (in_plugin->read_probe &&
+      gst_bytestream_peek (bs, &buf, size_required) == size_required) {
     AVProbeData probe_data;
 
     probe_data.filename = "";
-    probe_data.buf = GST_BUFFER_DATA (buffer);
-    probe_data.buf_size = GST_BUFFER_SIZE (buffer);
+    probe_data.buf = GST_BUFFER_DATA (buf);
+    probe_data.buf_size = GST_BUFFER_SIZE (buf);
 
     res = in_plugin->read_probe (&probe_data);
     if (res >= required) {
@@ -186,10 +189,15 @@ gst_ffmpegdemux_typefind (GstBuffer *buffer,
       caps = GST_PAD_TEMPLATE_CAPS (params->sinktempl);
       /* make sure we still hold a refcount to this caps */
       gst_caps_ref (caps);
+      gst_buffer_unref (buf);
       return caps;
     }
   }
-	
+
+  if (buf != NULL) {
+    gst_buffer_unref (buf);
+  }
+
   return NULL;
 }
 

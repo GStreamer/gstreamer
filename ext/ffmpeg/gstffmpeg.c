@@ -46,9 +46,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   avcodec_register_all ();
   av_register_all ();
 
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
-
   gst_ffmpegenc_register (plugin);
   gst_ffmpegdec_register (plugin);
   /*gst_ffmpegdemux_register (plugin);*/
