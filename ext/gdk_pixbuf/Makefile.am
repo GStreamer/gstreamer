@@ -22,8 +22,8 @@ gst_loader_headers = gstgdkanimation.h
 
 install-data-hook:
 	if test -z "$(DESTDIR)"  ; then \
-	  $(mkinstalldirs) $(DESTDIR)$(GDK_PIXBUF_SYSCONFDIR)/gtk-2.0 ; \
-	  $(QUERYLOADERS) > $(DESTDIR)$(GDK_PIXBUF_SYSCONFDIR)/gtk-2.0/gdk-pixbuf.loaders ; \
+	  $(mkinstalldirs) $(DESTDIR)$(GDK_PIXBUF_CONFDIR) ; \
+	  $(QUERYLOADERS) > $(DESTDIR)$(GDK_PIXBUF_CONFDIR)/gdk-pixbuf.loaders ; \
 	fi
 
 else

@@ -26,6 +26,10 @@
 #include "gstgdkanimation.h"
 #include <gst/gstinfo.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 
 typedef struct {
   /* stuff gdk throws at us and we're supposed to keep */
@@ -87,6 +91,13 @@ gst_loader_begin_load (GdkPixbufModuleSizeFunc size_func, GdkPixbufModulePrepare
     g_free (context);
     return NULL;
   }
+  context->ani->temp_fd = g_file_open_tmp (NULL, &context->ani->temp_location, error);
+  if (context->ani->temp_fd == 0) {
+    g_object_unref (context->ani);
+    g_free (context);
+    return NULL;
+  }
+
   GST_LOG_OBJECT (context->ani, "begin loading");
   return context;
 }
@@ -137,10 +148,9 @@ gst_loader_stop_load (gpointer context_pointer, GError **error)
 static GdkPixbufAnimation *
 gst_loader_load_animation (FILE *f, GError **error)
 {
-  guchar data[4096];
-  guint size;
-  GdkPixbufAnimationIter *iter;
+  gchar *filename;
   GstGdkAnimation *ani;
+  GdkPixbufAnimationIter *iter = NULL;
   
   if (!gst_loader_init (error))
     return NULL;
@@ -150,23 +160,20 @@ gst_loader_load_animation (FILE *f, GError **error)
   if (!ani)
     return NULL;
   
-  while ((size = fread (data, 1, 4096, f)) > 0) {
-    if (!gst_gdk_animation_add_data (ani, data, size)) {
-      g_set_error (error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_FAILED,
-		   "could not add more data to animation"); /* our errors suck ;) */
-      g_object_unref (ani);
-      GST_WARNING ("load_animation failed");
-      return NULL;
-    }
+  filename = g_strdup_printf ("/proc/self/fd/%d", fileno (f));
+  ani->temp_fd = open (filename, 0);
+  if (ani->temp_fd >= 0) {
+    iter = gdk_pixbuf_animation_get_iter (GDK_PIXBUF_ANIMATION (ani), NULL);
+  } else {
+    GST_DEBUG ("open (\"%s\", 0) failed", filename);
   }
-  gst_gdk_animation_done_adding (ani);
-  iter = gdk_pixbuf_animation_get_iter (GDK_PIXBUF_ANIMATION (ani), NULL);
+  g_free (filename);
   if (iter == NULL) {
-      g_set_error (error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-		   "could not create an image");
-      g_object_unref (ani);
-      GST_INFO ("could not create an image");
-      return NULL; 
+    g_set_error (error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+		 "could not create an image");
+    g_object_unref (ani);
+    GST_INFO ("could not create an image");
+    return NULL; 
   }
   g_object_unref (iter);
   GST_LOG_OBJECT (ani, "load_animation succeeded");
@@ -184,13 +191,22 @@ void
 fill_info (GdkPixbufFormat *info)
 {
   static GdkPixbufModulePattern signature[] = {
+    /* AVI */
     { "RIFF    AVI ", "    xxxx    ", 100 },
+    /* MPEG 1 */
     { "xx\001\272", "zz  ", 100 },
+    /* Quicktime */
+    { "    wide", "xxxx    ", 80 },
+    { "    moov", "xxxx    ", 80 },
+    { "    mdat", "xxxx    ", 80 },
+    { "    pnot", "xxxx    ", 80 },
+    { "    PICT", "xxxx    ", 80 },
+    { "    free", "xxxx    ", 80 },
     { NULL, NULL, 0 }
   };
   
   static gchar *mime_types[] = {
-    "video/avi",
+    "video/avi", "video/x-avi",
     "video/mpeg",
     NULL
   };
@@ -198,6 +214,7 @@ fill_info (GdkPixbufFormat *info)
   static gchar *extensions[] = {
     "avi",
     "mpeg", "mpe", "mpg",
+    "mov",
     NULL
   };
   

@@ -29,7 +29,9 @@
 G_BEGIN_DECLS
 
 /* how many bytes we need to have available before we dare to start a new iteration */
-#define GST_GDK_BUFFER_SIZE 102400
+#define GST_GDK_BUFFER_SIZE (102400)
+/* how far behind we need to be before we attempt to seek */
+#define GST_GDK_MAX_DELAY_TO_SEEK (GST_SECOND / 4)
 
 
 #define GST_TYPE_GDK_ANIMATION			(gst_gdk_animation_get_type())
@@ -97,6 +99,7 @@ struct _GstGdkAnimationIter {
   /* pipeline we're using */
   GstElement *			pipeline;
   gboolean			eos;
+  gboolean			just_seeked;
   
   /* current image and the buffers containing the data */
   GdkPixbuf *			pixbuf;
