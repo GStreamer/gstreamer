@@ -66,13 +66,15 @@ typedef struct
   GstFormat format;
   gint offset;
   GTree *tree;
-} GstMemIndexFormatIndex;
+}
+GstMemIndexFormatIndex;
 
 typedef struct
 {
   gint id;
   GHashTable *format_index;
-} GstMemIndexId;
+}
+GstMemIndexId;
 
 typedef struct _GstMemIndex GstMemIndex;
 typedef struct _GstMemIndexClass GstMemIndexClass;
@@ -136,9 +138,10 @@ gst_mem_index_get_type (void)
       (GInstanceInitFunc) gst_mem_index_init,
       NULL
     };
+
     mem_index_type =
-	g_type_register_static (GST_TYPE_INDEX, "GstMemIndex", &mem_index_info,
-	0);
+        g_type_register_static (GST_TYPE_INDEX, "GstMemIndex", &mem_index_info,
+        0);
   }
   return mem_index_type;
 }
@@ -293,7 +296,8 @@ typedef struct
   gint64 low_diff;
   GstIndexEntry *higher;
   gint64 high_diff;
-} GstMemIndexSearchData;
+}
+GstMemIndexSearchData;
 
 static gint
 mem_index_search (gconstpointer a, gconstpointer b)
@@ -382,16 +386,16 @@ gst_mem_index_get_assoc_entry (GstIndex * index, gint id,
       entry = NULL;
 
       while (l_entry) {
-	entry = (GstIndexEntry *) l_entry->data;
+        entry = (GstIndexEntry *) l_entry->data;
 
-	if (entry->id == id && (GST_INDEX_ASSOC_FLAGS (entry) & flags) == flags)
-	  break;
+        if (entry->id == id && (GST_INDEX_ASSOC_FLAGS (entry) & flags) == flags)
+          break;
 
-	if (method == GST_INDEX_LOOKUP_BEFORE)
-	  l_entry = g_list_next (l_entry);
-	else if (method == GST_INDEX_LOOKUP_AFTER) {
-	  l_entry = g_list_previous (l_entry);
-	}
+        if (method == GST_INDEX_LOOKUP_BEFORE)
+          l_entry = g_list_next (l_entry);
+        else if (method == GST_INDEX_LOOKUP_AFTER) {
+          l_entry = g_list_previous (l_entry);
+        }
       }
     }
   }

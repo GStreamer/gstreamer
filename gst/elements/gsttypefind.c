@@ -83,8 +83,8 @@ enum
 };
 enum
 {
-  MODE_NORMAL,			/* act as identity */
-  MODE_TYPEFIND,		/* do typefinding */
+  MODE_NORMAL,                  /* act as identity */
+  MODE_TYPEFIND,                /* do typefinding */
 };
 
 
@@ -146,16 +146,16 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
 
   g_object_class_install_property (gobject_class, ARG_CAPS,
       g_param_spec_boxed ("caps", _("caps"),
-	  _("detected capabilities in stream"), gst_caps_get_type (),
-	  G_PARAM_READABLE));
+          _("detected capabilities in stream"), gst_caps_get_type (),
+          G_PARAM_READABLE));
   g_object_class_install_property (gobject_class, ARG_MINIMUM,
       g_param_spec_uint ("minimum", _("minimum"),
-	  "minimum probability required to accept caps", GST_TYPE_FIND_MINIMUM,
-	  GST_TYPE_FIND_MAXIMUM, GST_TYPE_FIND_MINIMUM, G_PARAM_READWRITE));
+          "minimum probability required to accept caps", GST_TYPE_FIND_MINIMUM,
+          GST_TYPE_FIND_MAXIMUM, GST_TYPE_FIND_MINIMUM, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_MINIMUM,
       g_param_spec_uint ("maximum", _("maximum"),
-	  "probability to stop typefinding", GST_TYPE_FIND_MINIMUM,
-	  GST_TYPE_FIND_MAXIMUM, GST_TYPE_FIND_MAXIMUM, G_PARAM_READWRITE));
+          "probability to stop typefinding", GST_TYPE_FIND_MINIMUM,
+          GST_TYPE_FIND_MAXIMUM, GST_TYPE_FIND_MAXIMUM, G_PARAM_READWRITE));
 
   gst_type_find_element_signals[HAVE_TYPE] = g_signal_new ("have_type",
       G_TYPE_FROM_CLASS (typefind_class), G_SIGNAL_RUN_LAST,
@@ -259,8 +259,8 @@ gst_type_find_element_src_event_mask (GstPad * pad)
 {
   static const GstEventMask mask[] = {
     {GST_EVENT_SEEK,
-	  GST_SEEK_METHOD_SET | GST_SEEK_METHOD_CUR | GST_SEEK_METHOD_END |
-	  GST_SEEK_FLAG_FLUSH},
+        GST_SEEK_METHOD_SET | GST_SEEK_METHOD_CUR | GST_SEEK_METHOD_END |
+          GST_SEEK_FLAG_FLUSH},
     /* add more if you want, event masks suck and need to die anyway */
     {0,}
   };
@@ -290,7 +290,8 @@ typedef struct
 
   GList *buffers;
   GstTypeFindElement *self;
-} TypeFindEntry;
+}
+TypeFindEntry;
 
 static inline TypeFindEntry *
 new_entry (void)
@@ -336,7 +337,7 @@ stop_typefinding (GstTypeFindElement * typefind)
   if (typefind->possibilities != NULL) {
     /* this should only happen on PAUSED => READY or EOS */
     GST_LOG_OBJECT (typefind, "freeing remaining %u typefind functions",
-	g_list_length (typefind->possibilities));
+        g_list_length (typefind->possibilities));
     g_list_foreach (typefind->possibilities, (GFunc) free_entry, NULL);
     g_list_free (typefind->possibilities);
     typefind->possibilities = NULL;
@@ -349,7 +350,7 @@ stop_typefinding (GstTypeFindElement * typefind)
     guint size = gst_buffer_store_get_size (typefind->store, 0);
 
     if (size
-	&& (buffer = gst_buffer_store_get_buffer (typefind->store, 0, size))) {
+        && (buffer = gst_buffer_store_get_buffer (typefind->store, 0, size))) {
       GST_LOG_OBJECT (typefind, "pushing cached data (%u bytes)", size);
       gst_pad_push (typefind->src, GST_DATA (buffer));
     } else {
@@ -357,10 +358,10 @@ stop_typefinding (GstTypeFindElement * typefind)
     }
     GST_LOG_OBJECT (typefind, "seeking back to current position %u", size);
     if (!gst_pad_send_event (GST_PAD_PEER (typefind->sink),
-	    gst_event_new_seek (GST_SEEK_METHOD_SET | GST_FORMAT_BYTES,
-		size))) {
+            gst_event_new_seek (GST_SEEK_METHOD_SET | GST_FORMAT_BYTES,
+                size))) {
       GST_WARNING_OBJECT (typefind,
-	  "could not seek to required position %u, hope for the best", size);
+          "could not seek to required position %u, hope for the best", size);
     }
   }
   gst_buffer_store_clear (typefind->store);
@@ -375,25 +376,25 @@ find_element_get_length (gpointer data)
 
   if (!typefind->stream_length_available) {
     GST_LOG_OBJECT (entry->self,
-	"'%s' called get_length () but we know it's not available",
-	GST_PLUGIN_FEATURE_NAME (entry->factory));
+        "'%s' called get_length () but we know it's not available",
+        GST_PLUGIN_FEATURE_NAME (entry->factory));
     return 0;
   }
   if (entry->self->stream_length == 0) {
     typefind->stream_length_available =
-	gst_pad_query (GST_PAD_PEER (entry->self->sink), GST_QUERY_TOTAL,
-	&format, &entry->self->stream_length);
+        gst_pad_query (GST_PAD_PEER (entry->self->sink), GST_QUERY_TOTAL,
+        &format, &entry->self->stream_length);
     if (format != GST_FORMAT_BYTES)
       typefind->stream_length_available = FALSE;
     if (!typefind->stream_length_available) {
       GST_DEBUG_OBJECT (entry->self,
-	  "'%s' called get_length () but it's not available",
-	  GST_PLUGIN_FEATURE_NAME (entry->factory));
+          "'%s' called get_length () but it's not available",
+          GST_PLUGIN_FEATURE_NAME (entry->factory));
       return 0;
     } else {
       GST_DEBUG_OBJECT (entry->self,
-	  "'%s' called get_length () and it's %" G_GUINT64_FORMAT " bytes",
-	  GST_PLUGIN_FEATURE_NAME (entry->factory), entry->self->stream_length);
+          "'%s' called get_length () and it's %" G_GUINT64_FORMAT " bytes",
+          GST_PLUGIN_FEATURE_NAME (entry->factory), entry->self->stream_length);
     }
   }
 
@@ -409,23 +410,23 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
     /* need to do more? */
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
-	/* this should only happen when we got all available data */
-	entry =
-	    (TypeFindEntry *) typefind->possibilities ? typefind->
-	    possibilities->data : NULL;
-	if (entry && entry->probability >= typefind->min_probability) {
-	  GST_INFO_OBJECT (typefind,
-	      "'%s' is the best typefind left after we got all data, using it now (probability %u)",
-	      GST_PLUGIN_FEATURE_NAME (entry->factory), entry->probability);
-	  g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE], 0,
-	      entry->probability, entry->caps);
-	}
-	stop_typefinding (typefind);
-	gst_pad_event_default (pad, event);
-	break;
+        /* this should only happen when we got all available data */
+        entry =
+            (TypeFindEntry *) typefind->possibilities ? typefind->
+            possibilities->data : NULL;
+        if (entry && entry->probability >= typefind->min_probability) {
+          GST_INFO_OBJECT (typefind,
+              "'%s' is the best typefind left after we got all data, using it now (probability %u)",
+              GST_PLUGIN_FEATURE_NAME (entry->factory), entry->probability);
+          g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE], 0,
+              entry->probability, entry->caps);
+        }
+        stop_typefinding (typefind);
+        gst_pad_event_default (pad, event);
+        break;
       default:
-	gst_data_unref (GST_DATA (event));
-	break;
+        gst_data_unref (GST_DATA (event));
+        break;
     }
   } else {
     gst_pad_event_default (pad, event);
@@ -449,8 +450,8 @@ find_peek (gpointer data, gint64 offset, guint size)
       buf = NULL;
     } else {
       buf =
-	  gst_buffer_store_get_buffer (entry->self->store, length + offset,
-	  size);
+          gst_buffer_store_get_buffer (entry->self->store, length + offset,
+          size);
     }
   }
 
@@ -460,8 +461,8 @@ find_peek (gpointer data, gint64 offset, guint size)
   } else {
     if (entry->requested_size == 0) {
       GST_LOG_OBJECT (entry->self,
-	  "setting requested peek (%" G_GINT64_FORMAT ", %u) on '%s'", offset,
-	  size, GST_PLUGIN_FEATURE_NAME (entry->factory));
+          "setting requested peek (%" G_GINT64_FORMAT ", %u) on '%s'", offset,
+          size, GST_PLUGIN_FEATURE_NAME (entry->factory));
       entry->requested_offset = offset;
       entry->requested_size = size;
     }
@@ -521,160 +522,160 @@ gst_type_find_element_chain (GstPad * pad, GstData * data)
 
       gst_buffer_store_add_buffer (typefind->store, GST_BUFFER (data));
       current_offset = GST_BUFFER_OFFSET_IS_VALID (data) ?
-	  GST_BUFFER_OFFSET (data) + GST_BUFFER_SIZE (data) :
-	  gst_buffer_store_get_size (typefind->store, 0);
+          GST_BUFFER_OFFSET (data) + GST_BUFFER_SIZE (data) :
+          gst_buffer_store_get_size (typefind->store, 0);
       gst_data_unref (data);
       if (typefind->possibilities == NULL) {
-	/* not yet started, get all typefinding functions into our "queue" */
-	GList *all_factories = gst_type_find_factory_get_list ();
+        /* not yet started, get all typefinding functions into our "queue" */
+        GList *all_factories = gst_type_find_factory_get_list ();
 
-	GST_INFO_OBJECT (typefind, "starting with %u typefinding functions",
-	    g_list_length ((GList *) all_factories));
+        GST_INFO_OBJECT (typefind, "starting with %u typefinding functions",
+            g_list_length ((GList *) all_factories));
 
-	all_factories = g_list_sort (all_factories, compare_type_find_factory);
-	walk = all_factories;
-	while (all_factories) {
-	  entry = new_entry ();
+        all_factories = g_list_sort (all_factories, compare_type_find_factory);
+        walk = all_factories;
+        while (all_factories) {
+          entry = new_entry ();
 
-	  entry->factory = GST_TYPE_FIND_FACTORY (all_factories->data);
-	  entry->self = typefind;
-	  entry->probability = 0;
-	  typefind->possibilities =
-	      g_list_prepend (typefind->possibilities, entry);
-	  all_factories = g_list_next (all_factories);
-	}
-	g_list_free (all_factories);
+          entry->factory = GST_TYPE_FIND_FACTORY (all_factories->data);
+          entry->self = typefind;
+          entry->probability = 0;
+          typefind->possibilities =
+              g_list_prepend (typefind->possibilities, entry);
+          all_factories = g_list_next (all_factories);
+        }
+        g_list_free (all_factories);
       }
       /* call every typefind function once */
       walk = entries = typefind->possibilities;
       GST_INFO_OBJECT (typefind, "iterating %u typefinding functions",
-	  g_list_length (entries));
+          g_list_length (entries));
       typefind->possibilities = NULL;
       while (walk) {
-	find.data = entry = (TypeFindEntry *) walk->data;
-	walk = g_list_next (walk);
-	entry->probability = 0;
-	entry->requested_offset = 0;
-	entry->requested_size = 0;
-	gst_type_find_factory_call_function (entry->factory, &find);
-	free_entry_buffers (entry);
-	if (entry->probability == 0 && entry->requested_size == 0) {
-	  GST_DEBUG_OBJECT (typefind,
-	      "'%s' was removed - no chance of being the right plugin",
-	      GST_PLUGIN_FEATURE_NAME (entry->factory));
-	  free_entry (entry);
-	} else if (entry->probability >= typefind->max_probability) {
-	  /* wooha, got caps */
-	  GstCaps *found_caps = entry->caps;
-	  guint probability = entry->probability;
+        find.data = entry = (TypeFindEntry *) walk->data;
+        walk = g_list_next (walk);
+        entry->probability = 0;
+        entry->requested_offset = 0;
+        entry->requested_size = 0;
+        gst_type_find_factory_call_function (entry->factory, &find);
+        free_entry_buffers (entry);
+        if (entry->probability == 0 && entry->requested_size == 0) {
+          GST_DEBUG_OBJECT (typefind,
+              "'%s' was removed - no chance of being the right plugin",
+              GST_PLUGIN_FEATURE_NAME (entry->factory));
+          free_entry (entry);
+        } else if (entry->probability >= typefind->max_probability) {
+          /* wooha, got caps */
+          GstCaps *found_caps = entry->caps;
+          guint probability = entry->probability;
 
-	  GST_INFO_OBJECT (typefind,
-	      "'%s' returned %u/%u probability, using it NOW",
-	      GST_PLUGIN_FEATURE_NAME (entry->factory), probability,
-	      typefind->max_probability);
-	  while (walk) {
-	    free_entry ((TypeFindEntry *) walk->data);
-	    walk = g_list_next (walk);
-	  }
-	  walk = typefind->possibilities;
-	  while (walk) {
-	    free_entry (walk->data);
-	    walk = g_list_next (walk);
-	  }
-	  typefind->possibilities = NULL;
-	  g_list_free (typefind->possibilities);
-	  g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE], 0,
-	      probability, found_caps);
-	  free_entry (entry);
-	} else {
-	  typefind->possibilities =
-	      g_list_prepend (typefind->possibilities, entry);
-	}
+          GST_INFO_OBJECT (typefind,
+              "'%s' returned %u/%u probability, using it NOW",
+              GST_PLUGIN_FEATURE_NAME (entry->factory), probability,
+              typefind->max_probability);
+          while (walk) {
+            free_entry ((TypeFindEntry *) walk->data);
+            walk = g_list_next (walk);
+          }
+          walk = typefind->possibilities;
+          while (walk) {
+            free_entry (walk->data);
+            walk = g_list_next (walk);
+          }
+          typefind->possibilities = NULL;
+          g_list_free (typefind->possibilities);
+          g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE], 0,
+              probability, found_caps);
+          free_entry (entry);
+        } else {
+          typefind->possibilities =
+              g_list_prepend (typefind->possibilities, entry);
+        }
       }
       g_list_free (entries);
       /* we may now already have caps or we might be left without functions to try */
       if (typefind->caps) {
-	stop_typefinding (typefind);
+        stop_typefinding (typefind);
       } else if (typefind->possibilities == NULL) {
-	GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
+        GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
       } else {
-	/* set up typefind element for next iteration */
-	typefind->possibilities =
-	    g_list_sort (typefind->possibilities, compare_type_find_entry);
+        /* set up typefind element for next iteration */
+        typefind->possibilities =
+            g_list_sort (typefind->possibilities, compare_type_find_entry);
 
-	/* look for typefind functions that require data without seeking */
-	for (walk = typefind->possibilities; walk; walk = g_list_next (walk)) {
-	  entry = (TypeFindEntry *) walk->data;
-	  if (entry->requested_offset <= current_offset &&
-	      entry->requested_offset + entry->requested_size > current_offset)
-	    break;
-	}
-	if (!walk) {
-	  /* find out if we should seek */
-	  for (walk = typefind->possibilities; walk; walk = g_list_next (walk)) {
-	    entry = (TypeFindEntry *) walk->data;
-	    if (entry->requested_size > 0) {
-	      /* FIXME: need heuristic to find out if we should seek */
-	      gint64 seek_offset;
-	      GstEvent *event;
+        /* look for typefind functions that require data without seeking */
+        for (walk = typefind->possibilities; walk; walk = g_list_next (walk)) {
+          entry = (TypeFindEntry *) walk->data;
+          if (entry->requested_offset <= current_offset &&
+              entry->requested_offset + entry->requested_size > current_offset)
+            break;
+        }
+        if (!walk) {
+          /* find out if we should seek */
+          for (walk = typefind->possibilities; walk; walk = g_list_next (walk)) {
+            entry = (TypeFindEntry *) walk->data;
+            if (entry->requested_size > 0) {
+              /* FIXME: need heuristic to find out if we should seek */
+              gint64 seek_offset;
+              GstEvent *event;
 
-	      seek_offset =
-		  entry->requested_offset >
-		  0 ? entry->
-		  requested_offset : find_element_get_length (entry) +
-		  entry->requested_offset;
-	      seek_offset +=
-		  gst_buffer_store_get_size (typefind->store, seek_offset);
-	      event =
-		  gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET,
-		  seek_offset);
-	      if (gst_pad_send_event (GST_PAD_PEER (typefind->sink), event)) {
-		/* done seeking */
-		GST_DEBUG_OBJECT (typefind,
-		    "'%s' was reset - seeked to %" G_GINT64_FORMAT,
-		    GST_PLUGIN_FEATURE_NAME (entry->factory), seek_offset);
-		break;
-	      } else if (entry->requested_offset < 0) {
-		/* impossible to seek */
-		GST_DEBUG_OBJECT (typefind,
-		    "'%s' was reset - couldn't seek to %" G_GINT64_FORMAT,
-		    GST_PLUGIN_FEATURE_NAME (entry->factory), seek_offset);
-		entry->requested_size = 0;
-		entry->requested_offset = 0;
-	      }
-	    }
-	  }
-	}
-	/* throw out all entries that can't get more data */
-	walk = g_list_next (typefind->possibilities);
-	while (walk) {
-	  GList *cur = walk;
+              seek_offset =
+                  entry->requested_offset >
+                  0 ? entry->
+                  requested_offset : find_element_get_length (entry) +
+                  entry->requested_offset;
+              seek_offset +=
+                  gst_buffer_store_get_size (typefind->store, seek_offset);
+              event =
+                  gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET,
+                  seek_offset);
+              if (gst_pad_send_event (GST_PAD_PEER (typefind->sink), event)) {
+                /* done seeking */
+                GST_DEBUG_OBJECT (typefind,
+                    "'%s' was reset - seeked to %" G_GINT64_FORMAT,
+                    GST_PLUGIN_FEATURE_NAME (entry->factory), seek_offset);
+                break;
+              } else if (entry->requested_offset < 0) {
+                /* impossible to seek */
+                GST_DEBUG_OBJECT (typefind,
+                    "'%s' was reset - couldn't seek to %" G_GINT64_FORMAT,
+                    GST_PLUGIN_FEATURE_NAME (entry->factory), seek_offset);
+                entry->requested_size = 0;
+                entry->requested_offset = 0;
+              }
+            }
+          }
+        }
+        /* throw out all entries that can't get more data */
+        walk = g_list_next (typefind->possibilities);
+        while (walk) {
+          GList *cur = walk;
 
-	  entry = (TypeFindEntry *) walk->data;
-	  walk = g_list_next (walk);
-	  if (entry->requested_size == 0) {
-	    GST_DEBUG_OBJECT (typefind,
-		"'%s' was removed - higher possibilities available",
-		GST_PLUGIN_FEATURE_NAME (entry->factory));
-	    free_entry (entry);
-	    typefind->possibilities =
-		g_list_delete_link (typefind->possibilities, cur);
-	  }
-	}
-	if (g_list_next (typefind->possibilities) == NULL) {
-	  entry = (TypeFindEntry *) typefind->possibilities->data;
-	  if (entry->probability > typefind->min_probability) {
-	    GST_INFO_OBJECT (typefind,
-		"'%s' is the only typefind left, using it now (probability %u)",
-		GST_PLUGIN_FEATURE_NAME (entry->factory), entry->probability);
-	    g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
-		0, entry->probability, entry->caps);
-	    free_entry (entry);
-	    g_list_free (typefind->possibilities);
-	    typefind->possibilities = NULL;
-	    stop_typefinding (typefind);
-	  }
-	}
+          entry = (TypeFindEntry *) walk->data;
+          walk = g_list_next (walk);
+          if (entry->requested_size == 0) {
+            GST_DEBUG_OBJECT (typefind,
+                "'%s' was removed - higher possibilities available",
+                GST_PLUGIN_FEATURE_NAME (entry->factory));
+            free_entry (entry);
+            typefind->possibilities =
+                g_list_delete_link (typefind->possibilities, cur);
+          }
+        }
+        if (g_list_next (typefind->possibilities) == NULL) {
+          entry = (TypeFindEntry *) typefind->possibilities->data;
+          if (entry->probability > typefind->min_probability) {
+            GST_INFO_OBJECT (typefind,
+                "'%s' is the only typefind left, using it now (probability %u)",
+                GST_PLUGIN_FEATURE_NAME (entry->factory), entry->probability);
+            g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
+                0, entry->probability, entry->caps);
+            free_entry (entry);
+            g_list_free (typefind->possibilities);
+            typefind->possibilities = NULL;
+            stop_typefinding (typefind);
+          }
+        }
       }
       break;
     }

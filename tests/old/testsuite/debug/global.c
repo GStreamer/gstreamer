@@ -43,7 +43,7 @@ gst_debug_log_one (GstDebugCategory * category,
     GObject * object, gchar * message, gpointer thread) G_GNUC_NO_INSTRUMENT;
 
      static void
-	 gst_debug_log_one (GstDebugCategory * category, GstDebugLevel level,
+         gst_debug_log_one (GstDebugCategory * category, GstDebugLevel level,
     const gchar * file, const gchar * function, gint line, GObject * object,
     gchar * message, gpointer thread)
 {
@@ -95,7 +95,7 @@ main (gint argc, gchar * argv[])
   g_print ("creating %d threads\n", THREAD_COUNT);
   for (i = 0; i < THREAD_COUNT; i++) {
     g_assert ((threads[i] =
-	    g_thread_create (thread_main, GINT_TO_POINTER (i), TRUE, NULL)));
+            g_thread_create (thread_main, GINT_TO_POINTER (i), TRUE, NULL)));
   }
   g_print ("joining %d threads\n", THREAD_COUNT);
   for (i = 0; i < THREAD_COUNT; i++) {

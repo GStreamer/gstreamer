@@ -63,7 +63,7 @@ static void cothread_destroy (cothread_state * cothread);
 
 struct _cothread_context
 {
-  cothread_state *cothreads[COTHREAD_MAXTHREADS];	/* array of cothread states */
+  cothread_state *cothreads[COTHREAD_MAXTHREADS];       /* array of cothread states */
   int ncothreads;
   int current;
   unsigned long stack_top;
@@ -112,7 +112,7 @@ cothread_context *
 cothread_context_init (void)
 {
   char __csf;
-  void *current_stack_frame = &__csf;	/* Get pointer inside current stack frame */
+  void *current_stack_frame = &__csf;   /* Get pointer inside current stack frame */
   cothread_context *ctx;
 
   /* if there already is a cotread context for this thread,
@@ -120,7 +120,7 @@ cothread_context_init (void)
   ctx = g_static_private_get (&_cothread_ctx_key);
   if (ctx) {
     GST_CAT_INFO (GST_CAT_COTHREADS,
-	"returning private _cothread_ctx_key %p", ctx);
+        "returning private _cothread_ctx_key %p", ctx);
     return ctx;
   }
 
@@ -243,7 +243,7 @@ cothread_create (cothread_context * ctx)
     if (ctx->cothreads[slot] == NULL)
       break;
     else if (ctx->cothreads[slot]->flags & COTHREAD_DESTROYED &&
-	slot != ctx->current) {
+        slot != ctx->current) {
       cothread_destroy (ctx->cothreads[slot]);
       break;
     }
@@ -263,7 +263,7 @@ cothread_create (cothread_context * ctx)
     unsigned long ptr;
 
     for (ptr = ctx->stack_top - 4096; ptr > (unsigned long) cothread;
-	ptr -= 4096) {
+        ptr -= 4096) {
       GST_CAT_DEBUG (GST_CAT_COTHREADS, "touching location 0x%08lx", ptr);
       *(volatile unsigned int *) ptr = *(volatile unsigned int *) ptr;
       GST_CAT_DEBUG (GST_CAT_COTHREADS, "ok (0x%08x)", *(unsigned int *) ptr);
@@ -478,11 +478,11 @@ cothread_stub (void)
     cothread->func (cothread->argc, cothread->argv);
 
     GST_CAT_DEBUG (GST_CAT_COTHREADS, "cothread[%d] thread->func exited",
-	ctx->current);
+        ctx->current);
 
     GST_CAT_DEBUG (GST_CAT_COTHREADS, "sp=%p", current_stack_frame);
     GST_CAT_DEBUG (GST_CAT_COTHREADS, "ctx=%p current=%p", ctx,
-	cothread_get_current_context ());
+        cothread_get_current_context ());
     g_assert (ctx == cothread_get_current_context ());
 
     g_assert (ctx->current != 0);
@@ -623,8 +623,8 @@ cothread_switch (cothread_state * cothread)
   enter = setjmp (current->jmp);
   if (enter != 0) {
     GST_CAT_DEBUG (GST_CAT_COTHREADS,
-	"enter cothread #%d %d sp=%p jmpbuf=%p",
-	current->cothreadnum, enter, current->sp, current->jmp);
+        "enter cothread #%d %d sp=%p jmpbuf=%p",
+        current->cothreadnum, enter, current->sp, current->jmp);
     return;
   }
   GST_CAT_DEBUG (GST_CAT_COTHREADS, "exit cothread #%d %d sp=%p jmpbuf=%p",

@@ -95,34 +95,34 @@ gst_statistics_class_init (GstStatisticsClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFERS,
       g_param_spec_int64 ("buffers", "buffers", "total buffers count",
-	  0, G_MAXINT64, 0, G_PARAM_READABLE));
+          0, G_MAXINT64, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BYTES,
       g_param_spec_int64 ("bytes", "bytes", "total bytes count",
-	  0, G_MAXINT64, 0, G_PARAM_READABLE));
+          0, G_MAXINT64, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EVENTS,
       g_param_spec_int64 ("events", "events", "total event count",
-	  0, G_MAXINT64, 0, G_PARAM_READABLE));
+          0, G_MAXINT64, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       ARG_BUFFER_UPDATE_FREQ, g_param_spec_int64 ("buffer_update_freq",
-	  "buffer update freq", "buffer update frequency", 0, G_MAXINT64, 0,
-	  G_PARAM_READWRITE));
+          "buffer update freq", "buffer update frequency", 0, G_MAXINT64, 0,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       ARG_BYTES_UPDATE_FREQ, g_param_spec_int64 ("bytes_update_freq",
-	  "bytes update freq", "bytes update frequency", 0, G_MAXINT64, 0,
-	  G_PARAM_READWRITE));
+          "bytes update freq", "bytes update frequency", 0, G_MAXINT64, 0,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       ARG_EVENT_UPDATE_FREQ, g_param_spec_int64 ("event_update_freq",
-	  "event update freq", "event update frequency", 0, G_MAXINT64, 0,
-	  G_PARAM_READWRITE));
+          "event update freq", "event update frequency", 0, G_MAXINT64, 0,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_UPDATE_ON_EOS,
       g_param_spec_boolean ("update_on_eos", "update on EOS",
-	  "update on EOS event", TRUE, G_PARAM_READWRITE));
+          "update on EOS event", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_UPDATE,
       g_param_spec_boolean ("update", "update", "update", TRUE,
-	  G_PARAM_READWRITE));
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
       g_param_spec_boolean ("silent", "silent", "silent", TRUE,
-	  G_PARAM_READWRITE));
+          G_PARAM_READWRITE));
 
   gst_statistics_signals[SIGNAL_UPDATE] =
       g_signal_new ("update", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -253,14 +253,14 @@ gst_statistics_chain (GstPad * pad, GstData * _data)
     if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
       gst_element_set_eos (GST_ELEMENT (statistics));
       if (statistics->update_on_eos) {
-	update = TRUE;
+        update = TRUE;
       }
     }
     if (statistics->update_freq.events) {
       statistics->update_count.events += 1;
       if (statistics->update_count.events == statistics->update_freq.events) {
-	statistics->update_count.events = 0;
-	update = TRUE;
+        statistics->update_count.events = 0;
+        update = TRUE;
       }
     }
   } else {
@@ -268,8 +268,8 @@ gst_statistics_chain (GstPad * pad, GstData * _data)
     if (statistics->update_freq.buffers) {
       statistics->update_count.buffers += 1;
       if (statistics->update_count.buffers == statistics->update_freq.buffers) {
-	statistics->update_count.buffers = 0;
-	update = TRUE;
+        statistics->update_count.buffers = 0;
+        update = TRUE;
       }
     }
 
@@ -277,8 +277,8 @@ gst_statistics_chain (GstPad * pad, GstData * _data)
     if (statistics->update_freq.bytes) {
       statistics->update_count.bytes += GST_BUFFER_SIZE (buf);
       if (statistics->update_count.bytes >= statistics->update_freq.bytes) {
-	statistics->update_count.bytes = 0;
-	update = TRUE;
+        statistics->update_count.bytes = 0;
+        update = TRUE;
       }
     }
   }
@@ -287,7 +287,7 @@ gst_statistics_chain (GstPad * pad, GstData * _data)
     if (statistics->update) {
       GST_DEBUG ("[%s]: pre update emit", GST_ELEMENT_NAME (statistics));
       g_signal_emit (G_OBJECT (statistics),
-	  gst_statistics_signals[SIGNAL_UPDATE], 0);
+          gst_statistics_signals[SIGNAL_UPDATE], 0);
       GST_DEBUG ("[%s]: post update emit", GST_ELEMENT_NAME (statistics));
     }
     if (!statistics->silent) {

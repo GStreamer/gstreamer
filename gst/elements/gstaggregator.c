@@ -69,9 +69,10 @@ gst_aggregator_sched_get_type (void)
     {AGGREGATOR_CHAIN, "4", "Chain Based"},
     {0, NULL, NULL},
   };
+
   if (!aggregator_sched_type) {
     aggregator_sched_type =
-	g_enum_register_static ("GstAggregatorSched", aggregator_sched);
+        g_enum_register_static ("GstAggregatorSched", aggregator_sched);
   }
   return aggregator_sched_type;
 }
@@ -117,17 +118,17 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_PADS,
       g_param_spec_int ("num_pads", "Num pads", "The number of source pads",
-	  0, G_MAXINT, 0, G_PARAM_READABLE));
+          0, G_MAXINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
       g_param_spec_boolean ("silent", "Silent", "Don't produce messages",
-	  FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCHED,
       g_param_spec_enum ("sched", "Scheduling",
-	  "The type of scheduling this element should use",
-	  GST_TYPE_AGGREGATOR_SCHED, AGGREGATOR_CHAIN, G_PARAM_READWRITE));
+          "The type of scheduling this element should use",
+          GST_TYPE_AGGREGATOR_SCHED, AGGREGATOR_CHAIN, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
       g_param_spec_string ("last_message", "Last message",
-	  "The current state of the element", NULL, G_PARAM_READABLE));
+          "The current state of the element", NULL, G_PARAM_READABLE));
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_aggregator_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_aggregator_get_property);
@@ -192,7 +193,7 @@ gst_aggregator_update_functions (GstAggregator * aggregator)
 
   if (AGGREGATOR_IS_LOOP_BASED (aggregator)) {
     gst_element_set_loop_function (GST_ELEMENT (aggregator),
-	GST_DEBUG_FUNCPTR (gst_aggregator_loop));
+        GST_DEBUG_FUNCPTR (gst_aggregator_loop));
   } else {
     gst_element_set_loop_function (GST_ELEMENT (aggregator), NULL);
   }
@@ -271,9 +272,9 @@ gst_aggregator_push (GstAggregator * aggregator, GstPad * pad, GstBuffer * buf,
     g_free (aggregator->last_message);
 
     aggregator->last_message =
-	g_strdup_printf ("%10.10s ******* (%s:%s)a (%d bytes, %"
-	G_GUINT64_FORMAT ")", debug, GST_DEBUG_PAD_NAME (pad),
-	GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+        g_strdup_printf ("%10.10s ******* (%s:%s)a (%d bytes, %"
+        G_GUINT64_FORMAT ")", debug, GST_DEBUG_PAD_NAME (pad),
+        GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
 
     g_object_notify (G_OBJECT (aggregator), "last_message");
   }
@@ -306,11 +307,11 @@ gst_aggregator_loop (GstElement * element)
        * and that the peer pad is also enabled.
        */
       if (GST_PAD_IS_USABLE (pad)) {
-	buf = GST_BUFFER (gst_pad_pull (pad));
-	debug = "loop";
+        buf = GST_BUFFER (gst_pad_pull (pad));
+        debug = "loop";
 
-	/* then push it forward */
-	gst_aggregator_push (aggregator, pad, buf, debug);
+        /* then push it forward */
+        gst_aggregator_push (aggregator, pad, buf, debug);
       }
     }
   } else {

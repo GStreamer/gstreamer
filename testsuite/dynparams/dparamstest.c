@@ -96,7 +96,7 @@ gst_dptest_get_type (void)
     };
 
     dptest_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstDpTest", &dptest_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstDpTest", &dptest_info, 0);
   }
   return dptest_type;
 }
@@ -147,7 +147,7 @@ gst_dptest_init (GstDpTest * dptest)
 
   gst_dpman_add_required_dparam_direct (dptest->dpman,
       g_param_spec_float ("float1", "float1", "float1",
-	  0.0, 1.0, 0.5, G_PARAM_READWRITE), "float", &(dptest->float1)
+          0.0, 1.0, 0.5, G_PARAM_READWRITE), "float", &(dptest->float1)
       );
 
   dptest->float1 = 0.0;

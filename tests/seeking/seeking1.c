@@ -11,11 +11,11 @@ event_received (GObject * object, GstEvent * event, GstElement * pipeline)
     g_print ("segment done\n");
     if (--looping == 1) {
       event = gst_event_new_segment_seek (GST_FORMAT_DEFAULT |
-	  GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, 20, 25);
+          GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, 20, 25);
     } else {
       event = gst_event_new_segment_seek (GST_FORMAT_DEFAULT |
-	  GST_SEEK_METHOD_SET |
-	  GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT_LOOP, 50, 55);
+          GST_SEEK_METHOD_SET |
+          GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT_LOOP, 50, 55);
     }
     gst_pad_send_event (pad, event);
   }
@@ -51,7 +51,7 @@ main (gint argc, gchar * argv[])
 
   gst_pad_send_event (pad,
       gst_event_new_segment_seek (GST_FORMAT_DEFAULT |
-	  GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, 5, 10));
+          GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, 5, 10));
 
   format = GST_FORMAT_DEFAULT;
 

@@ -75,8 +75,9 @@ gst_dparam_get_type (void)
       0,
       (GInstanceInitFunc) gst_dparam_init,
     };
+
     dparam_type =
-	g_type_register_static (GST_TYPE_OBJECT, "GstDParam", &dparam_info, 0);
+        g_type_register_static (GST_TYPE_OBJECT, "GstDParam", &dparam_info, 0);
   }
   return dparam_type;
 }
@@ -97,20 +98,20 @@ gst_dparam_class_init (GstDParamClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VALUE_FLOAT,
       g_param_spec_float ("value_float", "Float Value",
-	  "The value that should be changed if gfloat is the type",
-	  -G_MAXFLOAT, G_MAXFLOAT, 0.0F, G_PARAM_READWRITE));
+          "The value that should be changed if gfloat is the type",
+          -G_MAXFLOAT, G_MAXFLOAT, 0.0F, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VALUE_DOUBLE,
       g_param_spec_double ("value_double", "Double Value",
-	  "The value that should be changed if gdouble is the type",
-	  -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
+          "The value that should be changed if gdouble is the type",
+          -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VALUE_INT,
       g_param_spec_int ("value_int", "Integer Value",
-	  "The value that should be changed if gint is the type",
-	  G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+          "The value that should be changed if gint is the type",
+          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VALUE_INT64,
       g_param_spec_int64 ("value_int64", "64 bit Integer Value",
-	  "The value that should be changed if gint64 is the type",
-	  G_MININT64, G_MAXINT64, 0, G_PARAM_READWRITE));
+          "The value that should be changed if gint64 is the type",
+          G_MININT64, G_MAXINT64, 0, G_PARAM_READWRITE));
 
   gobject_class->dispose = gst_dparam_dispose;
 
@@ -197,38 +198,38 @@ gst_dparam_set_property (GObject * object, guint prop_id, const GValue * value,
   switch (prop_id) {
     case ARG_VALUE_FLOAT:
       GST_DEBUG ("setting value from %g to %g", dparam->value_float,
-	  g_value_get_float (value));
+          g_value_get_float (value));
       dparam->value_float = g_value_get_float (value);
       GST_DPARAM_NEXT_UPDATE_TIMESTAMP (dparam) =
-	  GST_DPARAM_LAST_UPDATE_TIMESTAMP (dparam);
+          GST_DPARAM_LAST_UPDATE_TIMESTAMP (dparam);
       GST_DPARAM_READY_FOR_UPDATE (dparam) = TRUE;
       break;
 
     case ARG_VALUE_DOUBLE:
       GST_DEBUG ("setting value from %g to %g",
-	  dparam->value_double, g_value_get_double (value));
+          dparam->value_double, g_value_get_double (value));
       dparam->value_double = g_value_get_double (value);
       GST_DPARAM_NEXT_UPDATE_TIMESTAMP (dparam) =
-	  GST_DPARAM_LAST_UPDATE_TIMESTAMP (dparam);
+          GST_DPARAM_LAST_UPDATE_TIMESTAMP (dparam);
       GST_DPARAM_READY_FOR_UPDATE (dparam) = TRUE;
       break;
 
     case ARG_VALUE_INT:
       GST_DEBUG ("setting value from %d to %d", dparam->value_int,
-	  g_value_get_int (value));
+          g_value_get_int (value));
       dparam->value_int = g_value_get_int (value);
       GST_DPARAM_NEXT_UPDATE_TIMESTAMP (dparam) =
-	  GST_DPARAM_LAST_UPDATE_TIMESTAMP (dparam);
+          GST_DPARAM_LAST_UPDATE_TIMESTAMP (dparam);
       GST_DPARAM_READY_FOR_UPDATE (dparam) = TRUE;
       break;
 
     case ARG_VALUE_INT64:
       GST_DEBUG ("setting value from %"
-	  G_GINT64_FORMAT " to %"
-	  G_GINT64_FORMAT, dparam->value_int64, g_value_get_int64 (value));
+          G_GINT64_FORMAT " to %"
+          G_GINT64_FORMAT, dparam->value_int64, g_value_get_int64 (value));
       dparam->value_int64 = g_value_get_int64 (value);
       GST_DPARAM_NEXT_UPDATE_TIMESTAMP (dparam) =
-	  GST_DPARAM_LAST_UPDATE_TIMESTAMP (dparam);
+          GST_DPARAM_LAST_UPDATE_TIMESTAMP (dparam);
       GST_DPARAM_READY_FOR_UPDATE (dparam) = TRUE;
       break;
 

@@ -75,7 +75,7 @@ main (int argc, char *argv[])
   g_assert (filesink);
 
   /* set the filenames */
-  filename = g_strdup_printf ("%s.ogg", argv[1]);	/* easy solution */
+  filename = g_strdup_printf ("%s.ogg", argv[1]);       /* easy solution */
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
   g_object_set (G_OBJECT (filesink), "location", filename, NULL);
   g_free (filename);

@@ -82,7 +82,7 @@ gst_fdsink_class_init (GstFdSinkClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to write to",
-	  0, G_MAXINT, 1, G_PARAM_READWRITE));
+          0, G_MAXINT, 1, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_fdsink_set_property;
   gobject_class->get_property = gst_fdsink_get_property;
@@ -114,7 +114,7 @@ gst_fdsink_chain (GstPad * pad, GstData * _data)
 
   if (GST_BUFFER_DATA (buf)) {
     GST_DEBUG ("writing %d bytes to file descriptor %d", GST_BUFFER_SIZE (buf),
-	fdsink->fd);
+        fdsink->fd);
     write (fdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   }
 

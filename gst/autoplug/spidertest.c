@@ -15,10 +15,10 @@ gst_factories_at_most_templates (GList * factories, GstPadDirection dir,
 
     while (templs) {
       if (GST_PAD_TEMPLATE_DIRECTION (templs->data) == dir) {
-	count++;
+        count++;
       }
       if (count > maxtemplates)
-	break;
+        break;
       templs = g_list_next (templs);
     }
     if (count <= maxtemplates)
@@ -33,7 +33,7 @@ static void
 property_change_callback (GObject * object, GstObject * orig,
     GParamSpec * pspec)
 {
-  GValue value = { 0, };	/* the important thing is that value.type = 0 */
+  GValue value = { 0, };        /* the important thing is that value.type = 0 */
   gchar *str = 0;
 
   if (pspec->flags & G_PARAM_READABLE) {
@@ -121,8 +121,8 @@ main (int argc, char *argv[])
 
   /* link objects */
   if (!(gst_element_link (filesrc, decoder) &&
-	  gst_element_link (decoder, osssink) &&
-	  gst_element_link (decoder, videosink))) {
+          gst_element_link (decoder, osssink) &&
+          gst_element_link (decoder, videosink))) {
     g_print ("the pipeline could not be linked\n");
     exit (-4);
   }

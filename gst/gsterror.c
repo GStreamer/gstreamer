@@ -40,7 +40,7 @@ gst_g_error_get_type (void)
 
   if (!type)
     type = g_boxed_type_register_static ("GstGError",
-	(GBoxedCopyFunc) g_error_copy, (GBoxedFreeFunc) g_error_free);
+        (GBoxedCopyFunc) g_error_copy, (GBoxedFreeFunc) g_error_free);
   return type;
 }
 
@@ -56,7 +56,7 @@ _gst_core_errors_init ()
       N_("GStreamer encountered a general core library error."));
   TABLE (t, CORE, TOO_LAZY,
       N_("GStreamer developers were too lazy to assign an error code "
-	  "to this error.  Please file a bug."));
+          "to this error.  Please file a bug."));
   TABLE (t, CORE, NOT_IMPLEMENTED,
       N_("Internal GStreamer error: code not implemented.  File a bug."));
   TABLE (t, CORE, STATE_CHANGE,
@@ -93,7 +93,7 @@ _gst_library_errors_init ()
       N_("GStreamer encountered a general supporting library error."));
   TABLE (t, LIBRARY, TOO_LAZY,
       N_("GStreamer developers were too lazy to assign an error code "
-	  "to this error.  Please file a bug."));
+          "to this error.  Please file a bug."));
   TABLE (t, LIBRARY, INIT, N_("Could not initialize supporting library."));
   TABLE (t, LIBRARY, SHUTDOWN, N_("Could not close supporting library."));
   TABLE (t, LIBRARY, SETTINGS, N_("Could not close supporting library."));
@@ -113,7 +113,7 @@ _gst_resource_errors_init ()
       N_("GStreamer encountered a general supporting library error."));
   TABLE (t, RESOURCE, TOO_LAZY,
       N_("GStreamer developers were too lazy to assign an error code "
-	  "to this error.  Please file a bug."));
+          "to this error.  Please file a bug."));
   TABLE (t, RESOURCE, NOT_FOUND, N_("Resource not found."));
   TABLE (t, RESOURCE, BUSY, N_("Resource busy or not available."));
   TABLE (t, RESOURCE, OPEN_READ, N_("Could not open resource for reading."));
@@ -143,10 +143,10 @@ _gst_stream_errors_init ()
       N_("GStreamer encountered a general supporting library error."));
   TABLE (t, STREAM, TOO_LAZY,
       N_("GStreamer developers were too lazy to assign an error code "
-	  "to this error.  Please file a bug."));
+          "to this error.  Please file a bug."));
   TABLE (t, STREAM, NOT_IMPLEMENTED,
       N_("Element doesn't implement handling of this stream. "
-	  "Please file a bug."));
+          "Please file a bug."));
   TABLE (t, STREAM, TYPE_NOT_FOUND, N_("Could not determine type of stream."));
   TABLE (t, STREAM, WRONG_TYPE,
       N_("The stream is of a different type than handled by this element."));
@@ -205,13 +205,13 @@ QUARK_FUNC (core)
   else {
     g_warning ("No error messages for domain %s", g_quark_to_string (domain));
     return g_strdup_printf (_("No error message for domain %s."),
-	g_quark_to_string (domain));
+        g_quark_to_string (domain));
   }
   if (message)
     return g_strdup (_(message));
   else
     return
-	g_strdup_printf (_
-	("No standard error message for domain %s and code %d."),
-	g_quark_to_string (domain), code);
+        g_strdup_printf (_
+        ("No standard error message for domain %s and code %d."),
+        g_quark_to_string (domain), code);
 }

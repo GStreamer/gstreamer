@@ -11,8 +11,8 @@ make_and_check_element (gchar * type, gchar * name)
 
   if (element == NULL) {
     g_warning
-	("Could not run test, because element type \"%s\" is not installed. Please retry when it is. Assuming it works for now...",
-	type);
+        ("Could not run test, because element type \"%s\" is not installed. Please retry when it is. Assuming it works for now...",
+        type);
     exit (1);
   }
 

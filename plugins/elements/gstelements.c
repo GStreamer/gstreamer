@@ -81,7 +81,7 @@ plugin_init (GstPlugin * plugin)
 
   while ((*my_elements).name) {
     if (!gst_element_register (plugin, (*my_elements).name, (*my_elements).rank,
-	    ((*my_elements).type) ()))
+            ((*my_elements).type) ()))
       return FALSE;
     my_elements++;
   }

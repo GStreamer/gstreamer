@@ -72,7 +72,7 @@ main (gint argc, gchar * argv[])
     g_print ("Created GThread\n");
 
     g_print ("Waiting for thread PLAYING->PAUSED\n");
-    while (!done)		/* do nothing */
+    while (!done)               /* do nothing */
       ;
     running = FALSE;
     g_print ("Unreffing pipeline\n");

@@ -54,11 +54,12 @@ gst_uri_handler_get_type (void)
       NULL,
       NULL
     };
+
     urihandler_type = g_type_register_static (G_TYPE_INTERFACE,
-	"GstURIHandler", &urihandler_info, 0);
+        "GstURIHandler", &urihandler_info, 0);
 
     GST_DEBUG_CATEGORY_INIT (gst_uri_handler_debug, "GST_URI", GST_DEBUG_BOLD,
-	"handling of URIs");
+        "handling of URIs");
   }
   return urihandler_type;
 }
@@ -69,8 +70,8 @@ gst_uri_handler_base_init (gpointer g_class)
 
   if (!initialized) {
     g_signal_new ("new-uri", GST_TYPE_URI_HANDLER, G_SIGNAL_RUN_LAST,
-	G_STRUCT_OFFSET (GstURIHandlerInterface, new_uri), NULL, NULL,
-	gst_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
+        G_STRUCT_OFFSET (GstURIHandlerInterface, new_uri), NULL, NULL,
+        gst_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
     initialized = TRUE;
   }
 }
@@ -200,7 +201,8 @@ typedef struct
 {
   GstURIType type;
   gchar *protocol;
-} SearchEntry;
+}
+SearchEntry;
 static gboolean
 search_by_entry (GstPluginFeature * feature, gpointer search_entry)
 {
@@ -265,7 +267,7 @@ gst_element_make_from_uri (const GstURIType type, const gchar * uri,
 
   if (!possibilities) {
     GST_DEBUG ("No %s for URI '%s'", type == GST_URI_SINK ? "sink" : "source",
-	uri);
+        uri);
     return NULL;
   }
 
@@ -273,11 +275,11 @@ gst_element_make_from_uri (const GstURIType type, const gchar * uri,
   walk = possibilities;
   while (walk) {
     if ((ret = gst_element_factory_create (GST_ELEMENT_FACTORY (walk->data),
-		elementname)) != NULL) {
+                elementname)) != NULL) {
       GstURIHandler *handler = GST_URI_HANDLER (ret);
 
       if (gst_uri_handler_set_uri (handler, uri))
-	break;
+        break;
       g_object_unref (ret);
       ret = NULL;
     }

@@ -69,7 +69,7 @@ gst_registry_get_type (void)
     };
 
     registry_type = g_type_register_static (G_TYPE_OBJECT, "GstRegistry",
-	&registry_info, G_TYPE_FLAG_ABSTRACT);
+        &registry_info, G_TYPE_FLAG_ABSTRACT);
   }
   return registry_type;
 }

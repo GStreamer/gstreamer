@@ -76,8 +76,9 @@ gst_pipeline_get_type (void)
       gst_pipeline_init,
       NULL
     };
+
     pipeline_type =
-	g_type_register_static (GST_TYPE_BIN, "GstPipeline", &pipeline_info, 0);
+        g_type_register_static (GST_TYPE_BIN, "GstPipeline", &pipeline_info, 0);
   }
   return pipeline_type;
 }
@@ -122,8 +123,8 @@ gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
     const gchar *name = gst_scheduler_factory_get_default_name ();
 
     g_error ("Critical error: could not get scheduler \"%s\"\n"
-	"Are you sure you have a registry ?\n"
-	"Run gst-register as root if you haven't done so yet.", name);
+        "Are you sure you have a registry ?\n"
+        "Run gst-register as root if you haven't done so yet.", name);
   }
 }
 
@@ -168,7 +169,7 @@ gst_pipeline_change_state (GstElement * element)
        * might not be in cothread 0 */
 #if 0
       if (GST_ELEMENT_SCHED (element)) {
-	gst_scheduler_reset (GST_ELEMENT_SCHED (element));
+        gst_scheduler_reset (GST_ELEMENT_SCHED (element));
       }
 #endif
       break;

@@ -126,7 +126,7 @@ main (gint argc, gchar * argv[])
    * - if multiple toplevel elements exist, a pipeline is returned
    */
   TEST_START (PIPELINE3);
-  TEST_CHECK_FAIL (GST_BIN (cur)->numchildren == 3);	/* a bit hacky here */
+  TEST_CHECK_FAIL (GST_BIN (cur)->numchildren == 3);    /* a bit hacky here */
   TEST_CHECK_FAIL (GST_IS_PIPELINE (cur));
   TEST_OK;
 

@@ -346,8 +346,9 @@ gst_clock_get_type (void)
       (GInstanceInitFunc) gst_clock_init,
       NULL
     };
+
     clock_type = g_type_register_static (GST_TYPE_OBJECT, "GstClock",
-	&clock_info, G_TYPE_FLAG_ABSTRACT);
+        &clock_info, G_TYPE_FLAG_ABSTRACT);
   }
   return clock_type;
 }
@@ -380,16 +381,16 @@ gst_clock_class_init (GstClockClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STATS,
       g_param_spec_boolean ("stats", "Stats", "Enable clock stats",
-	  FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_DIFF,
       g_param_spec_int64 ("max-diff", "Max diff",
-	  "The maximum amount of time to wait in nanoseconds", 0, G_MAXINT64,
-	  DEFAULT_MAX_DIFF, G_PARAM_READWRITE));
+          "The maximum amount of time to wait in nanoseconds", 0, G_MAXINT64,
+          DEFAULT_MAX_DIFF, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EVENT_DIFF,
       g_param_spec_uint64 ("event-diff", "event diff",
-	  "The amount of time that may elapse until 2 events are treated as happening at different times",
-	  0, G_MAXUINT64, DEFAULT_EVENT_DIFF,
-	  G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "The amount of time that may elapse until 2 events are treated as happening at different times",
+          0, G_MAXUINT64, DEFAULT_EVENT_DIFF,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
 static void
@@ -475,7 +476,7 @@ gst_clock_set_resolution (GstClock * clock, guint64 resolution)
 
   if (cclass->change_resolution)
     clock->resolution =
-	cclass->change_resolution (clock, clock->resolution, resolution);
+        cclass->change_resolution (clock, clock->resolution, resolution);
 
   return clock->resolution;
 }
@@ -642,10 +643,10 @@ gst_clock_get_event_time (GstClock * clock)
 
   if (clock->last_event + clock->max_event_diff >= time) {
     GST_LOG_OBJECT (clock, "reporting last event time %" G_GUINT64_FORMAT,
-	clock->last_event);
+        clock->last_event);
   } else {
     GST_LOG_OBJECT (clock, "reporting new event time %" G_GUINT64_FORMAT,
-	clock->last_event);
+        clock->last_event);
     clock->last_event = time;
   }
 

@@ -124,7 +124,7 @@ gst_bstest_get_type (void)
     };
 
     bstest_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "BSTest", &bstest_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "BSTest", &bstest_info, 0);
   }
   return bstest_type;
 }
@@ -149,19 +149,19 @@ gst_bstest_class_init (GstBsTestClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZEMIN,
       g_param_spec_int ("sizemin", "sizemin", "sizemin", 0, G_MAXINT,
-	  0, G_PARAM_READWRITE));
+          0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZEMAX,
       g_param_spec_int ("sizemax", "sizemax", "sizemax", 0, G_MAXINT,
-	  384, G_PARAM_READWRITE));
+          384, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACCESSPATTERN,
       g_param_spec_string ("accesspattern", "accesspattern", "accesspattern",
-	  "r", G_PARAM_READWRITE));
+          "r", G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_COUNT,
       g_param_spec_uint ("count", "count", "count",
-	  0, G_MAXUINT, 0, G_PARAM_READWRITE));
+          0, G_MAXUINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
       g_param_spec_boolean ("silent", "silent", "silent",
-	  FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE));
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_bstest_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_bstest_get_property);
@@ -212,9 +212,9 @@ gst_bstest_get_size (GstBsTest * bstest, gchar * sizestring, guint prevsize)
     size = bstest->sizemax;
   } else if (sizestring[0] == 'r') {
     size =
-	bstest->sizemin +
-	(guint8) (((gfloat) bstest->sizemax) * rand () / (RAND_MAX +
-	    (gfloat) bstest->sizemin));
+        bstest->sizemin +
+        (guint8) (((gfloat) bstest->sizemax) * rand () / (RAND_MAX +
+            (gfloat) bstest->sizemin));
   } else if (sizestring[0] == '<') {
     size = prevsize;
   } else {
@@ -247,31 +247,31 @@ gst_bstest_loop (GstElement * element)
       buf = NULL;
 
       if (bstest->patterns[i][0] == 'r') {
-	size = gst_bstest_get_size (bstest, &bstest->patterns[i][1], size);
-	if (!bstest->silent)
-	  g_print ("bstest: ***** read %d bytes\n", size);
-	gst_bytestream_read (bstest->bs, &buf, size);
+        size = gst_bstest_get_size (bstest, &bstest->patterns[i][1], size);
+        if (!bstest->silent)
+          g_print ("bstest: ***** read %d bytes\n", size);
+        gst_bytestream_read (bstest->bs, &buf, size);
       } else if (bstest->patterns[i][0] == 'f') {
-	size = gst_bstest_get_size (bstest, &bstest->patterns[i][1], size);
-	if (!bstest->silent)
-	  g_print ("bstest: ***** flush %d bytes\n", size);
-	gst_bytestream_flush (bstest->bs, size);
+        size = gst_bstest_get_size (bstest, &bstest->patterns[i][1], size);
+        if (!bstest->silent)
+          g_print ("bstest: ***** flush %d bytes\n", size);
+        gst_bytestream_flush (bstest->bs, size);
       } else if (!strncmp (bstest->patterns[i], "pb", 2)) {
-	size = gst_bstest_get_size (bstest, &bstest->patterns[i][2], size);
-	if (!bstest->silent)
-	  g_print ("bstest: ***** peek bytes %d bytes\n", size);
-	gst_bytestream_peek_bytes (bstest->bs, &ptr, size);
+        size = gst_bstest_get_size (bstest, &bstest->patterns[i][2], size);
+        if (!bstest->silent)
+          g_print ("bstest: ***** peek bytes %d bytes\n", size);
+        gst_bytestream_peek_bytes (bstest->bs, &ptr, size);
       } else if (bstest->patterns[i][0] == 'p') {
-	size = gst_bstest_get_size (bstest, &bstest->patterns[i][1], size);
-	if (!bstest->silent)
-	  g_print ("bstest: ***** peek %d bytes\n", size);
-	gst_bytestream_peek (bstest->bs, &buf, size);
-	gst_buffer_unref (buf);
-	buf = NULL;
+        size = gst_bstest_get_size (bstest, &bstest->patterns[i][1], size);
+        if (!bstest->silent)
+          g_print ("bstest: ***** peek %d bytes\n", size);
+        gst_bytestream_peek (bstest->bs, &buf, size);
+        gst_buffer_unref (buf);
+        buf = NULL;
       }
 
       if (buf)
-	gst_pad_push (bstest->srcpad, GST_DATA (buf));
+        gst_pad_push (bstest->srcpad, GST_DATA (buf));
 
       i++;
     }
@@ -300,20 +300,20 @@ gst_bstest_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case ARG_ACCESSPATTERN:
       if (bstest->accesspattern) {
-	g_free (bstest->accesspattern);
-	g_strfreev (bstest->patterns);
+        g_free (bstest->accesspattern);
+        g_strfreev (bstest->patterns);
       }
       if (g_value_get_string (value) == NULL) {
-	gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
-	bstest->accesspattern = NULL;
-	bstest->num_patterns = 0;
+        gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
+        bstest->accesspattern = NULL;
+        bstest->num_patterns = 0;
       } else {
-	guint i = 0;
+        guint i = 0;
 
-	bstest->accesspattern = g_strdup (g_value_get_string (value));
-	bstest->patterns = g_strsplit (bstest->accesspattern, ":", 0);
-	while (bstest->patterns[i++]);
-	bstest->num_patterns = i - 1;
+        bstest->accesspattern = g_strdup (g_value_get_string (value));
+        bstest->patterns = g_strsplit (bstest->accesspattern, ":", 0);
+        while (bstest->patterns[i++]);
+        bstest->num_patterns = i - 1;
       }
       break;
     case ARG_COUNT:

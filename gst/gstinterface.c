@@ -54,7 +54,7 @@ gst_implements_interface_get_type (void)
     };
 
     gst_interface_type = g_type_register_static (G_TYPE_INTERFACE,
-	"GstImplementsInterface", &gst_interface_info, 0);
+        "GstImplementsInterface", &gst_interface_info, 0);
 
     g_type_interface_add_prerequisite (gst_interface_type, GST_TYPE_ELEMENT);
   }
@@ -97,11 +97,11 @@ gst_element_implements_interface (GstElement * element, GType iface_type)
     GstImplementsInterfaceClass *ifclass;
 
     iface = G_TYPE_CHECK_INSTANCE_CAST (G_OBJECT (element),
-	iface_type, GstImplementsInterface);
+        iface_type, GstImplementsInterface);
     ifclass = GST_IMPLEMENTS_INTERFACE_GET_CLASS (iface);
 
     if (ifclass->supported != NULL &&
-	ifclass->supported (iface, iface_type) == TRUE) {
+        ifclass->supported (iface, iface_type) == TRUE) {
       return TRUE;
     }
   }
@@ -127,7 +127,7 @@ gst_implements_interface_cast (gpointer from, GType iface_type)
 
   /* check cast, give warning+fail if it's invalid */
   if (!(iface = G_TYPE_CHECK_INSTANCE_CAST (from, iface_type,
-	      GstImplementsInterface))) {
+              GstImplementsInterface))) {
     return NULL;
   }
 
@@ -135,7 +135,7 @@ gst_implements_interface_cast (gpointer from, GType iface_type)
    * is actually implemented */
   if (GST_IS_ELEMENT (from)) {
     g_return_val_if_fail (gst_element_implements_interface (GST_ELEMENT (from),
-	    iface_type), NULL);
+            iface_type), NULL);
   }
 
   return iface;

@@ -43,7 +43,7 @@ static GList *_gst_plugin_static = NULL;
 
 /* static variables for segfault handling of plugin loading */
 static char *_gst_plugin_fault_handler_filename = NULL;
-extern gboolean *_gst_disable_segtrap;	/* see gst.c */
+extern gboolean *_gst_disable_segtrap;  /* see gst.c */
 static gboolean *_gst_plugin_fault_handler_is_setup = FALSE;
 
 /* list of valid licenses.
@@ -56,11 +56,11 @@ static gboolean *_gst_plugin_fault_handler_is_setup = FALSE;
  * QPL: http://www.trolltech.com/licenses/qpl.html
  */
 static gchar *valid_licenses[] = {
-  "LGPL",			/* GNU Lesser General Public License */
-  "GPL",			/* GNU General Public License */
-  "QPL",			/* Trolltech Qt Public License */
-  "GPL/QPL",			/* Combi-license of GPL + QPL */
-  GST_LICENSE_UNKNOWN,		/* some other license */
+  "LGPL",                       /* GNU Lesser General Public License */
+  "GPL",                        /* GNU General Public License */
+  "QPL",                        /* Trolltech Qt Public License */
+  "GPL/QPL",                    /* Combi-license of GPL + QPL */
+  GST_LICENSE_UNKNOWN,          /* some other license */
   NULL
 };
 
@@ -83,7 +83,7 @@ gst_plugin_get_type (void)
 
   if (plugin_type == 0) {
     plugin_type = g_boxed_type_register_static ("GstPlugin",
-	(GBoxedCopyFunc) gst_plugin_copy, g_free);
+        (GBoxedCopyFunc) gst_plugin_copy, g_free);
   }
 
   return plugin_type;
@@ -111,7 +111,7 @@ _gst_plugin_register_static (GstPluginDesc * desc)
   if (main_module == NULL) {
     if (GST_CAT_DEFAULT)
       GST_LOG ("queueing static plugin \"%s\" for loading later on",
-	  desc->name);
+          desc->name);
     _gst_plugin_static = g_list_prepend (_gst_plugin_static, desc);
   } else {
     GstPlugin *plugin;
@@ -121,7 +121,7 @@ _gst_plugin_register_static (GstPluginDesc * desc)
     plugin = g_new0 (GstPlugin, 1);
     if (gst_plugin_register_func (plugin, main_module, desc)) {
       if (GST_CAT_DEFAULT)
-	GST_INFO ("loaded static plugin \"%s\"", desc->name);
+        GST_INFO ("loaded static plugin \"%s\"", desc->name);
       gst_registry_pool_add_plugin (plugin);
     }
   }
@@ -176,21 +176,21 @@ gst_plugin_register_func (GstPlugin * plugin, GModule * module,
   if (!gst_plugin_check_version (desc->major_version, desc->minor_version)) {
     if (GST_CAT_DEFAULT)
       GST_INFO ("plugin \"%s\" has incompatible version, not loading",
-	  plugin->filename);
+          plugin->filename);
     return FALSE;
   }
 
   if (!desc->license || !desc->description || !desc->package || !desc->origin) {
     if (GST_CAT_DEFAULT)
       GST_INFO ("plugin \"%s\" has incorrect GstPluginDesc, not loading",
-	  plugin->filename);
+          plugin->filename);
     return FALSE;
   }
 
   if (!gst_plugin_check_license (desc->license)) {
     if (GST_CAT_DEFAULT)
       GST_INFO ("plugin \"%s\" has invalid license \"%s\", not loading",
-	  plugin->filename, desc->license);
+          plugin->filename, desc->license);
     return FALSE;
   }
 
@@ -300,15 +300,15 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
 
   if (g_module_supported () == FALSE) {
     g_set_error (error,
-	GST_PLUGIN_ERROR,
-	GST_PLUGIN_ERROR_MODULE, "Dynamic loading not supported");
+        GST_PLUGIN_ERROR,
+        GST_PLUGIN_ERROR_MODULE, "Dynamic loading not supported");
     return NULL;
   }
 
   if (stat (filename, &file_status)) {
     g_set_error (error,
-	GST_PLUGIN_ERROR,
-	GST_PLUGIN_ERROR_MODULE, "Problem opening file %s\n", filename);
+        GST_PLUGIN_ERROR,
+        GST_PLUGIN_ERROR_MODULE, "Problem opening file %s\n", filename);
     return NULL;
   }
 
@@ -322,40 +322,40 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
 
       plugin = gst_registry_pool_find_plugin (desc->name);
       if (!plugin) {
-	free_plugin = TRUE;
-	plugin = g_new0 (GstPlugin, 1);
-	plugin->filename = g_strdup (filename);
-	GST_DEBUG ("created new GstPlugin %p for file \"%s\"", plugin,
-	    filename);
+        free_plugin = TRUE;
+        plugin = g_new0 (GstPlugin, 1);
+        plugin->filename = g_strdup (filename);
+        GST_DEBUG ("created new GstPlugin %p for file \"%s\"", plugin,
+            filename);
       } else {
-	free_plugin = FALSE;
-	if (gst_plugin_is_loaded (plugin)) {
-	  if (strcmp (plugin->filename, filename) != 0) {
-	    GST_WARNING
-		("plugin %p from file \"%s\" with same name %s is already "
-		"loaded, aborting loading of \"%s\"", plugin, plugin->filename,
-		plugin->desc.name, filename);
-	    g_set_error (error, GST_PLUGIN_ERROR,
-		GST_PLUGIN_ERROR_NAME_MISMATCH,
-		"already a plugin with name \"%s\" loaded", desc->name);
-	    if (free_plugin)
-	      g_free (plugin);
-	    return NULL;
-	  }
-	  GST_LOG ("Plugin %p for file \"%s\" already loaded, returning it now",
-	      plugin, filename);
-	  return plugin;
-	}
+        free_plugin = FALSE;
+        if (gst_plugin_is_loaded (plugin)) {
+          if (strcmp (plugin->filename, filename) != 0) {
+            GST_WARNING
+                ("plugin %p from file \"%s\" with same name %s is already "
+                "loaded, aborting loading of \"%s\"", plugin, plugin->filename,
+                plugin->desc.name, filename);
+            g_set_error (error, GST_PLUGIN_ERROR,
+                GST_PLUGIN_ERROR_NAME_MISMATCH,
+                "already a plugin with name \"%s\" loaded", desc->name);
+            if (free_plugin)
+              g_free (plugin);
+            return NULL;
+          }
+          GST_LOG ("Plugin %p for file \"%s\" already loaded, returning it now",
+              plugin, filename);
+          return plugin;
+        }
       }
       GST_LOG ("Plugin %p for file \"%s\" prepared, calling entry function...",
-	  plugin, filename);
+          plugin, filename);
 
       if (g_module_symbol (module, "plugin_init", &ptr)) {
-	g_print
-	    ("plugin %p from file \"%s\" exports a symbol named plugin_init\n",
-	    plugin, plugin->filename);
-	g_set_error (error, GST_PLUGIN_ERROR, GST_PLUGIN_ERROR_NAME_MISMATCH,
-	    "plugin \"%s\" exports a symbol named plugin_init", desc->name);
+        g_print
+            ("plugin %p from file \"%s\" exports a symbol named plugin_init\n",
+            plugin, plugin->filename);
+        g_set_error (error, GST_PLUGIN_ERROR, GST_PLUGIN_ERROR_NAME_MISMATCH,
+            "plugin \"%s\" exports a symbol named plugin_init", desc->name);
       }
 
       /* this is where we load the actual .so, so let's trap SIGSEGV */
@@ -363,38 +363,38 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
       _gst_plugin_fault_handler_filename = plugin->filename;
 
       if (gst_plugin_register_func (plugin, module, desc)) {
-	/* remove signal handler */
-	_gst_plugin_fault_handler_restore ();
-	_gst_plugin_fault_handler_filename = NULL;
-	GST_INFO ("plugin \"%s\" loaded", plugin->filename);
-	return plugin;
+        /* remove signal handler */
+        _gst_plugin_fault_handler_restore ();
+        _gst_plugin_fault_handler_filename = NULL;
+        GST_INFO ("plugin \"%s\" loaded", plugin->filename);
+        return plugin;
       } else {
-	/* remove signal handler */
-	_gst_plugin_fault_handler_restore ();
-	GST_DEBUG ("gst_plugin_register_func failed for plugin \"%s\"",
-	    filename);
-	/* plugin == NULL */
-	g_set_error (error,
-	    GST_PLUGIN_ERROR,
-	    GST_PLUGIN_ERROR_MODULE,
-	    "gst_plugin_register_func failed for plugin \"%s\"", filename);
-	if (free_plugin)
-	  g_free (plugin);
-	return NULL;
+        /* remove signal handler */
+        _gst_plugin_fault_handler_restore ();
+        GST_DEBUG ("gst_plugin_register_func failed for plugin \"%s\"",
+            filename);
+        /* plugin == NULL */
+        g_set_error (error,
+            GST_PLUGIN_ERROR,
+            GST_PLUGIN_ERROR_MODULE,
+            "gst_plugin_register_func failed for plugin \"%s\"", filename);
+        if (free_plugin)
+          g_free (plugin);
+        return NULL;
       }
     } else {
       GST_DEBUG ("Could not find plugin entry point in \"%s\"", filename);
       g_set_error (error,
-	  GST_PLUGIN_ERROR,
-	  GST_PLUGIN_ERROR_MODULE,
-	  "Could not find plugin entry point in \"%s\"", filename);
+          GST_PLUGIN_ERROR,
+          GST_PLUGIN_ERROR_MODULE,
+          "Could not find plugin entry point in \"%s\"", filename);
     }
     return NULL;
   } else {
     GST_DEBUG ("Error loading plugin %s, reason: %s\n", filename,
-	g_module_error ());
+        g_module_error ());
     g_set_error (error, GST_PLUGIN_ERROR, GST_PLUGIN_ERROR_MODULE,
-	"Error loading plugin %s, reason: %s\n", filename, g_module_error ());
+        "Error loading plugin %s, reason: %s\n", filename, g_module_error ());
     return NULL;
   }
 }
@@ -454,11 +454,11 @@ gst_plugin_unload_plugin (GstPlugin * plugin)
   if (g_module_close (plugin->module)) {
     plugin->module = NULL;
     GST_CAT_INFO (GST_CAT_PLUGIN_LOADING, "plugin \"%s\" unloaded",
-	plugin->filename);
+        plugin->filename);
     return TRUE;
   } else {
     GST_CAT_INFO (GST_CAT_PLUGIN_LOADING, "failed to unload plugin \"%s\"",
-	plugin->filename);
+        plugin->filename);
     return FALSE;
   }
 }

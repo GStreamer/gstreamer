@@ -121,8 +121,8 @@ gst_trace_text_flush (GstTrace * trace)
 
   for (i = 0; i < trace->bufoffset; i++) {
     snprintf (str, STRSIZE, "%20" G_GINT64_FORMAT " %10d %10d %s\n",
-	trace->buf[i].timestamp,
-	trace->buf[i].sequence, trace->buf[i].data, trace->buf[i].message);
+        trace->buf[i].timestamp,
+        trace->buf[i].sequence, trace->buf[i].data, trace->buf[i].message);
     write (trace->fd, str, strlen (str));
   }
   trace->bufoffset = 0;
@@ -340,8 +340,8 @@ gst_alloc_trace_print (const GstAllocTrace * trace)
       g_print (", dumping live memory: ");
 
       while (mem_live) {
-	g_print ("%p ", mem_live->data);
-	mem_live = g_slist_next (mem_live);
+        g_print ("%p ", mem_live->data);
+        mem_live = g_slist_next (mem_live);
       }
       g_print ("\ntotal %d", g_slist_length (trace->mem_live));
     }

@@ -113,7 +113,7 @@ main (gint argc, gchar * argv[])
     g_assert (sink);
 
     g_signal_connect (G_OBJECT (sink), "handoff",
-	G_CALLBACK (change_state), pipeline);
+        G_CALLBACK (change_state), pipeline);
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     g_print ("running ...\n");
     while (gst_bin_iterate (GST_BIN (pipeline)));

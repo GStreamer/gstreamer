@@ -66,7 +66,8 @@ typedef struct
   GstIndexResolverMethod method;
   GstIndexResolver resolver;
   gpointer user_data;
-} ResolverEntry;
+}
+ResolverEntry;
 
 static const ResolverEntry resolvers[] = {
   {GST_INDEX_RESOLVER_CUSTOM, NULL, NULL},
@@ -81,16 +82,17 @@ gst_index_resolver_get_type (void)
   static GType index_resolver_type = 0;
   static GEnumValue index_resolver[] = {
     {GST_INDEX_RESOLVER_CUSTOM, "GST_INDEX_RESOLVER_CUSTOM",
-	  "Use a custom resolver"},
+        "Use a custom resolver"},
     {GST_INDEX_RESOLVER_GTYPE, "GST_INDEX_RESOLVER_GTYPE",
-	  "Resolve an object to its GType[.padname]"},
+        "Resolve an object to its GType[.padname]"},
     {GST_INDEX_RESOLVER_PATH, "GST_INDEX_RESOLVER_PATH",
-	  "Resolve an object to its path in the pipeline"},
+        "Resolve an object to its path in the pipeline"},
     {0, NULL, NULL},
   };
+
   if (!index_resolver_type) {
     index_resolver_type =
-	g_enum_register_static ("GstIndexResolver", index_resolver);
+        g_enum_register_static ("GstIndexResolver", index_resolver);
   }
   return index_resolver_type;
 }
@@ -102,8 +104,8 @@ gst_index_entry_get_type (void)
 
   if (!index_entry_type) {
     index_entry_type = g_boxed_type_register_static ("GstIndexEntry",
-	(GBoxedCopyFunc) gst_index_entry_copy,
-	(GBoxedFreeFunc) gst_index_entry_free);
+        (GBoxedCopyFunc) gst_index_entry_copy,
+        (GBoxedFreeFunc) gst_index_entry_free);
   }
   return index_entry_type;
 }
@@ -127,8 +129,9 @@ gst_index_get_type (void)
       (GInstanceInitFunc) gst_index_init,
       NULL
     };
+
     index_type =
-	g_type_register_static (GST_TYPE_OBJECT, "GstIndex", &index_info, 0);
+        g_type_register_static (GST_TYPE_OBJECT, "GstIndex", &index_info, 0);
   }
   return index_type;
 }
@@ -154,8 +157,8 @@ gst_index_class_init (GstIndexClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RESOLVER,
       g_param_spec_enum ("resolver", "Resolver",
-	  "Select a predefined object to string mapper",
-	  GST_TYPE_INDEX_RESOLVER, GST_INDEX_RESOLVER_PATH, G_PARAM_READWRITE));
+          "Select a predefined object to string mapper",
+          GST_TYPE_INDEX_RESOLVER, GST_INDEX_RESOLVER_PATH, G_PARAM_READWRITE));
 }
 
 static void
@@ -513,10 +516,10 @@ gst_index_gtype_resolver (GstIndex * index, GstObject * writer,
     GstElement *element = gst_pad_get_parent (GST_PAD (writer));
 
     *writer_string = g_strdup_printf ("%s.%s",
-	g_type_name (G_OBJECT_TYPE (element)), gst_object_get_name (writer));
+        g_type_name (G_OBJECT_TYPE (element)), gst_object_get_name (writer));
   } else {
     *writer_string =
-	g_strdup_printf ("%s", g_type_name (G_OBJECT_TYPE (writer)));
+        g_strdup_printf ("%s", g_type_name (G_OBJECT_TYPE (writer)));
   }
 
   return TRUE;
@@ -563,10 +566,10 @@ gst_index_get_writer_id (GstIndex * index, GstObject * writer, gint * id)
       gboolean res;
 
       res =
-	  index->resolver (index, writer, &writer_string,
-	  index->resolver_user_data);
+          index->resolver (index, writer, &writer_string,
+          index->resolver_user_data);
       if (!res)
-	return FALSE;
+        return FALSE;
     } else {
       g_warning ("no resolver found");
       return FALSE;
@@ -800,7 +803,7 @@ gst_index_get_assoc_entry_full (GstIndex * index, gint id,
 
   if (iclass->get_assoc_entry)
     return iclass->get_assoc_entry (index, id, method, flags, format, value,
-	func, user_data);
+        func, user_data);
 
   return NULL;
 }
@@ -860,8 +863,9 @@ gst_index_factory_get_type (void)
       (GInstanceInitFunc) gst_index_factory_init,
       NULL
     };
+
     indexfactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE,
-	"GstIndexFactory", &indexfactory_info, 0);
+        "GstIndexFactory", &indexfactory_info, 0);
   }
   return indexfactory_type;
 }

@@ -105,7 +105,7 @@ gst_multifilesrc_class_init (GstMultiFileSrcClass * klass)
       G_STRUCT_OFFSET (GstMultiFileSrcClass, new_file), NULL, NULL,
       g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATIONS, g_param_spec_pointer ("locations", "locations", "locations", G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATIONS, g_param_spec_pointer ("locations", "locations", "locations", G_PARAM_READWRITE));     /* CHECKME */
 
   gobject_class->set_property = gst_multifilesrc_set_property;
   gobject_class->get_property = gst_multifilesrc_get_property;
@@ -149,11 +149,11 @@ gst_multifilesrc_set_property (GObject * object, guint prop_id,
 
       /* clear the filename if we get a NULL */
       if (g_value_get_pointer (value) == NULL) {
-	gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
-	src->listptr = NULL;
-	/* otherwise set the new filenames */
+        gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
+        src->listptr = NULL;
+        /* otherwise set the new filenames */
       } else {
-	src->listptr = g_value_get_pointer (value);
+        src->listptr = g_value_get_pointer (value);
       }
       break;
     default:
@@ -244,7 +244,7 @@ gst_multifilesrc_open_file (GstMultiFileSrc * src, GstPad * srcpad)
 
   if (src->currentfilename == NULL || src->currentfilename[0] == '\0') {
     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-	(_("No file name specified for reading.")), (NULL));
+        (_("No file name specified for reading.")), (NULL));
     return FALSE;
   }
 
@@ -252,8 +252,8 @@ gst_multifilesrc_open_file (GstMultiFileSrc * src, GstPad * srcpad)
   src->fd = open ((const char *) src->currentfilename, O_RDONLY);
   if (src->fd < 0) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-	(_("Could not open file \"%s\" for reading."), src->currentfilename),
-	GST_ERROR_SYSTEM);
+        (_("Could not open file \"%s\" for reading."), src->currentfilename),
+        GST_ERROR_SYSTEM);
     return FALSE;
 
   } else {
@@ -267,7 +267,7 @@ gst_multifilesrc_open_file (GstMultiFileSrc * src, GstPad * srcpad)
     if (src->map == NULL) {
       close (src->fd);
       GST_ELEMENT_ERROR (src, RESOURCE, TOO_LAZY, (NULL),
-	  ("mmap call failed."));
+          ("mmap call failed."));
       return FALSE;
     }
     GST_FLAG_SET (src, GST_MULTIFILESRC_OPEN);

@@ -59,8 +59,8 @@ test1 (void)
 
   caps =
       gst_caps_new_full (gst_structure_new ("audio/raw", "_int", G_TYPE_INT,
-	  100, NULL), gst_structure_new ("audio/raw2", "_int", G_TYPE_INT, 100,
-	  NULL), NULL);
+          100, NULL), gst_structure_new ("audio/raw2", "_int", G_TYPE_INT, 100,
+          NULL), NULL);
   g_assert (caps != NULL);
   g_assert (gst_caps_is_empty (caps) == FALSE);
   g_assert (gst_caps_is_any (caps) == FALSE);
@@ -114,12 +114,12 @@ test2 (void)
 
   caps1 =
       gst_caps_new_full (gst_structure_new ("audio/raw", "_int", G_TYPE_INT,
-	  100, NULL), gst_structure_new ("audio/raw", "_int", G_TYPE_INT, 200,
-	  NULL), NULL);
+          100, NULL), gst_structure_new ("audio/raw", "_int", G_TYPE_INT, 200,
+          NULL), NULL);
   caps2 =
       gst_caps_new_full (gst_structure_new ("audio/raw", "_int", G_TYPE_INT,
-	  100, NULL), gst_structure_new ("audio/raw", "_int", G_TYPE_INT, 300,
-	  NULL), NULL);
+          100, NULL), gst_structure_new ("audio/raw", "_int", G_TYPE_INT, 300,
+          NULL), NULL);
   caps = gst_caps_intersect (caps1, caps2);
   g_print ("%s\n", gst_caps_to_string (caps));
   gst_caps_free (caps);

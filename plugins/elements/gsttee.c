@@ -95,13 +95,13 @@ gst_tee_class_init (GstTeeClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_PADS,
       g_param_spec_int ("num_pads", "num_pads", "num_pads",
-	  0, G_MAXINT, 0, G_PARAM_READABLE));
+          0, G_MAXINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
       g_param_spec_boolean ("silent", "silent", "silent",
-	  TRUE, G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
+          TRUE, G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
       g_param_spec_string ("last_message", "last_message", "last_message",
-	  NULL, G_PARAM_READABLE));
+          NULL, G_PARAM_READABLE));
 
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_tee_set_property);
@@ -134,7 +134,7 @@ name_pad_compare (gconstpointer a, gconstpointer b)
 
   g_assert (GST_IS_PAD (pad));
 
-  return strcmp (name, gst_pad_get_name (pad));	/* returns 0 if match */
+  return strcmp (name, gst_pad_get_name (pad)); /* returns 0 if match */
 }
 
 static GstPad *
@@ -163,7 +163,7 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
   while (!name) {
     name = g_strdup_printf ("src%d", i);
     if (g_list_find_custom ((GList *) pads, (gconstpointer) name,
-	    name_pad_compare) != NULL) {
+            name_pad_compare) != NULL) {
       /* this name is taken, use the next one */
       ++i;
       g_free (name);
@@ -276,9 +276,9 @@ gst_tee_chain (GstPad * pad, GstData * _data)
     if (!tee->silent) {
       g_free (tee->last_message);
       tee->last_message =
-	  g_strdup_printf ("chain        ******* (%s:%s)t (%d bytes, %"
-	  G_GUINT64_FORMAT ") %p", GST_DEBUG_PAD_NAME (outpad),
-	  GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
+          g_strdup_printf ("chain        ******* (%s:%s)t (%d bytes, %"
+          G_GUINT64_FORMAT ") %p", GST_DEBUG_PAD_NAME (outpad),
+          GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
       g_object_notify (G_OBJECT (tee), "last_message");
     }
 

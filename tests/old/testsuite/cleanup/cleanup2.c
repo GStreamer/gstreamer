@@ -32,7 +32,7 @@ main (gint argc, gchar * argv[])
   gint i = 1000;
   gint step = 100;
 
-  free (malloc (8));		/* -lefence */
+  free (malloc (8));            /* -lefence */
 
   gst_init (&argc, &argv);
 

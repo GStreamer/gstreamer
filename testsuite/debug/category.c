@@ -52,16 +52,16 @@ main (gint argc, gchar * argv[])
   g_assert (strcmp (gst_debug_category_get_name (cat), "cat") == 0);
   g_assert (gst_debug_category_get_color (cat) == GST_DEBUG_FG_GREEN);
   g_assert (strcmp (gst_debug_category_get_description (cat),
-	  "default category for this test") == 0);
+          "default category for this test") == 0);
   g_assert (gst_debug_category_get_threshold (cat) ==
       gst_debug_get_default_threshold ());
   g_assert (strcmp (gst_debug_category_get_name (cat_static),
-	  "cat_static") == 0);
+          "cat_static") == 0);
   g_assert (gst_debug_category_get_color (cat_static) | GST_DEBUG_FG_GREEN);
   g_assert (gst_debug_category_get_color (cat_static) | GST_DEBUG_BG_RED);
   g_assert (gst_debug_category_get_color (cat_static) | GST_DEBUG_BOLD);
   g_assert (strcmp (gst_debug_category_get_description (cat_static),
-	  "static category for this test") == 0);
+          "static category for this test") == 0);
   g_assert (gst_debug_category_get_threshold (cat_static) ==
       gst_debug_get_default_threshold ());
   /* check if setting levels for names work */

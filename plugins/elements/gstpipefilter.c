@@ -98,7 +98,7 @@ gst_pipefilter_class_init (GstPipefilterClass * klass)
   gobject_class->set_property = gst_pipefilter_set_property;
   gobject_class->get_property = gst_pipefilter_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_COMMAND, g_param_spec_string ("command", "command", "command", NULL, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_COMMAND, g_param_spec_string ("command", "command", "command", NULL, G_PARAM_READWRITE));        /* CHECKME */
 
   gstelement_class->change_state = gst_pipefilter_change_state;
 }
@@ -134,9 +134,9 @@ gst_pipefilter_handle_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
       if (close (pipefilter->fdin[1]) < 0)
-	perror ("close");
+        perror ("close");
       if (close (pipefilter->fdout[0]) < 0)
-	perror ("close");
+        perror ("close");
       break;
     default:
       break;
@@ -279,8 +279,8 @@ gst_pipefilter_open_file (GstPipefilter * src)
     close (src->fdin[1]);
     close (src->fdout[0]);
     /* child */
-    dup2 (src->fdin[0], STDIN_FILENO);	/* set the childs input stream */
-    dup2 (src->fdout[1], STDOUT_FILENO);	/* set the childs output stream */
+    dup2 (src->fdin[0], STDIN_FILENO);  /* set the childs input stream */
+    dup2 (src->fdout[1], STDOUT_FILENO);        /* set the childs output stream */
     execvp (src->command[0], &src->command[0]);
     /* will only be reached if execvp has an error */
     GST_ELEMENT_ERROR (src, RESOURCE, TOO_LAZY, (NULL), GST_ERROR_SYSTEM);
@@ -327,7 +327,7 @@ gst_pipefilter_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, GST_PIPEFILTER_OPEN)) {
       if (!gst_pipefilter_open_file (GST_PIPEFILTER (element)))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
     }
   }
 

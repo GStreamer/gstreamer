@@ -29,7 +29,7 @@
 static GList *_gst_queries = NULL;
 static GHashTable *_nick_to_query = NULL;
 static GHashTable *_query_type_to_nick = NULL;
-static gint _n_values = 1;	/* we start from 1 because 0 reserved for NONE */
+static gint _n_values = 1;      /* we start from 1 because 0 reserved for NONE */
 
 static GstQueryTypeDefinition standard_definitions[] = {
   {GST_QUERY_TOTAL, "total", "Total length"},
@@ -55,7 +55,7 @@ _gst_query_type_initialize (void)
   while (standards->nick) {
     g_hash_table_insert (_nick_to_query, standards->nick, standards);
     g_hash_table_insert (_query_type_to_nick,
-	GINT_TO_POINTER (standards->value), standards);
+        GINT_TO_POINTER (standards->value), standards);
 
     _gst_queries = g_list_append (_gst_queries, standards);
     standards++;

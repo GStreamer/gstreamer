@@ -69,7 +69,7 @@ main (gint argc, gchar * argv[])
 
     /* connect state change signal */
     id = g_signal_connect (G_OBJECT (thread), "state_change",
-	G_CALLBACK (state_changed), NULL);
+        G_CALLBACK (state_changed), NULL);
     construct_pipeline (thread, i / 10 + 1);
 
     g_print ("Setting thread to play with %d identities\n", i / 10 + 1);
@@ -77,7 +77,7 @@ main (gint argc, gchar * argv[])
       g_error ("Failed setting thread to play\n");
     } else {
       g_print ("Going into the main GStreamer loop\n");
-      can_quit = TRUE;		/* we don't want gst_main_quit called before gst_main */
+      can_quit = TRUE;          /* we don't want gst_main_quit called before gst_main */
       gst_main ();
     }
     running = FALSE;

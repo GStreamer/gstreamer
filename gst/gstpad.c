@@ -77,8 +77,9 @@ gst_pad_get_type (void)
       32,
       (GInstanceInitFunc) gst_pad_init, NULL
     };
+
     _gst_pad_type = g_type_register_static (GST_TYPE_OBJECT, "GstPad",
-	&pad_info, 0);
+        &pad_info, 0);
   }
   return _gst_pad_type;
 }
@@ -158,8 +159,9 @@ gst_real_pad_get_type (void)
       32,
       (GInstanceInitFunc) gst_real_pad_init, NULL
     };
+
     _gst_real_pad_type = g_type_register_static (GST_TYPE_PAD, "GstRealPad",
-	&pad_info, 0);
+        &pad_info, 0);
   }
   return _gst_real_pad_type;
 }
@@ -198,10 +200,10 @@ gst_real_pad_class_init (GstRealPadClass * klass)
 /*                           GTK_ARG_READWRITE, REAL_ARG_ACTIVE); */
   g_object_class_install_property (G_OBJECT_CLASS (klass), REAL_ARG_ACTIVE,
       g_param_spec_boolean ("active", "Active", "Whether the pad is active.",
-	  TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), REAL_ARG_CAPS,
       g_param_spec_boxed ("caps", "Caps", "The capabilities of the pad",
-	  GST_TYPE_CAPS, G_PARAM_READABLE));
+          GST_TYPE_CAPS, G_PARAM_READABLE));
 
 #ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself = GST_DEBUG_FUNCPTR (gst_pad_save_thyself);
@@ -422,11 +424,11 @@ gst_pad_set_active (GstPad * pad, gboolean active)
 
   if (active) {
     GST_CAT_DEBUG (GST_CAT_PADS, "activating pad %s:%s",
-	GST_DEBUG_PAD_NAME (realpad));
+        GST_DEBUG_PAD_NAME (realpad));
     GST_FLAG_UNSET (realpad, GST_PAD_DISABLED);
   } else {
     GST_CAT_DEBUG (GST_CAT_PADS, "de-activating pad %s:%s",
-	GST_DEBUG_PAD_NAME (realpad));
+        GST_DEBUG_PAD_NAME (realpad));
     GST_FLAG_SET (realpad, GST_PAD_DISABLED);
   }
 
@@ -1104,13 +1106,13 @@ gst_pad_link_ready_for_negotiation (GstPadLink * link)
   parent = GST_PAD_PARENT (link->srcpad);
   if (!parent || GST_STATE (parent) < GST_STATE_READY) {
     GST_DEBUG ("parent %s of pad %s:%s is not READY",
-	GST_ELEMENT_NAME (parent), GST_DEBUG_PAD_NAME (link->srcpad));
+        GST_ELEMENT_NAME (parent), GST_DEBUG_PAD_NAME (link->srcpad));
     return FALSE;
   }
   parent = GST_PAD_PARENT (link->sinkpad);
   if (!parent || GST_STATE (parent) < GST_STATE_READY) {
     GST_DEBUG ("parent %s of pad %s:%s is not READY",
-	GST_ELEMENT_NAME (parent), GST_DEBUG_PAD_NAME (link->sinkpad));
+        GST_ELEMENT_NAME (parent), GST_DEBUG_PAD_NAME (link->sinkpad));
     return FALSE;
   }
 
@@ -1136,48 +1138,48 @@ gst_pad_link_fixate (GstPadLink * link)
     for (i = 0; i < 5; i++) {
       newcaps = NULL;
       switch (i) {
-	case 0:
-	  g_signal_emit (G_OBJECT (link->srcpad),
-	      gst_real_pad_signals[REAL_FIXATE], 0, caps, &newcaps);
-	  GST_DEBUG ("app srcpad signal fixated to %" GST_PTR_FORMAT, newcaps);
-	  break;
-	case 1:
-	  g_signal_emit (G_OBJECT (link->sinkpad),
-	      gst_real_pad_signals[REAL_FIXATE], 0, caps, &newcaps);
-	  GST_DEBUG ("app sinkpad signal fixated to %" GST_PTR_FORMAT, newcaps);
-	  break;
-	case 2:
-	  if (GST_RPAD_FIXATEFUNC (link->srcpad)) {
-	    newcaps =
-		GST_RPAD_FIXATEFUNC (link->srcpad) (GST_PAD (link->srcpad),
-		caps);
-	    GST_DEBUG ("srcpad %s:%s fixated to %" GST_PTR_FORMAT,
-		GST_DEBUG_PAD_NAME (link->srcpad), newcaps);
-	  } else
-	    GST_DEBUG ("srcpad %s:%s doesn't have a fixate function",
-		GST_DEBUG_PAD_NAME (link->srcpad));
+        case 0:
+          g_signal_emit (G_OBJECT (link->srcpad),
+              gst_real_pad_signals[REAL_FIXATE], 0, caps, &newcaps);
+          GST_DEBUG ("app srcpad signal fixated to %" GST_PTR_FORMAT, newcaps);
+          break;
+        case 1:
+          g_signal_emit (G_OBJECT (link->sinkpad),
+              gst_real_pad_signals[REAL_FIXATE], 0, caps, &newcaps);
+          GST_DEBUG ("app sinkpad signal fixated to %" GST_PTR_FORMAT, newcaps);
+          break;
+        case 2:
+          if (GST_RPAD_FIXATEFUNC (link->srcpad)) {
+            newcaps =
+                GST_RPAD_FIXATEFUNC (link->srcpad) (GST_PAD (link->srcpad),
+                caps);
+            GST_DEBUG ("srcpad %s:%s fixated to %" GST_PTR_FORMAT,
+                GST_DEBUG_PAD_NAME (link->srcpad), newcaps);
+          } else
+            GST_DEBUG ("srcpad %s:%s doesn't have a fixate function",
+                GST_DEBUG_PAD_NAME (link->srcpad));
 
-	  break;
-	case 3:
-	  if (GST_RPAD_FIXATEFUNC (link->sinkpad)) {
-	    newcaps =
-		GST_RPAD_FIXATEFUNC (link->sinkpad) (GST_PAD (link->sinkpad),
-		caps);
-	    GST_DEBUG ("sinkpad %s:%s fixated to %" GST_PTR_FORMAT,
-		GST_DEBUG_PAD_NAME (link->sinkpad), newcaps);
-	  } else
-	    GST_DEBUG ("sinkpad %s:%s doesn't have a fixate function",
-		GST_DEBUG_PAD_NAME (link->sinkpad));
-	  break;
-	case 4:
-	  newcaps = _gst_pad_default_fixate_func (GST_PAD (link->srcpad), caps);
-	  GST_DEBUG ("core fixated to %" GST_PTR_FORMAT, newcaps);
-	  break;
+          break;
+        case 3:
+          if (GST_RPAD_FIXATEFUNC (link->sinkpad)) {
+            newcaps =
+                GST_RPAD_FIXATEFUNC (link->sinkpad) (GST_PAD (link->sinkpad),
+                caps);
+            GST_DEBUG ("sinkpad %s:%s fixated to %" GST_PTR_FORMAT,
+                GST_DEBUG_PAD_NAME (link->sinkpad), newcaps);
+          } else
+            GST_DEBUG ("sinkpad %s:%s doesn't have a fixate function",
+                GST_DEBUG_PAD_NAME (link->sinkpad));
+          break;
+        case 4:
+          newcaps = _gst_pad_default_fixate_func (GST_PAD (link->srcpad), caps);
+          GST_DEBUG ("core fixated to %" GST_PTR_FORMAT, newcaps);
+          break;
       }
       if (newcaps) {
-	gst_caps_free (caps);
-	caps = newcaps;
-	break;
+        gst_caps_free (caps);
+        caps = newcaps;
+        break;
       }
     }
   }
@@ -1193,7 +1195,7 @@ gst_pad_link_call_link_functions (GstPadLink * link)
 
   if (link->srcnotify && GST_RPAD_LINKFUNC (link->srcpad)) {
     GST_DEBUG ("calling link function on pad %s:%s",
-	GST_DEBUG_PAD_NAME (link->srcpad));
+        GST_DEBUG_PAD_NAME (link->srcpad));
 
     negotiating = GST_FLAG_IS_SET (link->srcpad, GST_PAD_NEGOTIATING);
 
@@ -1209,18 +1211,18 @@ gst_pad_link_call_link_functions (GstPadLink * link)
       GST_FLAG_UNSET (link->srcpad, GST_PAD_NEGOTIATING);
 
     GST_DEBUG ("got reply %d from link function on pad %s:%s",
-	res, GST_DEBUG_PAD_NAME (link->srcpad));
+        res, GST_DEBUG_PAD_NAME (link->srcpad));
 
     if (GST_PAD_LINK_FAILED (res)) {
       GST_CAT_INFO (GST_CAT_CAPS, "pad %s:%s doesn't accept caps",
-	  GST_DEBUG_PAD_NAME (link->srcpad));
+          GST_DEBUG_PAD_NAME (link->srcpad));
       return res;
     }
   }
 
   if (link->sinknotify && GST_RPAD_LINKFUNC (link->sinkpad)) {
     GST_DEBUG ("calling link function on pad %s:%s",
-	GST_DEBUG_PAD_NAME (link->sinkpad));
+        GST_DEBUG_PAD_NAME (link->sinkpad));
 
     negotiating = GST_FLAG_IS_SET (link->sinkpad, GST_PAD_NEGOTIATING);
 
@@ -1230,18 +1232,18 @@ gst_pad_link_call_link_functions (GstPadLink * link)
 
     /* call the link function */
     res = GST_RPAD_LINKFUNC (link->sinkpad) (GST_PAD (link->sinkpad),
-	link->caps);
+        link->caps);
 
     /* unset again after negotiating only if we set it  */
     if (!negotiating)
       GST_FLAG_UNSET (link->sinkpad, GST_PAD_NEGOTIATING);
 
     GST_DEBUG ("got reply %d from link function on pad %s:%s",
-	res, GST_DEBUG_PAD_NAME (link->sinkpad));
+        res, GST_DEBUG_PAD_NAME (link->sinkpad));
 
     if (GST_PAD_LINK_FAILED (res)) {
       GST_CAT_INFO (GST_CAT_CAPS, "pad %s:%s doesn't accept caps",
-	  GST_DEBUG_PAD_NAME (link->sinkpad));
+          GST_DEBUG_PAD_NAME (link->sinkpad));
       return res;
     }
   }
@@ -1406,10 +1408,10 @@ gst_pad_try_set_caps (GstPad * pad, const GstCaps * caps)
   /* setting non-fixed caps on a pad is not allowed */
   if (!gst_caps_is_fixed (caps)) {
     GST_CAT_INFO (GST_CAT_CAPS,
-	"trying to set unfixed caps on pad %s:%s, not allowed",
-	GST_DEBUG_PAD_NAME (pad));
+        "trying to set unfixed caps on pad %s:%s, not allowed",
+        GST_DEBUG_PAD_NAME (pad));
     g_warning ("trying to set non fixed caps on pad %s:%s, not allowed",
-	GST_DEBUG_PAD_NAME (pad));
+        GST_DEBUG_PAD_NAME (pad));
 
     GST_DEBUG ("unfixed caps %" GST_PTR_FORMAT, caps);
     return GST_PAD_LINK_REFUSED;
@@ -1564,33 +1566,33 @@ gst_pad_can_link_filtered (GstPad * srcpad, GstPad * sinkpad,
 
   if ((GST_PAD (realsrc) != srcpad) || (GST_PAD (realsink) != sinkpad)) {
     GST_CAT_INFO (GST_CAT_PADS, "*actually* linking %s:%s and %s:%s",
-	GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
+        GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
   }
   /* FIXME: shouldn't we convert this to g_return_val_if_fail? */
   if (GST_RPAD_PEER (realsrc) != NULL) {
     GST_CAT_INFO (GST_CAT_PADS, "Real source pad %s:%s has a peer, failed",
-	GST_DEBUG_PAD_NAME (realsrc));
+        GST_DEBUG_PAD_NAME (realsrc));
     return FALSE;
   }
   if (GST_RPAD_PEER (realsink) != NULL) {
     GST_CAT_INFO (GST_CAT_PADS, "Real sink pad %s:%s has a peer, failed",
-	GST_DEBUG_PAD_NAME (realsink));
+        GST_DEBUG_PAD_NAME (realsink));
     return FALSE;
   }
   if (GST_PAD_PARENT (realsrc) == NULL) {
     GST_CAT_INFO (GST_CAT_PADS, "Real src pad %s:%s has no parent, failed",
-	GST_DEBUG_PAD_NAME (realsrc));
+        GST_DEBUG_PAD_NAME (realsrc));
     return FALSE;
   }
   if (GST_PAD_PARENT (realsink) == NULL) {
     GST_CAT_INFO (GST_CAT_PADS, "Real sink pad %s:%s has no parent, failed",
-	GST_DEBUG_PAD_NAME (realsrc));
+        GST_DEBUG_PAD_NAME (realsrc));
     return FALSE;
   }
 
   if (!gst_pad_check_schedulers (realsrc, realsink)) {
     g_warning ("linking pads with different scheds requires "
-	"exactly one decoupled element (such as queue)");
+        "exactly one decoupled element (such as queue)");
     return FALSE;
   }
 
@@ -1609,14 +1611,14 @@ gst_pad_can_link_filtered (GstPad * srcpad, GstPad * sinkpad,
 
   if (GST_RPAD_DIRECTION (link->srcpad) != GST_PAD_SRC) {
     GST_CAT_INFO (GST_CAT_PADS,
-	"Real src pad %s:%s is not a source pad, failed",
-	GST_DEBUG_PAD_NAME (link->srcpad));
+        "Real src pad %s:%s is not a source pad, failed",
+        GST_DEBUG_PAD_NAME (link->srcpad));
     gst_pad_link_free (link);
     return FALSE;
   }
   if (GST_RPAD_DIRECTION (link->sinkpad) != GST_PAD_SINK) {
     GST_CAT_INFO (GST_CAT_PADS, "Real sink pad %s:%s is not a sink pad, failed",
-	GST_DEBUG_PAD_NAME (link->sinkpad));
+        GST_DEBUG_PAD_NAME (link->sinkpad));
     gst_pad_link_free (link);
     return FALSE;
   }
@@ -1685,33 +1687,33 @@ gst_pad_link_filtered (GstPad * srcpad, GstPad * sinkpad,
 
   if ((GST_PAD (realsrc) != srcpad) || (GST_PAD (realsink) != sinkpad)) {
     GST_CAT_INFO (GST_CAT_PADS, "*actually* linking %s:%s and %s:%s",
-	GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
+        GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
   }
   /* FIXME: shouldn't we convert this to g_return_val_if_fail? */
   if (GST_RPAD_PEER (realsrc) != NULL) {
     GST_CAT_INFO (GST_CAT_PADS, "Real source pad %s:%s has a peer, failed",
-	GST_DEBUG_PAD_NAME (realsrc));
+        GST_DEBUG_PAD_NAME (realsrc));
     return FALSE;
   }
   if (GST_RPAD_PEER (realsink) != NULL) {
     GST_CAT_INFO (GST_CAT_PADS, "Real sink pad %s:%s has a peer, failed",
-	GST_DEBUG_PAD_NAME (realsink));
+        GST_DEBUG_PAD_NAME (realsink));
     return FALSE;
   }
   if (GST_PAD_PARENT (realsrc) == NULL) {
     GST_CAT_INFO (GST_CAT_PADS, "Real src pad %s:%s has no parent, failed",
-	GST_DEBUG_PAD_NAME (realsrc));
+        GST_DEBUG_PAD_NAME (realsrc));
     return FALSE;
   }
   if (GST_PAD_PARENT (realsink) == NULL) {
     GST_CAT_INFO (GST_CAT_PADS, "Real sink pad %s:%s has no parent, failed",
-	GST_DEBUG_PAD_NAME (realsrc));
+        GST_DEBUG_PAD_NAME (realsrc));
     return FALSE;
   }
 
   if (!gst_pad_check_schedulers (realsrc, realsink)) {
     g_warning ("linking pads with different scheds requires "
-	"exactly one decoupled element (such as queue)");
+        "exactly one decoupled element (such as queue)");
     return FALSE;
   }
 
@@ -1730,14 +1732,14 @@ gst_pad_link_filtered (GstPad * srcpad, GstPad * sinkpad,
 
   if (GST_RPAD_DIRECTION (link->srcpad) != GST_PAD_SRC) {
     GST_CAT_INFO (GST_CAT_PADS,
-	"Real src pad %s:%s is not a source pad, failed",
-	GST_DEBUG_PAD_NAME (link->srcpad));
+        "Real src pad %s:%s is not a source pad, failed",
+        GST_DEBUG_PAD_NAME (link->srcpad));
     gst_pad_link_free (link);
     return FALSE;
   }
   if (GST_RPAD_DIRECTION (link->sinkpad) != GST_PAD_SINK) {
     GST_CAT_INFO (GST_CAT_PADS, "Real sink pad %s:%s is not a sink pad, failed",
-	GST_DEBUG_PAD_NAME (link->sinkpad));
+        GST_DEBUG_PAD_NAME (link->sinkpad));
     gst_pad_link_free (link);
     return FALSE;
   }
@@ -1762,12 +1764,12 @@ gst_pad_link_filtered (GstPad * srcpad, GstPad * sinkpad,
   /* now tell the scheduler */
   if (src_sched && src_sched == sink_sched) {
     gst_scheduler_pad_link (src_sched,
-	GST_PAD (link->srcpad), GST_PAD (link->sinkpad));
+        GST_PAD (link->srcpad), GST_PAD (link->sinkpad));
   } else {
     GST_CAT_INFO (GST_CAT_PADS,
-	"not telling link to scheduler %s:%s and %s:%s, %p %p",
-	GST_DEBUG_PAD_NAME (link->srcpad), GST_DEBUG_PAD_NAME (link->sinkpad),
-	src_sched, sink_sched);
+        "not telling link to scheduler %s:%s and %s:%s, %p %p",
+        GST_DEBUG_PAD_NAME (link->srcpad), GST_DEBUG_PAD_NAME (link->sinkpad),
+        src_sched, sink_sched);
   }
 
   GST_CAT_INFO (GST_CAT_PADS, "linked %s:%s and %s:%s, successful",
@@ -1838,7 +1840,7 @@ gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ)
 
   if (templ)
     g_signal_emit (G_OBJECT (templ),
-	gst_pad_template_signals[TEMPL_PAD_CREATED], 0, pad);
+        gst_pad_template_signals[TEMPL_PAD_CREATED], 0, pad);
 }
 
 /**
@@ -1885,8 +1887,8 @@ gst_pad_get_scheduler (GstPad * pad)
       GstRealPad *peer = GST_RPAD_PEER (pad);
 
       if (peer) {
-	scheduler =
-	    gst_element_get_scheduler (gst_pad_get_parent (GST_PAD (peer)));
+        scheduler =
+            gst_element_get_scheduler (gst_pad_get_parent (GST_PAD (peer)));
       }
     } else {
       scheduler = gst_element_get_scheduler (parent);
@@ -1993,17 +1995,17 @@ _gst_pad_default_fixate_foreach (GQuark field_id, GValue * value, gpointer s)
 
   if (type == GST_TYPE_INT_RANGE) {
     gst_structure_set (structure, g_quark_to_string (field_id),
-	G_TYPE_INT, gst_value_get_int_range_min (value), NULL);
+        G_TYPE_INT, gst_value_get_int_range_min (value), NULL);
     return FALSE;
   }
   if (type == GST_TYPE_DOUBLE_RANGE) {
     gst_structure_set (structure, g_quark_to_string (field_id),
-	G_TYPE_DOUBLE, gst_value_get_double_range_min (value), NULL);
+        G_TYPE_DOUBLE, gst_value_get_double_range_min (value), NULL);
     return FALSE;
   }
   if (type == GST_TYPE_LIST) {
     gst_structure_set_value (structure, g_quark_to_string (field_id),
-	gst_value_list_get_value (value, 0));
+        gst_value_list_get_value (value, 0));
     return FALSE;
   }
 
@@ -2028,7 +2030,7 @@ _gst_pad_default_fixate_func (GstPad * pad, const GstCaps * caps)
 
   if (caps->structs->len > 1) {
     return gst_caps_new_full (gst_structure_copy (gst_caps_get_structure (caps,
-		0)), NULL);
+                0)), NULL);
   }
 
   newcaps = gst_caps_copy (caps);
@@ -2110,7 +2112,7 @@ gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad,
 
   if ((GST_PAD (realsrc) != srcpad) || (GST_PAD (realsink) != sinkpad)) {
     GST_CAT_DEBUG (GST_CAT_PADS, "*actually* linking %s:%s and %s:%s",
-	GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
+        GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
   }
 
   g_return_val_if_fail (GST_RPAD_PEER (realsrc) == NULL, NULL);
@@ -2120,14 +2122,14 @@ gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad,
 
   if (!gst_pad_check_schedulers (realsrc, realsink)) {
     g_warning ("linking pads with different scheds requires "
-	"exactly one decoupled element (such as queue)");
+        "exactly one decoupled element (such as queue)");
     return NULL;
   }
 
   if (GST_RPAD_DIRECTION (realsrc) == GST_RPAD_DIRECTION (realsink)) {
     g_warning ("%s:%s and %s:%s are both %s pads, failed",
-	GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink),
-	GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC ? "src" : "sink");
+        GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink),
+        GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC ? "src" : "sink");
     return NULL;
   }
 
@@ -2175,7 +2177,7 @@ gst_pad_try_relink_filtered (GstPad * srcpad, GstPad * sinkpad,
 
   if (GST_RPAD_PEER (link->srcpad) != (GstRealPad *) link->sinkpad) {
     g_warning ("Pads %s:%s and %s:%s were never linked",
-	GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+        GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
     gst_pad_link_free (link);
     return FALSE;
   }
@@ -2289,7 +2291,7 @@ gst_pad_proxy_pad_link (GstPad * pad, const GstCaps * caps)
     if (otherpad != pad) {
       ret = gst_pad_try_set_caps (otherpad, caps);
       if (GST_PAD_LINK_FAILED (ret)) {
-	return ret;
+        return ret;
       }
     }
     pads = g_list_next (pads);
@@ -2333,14 +2335,14 @@ gst_pad_proxy_fixate (GstPad * pad, const GstCaps * caps)
       othercaps = gst_pad_get_negotiated_caps (otherpad);
 
       if (othercaps) {
-	GstCaps *icaps;
+        GstCaps *icaps;
 
-	icaps = gst_caps_intersect (othercaps, caps);
-	if (!gst_caps_is_empty (icaps)) {
-	  return icaps;
-	} else {
-	  gst_caps_free (icaps);
-	}
+        icaps = gst_caps_intersect (othercaps, caps);
+        if (!gst_caps_is_empty (icaps)) {
+          return icaps;
+        } else {
+          gst_caps_free (icaps);
+        }
       }
     }
     pads = g_list_next (pads);
@@ -2389,7 +2391,7 @@ gst_pad_set_explicit_caps (GstPad * pad, const GstCaps * caps)
   link_ret = gst_pad_try_set_caps (pad, caps);
   if (link_ret == GST_PAD_LINK_REFUSED) {
     GST_ELEMENT_ERROR (gst_pad_get_parent (pad), CORE, PAD, (NULL),
-	("failed to negotiate (try_set_caps returned REFUSED)"));
+        ("failed to negotiate (try_set_caps returned REFUSED)"));
     return FALSE;
   }
 
@@ -2530,8 +2532,8 @@ gst_pad_get_caps (GstPad * pad)
 
     if (caps == NULL) {
       g_critical ("pad %s:%s returned NULL caps from getcaps function\n",
-	  GST_ELEMENT_NAME (GST_PAD_PARENT (GST_PAD (realpad))),
-	  GST_PAD_NAME (realpad));
+          GST_ELEMENT_NAME (GST_PAD_PARENT (GST_PAD (realpad))),
+          GST_PAD_NAME (realpad));
       caps = gst_caps_new_any ();
     }
 
@@ -2542,15 +2544,15 @@ gst_pad_get_caps (GstPad * pad)
 
     caps = GST_PAD_TEMPLATE_CAPS (templ);
     GST_CAT_DEBUG (GST_CAT_CAPS,
-	"using pad template %p with caps %" GST_PTR_FORMAT, templ, caps);
+        "using pad template %p with caps %" GST_PTR_FORMAT, templ, caps);
 
 #if 0
     /* FIXME we should enable something like this someday, but this is
      * a bit buggy */
     if (!gst_caps_is_fixed (caps)) {
       g_warning
-	  ("pad %s:%s (%p) has no getcaps function and the pad template returns non-fixed caps.  Element is probably broken.\n",
-	  GST_DEBUG_PAD_NAME (realpad), realpad);
+          ("pad %s:%s (%p) has no getcaps function and the pad template returns non-fixed caps.  Element is probably broken.\n",
+          GST_DEBUG_PAD_NAME (realpad), realpad);
     }
 #endif
 
@@ -2644,16 +2646,16 @@ gst_pad_check_compatibility (GstPad * srcpad, GstPad * sinkpad)
 
   if (GST_PAD_CAPS (srcpad) && GST_PAD_CAPS (sinkpad)) {
     if (!gst_caps_is_always_compatible (GST_PAD_CAPS (srcpad),
-	    GST_PAD_CAPS (sinkpad))) {
+            GST_PAD_CAPS (sinkpad))) {
       return FALSE;
     } else {
       return TRUE;
     }
   } else {
     GST_CAT_DEBUG (GST_CAT_PADS,
-	"could not check capabilities of pads (%s:%s) and (%s:%s) %p %p",
-	GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad),
-	GST_PAD_CAPS (srcpad), GST_PAD_CAPS (sinkpad));
+        "could not check capabilities of pads (%s:%s) and (%s:%s) %p %p",
+        GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad),
+        GST_PAD_CAPS (srcpad), GST_PAD_CAPS (sinkpad));
     return TRUE;
   }
 }
@@ -2778,9 +2780,9 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size)
 
   if (peer->bufferallocfunc) {
     GST_CAT_DEBUG (GST_CAT_PADS,
-	"calling bufferallocfunc &%s (@%p) of peer pad %s:%s",
-	GST_DEBUG_FUNCPTR_NAME (peer->bufferallocfunc),
-	&peer->bufferallocfunc, GST_DEBUG_PAD_NAME (((GstPad *) peer)));
+        "calling bufferallocfunc &%s (@%p) of peer pad %s:%s",
+        GST_DEBUG_FUNCPTR_NAME (peer->bufferallocfunc),
+        &peer->bufferallocfunc, GST_DEBUG_PAD_NAME (((GstPad *) peer)));
     return (peer->bufferallocfunc) (GST_PAD (peer), offset, size);
   } else {
     return gst_buffer_new_and_alloc (size);
@@ -2813,15 +2815,15 @@ gst_real_pad_dispose (GObject * object)
       GstPad *ghostpad = GST_PAD (ghostpads->data);
 
       if (GST_IS_ELEMENT (GST_OBJECT_PARENT (ghostpad))) {
-	GstElement *parent = GST_ELEMENT (GST_OBJECT_PARENT (ghostpad));
+        GstElement *parent = GST_ELEMENT (GST_OBJECT_PARENT (ghostpad));
 
-	GST_CAT_DEBUG (GST_CAT_REFCOUNTING,
-	    "removing ghost pad from element '%s'", GST_OBJECT_NAME (parent));
-	gst_element_remove_pad (parent, ghostpad);
+        GST_CAT_DEBUG (GST_CAT_REFCOUNTING,
+            "removing ghost pad from element '%s'", GST_OBJECT_NAME (parent));
+        gst_element_remove_pad (parent, ghostpad);
       } else {
-	/* handle the case where we have some floating ghost pad that was never
-	   added to an element */
-	g_object_set (ghostpad, "real-pad", NULL, NULL);
+        /* handle the case where we have some floating ghost pad that was never
+           added to an element */
+        g_object_set (ghostpad, "real-pad", NULL, NULL);
       }
       ghostpads = g_list_next (ghostpads);
     }
@@ -2833,14 +2835,14 @@ gst_real_pad_dispose (GObject * object)
 
   if (GST_IS_ELEMENT (GST_OBJECT_PARENT (pad))) {
     GST_CAT_DEBUG (GST_CAT_REFCOUNTING, "removing pad from element '%s'",
-	GST_OBJECT_NAME (GST_OBJECT (GST_ELEMENT (GST_OBJECT_PARENT (pad)))));
+        GST_OBJECT_NAME (GST_OBJECT (GST_ELEMENT (GST_OBJECT_PARENT (pad)))));
 
     gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (pad)), pad);
   }
 
   if (GST_RPAD_EXPLICIT_CAPS (pad)) {
     GST_ERROR_OBJECT (pad, "still explicit caps %" GST_PTR_FORMAT " set",
-	GST_RPAD_EXPLICIT_CAPS (pad));
+        GST_RPAD_EXPLICIT_CAPS (pad));
     g_warning ("pad %p has still explicit caps set", pad);
     gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), NULL);
   }
@@ -2871,7 +2873,7 @@ gst_pad_load_and_link (xmlNodePtr self, GstObject * parent)
   while (field) {
     if (!strcmp (field->name, "name")) {
       pad = gst_element_get_pad (GST_ELEMENT (parent),
-	  xmlNodeGetContent (field));
+          xmlNodeGetContent (field));
     } else if (!strcmp (field->name, "peer")) {
       peer = xmlNodeGetContent (field);
     }
@@ -2886,8 +2888,8 @@ gst_pad_load_and_link (xmlNodePtr self, GstObject * parent)
 
   if (split[0] == NULL || split[1] == NULL) {
     GST_CAT_DEBUG (GST_CAT_XML,
-	"Could not parse peer '%s' for pad %s:%s, leaving unlinked",
-	peer, GST_DEBUG_PAD_NAME (pad));
+        "Could not parse peer '%s' for pad %s:%s, leaving unlinked",
+        peer, GST_DEBUG_PAD_NAME (pad));
     return;
   }
 
@@ -2942,7 +2944,7 @@ gst_pad_save_thyself (GstObject * object, xmlNodePtr parent)
     /* first check to see if the peer's parent's parent is the same */
     /* we just save it off */
     content = g_strdup_printf ("%s.%s",
-	GST_OBJECT_NAME (GST_PAD_PARENT (peer)), GST_PAD_NAME (peer));
+        GST_OBJECT_NAME (GST_PAD_PARENT (peer)), GST_PAD_NAME (peer));
     xmlNewChild (parent, NULL, "peer", content);
     g_free (content);
   } else
@@ -3002,7 +3004,7 @@ gst_pad_push (GstPad * pad, GstData * data)
 
   if (!GST_PAD_IS_LINKED (pad)) {
     GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad,
-	"not pushing data %p as pad is unconnected", data);
+        "not pushing data %p as pad is unconnected", data);
     gst_data_unref (data);
     return;
   }
@@ -3012,33 +3014,33 @@ gst_pad_push (GstPad * pad, GstData * data)
 
   if (!peer) {
     g_warning ("push on pad %s:%s but it is unlinked",
-	GST_DEBUG_PAD_NAME (pad));
+        GST_DEBUG_PAD_NAME (pad));
   } else {
     if (!GST_IS_EVENT (data) && !GST_PAD_IS_ACTIVE (peer)) {
       g_warning ("push on peer of pad %s:%s but peer is not active",
-	  GST_DEBUG_PAD_NAME (pad));
+          GST_DEBUG_PAD_NAME (pad));
       return;
     }
 
     if (peer->chainhandler) {
       if (data) {
-	GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad,
-	    "calling chainhandler &%s of peer pad %s:%s",
-	    GST_DEBUG_FUNCPTR_NAME (peer->chainhandler),
-	    GST_DEBUG_PAD_NAME (GST_PAD (peer)));
-	if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data))
-	  return;
+        GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad,
+            "calling chainhandler &%s of peer pad %s:%s",
+            GST_DEBUG_FUNCPTR_NAME (peer->chainhandler),
+            GST_DEBUG_PAD_NAME (GST_PAD (peer)));
+        if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data))
+          return;
 
-	(peer->chainhandler) (GST_PAD (peer), data);
-	return;
+        (peer->chainhandler) (GST_PAD (peer), data);
+        return;
       } else {
-	g_warning ("trying to push a NULL buffer on pad %s:%s",
-	    GST_DEBUG_PAD_NAME (peer));
-	return;
+        g_warning ("trying to push a NULL buffer on pad %s:%s",
+            GST_DEBUG_PAD_NAME (peer));
+        return;
       }
     } else {
       g_warning ("internal error: push on pad %s:%s but it has no chainhandler",
-	  GST_DEBUG_PAD_NAME (peer));
+          GST_DEBUG_PAD_NAME (peer));
     }
   }
   /* clean up the mess here */
@@ -3069,31 +3071,31 @@ gst_pad_pull (GstPad * pad)
 
   if (!peer) {
     GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
-	("pull on pad %s:%s but it was unlinked", GST_DEBUG_PAD_NAME (pad)));
+        ("pull on pad %s:%s but it was unlinked", GST_DEBUG_PAD_NAME (pad)));
   } else {
   restart:
     if (peer->gethandler) {
       GstData *data;
 
       GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad,
-	  "calling gethandler %s of peer pad %s:%s",
-	  GST_DEBUG_FUNCPTR_NAME (peer->gethandler), GST_DEBUG_PAD_NAME (peer));
+          "calling gethandler %s of peer pad %s:%s",
+          GST_DEBUG_FUNCPTR_NAME (peer->gethandler), GST_DEBUG_PAD_NAME (peer));
 
       data = (peer->gethandler) (GST_PAD (peer));
 
       if (data) {
-	if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data))
-	  goto restart;
-	return data;
+        if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data))
+          goto restart;
+        return data;
       }
 
       /* no null buffers allowed */
       GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
-	  ("NULL buffer during pull on %s:%s", GST_DEBUG_PAD_NAME (pad)));
+          ("NULL buffer during pull on %s:%s", GST_DEBUG_PAD_NAME (pad)));
     } else {
       GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
-	  ("pull on pad %s:%s but the peer pad %s:%s has no gethandler",
-	      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
+          ("pull on pad %s:%s but the peer pad %s:%s has no gethandler",
+              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
     }
   }
   return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
@@ -3199,9 +3201,10 @@ gst_pad_template_get_type (void)
       32,
       (GInstanceInitFunc) gst_pad_template_init, NULL
     };
+
     padtemplate_type =
-	g_type_register_static (GST_TYPE_OBJECT, "GstPadTemplate",
-	&padtemplate_info, 0);
+        g_type_register_static (GST_TYPE_OBJECT, "GstPadTemplate",
+        &padtemplate_info, 0);
   }
   return padtemplate_type;
 }
@@ -3261,23 +3264,23 @@ name_is_valid (const gchar * name, GstPadPresence presence)
   if (presence == GST_PAD_ALWAYS) {
     if (strchr (name, '%')) {
       g_warning ("invalid name template %s: conversion specifications are not"
-	  " allowed for GST_PAD_ALWAYS padtemplates", name);
+          " allowed for GST_PAD_ALWAYS padtemplates", name);
       return FALSE;
     }
   } else if (presence == GST_PAD_REQUEST) {
     if ((str = strchr (name, '%')) && strchr (str + 1, '%')) {
       g_warning ("invalid name template %s: only one conversion specification"
-	  " allowed in GST_PAD_REQUEST padtemplate", name);
+          " allowed in GST_PAD_REQUEST padtemplate", name);
       return FALSE;
     }
     if (str && (*(str + 1) != 's' && *(str + 1) != 'd')) {
       g_warning ("invalid name template %s: conversion specification must be of"
-	  " type '%%d' or '%%s' for GST_PAD_REQUEST padtemplate", name);
+          " type '%%d' or '%%s' for GST_PAD_REQUEST padtemplate", name);
       return FALSE;
     }
     if (str && (*(str + 2) != '\0')) {
       g_warning ("invalid name template %s: conversion specification must"
-	  " appear at the end of the GST_PAD_REQUEST padtemplate name", name);
+          " appear at the end of the GST_PAD_REQUEST padtemplate name", name);
       return FALSE;
     }
   }
@@ -3438,8 +3441,9 @@ gst_ghost_pad_get_type (void)
       (GInstanceInitFunc) gst_ghost_pad_init,
       NULL
     };
+
     _gst_ghost_pad_type = g_type_register_static (GST_TYPE_PAD, "GstGhostPad",
-	&pad_info, 0);
+        &pad_info, 0);
   }
   return _gst_ghost_pad_type;
 }
@@ -3459,7 +3463,7 @@ gst_ghost_pad_class_init (GstGhostPadClass * klass)
 
   g_object_class_install_property (gobject_class, GPAD_ARG_REAL_PAD,
       g_param_spec_object ("real-pad", "Real pad",
-	  "The real pad for the ghost pad", GST_TYPE_PAD, G_PARAM_READWRITE));
+          "The real pad for the ghost pad", GST_TYPE_PAD, G_PARAM_READWRITE));
 }
 
 static void
@@ -3489,14 +3493,14 @@ gst_ghost_pad_set_property (GObject * object, guint prop_id,
       realpad = g_value_get_object (value);
 
       if (oldrealpad) {
-	if (realpad == oldrealpad)
-	  return;
-	else
-	  gst_pad_remove_ghost_pad (oldrealpad, ghostpad);
+        if (realpad == oldrealpad)
+          return;
+        else
+          gst_pad_remove_ghost_pad (oldrealpad, ghostpad);
       }
 
       if (realpad)
-	gst_pad_add_ghost_pad (realpad, ghostpad);
+        gst_pad_add_ghost_pad (realpad, ghostpad);
       break;
 
     default:
@@ -3633,16 +3637,16 @@ gst_pad_event_default_dispatch (GstPad * pad, GstElement * element,
     /* for all of the internally-linked pads that are actually linked */
     if (GST_PAD_IS_LINKED (eventpad)) {
       if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
-	/* increase the refcount */
-	gst_event_ref (event);
-	gst_pad_push (eventpad, GST_DATA (event));
+        /* increase the refcount */
+        gst_event_ref (event);
+        gst_pad_push (eventpad, GST_DATA (event));
       } else {
-	GstPad *peerpad = GST_PAD (GST_RPAD_PEER (eventpad));
+        GstPad *peerpad = GST_PAD (GST_RPAD_PEER (eventpad));
 
-	/* we only send the event on one pad, multi-sinkpad elements 
-	 * should implement a handler */
-	g_list_free (orig);
-	return gst_pad_send_event (peerpad, event);
+        /* we only send the event on one pad, multi-sinkpad elements 
+         * should implement a handler */
+        g_list_free (orig);
+        return gst_pad_send_event (peerpad, event);
       }
     }
   }
@@ -3684,24 +3688,24 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
       guint64 time;
 
       if (gst_element_requires_clock (element) && element->clock) {
-	if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &time)) {
-	  gst_element_set_time (element, time);
-	} else {
-	  GstFormat format = GST_FORMAT_TIME;
-	  guint i;
+        if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &time)) {
+          gst_element_set_time (element, time);
+        } else {
+          GstFormat format = GST_FORMAT_TIME;
+          guint i;
 
-	  for (i = 0; i < event->event_data.discont.noffsets; i++) {
-	    if (gst_pad_convert (pad,
-		    event->event_data.discont.offsets[i].format,
-		    event->event_data.discont.offsets[i].value, &format,
-		    &time)) {
-	      gst_element_set_time (element, time);
-	    } else if (i == event->event_data.discont.noffsets) {
-	      g_warning
-		  ("can't adjust clock to new time when time not provided");
-	    }
-	  }
-	}
+          for (i = 0; i < event->event_data.discont.noffsets; i++) {
+            if (gst_pad_convert (pad,
+                    event->event_data.discont.offsets[i].format,
+                    event->event_data.discont.offsets[i].value, &format,
+                    &time)) {
+              gst_element_set_time (element, time);
+            } else if (i == event->event_data.discont.noffsets) {
+              g_warning
+                  ("can't adjust clock to new time when time not provided");
+            }
+          }
+        }
       }
     }
     default:
@@ -3742,7 +3746,7 @@ gst_pad_dispatcher (GstPad * pad, GstPadDispatcherFunction dispatch,
     if (int_peer) {
       res = dispatch (GST_PAD (int_peer), data);
       if (res)
-	break;
+        break;
     }
     int_pads = g_list_next (int_pads);
   }
@@ -3794,7 +3798,8 @@ typedef struct
   gint64 src_value;
   GstFormat *dest_format;
   gint64 *dest_value;
-} GstPadConvertData;
+}
+GstPadConvertData;
 
 static gboolean
 gst_pad_convert_dispatcher (GstPad * pad, GstPadConvertData * data)
@@ -3870,7 +3875,7 @@ gst_pad_convert (GstPad * pad,
 
   if (GST_RPAD_CONVERTFUNC (rpad)) {
     return GST_RPAD_CONVERTFUNC (rpad) (GST_PAD (rpad), src_format,
-	src_value, dest_format, dest_value);
+        src_value, dest_format, dest_value);
   }
 
   return FALSE;
@@ -3881,7 +3886,8 @@ typedef struct
   GstQueryType type;
   GstFormat *format;
   gint64 *value;
-} GstPadQueryData;
+}
+GstPadQueryData;
 
 static gboolean
 gst_pad_query_dispatcher (GstPad * pad, GstPadQueryData * data)

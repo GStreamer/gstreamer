@@ -10,7 +10,7 @@ main (int argc, char *argv[])
 
   gst_init (&argc, &argv);
 
-  free (malloc (8));		/* -lefence */
+  free (malloc (8));            /* -lefence */
 
   for (i = 0; i < TAILLE; i++) {
     bin = gst_pipeline_new ("pipeline");

@@ -1,5 +1,5 @@
-#include <string.h>		/* memset */
-#include <stdlib.h>		/* memset */
+#include <string.h>             /* memset */
+#include <stdlib.h>             /* memset */
 #include "gstmemchunk.h"
 
 #ifdef __SMP__
@@ -153,8 +153,8 @@ gst_mem_chunk_free (GstMemChunk * mem_chunk, gpointer mem)
   __asm__ __volatile__ ("1:				\t"
       "  movl %2, (%1) 		\n"
       CHUNK_LOCK "cmpxchg %1, %0 	\n\t"
-      "  jnz 1b 			\n\t"::"m"
-      (*mem_chunk), "r" (chunk), "a" (mem_chunk->free));
+      "  jnz 1b 			\n\t"::
+      "m" (*mem_chunk), "r" (chunk), "a" (mem_chunk->free));
 #else
   fprintf (stderr, "This only compiles correctly on i386.  Sorry\n");
   abort ();

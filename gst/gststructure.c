@@ -60,11 +60,11 @@ gst_structure_get_type (void)
 
   if (!gst_structure_type) {
     gst_structure_type = g_boxed_type_register_static ("GstStructure",
-	(GBoxedCopyFunc) gst_structure_copy_conditional,
-	(GBoxedFreeFunc) gst_structure_free);
+        (GBoxedCopyFunc) gst_structure_copy_conditional,
+        (GBoxedFreeFunc) gst_structure_free);
 
     g_value_register_transform_func (gst_structure_type, G_TYPE_STRING,
-	gst_structure_transform_to_string);
+        gst_structure_transform_to_string);
   }
 
   return gst_structure_type;
@@ -362,54 +362,54 @@ gst_structure_set_valist (GstStructure * structure,
 
     switch (type) {
       case G_TYPE_INT:
-	i = va_arg (varargs, int);
+        i = va_arg (varargs, int);
 
-	g_value_init (&field.value, G_TYPE_INT);
-	g_value_set_int (&field.value, i);
-	break;
+        g_value_init (&field.value, G_TYPE_INT);
+        g_value_set_int (&field.value, i);
+        break;
       case G_TYPE_DOUBLE:
-	d = va_arg (varargs, double);
+        d = va_arg (varargs, double);
 
-	g_value_init (&field.value, G_TYPE_DOUBLE);
-	g_value_set_double (&field.value, d);
-	break;
+        g_value_init (&field.value, G_TYPE_DOUBLE);
+        g_value_set_double (&field.value, d);
+        break;
       case G_TYPE_BOOLEAN:
-	i = va_arg (varargs, int);
+        i = va_arg (varargs, int);
 
-	g_value_init (&field.value, G_TYPE_BOOLEAN);
-	g_value_set_boolean (&field.value, i);
-	break;
+        g_value_init (&field.value, G_TYPE_BOOLEAN);
+        g_value_set_boolean (&field.value, i);
+        break;
       case G_TYPE_STRING:
-	s = va_arg (varargs, char *);
+        s = va_arg (varargs, char *);
 
-	g_value_init (&field.value, G_TYPE_STRING);
-	g_value_set_string (&field.value, s);
-	break;
+        g_value_init (&field.value, G_TYPE_STRING);
+        g_value_set_string (&field.value, s);
+        break;
       default:
-	if (type == GST_TYPE_FOURCC) {
-	  i = va_arg (varargs, int);
+        if (type == GST_TYPE_FOURCC) {
+          i = va_arg (varargs, int);
 
-	  g_value_init (&field.value, GST_TYPE_FOURCC);
-	  gst_value_set_fourcc (&field.value, i);
-	} else if (type == GST_TYPE_INT_RANGE) {
-	  int min, max;
-	  min = va_arg (varargs, int);
-	  max = va_arg (varargs, int);
+          g_value_init (&field.value, GST_TYPE_FOURCC);
+          gst_value_set_fourcc (&field.value, i);
+        } else if (type == GST_TYPE_INT_RANGE) {
+          int min, max;
+          min = va_arg (varargs, int);
+          max = va_arg (varargs, int);
 
-	  g_value_init (&field.value, GST_TYPE_INT_RANGE);
-	  gst_value_set_int_range (&field.value, min, max);
-	} else if (type == GST_TYPE_DOUBLE_RANGE) {
-	  double min, max;
-	  min = va_arg (varargs, double);
-	  max = va_arg (varargs, double);
+          g_value_init (&field.value, GST_TYPE_INT_RANGE);
+          gst_value_set_int_range (&field.value, min, max);
+        } else if (type == GST_TYPE_DOUBLE_RANGE) {
+          double min, max;
+          min = va_arg (varargs, double);
+          max = va_arg (varargs, double);
 
-	  g_value_init (&field.value, GST_TYPE_DOUBLE_RANGE);
-	  gst_value_set_double_range (&field.value, min, max);
-	} else {
-	  g_critical ("unimplemented vararg field type %d\n", (int) type);
-	  return;
-	}
-	break;
+          g_value_init (&field.value, GST_TYPE_DOUBLE_RANGE);
+          gst_value_set_double_range (&field.value, min, max);
+        } else {
+          g_critical ("unimplemented vararg field type %d\n", (int) type);
+          return;
+        }
+        break;
     }
 
     gst_structure_set_field (structure, &field);
@@ -573,7 +573,7 @@ gst_structure_remove_field (GstStructure * structure, const gchar * fieldname)
 
     if (field->name == id) {
       if (G_IS_VALUE (&field->value)) {
-	g_value_unset (&field->value);
+        g_value_unset (&field->value);
       }
       structure->fields = g_array_remove_index (structure->fields, i);
       return;
@@ -951,7 +951,8 @@ typedef struct _GstStructureAbbreviation
 {
   char *type_name;
   GType type;
-} GstStructureAbbreviation;
+}
+GstStructureAbbreviation;
 
 static GstStructureAbbreviation gst_structure_abbrs[] = {
   {"int", G_TYPE_INT},
@@ -1054,11 +1055,11 @@ gst_structure_to_string (const GstStructure * structure)
       GArray *array = g_value_peek_pointer (&field->value);
 
       if (array->len > 0) {
-	GValue *value = &g_array_index (array, GValue, 0);
+        GValue *value = &g_array_index (array, GValue, 0);
 
-	type = G_VALUE_TYPE (value);
+        type = G_VALUE_TYPE (value);
       } else {
-	type = G_TYPE_INT;
+        type = G_TYPE_INT;
       }
     } else if (G_VALUE_TYPE (&field->value) == GST_TYPE_INT_RANGE) {
       type = G_TYPE_INT;
@@ -1066,7 +1067,7 @@ gst_structure_to_string (const GstStructure * structure)
       type = G_TYPE_DOUBLE;
     }
     g_string_append_printf (s, ", %s=(%s)%s", g_quark_to_string (field->name),
-	gst_structure_to_abbr (type), t);
+        gst_structure_to_abbr (type), t);
     g_free (t);
   }
   return g_string_free (s, FALSE);
@@ -1171,10 +1172,10 @@ gst_structure_parse_range (gchar * s, gchar ** after, GValue * value,
   g_value_init (value, range_type);
   if (range_type == GST_TYPE_DOUBLE_RANGE) {
     gst_value_set_double_range (value, g_value_get_double (&value1),
-	g_value_get_double (&value2));
+        g_value_get_double (&value2));
   } else {
     gst_value_set_int_range (value, g_value_get_int (&value1),
-	g_value_get_int (&value2));
+        g_value_get_int (&value2));
   }
 
   *after = s;
@@ -1351,11 +1352,11 @@ gst_structure_parse_value (gchar * str,
       int i;
 
       for (i = 0; i < 3; i++) {
-	g_value_init (value, try_types[i]);
-	ret = gst_value_deserialize (value, value_s);
-	if (ret)
-	  break;
-	g_value_unset (value);
+        g_value_init (value, try_types[i]);
+        ret = gst_value_deserialize (value, value_s);
+        if (ret)
+          break;
+        g_value_unset (value);
       }
     } else {
       g_value_init (value, type);

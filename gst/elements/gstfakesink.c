@@ -70,22 +70,23 @@ gst_fakesink_state_error_get_type (void)
   static GEnumValue fakesink_state_error[] = {
     {FAKESINK_STATE_ERROR_NONE, "0", "No state change errors"},
     {FAKESINK_STATE_ERROR_NULL_READY, "1",
-	  "Fail state change from NULL to READY"},
+        "Fail state change from NULL to READY"},
     {FAKESINK_STATE_ERROR_READY_PAUSED, "2",
-	  "Fail state change from READY to PAUSED"},
+        "Fail state change from READY to PAUSED"},
     {FAKESINK_STATE_ERROR_PAUSED_PLAYING, "3",
-	  "Fail state change from PAUSED to PLAYING"},
+        "Fail state change from PAUSED to PLAYING"},
     {FAKESINK_STATE_ERROR_PLAYING_PAUSED, "4",
-	  "Fail state change from PLAYING to PAUSED"},
+        "Fail state change from PLAYING to PAUSED"},
     {FAKESINK_STATE_ERROR_PAUSED_READY, "5",
-	  "Fail state change from PAUSED to READY"},
+        "Fail state change from PAUSED to READY"},
     {FAKESINK_STATE_ERROR_READY_NULL, "6",
-	  "Fail state change from READY to NULL"},
+        "Fail state change from READY to NULL"},
     {0, NULL, NULL},
   };
+
   if (!fakesink_state_error_type) {
     fakesink_state_error_type =
-	g_enum_register_static ("GstFakeSinkStateError", fakesink_state_error);
+        g_enum_register_static ("GstFakeSinkStateError", fakesink_state_error);
   }
   return fakesink_state_error_type;
 }
@@ -133,27 +134,27 @@ gst_fakesink_class_init (GstFakeSinkClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_SINKS,
       g_param_spec_int ("num_sinks", "Number of sinks",
-	  "The number of sinkpads", 1, G_MAXINT, 1, G_PARAM_READABLE));
+          "The number of sinkpads", 1, G_MAXINT, 1, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STATE_ERROR,
       g_param_spec_enum ("state_error", "State Error",
-	  "Generate a state change error", GST_TYPE_FAKESINK_STATE_ERROR,
-	  FAKESINK_STATE_ERROR_NONE, G_PARAM_READWRITE));
+          "Generate a state change error", GST_TYPE_FAKESINK_STATE_ERROR,
+          FAKESINK_STATE_ERROR_NONE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
       g_param_spec_string ("last_message", "Last Message",
-	  "The message describing current status", NULL, G_PARAM_READABLE));
+          "The message describing current status", NULL, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Sync on the clock", FALSE,
-	  G_PARAM_READWRITE));
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIGNAL_HANDOFFS,
       g_param_spec_boolean ("signal-handoffs", "Signal handoffs",
-	  "Send a signal before unreffing the buffer", FALSE,
-	  G_PARAM_READWRITE));
+          "Send a signal before unreffing the buffer", FALSE,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
       g_param_spec_boolean ("silent", "Silent",
-	  "Don't produce last_message events", FALSE, G_PARAM_READWRITE));
+          "Don't produce last_message events", FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
       g_param_spec_boolean ("dump", "Dump", "Dump received bytes to stdout",
-	  FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE));
 
   gst_fakesink_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -316,22 +317,22 @@ gst_fakesink_chain (GstPad * pad, GstData * _data)
       g_free (fakesink->last_message);
 
       fakesink->last_message =
-	  g_strdup_printf ("chain   ******* (%s:%s)E (type: %d) %p",
-	  GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE (event), event);
+          g_strdup_printf ("chain   ******* (%s:%s)E (type: %d) %p",
+          GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE (event), event);
 
       g_object_notify (G_OBJECT (fakesink), "last_message");
     }
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
-	if (fakesink->sync && fakesink->clock) {
-	  gint64 value = GST_EVENT_DISCONT_OFFSET (event, 0).value;
+        if (fakesink->sync && fakesink->clock) {
+          gint64 value = GST_EVENT_DISCONT_OFFSET (event, 0).value;
 
-	  gst_element_set_time (GST_ELEMENT (fakesink), value);
-	}
+          gst_element_set_time (GST_ELEMENT (fakesink), value);
+        }
       default:
-	gst_pad_event_default (pad, event);
-	break;
+        gst_pad_event_default (pad, event);
+        break;
     }
     return;
   }
@@ -344,19 +345,19 @@ gst_fakesink_chain (GstPad * pad, GstData * _data)
     g_free (fakesink->last_message);
 
     fakesink->last_message =
-	g_strdup_printf ("chain   ******* (%s:%s)< (%d bytes, timestamp: %"
-	G_GINT64_FORMAT ", duration: %" G_GINT64_FORMAT ", offset: %"
-	G_GINT64_FORMAT ", flags: %d) %p", GST_DEBUG_PAD_NAME (pad),
-	GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf),
-	GST_BUFFER_DURATION (buf), GST_BUFFER_OFFSET (buf),
-	GST_BUFFER_FLAGS (buf), buf);
+        g_strdup_printf ("chain   ******* (%s:%s)< (%d bytes, timestamp: %"
+        G_GINT64_FORMAT ", duration: %" G_GINT64_FORMAT ", offset: %"
+        G_GINT64_FORMAT ", flags: %d) %p", GST_DEBUG_PAD_NAME (pad),
+        GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf),
+        GST_BUFFER_DURATION (buf), GST_BUFFER_OFFSET (buf),
+        GST_BUFFER_FLAGS (buf), buf);
 
     g_object_notify (G_OBJECT (fakesink), "last_message");
   }
 
   if (fakesink->signal_handoffs)
     g_signal_emit (G_OBJECT (fakesink), gst_fakesink_signals[SIGNAL_HANDOFF], 0,
-	buf, pad);
+        buf, pad);
 
   if (fakesink->dump) {
     gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
@@ -373,27 +374,27 @@ gst_fakesink_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       if (fakesink->state_error == FAKESINK_STATE_ERROR_NULL_READY)
-	goto error;
+        goto error;
       break;
     case GST_STATE_READY_TO_PAUSED:
       if (fakesink->state_error == FAKESINK_STATE_ERROR_READY_PAUSED)
-	goto error;
+        goto error;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       if (fakesink->state_error == FAKESINK_STATE_ERROR_PAUSED_PLAYING)
-	goto error;
+        goto error;
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       if (fakesink->state_error == FAKESINK_STATE_ERROR_PLAYING_PAUSED)
-	goto error;
+        goto error;
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (fakesink->state_error == FAKESINK_STATE_ERROR_PAUSED_READY)
-	goto error;
+        goto error;
       break;
     case GST_STATE_READY_TO_NULL:
       if (fakesink->state_error == FAKESINK_STATE_ERROR_READY_NULL)
-	goto error;
+        goto error;
       g_free (fakesink->last_message);
       fakesink->last_message = NULL;
       break;

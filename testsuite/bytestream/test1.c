@@ -15,7 +15,8 @@ typedef struct
   gchar *bs_accesspattern;
 
   gboolean integrity_check;
-} TestParam;
+}
+TestParam;
 
 static GSList *params = NULL;
 
@@ -34,10 +35,10 @@ handoff (GstElement * element, GstBuffer * buf, GstPad * pad, gpointer data)
       guint8 *ptr = GST_BUFFER_DATA (buf);
 
       for (i = 0; i < GST_BUFFER_SIZE (buf); i++) {
-	if (*ptr++ != count++) {
-	  g_print ("data error!\n");
-	  return;
-	}
+        if (*ptr++ != count++) {
+          g_print ("data error!\n");
+          return;
+        }
       }
     }
   } else {
@@ -80,7 +81,7 @@ read_param_file (gchar * filename)
       continue;
 
     if (sscanf (line, scan_str, &data, &sizetype, pattern,
-	    &integrity_check) != 4) {
+            &integrity_check) != 4) {
       g_print ("error on line: %d\n", linenr);
       res = FALSE;
       break;
@@ -118,7 +119,7 @@ run_test (GstBin * pipeline, gint iters)
 
     if (percent != prev_percent || newvm - vm > VM_THRES) {
       g_print ("\r%d (delta %d) %.3d%%               ", newvm, newvm - vm,
-	  percent);
+          percent);
       prev_percent = percent;
       vm = newvm;
     }
@@ -207,11 +208,11 @@ main (int argc, char *argv[])
     g_free (desc);
 
     g_object_set (G_OBJECT (src), "data", param->src_data,
-	"sizetype", param->src_sizetype,
-	"filltype", (integrity_check ? 5 : 0), "silent", !verbose, NULL);
+        "sizetype", param->src_sizetype,
+        "filltype", (integrity_check ? 5 : 0), "silent", !verbose, NULL);
 
     g_object_set (G_OBJECT (bs), "accesspattern", param->bs_accesspattern,
-	"silent", !verbose, NULL);
+        "silent", !verbose, NULL);
 
     g_object_set (G_OBJECT (sink), "dump", dump, "silent", !verbose, NULL);
 

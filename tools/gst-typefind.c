@@ -67,7 +67,7 @@ main (int argc, char *argv[])
 
     while (!FOUND) {
       if (!gst_bin_iterate (GST_BIN (pipeline)))
-	break;
+        break;
     }
     if (!FOUND) {
       g_print ("%s - No type found\n", argv[i]);

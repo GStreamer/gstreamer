@@ -1,5 +1,5 @@
 #include "gstmempool.h"
-#include <string.h>		/* memset */
+#include <string.h>             /* memset */
 
 #ifdef __SMP__
 #define POOL_LOCK "lock ; "
@@ -170,8 +170,8 @@ gst_mem_pool_free (GstMemPool * mem_pool, gpointer mem)
   __asm__ __volatile__ ("1:				\t"
       "  movl %2, (%1) 		\n"
       POOL_LOCK "cmpxchg %1, %0 	\n\t"
-      "  jnz 1b 			\n\t"::"m"
-      (*mem_pool), "r" (pool), "a" (mem_pool->free));
+      "  jnz 1b 			\n\t"::
+      "m" (*mem_pool), "r" (pool), "a" (mem_pool->free));
 #else
   g_mutex_lock (mem_pool->chunk_lock);
   pool->link = (GstMemPoolElement *) mem_pool->free;

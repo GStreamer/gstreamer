@@ -51,18 +51,18 @@ popt_callback (poptContext context, enum poptCallbackReason reason,
   if (reason == POPT_CALLBACK_REASON_OPTION) {
     switch (option->val) {
       case ARG_MM:
-	_arg_mm = g_strdup (arg);
-	break;
+        _arg_mm = g_strdup (arg);
+        break;
       case ARG_LIST_MM:
-	_arg_list_mm = TRUE;
-	break;
+        _arg_list_mm = TRUE;
+        break;
       case ARG_PRINT:
-	_print = TRUE;
-	break;
+        _print = TRUE;
+        break;
       case ARG_HELP:
-	poptPrintHelp (context, stdout, 0);
-	g_print ("\n");
-	break;
+        poptPrintHelp (context, stdout, 0);
+        g_print ("\n");
+        break;
     }
   } else {
     g_print ("Unknown reason for callback\n");
@@ -72,29 +72,29 @@ popt_callback (poptContext context, enum poptCallbackReason reason,
 /* popt options table for the wrapper */
 static struct poptOption wrapper_options[] = {
   {NULL, '\0',
-	POPT_ARG_CALLBACK,
+        POPT_ARG_CALLBACK,
       (void *) &popt_callback, 0, NULL, NULL},
   {"help", '\0',
-	POPT_ARG_NONE | POPT_ARGFLAG_DOC_HIDDEN,
+        POPT_ARG_NONE | POPT_ARGFLAG_DOC_HIDDEN,
       NULL, ARG_HELP, ("Show help"), NULL},
   {"?", '\0',
-	POPT_ARG_NONE | POPT_ARGFLAG_STRIP | POPT_ARGFLAG_ONEDASH
-	| POPT_ARGFLAG_DOC_HIDDEN,
+        POPT_ARG_NONE | POPT_ARGFLAG_STRIP | POPT_ARGFLAG_ONEDASH
+        | POPT_ARGFLAG_DOC_HIDDEN,
       NULL, ARG_HELP, NULL, NULL},
   /* We cheat by specifying -p as long "p" with onedash, so that it
      also gets stripped properly from our arg flags */
   {"p", '\0',
-	POPT_ARG_NONE | POPT_ARGFLAG_STRIP | POPT_ARGFLAG_ONEDASH
-	| POPT_ARGFLAG_DOC_HIDDEN,
+        POPT_ARG_NONE | POPT_ARGFLAG_STRIP | POPT_ARGFLAG_ONEDASH
+        | POPT_ARGFLAG_DOC_HIDDEN,
       NULL, ARG_PRINT, NULL, NULL},
   {"print", '\0',
-	POPT_ARG_NONE | POPT_ARGFLAG_STRIP,
+        POPT_ARG_NONE | POPT_ARGFLAG_STRIP,
       NULL, ARG_PRINT, ("Print wrapped command line"), NULL},
   {"gst-mm", '\0',
-	POPT_ARG_STRING | POPT_ARGFLAG_STRIP,
+        POPT_ARG_STRING | POPT_ARGFLAG_STRIP,
       NULL, ARG_MM, ("Force major/minor version"), NULL},
   {"gst-list-mm", '\0',
-	POPT_ARG_NONE | POPT_ARGFLAG_STRIP,
+        POPT_ARG_NONE | POPT_ARGFLAG_STRIP,
       NULL, ARG_LIST_MM, ("List found major/minor versions"), NULL},
   POPT_TABLEEND
 };
@@ -254,28 +254,28 @@ get_candidates (const gchar * dir, const gchar * base)
     }
     while ((entry = g_dir_read_name (gdir))) {
       if (g_pattern_match_string (spec, entry)) {
-	gchar *full;
+        gchar *full;
 
-	/* is it executable ? */
-	full = g_build_filename (*cur, entry, NULL);
-	if (!g_file_test (full, G_FILE_TEST_IS_EXECUTABLE)) {
-	  g_free (full);
-	  continue;
-	}
-	g_free (full);
+        /* is it executable ? */
+        full = g_build_filename (*cur, entry, NULL);
+        if (!g_file_test (full, G_FILE_TEST_IS_EXECUTABLE)) {
+          g_free (full);
+          continue;
+        }
+        g_free (full);
 
-	/* strip base and dash from it */
-	suffix = g_strdup (&(entry[strlen (base) + 1]));
+        /* strip base and dash from it */
+        suffix = g_strdup (&(entry[strlen (base) + 1]));
 
-	/* stricter pattern check: check if it only contains digits or dots */
-	test = g_strdup (suffix);
-	g_strcanon (test, "0123456789.", 'X');
-	if (strstr (test, "X")) {
-	  g_free (test);
-	  continue;
-	}
-	g_free (test);
-	g_hash_table_insert (candidates, suffix, g_strdup (*cur));
+        /* stricter pattern check: check if it only contains digits or dots */
+        test = g_strdup (suffix);
+        g_strcanon (test, "0123456789.", 'X');
+        if (strstr (test, "X")) {
+          g_free (test);
+          continue;
+        }
+        g_free (test);
+        g_hash_table_insert (candidates, suffix, g_strdup (*cur));
       }
     }
   }
@@ -285,14 +285,15 @@ get_candidates (const gchar * dir, const gchar * base)
   return candidates;
 }
 
-int main (int argc, char **argv)
+int
+main (int argc, char **argv)
 {
   GHashTable *candidates;
   gchar *dir;
   gchar *base;
   gchar *highest = NULL;
-  gchar *binary;		/* actual binary we're going to run */
-  gchar *path = NULL;		/* and its path */
+  gchar *binary;                /* actual binary we're going to run */
+  gchar *path = NULL;           /* and its path */
   poptContext ctx;
   int nextopt;
 
@@ -359,7 +360,7 @@ int main (int argc, char **argv)
     for (i = 0; i < argc; ++i) {
       g_print ("%s", argv[i]);
       if (i < argc - 1)
-	g_print (" ");
+        g_print (" ");
     }
     g_print ("\n");
   }

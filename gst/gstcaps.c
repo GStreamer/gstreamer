@@ -53,11 +53,11 @@ gst_caps_get_type (void)
 
   if (!gst_caps_type) {
     gst_caps_type = g_boxed_type_register_static ("GstCaps",
-	(GBoxedCopyFunc) gst_caps_copy_conditional,
-	(GBoxedFreeFunc) gst_caps_free);
+        (GBoxedCopyFunc) gst_caps_copy_conditional,
+        (GBoxedFreeFunc) gst_caps_free);
 
     g_value_register_transform_func (gst_caps_type,
-	G_TYPE_STRING, gst_caps_transform_to_string);
+        G_TYPE_STRING, gst_caps_transform_to_string);
   }
 
   return gst_caps_type;
@@ -680,7 +680,8 @@ typedef struct
   GstStructure *dest;
   const GstStructure *intersect;
   gboolean first_run;
-} IntersectData;
+}
+IntersectData;
 
 static gboolean
 gst_caps_structure_intersect_field (GQuark id, GValue * val1, gpointer data)
@@ -719,13 +720,13 @@ gst_caps_structure_intersect (const GstStructure * struct1,
   data.intersect = struct2;
   data.first_run = TRUE;
   if (!gst_structure_foreach ((GstStructure *) struct1,
-	  gst_caps_structure_intersect_field, &data))
+          gst_caps_structure_intersect_field, &data))
     goto error;
 
   data.intersect = struct1;
   data.first_run = FALSE;
   if (!gst_structure_foreach ((GstStructure *) struct2,
-	  gst_caps_structure_intersect_field, &data))
+          gst_caps_structure_intersect_field, &data))
     goto error;
 
   return data.dest;
@@ -763,10 +764,10 @@ gst_caps_structure_union (const GstStructure * struct1,
       continue;
     } else {
       if (gst_value_union (&dest_value, &field1->value, &field2->value)) {
-	gst_structure_set_value (dest, g_quark_to_string (field1->name),
-	    &dest_value);
+        gst_structure_set_value (dest, g_quark_to_string (field1->name),
+            &dest_value);
       } else {
-	ret = gst_value_compare (&field1->value, &field2->value);
+        ret = gst_value_compare (&field1->value, &field2->value);
       }
     }
   }
@@ -862,7 +863,8 @@ typedef struct _NormalizeForeach
 {
   GstCaps *caps;
   GstStructure *structure;
-} NormalizeForeach;
+}
+NormalizeForeach;
 
 static gboolean
 gst_caps_normalize_foreach (GQuark field_id, GValue * value, gpointer ptr)
@@ -915,7 +917,7 @@ gst_caps_normalize (const GstCaps * caps)
     nf.structure = gst_caps_get_structure (newcaps, i);
 
     while (!gst_structure_foreach (nf.structure,
-	    gst_caps_normalize_foreach, &nf));
+            gst_caps_normalize_foreach, &nf));
   }
 
   return newcaps;
@@ -982,7 +984,7 @@ gst_caps_simplify (const GstCaps * caps)
     for (j = 0; j < gst_caps_get_size (newcaps); j++) {
       struct2 = gst_caps_get_structure (caps, i);
       if (gst_caps_structure_simplify (struct2, structure)) {
-	break;
+        break;
       }
     }
     if (j == gst_caps_get_size (newcaps)) {
@@ -1023,7 +1025,7 @@ gst_caps_load_thyself (xmlNodePtr parent)
 void
 gst_caps_replace (GstCaps ** caps, GstCaps * newcaps)
 {
-#if 0				/* disable this, since too many plugins rely on undefined behavior */
+#if 0                           /* disable this, since too many plugins rely on undefined behavior */
 #ifdef USE_POISONING
   //if (newcaps) CAPS_POISON (newcaps);
 #endif
@@ -1203,12 +1205,12 @@ gst_caps_structure_fixate_field_nearest_int (GstStructure * structure,
     for (i = 0; i < n; i++) {
       list_value = gst_value_list_get_value (value, i);
       if (G_VALUE_TYPE (list_value) == G_TYPE_INT) {
-	int x = g_value_get_int (list_value);
+        int x = g_value_get_int (list_value);
 
-	if (best_index == -1 || (ABS (target - x) < ABS (best - x))) {
-	  best_index = i;
-	  best = x;
-	}
+        if (best_index == -1 || (ABS (target - x) < ABS (best - x))) {
+          best_index = i;
+          best = x;
+        }
       }
     }
     if (best_index != -1) {
@@ -1255,12 +1257,12 @@ gst_caps_structure_fixate_field_nearest_double (GstStructure * structure,
     for (i = 0; i < n; i++) {
       list_value = gst_value_list_get_value (value, i);
       if (G_VALUE_TYPE (list_value) == G_TYPE_DOUBLE) {
-	double x = g_value_get_double (list_value);
+        double x = g_value_get_double (list_value);
 
-	if (best_index == -1 || (ABS (target - x) < ABS (best - x))) {
-	  best_index = i;
-	  best = x;
-	}
+        if (best_index == -1 || (ABS (target - x) < ABS (best - x))) {
+          best_index = i;
+          best = x;
+        }
       }
     }
     if (best_index != -1) {

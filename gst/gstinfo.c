@@ -33,9 +33,9 @@
 #ifdef HAVE_PRINTF_EXTENSION
 #include <printf.h>
 #endif
-#include <stdio.h>		/* fprintf */
+#include <stdio.h>              /* fprintf */
 #include <unistd.h>
-#include <string.h>		/* G_VA_COPY */
+#include <string.h>             /* G_VA_COPY */
 #include "gstinfo.h"
 #include "gstlog.h"
 #include "gst_private.h"
@@ -58,7 +58,8 @@ typedef struct DL_INFO
   int dli_version;
   int dli_reserved1;
   long dli_reserved[4];
-} Dl_info;
+}
+Dl_info;
 
 #define _RLD_DLADDR             14
 int dladdr (void *address, Dl_info * dl);
@@ -100,7 +101,8 @@ typedef struct
 {
   GPatternSpec *pat;
   GstDebugLevel level;
-} LevelNameEntry;
+}
+LevelNameEntry;
 
 /* list of all categories */
 static GStaticMutex __cat_mutex = G_STATIC_MUTEX_INIT;
@@ -111,7 +113,8 @@ typedef struct
 {
   GstLogFunction func;
   gpointer user_data;
-} LogFuncEntry;
+}
+LogFuncEntry;
 static GStaticMutex __log_func_mutex = G_STATIC_MUTEX_INIT;
 static GSList *__log_functions = NULL;
 
@@ -304,7 +307,7 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
     entry = handler->data;
     handler = g_slist_next (handler);
     entry->func (category, level, file, function, line, object, &message,
-	entry->user_data);
+        entry->user_data);
   }
   g_free (message.message);
   va_end (message.arguments);
@@ -402,7 +405,7 @@ gst_debug_construct_term_color (guint colorinfo)
   }
   if (colorinfo & GST_DEBUG_BG_MASK) {
     g_string_append_printf (color, ";4%1d",
-	(colorinfo & GST_DEBUG_BG_MASK) >> 4);
+        (colorinfo & GST_DEBUG_BG_MASK) >> 4);
   }
   g_string_append (color, "m");
 
@@ -448,8 +451,8 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   /* color info */
   if (gst_debug_is_colored ()) {
     color =
-	gst_debug_construct_term_color (gst_debug_category_get_color
-	(category));
+        gst_debug_construct_term_color (gst_debug_category_get_color
+        (category));
     clear = "\033[00m";
     pidcolor = g_strdup_printf ("\033[3%1dm", pid % 6 + 31);
   } else {
@@ -717,7 +720,7 @@ gst_debug_reset_threshold (gpointer category, gpointer unused)
     walk = g_slist_next (walk);
     if (g_pattern_match_string (entry->pat, cat->name)) {
       GST_LOG ("category %s matches pattern %p - gets set to level %d",
-	  cat->name, entry->pat, entry->level);
+          cat->name, entry->pat, entry->level);
       gst_debug_category_set_threshold (cat, entry->level);
       goto exit;
     }
@@ -742,7 +745,7 @@ for_each_threshold_by_entry (gpointer data, gpointer user_data)
 
   if (g_pattern_match_string (entry->pat, cat->name)) {
     GST_LOG ("category %s matches pattern %p - gets set to level %d",
-	cat->name, entry->pat, entry->level);
+        cat->name, entry->pat, entry->level);
     gst_debug_category_set_threshold (cat, entry->level);
   }
 }
@@ -1076,7 +1079,7 @@ __cyg_profile_func_enter (void *this_fn, void *call_site)
       site);
   stack_trace =
       g_slist_prepend (stack_trace, g_strdup_printf ("%8p in %s from %p (%s)",
-	  this_fn, name, call_site, site));
+          this_fn, name, call_site, site));
 
   g_free (name);
   g_free (site);

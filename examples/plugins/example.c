@@ -58,13 +58,13 @@ enum
  * can have.  They can be quite complex, but for this example plugin
  * they are rather simple.
  */
-GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",	/* The name of the pad */
-    GST_PAD_SINK,		/* Direction of the pad */
-    GST_PAD_ALWAYS,		/* The pad exists for every instance */
-    GST_STATIC_CAPS ("unknown/unknown, "	/* The MIME media type */
-	"foo:int=1, "		/* an integer property */
-	"bar:boolean=true, "	/* a boolean property */
-	"baz:int={ 1, 3 }"	/* a list of values */
+GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",   /* The name of the pad */
+    GST_PAD_SINK,               /* Direction of the pad */
+    GST_PAD_ALWAYS,             /* The pad exists for every instance */
+    GST_STATIC_CAPS ("unknown/unknown, "        /* The MIME media type */
+        "foo:int=1, "           /* an integer property */
+        "bar:boolean=true, "    /* a boolean property */
+        "baz:int={ 1, 3 }"      /* a list of values */
     )
     );
 
@@ -120,9 +120,10 @@ gst_example_get_type (void)
       0,
       (GInstanceInitFunc) gst_example_init,
     };
+
     example_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstExample", &example_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstExample", &example_info,
+        0);
   }
   return example_type;
 }
@@ -152,7 +153,7 @@ gst_example_class_init (GstExampleClass * klass)
   /* Here we add an argument to the object.  This argument is an integer,
    * and can be both read and written.
    */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACTIVE, g_param_spec_int ("active", "active", "active", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACTIVE, g_param_spec_int ("active", "active", "active", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
 
   /* Here we add a signal to the object. This is avery useless signal
    * called asdf. The signal will also pass a pointer to the listeners
@@ -261,7 +262,7 @@ gst_example_chain (GstPad * pad, GstData * _data)
 
     /* Then copy the data in the incoming buffer into the new buffer. */
     memcpy (GST_BUFFER_DATA (outbuf), GST_BUFFER_DATA (buf),
-	GST_BUFFER_SIZE (outbuf));
+        GST_BUFFER_SIZE (outbuf));
 
     /* we don't need the incomming buffer anymore so we unref it. When we are
      * the last plugin with a handle to the buffer, its memory will be freed */
@@ -392,7 +393,7 @@ plugin_init (GstPlugin * plugin)
    * when compared to similar plugins and the GType identifier.
    */
   if (!gst_element_register (plugin, "example", GST_RANK_MARGINAL,
-	  GST_TYPE_EXAMPLE))
+          GST_TYPE_EXAMPLE))
     return FALSE;
 
   /* Now we can return successfully. */
@@ -410,16 +411,16 @@ plugin_init (GstPlugin * plugin)
  * The symbol pointing to this structure is the only symbol looked up when
  * loading the plugin.
  */
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,	/* The major version of the core that this was built with */
-    GST_VERSION_MINOR,		/* The minor version of the core that this was built with */
-    "example",			/* The name of the plugin.  This must be unique: plugins with
-				 * the same name will be assumed to be identical, and only
-				 * one will be loaded. */
-    "an example plugin",	/* a short description of the plugin in English */
-    plugin_init,		/* Pointer to the initialisation function for the plugin. */
-    "0.1",			/* The version number of the plugin */
-    "LGPL",			/* ieffective license the plugin can be shipped with. Must be 
-				 * valid for all libraries it links to, too. */
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,   /* The major version of the core that this was built with */
+    GST_VERSION_MINOR,          /* The minor version of the core that this was built with */
+    "example",                  /* The name of the plugin.  This must be unique: plugins with
+                                 * the same name will be assumed to be identical, and only
+                                 * one will be loaded. */
+    "an example plugin",        /* a short description of the plugin in English */
+    plugin_init,                /* Pointer to the initialisation function for the plugin. */
+    "0.1",                      /* The version number of the plugin */
+    "LGPL",                     /* ieffective license the plugin can be shipped with. Must be 
+                                 * valid for all libraries it links to, too. */
     "my nifty plugin package",
     /* package this plugin belongs to. */
     "http://www.mydomain.com"

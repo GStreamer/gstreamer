@@ -92,14 +92,14 @@ gst_fdsrc_class_init (GstFdSrcClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to read from",
-	  0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BLOCKSIZE,
       g_param_spec_ulong ("blocksize", "Block size",
-	  "Size in bytes to read per buffer", 1, G_MAXULONG, DEFAULT_BLOCKSIZE,
-	  G_PARAM_READWRITE));
+          "Size in bytes to read per buffer", 1, G_MAXULONG, DEFAULT_BLOCKSIZE,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TIMEOUT,
       g_param_spec_uint64 ("timeout", "Timeout", "Read timeout in nanoseconds",
-	  0, G_MAXUINT64, 0, G_PARAM_READWRITE));
+          0, G_MAXUINT64, 0, G_PARAM_READWRITE));
 
   gst_fdsrc_signals[SIGNAL_TIMEOUT] =
       g_signal_new ("timeout", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -204,11 +204,11 @@ gst_fdsrc_get (GstPad * pad)
 
   do {
     retval = select (1, &readfds, NULL, NULL, tp);
-  } while (retval == -1 && errno == EINTR);	/* retry if interrupted */
+  } while (retval == -1 && errno == EINTR);     /* retry if interrupted */
 
   if (retval == -1) {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-	("select on file descriptor: %s.", g_strerror (errno)));
+        ("select on file descriptor: %s.", g_strerror (errno)));
     gst_element_set_eos (GST_ELEMENT (src));
     return GST_DATA (gst_event_new (GST_EVENT_EOS));
   } else if (retval == 0) {
@@ -219,7 +219,7 @@ gst_fdsrc_get (GstPad * pad)
 
   do {
     readbytes = read (src->fd, GST_BUFFER_DATA (buf), src->blocksize);
-  } while (readbytes == -1 && errno == EINTR);	/* retry if interrupted */
+  } while (readbytes == -1 && errno == EINTR);  /* retry if interrupted */
 
   if (readbytes > 0) {
     GST_BUFFER_OFFSET (buf) = src->curoffset;
@@ -234,7 +234,7 @@ gst_fdsrc_get (GstPad * pad)
     return GST_DATA (gst_event_new (GST_EVENT_EOS));
   } else {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-	("read on file descriptor: %s.", g_strerror (errno)));
+        ("read on file descriptor: %s.", g_strerror (errno)));
     gst_element_set_eos (GST_ELEMENT (src));
     return GST_DATA (gst_event_new (GST_EVENT_EOS));
   }

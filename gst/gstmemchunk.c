@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <string.h>		/* memset */
+#include <string.h>             /* memset */
 
 #include "gstlog.h"
 #include "gstutils.h"
@@ -32,8 +32,8 @@ typedef struct _GstMemChunkElement GstMemChunkElement;
 
 struct _GstMemChunkElement
 {
-  GstTrashStackElement elem;	/* make sure we can safely push it on the trashstack */
-  gpointer area;		/* pointer to data areas */
+  GstTrashStackElement elem;    /* make sure we can safely push it on the trashstack */
+  gpointer area;                /* pointer to data areas */
 };
 
 struct _GstMemChunk

@@ -37,7 +37,8 @@ typedef struct
 {
   GstTagMergeMode mode;
   GstTagList *list;
-} GstTagData;
+}
+GstTagData;
 
 GType
 gst_tag_setter_get_type (void)
@@ -46,22 +47,22 @@ gst_tag_setter_get_type (void)
 
   if (!tag_setter_type) {
     static const GTypeInfo tag_setter_info = {
-      sizeof (GstTagSetterIFace),	/* class_size */
-      NULL,			/* base_init */
-      NULL,			/* base_finalize */
+      sizeof (GstTagSetterIFace),       /* class_size */
+      NULL,                     /* base_init */
+      NULL,                     /* base_finalize */
       NULL,
-      NULL,			/* class_finalize */
-      NULL,			/* class_data */
+      NULL,                     /* class_finalize */
+      NULL,                     /* class_data */
       0,
       0,
       NULL
     };
 
     GST_DEBUG_CATEGORY_INIT (gst_tag_interface_debug, "GstTagInterface", 0,
-	"interfaces for tagging");
+        "interfaces for tagging");
 
     tag_setter_type = g_type_register_static (G_TYPE_INTERFACE, "GstTagSetter",
-	&tag_setter_info, 0);
+        &tag_setter_info, 0);
 
     g_type_interface_add_prerequisite (tag_setter_type, GST_TYPE_ELEMENT);
 
@@ -91,7 +92,7 @@ gst_tag_setter_get_data (GstTagSetter * setter)
     data->list = NULL;
     data->mode = GST_TAG_MERGE_KEEP;
     g_object_set_qdata_full (G_OBJECT (setter), gst_tag_key, data,
-	gst_tag_data_free);
+        gst_tag_data_free);
   }
 
   return data;

@@ -13,7 +13,7 @@ handler (GObject * object, GstCaps * caps, gpointer user_data)
 
   if (gst_caps_is_any (caps)) {
     return gst_caps_new_simple ("application/x-foo",
-	"field", GST_TYPE_INT_RANGE, 1, 10, NULL);
+        "field", GST_TYPE_INT_RANGE, 1, 10, NULL);
   }
 
   return NULL;

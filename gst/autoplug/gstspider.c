@@ -138,8 +138,9 @@ gst_spider_get_type (void)
       0,
       (GInstanceInitFunc) gst_spider_init,
     };
+
     spider_type =
-	g_type_register_static (GST_TYPE_BIN, "GstSpider", &spider_info, 0);
+        g_type_register_static (GST_TYPE_BIN, "GstSpider", &spider_info, 0);
   }
   return spider_type;
 }
@@ -158,7 +159,7 @@ gst_spider_class_init (GstSpiderClass * klass)
   /* properties */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FACTORIES,
       g_param_spec_pointer ("factories", "allowed factories",
-	  "allowed factories for autoplugging", G_PARAM_READWRITE));
+          "allowed factories for autoplugging", G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_spider_set_property;
   gobject_class->get_property = gst_spider_get_property;
@@ -251,9 +252,9 @@ gst_spider_set_property (GObject * object, guint prop_id, const GValue * value,
     case ARG_FACTORIES:
       list = (GList *) g_value_get_pointer (value);
       while (list) {
-	g_return_if_fail (list->data != NULL);
-	g_return_if_fail (GST_IS_ELEMENT_FACTORY (list->data));
-	list = g_list_next (list);
+        g_return_if_fail (list->data != NULL);
+        g_return_if_fail (GST_IS_ELEMENT_FACTORY (list->data));
+        list = g_list_next (list);
       }
       g_list_free (spider->factories);
       spider->factories = (GList *) g_value_get_pointer (value);
@@ -304,7 +305,7 @@ gst_spider_link_sometimes (GstElement * src, GstPad * pad,
   /* try to autoplug the elements */
   if (gst_spider_plug_from_srcpad (conn, pad) != GST_PAD_LINK_REFUSED) {
     GST_DEBUG ("%s:%s was autoplugged to %s:%s, removing callback",
-	GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (conn->src->sink));
+        GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (conn->src->sink));
     g_signal_handler_disconnect (src, signal_id);
     signal_id = 0;
   }
@@ -425,24 +426,24 @@ gst_spider_identity_plug (GstSpiderIdentity * ident)
 
       factories = spider->factories;
       while (factories) {
-	if ((padtemp =
-		gst_autoplug_can_connect_src (factories->data, src_caps))) {
-	  const GstCaps *caps = gst_pad_template_get_caps (padtemp);
+        if ((padtemp =
+                gst_autoplug_can_connect_src (factories->data, src_caps))) {
+          const GstCaps *caps = gst_pad_template_get_caps (padtemp);
 
-	  GST_DEBUG ("can connect src to pad template: %" GST_PTR_FORMAT, caps);
-	  found = TRUE;
-	}
-	factories = factories->next;
+          GST_DEBUG ("can connect src to pad template: %" GST_PTR_FORMAT, caps);
+          found = TRUE;
+        }
+        factories = factories->next;
       }
       if (!found) {
-	const char *mime;
+        const char *mime;
 
-	mime = gst_structure_get_name (gst_caps_get_structure (src_caps, 0));
+        mime = gst_structure_get_name (gst_caps_get_structure (src_caps, 0));
 
-	GST_ELEMENT_ERROR (spider, STREAM, CODEC_NOT_FOUND,
-	    (_("There is no element present to handle the stream's mime type %s."), mime), (NULL));
-	gst_caps_free (src_caps);
-	return;
+        GST_ELEMENT_ERROR (spider, STREAM, CODEC_NOT_FOUND,
+            (_("There is no element present to handle the stream's mime type %s."), mime), (NULL));
+        gst_caps_free (src_caps);
+        return;
       }
     }
     gst_caps_free (src_caps);
@@ -482,15 +483,15 @@ gst_spider_identity_plug (GstSpiderIdentity * ident)
     if (dir != GST_PAD_DIRECTION (otherpad)) {
       /* we only link to plugged in elements */
       if (peer->plugged == TRUE) {
-	/* plug in the right direction */
-	if (dir == GST_PAD_SINK) {
-	  conn = gst_spider_link_get (peer);
-	} else {
-	  conn = gst_spider_link_get (ident);
-	}
-	if ((GstElement *) spider->sink_ident == conn->current) {
-	  gst_spider_plug (conn);
-	}
+        /* plug in the right direction */
+        if (dir == GST_PAD_SINK) {
+          conn = gst_spider_link_get (peer);
+        } else {
+          conn = gst_spider_link_get (ident);
+        }
+        if ((GstElement *) spider->sink_ident == conn->current) {
+          gst_spider_plug (conn);
+        }
       }
     }
     padlist = g_list_next (padlist);
@@ -536,9 +537,9 @@ gst_spider_create_and_plug (GstSpiderConnection * conn, GList * plugpath)
     templist = g_list_last (plugpath);
     element = (GstElement *) conn->src;
     while ((plugpath != NULL)
-	&& (element =
-	    gst_spider_find_element_to_plug (element,
-		(GstElementFactory *) plugpath->data, GST_PAD_SINK))) {
+        && (element =
+            gst_spider_find_element_to_plug (element,
+                (GstElementFactory *) plugpath->data, GST_PAD_SINK))) {
       GList *cur = templist;
 
       endelements = g_list_prepend (endelements, element);
@@ -549,18 +550,18 @@ gst_spider_create_and_plug (GstSpiderConnection * conn, GList * plugpath)
 
   /* do the linking */
   while (conn->current != (GstElement *) (endelements ==
-	  NULL ? conn->src : endelements->data)) {
+          NULL ? conn->src : endelements->data)) {
     /* get sink element to plug, src is conn->current */
     if (plugpath == NULL) {
       element =
-	  (GstElement *) (endelements == NULL ? conn->src : endelements->data);
+          (GstElement *) (endelements == NULL ? conn->src : endelements->data);
     } else {
       element =
-	  gst_element_factory_create ((GstElementFactory *) plugpath->data,
-	  NULL);
+          gst_element_factory_create ((GstElementFactory *) plugpath->data,
+          NULL);
       GST_DEBUG
-	  ("Adding element %s of type %s and syncing state with autoplugger",
-	  GST_ELEMENT_NAME (element), GST_PLUGIN_FEATURE_NAME (plugpath->data));
+          ("Adding element %s of type %s and syncing state with autoplugger",
+          GST_ELEMENT_NAME (element), GST_PLUGIN_FEATURE_NAME (plugpath->data));
       gst_bin_add (GST_BIN (spider), element);
     }
     /* insert and link new element */
@@ -572,30 +573,30 @@ gst_spider_create_and_plug (GstSpiderConnection * conn, GList * plugpath)
 
       /* remove element that couldn't be linked, if it wasn't the endpoint */
       if (element != (GstElement *) conn->src)
-	gst_bin_remove (GST_BIN (spider), element);
+        gst_bin_remove (GST_BIN (spider), element);
 
       while (templs) {
-	GstPadTemplate *templ = (GstPadTemplate *) templs->data;
+        GstPadTemplate *templ = (GstPadTemplate *) templs->data;
 
-	if ((GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC)
-	    && (GST_PAD_TEMPLATE_PRESENCE (templ) == GST_PAD_SOMETIMES)) {
-	  GST_DEBUG ("adding callback to link element %s to %s",
-	      GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
-	  conn->signal_id =
-	      g_signal_connect (G_OBJECT (conn->current), "new_pad",
-	      G_CALLBACK (gst_spider_link_sometimes), conn);
-	  g_list_free (plugpath);
-	  return GST_PAD_LINK_DELAYED;
-	}
-	templs = g_list_next (templs);
+        if ((GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC)
+            && (GST_PAD_TEMPLATE_PRESENCE (templ) == GST_PAD_SOMETIMES)) {
+          GST_DEBUG ("adding callback to link element %s to %s",
+              GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
+          conn->signal_id =
+              g_signal_connect (G_OBJECT (conn->current), "new_pad",
+              G_CALLBACK (gst_spider_link_sometimes), conn);
+          g_list_free (plugpath);
+          return GST_PAD_LINK_DELAYED;
+        }
+        templs = g_list_next (templs);
       }
       GST_DEBUG ("no chance to link element %s to %s",
-	  GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
+          GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
       g_list_free (plugpath);
       return GST_PAD_LINK_REFUSED;
     }
     GST_DEBUG ("added element %s and attached it to element %s",
-	GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (conn->current));
+        GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (conn->current));
     gst_spider_link_add (conn, element);
     if (plugpath != NULL)
       plugpath = g_list_delete_link (plugpath, plugpath);
@@ -622,13 +623,13 @@ gst_spider_find_element_to_plug (GstElement * src, GstElementFactory * fac,
 
     /* is the pad on the right side and is it linked? */
     if ((GST_PAD_DIRECTION (pad) == dir)
-	&& (pad = (GstPad *) (GST_RPAD_PEER (pad)))) {
+        && (pad = (GstPad *) (GST_RPAD_PEER (pad)))) {
       /* is the element the pad is linked to of the right type? */
       GstElement *element = GST_PAD_PARENT (pad);
 
       if (G_TYPE_FROM_INSTANCE (element) ==
-	  gst_element_factory_get_element_type (fac)) {
-	return element;
+          gst_element_factory_get_element_type (fac)) {
+        return element;
       }
     }
     padlist = g_list_next (padlist);
@@ -671,7 +672,7 @@ gst_spider_plug_from_srcpad (GstSpiderConnection * conn, GstPad * srcpad)
   /* see if they match already */
   if (gst_pad_link (srcpad, conn->src->sink)) {
     GST_DEBUG ("%s:%s and %s:%s can link directly",
-	GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (conn->src->sink));
+        GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (conn->src->sink));
     gst_pad_unlink (srcpad, conn->src->sink);
     gst_spider_create_and_plug (conn, NULL);
     return GST_PAD_LINK_OK;
@@ -696,7 +697,7 @@ gst_spider_plug_from_srcpad (GstSpiderConnection * conn, GstPad * srcpad)
   /* if there is no way to plug: return */
   if (plugpath == NULL) {
     GST_DEBUG ("no chance to plug from %s to %s",
-	GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
+        GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
     return GST_PAD_LINK_REFUSED;
   }
   GST_DEBUG ("found a link that needs %d elements", g_list_length (plugpath));
@@ -708,8 +709,8 @@ gst_spider_plug_from_srcpad (GstSpiderConnection * conn, GstPad * srcpad)
   element = conn->current;
   while ((plugpath != NULL)
       && (element =
-	  gst_spider_find_element_to_plug (element,
-	      (GstElementFactory *) plugpath->data, GST_PAD_SRC))) {
+          gst_spider_find_element_to_plug (element,
+              (GstElementFactory *) plugpath->data, GST_PAD_SRC))) {
     gst_spider_link_add (conn, element);
     plugpath = g_list_delete_link (plugpath, plugpath);
   }
@@ -739,10 +740,10 @@ plugin_init (GstPlugin * plugin)
       "spider autoplugging element");
 
   if (!gst_element_register (plugin, "spider", GST_RANK_SECONDARY,
-	  GST_TYPE_SPIDER))
+          GST_TYPE_SPIDER))
     return FALSE;
   if (!gst_element_register (plugin, "spideridentity", GST_RANK_NONE,
-	  GST_TYPE_SPIDER_IDENTITY))
+          GST_TYPE_SPIDER_IDENTITY))
     return FALSE;
 
   return TRUE;

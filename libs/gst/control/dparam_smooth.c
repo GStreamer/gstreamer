@@ -73,9 +73,10 @@ gst_dpsmooth_get_type (void)
       0,
       (GInstanceInitFunc) gst_dpsmooth_init,
     };
+
     dpsmooth_type =
-	g_type_register_static (GST_TYPE_DPARAM, "GstDParamSmooth",
-	&dpsmooth_info, 0);
+        g_type_register_static (GST_TYPE_DPARAM, "GstDParamSmooth",
+        &dpsmooth_info, 0);
   }
   return dpsmooth_type;
 }
@@ -96,27 +97,27 @@ gst_dpsmooth_class_init (GstDParamSmoothClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_UPDATE_PERIOD,
       g_param_spec_int64 ("update_period",
-	  "Update Period (nanoseconds)",
-	  "Number of nanoseconds between updates",
-	  0LL, G_MAXINT64, 2000000LL, G_PARAM_READWRITE));
+          "Update Period (nanoseconds)",
+          "Number of nanoseconds between updates",
+          0LL, G_MAXINT64, 2000000LL, G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SLOPE_TIME,
       g_param_spec_int64 ("slope_time",
-	  "Slope Time (nanoseconds)",
-	  "The time period to define slope_delta by",
-	  0LL, G_MAXINT64, 10000000LL, G_PARAM_READWRITE));
+          "Slope Time (nanoseconds)",
+          "The time period to define slope_delta by",
+          0LL, G_MAXINT64, 10000000LL, G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       ARG_SLOPE_DELTA_FLOAT,
       g_param_spec_float ("slope_delta_float", "Slope Delta float",
-	  "The amount a float value can change for a given slope_time",
-	  0.0F, G_MAXFLOAT, 0.2F, G_PARAM_READWRITE));
+          "The amount a float value can change for a given slope_time",
+          0.0F, G_MAXFLOAT, 0.2F, G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       ARG_SLOPE_DELTA_DOUBLE,
       g_param_spec_double ("slope_delta_double", "Slope Delta double",
-	  "The amount a double value can change for a given slope_time",
-	  0.0, G_MAXDOUBLE, 0.2, G_PARAM_READWRITE));
+          "The amount a double value can change for a given slope_time",
+          0.0, G_MAXDOUBLE, 0.2, G_PARAM_READWRITE));
 
   /*gstobject_class->save_thyself = gst_dparam_save_thyself; */
 
@@ -149,13 +150,13 @@ gst_dpsmooth_new (GType type)
     case G_TYPE_FLOAT:{
       dparam->do_update_func = gst_dpsmooth_do_update_float;
       g_signal_connect (G_OBJECT (dpsmooth), "value_changed",
-	  G_CALLBACK (gst_dpsmooth_value_changed_float), NULL);
+          G_CALLBACK (gst_dpsmooth_value_changed_float), NULL);
       break;
     }
     case G_TYPE_DOUBLE:{
       dparam->do_update_func = gst_dpsmooth_do_update_double;
       g_signal_connect (G_OBJECT (dpsmooth), "value_changed",
-	  G_CALLBACK (gst_dpsmooth_value_changed_double), NULL);
+          G_CALLBACK (gst_dpsmooth_value_changed_double), NULL);
       break;
     }
     default:
@@ -189,7 +190,7 @@ gst_dpsmooth_set_property (GObject * object, guint prop_id,
     case ARG_SLOPE_TIME:
       dpsmooth->slope_time = g_value_get_int64 (value);
       GST_DEBUG ("dpsmooth->slope_time:%"
-	  G_GINT64_FORMAT, dpsmooth->slope_time);
+          G_GINT64_FORMAT, dpsmooth->slope_time);
       GST_DPARAM_READY_FOR_UPDATE (dparam) = TRUE;
       break;
 
@@ -309,7 +310,7 @@ gst_dpsmooth_do_update_float (GstDParam * dparam, gint64 timestamp,
     }
     GST_DPARAM_LAST_UPDATE_TIMESTAMP (dparam) = timestamp;
     GST_DPARAM_NEXT_UPDATE_TIMESTAMP (dparam) =
-	dpsmooth->start_interp + dpsmooth->update_period;
+        dpsmooth->start_interp + dpsmooth->update_period;
 
     GST_DEBUG ("interp started at %" G_GINT64_FORMAT, timestamp);
 
@@ -420,7 +421,7 @@ gst_dpsmooth_do_update_double (GstDParam * dparam, gint64 timestamp,
     }
     GST_DPARAM_LAST_UPDATE_TIMESTAMP (dparam) = timestamp;
     GST_DPARAM_NEXT_UPDATE_TIMESTAMP (dparam) =
-	dpsmooth->start_interp + dpsmooth->update_period;
+        dpsmooth->start_interp + dpsmooth->update_period;
 
     GST_DEBUG ("interp started at %" G_GINT64_FORMAT, timestamp);
 

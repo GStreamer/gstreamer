@@ -39,7 +39,7 @@ gst_filter_run (const GList * list, GstFilterFunc func, gboolean first,
       result = g_list_prepend (result, data);
 
       if (first)
-	break;
+        break;
     }
   }
 

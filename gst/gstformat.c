@@ -29,7 +29,7 @@
 static GList *_gst_formats = NULL;
 static GHashTable *_nick_to_format = NULL;
 static GHashTable *_format_to_nick = NULL;
-static gint _n_values = 1;	/* we start from 1 because 0 reserved for UNDEFINED */
+static gint _n_values = 1;      /* we start from 1 because 0 reserved for UNDEFINED */
 
 static GstFormatDefinition standard_definitions[] = {
   {GST_FORMAT_DEFAULT, "default", "Default format for the media type"},
@@ -53,7 +53,7 @@ _gst_format_initialize (void)
   while (standards->nick) {
     g_hash_table_insert (_nick_to_format, standards->nick, standards);
     g_hash_table_insert (_format_to_nick, GINT_TO_POINTER (standards->value),
-	standards);
+        standards);
 
     _gst_formats = g_list_append (_gst_formats, standards);
     standards++;

@@ -62,7 +62,7 @@ main (int argc, char *argv[])
   /* we expect this to give an error */
   if (gst_bin_iterate (GST_BIN (pipeline)) != FALSE) {
     g_warning
-	("Iterating a bin with unlinked elements should return FALSE !\n");
+        ("Iterating a bin with unlinked elements should return FALSE !\n");
     retval = 1;
   }
 

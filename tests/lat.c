@@ -35,8 +35,8 @@ handoff_sink (GstElement * sink, GstBuffer * buf, gpointer user_data)
 
   if ((count % print_del) == 0) {
     g_print ("%07d:%08" G_GUINT64_FORMAT " min:%08" G_GUINT64_FORMAT " max:%08"
-	G_GUINT64_FORMAT " avg:%08" G_GUINT64_FORMAT " avg-s:0.%09d\r", count,
-	d, min, max, avg, avg_ns);
+        G_GUINT64_FORMAT " avg:%08" G_GUINT64_FORMAT " avg-s:0.%09d\r", count,
+        d, min, max, avg, avg_ns);
   }
 }
 
@@ -56,7 +56,7 @@ identity_add (GstPipeline * pipeline, GstElement * first, int count)
     g_object_set (G_OBJECT (ident), "silent", TRUE, NULL);
     gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (ident));
     gst_pad_link (gst_element_get_pad (last, "src"),
-	gst_element_get_pad (ident, "sink"));
+        gst_element_get_pad (ident, "sink"));
     last = ident;
   }
 
@@ -203,8 +203,8 @@ main (int argc, char *argv[])
 
   if (argc < 3) {
     fprintf (stderr,
-	"usage: %s iterations print_del mhz test_name [test_params...]\n",
-	argv[0]);
+        "usage: %s iterations print_del mhz test_name [test_params...]\n",
+        argv[0]);
     for (i = 0; tests[i].name; i++) {
       fprintf (stderr, "  %s %s\n", tests[i].name, tests[i].params);
     }

@@ -94,31 +94,31 @@ gst_identity_class_init (GstIdentityClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOOP_BASED,
       g_param_spec_boolean ("loop-based", "Loop-based",
-	  "Set to TRUE to use loop-based rather than chain-based scheduling",
-	  TRUE, G_PARAM_READWRITE));
+          "Set to TRUE to use loop-based rather than chain-based scheduling",
+          TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SLEEP_TIME,
       g_param_spec_uint ("sleep-time", "Sleep time",
-	  "Microseconds to sleep between processing", 0, G_MAXUINT, 0,
-	  G_PARAM_READWRITE));
+          "Microseconds to sleep between processing", 0, G_MAXUINT, 0,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUPLICATE,
       g_param_spec_uint ("duplicate", "Duplicate Buffers",
-	  "Push the buffers N times", 0, G_MAXUINT, 1, G_PARAM_READWRITE));
+          "Push the buffers N times", 0, G_MAXUINT, 1, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ERROR_AFTER,
       g_param_spec_int ("error_after", "Error After", "Error after N buffers",
-	  G_MININT, G_MAXINT, -1, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, -1, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DROP_PROBABILITY,
       g_param_spec_float ("drop_probability", "Drop Probability",
-	  "The Probability a buffer is dropped", 0.0, 1.0, 0.0,
-	  G_PARAM_READWRITE));
+          "The Probability a buffer is dropped", 0.0, 1.0, 0.0,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
       g_param_spec_boolean ("silent", "silent", "silent", FALSE,
-	  G_PARAM_READWRITE));
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
       g_param_spec_string ("last-message", "last-message", "last-message", NULL,
-	  G_PARAM_READABLE));
+          G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
       g_param_spec_boolean ("dump", "Dump", "Dump buffer contents", FALSE,
-	  G_PARAM_READWRITE));
+          G_PARAM_READWRITE));
 
   gst_identity_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -173,7 +173,7 @@ gst_identity_chain (GstPad * pad, GstData * _data)
     if (identity->error_after == 0) {
       gst_buffer_unref (buf);
       GST_ELEMENT_ERROR (identity, CORE, FAILED,
-	  (_("Failed after iterations as requested.")), (NULL));
+          (_("Failed after iterations as requested.")), (NULL));
       return;
     }
   }
@@ -181,12 +181,12 @@ gst_identity_chain (GstPad * pad, GstData * _data)
   if (identity->drop_probability > 0.0) {
     if ((gfloat) (1.0 * rand () / (RAND_MAX)) < identity->drop_probability) {
       if (identity->last_message != NULL) {
-	g_free (identity->last_message);
+        g_free (identity->last_message);
       }
       identity->last_message =
-	  g_strdup_printf ("dropping   ******* (%s:%s)i (%d bytes, %"
-	  G_GINT64_FORMAT ")", GST_DEBUG_PAD_NAME (identity->sinkpad),
-	  GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+          g_strdup_printf ("dropping   ******* (%s:%s)i (%d bytes, %"
+          G_GINT64_FORMAT ")", GST_DEBUG_PAD_NAME (identity->sinkpad),
+          GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
       g_object_notify (G_OBJECT (identity), "last-message");
       gst_buffer_unref (buf);
       return;
@@ -200,14 +200,14 @@ gst_identity_chain (GstPad * pad, GstData * _data)
     if (!identity->silent) {
       g_free (identity->last_message);
       identity->last_message =
-	  g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, %"
-	  G_GINT64_FORMAT ")", GST_DEBUG_PAD_NAME (identity->sinkpad),
-	  GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+          g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, %"
+          G_GINT64_FORMAT ")", GST_DEBUG_PAD_NAME (identity->sinkpad),
+          GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
       g_object_notify (G_OBJECT (identity), "last-message");
     }
 
     g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
-	buf);
+        buf);
 
     if (i > 1)
       gst_buffer_ref (buf);
@@ -259,12 +259,12 @@ gst_identity_set_property (GObject * object, guint prop_id,
     case ARG_LOOP_BASED:
       identity->loop_based = g_value_get_boolean (value);
       if (identity->loop_based) {
-	gst_element_set_loop_function (GST_ELEMENT (identity),
-	    gst_identity_loop);
-	gst_pad_set_chain_function (identity->sinkpad, NULL);
+        gst_element_set_loop_function (GST_ELEMENT (identity),
+            gst_identity_loop);
+        gst_pad_set_chain_function (identity->sinkpad, NULL);
       } else {
-	gst_pad_set_chain_function (identity->sinkpad, gst_identity_chain);
-	gst_element_set_loop_function (GST_ELEMENT (identity), NULL);
+        gst_pad_set_chain_function (identity->sinkpad, gst_identity_chain);
+        gst_element_set_loop_function (GST_ELEMENT (identity), NULL);
       }
       break;
     case ARG_SLEEP_TIME:

@@ -60,6 +60,7 @@ gst_xml_get_type (void)
       (GInstanceInitFunc) gst_xml_init,
       NULL
     };
+
     xml_type = g_type_register_static (GST_TYPE_OBJECT, "GstXML", &xml_info, 0);
   }
   return xml_type;
@@ -168,14 +169,14 @@ gst_xml_write_file (GstElement * element, FILE * out)
 
     if (cur->charset != XML_CHAR_ENCODING_UTF8) {
       xmlGenericError (xmlGenericErrorContext,
-	  "xmlDocDump: document not in UTF8\n");
+          "xmlDocDump: document not in UTF8\n");
       return -1;
     }
     if (enc != XML_CHAR_ENCODING_UTF8) {
       handler = xmlFindCharEncodingHandler (encoding);
       if (handler == NULL) {
-	xmlFree ((char *) cur->encoding);
-	cur->encoding = NULL;
+        xmlFree ((char *) cur->encoding);
+        cur->encoding = NULL;
       }
     }
   }
@@ -368,10 +369,10 @@ gst_xml_get_element (GstXML * xml, const guchar * name)
       return top;
     } else {
       if (GST_IS_BIN (top)) {
-	element = gst_bin_get_by_name (GST_BIN (top), name);
+        element = gst_bin_get_by_name (GST_BIN (top), name);
 
-	if (element)
-	  return element;
+        if (element)
+          return element;
       }
     }
     topelements = g_list_next (topelements);

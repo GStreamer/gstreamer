@@ -57,7 +57,7 @@ main (gint argc, gchar * argv[])
       command = g_strdup_printf ("%s %s %d", argv[0], lines[i], i);
       g_print ("running \"%s\"\n", command);
       g_assert (g_spawn_command_line_sync (command, NULL, NULL, &exit,
-	      NULL) == TRUE);
+              NULL) == TRUE);
       g_assert (exit == 0);
       g_print ("\"%s\" worked as expected.\n", command);
       g_free (command);
@@ -68,7 +68,7 @@ main (gint argc, gchar * argv[])
     gst_init (&argc, &argv);
     if (argc != 2) {
       g_print
-	  ("something funny happened to the command line arguments, aborting.\n");
+          ("something funny happened to the command line arguments, aborting.\n");
       return 1;
     }
     gst_debug_remove_log_function (gst_debug_log_default);
@@ -76,29 +76,29 @@ main (gint argc, gchar * argv[])
     GST_DEBUG_CATEGORY_INIT (cat_static, "cat_static", 0, "static category");
     switch (argv[1][0]) {
       case '0':
-	g_assert (gst_debug_is_active () == FALSE);
-	gst_debug_add_log_function (debug_not_reached, NULL);
-	GST_ERROR ("This will not be seen");
-	return 0;
+        g_assert (gst_debug_is_active () == FALSE);
+        gst_debug_add_log_function (debug_not_reached, NULL);
+        GST_ERROR ("This will not be seen");
+        return 0;
       case '1':
-	return gst_debug_is_colored ()? 1 : 0;
+        return gst_debug_is_colored ()? 1 : 0;
       case '2':
-	g_assert (gst_debug_get_default_threshold () == 4);
-	g_assert (gst_debug_category_get_threshold (cat) == 4);
-	return 0;
+        g_assert (gst_debug_get_default_threshold () == 4);
+        g_assert (gst_debug_category_get_threshold (cat) == 4);
+        return 0;
       case '3':
-	g_assert (gst_debug_get_default_threshold () == GST_LEVEL_DEFAULT);
-	g_assert (gst_debug_category_get_threshold (cat) == 4);
-	g_assert (gst_debug_category_get_threshold (cat_static) == 3);
-	return 0;
+        g_assert (gst_debug_get_default_threshold () == GST_LEVEL_DEFAULT);
+        g_assert (gst_debug_category_get_threshold (cat) == 4);
+        g_assert (gst_debug_category_get_threshold (cat_static) == 3);
+        return 0;
       case '4':
-	g_assert (gst_debug_get_default_threshold () == 4);
-	g_assert (gst_debug_category_get_threshold (cat) == 4);
-	g_assert (gst_debug_category_get_threshold (cat_static) == 5);
-	return 0;
+        g_assert (gst_debug_get_default_threshold () == 4);
+        g_assert (gst_debug_category_get_threshold (cat) == 4);
+        g_assert (gst_debug_category_get_threshold (cat_static) == 5);
+        return 0;
       default:
-	g_print ("usupported command, aborting...\n");
-	return -1;
+        g_print ("usupported command, aborting...\n");
+        return -1;
     }
   }
   g_assert_not_reached ();

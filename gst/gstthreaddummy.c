@@ -36,7 +36,7 @@ gst_mutex_new_dummy_impl (void)
 
 static void
 gst_mutex_dummy_impl (GMutex * mutex)
-{				/* NOP */
+{                               /* NOP */
 }
 
 static gboolean
@@ -56,7 +56,7 @@ gst_cond_new_dummy_impl (void)
 
 static void
 gst_cond_dummy_impl (GCond * cond)
-{				/* NOP */
+{                               /* NOP */
 }
 
 static gboolean
@@ -118,17 +118,17 @@ gst_thread_create_dummy_impl (GThreadFunc func, gpointer data,
 
 static void
 gst_thread_dummy_impl (void)
-{				/* NOP */
+{                               /* NOP */
 }
 
 static void
 gst_thread_dummy_impl_1 (gpointer thread)
-{				/* NOP */
+{                               /* NOP */
 }
 
 static void
 gst_thread_set_priority_dummy_impl (gpointer thread, GThreadPriority priority)
-{				/* NOP */
+{                               /* NOP */
 }
 
 static gboolean
@@ -138,23 +138,24 @@ gst_thread_equal_dummy_impl (gpointer thread1, gpointer thread2)
 }
 
 GThreadFunctions gst_thread_dummy_functions = {
-gst_mutex_new_dummy_impl,
-      (void (*)(GMutex *)) gst_mutex_dummy_impl,
-      gst_mutex_trylock_dummy_impl,
-      (void (*)(GMutex *)) gst_mutex_dummy_impl,
-      gst_mutex_dummy_impl,
-      gst_cond_new_dummy_impl,
-      (void (*)(GCond *)) gst_cond_dummy_impl,
-      (void (*)(GCond *)) gst_cond_dummy_impl,
-      (void (*)(GCond *, GMutex *)) gst_cond_dummy_impl,
-      gst_cond_timed_wait_dummy_impl,
-      gst_cond_dummy_impl,
-      gst_private_new_dummy_impl,
-      gst_private_get_dummy_impl,
-      gst_private_set_dummy_impl,
-      gst_thread_create_dummy_impl,
-      gst_thread_dummy_impl,
-      gst_thread_dummy_impl_1,
-      gst_thread_dummy_impl,
-      gst_thread_set_priority_dummy_impl,
-      gst_thread_dummy_impl_1, gst_thread_equal_dummy_impl};
+  gst_mutex_new_dummy_impl,
+  (void (*)(GMutex *)) gst_mutex_dummy_impl,
+  gst_mutex_trylock_dummy_impl,
+  (void (*)(GMutex *)) gst_mutex_dummy_impl,
+  gst_mutex_dummy_impl,
+  gst_cond_new_dummy_impl,
+  (void (*)(GCond *)) gst_cond_dummy_impl,
+  (void (*)(GCond *)) gst_cond_dummy_impl,
+  (void (*)(GCond *, GMutex *)) gst_cond_dummy_impl,
+  gst_cond_timed_wait_dummy_impl,
+  gst_cond_dummy_impl,
+  gst_private_new_dummy_impl,
+  gst_private_get_dummy_impl,
+  gst_private_set_dummy_impl,
+  gst_thread_create_dummy_impl,
+  gst_thread_dummy_impl,
+  gst_thread_dummy_impl_1,
+  gst_thread_dummy_impl,
+  gst_thread_set_priority_dummy_impl,
+  gst_thread_dummy_impl_1, gst_thread_equal_dummy_impl
+};

@@ -57,7 +57,7 @@ main (int argc, char *argv[])
     src = gst_bin_get_by_name (GST_BIN (bin), "fakesrc");
     if (src) {
       g_signal_connect (G_OBJECT (src), "handoff",
-	  G_CALLBACK (buffer_handoff_src), bin);
+          G_CALLBACK (buffer_handoff_src), bin);
     } else {
       g_print ("could not find src element\n");
       exit (-1);
@@ -66,7 +66,7 @@ main (int argc, char *argv[])
     sink = gst_bin_get_by_name (GST_BIN (bin), "fakesink");
     if (sink) {
       g_signal_connect (G_OBJECT (sink), "handoff",
-	  G_CALLBACK (buffer_handoff_sink), bin);
+          G_CALLBACK (buffer_handoff_sink), bin);
     } else {
       g_print ("could not find sink element\n");
       exit (-1);

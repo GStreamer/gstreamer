@@ -63,8 +63,9 @@ gst_system_clock_get_type (void)
       (GInstanceInitFunc) gst_system_clock_init,
       NULL
     };
+
     clock_type = g_type_register_static (GST_TYPE_CLOCK, "GstSystemClock",
-	&clock_info, 0);
+        &clock_info, 0);
   }
   return clock_type;
 }
@@ -182,7 +183,7 @@ gst_system_clock_wait (GstClock * clock, GstClockEntry * entry)
 
   if (diff + clock->max_diff < 0) {
     GST_WARNING_OBJECT (clock, "clock is way behind: %" G_GINT64_FORMAT
-	"s (max allowed is %" G_GINT64_FORMAT "s", -diff, clock->max_diff);
+        "s (max allowed is %" G_GINT64_FORMAT "s", -diff, clock->max_diff);
     return GST_CLOCK_ENTRY_EARLY;
   }
 

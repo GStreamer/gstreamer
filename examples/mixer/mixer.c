@@ -88,7 +88,7 @@ main (int argc, char *argv[])
 
   char buffer[20];
 
-  GList *input_channels;	/* structure holding all the input channels */
+  GList *input_channels;        /* structure holding all the input channels */
 
   input_channel_t *channel_in;
 
@@ -96,7 +96,7 @@ main (int argc, char *argv[])
   GstElement *adder;
   GstElement *audiosink;
 
-  GstPad *pad;			/* to request pads for the adder */
+  GstPad *pad;                  /* to request pads for the adder */
 
   gst_init (&argc, &argv);
 
@@ -167,17 +167,17 @@ main (int argc, char *argv[])
       /* first song gets special treatment for end style */
       env_register_cp (channel_in->volenv, 0.0, 1.0);
     } else {
-      env_register_cp (channel_in->volenv, 0.0, 0.0000001);	/* start muted */
-      env_register_cp (channel_in->volenv, i * 10.0 - 15.0, 0.0000001);	/* start fade in */
+      env_register_cp (channel_in->volenv, 0.0, 0.0000001);     /* start muted */
+      env_register_cp (channel_in->volenv, i * 10.0 - 15.0, 0.0000001); /* start fade in */
       env_register_cp (channel_in->volenv, i * 10.0 - 10.0, 1.0);
     }
-    env_register_cp (channel_in->volenv, i * 10.0 - 5.0, 1.0);	/* end of full level */
+    env_register_cp (channel_in->volenv, i * 10.0 - 5.0, 1.0);  /* end of full level */
 
     if (i != num_channels) {
-      env_register_cp (channel_in->volenv, i * 10.0, 0.0000001);	/* fade to black */
-      env_register_cp (channel_in->volenv, num_channels * 10.0 - 5.0, 0.0000001);	/* start fade in */
+      env_register_cp (channel_in->volenv, i * 10.0, 0.0000001);        /* fade to black */
+      env_register_cp (channel_in->volenv, num_channels * 10.0 - 5.0, 0.0000001);       /* start fade in */
     }
-    env_register_cp (channel_in->volenv, num_channels * 10.0, 1.0 / num_channels);	/* to end level */
+    env_register_cp (channel_in->volenv, num_channels * 10.0, 1.0 / num_channels);      /* to end level */
 
 #ifndef GST_DISABLE_LOADSAVE
     gst_xml_write_file (GST_ELEMENT (main_bin), fopen ("mixer.xml", "w"));
@@ -230,7 +230,7 @@ create_input_channel (int id, char *location)
 
   input_channel_t *channel;
 
-  char buffer[20];		/* hold the names */
+  char buffer[20];              /* hold the names */
 
 /*  GstAutoplug *autoplug;
   GstCaps *srccaps; */

@@ -15,8 +15,7 @@ main (int argc, char *argv[])
     return -1;
   }
 
-  pipeline =
-      (GstElement *)
+  pipeline = (GstElement *)
       gst_parse_launch ("filesrc name=my_filesrc ! mad ! osssink", &error);
   if (!pipeline) {
     fprintf (stderr, "Parse error: %s", error->message);

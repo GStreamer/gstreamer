@@ -306,8 +306,7 @@ gst_registry_pool_find_feature (const gchar * name, GType type)
   data.type = type;
   data.name = name;
 
-  walk =
-      gst_registry_pool_feature_filter ((GstPluginFeatureFilter)
+  walk = gst_registry_pool_feature_filter ((GstPluginFeatureFilter)
       gst_plugin_feature_type_name_filter, TRUE, &data);
 
   if (walk)

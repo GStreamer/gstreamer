@@ -18,7 +18,8 @@ typedef struct
   GSList *srcpadtemplates;
   GSList *sinkpadtemplates;
   GSList *arguments;
-} comp_element;
+}
+comp_element;
 
 enum
 {
@@ -32,13 +33,15 @@ typedef struct
   gchar *name;
   int type;
   GSList *enums;
-} comp_argument;
+}
+comp_argument;
 
 typedef struct
 {
   gint value;
   gchar *nick;
-} enum_value;
+}
+enum_value;
 
 
 void
@@ -110,48 +113,48 @@ main (int argc, char *argv[])
       propnode = elementnode->xmlChildrenNode;
       while (propnode) {
 
-	if (!strcmp (propnode->name, "name")) {
-	  element->name = xmlNodeGetContent (propnode);
+        if (!strcmp (propnode->name, "name")) {
+          element->name = xmlNodeGetContent (propnode);
 /* fprintf(stderr,element->name); */
-	} else if (!strcmp (propnode->name, "srcpad")) {
-	  element->srcpads =
-	      g_slist_prepend (element->srcpads, xmlNodeGetContent (propnode));
+        } else if (!strcmp (propnode->name, "srcpad")) {
+          element->srcpads =
+              g_slist_prepend (element->srcpads, xmlNodeGetContent (propnode));
 /* fprintf(stderr,"."); */
-	} else if (!strcmp (propnode->name, "sinkpad")) {
-	  element->sinkpads =
-	      g_slist_prepend (element->sinkpads, xmlNodeGetContent (propnode));
-	} else if (!strcmp (propnode->name, "srcpadtemplate")) {
-	  element->srcpadtemplates =
-	      g_slist_prepend (element->srcpadtemplates,
-	      xmlNodeGetContent (propnode));
+        } else if (!strcmp (propnode->name, "sinkpad")) {
+          element->sinkpads =
+              g_slist_prepend (element->sinkpads, xmlNodeGetContent (propnode));
+        } else if (!strcmp (propnode->name, "srcpadtemplate")) {
+          element->srcpadtemplates =
+              g_slist_prepend (element->srcpadtemplates,
+              xmlNodeGetContent (propnode));
 /* fprintf(stderr,"."); */
-	} else if (!strcmp (propnode->name, "sinkpad")) {
-	  element->sinkpadtemplates =
-	      g_slist_prepend (element->sinkpadtemplates,
-	      xmlNodeGetContent (propnode));
-	} else if (!strcmp (propnode->name, "argument")) {
-	  argument = g_new0 (comp_argument, 1);
-	  argument->name = xmlNodeGetContent (propnode);
-	  argument->type = ARG_INT;
+        } else if (!strcmp (propnode->name, "sinkpad")) {
+          element->sinkpadtemplates =
+              g_slist_prepend (element->sinkpadtemplates,
+              xmlNodeGetContent (propnode));
+        } else if (!strcmp (propnode->name, "argument")) {
+          argument = g_new0 (comp_argument, 1);
+          argument->name = xmlNodeGetContent (propnode);
+          argument->type = ARG_INT;
 
-	  /* walk through the values data */
-	  argnode = propnode->xmlChildrenNode;
-	  while (argnode) {
-	    if (!strcmp (argnode->name, "filename")) {
-	      argument->type = ARG_FILENAME;
-	    } else if (!strcmp (argnode->name, "option")) {
-	      argument->type = ARG_ENUM;
-	      option = g_new0 (enum_value, 1);
-	      sscanf (xmlNodeGetContent (argnode), "%d", &option->value);
-	      argument->enums = g_slist_prepend (argument->enums, option);
-	    }
-	    argnode = argnode->next;
-	  }
+          /* walk through the values data */
+          argnode = propnode->xmlChildrenNode;
+          while (argnode) {
+            if (!strcmp (argnode->name, "filename")) {
+              argument->type = ARG_FILENAME;
+            } else if (!strcmp (argnode->name, "option")) {
+              argument->type = ARG_ENUM;
+              option = g_new0 (enum_value, 1);
+              sscanf (xmlNodeGetContent (argnode), "%d", &option->value);
+              argument->enums = g_slist_prepend (argument->enums, option);
+            }
+            argnode = argnode->next;
+          }
 
-	  element->arguments = g_slist_prepend (element->arguments, argument);
-	}
+          element->arguments = g_slist_prepend (element->arguments, argument);
+        }
 
-	propnode = propnode->next;
+        propnode = propnode->next;
       }
       element_list = g_list_prepend (element_list, element);
       element_names = g_slist_prepend (element_names, element->name);
@@ -172,7 +175,7 @@ main (int argc, char *argv[])
     while (elements) {
       element = (comp_element *) (elements->data);
       if (!element->sinkpads && !element->sinkpadtemplates)
-	words = g_slist_prepend (words, element->name);
+        words = g_slist_prepend (words, element->name);
       elements = g_list_next (elements);
     }
   }
@@ -184,7 +187,7 @@ main (int argc, char *argv[])
     while (elements) {
       element = (comp_element *) (elements->data);
       if (element->sinkpads || element->sinkpadtemplates)
-	words = g_slist_prepend (words, element->name);
+        words = g_slist_prepend (words, element->name);
       elements = g_list_next (elements);
     }
   }
@@ -196,8 +199,8 @@ main (int argc, char *argv[])
 
   /* if the previous word is an element, we need to list both pads and arguments */
   if ((elements =
-	  g_list_find_custom (element_list, prev_word,
-	      (GCompareFunc) match_element))) {
+          g_list_find_custom (element_list, prev_word,
+              (GCompareFunc) match_element))) {
     element = elements->data;
     /* zero the numpads list so we can count them */
     num_pads = 0;
@@ -207,8 +210,8 @@ main (int argc, char *argv[])
     while (pads) {
       num_pads++;
       words =
-	  g_slist_prepend (words, g_strdup_printf ("%s!",
-	      (gchar *) (pads->data)));
+          g_slist_prepend (words, g_strdup_printf ("%s!",
+              (gchar *) (pads->data)));
       pads = g_slist_next (pads);
     }
 
@@ -218,7 +221,7 @@ main (int argc, char *argv[])
       num_pads++;
       word = g_strdup_printf ("%s!", (gchar *) (pads->data));
       if (!g_slist_find_custom (words, word, (GCompareFunc) strcmp))
-	words = g_slist_prepend (words, word);
+        words = g_slist_prepend (words, word);
       pads = g_slist_next (pads);
     }
 

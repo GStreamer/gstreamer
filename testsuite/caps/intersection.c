@@ -36,11 +36,11 @@ GstStaticCaps rawcaps6 = GST_STATIC_CAPS ("video/raw, "
     "height=(int)640, " "width=(int)480, " "framerate=(double)30.0");
 
 GstStaticCaps rawcaps7 =
-GST_STATIC_CAPS
+    GST_STATIC_CAPS
     ("video/x-raw-yuv, format=(fourcc)YUY2, width=(int)[1,2147483647], height=(int)[1,2147483647], framerate=(double)[0,1.79769e+308]");
 
 GstStaticCaps rawcaps8 =
-GST_STATIC_CAPS
+    GST_STATIC_CAPS
     ("video/x-raw-yuv, format=(fourcc){ I420, YV12, YUY2 }, width=(int)[16,4096], height=(int)[16,4096], framerate=(double)[0,1.79769e+308]");
 
 int
@@ -86,7 +86,7 @@ main (int argc, char *argv[])
 
   caps = gst_caps_intersect (gst_static_caps_get (&rawcaps6),
       gst_caps_new_full (gst_structure_copy (gst_caps_get_structure
-	      (gst_static_caps_get (&rawcaps6), 0)), NULL));
+              (gst_static_caps_get (&rawcaps6), 0)), NULL));
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities5", NULL);
   gst_caps_save_thyself (caps, parent);
 

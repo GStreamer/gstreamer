@@ -44,7 +44,7 @@ lookup (GstIndex * index, GstIndexLookupMethod method,
       g_print ("OK (not found)\n");
     else
       g_print ("FAIL - no index entry found for %lld %s, expecting %lld\n",
-	  src_value, def->nick, expecting);
+          src_value, def->nick, expecting);
   }
 }
 
@@ -55,7 +55,8 @@ typedef struct _GstIndexTestCase
   gint64 src_value;
   GstFormat dest_format;
   gint64 expecting;
-} GstIndexTestCase;
+}
+GstIndexTestCase;
 
 const static GstIndexTestCase cases[] = {
   {GST_INDEX_LOOKUP_EXACT, GST_FORMAT_BYTES, 3, GST_FORMAT_TIME, 3000},
@@ -68,7 +69,7 @@ const static GstIndexTestCase cases[] = {
   {GST_INDEX_LOOKUP_AFTER, GST_FORMAT_TIME, 0, GST_FORMAT_BYTES, 0},
   {GST_INDEX_LOOKUP_BEFORE, GST_FORMAT_TIME, -1, GST_FORMAT_BYTES, -1},
   {GST_INDEX_LOOKUP_BEFORE, GST_FORMAT_TIME, G_MAXINT64, GST_FORMAT_BYTES,
-	99999},
+      99999},
   {GST_INDEX_LOOKUP_AFTER, GST_FORMAT_TIME, G_MAXINT64, GST_FORMAT_BYTES, -1},
 };
 
@@ -98,14 +99,14 @@ main (gint argc, gchar * argv[])
 
   for (i = 0; i < 100000; i++) {
     gst_index_add_association (index, 0, 0, GST_FORMAT_BYTES, (gint64) i,
-	GST_FORMAT_TIME, (gint64) (i * 1000), 0);
+        GST_FORMAT_TIME, (gint64) (i * 1000), 0);
   }
 
   g_print ("Testing index...\n");
 
   for (i = 0; i < (sizeof (cases) / sizeof (GstIndexTestCase)); i++) {
     lookup (index, cases[i].method, cases[i].src_format, cases[i].src_value,
-	cases[i].dest_format, cases[i].expecting);
+        cases[i].dest_format, cases[i].expecting);
   }
 
   return 0;

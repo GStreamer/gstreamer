@@ -54,7 +54,7 @@ main (int argc, char *argv[])
   gchar *exclude_args = NULL;
   struct poptOption options[] = {
     {"verbose", 'v', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &verbose, 0,
-	"do not output status information", NULL},
+        "do not output status information", NULL},
     POPT_TABLEEND
   };
 
@@ -64,7 +64,7 @@ main (int argc, char *argv[])
   GstElement *md5sink;
   gchar *md5string = g_malloc0 (33);
 
-  free (malloc (8));		/* -lefence */
+  free (malloc (8));            /* -lefence */
 
   setlocale (LC_ALL, "");
 
@@ -98,7 +98,7 @@ main (int argc, char *argv[])
     argvn[argc - 1] = g_strdup_printf ("!");
     argvn[argc] = g_strdup_printf ("md5sink");
     pipeline =
-	(GstElement *) gst_parse_launchv ((const gchar **) argvn, &error);
+        (GstElement *) gst_parse_launchv ((const gchar **) argvn, &error);
   }
 
   if (!pipeline) {
@@ -112,10 +112,10 @@ main (int argc, char *argv[])
 
   if (verbose) {
     gchar **exclude_list = exclude_args ? g_strsplit (exclude_args, ",", 0)
-	: NULL;
+        : NULL;
 
     g_signal_connect (pipeline, "deep_notify",
-	G_CALLBACK (gst_element_default_deep_notify), exclude_list);
+        G_CALLBACK (gst_element_default_deep_notify), exclude_list);
   }
   g_signal_connect (pipeline, "error",
       G_CALLBACK (gst_element_default_error), NULL);

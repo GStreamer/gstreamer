@@ -1,5 +1,5 @@
-#include <string.h>		/* strerror */
-#include <stdlib.h>		/* strerror */
+#include <string.h>             /* strerror */
+#include <stdlib.h>             /* strerror */
 #include <gst/gst.h>
 #include "gstmemchunk.h"
 

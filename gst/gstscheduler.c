@@ -55,8 +55,8 @@ gst_scheduler_get_type (void)
     };
 
     _gst_scheduler_type =
-	g_type_register_static (GST_TYPE_OBJECT, "GstScheduler",
-	&scheduler_info, G_TYPE_FLAG_ABSTRACT);
+        g_type_register_static (GST_TYPE_OBJECT, "GstScheduler",
+        &scheduler_info, G_TYPE_FLAG_ABSTRACT);
   }
   return _gst_scheduler_type;
 }
@@ -229,7 +229,7 @@ gst_scheduler_add_element (GstScheduler * sched, GstElement * element)
   /* if it's already in this scheduler, don't bother doing anything */
   if (GST_ELEMENT_SCHED (element) == sched) {
     GST_CAT_DEBUG (GST_CAT_SCHEDULING, "element %s already in scheduler %p",
-	GST_ELEMENT_NAME (element), sched);
+        GST_ELEMENT_NAME (element), sched);
     return;
   }
 
@@ -239,12 +239,12 @@ gst_scheduler_add_element (GstScheduler * sched, GstElement * element)
   if (gst_element_provides_clock (element)) {
     sched->clock_providers = g_list_prepend (sched->clock_providers, element);
     GST_CAT_DEBUG (GST_CAT_CLOCK, "added clock provider %s",
-	GST_ELEMENT_NAME (element));
+        GST_ELEMENT_NAME (element));
   }
   if (gst_element_requires_clock (element)) {
     sched->clock_receivers = g_list_prepend (sched->clock_receivers, element);
     GST_CAT_DEBUG (GST_CAT_CLOCK, "added clock receiver %s",
-	GST_ELEMENT_NAME (element));
+        GST_ELEMENT_NAME (element));
   }
 
   gst_element_set_scheduler (element, sched);
@@ -305,14 +305,14 @@ gst_scheduler_state_transition (GstScheduler * sched, GstElement * element,
     switch (transition) {
       case GST_STATE_READY_TO_PAUSED:
       {
-	GstClock *clock = gst_scheduler_get_clock (sched);
+        GstClock *clock = gst_scheduler_get_clock (sched);
 
-	GST_CAT_DEBUG (GST_CAT_CLOCK,
-	    "scheduler READY to PAUSED clock is %p (%s)", clock,
-	    (clock ? GST_OBJECT_NAME (clock) : "nil"));
+        GST_CAT_DEBUG (GST_CAT_CLOCK,
+            "scheduler READY to PAUSED clock is %p (%s)", clock,
+            (clock ? GST_OBJECT_NAME (clock) : "nil"));
 
-	gst_scheduler_set_clock (sched, clock);
-	break;
+        gst_scheduler_set_clock (sched, clock);
+        break;
       }
     }
   }
@@ -541,7 +541,7 @@ gst_scheduler_get_clock (GstScheduler * sched)
     clock = sched->clock;
 
     GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler using fixed clock %p (%s)", clock,
-	(clock ? GST_OBJECT_NAME (clock) : "nil"));
+        (clock ? GST_OBJECT_NAME (clock) : "nil"));
   } else {
     GList *schedulers = sched->schedulers;
     GList *providers = sched->clock_providers;
@@ -552,7 +552,7 @@ gst_scheduler_get_clock (GstScheduler * sched)
 
       clock = gst_scheduler_get_clock (scheduler);
       if (clock)
-	break;
+        break;
 
       schedulers = g_list_next (schedulers);
     }
@@ -623,8 +623,8 @@ gst_scheduler_set_clock (GstScheduler * sched, GstClock * clock)
     GstElement *element = GST_ELEMENT (receivers->data);
 
     GST_CAT_DEBUG (GST_CAT_CLOCK,
-	"scheduler setting clock %p (%s) on element %s", clock,
-	(clock ? GST_OBJECT_NAME (clock) : "nil"), GST_ELEMENT_NAME (element));
+        "scheduler setting clock %p (%s) on element %s", clock,
+        (clock ? GST_OBJECT_NAME (clock) : "nil"), GST_ELEMENT_NAME (element));
 
     gst_element_set_clock (element, clock);
     receivers = g_list_next (receivers);
@@ -633,8 +633,8 @@ gst_scheduler_set_clock (GstScheduler * sched, GstClock * clock)
     GstScheduler *scheduler = GST_SCHEDULER (schedulers->data);
 
     GST_CAT_DEBUG (GST_CAT_CLOCK,
-	"scheduler setting clock %p (%s) on scheduler %p", clock,
-	(clock ? GST_OBJECT_NAME (clock) : "nil"), scheduler);
+        "scheduler setting clock %p (%s) on scheduler %p", clock,
+        (clock ? GST_OBJECT_NAME (clock) : "nil"), scheduler);
     gst_scheduler_set_clock (scheduler, clock);
     schedulers = g_list_next (schedulers);
   }
@@ -764,8 +764,9 @@ gst_scheduler_factory_get_type (void)
       (GInstanceInitFunc) gst_scheduler_factory_init,
       NULL
     };
+
     schedulerfactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE,
-	"GstSchedulerFactory", &schedulerfactory_info, 0);
+        "GstSchedulerFactory", &schedulerfactory_info, 0);
   }
   return schedulerfactory_type;
 }
@@ -821,7 +822,7 @@ gst_scheduler_factory_new (const gchar * name, const gchar * longdesc,
 
   if (!factory) {
     factory =
-	GST_SCHEDULER_FACTORY (g_object_new (GST_TYPE_SCHEDULER_FACTORY, NULL));
+        GST_SCHEDULER_FACTORY (g_object_new (GST_TYPE_SCHEDULER_FACTORY, NULL));
     GST_PLUGIN_FEATURE_NAME (factory) = g_strdup (name);
   } else {
     g_free (factory->longdesc);

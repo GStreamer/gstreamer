@@ -44,7 +44,8 @@ typedef struct
   BonoboUIComponent *uic;
 
   GstPlay *play;
-} control_data_t;
+}
+control_data_t;
 
 /*
  * This callback is invoked when the BonoboControl object
@@ -94,7 +95,8 @@ typedef struct
 {
   control_data_t *control_data;
   GtkFileSelection *selector;
-} file_select_struct;
+}
+file_select_struct;
 
 static void
 filename_selected (GtkButton * ok, gpointer user_data)
@@ -127,14 +129,14 @@ verb_Open_cb (BonoboUIComponent * uic, gpointer user_data, const char *cname)
   data->control_data = control_data;
 
   gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION (file_selector)->
-	  ok_button), "clicked", GTK_SIGNAL_FUNC (filename_selected), data);
+          ok_button), "clicked", GTK_SIGNAL_FUNC (filename_selected), data);
 
   gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION (file_selector)->
-	  ok_button), "clicked", GTK_SIGNAL_FUNC (gtk_widget_destroy),
+          ok_button), "clicked", GTK_SIGNAL_FUNC (gtk_widget_destroy),
       (gpointer) file_selector);
 
   gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION (file_selector)->
-	  cancel_button), "clicked", GTK_SIGNAL_FUNC (gtk_widget_destroy),
+          cancel_button), "clicked", GTK_SIGNAL_FUNC (gtk_widget_destroy),
       (gpointer) file_selector);
 
   gtk_widget_show (file_selector);
@@ -208,7 +210,7 @@ control_create_menus (control_data_t * control_data)
     node = bonobo_ui_node_from_string (ui);
     bonobo_ui_util_translate_ui (node);
     bonobo_ui_util_fixup_help (control_data->uic, node,
-	DATADIR, "gstmediaplay");
+        DATADIR, "gstmediaplay");
 
     bonobo_ui_component_set_tree (control_data->uic, "/", node, NULL);
 

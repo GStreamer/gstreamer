@@ -143,7 +143,7 @@ gst_xml_registry_get_type (void)
     };
 
     xml_registry_type = g_type_register_static (GST_TYPE_REGISTRY,
-	"GstXMLRegistry", &xml_registry_info, 0);
+        "GstXMLRegistry", &xml_registry_info, 0);
   }
   return xml_registry_type;
 }
@@ -168,7 +168,7 @@ gst_xml_registry_class_init (GstXMLRegistryClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LOCATION,
       g_param_spec_string ("location", "Location",
-	  "Location of the registry file", NULL, G_PARAM_READWRITE));
+          "Location of the registry file", NULL, G_PARAM_READWRITE));
 
   gstregistry_class->load = GST_DEBUG_FUNCPTR (gst_xml_registry_load);
   gstregistry_class->save = GST_DEBUG_FUNCPTR (gst_xml_registry_save);
@@ -236,21 +236,21 @@ gst_xml_registry_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_LOCATION:
       if (registry->open) {
-	CLASS (object)->close_func (registry);
-	g_return_if_fail (registry->open == FALSE);
+        CLASS (object)->close_func (registry);
+        g_return_if_fail (registry->open == FALSE);
       }
 
       if (registry->location)
-	g_free (registry->location);
+        g_free (registry->location);
 
       registry->location = g_strdup (g_value_get_string (value));
       GST_REGISTRY (registry)->flags = 0x0;
 
       if (CLASS (object)->get_perms_func)
-	CLASS (object)->get_perms_func (registry);
+        CLASS (object)->get_perms_func (registry);
 
       if (CLASS (object)->add_path_list_func)
-	CLASS (object)->add_path_list_func (registry);
+        CLASS (object)->add_path_list_func (registry);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -311,11 +311,11 @@ make_dir (gchar * filename)
   if (stat (dirname, &dirstat) == -1 && errno == ENOENT) {
     if (mkdir (dirname, dirmode) != 0) {
       if (make_dir (dirname) != TRUE) {
-	g_free (dirname);
-	return FALSE;
+        g_free (dirname);
+        return FALSE;
       } else {
-	if (mkdir (dirname, dirmode) != 0)
-	  return FALSE;
+        if (mkdir (dirname, dirmode) != 0)
+          return FALSE;
       }
     }
   }
@@ -395,7 +395,7 @@ gst_xml_registry_add_path_list_func (GstXMLRegistry * registry)
 
     if (error) {
       GST_ERROR ("parsing registry %s: %s\n",
-	  registry->location, error->message);
+          registry->location, error->message);
       goto finished;
     }
 
@@ -426,8 +426,8 @@ plugin_times_older_than_recurse (gchar * path, time_t regtime)
 
   if (pathtime > regtime) {
     GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,
-	"time for %s was %ld; more recent than registry time of %ld\n",
-	path, (long) pathtime, (long) regtime);
+        "time for %s was %ld; more recent than registry time of %ld\n",
+        path, (long) pathtime, (long) regtime);
     return FALSE;
   }
 
@@ -436,13 +436,13 @@ plugin_times_older_than_recurse (gchar * path, time_t regtime)
     while ((dirent = readdir (dir))) {
       /* don't want to recurse in place or backwards */
       if (strcmp (dirent->d_name, ".") && strcmp (dirent->d_name, "..")) {
-	pluginname = g_strjoin ("/", path, dirent->d_name, NULL);
-	if (!plugin_times_older_than_recurse (pluginname, regtime)) {
-	  g_free (pluginname);
-	  closedir (dir);
-	  return FALSE;
-	}
-	g_free (pluginname);
+        pluginname = g_strjoin ("/", path, dirent->d_name, NULL);
+        if (!plugin_times_older_than_recurse (pluginname, regtime)) {
+          g_free (pluginname);
+          closedir (dir);
+          return FALSE;
+        }
+        g_free (pluginname);
       }
     }
     closedir (dir);
@@ -459,8 +459,8 @@ plugin_times_older_than (GList * paths, time_t regtime)
 
   while (paths) {
     GST_CAT_LOG (GST_CAT_PLUGIN_LOADING,
-	"comparing plugin times from %s with %ld",
-	(gchar *) paths->data, (long) regtime);
+        "comparing plugin times from %s with %ld",
+        (gchar *) paths->data, (long) regtime);
     if (!plugin_times_older_than_recurse (paths->data, regtime))
       return FALSE;
     paths = g_list_next (paths);
@@ -487,16 +487,16 @@ gst_xml_registry_open_func (GstXMLRegistry * registry, GstXMLRegistryMode mode)
     if (!(gst_registry->flags & GST_REGISTRY_EXISTS)) {
       /* if it's not writable, then don't bother */
       if (!(gst_registry->flags & GST_REGISTRY_WRITABLE)) {
-	GST_CAT_INFO (GST_CAT_GST_INIT, "Registry isn't writable");
-	return FALSE;
+        GST_CAT_INFO (GST_CAT_GST_INIT, "Registry isn't writable");
+        return FALSE;
       }
       GST_CAT_INFO (GST_CAT_GST_INIT,
-	  "Registry doesn't exist, trying to build...");
+          "Registry doesn't exist, trying to build...");
       gst_registry_rebuild (gst_registry);
       gst_registry_save (gst_registry);
       /* FIXME: verify that the flags actually get updated ! */
       if (!(gst_registry->flags & GST_REGISTRY_EXISTS)) {
-	return FALSE;
+        return FALSE;
       }
     }
     /* at this point we know it exists */
@@ -504,32 +504,32 @@ gst_xml_registry_open_func (GstXMLRegistry * registry, GstXMLRegistryMode mode)
 
     if (!plugin_times_older_than (paths, get_time (registry->location))) {
       if (gst_registry->flags & GST_REGISTRY_WRITABLE) {
-	GST_CAT_INFO (GST_CAT_GST_INIT, "Registry out of date, rebuilding...");
+        GST_CAT_INFO (GST_CAT_GST_INIT, "Registry out of date, rebuilding...");
 
-	gst_registry_rebuild (gst_registry);
+        gst_registry_rebuild (gst_registry);
 
-	gst_registry_save (gst_registry);
+        gst_registry_save (gst_registry);
 
-	if (!plugin_times_older_than (paths, get_time (registry->location))) {
-	  GST_CAT_INFO (GST_CAT_GST_INIT,
-	      "Registry still out of date, something is wrong...");
-	  return FALSE;
-	}
+        if (!plugin_times_older_than (paths, get_time (registry->location))) {
+          GST_CAT_INFO (GST_CAT_GST_INIT,
+              "Registry still out of date, something is wrong...");
+          return FALSE;
+        }
       } else {
-	GST_CAT_INFO (GST_CAT_GST_INIT,
-	    "Can't write to this registry and it's out of date, ignoring it");
-	return FALSE;
+        GST_CAT_INFO (GST_CAT_GST_INIT,
+            "Can't write to this registry and it's out of date, ignoring it");
+        return FALSE;
       }
     }
 
     GST_CAT_DEBUG (GST_CAT_GST_INIT, "opening registry %s for reading",
-	registry->location);
+        registry->location);
     registry->regfile = fopen (registry->location, "r");
   } else if (mode == GST_XML_REGISTRY_WRITE) {
     g_return_val_if_fail (gst_registry->flags & GST_REGISTRY_WRITABLE, FALSE);
 
     GST_CAT_DEBUG (GST_CAT_GST_INIT, "opening registry %s for writing",
-	registry->location);
+        registry->location);
     registry->regfile = fopen (registry->location, "w");
   }
 
@@ -644,7 +644,7 @@ gst_xml_registry_load_plugin (GstRegistry * registry, GstPlugin * plugin)
   if (!plugin) {
     if (error) {
       g_warning ("could not load plugin %s: %s", plugin->desc.name,
-	  error->message);
+          error->message);
       g_error_free (error);
     }
     return GST_REGISTRY_PLUGIN_LOAD_ERROR;
@@ -842,7 +842,7 @@ gst_xml_registry_parse_padtemplate (GMarkupParseContext * context,
     registry->caps = gst_caps_from_string (s);
     if (registry->caps == NULL) {
       g_critical ("Could not parse caps: length %d, content: %*s\n", text_len,
-	  text_len, text);
+          text_len, text);
     }
     g_free (s);
     return TRUE;
@@ -864,62 +864,62 @@ gst_xml_registry_start_element (GMarkupParseContext * context,
   switch (xmlregistry->state) {
     case GST_XML_REGISTRY_NONE:
       if (!strcmp (element_name, "GST-PluginRegistry")) {
-	xmlregistry->state = GST_XML_REGISTRY_TOP;
+        xmlregistry->state = GST_XML_REGISTRY_TOP;
       }
       break;
     case GST_XML_REGISTRY_TOP:
       if (!strncmp (element_name, "plugin", 6)) {
-	xmlregistry->state = GST_XML_REGISTRY_PLUGIN;
-	xmlregistry->parser = gst_xml_registry_parse_plugin;
-	xmlregistry->current_plugin = (GstPlugin *) g_new0 (GstPlugin, 1);
+        xmlregistry->state = GST_XML_REGISTRY_PLUGIN;
+        xmlregistry->parser = gst_xml_registry_parse_plugin;
+        xmlregistry->current_plugin = (GstPlugin *) g_new0 (GstPlugin, 1);
       }
       break;
     case GST_XML_REGISTRY_PLUGIN:
       if (!strncmp (element_name, "feature", 7)) {
-	gint i = 0;
-	GstPluginFeature *feature = NULL;
+        gint i = 0;
+        GstPluginFeature *feature = NULL;
 
-	xmlregistry->state = GST_XML_REGISTRY_FEATURE;
+        xmlregistry->state = GST_XML_REGISTRY_FEATURE;
 
-	while (attribute_names[i]) {
-	  if (!strncmp (attribute_names[i], "typename", 8)) {
-	    feature =
-		GST_PLUGIN_FEATURE (g_object_new (g_type_from_name
-		    (attribute_values[i]), NULL));
-	    break;
-	  }
-	  i++;
-	}
-	if (feature) {
-	  xmlregistry->current_feature = feature;
+        while (attribute_names[i]) {
+          if (!strncmp (attribute_names[i], "typename", 8)) {
+            feature =
+                GST_PLUGIN_FEATURE (g_object_new (g_type_from_name
+                    (attribute_values[i]), NULL));
+            break;
+          }
+          i++;
+        }
+        if (feature) {
+          xmlregistry->current_feature = feature;
 
-	  if (GST_IS_ELEMENT_FACTORY (feature)) {
-	    GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
+          if (GST_IS_ELEMENT_FACTORY (feature)) {
+            GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
 
-	    factory->padtemplates = NULL;
-	    xmlregistry->parser = gst_xml_registry_parse_element_factory;
-	    break;
-	  } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
-	    xmlregistry->parser = gst_xml_registry_parse_type_find_factory;
-	  } else if (GST_IS_SCHEDULER_FACTORY (feature)) {
-	    xmlregistry->parser = gst_xml_registry_parse_scheduler_factory;
-	    GST_SCHEDULER_FACTORY (feature)->type = 0;
-	  } else if (GST_IS_INDEX_FACTORY (feature)) {
-	    xmlregistry->parser = gst_xml_registry_parse_index_factory;
-	  } else {
-	    g_warning ("unknown feature type");
-	  }
-	}
+            factory->padtemplates = NULL;
+            xmlregistry->parser = gst_xml_registry_parse_element_factory;
+            break;
+          } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
+            xmlregistry->parser = gst_xml_registry_parse_type_find_factory;
+          } else if (GST_IS_SCHEDULER_FACTORY (feature)) {
+            xmlregistry->parser = gst_xml_registry_parse_scheduler_factory;
+            GST_SCHEDULER_FACTORY (feature)->type = 0;
+          } else if (GST_IS_INDEX_FACTORY (feature)) {
+            xmlregistry->parser = gst_xml_registry_parse_index_factory;
+          } else {
+            g_warning ("unknown feature type");
+          }
+        }
       }
       break;
     case GST_XML_REGISTRY_FEATURE:
       if (!strncmp (element_name, "padtemplate", 11)) {
-	xmlregistry->state = GST_XML_REGISTRY_PADTEMPLATE;
-	xmlregistry->parser = gst_xml_registry_parse_padtemplate;
-	xmlregistry->name_template = NULL;
-	xmlregistry->direction = 0;
-	xmlregistry->presence = 0;
-	xmlregistry->caps = NULL;
+        xmlregistry->state = GST_XML_REGISTRY_PADTEMPLATE;
+        xmlregistry->parser = gst_xml_registry_parse_padtemplate;
+        xmlregistry->name_template = NULL;
+        xmlregistry->direction = 0;
+        xmlregistry->presence = 0;
+        xmlregistry->caps = NULL;
       }
       break;
     default:
@@ -940,41 +940,41 @@ gst_xml_registry_end_element (GMarkupParseContext * context,
   switch (xmlregistry->state) {
     case GST_XML_REGISTRY_TOP:
       if (!strcmp (element_name, "GST-PluginRegistry")) {
-	xmlregistry->state = GST_XML_REGISTRY_NONE;
+        xmlregistry->state = GST_XML_REGISTRY_NONE;
       }
       break;
     case GST_XML_REGISTRY_PLUGIN:
       if (!strcmp (element_name, "plugin")) {
-	xmlregistry->state = GST_XML_REGISTRY_TOP;
-	xmlregistry->parser = NULL;
-	gst_registry_add_plugin (GST_REGISTRY (xmlregistry),
-	    xmlregistry->current_plugin);
+        xmlregistry->state = GST_XML_REGISTRY_TOP;
+        xmlregistry->parser = NULL;
+        gst_registry_add_plugin (GST_REGISTRY (xmlregistry),
+            xmlregistry->current_plugin);
       }
       break;
     case GST_XML_REGISTRY_FEATURE:
       if (!strcmp (element_name, "feature")) {
-	xmlregistry->state = GST_XML_REGISTRY_PLUGIN;
-	xmlregistry->parser = gst_xml_registry_parse_plugin;
-	gst_plugin_add_feature (xmlregistry->current_plugin,
-	    xmlregistry->current_feature);
-	xmlregistry->current_feature = NULL;
+        xmlregistry->state = GST_XML_REGISTRY_PLUGIN;
+        xmlregistry->parser = gst_xml_registry_parse_plugin;
+        gst_plugin_add_feature (xmlregistry->current_plugin,
+            xmlregistry->current_feature);
+        xmlregistry->current_feature = NULL;
       }
       break;
     case GST_XML_REGISTRY_PADTEMPLATE:
       if (!strcmp (element_name, "padtemplate")) {
-	GstPadTemplate *template;
+        GstPadTemplate *template;
 
-	template = gst_pad_template_new (xmlregistry->name_template,
-	    xmlregistry->direction, xmlregistry->presence, xmlregistry->caps);
+        template = gst_pad_template_new (xmlregistry->name_template,
+            xmlregistry->direction, xmlregistry->presence, xmlregistry->caps);
 
-	g_free (xmlregistry->name_template);
-	xmlregistry->name_template = NULL;
-	xmlregistry->caps = NULL;
+        g_free (xmlregistry->name_template);
+        xmlregistry->name_template = NULL;
+        xmlregistry->caps = NULL;
 
-	__gst_element_factory_add_pad_template (GST_ELEMENT_FACTORY
-	    (xmlregistry->current_feature), template);
-	xmlregistry->state = GST_XML_REGISTRY_FEATURE;
-	xmlregistry->parser = gst_xml_registry_parse_element_factory;
+        __gst_element_factory_add_pad_template (GST_ELEMENT_FACTORY
+            (xmlregistry->current_feature), template);
+        xmlregistry->state = GST_XML_REGISTRY_FEATURE;
+        xmlregistry->parser = gst_xml_registry_parse_element_factory;
       }
       break;
     default:
@@ -996,7 +996,7 @@ gst_xml_registry_text (GMarkupParseContext * context, const gchar * text,
       //gst_plugin_add_path (g_strndup (text, text_len));
     } else if (xmlregistry->parser) {
       xmlregistry->parser (context, open_tag, text, text_len, xmlregistry,
-	  error);
+          error);
     }
   }
 }
@@ -1026,17 +1026,17 @@ gst_xml_registry_paths_start_element (GMarkupParseContext * context,
   switch (xmlregistry->state) {
     case GST_XML_REGISTRY_NONE:
       if (!strcmp (element_name, "GST-PluginRegistry")) {
-	xmlregistry->state = GST_XML_REGISTRY_TOP;
+        xmlregistry->state = GST_XML_REGISTRY_TOP;
       }
       break;
     case GST_XML_REGISTRY_TOP:
       if (!strcmp (element_name, "gst-registry-paths")) {
-	xmlregistry->state = GST_XML_REGISTRY_PATHS;
+        xmlregistry->state = GST_XML_REGISTRY_PATHS;
       }
       break;
     case GST_XML_REGISTRY_PATHS:
       if (!strcmp (element_name, "path")) {
-	xmlregistry->state = GST_XML_REGISTRY_PATH;
+        xmlregistry->state = GST_XML_REGISTRY_PATH;
       }
       break;
     default:
@@ -1053,12 +1053,12 @@ gst_xml_registry_paths_end_element (GMarkupParseContext * context,
   switch (xmlregistry->state) {
     case GST_XML_REGISTRY_PATH:
       if (!strcmp (element_name, "path")) {
-	xmlregistry->state = GST_XML_REGISTRY_PATHS;
+        xmlregistry->state = GST_XML_REGISTRY_PATHS;
       }
       break;
     case GST_XML_REGISTRY_PATHS:
       if (!strcmp (element_name, "gst-plugin-paths")) {
-	xmlregistry->state = GST_XML_REGISTRY_PATHS_DONE;
+        xmlregistry->state = GST_XML_REGISTRY_PATHS_DONE;
       }
       break;
     default:
@@ -1074,7 +1074,7 @@ gst_xml_registry_paths_text (GMarkupParseContext * context, const gchar * text,
 
   if (xmlregistry->state == GST_XML_REGISTRY_PATH)
     gst_registry_add_path (GST_REGISTRY (xmlregistry), g_strndup (text,
-	    text_len));
+            text_len));
 }
 
 /*
@@ -1183,12 +1183,12 @@ gst_xml_registry_save_feature (GstXMLRegistry * xmlregistry,
       gchar **protocol;
 
       PUT_ESCAPED ("uri_type",
-	  factory->uri_type == GST_URI_SINK ? "sink" : "source");
+          factory->uri_type == GST_URI_SINK ? "sink" : "source");
       g_assert (factory->uri_protocols);
       protocol = factory->uri_protocols;
       while (*protocol) {
-	PUT_ESCAPED ("uri_protocol", *protocol);
-	protocol++;
+        PUT_ESCAPED ("uri_protocol", *protocol);
+        protocol++;
       }
     }
   } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
@@ -1200,8 +1200,8 @@ gst_xml_registry_save_feature (GstXMLRegistry * xmlregistry,
     }
     if (factory->extensions) {
       while (factory->extensions[i]) {
-	PUT_ESCAPED ("extension", factory->extensions[i]);
-	i++;
+        PUT_ESCAPED ("extension", factory->extensions[i]);
+        i++;
       }
     }
   } else if (GST_IS_SCHEDULER_FACTORY (feature)) {
@@ -1231,7 +1231,7 @@ gst_xml_registry_save_plugin (GstXMLRegistry * xmlregistry, GstPlugin * plugin)
     GstPluginFeature *feature = GST_PLUGIN_FEATURE (walk->data);
 
     CLASS (xmlregistry)->save_func (xmlregistry, "<feature typename=\"%s\">\n",
-	g_type_name (G_OBJECT_TYPE (feature)));
+        g_type_name (G_OBJECT_TYPE (feature)));
     gst_xml_registry_save_feature (xmlregistry, feature);
     CLASS (xmlregistry)->save_func (xmlregistry, "</feature>\n");
 
@@ -1305,20 +1305,20 @@ gst_xml_registry_rebuild_recurse (GstXMLRegistry * registry,
       gchar *dirname;
 
       if (*dirent == '=') {
-	/* =build, =inst, etc. -- automake distcheck directories */
-	continue;
+        /* =build, =inst, etc. -- automake distcheck directories */
+        continue;
       }
 
       dirname = g_strjoin ("/", directory, dirent, NULL);
       ret =
-	  g_list_concat (ret, gst_xml_registry_rebuild_recurse (registry,
-	      dirname));
+          g_list_concat (ret, gst_xml_registry_rebuild_recurse (registry,
+              dirname));
       g_free (dirname);
     }
     g_dir_close (dir);
   } else {
     if ((temp = strstr (directory, G_MODULE_SUFFIX)) &&
-	(!strcmp (temp, G_MODULE_SUFFIX))) {
+        (!strcmp (temp, G_MODULE_SUFFIX))) {
       ret = g_list_prepend (ret, g_strdup (directory));
     }
   }
@@ -1341,10 +1341,10 @@ gst_xml_registry_rebuild (GstRegistry * registry)
     gchar *path = (gchar *) walk->data;
 
     GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,
-	"Rebuilding registry %p in directory %s...", registry, path);
+        "Rebuilding registry %p in directory %s...", registry, path);
 
     plugins = g_list_concat (plugins,
-	gst_xml_registry_rebuild_recurse (xmlregistry, path));
+        gst_xml_registry_rebuild_recurse (xmlregistry, path));
 
     walk = g_list_next (walk);
   }
@@ -1359,8 +1359,8 @@ gst_xml_registry_rebuild (GstRegistry * registry)
       g_assert (walk->data);
       plugin = gst_plugin_load_file ((gchar *) walk->data, NULL);
       if (plugin) {
-	prune = g_list_prepend (prune, walk->data);
-	gst_registry_add_plugin (registry, plugin);
+        prune = g_list_prepend (prune, walk->data);
+        gst_registry_add_plugin (registry, plugin);
       }
 
       walk = g_list_next (walk);
@@ -1380,11 +1380,11 @@ gst_xml_registry_rebuild (GstRegistry * registry)
   while (walk) {
     if ((plugin = gst_plugin_load_file ((gchar *) walk->data, &error))) {
       g_warning ("Bizarre behavior: plugin %s actually loaded",
-	  (gchar *) walk->data);
+          (gchar *) walk->data);
       gst_registry_add_plugin (registry, plugin);
     } else {
       GST_CAT_INFO (GST_CAT_PLUGIN_LOADING, "Plugin %s failed to load: %s",
-	  (gchar *) walk->data, error->message);
+          (gchar *) walk->data, error->message);
 
       g_free (walk->data);
       g_error_free (error);

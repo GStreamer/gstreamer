@@ -9,25 +9,25 @@ notify (GstProbe * probe, GstData ** data, gpointer user_data)
   switch (state) {
     case 0:
       if (GST_BUFFER_TIMESTAMP (*data) == 10) {
-	gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
+        gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
 
-	gst_element_unlink_pads (GST_ELEMENT (src1), "src", sink, "sink");
-	gst_bin_add (GST_BIN (bin), src2);
-	gst_bin_remove (GST_BIN (bin), src1);
-	gst_element_link_pads (GST_ELEMENT (src2), "src", sink, "sink");
-	gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
-	state++;
-	gst_data_unref (*data);
-	return FALSE;
+        gst_element_unlink_pads (GST_ELEMENT (src1), "src", sink, "sink");
+        gst_bin_add (GST_BIN (bin), src2);
+        gst_bin_remove (GST_BIN (bin), src1);
+        gst_element_link_pads (GST_ELEMENT (src2), "src", sink, "sink");
+        gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
+        state++;
+        gst_data_unref (*data);
+        return FALSE;
       }
       break;
     case 1:
       GST_BUFFER_TIMESTAMP (*data) = GST_BUFFER_TIMESTAMP (*data) + 10;
       if (GST_BUFFER_TIMESTAMP (*data) == 20) {
-	gst_data_unref (*data);
-	*data = GST_DATA (gst_event_new (GST_EVENT_EOS));
-	gst_element_set_state (src2, GST_STATE_PAUSED);
-	return TRUE;
+        gst_data_unref (*data);
+        *data = GST_DATA (gst_event_new (GST_EVENT_EOS));
+        gst_element_set_state (src2, GST_STATE_PAUSED);
+        return TRUE;
       }
       break;
     default:

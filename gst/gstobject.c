@@ -113,9 +113,10 @@ gst_object_get_type (void)
       (GInstanceInitFunc) gst_object_init,
       NULL
     };
+
     _gst_object_type =
-	g_type_register_static (G_TYPE_OBJECT, "GstObject", &object_info,
-	G_TYPE_FLAG_ABSTRACT);
+        g_type_register_static (G_TYPE_OBJECT, "GstObject", &object_info,
+        G_TYPE_FLAG_ABSTRACT);
   }
   return _gst_object_type;
 }
@@ -134,7 +135,7 @@ gst_object_class_init (GstObjectClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NAME,
       g_param_spec_string ("name", "Name", "The name of the object",
-	  NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE));
 
   gst_object_signals[PARENT_SET] =
       g_signal_new ("parent-set", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -361,11 +362,11 @@ gst_object_dispatch_properties_changed (GObject * object,
     /* need own category? */
     for (i = 0; i < n_pspecs; i++) {
       GST_CAT_LOG (GST_CAT_EVENT, "deep notification from %s to %s (%s)",
-	  GST_OBJECT_NAME (object), GST_OBJECT_NAME (gst_object),
-	  pspecs[i]->name);
+          GST_OBJECT_NAME (object), GST_OBJECT_NAME (gst_object),
+          pspecs[i]->name);
       g_signal_emit (gst_object, gst_object_signals[DEEP_NOTIFY],
-	  g_quark_from_string (pspecs[i]->name), (GstObject *) object,
-	  pspecs[i]);
+          g_quark_from_string (pspecs[i]->name), (GstObject *) object,
+          pspecs[i]);
     }
 
     gst_object = GST_OBJECT_PARENT (gst_object);
@@ -390,7 +391,7 @@ void
 gst_object_default_deep_notify (GObject * object, GstObject * orig,
     GParamSpec * pspec, gchar ** excluded_props)
 {
-  GValue value = { 0, };	/* the important thing is that value.type = 0 */
+  GValue value = { 0, };        /* the important thing is that value.type = 0 */
   gchar *str = 0;
   gchar *name = NULL;
 
@@ -398,7 +399,7 @@ gst_object_default_deep_notify (GObject * object, GstObject * orig,
     /* let's not print these out for excluded properties... */
     while (excluded_props != NULL && *excluded_props != NULL) {
       if (strcmp (pspec->name, *excluded_props) == 0)
-	return;
+        return;
       excluded_props++;
     }
     g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
@@ -408,11 +409,11 @@ gst_object_default_deep_notify (GObject * object, GstObject * orig,
       GEnumValue *enum_value;
 
       enum_value =
-	  g_enum_get_value (G_ENUM_CLASS (g_type_class_ref (pspec->value_type)),
-	  g_value_get_enum (&value));
+          g_enum_get_value (G_ENUM_CLASS (g_type_class_ref (pspec->value_type)),
+          g_value_get_enum (&value));
 
       str = g_strdup_printf ("%s (%d)", enum_value->value_nick,
-	  enum_value->value);
+          enum_value->value);
     } else {
       str = g_strdup_value_contents (&value);
     }
@@ -443,7 +444,7 @@ gst_object_set_name_default (GstObject * object)
 
   if (!object_name_counts) {
     object_name_counts = g_hash_table_new_full (g_str_hash, g_str_equal,
-	g_free, NULL);
+        g_free, NULL);
   }
 
   count = GPOINTER_TO_INT (g_hash_table_lookup (object_name_counts, type_name));
@@ -785,7 +786,7 @@ struct _GstSignalObjectClass
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
   void (*object_loaded) (GstSignalObject * object, GstObject * new,
       xmlNodePtr self);
-#endif				/* GST_DISABLE_LOADSAVE_REGISTRY */
+#endif                          /* GST_DISABLE_LOADSAVE_REGISTRY */
 };
 
 static GType
@@ -806,9 +807,10 @@ gst_signal_object_get_type (void)
       (GInstanceInitFunc) gst_signal_object_init,
       NULL
     };
+
     signal_object_type =
-	g_type_register_static (G_TYPE_OBJECT, "GstSignalObject",
-	&signal_object_info, 0);
+        g_type_register_static (G_TYPE_OBJECT, "GstSignalObject",
+        &signal_object_info, 0);
   }
   return signal_object_type;
 }

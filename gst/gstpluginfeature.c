@@ -54,9 +54,10 @@ gst_plugin_feature_get_type (void)
       (GInstanceInitFunc) gst_plugin_feature_init,
       NULL
     };
+
     plugin_feature_type =
-	g_type_register_static (G_TYPE_OBJECT, "GstPluginFeature",
-	&plugin_feature_info, G_TYPE_FLAG_ABSTRACT);
+        g_type_register_static (G_TYPE_OBJECT, "GstPluginFeature",
+        &plugin_feature_info, G_TYPE_FLAG_ABSTRACT);
   }
   return plugin_feature_type;
 }
@@ -100,11 +101,11 @@ gst_plugin_feature_ensure_loaded (GstPluginFeature * feature)
 #ifndef GST_DISABLE_REGISTRY
     if (GST_IS_REGISTRY (plugin->manager)) {
       GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING,
-	  "loading plugin %s for feature", plugin->desc.name);
+          "loading plugin %s for feature", plugin->desc.name);
 
       if (gst_registry_load_plugin (GST_REGISTRY (plugin->manager),
-	      plugin) != GST_REGISTRY_OK)
-	return FALSE;
+              plugin) != GST_REGISTRY_OK)
+        return FALSE;
     } else
 #endif /* GST_DISABLE_REGISTRY */
       return FALSE;
@@ -139,7 +140,7 @@ gst_plugin_feature_type_name_filter (GstPluginFeature * feature,
 {
   return ((data->type == 0 || data->type == G_OBJECT_TYPE (feature)) &&
       (data->name == NULL
-	  || !strcmp (data->name, GST_PLUGIN_FEATURE_NAME (feature))));
+          || !strcmp (data->name, GST_PLUGIN_FEATURE_NAME (feature))));
 }
 
 /**

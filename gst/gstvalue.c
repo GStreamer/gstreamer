@@ -71,7 +71,7 @@ gst_value_list_array_copy (const GArray * src)
   g_array_set_size (dest, src->len);
   for (i = 0; i < src->len; i++) {
     gst_value_init_and_copy (&g_array_index (dest, GValue, i),
-	&g_array_index (src, GValue, i));
+        &g_array_index (src, GValue, i));
   }
 
   return dest;
@@ -113,7 +113,7 @@ gst_value_collect_list (GValue * value, guint n_collect_values,
     value->data[1].v_uint = G_VALUE_NOCOPY_CONTENTS;
   } else {
     value->data[0].v_pointer =
-	gst_value_list_array_copy ((GArray *) collect_values[0].v_pointer);
+        gst_value_list_array_copy ((GArray *) collect_values[0].v_pointer);
   }
   return NULL;
 }
@@ -126,10 +126,10 @@ gst_value_lcopy_list (const GValue * value, guint n_collect_values,
 
   if (!dest)
     return g_strdup_printf ("value location for `%s' passed as NULL",
-	G_VALUE_TYPE_NAME (value));
+        G_VALUE_TYPE_NAME (value));
   if (!value->data[0].v_pointer)
     return g_strdup_printf ("invalid value given for `%s'",
-	G_VALUE_TYPE_NAME (value));
+        G_VALUE_TYPE_NAME (value));
   if (collect_flags & G_VALUE_NOCOPY_CONTENTS) {
     *dest = (GArray *) value->data[0].v_pointer;
   } else {
@@ -220,7 +220,7 @@ gst_value_list_concat (GValue * dest, const GValue * value1,
   if (GST_VALUE_HOLDS_LIST (value1)) {
     for (i = 0; i < value1_length; i++) {
       gst_value_init_and_copy (&g_array_index (array, GValue, i),
-	  gst_value_list_get_value (value1, i));
+          gst_value_list_get_value (value1, i));
     }
   } else {
     gst_value_init_and_copy (&g_array_index (array, GValue, 0), value1);
@@ -229,11 +229,11 @@ gst_value_list_concat (GValue * dest, const GValue * value1,
   if (GST_VALUE_HOLDS_LIST (value2)) {
     for (i = 0; i < value2_length; i++) {
       gst_value_init_and_copy (&g_array_index (array, GValue,
-	      i + value1_length), gst_value_list_get_value (value2, i));
+              i + value1_length), gst_value_list_get_value (value2, i));
     }
   } else {
     gst_value_init_and_copy (&g_array_index (array, GValue, value1_length),
-	value2);
+        value2);
   }
 }
 
@@ -281,7 +281,7 @@ gst_value_compare_list (const GValue * value1, const GValue * value2)
     for (j = 0; j < array1->len; j++) {
       v2 = &g_array_index (array2, GValue, j);
       if (gst_value_compare (v1, v2) == GST_VALUE_EQUAL)
-	break;
+        break;
     }
     if (j == array1->len) {
       return GST_VALUE_UNORDERED;
@@ -353,7 +353,7 @@ gst_value_lcopy_fourcc (const GValue * value, guint n_collect_values,
 
   if (!fourcc_p)
     return g_strdup_printf ("value location for `%s' passed as NULL",
-	G_VALUE_TYPE_NAME (value));
+        G_VALUE_TYPE_NAME (value));
 
   *fourcc_p = value->data[0].v_int;
 
@@ -395,7 +395,7 @@ gst_value_transform_fourcc_string (const GValue * src_value,
       g_ascii_isprint ((fourcc >> 16) & 0xff) &&
       g_ascii_isprint ((fourcc >> 24) & 0xff)) {
     dest_value->data[0].v_pointer =
-	g_strdup_printf (GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+        g_strdup_printf (GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
   } else {
     dest_value->data[0].v_pointer = g_strdup_printf ("0x%08x", fourcc);
   }
@@ -482,10 +482,10 @@ gst_value_lcopy_int_range (const GValue * value, guint n_collect_values,
 
   if (!int_range_start)
     return g_strdup_printf ("start value location for `%s' passed as NULL",
-	G_VALUE_TYPE_NAME (value));
+        G_VALUE_TYPE_NAME (value));
   if (!int_range_end)
     return g_strdup_printf ("end value location for `%s' passed as NULL",
-	G_VALUE_TYPE_NAME (value));
+        G_VALUE_TYPE_NAME (value));
 
   *int_range_start = value->data[0].v_int;
   *int_range_end = value->data[1].v_int;
@@ -597,10 +597,10 @@ gst_value_lcopy_double_range (const GValue * value, guint n_collect_values,
 
   if (!double_range_start)
     return g_strdup_printf ("start value location for `%s' passed as NULL",
-	G_VALUE_TYPE_NAME (value));
+        G_VALUE_TYPE_NAME (value));
   if (!double_range_end)
     return g_strdup_printf ("end value location for `%s' passed as NULL",
-	G_VALUE_TYPE_NAME (value));
+        G_VALUE_TYPE_NAME (value));
 
   *double_range_start = value->data[0].v_double;
   *double_range_end = value->data[1].v_double;
@@ -653,9 +653,9 @@ gst_value_transform_double_range_string (const GValue * src_value,
 
   dest_value->data[0].v_pointer = g_strdup_printf ("[%s,%s]",
       g_ascii_dtostr (s1, G_ASCII_DTOSTR_BUF_SIZE,
-	  src_value->data[0].v_double),
+          src_value->data[0].v_double),
       g_ascii_dtostr (s2, G_ASCII_DTOSTR_BUF_SIZE,
-	  src_value->data[1].v_double));
+          src_value->data[1].v_double));
 }
 
 static int
@@ -1059,16 +1059,16 @@ gst_value_intersect_list (GValue * dest, const GValue * value1,
     if (gst_value_intersect (&intersection, cur, value2)) {
       /* append value */
       if (!ret) {
-	gst_value_init_and_copy (dest, &intersection);
-	ret = TRUE;
+        gst_value_init_and_copy (dest, &intersection);
+        ret = TRUE;
       } else if (GST_VALUE_HOLDS_LIST (dest)) {
-	gst_value_list_append_value (dest, &intersection);
+        gst_value_list_append_value (dest, &intersection);
       } else {
-	GValue temp = { 0, };
+        GValue temp = { 0, };
 
-	gst_value_init_and_copy (&temp, dest);
-	g_value_unset (dest);
-	gst_value_list_concat (dest, &temp, &intersection);
+        gst_value_init_and_copy (&temp, dest);
+        g_value_unset (dest);
+        gst_value_list_concat (dest, &temp, &intersection);
       }
       g_value_unset (&intersection);
     }
@@ -1142,7 +1142,7 @@ gst_value_can_union (const GValue * value1, const GValue * value2)
   for (i = 0; i < gst_value_union_funcs->len; i++) {
     union_info = &g_array_index (gst_value_union_funcs, GstValueUnionInfo, i);
     if (union_info->type1 == G_VALUE_TYPE (value1) &&
-	union_info->type2 == G_VALUE_TYPE (value2))
+        union_info->type2 == G_VALUE_TYPE (value2))
       return TRUE;
   }
 
@@ -1162,7 +1162,7 @@ gst_value_union (GValue * dest, const GValue * value1, const GValue * value2)
   for (i = 0; i < gst_value_union_funcs->len; i++) {
     union_info = &g_array_index (gst_value_union_funcs, GstValueUnionInfo, i);
     if (union_info->type1 == G_VALUE_TYPE (value1) &&
-	union_info->type2 == G_VALUE_TYPE (value2)) {
+        union_info->type2 == G_VALUE_TYPE (value2)) {
       return union_info->func (dest, value1, value2);
     }
   }
@@ -1205,9 +1205,9 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
 
   for (i = 0; i < gst_value_intersect_funcs->len; i++) {
     intersect_info = &g_array_index (gst_value_intersect_funcs,
-	GstValueIntersectInfo, i);
+        GstValueIntersectInfo, i);
     if (intersect_info->type1 == G_VALUE_TYPE (value1) &&
-	intersect_info->type2 == G_VALUE_TYPE (value2))
+        intersect_info->type2 == G_VALUE_TYPE (value2))
       return TRUE;
   }
 
@@ -1234,14 +1234,14 @@ gst_value_intersect (GValue * dest, const GValue * value1,
 
   for (i = 0; i < gst_value_intersect_funcs->len; i++) {
     intersect_info = &g_array_index (gst_value_intersect_funcs,
-	GstValueIntersectInfo, i);
+        GstValueIntersectInfo, i);
     if (intersect_info->type1 == G_VALUE_TYPE (value1) &&
-	intersect_info->type2 == G_VALUE_TYPE (value2)) {
+        intersect_info->type2 == G_VALUE_TYPE (value2)) {
       ret = intersect_info->func (dest, value1, value2);
       return ret;
     }
     if (intersect_info->type1 == G_VALUE_TYPE (value2) &&
-	intersect_info->type2 == G_VALUE_TYPE (value1)) {
+        intersect_info->type2 == G_VALUE_TYPE (value1)) {
       ret = intersect_info->func (dest, value2, value1);
       return ret;
     }
@@ -1357,6 +1357,7 @@ _gst_value_initialize (void)
     NULL,
     NULL,
   };
+
   //const GTypeFundamentalInfo finfo = { G_TYPE_FLAG_DERIVABLE, };
 
   gst_value_table = g_array_new (FALSE, FALSE, sizeof (GstValueTable));
@@ -1382,9 +1383,10 @@ _gst_value_initialize (void)
       gst_value_serialize_fourcc,
       gst_value_deserialize_fourcc,
     };
+
     info.value_table = &value_table;
     gst_type_fourcc =
-	g_type_register_static (G_TYPE_BOXED, "GstFourcc", &info, 0);
+        g_type_register_static (G_TYPE_BOXED, "GstFourcc", &info, 0);
     gst_value.type = gst_type_fourcc;
     gst_value_register (&gst_value);
   }
@@ -1406,9 +1408,10 @@ _gst_value_initialize (void)
       gst_value_serialize_int_range,
       gst_value_deserialize_int_range,
     };
+
     info.value_table = &value_table;
     gst_type_int_range =
-	g_type_register_static (G_TYPE_BOXED, "GstIntRange", &info, 0);
+        g_type_register_static (G_TYPE_BOXED, "GstIntRange", &info, 0);
     gst_value.type = gst_type_int_range;
     gst_value_register (&gst_value);
   }
@@ -1430,9 +1433,10 @@ _gst_value_initialize (void)
       gst_value_serialize_double_range,
       gst_value_deserialize_double_range,
     };
+
     info.value_table = &value_table;
     gst_type_double_range =
-	g_type_register_static (G_TYPE_BOXED, "GstDoubleRange", &info, 0);
+        g_type_register_static (G_TYPE_BOXED, "GstDoubleRange", &info, 0);
     gst_value.type = gst_type_double_range;
     gst_value_register (&gst_value);
   }
@@ -1454,9 +1458,10 @@ _gst_value_initialize (void)
       gst_value_serialize_list,
       gst_value_deserialize_list,
     };
+
     info.value_table = &value_table;
     gst_type_list =
-	g_type_register_static (G_TYPE_BOXED, "GstValueList", &info, 0);
+        g_type_register_static (G_TYPE_BOXED, "GstValueList", &info, 0);
     gst_value.type = gst_type_list;
     gst_value_register (&gst_value);
   }
@@ -1468,6 +1473,7 @@ _gst_value_initialize (void)
       gst_value_serialize_int,
       gst_value_deserialize_int,
     };
+
     gst_value_register (&gst_value);
   }
 
@@ -1478,6 +1484,7 @@ _gst_value_initialize (void)
       gst_value_serialize_double,
       gst_value_deserialize_double,
     };
+
     gst_value_register (&gst_value);
   }
 
@@ -1488,6 +1495,7 @@ _gst_value_initialize (void)
       gst_value_serialize_string,
       gst_value_deserialize_string,
     };
+
     gst_value_register (&gst_value);
   }
 
@@ -1498,6 +1506,7 @@ _gst_value_initialize (void)
       gst_value_serialize_boolean,
       gst_value_deserialize_boolean,
     };
+
     gst_value_register (&gst_value);
   }
 

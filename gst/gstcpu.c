@@ -94,12 +94,12 @@ _gst_cpu_initialize_i386 (gulong * flags, GString * featurelist)
       gst_cpuid_i386 (0x80000001, &eax, &ebx, &ecx, &edx);
 
       if (edx & (1 << 31)) {
-	_gst_cpu_flags |= GST_CPU_FLAG_3DNOW;
-	g_string_append (featurelist, "3DNOW ");
+        _gst_cpu_flags |= GST_CPU_FLAG_3DNOW;
+        g_string_append (featurelist, "3DNOW ");
       }
       if (AMD && (edx & (1 << 22))) {
-	_gst_cpu_flags |= GST_CPU_FLAG_MMXEXT;
-	g_string_append (featurelist, "MMXEXT ");
+        _gst_cpu_flags |= GST_CPU_FLAG_MMXEXT;
+        g_string_append (featurelist, "MMXEXT ");
       }
     }
   }

@@ -56,7 +56,7 @@ gst_util_dump_mem (guchar * mem, guint size)
 
     if (j == 16 || i == size) {
       g_print ("%08x (%p): %-48.48s %-16.16s\n", i - j, mem + i - j,
-	  string->str, chars->str);
+          string->str, chars->str);
       g_string_set_size (string, 0);
       g_string_set_size (chars, 0);
       j = 0;
@@ -122,7 +122,7 @@ gst_util_set_value_from_string (GValue * value, const gchar * value_str)
       gboolean i = FALSE;
 
       if (!strncmp ("true", value_str, 4))
-	i = TRUE;
+        i = TRUE;
       g_value_set_boolean (value, i);
       break;
     }
@@ -176,95 +176,95 @@ gst_util_set_object_arg (GObject * object, const gchar * name,
     GParamSpec *paramspec;
 
     paramspec =
-	g_object_class_find_property (G_OBJECT_GET_CLASS (object), name);
+        g_object_class_find_property (G_OBJECT_GET_CLASS (object), name);
 
     if (!paramspec) {
       return;
     }
 
     GST_DEBUG ("paramspec->flags is %d, paramspec->value_type is %d",
-	paramspec->flags, (gint) paramspec->value_type);
+        paramspec->flags, (gint) paramspec->value_type);
 
     if (paramspec->flags & G_PARAM_WRITABLE) {
       switch (paramspec->value_type) {
-	case G_TYPE_STRING:
-	  g_object_set (G_OBJECT (object), name, value, NULL);
-	  break;
-	case G_TYPE_ENUM:
-	case G_TYPE_INT:{
-	  gint i;
+        case G_TYPE_STRING:
+          g_object_set (G_OBJECT (object), name, value, NULL);
+          break;
+        case G_TYPE_ENUM:
+        case G_TYPE_INT:{
+          gint i;
 
-	  sscanf (value, "%d", &i);
-	  g_object_set (G_OBJECT (object), name, i, NULL);
-	  break;
-	}
-	case G_TYPE_UINT:{
-	  guint i;
+          sscanf (value, "%d", &i);
+          g_object_set (G_OBJECT (object), name, i, NULL);
+          break;
+        }
+        case G_TYPE_UINT:{
+          guint i;
 
-	  sscanf (value, "%u", &i);
-	  g_object_set (G_OBJECT (object), name, i, NULL);
-	  break;
-	}
-	case G_TYPE_LONG:{
-	  glong i;
+          sscanf (value, "%u", &i);
+          g_object_set (G_OBJECT (object), name, i, NULL);
+          break;
+        }
+        case G_TYPE_LONG:{
+          glong i;
 
-	  sscanf (value, "%ld", &i);
-	  g_object_set (G_OBJECT (object), name, i, NULL);
-	  break;
-	}
-	case G_TYPE_ULONG:{
-	  gulong i;
+          sscanf (value, "%ld", &i);
+          g_object_set (G_OBJECT (object), name, i, NULL);
+          break;
+        }
+        case G_TYPE_ULONG:{
+          gulong i;
 
-	  sscanf (value, "%lu", &i);
-	  g_object_set (G_OBJECT (object), name, i, NULL);
-	  break;
-	}
-	case G_TYPE_BOOLEAN:{
-	  gboolean i = FALSE;
+          sscanf (value, "%lu", &i);
+          g_object_set (G_OBJECT (object), name, i, NULL);
+          break;
+        }
+        case G_TYPE_BOOLEAN:{
+          gboolean i = FALSE;
 
-	  if (!g_ascii_strncasecmp ("true", value, 4))
-	    i = TRUE;
-	  g_object_set (G_OBJECT (object), name, i, NULL);
-	  break;
-	}
-	case G_TYPE_CHAR:{
-	  gchar i;
+          if (!g_ascii_strncasecmp ("true", value, 4))
+            i = TRUE;
+          g_object_set (G_OBJECT (object), name, i, NULL);
+          break;
+        }
+        case G_TYPE_CHAR:{
+          gchar i;
 
-	  sscanf (value, "%c", &i);
-	  g_object_set (G_OBJECT (object), name, i, NULL);
-	  break;
-	}
-	case G_TYPE_UCHAR:{
-	  guchar i;
+          sscanf (value, "%c", &i);
+          g_object_set (G_OBJECT (object), name, i, NULL);
+          break;
+        }
+        case G_TYPE_UCHAR:{
+          guchar i;
 
-	  sscanf (value, "%c", &i);
-	  g_object_set (G_OBJECT (object), name, i, NULL);
-	  break;
-	}
-	case G_TYPE_FLOAT:{
-	  gfloat i;
+          sscanf (value, "%c", &i);
+          g_object_set (G_OBJECT (object), name, i, NULL);
+          break;
+        }
+        case G_TYPE_FLOAT:{
+          gfloat i;
 
-	  sscanf (value, "%f", &i);
-	  g_object_set (G_OBJECT (object), name, i, NULL);
-	  break;
-	}
-	case G_TYPE_DOUBLE:{
-	  gfloat i;
+          sscanf (value, "%f", &i);
+          g_object_set (G_OBJECT (object), name, i, NULL);
+          break;
+        }
+        case G_TYPE_DOUBLE:{
+          gfloat i;
 
-	  sscanf (value, "%g", &i);
-	  g_object_set (G_OBJECT (object), name, (gdouble) i, NULL);
-	  break;
-	}
-	default:
-	  if (G_IS_PARAM_SPEC_ENUM (paramspec)) {
-	    gint i;
+          sscanf (value, "%g", &i);
+          g_object_set (G_OBJECT (object), name, (gdouble) i, NULL);
+          break;
+        }
+        default:
+          if (G_IS_PARAM_SPEC_ENUM (paramspec)) {
+            gint i;
 
-	    sscanf (value, "%d", &i);
-	    g_object_set (G_OBJECT (object), name, i, NULL);
-	  } else if (paramspec->value_type == GST_TYPE_URI) {
-	    g_object_set (G_OBJECT (object), name, value, NULL);
-	  }
-	  break;
+            sscanf (value, "%d", &i);
+            g_object_set (G_OBJECT (object), name, i, NULL);
+          } else if (paramspec->value_type == GST_TYPE_URI) {
+            g_object_set (G_OBJECT (object), name, value, NULL);
+          }
+          break;
       }
     }
   }
@@ -308,7 +308,7 @@ gst_print_pad_caps (GString * buf, gint indent, GstPad * pad)
   if (!caps) {
     string_append_indent (buf, indent);
     g_string_printf (buf, "%s:%s has no capabilities",
-	GST_DEBUG_PAD_NAME (pad));
+        GST_DEBUG_PAD_NAME (pad));
   } else {
     char *s;
 
@@ -331,7 +331,7 @@ void
 gst_print_element_args (GString * buf, gint indent, GstElement * element)
 {
   guint width;
-  GValue value = { 0, };	/* the important thing is that value.type = 0 */
+  GValue value = { 0, };        /* the important thing is that value.type = 0 */
   gchar *str = 0;
   GParamSpec *spec, **specs, **walk;
 

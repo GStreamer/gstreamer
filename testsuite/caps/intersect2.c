@@ -23,15 +23,15 @@ GstStaticCaps rawcaps5 =
     ("video/x-raw-yuv, format=(fourcc)YUY2, framerate=(double)[0,1.79769e+308], width=(int)[0,2147483647], height=(int)[0,2147483647]; video/x-raw-yuv, format=(fourcc)UYVY, framerate=(double)[0,1.79769e+308], width=(int)[0,2147483647], height=(int)[0,2147483647]");
 
 GstStaticCaps rawcaps6 =
-GST_STATIC_CAPS
+    GST_STATIC_CAPS
     ("video/x-raw-yuv, format=(fourcc)YUY2, width=(int)320, height=(int)240");
 
 GstStaticCaps rawcaps7 =
-GST_STATIC_CAPS
+    GST_STATIC_CAPS
     ("video/x-raw-yuv, format=(fourcc)YUY2, width=(int)[0,2147483647], height=(int)[0,2147483647], framerate=(double)[0,1.79769e+308]");
 
 GstStaticCaps rawcaps8 =
-GST_STATIC_CAPS
+    GST_STATIC_CAPS
     ("video/x-raw-yuv, format=(fourcc)YUY2, width=(int)320, height=(int)240");
 
 
@@ -49,7 +49,7 @@ main (int argc, char *argv[])
   caps1 = gst_caps_copy (gst_static_caps_get (&rawcaps1));
   caps2 =
       gst_caps_new_full (gst_structure_copy (gst_caps_get_structure
-	  (gst_static_caps_get (&rawcaps1), 0)), NULL);
+          (gst_static_caps_get (&rawcaps1), 0)), NULL);
 
 #if 0
   gst_caps_set (caps1, "height", GST_PROPS_INT (640));

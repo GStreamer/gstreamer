@@ -7,7 +7,7 @@ main (gint argc, gchar * argv[])
   GstElement *fakesrc;
   gint i;
 
-  free (malloc (8));		/* -lefence */
+  free (malloc (8));            /* -lefence */
 
   gst_init (&argc, &argv);
 

@@ -60,21 +60,21 @@ main (int argc, char *argv[])
   /* compare */
   if (sizemin_set != sizemin_get) {
     g_print ("sizemin: set value %d differs from returned value %d\n",
-	sizemin_set, sizemin_get);
+        sizemin_set, sizemin_get);
     retval = 1;
   } else
     g_print ("name: set right\n");
 
   if (silent_set != silent_get) {
     g_print ("silent: set value %s differs from returned value %s\n",
-	silent_set ? "TRUE" : "FALSE", silent_get ? "TRUE" : "FALSE");
+        silent_set ? "TRUE" : "FALSE", silent_get ? "TRUE" : "FALSE");
     retval = 1;
   } else
     g_print ("silent: set right\n");
 
   if (strcmp (name_set, name_get) != 0) {
     g_print ("name: set value %s differs from returned value %s\n",
-	name_set, name_get);
+        name_set, name_get);
     retval = 1;
   } else
     g_print ("name: set right\n");

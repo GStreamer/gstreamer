@@ -397,7 +397,7 @@ gst_md5sink_class_init (GstMD5SinkClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MD5,
       g_param_spec_string ("md5", "md5", "current value of the md5 sum",
-	  "", G_PARAM_READABLE));
+          "", G_PARAM_READABLE));
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_md5sink_change_state);
 }
@@ -467,7 +467,7 @@ gst_md5sink_get_property (GObject * object, guint prop_id, GValue * value,
       guchar *md5string = g_malloc0 (33);
 
       for (i = 0; i < 16; ++i)
-	sprintf (md5string + i * 2, "%02x", sink->md5[i]);
+        sprintf (md5string + i * 2, "%02x", sink->md5[i]);
       g_value_set_string (value, md5string);
       g_free (md5string);
     }

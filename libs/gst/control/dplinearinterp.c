@@ -42,9 +42,10 @@ gst_dp_linint_get_type (void)
       0,
       (GInstanceInitFunc) gst_dp_linint_init,
     };
+
     dp_linint_type =
-	g_type_register_static (GST_TYPE_DPARAM, "GstDParamLinInterp",
-	&dp_linint_info, 0);
+        g_type_register_static (GST_TYPE_DPARAM, "GstDParamLinInterp",
+        &dp_linint_info, 0);
   }
   return dp_linint_type;
 }

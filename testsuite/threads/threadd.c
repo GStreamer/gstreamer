@@ -69,18 +69,18 @@ main (gint argc, gchar * argv[])
 
     /* connect state change signal */
     id = g_signal_connect (G_OBJECT (thread), "state_change",
-	G_CALLBACK (state_changed), NULL);
+        G_CALLBACK (state_changed), NULL);
     construct_pipeline (thread, i / RUNS_PER_IDENTITY + 1);
 
     g_print ("Setting thread to play with %d identities\n",
-	i / RUNS_PER_IDENTITY + 1);
+        i / RUNS_PER_IDENTITY + 1);
     done = FALSE;
     if (gst_element_set_state (thread, GST_STATE_PLAYING) == GST_STATE_FAILURE) {
       g_warning ("failed to go to PLAYING");
     } else {
       g_print ("Waiting for thread PLAYING->PAUSED\n");
-      while (!done)		/* do nothing */
-	;
+      while (!done)             /* do nothing */
+        ;
     }
     running = FALSE;
     g_print ("Coming out of the main GStreamer loop\n");

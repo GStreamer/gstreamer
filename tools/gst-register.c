@@ -67,7 +67,7 @@ spawn_all_in_dir (const char *dirname)
     argv[0] = g_build_filename (dirname, file, NULL);
     g_print ("running %s\n", argv[0]);
     g_spawn_sync (NULL, argv, NULL, G_SPAWN_FILE_AND_ARGV_ZERO, NULL, NULL,
-	NULL, NULL, NULL, NULL);
+        NULL, NULL, NULL, NULL);
     g_free (argv[0]);
   }
   g_dir_close (dir);
@@ -77,7 +77,7 @@ int
 main (int argc, char *argv[])
 {
   GList *registries;
-  GList *path_spill = NULL;	/* used for path spill from failing registries */
+  GList *path_spill = NULL;     /* used for path spill from failing registries */
 
   setlocale (LC_ALL, "");
 
@@ -101,16 +101,16 @@ main (int argc, char *argv[])
        * since they're spilled they probably weren't loaded correctly
        * so we should give a lower priority registry the chance to do them */
       for (iter = path_spill; iter; iter = iter->next) {
-	g_print ("added path   %s to %s \n",
-	    (const char *) iter->data, registry->name);
-	gst_registry_add_path (registry, (const gchar *) iter->data);
+        g_print ("added path   %s to %s \n",
+            (const char *) iter->data, registry->name);
+        gst_registry_add_path (registry, (const gchar *) iter->data);
       }
       g_list_free (path_spill);
       path_spill = NULL;
     }
 
     g_signal_connect (G_OBJECT (registry), "plugin_added",
-	G_CALLBACK (plugin_added_func), NULL);
+        G_CALLBACK (plugin_added_func), NULL);
 
     if (registry->flags & GST_REGISTRY_WRITABLE) {
       char *location;
@@ -123,11 +123,11 @@ main (int argc, char *argv[])
     } else {
       g_print ("trying to load %s\n", registry->name);
       if (!gst_registry_load (registry)) {
-	g_print ("error loading %s\n", registry->name);
-	/* move over paths from this registry to the next one */
-	path_spill = g_list_concat (path_spill,
-	    gst_registry_get_path_list (registry));
-	g_assert (path_spill != NULL);
+        g_print ("error loading %s\n", registry->name);
+        /* move over paths from this registry to the next one */
+        path_spill = g_list_concat (path_spill,
+            gst_registry_get_path_list (registry));
+        g_assert (path_spill != NULL);
       }
       /* also move over paths if the registry wasn't writable
        * FIXME: we should check if the paths that were loaded from this
@@ -145,8 +145,8 @@ main (int argc, char *argv[])
     dir_list = gst_registry_get_path_list (registry);
     for (iter = dir_list; iter; iter = iter->next) {
       dir =
-	  g_build_filename ((const char *) iter->data, "register-scripts",
-	  NULL);
+          g_build_filename ((const char *) iter->data, "register-scripts",
+          NULL);
       spawn_all_in_dir (dir);
       g_free (dir);
     }

@@ -56,10 +56,11 @@ gst_type_find_factory_get_type (void)
       gst_type_find_factory_init,
       NULL
     };
+
     typefind_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE,
-	"GstTypeFindFactory", &typefind_info, 0);
+        "GstTypeFindFactory", &typefind_info, 0);
     GST_DEBUG_CATEGORY_INIT (gst_type_find_debug, "GST_TYPEFIND",
-	GST_DEBUG_FG_GREEN, "typefinding subsystem");
+        GST_DEBUG_FG_GREEN, "typefinding subsystem");
   }
 
   return typefind_type;
@@ -120,7 +121,7 @@ gst_type_find_load_plugin (GstTypeFind * find, gpointer data)
     if (factory->function == gst_type_find_load_plugin) {
       /* looks like we didn't get a real typefind function */
       g_warning ("could not load valid typefind function for feature '%s'\n",
-	  GST_PLUGIN_FEATURE_NAME (factory));
+          GST_PLUGIN_FEATURE_NAME (factory));
     } else {
       g_assert (factory->function);
       gst_type_find_factory_call_function (factory, find);
@@ -231,7 +232,7 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
   GST_INFO ("registering typefind function for %s", name);
   factory =
       GST_TYPE_FIND_FACTORY (gst_registry_pool_find_feature (name,
-	  GST_TYPE_TYPE_FIND_FACTORY));
+          GST_TYPE_TYPE_FIND_FACTORY));
   if (!factory) {
     factory = g_object_new (GST_TYPE_TYPE_FIND_FACTORY, NULL);
     GST_DEBUG_OBJECT (factory, "using new typefind factory for %s", name);

@@ -58,11 +58,12 @@ gst_element_factory_get_type (void)
       (GInstanceInitFunc) gst_element_factory_init,
       NULL
     };
+
     elementfactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE,
-	"GstElementFactory", &elementfactory_info, 0);
+        "GstElementFactory", &elementfactory_info, 0);
     GST_DEBUG_CATEGORY_INIT (element_factory_debug, "GST_ELEMENT_FACTORY",
-	GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED,
-	"element factories keep information about installed elements");
+        GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED,
+        "element factories keep information about installed elements");
   }
   return elementfactory_type;
 }
@@ -202,16 +203,16 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   if (!factory) {
     klass = GST_ELEMENT_CLASS (g_type_class_ref (type));
     factory =
-	GST_ELEMENT_FACTORY (g_object_new (GST_TYPE_ELEMENT_FACTORY, NULL));
+        GST_ELEMENT_FACTORY (g_object_new (GST_TYPE_ELEMENT_FACTORY, NULL));
     gst_plugin_feature_set_name (GST_PLUGIN_FEATURE (factory), name);
     GST_LOG_OBJECT (factory, "Created new elementfactory for type %s",
-	g_type_name (type));
+        g_type_name (type));
   } else {
     g_return_val_if_fail (factory->type == 0, FALSE);
     klass = GST_ELEMENT_CLASS (g_type_class_ref (type));
     gst_element_factory_cleanup (factory);
     GST_LOG_OBJECT (factory, "Reuse existing elementfactory for type %s",
-	g_type_name (type));
+        g_type_name (type));
   }
 
   factory->type = type;
@@ -223,7 +224,7 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   /* special stuff for URI handling */
   if (g_type_is_a (type, GST_TYPE_URI_HANDLER)) {
     GstURIHandlerInterface *iface = (GstURIHandlerInterface *)
-	g_type_interface_peek (klass, GST_TYPE_URI_HANDLER);
+        g_type_interface_peek (klass, GST_TYPE_URI_HANDLER);
 
     if (!iface || !iface->get_type || !iface->get_protocols)
       goto error;
@@ -277,13 +278,13 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
 
   if (name)
     GST_INFO ("creating \"%s\" named \"%s\"", GST_PLUGIN_FEATURE_NAME (factory),
-	GST_STR_NULL (name));
+        GST_STR_NULL (name));
   else
     GST_INFO ("creating \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
 
   if (factory->type == 0) {
     g_critical ("Factory for `%s' has no type",
-	GST_PLUGIN_FEATURE_NAME (factory));
+        GST_PLUGIN_FEATURE_NAME (factory));
     return NULL;
   }
 
@@ -464,7 +465,7 @@ __gst_element_factory_add_interface (GstElementFactory * elementfactory,
 {
   g_return_if_fail (GST_IS_ELEMENT_FACTORY (elementfactory));
   g_return_if_fail (interfacename != NULL);
-  g_return_if_fail (interfacename[0] != '\0');	/* no empty string */
+  g_return_if_fail (interfacename[0] != '\0');  /* no empty string */
 
   elementfactory->interfaces =
       g_list_prepend (elementfactory->interfaces, g_strdup (interfacename));
@@ -545,8 +546,8 @@ gst_element_factory_can_src_caps (GstElementFactory * factory,
 
     if (template->direction == GST_PAD_SRC) {
       if (gst_caps_is_always_compatible (GST_PAD_TEMPLATE_CAPS (template),
-	      caps))
-	return TRUE;
+              caps))
+        return TRUE;
     }
     templates = g_list_next (templates);
   }
@@ -579,8 +580,8 @@ gst_element_factory_can_sink_caps (GstElementFactory * factory,
 
     if (template->direction == GST_PAD_SINK) {
       if (gst_caps_is_always_compatible (caps,
-	      GST_PAD_TEMPLATE_CAPS (template)))
-	return TRUE;
+              GST_PAD_TEMPLATE_CAPS (template)))
+        return TRUE;
     }
     templates = g_list_next (templates);
   }

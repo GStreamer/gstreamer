@@ -55,8 +55,8 @@ main (gint argc, gchar * argv[])
   while (1) {
     gint fx;
     GstIndexEntry *entry =
-	gst_index_get_assoc_entry (index, id, GST_INDEX_LOOKUP_AFTER, 0,
-	GST_FORMAT_TIME, cur);
+        gst_index_get_assoc_entry (index, id, GST_INDEX_LOOKUP_AFTER, 0,
+        GST_FORMAT_TIME, cur);
 
     if (!entry)
       break;
@@ -67,11 +67,11 @@ main (gint argc, gchar * argv[])
       const GstFormatDefinition *def = gst_format_get_details (fmt);
 
       if (fmt == GST_FORMAT_TIME) {
-	cur = GST_INDEX_ASSOC_VALUE (entry, fx) + 1;
-	g_print (" time %.4f",
-	    GST_INDEX_ASSOC_VALUE (entry, fx) / (double) GST_SECOND);
+        cur = GST_INDEX_ASSOC_VALUE (entry, fx) + 1;
+        g_print (" time %.4f",
+            GST_INDEX_ASSOC_VALUE (entry, fx) / (double) GST_SECOND);
       } else
-	g_print (" %s %lld", def->nick, GST_INDEX_ASSOC_VALUE (entry, fx));
+        g_print (" %s %lld", def->nick, GST_INDEX_ASSOC_VALUE (entry, fx));
     }
     g_print ("\n");
   }

@@ -397,10 +397,10 @@ gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
 
     /* we simply create a subbuffer of the common parent */
     newbuf = gst_buffer_create_sub (parent,
-	buf1->data - parent->data + offset, len);
+        buf1->data - parent->data + offset, len);
   } else {
     GST_CAT_DEBUG (GST_CAT_BUFFER,
-	"slow path taken while spanning buffers %p and %p", buf1, buf2);
+        "slow path taken while spanning buffers %p and %p", buf1, buf2);
     /* otherwise we simply have to brute-force copy the buffers */
     newbuf = gst_buffer_new_and_alloc (len);
 
@@ -408,7 +408,7 @@ gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
     memcpy (newbuf->data, buf1->data + offset, buf1->size - offset);
     /* copy the second buffer's data across */
     memcpy (newbuf->data + (buf1->size - offset), buf2->data,
-	len - (buf1->size - offset));
+        len - (buf1->size - offset));
     /* if the offset is 0, the new buffer has the same timestamp as buf1 */
     if (offset == 0) {
       GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET (buf1);
@@ -420,10 +420,10 @@ gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
    * invalid DURATIONS */
   if (offset == 0 && buf1->size + buf2->size == len) {
     if (GST_BUFFER_DURATION_IS_VALID (buf1) &&
-	GST_BUFFER_DURATION_IS_VALID (buf2)) {
+        GST_BUFFER_DURATION_IS_VALID (buf2)) {
       /* add duration */
       GST_BUFFER_DURATION (newbuf) = GST_BUFFER_DURATION (buf1) +
-	  GST_BUFFER_DURATION (buf2);
+          GST_BUFFER_DURATION (buf2);
     }
     if (GST_BUFFER_OFFSET_END_IS_VALID (buf2)) {
       /* add offset_end */

@@ -51,7 +51,7 @@ caps_nego_failed (GstPad * pad, GstCaps * caps)
   else
     /* else we use our hardcoded caps as an exazmple */
     toset = GST_CAPS_NEW ("testcaps", "test/test", "prop", GST_PROPS_INT (2)
-	);
+        );
 
   res = gst_pad_relink_filtered (pad, peer, toset);
   if (!res) {

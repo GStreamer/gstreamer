@@ -36,14 +36,15 @@
 
 typedef struct
 {
-  GType type;			/* type the data is in */
+  GType type;                   /* type the data is in */
 
-  gchar *nick;			/* translated name */
-  gchar *blurb;			/* translated description of type */
+  gchar *nick;                  /* translated name */
+  gchar *blurb;                 /* translated description of type */
 
-  GstTagMergeFunc merge_func;	/* functions to merge the values */
-  GstTagFlag flag;		/* type of tag */
-} GstTagInfo;
+  GstTagMergeFunc merge_func;   /* functions to merge the values */
+  GstTagFlag flag;              /* type of tag */
+}
+GstTagInfo;
 
 #define TAGLIST "taglist"
 static GQuark gst_tag_list_quark;
@@ -60,11 +61,11 @@ gst_tag_list_get_type (void)
 
   if (_gst_tag_list_type == 0) {
     _gst_tag_list_type = g_boxed_type_register_static ("GstTagList",
-	(GBoxedCopyFunc) gst_tag_list_copy, (GBoxedFreeFunc) gst_tag_list_free);
+        (GBoxedCopyFunc) gst_tag_list_copy, (GBoxedFreeFunc) gst_tag_list_free);
 
 #if 0
     g_value_register_transform_func (_gst_tag_list_type, G_TYPE_STRING,
-	_gst_structure_transform_to_string);
+        _gst_structure_transform_to_string);
 #endif
   }
 
@@ -89,7 +90,7 @@ _gst_tag_initialize (void)
       G_TYPE_STRING,
       _("album"),
       _("album containing this data"), gst_tag_merge_strings_with_comma);
-  gst_tag_register (GST_TAG_DATE, GST_TAG_FLAG_META, G_TYPE_UINT,	/* FIXME: own data type for dates? */
+  gst_tag_register (GST_TAG_DATE, GST_TAG_FLAG_META, G_TYPE_UINT,       /* FIXME: own data type for dates? */
       _("date"),
       _("date the data was created (in Julian calendar days)"), NULL);
   gst_tag_register (GST_TAG_GENRE, GST_TAG_FLAG_META,
@@ -136,7 +137,7 @@ _gst_tag_initialize (void)
       _
       ("International Standard Recording Code - see http://www.ifpi.org/isrc/"),
       NULL);
-  gst_tag_register (GST_TAG_ORGANIZATION, GST_TAG_FLAG_META, G_TYPE_STRING, _("organization"), _("organization"),	/* FIXME */
+  gst_tag_register (GST_TAG_ORGANIZATION, GST_TAG_FLAG_META, G_TYPE_STRING, _("organization"), _("organization"),       /* FIXME */
       gst_tag_merge_strings_with_comma);
   gst_tag_register (GST_TAG_COPYRIGHT, GST_TAG_FLAG_META,
       G_TYPE_STRING, _("copyright"), _("copyright notice of the data"), NULL);
@@ -227,8 +228,8 @@ gst_tag_merge_strings_with_comma (GValue * dest, const GValue * src)
     /* seperator between two string */
     str = g_string_append (str, _(", "));
     str =
-	g_string_append (str, g_value_get_string (gst_value_list_get_value (src,
-		1)));
+        g_string_append (str, g_value_get_string (gst_value_list_get_value (src,
+                1)));
   }
 
   g_value_init (dest, G_TYPE_STRING);
@@ -439,7 +440,8 @@ typedef struct
 {
   GstStructure *list;
   GstTagMergeMode mode;
-} GstTagCopyData;
+}
+GstTagCopyData;
 static void
 gst_tag_list_add_value_internal (GstStructure * list, GstTagMergeMode mode,
     GQuark tag, GValue * value)
@@ -452,45 +454,46 @@ gst_tag_list_add_value_internal (GstStructure * list, GstTagMergeMode mode,
   if (info->merge_func
       && (value2 = gst_structure_id_get_value (list, tag)) != NULL) {
     GValue dest = { 0, };
+
     switch (mode) {
       case GST_TAG_MERGE_REPLACE_ALL:
       case GST_TAG_MERGE_REPLACE:
-	gst_structure_id_set_value (list, tag, value);
-	break;
+        gst_structure_id_set_value (list, tag, value);
+        break;
       case GST_TAG_MERGE_PREPEND:
-	gst_value_list_concat (&dest, value, value2);
-	gst_structure_id_set_value (list, tag, &dest);
-	g_value_unset (&dest);
-	break;
+        gst_value_list_concat (&dest, value, value2);
+        gst_structure_id_set_value (list, tag, &dest);
+        g_value_unset (&dest);
+        break;
       case GST_TAG_MERGE_APPEND:
-	gst_value_list_concat (&dest, value2, value);
-	gst_structure_id_set_value (list, tag, &dest);
-	g_value_unset (&dest);
-	break;
+        gst_value_list_concat (&dest, value2, value);
+        gst_structure_id_set_value (list, tag, &dest);
+        g_value_unset (&dest);
+        break;
       case GST_TAG_MERGE_KEEP:
       case GST_TAG_MERGE_KEEP_ALL:
-	break;
+        break;
       default:
-	g_assert_not_reached ();
-	break;
+        g_assert_not_reached ();
+        break;
     }
   } else {
     switch (mode) {
       case GST_TAG_MERGE_APPEND:
       case GST_TAG_MERGE_KEEP:
-	if (gst_structure_id_get_value (list, tag) != NULL)
-	  break;
-	/* fall through */
+        if (gst_structure_id_get_value (list, tag) != NULL)
+          break;
+        /* fall through */
       case GST_TAG_MERGE_REPLACE_ALL:
       case GST_TAG_MERGE_REPLACE:
       case GST_TAG_MERGE_PREPEND:
-	gst_structure_id_set_value (list, tag, value);
-	break;
+        gst_structure_id_set_value (list, tag, value);
+        break;
       case GST_TAG_MERGE_KEEP_ALL:
-	break;
+        break;
       default:
-	g_assert_not_reached ();
-	break;
+        g_assert_not_reached ();
+        break;
     }
   }
 }
@@ -690,6 +693,7 @@ gst_tag_list_add_valist (GstTagList * list, GstTagMergeMode mode,
 
   while (tag != NULL) {
     GValue value = { 0, };
+
     quark = g_quark_from_string (tag);
     info = gst_tag_lookup (quark);
     if (info == NULL)
@@ -736,7 +740,7 @@ gst_tag_list_add_valist_values (GstTagList * list, GstTagMergeMode mode,
     info = gst_tag_lookup (quark);
     g_return_if_fail (info != NULL);
     gst_tag_list_add_value_internal (list, mode, quark, va_arg (var_args,
-	    GValue *));
+            GValue *));
     tag = va_arg (var_args, gchar *);
   }
 }
@@ -761,7 +765,8 @@ typedef struct
   GstTagForeachFunc func;
   GstTagList *tag_list;
   gpointer data;
-} TagForeachData;
+}
+TagForeachData;
 static int
 structure_foreach_wrapper (GQuark field_id, GValue * value, gpointer user_data)
 {

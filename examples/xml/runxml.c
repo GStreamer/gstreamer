@@ -14,13 +14,13 @@ xml_loaded (GstXML * xml, GstObject * object, xmlNodePtr self, gpointer data)
       xmlNodePtr nodes = children->xmlChildrenNode;
 
       while (nodes) {
-	if (!strcmp (nodes->name, "text")) {
-	  gchar *name = g_strdup (xmlNodeGetContent (nodes));
+        if (!strcmp (nodes->name, "text")) {
+          gchar *name = g_strdup (xmlNodeGetContent (nodes));
 
-	  g_print ("object %s loaded with comment '%s'\n",
-	      gst_object_get_name (object), name);
-	}
-	nodes = nodes->next;
+          g_print ("object %s loaded with comment '%s'\n",
+              gst_object_get_name (object), name);
+        }
+        nodes = nodes->next;
       }
     }
     children = children->next;

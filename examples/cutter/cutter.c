@@ -20,7 +20,7 @@ gboolean playing = TRUE;
 gboolean cut_start_signalled = FALSE;
 gboolean cut_stop_signalled = FALSE;
 
-int id = 0;			/* increment this for each new cut */
+int id = 0;                     /* increment this for each new cut */
 GstElement *main_bin;
 GstElement *audiosrc;
 GstElement *queue;
@@ -51,9 +51,9 @@ cut_start (GstElement * element)
     ct = localtime (&seconds);
 /*    sprintf (buffer, "/news/incoming/audio/cutter.%06d.wav", id); */
     sprintf (buffer,
-	"/news/incoming/audio/cutter.%04d%02d%02d.%02d%02d%02d.wav",
-	ct->tm_year + 1900, ct->tm_mon, ct->tm_mday, ct->tm_hour, ct->tm_min,
-	ct->tm_sec);
+        "/news/incoming/audio/cutter.%04d%02d%02d.%02d%02d%02d.wav",
+        ct->tm_year + 1900, ct->tm_mon, ct->tm_mday, ct->tm_hour, ct->tm_min,
+        ct->tm_sec);
   }
   g_print ("DEBUG: cut_start: setting new location to %s\n", buffer);
   g_object_set (G_OBJECT (disksink), "location", buffer, NULL);

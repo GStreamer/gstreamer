@@ -58,7 +58,8 @@ typedef struct
   GstPad *sinkpad;
   GstPad *srcpad;
   GstBuffer *buffer;
-} GstShaperConnection;
+}
+GstShaperConnection;
 
 GstStaticPadTemplate shaper_src_template = GST_STATIC_PAD_TEMPLATE ("src%d",
     GST_PAD_SRC,
@@ -80,9 +81,10 @@ gst_shaper_policy_get_type (void)
     {SHAPER_POLICY_BUFFERSIZE, "2", "sync on buffer size"},
     {0, NULL, NULL},
   };
+
   if (!shaper_policy_type) {
     shaper_policy_type =
-	g_enum_register_static ("GstShaperPolicy", shaper_policy);
+        g_enum_register_static ("GstShaperPolicy", shaper_policy);
   }
   return shaper_policy_type;
 }
@@ -128,13 +130,13 @@ gst_shaper_class_init (GstShaperClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_POLICY,
       g_param_spec_enum ("policy", "Policy", "Shaper policy",
-	  GST_TYPE_SHAPER_POLICY, SHAPER_POLICY_TIMESTAMPS, G_PARAM_READWRITE));
+          GST_TYPE_SHAPER_POLICY, SHAPER_POLICY_TIMESTAMPS, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
       g_param_spec_boolean ("silent", "silent", "silent",
-	  FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
       g_param_spec_string ("last-message", "last-message", "last-message",
-	  NULL, G_PARAM_READABLE));
+          NULL, G_PARAM_READABLE));
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_shaper_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_shaper_get_property);
@@ -279,30 +281,30 @@ gst_shaper_loop (GstElement * element)
 
       /* events are simply pushed ASAP */
       if (GST_IS_EVENT (buffer)) {
-	/* save event type as it will be unreffed after the next push */
-	GstEventType type = GST_EVENT_TYPE (buffer);
+        /* save event type as it will be unreffed after the next push */
+        GstEventType type = GST_EVENT_TYPE (buffer);
 
-	gst_pad_push (connection->srcpad, GST_DATA (buffer));
+        gst_pad_push (connection->srcpad, GST_DATA (buffer));
 
-	switch (type) {
-	    /* on EOS we disable the pad so that we don't pull on
-	     * it again and never get more data */
-	  case GST_EVENT_EOS:
-	    gst_pad_set_active (connection->sinkpad, FALSE);
-	    break;
-	  default:
-	    break;
-	}
+        switch (type) {
+            /* on EOS we disable the pad so that we don't pull on
+             * it again and never get more data */
+          case GST_EVENT_EOS:
+            gst_pad_set_active (connection->sinkpad, FALSE);
+            break;
+          default:
+            break;
+        }
       } else {
-	/* we store the buffer */
-	connection->buffer = buffer;
+        /* we store the buffer */
+        connection->buffer = buffer;
       }
     }
     /* FIXME policy stuff goes here */
     /* find connection with lowest timestamp */
     if (min == NULL || (connection->buffer != NULL &&
-	    (GST_BUFFER_TIMESTAMP (connection->buffer) <
-		GST_BUFFER_TIMESTAMP (min->buffer)))) {
+            (GST_BUFFER_TIMESTAMP (connection->buffer) <
+                GST_BUFFER_TIMESTAMP (min->buffer)))) {
       min = connection;
     }
     connections = g_slist_next (connections);

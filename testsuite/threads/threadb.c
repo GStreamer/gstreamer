@@ -60,7 +60,7 @@ main (gint argc, gchar * argv[])
 
     /* connect state change signal */
     id = g_signal_connect (G_OBJECT (thread), "state_change",
-	G_CALLBACK (state_changed), NULL);
+        G_CALLBACK (state_changed), NULL);
     construct_pipeline (thread);
 
     g_print ("Setting thread to play\n");

@@ -65,9 +65,10 @@ gst_unitconv_get_type (void)
       0,
       (GInstanceInitFunc) gst_unitconv_init,
     };
+
     unitconv_type =
-	g_type_register_static (GST_TYPE_OBJECT, "GstUnitConvert",
-	&unitconv_info, 0);
+        g_type_register_static (GST_TYPE_OBJECT, "GstUnitConvert",
+        &unitconv_info, 0);
   }
   return unitconv_type;
 }
@@ -223,68 +224,68 @@ _gst_unitconv_initialize (void)
 
   gst_unitconv_register_unit ("frequency", TRUE, TRUE,
       g_param_spec_float ("hertz", "Hz", "Frequency in hertz",
-	  0, G_MAXFLOAT, 0, 0));
+          0, G_MAXFLOAT, 0, 0));
 
   gst_unitconv_register_unit ("frequency", FALSE, TRUE,
       g_param_spec_float ("hertz-rate-bound", "Hz",
-	  "Frequency in hertz, bound by the sample rate", 0.0, G_MAXFLOAT, 0.0,
-	  0));
+          "Frequency in hertz, bound by the sample rate", 0.0, G_MAXFLOAT, 0.0,
+          0));
 
   gst_unitconv_register_unit ("frequency", FALSE, FALSE,
       g_param_spec_string ("twelve-tone-scale", "note",
-	  "Name of the note from the western twelve tone scale", "C", 0));
+          "Name of the note from the western twelve tone scale", "C", 0));
 
   gst_unitconv_register_unit ("frequency", FALSE, FALSE,
       g_param_spec_int ("midi-note", "midi note",
-	  "MIDI note value of the frequency", 1, 127, 1, 0));
+          "MIDI note value of the frequency", 1, 127, 1, 0));
 
   /* time based units */
   gst_unitconv_register_unit ("time", TRUE, FALSE,
       g_param_spec_float ("seconds", "s", "Time in seconds",
-	  -G_MAXFLOAT, G_MAXFLOAT, 0, 0));
+          -G_MAXFLOAT, G_MAXFLOAT, 0, 0));
 
   gst_unitconv_register_unit ("time", FALSE, FALSE,
       g_param_spec_int64 ("nanoseconds", "ns", "Time in nanoseconds",
-	  G_MININT64, G_MAXINT64, 0, 0));
+          G_MININT64, G_MAXINT64, 0, 0));
 
   gst_unitconv_register_unit ("time", FALSE, FALSE,
       g_param_spec_int64 ("samples", "samples", "Time in number of samples",
-	  G_MININT64, G_MAXINT64, 0, 0));
+          G_MININT64, G_MAXINT64, 0, 0));
 
   gst_unitconv_register_convert_property ("samples",
       g_param_spec_int ("samplerate", "samplerate", "samplerate",
-	  0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE));
 
 
   /* magnitude based units */
   gst_unitconv_register_unit ("magnitude", TRUE, FALSE,
       g_param_spec_float ("scalar", "scalar", "Magnitude as a scalar",
-	  -G_MAXFLOAT, G_MAXFLOAT, 0, 0));
+          -G_MAXFLOAT, G_MAXFLOAT, 0, 0));
 
   gst_unitconv_register_unit ("magnitude", FALSE, FALSE,
       g_param_spec_int ("scalar-int", "scalar int",
-	  "Magnitude as an integer scalar", G_MININT, G_MAXINT, 0, 0));
+          "Magnitude as an integer scalar", G_MININT, G_MAXINT, 0, 0));
 
   gst_unitconv_register_unit ("magnitude", FALSE, TRUE,
       g_param_spec_float ("decibel", "dB", "Magnitude in decibels",
-	  -G_MAXFLOAT, G_MAXFLOAT, 0, 0));
+          -G_MAXFLOAT, G_MAXFLOAT, 0, 0));
 
   gst_unitconv_register_unit ("magnitude", FALSE, FALSE,
       g_param_spec_float ("percent", "%", "Magnitude in percent",
-	  -G_MAXFLOAT, G_MAXFLOAT, 0, 0));
+          -G_MAXFLOAT, G_MAXFLOAT, 0, 0));
 
   /* generic units */
   gst_unitconv_register_unit ("float_default", TRUE, FALSE,
       g_param_spec_float ("float", "float", "Float value",
-	  -G_MAXFLOAT, G_MAXFLOAT, 0, 0));
+          -G_MAXFLOAT, G_MAXFLOAT, 0, 0));
 
   gst_unitconv_register_unit ("int_default", TRUE, FALSE,
       g_param_spec_int ("int", "int", "Integer value",
-	  G_MININT, G_MAXINT, 0, 0));
+          G_MININT, G_MAXINT, 0, 0));
 
   gst_unitconv_register_unit ("int64_default", TRUE, FALSE,
       g_param_spec_int64 ("int64", "int64", "64 bit integer value",
-	  G_MININT, G_MAXINT, 0, 0));
+          G_MININT, G_MAXINT, 0, 0));
 
 
   gst_unitconv_add_core_converters ();
@@ -312,7 +313,7 @@ gst_unitconv_register_unit (const gchar * domain_name,
   if (is_domain_default) {
     /* check if an default unit already exists for this domain */
     g_return_val_if_fail (g_hash_table_lookup (_gst_unit_domain_defaults,
-	    domain_name) == NULL, FALSE);
+            domain_name) == NULL, FALSE);
   }
 
   GST_DEBUG ("creating unit: %s", unit_name);
@@ -330,7 +331,7 @@ gst_unitconv_register_unit (const gchar * domain_name,
 
   if (is_domain_default) {
     g_hash_table_insert (_gst_unit_domain_defaults, g_strdup (domain_name),
-	unit);
+        unit);
   }
 
   return TRUE;

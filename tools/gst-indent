@@ -6,7 +6,7 @@ indent \
   --case-indentation2 \
   --braces-after-struct-decl-line \
   --line-length80 \
-  --use-tabs \
+  --no-tabs \
   --cuddle-else \
   --dont-line-up-parentheses \
   --continuation-indentation4 \

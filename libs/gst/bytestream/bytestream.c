@@ -186,7 +186,7 @@ gst_bytestream_get_next_buf (GstByteStream * bs)
 
       /* have to check to see if we merged with the head buffer */
       if (end == bs->buflist) {
-	bs->headbufavail += GST_BUFFER_SIZE (nextbuf);
+        bs->headbufavail += GST_BUFFER_SIZE (nextbuf);
       }
 
       gst_buffer_unref (lastbuf);
@@ -226,7 +226,7 @@ gst_bytestream_fill_bytes (GstByteStream * bs, guint32 len)
   /* as long as we don't have enough, we get more buffers */
   while (bs->listavail < len) {
     GST_DEBUG ("fill_bytes: there are %d bytes in the list, we need %d",
-	bs->listavail, len);
+        bs->listavail, len);
     if (!gst_bytestream_get_next_buf (bs))
       return FALSE;
   }
@@ -267,12 +267,12 @@ gst_bytestream_peek (GstByteStream * bs, GstBuffer ** buf, guint32 len)
     if (!gst_bytestream_fill_bytes (bs, len)) {
       /* we must have an event coming up */
       if (bs->listavail > 0) {
-	/* we have some data left, len will be shrunk to the amount of data available */
-	len = bs->listavail;
+        /* we have some data left, len will be shrunk to the amount of data available */
+        len = bs->listavail;
       } else {
-	/* there is no data */
-	*buf = retbuf;
-	return 0;
+        /* there is no data */
+        *buf = retbuf;
+        return 0;
       }
     }
     GST_DEBUG ("peek: there are now %d bytes in the list", bs->listavail);
@@ -286,14 +286,14 @@ gst_bytestream_peek (GstByteStream * bs, GstBuffer ** buf, guint32 len)
   GST_DEBUG ("peek: headbufavail is %d", bs->headbufavail);
   if (len <= bs->headbufavail) {
     GST_DEBUG ("peek: there are enough bytes in headbuf (need %d, have %d)",
-	len, bs->headbufavail);
+        len, bs->headbufavail);
     /* create a sub-buffer of the headbuf */
     retbuf =
-	gst_buffer_create_sub (headbuf,
-	GST_BUFFER_SIZE (headbuf) - bs->headbufavail, len);
+        gst_buffer_create_sub (headbuf,
+        GST_BUFFER_SIZE (headbuf) - bs->headbufavail, len);
     GST_BUFFER_OFFSET (retbuf) =
-	GST_BUFFER_OFFSET (headbuf) + GST_BUFFER_SIZE (headbuf) -
-	bs->headbufavail;
+        GST_BUFFER_OFFSET (headbuf) + GST_BUFFER_SIZE (headbuf) -
+        bs->headbufavail;
 
   }
   /* otherwise we need to figure out how to assemble one */
@@ -351,12 +351,12 @@ gst_bytestream_peek_bytes (GstByteStream * bs, guint8 ** data, guint32 len)
     if (!gst_bytestream_fill_bytes (bs, len)) {
       /* we must have an event coming up */
       if (bs->listavail > 0) {
-	/* we have some data left, len will be shrunk to the amount of data available */
-	len = bs->listavail;
+        /* we have some data left, len will be shrunk to the amount of data available */
+        len = bs->listavail;
       } else {
-	/* there is no data */
-	*data = NULL;
-	return 0;
+        /* there is no data */
+        *data = NULL;
+        return 0;
       }
     }
     GST_DEBUG ("peek_bytes: there are now %d bytes in the list", bs->listavail);
@@ -370,12 +370,12 @@ gst_bytestream_peek_bytes (GstByteStream * bs, guint8 ** data, guint32 len)
   GST_DEBUG ("peek_bytes: headbufavail is %d", bs->headbufavail);
   if (len <= bs->headbufavail) {
     GST_DEBUG
-	("peek_bytes: there are enough bytes in headbuf (need %d, have %d)",
-	len, bs->headbufavail);
+        ("peek_bytes: there are enough bytes in headbuf (need %d, have %d)",
+        len, bs->headbufavail);
     /* create a sub-buffer of the headbuf */
     *data =
-	GST_BUFFER_DATA (headbuf) + (GST_BUFFER_SIZE (headbuf) -
-	bs->headbufavail);
+        GST_BUFFER_DATA (headbuf) + (GST_BUFFER_SIZE (headbuf) -
+        bs->headbufavail);
 
   }
   /* otherwise we need to figure out how to assemble one */
@@ -413,12 +413,12 @@ gst_bytestream_assemble (GstByteStream * bs, guint32 len)
     buf = GST_BUFFER (walk->data);
     if (GST_BUFFER_SIZE (buf) < (len - copied)) {
       GST_DEBUG ("assemble: copying %d bytes from buf to output offset %d",
-	  GST_BUFFER_SIZE (buf), copied);
+          GST_BUFFER_SIZE (buf), copied);
       memcpy (data + copied, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
       copied += GST_BUFFER_SIZE (buf);
     } else {
       GST_DEBUG ("assemble: copying %d bytes from buf to output offset %d",
-	  len - copied, copied);
+          len - copied, copied);
       memcpy (data + copied, GST_BUFFER_DATA (buf), len - copied);
       copied = len;
     }
@@ -496,8 +496,8 @@ gst_bytestream_flush_fast (GstByteStream * bs, guint32 len)
     headbuf = GST_BUFFER (bs->buflist->data);
 
     GST_DEBUG ("flush: analyzing buffer that's %d bytes long, offset %"
-	G_GUINT64_FORMAT, GST_BUFFER_SIZE (headbuf),
-	GST_BUFFER_OFFSET (headbuf));
+        G_GUINT64_FORMAT, GST_BUFFER_SIZE (headbuf),
+        GST_BUFFER_OFFSET (headbuf));
 
     /* if there's enough to complete the flush */
     if (bs->headbufavail > len) {
@@ -521,10 +521,10 @@ gst_bytestream_flush_fast (GstByteStream * bs, guint32 len)
 
       /* record the new headbufavail */
       if (bs->buflist) {
-	bs->headbufavail = GST_BUFFER_SIZE (GST_BUFFER (bs->buflist->data));
-	GST_DEBUG ("flush: next headbuf is %d bytes", bs->headbufavail);
+        bs->headbufavail = GST_BUFFER_SIZE (GST_BUFFER (bs->buflist->data));
+        GST_DEBUG ("flush: next headbuf is %d bytes", bs->headbufavail);
       } else {
-	GST_DEBUG ("flush: no more bytes at all");
+        GST_DEBUG ("flush: no more bytes at all");
       }
     }
 
@@ -557,8 +557,8 @@ gst_bytestream_seek (GstByteStream * bs, gint64 offset, GstSeekType method)
 
   GST_DEBUG ("bs: send event\n");
   if (gst_pad_send_event (GST_PAD (peer), gst_event_new_seek (GST_FORMAT_BYTES |
-	      (method & GST_SEEK_METHOD_MASK) |
-	      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, offset))) {
+              (method & GST_SEEK_METHOD_MASK) |
+              GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, offset))) {
     gst_bytestream_flush_fast (bs, bs->listavail);
 
     /* we set the seek flag here. We cannot pull the pad here
@@ -590,7 +590,7 @@ gst_bytestream_tell (GstByteStream * bs)
   format = GST_FORMAT_BYTES;
 
   if (gst_pad_query (GST_PAD_PEER (bs->pad), GST_QUERY_POSITION, &format,
-	  &value)) {
+          &value)) {
     return value - bs->listavail;
   }
 
@@ -753,8 +753,8 @@ gst_bytestream_print_status (GstByteStream * bs)
     walk = g_slist_next (walk);
 
     GST_DEBUG ("STATUS: buffer starts at %" G_GUINT64_FORMAT
-	" and is %d bytes long", GST_BUFFER_OFFSET (buf),
-	GST_BUFFER_SIZE (buf));
+        " and is %d bytes long", GST_BUFFER_OFFSET (buf),
+        GST_BUFFER_SIZE (buf));
   }
 }
 

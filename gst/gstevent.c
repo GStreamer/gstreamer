@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <string.h>		/* memcpy */
+#include <string.h>             /* memcpy */
 
 #include "gst_private.h"
 #include "gstdata_private.h"
@@ -74,12 +74,12 @@ _gst_event_copy (GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:
       copy->event_data.structure.structure =
-	  gst_tag_list_copy ((GstTagList *) event->event_data.structure.
-	  structure);
+          gst_tag_list_copy ((GstTagList *) event->event_data.structure.
+          structure);
       break;
     case GST_EVENT_NAVIGATION:
       copy->event_data.structure.structure =
-	  gst_structure_copy (event->event_data.structure.structure);
+          gst_structure_copy (event->event_data.structure.structure);
     default:
       break;
   }
@@ -98,10 +98,10 @@ _gst_event_free (GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:
       if (GST_IS_TAG_LIST (event->event_data.structure.structure)) {
-	gst_tag_list_free (event->event_data.structure.structure);
+        gst_tag_list_free (event->event_data.structure.structure);
       } else {
-	g_warning ("tag event %p didn't contain a valid tag list!", event);
-	GST_ERROR ("tag event %p didn't contain a valid tag list!", event);
+        g_warning ("tag event %p didn't contain a valid tag list!", event);
+        GST_ERROR ("tag event %p didn't contain a valid tag list!", event);
       }
       break;
     case GST_EVENT_NAVIGATION:
@@ -136,7 +136,7 @@ gst_event_masks_contains (const GstEventMask * masks, GstEventMask * mask)
 
   while (masks->type) {
     if (masks->type == mask->type &&
-	(masks->flags & mask->flags) == mask->flags)
+        (masks->flags & mask->flags) == mask->flags)
       return TRUE;
 
     masks++;
@@ -233,7 +233,7 @@ gst_event_new_discontinuous_valist (gboolean new_media, GstFormat format1,
   while (format1 != GST_FORMAT_UNDEFINED && count < 8) {
 
     GST_EVENT_DISCONT_OFFSET (event, count).format =
-	format1 & GST_SEEK_FORMAT_MASK;
+        format1 & GST_SEEK_FORMAT_MASK;
     GST_EVENT_DISCONT_OFFSET (event, count).value = va_arg (var_args, gint64);
 
     format1 = va_arg (var_args, GstFormat);
