@@ -64,7 +64,6 @@ void
 _gst_plugin_initialize (void)
 {
   GList *gst_plugin_default_paths = NULL;
-  struct stat stat_buf;
 #ifndef GST_DISABLE_REGISTRY
   GstRegistryRead *gst_reg;
   gchar *gst_registry;
@@ -107,12 +106,19 @@ _gst_plugin_initialize (void)
   if (_gst_init_registry_write)
   {
     /* delete it before writing */
+    GST_INFO (GST_CAT_PLUGIN_LOADING, " Removing registry %s if it exists", gst_registry);
     unlink (gst_registry);
   }
-  if (stat (gst_registry, &stat_buf) == 0)
+  if (g_file_test (gst_registry, G_FILE_TEST_EXISTS))
+  {
     doc = xmlParseFile (gst_registry);
+    GST_INFO (GST_CAT_PLUGIN_LOADING, " Reading registry from %s", gst_registry);
+  }
   else
+  {
+    GST_INFO (GST_CAT_PLUGIN_LOADING, " Not reading registry", gst_registry);
     doc = NULL;
+  }
 
   if (!doc || 
       !doc->xmlRootNode ||

@@ -124,6 +124,11 @@ gst_registry_read_get ()
   {
     gchar *homedir = (gchar *) g_get_home_dir ();
     gst_reg->local_reg = g_strjoin ("/", homedir, LOCAL_REGISTRY_FILE, NULL);
+    if (g_file_test (gst_reg->local_reg, G_FILE_TEST_EXISTS) == FALSE)
+    {
+      /* it does not exist, so don't read from it */
+      g_free (gst_reg->local_reg);
+    }
     gst_reg->global_reg = g_strdup (GLOBAL_REGISTRY_FILE);
   }
   return gst_reg;
