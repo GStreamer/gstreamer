@@ -80,15 +80,15 @@ int main(int argc,char *argv[]) {
 
         if (!strcmp(propnode->name, "name")) {
           element->name = xmlNodeGetContent(propnode);
-//fprintf(stderr,element->name);
+/* fprintf(stderr,element->name); */
         } else if (!strcmp(propnode->name, "srcpad")) {
           element->srcpads = g_slist_prepend(element->srcpads, xmlNodeGetContent(propnode));
-//fprintf(stderr,".");
+/* fprintf(stderr,"."); */
         } else if (!strcmp(propnode->name, "sinkpad")) {
           element->sinkpads = g_slist_prepend(element->sinkpads, xmlNodeGetContent(propnode));
         } else if (!strcmp(propnode->name, "srcpadtemplate")) {
           element->srcpadtemplates = g_slist_prepend(element->srcpadtemplates, xmlNodeGetContent(propnode));
-//fprintf(stderr,".");
+/* fprintf(stderr,"."); */
         } else if (!strcmp(propnode->name, "sinkpad")) {
           element->sinkpadtemplates = g_slist_prepend(element->sinkpadtemplates, xmlNodeGetContent(propnode));
         } else if (!strcmp(propnode->name, "argument")) {
@@ -96,7 +96,7 @@ int main(int argc,char *argv[]) {
           argument->name = xmlNodeGetContent(propnode);
           argument->type = ARG_INT;
 
-          // walk through the values data
+          /* walk through the values data */
           argnode = propnode->xmlChildrenNode;
           while (argnode) {
             if (!strcmp(argnode->name, "filename")) {
@@ -127,9 +127,9 @@ int main(int argc,char *argv[]) {
 
   /* The bulk of the work is in deciding exactly which words are an option. */
 
-  // if we're right at the beginning, with -launch in the first word
+  /* if we're right at the beginning, with -launch in the first word */
   if (strstr(prev_word,"-launch")) {
-    // print out only elements with no sink pad or padtemplate
+    /* print out only elements with no sink pad or padtemplate */
     elements = element_list;
     while (elements) {
       element = (comp_element *)(elements->data);
@@ -139,9 +139,9 @@ int main(int argc,char *argv[]) {
     }
   }
 
-  // if the previous word is a connection
+  /* if the previous word is a connection */
   if (strchr(prev_word, '!')) {
-    // print out oly elements with a sink pad or template
+    /* print out oly elements with a sink pad or template */
     elements = element_list;
     while (elements) {
       element = (comp_element *)(elements->data);
@@ -151,18 +151,18 @@ int main(int argc,char *argv[]) {
     }
   }
 
-  // if the partial word is an argument, and it's an enum
+  /* if the partial word is an argument, and it's an enum */
   if (strchr(prev_word,'=')) {
     fprintf(stderr,"it's an arg, but dunno what element yet\n");
   }
 
-  // if the previous word is an element, we need to list both pads and arguments
+  /* if the previous word is an element, we need to list both pads and arguments*/
   if ((elements = g_list_find_custom(element_list, prev_word, (GCompareFunc)match_element))) {
     element = elements->data;
-    // zero the numpads list so we can count them
+    /* zero the numpads list so we can count them */
     num_pads = 0;
 
-    // pads
+    /* pads */
     pads = element->srcpads;
     while (pads) {
       num_pads++;
@@ -170,7 +170,7 @@ int main(int argc,char *argv[]) {
       pads = g_slist_next (pads);
     }
 
-    // padtemplates
+    /* padtemplates */
     pads = element->srcpadtemplates;
     while (pads) {
       num_pads++;
@@ -180,12 +180,12 @@ int main(int argc,char *argv[]) {
       pads = g_slist_next (pads);
     }
 
-    // if there is only one pad, add '!' to the list of completions
+    /* if there is only one pad, add '!' to the list of completions */
     if (num_pads == 1) {
       words = g_slist_prepend (words, "!");
     }
 
-    // arguments
+    /* arguments */
     args = element->arguments;
     while (args) {
       argument = (comp_argument *)(args->data);

@@ -54,7 +54,7 @@ load_history(GtkWidget *pipe_combo)
 		fstat(history_fd, &statbuf);
 		map = mmap(0, statbuf.st_size, PROT_READ, MAP_SHARED, history_fd, 0);
 
-		// scan it once to find out how many entries there are
+		/* scan it once to find out how many entries there are */
 		current = map;
 		while (current){
 			if ((next = strstr(current, "\n"))){
@@ -75,7 +75,7 @@ load_history(GtkWidget *pipe_combo)
 					g_free(entry);
 				}
 				else{
-					// show entries_limit of the newest entries
+					/* show entries_limit of the newest entries */
 					if (num_entries-- < entries_limit){
 						entry = g_strndup(current, next - current);
 						last_entry = entry;
@@ -414,7 +414,7 @@ build_props_box(GstElement *element)
 					prop_object = GTK_OBJECT(gtk_menu_new());
 					gtk_option_menu_set_menu(GTK_OPTION_MENU(prop_attach_widget), GTK_WIDGET(prop_object));
 					signal_name = "selection-done";
-					//FIXME when the shim is dead
+					/* FIXME when the shim is dead */
 					values = gtk_type_enum_get_values (property_specs[i]->value_type);
 
 					while (values[j].value_name) {
@@ -670,7 +670,7 @@ main (int argc, char *argv[])
 	gtk_tree_item_expand(GTK_TREE_ITEM(tree_root_item));
 
 	prop_box = gtk_vbox_new(FALSE, 0);
-	//dparam_box = gtk_vbox_new(FALSE, 0);
+	/* dparam_box = gtk_vbox_new(FALSE, 0); */
 	
 	notebook = gtk_notebook_new();
 

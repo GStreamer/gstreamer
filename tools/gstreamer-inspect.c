@@ -1,7 +1,7 @@
 #include <gst/gst.h>
 #include <string.h>
 
-// this must be built within the gstreamer dir, else this will fail
+/* this must be built within the gstreamer dir, else this will fail */
 #include <gst/gstpropsprivate.h>
 
 static void 
@@ -323,7 +323,7 @@ print_element_info (GstElementFactory *factory)
             printf("\n    (%d): \t%s", values[j].value, values[j].value_nick);
 	    j++; 
 	  }
-	  //g_type_class_unref (ec);
+	  /* g_type_class_unref (ec); */
 	}
         else
           printf("unknown %d", param->value_type);
@@ -381,7 +381,7 @@ print_element_info (GstElementFactory *factory)
   }
   
 
-  // for compound elements
+  /* for compound elements */
   if (GST_IS_BIN(element)) {
     printf("\nChildren:\n");
     children = gst_bin_get_list(GST_BIN(element));
@@ -522,13 +522,13 @@ main (int argc, char *argv[])
 
   gst_init(&argc,&argv);
 
-  // if no arguments, print out list of elements
+  /* if no arguments, print out list of elements */
   if (argc == 1) {
     print_element_list();
 
-  // else we try to get a factory
+  /* else we try to get a factory */
   } else {
-    // first check for help
+    /* first check for help */
     if (strstr(argv[1],"-help")) {
       printf("Usage: %s\t\t\tList all registered elements\n",argv[0]);
       printf("       %s element-name\tShow element details\n",argv[0]);
@@ -536,23 +536,24 @@ main (int argc, char *argv[])
       return 0;
     }
 
-    // only search for a factory if there's not a '.so'
+    /* only search for a factory if there's not a '.so' */
     if (! strstr(argv[1],".so")) {
       factory = gst_elementfactory_find (argv[1]);
 
-      // if there's a factory, print out the info
+      /* if there's a factory, print out the info */
       if (factory)
         return print_element_info(factory);
     } else {
-      // strip the .so
+      /* strip the .so */
       so = strstr(argv[1],".so");
       so[0] = '\0';
     }
 
-    // otherwise assume it's a plugin
+    /* otherwise assume it's a plugin */
     plugin = gst_plugin_find (argv[1]);
 
-    // if there is such a plugin, print out info
+    /* if there is such a plugin, print out info */
+
     if (plugin) {
       print_plugin_info(plugin);
 

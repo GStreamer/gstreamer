@@ -129,11 +129,11 @@ main(int argc, char *argv[])
 
   pipeline = gst_pipeline_new ("launch");
 
-  // make a null-terminated version of argv
+  /* make a null-terminated version of argv */
   argvn = g_new0 (char *,argc);
   memcpy (argvn, argv+1, sizeof (char*) * (argc-1));
 
-  // escape spaces
+  /* escape spaces */
   for (i=0; i<argc-1; i++) {
     gchar **split;
 
@@ -142,12 +142,12 @@ main(int argc, char *argv[])
     argvn[i] = g_strjoinv ("\\ ", split);
     g_strfreev (split);
   }
-  // join the argvs together
+  /* join the argvs together */
   cmdline = g_strjoinv (" ", argvn);
-  // free the null-terminated argv
+  /* free the null-terminated argv */
   g_free (argvn);
 
-  // fail if there are no pipes in it (needs pipes for a pipeline
+  /* fail if there are no pipes in it (needs pipes for a pipeline */
   if (!strchr(cmdline,'!')) {
     fprintf(stderr,"ERROR: no pipeline description found on commandline\n");
     exit(1);
