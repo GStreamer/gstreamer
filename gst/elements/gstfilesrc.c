@@ -322,6 +322,7 @@ gst_filesrc_set_property (GObject * object, guint prop_id, const GValue * value,
       g_object_notify (G_OBJECT (src), "touch");
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

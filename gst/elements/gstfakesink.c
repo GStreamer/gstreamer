@@ -255,6 +255,7 @@ gst_fakesink_set_property (GObject * object, guint prop_id,
       sink->signal_handoffs = g_value_get_boolean (value);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -346,10 +347,10 @@ gst_fakesink_chain (GstPad * pad, GstData * _data)
 
     fakesink->last_message =
         g_strdup_printf ("chain   ******* (%s:%s)< (%d bytes, timestamp: %"
-        G_GINT64_FORMAT ", duration: %" G_GINT64_FORMAT ", offset: %"
+        GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
         G_GINT64_FORMAT ", flags: %d) %p", GST_DEBUG_PAD_NAME (pad),
-        GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf),
-        GST_BUFFER_DURATION (buf), GST_BUFFER_OFFSET (buf),
+        GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
         GST_BUFFER_FLAGS (buf), buf);
 
     g_object_notify (G_OBJECT (fakesink), "last_message");

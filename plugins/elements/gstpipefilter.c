@@ -237,6 +237,7 @@ gst_pipefilter_set_property (GObject * object, guint prop_id,
       pipefilter->command = g_strsplit (g_value_get_string (value), " ", 0);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

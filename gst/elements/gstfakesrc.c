@@ -535,6 +535,7 @@ gst_fakesrc_set_property (GObject * object, guint prop_id, const GValue * value,
       src->dump = g_value_get_boolean (value);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

@@ -9,6 +9,20 @@
 
 2004-04-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/elements/gstfakesink.c: (gst_fakesink_state_error_get_type),
+	(gst_fakesink_set_property), (gst_fakesink_chain):
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_set_property):
+	* gst/elements/gstfdsrc.c: (gst_fdsrc_set_property):
+	* gst/elements/gstfilesrc.c: (gst_filesrc_set_property):
+	* gst/elements/gstidentity.c: (gst_identity_chain),
+	(gst_identity_set_property):
+	* gst/elements/gstmultifilesrc.c: (gst_multifilesrc_set_property):
+	* gst/elements/gstpipefilter.c: (gst_pipefilter_set_property):
+          add warnings to _set_property for unknown arguments
+          use GST_TIME_FORMAT/GST_TIME_ARGS for timestamp printing
+
+2004-04-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* Makefile.am:
 	* docs/manuals.mak:
           add .po file download snippet

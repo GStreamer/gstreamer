@@ -214,8 +214,8 @@ gst_identity_chain (GstPad * pad, GstData * _data)
       g_free (identity->last_message);
       identity->last_message =
           g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, %"
-          G_GINT64_FORMAT ")", GST_DEBUG_PAD_NAME (identity->sinkpad),
-          GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+          GST_TIME_FORMAT ")", GST_DEBUG_PAD_NAME (identity->sinkpad),
+          GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
       g_object_notify (G_OBJECT (identity), "last-message");
     }
 
@@ -299,6 +299,7 @@ gst_identity_set_property (GObject * object, guint prop_id,
       identity->drop_probability = g_value_get_float (value);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

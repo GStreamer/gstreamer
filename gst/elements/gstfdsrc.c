@@ -148,6 +148,7 @@ gst_fdsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       src->timeout = g_value_get_uint64 (value);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
