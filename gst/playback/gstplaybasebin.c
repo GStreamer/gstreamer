@@ -555,6 +555,12 @@ gst_play_base_bin_change_state (GstElement * element)
             CODEC_NOT_FOUND,
             ("cannot open file \"%s\"", play_base_bin->uri), (NULL));
         ret = GST_STATE_FAILURE;
+      } else if (!play_base_bin->streaminfo) {
+        GST_ELEMENT_ERROR (GST_ELEMENT (play_base_bin), STREAM,
+            CODEC_NOT_FOUND,
+            ("Failed to find any supported stream in file \"%s\"",
+                play_base_bin->uri), (NULL));
+        ret = GST_STATE_FAILURE;
       } else {
         ret = gst_element_set_state (play_base_bin->thread, GST_STATE_PAUSED);
       }
