@@ -1,5 +1,7 @@
 2004-03-31  Johan Dahlin  <johan@gnome.org>
 
+	* gst/Makefile.am: Only install gst-types.defs
+
 	* Makefile.am (EXTRA_DIST): Add codegen/* Can't believe distcheck passed
 
 == gst-python 0.7.90 ==

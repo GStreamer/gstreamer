@@ -22,7 +22,7 @@ else
 play_lib =
 endif
 
-defs_DATA = 
+defs_DATA = gst-types.defs
 defsdir = $(pkgdatadir)/2.0/defs
 
 INCLUDES = $(PYTHON_INCLUDES) $(PYGTK_CFLAGS)
@@ -39,7 +39,6 @@ GST_OVERRIDES = gst.override gstpad-handlers.override
 GST_DEFS = gst.defs gst-types.defs
 CLEANFILES = gst.c
 EXTRA_DIST += $(GST_OVERRIDES)
-defs_DATA += $(GST_DEFS)
 gst.c: $(GST_DEFS) $(GST_OVERRIDES)
 
 # gst-play bindings
@@ -52,7 +51,6 @@ PLAY_OVERRIDES = play.override
 PLAY_DEFS = play.defs
 CLEANFILES += play.c
 EXTRA_DIST += $(PLAY_OVERRIDES)
-defs_DATA += $(PLAY_DEFS)
 play.c: $(PLAY_DEFS) $(PLAY_OVERRIDES)
 
 # GStreamer interfaces bindings
@@ -65,7 +63,6 @@ INTERFACES_OVERRIDES = interfaces.override xoverlay.override
 INTERFACES_DEFS = interfaces.defs xoverlay.defs xwindowlistener.defs
 CLEANFILES += interfaces.c
 EXTRA_DIST += $(INTERFACES_OVERRIDES)
-defs_DATA += $(INTERFACES_DEFS)
 interfaces.c: $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES)
 
 .defs.c:
