@@ -74,7 +74,7 @@ struct _GstV4lSrc {
   /* caching values */
   gint width;
   gint height;
-  gint palette;
+  guint16 palette;
 };
 
 struct _GstV4lSrcClass {

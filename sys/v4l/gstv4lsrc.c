@@ -42,7 +42,10 @@ enum {
   ARG_0,
   ARG_WIDTH,
   ARG_HEIGHT,
-  ARG_PALETTE
+  ARG_PALETTE,
+  ARG_PALETTE_NAME,
+  ARG_NUMBUFS,
+  ARG_BUFSIZE
 };
 
 
@@ -126,7 +129,16 @@ gst_v4lsrc_class_init (GstV4lSrcClass *klass)
     G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PALETTE,
     g_param_spec_int("palette","palette","palette",
-    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+    0,G_MAXUSHORT,0,G_PARAM_READWRITE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PALETTE_NAME,
+    g_param_spec_string("palette_name","palette_name","palette_name",
+    NULL, G_PARAM_READABLE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUMBUFS,
+    g_param_spec_int("num_buffers","num_buffers","num_buffers",
+    G_MININT,G_MAXINT,0,G_PARAM_READABLE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFSIZE,
+    g_param_spec_int("buffer_size","buffer_size","buffer_size",
+    G_MININT,G_MAXINT,0,G_PARAM_READABLE));
 
   gobject_class->set_property = gst_v4lsrc_set_property;
   gobject_class->get_property = gst_v4lsrc_get_property;
@@ -432,6 +444,18 @@ gst_v4lsrc_get_property (GObject    *object,
 
     case ARG_PALETTE:
       g_value_set_int(value, v4lsrc->mmap.format);
+      break;
+
+    case ARG_PALETTE_NAME:
+      g_value_set_string(value, g_strdup(palette_name[v4lsrc->mmap.format]));
+      break;
+
+    case ARG_NUMBUFS:
+      g_value_set_int(value, v4lsrc->mbuf.frames);
+      break;
+
+    case ARG_BUFSIZE:
+      g_value_set_int(value, v4lsrc->mbuf.size/(v4lsrc->mbuf.frames*1024));
       break;
 
     default:

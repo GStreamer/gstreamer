@@ -39,6 +39,28 @@
 #endif
 
 
+/* palette names */
+char *palette_name[] = {
+  "",                          /* 0 */
+  "grayscale",                 /* VIDEO_PALETTE_GREY */
+  "Hi-420",                    /* VIDEO_PALETTE_HI420 */
+  "16-bit RGB (RGB-565)",      /* VIDEO_PALETTE_RB565 */
+  "24-bit RGB",                /* VIDEO_PALETTE_RGB24 */
+  "32-bit RGB",                /* VIDEO_PALETTE_RGB32 */
+  "15-bit RGB (RGB-555)",      /* VIDEO_PALETTE_RGB555 */
+  "YUV-4:2:2 (packed)",        /* VIDEO_PALETTE_YUV422 */
+  "YUYV",                      /* VIDEO_PALETTE_YUYV */
+  "UYVY",                      /* VIDEO_PALETTE_UYVY */
+  "YUV-4:2:0 (packed)",        /* VIDEO_PALETTE_YUV420 */
+  "YUV-4:1:1 (packed)",        /* VIDEO_PALETTE_YUV411 */
+  "Raw",                       /* VIDEO_PALETTE_RAW */
+  "YUV-4:2:2 (planar)",        /* VIDEO_PALETTE_YUV422P */
+  "YUV-4:1:1 (planar)",        /* VIDEO_PALETTE_YUV411P */
+  "YUV-4:2:0 (planar)",        /* VIDEO_PALETTE_YUV420P */
+  "YUV-4:1:0 (planar)"         /* VIDEO_PALETTE_YUV410P */
+};
+
+
 /******************************************************
  * gst_v4lsrc_queue_frame():
  *   queue a frame for capturing
@@ -265,8 +287,9 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
   }
 
   gst_element_info(GST_ELEMENT(v4lsrc),
-    "Got %d buffers of size %d KB",
-    v4lsrc->mbuf.frames, v4lsrc->mbuf.size/(v4lsrc->mbuf.frames*1024));
+    "Got %d buffers (\'%s\') of size %d KB",
+    v4lsrc->mbuf.frames, palette_name[v4lsrc->mmap.format],
+    v4lsrc->mbuf.size/(v4lsrc->mbuf.frames*1024));
 
   /* keep trakc of queued buffers */
   v4lsrc->frame_queued = (gint *) malloc(sizeof(int) * v4lsrc->mbuf.frames);

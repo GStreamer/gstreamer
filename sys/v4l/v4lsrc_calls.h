@@ -28,6 +28,9 @@ extern "C" {
 #endif /* __cplusplus */
 
 
+extern char *palette_name[];
+
+
 /* frame grabbing/capture (palette = VIDEO_PALETTE_* - see videodev.h) */
 gboolean gst_v4lsrc_set_capture    (GstV4lSrc *v4lsrc, gint width, gint height, gint palette);
 gboolean gst_v4lsrc_capture_init   (GstV4lSrc *v4lsrc);
