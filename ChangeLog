@@ -1,3 +1,21 @@
+2004-01-21  David Schleef  <ds@schleef.org>
+
+	* ext/swfdec/gstswfdec.c: (gst_swfdec_video_getcaps),
+	(gst_swfdec_video_link), (copy_image), (gst_swfdec_loop),
+	(gst_swfdec_init), (gst_swfdec_change_state):
+	* ext/swfdec/gstswfdec.h:
+	Fix negotiation.
+	* gst/adder/gstadder.c: (gst_adder_link), (gst_adder_init),
+	(gst_adder_request_new_pad): Fix negotiation.
+	* gst/goom/gstgoom.c: (gst_goom_init), (gst_goom_src_fixate):
+	Add a fixate function.
+	* gst/intfloat/gstfloat2int.c:
+	* gst/intfloat/gstfloat2int.h:
+	* gst/intfloat/gstint2float.c:
+	* gst/intfloat/gstint2float.h:
+	Completely rewrite the negotiation.  Doesn't quite work yet,
+	due to some buffer-frames problem.
+
 2004-01-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/gnomevfs/gstgnomevfssrc.c:

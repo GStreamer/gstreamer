@@ -49,7 +49,7 @@ GST_STATIC_PAD_TEMPLATE (
   "video_00",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx)
 );
 
 static GstStaticPadTemplate audio_template_factory =
@@ -158,6 +158,78 @@ gst_swfdec_class_init(GstSwfdecClass *klass)
   gstelement_class->change_state = gst_swfdec_change_state;
 }
 
+static GstCaps *
+gst_swfdec_video_getcaps (GstPad *pad)
+{
+  GstSwfdec *swfdec;
+  GstCaps *caps;
+
+  swfdec = GST_SWFDEC (gst_pad_get_parent (pad));
+
+  caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  if (swfdec->have_format) {
+    gst_caps_set_simple (caps,
+        "framerate", G_TYPE_DOUBLE, swfdec->frame_rate,
+        NULL);
+  }
+
+  return caps;
+}
+
+static GstPadLinkReturn
+gst_swfdec_video_link (GstPad *pad, const GstCaps *caps)
+{
+  GstSwfdec *swfdec;
+  GstStructure *structure;
+  int width, height;
+  int ret;
+
+  swfdec = GST_SWFDEC (gst_pad_get_parent (pad));
+
+  if (!swfdec->have_format) {
+    return GST_PAD_LINK_DELAYED;
+  }
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  gst_structure_get_int (structure, "width", &width);
+  gst_structure_get_int (structure, "height", &height);
+
+  if (swfdec->height == height && swfdec->width == width) {
+    return GST_PAD_LINK_OK;
+  }
+
+  ret = swfdec_decoder_set_image_size (swfdec->state, width, height);
+  if (ret == SWF_OK) {
+    swfdec->width = width;
+    swfdec->height = height;
+
+    return GST_PAD_LINK_OK;
+  }
+
+  return GST_PAD_LINK_REFUSED;
+}
+
+static void
+copy_image (void *dest, void *src, int width, int height)
+{
+  guint8 *d = dest;
+  guint8 *s = src;
+  int x,y;
+
+  for(y=0;y<height;y++){
+    for(x=0;x<width;x++){
+      d[0] = s[2];
+      d[1] = s[1];
+      d[2] = s[0];
+      d[3] = 0;
+      d+=4;
+      s+=3;
+    }
+  }
+  
+}
+
 static void
 gst_swfdec_loop(GstElement *element)
 {
@@ -197,6 +269,7 @@ gst_swfdec_loop(GstElement *element)
 
 	if(ret==SWF_CHANGE){
 	  	GstCaps *caps;
+                GstPadLinkReturn link_ret;
 
 		swfdec_decoder_get_image_size(swfdec->state,
 			&swfdec->width, &swfdec->height);
@@ -205,12 +278,20 @@ gst_swfdec_loop(GstElement *element)
 
 		caps = gst_caps_copy (gst_pad_get_pad_template_caps (
 		      swfdec->videopad));
+                swfdec_decoder_get_rate (swfdec->state, &swfdec->frame_rate);
 		gst_caps_set_simple (caps,
-		      "framerate", G_TYPE_DOUBLE, (double)swfdec->frame_rate,
+		      "framerate", G_TYPE_DOUBLE, swfdec->frame_rate,
 		      "height",G_TYPE_INT,swfdec->height,
 		      "width",G_TYPE_INT,swfdec->width,
 		      NULL);
-		gst_pad_set_explicit_caps(swfdec->videopad, caps);
+		link_ret = gst_pad_try_set_caps (swfdec->videopad, caps);
+                if (GST_PAD_LINK_SUCCESSFUL (link_ret)){
+                  /* good */
+                } else {
+                  gst_element_error (swfdec, CORE, NEGOTIATION, NULL, NULL);
+                  return;
+                }
+                swfdec->have_format = TRUE;
 
 		return;
 	}
@@ -221,11 +302,17 @@ gst_swfdec_loop(GstElement *element)
 		int len;
 
 		/* video stuff */
-		newbuf = gst_buffer_new();
-		GST_BUFFER_SIZE(newbuf) = swfdec->width * swfdec->height * 3;
+		//newbuf = gst_buffer_new();
+		//GST_BUFFER_SIZE(newbuf) = swfdec->width * swfdec->height * 3;
+
+                newbuf = gst_pad_alloc_buffer (swfdec->videopad, GST_BUFFER_OFFSET_NONE,
+                    swfdec->width * 4 * swfdec->height);
 
 		swfdec_decoder_get_image(swfdec->state, &data);
-		GST_BUFFER_DATA(newbuf) = data;
+                copy_image (GST_BUFFER_DATA (newbuf), data, swfdec->width,
+                    swfdec->height);
+                free (data);
+		//GST_BUFFER_DATA(newbuf) = data;
 
 		swfdec->timestamp += swfdec->interval;
 		GST_BUFFER_TIMESTAMP(newbuf) = swfdec->timestamp;
@@ -267,7 +354,8 @@ gst_swfdec_init (GstSwfdec *swfdec)
 		"video_00");
   gst_pad_set_query_function (swfdec->videopad,
 		GST_DEBUG_FUNCPTR (gst_swfdec_src_query));
-  gst_pad_use_explicit_caps (swfdec->videopad);
+  gst_pad_set_getcaps_function (swfdec->videopad, gst_swfdec_video_getcaps);
+  gst_pad_set_link_function (swfdec->videopad, gst_swfdec_video_link);
   gst_element_add_pad(GST_ELEMENT(swfdec), swfdec->videopad);
 
   swfdec->audiopad = gst_pad_new_from_template(
@@ -530,6 +618,7 @@ gst_swfdec_change_state (GstElement *element)
       swfdec->closed = FALSE;
 
       /* reset the initial video state */
+      swfdec->have_format = FALSE;
       swfdec->format = -1;
       swfdec->width = -1;
       swfdec->height = -1;

@@ -57,11 +57,12 @@ struct _GstSwfdec {
 
   /* the timestamp of the next frame */
   gboolean first;
+  gboolean have_format;
 
   double rate;
   gint64 timestamp;
   gint64 interval;
-  gfloat frame_rate;
+  double frame_rate;
 
   /* video state */
   gint format;
