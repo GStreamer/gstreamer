@@ -341,6 +341,7 @@ GST_PLUGINS_ALL="\
 	avi \
 	cdxaparse \
 	chart \
+	colorspace \
 	cutter \
 	debug \
 	deinterlace \
@@ -1525,6 +1526,7 @@ gst/avi/Makefile
 gst/asfdemux/Makefile
 gst/cdxaparse/Makefile
 gst/chart/Makefile
+gst/colorspace/Makefile
 gst/cutter/Makefile
 gst/debug/Makefile
 gst/deinterlace/Makefile
