@@ -59,6 +59,8 @@ struct _GstDParamSmoothClass {
 	/* signal callbacks */
 };
 
+GType gst_dpsmooth_get_type (void);
+
 GstDParam* gst_dpsmooth_new (GType type);
 
 G_END_DECLS
