@@ -49,6 +49,11 @@ API:
 
  - don't install gstmarshal.h
 
+ - make GstPad and friends a real class heirarchy
+
+ - make GstBuffer/GstData a real class heirarchy, although maybe not
+   as a subclass of GObject.
+
 caps:
 
   (Company:)
