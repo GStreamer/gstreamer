@@ -152,10 +152,7 @@ gst_element_class_init (GstElementClass *klass)
 static void
 gst_element_base_class_init (gpointer g_class)
 {
-  GstElementClass *klass = GST_ELEMENT_CLASS (klass);
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass*) klass;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
 
   gobject_class->set_property =		GST_DEBUG_FUNCPTR(gst_element_real_set_property);
   gobject_class->get_property =		GST_DEBUG_FUNCPTR(gst_element_real_get_property);
