@@ -869,6 +869,7 @@ gst_dvdec_change_state (GstElement *element)
     case GST_STATE_READY_TO_NULL:
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 	      
@@ -903,6 +904,7 @@ gst_dvdec_set_property (GObject *object, guint prop_id, const GValue *value, GPa
       dvdec->quality = g_value_get_flags (value);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
