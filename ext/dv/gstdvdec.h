@@ -63,6 +63,8 @@ struct _GstDVDec {
   gint     channels;
   
   gint 		 length;
+  gint		 framecount;
+  gint		 drop_factor;
   guint64	 next_ts;
   guint64	 audio_offset;
   guint64	 end_position;

@@ -55,6 +55,9 @@ enum
   LAST_SIGNAL
 };
 
+#define DV_DEFAULT_QUALITY DV_QUALITY_BEST
+#define DV_DEFAULT_DECODE_NTH 1
+
 /* Arguments are identified the same way, but cannot be zero, so you
  * must leave the ARG_0 entry in as a placeholder.
  */
@@ -63,7 +66,8 @@ enum
   ARG_0,
   ARG_CLAMP_LUMA,
   ARG_CLAMP_CHROMA,
-  ARG_QUALITY
+  ARG_QUALITY,
+  ARG_DECODE_NTH
       /* FILL ME */
 };
 
@@ -75,8 +79,6 @@ const gint qualities[] = {
   DV_QUALITY_AC_1 | DV_QUALITY_COLOR,
   DV_QUALITY_AC_2 | DV_QUALITY_COLOR
 };
-
-#define DV_QUALITY_DEFAULT 5
 
 /* The PadFactory structures describe what pads the element has or
  * can have.  They can be quite complex, but for this dvdec plugin
@@ -96,10 +98,10 @@ static GstStaticPadTemplate video_src_temp = GST_STATIC_PAD_TEMPLATE ("video",
         "width = (int) 720, "
         "height = (int) { "
         G_STRINGIFY (NTSC_HEIGHT) ", " G_STRINGIFY (PAL_HEIGHT)
-        " }, "
-        "framerate = (double) { "
-        G_STRINGIFY (PAL_FRAMERATE) ", " G_STRINGIFY (NTSC_FRAMERATE)
-        " }; "
+        " }, " "framerate = (double) [ 1.0, 60.0 ];"
+        //"framerate = (double) { "
+        //G_STRINGIFY (PAL_FRAMERATE) ", " G_STRINGIFY (NTSC_FRAMERATE)
+        //" }; "
         "video/x-raw-rgb, "
         "bpp = (int) 32, "
         "depth = (int) 32, "
@@ -110,10 +112,10 @@ static GstStaticPadTemplate video_src_temp = GST_STATIC_PAD_TEMPLATE ("video",
         "width = (int) 720, "
         "height = (int) { "
         G_STRINGIFY (NTSC_HEIGHT) ", " G_STRINGIFY (PAL_HEIGHT)
-        " }, "
-        "framerate = (double) { "
-        G_STRINGIFY (PAL_FRAMERATE) ", " G_STRINGIFY (NTSC_FRAMERATE)
-        " }; "
+        " }, " "framerate = (double) [ 1.0, 60.0 ];"
+        //"framerate = (double) { "
+        //G_STRINGIFY (PAL_FRAMERATE) ", " G_STRINGIFY (NTSC_FRAMERATE)
+        //" }; "
         "video/x-raw-rgb, "
         "bpp = (int) 24, "
         "depth = (int) 24, "
@@ -124,10 +126,11 @@ static GstStaticPadTemplate video_src_temp = GST_STATIC_PAD_TEMPLATE ("video",
         "width = (int) 720, "
         "height = (int) { "
         G_STRINGIFY (NTSC_HEIGHT) ", " G_STRINGIFY (PAL_HEIGHT)
-        " }, "
-        "framerate = (double) { "
-        G_STRINGIFY (PAL_FRAMERATE) ", " G_STRINGIFY (NTSC_FRAMERATE)
-        " }")
+        " }, " "framerate = (double) [ 1.0, 60.0 ]"
+        //"framerate = (double) { "
+        //G_STRINGIFY (PAL_FRAMERATE) ", " G_STRINGIFY (NTSC_FRAMERATE)
+        //" }"
+    )
     );
 
 static GstStaticPadTemplate audio_src_temp = GST_STATIC_PAD_TEMPLATE ("audio",
@@ -284,7 +287,10 @@ gst_dvdec_class_init (GstDVDecClass * klass)
           FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
       g_param_spec_enum ("quality", "Quality", "Decoding quality",
-          GST_TYPE_DVDEC_QUALITY, DV_QUALITY_DEFAULT, G_PARAM_READWRITE));
+          GST_TYPE_DVDEC_QUALITY, DV_DEFAULT_QUALITY, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DECODE_NTH,
+      g_param_spec_int ("drop-factor", "Drop Factor", "Only decode Nth frame",
+          1, G_MAXINT, DV_DEFAULT_DECODE_NTH, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_dvdec_set_property;
   gobject_class->get_property = gst_dvdec_get_property;
@@ -366,10 +372,11 @@ gst_dvdec_init (GstDVDec * dvdec)
   dvdec->height = 0;
   dvdec->frequency = 0;
   dvdec->channels = 0;
+  dvdec->drop_factor = 1;
 
   dvdec->clamp_luma = FALSE;
   dvdec->clamp_chroma = FALSE;
-  dvdec->quality = DV_QUALITY_BEST;
+  dvdec->quality = DV_DEFAULT_QUALITY;
   dvdec->loop = FALSE;
 
   for (i = 0; i < 4; i++) {
@@ -740,7 +747,8 @@ gst_dvdec_video_getcaps (GstPad * pad)
 
       gst_structure_set (structure,
           "height", G_TYPE_INT, dvdec->height,
-          "framerate", G_TYPE_DOUBLE, dvdec->framerate, NULL);
+          "framerate", G_TYPE_DOUBLE, dvdec->framerate / dvdec->drop_factor,
+          NULL);
     }
   }
 
@@ -769,7 +777,8 @@ gst_dvdec_video_link (GstPad * pad, const GstCaps * caps)
       !gst_structure_get_double (structure, "framerate", &framerate))
     return GST_PAD_LINK_REFUSED;
 
-  if ((height != dvdec->height) || (framerate != dvdec->framerate))
+  if ((height != dvdec->height)
+      || (framerate != dvdec->framerate / dvdec->drop_factor))
     return GST_PAD_LINK_REFUSED;
 
   if (strcmp (gst_structure_get_name (structure), "video/x-raw-rgb") == 0) {
@@ -871,7 +880,7 @@ gst_dvdec_loop (GstElement * element)
   }
 
   ts = dvdec->next_ts;
-  dvdec->next_ts += GST_SECOND / dvdec->framerate;
+  dvdec->next_ts += GST_SECOND / fps;
   duration = dvdec->next_ts - ts;
 
   dv_parse_packs (dvdec->decoder, GST_BUFFER_DATA (buf));
@@ -940,6 +949,13 @@ gst_dvdec_loop (GstElement * element)
     guint8 *outframe_ptrs[3];
     gint outframe_pitches[3];
 
+    dvdec->framecount++;
+    if (dvdec->framecount < dvdec->drop_factor) {
+      /* don't decode */
+      goto end;
+    }
+    dvdec->framecount = 0;
+
     if ((dvdec->framerate != fps) || (dvdec->height != height)) {
       dvdec->height = height;
       dvdec->framerate = fps;
@@ -970,7 +986,7 @@ gst_dvdec_loop (GstElement * element)
         dvdec->space, outframe_ptrs, outframe_pitches);
 
     GST_BUFFER_TIMESTAMP (outbuf) = ts;
-    GST_BUFFER_DURATION (outbuf) = duration;
+    GST_BUFFER_DURATION (outbuf) = duration * dvdec->drop_factor;
 
     gst_dvdec_push (dvdec, outbuf, dvdec->videosrcpad, ts);
   } else {
@@ -978,6 +994,7 @@ gst_dvdec_loop (GstElement * element)
     dvdec->framerate = fps;
   }
 
+end:
   if ((dvdec->end_position != -1) &&
       (dvdec->next_ts >= dvdec->end_position) && !dvdec->loop) {
     gst_element_set_eos (GST_ELEMENT (dvdec));
@@ -1003,6 +1020,7 @@ gst_dvdec_change_state (GstElement * element)
           dv_decoder_new (0, dvdec->clamp_luma, dvdec->clamp_chroma);
       dvdec->decoder->quality = qualities[dvdec->quality];
       dvdec->audio_offset = 0;
+      dvdec->framecount = 0;
       /* 
        * Enable this function call when libdv2 0.100 or higher is more
        * common
@@ -1057,6 +1075,9 @@ gst_dvdec_set_property (GObject * object, guint prop_id, const GValue * value,
       if ((dvdec->quality < 0) || (dvdec->quality > 5))
         dvdec->quality = 0;
       break;
+    case ARG_DECODE_NTH:
+      dvdec->drop_factor = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1083,6 +1104,9 @@ gst_dvdec_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_QUALITY:
       g_value_set_enum (value, dvdec->quality);
+      break;
+    case ARG_DECODE_NTH:
+      g_value_set_int (value, dvdec->drop_factor);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
