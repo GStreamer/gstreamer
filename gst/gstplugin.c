@@ -218,15 +218,6 @@ gst_plugin_load_plugin (GstPlugin *plugin, GError **error)
                  filename, g_module_error());
     return FALSE;
   }
-
-  /* FIXME: this should not happen */
-  g_set_error (error,
-               GST_PLUGIN_ERROR,
-               GST_PLUGIN_ERROR_MODULE,
-               "Error loading plugin %s, reason: %s\n",
-               filename, 
-	       "fell of the end of the gst_plugin_load_plugin function");
-  return FALSE;
 }
 
 

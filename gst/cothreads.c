@@ -497,10 +497,8 @@ cothread_stackquery (void **stack, glong* stacksize)
 {
   /* wingo says: use posix_memalign to allocate a 2M-aligned, 2M stack */
 
-  int retval = 0;
-
 #ifdef HAVE_POSIX_MEMALIGN
-  retval = posix_memalign (stack, STACK_SIZE, STACK_SIZE);
+  int retval = posix_memalign (stack, STACK_SIZE, STACK_SIZE);
   if (retval != 0)
   {
     g_warning ("Could not posix_memalign stack !\n");

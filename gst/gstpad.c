@@ -1732,6 +1732,12 @@ gst_pad_load_and_connect (xmlNodePtr self,
 
   split = g_strsplit (peer, ".", 2);
 
+  if (split[0] == NULL || split[1] == NULL) {
+    GST_DEBUG (GST_CAT_XML, "Could not parse peer '%s' for pad %s:%s, leaving it unconnected",
+               peer, GST_DEBUG_PAD_NAME (pad));
+    return;
+  }
+  
   g_return_if_fail (split[0] != NULL);
   g_return_if_fail (split[1] != NULL);
 
