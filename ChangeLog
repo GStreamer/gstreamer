@@ -6,7 +6,7 @@
 	* gst/playback/gstplaybasebin.h:
 	  Multiple .sub files is just a stupid idea... Fix some threading
 	  mistakes. Interestingly, external .sub files cause playbin to
-	  hang, I don't know why... Parsing fixes contributed by Felix
+	  hang, I don't know why... Parsing fixes contributed by François
 	  Kooman <fkooman@tuxed.net>.
 
 2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
