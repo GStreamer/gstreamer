@@ -80,6 +80,14 @@ GValue implementations specific to GStreamer
 @x: 
 
 
+<!-- ##### MACRO GST_VALUE_HOLDS_FIXED_LIST ##### -->
+<para>
+
+</para>
+
+@x: 
+
+
 <!-- ##### MACRO GST_VALUE_HOLDS_CAPS ##### -->
 <para>
 
@@ -110,6 +118,13 @@ GValue implementations specific to GStreamer
 
 
 <!-- ##### MACRO GST_TYPE_LIST ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TYPE_FIXED_LIST ##### -->
 <para>
 
 </para>
@@ -236,6 +251,12 @@ GValue implementations specific to GStreamer
 
 
 <!-- ##### VARIABLE gst_type_list ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE gst_type_fixed_list ##### -->
 <para>
 
 </para>
