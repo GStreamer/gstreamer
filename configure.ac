@@ -8,7 +8,7 @@ AM_CONFIG_HEADER(config.h)
 
 GST_VERSION_MAJOR=0
 GST_VERSION_MINOR=3
-GST_VERSION_MICRO=11
+GST_VERSION_MICRO=01
 
 dnl we use the release tag during CVS development
 GST_VERSION_RELEASE=`date +%Y%m%d`
@@ -67,6 +67,50 @@ AC_HEADER_STDC([])
 dnl This is used for the -config script...
 builddir=`pwd`
 AC_SUBST(builddir)
+
+
+dnl ###########################################
+dnl # Super Duper options for plugin building #
+dnl ###########################################
+
+dnl experimental plugins; stuff that hasn't had the dust settle yet
+dnl AM_CONDITIONAL(PLUGINS_EXP, test "$experimental-plugins" = "$xyes")
+AC_ARG_ENABLE(experimental,
+[  --enable-experimental          enable building of experimental plugins],
+[case "${enableval}" in
+  yes) EXPERIMENTAL="yes" ;;
+  no) EXPERIMENTAL="no" ;;
+esac], 
+[EXPERIMENTAL=no]) dnl Default value
+
+if test "x$EXPERIMENTAL" = "$xyes"; then
+  USE_FLACLIB="no"
+else
+  USE_FLACLIB="yes"
+fi
+
+dnl broken plugins; stuff that doesn't seem to build at the moment
+AC_ARG_ENABLE(broken,
+[  --enable-broken          enable building of broken plugins],
+[case "${enableval}" in
+  yes) BROKEN="yes" ;;
+  no) BROKEN="no" ;;
+esac], 
+[BROKEN=no]) dnl Default value
+
+AM_CONDITIONAL(PLUGINS_EXP, test "$broken-plugins" = "$xyes")
+
+if test "x$broken-plugins" = "$xyes"; then
+  USE_ARTS="yes"
+  USE_ARTSC="yes"
+  USE_LIBGSM="yes"
+else
+  USE_ARTS="no"
+  USE_ARTSC="no"
+  USE_LIBGSM="no"
+fi
+
+
 
 dnl ##############################
 dnl # Do automated configuration #
@@ -387,9 +431,10 @@ GST_CHECK_FEATURE(AALIB, [aasink plugin], aasink, [
 ])
 
 dnl *** alsa ***
+dnl FIXME: check if the version should be 0.9.0 or 0.5.0
 translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
 GST_CHECK_FEATURE(ALSA, [alsa plugins], gstalsa, [
-AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
+AM_PATH_ALSA(0.5.0, HAVE_ALSA=yes, HAVE_ALSA=no)
 ])
 
 dnl *** arts ***
@@ -1164,6 +1209,7 @@ dnl until ffmpeg is handled by configure plugins/ffmpeg/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
 dnl someone should fix this test/misc/Makefile
 dnl wtay fix this: testsuite/threads/Makefile
+dnl testsuite/refcounting/Makefile
 AC_OUTPUT(
 Makefile
 include/Makefile
@@ -1295,7 +1341,6 @@ tests/muxing/Makefile
 testsuite/Makefile
 testsuite/bytestream/Makefile
 testsuite/capsnego/Makefile
-testsuite/refcounting/Makefile
 testsuite/plugin/Makefile
 tests/nego/Makefile
 examples/Makefile
