@@ -815,7 +815,7 @@ gst_riff_read_info (GstRiffRead *riff)
     /* let the world know about this wonderful thing */
     for (padlist = gst_element_get_pad_list (element);
 	 padlist != NULL; padlist = padlist->next) {
-      if (GST_PAD_IS_SRC (padlist->data)) {
+      if (GST_PAD_IS_SRC (padlist->data) && GST_PAD_IS_USABLE(padlist->data)) {
         gst_event_ref (event);
         gst_pad_push (GST_PAD (padlist->data), GST_DATA (event));
       }

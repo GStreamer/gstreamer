@@ -1,3 +1,38 @@
+2004-01-25  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_info):
+	  Additional pad usability check.
+	* gst/mpeg1videoparse/gstmp1videoparse.c: (gst_mp1videoparse_init),
+	(mp1videoparse_find_next_gop), (gst_mp1videoparse_time_code),
+	(gst_mp1videoparse_real_chain):
+	  Fix MPEG video stream parsing. The original plugin had several
+	  issues, including not timestamping streams where the source was
+	  not timestamped (this happens with PTS values in mpeg system
+	  streams, but MPEG video is also a valid stream on its own so
+	  that needs timestamps too). We use the display time code for that
+	  for now. Also, if one incoming buffer contains multiple valid
+	  frames, we push them all on correctly now, including proper EOS
+	  handling. Lastly, several potential segfaults were fixed, and we
+	  properly sync on new sequence/gop headers to include them in next,
+	  not previous frames (since they're header for the next frame, not
+	  the previous). Also see #119206.
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_chain),
+	(bpf_from_header):
+	  Move caps setting so we only do it after finding several valid
+	  MPEG-1 fraes sequentially, not right after the first one (which
+	  might be coincidental).
+	* gst/typefind/gsttypefindfunctions.c: (mpeg1_sys_type_find),
+	(mpeg_video_type_find), (mpeg_video_stream_type_find),
+	(plugin_init):
+	  Add unsynced MPEG video stream typefinding, and change some
+	  probability values so we detect streams rightly. The idea is as
+	  follows: I can have an unsynced system stream which contains
+	  video. In the current code, I would randomly get a type for either
+	  system or video stream type found, because the probabilities are
+	  being calculated rather randomly. I now use fixed values, so we
+	  always prefer system stream if that was found (and that is how it
+	  should be). If no system stream was found, we can still identity		  the stream as video-only.
+
 2004-01-23  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_avih),
