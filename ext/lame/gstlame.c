@@ -768,7 +768,7 @@ gst_lame_chain (GstPad *pad, GstData *_data)
         break;	
       case GST_EVENT_TAG:
 	if (lame->tags) {
-	  gst_tag_list_merge (lame->tags, gst_event_tag_get_list (GST_EVENT (buf)), 
+	  gst_tag_list_insert (lame->tags, gst_event_tag_get_list (GST_EVENT (buf)), 
 		  gst_tag_setter_get_merge_mode (GST_TAG_SETTER (lame)));
 	} else {
 	  g_assert_not_reached ();
