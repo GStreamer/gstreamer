@@ -193,7 +193,7 @@ gst_ffmpegmux_init(GstFFMpegMux *ffmpegmux)
 {
   GstFFMpegMuxClass *oclass = (GstFFMpegMuxClass*)(G_OBJECT_GET_CLASS (ffmpegmux));
 
-  ffmpegmux->context = g_malloc0 (sizeof (AVCodecContext));
+  ffmpegmux->context = avcodec_alloc_context();
 
   ffmpegmux->sinkpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (gst_ffmpegmux_sink_factory), "sink");

@@ -285,7 +285,7 @@ gst_ffmpegenc_init(GstFFMpegEnc *ffmpegenc)
 {
   GstFFMpegEncClass *oclass = (GstFFMpegEncClass*)(G_OBJECT_GET_CLASS (ffmpegenc));
 
-  ffmpegenc->context = g_malloc0 (sizeof (AVCodecContext));
+  ffmpegenc->context = avcodec_alloc_context();
 
   if (oclass->in_plugin->type == CODEC_TYPE_VIDEO) {
     ffmpegenc->sinkpad = gst_pad_new_from_template (
