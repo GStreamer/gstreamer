@@ -1,0 +1,16 @@
+#!/bin/bash
+indent \
+  --braces-on-if-line \
+  --blank-lines-after-declarations \
+  --case-brace-indentation0 \
+  --case-indentation2 \
+  --braces-after-struct-decl-line \
+  --line-length80 \
+  --use-tabs \
+  --cuddle-else \
+  --dont-line-up-parentheses \
+  --continuation-indentation4 \
+  --honour-newlines \
+  --tab-size8 \
+  --indent-level2 \
+  $*

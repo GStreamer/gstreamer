@@ -153,3 +153,6 @@ EXTRA_DIST = \
 		-e s,gst-typefind,gst-typefind-@GST_MAJORMINOR@,g \
 		-e s,gst-xmllaunch,gst-xmllaunch-@GST_MAJORMINOR@,g \
 		$< >$@
+
+# developer helper tools, not meant for installation
+noinst_SCRIPTS = gst-indent

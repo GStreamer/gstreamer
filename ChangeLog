@@ -1,5 +1,11 @@
 2004-03-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* tools/gst-indent:
+	* tools/Makefile.am:
+	  add our indentation style as a script
+
+2004-03-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* po/sr.po:
 	* po/LINGUAS:
 	  added Serbian translation
