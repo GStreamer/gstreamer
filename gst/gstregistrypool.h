@@ -26,6 +26,8 @@
 
 #include <gst/gstregistry.h>
 
+G_BEGIN_DECLS
+
 /* the pool of registries */
 GList*			gst_registry_pool_list		(void);
 void			gst_registry_pool_add		(GstRegistry *registry, guint priority);
