@@ -1,3 +1,8 @@
+2004-07-02  David Schleef  <ds@schleef.org>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_handle_client_write):
+	Most systems don't have MSG_NOSIGNAL.
+
 2004-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:
