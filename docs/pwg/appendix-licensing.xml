@@ -30,5 +30,9 @@ special code to do so. The point of this is not to block GPL-licensed
 plugins from being used and developed, but to make sure people are not 
 unintentionally violating the GPL license of said plugins. 
 </para>
+<para>
+This advisory is part of a bigger advisory with a FAQ which you can find
+on the <ulink url="http://gstreamer.freedesktop.org/documentation/licensing.html">GStreamer website</ulink>
+</para>
   </sect1>
 </chapter>
