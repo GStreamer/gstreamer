@@ -2262,7 +2262,15 @@ gst_element_set_state (GstElement *element, GstElementState state)
         /* Last thing we do is verify that a successful state change really
          * did change the state... */
         /* if it did not, this is an error - fix the element that does this */
-        g_assert (GST_STATE (element) == curpending);
+	if (GST_STATE (element) != curpending) {
+	  g_warning ("element %s claimed state-change success,"
+	             "but state didn't change %s, %s <-> %s, fix the element",
+		     GST_ELEMENT_NAME (element),
+	             gst_element_state_get_name (GST_STATE (element)),
+	             gst_element_state_get_name (GST_STATE_PENDING (element)),
+	             gst_element_state_get_name (curpending));
+	  return GST_STATE_FAILURE;
+	}
         break;
       default:
 	/* somebody added a GST_STATE_ and forgot to do stuff here ! */
