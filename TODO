@@ -25,3 +25,5 @@
 * festival should have checks and stuff and added properly
 
 * fix ffmpeg
+
+* add ladspa header check stuff
