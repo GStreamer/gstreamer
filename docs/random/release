@@ -95,7 +95,7 @@ TODO :
   - tag tree
     for example for 0.6.3 :
            cvs tag RELEASE-0_6_3
-  - roll the tarball, build rpms
+  - run "make release", build rpms
   - run "make upload" from gstreamer/docs to get the new docs online
   - change www/src/htdocs/entities.gst with the new version numbers
   - add a news item to the news.xml
