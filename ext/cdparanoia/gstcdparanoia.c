@@ -424,7 +424,7 @@ cdparanoia_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
        * So issue a warning.
        * See cdparanoia/interface/common-interface.c:FixupTOC
        */
-      if (src->d->cd_extra)
+      if (src->d && src->d->cd_extra)
 	g_warning("DiscID on multisession discs might be broken. Use at own risk.");
       g_value_set_string (value, src->discid);
       break;
