@@ -1,5 +1,10 @@
 2004-11-03  Christophe Fergeau  <teuf@gnome.org>
 
+	* docs/random/signal: added notes about using BOXED for GstBuffer
+	signal marshallers, not POINTER
+
+2004-11-03  Christophe Fergeau  <teuf@gnome.org>
+
 	* gst/elements/gstfakesink.c: (gst_fakesink_class_init):
 	* gst/elements/gstfakesrc.c: (gst_fakesrc_class_init): more
 	POINTER=>BOXED changes to marshal GstBuffers
