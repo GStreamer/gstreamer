@@ -1,3 +1,8 @@
+2004-12-04  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/apetag/apedemux.c: (gst_ape_demux_stream_init):
+	  Let's make sure we're done typefinding when detecting tags.
+
 2004-12-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/matroska/ebml-read.c: (gst_ebml_read_class_init),
