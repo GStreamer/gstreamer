@@ -15,8 +15,8 @@ These libraries are all central parts of gnome, and are available from the
 ftp.gnome.org or its mirrors, amongst other places.
 
 
-Optional libraries:
-===================
+Optional libraries for Plugins:
+==============================
 
 The vast number of optional libraries that can be used for plugins are
 listed in the REQUIREMENTS document in the gst-plugins package.
@@ -42,6 +42,11 @@ db2html
 fig2dev
 xsltproc
 
+To build pdf and ps version of docs
+===================================
+passivetex
+xmltex
+tetex-dvips
 
 Optional debian packages:
 =========================
