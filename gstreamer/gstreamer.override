@@ -17,7 +17,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  * 
- * Author: David I. Lehn <dlehn@vt.edu>
+ * Author: David I. Lehn <dlehn@users.sourceforge.net>
  */
 %%
 headers
@@ -226,6 +226,26 @@ _wrap_gst_bin_iterate(PyGObject *self)
 
     pyg_unblock_threads();
     ret = gst_bin_iterate(GST_BIN(self->obj));
+    pyg_block_threads();
+    return PyInt_FromLong(ret);
+}
+%%
+override gst_element_set_state kwargs
+
+static PyObject *
+_wrap_gst_element_set_state(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "state", NULL };
+    PyObject *py_state = NULL;
+    GstElementState state;
+    gint ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstElement.set_state", kwlist, &py_state))
+        return NULL;
+    if (pyg_flags_get_value(GST_TYPE_ELEMENT_STATE, py_state, (gint *)&state))
+        return NULL;
+    pyg_unblock_threads();
+    ret = gst_element_set_state(GST_ELEMENT(self->obj), state);
     pyg_block_threads();
     return PyInt_FromLong(ret);
 }
