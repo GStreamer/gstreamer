@@ -1,0 +1,86 @@
+Hi,
+
+   This is the gstreamer MikMod plugin. It is able to play the IT, XM, S3M, 
+ MTM, 669, STM, ULT, FAR, MED, AMF, DSM, IMF, GDM, STX, OKT and of course MOD
+ module formats.
+
+  Take a look to : www.mikmod.org
+
+ 
+ Usage : gstreamer-launch disksrc location=foo.mod ! mikmod ! osssink
+     or  gstmediaplay foo.mod
+
+
+Properties :
+
+  musicvolume :
+    Volume of the module. Allowed values range from 0 to 128. The default value is 128. 
+
+  pansep :
+    Stereo channels separation. Allowed values range from 0 (no separation, thus mono sound) 
+    to 128 (full channel separation). The default value is 128. 
+
+  reverb :
+    Amount of sound reverberation. Allowed values range from 0 (no reverberation) to 15 
+    (a rough estimate for chaos...). The default value is 6. 
+
+  sndfxvolume :
+    Volume of the sound effects. Allowed values range from 0 to 128. The default value is 128. 
+
+  volume :
+    Overall sound volume. Allowed values range from 0 to 128. The default value is 96
+
+  interp : 
+    This flag, if set, enables the interpolated mixers. Interpolated mixing gives better 
+    sound but takes a bit more time than standard mixing. If the library is built with the 
+    high quality mixer, interpolated mixing is always enabled, regardless of this flag. The
+    default value is false.
+
+  reverse : 
+    This flag, if set, exchanges the left and right stereo channels. The default value is false.
+
+  surround : 
+    This flag, if set, enables the surround mixers. Since surround mixing works only for stereo 
+    sound, this flag has no effect if the sound playback is in mono. The default value is true.
+
+  16bit : 
+    This flag, if set, selects 16 bit sound mode. This mode yields better sound quality, but needs 
+    twice more mixing time. The default value is true.
+
+  hqmixer :
+    This flag, if set, selects the high-quality software mixer. This mode yields better sound quality,
+    but needs more mixing time. Of course, this flag has no effect if no DMODE_SOFT_xx flag is set.
+    The default value is false.
+
+  soft_music : 
+    This flag, if set, selects software mixing of the module. The default value is true.
+
+  soft_sndfx :
+    This flag, if set, selects software mixing of the sound effects. The default value is true.
+
+  stereo :  
+    This flag, if set, selects stereo sound. The default value is true.
+    
+--
+Apoc    
+
+
+/*  MikMod sound library
+    (c) 1998, 1999, 2000 Miodrag Vallat and others - see file AUTHORS
+    for complete list.
+
+    This library is free software; you can redistribute it and/or modify
+    it under the terms of the GNU Library General Public License as
+    published by the Free Software Foundation; either version 2 of
+    the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Library General Public License for more details.
+
+    You should have received a copy of the GNU Library General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+    02111-1307, USA.
+*/
