@@ -1382,8 +1382,8 @@ gst_element_populate_std_props (GObjectClass * klass,
 				  "Touch data to force disk read before push ()", TRUE, flags);
   }
   else {
-    g_warning ("Unknown - 'standard' property '%s' id %d",
-               prop_name, arg_id);
+    g_warning ("Unknown - 'standard' property '%s' id %d from klass %s",
+               prop_name, arg_id, g_type_name (G_OBJECT_CLASS_TYPE (klass)));
     pspec = NULL;
   }
 
