@@ -20,9 +20,6 @@ Generic structure containing fields of names and values
 </para>
 
 @type: 
-@name: 
-@fields: 
-@_gst_reserved: 
 
 <!-- ##### USER_FUNCTION GstStructureForeachFunc ##### -->
 <para>

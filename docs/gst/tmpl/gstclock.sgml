@@ -26,6 +26,7 @@ clock so that the clock is always a good measure of the time in the pipeline.
 
 </para>
 
+@flags: 
 
 <!-- ##### ARG GstClock:event-diff ##### -->
 <para>
@@ -142,13 +143,6 @@ All pending timeouts or periodic notifies are converted into
 an entry.
 </para>
 
-@clock: 
-@type: 
-@time: 
-@interval: 
-@status: 
-@func: 
-@user_data: 
 
 <!-- ##### USER_FUNCTION GstClockCallback ##### -->
 <para>
@@ -232,11 +226,12 @@ The status of the entry
 The return value of a clock operation.
 </para>
 
-@GST_CLOCK_STOPPED: The clock is stopped.
+@GST_CLOCK_UNSCHEDULED: 
 @GST_CLOCK_TIMEOUT: The operation timed out.
 @GST_CLOCK_EARLY: The operation was scheduled too late.
 @GST_CLOCK_ERROR: An error occured
 @GST_CLOCK_UNSUPPORTED: Operation is not supported
+@GST_CLOCK_OK: 
 
 <!-- ##### ENUM GstClockFlags ##### -->
 <para>
@@ -258,25 +253,6 @@ Get the clock flags
 @clock: the clock to query
 
 
-<!-- ##### FUNCTION gst_clock_set_speed ##### -->
-<para>
-
-</para>
-
-@clock: 
-@speed: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_clock_get_speed ##### -->
-<para>
-
-</para>
-
-@clock: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_clock_set_resolution ##### -->
 <para>
 
@@ -296,67 +272,12 @@ Get the clock flags
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_clock_set_active ##### -->
-<para>
-
-</para>
-
-@clock: 
-@active: 
-
-
-<!-- ##### FUNCTION gst_clock_is_active ##### -->
-<para>
-
-</para>
-
-@clock: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_clock_reset ##### -->
-<para>
-
-</para>
-
-@clock: 
-
-
-<!-- ##### FUNCTION gst_clock_handle_discont ##### -->
-<para>
-
-</para>
-
-@clock: 
-@time: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_clock_get_time ##### -->
 <para>
 
 </para>
 
 @clock: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_clock_get_event_time ##### -->
-<para>
-
-</para>
-
-@clock: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_clock_get_event_time_delay ##### -->
-<para>
-
-</para>
-
-@clock: 
-@delay: 
 @Returns: 
 
 

@@ -196,13 +196,3 @@ Flags for the padtemplate
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_template_get_caps_by_name ##### -->
-<para>
-
-</para>
-
-@templ: 
-@name: 
-@Returns: 
-
-

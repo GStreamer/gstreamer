@@ -95,11 +95,9 @@ The basic structure of a buffer.
 @maxsize: 
 @timestamp: 
 @duration: 
+@caps: 
 @offset: 
 @offset_end: 
-@free_data: 
-@buffer_private: 
-@_gst_reserved: 
 
 <!-- ##### FUNCTION gst_buffer_new ##### -->
 <para>
@@ -127,9 +125,10 @@ The basic structure of a buffer.
 @GST_BUFFER_SUBBUFFER: 
 @GST_BUFFER_ORIGINAL: 
 @GST_BUFFER_DONTFREE: 
-@GST_BUFFER_KEY_UNIT: 
-@GST_BUFFER_DONTKEEP: 
+@GST_BUFFER_PREROLL: 
+@GST_BUFFER_DISCONT: 
 @GST_BUFFER_IN_CAPS: 
+@GST_BUFFER_GAP: 
 @GST_BUFFER_DELTA_UNIT: 
 @GST_BUFFER_FLAG_LAST: 
 
@@ -262,15 +261,6 @@ will be freed.
 @buf: a #GstBuffer to unref.
 
 
-<!-- ##### FUNCTION gst_buffer_stamp ##### -->
-<para>
-
-</para>
-
-@dest: 
-@src: 
-
-
 <!-- ##### MACRO gst_buffer_copy ##### -->
 <para>
 Copies the given buffer using the copy function of the parent GstData structure.
@@ -311,16 +301,6 @@ If the refcount is 1, this function just returns the original buffer.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_buffer_join ##### -->
-<para>
-
-</para>
-
-@buf1: 
-@buf2: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_buffer_merge ##### -->
 <para>
 
@@ -349,6 +329,13 @@ If the refcount is 1, this function just returns the original buffer.
 </para>
 
 <<<<<<< gstbuffer.sgml
+
+@buf1: 
+@buf2: 
+@Returns: 
+
+>>>>>>> 1.48
+<!-- # Unused Parameters # -->
 @GST_BUFFER_READONLY: the buffer is read-only.
 @GST_BUFFER_SUBBUFFER: the buffer is a subbuffer, the parent buffer can be 
                        found with the GST_BUFFER_POOL_PRIVATE() macro.
@@ -365,11 +352,7 @@ If the refcount is 1, this function just returns the original buffer.
 >>>>>>> 1.44
 @GST_BUFFER_FLAG_LAST: additional flags can be added starting from this flag.
 =======
-@buf1: 
-@buf2: 
-@Returns: 
 
->>>>>>> 1.48
 
 <!-- ##### FUNCTION gst_buffer_default_free ##### -->
 <para>

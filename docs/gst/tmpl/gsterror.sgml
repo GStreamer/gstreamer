@@ -123,16 +123,6 @@ Generates an human readable error message out of an errno number.
 
 
 
-<!-- ##### FUNCTION gst_error_get_message ##### -->
-<para>
-
-</para>
-
-@domain: 
-@code: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_stream_error_quark ##### -->
 <para>
 

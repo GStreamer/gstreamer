@@ -18,7 +18,6 @@ gst_queue_get_type
 gst_scheduler_factory_get_type
 gst_scheduler_get_type
 gst_tag_setter_get_type
-gst_thread_get_type
 gst_type_find_factory_get_type
 gst_xml_get_type
 
