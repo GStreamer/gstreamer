@@ -156,6 +156,9 @@ gint parse_cmdline(int argc,char *argv[],GstBin *parent) {
       gtk_object_set(GTK_OBJECT(previous),argname,argval,NULL);
       g_free(argname);
 
+      i++;
+      continue;
+
     // element or argument, or beginning of bin or thread
     } else {
       DEBUG("have element or bin/thread\n");
