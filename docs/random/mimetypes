@@ -372,7 +372,7 @@ channels = 1 - MAXINT (INT, number of audio channels)
 
 4 - Ogg/Vorbis
     MIME type: audio/x-vorbis
-    Encoder: vorbisenc
+    Encoder: rawvorbisenc (vorbisenc does rawvorbisenc+oggmux)
     Decoder: vorbisdec
 
 5 - Windows Media Audio 1,2 and 9 (WMA)
@@ -543,7 +543,7 @@ endianness = 1234/4321 (INT) <- use G_BIG/LITTLE_ENDIAN
 
 3 - Raw audio (integer format)
     MIME type: audio/x-raw-int
-    properties: width = 8/16/32 (INT, bits used to store each sample)
+    properties: width = 8/16/24/32 (INT, bits used to store each sample)
                 depth = 8 - 32 (INT, bits actually used per sample)
                 signed = TRUE/FALSE (BOOLEAN)
 
