@@ -152,7 +152,7 @@ static void qtdemux_parse(GstQTDemux *qtdemux, GNode *node, void *buffer, int le
 static QtNodeType *qtdemux_type_get(guint32 fourcc);
 static void qtdemux_node_dump(GstQTDemux *qtdemux, GNode *node);
 static void qtdemux_parse_tree(GstQTDemux *qtdemux);
-static GstCaps *qtdemux_video_caps(GstQTDemux *qtdemux, guint32 fourcc);
+static GstCaps *qtdemux_video_caps(GstQTDemux *qtdemux, guint32 fourcc, const guint8 *stsd_data);
 static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc);
 
 static GType gst_qtdemux_get_type (void) 
@@ -246,6 +246,9 @@ plugin_init (GstPlugin *plugin)
 #endif
 
   if (!gst_library_load ("gstbytestream"))
+    return FALSE;
+
+  if (!gst_library_load ("gstgetbits"))
     return FALSE;
 
   return gst_element_register (plugin, "qtdemux",
@@ -1278,7 +1281,7 @@ static void qtdemux_parse_trak(GstQTDemux *qtdemux, GNode *trak)
     g_print("frame count:   %u\n", QTDEMUX_GUINT16_GET(stsd->data+offset+48));
     
     stream->caps = qtdemux_video_caps(qtdemux,
-        QTDEMUX_FOURCC_GET(stsd->data+offset+4));
+        QTDEMUX_FOURCC_GET(stsd->data+offset+4), stsd->data);
     g_print("caps %s\n",gst_caps_to_string(stream->caps));
   }else if(stream->subtype == FOURCC_soun){
     int version;
@@ -1481,7 +1484,7 @@ done2:
 }
 
 
-static GstCaps *qtdemux_video_caps(GstQTDemux *qtdemux, guint32 fourcc)
+static GstCaps *qtdemux_video_caps(GstQTDemux *qtdemux, guint32 fourcc, const guint8 *stsd_data)
 {
   switch(fourcc){
     case GST_MAKE_FOURCC('j','p','e','g'):
@@ -1494,6 +1497,55 @@ static GstCaps *qtdemux_video_caps(GstQTDemux *qtdemux, guint32 fourcc)
       /* Motion-JPEG (format B) */
       return gst_caps_from_string ("image/jpeg");
     case GST_MAKE_FOURCC('S','V','Q','3'):
+      if (stsd_data != NULL) {
+        gst_getbits_t gb;
+	gint halfpel_flag;
+	gint thirdpel_flag;
+	gint unknown_svq3_flag;
+	gint low_delay;
+	gint size;
+
+	size = QTDEMUX_GUINT32_GET(stsd_data + 16);
+
+        gst_getbits_init (&gb, NULL, NULL);
+        gst_getbits_newbuf (&gb, (unsigned char *)stsd_data + 98 + 16 + 4 , (size - 102 + 16));
+	
+        /* Infos ripped from ffmpeg see libavcodec/svq3.c */
+	
+	/* 'frame size code' and optional 'width, height' */
+        if (gst_getbitsn (&gb, 3) == 7) {
+          gst_getbitsn (&gb, 12);
+          gst_getbitsn (&gb, 12);
+	}
+
+	halfpel_flag = gst_get1bit (&gb);
+        thirdpel_flag = gst_get1bit (&gb);
+
+        /* unknown fields */
+        gst_get1bit (&gb);
+        gst_get1bit (&gb);
+        gst_get1bit (&gb);
+        gst_get1bit (&gb);
+
+        low_delay = gst_get1bit (&gb);
+
+        /* unknown field */
+        gst_get1bit (&gb);
+
+	while (gst_get1bit (&gb)) {
+          gst_getbitsn (&gb, 8);
+        }
+	
+        unknown_svq3_flag = gst_get1bit (&gb);
+
+        return gst_caps_new_simple ("video/x-svq",
+		"svqversion",        G_TYPE_INT, 3,
+                "halfpel_flag",      G_TYPE_INT, halfpel_flag,
+                "thirdpel_flag",     G_TYPE_INT, thirdpel_flag,
+                "low_delay",         G_TYPE_INT, low_delay,
+                "unknown_svq3_flag", G_TYPE_INT, unknown_svq3_flag,
+		NULL);
+      }
       return gst_caps_from_string ("video/x-svq, "
 	  "svqversion = (int) 3");
     case GST_MAKE_FOURCC('s','v','q','i'):
