@@ -18,12 +18,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ * This file was (probably) generated from gstvideotemplate.c,
+ * $Id$
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 /*#define DEBUG_ENABLED */
 #include <gstvideotemplate.h>
+#include <string.h>
 
 /* GstVideotemplate signals and args */
 enum {
@@ -37,18 +43,14 @@ enum {
 };
 
 static void	gst_videotemplate_base_init	(gpointer g_class);
-static void	gst_videotemplate_class_init	(GstVideotemplateClass *klass);
-static void	gst_videotemplate_init		(GstVideotemplate *videotemplate);
+static void	gst_videotemplate_class_init	(gpointer g_class, gpointer class_data);
+static void	gst_videotemplate_init		(GTypeInstance *instance, gpointer g_class);
 
 static void	gst_videotemplate_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_videotemplate_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static void gst_videotemplate_planar411(GstVideofilter *videofilter, void *dest, void *src);
 static void gst_videotemplate_setup(GstVideofilter *videofilter);
-
-static GstVideotemplateClass *this_class = NULL;
-static GstVideofilterClass *parent_class = NULL;
-static GstElementClass *element_class = NULL;
 
 GType
 gst_videotemplate_get_type (void)
@@ -60,12 +62,12 @@ gst_videotemplate_get_type (void)
       sizeof(GstVideotemplateClass),
       gst_videotemplate_base_init,
       NULL,
-      (GClassInitFunc)gst_videotemplate_class_init,
+      gst_videotemplate_class_init,
       NULL,
       NULL,
       sizeof(GstVideotemplate),
       0,
-      (GInstanceInitFunc)gst_videotemplate_init,
+      gst_videotemplate_init,
     };
     videotemplate_type = g_type_register_static(GST_TYPE_VIDEOFILTER,
         "GstVideotemplate", &videotemplate_info, 0);
@@ -88,106 +90,52 @@ gst_videotemplate_base_init (gpointer g_class)
     "David Schleef <ds@schleef.org>"
   );
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstVideofilterClass *videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
+  int i;
   
   gst_element_class_set_details (element_class, &videotemplate_details);
+
+  for(i=0;i<G_N_ELEMENTS(gst_videotemplate_formats);i++){
+    gst_videofilter_class_add_format(videofilter_class,
+	gst_videotemplate_formats + i);
+  }
+
+  gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
 }
+
 static void
-gst_videotemplate_class_init (GstVideotemplateClass *klass)
+gst_videotemplate_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstVideofilterClass *gstvideofilter_class;
-  int i;
+  GstVideofilterClass *videofilter_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
-  gstvideofilter_class = (GstVideofilterClass *)klass;
+  gobject_class = G_OBJECT_CLASS (g_class);
+  videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
 
 #if 0
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_METHOD,
+  g_object_class_install_property(gobject_class, ARG_METHOD,
       g_param_spec_enum("method","method","method",
-      GST_TYPE_VIDEOTEMPLATE_METHOD, GST_VIDEOTEMPLATE_METHOD_90R,
+      GST_TYPE_VIDEOTEMPLATE_METHOD, GST_VIDEOTEMPLATE_METHOD_1,
       G_PARAM_READWRITE));
 #endif
-
-  this_class = klass;
-  parent_class = g_type_class_ref(GST_TYPE_VIDEOFILTER);
-  element_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
   gobject_class->set_property = gst_videotemplate_set_property;
   gobject_class->get_property = gst_videotemplate_get_property;
 
-  gstvideofilter_class->setup = gst_videotemplate_setup;
-
-  for(i=0;i<G_N_ELEMENTS(gst_videotemplate_formats);i++){
-    gst_videofilter_class_add_format(gstvideofilter_class,
-	gst_videotemplate_formats + i);
-  }
-}
-
-static GstCaps *gst_videotemplate_get_capslist(void)
-{
-  GstVideofilterClass *klass;
-
-  klass = g_type_class_ref(GST_TYPE_VIDEOFILTER);
-
-  return gst_videofilter_class_get_capslist(klass);
-}
-
-static GstPadTemplate *
-gst_videotemplate_src_template_factory(void)
-{
-  static GstPadTemplate *templ = NULL;
-
-  if(!templ){
-    GstCaps *caps = GST_CAPS_NEW("src","video/x-raw-yuv",
-		"width", GST_PROPS_INT_RANGE (1, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (1, G_MAXINT),
-		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
-
-    caps = gst_caps_intersect(caps, gst_videotemplate_get_capslist ());
-
-    templ = GST_PAD_TEMPLATE_NEW("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
-  }
-  return templ;
-}
-
-static GstPadTemplate *
-gst_videotemplate_sink_template_factory(void)
-{
-  static GstPadTemplate *templ = NULL;
-
-  if(!templ){
-    GstCaps *caps = GST_CAPS_NEW("src","video/x-raw-yuv",
-		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
-
-    caps = gst_caps_intersect(caps, gst_videotemplate_get_capslist ());
-
-    templ = GST_PAD_TEMPLATE_NEW("src", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
-  }
-  return templ;
+  videofilter_class->setup = gst_videotemplate_setup;
 }
 
 static void
-gst_videotemplate_init (GstVideotemplate *videotemplate)
+gst_videotemplate_init (GTypeInstance *instance, gpointer g_class)
 {
+  GstVideotemplate *videotemplate = GST_VIDEOTEMPLATE (instance);
   GstVideofilter *videofilter;
 
   GST_DEBUG("gst_videotemplate_init");
 
   videofilter = GST_VIDEOFILTER(videotemplate);
 
-  videofilter->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (gst_videotemplate_sink_template_factory),
-		  "sink");
-
-  videofilter->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (gst_videotemplate_src_template_factory),
-		  "src");
-
-  gst_videofilter_postinit(GST_VIDEOFILTER(videotemplate));
+  /* do stuff */
 }
 
 static void
@@ -237,7 +185,8 @@ static gboolean plugin_init (GstPlugin *plugin)
   if(!gst_library_load("gstvideofilter"))
     return FALSE;
 
-  return gst_element_register (plugin, "videotemplate", GST_RANK_NONE, GST_TYPE_VIDEOTEMPLATE);
+  return gst_element_register (plugin, "videotemplate", GST_RANK_NONE,
+      GST_TYPE_VIDEOTEMPLATE);
 }
 
 GST_PLUGIN_DEFINE (
@@ -268,10 +217,14 @@ static void gst_videotemplate_planar411(GstVideofilter *videofilter,
     void *dest, void *src)
 {
   GstVideotemplate *videotemplate;
+  int width = gst_videofilter_get_input_width(videofilter);
+  int height = gst_videofilter_get_input_height(videofilter);
 
   g_return_if_fail(GST_IS_VIDEOTEMPLATE(videofilter));
   videotemplate = GST_VIDEOTEMPLATE(videofilter);
 
-  /* do something interesting here */
+  /* do something interesting here.  This simply copies the source
+   * to the destination. */
+  memcpy(dest,src,width * height + (width/2) * (height/2) * 2);
 }
 
