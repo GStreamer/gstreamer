@@ -216,7 +216,7 @@ GST_PLUGINS_ALL="\
         mpegaudio mpegaudioparse mpegstream mpegtypes modplug\
         monoscope passthrough playondemand qtdemux rtjpeg silence sine\
         smooth spectrum speed stereo stereomono\
-        synaesthesia udp videocrop videoscale volenv volume vumeter wavparse y4m"
+        synaesthesia udp videocrop videoscale videotestsrc volenv volume vumeter wavparse y4m"
 
 AC_SUBST(GST_PLUGINS_ALL)
 
@@ -870,6 +870,7 @@ gst/stereomono/Makefile
 gst/synaesthesia/Makefile
 gst/udp/Makefile
 gst/videoscale/Makefile
+gst/videotestsrc/Makefile
 gst/videocrop/Makefile
 gst/volenv/Makefile
 gst/volume/Makefile
