@@ -1,5 +1,13 @@
 2003-12-22  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst/elements/gstelements.c:
+	  Set ranks of elements to NONE, so the autoplugger doesn't use them.
+	* gst/elements/gstshaper.c: (gst_shaper_getcaps):
+	  Fix proxying to new CAPS stuff. Don't call get_allowed_caps but
+	  gst_caps (peer).
+
+2003-12-22  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* gst/autoplug/gstsearchfuncs.c: (gst_autoplug_caps_intersect):
 	* gst/autoplug/gstspideridentity.c: (gst_spider_identity_link),
 	(gst_spider_identity_getcaps), (gst_spider_identity_change_state),

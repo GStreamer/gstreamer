@@ -180,7 +180,11 @@ gst_shaper_getcaps (GstPad *pad)
 
   otherpad = (pad == connection->srcpad ? connection->sinkpad : connection->srcpad);
 
-  return gst_caps_copy (gst_pad_get_allowed_caps (otherpad));
+  if (GST_PAD_PEER (otherpad)) {
+    return gst_pad_get_caps (GST_PAD_PEER (otherpad));
+  } else {
+    return gst_caps_new_any ();
+  }
 }
 
 static GList*
