@@ -6,6 +6,7 @@ class EventTest(unittest.TestCase):
     def setUp(self):
         pipeline = gst.parse_launch('fakesrc ! fakesink name=sink')
         self.sink = pipeline.get_by_name('sink')
+        pipeline.set_state(gst.STATE_PLAYING)
         
     def testEventEmpty(self):
         event = gst.Event(gst.EVENT_EMPTY)
@@ -26,6 +27,7 @@ class EventFileSrcTest(unittest.TestCase):
         self.source = self.pipeline.get_by_name('source')
         self.sink = self.pipeline.get_by_name('sink')
         self.sink.connect('handoff', self.handoff_cb)
+        self.pipeline.set_state(gst.STATE_PLAYING)
         
     def tearDown(self):
         assert self.pipeline.set_state(gst.STATE_PLAYING)

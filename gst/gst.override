@@ -179,9 +179,15 @@ _wrap_gst_pad_query(PyGObject *self, PyObject *args, PyObject *kwargs)
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ii:GstPad.query", kwlist, &type, &format))
 		return NULL;
+	
 	value = 0;
 	ret = gst_pad_query(GST_PAD(self->obj), type, &format, &value);
-	return Py_BuildValue("(bL)", ret, value);
+	if (!ret) {
+		PyErr_SetString(PyExc_RuntimeError, "query could not be performed");
+		return NULL;
+	}
+	
+	return PyInt_FromLong(value);
 }
 %%
 override gst_element_query kwargs
