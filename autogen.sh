@@ -71,7 +71,7 @@ fi
 #  popd > /dev/null
 #done
 
-./configure --enable-maintainer-mode --enable-plugin-srcdir --enable-debug-verbose "$@"
+./configure --enable-maintainer-mode --enable-plugin-srcdir --enable-debug --enable-debug-verbose "$@"
 
 echo 
 echo "Now type 'make' to compile $package."
