@@ -26,8 +26,6 @@
 #ifdef HAVE_CPU_I386
 #include "gstscale_x86.h"
 #endif
-//FIXME
-#include <gst/meta/videoraw.h>
 
 static void	gst_videoscale_scale_yuv		(GstVideoScale *scale, unsigned char *src, unsigned char *dest);
 static void	gst_videoscale_scale_rgb		(GstVideoScale *scale, unsigned char *src, unsigned char *dest);

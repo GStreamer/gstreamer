@@ -58,6 +58,31 @@ _gst_props_initialize (void)
   _gst_props_chunk_lock = g_mutex_new ();
 }
 
+static void
+gst_props_debug_entry (GstPropsEntry *entry)
+{
+  switch (entry->propstype) {
+    case GST_PROPS_INT_ID:
+      GST_DEBUG (0, "%d\n", entry->data.int_data);
+      break;
+    case GST_PROPS_FOURCC_ID_NUM:
+      GST_DEBUG (0, "%s\n", (gchar*)&entry->data.fourcc_data);
+      break;
+    case GST_PROPS_BOOL_ID_NUM:
+      GST_DEBUG (0, "%d\n", entry->data.bool_data);
+      break;
+    case GST_PROPS_STRING_ID_NUM:
+      GST_DEBUG (0, "%s\n", entry->data.string_data.string);
+      break;
+    case GST_PROPS_INT_RANGE_ID_NUM:
+      GST_DEBUG (0, "%d-%d\n", entry->data.int_range_data.min,
+		      entry->data.int_range_data.max);
+      break;
+    default:
+      break;
+  }
+}
+
 static GstPropsEntry*
 gst_props_create_entry (GstPropsFactory factory, gint *skipped)
 {
@@ -813,9 +838,11 @@ gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
 
     if (!gst_props_entry_check_compatibility (entry1, entry2)) {
 	compatible = FALSE;
-	GST_DEBUG (0, "%s and %s are not compatible\n",
-		   g_quark_to_string (entry1->propid),
-		   g_quark_to_string (entry2->propid));
+	GST_DEBUG (0, "%s are not compatible\n:",
+		   g_quark_to_string (entry1->propid));
+	gst_props_debug_entry (entry1);
+	gst_props_debug_entry (entry2);
+	GST_DEBUG (0, "\n");
     }
 
     sourcelist = g_list_next (sourcelist);

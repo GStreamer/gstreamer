@@ -30,11 +30,10 @@ int main(int argc,char *argv[]) {
   GstPipeline *pipeline;
   GstElement *src, *parse;
   GstElement *decode, *show, *thread;
+  GtkWidget  *gtk_socket;
 
   g_print("have %d args\n",argc);
 
-  g_thread_init(NULL);
-  gtk_init(&argc,&argv);
   gst_init(&argc,&argv);
   gnome_init("MPEG2 Video player","0.0.1",argc,argv);
   //gst_plugin_load("mpeg1parse");
@@ -76,14 +75,21 @@ int main(int argc,char *argv[]) {
   decode = gst_elementfactory_make("mpeg2dec","decode_video");
   g_return_val_if_fail(decode != NULL, -1);
 
-  show = gst_elementfactory_make("videosink","show");
+  show = gst_elementfactory_make("xvideosink","show");
   //gtk_object_set(GTK_OBJECT(show),"xv_enabled",FALSE,NULL);
   g_return_val_if_fail(show != NULL, -1);
 
   appwindow = gnome_app_new("MPEG player","MPEG player");
+
+  gtk_socket = gtk_socket_new ();
+  gtk_widget_show (gtk_socket);
+
   gnome_app_set_contents(GNOME_APP(appwindow),
-      	        gst_util_get_widget_arg(GTK_OBJECT(show),"widget"));
-  gtk_widget_show_all(appwindow);
+      	        GTK_WIDGET(gtk_socket));
+
+  gtk_widget_realize (gtk_socket);
+  gtk_socket_steal (GTK_SOCKET (gtk_socket), 
+		  gst_util_get_int_arg (GTK_OBJECT(show), "xid"));
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));
@@ -108,6 +114,8 @@ int main(int argc,char *argv[]) {
                   gst_element_get_pad(decode,"sink"));
   gst_pad_connect(gst_element_get_pad(decode,"src"),
                   gst_element_get_pad(show,"sink"));
+
+  gtk_widget_show_all(appwindow);
 
   g_print("setting to PLAYING state\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);

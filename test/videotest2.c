@@ -32,6 +32,7 @@ main (int argc,char *argv[])
   src = gst_elementfactory_make ("v4lsrc", "src");
   gtk_object_set(GTK_OBJECT(src),"format",9,NULL);
   gtk_object_set(GTK_OBJECT(src),"width",320,"height",240,NULL);
+  //gtk_object_set(GTK_OBJECT(src),"width",100,"height",100,NULL);
 
   videosink = gst_elementfactory_make ("xvideosink", "videosink");
   gtk_object_set(GTK_OBJECT(videosink),"width",320,"height",240,NULL);

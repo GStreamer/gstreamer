@@ -507,8 +507,9 @@ static gboolean
 gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
 {
   if (fromcaps->id != tocaps->id) {
-    GST_DEBUG (0,"gstcaps: mime types differ (%d to %d)\n",
-	       fromcaps->id, tocaps->id);
+    GST_DEBUG (0,"gstcaps: mime types differ (%s to %s)\n",
+	       gst_type_find_by_id (fromcaps->id)->mime, 
+	       gst_type_find_by_id (tocaps->id)->mime);
     return FALSE;
   }
 
