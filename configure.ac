@@ -161,6 +161,22 @@ if test x$HAVE_CPU_PPC = xyes ; then
     true)
 fi
 
+AC_ARG_ENABLE(gcov,
+  [--enable-gcov         compile with coverage profiling instrumentation (gcc only)],
+  enable_gcov=$enableval,enable_gcov=no)
+if test x$enable_gcov = xyes ; then
+  AS_COMPILER_FLAG(["-fprofile-arcs"],
+    [GST_INT_CFLAGS="$GST_INT_CFLAGS -fprofile-arcs"],
+    true)
+  AS_COMPILER_FLAG(["-ftest-coverage"],
+    [GST_INT_CFLAGS="$GST_INT_CFLAGS -ftest-coverage"],
+    true)
+  GST_INT_CFLAGS=`echo "$GST_INT_CFLAGS" | sed -e 's/-O[0-9]*//g'`
+
+  AC_DEFINE_UNQUOTED(GST_GCOV_ENABLED, 1, [Defined if gcov is enabled to force a rebuild due to config.h changing])
+fi
+AM_CONDITIONAL(GST_GCOV_ENABLED, test x$enable_gcov = xyes)
+
 
 dnl Check for essential libraries first:
 dnl ====================================

@@ -1,3 +1,11 @@
+2004-01-08  David Schleef  <ds@schleef.org>
+
+	* Makefile.am:
+	* configure.ac:
+	Add option --enable-gcov to build GStreamer with -fprofile-arcs
+	and -ftest-coverage, which allows gcov to show information about
+	testsuite coverage.
+
 2004-01-08  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstutils.h:
