@@ -37,16 +37,16 @@ extern "C" {
 
 typedef enum {
   GST_STATE_NONE_PENDING	= -1,
-  GST_STATE_NULL	= 0,
-  GST_STATE_READY	= 1,
-  GST_STATE_PLAYING	= 2,
-  GST_STATE_PAUSED	= 3,
+  GST_STATE_NULL		= 0,
+  GST_STATE_READY		= 1,
+  GST_STATE_PLAYING		= 2,
+  GST_STATE_PAUSED		= 3,
 } GstElementState;
 
 typedef enum {
-  GST_STATE_FAILURE	= 0,
-  GST_STATE_SUCCESS	= 1,
-  GST_STATE_ASYNC	= 2,
+  GST_STATE_FAILURE		= 0,
+  GST_STATE_SUCCESS		= 1,
+  GST_STATE_ASYNC		= 2,
 } GstElementStateReturn;
 
 static inline char *_gst_print_statename(int state) {
@@ -78,6 +78,7 @@ static inline char *_gst_print_statename(int state) {
 typedef enum {
   GST_ELEMENT_MULTI_IN		= (1 << 4),
   GST_ELEMENT_THREAD_SUGGESTED	= (1 << 5),
+  GST_ELEMENT_NO_SEEK		= (1 << 6),
 } GstElementFlags;
 
 #define GST_ELEMENT_IS_MULTI_IN(obj)	(GST_FLAGS(obj) & GST_ELEMENT_MULTI_IN)
@@ -115,10 +116,10 @@ struct _GstElementClass {
   GstElementFactory *elementfactory;
 
   /* signal callbacks */
-  void (*state_change) (GstElement *element,GstElementState state);
-  void (*new_pad) (GstElement *element,GstPad *pad);
+  void (*state_change) 	(GstElement *element,GstElementState state);
+  void (*new_pad) 	(GstElement *element,GstPad *pad);
   void (*new_ghost_pad) (GstElement *element,GstPad *pad);
-  void (*error) (GstElement *element,gchar *error);
+  void (*error) 	(GstElement *element,gchar *error);
 
   /* events */
 //  gboolean (*start) (GstElement *element,GstElementState state);
@@ -151,59 +152,57 @@ struct _GstElementFactory {
   GList *sink_types;
 };
 
-GtkType gst_element_get_type(void);
-GstElement *gst_element_new(void);
+GtkType 		gst_element_get_type		(void);
+GstElement*		gst_element_new			(void);
+#define 		gst_element_destroy(element) 	gst_object_destroy (GST_OBJECT (element))
 
-void gst_element_set_loop_function(GstElement *element,
-                                   GstElementLoopFunction loop);
+void 			gst_element_set_loop_function	(GstElement *element,
+                                   			 GstElementLoopFunction loop);
 
-void gst_element_set_name(GstElement *element,gchar *name);
-gchar *gst_element_get_name(GstElement *element);
+void 			gst_element_set_name		(GstElement *element, gchar *name);
+gchar*			gst_element_get_name		(GstElement *element);
 
-void gst_element_set_manager(GstElement *element,GstElement *manager);
-GstElement *gst_element_get_manager(GstElement *element);
+void 			gst_element_set_manager		(GstElement *element, GstElement *manager);
+GstElement*		gst_element_get_manager		(GstElement *element);
 
-void gst_element_add_pad(GstElement *element,GstPad *pad);
-void gst_element_add_ghost_pad(GstElement *element,GstPad *pad);
-GstPad *gst_element_get_pad(GstElement *element,gchar *name);
-GList *gst_element_get_pad_list(GstElement *element);
+void 			gst_element_add_pad		(GstElement *element, GstPad *pad);
+GstPad*			gst_element_get_pad		(GstElement *element, gchar *name);
+GList*			gst_element_get_pad_list	(GstElement *element);
+void 			gst_element_add_ghost_pad	(GstElement *element, GstPad *pad);
 
-void gst_element_connect(GstElement *src,gchar *srcpadname,
-                         GstElement *dest,gchar *destpadname);
+void 			gst_element_connect		(GstElement *src, gchar *srcpadname,
+                         				 GstElement *dest, gchar *destpadname);
 
 /* called by the app to set the state of the element */
-gint gst_element_set_state(GstElement *element,GstElementState state);
+gint 			gst_element_set_state		(GstElement *element, GstElementState state);
 
-void gst_element_error(GstElement *element,gchar *error);
+void 			gst_element_error		(GstElement *element, gchar *error);
 
-GstElementFactory *gst_element_get_factory(GstElement *element);
-
-#define gst_element_destroy(element) gst_object_destroy(GST_OBJECT(element))
+GstElementFactory*	gst_element_get_factory		(GstElement *element);
+int 			gst_element_loopfunc_wrapper	(int argc,char **argv);
 
 /* XML write and read */
-xmlNodePtr gst_element_save_thyself(GstElement *element,xmlNodePtr parent);
-GstElement *gst_element_load_thyself(xmlNodePtr parent, GHashTable *elements);
+xmlNodePtr 		gst_element_save_thyself	(GstElement *element, xmlNodePtr parent);
+GstElement*		gst_element_load_thyself	(xmlNodePtr parent, GHashTable *elements);
 
-GstElementFactory *gst_elementfactory_new(gchar *name,GtkType type,
-                                          GstElementDetails *details);
-void gst_elementfactory_register(GstElementFactory *elementfactory);
 
-void gst_elementfactory_add_src(GstElementFactory *elementfactory, guint16 id);
-void gst_elementfactory_add_sink(GstElementFactory *elementfactory, guint16 id);
+GstElementFactory*	gst_elementfactory_new		(gchar *name,GtkType type,
+                                          		 GstElementDetails *details);
+void 			gst_elementfactory_register	(GstElementFactory *elementfactory);
 
-GstElementFactory *gst_elementfactory_find(gchar *name);
-GList *gst_elementfactory_get_list();
+void 			gst_elementfactory_add_src	(GstElementFactory *elementfactory, guint16 id);
+void 			gst_elementfactory_add_sink	(GstElementFactory *elementfactory, guint16 id);
 
-GstElement *gst_elementfactory_create(GstElementFactory *factory,
-                                      gchar *name);
-  
+GstElementFactory*	gst_elementfactory_find		(gchar *name);
+GList*			gst_elementfactory_get_list	(void);
+
+GstElement*		gst_elementfactory_create	(GstElementFactory *factory,
+                                      			 gchar *name);
 // FIXME this name is wrong, probably so is the one above it
-GstElement *gst_elementfactory_make(gchar *factoryname,gchar *name);
+GstElement*		gst_elementfactory_make		(gchar *factoryname, gchar *name);
 
-xmlNodePtr gst_elementfactory_save_thyself(GstElementFactory *factory, xmlNodePtr parent); 
-GstElementFactory *gst_elementfactory_load_thyself(xmlNodePtr parent);
-
-int gst_element_loopfunc_wrapper(int argc,char **argv);
+xmlNodePtr 		gst_elementfactory_save_thyself	(GstElementFactory *factory, xmlNodePtr parent); 
+GstElementFactory*	gst_elementfactory_load_thyself	(xmlNodePtr parent);
 
 #ifdef __cplusplus
 }

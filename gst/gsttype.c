@@ -73,7 +73,7 @@ guint16 gst_type_register(GstTypeFactory *factory) {
 
   g_return_val_if_fail(factory != NULL, 0);
 
-  g_print("gsttype: type register %s\n", factory->mime);
+  //g_print("gsttype: type register %s\n", factory->mime);
   id = gst_type_find_by_mime(factory->mime);
   if (!id) {
     type = g_new0(GstType, 1);

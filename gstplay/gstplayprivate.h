@@ -19,6 +19,10 @@ struct _GstPlayPrivate {
 
   guchar *uri;
   gboolean muted;
+  gboolean can_seek;
+
+  GstElement *offset_element;
+  GstElement *bit_rate_element;
 };
 
 #endif /* __GSTPLAY_PRIVATE_H__ */

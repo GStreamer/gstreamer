@@ -15,8 +15,6 @@ gstmediaplay_SOURCES = \
 	gststatusarea.c gststatusarea.h \
 	callbacks.c callbacks.h 
 
-#	interface.c interface.h 
-
 CFLAGS += -O2 -Wall -DDATADIR=\""$(gladedir)/"\"
 
 gstmediaplay_CFLAGS = $(shell gnome-config --cflags gnomeui) $(shell libglade-config --cflags gnome) \

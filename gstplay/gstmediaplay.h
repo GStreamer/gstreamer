@@ -37,6 +37,12 @@ struct _GstMediaPlay {
   GtkWidget *stop_button;
 
   GstStatusArea *status;
+
+  // the slider
+  GtkAdjustment *adjustment;
+  GtkWidget *slider;
+
+  gulong last_time;
 };
 
 struct _GstMediaPlayClass {

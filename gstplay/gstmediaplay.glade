@@ -20,13 +20,13 @@
   <name>gstplay</name>
   <signal>
     <name>delete_event</name>
-    <handler>on_gstplay_delete_event</handler>
-    <last_modification_time>Sun, 06 Aug 2000 11:30:22 GMT</last_modification_time>
+    <handler>on_gst_media_play_delete_event</handler>
+    <last_modification_time>Wed, 01 Nov 2000 00:38:57 GMT</last_modification_time>
   </signal>
   <signal>
     <name>destroy</name>
-    <handler>on_gstplay_destroy</handler>
-    <last_modification_time>Sun, 06 Aug 2000 11:34:58 GMT</last_modification_time>
+    <handler>on_gst_media_play_destroy</handler>
+    <last_modification_time>Wed, 01 Nov 2000 00:39:03 GMT</last_modification_time>
   </signal>
   <title>Gstplay</title>
   <type>GTK_WINDOW_TOPLEVEL</type>

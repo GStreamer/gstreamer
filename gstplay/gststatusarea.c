@@ -28,7 +28,7 @@ enum {
 };
 
 static GtkDrawingArea *parent_class = NULL;
-static guint gst_status_area_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_status_area_signals[LAST_SIGNAL] = { 0 };
 
 GtkType 
 gst_status_area_get_type (void) 
@@ -159,10 +159,12 @@ gst_status_area_expose(GtkWidget *widget,
 		     8, 15, statustext);
 
     if (status_area->playtime) {
+      gint width = gdk_string_width (widget->style->font, status_area->playtime);
+
       gdk_draw_string (widget->window,
 		       widget->style->font,
 		       widget->style->white_gc, 
-		       widget->allocation.width-100, 15, status_area->playtime);
+		       widget->allocation.width-width-20, 15, status_area->playtime);
     }
   }
   return FALSE;
@@ -192,6 +194,9 @@ gst_status_area_set_playtime (GstStatusArea *area,
   if (area->playtime) g_free (area->playtime);
   
   area->playtime = g_strdup (time);
+
+  if (GTK_WIDGET_VISIBLE(area)) 
+    gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
 void 

@@ -45,7 +45,7 @@ struct _GstPlay {
   GstPlayState state;
   GstPlayMediaTypeFlags flags;
 
-  gpointer private;
+  gpointer priv;
 };
 
 #define GST_PLAY_STATE(play) ((play)->state)
@@ -78,6 +78,7 @@ void 		gst_play_mute			(GstPlay *play, gboolean mute);
 /* information about the media stream */
 gulong 		gst_play_get_media_size		(GstPlay *play);
 gulong 		gst_play_get_media_offset	(GstPlay *play);
+gboolean	gst_play_media_can_seek		(GstPlay *play);
 void 		gst_play_media_seek		(GstPlay *play, gulong offset);
 
 gulong 		gst_play_get_media_total_time	(GstPlay *play);

@@ -191,11 +191,12 @@ static GstElementStateReturn gst_thread_change_state(GstElement *element) {
 
   if (pending == GST_STATE(element)) return GST_STATE_SUCCESS;
 
+  GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
+
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
     stateset = GST_ELEMENT_CLASS(parent_class)->change_state(element);
   
   gst_info("gstthread: stateset %d %d %d\n", GST_STATE(element), stateset, GST_STATE_PENDING(element));
-
 
   switch (pending) {
     case GST_STATE_READY:
@@ -229,7 +230,7 @@ static GstElementStateReturn gst_thread_change_state(GstElement *element) {
     case GST_STATE_PAUSED:
       gst_info("gstthread: pausing thread \"%s\"\n",
               gst_element_get_name(GST_ELEMENT(element)));
-      GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
+      //GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
       gst_thread_signal_thread(thread);
       break;
     case GST_STATE_NULL:

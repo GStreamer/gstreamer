@@ -8,7 +8,6 @@
 
 #include "gstplay.h"
 #include "callbacks.h"
-#include "interface.h"
 
 GtkFileSelection *open_file_selection;
 
@@ -52,19 +51,6 @@ on_open2_activate                      (GtkMenuItem     *menuitem,
   /* connect the signals in the interface */
   glade_xml_signal_autoconnect(xml);
   open_file_selection = GTK_FILE_SELECTION(glade_xml_get_widget(xml, "fileselection1"));
-}
-
-void
-on_hscale1_value_changed               (GtkAdjustment 	*adj,
-                                        gpointer         user_data)
-{
-  //int size = gst_util_get_int_arg(GTK_OBJECT(src),"size");
-
-  //gtk_object_set(GTK_OBJECT(src),"offset",(int)(adj->value*size/100.0),NULL);
-  
-  //if (state != GSTPLAY_PLAYING) {
-  //  show_next_picture();
-  //}
 }
 
 void on_about_activate(GtkWidget *widget, gpointer data)

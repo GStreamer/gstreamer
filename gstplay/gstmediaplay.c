@@ -9,14 +9,18 @@
 #include "gstmediaplay.h"
 #include "callbacks.h"
 
-static void gst_media_play_class_init (GstMediaPlayClass *klass);
-static void gst_media_play_init       (GstMediaPlay *play);
+static void gst_media_play_class_init 		(GstMediaPlayClass *klass);
+static void gst_media_play_init       		(GstMediaPlay *play);
 
-static void gst_media_play_set_arg    (GtkObject *object,GtkArg *arg,guint id);
-static void gst_media_play_get_arg    (GtkObject *object,GtkArg *arg,guint id);
+static void gst_media_play_set_arg    		(GtkObject *object,GtkArg *arg,guint id);
+static void gst_media_play_get_arg    		(GtkObject *object,GtkArg *arg,guint id);
 
-static void update_buttons            (GstMediaPlay *mplay, GstPlayState state);
-static void update_slider             (GtkAdjustment *adjustment, gfloat value);
+static void gst_media_play_frame_displayed 	(GstPlay *play, GstMediaPlay *mplay);
+static void gst_media_play_state_changed 	(GstPlay *play, GstPlayState state, GstMediaPlay *mplay);
+static void gst_media_play_slider_changed 	(GtkAdjustment   *adj, GstMediaPlay *mplay);
+
+static void update_buttons            		(GstMediaPlay *mplay, GstPlayState state);
+static void update_slider 			(GstMediaPlay *mplay, GtkAdjustment *adjustment, gfloat value);
 
 /* signals and args */
 enum {
@@ -46,7 +50,7 @@ static GtkTargetEntry target_table[] = {
 };
 
 static GtkObject *parent_class = NULL;
-static guint gst_media_play_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_media_play_signals[LAST_SIGNAL] = { 0 };
 
 GtkType 
 gst_media_play_get_type(void) 
@@ -125,6 +129,20 @@ gst_media_play_init(GstMediaPlay *mplay)
   /* load the interface */
   mplay->xml = glade_xml_new (DATADIR "gstmediaplay.glade", "gstplay");
 
+  mplay->slider = glade_xml_get_widget(mplay->xml, "slider");
+  {
+    GtkArg arg;
+    GtkRange *range;
+    
+    arg.name = "adjustment";
+    gtk_object_getv (GTK_OBJECT (mplay->slider), 1, &arg);
+    range = GTK_RANGE (GTK_VALUE_POINTER (arg));
+    mplay->adjustment = gtk_range_get_adjustment (range);
+
+    gtk_signal_connect (GTK_OBJECT (mplay->adjustment), "value_changed",
+                    GTK_SIGNAL_FUNC (gst_media_play_slider_changed), mplay);
+  }
+
   mplay->play_button = glade_xml_get_widget (mplay->xml, "toggle_play");
   mplay->pause_button = glade_xml_get_widget (mplay->xml, "toggle_pause");
   mplay->stop_button = glade_xml_get_widget (mplay->xml, "toggle_stop");
@@ -139,6 +157,18 @@ gst_media_play_init(GstMediaPlay *mplay)
 	              NULL);
 
   mplay->play = gst_play_new();
+
+  gtk_signal_connect (GTK_OBJECT (mplay->play), "frame_displayed",
+	              GTK_SIGNAL_FUNC (gst_media_play_frame_displayed),
+	              mplay);
+
+  gtk_signal_connect (GTK_OBJECT (mplay->play), "audio_played",
+	              GTK_SIGNAL_FUNC (gst_media_play_frame_displayed),
+	              mplay);
+
+  gtk_signal_connect (GTK_OBJECT (mplay->play), "playing_state_changed",
+	              GTK_SIGNAL_FUNC (gst_media_play_state_changed),
+	              mplay);
 
   gnome_dock_set_client_area (GNOME_DOCK (glade_xml_get_widget(mplay->xml, "dock1")),
 		  GTK_WIDGET (mplay->play));
@@ -160,12 +190,24 @@ gst_media_play_init(GstMediaPlay *mplay)
 		  GTK_WIDGET (mplay->status));
   gtk_widget_show (GTK_WIDGET (mplay->status));
 
+  mplay->last_time = 0;
 }
 
 GstMediaPlay *
 gst_media_play_new () 
 {
   return GST_MEDIA_PLAY (gtk_type_new (GST_TYPE_MEDIA_PLAY));
+}
+
+static void 
+gst_media_play_update_status_area (GstMediaPlay *play, 
+				   gulong current_time, 
+				   gulong total_time)
+{
+  gst_status_area_set_playtime (play->status, 
+		    		g_strdup_printf("%02lu:%02lu / %02lu:%02lu", 
+			    	          current_time/60, current_time%60,
+			    	          total_time/60, total_time%60));
 }
 
 void 
@@ -179,9 +221,12 @@ gst_media_play_start_uri (GstMediaPlay *play,
 
   if (uri != NULL) {
     ret = gst_play_set_uri (play->play, uri);
-    gst_status_area_set_state (play->status, GST_STATUS_AREA_STATE_PLAYING);
+
+    if (!gst_play_media_can_seek (play->play)) {
+      gtk_widget_set_sensitive (play->slider, FALSE);
+    }
+
     gst_play_play (play->play);
-    update_buttons (play, GST_PLAY_STATE (play->play));
   }
 }
 
@@ -216,31 +261,110 @@ gst_media_play_get_arg (GtkObject *object,
   }
 }
 
+static void
+gst_media_play_state_changed (GstPlay *play,
+			      GstPlayState state,
+                              GstMediaPlay *mplay)
+{
+  GstStatusAreaState area_state;
+
+  g_return_if_fail (GST_IS_PLAY (play));
+  g_return_if_fail (GST_IS_MEDIA_PLAY (mplay));
+
+  update_buttons (mplay, state);
+
+  switch (state) {
+    case GST_PLAY_STOPPED:
+      area_state =  GST_STATUS_AREA_STATE_STOPPED;
+      break;
+    case GST_PLAY_PLAYING:
+      area_state =  GST_STATUS_AREA_STATE_PLAYING;
+      break;
+    case GST_PLAY_PAUSED:
+      area_state =  GST_STATUS_AREA_STATE_PAUSED;
+      break;
+    default:
+      area_state =  GST_STATUS_AREA_STATE_INIT;
+  }
+  gst_status_area_set_state (mplay->status, area_state);
+}
+
+void 
+on_gst_media_play_destroy (GtkWidget *widget, 
+		           GstMediaPlay *mplay)
+{
+  gst_main_quit ();
+}
+
+gint 
+on_gst_media_play_delete_event (GtkWidget *widget, 
+		                GdkEvent *event, 
+			        GstMediaPlay *mplay)
+{
+  gdk_threads_leave ();
+  gst_play_stop (mplay->play);
+  gdk_threads_enter ();
+  return FALSE;
+}
+
+static void
+gst_media_play_frame_displayed (GstPlay *play,
+                                GstMediaPlay *mplay)
+{
+  gulong current_time;
+  gulong total_time;
+  gulong size, current_offset;
+
+  g_return_if_fail (GST_IS_PLAY (play));
+  g_return_if_fail (GST_IS_MEDIA_PLAY (mplay));
+
+  current_time   = gst_play_get_media_current_time (play);
+  total_time     = gst_play_get_media_total_time (play);
+  size           = gst_play_get_media_size (play);
+  current_offset = gst_play_get_media_offset (play);
+
+  if (current_time != mplay->last_time) {
+    gst_media_play_update_status_area (mplay, current_time, total_time);
+    update_slider (mplay, mplay->adjustment, current_offset*100.0/size);
+    mplay->last_time = current_time;
+  }
+}
+
+static void
+gst_media_play_slider_changed (GtkAdjustment *adj,
+                               GstMediaPlay *mplay)
+{
+  gulong size;
+
+  g_return_if_fail (GST_IS_MEDIA_PLAY (mplay));
+
+  size   = gst_play_get_media_size (mplay->play);
+
+  gst_play_media_seek(mplay->play, (int)(adj->value*size/100.0));
+}
+
 void
 on_toggle_play_toggled (GtkToggleButton *togglebutton,
                         GstMediaPlay    *play)
 {
-  gst_status_area_set_state (play->status, GST_STATUS_AREA_STATE_PLAYING);
   gst_play_play (play->play);
-  update_buttons (play, GST_PLAY_STATE (play->play));
+  update_buttons (play, GST_PLAY_STATE(play->play));
 }
 
 void
 on_toggle_pause_toggled (GtkToggleButton *togglebutton,
                          GstMediaPlay    *play)
 {
-  gst_status_area_set_state (play->status, GST_STATUS_AREA_STATE_PAUSED);
   gst_play_pause (play->play);
-  update_buttons (play, GST_PLAY_STATE (play->play));
+  update_buttons (play, GST_PLAY_STATE(play->play));
 }
 
 void
 on_toggle_stop_toggled (GtkToggleButton *togglebutton,
                         GstMediaPlay    *play)
 {
-  gst_status_area_set_state (play->status, GST_STATUS_AREA_STATE_STOPPED);
   gst_play_stop (play->play);
-  update_buttons (play, GST_PLAY_STATE (play->play));
+  update_buttons (play, GST_PLAY_STATE(play->play));
 }
 
 static void 
@@ -283,15 +407,16 @@ update_buttons (GstMediaPlay *mplay,
 }
 
 static void 
-update_slider (GtkAdjustment *adjustment, 
+update_slider (GstMediaPlay *mplay,
+	       GtkAdjustment *adjustment, 
 	       gfloat value) 
 {
   gtk_signal_handler_block_by_func (GTK_OBJECT (adjustment),
-                         GTK_SIGNAL_FUNC (on_hscale1_value_changed),
-	                 NULL);
+                         GTK_SIGNAL_FUNC (gst_media_play_slider_changed),
+	                 mplay);
   gtk_adjustment_set_value (adjustment, value);
   gtk_signal_handler_unblock_by_func (GTK_OBJECT (adjustment),
-                         GTK_SIGNAL_FUNC (on_hscale1_value_changed),
-	                 NULL);
+                         GTK_SIGNAL_FUNC (gst_media_play_slider_changed),
+	                 mplay);
 }
 
