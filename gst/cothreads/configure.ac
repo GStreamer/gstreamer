@@ -270,10 +270,9 @@ GST_CHECK_FEATURE(GLIB2, [use of glib-2.0 and GObject], , [
   GLIB_CFLAGS=$GLIB2_CFLAGS
   AC_SUBST(GLIB_LIBS)
   AC_SUBST(GLIB_CFLAGS)
-  # if we've gotten this far, the user has specifically asked that glib2 be
-  # used. if we have no glib2, that is an error.
+  # glib2 is now the default.  so if we don't have it here, then use glib1
   if test "x$HAVE_GLIB2" = "xno"; then
-    AC_MSG_ERROR([no glib2 found, try --disable-glib2])
+    AC_MSG_WARN([no glib2 found, falling back to glib1])
   fi
 ], enabled, [
 dnl  AC_DEFINE(USE_GLIB2)
