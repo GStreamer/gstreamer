@@ -124,6 +124,7 @@ GStreamer support libraries header files.
 %{_includedir}/gst-plugins-%{version}/gst/resample/resample.h
 %{_includedir}/gst-plugins-%{version}/gst/riff/riff.h
 %{_includedir}/gst-plugins-%{version}/gst/video/video.h
+%{_datadir}/aclocal/gst-element-check.m4
 %{_libdir}/pkgconfig/gstreamer-libs.pc
 
 # Here are all the packages depending on external libs #
