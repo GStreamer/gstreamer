@@ -28,9 +28,12 @@ plugins.
 %{_bindir}/gst-launch
 %{_bindir}/gst-register
 %{_libdir}/libgst.so.*
-%{_libdir}/gst/*.so.*
-%{_libdir}/gst/*.so
-%{_libdir}/gst/libgstcontrol*.so*
+%{_libdir}/gst/libgstautoplugcache.so*
+%{_libdir}/gst/libgstautoplugger.so*
+%{_libdir}/gst/libgstbasicscheduler.so*
+%{_libdir}/gst/libgststaticautoplug.so*
+%{_libdir}/gst/libgststaticautoplugrender.so*
+%{_libdir}/gst/libgstcontrol.so*
 %{_libdir}/gst/libgstbytestream*.so*
 %{_libdir}/gst/libgstgetbits*.so*
 %{_libdir}/gst/libgstputbits*.so*
