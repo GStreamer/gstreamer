@@ -1148,7 +1148,8 @@ gst_xvimagesink_chain (GstPad * pad, GstData * data)
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     xvimagesink->time = GST_BUFFER_TIMESTAMP (buf);
   }
-  GST_DEBUG ("videosink: clock wait: %" G_GUINT64_FORMAT, xvimagesink->time);
+  GST_DEBUG ("clock wait: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (xvimagesink->time));
 
   if (GST_VIDEOSINK_CLOCK (xvimagesink)) {
     gst_element_wait (GST_ELEMENT (xvimagesink), xvimagesink->time);
