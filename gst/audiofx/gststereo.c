@@ -81,8 +81,9 @@ gst_stereo_get_type (void)
       0,
       (GInstanceInitFunc) gst_stereo_init,
     };
+
     stereo_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstStereo", &stereo_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstStereo", &stereo_info, 0);
   }
   return stereo_type;
 }
@@ -105,8 +106,8 @@ gst_stereo_class_init (GstStereoClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACTIVE, g_param_spec_int ("active", "active", "active", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STEREO, g_param_spec_float ("stereo", "stereo", "stereo", 0.0, 1.0, 0.0, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACTIVE, g_param_spec_int ("active", "active", "active", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STEREO, g_param_spec_float ("stereo", "stereo", "stereo", 0.0, 1.0, 0.0, G_PARAM_READWRITE));    /* CHECKME */
 
   gobject_class->set_property = gst_stereo_set_property;
   gobject_class->get_property = gst_stereo_get_property;
@@ -160,16 +161,16 @@ gst_stereo_chain (GstPad * pad, GstData * _data)
 
       tmp = avg + ldiff * mul;
       if (tmp < -32768)
-	tmp = -32768;
+        tmp = -32768;
       if (tmp > 32767)
-	tmp = 32767;
+        tmp = 32767;
       data[i] = tmp;
 
       tmp = avg + rdiff * mul;
       if (tmp < -32768)
-	tmp = -32768;
+        tmp = -32768;
       if (tmp > 32767)
-	tmp = 32767;
+        tmp = 32767;
       data[i + 1] = tmp;
     }
     /*} */
