@@ -2,6 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2001 Bastien Nocera <hadess@hadess.net>
+ *                    2003 Colin Walters <walters@verbum.org>
  *
  * gstgnomevfssink.c: 
  *
@@ -95,6 +96,7 @@ enum {
 enum {
   ARG_0,
   ARG_LOCATION,
+  ARG_HANDLE,
   ARG_ERASE
 };
 
@@ -163,6 +165,13 @@ gst_gnomevfssink_class_init (GstGnomeVFSSinkClass *klass)
 	  "location",     ARG_LOCATION,     G_PARAM_READWRITE,
 	  NULL);
 
+  g_object_class_install_property (gobject_class,
+				   ARG_HANDLE,
+				   g_param_spec_pointer ("handle",
+							 "GnomeVFSHandle",
+							 "Handle for GnomeVFS",
+							 G_PARAM_READWRITE));
+
   gst_gnomevfssink_signals[SIGNAL_HANDOFF] =
     g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                    G_STRUCT_OFFSET (GstGnomeVFSSinkClass, handoff), NULL, NULL,
@@ -212,9 +221,11 @@ gst_gnomevfssink_set_property (GObject *object, guint prop_id, const GValue *val
 	g_free (sink->filename);
       if (sink->uri)
 	g_free (sink->uri);
-      if (sink->handle)
-	g_free (sink->handle);
       sink->filename = g_strdup (g_value_get_string (value));
+      sink->uri = gnome_vfs_uri_new (sink->filename);
+      break;
+    case ARG_HANDLE:
+      sink->handle = g_value_get_pointer (value);
       break;
     case ARG_ERASE:
       sink->erase = g_value_get_boolean (value);
@@ -238,6 +249,9 @@ gst_gnomevfssink_get_property (GObject *object, guint prop_id, GValue *value, GP
     case ARG_LOCATION:
       g_value_set_string (value, sink->filename);
       break;
+    case ARG_HANDLE:
+      g_value_set_pointer (value, sink->handle);
+      break;
     case ARG_ERASE:
       g_value_set_boolean (value, sink->erase);
     default:
@@ -253,28 +267,24 @@ gst_gnomevfssink_open_file (GstGnomeVFSSink *sink)
 
   g_return_val_if_fail (!GST_FLAG_IS_SET (sink, GST_GNOMEVFSSINK_OPEN), FALSE);
 
-  /* create the GnomeVFSURI from the url */
-  sink->uri = gnome_vfs_uri_new(sink->filename);
-  if (!sink->uri) {
-    gst_element_error (GST_ELEMENT (sink), "opening file \"%s\" (%s)", sink->filename, strerror (errno));
-    return FALSE;
-  }
-
-  /* open the file */
-  result = gnome_vfs_create_uri(&(sink->handle), sink->uri,
-      GNOME_VFS_OPEN_WRITE, sink->erase,
-      GNOME_VFS_PERM_USER_READ | GNOME_VFS_PERM_USER_WRITE
-        | GNOME_VFS_PERM_GROUP_READ);
-  GST_DEBUG ("open: %s", gnome_vfs_result_to_string(result));
-  if (result != GNOME_VFS_OK) {
-    if (sink->erase == FALSE) {
-      g_signal_emit (G_OBJECT (sink),
-          gst_gnomevfssink_signals[SIGNAL_ERASE_ASK], 0,
-          sink->erase);
-    }
-    gst_element_error (GST_ELEMENT (sink), "opening file \"%s\" (%s)", sink->filename, strerror (errno));
-    return FALSE;
-  } 
+  if (sink->filename) {
+    /* open the file */
+    result = gnome_vfs_create_uri(&(sink->handle), sink->uri,
+				  GNOME_VFS_OPEN_WRITE, sink->erase,
+				  GNOME_VFS_PERM_USER_READ | GNOME_VFS_PERM_USER_WRITE
+				  | GNOME_VFS_PERM_GROUP_READ);
+    GST_DEBUG ("open: %s", gnome_vfs_result_to_string(result));
+    if (result != GNOME_VFS_OK) {
+      if (sink->erase == FALSE) {
+	g_signal_emit (G_OBJECT (sink),
+		       gst_gnomevfssink_signals[SIGNAL_ERASE_ASK], 0,
+		       sink->erase);
+      }
+      gst_element_error (GST_ELEMENT (sink), "opening file \"%s\" (%s)", sink->filename, strerror (errno));
+      return FALSE;
+    } 
+  } else
+    g_return_val_if_fail (sink->handle != NULL, FALSE);
 
   GST_FLAG_SET (sink, GST_GNOMEVFSSINK_OPEN);
 
@@ -288,20 +298,15 @@ gst_gnomevfssink_close_file (GstGnomeVFSSink *sink)
 
   g_return_if_fail (GST_FLAG_IS_SET (sink, GST_GNOMEVFSSINK_OPEN));
 
-  /* close the file */
-  result = gnome_vfs_close(sink->handle);
+  if (sink->filename) {
+    /* close the file */
+    result = gnome_vfs_close(sink->handle);
 
-  /* zero out the handle */
-  if (sink->handle)
-    g_free (sink->handle);
-
-  if (result != GNOME_VFS_OK)
-  {
-    gst_element_error (GST_ELEMENT (sink), "closing file \"%s\" (%s)", sink->filename, strerror (errno));
+    if (result != GNOME_VFS_OK)
+	gst_element_error (GST_ELEMENT (sink), "closing file \"%s\" (%s)", sink->filename, strerror (errno));
   }
-  else {
-    GST_FLAG_UNSET (sink, GST_GNOMEVFSSINK_OPEN);
-  }
+  
+  GST_FLAG_UNSET (sink, GST_GNOMEVFSSINK_OPEN);
 }
 
 /**
