@@ -93,10 +93,10 @@ make_mp3_pipeline (const gchar *location)
   
   pipeline = gst_pipeline_new ("app");
 
-  src = gst_element_factory_make_or_warn ("filesrc", "src");
-  decoder = gst_element_factory_make_or_warn ("mad", "dec");
-  osssink = gst_element_factory_make_or_warn ("osssink", "sink");
-  queue = gst_element_factory_make_or_warn ("queue", "queue");
+  src = gst_element_factory_make ("filesrc", "src");
+  decoder = gst_element_factory_make ("mad", "dec");
+  osssink = gst_element_factory_make ("osssink", "sink");
+  queue = gst_element_factory_make ("queue", "queue");
   thread = gst_thread_new ("playback");
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
