@@ -251,15 +251,17 @@ AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_CFLAGS)
 
 dnl Check for libxml
-AC_PATH_PROG(XML_CONFIG, xml-config, no)
+dnl Thomas tries to convert this to pkg-config
+PKG_CHECK_MODULES(XML, libxml >= 1.8.1, XML_CONFIG=yes, XML_CONFIG=no)
+dnl AC_PATH_PROG(XML_CONFIG, xml-config, no)
 if test x$XML_CONFIG = xno; then
   AC_MSG_ERROR(Couldn't find xml-config)
 fi
-XML_LIBS="`xml-config --libs`"
-XML_CFLAGS="`xml-config --cflags`"
-AC_CHECK_LIB(xml, xmlDocGetRootElement, :,
-  [ AC_MSG_ERROR(Need version 1.8.1 or better of libxml) ],
-  $XML_LIBS)
+dnl XML_LIBS="`xml-config --libs`"
+dnl XML_CFLAGS="`xml-config --cflags`"
+dnl AC_CHECK_LIB(xml, xmlDocGetRootElement, :,
+dnl  [ AC_MSG_ERROR(Need version 1.8.1 or better of libxml) ],
+dnl  $XML_LIBS)
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
 
