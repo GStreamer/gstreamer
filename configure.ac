@@ -270,7 +270,7 @@ AC_MSG_NOTICE(Checking for plugin libraries)
 dnl *** a52dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_A52DEC, true)
 GST_CHECK_FEATURE(A52DEC, [a52dec], a52dec, [
-  GST_CHECK_A52DEC()
+  AC_CHECK_A52DEC(HAVE_A52DEC=yes, HAVE_A52DEC=no)
 ])
 
 dnl *** aalib ***
@@ -504,7 +504,9 @@ GST_CHECK_FEATURE(MJPEGTOOLS, [mjpegtools], jpegmmxenc jpegmmxdec, [
 
 dnl *** mpeg2dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
-GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [ GST_CHECK_MPEG2DEC() ])
+GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
+  AC_CHECK_MPEG2DEC(HAVE_MPEG2DEC=yes, HAVE_MPEG2DEC=no)
+])
 
 dnl *** openquicktime ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENQUICKTIME, true)
