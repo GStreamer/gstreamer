@@ -20,7 +20,7 @@
  */
  
 #include <gst/gst.h>
-#include <gst/control/control.h>
+#include "control.h"
 
 static void 
 gst_control_init_common()

@@ -19,7 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/control/unitconvert.h>
+#include "unitconvert.h"
 #include <gst/gstinfo.h>
 
 static GHashTable *_gst_units;
