@@ -340,6 +340,8 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
 		      "blockalign",  &avimux->auds.blockalign,
 		      "size",        &avimux->auds.size,
 		      NULL);
+        avimux->auds_hdr.samplesize = avimux->auds_hdr.scale = avimux->auds.blockalign;
+        avimux->auds_hdr.rate = avimux->auds.av_bps;
         goto done;
       }
     }
@@ -406,8 +408,8 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
 		          "width",	&width,
 		          "depth",	&avimux->auds.size,
 		          NULL);
-      avimux->auds.av_bps      = width * avimux->auds.rate * avimux->auds.channels / 8;
-      avimux->auds.blockalign  = width * avimux->auds.channels/8;
+      avimux->auds_hdr.rate = avimux->auds.av_bps = width * avimux->auds.rate * avimux->auds.channels / 8;
+      avimux->auds_hdr.samplesize = avimux->auds_hdr.scale = avimux->auds.blockalign = width * avimux->auds.channels/8;
       goto done;
     }
     else if (!strcmp (mimetype, "audio/mp3"))
@@ -950,7 +952,12 @@ gst_avimux_stop_file (GstAviMux *avimux)
   if (avimux->video_pad_connected)
     avimux->vids_hdr.length = avimux->num_frames;
   if (avimux->audio_pad_connected)
-    avimux->auds_hdr.length = avimux->audio_size/avimux->auds_hdr.scale;
+  {
+    if (avimux->auds_hdr.scale)
+      avimux->auds_hdr.length = avimux->audio_size/avimux->auds_hdr.scale;
+    else
+      avimux->auds_hdr.length = 0; /* urm...? FIXME! ;-) */
+  }
 
   /* set rate and everything having to do with that */
   avimux->avi_hdr.us_frame = avimux->vids_hdr.scale = 1000000/avimux->framerate;
@@ -1066,15 +1073,30 @@ gst_avimux_fill_queue (GstAviMux *avimux)
 }
 
 
+/* send extra 'padding' data */
+static void
+gst_avimux_send_pad_data (GstAviMux *avimux,
+                          gulong     num_bytes)
+{
+  GstBuffer *buffer;
+
+  buffer = gst_buffer_new();
+  GST_BUFFER_SIZE(buffer) = num_bytes;
+  GST_BUFFER_DATA(buffer) = g_malloc(num_bytes);
+  memset(GST_BUFFER_DATA(buffer), 0, num_bytes);
+
+  gst_pad_push(avimux->srcpad, buffer);
+}
+
 /* do audio buffer */
 static void
 gst_avimux_do_audio_buffer (GstAviMux *avimux)
 {
   GstBuffer *data = avimux->audio_buffer_queue, *header;
-  gulong total_size;
+  gulong total_size, pad_bytes;
 
   /* write a audio header + index entry */
-  header = gst_avimux_riff_get_audio_header(GST_BUFFER_SIZE(data));
+  header = gst_avimux_riff_get_audio_header((GST_BUFFER_SIZE(data)+3)&~3);
   total_size = GST_BUFFER_SIZE(header) + GST_BUFFER_SIZE(data);
   avimux->total_data += total_size;
 
@@ -1090,7 +1112,16 @@ gst_avimux_do_audio_buffer (GstAviMux *avimux)
   }
 
   gst_pad_push(avimux->srcpad, header);
+  pad_bytes = ((GST_BUFFER_SIZE(data)+3)&~3) - GST_BUFFER_SIZE(data);
+  if (pad_bytes)
+    if (GST_BUFFER_MAXSIZE(data) >= GST_BUFFER_SIZE(data) + pad_bytes)
+    {
+      GST_BUFFER_SIZE(data) += pad_bytes;
+      pad_bytes = 0;
+    }
   gst_pad_push(avimux->srcpad, data);
+  if (pad_bytes)
+    gst_avimux_send_pad_data(avimux, pad_bytes);
   avimux->audio_buffer_queue = NULL;
 }
 
@@ -1100,7 +1131,7 @@ static void
 gst_avimux_do_video_buffer (GstAviMux *avimux)
 {
   GstBuffer *data = avimux->video_buffer_queue, *header;
-  gulong total_size;
+  gulong total_size, pad_bytes;
 
   if (avimux->restart)
     gst_avimux_restart_file(avimux);
@@ -1114,7 +1145,7 @@ gst_avimux_do_video_buffer (GstAviMux *avimux)
       gst_avimux_restart_file(avimux);
   }
 
-  header = gst_avimux_riff_get_video_header(GST_BUFFER_SIZE(data));
+  header = gst_avimux_riff_get_video_header((GST_BUFFER_SIZE(data)+3)&~3);
   total_size = GST_BUFFER_SIZE(header) + GST_BUFFER_SIZE(data);
   avimux->total_data += total_size;
   avimux->total_frames++;
@@ -1132,7 +1163,16 @@ gst_avimux_do_video_buffer (GstAviMux *avimux)
   }
 
   gst_pad_push(avimux->srcpad, header);
+  pad_bytes = ((GST_BUFFER_SIZE(data)+3)&~3) - GST_BUFFER_SIZE(data);
+  if (pad_bytes)
+    if (GST_BUFFER_MAXSIZE(data) >= GST_BUFFER_SIZE(data) + pad_bytes)
+    {
+      GST_BUFFER_SIZE(data) += pad_bytes;
+      pad_bytes = 0;
+    }
   gst_pad_push(avimux->srcpad, data);
+  if (pad_bytes)
+    gst_avimux_send_pad_data(avimux, pad_bytes);
   avimux->video_buffer_queue = NULL;
 }
 
