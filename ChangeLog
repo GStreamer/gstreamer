@@ -1,5 +1,11 @@
 2005-02-10  Andy Wingo  <wingo@pobox.com>
 
+	* docs/design/part-MT-refcounting.txt (Refcounting): Some
+	grammar/clarity fixes, and added a section on child structures of
+	shared refcounted objects.
+
+2005-02-10  Andy Wingo  <wingo@pobox.com>
+
 	* docs/design/part-MT-refcounting.txt: Fill to 80 columns.
 
 	* gst/gstcaps.h:
