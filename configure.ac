@@ -607,6 +607,7 @@ examples/typefind/Makefile
 examples/xml/Makefile
 tools/Makefile
 docs/Makefile
+docs/version.entities
 docs/faq/Makefile
 docs/gst/Makefile
 docs/libs/Makefile
