@@ -279,7 +279,7 @@ process (jack_nframes_t nframes, void *arg)
     bin->nframes = nframes;
     
     JACK_DEBUG ("jackbin: iterating to process %ld frames of audio...", nframes);
-    if (!gst_bin_iterate (GST_BIN_CAST (bin))) {
+    if (!gst_bin_iterate (GST_BIN (bin))) {
         g_warning ("bin failed to iterate");
         return -1;
     }
