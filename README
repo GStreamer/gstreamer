@@ -1,5 +1,3 @@
-This is GStreamer 0.3.2, code-named "Do-B-day" 
-
 This is GStreamer, a framework for streaming media.  The
 fundamental design comes from the video pipeline at Oregon Graduate
 Institute, as well as some ideas from DirectMedia.  It's based on plug-ins
