@@ -324,30 +324,6 @@ Plug-ins for playback of AVI format media files.
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
 ### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
-### AVIFILE ###
-@USE_AVIFILE_TRUE@%package -n gstreamer-windec
-@USE_AVIFILE_TRUE@Summary:       GStreamer plug-in for Windows DLL loading
-@USE_AVIFILE_TRUE@Group:         Libraries/Multimedia
-@USE_AVIFILE_TRUE@Requires:      gstreamer-plugins = %{version}
-@USE_AVIFILE_TRUE@Requires:      avifile
-@USE_AVIFILE_TRUE@BuildRequires: avifile-devel
-@USE_AVIFILE_TRUE@
-@USE_AVIFILE_TRUE@%description -n gstreamer-windec
-@USE_AVIFILE_TRUE@Plug-ins for playback for loading window DLL files. 
-@USE_AVIFILE_TRUE@Needed for playback of some  AVI format media files.
-@USE_AVIFILE_TRUE@
-@USE_AVIFILE_TRUE@%files -n gstreamer-windec
-@USE_AVIFILE_TRUE@%defattr(-, root, root)
-@USE_AVIFILE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwincodec.so
-@USE_AVIFILE_TRUE@
-@USE_AVIFILE_TRUE@%post -n gstreamer-windec
-@USE_AVIFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_AVIFILE_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
-@USE_AVIFILE_TRUE@
-@USE_AVIFILE_TRUE@%postun -n gstreamer-windec
-@USE_AVIFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_AVIFILE_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
-
 ### CDPARANOIA ###
 @USE_CDPARANOIA_TRUE@%package -n gstreamer-cdparanoia
 @USE_CDPARANOIA_TRUE@Summary:       GStreamer plug-in for CD audio input using CDParanoia IV.
