@@ -135,9 +135,19 @@ gst_disksink_set_arg (GtkObject *object, GtkArg *arg, guint id)
 
   switch(id) {
     case ARG_LOCATION:
+      /* the element must be stopped or paused in order to do this */
+      g_return_if_fail ((GST_STATE (sink) < GST_STATE_PLAYING)
+                      || (GST_STATE (sink) == GST_STATE_PAUSED));
       if (sink->filename)
 	g_free (sink->filename);
       sink->filename = g_strdup (GTK_VALUE_STRING (*arg));
+      if ( (GST_STATE (sink) == GST_STATE_PAUSED) 
+        && (sink->filename != NULL))
+      {
+              gst_disksink_close_file (sink);
+              gst_disksink_open_file (sink);   
+      }
+ 
       break;
     default:
       break;
