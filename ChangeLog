@@ -1,5 +1,21 @@
 2004-04-05  Benjamin Otte  <otte@gnome.org>
 
+	* ext/ladspa/gstladspa.c: (gst_ladspa_class_init),
+	(gst_ladspa_init), (gst_ladspa_force_src_caps),
+	(gst_ladspa_set_property), (gst_ladspa_get_property),
+	(gst_ladspa_instantiate), (gst_ladspa_activate),
+	(gst_ladspa_deactivate), (gst_ladspa_loop), (gst_ladspa_chain):
+	  clean up debugging
+
+2004-04-05  Stefan Kost <kost@imn.htwk-leipzig.de>
+
+	reviewed by Benjamin Otte  <otte@gnome.org>
+
+	* ext/ladspa/gstladspa.c: (gst_ladspa_class_init):
+	  check for broken LADSPA parameters (fixes #138635)
+	
+2004-04-05  Benjamin Otte  <otte@gnome.org>
+
 	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_getcaps):
 	  advertise buffer-frames correctly on sinkpads
 
