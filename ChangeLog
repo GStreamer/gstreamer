@@ -1,3 +1,13 @@
+2005-02-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/libs/tmpl/gstcontrol.sgml:
+	* docs/libs/tmpl/gstdparam.sgml:
+	* docs/libs/tmpl/gstdplinint.sgml:
+	* docs/libs/tmpl/gstdpman.sgml:
+	* docs/libs/tmpl/gstdpsmooth.sgml:
+	* docs/libs/tmpl/gstunitconvert.sgml:
+    more docs for the state of dparams
+
 2005-02-19  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstelementfactory.c: (gst_element_factory_create):

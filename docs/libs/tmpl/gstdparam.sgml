@@ -6,13 +6,17 @@ dynamic parameter instance
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+This base class for dynamic parameters will update parameters as they are.
+Subclasses of this do more advanced updates like smoothing parameter changes.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
 
 <!-- ##### STRUCT GstDParam ##### -->
 <para>

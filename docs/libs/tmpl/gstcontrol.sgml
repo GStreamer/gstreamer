@@ -6,15 +6,25 @@ dynamic parameter functionality.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-This library provides a Manager that maintains a list of dynamically
-controlable parameters for a GstElement.
+This library provides a manager component (#GstDParamManager) that maintains a
+list of dynamically controlable parameters for a #GstElement.
 Just think of a volume slider in a mixer.
 </para>
 
 <para>
-To use this library one needs to add some code to initialize it.
+#GstElement instances wanting to provide dynamic parameters, need to provide
+a #GParamSpec and an update method. The application that will later use the
+control parameter, will create a #DParam instance and attach that to use
+provided #GParamSpec and update method.
+The control library provides several #DParam implementations that can be used
+interchangably. The base on just updated the parameter, while others can smooth
+the control changes.
+</para>
+
+<para>
+To use this library in a application one needs to add some code to initialize it.
 <example>
-<title>Adding the control library to a project</title>
+<title>Adding the control library to an application (step 1)</title>
 <programlisting>
 ...
 &hash;include &lt;gst/gst.h&gt;
@@ -25,13 +35,46 @@ gst_control_init(&amp;argc,&amp;argv);
 ...
 </programlisting>
 </example>
-The next step is to get hold of the GstDParamManager instance of a GstElement.
+</para>
+<para>
+The next step is to get hold of the #GstDParamManager instance of a #GstElement
+and set the working mode of the manager.
+<example>
+<title>Adding the control library to an application (step 2)</title>
+<programlisting>
+dparam_manager=gst_dpman_get_manager(element);
+gst_dpman_set_mode(dparam_manager, "synchronous");
+</programlisting>
+</example>
+</para>
+
+<para>
+Finally one need to attach a new #DParam to the paramter spec.
+<example>
+<title>Adding the control library to an application (step 3)</title>
+<programlisting>
+pspec=gst_dpman_get_param_spec(dparam_manager,"volume");
+dparam=gst_dparam_new(G_PARAM_SPEC_VALUE_TYPE(pspec));
+gst_dpman_attach_dparam(dparam_manager,g_param_spec_get_name(pspecs),dparam);
+</programlisting>
+</example>
+For a full example look at the <file>gst-plugins/gst/sine/demo-dparams.c</file>
+</para>
+<para>
+To add dparam support to a plugin look at <file>gst-plugins/gst/sine/gstsinesrc.c</file>
+or <file>gst-plugins/gst/volume/gstvolume.c</file>.
+The key concept is to call GST_DPMAN_PREPROCESS() before processing data and to
+wrap the data processing (chain or loop function) by GST_DPMAN_PROCESS().
+This allows the manager to interupt processing to apply new control values.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
 
 <!-- ##### FUNCTION gst_control_init ##### -->
 <para>
