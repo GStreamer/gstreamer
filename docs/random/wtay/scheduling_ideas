@@ -93,6 +93,8 @@ DECOUPLED
   * never loop-based
   * always acts like a chain-based sink for upstream elements
   * always acts like a get-based src for downstream elements
+  * are not added to a group, but marked as an entry point in 
+    case it acts as a src element
 
 
 Connection types
@@ -136,8 +138,15 @@ A)
  - get based source
  - chain based sink
 
-  * src at start of chain and entry point
+  * one group
+  * src at start of group and entry point
   * _get from src, push to sink
+
+  (-group1---------------)
+  !                      !
+  ! *fakesrc -> fakesink !
+  (----------------------)
+
 
 B)
 
@@ -151,8 +160,14 @@ B)
  - loop based source/filter
  - chain based sink/filter/decoupled
 
- * src/filter at start of chain and entry point
- * loop on src, pushhandler set to chain function
+ * one group
+ * src/filter at start of group and entry point
+ * loop on src, chainhandler set to chain function
+
+  (-group1----------------)
+  !                       !
+  ! %*fakesrc -> fakesink !
+  (-----------------------)
 
 
 C) 
@@ -165,9 +180,14 @@ C)
  - get based source/decoupled
  - loop based sink/filter
 
+ * one group
  * loop based element is entry point
- * loop on sink/filter, pullhandler set to _getfunction
+ * loop on sink/filter, gethandler set to getfunction
  
+  (-group1----------------)
+  !                       !
+  ! fakesrc -> %*fakesink !
+  (-----------------------)
 
 D)
 
@@ -178,9 +198,15 @@ D)
   - chain based filter
   - chain based filter/sink/decoupled
 
+  * one group is created to hold the two elements
   * no entry point
-  * pushhandler set to peer chainfunction
+  * chainhandler set to peer chainfunction
   
+  (-group1----------------)
+  !                       !
+  ! identity -> identity  !
+  (-----------------------)
+
 E)
 
   filter  -> filter
@@ -189,8 +215,17 @@ E)
   - chain based filter
   - loop based filter/sink
 
-  * entry point in chain of filter
-  * pushhandler set to loop wrapper
+  * two groups
+  * group is created for src element if needed
+  * chainhandler of loop based element set to loop wrapper, control is
+    handed to the peer group
+  * gethandler of loop based element set to get wrapper
+
+  (-group1---)  (-group2------)
+  !          !  !             !
+  ! identity ---> %*identity  !
+  (----------)  (-------------)
+
 
 F)
 
@@ -202,25 +237,41 @@ F)
   - loop based filter/src
   - loop based filter/sink
 
-  * entry point in chain of filter/src
-  * pushhandler set to loop wrapper
+  * two groups
+  * two entry points
+  * chainhandler set to loop wrapper
+  * gethandler set to get wrapper
   
+  (-group1-----)  (-group2------)
+  !            !  !             !
+  ! %*identity ---> %*identity  !
+  (------------)  (-------------)
+
 
 Grouping
 --------
 
  * a group has at most one loop based element
- * elements in a group are sorted, src elements first
+ * elements in a group are sorted, src elements first (not mandatory)
  * a group has one cothread
+ * a group is created immediatly for loop based elements, all other elements
+   are added to a group when a pad connection is made
  * get-based plugins are put in the same group as a peer loop based element
- * chain based elements are put in the same group
+ * chain based elements are put in the same group as sink peer elements
  * entry point in the group is:
-   - leftmost loopbased element 
-   - first src element if no loopbased elements exist in the group
+   - loopbased element 
+   - first src element if no loopbased element exists in the group
+
+Result: you end up with a group of connected elements with either:
+    - a loop based plugin as the entry point
+    - a get based plugin as the entry point
+
+Scheduling the group is a matter of starting the cothread and calling
+the loop function or doing a _get/_push on a srcpad.
 
 
-examples:
----------
+other examples of groups:
+-------------------------
 
  % = loop based
  * = entry point of group
@@ -289,7 +340,19 @@ examples:
   (------------------------------) (-----------------------------)
 
 
+Chaining
+--------
 
+ * groups that are connected end up in the same chain
+ * a group always belongs to a chain
+ * updating the chain is only needed when two groups are
+   connected with a connection of type E/F. for other
+   connection types, the group itself is updated.
+ * a chain is scheduled by scheduling a random group in the chain.
+
+
+Wrapper functions
+-----------------
 
 
 
