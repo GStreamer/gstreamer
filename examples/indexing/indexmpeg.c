@@ -40,7 +40,7 @@ entry_added (GstIndex *index, GstIndexEntry *entry)
     {
       gint i;
 
-      g_print ("%d: %08x ", entry->id, GST_INDEX_ASSOC_FLAGS (entry));
+      g_print ("%p, %d: %08x ", entry, entry->id, GST_INDEX_ASSOC_FLAGS (entry));
       for (i = 0; i < GST_INDEX_NASSOCS (entry); i++) {
 	g_print ("%d %lld ", GST_INDEX_ASSOC_FORMAT (entry, i), 
 			     GST_INDEX_ASSOC_VALUE (entry, i));
@@ -202,7 +202,7 @@ main (gint argc, gchar *argv[])
   gint count = 0;
   GstEvent *event;
   gboolean res;
-  gint i;
+  GstElement *sink;
   struct poptOption options[] = {
     { "verbose",  'v',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &verbose,   0,
       "Print index entries", NULL},
@@ -222,7 +222,8 @@ main (gint argc, gchar *argv[])
 
   /* create index that elements can fill */
   index = gst_index_factory_make ("memindex");
-  if (verbose)
+  index = NULL;
+  if (verbose && index)
     g_signal_connect (G_OBJECT (index), "entry_added", G_CALLBACK (entry_added), NULL);
 
   /* construct pipeline */
@@ -265,15 +266,19 @@ main (gint argc, gchar *argv[])
   gst_element_set_state (pipeline, GST_STATE_READY);
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
-  GST_FLAG_UNSET (index, GST_INDEX_WRITABLE);
+  if (index)
+    GST_FLAG_UNSET (index, GST_INDEX_WRITABLE);
 
   src = gst_bin_get_by_name (GST_BIN (pipeline), "video_decoder");
   pad = gst_element_get_pad (src, "src");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  gst_element_connect_pads (src, "src", sink, "sink");
+  gst_bin_add (GST_BIN (pipeline), sink);
 
   g_print ("seeking %s...\n", argv [2]);
   event = gst_event_new_seek (GST_FORMAT_TIME |
                               GST_SEEK_METHOD_SET |
-                              GST_SEEK_FLAG_FLUSH, 1 * GST_SECOND);
+                              GST_SEEK_FLAG_FLUSH, 5 * GST_SECOND);
 
   res = gst_pad_send_event (pad, event);
   if (!res) {
@@ -281,8 +286,12 @@ main (gint argc, gchar *argv[])
   }
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  for (i = 0; i < 100; i++) {
-    gst_bin_iterate (GST_BIN (pipeline));
+  count = 0;
+  while (gst_bin_iterate (GST_BIN (pipeline))) {
+    if (!quiet && (count % 1000 == 0)) {
+      print_progress (pad);
+    }
+    count++;
   }
 
   gst_element_set_state (pipeline, GST_STATE_NULL);

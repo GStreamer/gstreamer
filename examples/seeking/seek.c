@@ -232,7 +232,8 @@ make_parse_pipeline (const gchar *location)
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   parser = gst_element_factory_make_or_warn ("mpegparse", "parse");
   fakesink = gst_element_factory_make_or_warn ("fakesink", "sink");
-  g_object_set (G_OBJECT (fakesink), "sync", FALSE, NULL);
+  g_object_set (G_OBJECT (fakesink), "silent", TRUE, NULL);
+  g_object_set (G_OBJECT (fakesink), "sync", TRUE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
@@ -263,7 +264,7 @@ make_vorbis_pipeline (const gchar *location)
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("vorbisfile", "decoder");
   audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
-  //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
+  g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
@@ -364,13 +365,14 @@ make_avi_pipeline (const gchar *location)
 
   video_bin = gst_bin_new ("v_decoder_bin");
   //v_decoder = gst_element_factory_make_or_warn ("identity", "v_dec");
-  v_decoder = gst_element_factory_make_or_warn ("windec", "v_dec");
+  //v_decoder = gst_element_factory_make_or_warn ("windec", "v_dec");
+  v_decoder = gst_element_factory_make_or_warn ("ffdec_msmpeg4", "v_dec");
   video_thread = gst_thread_new ("v_decoder_thread");
   videosink = gst_element_factory_make_or_warn ("xvideosink", "v_sink");
   //videosink = gst_element_factory_make_or_warn ("fakesink", "v_sink");
   //g_object_set (G_OBJECT (videosink), "sync", TRUE, NULL);
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
-  g_object_set (G_OBJECT (v_queue), "max_level", 10, NULL);
+  //g_object_set (G_OBJECT (v_queue), "max_level", 10, NULL);
   gst_element_connect (v_decoder, v_queue);
   gst_element_connect (v_queue, videosink);
   gst_bin_add (GST_BIN (video_bin), v_decoder);
@@ -405,8 +407,7 @@ make_mpeg_pipeline (const gchar *location)
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
   demux = gst_element_factory_make_or_warn ("mpegdemux", "demux");
-  //g_object_set (G_OBJECT (demux), "sync", FALSE, NULL);
-  g_object_set (G_OBJECT (demux), "sync", TRUE, NULL);
+  //g_object_set (G_OBJECT (demux), "sync", TRUE, NULL);
 
   seekable_elements = g_list_prepend (seekable_elements, demux);
 
@@ -437,7 +438,7 @@ make_mpeg_pipeline (const gchar *location)
   video_bin = gst_bin_new ("v_decoder_bin");
   v_decoder = gst_element_factory_make_or_warn ("mpeg2dec", "v_dec");
   video_thread = gst_thread_new ("v_decoder_thread");
-  g_object_set (G_OBJECT (video_thread), "schedpolicy", 2, NULL);
+  //g_object_set (G_OBJECT (video_thread), "priority", 2, NULL);
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
   v_filter = gst_element_factory_make_or_warn ("colorspace", "v_filter");
   videosink = gst_element_factory_make_or_warn ("xvideosink", "v_sink");
@@ -472,7 +473,6 @@ make_mpegnt_pipeline (const gchar *location)
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
   demux = gst_element_factory_make_or_warn ("mpegdemux", "demux");
-  //g_object_set (G_OBJECT (demux), "sync", FALSE, NULL);
   //g_object_set (G_OBJECT (demux), "sync", TRUE, NULL);
 
   seekable_elements = g_list_prepend (seekable_elements, demux);
@@ -856,7 +856,12 @@ main (int argc, char **argv)
   /* show the gui. */
   gtk_widget_show_all (window);
 
+  g_signal_connect (pipeline, "deep_notify", G_CALLBACK (gst_element_default_deep_notify), NULL);
+  g_signal_connect (pipeline, "error", G_CALLBACK (gst_element_default_error), NULL);
+
   gtk_main ();
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
 
   //gst_object_unref (GST_OBJECT (pipeline));
   gst_buffer_print_stats();
