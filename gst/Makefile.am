@@ -8,6 +8,16 @@ GSTOBJECT_SRCS =	\
 GSTOBJECT_INCLUDES =	\
 	gstobject.h
 
+if HAVE_CPU_I386
+GSTARCH_SRCS = gstcpuid_i386.s
+else
+if HAVE_CPU_PPC
+GSTARCH_SRCS = gstppc.c
+else
+GSTARCH_SRCS = 
+endif
+endif
+
 libgst_la_SOURCES =	\
 	gst.c		\
 	$(GSTOBJECT_SRCS)	\
@@ -16,7 +26,8 @@ libgst_la_SOURCES =	\
 	gstbufferpool.c	\
 	gstclock.c	\
 	gstcpu.c	\
-	gstcpuid_i386.s	\
+	$(GSTI386_SRCS) \
+	$(GSTPPC_SRCS)	\
 	gstelement.c	\
 	gstelementfactory.c	\
 	gstbin.c	\

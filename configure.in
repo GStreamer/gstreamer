@@ -1,5 +1,7 @@
 AC_INIT(gst/gstobject.h)
 
+AC_CANONICAL_SYSTEM
+
 AM_CONFIG_HEADER(config.h)
 
 STREAMER_MAJOR_VERSION=0
@@ -41,6 +43,17 @@ AM_PROG_LIBTOOL
 dnl ##############################
 dnl # Do automated configuration #
 dnl ##############################
+
+dnl Set up conditionals for (target) host type:
+dnl ===========================================
+
+case "x${target_cpu}" in
+  xi386)     HAVE_CPU_I386=yes ;
+             AC_DEFINE(HAVE_CPU_I386) ;;
+  xpowerpc)  HAVE_CPU_PPC=yes ;
+             AC_DEFINE(HAVE_CPU_PPC) ;;
+esac
+
 
 dnl Check for tools:
 dnl ================
@@ -101,6 +114,7 @@ dnl Check for gtk
 AM_PATH_GTK(1.2.0)
 
 dnl Check for libghttp
+dnl FIXME: need to check for header
 AC_CHECK_LIB(ghttp, ghttp_request_new,
   [GHTTP_LIBS="-lghttp"
    GST_HTTPSRC_GET_TYPE="gst_httpsrc_get_type"
@@ -331,6 +345,8 @@ dnl #############################
 
 dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
 dnl HAVE_ and it is likely to be easier to stick with the old name
+AM_CONDITIONAL(HAVE_CPU_I386,       test "x$HAVE_CPU_I386" = "xyes")
+AM_CONDITIONAL(HAVE_CPU_PPC,        test "x$HAVE_CPU_PPC" = "xyes")
 AM_CONDITIONAL(HAVE_GDK_PIXBUF,     test "x$USE_GDK_PIXBUF" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGHTTP,       test "x$USE_LIBGHTTP" = "xyes")
 AM_CONDITIONAL(HAVE_LIBMMX,         test "x$USE_LIBMMX" = "xyes")

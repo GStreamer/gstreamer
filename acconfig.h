@@ -2,6 +2,9 @@
 #undef PLUGINS_SRCDIR
 #undef PLUGINS_USE_SRCDIR
 
+#undef HAVE_CPU_I386
+#undef HAVE_CPU_PPC
+
 #undef HAVE_GDK_PIXBUF
 #undef HAVE_LIBGHTTP
 #undef HAVE_LIBMMX

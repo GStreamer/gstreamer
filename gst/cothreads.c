@@ -9,6 +9,7 @@
 #include <sys/mman.h>
 
 #include "cothreads.h"
+#include "gstarch.h"
 
 pthread_key_t _cothread_key = -1;
 
@@ -130,7 +131,7 @@ void cothread_switch(cothread_state *thread) {
   fprintf(stderr,"about to switch to thread #%d\n",ctx->current);
 
   /* save the current stack pointer, frame pointer, and pc */
-  __asm__("movl %%esp, %0" : "=m"(current->sp) : : "esp", "ebp");
+  GET_SP(current->sp);
   enter = setjmp(current->jmp);
   if (enter != 0)
     return;
@@ -140,12 +141,12 @@ void cothread_switch(cothread_state *thread) {
   /* restore stack pointer and other stuff of new cothread */
   if (thread->flags & COTHREAD_STARTED) {
     fprintf(stderr,"in thread \n");
-    __asm__("movl %0, %%esp\n" : "=m"(thread->sp));
+    SET_SP(thread->sp);
     // switch to it
     longjmp(thread->jmp,1);
   } else {
-    __asm__("movl %0, %%esp\n" : "=m"(thread->sp));
+     SET_SP(thread->sp);
     // start it
-    __asm__("jmp " SYMBOL_NAME_STR(cothread_stub));
+    JUMP(cothread_stub);
   }
 }
