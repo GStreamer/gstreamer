@@ -1,3 +1,8 @@
+2004-01-02  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/alsa/README:
+	  Remove outdated document
+
 2004-01-03  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/cutter/gstcutter.c: (gst_cutter_init):
