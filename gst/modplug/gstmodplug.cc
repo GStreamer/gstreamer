@@ -102,6 +102,21 @@ GST_PAD_TEMPLATE_FACTORY (modplug_sink_template_factory,
     "modplug_sink",
     "audio/x-mod",
     NULL
+  ),
+  GST_CAPS_NEW (
+    "modplug_sink",
+    "audio/x-xm",
+    NULL
+  ),
+  GST_CAPS_NEW (
+    "modplug_sink",
+    "audio/x-s3m",
+    NULL
+  ),
+  GST_CAPS_NEW (
+    "modplug_sink",
+    "audio/x-it",
+    NULL
   )
 )
 
@@ -184,7 +199,7 @@ modplug_type_find (GstBuffer *buf, gpointer priv)
   /* FIXME
   if ( Med_CheckType( buf ) )
     return gst_caps_new ("mikmod_type_find", "audio/x-mod", NULL);
-    */
+  */
   
   if (Mtm_CheckType (buf))
     return gst_caps_new ("modplug_type_find", "audio/x-mod", NULL);
@@ -205,7 +220,7 @@ static GstTypeDefinition modplug_definitions[] = {
   { "modplug_audio/mod", "audio/x-mod", ".mod .sam .med .stm .mtm .669 .ult .far .amf  .dsm .imf .gdm .stx .okt", modplug_type_find },
   { "modplug_audio/xm", "audio/x-xm", ".xm", modplug_type_find },
   { "modplug_audio/it", "audio/x-it", ".it", modplug_type_find },
-  { "modplug_audio/xm", "audio/x-s3m", ".s3m", modplug_type_find },
+  { "modplug_audio/s3m", "audio/x-s3m", ".s3m", modplug_type_find },
   { NULL, NULL, NULL, NULL }
 };
 
@@ -344,8 +359,6 @@ gst_modplug_init (GstModPlug *modplug)
   modplug->_16bit          = TRUE;
   modplug->channel         = 2;
   modplug->frequency       = 44100;
-
-  /*modplug->bs = NULL;*/
 }
 
 
@@ -399,6 +412,8 @@ gst_modplug_get_query_types (GstPad *pad)
   };
   return gst_modplug_src_query_types;
 }
+
+
 static gboolean
 gst_modplug_src_query (GstPad *pad, GstQueryType type,
 		                   GstFormat *format, gint64 *value)
@@ -480,13 +495,11 @@ gst_modplug_get_streaminfo (GstModPlug *modplug)
  
   props = gst_props_empty_new ();
 
-  g_print("Num patterns : %d\n", (gint)modplug->mSoundFile->GetNumPatterns());
   entry = gst_props_entry_new ("Patterns", GST_PROPS_INT ((gint)modplug->mSoundFile->GetNumPatterns()));
   gst_props_add_entry (props, (GstPropsEntry *) entry);
   
-  caps = gst_caps_new ("mad_streaminfo",
-		       "application/x-gst-streaminfo",
-		       props);
+  caps = gst_caps_new ("mad_streaminfo", "application/x-gst-streaminfo",
+		                   props);
   return caps;
 }
 
@@ -497,6 +510,7 @@ gst_modplug_update_info (GstModPlug *modplug)
     if (modplug->streaminfo) {
       gst_caps_unref (modplug->streaminfo);
     }
+
     modplug->streaminfo = gst_modplug_get_streaminfo (modplug);
     g_object_notify (G_OBJECT (modplug), "streaminfo"); 
 }
@@ -513,19 +527,10 @@ gst_modplug_update_metadata (GstModPlug *modplug)
   title = modplug->mSoundFile->GetTitle();
   entry = gst_props_entry_new ("Title", GST_PROPS_STRING (title));
   gst_props_add_entry (props, entry);
-  /*
-    if (info.authorString) {
-      entry = gst_props_entry_new ("Composer", GST_PROPS_STRING (info.authorString));
-      gst_props_add_entry (props, entry);
-    }
-    if (info.copyrightString) {
-      entry = gst_props_entry_new ("Copyright", GST_PROPS_STRING (info.copyrightString));
-      gst_props_add_entry (props, entry);
-    }*/
 
   modplug->metadata = gst_caps_new ("modplug_metadata",
                                     "application/x-gst-metadata",
-			                              props);
+                                    props);
 
   g_object_notify (G_OBJECT (modplug), "metadata");
 }
@@ -535,34 +540,6 @@ gst_modplug_update_metadata (GstModPlug *modplug)
 static gboolean
 modplug_negotiate (GstModPlug *modplug)
 {
-/*  GstCaps *allowed;
-  gboolean sign = TRUE;
-  gint width = 0, depth = 0;
-
-  
-  allowed = gst_pad_get_allowed_caps (siddec->srcpad);
-  if (!allowed)
-    return FALSE;
-
-  GET_FIXED_INT     (allowed, "width",      &width);
-  GET_FIXED_INT     (allowed, "depth",      &depth);
-
-  if (width && depth && width != depth) {
-    return FALSE;
-  }
-  width = width | depth;
-  
-  if (width) {
-    siddec->config->bitsPerSample = width;
-  }
-
-  GET_FIXED_BOOLEAN (allowed, "signed",     &sign);
-  GET_FIXED_INT     (allowed, "rate",       &siddec->config->frequency);
-  GET_FIXED_INT     (allowed, "channels",   &siddec->config->channels);
-
-  siddec->config->sampleFormat = (sign ? SIDEMU_SIGNED_PCM : SIDEMU_UNSIGNED_PCM);
-  */
-  
   modplug->length = 1152 * modplug->channel;
   
   if (modplug->_16bit)
@@ -578,21 +555,22 @@ modplug_negotiate (GstModPlug *modplug)
       GST_CAPS_NEW (
         "modplug_src",
         "audio/raw",
-          "format",       GST_PROPS_STRING ("int"),
-            "law",        GST_PROPS_INT (0),            
-            "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-            "signed",     GST_PROPS_BOOLEAN (TRUE),
-            "width",      GST_PROPS_INT (modplug->bitsPerSample),
-            "depth",      GST_PROPS_INT (modplug->bitsPerSample),
-            "rate",       GST_PROPS_INT (modplug->frequency),
-            "channels",   GST_PROPS_INT (modplug->channel)
-      )))
+          "format",       	GST_PROPS_STRING ("int"),
+            "law",        	GST_PROPS_INT (0),            
+            "endianness",   GST_PROPS_INT (G_BYTE_ORDER),
+            "signed",     	GST_PROPS_BOOLEAN (TRUE),
+            "width",      	GST_PROPS_INT (modplug->bitsPerSample),
+            "depth",      	GST_PROPS_INT (modplug->bitsPerSample),
+            "rate",       	GST_PROPS_INT (modplug->frequency),
+            "channels",     GST_PROPS_INT (modplug->channel),
+           NULL)
+       ))
     {
       return FALSE;
     }
   }
   
-  gst_modplug_setup (modplug);
+ gst_modplug_setup (modplug);
 
   return TRUE;
 }
@@ -607,15 +585,16 @@ gst_modplug_loop (GstElement *element)
   g_return_if_fail (GST_IS_MODPLUG (element));
 	
   modplug = GST_MODPLUG (element);
+
   if (modplug->state == MODPLUG_STATE_NEED_TUNE) 
   {            
-    GstBuffer *buf;
+/*    GstBuffer *buf;*/
     
     modplug->total_samples = 0;
     modplug->seek_at = -1;
     modplug->need_discont = FALSE;
     modplug->eos = FALSE;
-            
+/*            
     buf = gst_pad_pull (modplug->sinkpad);
     g_assert (buf != NULL);
       
@@ -629,7 +608,7 @@ gst_modplug_loop (GstElement *element)
         case GST_EVENT_DISCONTINUOUS:
           break;
         default:
-          /* bail out, we're not going to do anything */
+           bail out, we're not going to do anything 
           gst_event_unref (event);
           gst_pad_send_event (modplug->srcpad, gst_event_new (GST_EVENT_EOS));
           gst_element_set_eos (element);
@@ -643,6 +622,12 @@ gst_modplug_loop (GstElement *element)
 
       gst_buffer_unref (buf);
     }
+*/
+
+    modplug->song_size = gst_bytestream_length (modplug->bs);
+  
+    gst_bytestream_peek_bytes (modplug->bs, &modplug->buffer_in,  modplug->song_size);
+    modplug->state = MODPLUG_STATE_LOAD_TUNE; 
   }  
   
   if (modplug->state == MODPLUG_STATE_LOAD_TUNE) 
@@ -687,7 +672,7 @@ gst_modplug_loop (GstElement *element)
       GstBuffer *buffer_out;
       GstFormat format;
       gint64 value;
-   
+ 
       format = GST_FORMAT_TIME;
       gst_modplug_src_query (modplug->srcpad, GST_QUERY_POSITION, &format, &value);
       
@@ -706,7 +691,8 @@ gst_modplug_loop (GstElement *element)
       GST_BUFFER_SIZE (buffer_out) = modplug->length;
       GST_BUFFER_TIMESTAMP (buffer_out) = value;
       
-      gst_pad_push (modplug->srcpad, buffer_out);   
+      if (GST_PAD_IS_USABLE (modplug->srcpad))
+        gst_pad_push (modplug->srcpad, buffer_out);   
     }
     else
       if (GST_PAD_IS_USABLE (modplug->srcpad))
@@ -728,9 +714,10 @@ gst_modplug_change_state (GstElement *element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
-    case GST_STATE_READY_TO_PAUSED:   
+      break;
+    case GST_STATE_READY_TO_PAUSED:  
+      modplug->bs = gst_bytestream_new (modplug->sinkpad);
       modplug->song_size = 0;
-      modplug->buffer_in = (guint8 *) g_malloc( 1024 *1024 * 2 );
       modplug->state = MODPLUG_STATE_NEED_TUNE;
       modplug->metadata = NULL;
       modplug->streaminfo = NULL;
@@ -739,11 +726,14 @@ gst_modplug_change_state (GstElement *element)
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:              
-      /*gst_bytestream_destroy (modplug->bs);*/
+    case GST_STATE_PAUSED_TO_READY:     
+      gst_bytestream_destroy (modplug->bs);          
       modplug->mSoundFile->Destroy ();      
       g_free (modplug->audiobuffer);      
+      g_free (modplug->buffer_in);
       modplug->audiobuffer = NULL;
+      modplug->buffer_in = NULL;
+      modplug->state = MODPLUG_STATE_NEED_TUNE;
       break;
     case GST_STATE_READY_TO_NULL:         
       break;
@@ -879,8 +869,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
 	guint i;
   
   /* this filter needs the bytestream package */
-  /*if (!gst_library_load ("gstbytestream"))
-    return FALSE;*/
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
   
   factory = gst_element_factory_new ("modplug", GST_TYPE_MODPLUG, &modplug_details);
   g_return_val_if_fail (factory != NULL, FALSE);

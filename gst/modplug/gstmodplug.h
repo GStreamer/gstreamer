@@ -28,6 +28,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 #include <gst/gst.h>
+#include <gst/bytestream/bytestream.h>
 	
 #include "modplug_types.h"	
 
@@ -49,6 +50,7 @@ struct _GstModPlug {
   guint8 *buffer_in;
   GstCaps *metadata;
   GstCaps	*streaminfo;
+  GstByteStream *bs;
 
   const gchar *songname;
   gboolean reverb;
