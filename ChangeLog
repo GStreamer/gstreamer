@@ -1,3 +1,19 @@
+2004-06-19  Jan Schmidt  <thaytan@mad.scientist.com>
+	* ext/dvdnav/gst-dvd:
+	Grab the gconf key from the right spot
+	* gst/debug/gstnavseek.c: (gst_navseek_init),
+	(gst_navseek_segseek), (gst_navseek_handle_src_event),
+	(gst_navseek_chain):
+	* gst/debug/gstnavseek.h:
+	  Add 's', 'e' and 'l' keypresses to navseek to define the start,end
+	  and loop parameters of a segment seek.
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_videotestsrc_init),
+	(gst_videotestsrc_get_event_masks),
+	(gst_videotestsrc_handle_src_event), (gst_videotestsrc_get):
+	* gst/videotestsrc/gstvideotestsrc.h:
+	  Add seeking support to videotestsrc
+	  Initialise the timestamp_offset variable.
+
 2004-06-18  Wim Taymans  <wim@fluendo.com>
 
 	* ext/sidplay/gstsiddec.cc:

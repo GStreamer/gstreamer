@@ -75,6 +75,9 @@ static GstData *gst_videotestsrc_get (GstPad * pad);
 static const GstQueryType *gst_videotestsrc_get_query_types (GstPad * pad);
 static gboolean gst_videotestsrc_src_query (GstPad * pad,
     GstQueryType type, GstFormat * format, gint64 * value);
+static const GstEventMask *gst_videotestsrc_get_event_masks (GstPad * pad);
+static gboolean gst_videotestsrc_handle_src_event (GstPad * pad,
+    GstEvent * event);
 
 static GstElementClass *parent_class = NULL;
 
@@ -355,12 +358,22 @@ gst_videotestsrc_init (GstVideotestsrc * videotestsrc)
   gst_pad_set_query_function (videotestsrc->srcpad, gst_videotestsrc_src_query);
   gst_pad_set_query_type_function (videotestsrc->srcpad,
       gst_videotestsrc_get_query_types);
+  gst_pad_set_event_mask_function (videotestsrc->srcpad,
+      gst_videotestsrc_get_event_masks);
+  gst_pad_set_event_function (videotestsrc->srcpad,
+      gst_videotestsrc_handle_src_event);
+
 
   gst_videotestsrc_set_pattern (videotestsrc, GST_VIDEOTESTSRC_SMPTE);
 
   videotestsrc->num_buffers = -1;
   videotestsrc->num_buffers_left = -1;
   videotestsrc->sync = TRUE;
+  videotestsrc->need_discont = FALSE;
+  videotestsrc->loop = FALSE;
+  videotestsrc->segment_start_frame = -1;
+  videotestsrc->segment_end_frame = -1;
+  videotestsrc->timestamp_offset = 0;
 }
 
 
@@ -405,6 +418,91 @@ gst_videotestsrc_src_query (GstPad * pad,
   return res;
 }
 
+static const GstEventMask *
+gst_videotestsrc_get_event_masks (GstPad * pad)
+{
+  static const GstEventMask src_event_masks[] = {
+    {GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH},
+    {0,}
+  };
+
+  return src_event_masks;
+}
+
+static gboolean
+gst_videotestsrc_handle_src_event (GstPad * pad, GstEvent * event)
+{
+  gboolean res = TRUE;
+  GstVideotestsrc *videotestsrc;
+  gint64 new_n_frames;
+
+  g_return_val_if_fail (pad != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  videotestsrc = GST_VIDEOTESTSRC (gst_pad_get_parent (pad));
+  new_n_frames = videotestsrc->n_frames;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+    {
+      switch (GST_EVENT_SEEK_FORMAT (event)) {
+        case GST_FORMAT_TIME:
+          new_n_frames =
+              GST_EVENT_SEEK_OFFSET (event) * (double) videotestsrc->rate /
+              GST_SECOND;
+          videotestsrc->segment_start_frame = -1;
+          videotestsrc->segment_end_frame = -1;
+          break;
+        case GST_FORMAT_DEFAULT:
+          new_n_frames = GST_EVENT_SEEK_OFFSET (event);
+          videotestsrc->segment_start_frame = -1;
+          videotestsrc->segment_end_frame = -1;
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    }
+    case GST_EVENT_SEEK_SEGMENT:
+    {
+      switch (GST_EVENT_SEEK_FORMAT (event)) {
+        case GST_FORMAT_TIME:
+          new_n_frames =
+              GST_EVENT_SEEK_OFFSET (event) * (double) videotestsrc->rate /
+              GST_SECOND;
+          videotestsrc->segment_start_frame = new_n_frames;
+          videotestsrc->segment_end_frame =
+              GST_EVENT_SEEK_ENDOFFSET (event) * (double) videotestsrc->rate /
+              GST_SECOND;
+          videotestsrc->loop =
+              GST_EVENT_SEEK_TYPE (event) & GST_SEEK_FLAG_SEGMENT_LOOP;
+          break;
+        case GST_FORMAT_DEFAULT:
+          new_n_frames = GST_EVENT_SEEK_OFFSET (event);
+          videotestsrc->segment_start_frame = new_n_frames;
+          videotestsrc->segment_end_frame = GST_EVENT_SEEK_ENDOFFSET (event);
+          videotestsrc->loop =
+              GST_EVENT_SEEK_TYPE (event) & GST_SEEK_FLAG_SEGMENT_LOOP;
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    }
+    default:
+      res = FALSE;
+      break;
+  }
+
+  if (videotestsrc->n_frames != new_n_frames) {
+    videotestsrc->n_frames = new_n_frames;
+    videotestsrc->need_discont = TRUE;
+  }
+
+  return res;
+}
 
 static GstData *
 gst_videotestsrc_get (GstPad * pad)
@@ -424,6 +522,33 @@ gst_videotestsrc_get (GstPad * pad)
     GST_ELEMENT_ERROR (videotestsrc, CORE, NEGOTIATION, (NULL),
         ("format wasn't negotiated before get function"));
     return NULL;
+  }
+
+  if (videotestsrc->need_discont) {
+    GstClockTime ts = videotestsrc->timestamp_offset +
+        (videotestsrc->n_frames * GST_SECOND) / (double) videotestsrc->rate;
+
+    videotestsrc->need_discont = FALSE;
+    return GST_DATA (gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, ts,
+            NULL));
+  }
+
+  if ((videotestsrc->segment_end_frame != -1) &&
+      (videotestsrc->n_frames > videotestsrc->segment_end_frame)) {
+    if (videotestsrc->loop) {
+      return GST_DATA (gst_event_new (GST_EVENT_SEGMENT_DONE));
+    } else {
+      gst_element_set_eos (GST_ELEMENT (videotestsrc));
+      return GST_DATA (gst_event_new (GST_EVENT_EOS));
+    }
+  }
+
+  if (videotestsrc->num_buffers_left == 0) {
+    gst_element_set_eos (GST_ELEMENT (videotestsrc));
+    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+  } else {
+    if (videotestsrc->num_buffers_left > 0)
+      videotestsrc->num_buffers_left--;
   }
 
   newsize = gst_videotestsrc_get_size (videotestsrc, videotestsrc->width,
@@ -454,14 +579,6 @@ gst_videotestsrc_get (GstPad * pad)
     videotestsrc->n_frames++;
   }
   GST_BUFFER_DURATION (buf) = GST_SECOND / (double) videotestsrc->rate;
-
-  if (videotestsrc->num_buffers_left == 0) {
-    gst_element_set_eos (GST_ELEMENT (videotestsrc));
-    return GST_DATA (gst_event_new (GST_EVENT_EOS));
-  } else {
-    if (videotestsrc->num_buffers_left > 0)
-      videotestsrc->num_buffers_left--;
-  }
 
   return GST_DATA (buf);
 }
