@@ -1,6 +1,7 @@
 #!/bin/sh
 
 AUDIOSINK=`gconftool-2 -g /system/gstreamer/0.8/default/audiosink`
+VIDEOSINK=`gconftool-2 -g /system/gstreamer/0.8/default/videosink`
 gst-launch dvdnavsrc ! dvddemux name=demux .current_video ! { queue max-size-buffers=10 ! mpeg2dec ! mpeg2subt name=sub ! \
-navseek ! xvimagesink } demux.current_subpicture ! queue max-size-buffers=5 block-timeout=100000 ! sub.subtitle \
+navseek ! $VIDEOSINK } demux.current_subpicture ! queue max-size-buffers=5 block-timeout=100000 ! sub.subtitle \
 demux.current_audio ! { queue ! a52dec ! audioscale ! $AUDIOSINK } $@
