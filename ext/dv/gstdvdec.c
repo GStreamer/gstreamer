@@ -610,6 +610,7 @@ gst_dvdec_handle_sink_event (GstDVDec * dvdec)
     case GST_EVENT_FLUSH:
     case GST_EVENT_EOS:
     case GST_EVENT_FILLER:
+    {
       /* Forward the event to output sinks */
       if (GST_PAD_IS_LINKED (dvdec->videosrcpad)) {
         gst_event_ref (event);
@@ -619,8 +620,8 @@ gst_dvdec_handle_sink_event (GstDVDec * dvdec)
         gst_event_ref (event);
         gst_pad_push (dvdec->audiosrcpad, GST_DATA (event));
       }
-      gst_event_unref (event);
       break;
+    }
     case GST_EVENT_DISCONTINUOUS:
     {
       gint i;
@@ -877,7 +878,6 @@ gst_dvdec_loop (GstElement * element)
   dv_parse_packs (dvdec->decoder, GST_BUFFER_DATA (buf));
   if (dv_is_new_recording (dvdec->decoder, GST_BUFFER_DATA (buf)))
     dvdec->new_media = TRUE;
-
   if (GST_PAD_IS_LINKED (dvdec->audiosrcpad)) {
     gint16 *a_ptr;
     gint i, j;
