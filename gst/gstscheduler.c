@@ -71,7 +71,7 @@ gst_scheduler_init (GstScheduler *sched)
 
 /**
  * gst_scheduler_setup:
- * @sched: the schedulerr
+ * @sched: the scheduler
  *
  * Prepare the scheduler.
  */
@@ -86,7 +86,7 @@ gst_scheduler_setup (GstScheduler *sched)
 
 /**
  * gst_scheduler_reset:
- * @sched: the schedulerr
+ * @sched: the scheduler
  *
  * Reset the scheduler
  */
@@ -101,7 +101,7 @@ gst_scheduler_reset (GstScheduler *sched)
 
 /**
  * gst_scheduler_pad_connect:
- * @sched: the schedulerr
+ * @sched: the scheduler
  * @srcpad: the srcpad to connect
  * @sinkpad: the sinkpad to connect to
  *
@@ -120,7 +120,7 @@ gst_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
 
 /**
  * gst_scheduler_pad_disconnect:
- * @sched: the schedulerr
+ * @sched: the scheduler
  * @srcpad: the srcpad to disconnect
  * @sinkpad: the sinkpad to disconnect from
  *
@@ -139,7 +139,7 @@ gst_scheduler_pad_disconnect (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
 
 /**
  * gst_scheduler_pad_select:
- * @sched: the schedulerr
+ * @sched: the scheduler
  * @padlist: the padlist to select on
  *
  * register the given padlist for a select operation. 
@@ -158,7 +158,7 @@ gst_scheduler_pad_select (GstScheduler *sched, GList *padlist)
 
 /**
  * gst_scheduler_add_element:
- * @sched: the schedulerr
+ * @sched: the scheduler
  * @element: the element to add to the schedulerr
  *
  * Add an element to the schedulerr.
@@ -175,7 +175,7 @@ gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
 
 /**
  * gst_scheduler_state_transition:
- * @sched: the schedulerr
+ * @sched: the scheduler
  * @element: the element with the state transition
  * @transition: the state transition
  *
@@ -199,23 +199,28 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
 /**
  * gst_scheduler_remove_element:
  * @sched: the schedulerr
- * @element: the element to remove
+ * @element: the element to remov
  *
  * Remove an element from the schedulerr.
  */
 void
 gst_scheduler_remove_element (GstScheduler *sched, GstElement *element)
 {
+  GList *l;
+  
   g_return_if_fail (GST_IS_SCHEDULER (sched));
   g_return_if_fail (GST_IS_ELEMENT (element));
 
   if (CLASS (sched)->remove_element)
     CLASS (sched)->remove_element (sched, element);
+  
+  for (l=element->pads; l; l=l->next)
+    gst_pad_unset_sched ((GstPad*) l->data);
 }
 
 /**
  * gst_scheduler_lock_element:
- * @sched: the schedulerr
+ * @sched: the scheduler
  * @element: the element to lock
  *
  * Acquire a lock on the given element in the given scheduler.
@@ -232,7 +237,7 @@ gst_scheduler_lock_element (GstScheduler *sched, GstElement *element)
 
 /**
  * gst_scheduler_unlock_element:
- * @sched: the schedulerr
+ * @sched: the scheduler
  * @element: the element to unlock
  *
  * Release the lock on the given element in the given scheduler.
@@ -249,7 +254,7 @@ gst_scheduler_unlock_element (GstScheduler *sched, GstElement *element)
 
 /**
  * gst_scheduler_error:
- * @sched: the schedulerr
+ * @sched: the scheduler
  * @element: the element with the error
  *
  * Tell the scheduler an element was in error
@@ -266,7 +271,7 @@ gst_scheduler_error (GstScheduler *sched, GstElement *element)
 
 /**
  * gst_scheduler_yield:
- * @sched: the schedulerr
+ * @sched: the scheduler
  * @element: the element requesting a yield
  *
  * Tell the scheduler to schedule another element.
@@ -283,7 +288,7 @@ gst_scheduler_yield (GstScheduler *sched, GstElement *element)
 
 /**
  * gst_scheduler_interrupt:
- * @sched: the schedulerr
+ * @sched: the scheduler
  * @element: the element requesting an interrupt
  *
  * Tell the scheduler to interrupt execution of this element.
@@ -305,7 +310,7 @@ gst_scheduler_interrupt (GstScheduler *sched, GstElement *element)
 
 /**
  * gst_scheduler_iterate:
- * @sched: the schedulerr
+ * @sched: the scheduler
  *
  * Perform one iteration on the schedulerr.
  *
@@ -323,7 +328,7 @@ gst_scheduler_iterate (GstScheduler *sched)
 
 /**
  * gst_scheduler_show:
- * @sched: the schedulerr
+ * @sched: the scheduler
  *
  * Dump the state of the schedulerr
  */

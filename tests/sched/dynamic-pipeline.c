@@ -1,5 +1,10 @@
 #include <gst/gst.h>
 
+/* This test will fail because it tries to allocate two cothread_context's in
+ * one thread. This will cause a segfault. This is a problem with gstreamer's
+ * cothreading that will be fixed in the future.
+ */
+
 int main (int argc, char *argv[]) 
 {
     GstElement *fakesrc, *fakesink1, *fakesink2, *pipe1, *pipe2;
@@ -32,6 +37,7 @@ int main (int argc, char *argv[])
     gst_object_ref(GST_OBJECT(fakesrc));
     gst_bin_remove(GST_BIN(pipe1), fakesrc);
     gst_bin_remove(GST_BIN(pipe1), fakesink1);
+    gst_object_unref(GST_OBJECT(pipe1));
     
     // make a new pipeline
     gst_bin_add (GST_BIN(pipe2), fakesink2);

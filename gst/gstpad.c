@@ -621,11 +621,12 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
       g_warning ("cannot connect pads from decoupled elements with the same sched\n");
       return FALSE;
     } else if (realsrc->sched != realsink->sched && num_decoupled != 1) {
-      g_warning ("connecting pads with different scheds requires one decoupled element (queue)\n");
+      g_warning ("connecting pads with different scheds requires exactly one decoupled element (queue)\n");
       return FALSE;
     }
   } else if (realsrc->sched || realsink->sched) {
     g_warning ("you can't connect to a non-managed element");
+    return FALSE;
   }
 
   /* check for reversed directions and swap if necessary */
@@ -745,7 +746,7 @@ gst_pad_get_padtemplate (GstPad *pad)
  * @pad: the pad to set the scheduler for
  * @sched: The scheduler to set
  *
- * Set the sceduler for the pad
+ * Set the scheduler for the pad
  */
 void
 gst_pad_set_sched (GstPad *pad, GstScheduler *sched)
@@ -773,6 +774,21 @@ gst_pad_get_sched (GstPad *pad)
   return GST_RPAD_SCHED(pad);
 }
 
+/**
+ * gst_pad_unset_sched:
+ * @pad: the pad to unset the scheduler for
+ *
+ * Unset the scheduler for the pad
+ */
+void
+gst_pad_unset_sched (GstPad *pad)
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_PAD (pad));
+ 
+  GST_RPAD_SCHED(pad) = NULL;
+}
+ 
 /**
  * gst_pad_get_real_parent:
  * @pad: the pad to get the parent from

@@ -751,7 +751,7 @@ gst_bin_iterate_func (GstBin * bin)
     }
   }
   else {
-    g_warning ("bin \"%d\" can't be iterated on!\n", GST_ELEMENT_NAME (bin));
+    g_warning ("bin \"%s\" can't be iterated on!\n", GST_ELEMENT_NAME (bin));
   }
 
   return FALSE;

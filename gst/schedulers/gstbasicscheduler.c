@@ -920,10 +920,9 @@ gst_basic_scheduler_add_element (GstScheduler * sched, GstElement * element)
   GST_INFO (GST_CAT_SCHEDULING, "adding element \"%s\" to scheduler", GST_ELEMENT_NAME (element));
 
   /* if the element already has a different scheduler, remove the element from it */
-  if (GST_ELEMENT_SCHED (element)) {
-    gst_basic_scheduler_remove_element (GST_ELEMENT_SCHED (element), element);
-  }
-
+  if (GST_ELEMENT_SCHED (element))
+    GST_ERROR(GST_CAT_SCHEDULING, "grave error");
+  
   /* set the sched pointer in the element itself */
   GST_ELEMENT_SCHED (element) = sched;
 
