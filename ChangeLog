@@ -1,3 +1,11 @@
+2004-02-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_init), (gst_dvdec_src_convert),
+	(gst_dvdec_sink_convert), (gst_dvdec_handle_sink_event),
+	(gst_dvdec_video_getcaps), (gst_dvdec_video_link),
+	(gst_dvdec_loop), (gst_dvdec_change_state):
+	Second attempt at committing a working dvdec element.
+
 2004-02-06  David Schleef  <ds@schleef.org>
 
 	Build fixes for OS X: (see #129600)
