@@ -1,3 +1,8 @@
+2004-07-15  Johan Dahlin  <johan@gnome.org>
+
+	* gst/__init__.py: Use DLFCN instead of dl to help python
+	installations without the dl module (gentoo for instance)
+
 2004-07-13  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gst.override (_wrap_gst_pad_query, _wrap_gst_element_query) 

@@ -20,9 +20,6 @@
 # Author: David I. Lehn <dlehn@users.sourceforge.net>
 #
 
-import sys
-import dl
-
 try:
    import ltihooks
 except:
@@ -31,7 +28,11 @@ except:
 import gobject
 del gobject
 
-sys.setdlopenflags(dl.RTLD_LAZY | dl.RTLD_GLOBAL)
-del sys, dl
+try:
+   import sys, DLFCN
+   sys.setdlopenflags(DLFCN.RTLD_LAZY | DLFCN.RTLD_GLOBAL)
+   del sys, DLFCN
+except ImportError:
+   pass
 
 from _gst import *
