@@ -66,7 +66,7 @@ _gst_buffer_initialize (void)
 /**
  * gst_buffer_print_stats:
  *
- * Print statistics about live buffers.
+ * Logs statistics about live buffers (using g_log).
  */
 void
 gst_buffer_print_stats (void)
@@ -78,9 +78,9 @@ gst_buffer_print_stats (void)
 /**
  * gst_buffer_new:
  *
- * Create a new buffer.
+ * Creates a newly allocated buffer.
  *
- * Returns: new buffer
+ * Returns: new #GstBuffer
  */
 GstBuffer*
 gst_buffer_new (void)
@@ -122,9 +122,9 @@ gst_buffer_new (void)
  * @offset: the offset of the new buffer
  * @size: the size of the new buffer
  *
- * Create a new buffer using the specified bufferpool, offset and size.
+ * Creates a newly allocated buffer using the specified bufferpool, offset and size.
  *
- * Returns: new buffer
+ * Returns: new #GstBuffer
  */
 GstBuffer*
 gst_buffer_new_from_pool (GstBufferPool *pool, guint32 offset, guint32 size)
@@ -147,13 +147,14 @@ gst_buffer_new_from_pool (GstBufferPool *pool, guint32 offset, guint32 size)
 
 /**
  * gst_buffer_create_sub:
- * @parent: parent buffer
- * @offset: offset into parent buffer
- * @size: size of new subbuffer
+ * @parent: parent #GstBuffer
+ * @offset: offset into parent #GstBuffer
+ * @size: size of new sub-buffer
  *
  * Creates a sub-buffer from the parent at a given offset.
+ * This sub-buffer uses the actual memory space of the parent buffer.
  *
- * Returns: new buffer
+ * Returns: a new #GstBuffer
  */
 GstBuffer*
 gst_buffer_create_sub (GstBuffer *parent,
@@ -217,50 +218,55 @@ gst_buffer_create_sub (GstBuffer *parent,
 /* FIXME FIXME: how does this overlap with the newly-added gst_buffer_span() ??? */
 /**
  * gst_buffer_append:
- * @buffer: a buffer
- * @append: the buffer to append
+ * @first: #GstBuffer to append to
+ * @second: #GstBuffer to append
  *
- * Creates a new buffer by appending the data of append to the
- * existing data of buffer.
+ * Creates a new buffer by appending the data of second to the
+ * existing data of first.  This will grow first if first is unused elsewhere, 
+ * or create a newly allocated buffer if it is in use.
+ * second will not be changed.
  *
- * Returns: new buffer
+ * Returns: a new #GstBuffer
  */
 GstBuffer*
-gst_buffer_append (GstBuffer *buffer, 
-		   GstBuffer *append) 
+gst_buffer_append (GstBuffer *first, 
+		   GstBuffer *second) 
 {
   guint size;
-  GstBuffer *newbuf;
+  GstBuffer *newbuf = NULL;
+  GstBuffer *buffer = NULL;
 
-  g_return_val_if_fail (buffer != NULL, NULL);
-  g_return_val_if_fail (append != NULL, NULL);
-  g_return_val_if_fail (buffer->pool == NULL, NULL);
-  g_return_val_if_fail (GST_BUFFER_REFCOUNT(buffer) > 0, NULL);
-  g_return_val_if_fail (GST_BUFFER_REFCOUNT(append) > 0, NULL);
+  g_return_val_if_fail (first != NULL, NULL);
+  g_return_val_if_fail (second != NULL, NULL);
+  g_return_val_if_fail (first->pool == NULL, NULL);
+  g_return_val_if_fail (GST_BUFFER_REFCOUNT (first) > 0, NULL);
+  g_return_val_if_fail (GST_BUFFER_REFCOUNT (second) > 0, NULL);
 
-  GST_INFO (GST_CAT_BUFFER,"appending buffers %p and %p",buffer,append);
+  GST_INFO (GST_CAT_BUFFER,"appending buffers %p and %p",first, second);
 
-  GST_BUFFER_LOCK (buffer);
-  /* the buffer is not used by anyone else */
-  if (GST_BUFFER_REFCOUNT (buffer) == 1 && buffer->parent == NULL 
-	  && !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DONTFREE)) {
-    /* save the old size */
-    size = buffer->size;
-    buffer->size += append->size;
-    buffer->data = g_realloc (buffer->data, buffer->size);
-    memcpy(buffer->data + size, append->data, append->size);
-    GST_BUFFER_UNLOCK (buffer);
+  GST_BUFFER_LOCK (first);
+  /* is the buffer used by anyone else ? */
+  if (GST_BUFFER_REFCOUNT (first) == 1 && first->parent == NULL 
+	  && !GST_BUFFER_FLAG_IS_SET (first, GST_BUFFER_DONTFREE)) {
+    /* it's not, so we can realloc and expand the first buffer, 
+     * filling it with the second's data */
+    size = first->size;
+    first->size += second->size;
+    first->data = g_realloc (first->data, first->size);
+    memcpy(first->data + size, second->data, second->size);
+    GST_BUFFER_UNLOCK (first);
+    buffer = first;
   }
-  /* the buffer is used, create a new one */
   else {
+    /* the buffer is used, create a new one */
     newbuf = gst_buffer_new ();
-    newbuf->size = buffer->size+append->size;
+    newbuf->size = first->size + second->size;
     newbuf->data = g_malloc (newbuf->size);
-    memcpy (newbuf->data, buffer->data, buffer->size);
-    memcpy (newbuf->data+buffer->size, append->data, append->size);
-    GST_BUFFER_TIMESTAMP (newbuf) = GST_BUFFER_TIMESTAMP (buffer);
-    GST_BUFFER_UNLOCK (buffer);
-    gst_buffer_unref (buffer);
+    memcpy (newbuf->data, first->data, first->size);
+    memcpy (newbuf->data + first->size, second->data, second->size);
+    GST_BUFFER_TIMESTAMP (newbuf) = GST_BUFFER_TIMESTAMP (first);
+    GST_BUFFER_UNLOCK (first);
+    gst_buffer_unref (first);
     buffer = newbuf;
   }
   return buffer;
@@ -268,9 +274,9 @@ gst_buffer_append (GstBuffer *buffer,
 
 /**
  * gst_buffer_destroy:
- * @buffer: the GstBuffer to destroy
+ * @buffer: #GstBuffer to destroy
  *
- * destroy the buffer
+ * Destroys the buffer.  Actual data will be retained if DONTFREE is set.
  */
 void 
 gst_buffer_destroy (GstBuffer *buffer) 
@@ -315,9 +321,9 @@ gst_buffer_destroy (GstBuffer *buffer)
 
 /**
  * gst_buffer_ref:
- * @buffer: the GstBuffer to reference
+ * @buffer: a #GstBuffer to reference
  *
- * Increment the refcount of this buffer.
+ * Increments the reference count of this buffer.
  */
 void 
 gst_buffer_ref (GstBuffer *buffer) 
@@ -338,10 +344,10 @@ gst_buffer_ref (GstBuffer *buffer)
 
 /**
  * gst_buffer_ref_by_count:
- * @buffer: the GstBuffer to reference
- * @count: a number
+ * @buffer: a #GstBuffer to reference
+ * @count: the number to increment the reference count by
  *
- * Increment the refcount of this buffer by the given number.
+ * Increments the reference count of this buffer by the given number.
  */
 void
 gst_buffer_ref_by_count (GstBuffer *buffer, gint count)
@@ -362,9 +368,9 @@ gst_buffer_ref_by_count (GstBuffer *buffer, gint count)
 
 /**
  * gst_buffer_unref:
- * @buffer: the GstBuffer to unref
+ * @buffer: a #GstBuffer to unreference
  *
- * Decrement the refcount of this buffer. If the refcount is
+ * Decrements the refcount of this buffer. If the refcount is
  * zero, the buffer will be destroyed.
  */
 void 
@@ -394,11 +400,11 @@ gst_buffer_unref (GstBuffer *buffer)
 
 /**
  * gst_buffer_copy:
- * @buffer: the orignal GstBuffer to make a copy of
+ * @buffer: a #GstBuffer to make a copy of
  *
- * Make a full copy of the give buffer, data and all.
+ * Make a full newly allocated copy of the given buffer, data and all.
  *
- * Returns: new buffer
+ * Returns: new #GstBuffer
  */
 GstBuffer *
 gst_buffer_copy (GstBuffer *buffer)
@@ -458,12 +464,12 @@ gst_buffer_is_span_fast (GstBuffer *buf1, GstBuffer *buf2)
 
 /**
  * gst_buffer_span:
- * @buf1: first source buffer to merge
+ * @buf1: first source #GstBuffer to merge
  * @offset: offset in first buffer to start new buffer
- * @buf2: second source buffer to merge
+ * @buf2: second source #GstBuffer to merge
  * @len: length of new buffer
  *
- * Create a new buffer that consists of part of buf1 and buf2.
+ * Creates a new buffer that consists of part of buf1 and buf2.
  * Logically, buf1 and buf2 are concatenated into a single larger
  * buffer, and a new buffer is created at the given offset inside
  * this space, with a given length.
@@ -472,7 +478,7 @@ gst_buffer_is_span_fast (GstBuffer *buf1, GstBuffer *buf2)
  * and are contiguous, the new buffer will be a child of the shared
  * parent, and thus no copying is necessary.
  *
- * Returns: new buffer that spans the two source buffers
+ * Returns: a new #GstBuffer that spans the two source buffers
  */
 /* FIXME need to think about CoW and such... */
 GstBuffer *
@@ -524,8 +530,8 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
 
 /**
  * gst_buffer_merge:
- * @buf1: first source buffer to merge
- * @buf2: second source buffer to merge
+ * @buf1: first source #GstBuffer to merge
+ * @buf2: second source #GstBuffer to merge
  *
  * Create a new buffer that is the concatenation of the two source
  * buffers.  The original source buffers will not be modified or
@@ -534,7 +540,7 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
  * Internally is nothing more than a specialized gst_buffer_span,
  * so the same optimizations can occur.
  *
- * Returns: new buffer that's the concatenation of the source buffers
+ * Returns: a new #GstBuffer that's the concatenation of the source buffers
  */
 GstBuffer *
 gst_buffer_merge (GstBuffer *buf1, GstBuffer *buf2)
