@@ -222,7 +222,6 @@ g_signal_connect(object,name,func,func_data) \
 gtk_signal_connect((GtkObject *)object,name,func,func_data)
 
 #define \
-
 g_signal_handlers_disconnect_by_func(object,func,func_data) \
 gtk_signal_disconnect_by_func((GtkObject *)object,func,func_data)
 
