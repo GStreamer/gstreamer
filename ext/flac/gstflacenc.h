@@ -52,6 +52,9 @@ struct _FlacEnc {
   gint 		 depth;
   gint 		 sample_rate;
   gboolean	 negotiated;
+  gint 		 quality;
+  gboolean	 stopped;
+  FLAC__int32 	*data;
 
   FLAC__StreamEncoder *encoder;
 };
