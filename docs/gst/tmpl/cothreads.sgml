@@ -100,8 +100,6 @@ Indicates the cothread is destroyed.
 
 @cothread: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@thread: 
 
 
 <!-- ##### FUNCTION cothread_set_private ##### -->
@@ -111,8 +109,6 @@ Indicates the cothread is destroyed.
 
 @cothread: 
 @data: 
-<!-- # Unused Parameters # -->
-@thread: 
 
 
 <!-- ##### FUNCTION cothread_create ##### -->
@@ -130,8 +126,6 @@ Indicates the cothread is destroyed.
 </para>
 
 @cothread: 
-<!-- # Unused Parameters # -->
-@thread: 
 
 
 <!-- ##### FUNCTION cothread_setfunc ##### -->
@@ -143,8 +137,6 @@ Indicates the cothread is destroyed.
 @func: 
 @argc: 
 @argv: 
-<!-- # Unused Parameters # -->
-@thread: 
 
 
 <!-- ##### FUNCTION cothread_stop ##### -->
@@ -153,8 +145,6 @@ Indicates the cothread is destroyed.
 </para>
 
 @cothread: 
-<!-- # Unused Parameters # -->
-@thread: 
 
 
 <!-- ##### FUNCTION cothread_switch ##### -->
@@ -163,8 +153,6 @@ Indicates the cothread is destroyed.
 </para>
 
 @cothread: 
-<!-- # Unused Parameters # -->
-@thread: 
 
 
 <!-- ##### FUNCTION cothread_context_get_data ##### -->
@@ -175,8 +163,6 @@ Indicates the cothread is destroyed.
 @cothread: 
 @key: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@thread: 
 
 
 <!-- ##### FUNCTION cothread_context_set_data ##### -->
@@ -187,8 +173,6 @@ Indicates the cothread is destroyed.
 @cothread: 
 @key: 
 @data: 
-<!-- # Unused Parameters # -->
-@thread: 
 
 
 <!-- ##### FUNCTION cothread_lock ##### -->
@@ -197,8 +181,6 @@ Indicates the cothread is destroyed.
 </para>
 
 @cothread: 
-<!-- # Unused Parameters # -->
-@thread: 
 
 
 <!-- ##### FUNCTION cothread_trylock ##### -->
@@ -208,8 +190,6 @@ Indicates the cothread is destroyed.
 
 @cothread: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@thread: 
 
 
 <!-- ##### FUNCTION cothread_unlock ##### -->
@@ -218,8 +198,6 @@ Indicates the cothread is destroyed.
 </para>
 
 @cothread: 
-<!-- # Unused Parameters # -->
-@thread: 
 
 
 <!-- ##### FUNCTION cothread_main ##### -->
