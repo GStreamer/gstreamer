@@ -1,3 +1,7 @@
+2004-07-13  Steve Lhomme  <steve.lhomme@free.fr>
+	* gst/elements/gstfilesrc.c:
+	  Binary files support under Windows now OK
+      
 2004-07-13  Benjamin Otte  <otte@gnome.org>
 
 	  compatibility fixes for Solaris 8/gcc 2.95

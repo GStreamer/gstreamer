@@ -51,7 +51,6 @@
 #ifndef S_ISSOCK
 #define S_ISSOCK(x) (0)
 #endif
-/* FIXME: is that enough or should we do #ifdef __WIN32__ stuff? */
 #ifndef O_BINARY
 #define O_BINARY (0)
 #endif
