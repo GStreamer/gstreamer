@@ -1,5 +1,34 @@
 2004-07-21  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstbin.c: (gst_bin_get_type), (gst_bin_class_init),
+	(gst_bin_fix_state), (gst_bin_add_func), (gst_bin_remove_func),
+	(gst_bin_child_state_change_func), (set_kid_state_func),
+	(gst_bin_set_state), (gst_bin_change_state_norecurse):
+	  make state changes work correctly and reentrant (so removing
+	  elements from bins during state changes of bins doesn't cause
+	  segfaults or even wrong states)
+	  add debugging category and debugging output to print children states
+	* gst/gstbin.c: (gst_bin_dispose): 
+	  add some assertion checks
+	* gst/gstbin.h:
+	* gst/gstbin.c: (gst_bin_sync_children_state):
+	  deprecate this function - it just does gst_bin_set_state (bin,
+	  GST_STATE (bin)) 
+	* testsuite/threads/queue.c: (main):
+	  don't use gst_bin_sync_children_state anymore
+	* testsuite/states/Makefile.am:
+	* testsuite/states/bin.c:
+	  test that the state changes of bins work as expected
+	* gst/gstthread.c: (gst_thread_class_init), (gst_thread_set_state):
+	  some adjustments to change states correctly, too
+	* gst/gstthread.c: (gst_thread_change_state):
+	  don't enable/disable "threadsafe" properties, they're unused and
+	  cause random segfaults
+	* testsuite/threads/Makefile.am:
+	  the queue check randomly passes now, ignore it
+
+2004-07-21  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gstpad.c:
 	  check if data is NULL before outputting debug info. (fixes #145100)
 

@@ -76,7 +76,7 @@ main (gint argc, gchar * argv[])
   gst_element_set_state (thread, GST_STATE_PLAYING);
   g_print ("SLEEPING 1 sec\n");
   sleep (1);
-  gst_bin_sync_children_state (GST_BIN (pipeline));
+  gst_element_set_state (pipeline, gst_element_get_state (pipeline));
   g_print ("SLEEPING 2 sec\n");
   sleep (2);
 
