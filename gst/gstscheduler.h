@@ -151,6 +151,9 @@ void			gst_scheduler_show		(GstScheduler *sched);
 #define GST_IS_SCHEDULER_FACTORY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_SCHEDULER_FACTORY))
 #define GST_SCHEDULER_FACTORY_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_SCHEDULER_FACTORY, GstSchedulerFactoryClass))
 
+/* change this to change the default scheduler */
+#define GST_SCHEDULER_DEFAULT_NAME	"basicomega"
+
 typedef struct _GstSchedulerFactory GstSchedulerFactory;
 typedef struct _GstSchedulerFactoryClass GstSchedulerFactoryClass;
 

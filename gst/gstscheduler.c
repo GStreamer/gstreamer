@@ -802,7 +802,7 @@ gst_scheduler_factory_class_init (GstSchedulerFactoryClass *klass)
   factory_parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
 
   if (!_default_name)
-    _default_name = g_strdup ("basicomega");
+    _default_name = g_strdup (GST_SCHEDULER_DEFAULT_NAME);
 }
 
 static void

@@ -100,8 +100,8 @@ enum {
 #define NUL '\0'
 #endif
 
-/* default scheduler, 'basicomega', can be changed in
- * gstscheduler.c in function gst_scheduler_factory_class_init
+/* default scheduler, can be changed in gstscheduler.h with
+ * the GST_SCHEDULER_DEFAULT_NAME define.
  */
 static const struct poptOption options[] = {
   {NULL, NUL, POPT_ARG_CALLBACK|POPT_CBFLAG_PRE|POPT_CBFLAG_POST, &init_popt_callback, 0, NULL, NULL},
@@ -114,7 +114,7 @@ static const struct poptOption options[] = {
   {"gst-plugin-spew",    NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_PLUGIN_SPEW,    "enable verbose plugin loading diagnostics", NULL},
   {"gst-plugin-path",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_PATH,    "'" G_SEARCHPATH_SEPARATOR_S "'--separated path list for loading plugins", "PATHS"},
   {"gst-plugin-load",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_LOAD,    "comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH", "PLUGINS"},
-  {"gst-scheduler",      NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_SCHEDULER,      "scheduler to use ('basicomega' is the default)", "SCHEDULER"},
+  {"gst-scheduler",      NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_SCHEDULER,      "scheduler to use ('"GST_SCHEDULER_DEFAULT_NAME"' is the default)", "SCHEDULER"},
   {"gst-nothreads",      NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_NOTHREADS,      "use NOPs for all threading and locking operations", NULL},
   {"gst-registry",       NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_REGISTRY,       "registry to use" , "REGISTRY"},
   POPT_TABLEEND
