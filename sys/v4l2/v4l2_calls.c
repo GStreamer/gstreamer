@@ -342,6 +342,49 @@ gst_v4l2_empty_lists (GstV4l2Element *v4l2element)
 	v4l2element->colors = NULL;
 }
 
+/* FIXME: move this stuff to gstv4l2tuner.c? */
+
+static void
+gst_v4l2_set_defaults (GstV4l2Element *v4l2element)
+{
+  GstTunerNorm *norm = NULL;
+  GstTunerChannel *channel = NULL;
+  GstTuner *tuner = GST_TUNER (v4l2element);
+  
+  if (v4l2element->norm)
+    norm = gst_tuner_find_norm_by_name (tuner, v4l2element->norm);
+  if (norm) {
+    gst_tuner_set_norm (tuner, norm);
+  } else {
+    norm = GST_TUNER_NORM (gst_tuner_get_norm (GST_TUNER (v4l2element)));
+    v4l2element->norm = g_strdup (norm->label);
+    gst_tuner_norm_changed (tuner, norm);
+    g_object_notify (G_OBJECT (v4l2element), "norm"); 
+  }
+  
+  if (v4l2element->channel) 
+    channel = gst_tuner_find_channel_by_name (tuner, v4l2element->channel);
+  if (channel) {
+    gst_tuner_set_channel (tuner, channel);
+  } else {
+    channel = GST_TUNER_CHANNEL (gst_tuner_get_channel (GST_TUNER (v4l2element)));
+    v4l2element->channel = g_strdup (channel->label);
+    gst_tuner_channel_changed (tuner, channel);
+    g_object_notify (G_OBJECT (v4l2element), "channel"); 
+  }
+  if (v4l2element->frequency != 0) {
+    gst_tuner_set_frequency (tuner, channel, v4l2element->frequency);
+  } else {
+    v4l2element->frequency = gst_tuner_get_frequency (tuner, channel);
+    if (v4l2element->frequency == 0) {
+      /* guess */
+      gst_tuner_set_frequency (tuner, channel, 1000);
+    } else {
+      g_object_notify (G_OBJECT (v4l2element), "frequency");
+    }
+  }
+}
+
 
 /******************************************************
  * gst_v4l2_open():
@@ -387,7 +430,10 @@ gst_v4l2_open (GstV4l2Element *v4l2element)
 	if (!gst_v4l2_fill_lists(v4l2element))
 		goto error;
 
-	gst_info("Opened device '%s' (%s) successfully\n",
+	/* set defaults */
+	gst_v4l2_set_defaults (v4l2element);
+
+	GST_INFO_OBJECT (v4l2element, "Opened device '%s' (%s) successfully\n",
 		v4l2element->vcap.card, v4l2element->device);
 
 	return TRUE;

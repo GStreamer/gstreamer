@@ -40,14 +40,14 @@ static const GList *
 		gst_v4l2_tuner_list_channels	(GstTuner        *mixer);
 static void	gst_v4l2_tuner_set_channel	(GstTuner        *mixer,
 						 GstTunerChannel *channel);
-static const GstTunerChannel *
+static GstTunerChannel *
 		gst_v4l2_tuner_get_channel	(GstTuner        *mixer);
 
 static const GList *
 		gst_v4l2_tuner_list_norms	(GstTuner        *mixer);
 static void	gst_v4l2_tuner_set_norm		(GstTuner        *mixer,
 						 GstTunerNorm    *norm);
-static const GstTunerNorm *
+static GstTunerNorm *
 		gst_v4l2_tuner_get_norm		(GstTuner        *mixer);
 
 static void	gst_v4l2_tuner_set_frequency	(GstTuner        *mixer,
@@ -205,13 +205,15 @@ gst_v4l2_tuner_set_channel (GstTuner        *mixer,
   g_return_if_fail (gst_v4l2_tuner_contains_channel (v4l2element, v4l2channel));
 
   /* ... or output, if we're a sink... */
-  if (gst_v4l2_tuner_is_sink (v4l2element))
-    gst_v4l2_set_output (v4l2element, v4l2channel->index);
-  else
-    gst_v4l2_set_input (v4l2element, v4l2channel->index);
+  if (gst_v4l2_tuner_is_sink (v4l2element) ? 
+      gst_v4l2_set_output (v4l2element, v4l2channel->index) :
+      gst_v4l2_set_input (v4l2element, v4l2channel->index)) {
+    gst_tuner_channel_changed (mixer, channel);
+    g_object_notify (G_OBJECT (v4l2element), "channel");
+  }
 }
 
-static const GstTunerChannel *
+static GstTunerChannel *
 gst_v4l2_tuner_get_channel (GstTuner *mixer)
 {
   GstV4l2Element *v4l2element = GST_V4L2ELEMENT (mixer);
@@ -229,7 +231,7 @@ gst_v4l2_tuner_get_channel (GstTuner *mixer)
 
   for (item = v4l2element->channels; item != NULL; item = item->next) {
     if (channel == GST_V4L2_TUNER_CHANNEL (item->data)->index)
-      return (const GstTunerChannel *) item->data;
+      return (GstTunerChannel *) item->data;
   }
 
   return NULL;
@@ -265,10 +267,13 @@ gst_v4l2_tuner_set_norm (GstTuner     *mixer,
   g_return_if_fail (GST_V4L2_IS_OPEN (v4l2element));
   g_return_if_fail (gst_v4l2_tuner_contains_norm (v4l2element, v4l2norm));
 
-  gst_v4l2_set_norm (v4l2element, v4l2norm->index);
+  if (gst_v4l2_set_norm (v4l2element, v4l2norm->index)) {
+    gst_tuner_norm_changed (mixer, norm);
+    g_object_notify (G_OBJECT (v4l2element), "norm"); 
+  }
 }
 
-static const GstTunerNorm *
+static GstTunerNorm *
 gst_v4l2_tuner_get_norm (GstTuner *mixer)
 {
   GstV4l2Element *v4l2element = GST_V4L2ELEMENT (mixer);
@@ -282,7 +287,7 @@ gst_v4l2_tuner_get_norm (GstTuner *mixer)
 
   for (item = v4l2element->norms; item != NULL; item = item->next) {
     if (norm == GST_V4L2_TUNER_NORM (item->data)->index)
-      return (const GstTunerNorm *) item->data;
+      return (GstTunerNorm *) item->data;
   }
 
   return NULL;
@@ -306,7 +311,10 @@ gst_v4l2_tuner_set_frequency (GstTuner        *mixer,
   gst_v4l2_get_input (v4l2element, &chan);
   if (chan == GST_V4L2_TUNER_CHANNEL (channel)->index &&
       GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {
-    gst_v4l2_set_frequency (v4l2element, v4l2channel->tuner, frequency);
+    if (gst_v4l2_set_frequency (v4l2element, v4l2channel->tuner, frequency)) {
+      gst_tuner_frequency_changed (mixer, channel, frequency);
+      g_object_notify (G_OBJECT (v4l2element), "frequency"); 
+    }
   }
 }
 
