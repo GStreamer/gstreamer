@@ -2261,7 +2261,8 @@ gst_element_save_thyself (GstObject *object,
       else if (G_IS_PARAM_SPEC_ENUM (spec))
 	contents = g_strdup_printf ("%d", g_value_get_enum (&value));
       else if (G_IS_PARAM_SPEC_INT64 (spec))
-	contents = g_strdup_printf ("%lld", g_value_get_int64 (&value));
+	contents = g_strdup_printf ("%" G_GINT64_FORMAT,
+			            g_value_get_int64 (&value));
       else
 	contents = g_strdup_value_contents (&value);
       
