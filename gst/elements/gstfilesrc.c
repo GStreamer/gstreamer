@@ -362,7 +362,8 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
   retval = madvise(GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf),MADV_SEQUENTIAL);
 #endif
   /* fill in the rest of the fields */
-  GST_BUFFER_FLAGS(buf) = GST_BUFFER_READONLY | GST_BUFFER_ORIGINAL;
+  GST_BUFFER_FLAG_SET(buf) = GST_BUFFER_READONLY;
+  GST_BUFFER_FLAG_SET(buf) = GST_BUFFER_ORIGINAL;
   GST_BUFFER_SIZE(buf) = size;
   GST_BUFFER_MAXSIZE(buf) = size;
   GST_BUFFER_OFFSET(buf) = offset;
