@@ -147,14 +147,14 @@ struct _asf_stream_video_format {
   guint32   size;
   guint32   width;
   guint32   height;
-  guint16   panes;
+  guint16   planes;
   guint16   depth;
   guint32   tag;
-  guint32   unknown1;
-  guint32   unknown2;
-  guint32   unknown3;
-  guint32   unknown4;
-  guint32   unknown5;
+  guint32   image_size;
+  guint32   xpels_meter;
+  guint32   ypels_meter;
+  guint32   num_colors;
+  guint32   imp_colors;
 };
 
 typedef struct _asf_stream_video_format asf_stream_video_format;
@@ -200,6 +200,7 @@ struct _asf_segment_info {
   guint32  chunk_size;
   guint32  frag_offset;
   guint32  sequence;
+  guint32  frag_timestamp;
   gboolean compressed;
 };
 
@@ -266,8 +267,6 @@ asf_asf_type_find (GstBuffer *buf, gpointer private)
 {
   GstCaps *new;
 
-  /*!!! Check here if the header is a valid ASF 1.0. return NULL otherwise */
-
   new = gst_caps_new (
                   "asf_type_find",
                   "video/x-ms-asf",
@@ -281,8 +280,6 @@ static GstCaps*
 asf_wma_type_find (GstBuffer *buf, gpointer private)
 {
   GstCaps *new;
-
-  /*!!! Check here if the header is a valid ASF 1.0. return NULL otherwise */
 
   new = gst_caps_new (
                   "asf_type_find",
@@ -298,8 +295,6 @@ asf_wax_type_find (GstBuffer *buf, gpointer private)
 {
   GstCaps *new;
 
-  /*!!! Check here if the header is a valid ASF 1.0. return NULL otherwise */
-
   new = gst_caps_new (
                   "asf_type_find",
                   "video/x-ms-asf",
@@ -313,8 +308,6 @@ static GstCaps*
 asf_wmv_type_find (GstBuffer *buf, gpointer private)
 {
   GstCaps *new;
-
-  /*!!! Check here if the header is a valid ASF 1.0. return NULL otherwise */
 
   new = gst_caps_new (
                   "asf_type_find",
@@ -330,8 +323,6 @@ asf_wvx_type_find (GstBuffer *buf, gpointer private)
 {
   GstCaps *new;
 
-  /*!!! Check here if the header is a valid ASF 1.0. return NULL otherwise */
-
   new = gst_caps_new (
                   "asf_type_find",
                   "video/x-ms-asf",
@@ -345,8 +336,6 @@ static GstCaps*
 asf_wm_type_find (GstBuffer *buf, gpointer private)
 {
   GstCaps *new;
-
-  /*!!! Check here if the header is a valid ASF 1.0. return NULL otherwise */
 
   new = gst_caps_new (
                   "asf_type_find",
@@ -386,29 +375,84 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
 					"asfversion", GST_PROPS_INT_RANGE (1, 1)
 					)
 			  );
-
+			  			  
 GST_PAD_TEMPLATE_FACTORY (audio_factory,
 			  "audio_%02d",
 			  GST_PAD_SRC,
 			  GST_PAD_SOMETIMES,
 			  GST_CAPS_NEW ("asf_demux_audio",
-					"audio/x-wav",
+					"video/avi",
+					"format",  GST_PROPS_STRING ("strf_auds")
+					),
+			  GST_CAPS_NEW (
+					"asfdemux_src_audio",
+					"audio/raw",
+					"format",           GST_PROPS_STRING ("int"),
+					"law",              GST_PROPS_INT (0),
+					"endianness",       GST_PROPS_INT (G_BYTE_ORDER),
+					"signed",           GST_PROPS_LIST (
+      			    GST_PROPS_BOOLEAN (TRUE),
+      			    GST_PROPS_BOOLEAN (FALSE)
+			    ),
+					"width",            GST_PROPS_LIST (
+      			    GST_PROPS_INT (8),
+      			    GST_PROPS_INT (16)
+			    ),
+					"depth",            GST_PROPS_LIST (
+      			    GST_PROPS_INT (8),
+      			    GST_PROPS_INT (16)
+			    ),
+					"rate",             GST_PROPS_INT_RANGE (11025, 44100),
+					"channels",         GST_PROPS_INT_RANGE (1, 2)
+					),
+			  GST_CAPS_NEW (
+					"asfdemux_src_audio",
+					"audio/x-mp3",
 					NULL
-					)
+					),
+			  GST_CAPS_NEW (
+					"asfdemux_src_audio",
+					"audio/a52",
+					NULL
+					),
+			  GST_CAPS_NEW (
+					"asfdemux_src_audio",
+					"application/x-ogg",
+					NULL
+					)			  
 			  );
 
 GST_PAD_TEMPLATE_FACTORY (video_factory,
 			  "video_%02d",
 			  GST_PAD_SRC,
 			  GST_PAD_SOMETIMES,
-			  GST_CAPS_NEW ("asf_demux_video_mpeg4",
-					"video/mpeg",
-					"mpegversion",  GST_PROPS_INT (4),
-					"systemstream",  GST_PROPS_BOOLEAN (FALSE),
+			  GST_CAPS_NEW ("asf_demux_src_video",
+					"video/avi",
+					"format",  GST_PROPS_LIST (
+					     GST_PROPS_STRING ("strf_vids")
+					     ),
+					"width",   GST_PROPS_INT_RANGE (16, 4096),
+					"height",  GST_PROPS_INT_RANGE (16, 4096),
 					NULL
+					),
+			  GST_CAPS_NEW (
+					"asf_demux_src_video",
+					"video/raw",
+					"format",  GST_PROPS_LIST (
+                   GST_PROPS_FOURCC (GST_MAKE_FOURCC('Y','U','Y','2')),
+                   GST_PROPS_FOURCC (GST_MAKE_FOURCC('I','4','2','0'))
+		   ),
+					"width",          GST_PROPS_INT_RANGE (16, 4096),
+					"height",         GST_PROPS_INT_RANGE (16, 4096)
+					),
+			  GST_CAPS_NEW (
+					"asf_demux_src_video",
+					"video/jpeg",
+					"width",   GST_PROPS_INT_RANGE (16, 4096),
+					"height",  GST_PROPS_INT_RANGE (16, 4096)
 					)
 			  );
-
+			  
 static void 	gst_asf_demux_class_init	(GstASFDemuxClass *klass);
 static void 	gst_asf_demux_init		(GstASFDemux *asf_demux);
 static gboolean gst_asf_demux_send_event 	(GstElement *element, 
@@ -420,25 +464,30 @@ static void     gst_asf_demux_get_property      (GObject *object,
 						 guint prop_id, 	
 						 GValue *value, 
 						 GParamSpec *pspec);
-static guint32  gst_asf_demux_identify_guid (GstASFDemux *asf_demux,
-				       GstASFGuidHash *guids,
-				       GstASFGuid *guid_raw);
-
-static gboolean gst_asf_demux_process_chunk (GstASFDemux *asf_demux,
-					     asf_packet_info *packet_info,
-					     asf_segment_info *segment_info);
-
-static const GstEventMask* gst_asf_demux_get_src_event_mask (GstPad *pad);
-static gboolean 	   gst_asf_demux_handle_src_event (GstPad *pad,
-							   GstEvent *event);
-static const GstFormat*    gst_asf_demux_get_src_formats  (GstPad *pad); 
+static guint32  gst_asf_demux_identify_guid     (GstASFDemux *asf_demux,
+						 GstASFGuidHash *guids,
+						 GstASFGuid *guid_raw);
+static gboolean gst_asf_demux_process_chunk      (GstASFDemux *asf_demux,
+						  asf_packet_info *packet_info,
+						  asf_segment_info *segment_info);
+static const GstEventMask* gst_asf_demux_get_src_event_mask  (GstPad *pad);
+static gboolean 	   gst_asf_demux_handle_sink_event   (GstASFDemux *asf_demux);
+static gboolean 	   gst_asf_demux_handle_src_event    (GstPad *pad,
+							      GstEvent *event);
+static const GstFormat*    gst_asf_demux_get_src_formats     (GstPad *pad); 
 static const GstQueryType* gst_asf_demux_get_src_query_types (GstPad *pad);
-static gboolean 	   gst_asf_demux_handle_src_query (GstPad *pad,
-							   GstQueryType type,
-							   GstFormat *format, gint64 *value);
+static gboolean 	   gst_asf_demux_handle_src_query    (GstPad *pad,
+							      GstQueryType type,
+							      GstFormat *format, gint64 *value);
+static gboolean            gst_asf_demux_add_video_stream (GstASFDemux *asf_demux,
+							   asf_stream_video_format *video_format);
+static gboolean            gst_asf_demux_add_audio_stream (GstASFDemux *asf_demux,
+							   asf_stream_audio *audio);
+static gboolean            gst_asf_demux_setup_pad        (GstASFDemux *asf_demux,
+							   GstPad *src_pad,
+							   GstCaps *caps_list);
 
-static GstElementStateReturn
-		gst_asf_demux_change_state 	(GstElement *element);
+static GstElementStateReturn gst_asf_demux_change_state   (GstElement *element);
 
 static GstElementClass *parent_class = NULL;
 
@@ -492,7 +541,7 @@ gst_asf_demux_init (GstASFDemux *asf_demux)
 
   gst_element_set_loop_function (GST_ELEMENT (asf_demux), gst_asf_demux_loop);
 
-  /* i think everything is already zero'd, but oh well*/
+  /* I think everything is already zero'd, but oh well*/
   for (i=0; i < GST_ASF_DEMUX_NUM_VIDEO_PADS; i++) {
     asf_demux->video_pad[i] = NULL;
     asf_demux->video_PTS[i] = 0;
@@ -549,15 +598,13 @@ gst_asf_demux_loop (GstElement *element)
 
   asf_demux->restart = FALSE;
 
-  g_print ("asf_demux_loop called\n");
   /* this is basically an infinite loop */
-  if (!gst_asf_demux_process_object (asf_demux, &filepos)) {
-    gst_element_error (element, "This doesn't appear to be an ASF stream");
-    return;
-  }
-  if (!asf_demux->restart)
+  while (gst_asf_demux_process_object (asf_demux, &filepos)) { }
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "Ending loop");
+  if (!asf_demux->restart) {
     /* if we exit the loop we are EOS */
     gst_pad_event_default (asf_demux->sinkpad, gst_event_new (GST_EVENT_EOS));
+  }
 }
 
 static inline gboolean
@@ -567,8 +614,8 @@ gst_asf_demux_read_object_header (GstASFDemux *asf_demux, guint32 *obj_id, guint
   GstASFGuid    *guid;
   guint64       *size;
   GstByteStream *bs = asf_demux->bs;
-
-
+  
+  
   /* First get the GUID */
   got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&guid, sizeof(GstASFGuid));
   if (got_bytes < sizeof (GstASFGuid)) {
@@ -580,32 +627,32 @@ gst_asf_demux_read_object_header (GstASFDemux *asf_demux, guint32 *obj_id, guint
     
     return FALSE;
   }
-
+  
   *obj_id = gst_asf_demux_identify_guid (asf_demux, asf_object_guids, guid);
-
+  
   gst_bytestream_flush (bs, sizeof (GstASFGuid));
 
   if (*obj_id == ASF_OBJ_UNDEFINED) {
     GST_INFO (GST_CAT_PLUGIN_INFO, "Object found with unknown GUID %08x %08x %08x %08x", guid->v1, guid->v2, guid->v3, guid->v4);
     gst_element_error (GST_ELEMENT (asf_demux), "Could not identify object");
-    return FALSE;
+    return TRUE;
   }
-
+  
   /* Now get the object size */
   got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&size, sizeof (guint64));
   while (got_bytes < sizeof (guint64)) {
     guint32 remaining;
     GstEvent *event;
-  
+    
     gst_bytestream_get_status (bs, &remaining, &event);
     gst_event_unref (event);
-
+    
     got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&size, sizeof (guint64));
   }
-
+  
   *obj_size = GUINT64_FROM_LE (*size);
   gst_bytestream_flush (bs, sizeof (guint64));
-
+  
   return TRUE;
 }
 
@@ -657,18 +704,13 @@ static void gst_asf_demux_read_object_header_rest (GstASFDemux *asf_demux, guint
   guint32       got_bytes;
   GstByteStream *bs = asf_demux->bs;
 
-  got_bytes = gst_bytestream_peek_bytes (bs, buf, size);
-  while (got_bytes < size) {
-    guint32 remaining;
-    GstEvent *event;
-  
-    gst_bytestream_get_status (bs, &remaining, &event);
-    gst_event_unref (event);
-
+  do {
     got_bytes = gst_bytestream_peek_bytes (bs, buf, size);
-  }
-
-  gst_bytestream_flush (bs, size);
+    if (got_bytes == size) {
+      gst_bytestream_flush (bs, size);
+      return;
+    }
+  } while (gst_asf_demux_handle_sink_event (asf_demux));
 }
 
 static inline gboolean
@@ -676,13 +718,14 @@ gst_asf_demux_process_file (GstASFDemux *asf_demux, guint64 *filepos, guint64 *o
 {
   asf_obj_file *object;
   guint64 packets;
-
+  
   /* Get the rest of the header's header */
   gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&object, 80);
   packets = GUINT64_FROM_LE (object->packets_count);
   asf_demux->packet_size = GUINT32_FROM_LE (object->max_pktsize);
   asf_demux->play_time = (guint32) GUINT64_FROM_LE (object->play_time) / 10;
-
+  asf_demux->preroll = GUINT64_FROM_LE (object->preroll);
+  
   GST_INFO (GST_CAT_PLUGIN_INFO, "Object is a file with %llu data packets", packets);
 
   return TRUE;
@@ -722,7 +765,6 @@ gst_asf_demux_process_segment (GstASFDemux       *asf_demux,
   guint32  replic_size;
   guint8   time_delta;
   guint32  time_start;
-  guint32  frag_timestamp;
   guint32  frag_size;
   guint32  rsize;
   asf_segment_info segment_info;
@@ -736,7 +778,7 @@ gst_asf_demux_process_segment (GstASFDemux       *asf_demux,
   segment_info.frag_offset = gst_asf_demux_read_var_length (asf_demux, packet_info->fragoffsettype, &rsize);
   replic_size = gst_asf_demux_read_var_length (asf_demux, packet_info->replicsizetype, &rsize);
   GST_DEBUG (GST_CAT_PLUGIN_INFO, "sequence = %x, frag_offset = %x, replic_size = %x", segment_info.sequence, segment_info.frag_offset, replic_size);
-
+  
   if (replic_size > 1) {
     asf_replicated_data *replicated_data_header;
     guint8              **replicated_data = NULL;
@@ -749,7 +791,7 @@ gst_asf_demux_process_segment (GstASFDemux       *asf_demux,
       return FALSE;
     }
     gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&replicated_data_header, 8);
-    frag_timestamp = replicated_data_header->frag_timestamp;
+    segment_info.frag_timestamp = replicated_data_header->frag_timestamp;
 
     if (replic_size > 8) {
       gst_asf_demux_read_object_header_rest (asf_demux, replicated_data, replic_size - 8);
@@ -768,7 +810,7 @@ gst_asf_demux_process_segment (GstASFDemux       *asf_demux,
     
     time_start = segment_info.frag_offset;
     segment_info.frag_offset = 0;
-    frag_timestamp = asf_demux->timestamp;
+    segment_info.frag_timestamp = asf_demux->timestamp;
   }
 
   GST_DEBUG (GST_CAT_PLUGIN_INFO, "multiple = %u compressed = %u", packet_info->multiple, segment_info.compressed);
@@ -923,10 +965,6 @@ gst_asf_demux_process_stream (GstASFDemux *asf_demux, guint64 *filepos, guint64 
   guint16                 size;
   GstBuffer               *buf;
   guint32                 got_bytes;
-  GstPad                  **outpad = NULL;
-  GstPadTemplate          *new_template = NULL;
-  gchar                   *name = NULL;
-  asf_stream_context      *stream = NULL;
 
   /* Get the rest of the header's header */
   gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&object, 54);
@@ -935,17 +973,17 @@ gst_asf_demux_process_stream (GstASFDemux *asf_demux, guint64 *filepos, guint64 
   stream_id = gst_asf_demux_identify_guid (asf_demux, asf_stream_guids, &(object->type));
   correction = gst_asf_demux_identify_guid (asf_demux, asf_correction_guids, &(object->correction));
 
-
   switch (stream_id) {
   case ASF_STREAM_AUDIO:
+
     gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&audio_object, 18);
     size = GUINT16_FROM_LE (audio_object->size);
 
-    name = g_strdup_printf ("audio_%02d", asf_demux->num_audio_streams);
-    outpad = &asf_demux->audio_pad[asf_demux->num_audio_streams++];
-    new_template = GST_PAD_TEMPLATE_GET (audio_factory);
+    GST_INFO (GST_CAT_PLUGIN_INFO, "Object is an audio stream with %u bytes of additional data.", size);
 
-    GST_INFO (GST_CAT_PLUGIN_INFO, "Object is an audio stream with %u bytes of additional data. Assigned to pad '%s'", size, name);
+    if (!gst_asf_demux_add_audio_stream (asf_demux, audio_object))
+      return FALSE;
+
     switch (correction) {
     case ASF_CORRECTION_ON:
       GST_INFO (GST_CAT_PLUGIN_INFO, "Using error correction");
@@ -957,6 +995,7 @@ gst_asf_demux_process_stream (GstASFDemux *asf_demux, guint64 *filepos, guint64 
       gst_element_error (GST_ELEMENT (asf_demux), "Audio stream using unknown error correction");
       return FALSE;
     }
+
     /* Read any additional information */
     if (size) {
       got_bytes = gst_bytestream_read (asf_demux->bs, &buf, size);
@@ -971,20 +1010,19 @@ gst_asf_demux_process_stream (GstASFDemux *asf_demux, guint64 *filepos, guint64 
 	got_bytes = gst_bytestream_read (asf_demux->bs, &buf, size);
       }
     }
+    
     break;
   case ASF_STREAM_VIDEO:
     gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&video_object, 11);
     size = GUINT16_FROM_BE(video_object->size) - 40; /* Byte order gets 
 						      * offset by single 
 						      * byte */
-    name = g_strdup_printf ("video_%02d", asf_demux->num_video_streams);
-    outpad = &asf_demux->video_pad[asf_demux->num_video_streams++];
-    new_template = GST_PAD_TEMPLATE_GET (video_factory);
-
-    /*!!! Set for MJPG too */
-
-    GST_INFO (GST_CAT_PLUGIN_INFO, "Object is a video stream with %u bytes of additional data. Assigned to pad '%s'", size, name);
+    GST_INFO (GST_CAT_PLUGIN_INFO, "Object is a video stream with %u bytes of additional data.", size);
     gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&video_format_object, 40);
+
+    if (!gst_asf_demux_add_video_stream (asf_demux, video_format_object))
+      return FALSE;
+    
     /* Read any additional information */
     if (size) {
       got_bytes = gst_bytestream_read (asf_demux->bs, &buf, size);
@@ -1004,28 +1042,7 @@ gst_asf_demux_process_stream (GstASFDemux *asf_demux, guint64 *filepos, guint64 
     gst_element_error (GST_ELEMENT (asf_demux), "Object is a stream of unrecognised type");
     return FALSE;
   }
-  
-  *outpad = gst_pad_new_from_template (new_template, name);
 
-  /* Set up the pad */
-  gst_pad_try_set_caps (*outpad, gst_pad_get_pad_template_caps (*outpad));
-  gst_pad_set_formats_function (*outpad, gst_asf_demux_get_src_formats);
-  gst_pad_set_event_mask_function (*outpad, gst_asf_demux_get_src_event_mask);
-  gst_pad_set_event_function (*outpad, gst_asf_demux_handle_src_event);
-  gst_pad_set_query_type_function (*outpad, gst_asf_demux_get_src_query_types);
-  gst_pad_set_query_function (*outpad, gst_asf_demux_handle_src_query);
-
-  /* Initialise the stream context */
-  stream = &asf_demux->stream[asf_demux->num_streams];
-  stream->pad = *outpad;
-  stream->frag_offset = 0;
-  stream->sequence = 0;
-  gst_pad_set_element_private (*outpad, stream);
-  asf_demux->num_streams++;
-
-  /* Add the pad to the element */
-  gst_element_add_pad (GST_ELEMENT (asf_demux), *outpad);
-  
   return TRUE;
 }
 
@@ -1061,6 +1078,8 @@ gst_asf_demux_process_object    (GstASFDemux *asf_demux,
     break;
   case ASF_OBJ_DATA:
     gst_asf_demux_process_data (asf_demux, filepos, &obj_size);
+    /* This is the last object */
+    return FALSE;
     break;
   case ASF_OBJ_FILE:
     gst_asf_demux_process_file (asf_demux, filepos, &obj_size);
@@ -1090,7 +1109,8 @@ gst_asf_demux_process_object    (GstASFDemux *asf_demux,
   default:
     gst_element_error (GST_ELEMENT (asf_demux), "Unknown ASF object");
   }
-    
+
+  //gst_element_yield (GST_ELEMENT (asf_demux));
 
   return TRUE;
 }
@@ -1104,6 +1124,7 @@ static gboolean gst_asf_demux_process_chunk (GstASFDemux *asf_demux,
   guint64            next_ts;
   guint32            got_bytes;
   GstByteStream      *bs = asf_demux->bs;
+  GstBuffer          *buffer;
 
   if (segment_info->stream_number > asf_demux->num_streams) {
     gst_element_error (GST_ELEMENT (asf_demux), "Segment found for stream out of range");
@@ -1116,15 +1137,26 @@ static gboolean gst_asf_demux_process_chunk (GstASFDemux *asf_demux,
   if (stream->frag_offset == 0) {
     /* new packet */
     stream->sequence = segment_info->sequence;
+    asf_demux->pts = segment_info->frag_timestamp - asf_demux->preroll;
+    got_bytes = gst_bytestream_peek (bs, &buffer, segment_info->chunk_size);
+    stream->payload = buffer;
   } else {
     if (segment_info->sequence == stream->sequence && 
 	segment_info->frag_offset == stream->frag_offset) {
+      GstBuffer *new_buffer;
       /* continuing packet */
+      GST_INFO (GST_CAT_PLUGIN_INFO, "A continuation packet");
+      got_bytes = gst_bytestream_peek (bs, &buffer, segment_info->chunk_size);
+      new_buffer = gst_buffer_merge (stream->payload, buffer);
+      //gst_buffer_unref (stream->payload);
+      //gst_buffer_unref (buffer);
+      stream->payload = new_buffer;
     } else {
       /* cannot continue current packet: free it */
       stream->frag_offset = 0;
       if (segment_info->frag_offset != 0) {
 	/* cannot create new packet */
+	gst_buffer_free(stream->payload);
 	gst_bytestream_flush (bs, segment_info->chunk_size);
 	packet_info->size_left -= segment_info->chunk_size;
 	return TRUE;
@@ -1134,24 +1166,82 @@ static gboolean gst_asf_demux_process_chunk (GstASFDemux *asf_demux,
       }
     }
   }
-  
-  format = GST_FORMAT_TIME;
-  gst_pad_query (stream->pad, GST_QUERY_POSITION, &format, &next_ts);
 
-  if (GST_PAD_IS_LINKED (stream->pad)) {
-    GstBuffer *buf;
+  if (packet_info->size_left == segment_info->chunk_size) {
+    /* We don't have the whole packet yet */
+    stream->frag_offset = segment_info->chunk_size;
+  } else {  
+    format = GST_FORMAT_TIME;
+    gst_pad_query (stream->pad, GST_QUERY_POSITION, &format, &next_ts);
+
+    GST_DEBUG (GST_CAT_PLUGIN_INFO, "Nextts is %llu\n", next_ts);
     
-    got_bytes = gst_bytestream_peek (bs, &buf, segment_info->chunk_size);
+    if (GST_PAD_IS_USABLE (stream->pad)) {
+      GST_DEBUG (GST_CAT_PLUGIN_INFO, "New buffer is at: %p size: %u", GST_BUFFER_DATA(stream->payload), GST_BUFFER_SIZE(stream->payload));
+      
+      GST_BUFFER_TIMESTAMP (stream->payload) = next_ts;
 
-    GST_BUFFER_TIMESTAMP (buf) = next_ts;
-
-    /*!!! Should handle flush events here? */
-    
-    gst_pad_push (stream->pad, buf);
+      /*!!! Should handle flush events here? */
+      GST_DEBUG (GST_CAT_PLUGIN_INFO, "Sending strem %d of size %d", stream->num , segment_info->chunk_size);
+      
+      GST_INFO (GST_CAT_PLUGIN_INFO, "Pushing pad");
+      gst_pad_push (stream->pad, stream->payload);
+    }
   }
 
-  gst_bytestream_flush (bs, segment_info->chunk_size);
+  gst_bytestream_flush (bs, segment_info->chunk_size);  
   packet_info->size_left -= segment_info->chunk_size;
+
+  return TRUE;
+}
+
+/*
+ * Event stuff
+ */
+
+static gboolean
+gst_asf_demux_handle_sink_event (GstASFDemux *asf_demux)
+{
+  guint32 remaining;
+  GstEvent *event;
+  GstEventType type;
+  
+  gst_bytestream_get_status (asf_demux->bs, &remaining, &event);
+
+  type = event? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
+
+  switch (type) {
+    case GST_EVENT_EOS:
+      gst_bytestream_flush (asf_demux->bs, remaining);
+      gst_pad_event_default (asf_demux->sinkpad, event);
+      break;
+    case GST_EVENT_FLUSH:
+      g_warning ("flush event");
+      break;
+    case GST_EVENT_DISCONTINUOUS:
+    {
+      gint i;
+      GstEvent *discont;
+
+      for (i = 0; i < asf_demux->num_streams; i++) {
+        asf_stream_context *stream = &asf_demux->stream[i];
+
+	if (GST_PAD_IS_USABLE (stream->pad)) {
+	  GST_DEBUG (GST_CAT_EVENT, "sending discont on %d %lld + %lld = %lld", i, 
+			asf_demux->last_seek, stream->delay, asf_demux->last_seek + stream->delay);
+         discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
+			asf_demux->last_seek + stream->delay , NULL);
+	  gst_pad_push (stream->pad, GST_BUFFER (discont));
+	}
+      }
+      break;
+    }
+    default:
+      g_warning ("unhandled event %d", type);
+      break;
+  }
+
+  gst_event_unref (event);
 
   return TRUE;
 }
@@ -1210,7 +1300,7 @@ gst_asf_demux_handle_src_query (GstPad *pad,
       *format = GST_FORMAT_TIME;
       /* fall through */
     case GST_FORMAT_TIME:
-      *value = (GST_SECOND / 1000) * asf_demux->play_time;
+      *value = (GST_SECOND / 1000) * asf_demux->pts;
       break;
     default:
       res = FALSE;
@@ -1263,6 +1353,7 @@ gst_asf_demux_change_state (GstElement *element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_READY_TO_PAUSED:
       asf_demux->bs = gst_bytestream_new (asf_demux->sinkpad);
+      asf_demux->last_seek = 0;
       break;
     case GST_STATE_PAUSED_TO_READY:
       gst_bytestream_destroy (asf_demux->bs);
@@ -1312,6 +1403,204 @@ gst_asf_demux_identify_guid (GstASFDemux *asf_demux,
   /* The base case if none is found */
   return ASF_OBJ_UNDEFINED;
 }
+
+
+/*
+ * Stream and pad setup code
+ */
+
+static gboolean 
+gst_asf_demux_add_audio_stream (GstASFDemux *asf_demux,
+				asf_stream_audio *audio) 
+{
+  GstPad         *src_pad;  
+  GstCaps        *new_caps = NULL;
+  GstCaps        *caps_list = NULL;
+  gchar          *name = NULL;
+  GstPadTemplate *new_template = NULL; 
+
+  /* Create the audio pad */
+  name = g_strdup_printf ("audio_%02d", asf_demux->num_audio_streams);
+  new_template = GST_PAD_TEMPLATE_GET (audio_factory);
+  src_pad =  gst_pad_new_from_template (
+                GST_PAD_TEMPLATE_GET (audio_factory), name);
+
+  /* Now set up the standard propertis from the header info */
+  caps_list = gst_caps_append(NULL, GST_CAPS_NEW (
+ 		  "asf_demux_audio_src",
+		  "video/avi",
+		  "format",    	GST_PROPS_STRING ("strf_auds"),
+		  "fmt", 	GST_PROPS_INT (GUINT16_FROM_LE (audio->codec_tag)),
+		  "channels", 	GST_PROPS_INT (GUINT16_FROM_LE (audio->channels)),
+		  "rate", 	GST_PROPS_INT (GUINT32_FROM_LE (audio->sample_rate)),
+		  "av_bps",	GST_PROPS_INT (GUINT32_FROM_LE (audio->byte_rate)),
+		  "blockalign",	GST_PROPS_INT (GUINT16_FROM_LE (audio->block_align)),
+		  "size",	GST_PROPS_INT (GUINT16_FROM_LE (audio->word_size))
+		  ));  
+  
+  /* Now try some gstreamer formatted MIME types (from gst_avi_demux_strf_auds) */
+  switch (GUINT16_FROM_LE(audio->codec_tag)) {
+  case GST_RIFF_WAVE_FORMAT_MPEGL3:
+  case GST_RIFF_WAVE_FORMAT_MPEGL12: /* mp3 */
+    new_caps = gst_caps_new ("asf_demux_audio_src",
+			     "audio/x-mp3",
+			     NULL);
+    break;
+  case GST_RIFF_WAVE_FORMAT_PCM: /* PCM/wav */
+    new_caps = gst_caps_new ("asf_demux_audio_src",
+			     "audio/raw",
+			     gst_props_new (
+                                "format",     GST_PROPS_STRING ("int"),
+                                "law",        GST_PROPS_INT (0),
+                                "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+                                "signed",     GST_PROPS_BOOLEAN ((GUINT16_FROM_LE (audio->word_size) != 8)),
+                                "width",      GST_PROPS_INT ((GUINT16_FROM_LE (audio->block_align)*8) /
+                                                              GUINT16_FROM_LE (audio->channels)),
+                                "depth",      GST_PROPS_INT (GUINT16_FROM_LE (audio->word_size)),
+                                "rate",       GST_PROPS_INT (GUINT32_FROM_LE (audio->byte_rate)),
+                                "channels",   GST_PROPS_INT (GUINT16_FROM_LE (audio->channels)),
+                                NULL
+                              ));
+    break;
+  case GST_RIFF_WAVE_FORMAT_VORBIS1: /* ogg/vorbis mode 1 */
+  case GST_RIFF_WAVE_FORMAT_VORBIS2: /* ogg/vorbis mode 2 */
+  case GST_RIFF_WAVE_FORMAT_VORBIS3: /* ogg/vorbis mode 3 */
+  case GST_RIFF_WAVE_FORMAT_VORBIS1PLUS: /* ogg/vorbis mode 1+ */
+  case GST_RIFF_WAVE_FORMAT_VORBIS2PLUS: /* ogg/vorbis mode 2+ */
+  case GST_RIFF_WAVE_FORMAT_VORBIS3PLUS: /* ogg/vorbis mode 3+ */
+    new_caps = gst_caps_new ("asf_demux_audio_src",
+			     "application/x-ogg",
+			     NULL);
+    break;
+  case GST_RIFF_WAVE_FORMAT_A52:
+    new_caps = gst_caps_new ("asf_demux_audio_src",
+			     "audio/a52",
+			     NULL);
+    break;
+  default:
+    g_warning ("asfdemux: unkown audio format %d", GUINT16_FROM_LE(audio->codec_tag));
+    break;
+  }  
+  
+  if (new_caps) caps_list = gst_caps_append(caps_list, new_caps);
+
+  GST_INFO (GST_CAT_PLUGIN_INFO, "Adding audio stream %u codec %u (0x%x)", asf_demux->num_video_streams, GUINT16_FROM_LE(audio->codec_tag), GUINT16_FROM_LE(audio->codec_tag));
+  
+   asf_demux->num_audio_streams++;
+  
+  return gst_asf_demux_setup_pad (asf_demux, src_pad, caps_list);
+}
+
+static gboolean
+gst_asf_demux_add_video_stream (GstASFDemux *asf_demux,
+				asf_stream_video_format *video_format) {
+  GstPad         *src_pad;  
+  GstCaps        *new_caps = NULL;
+  GstCaps        *caps_list = NULL;
+  gchar          *name = NULL;
+  GstPadTemplate *new_template = NULL; 
+  
+  /* Create the audio pad */
+  name = g_strdup_printf ("video_%02d", asf_demux->num_video_streams);
+  new_template = GST_PAD_TEMPLATE_GET (video_factory);
+  src_pad =  gst_pad_new_from_template (
+		GST_PAD_TEMPLATE_GET (video_factory), name);
+  
+
+  caps_list = gst_caps_append(NULL, GST_CAPS_NEW (
+      "asf_demux_video_src",
+      "video/avi",
+      "format",    GST_PROPS_STRING ("strf_vids"),
+      //"size", GST_PROPS_INT (GUINT32_FROM_LE (video_format->size)),
+      "width",GST_PROPS_INT (GUINT32_FROM_LE (video_format->width)),
+      "height", 	GST_PROPS_INT (GUINT32_FROM_LE (video_format->height)),
+      //"planes", 	GST_PROPS_INT (GUINT16_FROM_LE (video_format->planes)),
+      //"bit_cnt", 	GST_PROPS_INT (GUINT16_FROM_LE (video_format->depth)),
+      //"compression", GST_PROPS_FOURCC (GUINT32_FROM_LE (video_format->tag)),
+      "compression", GST_PROPS_FOURCC (GST_MAKE_FOURCC('D','I','V','3'))
+      //"image_size", GST_PROPS_INT (GUINT32_FROM_LE (video_format->image_size)),
+      //"xpels_meter", GST_PROPS_INT (GUINT32_FROM_LE (video_format->xpels_meter)),
+      //"ypels_meter", GST_PROPS_INT (GUINT32_FROM_LE (video_format->ypels_meter)),
+      //"num_colors", GST_PROPS_INT (GUINT32_FROM_LE (video_format->num_colors)),
+      //"imp_colors", GST_PROPS_INT (GUINT32_FROM_LE (video_format->imp_colors))
+      ));
+  
+  /* Now try some gstreamer formatted MIME types (from gst_avi_demux_strf_vids) */
+  switch (GUINT32_FROM_LE(video_format->tag)) {
+  case GST_MAKE_FOURCC('I','4','2','0'):
+  case GST_MAKE_FOURCC('Y','U','Y','2'):
+    new_caps = GST_CAPS_NEW (
+			    "asf_demux_video_src",
+			    "video/raw",
+			    "format",  GST_PROPS_FOURCC(GUINT32_FROM_LE(video_format->tag)),
+			    "width",   GST_PROPS_INT(video_format->width),
+			    "height",  GST_PROPS_INT(video_format->height)
+			    );
+    break;
+  case GST_MAKE_FOURCC('M','J','P','G'):
+    new_caps = GST_CAPS_NEW (
+			    "asf_demux_video_src",
+			    "video/jpeg",
+			    "width",   GST_PROPS_INT(video_format->width),
+			    "height",  GST_PROPS_INT(video_format->height)
+			    );
+    break;
+  case GST_MAKE_FOURCC('d','v','s','d'):
+    new_caps = GST_CAPS_NEW (
+			    "asf_demux_video_src",
+			    "video/dv",
+			    "format",  GST_PROPS_STRING("NTSC"), /* FIXME??? */
+			    "width",   GST_PROPS_INT(video_format->width),
+			    "height",  GST_PROPS_INT(video_format->height)
+			    );
+    break;
+  }
+
+  if (new_caps) caps_list = gst_caps_append(caps_list, new_caps);
+
+  GST_INFO (GST_CAT_PLUGIN_INFO, "Adding video stream %u", asf_demux->num_video_streams);
+
+  
+  asf_demux->num_video_streams++;
+  
+  return gst_asf_demux_setup_pad (asf_demux, src_pad, caps_list);
+}
+
+
+static gboolean
+gst_asf_demux_setup_pad (GstASFDemux *asf_demux,
+			 GstPad *src_pad,
+			 GstCaps *caps_list)
+{
+  asf_stream_context *stream;
+  
+  gst_pad_try_set_caps (src_pad, caps_list);
+  gst_pad_set_formats_function (src_pad, gst_asf_demux_get_src_formats);
+  gst_pad_set_event_mask_function (src_pad, gst_asf_demux_get_src_event_mask);
+  gst_pad_set_event_function (src_pad, gst_asf_demux_handle_src_event);
+  gst_pad_set_query_type_function (src_pad, gst_asf_demux_get_src_query_types);
+  gst_pad_set_query_function (src_pad, gst_asf_demux_handle_src_query);
+  
+  stream = &asf_demux->stream[asf_demux->num_streams];
+  stream->pad = src_pad;
+  stream->num = asf_demux->num_streams;
+  stream->frag_offset = 0;
+  stream->sequence = 0;
+  stream->delay = 0LL;
+
+  gst_pad_set_element_private (src_pad, stream);
+
+  GST_INFO (GST_CAT_PLUGIN_INFO, "Adding pad for stream %u", asf_demux->num_streams);
+
+  asf_demux->num_streams++;
+  
+  gst_element_add_pad (GST_ELEMENT (asf_demux), src_pad);
+  
+  return TRUE;
+}
+
+
+
 
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)

@@ -21,7 +21,9 @@
 #ifndef __ASF_DEMUX_H__
 #define __ASF_DEMUX_H__
 
+#include <config.h>
 #include <gst/gst.h>
+#include <gst/riff/riff.h>
 #include <gst/bytestream/bytestream.h>
 
 G_BEGIN_DECLS
@@ -66,6 +68,8 @@ typedef struct
   guint32 num;
   guint32 frag_offset;
   guint32 sequence;
+  guint64 delay;
+  GstBuffer *payload;
 } asf_stream_context;
 
 struct _GstASFDemux {
@@ -87,6 +91,7 @@ struct _GstASFDemux {
   GstPad *audio_pad[GST_ASF_DEMUX_NUM_AUDIO_PADS];
   gint64 audio_PTS[GST_ASF_DEMUX_NUM_AUDIO_PADS];
 
+  guint64  last_seek;
   gboolean restart;
 
   /* Demuxing state */
@@ -98,6 +103,9 @@ struct _GstASFDemux {
   guint32 packet_size;
   guint32 timestamp;
   guint32 play_time;
+
+  guint64 preroll;
+  guint64 pts;
 };
 
 struct _GstASFDemuxClass {
