@@ -70,17 +70,15 @@ size_t GstMplexIBitStream::ReadStreamBytes (uint8_t * buf, size_t size)
 {
   guint8 *
       data;
-
   guint
       read;
 
   if (eos)
     return 0;
 
-  if ((read = gst_bytestream_peek_bytes (bs, &data, size)) != size) {
+  while (!eos && (read = gst_bytestream_peek_bytes (bs, &data, size)) != size) {
     GstEvent *
         event;
-
     guint
         pending;
 
