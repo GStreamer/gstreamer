@@ -1106,6 +1106,8 @@ gst_bin_restore_thyself (GstObject * object, xmlNodePtr self)
 
     field = field->next;
   }
+  if (GST_OBJECT_CLASS (parent_class)->restore_thyself)
+    (GST_OBJECT_CLASS (parent_class)->restore_thyself) (object, self);
 }
 #endif /* GST_DISABLE_LOADSAVE */
 

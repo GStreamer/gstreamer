@@ -1,3 +1,9 @@
+2004-07-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstbin.c: (gst_bin_restore_thyself):
+	  chain to parent restore so the bins get restored correctly
+          in the editor
+
 2004-07-03  David Schleef  <ds@schleef.org>
 
 	* gst/gstcaps.c: (gst_caps_save_thyself), (gst_caps_load_thyself):
