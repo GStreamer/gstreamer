@@ -34,6 +34,18 @@ else
 AUDIOFILE_DIR=
 endif
 
+if USE_AUDIORESAMPLE
+AUDIORESAMPLE_DIR=audioresample
+else
+AUDIORESAMPLE_DIR=
+endif
+
+if USE_CAIRO
+CAIRO_DIR=cairo
+else
+CAIRO_DIR=
+endif
+
 if USE_CDAUDIO
 CDAUDIO_DIR=cdaudio
 else
@@ -383,6 +395,8 @@ SUBDIRS=\
 	$(ARTS_DIR) \
 	$(ARTSC_DIR) \
 	$(AUDIOFILE_DIR) \
+	$(AUDIORESAMPLE_DIR) \
+	$(CAIRO_DIR) \
 	$(CDAUDIO_DIR) \
 	$(CDPARANOIA_DIR) \
 	$(DIRAC_DIR) \
@@ -446,6 +460,8 @@ DIST_SUBDIRS=\
 	arts \
 	artsd \
 	audiofile \
+	audioresample \
+	cairo \
 	cdaudio \
 	cdparanoia \
 	dirac \
