@@ -1,3 +1,15 @@
+2004-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/vorbis/Makefile.am:
+	* ext/vorbis/vorbis.c: (plugin_init):
+	* ext/vorbis/vorbisparse.c: (gst_vorbis_parse_base_init),
+	(gst_vorbis_parse_class_init), (gst_vorbis_parse_init),
+	(vorbis_parse_set_header_on_caps), (vorbis_parse_chain),
+	(vorbis_parse_change_state):
+	* ext/vorbis/vorbisparse.h:
+          adding a vorbisparse element that marks the buffers, streaming
+          raw vorbis using GDP now works, whee
+
 2004-06-08  Wim Taymans  <wim@fluendo.com>
 
 	* ext/jpeg/Makefile.am:
