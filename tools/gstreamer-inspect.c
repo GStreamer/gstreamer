@@ -340,7 +340,7 @@ print_element_info (GstElementFactory *factory)
     guint nsignals;
     gint i;
 #ifdef USE_GLIB2
-    GSignalQuery query;
+    GSignalQuery *query;
 #else
     GtkSignalQuery *query;
 #endif
@@ -356,7 +356,8 @@ print_element_info (GstElementFactory *factory)
       gint j;
       
 #ifdef USE_GLIB2
-      g_signal_query (signals[i], &query);
+      query = g_new0(GSignalQuery,1);
+      g_signal_query (signals[i], query);
       n_params = query->n_params;
       return_type = query->return_type;
       param_types = query->param_types;
