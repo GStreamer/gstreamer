@@ -244,6 +244,29 @@ GStreamer support libraries header files.
 @USE_ARTSC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
 @USE_ARTSC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
+### SWFDEC FLASH PLUGIN ###
+@USE_SWFDEC_TRUE@%package -n gstreamer-swfdec
+@USE_SWFDEC_TRUE@Summary:  GStreamer Flash redering plug-in.
+@USE_SWFDEC_TRUE@Group:    Libraries/Multimedia
+@USE_SWFDEC_TRUE@Requires: gstreamer-plugins = %{version}
+@USE_SWFDEC_TRUE@Requires: libswfdec => 0.1.1
+@USE_SWFDEC_TRUE@
+@USE_SWFDEC_TRUE@%description -n gstreamer-swfdec
+@USE_SWFDEC_TRUE@Plug-in for rendering Flash animations using swfdec library
+@USE_SWFDEC_TRUE@
+@USE_SWFDEC_TRUE@%files -n gstreamer-swfdec
+@USE_SWFDEC_TRUE@%defattr(-, root, root)
+@USE_SWFDEC_TRUE@%{_libdir}/gst/libgstswfdec.so
+@USE_SWFDEC_TRUE@
+@USE_SWFDEC_TRUE@%post -n gstreamer-swfdec
+@USE_SWFDEC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_SWFDEC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_SWFDEC_TRUE@
+@USE_SWFDEC_TRUE@%postun -n gstreamer-swfdec
+@USE_SWFDEC_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_SWFDEC_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+
 ### AUDIOFILE ###
 @USE_AUDIOFILE_TRUE@%package -n gstreamer-audiofile
 @USE_AUDIOFILE_TRUE@Summary:       GStreamer plug-in for audiofile support.
