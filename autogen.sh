@@ -112,16 +112,17 @@ if test -z "$*"; then
         echo "to pass any to it, please specify them on the $0 command line."
 fi
 
-# FIXME : why does libtoolize keep complaining about aclocal ?
-echo "+ running libtoolize ..."
-libtoolize --copy --force
-
 echo "+ running aclocal ..."
 aclocal $ACLOCAL_FLAGS || {
 	echo
 	echo "aclocal failed - check that all needed development files are present on system"
 	exit 1
 }
+
+# FIXME : why does libtoolize keep complaining about aclocal ?
+echo "+ running libtoolize ..."
+libtoolize --copy --force
+
 echo "+ running autoheader ... "
 autoheader || {
 	echo
@@ -132,13 +133,13 @@ echo "+ running autoconf ... "
 autoconf || {
 	echo
 	echo "autoconf failed"
-	#exit 1
+	exit 1
 }
 echo "+ running automake ... "
 automake -a -c || {
 	echo
 	echo "automake failed"
-	#exit 1
+	exit 1
 }
 
 # now remove the cache, because it can be considered dangerous in this case
