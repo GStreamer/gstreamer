@@ -31,6 +31,17 @@
 #include "gstalsaclock.h"
 #include "gstalsamixer.h"
 
+#define ALSA_DEBUG_FLUSH(this) G_STMT_START{ \
+  gchar *__str; \
+  ssize_t __size; \
+  __size = snd_output_buffer_string (this->out, &__str); \
+  if (__size > 0) { \
+    GST_DEBUG_OBJECT (this, "%*s", __size, __str); \
+    if (snd_output_flush (this->out) != 0) \
+      GST_ERROR_OBJECT (this, "error flushing output buffer"); \
+  } \
+}G_STMT_END
+
 /* GObject functions */
 static void gst_alsa_class_init (gpointer g_class, gpointer class_data);
 static void gst_alsa_init (GstAlsa * this);
@@ -692,9 +703,20 @@ add_channels (GstStructure * structure, gint min_rate, gint max_rate,
     min_rate = GST_ALSA_MIN_RATE;
     max_rate = GST_ALSA_MAX_RATE;
   }
-  if (max_rate < 0) {
+  if (max_rate < 0 || min_rate == max_rate) {
     gst_structure_set (structure, "rate", G_TYPE_INT, min_rate, NULL);
   } else {
+    /* just to be sure */
+    if (min_rate > max_rate) {
+      gint temp;
+
+      GST_ERROR
+          ("minimum rate > maximum rate (%d > %d), please fix your soundcard drivers",
+          min_rate, max_rate);
+      temp = min_rate;
+      min_rate = max_rate;
+      max_rate = temp;
+    }
     gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE, min_rate,
         max_rate, NULL);
   }
@@ -702,9 +724,20 @@ add_channels (GstStructure * structure, gint min_rate, gint max_rate,
     min_channels = 1;
     max_channels = GST_ALSA_MAX_CHANNELS;
   }
-  if (max_channels < 0) {
+  if (max_channels < 0 || min_channels == max_channels) {
     gst_structure_set (structure, "channels", G_TYPE_INT, min_channels, NULL);
   } else {
+    /* just to be sure */
+    if (min_channels > max_channels) {
+      gint temp;
+
+      GST_ERROR
+          ("minimum channels > maximum channels (%d > %d), please fix your soundcard drivers",
+          min_channels, max_channels);
+      temp = min_channels;
+      min_channels = max_channels;
+      max_channels = temp;
+    }
     gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE,
         min_channels, max_channels, NULL);
   }
@@ -828,37 +861,118 @@ gst_alsa_get_caps (GstPad * pad)
   }
 }
 
+static GstCaps *
+gst_alsa_fixate_to_mimetype (const GstCaps * caps, const gchar * mime)
+{
+  GstCaps *try, *result;
+
+  try = gst_caps_new_simple (mime, NULL);
+  result = gst_caps_intersect (try, caps);
+  gst_caps_free (try);
+  if (gst_caps_is_empty (result)) {
+    gst_caps_free (result);
+    return NULL;
+  }
+  if (gst_caps_is_subset (caps, result)) {
+    /* we didn't reduce caps */
+    gst_caps_free (result);
+    return NULL;
+  }
+  return result;
+}
+
+static GstCaps *
+gst_alsa_fixate_field_nearest_int (const GstCaps * caps,
+    const gchar * field_name, gint target)
+{
+  guint i;
+  GstCaps *result;
+  GstCaps *smaller = gst_caps_new_empty ();
+  GstCaps *equal = gst_caps_new_empty ();
+  GstCaps *bigger = gst_caps_new_empty ();
+
+  /* works like this: we fixate every structure and put them into one of those 
+   * caps depending on what we fixated to. We then return the best caps that is 
+   * not empty in the following order: equal, bigger, smaller 
+   * We also make sure the caps were really reduced.
+   */
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    gint fixated_to;
+    GstStructure *copy = gst_structure_copy (gst_caps_get_structure (caps, i));
+
+    gst_caps_structure_fixate_field_nearest_int (copy, field_name, target);
+    if (gst_structure_get_int (copy, field_name, &fixated_to)) {
+      if (fixated_to == target) {
+        gst_caps_append_structure (equal, copy);
+      } else if (fixated_to > target) {
+        gst_caps_append_structure (bigger, copy);
+      } else {
+        gst_caps_append_structure (smaller, copy);
+      }
+    } else {
+      /* FIXME: what do we do here? Add to all or throw an error? */
+      g_return_val_if_reached (NULL);
+    }
+  }
+  if (!gst_caps_is_empty (equal)) {
+    gst_caps_free (bigger);
+    gst_caps_free (smaller);
+    result = equal;
+  } else {
+    gst_caps_free (equal);
+    if (!gst_caps_is_empty (bigger)) {
+      gst_caps_free (smaller);
+      result = bigger;
+    } else {
+      gst_caps_free (bigger);
+      if (gst_caps_is_empty (smaller)) {
+        gst_caps_free (smaller);
+        return NULL;
+      }
+      result = smaller;
+    }
+  }
+  if (gst_caps_is_subset (caps, result)) {
+    /* we didn't reduce caps */
+    gst_caps_free (result);
+    return NULL;
+  }
+  return result;
+}
+
 GstCaps *
 gst_alsa_fixate (GstPad * pad, const GstCaps * caps)
 {
-  GstCaps *newcaps;
-  GstStructure *structure;
+  GstCaps *result;
+  const gchar *mime;
 
-  newcaps =
-      gst_caps_new_full (gst_structure_copy (gst_caps_get_structure (caps, 0)),
-      NULL);
-  structure = gst_caps_get_structure (newcaps, 0);
+  if ((result = gst_alsa_fixate_to_mimetype (caps, "audio/x-raw-int")))
+    return result;
+  if ((result = gst_alsa_fixate_to_mimetype (caps, "audio/x-raw-float")))
+    return result;
+  if ((result = gst_alsa_fixate_to_mimetype (caps, "audio/x-alaw")))
+    return result;
+  if ((result = gst_alsa_fixate_to_mimetype (caps, "audio/x-mulaw")))
+    return result;
 
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "rate", 44100)) {
-    return newcaps;
-  }
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "channels", 2)) {
-    return newcaps;
-  }
-  if (strcmp (gst_structure_get_name (structure), "audio/x-raw-int") == 0) {
-    if (gst_caps_structure_fixate_field_nearest_int (structure, "depth", 16)) {
-      return newcaps;
-    }
-    if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 16)) {
-      return newcaps;
-    }
-  } else {
-    if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 32)) {
-      return newcaps;
-    }
-  }
+  /* now we know there's only one mimetype in the caps */
+  /* FIXME: I should check this to be really sure I didn't mess up somewhere */
 
-  gst_caps_free (newcaps);
+  if ((result = gst_alsa_fixate_field_nearest_int (caps, "rate", 44100)))
+    return result;
+  if ((result = gst_alsa_fixate_field_nearest_int (caps, "channels", 2)))
+    return result;
+
+  mime = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  if (g_str_equal (mime, "audio/x-raw-int")) {
+    if ((result = gst_alsa_fixate_field_nearest_int (caps, "width", 16)))
+      return result;
+    if ((result = gst_alsa_fixate_field_nearest_int (caps, "depth", 16)))
+      return result;
+  } else if (g_str_equal (mime, "audio/x-raw-float")) {
+    if ((result = gst_alsa_fixate_field_nearest_int (caps, "width", 32)))
+      return result;
+  }
 
   return NULL;
 }
@@ -1229,6 +1343,20 @@ gst_alsa_open_audio (GstAlsa * this)
   return TRUE;
 }
 
+void
+gst_alsa_sw_params_dump (GstAlsa * this, snd_pcm_sw_params_t * sw_params)
+{
+  snd_pcm_sw_params_dump (sw_params, this->out);
+  ALSA_DEBUG_FLUSH (this);
+}
+
+void
+gst_alsa_hw_params_dump (GstAlsa * this, snd_pcm_hw_params_t * hw_params)
+{
+  snd_pcm_hw_params_dump (hw_params, this->out);
+  ALSA_DEBUG_FLUSH (this);
+}
+
 /* if someone finds an easy way to merge this with _set_hw_params, go ahead */
 static gboolean
 gst_alsa_probe_hw_params (GstAlsa * this, GstAlsaFormat * format)
@@ -1246,8 +1374,7 @@ gst_alsa_probe_hw_params (GstAlsa * this, GstAlsaFormat * format)
   snd_pcm_hw_params_alloca (&hw_params);
   SIMPLE_ERROR_CHECK (snd_pcm_hw_params_any (this->handle, hw_params));
 
-  snd_pcm_hw_params_dump (hw_params, this->out);
-  ALSA_DEBUG_FLUSH (this);
+  gst_alsa_hw_params_dump (this, hw_params);
 
   if (GST_ELEMENT (this)->numpads == 1) {
     SIMPLE_ERROR_CHECK (snd_pcm_hw_params_set_access (this->handle,
@@ -1291,34 +1418,27 @@ gst_alsa_set_hw_params (GstAlsa * this)
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (this->handle != NULL, FALSE);
 
-  if (this->format) {
-    GST_INFO ("Preparing format: %s %dHz, %d channels",
-        snd_pcm_format_name (this->format->format), this->format->rate,
-        this->format->channels);
-  } else {
-    GST_INFO ("Preparing format: (none)");
-  }
-
   snd_pcm_hw_params_alloca (&hw_params);
   ERROR_CHECK (snd_pcm_hw_params_any (this->handle, hw_params),
       "Broken configuration for this PCM: %s");
 
-  snd_pcm_hw_params_dump (hw_params, this->out);
-  ALSA_DEBUG_FLUSH (this);
-
-  if (GST_ELEMENT (this)->numpads == 1) {
-    ERROR_CHECK (snd_pcm_hw_params_set_access (this->handle, hw_params, this->
-            mmap ? SND_PCM_ACCESS_MMAP_INTERLEAVED :
-            SND_PCM_ACCESS_RW_INTERLEAVED),
-        "This plugin does not support your harware: %s");
-  } else {
-    ERROR_CHECK (snd_pcm_hw_params_set_access (this->handle, hw_params, this->
-            mmap ? SND_PCM_ACCESS_MMAP_NONINTERLEAVED :
-            SND_PCM_ACCESS_RW_NONINTERLEAVED),
-        "This plugin does not support your harware: %s");
-  }
-
   if (this->format) {
+    GST_INFO ("Preparing format: %s %dHz, %d channels",
+        snd_pcm_format_name (this->format->format), this->format->rate,
+        this->format->channels);
+
+    if (GST_ELEMENT (this)->numpads == 1) {
+      ERROR_CHECK (snd_pcm_hw_params_set_access (this->handle, hw_params, this->
+              mmap ? SND_PCM_ACCESS_MMAP_INTERLEAVED :
+              SND_PCM_ACCESS_RW_INTERLEAVED),
+          "This plugin does not support your harware: %s");
+    } else {
+      ERROR_CHECK (snd_pcm_hw_params_set_access (this->handle, hw_params, this->
+              mmap ? SND_PCM_ACCESS_MMAP_NONINTERLEAVED :
+              SND_PCM_ACCESS_RW_NONINTERLEAVED),
+          "This plugin does not support your harware: %s");
+    }
+
     ERROR_CHECK (snd_pcm_hw_params_set_format (this->handle, hw_params,
             this->format->format), "Sample format (%s) not available: %s",
         snd_pcm_format_name (this->format->format));
@@ -1328,14 +1448,18 @@ gst_alsa_set_hw_params (GstAlsa * this)
     ERROR_CHECK (snd_pcm_hw_params_set_rate (this->handle, hw_params,
             this->format->rate, 0), "error setting rate (%d): %s",
         this->format->rate);
+    ERROR_CHECK (snd_pcm_hw_params_set_periods_near (this->handle, hw_params,
+            &this->period_count, 0), "error setting period count to %u: %s",
+        (guint) this->period_count);
+    ERROR_CHECK (snd_pcm_hw_params_set_period_size_near (this->handle,
+            hw_params, &this->period_size, 0),
+        "error setting period size to %u frames: %s",
+        (guint) this->period_size);
+  } else {
+    GST_INFO_OBJECT (this, "Preparing format: (none)");
   }
+  gst_alsa_hw_params_dump (this, hw_params);
 
-  ERROR_CHECK (snd_pcm_hw_params_set_periods_near (this->handle, hw_params,
-          &this->period_count, 0), "error setting period count to %u: %s",
-      (guint) this->period_count);
-  ERROR_CHECK (snd_pcm_hw_params_set_period_size_near (this->handle, hw_params,
-          &this->period_size, 0), "error setting period size to %u frames: %s",
-      (guint) this->period_size);
 
   ERROR_CHECK (snd_pcm_hw_params (this->handle, hw_params),
       "Could not set hardware parameters: %s");
@@ -1362,12 +1486,16 @@ gst_alsa_set_sw_params (GstAlsa * this)
 {
   snd_pcm_sw_params_t *sw_params;
 
+  if (!this->format) {
+    GST_LOG_OBJECT (this, "not setting sw params, we're not negotiated yet");
+    return TRUE;
+  }
+
   snd_pcm_sw_params_alloca (&sw_params);
   ERROR_CHECK (snd_pcm_sw_params_current (this->handle, sw_params),
       "Could not get current software parameters: %s");
 
-  snd_pcm_sw_params_dump (sw_params, this->out);
-  ALSA_DEBUG_FLUSH (this);
+  gst_alsa_sw_params_dump (this, sw_params);
 
   ERROR_CHECK (snd_pcm_sw_params_set_silence_size (this->handle, sw_params, 0),
       "could not set silence size: %s");
