@@ -429,8 +429,6 @@ gst_a52dec_loop (GstElement *element)
   flags = a52dec->req_channels | A52_ADJUST_LEVEL;
   a52dec->level = 1;
 
-  memset (a52dec->state, 0, sizeof (a52_state_t));
-
   if (a52_frame (a52dec->state, data, &flags, &a52dec->level, a52dec->bias)) {
     fprintf (stderr, "a52dec a52_frame error\n");
     goto end;
@@ -445,7 +443,7 @@ gst_a52dec_loop (GstElement *element)
   }
 
   for (i = 0; i < 6; i++) {
-    if (a52_block (a52dec->state, a52dec->samples)) {
+    if (a52_block (a52dec->state)) {
       gst_element_info (element, "a52dec a52_block error %d\n", i);
       continue;
     }
@@ -468,9 +466,8 @@ gst_a52dec_change_state (GstElement * element)
       break;
     case GST_STATE_READY_TO_PAUSED:
       a52dec->bs = gst_bytestream_new (a52dec->sinkpad);
-      a52dec->samples = a52_init (0);	/* mm_accel()); */
-      /* FIXME this is 0ed only untill a liba52 bug is fixed */
-      a52dec->state = g_new (a52_state_t, 1);
+      a52dec->state = a52_init (0);	/* mm_accel()); */
+      a52dec->samples = a52_samples (a52dec->state);
       a52dec->bit_rate = -1;
       a52dec->sample_rate = -1;
       a52dec->stream_channels = -1;
@@ -485,8 +482,9 @@ gst_a52dec_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       gst_bytestream_destroy (a52dec->bs);
       a52dec->bs = NULL;
-      g_free (a52dec->state);
-      g_free (a52dec->samples);
+      a52dec->samples = NULL;
+      a52_free (a52dec->state);
+      a52dec->state = NULL;
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -530,7 +528,7 @@ gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value, GParam
 
   switch (prop_id) {
     case ARG_DRC:
-      g_value_set_int (value, src->dynamic_range_compression);
+      g_value_set_boolean (value, src->dynamic_range_compression);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
