@@ -351,7 +351,7 @@ gst_audio_convert_link (GstPad *pad, GstCaps *caps)
      ))
     return GST_PAD_LINK_DELAYED;
   if (!gst_caps_get_int (caps, "endianness", &endianness)) {
-    if (width == 8) {
+    if (width == 1) {
       endianness = G_BYTE_ORDER;  
     } else {
       return GST_PAD_LINK_DELAYED;
@@ -397,7 +397,7 @@ gst_audio_convert_change_state (GstElement *element)
 static GstCaps*
 make_caps (gint endianness, gboolean sign, gint depth, gint width, gint rate, gint channels)
 {
-  if (width == 8) {
+  if (width == 1) {
     return GST_CAPS_NEW (
       "audio_convert_caps",
       "audio/raw",
@@ -437,7 +437,6 @@ gst_audio_convert_set_caps (GstPad *pad)
   this = GST_AUDIO_CONVERT (GST_PAD_PARENT (pad));
   nr = this->src == pad ? 1 : this->sink == pad ? 0 : -1;
   g_assert (nr > -1);
-  g_assert (this->caps_set[1 - nr]);
 
   /* try 1:1 first */
   caps = make_caps (this->endian[1 - nr], this->sign[1 - nr], this->depth[1 - nr], 
