@@ -1,3 +1,8 @@
+2004-01-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/typefind/gsttypefindfunctions.c: (mpeg2_sys_type_find):
+	  Fix typefinding for MPEG-1 system streams, similar to MPEG-2.
+
 2004-01-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/esd/esdsink.c: (gst_esdsink_open_audio):
