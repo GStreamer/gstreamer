@@ -498,6 +498,12 @@ draw_puzzle (GstVideofilter * videofilter, void *destp, void *srcp)
   /* use multiples of 4 here to get around drawing problems with YUV colorspaces */
   width = (width / puzzle->columns) & ~3;
   height = (height / puzzle->rows) & ~3;
+  if (width == 0 || height == 0) {
+    gst_video_image_copy_area (&dest, 0, 0, &src, 0, 0,
+        gst_videofilter_get_input_width (videofilter),
+        gst_videofilter_get_input_height (videofilter));
+    return;
+  }
   if (width * puzzle->columns != gst_videofilter_get_input_width (videofilter)) {
     guint w =
         gst_videofilter_get_input_width (videofilter) - width * puzzle->columns;
