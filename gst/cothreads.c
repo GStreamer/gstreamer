@@ -42,9 +42,14 @@
 #include <ucontext.h>
 #endif
 
-/* older glibc's have MAP_ANON instead of MAP_ANONYMOUS */
 #ifndef MAP_ANONYMOUS
+#ifdef MAP_ANON
+/* older glibc's have MAP_ANON instead of MAP_ANONYMOUS */
 #define MAP_ANONYMOUS MAP_ANON
+#else
+/* make due without.  If this fails, we need to open and map /dev/zero */
+#define MAP_ANONYMOUS 0
+#endif
 #endif
 
 #define STACK_SIZE 0x200000

@@ -1,3 +1,8 @@
+2004-01-30  David Schleef  <ds@schleef.org>
+
+	* gst/cothreads.c: Add another fallback if MAP_ANONYMOUS is
+	  missing (#132991)
+
 2004-01-30  Laurent Vivier <Laurent.Vivier@bull.net>
 
 	reviewed by Benjamin Otte 
