@@ -1,5 +1,12 @@
 2004-05-10  David Schleef  <ds@schleef.org>
 
+	* docs/gst/Makefile.am: Dear gtk-doc, please print out the unused
+	symbols, because otherwise we don't know what they are.  Thanks,
+	the GStreamer team.
+	* gst/registries/gstxmlregistry.c: (make_dir): Remove a spurious ;
+
+2004-05-10  David Schleef  <ds@schleef.org>
+
 	(from Steve Lhomme)
 	* win32/Makefile: When using make clean the MS Visual Studio makefiles
 	are deleted.  Fix.

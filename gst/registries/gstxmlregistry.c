@@ -321,7 +321,7 @@ get_time (const char *path, gboolean * is_dir)
 #ifdef _MSC_VER
 #define xmkdir(dirname) _mkdir (dirname)
 #else
-#define xmkdir(dirname) mkdir (dirname, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+#define xmkdir(dirname) mkdir (dirname, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)
 #endif
 
 static gboolean
@@ -329,7 +329,6 @@ make_dir (gchar * filename)
 {
   struct stat dirstat;
   gchar *dirname;
-  int ret;
 
   if (strrchr (filename, '/') == NULL)
     return FALSE;
