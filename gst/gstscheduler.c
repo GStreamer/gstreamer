@@ -1203,7 +1203,8 @@ gst_schedule_add_element (GstSchedule *sched, GstElement *element)
 
     // if the peer element exists and is a candidate
     if (GST_PAD_PEER(pad)) {
-      if (GST_ELEMENT_SCHED(GST_PAD_PARENT(pad)) == GST_ELEMENT_SCHED(GST_PAD_PARENT(GST_PAD_PEER(pad)))) {
+      peerelement = GST_PAD_PARENT( GST_PAD_PEER (pad) );
+      if (GST_ELEMENT_SCHED(element) == GST_ELEMENT_SCHED(peerelement)) {
         GST_INFO (GST_CAT_SCHEDULING, "peer is in same schedule, chaining together");
         // make sure that the two elements are in the same chain
         gst_schedule_chain_elements (sched,element,peerelement);
