@@ -146,20 +146,66 @@ gst_videodrop_class_init (GstVideodropClass *klass)
                                                     name), \
                                   min, max)
 
+static GstCaps *
+gst_videodrop_getcaps (GstPad *pad)
+{
+  GstVideodrop *videodrop;
+  GstPad *otherpad;
+  GstCaps *caps;
+  int i;
+  GstStructure *structure;
+
+  videodrop = GST_VIDEODROP (gst_pad_get_parent (pad));
+
+  otherpad = (pad == videodrop->srcpad) ? videodrop->sinkpad :
+    videodrop->srcpad;
+
+  caps = gst_pad_get_allowed_caps (otherpad);
+  for (i=0;i<gst_caps_get_size(caps);i++) {
+    structure = gst_caps_get_structure (caps, i);
+
+    gst_structure_set (structure,
+        "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
+  }
+  
+  return caps;
+}
+
 static GstPadLinkReturn
 gst_videodrop_link (GstPad *pad, const GstCaps *caps)
 {
   GstVideodrop *videodrop;
   GstStructure *structure;
+  GstPadLinkReturn link_ret;
   gboolean ret;
   double fps;
+  double otherfps;
+  GstPad *otherpad;
+  GstCaps *othercaps;
 
   videodrop = GST_VIDEODROP (gst_pad_get_parent (pad));
 
+  otherpad = (pad == videodrop->srcpad) ? videodrop->sinkpad :
+    videodrop->srcpad;
+
   structure = gst_caps_get_structure (caps, 0);
   ret = gst_structure_get_double (structure, "framerate", &fps);
-
   if (!ret) return GST_PAD_LINK_REFUSED;
+
+  if (gst_pad_is_negotiated (otherpad)) {
+    othercaps = gst_caps_copy (caps);
+    if (pad == videodrop->srcpad) {
+      otherfps = videodrop->from_fps;
+    } else {
+      otherfps = videodrop->to_fps;
+    }
+    gst_caps_set_simple (othercaps,
+        "framerate", G_TYPE_DOUBLE, otherfps, NULL);
+    link_ret = gst_pad_try_set_caps (otherpad, othercaps);
+    if (GST_PAD_LINK_FAILED (link_ret)) {
+      return link_ret;
+    }
+  }
 
   if (pad == videodrop->srcpad) {
     videodrop->to_fps = fps;
@@ -178,11 +224,13 @@ gst_videodrop_init (GstVideodrop *videodrop)
       gst_static_pad_template_get (&gst_videodrop_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (videodrop), videodrop->sinkpad);
   gst_pad_set_chain_function (videodrop->sinkpad, gst_videodrop_chain);
+  gst_pad_set_getcaps_function (videodrop->sinkpad, gst_videodrop_getcaps);
   gst_pad_set_link_function (videodrop->sinkpad, gst_videodrop_link);
 
   videodrop->srcpad = gst_pad_new_from_template (
       gst_static_pad_template_get (&gst_videodrop_src_template), "src");
   gst_element_add_pad (GST_ELEMENT(videodrop), videodrop->srcpad);
+  gst_pad_set_getcaps_function (videodrop->srcpad, gst_videodrop_getcaps);
   gst_pad_set_link_function (videodrop->srcpad, gst_videodrop_link);
 
   videodrop->inited = FALSE;
