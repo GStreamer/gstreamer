@@ -1,4 +1,6 @@
-lib_LTLIBRARIES = libgstelements.la
+filterdir = $(libdir)/gst
+
+filter_LTLIBRARIES = libgstelements.la
 
 libgstelements_la_DEPENDENCIES = ../libgst.la
 libgstelements_la_SOURCES =	\

@@ -56,5 +56,4 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 
 %{prefix}/bin/*
 %{prefix}/lib/*
-%{prefix}/lib/gst/*
-%{prefix}/include/gst/*
+%{prefix}/include/*

@@ -1,4 +1,6 @@
-lib_LTLIBRARIES = libgsttypes.la
+filterdir = $(libdir)/gst
+
+filter_LTLIBRARIES = libgsttypes.la
 
 libgsttypes_la_DEPENDENCIES = ../libgst.la
 libgsttypes_la_SOURCES =	\

@@ -1,4 +1,4 @@
-lib_LTLIBRARIES = libcrashtest.la
+noinst_LTLIBRARIES = libcrashtest.la
 
 libcrashtest_la_SOURCES = \
 	dummy.c
@@ -6,6 +6,5 @@ libcrashtest_la_SOURCES = \
 include_HEADERS = \
 	dummy.h
 
-bin_PROGRAMS = test
-
+noinst_PROGRAMS = test
 test_LDADD = libcrashtest.la

@@ -77,7 +77,7 @@ AC_CHECK_HEADER(xaudio/decoder.h,[
 ])
 AM_CONDITIONAL(HAVE_XAUDIO, test "x$HAVE_XAUDIO" = "xyes")
 
-PLUGINS_DIR=${libdir}/plugins
+PLUGINS_DIR=${prefix}/lib/gst
 AC_DEFINE_UNQUOTED(PLUGINS_DIR,"$PLUGINS_DIR")
 AC_SUBST(PLUGINS_DIR)
 
@@ -163,4 +163,7 @@ test/cothreads/Makefile
 editor/Makefile
 tools/Makefile
 docs/Makefile
-stamp.h])
+stamp.h
+gstreamer-config
+gstreamer.spec])
+AC_OUTPUT_COMMANDS([chmod +x gstreamer-config])

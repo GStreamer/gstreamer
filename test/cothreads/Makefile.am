@@ -1,4 +1,4 @@
-bin_PROGRAMS = test simple
+noinst_PROGRAMS = test simple
 
 test_SOURCES = test.c cothreads.c object.c looper.c
 

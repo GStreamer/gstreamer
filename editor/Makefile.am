@@ -22,6 +22,7 @@ libgsteditorinclude_HEADERS =	\
 
 
 bin_PROGRAMS = gsteditor
+gsteditor_SOURCES = editor.c
 gsteditor_LDFLAGS = libgsteditor.la
 
 
