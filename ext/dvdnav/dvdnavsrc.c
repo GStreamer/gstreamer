@@ -124,7 +124,7 @@ struct _DVDNavSrc
 
   gboolean did_seek;
   gboolean need_flush;
-  gboolean need_discont;
+  gboolean need_newmedia;
 
   /* Timing */
   GstClock *clock;              /* The clock for this element. */
@@ -395,6 +395,7 @@ dvdnavsrc_init (DVDNavSrc * src)
 
   src->did_seek = FALSE;
   src->need_flush = FALSE;
+  src->need_newmedia = TRUE;
 
   /* Pause mode is initially inactive. */
   src->pause_mode = DVDNAVSRC_PAUSE_OFF;
@@ -1278,13 +1279,16 @@ dvdnavsrc_loop (GstElement * element)
 
   g_return_if_fail (dvdnavsrc_is_open (src));
 
-  if (src->did_seek) {
+  if (src->did_seek || src->need_newmedia) {
     GstEvent *event;
 
     src->did_seek = FALSE;
     GST_INFO_OBJECT (src, "sending discont");
-    event = gst_event_new_discontinuous (FALSE, 0);
+
+    event = gst_event_new_discontinuous (src->need_newmedia, 0);
+
     src->need_flush = FALSE;
+    src->need_newmedia = FALSE;
     gst_pad_push (src->srcpad, GST_DATA (event));
     return;
   }
@@ -1595,6 +1599,7 @@ dvdnavsrc_change_state (GstElement * element)
         }
       }
       src->streaminfo = NULL;
+      src->need_newmedia = TRUE;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;

@@ -107,7 +107,7 @@ struct _GstDVDDemux {
   gboolean just_flushed;	/* The element just received a flush event. */
   GstClockTime discont_time;	/* If different from GST_CLOCK_TIME_NONE, a
                                    discontinuous event should be sent with the
-                                   given time, before sending the next dara
+                                   given time, before sending the next data
                                    block.. */
 
   gint mpeg_version;		/* Version of the MPEG video stream */

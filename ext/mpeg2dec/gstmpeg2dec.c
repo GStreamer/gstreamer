@@ -585,7 +585,7 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
   guint32 size;
   guint8 *data, *end;
-  gint64 pts;
+  GstClockTime pts;
   const mpeg2_info_t *info;
   mpeg2_state_t state;
   gboolean done = FALSE;
@@ -596,8 +596,20 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
       {
-        GST_DEBUG_OBJECT (mpeg2dec, "discont, resetting next_time to 0");
-        mpeg2dec->next_time = 0;
+        GstClockTime time;
+
+        if (!gst_event_discont_get_value (event, GST_FORMAT_TIME, &time)
+            || !GST_CLOCK_TIME_IS_VALID (time)) {
+          GST_WARNING_OBJECT (mpeg2dec,
+              "No new time offset in discont event %p", event);
+        } else {
+          mpeg2dec->next_time = time;
+          GST_DEBUG_OBJECT (mpeg2dec,
+              "discont, reset next_time to %" G_GUINT64_FORMAT " (%"
+              GST_TIME_FORMAT ")", mpeg2dec->next_time,
+              GST_TIME_ARGS (mpeg2dec->next_time));
+        }
+
         mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
         gst_mpeg2dec_flush_decoder (mpeg2dec);
         gst_pad_event_default (pad, event);
@@ -626,7 +638,7 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
   info = mpeg2_info (mpeg2dec->decoder);
   end = data + size;
 
-  if (pts != -1) {
+  if (pts != GST_CLOCK_TIME_NONE) {
     gint64 mpeg_pts = GST_TIME_TO_MPEG_TIME (pts);
 
     GST_DEBUG_OBJECT (mpeg2dec,
@@ -643,14 +655,14 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
     GST_LOG ("no pts");
   }
 
-  GST_LOG ("calling mpeg2_buffer");
+  GST_LOG_OBJECT (mpeg2dec, "calling mpeg2_buffer");
   mpeg2_buffer (mpeg2dec->decoder, data, end);
-  GST_LOG ("calling mpeg2_buffer done");
+  GST_LOG_OBJECT (mpeg2dec, "calling mpeg2_buffer done");
 
   while (!done) {
     gboolean slice = FALSE;
 
-    GST_LOG ("calling parse");
+    GST_LOG_OBJECT (mpeg2dec, "calling parse");
     state = mpeg2_parse (mpeg2dec->decoder);
     GST_DEBUG_OBJECT (mpeg2dec, "parse state %d", state);
     switch (state) {
@@ -676,8 +688,9 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
             info->sequence->frame_period * GST_USECOND / 27;
 
         GST_DEBUG_OBJECT (mpeg2dec,
-            "sequence flags: %d, frame period: %d, frame rate: %d",
+            "sequence flags: %d, frame period: %d (%g), frame rate: %g",
             info->sequence->flags, info->sequence->frame_period,
+            (double) (mpeg2dec->frame_period) / GST_SECOND,
             mpeg2dec->frame_rate);
         GST_DEBUG_OBJECT (mpeg2dec, "profile: %02x, colour_primaries: %d",
             info->sequence->profile_level_id, info->sequence->colour_primaries);
@@ -741,10 +754,11 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
         break;
       }
       case STATE_SLICE_1ST:
-        GST_DEBUG_OBJECT (mpeg2dec, "slice 1st");
+        GST_LOG_OBJECT (mpeg2dec, "1st slice of frame encountered");
         break;
       case STATE_PICTURE_2ND:
-        GST_DEBUG_OBJECT (mpeg2dec, "picture second");
+        GST_LOG_OBJECT (mpeg2dec,
+            "Second picture header encountered. Decoding 2nd field");
         break;
       case STATE_SLICE:
         slice = TRUE;
@@ -788,22 +802,31 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
 #else
           if (picture->flags & PIC_FLAG_TAGS) {
             GstClockTime time =
-                MPEG_TIME_TO_GST_TIME ((guint64) picture->tag2 << 32 | picture->
-                tag);
+                MPEG_TIME_TO_GST_TIME ((GstClockTime) (picture->
+                    tag2) << 32 | picture->tag);
 #endif
-
-            GST_DEBUG_OBJECT (mpeg2dec, "picture had pts %" GST_TIME_FORMAT,
-                GST_TIME_ARGS (time));
+            GST_DEBUG_OBJECT (mpeg2dec,
+                "picture had pts %" GST_TIME_FORMAT ", we had %"
+                GST_TIME_FORMAT, GST_TIME_ARGS (time),
+                GST_TIME_ARGS (mpeg2dec->next_time));
             GST_BUFFER_TIMESTAMP (outbuf) = mpeg2dec->next_time = time;
           } else {
             GST_DEBUG_OBJECT (mpeg2dec,
-                "picture didn't have pts using %" GST_TIME_FORMAT,
+                "picture didn't have pts. Using %" GST_TIME_FORMAT,
                 GST_TIME_ARGS (mpeg2dec->next_time));
             GST_BUFFER_TIMESTAMP (outbuf) = mpeg2dec->next_time;
           }
 
-          mpeg2dec->next_time +=
-              (mpeg2dec->frame_period * picture->nb_fields) >> 1;
+          /* TODO set correct offset here based on frame number */
+          if (info->display_picture_2nd) {
+            GST_BUFFER_DURATION (outbuf) = (picture->nb_fields +
+                info->display_picture_2nd->nb_fields) * mpeg2dec->frame_period /
+                2;
+          } else {
+            GST_BUFFER_DURATION (outbuf) =
+                picture->nb_fields * mpeg2dec->frame_period / 2;
+          }
+          mpeg2dec->next_time += GST_BUFFER_DURATION (outbuf);
 
           GST_DEBUG_OBJECT (mpeg2dec,
               "picture: %s %s fields:%d off:%" G_GINT64_FORMAT " ts:%"
@@ -840,8 +863,6 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
             GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer, asked to skip");
             gst_buffer_unref (outbuf);
           } else {
-            /* TODO set correct offset here based on frame number */
-            GST_BUFFER_DURATION (outbuf) = mpeg2dec->frame_period;
             GST_LOG_OBJECT (mpeg2dec, "pushing buffer, timestamp %"
                 GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
                 GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
@@ -869,14 +890,13 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
         break;
         /* error */
       case STATE_INVALID:
-        g_warning ("mpeg2dec: decoding error");
+        GST_WARNING_OBJECT (mpeg2dec, "Decoding error");
         /* it looks like setting a new frame in libmpeg2 avoids a crash */
         /* FIXME figure out how this screws up sync and buffer leakage */
         gst_mpeg2dec_alloc_buffer (mpeg2dec, info, GST_BUFFER_OFFSET (buf));
         break;
       default:
-        g_warning ("%s: unhandled state %d, FIXME",
-            gst_element_get_name (GST_ELEMENT (mpeg2dec)), state);
+        GST_ERROR_OBJECT (mpeg2dec, "Unknown libmpeg2 state %d, FIXME", state);
         break;
     }
 
@@ -1306,6 +1326,7 @@ gst_mpeg2dec_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      gst_mpeg2dec_flush_decoder (mpeg2dec);
       gst_mpeg2dec_close_decoder (mpeg2dec);
       break;
     case GST_STATE_READY_TO_NULL:

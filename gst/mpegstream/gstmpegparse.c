@@ -238,6 +238,7 @@ gst_mpeg_parse_init (GstMPEGParse * mpeg_parse)
   mpeg_parse->max_discont = DEFAULT_MAX_DISCONT;
 
   mpeg_parse->do_adjust = TRUE;
+  mpeg_parse->use_adjust = TRUE;
 
   GST_FLAG_SET (mpeg_parse, GST_ELEMENT_EVENT_AWARE);
 }
@@ -283,9 +284,10 @@ gst_mpeg_parse_handle_discont (GstMPEGParse * mpeg_parse, GstEvent * event)
 
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_DISCONTINUOUS);
 
-  if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &time)) {
-    GST_DEBUG_OBJECT (mpeg_parse,
-        "forwarding discontinuity, time: %0.3fs", (double) time / GST_SECOND);
+  if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &time)
+      && (GST_CLOCK_TIME_IS_VALID (time))) {
+    GST_DEBUG_OBJECT (mpeg_parse, "forwarding discontinuity, time: %0.3fs",
+        (double) time / GST_SECOND);
 
     if (CLASS (mpeg_parse)->send_discont)
       CLASS (mpeg_parse)->send_discont (mpeg_parse, time);
@@ -452,10 +454,11 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
         mpeg_parse->current_scr, mpeg_parse->adjust);
 
     if (mpeg_parse->do_adjust) {
-      mpeg_parse->adjust +=
-          (gint64) mpeg_parse->next_scr - (gint64) mpeg_parse->current_scr;
-
-      GST_DEBUG ("new adjust: %" G_GINT64_FORMAT, mpeg_parse->adjust);
+      if (mpeg_parse->use_adjust) {
+        mpeg_parse->adjust +=
+            (gint64) mpeg_parse->next_scr - (gint64) mpeg_parse->current_scr;
+        GST_DEBUG ("new adjust: %" G_GINT64_FORMAT, mpeg_parse->adjust);
+      }
     } else {
       mpeg_parse->discont_pending = TRUE;
     }

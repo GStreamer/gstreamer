@@ -71,9 +71,10 @@ struct _GstMpeg2dec {
   gboolean	 closed;
   gboolean	 have_fbuf;
 
-  /* the timestamp of the next frame */
   DiscontState	 discont_state;
-  gint64	 next_time;
+
+  /* the timestamp of the next frame */
+  GstClockTime   next_time;
   gint64	 segment_start;
   gint64	 segment_end;
 

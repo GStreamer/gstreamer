@@ -65,8 +65,12 @@ struct _GstMPEGParse {
   guint64	 next_scr;		/* Expected next SCR. */
   guint64	 bytes_since_scr;
 
-  gboolean	 do_adjust;		/* Adjust timestamps to smooth
-                                           discontinuities. */
+  gboolean	do_adjust;		/* If false, send discont events on SCR
+					 * jumps
+				 	*/
+  gboolean	 use_adjust;		/* Collect SCR jumps into 'adjust' in
+					 * order to adjust timestamps to smooth
+                                         * discontinuities. */
   gint64	 adjust;		/* Current timestamp adjust value. */
 
   gboolean	 discont_pending;

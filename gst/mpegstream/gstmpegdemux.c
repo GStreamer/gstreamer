@@ -275,13 +275,18 @@ gst_mpeg_demux_send_discont (GstMPEGParse * mpeg_parse, GstClockTime time)
   gint i;
 
   GST_DEBUG_OBJECT (mpeg_demux, "discont %" G_GUINT64_FORMAT, time);
+  discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, NULL);
+
+  if (!discont) {
+    GST_ELEMENT_ERROR (GST_ELEMENT (mpeg_demux),
+        RESOURCE, FAILED, (NULL), ("Allocation failed"));
+    return;
+  }
 
   for (i = 0; i < GST_MPEG_DEMUX_NUM_VIDEO_STREAMS; i++) {
     if (mpeg_demux->video_stream[i] &&
         GST_PAD_IS_USABLE (mpeg_demux->video_stream[i]->pad)) {
-      discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-          time, NULL);
-
+      gst_event_ref (discont);
       gst_pad_push (mpeg_demux->video_stream[i]->pad, GST_DATA (discont));
     }
   }
@@ -289,9 +294,7 @@ gst_mpeg_demux_send_discont (GstMPEGParse * mpeg_parse, GstClockTime time)
   for (i = 0; i < GST_MPEG_DEMUX_NUM_AUDIO_STREAMS; i++) {
     if (mpeg_demux->audio_stream[i] &&
         GST_PAD_IS_USABLE (mpeg_demux->audio_stream[i]->pad)) {
-      discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-          time, NULL);
-
+      gst_event_ref (discont);
       gst_pad_push (mpeg_demux->audio_stream[i]->pad, GST_DATA (discont));
     }
   }
@@ -299,12 +302,12 @@ gst_mpeg_demux_send_discont (GstMPEGParse * mpeg_parse, GstClockTime time)
   for (i = 0; i < GST_MPEG_DEMUX_NUM_PRIVATE_STREAMS; i++) {
     if (mpeg_demux->private_stream[i] &&
         GST_PAD_IS_USABLE (mpeg_demux->private_stream[i]->pad)) {
-      discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-          time, NULL);
-
+      gst_event_ref (discont);
       gst_pad_push (mpeg_demux->private_stream[i]->pad, GST_DATA (discont));
     }
   }
+
+  gst_event_unref (discont);
 }
 
 static void
@@ -618,13 +621,13 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
 
         if (GST_PAD_IS_USABLE (outstream->pad)) {
           GstEvent *event;
-          gint64 time;
+          GstClockTime time;
 
           time = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr
               + mpeg_parse->adjust) + mpeg_demux->adjust;
 
           event = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-              MPEGTIME_TO_GSTTIME (time), NULL);
+              time, NULL);
 
           gst_pad_push (outstream->pad, GST_DATA (event));
         }
@@ -839,11 +842,14 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
       pts |= ((guint64) * buf++) << 7;
       pts |= ((guint64) (*buf++ & 0xFE)) >> 1;
 
-      GST_DEBUG_OBJECT (mpeg_demux, "0x%02x (%lld) PTS = %" G_GUINT64_FORMAT,
-          id, pts, MPEGTIME_TO_GSTTIME (pts));
+      timestamp =
+          MPEGTIME_TO_GSTTIME (pts + mpeg_parse->adjust) + mpeg_demux->adjust;
 
-      pts += mpeg_parse->adjust;
-      timestamp = MPEGTIME_TO_GSTTIME (pts) + mpeg_demux->adjust;
+      GST_DEBUG_OBJECT (mpeg_demux,
+          "0x%02x (% " G_GINT64_FORMAT ") PTS = %" G_GUINT64_FORMAT
+          " (adjusted = %" G_GINT64_FORMAT ")", id, pts,
+          MPEGTIME_TO_GSTTIME (pts),
+          MPEGTIME_TO_GSTTIME (pts + mpeg_parse->adjust) + mpeg_demux->adjust);
     } else {
       timestamp = GST_CLOCK_TIME_NONE;
     }

@@ -283,6 +283,11 @@ gst_a52dec_push (GstA52Dec * a52dec,
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
   GST_BUFFER_DURATION (buf) = 256 * GST_SECOND / a52dec->sample_rate;
 
+  GST_DEBUG_OBJECT (a52dec,
+      "Pushing buffer with ts %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+
   gst_pad_push (srcpad, GST_DATA (buf));
 
   return 0;
@@ -324,7 +329,8 @@ gst_a52dec_handle_event (GstA52Dec * a52dec, GstEvent * event)
     case GST_EVENT_DISCONTINUOUS:{
       gint64 val;
 
-      if (!gst_event_discont_get_value (event, GST_FORMAT_TIME, &val)) {
+      if (!gst_event_discont_get_value (event, GST_FORMAT_TIME, &val)
+          || !GST_CLOCK_TIME_IS_VALID (val)) {
         GST_WARNING ("No time discont value in event %p", event);
       } else {
         a52dec->time = val;
@@ -442,7 +448,12 @@ gst_a52dec_chain (GstPad * pad, GstData * _data)
   buf = GST_BUFFER (_data);
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     a52dec->time = GST_BUFFER_TIMESTAMP (buf);
+    GST_DEBUG_OBJECT (a52dec,
+        "Received buffer with ts %" GST_TIME_FORMAT " duration %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
   }
+
   if (a52dec->cache) {
     buf = gst_buffer_join (a52dec->cache, buf);
     a52dec->cache = NULL;

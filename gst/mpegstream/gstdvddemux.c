@@ -26,6 +26,11 @@
 
 #include "gstdvddemux.h"
 
+/* 
+ * Start the timestamp sequence at 2 seconds to allow for strange audio
+ * timestamps when audio crosses a VOBU 
+ */
+#define INITIAL_END_PTM (2 * GST_SECOND)
 
 GST_DEBUG_CATEGORY_STATIC (gstdvddemux_debug);
 #define GST_CAT_DEFAULT (gstdvddemux_debug)
@@ -290,28 +295,7 @@ gst_dvd_demux_init (GstDVDDemux * dvd_demux)
   dvd_demux->cur_audio_nr = 0;
   dvd_demux->cur_subpicture_nr = 0;
 
-  /* Start the timestamp sequence in 0. */
-  dvd_demux->last_end_ptm = 0;
-
-  /* (Ronald) so, this was disabled. I'm enabling (default) it again.
-   * Timestamp adjustment is fairly evil, we would ideally use discont
-   * events instead. However, our current clocking has a pretty serious
-   * race condition: imagine that $pipeline is at time 30sec and $audio
-   * receives a discont to 0sec. Video processes its last buffer and
-   * calls _wait() on $timestamp, which is 30s - so we wait (hang) 30sec.
-   * This is unacceptable, obviously, and timestamp adjustment, no matter
-   * how evil, solves this.
-   * Before disabling this again, tripple check that al .vob files on our
-   * websites /media/ directory work fine, especially bullet.vob and
-   * barrage.vob.
-   */
-#if 0
-  /* Try to prevent the mpegparse infrastructure from doing timestamp
-     adjustment. */
-  mpeg_parse->do_adjust = FALSE;
-  mpeg_parse->adjust = 0;
-#endif
-
+  dvd_demux->last_end_ptm = INITIAL_END_PTM;
   dvd_demux->just_flushed = FALSE;
   dvd_demux->discont_time = GST_CLOCK_TIME_NONE;
 
@@ -416,6 +400,26 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
           (double) dvd_demux->last_end_ptm / GST_SECOND,
           (double) start_ptm / GST_SECOND,
           (double) mpeg_demux->adjust / GST_SECOND);
+
+      /* Disable mpeg_parse's timestamp adjustment in favour of the info
+       * from DVD nav packets.
+       * Timestamp adjustment is fairly evil, we would ideally use discont
+       * events instead. However, our current clocking has a pretty serious
+       * race condition: imagine that $pipeline is at time 30sec and $audio
+       * receives a discont to 0sec. Video processes its last buffer and
+       * calls _wait() on $timestamp, which is 30s - so we wait (hang) 30sec.
+       * This is unacceptable, obviously, and timestamp adjustment, no matter
+       * how evil, solves this.
+       * Before disabling this again, tripple check that al .vob files on our
+       * websites /media/ directory work fine, especially bullet.vob and
+       * barrage.vob.
+       */
+#if 1
+      /* Try to prevent the mpegparse infrastructure from doing timestamp
+         adjustment. */
+      mpeg_parse->use_adjust = FALSE;
+      mpeg_parse->adjust = 0;
+#endif
     }
     dvd_demux->last_end_ptm = end_ptm;
 
@@ -425,6 +429,9 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
          time gap between the discontinuity and the subsequent data
          blocks. */
       dvd_demux->discont_time = start_ptm + mpeg_demux->adjust;
+      GST_DEBUG_OBJECT (dvd_demux, "Set discont time to %" G_GINT64_FORMAT,
+          start_ptm + mpeg_demux->adjust);
+
       dvd_demux->just_flushed = FALSE;
     }
 
@@ -454,34 +461,39 @@ gst_dvd_demux_send_discont (GstMPEGParse * mpeg_parse, GstClockTime time)
 
   GST_MPEG_PARSE_CLASS (parent_class)->send_discont (mpeg_parse, time);
 
+  discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, NULL);
+  if (!discont) {
+    GST_ELEMENT_ERROR (GST_ELEMENT (dvd_demux),
+        RESOURCE, FAILED, (NULL), ("Allocation failed"));
+    return;
+  }
+
   for (i = 0; i < GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS; i++) {
     if (dvd_demux->subpicture_stream[i] &&
         GST_PAD_IS_USABLE (dvd_demux->subpicture_stream[i]->pad)) {
-      discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-          time, NULL);
 
+      gst_event_ref (discont);
       gst_pad_push (dvd_demux->subpicture_stream[i]->pad, GST_DATA (discont));
     }
   }
 
   /* Distribute the event to the "current" pads. */
   if (GST_PAD_IS_USABLE (dvd_demux->cur_video)) {
-    discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, NULL);
-
+    gst_event_ref (discont);
     gst_pad_push (dvd_demux->cur_video, GST_DATA (discont));
   }
 
   if (GST_PAD_IS_USABLE (dvd_demux->cur_audio)) {
-    discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, NULL);
-
+    gst_event_ref (discont);
     gst_pad_push (dvd_demux->cur_audio, GST_DATA (discont));
   }
 
   if (GST_PAD_IS_USABLE (dvd_demux->cur_subpicture)) {
-    discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, NULL);
-
+    gst_event_ref (discont);
     gst_pad_push (dvd_demux->cur_subpicture, GST_DATA (discont));
   }
+
+  gst_event_unref (discont);
 }
 
 static void
@@ -857,8 +869,12 @@ gst_dvd_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
      minimize the time interval between the discontinuity and the data
      buffers following it. */
   if (dvd_demux->discont_time != GST_CLOCK_TIME_NONE) {
+    if ((gint64) (dvd_demux->discont_time) < 0) {
+      GST_ERROR ("DVD Discont < 0! % " G_GINT64_FORMAT,
+          (gint64) dvd_demux->discont_time);
+    }
     PARSE_CLASS (mpeg_demux)->send_discont (mpeg_parse,
-        dvd_demux->discont_time - 200 * GST_MSECOND);
+        dvd_demux->discont_time);
     dvd_demux->discont_time = GST_CLOCK_TIME_NONE;
   }
 
@@ -991,7 +1007,7 @@ gst_dvd_demux_reset (GstDVDDemux * dvd_demux)
   dvd_demux->cur_audio_nr = 0;
   dvd_demux->cur_subpicture_nr = 0;
   dvd_demux->mpeg_version = 0;
-  dvd_demux->last_end_ptm = 0;
+  dvd_demux->last_end_ptm = INITIAL_END_PTM;
 
   dvd_demux->just_flushed = FALSE;
   dvd_demux->discont_time = GST_CLOCK_TIME_NONE;
