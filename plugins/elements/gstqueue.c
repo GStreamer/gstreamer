@@ -18,6 +18,12 @@
  */
 
 //#define DEBUG_ENABLED
+//#define STATUS_ENABLED
+#ifdef STATUS_ENABLED
+#define STATUS(A) g_print(A)
+#else
+#define STATUS(A) 
+#endif
 
 #include <gstqueue.h>
 
@@ -158,7 +164,7 @@ void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
     GST_UNLOCK(queue);
     while (queue->level_buffers >= queue->max_buffers) {
       g_mutex_lock(queue->fulllock);
-      //g_print("O");
+      STATUS("O");
       g_cond_wait(queue->fullcond,queue->fulllock);
       g_mutex_unlock(queue->fulllock);
     }
@@ -178,7 +184,7 @@ void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
 //    queue->tail = g_list_next(queue->tail);
     queue->queue = g_list_append(queue->queue,buf);
   }
-  //g_print("+");
+  STATUS("+");
 
   /* if we were empty, but aren't any more, signal a condition */
   tosignal = (queue->level_buffers <= 0);
@@ -210,7 +216,7 @@ void gst_queue_push(GstConnection *connection) {
     GST_UNLOCK(queue);
     while (!queue->level_buffers) {
       g_mutex_lock(queue->emptylock);
-      //g_print("U");
+      STATUS("U");
       g_cond_wait(queue->emptycond,queue->emptylock);
       g_mutex_unlock(queue->emptylock);
     }
@@ -222,7 +228,7 @@ void gst_queue_push(GstConnection *connection) {
   queue->queue = g_list_remove_link(queue->queue,front);
   g_list_free(front);
   queue->level_buffers--;
-  //g_print("-%d", queue->level_buffers);
+  STATUS("-");
   tosignal = queue->level_buffers < queue->max_buffers;
   GST_UNLOCK(queue);
 

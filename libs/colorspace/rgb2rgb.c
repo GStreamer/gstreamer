@@ -70,9 +70,9 @@ static void gst_colorspace_rgb24_to_bgr24(GstColorSpace *space, unsigned char *s
   gint size;
   gchar temp;
 
-  DEBUG("gst_colorspace_rgb24_to_bgr24\n");
+  printf("gst_colorspace_rgb24_to_bgr24 %p %p %d\n", src, dest, space->outsize);
 
-  size = space->outsize;
+  size = space->outsize/3;
 
   if (src == dest) {
     while (size--) {

@@ -30,8 +30,9 @@ int main(int argc,char *argv[]) {
   encoderfactory = gst_elementfactory_find("aviencoder");
   encoder = gst_elementfactory_create(encoderfactory,"aviencoder");
   gtk_object_set(GTK_OBJECT(videosrc),"width",384,"height",288,NULL);
+  gtk_object_set(GTK_OBJECT(videosrc),"format",9,NULL);
 
-  gtk_object_set(GTK_OBJECT(encoder),"video","00:MJPG",NULL);
+  gtk_object_set(GTK_OBJECT(encoder),"video","00:I420",NULL);
 
   fd = open(argv[1],O_CREAT|O_RDWR|O_TRUNC);
 
@@ -48,10 +49,11 @@ int main(int argc,char *argv[]) {
   gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(encoder));
   gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(fdsink));
 
+
   /* connect src to sink */
   gst_element_add_ghost_pad(GST_ELEMENT(video_thread),
-                            gst_element_get_pad(compress,"sink"));
-  gst_pad_connect(gst_element_get_pad(compress,"src"),
+  //                gst_element_get_pad(compress,"sink"));
+  //gst_pad_connect(gst_element_get_pad(compress,"src"),
                   gst_element_get_pad(encoder,"video_00"));
   gst_pad_connect(gst_element_get_pad(encoder,"src"),
                   gst_element_get_pad(fdsink,"sink"));
@@ -65,7 +67,7 @@ int main(int argc,char *argv[]) {
   gst_pad_connect(gst_element_get_pad(videosrc, "src"),
                   gst_element_get_pad(video_queue,"sink"));
   gst_pad_connect(gst_element_get_pad(video_queue,"src"),
-                  gst_element_get_pad(video_thread,"sink"));
+                  gst_element_get_pad(video_thread,"video_00"));
 
   gtk_object_set(GTK_OBJECT(video_thread),"create_thread",TRUE,NULL);
   g_print("\neverything's built, setting it up to be runnable\n");
