@@ -12,6 +12,8 @@ static GstElement *pipeline;
 static guint64 duration;
 static GtkAdjustment *adjustment;
 static gboolean stats = FALSE;
+static gboolean elem_seek = FALSE;
+static gboolean verbose = FALSE;
 
 static guint update_id;
 
@@ -116,7 +118,7 @@ make_dv_pipeline (const gchar * location)
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("dvdec", "decoder");
-  videosink = gst_element_factory_make_or_warn ("xvideosink", "v_sink");
+  videosink = gst_element_factory_make_or_warn ("ximagesink", "v_sink");
   audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
@@ -386,7 +388,7 @@ make_avi_pipeline (const gchar * location)
   //v_decoder = gst_element_factory_make_or_warn ("windec", "v_dec");
   v_decoder = gst_element_factory_make_or_warn ("ffmpegdecall", "v_dec");
   video_thread = gst_thread_new ("v_decoder_thread");
-  videosink = gst_element_factory_make_or_warn ("xvideosink", "v_sink");
+  videosink = gst_element_factory_make_or_warn ("ximagesink", "v_sink");
   //videosink = gst_element_factory_make_or_warn ("fakesink", "v_sink");
   //g_object_set (G_OBJECT (videosink), "sync", TRUE, NULL);
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
@@ -462,8 +464,8 @@ make_mpeg_pipeline (const gchar * location)
   video_thread = gst_thread_new ("v_decoder_thread");
   //g_object_set (G_OBJECT (video_thread), "priority", 2, NULL);
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
-  v_filter = gst_element_factory_make_or_warn ("colorspace", "v_filter");
-  videosink = gst_element_factory_make_or_warn ("xvideosink", "v_sink");
+  v_filter = gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_filter");
+  videosink = gst_element_factory_make_or_warn ("ximagesink", "v_sink");
   gst_element_link_many (v_decoder, v_queue, v_filter, NULL);
 
   gst_element_link (v_filter, videosink);
@@ -530,8 +532,8 @@ make_mpegnt_pipeline (const gchar * location)
 
   video_bin = gst_bin_new ("v_decoder_bin");
   v_decoder = gst_element_factory_make_or_warn ("mpeg2dec", "v_dec");
-  v_filter = gst_element_factory_make_or_warn ("colorspace", "v_filter");
-  videosink = gst_element_factory_make_or_warn ("xvideosink", "v_sink");
+  v_filter = gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_filter");
+  videosink = gst_element_factory_make_or_warn ("ximagesink", "v_sink");
   gst_element_link_many (v_decoder, v_filter, videosink, NULL);
 
   gst_bin_add_many (GST_BIN (video_bin), v_decoder, v_filter, videosink, NULL);
@@ -551,7 +553,19 @@ make_mpegnt_pipeline (const gchar * location)
 static GstElement *
 make_playerbin_pipeline (const gchar * location)
 {
-  return NULL;
+  GstElement *player;
+
+  player = gst_element_factory_make ("playbin", "player");
+  g_assert (player);
+
+  g_object_set (G_OBJECT (player), "uri", location, NULL);
+
+  seekable_elements = g_list_prepend (seekable_elements, player);
+
+  /* force element seeking on this pipeline */
+  elem_seek = TRUE;
+
+  return player;
 }
 
 static gchar *
@@ -615,7 +629,37 @@ query_rates (void)
 }
 
 G_GNUC_UNUSED static void
-query_durations ()
+query_durations_elems ()
+{
+  GList *walk = seekable_elements;
+
+  while (walk) {
+    GstElement *element = GST_ELEMENT (walk->data);
+    gint i = 0;
+
+    g_print ("durations %8.8s: ", GST_ELEMENT_NAME (element));
+    while (seek_formats[i].name) {
+      gboolean res;
+      gint64 value;
+      GstFormat format;
+
+      format = seek_formats[i].format;
+      res = gst_element_query (element, GST_QUERY_TOTAL, &format, &value);
+      if (res) {
+        g_print ("%s %13lld | ", seek_formats[i].name, value);
+      } else {
+        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
+      }
+      i++;
+    }
+    g_print (" %s\n", GST_ELEMENT_NAME (element));
+
+    walk = g_list_next (walk);
+  }
+}
+
+G_GNUC_UNUSED static void
+query_durations_pads ()
 {
   GList *walk = seekable_pads;
 
@@ -645,7 +689,37 @@ query_durations ()
 }
 
 G_GNUC_UNUSED static void
-query_positions ()
+query_positions_elems ()
+{
+  GList *walk = seekable_elements;
+
+  while (walk) {
+    GstElement *element = GST_ELEMENT (walk->data);
+    gint i = 0;
+
+    g_print ("positions %8.8s: ", GST_ELEMENT_NAME (element));
+    while (seek_formats[i].name) {
+      gboolean res;
+      gint64 value;
+      GstFormat format;
+
+      format = seek_formats[i].format;
+      res = gst_element_query (element, GST_QUERY_POSITION, &format, &value);
+      if (res) {
+        g_print ("%s %13lld | ", seek_formats[i].name, value);
+      } else {
+        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
+      }
+      i++;
+    }
+    g_print (" %s\n", GST_ELEMENT_NAME (element));
+
+    walk = g_list_next (walk);
+  }
+}
+
+G_GNUC_UNUSED static void
+query_positions_pads ()
 {
   GList *walk = seekable_pads;
 
@@ -684,18 +758,35 @@ update_scale (gpointer data)
   duration = 0;
   clock = gst_bin_get_clock (GST_BIN (pipeline));
 
-  if (seekable_pads) {
-    GstPad *pad = GST_PAD (seekable_pads->data);
+  if (elem_seek) {
+    if (seekable_elements) {
+      GstElement *element = GST_ELEMENT (seekable_elements->data);
 
-    gst_pad_query (pad, GST_QUERY_TOTAL, &format, &duration);
+      gst_element_query (element, GST_QUERY_TOTAL, &format, &duration);
+      gst_element_query (element, GST_QUERY_POSITION, &format, &position);
+    }
+  } else {
+    if (seekable_pads) {
+      GstPad *pad = GST_PAD (seekable_pads->data);
+
+      gst_pad_query (pad, GST_QUERY_TOTAL, &format, &duration);
+      gst_pad_query (pad, GST_QUERY_POSITION, &format, &position);
+    }
   }
-  position = gst_clock_get_time (clock);
 
   if (stats) {
-    g_print ("clock:                  %13llu  (%s)\n", position,
-        gst_object_get_name (GST_OBJECT (clock)));
-    query_durations ();
-    query_positions ();
+    if (clock) {
+      g_print ("clock:                  %13llu  (%s)\n", position,
+          gst_object_get_name (GST_OBJECT (clock)));
+    }
+
+    if (elem_seek) {
+      query_durations_elems ();
+      query_positions_elems ();
+    } else {
+      query_durations_pads ();
+      query_positions_pads ();
+    }
     query_rates ();
   }
 
@@ -711,7 +802,12 @@ iterate (gpointer data)
 {
   gboolean res;
 
-  res = gst_bin_iterate (GST_BIN (data));
+  if (!GST_FLAG_IS_SET (GST_OBJECT (data), GST_BIN_SELF_SCHEDULABLE)) {
+    res = gst_bin_iterate (GST_BIN (data));
+  } else {
+    res = gst_element_get_state (GST_ELEMENT (data)) == GST_STATE_PLAYING;
+  }
+
   if (!res) {
     gtk_timeout_remove (update_id);
     g_print ("stopping iterations\n");
@@ -735,39 +831,39 @@ stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
   gboolean res;
   GstEvent *s_event;
 
-#ifdef PAD_SEEK
-  GList *walk = seekable_pads;
+  if (!elem_seek) {
+    GList *walk = seekable_pads;
 
-  while (walk) {
-    GstPad *seekable = GST_PAD (walk->data);
+    while (walk) {
+      GstPad *seekable = GST_PAD (walk->data);
 
-    g_print ("seek to %lld on pad %s:%s\n", real,
-        GST_DEBUG_PAD_NAME (seekable));
-    s_event =
-        gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
-        GST_SEEK_FLAG_FLUSH, real);
+      g_print ("seek to %lld on pad %s:%s\n", real,
+          GST_DEBUG_PAD_NAME (seekable));
+      s_event =
+          gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
+          GST_SEEK_FLAG_FLUSH, real);
 
-    res = gst_pad_send_event (seekable, s_event);
+      res = gst_pad_send_event (seekable, s_event);
 
-    walk = g_list_next (walk);
+      walk = g_list_next (walk);
+    }
+  } else {
+    GList *walk = seekable_elements;
+
+    while (walk) {
+      GstElement *seekable = GST_ELEMENT (walk->data);
+
+      g_print ("seek to %lld on element %s\n", real,
+          gst_element_get_name (seekable));
+      s_event =
+          gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
+          GST_SEEK_FLAG_FLUSH, real);
+
+      res = gst_element_send_event (seekable, s_event);
+
+      walk = g_list_next (walk);
+    }
   }
-#else
-  GList *walk = seekable_elements;
-
-  while (walk) {
-    GstElement *seekable = GST_ELEMENT (walk->data);
-
-    g_print ("seek to %lld on element %s\n", real,
-        gst_element_get_name (seekable));
-    s_event =
-        gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
-        GST_SEEK_FLAG_FLUSH, real);
-
-    res = gst_element_send_event (seekable, s_event);
-
-    walk = g_list_next (walk);
-  }
-#endif
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   gtk_idle_add ((GtkFunction) iterate, pipeline);
@@ -852,6 +948,10 @@ main (int argc, char **argv)
   struct poptOption options[] = {
     {"stats", 's', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &stats, 0,
         "Show pad stats", NULL},
+    {"elem", 'e', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &elem_seek, 0,
+        "Seek on elements instead of pads", NULL},
+    {"verbose", 'v', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &verbose, 0,
+        "Verbose properties", NULL},
     POPT_TABLEEND
   };
   gint type;
@@ -916,8 +1016,10 @@ main (int argc, char **argv)
   /* show the gui. */
   gtk_widget_show_all (window);
 
-  g_signal_connect (pipeline, "deep_notify",
-      G_CALLBACK (gst_element_default_deep_notify), NULL);
+  if (verbose) {
+    g_signal_connect (pipeline, "deep_notify",
+        G_CALLBACK (gst_element_default_deep_notify), NULL);
+  }
   g_signal_connect (pipeline, "error", G_CALLBACK (gst_element_default_error),
       NULL);
 
