@@ -2134,7 +2134,20 @@ static PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
     },
 };
 
-#define ROUND_UP_4(x) (((x) + 3) & ~3)
+int
+gst_ffmpeg_avpicture_get_size (int pix_fmt, int width, int height)
+{
+  AVPicture dummy_pict;
+
+  return gst_ffmpeg_avpicture_fill (&dummy_pict, NULL, pix_fmt, width, height);
+}
+
+#define GEN_MASK(x) ((1<<(x))-1)
+#define ROUND_UP_X(v,x) (((v) + GEN_MASK(x)) & ~GEN_MASK(x))
+#define ROUND_UP_2(x) ROUND_UP_X (x, 1)
+#define ROUND_UP_4(x) ROUND_UP_X (x, 2)
+#define ROUND_UP_8(x) ROUND_UP_X (x, 3)
+#define DIV_ROUND_UP_X(v,x) (((v) + GEN_MASK(x)) >> (x))
 
 int
 gst_ffmpeg_avpicture_fill (AVPicture * picture,
@@ -2145,8 +2158,6 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
   PixFmtInfo *pinfo;
 
   pinfo = &pix_fmt_info[pix_fmt];
-  stride = ROUND_UP_4 (width);
-  size = stride * height;
   switch (pix_fmt) {
     case PIX_FMT_YUV420P:
     case PIX_FMT_YUV422P:
@@ -2157,10 +2168,11 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
     case PIX_FMT_YUVJ422P:
     case PIX_FMT_YUVJ444P:
       stride = ROUND_UP_4 (width);
-      size = stride * height;
-      w2 = (width + (1 << pinfo->x_chroma_shift) - 1) >> pinfo->x_chroma_shift;
+      h2 = ROUND_UP_X (height, pinfo->y_chroma_shift);
+      size = stride * h2;
+      w2 = DIV_ROUND_UP_X (width, pinfo->x_chroma_shift);
       stride2 = ROUND_UP_4 (w2);
-      h2 = (height + (1 << pinfo->y_chroma_shift) - 1) >> pinfo->y_chroma_shift;
+      h2 = DIV_ROUND_UP_X (height, pinfo->y_chroma_shift);
       size2 = stride2 * h2;
       picture->data[0] = ptr;
       picture->data[1] = picture->data[0] + size;
@@ -2233,3 +2245,41 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
 
   return 0;
 }
+
+/**
+ * Convert image 'src' to 'dst'.
+ *
+ * We use this code to copy two pictures between the same
+ * colorspaces, so this function is not realy used to do
+ * colorspace conversion.
+ * The ffmpeg code has a bug in it where odd sized frames were
+ * not copied completely. We adjust the input parameters for
+ * the original ffmpeg img_convert function here so that it
+ * still does the right thing.
+ */
+int
+gst_ffmpeg_img_convert (AVPicture * dst, int dst_pix_fmt,
+    const AVPicture * src, int src_pix_fmt, int src_width, int src_height)
+{
+  int i;
+  PixFmtInfo *pf = &pix_fmt_info[src_pix_fmt];
+
+  pf = &pix_fmt_info[src_pix_fmt];
+  switch (pf->pixel_type) {
+    case FF_PIXEL_PACKED:
+      /* nothing wrong here */
+      break;
+    case FF_PIXEL_PLANAR:
+      /* patch up, so that img_copy copies all of the pixels */
+      src_width = ROUND_UP_X (src_width, pf->x_chroma_shift);
+      src_height = ROUND_UP_X (src_height, pf->y_chroma_shift);
+      break;
+    case FF_PIXEL_PALETTE:
+      /* nothing wrong here */
+      break;
+  }
+  return img_convert (dst, dst_pix_fmt, src, src_pix_fmt, src_width, src_height);
+}
+
+
+

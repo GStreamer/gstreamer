@@ -358,6 +358,9 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
 }
 #endif
 
+#define ROUND_UP_2(x) (((x) + 1) & ~1)
+#define ROUND_UP_4(x) (((x) + 3) & ~3)
+
 static void
 gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
 {
@@ -406,23 +409,28 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
             ffmpegdec->picture, &have_data, data, size);
 
         if (len >= 0 && have_data) {
-#define ROUND_UP_4(x) (((x) + 3) & ~3)
           /* libavcodec constantly crashes on stupid buffer allocation
            * errors inside. This drives me crazy, so we let it allocate
            * it's own buffers and copy to our own buffer afterwards... */
           AVPicture pic;
-          gint size = avpicture_get_size (ffmpegdec->context->pix_fmt,
-              ROUND_UP_4 (ffmpegdec->context->width),
-              ROUND_UP_4 (ffmpegdec->context->height));
+          gint size = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
+              ffmpegdec->context->width, ffmpegdec->context->height);
 
           outbuf = gst_buffer_new_and_alloc (size);
+	  /* original ffmpeg code does not handle odd sizes correctly. This patched
+	   * up version does */
           gst_ffmpeg_avpicture_fill (&pic, GST_BUFFER_DATA (outbuf),
               ffmpegdec->context->pix_fmt,
               ffmpegdec->context->width, ffmpegdec->context->height);
-          img_convert (&pic, ffmpegdec->context->pix_fmt,
+
+	  /* the original convert function did not do the right thing, this
+	   * is a patched up version that adjust widht/height so that the
+	   * ffmpeg one works correctly. */
+          gst_ffmpeg_img_convert (&pic, ffmpegdec->context->pix_fmt,
               (AVPicture *) ffmpegdec->picture,
               ffmpegdec->context->pix_fmt,
-              ffmpegdec->context->width, ffmpegdec->context->height);
+              ffmpegdec->context->width, 
+	      ffmpegdec->context->height);
 
           /* note that ffmpeg sometimes gets the FPS wrong */
           if (GST_CLOCK_TIME_IS_VALID (expected_ts) &&

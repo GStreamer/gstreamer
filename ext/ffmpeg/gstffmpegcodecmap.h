@@ -96,6 +96,12 @@ G_CONST_RETURN gchar *
 gst_ffmpeg_get_codecid_longname (enum CodecID codec_id);
 
 /*
+ *Get the size of an picture
+ */
+int
+gst_ffmpeg_avpicture_get_size (int pix_fmt, int width, int height);
+
+/*
  * Fill in pointers in an AVPicture, aligned by 4 (required by X).
  */
 
@@ -105,6 +111,15 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
 			   enum PixelFormat pix_fmt,
 			   int         width,
 			   int         height);
+
+/*
+ * convert an image, we only use this for copying the image, ie,
+ * convert between the same colorspaces.
+ */
+int
+gst_ffmpeg_img_convert (AVPicture * dst, int dst_pix_fmt,
+    const AVPicture * src, int src_pix_fmt, int src_width, int src_height);
+
 
 /*
  * FFMPEG debugging function; maybe move to a different file.

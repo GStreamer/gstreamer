@@ -1,3 +1,12 @@
+2004-11-05  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_avpicture_get_size),
+	(gst_ffmpeg_avpicture_fill), (gst_ffmpeg_img_convert):
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
+	Fix strides and plane sizes when dealing with odd sized
+	movies.
+
 2004-10-29  Sebastien Cote  <sc5@hermes.usherb.ca>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
