@@ -327,9 +327,9 @@ restart:
   /* handle events */
   if (queue->upstream_event)
   {
+    GstPad *peer = GST_PAD_PEER (pad);
     g_print ("handling event\n");
     g_mutex_lock (queue->upstream_mutex);
-    GstPad *peer = GST_PAD_PEER (pad);
     
     if (peer)
     {
