@@ -2334,6 +2334,7 @@ gpointer
 gst_pad_event_default (GstPad *pad, GstData *event)
 {
   GstElement *element;
+  GList *pads;
   gpointer ret = NULL;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -2343,7 +2344,7 @@ gst_pad_event_default (GstPad *pad, GstData *event)
   element = GST_PAD_PARENT (pad);
  
   /* send event */
-  GList *pads = element->pads;
+  pads = element->pads;
   while (pads) {
     GstPad *eventpad = GST_PAD (pads->data);
     pads = g_list_next (pads);
