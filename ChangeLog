@@ -1,3 +1,19 @@
+2005-02-02  Wim Taymans  <wim@fluendo.com>
+
+	* gst/schedulers/gstoptimalscheduler.c:
+	(gst_opt_scheduler_class_init), (gst_opt_scheduler_init),
+	(gst_opt_scheduler_finalize), (remove_decoupled), (schedule_chain),
+	(get_invalid_call), (chain_invalid_call),
+	(get_group_schedule_function), (loop_group_schedule_function),
+	(gst_opt_scheduler_loop_wrapper), (gst_opt_scheduler_get_wrapper),
+	(gst_opt_scheduler_state_transition),
+	(gst_opt_scheduler_add_element),
+	(gst_opt_scheduler_remove_element), (gst_opt_scheduler_interrupt),
+	(gst_opt_scheduler_error), (gst_opt_scheduler_pad_link),
+	(gst_opt_scheduler_pad_unlink), (gst_opt_scheduler_iterate),
+	(gst_opt_scheduler_show):
+	Added lock to protect scheduler data structures.
+
 2005-02-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* testsuite/threads/threadi.c: (cb_data):
