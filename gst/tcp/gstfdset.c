@@ -24,6 +24,11 @@
 #define INIT_POLLFDS	MIN_POLLFDS
 
 #include <sys/poll.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+/* OS/X needs this because of bad headers */
+#include <string.h>
 
 #include "gstfdset.h"
 
