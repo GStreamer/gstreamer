@@ -15,6 +15,8 @@ dnl on whether the feature is available.
 dnl
 dnl The macro will set USE_<FEATURE-NAME> to "yes" or "no" depending on
 dnl whether the feature is to be used.
+dnl Thomas changed this, so that when USE_<FEATURE-NAME> was already set
+dnl to no, then it stays that way.
 dnl
 dnl The macro will call AM_CONDITIONAL(USE_<<FEATURE-NAME>, ...) to allow
 dnl the feature to control what is built in Makefile.ams.  If you want
@@ -46,16 +48,29 @@ dnl GST_PLUGINS_NO will contain those that won't be built
 AC_DEFUN(GST_CHECK_FEATURE,
 [dnl
 builtin(define, [gst_endisable], ifelse($5, [disabled], [enable], [disable]))dnl
+dnl if it is set to NO, then don't even consider it for building
+NOUSE=
+if test "x$USE_[$1]" = "xno"; then
+  NOUSE="yes"
+fi
 AC_ARG_ENABLE(translit([$1], A-Z, a-z),
   [  ]builtin(format, --%-26s gst_endisable %s, gst_endisable-translit([$1], A-Z, a-z), [$2]ifelse([$3],,,: [$3])),
   [ case "${enableval}" in
-      yes) USE_[$1]=yes ;;
-      no) USE_[$1]=no ;;
+      yes) USE_[$1]=yes;;
+      no) USE_[$1]=no;;
       *) AC_MSG_ERROR(bad value ${enableval} for --enable-translit([$1], A-Z, a-z)) ;;
     esac],
   [ USE_$1=]ifelse($5, [disabled], [no], [yes]))           dnl DEFAULT
 
+dnl *** set it back to no if it was preset to no
+if test "x$NOUSE" = "xyes"; then
+  USE_[$1]="no"
+  AC_MSG_WARN(*** $3 pre-configured not to be built)
+fi
+NOUSE=
+
 dnl *** If it's enabled
+
 if test x$USE_[$1] = xyes; then
   gst_check_save_LIBS=$LIBS
   gst_check_save_LDFLAGS=$LDFLAGS

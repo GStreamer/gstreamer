@@ -85,9 +85,11 @@ esac],
 if test "x$EXPERIMENTAL" = "$xyes"; then
   AC_MSG_WARN(building experimental plugins)
   USE_FLACLIB="yes"
+  USE_LIBMIKMOD="yes"
 else
   AC_MSG_NOTICE(not building experimental plugins)
   USE_FLACLIB="no"
+  USE_LIBMIKMOD="no"
 fi
 
 dnl broken plugins; stuff that doesn't seem to build at the moment
@@ -106,6 +108,7 @@ if test "x$broken-plugins" = "$xyes"; then
   USE_LIBGSM="yes"
   USE_FLACLIB="yes"
   USE_LIBAVIFILE="yes"
+  USE_LIBMAD="yes"
 else
   AC_MSG_NOTICE(not building broken plugins)
   USE_ARTS="no"
@@ -113,6 +116,7 @@ else
   USE_LIBGSM="no"
   USE_FLACLIB="no"
   USE_LIBAVIFILE="no"
+  USE_LIBMAD="no"
 fi
 
 
@@ -426,7 +430,7 @@ AC_MSG_NOTICE(Checking for plugin libraries)
 dnl *** a52dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_A52DEC, true)
 GST_CHECK_FEATURE(A52DEC, [a52dec], a52dec, [
-GST_CHECK_LIBHEADER(A52DEC, a52, a52_init,-lm, a52dec/a52.h, A52DEC_LIBS="-la52")
+GST_CHECK_LIBHEADER(A52DEC, a52, a52_init, -lm, a52dec/a52.h, A52DEC_LIBS="-la52")
 ])
 
 dnl *** aalib ***
@@ -443,13 +447,12 @@ AM_PATH_ALSA(0.5.0, HAVE_ALSA=yes, HAVE_ALSA=no)
 ])
 
 dnl *** arts ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
-GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [GST_CHECK_ARTS()])
+dnl translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
+dnl GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [GST_CHECK_ARTS()])
 
 dnl *** artsc ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_ARTSC, true)
-GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [GST_CHECK_ARTSC()],
-)
+dnl translit(dnm, m, l) AM_CONDITIONAL(USE_ARTSC, true)
+dnl GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [GST_CHECK_ARTSC()])
 
 dnl *** audiofile ***
 dnl this check uses the GST_CHECK_CONFIGPROG macro
@@ -569,6 +572,19 @@ GST_CHECK_FEATURE(RAW1394, [raw1394 library], dv1394src, [
   GST_CHECK_LIBHEADER(RAW1394, raw1934, raw1934_get_handle,, libraw1394/raw1394.h, RAW1394_LIBS="-raw1394")
 ])
 
+dnl Check for librtp
+dnl FIXME : adapt and make it work
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBRTP, true)
+GST_CHECK_FEATURE(LIBRTP, [RTP library], rtpenc rtpdec,[
+  AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
+])
+dnl FIXME header check needs to use GLIB_CFLAGS in order to succeed for rtp
+dnl AC_CHECK_HEADERS(rtp/rtp.h, HAVE_LIBRTP=yes, HAVE_LIBRTP=no)
+dnl AC_CHECK_HEADERS(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
+dnl AC_CHECK_HEADERS(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
+dnl AC_CHECK_HEADERS(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
+
+
 dnl *** SDL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBSDL, true)
 GST_CHECK_FEATURE(LIBSDL, [SDL plugin], sdlvideosink, [
@@ -580,6 +596,11 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_LIBSHOUT, true)
 GST_CHECK_FEATURE(LIBSHOUT, [shout plugin], icecastsend, [
   GST_CHECK_LIBHEADER(LIBSHOUT, shout, shout_init_connection,, shout/shout.h, LIBSHOUT_LIBS="-lshout")
 ])
+
+dnl for sidplay
+dnl FIXME : make this work
+dnl AC_PATH_LIBSIDPLAY
+
 
 dnl *** vorbis ***
 dnl AM_PATH_VORBIS only takes two options
@@ -641,11 +662,12 @@ GST_CHECK_FEATURE(LIBGHTTP, [libghttp plugins], gsthttpsrc, [
 
 
 dnl thomas : adding an arts check taken from xine with it's own .m4
-AM_PATH_ARTS(, HAVE_ARTS=yes, HAVE_ARTS=no)
+dnl FIXME: put this higher up
+dnl AM_PATH_ARTS(, HAVE_ARTS=yes, HAVE_ARTS=no)
 
 dnl also define ARTS_MCOPFLAGS
-ARTS_MCOPFLAGS="$ARTS_CFLAGS"
-AC_SUBST(ARTS_MCOPFLAGS)   
+dnl ARTS_MCOPFLAGS="$ARTS_CFLAGS"
+dnl AC_SUBST(ARTS_MCOPFLAGS)   
 
 dnl Check for libglade with gnome support; no libglade for glib2.0
 HAVE_LIBGLADE_GNOME="no"
@@ -674,24 +696,6 @@ fi
 AC_SUBST(HAVE_LIBGLADE_GNOME)
 AC_SUBST(LIBGLADE_GNOME_LIBS)
 AC_SUBST(LIBGLADE_GNOME_CFLAGS)
-
-dnl Check for Avifile
-HAVE_AVIFILE="no"
-AC_MSG_CHECKING(for Avifile)
-if avifile-config --libs > /dev/null 2>&1; then
-        HAVE_AVIFILE="yes"
-        AC_MSG_RESULT(found)
-else
-        AC_MSG_WARN(Did not find Avifile installed)
-fi
-
-AVIFILE_LIBS="`avifile-config --libs`"
-AVIFILE_CFLAGS="`avifile-config --cflags`"
-AC_SUBST(AVIFILE_LIBS)
-AC_SUBST(AVIFILE_CFLAGS)
-dnl HAVE_AVIFILE is needed in a Makefile.am
-
-AC_SUBST(HAVE_AVIFILE)
 
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
@@ -757,18 +761,6 @@ AC_CHECK_LIB(cdda_interface, cdda_open, : , HAVE_CDPARANOIA=no, )
 AC_CHECK_HEADER(cdda_interface.h, :, HAVE_CDPARANOIA=no)
 AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
 AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
-
-dnl Check for sidplay
-AC_PATH_LIBSIDPLAY
-
-dnl Check for librtp
-AC_MSG_CHECKING(rtp library)
-AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
-dnl FIXME header check needs to use GLIB_CFLAGS in order to succeed for rtp
-dnl AC_CHECK_HEADERS(rtp/rtp.h, HAVE_LIBRTP=yes, HAVE_LIBRTP=no)
-dnl AC_CHECK_HEADERS(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
-dnl AC_CHECK_HEADERS(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
-dnl AC_CHECK_HEADERS(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
 
 
 dnl Check for linux/cdrom.h
