@@ -234,6 +234,7 @@ theora_enc_sink_link (GstPad * pad, const GstCaps * caps)
 {
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   GstTheoraEnc *enc = GST_THEORA_ENC (gst_pad_get_parent (pad));
+  const GValue *par;
 
   if (!gst_caps_is_fixed (caps))
     return GST_PAD_LINK_DELAYED;
@@ -241,6 +242,7 @@ theora_enc_sink_link (GstPad * pad, const GstCaps * caps)
   gst_structure_get_int (structure, "width", &enc->width);
   gst_structure_get_int (structure, "height", &enc->height);
   gst_structure_get_double (structure, "framerate", &enc->fps);
+  par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
   /* Theora has a divisible-by-sixteen restriction for the encoded video size */
   if ((enc->width & 0x0f) != 0 || (enc->height & 0x0f) != 0)
@@ -257,9 +259,15 @@ theora_enc_sink_link (GstPad * pad, const GstCaps * caps)
   /* do some scaling, we really need fractions in structures... */
   enc->info.fps_numerator = enc->fps * 10000000;
   enc->info.fps_denominator = 10000000;
-  enc->info.aspect_numerator = 1;
-  enc->info.aspect_denominator = 1;
-  /* */
+  if (par) {
+    enc->info.aspect_numerator = gst_value_get_fraction_numerator (par);
+    enc->info.aspect_denominator = gst_value_get_fraction_denominator (par);
+  } else {
+    /* setting them to 0 indicates that the decoder can chose a good aspect
+     * ratio, defaulting to 1/1 */
+    enc->info.aspect_numerator = 0;
+    enc->info.aspect_denominator = 0;
+  }
 
   enc->info.colorspace = OC_CS_UNSPECIFIED;
   enc->info.target_bitrate = enc->video_bitrate;

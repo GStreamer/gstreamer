@@ -304,6 +304,7 @@ gst_videotestsrc_get_capslist (void)
     gst_structure_set (structure,
         "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
         "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
         "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
     gst_caps_append_structure (caps, structure);
   }

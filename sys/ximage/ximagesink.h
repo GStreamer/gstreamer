@@ -75,6 +75,10 @@ struct _GstXContext {
   gint bpp;
   gint endianness;
 
+  gint width, height;
+  gint widthmm, heightmm;
+  GValue par;                  /* calculated pixel aspect ratio */
+
   gboolean use_xshm;
 
   GstCaps *caps;
@@ -118,6 +122,7 @@ struct _GstXImageSink {
 
   /* Unused */
   gint pixel_width, pixel_height;
+  GValue par;                  /* object-set pixel aspect ratio */
 
   GstClockTime time;
 

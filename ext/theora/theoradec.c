@@ -532,6 +532,22 @@ theora_dec_chain (GstPad * pad, GstData * data)
       gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, 0, list);
     } else if (packet.packetno == 2) {
       GstCaps *caps;
+      gint par_num, par_den;
+
+      GST_DEBUG_OBJECT (dec, "fps %d/%d, PAR %d/%d",
+          dec->info.fps_numerator, dec->info.fps_denominator,
+          dec->info.aspect_numerator, dec->info.aspect_denominator);
+
+      /* calculate par
+       * the info.aspect_* values reflect PAR;
+       * 0:0 is allowed and can be interpreted as 1:1, so correct for it */
+      par_num = dec->info.aspect_numerator;
+      par_den = dec->info.aspect_denominator;
+      if (par_num == 0 && par_den == 0) {
+        par_num = par_den = 1;
+      }
+      GST_DEBUG_OBJECT (dec, "video %dx%d, PAR %d/%d", dec->info.width,
+          dec->info.height, par_num, par_den);
 
       /* done */
       theora_decode_init (&dec->state, &dec->info);
@@ -539,6 +555,7 @@ theora_dec_chain (GstPad * pad, GstData * data)
           "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
           "framerate", G_TYPE_DOUBLE,
           ((gdouble) dec->info.fps_numerator) / dec->info.fps_denominator,
+          "pixel-aspect-ratio", GST_TYPE_FRACTION, par_num, par_den,
           "width", G_TYPE_INT, dec->info.width, "height", G_TYPE_INT,
           dec->info.height, NULL);
       gst_pad_set_explicit_caps (dec->srcpad, caps);

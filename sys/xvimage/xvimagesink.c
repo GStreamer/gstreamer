@@ -81,7 +81,8 @@ enum
   ARG_HUE,
   ARG_SATURATION,
   ARG_DISPLAY,
-  ARG_SYNCHRONOUS
+  ARG_SYNCHRONOUS,
+  ARG_PIXEL_ASPECT_RATIO
       /* FILL ME */
 };
 
@@ -390,7 +391,8 @@ gst_xvimagesink_xwindow_decorate (GstXvImageSink * xvimagesink,
   return TRUE;
 }
 
-/* This function handles a GstXWindow creation */
+/* This function handles a GstXWindow creation
+ * The width and height are the actual pixel size on the display */
 static GstXWindow *
 gst_xvimagesink_xwindow_new (GstXvImageSink * xvimagesink,
     gint width, gint height)
@@ -458,7 +460,8 @@ gst_xvimagesink_xwindow_destroy (GstXvImageSink * xvimagesink,
   g_free (xwindow);
 }
 
-/* This function resizes a GstXWindow */
+/* This function resizes a GstXWindow.
+ * The width and height are the actual pixel size on the display. */
 static void
 gst_xvimagesink_xwindow_resize (GstXvImageSink * xvimagesink,
     GstXWindow * xwindow, guint width, guint height)
@@ -815,6 +818,49 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
   return caps;
 }
 
+/* This function calculates the pixel aspect ratio based on the properties
+ * in the xcontext structure and stores it there. */
+static void
+gst_xvimagesink_calculate_pixel_aspect_ratio (GstXContext * xcontext)
+{
+  gint par[][2] = {
+    {1, 1},                     /* regular screen */
+    {16, 15},                   /* PAL TV */
+    {11, 10},                   /* 525 line Rec.601 video */
+    {54, 59}                    /* 625 line Rec.601 video */
+  };
+  gint i;
+  gint index;
+  gdouble ratio;
+  gdouble delta;
+
+#define DELTA(idx) (ABS (ratio - ((gdouble) par[idx][0] / par[idx][1])))
+
+  /* first calculate the "real" ratio based on the X values;
+   * which is the "physical" w/h divided by the w/h in pixels of the display */
+  ratio = xcontext->widthmm * xcontext->height
+      / (xcontext->heightmm * xcontext->width);
+  GST_DEBUG ("calculated pixel aspect ratio: %f", ratio);
+  /* now find the one from par[][2] with the lowest delta to the real one */
+  delta = DELTA (0);
+  index = 0;
+
+  for (i = 1; i < sizeof (par) / (sizeof (gint) * 2); ++i) {
+    gdouble this_delta = DELTA (i);
+
+    if (this_delta < delta) {
+      index = i;
+      delta = this_delta;
+    }
+  }
+
+  GST_DEBUG ("Decided on index %d (%d/%d)", index,
+      par[index][0], par[index][1]);
+
+  g_value_init (&xcontext->par, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&xcontext->par, par[index][0], par[index][1]);
+}
+
 /* This function gets the X Display and global info about it. Everything is
    stored in our object and will be cleaned when the object is disposed. Note
    here that caps for supported format are generated without any window or
@@ -855,6 +901,12 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
   xcontext->black = XBlackPixel (xcontext->disp, xcontext->screen_num);
   xcontext->depth = DefaultDepthOfScreen (xcontext->screen);
 
+  xcontext->width = DisplayWidth (xcontext->disp, xcontext->screen_num);
+  xcontext->height = DisplayHeight (xcontext->disp, xcontext->screen_num);
+  xcontext->widthmm = DisplayWidthMM (xcontext->disp, xcontext->screen_num);
+  xcontext->heightmm = DisplayHeightMM (xcontext->disp, xcontext->screen_num);
+
+  gst_xvimagesink_calculate_pixel_aspect_ratio (xcontext);
   /* We get supported pixmap formats at supported depth */
   px_formats = XListPixmapFormats (xcontext->disp, &nb_formats);
 
@@ -1112,6 +1164,12 @@ gst_xvimagesink_sink_link (GstPad * pad, const GstCaps * caps)
   GstStructure *structure;
   gint im_format = 0;
   gboolean ret;
+  gint video_width, video_height;
+  gint video_par_n, video_par_d;        /* video's PAR */
+  gint display_par_n, display_par_d;    /* display's PAR */
+  GValue display_ratio = { 0, };        /* display w/h ratio */
+  const GValue *caps_par;
+  gint num, den;
 
   xvimagesink = GST_XVIMAGESINK (gst_pad_get_parent (pad));
 
@@ -1120,15 +1178,15 @@ gst_xvimagesink_sink_link (GstPad * pad, const GstCaps * caps)
       GST_PTR_FORMAT, xvimagesink->xcontext->caps, caps);
 
   structure = gst_caps_get_structure (caps, 0);
-  ret = gst_structure_get_int (structure, "width",
-      &(GST_VIDEOSINK_WIDTH (xvimagesink)));
-  ret &= gst_structure_get_int (structure, "height",
-      &(GST_VIDEOSINK_HEIGHT (xvimagesink)));
+  ret = gst_structure_get_int (structure, "width", &video_width);
+  ret &= gst_structure_get_int (structure, "height", &video_height);
   ret &= gst_structure_get_double (structure, "framerate",
       &xvimagesink->framerate);
   if (!ret)
     return GST_PAD_LINK_REFUSED;
 
+  xvimagesink->video_width = video_width;
+  xvimagesink->video_height = video_height;
   if (!gst_structure_get_fourcc (structure, "format", &im_format)) {
     im_format =
         gst_xvimagesink_get_fourcc_from_caps (xvimagesink,
@@ -1138,13 +1196,58 @@ gst_xvimagesink_sink_link (GstPad * pad, const GstCaps * caps)
     return GST_PAD_LINK_REFUSED;
   }
 
-  xvimagesink->pixel_width = 1;
-  gst_structure_get_int (structure, "pixel_width", &xvimagesink->pixel_width);
+  /* get aspect ratio from caps if it's present, and
+   * convert video width and height to a display width and height
+   * using wd / hd = wv / hv * PARv / PARd
+   * the ratio wd / hd will be stored in display_ratio */
+  g_value_init (&display_ratio, GST_TYPE_FRACTION);
 
-  xvimagesink->pixel_height = 1;
-  gst_structure_get_int (structure, "pixel_height", &xvimagesink->pixel_height);
+  /* get video's PAR */
+  caps_par = gst_structure_get_value (structure, "pixel-aspect-ratio");
+  if (caps_par) {
+    video_par_n = gst_value_get_fraction_numerator (caps_par);
+    video_par_d = gst_value_get_fraction_denominator (caps_par);
+  } else {
+    video_par_n = 1;
+    video_par_d = 1;
+  }
+  /* get display's PAR */
+  display_par_n = gst_value_get_fraction_numerator (&xvimagesink->par);
+  display_par_d = gst_value_get_fraction_denominator (&xvimagesink->par);
 
-  /* Creating our window and our image */
+  gst_value_set_fraction (&display_ratio,
+      video_width * video_par_n * display_par_d,
+      video_height * video_par_d * display_par_n);
+
+  num = gst_value_get_fraction_numerator (&display_ratio);
+  den = gst_value_get_fraction_denominator (&display_ratio);
+  GST_DEBUG_OBJECT (xvimagesink,
+      "video width/height: %dx%d, calculated display ratio: %d/%d",
+      video_width, video_height, num, den);
+
+  /* now find a width x height that respects this display ratio.
+   * prefer those that have one of w/h the same as the incoming video
+   * using wd / hd = num / den */
+
+  /* start with same height, because of interlaced video */
+  /* check hd / den is an integer scale factor, and scale wd with the PAR */
+  if (video_height % den == 0) {
+    GST_DEBUG_OBJECT (xvimagesink, "keeping video height");
+    GST_VIDEOSINK_WIDTH (xvimagesink) = video_height * num / den;
+    GST_VIDEOSINK_HEIGHT (xvimagesink) = video_height;
+  } else if (video_width % num == 0) {
+    GST_DEBUG_OBJECT (xvimagesink, "keeping video width");
+    GST_VIDEOSINK_WIDTH (xvimagesink) = video_width;
+    GST_VIDEOSINK_HEIGHT (xvimagesink) = video_width * den / num;
+  } else {
+    GST_DEBUG_OBJECT (xvimagesink, "approximating while keeping video height");
+    GST_VIDEOSINK_WIDTH (xvimagesink) = video_height * num / den;
+    GST_VIDEOSINK_HEIGHT (xvimagesink) = video_height;
+  }
+  GST_DEBUG_OBJECT (xvimagesink, "scaling to %dx%d",
+      GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
+
+  /* Creating our window and our image with the display size in pixels */
   g_assert (GST_VIDEOSINK_WIDTH (xvimagesink) > 0);
   g_assert (GST_VIDEOSINK_HEIGHT (xvimagesink) > 0);
   if (!xvimagesink->xwindow)
@@ -1157,12 +1260,12 @@ gst_xvimagesink_sink_link (GstPad * pad, const GstCaps * caps)
           GST_VIDEOSINK_HEIGHT (xvimagesink));
   }
 
-  /* We renew our xvimage only if size or format changed */
+  /* We renew our xvimage only if size or format changed;
+   * the xvimage is the same size as the video pixel size */
   if ((xvimagesink->xvimage) &&
       ((im_format != xvimagesink->xvimage->im_format) ||
-          (GST_VIDEOSINK_WIDTH (xvimagesink) != xvimagesink->xvimage->width) ||
-          (GST_VIDEOSINK_HEIGHT (xvimagesink) !=
-              xvimagesink->xvimage->height))) {
+          (video_width != xvimagesink->xvimage->width) ||
+          (video_height != xvimagesink->xvimage->height))) {
     GST_DEBUG_OBJECT (xvimagesink,
         "old format " GST_FOURCC_FORMAT ", new format " GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (xvimagesink->xcontext->im_format),
@@ -1278,8 +1381,7 @@ gst_xvimagesink_chain (GstPad * pad, GstData * data)
     if (!xvimagesink->xvimage) {
       GST_DEBUG_OBJECT (xvimagesink, "creating our xvimage");
       xvimagesink->xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
-          GST_VIDEOSINK_WIDTH (xvimagesink),
-          GST_VIDEOSINK_HEIGHT (xvimagesink));
+          xvimagesink->video_width, xvimagesink->video_height);
       if (!xvimagesink->xvimage) {
         /* No image available. That's very bad ! */
         gst_buffer_unref (buf);
@@ -1373,7 +1475,7 @@ gst_xvimagesink_buffer_alloc (GstPad * pad, guint64 offset, guint size)
     /* We found no suitable image in the pool. Creating... */
     GST_DEBUG_OBJECT (xvimagesink, "no usable image in pool, creating xvimage");
     xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
-        GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
+        xvimagesink->video_width, xvimagesink->video_height);
   }
 
   if (xvimage) {
@@ -1680,6 +1782,13 @@ gst_xvimagesink_set_property (GObject * object, guint prop_id,
             xvimagesink->synchronous ? "TRUE" : "FALSE");
       }
       break;
+    case ARG_PIXEL_ASPECT_RATIO:
+      if (!g_value_transform (value, &xvimagesink->par))
+        g_warning ("Could not transform string to aspect ratio");
+      GST_DEBUG_OBJECT (xvimagesink, "set PAR to %d/%d",
+          gst_value_get_fraction_numerator (&xvimagesink->par),
+          gst_value_get_fraction_denominator (&xvimagesink->par));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1714,6 +1823,9 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
       break;
     case ARG_SYNCHRONOUS:
       g_value_set_boolean (value, xvimagesink->synchronous);
+      break;
+    case ARG_PIXEL_ASPECT_RATIO:
+      g_value_transform (&xvimagesink->par, value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1777,7 +1889,8 @@ gst_xvimagesink_init (GstXvImageSink * xvimagesink)
 
   xvimagesink->x_lock = g_mutex_new ();
 
-  xvimagesink->pixel_width = xvimagesink->pixel_height = 1;
+  g_value_init (&xvimagesink->par, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&xvimagesink->par, 1, 1);
 
   xvimagesink->image_pool = NULL;
   xvimagesink->pool_lock = g_mutex_new ();
@@ -1830,6 +1943,9 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
           "When enabled, runs "
           "the X display in synchronous mode. (used only for debugging)", FALSE,
           G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_PIXEL_ASPECT_RATIO,
+      g_param_spec_string ("pixel-aspect-ratio", "Pixel Aspect Ratio",
+          "The pixel aspect ratio of the device", "1/1", G_PARAM_READWRITE));
 
   gobject_class->finalize = gst_xvimagesink_finalize;
   gobject_class->set_property = gst_xvimagesink_set_property;

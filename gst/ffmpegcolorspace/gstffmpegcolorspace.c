@@ -175,19 +175,24 @@ gst_ffmpegcolorspace_pad_link (GstPad * pad, const GstCaps * caps)
   enum PixelFormat pix_fmt;
   int height, width;
   double framerate;
+  const GValue *par = NULL;
 
   space = GST_FFMPEGCOLORSPACE (gst_pad_get_parent (pad));
+  GST_DEBUG_OBJECT (space, "pad_link on %s:%s with caps %" GST_PTR_FORMAT,
+      GST_DEBUG_PAD_NAME (pad), caps);
 
   structure = gst_caps_get_structure (caps, 0);
-
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
   gst_structure_get_double (structure, "framerate", &framerate);
+  par = gst_structure_get_value (structure, "pixel-aspect-ratio");
+  if (par) {
+    GST_DEBUG_OBJECT (space, "setting PAR %d/%d",
+        gst_value_get_fraction_numerator (par),
+        gst_value_get_fraction_denominator (par));
+  }
 
   otherpad = (pad == space->srcpad) ? space->sinkpad : space->srcpad;
-
-  GST_DEBUG_OBJECT (space, "pad_link on %s:%s with caps %" GST_PTR_FORMAT,
-      GST_DEBUG_PAD_NAME (pad), caps);
 
   /* FIXME attempt and/or check for passthru */
 
@@ -205,7 +210,6 @@ gst_ffmpegcolorspace_pad_link (GstPad * pad, const GstCaps * caps)
     return GST_PAD_LINK_REFUSED;
   }
 
-
   /* set the size on the otherpad */
   othercaps = gst_pad_get_negotiated_caps (otherpad);
   if (othercaps) {
@@ -215,6 +219,15 @@ gst_ffmpegcolorspace_pad_link (GstPad * pad, const GstCaps * caps)
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
         "framerate", G_TYPE_DOUBLE, framerate, NULL);
+    if (par) {
+      GST_DEBUG_OBJECT (space, "setting PAR %d/%d",
+          gst_value_get_fraction_numerator (par),
+          gst_value_get_fraction_denominator (par));
+      gst_caps_set_simple (newothercaps,
+          "pixel-aspect-ratio", GST_TYPE_FRACTION,
+          gst_value_get_fraction_numerator (par),
+          gst_value_get_fraction_denominator (par), NULL);
+    }
     ret = gst_pad_try_set_caps (otherpad, newothercaps);
     if (GST_PAD_LINK_FAILED (ret)) {
       return ret;

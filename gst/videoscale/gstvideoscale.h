@@ -66,6 +66,8 @@ struct _GstVideoscale {
   gint to_height;
   gint from_width;
   gint from_height;
+  GValue *to_par;	/* pixel aspect ratio of sink pad */
+  GValue *from_par;	/* pixel aspect ratio of src pad */
   gboolean passthru;
   float framerate;
 

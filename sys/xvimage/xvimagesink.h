@@ -79,6 +79,10 @@ struct _GstXContext {
   gint bpp;
   gint endianness;
 
+  gint width, height;
+  gint widthmm, heightmm;
+  GValue par;                  /* calculated pixel aspect ratio */
+
   gboolean use_xshm;
 
   XvPortID xv_port_id;
@@ -139,8 +143,9 @@ struct _GstXvImageSink {
 
   GMutex *x_lock;
 
-  /* Unused */
-  gint pixel_width, pixel_height;
+  guint video_width, video_height;     /* size of incoming video;
+                                        * used as the size for XvImage */
+  GValue par;                          /* object-set pixel aspect ratio */
 
   GstClockTime time;
 
