@@ -56,6 +56,9 @@ struct _GstMusicBrainz {
   gchar signature[17];
   gchar ascii_signature[37];
 
+  gchar *proxy_address;
+  guint  proxy_port;
+
   guint depth;  
   guint rate;
   guint channels;

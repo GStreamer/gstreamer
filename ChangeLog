@@ -1,3 +1,14 @@
+2004-12-16  James Bowes  <bowes@cs.dal.ca>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/musicbrainz/gsttrm.c: (gst_musicbrainz_class_init),
+	(gst_musicbrainz_init), (gst_musicbrainz_chain),
+	(gst_musicbrainz_set_property), (gst_musicbrainz_get_property):
+	* ext/musicbrainz/gsttrm.h:
+	  Add support for using a proxy server when getting a trm id from
+	  the MusicBrainz database (#149613).
+
 2004-12-16  Christophe Fergeau  <teuf@gnome.org>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

@@ -38,7 +38,9 @@ enum
 {
   ARG_0,
   ARG_SIGNATURE,
-  ARG_ASCII_SIGNATURE
+  ARG_ASCII_SIGNATURE,
+  ARG_PROXY_ADDRESS,
+  ARG_PROXY_PORT
 };
 
 
@@ -149,6 +151,13 @@ gst_musicbrainz_class_init (GstMusicBrainzClass * klass)
       g_param_spec_string ("ascii_signature", "ascii_signature",
           "ascii_signature", NULL, G_PARAM_READABLE));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PROXY_ADDRESS,
+      g_param_spec_string ("proxy_address", "proxy address", "proxy address",
+          NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PROXY_PORT,
+      g_param_spec_uint ("proxy_port", "proxy port", "proxy port",
+          1, 65535, 8080, G_PARAM_READWRITE));
+
   gobject_class->set_property = gst_musicbrainz_set_property;
   gobject_class->get_property = gst_musicbrainz_get_property;
 
@@ -212,6 +221,8 @@ gst_musicbrainz_init (GstMusicBrainz * musicbrainz)
       "src");
   gst_element_add_pad (GST_ELEMENT (musicbrainz), musicbrainz->srcpad);
 
+  musicbrainz->proxy_port = 8080;
+
   musicbrainz->trm = NULL;
   musicbrainz->linked = FALSE;
   musicbrainz->data_available = FALSE;
@@ -265,6 +276,13 @@ gst_musicbrainz_chain (GstPad * pad, GstData * data)
           GST_BUFFER_SIZE (buf))) {
     GST_DEBUG ("Signature");
 
+    if (musicbrainz->proxy_address != NULL) {
+      if (!trm_SetProxy (musicbrainz->trm, musicbrainz->proxy_address,
+              musicbrainz->proxy_port))
+        GST_ELEMENT_ERROR (musicbrainz, RESOURCE, SETTINGS, (NULL),
+            ("Unable to set proxy server for trm lookup"));
+    }
+
     trm_FinalizeSignature (musicbrainz->trm, musicbrainz->signature, NULL);
     trm_ConvertSigToASCII (musicbrainz->trm, musicbrainz->signature,
         musicbrainz->ascii_signature);
@@ -296,6 +314,14 @@ gst_musicbrainz_set_property (GObject * object, guint prop_id,
     case ARG_SIGNATURE:
     case ARG_ASCII_SIGNATURE:
       break;
+    case ARG_PROXY_ADDRESS:{
+      musicbrainz->proxy_address = g_value_dup_string (value);
+      break;
+    }
+    case ARG_PROXY_PORT:{
+      musicbrainz->proxy_port = g_value_get_uint (value);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -319,6 +345,14 @@ gst_musicbrainz_get_property (GObject * object, guint prop_id, GValue * value,
     }
     case ARG_ASCII_SIGNATURE:{
       g_value_set_string (value, musicbrainz->ascii_signature);
+      break;
+    }
+    case ARG_PROXY_ADDRESS:{
+      g_value_set_string (value, musicbrainz->proxy_address);
+      break;
+    }
+    case ARG_PROXY_PORT:{
+      g_value_set_uint (value, musicbrainz->proxy_port);
       break;
     }
     default:{
