@@ -512,15 +512,19 @@ gst_ffmpegenc_register (GstPlugin *plugin)
 
   while (in_plugin) {
     gchar *type_name;
-    gchar *codec_type;
     GstCaps *srccaps, *sinkcaps;
     GstPadTemplate *srctempl, *sinktempl;
     GstFFMpegEncClassParams *params;
 
-    if (in_plugin->encode) {
-      codec_type = "enc";
+    /* no quasi codecs, please */
+    if (in_plugin->id == CODEC_ID_RAWVIDEO ||
+	(in_plugin->id >= CODEC_ID_PCM_S16LE &&
+	 in_plugin->id >= CODEC_ID_PCM_ALAW)) {
+      goto next;
     }
-    else {
+
+    /* only encoders */
+    if (!in_plugin->encode) {
       goto next;
     }
 
@@ -531,7 +535,7 @@ gst_ffmpegenc_register (GstPlugin *plugin)
       goto next;
 
     /* construct the type */
-    type_name = g_strdup_printf("ff%s_%s", codec_type, in_plugin->name);
+    type_name = g_strdup_printf("ffenc_%s", in_plugin->name);
 
     /* if it's already registered, drop it */
     if (g_type_from_name(type_name)) {

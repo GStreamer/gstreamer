@@ -280,6 +280,13 @@ gst_ffmpegdec_chain (GstPad    *pad,
   gint size, len = 0;
   gint have_data;
 
+  if (!ffmpegdec->opened) {
+    gst_element_error (GST_ELEMENT (ffmpegdec),
+		       "ffdec_%s: input format was not set before data-start",
+		       oclass->in_plugin->name);
+    return;
+  }
+
   /* FIXME: implement event awareness (especially EOS
    * (av_close_codec ()) and FLUSH/DISCONT
    * (avcodec_flush_buffers ()))
@@ -403,15 +410,19 @@ gst_ffmpegdec_register (GstPlugin *plugin)
 
   while (in_plugin) {
     gchar *type_name;
-    gchar *codec_type;
     GstPadTemplate *sinktempl, *srctempl;
     GstCaps *sinkcaps, *srccaps;
     GstFFMpegDecClassParams *params;
 
-    if (in_plugin->decode) {
-      codec_type = "dec";
+    /* no quasi-codecs, please */
+    if (in_plugin->id == CODEC_ID_RAWVIDEO ||
+	(in_plugin->id >= CODEC_ID_PCM_S16LE &&
+	 in_plugin->id >= CODEC_ID_PCM_ALAW)) {
+      goto next;
     }
-    else {
+
+    /* only decoders */
+    if (!in_plugin->decode) {
       goto next;
     }
 
@@ -422,7 +433,7 @@ gst_ffmpegdec_register (GstPlugin *plugin)
       goto next;
 
     /* construct the type */
-    type_name = g_strdup_printf("ff%s_%s", codec_type, in_plugin->name);
+    type_name = g_strdup_printf("ffdec_%s", in_plugin->name);
 
     /* if it's already registered, drop it */
     if (g_type_from_name(type_name)) {
