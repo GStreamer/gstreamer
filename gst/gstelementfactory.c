@@ -106,16 +106,11 @@ gst_elementfactory_new (gchar *name, GtkType type,
                         GstElementDetails *details) 
 {
   GstElementFactory *factory = g_new0(GstElementFactory, 1);
-  GstElementClass *gstelement_class;
 
   factory->name = g_strdup(name);
   factory->type = type;
   factory->details = details;
   factory->padtemplates = NULL;
-
-  gstelement_class = (GstElementClass*) gtk_type_class (GST_TYPE_ELEMENT);
-
-  gstelement_class->elementfactory = factory;
 
   _gst_elementfactories = g_list_prepend (_gst_elementfactories, factory);
 
@@ -158,8 +153,10 @@ gst_elementfactory_create (GstElementFactory *factory,
 
   // attempt to set the elemenfactory class pointer if necessary
   oclass = GST_ELEMENT_CLASS(GTK_OBJECT(element)->klass);
-  if (oclass->elementfactory == NULL)
+  if (oclass->elementfactory == NULL) {
+    g_print ("gstelementfactory: class %s\n", factory->name);
     oclass->elementfactory = factory;
+  }
 
   gst_element_set_name(GST_ELEMENT(element),name);
 

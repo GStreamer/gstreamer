@@ -121,6 +121,7 @@ gst_thread_init (GstThread *thread)
 
   // default is to create a thread
   GST_FLAG_SET (thread, GST_THREAD_CREATE);
+  GST_FLAG_UNSET (thread, GST_THREAD_STATE_REAPING);
 
   thread->lock = g_mutex_new();
   thread->cond = g_cond_new();
@@ -189,15 +190,7 @@ gst_thread_get_arg (GtkObject *object,
 GstElement*
 gst_thread_new (guchar *name) 
 {
-  GstThread *thread;
-
-  thread = gtk_type_new (gst_thread_get_type ());
-  
-  gst_element_set_name (GST_ELEMENT (thread), name);
-  
-  GST_FLAG_UNSET (thread, GST_THREAD_STATE_REAPING);
-  
-  return GST_ELEMENT (thread);
+  return gst_elementfactory_make ("bin", name);
 }
 
 

@@ -141,9 +141,7 @@ gst_bin_init (GstBin *bin)
 GstElement*
 gst_bin_new (gchar *name) 
 {
-  GstElement *bin = GST_ELEMENT (gtk_type_new (GST_TYPE_BIN));
-  gst_element_set_name (GST_ELEMENT (bin), name);
-  return bin;
+  return gst_elementfactory_make ("bin", name);
 }
 
 /**
@@ -688,6 +686,11 @@ gst_bin_create_plan_func (GstBin *bin)
   // otherwise, it's what our parent says it is
   } else {
     manager = gst_element_get_manager (GST_ELEMENT (bin));
+    if (!manager) {
+      DEBUG("manager not set for element \"%s\" assuming manager is self\n", gst_element_get_name (GST_ELEMENT (bin)));
+      manager = GST_ELEMENT (bin);
+      GST_FLAG_SET (bin, GST_BIN_FLAG_MANAGER);
+    }
     DEBUG("setting manager to \"%s\"\n", gst_element_get_name (manager));
   }
 
@@ -841,8 +844,9 @@ gst_bin_create_plan_func (GstBin *bin)
 
         // check to see if someone else gets to set up the element
         peer_manager = GST_ELEMENT((pad)->peer->parent)->manager;
-        if (peer_manager != GST_ELEMENT(bin))
+        if (peer_manager != GST_ELEMENT(bin)) {
           DEBUG("WARNING: pad %s:%s is connected outside of bin\n",GST_DEBUG_PAD_NAME(pad));
+	}
 
         // if the wrapper_function is set, we need to use the proxy functions
         if (wrapper_function != NULL) {

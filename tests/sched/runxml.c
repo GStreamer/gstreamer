@@ -1,10 +1,21 @@
 #include <gst/gst.h>
 
+static guint outcount, incount;
+
 static void
-buffer_handoff (GstElement *src, GstElement *bin)
+buffer_handoff_sink (GstElement *src, GstElement *bin)
 {
   g_print ("\n\n *** buffer arrived in sink ***\n\n");
   gst_element_set_state(bin, GST_STATE_NULL);
+
+  outcount++;
+}
+
+static void
+buffer_handoff_src (GstElement *src, GstElement *bin)
+{
+  g_print ("\n\n *** buffer started in src ***\n\n");
+  incount++;
 }
 
 /* eos will be called when the src element has an end of stream */
@@ -40,6 +51,8 @@ int main(int argc,char *argv[])
 
     src = gst_bin_get_by_name (GST_BIN (bin), "fakesrc");
     if (src) {
+      gtk_signal_connect (GTK_OBJECT(src), "handoff",
+                   GTK_SIGNAL_FUNC(buffer_handoff_src), bin);
     }
     else {
       g_print ("could not find src element\n");
@@ -49,12 +62,15 @@ int main(int argc,char *argv[])
     sink = gst_bin_get_by_name (GST_BIN (bin), "fakesink");
     if (sink) {
       gtk_signal_connect (GTK_OBJECT(sink), "handoff",
-                   GTK_SIGNAL_FUNC(buffer_handoff), bin);
+                   GTK_SIGNAL_FUNC(buffer_handoff_sink), bin);
     }
     else {
       g_print ("could not find sink element\n");
       exit(-1);
     }
+
+    incount = 0;
+    outcount = 0;
 
     gst_element_set_state(bin, GST_STATE_READY);
     gst_element_set_state(bin, GST_STATE_PLAYING);
@@ -64,6 +80,11 @@ int main(int argc,char *argv[])
     }
     else {
       gst_bin_iterate(GST_BIN(bin));
+    }
+
+    if (outcount != 1 && incount != 1) {
+      g_print ("test failed\n");
+      exit (-1);
     }
 
     toplevelelements = g_list_next (toplevelelements);

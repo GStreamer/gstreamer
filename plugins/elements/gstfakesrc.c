@@ -34,6 +34,7 @@ GstElementDetails gst_fakesrc_details = {
 /* FakeSrc signals and args */
 enum {
   /* FILL ME */
+  SIGNAL_HANDOFF,
   LAST_SIGNAL
 };
 
@@ -52,7 +53,7 @@ static void		gst_fakesrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 static GstBuffer *	gst_fakesrc_get		(GstPad *pad);
 
 static GstSrcClass *parent_class = NULL;
-//static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
+static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_fakesrc_get_type (void) 
@@ -91,6 +92,15 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
 
   gtkobject_class->set_arg = gst_fakesrc_set_arg;
   gtkobject_class->get_arg = gst_fakesrc_get_arg;
+
+  gst_fakesrc_signals[SIGNAL_HANDOFF] =
+    gtk_signal_new ("handoff", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstFakeSrcClass, handoff),
+                    gtk_marshal_NONE__NONE, GTK_TYPE_NONE, 0);
+
+  gtk_object_class_add_signals (gtkobject_class, gst_fakesrc_signals,
+                                LAST_SIGNAL);
+
 }
 
 static void gst_fakesrc_init(GstFakeSrc *fakesrc) {
@@ -170,11 +180,15 @@ gst_fakesrc_get(GstPad *pad)
   GstFakeSrc *src;
   GstBuffer *buf;
 
-  g_return_if_fail(pad != NULL);
+  g_return_val_if_fail(pad != NULL, NULL);
   src = GST_FAKESRC(gst_pad_get_parent(pad));
-  g_return_if_fail(GST_IS_FAKESRC(src));
+  g_return_val_if_fail(GST_IS_FAKESRC(src), NULL);
 
   g_print("(%s:%s)> ",GST_DEBUG_PAD_NAME(pad));
   buf = gst_buffer_new();
+
+  gtk_signal_emit (GTK_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF],
+                                  src);
+
   return buf;
 }

@@ -113,12 +113,7 @@ gst_pipeline_init (GstPipeline *pipeline)
 GstElement*
 gst_pipeline_new (guchar *name) 
 {
-  GstPipeline *pipeline;
-
-  pipeline = gtk_type_new (gst_pipeline_get_type ());
-  gst_element_set_name (GST_ELEMENT (pipeline), name);
-  
-  return GST_ELEMENT (pipeline);
+  return gst_elementfactory_make ("bin", name);
 }
 
 static void 

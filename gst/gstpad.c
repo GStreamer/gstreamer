@@ -622,12 +622,15 @@ gst_pad_connect (GstPad *srcpad,
   /* chack pad compatibility */
   if (srcpad->caps && sinkpad->caps) {
     if (!gst_caps_check_compatibility (srcpad->caps, sinkpad->caps))
-      g_warning ("gstpad: connecting incompatible pads");
+      g_warning ("gstpad: connecting incompatible pads (%s:%s) and (%s:%s)\n",
+		    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
     else
-      g_print ("gstpad: connecting compatible pads\n");
+      g_print ("gstpad: connecting compatible pads (%s:%s) and (%s:%s)\n",
+		    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
   }
   else
-    g_print ("gstpad: could not check capabilities of pads\n");
+    g_print ("gstpad: could not check capabilities of pads (%s:%s) and (%s:%s)\n", 
+		    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
   /* first set peers */
   srcpad->peer = sinkpad;

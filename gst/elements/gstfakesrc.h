@@ -57,6 +57,9 @@ struct _GstFakeSrc {
 
 struct _GstFakeSrcClass {
   GstSrcClass parent_class;
+
+  /* signals */
+  void (*handoff) (GstElement *element,GstPad *pad);
 };
 
 GtkType gst_fakesrc_get_type(void);
