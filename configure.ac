@@ -720,8 +720,10 @@ GST_CHECK_FEATURE(SHOUT, [shout plug-in], icecastsend, [
 
 dnl *** shout2 *** 
 translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT2, true)
-GST_CHECK_FEATURE(SHOUT, [shout2 plug-in], shout2send, [
-  AM_PATH_SHOUT2([USE_SHOUT2="true" [, USE_SHOUT2="false"]])
+GST_CHECK_FEATURE(SHOUT2, [shout2 plug-in], shout2send, [
+  AM_PATH_SHOUT2(HAVE_SHOUT2="true", HAVE_SHOUT2="false")
+  AC_SUBST(SHOUT2_CFLAGS)
+  AC_SUBST(SHOUT2_LIBS)
 ])
 
 dnl *** sidplay ***
@@ -928,6 +930,8 @@ AC_CONFIG_FILES(
 Makefile
 gstreamer-libs.pc
 gstreamer-libs-uninstalled.pc
+gstreamer-play.pc
+gstreamer-play-uninstalled.pc
 gst-plugins.spec
 gst/Makefile
 gst/ac3parse/Makefile
