@@ -241,6 +241,25 @@ gst_event_discont_get_value (GstEvent *event, GstFormat format, gint64 *value)
 
 
 /**
+ * gst_event_has_new_media:
+ * @event: The event to check
+ *
+ * Checks if a given event indicates a new media.
+ *
+ * Returns: True if the event indicates a new media
+ */
+gboolean
+gst_event_has_new_media (GstEvent *event)
+{
+  g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
+  g_return_val_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_DISCONTINUOUS ||
+                        GST_EVENT_TYPE (event) == GST_EVENT_NEW_MEDIA, FALSE);
+  if (GST_EVENT_TYPE (event) == GST_EVENT_NEW_MEDIA)
+    return TRUE;
+
+  return GST_EVENT_DISCONT_NEW_MEDIA (event);  
+}
+/**
  * gst_event_new_size:
  * @format: The format of the size value
  * @value: The value of the size event
