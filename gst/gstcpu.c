@@ -72,11 +72,11 @@ gst_cpuid_i386 (int x, unsigned long *eax, unsigned long *ebx,
   asm (
       /* GCC-3.2 (and possibly others) don't clobber ebx properly,
        * so we save/restore it directly. */
-"  pushl %%ebx\n" "  cpuid\n" "  movl %%eax, %0\n" "  movl %%ebx, %1\n" "  movl %%ecx, %2\n" "  movl %%edx, %3\n" "  popl %%ebx\n":"=o" (regs[0]),
-      "=o" (regs[1]),
-      "=o" (regs[2]), "=o" (regs[3])
+"  movl %%ebx, %%esi\n" "  cpuid\n" "  movl %%eax, %0\n" "  movl %%ebx, %1\n" "  movl %%ecx, %2\n" "  movl %%edx, %3\n" "  movl %%esi, %%ebx\n":"=o" (regs[0]), "=o" (regs[1]), "=o" (regs[2]),
+      "=o" (regs
+          [3])
 :    "a" (x)
-:    "ecx", "edx");
+:    "ecx", "edx", "esi");
 
   *eax = regs[0];
   *ebx = regs[1];
