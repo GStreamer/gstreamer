@@ -32,13 +32,6 @@ GType _gst_buffer_type;
 static GMemChunk *_gst_buffer_chunk;
 static GMutex *_gst_buffer_chunk_lock;
 
-#ifdef GST_BUFFER_WHERE
-static GSList *_debug_live = 0;
-# define GST_BUFFERS_COUNT (g_slist_length(_debug_live))
-#else
-# define GST_BUFFERS_COUNT 1
-#endif
-
 void 
 _gst_buffer_initialize (void) 
 {
@@ -74,15 +67,12 @@ _gst_buffer_initialize (void)
  * Returns: new buffer
  */
 GstBuffer*
-gst_buffer_new_loc (GST_WHERE_ARGS)
+gst_buffer_new (void)
 {
   GstBuffer *buffer;
 
   g_mutex_lock (_gst_buffer_chunk_lock);
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
-#ifdef GST_BUFFER_WHERE
-  _debug_live = g_slist_prepend (_debug_live, buffer);
-#endif
   g_mutex_unlock (_gst_buffer_chunk_lock);
   GST_INFO (GST_CAT_BUFFER,"creating new buffer %p",buffer);
 
@@ -105,11 +95,6 @@ gst_buffer_new_loc (GST_WHERE_ARGS)
   buffer->pool_private = NULL;
   buffer->free = NULL;
   buffer->copy = NULL;
-  
-#ifdef GST_BUFFER_WHERE
-  buffer->file = where_file;
-  buffer->line = where_line;
-#endif
 
   return buffer;
 }
@@ -152,10 +137,9 @@ gst_buffer_new_from_pool (GstBufferPool *pool, guint32 offset, guint32 size)
  * Returns: new buffer
  */
 GstBuffer*
-gst_buffer_create_sub_loc (GST_WHERE_ARGS_
-			   GstBuffer *parent,
-			   guint32 offset,
-			   guint32 size) 
+gst_buffer_create_sub (GstBuffer *parent,
+		       guint32 offset,
+		       guint32 size) 
 {
   GstBuffer *buffer;
 
@@ -166,9 +150,6 @@ gst_buffer_create_sub_loc (GST_WHERE_ARGS_
 
   g_mutex_lock (_gst_buffer_chunk_lock);
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
-#ifdef GST_BUFFER_WHERE
-  _debug_live = g_slist_prepend (_debug_live, buffer);
-#endif
   g_mutex_unlock (_gst_buffer_chunk_lock);
   GST_INFO (GST_CAT_BUFFER,"creating new subbuffer %p from parent %p (size %u, offset %u)", 
 		  buffer, parent, size, offset);
@@ -208,11 +189,6 @@ gst_buffer_create_sub_loc (GST_WHERE_ARGS_
 
   buffer->pool = NULL;
 
-#ifdef GST_BUFFER_WHERE
-  buffer->file = where_file;
-  buffer->line = where_line;
-#endif
-
   return buffer;
 }
 
@@ -229,9 +205,8 @@ gst_buffer_create_sub_loc (GST_WHERE_ARGS_
  * Returns: new buffer
  */
 GstBuffer*
-gst_buffer_append_loc (GST_WHERE_ARGS_
-		       GstBuffer *buffer, 
-		       GstBuffer *append) 
+gst_buffer_append (GstBuffer *buffer, 
+		   GstBuffer *append) 
 {
   guint size;
   GstBuffer *newbuf;
@@ -257,7 +232,7 @@ gst_buffer_append_loc (GST_WHERE_ARGS_
   }
   // the buffer is used, create a new one 
   else {
-    newbuf = gst_buffer_new_loc (GST_WHERE_VARS);
+    newbuf = gst_buffer_new ();
     newbuf->size = buffer->size+append->size;
     newbuf->data = g_malloc (newbuf->size);
     memcpy (newbuf->data, buffer->data, buffer->size);
@@ -281,10 +256,9 @@ gst_buffer_destroy (GstBuffer *buffer)
 
   g_return_if_fail (buffer != NULL);
   
-  GST_INFO (GST_CAT_BUFFER, "freeing %sbuffer %p (%d buffers remain)",
+  GST_INFO (GST_CAT_BUFFER, "freeing %sbuffer %p",
 	    (buffer->parent?"sub":""),
-	    buffer,
-	    GST_BUFFERS_COUNT - 1);
+	    buffer);
   
   // free the data only if there is some, DONTFREE isn't set, and not sub
   if (GST_BUFFER_DATA (buffer) &&
@@ -313,60 +287,8 @@ gst_buffer_destroy (GstBuffer *buffer)
   // remove it entirely from memory
   g_mutex_lock (_gst_buffer_chunk_lock);
   g_mem_chunk_free (_gst_buffer_chunk,buffer);
-#ifdef GST_BUFFER_WHERE
-  _debug_live = g_slist_delete_link (_debug_live,
-				     g_slist_find (_debug_live, buffer));
-#endif
   g_mutex_unlock (_gst_buffer_chunk_lock);
 }
-
-#ifdef GST_BUFFER_WHERE
-static gint
-_compare_buffer (GstBuffer *b1, GstBuffer *b2)
-{ 
-  if (b1->timestamp == b2->timestamp)
-    return 0;
-  else if (b1->timestamp > b2->timestamp)
-    return 1;
-  else
-    return -1;
-}
-
-//
-// GST_BUFFER_WHERE will be replaced with something better as
-// soon as something better is actually implemented.  The
-// problems with this technique are:
-//
-// 1. Toggling debugging changes the function prototypes, causing
-// a full recompile.  Yuk.
-//
-// 2. The prototypes don't match the documentation.  This may cause
-// gtk-doc to choak.
-//
-// 3. Lots of ugly macros make the source code hard to maintain.
-//
-
-void gst_buffer_print_live ()
-{
-  GSList *elem;
-
-  g_mutex_lock (_gst_buffer_chunk_lock);
-
-  _debug_live = g_slist_sort (_debug_live, (GCompareFunc) _compare_buffer);
-
-  for (elem = _debug_live; elem; elem = elem->next) {
-    GstBuffer *buf = elem->data;
-    g_print ("%sbuffer %p created %s:%d data=%p size=0x%x\n",
-	     buf->parent? "sub":"   ",
-	     buf, (!buf->file || buf->file == NULL)? "?" : buf->file,
-	     buf->line, buf->data, buf->size);
-  }
-
-  g_print ("(%d buffers)\n", g_slist_length (_debug_live));
-
-  g_mutex_unlock (_gst_buffer_chunk_lock);
-}
-#endif
 
 /**
  * gst_buffer_ref:
@@ -432,7 +354,7 @@ gst_buffer_unref (GstBuffer *buffer)
  * Returns: new buffer
  */
 GstBuffer *
-gst_buffer_copy_loc (GST_WHERE_ARGS_ GstBuffer *buffer)
+gst_buffer_copy (GstBuffer *buffer)
 {
   GstBuffer *newbuf;
 
@@ -506,8 +428,7 @@ gst_buffer_is_span_fast (GstBuffer *buf1, GstBuffer *buf2)
  */
 // FIXME need to think about CoW and such...
 GstBuffer *
-gst_buffer_span_loc (GST_WHERE_ARGS_
-		     GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
+gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
 {
   GstBuffer *newbuf;
 
@@ -527,13 +448,12 @@ gst_buffer_span_loc (GST_WHERE_ARGS_
 //      ((buf1->data + buf1->size) == buf2->data)) {
   if (gst_buffer_is_span_fast(buf1,buf2)) {
     // we simply create a subbuffer of the common parent
-    newbuf = gst_buffer_create_sub_loc(GST_WHERE_VARS_
-				       buf1->parent, buf1->data - (buf1->parent->data) + offset, len);
+    newbuf = gst_buffer_create_sub (buf1->parent, buf1->data - (buf1->parent->data) + offset, len);
   }
   else {
     g_print ("slow path taken in buffer_span\n");
     // otherwise we simply have to brute-force copy the buffers
-    newbuf = gst_buffer_new_loc (GST_WHERE_VARS);
+    newbuf = gst_buffer_new ();
 
     // put in new size
     newbuf->size = len;
@@ -571,10 +491,8 @@ gst_buffer_span_loc (GST_WHERE_ARGS_
  * Returns: new buffer that's the concatenation of the source buffers
  */
 GstBuffer *
-gst_buffer_merge_loc (GST_WHERE_ARGS_
-		      GstBuffer *buf1, GstBuffer *buf2)
+gst_buffer_merge (GstBuffer *buf1, GstBuffer *buf2)
 {
   // we're just a specific case of the more general gst_buffer_span()
-  return gst_buffer_span_loc (GST_WHERE_VARS_
-			      buf1, 0, buf2, buf1->size + buf2->size);
+  return gst_buffer_span (buf1, 0, buf2, buf1->size + buf2->size);
 }

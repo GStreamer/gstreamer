@@ -44,24 +44,69 @@
 extern "C" {
 #endif /* __cplusplus */
 
+extern GType _gst_pad_type;
+extern GType _gst_real_pad_type;
+extern GType _gst_ghost_pad_type;
 
-#define GST_TYPE_PAD			(gst_pad_get_type ())
-#define GST_PAD(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PAD, GstPad))
-#define GST_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD, GstPadClass))
+//#define GST_TYPE_PARANOID
+
+/* 
+ * Pad base class
+ */
+#define GST_TYPE_PAD			(_gst_pad_type)
+
+#define GST_PAD_FAST(obj)		((GstPad*)(obj))
+#define GST_PAD_CLASS_FAST(klass)	((GstPadClass*)(klass))
 #define GST_IS_PAD(obj)			(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PAD))
+#define GST_IS_PAD_FAST(obj)		(G_OBJECT_TYPE(obj) == GST_TYPE_REAL_PAD || \
+					 G_OBJECT_TYPE(obj) == GST_TYPE_GHOST_PAD)
 #define GST_IS_PAD_CLASS(obj)		(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PAD))
 
-#define GST_TYPE_REAL_PAD		(gst_real_pad_get_type ())
-#define GST_REAL_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_REAL_PAD, GstRealPad))
-#define GST_REAL_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_REAL_PAD, GstRealPadClass))
+#ifdef GST_TYPE_PARANOID
+# define GST_PAD(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PAD, GstPad))
+# define GST_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD, GstPadClass))
+#else
+# define GST_PAD			GST_PAD_FAST
+# define GST_PAD_CLASS			GST_PAD_CLASS_FAST
+#endif
+
+/* 
+ * Real Pads
+ */
+#define GST_TYPE_REAL_PAD		(_gst_real_pad_type)
+
+#define GST_REAL_PAD_FAST(obj)		((GstRealPad*)(obj))
+#define GST_REAL_PAD_CLASS_FAST(klass)	((GstRealPadClass*)(klass))
 #define GST_IS_REAL_PAD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_REAL_PAD))
+#define GST_IS_REAL_PAD_FAST(obj)	(G_OBJECT_TYPE(obj) == GST_TYPE_REAL_PAD)
 #define GST_IS_REAL_PAD_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_REAL_PAD))
 
-#define GST_TYPE_GHOST_PAD		(gst_ghost_pad_get_type ())
-#define GST_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GHOST_PAD, GstGhostPad))
-#define GST_GHOST_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GHOST_PAD, GstGhostPadClass))
+#ifdef GST_TYPE_PARANOID
+# define GST_REAL_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_REAL_PAD, GstRealPad))
+# define GST_REAL_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_REAL_PAD, GstRealPadClass))
+#else
+# define GST_REAL_PAD			GST_REAL_PAD_FAST
+# define GST_REAL_PAD_CLASS		GST_REAL_PAD_CLASS_FAST
+#endif
+
+/* 
+ * Ghost Pads
+ */
+#define GST_TYPE_GHOST_PAD		(_gst_ghost_pad_type)
+
+#define GST_GHOST_PAD_FAST(obj)		((GstGhostPad*)(obj))
+#define GST_GHOST_PAD_CLASS_FAST(klass)	((GstGhostPadClass*)(klass))
 #define GST_IS_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_GHOST_PAD))
+#define GST_IS_GHOST_PAD_FAST(obj)	(G_OBJECT_TYPE(obj) == GST_TYPE_GHOST_PAD)
 #define GST_IS_GHOST_PAD_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_GHOST_PAD))
+
+#ifdef GST_TYPE_PARANOID
+# define GST_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GHOST_PAD, GstGhostPad))
+# define GST_GHOST_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GHOST_PAD, GstGhostPadClass))
+#else
+# define GST_GHOST_PAD			GST_GHOST_PAD_FAST
+# define GST_GHOST_PAD_CLASS		GST_GHOST_PAD_CLASS_FAST
+#endif
 
 
 //typedef struct _GstPad GstPad;

@@ -225,6 +225,7 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
 
   if (GST_IS_EVENT(buf)) {
     g_print("fakesink: have event!\n");
+    gst_element_set_state (GST_ELEMENT (fakesink), GST_STATE_PAUSED);
     return;
   }
 

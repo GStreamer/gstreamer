@@ -596,6 +596,7 @@ gst_filesrc_close_file (GstFileSrc *src)
 {
   g_return_if_fail (GST_FLAG_IS_SET (src, GST_FILESRC_OPEN));
 
+  g_print ("close\n");
   /* close the file */
   close (src->fd);
 

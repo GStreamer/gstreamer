@@ -64,8 +64,8 @@ static void		gst_disksrc_set_property	(GObject *object, guint prop_id,
 static void		gst_disksrc_get_property	(GObject *object, guint prop_id, 
 							 GValue *value, GParamSpec *pspec);
 
-static GstBuffer *	gst_disksrc_get			(GstPad *pad);
-static GstBuffer *	gst_disksrc_get_region		(GstPad *pad,GstRegionType type,guint64 offset,guint64 len);
+static GstBuffer*	gst_disksrc_get			(GstPad *pad);
+static GstBufferPool* 	gst_disksrc_get_bufferpool 	(GstPad *pad);
 
 static GstElementStateReturn	
                  	gst_disksrc_change_state	(GstElement *element);
@@ -73,7 +73,7 @@ static GstElementStateReturn
 static gboolean		gst_disksrc_open_file		(GstDiskSrc *src);
 static void		gst_disksrc_close_file		(GstDiskSrc *src);
 
-static GstElementClass *parent_class = NULL;
+static GstElementClass* parent_class = NULL;
 //static guint gst_disksrc_signals[LAST_SIGNAL] = { 0 };
 
 GType
@@ -133,8 +133,8 @@ gst_disksrc_init (GstDiskSrc *disksrc)
 //  GST_FLAG_SET (disksrc, GST_SRC_);
 
   disksrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_pad_set_get_function (disksrc->srcpad,gst_disksrc_get);
-  gst_pad_set_getregion_function (disksrc->srcpad,gst_disksrc_get_region);
+  gst_pad_set_get_function (disksrc->srcpad, gst_disksrc_get);
+  gst_pad_set_bufferpool_function (disksrc->srcpad, gst_disksrc_get_bufferpool);
   gst_element_add_pad (GST_ELEMENT (disksrc), disksrc->srcpad);
 
   disksrc->filename = NULL;
@@ -220,6 +220,56 @@ gst_disksrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
   }
 }
 
+static GstBuffer*
+gst_disksrc_buffer_new (GstBufferPool *pool, gint64 location, gint size, gpointer user_data)
+{
+  GstDiskSrc *src;
+  GstBuffer *buf;
+
+  src = GST_DISKSRC (user_data);
+
+  buf = gst_buffer_new ();
+  g_return_val_if_fail (buf != NULL, NULL);
+
+  /* simply set the buffer to point to the correct region of the file */
+  GST_BUFFER_DATA (buf) = src->map + location;
+  GST_BUFFER_OFFSET (buf) = location;
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
+
+  if ((location + size) > src->size) 
+    GST_BUFFER_SIZE (buf) = src->size - location;
+  else
+    GST_BUFFER_SIZE (buf) = size;
+
+  GST_DEBUG (0,"map %p, offset %ld (%p), size %d\n", src->map, src->curoffset,
+             src->map + src->curoffset, GST_BUFFER_SIZE (buf));
+
+  return buf;
+}
+
+static void
+gst_disksrc_buffer_free (GstBuffer *buf)
+{
+  // FIXME do something here
+}
+
+static GstBufferPool*
+gst_disksrc_get_bufferpool (GstPad *pad)
+{
+  GstDiskSrc *src;
+  
+  src = GST_DISKSRC (gst_pad_get_parent (pad));
+
+  if (!src->bufferpool) {
+    src->bufferpool = gst_buffer_pool_new ();
+    gst_buffer_pool_set_buffer_new_function 	(src->bufferpool, gst_disksrc_buffer_new);
+    gst_buffer_pool_set_buffer_free_function 	(src->bufferpool, gst_disksrc_buffer_free);
+    gst_buffer_pool_set_user_data 		(src->bufferpool, src);
+  }
+
+  return src->bufferpool;
+}
+
 /**
  * gst_disksrc_get:
  * @pad: #GstPad to push a buffer from
@@ -246,28 +296,10 @@ gst_disksrc_get (GstPad *pad)
     return buf;
   }
 
-  /* create the buffer */
-  // FIXME: should eventually use a bufferpool for this
-  buf = gst_buffer_new ();
-
-  g_return_val_if_fail (buf != NULL, NULL);
-
-  /* simply set the buffer to point to the correct region of the file */
-  GST_BUFFER_DATA (buf) = src->map + src->curoffset;
-  GST_BUFFER_OFFSET (buf) = src->curoffset;
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
-
-  if ((src->curoffset + src->bytes_per_read) > src->size) {
-    GST_BUFFER_SIZE (buf) = src->size - src->curoffset;
-    // FIXME: set the buffer's EOF bit here
-  } else
-    GST_BUFFER_SIZE (buf) = src->bytes_per_read;
-
-  GST_DEBUG (0,"map %p, offset %ld (%p), size %d\n", src->map, src->curoffset,
-             src->map + src->curoffset, GST_BUFFER_SIZE (buf));
+  // FIXME use a bufferpool
+  buf = gst_disksrc_buffer_new (NULL, src->curoffset, src->bytes_per_read, src);
 
   //gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-
   src->curoffset += GST_BUFFER_SIZE (buf);
 
   if (src->new_seek) {
@@ -279,61 +311,6 @@ gst_disksrc_get (GstPad *pad)
   /* we're done, return the buffer */
   return buf;
 }
-
-/**
- * gst_disksrc_get_region:
- * @src: #GstSrc to push a buffer from
- * @offset: offset in file
- * @size: number of bytes
- *
- * Push a new buffer from the disksrc of given size at given offset.
- */
-static GstBuffer *
-gst_disksrc_get_region (GstPad *pad, GstRegionType type,guint64 offset,guint64 len)
-{
-  GstDiskSrc *src;
-  GstBuffer *buf;
-
-  g_return_val_if_fail (pad != NULL, NULL);
-  g_return_val_if_fail (type == GST_REGION_OFFSET_LEN, NULL);
-
-  src = GST_DISKSRC (gst_pad_get_parent (pad));
-
-  g_return_val_if_fail (GST_IS_DISKSRC (src), NULL);
-  g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_DISKSRC_OPEN), NULL);
-
-  /* deal with EOF state */
-  if (offset >= src->size) {
-    gst_pad_event (pad, GST_EVENT_EOS, 0LL, 0);
-    GST_DEBUG (0,"map offset %lld >= size %ld --> eos\n", offset, src->size);
-    //FIXME
-    buf =  gst_buffer_new();
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_EOS);
-    return buf;
-  }
-
-  /* create the buffer */
-  // FIXME: should eventually use a bufferpool for this
-  buf = gst_buffer_new ();
-  g_return_val_if_fail (buf != NULL, NULL);
-
-  /* simply set the buffer to point to the correct region of the file */
-  GST_BUFFER_DATA (buf) = src->map + offset;
-  GST_BUFFER_OFFSET (buf) = offset;
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
-
-  if ((offset + len) > src->size) {
-    GST_BUFFER_SIZE (buf) = src->size - offset;
-    // FIXME: set the buffer's EOF bit here
-  } else
-    GST_BUFFER_SIZE (buf) = len;
-
-  GST_DEBUG (0,"map %p, offset %lld, size %d\n", src->map, offset, GST_BUFFER_SIZE (buf));
-
-  /* we're done, return the buffer off now */
-  return buf;
-}
-
 
 /* open the file and mmap it, necessary to go to READY state */
 static gboolean 

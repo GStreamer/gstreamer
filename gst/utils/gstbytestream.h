@@ -43,10 +43,10 @@ struct _GstByteStream
 GstByteStream*		gst_bytestream_new		(GstPad *pad);
 void			gst_bytestream_destroy		(GstByteStream *bs);
 
-guint8*			gst_bytestream_bytes_peek	(GstByteStream *bs, guint64 len);
-guint8*			gst_bytestream_bytes_read	(GstByteStream *bs, guint64 len);
+gint			gst_bytestream_bytes_peek	(GstByteStream *bs, guint8 **buf, guint64 len);
+gint			gst_bytestream_bytes_read	(GstByteStream *bs, guint8 **buf, guint64 len);
 gboolean		gst_bytestream_bytes_seek	(GstByteStream *bs, guint64 offset);
-void			gst_bytestream_bytes_flush	(GstByteStream *bs, guint64 len);
+gint			gst_bytestream_bytes_flush	(GstByteStream *bs, guint64 len);
 
 
 #ifdef __cplusplus

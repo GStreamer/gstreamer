@@ -33,10 +33,10 @@
  *
  * Returns: a new #GstByteStream object
  */
-GstByteStream*
-gst_bytestream_new (GstPad *pad)
+GstByteStream *
+gst_bytestream_new (GstPad * pad)
 {
-  GstByteStream *bs = g_new(GstByteStream, 1);
+  GstByteStream *bs = g_new (GstByteStream, 1);
 
   bs->pad = pad;
   bs->data = NULL;
@@ -47,37 +47,37 @@ gst_bytestream_new (GstPad *pad)
 }
 
 void
-gst_bytestream_destroy (GstByteStream *bs)
+gst_bytestream_destroy (GstByteStream * bs)
 {
   if (bs->data) {
-    g_free(bs->data);
+    g_free (bs->data);
   }
-  g_free(bs);
+  g_free (bs);
 }
 
-static void 
-gst_bytestream_bytes_fill (GstByteStream *bs, guint64 len) 
+static void
+gst_bytestream_bytes_fill (GstByteStream * bs, guint64 len)
 {
   size_t oldlen;
   GstBuffer *buf;
 
   while ((bs->index + len) > bs->size) {
-    buf = gst_pad_pull(bs->pad);
+    buf = gst_pad_pull (bs->pad);
     oldlen = bs->size - bs->index;
-    memmove(bs->data, bs->data + bs->index, oldlen);
-    bs->size = oldlen + GST_BUFFER_SIZE(buf);
+    memmove (bs->data, bs->data + bs->index, oldlen);
+    bs->size = oldlen + GST_BUFFER_SIZE (buf);
     bs->index = 0;
-    bs->data = realloc(bs->data, bs->size);
+    bs->data = realloc (bs->data, bs->size);
     if (!bs->data) {
-      fprintf(stderr, "realloc failed: d:%p s:%d\n", bs->data, bs->size);
+      fprintf (stderr, "realloc failed: d:%p s:%d\n", bs->data, bs->size);
     }
-    memcpy(bs->data + oldlen, GST_BUFFER_DATA(buf), GST_BUFFER_SIZE(buf));
+    memcpy (bs->data + oldlen, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   }
   g_assert ((bs->index + len) <= bs->size);
 }
 
-guint8*
-gst_bytestream_bytes_peek (GstByteStream *bs, guint64 len)
+guint8 *
+gst_bytestream_bytes_peek (GstByteStream * bs, guint64 len)
 {
   g_return_val_if_fail (len > 0, NULL);
 
@@ -86,29 +86,28 @@ gst_bytestream_bytes_peek (GstByteStream *bs, guint64 len)
   return gst_bytestream_pos (bs);
 }
 
-guint8*
-gst_bytestream_bytes_read (GstByteStream *bs, guint64 len)
+guint8 *
+gst_bytestream_bytes_read (GstByteStream * bs, guint64 len)
 {
   guint8 *ptr;
 
   g_return_val_if_fail (len > 0, NULL);
 
-  gst_bytestream_bytes_fill(bs, len);
-  ptr = gst_bytestream_pos(bs);
+  gst_bytestream_bytes_fill (bs, len);
+  ptr = gst_bytestream_pos (bs);
   bs->index += len;
 
   return ptr;
 }
 
 gboolean
-gst_bytestream_bytes_seek (GstByteStream *bs, guint64 offset)
+gst_bytestream_bytes_seek (GstByteStream * bs, guint64 offset)
 {
   return FALSE;
 }
 
 void
-gst_bytestream_bytes_flush (GstByteStream *bs, guint64 len)
+gst_bytestream_bytes_flush (GstByteStream * bs, guint64 len)
 {
-  gst_bytestream_bytes_read(bs, len);
+  gst_bytestream_bytes_read (bs, len);
 }
-

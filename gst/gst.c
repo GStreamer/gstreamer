@@ -90,7 +90,12 @@ gst_init (int *argc, char **argv[])
 
   GST_INFO (GST_CAT_GST_INIT, "Initializing GStreamer Core Library");
 
+  gst_object_get_type ();
+  gst_pad_get_type ();
+  gst_real_pad_get_type ();
+  gst_ghost_pad_get_type ();
   gst_elementfactory_get_type ();
+  gst_element_get_type ();
   gst_typefactory_get_type ();
 #ifndef GST_DISABLE_AUTOPLUG
   gst_autoplugfactory_get_type ();

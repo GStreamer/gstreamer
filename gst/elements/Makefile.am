@@ -41,7 +41,7 @@ noinst_HEADERS =		\
 	gstaggregator.h		\
 	gstsinesrc.h
 
-CFLAGS += -O2 -Wall
+CFLAGS += -O2 -Wall -finstrument-functions -DGST_ENABLE_FUNC_INSTRUMENTATION
 LDFLAGS += -lm
 
 libgstelements_la_LIBADD = $(GHTTP_LIBS)

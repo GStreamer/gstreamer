@@ -73,16 +73,22 @@ typedef enum {
 #define GST_STATE_PAUSED_TO_READY	((GST_STATE_PAUSED<<8) | GST_STATE_READY)
 #define GST_STATE_READY_TO_NULL		((GST_STATE_READY<<8) | GST_STATE_NULL)
 
-#define GST_TYPE_ELEMENT \
-  (gst_element_get_type())
-#define GST_ELEMENT(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ELEMENT,GstElement))
-#define GST_ELEMENT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ELEMENT,GstElementClass))
-#define GST_IS_ELEMENT(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ELEMENT))
-#define GST_IS_ELEMENT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT))
+extern GType _gst_element_type;
+
+#define GST_TYPE_ELEMENT		(_gst_element_type)
+
+#define GST_ELEMENT_FAST(obj)		((GstElement*)(obj))
+#define GST_ELEMENT_CLASS_FAST(klass)	((GstElementClass*)(klass))
+#define GST_IS_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_ELEMENT))
+#define GST_IS_ELEMENT_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_ELEMENT))
+
+#ifdef GST_TYPE_PARANOID
+# define GST_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_ELEMENT, GstElement))
+# define GST_ELEMENT_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_ELEMENT, GstElementClass))
+#else
+# define GST_ELEMENT                    GST_ELEMENT_FAST
+# define GST_ELEMENT_CLASS              GST_ELEMENT_CLASS_FAST
+#endif
 
 typedef enum {
   /* element is complex (for some def.) and generally require a cothread */
@@ -124,7 +130,7 @@ typedef enum {
 #define GST_ELEMENT_MANAGER(obj)		(((GstElement*)(obj))->manager)
 #define GST_ELEMENT_SCHED(obj)			(((GstElement*)(obj))->sched)
 #define GST_ELEMENT_PADS(obj)			((obj)->pads)
-#define GST_ELEMENT_DPARAM_MANAGER(obj)			((obj)->dpman)
+#define GST_ELEMENT_DPARAM_MANAGER(obj)		((obj)->dpman)
 
 //typedef struct _GstElement GstElement;
 //typedef struct _GstElementClass GstElementClass;
@@ -134,33 +140,34 @@ typedef struct _GstElementFactoryClass GstElementFactoryClass;
 typedef void (*GstElementLoopFunction) (GstElement *element);
 
 struct _GstElement {
-  GstObject object;
+  GstObject 		object;
 
-  guint8 current_state;
-  guint8 pending_state;
-
+  /* element state  and scheduling */
+  guint8 		current_state;
+  guint8 		pending_state;
+  GstElement 		*manager;
+  GstSchedule 		*sched;
   GstElementLoopFunction loopfunc;
-  cothread_state *threadstate;
-  GstPad *select_pad;
+  cothread_state 	*threadstate;
 
-  guint16 numpads;
-  guint16 numsrcpads;
-  guint16 numsinkpads;
-  GList *pads;
+  /* element pads */
+  guint16 		numpads;
+  guint16 		numsrcpads;
+  guint16 		numsinkpads;
+  GList 		*pads;
+  GstPad 		*select_pad;
 
-  GstElement *manager;
-  GstSchedule *sched;
-  GstDParamManager *dpman;
+  GstDParamManager 	*dpman;
 };
 
 struct _GstElementClass {
-  GstObjectClass parent_class;
+  GstObjectClass 	parent_class;
 
   /* the elementfactory that created us */
-  GstElementFactory *elementfactory;
+  GstElementFactory 	*elementfactory;
   /* templates for our pads */
-  GList *padtemplates;
-  gint numpadtemplates;
+  GList 		*padtemplates;
+  gint 			numpadtemplates;
   
   /* signal callbacks */
   void (*state_change)		(GstElement *element,GstElementState state);
@@ -172,8 +179,8 @@ struct _GstElementClass {
   void (*eos)			(GstElement *element);
 
   /* local pointers for get/set */
-  void (*set_property) (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-  void (*get_property) (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+  void (*set_property) 	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+  void (*get_property)	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 
   /* change the element state */
   GstElementStateReturn (*change_state)		(GstElement *element);
@@ -247,16 +254,13 @@ struct _GstElementDetails {
   gchar *copyright;             /* copyright details (year, etc.) */
 };
 
-#define GST_TYPE_ELEMENTFACTORY \
-  (gst_elementfactory_get_type())
-#define GST_ELEMENTFACTORY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ELEMENTFACTORY,GstElementFactory))
-#define GST_ELEMENTFACTORY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ELEMENTFACTORY,GstElementFactoryClass))
-#define GST_IS_ELEMENTFACTORY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ELEMENTFACTORY))
-#define GST_IS_ELEMENTFACTORY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENTFACTORY))
+#define GST_TYPE_ELEMENTFACTORY 		(gst_elementfactory_get_type())
+#define GST_ELEMENTFACTORY(obj)  		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ELEMENTFACTORY,\
+						 GstElementFactory))
+#define GST_ELEMENTFACTORY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ELEMENTFACTORY,\
+						 GstElementFactoryClass))
+#define GST_IS_ELEMENTFACTORY(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ELEMENTFACTORY))
+#define GST_IS_ELEMENTFACTORY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENTFACTORY))
 
 struct _GstElementFactory {
   GstPluginFeature feature;

@@ -8,6 +8,8 @@ else
 GSTARCH_SRCS = 
 endif
 
+#GST_INSTRUMENT_FLAGS = -finstrument-functions -DGST_ENABLE_FUNC_INSTRUMENTATION
+
 if USE_GLIB2
 GST_OBJECT_MODEL_SRC = gstmarshal.c
 GST_OBJECT_MODEL_HDR = gstmarshal.h
@@ -198,7 +200,7 @@ noinst_HEADERS = 	\
 	gstarch.h	\
 	gstpropsprivate.h
 
-CFLAGS = $(LIBGST_CFLAGS) -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\"
+CFLAGS = $(LIBGST_CFLAGS) -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" -Wall
 LIBS = $(LIBGST_LIBS)
 LDFLAGS = ""
 libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION)

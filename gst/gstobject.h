@@ -52,17 +52,22 @@
 extern "C" {
 #endif /* __cplusplus */
 
+extern GType _gst_object_type;
 
-#define GST_TYPE_OBJECT \
-  (gst_object_get_type())
-#define GST_OBJECT(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OBJECT,GstObject))
-#define GST_OBJECT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OBJECT,GstObjectClass))
-#define GST_IS_OBJECT(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OBJECT))
-#define GST_IS_OBJECT_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OBJECT))
+#define GST_TYPE_OBJECT                 (_gst_object_type)
+# define GST_IS_OBJECT(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_OBJECT))
+# define GST_IS_OBJECT_CLASS(obj)       (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_OBJECT))
+
+#define GST_OBJECT_FAST(obj)            ((GstObject*)(obj))
+#define GST_OBJECT_CLASS_FAST(klass)    ((GstObjectClass*)(klass))
+
+#ifdef GST_TYPE_PARANOID
+# define GST_OBJECT(obj)                (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_OBJECT, GstObject))
+# define GST_OBJECT_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_OBJECT, GstObjectClass))
+#else
+# define GST_OBJECT                     GST_OBJECT_FAST
+# define GST_OBJECT_CLASS               GST_OBJECT_CLASS_FAST
+#endif
 
 //typedef struct _GstObject GstObject;
 //typedef struct _GstObjectClass GstObjectClass;
@@ -76,30 +81,29 @@ typedef enum
 } GstObjectFlags;
 
 struct _GstObject {
-  GObject object;
+  GObject 	object;
 
-  gchar *name;
+  gchar 	*name;
   /* have to have a refcount for the object */
 #ifdef HAVE_ATOMIC_H
-  atomic_t refcount;
+  atomic_t 	refcount;
 #else
-  int refcount;
+  gint 		refcount;
 #endif
 
   /* locking for all sorts of things (like the refcount) */
-  GMutex *lock;
-
+  GMutex 	*lock;
   /* this objects parent */
-  GstObject *parent;
+  GstObject 	*parent;
 
-  guint32 flags;
+  guint32 	flags;
 };
 
 struct _GstObjectClass {
   GObjectClass	parent_class;
 
-  gchar			*path_string_separator;
-  GObject		*signal_object;
+  gchar		*path_string_separator;
+  GObject	*signal_object;
 
   /* signals */
   void		(*parent_set)		(GstObject *object, GstObject *parent);

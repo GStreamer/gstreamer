@@ -43,6 +43,8 @@ enum {
   SO_LAST_SIGNAL
 };
 
+GType _gst_object_type = 0;
+
 typedef struct _GstSignalObject GstSignalObject;
 typedef struct _GstSignalObjectClass GstSignalObjectClass;
 
@@ -65,9 +67,7 @@ static guint gst_object_signals[LAST_SIGNAL] = { 0 };
 GType
 gst_object_get_type (void)
 {
-  static GType object_type = 0;
-
-  if (!object_type) {
+  if (!_gst_object_type) {
     static const GTypeInfo object_info = {
       sizeof (GstObjectClass),
       NULL,
@@ -79,9 +79,9 @@ gst_object_get_type (void)
       32,
       (GInstanceInitFunc) gst_object_init,
     };
-    object_type = g_type_register_static (G_TYPE_OBJECT, "GstObject", &object_info, G_TYPE_FLAG_ABSTRACT);
+    _gst_object_type = g_type_register_static (G_TYPE_OBJECT, "GstObject", &object_info, G_TYPE_FLAG_ABSTRACT);
   }
-  return object_type;
+  return _gst_object_type;
 }
 
 static void
