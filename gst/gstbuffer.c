@@ -91,8 +91,11 @@ gst_buffer_default_free (GstBuffer *buffer)
   g_return_if_fail (buffer != NULL);
 
   /* free our data */
-  if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DONTFREE) && GST_BUFFER_DATA (buffer)) 
+  if (GST_BUFFER_FREE_DATA_FUNC (buffer)) {
+    GST_BUFFER_FREE_DATA_FUNC (buffer) (buffer);
+  } else if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DONTFREE)) { 
     g_free (GST_BUFFER_DATA (buffer));
+  }
 
   /* set to safe values */
   GST_BUFFER_DATA (buffer) = NULL;
