@@ -230,20 +230,20 @@ gst_mixmatrix_init (GstMixMatrix * mix)
   mix->grpsize = 8;
   mix->outsize = 1024;
 
-  // start with zero pads
+  /* start with zero pads */
   mix->sinkpadalloc = mix->grpsize;
   mix->srcpadalloc = mix->grpsize;
 
-  // allocate the pads
-  mix->sinkpads = g_new (GstPad *, mix->sinkpadalloc);
-  mix->sinkbs = g_new (GstByteStream *, mix->sinkpadalloc);
+  /* allocate the pads */
+  mix->sinkpads = g_new0 (GstPad *, mix->sinkpadalloc);
+  mix->sinkbs = g_new0 (GstByteStream *, mix->sinkpadalloc);
 
-  mix->srcpads = g_new (GstPad *, mix->srcpadalloc);
+  mix->srcpads = g_new0 (GstPad *, mix->srcpadalloc);
 
-  // allocate a similarly sized matrix
+  /* allocate a similarly sized matrix */
   mix->matrix = mixmatrix_alloc_matrix (mix->sinkpadalloc, mix->srcpadalloc);
 
-  // set the loop function that does all the work
+  /* set the loop function that does all the work */
   gst_element_set_loop_function (GST_ELEMENT (mix), gst_mixmatrix_loop);
 }
 
@@ -269,7 +269,7 @@ mixmatrix_resize (GstMixMatrix * mix, int sinkpads, int srcpads)
 
   GST_DEBUG ("mixmatrix: resizing matrix!!!!\n");
 
-  // check the sinkpads list
+  /* check the sinkpads list */
   if (sinkresize) {
     mix->sinkpads =
         (GstPad **) grow_ptrlist ((void **) mix->sinkpads, mix->sinkpadalloc,
@@ -278,29 +278,29 @@ mixmatrix_resize (GstMixMatrix * mix, int sinkpads, int srcpads)
         (GstByteStream **) grow_ptrlist ((void **) mix->sinkbs,
         mix->sinkpadalloc, sinkpads);
   }
-  // check the srcpads list
+  /* check the srcpads list */
   if (srcresize) {
     mix->srcpads =
         (GstPad **) grow_ptrlist ((void **) mix->srcpads, mix->srcpadalloc,
         srcpads);
   }
-  // now resize the matrix if either has changed
+  /* now resize the matrix if either has changed */
   if (sinkresize || srcresize) {
-    // allocate the new matrix
+    /* allocate the new matrix */
     newmatrix = mixmatrix_alloc_matrix (sinkpads, srcpads);
-    // if only the srcpad count changed (y axis), we can just copy
+    /* if only the srcpad count changed (y axis), we can just copy */
     if (!sinkresize) {
       memcpy (newmatrix, mix->matrix, sizeof (gfloat *) * sinkpads);
-      // otherwise we have to copy line by line
+      /* otherwise we have to copy line by line */
     } else {
       for (i = 0; i < mix->srcpadalloc; i++)
         memcpy (newmatrix[i], mix->matrix[i],
             sizeof (gfloat) * mix->srcpadalloc);
     }
 
-    // would signal here!
+    /* would signal here! */
 
-    // free old matrix and replace it
+    /* free old matrix and replace it */
     mixmatrix_free_matrix (mix->matrix, mix->sinkpadalloc);
     mix->matrix = newmatrix;
   }
@@ -309,31 +309,33 @@ mixmatrix_resize (GstMixMatrix * mix, int sinkpads, int srcpads)
   mix->srcpadalloc = srcpads;
 }
 
-/*
+#if 0
 static gboolean
-gst_mixmatrix_set_all_caps (GstMixMatrix *mix)
+gst_mixmatrix_set_all_caps (GstMixMatrix * mix)
 {
   int i;
 
-  // sink pads
-  for (i=0;i<mix->sinkpadalloc;i++) {
+  /* sink pads */
+  for (i = 0; i < mix->sinkpadalloc; i++) {
     if (mix->sinkpads[i]) {
-      if (GST_PAD_CAPS(mix->sinkpads[i]) == NULL)
-        if (gst_pad_try_set_caps(mix->sinkpads[i],mix->caps) <= 0) return FALSE;
+      if (GST_PAD_CAPS (mix->sinkpads[i]) == NULL)
+        if (gst_pad_try_set_caps (mix->sinkpads[i], mix->caps) <= 0)
+          return FALSE;
     }
   }
 
-  // src pads
-  for (i=0;i<mix->srcpadalloc;i++) {
+  /* src pads */
+  for (i = 0; i < mix->srcpadalloc; i++) {
     if (mix->srcpads[i]) {
-      if (GST_PAD_CAPS(mix->srcpads[i]) == NULL)
-        if (gst_pad_try_set_caps(mix->srcpads[i],mix->caps) <= 0) return FALSE;
+      if (GST_PAD_CAPS (mix->srcpads[i]) == NULL)
+        if (gst_pad_try_set_caps (mix->srcpads[i], mix->caps) <= 0)
+          return FALSE;
     }
   }
 
   return TRUE;
 }
-*/
+#endif
 
 static GstPadLinkReturn
 gst_mixmatrix_connect (GstPad * pad, const GstCaps * caps)
@@ -369,13 +371,13 @@ gst_mixmatrix_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   mix = GST_MIXMATRIX (element);
 
-  // figure out if it's a sink pad
+  /* figure out if it's a sink pad */
   if (sscanf (name, "sink%d", &padnum)) {
-    // check to see if it already exists
+    /* check to see if it already exists */
     if (padnum < mix->sinkpadalloc && mix->sinkpads[padnum])
       return mix->sinkpads[padnum];
 
-    // determine if it's bigger than the current size
+    /* determine if it's bigger than the current size */
     if (padnum >= mix->sinkpadalloc)
       mixmatrix_resize (mix, ROUND_UP (padnum, mix->grpsize),
           mix->sinkpadalloc);
@@ -385,22 +387,22 @@ gst_mixmatrix_request_new_pad (GstElement * element, GstPadTemplate * templ,
         (&mixmatrix_sink_template), name);
     GST_PAD_ELEMENT_PRIVATE (pad) = GINT_TO_POINTER (padnum);
     gst_element_add_pad (GST_ELEMENT (mix), pad);
-//    g_signal_connect(G_OBJECT(pad), "unlink", G_CALLBACK(sink_unlinked), mix);
+/*    g_signal_connect(G_OBJECT(pad), "unlink", G_CALLBACK(sink_unlinked), mix); */
     gst_pad_set_link_function (pad, gst_mixmatrix_connect);
 
-    // create a bytestream for it
+    /* create a bytestream for it */
     mix->sinkbs[padnum] = gst_bytestream_new (pad);
 
-    // store away the pad and account for it
+    /* store away the pad and account for it */
     mix->sinkpads[padnum] = pad;
   }
-  // or it's a src pad
+  /* or it's a src pad */
   else if (sscanf (name, "src%d", &padnum)) {
-    // check to see if it already exists
+    /* check to see if it already exists */
     if (padnum < mix->srcpadalloc && mix->srcpads[padnum])
       return mix->srcpads[padnum];
 
-    // determine if it's bigger than the current size
+    /* determine if it's bigger than the current size */
     if (padnum >= mix->srcpadalloc)
       mixmatrix_resize (mix, ROUND_UP (padnum, mix->grpsize), mix->srcpadalloc);
 
@@ -409,10 +411,10 @@ gst_mixmatrix_request_new_pad (GstElement * element, GstPadTemplate * templ,
         (&mixmatrix_src_template), name);
     GST_PAD_ELEMENT_PRIVATE (pad) = GINT_TO_POINTER (padnum);
     gst_element_add_pad (GST_ELEMENT (mix), pad);
-//    g_signal_connect(G_OBJECT(pad), "unlink", G_CALLBACK(sink_unlinked), mix);
-    //gst_pad_set_link_function (pad, gst_mixmatrix_connect);
+/*    g_signal_connect(G_OBJECT(pad), "unlink", G_CALLBACK(sink_unlinked), mix); */
+    /* gst_pad_set_link_function (pad, gst_mixmatrix_connect); */
 
-    // store away the pad and account for it  
+    /* store away the pad and account for it */
     mix->srcpads[padnum] = pad;
   }
 
@@ -431,7 +433,7 @@ gst_mixmatrix_loop (GstElement * element)
   int bytesize = sizeof (gfloat) * mix->outsize;
   gfloat gain;
 
-  // create the output buffers
+  /* create the output buffers */
   outbufs = g_new (GstBuffer *, mix->srcpadalloc);
   outfloats = g_new (gfloat *, mix->srcpadalloc);
   for (i = 0; i < mix->srcpadalloc; i++) {
@@ -442,14 +444,14 @@ gst_mixmatrix_loop (GstElement * element)
     }
   }
 
-  // go through all the input buffers and pull them
+  /* go through all the input buffers and pull them */
   inbufs = g_new (GstBuffer *, mix->sinkpadalloc);
   infloats = g_new (gfloat *, mix->sinkpadalloc);
   for (i = 0; i < mix->sinkpadalloc; i++) {
     if (mix->sinkpads[i] != NULL) {
       gst_bytestream_read (mix->sinkbs[i], &inbufs[i], bytesize);
       infloats[i] = (gfloat *) GST_BUFFER_DATA (inbufs[i]);
-      // loop through each src pad
+      /* loop through each src pad */
       for (j = 0; j < mix->srcpadalloc; j++) {
         if (mix->srcpads[j] != NULL) {
 /*
@@ -463,7 +465,7 @@ gst_mixmatrix_loop (GstElement * element)
 fprintf(stderr,"attempting to get gain for %dx%d\n",i,j);
 */
           gain = mix->matrix[i][j];
-//          fprintf(stderr,"%d->%d=%0.2f ",i,j,gain);
+/*          fprintf(stderr,"%d->%d=%0.2f ",i,j,gain); */
           for (k = 0; k < mix->outsize; k++) {
             outfloats[j][k] += infloats[i][k] * gain;
           }
@@ -471,7 +473,7 @@ fprintf(stderr,"attempting to get gain for %dx%d\n",i,j);
       }
     }
   }
-//  fprintf(stderr,"\n");
+/*  fprintf(stderr,"\n"); */
 
   for (i = 0; i < mix->srcpadalloc; i++) {
     if (mix->srcpads[i] != NULL) {
