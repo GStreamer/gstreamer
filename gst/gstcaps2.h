@@ -44,6 +44,12 @@ struct _GstStaticCaps2 {
   const char *string;
 };
 
+#define GST_STATIC_CAPS(string) \
+{ \
+  /* caps */ { 0 }, \
+  /* string */ string, \
+}
+
 #define GST_CAPS2_ANY gst_caps2_new_any()
 #define GST_CAPS2_NONE gst_caps2_new_empty()
 

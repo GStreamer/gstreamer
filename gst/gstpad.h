@@ -109,6 +109,7 @@ typedef struct _GstGhostPad GstGhostPad;
 typedef struct _GstGhostPadClass GstGhostPadClass;
 /*typedef struct _GstPadTemplate GstPadTemplate;*/
 /*typedef struct _GstPadTemplateClass GstPadTemplateClass;*/
+typedef struct _GstStaticPadTemplate GstStaticPadTemplate;
 
 
 typedef enum {
@@ -346,6 +347,22 @@ struct _GstPadTemplateClass {
   GST_CLASS_PADDING
 };
 
+struct _GstStaticPadTemplate {
+  gchar           *name_template;
+  GstPadDirection  direction;
+  GstPadPresence   presence;
+  GstStaticCaps2   static_caps;
+};
+
+#define GST_STATIC_PAD_TEMPLATE(padname, dir, pres, caps) \
+  { \
+  /* name_template */    padname, \
+  /* direction */        dir, \
+  /* presence */         pres, \
+  /* caps */             caps \
+  }
+
+
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_PAD_TEMPLATE_NEW(padname, dir, pres, ...) \
   gst_pad_template_new (                        \
@@ -534,6 +551,7 @@ GstPadTemplate*		gst_pad_template_newv			(const gchar *name_template,
 		                                        	 GstPadDirection direction, GstPadPresence presence,
 								 GstCaps2 *caps, va_list var_args);
 
+GstPadTemplate *	gst_static_pad_template_get             (GstStaticPadTemplate *templ);
 const GstCaps2*		gst_pad_template_get_caps		(GstPadTemplate *templ);
 const GstCaps2*		gst_pad_template_get_caps_by_name	(GstPadTemplate *templ, const gchar *name);
 
