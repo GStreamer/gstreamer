@@ -681,18 +681,24 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
 	       "encoded %d bytes of audio to %d bytes of mp3", 
 	       GST_BUFFER_SIZE (buf), mp3_size);
 
-    lame->last_ts = GST_BUFFER_TIMESTAMP (buf);
+    if (lame->last_ts == GST_CLOCK_TIME_NONE) {
+      lame->last_ts   = GST_BUFFER_TIMESTAMP (buf);
+      lame->last_offs = GST_BUFFER_OFFSET (buf);
+    }
 
     gst_buffer_unref (buf);
   }
   
   if (mp3_size > 0) {
     outbuf = gst_buffer_new ();
-    GST_BUFFER_DATA (outbuf) = mp3_data;
-    GST_BUFFER_SIZE (outbuf) = mp3_size;
+    GST_BUFFER_DATA (outbuf)      = mp3_data;
+    GST_BUFFER_SIZE (outbuf)      = mp3_size;
     GST_BUFFER_TIMESTAMP (outbuf) = lame->last_ts;
+    GST_BUFFER_OFFSET (outbuf)    = lame->last_offs;
 
     gst_pad_push (lame->srcpad,outbuf);
+
+    lame->last_ts = GST_CLOCK_TIME_NONE;
   }
   else { 
     g_free (mp3_data);
@@ -784,7 +790,7 @@ gst_lame_change_state (GstElement *element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_READY_TO_PAUSED:
-      lame->last_ts = 0;
+      lame->last_ts = GST_CLOCK_TIME_NONE;
       break;
     case GST_STATE_READY_TO_NULL:
       if (lame->initialized) {
