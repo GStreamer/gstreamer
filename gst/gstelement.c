@@ -284,6 +284,14 @@ gst_element_threadsafe_properties_post_run (GstElement *element)
   g_mutex_unlock (element->property_mutex);
 }
 
+/**
+ * gst_element_enable_threadsafe_properties:
+ * @element: a #GstElement to enable the threadsafe properties on
+ *
+ * Install an async queue, a mutex and pre and post run functions on
+ * this element so that properties on the element can be set in a 
+ * threadsafe way.
+ */
 void
 gst_element_enable_threadsafe_properties (GstElement *element)
 {
@@ -298,6 +306,13 @@ gst_element_enable_threadsafe_properties (GstElement *element)
     element->property_mutex = g_mutex_new ();
 }
 
+/**
+ * gst_element_disable_threadsafe_properties:
+ * @element: a #GstElement to disable the threadsafe properties on
+ *
+ * Remove the threadsafe properties post and pre run locks from
+ * this element.
+ */
 void
 gst_element_disable_threadsafe_properties (GstElement *element)
 {
@@ -309,6 +324,13 @@ gst_element_disable_threadsafe_properties (GstElement *element)
   /* let's keep around that async queue */
 }
 
+/**
+ * gst_element_set_pending_properties:
+ * @element: a #GstElement to set the pending properties on
+ *
+ * Set all pending properties on the threadsafe properties enabled
+ * element.
+ */
 void
 gst_element_set_pending_properties (GstElement *element) 
 {
@@ -322,6 +344,15 @@ gst_element_set_pending_properties (GstElement *element)
 
 /* following 6 functions taken mostly from gobject.c */
 
+/**
+ * gst_element_set:
+ * @element: a #GstElement to set properties on
+ * @first_property_name: The first property to set
+ * @...: more properties to set
+ *
+ * Set properties on an element. If the element uses threadsafe properties,
+ * they will be queued and set to the object when it is scheduled again.
+ */
 void
 gst_element_set (GstElement *element, const gchar *first_property_name, ...)
 {
@@ -334,6 +365,15 @@ gst_element_set (GstElement *element, const gchar *first_property_name, ...)
   va_end (var_args);
 }
 
+/**
+ * gst_element_get:
+ * @element: a #GstElement to get properties of
+ * @first_property_name: The first property to get
+ * @...: more properties to get
+ *
+ * Get properties from an element. If the element uses threadsafe properties,
+ * the element will be locked before getting the given properties.
+ */
 void
 gst_element_get (GstElement *element, const gchar *first_property_name, ...)
 {
@@ -346,6 +386,15 @@ gst_element_get (GstElement *element, const gchar *first_property_name, ...)
   va_end (var_args);
 }
 
+/**
+ * gst_element_set_valist:
+ * @element: a #GstElement to set properties on
+ * @first_property_name: The first property to set
+ * @var_args: a var_args list of other properties to get
+ *
+ * Set properties on an element. If the element uses threadsafe properties,
+ * the property change will be put on the async queue.
+ */
 void
 gst_element_set_valist (GstElement *element, const gchar *first_property_name, va_list var_args)
 {
@@ -413,6 +462,15 @@ gst_element_set_valist (GstElement *element, const gchar *first_property_name, v
   g_object_unref (object);
 }
 
+/**
+ * gst_element_get_valist:
+ * @element: a #GstElement to get properties of
+ * @first_property_name: The first property to get
+ * @var_args: a var_args list of other properties to get
+ *
+ * Get properties from an element. If the element uses threadsafe properties,
+ * the element will be locked before getting the given properties.
+ */
 void
 gst_element_get_valist (GstElement *element, const gchar *first_property_name, va_list var_args)
 {
@@ -478,6 +536,15 @@ gst_element_get_valist (GstElement *element, const gchar *first_property_name, v
   g_object_unref (object);
 }
 
+/**
+ * gst_element_set_property:
+ * @element: a #GstElement to set properties on
+ * @property_name: The first property to get
+ * @value: GValue that hold the value to set
+ *
+ * Set a property on an element. If the element uses threadsafe properties,
+ * the property will be put on the async queue.
+ */
 void
 gst_element_set_property (GstElement *element, const gchar *property_name, const GValue *value)
 {
@@ -510,6 +577,15 @@ gst_element_set_property (GstElement *element, const gchar *property_name, const
   g_object_unref (object);
 }
   
+/**
+ * gst_element_get_property:
+ * @element: a #GstElement to get properties of
+ * @property_name: The first property to get
+ * @value: Target GValue to hold the property value
+ *
+ * Get a property from an element. If the element uses threadsafe properties,
+ * the element will be locked before getting the given property.
+ */
 void
 gst_element_get_property (GstElement *element, const gchar *property_name, GValue *value)
 {
@@ -1649,7 +1725,7 @@ gst_element_send_event_default (GstElement *element, GstEvent *event)
     GstPad *pad = GST_PAD_CAST (pads->data);
     
     if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
-      if (GST_PAD_IS_CONNECTED (pad)) {
+      if (GST_PAD_IS_USABLE (pad)) {
 	res = gst_pad_send_event (GST_PAD_PEER (pad), event);
 	break;
       }
@@ -1693,7 +1769,7 @@ gst_element_query_default (GstElement *element, GstPadQueryType type,
     GstPad *pad = GST_PAD_CAST (pads->data);
     
     if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
-      if (GST_PAD_IS_CONNECTED (pad)) {
+      if (GST_PAD_IS_USABLE (pad)) {
 	res = gst_pad_query (GST_PAD_PEER (pad), type, format, value);
 	break;
       }
@@ -1903,7 +1979,7 @@ gst_element_negotiate_pads (GstElement *element)
 
     /* if we have a connection on this pad and it doesn't have caps
      * allready, try to negotiate */
-    if (GST_PAD_IS_CONNECTED (srcpad) && !GST_PAD_CAPS (srcpad)) {
+    if (GST_PAD_IS_USABLE (srcpad) && !GST_PAD_CAPS (srcpad)) {
       GstRealPad *sinkpad;
       GstElementState otherstate;
       GstElement *parent;
@@ -1987,14 +2063,18 @@ gst_element_change_state (GstElement *element)
   GST_STATE (element) = old_pending;
   GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
 
-  /* if we are going to paused, we try to negotiate the pads */
-  if (old_transition == GST_STATE_NULL_TO_READY) {
-    if (!gst_element_negotiate_pads (element)) 
-      goto failure;
-  }
-  /* going to the READY state clears all pad caps */
-  else if (old_transition == GST_STATE_READY_TO_NULL) {
-    gst_element_clear_pad_caps (element);
+  switch (old_transition) {
+    /* if we are going to paused, we try to negotiate the pads */
+    case GST_STATE_READY_TO_PAUSED:
+      if (!gst_element_negotiate_pads (element)) 
+        goto failure;
+      break;
+    /* going to the READY state clears all pad caps */
+    case GST_STATE_PAUSED_TO_READY:
+      gst_element_clear_pad_caps (element);
+      break;
+    default:
+      break;
   }
 
   /* tell the scheduler if we have one */
