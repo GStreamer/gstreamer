@@ -53,6 +53,7 @@ guint8*			gst_bytestream_peek_bytes	(GstByteStream *bs, guint32 len);
 gboolean		gst_bytestream_flush		(GstByteStream *bs, guint32 len);
 void                    gst_bytestream_flush_fast       (GstByteStream *bs, guint32 len);
 void                    gst_bytestream_get_status	(GstByteStream *bs, guint32 *avail_out, GstEvent **event_out);
+guint64			gst_bytestream_get_timestamp	(GstByteStream *bs);
 
 void 			gst_bytestream_print_status	(GstByteStream *bs);
 

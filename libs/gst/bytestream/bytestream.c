@@ -236,6 +236,7 @@ gst_bytestream_peek (GstByteStream * bs, guint32 len)
     retbuf = gst_buffer_new ();
     GST_BUFFER_SIZE (retbuf) = len;
     GST_BUFFER_DATA (retbuf) = gst_bytestream_assemble (bs, len);
+    GST_BUFFER_TIMESTAMP (retbuf) = gst_bytestream_get_timestamp (bs);
     if (GST_BUFFER_OFFSET (headbuf) != -1)
       GST_BUFFER_OFFSET (retbuf) = GST_BUFFER_OFFSET (headbuf) + (GST_BUFFER_SIZE (headbuf) - bs->headbufavail);
   }
@@ -463,6 +464,39 @@ gst_bytestream_get_status (GstByteStream *bs,
       *event_out = bs->event;
       bs->event = NULL;
     }
+}
+
+/**
+ * gst_bytestream_get_timestamp
+ * @bs: a bytestream
+ *
+ * Get the timestamp of the first data in the bytestream.  If no data
+ * exists 1 byte is read to load a new buffer.
+ *
+ * This function will not check input buffer boundries.  It is  possible
+ * the next read could span two or more input buffers with different
+ * timestamps.
+ */
+guint64
+gst_bytestream_get_timestamp (GstByteStream *bs)
+{
+  GstBuffer *headbuf;
+
+  g_return_val_if_fail (bs != NULL, 0);
+
+  bs_print ("get_timestamp: asking for %d bytes\n", len);
+
+  /* make sure we have a buffer */
+  if (bs->listavail == 0) {
+    bs_print ("gst_timestamp: fetching a buffer\n");
+    if (!gst_bytestream_fill_bytes (bs, 1))
+      return 0;
+  }
+
+  /* extract the head buffer */
+  headbuf = GST_BUFFER (bs->buflist->data);
+
+  return GST_BUFFER_TIMESTAMP (headbuf);
 }
 
 void
