@@ -1,4 +1,8 @@
-2004-10-11  set REAL_NAME environment variable  <set EMAIL_ADDRESS environment variable>
+2004-10-11  Johan Dahlin  <johan@gnome.org>
+
+	* configure.ac: Bump version number
+
+2004-10-11  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/gst.defs:
 	* gst/gst.override:
