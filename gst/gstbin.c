@@ -45,6 +45,8 @@ static GstElementStateReturn	gst_bin_change_state_norecurse	(GstBin *bin);
 static gboolean			gst_bin_change_state_type	(GstBin *bin,
 								 GstElementState state,
 								 GType type);
+static void 			gst_bin_child_state_change 	(GstBin *bin, GstElementState old, 
+								 GstElementState new, GstElement *child);
 
 static gboolean			gst_bin_iterate_func		(GstBin *bin);
 
@@ -135,7 +137,6 @@ gst_bin_init (GstBin *bin)
   bin->children = NULL;
   bin->eos_providers = NULL;
   bin->num_eos_providers = 0;
-  bin->chains = NULL;
   bin->eoscond = g_cond_new ();
 }
 
@@ -154,23 +155,15 @@ gst_bin_new (const gchar *name)
 }
 
 static inline void
-gst_bin_reset_element_sched (GstElement *element, GstSchedule *sched)
+gst_bin_reset_element_sched (GstElement *element, GstScheduler *sched)
 {
   GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "resetting element's scheduler");
 
-  // first remove the element from its current schedule, if any
-//  if (GST_ELEMENT_SCHED(element))
-//    GST_SCHEDULE_REMOVE_ELEMENT (GST_ELEMENT_SCHED(element), element);
-  // then set the new manager
   gst_element_set_sched (element,sched);
-
-  // and add it to the new scheduler
-//  if (sched)
-//    GST_SCHEDULE_ADD_ELEMENT (sched, element);
 }
 
 static void
-gst_bin_set_element_sched (GstElement *element,GstSchedule *sched)
+gst_bin_set_element_sched (GstElement *element,GstScheduler *sched)
 {
   GList *children;
   GstElement *child;
@@ -178,21 +171,20 @@ gst_bin_set_element_sched (GstElement *element,GstSchedule *sched)
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT(element));
   g_return_if_fail (sched != NULL);
-  g_return_if_fail (GST_IS_SCHEDULE(sched));
+  g_return_if_fail (GST_IS_SCHEDULER(sched));
 
   GST_INFO (GST_CAT_SCHEDULING, "setting element \"%s\" sched to %p",GST_ELEMENT_NAME(element),
             sched);
 
   // if it's actually a Bin
   if (GST_IS_BIN(element)) {
-
-    if (GST_FLAG_IS_SET(element,GST_BIN_FLAG_MANAGER)) {
+    if (GST_FLAG_IS_SET (element, GST_BIN_FLAG_MANAGER)) {
       GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "child is already a manager, not resetting");
       return;
     }
 
     GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting children's schedule to parent's");
-    GST_SCHEDULE_ADD_ELEMENT (sched, element);
+    gst_scheduler_add_element (sched, element);
 
     // set the children's schedule
     children = GST_BIN(element)->children;
@@ -205,7 +197,7 @@ gst_bin_set_element_sched (GstElement *element,GstSchedule *sched)
 
   // otherwise, if it's just a regular old element
   } else {
-    GST_SCHEDULE_ADD_ELEMENT (sched, element);
+    gst_scheduler_add_element (sched, element);
   }
 }
 
@@ -232,7 +224,7 @@ gst_bin_unset_element_sched (GstElement *element)
 
     // FIXME this check should be irrelevant
     if (GST_ELEMENT_SCHED (element))
-      GST_SCHEDULE_REMOVE_ELEMENT (GST_ELEMENT_SCHED(element), element);
+      gst_scheduler_remove_element (GST_ELEMENT_SCHED(element), element);
 
     // for each child, remove them from their schedule
     children = GST_BIN(element)->children;
@@ -247,7 +239,7 @@ gst_bin_unset_element_sched (GstElement *element)
   } else {
     // FIXME this check should be irrelevant
     if (GST_ELEMENT_SCHED (element))
-      GST_SCHEDULE_REMOVE_ELEMENT (GST_ELEMENT_SCHED(element), element);
+      gst_scheduler_remove_element (GST_ELEMENT_SCHED(element), element);
   }
 }
 
@@ -270,27 +262,33 @@ gst_bin_add (GstBin *bin,
   g_return_if_fail (GST_IS_ELEMENT (element));
 
   GST_DEBUG (GST_CAT_PARENTAGE, "adding element \"%s\" to bin \"%s\"\n",
-             GST_ELEMENT_NAME(element),GST_ELEMENT_NAME(bin));
+             GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (bin));
 
   // must be not be in PLAYING state in order to modify bin
-//  g_return_if_fail (GST_STATE (bin) != GST_STATE_PLAYING);
+  g_return_if_fail (GST_STATE (bin) != GST_STATE_PLAYING);
 
   // the element must not already have a parent
-  g_return_if_fail (GST_ELEMENT_PARENT(element) == NULL);
+  g_return_if_fail (GST_ELEMENT_PARENT (element) == NULL);
 
   // then check to see if the element's name is already taken in the bin
-  g_return_if_fail (gst_object_check_uniqueness (bin->children, GST_ELEMENT_NAME(element)) == TRUE);
+  g_return_if_fail (gst_object_check_uniqueness (bin->children, GST_ELEMENT_NAME (element)) == TRUE);
 
   // set the element's parent and add the element to the bin's list of children
   gst_object_set_parent (GST_OBJECT (element), GST_OBJECT (bin));
+  g_signal_connect_object (G_OBJECT (element), "state_change", gst_bin_child_state_change, G_OBJECT (bin));
+
   bin->children = g_list_append (bin->children, element);
   bin->numchildren++;
 
   ///// now we have to deal with manager stuff
   // we can only do this if there's a scheduler:
   // if we're not a manager, and aren't attached to anything, we have no sched (yet)
-  if (GST_ELEMENT_SCHED(bin) != NULL)
-    gst_bin_set_element_sched (element, GST_ELEMENT_SCHED(bin));
+  if (GST_IS_BIN(element) && GST_FLAG_IS_SET (element, GST_BIN_FLAG_MANAGER)) {
+    GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "child is a manager");
+  }
+  else if (GST_ELEMENT_SCHED (bin) != NULL) {
+    gst_bin_set_element_sched (element, GST_ELEMENT_SCHED (bin));
+  }
 
   GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "added child \"%s\"", GST_ELEMENT_NAME (element));
 
@@ -343,6 +341,41 @@ gst_bin_remove (GstBin *bin,
     gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
 }
 
+static void
+gst_bin_child_state_change (GstBin *bin, GstElementState old, GstElementState new, GstElement *child)
+{
+  gint old_idx = 0, new_idx = 0, i;
+
+  GST_INFO (GST_CAT_STATES, "child %s changed state in bin %s from %s to %s", 
+		  GST_ELEMENT_NAME (child), GST_ELEMENT_NAME (bin),
+		  gst_element_statename (old), gst_element_statename (new));
+
+  while (old>>=1) old_idx++;
+  while (new>>=1) new_idx++;
+
+  GST_LOCK (bin);
+  bin->child_states[old_idx]--;
+  bin->child_states[new_idx]++;
+
+  for (i = GST_NUM_STATES-1; i >= 0; i--) {
+    if (bin->child_states[i] != 0) {
+      if (GST_STATE (bin) != (1 << i)) {
+        GST_INFO (GST_CAT_STATES, "bin %s need state change to %s", 
+			GST_ELEMENT_NAME (bin), gst_element_statename (1<<i));
+        GST_STATE_PENDING (bin) = (1<<i);
+	gst_bin_change_state_norecurse (bin);
+      }
+      break;
+    }
+  }
+  // FIXME, need to setup this array at add/remove time
+  if (i<0) {
+    GST_STATE_PENDING (bin) = GST_STATE_NULL;
+    gst_bin_change_state_norecurse (bin);
+  }
+	  
+  GST_UNLOCK (bin);
+}
 
 static GstElementStateReturn
 gst_bin_change_state (GstElement *element)
@@ -351,49 +384,51 @@ gst_bin_change_state (GstElement *element)
   GList *children;
   GstElement *child;
   GstElementStateReturn ret;
-
-//  GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME  (element));
+  GstElementState old_state, pending;
+  gboolean have_async = FALSE;
 
   g_return_val_if_fail (GST_IS_BIN (element), GST_STATE_FAILURE);
 
   bin = GST_BIN (element);
 
-//  GST_DEBUG (GST_CAT_STATES,"currently %d(%s), %d(%s) pending\n",GST_STATE (element),
-//          gst_element_statename (GST_STATE (element)), GST_STATE_PENDING (element),
-//          gst_element_statename (GST_STATE_PENDING (element)));
+  old_state = GST_STATE (element);
+  pending = GST_STATE_PENDING (element);
 
   GST_INFO_ELEMENT (GST_CAT_STATES, element, "changing childrens' state from %s to %s",
-                gst_element_statename (GST_STATE (element)),
-                gst_element_statename (GST_STATE_PENDING (element)));
+                gst_element_statename (old_state),
+                gst_element_statename (pending));
 
-//  g_return_val_if_fail(bin->numchildren != 0, GST_STATE_FAILURE);
-
-
-//  g_print("-->\n");
   children = bin->children;
   while (children) {
     child = GST_ELEMENT (children->data);
-//    GST_DEBUG (GST_CAT_STATES,"setting state on '%s'\n",GST_ELEMENT_NAME  (child));
-    switch (gst_element_set_state (child, GST_STATE_PENDING (element))) {
+    children = g_list_next (children);
+
+    switch (gst_element_set_state (child, pending)) {
       case GST_STATE_FAILURE:
         GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
         GST_DEBUG (GST_CAT_STATES,"child '%s' failed to go to state %d(%s)\n", GST_ELEMENT_NAME (child),
-              GST_STATE_PENDING (element), gst_element_statename (GST_STATE_PENDING (element)));
-        return GST_STATE_FAILURE;
+              pending, gst_element_statename (pending));
+
+	gst_element_set_state (child, old_state);
+	if (GST_ELEMENT_SCHED (child) == GST_ELEMENT_SCHED (element)) {
+          return GST_STATE_FAILURE;
+	}
         break;
       case GST_STATE_ASYNC:
         GST_DEBUG (GST_CAT_STATES,"child '%s' is changing state asynchronously\n", GST_ELEMENT_NAME (child));
+	have_async = TRUE;
         break;
     }
-//    g_print("\n");
-    children = g_list_next (children);
   }
-//  g_print("<-- \"%s\"\n",GST_OBJECT_NAME(bin));
 
   GST_INFO_ELEMENT (GST_CAT_STATES, element, "done changing bin's state from %s to %s",
-                gst_element_statename (GST_STATE (element)),
-                gst_element_statename (GST_STATE_PENDING (element)));
-  ret =  gst_bin_change_state_norecurse (bin);
+                gst_element_statename (old_state),
+                gst_element_statename (pending));
+
+  if (have_async)
+    ret = GST_STATE_ASYNC;
+  else
+    ret = GST_STATE_SUCCESS;
 
   return ret;
 }
@@ -410,20 +445,16 @@ gst_bin_change_state_norecurse (GstBin *bin)
 }
 
 static gboolean
-gst_bin_change_state_type(GstBin *bin,
-                          GstElementState state,
-                          GType type)
+gst_bin_change_state_type (GstBin *bin,
+                           GstElementState state,
+                           GType type)
 {
   GList *children;
   GstElement *child;
 
-//  g_print("gst_bin_change_state_type(\"%s\",%d,%d);\n",
-//          GST_OBJECT_NAME(bin))),state,type);
-
   g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
   g_return_val_if_fail (bin->numchildren != 0, FALSE);
 
-//  g_print("-->\n");
   children = bin->children;
   while (children) {
     child = GST_ELEMENT (children->data);
@@ -434,11 +465,10 @@ gst_bin_change_state_type(GstBin *bin,
       if (!gst_element_set_state (child,state))
         return FALSE;
     }
-//    g_print("\n");
     children = g_list_next (children);
   }
   if (type == GST_TYPE_BIN)
-    gst_element_set_state (GST_ELEMENT (bin),state);
+    gst_element_set_state (GST_ELEMENT (bin), state);
 
   return TRUE;
 }
@@ -646,6 +676,18 @@ gst_bin_restore_thyself (GstObject *object,
 }
 #endif /* GST_DISABLE_LOADSAVE */
 
+static gboolean
+gst_bin_iterate_func (GstBin *bin)
+{
+  // only iterate if this is the manager bin
+  if (GST_ELEMENT_SCHED(bin)->parent == GST_ELEMENT (bin)) {
+    return gst_scheduler_iterate (GST_ELEMENT_SCHED(bin));
+  } else {
+    g_warning ("bin \"%d\" can't be iterated on!\n", GST_ELEMENT_NAME (bin));
+  }
+
+  return FALSE;
+}
 
 /**
  * gst_bin_iterate:
@@ -671,8 +713,14 @@ gst_bin_iterate (GstBin *bin)
 
   GST_DEBUG_LEAVE("(\"%s\")",GST_ELEMENT_NAME (bin));
 
-//  if (!running)
- //   gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
+  if (!running) {
+    if (GST_STATE (bin) == GST_STATE_PLAYING && GST_STATE_PENDING (bin) == GST_STATE_VOID_PENDING) {
+      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, bin, "waiting for child shutdown after useless iteration\n");
+      //gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
+      gst_element_wait_state_change (GST_ELEMENT (bin));
+      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, bin, "child shutdown\n");
+    }
+  }
 
   return running;
 }
@@ -690,24 +738,5 @@ gst_bin_received_eos (GstElement *element, GstBin *bin)
     g_cond_signal (bin->eoscond);
   }
   GST_UNLOCK (bin);
-}
-
-typedef struct {
-  gulong offset;
-  gulong size;
-} region_struct;
-
-
-static gboolean
-gst_bin_iterate_func (GstBin *bin)
-{
-  // only iterate if this is the manager bin
-  if (GST_ELEMENT_SCHED(bin)->parent == GST_ELEMENT (bin)) {
-    return GST_SCHEDULE_ITERATE(GST_ELEMENT_SCHED(bin));
-  } else {
-    GST_DEBUG (GST_CAT_SCHEDULING, "this bin can't be iterated on!\n");
-  }
-
-  return FALSE;
 }
 

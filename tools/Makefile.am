@@ -30,11 +30,15 @@ man_MANS = gstreamer-launch.1 gstreamer-register.1 gstreamer-inspect.1 \
 gstreamer_launch_LDADD = $(GST_LIBS)
 gstreamer_launch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
 
+if !USE_GLIB2
 gstreamer_guilaunch_LDADD = $(GST_LIBS)
 gstreamer_guilaunch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+endif
 
+if !GST_DISABLE_REGISTRY
 gstreamer_register_LDADD = $(GST_LIBS)
 gstreamer_register_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+endif
 
 gstreamer_inspect_LDADD = $(GST_LIBS)
 gstreamer_inspect_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
@@ -42,7 +46,9 @@ gstreamer_inspect_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\"
 gstreamer_complete_LDADD = $(GST_LIBS)
 gstreamer_complete_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
 
+if !GST_DISABLE_LOADSAVE
 gstreamer_compprep_LDADD = $(GST_LIBS)
 gstreamer_compprep_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+endif
 
 EXTRA_DIST = $(man_MANS)

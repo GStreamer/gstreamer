@@ -1,5 +1,5 @@
 noinst_PROGRAMS = mixer
 noinst_HEADERS = mixer.h
 
-LIBS += $(GST_LIBS)
-CFLAGS += $(GST_CFLAGS)
+mixer_LDADD = $(GST_LIBS)
+mixer_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)

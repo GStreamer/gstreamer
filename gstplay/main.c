@@ -21,7 +21,7 @@ main (int argc, char *argv[])
 		gst_media_play_start_uri (play, argv[1]);
 
 		for (i=1;i<argc;i++) {
-			gst_media_play_addto_playlist (play, argv[i]);
+			//gst_media_play_addto_playlist (play, argv[i]);
 		}
 	}
 	

@@ -440,6 +440,12 @@ print_element_list (void)
         if (factory->typefindfunc)
           printf("      Has typefind function: %s\n",GST_DEBUG_FUNCPTR_NAME(factory->typefindfunc));
       }
+      else if (GST_IS_SCHEDULERFACTORY (feature)) {
+        GstSchedulerFactory *factory;
+
+        factory = GST_SCHEDULERFACTORY (feature);
+        printf("%s:  %s: %s\n", plugin->name, GST_OBJECT_NAME (factory), factory->longdesc);
+      }
       else {
         printf("%s:  %s (%s)\n", plugin->name, gst_object_get_name (GST_OBJECT (feature)), 
 	  	      g_type_name (G_OBJECT_TYPE (feature)));
@@ -488,6 +494,12 @@ print_plugin_info (GstPlugin *plugin)
 
       if (factory->typefindfunc)
         printf("      Has typefind function: %s\n",GST_DEBUG_FUNCPTR_NAME(factory->typefindfunc));
+    }
+    else if (GST_IS_SCHEDULERFACTORY (feature)) {
+      GstSchedulerFactory *factory;
+
+      factory = GST_SCHEDULERFACTORY (feature);
+      printf("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
     }
     else {
       printf("  %s (%s)\n", gst_object_get_name (GST_OBJECT (feature)), 

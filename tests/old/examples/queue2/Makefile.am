@@ -1,5 +1,5 @@
 noinst_PROGRAMS = queue2
 
-LIBS += $(GST_LIBS)
-CFLAGS += $(GST_CFLAGS)
+queue2_LDADD = $(GST_LIBS)
+queue2_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
 

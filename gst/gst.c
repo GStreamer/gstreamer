@@ -24,17 +24,8 @@
 
 #include "gst_private.h"
 
-#include "gstversion.h"
-#include "gstcpu.h"
-#include "gsttype.h"
-#include "gstplugin.h"
-#include "gstbuffer.h"
-#include "gstbin.h"
-#include "gstpipeline.h"
-#include "gstthread.h"
+#include "gst.h"
 #include "gstqueue.h"
-#include "gstautoplug.h"
-#include "gstscheduler.h"
 #ifndef GST_DISABLE_TYPEFIND
 #include "gsttypefind.h"
 #endif
@@ -118,7 +109,7 @@ gst_init (int *argc, char **argv[])
   gst_elementfactory_get_type ();
   gst_element_get_type ();
   gst_typefactory_get_type ();
-  gst_schedule_get_type ();
+  gst_schedulerfactory_get_type ();
   gst_bin_get_type ();
 #ifndef GST_DISABLE_AUTOPLUG
   gst_autoplugfactory_get_type ();
@@ -166,7 +157,6 @@ split_and_iterate (const gchar *stringlist, gchar *separator, GFunc iterator)
 
   while (lastlist) {
     strings = g_strsplit (lastlist, separator, MAX_PATH_SPLIT);
-    //strings = g_strsplit (lastlist, G_SEARCHPATH_SEPARATOR_S, MAX_PATH_SPLIT);
     g_free (lastlist);
     lastlist = NULL;
 

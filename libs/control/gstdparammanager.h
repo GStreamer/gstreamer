@@ -24,6 +24,7 @@
 
 #include <gst/gstobject.h>
 #include <gst/gstprops.h>
+#include <libs/control/gstdparamcommon.h>
 #include <libs/control/gstdparam.h>
 
 #ifdef __cplusplus
@@ -52,7 +53,6 @@ typedef enum {
   GST_DPMAN_ARRAY,
 } GstDPMUpdateMethod;
 
-typedef struct _GstDParamManager GstDParamManager;
 typedef struct _GstDParamManagerClass GstDParamManagerClass;
 typedef struct _GstDPMMode GstDPMMode;
 typedef struct _GstDParamWrapper GstDParamWrapper;
@@ -118,6 +118,7 @@ struct _GstDParamWrapper {
 				
 #define GST_DPMAN_DO_UPDATE(dpwrap) ((dpwrap->update_func)(dpwrap->value, dpwrap->update_data))
 
+void _gst_dpman_initialize();
 GType gst_dpman_get_type (void);
 GstDParamManager* gst_dpman_new (gchar *name, GstElement *parent);
 void gst_dpman_set_parent (GstDParamManager *dpman, GstElement *parent);
@@ -138,7 +139,7 @@ gboolean gst_dpman_add_required_dparam_array (GstDParamManager *dpman,
                                               gpointer update_data);
 void gst_dpman_remove_required_dparam (GstDParamManager *dpman, gchar *dparam_name);
 gboolean gst_dpman_attach_dparam (GstDParamManager *dpman, gchar *dparam_name, GstDParam *dparam);
-void gst_dpman_dettach_dparam (GstDParamManager *dpman, gchar *dparam_name);                         
+void gst_dpman_detach_dparam (GstDParamManager *dpman, gchar *dparam_name);                         
 GstDParam* gst_dpman_get_dparam(GstDParamManager *dpman, gchar *name);
 GType gst_dpman_get_dparam_type (GstDParamManager *dpman, gchar *name);
 

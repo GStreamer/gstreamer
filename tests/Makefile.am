@@ -13,7 +13,7 @@ incsched reaping threadlock mp1vid reconnect \
 faketest events timecache
 
 # we have nothing but apps here, we can do this safely
-LIBS += $(GST_LIBS)
-CFLAGS += $(GST_CFLAGS)
+LIBS = $(GST_LIBS)
+CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
 
 EXTRA_DIST = README

@@ -14,7 +14,7 @@ gboolean idle_func(gpointer data) {
   return TRUE;
 }
 
-void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
+void mpegdemux_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
   g_print("***** a new pad %s was created %p\n", gst_pad_get_name(pad), pipeline);
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
@@ -57,7 +57,7 @@ int main(int argc,char *argv[]) {
   }
   g_print("should be using file '%s'\n",argv[1]);
 
-  parse = gst_elementfactory_make("mpeg2parse","parse");
+  parse = gst_elementfactory_make("mpegdemux","parse");
   //parse = gst_elementfactory_make("mpeg1parse","parse");
   g_return_val_if_fail(parse != NULL, -1);
 
@@ -106,7 +106,7 @@ int main(int argc,char *argv[]) {
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(thread));
 
-  gtk_signal_connect(GTK_OBJECT(parse),"new_pad",mpeg2parse_newpad, pipeline);
+  gtk_signal_connect(GTK_OBJECT(parse),"new_pad",mpegdemux_newpad, pipeline);
 
   gtk_signal_connect(GTK_OBJECT(src),"eos",GTK_SIGNAL_FUNC(eof),NULL);
 

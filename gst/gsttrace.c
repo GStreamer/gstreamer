@@ -33,101 +33,119 @@
 #include "gstlog.h"
 #include "gsttrace.h"
 
-
-__inline__ void read_tsc(guint64 *dst) {
+static __inline__ void
+read_tsc (guint64 * dst)
+{
 #ifdef HAVE_RDTSC
   guint64 tsc;
-  __asm__ __volatile__ ("rdtsc" : "=A" (tsc));
+  __asm__ __volatile__ ("rdtsc":"=A" (tsc));
+
   *dst = tsc;
 #else
   *dst = 0;
 #endif
 }
 
-void gst_trace_read_tsc(guint64 *dst) {
-  read_tsc(dst);
+void
+gst_trace_read_tsc (guint64 * dst)
+{
+  read_tsc (dst);
 }
 
 GstTrace *_gst_trace_default = NULL;
 gint _gst_trace_on = 1;
 
-GstTrace *gst_trace_new(guchar *filename,gint size) {
-  GstTrace *trace = g_malloc(sizeof(GstTrace));
+GstTrace *
+gst_trace_new (guchar * filename, gint size)
+{
+  GstTrace *trace = g_malloc (sizeof (GstTrace));
 
-  g_return_val_if_fail(trace != NULL,NULL);
-  trace->filename = g_strdup(filename);
-  g_print("opening '%s'\n",trace->filename);
-  trace->fd = open(trace->filename,O_RDWR|O_CREAT|O_TRUNC,S_IRUSR|S_IWUSR);
-  perror("opening trace file");
-  g_return_val_if_fail(trace->fd > 0,NULL);
-  trace->buf = g_malloc(size * sizeof(GstTraceEntry));
-  g_return_val_if_fail(trace->buf != NULL,NULL);
+  g_return_val_if_fail (trace != NULL, NULL);
+  trace->filename = g_strdup (filename);
+  g_print ("opening '%s'\n", trace->filename);
+  trace->fd = open (trace->filename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+  perror ("opening trace file");
+  g_return_val_if_fail (trace->fd > 0, NULL);
+  trace->buf = g_malloc (size * sizeof (GstTraceEntry));
+  g_return_val_if_fail (trace->buf != NULL, NULL);
   trace->bufsize = size;
   trace->bufoffset = 0;
 
   return trace;
 }
 
-void gst_trace_destroy(GstTrace *trace) {
-  g_return_if_fail(trace != NULL);
-  g_return_if_fail(trace->buf != NULL);
+void
+gst_trace_destroy (GstTrace * trace)
+{
+  g_return_if_fail (trace != NULL);
+  g_return_if_fail (trace->buf != NULL);
 
-  if (gst_trace_get_remaining(trace) > 0)
-    gst_trace_flush(trace);
-  close(trace->fd);
-  g_free(trace->buf);
-  g_free(trace);
+  if (gst_trace_get_remaining (trace) > 0)
+    gst_trace_flush (trace);
+  close (trace->fd);
+  g_free (trace->buf);
+  g_free (trace);
 }
 
-void gst_trace_flush(GstTrace *trace) {
+void
+gst_trace_flush (GstTrace * trace)
+{
   if (!trace) {
     trace = _gst_trace_default;
-    if (!trace ) return;
+    if (!trace)
+      return;
   }
 
-  write(trace->fd,trace->buf,trace->bufoffset * sizeof(GstTraceEntry));
+  write (trace->fd, trace->buf, trace->bufoffset * sizeof (GstTraceEntry));
   trace->bufoffset = 0;
 }
 
-void gst_trace_text_flush(GstTrace *trace) {
+void
+gst_trace_text_flush (GstTrace * trace)
+{
   int i;
-  const int strsize = 20+1 + 10+1 + 10+1 + 112+1 + 1;
+  const int strsize = 20 + 1 + 10 + 1 + 10 + 1 + 112 + 1 + 1;
   char str[strsize];
 
   if (!trace) {
     trace = _gst_trace_default;
-    if (!trace ) return;
+    if (!trace)
+      return;
   }
 
-  for (i=0; i<trace->bufoffset; i++) {
-    snprintf(str, strsize, "%20lld %10d %10d %s\n",
-        trace->buf[i].timestamp,
-        trace->buf[i].sequence,
-        trace->buf[i].data,
-        trace->buf[i].message);
-    write(trace->fd,str,strlen(str));
+  for (i = 0; i < trace->bufoffset; i++) {
+    snprintf (str, strsize, "%20lld %10d %10d %s\n",
+	      trace->buf[i].timestamp,
+	      trace->buf[i].sequence, trace->buf[i].data, trace->buf[i].message);
+    write (trace->fd, str, strlen (str));
   }
   trace->bufoffset = 0;
 }
 
-void gst_trace_set_default(GstTrace *trace) {
-  g_return_if_fail(trace != NULL);
+void
+gst_trace_set_default (GstTrace * trace)
+{
+  g_return_if_fail (trace != NULL);
   _gst_trace_default = trace;
 }
 
-void _gst_trace_add_entry(GstTrace *trace,guint32 seq,guint32 data,gchar *msg) {
+void
+_gst_trace_add_entry (GstTrace * trace, guint32 seq, guint32 data, gchar * msg)
+{
   GstTraceEntry *entry;
+
   if (!trace) {
     trace = _gst_trace_default;
-    if (!trace ) return;
+    if (!trace)
+      return;
   }
 
   entry = trace->buf + trace->bufoffset;
-  read_tsc(&(entry->timestamp));
+  read_tsc (&(entry->timestamp));
   entry->sequence = seq;
   entry->data = data;
-  strncpy(entry->message,msg,112);
+  strncpy (entry->message, msg, 112);
   trace->bufoffset++;
 
-  gst_trace_flush(trace);
+  gst_trace_flush (trace);
 }

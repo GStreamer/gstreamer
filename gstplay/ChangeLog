@@ -1,3 +1,17 @@
+2001-12-04  Arik Devens  <arik@gnome.org>
+
+	This is a minor update on a few things while i work on getting the
+	new gstplay into cvs. Enjoy :-)
+	
+	* gstmediaplay.c (on_load_file_selected): As below, commented out
+	the addto_playlist line to get rid of GtkCList warnings.
+	(gst_media_play_set_fullscreen): Added setting and unsetting of
+	the GdkCursor on fullscreen to hide the cursor while playing
+	video.
+
+	* main.c (main): Commented out adding to the playlist for now to
+	get rid of the GtkCList warning.
+
 2001-08-15  Arik Devens  <arik@gnome.org>
 
 	* gstmediaplay.c (gst_media_play_set_fullscreen): Added a hacky

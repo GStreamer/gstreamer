@@ -14,6 +14,7 @@ libgstcontrolinclude_HEADERS = \
     gstcontrol.h \
     gstdparammanager.h \
     gstdparam.h \
+    gstdparamcommon.h \
     gstdplinearinterp.h
 
 libgstcontrol_la_LIBADD = $(GST_LIBS)

@@ -1,5 +1,5 @@
 noinst_PROGRAMS = cutter
 noinst_HEADERS = cutter.h
 
-LIBS += $(GST_LIBS)
-CFLAGS += $(GST_CFLAGS)
+cutter_LDADD = $(GST_LIBS)
+cutter_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)

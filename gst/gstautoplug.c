@@ -365,7 +365,7 @@ gst_autoplugfactory_make (const gchar *name)
   if (factory == NULL)
     return NULL;
 
-  return gst_autoplugfactory_create (factory);;
+  return gst_autoplugfactory_create (factory);
 }
 
 #ifndef GST_DISABLE_REGISTRY

@@ -6,6 +6,7 @@ gstreamer.signals
 gstreamer.types
 gstreamer.html
 gstreamer-unused.txt
+gstreamer-undocumented.txt
 gstreamer-decl-list.txt
 gstreamer-decl.txt
 gstreamer-scan.c

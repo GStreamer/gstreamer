@@ -27,4 +27,3 @@ endif
 
 libresample_la_LIBADD = $(GST_LIBS)
 libresample_la_CFLAGS = $(GST_CFLAGS) -ffast-math $(ARCHCFLAGS)
-
