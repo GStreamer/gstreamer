@@ -434,7 +434,7 @@ gst_xvidenc_set_property (GObject * object,
       xvidenc->bitrate = g_value_get_int (value);
       break;
     case ARG_BUFSIZE:
-      xvidenc->buffer_size = g_value_get_int (value);
+      xvidenc->buffer_size = g_value_get_ulong (value);
       break;
     case ARG_MAXKEYINTERVAL:
       xvidenc->max_key_interval = g_value_get_int (value);
@@ -464,7 +464,7 @@ gst_xvidenc_get_property (GObject * object,
       g_value_set_int (value, xvidenc->bitrate);
       break;
     case ARG_BUFSIZE:
-      g_value_set_int (value, xvidenc->buffer_size);
+      g_value_set_ulong (value, xvidenc->buffer_size);
       break;
     case ARG_MAXKEYINTERVAL:
       g_value_set_int (value, xvidenc->max_key_interval);
