@@ -373,7 +373,7 @@ gmi_set_mime (GstMediaInfo * info, const char *mime)
       || (strcmp (mime, "audio/x-wav") == 0))
     desc =
         g_strdup_printf
-        ("%s ! wavparse name=decoder ! audio/x-raw-int ! fakesink name=sink",
+        ("%s name=source ! wavparse name=decoder ! audio/x-raw-int ! fakesink name=sink",
         priv->source_name);
   else if (strcmp (mime, "audio/x-mod") == 0
       || strcmp (mime, "audio/x-s3m") == 0 || strcmp (mime, "audio/x-xm") == 0
