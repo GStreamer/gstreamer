@@ -336,6 +336,7 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
   GstColorspace *space;
   GstCaps *peercaps;
   GstCaps *ourcaps, *to_intersect, *try_peercaps;
+  GstPadLinkReturn res = GST_PAD_LINK_REFUSED;
   
   space = GST_COLORSPACE (gst_pad_get_parent (pad));
 
@@ -357,7 +358,8 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
       space->type = GST_COLORSPACE_NONE;
       space->disabled = FALSE;
       gst_caps_unref (peercaps);
-      return GST_PAD_LINK_DONE;
+      res = GST_PAD_LINK_DONE;
+      goto success;
     }
     gst_caps_unref (peercaps);
   }
@@ -385,17 +387,28 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
       if (gst_pad_try_set_caps (space->srcpad, peercaps) > 0) {
         space->disabled = FALSE;
         gst_caps_unref (try_peercaps);
-        return GST_PAD_LINK_DONE;
+	res = GST_PAD_LINK_DONE;
+	goto success;
       }
     }
     peercaps = peercaps->next;
   }
   gst_caps_unref (try_peercaps);
+
+  if (gst_pad_recover_caps_error (space->srcpad, NULL)) {
+    res = GST_PAD_LINK_DONE;
+    goto success;
+  }
   
   /* we disable ourself here */
   space->disabled = TRUE;
+  goto done;
 
-  return GST_PAD_LINK_REFUSED;
+success:
+  space->pool = gst_pad_get_bufferpool (space->srcpad);
+done:
+
+  return res;
 }
 
 GType
@@ -554,7 +567,6 @@ gst_colorspace_change_state (GstElement *element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PAUSED_TO_PLAYING:
-      space->pool = gst_pad_get_bufferpool (space->srcpad);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       if (space->pool)
@@ -570,9 +582,7 @@ gst_colorspace_change_state (GstElement *element)
       break;
   }
 
-  parent_class->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return parent_class->change_state (element);
 }
 
 static void
