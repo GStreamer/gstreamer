@@ -39,7 +39,7 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 DOC_SOURCE_DIR=$(top_srcdir)/libs/gst
 
 # Extra options to supply to gtkdoc-scan.
-SCAN_OPTIONS=
+SCAN_OPTIONS=--deprecated-guards="GST_DISABLE_DEPRECATED"
 
 # FIXME :
 # there's something wrong with gstreamer-sections.txt not being in the dist

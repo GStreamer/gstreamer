@@ -36,19 +36,19 @@ G_BEGIN_DECLS
  */
 /**
  * GstCoreError:
- * @GST_CORE_ERROR_FAILED:
- * @GST_CORE_ERROR_TOO_LAZY:
- * @GST_CORE_ERROR_NOT_IMPLEMENTED:
- * @GST_CORE_ERROR_STATE_CHANGE:
- * @GST_CORE_ERROR_PAD:
- * @GST_CORE_ERROR_THREAD:
- * @GST_CORE_ERROR_SCHEDULER:
- * @GST_CORE_ERROR_NEGOTIATION:
- * @GST_CORE_ERROR_EVENT:
- * @GST_CORE_ERROR_SEEK:
- * @GST_CORE_ERROR_CAPS:
- * @GST_CORE_ERROR_TAG:
- * @GST_CORE_ERROR_NUM_ERRORS:
+ * @GST_CORE_ERROR_FAILED: GStreamer encountered a general core library error.
+ * @GST_CORE_ERROR_TOO_LAZY: GStreamer developers were too lazy to assign an error code to this error.  Please file a bug.
+ * @GST_CORE_ERROR_NOT_IMPLEMENTED: Internal GStreamer error: code not implemented.  File a bug.
+ * @GST_CORE_ERROR_STATE_CHANGE: Internal GStreamer error: state change failed.  File a bug.
+ * @GST_CORE_ERROR_PAD: Internal GStreamer error: pad problem.  File a bug.
+ * @GST_CORE_ERROR_THREAD: Internal GStreamer error: thread problem.  File a bug.
+ * @GST_CORE_ERROR_SCHEDULER: Internal GStreamer error: scheduler problem.  File a bug.
+ * @GST_CORE_ERROR_NEGOTIATION: Internal GStreamer error: negotiation problem.  File a bug.
+ * @GST_CORE_ERROR_EVENT: Internal GStreamer error: event problem.  File a bug.
+ * @GST_CORE_ERROR_SEEK: Internal GStreamer error: seek problem.  File a bug.
+ * @GST_CORE_ERROR_CAPS: Internal GStreamer error: caps problem.  File a bug.
+ * @GST_CORE_ERROR_TAG: Internal GStreamer error: tag problem.  File a bug.
+ * @GST_CORE_ERROR_NUM_ERRORS: the error count
  *
  * Core errors are anything that can go wrong in or using
  * the core GStreamer library
@@ -74,13 +74,13 @@ typedef enum
 
 /**
  * GstLibraryError:
- * @GST_LIBRARY_ERROR_FAILED:
- * @GST_LIBRARY_ERROR_TOO_LAZY:
- * @GST_LIBRARY_ERROR_INIT:
- * @GST_LIBRARY_ERROR_SHUTDOWN:
- * @GST_LIBRARY_ERROR_SETTINGS:
+ * @GST_LIBRARY_ERROR_FAILED: GStreamer encountered a general supporting library error.
+ * @GST_LIBRARY_ERROR_TOO_LAZY: GStreamer developers were too lazy to assign an error code to this error.  Please file a bug.
+ * @GST_LIBRARY_ERROR_INIT: Could not initialize supporting library.
+ * @GST_LIBRARY_ERROR_SHUTDOWN: Could not close supporting library.
+ * @GST_LIBRARY_ERROR_SETTINGS: Could not close supporting library.
  * @GST_LIBRARY_ERROR_ENCODE:
- * @GST_LIBRARY_ERROR_NUM_ERRORS:
+ * @GST_LIBRARY_ERROR_NUM_ERRORS: the error count
  *
  * Library errors are for errors from the library being used by elements
  * initializing, closing, ...
@@ -98,20 +98,20 @@ typedef enum
 
 /**
  * GstResourceError:
- * @GST_RESOURCE_ERROR_FAILED:
- * @GST_RESOURCE_ERROR_TOO_LAZY:
- * @GST_RESOURCE_ERROR_NOT_FOUND:
- * @GST_RESOURCE_ERROR_BUSY:
- * @GST_RESOURCE_ERROR_OPEN_READ:
- * @GST_RESOURCE_ERROR_OPEN_WRITE:
- * @GST_RESOURCE_ERROR_OPEN_READ_WRITE:
- * @GST_RESOURCE_ERROR_CLOSE:
- * @GST_RESOURCE_ERROR_READ:
- * @GST_RESOURCE_ERROR_WRITE:
- * @GST_RESOURCE_ERROR_SEEK:
- * @GST_RESOURCE_ERROR_SYNC:
- * @GST_RESOURCE_ERROR_SETTINGS:
- * @GST_RESOURCE_ERROR_NUM_ERRORS:
+ * @GST_RESOURCE_ERROR_FAILED: GStreamer encountered a general resource error
+ * @GST_RESOURCE_ERROR_TOO_LAZY: GStreamer developers were too lazy to assign an error code to this error.  Please file a bug.
+ * @GST_RESOURCE_ERROR_NOT_FOUND: Resource not found
+ * @GST_RESOURCE_ERROR_BUSY: Resource busy or not available
+ * @GST_RESOURCE_ERROR_OPEN_READ: Could not open resource for reading
+ * @GST_RESOURCE_ERROR_OPEN_WRITE: Could not open resource for writing
+ * @GST_RESOURCE_ERROR_OPEN_READ_WRITE: Could not open resource for reading and writing
+ * @GST_RESOURCE_ERROR_CLOSE: Could not close resource
+ * @GST_RESOURCE_ERROR_READ: Could not read from resource
+ * @GST_RESOURCE_ERROR_WRITE: Could not write to resource
+ * @GST_RESOURCE_ERROR_SEEK: Could not perform seek on resource
+ * @GST_RESOURCE_ERROR_SYNC: Could not synchronize on resource
+ * @GST_RESOURCE_ERROR_SETTINGS: Could not get/set settings from/on resource
+ * @GST_RESOURCE_ERROR_NUM_ERRORS: the error count
  *
  * Resource errors are for anything external used by an element:
  * memory, files, network connections, process space, ...
@@ -137,18 +137,18 @@ typedef enum
 
 /**
  * GstStreamError:
- * @GST_STREAM_ERROR_FAILED:
- * @GST_STREAM_ERROR_TOO_LAZY:
- * @GST_STREAM_ERROR_NOT_IMPLEMENTED:
- * @GST_STREAM_ERROR_TYPE_NOT_FOUND:
- * @GST_STREAM_ERROR_WRONG_TYPE:
- * @GST_STREAM_ERROR_CODEC_NOT_FOUND:
- * @GST_STREAM_ERROR_DECODE:
- * @GST_STREAM_ERROR_ENCODE:
- * @GST_STREAM_ERROR_DEMUX:
- * @GST_STREAM_ERROR_MUX:
- * @GST_STREAM_ERROR_FORMAT:
- * @GST_STREAM_ERROR_NUM_ERRORS:
+ * @GST_STREAM_ERROR_FAILED: GStreamer encountered a general stream error
+ * @GST_STREAM_ERROR_TOO_LAZY: GStreamer developers were too lazy to assign an error code to this error.  Please file a bug
+ * @GST_STREAM_ERROR_NOT_IMPLEMENTED: Element doesn't implement handling of this stream. Please file a bug.
+ * @GST_STREAM_ERROR_TYPE_NOT_FOUND: Could not determine type of stream
+ * @GST_STREAM_ERROR_WRONG_TYPE: The stream is of a different type than handled by this element
+ * @GST_STREAM_ERROR_CODEC_NOT_FOUND: There is no codec present that can handle the stream's type
+ * @GST_STREAM_ERROR_DECODE: Could not decode stream
+ * @GST_STREAM_ERROR_ENCODE: Could not encode stream
+ * @GST_STREAM_ERROR_DEMUX: Could not demultiplex stream
+ * @GST_STREAM_ERROR_MUX: Could not multiplex stream
+ * @GST_STREAM_ERROR_FORMAT: Stream is of the wrong format
+ * @GST_STREAM_ERROR_NUM_ERRORS: the error count
  *
  * Stream errors are for anything related to the stream being processed:
  * format errors, media type errors, ...

@@ -1,3 +1,15 @@
+2005-01-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am:
+      added params for deprecation guards
+	* gst/gst.c:
+	* gst/gst.h:
+	* gst/gsterror.c: (_gst_resource_errors_init),
+	(_gst_stream_errors_init):
+	* gst/gsterror.h:
+      documented some more enums
+
 2005-01-19  Jan Schmidt  <thaytan@mad.scientist.com>
 	* gst/autoplug/gstspideridentity.c:
 	Cosmetic fix - spider_find_peek should be static

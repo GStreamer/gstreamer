@@ -110,7 +110,7 @@ _gst_resource_errors_init (void)
   t = g_new0 (gchar *, GST_RESOURCE_ERROR_NUM_ERRORS);
 
   TABLE (t, RESOURCE, FAILED,
-      N_("GStreamer encountered a general supporting library error."));
+      N_("GStreamer encountered a general resource error."));
   TABLE (t, RESOURCE, TOO_LAZY,
       N_("GStreamer developers were too lazy to assign an error code "
           "to this error.  Please file a bug."));
@@ -140,7 +140,7 @@ _gst_stream_errors_init (void)
   t = g_new0 (gchar *, GST_STREAM_ERROR_NUM_ERRORS);
 
   TABLE (t, STREAM, FAILED,
-      N_("GStreamer encountered a general supporting library error."));
+      N_("GStreamer encountered a general stream error."));
   TABLE (t, STREAM, TOO_LAZY,
       N_("GStreamer developers were too lazy to assign an error code "
           "to this error.  Please file a bug."));
