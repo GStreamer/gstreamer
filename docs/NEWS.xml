@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+    "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+  <!ENTITY % ents SYSTEM "gst-python.ent">
+  %ents;
+]>
+
+<article id="gst-python-news">
+
+<!--=====================================================================-->
+
+<articleinfo>
+  <title>Gst-Python &version; News</title>
+  <copyright><year>2003</year><holder>David I. Lehn</holder></copyright>
+  <pubdate>&pubdate;</pubdate>
+  <authorgroup>
+    <author>
+      <firstname>David</firstname>
+      <othername role="mi">I.</othername>
+      <surname>Lehn</surname>
+      <email>dlehn@users.sourceforge.net</email>
+    </author>
+  </authorgroup>
+</articleinfo>
+
+<!--=====================================================================-->
+
+<section id="news">
+<title>News</title>
+
+<section role="notintoc" id="release-0.1.0">
+  <title>2003-07-09 - 0.1.0 - David I. Lehn <email>dlehn@users.sourceforge.net</email></title>
+  <para>
+    <itemizedlist>
+      <listitem><para>First release</para></listitem>
+    </itemizedlist>
+  </para>
+</section>
+
+</section>
+
+<!--=====================================================================-->
+
+</article>

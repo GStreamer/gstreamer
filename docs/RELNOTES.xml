@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+    "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+  <!ENTITY % local.common.attrib "xml:base CDATA #IMPLIED">
+  <!ENTITY % ents SYSTEM "gst-python.ent">
+  %ents;
+]>
+
+<article id="gst-python-release-notes">
+
+<!--=====================================================================-->
+
+<articleinfo>
+  <title>Gst-Python &version; Release Notes</title>
+</articleinfo>
+
+<!--=====================================================================-->
+
+<xi:include href="NEWS.xml#release-&version;" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+<!--=====================================================================-->
+
+<para><ulink url="http://www.gstreamer.net/bindings/python/"/></para>
+
+<!--=====================================================================-->
+
+</article>
