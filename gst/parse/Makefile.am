@@ -4,7 +4,7 @@ libgstparse_la_SOURCES = lex._gst_parse_yy.c grammar.tab.c
 
 BISON = bison -d -v -p_gst_parse__yy
 
-libgstparse_la_CFLAGS = $(LIBGST_CFLAGS)
+libgstparse_la_CFLAGS = $(GST_CFLAGS)
 libgstparse_la_LIBADD = $(LIBGST_LIBS)
 
 noinst_HEADERS = grammar.tab.h
@@ -23,3 +23,9 @@ grammar.tab.c grammar.tab.h: grammar.y ../gstmarshal.h
 
 lex._gst_parse_yy.c: parse.l
 	flex -P_gst_parse_yy $^
+
+dist-hook:
+	rm -f $(BUILT_SOURCES)
+
+clean-local:
+	rm -f $(BUILT_SOURCES)
