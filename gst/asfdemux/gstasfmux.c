@@ -84,7 +84,7 @@ static GstStaticPadTemplate gst_asfmux_videosink_template =
         "format = (fourcc) { YUY2, I420 }, "
         "width = (int) [ 1, MAX], "
         "height = (int) [ 1, MAX]; "
-        "video/x-jpeg, "
+        "image/jpeg, "
         "width = (int) [ 1, MAX], "
         "height = (int) [ 1, MAX]; "
         "video/x-divx, "
@@ -316,7 +316,7 @@ gst_asfmux_vidsink_link (GstPad * pad, const GstCaps * caps)
     /* find format */
     if (!strcmp (mimetype, "video/x-huffyuv")) {
       stream->header.video.format.tag = GST_MAKE_FOURCC ('H', 'F', 'Y', 'U');
-    } else if (!strcmp (mimetype, "video/x-jpeg")) {
+    } else if (!strcmp (mimetype, "image/jpeg")) {
       stream->header.video.format.tag = GST_MAKE_FOURCC ('M', 'J', 'P', 'G');
     } else if (!strcmp (mimetype, "video/x-divx")) {
       gint divxversion;
