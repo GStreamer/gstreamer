@@ -641,11 +641,11 @@ gst_play_seek_to_time (GstPlay * play, gint64 time_nanos)
       GST_IS_ELEMENT (video_sink_element)) {
     gboolean s = FALSE;
    
-    s = gst_element_seek (audio_sink_element, GST_FORMAT_TIME |
+    s = gst_element_seek (video_sink_element, GST_FORMAT_TIME |
                           GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH,
                           time_nanos);
     if (!s) {
-      s = gst_element_seek (video_sink_element, GST_FORMAT_TIME |
+      s = gst_element_seek (audio_sink_element, GST_FORMAT_TIME |
                             GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH,
                             time_nanos);
     }
