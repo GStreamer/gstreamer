@@ -60,40 +60,40 @@ typedef struct
   GstElement    *bin;
   GstElement    *pipeline;
   GstIndex      *index;
-} dyn_connect;
+} dyn_link;
 
 static void
-dynamic_connect (GstPadTemplate *templ, GstPad *newpad, gpointer data)
+dynamic_link (GstPadTemplate *templ, GstPad *newpad, gpointer data)
 {
-  dyn_connect *connect = (dyn_connect *) data;
+  dyn_link *link = (dyn_link *) data;
 
-  if (!strcmp (gst_pad_get_name (newpad), connect->padname)) {
-    gst_element_set_state (connect->pipeline, GST_STATE_PAUSED);
-    gst_bin_add (GST_BIN (connect->pipeline), connect->bin);
-    gst_pad_connect (newpad, connect->target);
-    gst_element_set_index (connect->bin, connect->index);
-    gst_element_set_state (connect->pipeline, GST_STATE_PLAYING);
+  if (!strcmp (gst_pad_get_name (newpad), link->padname)) {
+    gst_element_set_state (link->pipeline, GST_STATE_PAUSED);
+    gst_bin_add (GST_BIN (link->pipeline), link->bin);
+    gst_pad_link (newpad, link->target);
+    gst_element_set_index (link->bin, link->index);
+    gst_element_set_state (link->pipeline, GST_STATE_PLAYING);
   }
 }
 
 static void
-setup_dynamic_connection (GstElement *pipeline, 
+setup_dynamic_linking (GstElement *pipeline, 
 		          GstElement *element, 
 			  const gchar *padname, 
 			  GstPad *target, 
 			  GstElement *bin,
 			  GstIndex *index)
 {
-  dyn_connect *connect;
+  dyn_link *link;
 
-  connect = g_new0 (dyn_connect, 1);
-  connect->padname      = g_strdup (padname);
-  connect->target       = target;
-  connect->bin          = bin;
-  connect->pipeline     = pipeline;
-  connect->index     	= index;
+  link = g_new0 (dyn_link, 1);
+  link->padname      = g_strdup (padname);
+  link->target       = target;
+  link->bin          = bin;
+  link->pipeline     = pipeline;
+  link->index        = index;
 
-  g_signal_connect (G_OBJECT (element), "new_pad", G_CALLBACK (dynamic_connect), connect);
+  g_signal_connect (G_OBJECT (element), "new_pad", G_CALLBACK (dynamic_link), link);
 }
 
 static GstElement*
@@ -116,7 +116,7 @@ make_mpeg_systems_pipeline (const gchar *path, GstIndex *index)
     gst_element_set_index (pipeline, index);
   }
 
-  gst_element_connect_pads (src, "src", demux, "sink");
+  gst_element_link_pads (src, "src", demux, "sink");
   
   return pipeline;
 }
@@ -139,16 +139,16 @@ make_mpeg_decoder_pipeline (const gchar *path, GstIndex *index)
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), demux);
 
-  gst_element_connect_pads (src, "src", demux, "sink");
+  gst_element_link_pads (src, "src", demux, "sink");
 
   video_bin = gst_bin_new ("video_bin");
   video_decoder = gst_element_factory_make ("mpeg2dec", "video_decoder");
 
   gst_bin_add (GST_BIN (video_bin), video_decoder);
   
-  setup_dynamic_connection (pipeline, demux, "video_00", 
-		            gst_element_get_pad (video_decoder, "sink"),
-			    video_bin, index);
+  setup_dynamic_linking (pipeline, demux, "video_00", 
+		         gst_element_get_pad (video_decoder, "sink"),
+			 video_bin, index);
 
   audio_bin = gst_bin_new ("audio_bin");
   audio_decoder = gst_element_factory_make ("mad", "audio_decoder");
@@ -222,8 +222,12 @@ main (gint argc, gchar *argv[])
 
   /* create index that elements can fill */
   index = gst_index_factory_make ("memindex");
-  if (verbose && index)
-    g_signal_connect (G_OBJECT (index), "entry_added", G_CALLBACK (entry_added), NULL);
+  if (index) {
+    if (verbose) 
+      g_signal_connect (G_OBJECT (index), "entry_added", G_CALLBACK (entry_added), NULL);
+
+    g_object_set (G_OBJECT (index), "resolver", 1, NULL);
+  }
 
   /* construct pipeline */
   switch (atoi (argv[1])) {
@@ -269,9 +273,26 @@ main (gint argc, gchar *argv[])
     GST_FLAG_UNSET (index, GST_INDEX_WRITABLE);
 
   src = gst_bin_get_by_name (GST_BIN (pipeline), "video_decoder");
+
+  {
+    gint id;
+    GstIndexEntry *entry;
+    gint64 result;
+    gint total_tm;
+
+    gst_index_get_writer_id (index, GST_OBJECT (src), &id);
+    
+    entry = gst_index_get_assoc_entry (index, id, GST_INDEX_LOOKUP_BEFORE, 0,
+ 				       GST_FORMAT_TIME, G_MAXINT64);
+    g_assert (entry);
+    gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &result);
+    total_tm = result * 60 / GST_SECOND;
+    g_print ("total time = %.2fs\n", total_tm / 60.0);
+  }
+  
   pad = gst_element_get_pad (src, "src");
   sink = gst_element_factory_make ("fakesink", "sink");
-  gst_element_connect_pads (src, "src", sink, "sink");
+  gst_element_link_pads (src, "src", sink, "sink");
   gst_bin_add (GST_BIN (pipeline), sink);
 
   g_print ("seeking %s...\n", argv [2]);
