@@ -188,6 +188,8 @@ gst_mpeg2enc_dispose (GObject * object)
     enc->encoder = NULL;
   }
   delete enc->options;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void

@@ -1,3 +1,8 @@
+2004-05-04  Wim Taymans  <wim@fluendo.com>
+
+	* ext/mpeg2enc/gstmpeg2enc.cc: (gst_mpeg2enc_dispose): call the
+	parent dispose function to avoid segfault on destroy.
+
 2004-05-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_sink_link),
