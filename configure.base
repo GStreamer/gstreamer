@@ -1200,6 +1200,7 @@ plugins/avi/Makefile
 plugins/avi/wincodec/Makefile
 plugins/avi/winaudio/Makefile
 plugins/flx/Makefile
+plugins/festival/Makefile
 plugins/jpeg/Makefile
 plugins/mp3decode/Makefile
 plugins/mp3decode/types/Makefile
@@ -1253,6 +1254,7 @@ plugins/icecast/icecastsend/Makefile
 plugins/effects/Makefile
 plugins/effects/stereo/Makefile
 plugins/effects/volume/Makefile
+plugins/udp/Makefile
 plugins/visualization/Makefile
 plugins/visualization/spectrum/Makefile
 plugins/visualization/vumeter/Makefile
