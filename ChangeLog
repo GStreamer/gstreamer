@@ -1,3 +1,22 @@
+2005-01-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mad/gstid3tag.c: (mad_id3_parse_latin1_string),
+	(mad_id3_parse_comment_frame), (gst_mad_id3_to_tag_list):
+	  Check environment variables GST_ID3V2_TAG_ENCODING,
+	  GST_ID3_TAG_ENCODING and GST_TAG_ENCODING for a colon-separated
+	  list of character encodings to force interpretation of non-unicode
+	  strings stored in an ID3v2 tag to a particular encoding. If none
+	  is specified, try to use current locale's encoding, then fall back
+	  to ISO-8859-1 (which will always succeed). (Resolves #149274)
+	* gst/tags/gstid3tag.c: (gst_tag_from_id3_tag),
+	(gst_tag_extract_id3v1_string), (gst_tag_list_new_from_id3v1):
+	  Check environment variables GST_ID3V1_TAG_ENCODING,
+	  GST_ID3_TAG_ENCODING and GST_TAG_ENCODING for a colon-separated
+	  list of character encodings to use in case a string encountered
+	  in an ID3v1 tag is not valid UTF-8 already. If no encoding is
+	  specified, try to use the current locale's encoding, then fall
+	  back to ISO-8859-1 (which will always succeed).
+
 2005-01-25  Benjamin Otte  <otte@gnome.org>
 
 	* ext/mad/gstmad.c: (gst_mad_check_caps_reset), (gst_mad_chain):
