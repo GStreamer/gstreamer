@@ -1,5 +1,9 @@
 2002-01-15  Bastien Nocera  <hadess@hadess.net>
 
+	* tests/Makefile.am: add all the dirs to the DIST_SUBDIRS
+
+2002-01-15  Bastien Nocera  <hadess@hadess.net>
+
 	* tests/Makefile.am: dodge compiling memchunk and bufspeed
 	if NASM is not present
 
