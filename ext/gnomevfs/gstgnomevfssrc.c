@@ -448,7 +448,7 @@ unicodify (const char *str, int len, ...)
 {
 	char *ret = NULL, *cset;
 	va_list args;
-	int bytes_read, bytes_written;
+	gsize bytes_read, bytes_written;
 
 	if (g_utf8_validate (str, len, NULL))
 		return g_strndup (str, len >= 0 ? len : strlen (str));
