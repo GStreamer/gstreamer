@@ -27,7 +27,7 @@ int main(int argc,char *argv[]) {
   fprintf(stderr,"RUNNING pipeline\n");
   gst_element_set_state(pipeline,GST_STATE_PLAYING);
 
-  while (1) {        
+  while (1)
     gst_bin_iterate (GST_BIN (pipeline));
 
   return 0;
