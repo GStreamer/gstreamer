@@ -447,6 +447,7 @@ gst_basesink_event (GstPad * pad, GstEvent * event)
         //gint64 value = GST_EVENT_DISCONT_OFFSET (event, 0).value;
       }
       GST_STREAM_UNLOCK (pad);
+      break;
     case GST_EVENT_FLUSH:
       /* make sure we are not blocked on the clock also clear any pending
        * eos state. */

@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2004 Wim Taymans <wim@fluendo.com>
+ *                    2004,2005 Wim Taymans <wim@fluendo.com>
  *
  * gstpipeline.c: Overall pipeline management element
  *
@@ -31,7 +31,7 @@ static GstElementDetails gst_pipeline_details =
 GST_ELEMENT_DETAILS ("Pipeline object",
     "Generic/Bin",
     "Complete pipeline object",
-    "Erik Walthinsen <omega@cse.ogi.edu>" "Wim Taymans <wim@fluendo.com>");
+    "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>");
 
 /* Pipeline signals and args */
 enum
@@ -180,21 +180,19 @@ gst_pipeline_set_property (GObject * object, guint prop_id,
 {
   GstPipeline *pipeline = GST_PIPELINE (object);
 
+  GST_LOCK (pipeline);
   switch (prop_id) {
     case ARG_DELAY:
-      GST_LOCK (pipeline);
       pipeline->delay = g_value_get_uint64 (value);
-      GST_UNLOCK (pipeline);
       break;
     case ARG_PLAY_TIMEOUT:
-      GST_LOCK (pipeline);
       pipeline->play_timeout = g_value_get_uint64 (value);
-      GST_UNLOCK (pipeline);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_UNLOCK (pipeline);
 }
 
 static void
@@ -203,21 +201,19 @@ gst_pipeline_get_property (GObject * object, guint prop_id,
 {
   GstPipeline *pipeline = GST_PIPELINE (object);
 
+  GST_LOCK (pipeline);
   switch (prop_id) {
     case ARG_DELAY:
-      GST_LOCK (pipeline);
       g_value_set_uint64 (value, pipeline->delay);
-      GST_UNLOCK (pipeline);
       break;
     case ARG_PLAY_TIMEOUT:
-      GST_LOCK (pipeline);
       g_value_set_uint64 (value, pipeline->play_timeout);
-      GST_UNLOCK (pipeline);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_UNLOCK (pipeline);
 }
 
 static gboolean

@@ -22,6 +22,7 @@ TESTS = $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@ \
 	gst/gstbus      \
 	gst/gstcaps     \
 	gst/gstdata	\
+	gst/gstiterator \
 	gst/gstobject	\
 	gst/gstpad	\
 	gst-libs/gdp	\

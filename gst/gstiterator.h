@@ -48,6 +48,8 @@ typedef GstIteratorItem	  (*GstIteratorItemFunction)	(GstIterator *it, gpointer 
 typedef void		  (*GstIteratorResyncFunction)	(GstIterator *it);
 typedef void		  (*GstIteratorFreeFunction)	(GstIterator *it);
 
+typedef void		  (*GstIteratorFoldFunction)    (gpointer item, GValue *ret, gpointer user_data);
+
 #define GST_ITERATOR(it)  		((GstIterator*)(it))
 #define GST_ITERATOR_LOCK(it)  		(GST_ITERATOR(it)->lock)
 #define GST_ITERATOR_COOKIE(it) 	(GST_ITERATOR(it)->cookie)
@@ -90,13 +92,16 @@ void			gst_iterator_free		(GstIterator *it);
 
 void			gst_iterator_push		(GstIterator *it, GstIterator *other);
 
-/* special functions that operate on iterators */
-void 			gst_iterator_foreach 		(GstIterator *it, GFunc function, 
-							 gpointer user_data);
-gpointer 		gst_iterator_find_custom 	(GstIterator *it, gpointer user_data,
-							 GCompareFunc func);
-GstIterator*		gst_iterator_filter		(GstIterator *it, gpointer user_data,
-							 GCompareFunc func);
+/* higher-order functions that operate on iterators */
+GstIterator*		gst_iterator_filter		(GstIterator *it, GCompareFunc func,
+                                                         gpointer user_data);
+GstIteratorResult	gst_iterator_fold		(GstIterator *iter,
+                                                         GstIteratorFoldFunction func,
+                                                         GValue *ret, gpointer user_data);
+GstIteratorResult	gst_iterator_foreach		(GstIterator *iter,
+                                                         GFunc func, gpointer user_data);
+gpointer 		gst_iterator_find_custom 	(GstIterator *it, GCompareFunc func,
+                                                         gpointer user_data);
 
 G_END_DECLS
 

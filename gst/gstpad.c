@@ -275,6 +275,7 @@ gst_real_pad_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case REAL_ARG_ACTIVE:
+      g_warning ("FIXME: not useful any more!!!");
       gst_pad_set_active (GST_PAD (object), g_value_get_boolean (value));
       break;
     default:
@@ -465,6 +466,24 @@ gst_pad_set_active (GstPad * pad, GstActivateMode mode)
     GST_PAD_BLOCK_SIGNAL (realpad);
   }
 
+  if (active) {
+    if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
+      if (mode == GST_ACTIVATE_PULL) {
+        if (!realpad->getrangefunc)
+          goto wrong_mode;
+      } else {
+        /* we can push if driven by a chain or loop on the sink pad */
+      }
+    } else {                    /* sink pads */
+      if (mode == GST_ACTIVATE_PULL) {
+        /* the src can drive us with getrange */
+      } else {
+        if (!realpad->chainfunc)
+          goto wrong_mode;
+      }
+    }
+  }
+
   activatefunc = realpad->activatefunc;
   if (activatefunc) {
     gboolean result;
@@ -497,6 +516,14 @@ exit:
   /* errors */
 lost_ghostpad:
   {
+    return FALSE;
+  }
+wrong_mode:
+  {
+    GST_CAT_DEBUG (GST_CAT_PADS,
+        "pad %s:%s lacks functions to be active in mode %d",
+        GST_DEBUG_PAD_NAME (realpad), mode);
+    GST_UNLOCK (realpad);
     return FALSE;
   }
 activate_error:
@@ -3438,7 +3465,20 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
 
-  return gst_pad_event_default_dispatch (pad, event);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+    {
+      GstRealPad *rpad = GST_PAD_REALIZE (pad);
+
+      if (GST_RPAD_TASK (rpad)) {
+        GST_DEBUG_OBJECT (rpad, "pausing task because of eos");
+        gst_task_pause (GST_RPAD_TASK (rpad));
+      }
+    }
+      return gst_pad_event_default_dispatch (pad, event);
+    default:
+      return gst_pad_event_default_dispatch (pad, event);
+  }
 }
 
 /**

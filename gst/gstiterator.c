@@ -305,16 +305,8 @@ typedef struct _GstIteratorFilter
 
   GCompareFunc func;
   gpointer user_data;
-
-  gboolean compare;
-  gboolean first;
-  gboolean found;
-
 } GstIteratorFilter;
 
-/* this function can iterate in 3 modes:
- * filter, foreach and find_custom.
- */
 static GstIteratorResult
 filter_next (GstIteratorFilter * it, gpointer * elem)
 {
@@ -322,9 +314,6 @@ filter_next (GstIteratorFilter * it, gpointer * elem)
   gboolean done = FALSE;
 
   *elem = NULL;
-
-  if (G_UNLIKELY (it->found))
-    return GST_ITERATOR_DONE;
 
   while (G_LIKELY (!done)) {
     gpointer item;
@@ -334,15 +323,9 @@ filter_next (GstIteratorFilter * it, gpointer * elem)
       case GST_ITERATOR_OK:
         if (G_LIKELY (GST_ITERATOR (it)->lock))
           g_mutex_unlock (GST_ITERATOR (it)->lock);
-        if (it->compare) {
-          if (it->func (item, it->user_data) == 0) {
-            *elem = item;
-            done = TRUE;
-            if (it->first)
-              it->found = TRUE;
-          }
-        } else {
-          it->func (item, it->user_data);
+        if (it->func (item, it->user_data) == 0) {
+          *elem = item;
+          done = TRUE;
         }
         if (G_LIKELY (GST_ITERATOR (it)->lock))
           g_mutex_lock (GST_ITERATOR (it)->lock);
@@ -363,7 +346,6 @@ static void
 filter_resync (GstIteratorFilter * it)
 {
   gst_iterator_resync (it->slave);
-  it->found = FALSE;
 }
 
 static void
@@ -398,7 +380,7 @@ filter_free (GstIteratorFilter * it)
  * MT safe.
  */
 GstIterator *
-gst_iterator_filter (GstIterator * it, gpointer user_data, GCompareFunc func)
+gst_iterator_filter (GstIterator * it, GCompareFunc func, gpointer user_data)
 {
   GstIteratorFilter *result;
 
@@ -415,11 +397,70 @@ gst_iterator_filter (GstIterator * it, gpointer user_data, GCompareFunc func)
   result->func = func;
   result->user_data = user_data;
   result->slave = it;
-  result->compare = TRUE;
-  result->first = FALSE;
-  result->found = FALSE;
 
   return GST_ITERATOR (result);
+}
+
+/**
+ * gst_iterator_fold:
+ * @iter: The #GstIterator to fold over
+ * @func: the fold function
+ * @ret: the seed value passed to the fold function
+ * @user_data: user data passed to the fold function
+ *
+ * Folds @func over the elements of @iter. That is to say, @proc will be called
+ * as @proc (object, @ret, @user_data) for each object in @iter. The normal use
+ * of this procedure is to accumulate the results of operating on the objects in
+ * @ret.
+ *
+ * This procedure can be used (and is used internally) to implement the foreach
+ * and find_custom operations.
+ *
+ * Returns: the result of the last call to gst_iterator_next(). This function
+ * stops on a resync.
+ * 
+ * MT safe.
+ */
+GstIteratorResult
+gst_iterator_fold (GstIterator * iter, GstIteratorFoldFunction func,
+    GValue * ret, gpointer user_data)
+{
+  gpointer item;
+  GstIteratorResult result;
+
+  while (1) {
+    result = gst_iterator_next (iter, &item);
+    switch (result) {
+      case GST_ITERATOR_OK:
+        func (item, ret, user_data);
+        /* fixme: is there a way to ref/unref items? */
+        break;
+      case GST_ITERATOR_RESYNC:
+      case GST_ITERATOR_ERROR:
+        goto fold_interrupted;
+      case GST_ITERATOR_DONE:
+        goto fold_done;
+    }
+  }
+
+fold_interrupted:
+  return result;
+
+fold_done:
+  gst_iterator_free (iter);
+  return result;
+}
+
+typedef struct
+{
+  GFunc func;
+  gpointer user_data;
+} ForeachFoldData;
+
+static void
+foreach_fold_func (gpointer item, GValue * unused, ForeachFoldData * data)
+{
+  data->func (item, data->user_data);
 }
 
 /**
@@ -431,32 +472,35 @@ gst_iterator_filter (GstIterator * it, gpointer user_data, GCompareFunc func)
  * Iterate over all element of @it and call the given function for
  * each element.
  *
+ * Returns: the result of the last call to gst_iterator_next(). This function
+ * stops on a resync.
+ *
  * MT safe.
  */
-void
-gst_iterator_foreach (GstIterator * it, GFunc function, gpointer user_data)
+GstIteratorResult
+gst_iterator_foreach (GstIterator * iter, GFunc func, gpointer user_data)
 {
-  GstIteratorFilter filter;
-  gpointer dummy;
+  ForeachFoldData data;
 
-  g_return_if_fail (it != NULL);
-  g_return_if_fail (function != NULL);
+  data.func = func;
+  data.user_data = user_data;
 
-  gst_iterator_init (GST_ITERATOR (&filter),
-      it->lock, it->master_cookie,
-      (GstIteratorNextFunction) filter_next,
-      (GstIteratorItemFunction) NULL,
-      (GstIteratorResyncFunction) filter_resync,
-      (GstIteratorFreeFunction) filter_uninit);
-  it->lock = NULL;
-  filter.func = (GCompareFunc) function;
-  filter.user_data = user_data;
-  filter.slave = it;
-  filter.compare = FALSE;
-  filter.first = FALSE;
-  filter.found = FALSE;
-  gst_iterator_next (GST_ITERATOR (&filter), &dummy);
-  gst_iterator_free (GST_ITERATOR (&filter));
+  return gst_iterator_fold (iter, (GstIteratorFoldFunction) foreach_fold_func,
+      NULL, &data);
+}
+
+typedef struct
+{
+  GCompareFunc func;
+  gpointer user_data;
+} FindCustomFoldData;
+
+static void
+find_custom_fold_func (gpointer item, GValue * ret, FindCustomFoldData * data)
+{
+  if (!g_value_get_pointer (ret))
+    if (data->func (item, data->user_data))
+      g_value_set_pointer (ret, item);
 }
 
 /**
@@ -474,31 +518,19 @@ gst_iterator_foreach (GstIterator * it, GFunc function, gpointer user_data)
  * MT safe.
  */
 gpointer
-gst_iterator_find_custom (GstIterator * it, gpointer user_data,
-    GCompareFunc func)
+gst_iterator_find_custom (GstIterator * iter, GCompareFunc func,
+    gpointer user_data)
 {
-  GstIteratorFilter filter;
-  gpointer result = NULL;
+  GValue ret = { 0, };
+  FindCustomFoldData data;
 
-  g_return_val_if_fail (it != NULL, NULL);
-  g_return_val_if_fail (func != NULL, NULL);
+  g_value_init (&ret, G_TYPE_POINTER);
+  data.func = func;
+  data.user_data = user_data;
 
-  gst_iterator_init (GST_ITERATOR (&filter),
-      it->lock, it->master_cookie,
-      (GstIteratorNextFunction) filter_next,
-      (GstIteratorItemFunction) NULL,
-      (GstIteratorResyncFunction) filter_resync,
-      (GstIteratorFreeFunction) filter_uninit);
-  it->lock = NULL;
-  filter.func = func;
-  filter.user_data = user_data;
-  filter.slave = it;
-  filter.compare = TRUE;
-  filter.first = TRUE;
-  filter.found = FALSE;
+  gst_iterator_fold (iter, (GstIteratorFoldFunction) find_custom_fold_func,
+      &ret, &data);
 
-  gst_iterator_next (GST_ITERATOR (&filter), &result);
-  gst_iterator_free (GST_ITERATOR (&filter));
-
-  return result;
+  /* no need to unset, it's just a pointer */
+  return g_value_get_pointer (&ret);
 }
