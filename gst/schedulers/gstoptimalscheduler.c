@@ -951,8 +951,9 @@ gst_opt_scheduler_event_wrapper (GstPad *srcpad, GstEvent *event)
   }
 
   if (flush) {
-    GST_INFO (GST_CAT_SCHEDULING, "event is flush");
     GList *buflist = GST_PAD_BUFLIST (srcpad);
+
+    GST_INFO (GST_CAT_SCHEDULING, "event is flush");
 
     if (buflist) {
       GST_INFO (GST_CAT_SCHEDULING, "need to clear some buffers");

@@ -546,8 +546,9 @@ gst_basic_scheduler_eventhandler_proxy (GstPad *srcpad, GstEvent *event)
   }
 
   if (flush) {
-    GST_INFO (GST_CAT_SCHEDULING, "event is flush");
     GstData *data = GST_DATA (GST_RPAD_BUFPEN (srcpad));
+
+    GST_INFO (GST_CAT_SCHEDULING, "event is flush");
 
     if (data) {
       GST_INFO (GST_CAT_SCHEDULING, "need to clear some buffers");
