@@ -57,7 +57,7 @@ void
 gst_init (int *argc, char **argv[]) 
 {
   GstTrace *gst_trace;
-  gchar *display;
+//  gchar *display;
 
   GST_INFO (GST_CAT_GST_INIT, "Initializing GStreamer Core Library");
 
@@ -222,7 +222,7 @@ gst_init_check (int     *argc,
 
   /* check for ENV variables */
   {
-    gchar *plugin_path = g_getenv("GST_PLUGIN_PATH");
+    const gchar *plugin_path = g_getenv("GST_PLUGIN_PATH");
     gst_add_paths_func (plugin_path);
   }
 
