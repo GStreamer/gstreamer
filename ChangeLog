@@ -1,3 +1,24 @@
+2004-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/tcp/Makefile.am:
+	* gst/tcp/gsttcpclientsink.c: (gst_tcpclientsink_get_type),
+	(gst_tcpclientsink_class_init), (gst_tcpclientsink_init),
+	(gst_tcpclientsink_set_property), (gst_tcpclientsink_get_property):
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_class_init),
+	(gst_tcpclientsrc_init), (gst_tcpclientsrc_set_property),
+	(gst_tcpclientsrc_get_property):
+	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_class_init),
+	(gst_tcpserversink_init), (gst_tcpserversink_handle_server_read),
+	(gst_tcpserversink_handle_client_read),
+	(gst_tcpserversink_handle_client_write),
+	(gst_tcpserversink_set_property), (gst_tcpserversink_get_property):
+	* gst/tcp/gsttcpserversink.h:
+	  add signals client-added and client-removed
+	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_class_init),
+	(gst_tcpserversrc_init), (gst_tcpserversrc_set_property),
+	(gst_tcpserversrc_get_property):
+	uniformized, change default protocol to NONE
+	* gst/tcp/gsttcp-marshal.list: added
 2004-06-07  Benjamin Otte  <otte@gnome.org>
 
 	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event):
