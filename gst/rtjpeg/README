@@ -1,0 +1,12 @@
+This plugin contains elements necessary for doing RTjpeg compression and
+decompression, as well as conversion from RGB to YUV and back, based
+entirely on functions supplied by RTjpeg.c.
+
+You can find RTjpeg at Justin Schoeman's site:
+http://www.ee.up.ac.za/~justin/bttv/
+
+The idea is to start out with the code elements reading and writing YUV420
+images, with external elements to do the conversion.  Eventually (when
+typing is a bit more sane/globally used) the codec elements will
+automatically convert images to/from the proper format based on what their
+peer wants to be dealing with.

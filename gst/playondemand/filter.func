@@ -1,0 +1,120 @@
+/* -*- C -*- */
+
+_TYPE_ *data_in, *data_out, *filter_data;
+
+filter_data = (_TYPE_ *) filter->buffer;
+num_filter = filter->buffer_size / sizeof(_TYPE_);
+
+/******************************************************************************/
+/* see if we've got any events coming through ... */
+
+do {
+  GST_DEBUG(0, "--- going to events\n");
+
+  while (! filter->eos && GST_IS_EVENT(in)) {
+    if (GST_EVENT_TYPE(in) == GST_EVENT_EOS) {
+      filter->eos = TRUE;
+    } else {
+      gst_pad_push(filter->srcpad, in);
+    }
+
+    in = gst_pad_pull(filter->sinkpad);
+  }
+
+  /******************************************************************************/
+  /* first handle data from the input buffer. */
+
+  GST_DEBUG(0, "--- done with events, going to input\n");
+
+  /* only update the input if there hasn't been an eos yet. */
+  if (! filter->eos) {
+    data_in = (_TYPE_ *) GST_BUFFER_DATA(in);
+    num_in = GST_BUFFER_SIZE(in) / sizeof(_TYPE_);
+
+    w = filter->write;
+
+    /* copy the input data to the filter's internal buffer. */
+    if (filter->follow_stream_tail) {
+      for (j = 0; j < num_in; j++) {
+        filter_data[(w + j) % num_filter] = data_in[j];
+      }
+
+      filter->write = (w + j) % num_filter;
+      
+      /* update the start pointer */
+      if ((filter->start != 0) || ((w + j) >= num_filter)) {
+        filter->start = (filter->write + 1) % num_filter;
+      }
+    } else {
+      for (j = 0; (j < num_in) && ((w + j) < num_filter); j++) {
+        filter_data[w + j] = data_in[j];
+      }
+
+      filter->write += j;
+
+      /* if we're not following the stream tail, the buffer is just a straight
+         buffer. so we need to set eos if we've passed the limit of the internal
+         buffer size. */
+      if ((w + j) >= num_filter) {
+        filter->eos = TRUE;
+      }
+    }
+
+    out = in;
+  } else {
+    j = 0;
+
+    if (filter->srcpool) {
+      out = gst_buffer_new_from_pool(filter->srcpool, 0, 0);
+    } else {
+      out = gst_buffer_new();
+  
+      GST_BUFFER_DATA(out) = (gchar *) g_new(_TYPE_, POD_GSTBUFSIZE / sizeof(_TYPE_));
+      GST_BUFFER_SIZE(out) = POD_GSTBUFSIZE;
+    }
+  }
+
+  /******************************************************************************/
+  /* now handle output data. */
+
+  GST_DEBUG(0, "--- done with input, going to output\n");
+
+  data_out = (_TYPE_ *) GST_BUFFER_DATA(out);
+  num_out = GST_BUFFER_SIZE(out) / sizeof(_TYPE_);
+
+  for (k = 0; k < num_out; k++) {
+    data_out[k] = zero;
+  }
+  
+  /* output play pointer data. */
+  for (t = 0; t < POD_MAX_PLAYS; t++) {
+    offset = filter->plays[t];
+
+    if (offset != G_MAXUINT) {
+      if (filter->follow_stream_tail) {
+        for (k = 0; k < num_out; k++) {
+          data_out[k] = CLAMP(data_out[k] + filter_data[(offset + k) % num_filter], min, max);
+        }
+      } else {
+        for (k = 0; (k < num_out) && ((offset + k) < (w + j)); k++) {
+          data_out[k] = CLAMP(data_out[k] + filter_data[offset + k], min, max);
+        }
+      }
+
+      if ((offset < w) && ((offset + k) >= (w + j))) {
+        filter->plays[t] = G_MAXUINT;
+      } else {
+        filter->plays[t] = (filter->plays[t] + k) % num_filter;
+      }
+    }
+  }
+
+  GST_DEBUG(0, "--- done with output, pushing buffer %p\n", out);
+
+  gst_pad_push(filter->srcpad, out);
+
+  if (! filter->eos) {
+    in = gst_pad_pull(filter->sinkpad);
+  }
+
+} while (! GST_ELEMENT_IS_COTHREAD_STOPPING(elem));

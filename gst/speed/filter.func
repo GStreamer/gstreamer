@@ -1,0 +1,66 @@
+/* -*- Mode: c; c-basic-offset: 2 -*- */ 
+    _FORMAT *in_data, *out_data;
+
+    /* get a buffer here so that we can have something to interpolate
+     * against for the first few samples if speed < 0.5 */
+    in_data = (_FORMAT*) GST_BUFFER_DATA(in);
+    nin = GST_BUFFER_SIZE(in)/sizeof(_FORMAT);
+    lower = in_data[0];
+    i_float = 0.5 * (speed - 1.0);
+    i = i_float + 1.0; /* ciel(i_float) for ints */
+    
+    do {
+      speed = filter->speed; /* update this, it might have changed */
+      
+      if (filter->srcpool) {
+        out = gst_buffer_new_from_pool(filter->srcpool, 0, 0);
+        out_data = (_FORMAT*) GST_BUFFER_DATA(out);
+      } else {
+        out = gst_buffer_new();
+        GST_BUFFER_DATA(out) = (gchar*) g_new(_FORMAT,SPEED_BUFSIZE/sizeof(_FORMAT));
+        GST_BUFFER_SIZE(out) = SPEED_BUFSIZE;
+        out_data = (_FORMAT*) GST_BUFFER_DATA(out);
+      }
+      nout = GST_BUFFER_SIZE(out) / sizeof(_FORMAT);
+      
+      for (j=0; j<nout; j++) {
+        /* index of upper bounds of interpolation for
+         * new sample, got it by trial&error on the chalkboard */
+        i_float += speed;
+        i = i_float + 1.0; /* ciel(i_float) for ints */
+        
+        while (i >= nin) {
+          i = i % nin;
+          i_float = i_float - nin;
+          lower = in_data[nin-1];
+          gst_buffer_unref(in);
+          in = gst_pad_pull (filter->sinkpad);
+          
+          while (GST_IS_EVENT(in)) {
+            switch (GST_EVENT_TYPE(in)) {
+            case GST_EVENT_EOS:
+              gst_element_set_state((GstElement*)filter, GST_STATE_PAUSED);
+              gst_pad_push(filter->srcpad, in);
+              return;
+            default:
+              gst_pad_push(filter->srcpad, in);
+              in = gst_pad_pull (filter->sinkpad);
+            }
+          }
+          
+          in_data = (_FORMAT*) GST_BUFFER_DATA(in);
+          nin = GST_BUFFER_SIZE(in) / sizeof(_FORMAT);
+        } 
+        
+        if (i>0)
+          lower = in_data[i-1];
+        
+        interp = i_float - floor(i_float);
+        
+        out_data[j] = lower*(1-interp) + in_data[i]*interp;
+        
+        lower = in_data[i];
+      }
+      
+      gst_pad_push(filter->srcpad, out);
+    } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));

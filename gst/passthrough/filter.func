@@ -1,0 +1,18 @@
+{
+  guint j;
+  static long int sample = 0;	/* you can use this to count samples */
+
+  /*
+   * process data here  
+   * *data contains the original 8 or 16 bit samples and is modified in place
+   * channels are interleaved in input data
+   */
+  
+  /* do nothing */
+  
+  for (j = 0; j < num_samples; j++) 
+  {
+     data[j] = data[j];
+  }
+  sample += num_samples;
+}
