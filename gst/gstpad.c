@@ -1438,9 +1438,9 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
 {
   GstRealPad *peer = GST_RPAD_PEER (pad);
 
-  g_return_if_fail (peer != NULL);
-  
   GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
+
+  g_return_if_fail (peer != NULL);  
   
   if (peer->pushfunc) {
     GST_DEBUG (GST_CAT_DATAFLOW, "calling pushfunc &%s of peer pad %s:%s\n",
@@ -1465,9 +1465,9 @@ gst_pad_pull (GstPad *pad)
 {
   GstRealPad *peer = GST_RPAD_PEER(pad);
   
-  g_return_val_if_fail (peer != NULL, NULL);
-
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
+
+  g_return_val_if_fail (peer != NULL, NULL);
 
   if (peer->pullfunc) {
     GST_DEBUG (GST_CAT_DATAFLOW,"calling pullfunc %s of peer pad %s:%s\n",

@@ -323,8 +323,15 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
       // if there's a pending state change for this queue or its manager, switch
       // back to iterator so bottom half of state change executes
       if (GST_STATE_PENDING(queue) != GST_STATE_NONE_PENDING ||
-          GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_NONE_PENDING)
+//          GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_NONE_PENDING)
+GST_STATE_PENDING(GST_SCHED_PARENT(GST_ELEMENT_SCHED(GST_PAD_PARENT(GST_PAD_PEER(queue->sinkpad))))) != 
+GST_STATE_NONE_PENDING)
       {
+        GST_DEBUG(GST_CAT_DATAFLOW,"interrupted!!\n");
+        if (GST_STATE_PENDING(queue) != GST_STATE_NONE_PENDING)
+          GST_DEBUG(GST_CAT_DATAFLOW,"GST_STATE_PENDING(queue) != GST_STATE_NONE_PENDING)\n");
+        if (GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_NONE_PENDING)
+          GST_DEBUG(GST_CAT_DATAFLOW,"GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_NONE_PENDING\n");
         GST_UNLOCK(queue);
         cothread_switch(cothread_current_main());
       }
@@ -386,8 +393,15 @@ gst_queue_get (GstPad *pad)
     // if there's a pending state change for this queue or its manager, switch
     // back to iterator so bottom half of state change executes
     if (GST_STATE_PENDING(queue) != GST_STATE_NONE_PENDING ||
-        GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_NONE_PENDING)
+//        GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_NONE_PENDING)
+GST_STATE_PENDING(GST_SCHED_PARENT(GST_ELEMENT_SCHED(GST_PAD_PARENT(GST_PAD_PEER(queue->srcpad))))) != 
+GST_STATE_NONE_PENDING)
     {
+      GST_DEBUG(GST_CAT_DATAFLOW,"interrupted!!\n");
+      if (GST_STATE_PENDING(queue) != GST_STATE_NONE_PENDING)
+        GST_DEBUG(GST_CAT_DATAFLOW,"GST_STATE_PENDING(queue) != GST_STATE_NONE_PENDING)\n");
+      if (GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_NONE_PENDING)
+        GST_DEBUG(GST_CAT_DATAFLOW,"GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_NONE_PENDING\n");
       GST_UNLOCK(queue);
       cothread_switch(cothread_current_main());
     }

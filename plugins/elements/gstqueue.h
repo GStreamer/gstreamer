@@ -75,6 +75,7 @@ struct _GstQueue {
 
   gint leaky;		/* whether the queue is leaky, and if so at which end */
 
+//  GMutex *lock;	(optimization?)
   GCond *emptycond;
   GCond *fullcond;
 

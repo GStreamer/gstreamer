@@ -45,6 +45,8 @@ extern "C" {
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_SCHEDULE))
 
 
+#define GST_SCHED_PARENT(sched)		((sched)->parent)
+
 //typedef struct _GstSchedule GstSchedule;
 //typedef struct _GstScheduleClass GstScheduleClass;
 typedef struct _GstScheduleChain GstScheduleChain;

@@ -250,6 +250,7 @@ gst_thread_change_state (GstElement *element)
   gboolean stateset = GST_STATE_SUCCESS;
   gint transition;
   pthread_t self = pthread_self();
+  GstElement *peerelement;
 
   g_return_val_if_fail (GST_IS_THREAD(element), FALSE);
 //  GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME(element));
@@ -328,10 +329,10 @@ gst_thread_change_state (GstElement *element)
       if (pthread_equal(self, thread->thread_id))
       {
         //FIXME this should not happen
-        g_assert(!pthread_equal(self, thread->thread_id));
         GST_DEBUG(GST_CAT_THREAD,"no sync(" GST_DEBUG_THREAD_FORMAT "): setting own thread's state to paused\n",
                   GST_DEBUG_THREAD_ARGS(thread->pid));
         GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
+        g_assert(!pthread_equal(self, thread->thread_id));
       }
       else
       {
@@ -357,8 +358,10 @@ gst_thread_change_state (GstElement *element)
             //
             //FIXME also make this more efficient by keeping list of managed queues
             THR_DEBUG("waking queue \"%s\"\n",GST_ELEMENT_NAME(e));
+            GST_LOCK(e);
             g_cond_signal((GST_QUEUE(e)->emptycond));
             g_cond_signal((GST_QUEUE(e)->fullcond));
+            GST_UNLOCK(e);
           }
           else
           {
@@ -367,16 +370,32 @@ gst_thread_change_state (GstElement *element)
             {
               GstPad *p = GST_PAD(pads->data);
               pads = g_list_next(pads);
-              if (GST_IS_REAL_PAD(p) &&
-                  GST_ELEMENT_SCHED(e) != GST_ELEMENT_SCHED(GST_ELEMENT(GST_PAD_PARENT(GST_PAD_PEER(p)))))
+
+              peerelement = GST_PAD_PARENT(GST_PAD_PEER(p));
+              if (!peerelement) continue;		// deal with case where there's no peer
+
+              if (!GST_FLAG_IS_SET(peerelement,GST_ELEMENT_DECOUPLED)) {
+                GST_DEBUG(GST_CAT_THREAD,"peer element isn't DECOUPLED\n");
+                continue;
+              }
+
+              // FIXME this needs to go away eventually
+              if (!GST_IS_QUEUE(peerelement)) {
+                GST_DEBUG(GST_CAT_THREAD,"peer element isn't a Queue\n");
+                continue;
+              }
+
+              if (GST_ELEMENT_SCHED(peerelement) != GST_ELEMENT_SCHED(thread))
+//                  GST_ELEMENT_SCHED(e) != GST_ELEMENT_SCHED(GST_ELEMENT(GST_PAD_PARENT(GST_PAD_PEER(p)))))
               {
                 THR_DEBUG("  element \"%s\" has pad cross sched boundary\n",GST_ELEMENT_NAME(e));
                 // FIXME i assume this signals our own (current) thread so don't need to lock
                 // FIXME however, this *may* go to yet another thread for which we need locks
                 // FIXME i'm too tired to deal with this now 
-                g_cond_signal(GST_QUEUE(GST_ELEMENT(GST_PAD_PARENT(GST_PAD_PEER(p))))->emptycond);
-                g_cond_signal(GST_QUEUE(GST_ELEMENT(GST_PAD_PARENT(GST_PAD_PEER(p))))->fullcond);
-
+                GST_LOCK(peerelement);
+                g_cond_signal(GST_QUEUE(peerelement)->emptycond);
+                g_cond_signal(GST_QUEUE(peerelement)->fullcond);
+                GST_UNLOCK(peerelement);
               }
             }
           }
@@ -396,6 +415,7 @@ gst_thread_change_state (GstElement *element)
       }
       else
       {
+        // FIXME FIXME we need to interrupt, or reorder the states!
         THR_DEBUG("telling thread to pause (ready)\n");
         g_mutex_lock(thread->lock);
         gst_thread_signal_thread(thread,FALSE);
@@ -486,7 +506,7 @@ gst_thread_main_loop (void *arg)
     THR_DEBUG_MAIN("parent thread has signaled back at top of while\n");
     // now is a good time to change the state of the children and the thread itself
     gst_thread_update_state (thread);
-    THR_DEBUG_MAIN("doe changing state, signaling back to parent process\n");
+    THR_DEBUG_MAIN("done changing state, signaling back to parent process\n");
     g_cond_signal (thread->cond);
     g_mutex_unlock (thread->lock);
     THR_DEBUG_MAIN("done syncing with parent process at top of while\n");
