@@ -28,6 +28,7 @@
  */
 
 /* ulaw -> signed 16-bit */
+/* defined but not used
 static gint16 isdn_audio_ulaw_to_s16[] =
 {
 	0x8284, 0x8684, 0x8a84, 0x8e84, 0x9284, 0x9684, 0x9a84, 0x9e84,
@@ -63,8 +64,9 @@ static gint16 isdn_audio_ulaw_to_s16[] =
 	0x0078, 0x0070, 0x0068, 0x0060, 0x0058, 0x0050, 0x0048, 0x0040,
 	0x0038, 0x0030, 0x0028, 0x0020, 0x0018, 0x0010, 0x0008, 0x0000
 };
-
+*/
 /* alaw -> signed 16-bit */
+/* defined but not used
 static gint16 isdn_audio_alaw_to_s16[] =
 {
 	0x13fc, 0xec04, 0x0144, 0xfebc, 0x517c, 0xae84, 0x051c, 0xfae4,
@@ -100,7 +102,7 @@ static gint16 isdn_audio_alaw_to_s16[] =
 	0x18fc, 0xe704, 0x018c, 0xfe74, 0x657c, 0x9a84, 0x065c, 0xf9a4,
 	0x0cbc, 0xf344, 0x0094, 0xff6c, 0x327c, 0xcd84, 0x032c, 0xfcd4
 };
-
+*/
 /* alaw -> ulaw */
 static guint8 isdn_audio_alaw_to_ulaw[] =
 {
@@ -179,7 +181,10 @@ static inline void
 isdn_audio_tlookup(const guint8 *table, guint8 *buff, gulong n)
 {
 	while (n--)
-		*buff++ = table[*(unsigned char *)buff];
+	{
+		*buff = table[*(unsigned char *)buff];
+		buff++;
+	}
 }
 
 void

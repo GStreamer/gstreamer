@@ -245,18 +245,22 @@ guint32 * goom_update (gint16 data [2][512])
                 switch (vtmp = (iRAND (27)))
                 {
                     case 0:
-                        zfd.vPlaneEffect = iRAND(3) - iRAND(3);
-                        zfd.hPlaneEffect = iRAND(3) - iRAND(3);
+                        zfd.vPlaneEffect = iRAND(3);
+                        zfd.vPlaneEffect -= iRAND(3);
+                        zfd.hPlaneEffect = iRAND(3);
+                        zfd.hPlaneEffect -= iRAND(3);
                         break;
                     case 3:
                         zfd.vPlaneEffect = 0 ;
-                        zfd.hPlaneEffect = iRAND(8) - iRAND(8);
+                        zfd.hPlaneEffect = iRAND(8);
+                        zfd.hPlaneEffect -= iRAND(8);
                         break;
                     case 4:
                     case 5:
                     case 6:
                     case 7:
-                        zfd.vPlaneEffect = iRAND(5) - iRAND (5);
+                        zfd.vPlaneEffect = iRAND(5);
+                        zfd.vPlaneEffect -= iRAND(5);
                         zfd.hPlaneEffect = - zfd.vPlaneEffect;
                         break;
                     case 8:
@@ -269,7 +273,8 @@ guint32 * goom_update (gint16 data [2][512])
                         break;
                     case 13:
                         zfd.hPlaneEffect = 0;
-                        zfd.vPlaneEffect = iRAND(10) - iRAND(10);
+                        zfd.vPlaneEffect = iRAND(10);
+                        zfd.vPlaneEffect -= iRAND(10);
                         break;
                     default:
                         if (vtmp < 10)

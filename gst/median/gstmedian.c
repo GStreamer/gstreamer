@@ -195,10 +195,13 @@ median_5 (unsigned char *src, unsigned char *dest, int width, int height)
       PIX_SORT(p[1],p[2]) ;
       dest[i] = p[2];
     }
-    dest[i] = src[i++];
-    dest[i] = src[i++];
+    dest[i] = src[i];
+    i++;
+    dest[i] = src[i];
+    i++;
   }
-  dest[i] = src[i++];
+  dest[i] = src[i];
+  i++;
 }
 
 static void
@@ -244,10 +247,13 @@ median_9 (unsigned char *src, unsigned char *dest, int width, int height)
       PIX_SORT(p[4], p[2]) ;
       dest[i] = p[4];
     }
-    dest[i] = src[i++];
-    dest[i] = src[i++];
+    dest[i] = src[i];
+    i++;
+    dest[i] = src[i];
+    i++;
   }
-  dest[i] = src[i++];
+  dest[i] = src[i];
+  i++;
 }
 
 static void

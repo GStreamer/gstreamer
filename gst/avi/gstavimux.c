@@ -326,6 +326,7 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
     else if (!strcmp (mimetype, "video/raw"))
     {
       guint32 format;
+      gint temp;
 
       gst_caps_get_fourcc_int (caps, "format", &format);
       switch (format)
@@ -346,7 +347,8 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
               avimux->vids.bit_cnt     = 16; /* YUY2 */
               break;
             case GST_MAKE_FOURCC('R','G','B',' '):
-              gst_caps_get_int (caps, "bpp", &avimux->vids.bit_cnt); /* RGB */
+              gst_caps_get_int (caps, "bpp", &temp); /* RGB */
+	      avimux->vids.bit_cnt = temp;
               break;
             case GST_MAKE_FOURCC('Y','4','1','P'):
             case GST_MAKE_FOURCC('I','4','2','0'):

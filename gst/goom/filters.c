@@ -92,17 +92,20 @@ inline void calculatePXandPY (int x, int y, int *px, int *py)
         static int wavesp = 0 ;
         int yy ;
 
-        yy = y + RAND () % 4 - RAND () % 4 + wave / 10 ;
+        yy = y + RAND () % 4 + wave / 10 ;
+        yy -= RAND () % 4;
         if (yy < 0) yy = 0 ;
         if (yy >= resoly) yy = resoly - 1 ;
 	  
         *px = (x<<4) + firedec [yy] + (wave / 10) ;
         *py = (y<<4) + 132 - ((vitesse < 132) ? vitesse : 131) ;
 
-        wavesp += RAND () % 3 - RAND () % 3 ;
+        wavesp += RAND () % 3;
+	wavesp -= RAND () % 3;
         if (wave < -10) wavesp += 2 ;
         if (wave > 10) wavesp -= 2 ;
-        wave += (wavesp / 10) + RAND () % 3 - RAND () % 3 ;
+        wave += (wavesp / 10) + RAND () % 3;
+	wave -= RAND () % 3;
         if (wavesp > 100) wavesp = (wavesp * 9) / 10  ;
     }
     else
@@ -113,8 +116,10 @@ inline void calculatePXandPY (int x, int y, int *px, int *py)
 
         if (noisify)
         {
-            x += RAND() % noisify - RAND() % noisify ;
-            y += RAND() % noisify - RAND() % noisify ;
+            x += RAND() % noisify;
+            x -= RAND() % noisify;
+            y += RAND() % noisify;
+            y -= RAND() % noisify;
         }
 
         if (hPlaneEffect) vx = ((x - middleX) << 9) + hPlaneEffect * (y - middleY);
@@ -356,7 +361,8 @@ void zoomFilterFastRGB (Uint *pix1,
 				  loopv -- ;
 				  firedec [loopv] = decc ;
 				  decc += spdc / 10 ;
-				  spdc = spdc + RAND () % 3 - RAND () % 3 ;
+				  spdc+= RAND () % 3;
+				  spdc-= RAND () % 3;
 				  
 				  if (decc > 4)
 					spdc -= 1 ;
@@ -377,7 +383,8 @@ void zoomFilterFastRGB (Uint *pix1,
 				  if (decc > 8 || decc < -8)
 					decc = decc * 8 / 9 ;
 				  
-				  accel += RAND () % 2 - RAND () % 2 ;
+				  accel += RAND () % 2;
+				  accel -= RAND () % 2;
 				  if (accel > 20)
 					accel -= 2 ;
 				  if (accel < -20)
@@ -419,7 +426,7 @@ void zoomFilterFastRGB (Uint *pix1,
 				{
 				  int npx10 ;
 				  int npy10 ;
-                                  int pos = (y*prevX+x)*2;
+                                  int pos;
 
 				  npx10 = (px/sqrtperte) ;
 				  npy10 = (py/sqrtperte) ;
@@ -430,6 +437,7 @@ void zoomFilterFastRGB (Uint *pix1,
 				  coefh = px % sqrtperte ;
 				  coefv = py % sqrtperte ;				  
 #ifdef USE_ASM
+				pos = (y*prevX+x)*2;
                                 coeffs[pos] = (npx10 + prevX * npy10) * 4;
 				
 				if (!(coefh || coefv))
@@ -443,16 +451,17 @@ void zoomFilterFastRGB (Uint *pix1,
 				coeffs[pos+1] |= ((sqrtperte-coefh) * coefv) << 16 ;
 				coeffs[pos+1] |= (coefh * coefv)<<24 ;
 #else
-				pos10[y*prevX+x]= npx10 + prevX * npy10 ;
+				pos = y*prevX+x;
+				pos10[pos]= npx10 + prevX * npy10 ;
 
 				if (!(coefh || coefv))
-					c1[y*prevX+x] = sqrtperte*sqrtperte-1 ;
+					c1[pos] = sqrtperte*sqrtperte-1 ;
 				else
-					c1[y*prevX+x] = (sqrtperte-coefh) * (sqrtperte-coefv);
+					c1[pos] = (sqrtperte-coefh) * (sqrtperte-coefv);
 				
-				c2[y*prevX+x] = coefh * (sqrtperte-coefv) ;
-				c3[y*prevX+x] = (sqrtperte-coefh) * coefv ;
-				c4[y*prevX+x] = coefh * coefv ;
+				c2[pos] = coefh * (sqrtperte-coefv) ;
+				c3[pos] = (sqrtperte-coefh) * coefv ;
+				c4[pos] = coefh * coefv ;
 #endif
 				}
 			}

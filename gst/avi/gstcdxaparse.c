@@ -141,8 +141,6 @@ gst_cdxa_parse_class_init (GstCDXAParseClass *klass)
 static void 
 gst_cdxa_parse_init (GstCDXAParse *cdxa_parse) 
 {
-  guint i;
-
   GST_FLAG_SET (cdxa_parse, GST_ELEMENT_EVENT_AWARE);
 				
   cdxa_parse->sinkpad = gst_pad_new_from_template (
