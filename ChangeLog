@@ -1,3 +1,11 @@
+2004-05-10  David Schleef  <ds@schleef.org>
+
+	* configure.ac: Add prototype Dirac support.
+	* ext/Makefile.am:
+	* ext/dirac/Makefile.am:
+	* ext/dirac/gstdirac.cc:
+	* ext/dirac/gstdiracdec.cc:
+
 2004-05-10  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/auparse/gstauparse.c: (gst_auparse_class_init),
