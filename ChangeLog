@@ -1,5 +1,10 @@
 2004-09-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/qtdemux/qtdemux.c: (qtdemux_audio_caps):
+	  Don't touch non-existing data (fixes crash on file in #140147).
+
+2004-09-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/playback/gstplaybasebin.c:
 	(gst_play_base_bin_dispose), (gst_play_base_bin_set_property):
 	  Handle double disposals, and proper change of URIs.
