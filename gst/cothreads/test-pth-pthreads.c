@@ -21,19 +21,14 @@ void cothread (void *unused)
 void pthread (void* unused) 
 {
   pth_mctx_t ctx;
-  char *skaddr, *stackspace;
+  char *skaddr;
   
   printf ("1: saving the main context\n");
   printf ("1: current stack frame: %p\n", CURRENT_STACK_FRAME);
   pth_mctx_save (&main_context);
   
-  printf ("1: %d\n", pthread_self());
-  
-  stackspace = malloc(2 * 1024 * 1024);
-  memset (stackspace + 2 * 1024 * 1024 - sizeof(pthread_descr) - 1, &(thread_handle (pthread_self()))->h_descr, sizeof (pthread_descr));
-  
   while (1) {
-    skaddr = stackspace;
+    skaddr = alloca (64 * 1024);
     
     printf ("1: current stack frame: %p\n", CURRENT_STACK_FRAME);
     printf ("1: spawning a new cothread\n");
