@@ -1,5 +1,10 @@
 2005-02-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_iso_receive):
+	  Set caps to systemstream=TRUE.
+
+2005-02-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* testsuite/Makefile.am:
 	  Fix more OSX buildbots.
 
