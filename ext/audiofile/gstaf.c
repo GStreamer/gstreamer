@@ -22,6 +22,8 @@
 #include "gstafsink.h"
 #include "gstafparse.h"
 
+gboolean gst_aftypes_plugin_init (GModule *module, GstPlugin *plugin);
+
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
@@ -31,6 +33,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_afsink_plugin_init (module, plugin);
   gst_afsrc_plugin_init (module, plugin);
   gst_afparse_plugin_init (module, plugin);
+  gst_aftypes_plugin_init (module, plugin);
 
   return TRUE;
 }

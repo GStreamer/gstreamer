@@ -24,8 +24,6 @@
 extern GstElementDetails tarkinenc_details;
 extern GstElementDetails tarkindec_details;
 
-static GstCaps* 	tarkin_type_find 	(GstBuffer *buf, gpointer private);
-
 GstPadTemplate *enc_src_template, *enc_sink_template;
 GstPadTemplate *dec_src_template, *dec_sink_template;
 
@@ -58,39 +56,10 @@ raw_caps_factory (void)
    );
 }
 
-static GstTypeDefinition tarkindefinition = 
-{
-  "tarkin_video/x-ogg",
-  "application/ogg",
-  ".ogg",
-  tarkin_type_find,
-};
-
-static GstCaps* 
-tarkin_type_find (GstBuffer *buf, gpointer private) 
-{
-  guint32 head;
-
-  if (GST_BUFFER_SIZE (buf) < 4)
-    return NULL;
-
-  /* FIXME */
-  return NULL;
-  
-  head = GUINT32_FROM_BE (*((guint32 *)GST_BUFFER_DATA (buf)));
-
-  if (head  != 0x4F676753)
-    return NULL;
-
-  return gst_caps_new ("tarkin_type_find", "application/ogg", NULL);
-}
-
-
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *enc, *dec;
-  GstTypeFactory *type;
   GstCaps *raw_caps, *tarkin_caps;
 
   gst_plugin_set_longname (plugin, "The OGG Tarkin Codec");
@@ -146,9 +115,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (dec, dec_src_template);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (dec));
-
-  type = gst_type_factory_new (&tarkindefinition);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   return TRUE;
 }

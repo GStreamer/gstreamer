@@ -27,8 +27,6 @@ extern GType ivorbisfile_get_type(void);
 
 extern GstElementDetails ivorbisfile_details;
 
-static GstCaps* 	vorbis_type_find 	(GstBuffer *buf, gpointer private);
-
 GstPadTemplate *gst_vorbisdec_src_template, *gst_vorbisdec_sink_template; 
 
 static GstCaps*
@@ -73,35 +71,10 @@ raw_caps2_factory (void)
 	    NULL));
 }
 
-static GstTypeDefinition vorbisdefinition = {
-  "tremor_audio/x-ogg",
-  "application/ogg",
-  ".ogg",
-  vorbis_type_find,
-};
-
-static GstCaps* 
-vorbis_type_find (GstBuffer *buf, gpointer private) 
-{
-  guint32 head;
-    
-  if (GST_BUFFER_SIZE (buf) < 4)
-    return NULL;
-
-  head = GUINT32_FROM_BE (*((guint32 *)GST_BUFFER_DATA (buf)));
-
-  if (head  != 0x4F676753)
-    return NULL;
-
-  return gst_caps_new ("vorbis_type_find", "application/ogg", NULL);
-}
-
-
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *file;
-  GstTypeFactory *type;
   GstCaps *raw_caps, *vorbis_caps, *raw_caps2;
 
   if (!gst_library_load ("gstbytestream"))
@@ -134,9 +107,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (file, gst_vorbisdec_src_template);
   
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (file));
-
-  type = gst_type_factory_new (&vorbisdefinition);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   return TRUE;
 }
