@@ -4,6 +4,8 @@ config.h
 config.h.in
 config.log
 config.status
+config.guess
+config.sub
 configure
 gst-plugins.spec
 gstreamer-libs-uninstalled*.pc
@@ -14,3 +16,11 @@ libtool
 stamp-h
 stamp-h.in
 stamp-h1
+gst-element-check-*.m4
+ltmain.sh
+missing
+mkinstalldirs
+compile
+install-sh
+depcomp
+autoregen.sh
