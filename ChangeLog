@@ -1,3 +1,9 @@
+2004-01-19  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* configure.ac:
+	  Up version requirement to 2.0.3 (not yet released) to avoid symbol
+	  clashes with ffmpeg.
+
 2004-01-20  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/switch/gstswitch.c: (gst_switch_request_new_pad),
