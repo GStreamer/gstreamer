@@ -78,6 +78,7 @@ struct _GstModPlug {
   guint64 song_size;
 
   CSoundFile *mSoundFile;
+  gboolean opened; /* set to TRUE when mSoundFile is created */
 };
 
 struct _GstModPlugClass {
