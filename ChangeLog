@@ -7,7 +7,7 @@
 	* testsuite/debug/output.c: (main):
 	* testsuite/debug/printf_extension.c: (main):
 	  fix to successfully build and test with --disable-gst-debug
-	  configure switch
+	  configure switch (fixes #138705)
 
 2004-04-03  Benjamin Otte  <otte@gnome.org>
 
