@@ -1,3 +1,9 @@
+2004-03-06  Benjamin Otte  <otte@gnome.org>
+
+	* ext/mad/gstid3tag.c: (gst_id3_tag_chain):
+	  fix huge leak: gst_buffer_merge doesn't unref the first argument
+	  itself.
+
 2004-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/mad/gstmad.c: (gst_mad_class_init), (gst_mad_update_info):
