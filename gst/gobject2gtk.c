@@ -2,6 +2,7 @@
 /* Modified by Jamie Gennis 06-2001 */
 #include <string.h>
 #include <stdio.h>
+#include "gstlog.h"
 #include "gobject2gtk.h"
 
 
