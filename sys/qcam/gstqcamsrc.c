@@ -388,19 +388,22 @@ gst_qcamsrc_change_state (GstElement * element)
 {
   g_return_val_if_fail (GST_IS_QCAMSRC (element), FALSE);
 
-  /* if going down into NULL state, close the file if it's open */
-  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET (element, GST_QCAMSRC_OPEN))
-      gst_qcamsrc_close (GST_QCAMSRC (element));
-    /* otherwise (READY or higher) we need to open the sound card */
-  } else {
-    if (!GST_FLAG_IS_SET (element, GST_QCAMSRC_OPEN)) {
-      GST_DEBUG ("opening");
-      if (!gst_qcamsrc_open (GST_QCAMSRC (element))) {
-        GST_DEBUG ("open failed");
-        return GST_STATE_FAILURE;
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_READY_TO_NULL:
+      if (GST_FLAG_IS_SET (element, GST_QCAMSRC_OPEN))
+        gst_qcamsrc_close (GST_QCAMSRC (element));
+      break;
+    case GST_STATE_NULL_TO_READY:
+      if (!GST_FLAG_IS_SET (element, GST_QCAMSRC_OPEN)) {
+        GST_DEBUG ("opening");
+        if (!gst_qcamsrc_open (GST_QCAMSRC (element))) {
+          GST_DEBUG ("open failed");
+          return GST_STATE_FAILURE;
+        }
       }
-    }
+      break;
+    default:
+      break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
@@ -413,7 +416,8 @@ static gboolean
 gst_qcamsrc_open (GstQCamSrc * qcamsrc)
 {
   if (qc_open (qcamsrc->qcam)) {
-    g_warning ("qcamsrc: Cannot open QuickCam.\n");
+    GST_ELEMENT_ERROR (qcamsrc, RESOURCE, OPEN_READ, (NULL),
+        ("Failed to open QuickCam"));
     return FALSE;
   }
 
