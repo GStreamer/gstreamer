@@ -66,7 +66,7 @@ G_STMT_START {					\
   (ref)->lock = g_mutex_new();			\
 } G_STMT_END
 
-#define GST_ATOMIC_INT_FREE(ref)		g_mutex_free (&(ref)->lock)
+#define GST_ATOMIC_INT_FREE(ref)		g_mutex_free ((ref)->lock)
 
 #define GST_ATOMIC_INT_SET(ref,val)		\
 G_STMT_START {					\
