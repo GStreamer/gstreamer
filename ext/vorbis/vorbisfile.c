@@ -270,6 +270,7 @@ gst_vorbisfile_init (VorbisFile * vorbisfile)
 		                   gst_vorbisfile_get_event_masks);
   gst_pad_set_event_function (vorbisfile->srcpad, gst_vorbisfile_src_event);
   gst_pad_set_convert_function (vorbisfile->srcpad, gst_vorbisfile_src_convert);
+  gst_pad_use_explicit_caps (vorbisfile->srcpad);
 
   vorbisfile->total_bytes = 0;
   vorbisfile->offset = 0;
@@ -525,12 +526,7 @@ gst_vorbisfile_new_link (VorbisFile *vorbisfile, gint link)
       "channels",   G_TYPE_INT, vi->channels,
       NULL);
 
-  if (gst_pad_try_set_caps (vorbisfile->srcpad, caps) <= 0) {
-    res = FALSE;
-  }
-  gst_caps_free (caps);
-
-  return res;
+  return gst_pad_set_explicit_caps (vorbisfile->srcpad, caps);
 }
 
 static void

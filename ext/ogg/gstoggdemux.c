@@ -437,6 +437,11 @@ gst_ogg_pad_push (GstOggDemux *ogg, GstOggPad *pad)
 	  GstCaps *caps = gst_ogg_type_find (&packet);
 	  gchar *name = g_strdup_printf ("serial %d", pad->serial);
 	  
+	  if (caps == NULL) {
+	    gst_element_error (GST_ELEMENT (ogg),
+		"couldn't determine stream type from media");
+	    return;
+	  }
 	  pad->pad = gst_pad_new_from_template (
 	      gst_static_pad_template_get (&ogg_demux_src_template_factory),
 	      name);
@@ -445,8 +450,8 @@ gst_ogg_pad_push (GstOggDemux *ogg, GstOggPad *pad)
 	  gst_pad_set_event_mask_function (pad->pad, GST_DEBUG_FUNCPTR (gst_ogg_demux_get_event_masks));
 	  gst_pad_set_query_function (pad->pad, GST_DEBUG_FUNCPTR (gst_ogg_demux_src_query));
 	  gst_pad_set_query_type_function (pad->pad, GST_DEBUG_FUNCPTR (gst_ogg_demux_get_query_types));
-	  if (caps)
-	    g_assert (gst_pad_try_set_caps (pad->pad, caps) >= GST_PAD_LINK_OK);
+	  gst_pad_use_explicit_caps (pad->pad);
+	  gst_pad_set_explicit_caps (pad->pad, caps);
 	  gst_pad_set_active (pad->pad, TRUE);
 	  gst_element_add_pad (GST_ELEMENT (ogg), pad->pad);
 	}
