@@ -1,3 +1,11 @@
+2005-01-15  Gergely Nagy  <algernon@bonehunter.rulez.org>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_caps_to_pixfmt):
+	  Fix for depth = 15. Fixes #161675.
+
 2005-01-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_getcaps):
