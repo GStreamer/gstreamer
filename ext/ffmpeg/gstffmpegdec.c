@@ -47,6 +47,8 @@ struct _GstFFMpegDec
   AVCodecContext *context;
   AVFrame *picture;
   gboolean opened;
+
+  GValue *par;		/* pixel aspect ratio of incoming data */
 };
 
 typedef struct _GstFFMpegDecClass GstFFMpegDecClass;
@@ -254,6 +256,8 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) (gst_pad_get_parent (pad));
   GstFFMpegDecClass *oclass =
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  GstStructure *structure;
+  const GValue *par;
 
   /* close old session */
   gst_ffmpegdec_close (ffmpegdec);
@@ -270,6 +274,15 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
   /* get size and so */
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
       oclass->in_plugin->type, caps, ffmpegdec->context);
+
+  /* get pixel aspect ratio if it's set */
+  structure = gst_caps_get_structure (caps, 0);
+  par = gst_structure_get_value (structure, "pixel-aspect-ratio");
+  if (par) {
+    GST_DEBUG_OBJECT (ffmpegdec, "sink caps have pixel-aspect-ratio");
+    ffmpegdec->par = g_new0 (GValue, 1);
+    gst_value_init_and_copy (ffmpegdec->par, par);
+  }
 
   /* we dont send complete frames - FIXME: we need a 'framed' property
    * in caps */
@@ -470,6 +483,16 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
         caps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type,
             ffmpegdec->context);
         ffmpegdec->context->pix_fmt = orig_fmt;
+
+        /* add in pixel-aspect-ratio if we have it */
+        if (caps && ffmpegdec->par) {
+          GST_DEBUG_OBJECT (ffmpegdec, "setting pixel-aspect-ratio");
+	  gst_structure_set (gst_caps_get_structure (caps, 0),
+              "pixel-aspect-ratio", GST_TYPE_FRACTION,
+              gst_value_get_fraction_numerator (ffmpegdec->par),
+              gst_value_get_fraction_denominator (ffmpegdec->par),
+              NULL);
+        }
         if (caps == NULL ||
             !gst_pad_set_explicit_caps (ffmpegdec->srcpad, caps)) {
           GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
