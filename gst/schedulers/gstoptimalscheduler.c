@@ -2097,7 +2097,7 @@ gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
   else {
     gboolean still_link1, still_link2;
     GstOptSchedulerGroup *group;
-    GstElement *element;
+    GstElement *element = NULL; /* shut up gcc */
     
     /* since group1 == group2, it doesn't matter which group we take */
     group = group1;
