@@ -93,6 +93,26 @@ gst_data_copy (const GstData *data)
 }
 
 /**
+ * gst_data_needs_copy_on_write:
+ * @data: a #GstData to copy
+ *
+ * Returns: TRUE if the given #GstData is potentially shared and needs to
+ * be copied before it can be modified safely.
+ */
+gboolean
+gst_data_needs_copy_on_write (GstData *data) 
+{
+  gint refcount;
+
+  GST_ATOMIC_INT_READ (&data->refcount, &refcount);
+
+  if (refcount == 1 && !GST_DATA_FLAG_IS_SET (data, GST_DATA_READONLY))
+    return FALSE;
+
+  return TRUE;
+}
+
+/**
  * gst_data_copy_on_write:
  * @data: a #GstData to copy
  *
