@@ -31,6 +31,8 @@
 #if MPEG2_RELEASE < MPEG2_VERSION(0,3,2)
 */
 #ifndef MPEG2_RELEASE
+#define MPEG2_VERSION(a,b,c) ((((a)&0xff)<<16)|(((b)&0xff)<<8)|((c)&0xff))
+#define MPEG2_RELEASE MPEG2_VERSION(0,3,1)
 typedef picture_t mpeg2_picture_t;
 typedef gint mpeg2_state_t;
 #define STATE_BUFFER 0
