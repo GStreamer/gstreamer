@@ -52,7 +52,8 @@ dnl
 AC_DEFUN(AC_CHECK_A52DEC, 
 [dnl
 AC_ARG_WITH(a52dec-prefix,
-    AC_HELP_STRING([--with-a52dec-prefix=PFX],[Prefix where a52dec is installed (optional)]),
+    AC_HELP_STRING([--with-a52dec-prefix=PFX],
+                   [prefix where a52dec is installed (optional)]),
     a52dec_config_prefix="$withval", a52dec_config_prefix="")
 
 if test x$a52dec_config_prefix = x ; then

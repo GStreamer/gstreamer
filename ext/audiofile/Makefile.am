@@ -1,10 +1,10 @@
 plugindir = $(libdir)/gst
 
-plugin_LTLIBRARIES = libgstaf.la
+plugin_LTLIBRARIES = libgstaudiofile.la
 
-libgstaf_la_SOURCES = gstaf.c gstafsink.c gstafsrc.c gstafparse.c
-libgstaf_la_CFLAGS = $(GST_CFLAGS) $(AUDIOFILE_CFLAGS)
-libgstaf_la_LIBADD = $(AUDIOFILE_LIBS)
-libgstaf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstaudiofile_la_SOURCES = gstaf.c gstafsink.c gstafsrc.c gstafparse.c
+libgstaudiofile_la_CFLAGS = $(GST_CFLAGS) $(AUDIOFILE_CFLAGS)
+libgstaudiofile_la_LIBADD = $(AUDIOFILE_LIBS)
+libgstaudiofile_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstafsink.h gstafsrc.h 

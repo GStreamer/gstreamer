@@ -61,10 +61,15 @@ function vercmp(ver1, ver2,    ver1arr, ver2arr,			\
 
 AC_DEFUN(AM_PATH_XMMS,
 [
-AC_ARG_WITH(xmms-prefix,[  --with-xmms-prefix=PFX  Prefix where XMMS is installed (optional)],
-	xmms_config_prefix="$withval", xmms_config_prefix="")
-AC_ARG_WITH(xmms-exec-prefix,[  --with-xmms-exec-prefix=PFX Exec prefix where XMMS is installed (optional)],
-	xmms_config_exec_prefix="$withval", xmms_config_exec_prefix="")
+AC_ARG_WITH(xmms-prefix,
+  AC_HELP_STRING([--with-xmms-prefix=PFX],
+                 [prefix where XMMS is installed (optional)]),
+  xmms_config_prefix="$withval", xmms_config_prefix="")
+
+AC_ARG_WITH(xmms-exec-prefix,
+  AC_HELP_STRING([--with-xmms-exec-prefix=PFX],
+                 [exec prefix where XMMS is installed (optional)]),
+  xmms_config_exec_prefix="$withval", xmms_config_exec_prefix="")
 
 if test x$xmms_config_exec_prefix != x; then
     xmms_config_args="$xmms_config_args --exec-prefix=$xmms_config_exec_prefix"

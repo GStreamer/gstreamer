@@ -214,7 +214,6 @@ dnl ==========================================================================
 dnl ============================= sys plugins ================================
 dnl ==========================================================================
 
-
 dnl *** DXR3 card ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DXR3, true)
 GST_CHECK_FEATURE(DXR3, [DXR3 hardware mpeg video decoder], dxr3videosink, [
@@ -288,8 +287,6 @@ dnl These are all libraries used in building plugins
 dnl ================================================
 dnl let's try and sort them alphabetically, shall we ?
 
-echo
-echo
 AC_MSG_NOTICE(Checking for plugin libraries)
 
 dnl *** a52dec ***
@@ -307,11 +304,10 @@ GST_CHECK_FEATURE(AALIB, [aasink plugin], aasink, [
 dnl *** alsa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
 GST_CHECK_FEATURE(ALSA, [alsa plugins], gstalsa, [
-  AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
+   AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
 ])
 
 dnl *** arts ***
-
 dnl if mcopidl can't be found there's no use in compiling it
 AC_CHECK_PROG(MCOPIDL, mcopidl, yes, no)
 if test "xHAVE_MCOPIDL" = "xno";
@@ -323,12 +319,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
 GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [
   AM_PATH_ARTS(, HAVE_ARTS=yes, HAVE_ARTS=no)
 ])
-dnl if mcopidl can't be found there's no use in compiling it
-AC_PATH_PROG(MCOPIDL, mcopidl, yes, no)
-if test "xHAVE_MCOPIDL" = "xno";
-then
-  USE_ARTS=NO
-fi
 
 dnl *** artsc ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ARTSC, true)
@@ -655,7 +645,7 @@ dnl ######################################################################
 GST_DEBUGINFO
 
 AC_ARG_ENABLE(libmmx,
-[  --enable-libmmx              use libmmx, if available],
+  AC_HELP_STRING([--enable-libmmx],[use libmmx, if available]),
 [case "${enableval}" in
   yes) USE_LIBMMX=$HAVE_LIBMMX ;;
   no)  USE_LIBMMX=no ;;
@@ -664,7 +654,7 @@ esac],
 [USE_LIBMMX=$HAVE_LIBMMX]) dnl Default value
 
 AC_ARG_ENABLE(atomic,
-[  --enable-atomic              use atomic reference counting header],
+  AC_HELP_STRING([--enable-atomic],[use atomic reference counting header]),
 [case "${enableval}" in
   yes) USE_ATOMIC_H=$HAVE_ATOMIC_H;;
   noset) USE_ATOMIC_H=$HAVE_ATOMIC_H;;
@@ -674,7 +664,8 @@ esac],
 [USE_ATOMIC_H=$HAVE_ATOMIC_H]) dnl Default value
 
 AC_ARG_ENABLE(profiling,
-[  --enable-profiling           adds -pg to compiler commandline, for profiling],
+  AC_HELP_STRING([--enable-profiling],
+                 [-pg to compiler commandline, for profiling]),
 [case "${enableval}" in
   yes) USE_PROFILING=yes ;;
   no)  UES_PROFILING=no ;;
@@ -683,7 +674,7 @@ esac],
 [USE_PROFILING=no]) dnl Default value
 
 AC_ARG_ENABLE(tests,
-[  --disable-tests              disable building test apps],
+  AC_HELP_STRING([--disable-tests],[disable building test apps]),
 [case "${enableval}" in
   yes) BUILD_TESTS=yes ;;
   no)  BUILD_TESTS=no ;;
@@ -692,7 +683,7 @@ esac],
 [BUILD_TESTS=yes]) dnl Default value
 
 AC_ARG_ENABLE(examples,
-[  --disable-examples           disable building examples],
+  AC_HELP_STRING([--disable-examples],[disable building examples]),
 [case "${enableval}" in
   yes) BUILD_EXAMPLES=yes ;;
   no)  BUILD_EXAMPLES=no ;;
