@@ -123,7 +123,7 @@ gst_gconf_set_string (const gchar * key, const gchar * value)
 
   gconf_client_set_string (gst_gconf_get_client (), full_key, value, &error);
   if (error) {
-    g_print ("gst_gconf_set_string: error: %s\n", error->message);
+    GST_ERROR ("gst_gconf_set_string: error: %s\n", error->message);
     g_error_free (error);
   }
   g_free (full_key);
@@ -150,7 +150,7 @@ gst_gconf_render_bin_from_description (const gchar * description)
   bin = GST_ELEMENT (gst_parse_launch (desc, &error));
   g_free (desc);
   if (error) {
-    g_print ("DEBUG: gstgconf: error parsing pipeline %s\n%s\n",
+    GST_ERROR ("gstgconf: error parsing pipeline %s\n%s\n",
         description, error->message);
     g_error_free (error);
     return NULL;
@@ -191,7 +191,8 @@ gst_gconf_render_bin_from_key (const gchar * key)
  * gst_gconf_get_default_audio_sink:
  *
  * Render audio output bin from GStreamer GConf key : "default/audiosink".
- * If key is invalid osssink is used as default output plugin.
+ * If key is invalid, the default audio sink for the platform is used
+ * (typically osssink or sunaudiosink).
  *
  * Returns: a #GstElement containing the audio output bin, or NULL if
  * everything failed.
@@ -202,12 +203,11 @@ gst_gconf_get_default_audio_sink (void)
   GstElement *ret = gst_gconf_render_bin_from_key ("default/audiosink");
 
   if (!ret) {
-    ret = gst_element_factory_make ("osssink", NULL);
+    ret = gst_element_factory_make (DEFAULT_AUDIOSINK, NULL);
 
     if (!ret)
-      g_warning ("No GConf default audio sink key and osssink doesn't work");
-    else
-      g_print ("GConf audio sink not found, using osssink\n");
+      g_warning ("No GConf default audio sink key and %s doesn't work",
+          DEFAULT_AUDIOSINK);
   }
 
   return ret;
@@ -217,7 +217,8 @@ gst_gconf_get_default_audio_sink (void)
  * gst_gconf_get_default_video_sink:
  *
  * Render video output bin from GStreamer GConf key : "default/videosink".
- * If key is invalid ximagesink is used as default output plugin.
+ * If key is invalid, the default video sink for the platform is used
+ * (typically xvimagesink or ximagesink).
  *
  * Returns: a #GstElement containing the video output bin, or NULL if
  * everything failed.
@@ -228,12 +229,11 @@ gst_gconf_get_default_video_sink (void)
   GstElement *ret = gst_gconf_render_bin_from_key ("default/videosink");
 
   if (!ret) {
-    ret = gst_element_factory_make ("ximagesink", NULL);
+    ret = gst_element_factory_make (DEFAULT_VIDEOSINK, NULL);
 
     if (!ret)
-      g_warning ("No GConf default video sink key and ximagesink doesn't work");
-    else
-      g_print ("GConf video sink not found, using ximagesink\n");
+      g_warning ("No GConf default video sink key and %s doesn't work",
+          DEFAULT_VIDEOSINK);
   }
 
   return ret;
@@ -243,7 +243,8 @@ gst_gconf_get_default_video_sink (void)
  * gst_gconf_get_default_audio_src:
  *
  * Render audio acquisition bin from GStreamer GConf key : "default/audiosrc".
- * If key is invalid osssrc is used as default source.
+ * If key is invalid, the default audio source for the plaform is used.
+ * (typically osssrc or sunaudiosrc).
  *
  * Returns: a #GstElement containing the audio source bin, or NULL if
  * everything failed.
@@ -254,12 +255,11 @@ gst_gconf_get_default_audio_src (void)
   GstElement *ret = gst_gconf_render_bin_from_key ("default/audiosrc");
 
   if (!ret) {
-    ret = gst_element_factory_make ("osssrc", NULL);
+    ret = gst_element_factory_make (DEFAULT_AUDIOSRC, NULL);
 
     if (!ret)
-      g_warning ("No GConf default audio src key and osssrc doesn't work");
-    else
-      g_print ("GConf audio src not found, using osssrc\n");
+      g_warning ("No GConf default audio src key and %s doesn't work",
+          DEFAULT_AUDIOSRC);
   }
 
   return ret;
@@ -269,8 +269,8 @@ gst_gconf_get_default_audio_src (void)
  * gst_gconf_get_default_video_src:
  *
  * Render video acquisition bin from GStreamer GConf key :
- * "default/videosrc". If key is invalid videotestsrc
- * is used as default source.
+ * "default/videosrc". If key is invalid, the default video source
+ * for the platform is used (typically videotestsrc).
  *
  * Returns: a #GstElement containing the video source bin, or NULL if
  * everything failed.
@@ -281,12 +281,11 @@ gst_gconf_get_default_video_src (void)
   GstElement *ret = gst_gconf_render_bin_from_key ("default/videosrc");
 
   if (!ret) {
-    ret = gst_element_factory_make ("videotestsrc", NULL);
+    ret = gst_element_factory_make (DEFAULT_VIDEOSRC, NULL);
 
     if (!ret)
-      g_warning ("No GConf default video src key and videotestrc doesn't work");
-    else
-      g_print ("GConf video src not found, using videotestrc\n");
+      g_warning ("No GConf default video src key and %s doesn't work",
+          DEFAULT_VIDEOSRC);
   }
 
   return ret;
@@ -296,7 +295,7 @@ gst_gconf_get_default_video_src (void)
  * gst_gconf_get_default_visualization_element:
  *
  * Render visualization bin from GStreamer GConf key : "default/visualization".
- * If key is invalid goom is used as default visualization element.
+ * If key is invalid, the default visualization element is used.
  *
  * Returns: a #GstElement containing the visualization bin, or NULL if
  * everything failed.
@@ -307,13 +306,12 @@ gst_gconf_get_default_visualization_element (void)
   GstElement *ret = gst_gconf_render_bin_from_key ("default/visualization");
 
   if (!ret) {
-    ret = gst_element_factory_make ("goom", NULL);
+    ret = gst_element_factory_make (DEFAULT_VISUALIZER, NULL);
 
     if (!ret)
       g_warning
-          ("No GConf default visualization plugin key and goom doesn't work");
-    else
-      g_print ("GConf visualization plugin not found, using goom\n");
+          ("No GConf default visualization plugin key and %s doesn't work",
+          DEFAULT_VISUALIZER);
   }
 
   return ret;

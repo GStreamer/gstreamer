@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gst/gst.h>
 #include <gtk/gtk.h>
 
@@ -38,7 +41,7 @@ main (int argc, char *argv[])
 
   bin = gst_pipeline_new ("bin");
 
-  src = gst_element_factory_make ("osssrc", "src");
+  src = gst_element_factory_make (DEFAULT_AUDIOSRC, "src");
   g_object_set (G_OBJECT (src), "buffersize", (gulong) 1024, NULL);
   spectrum = gst_element_factory_make ("spectrum", "spectrum");
   g_object_set (G_OBJECT (spectrum), "width", 256, NULL);

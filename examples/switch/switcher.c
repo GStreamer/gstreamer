@@ -77,7 +77,7 @@ main (int argc, char *argv[])
   src2 = gst_element_factory_make ("videotestsrc", "src2");
   g_object_set (G_OBJECT (src2), "pattern", 1, NULL);
   video_switch = gst_element_factory_make ("switch", "video_switch");
-  video_sink = gst_element_factory_make ("ximagesink", "video_sink");
+  video_sink = gst_element_factory_make (DEFAULT_VIDEOSINK, "video_sink");
 
   gst_bin_add_many (GST_BIN (pipeline), src1, src2, video_switch,
       video_sink, NULL);

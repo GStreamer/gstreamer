@@ -18,6 +18,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <stdlib.h>
 #include <gtk/gtk.h>
 #include <gst/gst.h>
@@ -34,7 +37,7 @@ int
 main (int argc, char **argv)
 {
   GtkWidget *window, *vbox, *hscale, *button;
-  GstElement *filesrc, *mad, *stereo2mono, *speed, *osssink, *pipeline;
+  GstElement *filesrc, *mad, *stereo2mono, *speed, *audiosink, *pipeline;
 
   gst_init (&argc, &argv);
   gtk_init (&argc, &argv);
@@ -64,16 +67,16 @@ main (int argc, char **argv)
   mad = gst_element_factory_make ("mad", "mad");
   stereo2mono = gst_element_factory_make ("stereo2mono", "stereo2mono");
   speed = gst_element_factory_make ("speed", "speed");
-  osssink = gst_element_factory_make ("osssink", "osssink");
-  g_object_set (osssink, "fragment", 0x00180008, NULL);
+  audiosink = gst_element_factory_make (DEFAULT_AUDIOSINK, "audiosink");
+  g_object_set (audiosink, "fragment", 0x00180008, NULL);
 
   gtk_signal_connect (GTK_OBJECT (gtk_range_get_adjustment (GTK_RANGE
               (hscale))), "value_changed", G_CALLBACK (set_speed), speed);
 
   pipeline = gst_pipeline_new ("app");
   gst_bin_add_many (GST_BIN (pipeline), filesrc, mad, stereo2mono, speed,
-      osssink, NULL);
-  gst_element_link_many (filesrc, mad, stereo2mono, speed, osssink, NULL);
+      audiosink, NULL);
+  gst_element_link_many (filesrc, mad, stereo2mono, speed, audiosink, NULL);
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);

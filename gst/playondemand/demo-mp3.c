@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <stdlib.h>
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -78,7 +81,7 @@ setup_pipeline (gchar * filename)
   src = gst_element_factory_make ("filesrc", "source");
   dec = gst_element_factory_make ("vorbisfile", "decoder");
   pod = gst_element_factory_make ("playondemand", "sequencer");
-  sink = gst_element_factory_make ("alsasink", "sink");
+  sink = gst_element_factory_make (DEFAULT_AUDIOSINK, "sink");
 
   g_object_set (G_OBJECT (src), "location", filename, NULL);
   g_object_set (G_OBJECT (sink), "period-count", 64, "period-size", 512, NULL);

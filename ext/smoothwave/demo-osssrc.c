@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gtk/gtk.h>
 #include <gst/gst.h>
 
@@ -23,7 +26,7 @@ main (int argc, char *argv[])
 
   src = gst_element_factory_make ("sinesrc", "src");
   wave = gst_element_factory_make ("smoothwave", "wave");
-  ximage = gst_element_factory_make ("ximagesink", "sink");
+  ximage = gst_element_factory_make (DEFAULT_VIDEOSINK, "sink");
   g_return_val_if_fail (src != NULL, -1);
   g_return_val_if_fail (wave != NULL, -1);
   g_return_val_if_fail (ximage != NULL, -1);

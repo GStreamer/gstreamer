@@ -692,7 +692,7 @@ gst_faad_change_state (GstElement * element)
 
         conf = faacDecGetCurrentConfiguration (faad->handle);
         conf->defObjectType = LC;
-        conf->dontUpSampleImplicitSBR = 1;
+        //conf->dontUpSampleImplicitSBR = 1;
         faacDecSetConfiguration (faad->handle, conf);
       }
       break;
