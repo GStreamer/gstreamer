@@ -28,12 +28,15 @@ main (gint argc, gchar *argv[])
   GstElement *pipeline;
   gint i;
 
+  free (malloc(8)); /* -lefence */
+
   gst_init (&argc, &argv);
 
   i = 10000;
 
+  g_mem_chunk_info ();
   while (i--) {
-    g_print ("create...\n");
+    fprintf (stderr, "+");
     pipeline = create_pipeline ();
 	  
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -48,11 +51,12 @@ main (gint argc, gchar *argv[])
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
 
-    g_print ("cleanup...\n");
+    fprintf (stderr, "-");
     gst_object_unref (GST_OBJECT (pipeline));
 
-    g_mem_chunk_info ();
   }
+  fprintf (stderr, "\n");
+  g_mem_chunk_info ();
 
   return 0;
 }

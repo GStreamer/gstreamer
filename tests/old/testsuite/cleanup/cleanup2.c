@@ -5,17 +5,20 @@ create_pipeline (void)
 {
   GstElement *fakesrc, *fakesink;
   GstElement *pipeline;
+  GstElement *bin;
 
-  
   pipeline = gst_pipeline_new ("main_pipeline");
 
   fakesrc = gst_elementfactory_make ("fakesrc", "fakesrc");
+  bin = gst_bin_new ("bin");
   fakesink = gst_elementfactory_make ("fakesink", "fakesink");
+  gst_bin_add (GST_BIN (bin), fakesink);
+  gst_element_add_ghost_pad (bin, gst_element_get_pad (fakesink, "sink"), "sink");
 
-  gst_element_connect (fakesrc, "src", fakesink, "sink");
+  gst_element_connect (fakesrc, "src", bin, "sink");
 
   gst_bin_add (GST_BIN (pipeline), fakesrc);
-  gst_bin_add (GST_BIN (pipeline), fakesink);
+  gst_bin_add (GST_BIN (pipeline), bin);
 
   g_object_set (G_OBJECT (fakesrc), "num_buffers", 5, NULL);
 
@@ -53,9 +56,7 @@ main (gint argc, gchar *argv[])
 
     fprintf (stderr, "-");
     gst_object_unref (GST_OBJECT (pipeline));
-
   }
-  fprintf (stderr, "\n");
   g_mem_chunk_info ();
 
   return 0;
