@@ -74,7 +74,7 @@ GST_PAD_TEMPLATE_FACTORY (audio_factory,
   )
 );
 
-GST_PAD_TEMPLATE_FACTORY (video_mpeg1_factory,
+GST_PAD_TEMPLATE_FACTORY (video_src_factory,
   "video_%02d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
@@ -83,13 +83,7 @@ GST_PAD_TEMPLATE_FACTORY (video_mpeg1_factory,
     "video/mpeg",
       "mpegversion",  GST_PROPS_INT (1),
       "systemstream",  GST_PROPS_BOOLEAN (FALSE)
-  )
-);
-
-GST_PAD_TEMPLATE_FACTORY (video_mpeg2_factory,
-  "video_%02d",
-  GST_PAD_SRC,
-  GST_PAD_SOMETIMES,
+  ),
   GST_CAPS_NEW (
     "mpeg_demux_video_mpeg2",
     "video/mpeg",
@@ -152,7 +146,11 @@ GST_PAD_TEMPLATE_FACTORY (subtitle_factory,
   "subtitle_stream_%d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  NULL /* FIXME! */
+  GST_CAPS_NEW (
+    "mpeg_demux_subtitle",
+    "unknown/unknown",
+    NULL
+  )
 );
 
 static void 		gst_mpeg_demux_class_init	(GstMPEGDemuxClass *klass);
@@ -438,11 +436,7 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
         /* Video */
 	name = g_strdup_printf ("video_%02d", stream_id & 0x0F);
 	outstream = &mpeg_demux->video_stream[stream_id & 0x0F];
-        if (!GST_MPEG_PARSE_IS_MPEG2 (mpeg_demux)) {
-          newtemp = GST_PAD_TEMPLATE_GET (video_mpeg1_factory);
-	} else {
-	  newtemp = GST_PAD_TEMPLATE_GET (video_mpeg2_factory);
-	}
+        newtemp = GST_PAD_TEMPLATE_GET (video_src_factory);
       } else {
 	GST_DEBUG ("unkown stream id %d", stream_id);
       }
@@ -890,7 +884,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     } else if (id >= 0xE0 && id <= 0xEF) {
       /* video */
       name = g_strdup_printf ("video_%02d", id - 0xE0);
-      newtemp = GST_PAD_TEMPLATE_GET (video_mpeg2_factory);
+      newtemp = GST_PAD_TEMPLATE_GET (video_src_factory);
     } else {
       /* unkown */
       name = g_strdup_printf ("unknown");
@@ -1210,8 +1204,7 @@ gst_mpeg_demux_plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
 
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (video_mpeg1_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (video_mpeg2_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (video_src_factory));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (private1_factory));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (private2_factory));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (pcm_factory));
