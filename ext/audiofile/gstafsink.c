@@ -487,7 +487,6 @@ gst_afsink_handle_event (GstPad *pad, GstEvent *event)
   afsink = GST_AFSINK (gst_pad_get_parent (pad));
   GST_DEBUG (0, "DEBUG: afsink: got event");
   gst_afsink_close_file (afsink);
-  GST_FLAG_SET (pad, GST_PAD_EOS);
 
   return TRUE;
 }
