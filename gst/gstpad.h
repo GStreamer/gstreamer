@@ -204,9 +204,8 @@ struct _GstRealPad {
   GstPadDirection 		 direction;
 
   /*< public >*/ /* with STREAM_LOCK */
-  /* streaming lock and cond */
-  GMutex			*stream_lock;
-  GCond				*stream_cond;
+  /* streaming rec_lock */
+  GStaticRecMutex		*stream_rec_lock;
   GstTask			*task;
 
   /*< public >*/ /* with LOCK */
@@ -331,11 +330,10 @@ struct _GstGhostPadClass {
 #define GST_RPAD_IS_SRC(pad)		(GST_RPAD_DIRECTION(pad) == GST_PAD_SRC)
 #define GST_RPAD_IS_SINK(pad)		(GST_RPAD_DIRECTION(pad) == GST_PAD_SINK)
 
-#define GST_STREAM_GET_LOCK(pad)        (GST_PAD_REALIZE(pad)->stream_lock)
-#define GST_STREAM_LOCK(pad)            (g_mutex_lock(GST_STREAM_GET_LOCK(pad)))
-#define GST_STREAM_TRYLOCK(pad)         (g_mutex_trylock(GST_STREAM_GET_LOCK(pad)))
-#define GST_STREAM_UNLOCK(pad)          (g_mutex_unlock(GST_STREAM_GET_LOCK(pad)))
-#define GST_STREAM_GET_COND(pad)        (GST_PAD_REALIZE(pad)->stream_cond)
+#define GST_STREAM_GET_LOCK(pad)        (GST_PAD_REALIZE(pad)->stream_rec_lock)
+#define GST_STREAM_LOCK(pad)            (g_static_rec_mutex_lock(GST_STREAM_GET_LOCK(pad)))
+#define GST_STREAM_TRYLOCK(pad)         (g_static_rec_mutex_trylock(GST_STREAM_GET_LOCK(pad)))
+#define GST_STREAM_UNLOCK(pad)          (g_static_rec_mutex_unlock(GST_STREAM_GET_LOCK(pad)))
 
 #define GST_PAD_BLOCK_GET_COND(pad)     (GST_PAD_REALIZE(pad)->block_cond)
 #define GST_PAD_BLOCK_WAIT(pad)         (g_cond_wait(GST_PAD_BLOCK_GET_COND (pad), GST_GET_LOCK (pad)))

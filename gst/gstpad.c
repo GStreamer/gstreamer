@@ -254,8 +254,8 @@ gst_real_pad_init (GstRealPad * pad)
 
   GST_FLAG_UNSET (pad, GST_PAD_ACTIVE);
 
-  pad->stream_lock = g_mutex_new ();
-  pad->stream_cond = g_cond_new ();
+  pad->stream_rec_lock = g_new (GStaticRecMutex, 1);
+  g_static_rec_mutex_init (pad->stream_rec_lock);
 
   pad->block_cond = g_cond_new ();
 
@@ -2494,7 +2494,11 @@ not_negotiated:
 static void
 gst_real_pad_dispose (GObject * object)
 {
-  GstPad *pad = GST_PAD (object);
+  GstPad *pad;
+  GstRealPad *rpad;
+
+  pad = GST_PAD (object);
+  rpad = GST_REAL_PAD (object);
 
   /* No linked pad can ever be disposed.
    * It has to have a parent to be linked 
@@ -2508,10 +2512,10 @@ gst_real_pad_dispose (GObject * object)
       GST_DEBUG_PAD_NAME (pad));
 
   /* we destroy the ghostpads, because they are nothing without the real pad */
-  if (GST_REAL_PAD (pad)->ghostpads) {
+  if (rpad->ghostpads) {
     GList *orig, *ghostpads;
 
-    orig = ghostpads = g_list_copy (GST_REAL_PAD (pad)->ghostpads);
+    orig = ghostpads = g_list_copy (rpad->ghostpads);
 
     while (ghostpads) {
       GstPad *ghostpad = GST_PAD (ghostpads->data);
@@ -2532,7 +2536,12 @@ gst_real_pad_dispose (GObject * object)
     g_list_free (orig);
     /* as the ghost pads are removed, they remove themselves from ->ghostpads.
        So it should be empty now. Let's assert that. */
-    g_assert (GST_REAL_PAD (pad)->ghostpads == NULL);
+    g_assert (rpad->ghostpads == NULL);
+  }
+
+  if (rpad->stream_rec_lock) {
+    g_static_rec_mutex_free (rpad->stream_rec_lock);
+    rpad->stream_rec_lock = NULL;
   }
 
   /* clear the caps */

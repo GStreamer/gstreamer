@@ -1,5 +1,16 @@
 2005-02-21  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstpad.c (gst_real_pad_dispose): Free the stream lock (it
+	wasn't being freed before). 
+	(gst_real_pad_init): Allocate and initialize the stream lock.
+
+	* gst/gstpad.h (GstRealPad): Change the stream lock to be
+	recursive, so that if an event comes while a loop-based sink is
+	pulling, the stream lock can be had by both the sink's loop
+	function and the sink's event function.
+	(GST_STREAM_GET_LOCK, GST_STREAM_LOCK, GST_STREAM_TRYLOCK) 
+	(GST_STREAM_UNLOCK): Updated accordingly.
+
 	* gst/gstmessage.h (GstMessageType): Turned into flags. Added
 	GST_MESSAGE_ANY as an OR of all flags.
 	(GST_MESSAGE_PARSE_STATE_CHANGED): New terrible macro. Will be
