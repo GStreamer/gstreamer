@@ -86,7 +86,9 @@ gst_autoplug_can_connect_src (GstElementFactory *fac, GstCaps *src)
   
   while (templs)
   {
-    if ((GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SINK) && gst_autoplug_caps_intersect (src, GST_PAD_TEMPLATE_CAPS (templs->data)))
+    if ((GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SINK) && 
+	gst_autoplug_caps_intersect (src, 
+		                     GST_PAD_TEMPLATE_CAPS (templs->data)))
     {
       return GST_PAD_TEMPLATE (templs->data);
     }
@@ -113,13 +115,16 @@ gst_autoplug_can_connect_sink (GstElementFactory *fac, GstCaps *sink)
   
   while (templs)
   {
-    if ((GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC) && gst_autoplug_caps_intersect (GST_PAD_TEMPLATE_CAPS (templs->data), sink))
+    GstCaps *caps = GST_PAD_TEMPLATE_CAPS (templs->data);
+    if ((GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC) &&
+	gst_autoplug_caps_intersect (GST_PAD_TEMPLATE_CAPS (templs->data), 
+		                     sink))
     {
       return GST_PAD_TEMPLATE (templs->data);
     }
     templs = g_list_next (templs);
   }
-  
+
   return NULL;  
 }
 GstPadTemplate *
@@ -328,8 +333,10 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
   g_return_val_if_fail (sinkcaps != NULL, NULL);
   
   GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT, 
-            "attempting to autoplug via shortest path from %s to %s\n", 
+            "attempting to autoplug via shortest path from %s to %s", 
 	    gst_caps_get_mime (srccaps), gst_caps_get_mime (sinkcaps));
+  gst_caps_debug (srccaps, "source caps");
+  gst_caps_debug (sinkcaps, "sink caps");
   /* wrap all factories as GstAutoplugNode 
    * initialize the cost */
   while (factories)
@@ -337,10 +344,19 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
     GstAutoplugNode *node = g_new0 (GstAutoplugNode, 1);
     node->prev = NULL;
     node->fac = (GstElementFactory *) factories->data;
+    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
+	       "trying with %s", node->fac->details->longname);
     node->templ = gst_autoplug_can_connect_src (node->fac, srccaps);
     node->cost = (node->templ ? gst_autoplug_get_cost (node->fac) 
 		              : GST_AUTOPLUG_MAX_COST);
     node->endpoint = gst_autoplug_can_connect_sink (node->fac, sinkcaps);
+    if (node->templ && node->endpoint)
+      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "%s makes connection possible",
+		 node->fac->details->longname);
+    else
+      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, 
+		 "direct connection with %s not possible",
+		 node->fac->details->longname);
     if ((node->endpoint != NULL) && 
 	((bestnode == NULL) || (node->cost < bestnode->cost)))
     {
