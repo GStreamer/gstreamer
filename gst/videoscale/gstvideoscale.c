@@ -208,7 +208,7 @@ gst_videoscale_link (GstPad *pad, const GstCaps *caps)
 {
   GstVideoscale *videoscale;
   GstPadLinkReturn ret;
-  GstCaps *othercaps;
+  const GstCaps *othercaps = NULL;
   GstPad *otherpad;
   GstStructure *structure;
 
