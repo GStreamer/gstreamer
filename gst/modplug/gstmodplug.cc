@@ -30,7 +30,7 @@
 
 #include "gstmodplug.h"
 
-#include <gst/audio/audio.h>
+#include <gst/gst.h>
 #include <stdlib.h>
 
 GstElementDetails modplug_details = {
@@ -105,9 +105,12 @@ static void		gst_modplug_class_init		(GstModPlugClass *klass);
 static void		gst_modplug_init		(GstModPlug *filter);
 static void		gst_modplug_set_property 	(GObject *object, guint id, const GValue *value, GParamSpec *pspec );
 static void		gst_modplug_get_property	(GObject *object, guint id, GValue *value, GParamSpec *pspec );
-static void     gst_modplug_loop                (GstElement *element);
+static void  		gst_modplug_loop                (GstElement *element);
 static void		gst_modplug_setup 		(GstModPlug *modplug);
-static GstElementStateReturn  gst_modplug_change_state 	(GstElement *element);
+static gboolean		gst_modplug_src_event		(GstPad *pad, GstEvent *event);
+static gboolean		gst_modplug_src_query 		(GstPad *pad, GstPadQueryType type, GstFormat *format, gint64 *value);
+static GstElementStateReturn  
+			gst_modplug_change_state 	(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
 
@@ -237,6 +240,8 @@ gst_modplug_init (GstModPlug *modplug)
   gst_element_add_pad(GST_ELEMENT(modplug),modplug->sinkpad);
   gst_element_add_pad(GST_ELEMENT(modplug),modplug->srcpad);
   
+  gst_pad_set_event_function (modplug->srcpad, (GstPadEventFunction)GST_DEBUG_FUNCPTR(gst_modplug_src_event));
+  gst_pad_set_query_function (modplug->srcpad, gst_modplug_src_query);
   gst_element_set_loop_function (GST_ELEMENT (modplug), gst_modplug_loop);
   
   modplug->Buffer = NULL;
@@ -282,7 +287,83 @@ gst_modplug_setup (GstModPlug *modplug)
     modplug->mSoundFile->SetReverbParameters( modplug->reverb_depth, modplug->reverb_delay );
 
 }
-  
+
+
+static gboolean
+gst_modplug_src_query (GstPad *pad, GstPadQueryType type,
+		                   GstFormat *format, gint64 *value)
+{
+  gboolean res = TRUE;
+  GstModPlug *modplug;
+  float tmp;
+
+  modplug = GST_MODPLUG (gst_pad_get_parent (pad));
+
+  switch (type) {
+    case GST_PAD_QUERY_TOTAL:
+      switch (*format) {
+        case GST_FORMAT_DEFAULT:
+              *format = GST_FORMAT_TIME;
+	case GST_FORMAT_TIME:
+          *value=(gint64)modplug->mSoundFile->GetSongTime() * 1000000000LL;
+	  break;
+	default:
+          res = FALSE;
+          break;
+      }
+      break;
+    case GST_PAD_QUERY_POSITION:
+      switch (*format) {
+         case GST_FORMAT_DEFAULT:
+           *format = GST_FORMAT_TIME;
+	 default:
+	   tmp = ((float)( modplug->mSoundFile->GetSongTime() * modplug->mSoundFile->GetCurrentPos() ) / (float)modplug->mSoundFile->GetMaxPosition() );
+	   *value=(gint64)(tmp * 1000000000LL);
+	   break;
+      }
+    default:
+      break;
+  }
+
+  return res;
+}    
+
+					
+
+
+static gboolean
+gst_modplug_src_event (GstPad *pad, GstEvent *event)
+{
+  gboolean res = TRUE;
+  GstModPlug *modplug; 
+
+  modplug = GST_MODPLUG (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+  /* the all-formats seek logic */
+  case GST_EVENT_SEEK:
+  {
+    gboolean flush;
+    GstFormat format;
+
+    format = GST_FORMAT_TIME;
+
+    /* shave off the flush flag, we'll need it later */
+    flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
+
+    /* assume the worst */
+    res = FALSE;
+
+    modplug->seek_at = GST_EVENT_SEEK_OFFSET (event);
+  }
+  default:
+    res = FALSE;
+    break;
+  }
+
+  return res;
+}
+
 	
 
 static void
@@ -291,7 +372,8 @@ gst_modplug_loop (GstElement *element)
   GstModPlug *modplug;
   GstBuffer *buffer_in, *buffer_out;
   gint mode16bits;
-	guint64 total_samples, sync_point;
+  guint64 total_samples, sync_point;
+  float temp;
 
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_MODPLUG (element));
@@ -321,11 +403,6 @@ gst_modplug_loop (GstElement *element)
     mode16bits = 16;
   else
     mode16bits = 8;
-
-/*  CSoundFile::SetWaveConfig ( modplug->frequency, mode16bits, modplug->channel );
-  CSoundFile::SetWaveConfigEx ( modplug->surround, !modplug->oversamp, modplug->reverb, true, modplug->megabass, modplug->noise_reduction, false );
-  CSoundFile::SetResamplingMode ( SRCMODE_SPLINE );
-  CSoundFile::SetSurroundParameters( 30, 100 );*/
 
   gst_modplug_setup( modplug );
 
@@ -357,6 +434,30 @@ gst_modplug_loop (GstElement *element)
   sync_point = 0;
   			    
   do {
+    if ( modplug->seek_at != 0 )
+    {
+      GstEvent *discont;
+      GstClockTime time;
+      int seek_to_pos;
+      gint64 total;
+
+      total = modplug->mSoundFile->GetSongTime() * 1000000000LL;
+
+      temp = (float) total / modplug->seek_at;     
+      seek_to_pos = (int)( modplug->mSoundFile->GetMaxPosition() / temp );
+
+      modplug->mSoundFile->SetCurrentPos( seek_to_pos );
+      modplug->seek_at = 0;
+
+      /* get stream stats */
+      time = (gint64) (total * modplug->mSoundFile->GetCurrentPos() ) / modplug->mSoundFile->GetMaxPosition();
+      discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, NULL );
+
+      gst_pad_push (modplug->srcpad, GST_BUFFER (discont));
+    }
+
+    
+  
     if( modplug->mSoundFile->Read ( modplug->audiobuffer, modplug->length ) != 0 )
     {
       buffer_out = gst_buffer_new();
@@ -364,14 +465,14 @@ gst_modplug_loop (GstElement *element)
       GST_BUFFER_SIZE( buffer_out ) = modplug->length;
  	  
       total_samples+=1152;		
-	  GST_BUFFER_TIMESTAMP( buffer_out ) = total_samples * GST_SECOND / modplug->frequency;
+      GST_BUFFER_TIMESTAMP( buffer_out ) = total_samples * GST_SECOND / modplug->frequency;
  	  	
-	  gst_pad_push( srcpad, buffer_out );
-	  gst_element_yield (element);      
+      gst_pad_push( srcpad, buffer_out );
+      gst_element_yield (element);      
     }
     else
     {	    
-	  free( modplug->audiobuffer );
+      free( modplug->audiobuffer );
       gst_element_set_eos (GST_ELEMENT (modplug));
       gst_pad_push (modplug->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));	  
     }
@@ -383,53 +484,33 @@ gst_modplug_loop (GstElement *element)
 static GstElementStateReturn
 gst_modplug_change_state (GstElement *element)
 {
-GstModPlug *modplug;
+  GstModPlug *modplug;
 
-  g_return_val_if_fail (GST_IS_MODPLUG (element), GST_STATE_FAILURE);
+  modplug = GST_MODPLUG( element );
 
-  modplug = GST_MODPLUG (element);
-
-  GST_DEBUG (0,"state pending %d", GST_STATE_PENDING (element));
-
-  /* if going down into NULL state, close the file if it's open */
-/*  if (GST_STATE_PENDING (element) == GST_STATE_READY) 
-  {
-     gst_modplug_setup(modplug);
-	  
-	 if ( Player_Active() )
-	 {
-		Player_TogglePause();
-		Player_SetPosition( 0 );
-	 }
-	
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+//      modplug->mSoundFile = new CSoundFile;
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+//      modplug->mSoundFile->SetCurrentPos( 0 );    
+      break;
+    case GST_STATE_READY_TO_NULL:
+      free( modplug->audiobuffer );
+      modplug->mSoundFile->Destroy();
+      break;
   }
+
+  parent_class->change_state (element);
   
-  if (GST_STATE_PENDING (element) == GST_STATE_PLAYING) 
-  {	 
-	 if ( Player_Active() && Player_Paused() )	 
-		Player_TogglePause();
-	 else
-	   if ( ! Player_Active() )
-	     Player_Start(module);
-	 
-  }
-    	
-  if (GST_STATE_PENDING (element) == GST_STATE_PAUSED) 
-    if ( Player_Active() && ! Player_Paused() )
-       Player_TogglePause();
-
-  if (GST_STATE_PENDING (element) == GST_STATE_NULL) 
-	  ModPlug_Exit();    
- */ 
-
-  /* if we haven't failed already, give the parent class a chance to ;-) */
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
   return GST_STATE_SUCCESS;
 }
-
-
 
 static void
 gst_modplug_set_property (GObject *object, guint id, const GValue *value, GParamSpec *pspec )

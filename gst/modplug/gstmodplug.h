@@ -63,6 +63,8 @@ struct _GstModPlug {
 
   guchar *audiobuffer;
   gint32 length;
+  gboolean restart;
+  gint64 seek_at;
 
   CSoundFile *mSoundFile;
 };
