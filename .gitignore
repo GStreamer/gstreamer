@@ -23,3 +23,9 @@ stamp-h.in
 stamp.h
 autom4te.cache
 stamp-h1
+autoregen.sh
+compile
+depcomp
+install-sh
+mkinstalldirs
+py-compile
