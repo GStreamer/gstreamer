@@ -93,8 +93,10 @@ _gst_event_free (GstEvent* event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:
       gst_tag_list_free (event->event_data.structure.structure);
+      break;
     case GST_EVENT_NAVIGATION:
       gst_structure_free (event->event_data.structure.structure);
+      break;
     default:
       break;
   }

@@ -1,3 +1,10 @@
+2004-02-04  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstevent.c: (_gst_event_free):
+	  actually break; inside the switch statement
+	* gst/parse/grammar.y:
+	  fix memleak where GValues weren't unset
+
 2004-02-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gststructure.c: (gst_structure_from_string):

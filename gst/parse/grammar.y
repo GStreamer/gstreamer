@@ -223,6 +223,8 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
 {
   GParamSpec *pspec;
   gchar *pos = value;
+  GValue v = { 0, }; 
+  GValue v2 = { 0, };
   /* parse the string, so the property name is null-terminated an pos points
      to the beginning of the value */
   while (!g_ascii_isspace (*pos) && (*pos != '=')) pos++; 
@@ -241,8 +243,6 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
   }
   gst_parse_unescape (pos); 
   if ((pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (element), value))) { 
-    GValue v = { 0, }; 
-    GValue v2 = { 0, };
     g_value_init (&v, G_PARAM_SPEC_VALUE_TYPE(pspec)); 
     switch (G_TYPE_FUNDAMENTAL (G_PARAM_SPEC_VALUE_TYPE (pspec))) {
     case G_TYPE_STRING:
@@ -320,6 +320,10 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
 
 out:
   gst_parse_strfree (value);
+  if (G_IS_VALUE (&v))
+    g_value_unset (&v);
+  if (G_IS_VALUE (&v2))
+    g_value_unset (&v2);
   return;
   
 error:
