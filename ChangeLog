@@ -1,5 +1,10 @@
 2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gsterror.h:
+          fix wrong GST_LIBRARY_ERROR_ENCODE addition
+
+2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstelement.c: (gst_element_error_full):
 	* gst/gstelement.h:
           change _extended to _full
