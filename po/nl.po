@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-02-04 23:10+0100\n"
+"POT-Creation-Date: 2004-02-17 19:22+0100\n"
 "PO-Revision-Date: 2004-01-13 12:03+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -255,7 +255,7 @@ msgstr "De stroom is van een ander type dan dit element kan verwerken."
 
 #: gst/gsterror.c:152
 msgid "There is no codec present that can handle the stream's type."
-msgstr "Er is geen codec aanwezig die dit type stream kan verwerken."
+msgstr "Er is geen codec aanwezig die dit type stroom kan verwerken."
 
 #: gst/gsterror.c:154
 msgid "Could not decode stream."
@@ -421,122 +421,118 @@ msgid "person(s) performing"
 msgstr "perso(o)n(en) die het stuk uitvoeren"
 
 #: gst/gsttag.c:147
-msgid "application"
-msgstr "applicatie"
-
-#: gst/gsttag.c:148
-msgid "application that wrote the stream"
-msgstr "applicatie die de stroom geschreven heeft"
-
-#: gst/gsttag.c:152
 msgid "duration"
 msgstr "duur"
 
-#: gst/gsttag.c:153
+#: gst/gsttag.c:148
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "lengte in GStreamer tijdseenheden (nanoseconden)"
 
-#: gst/gsttag.c:157
+#: gst/gsttag.c:152
 msgid "codec"
 msgstr "codec"
 
-#: gst/gsttag.c:158
+#: gst/gsttag.c:153
 msgid "codec the data is stored in"
 msgstr "codec waarin het stuk is opgeslagen"
 
-#: gst/gsttag.c:162
+#: gst/gsttag.c:157
 msgid "bitrate"
 msgstr "bitsnelheid"
 
-#: gst/gsttag.c:163
+#: gst/gsttag.c:158
 msgid "exact or average bitrate in bits/s"
 msgstr "exacte of gemiddelde bitsnelheid in bits/s"
 
-#: gst/gsttag.c:167
+#: gst/gsttag.c:162
 msgid "nominal bitrate"
 msgstr "nominale bitsnelheid"
 
-#: gst/gsttag.c:168
+#: gst/gsttag.c:163
 msgid "nominal bitrate in bits/s"
 msgstr "nominale bitsnelheid in bits per seconde"
 
-#: gst/gsttag.c:172
+#: gst/gsttag.c:167
 msgid "minimum bitrate"
 msgstr "minimum bitsnelheid"
 
-#: gst/gsttag.c:173
+#: gst/gsttag.c:168
 msgid "minimum bitrate in bits/s"
 msgstr "minimum bitsnelheid in bits per seconde"
 
-#: gst/gsttag.c:177
+#: gst/gsttag.c:172
 msgid "maximum bitrate"
 msgstr "maximum bitsnelheid"
 
-#: gst/gsttag.c:178
+#: gst/gsttag.c:173
 msgid "maximum bitrate in bits/s"
 msgstr "maximum bitsnelheid in bits per seconde"
 
-#: gst/gsttag.c:182
+#: gst/gsttag.c:177
 msgid "encoder"
 msgstr "encoder"
 
-#: gst/gsttag.c:183
+#: gst/gsttag.c:178
 msgid "encoder used to encode this stream"
 msgstr "encoder gebruikt om deze stroom te encoderen"
 
-#: gst/gsttag.c:187
+#: gst/gsttag.c:182
 msgid "encoder version"
 msgstr "encoder versie"
 
-#: gst/gsttag.c:188
+#: gst/gsttag.c:183
 msgid "version of the encoder used to encode this stream"
 msgstr "versie van de encoder gebruikt om deze stroom te encoderen"
 
-#: gst/gsttag.c:192
+#: gst/gsttag.c:187
 msgid "serial"
 msgstr "volgnummer"
 
-#: gst/gsttag.c:193
+#: gst/gsttag.c:188
 msgid "serial number of track"
 msgstr "volgnummer van dit nummer"
 
-#: gst/gsttag.c:197
+#: gst/gsttag.c:192
 msgid "replaygain track gain"
 msgstr ""
 
-#: gst/gsttag.c:198
+#: gst/gsttag.c:193
 msgid "track gain in db"
 msgstr ""
 
-#: gst/gsttag.c:202
+#: gst/gsttag.c:197
 msgid "replaygain track peak"
 msgstr ""
 
-#: gst/gsttag.c:203
+#: gst/gsttag.c:198
 msgid "peak of the track"
 msgstr ""
 
-#: gst/gsttag.c:207
+#: gst/gsttag.c:202
 msgid "replaygain album gain"
 msgstr ""
 
-#: gst/gsttag.c:208
+#: gst/gsttag.c:203
 msgid "album gain in db"
 msgstr ""
 
-#: gst/gsttag.c:212
+#: gst/gsttag.c:207
 msgid "replaygain album peak"
 msgstr ""
 
-#: gst/gsttag.c:213
+#: gst/gsttag.c:208
 msgid "peak of the album"
 msgstr ""
 
-#: gst/gsttag.c:251
+#: gst/gsttag.c:246
 msgid ", "
 msgstr ", "
 
-#: gst/elements/gstfilesink.c:248 gst/elements/gstfilesrc.c:674
+#: gst/autoplug/gstspider.c:418
+msgid "There is no element present to handle the stream's mime type %s."
+msgstr "Er is geen element aanwezig die het mime-type %s van de stroom kan verwerken."
+
+#: gst/elements/gstfilesink.c:248 gst/elements/gstfilesrc.c:676
 msgid "No filename specified."
 msgstr "Geen bestandsnaam gegeven."
 
@@ -556,16 +552,16 @@ msgstr "Fout bij het sluiten van bestand \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Fout bij het schrijven naar bestand \"%s\"."
 
-#: gst/elements/gstfilesrc.c:681
+#: gst/elements/gstfilesrc.c:683
 msgid "No file specified for reading."
 msgstr "Geen bestandsnaam gegeven om te lezen."
 
-#: gst/elements/gstfilesrc.c:696 gst/elements/gstmultifilesrc.c:244
+#: gst/elements/gstfilesrc.c:698 gst/elements/gstmultifilesrc.c:244
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kon bestand \"%s\" niet openen om te lezen."
 
-#: gst/elements/gstfilesrc.c:707
+#: gst/elements/gstfilesrc.c:709
 #, c-format
 msgid "File \"%s\" isn't a regular file."
 msgstr "Bestand \"%s\" is geen gewoon bestand."
@@ -799,3 +795,9 @@ msgstr "BEZIG met pijplijn ...\n"
 #: tools/gst-launch.c:471
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FOUT: pijplijn wil niet spelen.\n"
+
+#~ msgid "application"
+#~ msgstr "applicatie"
+
+#~ msgid "application that wrote the stream"
+#~ msgstr "applicatie die de stroom geschreven heeft"
