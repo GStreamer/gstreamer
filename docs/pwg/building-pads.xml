@@ -39,19 +39,19 @@ gst_my_filter_init (GstMyFilter *filter)
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (filter);
 
   /* pad through which data comes in to the element */
-  filter->sinkpad = gst_pad_new_from_template (
+  filter-&gt;sinkpad = gst_pad_new_from_template (
 	gst_element_class_get_pad_template (klass, "sink"), "sink");
-  gst_pad_set_link_function (filter->sinkpad, gst_my_filter_link);
-  gst_pad_set_getcaps_function (filter->sinkpad, gst_my_filter_getcaps);
-  gst_pad_set_chain_function (filter->sinkpad, gst_my_filter_chain);
-  gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
+  gst_pad_set_link_function (filter-&gt;sinkpad, gst_my_filter_link);
+  gst_pad_set_getcaps_function (filter-&gt;sinkpad, gst_my_filter_getcaps);
+  gst_pad_set_chain_function (filter-&gt;sinkpad, gst_my_filter_chain);
+  gst_element_add_pad (GST_ELEMENT (filter), filter-&gt;sinkpad);
 
   /* pad through which data goes out of the element */
-  filter->srcpad = gst_pad_new_from_template (
+  filter-&gt;srcpad = gst_pad_new_from_template (
 	gst_element_class_get_pad_template (klass, "src"), "src");
-  gst_pad_set_link_function (filter->srcpad, gst_my_filter_link);
-  gst_pad_set_getcaps_function (filter->srcpad, gst_my_filter_getcaps);
-  gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
+  gst_pad_set_link_function (filter-&gt;srcpad, gst_my_filter_link);
+  gst_pad_set_getcaps_function (filter-&gt;srcpad, gst_my_filter_getcaps);
+  gst_element_add_pad (GST_ELEMENT (filter), filter-&gt;srcpad);
 [..]
 }
   </programlisting>
@@ -75,8 +75,8 @@ gst_my_filter_link (GstPad        *pad,
 {
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   GstMyFilter *filter = GST_MY_FILTER (gst_pad_get_parent (pad));
-  GstPad *otherpad = (pad == filter->srcpad) ? filter->sinkpad :
-					       filter->srcpad;
+  GstPad *otherpad = (pad == filter-&gt;srcpad) ? filter-&gt;sinkpad :
+					       filter-&gt;srcpad;
   GstPadLinkReturn ret;
   const gchar *mime;
 
@@ -99,11 +99,11 @@ gst_my_filter_link (GstPad        *pad,
 
   /* Capsnego succeeded, get the stream properties for internal
    * usage and return success. */
-  gst_structure_get_int (structure, "rate", &amp;filter->samplerate);
-  gst_structure_get_int (structure, "channels", &amp;filter->channels);
+  gst_structure_get_int (structure, "rate", &amp;filter-&gt;samplerate);
+  gst_structure_get_int (structure, "channels", &amp;filter-&gt;channels);
 
   g_print ("Caps negotiation succeeded with %d Hz @ %d channels\n",
-	   filter->samplerate, filter->channels);
+	   filter-&gt;samplerate, filter-&gt;channels);
 
   return ret;
 }
@@ -137,8 +137,8 @@ static GstCaps *
 gst_my_filter_getcaps (GstPad *pad)
 {
   GstMyFilter *filter = GST_MY_FILTER (gst_pad_get_parent (pad));
-  GstPad *otherpad = (pad == filter->srcpad) ? filter->sinkpad :
-					       filter->srcpad;
+  GstPad *otherpad = (pad == filter-&gt;srcpad) ? filter-&gt;sinkpad :
+					       filter-&gt;srcpad;
   GstCaps *othercaps = gst_pad_get_allowed_caps (otherpad), *caps;
   gint n;
 
@@ -147,7 +147,7 @@ gst_my_filter_getcaps (GstPad *pad)
 
   /* We support *any* samplerate, indifferent from the samplerate
    * supported by the linked elements on both sides. */
-  for (i = 0; i < gst_caps_get_size (othercaps); i++) {
+  for (i = 0; i &lt; gst_caps_get_size (othercaps); i++) {
     GstStructure *structure = gst_caps_get_structure (othercaps, i);
 
     gst_structure_remove_field (structure, "rate");
@@ -176,9 +176,9 @@ gst_my_filter_init (GstMyFilter *filter)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (filter);
 [..]
-  filter->srcpad = gst_pad_new_from_template (
+  filter-&gt;srcpad = gst_pad_new_from_template (
 	gst_element_class_get_pad_template (klass, "src"), "src");
-  gst_pad_use_explicit_caps (filter->srcpad);
+  gst_pad_use_explicit_caps (filter-&gt;srcpad);
 [..]
 }
 
@@ -187,7 +187,7 @@ gst_my_filter_somefunction (GstMyFilter *filter)
 {
   GstCaps *caps = ..;
 [..]
-  gst_pad_set_explicit_caps (filter->srcpad, caps);
+  gst_pad_set_explicit_caps (filter-&gt;srcpad, caps);
 [..]
 }
   </programlisting>
