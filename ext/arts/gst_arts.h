@@ -24,7 +24,6 @@
 #define __GST_ARTS_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 

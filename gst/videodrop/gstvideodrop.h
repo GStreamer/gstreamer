@@ -20,7 +20,6 @@
 #ifndef __GST_VIDEODROP_H__
 #define __GST_VIDEODROP_H__
 
-#include <config.h>
 #include <gst/gst.h>
 
 G_BEGIN_DECLS

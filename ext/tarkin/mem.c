@@ -2,6 +2,9 @@
  *   Debugging implementation of MALLOC and friends
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "mem.h"
 

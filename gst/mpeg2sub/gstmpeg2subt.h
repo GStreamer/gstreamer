@@ -22,7 +22,6 @@
 #define __GST_MPEG2SUBT_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 

@@ -22,7 +22,6 @@
 #define __RTJPEGENC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 #include "RTjpeg.h"

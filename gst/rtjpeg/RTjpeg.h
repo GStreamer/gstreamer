@@ -21,7 +21,6 @@
    This file is a modified version of RTjpeg 0.1.2, (C) Justin Schoeman 1998
 */
 
-#include <config.h>
 #include <inttypes.h>
 
 typedef uint8_t  __u8;

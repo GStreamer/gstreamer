@@ -22,10 +22,6 @@
 #ifndef __GST_SPEED_H__
 #define __GST_SPEED_H__
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
-
 #include <gst/gst.h>
 
 G_BEGIN_DECLS

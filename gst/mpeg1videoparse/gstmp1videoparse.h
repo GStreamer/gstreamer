@@ -22,7 +22,6 @@
 #define __MP1VIDEOPARSE_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 

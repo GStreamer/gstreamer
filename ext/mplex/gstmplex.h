@@ -22,7 +22,6 @@
 #define __GST_MPLEX_H__
 
 
-#include <config.h>
 #include <stdlib.h>
 
 #include <gst/gst.h>

@@ -22,7 +22,6 @@
 #define __TARKINENC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 #include "tarkin.h"

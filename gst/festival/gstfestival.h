@@ -61,7 +61,6 @@
 #define __GST_FESTIVAL_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 #ifdef __cplusplus

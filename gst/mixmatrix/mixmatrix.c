@@ -20,7 +20,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <config.h>
+
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
 #include <gst/audio/audio.h>

@@ -22,7 +22,6 @@
 #define __GST_GSMENC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 #ifdef GSM_HEADER_IN_SUBDIR

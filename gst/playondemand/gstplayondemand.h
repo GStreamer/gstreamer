@@ -23,7 +23,6 @@
 #define __GST_PLAYONDEMAND_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 

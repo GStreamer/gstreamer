@@ -22,7 +22,6 @@
 #define __PRIVATE_H__
 
 #include "resample.h"
-#include "config.h"
 
 void resample_nearest_s16(resample_t *r);
 void resample_bilinear_s16(resample_t *r);

@@ -25,7 +25,6 @@
 #define __GST_AFSRC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 #include <audiofile.h>			/* what else are we to do */
 

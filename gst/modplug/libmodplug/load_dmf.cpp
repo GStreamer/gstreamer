@@ -7,6 +7,11 @@
 ///////////////////////////////////////////////////////
 // DMF DELUSION DIGITAL MUSIC FILEFORMAT (X-Tracker) //
 ///////////////////////////////////////////////////////
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "stdafx.h"
 #include "sndfile.h"
 

@@ -4,6 +4,10 @@
  * Authors: Kenton Varda <temporal@gauge3d.org> (C interface wrapper)
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "modplug.h"
 #include "stdafx.h"
 #include "sndfile.h"

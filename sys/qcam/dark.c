@@ -38,6 +38,10 @@ OTHER DEALINGS IN THE SOFTWARE.
 	establishing shots need only be done once per camera.
 */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>

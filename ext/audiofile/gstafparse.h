@@ -25,7 +25,6 @@
 #define __GST_AFPARSE_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
 #include <audiofile.h>			/* what else are we to do */

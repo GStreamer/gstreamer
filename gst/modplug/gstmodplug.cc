@@ -25,6 +25,10 @@
      Olivier Lapicque <olivierl@jps.net>  
 */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "libmodplug/stdafx.h"
 #include "libmodplug/sndfile.h"
 

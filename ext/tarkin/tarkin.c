@@ -3,6 +3,10 @@
  *   (this one has to be rewritten to write ogg streams ...)
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "mem.h"
 #include "tarkin.h"
 #include "yuv.h"

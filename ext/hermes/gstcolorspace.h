@@ -22,7 +22,6 @@
 #define __GST_COLORSPACE_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 #include "yuv2rgb.h"
 

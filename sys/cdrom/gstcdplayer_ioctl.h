@@ -20,10 +20,6 @@
 #ifndef __CDPLAYER_LL_H__
 #define __CDPLAYER_LL_H__
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <glib.h>
 
 #define LEADOUT 0

@@ -19,6 +19,10 @@
 
 /* media-info-priv.c - handling of internal stuff */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/gst.h>
 #include <string.h>
 #include "media-info.h"

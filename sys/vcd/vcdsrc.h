@@ -22,7 +22,6 @@
 #define __VCDSRC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 #include <linux/cdrom.h>

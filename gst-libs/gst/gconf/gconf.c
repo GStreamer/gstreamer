@@ -21,6 +21,10 @@
  * this library handles interaction with GConf
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "gconf.h"
 
 #define GST_GCONF_DIR "/system/gstreamer"

@@ -22,7 +22,6 @@
 #ifndef __GST_CDXA_PARSE_H__
 #define __GST_CDXA_PARSE_H__
 
-#include <config.h>
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
 

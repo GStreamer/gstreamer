@@ -22,7 +22,6 @@
 #define __RTJPEGDEC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 

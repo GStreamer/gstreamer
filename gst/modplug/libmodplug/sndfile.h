@@ -5,10 +5,6 @@
  *          Adam Goode       <adam@evdebs.org> (endian and char fixes for PPC)
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #ifndef __SNDFILE_H
 #define __SNDFILE_H
 

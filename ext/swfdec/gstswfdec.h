@@ -22,7 +22,6 @@
 #define __GST_SWFDEC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 #include <swfdec.h>
 

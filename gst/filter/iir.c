@@ -19,6 +19,10 @@
 /* LPC is actually a degenerate case of form I/II filters, but we need
    both */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>

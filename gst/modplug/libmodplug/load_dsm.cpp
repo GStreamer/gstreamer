@@ -7,6 +7,11 @@
 //////////////////////////////////////////////
 // DSIK Internal Format (DSM) module loader //
 //////////////////////////////////////////////
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "stdafx.h"
 #include "sndfile.h"
 

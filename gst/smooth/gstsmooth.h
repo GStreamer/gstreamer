@@ -22,9 +22,7 @@
 #define __GST_SMOOTH_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
-
 
 #ifdef __cplusplus
 extern "C" {

@@ -22,7 +22,6 @@
 #define __SYSTEM_ENCODE_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 #include <gst/getbits/getbits.h>
 

@@ -21,8 +21,6 @@
 #ifndef __GST_MODPLUG_H__
 #define __GST_MODPLUG_H__
 
-#include <config.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

@@ -23,7 +23,6 @@
 #define __GST_PASSTHROUGH_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 
