@@ -1,3 +1,15 @@
+2005-02-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/speed/demo-mp3.c: (time_tick_cb), (main):
+	  Display current position and track length; misc. clean-ups.
+	  
+	* gst/speed/gstspeed.c: (speed_get_query_types), (speed_src_query),
+	(speed_init), (speed_chain):
+	  Add query function, so that the stream length and current position
+	  get adjusted when queried (note that current position queries may
+	  still be wrong if the audio sink returns values based on buffer
+	  timestamps instead of passing on the query).
+
 2005-02-13  Benjamin Otte  <otte@gnome.org>
 
 	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_link),
