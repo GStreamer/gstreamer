@@ -281,7 +281,7 @@ gst_jack_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
     pad->peer_name = newname;
     pad->pad = gst_pad_new_from_template (templ, newname);
     gst_element_add_pad (GST_ELEMENT (this), pad->pad);
-    gst_pad_set_connect_function (pad->pad, gst_jack_connect);
+    gst_pad_set_link_function (pad->pad, gst_jack_connect);
     
     this->pads = g_list_append (this->pads, pad);
     
@@ -402,18 +402,18 @@ gst_jack_connect (GstPad *pad, GstCaps *caps)
   gint rate;
   
   this = GST_JACK (gst_pad_get_parent (pad));
-  g_return_val_if_fail (this != NULL, GST_PAD_CONNECT_REFUSED);
-  g_return_val_if_fail (GST_IS_JACK (this), GST_PAD_CONNECT_REFUSED);
+  g_return_val_if_fail (this != NULL, GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_IS_JACK (this), GST_PAD_LINK_REFUSED);
   
   if (GST_CAPS_IS_FIXED (caps)) {
       gst_caps_get_int (caps, "rate", &rate);
       if (this->bin && rate != this->bin->rate)
-          return GST_PAD_CONNECT_REFUSED;
+          return GST_PAD_LINK_REFUSED;
       
-      return GST_PAD_CONNECT_OK;
+      return GST_PAD_LINK_OK;
   }
   
-  return GST_PAD_CONNECT_DELAYED;
+  return GST_PAD_LINK_DELAYED;
 }
 
 static void
