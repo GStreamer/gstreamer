@@ -93,7 +93,7 @@ GST_PAD_TEMPLATE_FACTORY (src_template,
     "video/x-raw-rgb",
       "bpp",		GST_PROPS_INT (32),
       "depth",		GST_PROPS_INT (32),
-      "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
+      "endianness", 	GST_PROPS_INT (G_BIG_ENDIAN),
       "red_mask",   	GST_PROPS_INT (R_MASK_32),
       "green_mask", 	GST_PROPS_INT (G_MASK_32),
       "blue_mask",  	GST_PROPS_INT (B_MASK_32),
@@ -215,13 +215,13 @@ gst_monoscope_negotiate (GstMonoscope *monoscope)
 		     "video/x-raw-rgb",
 		       "bpp", 		GST_PROPS_INT (32), 
 		       "depth", 	GST_PROPS_INT (32), 
-		       "endianness", 	GST_PROPS_INT (G_BYTE_ORDER), 
+		       "endianness", 	GST_PROPS_INT (G_BIG_ENDIAN), 
 		       "red_mask", 	GST_PROPS_INT (R_MASK_32), 
 		       "green_mask", 	GST_PROPS_INT (G_MASK_32), 
 		       "blue_mask", 	GST_PROPS_INT (B_MASK_32), 
 		       "width", 	GST_PROPS_INT (monoscope->width), 
 		       "height", 	GST_PROPS_INT (monoscope->height),
-                       "framerate",     GST_PROPS_FLOAT (monoscope->fps)
+               "framerate",     GST_PROPS_FLOAT (monoscope->fps)
 		   );
 
   return gst_pad_try_set_caps (monoscope->srcpad, caps);

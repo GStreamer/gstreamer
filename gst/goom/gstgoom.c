@@ -244,14 +244,14 @@ gst_goom_negotiate_default (GstGOOM *goom)
 
   caps = GST_CAPS_NEW (
 	     "goomsrc",
-	     "video/raw",
+	     "video/x-raw-rgb",
 	       "format", 	GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")), 
 	       "bpp", 		GST_PROPS_INT (32), 
 	       "depth", 	GST_PROPS_INT (32), 
-	       "endianness", 	GST_PROPS_INT (G_BYTE_ORDER), 
-	       "red_mask", 	GST_PROPS_INT (0xff0000), 
-	       "green_mask", 	GST_PROPS_INT (0x00ff00), 
-	       "blue_mask", 	GST_PROPS_INT (0x0000ff), 
+	       "endianness", 	GST_PROPS_INT (G_BIG_ENDIAN),
+	       "red_mask", 	GST_PROPS_INT (R_MASK_32), 
+	       "green_mask", 	GST_PROPS_INT (G_MASK_32), 
+	       "blue_mask", 	GST_PROPS_INT (B_MASK_32), 
 	       "width", 	GST_PROPS_INT (goom->width), 
 	       "height", 	GST_PROPS_INT (goom->height),
 	       "framerate",	GST_PROPS_FLOAT (goom->fps)
