@@ -203,6 +203,7 @@ dnl Check for essential libraries first:
 dnl ====================================
 
 dnl Check for glib2
+translit(dnm, m, l) AM_CONDITIONAL(USE_GLIB2, true)
 GST_CHECK_FEATURE(GLIB2, [use of glib-2.0 and GObject], , [
   PKG_CHECK_MODULES(GLIB2, glib-2.0 gobject-2.0 gthread-2.0 gmodule-2.0,
     HAVE_GLIB2=yes,HAVE_GLIB2=no)
@@ -322,22 +323,27 @@ dnl =======================================
 
 
 dnl ***** ESound *****
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBESD, true)
 GST_CHECK_FEATURE(LIBESD, [esound plugins], esdsrc esdsink, [
   AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
 ])
 
 dnl Check for artsc
+translit(dnm, m, l) AM_CONDITIONAL(USE_ARTSC, true)
 GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [GST_CHECK_ARTSC()])
 
-dnl Check for artsc
+dnl Check for arts
+translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
 GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [GST_CHECK_ARTS()])
 
 dnl Check for xmms
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBXMMS, true)
 GST_CHECK_FEATURE(LIBXMMS, [xmms plugin], xmms, [
   AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
 ], disabled)
 
 dnl Check for alsa
+translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
 GST_CHECK_FEATURE(ALSA, [alsa plugins], gstalsa, [
   AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
 ])
@@ -348,14 +354,20 @@ if test x$HAVE_ALSA = xno; then
 fi
 
 dnl Check for libaudiofile
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBAUDIOFILE, true)
 GST_CHECK_FEATURE(LIBAUDIOFILE, [use gdk pixbuf], afsink afsrc, [
-  GST_CHECK_CONFIGPROG(LIBAUDIOFILE, audiofile-config)
+translit(dnm, m, l) AC_SUBST(LIBAUDIOFILE_LIBS)
+translit(dnm, m, l) AC_SUBST(LIBAUDIOFILE_CFLAGS)
+GST_CHECK_CONFIGPROG(LIBAUDIOFILE, audiofile-config)
 ])
 
 dnl Check for libgdk-pixbuf
 dnl FIXME: not sure that this is still used anywhere.
+translit(dnm, m, l) AM_CONDITIONAL(USE_GDK_PIXBUF, true)
 GST_CHECK_FEATURE(GDK_PIXBUF, [use gdk pixbuf], , [
-  GST_CHECK_CONFIGPROG(GDK_PIXBUF, gdk-pixbuf-config)
+translit(dnm, m, l) AC_SUBST(GDK_PIXBUF_LIBS)
+translit(dnm, m, l) AC_SUBST(GDK_PIXBUF_CFLAGS)
+GST_CHECK_CONFIGPROG(GDK_PIXBUF, gdk-pixbuf-config)
 ])
 
 if test x$USE_GLIB2 = xyes; then
@@ -370,6 +382,7 @@ else
 fi
 
 dnl Check for libghttp
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBGHTTP, true)
 GST_CHECK_FEATURE(LIBGHTTP, [libghttp plugins], gsthttpsrc, [
   dnl FIXME: need to check for header
   GHTTP_LIBS=
@@ -386,6 +399,7 @@ GST_CHECK_FEATURE(LIBGHTTP, [libghttp plugins], gsthttpsrc, [
   AC_SUBST(GHTTP_LIBS)
   AC_SUBST(GST_HTTPSRC_GET_TYPE)
 ])
+
 
 dnl Check for libglade with gnome support; no libglade for glib2.0
 HAVE_LIBGLADE_GNOME="no"
@@ -836,11 +850,17 @@ AC_SUBST(GST_DISABLE_[$1]_DEFINE)
 GST_SUBSYSTEM_DISABLE_DEFINES="$GST_SUBSYTEM_DISABLE_DEFINES $GST_DISABLE_[$1]_DEFINE"
 ])
 
+translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_LOADSAVE, true)
 GST_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
+translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_TYPEFIND, true)
 GST_SUBSYSTEM_DISABLE(TYPEFIND,[typefind plugin],)
+translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_AUTOPLUG, true)
 GST_SUBSYSTEM_DISABLE(AUTOPLUG,[autoplugger subsystem])
+translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_PARSE, true)
 GST_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
+translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_TRACE, true)
 GST_SUBSYSTEM_DISABLE(TRACE,[tracing subsystem])
+translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_REGISTRY, true)
 GST_SUBSYSTEM_DISABLE(REGISTRY,[plugin registry])
 
 GST_CFLAGS="$GST_CFLAGS $GST_SUBSYSTEM_DISABLE_DEFINES"
