@@ -23,6 +23,39 @@ static GMainLoop *loop = NULL;
 static gint64 length = 0;
 
 static void
+print_tag (const GstTagList *list, const gchar *tag, gpointer unused)
+{
+  gint i, count;
+
+  count = gst_tag_list_get_tag_size (list, tag);
+
+  for (i = 0; i < count; i++) {
+    gchar *str;
+    
+    if (gst_tag_get_type (tag) == G_TYPE_STRING) {
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &str));
+    } else {
+      str = g_strdup_value_contents (
+	      gst_tag_list_get_value_index (list, tag, i));
+    }
+  
+    if (i == 0) {
+      g_print ("%15s: %s\n", gst_tag_get_nick (tag), str);
+    } else {
+      g_print ("               : %s\n", str);
+    }
+
+    g_free (str);
+  }
+}
+
+static void
+got_found_tag (GstPlay *play,GstElement *source, GstTagList *tag_list)
+{
+  gst_tag_list_foreach (tag_list, print_tag, NULL);
+}
+
+static void
 got_time_tick (GstPlay *play, gint64 time_nanos)
 {
   g_message ("time tick %llu", time_nanos);
@@ -82,7 +115,7 @@ main (int argc, char *argv[])
 
   /* Getting default audio and video plugins from GConf */
   audio_sink = gst_element_factory_make ("osssink", "audio_sink");
-  video_sink = gst_element_factory_make ("ximagesink", "video_sink");
+  video_sink = gst_element_factory_make ("xvimagesink", "video_sink");
   vis_element = gst_element_factory_make ("goom", "vis_element");
   data_src = gst_element_factory_make ("gnomevfssrc", "source");
   
@@ -103,6 +136,8 @@ main (int argc, char *argv[])
                     G_CALLBACK (got_stream_length), NULL);
   g_signal_connect (G_OBJECT (play), "have_video_size",
                     G_CALLBACK (got_video_size), NULL);
+  g_signal_connect (G_OBJECT (play), "found_tag",
+                    G_CALLBACK (got_found_tag), NULL);
   g_signal_connect (G_OBJECT (play), "eos",
                     G_CALLBACK (got_eos), NULL);
   
