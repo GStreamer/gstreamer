@@ -1,3 +1,8 @@
+2004-12-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* autogen.sh:
+	  remove patch if autopoint fails
+
 2004-12-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/gst/gstreamer-sections.txt:
