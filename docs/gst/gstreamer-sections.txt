@@ -258,6 +258,8 @@ gst_data_get_type
 
 <SECTION>
 <FILE>gstelement</FILE>
+GstElement
+GstElementClass
 GstElementDetails
 GST_ELEMENT_DETAILS
 GST_IS_ELEMENT_DETAILS
@@ -594,6 +596,8 @@ GST_OBJECT_GET_CLASS
 
 <SECTION>
 <FILE>gstpad</FILE>
+GstPad
+GstPadClass
 GstRealPad
 GstGhostPad
 GstRealPadClass
@@ -843,9 +847,9 @@ GST_PLUGIN_FEATURE_GET_CLASS
 <FILE>gstqueue</FILE>
 <TITLE>GstQueue</TITLE>
 GstQueue
+GstQueueClass
 GstQueueSize
 <SUBSECTION Standard>
-GstQueueClass
 GST_QUEUE
 GST_IS_QUEUE
 GST_TYPE_QUEUE
@@ -899,6 +903,8 @@ GST_REGISTRY_GET_CLASS
 
 <SECTION>
 <FILE>gstscheduler</FILE>
+GstScheduler
+GstSchedulerClass
 GstSchedulerFlags
 GST_SCHEDULER_PARENT
 GST_SCHEDULER_STATE

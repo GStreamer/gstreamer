@@ -4,7 +4,6 @@
 <!ENTITY % version-entities SYSTEM "../version.entities">
 %version-entities;
 <!ENTITY Gst SYSTEM "xml/gst.xml">
-<!ENTITY Gst SYSTEM "xml/gst.xml">
 <!ENTITY GstAtomic SYSTEM "xml/gstatomic.xml">
 <!ENTITY GstBin SYSTEM "xml/gstbin.xml">
 <!ENTITY GstBuffer SYSTEM "xml/gstbuffer.xml">
@@ -44,8 +43,9 @@
 <!ENTITY GstUri SYSTEM "xml/gsturi.xml">
 <!ENTITY GstValue SYSTEM "xml/gstvalue.xml">
 <!ENTITY GstXML SYSTEM "xml/gstxml.xml">
-<!-- these are elements without API docs
 <!ENTITY GstQueue SYSTEM "xml/gstqueue.xml">
+<!-- these are elements without API docs
+...
 -->
 
 <!ENTITY GstAggregator SYSTEM "xml/gstaggregator.xml">
@@ -61,7 +61,7 @@
 <!ENTITY GstMD5Sink SYSTEM "xml/gstmd5sink.xml">
 <!ENTITY GstTee SYSTEM "xml/gsttee.xml">
 
-<!ENTITY gstreamer-tree-index SYSTEM "xml/tree_index.xml">
+<!ENTITY gstreamer-tree-index SYSTEM "xml/tree_index.sgml">
 
 <!ENTITY hash "#">
 ]>
@@ -102,7 +102,9 @@ with some more specialized elements.</para>
     &GstProbe;
     &GstQuery;
 <!-- no API docs
-    &GstQueue; -->
+...
+-->
+    &GstQueue;
     &GstRegistry;
     &GstRegistryPool;
     &GstScheduler;
@@ -160,14 +162,12 @@ with some more specialized elements.</para>
   </chapter>
     -->
 
-<!--
-  <chapter id="gst-index">
-    <title>Index</title>
 
-    <sect1>
-      <title>Object Hierarchy</title>
-      &gstreamer-tree-index;
-    </sect1>
+  <chapter>
+    <title>Object Hierarchy</title>
+    &gstreamer-tree-index;
   </chapter>
--->
+
+  <index/>
+
 </book>

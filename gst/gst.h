@@ -47,6 +47,7 @@
 #include <gst/gstpad.h>
 #include <gst/gstpipeline.h>
 #include <gst/gstplugin.h>
+#include <gst/gstqueue.h>
 #include <gst/gstscheduler.h>
 #include <gst/gststructure.h>
 #include <gst/gstsystemclock.h>
@@ -64,6 +65,7 @@
 #include <gst/gstparse.h>
 #include <gst/gstregistry.h>
 #include <gst/gstregistrypool.h>
+#include <gst/registries/gstxmlregistry.h>
 
 /* API compatibility stuff */
 #include <gst/gstcompat.h>

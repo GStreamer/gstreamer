@@ -14,6 +14,40 @@ This is a base class for custom schedulers.
 
 </para>
 
+<!-- ##### STRUCT GstScheduler ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstSchedulerClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@setup: 
+@reset: 
+@add_element: 
+@remove_element: 
+@add_scheduler: 
+@remove_scheduler: 
+@state_transition: 
+@scheduling_change: 
+@lock_element: 
+@unlock_element: 
+@yield: 
+@interrupt: 
+@error: 
+@pad_link: 
+@pad_unlink: 
+@pad_select: 
+@clock_wait: 
+@iterate: 
+@show: 
+@object_sync: 
+@_gst_reserved: 
+
 <!-- ##### ENUM GstSchedulerFlags ##### -->
 <para>
 Flags for the scheduler

@@ -124,22 +124,20 @@ template.
 
 <!-- ##### SIGNAL GstElement::eos ##### -->
 <para>
-Signal emited when the element goes to PAUSED due to an end-of-stream
-condition.
+
 </para>
 
 @gstelement: the object which received the signal.
 
 <!-- ##### SIGNAL GstElement::error ##### -->
 <para>
-This signal is emitted when an element has encountered an error that caused
-it to fail performing its function.
+
 </para>
 
 @gstelement: the object which received the signal.
-@arg1: the original #GstElement that generated the error.
-@arg2: a #GError containing the translated error message.
-@arg3: a debug string providing additional untranslated debug information, or NULL.
+@arg1: 
+@arg2: 
+@arg3: 
 
 <!-- ##### SIGNAL GstElement::found-tag ##### -->
 <para>
@@ -152,27 +150,34 @@ it to fail performing its function.
 
 <!-- ##### SIGNAL GstElement::new-pad ##### -->
 <para>
-Is triggered whenever a new pad is added to an element.
+
 </para>
 
 @gstelement: the object which received the signal.
-@arg1: the new pad that was added
+@arg1: 
+
+<!-- ##### SIGNAL GstElement::no-more-pads ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
 
 <!-- ##### SIGNAL GstElement::pad-removed ##### -->
 <para>
-Is triggered whenever a pad has been removed from the element.
+
 </para>
 
 @gstelement: the object which received the signal.
-@arg1: The pad that was removed.
+@arg1: 
 
 <!-- ##### SIGNAL GstElement::state-change ##### -->
 <para>
-Is triggered whenever the state of an element changes.
+
 </para>
 
 @gstelement: the object which received the signal.
-@arg1: the new state of the object
+@arg1: 
 @arg2: 
 
 <!-- ##### STRUCT GstElementClass ##### -->
@@ -208,6 +213,7 @@ Is triggered whenever the state of an element changes.
 @get_index: 
 @set_index: 
 @set_state: 
+@no_more_pads: 
 @_gst_reserved: 
 
 <!-- ##### STRUCT GstBin ##### -->

@@ -31,6 +31,98 @@ The queue blocks by default.
 </para>
 
 
+<!-- ##### SIGNAL GstQueue::overrun ##### -->
+<para>
+
+</para>
+
+@gstqueue: the object which received the signal.
+
+<!-- ##### SIGNAL GstQueue::running ##### -->
+<para>
+
+</para>
+
+@gstqueue: the object which received the signal.
+
+<!-- ##### SIGNAL GstQueue::underrun ##### -->
+<para>
+
+</para>
+
+@gstqueue: the object which received the signal.
+
+<!-- ##### ARG GstQueue:block-timeout ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstQueue:current-level-buffers ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstQueue:current-level-bytes ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstQueue:current-level-time ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstQueue:leaky ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstQueue:max-size-buffers ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstQueue:max-size-bytes ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstQueue:max-size-time ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstQueue:may-deadlock ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstQueue:min-threshold-buffers ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstQueue:min-threshold-bytes ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstQueue:min-threshold-time ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstQueueClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@underrun: 
+@running: 
+@overrun: 
+@_gst_reserved: 
+
 <!-- ##### STRUCT GstQueueSize ##### -->
 <para>
 

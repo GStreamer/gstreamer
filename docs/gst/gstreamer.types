@@ -17,3 +17,5 @@ gst_scheduler_get_type
 gst_index_get_type
 gst_index_factory_get_type
 gst_xml_get_type
+gst_queue_get_type
+gst_xml_registry_get_type

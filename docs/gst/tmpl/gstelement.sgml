@@ -65,6 +65,127 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 
 <!-- basic object functions -->
 
+<!-- ##### STRUCT GstElement ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GstElement::eos ##### -->
+<para>
+
+</para>
+
+@:
+
+@gstelement: the object which received the signal.
+
+<!-- ##### SIGNAL GstElement::error ##### -->
+<para>
+
+</para>
+
+@: 
+@: 
+@: 
+@:
+
+@gstelement: the object which received the signal.
+@arg1: 
+@arg2: 
+@arg3: 
+
+<!-- ##### SIGNAL GstElement::found-tag ##### -->
+<para>
+
+</para>
+
+@: 
+@: 
+@:
+
+@gstelement: the object which received the signal.
+@arg1: 
+@arg2: 
+
+<!-- ##### SIGNAL GstElement::new-pad ##### -->
+<para>
+
+</para>
+
+@: 
+@:
+
+@gstelement: the object which received the signal.
+@arg1: 
+
+<!-- ##### SIGNAL GstElement::no-more-pads ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+
+<!-- ##### SIGNAL GstElement::pad-removed ##### -->
+<para>
+
+</para>
+
+@: 
+@:
+
+@gstelement: the object which received the signal.
+@arg1: 
+
+<!-- ##### SIGNAL GstElement::state-change ##### -->
+<para>
+
+</para>
+
+@: 
+@: 
+@:
+
+@gstelement: the object which received the signal.
+@arg1: 
+@arg2: 
+
+<!-- ##### STRUCT GstElementClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@details: 
+@elementfactory: 
+@padtemplates: 
+@numpadtemplates: 
+@state_change: 
+@new_pad: 
+@pad_removed: 
+@error: 
+@eos: 
+@found_tag: 
+@set_property: 
+@get_property: 
+@release_locks: 
+@get_event_masks: 
+@send_event: 
+@get_formats: 
+@convert: 
+@get_query_types: 
+@query: 
+@change_state: 
+@request_new_pad: 
+@release_pad: 
+@get_clock: 
+@set_clock: 
+@get_index: 
+@set_index: 
+@set_state: 
+@no_more_pads: 
+@_gst_reserved: 
+
 <!-- ##### STRUCT GstElementDetails ##### -->
 <para>
 This struct is used to define public information about the element.  It
@@ -1130,6 +1251,14 @@ Sets the parent of an element.
 @Returns: 
 
 <!-- clocking -->
+
+
+<!-- ##### FUNCTION gst_element_no_more_pads ##### -->
+<para>
+
+</para>
+
+@element: 
 
 
 <!-- ##### FUNCTION gst_element_factory_get_type ##### -->
