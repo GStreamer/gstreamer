@@ -47,9 +47,18 @@ enum {
   ARG_SILENT,
 };
 
+GST_PADTEMPLATE_FACTORY (fakesink_sink_factory,
+  "sink%d",
+  GST_PAD_SINK,
+  GST_PAD_REQUEST,
+  NULL                  /* no caps */
+);
+
 
 static void	gst_fakesink_class_init		(GstFakeSinkClass *klass);
 static void	gst_fakesink_init		(GstFakeSink *fakesink);
+
+static GstPad* 	gst_fakesink_request_new_pad 	(GstElement *element, GstPadTemplate *templ);
 
 static void	gst_fakesink_set_property	(GObject *object, guint prop_id, 
 						 const GValue *value, GParamSpec *pspec);
@@ -86,8 +95,10 @@ static void
 gst_fakesink_class_init (GstFakeSinkClass *klass) 
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass*)klass;
+  gstelement_class = (GstElementClass*)klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -104,8 +115,10 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
 
-  gobject_class->set_property = gst_fakesink_set_property;
-  gobject_class->get_property = gst_fakesink_get_property;
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fakesink_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesink_get_property);
+
+  gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR (gst_fakesink_request_new_pad);
 }
 
 static void 
@@ -114,11 +127,38 @@ gst_fakesink_init (GstFakeSink *fakesink)
   GstPad *pad;
   pad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (fakesink), pad);
-  gst_pad_set_chain_function (pad, gst_fakesink_chain);
+  gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_chain));
 
   fakesink->sinkpads = g_slist_prepend (NULL, pad);
   fakesink->numsinkpads = 1;
   fakesink->silent = FALSE;
+}
+
+static GstPad*
+gst_fakesink_request_new_pad (GstElement *element, GstPadTemplate *templ)
+{
+  gchar *name;
+  GstPad *sinkpad;
+  GstFakeSink *fakesink;
+
+  g_return_val_if_fail (GST_IS_FAKESINK (element), NULL);
+
+  if (templ->direction != GST_PAD_SINK) {
+    g_warning ("gstfakesink: request new pad that is not a SINK pad\n");
+    return NULL;
+  }
+
+  fakesink = GST_FAKESINK (element);
+
+  name = g_strdup_printf ("sink%d", fakesink->numsinkpads);
+
+  sinkpad = gst_pad_new_from_template (templ, name);
+  gst_element_add_pad (GST_ELEMENT (fakesink), sinkpad);
+
+  fakesink->sinkpads = g_slist_prepend (fakesink->sinkpads, sinkpad);
+  fakesink->numsinkpads++;
+
+  return sinkpad;
 }
 
 static void
@@ -188,3 +228,12 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
 
   gst_buffer_unref (buf);
 }
+
+gboolean
+gst_fakesink_factory_init (GstElementFactory *factory)
+{
+  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (fakesink_sink_factory));
+
+  return TRUE;
+}
+
