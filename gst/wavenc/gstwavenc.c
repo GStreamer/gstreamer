@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 /* GStreamer
  * Copyright (C) <2002> Iain Holmes <iain@prettypeople.org>
  *
@@ -111,6 +112,17 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
 )
 
 static GstElementClass *parent_class = NULL;
+
+static const GstEventMask *
+gst_wavenc_get_event_masks (GstPad *pad)
+{
+	static const GstEventMask src_event_masks[] = {
+		{ GST_EVENT_EOS, 0 },
+		{ 0, }
+	};
+
+	return src_event_masks;
+}
 
 static GType
 gst_wavenc_get_type (void)
@@ -240,13 +252,59 @@ gst_wavenc_sinkconnect (GstPad *pad,
 }
 
 static void
+gst_wavenc_stop_file (GstWavEnc *wavenc)
+{
+  GstEvent *event;
+  GstBuffer *outbuf;
+
+  event = gst_event_new_seek (GST_FORMAT_BYTES |
+			      GST_SEEK_METHOD_SET, 0);
+  gst_pad_send_event (GST_PAD_PEER (wavenc->srcpad), event);
+  
+  outbuf = gst_buffer_new_and_alloc (WAV_HEADER_LEN);
+  WRITE_U32 (wavenc->header + 4, wavenc->length);
+  memcpy (GST_BUFFER_DATA (outbuf), wavenc->header, WAV_HEADER_LEN);
+  
+  gst_pad_push (wavenc->srcpad, outbuf);
+}
+
+static gboolean
+gst_wavenc_handle_event (GstPad *pad,
+			 GstEvent *event)
+{
+  GstWavEnc *wavenc;
+  GstEventType type;
+
+  wavenc = GST_WAVENC (gst_pad_get_parent (pad));
+
+  type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
+
+  switch (type) {
+  case GST_EVENT_EOS:
+    wavenc->pad_eos = TRUE;
+    gst_wavenc_stop_file (wavenc);
+    gst_pad_push (wavenc->srcpad,
+		  GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+    gst_element_set_eos (GST_ELEMENT (wavenc));
+    break;
+
+  default:
+    break;
+  }
+
+  return TRUE;
+}
+
+static void
 gst_wavenc_init (GstWavEnc *wavenc)
 {
   wavenc->sinkpad = gst_pad_new_from_template (sinktemplate, "sink");
   gst_element_add_pad (GST_ELEMENT (wavenc), wavenc->sinkpad);
   gst_pad_set_chain_function (wavenc->sinkpad, gst_wavenc_chain);
   gst_pad_set_link_function (wavenc->sinkpad, gst_wavenc_sinkconnect);
-
+  gst_pad_set_event_function (wavenc->sinkpad, gst_wavenc_handle_event);
+  gst_pad_set_event_mask_function (wavenc->sinkpad, gst_wavenc_get_event_masks);
+  
   wavenc->srcpad = gst_pad_new_from_template (srctemplate, "src");
   gst_element_add_pad (GST_ELEMENT (wavenc), wavenc->srcpad);
 
@@ -262,44 +320,26 @@ gst_wavenc_chain (GstPad *pad,
 
   wavenc = GST_WAVENC (gst_pad_get_parent (pad));
 
-  if (GST_IS_EVENT (buf)) {
-    GstEvent *event = GST_EVENT (buf);
+  if (!wavenc->setup) {
+    gst_buffer_unref (buf);
+    gst_element_error (GST_ELEMENT (wavenc), "encoder not initialised (input is not audio?)");
+    return;
+  }
 
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_EOS:
-        /* Should do something... */
-        gst_event_unref (event);
-
-        if (GST_PAD_IS_USABLE (wavenc->srcpad))
-          gst_pad_push (wavenc->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
-        gst_element_set_eos (GST_ELEMENT (wavenc));
-        break;
-      default:
-        gst_pad_event_default (pad, event);
-        return;
-    }
-  } 
-  else {
-    if (!wavenc->setup) {
-      gst_buffer_unref (buf);
-      gst_element_error (GST_ELEMENT (wavenc), "encoder not initialised (input is not audio?)");
-      return;
+  if (GST_PAD_IS_USABLE (wavenc->srcpad)) {
+    if (wavenc->flush_header) {
+      GstBuffer *outbuf;
+      
+      outbuf = gst_buffer_new_and_alloc (WAV_HEADER_LEN);
+      memcpy (GST_BUFFER_DATA (outbuf), wavenc->header, WAV_HEADER_LEN);
+      GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
+      
+      gst_pad_push (wavenc->srcpad, outbuf);
+      wavenc->flush_header = FALSE;
     }
 
-    if (GST_PAD_IS_USABLE (wavenc->srcpad)) {
-      if (wavenc->flush_header) {
-        GstBuffer *outbuf;
-
-        outbuf = gst_buffer_new_and_alloc (WAV_HEADER_LEN);
-        memcpy (GST_BUFFER_DATA (outbuf), wavenc->header, WAV_HEADER_LEN);
-        GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
-
-	gst_pad_push (wavenc->srcpad, outbuf);
-        wavenc->flush_header = FALSE;
-      }
-    
-      gst_pad_push (wavenc->srcpad, buf);
-    }
+    wavenc->length += GST_BUFFER_SIZE (buf);
+    gst_pad_push (wavenc->srcpad, buf);
   }
 }
 

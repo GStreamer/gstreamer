@@ -54,8 +54,9 @@ struct _GstWavEnc {
   guint rate;
   guint channels;
   guint width;
-
-  gboolean setup, flush_header;
+  guint32 length;
+  
+  gboolean setup, flush_header, pad_eos;
   guchar header[WAV_HEADER_LEN];
 };
 
