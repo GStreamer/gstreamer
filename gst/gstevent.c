@@ -184,6 +184,43 @@ gst_event_new_seek (GstSeekType type, gint64 offset)
 }
 
 /**
+ * gst_event_new_discontinuousv:
+ * @new_media: A flag indicating a new media type starts
+ * @format1: The format of the discont value
+ * @var_args: more discont values and formats
+ *
+ * Allocate a new discontinuous event with the given format/value pairs. Note
+ * that the values are of type gint64 - you may not use simple integers such
+ * as "0" when calling this function, always cast them like "(gint64) 0".
+ * Terminate the list with #GST_FORMAT_UNDEFINED.
+ *
+ * Returns: A new discontinuous event.
+ */
+GstEvent*
+gst_event_new_discontinuousv (gboolean new_media, GstFormat format1, va_list var_args)
+{
+  GstEvent *event;
+  gint count = 0;
+
+  event = gst_event_new (GST_EVENT_DISCONTINUOUS);
+  GST_EVENT_DISCONT_NEW_MEDIA (event) = new_media;
+
+  while (format1 != GST_FORMAT_UNDEFINED && count < 8) {
+
+    GST_EVENT_DISCONT_OFFSET (event, count).format = format1 & GST_SEEK_FORMAT_MASK;
+    GST_EVENT_DISCONT_OFFSET (event, count).value = va_arg (var_args, gint64);
+
+    format1 = va_arg (var_args, GstFormat);
+
+    count++;
+  }
+
+  GST_EVENT_DISCONT_OFFSET_LEN (event) = count;
+		    
+  return event;
+}
+
+/**
  * gst_event_new_discontinuous:
  * @new_media: A flag indicating a new media type starts
  * @format1: The format of the discont value
@@ -201,26 +238,13 @@ gst_event_new_discontinuous (gboolean new_media, GstFormat format1, ...)
 {
   va_list var_args;
   GstEvent *event;
-  gint count = 0;
-
-  event = gst_event_new (GST_EVENT_DISCONTINUOUS);
-  GST_EVENT_DISCONT_NEW_MEDIA (event) = new_media;
 
   va_start (var_args, format1);
-	        
-  while (format1 != GST_FORMAT_UNDEFINED && count < 8) {
 
-    GST_EVENT_DISCONT_OFFSET (event, count).format = format1 & GST_SEEK_FORMAT_MASK;
-    GST_EVENT_DISCONT_OFFSET (event, count).value = va_arg (var_args, gint64);
+  event = gst_event_new_discontinuousv (new_media, format1, var_args);
 
-    format1 = va_arg (var_args, GstFormat);
-
-    count++;
-  }
   va_end (var_args);
 
-  GST_EVENT_DISCONT_OFFSET_LEN (event) = count;
-		    
   return event;
 }
 
