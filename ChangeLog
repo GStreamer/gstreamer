@@ -1,3 +1,22 @@
+2004-03-09  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	  Patch properly. Update version.
+	* gst-libs/ext/ffmpeg/Makefile.am:
+	  Comment out patching - all handled by configure.
+	* gst-libs/ext/ffmpeg/Tag:
+	  Update version.
+	* gst-libs/ext/ffmpeg/patch/autotools.diff:
+	  Some small updates to improve compiling.
+	* gst-libs/ext/ffmpeg/patch/functions.diff:
+	  Update date.
+	* gst-libs/ext/ffmpeg/patch/matroska.diff:
+	  Newer patch - see ffmpeg-devel mailinglists.
+	* gst-libs/ext/ffmpeg/patch/function.patch:
+	  Remove old cruft.
+	* gst-libs/ext/ffmpeg/patch/disabletools.diff:
+	  Now handled by --disable-... in configure.
+
 2004-03-07  David Schleef  <ds@schleef.org>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):

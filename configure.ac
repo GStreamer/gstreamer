@@ -84,13 +84,13 @@ GST_CHECK_FEATURE(FFMPEG, [ffmpeg plug-ins], ffmpeg, [
   if test "x$GST_PLUGINS_VERSION_NANO" = x1; then
     AC_MSG_NOTICE(slurping FFmpeg CVS source)
     dnl until someone fixes this... I guess this should be in ./autogen.sh
-    AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, 2004-02-29 20:00 GMT,
+    AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, 2004-03-09 06:00 GMT,
       if ! test -f gst-libs/ext/ffmpeg/ffmpeg/configure.ac; then
         AC_MSG_NOTICE(setting up ffmpeg build system and applying patches)
         CURDIR=`pwd`
         cd gst-libs/ext/ffmpeg
-        for PATCH in patch/*.diff; do
-          patch -p0 -N -r rejects < $PATCH > /dev/null || true
+        for PATCH in matroska autotools disablemmx disableinstalllibs functions; do
+          patch -p0 -N -r rejects < patch/${PATCH}.diff > /dev/null || true
         done
         cd ffmpeg
         chmod a+x ./autogen.sh
@@ -114,7 +114,7 @@ dnl ###########################
 dnl # Configure external libs #
 dnl ###########################
 if test "x$HAVE_FFMPEG" = "xyes"; then
-  ac_configure_args="$ac_configure_args --disable-v4l --disable-audio-oss --disable-dv1394"
+  ac_configure_args="$ac_configure_args --disable-v4l --disable-audio-oss --disable-dv1394 --disable-vhook --disable-ffmpeg --disable-ffplay --disable-ffserver"
   AC_CONFIG_SUBDIRS(gst-libs/ext/ffmpeg/ffmpeg)
 fi 
 
