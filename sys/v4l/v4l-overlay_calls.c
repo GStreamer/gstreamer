@@ -47,6 +47,7 @@ gboolean
 gst_v4l_set_overlay (GstV4lElement * v4lelement)
 {
   gchar *buff;
+  gchar *path;
 
   if (v4lelement->display)
     g_free (v4lelement->display);
@@ -59,6 +60,15 @@ gst_v4l_set_overlay (GstV4lElement * v4lelement)
     return FALSE;
 
   /* start v4l-conf */
+  path = g_find_program_in_path ("v4l-conf");
+  if (!path) {
+    GST_ELEMENT_ERROR (v4lelement, RESOURCE, FAILED,
+        (_("Program 'v4l-conf' missing from path.")),
+        ("Cannot set XVideo overlay mode."));
+    return FALSE;
+  }
+  g_free (path);
+
   buff = g_strdup_printf ("v4l-conf -q -c %s -d %s 2> /dev/null",
       v4lelement->videodev, v4lelement->display);
 
