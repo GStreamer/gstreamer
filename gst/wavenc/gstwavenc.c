@@ -605,13 +605,6 @@ gst_wavenc_chain (GstPad * pad, GstData * _data)
 
   wavenc = GST_WAVENC (gst_pad_get_parent (pad));
 
-  if (!wavenc->setup) {
-    gst_buffer_unref (buf);
-    GST_ELEMENT_ERROR (wavenc, CORE, NEGOTIATION, (NULL),
-        ("encoder not initialised (input is not audio?)"));
-    return;
-  }
-
   if (GST_IS_EVENT (buf)) {
     if (GST_EVENT_TYPE (buf) == GST_EVENT_EOS) {
       wavenc->pad_eos = TRUE;
@@ -631,6 +624,13 @@ gst_wavenc_chain (GstPad * pad, GstData * _data)
     } else {
       gst_pad_event_default (wavenc->srcpad, GST_EVENT (buf));
     }
+    return;
+  }
+
+  if (!wavenc->setup) {
+    gst_buffer_unref (buf);
+    GST_ELEMENT_ERROR (wavenc, CORE, NEGOTIATION, (NULL),
+        ("encoder not initialised (input is not audio?)"));
     return;
   }
 
