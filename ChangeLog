@@ -1,5 +1,14 @@
 2004-01-07  David Schleef  <ds@schleef.org>
 
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/librfb/Makefile.am:
+	* ext/librfb/gstrfbsrc.c:
+	New source plugin based on librfb-0.1.  RFB (remote framebuffer)
+	is the protocol used by VNC.
+
+2004-01-07  David Schleef  <ds@schleef.org>
+
 	* gst/videofilter/gstvideotemplate.c:
 	* gst/videofilter/gstvideotemplate.h:
 	* gst/videofilter/make_filter:
