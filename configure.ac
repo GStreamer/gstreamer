@@ -64,6 +64,12 @@ if test x$BISON_PATH = xno; then
   AC_MSG_ERROR(Could not find bison)
 fi
 
+dnl we require flex for building the parser
+AC_PATH_PROG(FLEX_PATH, flex, no)
+if test x$FLEX_PATH = xno; then
+  AC_MSG_ERROR(Could not find flex)
+fi
+
 dnl
 dnl We should really use AC_SYS_LARGEFILE, but the problem is
 dnl many of the plugins don't include "config.h".  To assure
