@@ -1,5 +1,34 @@
 2004-04-28  David Schleef  <ds@schleef.org>
 
+	Move a bunch of unused files to old/ with names that are
+	not case-insensitive-unique.  These files still contain some
+	useful information that needs to be merged into gstbin.sgml,
+	etc., so they shouldn't be deleted yet.
+	* docs/gst/tmpl/GstBin.sgml:
+	* docs/gst/tmpl/GstBuffer.sgml:
+	* docs/gst/tmpl/GstCaps.sgml:
+	* docs/gst/tmpl/GstClock.sgml:
+	* docs/gst/tmpl/GstCompat.sgml:
+	* docs/gst/tmpl/GstData.sgml:
+	* docs/gst/tmpl/GstElement.sgml:
+	* docs/gst/tmpl/GstEvent.sgml:
+	* docs/gst/tmpl/GstIndex.sgml:
+	* docs/gst/tmpl/GstStructure.sgml:
+	* docs/gst/tmpl/GstTag.sgml:
+	* docs/gst/tmpl/old/GstBin.sgml:
+	* docs/gst/tmpl/old/GstBuffer.sgml:
+	* docs/gst/tmpl/old/GstCaps.sgml:
+	* docs/gst/tmpl/old/GstClock.sgml:
+	* docs/gst/tmpl/old/GstCompat.sgml:
+	* docs/gst/tmpl/old/GstData.sgml:
+	* docs/gst/tmpl/old/GstElement.sgml:
+	* docs/gst/tmpl/old/GstEvent.sgml:
+	* docs/gst/tmpl/old/GstIndex.sgml:
+	* docs/gst/tmpl/old/GstStructure.sgml:
+	* docs/gst/tmpl/old/GstTag.sgml:
+
+2004-04-28  David Schleef  <ds@schleef.org>
+
 	* gst/gstcaps.c: (gst_caps_copy), (gst_caps_free),
 	(gst_caps_append), (gst_caps_append_structure),
 	(gst_caps_get_size), (gst_caps_get_structure), (gst_caps_copy_1),
