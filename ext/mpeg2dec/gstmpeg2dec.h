@@ -38,8 +38,8 @@ G_BEGIN_DECLS
 #define GST_IS_MPEG2DEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MPEG2DEC))
 
-#define MPEGTIME_TO_GSTTIME(time) (((time) * (GST_MSECOND/10)) / 9LL)
-#define GSTTIME_TO_MPEGTIME(time) (((time) * 9LL) / (GST_MSECOND/10))
+#define MPEG_TIME_TO_GST_TIME(time) (((time) * (GST_MSECOND/10)) / 9LL)
+#define GST_TIME_TO_MPEG_TIME(time) (((time) * 9LL) / (GST_MSECOND/10))
 
 typedef struct _GstMpeg2dec GstMpeg2dec;
 typedef struct _GstMpeg2decClass GstMpeg2decClass;

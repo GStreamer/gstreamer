@@ -1,3 +1,10 @@
+2004-07-07  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_flush_decoder):
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	  various debugging improvements.  Reset stream to next picture
+	  instead of sequence header, otherwise seeks cannot work. */
+
 2004-07-07  Wim Taymans  <wim@fluendo.com>
 
 	* gst/videobox/gstvideobox.c: (gst_video_box_fill_get_type),
