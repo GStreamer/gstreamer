@@ -330,10 +330,11 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 }
 
 GstCaps *
-gst_riff_create_audio_caps (guint16 codec_id,
-    gst_riff_strh * strh, gst_riff_strf_auds * strf, char **codec_name)
+gst_riff_create_audio_caps_with_data (guint16 codec_id,
+    gst_riff_strh * strh, gst_riff_strf_auds * strf,
+    GstBuffer * strf_data, GstBuffer * strd_data, char **codec_name)
 {
-  gboolean block_align = FALSE;
+  gboolean block_align = FALSE, rate_chan = TRUE;
   GstCaps *caps = NULL;
   gint rate_min = 8000, rate_max = 96000;
   gint channels_max = 2;
@@ -426,29 +427,68 @@ gst_riff_create_audio_caps (guint16 codec_id,
       if (codec_name)
         *codec_name = g_strdup ("AC3");
       break;
+    case GST_RIFF_WAVE_FORMAT_WMAV1:
+    case GST_RIFF_WAVE_FORMAT_WMAV2:
+    {
+      gint version = codec_id == GST_RIFF_WAVE_FORMAT_WMAV1 ? 1 : 2;
 
+      block_align = TRUE;
+
+      caps = gst_caps_new_simple ("audio/x-wma",
+          "wmaversion", G_TYPE_INT, version, NULL);
+
+      if (codec_name)
+        *codec_name = g_strdup_printf ("WMA Version %d", version);
+
+      if (strf != NULL) {
+        gst_caps_set_simple (caps,
+            "bitrate", G_TYPE_INT, strf->av_bps * 8, NULL);
+      } else {
+        gst_caps_set_simple (caps,
+            "bitrate", GST_TYPE_INT_RANGE, 0, G_MAXINT, NULL);
+      }
+      if (strf_data) {
+        gst_caps_set_simple (caps,
+            "codec_data", GST_TYPE_BUFFER, strf_data, NULL);
+      }
+      break;
+    }
     default:
       GST_WARNING ("Unknown audio tag 0x%04x", codec_id);
       return NULL;
   }
 
   if (strf != NULL) {
-    gst_caps_set_simple (caps,
-        "rate", G_TYPE_INT, strf->rate,
-        "channels", G_TYPE_INT, strf->channels, NULL);
-    if (block_align)
+    if (rate_chan) {
+      gst_caps_set_simple (caps,
+          "rate", G_TYPE_INT, strf->rate,
+          "channels", G_TYPE_INT, strf->channels, NULL);
+    }
+    if (block_align) {
       gst_caps_set_simple (caps,
           "block_align", G_TYPE_INT, strf->blockalign, NULL);
+    }
   } else {
-    gst_caps_set_simple (caps,
-        "rate", GST_TYPE_INT_RANGE, rate_min, rate_max,
-        "channels", GST_TYPE_INT_RANGE, 1, channels_max, NULL);
-    if (block_align)
+    if (rate_chan) {
+      gst_caps_set_simple (caps,
+          "rate", GST_TYPE_INT_RANGE, rate_min, rate_max,
+          "channels", GST_TYPE_INT_RANGE, 1, channels_max, NULL);
+    }
+    if (block_align) {
       gst_caps_set_simple (caps,
           "block_align", GST_TYPE_INT_RANGE, 1, 8192, NULL);
+    }
   }
 
   return caps;
+}
+
+GstCaps *
+gst_riff_create_audio_caps (guint16 codec_id,
+    gst_riff_strh * strh, gst_riff_strf_auds * strf, char **codec_name)
+{
+  return gst_riff_create_audio_caps_with_data (codec_id,
+      strh, strf, NULL, NULL, codec_name);
 }
 
 GstCaps *
@@ -533,6 +573,8 @@ gst_riff_create_audio_template_caps (void)
     GST_RIFF_WAVE_FORMAT_MULAW,
     GST_RIFF_WAVE_FORMAT_ADPCM,
     GST_RIFF_WAVE_FORMAT_DVI_ADPCM,
+    GST_RIFF_WAVE_FORMAT_WMAV1,
+    GST_RIFF_WAVE_FORMAT_WMAV2,
     /* FILL ME */
     0
   };

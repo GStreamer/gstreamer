@@ -57,6 +57,13 @@ gst_riff_create_video_caps_with_data (guint32              codec_fcc,
 				      GstBuffer          * strd_data,
 				      char              ** codec_name);
 
+GstCaps *
+gst_riff_create_audio_caps_with_data (guint16              codec_id,
+				      gst_riff_strh      * strh,
+				      gst_riff_strf_auds * strf,
+				      GstBuffer          * strf_data,
+				      GstBuffer          * strd_data,
+				      char              ** codec_name);
 /*
  * Create template caps (includes all known types).
  */
