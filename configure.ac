@@ -239,6 +239,8 @@ AC_SUBST(X_LIBS)
 dnl ==========================================================================
 dnl ============================= gst plugins ================================
 dnl ==========================================================================
+GST_PLUGIN_LDFLAGS='-module -avoid-version'
+AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 GST_PLUGINS_ALL="\
         ac3parse adder audioscale auparse avi chart\
