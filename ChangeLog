@@ -1,3 +1,10 @@
+2004-11-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	Submitted by: Luca Ferretti <elle.uca@infinito.it>
+	* po/LINGUAS:
+	* po/it.po:
+	  Add Italian
+
 2004-11-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/README:
