@@ -16,6 +16,10 @@
 typedef const BYTE * LPCBYTE;
 #endif
 
+#ifndef __inline
+#define __inline
+#endif
+
 #define MOD_AMIGAC2			0x1AB
 #define MAX_SAMPLE_LENGTH	16000000
 #define MAX_SAMPLE_RATE		50000
@@ -509,7 +513,7 @@ enum {
 	MIDIOUT_VOLUME,
 	MIDIOUT_PAN,
 	MIDIOUT_BANKSEL,
-	MIDIOUT_PROGRAM,
+	MIDIOUT_PROGRAM
 };
 
 

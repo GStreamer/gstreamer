@@ -75,12 +75,11 @@ enum {
   ARG_STREAMINFO
 };
 
-
 GST_PAD_TEMPLATE_FACTORY (modplug_src_template_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW ( /* use16bit = TRUE */
+  GST_CAPS_NEW (
     "modplug_src",
     "audio/raw",  
       "format",      GST_PROPS_STRING ("int"),
@@ -92,7 +91,7 @@ GST_PAD_TEMPLATE_FACTORY (modplug_src_template_factory,
       "rate",        GST_PROPS_INT_RANGE (11025, 44100),
       "channels",    GST_PROPS_INT_RANGE (1, 2)
   ),
-  GST_CAPS_NEW ( /* use16bit = FALSE */
+  GST_CAPS_NEW ( 
     "modplug_src",
     "audio/raw",  
       "format",      GST_PROPS_STRING ("int"),
