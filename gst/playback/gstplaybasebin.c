@@ -423,6 +423,7 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal)
     g_signal_emit (play_base_bin,
         gst_play_base_bin_signals[SETUP_OUTPUT_PADS_SIGNAL], 0);
     GST_DEBUG ("done");
+    g_object_notify (G_OBJECT (play_base_bin), "stream-info");
   }
 }
 
