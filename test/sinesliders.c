@@ -40,25 +40,12 @@ int main(int argc,char *argv[]) {
   GstDParamManager *dpman;
   GstDParam *volume;
   GstDParam *freq;
+  GstDParamSpec *spec;
   
   GValue **vol_vals;
 
   gtk_init(&argc,&argv);
   gst_init(&argc,&argv);
-
-  /***** set up the GUI *****/
-  window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  g_signal_connect(window,"delete_event",GTK_SIGNAL_FUNC(quit_live),NULL);
-  hbox = gtk_hbox_new(TRUE,0);
-  gtk_container_add(GTK_CONTAINER(window),hbox);
-
-  volume_adj = (GtkAdjustment*)gtk_adjustment_new(1.0, 0.0, 1.0, 0.1, 0.01, 0.01);
-  volume_slider = gtk_vscale_new(volume_adj);
-  gtk_box_pack_start(GTK_BOX(hbox),volume_slider,TRUE,TRUE,0);
-
-  freq_adj = (GtkAdjustment*)gtk_adjustment_new(440.0, 0.0, 2000.0, 1.0, 5.0, 5.0);
-  freq_slider = gtk_vscale_new(freq_adj);
-  gtk_box_pack_start(GTK_BOX(hbox),freq_slider,TRUE,TRUE,0);
 
   /***** construct the pipeline *****/
   
@@ -93,6 +80,27 @@ int main(int argc,char *argv[]) {
   
   gst_dpman_set_mode(dpman, "synchronous");
 
+  /***** set up the GUI *****/
+  window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  g_signal_connect(window,"delete_event",GTK_SIGNAL_FUNC(quit_live),NULL);
+  hbox = gtk_hbox_new(TRUE,0);
+  gtk_container_add(GTK_CONTAINER(window),hbox);
+
+  spec = gst_dpman_get_dparam_spec (dpman, "volume");
+  volume_adj = (GtkAdjustment*)gtk_adjustment_new(g_value_get_float(spec->default_val), 
+                                                  g_value_get_float(spec->min_val),
+                                                  g_value_get_float(spec->max_val), 0.1, 0.01, 0.01);
+  volume_slider = gtk_vscale_new(volume_adj);
+  gtk_box_pack_start(GTK_BOX(hbox),volume_slider,TRUE,TRUE,0);
+
+  spec = gst_dpman_get_dparam_spec (dpman, "freq");
+  freq_adj = (GtkAdjustment*)gtk_adjustment_new(g_value_get_float(spec->default_val), 
+                                                g_value_get_float(spec->min_val),
+                                                g_value_get_float(spec->max_val), 0.1, 0.01, 0.01);
+  freq_slider = gtk_vscale_new(freq_adj);
+  gtk_box_pack_start(GTK_BOX(hbox),freq_slider,TRUE,TRUE,0);
+  
+  
   /***** set up the handlers and such *****/
   //gtk_signal_connect(volume_adj,"value-changed",GTK_SIGNAL_FUNC(volume_changed),sinesrc);
   g_signal_connect(volume_adj,"value-changed",
