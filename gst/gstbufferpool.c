@@ -345,7 +345,6 @@ gst_buffer_pool_default_buffer_new (GstBufferPool *pool, gint64 location /*unuse
   GST_BUFFER_DATA(buffer) = g_mem_chunk_alloc(data_chunk);
   g_mutex_unlock (pool->lock);
   
-  GST_BUFFER_FLAG_SET(buffer,GST_BUFFER_DONTFREE);
   GST_BUFFER_SIZE(buffer)    = def->size;
   GST_BUFFER_MAXSIZE(buffer) = def->size;
   
