@@ -1,3 +1,12 @@
+2004-03-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/oss/gstosssink.c: (gst_osssink_get_delay),
+	(gst_osssink_get_time):
+	  get_delay() may return values lower than 0. In those cases, we
+	  should not actually cast to *unsigned* int64, that will break
+	  stuff horribly. In my case, it screwed up A/V sync in movies
+	  in totem rather badly.
+
 2004-03-06  Christophe Fergeau  <teuf@gnome.org>
 
 	* ext/faac/gstfaac.c: (gst_faac_chain):
