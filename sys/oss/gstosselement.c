@@ -131,7 +131,7 @@ gst_osselement_class_init (GstOssElementClass *klass)
     g_param_spec_string ("mixerdev", "Mixer device",
 			 "OSS mixer device (/dev/mixerN usually)",
                          "default", G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MIXERDEV,
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_NAME,
     g_param_spec_string ("device_name", "Device name", "Name of the device",
                          NULL, G_PARAM_READABLE));
   
