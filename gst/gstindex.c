@@ -915,7 +915,7 @@ gst_index_factory_new (const gchar * name, const gchar * longdesc, GType type)
     factory = GST_INDEX_FACTORY (g_object_new (GST_TYPE_INDEX_FACTORY, NULL));
     GST_PLUGIN_FEATURE_NAME (factory) = g_strdup (name);
   } else {
-    gst_object_ref (GST_OBJECT (factory));
+    g_object_ref (G_OBJECT (factory));
   }
 
   g_free (factory->longdesc);

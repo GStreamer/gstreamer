@@ -1,5 +1,10 @@
 2005-03-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/gstindex.c: (gst_index_factory_new):
+	  Oops, this is a gobject, not a gstobject.
+
+2005-03-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/tmpl/gstindex.sgml:
 	* gst/gstindex.c:
