@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2001 Steve Baker <stevebaker_org@yahoo.co.uk>
  *
- * gstcontrol.h: GStreamer control utility library
+ * gstdparamcommon.h: Dynamic Parameter common header
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,23 +18,20 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
- 
-#ifndef __GST_CONTROL_H__
-#define __GST_CONTROL_H__
+
+#ifndef __GST_DPCOMMON_H__
+#define __GST_DPCOMMON_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#include <libs/control/gstdparammanager.h>
-#include <libs/control/gstdparam.h>
-
-#include <libs/control/gstdplinearinterp.h>
-
-void gst_control_init (int *argc, char **argv[]);
+typedef struct _GstDParam GstDParam;
+typedef struct _GstDParamSpec GstDParamSpec;
+typedef struct _GstDParamManager GstDParamManager;
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* __GST_CONTROL_H__ */
+#endif /* __GST_DPCOMMON_H__ */
