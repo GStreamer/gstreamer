@@ -1,5 +1,11 @@
 2004-11-07  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_next_buffer),
+	(gst_ogg_mux_queue_pads), (gst_ogg_mux_loop):
+	  Fix interrupt event handling (#144436).
+
+2004-11-07  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/mad/gstid3tag.c: (gst_id3_tag_do_typefind):
 	  Hide unused glory.
 
