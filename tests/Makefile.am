@@ -1,9 +1,5 @@
-# This directory depends on an x86 computer, so if nasm is present, we're good
-# complain to hadess@hadess.net
-# bufspeed gives warnings, can someone please fix that ?
-NASMDEP_DIR=memchunk #bufspeed
 
-SUBDIRS = $(NASMDEP_DIR) muxing sched threadstate seeking
+SUBDIRS = memchunk muxing sched threadstate seeking # bufspeed
 
 noinst_PROGRAMS = lat
 
