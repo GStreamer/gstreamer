@@ -231,7 +231,8 @@ gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value
 {
 	gint64 time_diff;
 	gfloat time_ratio;
-	gfloat current, target, max_change, current_diff, final_val;
+	gfloat current, target, max_change, final_val;
+	gfloat current_diff = 0;
 	
 	GstDParamSmooth *dpsmooth = GST_DPSMOOTH(dparam);
 
