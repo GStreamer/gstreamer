@@ -182,7 +182,6 @@ enum {
   ARG_ALLOW_DIFF_SHORT,
   ARG_NO_SHORT_BLOCKS,
   ARG_EMPHASIS,
-  ARG_METADATA,
 };
 
 static void                     gst_lame_base_init      (gpointer g_class);
@@ -217,7 +216,16 @@ gst_lame_get_type (void)
       0,
       (GInstanceInitFunc) gst_lame_init,
     };
+
+    static const GInterfaceInfo tag_setter_info = {
+      NULL,
+      NULL,
+      NULL
+    };
+
     gst_lame_type = g_type_register_static (GST_TYPE_ELEMENT, "GstLame", &gst_lame_info, 0);
+    g_type_add_interface_static (gst_lame_type, GST_TYPE_TAG_SETTER, &tag_setter_info);
+
   }
   return gst_lame_type;
 }
@@ -343,11 +351,6 @@ gst_lame_class_init (GstLameClass *klass)
     g_param_spec_boolean ("emphasis", "Emphasis", "Emphasis",
                           TRUE, G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_METADATA,
-    g_param_spec_boxed ("metadata", "Metadata", "Metadata to add to the stream,",
-            GST_TYPE_CAPS, G_PARAM_READWRITE));
-
-
   gobject_class->set_property = gst_lame_set_property;
   gobject_class->get_property = gst_lame_get_property;
 
@@ -441,65 +444,104 @@ gst_lame_init (GstLame *lame)
   lame->allow_diff_short = lame_get_allow_diff_short (lame->lgf);
   lame->no_short_blocks = lame_get_no_short_blocks (lame->lgf);
   lame->emphasis = lame_get_emphasis (lame->lgf);
-
-  lame->metadata = GST_CAPS_NEW (
-      "lame_metadata",
-      "application/x-gst-metadata",
-      "comment",     GST_PROPS_STRING ("Track encoded with GStreamer"),
-      "year",        GST_PROPS_STRING (""),
-      "tracknumber", GST_PROPS_STRING (""),
-      "title",       GST_PROPS_STRING (""),
-      "artist",      GST_PROPS_STRING (""),
-      "album",       GST_PROPS_STRING (""),
-      "genre",       GST_PROPS_STRING ("")
-  );
+  lame->tags = gst_tag_list_new ();
 
   id3tag_init (lame->lgf);
   
   GST_DEBUG_OBJECT (lame, "done initializing");
 }
 
-static void
-gst_lame_add_metadata (GstLame *lame, GstCaps *caps)
+typedef struct _GstLameTagMatch GstLameTagMatch;
+typedef void (*GstLameTagFunc)(lame_global_flags* gfp, const char *value);
+
+struct _GstLameTagMatch
 {
-  GList *props;
-  GstPropsEntry *prop;
+  gchar *gstreamer_tag;
+  GstLameTagFunc tag_func;
+};
 
-  if (caps == NULL)
-    return;
+static GstLameTagMatch tag_matches[] = 
+  {
+    {GST_TAG_TITLE,        id3tag_set_title},
+    {GST_TAG_DATE,         id3tag_set_year},
+    {GST_TAG_TRACK_NUMBER, id3tag_set_track},
+    {GST_TAG_COMMENT,      id3tag_set_comment},
+    {GST_TAG_ARTIST,       id3tag_set_artist},
+    {GST_TAG_ALBUM,        id3tag_set_album},
+    {GST_TAG_GENRE,        (GstLameTagFunc)id3tag_set_genre},
+    {NULL,                 NULL}
+  };
 
-  props = gst_caps_get_props (caps)->properties;
-  while (props) {
-    prop = (GstPropsEntry*)(props->data);
-    props = g_list_next(props);
+static void 
+add_one_tag (const GstTagList *list, const gchar *tag, 
+	     gpointer user_data)
+{
+  GstLame *lame;
+  gchar *value;
+  int i = 0;
 
-    if (gst_props_entry_get_props_type (prop) == GST_PROPS_STRING_TYPE) {
-      const gchar *name = gst_props_entry_get_name (prop);
-      const gchar *value;
+  lame = GST_LAME (user_data);
+  g_return_if_fail (lame != NULL);
 
-      gst_props_entry_get_string (prop, &value);
-
-      if (!value || strlen (value) == 0)
-        continue;
-
-      if (strcmp (name, "comment") == 0) {
-        id3tag_set_comment (lame->lgf, value);
-      } else if (strcmp (name, "date") == 0) {
-        id3tag_set_year (lame->lgf, value);
-      } else if (strcmp (name, "tracknumber") == 0) {
-        id3tag_set_track (lame->lgf, value);
-      } else if (strcmp (name, "title") == 0) {
-        id3tag_set_title (lame->lgf, value);
-      } else if (strcmp (name, "artist") == 0) {
-        id3tag_set_artist (lame->lgf, value);
-      } else if (strcmp (name, "album") == 0) {
-        id3tag_set_album (lame->lgf, value);
-      } else if (strcmp (name, "genre") == 0) {
-        id3tag_set_genre (lame->lgf, value);
-      }
+  while (tag_matches[i].gstreamer_tag != NULL) {
+    if (strcmp (tag, tag_matches[i].gstreamer_tag) == 0) {
+      break;
     }
+    i++;
+  }
+  
+  if (tag_matches[i].tag_func == NULL) {
+    g_print ("Couldn't find matching gstreamer tag for %s\n", tag);
+    return;
+  }
+
+  switch (gst_tag_get_type (tag)) {
+  case G_TYPE_UINT: {
+    guint ivalue;
+    if (gst_tag_list_get_uint (list, tag, &ivalue)) {
+      GST_DEBUG ("Error reading \"%s\" tag value\n", tag);
+      return;
+    }
+    value = g_strdup_printf ("%u", ivalue);
+    break;
+  }
+  case G_TYPE_STRING: 
+    if (gst_tag_list_get_string (list, tag, &value)) {
+      GST_DEBUG ("Error reading \"%s\" tag value\n", tag);
+      return;
+    };
+    break;
+  default:
+    GST_DEBUG ("Couldn't write tag %s", tag);
+    break;
+  }
+
+  tag_matches[i].tag_func (lame->lgf, value);
+
+  if (gst_tag_get_type (tag) == G_TYPE_UINT) {
+    g_free (value);
   }
 }
+
+static void
+gst_lame_set_metadata (GstLame *lame)
+{
+  const GstTagList *user_tags;
+  GstTagList *copy;
+
+  g_return_if_fail (lame != NULL);
+  user_tags = gst_tag_setter_get_list (GST_TAG_SETTER (lame));
+  if ((lame->tags == NULL) && (user_tags == NULL)) {
+    return;
+  }
+  copy = gst_tag_list_merge (user_tags, lame->tags, 
+			     gst_tag_setter_get_merge_mode (GST_TAG_SETTER (lame)));
+  gst_tag_list_foreach ((GstTagList*)copy, add_one_tag, lame);
+
+  gst_tag_list_free (copy);
+}
+
+
 
 static void
 gst_lame_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -601,9 +643,6 @@ gst_lame_set_property (GObject *object, guint prop_id, const GValue *value, GPar
       break;
     case ARG_EMPHASIS:
       lame->emphasis = g_value_get_boolean (value);
-      break;
-    case ARG_METADATA:
-      lame->metadata = g_value_get_boxed (value);
       break;
     default:
       break;
@@ -712,9 +751,6 @@ gst_lame_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec
     case ARG_EMPHASIS:
       g_value_set_boolean (value, lame->emphasis);
       break;
-    case ARG_METADATA:
-      g_value_set_static_boxed (value, lame->metadata);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -746,6 +782,15 @@ gst_lame_chain (GstPad *pad, GstData *_data)
         mp3_size = lame_encode_flush (lame->lgf, mp3_data, mp3_buffer_size);
 	gst_event_unref (GST_EVENT (buf));
         break;	
+      case GST_EVENT_TAG:
+	if (lame->tags) {
+	  gst_tag_list_merge (lame->tags, gst_event_tag_get_list (GST_EVENT (buf)), 
+		  gst_tag_setter_get_merge_mode (GST_TAG_SETTER (lame)));
+	} else {
+	  g_assert_not_reached ();
+	}	
+	//	gst_pad_event_default (pad, GST_EVENT (buf));
+	break;
       default:
 	gst_pad_event_default (pad, GST_EVENT (buf));
 	break;
@@ -875,7 +920,7 @@ gst_lame_setup (GstLame *lame)
   lame_set_no_short_blocks (lame->lgf, lame->no_short_blocks);
   lame_set_emphasis (lame->lgf, lame->emphasis);
 
-  gst_lame_add_metadata (lame, lame->metadata);
+  gst_lame_set_metadata (lame);
 
   /* initialize the lame encoder */
   if (lame_init_params (lame->lgf) < 0) {
