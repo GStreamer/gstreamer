@@ -97,12 +97,6 @@ gboolean	gst_init_check_with_popt_table	(int *argc, char **argv[],
 
 const GstPoptOption *	gst_init_get_popt_table		(void);
 
-void		gst_use_threads			(gboolean use_threads);
-gboolean	gst_has_threads			(void);
-
-void		gst_main			(void);
-void		gst_main_quit			(void);
-
 G_END_DECLS
 
 #endif /* __GST_H__ */

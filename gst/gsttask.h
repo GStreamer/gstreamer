@@ -57,7 +57,7 @@ typedef enum {
 struct _GstTask {
   GstObject      object;
 
-  /*< public >*/ /* with LOCK */
+  /*< public >*/ /* with TASK_LOCK */
   GstTaskState state;
   GCond *cond;
 

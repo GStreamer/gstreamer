@@ -420,7 +420,6 @@ gst_object_dispose (GObject * object)
   PATCH_REFCOUNT1 (object)
 
       parent_class->dispose (object);
-
 }
 
 /* finalize is called when the object has to free its resources */

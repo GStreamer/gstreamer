@@ -830,6 +830,13 @@ gst_element_get_pad (GstElement * element, const gchar * name)
   return pad;
 }
 
+GstIteratorItem
+iterate_pad (GstIterator * it, GstPad * pad)
+{
+  gst_object_ref (GST_OBJECT_CAST (pad));
+  return GST_ITERATOR_ITEM_PASS;
+}
+
 /**
  * gst_element_iterate_pads:
  * @element: a #GstElement to iterate pads of.
@@ -853,8 +860,7 @@ gst_element_iterate_pads (GstElement * element)
       &element->pads_cookie,
       &element->pads,
       element,
-      (GstIteratorRefFunction) gst_object_ref,
-      (GstIteratorUnrefFunction) gst_object_unref,
+      (GstIteratorItemFunction) iterate_pad,
       (GstIteratorDisposeFunction) gst_object_unref);
   GST_UNLOCK (element);
 
@@ -1571,6 +1577,8 @@ gst_element_get_state_func (GstElement * element,
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "getting state");
+
   GST_STATE_LOCK (element);
   /* we got an error, report immediatly */
   if (GST_STATE_ERROR (element))
@@ -1578,21 +1586,26 @@ gst_element_get_state_func (GstElement * element,
 
   old_pending = GST_STATE_PENDING (element);
   if (old_pending != GST_STATE_VOID_PENDING) {
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "wait for pending");
     /* we have a pending state change, wait for it to complete */
     if (!GST_STATE_TIMED_WAIT (element, timeout)) {
+      GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "timeout");
       /* timeout triggered */
       ret = GST_STATE_ASYNC;
     } else {
       /* could be success or failure */
       if (old_pending == GST_STATE (element)) {
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "got success");
         ret = GST_STATE_SUCCESS;
       } else {
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "got failure");
         ret = GST_STATE_FAILURE;
       }
     }
   }
   /* if nothing is pending anymore we can return SUCCESS */
   if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING) {
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "nothing pending");
     ret = GST_STATE_SUCCESS;
   }
 
@@ -1601,6 +1614,11 @@ done:
     *state = GST_STATE (element);
   if (pending)
     *pending = GST_STATE_PENDING (element);
+
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+      "state current: %s, pending: %s",
+      gst_element_state_get_name (GST_STATE (element)),
+      gst_element_state_get_name (GST_STATE_PENDING (element)));
 
   GST_STATE_UNLOCK (element);
 
@@ -1877,12 +1895,13 @@ restart:
     /* we only care about real pads */
     if (GST_IS_REAL_PAD (pad)) {
       GstRealPad *peer;
-      gboolean pad_loop;
+      gboolean pad_loop, pad_get;
       gboolean delay = FALSE;
 
       /* see if the pad has a loop function and grab
        * the peer */
       GST_LOCK (pad);
+      pad_get = GST_RPAD_GETRANGEFUNC (pad) != NULL;
       pad_loop = GST_RPAD_LOOPFUNC (pad) != NULL;
       peer = GST_RPAD_PEER (pad);
       if (peer)
@@ -1890,18 +1909,20 @@ restart:
       GST_UNLOCK (pad);
 
       if (peer) {
-        gboolean peer_loop;
+        gboolean peer_loop, peer_get;
 
+        /* see if the peer has a getrange function */
+        peer_get = GST_RPAD_GETRANGEFUNC (peer) != NULL;
         /* see if the peer has a loop function */
         peer_loop = GST_RPAD_LOOPFUNC (peer) != NULL;
 
         /* sinkpads with a loop function are delayed since they
          * need the srcpad to be active first */
-        if (GST_PAD_IS_SINK (pad) && pad_loop) {
+        if (GST_PAD_IS_SINK (pad) && pad_loop && peer_get) {
           GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
               "delaying pad %s", GST_OBJECT_NAME (pad));
           delay = TRUE;
-        } else if (GST_PAD_IS_SRC (pad) && peer_loop) {
+        } else if (GST_PAD_IS_SRC (pad) && peer_loop && pad_get) {
           /* If the pad is a source and the peer has a loop function,
            * we can activate the srcpad and then the loopbased sinkpad */
           GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
@@ -2039,7 +2060,6 @@ gst_element_dispose (GObject * object)
 
   /* ref so we don't hit 0 again */
   gst_object_ref (GST_OBJECT (object));
-  gst_element_set_state (element, GST_STATE_NULL);
 
   /* first we break all our links with the ouside */
   while (element->pads) {

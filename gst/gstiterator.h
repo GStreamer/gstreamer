@@ -35,11 +35,16 @@ typedef enum {
 
 typedef struct _GstIterator GstIterator;
 
-typedef void		  (*GstIteratorRefFunction)	(gpointer item);
-typedef void		  (*GstIteratorUnrefFunction)	(gpointer item);
+typedef enum {
+  GST_ITERATOR_ITEM_SKIP		= 0, /* skip item */
+  GST_ITERATOR_ITEM_PASS		= 1, /* return item */
+  GST_ITERATOR_ITEM_END			= 2, /* stop after this item */
+} GstIteratorItem;
+
 typedef void		  (*GstIteratorDisposeFunction)	(gpointer owner);
 
 typedef GstIteratorResult (*GstIteratorNextFunction)	(GstIterator *it, gpointer *result);
+typedef GstIteratorItem	  (*GstIteratorItemFunction)	(GstIterator *it, gpointer item);
 typedef void		  (*GstIteratorResyncFunction)	(GstIterator *it);
 typedef void		  (*GstIteratorFreeFunction)	(GstIterator *it);
 
@@ -50,8 +55,11 @@ typedef void		  (*GstIteratorFreeFunction)	(GstIterator *it);
 
 struct _GstIterator {
   GstIteratorNextFunction next;
+  GstIteratorItemFunction item;
   GstIteratorResyncFunction resync;
   GstIteratorFreeFunction free;
+
+  GstIterator *pushed;		/* pushed iterator */
 
   GMutex   *lock;	
   guint32   cookie;		/* cookie of the iterator */
@@ -64,6 +72,7 @@ GstIterator* 		gst_iterator_new		(guint size,
 							 GMutex *lock, 
 							 guint32 *master_cookie,
   							 GstIteratorNextFunction next,
+  							 GstIteratorItemFunction item,
   							 GstIteratorResyncFunction resync,
   							 GstIteratorFreeFunction free);
 
@@ -71,14 +80,15 @@ GstIterator* 		gst_iterator_new_list		(GMutex *lock,
 							 guint32 *master_cookie,
 							 GList **list,
 							 gpointer owner,
-  							 GstIteratorRefFunction ref,
-  							 GstIteratorUnrefFunction unref,
+  							 GstIteratorItemFunction item,
   							 GstIteratorDisposeFunction free);
 
 /* using iterators */
 GstIteratorResult	gst_iterator_next		(GstIterator *it, gpointer *result);
 void			gst_iterator_resync		(GstIterator *it);
 void			gst_iterator_free		(GstIterator *it);
+
+void			gst_iterator_push		(GstIterator *it, GstIterator *other);
 
 /* special functions that operate on iterators */
 void 			gst_iterator_foreach 		(GstIterator *it, GFunc function, 

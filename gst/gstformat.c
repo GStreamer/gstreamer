@@ -194,7 +194,7 @@ gst_format_iterate_definitions (void)
 
   g_static_mutex_lock (&mutex);
   result = gst_iterator_new_list (g_static_mutex_get_mutex (&mutex),
-      &_n_values, &_gst_formats, NULL, NULL, NULL, NULL);
+      &_n_values, &_gst_formats, NULL, NULL, NULL);
   g_static_mutex_unlock (&mutex);
 
   return result;

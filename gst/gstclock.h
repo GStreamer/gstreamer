@@ -179,6 +179,8 @@ guint64			gst_clock_get_resolution	(GstClock *clock);
 GstClockTime		gst_clock_get_time		(GstClock *clock);
 void			gst_clock_set_time_adjust	(GstClock *clock, GstClockTime adjust);
 
+GstClockTime		gst_clock_adjust_unlocked	(GstClock *clock, GstClockTime internal);
+
 
 /* creating IDs that can be used to get notifications */
 GstClockID		gst_clock_new_single_shot_id	(GstClock *clock, 

@@ -195,6 +195,8 @@ gst_bus_post (GstBus * bus, GstMessage * message)
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
   g_return_val_if_fail (GST_IS_MESSAGE (message), FALSE);
 
+  GST_DEBUG_OBJECT (bus, "posting message on bus");
+
   GST_LOCK (bus);
   handler = bus->sync_handler;
   handler_data = bus->sync_handler_data;

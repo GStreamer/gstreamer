@@ -509,6 +509,34 @@ gst_clock_get_resolution (GstClock * clock)
 }
 
 /**
+ * gst_clock_adjust_unlocked
+ * @clock: a #GstClock to use
+ * @internal: a clock time
+ *
+ * Converts the given @internal clock time to the real time, adjusting
+ * and making sure that the returned time is increasing.
+ * This function should be called with the clock lock held.
+ *
+ * Returns: the converted time of the clock.
+ *
+ * MT safe.
+ */
+GstClockTime
+gst_clock_adjust_unlocked (GstClock * clock, GstClockTime internal)
+{
+  GstClockTime ret;
+
+  ret = internal + clock->adjust;
+  /* make sure the time is increasing, else return last_time */
+  if ((gint64) ret < (gint64) clock->last_time) {
+    ret = clock->last_time;
+  } else {
+    clock->last_time = ret;
+  }
+  return ret;
+}
+
+/**
  * gst_clock_get_time
  * @clock: a #GstClock to query
  *
@@ -535,16 +563,15 @@ gst_clock_get_time (GstClock * clock)
   } else {
     ret = G_GINT64_CONSTANT (0);
   }
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "internal time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (ret));
 
-  /* make sure the time is increasing, else return last_time */
   GST_LOCK (clock);
-  ret += clock->adjust;
-  if ((gint64) ret < (gint64) clock->last_time) {
-    ret = clock->last_time;
-  } else {
-    clock->last_time = ret;
-  }
+  ret = gst_clock_adjust_unlocked (clock, ret);
   GST_UNLOCK (clock);
+
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "adjusted time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (ret));
 
   return ret;
 }

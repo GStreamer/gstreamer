@@ -861,48 +861,6 @@ done:
   GST_STREAM_UNLOCK (pad);
 }
 
-#if 0
-/**
- * gst_fakesrc_loop:
- * @element: the faksesrc to loop
- * 
- * generate an empty buffer and push it to the next element.
- */
-static gboolean
-gst_fakesrc_loop (GstPad * pad)
-{
-  GstFakeSrc *src;
-  const GList *pads;
-  GstTask *task;
-
-  src = GST_FAKESRC (GST_PAD_PARENT (pad));
-  task = src->task;
-
-  pads = GST_ELEMENT (src)->pads;
-
-  while (pads) {
-    GstPad *pad = GST_PAD (pads->data);
-    GstBuffer *buffer;
-    GstFlowReturn ret;
-
-    ret = gst_fakesrc_get (pad, &buffer);
-    if (ret != GST_FLOW_OK) {
-      return FALSE;
-    }
-    ret = gst_pad_push (pad, buffer);
-    if (ret != GST_FLOW_OK) {
-      return FALSE;
-    }
-
-    if (src->eos) {
-      return FALSE;
-    }
-    pads = g_list_next (pads);
-  }
-  return TRUE;
-}
-#endif
-
 static gboolean
 gst_fakesrc_activate (GstPad * pad, GstActivateMode mode)
 {

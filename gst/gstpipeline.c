@@ -216,11 +216,9 @@ pipeline_bus_handler (GstBus * bus, GstMessage * message,
 {
   GstBusSyncReply result = GST_BUS_PASS;
   gboolean posteos = FALSE;
-  gboolean locked;
 
   /* we don't want messages from the streaming thread while we're doing the 
    * state change. We do want them from the state change functions. */
-  locked = GST_STATE_TRYLOCK (pipeline);
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_EOS:
@@ -242,8 +240,6 @@ pipeline_bus_handler (GstBus * bus, GstMessage * message,
     default:
       break;
   }
-  if (locked)
-    GST_STATE_UNLOCK (pipeline);
 
   if (posteos) {
     gst_bus_post (bus, gst_message_new_eos (GST_OBJECT (pipeline)));

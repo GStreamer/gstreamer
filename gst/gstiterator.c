@@ -27,14 +27,17 @@ gst_iterator_init (GstIterator * it,
     GMutex * lock,
     guint32 * master_cookie,
     GstIteratorNextFunction next,
+    GstIteratorItemFunction item,
     GstIteratorResyncFunction resync, GstIteratorFreeFunction free)
 {
   it->lock = lock;
   it->master_cookie = master_cookie;
   it->cookie = *master_cookie;
   it->next = next;
+  it->item = item;
   it->resync = resync;
   it->free = free;
+  it->pushed = NULL;
 }
 
 /**
@@ -43,6 +46,7 @@ gst_iterator_init (GstIterator * it,
  * @lock: pointer to a #GMutex.
  * @master_cookie: pointer to a guint32 to protect the iterated object.
  * @next: function to get next item
+ * @item: function to call on each item retrieved
  * @resync: function to resync the iterator
  * @free: function to free the iterator
  *
@@ -58,6 +62,7 @@ gst_iterator_new (guint size,
     GMutex * lock,
     guint32 * master_cookie,
     GstIteratorNextFunction next,
+    GstIteratorItemFunction item,
     GstIteratorResyncFunction resync, GstIteratorFreeFunction free)
 {
   GstIterator *result;
@@ -69,7 +74,7 @@ gst_iterator_new (guint size,
   g_return_val_if_fail (free != NULL, NULL);
 
   result = g_malloc (size);
-  gst_iterator_init (result, lock, master_cookie, next, resync, free);
+  gst_iterator_init (result, lock, master_cookie, next, item, resync, free);
 
   return result;
 }
@@ -83,8 +88,6 @@ typedef struct _GstListIterator
   gpointer owner;
   GList **orig;
   GList *list;                  /* pointer in list */
-  GstIteratorRefFunction reffunc;
-  GstIteratorUnrefFunction unreffunc;
   GstIteratorDisposeFunction freefunc;
 } GstListIterator;
 
@@ -95,9 +98,6 @@ gst_list_iterator_next (GstListIterator * it, gpointer * elem)
     return GST_ITERATOR_DONE;
 
   *elem = it->list->data;
-  if (it->reffunc) {
-    it->reffunc (*elem);
-  }
   it->list = g_list_next (it->list);
 
   return GST_ITERATOR_OK;
@@ -139,8 +139,7 @@ gst_iterator_new_list (GMutex * lock,
     guint32 * master_cookie,
     GList ** list,
     gpointer owner,
-    GstIteratorRefFunction ref,
-    GstIteratorUnrefFunction unref, GstIteratorDisposeFunction free)
+    GstIteratorItemFunction item, GstIteratorDisposeFunction free)
 {
   GstListIterator *result;
 
@@ -149,17 +148,25 @@ gst_iterator_new_list (GMutex * lock,
       lock,
       master_cookie,
       (GstIteratorNextFunction) gst_list_iterator_next,
+      (GstIteratorItemFunction) item,
       (GstIteratorResyncFunction) gst_list_iterator_resync,
       (GstIteratorFreeFunction) gst_list_iterator_free);
 
   result->owner = owner;
   result->orig = list;
   result->list = *list;
-  result->reffunc = ref;
-  result->unreffunc = unref;
   result->freefunc = free;
 
   return GST_ITERATOR (result);
+}
+
+static void
+gst_iterator_pop (GstIterator * it)
+{
+  if (it->pushed) {
+    gst_iterator_free (it->pushed);
+    it->pushed = NULL;
+  }
 }
 
 /**
@@ -181,14 +188,43 @@ gst_iterator_next (GstIterator * it, gpointer * elem)
   g_return_val_if_fail (it != NULL, GST_ITERATOR_ERROR);
   g_return_val_if_fail (elem != NULL, GST_ITERATOR_ERROR);
 
+restart:
+  if (it->pushed) {
+    result = gst_iterator_next (it->pushed, elem);
+    if (result == GST_ITERATOR_DONE) {
+      /* we are done with this iterator, pop it and
+       * fallthrough iterating the main iterator again. */
+      gst_iterator_pop (it);
+    } else {
+      return result;
+    }
+  }
+
   if (G_LIKELY (it->lock))
     g_mutex_lock (it->lock);
+
   if (G_UNLIKELY (*it->master_cookie != it->cookie)) {
     result = GST_ITERATOR_RESYNC;
     goto done;
   }
 
   result = it->next (it, elem);
+  if (it->item) {
+    GstIteratorItem itemres;
+
+    itemres = it->item (it, *elem);
+    switch (itemres) {
+      case GST_ITERATOR_ITEM_SKIP:
+        if (G_LIKELY (it->lock))
+          g_mutex_unlock (it->lock);
+        goto restart;
+      case GST_ITERATOR_ITEM_END:
+        result = GST_ITERATOR_DONE;
+        break;
+      case GST_ITERATOR_ITEM_PASS:
+        break;
+    }
+  }
 
 done:
   if (G_LIKELY (it->lock))
@@ -211,6 +247,8 @@ gst_iterator_resync (GstIterator * it)
 {
   g_return_if_fail (it != NULL);
 
+  gst_iterator_pop (it);
+
   if (G_LIKELY (it->lock))
     g_mutex_lock (it->lock);
   it->resync (it);
@@ -232,7 +270,32 @@ gst_iterator_free (GstIterator * it)
 {
   g_return_if_fail (it != NULL);
 
+  gst_iterator_pop (it);
+
   it->free (it);
+}
+
+/**
+ * gst_iterator_push:
+ * @it: The #GstIterator to use
+ * @other: The #GstIterator to push
+ *
+ * Pushes @other iterator onto @it. All calls performed on @it are
+ * forwarded tot @other. If @other returns #GST_ITERATOR_DONE, it is
+ * popped again and calls are handled by @it again.
+ *
+ * This function is mainly used by objects implementing the iterator
+ * next function to recurse into substructures.
+ * 
+ * MT safe.
+ */
+void
+gst_iterator_push (GstIterator * it, GstIterator * other)
+{
+  g_return_if_fail (it != NULL);
+  g_return_if_fail (other != NULL);
+
+  it->pushed = other;
 }
 
 typedef struct _GstIteratorFilter
@@ -345,6 +408,7 @@ gst_iterator_filter (GstIterator * it, gpointer user_data, GCompareFunc func)
   result = (GstIteratorFilter *) gst_iterator_new (sizeof (GstIteratorFilter),
       it->lock, it->master_cookie,
       (GstIteratorNextFunction) filter_next,
+      (GstIteratorItemFunction) NULL,
       (GstIteratorResyncFunction) filter_resync,
       (GstIteratorFreeFunction) filter_free);
   it->lock = NULL;
@@ -381,6 +445,7 @@ gst_iterator_foreach (GstIterator * it, GFunc function, gpointer user_data)
   gst_iterator_init (GST_ITERATOR (&filter),
       it->lock, it->master_cookie,
       (GstIteratorNextFunction) filter_next,
+      (GstIteratorItemFunction) NULL,
       (GstIteratorResyncFunction) filter_resync,
       (GstIteratorFreeFunction) filter_uninit);
   it->lock = NULL;
@@ -421,6 +486,7 @@ gst_iterator_find_custom (GstIterator * it, gpointer user_data,
   gst_iterator_init (GST_ITERATOR (&filter),
       it->lock, it->master_cookie,
       (GstIteratorNextFunction) filter_next,
+      (GstIteratorItemFunction) NULL,
       (GstIteratorResyncFunction) filter_resync,
       (GstIteratorFreeFunction) filter_uninit);
   it->lock = NULL;

@@ -245,13 +245,8 @@ gst_thread_scheduler_get_type (void)
 
 static void gst_thread_scheduler_setup (GstScheduler * sched);
 static void gst_thread_scheduler_reset (GstScheduler * sched);
-static void gst_thread_scheduler_add_element (GstScheduler * sched,
-    GstElement * element);
-static void gst_thread_scheduler_remove_element (GstScheduler * sched,
-    GstElement * element);
 static GstTask *gst_thread_scheduler_create_task (GstScheduler * sched,
     GstTaskFunction func, gpointer data);
-static void gst_thread_scheduler_show (GstScheduler * scheduler);
 
 static void
 gst_thread_scheduler_class_init (gpointer klass, gpointer class_data)
@@ -260,11 +255,7 @@ gst_thread_scheduler_class_init (gpointer klass, gpointer class_data)
 
   scheduler->setup = gst_thread_scheduler_setup;
   scheduler->reset = gst_thread_scheduler_reset;
-  scheduler->add_element = gst_thread_scheduler_add_element;
-  scheduler->remove_element = gst_thread_scheduler_remove_element;
   scheduler->create_task = gst_thread_scheduler_create_task;
-  scheduler->clock_wait = NULL;
-  scheduler->show = gst_thread_scheduler_show;
 }
 
 static void
@@ -332,31 +323,6 @@ gst_thread_scheduler_setup (GstScheduler * sched)
 
 static void
 gst_thread_scheduler_reset (GstScheduler * sched)
-{
-}
-
-static void
-gst_thread_scheduler_add_element (GstScheduler * scheduler,
-    GstElement * element)
-{
-  g_print ("add element\n");
-}
-
-static void
-gst_thread_scheduler_remove_element (GstScheduler * scheduler,
-    GstElement * element)
-{
-  GstThreadSchedulerTask *task;;
-
-  task = ELEMENT_PRIVATE (element);
-  if (task) {
-    g_object_unref (G_OBJECT (task));
-    ELEMENT_PRIVATE (element) = NULL;;
-  }
-}
-
-static void
-gst_thread_scheduler_show (GstScheduler * scheduler)
 {
 }
 

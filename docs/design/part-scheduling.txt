@@ -67,7 +67,8 @@ Multi-sink elements
   ----------
 
     If the chain based sink wants to wait for one of the pads to receive a buffer, just
-    implement the action to perform in the chain function.
+    implement the action to perform in the chain function. Be aware that the action could
+    be performed in different threads and possibly simultaneously so grab the STREAM_LOCK.
 
   Collect pads
   ------------
@@ -176,3 +177,25 @@ Cases
     |        src--sink       src--sink         src--sink        |
     +---------+    +----------+    +------------+    +----------+
             (l-g) (c-l)      (g)  (l)          ()   (c)
+
+      * fakesink has a chain function and the peer pad has no
+        loop function, no scheduling is done.
+      * avidemuxer and identity expose an (g) - (l) connection,
+        a thread is created to call the sinkpad loop function.
+      * identity knows the srcpad is getrange based and uses the
+        thread from avidemux to getrange data from filesrc.
+
+    +---------+    +----------+    +------------+    +----------+
+    | filesrc |    | identity |    | oggdemuxer |    | fakesink |
+    |        src--sink       src--sink         src--sink        |
+    +---------+    +----------+    +------------+    +----------+
+            (l-g) (c)        ()   (l-c)        ()   (c)
+
+      * fakesink has a chain function and the peer pad has no
+        loop function, no scheduling is done.
+      * oggdemuxer and identity expose an () - (l-c) connection,
+        oggdemux has to operate in chain mode.
+      * identity chan only work chain based and so filesrc creates
+        a thread to push data to identity.
+
+

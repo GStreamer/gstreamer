@@ -521,6 +521,13 @@ no_function:
   return FALSE;
 }
 
+static GstIteratorItem
+iterate_child (GstIterator * it, GstElement * child)
+{
+  gst_object_ref (GST_OBJECT (child));
+  return GST_ITERATOR_ITEM_PASS;
+}
+
 /**
  * gst_bin_iterate_elements:
  * @bin: #Gstbin to iterate the elements of
@@ -542,18 +549,74 @@ gst_bin_iterate_elements (GstBin * bin)
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
 
   GST_LOCK (bin);
-  /* add ref because the iterator refs the bin */
+  /* add ref because the iterator refs the bin. When the iterator
+   * is freed it will unref the bin again using the provided dispose 
+   * function. */
   gst_object_ref (GST_OBJECT (bin));
   result = gst_iterator_new_list (GST_GET_LOCK (bin),
       &bin->children_cookie,
       &bin->children,
       bin,
-      (GstIteratorRefFunction) gst_object_ref,
-      (GstIteratorUnrefFunction) gst_object_unref,
+      (GstIteratorItemFunction) iterate_child,
       (GstIteratorDisposeFunction) gst_object_unref);
   GST_UNLOCK (bin);
 
   return result;
+}
+
+static GstIteratorItem
+iterate_child_recurse (GstIterator * it, GstElement * child)
+{
+  gst_object_ref (GST_OBJECT (child));
+  if (GST_IS_BIN (child)) {
+    GstIterator *other = gst_bin_iterate_recurse (GST_BIN (child));
+
+    gst_iterator_push (it, other);
+  }
+  return GST_ITERATOR_ITEM_PASS;
+}
+
+/**
+ * gst_bin_iterate_recurse:
+ * @bin: #Gstbin to iterate the elements of
+ *
+ * Get an iterator for the elements in this bin. 
+ * Each element will have its refcount increased, so unref 
+ * after usage. This iterator recurses into GstBin children.
+ *
+ * Returns: a #GstIterator of #GstElements. gst_iterator_free after
+ * use. returns NULL when passing bad parameters.
+ *
+ * MT safe.
+ */
+GstIterator *
+gst_bin_iterate_recurse (GstBin * bin)
+{
+  GstIterator *result;
+
+  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+
+  GST_LOCK (bin);
+  /* add ref because the iterator refs the bin. When the iterator
+   * is freed it will unref the bin again using the provided dispose 
+   * function. */
+  gst_object_ref (GST_OBJECT (bin));
+  result = gst_iterator_new_list (GST_GET_LOCK (bin),
+      &bin->children_cookie,
+      &bin->children,
+      bin,
+      (GstIteratorItemFunction) iterate_child_recurse,
+      (GstIteratorDisposeFunction) gst_object_unref);
+  GST_UNLOCK (bin);
+
+  return result;
+  return NULL;
+}
+
+GstIterator *
+gst_bin_iterate_recurse_up (GstBin * bin)
+{
+  return NULL;
 }
 
 /* returns 0 if the element is a sink, this is made so that
@@ -937,7 +1000,6 @@ gst_bin_dispose (GObject * object)
 
   /* ref to not hit 0 again */
   gst_object_ref (GST_OBJECT (object));
-  gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
 
   while (bin->children) {
     gst_bin_remove (bin, GST_ELEMENT (bin->children->data));
@@ -949,6 +1011,21 @@ gst_bin_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
+static gint
+compare_name (GstElement * element, const gchar * name)
+{
+  gint eq;
+
+  GST_LOCK (element);
+  eq = strcmp (GST_ELEMENT_NAME (element), name) == 0;
+  GST_UNLOCK (element);
+
+  if (eq != 0) {
+    gst_object_unref (GST_OBJECT (element));
+  }
+  return eq;
+}
+
 /**
  * gst_bin_get_by_name:
  * @bin: #Gstbin to search
@@ -958,46 +1035,24 @@ gst_bin_dispose (GObject * object)
  * function recurses into subbins.
  *
  * Returns: the element with the given name. Returns NULL if the
- * element is not found or when bad parameters were given.
+ * element is not found or when bad parameters were given. Unref after
+ * usage.
  *
  * MT safe.
  */
 GstElement *
 gst_bin_get_by_name (GstBin * bin, const gchar * name)
 {
-  GList *children;
-  GstElement *result = NULL;
+  GstIterator *children;
+  GstIterator *result;
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
-  g_return_val_if_fail (name != NULL, NULL);
 
-  GST_CAT_INFO (GST_CAT_PARENTAGE, "[%s]: looking up child element %s",
-      GST_ELEMENT_NAME (bin), name);
+  children = gst_bin_iterate_recurse (bin);
+  result = gst_iterator_find_custom (children, (gpointer) name,
+      (GCompareFunc) compare_name);
 
-  /* we recursively lock all elements, this might be a bit too much.. */
-  GST_LOCK (bin);
-  for (children = bin->children; children; children = g_list_next (children)) {
-    GstElement *child = GST_ELEMENT_CAST (children->data);
-    gboolean eq;
-
-    GST_LOCK (child);
-    eq = strcmp (GST_ELEMENT_NAME (child), name) == 0;
-    GST_UNLOCK (child);
-
-    if (eq) {
-      result = child;
-      break;
-    }
-    if (GST_IS_BIN (child)) {
-      result = gst_bin_get_by_name (GST_BIN (child), name);
-      if (result) {
-        break;
-      }
-    }
-  }
-  GST_UNLOCK (bin);
-
-  return result;
+  return GST_ELEMENT_CAST (result);
 }
 
 /**
@@ -1009,7 +1064,7 @@ gst_bin_get_by_name (GstBin * bin, const gchar * name)
  * element is not found, a recursion is performed on the parent bin.
  *
  * Returns: the element with the given name or NULL when the element
- * was not found or bad parameters were given.
+ * was not found or bad parameters were given. Unref after usage.
  *
  * MT safe.
  */
@@ -1037,6 +1092,23 @@ gst_bin_get_by_name_recurse_up (GstBin * bin, const gchar * name)
   return result;
 }
 
+
+static gint
+compare_interface (GstElement * element, gpointer interface)
+{
+  gint ret;
+
+  if (G_TYPE_CHECK_INSTANCE_TYPE (element, GPOINTER_TO_INT (interface))) {
+    ret = 0;
+  } else {
+    /* we did not find the element, need to release the ref
+     * added by the iterator */
+    gst_object_unref (GST_OBJECT (element));
+    ret = 1;
+  }
+  return ret;
+}
+
 /**
  * gst_bin_get_by_interface:
  * @bin: bin to find element in
@@ -1046,36 +1118,26 @@ gst_bin_get_by_name_recurse_up (GstBin * bin, const gchar * name)
  * interface. If such an element is found, it returns the element. You can
  * cast this element to the given interface afterwards.
  * If you want all elements that implement the interface, use
- * gst_bin_get_all_by_interface(). The function recurses bins inside bins.
+ * gst_bin_iterate_all_by_interface(). The function recurses bins inside bins.
  *
- * Returns: An element inside the bin implementing the interface.
+ * Returns: An element inside the bin implementing the interface. Unref after
+ *          usage.
  *
  * MT safe.
  */
 GstElement *
 gst_bin_get_by_interface (GstBin * bin, GType interface)
 {
-  GList *walk;
-  GstElement *result = NULL;
+  GstIterator *children;
+  GstIterator *result;
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
-  g_return_val_if_fail (G_TYPE_IS_INTERFACE (interface), NULL);
 
-  GST_LOCK (bin);
-  for (walk = bin->children; walk; walk = g_list_next (walk)) {
-    if (G_TYPE_CHECK_INSTANCE_TYPE (walk->data, interface)) {
-      result = GST_ELEMENT_CAST (walk->data);
-      break;
-    }
-    if (GST_IS_BIN (walk->data)) {
-      result = gst_bin_get_by_interface (GST_BIN (walk->data), interface);
-      if (result)
-        break;
-    }
-  }
-  GST_UNLOCK (bin);
+  children = gst_bin_iterate_recurse (bin);
+  result = gst_iterator_find_custom (children, GINT_TO_POINTER (interface),
+      (GCompareFunc) compare_interface);
 
-  return result;
+  return GST_ELEMENT_CAST (result);
 }
 
 /**
@@ -1085,35 +1147,25 @@ gst_bin_get_by_interface (GstBin * bin, GType interface)
  *
  * Looks for all elements inside the bin that implements the given
  * interface. You can safely cast all returned elements to the given interface.
- * The function recurses bins inside bins. You need to free the list using
- * g_list_free() after use.
+ * The function recurses bins inside bins. The iterator will return a series
+ * of #GstElement that should be unreffed after usage.
  *
- * Returns: The elements inside the bin implementing the interface.
+ * Returns: An iterator for the  elements inside the bin implementing the interface.
  *
- * MT safe.
  */
-GList *
-gst_bin_get_all_by_interface (GstBin * bin, GType interface)
+GstIterator *
+gst_bin_iterate_all_by_interface (GstBin * bin, GType interface)
 {
-  GList *walk;
-  GList *ret = NULL;
+  GstIterator *children;
+  GstIterator *result;
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
-  g_return_val_if_fail (G_TYPE_IS_INTERFACE (interface), NULL);
 
-  GST_LOCK (bin);
-  for (walk = bin->children; walk; walk = g_list_next (walk)) {
-    if (G_TYPE_CHECK_INSTANCE_TYPE (walk->data, interface)) {
-      ret = g_list_prepend (ret, walk->data);
-    }
-    if (GST_IS_BIN (walk->data)) {
-      ret = g_list_concat (ret,
-          gst_bin_get_all_by_interface (GST_BIN (walk->data), interface));
-    }
-  }
-  GST_UNLOCK (bin);
+  children = gst_bin_iterate_recurse (bin);
+  result = gst_iterator_filter (children, GINT_TO_POINTER (interface),
+      (GCompareFunc) compare_interface);
 
-  return ret;
+  return result;
 }
 
 #ifndef GST_DISABLE_LOADSAVE

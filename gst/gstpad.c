@@ -464,6 +464,10 @@ gst_pad_set_active (GstPad * pad, GstActivateMode mode)
   if (activatefunc) {
     gboolean result;
 
+    GST_CAT_DEBUG (GST_CAT_PADS,
+        "calling activate function on pad %s:%s with mode %d",
+        GST_DEBUG_PAD_NAME (realpad), mode);
+
     /* unlock so element can sync */
     GST_UNLOCK (realpad);
     result = activatefunc (GST_PAD_CAST (realpad), mode);
@@ -519,7 +523,7 @@ gst_pad_is_active (GstPad * pad)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
-  result = !!GST_FLAG_IS_SET (realpad, GST_PAD_ACTIVE);
+  result = GST_FLAG_IS_SET (realpad, GST_PAD_ACTIVE);
   GST_UNLOCK (realpad);
 
   return result;

@@ -63,19 +63,8 @@ struct _GstSchedulerClass {
   /* virtual methods */
   void 			(*setup)		(GstScheduler *sched);
   void 			(*reset)		(GstScheduler *sched);
-  void 			(*add_element) 		(GstScheduler *sched, GstElement * element);
-  void 			(*remove_element)	(GstScheduler *sched, GstElement * element);
 
   GstTask*		(*create_task)		(GstScheduler *sched, GstTaskFunction func, gpointer data);
-
-  GstClockReturn	(*clock_wait)		(GstScheduler *sched, GstElement *element,
-		  				 GstClockID id, GstClockTimeDiff *jitter);
-  /* for debugging */
-  void 			(*show)			(GstScheduler *sched);
-
-  /* signals */
-  void                  (*object_sync)          (GstScheduler *sched, GstClock *clock, GstObject *object,
-			                         GstClockID id);
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -87,11 +76,6 @@ void			gst_scheduler_setup		(GstScheduler *sched);
 void			gst_scheduler_reset		(GstScheduler *sched);
 GstTask*		gst_scheduler_create_task	(GstScheduler *sched, GstTaskFunction func, gpointer data);
 
-
-GstClockReturn		gst_scheduler_clock_wait	(GstScheduler *sched, GstElement *element,
-							 GstClockID id, GstClockTimeDiff *jitter);
-
-void			gst_scheduler_show		(GstScheduler *sched);
 
 /*
  * creating schedulers

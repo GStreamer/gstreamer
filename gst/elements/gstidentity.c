@@ -259,6 +259,7 @@ gst_identity_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstBuffer *buf = GST_BUFFER (buffer);
   GstIdentity *identity;
+  GstFlowReturn result = GST_FLOW_OK;
   guint i;
 
   g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
@@ -365,12 +366,12 @@ gst_identity_chain (GstPad * pad, GstBuffer * buffer)
     }
 
     identity->bytes_handled += GST_BUFFER_SIZE (buf);
-    gst_pad_push (identity->srcpad, buf);
+    result = gst_pad_push (identity->srcpad, buf);
 
     if (identity->sleep_time)
       g_usleep (identity->sleep_time);
   }
-  return GST_FLOW_OK;
+  return result;
 }
 
 #if 0

@@ -125,48 +125,6 @@ gst_scheduler_reset (GstScheduler * sched)
     sclass->reset (sched);
 }
 
-/**
- * gst_scheduler_add_element:
- * @sched: the scheduler
- * @element: the element to add to the scheduler
- *
- * Add an element to the scheduler.
- */
-void
-gst_scheduler_add_element (GstScheduler * sched, GstElement * element)
-{
-  GstSchedulerClass *sclass;
-
-  g_return_if_fail (GST_IS_SCHEDULER (sched));
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  sclass = GST_SCHEDULER_GET_CLASS (sched);
-
-  if (sclass->add_element)
-    sclass->add_element (sched, element);
-}
-
-/**
- * gst_scheduler_remove_element:
- * @sched: the scheduler
- * @element: the element to remove
- *
- * Remove an element from the scheduler.
- */
-void
-gst_scheduler_remove_element (GstScheduler * sched, GstElement * element)
-{
-  GstSchedulerClass *sclass;
-
-  g_return_if_fail (GST_IS_SCHEDULER (sched));
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  sclass = GST_SCHEDULER_GET_CLASS (sched);
-
-  if (sclass->remove_element)
-    sclass->remove_element (sched, element);
-}
-
 GstTask *
 gst_scheduler_create_task (GstScheduler * sched, GstTaskFunction func,
     gpointer data)
@@ -182,56 +140,6 @@ gst_scheduler_create_task (GstScheduler * sched, GstTaskFunction func,
     result = sclass->create_task (sched, func, data);
 
   return result;
-}
-
-GstClockReturn gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter);
-
-/**
- * gst_scheduler_clock_wait:
- * @sched: the scheduler
- * @element: the element that wants to wait
- * @id: the clockid to use
- * @jitter: the time difference between requested time and actual time
- *
- * Wait till the clock reaches a specific time. The ClockID can
- * be obtained from #gst_clock_new_single_shot_id. 
- *
- * Returns: the status of the operation
- */
-GstClockReturn
-gst_scheduler_clock_wait (GstScheduler * sched, GstElement * element,
-    GstClockID id, GstClockTimeDiff * jitter)
-{
-  GstSchedulerClass *sclass;
-
-  g_return_val_if_fail (GST_IS_SCHEDULER (sched), GST_CLOCK_ERROR);
-  g_return_val_if_fail (id != NULL, GST_CLOCK_ERROR);
-
-  sclass = GST_SCHEDULER_GET_CLASS (sched);
-
-  if (sclass->clock_wait)
-    return sclass->clock_wait (sched, element, id, jitter);
-  else
-    return gst_clock_id_wait (id, jitter);
-}
-
-/**
- * gst_scheduler_show:
- * @sched: the scheduler
- *
- * Dump the state of the scheduler
- */
-void
-gst_scheduler_show (GstScheduler * sched)
-{
-  GstSchedulerClass *sclass;
-
-  g_return_if_fail (GST_IS_SCHEDULER (sched));
-
-  sclass = GST_SCHEDULER_GET_CLASS (sched);
-
-  if (sclass->show)
-    sclass->show (sched);
 }
 
 /*

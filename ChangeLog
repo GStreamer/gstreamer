@@ -1,3 +1,91 @@
+2005-01-26  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-scheduling.txt:
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_activate):
+	* gst/elements/gstidentity.c: (gst_identity_chain):
+	* gst/gst.c:
+	* gst/gst.h:
+	* gst/gstbin.c: (gst_bin_set_index), (gst_bin_set_clock),
+	(gst_bin_set_bus), (gst_bin_set_scheduler), (gst_bin_add_func),
+	(iterate_child), (gst_bin_iterate_elements),
+	(iterate_child_recurse), (gst_bin_iterate_recurse),
+	(gst_bin_iterate_recurse_up), (bin_element_is_sink),
+	(gst_bin_get_state), (gst_bin_change_state), (gst_bin_dispose),
+	(compare_name), (gst_bin_get_by_name),
+	(gst_bin_get_by_name_recurse_up), (compare_interface),
+	(gst_bin_get_by_interface), (gst_bin_iterate_all_by_interface):
+	* gst/gstbin.h:
+	* gst/gstbus.c: (gst_bus_post):
+	* gst/gstclock.c: (gst_clock_id_ref), (gst_clock_id_unref),
+	(gst_clock_id_compare_func), (gst_clock_id_wait),
+	(gst_clock_id_wait_async), (gst_clock_init),
+	(gst_clock_adjust_unlocked), (gst_clock_get_time):
+	* gst/gstclock.h:
+	* gst/gstcompat.h:
+	* gst/gstelement.c: (gst_element_add_pad),
+	(gst_element_remove_pad), (iterate_pad),
+	(gst_element_iterate_pads), (gst_element_get_state_func),
+	(gst_element_set_state), (gst_element_pads_activate),
+	(gst_element_change_state), (gst_element_dispose):
+	* gst/gstformat.c: (gst_format_iterate_definitions):
+	* gst/gstiterator.c: (gst_iterator_init), (gst_iterator_new),
+	(gst_list_iterator_next), (gst_list_iterator_free),
+	(gst_iterator_new_list), (gst_iterator_pop), (gst_iterator_next),
+	(gst_iterator_resync), (gst_iterator_free), (gst_iterator_push),
+	(gst_iterator_filter), (gst_iterator_foreach),
+	(gst_iterator_find_custom):
+	* gst/gstiterator.h:
+	* gst/gstobject.c: (gst_object_class_init), (gst_object_ref),
+	(gst_object_unref), (gst_object_sink), (gst_object_dispose),
+	(gst_object_dispatch_properties_changed), (gst_object_set_name),
+	(gst_object_set_parent), (gst_object_unparent),
+	(gst_object_check_uniqueness), (gst_object_get_path_string):
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_is_active),
+	(gst_pad_set_blocked_async), (gst_pad_set_acceptcaps_function),
+	(gst_pad_set_fixatecaps_function), (gst_pad_unlink),
+	(gst_pad_link_prepare_filtered), (gst_pad_link_filtered),
+	(gst_pad_relink_filtered), (gst_real_pad_get_caps_unlocked),
+	(gst_pad_peer_get_caps), (gst_pad_fixate_caps),
+	(gst_pad_accept_caps), (gst_pad_peer_accept_caps),
+	(gst_pad_set_caps), (gst_pad_configure_sink),
+	(gst_pad_configure_src), (gst_pad_realize), (gst_pad_alloc_buffer),
+	(gst_pad_push), (gst_pad_pull_range), (gst_pad_push_event),
+	(gst_pad_send_event):
+	* gst/gstpipeline.c: (is_eos), (pipeline_bus_handler),
+	(gst_pipeline_change_state):
+	* gst/gstquery.c: (gst_query_type_iterate_definitions):
+	* gst/gstscheduler.c:
+	* gst/gstscheduler.h:
+	* gst/gstsystemclock.c: (gst_system_clock_init),
+	(gst_system_clock_async_thread),
+	(gst_system_clock_id_wait_unlocked), (gst_system_clock_id_wait),
+	(gst_system_clock_id_wait_async), (gst_system_clock_id_unschedule):
+	* gst/gsttask.h:
+	* gst/gsttypes.h:
+	* gst/schedulers/cothreads_compat.h:
+	* gst/schedulers/entryscheduler.c:
+	* gst/schedulers/faircothreads.c:
+	* gst/schedulers/faircothreads.h:
+	* gst/schedulers/fairscheduler.c:
+	* gst/schedulers/gstbasicscheduler.c:
+	* gst/schedulers/gstoptimalscheduler.c:
+	* gst/schedulers/gthread-cothreads.h:
+	* gst/schedulers/threadscheduler.c:
+	(gst_thread_scheduler_class_init), (gst_thread_scheduler_func):
+	* testsuite/bins/interface.c: (main):
+	* testsuite/dlopen/loadgst.c: (do_test):
+	* testsuite/states/.cvsignore:
+	* testsuite/states/Makefile.am:
+	* testsuite/states/stress.c: (message_received), (state_change),
+	(main):
+	Removed schedulers and compat stuff.
+	Use iterators in bin for the various lookup functions.
+	Optimized the clock a bit.
+	Added some more docs.
+	Fixed scheduling in the ()-(l) case.
+	Fixed and added some testcases.
+	Removed old code.
+
 2005-01-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst/elements/gstfilesrc.c: (gst_filesrc_getrange),

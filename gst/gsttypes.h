@@ -57,7 +57,6 @@ typedef enum
   GST_STATE_FAILURE 	= 0,
   GST_STATE_SUCCESS 	= 1,
   GST_STATE_ASYNC 	= 2,
-  GST_STATE_BUSY 	= 3
 } GstElementStateReturn;
 
 typedef enum

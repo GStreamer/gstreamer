@@ -36,6 +36,8 @@ static GstClockTime gst_system_clock_get_internal_time (GstClock * clock);
 static guint64 gst_system_clock_get_resolution (GstClock * clock);
 static GstClockReturn gst_system_clock_id_wait (GstClock * clock,
     GstClockEntry * entry);
+static GstClockReturn gst_system_clock_id_wait_unlocked
+    (GstClock * clock, GstClockEntry * entry);
 static GstClockReturn gst_system_clock_id_wait_async (GstClock * clock,
     GstClockEntry * entry);
 static void gst_system_clock_id_unschedule (GstClock * clock,
@@ -232,11 +234,9 @@ gst_system_clock_async_thread (GstClock * clock)
       goto next_entry;
     }
 
-    /* now wait for the entry, it's a bit stupid to release the lock
-     * here but we have to since the next function grabs the lock... */
-    GST_UNLOCK (clock);
-    res = gst_system_clock_id_wait (clock, (GstClockID) entry);
-    GST_LOCK (clock);
+    /* now wait for the entry, we already hold the lock */
+    res = gst_system_clock_id_wait_unlocked (clock, (GstClockID) entry);
+
     switch (res) {
       case GST_CLOCK_UNSCHEDULED:
         /* entry was unscheduled, move to the next */
@@ -308,31 +308,32 @@ gst_system_clock_get_resolution (GstClock * clock)
  * MT safe.
  */
 static GstClockReturn
-gst_system_clock_id_wait (GstClock * clock, GstClockEntry * entry)
+gst_system_clock_id_wait_unlocked (GstClock * clock, GstClockEntry * entry)
 {
-  GstClockTime current, target;
-  gint64 diff;
+  GstClockTime real, current, target;
+  GstClockTimeDiff diff;
 
-  current = gst_clock_get_time (clock);
-  diff = GST_CLOCK_ENTRY_TIME (entry) - current;
+  real = GST_CLOCK_GET_CLASS (clock)->get_internal_time (clock);
+  target = GST_CLOCK_ENTRY_TIME (entry);
 
+  current = gst_clock_adjust_unlocked (clock, real);
+  diff = target - current;
   target = gst_system_clock_get_internal_time (clock) + diff;
 
-  GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p real_target %" GST_TIME_FORMAT
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p"
       " target %" GST_TIME_FORMAT
       " now %" GST_TIME_FORMAT
+      " real %" GST_TIME_FORMAT
       " diff %" G_GINT64_FORMAT,
       entry,
       GST_TIME_ARGS (target),
-      GST_TIME_ARGS (GST_CLOCK_ENTRY_TIME (entry)),
-      GST_TIME_ARGS (current), diff);
+      GST_TIME_ARGS (current), GST_TIME_ARGS (real), diff);
 
   if (diff > 0) {
     GTimeVal tv;
 
     GST_TIME_TO_TIMEVAL (target, tv);
 
-    GST_LOCK (clock);
     while (TRUE) {
       /* now wait on the entry, it either times out or the cond is signaled. */
       if (!GST_CLOCK_TIMED_WAIT (clock, &tv)) {
@@ -349,11 +350,22 @@ gst_system_clock_id_wait (GstClock * clock, GstClockEntry * entry)
           break;
       }
     }
-    GST_UNLOCK (clock);
   } else {
     entry->status = GST_CLOCK_EARLY;
   }
   return entry->status;
+}
+
+static GstClockReturn
+gst_system_clock_id_wait (GstClock * clock, GstClockEntry * entry)
+{
+  GstClockReturn ret;
+
+  GST_LOCK (clock);
+  ret = gst_system_clock_id_wait_unlocked (clock, entry);
+  GST_UNLOCK (clock);
+
+  return ret;
 }
 
 /* Add an entry to the list of pending async waits. The entry is inserted

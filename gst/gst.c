@@ -814,33 +814,6 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
 }
 
 /**
- * gst_use_threads:
- * @use_threads: a #gboolean indicating whether threads should be used
- *
- * This function is deprecated and should not be used in new code.
- * GStreamer requires threads to be enabled at all times.
- */
-void
-gst_use_threads (gboolean use_threads)
-{
-}
-
-/**
- * gst_has_threads:
- *
- * This function is deprecated and should not be used in new code.
- *
- * Queries if GStreamer has threads enabled.
- *
- * Returns: %TRUE if threads are enabled.
- */
-gboolean
-gst_has_threads (void)
-{
-  return TRUE;
-}
-
-/**
  * gst_version:
  * @major: pointer to a guint to store the major version number
  * @minor: pointer to a guint to store the minor version number
