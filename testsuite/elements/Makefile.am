@@ -3,7 +3,7 @@ tests_failing = fake
 else
 tests_failing =
 endif
-tests_working = name tee
+tests_working = name tee property
 
 GST_PLUGIN_PATH=$(shell cd $(top_builddir) && pwd)
 
