@@ -88,11 +88,16 @@ void conv_short_double_ppcasm(short *dest, double *src, int n);
 #endif
 
 #ifdef HAVE_CPU_PPC
-#define conv_double_short conv_double_short_table
-#define conv_short_double conv_short_double_ppcasm
+#  define conv_double_short conv_double_short_table
+#  if 0
+/* disabled as in .c */
+#    define conv_short_double conv_short_double_ppcasm
+#  else
+#    define conv_short_double conv_short_double_ref
+#  endif
 #else
-#define conv_double_short conv_double_short_ref
-#define conv_short_double conv_short_double_ref
+#  define conv_double_short conv_double_short_ref
+#  define conv_short_double conv_short_double_ref
 #endif
 
 #define conv_double_float conv_double_float_ref
