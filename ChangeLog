@@ -1,5 +1,10 @@
 2004-04-05  David Schleef  <ds@schleef.org>
 
+	* gst/gsttrace.h:  Fix #ifdef nesting (bug #139109) Patch from
+	  jensgr@gmx.net (Jens Granseuer)
+
+2004-04-05  David Schleef  <ds@schleef.org>
+
 	* gst/gstbuffer.c: (_gst_buffer_sub_free),
 	(gst_buffer_default_free), (gst_buffer_default_copy),
 	(gst_buffer_alloc_chunk), (gst_buffer_free_chunk),

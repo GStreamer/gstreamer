@@ -24,11 +24,11 @@
 #ifndef __GST_TRACE_H__
 #define __GST_TRACE_H__
 
-#ifndef GST_DISABLE_TRACE
-
 #include <glib.h>
 
 G_BEGIN_DECLS
+
+#ifndef GST_DISABLE_TRACE
 
 typedef struct _GstTrace 	GstTrace;
 typedef struct _GstTraceEntry 	GstTraceEntry;
@@ -125,15 +125,11 @@ G_STMT_START {						\
 #endif
 
 
-#ifndef GST_DISABLE_TRACE
 extern gint _gst_trace_on;
 #define gst_trace_add_entry(trace,seq,data,msg) \
   if (_gst_trace_on) { \
     _gst_trace_add_entry(trace,(guint32)seq,(guint32)data,msg); \
   }
-#else
-#define gst_trace_add_entry(trace,seq,data,msg)
-#endif
 
 #else /* GST_DISABLE_TRACE */
 
@@ -164,6 +160,7 @@ extern gint _gst_trace_on;
 #define		gst_alloc_trace_print(trace)
 #define		gst_alloc_trace_set_flags(trace,flags)
 
+#define         gst_trace_add_entry(trace,seq,data,msg)
 
 #endif /* GST_DISABLE_TRACE */
 
