@@ -15,6 +15,7 @@ libgstelements_la_SOURCES =	\
 	gstidentity.c		\
 	gstfakesink.c		\
 	gstdisksrc.c		\
+	gstfilesrc.c		\
 	gstdisksink.c		\
 	gstfdsrc.c		\
 	gstfdsink.c		\

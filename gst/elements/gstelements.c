@@ -48,10 +48,16 @@ struct _elements_entry {
   gboolean (*factoryinit) (GstElementFactory *factory);
 };
 
+
+extern GtkType gst_filesrc_get_type(void);
+
+extern GstElementDetails *gst_filesrc_details;
+
 static struct _elements_entry _elements[] = {
   { "fakesrc", 	    gst_fakesrc_get_type, 	&gst_fakesrc_details,		gst_fakesrc_factory_init },
   { "fakesink",     gst_fakesink_get_type, 	&gst_fakesink_details,		gst_fakesink_factory_init },
   { "disksrc", 	    gst_disksrc_get_type, 	&gst_disksrc_details,		NULL },
+  { "filesrc", 	    gst_filesrc_get_type, 	&gst_filesrc_details,		NULL },
   { "disksink",	    gst_disksink_get_type,      &gst_disksink_details, 		NULL },
   { "identity",     gst_identity_get_type,  	&gst_identity_details,		NULL },
   { "fdsink",       gst_fdsink_get_type, 	&gst_fdsink_details,		NULL },
