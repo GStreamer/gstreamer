@@ -52,48 +52,53 @@ enum
       /* FILL ME */
 };
 
-static GstStaticPadTemplate gst_audioscale_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) { 8, 16, 24, 32 }, "
-        "depth = (int) [ 1, 32 ], " "signed = (boolean) { true, false }")
-    );
+#define SUPPORTED_CAPS \
+  GST_STATIC_CAPS (\
+    "audio/x-raw-int, " \
+      "rate = (int) [ 1, MAX ], " \
+      "channels = (int) [ 1, MAX ], " \
+      "endianness = (int) BYTE_ORDER, " \
+      "width = (int) 16, " \
+      "depth = (int) 16, " \
+      "signed = (boolean) true")
+#if 0
+  /* disabled because it segfaults */
+"audio/x-raw-float, "
+    "rate = (int) [ 1, MAX ], "
+    "channels = (int) [ 1, MAX ], "
+    "endianness = (int) BYTE_ORDER, " "width = (int) 32")
+#endif
+     static GstStaticPadTemplate gst_audioscale_sink_template =
+         GST_STATIC_PAD_TEMPLATE ("sink",
+         GST_PAD_SINK, GST_PAD_ALWAYS, SUPPORTED_CAPS);
 
-static GstStaticPadTemplate gst_audioscale_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) { 8, 16, 24, 32 }, "
-        "depth = (int) [ 1, 32 ], " "signed = (boolean) { true, false }")
-    );
+     static GstStaticPadTemplate gst_audioscale_src_template =
+         GST_STATIC_PAD_TEMPLATE ("src",
+         GST_PAD_SRC, GST_PAD_ALWAYS, SUPPORTED_CAPS);
 
 #define GST_TYPE_AUDIOSCALE_METHOD (gst_audioscale_method_get_type())
-static GType
-gst_audioscale_method_get_type (void)
-{
-  static GType audioscale_method_type = 0;
-  static GEnumValue audioscale_methods[] = {
-    {GST_RESAMPLE_NEAREST, "0", "Nearest"},
-    {GST_RESAMPLE_BILINEAR, "1", "Bilinear"},
-    {GST_RESAMPLE_SINC, "2", "Sinc"},
-    {0, NULL, NULL},
-  };
+     static GType gst_audioscale_method_get_type (void)
+     {
+       static GType audioscale_method_type = 0;
+       static GEnumValue audioscale_methods[] =
+       {
+         {
+         GST_RESAMPLE_NEAREST, "0", "Nearest"}
+         ,
+         {
+         GST_RESAMPLE_BILINEAR, "1", "Bilinear"}
+         , {
+         GST_RESAMPLE_SINC, "2", "Sinc"}
+         , {
+         0, NULL, NULL}
+       ,};
 
-  if (!audioscale_method_type) {
-    audioscale_method_type = g_enum_register_static ("GstAudioscaleMethod",
-        audioscale_methods);
-  }
-  return audioscale_method_type;
-}
+       if (!audioscale_method_type) {
+         audioscale_method_type = g_enum_register_static ("GstAudioscaleMethod",
+             audioscale_methods);
+       }
+       return audioscale_method_type;
+     }
 
 static void gst_audioscale_base_init (gpointer g_class);
 static void gst_audioscale_class_init (AudioscaleClass * klass);
@@ -111,23 +116,21 @@ static GstElementClass *parent_class = NULL;
 
 /*static guint gst_audioscale_signals[LAST_SIGNAL] = { 0 }; */
 
-GType
-audioscale_get_type (void)
+GType audioscale_get_type (void)
 {
   static GType audioscale_type = 0;
 
-  if (!audioscale_type) {
-    static const GTypeInfo audioscale_info = {
-      sizeof (AudioscaleClass),
-      gst_audioscale_base_init,
-      NULL,
-      (GClassInitFunc) gst_audioscale_class_init,
-      NULL,
-      NULL,
-      sizeof (Audioscale),
-      0,
-      (GInstanceInitFunc) gst_audioscale_init,
-    };
+  if (!audioscale_type)
+  {
+    static const GTypeInfo audioscale_info =
+    {
+    sizeof (AudioscaleClass),
+          gst_audioscale_base_init,
+          NULL,
+          (GClassInitFunc) gst_audioscale_class_init,
+          NULL,
+          NULL,
+          sizeof (Audioscale), 0, (GInstanceInitFunc) gst_audioscale_init,};
 
     audioscale_type =
         g_type_register_static (GST_TYPE_ELEMENT, "Audioscale",
@@ -136,8 +139,7 @@ audioscale_get_type (void)
   return audioscale_type;
 }
 
-static void
-gst_audioscale_base_init (gpointer g_class)
+static void gst_audioscale_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
@@ -149,8 +151,7 @@ gst_audioscale_base_init (gpointer g_class)
   gst_element_class_set_details (gstelement_class, &gst_audioscale_details);
 }
 
-static void
-gst_audioscale_class_init (AudioscaleClass * klass)
+static void gst_audioscale_class_init (AudioscaleClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -174,22 +175,23 @@ gst_audioscale_class_init (AudioscaleClass * klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 }
 
-static void
-gst_audioscale_expand_value (GValue * dest, const GValue * src)
+static void gst_audioscale_expand_value (GValue * dest, const GValue * src)
 {
   int rate_min, rate_max;
 
   if (G_VALUE_TYPE (src) == G_TYPE_INT ||
-      G_VALUE_TYPE (src) == GST_TYPE_INT_RANGE) {
+      G_VALUE_TYPE (src) == GST_TYPE_INT_RANGE)
+  {
     if (G_VALUE_TYPE (src) == G_TYPE_INT) {
       rate_min = g_value_get_int (src);
       rate_max = rate_min;
-    } else {
+    } else
+    {
       rate_min = gst_value_get_int_range_min (src);
       rate_max = gst_value_get_int_range_max (src);
     }
 
-    rate_min /= 2;
+    rate_min = (rate_min + 1) / 2;
     if (rate_min < 1)
       rate_min = 1;
     if (rate_max < G_MAXINT / 2) {
@@ -209,14 +211,18 @@ gst_audioscale_expand_value (GValue * dest, const GValue * src)
     g_value_init (dest, GST_TYPE_LIST);
     for (i = 0; i < gst_value_list_get_size (src); i++) {
       const GValue *s = gst_value_list_get_value (src, i);
-      GValue d = { 0 };
+      GValue d =
+      {
+      0};
       int j;
 
       gst_audioscale_expand_value (&d, s);
 
       for (j = 0; j < gst_value_list_get_size (dest); j++) {
         const GValue *s2 = gst_value_list_get_value (dest, j);
-        GValue d2 = { 0 };
+        GValue d2 =
+        {
+        0};
 
         gst_value_union (&d2, &d, s2);
         if (G_VALUE_TYPE (&d2) == GST_TYPE_INT_RANGE) {
@@ -234,7 +240,9 @@ gst_audioscale_expand_value (GValue * dest, const GValue * src)
 
     if (gst_value_list_get_size (dest) == 1) {
       const GValue *s = gst_value_list_get_value (dest, 0);
-      GValue d = { 0 };
+      GValue d =
+      {
+      0};
 
       gst_value_init_and_copy (&d, s);
       g_value_unset (dest);
@@ -248,13 +256,36 @@ gst_audioscale_expand_value (GValue * dest, const GValue * src)
   GST_ERROR ("unexpected value type");
 }
 
-static GstCaps *
-gst_audioscale_getcaps (GstPad * pad)
+static void gst_audioscale_expand_caps (GstCaps * caps)
+{
+  gint i;
+
+  /* we do this hack, because the audioscale lib doesn't handle
+   * rate conversions larger than a factor of 2 */
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstStructure *structure = gst_caps_get_structure (caps, i);
+    const GValue *value;
+    GValue dest =
+    {
+    0};
+
+    value = gst_structure_get_value (structure, "rate");
+    if (value == NULL) {
+      GST_ERROR ("caps structure doesn't have required rate field");
+      return;
+    }
+
+    gst_audioscale_expand_value (&dest, value);
+
+    gst_structure_set_value (structure, "rate", &dest);
+  }
+}
+
+static GstCaps *gst_audioscale_getcaps (GstPad * pad)
 {
   Audioscale *audioscale;
   GstCaps *caps;
   GstPad *otherpad;
-  int i;
 
   audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
 
@@ -262,102 +293,118 @@ gst_audioscale_getcaps (GstPad * pad)
       audioscale->srcpad;
   caps = gst_pad_get_allowed_caps (otherpad);
 
-  /* we do this hack, because the audioscale lib doesn't handle
-   * rate conversions larger than a factor of 2 */
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    GstStructure *structure = gst_caps_get_structure (caps, i);
-    const GValue *value;
-    GValue dest = { 0 };
-
-    value = gst_structure_get_value (structure, "rate");
-    if (value == NULL) {
-      GST_ERROR ("caps structure doesn't have required rate field");
-      return NULL;
-    }
-
-    gst_audioscale_expand_value (&dest, value);
-
-    gst_structure_set_value (structure, "rate", &dest);
-  }
+  gst_audioscale_expand_caps (caps);
 
   return caps;
 }
 
-static GstPadLinkReturn
-gst_audioscale_link (GstPad * pad, const GstCaps * caps)
+static GstCaps *gst_audioscale_fixate (GstPad * pad, const GstCaps * caps)
+{
+  Audioscale *audioscale;
+  gst_resample_t *r;
+  GstPad *otherpad;
+  int rate;
+  GstCaps *copy;
+  GstStructure *structure;
+
+    audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
+    r = audioscale->gst_resample;
+  if (pad == audioscale->srcpad)
+  {
+    otherpad = audioscale->sinkpad;
+    rate = r->i_rate;
+  } else
+  {
+    otherpad = audioscale->srcpad;
+    rate = r->o_rate;
+  }
+  if (!GST_PAD_IS_NEGOTIATING (otherpad))
+    return NULL;
+  if (gst_caps_get_size (caps) > 1)
+    return NULL;
+
+  copy = gst_caps_copy (caps);
+  structure = gst_caps_get_structure (copy, 0);
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "rate", rate))
+    return copy;
+  gst_caps_free (copy);
+  return NULL;
+}
+
+static GstPadLinkReturn gst_audioscale_link (GstPad * pad, const GstCaps * caps)
 {
   Audioscale *audioscale;
   gst_resample_t *r;
   GstStructure *structure;
-  int rate;
-  int channels;
-  int ret;
+  double *rate, *otherrate;
+  int temp;
+  gboolean ret;
   GstPadLinkReturn link_ret;
   GstPad *otherpad;
+  GstCaps *copy;
 
-  audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
-  r = audioscale->gst_resample;
+    audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
+    r = audioscale->gst_resample;
 
-  otherpad = (pad == audioscale->srcpad) ? audioscale->sinkpad
-      : audioscale->srcpad;
+  if (pad == audioscale->srcpad)
+  {
+    otherpad = audioscale->sinkpad;
+    rate = &r->o_rate;
+    otherrate = &r->i_rate;
+  } else
+  {
+    otherpad = audioscale->srcpad;
+    rate = &r->i_rate;
+    otherrate = &r->o_rate;
+  }
 
   structure = gst_caps_get_structure (caps, 0);
+  ret = gst_structure_get_int (structure, "rate", &temp);
+  ret &= gst_structure_get_int (structure, "channels", &r->channels);
+  g_return_val_if_fail (ret, GST_PAD_LINK_REFUSED);
+  *rate = temp;
 
-  ret = gst_structure_get_int (structure, "rate", &rate);
-  ret &= gst_structure_get_int (structure, "channels", &channels);
+  copy = gst_caps_copy (caps);
+  gst_audioscale_expand_caps (copy);
+  link_ret = gst_pad_try_set_caps_nonfixed (otherpad, copy);
 
-  link_ret = gst_pad_try_set_caps (otherpad, gst_caps_copy (caps));
-  if (GST_PAD_LINK_SUCCESSFUL (link_ret)) {
-    audioscale->passthru = TRUE;
-    r->channels = channels;
-    r->i_rate = rate;
-    r->o_rate = rate;
+  if (GST_PAD_LINK_FAILED (link_ret))
     return link_ret;
-  }
-  audioscale->passthru = FALSE;
 
-
-  if (gst_pad_is_negotiated (otherpad)) {
-    GstCaps *trycaps = gst_caps_copy (caps);
-
-    gst_caps_set_simple (trycaps,
-        "rate", G_TYPE_INT,
-        (int) ((pad == audioscale->srcpad) ? r->i_rate : r->o_rate), NULL);
-    link_ret = gst_pad_try_set_caps (otherpad, trycaps);
-    if (GST_PAD_LINK_FAILED (link_ret)) {
-      return link_ret;
-    }
-  }
-
-  r->channels = channels;
-  if (pad == audioscale->srcpad) {
-    r->o_rate = rate;
+  caps = gst_pad_get_negotiated_caps (otherpad);
+  g_return_val_if_fail (caps, GST_PAD_LINK_REFUSED);
+  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_structure_get_int (structure, "rate", &temp);
+  g_return_val_if_fail (ret, GST_PAD_LINK_REFUSED);
+  *otherrate = temp;
+  if (g_str_equal (gst_structure_get_name (structure), "audio/x-raw-float")) {
+    r->format = GST_RESAMPLE_FLOAT;
   } else {
-    r->i_rate = rate;
+    r->format = GST_RESAMPLE_S16;
   }
+
+  audioscale->passthru = (r->i_rate == r->o_rate);
   gst_resample_reinit (r);
 
-  return GST_PAD_LINK_OK;
+  return link_ret;
 }
 
-static void *
-gst_audioscale_get_buffer (void *priv, unsigned int size)
+static void *gst_audioscale_get_buffer (void *priv, unsigned int size)
 {
   Audioscale *audioscale = priv;
 
-  audioscale->outbuf = gst_buffer_new ();
-  GST_BUFFER_SIZE (audioscale->outbuf) = size;
-  GST_BUFFER_DATA (audioscale->outbuf) = g_malloc (size);
-  GST_BUFFER_TIMESTAMP (audioscale->outbuf) =
+    audioscale->outbuf = gst_buffer_new ();
+    GST_BUFFER_SIZE (audioscale->outbuf) = size;
+    GST_BUFFER_DATA (audioscale->outbuf) = g_malloc (size);
+    GST_BUFFER_TIMESTAMP (audioscale->outbuf) =
       audioscale->offset * GST_SECOND / audioscale->gst_resample->o_rate;
-  audioscale->offset +=
+    audioscale->offset +=
       size / sizeof (gint16) / audioscale->gst_resample->channels;
 
-  return GST_BUFFER_DATA (audioscale->outbuf);
+    return GST_BUFFER_DATA (audioscale->outbuf);
 }
 
-static void
-gst_audioscale_init (Audioscale * audioscale)
+static void gst_audioscale_init (Audioscale * audioscale)
 {
   gst_resample_t *r;
 
@@ -368,6 +415,7 @@ gst_audioscale_init (Audioscale * audioscale)
   gst_pad_set_chain_function (audioscale->sinkpad, gst_audioscale_chain);
   gst_pad_set_link_function (audioscale->sinkpad, gst_audioscale_link);
   gst_pad_set_getcaps_function (audioscale->sinkpad, gst_audioscale_getcaps);
+  gst_pad_set_fixate_function (audioscale->sinkpad, gst_audioscale_fixate);
 
   audioscale->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
@@ -376,6 +424,7 @@ gst_audioscale_init (Audioscale * audioscale)
   gst_element_add_pad (GST_ELEMENT (audioscale), audioscale->srcpad);
   gst_pad_set_link_function (audioscale->srcpad, gst_audioscale_link);
   gst_pad_set_getcaps_function (audioscale->srcpad, gst_audioscale_getcaps);
+  gst_pad_set_fixate_function (audioscale->srcpad, gst_audioscale_fixate);
 
   r = g_new0 (gst_resample_t, 1);
   audioscale->gst_resample = r;
@@ -395,8 +444,7 @@ gst_audioscale_init (Audioscale * audioscale)
   /* we will be reinitialized when the G_PARAM_CONSTRUCTs hit */
 }
 
-static void
-gst_audioscale_dispose (GObject * object)
+static void gst_audioscale_dispose (GObject * object)
 {
   Audioscale *audioscale = GST_AUDIOSCALE (object);
 
@@ -407,8 +455,7 @@ gst_audioscale_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-static void
-gst_audioscale_chain (GstPad * pad, GstData * _data)
+static void gst_audioscale_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   Audioscale *audioscale;
@@ -439,16 +486,16 @@ gst_audioscale_chain (GstPad * pad, GstData * _data)
 }
 
 static void
-gst_audioscale_set_property (GObject * object, guint prop_id,
+    gst_audioscale_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   Audioscale *src;
   gst_resample_t *r;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_AUDIOSCALE (object));
-  src = GST_AUDIOSCALE (object);
-  r = src->gst_resample;
+    g_return_if_fail (GST_IS_AUDIOSCALE (object));
+    src = GST_AUDIOSCALE (object);
+    r = src->gst_resample;
 
   switch (prop_id) {
     case ARG_FILTERLEN:
@@ -456,11 +503,9 @@ gst_audioscale_set_property (GObject * object, guint prop_id,
       GST_DEBUG_OBJECT (GST_ELEMENT (src), "new filter length %d\n",
           r->filter_length);
       break;
-    case ARG_METHOD:
-      r->method = g_value_get_enum (value);
+      case ARG_METHOD:r->method = g_value_get_enum (value);
       break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      default:G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 
@@ -468,8 +513,8 @@ gst_audioscale_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_audioscale_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
+    gst_audioscale_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
   Audioscale *src;
   gst_resample_t *r;
@@ -491,14 +536,13 @@ gst_audioscale_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+static gboolean plugin_init (GstPlugin * plugin)
 {
   /* load support library */
   if (!gst_library_load ("gstresample"))
     return FALSE;
 
-  if (!gst_element_register (plugin, "audioscale", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "audioscale", GST_RANK_SECONDARY,
           GST_TYPE_AUDIOSCALE)) {
     return FALSE;
   }

@@ -1,3 +1,12 @@
+2004-07-27  Benjamin Otte  <otte@gnome.org>
+
+	* gst/audioscale/gstaudioscale.c:
+	- fix templates to only support S16, it's the only format that works
+	- make caps nego code use try_set_caps_nonfixed and fixation instead
+	of try_set_caps twice, which is not nice for autopluggers
+	- change rank to secondary, so autopluggers can pick it up after
+	audioconvert
+
 2004-08-02  Iain <iain@prettypeople.org>
 
 	* gst/interleave/interleave.c (interleave_init),
@@ -279,6 +288,7 @@
 	* testsuite/alsa/srcstate.c:
 	add test for alsasrc changing state
 
+>>>>>>> 1.958
 2004-07-27  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/silence/gstsilence.c: (gst_silence_init), (gst_silence_link),
