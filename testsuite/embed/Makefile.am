@@ -1,7 +1,5 @@
 
-TESTS = embed
-
-check_PROGRAMS = embed
+noinst_PROGRAMS = embed
 
 # we have nothing but apps here, we can do this safely
 LIBS = $(GST_LIBS) $(GTK_LIBS) \
