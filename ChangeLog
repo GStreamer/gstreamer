@@ -1,3 +1,9 @@
+2004-11-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/audioconvert/gstchannelmix.c:
+	(gst_audio_convert_fill_normalize):
+	  Normalize using absolute values.
+
 2004-11-28  Julien MOUTTE  <julien@moutte.net>
 
 	* configure.ac:
