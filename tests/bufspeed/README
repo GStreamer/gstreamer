@@ -1,6 +1,0 @@
-benchmark of 5000000 gst_buffer_new/free on 0.2.1 code
-------------------------------------------------------
-gstmemchunk, no lock:   real    0m1.309s user   0m1.220s sys    0m0.070s
-gmemchunk, no lock:     real    0m3.872s user   0m3.740s sys    0m0.090s
-gstmemchunk, lock:      real    0m5.306s user   0m5.160s sys    0m0.100s
-gmemchunk, lock:        real    0m8.001s user   0m7.890s sys    0m0.080s
