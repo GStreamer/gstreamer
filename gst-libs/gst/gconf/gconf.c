@@ -85,7 +85,8 @@ gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
  *
  * Get GConf key @key's string value.
  *
- * Returns: a #gchar string containing @key's value.
+ * Returns: a newly allocated #gchar string containing @key's value,
+ * or NULL in the case of an error..
  */
 gchar *
 gst_gconf_get_string (const gchar * key)
@@ -99,10 +100,11 @@ gst_gconf_get_string (const gchar * key)
   g_free (full_key);
 
   if (error) {
-    g_print ("gst_gconf_get_string: error: %s\n", error->message);
+    g_warning ("gst_gconf_get_string: error: %s\n", error->message);
     g_error_free (error);
+    return NULL;
   }
-  /* FIXME: decide if we want to strdup this value; if we do, check for NULL */
+
   return value;
 }
 
@@ -181,6 +183,7 @@ gst_gconf_render_bin_from_key (const gchar * key)
   value = gst_gconf_get_string (key);
   if (value)
     bin = gst_gconf_render_bin_from_description (value);
+  g_free (value);
   return bin;
 }
 
