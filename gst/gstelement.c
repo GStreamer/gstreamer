@@ -1279,7 +1279,7 @@ gst_element_wait_state_change (GstElement *element)
  * @state: new element state
  *
  * Sets the state of the element. This function will only set
- * the elements pending state.
+ * the element's pending state.
  *
  * Returns: whether or not the state was successfully set.
  */
@@ -1300,19 +1300,22 @@ gst_element_set_state (GstElement *element, GstElementState state)
                      gst_element_statename (state));
 
   /* loop until the final requested state is set */
-  while (GST_STATE (element) != state && GST_STATE (element) != GST_STATE_VOID_PENDING) {
+  while (GST_STATE (element) != state 
+      && GST_STATE (element) != GST_STATE_VOID_PENDING) {
     /* move the curpending state in the correct direction */
     if (curpending < state) 
-      curpending<<=1;
+      curpending <<= 1;
     else 
-      curpending>>=1;
+      curpending >>= 1;
 
     /* set the pending state variable */
     /* FIXME: should probably check to see that we don't already have one */
     GST_STATE_PENDING (element) = curpending;
 
     if (curpending != state) {
-      GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "intermediate: setting state to %s",
+      GST_DEBUG_ELEMENT (GST_CAT_STATES, element, 
+	                 "intermediate: setting state from %s to %s",
+			 gst_element_statename (state),
                          gst_element_statename (curpending));
     }
 
@@ -1324,11 +1327,11 @@ gst_element_set_state (GstElement *element, GstElementState state)
     switch (return_val) {
       case GST_STATE_FAILURE:
         GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "have failed change_state return");
-	return return_val;
+	break;
       case GST_STATE_ASYNC:
         GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "element will change state async");
-	return return_val;
-      default:
+	break;
+      case GST_STATE_SUCCESS:
         /* Last thing we do is verify that a successful state change really
          * did change the state... */
         if (GST_STATE (element) != curpending) {
@@ -1340,6 +1343,9 @@ gst_element_set_state (GstElement *element, GstElementState state)
           return GST_STATE_FAILURE;
 	}
         break;
+      default:
+	/* somebody added a GST_STATE_ and forgot to do stuff here ! */
+	g_assert_not_reached ();
     }
   }
 
