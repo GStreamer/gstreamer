@@ -162,8 +162,13 @@ static QtNodeType *qtdemux_type_get (guint32 fourcc);
 static void qtdemux_node_dump (GstQTDemux * qtdemux, GNode * node);
 static void qtdemux_parse_tree (GstQTDemux * qtdemux);
 static void qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta);
-static void qtdemux_tag_add (GstQTDemux * qtdemux, const char *tag,
+static void qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag,
     GNode * node);
+static void qtdemux_tag_add_num (GstQTDemux * qtdemux, const char *tag1,
+    const char *tag2, GNode * node);
+static void qtdemux_tag_add_gnre (GstQTDemux * qtdemux, const char *tag,
+    GNode * node);
+
 static void gst_qtdemux_handle_esds (GstQTDemux * qtdemux,
     QtDemuxStream * stream, GNode * esds);
 static GstCaps *qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
@@ -899,8 +904,11 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
 #define FOURCC_ilst	GST_MAKE_FOURCC('i','l','s','t')
 #define FOURCC__nam	GST_MAKE_FOURCC(0xa9,'n','a','m')
 #define FOURCC__ART	GST_MAKE_FOURCC(0xa9,'A','R','T')
+#define FOURCC__wrt	GST_MAKE_FOURCC(0xa9,'w','r','t')
+#define FOURCC__grp	GST_MAKE_FOURCC(0xa9,'g','r','p')
 #define FOURCC__alb	GST_MAKE_FOURCC(0xa9,'a','l','b')
 #define FOURCC_gnre	GST_MAKE_FOURCC('g','n','r','e')
+#define FOURCC_disc	GST_MAKE_FOURCC('d','i','s','c')
 #define FOURCC_trkn	GST_MAKE_FOURCC('t','r','k','n')
 #define FOURCC_cpil	GST_MAKE_FOURCC('c','p','i','l')
 #define FOURCC_tmpo	GST_MAKE_FOURCC('t','m','p','o')
@@ -997,9 +1005,12 @@ QtNodeType qt_node_types[] = {
   {FOURCC_ilst, "ilst", QT_CONTAINER,},
   {FOURCC__nam, "Name", QT_CONTAINER,},
   {FOURCC__ART, "Artist", QT_CONTAINER,},
+  {FOURCC__wrt, "Writer", QT_CONTAINER,},
+  {FOURCC__grp, "Group", QT_CONTAINER,},
   {FOURCC__alb, "Album", QT_CONTAINER,},
   {FOURCC_gnre, "Genre", QT_CONTAINER,},
   {FOURCC_trkn, "Track Number", QT_CONTAINER,},
+  {FOURCC_disc, "Disc Number", QT_CONTAINER,},
   {FOURCC_cpil, "cpil", QT_CONTAINER,},
   {FOURCC_tmpo, "Tempo", QT_CONTAINER,},
   {FOURCC__too, "too", QT_CONTAINER,},
@@ -2302,24 +2313,49 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
 
   node = qtdemux_tree_get_child_by_type (ilst, FOURCC__nam);
   if (node) {
-    qtdemux_tag_add (qtdemux, GST_TAG_TITLE, node);
+    qtdemux_tag_add_str (qtdemux, GST_TAG_TITLE, node);
   }
 
   node = qtdemux_tree_get_child_by_type (ilst, FOURCC__ART);
   if (node) {
-    qtdemux_tag_add (qtdemux, GST_TAG_ARTIST, node);
+    qtdemux_tag_add_str (qtdemux, GST_TAG_ARTIST, node);
+  } else {
+    node = qtdemux_tree_get_child_by_type (ilst, FOURCC__wrt);
+    if (node) {
+      qtdemux_tag_add_str (qtdemux, GST_TAG_ARTIST, node);
+    } else {
+      node = qtdemux_tree_get_child_by_type (ilst, FOURCC__grp);
+      if (node) {
+        qtdemux_tag_add_str (qtdemux, GST_TAG_ARTIST, node);
+      }
+    }
   }
 
   node = qtdemux_tree_get_child_by_type (ilst, FOURCC__alb);
   if (node) {
-    qtdemux_tag_add (qtdemux, GST_TAG_ALBUM, node);
+    qtdemux_tag_add_str (qtdemux, GST_TAG_ALBUM, node);
   }
 
+  node = qtdemux_tree_get_child_by_type (ilst, FOURCC_trkn);
+  if (node) {
+    qtdemux_tag_add_num (qtdemux, GST_TAG_TRACK_NUMBER,
+        GST_TAG_TRACK_COUNT, node);
+  }
 
+  node = qtdemux_tree_get_child_by_type (ilst, FOURCC_disc);
+  if (node) {
+    qtdemux_tag_add_num (qtdemux, GST_TAG_ALBUM_VOLUME_NUMBER,
+        GST_TAG_ALBUM_VOLUME_COUNT, node);
+  }
+
+  node = qtdemux_tree_get_child_by_type (ilst, FOURCC_gnre);
+  if (node) {
+    qtdemux_tag_add_gnre (qtdemux, GST_TAG_GENRE, node);
+  }
 }
 
 static void
-qtdemux_tag_add (GstQTDemux * qtdemux, const char *tag, GNode * node)
+qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag, GNode * node)
 {
   GNode *data;
   char *s;
@@ -2335,6 +2371,83 @@ qtdemux_tag_add (GstQTDemux * qtdemux, const char *tag, GNode * node)
       GST_DEBUG ("adding tag %s\n", s);
       gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE, tag, s, NULL);
       g_free (s);
+    }
+  }
+}
+
+static void
+qtdemux_tag_add_num (GstQTDemux * qtdemux, const char *tag1,
+    const char *tag2, GNode * node)
+{
+  GNode *data;
+  int len;
+  int type;
+  int n1, n2;
+
+  data = qtdemux_tree_get_child_by_type (node, FOURCC_data);
+  if (data) {
+    len = QTDEMUX_GUINT32_GET (data->data);
+    type = QTDEMUX_GUINT32_GET (data->data + 8);
+    if (type == 0x00000000 && len >= 22) {
+      n1 = GST_READ_UINT16_BE (data->data + 18);
+      n2 = GST_READ_UINT16_BE (data->data + 20);
+      GST_DEBUG ("adding tag %d/%d\n", n1, n2);
+      gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE,
+          tag1, n1, tag2, n2, NULL);
+    }
+  }
+}
+
+static void
+qtdemux_tag_add_gnre (GstQTDemux * qtdemux, const char *tag, GNode * node)
+{
+  const gchar *genres[] = {
+    "N/A", "Blues", "Classic Rock", "Country", "Dance", "Disco",
+    "Funk", "Grunge", "Hip-Hop", "Jazz", "Metal", "New Age", "Oldies",
+    "Other", "Pop", "R&B", "Rap", "Reggae", "Rock", "Techno",
+    "Industrial", "Alternative", "Ska", "Death Metal", "Pranks",
+    "Soundtrack", "Euro-Techno", "Ambient", "Trip-Hop", "Vocal",
+    "Jazz+Funk", "Fusion", "Trance", "Classical", "Instrumental",
+    "Acid", "House", "Game", "Sound Clip", "Gospel", "Noise",
+    "AlternRock", "Bass", "Soul", "Punk", "Space", "Meditative",
+    "Instrumental Pop", "Instrumental Rock", "Ethnic", "Gothic",
+    "Darkwave", "Techno-Industrial", "Electronic", "Pop-Folk",
+    "Eurodance", "Dream", "Southern Rock", "Comedy", "Cult", "Gangsta",
+    "Top 40", "Christian Rap", "Pop/Funk", "Jungle", "Native American",
+    "Cabaret", "New Wave", "Psychadelic", "Rave", "Showtunes",
+    "Trailer", "Lo-Fi", "Tribal", "Acid Punk", "Acid Jazz", "Polka",
+    "Retro", "Musical", "Rock & Roll", "Hard Rock", "Folk",
+    "Folk/Rock", "National Folk", "Swing", "Fast-Fusion", "Bebob",
+    "Latin", "Revival", "Celtic", "Bluegrass", "Avantgarde",
+    "Gothic Rock", "Progressive Rock", "Psychedelic Rock",
+    "Symphonic Rock", "Slow Rock", "Big Band", "Chorus",
+    "Easy Listening", "Acoustic", "Humour", "Speech", "Chanson",
+    "Opera", "Chamber Music", "Sonata", "Symphony", "Booty Bass",
+    "Primus", "Porn Groove", "Satire", "Slow Jam", "Club", "Tango",
+    "Samba", "Folklore", "Ballad", "Power Ballad", "Rhythmic Soul",
+    "Freestyle", "Duet", "Punk Rock", "Drum Solo", "A capella",
+    "Euro-House", "Dance Hall", "Goa", "Drum & Bass", "Club House",
+    "Hardcore", "Terror", "Indie", "BritPop", "NegerPunk",
+    "Polsk Punk", "Beat", "Christian Gangsta", "Heavy Metal",
+    "Black Metal", "Crossover", "Contemporary C", "Christian Rock",
+    "Merengue", "Salsa", "Thrash Metal", "Anime", "JPop", "SynthPop"
+  };
+  GNode *data;
+  int len;
+  int type;
+  int n;
+
+  data = qtdemux_tree_get_child_by_type (node, FOURCC_data);
+  if (data) {
+    len = QTDEMUX_GUINT32_GET (data->data);
+    type = QTDEMUX_GUINT32_GET (data->data + 8);
+    if (type == 0x00000000 && len >= 18) {
+      n = GST_READ_UINT16_BE (data->data + 16);
+      if (n > 0 && n < sizeof (genres) / sizeof (char *)) {
+        GST_DEBUG ("adding %d [%s]\n", n, genres[n]);
+        gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE,
+            tag, genres[n], NULL);
+      }
     }
   }
 }
@@ -2527,6 +2640,9 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
     case GST_MAKE_FOURCC ('r', 'p', 'z', 'a'):
       /* Apple Video */
       return gst_caps_from_string ("video/x-apple-video");
+    case GST_MAKE_FOURCC ('a', 'v', 'c', '1'):
+      /* H.264/AVC */
+      return gst_caps_from_string ("video/x-h264");
     case GST_MAKE_FOURCC ('r', 'l', 'e', ' '):
       /* Run-length encoding */
     case GST_MAKE_FOURCC ('s', 'm', 'c', ' '):

@@ -469,6 +469,8 @@ gst_ape_demux_parse_tags (GstApeDemux * ape, guint8 * data, gint size)
       type = GST_TAG_COMMENT;
     } else if (!strcasecmp (tag, "copyright")) {
       type = GST_TAG_COPYRIGHT;
+    } else if (!strcasecmp (tag, "genre")) {
+      type = GST_TAG_GENRE;
     } else if (!strcasecmp (tag, "isrc")) {
       type = GST_TAG_ISRC;
     } else if (!strcasecmp (tag, "track")) {
