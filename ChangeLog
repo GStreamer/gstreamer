@@ -1,5 +1,11 @@
 2004-03-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* pkgconfig/gstreamer-play-uninstalled.pc.in:
+	* pkgconfig/gstreamer-play.pc.in:
+          synchronize the two
+
+2004-03-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* ext/cdparanoia/gstcdparanoia.c: (cdparanoia_base_init),
 	(cdparanoia_open), (cdparanoia_event):
 	  fix/add error handling
@@ -515,7 +521,7 @@
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_chunk):
 	  don't use gst_buffer_free
 	* gst/playondemand/filter.func:
-	  don't usae gst_data_free. Free data only once.
+	  don't use gst_data_free. Free data only once.
 
 2004-02-26  David Schleef  <ds@schleef.org>
 
