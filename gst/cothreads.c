@@ -126,15 +126,6 @@ cothread_context_init (void)
 
   GST_INFO (GST_CAT_COTHREADS, "initializing cothreads");
 
-#if 0
-  /* initialize the cothread key (for GThread space) if not done yet */
-  /* FIXME this should be done in cothread_init() */
-  if (_cothread_ctx_key == NULL) {
-    _cothread_ctx_key = g_private_new (NULL);
-    g_assert (_cothread_ctx_key);
-  }
-#endif
-
   /* set this thread's context pointer */
   GST_INFO (GST_CAT_COTHREADS, "setting private _cothread_ctx_key to %p",
 	    ctx);
@@ -620,7 +611,7 @@ cothread_stackquery (void **stack, glong* stacksize)
   GST_DEBUG (GST_CAT_THREAD, "have  posix_memalign at %p of size %d",
              (void *) *stack, STACK_SIZE);
 #else
-  if ((*stack = valloc (STACK_SIZE)) != 0)
+  if ((*stack = valloc (STACK_SIZE)) == NULL)
   {
     g_warning ("Could not valloc stack !\n");
     return FALSE;
