@@ -88,22 +88,22 @@ gst_osselement_get_type (void)
       NULL,
       sizeof(GstOssElement),
       0,
-      (GInstanceInitFunc)gst_osselement_init,
+      (GInstanceInitFunc)gst_osselement_init
     };
     static const GInterfaceInfo ossiface_info = {
       (GInterfaceInitFunc) gst_oss_interface_init,
       NULL,
-      NULL,
+      NULL
     };
     static const GInterfaceInfo ossmixer_info = {
       (GInterfaceInitFunc) gst_ossmixer_interface_init,
       NULL,
-      NULL,
+      NULL
     };
     static const GInterfaceInfo ossprobe_info = {
       (GInterfaceInitFunc) gst_ossprobe_interface_init,
       NULL,
-      NULL,
+      NULL
     };
 
     osselement_type = g_type_register_static (GST_TYPE_ELEMENT,
@@ -937,4 +937,3 @@ gst_osselement_change_state (GstElement *element)
 
   return GST_STATE_SUCCESS;
 }
-

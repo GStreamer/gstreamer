@@ -212,6 +212,8 @@ gst_oss_interface_init (GstImplementsInterfaceClass *klass)
 void
 gst_ossmixer_interface_init (GstMixerClass *klass)
 {
+  GST_MIXER_TYPE (klass) = GST_MIXER_HARDWARE;
+  
   /* default virtual functions */
   klass->list_tracks = gst_ossmixer_list_tracks;
   klass->set_volume = gst_ossmixer_set_volume;
