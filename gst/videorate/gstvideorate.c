@@ -51,6 +51,7 @@ struct _GstVideorate
   /* video state */
   gdouble from_fps, to_fps;
   guint64 next_ts;
+  guint64 first_ts;
   GstBuffer *prevbuf;
   guint64 in, out, dup, drop;
 
@@ -286,6 +287,21 @@ gst_videorate_link (GstPad * pad, const GstCaps * caps)
 }
 
 static void
+gst_videorate_blank_data (GstVideorate * videorate)
+{
+  GST_DEBUG ("resetting data");
+  if (videorate->prevbuf)
+    gst_buffer_unref (videorate->prevbuf);
+  videorate->prevbuf = NULL;
+  videorate->in = 0;
+  videorate->out = 0;
+  videorate->drop = 0;
+  videorate->dup = 0;
+  videorate->next_ts = 0LL;
+  videorate->first_ts = 0LL;
+}
+
+static void
 gst_videorate_init (GstVideorate * videorate)
 {
   GST_FLAG_SET (videorate, GST_ELEMENT_EVENT_AWARE);
@@ -306,11 +322,7 @@ gst_videorate_init (GstVideorate * videorate)
   gst_pad_set_getcaps_function (videorate->srcpad, gst_videorate_getcaps);
   gst_pad_set_link_function (videorate->srcpad, gst_videorate_link);
 
-  videorate->prevbuf = NULL;
-  videorate->in = 0;
-  videorate->out = 0;
-  videorate->drop = 0;
-  videorate->dup = 0;
+  gst_videorate_blank_data (videorate);
   videorate->silent = DEFAULT_SILENT;
   videorate->new_pref = DEFAULT_NEW_PREF;
 }
@@ -324,29 +336,49 @@ gst_videorate_chain (GstPad * pad, GstData * data)
   if (GST_IS_EVENT (data)) {
     GstEvent *event = GST_EVENT (data);
 
-    gst_pad_event_default (pad, event);
-    return;
+    if (!videorate->prevbuf) {
+      gst_pad_event_default (pad, event);
+      return;
+    }
+    if (GST_EVENT_TYPE (event) == GST_EVENT_DISCONTINUOUS) {
+      gint64 etime;
+
+      if (!(gst_event_discont_get_value (event, GST_FORMAT_TIME, &etime)))
+        GST_WARNING ("Got discont but doesn't have GST_FORMAT_TIME value");
+      else {
+        gst_videorate_blank_data (videorate);
+        videorate->first_ts = etime;
+      }
+      gst_pad_event_default (pad, event);
+      return;
+    }
   }
 
   buf = GST_BUFFER (data);
 
   /* pull in 2 buffers */
   if (videorate->prevbuf == NULL) {
+    /* We're sure it's a GstBuffer here */
     videorate->prevbuf = buf;
+    videorate->next_ts = videorate->first_ts = GST_BUFFER_TIMESTAMP (buf);
   } else {
     GstClockTime prevtime, intime;
     gint count = 0;
     gint64 diff1, diff2;
 
     prevtime = GST_BUFFER_TIMESTAMP (videorate->prevbuf);
-    intime = GST_BUFFER_TIMESTAMP (buf);
+    /* If it's a GstEvent, we give him the time of the next outputed frame */
+    intime = (GST_IS_EVENT (data))
+        ? videorate->next_ts +
+        (1 / videorate->to_fps * GST_SECOND) : GST_BUFFER_TIMESTAMP (buf);
 
     GST_LOG_OBJECT (videorate,
         "prev buf %" GST_TIME_FORMAT " new buf %" GST_TIME_FORMAT
         " outgoing ts %" GST_TIME_FORMAT, GST_TIME_ARGS (prevtime),
         GST_TIME_ARGS (intime), GST_TIME_ARGS (videorate->next_ts));
 
-    videorate->in++;
+    if (GST_IS_BUFFER (data))
+      videorate->in++;
 
     /* got 2 buffers, see which one is the best */
     do {
@@ -375,7 +407,9 @@ gst_videorate_chain (GstPad * pad, GstData * data)
             GST_BUFFER_SIZE (videorate->prevbuf));
         GST_BUFFER_TIMESTAMP (outbuf) = videorate->next_ts;
         videorate->out++;
-        videorate->next_ts = videorate->out / videorate->to_fps * GST_SECOND;
+        videorate->next_ts =
+            videorate->first_ts +
+            (videorate->out / videorate->to_fps * GST_SECOND);
         GST_BUFFER_DURATION (outbuf) =
             videorate->next_ts - GST_BUFFER_TIMESTAMP (outbuf);
         gst_pad_push (videorate->srcpad, GST_DATA (outbuf));
@@ -405,14 +439,17 @@ gst_videorate_chain (GstPad * pad, GstData * data)
     }
     GST_LOG_OBJECT (videorate,
         "left loop, putting new in old, diff1 %" GST_TIME_FORMAT
-        ", diff2 %" GST_TIME_FORMAT
+        ", diff2 %" GST_TIME_FORMAT ", next_ts %" GST_TIME_FORMAT
         ", in %lld, out %lld, drop %lld, dup %lld", GST_TIME_ARGS (diff1),
-        GST_TIME_ARGS (diff2), videorate->in, videorate->out, videorate->drop,
-        videorate->dup);
+        GST_TIME_ARGS (diff2), GST_TIME_ARGS (videorate->next_ts),
+        videorate->in, videorate->out, videorate->drop, videorate->dup);
 
-    /* swap in new one when it's the best */
-    gst_buffer_unref (videorate->prevbuf);
-    videorate->prevbuf = buf;
+    if (GST_IS_BUFFER (data)) {
+      /* swap in new one when it's the best */
+      gst_buffer_unref (videorate->prevbuf);
+      videorate->prevbuf = buf;
+    } else
+      gst_pad_event_default (pad, GST_EVENT (data));
   }
 }
 
@@ -473,6 +510,7 @@ gst_videorate_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PAUSED_TO_READY:
+      gst_videorate_blank_data (GST_VIDEORATE (element));
       break;
     default:
       break;
