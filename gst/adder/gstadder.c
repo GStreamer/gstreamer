@@ -224,6 +224,7 @@ gst_adder_connect (GstPad *pad, GstCaps *caps)
           if (channel->sinkpad == GST_PAD_CAST (remove->data)) {
             gst_bytestream_destroy (channel->bytestream);
             adder->input_channels = g_slist_remove_link (adder->input_channels, channels);
+            adder->numsinkpads--;
             goto restart;
           }
           channels = g_slist_next (channels);
