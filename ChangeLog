@@ -1,5 +1,10 @@
 2005-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/gst/Makefile.am:
+	  don't fail on the stupid GstPoptOption
+
+2005-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstpad.h:
 	* gst/gstprobe.c:
 	  allow probes to work on ghost pads by realizing the pad
