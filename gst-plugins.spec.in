@@ -1,0 +1,72 @@
+%define name    gst-plugins  
+%define ver     0.3.02
+%define rel     20011221
+%define prefix  /usr
+%define sysconfdir /etc
+
+Summary: GStreamer Streaming-media framework plugins
+Name: %name
+Version: %ver
+Release: %rel
+Copyright: LGPL
+Group: Libraries/Multimedia
+Source: %{name}-%{ver}.tar.gz
+BuildRoot: /var/tmp/%{name}-%{ver}-root
+Docdir: %{prefix}/doc
+Prefix: %prefix
+Requires: libxml >= 1.8.0
+BuildRequires: nasm => 0.90
+
+%description
+GStreamer is a streaming-media framework, based on graphs of filters which
+operate on media data. Applications using this library can do anything
+from real-time sound processing to playing videos, and just about anything
+else media-related.  Its plugin-based architecture means that new data
+types or processing capabilities can be added simply by installing new
+plugins.
+
+%files
+%defattr(-, root, root)
+%doc AUTHORS COPYING README  
+
+%prep
+%setup
+%build
+CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --sysconfdir=%{sysconfdir} --mandir=$RPM_BUILD_ROOT%{prefix}/share/man  --enable-glib2
+
+if [ "$SMP" != "" ]; then
+  (make "MAKE=make -k -j $SMP"; exit 0)
+  make 2>&1 | tee make.log
+else
+  make 2>&1 | tee make.log
+fi
+
+%install
+[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
+
+make prefix=$RPM_BUILD_ROOT%{prefix} install
+
+%clean
+[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
+
+### ESD ###
+@USE_ESD_TRUE@%package -n gstreamer-esd
+@USE_ESD_TRUE@Summary: Gstreamer plugin for ESD sound output
+@USE_ESD_TRUE@Group: Libraries/Multimedia
+@USE_ESD_TRUE@Requires: esound >= 0.2.8
+@USE_ESD_TRUE@Requires: %{name} = %{ver}
+@USE_ESD_TRUE@
+@USE_ESD_TRUE@%description -n gstreamer-esd
+@USE_ESD_TRUE@Output plugin for GStreamer for use with the esound package
+@USE_ESD_TRUE@
+@USE_ESD_TRUE@%files -n gstreamer-esd
+@USE_ESD_TRUE@%defattr(-, root, root)
+@USE_ESD_TRUE@%{prefix}/lib/gst/libesd*
+
+%post -n gstreamer-esd
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%postun -n gstreamer-esd
+%{prefix}/bin/gstreamer-register --gst-mask=0
+/sbin/ldconfig
+
