@@ -57,10 +57,4 @@ gstreamer_compprep_LDADD = $(GST_LIBS)
 gstreamer_compprep_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
 endif
 
-### FIXME DELETEME
-### these flags are from the original branch
-### wrobell reckons we don't need them
-### LDADD = $(GST_LIBS)
-### CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" $(GLIB_CFLAGS) $(XML_CFLAGS)
-
 EXTRA_DIST = $(man_MANS)
