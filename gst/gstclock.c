@@ -22,7 +22,7 @@
 
 #include <sys/time.h>
 
-//#define GST_DEBUG_ENABLED
+/* #define GST_DEBUG_ENABLED */
 #include "gst_private.h"
 
 #include "gstelement.h"
@@ -180,7 +180,7 @@ gst_clock_wait (GstClock *clock, GstClockTime time, GstObject *obj)
   now = tfnow.tv_sec*1000000LL+tfnow.tv_usec - clock->start_time;
 
   diff = GST_CLOCK_DIFF (time, now);
-  // if we are not behind wait a bit
+  /* if we are not behind wait a bit */
   GST_DEBUG (GST_CAT_CLOCK,"gst_clock: %s waiting for time %08llu %08llu %08lld\n",
              GST_OBJECT_NAME (obj), time, now, diff);
 
@@ -188,7 +188,7 @@ gst_clock_wait (GstClock *clock, GstClockTime time, GstObject *obj)
   if (diff > 10000 ) {
     tfnow.tv_usec = (diff % 1000000);
     tfnow.tv_sec = diff / 1000000;
-    // FIXME, this piece of code does not work with egcs optimisations on, had to use the following line
+    /* FIXME, this piece of code does not work with egcs optimisations on, had to use the following line */
     if (!tfnow.tv_sec) {
       select(0, NULL, NULL, NULL, &tfnow);
     }

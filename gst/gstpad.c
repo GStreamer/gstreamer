@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define GST_DEBUG_ENABLED
+/* #define GST_DEBUG_ENABLED */
 #include "gst_private.h"
 
 #include "gstpad.h"
@@ -173,8 +173,8 @@ gst_real_pad_class_init (GstRealPadClass *klass)
                     gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
 
-//  gtk_object_add_arg_type ("GstRealPad::active", G_TYPE_BOOLEAN,
-//                           GTK_ARG_READWRITE, REAL_ARG_ACTIVE);
+/*  gtk_object_add_arg_type ("GstRealPad::active", G_TYPE_BOOLEAN, */
+/*                           GTK_ARG_READWRITE, REAL_ARG_ACTIVE); */
   g_object_class_install_property (G_OBJECT_CLASS(klass), REAL_ARG_ACTIVE,
     g_param_spec_boolean("active","Active","Whether the pad is active.",
                          TRUE,G_PARAM_READWRITE));
@@ -511,7 +511,7 @@ gst_pad_disconnect (GstPad *srcpad,
   GST_INFO (GST_CAT_ELEMENT_PADS, "disconnecting %s:%s(%p) and %s:%s(%p)",
             GST_DEBUG_PAD_NAME(srcpad), srcpad, GST_DEBUG_PAD_NAME(sinkpad), sinkpad);
 
-  // now we need to deal with the real/ghost stuff
+  /* now we need to deal with the real/ghost stuff */
   realsrc = GST_PAD_REALIZE(srcpad);
   realsink = GST_PAD_REALIZE(sinkpad);
 
@@ -537,7 +537,7 @@ gst_pad_disconnect (GstPad *srcpad,
   g_signal_emit(G_OBJECT(realsrc), gst_real_pad_signals[REAL_DISCONNECTED], 0, realsink);
   g_signal_emit(G_OBJECT(realsink), gst_real_pad_signals[REAL_DISCONNECTED], 0, realsrc);
 
-  // now tell the scheduler
+  /* now tell the scheduler */
   if (realsrc->sched)
     gst_scheduler_pad_connect (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
 
@@ -595,7 +595,7 @@ gst_pad_try_connect (GstPad *srcpad,
   GST_INFO (GST_CAT_PADS, "connecting %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
 
-  // now we need to deal with the real/ghost stuff
+  /* now we need to deal with the real/ghost stuff */
   realsrc = GST_PAD_REALIZE(srcpad);
   realsink = GST_PAD_REALIZE(sinkpad);
 
@@ -647,7 +647,7 @@ gst_pad_try_connect (GstPad *srcpad,
   g_signal_emit(G_OBJECT(realsrc), gst_real_pad_signals[REAL_CONNECTED], 0, realsink);
   g_signal_emit(G_OBJECT(realsink), gst_real_pad_signals[REAL_CONNECTED], 0, realsrc);
 
-  // now tell the scheduler(s)
+  /* now tell the scheduler(s) */
   if (realsrc->sched)
     gst_scheduler_pad_connect (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
   else if (realsink->sched)
@@ -845,7 +845,7 @@ gst_pad_set_caps (GstPad *pad,
   GstCaps *oldcaps;
 
   g_return_val_if_fail (pad != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_REAL_PAD (pad), FALSE);		// NOTE this restriction
+  g_return_val_if_fail (GST_IS_REAL_PAD (pad), FALSE);		/* NOTE this restriction */
 
   GST_INFO (GST_CAT_CAPS, "setting caps %p on pad %s:%s",
             caps, GST_DEBUG_PAD_NAME(pad));
@@ -853,7 +853,7 @@ gst_pad_set_caps (GstPad *pad,
   if (!gst_caps_check_compatibility (caps, gst_pad_get_padtemplate_caps (pad))) {
     g_warning ("pad %s:%s tried to set caps incompatible with its padtemplate\n",
 		    GST_DEBUG_PAD_NAME (pad));
-    //return FALSE;
+    /* return FALSE; */
   }
   
   oldcaps = GST_PAD_CAPS (pad);
@@ -1040,7 +1040,7 @@ gst_real_pad_dispose (GObject *object)
     gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (pad)), pad);
   }
   
-  // FIXME we should destroy the ghostpads, because they are nothing without the real pad
+  /* FIXME we should destroy the ghostpads, because they are nothing without the real pad  */
   if (GST_REAL_PAD (pad)->ghostpads) {
     GList *orig, *ghostpads;
 
@@ -1120,7 +1120,7 @@ gst_pad_load_and_connect (xmlNodePtr self,
 cleanup:
   g_strfreev (split);
 }
-#endif // GST_DISABLE_LOADSAVE
+#endif /* GST_DISABLE_LOADSAVE */
 
 static gboolean
 gst_pad_renegotiate_func (GstPad *pad, gpointer *data1, GstPad *peerpad, gpointer *data2, GstCaps **newcaps)
@@ -1288,7 +1288,7 @@ gst_pad_renegotiate (GstPad *pad)
     GST_DEBUG (GST_CAT_NEGOTIATION, "pads aggreed on caps :)\n");
 
   newcaps = GST_PAD_CAPS (pad);
-    //g_return_val_if_fail(newcaps != NULL, FALSE);	// FIXME is this valid?
+    /* g_return_val_if_fail(newcaps != NULL, FALSE);  FIXME is this valid? */
 
     /* here we have some sort of aggreement of the caps */
     GST_PAD_CAPS (currentpad) = gst_caps_ref (newcaps);
@@ -1392,8 +1392,8 @@ gst_pad_save_thyself (GstObject *object,
   xmlNewChild(parent,NULL,"name", GST_PAD_NAME (realpad));
   if (GST_RPAD_PEER(realpad) != NULL) {
     peer = GST_PAD(GST_RPAD_PEER(realpad));
-    // first check to see if the peer's parent's parent is the same
-    // we just save it off
+    /* first check to see if the peer's parent's parent is the same */
+    /* we just save it off */
     xmlNewChild(parent,NULL,"peer",g_strdup_printf("%s.%s",
                     GST_OBJECT_NAME (GST_PAD_PARENT (peer)), GST_PAD_NAME (peer)));
   } else
@@ -1425,7 +1425,7 @@ gst_pad_ghost_save_thyself (GstPad *pad,
   xmlNewChild(self,NULL,"name", GST_PAD_NAME (pad));
   xmlNewChild(self,NULL,"parent", GST_OBJECT_NAME (GST_PAD_PARENT (pad)));
 
-  // FIXME FIXME FIXME!
+  /* FIXME FIXME FIXME! */
 
   return self;
 }
@@ -1884,7 +1884,7 @@ static void     gst_ghost_pad_class_init         (GstGhostPadClass *klass);
 static void     gst_ghost_pad_init               (GstGhostPad *pad);
 
 static GstPad *ghost_pad_parent_class = NULL;
-//static guint gst_ghost_pad_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_ghost_pad_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_ghost_pad_get_type(void) {
@@ -1945,10 +1945,10 @@ gst_ghost_pad_new (gchar *name,
   GST_GPAD_REALPAD(ghostpad) = GST_PAD_REALIZE(pad);
   GST_PAD_PADTEMPLATE(ghostpad) = GST_PAD_PADTEMPLATE(pad);
 
-  // add ourselves to the real pad's list of ghostpads
+  /* add ourselves to the real pad's list of ghostpads */
   gst_pad_add_ghost_pad (pad, GST_PAD(ghostpad));
 
-  // FIXME need to ref the real pad here... ?
+  /* FIXME need to ref the real pad here... ? */
 
   GST_DEBUG(GST_CAT_PADS,"created ghost pad \"%s\"\n",name);
 
@@ -1970,7 +1970,7 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
  
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-//      gst_element_signal_eos (element);
+/*      gst_element_signal_eos (element); */
       gst_element_set_state (element, GST_STATE_PAUSED);
       {
 	GList *pads = element->pads;

@@ -29,7 +29,7 @@
 #include <sys/mman.h>
 
 /* we make too much noise for normal debugging... */
-//#define GST_DEBUG_FORCE_DISABLE
+/* #define GST_DEBUG_FORCE_DISABLE */
 #include "gst_private.h"
 
 #include "cothreads.h"
@@ -67,7 +67,7 @@ cothread_init (void)
 {
   cothread_context *ctx = (cothread_context *)malloc(sizeof(cothread_context));
 
-  // we consider the initiating process to be cothread 0
+  /* we consider the initiating process to be cothread 0 */
   ctx->nthreads = 1;
   ctx->current = 0;
   ctx->data = g_hash_table_new(g_str_hash, g_str_equal);
@@ -94,7 +94,7 @@ cothread_init (void)
   ctx->threads[0]->sp = (void *)CURRENT_STACK_FRAME;
   ctx->threads[0]->pc = 0;
 
-  // initialize the lock
+  /* initialize the lock */
 #ifdef COTHREAD_ATOMIC
   atomic_set (&ctx->threads[0]->lock, 0);
 #else
@@ -124,15 +124,16 @@ cothread_create (cothread_context *ctx)
     return NULL;
   }
   GST_DEBUG (0,"pthread_self() %ld\n",pthread_self());
-  //if (0) {
-  if (pthread_self() == 0) {	// FIXME uh, what does this test really do?
+  /* if (0) { */
+  if (pthread_self() == 0) {	/* FIXME uh, what does this test really do? */
     s = (cothread_state *)malloc(COTHREAD_STACKSIZE);
     GST_DEBUG (0,"new stack (case 1) at %p\n",s);
   } else {
     void *sp = CURRENT_STACK_FRAME;
-    // FIXME this may not be 64bit clean
-    //       could use casts to uintptr_t from inttypes.h
-    //       if only all platforms had inttypes.h
+    /* FIXME this may not be 64bit clean
+     *       could use casts to uintptr_t from inttypes.h
+     *       if only all platforms had inttypes.h
+     */
     guchar *stack_end = (guchar *)((unsigned long)sp & ~(STACK_SIZE - 1));
     s = (cothread_state *)(stack_end + ((ctx->nthreads - 1) *
                            COTHREAD_STACKSIZE));
@@ -149,10 +150,10 @@ cothread_create (cothread_context *ctx)
   s->threadnum = ctx->nthreads;
   s->flags = 0;
   s->sp = ((guchar *)s + COTHREAD_STACKSIZE);
-  // is this needed anymore?
+  /* is this needed anymore? */
   s->top_sp = s->sp;
 
-  // initialize the lock
+  /* initialize the lock */
 #ifdef COTHREAD_ATOMIC
   atomic_set (s->lock, 0);
 #else
@@ -226,14 +227,15 @@ cothread_stub (void)
   GST_DEBUG_ENTER("");
 
   thread->flags |= COTHREAD_STARTED;
-//#ifdef COTHREAD_ATOMIC
-//  // do something here to lock
-//#else
-//  g_mutex_lock(thread->lock);
-//#endif
+/* #ifdef COTHREAD_ATOMIC 
+ *   do something here to lock
+ * #else
+ *  g_mutex_lock(thread->lock);
+ * #endif
+ */
   while (1) {
     thread->func(thread->argc,thread->argv);
-    // we do this to avoid ever returning, we just switch to 0th thread
+    /* we do this to avoid ever returning, we just switch to 0th thread */
     cothread_switch(cothread_main(ctx));
   }
   thread->flags &= ~COTHREAD_STARTED;
@@ -322,21 +324,21 @@ cothread_switch (cothread_state *thread)
 #endif
   if (current == thread) goto selfswitch;
 
-  // unlock the current thread, we're out of that context now
+  /* unlock the current thread, we're out of that context now */
 #ifdef COTHREAD_ATOMIC
-  // do something to unlock the cothread
+  /* do something to unlock the cothread */
 #else
   g_mutex_unlock(current->lock);
 #endif
 
-  // lock the next cothread before we even switch to it
+  /* lock the next cothread before we even switch to it */
 #ifdef COTHREAD_ATOMIC
-  // do something to lock the cothread
+  /* do something to lock the cothread */
 #else
   g_mutex_lock(thread->lock);
 #endif
 
-  // find the number of the thread to switch to
+  /* find the number of the thread to switch to */
   GST_INFO (GST_CAT_COTHREAD_SWITCH,"switching from cothread #%d to cothread #%d",
             ctx->current,thread->threadnum);
   ctx->current = thread->threadnum;
@@ -359,12 +361,12 @@ cothread_switch (cothread_state *thread)
   /* restore stack pointer and other stuff of new cothread */
   if (thread->flags & COTHREAD_STARTED) {
     GST_DEBUG (0,"in thread \n");
-    // switch to it
+    /* switch to it */
     siglongjmp(thread->jmp,1);
   } else {
     GST_ARCH_SETUP_STACK(thread->sp);
     GST_ARCH_SET_SP(thread->sp);
-    // start it
+    /* start it */
     GST_ARCH_CALL(cothread_stub);
     GST_DEBUG (0,"exit thread \n");
     ctx->current = 0;
@@ -398,7 +400,7 @@ void
 cothread_lock (cothread_state *thread)
 {
 #ifdef COTHREAD_ATOMIC
-  // do something to lock the cothread
+  /* do something to lock the cothread */
 #else
   if (thread->lock)
     g_mutex_lock(thread->lock);
@@ -417,7 +419,7 @@ gboolean
 cothread_trylock (cothread_state *thread)
 {
 #ifdef COTHREAD_ATOMIC
-  // do something to try to lock the cothread
+  /* do something to try to lock the cothread */
 #else
   if (thread->lock)
     return g_mutex_trylock(thread->lock);
@@ -436,7 +438,7 @@ void
 cothread_unlock (cothread_state *thread)
 {
 #ifdef COTHREAD_ATOMIC
-  // do something to unlock the cothread
+  /* do something to unlock the cothread */
 #else
   if (thread->lock)
     g_mutex_unlock(thread->lock);

@@ -95,7 +95,7 @@ gst_init (int *argc, char **argv[])
 #endif
 
   if (!gst_init_check (argc,argv)) {
-    exit (0);				// FIXME!
+    exit (0);				/* FIXME! */
   }
 
   llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
@@ -146,7 +146,7 @@ gst_init (int *argc, char **argv[])
     gst_trace = gst_trace_new ("gst.trace",1024);
     gst_trace_set_default (gst_trace);
   }
-#endif // GST_DISABLE_TRACE
+#endif /* GST_DISABLE_TRACE */
 }
 
 static void
@@ -219,7 +219,7 @@ gst_init_check (int     *argc,
       if (!strncmp ("--gst-info-mask=", (*argv)[i], 16)) {
 	guint32 val;
 
-        // handle either 0xHEX or dec
+        /* handle either 0xHEX or dec */
         if (*((*argv)[i]+17) == 'x') {
           sscanf ((*argv)[i]+18, "%08x", &val);
         } else {
@@ -233,7 +233,7 @@ gst_init_check (int     *argc,
       else if (!strncmp ("--gst-debug-mask=", (*argv)[i], 17)) {
 	guint32 val;
 
-        // handle either 0xHEX or dec
+        /* handle either 0xHEX or dec */
         if (*((*argv)[i]+18) == 'x') {
           sscanf ((*argv)[i]+19, "%08x", &val);
         } else {
@@ -247,7 +247,7 @@ gst_init_check (int     *argc,
       else if (!strncmp ("--gst-mask=", (*argv)[i], 11)) {
 	guint32 val;
 
-        // handle either 0xHEX or dec
+        /* handle either 0xHEX or dec */
         if (*((*argv)[i]+12) == 'x') {
           sscanf ((*argv)[i]+13, "%08x", &val);
         } else {

@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define DEBUG_ENABLED
+/* #define DEBUG_ENABLED */
 #include "gst_private.h"
 
 #include "gstelement.h"
@@ -39,7 +39,7 @@ static void 		gst_elementfactory_unload_thyself 	(GstPluginFeature *feature);
 static GList* _gst_elementfactories;
 
 static GstPluginFeatureClass *parent_class = NULL;
-//static guint gst_elementfactory_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_elementfactory_signals[LAST_SIGNAL] = { 0 }; */
 
 GType 
 gst_elementfactory_get_type (void) 
@@ -121,7 +121,7 @@ gst_elementfactory_find (const gchar *name)
     walk = g_list_next(walk);
   }
 
-  // this should be an ERROR
+  /* this should be an ERROR */
   GST_DEBUG (GST_CAT_ELEMENTFACTORY,"no such elementfactory \"%s\"\n", name);
   return NULL;
 }
@@ -241,18 +241,18 @@ gst_elementfactory_create (GstElementFactory *factory,
       return NULL;
   }
 
-  // create an instance of the element
+  /* create an instance of the element */
   element = GST_ELEMENT(g_object_new(factory->type,NULL));
   g_assert(element != NULL);
 
-  // attempt to set the elemenfactory class pointer if necessary
+  /* attempt to set the elemenfactory class pointer if necessary */
   oclass = GST_ELEMENT_CLASS(G_OBJECT_GET_CLASS(element));
   if (oclass->elementfactory == NULL) {
     GST_DEBUG (GST_CAT_ELEMENTFACTORY,"class %s\n", GST_OBJECT_NAME (factory));
     oclass->elementfactory = factory;
   }
   
-  // copy pad template pointers to the element class
+  /* copy pad template pointers to the element class */
   oclass->padtemplates = g_list_copy(factory->padtemplates);
   oclass->numpadtemplates = factory->numpadtemplates;
   
@@ -283,7 +283,7 @@ gst_elementfactory_make (const gchar *factoryname, const gchar *name)
 
   GST_DEBUG (GST_CAT_ELEMENTFACTORY, "gstelementfactory: make \"%s\" \"%s\"\n", factoryname, name);
 
-  //gst_plugin_load_elementfactory(factoryname);
+  /* gst_plugin_load_elementfactory(factoryname); */
   factory = gst_elementfactory_find(factoryname);
   if (factory == NULL) {
     GST_INFO (GST_CAT_ELEMENTFACTORY,"no such elementfactory \"%s\"!",factoryname);

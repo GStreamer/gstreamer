@@ -174,7 +174,7 @@ gst_util_get_string_arg (GObject * object, const gchar * argname)
   g_value_init (&value, G_TYPE_STRING);
   g_object_get_property (G_OBJECT (object), argname, &value);
 
-  return g_value_get_string (&value);	// memleak?
+  return g_value_get_string (&value);	/* memleak? */
 }
 
 /**
@@ -357,11 +357,11 @@ gst_util_set_object_arg (GObject * object, const gchar * name, const gchar * val
   }
 }
 
-// -----------------------------------------------------
-//
-// The following code will be moved out of the main
-// gstreamer library someday.
-//
+/* -----------------------------------------------------
+ *
+ *  The following code will be moved out of the main
+ * gstreamer library someday.
+ */
 
 #include "gstpad.h"
 #include "gsttype.h"

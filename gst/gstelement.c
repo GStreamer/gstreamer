@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define GST_DEBUG_ENABLED
+/* #define GST_DEBUG_ENABLED */
 #include <glib.h>
 #include <stdarg.h>
 #include "gst_private.h"
@@ -277,10 +277,10 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
 
-  // first check to make sure the pad's parent is already set
+  /* first check to make sure the pad's parent is already set */
   g_return_if_fail (GST_PAD_PARENT (pad) == NULL);
 
-  // then check to see if there's already a pad by that name here
+  /* then check to see if there's already a pad by that name here */
   g_return_if_fail (gst_object_check_uniqueness (element->pads, GST_PAD_NAME(pad)) == TRUE);
 
   /* set the pad's parent */
@@ -349,7 +349,7 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name)
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
 
-  // then check to see if there's already a pad by that name here
+  /* then check to see if there's already a pad by that name here */
   g_return_if_fail (gst_object_check_uniqueness (element->pads, name) == TRUE);
 
   GST_DEBUG(GST_CAT_ELEMENT_PADS,"creating new ghost pad called %s, from pad %s:%s\n",
@@ -361,7 +361,7 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name)
             name, GST_ELEMENT_NAME (element));
   element->pads = g_list_append (element->pads, ghostpad);
   element->numpads++;
-  // set the parent of the ghostpad
+  /* set the parent of the ghostpad */
   gst_object_set_parent (GST_OBJECT (ghostpad), GST_OBJECT (element));
 
   GST_DEBUG(GST_CAT_ELEMENT_PADS,"added ghostpad %s:%s\n",GST_DEBUG_PAD_NAME(ghostpad));
@@ -386,10 +386,11 @@ gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_GHOST_PAD (pad));
 
-  // FIXME this is redundant?
-  // wingo 10-july-2001: I don't think so, you have to actually remove the pad
-  // from the element. gst_pad_remove_ghost_pad just removes the ghostpad from
-  // the real pad's ghost pad list
+  /* FIXME this is redundant?
+   * wingo 10-july-2001: I don't think so, you have to actually remove the pad
+   * from the element. gst_pad_remove_ghost_pad just removes the ghostpad from
+   * the real pad's ghost pad list
+   */
   gst_pad_remove_ghost_pad (GST_PAD (GST_PAD_REALIZE (pad)), pad);
   gst_element_remove_pad (element, pad);
 }
@@ -413,11 +414,11 @@ gst_element_get_pad (GstElement *element, const gchar *name)
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  // if there aren't any pads, well, we're not likely to find one
+  /* if there aren't any pads, well, we're not likely to find one */
   if (!element->numpads)
     return NULL;
 
-  // look through the list, matching by name
+  /* look through the list, matching by name */
   walk = element->pads;
   while (walk) {
     GstPad *pad = GST_PAD(walk->data);
@@ -553,11 +554,11 @@ gst_element_get_padtemplate_by_compatible (GstElement *element, GstPadTemplate *
     GstPadTemplate *padtempl = (GstPadTemplate*) padlist->data;
     gboolean compat = FALSE;
 
-    // Ignore name
-    // Ignore presence
-    // Check direction (must be opposite)
-    // Check caps
-
+    /* Ignore name
+     * Ignore presence
+     * Check direction (must be opposite)
+     * Check caps
+     */
     GST_DEBUG(GST_CAT_CAPS,"checking direction and caps\n");
     if (padtempl->direction == GST_PAD_SRC &&
       compattempl->direction == GST_PAD_SINK) {
@@ -837,8 +838,8 @@ gst_element_set_state (GstElement *element, GstElementState state)
   GstElementState curpending;
   GstElementStateReturn return_val = GST_STATE_SUCCESS;
 
-//  g_print("gst_element_set_state(\"%s\",%08lx)\n",
-//          element->name,state);
+/*  g_print("gst_element_set_state(\"%s\",%08lx)\n", */
+/*          element->name,state); */
 
   g_return_val_if_fail (element != NULL, GST_STATE_FAILURE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
@@ -858,7 +859,7 @@ gst_element_set_state (GstElement *element, GstElementState state)
     else curpending>>=1;
 
     /* set the pending state variable */
-    // FIXME: should probably check to see that we don't already have one
+    /* FIXME: should probably check to see that we don't already have one */
     GST_STATE_PENDING (element) = curpending;
     if (curpending != state)
       GST_DEBUG_ELEMENT (GST_CAT_STATES,element,"intermediate: setting state to %s\n",
@@ -932,11 +933,12 @@ gst_element_change_state (GstElement *element)
   GST_STATE (element) = GST_STATE_PENDING (element);
   GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
 
-  // note: queues' state_change is a special case because it needs to lock
-  // for synchronization (from another thread).  since this signal may block
-  // or (worse) make another state change, the queue needs to unlock before
-  // calling.  thus, gstqueue.c::gst_queue_state_change() blocks, unblocks,
-  // unlocks, then emits this. 
+  /* note: queues' state_change is a special case because it needs to lock
+   * for synchronization (from another thread).  since this signal may block
+   * or (worse) make another state change, the queue needs to unlock before
+   * calling.  thus, gstqueue.c::gst_queue_state_change() blocks, unblocks,
+   * unlocks, then emits this. 
+   */
   g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE], 0,
                    old_state, GST_STATE (element));
 
@@ -982,7 +984,7 @@ gst_element_dispose (GObject *object)
     orig = pads = g_list_copy (element->pads);
     while (pads) {
       pad = GST_PAD (pads->data);
-      // the gst_object_unparent will do the unreffing
+      /* the gst_object_unparent will do the unreffing */
       gst_element_remove_pad(element, pad);
       pads = g_list_next (pads);
     }
@@ -1013,7 +1015,7 @@ gst_element_save_thyself (GstObject *object,
 {
   GList *pads;
   GstElementClass *oclass;
-//  GType type;
+/*  GType type; */
   GstElement *element;
 
   g_return_val_if_fail (GST_IS_ELEMENT (object), parent);
@@ -1031,11 +1033,11 @@ gst_element_save_thyself (GstObject *object,
     xmlNewChild (parent, NULL, "version", factory->details->version);
   }
 
-//  if (element->manager)
-//    xmlNewChild(parent, NULL, "manager", GST_ELEMENT_NAME(element->manager));
+/*  if (element->manager) */
+/*    xmlNewChild(parent, NULL, "manager", GST_ELEMENT_NAME(element->manager)); */
 
-/* FIXME FIXME FIXME!
-  // output all args to the element
+/* FIXME FIXME FIXME! */
+  /* output all args to the element */
   type = G_OBJECT_TYPE (element);
   while (type != G_TYPE_INVALID) {
     GtkArg *args;
@@ -1103,7 +1105,7 @@ gst_element_save_thyself (GstObject *object,
 
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
-    // figure out if it's a direct pad or a ghostpad
+    /* figure out if it's a direct pad or a ghostpad */
     if (GST_ELEMENT (GST_OBJECT_PARENT (pad)) == element) {
       xmlNodePtr padtag = xmlNewChild (parent, NULL, "pad", NULL);
       gst_object_save_thyself (GST_OBJECT (pad), padtag);
@@ -1133,7 +1135,7 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
   guchar *value = NULL;
   guchar *type = NULL;
 
-  // first get the needed tags to construct the element
+  /* first get the needed tags to construct the element */
   while (children) {
     if (!strcmp (children->name, "name")) {
       name = xmlNodeGetContent (children);
@@ -1151,12 +1153,12 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
 
   g_return_val_if_fail (element != NULL, NULL);
 
-  // ne need to set the parent on this object bacause the pads
-  // will go through the hierarchy to connect to thier peers
+  /* ne need to set the parent on this object bacause the pads */
+  /* will go through the hierarchy to connect to thier peers */
   if (parent)
     gst_object_set_parent (GST_OBJECT (element), parent);
 
-  // we have the element now, set the arguments
+  /* we have the element now, set the arguments */
   children = self->xmlChildrenNode;
 
   while (children) {
@@ -1176,7 +1178,7 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
     }
     children = children->next;
   }
-  // we have the element now, set the pads
+  /* we have the element now, set the pads */
   children = self->xmlChildrenNode;
 
   while (children) {

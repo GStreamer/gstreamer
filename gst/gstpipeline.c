@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define GST_DEBUG_ENABLED
+/* #define GST_DEBUG_ENABLED */
 #include "gst_private.h"
 
 #include "gstpipeline.h"
@@ -58,7 +58,7 @@ static void			gst_pipeline_init		(GstPipeline *pipeline);
 static GstElementStateReturn	gst_pipeline_change_state	(GstElement *element);
 
 static GstBinClass *parent_class = NULL;
-//static guint gst_pipeline_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_pipeline_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_pipeline_get_type (void) {
@@ -97,7 +97,7 @@ gst_pipeline_class_init (GstPipelineClass *klass)
 static void
 gst_pipeline_init (GstPipeline *pipeline)
 {
-  // we're a manager by default
+  /* we're a manager by default */
   GST_FLAG_SET (pipeline, GST_BIN_FLAG_MANAGER);
 
   GST_ELEMENT_SCHED (pipeline) = gst_schedulerfactory_make ("basic", GST_ELEMENT (pipeline));

@@ -123,7 +123,7 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
 
   while (i < argc) {
     arg = argv[i];
-    // FIXME this is a lame solution for problems with the first parser
+    /* FIXME this is a lame solution for problems with the first parser */
     if (arg == NULL) {
       i++;
       continue;
@@ -132,29 +132,29 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
     element = NULL;
     DEBUG ("** ARGUMENT is '%s'\n", arg);
 
-    // a null that slipped through the reconstruction
+    /* a null that slipped through the reconstruction */
     if (len == 0) {
       DEBUG ("random arg, FIXME\n");
       i++;
       continue;
 
-      // end of the container
+      /* end of the container */
     }
     else if (arg[0] == closingchar) {
-      // time to finish off this bin
+      /* time to finish off this bin */
       DEBUG ("exiting container %s\n", GST_ELEMENT_NAME (GST_ELEMENT (parent)));
       retval = i + 1;
       break;
 
-      // a pad connection
+      /* a pad connection */
     }
     else if ((ptr = strchr (arg, '!'))) {
       DEBUG ("attempting to connect pads together....\n");
 
-      // if it starts with the !
+      /* if it starts with the ! */
       if (arg[0] == '!') {
 	srcpadname = NULL;
-	// if there's a sinkpad...
+	/* if there's a sinkpad... */
 	if (len > 1)
 	  sinkpadname = &arg[1];
 	else
@@ -162,7 +162,7 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
       }
       else {
 	srcpadname = g_strndup (arg, (ptr - arg));
-	// if there's a sinkpad
+	/* if there's a sinkpad */
 	if (len > (ptr - arg) + 1)
 	  sinkpadname = &ptr[1];
 	else
@@ -176,10 +176,10 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
       numsrcpads = 0;
       tempname = NULL;
 
-      // find src pads
+      /* find src pads */
       if (srcpadname != NULL) {
 	while (1) {
-	  // split name at commas
+	  /* split name at commas */
 	  if ((ptr = strchr (srcpadname, ','))) {
 	    tempname = g_strndup (srcpadname, (ptr - srcpadname));
 	    srcpadname = &ptr[1];
@@ -188,13 +188,13 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
 	    tempname = srcpadname;
 	  }
 
-	  // look for pad with that name
+	  /* look for pad with that name */
 	  if ((temppad = gst_element_get_pad (previous, tempname))) {
 	    srcpads = g_slist_append (srcpads, temppad);
 	    numsrcpads++;
 	  }
 
-	  // try to create a pad using that padtemplate name
+	  /* try to create a pad using that padtemplate name */
 	  else if ((temppad = gst_element_request_pad_by_name (previous, tempname))) {
 	    srcpads = g_slist_append (srcpads, temppad);
 	    numsrcpads++;
@@ -206,14 +206,14 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
 	    GST_DEBUG (0, "have src pad %s:%s\n", GST_DEBUG_PAD_NAME (temppad));
 	  }
 
-	  // if there is no more commas in srcpadname then we're done
+	  /* if there is no more commas in srcpadname then we're done */
 	  if (tempname == srcpadname)
 	    break;
 	  g_free (tempname);
 	}
       }
       else {
-	// check through the list to find the first sink pad
+	/* check through the list to find the first sink pad */
 	GST_DEBUG (0, "CHECKING through element %s for pad named %s\n", GST_ELEMENT_NAME (previous),
 		   srcpadname);
 	pads = gst_element_get_pad_list (previous);
@@ -235,14 +235,14 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
 	  GST_DEBUG (0, "have src pad %s:%s\n", GST_DEBUG_PAD_NAME (GST_PARSE_LISTPAD (srcpads)));
       }
 
-      // argument with = in it
+      /* argument with = in it */
     }
     else if (strstr (arg, "=")) {
       gchar *argname;
       gchar *argval;
       gchar *pos = strstr (arg, "=");
 
-      // we have an argument
+      /* we have an argument */
       argname = arg;
       pos[0] = '\0';
       argval = pos + 1;
@@ -252,11 +252,11 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
       gst_util_set_object_arg (G_OBJECT (previous), argname, argval);
       g_free (argname);
 
-      // element or argument, or beginning of bin or thread
+      /* element or argument, or beginning of bin or thread */
     }
     else if (arg[0] == '[') {
-      // we have the start of a name of the preceding element.
-      // rename previous element to next arg.
+      /* we have the start of a name of the preceding element. */
+      /* rename previous element to next arg. */
       if (arg[1] != '\0') {
 	fprintf (stderr, "error, unexpected junk after [\n");
 	return GST_PARSE_ERROR_SYNTAX;
@@ -281,10 +281,10 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
     }
     else {
       DEBUG ("have element or bin/thread\n");
-      // if we have a bin or thread starting
+      /* if we have a bin or thread starting */
       if (strchr ("({", arg[0])) {
 	if (arg[0] == '(') {
-	  // create a bin and add it to the current parent
+	  /* create a bin and add it to the current parent */
 	  element = gst_bin_new (g_strdup_printf ("bin%d", priv->bincount++));
 	  if (!element) {
 	    fprintf (stderr, "Couldn't create a bin!\n");
@@ -293,7 +293,7 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
 	  GST_DEBUG (0, "CREATED bin %s\n", GST_ELEMENT_NAME (element));
 	}
 	else if (arg[0] == '{') {
-	  // create a thread and add it to the current parent
+	  /* create a thread and add it to the current parent */
 	  element = gst_thread_new (g_strdup_printf ("thread%d", priv->threadcount++));
 	  if (!element) {
 	    fprintf (stderr, "Couldn't create a thread!\n");
@@ -308,14 +308,14 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
 	}
 
 	j = gst_parse_launch_cmdline (argc - i, argv + i + 1, GST_BIN (element), priv);
-	//check for parse error
+	/* check for parse error */
 	if (j < 0)
 	  return j;
 	i += j;
 
       }
       else {
-	// we have an element
+	/* we have an element */
 	DEBUG ("attempting to create element '%s'\n", arg);
 	ptr = gst_parse_unique_name (arg, priv);
 	element = gst_elementfactory_make (arg, ptr);
@@ -342,10 +342,11 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
       numsinkpads = 0;
       tempname = NULL;
 
-      // find sink pads
+      /
+ find sink pads
       if (sinkpadname != NULL) {
 	while (1) {
-	  // split name at commas
+	  /* split name at commas */
 	  if ((ptr = strchr (sinkpadname, ','))) {
 	    tempname = g_strndup (sinkpadname, (ptr - sinkpadname));
 	    sinkpadname = &ptr[1];
@@ -354,13 +355,13 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
 	    tempname = sinkpadname;
 	  }
 
-	  // look for pad with that name
+	  /* look for pad with that name */
 	  if ((temppad = gst_element_get_pad (element, tempname))) {
 	    sinkpads = g_slist_append (sinkpads, temppad);
 	    numsinkpads++;
 	  }
 
-	  // try to create a pad using that padtemplate name
+	  /* try to create a pad using that padtemplate name */
 	  else if ((temppad = gst_element_request_pad_by_name (element, tempname))) {
 	    sinkpads = g_slist_append (sinkpads, temppad);
 	    numsinkpads++;
@@ -372,14 +373,14 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
 	    GST_DEBUG (0, "have sink pad %s:%s\n", GST_DEBUG_PAD_NAME (temppad));
 	  }
 
-	  // if there is no more commas in sinkpadname then we're done
+	  /* if there is no more commas in sinkpadname then we're done */
 	  if (tempname == sinkpadname)
 	    break;
 	  g_free (tempname);
 	}
       }
       else {
-	// check through the list to find the first sink pad
+	/* check through the list to find the first sink pad */
 	pads = gst_element_get_pad_list (element);
 	while (pads) {
 	  temppad = GST_PAD (pads->data);
@@ -426,7 +427,7 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
       g_slist_free (sinkpads);
       sinkpads = NULL;
 
-      // if we're the first element, ghost all the sinkpads
+      /* if we're the first element, ghost all the sinkpads */
       if (elementcount == 1) {
 	DEBUG ("first element, ghosting all of %s's sink pads to parent %s\n",
 	       GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (GST_ELEMENT (parent)));
@@ -454,7 +455,7 @@ gst_parse_launch_cmdline (int argc, char *argv[], GstBin * parent, gst_parse_pri
     i++;
   }
 
-  // ghost all the src pads of the bin
+  /* ghost all the src pads of the bin */
   if (prevelement != NULL) {
     DEBUG ("last element, ghosting all of %s's src pads to parent %s\n",
 	   GST_ELEMENT_NAME (prevelement), GST_ELEMENT_NAME (GST_ELEMENT (parent)));
@@ -515,16 +516,16 @@ gst_parse_launch (const gchar * cmdline, GstBin * parent)
 
   temp = "";
 
-  // Extract the arguments to a gslist in reverse order
+  /* Extract the arguments to a gslist in reverse order */
   for (cp = cmdline; cp < end;) {
     i = strcspn (cp, "([{}]) \"\\");
 
     if (i > 0) {
       temp = g_strconcat (temp, g_strndup (cp, i), NULL);
 
-      // see if we have an escape char
+      /* see if we have an escape char */
       if (cp[i] != '\\') {
-	// normal argument - copy and add to the list
+	/* normal argument - copy and add to the list */
 	string_list = g_slist_prepend (string_list, temp);
 	newargc++;
 	temp = "";
@@ -535,33 +536,33 @@ gst_parse_launch (const gchar * cmdline, GstBin * parent)
       cp += i;
     }
 
-    // skip spaces
+    /* skip spaces */
     while (cp < end && *cp == ' ') {
       cp++;
     }
 
-    // handle quoted arguments
+    /* handle quoted arguments */
     if (*cp == '"') {
       start = ++cp;
 
-      // find matching quote
+      /* find matching quote */
       while (cp < end && *cp != '"')
 	cp++;
 
-      // make sure we got it
+      /* make sure we got it */
       if (cp == end) {
 	g_warning ("gst_parse_launch: Unbalanced quote in command line");
-	// FIXME: The list leaks here
+	/* FIXME: The list leaks here */
 	return 0;
       }
 
-      // copy the string sans quotes
+      /* copy the string sans quotes */
       string_list = g_slist_prepend (string_list, g_strndup (start, cp - start));
       newargc++;
-      cp += 2;			// skip the quote aswell
+      cp += 2;			/* skip the quote aswell */
     }
 
-    // brackets exist in a separate argument slot
+    /* brackets exist in a separate argument slot */
     if (*cp && strchr ("([{}])", *cp)) {
       string_list = g_slist_prepend (string_list, g_strndup (cp, 1));
       newargc++;
@@ -569,12 +570,12 @@ gst_parse_launch (const gchar * cmdline, GstBin * parent)
     }
   }
 
-  // now allocate the new argv array
+  /* now allocate the new argv array */
   argvn = g_new0 (char *, newargc);
 
   GST_DEBUG (0, "got %d args\n", newargc);
 
-  // reverse the list and put the strings in the new array
+  /* reverse the list and put the strings in the new array */
   i = newargc;
 
   for (slist = string_list; slist; slist = slist->next)
@@ -582,19 +583,19 @@ gst_parse_launch (const gchar * cmdline, GstBin * parent)
 
   g_slist_free (string_list);
 
-  // print them out
+  /* print them out */
   for (i = 0; i < newargc; i++) {
     GST_DEBUG (0, "arg %d is: %s\n", i, argvn[i]);
   }
 
-  // set up the elementcounts hash
+  /* set up the elementcounts hash */
   priv.elementcounts = g_hash_table_new (g_str_hash, g_str_equal);
 
-  // do it!
+  /* do it! */
   i = gst_parse_launch_cmdline (newargc, argvn, parent, &priv);
 
-//  GST_DEBUG(0, "Finished - freeing temporary argument array");
-//  g_strfreev(argvn);
+/*  GST_DEBUG(0, "Finished - freeing temporary argument array"); */
+/*  g_strfreev(argvn); */
 
   return i;
 }

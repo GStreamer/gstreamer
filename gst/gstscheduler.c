@@ -242,7 +242,7 @@ static void 		gst_schedulerfactory_restore_thyself 	(GstObject *object, xmlNodeP
 #endif
 
 static GstPluginFeatureClass *factory_parent_class = NULL;
-//static guint gst_schedulerfactory_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_schedulerfactory_signals[LAST_SIGNAL] = { 0 }; */
 
 GType 
 gst_schedulerfactory_get_type (void) 
@@ -339,7 +339,7 @@ gst_schedulerfactory_destroy (GstSchedulerFactory *factory)
 
   _gst_schedulerfactories = g_list_remove (_gst_schedulerfactories, factory);
 
-  // we don't free the struct bacause someone might  have a handle to it..
+  /* we don't free the struct bacause someone might  have a handle to it.. */
 }
 
 /**

@@ -51,7 +51,7 @@ static void 		gst_typefactory_restore_thyself (GstObject *object, xmlNodePtr par
 static void 		gst_typefactory_unload_thyself 	(GstPluginFeature *feature);
 
 static GstPluginFeatureClass *parent_class = NULL;
-//static guint gst_typefactory_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_typefactory_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_typefactory_get_type (void)
@@ -156,7 +156,7 @@ gst_type_register (GstTypeFactory *factory)
 
   g_return_val_if_fail (factory != NULL, 0);
 
-//  GST_INFO (GST_CAT_TYPES,"type register %s", factory->mime);
+/*  GST_INFO (GST_CAT_TYPES,"type register %s", factory->mime); */
   id = gst_type_find_by_mime (factory->mime);
 
   if (!id) {
@@ -196,12 +196,12 @@ gst_type_find_by_mime_func (const gchar *mime)
   g_return_val_if_fail (mime != NULL, 0);
 
   walk = _gst_types;
-//  GST_DEBUG (GST_CAT_TYPES,"searching for '%s'\n",mime);
+/*  GST_DEBUG (GST_CAT_TYPES,"searching for '%s'\n",mime); */
   mimelen = strlen (mime);
   while (walk) {
     type = (GstType *)walk->data;
     search = type->mime;
-//    GST_DEBUG (GST_CAT_TYPES,"checking against '%s'\n",search);
+/*    GST_DEBUG (GST_CAT_TYPES,"checking against '%s'\n",search); */
     typelen = strlen (search);
     while ((search - type->mime) < typelen) {
       found = strstr (search, mime);
@@ -248,7 +248,7 @@ gst_type_find_by_mime (const gchar *mime)
 guint16
 gst_type_find_by_ext (const gchar *ext)
 {
-  //FIXME
+  /* FIXME */
   g_warning ("gsttype: find_by_ext not implemented");
   return 0;
 }

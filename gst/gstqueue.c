@@ -20,8 +20,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define DEBUG_ENABLED
-//#define STATUS_ENABLED
+/* #define DEBUG_ENABLED */
+/* #define STATUS_ENABLED */
 #ifdef STATUS_ENABLED
 #define STATUS(A) GST_DEBUG(GST_CAT_DATAFLOW, A, GST_ELEMENT_NAME(queue))
 #else
@@ -104,7 +104,7 @@ queue_leaky_get_type(void) {
 }
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_queue_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_queue_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_queue_get_type(void) 
@@ -159,7 +159,7 @@ gst_queue_class_init (GstQueueClass *klass)
 static void
 gst_queue_init (GstQueue *queue)
 {
-  // scheduling on this kind of element is, well, interesting
+  /* scheduling on this kind of element is, well, interesting */
   GST_FLAG_SET (queue, GST_ELEMENT_DECOUPLED);
   GST_FLAG_SET (queue, GST_ELEMENT_EVENT_AWARE);
 
@@ -178,9 +178,9 @@ gst_queue_init (GstQueue *queue)
   queue->level_buffers = 0;
   queue->level_bytes = 0;
   queue->level_time = 0LL;
-  queue->size_buffers = 100;		// 100 buffers
-  queue->size_bytes = 100 * 1024;	// 100KB
-  queue->size_time = 1000000000LL;	// 1sec
+  queue->size_buffers = 100;		/* 100 buffers */
+  queue->size_bytes = 100 * 1024;	/* 100KB */
+  queue->size_time = 1000000000LL;	/* 1sec */
 
   queue->qlock = g_mutex_new ();
   queue->reader = FALSE;
@@ -290,10 +290,10 @@ restart:
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "adding buffer %p of size %d\n",buf,GST_BUFFER_SIZE(buf));
 
   if (queue->level_buffers == queue->size_buffers) {
-    // if this is a leaky queue...
+    /* if this is a leaky queue... */
     if (queue->leaky) {
-      // FIXME don't want to leak events!
-      // if we leak on the upstream side, drop the current buffer
+      /* FIXME don't want to leak events! */
+      /* if we leak on the upstream side, drop the current buffer */
       if (queue->leaky == GST_QUEUE_LEAK_UPSTREAM) {
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue is full, leaking buffer on upstream end\n");
         if (GST_IS_EVENT (buf))
@@ -302,11 +302,11 @@ restart:
               GST_EVENT_TYPE(GST_EVENT(buf)));
           GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue is full, leaking buffer on upstream end\n");
         gst_buffer_unref(buf);
-        // now we have to clean up and exit right away
+        /* now we have to clean up and exit right away */
         g_mutex_unlock (queue->qlock);
         return;
       }
-      // otherwise we have to push a buffer off the other end
+      /* otherwise we have to push a buffer off the other end */
       else {
         GSList *front;
         GstBuffer *leakbuf;
@@ -328,8 +328,8 @@ restart:
     GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "pre full wait, level:%d/%d\n",
         queue->level_buffers, queue->size_buffers);
     while (queue->level_buffers == queue->size_buffers) {
-      // if there's a pending state change for this queue or its manager, switch
-      // back to iterator so bottom half of state change executes
+      /* if there's a pending state change for this queue or its manager, switch */
+      /* back to iterator so bottom half of state change executes */
       while (GST_STATE (queue) != GST_STATE_PLAYING) {
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!\n");
         g_mutex_unlock (queue->qlock);
@@ -395,8 +395,9 @@ restart:
 
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "pre empty wait, level:%d/%d\n", queue->level_buffers, queue->size_buffers);
   while (queue->level_buffers == 0) {
-    // if there's a pending state change for this queue or its manager, switch
-    // back to iterator so bottom half of state change executes
+    /* if there's a pending state change for this queue or its manager, switch
+     * back to iterator so bottom half of state change executes
+     */ 
     while (GST_STATE (queue) != GST_STATE_PLAYING) {
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!\n");
       g_mutex_unlock (queue->qlock);
@@ -438,7 +439,7 @@ restart:
     g_cond_signal (queue->not_full);
   }
 
-  // FIXME where should this be? locked?
+  /* FIXME where should this be? locked? */
   if (GST_IS_EVENT(buf)) {
     GstEvent *event = GST_EVENT(buf);
     switch (GST_EVENT_TYPE(event)) {
@@ -466,8 +467,9 @@ gst_queue_change_state (GstElement *element)
 
   GST_DEBUG_ENTER("('%s')", GST_ELEMENT_NAME (element));
 
-  // lock the queue so another thread (not in sync with this thread's state)
-  // can't call this queue's _get (or whatever)
+  /* lock the queue so another thread (not in sync with this thread's state)
+   * can't call this queue's _get (or whatever)
+   */
   g_mutex_lock (queue->qlock);
 
   new_state = GST_STATE_PENDING (element);
@@ -481,7 +483,7 @@ gst_queue_change_state (GstElement *element)
   }
   else if (new_state == GST_STATE_PLAYING) {
     if (!GST_PAD_CONNECTED (queue->sinkpad)) {
-      // FIXME can this be?
+      /* FIXME can this be? */
       if (queue->reader)
         g_cond_signal (queue->not_empty);
       g_mutex_unlock (queue->qlock);

@@ -33,7 +33,7 @@ static void 		gst_plugin_feature_restore_thyself 	(GstObject *object, xmlNodePtr
 #endif /* GST_DISABLE_REGISTRY */
 
 static GstObjectClass *parent_class = NULL;
-//static guint gst_plugin_feature_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_plugin_feature_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_plugin_feature_get_type (void)

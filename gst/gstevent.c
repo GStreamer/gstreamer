@@ -46,14 +46,14 @@ _gst_event_initialize (void)
     NULL,
   };
 
-  // round up to the nearest 32 bytes for cache-line and other efficiencies
+  /* round up to the nearest 32 bytes for cache-line and other efficiencies */
   eventsize = (((eventsize-1) / 32) + 1) * 32;
 
   _gst_event_chunk = g_mem_chunk_new ("GstEvent", eventsize,
   				      eventsize * 32, G_ALLOC_AND_FREE);
   _gst_event_chunk_lock = g_mutex_new ();
 
-  // register the type
+  /* register the type */
   _gst_event_type = g_type_register_static (G_TYPE_INT, "GstEvent", &event_info, 0);
 }
 

@@ -273,9 +273,9 @@ gst_buffer_pool_destroy (GstBufferPool *pool)
   g_free(pool);
 }
 
-//
-// This is so we don't get messed up by GST_BUFFER_WHERE.
-//
+/*
+ * This is so we don't get messed up by GST_BUFFER_WHERE.
+ */
 static GstBuffer *
 _pool_gst_buffer_copy (GstBuffer *buffer)
 { return gst_buffer_copy (buffer); }
@@ -300,11 +300,11 @@ gst_buffer_pool_get_default (guint buffer_size, guint pool_size)
   guint real_buffer_size;
   GstBufferPoolDefault *def;
   
-  // round up to the nearest 32 bytes for cache-line and other efficiencies
+  /* round up to the nearest 32 bytes for cache-line and other efficiencies */
   real_buffer_size = (((buffer_size-1) / 32) + 1) * 32;
   
-  // check for an existing GstBufferPool with the same real_buffer_size
-  // (we won't worry about the pool_size)
+  /* check for an existing GstBufferPool with the same real_buffer_size */
+  /* (we won't worry about the pool_size) */
   g_mutex_lock (_default_pool_lock);
   pool = (GstBufferPool*)g_hash_table_lookup(_default_pools,GINT_TO_POINTER(real_buffer_size));
   g_mutex_unlock (_default_pool_lock);

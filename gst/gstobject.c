@@ -120,8 +120,8 @@ gst_object_class_init (GstObjectClass *klass)
 #endif
 
   klass->path_string_separator = "/";
-// FIXME!!!
-//  klass->signal_object = g_object_new(gst_signal_object_get_type (,NULL));
+/* FIXME!!! */
+/*  klass->signal_object = g_object_new(gst_signal_object_get_type (,NULL)); */
 
   gobject_class->dispose = gst_object_dispose;
   gobject_class->finalize = gst_object_finalize;
@@ -371,16 +371,16 @@ gst_object_ref (GstObject *object)
   g_return_if_fail (object != NULL, NULL);
   g_return_if_fail (GST_IS_OBJECT (object), NULL);
 
-//#ifdef HAVE_ATOMIC_H
-//  g_return_if_fail (atomic_read (&(object->refcount)) > 0);
-//  atomic_inc (&(object->refcount))
-//#else
+/* #ifdef HAVE_ATOMIC_H */
+/*  g_return_if_fail (atomic_read (&(object->refcount)) > 0); */
+/*  atomic_inc (&(object->refcount)) */
+/* #else */
   g_return_if_fail (object->refcount > 0);
   GST_LOCK (object);
-//  object->refcount++;
+/*  object->refcount++; */
   g_object_ref((GObject *)object);
   GST_UNLOCK (object);
-//#endif
+/* #endif */
 
   return object;
 }
@@ -430,9 +430,9 @@ gst_object_unref (GstObject *object)
     object->refcount = 0;
 #endif
     /* finalize the object */
-    // FIXME this is an evil hack that should be killed
-// FIXMEFIXMEFIXMEFIXME
-//    gtk_object_finalize(G_OBJECT(object));
+    /* FIXME this is an evil hack that should be killed */
+/* FIXMEFIXMEFIXMEFIXME */
+/*    gtk_object_finalize(G_OBJECT(object)); */
   }
 }
 #endif /* gst_object_unref */
@@ -581,7 +581,7 @@ gst_object_get_path_string (GstObject *object)
 
   path = g_strdup ("");
 
-  // first walk the object hierarchy to build a list of the parents
+  /* first walk the object hierarchy to build a list of the parents */
   do {
     if (GST_IS_OBJECT (object)) {
       parent = gst_object_get_parent (object);
@@ -597,7 +597,7 @@ gst_object_get_path_string (GstObject *object)
     object = parent;
   } while (object != NULL);
 
-  // then walk the parent list and print them out
+  /* then walk the parent list and print them out */
   parents = parentage;
   while (parents) {
     if (GST_IS_OBJECT (parents->data)) {
