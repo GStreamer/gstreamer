@@ -187,8 +187,8 @@ gst_data_ref (GstData *data)
   g_return_val_if_fail (data != NULL, NULL);
   g_return_val_if_fail (GST_DATA_REFCOUNT_VALUE(data) > 0, NULL);
 
-  GST_CAT_LOG (GST_CAT_BUFFER, "ref data %p, count before ref is %d", 
-               data, GST_DATA_REFCOUNT_VALUE (data));
+  GST_CAT_LOG (GST_CAT_BUFFER, "%p %d->%d", data,
+               GST_DATA_REFCOUNT_VALUE (data), GST_DATA_REFCOUNT_VALUE (data) + 1);
   
   gst_atomic_int_inc (&data->refcount);
 
@@ -210,6 +210,9 @@ gst_data_ref_by_count (GstData *data, gint count)
   g_return_val_if_fail (data != NULL, NULL);
   g_return_val_if_fail (count >= 0, NULL);
   g_return_val_if_fail (GST_DATA_REFCOUNT_VALUE(data) > 0, NULL);
+
+  GST_CAT_LOG (GST_CAT_BUFFER, "%p %d->%d", data,
+               GST_DATA_REFCOUNT_VALUE (data), GST_DATA_REFCOUNT_VALUE (data) + count);
 
   gst_atomic_int_add (&data->refcount, count);
 
@@ -234,8 +237,8 @@ gst_data_unref (GstData *data)
 
   g_return_if_fail (data != NULL);
 
-  GST_CAT_LOG (GST_CAT_BUFFER, "unref data %p, count before unref is %d", 
-               data, GST_DATA_REFCOUNT_VALUE (data));
+  GST_CAT_LOG (GST_CAT_BUFFER, "%p %d->%d", data,
+               GST_DATA_REFCOUNT_VALUE (data), GST_DATA_REFCOUNT_VALUE (data) - 1);
   g_return_if_fail (GST_DATA_REFCOUNT_VALUE (data) > 0);
 
   zero = gst_atomic_int_dec_and_test (&data->refcount);

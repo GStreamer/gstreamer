@@ -1066,9 +1066,10 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
   /* then check to see if there's already a pad by that name here */
   g_return_if_fail (gst_object_check_uniqueness (element->pads, GST_PAD_NAME(pad)) == TRUE);
 
+  GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element, "adding pad '%s'",
+                       GST_STR_NULL (GST_OBJECT_NAME (pad)));
+
   /* set the pad's parent */
-  GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,"setting parent of pad '%s' to '%s'",
-        GST_PAD_NAME (pad), GST_STR_NULL (GST_ELEMENT_NAME (element)));
   gst_object_set_parent (GST_OBJECT (pad), GST_OBJECT (element));
 
   /* add it to the list */
@@ -1358,18 +1359,14 @@ void
 gst_element_class_add_pad_template (GstElementClass *klass, 
                                     GstPadTemplate *templ)
 {
-  GstPadTemplate *templ_copy;
-
-  g_return_if_fail (klass != NULL);
   g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
-  g_return_if_fail (templ != NULL);
   g_return_if_fail (GST_IS_PAD_TEMPLATE (templ));
+
   /* avoid registering pad templates with the same name */
   g_return_if_fail (gst_element_class_get_pad_template (klass, templ->name_template) == NULL);
   
-  templ_copy = g_memdup(templ, sizeof(GstPadTemplate));
-
-  klass->padtemplates = g_list_append (klass->padtemplates, templ_copy);
+  klass->padtemplates = g_list_append (klass->padtemplates,
+                                       gst_object_ref (GST_OBJECT (templ)));
   klass->numpadtemplates++;
 }
 
@@ -1500,37 +1497,37 @@ gst_element_get_compatible_pad_template (GstElement *element,
   GstPadTemplate *newtempl = NULL;
   GList *padlist;
 
-  GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "gst_element_get_compatible_pad_template()");
-
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (compattempl != NULL, NULL);
 
   padlist = gst_element_get_pad_template_list (element);
 
+  GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "Looking for a suitable pad template...");
+
   while (padlist) {
     GstPadTemplate *padtempl = (GstPadTemplate*) padlist->data;
-    gboolean comp = FALSE;
+    GstCaps *intersection;
 
     /* Ignore name
      * Ignore presence
      * Check direction (must be opposite)
      * Check caps
      */
-    GST_CAT_DEBUG (GST_CAT_CAPS, "checking direction and caps");
     if (padtempl->direction != compattempl->direction) {
-      GST_CAT_DEBUG (GST_CAT_CAPS, "compatible direction: found %s pad template",
-                     padtempl->direction == GST_PAD_SRC ? "src" : "sink");
+      GST_CAT_DEBUG (GST_CAT_CAPS, "compatible direction: found %s pad template \"%s\"",
+                     padtempl->direction == GST_PAD_SRC ? "src" : "sink",
+                     padtempl->name_template);
 
-      comp = gst_caps_is_always_compatible (GST_PAD_TEMPLATE_CAPS (compattempl),
-                                            GST_PAD_TEMPLATE_CAPS (padtempl));
+      intersection = gst_caps_intersect (GST_PAD_TEMPLATE_CAPS (compattempl),
+                                         GST_PAD_TEMPLATE_CAPS (padtempl));
 
-      GST_CAT_DEBUG (GST_CAT_CAPS, "caps are %scompatible", (comp ? "" : "not "));
+      GST_CAT_DEBUG (GST_CAT_CAPS, "caps are %scompatible", (intersection ? "" : "not "));
 
-      if (comp) {
+      if (intersection)
         newtempl = padtempl;
-        break;
-      }
+      gst_caps_free (intersection);
+      if (newtempl) break;
     }
 
     padlist = g_list_next (padlist);
@@ -1636,8 +1633,8 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  GST_DEBUG ("finding pad in %s compatible with %s:%s",
-        GST_ELEMENT_NAME (element), GST_DEBUG_PAD_NAME (pad));    
+  GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "finding pad in %s compatible with %s:%s",
+                 GST_ELEMENT_NAME (element), GST_DEBUG_PAD_NAME (pad));    
 
   /* let's use the real pad */
   pad = (GstPad *) GST_PAD_REALIZE (pad);
@@ -1685,8 +1682,9 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
     if (foundpad) return foundpad;
   //}
   
-  GST_DEBUG_OBJECT (element, "Could not find a compatible pad to link to %s:%s",
-      GST_DEBUG_PAD_NAME (pad));
+  GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element,
+                       "Could not find a compatible pad to link to %s:%s",
+                       GST_DEBUG_PAD_NAME (pad));
 
   return NULL;
 }
@@ -2636,9 +2634,9 @@ gst_element_set_state (GstElement *element, GstElementState state)
     return (GST_STATE_SUCCESS);
   }
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "setting state from %s to %s",
-                     gst_element_state_get_name (curpending),
-                     gst_element_state_get_name (state));
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "setting state from %s to %s",
+                       gst_element_state_get_name (curpending),
+                       gst_element_state_get_name (state));
 
   /* loop until the final requested state is set */
   while (GST_STATE (element) != state 
@@ -2655,9 +2653,9 @@ gst_element_set_state (GstElement *element, GstElementState state)
 
     if (curpending != state) {
       GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, 
-	                 "intermediate: setting state from %s to %s",
-			 gst_element_state_get_name (GST_STATE (element)),
-                         gst_element_state_get_name (curpending));
+                            "intermediate: setting state from %s to %s",
+                            gst_element_state_get_name (GST_STATE (element)),
+                            gst_element_state_get_name (curpending));
     }
 
     /* call the state change function so it can set the state */
@@ -2667,12 +2665,12 @@ gst_element_set_state (GstElement *element, GstElementState state)
 
     switch (return_val) {
       case GST_STATE_FAILURE:
-        GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, 
-	                   "have failed change_state return");
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, 
+                             "have failed change_state return");
         goto exit;
       case GST_STATE_ASYNC:
-        GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, 
-	                   "element will change state async");
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, 
+                             "element will change state async");
         goto exit;
       case GST_STATE_SUCCESS:
         /* Last thing we do is verify that a successful state change really
@@ -2818,17 +2816,17 @@ gst_element_change_state (GstElement *element)
 
   if (old_pending == GST_STATE_VOID_PENDING || 
       old_state == GST_STATE_PENDING (element)) {
-    GST_CAT_INFO (GST_CAT_STATES, 
-	      "no state change needed for element %s (VOID_PENDING)", 
-	      GST_ELEMENT_NAME (element));
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+                          "element is already in the %s state",
+                          gst_element_state_get_name (old_state));
     return GST_STATE_SUCCESS;
   }
   
-  GST_CAT_INFO (GST_CAT_STATES, "%s default handler sets state from %s to %s %04x", 
-            GST_ELEMENT_NAME (element),
-            gst_element_state_get_name (old_state),
-            gst_element_state_get_name (old_pending),
-	    old_transition);
+  GST_CAT_LOG_OBJECT (GST_CAT_STATES, element,
+                      "default handler sets state from %s to %s %04x", 
+                      gst_element_state_get_name (old_state),
+                      gst_element_state_get_name (old_pending),
+                      old_transition);
 
   /* we set the state change early for the negotiation functions */
   GST_STATE (element) = old_pending;
@@ -2872,17 +2870,17 @@ gst_element_change_state (GstElement *element)
 
   parent = GST_ELEMENT_PARENT (element);
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-                     "signaling state change from %s to %s",
-                     gst_element_state_get_name (old_state),
-                     gst_element_state_get_name (GST_STATE (element)));
+  GST_CAT_LOG_OBJECT (GST_CAT_STATES, element,
+                      "signaling state change from %s to %s",
+                      gst_element_state_get_name (old_state),
+                      gst_element_state_get_name (GST_STATE (element)));
 
   /* tell the scheduler if we have one */
   if (element->sched) {
     if (gst_scheduler_state_transition (element->sched, element, 
 	                                old_transition) != GST_STATE_SUCCESS) {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, 
-		         "scheduler could not change state");
+      GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, 
+                           "scheduler could not change state");
       goto failure;
     }
   }
@@ -3161,7 +3159,7 @@ gst_element_set_scheduler (GstElement *element,
 {
   g_return_if_fail (GST_IS_ELEMENT (element));
   
-  GST_CAT_INFO_OBJECT (GST_CAT_PARENTAGE, element, "setting scheduler to %p", sched);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, element, "setting scheduler to %p", sched);
 
   gst_object_replace ((GstObject **)&GST_ELEMENT_SCHED (element), GST_OBJECT (sched));
 }

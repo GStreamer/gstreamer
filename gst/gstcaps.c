@@ -22,7 +22,6 @@
 #endif
 #include <string.h>
 
-#include <gobject/gvaluecollector.h>
 #include <gst/gst.h>
 
 #define CAPS_POISON(caps) G_STMT_START{ \

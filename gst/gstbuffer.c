@@ -53,7 +53,7 @@ _gst_buffer_initialize (void)
   chunk = gst_mem_chunk_new ("GstBufferChunk", sizeof (GstBuffer), 
                              sizeof (GstBuffer) * 200, 0);
 
-  GST_CAT_INFO (GST_CAT_BUFFER, "Buffers are initialized now");
+  GST_CAT_LOG (GST_CAT_BUFFER, "Buffers are initialized now");
 }
 
 GType
@@ -268,7 +268,7 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
   gst_alloc_trace_new (_gst_buffer_trace, buffer);
 #endif
 
-  GST_CAT_LOG (GST_CAT_BUFFER, "new subbuffer %p", buffer);
+  GST_CAT_LOG (GST_CAT_BUFFER, "new subbuffer %p (parent %p)", buffer, parent);
 
   /* make sure nobody overwrites data in the new buffer 
    * by setting the READONLY flag */

@@ -1,3 +1,39 @@
+2004-02-20  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstbin.c:
+	* gst/gstbuffer.c:
+	* gst/gstplugin.c:
+	* gst/registries/gstxmlregistry.c: 
+	* gst/schedulers/gstoptimalscheduler.c: Debugging tweaks.
+
+	* gst/gstelement.c (gst_element_set_scheduler): Debugging fixes.
+	(gst_element_add_pad): DEBUG->INFO, some fixes.
+	(gst_element_get_compatible_pad_template): Just see if the
+	templates' caps intersect, not if one is a strict subset of the
+	other. This conforms more to what gst_pad_link_intersect() does.
+	(gst_element_class_add_pad_template): Don't memcpy the pad
+	template, just ref it.
+	(gst_element_get_compatible_pad_filtered): Clean up debug messages
+
+	* gst/gstpad.c (gst_pad_can_link_filtered): Debug a true result.
+	(gst_pad_link_filtered): Debug changes.
+	(gst_pad_link_prepare): New function, consolidated from
+	can_link_filtered and link_filtered.
+
+	* gst/parse/grammar.y (gst_parse_perform_link): Made INFO output
+	look more like that of the functions in gstelement.c
+
+	* gst/gstinfo.c (gst_debug_print_object): Put a space before the
+	object, and return the empty string if object is NULL.
+
+	* gst/parse/parse.l: Remove trailing newlines when calling PRINT.
+	* gst/parse/grammar.y (YYFPRINTF): Log bison debugging info via
+	LOG, not DEBUG. We still get flex info on debug.
+
+	* gst/registries/gstxmlregistry.c (gst_xml_registry_load): Make
+	debug string more verbose.
+	(plugin_times_older_than): DEBUG->LOG.
+
 2004-02-20  Julien MOUTTE <julien@moutte.net>
 
 	* gst/gsttag.h: Adding video-codec and audio-codec for demuxers which
@@ -280,6 +316,7 @@
           require gettext 0.11.5 so ulonglong.m4 gets checked out and copied
           by autopoint (fixes #132996)
 
+>>>>>>> 1.260
 2004-02-10  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstpad.c (gst_pad_custom_new): Add a FIXME, this is a hacky
@@ -739,7 +776,6 @@
 	* gst/gstelement.c: (gst_element_default_error):
           suffix error messages with period
 
->>>>>>> 1.206
 2004-01-31  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/elements/gstfilesrc.c: (gst_filesrc_open_file):

@@ -461,9 +461,9 @@ plugin_times_older_than(GList *paths, time_t regtime)
    */
 
   while (paths) {
-    GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING,
-                      "comparing plugin times from %s with %ld\n",
-                      (gchar *)paths->data, (long) regtime);
+    GST_CAT_LOG (GST_CAT_PLUGIN_LOADING,
+                 "comparing plugin times from %s with %ld",
+                 (gchar *)paths->data, (long) regtime);
     if(!plugin_times_older_than_recurse(paths->data, regtime))
       return FALSE;
     paths = g_list_next(paths);
@@ -619,8 +619,8 @@ gst_xml_registry_load (GstRegistry *registry)
   seconds = g_timer_elapsed (timer, NULL);
   g_timer_destroy (timer);
 
-  GST_INFO ( "registry: loaded %s in %f seconds\n          (%s)", 
-	   registry->name, seconds, xmlregistry->location);
+  GST_INFO ("loaded %s in %f seconds (%s)", 
+            registry->name, seconds, xmlregistry->location);
 
   CLASS (xmlregistry)->close_func (xmlregistry);
 

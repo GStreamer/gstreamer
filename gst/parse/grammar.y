@@ -113,7 +113,7 @@ typedef struct {
  */
 #  define YYFPRINTF(a, ...) G_STMT_START{ \
      gchar *temp = g_strdup_printf (__VA_ARGS__); \
-     GST_CAT_DEBUG (GST_CAT_PIPELINE, temp); \
+     GST_CAT_LOG (GST_CAT_PIPELINE, temp); \
      g_free (temp); \
    }G_STMT_END
 #endif
@@ -138,7 +138,7 @@ typedef struct {
  */
 #  define YYFPRINTF(a, args...) G_STMT_START{ \
      gchar *temp = g_strdup_printf ( args ); \
-     GST_CAT_DEBUG (GST_CAT_PIPELINE, temp); \
+     GST_CAT_LOG (GST_CAT_PIPELINE, temp); \
      g_free (temp); \
    }G_STMT_END
 #endif
@@ -462,9 +462,10 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
   g_assert (GST_IS_ELEMENT (src));
   g_assert (GST_IS_ELEMENT (sink));
   
-  GST_CAT_INFO (GST_CAT_PIPELINE, "linking %s(%s):%u to %s(%s):%u with caps \"%" GST_PTR_FORMAT "\"", 
-                GST_ELEMENT_NAME (src), link->src_name ? link->src_name : "---", g_slist_length (srcs),
-                GST_ELEMENT_NAME (sink), link->sink_name ? link->sink_name : "---", g_slist_length (sinks),
+  GST_CAT_INFO (GST_CAT_PIPELINE, "linking %s:%s to %s:%s (%u/%u) with caps \"%" GST_PTR_FORMAT "\"", 
+                GST_ELEMENT_NAME (src), link->src_name ? link->src_name : "(any)",
+                GST_ELEMENT_NAME (sink), link->sink_name ? link->sink_name : "(any)",
+                g_slist_length (srcs), g_slist_length (sinks),
 	        link->caps);
 
   if (!srcs || !sinks) {
@@ -791,7 +792,7 @@ static int
 yyerror (const char *s)
 {
   /* FIXME: This should go into the GError somehow, but how? */
-  g_warning ("error: %s\n", s);
+  g_warning ("error: %s", s);
   return -1;
 }
 
@@ -830,7 +831,7 @@ _gst_parse_launch (const gchar *str, GError **error)
   }
   g_free (dstr);
   
-  GST_CAT_INFO (GST_CAT_PIPELINE, "got %u elements and %u links", g.chain ? g_slist_length (g.chain->elements) : 0, g_slist_length (g.links));
+  GST_CAT_DEBUG (GST_CAT_PIPELINE, "got %u elements and %u links", g.chain ? g_slist_length (g.chain->elements) : 0, g_slist_length (g.links));
   
   if (!g.chain) {
     ret = NULL;

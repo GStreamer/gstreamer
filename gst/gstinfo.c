@@ -365,7 +365,7 @@ gst_debug_print_object (gpointer ptr)
 
   /* nicely printed object */
   if (object == NULL) {
-    return g_strdup ("NULL");
+    return g_strdup ("(NULL)");
   }
   if (*(GType *)ptr == GST_TYPE_CAPS) {
     return gst_caps_to_string ((GstCaps *)ptr);
@@ -472,9 +472,9 @@ gst_debug_log_default (GstDebugCategory *category, GstDebugLevel level,
     pidcolor = g_strdup ("");
   }
 
-  obj = gst_debug_print_object (object);
+  obj = object ? gst_debug_print_object (object) : g_strdup ("");
 
-  g_printerr ("%s %s%15s%s(%s%5d%s) %s%s(%d):%s: %s%s %s\n", 
+  g_printerr ("%s %s%15s%s(%s%5d%s) %s%s(%d):%s:%s%s %s\n", 
   	      gst_debug_level_get_name (level),
               color, gst_debug_category_get_name (category), clear,
               pidcolor, pid, clear,

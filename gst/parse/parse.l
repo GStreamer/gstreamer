@@ -55,7 +55,7 @@ _link ("!"[[:space:]]*{_caps}([[:space:]]*";"[[:space:]]*{_caps})*[[:space:]]*"!
 
 {_assignment} {
     /* "=" */
-    PRINT ("ASSIGNMENT: %s\n", yytext);
+    PRINT ("ASSIGNMENT: %s", yytext);
     lvalp->s = gst_parse_strdup (yytext);
     BEGIN (INITIAL);
     return ASSIGNMENT;
@@ -63,14 +63,14 @@ _link ("!"[[:space:]]*{_caps}([[:space:]]*";"[[:space:]]*{_caps})*[[:space:]]*"!
 
 {_padref} {
     yytext++;
-    PRINT ("PADREF: %s\n", yytext);
+    PRINT ("PADREF: %s", yytext);
     lvalp->s = gst_parse_strdup (yytext);
     BEGIN (INITIAL);
     return PADREF;
 }
 
 {_ref} {
-    PRINT ("REF: %s\n", yytext);
+    PRINT ("REF: %s", yytext);
     lvalp->s = gst_parse_strdup (yytext);
     BEGIN (INITIAL);
     return REF;
@@ -80,14 +80,14 @@ _link ("!"[[:space:]]*{_caps}([[:space:]]*";"[[:space:]]*{_caps})*[[:space:]]*"!
     gchar *pos = yytext;
     while (!g_ascii_isspace (*pos) && (*pos != '.')) pos++;
     *pos = '\0';
-    PRINT ("BINREF: %s\n", yytext);
+    PRINT ("BINREF: %s", yytext);
     lvalp->s = gst_parse_strdup (yytext);
     BEGIN (INITIAL);
     return BINREF;
 }
 
 {_identifier} {
-    PRINT ("IDENTIFIER: %s\n", yytext);
+    PRINT ("IDENTIFIER: %s", yytext);
     lvalp->s = gst_parse_strdup (yytext);
     BEGIN (INITIAL);
     return IDENTIFIER;
@@ -95,7 +95,7 @@ _link ("!"[[:space:]]*{_caps}([[:space:]]*";"[[:space:]]*{_caps})*[[:space:]]*"!
 
 {_link} {
     gchar *c = yytext;
-    PRINT ("LINK: %s\n", yytext);
+    PRINT ("LINK: %s", yytext);
     c++;
     if (*c) {
       while (g_ascii_isspace (*c)) c++;
@@ -111,7 +111,7 @@ _link ("!"[[:space:]]*{_caps}([[:space:]]*";"[[:space:]]*{_caps})*[[:space:]]*"!
     return LINK;
 }
 {_url} {
-  PRINT ("URL: %s\n", yytext);
+  PRINT ("URL: %s", yytext);
   if (gst_uri_is_valid (yytext)) {
     lvalp->s = g_strdup (yytext);
   } else {
@@ -122,9 +122,9 @@ _link ("!"[[:space:]]*{_caps}([[:space:]]*";"[[:space:]]*{_caps})*[[:space:]]*"!
   return PARSE_URL;
 }
 
-{_operator} { PRINT ("OPERATOR: [%s]\n", yytext); return *yytext; }
+{_operator} { PRINT ("OPERATOR: [%s]", yytext); return *yytext; }
 
-[[:space:]]+ { PRINT ("SPACE: [%s]\n", yytext); }
+[[:space:]]+ { PRINT ("SPACE: [%s]", yytext); }
 
 . {
     printf ("???: %s\n", yytext);

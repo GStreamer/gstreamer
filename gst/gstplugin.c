@@ -200,7 +200,7 @@ gst_plugin_register_func (GstPlugin *plugin, GModule *module, GstPluginDesc *des
     return FALSE;
   }
   
-  if (GST_CAT_DEFAULT) GST_DEBUG ("plugin \"%s\" initialised", GST_STR_NULL (plugin->filename));
+  if (GST_CAT_DEFAULT) GST_LOG ("plugin \"%s\" initialised", GST_STR_NULL (plugin->filename));
 
   return plugin;
 }

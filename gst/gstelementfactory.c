@@ -110,8 +110,9 @@ gst_element_factory_find (const gchar *name)
   if (feature)
     return GST_ELEMENT_FACTORY (feature);
 
-  /* this should be an ERROR */
-  GST_DEBUG ("no such elementfactory \"%s\"", name);
+  /* this isn't an error, for instance when you query if an element factory is
+   * present */
+  GST_LOG ("no such element factory \"%s\"", name);
   return NULL;
 }
 
@@ -261,8 +262,11 @@ gst_element_factory_create (GstElementFactory *factory,
     return NULL;
   }
 
-  GST_LOG_OBJECT (factory, "creating element (name \"%s\", type %d)", 
-           GST_STR_NULL (name), (gint) factory->type);
+  if (name)
+    GST_INFO ("creating \"%s\" named \"%s\"", GST_PLUGIN_FEATURE_NAME (factory),
+              GST_STR_NULL (name));
+  else
+    GST_INFO ("creating \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
 
   if (factory->type == 0) {
       g_critical ("Factory for `%s' has no type",
@@ -271,10 +275,8 @@ gst_element_factory_create (GstElementFactory *factory,
   }
 
   oclass = GST_ELEMENT_CLASS (g_type_class_ref (factory->type)); 	 
-  if (oclass->elementfactory == NULL) { 	 
-    GST_DEBUG ("class %s", GST_PLUGIN_FEATURE_NAME (factory)); 	 
+  if (oclass->elementfactory == NULL)
     oclass->elementfactory = factory;
-  }
 
   /* create an instance of the element */
   element = GST_ELEMENT (g_object_new (factory->type, NULL));
