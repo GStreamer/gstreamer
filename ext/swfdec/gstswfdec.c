@@ -631,6 +631,9 @@ swf_type_find(GstBuffer *buf, gpointer private)
 {
 	gchar *data = GST_BUFFER_DATA(buf);
 
+	if (GST_BUFFER_SIZE (buf) < 4)
+	  return NULL;
+
 	if((data[0] != 'F' && data[0] != 'C') ||
 	    data[1] != 'W' || data[2] != 'S')return NULL;
 

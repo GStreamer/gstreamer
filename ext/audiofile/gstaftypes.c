@@ -58,7 +58,7 @@ gst_aftypes_type_find(GstBuffer *buf, gpointer private)
   int file_format, format_version;
   gchar *type;
 
-  g_print("calling gst_aftypes_type_find\n");
+  GST_DEBUG("calling gst_aftypes_type_find");
 
   buffer_wrap->buffer = buf;
   buffer_wrap->offset = 0;
@@ -76,7 +76,7 @@ gst_aftypes_type_find(GstBuffer *buf, gpointer private)
   file_format = afGetFileFormat (file, &format_version);
   afCloseFile (file);
 
-  g_print("file format: %d\n", file_format);
+  GST_DEBUG("file format: %d", file_format);
 
   /* reject raw data, just in case it is some other format */
   if (file_format == AF_FILE_UNKNOWN ||

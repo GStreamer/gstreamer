@@ -132,6 +132,9 @@ static GstElementClass *parent_class = NULL;
 static GstCaps* 
 modplug_type_find (GstBuffer *buf, gpointer priv) 
 {  
+  if (GST_BUFFER_SIZE (buf) < 75)
+    return NULL;
+
   if (MOD_CheckType (buf)     ||
       Mod_669_CheckType (buf) ||
       Amf_CheckType (buf)     ||

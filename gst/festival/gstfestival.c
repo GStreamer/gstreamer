@@ -203,8 +203,12 @@ text_type_find (GstBuffer *buf, gpointer private)
   gchar *data = GST_BUFFER_DATA (buf);
   gint i;
 
+  /* 20 is arbitrary.  4 is definitely too small. */
+  if (GST_BUFFER_SIZE (buf) < 20)
+    return NULL;
+
   for (i=0; i<GST_BUFFER_SIZE (buf); i++) {
-    if (!isprint(*(data+i)))
+    if (!isprint(data[i]) && data[i]!='\n')
       return NULL;
   }
 

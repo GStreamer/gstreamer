@@ -167,6 +167,9 @@ cdxa_type_find (GstBuffer *buf,
 
   GST_DEBUG ("cdxa_parse: typefind");
 
+  if (GST_BUFFER_SIZE (buf) < 12)
+    return NULL;
+
   if (GUINT32_FROM_LE (((guint32 *)data)[0]) != GST_RIFF_TAG_RIFF)
     return NULL;
   if (GUINT32_FROM_LE (((guint32 *)data)[2]) != GST_RIFF_RIFF_CDXA)
