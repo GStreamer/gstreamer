@@ -1,5 +1,10 @@
 2005-02-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/modplug/gstmodplug.cc:
+	  Add missing break causing position queries to fail.
+
+2005-02-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_populate):
 	  Granpos can apparently be -1, which screws up calculations...
 
