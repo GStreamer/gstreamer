@@ -598,7 +598,7 @@ void
 gst_main_quit (void) 
 {
   if (!mainloops)
-    g_warning ("Quit more loops than there are");
+    g_error ("Quit more loops than there are");
   else {
     GMainLoop *loop = mainloops->data;
     mainloops = g_slist_delete_link (mainloops, mainloops);
