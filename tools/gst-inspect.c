@@ -1015,7 +1015,8 @@ print_element_features (const gchar * element_name)
     return 0;
   }
 #endif
-  return 0;
+
+  return -1;
 }
 
 int
@@ -1045,7 +1046,6 @@ main (int argc, char *argv[])
     /* only search for a factory if there's not a '.so' */
     if (!strstr (argv[1], ".so")) {
       factory = gst_element_factory_find (argv[1]);
-
       /* if there's a factory, print out the info */
       if (factory) {
         GstElement *element;
