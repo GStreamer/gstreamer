@@ -215,6 +215,8 @@ static GstOptSchedulerGroup *add_to_group (GstOptSchedulerGroup * group,
     GstElement * element);
 static GstOptSchedulerGroup *remove_from_group (GstOptSchedulerGroup * group,
     GstElement * element);
+static void group_dec_links_for_element (GstOptSchedulerGroup * group,
+    GstElement * element);
 static GstOptSchedulerGroup *merge_groups (GstOptSchedulerGroup * group1,
     GstOptSchedulerGroup * group2);
 static void setup_group_scheduler (GstOptScheduler * osched,
@@ -845,6 +847,10 @@ remove_from_group (GstOptSchedulerGroup * group, GstElement * element)
   g_assert (group != NULL);
   g_assert (element != NULL);
   g_assert (GST_ELEMENT_SCHED_GROUP (element) == group);
+
+  /* first decrement the links that this group has with other groups through
+   * this element */
+  group_dec_links_for_element (group, element);
 
   group->elements = g_slist_remove (group->elements, element);
   group->num_elements--;
@@ -1612,6 +1618,7 @@ group_dec_link (GstOptSchedulerGroup * group1, GstOptSchedulerGroup * group2)
     links = g_slist_next (links);
 
     if (IS_GROUP_LINK (link, group1, group2)) {
+      g_assert (link->count > 0);
       link->count--;
       GST_LOG ("link count between %p and %p is now %d",
           group1, group2, link->count);
@@ -2073,6 +2080,11 @@ group_can_reach_group (GstOptSchedulerGroup * group,
   return reachable;
 }
 
+/*
+ * Go through all the pads of the given element and decrement the links that
+ * this group has with the group of the element.  This function is mainly used
+ * to update the group connections before we remove element from the group.
+ */
 static void
 group_dec_links_for_element (GstOptSchedulerGroup * group, GstElement * element)
 {
@@ -2215,7 +2227,6 @@ gst_opt_scheduler_pad_unlink (GstScheduler * sched,
           }
 
           if (linkcount < 2) {
-            group_dec_links_for_element (group, element);
             remove_from_group (group, element);
           }
           /* if linkcount == 2, it will be unlinked later on */
@@ -2239,8 +2250,6 @@ gst_opt_scheduler_pad_unlink (GstScheduler * sched,
           !GST_ELEMENT_IS_DECOUPLED (src_element)) {
         GST_LOG ("el ement1 is separated from the group");
 
-        /* have to decrement links to other groups from other pads */
-        group_dec_links_for_element (group, src_element);
         remove_from_group (group, src_element);
       } else {
         GST_LOG ("src_element is decoupled or entry in loop based group");
@@ -2255,8 +2264,6 @@ gst_opt_scheduler_pad_unlink (GstScheduler * sched,
           !GST_ELEMENT_IS_DECOUPLED (sink_element)) {
         GST_LOG ("sink_element is separated from the group");
 
-        /* have to decrement links to other groups from other pads */
-        group_dec_links_for_element (group, sink_element);
         remove_from_group (group, sink_element);
       } else {
         GST_LOG ("sink_element is decoupled or entry in loop based group");
