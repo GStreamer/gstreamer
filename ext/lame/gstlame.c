@@ -354,7 +354,7 @@ gst_lame_sink_link (GstPad *pad, const GstCaps *caps)
   gst_structure_get_int (structure, "channels", &lame->num_channels);
 
   if (!gst_lame_setup (lame)) {
-    gst_element_error (lame, CORE, NEGOTIATION, NULL,
+    GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, NULL,
 	               ("could not initialize encoder (wrong parameters?)"));
     return GST_PAD_LINK_REFUSED;
   }
@@ -785,7 +785,7 @@ gst_lame_chain (GstPad *pad, GstData *_data)
 
     if (!lame->initialized) {
       gst_buffer_unref (buf);
-      gst_element_error (lame, CORE, NEGOTIATION, NULL, ("encoder not initialized (input is not audio?)"));
+      GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, NULL, ("encoder not initialized (input is not audio?)"));
       return;
     }
 
