@@ -264,7 +264,7 @@ print_element_info (GstElementFactory *factory)
 // FIXME should say whether it's read-only or not
     gtk_object_getv (GTK_OBJECT (element), num_args, args2);
 
-    printf("  %s: ",args[i].name);
+    printf("  %-40.40s: ",args[i].name);
     switch (args[i].type) {
       case GTK_TYPE_STRING: printf("String (Default \"%s\")", GTK_VALUE_STRING (args2[i]));break;
       case GTK_TYPE_BOOL: printf("Boolean (Default %s)", (GTK_VALUE_BOOL (args2[i])?"true":"false"));break;
