@@ -5,7 +5,7 @@ includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
 
 Name: GStreamer Plugin Libraries
 Description: Streaming-media framework, plugin libraries
-Requires: gstreamer-@GST_MAJORMINOR@
+Requires: gstreamer-@GST_MAJORMINOR@ 
 Version: @VERSION@
 Libs: 
 Cflags: -I${includedir}

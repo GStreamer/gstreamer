@@ -294,6 +294,7 @@ GStreamer support libraries header files.
 %{_libdir}/pkgconfig/gstreamer-libs-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-media-info-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-play-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-plugins-%{majorminor}.pc
 # .so files
 @USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so
 %{_libdir}/libgstmedia-info-%{majorminor}.so

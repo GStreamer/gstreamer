@@ -5,7 +5,7 @@ includedir=${pcfiledir}/../gst-libs
 
 Name: GStreamer Play Library, uninstalled
 Description: Streaming-media framework, play libraries, not installed
-Requires: gstreamer-@GST_MAJORMINOR@ >= @VERSION@ \
+Requires: gstreamer-@GST_MAJORMINOR@ \
           gstreamer-interfaces-@GST_MAJORMINOR@ >= @VERSION@
           gstreamer-control-@GST_MAJORMINOR@ >= @VERSION@
 Version: @VERSION@

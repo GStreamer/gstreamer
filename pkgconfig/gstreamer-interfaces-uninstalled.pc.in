@@ -5,7 +5,7 @@ includedir=${pcfiledir}/../gst-libs
 
 Name: GStreamer Interfaces library, uninstalled
 Description: Streaming-media framework, interfaces library, not installed
-Requires: gstreamer-@GST_MAJORMINOR@ >= @VERSION@
+Requires: gstreamer-@GST_MAJORMINOR@
 Version: @VERSION@
 
 Libs: ${libdir}/libgstinterfaces-@GST_MAJORMINOR@.la

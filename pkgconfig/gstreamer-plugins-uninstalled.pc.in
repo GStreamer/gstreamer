@@ -3,8 +3,8 @@ exec_prefix=
 libdir=${pcfiledir}/../gst-libs/gst
 includedir=${pcfiledir}/../gst-libs
 
-Name: GStreamer Uninstalled Media-Specific Libraries
-Description: Streaming-media framework media-specific libraries, not installed
+Name: GStreamer Uninstalled Plugin Libraries
+Description: Streaming-media framework plugin libraries, not installed
 Version: @VERSION@
 Requires: gstreamer-@GST_MAJORMINOR@
 
