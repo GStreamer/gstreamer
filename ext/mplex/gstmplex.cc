@@ -314,9 +314,6 @@ gst_mplex_sink_link (GstPad        *pad,
   }
 
   /* we do the actual inputstream setup in our first loopfunc cycle */
-g_print ("Pad %s linked with caps %s\n",
-	 gst_pad_get_name (pad),
-	 gst_caps_to_string (caps));
   return GST_PAD_LINK_OK;
 }
 
