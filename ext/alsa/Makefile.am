@@ -13,5 +13,3 @@ libgstalsa_la_LIBADD = $(ALSA_LIBS) \
 noinst_HEADERS = \
   gstalsa.h gstalsaclock.h gstalsasink.h gstalsasrc.h \
   gstalsamixer.h gstalsamixertrack.h
-
-EXTRA_DIST = README
