@@ -190,7 +190,7 @@ gst_thread_get_arg (GtkObject *object,
 GstElement*
 gst_thread_new (guchar *name) 
 {
-  return gst_elementfactory_make ("bin", name);
+  return gst_elementfactory_make ("thread", name);
 }
 
 
