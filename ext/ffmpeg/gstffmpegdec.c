@@ -472,7 +472,12 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
 
   /* parse cache joining */
   if (ffmpegdec->pcache) {
+GST_LOG ("Joining %p[%lld/%d]&&%p[%lld/%d]",
+	 ffmpegdec->pcache, GST_BUFFER_OFFSET (ffmpegdec->pcache),
+	 GST_BUFFER_SIZE (ffmpegdec->pcache), inbuf,
+	 GST_BUFFER_OFFSET (inbuf), GST_BUFFER_SIZE (inbuf));
     inbuf = gst_buffer_join (ffmpegdec->pcache, inbuf);
+GST_LOG ("done");
     ffmpegdec->pcache = NULL;
     bdata = GST_BUFFER_DATA (inbuf);
     bsize = GST_BUFFER_SIZE (inbuf);
@@ -493,7 +498,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
 
   do {
     /* parse, if at all possible */
-    if (ffmpegdec->pctx && ffmpegdec->context->codec_id != CODEC_ID_MP3) {
+    if (ffmpegdec->pctx && ffmpegdec->context->codec_id != CODEC_ID_MP3 && 
+	ffmpegdec->context->codec_id != CODEC_ID_MJPEG) {
       gint res;
 
       res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
@@ -613,7 +619,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
         gst_buffer_unref (outbuf);
     }
 
-    if (!ffmpegdec->pctx || ffmpegdec->context->codec_id == CODEC_ID_MP3) {
+    if (!ffmpegdec->pctx || ffmpegdec->context->codec_id == CODEC_ID_MP3 || 
+	ffmpegdec->context->codec_id == CODEC_ID_MJPEG) {
       bsize -= len;
       bdata += len;
     }
