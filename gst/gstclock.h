@@ -69,13 +69,13 @@ typedef enum {
   /* --- protected --- */
   GST_CLOCK_ENTRY_OK,
   GST_CLOCK_ENTRY_EARLY,
-  GST_CLOCK_ENTRY_RESTART,
+  GST_CLOCK_ENTRY_RESTART
 } GstClockEntryStatus;
 
 typedef enum {
   /* --- protected --- */
   GST_CLOCK_ENTRY_SINGLE,
-  GST_CLOCK_ENTRY_PERIODIC,
+  GST_CLOCK_ENTRY_PERIODIC
 } GstClockEntryType;
 
 #define GST_CLOCK_ENTRY(entry)		((GstClockEntry *)(entry))
@@ -112,7 +112,7 @@ typedef enum
   GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC   = (1 << 3),
   GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC  = (1 << 4),
   GST_CLOCK_FLAG_CAN_SET_RESOLUTION     = (1 << 5),
-  GST_CLOCK_FLAG_CAN_SET_SPEED          = (1 << 6),
+  GST_CLOCK_FLAG_CAN_SET_SPEED          = (1 << 6)
 } GstClockFlags;
 
 #define GST_CLOCK_FLAGS(clock)  (GST_CLOCK(clock)->flags)

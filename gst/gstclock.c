@@ -38,7 +38,7 @@ static GstAllocTrace *_gst_clock_entry_trace;
 enum {
   ARG_0,
   ARG_STATS,
-  ARG_MAX_DIFF,
+  ARG_MAX_DIFF
 };
 
 static GstMemChunk   *_gst_clock_entries_chunk;
@@ -166,6 +166,7 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff *jitter)
   requested = GST_CLOCK_ENTRY_TIME (entry);
 
   if (! GST_CLOCK_TIME_IS_VALID (requested)) {
+    GST_DEBUG (GST_CAT_CLOCK, "invalid time requested, returning _TIMEOUT");
     return GST_CLOCK_TIMEOUT;
   }
 
@@ -179,10 +180,12 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff *jitter)
     clock->entries = g_list_prepend (clock->entries, entry);
     GST_UNLOCK (clock);
 
+    GST_DEBUG (GST_CAT_CLOCK, "waiting on clock");
     do {
       res = cclass->wait (clock, entry);
     }
     while (res == GST_CLOCK_ENTRY_RESTART);
+    GST_DEBUG (GST_CAT_CLOCK, "done waiting");
 
     GST_LOCK (clock);
     clock->entries = g_list_remove (clock->entries, entry);

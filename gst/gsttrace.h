@@ -72,7 +72,7 @@ void 		gst_trace_read_tsc		(gint64 *dst);
 typedef enum
 {
   GST_ALLOC_TRACE_LIVE		= (1 << 0),
-  GST_ALLOC_TRACE_MEM_LIVE	= (1 << 1),
+  GST_ALLOC_TRACE_MEM_LIVE	= (1 << 1)
 } GstAllocTraceFlags;
 
 typedef struct _GstAllocTrace 	GstAllocTrace;
