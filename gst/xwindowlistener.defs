@@ -1,0 +1,41 @@
+;; -*- scheme -*-
+; object definitions ...
+(define-object XWindowListener
+  (in-module "Gst")
+  (parent "GObject")
+  (c-name "GstXWindowListener")
+  (gtype-id "GST_TYPE_XWINDOW_LISTENER")
+)
+
+;; Enumerations and flags ...
+
+
+;; From /opt/gnome/include/gstreamer-0.7/gst/xwindowlistener/xwindowlistener.h
+
+(define-function gst_x_window_listener_get_type
+  (c-name "gst_x_window_listener_get_type")
+  (return-type "GType")
+)
+
+(define-function gst_x_window_listener_new
+  (c-name "gst_x_window_listener_new")
+  (is-constructor-of "GstXWindowListener")
+  (return-type "GstXWindowListener*")
+  (parameters
+    '("gchar*" "display")
+    '("MapWindowFunc" "map_window_func")
+    '("SetWindowFunc" "set_window_func")
+    '("gpointer" "private_data")
+  )
+)
+
+(define-method set_xid
+  (of-object "GstXWindowListener")
+  (c-name "gst_x_window_listener_set_xid")
+  (return-type "none")
+  (parameters
+    '("XID" "id")
+  )
+)
+
+

@@ -1,0 +1,526 @@
+;; -*- scheme -*-
+
+(include "xoverlay.defs")
+
+; object definitions ...
+;(define-object XWindowListener
+;  (in-module "Gst")
+;  (parent "GObject")
+;  (c-name "GstXWindowListener")
+;  (gtype-id "GST_TYPE_X_WINDOW_LISTENER")
+;)
+
+;; Enumerations and flags ...
+
+(define-enum ColorBalanceType
+  (in-module "Gst")
+  (c-name "GstColorBalanceType")
+  (gtype-id "GST_TYPE_COLOR_BALANCE_TYPE")
+  (values
+    '("hardware" "GST_COLOR_BALANCE_HARDWARE")
+    '("software" "GST_COLOR_BALANCE_SOFTWARE")
+  )
+)
+
+(define-enum MixerType
+  (in-module "Gst")
+  (c-name "GstMixerType")
+  (gtype-id "GST_TYPE_MIXER_TYPE")
+  (values
+    '("hardware" "GST_MIXER_HARDWARE")
+    '("software" "GST_MIXER_SOFTWARE")
+  )
+)
+
+
+;; From /opt/gnome/include/gstreamer-0.7/gst/colorbalance/colorbalance.h
+
+(define-function gst_color_balance_get_type
+  (c-name "gst_color_balance_get_type")
+  (return-type "GType")
+)
+
+(define-method list_channels
+  (of-object "GstColorBalance")
+  (c-name "gst_color_balance_list_channels")
+  (return-type "const-GList*")
+)
+
+(define-method set_value
+  (of-object "GstColorBalance")
+  (c-name "gst_color_balance_set_value")
+  (return-type "none")
+  (parameters
+    '("GstColorBalanceChannel*" "channel")
+    '("gint" "value")
+  )
+)
+
+(define-method get_value
+  (of-object "GstColorBalance")
+  (c-name "gst_color_balance_get_value")
+  (return-type "gint")
+  (parameters
+    '("GstColorBalanceChannel*" "channel")
+  )
+)
+
+(define-method value_changed
+  (of-object "GstColorBalance")
+  (c-name "gst_color_balance_value_changed")
+  (return-type "none")
+  (parameters
+    '("GstColorBalanceChannel*" "channel")
+    '("gint" "value")
+  )
+)
+
+
+
+;; From /opt/gnome/include/gstreamer-0.7/gst/mixer/mixer.h
+
+(define-function gst_mixer_get_type
+  (c-name "gst_mixer_get_type")
+  (return-type "GType")
+)
+
+(define-method list_tracks
+  (of-object "GstMixer")
+  (c-name "gst_mixer_list_tracks")
+  (return-type "const-GList*")
+)
+
+(define-method set_volume
+  (of-object "GstMixer")
+  (c-name "gst_mixer_set_volume")
+  (return-type "none")
+  (parameters
+    '("GstMixerTrack*" "track")
+    '("gint*" "volumes")
+  )
+)
+
+(define-method get_volume
+  (of-object "GstMixer")
+  (c-name "gst_mixer_get_volume")
+  (return-type "none")
+  (parameters
+    '("GstMixerTrack*" "track")
+    '("gint*" "volumes")
+  )
+)
+
+(define-method set_mute
+  (of-object "GstMixer")
+  (c-name "gst_mixer_set_mute")
+  (return-type "none")
+  (parameters
+    '("GstMixerTrack*" "track")
+    '("gboolean" "mute")
+  )
+)
+
+(define-method set_record
+  (of-object "GstMixer")
+  (c-name "gst_mixer_set_record")
+  (return-type "none")
+  (parameters
+    '("GstMixerTrack*" "track")
+    '("gboolean" "record")
+  )
+)
+
+(define-method mute_toggled
+  (of-object "GstMixer")
+  (c-name "gst_mixer_mute_toggled")
+  (return-type "none")
+  (parameters
+    '("GstMixerTrack*" "track")
+    '("gboolean" "mute")
+  )
+)
+
+(define-method record_toggled
+  (of-object "GstMixer")
+  (c-name "gst_mixer_record_toggled")
+  (return-type "none")
+  (parameters
+    '("GstMixerTrack*" "track")
+    '("gboolean" "record")
+  )
+)
+
+(define-method volume_changed
+  (of-object "GstMixer")
+  (c-name "gst_mixer_volume_changed")
+  (return-type "none")
+  (parameters
+    '("GstMixerTrack*" "track")
+    '("gint*" "volumes")
+  )
+)
+
+
+
+;; From /opt/gnome/include/gstreamer-0.7/gst/navigation/navigation.h
+
+(define-function gst_navigation_get_type
+  (c-name "gst_navigation_get_type")
+  (return-type "GType")
+)
+
+(define-method send_event
+  (of-object "GstNavigation")
+  (c-name "gst_navigation_send_event")
+  (return-type "none")
+  (parameters
+    '("GstStructure*" "structure")
+  )
+)
+
+(define-method send_key_event
+  (of-object "GstNavigation")
+  (c-name "gst_navigation_send_key_event")
+  (return-type "none")
+  (parameters
+    '("const-char*" "event")
+    '("const-char*" "key")
+  )
+)
+
+(define-method send_mouse_event
+  (of-object "GstNavigation")
+  (c-name "gst_navigation_send_mouse_event")
+  (return-type "none")
+  (parameters
+    '("const-char*" "event")
+    '("int" "button")
+    '("double" "x")
+    '("double" "y")
+  )
+)
+
+
+
+;; From /opt/gnome/include/gstreamer-0.7/gst/propertyprobe/propertyprobe.h
+
+(define-function gst_property_probe_get_type
+  (c-name "gst_property_probe_get_type")
+  (return-type "GType")
+)
+
+(define-method get_properties
+  (of-object "GstPropertyProbe")
+  (c-name "gst_property_probe_get_properties")
+  (return-type "const-GList*")
+)
+
+(define-method get_property
+  (of-object "GstPropertyProbe")
+  (c-name "gst_property_probe_get_property")
+  (return-type "const-GParamSpec*")
+  (parameters
+    '("const-gchar*" "name")
+  )
+)
+
+(define-method probe_property
+  (of-object "GstPropertyProbe")
+  (c-name "gst_property_probe_probe_property")
+  (return-type "none")
+  (parameters
+    '("const-GParamSpec*" "pspec")
+  )
+)
+
+(define-method probe_property_name
+  (of-object "GstPropertyProbe")
+  (c-name "gst_property_probe_probe_property_name")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "name")
+  )
+)
+
+(define-method needs_probe
+  (of-object "GstPropertyProbe")
+  (c-name "gst_property_probe_needs_probe")
+  (return-type "gboolean")
+  (parameters
+    '("const-GParamSpec*" "pspec")
+  )
+)
+
+(define-method needs_probe_name
+  (of-object "GstPropertyProbe")
+  (c-name "gst_property_probe_needs_probe_name")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "name")
+  )
+)
+
+(define-method get_values
+  (of-object "GstPropertyProbe")
+  (c-name "gst_property_probe_get_values")
+  (return-type "GValueArray*")
+  (parameters
+    '("const-GParamSpec*" "pspec")
+  )
+)
+
+(define-method get_values_name
+  (of-object "GstPropertyProbe")
+  (c-name "gst_property_probe_get_values_name")
+  (return-type "GValueArray*")
+  (parameters
+    '("const-gchar*" "name")
+  )
+)
+
+(define-method probe_and_get_values
+  (of-object "GstPropertyProbe")
+  (c-name "gst_property_probe_probe_and_get_values")
+  (return-type "GValueArray*")
+  (parameters
+    '("const-GParamSpec*" "pspec")
+  )
+)
+
+(define-method probe_and_get_values_name
+  (of-object "GstPropertyProbe")
+  (c-name "gst_property_probe_probe_and_get_values_name")
+  (return-type "GValueArray*")
+  (parameters
+    '("const-gchar*" "name")
+  )
+)
+
+
+
+;; From /opt/gnome/include/gstreamer-0.7/gst/tuner/tuner.h
+
+(define-function gst_tuner_get_type
+  (c-name "gst_tuner_get_type")
+  (return-type "GType")
+)
+
+(define-method list_channels
+  (of-object "GstTuner")
+  (c-name "gst_tuner_list_channels")
+  (return-type "const-GList*")
+)
+
+(define-method set_channel
+  (of-object "GstTuner")
+  (c-name "gst_tuner_set_channel")
+  (return-type "none")
+  (parameters
+    '("GstTunerChannel*" "channel")
+  )
+)
+
+(define-method get_channel
+  (of-object "GstTuner")
+  (c-name "gst_tuner_get_channel")
+  (return-type "GstTunerChannel*")
+)
+
+(define-method list_norms
+  (of-object "GstTuner")
+  (c-name "gst_tuner_list_norms")
+  (return-type "const-GList*")
+)
+
+(define-method set_norm
+  (of-object "GstTuner")
+  (c-name "gst_tuner_set_norm")
+  (return-type "none")
+  (parameters
+    '("GstTunerNorm*" "channel")
+  )
+)
+
+(define-method get_norm
+  (of-object "GstTuner")
+  (c-name "gst_tuner_get_norm")
+  (return-type "GstTunerNorm*")
+)
+
+(define-method set_frequency
+  (of-object "GstTuner")
+  (c-name "gst_tuner_set_frequency")
+  (return-type "none")
+  (parameters
+    '("GstTunerChannel*" "channel")
+    '("gulong" "frequency")
+  )
+)
+
+(define-method get_frequency
+  (of-object "GstTuner")
+  (c-name "gst_tuner_get_frequency")
+  (return-type "gulong")
+  (parameters
+    '("GstTunerChannel*" "channel")
+  )
+)
+
+(define-method signal_strength
+  (of-object "GstTuner")
+  (c-name "gst_tuner_signal_strength")
+  (return-type "gint")
+  (parameters
+    '("GstTunerChannel*" "channel")
+  )
+)
+
+(define-method find_norm_by_name
+  (of-object "GstTuner")
+  (c-name "gst_tuner_find_norm_by_name")
+  (return-type "GstTunerNorm*")
+  (parameters
+    '("gchar*" "norm")
+  )
+)
+
+(define-method find_channel_by_name
+  (of-object "GstTuner")
+  (c-name "gst_tuner_find_channel_by_name")
+  (return-type "GstTunerChannel*")
+  (parameters
+    '("gchar*" "channel")
+  )
+)
+
+(define-method channel_changed
+  (of-object "GstTuner")
+  (c-name "gst_tuner_channel_changed")
+  (return-type "none")
+  (parameters
+    '("GstTunerChannel*" "channel")
+  )
+)
+
+(define-method norm_changed
+  (of-object "GstTuner")
+  (c-name "gst_tuner_norm_changed")
+  (return-type "none")
+  (parameters
+    '("GstTunerNorm*" "norm")
+  )
+)
+
+(define-method frequency_changed
+  (of-object "GstTuner")
+  (c-name "gst_tuner_frequency_changed")
+  (return-type "none")
+  (parameters
+    '("GstTunerChannel*" "channel")
+    '("gulong" "frequency")
+  )
+)
+
+(define-method signal_changed
+  (of-object "GstTuner")
+  (c-name "gst_tuner_signal_changed")
+  (return-type "none")
+  (parameters
+    '("GstTunerChannel*" "channel")
+    '("gint" "signal")
+  )
+)
+
+
+
+
+;; From /opt/gnome/include/gstreamer-0.7/gst/xwindowlistener/xwindowlistener.h
+
+(define-function gst_x_window_listener_get_type
+  (c-name "gst_x_window_listener_get_type")
+  (return-type "GType")
+)
+
+(define-function gst_x_window_listener_new
+  (c-name "gst_x_window_listener_new")
+  (is-constructor-of "GstXWindowListener")
+  (return-type "GstXWindowListener*")
+  (parameters
+    '("gchar*" "display")
+    '("MapWindowFunc" "map_window_func")
+    '("SetWindowFunc" "set_window_func")
+    '("gpointer" "private_data")
+  )
+)
+
+(define-method set_xid
+  (of-object "GstXWindowListener")
+  (c-name "gst_x_window_listener_set_xid")
+  (return-type "none")
+  (parameters
+    '("XID" "id")
+  )
+)
+
+
+;;
+;; interface definitions ...
+;;
+
+(define-interface ColorBalance
+   (in-module "Gst")
+   (c-name "GstColorBalance")
+   (gtype-id "GST_TYPE_COLOR_BALANCE")
+)
+
+(define-object ColorBalanceChannel
+  (in-module "Gst")
+  (parent "GstObject")
+  (c-name "GstColorBalanceChannel")
+  (gtype-id "GST_TYPE_COLOR_BALANCE_CHANNEL")
+)
+
+(define-interface Mixer
+   (in-module "Gst")
+   (c-name "GstMixer")
+   (gtype-id "GST_TYPE_MIXER")
+)
+
+(define-object MixerTrack
+   (in-module "Gst")
+   (parent "GstObject")
+   (c-name "GstMixerTrack")
+   (gtype-id "GST_TYPE_MIXER_TRACK")
+)
+
+(define-interface Navigation
+   (in-module "Gst")
+   (c-name "GstNavigation")
+   (gtype-id "GST_TYPE_NAVIGATION")
+)
+
+(define-interface PropertyProbe
+   (in-module "Gst")
+   (c-name "GstPropertyProbe")
+   (gtype-id "GST_TYPE_PROPERTY_PROBE")
+)
+
+(define-interface Tuner
+   (in-module "Gst")
+   (c-name "GstTuner")
+   (gtype-id "GST_TYPE_TUNER")
+)
+
+(define-object TunerChannel
+   (in-module "Gst")
+   (parent "GstObject")
+   (c-name "GstTunerChannel")
+   (gtype-id "GST_TYPE_TUNER_CHANNEL")
+)
+
+(define-object TunerNorm
+   (in-module "Gst")
+   (parent "GstObject")
+   (c-name "GstTunerNorm")
+   (gtype-id "GST_TYPE_TUNER_NORM")
+)

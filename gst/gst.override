@@ -33,6 +33,7 @@ headers
 #include <gst/gsterror.h>
 #include <gst/gstqueue.h>
 #include <gst/gsttypefind.h>
+#include <gst/gsttag.h>
 
 typedef struct {
      PyGObject *pad;

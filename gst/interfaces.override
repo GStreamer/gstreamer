@@ -1,0 +1,117 @@
+/* -*- Mode: C; c-basic-offset: 4 -*- */
+/* gst-python
+ * Copyright (C) 2004 David I. Lehn
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ * 
+ * Author: David I. Lehn <dlehn@users.sourceforge.net>
+ */
+%%
+headers
+#include <Python.h>
+
+#include "pygobject.h"
+#include <gst/gst.h>
+#include <gst/colorbalance/colorbalance.h>
+#include <gst/colorbalance/colorbalancechannel.h>
+#include <gst/mixer/mixer.h>
+#include <gst/mixer/mixertrack.h>
+#include <gst/navigation/navigation.h>
+#include <gst/propertyprobe/propertyprobe.h>
+#include <gst/tuner/tuner.h>
+#include <gst/xwindowlistener/xwindowlistener.h>
+
+%%
+modulename gstinterfaces
+%%
+import gobject.GObject as PyGObject_Type
+import gst.Object as PyGstObject_Type
+import gst.Structure as PyGstStructure_Type
+import gst.Element as PyGstElement_Type
+%%
+include
+  xoverlay.override
+%%
+ignore-glob
+ _*
+ gstinterfaces_*init
+ *_get_type
+%%
+%%
+override gst_tuner_make kwargs
+
+static PyObject *
+_wrap_gst_tuner_make(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "obj", NULL };
+    PyObject *py_value = NULL;
+    GValue value = { 0 };
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstStructure.set_value", kwlist, &py_value))
+        return NULL;
+    g_value_init(&value, G_TYPE_STRING);
+    if (pyg_value_from_pyobject(&value, py_value) != 0) {
+        return NULL;
+    }
+    gst_structure_set_value(pyg_boxed_get(self, GstStructure), field, &value);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+%%
+override gst_structure_new kwargs
+
+static int
+_wrap_gst_structure_new(PyGBoxed *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", NULL };
+    char *name;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s:GstStructure.__init__", kwlist, &name))
+        return -1;
+    self->gtype = GST_TYPE_STRUCTURE;
+    self->free_on_dealloc = FALSE;
+    self->boxed = gst_structure_new(name, NULL);
+
+    if (!self->boxed) {
+        PyErr_SetString(PyExc_RuntimeError, "could not create GstStructure object");
+        return -1;
+    }
+    self->free_on_dealloc = TRUE;
+    return 0;
+}
+%%
+override gst_structure_set_value kwargs
+
+static PyObject *
+_wrap_gst_structure_set_value(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "field", "value", NULL };
+    char *field;
+    PyObject *py_value = NULL;
+    GValue value = { 0 };
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sO:GstStructure.set_value", kwlist, &field, &py_value))
+        return NULL;
+    g_value_init(&value, G_TYPE_STRING);
+    if (pyg_value_from_pyobject(&value, py_value) != 0) {
+        return NULL;
+    }
+    gst_structure_set_value(pyg_boxed_get(self, GstStructure), field, &value);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}

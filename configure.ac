@@ -160,7 +160,6 @@ changequote([,])dnl
 AC_OUTPUT([
   Makefile
   gst/Makefile
-  gstinterfaces/Makefile
   gstplay/Makefile
   pkgconfig/Makefile
   pkgconfig/gst-python.pc

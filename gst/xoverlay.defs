@@ -1,0 +1,57 @@
+;; -*- scheme -*-
+; object definitions ...
+;; Enumerations and flags ...
+
+(define-interface XOverlay
+  (in-module "Gst")
+  (c-name "GstXOverlay")
+  (gtype-id "GST_TYPE_X_OVERLAY")
+)
+
+;; From /opt/gnome/include/gstreamer-0.7/gst/xoverlay/xoverlay.h
+
+(define-method set_xwindow_id
+  (of-object "GstXOverlay")
+  (c-name "gst_x_overlay_set_xwindow_id")
+  (return-type "none")
+  (parameters
+    '("gulong" "xwindow_id")
+  )
+)
+
+(define-method get_desired_size
+  (of-object "GstXOverlay")
+  (c-name "gst_x_overlay_get_desired_size")
+  (return-type "none")
+  (parameters
+    '("guint*" "width")
+    '("guint*" "height")
+  )
+)
+
+(define-method expose
+  (of-object "GstXOverlay")
+  (c-name "gst_x_overlay_expose")
+  (return-type "none")
+)
+
+(define-method got_xwindow_id
+  (of-object "GstXOverlay")
+  (c-name "gst_x_overlay_got_xwindow_id")
+  (return-type "none")
+  (parameters
+    '("XID" "xwindow_id")
+  )
+)
+
+(define-method got_desired_size
+  (of-object "GstXOverlay")
+  (c-name "gst_x_overlay_got_desired_size")
+  (return-type "none")
+  (parameters
+    '("guint" "width")
+    '("guint" "height")
+  )
+)
+
+
