@@ -814,6 +814,13 @@ gst_basesink_change_state (GstElement * element)
       }
       GST_PREROLL_UNLOCK (basesink->sinkpad);
       break;
+    default:
+      break;
+  }
+
+  GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
     {
       gboolean eos;
@@ -850,6 +857,7 @@ gst_basesink_change_state (GstElement * element)
       basesink->need_preroll = FALSE;
       basesink->have_preroll = FALSE;
       GST_PREROLL_UNLOCK (basesink->sinkpad);
+
       /* make sure the element is finished processing */
       GST_STREAM_LOCK (basesink->sinkpad);
       GST_STREAM_UNLOCK (basesink->sinkpad);
@@ -860,7 +868,6 @@ gst_basesink_change_state (GstElement * element)
       break;
   }
 
-  GST_ELEMENT_CLASS (parent_class)->change_state (element);
   DEBUG ("state change < %p %x\n", basesink, transition);
   return ret;
 }

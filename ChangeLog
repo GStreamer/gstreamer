@@ -1,5 +1,10 @@
 2005-03-10  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesink.c: (gst_basesink_change_state):
+	Fix preroll lockup.
+
+2005-03-10  Wim Taymans  <wim@fluendo.com>
+
 	* REQUIREMENTS:
 	* docs/design/part-MT-refcounting.txt:
 	* docs/design/part-clocks.txt:
