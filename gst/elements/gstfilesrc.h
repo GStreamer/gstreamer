@@ -65,7 +65,9 @@ struct _GstFileSrc {
   off_t curoffset;			/* current offset in file*/
   off_t block_size;			/* bytes per read */
   gboolean touch;			/* whether to touch every page */
-  gboolean using_mmap;
+  gboolean using_mmap;                  /* whether we opened it with mmap */
+  gboolean is_regular;                  /* whether it's (symlink to)
+                                           a regular file */
 
   GstBuffer *mapbuf;
   size_t mapsize;

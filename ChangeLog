@@ -1,3 +1,12 @@
+2004-04-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/elements/gstfilesrc.c: (gst_filesrc_init),
+	(gst_filesrc_get_mmap), (gst_filesrc_get_read), (gst_filesrc_get),
+	(gst_filesrc_open_file), (gst_filesrc_close_file),
+	(gst_filesrc_srcpad_query), (gst_filesrc_srcpad_event):
+	* gst/elements/gstfilesrc.h:
+          add support for non-regular files (#140734)
+
 2004-04-21  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstpad.c: (gst_pad_link_fixate):

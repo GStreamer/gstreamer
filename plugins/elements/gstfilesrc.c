@@ -245,6 +245,8 @@ gst_filesrc_init (GstFileSrc * src)
 
   src->mapbuf = NULL;
   src->mapsize = DEFAULT_MMAPSIZE;      /* default is 4MB */
+
+  src->is_regular = FALSE;
 }
 
 static void
@@ -470,11 +472,11 @@ gst_filesrc_map_small_region (GstFileSrc * src, off_t offset, size_t size)
 #ifdef HAVE_MMAP
 /**
  * gst_filesrc_get_mmap:
- * @pad: #GstPad to push a buffer from
+ * @src: #GstElement to get data from
  *
- * Push a new buffer from the filesrc at the current offset.
+ * Returns: a new #GstData from the mmap'd source.
  */
-static GstBuffer *
+static GstData *
 gst_filesrc_get_mmap (GstFileSrc * src)
 {
   GstBuffer *buf = NULL;
@@ -601,11 +603,11 @@ gst_filesrc_get_mmap (GstFileSrc * src)
   /* we're done, return the buffer */
   g_assert (src->curoffset == GST_BUFFER_OFFSET (buf));
   src->curoffset += GST_BUFFER_SIZE (buf);
-  return buf;
+  return GST_DATA (buf);
 }
 #endif
 
-static GstBuffer *
+static GstData *
 gst_filesrc_get_read (GstFileSrc * src)
 {
   GstBuffer *buf = NULL;
@@ -613,26 +615,40 @@ gst_filesrc_get_read (GstFileSrc * src)
   int ret;
 
   readsize = src->block_size;
-  if (src->curoffset + readsize > src->filelen) {
-    if (!gst_filesrc_check_filesize (src)
-        || src->curoffset + readsize > src->filelen) {
-      readsize = src->filelen - src->curoffset;
+  /* for regular files, we can use the filesize to check how much we
+     can read */
+  if (src->is_regular) {
+    if (src->curoffset + readsize > src->filelen) {
+      if (!gst_filesrc_check_filesize (src)
+          || src->curoffset + readsize > src->filelen) {
+        readsize = src->filelen - src->curoffset;
+      }
     }
   }
 
   buf = gst_buffer_new_and_alloc (readsize);
   g_return_val_if_fail (buf != NULL, NULL);
 
+  GST_LOG_OBJECT (src, "Reading %d bytes", readsize);
   ret = read (src->fd, GST_BUFFER_DATA (buf), readsize);
   if (ret < 0) {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
     return NULL;
   }
-  if (ret < readsize) {
+  /* regular files should have given us what we expected */
+  if (ret < readsize && src->is_regular) {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("unexpected end of file."));
     return NULL;
   }
+  /* other files should eos if they read 0 */
+  if (ret == 0) {
+    GST_DEBUG ("non-regular file hits EOS");
+    gst_buffer_unref (buf);
+    gst_element_set_eos (GST_ELEMENT (src));
+    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+  }
+  readsize = ret;
 
   GST_BUFFER_SIZE (buf) = readsize;
   GST_BUFFER_MAXSIZE (buf) = readsize;
@@ -640,7 +656,7 @@ gst_filesrc_get_read (GstFileSrc * src)
   GST_BUFFER_OFFSET_END (buf) = src->curoffset + readsize;
   src->curoffset += readsize;
 
-  return buf;
+  return GST_DATA (buf);
 }
 
 static GstData *
@@ -670,24 +686,27 @@ gst_filesrc_get (GstPad * pad)
     return GST_DATA (event);
   }
 
-  /* check for EOF */
-  g_assert (src->curoffset <= src->filelen);
-  if (src->curoffset == src->filelen) {
-    if (!gst_filesrc_check_filesize (src) || src->curoffset >= src->filelen) {
-      GST_DEBUG_OBJECT (src, "eos %" G_GINT64_FORMAT " %" G_GINT64_FORMAT,
-          src->curoffset, src->filelen);
+  /* check for EOF if it's a regular file */
+  if (src->is_regular) {
+    g_assert (src->curoffset <= src->filelen);
+    if (src->curoffset == src->filelen) {
+      if (!gst_filesrc_check_filesize (src) || src->curoffset >= src->filelen) {
+        GST_DEBUG_OBJECT (src, "eos %" G_GINT64_FORMAT " %" G_GINT64_FORMAT,
+            src->curoffset, src->filelen);
+      }
       gst_element_set_eos (GST_ELEMENT (src));
       return GST_DATA (gst_event_new (GST_EVENT_EOS));
+
     }
   }
 #ifdef HAVE_MMAP
   if (src->using_mmap) {
-    return GST_DATA (gst_filesrc_get_mmap (src));
+    return gst_filesrc_get_mmap (src);
   } else {
-    return GST_DATA (gst_filesrc_get_read (src));
+    return gst_filesrc_get_read (src);
   }
 #else
-  return GST_DATA (gst_filesrc_get_read (src));
+  return gst_filesrc_get_read (src);
 #endif
 }
 
@@ -740,9 +759,15 @@ gst_filesrc_open_file (GstFileSrc * src)
 
     fstat (src->fd, &stat_results);
 
-    if (!S_ISREG (stat_results.st_mode)) {
+    if (S_ISDIR (stat_results.st_mode)) {
       GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-          (_("File \"%s\" isn't a regular file."), src->filename), (NULL));
+          (_("\"%s\" is a directory."), src->filename), (NULL));
+      close (src->fd);
+      return FALSE;
+    }
+    if (S_ISSOCK (stat_results.st_mode)) {
+      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+          (_("File \"%s\" is a socket."), src->filename), (NULL));
       close (src->fd);
       return FALSE;
     }
@@ -751,14 +776,19 @@ gst_filesrc_open_file (GstFileSrc * src)
     src->filelen = stat_results.st_size;
 
     src->using_mmap = FALSE;
+
+    /* record if it's a regular (hence seekable and lengthable) file */
+    if (S_ISREG (stat_results.st_mode))
+      src->is_regular = TRUE;
 #ifdef HAVE_MMAP
-    /* allocate the first mmap'd region */
+    /* FIXME: maybe we should only try to mmap if it's a regular file */
+    /* allocate the first mmap'd region if it's a regular file ? */
     src->mapbuf = gst_filesrc_map_region (src, 0, src->mapsize);
     if (src->mapbuf != NULL) {
+      GST_DEBUG_OBJECT (src, "using mmap for file");
       src->using_mmap = TRUE;
     }
 #endif
-
 
     src->curoffset = 0;
 
@@ -780,6 +810,7 @@ gst_filesrc_close_file (GstFileSrc * src)
   src->fd = 0;
   src->filelen = 0;
   src->curoffset = 0;
+  src->is_regular = FALSE;
 
   if (src->mapbuf) {
     gst_buffer_unref (src->mapbuf);
@@ -833,6 +864,8 @@ gst_filesrc_srcpad_query (GstPad * pad, GstQueryType type,
       if (*format != GST_FORMAT_BYTES) {
         return FALSE;
       }
+      if (!src->is_regular)
+        return FALSE;
       gst_filesrc_check_filesize (src);
       *value = src->filelen;
       break;
@@ -843,6 +876,8 @@ gst_filesrc_srcpad_query (GstPad * pad, GstQueryType type,
           break;
         case GST_FORMAT_PERCENT:
           if (src->filelen == 0)
+            return FALSE;
+          if (!src->is_regular)
             return FALSE;
           *value = src->curoffset * GST_FORMAT_PERCENT_MAX / src->filelen;
           break;
@@ -870,6 +905,10 @@ gst_filesrc_srcpad_event (GstPad * pad, GstEvent * event)
       gint64 offset;
 
       if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
+        goto error;
+      }
+      if (!src->is_regular) {
+        GST_DEBUG ("can't handle seek on a non-regular file");
         goto error;
       }
 
