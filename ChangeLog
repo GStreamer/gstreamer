@@ -1,6 +1,6 @@
 2004-03-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
-        * configure.ac: use new setup with mirrored cvs tree
+	* configure.ac: use new setup with mirrored cvs tree
 
 2004-03-10  David Schleef  <ds@schleef.org>
 
