@@ -24,22 +24,12 @@
 #include <gst/gst.h>
 #include <gdk/gdk.h>
 #include <gst/gstmeta.h>
+#include <libs/colorspace/gstcolorspace.h>
 
 typedef struct _MetaVideoRaw MetaVideoRaw;
 typedef struct _MetaDGA MetaDGA;
 typedef struct _MetaOverlay MetaOverlay;
 typedef struct _OverlayClip OverlayClip;
-
-enum {
-  GST_META_VIDEORAW_RGB555,
-  GST_META_VIDEORAW_BGR555,
-  GST_META_VIDEORAW_RGB565,
-  GST_META_VIDEORAW_BGR565,
-  GST_META_VIDEORAW_RGB24,                   // RGB
-  GST_META_VIDEORAW_RGB32,
-  GST_META_VIDEORAW_YUV420,                  // YUV planar
-  GST_META_VIDEORAW_YUV422
-};
 
 struct _OverlayClip {
   int x1, x2, y1, y2;
@@ -76,7 +66,7 @@ struct _MetaVideoRaw {
 
   /* formatting information */
   gint format;
-	GdkVisual *visual;
+  GdkVisual *visual;
   // dimensions of the video buffer
   gint width;
   gint height;

@@ -26,9 +26,18 @@
 #include <gst/gstplugin.h>
 
 
+#define GST_RIFF_OK 	   0		
 #define GST_RIFF_ENOTRIFF -1		/* not a RIFF file */
 #define GST_RIFF_EINVAL   -2		/* wrong parameters */
 #define GST_RIFF_ENOMEM   -3		/* out of memory */
+
+/* states */
+#define GST_RIFF_STATE_INITIAL  	0
+#define GST_RIFF_STATE_HASAVIH  	1
+#define GST_RIFF_STATE_HASSTRH  	2
+#define GST_RIFF_STATE_HASSTRF  	3
+#define GST_RIFF_STATE_MOVI	  	4
+
 
 #define MAKE_FOUR_CC(a,b,c,d) ( ((guint32)a)     | (((guint32)b)<< 8) | \
                                 ((guint32)c)<<16 | (((guint32)d)<<24) )
@@ -190,7 +199,7 @@
 #define GST_RIFF_rec  MAKE_FOUR_CC( 'r', 'e', 'c', ' ')
 
 /* common data structures */
-struct gst_riff_avih {
+struct _gst_riff_avih {
   guint32 us_frame;          /* microsec per frame */
   guint32 max_bps;           /* byte/s overall */
   guint32 pad_gran;          /* pad_gran (???) */
@@ -213,8 +222,8 @@ struct gst_riff_avih {
   guint32 length;
 };
 
-struct gst_riff_strh {
-  gchar   type[4];           /* stream type */
+struct _gst_riff_strh {
+  guint32 type;             /* stream type */
   guint32 fcc_handler;       /* fcc_handler */
   guint32 flags;
 /* flags values */
@@ -232,13 +241,13 @@ struct gst_riff_strh {
   /* XXX 16 bytes ? */
 };
 
-struct gst_riff_strf_vids {       /* == BitMapInfoHeader */
+struct _gst_riff_strf_vids {       /* == BitMapInfoHeader */
   guint32 size;
   guint32 width;
   guint32 height;
   guint16 planes;
   guint16 bit_cnt;
-  gchar   compression[4];
+  guint32 compression;
   guint32 image_size;
   guint32 xpels_meter;
   guint32 ypels_meter;
@@ -248,7 +257,7 @@ struct gst_riff_strf_vids {       /* == BitMapInfoHeader */
 };
 
 
-struct gst_riff_strf_auds {       /* == WaveHeader (?) */
+struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
   guint16 format;
 /**** from public Microsoft RIFF docs ******/
 #define GST_RIFF_WAVE_FORMAT_UNKNOWN        (0x0000)
@@ -274,7 +283,31 @@ struct gst_riff_strf_auds {       /* == WaveHeader (?) */
   guint16 size;
 };
 
+struct _gst_riff_riff {  
+  guint32 id;
+  guint32 size;
+  guint32 type;
+};
 
+struct _gst_riff_list {  
+  guint32 id;
+  guint32 size;
+  guint32 type;
+};
+
+struct _gst_riff_chunk {  
+  guint32 id;
+  guint32 size;
+};
+
+typedef struct _gst_riff_riff gst_riff_riff;
+typedef struct _gst_riff_list gst_riff_list;
+typedef struct _gst_riff_chunk gst_riff_chunk;
+
+typedef struct _gst_riff_avih gst_riff_avih;
+typedef struct _gst_riff_strh gst_riff_strh;
+typedef struct _gst_riff_strf_vids gst_riff_strf_vids;
+typedef struct _gst_riff_strf_auds gst_riff_strf_auds;
 typedef struct _GstRiff GstRiff;
 typedef struct _GstRiffChunk GstRiffChunk;
 
@@ -286,20 +319,20 @@ struct _GstRiff {
   /* list of chunks, most recent at the head */
   GList *chunks;
 
-	/* incomplete chunks are assembled here */
-	GstRiffChunk *incomplete_chunk;
-	guint32 incomplete_chunk_size;
+  /* incomplete chunks are assembled here */
+  GstRiffChunk *incomplete_chunk;
+  guint32 incomplete_chunk_size;
   /* parse state */
   gint state;
   guint32 curoffset;
   guint32 nextlikely;
-	/* leftover data */
-	guchar *dataleft;
-	guint32 dataleft_size;
+  /* leftover data */
+  guchar *dataleft;
+  guint32 dataleft_size;
 
-	/* callback function and data pointer */
-	GstRiffCallback new_tag_found;
-	gpointer callback_data;
+  /* callback function and data pointer */
+  GstRiffCallback new_tag_found;
+  gpointer callback_data;
 };
 
 struct _GstRiffChunk {
@@ -309,13 +342,24 @@ struct _GstRiffChunk {
   guint32 size;
   guint32 form; /* for list chunks */
 
-	gchar *data;
+  gchar *data;
 };
 
 
-GstRiff *gst_riff_new(GstRiffCallback function, gpointer data);
-gint gst_riff_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off);
+/* from gstriffparse.c */
+GstRiff *gst_riff_parser_new(GstRiffCallback function, gpointer data);
+gint gst_riff_parser_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off);
 
+/* from gstriffencode.c */
+GstRiff *gst_riff_encoder_new(guint32 type);
+gint gst_riff_encoder_avih(GstRiff *riff, gst_riff_avih *head, gulong size);
+gint gst_riff_encoder_strh(GstRiff *riff, guint32 fcc_type, gst_riff_strh *head, gulong size);
+gint gst_riff_encoder_strf(GstRiff *riff, void *format, gulong size);
+gint gst_riff_encoder_chunk(GstRiff *riff, guint32 chunk_type, void *chunk, gulong size);
+
+GstBuffer *gst_riff_encoder_get_buffer(GstRiff *riff);
+GstBuffer *gst_riff_encoder_get_and_reset_buffer(GstRiff *riff);
+/* from gstriffutil.c */
 gulong gst_riff_fourcc_to_id(gchar *fourcc);
 gchar *gst_riff_id_to_fourcc(gulong id);
 

@@ -15,7 +15,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
   GstElement *audio_queue, *video_queue;
   GstElement *audio_thread, *video_thread;
 
-	GtkWidget *appwindow;
+  GtkWidget *appwindow;
 
   g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
 
@@ -59,10 +59,10 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     g_return_if_fail(show != NULL);
     //gtk_object_set(GTK_OBJECT(show),"width",640, "height", 480,NULL);
 
-		appwindow = gnome_app_new("AVI player","AVI player");
-		gnome_app_set_contents(GNOME_APP(appwindow),
-										gst_util_get_widget_arg(GTK_OBJECT(show),"widget"));
-		gtk_widget_show_all(appwindow);
+    appwindow = gnome_app_new("AVI player","AVI player");
+    gnome_app_set_contents(GNOME_APP(appwindow),
+    gst_util_get_widget_arg(GTK_OBJECT(show),"widget"));
+    gtk_widget_show_all(appwindow);
 
     // create the thread and pack stuff into it
     video_thread = gst_thread_new("video_thread");
@@ -134,18 +134,18 @@ int main(int argc,char *argv[]) {
 
   g_print("about to enter loop\n");
 
-	while (1) {
-	  gst_src_push(GST_SRC(src));
-	}
-	// this does not work due to multithreading
-	/*
-	g_idle_add(idle_func,src);
+  while (1) {
+    gst_src_push(GST_SRC(src));
+  }
+  // this does not work due to multithreading
+  /*
+  g_idle_add(idle_func,src);
 
-	gtk_main();
-	*/
+  gtk_main();
+  */
 }
 
 gboolean idle_func(gpointer data) {
-	gst_src_push(GST_SRC(data));
-	return TRUE;
+  gst_src_push(GST_SRC(data));
+  return TRUE;
 }

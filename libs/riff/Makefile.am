@@ -2,7 +2,7 @@ filterdir = $(libdir)/gst
 
 filter_LTLIBRARIES = libgstriff.la
 
-libgstriff_la_SOURCES = gstriff.c
+libgstriff_la_SOURCES = gstriffparse.c gstriffencode.c gstriffutil.c
 
 noinst_HEADERS = gstriff.h
 

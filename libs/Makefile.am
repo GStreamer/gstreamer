@@ -1,3 +1,3 @@
-SUBDIRS = riff
+SUBDIRS = riff colorspace
 
-DIST_SUBDIRS = riff
+DIST_SUBDIRS = riff colorspace
