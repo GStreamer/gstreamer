@@ -29,6 +29,9 @@
 #include "gstlevel.h"
 #include "math.h"
 
+GST_DEBUG_CATEGORY (level_debug);
+#define GST_CAT_DEFAULT level_debug
+
 /* elementfactory information */
 static GstElementDetails level_details = {
   "Level",
@@ -74,7 +77,6 @@ static void gst_level_class_init (GstLevelClass * klass);
 static void gst_level_base_init (GstLevelClass * klass);
 static void gst_level_init (GstLevel * filter);
 
-static GstElementStateReturn gst_level_change_state (GstElement * element);
 static void gst_level_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_level_get_property (GObject * object, guint prop_id,
@@ -137,20 +139,13 @@ gst_level_link (GstPad * pad, const GstCaps * caps)
     return GST_PAD_LINK_REFUSED;
 
   /* allocate channel variable arrays */
-  if (filter->CS)
-    g_free (filter->CS);
-  if (filter->peak)
-    g_free (filter->peak);
-  if (filter->last_peak)
-    g_free (filter->last_peak);
-  if (filter->decay_peak)
-    g_free (filter->decay_peak);
-  if (filter->decay_peak_age)
-    g_free (filter->decay_peak_age);
-  if (filter->MS)
-    g_free (filter->MS);
-  if (filter->RMS_dB)
-    g_free (filter->RMS_dB);
+  g_free (filter->CS);
+  g_free (filter->peak);
+  g_free (filter->last_peak);
+  g_free (filter->decay_peak);
+  g_free (filter->decay_peak_age);
+  g_free (filter->MS);
+  g_free (filter->RMS_dB);
   filter->CS = g_new (double, filter->channels);
   filter->peak = g_new (double, filter->channels);
   filter->last_peak = g_new (double, filter->channels);
@@ -222,7 +217,8 @@ gst_level_fast_16bit_chain (gint16 * in, guint num, gint channels,
             filter->channels, filter->width - 1, &CS, &filter->peak[i]);
         break;
     }
-    /* g_print ("DEBUG: CS %f, peak %f\n", CS, filter->peak[i]); */
+    GST_LOG_OBJECT (filter, "channel %d, cumulative sum %f, peak %f", i, CS,
+        filter->peak[i]);
     filter->CS[i] += CS;
 
   }
@@ -232,7 +228,7 @@ gst_level_fast_16bit_chain (gint16 * in, guint num, gint channels,
 
   for (i = 0; i < filter->channels; ++i) {
     filter->decay_peak_age[i] += num_samples;
-    /* g_print ("filter peak info [%d]: peak %f, age %f\n", i, 
+    /* g_print ("filter peak info [%d]: peak %f, age %f\n", i,
        filter->last_peak[i], filter->decay_peak_age[i]); */
     /* update running peak */
     if (filter->peak[i] > filter->last_peak[i])
@@ -290,26 +286,12 @@ gst_level_fast_16bit_chain (gint16 * in, guint num, gint channels,
   }
 }
 
-static GstElementStateReturn
-gst_level_change_state (GstElement * element)
-{
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_PLAYING:
-      break;
-    default:
-      break;
-  }
-
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-}
-
 static void
 gst_level_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstLevel *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_LEVEL (object));
   filter = GST_LEVEL (object);
 
@@ -337,7 +319,6 @@ gst_level_get_property (GObject * object, guint prop_id,
 {
   GstLevel *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_LEVEL (object));
   filter = GST_LEVEL (object);
 
@@ -370,8 +351,6 @@ gst_level_base_init (GstLevelClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template_factory));
   gst_element_class_set_details (element_class, &level_details);
-
-  element_class->change_state = gst_level_change_state;
 }
 
 static void
@@ -409,6 +388,8 @@ gst_level_class_init (GstLevelClass * klass)
       gst_level_marshal_VOID__DOUBLE_INT_DOUBLE_DOUBLE_DOUBLE,
       G_TYPE_NONE, 5,
       G_TYPE_DOUBLE, G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
+
+  GST_DEBUG_CATEGORY_INIT (level_debug, "level", 0, "Level calculation");
 }
 
 static void
