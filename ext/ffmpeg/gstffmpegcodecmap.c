@@ -111,14 +111,16 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
     case CODEC_ID_MP2:
       caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_mp2",
                                   "audio/mpeg",
-                                    "layer", GST_PROPS_INT (2)
+				    "mpegversion", GST_PROPS_INT (1),
+                                    "layer",       GST_PROPS_INT (2)
                                  );
       break;
 
     case CODEC_ID_MP3LAME:
       caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_mp3",
                                   "audio/mpeg",
-                                    "layer", GST_PROPS_INT (3)
+				    "mpegversion", GST_PROPS_INT (1),
+                                    "layer",       GST_PROPS_INT (3)
                                  );
       break;
 
@@ -1261,28 +1263,36 @@ gst_ffmpeg_caps_to_codecid (GstCaps        *caps,
 
   } else if (!strcmp(mimetype, "audio/mpeg")) {
 
-    if (gst_caps_has_property (caps, "layer")) {
-      gint layer = 0;
-
-      gst_caps_get_int (caps, "layer", &layer);
-      switch (layer) {
-        case 1:
-        case 2:
-          id = CODEC_ID_MP2;
-          break;
-        case 3:
-          id = CODEC_ID_MP3LAME;
-          break;
-        default:
-          /* ... */
-          break;
-      }
-    } else if (gst_caps_has_property (caps, "mpegversion")) {
+    if (gst_caps_has_property (caps, "mpegversion")) {
       gint mpegversion = 0;
 
       gst_caps_get_int (caps, "mpegversion", &mpegversion);
-      if (mpegversion == 4) {
-        id = CODEC_ID_MPEG4AAC;
+      switch (mpegversion) {
+        case 2: /* ffmpeg uses faad for both... */
+        case 4:
+          id = CODEC_ID_MPEG4AAC;
+          break;
+        case 1:
+          if (gst_caps_has_property (caps, "layer")) {
+            gint layer = 0;
+
+            gst_caps_get_int (caps, "layer", &layer);
+            switch (layer) {
+              case 1:
+              case 2:
+                id = CODEC_ID_MP2;
+                break;
+              case 3:
+                id = CODEC_ID_MP3;
+                break;
+              default:
+                /* ... */
+                break;
+            }
+          }
+        default:
+          /* ... */
+          break;
       }
     }
 
