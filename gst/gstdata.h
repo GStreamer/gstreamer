@@ -92,7 +92,6 @@ void			gst_data_copy_into		(const GstData *data, GstData *target);
 GstData*		gst_data_copy	 		(const GstData *data);
 gboolean 		gst_data_is_writable	 	(GstData *data);
 GstData* 		gst_data_copy_on_write 		(GstData *data);
-void 			gst_data_free	 		(GstData *data);
 
 /* reference counting */
 GstData*		gst_data_ref			(GstData* data);

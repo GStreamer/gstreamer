@@ -132,7 +132,6 @@ void		gst_buffer_stamp		(GstBuffer *dest, const GstBuffer *src);
 #define		gst_buffer_copy(buf)		GST_BUFFER (gst_data_copy (GST_DATA (buf)))
 #define		gst_buffer_is_writable(buf)	gst_data_is_writable (GST_DATA (buf))
 #define		gst_buffer_copy_on_write(buf)   GST_BUFFER (gst_data_copy_on_write (GST_DATA (buf)))
-#define		gst_buffer_free(buf)		gst_data_free (GST_DATA (buf))
 
 /* creating a subbuffer */
 GstBuffer*	gst_buffer_create_sub		(GstBuffer *parent, guint offset, guint size);

@@ -34,8 +34,8 @@ gst_data_get_type (void)
   
   if (!type)
     type = g_boxed_type_register_static ("GstData",
-					 (GBoxedCopyFunc) gst_data_copy,
-					 (GBoxedFreeFunc) gst_data_free);
+					 (GBoxedCopyFunc) gst_data_ref,
+					 (GBoxedFreeFunc) gst_data_unref);
     return type;
 }
 
@@ -166,23 +166,6 @@ gst_data_copy_on_write (GstData *data)
   }
 
   return NULL;
-}
-
-/**
- * gst_data_free:
- * @data: a #GstData to free
- *
- * Frees the given #GstData. This function will call the custom free function
- * provided by the subclass. 
- */
-void
-gst_data_free (GstData *data) 
-{
-  if (!data)
-    return;
-
-  if (data->free)
-    data->free (data); 
 }
 
 /**

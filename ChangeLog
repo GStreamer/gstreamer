@@ -1,3 +1,12 @@
+2004-02-27  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstbuffer.h:
+	  remove gst_buffer_free, use gst_data_unref
+	* gst/gstdata.c: (gst_data_get_type):
+	  use refcounting in GstData GBoxed registration
+	* gst/gstdata.h:
+	  remove gst_data_free, use gst_data_unref
+
 2004-02-27  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gstdata.c (gst_data_get_type): New function, register
