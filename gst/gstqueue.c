@@ -719,6 +719,9 @@ restart:
   data = g_queue_pop_head (queue->queue);
   GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, queue,
 		      "retrieved data %p from queue", data);
+  
+  if (data == NULL)
+    return NULL;
 
   if (GST_IS_BUFFER (data)) {
     /* Update statistics */

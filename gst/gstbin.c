@@ -723,14 +723,13 @@ gst_bin_change_state (GstElement * element)
 		   GST_ELEMENT_NAME (child), pending, gst_element_state_get_name (pending));
 
 	gst_element_set_state (child, old_child_state);
-	/* FIXME, this is legacy code, a failed state change of a child should
-	 * return a failure in all cases */
-	if (GST_ELEMENT_SCHED (child) == GST_ELEMENT_SCHED (element)) {
-          /* try to reset it to what is was */
-          GST_STATE_PENDING (element) = old_state;
-
-	  return GST_STATE_FAILURE;
-	}
+	/* There was a check for elements being in the same scheduling group
+	   here. Removed by dolphy <julien@moutte.net>. No matter the 
+	   scheduling group we should always return a failure. This change
+	   seems to work on my machine and fixes tons of issues. If anyone
+	   want to revert please tell me what it breaks first, Thanks. */
+	GST_STATE_PENDING (element) = old_state;
+	return GST_STATE_FAILURE;
 	break;
       case GST_STATE_ASYNC:
 	GST_CAT_DEBUG (GST_CAT_STATES, "child '%s' is changing state asynchronously",
@@ -738,6 +737,8 @@ gst_bin_change_state (GstElement * element)
 	have_async = TRUE;
 	break;
       case GST_STATE_SUCCESS:
+        GST_CAT_DEBUG (GST_CAT_STATES, "child '%s' changed state to %d(%s) successfully",
+		   GST_ELEMENT_NAME (child), pending, gst_element_state_get_name (pending));
         break;	
     }
   }
@@ -1134,4 +1135,3 @@ gst_bin_iterate (GstBin *bin)
 
   return running;
 }
-

@@ -1,3 +1,17 @@
+2004-02-15  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/gstbin.c: (gst_bin_change_state), (gst_bin_iterate): Fix a big
+	bug that was breaking pipelines like sinesrc ! { queue ! osssink } when
+	an error was thrown by osssink. Basically a state change failure for
+	an element in a different scheduling group was considered as successfull
+	, which means that caps nego was going on and weird stuff happened. Like
+	i wrote in the comment there, if someone want to revert that please
+	drop me a mail explaining why because i really see no point in keeping
+	that broken behaviour there.
+	* gst/gstqueue.c: (gst_queue_get): Add a safety check as the queue CAN
+	be empty, we then return NULL which will trigger a nice error when 
+	pulling from the pad.
+
 2004-02-13  David Schleef  <ds@schleef.org>
 
 	* libs/gst/control/dparam.c: (gst_dparam_class_init),
