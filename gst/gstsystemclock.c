@@ -119,7 +119,7 @@ gst_system_clock_dispose (GObject * object)
 }
 
 /**
- * gst_system_clock_obtain 
+ * gst_system_clock_obtain
  *
  * Get a handle to the default system clock.
  *
@@ -135,21 +135,31 @@ gst_system_clock_obtain (void)
     if (_the_system_clock != NULL) {
       clock = _the_system_clock;
       g_static_mutex_unlock (&_gst_sysclock_mutex);
+      GST_CAT_DEBUG (GST_CAT_CLOCK, "returning static system clock");
       goto have_clock;
     }
 
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "creating new static system clock");
+    /* FIXME: the only way to clean this up is to have a gst_exit()
+     * function; until then, the program will always end with the sysclock
+     * at refcount 1 */
     clock = GST_CLOCK (g_object_new (GST_TYPE_SYSTEM_CLOCK, NULL));
 
     gst_object_set_name (GST_OBJECT (clock), "GstSystemClock");
 
+    /* we created the global clock; take ownership so
+     * we can hand out instances later */
     gst_object_ref (GST_OBJECT (clock));
     gst_object_sink (GST_OBJECT (clock));
 
     _the_system_clock = clock;
     g_static_mutex_unlock (&_gst_sysclock_mutex);
+  } else {
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "returning static system clock");
   }
 
 have_clock:
+  /* we ref it since we are a clock factory. */
   gst_object_ref (GST_OBJECT (clock));
   return clock;
 }

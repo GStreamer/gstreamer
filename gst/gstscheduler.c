@@ -510,7 +510,7 @@ gst_scheduler_interrupt (GstScheduler * sched, GstElement * element)
  * gst_scheduler_get_clock:
  * @sched: the scheduler
  *
- * Get the current clock used by the scheduler
+ * Gets the current clock used by the scheduler.
  *
  * Returns: a GstClock
  */
@@ -523,8 +523,8 @@ gst_scheduler_get_clock (GstScheduler * sched)
   if (GST_FLAG_IS_SET (sched, GST_SCHEDULER_FLAG_FIXED_CLOCK)) {
     clock = sched->clock;
 
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler using fixed clock %p (%s)", clock,
-        (clock ? GST_OBJECT_NAME (clock) : "nil"));
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler using fixed clock %p (%s)",
+        clock, clock ? GST_STR_NULL (GST_OBJECT_NAME (clock)) : "-");
   } else {
     GList *schedulers = sched->schedulers;
     GList *providers = sched->clock_providers;
@@ -534,24 +534,34 @@ gst_scheduler_get_clock (GstScheduler * sched)
       GstScheduler *scheduler = GST_SCHEDULER (schedulers->data);
 
       clock = gst_scheduler_get_clock (scheduler);
-      if (clock)
+      if (clock) {
+        GST_CAT_DEBUG (GST_CAT_CLOCK,
+            "scheduler found managed sched clock %p (%s)",
+            clock, clock ? GST_STR_NULL (GST_OBJECT_NAME (clock)) : "-");
         break;
+      }
 
       schedulers = g_list_next (schedulers);
     }
     /* still no clock, try to find one in the providers */
     while (!clock && providers) {
       clock = gst_element_get_clock (GST_ELEMENT (providers->data));
-
+      if (clock)
+        GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler found provider clock: %p (%s)",
+            clock, clock ? GST_STR_NULL (GST_OBJECT_NAME (clock)) : "-");
       providers = g_list_next (providers);
     }
     /* still no clock, use a system clock */
     if (!clock && sched->parent_sched == NULL) {
       clock = gst_system_clock_obtain ();
+      /* we unref since this function is not supposed to increase refcount
+       * of clock object returned; this is ok since the systemclock always
+       * has a refcount of at least one in the current code. */
+      gst_object_unref (GST_OBJECT (clock));
+      GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler obtained system clock: %p (%s)",
+          clock, clock ? GST_STR_NULL (GST_OBJECT_NAME (clock)) : "-");
     }
   }
-  GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, sched, "scheduler selected clock %p (%s)",
-      clock, clock ? GST_STR_NULL (GST_OBJECT_NAME (clock)) : "-");
 
   return clock;
 }
@@ -584,8 +594,8 @@ gst_scheduler_use_clock (GstScheduler * sched, GstClock * clock)
  * @sched: the scheduler
  * @clock: the clock to set
  *
- * Set the clock for the scheduler. The clock will be distributed 
- * to all the elements managed by the scheduler. 
+ * Set the clock for the scheduler. The clock will be distributed
+ * to all the elements managed by the scheduler.
  */
 void
 gst_scheduler_set_clock (GstScheduler * sched, GstClock * clock)

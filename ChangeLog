@@ -1,5 +1,12 @@
 2004-07-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstobject.c: (gst_object_replace):
+	* gst/gstscheduler.c: (gst_scheduler_get_clock):
+	* gst/gstsystemclock.c: (gst_system_clock_obtain):
+          clean up clock lifecycle.  Fixes #109831
+
+2004-07-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* po/LINGUAS:
 	* po/cs.po:
 	  added Czech translation (Miloslav Trmac)

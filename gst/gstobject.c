@@ -286,9 +286,11 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
   g_return_if_fail (*oldobj == NULL || GST_IS_OBJECT (*oldobj));
   g_return_if_fail (newobj == NULL || GST_IS_OBJECT (newobj));
 
-  GST_CAT_LOG (GST_CAT_REFCOUNTING, "replace %s %s",
+  GST_CAT_LOG (GST_CAT_REFCOUNTING, "replace %s (%d) with %s (%d)",
       *oldobj ? GST_STR_NULL (GST_OBJECT_NAME (*oldobj)) : "(NONE)",
-      newobj ? GST_STR_NULL (GST_OBJECT_NAME (newobj)) : "(NONE)");
+      *oldobj ? G_OBJECT (*oldobj)->ref_count : 0,
+      newobj ? GST_STR_NULL (GST_OBJECT_NAME (newobj)) : "(NONE)",
+      newobj ? G_OBJECT (newobj)->ref_count : 0);
 
   if (*oldobj != newobj) {
     if (newobj)
