@@ -1,3 +1,8 @@
+2003-12-02  Thomas Vander Stichele <thomas at apestaart dot org>
+
+        * fix documentation build using docbook2..., works on fc1 and rh9
+	* fix distcheck on fc1
+
 2003-11-14  Thomas Vander Stichele <thomas at apestaart dot org>
 
         * put GST_CACHE_DIR in config.h, as ordered by iain

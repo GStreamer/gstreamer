@@ -6,7 +6,6 @@ endif
 
 dirs = \
 	helloworld			\
-	helloworld2			\
 	queue				\
 	queue2				\
 	queue3				\

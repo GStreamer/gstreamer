@@ -10,7 +10,7 @@ libgstspider_la_CFLAGS = $(GST_CFLAGS)
 libgstspider_la_LIBADD =
 libgstspider_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gstspider.h gstsearchfuncs.h 
+noinst_HEADERS = gstspider.h gstspideridentity.h gstsearchfuncs.h 
 
 noinst_PROGRAMS = spidertest
 

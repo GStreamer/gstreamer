@@ -616,10 +616,8 @@ testsuite/refcounting/Makefile
 testsuite/tags/Makefile
 testsuite/threads/Makefile
 examples/Makefile
-examples/autoplug/Makefile
 examples/cutter/Makefile
 examples/helloworld/Makefile
-examples/helloworld2/Makefile
 examples/launch/Makefile
 examples/manual/Makefile
 examples/mixer/Makefile

@@ -95,7 +95,7 @@ html/index.html: $(BUILDDIR)/$(MAIN) $(PNG_BUILT) $(FIG_SRC)
 	@echo "*** Generating HTML output ***"
 	@-mkdir -p html
 	@cp -f $(srcdir)/../image-png $(BUILDDIR)/image.entities
-	@cd $(BUILDDIR) && docbook2html -o ../html $(MAIN)
+	@cd $(BUILDDIR) && docbook2html -o ../html -V '%use-id-as-filename%' $(MAIN)
 	@test "x$(CSS)" != "x" && \
           echo "Copying .css files: $(CSS)" && \
           cp $(srcdir)/$(CSS) html

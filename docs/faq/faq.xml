@@ -20,7 +20,7 @@
 
 ]>
 
-<article class="faq">
+<article class="faq" id="index">
   <articleinfo>
     <title>GStreamer FAQ</title>
     <abstract>
