@@ -1,21 +1,24 @@
 #include <gst/gst.h>
 #include <gst/gstqueue.h>
 
-gst_object_get_type
-gst_element_get_type
 gst_bin_get_type
 gst_clock_get_type
-gst_pipeline_get_type
+gst_element_factory_get_type
+gst_element_get_type
+gst_ghost_pad_get_type
+gst_implements_interface_get_type
+gst_index_factory_get_type
+gst_index_get_type
+gst_object_get_type
 gst_pad_get_type
 gst_pad_template_get_type
-gst_ghost_pad_get_type
-gst_thread_get_type
+gst_pipeline_get_type
 gst_plugin_feature_get_type
-gst_type_find_factory_get_type
-gst_element_factory_get_type
+gst_queue_get_type
 gst_scheduler_factory_get_type
 gst_scheduler_get_type
-gst_index_get_type
-gst_index_factory_get_type
+gst_tag_setter_get_type
+gst_thread_get_type
+gst_type_find_factory_get_type
 gst_xml_get_type
-gst_queue_get_type
+

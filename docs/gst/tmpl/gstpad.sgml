@@ -63,14 +63,6 @@ Last reviewed on December 13th, 2002 (0.5.0.1)
 </para>
 
 
-<!-- ##### STRUCT GstPadClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@_gst_reserved: 
-
 <!-- ##### STRUCT GstRealPad ##### -->
 <para>
 
@@ -88,40 +80,26 @@ Last reviewed on December 13th, 2002 (0.5.0.1)
 
 </para>
 
-<!-- ##### STRUCT GstRealPadClass ##### -->
+<!-- ##### STRUCT GstPadTemplate ##### -->
+<para>
+The padtemplate object.
+</para>
+
+
+<!-- ##### SIGNAL GstPadTemplate::pad-created ##### -->
+<para>
+This signal is fired when an element creates a pad from this 
+template.
+</para>
+
+@gstpadtemplate: the object which received the signal.
+@arg1: The pad that was created.
+
+<!-- ##### MACRO GST_TYPE_PAD ##### -->
 <para>
 
 </para>
 
-@parent_class: 
-@caps_nego_failed: 
-@linked: 
-@unlinked: 
-@appfixatefunc: 
-@_gst_reserved: 
-
-<!-- ##### STRUCT GstGhostPadClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@_gst_reserved: 
-
-<!-- ##### MACRO GST_IS_PAD_FAST ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO GST_PAD_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
 
 
 <!-- ##### MACRO GST_TYPE_REAL_PAD ##### -->
@@ -129,14 +107,6 @@ Last reviewed on December 13th, 2002 (0.5.0.1)
 
 </para>
 
-
-
-<!-- ##### MACRO GST_IS_REAL_PAD ##### -->
-<para>
-
-</para>
-
-@obj: 
 
 
 <!-- ##### MACRO GST_IS_REAL_PAD_FAST ##### -->
@@ -147,45 +117,11 @@ Last reviewed on December 13th, 2002 (0.5.0.1)
 @obj: 
 
 
-<!-- ##### MACRO GST_IS_REAL_PAD_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-<!-- # Unused Parameters # -->
-@obj: 
-
-
-<!-- ##### MACRO GST_REAL_PAD ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO GST_REAL_PAD_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-
 <!-- ##### MACRO GST_TYPE_GHOST_PAD ##### -->
 <para>
 
 </para>
 
-
-
-<!-- ##### MACRO GST_IS_GHOST_PAD ##### -->
-<para>
-
-</para>
-
-@obj: 
 
 
 <!-- ##### MACRO GST_IS_GHOST_PAD_FAST ##### -->
@@ -196,30 +132,12 @@ Last reviewed on December 13th, 2002 (0.5.0.1)
 @obj: 
 
 
-<!-- ##### MACRO GST_IS_GHOST_PAD_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-<!-- # Unused Parameters # -->
-@obj: 
-
-
-<!-- ##### MACRO GST_GHOST_PAD ##### -->
+<!-- ##### MACRO GST_IS_PAD_FAST ##### -->
 <para>
 
 </para>
 
 @obj: 
-
-
-<!-- ##### MACRO GST_GHOST_PAD_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
 
 
 <!-- ##### STRUCT GstStaticPadTemplate ##### -->
@@ -807,40 +725,6 @@ Checks if the pad is a sink pad.
 
 
 
-<!-- ##### MACRO GST_PAD_TEMPLATE ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO GST_PAD_TEMPLATE_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-
-<!-- ##### MACRO GST_IS_PAD_TEMPLATE ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO GST_IS_PAD_TEMPLATE_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-<!-- # Unused Parameters # -->
-@obj: 
-
-
 <!-- ##### ENUM GstPadPresence ##### -->
 <para>
 Indicates when this pad will become available.
@@ -908,22 +792,6 @@ Check if the properties of the padtemplate are fixed
 @dir: 
 @pres: 
 @caps: 
-
-
-<!-- ##### FUNCTION gst_real_pad_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_ghost_pad_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_pad_new ##### -->
@@ -1783,14 +1651,6 @@ Remove the probe from the pad
 
 @name: 
 @pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_template_get_type ##### -->
-<para>
-
-</para>
-
 @Returns: 
 
 

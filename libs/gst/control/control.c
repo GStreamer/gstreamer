@@ -26,6 +26,13 @@
 GST_DEBUG_CATEGORY (_gst_control_debug);
 #define GST_CAT_DEFAULT _gst_control_debug
 
+/**
+ * gst_control_init:
+ * @argc: pointer to application's argc
+ * @argv: pointer to application's argv
+ *
+ * Initializes the GStreamer control library, registering modes and units
+ */
 void
 gst_control_init (int *argc, char **argv[])
 {

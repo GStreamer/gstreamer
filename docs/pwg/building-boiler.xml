@@ -174,7 +174,7 @@ U gst-template/gst-app/src/Makefile.am
   <sect1 id="section-boiler-details">
     <title>GstElementDetails</title>
     <para>
-      The GstElementDetails structure gives a heirarchical type for the element,
+      The GstElementDetails structure gives a hierarchical type for the element,
       a human-readable description of the element, as well as author and version
       data. The entries are:
     </para>
@@ -182,7 +182,7 @@ U gst-template/gst-app/src/Makefile.am
       <listitem><para>
         A long, english, name for the element.
       </para></listitem><listitem><para>
-        The type of the element, as a heirarchy. The heirarchy is defined by
+        The type of the element, as a hierarchy. The hierarchy is defined by
         specifying the top level category, followed by a "/", followed by the
         next level category, etc. The type should be defined according to the
         guidelines elsewhere in this document. (FIXME: write the guidelines, and

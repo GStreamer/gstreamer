@@ -20,34 +20,6 @@ This is a base class for custom schedulers.
 </para>
 
 
-<!-- ##### STRUCT GstSchedulerClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@setup: 
-@reset: 
-@add_element: 
-@remove_element: 
-@add_scheduler: 
-@remove_scheduler: 
-@state_transition: 
-@scheduling_change: 
-@lock_element: 
-@unlock_element: 
-@yield: 
-@interrupt: 
-@error: 
-@pad_link: 
-@pad_unlink: 
-@pad_select: 
-@clock_wait: 
-@iterate: 
-@show: 
-@object_sync: 
-@_gst_reserved: 
-
 <!-- ##### ENUM GstSchedulerFlags ##### -->
 <para>
 Flags for the scheduler
@@ -307,48 +279,6 @@ The state of the scheduler
 
 
 
-<!-- ##### MACRO GST_SCHEDULER_FACTORY ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO GST_IS_SCHEDULER_FACTORY ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO GST_SCHEDULER_FACTORY_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-
-<!-- ##### MACRO GST_IS_SCHEDULER_FACTORY_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-<!-- # Unused Parameters # -->
-@obj: 
-
-
-<!-- ##### MACRO GST_SCHEDULER_FACTORY_GET_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
 <!-- ##### MACRO GST_SCHEDULER_DEFAULT_NAME ##### -->
 <para>
 
@@ -360,22 +290,6 @@ The state of the scheduler
 <para>
 
 </para>
-
-
-<!-- ##### STRUCT GstSchedulerFactoryClass ##### -->
-<para>
-
-</para>
-
-@parent: 
-@_gst_reserved: 
-
-<!-- ##### FUNCTION gst_scheduler_factory_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_scheduler_factory_new ##### -->

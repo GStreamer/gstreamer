@@ -112,17 +112,6 @@ The queue blocks by default.
 
 </para>
 
-<!-- ##### STRUCT GstQueueClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@underrun: 
-@running: 
-@overrun: 
-@_gst_reserved: 
-
 <!-- ##### STRUCT GstQueueSize ##### -->
 <para>
 

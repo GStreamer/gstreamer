@@ -38,7 +38,7 @@ G_BEGIN_DECLS
  * the core GStreamer library */
 /* FIXME: should we divide in numerical blocks so we can easily add
           for example PAD errors later ? */
-    typedef enum
+typedef enum
 {
   GST_CORE_ERROR_FAILED = 1,
   GST_CORE_ERROR_TOO_LAZY,

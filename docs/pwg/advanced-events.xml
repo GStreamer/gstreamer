@@ -1,7 +1,7 @@
 <chapter id="chapter-advanced-events">
   <title>Events: Seeking, Navigation and More</title>
   <para>
-    There are many different event types but only 2 ways they can travel accross
+    There are many different event types but only 2 ways they can travel across
     the pipeline: downstream or upstream. It is very important to understand
     how both of those methods work because if one element in the pipeline is not
     handling them correctly the whole event system of the pipeline is broken.
@@ -17,7 +17,7 @@
       or directly in the function call arguments. So when receiving dataflow
       from the sink pad you have to check first if this data chunk is an event.
       If that's the case you check what kind of event it is to react on relevant
-      ones and then forward others dowstream using
+      ones and then forward others downstream using
       <function>gst_pad_event_default</function>. Here is an example for both
       loop and chain based elements.
     </para>
@@ -157,7 +157,7 @@ gst_my_filter_handle_src_event (GstPad   *pad,
     <title>All Events Together</title>
     <para>
       In this chapter follows a list of all defined events that are currently
-      being used, plus how they should be used/interpretted. Events are stored
+      being used, plus how they should be used/interpreted. Events are stored
       in a <classname>GstEvent</classname> structure, which is simply a big
       C union with the types for each event in it. For the next development
       cycle, we intend to switch events over to <classname>GstStructure</classname>,
@@ -186,7 +186,7 @@ gst_my_filter_handle_src_event (GstPad   *pad,
         downstream and set itself to EOS (<function>gst_element_set_eos ()</function>).
         <function>gst_pad_event_default ()</function> takes care of all this,
         so most elements do not need to support this event. Exceptions are
-        elements that explicitely need to close a resource down on EOS, and
+        elements that explicitly need to close a resource down on EOS, and
         N-to-1 elements. Note that the stream itself is <emphasis>not</emphasis>
         a resource that should be closed down on EOS! Applications might seek
         back to a point before EOS and set the pipeline to PLAYING again.

@@ -1,8 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-GstInterface
+GstImplementsInterface
 
 <!-- ##### SECTION Short_Description ##### -->
-Core interfaces implemented by #GstElements
+Core interface implemented by #GstElements that allows runtime querying of interface availabillity
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -13,6 +13,13 @@ Core interfaces implemented by #GstElements
 <para>
 
 </para>
+
+<!-- ##### MACRO GST_TYPE_IMPLEMENTS_INTERFACE ##### -->
+<para>
+
+</para>
+
+
 
 <!-- ##### STRUCT GstImplementsInterface ##### -->
 <para>

@@ -126,14 +126,6 @@ Categorized error messages
 
 
 
-<!-- ##### FUNCTION gst_g_error_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_error_get_message ##### -->
 <para>
 

@@ -21,11 +21,3 @@ GstURIType
 
 
 
-<!-- ##### FUNCTION gst_uri_get_uri_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-

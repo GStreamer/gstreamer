@@ -50,7 +50,7 @@
       <row>
         <entry><emphasis>Frequency and resolution of updates</emphasis></entry>
         <entry>Object properties will only be updated between calls to _get, _chain or _loop</entry>
-        <entry>dparams can be updated at any rate independant of calls to _get, _chain or _loop up to sample-level accuracy</entry>
+        <entry>dparams can be updated at any rate independent of calls to _get, _chain or _loop up to sample-level accuracy</entry>
       </row>
       </tbody>
       </tgroup>
@@ -124,7 +124,7 @@
 </sect1>
 
 <sect1 id="section-dparam-define">
-  <title>Defining Parameter Specificiations</title>
+  <title>Defining Parameter Specifications</title>
   <para>
     You can define the dparams you need anywhere within your element but will
     usually need to do so in only a couple of places:
@@ -139,7 +139,7 @@
         <para>
         Whenever a new pad is created so that parameters can affect data going
         into or out of a specific pad. An example of this would be a mixer
-        element where a seperate volume parameter is needed on every pad.
+        element where a separate volume parameter is needed on every pad.
         </para>
       </listitem>
     </itemizedlist>
@@ -203,7 +203,7 @@
       This method is the simplest and has the lowest overhead for parameters
       which change less frequently than the sample rate. First you need
       somewhere to store the parameter - this will usually be in your element's
-      stuct.
+      struct.
     </para>
     <programlisting>
   struct _GstExample {
@@ -248,7 +248,7 @@
     <para>
       The following code illustrates an instance where you might want to use the
       callback method. If you had a volume dparam which was represented by a
-      gfloat number, your element may only deal with integer arithmatic. The
+      gfloat number, your element may only deal with integer arithmetic. The
       callback could be used to calculate the integer scaler when the volume
       changes. First you will need somewhere to store these values.
     </para>
@@ -281,7 +281,7 @@
   );
     </programlisting>
     <para>
-      The callback function needs to conform to this signiture
+      The callback function needs to conform to this signature
     </para>
     <programlisting>
 typedef void (*GstDPMUpdateFunction) (GValue *value, gpointer data);
@@ -335,7 +335,7 @@ gst_example_update_volume(GValue *value, gpointer data)
     <para>
       The array method is currently the least mature of the three methods and is
       not yet ready to be used in elements, but plugin writers should be aware
-      of its existance for the future.
+      of its existence for the future.
     </para>
   </sect2>
 </sect1>
@@ -491,7 +491,7 @@ example_chain (GstPad *pad, GstBuffer *buf)
     </para>
   </sect2>
   <sect2 id="section-dparam-audio-video">
-    <title>DParam Manager Modes</title>
+    <title>Dynamic Parameters for Video</title>
     <para>
       All of the explanation so far has presumed that the buffer contains audio
       data with many samples. Video should be regarded differently since a video

@@ -45,11 +45,13 @@ G_BEGIN_DECLS
 
 typedef struct _GstImplementsInterface GstImplementsInterface;
 
+typedef struct _GstImplementsInterfaceClass GstImplementsInterfaceClass;
+
 /* This small extra virtual function is here to provide an
  * interface functionality on a per-instance basis rather
  * than a per-class basis, which is the case for glib.
  */
-typedef struct _GstImplementsInterfaceClass {
+struct _GstImplementsInterfaceClass {
   GTypeInterface parent;
 
   /* virtual functions */
@@ -57,7 +59,7 @@ typedef struct _GstImplementsInterfaceClass {
 			  GType                   iface_type);
 
   gpointer _gst_reserved[GST_PADDING];
-} GstImplementsInterfaceClass;
+};
 
 #define GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST(obj, type, cast_t) \
   ((cast_t *) gst_implements_interface_cast ((obj), (type)))

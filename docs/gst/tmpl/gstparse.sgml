@@ -2,7 +2,7 @@
 gstparse
 
 <!-- ##### SECTION Short_Description ##### -->
-
+get a pipeline from a text pipeline description
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

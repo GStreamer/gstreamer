@@ -2,7 +2,7 @@
 GstXML
 
 <!-- ##### SECTION Short_Description ##### -->
-
+XML save/restore operations of pipelines
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

@@ -1,0 +1,32 @@
+$Id$
+
+* new general interfaces
+  * GST_TYPE_PRESET_MANAGER
+    - add preset managment
+    - API:
+      GList *get_presets();
+      void activate_preset_by_index(glong index);
+      void activate_preset_by_name(const gchar *name);
+      void add_current(const gchar *name);
+      void remove_preset_by_index(glong index);
+      void remove_preset_by_name(const gchar *name);
+    - features
+      - there should always be a default preset
+    - questions
+      - were and how do we store the presets?
+
+  * GST_TYPE_UI_HINT
+    - add hints to generate 'good' looking interfaces to elements
+    - API:
+    - features
+      - grouping of parameters
+
+* new interfaces for audio applications
+  * GST_TYPE_MUSIC_GENERATOR
+    - add hints so that application can find out which params to use to
+      play notes and/or to trigger sounds
+    - API:
+      DParam *get_note_dparam();
+      DParam *get_trigger_dparam();
+    - questions
+      - can we use this to support multiple voices?

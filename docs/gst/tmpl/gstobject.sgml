@@ -25,12 +25,58 @@ object.
 
 </para>
 
-<!-- ##### MACRO GST_OBJECT_CLASS ##### -->
+<!-- ##### STRUCT GstObject ##### -->
 <para>
 
 </para>
 
-@klass: 
+
+<!-- ##### SIGNAL GstObject::deep-notify ##### -->
+<para>
+The deep notify signal is used to be notified of property changes.
+it is typically attached to the toplevel bin to receive notifications
+from all the elements contained in that bin.
+</para>
+
+@gstobject: the object which received the signal.
+@arg1: the object that originated the signal
+@arg2: the property that changed
+
+<!-- ##### SIGNAL GstObject::object-saved ##### -->
+<para>
+Is trigered whenever a new object is saved to XML. You can connect to
+this signal to insert custom XML tags into the core XML.
+</para>
+
+@gstobject: the object which received the signal.
+@arg1: the xmlNodePtr of the parent node
+
+<!-- ##### SIGNAL GstObject::parent-set ##### -->
+<para>
+Is emitted when the parent of an object is set.
+</para>
+
+@gstobject: the object which received the signal.
+@arg1: the new parent
+
+<!-- ##### SIGNAL GstObject::parent-unset ##### -->
+<para>
+Is emitted when the parent of an object is unset.
+</para>
+
+@gstobject: the object which received the signal.
+@arg1: the old parent
+
+<!-- ##### ARG GstObject:name ##### -->
+<para>
+The name of the object
+</para>
+
+<!-- ##### MACRO GST_TYPE_OBJECT ##### -->
+<para>
+
+</para>
+
 
 
 <!-- ##### MACRO xmlNodePtr ##### -->

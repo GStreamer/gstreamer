@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-GstTagInterface
+GstTagSetter
 
 <!-- ##### SECTION Short_Description ##### -->
 Element interface that allows setting and retrieval of media metadata

@@ -445,66 +445,10 @@ Check if the index can be written to
 
 
 
-<!-- ##### MACRO GST_INDEX_FACTORY ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO GST_IS_INDEX_FACTORY ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO GST_INDEX_FACTORY_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-
-<!-- ##### MACRO GST_IS_INDEX_FACTORY_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-
-<!-- ##### MACRO GST_INDEX_FACTORY_GET_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
 <!-- ##### STRUCT GstIndexFactory ##### -->
 <para>
 The GstIndexFactory object
 </para>
-
-
-<!-- ##### STRUCT GstIndexFactoryClass ##### -->
-<para>
-
-</para>
-
-@parent: 
-@_gst_reserved: 
-
-<!-- ##### FUNCTION gst_index_factory_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_index_factory_new ##### -->

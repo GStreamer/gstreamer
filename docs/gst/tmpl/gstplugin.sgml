@@ -58,14 +58,6 @@ The plugin loading errors
 @GST_PLUGIN_ERROR_DEPENDENCIES: The plugin has unresolved dependencies
 @GST_PLUGIN_ERROR_NAME_MISMATCH: 
 
-<!-- ##### MACRO GST_PLUGIN ##### -->
-<para>
-
-</para>
-
-@plugin: 
-
-
 <!-- ##### STRUCT GstPlugin ##### -->
 <para>
 The plugin object
@@ -171,14 +163,6 @@ It will be called by the loader at statup.
 
 </para>
 
-
-
-<!-- ##### FUNCTION gst_plugin_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_plugin_get_name ##### -->

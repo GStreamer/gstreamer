@@ -17,8 +17,8 @@
 <!ENTITY GstEvent SYSTEM "xml/gstevent.xml">
 <!ENTITY GstFormat SYSTEM "xml/gstformat.xml">
 <!ENTITY GstIndex SYSTEM "xml/gstindex.xml">
+<!ENTITY GstImplementsInterface SYSTEM "xml/gstimplementsinterface.xml">
 <!ENTITY GstInfo SYSTEM "xml/gstinfo.xml">
-<!ENTITY GstInterface SYSTEM "xml/gstinterface.xml">
 <!ENTITY GstLog SYSTEM "xml/gstlog.xml">
 <!ENTITY GstMemChunk SYSTEM "xml/gstmemchunk.xml">
 <!ENTITY GstObject SYSTEM "xml/gstobject.xml">
@@ -35,7 +35,7 @@
 <!ENTITY GstStructure SYSTEM "xml/gststructure.xml">
 <!ENTITY GstSystemClock SYSTEM "xml/gstsystemclock.xml">
 <!ENTITY GstTag SYSTEM "xml/gsttag.xml">
-<!ENTITY GstTagInterface SYSTEM "xml/gsttaginterface.xml">
+<!ENTITY GstTagSetter SYSTEM "xml/gsttagsetter.xml">
 <!ENTITY GstThread SYSTEM "xml/gstthread.xml">
 <!ENTITY GstTrace SYSTEM "xml/gsttrace.xml">
 <!ENTITY GstTypeFind SYSTEM "xml/gsttypefind.xml">
@@ -70,10 +70,12 @@
   <chapter id="gstreamer">
     <title>GStreamer Core Library</title>
 
-    <para>libgstreamer-0.8.so provides all the core GStreamer services,
-including initialization, plugin management and types, as 
-well as the object hierarchy that defines elements and bins, along
-with some more specialized elements.</para>
+    <para>
+      libgstreamer-&GST_MAJORMINOR;.so provides all the core GStreamer services,
+      including initialization, plugin management and types,
+      as well as the object hierarchy that defines elements and bins,
+      along with some more specialized elements.
+    </para>
 
     &Gst;
     &GstBin;
@@ -89,7 +91,7 @@ with some more specialized elements.</para>
     &GstFormat;
     &GstIndex;
     &GstInfo;
-    &GstInterface;
+    &GstImplementsInterface;
     &GstObject;
     &GstPad;
     &GstParse;
@@ -105,7 +107,7 @@ with some more specialized elements.</para>
     &GstStructure;
     &GstSystemClock;
     &GstTag;
-    &GstTagInterface;
+    &GstTagSetter;
     &GstThread;
     &GstTypeFind;
     &GstUri;
@@ -118,6 +120,7 @@ with some more specialized elements.</para>
   <chapter id="gstreamer-support">
     <title>GStreamer Core Support</title>
     <para>
+      Theses elements support the gstreamer core and applications using it.
     </para>
 
     &GstAtomic;
@@ -126,6 +129,7 @@ with some more specialized elements.</para>
   </chapter>
 
 <!--
+  FIXME: why is this commented out
   <chapter id="element-types">
     <title>GStreamer Standard Elements</title>
 

@@ -6,7 +6,7 @@ Configuration options
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-This describes the configureation options for GStreamer. When building 
+This describes the configuration options for GStreamer. When building 
 GStreamer there are a lot of parts (known internally as "subsystems" ) that can 
 be disabled for various reasons. The most common reasons are speed and size, 
 which is important because GStreamer is designed to run on embedded systems.

@@ -152,41 +152,12 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 @arg1: 
 @arg2: 
 
-<!-- ##### STRUCT GstElementClass ##### -->
+<!-- ##### MACRO GST_TYPE_ELEMENT ##### -->
 <para>
 
 </para>
 
-@parent_class: 
-@details: 
-@elementfactory: 
-@padtemplates: 
-@numpadtemplates: 
-@state_change: 
-@new_pad: 
-@pad_removed: 
-@error: 
-@eos: 
-@found_tag: 
-@set_property: 
-@get_property: 
-@release_locks: 
-@get_event_masks: 
-@send_event: 
-@get_formats: 
-@convert: 
-@get_query_types: 
-@query: 
-@change_state: 
-@request_new_pad: 
-@release_pad: 
-@get_clock: 
-@set_clock: 
-@get_index: 
-@set_index: 
-@set_state: 
-@no_more_pads: 
-@_gst_reserved: 
+
 
 <!-- ##### STRUCT GstElementDetails ##### -->
 <para>
@@ -290,14 +261,6 @@ The Element is going from the PAUSED state to the READY state.
 The Element is going from the READY state to the NULL state.
 </para>
 
-
-
-<!-- ##### MACRO GST_ELEMENT_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
 
 
 <!-- ##### MACRO GST_ELEMENT_QUERY_TYPE_FUNCTION ##### -->
@@ -1255,14 +1218,6 @@ Sets the parent of an element.
 @element: 
 
 
-<!-- ##### FUNCTION gst_element_factory_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_element_register ##### -->
 <para>
 
@@ -1413,50 +1368,10 @@ Sets the parent of an element.
 </para>
 
 
-<!-- ##### STRUCT GstElementFactoryClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@_gst_reserved: 
-
 <!-- ##### MACRO GST_TYPE_ELEMENT_FACTORY ##### -->
 <para>
 
 </para>
 
-
-
-<!-- ##### MACRO GST_ELEMENT_FACTORY ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO GST_ELEMENT_FACTORY_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-
-<!-- ##### MACRO GST_IS_ELEMENT_FACTORY ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO GST_IS_ELEMENT_FACTORY_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
 
 

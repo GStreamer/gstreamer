@@ -87,6 +87,14 @@ HOW THE BUILD SYSTEM IS SET UP
 * ps and pdf are built in the current dir, in one file
 
 
+DOCBOOK NOTES
+=============
+
+* spell checking with aspell
+  * aspell -b -c --mode=sgml --lang=en <file>.xml
+    unfortunately the curses-ui of aspell (0.50.5) has problems with the xml tags
+
+
 GTK-DOC NOTES
 =============
 
@@ -108,10 +116,21 @@ GTK-DOC NOTES
   - add both an entity and use the entity in gstreamer-docs.sgml
   - add a new section to gstreamer-sections.txt
   - add all documented symbols to gstreamer-sections.txt in the proper section
+    (default),<SUBSECTION Standard>,<SUBSECTION Private>
+  - document at least the Short_Description in tmpl/.sgml
+  - signals: document them properly in tmpl/.sgml (or better in the c-source)
 
-  - signals: document them properly in tmpl/.sgml
 * checklist:
   - make sure -sections.txt has a <TITLE> set for each <FILE>
+  - the title should be named like the type, when it gets registered
+    (otherwise gtkdoc introspection fails)
+  - for clarity name the file like the title, but all lowercase
+
+* what to do when trying to improve the docs
+  - compare the output of
+    grep "_get_type" gstreamer-sections.txt | sort
+    with the types in XXX.types to detect entries that
+    are maybe missing
 
 * what happens during a gtk-doc build ?
   - headers are scanned based on $(MODULE).types
@@ -120,11 +139,8 @@ GTK-DOC NOTES
     where the module name is  $(MODULE)
     $(MODULE)-sections.txt is created if it doesn't exist yet (it should),
     as well as $(MODULE)-decl.txt and $(MODULE)-decl-list.txt
-    
     and .args, .hierarchy and .signals files are created
     gtkdoc-scan is called 
-
-  (FIXME: why is there gstreamer.types.in and gst-plugins.types.in ?)
 
 * Possible errors and how to fix them
   - Warning: multiple "IDs" for constraint linkend: gst-tag-register.
@@ -156,3 +172,4 @@ RANDOM THINGS I'VE LEARNED
   xsltproc has a --path option (that xmlto doesn't use yet), but it
   resolves single files to $(specified_path)/$(srcdir)/$(file)
   For now, we need to hack around it by copying xml to the build dir.
+

@@ -27,6 +27,23 @@ gst_event_new_flush() creates a new flush event.
 #GstPad, #GstElement
 </para>
 
+<!-- ##### MACRO GST_TYPE_EVENT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### STRUCT GstEvent ##### -->
+<para>
+
+</para>
+
+@data: 
+@type: 
+@timestamp: 
+@src: 
+
 <!-- ##### ENUM GstEventType ##### -->
 <para>
 The different major types of events.
@@ -307,16 +324,6 @@ Get access to the rate vale field
 
 @event: The event to query
 
-
-<!-- ##### STRUCT GstEvent ##### -->
-<para>
-
-</para>
-
-@data: 
-@type: 
-@timestamp: 
-@src: 
 
 <!-- ##### FUNCTION gst_event_new ##### -->
 <para>

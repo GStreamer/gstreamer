@@ -31,56 +31,19 @@ and the element property that can handle a given URI.
 
 
 
-<!-- ##### MACRO GST_URI_HANDLER ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO GST_IS_URI_HANDLER ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO GST_URI_HANDLER_GET_INTERFACE ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO GST_URI_HANDLER_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
 <!-- ##### STRUCT GstURIHandler ##### -->
 <para>
 
 </para>
 
 
-<!-- ##### STRUCT GstURIHandlerInterface ##### -->
+<!-- ##### MACRO GST_URI_TYPE_IS_VALID ##### -->
 <para>
 
 </para>
 
-@parent: 
-@new_uri: 
-@get_type: 
-@get_protocols: 
-@get_uri: 
-@set_uri: 
-@_gst_reserved: 
+@type: 
+
 
 <!-- ##### FUNCTION gst_uri_protocol_is_valid ##### -->
 <para>
