@@ -486,7 +486,7 @@ gst_props_entry_from_string (gchar *str, gchar **after)
   GstPropsEntry *entry;
 
   name = s = str;
-  while (g_ascii_isalnum (*s)) s++;
+  while (g_ascii_isalnum (*s) || *s == '_' || *s == '-') s++;
   del = s;
   while (g_ascii_isspace (*s)) s++;
   if (!(*s == '=' || *s == ':')) return NULL;  
