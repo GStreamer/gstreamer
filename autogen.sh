@@ -7,10 +7,10 @@ srcfile=gst/gst.c
 
 # a quick cvs co to ease the transition
 if test ! -d common; then
-  echo "+ getting common from cvs"; cvs co common
+  echo "+ getting common from cvs"; cvs co -r BRANCH-GSTREAMER-0_6 common
 fi
 if test ! -d libs/ext/cothreads; then
-  echo "+ getting cothreads from cvs"; cvs co gst-cothreads
+  echo "+ getting cothreads from cvs"; cvs co -r BRANCH-GSTREAMER-0_6 gst-cothreads
 fi
 
 # source helper functions
