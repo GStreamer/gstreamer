@@ -1,0 +1,32 @@
+.TH GStreamer 1 "June 2002"
+.SH NAME
+gst\-feedback - generate debug info for GStreamer bug reports
+.SH SYNOPSIS
+.B  gst-feedback
+.SH DESCRIPTION
+.PP
+\fIgst\-feedback\fP is a utility to scan the system for various
+information that is useful for GStreamer developers to help diagnose
+user problem.
+.PP
+Depending on the type of bug report, it may be useful to attach the
+output of \fIgst\-feeback\fP when you contact the developers.
+.PP
+NOTE: The current version of this script scans many dirs:
+/usr/lib /usr/local/lib /home /usr/include /usr/local/include /home (again)
+for various GStreamer installations.  Depending on your system you may not
+want to do this.  Improvements to the script are welcome.
+.SH USAGE
+Generate the feedback information by running \fIgst\-feedback\fP:
+.TP 8
+.B  gst\-feedback
+.TP -8
+Possibly redirect output and errors to a file:
+.TP 8
+.B  gst\-feedback > myfeedback 2>&1
+.SH SEE ALSO
+.BR gst\-launch (1),
+.BR gst\-register (1),
+.BR gst\-inspect (1),
+.SH AUTHOR
+The GStreamer team at http://gstreamer.net/
