@@ -1,3 +1,8 @@
+2004-01-03  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/cutter/gstcutter.c: (gst_cutter_init):
+	  src pad was being created twice - oops.
+
 2004-01-02  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_sinkconnect):
