@@ -3,7 +3,7 @@
   <para> 
     Sometimes the capabilities of a pad are not specificied. The disksrc, for
     example, does not know what type of file it is reading. Before you can attach
-    and element to the pad of the disksrc, you need to determine the media type in
+    an element to the pad of the disksrc, you need to determine the media type in
     order to be able to choose a compatible element.
   </para>
   <para> 

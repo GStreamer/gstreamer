@@ -1,4 +1,11 @@
-SUBDIRS = manual fwg gst libs plugins
+
+if BUILD_PLUGIN_DOCS
+SUBDIRS_PLUGINS = plugins
+else
+SUBDIRS_PLUGINS =
+endif
+
+SUBDIRS = manual fwg gst libs $(SUBDIRS_PLUGINS)
 
 EXTRA_DIST = random slides manuals.mak
 

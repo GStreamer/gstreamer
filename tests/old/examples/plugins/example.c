@@ -27,11 +27,11 @@
  */
 static GstElementDetails example_details = {
   "An example plugin",
-  "Example",
+  "Example/FirstExample",
   "Shows the basic structure of a plugin",
   VERSION,
   "your name <your.name@your.isp>",
-  "(C) 2000",
+  "(C) 2001",
 };
 
 /* These are the signals that this element can fire.  They are zero-

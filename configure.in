@@ -527,13 +527,24 @@ esac],
 [:]) dnl Default value
 
 AC_ARG_ENABLE(docs-build,
-[  --enable-docs-build          enable the building of the documentation],
+[  --disable-docs-build         disable all building of documentation],
 [case "${enableval}" in
   yes) BUILD_DOCS=yes ;;
   no)  BUILD_DOCS=no ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-docs-build) ;;
 esac], 
-[BUILD_DOCS=no]) dnl Default value
+[BUILD_DOCS=yes]) dnl Default value
+
+AC_ARG_ENABLE(plugin-docs,
+[  --enable-plugin-docs         enable the building of plugin documentation
+                               (this is currently broken, so off by default)],
+[case "${enableval}" in
+  yes) BUILD_PLUGIN_DOCS=yes ;;
+  no)  BUILD_PLUGIN_DOCS=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-plugin-docs) ;;
+esac], 
+[BUILD_PLUGIN_DOCS=no]) dnl Default value
+
 
 
 
@@ -615,6 +626,7 @@ AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBXV,          test "x$HAVE_LIBXV" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
 AM_CONDITIONAL(BUILD_DOCS,          test "x$BUILD_DOCS" = "xyes")
+AM_CONDITIONAL(BUILD_PLUGIN_DOCS,   test "x$BUILD_PLUGIN_DOCS" = "xyes")
 AM_CONDITIONAL(HAVE_DB2HTML,        $HAVE_DB2HTML)
 AM_CONDITIONAL(HAVE_DB2PS,          $HAVE_DB2PS)
 AM_CONDITIONAL(HAVE_PS2PDF,         $HAVE_PS2PDF)
