@@ -1132,7 +1132,6 @@ libs/colorspace/Makefile
 libs/videoscale/Makefile
 libs/getbits/Makefile
 libs/putbits/Makefile
-libs/winloader/Makefile
 libs/idct/Makefile
 libs/audio/Makefile
 plugins/Makefile
@@ -1145,6 +1144,7 @@ plugins/avi/Makefile
 plugins/avi/wincodec/Makefile
 plugins/avi/winaudio/Makefile
 plugins/flx/Makefile
+plugins/flac/Makefile
 plugins/jpeg/Makefile
 plugins/mp3decode/Makefile
 plugins/mp3decode/types/Makefile
