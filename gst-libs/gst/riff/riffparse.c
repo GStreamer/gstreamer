@@ -170,9 +170,9 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
     }
     else {
 
-      GST_DEBUG ("gst_riff_parser: chunk id offset %08x is 0x%08x '%s' and is 0x%08x long",
-		riff->nextlikely, GUINT32_FROM_LE (words[0]),
-            	gst_riff_id_to_fourcc(GUINT32_FROM_LE (words[0])), GUINT32_FROM_LE (words[1]));
+      GST_DEBUG ("gst_riff_parser: chunk id offset %08x is 0x%08x '" GST_FOURCC_FORMAT "' and is 0x%08x long",
+		riff->nextlikely, chunk->id, GST_FOURCC_ARGS(chunk->id),
+		chunk->size);
 
       riff->nextlikely += 8 + chunk->size;	/* doesn't include hdr */
       /* if this buffer is incomplete */
@@ -194,7 +194,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
       }
       if (riff->nextlikely & 0x01) riff->nextlikely++;
 
-      /*riff->chunks = g_list_prepend(riff->chunks,chunk); */
+      /*riff->chunks = g_list_prepend(riff->chunks,chunk);*/
     }
   }
   if ((riff->nextlikely+12) > last && !riff->incomplete_chunk) {
@@ -221,16 +221,15 @@ gst_riff_parser_resync (GstRiff *riff, gulong offset)
 }
 
 
-GstRiffChunk *gst_riff_get_chunk(GstRiff *riff,gchar *fourcc)
+GstRiffChunk *gst_riff_parser_get_chunk(GstRiff *riff, guint32 fourcc)
 {
   GList *chunk;
   
   g_return_val_if_fail(riff != NULL, NULL);
-  g_return_val_if_fail(fourcc != NULL, NULL);
 
   chunk = riff->chunks;
   while (chunk) {
-    if (((GstRiffChunk *)(chunk->data))->id == gst_riff_fourcc_to_id(fourcc))
+    if (((GstRiffChunk *)(chunk->data))->id == fourcc)
       return (GstRiffChunk *)(chunk->data);
     chunk = g_list_next(chunk);
   }
@@ -238,7 +237,7 @@ GstRiffChunk *gst_riff_get_chunk(GstRiff *riff,gchar *fourcc)
   return NULL;
 }   
   
-guint32 gst_riff_get_nextlikely(GstRiff *riff)
+guint32 gst_riff_parser_get_nextlikely(GstRiff *riff)
 {
   g_return_val_if_fail(riff != NULL, 0);
 
