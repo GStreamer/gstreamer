@@ -170,7 +170,9 @@ gst_esdsink_init(GTypeInstance *instance, gpointer g_class)
   esdsink->mute = FALSE;
   esdsink->fd = -1;
   /* FIXME: get default from somewhere better than just putting them inline. */
-  esdsink->negotiated = FALSE;
+  /*esdsink->negotiated = FALSE;*/
+  /* we have static caps on our template, so it always is negotiated */
+  esdsink->negotiated = TRUE;
   esdsink->format = 16;
   esdsink->depth = 16;
   esdsink->channels = 2;
