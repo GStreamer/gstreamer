@@ -23,29 +23,36 @@ man_MANS = gst-launch.1 gst-md5sum.1 gst-register.1 gst-inspect.1 \
 	gst-feedback.1
 
 gst_launch_LDADD = $(GST_LIBS) #-lefence
-gst_launch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+gst_launch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
+	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
 
 gst_md5sum_LDADD = $(GST_LIBS) #-lefence
-gst_md5sum_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+gst_md5sum_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
+	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
 
 if !GST_DISABLE_REGISTRY
 gst_register_LDADD = $(GST_LIBS)
-gst_register_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+gst_register_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
+	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
 endif
 
 gst_inspect_LDADD = $(GST_LIBS) ../libs/gst/control/libgstcontrol.la
-gst_inspect_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+gst_inspect_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
+	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
 
 gst_complete_LDADD = $(GST_LIBS)
-gst_complete_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+gst_complete_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
+	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
 
 if !GST_DISABLE_LOADSAVE
 gst_compprep_LDADD = $(GST_LIBS)
-gst_compprep_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+gst_compprep_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
+	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
 
 gst_xmllaunch_SOURCES = gst-launch.c
 gst_xmllaunch_LDADD = $(GST_LIBS)
-gst_xmllaunch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+gst_xmllaunch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
+	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
 endif
 
 EXTRA_DIST = $(man_MANS) gst-feedback

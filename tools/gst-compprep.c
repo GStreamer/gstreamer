@@ -99,9 +99,9 @@ int main(int argc,char *argv[]) {
   }
 
 #ifdef HAVE_LIBXML2
-  xmlSaveFormatFile(GST_CONFIG_DIR "/compreg.xml",doc,1);
+  xmlSaveFormatFile(GST_CACHE_DIR "/compreg.xml",doc,1);
 #else
-  xmlSaveFile(GST_CONFIG_DIR "/compreg.xml",doc);
+  xmlSaveFile(GST_CACHE_DIR "/compreg.xml",doc);
 #endif
 
   return 0;

@@ -26,7 +26,7 @@
 
 #include <gst/gstplugin.h>
 
-#define GLOBAL_REGISTRY_DIR      GST_CONFIG_DIR
+#define GLOBAL_REGISTRY_DIR      GST_CACHE_DIR
 #define GLOBAL_REGISTRY_FILE     GLOBAL_REGISTRY_DIR"/registry.xml"
 #define GLOBAL_REGISTRY_FILE_TMP GLOBAL_REGISTRY_DIR"/.registry.xml.tmp"
 

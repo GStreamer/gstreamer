@@ -36,6 +36,8 @@ configure-stamp:
 		--with-html-dir=\$${prefix}/share/doc/gstreamer-doc \
 		--sysconfdir=/etc \
 		--with-configdir=/etc/gstreamer \
+		--localstatedir=/var \
+		--with-cachedir=/var/cache/gstreamer \
 		--disable-plugin-builddir \
 		--disable-tests \
 		--disable-examples \

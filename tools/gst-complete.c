@@ -81,8 +81,8 @@ int main(int argc,char *argv[]) {
 
   /***** Loading the completion information from the registry *****/
 
-  if (stat (GST_CONFIG_DIR"/compreg.xml", &stat_buf) == 0) {
-    doc = xmlParseFile (GST_CONFIG_DIR"/compreg.xml");
+  if (stat (GST_CACHE_DIR"/compreg.xml", &stat_buf) == 0) {
+    doc = xmlParseFile (GST_CACHE_DIR"/compreg.xml");
   } else {
     exit (1);
   }

@@ -183,11 +183,11 @@ dist-hook:
 distclean-local:
 	rm -f $(top_builddir)/gst/gstmarshal.c $(top_builddir)/gst/gstmarshal.h
 
-libgstreamer_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
+libgstreamer_la_CFLAGS = -D_GNU_SOURCE \
 	$(LIBGST_CFLAGS) \
-	-D_GNU_SOURCE \
 	-DG_LOG_DOMAIN=g_log_domain_gstreamer \
-	-DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" 
+	-DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
+	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
 
 # the compiler shoots cothreads.c in the head at -O6
 libcothreads_la_CFLAGS = $(libgstreamer_la_CFLAGS) -O2 
