@@ -1,3 +1,9 @@
+2004-07-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am:
+	  clean up docs build.  Fixes needless rebuilding of template files.
+
 2004-07-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (set_kid_state_func), (gst_bin_set_state):
@@ -11,14 +17,14 @@
 	* win32/GStreamer.vcproj:
 	* win32/gstreamer.def:
 	  more exports for the plugins
-    
+
 2004-07-27  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/gstgetbits.vcproj:
 	* win32/gstgetbits.def:
 	* win32/msvc71.sln:
 	  add support for the getbits plugin
-    
+
 2004-07-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstvalue.c: (gst_value_transform_double_fraction),
@@ -39,22 +45,23 @@
 	* win32/gstelements.vcproj:
 	* win32/gstoptimalscheduler.vcproj:
 	  fixes for the Release build
-    
+
 2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/config.h:
 	  update the version number
-    
+
 2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/GStreamer.vcproj:
 	  add gstinterface to the build
-    
+
 2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/gstreamer.def:
-	  add many definitions needed by plugins, GST_CAT_DEFAULT only available in the Debug build ?
-    
+	  add many definitions needed by plugins,
+	  GST_CAT_DEFAULT only available in the Debug build ?
+
 2004-07-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstelement.c: (gst_element_set_eos_recursive):
@@ -98,7 +105,7 @@
 	* win32/gstspider.def:
 	* win32/gstspider.vcproj:
 	  remove unused .def files and export symbols using GST_PLUGIN_DEFINE
-    
+
 2004-07-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/gstreamer-sections.txt:

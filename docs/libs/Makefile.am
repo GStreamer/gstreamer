@@ -47,7 +47,7 @@ SCAN_OPTIONS=
 #EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
 
 # Extra options to supply to gtkdoc-mkdb.
-MKDB_OPTIONS=--sgml-mode --output-format=xml --ignore-files=trio
+MKDB_OPTIONS=--sgml-mode --ignore-files=trio
 
 # Extra options to supply to gtkdoc-fixref.
 FIXXREF_OPTIONS=--extra-dir=../gst/html
@@ -113,36 +113,60 @@ EXTRA_DIST = 				\
 	$(DOC_MODULE).types		\
 	$(DOC_MODULE)-sections.txt
 
-DOC_STAMPS=scan-build.stamp tmpl-build.stamp sgml-build.stamp html-build.stamp \
-	   $(srcdir)/tmpl.stamp $(srcdir)/sgml.stamp $(srcdir)/html.stamp
+DOC_STAMPS = 				\
+	scan-build.stamp		\
+	tmpl-build.stamp		\
+	sgml-build.stamp		\
+	html-build.stamp		\
+	$(srcdir)/tmpl.stamp		\
+	$(srcdir)/sgml.stamp		\
+	$(srcdir)/html.stamp
 
-SCANOBJ_FILES = 		\
-	$(DOC_MODULE).args 	\
-	$(DOC_MODULE).hierarchy \
+SCANOBJ_FILES =				\
+	$(DOC_MODULE).args 		\
+	$(DOC_MODULE).hierarchy 	\
+	$(DOC_MODULE).interfaces 	\
+	$(DOC_MODULE).prerequisites 	\
+	.libs/$(DOC_MODULE)-scan.o	\
 	$(DOC_MODULE).signals
+
+CLEANFILES = $(SCANOBJ_FILES) $(DOC_MODULE)-unused.txt $(DOC_STAMPS)
 
 if HAVE_GTK_DOC
 all-local: html-build.stamp
 
 #### scan ####
 
-
-# wingo addition
+# in the case of non-srcdir builds, the built gst directory gets added
+# to gtk-doc scanning; but only then, to avoid duplicates
 scan-build.stamp: $(HFILE_GLOB) $(SCANOBJ_DEPS) $(basefiles)
 	@echo '*** Scanning header files ***'
-	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types > /dev/null ; then \
-	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" $(GTK_DOC_SCANOBJ) --module=$(DOC_MODULE) --output-dir=$(srcdir) ; \
-	    if test x"$(srcdir)" != x. ; then \
-	        cp $(srcdir)/$(DOC_MODULE).types . ; \
-	    fi ; \
-	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" $(GTK_DOC_SCANOBJ) --module=$(DOC_MODULE) ; \
-	else \
-	    cd $(srcdir) ; \
-	    for i in $(SCANOBJ_FILES) ; do \
-               test -f $$i || touch $$i ; \
-	    done \
+	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types > /dev/null;	\
+	then								\
+            if test x"$(srcdir)" != x. ; then				\
+                cp $(srcdir)/$(DOC_MODULE).types . ;			\
+                chmod u+w $(DOC_MODULE).types ;				\
+            fi ;							\
+	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)"				\
+	    CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)"		\
+	    $(GTK_DOC_SCANOBJ) --type-init-func="gst_init(NULL,NULL)"	\
+	        --module=$(DOC_MODULE) ;				\
+	else								\
+	    cd $(srcdir) ;						\
+	    for i in $(SCANOBJ_FILES) ; do				\
+	       test -f $$i || touch $$i ;				\
+	    done							\
 	fi
-	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers="$(IGNORE_HFILES)" $(SCAN_OPTIONS) $(EXTRA_HFILES)
+	if test "x$(top_srcdir)" != "x$(top_builddir)";			\
+	then								\
+	  export BUILT_OPTIONS="--source-dir=$(top_builddir)/gst-libs";	\
+	fi;								\
+	gtkdoc-scan							\
+		$(SCAN_OPTIONS) $(EXTRA_HFILES)				\
+		--module=$(DOC_MODULE)					\
+		--source-dir=$(DOC_SOURCE_DIR)				\
+		$$BUILT_OPTIONS						\
+		--ignore-headers="$(IGNORE_HFILES)"
 	touch scan-build.stamp
 
 $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp

@@ -156,7 +156,7 @@ SCANOBJ_FILES =				\
 	$(DOC_MODULE).hierarchy		\
 	$(DOC_MODULE).interfaces	\
 	$(DOC_MODULE).prerequisites	\
-	$(DOC_MODULE)-scan.o		\
+	.libs/$(DOC_MODULE)-scan.o	\
 	$(DOC_MODULE).signals
 
 CLEANFILES = $(SCANOBJ_FILES) $(DOC_MODULE)-unused.txt $(DOC_STAMPS)
@@ -170,27 +170,31 @@ all-local: html-build.stamp
 # to gtk-doc scanning; but only then, to avoid duplicates
 scan-build.stamp: $(HFILE_GLOB) $(SCANOBJ_DEPS) $(basefiles)
 	@echo '*** Scanning header files ***'
-	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types > /dev/null ; then \
-	    if test x"$(srcdir)" != x. ; then \
-	        cp $(srcdir)/$(DOC_MODULE).types . ; \
-	        chmod u+w $(DOC_MODULE).types ; \
-	    fi ; \
-	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" $(GTK_DOC_SCANOBJ) --type-init-func="gst_init(NULL,NULL)" --module=$(DOC_MODULE) ; \
-	else \
-	    cd $(srcdir) ; \
-	    for i in $(SCANOBJ_FILES) ; do \
-               test -f $$i || touch $$i ; \
-	    done \
+	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types > /dev/null;	\
+	then								\
+	    if test x"$(srcdir)" != x. ; then				\
+	        cp $(srcdir)/$(DOC_MODULE).types . ;			\
+	        chmod u+w $(DOC_MODULE).types ;				\
+	    fi ;							\
+	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" 			\
+	    CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)"		\
+	    $(GTK_DOC_SCANOBJ) --type-init-func="gst_init(NULL,NULL)"	\
+	        --module=$(DOC_MODULE) ;				\
+	else								\
+	    cd $(srcdir) ;						\
+	    for i in $(SCANOBJ_FILES) ; do				\
+               test -f $$i || touch $$i ;				\
+	    done							\
 	fi
-	if test "x$(top_srcdir)" != "x$(top_builddir)"; \
-        then \
-          export BUILT_OPTIONS="--source-dir=$(top_builddir)/gst"; \
-        fi; \
-	gtkdoc-scan \
-		$(SCAN_OPTIONS) $(EXTRA_HFILES) \
-		--module=$(DOC_MODULE) \
-		--source-dir=$(DOC_SOURCE_DIR) \
-		$$BUILT_OPTIONS \
+	if test "x$(top_srcdir)" != "x$(top_builddir)";			\
+        then								\
+          export BUILT_OPTIONS="--source-dir=$(top_builddir)/gst";	\
+        fi;								\
+	gtkdoc-scan							\
+		$(SCAN_OPTIONS) $(EXTRA_HFILES)				\
+		--module=$(DOC_MODULE)					\
+		--source-dir=$(DOC_SOURCE_DIR)				\
+		$$BUILT_OPTIONS						\
 		--ignore-headers="$(IGNORE_HFILES)"
 	touch scan-build.stamp
 
@@ -241,7 +245,7 @@ html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
 	cp ../version.entities html
 	cd html && gtkdoc-mkhtml $(DOC_MODULE) $(DOC_MAIN_SGML_FILE)
 	rm -f html/$(DOC_MAIN_SGML_FILE)
-	rm -rf xml
+	rm -rf html/xml
 	rm -f html/version.entities
 	test "x$(HTML_IMAGES)" = "x" || for i in "" $(HTML_IMAGES) ; do \
 	    if test "$$i" != ""; then cp $(srcdir)/$$i html ; fi; done
