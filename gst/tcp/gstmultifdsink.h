@@ -29,20 +29,8 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
 #include "gsttcp.h"
+#include "gstfdset.h"
 
 #define GST_TYPE_MULTIFDSINK \
   (gst_multifdsink_get_type())
@@ -94,7 +82,8 @@ typedef enum
 /* structure for a client
  *  */
 typedef struct {
-  int fd;
+  GstFD fd;
+
   gint bufpos;                  /* position of this client in the global queue */
 
   GstClientStatus status;
@@ -131,10 +120,13 @@ struct _GstMultiFdSink {
   GMutex *clientslock;	/* lock to protect the clients list */
   GList *clients;	/* list of clients we are serving */
   
-  fd_set readfds; /* all the client file descriptors that we can read from */
-  fd_set writefds; /* all the client file descriptors that we can write to */
+  GstFDSetMode mode;
+  GstFDSet *fdset;
 
-  int control_sock[2];	/* sockets for controlling the select call */
+  //fd_set readfds; /* all the client file descriptors that we can read from */
+  //fd_set writefds; /* all the client file descriptors that we can write to */
+
+  GstFD control_sock[2];/* sockets for controlling the select call */
 
   GSList *streamheader; /* GSList of GstBuffers to use as streamheader */
   GstTCPProtocolType protocol;
@@ -168,7 +160,7 @@ struct _GstMultiFdSinkClass {
 
   /* vtable */
   gboolean (*init)   (GstMultiFdSink *sink);
-  gboolean (*select) (GstMultiFdSink *sink, fd_set *readfds, fd_set *writefds);
+  gboolean (*wait)   (GstMultiFdSink *sink, GstFDSet *set);
   gboolean (*close)  (GstMultiFdSink *sink);
 
   /* signals */

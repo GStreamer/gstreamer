@@ -16,6 +16,7 @@ libgsttcp_la_SOURCES = \
 	gsttcpplugin.c \
 	gsttcpsrc.c gsttcpsink.c \
 	gsttcp.c \
+	gstfdset.c \
 	gstmultifdsink.c  \
 	gsttcpclientsrc.c gsttcpclientsink.c \
 	gsttcpserversrc.c gsttcpserversink.c
@@ -32,6 +33,7 @@ noinst_HEADERS = \
   gsttcpplugin.h \
   gsttcpsrc.h gsttcpsink.h \
   gsttcp.h \
+  gstfdset.h \
   gstmultifdsink.h  \
   gsttcpclientsrc.h gsttcpclientsink.h \
   gsttcpserversrc.h gsttcpserversink.h

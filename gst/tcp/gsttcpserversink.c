@@ -57,8 +57,8 @@ static void gst_tcpserversink_base_init (gpointer g_class);
 static void gst_tcpserversink_class_init (GstTCPServerSink * klass);
 static void gst_tcpserversink_init (GstTCPServerSink * tcpserversink);
 
-static gboolean gst_tcpserversink_handle_select (GstMultiFdSink * sink,
-    fd_set * readfds, fd_set * writefds);
+static gboolean gst_tcpserversink_handle_wait (GstMultiFdSink * sink,
+    GstFDSet * set);
 static gboolean gst_tcpserversink_init_send (GstMultiFdSink * this);
 static gboolean gst_tcpserversink_close (GstMultiFdSink * this);
 
@@ -129,7 +129,7 @@ gst_tcpserversink_class_init (GstTCPServerSink * klass)
   gobject_class->get_property = gst_tcpserversink_get_property;
 
   gstmultifdsink_class->init = gst_tcpserversink_init_send;
-  gstmultifdsink_class->select = gst_tcpserversink_handle_select;
+  gstmultifdsink_class->wait = gst_tcpserversink_handle_wait;
   gstmultifdsink_class->close = gst_tcpserversink_close;
 
   GST_DEBUG_CATEGORY_INIT (tcpserversink_debug, "tcpserversink", 0, "TCP sink");
@@ -142,7 +142,7 @@ gst_tcpserversink_init (GstTCPServerSink * this)
   /* should support as minimum 576 for IPV4 and 1500 for IPV6 */
   /* this->mtu = 1500; */
 
-  this->server_sock_fd = -1;
+  this->server_sock.fd = -1;
 }
 
 /* handle a read request on the server,
@@ -156,7 +156,7 @@ gst_tcpserversink_handle_server_read (GstTCPServerSink * sink)
   int client_address_len;
 
   client_sock_fd =
-      accept (sink->server_sock_fd, (struct sockaddr *) &client_address,
+      accept (sink->server_sock.fd, (struct sockaddr *) &client_address,
       &client_address_len);
   if (client_sock_fd == -1) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
@@ -173,12 +173,11 @@ gst_tcpserversink_handle_server_read (GstTCPServerSink * sink)
 }
 
 static gboolean
-gst_tcpserversink_handle_select (GstMultiFdSink * sink,
-    fd_set * readfds, fd_set * writefds)
+gst_tcpserversink_handle_wait (GstMultiFdSink * sink, GstFDSet * set)
 {
   GstTCPServerSink *this = GST_TCPSERVERSINK (sink);
 
-  if (FD_ISSET (this->server_sock_fd, readfds)) {
+  if (gst_fdset_fd_can_read (set, &this->server_sock)) {
     /* handle new client connection on server socket */
     if (!gst_tcpserversink_handle_server_read (this)) {
       GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
@@ -245,22 +244,22 @@ gst_tcpserversink_init_send (GstMultiFdSink * parent)
   GstTCPServerSink *this = GST_TCPSERVERSINK (parent);
 
   /* create sending server socket */
-  if ((this->server_sock_fd = socket (AF_INET, SOCK_STREAM, 0)) == -1) {
+  if ((this->server_sock.fd = socket (AF_INET, SOCK_STREAM, 0)) == -1) {
     GST_ELEMENT_ERROR (this, RESOURCE, OPEN_WRITE, (NULL), GST_ERROR_SYSTEM);
     return FALSE;
   }
   GST_DEBUG_OBJECT (this, "opened sending server socket with fd %d",
-      this->server_sock_fd);
+      this->server_sock.fd);
 
   /* make address reusable */
-  if (setsockopt (this->server_sock_fd, SOL_SOCKET, SO_REUSEADDR, &ret,
+  if (setsockopt (this->server_sock.fd, SOL_SOCKET, SO_REUSEADDR, &ret,
           sizeof (int)) < 0) {
     GST_ELEMENT_ERROR (this, RESOURCE, SETTINGS, (NULL),
         ("Could not setsockopt: %s", g_strerror (errno)));
     return FALSE;
   }
   /* keep connection alive; avoids SIGPIPE during write */
-  if (setsockopt (this->server_sock_fd, SOL_SOCKET, SO_KEEPALIVE, &ret,
+  if (setsockopt (this->server_sock.fd, SOL_SOCKET, SO_KEEPALIVE, &ret,
           sizeof (int)) < 0) {
     GST_ELEMENT_ERROR (this, RESOURCE, SETTINGS, (NULL),
         ("Could not setsockopt: %s", g_strerror (errno)));
@@ -275,7 +274,7 @@ gst_tcpserversink_init_send (GstMultiFdSink * parent)
 
   /* bind it */
   GST_DEBUG_OBJECT (this, "binding server socket to address");
-  ret = bind (this->server_sock_fd, (struct sockaddr *) &this->server_sin,
+  ret = bind (this->server_sock.fd, (struct sockaddr *) &this->server_sin,
       sizeof (this->server_sin));
 
   if (ret) {
@@ -289,20 +288,23 @@ gst_tcpserversink_init_send (GstMultiFdSink * parent)
   }
 
   /* set the server socket to nonblocking */
-  fcntl (this->server_sock_fd, F_SETFL, O_NONBLOCK);
+  fcntl (this->server_sock.fd, F_SETFL, O_NONBLOCK);
 
   GST_DEBUG_OBJECT (this, "listening on server socket %d with queue of %d",
-      this->server_sock_fd, TCP_BACKLOG);
-  if (listen (this->server_sock_fd, TCP_BACKLOG) == -1) {
+      this->server_sock.fd, TCP_BACKLOG);
+  if (listen (this->server_sock.fd, TCP_BACKLOG) == -1) {
     GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
         ("Could not listen on server socket: %s", g_strerror (errno)));
     return FALSE;
   }
   GST_DEBUG_OBJECT (this,
       "listened on server socket %d, returning from connection setup",
-      this->server_sock_fd);
+      this->server_sock.fd);
 
-  FD_SET (this->server_sock_fd, &parent->readfds);
+  gst_fdset_add_fd (parent->fdset, &this->server_sock);
+  gst_fdset_fd_ctl_read (parent->fdset, &this->server_sock, TRUE);
+
+  //FD_SET (this->server_sock_fd, &parent->readfds);
 
   return TRUE;
 }
@@ -312,9 +314,11 @@ gst_tcpserversink_close (GstMultiFdSink * parent)
 {
   GstTCPServerSink *this = GST_TCPSERVERSINK (parent);
 
-  if (this->server_sock_fd != -1) {
-    close (this->server_sock_fd);
-    this->server_sock_fd = -1;
+  if (this->server_sock.fd != -1) {
+    close (this->server_sock.fd);
+    this->server_sock.fd = -1;
+
+    gst_fdset_remove_fd (parent->fdset, &this->server_sock);
   }
   return TRUE;
 }

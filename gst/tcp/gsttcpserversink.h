@@ -73,7 +73,7 @@ struct _GstTCPServerSink {
   struct sockaddr_in server_sin;
 
   /* socket */
-  int server_sock_fd;
+  GstFD server_sock;
 };
 
 struct _GstTCPServerSinkClass {

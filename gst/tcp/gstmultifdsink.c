@@ -24,6 +24,10 @@
 #include <gst/gst-i18n-plugin.h>
 
 #include <sys/ioctl.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #ifdef HAVE_FIONREAD_IN_SYS_FILIO
 #include <sys/filio.h>
@@ -32,6 +36,8 @@
 #include "gstmultifdsink.h"
 #include "gsttcp-marshal.h"
 
+#define NOT_IMPLEMENTED 0
+
 /* the select call is also performed on the control sockets, that way
  * we can send special commands to unblock or restart the select call */
 #define CONTROL_RESTART		'R'     /* restart the select call */
@@ -39,15 +45,16 @@
 #define CONTROL_SOCKETS(sink)	sink->control_sock
 #define WRITE_SOCKET(sink)	sink->control_sock[1]
 #define READ_SOCKET(sink)	sink->control_sock[0]
+
 #define SEND_COMMAND(sink, command)		\
 G_STMT_START {					\
   unsigned char c; c = command;			\
-  write (WRITE_SOCKET(sink), &c, 1);		\
+  write (WRITE_SOCKET(sink).fd, &c, 1);		\
 } G_STMT_END
 
 #define READ_COMMAND(sink, command, res)	\
 G_STMT_START {					\
-  res = read(READ_SOCKET(sink), &command, 1);	\
+  res = read(READ_SOCKET(sink).fd, &command, 1);	\
 } G_STMT_END
 
 /* elementfactory information */
@@ -79,6 +86,7 @@ enum
 
 /* this is really arbitrary choosen */
 #define DEFAULT_PROTOCOL		 GST_TCP_PROTOCOL_TYPE_NONE
+#define DEFAULT_MODE			 GST_FDSET_MODE_POLL
 #define DEFAULT_BUFFERS_MAX		-1
 #define DEFAULT_BUFFERS_SOFT_MAX	-1
 #define DEFAULT_UNIT_TYPE	 	GST_UNIT_TYPE_BUFFERS
@@ -91,6 +99,7 @@ enum
 {
   ARG_0,
   ARG_PROTOCOL,
+  ARG_MODE,
   ARG_BUFFERS_QUEUED,
   ARG_BYTES_QUEUED,
   ARG_TIME_QUEUED,
@@ -132,6 +141,7 @@ gst_recover_policy_get_type (void)
   return recover_policy_type;
 }
 
+#if NOT_IMPLEMENTED
 #define GST_TYPE_UNIT_TYPE (gst_unit_type_get_type())
 static GType
 gst_unit_type_get_type (void)
@@ -149,6 +159,7 @@ gst_unit_type_get_type (void)
   }
   return unit_type_type;
 }
+#endif
 
 #define GST_TYPE_CLIENT_STATUS (gst_client_status_get_type())
 static GType
@@ -241,6 +252,10 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
   g_object_class_install_property (gobject_class, ARG_PROTOCOL,
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
           GST_TYPE_TCP_PROTOCOL_TYPE, DEFAULT_PROTOCOL, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_MODE,
+      g_param_spec_enum ("mode", "Mode",
+          "The mode for selecting activity on the fds", GST_TYPE_FDSET_MODE,
+          DEFAULT_MODE, G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFERS_MAX,
       g_param_spec_int ("buffers-max", "Buffers max",
@@ -251,6 +266,7 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
           "Recover client when going over this limit (-1 = no limit)", -1,
           G_MAXINT, DEFAULT_BUFFERS_SOFT_MAX, G_PARAM_READWRITE));
 
+#if NOT_IMPLEMENTED
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_UNIT_TYPE,
       g_param_spec_enum ("unit-type", "Units type",
           "The unit to measure the max/soft-max/queued properties",
@@ -263,11 +279,13 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
       g_param_spec_int ("units-soft-max", "Units soft max",
           "Recover client when going over this limit (-1 = no limit)", -1,
           G_MAXINT, DEFAULT_UNITS_SOFT_MAX, G_PARAM_READWRITE));
+#endif
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFERS_QUEUED,
       g_param_spec_uint ("buffers-queued", "Buffers queued",
           "Number of buffers currently queued", 0, G_MAXUINT, 0,
           G_PARAM_READABLE));
+#if NOT_IMPLEMENTED
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BYTES_QUEUED,
       g_param_spec_uint ("bytes-queued", "Bytes queued",
           "Number of bytes currently queued", 0, G_MAXUINT, 0,
@@ -276,6 +294,7 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
       g_param_spec_uint64 ("time-queued", "Time queued",
           "Number of time currently queued", 0, G_MAXUINT64, 0,
           G_PARAM_READABLE));
+#endif
 
   g_object_class_install_property (gobject_class, ARG_RECOVER_POLICY,
       g_param_spec_enum ("recover-policy", "Recover Policy",
@@ -346,6 +365,7 @@ gst_multifdsink_init (GstMultiFdSink * this)
   GST_FLAG_UNSET (this, GST_MULTIFDSINK_OPEN);
 
   this->protocol = DEFAULT_PROTOCOL;
+  this->mode = DEFAULT_MODE;
 
   this->clientslock = g_mutex_new ();
   this->clients = NULL;
@@ -359,18 +379,6 @@ gst_multifdsink_init (GstMultiFdSink * this)
   this->timeout = DEFAULT_TIMEOUT;
 }
 
-static void
-gst_multifdsink_debug_fdset (GstMultiFdSink * sink, fd_set * testfds)
-{
-  int fd;
-
-  for (fd = 0; fd < FD_SETSIZE; fd++) {
-    if (FD_ISSET (fd, testfds)) {
-      GST_LOG_OBJECT (sink, "fd %d", fd);
-    }
-  }
-}
-
 void
 gst_multifdsink_add (GstMultiFdSink * sink, int fd)
 {
@@ -381,7 +389,7 @@ gst_multifdsink_add (GstMultiFdSink * sink, int fd)
 
   /* create client datastructure */
   client = g_new0 (GstTCPClient, 1);
-  client->fd = fd;
+  client->fd.fd = fd;
   client->status = GST_CLIENT_STATUS_OK;
   client->bufpos = -1;
   client->bufoffset = 0;
@@ -404,7 +412,9 @@ gst_multifdsink_add (GstMultiFdSink * sink, int fd)
   /* set the socket to non blocking */
   fcntl (fd, F_SETFL, O_NONBLOCK);
   /* we always read from a client */
-  FD_SET (fd, &sink->readfds);
+  gst_fdset_add_fd (sink->fdset, &client->fd);
+  gst_fdset_fd_ctl_read (sink->fdset, &client->fd, TRUE);
+
   SEND_COMMAND (sink, CONTROL_RESTART);
 
   g_mutex_unlock (sink->clientslock);
@@ -428,9 +438,10 @@ gst_multifdsink_remove (GstMultiFdSink * sink, int fd)
     client = (GstTCPClient *) clients->data;
     next = g_list_next (clients);
 
-    if (client->fd == fd) {
+    if (client->fd.fd == fd) {
       client->status = GST_CLIENT_STATUS_REMOVED;
       gst_multifdsink_remove_client_link (sink, clients);
+      SEND_COMMAND (sink, CONTROL_RESTART);
       break;
     }
   }
@@ -454,6 +465,7 @@ gst_multifdsink_clear (GstMultiFdSink * sink)
     client->status = GST_CLIENT_STATUS_REMOVED;
     gst_multifdsink_remove_client_link (sink, clients);
   }
+  SEND_COMMAND (sink, CONTROL_RESTART);
   g_mutex_unlock (sink->clientslock);
 }
 
@@ -470,7 +482,7 @@ gst_multifdsink_get_stats (GstMultiFdSink * sink, int fd)
 
     client = (GstTCPClient *) clients->data;
 
-    if (client->fd == fd) {
+    if (client->fd.fd == fd) {
       GValue value = { 0 };
       guint64 interval;
 
@@ -525,48 +537,42 @@ gst_multifdsink_remove_client_link (GstMultiFdSink * sink, GList * link)
   GTimeVal now;
   GstTCPClient *client = (GstTCPClient *) link->data;
 
-  fd = client->fd;
+  fd = client->fd.fd;
 
   /* FIXME: if we keep track of ip we can log it here and signal */
-  GST_DEBUG_OBJECT (sink, "removing client on fd %d", fd);
-
   switch (client->status) {
     case GST_CLIENT_STATUS_OK:
       GST_WARNING_OBJECT (sink, "removing client %p with fd %d for no reason",
-          client, client->fd);
+          client, fd);
       break;
     case GST_CLIENT_STATUS_CLOSED:
       GST_DEBUG_OBJECT (sink, "removing client %p with fd %d because of close",
-          client, client->fd);
+          client, fd);
       break;
     case GST_CLIENT_STATUS_REMOVED:
       GST_DEBUG_OBJECT (sink,
           "removing client %p with fd %d because the app removed it", client,
-          client->fd);
+          fd);
       break;
     case GST_CLIENT_STATUS_SLOW:
       GST_INFO_OBJECT (sink,
-          "removing client %p with fd %d because it was too slow", client,
-          client->fd);
+          "removing client %p with fd %d because it was too slow", client, fd);
       break;
     case GST_CLIENT_STATUS_ERROR:
       GST_WARNING_OBJECT (sink,
-          "removing client %p with fd %d because of error", client, client->fd);
+          "removing client %p with fd %d because of error", client, fd);
       break;
     default:
       GST_WARNING_OBJECT (sink,
-          "removing client %p with fd %d with invalid reason", client,
-          client->fd);
+          "removing client %p with fd %d with invalid reason", client, fd);
       break;
   }
 
-  FD_CLR (fd, &sink->readfds);
-  FD_CLR (fd, &sink->writefds);
+  gst_fdset_remove_fd (sink->fdset, &client->fd);
   if (close (fd) != 0) {
     /* this is not really an error */
     GST_DEBUG_OBJECT (sink, "error closing fd %d: %s", fd, g_strerror (errno));
   }
-  SEND_COMMAND (sink, CONTROL_RESTART);
 
   g_get_current_time (&now);
   client->disconnect_time = GST_TIMEVAL_TO_TIME (now);
@@ -596,7 +602,7 @@ gst_multifdsink_handle_client_read (GstMultiFdSink * sink,
   int avail, fd;
   gboolean ret;
 
-  fd = client->fd;
+  fd = client->fd.fd;
 
   if (ioctl (fd, FIONREAD, &avail) < 0) {
     GST_WARNING_OBJECT (sink, "ioctl failed for fd %d: %s",
@@ -665,7 +671,7 @@ gst_multifdsink_client_queue_data (GstMultiFdSink * sink, GstTCPClient * client,
   GST_BUFFER_SIZE (buf) = len;
 
   GST_LOG_OBJECT (sink, "Queueing data of length %d for fd %d",
-      len, client->fd);
+      len, client->fd.fd);
 
   client->sending = g_slist_append (client->sending, buf);
 
@@ -683,7 +689,7 @@ gst_multifdsink_client_queue_caps (GstMultiFdSink * sink, GstTCPClient * client,
 
   string = gst_caps_to_string (caps);
   GST_DEBUG_OBJECT (sink, "Queueing caps %s for fd %d through GDP", string,
-      client->fd);
+      client->fd.fd);
   g_free (string);
 
   if (!gst_dp_packet_from_caps (caps, 0, &length, &header, &payload)) {
@@ -708,7 +714,7 @@ gst_multifdsink_client_queue_buffer (GstMultiFdSink * sink,
 
     if (!gst_dp_header_from_buffer (buffer, 0, &len, &header)) {
       GST_DEBUG_OBJECT (sink,
-          "could not create header, removing client on fd %d", client->fd);
+          "could not create header, removing client on fd %d", client->fd.fd);
       return FALSE;
     }
     gst_multifdsink_client_queue_data (sink, client, header, len);
@@ -750,7 +756,7 @@ static gboolean
 gst_multifdsink_handle_client_write (GstMultiFdSink * sink,
     GstTCPClient * client)
 {
-  int fd = client->fd;
+  int fd = client->fd.fd;
   gboolean more;
   gboolean res;
   GstClockTime now;
@@ -803,7 +809,7 @@ gst_multifdsink_handle_client_write (GstMultiFdSink * sink,
       if (client->bufpos == -1) {
         /* client is too fast, remove from write queue until new buffer is
          * available */
-        FD_CLR (fd, &sink->writefds);
+        gst_fdset_fd_ctl_write (sink->fdset, &client->fd, FALSE);
         return TRUE;
       } else {
         /* client can pick a buffer from the global queue */
@@ -885,7 +891,7 @@ gst_multifdsink_recover_client (GstMultiFdSink * sink, GstTCPClient * client)
 
   GST_WARNING_OBJECT (sink,
       "client %p with fd %d is lagging at %d, recover using policy %d", client,
-      client->fd, client->bufpos, sink->recover_policy);
+      client->fd.fd, client->bufpos, sink->recover_policy);
 
   switch (sink->recover_policy) {
     case GST_RECOVER_POLICY_NONE:
@@ -961,7 +967,7 @@ gst_multifdsink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
 
     client->bufpos++;
     GST_LOG_OBJECT (sink, "client %p with fd %d at position %d",
-        client, client->fd, client->bufpos);
+        client, client->fd.fd, client->bufpos);
     /* check soft max if needed, recover client */
     if (sink->units_soft_max > 0 && client->bufpos >= sink->units_soft_max) {
       gint newpos;
@@ -971,10 +977,11 @@ gst_multifdsink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
         client->bufpos = newpos;
         client->discont = TRUE;
         GST_WARNING_OBJECT (sink, "client %p with fd %d position reset to %d",
-            client, client->fd, client->bufpos);
+            client, client->fd.fd, client->bufpos);
       } else {
         GST_WARNING_OBJECT (sink,
-            "client %p with fd %d not recovering position", client, client->fd);
+            "client %p with fd %d not recovering position", client,
+            client->fd.fd);
       }
     }
     /* check hard max and timeout, remove client */
@@ -983,20 +990,18 @@ gst_multifdsink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
             && now - client->last_activity_time > sink->timeout)) {
       /* remove client */
       GST_WARNING_OBJECT (sink, "client %p with fd %d is too slow, removing",
-          client, client->fd);
-      FD_CLR (client->fd, &sink->readfds);
-      FD_CLR (client->fd, &sink->writefds);
+          client, client->fd.fd);
+      /* remove the client, the fd set will be cleared and the select thread will
+       * be signaled */
       client->status = GST_CLIENT_STATUS_SLOW;
       gst_multifdsink_remove_client_link (sink, clients);
-      /* cannot send data to this client anymore. need to signal the select thread that
-       * the fd_set changed */
-      need_signal = TRUE;
       /* set client to invalid position while being removed */
       client->bufpos = -1;
+      need_signal = TRUE;
     } else if (client->bufpos == 0) {
       /* can send data to this client now. need to signal the select thread that
        * the fd_set changed */
-      FD_SET (client->fd, &sink->writefds);
+      gst_fdset_fd_ctl_write (sink->fdset, &client->fd, TRUE);
       need_signal = TRUE;
     }
     /* keep track of maximum buffer usage */
@@ -1038,7 +1043,6 @@ static void
 gst_multifdsink_handle_clients (GstMultiFdSink * sink)
 {
   int result;
-  fd_set testreadfds, testwritefds;
   GList *clients, *next;
   gboolean try_again;
   GstMultiFdSinkClass *fclass;
@@ -1054,20 +1058,11 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
      * - server socket input (ie, new client connections)
      * - client socket input (ie, clients saying goodbye)
      * - client socket output (ie, client reads)          */
-    testwritefds = sink->writefds;
-    testreadfds = sink->readfds;
-
-    GST_LOG_OBJECT (sink, "doing select on server + client fds for reads");
-    gst_multifdsink_debug_fdset (sink, &testreadfds);
-    GST_LOG_OBJECT (sink, "doing select on client fds for writes");
-    gst_multifdsink_debug_fdset (sink, &testwritefds);
-
-    result =
-        select (FD_SETSIZE, &testreadfds, &testwritefds, (fd_set *) 0, NULL);
+    result = gst_fdset_wait (sink->fdset, -1);
 
     /* < 0 is an error, 0 just means a timeout happened */
     if (result < 0) {
-      GST_WARNING_OBJECT (sink, "select failed: %s", g_strerror (errno));
+      GST_WARNING_OBJECT (sink, "wait failed: %s", g_strerror (errno));
       if (errno == EBADF) {
         /* ok, so one of the fds is invalid. We loop over them to find one
          * that gives an error to the F_GETFL fcntl.  */
@@ -1081,7 +1076,7 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
           client = (GstTCPClient *) clients->data;
           next = g_list_next (clients);
 
-          fd = client->fd;
+          fd = client->fd.fd;
 
           res = fcntl (fd, F_GETFL, &flags);
           if (res == -1) {
@@ -1106,34 +1101,35 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
         return;
       }
     } else {
-      GST_LOG_OBJECT (sink, "%d sockets had action", result);
-      GST_LOG_OBJECT (sink, "done select on server/client fds for reads");
-      gst_multifdsink_debug_fdset (sink, &testreadfds);
-      GST_LOG_OBJECT (sink, "done select on client fds for writes");
-      gst_multifdsink_debug_fdset (sink, &testwritefds);
-
+      GST_INFO_OBJECT (sink, "wait done: %d", result);
       /* read all commands */
-      if (FD_ISSET (READ_SOCKET (sink), &testreadfds)) {
+      if (gst_fdset_fd_can_read (sink->fdset, &READ_SOCKET (sink))) {
+        GST_INFO_OBJECT (sink, "have a command");
         while (TRUE) {
           gchar command;
           int res;
 
           READ_COMMAND (sink, command, res);
           if (res < 0) {
+            GST_INFO_OBJECT (sink, "no more commands");
             /* no more commands */
             break;
           }
 
           switch (command) {
             case CONTROL_RESTART:
+              GST_INFO_OBJECT (sink, "restart");
               /* need to restart the select call as the fd_set changed */
               try_again = TRUE;
               break;
+              /* need to restart the select call as the fd_set changed */
             case CONTROL_STOP:
+              GST_INFO_OBJECT (sink, "stop");
               /* stop this function */
               stop = TRUE;
               break;
             default:
+              GST_WARNING_OBJECT (sink, "unkown");
               g_warning ("multifdsink: unknown control message received");
               break;
           }
@@ -1145,14 +1141,13 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
     }
   } while (try_again);
 
-  if (fclass->select)
-    fclass->select (sink, &testreadfds, &testwritefds);
+  if (fclass->wait)
+    fclass->wait (sink, sink->fdset);
 
   /* Check the reads */
   g_mutex_lock (sink->clientslock);
   for (clients = sink->clients; clients; clients = next) {
     GstTCPClient *client;
-    int fd;
 
     client = (GstTCPClient *) clients->data;
     next = g_list_next (clients);
@@ -1162,16 +1157,24 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
       continue;
     }
 
-    fd = client->fd;
-
-    if (FD_ISSET (fd, &testreadfds)) {
+    if (gst_fdset_fd_has_closed (sink->fdset, &client->fd)) {
+      client->status = GST_CLIENT_STATUS_CLOSED;
+      gst_multifdsink_remove_client_link (sink, clients);
+      continue;
+    }
+    if (gst_fdset_fd_has_error (sink->fdset, &client->fd)) {
+      client->status = GST_CLIENT_STATUS_ERROR;
+      gst_multifdsink_remove_client_link (sink, clients);
+      continue;
+    }
+    if (gst_fdset_fd_can_read (sink->fdset, &client->fd)) {
       /* handle client read */
       if (!gst_multifdsink_handle_client_read (sink, client)) {
         gst_multifdsink_remove_client_link (sink, clients);
         continue;
       }
     }
-    if (FD_ISSET (fd, &testwritefds)) {
+    if (gst_fdset_fd_can_write (sink->fdset, &client->fd)) {
       /* handle client write */
       if (!gst_multifdsink_handle_client_write (sink, client)) {
         gst_multifdsink_remove_client_link (sink, clients);
@@ -1243,6 +1246,9 @@ gst_multifdsink_set_property (GObject * object, guint prop_id,
     case ARG_PROTOCOL:
       multifdsink->protocol = g_value_get_enum (value);
       break;
+    case ARG_MODE:
+      multifdsink->mode = g_value_get_enum (value);
+      break;
     case ARG_BUFFERS_MAX:
       multifdsink->units_max = g_value_get_int (value);
       break;
@@ -1283,6 +1289,9 @@ gst_multifdsink_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case ARG_PROTOCOL:
       g_value_set_enum (value, multifdsink->protocol);
+      break;
+    case ARG_MODE:
+      g_value_set_enum (value, multifdsink->mode);
       break;
     case ARG_BUFFERS_MAX:
       g_value_set_int (value, multifdsink->units_max);
@@ -1333,20 +1342,26 @@ static gboolean
 gst_multifdsink_init_send (GstMultiFdSink * this)
 {
   GstMultiFdSinkClass *fclass;
+  int control_socket[2];
 
   fclass = GST_MULTIFDSINK_GET_CLASS (this);
 
-  FD_ZERO (&this->readfds);
-  FD_ZERO (&this->writefds);
+  GST_INFO_OBJECT (this, "starting in mode %d", this->mode);
+  this->fdset = gst_fdset_new (this->mode);
 
-  if (socketpair (PF_UNIX, SOCK_STREAM, 0, CONTROL_SOCKETS (this)) < 0) {
+  if (socketpair (PF_UNIX, SOCK_STREAM, 0, control_socket) < 0) {
     GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ_WRITE, (NULL),
         GST_ERROR_SYSTEM);
     return FALSE;
   }
-  FD_SET (READ_SOCKET (this), &this->readfds);
-  fcntl (READ_SOCKET (this), F_SETFL, O_NONBLOCK);
-  fcntl (WRITE_SOCKET (this), F_SETFL, O_NONBLOCK);
+  READ_SOCKET (this).fd = control_socket[0];
+  WRITE_SOCKET (this).fd = control_socket[1];
+
+  gst_fdset_add_fd (this->fdset, &READ_SOCKET (this));
+  gst_fdset_fd_ctl_read (this->fdset, &READ_SOCKET (this), TRUE);
+
+  fcntl (READ_SOCKET (this).fd, F_SETFL, O_NONBLOCK);
+  fcntl (WRITE_SOCKET (this).fd, F_SETFL, O_NONBLOCK);
 
   this->streamheader = NULL;
   this->bytes_to_serve = 0;
@@ -1375,8 +1390,9 @@ gst_multifdsink_close (GstMultiFdSink * this)
   SEND_COMMAND (this, CONTROL_STOP);
   g_thread_join (this->thread);
 
-  close (READ_SOCKET (this));
-  close (WRITE_SOCKET (this));
+  close (READ_SOCKET (this).fd);
+  close (WRITE_SOCKET (this).fd);
+  gst_fdset_remove_fd (this->fdset, &READ_SOCKET (this));
 
   if (this->streamheader) {
     GSList *l;
@@ -1389,6 +1405,8 @@ gst_multifdsink_close (GstMultiFdSink * this)
 
   if (fclass->close)
     fclass->close (this);
+
+  gst_fdset_free (this->fdset);
 }
 
 static GstElementStateReturn
