@@ -857,7 +857,10 @@ gst_element_wait (GstElement * element, GstClockTime timestamp)
 
   /* shortcut when we're already late... */
   if (gst_element_get_time (element) >= timestamp) {
-    GST_INFO_OBJECT (element, "called gst_element_wait and was late");
+    GST_INFO_OBJECT (element,
+        "called gst_element_wait (% " GST_TIME_FORMAT ") and was late (%"
+        GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
+        GST_TIME_ARGS (gst_element_get_time (element)));
     return TRUE;
   }
 
@@ -919,7 +922,8 @@ gst_element_set_time_delay (GstElement * element, GstClockTime time,
     case GST_STATE_PLAYING:
       event_time = gst_clock_get_event_time_delay (element->clock, delay);
       GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, element,
-          "clock time %llu: setting element time to %llu", event_time, time);
+          "clock time %" GST_TIME_FORMAT ": setting element time to %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (event_time), GST_TIME_ARGS (time));
       element->base_time = event_time - time;
       break;
     default:
@@ -2893,7 +2897,7 @@ gst_element_change_state (GstElement * element)
 
         element->base_time = time - element->base_time;
         GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, element, "setting base time to %"
-            G_GINT64_FORMAT, element->base_time);
+            GST_TIME_FORMAT, GST_TIME_ARGS (element->base_time));
       }
       break;
       /* if we are going to paused, we try to negotiate the pads */

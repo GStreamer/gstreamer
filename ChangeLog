@@ -1,3 +1,9 @@
+2004-04-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstelement.c: (gst_element_wait),
+	(gst_element_set_time_delay), (gst_element_change_state):
+          Use GST_TIME_*
+
 2004-04-20  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/autoplug/gstspider.c: (gst_spider_link_sometimes),
