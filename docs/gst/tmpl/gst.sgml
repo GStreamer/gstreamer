@@ -71,7 +71,8 @@ fragment:
   to find the version at compile time.
 </para>
 <para>
-gst_main() and gst_main_quit() enter and exit the main loop. 
+gst_main() and gst_main_quit() enter and exit the main loop. GStreamer doesn't currently require
+you to us a mainloop but can intergrate with it without problems.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

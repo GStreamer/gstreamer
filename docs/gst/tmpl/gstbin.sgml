@@ -43,6 +43,8 @@ gst_bin_destroy() is used to destroy the bin.
 To control the selection of the clock in a bin, you can use the following methods:
 gst_bin_auto_clock() to let the bin select a clock automatically, gst_bin_get_clock() to
 get the current clock of the bin and gst_bin_use_clock() to specify a clock explicitly.
+Note that the default behaviour is to automatically select a clock from one of the
+clock providers in the bin.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -74,7 +76,7 @@ gst_bin_set_pre_iterate_function() and gst_bin_set_post_iterate_function().
 </para>
 
 @bin: The bin that performed the callback
-@data: user data
+@user_data: user data
 
 
 <!-- ##### FUNCTION gst_bin_new ##### -->
@@ -167,7 +169,7 @@ Free the memory allocated by this bin
 
 @bin: 
 @func: 
-@func_data: 
+@user_data: 
 
 
 <!-- ##### FUNCTION gst_bin_set_pre_iterate_function ##### -->
@@ -177,7 +179,7 @@ Free the memory allocated by this bin
 
 @bin: 
 @func: 
-@func_data: 
+@user_data: 
 
 
 <!-- ##### FUNCTION gst_bin_child_state_change ##### -->
@@ -217,12 +219,19 @@ Free the memory allocated by this bin
 @clock: 
 
 
-<!-- ##### SIGNAL GstBin::object-added ##### -->
+<!-- ##### SIGNAL GstBin::element-added ##### -->
 <para>
-is signaled whenever a new <classname>GstElement</classname> is added to the <classname>GstBin</classname>
 
 </para>
 
 @gstbin: the object which received the signal.
-@arg1: the element that was added
+@arg1: 
+
+<!-- ##### SIGNAL GstBin::element-removed ##### -->
+<para>
+
+</para>
+
+@gstbin: the object which received the signal.
+@arg1: 
 

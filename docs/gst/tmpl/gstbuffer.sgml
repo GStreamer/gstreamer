@@ -374,7 +374,6 @@ Frees the given buffer, regardless of the refcount.
 It is dangerous to use this function, you should use gst_buffer_unref() instead.
 </para>
 
-@buf: 
 @buf: a #GstBuffer to free.
 
 
