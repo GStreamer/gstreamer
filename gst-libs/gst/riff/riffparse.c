@@ -219,3 +219,29 @@ gst_riff_parser_resync (GstRiff *riff, gulong offset)
   riff->dataleft = NULL;
   riff->nextlikely = offset;
 }
+
+
+GstRiffChunk *gst_riff_get_chunk(GstRiff *riff,gchar *fourcc)
+{
+  GList *chunk;
+  
+  g_return_val_if_fail(riff != NULL, NULL);
+  g_return_val_if_fail(fourcc != NULL, NULL);
+
+  chunk = riff->chunks;
+  while (chunk) {
+    if (((GstRiffChunk *)(chunk->data))->id == gst_riff_fourcc_to_id(fourcc))
+      return (GstRiffChunk *)(chunk->data);
+    chunk = g_list_next(chunk);
+  }
+
+  return NULL;
+}   
+  
+guint32 gst_riff_get_nextlikely(GstRiff *riff)
+{
+  g_return_val_if_fail(riff != NULL, 0);
+
+  return riff->nextlikely;
+}
+
