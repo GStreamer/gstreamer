@@ -17,10 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_GSMENC_H__
 #define __GST_GSMENC_H__
-
 
 #include <gst/gst.h>
 
@@ -30,10 +28,7 @@
 #include <gsm.h>
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_GSMENC \
   (gst_gsmenc_get_type())
@@ -49,33 +44,29 @@ extern "C" {
 typedef struct _GstGSMEnc GstGSMEnc;
 typedef struct _GstGSMEncClass GstGSMEncClass;
 
-struct _GstGSMEnc {
+struct _GstGSMEnc
+{
   GstElement element;
 
   /* pads */
-  GstPad *sinkpad,*srcpad;
+  GstPad *sinkpad, *srcpad;
 
   gsm state;
   gsm_signal buffer[160];
   gint bufsize;
-
-  guint64 next_ts;
-  gint rate;
+  GstClockTime next_ts;
 };
 
-struct _GstGSMEncClass {
+struct _GstGSMEncClass
+{
   GstElementClass parent_class;
 
   /* signals */
-  void (*frame_encoded) (GstElement *element);
+  void (*frame_encoded) (GstElement * element);
 };
 
-GType gst_gsmenc_get_type(void);
+GType gst_gsmenc_get_type (void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_GSMENC_H__ */

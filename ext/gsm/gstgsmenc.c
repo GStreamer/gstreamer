@@ -52,8 +52,6 @@ static void gst_gsmenc_class_init (GstGSMEnc * klass);
 static void gst_gsmenc_init (GstGSMEnc * gsmenc);
 
 static void gst_gsmenc_chain (GstPad * pad, GstData * _data);
-static GstPadLinkReturn gst_gsmenc_sinkconnect (GstPad * pad,
-    const GstCaps * caps);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_gsmenc_signals[LAST_SIGNAL] = { 0 };
@@ -86,8 +84,7 @@ static GstStaticPadTemplate gsmenc_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-gsm, "
-        "rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
+    GST_STATIC_CAPS ("audio/x-gsm, " "rate = (int) 8000, " "channels = (int) 1")
     );
 
 static GstStaticPadTemplate gsmenc_sink_template =
@@ -98,8 +95,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "endianness = (int) BYTE_ORDER, "
         "signed = (boolean) true, "
         "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
+        "depth = (int) 16, " "rate = (int) 8000, " "channels = (int) 1")
     );
 
 static void
@@ -141,7 +137,6 @@ gst_gsmenc_init (GstGSMEnc * gsmenc)
       (&gsmenc_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (gsmenc), gsmenc->sinkpad);
   gst_pad_set_chain_function (gsmenc->sinkpad, gst_gsmenc_chain);
-  gst_pad_set_link_function (gsmenc->sinkpad, gst_gsmenc_sinkconnect);
 
   gsmenc->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
@@ -151,89 +146,90 @@ gst_gsmenc_init (GstGSMEnc * gsmenc)
   gsmenc->state = gsm_create ();
   gsmenc->bufsize = 0;
   gsmenc->next_ts = 0;
-  gsmenc->rate = 8000;
-}
-
-static GstPadLinkReturn
-gst_gsmenc_sinkconnect (GstPad * pad, const GstCaps * caps)
-{
-  GstGSMEnc *gsmenc;
-  GstStructure *structure;
-
-  gsmenc = GST_GSMENC (gst_pad_get_parent (pad));
-
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "rate", &gsmenc->rate);
-  if (gst_pad_try_set_caps (gsmenc->srcpad,
-          gst_caps_new_simple ("audio/x-gsm",
-              "rate", G_TYPE_INT, gsmenc->rate,
-              "channels", G_TYPE_INT, 1, NULL)) > 0) {
-    return GST_PAD_LINK_OK;
-  }
-  return GST_PAD_LINK_REFUSED;
-
 }
 
 static void
 gst_gsmenc_chain (GstPad * pad, GstData * _data)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstGSMEnc *gsmenc;
-  gsm_signal *data;
-  guint size;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  g_return_if_fail (_data != NULL);
 
   gsmenc = GST_GSMENC (GST_OBJECT_PARENT (pad));
 
-  data = (gsm_signal *) GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf) / sizeof (gsm_signal);
+  if (GST_IS_EVENT (_data)) {
+    GstEvent *event = GST_EVENT (_data);
 
-  if (gsmenc->bufsize && (gsmenc->bufsize + size >= 160)) {
-    GstBuffer *outbuf;
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_EOS:{
+        gst_element_set_eos (GST_ELEMENT (gsmenc));
+        gst_pad_push (gsmenc->srcpad, _data);
+        break;
+      }
+      case GST_EVENT_DISCONTINUOUS:{
+        /* drop the discontinuity */
+        break;
+      }
+      default:{
+        gst_pad_event_default (pad, event);
+        break;
+      }
+    }
+    return;
+  } else if (GST_IS_BUFFER (_data)) {
+    GstBuffer *buf = GST_BUFFER (_data);
+    gsm_signal *data;
+    guint size;
 
-    memcpy (gsmenc->buffer + gsmenc->bufsize, data,
-        (160 - gsmenc->bufsize) * sizeof (gsm_signal));
+    data = (gsm_signal *) GST_BUFFER_DATA (buf);
+    size = GST_BUFFER_SIZE (buf) / sizeof (gsm_signal);
 
-    outbuf = gst_buffer_new ();
-    GST_BUFFER_DATA (outbuf) = g_malloc (33 * sizeof (gsm_byte));
-    GST_BUFFER_SIZE (outbuf) = 33 * sizeof (gsm_byte);
+    if (gsmenc->bufsize && (gsmenc->bufsize + size >= 160)) {
+      GstBuffer *outbuf;
 
-    gsm_encode (gsmenc->state, gsmenc->buffer,
-        (gsm_byte *) GST_BUFFER_DATA (outbuf));
+      memcpy (gsmenc->buffer + gsmenc->bufsize, data,
+          (160 - gsmenc->bufsize) * sizeof (gsm_signal));
 
-    GST_BUFFER_TIMESTAMP (outbuf) = gsmenc->next_ts;
-    gst_pad_push (gsmenc->srcpad, GST_DATA (outbuf));
-    gsmenc->next_ts += (160.0 / gsmenc->rate) * 1000000;
+      outbuf = gst_buffer_new_and_alloc (33 * sizeof (gsm_byte));
+      GST_BUFFER_TIMESTAMP (outbuf) = gsmenc->next_ts;
+      GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
+      gsmenc->next_ts += 20 * GST_MSECOND;
 
-    size -= (160 - gsmenc->bufsize);
-    data += (160 - gsmenc->bufsize);
-    gsmenc->bufsize = 0;
+      gsm_encode (gsmenc->state, gsmenc->buffer,
+          (gsm_byte *) GST_BUFFER_DATA (outbuf));
+
+      gst_pad_push (gsmenc->srcpad, GST_DATA (outbuf));
+
+      size -= (160 - gsmenc->bufsize);
+      data += (160 - gsmenc->bufsize);
+      gsmenc->bufsize = 0;
+    }
+
+    while (size >= 160) {
+      GstBuffer *outbuf;
+
+      outbuf = gst_buffer_new_and_alloc (33 * sizeof (gsm_byte));
+      GST_BUFFER_TIMESTAMP (outbuf) = gsmenc->next_ts;
+      GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
+      gsmenc->next_ts += 20 * GST_MSECOND;
+
+      gsm_encode (gsmenc->state, data, (gsm_byte *) GST_BUFFER_DATA (outbuf));
+
+      gst_pad_push (gsmenc->srcpad, GST_DATA (outbuf));
+
+      size -= 160;
+      data += 160;
+    }
+
+    if (size) {
+      memcpy (gsmenc->buffer + gsmenc->bufsize, data,
+          size * sizeof (gsm_signal));
+      gsmenc->bufsize += size;
+    }
+
+    gst_buffer_unref (buf);
+    return;
   }
-
-  while (size >= 160) {
-    GstBuffer *outbuf;
-
-    outbuf = gst_buffer_new ();
-    GST_BUFFER_DATA (outbuf) = g_malloc (33 * sizeof (gsm_byte));
-    GST_BUFFER_SIZE (outbuf) = 33 * sizeof (gsm_byte);
-
-    gsm_encode (gsmenc->state, data, (gsm_byte *) GST_BUFFER_DATA (outbuf));
-
-    GST_BUFFER_TIMESTAMP (outbuf) = gsmenc->next_ts;
-    gst_pad_push (gsmenc->srcpad, GST_DATA (outbuf));
-    gsmenc->next_ts += (160 / gsmenc->rate) * GST_SECOND;
-
-    size -= 160;
-    data += 160;
-  }
-
-  if (size) {
-    memcpy (gsmenc->buffer + gsmenc->bufsize, data, size * sizeof (gsm_signal));
-    gsmenc->bufsize += size;
-  }
-
-  gst_buffer_unref (buf);
 }
