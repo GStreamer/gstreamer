@@ -20,6 +20,8 @@
 # Author: David I. Lehn <dlehn@vt.edu>
 #
 
+import pygtk
+pygtk.require('2.0')
 import sys
 import os
 import dl
