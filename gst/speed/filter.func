@@ -63,4 +63,6 @@
       }
       
       gst_pad_push(filter->srcpad, out);
-    } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+
+      gst_element_yield (element);
+    } while (TRUE);

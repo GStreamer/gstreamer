@@ -580,8 +580,9 @@ gst_flxdec_loop (GstElement *element)
     // destroy header buffer 
     gst_buffer_unref(databuf);
 
+    gst_element_yield (element);
   }
-  while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+  while (TRUE);
 
 }
 
