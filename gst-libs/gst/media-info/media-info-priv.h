@@ -25,6 +25,9 @@
 #include <gst/gst.h>
 
 /* debug */
+GST_DEBUG_CATEGORY_EXTERN (gst_media_info_debug);
+#define GST_CAT_DEFAULT gst_media_info_debug
+
 #define DEBUG
 #ifdef DEBUG
 static gboolean _gmi_debug = TRUE;

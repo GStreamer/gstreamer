@@ -91,7 +91,7 @@ deep_notify_callback (GObject *object, GstObject *origin,
 
   if (strcmp (pspec->name, "metadata") == 0)
   {
-    GMI_DEBUG("DEBUG: deep_notify: have metadata !\n");
+    GST_DEBUG ("DEBUG: deep_notify: have metadata !");
     g_value_init (&value, pspec->value_type);
     g_object_get_property (G_OBJECT (origin), pspec->name, &value);
     priv->metadata = g_value_peek_pointer (&value);
@@ -101,12 +101,12 @@ deep_notify_callback (GObject *object, GstObject *origin,
     /* check if we're getting it from the source we want it from */
     if (GST_IS_PAD (origin) && GST_PAD (origin) == priv->decoder_pad)
     {
-      GMI_DEBUG("DEBUG: deep_notify: have caps on decoder_pad !\n");
+      GST_DEBUG ("DEBUG: deep_notify: have caps on decoder_pad !");
       g_value_init (&value, pspec->value_type);
       g_object_get_property (G_OBJECT (origin), pspec->name, &value);
       priv->format = g_value_peek_pointer (&value);
     }
-    else GMI_DEBUG("DEBUG: igoring caps on object %s:%s\n",
+    else GST_DEBUG ("ignoring caps on object %s:%s",
 		   gst_object_get_name (gst_object_get_parent (origin)),
 		   gst_object_get_name (origin));
   }
@@ -116,12 +116,12 @@ deep_notify_callback (GObject *object, GstObject *origin,
   }
   else if (strcmp (pspec->name, "streaminfo") == 0)
   {
-    GMI_DEBUG("DEBUG: deep_notify: have streaminfo !\n");
+    GST_DEBUG ("deep_notify: have streaminfo !");
     g_value_init (&value, pspec->value_type);
     g_object_get_property (G_OBJECT (origin), pspec->name, &value);
     priv->streaminfo = g_value_peek_pointer (&value);
   }
-   else GMI_DEBUG("DEBUG: ignoring notify of %s\n", pspec->name);
+   else GST_DEBUG ("ignoring notify of %s", pspec->name);
 }
 
 /* helpers */
@@ -173,7 +173,7 @@ gmi_seek_to_track (GstMediaInfo *info, long track)
   /* FIXME: consider more nicks as "track" */
   track_format = gst_format_get_by_nick ("logical_stream");
   if (track_format == 0) return FALSE;
-  GMI_DEBUG("Track format: %d\n", track_format);
+  GST_DEBUG ("Track format: %d", track_format);
 
   if (gst_element_set_state (priv->pipeline, GST_STATE_PLAYING)
 		            == GST_STATE_FAILURE)
@@ -217,7 +217,7 @@ gmi_get_decoder (GstMediaInfo *info, const char *mime)
   decoder = g_hash_table_lookup (info->priv->decoders, mime);
   if (decoder == NULL)
   {
-    GMI_DEBUG("DEBUG: no decoder in table, inserting one\n");
+    GST_DEBUG ("no decoder in table, inserting one");
     /* FIXME: please figure out proper mp3 mimetypes */
     if ((strcmp (mime, "application/x-ogg") == 0) ||
         (strcmp (mime, "application/ogg") == 0))
@@ -240,7 +240,7 @@ gmi_get_decoder (GstMediaInfo *info, const char *mime)
     if (factory == NULL)
       return NULL;
 
-    GMI_DEBUG("DEBUG: using factory %s\n", factory);
+    GST_DEBUG ("using factory %s", factory);
     decoder = gst_element_factory_make (factory, "decoder");
     g_free (factory);
 
@@ -309,7 +309,7 @@ gmip_find_type_pre (GstMediaInfoPriv *priv)
     priv->type = NULL;
   }
 
-  GMI_DEBUG("DEBUG: gmip_find_type_pre: start\n");
+  GST_DEBUG ("gmip_find_type_pre: start");
   /* find out type */
   /* FIXME: we could move caps for typefind out of struct and
    * just use it through this function only */
@@ -354,7 +354,7 @@ gmip_find_type (GstMediaInfoPriv *priv)
 {
   if (!gmip_find_type_pre (priv))
     return FALSE;
-  GMI_DEBUG("DEBUG: gmip_find_type: iterating\n");
+  GST_DEBUG ("gmip_find_type: iterating");
   while ((priv->type == NULL) &&
 	 gst_bin_iterate (GST_BIN (priv->pipeline)))
     GMI_DEBUG("+");
@@ -388,7 +388,7 @@ gmip_find_stream_post (GstMediaInfoPriv *priv)
   glong bytes = 0;
 
 
-  GMI_DEBUG("gmip_find_stream_post: start\n");
+  GST_DEBUG ("gmip_find_stream_post: start");
   /* find a format that matches the "track" concept */
   /* FIXME: this is used in vorbis, but we might have to loop when
    * more codecs have tracks */
@@ -404,7 +404,7 @@ gmip_find_stream_post (GstMediaInfoPriv *priv)
 
     g_assert (GST_IS_PAD (priv->decoder_pad));
     definition = gst_format_get_details (*formats);
-    GMI_DEBUG("trying to figure out length for format %s\n", definition->nick);
+    GST_DEBUG ("trying to figure out length for format %s", definition->nick);
 
     res = gst_pad_query (priv->decoder_pad, GST_QUERY_TOTAL,
                          &format, &value);
@@ -415,7 +415,7 @@ gmip_find_stream_post (GstMediaInfoPriv *priv)
       {
         case GST_FORMAT_TIME:
           stream->length_time = value;
-          GMI_DEBUG("  total %s: %lld\n", definition->nick, value);
+          GST_DEBUG ("  total %s: %lld", definition->nick, value);
 	  break;
 	case GST_FORMAT_DEFAULT:
 	case GST_FORMAT_BYTES:
@@ -426,14 +426,14 @@ gmip_find_stream_post (GstMediaInfoPriv *priv)
 	  if (format == track_format)
 	  {
 	    stream->length_tracks = value;
-            GMI_DEBUG("  total %s: %lld\n", definition->nick, value);
+            GST_DEBUG ("  total %s: %lld", definition->nick, value);
 	  }
 	  else
-	    GMI_DEBUG("unhandled format %s\n", definition->nick);
+	    GST_DEBUG ("unhandled format %s", definition->nick);
       }
     }
     else
-      GMI_DEBUG("query didn't return result for %s\n", definition->nick);
+      GST_DEBUG ("query didn't return result for %s", definition->nick);
 
     formats++;
   }
@@ -445,7 +445,7 @@ gmip_find_stream_post (GstMediaInfoPriv *priv)
                        &format, &value);
   if (!res) g_warning ("Failed to query on sink pad !");
   bytes = value;
-  GMI_DEBUG("bitrate calc: bytes gotten: %ld\n", bytes);
+  GST_DEBUG ("bitrate calc: bytes gotten: %ld", bytes);
 
   if (bytes)
   {
@@ -462,7 +462,7 @@ gmip_find_stream_post (GstMediaInfoPriv *priv)
 gboolean
 gmip_find_stream (GstMediaInfoPriv *priv)
 {
-  GMI_DEBUG("DEBUG:gmip_find_stream start\n");
+  GST_DEBUG ("mip_find_stream start");
 
   gmip_find_stream_pre (priv);
   /* iterate until caps are found */
@@ -477,7 +477,7 @@ gmip_find_stream (GstMediaInfoPriv *priv)
 
   if (priv->format == NULL)
   {
-    GMI_DEBUG("DEBUG: gmip_find_stream: couldn't get caps !");
+    GMI_DEBUG("gmip_find_stream: couldn't get caps !");
     return FALSE;
   }
   return gmip_find_stream_post (priv);
@@ -514,7 +514,7 @@ gboolean
 gmip_find_track_metadata (GstMediaInfoPriv *priv)
 {
   gmip_find_track_metadata_pre (priv);
-  GMI_DEBUG("DEBUG: gmip_find_metadata: iterating\n");
+  GST_DEBUG ("gmip_find_metadata: iterating");
   while ((priv->metadata == NULL) &&
 	 gst_bin_iterate (GST_BIN (priv->pipeline)))
     GMI_DEBUG("+");
@@ -564,7 +564,7 @@ gmip_find_track_streaminfo_post (GstMediaInfoPriv *priv)
     {
       format = GST_FORMAT_TIME;
       track_num = value_start;
-      GMI_DEBUG("DEBUG: we are currently at %ld\n", track_num);
+      GST_DEBUG ("we are currently at %ld", track_num);
       res = gst_pad_convert  (priv->decoder_pad,
 		              track_format, track_num,
 			      &format, &value_start);
@@ -574,7 +574,7 @@ gmip_find_track_streaminfo_post (GstMediaInfoPriv *priv)
       if (res)
       {
         /* substract to get the length */
-	GMI_DEBUG("DEBUG: start %lld, end %lld\n", value_start, value_end);
+	GST_DEBUG ("start %lld, end %lld", value_start, value_end);
 	value_end -= value_start;
 	/* FIXME: check units; this is in seconds */
 
@@ -593,7 +593,7 @@ gboolean
 gmip_find_track_streaminfo (GstMediaInfoPriv *priv)
 {
   gmip_find_track_streaminfo_pre (priv);
-  GMI_DEBUG("DEBUG: gmip_find_streaminfo: iterating\n");
+  GST_DEBUG ("DEBUG: gmip_find_streaminfo: iterating");
   while ((priv->streaminfo == NULL) &&
 	 gst_bin_iterate (GST_BIN (priv->pipeline)))
     GMI_DEBUG("+");
@@ -631,7 +631,7 @@ gboolean
 gmip_find_track_format (GstMediaInfoPriv *priv)
 {
   gmip_find_track_format_pre (priv);
-  GMI_DEBUG("DEBUG: gmip_find_format: iterating\n");
+  GST_DEBUG ("DEBUG: gmip_find_format: iterating");
   while ((priv->format == NULL) &&
 	 gst_bin_iterate (GST_BIN (priv->pipeline)))
     GMI_DEBUG("+");
