@@ -198,6 +198,8 @@ gst_goom_init (GstGOOM *goom)
   gst_element_add_pad (GST_ELEMENT (goom), goom->sinkpad);
   gst_element_add_pad (GST_ELEMENT (goom), goom->srcpad);
 
+  GST_FLAG_SET (goom, GST_ELEMENT_EVENT_AWARE);
+
   gst_pad_set_chain_function (goom->sinkpad, gst_goom_chain);
   gst_pad_set_link_function (goom->sinkpad, gst_goom_sinkconnect);
 
@@ -231,6 +233,25 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
   goom = GST_GOOM (gst_pad_get_parent (pad));
 
   GST_DEBUG (0, "GOOM: chainfunc called");
+
+  if (GST_IS_EVENT (bufin)) {
+    GstEvent *event = GST_EVENT (bufin);
+
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_DISCONTINUOUS:
+      {
+	gint64 value = 0;
+
+	gst_event_discont_get_value (event, GST_FORMAT_TIME, &value);
+
+        goom->next_time = value;
+      }
+      default:
+	gst_pad_event_default (pad, event);
+	break;
+    }
+    return;
+  }
 
   samples_in = GST_BUFFER_SIZE (bufin) / sizeof (gint16);
 
