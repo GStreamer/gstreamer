@@ -86,6 +86,37 @@ make_parse_pipeline (const gchar *location)
 }
 
 static GstElement*
+make_vorbis_pipeline (const gchar *location) 
+{
+  GstElement *pipeline;
+  GstElement *src, *decoder, *audiosink;
+  GstPad *seekable;
+  
+  pipeline = gst_pipeline_new ("app");
+
+  src = gst_element_factory_make ("filesrc", "src");
+  decoder = gst_element_factory_make ("vorbisfile", "decoder");
+  audiosink = gst_element_factory_make ("osssink", "sink");
+  //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
+
+  g_object_set (G_OBJECT (src), "location", location, NULL);
+
+  gst_bin_add (GST_BIN (pipeline), src);
+  gst_bin_add (GST_BIN (pipeline), decoder);
+  gst_bin_add (GST_BIN (pipeline), audiosink);
+
+  gst_element_connect (src, decoder);
+  gst_element_connect (decoder, audiosink);
+
+  seekable = gst_element_get_pad (decoder, "src");
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (decoder, "sink"));
+
+  return pipeline;
+}
+
+static GstElement*
 make_mp3_pipeline (const gchar *location) 
 {
   GstElement *pipeline;
@@ -467,23 +498,29 @@ stop_seek (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 static void
 play_cb (GtkButton * button, gpointer data)
 {
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  gtk_idle_add ((GtkFunction) iterate, pipeline);
-  update_id = gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
+  if (gst_element_get_state (pipeline) != GST_STATE_PLAYING) {
+    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    gtk_idle_add ((GtkFunction) iterate, pipeline);
+    update_id = gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
+  }
 }
 
 static void
 pause_cb (GtkButton * button, gpointer data)
 {
-  gst_element_set_state (pipeline, GST_STATE_PAUSED);
-  gtk_timeout_remove (update_id);
+  if (gst_element_get_state (pipeline) != GST_STATE_PAUSED) {
+    gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    gtk_timeout_remove (update_id);
+  }
 }
 
 static void
 stop_cb (GtkButton * button, gpointer data)
 {
-  gst_element_set_state (pipeline, GST_STATE_READY);
-  gtk_timeout_remove (update_id);
+  if (gst_element_get_state (pipeline) != GST_STATE_READY) {
+    gst_element_set_state (pipeline, GST_STATE_READY);
+    gtk_timeout_remove (update_id);
+  }
 }
 
 int
@@ -497,7 +534,7 @@ main (int argc, char **argv)
   gtk_init (&argc, &argv);
 
   if (argc != 3) {
-    g_print ("usage: %s <type 0=mp3 1=avi 2=mpeg1 3=mpegparse> <filename>\n", argv[0]);
+    g_print ("usage: %s <type 0=mp3 1=avi 2=mpeg1 3=mpegparse 4=vorbis> <filename>\n", argv[0]);
     exit (-1);
   }
 
@@ -507,8 +544,10 @@ main (int argc, char **argv)
     pipeline = make_avi_pipeline (argv[2]);
   else if (atoi (argv[1]) == 2) 
     pipeline = make_mpeg_pipeline (argv[2]);
-  else 
+  else if (atoi (argv[1]) == 3)
     pipeline = make_parse_pipeline (argv[2]);
+  else if (atoi (argv[1]) == 4) 
+    pipeline = make_vorbis_pipeline (argv[2]);
 
   /* initialize gui elements ... */
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
