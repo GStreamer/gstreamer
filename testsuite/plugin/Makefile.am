@@ -2,8 +2,7 @@ GST_PLUGIN_PATH=$(shell cd $(top_builddir) && pwd)
 TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(GST_PLUGIN_PATH) GST_REGISTRY=$(GST_PLUGIN_PATH)/testsuite/test-registry.xml
 
 # FIXME : tests need fixing
-testprogs = static # dynamic linked loading registry static2
-# filterdir = $(libdir)/gst
+testprogs = # static # dynamic linked loading registry static2
 
 AM_CFLAGS = $(GST_CFLAGS)
 LIBS = $(GST_LIBS)

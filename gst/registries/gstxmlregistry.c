@@ -244,21 +244,35 @@ plugin_times_older_than(GList *paths, time_t regtime)
   return TRUE;
 }
 
+static void
+plugin_added_func (GstRegistry *registry, GstPlugin *plugin, gpointer user_data)
+{
+  GST_INFO (GST_CAT_PLUGIN_LOADING, "added plugin %s with %d features\n", plugin->name, plugin->numfeatures);
+}
+
 static gboolean
 gst_xml_registry_open_func (GstXMLRegistry *registry, GstXMLRegistryMode mode)
 {
+  gulong handler_id;
   GList *paths = GST_REGISTRY (registry)->paths;
 
   if (mode == GST_XML_REGISTRY_READ) {
     if (!plugin_times_older_than (paths, get_time (registry->location))) {
       GST_INFO (GST_CAT_GST_INIT, "Registry out of date, rebuilding...");
       
-      gst_registry_rebuild (GST_REGISTRY (registry));
-      gst_registry_save (GST_REGISTRY (registry));
+      handler_id = g_signal_connect (G_OBJECT (registry), "plugin_added", 
+                                     G_CALLBACK (plugin_added_func), NULL);
 
-      if (!plugin_times_older_than (paths, get_time (registry->location))) {
-        GST_INFO (GST_CAT_GST_INIT, "Registry still out of date, something is wrong...");
-        return FALSE;
+      gst_registry_rebuild (GST_REGISTRY (registry));
+
+      g_signal_handler_disconnect (registry, handler_id);
+
+      if (GST_REGISTRY (registry)->flags & GST_REGISTRY_WRITABLE) {
+        gst_registry_save (GST_REGISTRY (registry));
+        if (!plugin_times_older_than (paths, get_time (registry->location))) {
+          GST_INFO (GST_CAT_GST_INIT, "Registry still out of date, something is wrong...");
+          return FALSE;
+        }
       }
     }
     
@@ -1120,6 +1134,11 @@ gst_xml_registry_rebuild_recurse (GstXMLRegistry *registry, const gchar *directo
     while ((dirent = g_dir_read_name (dir))) {
       gchar *dirname;
 	
+      if (*dirent == '=') {
+        /* =build, =inst, etc. -- automake distcheck directories */
+        continue;
+      }
+      
       dirname = g_strjoin ("/", directory, dirent, NULL);
       gst_xml_registry_rebuild_recurse (registry, dirname);
       g_free(dirname);
@@ -1158,6 +1177,8 @@ gst_xml_registry_rebuild (GstRegistry *registry)
   while (walk) {
     gchar *path = (gchar *) walk->data;
     
+    GST_INFO (GST_CAT_PLUGIN_LOADING, "Rebuilding registry %p in directory %s...", registry, path);
+
     gst_xml_registry_rebuild_recurse (xmlregistry, path);
 
     walk = g_list_next (walk);

@@ -356,7 +356,7 @@ init_post (void)
 
 
   plugin_path = g_getenv("GST_PLUGIN_PATH");
-  split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func, _global_registry);
+  split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func, _user_registry);
 
   /* register core plugins */
   _gst_plugin_register_static (&plugin_desc);
@@ -465,7 +465,7 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
       gst_scheduler_factory_set_default_name (arg);
       break;
     case ARG_REGISTRY:
-      gst_registry_option_set (arg);
+      GST_XML_REGISTRY (_global_registry)->location = g_strdup (arg);
       break;
     default:
       g_warning ("option %d not recognized", option->val);
