@@ -889,7 +889,7 @@ gst_value_deserialize_buffer (GValue * dest, const char *s)
   buffer = gst_buffer_new_and_alloc (len / 2);
   data = GST_BUFFER_DATA (buffer);
   for (i = 0; i < len / 2; i++) {
-    if (!isxdigit (s[i * 2]) || !isxdigit (s[i * 2 + 1])) {
+    if (!isxdigit ((int) s[i * 2]) || !isxdigit ((int) s[i * 2 + 1])) {
       ret = FALSE;
       break;
     }
