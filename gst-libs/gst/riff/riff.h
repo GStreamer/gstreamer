@@ -426,6 +426,8 @@ struct _GstRiffChunk {
 GstRiff*		gst_riff_parser_new			(GstRiffCallback function, gpointer data);
 GstRiffReturn 		gst_riff_parser_next_buffer		(GstRiff *riff, GstBuffer *buf, gulong off);
 void 			gst_riff_parser_resync 			(GstRiff *riff, gulong offset);  
+GstRiffChunk*		gst_riff_parser_get_chunk		(GstRiff *riff, guint32 fourcc);
+guint32			gst_riff_parser_get_nextlikely		(GstRiff *riff);
 
 /* from gstriffencode.c */
 GstRiff*		gst_riff_encoder_new			(guint32 type);
