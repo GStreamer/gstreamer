@@ -14,3 +14,10 @@ noinst_HEADERS = gstosssink.h	\
 		gstosssrc.h	\
 		gstosselement.h\
 		gstossmixer.h
+
+noinst_PROGRAMS = oss_probe
+
+oss_probe_SOURCES = oss_probe.c
+oss_probe_CFLAGS = $(GLIB_CFLAGS)
+oss_probe_LDADD = $(GLIB_LIBS)
+
