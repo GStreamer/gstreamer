@@ -79,6 +79,9 @@ typedef enum {
 #define GST_PROPS_INT_ANY		GST_PROPS_INT_RANGE(G_MININT,G_MAXINT)
 
 typedef struct _GstPropsEntry GstPropsEntry;
+extern GType _gst_props_entry_type;
+
+#define GST_TYPE_PROPS_ENTRY	(_gst_props_entry_type)
 
 struct _GstProps {
   gint refcount;
@@ -94,9 +97,9 @@ GstProps*		gst_props_new			(const gchar *firstname, ...);
 GstProps*		gst_props_newv			(const gchar *firstname, va_list var_args);
 GstProps*		gst_props_empty_new		(void);
 
-void            	gst_props_unref                 (GstProps *props);
-void            	gst_props_ref                   (GstProps *props);
-void            	gst_props_destroy               (GstProps *props);
+void            	gst_props_unref			(GstProps *props);
+void            	gst_props_ref			(GstProps *props);
+void            	gst_props_destroy		(GstProps *props);
 
 void            	gst_props_debug 		(GstProps *props);
 
@@ -123,6 +126,8 @@ void			gst_props_add_entry		(GstProps *props, GstPropsEntry *entry);
 /* working with props entries */
 GstPropsEntry*		gst_props_entry_new		(const gchar *name, ...);
 
+void            	gst_props_entry_destroy		(GstPropsEntry *entry);
+GstPropsEntry*       	gst_props_entry_copy		(GstPropsEntry *entry);
 GstPropsType		gst_props_entry_get_type	(const GstPropsEntry *entry);
 const gchar*		gst_props_entry_get_name	(const GstPropsEntry *entry);
 gboolean		gst_props_entry_is_fixed	(const GstPropsEntry *entry);

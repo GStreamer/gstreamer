@@ -27,6 +27,7 @@
 #include "gstprops.h"
 
 GType _gst_props_type;
+GType _gst_props_entry_type;
 
 #define GST_PROPS_ENTRY_IS_VARIABLE(a)	(((GstPropsEntry*)(a))->propstype > GST_PROPS_VAR_TYPE)
 
@@ -133,6 +134,10 @@ _gst_props_initialize (void)
   g_value_register_transform_func (_gst_props_type,
                                    G_TYPE_STRING,
                                    transform_func);
+
+  _gst_props_entry_type = g_boxed_type_register_static ("GstPropsEntry",
+		  (GBoxedCopyFunc) gst_props_entry_copy,
+		  (GBoxedFreeFunc) gst_props_entry_destroy);
 }
 
 static void
@@ -304,7 +309,7 @@ gst_props_alloc_entry (void)
   return entry;
 }
 
-static void
+void
 gst_props_entry_destroy (GstPropsEntry *entry)
 {
   switch (entry->propstype) {
@@ -794,7 +799,7 @@ gst_props_destroy (GstProps *props)
 /* 
  * copy entries 
  */
-static GstPropsEntry*
+GstPropsEntry*
 gst_props_entry_copy (GstPropsEntry *entry)
 {
   GstPropsEntry *newentry;
