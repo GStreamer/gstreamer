@@ -9,7 +9,6 @@
 
 #undef HAVE_GDK_PIXBUF
 #undef HAVE_LIBGHTTP
-#undef HAVE_GNOME
 #undef HAVE_LIBMMX
 #undef HAVE_LIBXV
 #undef HAVE_XAUDIO
