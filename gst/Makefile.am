@@ -76,7 +76,7 @@ noinst_HEADERS =	\
 	gsti386.h       \
 	gstppc.h        
 
-CFLAGS += -g -O2 -Wall
+CFLAGS += -O2 -Wall -fomit-frame-pointer
 
 libgst_la_LIBADD = $(GLIB_LIBS) $(GTK_LIBS) $(XML_LIBS)
 libgst_la_LDFLAGS = -version-info $(STREAMER_CURRENT):$(STREAMER_REVISION):$(STREAMER_AGE)

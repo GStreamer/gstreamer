@@ -231,9 +231,7 @@ void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
       }
     }
   }
-  //g_print("a unref\n");
   gst_buffer_unref(buf);
-  //g_print("a done\n");
 }
 
 static void gst_audiosink_set_arg(GtkObject *object,GtkArg *arg,guint id) {

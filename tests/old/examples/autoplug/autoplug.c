@@ -11,6 +11,11 @@ void eos(GstSrc *src)
   playing = FALSE;
 }
 
+gboolean idle_func(gpointer data) {
+  gst_bin_iterate(GST_BIN(data));
+  return TRUE;
+}
+
 int main(int argc,char *argv[]) 
 {
   GstElement *disksrc, *audiosink, *videosink;
@@ -22,6 +27,7 @@ int main(int argc,char *argv[])
     exit(-1);
   }
 
+  g_thread_init(NULL);
   gst_init(&argc,&argv);
   gnome_init("autoplug","0.0.1", argc,argv);
 
@@ -68,12 +74,9 @@ int main(int argc,char *argv[])
 
   playing = TRUE;
 
-  while (playing) {
-    gst_bin_iterate(GST_BIN(pipeline));
-    gdk_threads_enter();
-    while (gtk_events_pending()) gtk_main_iteration();
-    gdk_threads_leave();
-  }
+  gtk_idle_add(idle_func, pipeline);
+
+  gst_main();
 
   /* stop the bin */
   gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);

@@ -238,7 +238,8 @@ static void gst_pipeline_pads_autoplug(GstElement *src, GstElement *sink) {
   
 end:
   if (!connected) {
-    g_print("gstpipeline: delaying pad connections\n");
+    g_print("gstpipeline: delaying pad connections for \"%s\" to \"%s\"\n",
+		    gst_element_get_name(src), gst_element_get_name(sink));
     gtk_signal_connect(GTK_OBJECT(src),"new_pad",
                  GTK_SIGNAL_FUNC(gst_pipeline_pads_autoplug_func), sink);
   }
@@ -306,6 +307,7 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
   GList *src_types;
   guint16 src_type = 0, sink_type = 0;
   guint i, numsinks;
+  gboolean use_thread = FALSE, have_common = FALSE;
 
   g_return_val_if_fail(pipeline != NULL, FALSE);
   g_return_val_if_fail(GST_IS_PIPELINE(pipeline), FALSE);
@@ -387,8 +389,9 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
 
     // check to other paths for mathing elements (factories)
     for (i=1; i<numsinks; i++) {
-      if (factory != (GstElementFactory *)(factories[i]->data))
+      if (factory != (GstElementFactory *)(factories[i]->data)) {
 	goto differ;
+      }
       factories[i] = g_list_next(factories[i]);
     }
     factory = (GstElementFactory *)(factories[0]->data);
@@ -403,6 +406,8 @@ gboolean gst_pipeline_autoplug(GstPipeline *pipeline) {
     srcelement = element;
 
     factories[0] = g_list_next(factories[0]);
+
+    have_common = TRUE;
   }
 
 differ:
@@ -415,6 +420,8 @@ differ:
     GstElement *thebin = GST_ELEMENT(pipeline);
 
     sinkelement = (GstElement *)elements->data;
+
+    use_thread = have_common;
 
     while (factories[i] || sinkelement) {
       // fase 4: add other elements...
@@ -432,20 +439,24 @@ differ:
       }
 
       // this element suggests the use of a thread, so we set one up...
-      if (GST_ELEMENT_IS_THREAD_SUGGESTED(element)) {
+      if (GST_ELEMENT_IS_THREAD_SUGGESTED(element) || use_thread) {
         GstElement *queue;
         GList *sinkpads;
         GstPad *srcpad, *sinkpad;
+
+	use_thread = FALSE;
+
         g_print("GstPipeline: sugest new thread for \"%s\" %08x\n", element->name, GST_FLAGS(element));
 
 	// create a new queue and add to the previous bin
         queue = gst_elementfactory_make("queue", g_strconcat("queue_", gst_element_get_name(element), NULL));
-        gst_bin_add(GST_BIN(pipeline), queue);
+        gst_bin_add(GST_BIN(thebin), queue);
 
 	// this will be the new bin for all following elements
-        thebin = gst_thread_new("thread");
+        thebin = gst_elementfactory_make("thread", g_strconcat("thread_", gst_element_get_name(element), NULL));
 
         srcpad = gst_element_get_pad(queue, "src");
+
         sinkpads = gst_element_get_pad_list(element);
         while (sinkpads) {
           sinkpad = (GstPad *)sinkpads->data;
@@ -456,19 +467,15 @@ differ:
 	    // the queue has the types of the element it connects
 	    srcpad->type = sinkpad->type;
             gst_element_get_pad(queue, "sink")->type = sinkpad->type;
-            gst_pad_connect(srcpad, sinkpad);
-            g_print("gstpipeline: autoconnect pad \"%s\" (%d) in element %s <-> ", 
-			  srcpad->name, srcpad->type, gst_element_get_name(queue));
-            g_print("pad \"%s\" (%d) in element %s\n", sinkpad->name, 
-			  sinkpad->type, gst_element_get_name(element));
 	    break;
 	  }
           sinkpads = g_list_next(sinkpads);
         }
+        gst_pipeline_pads_autoplug(thesrcelement, queue);
 
         gst_bin_add(GST_BIN(thebin), element);
         gst_bin_add(GST_BIN(pipeline), thebin);
-        element = queue;
+        thesrcelement = queue;
       }
       // no thread needed, easy case
       else {

@@ -113,7 +113,7 @@ static void gst_queue_init(GstQueue *queue) {
 
   queue->queue = NULL;
   queue->level_buffers = 0;
-  queue->max_buffers = 10;
+  queue->max_buffers = 20;
   queue->level_bytes = 0;
   queue->size_buffers = 0;
   queue->size_bytes = 0;
