@@ -20,7 +20,21 @@ pygstexecdir = $(pkgpyexecdir)
 GST_OVERRIDES = gst.override gstpad-handlers.override
 GST_DEFS = gst.defs gst-types.defs
 
-pygstexec_LTLIBRARIES = _gst.la
+# what shall we build ?
+if BUILD_INTERFACES
+interface_lib = interfaces.la
+else
+interface_lib =
+endif
+if BUILD_PLAY
+play_lib = play.la
+else
+play_lib =
+endif
+
+pygstexec_LTLIBRARIES = _gst.la $(interface_lib) $(play_lib)
+
+# how shall we build them ?
 _gst_la_CFLAGS = $(GST_CFLAGS) -fno-strict-aliasing
 _gst_la_LIBADD = $(GST_LIBS)
 _gst_la_LDFLAGS = $(common_ldflags) -export-symbols-regex init_gst
@@ -35,9 +49,6 @@ gst.c: $(GST_DEFS) $(GST_OVERRIDES)
 PLAY_OVERRIDES = play.override
 PLAY_DEFS = play.defs
 
-if BUILD_PLAY
-pygstexec_LTLIBRARIES += play.la
-endif
 play_la_CFLAGS = $(GST_CFLAGS) $(GST_PLAY_CFLAGS) -fno-strict-aliasing
 play_la_LIBADD = $(GST_LIBS) $(GST_PLAY_LIBS)
 play_la_LDFLAGS = $(common_ldflags) -export-symbols-regex initplay
@@ -52,9 +63,6 @@ play.c: $(PLAY_DEFS) $(PLAY_OVERRIDES)
 INTERFACES_OVERRIDES = interfaces.override xoverlay.override
 INTERFACES_DEFS = interfaces.defs xoverlay.defs xwindowlistener.defs
 
-if BUILD_INTERFACES
-pygstexec_LTLIBRARIES += interfaces.la
-endif
 interfaces_la_CFLAGS = $(GST_CFLAGS) $(GST_INTERFACES_CFLAGS) -fno-strict-aliasing
 interfaces_la_LIBADD = $(GST_LIBS) $(GST_INTERFACES_LIBS)
 interfaces_la_LDFLAGS = $(common_ldflags) -export-symbols-regex initinterface

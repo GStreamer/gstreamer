@@ -1,5 +1,9 @@
 2004-03-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/Makefile.am: fix automake don'ts
+
+2004-03-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* examples/gst/player.py:
           update for new API.  Use Enter to pause pipeline.
 	* examples/gst/vorbisplay.py:
