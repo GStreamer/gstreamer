@@ -46,6 +46,12 @@ libgst_la_SOURCES =	\
 	cothreads.c	\
 	gstscheduler.c
 
+# the compiler shoots cothreads.c in the head at -O6
+cothreads.lo: cothreads.c
+	$(LTCOMPILE) -O2 -c $<
+cothreads.o: cothreads.c
+	$(COMPILE) -O2 -c $<
+
 libgstincludedir = $(includedir)/gst
 libgstinclude_HEADERS =	\
 	gst.h		\
@@ -81,8 +87,6 @@ noinst_HEADERS = 	\
 	gstarch.h	\
 	gsti386.h	\
 	gstppc.h	
-
-CFLAGS += -g -Wall
 
 libgst_la_LIBADD = $(GLIB_LIBS) $(GTK_LIBS) $(XML_LIBS)
 libgst_la_LDFLAGS = -version-info $(STREAMER_CURRENT):$(STREAMER_REVISION):$(STREAMER_AGE)
