@@ -746,7 +746,7 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
   if (!xcontext->disp) {
     g_mutex_unlock (ximagesink->x_lock);
     g_free (xcontext);
-    GST_ELEMENT_ERROR (ximagesink, RESOURCE, TOO_LAZY, (NULL),
+    GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE, (NULL),
         ("Could not open display"));
     return NULL;
   }

@@ -684,7 +684,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
 
   /* First let's check that XVideo extension is available */
   if (!XQueryExtension (xcontext->disp, "XVideo", &i, &i, &i)) {
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, TOO_LAZY, (NULL),
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS, (NULL),
         ("XVideo extension is not available"));
     return NULL;
   }
@@ -692,7 +692,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
   /* Then we get adaptors list */
   if (Success != XvQueryAdaptors (xcontext->disp, xcontext->root,
           &nb_adaptors, &adaptors)) {
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, TOO_LAZY, (NULL),
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS, (NULL),
         ("Failed getting XV adaptors list"));
     return NULL;
   }
@@ -722,7 +722,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
   XvFreeAdaptorInfo (adaptors);
 
   if (!xcontext->xv_port_id) {
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, TOO_LAZY, (NULL),
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, BUSY, (NULL),
         ("No port available"));
     return NULL;
   }
@@ -810,7 +810,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
   if (gst_caps_is_empty (caps)) {
     gst_caps_free (caps);
     XvUngrabPort (xcontext->disp, xcontext->xv_port_id, 0);
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, TOO_LAZY, (NULL),
+    GST_ELEMENT_ERROR (xvimagesink, STREAM, WRONG_TYPE, (NULL),
         ("No supported format found"));
     return NULL;
   }
@@ -899,7 +899,7 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
   if (!xcontext->disp) {
     g_mutex_unlock (xvimagesink->x_lock);
     g_free (xcontext);
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, TOO_LAZY, (NULL),
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE, (NULL),
         ("Could not open display"));
     return NULL;
   }
@@ -929,7 +929,7 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
     XCloseDisplay (xcontext->disp);
     g_mutex_unlock (xvimagesink->x_lock);
     g_free (xcontext);
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, TOO_LAZY, (NULL),
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS, (NULL),
         ("Could not get pixel formats"));
     return NULL;
   }
