@@ -671,7 +671,7 @@ gst_bin_iterate (GstBin *bin)
 }
 
 /* out internal element fired EOS, we decrement the number of pending EOS childs */
-static void
+G_GNUC_UNUSED static void
 gst_bin_received_eos (GstElement *element, GstBin *bin)
 {
   GST_INFO_ELEMENT (GST_CAT_PLANNING, bin, "child %s fired eos, pending %d", GST_ELEMENT_NAME (element),

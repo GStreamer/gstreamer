@@ -63,7 +63,6 @@ void have_type(GstElement *element, GstCaps *caps, GstCaps **private_caps) {
 
 int main (int argc,char *argv[]) {
   GstCaps *caps;
-  int i;
 
   gst_init(&argc,&argv);
 

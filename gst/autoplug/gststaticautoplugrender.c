@@ -242,6 +242,8 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
   }
   else {
     res = gst_autoplug_can_match ((GstElementFactory *)src, (GstElementFactory *)dest);
+    //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to factory %s %d", 
+//		    ((GstElementFactory *)src)->name, ((GstElementFactory *)dest)->name, res);
   }
 
   if (res)

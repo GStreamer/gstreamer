@@ -314,7 +314,7 @@ gst_schedule_cothreaded_chain (GstBin *bin, GstScheduleChain *chain) {
   }
 }
 
-static void
+G_GNUC_UNUSED static void
 gst_schedule_chained_chain (GstBin *bin, _GstBinChain *chain) {
   GList *elements;
   GstElement *element;
