@@ -192,7 +192,7 @@ gst_gsmenc_chain (GstPad *pad, GstBuffer *buf)
 
     GST_BUFFER_TIMESTAMP (outbuf) = gsmenc->next_ts;
     gst_pad_push (gsmenc->srcpad, outbuf);
-    gsmenc->next_ts += (160.0 / gsmenc->rate) * 1000000;
+    gsmenc->next_ts += (160 / gsmenc->rate) * GST_SECOND;
 
     size -= 160;
     data += 160;
