@@ -65,6 +65,7 @@ struct _GstV4lSrc {
 
   /* num of queued frames and some GThread stuff to wait if there's not enough */
   guint16 num_queued_frames;
+  guint64 total_queued_frames;
   GMutex * mutex_queued_frames;
   GCond * cond_queued_frames;
 
