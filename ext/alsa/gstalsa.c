@@ -31,9 +31,13 @@
 #include "gstalsaclock.h"
 #include "gstalsamixer.h"
 
+/* all this ifdef'ed stuff causes segfaults because of alsa bug 389, see
+ * https://bugtrack.alsa-project.org/alsa-bug/bug_view_page.php?bug_id=0000389
+ */
+#ifdef ALSA_BUG_389_FIXED
 #define ALSA_DEBUG_FLUSH(this) G_STMT_START{ \
   gchar *__str; \
-  ssize_t __size; \
+  size_t __size; \
   __size = snd_output_buffer_string (this->out, &__str); \
   if (__size > 0) { \
     GST_DEBUG_OBJECT (this, "%*s", __size, __str); \
@@ -41,6 +45,7 @@
       GST_ERROR_OBJECT (this, "error flushing output buffer"); \
   } \
 }G_STMT_END
+#endif
 
 /* GObject functions */
 static void gst_alsa_class_init (gpointer g_class, gpointer class_data);
@@ -1299,8 +1304,10 @@ gst_alsa_open_audio (GstAlsa * this)
 
   GST_INFO ("Opening alsa device \"%s\"...", this->device);
 
+#ifdef ALSA_BUG_389_FIXED
   ERROR_CHECK (snd_output_buffer_open (&this->out),
       "error opening log output: %s");
+#endif
 
   if ((ret = snd_pcm_open (&this->handle, this->device,
               GST_ALSA_GET_CLASS (this)->stream, SND_PCM_NONBLOCK)) < 0) {
@@ -1345,15 +1352,19 @@ gst_alsa_open_audio (GstAlsa * this)
 void
 gst_alsa_sw_params_dump (GstAlsa * this, snd_pcm_sw_params_t * sw_params)
 {
+#ifdef ALSA_BUG_389_FIXED
   snd_pcm_sw_params_dump (sw_params, this->out);
   ALSA_DEBUG_FLUSH (this);
+#endif
 }
 
 void
 gst_alsa_hw_params_dump (GstAlsa * this, snd_pcm_hw_params_t * hw_params)
 {
+#ifdef ALSA_BUG_389_FIXED
   snd_pcm_hw_params_dump (hw_params, this->out);
   ALSA_DEBUG_FLUSH (this);
+#endif
 }
 
 /* if someone finds an easy way to merge this with _set_hw_params, go ahead */
@@ -1611,7 +1622,9 @@ gst_alsa_stop_audio (GstAlsa * this)
 static gboolean
 gst_alsa_close_audio (GstAlsa * this)
 {
+#ifdef ALSA_BUG_389_FIXED
   gint err;
+#endif
 
   /* if there's no pads, we never open. So we don't close either. */
   if (!gst_element_get_pad_list (GST_ELEMENT (this)))
@@ -1620,11 +1633,13 @@ gst_alsa_close_audio (GstAlsa * this)
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (this->handle != NULL, FALSE);
 
+#ifdef ALSA_BUG_389_FIXED
   ALSA_DEBUG_FLUSH (this);
   err = snd_output_close (this->out);
   if (err != 0)
     GST_ERROR_OBJECT (this, "failed to close debugging output: %s",
         snd_strerror (err));
+#endif
   ERROR_CHECK (snd_pcm_close (this->handle), "Error closing device: %s");
 
   this->handle = NULL;
