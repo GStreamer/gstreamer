@@ -248,7 +248,7 @@ gst_thread_change_state (GstElement * element)
   glong stacksize;
 
   g_return_val_if_fail (GST_IS_THREAD (element), GST_STATE_FAILURE);
-  g_return_val_if_fail (gst_with_threads (), GST_STATE_FAILURE);
+  g_return_val_if_fail (gst_has_threads (), GST_STATE_FAILURE);
 
   thread = GST_THREAD (element);
 
