@@ -147,6 +147,7 @@ struct _GstAlsa {
   GstAlsaFormat *		format;		/* NULL if undefined */
   gboolean			mmap; 		/* use mmap transmit (fast) or read/write (sloooow) */
   GstAlsaTransmitFunction	transmit;
+  GstCaps *			cached_caps;	/* we cache caps to speed up get_caps */
 
   /* latency / performance parameters */
   snd_pcm_uframes_t		period_size;

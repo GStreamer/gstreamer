@@ -821,6 +821,8 @@ gst_alsa_get_caps (GstPad * pad)
 
   if (!GST_FLAG_IS_SET (this, GST_ALSA_OPEN))
     return gst_caps_copy (GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad)));
+  if (this->cached_caps)
+    return gst_caps_copy (this->cached_caps);
 
   snd_pcm_hw_params_alloca (&hw_params);
   ERROR_CHECK (snd_pcm_hw_params_any (this->handle, hw_params),
@@ -861,7 +863,8 @@ gst_alsa_get_caps (GstPad * pad)
             min_channels, max_channels);
 
         /* channel configuration */
-        for (n = min_channels; n <= max_channels; n++) {
+        /* MIN used to spped up because we don't support more than 8 channels */
+        for (n = min_channels; n <= MIN (8, max_channels); n++) {
           if (snd_pcm_hw_params_test_channels (this->handle, hw_params, n) == 0) {
             GstStructure *str;
             GstAudioChannelPosition pos[8] = {
@@ -911,16 +914,13 @@ gst_alsa_get_caps (GstPad * pad)
 
   if (ret == NULL) {
     GST_WARNING_OBJECT (this, "no supported caps found, returning empty caps");
-    return gst_caps_new_empty ();
-  } else {
-    G_GNUC_UNUSED gchar *str;
-
-    gst_caps_do_simplify (ret);
-    str = gst_caps_to_string (ret);
-    GST_LOG_OBJECT (this, "get_caps returns %s", str);
-    g_free (str);
-    return ret;
+    ret = gst_caps_new_empty ();
   }
+  gst_caps_do_simplify (ret);
+  GST_LOG_OBJECT (this, "get_caps returns %P", ret);
+
+  this->cached_caps = gst_caps_copy (ret);
+  return ret;
 }
 
 static GstCaps *
@@ -1717,6 +1717,10 @@ gst_alsa_close_audio (GstAlsa * this)
   GST_ALSA_CAPS_SET (this, GST_ALSA_CAPS_RESUME, 0);
   GST_ALSA_CAPS_SET (this, GST_ALSA_CAPS_SYNC_START, 0);
   GST_FLAG_UNSET (this, GST_ALSA_OPEN);
+  if (this->cached_caps) {
+    gst_caps_free (this->cached_caps);
+    this->cached_caps = NULL;
+  }
 
   return TRUE;
 }
