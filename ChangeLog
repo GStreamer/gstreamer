@@ -1,3 +1,11 @@
+2004-03-29  Benjamin Otte  <otte@gnome.org>
+
+	* COPYING:
+	  replace by LGPL (former COPYING.LIB). The core is completely
+	  licensed LGPL.
+	* COPYING.LIB:
+	  remove
+
 2004-03-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/af.po:
