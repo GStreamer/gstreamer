@@ -15,6 +15,30 @@ a mime-type and a set of properties.
 
 </para>
 
+<!-- ##### MACRO GST_CAPS_LOCK ##### -->
+<para>
+Lock the caps structure
+</para>
+
+@caps: The caps structure to lock
+
+
+<!-- ##### MACRO GST_CAPS_TRYLOCK ##### -->
+<para>
+Try to lock the caps structure
+</para>
+
+@caps: The caps structure to try to lock
+
+
+<!-- ##### MACRO GST_CAPS_UNLOCK ##### -->
+<para>
+Unlock the caps structure
+</para>
+
+@caps: The caps structure to unlock
+
+
 <!-- ##### STRUCT GstCaps ##### -->
 <para>
 
@@ -22,10 +46,10 @@ a mime-type and a set of properties.
 
 @name: the name of the capability, for the application
 @id: the typeid of the capability
-@refcount: 
-@lock: 
+@refcount: a refcounter for this caps structure
+@lock: the lock for this caps structure
 @properties: the properties of the capability
-@next: 
+@next: a pointer to the next caps.
 
 <!-- ##### TYPEDEF GstCapsFactory ##### -->
 <para>
@@ -233,9 +257,6 @@ a mime-type and a set of properties.
 @fromcaps: 
 @tocaps: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@caps1: 
-@caps2: 
 
 
 <!-- ##### MACRO gst_caps_set ##### -->

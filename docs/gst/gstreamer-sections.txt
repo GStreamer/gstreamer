@@ -619,6 +619,9 @@ gst_typefactory_save_thyself
 <SECTION>
 <FILE>gstcaps</FILE>
 <TITLE>GstCaps</TITLE>
+GST_CAPS_LOCK
+GST_CAPS_TRYLOCK
+GST_CAPS_UNLOCK
 GstCaps
 GstCapsFactory
 GstCapsFactoryEntry
@@ -649,10 +652,12 @@ gst_caps_get_boolean
 gst_caps_get_by_name
 gst_caps_get_fourcc_int
 gst_caps_get_int
+gst_caps_get_string
 
 gst_caps_save_thyself
 gst_caps_load_thyself
 <SUBSECTION Standard>
+GST_CAPS
 </SECTION>
 
 <SECTION>
@@ -667,6 +672,7 @@ GST_PROPS_INT_RANGE
 GST_PROPS_FOURCC
 GST_PROPS_FOURCC_INT
 GST_PROPS_BOOLEAN
+GST_PROPS_STRING
 gst_props_register
 gst_props_register_count
 gst_props_new
@@ -681,6 +687,7 @@ gst_props_set
 gst_props_get_boolean
 gst_props_get_fourcc_int
 gst_props_get_int
+gst_props_get_string
 gst_props_save_thyself
 gst_props_load_thyself
 <SUBSECTION Standard>
@@ -693,6 +700,7 @@ GST_PROPS_INT_ID
 GST_PROPS_INT_RANGE_ID
 GST_PROPS_FOURCC_ID
 GST_PROPS_BOOL_ID
+GST_PROPS_STRING_ID
 GST_PROPS_LAST_ID
 </SECTION>
 
@@ -924,6 +932,20 @@ GST_TYPEFIND
 GST_TYPEFIND_CLASS
 GST_IS_TYPEFIND
 GST_IS_TYPEFIND_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gstmultidisksrc</FILE>
+<TITLE>GstMultiDiskSrc</TITLE>
+GstMultiDiskSrcFlags
+<SUBSECTION Standard>
+GstMultiDiskSrc
+GST_MULTIDISKSRC
+GST_IS_MULTIDISKSRC
+GST_TYPE_MULTIDISKSRC
+gst_multidisksrc_get_type
+GST_MULTIDISKSRC_CLASS
+GST_IS_MULTIDISKSRC_CLASS
 </SECTION>
 
 <SECTION>

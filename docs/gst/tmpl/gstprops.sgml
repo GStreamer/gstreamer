@@ -88,6 +88,14 @@ Create a boolean property.
 @a: the boolean property
 
 
+<!-- ##### MACRO GST_PROPS_STRING ##### -->
+<para>
+
+</para>
+
+@a: 
+
+
 <!-- ##### FUNCTION gst_props_register ##### -->
 <para>
 
@@ -217,6 +225,16 @@ Create a boolean property.
 
 
 <!-- ##### FUNCTION gst_props_get_int ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_props_get_string ##### -->
 <para>
 
 </para>
