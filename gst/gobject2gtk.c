@@ -87,10 +87,9 @@ fprintf(stderr,"installing arg \"%s\" into class \"%s\"\n",arg_fullname,"");
 }
 
 GParamSpec *
-g_object_class_find_property(GtkObjectClass *class,const gchar *name)
+g_object_class_find_property(GtkObjectClass *class,gchar *name)
 {
   GtkArgInfo *info;
-  gchar *result;
   GParamSpec *spec;
 
 fprintf(stderr,"class name is %s\n",gtk_type_name(class->type));
@@ -170,6 +169,28 @@ g_param_spec_ulong(gchar *name,gchar *nick,gchar *blurb,gulong min,gulong max,gu
 
   spec->shortname = name;
   spec->value_type = GTK_TYPE_ULONG;
+  spec->flags = flags;
+
+  return spec;
+}
+
+GParamSpec *
+g_param_spec_float(gchar *name,gchar *nick,gchar *blurb,float min,float max,float def,gint flags) {
+  GParamSpec *spec = g_new(GParamSpec,1);
+
+  spec->shortname = name;
+  spec->value_type = GTK_TYPE_FLOAT;
+  spec->flags = flags;
+
+  return spec;
+}
+
+GParamSpec *
+g_param_spec_double(gchar *name,gchar *nick,gchar *blurb,double min,double max,double def,gint flags) {
+  GParamSpec *spec = g_new(GParamSpec,1);
+
+  spec->shortname = name;
+  spec->value_type = GTK_TYPE_DOUBLE;
   spec->flags = flags;
 
   return spec;

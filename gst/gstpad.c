@@ -1595,7 +1595,7 @@ gst_padtemplate_class_init (GstPadTemplateClass *klass)
   padtemplate_parent_class = g_type_class_ref(GST_TYPE_OBJECT);
 
   gst_padtemplate_signals[TEMPL_PAD_CREATED] =
-    g_signal_newc ("pad_created", G_SIGNAL_RUN_LAST, G_TYPE_FROM_CLASS(klass),
+    g_signal_newc ("pad_created", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstPadTemplateClass, pad_created), NULL, NULL,
                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     GST_TYPE_PAD);

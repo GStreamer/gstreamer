@@ -145,11 +145,11 @@ gst_autoplugger_class_init (GstAutopluggerClass *klass)
 
 /*
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFFER_COUNT,
-    g_param_spec_enum("buffer_count","buffer_count","buffer_count",
-                      G_TYPE_INT,0,G_PARAM_READABLE)); // CHECKME!
+    g_param_spec_int("buffer_count","buffer_count","buffer_count",
+                      0,G_MAXINT,0,G_PARAM_READABLE)); // CHECKME!
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_RESET,
-    g_param_spec_enum("reset","reset","reset",
-                      G_TYPE_BOOL,0,G_PARAM_WRITABLE)); // CHECKME!
+    g_param_spec_boolean("reset","reset","reset",
+                         FALSE,G_PARAM_WRITABLE)); // CHECKME!
 */
 
   gobject_class->set_property = gst_autoplugger_set_property;

@@ -97,8 +97,8 @@ gst_fdsrc_class_init (GstFdSrcClass *klass)
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATION,
-    g_param_spec_enum("location","location","location",
-                      GST_TYPE_FILENAME,0,G_PARAM_WRITABLE)); // CHECKME!
+    g_param_spec_string("location","location","location",
+                        "",G_PARAM_WRITABLE)); // CHECKME!
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BYTESPERREAD,
     g_param_spec_int("bytesperread","bytesperread","bytesperread",
                      G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME

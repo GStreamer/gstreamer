@@ -115,6 +115,7 @@ gpointer g_object_new(GtkType type,gpointer blah_varargs_stuff);
 #define G_SIGNAL_RUN_FIRST				GTK_RUN_FIRST
 
 #define GCallback					gpointer	// FIXME?
+#define G_CALLBACK(f)					((gpointer)(f))
 
 #define \
 g_signal_newc(name,type,location,offset,null1,null2,marshal,ret,count,args...) \
@@ -150,8 +151,10 @@ struct _GParamSpec {
   gint flags;
 };
 
+#define g_value_init(value,t)			((value)->type = (t))
+
 void g_object_class_install_property(GtkObjectClass *oclass,guint property_id,GParamSpec *pspec);
-GParamSpec *g_object_class_find_property(GtkObjectClass *class,const gchar *name);
+GParamSpec *g_object_class_find_property(GtkObjectClass *class,gchar *name);
 
 #define G_IS_PARAM_SPEC_ENUM(pspec)		(GTK_FUNDAMENTAL_TYPE(pspec->value_type) == GTK_TYPE_ENUM)
 
@@ -160,6 +163,8 @@ GParamSpec *g_param_spec_int(gchar *name,gchar *nick,gchar *blurb,gint min,gint 
 GParamSpec *g_param_spec_uint(gchar *name,gchar *nick,gchar *blurb,guint min,guint max,guint def,gint flags);
 GParamSpec *g_param_spec_long(gchar *name,gchar *nick,gchar *blurb,glong min,glong max,glong def,gint flags);
 GParamSpec *g_param_spec_ulong(gchar *name,gchar *nick,gchar *blurb,gulong min,gulong max,gulong def,gint flags);
+GParamSpec *g_param_spec_float(gchar *name,gchar *nick,gchar *blurb,float min,float max,float def,gint flags);
+GParamSpec *g_param_spec_double(gchar *name,gchar *nick,gchar *blurb,double min,double max,double def,gint flags);
 GParamSpec *g_param_spec_enum(gchar *name,gchar *nick,gchar *blurb,GtkType e,guint def,gint flags);
 GParamSpec *g_param_spec_pointer(gchar *name,gchar *nick,gchar *blurb,gint flags);
 GParamSpec *g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *def,gint flags);
@@ -177,7 +182,7 @@ GParamSpec *g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *def,
 #define g_value_get_ulong(value)		GTK_VALUE_ULONG(*value)
 #define g_value_set_ulong(value,data)		(GTK_VALUE_ULONG(*value) = (data))
 #define g_value_get_float(value)		GTK_VALUE_FLOAT(*value)
-#define g_value_set_float(value,data)		(GTK_VALUE_FLAT(*value) = (data))
+#define g_value_set_float(value,data)		(GTK_VALUE_FLOAT(*value) = (data))
 #define g_value_get_double(value)		GTK_VALUE_DOUBLE(*value)
 #define g_value_set_double(value,data)		(GTK_VALUE_DOUBLE(*value) = (data))
 #define g_value_get_string(value)		GTK_VALUE_STRING(*value)
