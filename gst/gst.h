@@ -70,8 +70,10 @@
 
 G_BEGIN_DECLS
 
-/* make our own type for poptOption because the struct poptOption
- * definition is iffy */
+/* make our own type for poptOption because gtkdoc (1.2) can not handle functions with
+ * return types like 'struct abc'
+ * Filed as http://bugzilla.gnome.org/show_bug.cgi?id=148507
+ */
 typedef struct poptOption GstPoptOption;
 
 #ifndef GST_DISABLE_REGISTRY
