@@ -1,3 +1,11 @@
+2004-01-07  David Schleef  <ds@schleef.org>
+
+	* gst/videofilter/Makefile.am:
+	* gst/videofilter/gstvideotemplate.c:
+	* gst/videofilter/make_filter:
+	Create gstvideoexample.c in a srcdir!=builddir friendly way.
+	Convert make_filter to /bin/sh script.
+
 2004-01-07  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/modplug/gstmodplug.cc: fix element description
