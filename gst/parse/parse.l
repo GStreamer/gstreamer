@@ -21,7 +21,7 @@ _integer [[:digit:]]+
 _double [[:digit:]]+"."*[[:digit:]]*
 _number {_integer}|{_double}
 _boolean "true"|"false"|"TRUE"|"FALSE"
-_identifier [[:alpha:]][[:alnum:]\-_%]*
+_identifier [[:alpha:]][[:alnum:]\-_%:]*
 _lconnection ({_identifier}\.)?{_identifier}!
 _rconnection !({_identifier}\.)?{_identifier}
 _bconnection ({_identifier}\.)?{_identifier}!({_identifier}\.)?{_identifier}
