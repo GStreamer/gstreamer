@@ -61,6 +61,9 @@ applications and plugins for GStreamer.
 %{_libdir}/pkgconfig/*
 
 %changelog
+* Fri Jan 04 2001 Christian Schaller <Uraeus@linuxrising.org>
+- Added configdir parameter as it seems the configdir else gets weird
+
 * Thu Jan 03 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - split off gstreamer-editor from core
 - removed gstreamer-gnome-apps
@@ -129,6 +132,7 @@ FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
   --sharedstatedir=%{_sharedstatedir} \
   --mandir=%{_mandir} \
   --infodir=%{_infodir} \
+  --with-configdir=/etc/gstreamer \
   --disable-tests --disable-examples --disable-debug-color
 if [ "$SMP" != "" ]; then
   (make "MAKE=make -k -j $SMP"; exit 0)
