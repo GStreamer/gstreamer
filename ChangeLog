@@ -1,5 +1,10 @@
 2005-01-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/manual/manual.xml:
+	  Add dataaccess part (doh!).
+
+2005-01-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/manual/advanced-autoplugging.xml:
 	  Fix typo (intiate -> initiate).
 
