@@ -22,6 +22,7 @@
 #define __GST_CACASINK_H__
 
 #include <gst/gst.h>
+#include <gst/video/gstvideosink.h>
 #include <gst/video/video.h>
 
 #include <caca.h>
@@ -30,13 +31,16 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#define GST_CACA_DEFAULT_SCREEN_WIDTH 80
+#define GST_CACA_DEFAULT_SCREEN_HEIGHT 25
+#define GST_CACA_DEFAULT_BPP 24
+#define GST_CACA_DEFAULT_RED_MASK R_MASK_32_INT
+#define GST_CACA_DEFAULT_GREEN_MASK G_MASK_32_INT
+#define GST_CACA_DEFAULT_BLUE_MASK B_MASK_32_INT
 
-#define GST_CACA_DEFAULT_IMAGE_WIDTH 320
-#define GST_CACA_DEFAULT_IMAGE_HEIGHT 240
-#define GST_CACA_DEFAULT_BPP 32
-#define GST_CACA_DEFAULT_RED_MASK R_MASK_32 
-#define GST_CACA_DEFAULT_GREEN_MASK G_MASK_32 
-#define GST_CACA_DEFAULT_BLUE_MASK B_MASK_32 
+//#define GST_CACA_DEFAULT_RED_MASK R_MASK_32_REVERSE_INT
+//#define GST_CACA_DEFAULT_GREEN_MASK G_MASK_32_REVERSE_INT
+//#define GST_CACA_DEFAULT_BLUE_MASK B_MASK_32_REVERSE_INT
 
 #define GST_TYPE_CACASINK \
   (gst_cacasink_get_type())
@@ -59,31 +63,26 @@ typedef struct _GstCACASink GstCACASink;
 typedef struct _GstCACASinkClass GstCACASinkClass;
 
 struct _GstCACASink {
-  GstElement element;
+  GstVideoSink videosink;
 
   GstPad *sinkpad;
 
   gulong format;
   gint screen_width, screen_height;
-  gint image_width, image_height;
   guint bpp;
   guint dither;
   guint red_mask, green_mask, blue_mask;
 
-  gint frames_displayed;
-  guint64 frame_time;
-
-  GstClock *clock;
+  gint64 correction;
+  GstClockID id;
 
   struct caca_bitmap *bitmap;
 };
 
 struct _GstCACASinkClass {
-  GstElementClass parent_class;
+  GstVideoSinkClass parent_class;
 
   /* signals */
-  void (*frame_displayed) (GstElement *element);
-  void (*have_size) 	  (GstElement *element, guint width, guint height);
 };
 
 GType gst_cacasink_get_type(void);
