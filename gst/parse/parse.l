@@ -76,11 +76,6 @@ _string {_char}+|("\""([^\"]|"\\\"")*"\"")
     }
     
     [[:space:]]+ { /* PRINT ("space: [%s]\n", yytext); */ }
-    
-    . {
-        PRINT ("unknown: %s\n", yytext);
-        return *yytext;
-    }
 }
 
 {_lconnection} {
