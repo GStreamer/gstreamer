@@ -1418,16 +1418,13 @@ dnl *** musepack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MUSEPACK, true)
 GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
   AC_LANG_CPLUSPLUS
-  OLD_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="-I/usr/include/musepack $CPPFLAGS"
-  AC_CHECK_HEADER(mpc_dec.h, [
+  AC_CHECK_HEADER([musepack/mpc_dec.h], [
     HAVE_MUSEPACK="yes"
     MUSEPACK_LIBS="-lmusepack"
-    MUSEPACK_CFLAGS="-I/usr/include/musepack"
+    MUSEPACK_CFLAGS=
     AC_SUBST(MUSEPACK_CFLAGS)
     AC_SUBST(MUSEPACK_LIBS)
     ], [HAVE_MUSEPACK="no"])
-  CPPFLAGS="$OLD_CPPFLAGS"
   AC_LANG_C
 ])
 
