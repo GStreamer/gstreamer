@@ -1307,7 +1307,7 @@ gst_element_populate_std_props (GObjectClass * klass,
 				const char *prop_name, guint arg_id, GParamFlags flags)
 {
   GQuark prop_id = g_quark_from_string (prop_name);
-  GParamSpec *pspec = NULL;
+  GParamSpec *pspec;
 
   static GQuark fd_id = 0;
   static GQuark blocksize_id;
@@ -1334,8 +1334,8 @@ gst_element_populate_std_props (GObjectClass * klass,
   }
 
   if (prop_id == fd_id) {
-    g_param_spec_int ("fd", "File-descriptor",
-		      "File-descriptor for the file being read", 0, G_MAXINT, 0, flags);
+    pspec = g_param_spec_int ("fd", "File-descriptor",
+		      	      "File-descriptor for the file being read", 0, G_MAXINT, 0, flags);
 
   }
   else if (prop_id == blocksize_id) {
@@ -1380,6 +1380,12 @@ gst_element_populate_std_props (GObjectClass * klass,
   else if (prop_id == touch_id) {
     pspec = g_param_spec_boolean ("touch", "Touch read data",
 				  "Touch data to force disk read before push ()", TRUE, flags);
+  }
+  else {
+    g_warning ("Unknown - 'standard' property '%s' id %d on class %s",
+               prop_name, arg_id,
+               g_type_name_from_class ((GTypeClass *) klass));
+    pspec = NULL;
   }
 
   if (pspec) {

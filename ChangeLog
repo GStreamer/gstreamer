@@ -1,3 +1,8 @@
+2001-12-14  Michael Meeks  <michael@ximian.com>
+
+        * gst/gstelement.c (gst_element_populate_std_props):
+        add debug & robustness.
+
 2001-12-13  Michael Meeks  <michael@ximian.com>
 
 	* gst/elements/*.c: (..._class_init): clean to use
