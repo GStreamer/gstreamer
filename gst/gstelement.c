@@ -103,37 +103,37 @@ gst_element_class_init (GstElementClass *klass)
   gst_element_signals[STATE_CHANGE] =
     g_signal_new ("state_change", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstElementClass, state_change), NULL, NULL,
-                    g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1,
+		  gst_marshal_VOID__INT, G_TYPE_NONE, 1,
                     G_TYPE_INT);
   gst_element_signals[NEW_PAD] =
     g_signal_new ("new_pad", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstElementClass, new_pad), NULL, NULL,
-                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                     GST_TYPE_PAD);
   gst_element_signals[PAD_REMOVED] =
     g_signal_new ("pad_removed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstElementClass, pad_removed), NULL, NULL,
-                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                     GST_TYPE_PAD);
   gst_element_signals[NEW_GHOST_PAD] =
     g_signal_new ("new_ghost_pad", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstElementClass, new_ghost_pad), NULL, NULL,
-                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                     GST_TYPE_PAD);
   gst_element_signals[GHOST_PAD_REMOVED] =
     g_signal_new ("ghost_pad_removed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstElementClass, ghost_pad_removed), NULL, NULL,
-                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                     GST_TYPE_PAD);
   gst_element_signals[ERROR] =
     g_signal_new ("error", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstElementClass, error), NULL, NULL,
-                    g_cclosure_marshal_VOID__STRING, G_TYPE_NONE,1,
+                    gst_marshal_VOID__STRING, G_TYPE_NONE,1,
                     G_TYPE_STRING);
   gst_element_signals[EOS] =
     g_signal_new ("eos", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstElementClass,eos), NULL, NULL,
-                    g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+                    gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
 
 

@@ -28,6 +28,7 @@
 #include "gsttype.h"
 #include "gstbin.h"
 #include "gstscheduler.h"
+#include "gstmarshal.h"
 
 
 /***** Start with the base GstPad class *****/
@@ -149,27 +150,27 @@ gst_real_pad_class_init (GstRealPadClass *klass)
   gst_real_pad_signals[REAL_SET_ACTIVE] =
     g_signal_new ("set_active", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstRealPadClass, set_active), NULL, NULL,
-                    g_cclosure_marshal_VOID__BOOLEAN, G_TYPE_NONE, 1,
+                    gst_marshal_VOID__BOOLEAN, G_TYPE_NONE, 1,
                     G_TYPE_BOOLEAN);
   gst_real_pad_signals[REAL_CAPS_CHANGED] =
     g_signal_new ("caps_changed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstRealPadClass, caps_changed), NULL, NULL,
-                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
   gst_real_pad_signals[REAL_CAPS_NEGO_FAILED] =
     g_signal_new ("caps_nego_failed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstRealPadClass, caps_nego_failed), NULL, NULL,
-                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
   gst_real_pad_signals[REAL_CONNECTED] =
     g_signal_new ("connected", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstRealPadClass, connected), NULL, NULL,
-                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
   gst_real_pad_signals[REAL_DISCONNECTED] =
     g_signal_new ("disconnected", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstRealPadClass, disconnected), NULL, NULL,
-                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
 
 //  gtk_object_add_arg_type ("GstRealPad::active", G_TYPE_BOOLEAN,
@@ -1631,7 +1632,7 @@ gst_padtemplate_class_init (GstPadTemplateClass *klass)
   gst_padtemplate_signals[TEMPL_PAD_CREATED] =
     g_signal_new ("pad_created", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstPadTemplateClass, pad_created), NULL, NULL,
-                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                     GST_TYPE_PAD);
 
 
