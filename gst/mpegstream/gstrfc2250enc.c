@@ -46,7 +46,7 @@ enum {
   /* FILL ME */
 };
 
-GST_PADTEMPLATE_FACTORY (sink_factory,
+GST_PAD_TEMPLATE_FACTORY (sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -58,7 +58,7 @@ GST_PADTEMPLATE_FACTORY (sink_factory,
   )
 );
 
-GST_PADTEMPLATE_FACTORY (src_factory,
+GST_PAD_TEMPLATE_FACTORY (src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -131,11 +131,11 @@ static void
 gst_rfc2250_enc_init (GstRFC2250Enc *rfc2250_enc)
 {
   rfc2250_enc->sinkpad = gst_pad_new_from_template(
-		  GST_PADTEMPLATE_GET (sink_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(rfc2250_enc),rfc2250_enc->sinkpad);
   gst_element_set_loop_function (GST_ELEMENT (rfc2250_enc), gst_rfc2250_enc_loop);
   rfc2250_enc->srcpad = gst_pad_new_from_template(
-		  GST_PADTEMPLATE_GET (src_factory), "src");
+		  GST_PAD_TEMPLATE_GET (src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(rfc2250_enc),rfc2250_enc->srcpad);
 
   /* initialize parser state */
@@ -330,12 +330,12 @@ gst_rfc2250_enc_plugin_init (GModule *module, GstPlugin *plugin)
   }
 
   /* create an elementfactory for the rfc2250_enc element */
-  factory = gst_elementfactory_new("rfc2250enc",GST_TYPE_RFC2250_ENC,
+  factory = gst_element_factory_new("rfc2250enc",GST_TYPE_RFC2250_ENC,
                                    &rfc2250_enc_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

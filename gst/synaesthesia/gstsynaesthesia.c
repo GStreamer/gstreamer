@@ -80,7 +80,7 @@ enum {
   /* FILL ME */
 };
 
-GST_PADTEMPLATE_FACTORY (src_template,
+GST_PAD_TEMPLATE_FACTORY (src_template,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -99,7 +99,7 @@ GST_PADTEMPLATE_FACTORY (src_template,
   )
 )
 
-GST_PADTEMPLATE_FACTORY (sink_template,
+GST_PAD_TEMPLATE_FACTORY (sink_template,
   "sink",					/* the name of the pads */
   GST_PAD_SINK,				/* type of the pad */
   GST_PAD_ALWAYS,				/* ALWAYS/SOMETIMES */
@@ -186,9 +186,9 @@ gst_synaesthesia_init (GstSynaesthesia *synaesthesia)
 {
   /* create the sink and src pads */
   synaesthesia->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (sink_template ), "sink");
+		  GST_PAD_TEMPLATE_GET (sink_template ), "sink");
   synaesthesia->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (src_template ), "src");
+		  GST_PAD_TEMPLATE_GET (src_template ), "src");
   gst_element_add_pad (GST_ELEMENT (synaesthesia), synaesthesia->sinkpad);
   gst_element_add_pad (GST_ELEMENT (synaesthesia), synaesthesia->srcpad);
 
@@ -347,12 +347,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the synaesthesia element */
-  factory = gst_elementfactory_new("synaesthesia",GST_TYPE_SYNAESTHESIA,
+  factory = gst_element_factory_new("synaesthesia",GST_TYPE_SYNAESTHESIA,
                                    &gst_synaesthesia_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_template));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_template));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_template));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_template));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

@@ -64,7 +64,7 @@ enum {
   /* FILL ME */
 };
 
-GST_PADTEMPLATE_FACTORY (sink_templ,
+GST_PAD_TEMPLATE_FACTORY (sink_templ,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -75,7 +75,7 @@ GST_PADTEMPLATE_FACTORY (sink_templ,
   )
 )
 
-GST_PADTEMPLATE_FACTORY (src_templ,
+GST_PAD_TEMPLATE_FACTORY (src_templ,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -299,11 +299,11 @@ static void
 gst_siddec_init (GstSidDec *siddec) 
 {
   siddec->sinkpad = gst_pad_new_from_template (
-  		GST_PADTEMPLATE_GET (sink_templ), "sink");
+  		GST_PAD_TEMPLATE_GET (sink_templ), "sink");
   gst_element_add_pad (GST_ELEMENT (siddec), siddec->sinkpad);
 
   siddec->srcpad = gst_pad_new_from_template (
-  		GST_PADTEMPLATE_GET (src_templ), "src");
+  		GST_PAD_TEMPLATE_GET (src_templ), "src");
   gst_element_add_pad (GST_ELEMENT (siddec), siddec->srcpad);
 
   gst_element_set_loop_function (GST_ELEMENT (siddec), gst_siddec_loop);
@@ -513,14 +513,14 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstTypeFactory *type;
 
   /* create an elementfactory for the avi_demux element */
-  factory = gst_elementfactory_new ("siddec",GST_TYPE_SIDDEC,
+  factory = gst_element_factory_new ("siddec",GST_TYPE_SIDDEC,
                                     &gst_siddec_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_templ));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_templ));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_templ));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));
 
-  type = gst_typefactory_new (&siddefinition);
+  type = gst_type_factory_new (&siddefinition);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));

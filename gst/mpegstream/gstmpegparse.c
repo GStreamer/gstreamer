@@ -47,7 +47,7 @@ enum {
   /* FILL ME */
 };
 
-GST_PADTEMPLATE_FACTORY (sink_factory,
+GST_PAD_TEMPLATE_FACTORY (sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -59,7 +59,7 @@ GST_PADTEMPLATE_FACTORY (sink_factory,
   )
 );
 
-GST_PADTEMPLATE_FACTORY (src_factory,
+GST_PAD_TEMPLATE_FACTORY (src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -143,11 +143,11 @@ static void
 gst_mpeg_parse_init (GstMPEGParse *mpeg_parse)
 {
   mpeg_parse->sinkpad = gst_pad_new_from_template(
-		  GST_PADTEMPLATE_GET (sink_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(mpeg_parse),mpeg_parse->sinkpad);
   gst_element_set_loop_function (GST_ELEMENT (mpeg_parse), gst_mpeg_parse_loop);
   mpeg_parse->srcpad = gst_pad_new_from_template(
-		  GST_PADTEMPLATE_GET (src_factory), "src");
+		  GST_PAD_TEMPLATE_GET (src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(mpeg_parse),mpeg_parse->srcpad);
 
   /* initialize parser state */
@@ -357,12 +357,12 @@ gst_mpeg_parse_plugin_init (GModule *module, GstPlugin *plugin)
   }
 
   /* create an elementfactory for the mpeg_parse element */
-  factory = gst_elementfactory_new("mpegparse",GST_TYPE_MPEG_PARSE,
+  factory = gst_element_factory_new("mpegparse",GST_TYPE_MPEG_PARSE,
                                    &mpeg_parse_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

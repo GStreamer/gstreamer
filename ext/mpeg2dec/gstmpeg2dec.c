@@ -67,7 +67,7 @@ static double video_rates[16] =
   0
 };
 
-GST_PADTEMPLATE_FACTORY (src_template_factory,
+GST_PAD_TEMPLATE_FACTORY (src_template_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -80,7 +80,7 @@ GST_PADTEMPLATE_FACTORY (src_template_factory,
   )
 );
 
-GST_PADTEMPLATE_FACTORY (sink_template_factory,
+GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -406,12 +406,12 @@ gst_mpeg2dec_init (GstMpeg2dec *mpeg2dec)
 
   /* create the sink and src pads */
   mpeg2dec->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (sink_template_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (sink_template_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (mpeg2dec), mpeg2dec->sinkpad);
   gst_pad_set_chain_function (mpeg2dec->sinkpad, gst_mpeg2dec_chain);
 
   mpeg2dec->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (src_template_factory), "src");
+		  GST_PAD_TEMPLATE_GET (src_template_factory), "src");
   gst_element_add_pad (GST_ELEMENT (mpeg2dec), mpeg2dec->srcpad);
 
   /* initialize the mpeg2dec decoder state */
@@ -609,12 +609,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the mpeg2dec element */
-  factory = gst_elementfactory_new("mpeg2dec",GST_TYPE_MPEG2DEC,
+  factory = gst_element_factory_new("mpeg2dec",GST_TYPE_MPEG2DEC,
                                    &gst_mpeg2dec_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_template_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_template_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_template_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_template_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

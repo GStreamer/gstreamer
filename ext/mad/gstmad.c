@@ -102,7 +102,7 @@ enum {
   /* FILL ME */
 };
 
-GST_PADTEMPLATE_FACTORY (mad_src_template_factory,
+GST_PAD_TEMPLATE_FACTORY (mad_src_template_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -120,7 +120,7 @@ GST_PADTEMPLATE_FACTORY (mad_src_template_factory,
   )
 )
 
-GST_PADTEMPLATE_FACTORY (mad_sink_template_factory,
+GST_PAD_TEMPLATE_FACTORY (mad_sink_template_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -226,12 +226,12 @@ gst_mad_init (GstMad *mad)
 {
   /* create the sink and src pads */
   mad->sinkpad = gst_pad_new_from_template(
-		  GST_PADTEMPLATE_GET (mad_sink_template_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (mad_sink_template_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(mad),mad->sinkpad);
   gst_pad_set_chain_function (mad->sinkpad, GST_DEBUG_FUNCPTR(gst_mad_chain));
 
   mad->srcpad = gst_pad_new_from_template(
-		  GST_PADTEMPLATE_GET (mad_src_template_factory), "src");
+		  GST_PAD_TEMPLATE_GET (mad_src_template_factory), "src");
   gst_element_add_pad(GST_ELEMENT(mad),mad->srcpad);
   gst_pad_set_event_function (mad->srcpad, GST_DEBUG_FUNCPTR(gst_mad_src_event));
 
@@ -593,14 +593,14 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the mad element */
-  factory = gst_elementfactory_new("mad",GST_TYPE_MAD,
+  factory = gst_element_factory_new("mad",GST_TYPE_MAD,
                                    &gst_mad_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, 
-		  GST_PADTEMPLATE_GET (mad_sink_template_factory));
-  gst_elementfactory_add_padtemplate (factory, 
-		  GST_PADTEMPLATE_GET (mad_src_template_factory));
+  gst_element_factory_add_pad_template (factory, 
+		  GST_PAD_TEMPLATE_GET (mad_sink_template_factory));
+  gst_element_factory_add_pad_template (factory, 
+		  GST_PAD_TEMPLATE_GET (mad_src_template_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

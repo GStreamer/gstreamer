@@ -53,15 +53,15 @@ int main(int argc,char *argv[]) {
   pipeline = GST_PIPELINE(gst_pipeline_new("pipeline"));
   g_return_val_if_fail(pipeline != NULL, -1);
 
-  src = gst_elementfactory_make("dvdsrc","src");
+  src = gst_element_factory_make("dvdsrc","src");
   g_return_val_if_fail(src != NULL, -1);
   gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
   gtk_object_set(GTK_OBJECT(src),"title",atoi(argv[2]),NULL);
   gtk_object_set(GTK_OBJECT(src),"chapter",atoi(argv[3]),NULL);
   gtk_object_set(GTK_OBJECT(src),"angle",atoi(argv[4]),NULL);
 
-  parse = gst_elementfactory_make("mpeg2parse","parse");
-  /*parse = gst_elementfactory_make("mpeg1parse","parse"); */
+  parse = gst_element_factory_make("mpeg2parse","parse");
+  /*parse = gst_element_factory_make("mpeg1parse","parse"); */
   g_return_val_if_fail(parse != NULL, -1);
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
@@ -74,16 +74,16 @@ int main(int argc,char *argv[]) {
   v_thread = GST_ELEMENT(gst_thread_new("v_thread"));
   g_return_val_if_fail(v_thread != NULL, -1);
 
-  v_queue = gst_elementfactory_make("queue","v_queue");
+  v_queue = gst_element_factory_make("queue","v_queue");
   g_return_val_if_fail(v_queue != NULL, -1);
 
-  v_decode = gst_elementfactory_make("mpeg2dec","decode_video");
+  v_decode = gst_element_factory_make("mpeg2dec","decode_video");
   g_return_val_if_fail(v_decode != NULL, -1);
 
-  color = gst_elementfactory_make("colorspace","color");
+  color = gst_element_factory_make("colorspace","color");
   g_return_val_if_fail(color != NULL, -1);
 
-  show = gst_elementfactory_make("xvideosink","show");
+  show = gst_element_factory_make("xvideosink","show");
   g_return_val_if_fail(show != NULL, -1);
 
   gst_bin_add(GST_BIN(v_thread),GST_ELEMENT(v_queue));
@@ -100,13 +100,13 @@ int main(int argc,char *argv[]) {
   a_thread = GST_ELEMENT(gst_thread_new("a_thread"));
   g_return_val_if_fail(a_thread != NULL, -1);
 
-  a_queue = gst_elementfactory_make("queue","a_queue");
+  a_queue = gst_element_factory_make("queue","a_queue");
   g_return_val_if_fail(a_queue != NULL, -1);
   
-  a_decode = gst_elementfactory_make("a52dec","decode_audio");
+  a_decode = gst_element_factory_make("a52dec","decode_audio");
   g_return_val_if_fail(a_decode != NULL, -1);
 
-  osssink = gst_elementfactory_make("osssink","osssink");
+  osssink = gst_element_factory_make("osssink","osssink");
   g_return_val_if_fail(osssink != NULL, -1);
 
   gst_bin_add(GST_BIN(a_thread),GST_ELEMENT(a_queue));

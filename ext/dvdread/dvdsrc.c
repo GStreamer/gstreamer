@@ -772,7 +772,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the dvdsrc element */
-  factory = gst_elementfactory_new ("dvdsrc", GST_TYPE_DVDSRC,
+  factory = gst_element_factory_new ("dvdsrc", GST_TYPE_DVDSRC,
                                     &dvdsrc_details);
   g_return_val_if_fail (factory != NULL, FALSE);
   

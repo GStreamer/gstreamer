@@ -54,7 +54,7 @@ enum
  * "audio/a52" and "audio/ac3" are the same format.  The name
  * "ac3" is now deprecated and should not be used in new code.
  */
-GST_PADTEMPLATE_FACTORY (sink_factory,
+GST_PAD_TEMPLATE_FACTORY (sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -70,7 +70,7 @@ GST_PADTEMPLATE_FACTORY (sink_factory,
   )
 );
 
-GST_PADTEMPLATE_FACTORY (src_factory,
+GST_PAD_TEMPLATE_FACTORY (src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -148,11 +148,11 @@ static void
 gst_a52dec_init (GstA52Dec * a52dec)
 {
   /* create the sink and src pads */
-  a52dec->sinkpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (sink_factory), "sink");
+  a52dec->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->sinkpad);
   gst_element_set_loop_function ((GstElement *) a52dec, gst_a52dec_loop);
 
-  a52dec->srcpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (src_factory), "src");
+  a52dec->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->srcpad);
 
   a52dec->dynamic_range_compression = FALSE;
@@ -444,7 +444,7 @@ gst_a52dec_loop (GstElement *element)
 
   for (i = 0; i < 6; i++) {
     if (a52_block (a52dec->state)) {
-      gst_element_info (element, "a52dec a52_block error %d\n", i);
+      g_warning ("a52dec a52_block error %d\n", i);
       continue;
     }
     /* push on */
@@ -548,11 +548,11 @@ plugin_init (GModule * module, GstPlugin * plugin)
   }
 
   /* create an elementfactory for the a52dec element */
-  factory = gst_elementfactory_new ("a52dec", GST_TYPE_A52DEC, &gst_a52dec_details);
+  factory = gst_element_factory_new ("a52dec", GST_TYPE_A52DEC, &gst_a52dec_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

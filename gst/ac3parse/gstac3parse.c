@@ -95,7 +95,7 @@ static GstPadTemplate*
 src_factory (void) 
 {
   return 
-    gst_padtemplate_new (
+    gst_pad_template_new (
   	"src",
   	GST_PAD_SRC,
   	GST_PAD_ALWAYS,
@@ -112,7 +112,7 @@ static GstPadTemplate*
 sink_factory (void) 
 {
   return 
-    gst_padtemplate_new (
+    gst_pad_template_new (
   	"sink",
   	GST_PAD_SINK,
   	GST_PAD_ALWAYS,
@@ -325,15 +325,15 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the ac3parse element */
-  factory = gst_elementfactory_new("ac3parse",GST_TYPE_AC3PARSE,
+  factory = gst_element_factory_new("ac3parse",GST_TYPE_AC3PARSE,
                                    &ac3parse_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
   src_template = src_factory ();
-  gst_elementfactory_add_padtemplate (factory, src_template);
+  gst_element_factory_add_pad_template (factory, src_template);
 
   sink_template = sink_factory ();
-  gst_elementfactory_add_padtemplate (factory, sink_template);
+  gst_element_factory_add_pad_template (factory, sink_template);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

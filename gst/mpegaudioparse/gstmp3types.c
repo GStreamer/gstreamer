@@ -21,15 +21,15 @@
 #include <gst/gst.h>
 #include <string.h> /* memcmp */
 
-static GstCaps* mp3_typefind(GstBuffer *buf, gpointer private);
+static GstCaps* mp3_type_find(GstBuffer *buf, gpointer private);
 
 static GstTypeDefinition mp3type_definitions[] = {
-  { "mp3types_audio/mp3", "audio/mp3", ".mp3 .mp2 .mp1 .mpga", mp3_typefind },
+  { "mp3types_audio/mp3", "audio/mp3", ".mp3 .mp2 .mp1 .mpga", mp3_type_find },
   { NULL, NULL, NULL, NULL },
 };
 
 static GstCaps* 
-mp3_typefind(GstBuffer *buf, gpointer private) 
+mp3_type_find(GstBuffer *buf, gpointer private) 
 {
   gchar *data;
   gulong head;
@@ -74,7 +74,7 @@ mp3_typefind(GstBuffer *buf, gpointer private)
   if (((head >> 10) & 0x3) == 0x3)
     return NULL;
 
-  caps = gst_caps_new ("mp3_typefind", "audio/mp3", NULL);
+  caps = gst_caps_new ("mp3_type_find", "audio/mp3", NULL);
   /* gst_caps_set(caps,"layer",GST_PROPS_INT(4-((head>>17)&0x3))); */
 
   return caps;
@@ -88,7 +88,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   while (mp3type_definitions[i].name) {
     GstTypeFactory *type;
 
-    type = gst_typefactory_new (&mp3type_definitions[i]);
+    type = gst_type_factory_new (&mp3type_definitions[i]);
     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
     i++;
   }

@@ -29,13 +29,13 @@ main (int argc, char *argv[])
   gst_init (&argc, &argv);
 
   /* create elements */
-  if (!(pipeline = gst_elementfactory_make ("pipeline", "pipeline"))) return 1;
-  if (!(src      = gst_elementfactory_make ("fakesrc",  "source")))   return 1;
-  if (!(tee      = gst_elementfactory_make ("tee",      "tee")))      return 1;
-  if (!(encoder1 = gst_elementfactory_make ("lame",     "lame1")))    return 1;
-  if (!(encoder2 = gst_elementfactory_make ("lame",     "lame2")))    return 1;
-  if (!(sink1    = gst_elementfactory_make ("fakesink", "sink1")))    return 1;
-  if (!(sink2    = gst_elementfactory_make ("fakesink", "sink2")))    return 1;
+  if (!(pipeline = gst_element_factory_make ("pipeline", "pipeline"))) return 1;
+  if (!(src      = gst_element_factory_make ("fakesrc",  "source")))   return 1;
+  if (!(tee      = gst_element_factory_make ("tee",      "tee")))      return 1;
+  if (!(encoder1 = gst_element_factory_make ("lame",     "lame1")))    return 1;
+  if (!(encoder2 = gst_element_factory_make ("lame",     "lame2")))    return 1;
+  if (!(sink1    = gst_element_factory_make ("fakesink", "sink1")))    return 1;
+  if (!(sink2    = gst_element_factory_make ("fakesink", "sink2")))    return 1;
 
   pipeline = gst_pipeline_new ("pipeline");
   g_signal_connect (pipeline, "error", G_CALLBACK (error_callback), NULL);
