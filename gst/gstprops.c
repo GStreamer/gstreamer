@@ -39,6 +39,8 @@ static guint _arg_len[] = {
   0,  // GST_PROPS_LIST_ID_NUM,
   1,  // GST_PROPS_INT_ID_NUM,
   2,  // GST_PROPS_INT_RANGE_ID_NUM,
+  1,  // GST_PROPS_FLOAT_ID_NUM,
+  2,  // GST_PROPS_FLOAT_RANGE_ID_NUM,
   1,  // GST_PROPS_FOURCC_ID_NUM,
   1,  // GST_PROPS_BOOL_ID_NUM,
   1,  // GST_PROPS_STRING_ID_NUM,
@@ -104,6 +106,15 @@ gst_props_create_entry (GstPropsFactory factory, gint *skipped)
       entry->propstype = GST_PROPS_INT_RANGE_ID_NUM;
       entry->data.int_range_data.min = GPOINTER_TO_INT (factory[i++]);
       entry->data.int_range_data.max = GPOINTER_TO_INT (factory[i++]);
+      break;
+    case GST_PROPS_FLOAT_ID_NUM:
+      entry->propstype = GST_PROPS_FLOAT_ID_NUM;
+      entry->data.float_data = *(gfloat*)factory[i++];
+      break;
+    case GST_PROPS_FLOAT_RANGE_ID_NUM:
+      entry->propstype = GST_PROPS_FLOAT_RANGE_ID_NUM;
+      entry->data.float_range_data.min = *(gfloat*)factory[i++];
+      entry->data.float_range_data.max = *(gfloat*)factory[i++];
       break;
     case GST_PROPS_FOURCC_ID_NUM:
       entry->propstype = GST_PROPS_FOURCC_ID_NUM;
@@ -374,7 +385,12 @@ gst_props_set (GstProps *props, const gchar *name, GstPropsFactoryEntry entry, .
         thisentry->propstype = GST_PROPS_INT_ID_NUM;
         value = va_arg (var_args, GstPropsFactoryEntry);
         thisentry->data.int_data = GPOINTER_TO_INT (value);
-	break;
+        break;
+      case GST_PROPS_FLOAT_ID:
+        thisentry->propstype = GST_PROPS_FLOAT_ID_NUM;
+        value = va_arg (var_args, GstPropsFactoryEntry);
+        thisentry->data.float_data = *(gfloat*)value;
+        break;
       case GST_PROPS_FOURCC_ID_NUM:
         thisentry->propstype = GST_PROPS_FOURCC_ID_NUM;
         value = va_arg (var_args, GstPropsFactoryEntry);
@@ -735,6 +751,18 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
           return FALSE;
       }
       break;
+    case GST_PROPS_FLOAT_RANGE_ID_NUM:
+      switch (entry2->propstype) {
+	// a - b   <--->   a - c
+        case GST_PROPS_FLOAT_RANGE_ID_NUM:
+	  return (entry2->data.float_range_data.min <= entry1->data.float_range_data.min &&
+	          entry2->data.float_range_data.max >= entry1->data.float_range_data.max);
+        case GST_PROPS_LIST_ID_NUM:
+	  return gst_props_entry_check_list_compatibility (entry1, entry2);
+        default:
+          return FALSE;
+      }
+      break;
     case GST_PROPS_FOURCC_ID_NUM:
       switch (entry2->propstype) {
 	// b   <--->   a
@@ -756,6 +784,22 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
 	// b   <--->   a
         case GST_PROPS_INT_ID_NUM:
 	  return (entry2->data.int_data == entry1->data.int_data);
+	// b   <--->   a,b,c
+        case GST_PROPS_LIST_ID_NUM:
+	  return gst_props_entry_check_list_compatibility (entry1, entry2);
+        default:
+          return FALSE;
+      }
+      break;
+    case GST_PROPS_FLOAT_ID_NUM:
+      switch (entry2->propstype) {
+	// b   <--->   a - d
+        case GST_PROPS_FLOAT_RANGE_ID_NUM:
+	  return (entry2->data.float_range_data.min <= entry1->data.float_data &&
+	          entry2->data.float_range_data.max >= entry1->data.float_data);
+	// b   <--->   a
+        case GST_PROPS_FLOAT_ID_NUM:
+	  return (entry2->data.float_data == entry1->data.float_data);
 	// b   <--->   a,b,c
         case GST_PROPS_LIST_ID_NUM:
 	  return gst_props_entry_check_list_compatibility (entry1, entry2);
@@ -886,6 +930,23 @@ gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
       xmlNewProp (subtree, "max", str);
       g_free(str);
       break;
+    case GST_PROPS_FLOAT_ID_NUM: 
+      subtree = xmlNewChild (parent, NULL, "float", NULL);
+      xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
+      str = g_strdup_printf ("%f", entry->data.float_data);
+      xmlNewProp (subtree, "value", str);
+      g_free(str);
+      break;
+    case GST_PROPS_FLOAT_RANGE_ID_NUM: 
+      subtree = xmlNewChild (parent, NULL, "floatrange", NULL);
+      xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
+      str = g_strdup_printf ("%f", entry->data.float_range_data.min);
+      xmlNewProp (subtree, "min", str);
+      g_free(str);
+      str = g_strdup_printf ("%f", entry->data.float_range_data.max);
+      xmlNewProp (subtree, "max", str);
+      g_free(str);
+      break;
     case GST_PROPS_FOURCC_ID_NUM: 
       str = g_strdup_printf ("%4.4s", (gchar *)&entry->data.fourcc_data);
       xmlAddChild (parent, xmlNewComment (str));
@@ -979,6 +1040,27 @@ gst_props_load_thyself_func (xmlNodePtr field)
     g_free (prop);
     prop = xmlGetProp (field, "max");
     sscanf (prop, "%d", &entry->data.int_range_data.max);
+    g_free (prop);
+  }
+  else if (!strcmp(field->name, "float")) {
+    entry->propstype = GST_PROPS_FLOAT_ID_NUM;
+    prop = xmlGetProp(field, "name");
+    entry->propid = g_quark_from_string (prop);
+    g_free (prop);
+    prop = xmlGetProp(field, "value");
+    sscanf (prop, "%f", &entry->data.float_data);
+    g_free (prop);
+  }
+  else if (!strcmp(field->name, "floatrange")) {
+    entry->propstype = GST_PROPS_FLOAT_RANGE_ID_NUM;
+    prop = xmlGetProp(field, "name");
+    entry->propid = g_quark_from_string (prop);
+    g_free (prop);
+    prop = xmlGetProp (field, "min");
+    sscanf (prop, "%f", &entry->data.float_range_data.min);
+    g_free (prop);
+    prop = xmlGetProp (field, "max");
+    sscanf (prop, "%f", &entry->data.float_range_data.max);
     g_free (prop);
   }
   else if (!strcmp(field->name, "boolean")) {
@@ -1079,3 +1161,7 @@ gst_props_load_thyself (xmlNodePtr parent)
   return props;
 }
 
+gfloat* _gst_props_floatpointer (gfloat f)
+{
+  return &f;
+}
