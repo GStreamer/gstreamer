@@ -95,6 +95,34 @@ if test "x$GST_INCLUDEDIR" = "x"; then
   AC_MSG_ERROR(no gstreamer include dir found)
 fi
 
+
+AC_CHECK_PROG(HAVE_XMLTO, xmlto, true, false)
+AC_CHECK_PROG(HAVE_XMLCATALOG, xmlcatalog, true, false)
+
+AC_ARG_ENABLE(docs,
+AC_HELP_STRING([--enable-docs],[enable building of documentation]),
+[case "${enableval}" in
+  yes)
+    if test "x$HAVE_XMLTO" = "xtrue" ; then
+      BUILD_DOCS=yes
+    else
+      AC_MSG_ERROR([you don't have xmlto, so don't use --enable-docs])
+      BUILD_DOCS=no
+    fi
+    if test "x$HAVE_XMLCATALOG" = "xtrue" ; then
+      BUILD_DOCS=yes
+    else
+      AC_MSG_ERROR([you don't have xmlcatalog, so don't use --enable-docs])
+      BUILD_DOCS=no
+    fi ;;
+  no)  BUILD_DOCS=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-docs) ;;
+esac],
+[BUILD_DOCS=yes]) dnl Default value
+
+AM_CONDITIONAL(BUILD_DOCS,          test "x$BUILD_DOCS" = "xyes")
+
+
 dnl add debugging options ...
 changequote(,)dnl
 if test "x$GCC" = xyes; then
@@ -119,5 +147,6 @@ AC_OUTPUT([
   examples/Makefile
   examples/gstreamer/Makefile
   docs/Makefile
+  docs/gst-python.ent
   gst-python.spec
 ])
