@@ -116,7 +116,7 @@ GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_SOMETIMES,
-  GST_STATIC_CAPS_ANY
+  GST_STATIC_CAPS ("video/quicktime")
 );
 
 static GstStaticPadTemplate gst_qtdemux_videosrc_template =
