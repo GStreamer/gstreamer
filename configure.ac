@@ -382,7 +382,7 @@ GST_INT_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir)/include -I\$(top_srcdir) 
 AC_SUBST(GST_CFLAGS, "$GST_EXT_CFLAGS $GST_INT_CFLAGS")
 AC_SUBST(GST_LIBS, "$GST_EXT_LIBS $GST_INT_LIBS")
 
-dnl AC_CONFIG_SUBDIRS(gst/cothreads)
+AC_CONFIG_SUBDIRS(libs/ext/cothreads)
 
 dnl ##################################################
 dnl # Prepare informative messages to display at end #
