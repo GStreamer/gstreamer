@@ -1,3 +1,7 @@
+2004-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/mad/gstmad.c: add debugging category, comment + cleanups
+
 2004-04-05  Julio M. Merino Vidal  <jmmv@menta.net>
 
 	reviewed by Benjamin Otte  <otte@gnome.org>

@@ -118,6 +118,8 @@ enum
       /* FILL ME */
 };
 
+GST_DEBUG_CATEGORY_EXTERN (mad_debug);
+
 static GstStaticPadTemplate id3_tag_src_template_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,

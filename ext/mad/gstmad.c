@@ -35,6 +35,7 @@
 #define GST_IS_MAD_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MAD))
 
+
 typedef struct _GstMad GstMad;
 typedef struct _GstMadClass GstMadClass;
 
@@ -49,9 +50,8 @@ struct _GstMad
   struct mad_stream stream;
   struct mad_frame frame;
   struct mad_synth synth;
-  guchar *tempbuffer;
-  glong tempsize;               /* used to keep track of partial buffers */
-  gboolean need_sync;
+  guchar *tempbuffer;           /* temporary buffer to serve to mad */
+  glong tempsize;               /* running count of temp buffer size */
   GstClockTime last_ts;
   guint64 base_byte_offset;
   guint64 bytes_consumed;       /* since the base_byte_offset */
@@ -111,6 +111,9 @@ enum
   ARG_STREAMINFO
       /* FILL ME */
 };
+
+GST_DEBUG_CATEGORY_STATIC (mad_debug);
+#define GST_CAT_DEFAULT mad_debug
 
 static GstStaticPadTemplate mad_src_template_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -187,6 +190,7 @@ gst_mad_get_type (void)
     mad_type =
         g_type_register_static (GST_TYPE_ELEMENT, "GstMad", &mad_info, 0);
   }
+  GST_DEBUG_CATEGORY_INIT (mad_debug, "mad", 0, "mad mp3 decoding");
   return mad_type;
 }
 
@@ -337,7 +341,6 @@ gst_mad_init (GstMad * mad)
 
   mad->tempbuffer = g_malloc (MAD_BUFFER_MDLEN * 3);
   mad->tempsize = 0;
-  mad->need_sync = TRUE;
   mad->base_byte_offset = 0;
   mad->bytes_consumed = 0;
   mad->total_samples = 0;
@@ -1118,17 +1121,20 @@ gst_mad_chain (GstPad * pad, GstData * _data)
     return;
   }
 
-  gst_mad_check_restart (mad);
+  /* restarts happen on discontinuities, ie. seek, flush, PAUSED to PLAYING */
+  if (gst_mad_check_restart (mad))
+    GST_DEBUG ("mad restarted");
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
   /* handle timestamps */
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-    /* if there is nothing queued (partial buffer), we prepare to set the
-     * timestamp on the next buffer */
+    /* if there is nothing left to process in our temporary buffer,
+     * we can set this timestamp on the next outgoing buffer */
     if (mad->tempsize == 0) {
-      /* we have to save the result here because we can't yet convert the timestamp
-       * to a sample offset yet, the samplerate might not be known yet */
+      /* we have to save the result here because we can't yet convert
+       * the timestamp to a sample offset yet,
+       * the samplerate might not be known yet */
       mad->last_ts = timestamp;
       mad->base_byte_offset = GST_BUFFER_OFFSET (buffer);
       mad->bytes_consumed = 0;
@@ -1144,16 +1150,17 @@ gst_mad_chain (GstPad * pad, GstData * _data)
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
 
-
   /* process the incoming buffer in chunks of maximum MAD_BUFFER_MDLEN bytes;
    * this is the upper limit on processable chunk sizes set by mad */
   while (size > 0) {
     gint tocopy;
-    guchar *mad_input_buffer;
+    guchar *mad_input_buffer;   /* convenience pointer to tempbuffer */
 
     tocopy = MIN (MAD_BUFFER_MDLEN, size);
 
     /* append the chunk to process to our internal temporary buffer */
+    GST_LOG ("tempbuffer size %d, copying %d bytes from incoming buffer",
+        mad->tempsize, tocopy);
     memcpy (mad->tempbuffer + mad->tempsize, data, tocopy);
     mad->tempsize += tocopy;
 
@@ -1209,7 +1216,7 @@ gst_mad_chain (GstPad * pad, GstData * _data)
 
               list = gst_mad_id3_to_tag_list (tag);
               id3_tag_delete (tag);
-              GST_DEBUG_OBJECT (mad, "found tag");
+              GST_DEBUG ("found tag");
               gst_element_found_tags (GST_ELEMENT (mad), list);
               if (mad->tags) {
                 gst_tag_list_insert (mad->tags, list, GST_TAG_MERGE_PREPEND);
