@@ -109,6 +109,7 @@ cdparanoia      libcdparanoia   (http://www.xiph.org/paranoia/)
 aasink		aalib		(http://aa-project.sourceforge.net/aalib/)
 xmms		libxmms		(http://www.xmms.org)
 decdvd		ac3dec,mpeg2dec	(http://linuxvideo.org/mpeg2dec/,http://linuxvideo.org/ac3dec/)a
+mad		mad		(http://www.mars.org/home/rob/proj/mpeg/)
 
 Plug-ins which use an LGPL library are as follows:
 colorspace 	Hermes 		(http://www.clanlib.org/hermes/)
