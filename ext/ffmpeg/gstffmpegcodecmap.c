@@ -401,13 +401,17 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = GST_FF_VID_CAPS_NEW ("video/x-4xm", NULL);
       break;
 
+    case CODEC_ID_XAN_WC3:
+    case CODEC_ID_XAN_WC4:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-xan",
+          "wcversion", G_TYPE_INT, 3 - CODEC_ID_XAN_WC3 + codec_id, NULL);
+      break;
+
     case CODEC_ID_VCR1:
     case CODEC_ID_CLJR:
     case CODEC_ID_MDEC:
     case CODEC_ID_ROQ:
     case CODEC_ID_INTERPLAY_VIDEO:
-    case CODEC_ID_XAN_WC3:
-    case CODEC_ID_XAN_WC4:
       buildcaps = TRUE;
       break;
 
@@ -427,7 +431,6 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       if (context) {
         gst_caps_set_simple (caps,
 	    "depth", G_TYPE_INT, (gint) context->bits_per_sample, NULL);
-        gst_ffmpeg_set_palette (caps, context);
       } else {
         gst_caps_set_simple (caps, "depth", GST_TYPE_INT_RANGE, 1, 64, NULL);
       }
@@ -692,6 +695,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       gst_caps_set_simple (caps,
           "codec_data", GST_TYPE_BUFFER, data, NULL);
       gst_buffer_unref (data);
+    }
+
+    /* palette */
+    if (context) {
+      gst_ffmpeg_set_palette (caps, context);
     }
 
     str = gst_caps_to_string (caps);
@@ -1172,7 +1180,6 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
 
         if (gst_structure_get_int (str, "depth", &depth))
           context->bits_per_sample = depth;
-        gst_ffmpeg_get_palette (caps, context);
       } while (0);
       break;
 
@@ -1184,6 +1191,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
   switch (codec_type) {
     case CODEC_TYPE_VIDEO:
       gst_ffmpeg_caps_to_pixfmt (caps, context, codec_id == CODEC_ID_RAWVIDEO);
+      gst_ffmpeg_get_palette (caps, context);
       break;
     case CODEC_TYPE_AUDIO:
       gst_ffmpeg_caps_to_smpfmt (caps, context, FALSE);
@@ -1602,6 +1610,23 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       if (!strcmp (layout, "microsoft")) {
         id = CODEC_ID_MSRLE;
         video = TRUE;
+      }
+    }
+  } else if (!strcmp (mimetype, "video/x-xan")) {
+    gint wcversion = 0;
+
+    if ((gst_structure_get_int (structure, "wcversion", &wcversion))) {
+      switch (wcversion) {
+        case 3:
+          id = CODEC_ID_XAN_WC3;
+          video = TRUE;
+          break;
+        case 4:
+          id = CODEC_ID_XAN_WC4;
+          video = TRUE;
+          break;
+        default:
+          break;
       }
     }
   } else if (!strncmp (mimetype, "audio/x-gst_ff-", 15) ||

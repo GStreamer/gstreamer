@@ -1,5 +1,16 @@
 2004-10-02  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_with_codecid), (gst_ffmpeg_caps_to_codecid):
+	  Generalized palette functions, add actual mimetypes for wing
+	  commander formats.
+	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_chain):
+	  Ffmpeg has internal palette functions, so I noticed.
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
+	  Actually remove all palette code.
+
+2004-10-02  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_loop):
 	  Signal no_more_pads.
 	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_read),

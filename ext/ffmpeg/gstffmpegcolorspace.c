@@ -351,54 +351,25 @@ gst_ffmpegcsp_chain (GstPad * pad, GstData * data)
   if (space->from_pixfmt == space->to_pixfmt) {
     outbuf = inbuf;
   } else {
-    enum PixelFormat from_pixfmt =
-        (space->from_pixfmt == PIX_FMT_PAL8) ?
-        PIX_FMT_RGBA32 : space->from_pixfmt;
     guint size = avpicture_get_size (space->to_pixfmt,
         space->width, space->height);
-    GstBuffer *inbuf2;
-
-    if (from_pixfmt != space->from_pixfmt) {
-      /* manual conversion from palette to RGBA32 */
-      gint x, y, pix, wd = space->width;
-      guint8 *dest;
-      guint32 conv;
-      AVPaletteControl *pal = space->palette;
-
-      inbuf2 = gst_buffer_new_and_alloc (4 *
-          space->width * space->height);
-      dest = GST_BUFFER_DATA (inbuf2);
-
-      for (y = 0; y < space->height; y++) {
-        for (x = 0; x < space->width; x++) {
-          pix = GST_BUFFER_DATA (inbuf)[y * wd + x];
-          conv = pal->palette[pix];
-          dest[(y * wd + x) * 4]     = ((guint8 *) &conv)[0];
-          dest[(y * wd + x) * 4 + 1] = ((guint8 *) &conv)[1];
-          dest[(y * wd + x) * 4 + 2] = ((guint8 *) &conv)[2];
-          dest[(y * wd + x) * 4 + 3] = ((guint8 *) &conv)[3];
-        }
-      }
-    } else {
-      inbuf2 = inbuf;
-    }
 
     outbuf = gst_pad_alloc_buffer (space->srcpad, GST_BUFFER_OFFSET_NONE, size);
 
     /* convert */
-    avpicture_fill ((AVPicture *) space->from_frame, GST_BUFFER_DATA (inbuf2),
-        from_pixfmt, space->width, space->height);
+    avpicture_fill ((AVPicture *) space->from_frame, GST_BUFFER_DATA (inbuf),
+        space->from_pixfmt, space->width, space->height);
+    if (space->palette)
+      space->from_frame->data[1] = (uint8_t *) space->palette;
     avpicture_fill ((AVPicture *) space->to_frame, GST_BUFFER_DATA (outbuf),
         space->to_pixfmt, space->width, space->height);
     img_convert ((AVPicture *) space->to_frame, space->to_pixfmt,
-        (AVPicture *) space->from_frame, from_pixfmt,
+        (AVPicture *) space->from_frame, space->from_pixfmt,
         space->width, space->height);
 
     GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
     GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
 
-    if (inbuf != inbuf2)
-      gst_buffer_unref (inbuf2);
     gst_buffer_unref (inbuf);
   }
 

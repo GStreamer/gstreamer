@@ -472,13 +472,9 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
     if (have_data) {
       if (!GST_PAD_CAPS (ffmpegdec->srcpad)) {
         GstCaps *caps;
-        enum PixelFormat orig_fmt = ffmpegdec->context->pix_fmt;
 
-        ffmpegdec->context->pix_fmt = (orig_fmt == PIX_FMT_PAL8) ?
-	    PIX_FMT_RGBA32 : orig_fmt;
         caps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type,
             ffmpegdec->context);
-        ffmpegdec->context->pix_fmt = orig_fmt;
 
         /* add in pixel-aspect-ratio if we have it */
         if (caps && ffmpegdec->par) {
