@@ -1,5 +1,12 @@
 2004-04-10  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* configure.ac:
+	* sys/v4l2/gstv4l2element.h:
+	  Workaround for missing struct v4l2_buffer declaration in Suse 9
+	  and Mandrake 10 linux/videodev2.h header file (#135919).
+
+2004-04-10  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnomevfssink_open_file):
 	  Bail out if no filename was given.
 
