@@ -106,6 +106,9 @@ typedef enum {
 
   /***** !!!!! need to have a flag that says that an element must
     *not* be an entry into a scheduling chain !!!!! *****/
+  /* this element for some reason doesn't obey COTHREAD_STOPPING, or
+     has some other reason why it can't be the entry */
+  GST_ELEMENT_NO_ENTRY,
 
   /* there is a new loopfunction ready for placement */
   GST_ELEMENT_NEW_LOOPFUNC,
@@ -118,7 +121,7 @@ typedef enum {
   GST_ELEMENT_EOS,
 
   /* use some padding for future expansion */
-  GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 8,
+  GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 12,
 } GstElementFlags;
 
 #define GST_ELEMENT_IS_THREAD_SUGGESTED(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_THREAD_SUGGESTED))

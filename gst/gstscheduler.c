@@ -1310,6 +1310,8 @@ GST_DEBUG(GST_CAT_SCHEDULING,"there are %d elements in this chain\n",chain->num_
           elements = g_list_next(elements);
           if (GST_FLAG_IS_SET(entry,GST_ELEMENT_DECOUPLED))
             GST_DEBUG(GST_CAT_SCHEDULING,"entry \"%s\" is DECOUPLED, skipping\n",GST_ELEMENT_NAME(entry));
+          else if (GST_FLAG_IS_SET(entry,GST_ELEMENT_NO_ENTRY))
+            GST_DEBUG(GST_CAT_SCHEDULING,"entry \"%s\" is not valid, skipping\n",GST_ELEMENT_NAME(entry));
           else
             break;
         }
