@@ -1,3 +1,11 @@
+gstreamer (0.2.1.20010907-1) unstable; urgency=low
+
+  * Sync to latest CVS
+  * Added plugin packages: -a52dec, -mikmod, -sid
+  * Added speed and qcam to -common
+
+ -- David I. Lehn <dlehn@vt.edu>  Fri,  7 Sep 2001 03:33:43 -0400
+
 gstreamer (0.2.1-4) unstable; urgency=low
 
   * Fix some problems reported from lintian 1.20.14:

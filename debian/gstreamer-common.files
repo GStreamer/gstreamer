@@ -52,12 +52,14 @@ usr/lib/gst/libmpegaudio.*
 usr/lib/gst/libmulaw.*
 usr/lib/gst/libpassthrough.*
 usr/lib/gst/librtjpeg.*
+usr/lib/gst/libspeed.*
 usr/lib/gst/libsmooth.*
 usr/lib/gst/libsmoothwave.*
 usr/lib/gst/libstereo.*
 usr/lib/gst/libstereo2mono.*
 usr/lib/gst/libsynaesthesia.*
 usr/lib/gst/libsystem_encode.*
+usr/lib/gst/libgstqcam.*
 usr/lib/gst/libv4lsrc.*
 usr/lib/gst/libvcdsrc.*
 usr/lib/gst/libvideoscale.*

@@ -10,6 +10,7 @@ EXTRA_DIST = \
 	gstmediaplay.files \
 	gstmediaplay.manpages \
 	gstmediaplay.menu \
+	gstreamer-a52dec.files \
 	gstreamer-aa.files \
 	gstreamer-alsa.files \
 	gstreamer-arts.files \
@@ -29,6 +30,7 @@ EXTRA_DIST = \
 	gstreamer-jpeg.files \
 	gstreamer-lame.files \
 	gstreamer-mad.files \
+	gstreamer-mikmod.files \
 	gstreamer-mpeg2dec.files \
 	gstreamer-mpg123.files \
 	gstreamer-oss.files \
@@ -38,6 +40,7 @@ EXTRA_DIST = \
 	gstreamer-runtime.manpages \
 	gstreamer-runtime.postinst \
 	gstreamer-runtime.postrm \
+	gstreamer-sid.files \
 	gstreamer-sdl.files \
 	gstreamer-tools.files \
 	gstreamer-tools.manpages \

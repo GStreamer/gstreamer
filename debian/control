@@ -2,7 +2,7 @@ Source: gstreamer
 Section: x11
 Priority: optional
 Maintainer: David I. Lehn <dlehn@vt.edu>
-Build-Depends: debhelper (>= 3.0.0), libxml-dev (>= 1.8.10), zlib1g-dev (>= 1:1.1.3), libghttp-dev (>= 1.0.6), libglib1.2-dev (>= 1.2.8), libgtk1.2-dev (>= 1.2.8), libglade0-dev (>= 0.14), libglade-gnome0-dev (>= 0.14), libesd0-dev (>= 0.2.22), libcdparanoia0-dev (>= 3a9.7), libvorbis-dev (>= 1.0beta3), libgnome-dev (>= 1.2.11), libasound1-dev (>= 0.5.10) | libasound2-dev (>= 0.9), libghttp-dev (>= 1.0.9), libjpeg62-dev (>= 6b), aalib1-dev (>= 1.4p4), libmad0-dev (>= 0.13.0b), hermes1-dev (>= 1.3.1), libarts-dev (>= 2.1.2), libgsm1-dev (>= 1.0.10), libgnome-vfs-dev (>= 1.0.1), libsdl1.2-dev (>= 1.2.1), libaudiofile-dev (>= 0.2.1), libavifile0.6-dev (>= 0.6.0.20010810), festival-dev (>= 1.4.1p), libflac-dev (>= 1.0-2), libmpeg2-dev (>= 0.2.0), libmpeg2dec-dev (>= 0.2.0), pkg-config (>= 0.7.0)
+Build-Depends: debhelper (>= 3.0.0), libxml-dev (>= 1.8.10), zlib1g-dev (>= 1:1.1.3), libghttp-dev (>= 1.0.6), libglib1.2-dev (>= 1.2.8), libgtk1.2-dev (>= 1.2.8), libglade0-dev (>= 0.14), libglade-gnome0-dev (>= 0.14), libesd0-dev (>= 0.2.22), libcdparanoia0-dev (>= 3a9.7), libvorbis-dev (>= 1.0beta3), libgnome-dev (>= 1.2.11), libasound1-dev (>= 0.5.10) | libasound2-dev (>= 0.9), libghttp-dev (>= 1.0.9), libjpeg62-dev (>= 6b), aalib1-dev (>= 1.4p4), libmad0-dev (>= 0.13.0b), hermes1-dev (>= 1.3.1), libarts-dev (>= 2.1.2), libgsm1-dev (>= 1.0.10), libgnome-vfs-dev (>= 1.0.1), libsdl1.2-dev (>= 1.2.1), libaudiofile-dev (>= 0.2.1), libavifile0.6-dev (>= 0.6.0.20010810), festival-dev (>= 1.4.1p), libflac-dev (>= 1.0-2), libmpeg2-dev (>= 0.2.0), libmpeg2dec-dev (>= 0.2.0), pkg-config (>= 0.7.0), libsidplay1-dev (>= 1.36.47), libmikmod2-dev (>= 3.1.9), liba52-dev (>= 0.7.1)
 Build-Depends-Indep: debhelper (>= 3.0.0), gtk-doc-tools (>= 0.4), jade (>= 1.2.1), transfig (>= 3.2.3.c), cygnus-stylesheets (>= 0.10.2-12)
 Standards-Version: 3.5.6
 
@@ -97,12 +97,22 @@ Description: GStreamer editor
 Package: gstreamer-all-plugins
 Architecture: any
 Section: libs
-Depends: gstreamer-aa, gstreamer-alsa, gstreamer-arts, gstreamer-artsd, gstreamer-audiofile, gstreamer-avifile, gstreamer-cdparanoia, gstreamer-colorspace, gstreamer-common, gstreamer-elements, gstreamer-esd, gstreamer-festival, gstreamer-flac, gstreamer-gnomevfs, gstreamer-gsm, gstreamer-jpeg, gstreamer-lame, gstreamer-mad, gstreamer-mpeg2dec, gstreamer-mpg123, gstreamer-oss, gstreamer-sdl, gstreamer-vorbis, gstreamer-x
+Depends: gstreamer-a52dec, gstreamer-aa, gstreamer-alsa, gstreamer-arts, gstreamer-artsd, gstreamer-audiofile, gstreamer-avifile, gstreamer-cdparanoia, gstreamer-colorspace, gstreamer-common, gstreamer-elements, gstreamer-esd, gstreamer-festival, gstreamer-flac, gstreamer-gnomevfs, gstreamer-gsm, gstreamer-jpeg, gstreamer-lame, gstreamer-mad, gstreamer-mikmod, gstreamer-mpeg2dec, gstreamer-mpg123, gstreamer-oss, gstreamer-sdl, gstreamer-sid, gstreamer-vorbis, gstreamer-x
 Description: Pseudo package for all GStreamer plugins
  Pseudo package which depends on all current GStreamer plugin
  packages.
  .
  WARNING: This package depends on many other packages.
+
+Package: gstreamer-a52dec
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
+Description: ATSC A/52 audio decoder plugin for GStreamer
+ ATSC A/52 audio decoder plugin for GStreamer
+ Uses liba52.
+ .
+ http://liba52.sourceforge.net/
 
 Package: gstreamer-aa
 Architecture: any
@@ -248,14 +258,26 @@ Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: MAD MPEG audio decoder plugin for GStreamer
  MAD MPEG audio decoder plugin for GStreamer
 
+Package: gstreamer-mikmod
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
+Description: MikMod decoder plugin for GStreamer
+ MikMod decoder plugin for GStreamer.
+ MikMod is able to decode the IT, XM, S3M, MTM, 669, STM, ULT, FAR,
+ MED, AMF, DSM, IMF, GDM, STX, OKT and of course MOD module formats.
+ .
+ http://www.mikmod.org/
+
 Package: gstreamer-mpeg2dec
 Architecture: any
 Section: libs
 Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
-Description: mpeg2dec plugin for GStreamer
- mpeg2dec plugin for GStreamer
+Description: MPEG1 and MPEG2 video decoder plugin for GStreamer
+ MPEG1 and MPEG2 video decoder plugin for GStreamer
+ Uses libmpeg2
  .
- http://www.linuxvideo.org/mpeg2dec/
+ http://libmpeg2.sourceforge.net/
 
 Package: gstreamer-mpg123
 Architecture: any
@@ -270,6 +292,18 @@ Section: libs
 Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: OSS plugin for GStreamer
  OSS plugin for GStreamer
+
+Package: gstreamer-sid
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
+Description: C64 SID decoder plugin for GStreamer
+ C64 SID decoder plugin for GStreamer.
+ Capable of playing music written for C64 SID chip (MOS 6581) and
+ CPU (6510).
+ .
+ http://stud1.tuwien.ac.at/~e9426444/
+ http://sidplay2.sourceforge.net/
 
 Package: gstreamer-sdl
 Architecture: any

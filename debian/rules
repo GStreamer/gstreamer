@@ -16,7 +16,7 @@ export DH_OPTIONS
 # Link special names to a template file.
 # still need "*.files" to be done by hand
 
-PLUGINS=aa alsa arts artsd audiofile avifile cdparanoia colorspace common elements esd festival flac gnomevfs gsm jpeg lame mad mpeg2dec mpg123 oss sdl vorbis x
+PLUGINS=a52dec aa alsa arts artsd audiofile avifile cdparanoia colorspace common elements esd festival flac gnomevfs gsm jpeg lame mad mikmod mpeg2dec mpg123 oss sdl sid vorbis x
 
 setup-links:
 	for i in $(PLUGINS); do \
@@ -82,11 +82,7 @@ clean:
 		docs/gst/gstreamer-decl.txt \
 		docs/gst/gstreamer.html \
 		docs/libs/tmpl \
-		docs/plugins/gstreamer-plugins.types \
-		debian/libgst0.postinst \
-		debian/libgsteditor0.postinst \
-		debian/libgstmediaplay0.postinst \
-		debian/gstreamer-plugin-template.prerm
+		docs/plugins/gstreamer-plugins.types
 	find . -name \*.stamp | xargs rm || true
 	find . -name Makefile | grep -v omega | xargs rm || true
 

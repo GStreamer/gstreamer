@@ -13,7 +13,7 @@ EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt $
 
 HTML_DIR=$(datadir)/gstreamer/html
 
-GST_LIBS += ../../gst/elements/libgstelements.la
+GST_LIBS += $(top_builddir)/gst/elements/libgstelements.la
 
 
 TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)
