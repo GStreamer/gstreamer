@@ -48,6 +48,11 @@ GST_DEBUG_CATEGORY_EXTERN (v4l_debug);
 	GST_DEBUG_OBJECT (\
 		GST_ELEMENT(v4lsrc), \
 		"V4LSRC: " format, ##args)
+#define LOG(format, args...) \
+	GST_LOG_OBJECT (\
+		GST_ELEMENT(v4lsrc), \
+		"V4LSRC: " format, ##args)
+
 
 /* palette names */
 static const char *palette_name[] = {
@@ -80,7 +85,7 @@ static const char *palette_name[] = {
 static gboolean
 gst_v4lsrc_queue_frame (GstV4lSrc * v4lsrc, gint num)
 {
-  DEBUG ("queueing frame %d", num);
+  LOG ("queueing frame %d", num);
 
   if (v4lsrc->frame_queue_state[num] != QUEUE_STATE_READY_FOR_QUEUE) {
     return FALSE;
@@ -110,7 +115,7 @@ gst_v4lsrc_queue_frame (GstV4lSrc * v4lsrc, gint num)
 static gboolean
 gst_v4lsrc_sync_frame (GstV4lSrc * v4lsrc, gint num)
 {
-  DEBUG ("Syncing on frame %d", num);
+  LOG ("Syncing on frame %d", num);
 
   if (v4lsrc->frame_queue_state[num] != QUEUE_STATE_QUEUED) {
     return FALSE;
@@ -271,7 +276,7 @@ gst_v4lsrc_capture_start (GstV4lSrc * v4lsrc)
 gboolean
 gst_v4lsrc_grab_frame (GstV4lSrc * v4lsrc, gint * num)
 {
-  DEBUG ("grabbing frame");
+  LOG ("grabbing frame");
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lsrc));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lsrc));
 
@@ -306,7 +311,7 @@ gst_v4lsrc_grab_frame (GstV4lSrc * v4lsrc, gint * num)
   }
   v4lsrc->sync_frame = (v4lsrc->sync_frame + 1) % v4lsrc->mbuf.frames;
 
-  GST_DEBUG ("grabbed frame %d", *num);
+  GST_LOG ("grabbed frame %d", *num);
 
   g_mutex_unlock (v4lsrc->mutex_queue_state);
 
@@ -343,7 +348,7 @@ gst_v4lsrc_get_buffer (GstV4lSrc * v4lsrc, gint num)
 gboolean
 gst_v4lsrc_requeue_frame (GstV4lSrc * v4lsrc, gint num)
 {
-  DEBUG ("requeueing frame %d", num);
+  LOG ("requeueing frame %d", num);
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lsrc));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lsrc));
 

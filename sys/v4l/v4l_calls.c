@@ -94,6 +94,13 @@ gst_v4l_get_capabilities (GstV4lElement * v4lelement)
     return FALSE;
   }
 
+  if (ioctl (v4lelement->video_fd, VIDIOCGWIN, &(v4lelement->vwin)) < 0) {
+    GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
+        ("error getting window properties %s of from device %s",
+            g_strerror (errno), v4lelement->videodev));
+    return FALSE;
+  }
+
   return TRUE;
 }
 

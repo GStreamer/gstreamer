@@ -70,8 +70,11 @@ struct _GstV4lElement {
   /* the video buffer (mmap()'ed) */
   guint8 *buffer;
 
-  /* the video-device's capabilities */
+  /* the video device's capabilities */
   struct video_capability vcap;
+
+  /* the video device's window properties */
+  struct video_window vwin;
 
   /* some more info about the current input's capabilities */
   struct video_channel vchan;

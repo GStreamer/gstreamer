@@ -277,7 +277,18 @@ static gfloat
 gst_v4lsrc_get_fps (GstV4lSrc * v4lsrc)
 {
   gint norm;
+  gint fps_index;
   gfloat fps;
+  struct video_window *vwin = &GST_V4LELEMENT (v4lsrc)->vwin;
+
+  /* check if we have vwin window properties giving a framerate,
+   * as is done for webcams
+   * See http://www.smcc.demon.nl/webcam/api.html
+   * which is used for the Philips and qce-ga drivers */
+  fps_index = (vwin->flags >> 16) & 0x3F;       /* 6 bit index for framerate */
+  if (fps_index != 0)
+    /* index of 16 corresponds to 15 fps */
+    return fps_index * 15.0 / 16;
 
   if (!v4lsrc->use_fixed_fps && v4lsrc->clock != NULL && v4lsrc->handled > 0) {
     /* try to get time from clock master and calculate fps */
@@ -622,6 +633,8 @@ gst_v4lsrc_getcaps (GstPad * pad)
     return gst_caps_new_any ();
   }
 
+  fps = gst_v4lsrc_get_fps (v4lsrc);
+
   list = gst_caps_new_empty ();
   for (item = v4lsrc->colourspaces; item != NULL; item = item->next) {
     GstCaps *one;
@@ -629,7 +642,6 @@ gst_v4lsrc_getcaps (GstPad * pad)
     one = gst_v4lsrc_palette_to_caps (GPOINTER_TO_INT (item->data));
     if (!one)
       g_print ("Palette %d gave no caps\n", GPOINTER_TO_INT (item->data));
-    fps = gst_v4lsrc_get_fps (v4lsrc);
     GST_DEBUG_OBJECT (v4lsrc,
         "Device reports w: %d-%d, h: %d-%d, fps: %f for palette %d",
         vcap->minwidth, vcap->maxwidth, vcap->minheight, vcap->maxheight, fps,
@@ -895,14 +907,14 @@ gst_v4lsrc_buffer_free (GstBuffer * buf)
   g_free (v4lsrc_private);
   GST_BUFFER_PRIVATE (buf) = 0;
 
-  GST_DEBUG_OBJECT (v4lsrc, "freeing buffer %p with refcount %d for frame %d",
+  GST_LOG_OBJECT (v4lsrc, "freeing buffer %p with refcount %d for frame %d",
       buf, GST_BUFFER_REFCOUNT_VALUE (buf), num);
   if (gst_element_get_state (GST_ELEMENT (v4lsrc)) != GST_STATE_PLAYING)
     return;                     /* we've already cleaned up ourselves */
 
   v4lsrc->use_num_times[num]--;
   if (v4lsrc->use_num_times[num] <= 0) {
-    GST_DEBUG_OBJECT (v4lsrc, "requeueing frame %d", num);
+    GST_LOG_OBJECT (v4lsrc, "requeueing frame %d", num);
     gst_v4lsrc_requeue_frame (v4lsrc, num);
   }
 }

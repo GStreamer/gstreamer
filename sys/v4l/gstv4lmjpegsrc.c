@@ -187,7 +187,7 @@ gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_USE_FIXED_FPS,
       g_param_spec_boolean ("use_fixed_fps", "Use Fixed FPS",
           "Drop/Insert frames to reach a certain FPS (TRUE) "
-          "or adapt FPS to suit the number of frabbed frames",
+          "or adapt FPS to suit the number of grabbed frames",
           TRUE, G_PARAM_READWRITE));
 
   /* signals */
