@@ -29,7 +29,7 @@
 #include <sys/mman.h>
 
 /* we make too much noise for normal debugging... */
-#define GST_DEBUG_FORCE_DISABLE
+//#define GST_DEBUG_FORCE_DISABLE
 #include "gst_private.h"
 
 #include "cothreads.h"
@@ -180,7 +180,7 @@ cothread_stub (void)
   thread->pc = 0;
   thread->sp = thread->top_sp;
   GST_DEBUG_LEAVE("");
-//  printf("uh, yeah, we shouldn't be here, but we should deal anyway\n");
+  fprintf(stderr,"uh, yeah, we shouldn't be here, but we should deal anyway\n");
 }
 
 /**
@@ -258,11 +258,12 @@ cothread_switch (cothread_state *thread)
   if (current == thread) goto selfswitch;
 
   // find the number of the thread to switch to
+  GST_INFO (GST_CAT_COTHREAD_SWITCH,"switching from cothread %d to to cothread #%d\n",
+            ctx->current,thread->threadnum);
   ctx->current = thread->threadnum;
-  GST_INFO (GST_CAT_COTHREAD_SWITCH,"switching to thread #%d",ctx->current);
 
   /* save the current stack pointer, frame pointer, and pc */
-  GET_SP(current->sp);
+//  GET_SP(current->sp);
   enter = setjmp(current->jmp);
   if (enter != 0) {
     GST_DEBUG (0,"enter thread #%d %d %p<->%p (%d)\n",current->threadnum, enter, 
@@ -277,14 +278,14 @@ cothread_switch (cothread_state *thread)
   /* restore stack pointer and other stuff of new cothread */
   if (thread->flags & COTHREAD_STARTED) {
     GST_DEBUG (0,"in thread \n");
-    SET_SP(thread->sp);
+//    SET_SP(thread->sp);
     // switch to it
     longjmp(thread->jmp,1);
   } else {
     SETUP_STACK(thread->sp);
     SET_SP(thread->sp);
     // start it
-    cothread_stub();
+    CALL(cothread_stub);
     GST_DEBUG (0,"exit thread \n");
     ctx->current = 0;
   }

@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstarch.h: Architecture-specific inclusions
+ * gstppc.h: Header for PPC-specific architecture issues
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,25 +20,30 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_GSTARCH_H__
-#define __GST_GSTARCH_H__
+#ifndef GST_HGUARD_GSTALPHA_H
+#define GST_HGUARD_GSTALPHA_H
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#warning in gstalpha.h
 
-#ifdef HAVE_CPU_I386
-#include "gsti386.h"
-#else
-#ifdef HAVE_CPU_PPC
-#include "gstppc.h"
-#else
-#ifdef HAVE_CPU_ALPHA
-#include "gstalpha.h"
-#else
-#error Need to know about this architecture, or have a generic implementation
-#endif
-#endif
-#endif
+#define GET_SP(target) \
+    __asm__("stq $30,%0" : "=m"(target) : : "30");
 
-#endif /* __GST_GSTARCH_H__ */
+#define SET_SP(stackpointer) \
+    __asm__("bis $31,%0,$30" : : "r"(stackpointer));
+
+#define CALL(target) \
+    __asm__( "bis $31,%0,$27\n\t" \
+             "jsr $26,($27),0" : : "r"(target) );
+
+struct minimal_ppc_stackframe {
+    unsigned long back_chain;
+    unsigned long LR_save;
+    unsigned long unused1;
+    unsigned long unused2;
+};
+
+#define SETUP_STACK(sp) \
+    sp = ((unsigned long *)(sp)) - 4; \
+    ((struct minimal_ppc_stackframe *)sp)->back_chain = 0;
+
+#endif /* GST_HGUARD_GSTALPHA_H */

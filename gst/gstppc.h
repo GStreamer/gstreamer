@@ -31,8 +31,10 @@
 #define SET_SP(source) \
     __asm__("lwz 1,%0" : "=m"(source))
 
-#define JUMP(target) \
-    __asm__("b " SYMBOL_NAME_STR(cothread_stub))
+#define CALL(target) \
+    __asm__( "mr 0,%0\n\t" \
+             "mtlr 0\n\t" \
+             "blrl" : : "r"(target) );
 
 struct minimal_ppc_stackframe {
     unsigned long back_chain;

@@ -24,13 +24,13 @@
 #define GST_HGUARD_GSTI386_H
 
 #define GET_SP(target) \
-  __asm__("movl %%esp, %0" : "=m"(target) : : "esp", "ebp");
+  __asm__( "movl %%esp, %0" : "=r"(target) : : "esp", "ebp" );
 
 #define SET_SP(source) \
-  __asm__("movl %0, %%esp\n" : "=m"(thread->sp));
+  __asm__( "movl %0, %%esp\n" : : "r"(source) );
 
-#define JUMP(target) \
-    __asm__("jmp " SYMBOL_NAME_STR(cothread_stub))
+#define CALL(target) \
+    __asm__("call *%0" : : "r"(target) );
 
 #define SETUP_STACK(sp) do ; while(0)
 
