@@ -36,10 +36,10 @@
 #include "gstarch.h"
 
 
-#define COTHREAD_STACKSIZE 32768
-#define COTHREAD_MAXTHREADS 64
 #define STACK_SIZE 0x200000
 
+#define COTHREAD_MAXTHREADS 64
+#define COTHREAD_STACKSIZE (STACK_SIZE/COTHREAD_MAXTHREADS)
 
 struct _cothread_context {
   cothread_state *threads[COTHREAD_MAXTHREADS];
