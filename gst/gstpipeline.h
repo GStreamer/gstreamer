@@ -24,7 +24,9 @@
 #ifndef __GST_PIPELINE_H__
 #define __GST_PIPELINE_H__
 
+#include <gst/gsttypes.h>
 #include <gst/gstbin.h>
+#include <gst/gstbus.h>
 
 G_BEGIN_DECLS
 
@@ -35,11 +37,22 @@ G_BEGIN_DECLS
 #define GST_IS_PIPELINE_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PIPELINE))
 #define GST_PIPELINE_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PIPELINE, GstPipelineClass))
 
-typedef struct _GstPipeline GstPipeline;
-typedef struct _GstPipelineClass GstPipelineClass;
+typedef enum {
+  /* this pipeline works with a fixed clock */
+  GST_PIPELINE_FLAG_FIXED_CLOCK        = GST_BIN_FLAG_LAST,
+
+  /* padding */
+  GST_PIPELINE_FLAG_LAST               = GST_BIN_FLAG_LAST + 4
+} GstPipelineFlags;
 
 struct _GstPipeline {
   GstBin 	 bin;
+
+  GstBus	*bus;
+  GstScheduler  *scheduler;
+  GstClock      *fixed_clock;	/* fixed clock if any */
+
+  GList		*eosed;		/* list of elements that posted EOS */
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -53,6 +66,14 @@ struct _GstPipelineClass {
 GType		gst_pipeline_get_type		(void);
 GstElement*	gst_pipeline_new		(const gchar *name);
 
+GstScheduler*	gst_pipeline_get_scheduler	(GstPipeline *pipeline);
+GstBus*		gst_pipeline_get_bus		(GstPipeline *pipeline);
+void            gst_pipeline_use_clock          (GstPipeline *pipeline, GstClock *clock);
+void            gst_pipeline_set_clock          (GstPipeline *pipeline, GstClock *clock);
+GstClock*       gst_pipeline_get_clock          (GstPipeline *pipeline);
+void            gst_pipeline_auto_clock         (GstPipeline *pipeline);
+
+gboolean	gst_pipeline_post_message	(GstPipeline *pipeline, GstMessage *message);
 
 G_END_DECLS
 

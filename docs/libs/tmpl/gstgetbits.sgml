@@ -2,17 +2,19 @@
 gstgetbits
 
 <!-- ##### SECTION Short_Description ##### -->
-accelerated routines for getting bits from a data stream.
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
 
 </para>
 
+
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
+
 
 <!-- ##### STRUCT gst_getbits_t ##### -->
 <para>
@@ -130,8 +132,6 @@ accelerated routines for getting bits from a data stream.
 
 @gb: 
 @n: 
-<!-- # Unused Parameters # -->
-@num: 
 
 
 <!-- ##### MACRO gst_getbits1 ##### -->
@@ -325,8 +325,6 @@ accelerated routines for getting bits from a data stream.
 
 @gb: 
 @n: 
-<!-- # Unused Parameters # -->
-@num: 
 
 
 <!-- ##### MACRO gst_showbits1 ##### -->
@@ -536,8 +534,6 @@ accelerated routines for getting bits from a data stream.
 
 @gb: 
 @n: 
-<!-- # Unused Parameters # -->
-@num: 
 
 
 <!-- ##### MACRO gst_flushbits32 ##### -->
@@ -555,8 +551,6 @@ accelerated routines for getting bits from a data stream.
 
 @gb: 
 @n: 
-<!-- # Unused Parameters # -->
-@num: 
 
 
 <!-- ##### MACRO gst_backbits24 ##### -->

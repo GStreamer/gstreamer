@@ -505,40 +505,12 @@ print_element_flag_info (GstElement * element)
   n_print ("\n");
   n_print ("Element Flags:\n");
 
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_COMPLEX)) {
-    n_print ("  GST_ELEMENT_COMPLEX\n");
-    have_flags = TRUE;
-  }
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
-    n_print ("  GST_ELEMENT_DECOUPLED\n");
-    have_flags = TRUE;
-  }
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_THREAD_SUGGESTED)) {
-    n_print ("  GST_ELEMENT_THREADSUGGESTED\n");
-    have_flags = TRUE;
-  }
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_EVENT_AWARE)) {
-    n_print ("  GST_ELEMENT_EVENT_AWARE\n");
-    have_flags = TRUE;
-  }
   if (!have_flags)
     n_print ("  no flags set\n");
 
   if (GST_IS_BIN (element)) {
     n_print ("\n");
     n_print ("Bin Flags:\n");
-    if (GST_FLAG_IS_SET (element, GST_BIN_FLAG_MANAGER)) {
-      n_print ("  GST_BIN_FLAG_MANAGER\n");
-      have_flags = TRUE;
-    }
-    if (GST_FLAG_IS_SET (element, GST_BIN_SELF_SCHEDULABLE)) {
-      n_print ("  GST_BIN_SELF_SCHEDULABLE\n");
-      have_flags = TRUE;
-    }
-    if (GST_FLAG_IS_SET (element, GST_BIN_FLAG_PREFER_COTHREADS)) {
-      n_print ("  GST_BIN_FLAG_PREFER_COTHREADS\n");
-      have_flags = TRUE;
-    }
     if (!have_flags)
       n_print ("  no flags set\n");
   }
@@ -556,11 +528,7 @@ print_implementation_info (GstElement * element)
   n_print ("\n");
   n_print ("Element Implementation:\n");
 
-  if (element->loopfunc)
-    n_print ("  loopfunc()-based element: %s\n",
-        GST_DEBUG_FUNCPTR_NAME (element->loopfunc));
-  else
-    n_print ("  No loopfunc(), must be chain-based or not configured yet\n");
+  n_print ("  No loopfunc(), must be chain-based or not configured yet\n");
 
   n_print ("  Has change_state() function: %s\n",
       GST_DEBUG_FUNCPTR_NAME (gstelement_class->change_state));
@@ -854,7 +822,8 @@ print_children_info (GstElement * element)
   if (!GST_IS_BIN (element))
     return;
 
-  children = (GList *) gst_bin_get_list (GST_BIN (element));
+  //children = (GList *) gst_bin_get_list (GST_BIN (element));
+  children = (GList *) GST_BIN (element)->children;
   if (children) {
     n_print ("\n");
     g_print ("Children:\n");

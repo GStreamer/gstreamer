@@ -50,6 +50,7 @@ GST_EXPORT GType _gst_ghost_pad_type;
 #define GST_IS_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PAD))
 #define GST_PAD(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PAD, GstPad))
 #define GST_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD, GstPadClass))
+#define GST_PAD_CAST(obj)		((GstPad*)(obj))
 
 /* 
  * Real Pads
@@ -60,6 +61,7 @@ GST_EXPORT GType _gst_ghost_pad_type;
 #define GST_IS_REAL_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_REAL_PAD))
 #define GST_REAL_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_REAL_PAD, GstRealPad))
 #define GST_REAL_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_REAL_PAD, GstRealPadClass))
+#define GST_REAL_PAD_CAST(obj)		((GstRealPad*)(obj))
 
 /* 
  * Ghost Pads
@@ -70,6 +72,7 @@ GST_EXPORT GType _gst_ghost_pad_type;
 #define GST_IS_GHOST_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_GHOST_PAD))
 #define GST_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GHOST_PAD, GstGhostPad))
 #define GST_GHOST_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GHOST_PAD, GstGhostPadClass))
+#define GST_GHOST_PAD_CAST(obj)		((GstGhostPad*)(obj))
 
 
 /*typedef struct _GstPad GstPad; */
@@ -84,17 +87,27 @@ typedef struct _GstStaticPadTemplate GstStaticPadTemplate;
 typedef struct _GstPadLink GstPadLink;
 
 typedef enum {
-  GST_PAD_LINK_REFUSED = -1,
-  GST_PAD_LINK_DELAYED =  0,
-  GST_PAD_LINK_OK      =  1,
-  GST_PAD_LINK_DONE    =  2
+  GST_PAD_LINK_NOSCHED       = -3,	/* pads cannot cooperate in scheduling */
+  GST_PAD_LINK_NOFORMAT      = -2,	/* pads do not have common format */
+  GST_PAD_LINK_REFUSED       = -1,	/* refused for some reason */
+  GST_PAD_LINK_OK            =  0,	/* link ok */
 } GstPadLinkReturn;
 
 #define GST_PAD_LINK_FAILED(ret) (ret < GST_PAD_LINK_OK)
 #define GST_PAD_LINK_SUCCESSFUL(ret) (ret >= GST_PAD_LINK_OK)
 
+typedef enum {
+  GST_FLOW_OK 		  =  0,		/* data passing was ok */
+  GST_FLOW_RESEND	  =  1,		/* resend buffer, possibly with new caps */
+  GST_FLOW_ERROR 	  = -1,		/* some error occured */
+  GST_FLOW_NOT_CONNECTED  = -2,		/* pad is not connected */
+  GST_FLOW_NOT_NEGOTIATED = -3,		/* pad is not negotiated */
+  GST_FLOW_WRONG_STATE    = -4,		/* pad is in wrong state */
+  GST_FLOW_UNEXPECTED     = -5,		/* did not expect anything */
+  GST_FLOW_NOT_SUPPORTED  = -6		/* function not supported */
+} GstFlowReturn;
+
 /* convenience functions */
-#ifndef GST_DISABLE_DEPRECATED
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_PAD_QUERY_TYPE_FUNCTION(functionname, ...)  GST_QUERY_TYPE_FUNCTION (GstPad *, functionname, __VA_ARGS__);
 #define GST_PAD_FORMATS_FUNCTION(functionname, ...)  	GST_FORMATS_FUNCTION (GstPad *, functionname, __VA_ARGS__);
@@ -104,15 +117,19 @@ typedef enum {
 #define GST_PAD_FORMATS_FUNCTION(functionname, a...)  	GST_FORMATS_FUNCTION (GstPad *, functionname, a);
 #define GST_PAD_EVENT_MASK_FUNCTION(functionname, a...) GST_EVENT_MASK_FUNCTION (GstPad *, functionname, a);
 #endif
-#endif
 
  
-/* this defines the functions used to chain buffers
- * pad is the sink pad (so the same chain function can be used for N pads)
- * buf is the buffer being passed */
-typedef void 			(*GstPadChainFunction) 		(GstPad *pad,GstData *data);
-typedef GstData*		(*GstPadGetFunction) 		(GstPad *pad);
+/* pad states */
+typedef gboolean		(*GstPadActivateFunction) 	(GstPad *pad, gboolean active);
+
+/* data passing */
+typedef GstFlowReturn		(*GstPadChainFunction) 		(GstPad *pad, GstBuffer *buffer);
+typedef GstFlowReturn		(*GstPadGetFunction) 		(GstPad *pad, GstBuffer **buffer);
+typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, guint64 offset, 
+		                                                 guint64 length, GstBuffer **buffer);
 typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
+
+/* convert/query/format functions */
 typedef gboolean		(*GstPadConvertFunction)	(GstPad *pad, 
 		 						 GstFormat src_format,  gint64  src_value,
 								 GstFormat *dest_format, gint64 *dest_value);
@@ -123,13 +140,18 @@ typedef const GstFormat*	(*GstPadFormatsFunction)	(GstPad *pad);
 typedef const GstEventMask*	(*GstPadEventMaskFunction)	(GstPad *pad);
 typedef const GstQueryType*	(*GstPadQueryTypeFunction)	(GstPad *pad);
 
-typedef GstPadLinkReturn	(*GstPadLinkFunction) 		(GstPad *pad, const GstCaps *caps);
+/* linking */
+typedef GstPadLinkReturn	(*GstPadLinkFunction) 		(GstPad *pad, GstPad *peer);
 typedef void			(*GstPadUnlinkFunction) 	(GstPad *pad);
-typedef GstCaps*		(*GstPadGetCapsFunction) 	(GstPad *pad);
-typedef GstCaps*		(*GstPadFixateFunction) 	(GstPad *pad, const GstCaps *caps);
-typedef GstBuffer*		(*GstPadBufferAllocFunction) 	(GstPad *pad, guint64 offset, guint size);
 
+/* caps nego */
+typedef GstCaps*		(*GstPadGetCapsFunction) 	(GstPad *pad);
+typedef GstBuffer*		(*GstPadBufferAllocFunction) 	(GstPad *pad, guint64 offset, guint size,
+								 GstCaps *caps);
+/* misc */
 typedef gboolean 		(*GstPadDispatcherFunction) 	(GstPad *pad, gpointer data);
+
+typedef void 			(*GstPadBlockCallback)		(GstPad *pad, gboolean blocked, gpointer user_data);
 
 typedef enum {
   GST_PAD_UNKNOWN,
@@ -139,6 +161,7 @@ typedef enum {
 
 typedef enum {
   GST_PAD_DISABLED		= GST_OBJECT_FLAG_LAST,
+  GST_PAD_BLOCKED,
   GST_PAD_NEGOTIATING,
   GST_PAD_DISPATCHING,
 
@@ -164,14 +187,23 @@ struct _GstPadClass {
 struct _GstRealPad {
   GstPad 			 pad;
 
+  /* streaming lock and cond */
+  GMutex			*stream_lock;
+  GCond				*stream_cond;
+
+  /* block cond, mutex is from the object */
+  GCond				*block_cond;
+  GstPadBlockCallback		 block_callback;
+  gpointer			 block_data;
+
   /* the pad capabilities */
   GstCaps 			*caps;
-  GstPadFixateFunction		 appfixatefunc;
   GstCaps 			*appfilter;
   GstPadGetCapsFunction 	 getcapsfunc;
-  GstPadFixateFunction		 fixatefunc;
   
   GstPadDirection 		 direction;
+
+  GstPadActivateFunction	 activatefunc;
 
   GstPadLinkFunction 		 linkfunc;
   GstPadUnlinkFunction 		 unlinkfunc;
@@ -181,11 +213,10 @@ struct _GstRealPad {
 
   /* data transport functions */
   GstPadChainFunction 		 chainfunc;
-  GstPadChainFunction 		 chainhandler;
   GstPadGetFunction 		 getfunc;
-  GstPadGetFunction		 gethandler;
+  GstPadGetRangeFunction 	 getrangefunc;
   GstPadEventFunction		 eventfunc;
-  GstPadEventFunction		 eventhandler;
+
   GstPadEventMaskFunction	 eventmaskfunc;
 
   GList 			*ghostpads;
@@ -197,12 +228,9 @@ struct _GstRealPad {
   GstPadQueryTypeFunction	 querytypefunc;
   GstPadIntLinkFunction		 intlinkfunc;
 
-  GstPadBufferAllocFunction        bufferallocfunc;
+  GstPadBufferAllocFunction      bufferallocfunc;
 
   GstProbeDispatcher 		 probedisp;
-
-  GstPadLink                    *link;
-  GstCaps			*explicit_caps;
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -211,11 +239,9 @@ struct _GstRealPadClass {
   GstPadClass 	parent_class;
 
   /* signal callbacks */
-  void		(*caps_nego_failed)	(GstPad *pad, GstCaps *caps);
-
   void 		(*linked)		(GstPad *pad, GstPad *peer);
   void 		(*unlinked)		(GstPad *pad, GstPad *peer);
-  GstPadFixateFunction		 appfixatefunc;
+  void 		(*request_link)		(GstPad *pad);
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -247,12 +273,11 @@ struct _GstGhostPadClass {
 #define GST_RPAD_CAPS(pad)		(((GstRealPad *)(pad))->caps)
 #define GST_RPAD_APPFILTER(pad)		(((GstRealPad *)(pad))->appfilter)
 #define GST_RPAD_PEER(pad)		(((GstRealPad *)(pad))->peer)
+#define GST_RPAD_ACTIVATEFUNC(pad)	(((GstRealPad *)(pad))->activatefunc)
 #define GST_RPAD_CHAINFUNC(pad)		(((GstRealPad *)(pad))->chainfunc)
-#define GST_RPAD_CHAINHANDLER(pad)	(((GstRealPad *)(pad))->chainhandler)
 #define GST_RPAD_GETFUNC(pad)		(((GstRealPad *)(pad))->getfunc)
-#define GST_RPAD_GETHANDLER(pad)	(((GstRealPad *)(pad))->gethandler)
+#define GST_RPAD_GETRANGEFUNC(pad)	(((GstRealPad *)(pad))->getrangefunc)
 #define GST_RPAD_EVENTFUNC(pad)		(((GstRealPad *)(pad))->eventfunc)
-#define GST_RPAD_EVENTHANDLER(pad)	(((GstRealPad *)(pad))->eventhandler)
 #define GST_RPAD_CONVERTFUNC(pad)	(((GstRealPad *)(pad))->convertfunc)
 #define GST_RPAD_QUERYFUNC(pad)		(((GstRealPad *)(pad))->queryfunc)
 #define GST_RPAD_INTLINKFUNC(pad)	(((GstRealPad *)(pad))->intlinkfunc)
@@ -263,10 +288,28 @@ struct _GstGhostPadClass {
 #define GST_RPAD_LINKFUNC(pad)		(((GstRealPad *)(pad))->linkfunc)
 #define GST_RPAD_UNLINKFUNC(pad)	(((GstRealPad *)(pad))->unlinkfunc)
 #define GST_RPAD_GETCAPSFUNC(pad)	(((GstRealPad *)(pad))->getcapsfunc)
-#define GST_RPAD_FIXATEFUNC(pad)	(((GstRealPad *)(pad))->fixatefunc)
 #define GST_RPAD_BUFFERALLOCFUNC(pad)	(((GstRealPad *)(pad))->bufferallocfunc)
-#define GST_RPAD_LINK(pad)	        (((GstRealPad *)(pad))->link)
-#define GST_RPAD_EXPLICIT_CAPS(pad)	(((GstRealPad *)(pad))->explicit_caps)
+
+#define GST_RPAD_IS_LINKED(pad)		(GST_RPAD_PEER(pad) != NULL)
+#define GST_RPAD_IS_ACTIVE(pad)		(!GST_FLAG_IS_SET(pad, GST_PAD_DISABLED))
+#define GST_RPAD_IS_BLOCKED(pad)	(GST_FLAG_IS_SET (pad, GST_PAD_BLOCKED))
+#define GST_RPAD_IS_NEGOTIATING(pad)	(GST_FLAG_IS_SET (pad, GST_PAD_NEGOTIATING))
+#define GST_RPAD_IS_DISPATCHING(pad)	(GST_FLAG_IS_SET (pad, GST_PAD_DISPATCHING))
+#define GST_RPAD_IS_USABLE(pad)		(GST_RPAD_IS_LINKED (pad) && \
+		                         GST_RPAD_IS_ACTIVE(pad) && GST_RPAD_IS_ACTIVE(GST_RPAD_PEER (pad)))
+#define GST_RPAD_CAN_PULL(pad)		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->gethandler != NULL)
+#define GST_RPAD_IS_SRC(pad)		(GST_RPAD_DIRECTION(pad) == GST_PAD_SRC)
+#define GST_RPAD_IS_SINK(pad)		(GST_RPAD_DIRECTION(pad) == GST_PAD_SINK)
+
+#define GST_STREAM_GET_LOCK(pad)               (GST_PAD_REALIZE(pad)->stream_lock)
+#define GST_STREAM_LOCK(pad)                   (g_mutex_lock(GST_STREAM_GET_LOCK(pad)))
+#define GST_STREAM_TRYLOCK(pad)                (g_mutex_trylock(GST_STREAM_GET_LOCK(pad)))
+#define GST_STREAM_UNLOCK(pad)                 (g_mutex_unlock(GST_STREAM_GET_LOCK(pad)))
+#define GST_STREAM_GET_COND(pad)               (GST_PAD_REALIZE(pad)->stream_cond)
+
+#define GST_PAD_BLOCK_GET_COND(pad)            (GST_PAD_REALIZE(pad)->block_cond)
+#define GST_PAD_BLOCK_WAIT(pad)                (g_cond_wait(GST_PAD_BLOCK_GET_COND (pad), GST_GET_LOCK (pad)))
+#define GST_PAD_BLOCK_SIGNAL(pad)              (g_cond_signal(GST_PAD_BLOCK_GET_COND (pad)))
 
 /* GstGhostPad */
 #define GST_GPAD_REALPAD(pad)		(((GstGhostPad *)(pad))->realpad)
@@ -274,19 +317,20 @@ struct _GstGhostPadClass {
 /* Generic */
 #define GST_PAD_REALIZE(pad)		(GST_IS_REAL_PAD(pad) ? ((GstRealPad *)(pad)) : GST_GPAD_REALPAD(pad))
 #define GST_PAD_DIRECTION(pad)		GST_RPAD_DIRECTION(GST_PAD_REALIZE(pad))
-#define GST_PAD_CAPS(pad)		(gst_pad_get_negotiated_caps(GST_PAD (pad)))
-#define GST_PAD_PEER(pad)		GST_PAD(GST_RPAD_PEER(GST_PAD_REALIZE(pad)))
+#define GST_PAD_CAPS(pad)		GST_RPAD_CAPS(GST_PAD_REALIZE (pad))
+#define GST_PAD_APPFILTER(pad)		GST_RPAD_APPFILTER(GST_PAD_REALIZE (pad))
+#define GST_PAD_PEER(pad)		GST_PAD_CAST(GST_RPAD_PEER(GST_PAD_REALIZE(pad)))
 
 /* Some check functions (unused?) */
-#define GST_PAD_IS_LINKED(pad)		(GST_PAD_PEER(pad) != NULL)
-#define GST_PAD_IS_ACTIVE(pad)		(!GST_FLAG_IS_SET(GST_PAD_REALIZE(pad), GST_PAD_DISABLED))
-#define GST_PAD_IS_NEGOTIATING(pad)	(GST_FLAG_IS_SET (pad, GST_PAD_NEGOTIATING))
-#define GST_PAD_IS_DISPATCHING(pad)	(GST_FLAG_IS_SET (pad, GST_PAD_DISPATCHING))
-#define GST_PAD_IS_USABLE(pad)		(GST_PAD_IS_LINKED (pad) && \
-		                         GST_PAD_IS_ACTIVE(pad) && GST_PAD_IS_ACTIVE(GST_PAD_PEER (pad)))
-#define GST_PAD_CAN_PULL(pad)		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->gethandler != NULL)
-#define GST_PAD_IS_SRC(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SRC)
-#define GST_PAD_IS_SINK(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SINK)
+#define GST_PAD_IS_LINKED(pad)		(GST_RPAD_IS_LINKED(GST_PAD_REALIZE(pad)))
+#define GST_PAD_IS_ACTIVE(pad)		(GST_RPAD_IS_ACTIVE(GST_PAD_REALIZE(pad)))
+#define GST_PAD_IS_BLOCKED(pad)		(GST_RPAD_IS_BLOCKED(GST_PAD_REALIZE(pad)))
+#define GST_PAD_IS_NEGOTIATING(pad)	(GST_RPAD_IS_NEGOTIATING(GST_PAD_REALIZE(pad)))
+#define GST_PAD_IS_DISPATCHING(pad)	(GST_RPAD_IS_DISPATCHING(GST_PAD_REALIZE(pad)))
+#define GST_PAD_IS_USABLE(pad)		(GST_RPAD_IS_USABLE(GST_PAD_REALIZE(pad)))
+#define GST_PAD_CAN_PULL(pad)		(GST_RPAD_CAN_PULL(GST_PAD_REALIZE(pad)))
+#define GST_PAD_IS_SRC(pad)		(GST_RPAD_IS_SRC(GST_PAD_REALIZE(pad)))
+#define GST_PAD_IS_SINK(pad)		(GST_RPAD_IS_SINK(GST_PAD_REALIZE(pad)))
 
 /***** PadTemplate *****/
 #define GST_TYPE_PAD_TEMPLATE		(gst_pad_template_get_type ())
@@ -360,35 +404,36 @@ GstPad*			gst_pad_new_from_template		(GstPadTemplate *templ, const gchar *name);
 GstPad*			gst_pad_custom_new			(GType type, const gchar *name, GstPadDirection direction);
 GstPad*			gst_pad_custom_new_from_template	(GType type, GstPadTemplate *templ, const gchar *name);
 
-void			gst_pad_set_name			(GstPad *pad, const gchar *name);
-G_CONST_RETURN gchar*	gst_pad_get_name			(GstPad *pad);
+#define                 gst_pad_get_name(pad)      		gst_object_get_name(GST_OBJECT(pad))
+#define                 gst_pad_set_name(pad,name) 		gst_object_set_name(GST_OBJECT(pad),name)
+#define                 gst_pad_get_parent(pad)    		GST_ELEMENT(gst_object_get_parent(GST_OBJECT(pad)))
+#define                 gst_pad_set_parent(pad,parent)     	gst_object_set_parent(GST_OBJECT(pad),parent)
+GstElement*		gst_pad_get_real_parent			(GstPad *pad);
+
 
 GstPadDirection		gst_pad_get_direction			(GstPad *pad);
 
-void			gst_pad_set_active			(GstPad *pad, gboolean active);
+gboolean		gst_pad_set_active			(GstPad *pad, gboolean active);
 gboolean		gst_pad_is_active			(GstPad *pad);
+gboolean		gst_pad_set_blocked			(GstPad *pad, gboolean blocked);
+gboolean		gst_pad_set_blocked_async		(GstPad *pad, gboolean blocked,
+								 GstPadBlockCallback callback, gpointer user_data);
+gboolean		gst_pad_is_blocked			(GstPad *pad);
 
 void			gst_pad_set_element_private		(GstPad *pad, gpointer priv);
 gpointer		gst_pad_get_element_private		(GstPad *pad);
 
-void			gst_pad_set_parent			(GstPad *pad, GstElement *parent);
-GstElement*		gst_pad_get_parent			(GstPad *pad);
-GstElement*		gst_pad_get_real_parent			(GstPad *pad);
-
-GstScheduler*		gst_pad_get_scheduler			(GstPad *pad);
-
-void			gst_pad_add_ghost_pad			(GstPad *pad, GstPad *ghostpad);
-void			gst_pad_remove_ghost_pad		(GstPad *pad, GstPad *ghostpad);
-GList*			gst_pad_get_ghost_pad_list		(GstPad *pad);
-
 GstPadTemplate*		gst_pad_get_pad_template		(GstPad *pad);
 
-void			gst_pad_set_bufferalloc_function		(GstPad *pad, GstPadBufferAllocFunction bufalloc);
+void			gst_pad_set_bufferalloc_function	(GstPad *pad, GstPadBufferAllocFunction bufalloc);
 GstBuffer*		gst_pad_alloc_buffer			(GstPad *pad, guint64 offset, gint size);
 
 /* data passing setup functions */
+void			gst_pad_set_activate_function		(GstPad *pad, GstPadActivateFunction activate);
 void			gst_pad_set_chain_function		(GstPad *pad, GstPadChainFunction chain);
 void			gst_pad_set_get_function		(GstPad *pad, GstPadGetFunction get);
+void			gst_pad_set_get_range_function		(GstPad *pad, GstPadGetRangeFunction get);
+
 void			gst_pad_set_event_function		(GstPad *pad, GstPadEventFunction event);
 void			gst_pad_set_event_mask_function		(GstPad *pad, GstPadEventMaskFunction mask_func);
 G_CONST_RETURN GstEventMask*
@@ -398,62 +443,35 @@ G_CONST_RETURN GstEventMask*
 
 /* pad links */
 void			gst_pad_set_link_function		(GstPad *pad, GstPadLinkFunction link);
-gboolean                gst_pad_can_link            		(GstPad *srcpad, GstPad *sinkpad);
-gboolean                gst_pad_can_link_filtered   		(GstPad *srcpad, GstPad *sinkpad, const GstCaps *filtercaps);
 void			gst_pad_set_unlink_function		(GstPad *pad, GstPadUnlinkFunction unlink);
 
-gboolean                gst_pad_link             		(GstPad *srcpad, GstPad *sinkpad);
-gboolean                gst_pad_link_filtered       		(GstPad *srcpad, GstPad *sinkpad, const GstCaps *filtercaps);
+GstPadLinkReturn        gst_pad_link             		(GstPad *srcpad, GstPad *sinkpad);
+GstPadLinkReturn        gst_pad_link_filtered       		(GstPad *srcpad, GstPad *sinkpad, 
+								 const GstCaps *filtercaps);
+GstPadLinkReturn	gst_pad_relink_filtered			(GstPad *srcpad, GstPad *sinkpad, 
+								 const GstCaps *filtercaps);
 void			gst_pad_unlink				(GstPad *srcpad, GstPad *sinkpad);
 gboolean		gst_pad_is_linked			(GstPad *pad);
 
 GstPad*			gst_pad_get_peer			(GstPad *pad);
 
 /* capsnego functions */
-G_CONST_RETURN GstCaps*	gst_pad_get_negotiated_caps		(GstPad *pad);
-gboolean	        gst_pad_is_negotiated		        (GstPad *pad);
-GstCaps*		gst_pad_get_caps			(GstPad *pad);
-G_CONST_RETURN GstCaps*	gst_pad_get_pad_template_caps		(GstPad *pad);
-GstPadLinkReturn	gst_pad_try_set_caps			(GstPad *pad, const GstCaps *caps);
-GstPadLinkReturn	gst_pad_try_set_caps_nonfixed		(GstPad *pad, const GstCaps *caps);
-gboolean		gst_pad_check_compatibility		(GstPad *srcpad, GstPad *sinkpad);
-
 void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps);
-void			gst_pad_set_fixate_function		(GstPad *pad, GstPadFixateFunction fixate);
-GstCaps *	        gst_pad_proxy_getcaps          		(GstPad *pad);
-GstPadLinkReturn        gst_pad_proxy_pad_link                  (GstPad *pad, const GstCaps *caps);
-GstCaps *               gst_pad_proxy_fixate                    (GstPad *pad, const GstCaps *caps);
-#ifndef GST_DISABLE_DEPRECATED
-GstPadLinkReturn	gst_pad_proxy_link          		(GstPad *pad, const GstCaps *caps);
-#endif
-gboolean		gst_pad_set_explicit_caps		(GstPad *pad, const GstCaps *caps);
-void			gst_pad_use_explicit_caps		(GstPad *pad);
-gboolean		gst_pad_relink_filtered			(GstPad *srcpad, GstPad *sinkpad, const GstCaps *filtercaps);
-#ifndef GST_DISABLE_DEPRECATED
-gboolean		gst_pad_perform_negotiate		(GstPad *srcpad, GstPad *sinkpad);
-#endif
-GstPadLinkReturn	gst_pad_renegotiate			(GstPad *pad);
-void			gst_pad_unnegotiate			(GstPad *pad);
-gboolean		gst_pad_try_relink_filtered		(GstPad *srcpad, GstPad *sinkpad, const GstCaps *filtercaps);
-GstCaps*	     	gst_pad_get_allowed_caps       		(GstPad *pad);
-void                    gst_pad_caps_change_notify              (GstPad *pad);
 
-gboolean	     	gst_pad_recover_caps_error    		(GstPad *pad, const GstCaps *allowed);
+G_CONST_RETURN GstCaps*	gst_pad_get_pad_template_caps		(GstPad *pad);
+
+GstCaps * 		gst_pad_get_allowed_caps 		(GstPad * pad);
+GstCaps * 		gst_pad_get_caps 			(GstPad * pad);
+gboolean  		gst_pad_set_caps 			(GstPad * pad, GstCaps *caps);
 
 /* data passing functions */
-void			gst_pad_push				(GstPad *pad, GstData *data);
-GstData*		gst_pad_pull				(GstPad *pad);
+GstFlowReturn		gst_pad_push				(GstPad *pad, GstBuffer *buffer);
+GstFlowReturn		gst_pad_pull				(GstPad *pad, GstBuffer **buffer);
+GstFlowReturn		gst_pad_pull_range			(GstPad *pad, guint64 offset, guint size,
+								 GstBuffer **buffer);
+gboolean		gst_pad_push_event			(GstPad *pad, GstEvent *event);
 gboolean		gst_pad_send_event			(GstPad *pad, GstEvent *event);
 gboolean		gst_pad_event_default			(GstPad *pad, GstEvent *event);
-#ifndef GST_DISABLE_DEPRECATED
-GstPad*			gst_pad_selectv				(GList *padlist);
-GstPad*			gst_pad_select				(GstPad *pad, ...);
-GstPad*			gst_pad_select_valist			(GstPad *pad, va_list varargs);
-#endif
-/* FIXME 0.9: rename to _select? Otherwise rename SchedulerClass pointer */
-GstData *		gst_pad_collectv			(GstPad **selected, const GList *padlist);
-GstData *		gst_pad_collect				(GstPad **selected, GstPad *pad, ...);
-GstData *		gst_pad_collect_valist			(GstPad **selected, GstPad *pad, va_list varargs);
 
 /* convert/query/format functions */
 void			gst_pad_set_formats_function		(GstPad *pad, 
@@ -490,6 +508,7 @@ GList*	 		gst_pad_get_internal_links_default 	(GstPad *pad);
 gboolean 		gst_pad_dispatcher 			(GstPad *pad, GstPadDispatcherFunction dispatch, 
 								 gpointer data);
 
+/* probes */
 #define			gst_pad_add_probe(pad, probe) \
 			(gst_probe_dispatcher_add_probe (&(GST_REAL_PAD (pad)->probedisp), probe))
 #define			gst_pad_remove_probe(pad, probe) \
@@ -513,18 +532,11 @@ GstPadTemplate*		gst_pad_template_new			(const gchar *name_template,
 
 GstPadTemplate *	gst_static_pad_template_get             (GstStaticPadTemplate *pad_template);
 const GstCaps*		gst_pad_template_get_caps		(GstPadTemplate *templ);
-#ifndef GST_DISABLE_DEPRECATED
-const GstCaps*		gst_pad_template_get_caps_by_name	(GstPadTemplate *templ, const gchar *name);
-#endif
 
 #ifndef GST_DISABLE_LOADSAVE
 xmlNodePtr              gst_ghost_pad_save_thyself   		(GstPad *pad,
 						     		 xmlNodePtr parent);
 #endif
-
-/* for schedulers only */
-void			gst_pad_call_chain_function		(GstPad *pad, GstData *data);
-GstData *		gst_pad_call_get_function		(GstPad *pad);
 
 
 G_END_DECLS

@@ -396,8 +396,6 @@ gst_clock_class_init (GstClockClass * klass)
 static void
 gst_clock_init (GstClock * clock)
 {
-  clock->max_diff = DEFAULT_MAX_DIFF;
-
   clock->start_time = 0;
   clock->last_time = 0;
   clock->entries = NULL;
@@ -571,25 +569,6 @@ gst_clock_reset (GstClock * clock)
 }
 
 /**
- * gst_clock_handle_discont
- * @clock: a #GstClock to notify of the discontinuity
- * @time: The new time
- *
- * Notifies the clock of a discontinuity in time.
- *
- * Returns: TRUE if the clock was updated. It is possible that
- * the clock was not updated by this call because only the first
- * discontinuitity in the pipeline is honoured.
- */
-gboolean
-gst_clock_handle_discont (GstClock * clock, guint64 time)
-{
-  GST_ERROR_OBJECT (clock, "called deprecated function.");
-
-  return FALSE;
-}
-
-/**
  * gst_clock_get_time
  * @clock: a #GstClock to query
  *
@@ -619,61 +598,6 @@ gst_clock_get_time (GstClock * clock)
   }
 
   return ret;
-}
-
-/**
- * gst_clock_get_event_time:
- * @clock: clock to query
- * 
- * Gets the "event time" of a given clock. An event on the clock happens
- * whenever this function is called. This ensures that multiple events that
- * happen shortly after each other are treated as if they happened at the same
- * time. GStreamer uses to keep state changes of multiple elements in sync.
- *
- * Returns: the time of the event
- */
-GstClockTime
-gst_clock_get_event_time (GstClock * clock)
-{
-  return gst_clock_get_event_time_delay (clock, 0);
-}
-
-/**
- * gst_clock_get_event_time_delay:
- * @clock: clock to query
- * @delay: time before the event actually occurs
- *
- * Gets the "event time" of a given clock. An event on the clock happens
- * whenever this function is called. This ensures that multiple events that
- * happen shortly after each other are treated as if they happened at the same
- * time. GStreamer uses to keep state changes of multiple elements in sync.
- *
- * When calling this function, the specified delay will be added to the current
- * time to produce the event time. This can be used for events that are
- * scheduled to happen at some point in the future.
- *
- * Returns: the time of the event
- */
-GstClockTime
-gst_clock_get_event_time_delay (GstClock * clock, GstClockTime delay)
-{
-  GstClockTime time;
-
-  g_return_val_if_fail (GST_IS_CLOCK (clock), GST_CLOCK_TIME_NONE);
-
-  time = gst_clock_get_time (clock);
-
-  if (ABS (GST_CLOCK_DIFF (clock->last_event, time + delay)) <
-      clock->max_event_diff) {
-    GST_LOG_OBJECT (clock, "reporting last event time %" G_GUINT64_FORMAT,
-        clock->last_event);
-  } else {
-    clock->last_event = time + delay;
-    GST_LOG_OBJECT (clock, "reporting new event time %" G_GUINT64_FORMAT,
-        clock->last_event);
-  }
-
-  return clock->last_event;
 }
 
 /**
@@ -718,12 +642,8 @@ gst_clock_set_property (GObject * object, guint prop_id,
       g_object_notify (object, "stats");
       break;
     case ARG_MAX_DIFF:
-      clock->max_diff = g_value_get_int64 (value);
-      g_object_notify (object, "max-diff");
       break;
     case ARG_EVENT_DIFF:
-      clock->max_event_diff = g_value_get_uint64 (value);
-      g_object_notify (object, "event-diff");
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -744,10 +664,8 @@ gst_clock_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, clock->stats);
       break;
     case ARG_MAX_DIFF:
-      g_value_set_int64 (value, clock->max_diff);
       break;
     case ARG_EVENT_DIFF:
-      g_value_set_uint64 (value, clock->max_event_diff);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

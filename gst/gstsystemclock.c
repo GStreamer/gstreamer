@@ -191,12 +191,6 @@ gst_system_clock_wait (GstClock * clock, GstClockEntry * entry)
   current = gst_clock_get_time (clock);
   diff = GST_CLOCK_ENTRY_TIME (entry) - current;
 
-  if (diff + clock->max_diff < 0) {
-    GST_WARNING_OBJECT (clock, "clock is way behind: %" G_GINT64_FORMAT
-        "s (max allowed is %" G_GINT64_FORMAT "s", -diff, clock->max_diff);
-    return GST_CLOCK_ENTRY_EARLY;
-  }
-
   target = gst_system_clock_get_internal_time (clock) + diff;
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "real_target %" G_GUINT64_FORMAT

@@ -52,8 +52,10 @@ main (int argc, char *argv[])
   g_assert (GST_IS_ELEMENT (source));
   typefind = gst_element_factory_make ("typefind", "typefind");
   g_assert (GST_IS_ELEMENT (typefind));
-  gst_bin_add_many (GST_BIN (pipeline), source, typefind, NULL);
-  gst_element_link (source, typefind);
+  gst_bin_add (GST_BIN (pipeline), source);
+  gst_bin_add (GST_BIN (pipeline), typefind);
+  gst_pad_link (gst_element_get_pad (source, "src"),
+      gst_element_get_pad (typefind, "sink"));
   g_signal_connect (G_OBJECT (typefind), "have-type",
       G_CALLBACK (have_type_handler), NULL);
 
@@ -66,8 +68,6 @@ main (int argc, char *argv[])
     gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
     while (!FOUND) {
-      if (!gst_bin_iterate (GST_BIN (pipeline)))
-        break;
     }
     if (!FOUND) {
       g_print ("%s - No type found\n", argv[i]);

@@ -26,6 +26,7 @@
 
 
 #include <gst/gstelement.h>
+#include <gst/gsttask.h>
 
 
 G_BEGIN_DECLS
@@ -66,6 +67,8 @@ struct _GstQueue {
   /* the queue of data we're keeping our grubby hands on */
   GQueue *queue;
 
+  GstTask *task;
+
   GstQueueSize
     cur_level,		/* currently in the queue */
     max_size,		/* max. amount of data allowed in the queue */
@@ -80,21 +83,12 @@ struct _GstQueue {
 
   /* it the queue should fail on possible deadlocks */
   gboolean may_deadlock;
-
   gboolean interrupt;
   gboolean flush;
 
   GMutex *qlock;	/* lock for queue (vs object lock) */
   GCond *item_add;	/* signals buffers now available for reading */
   GCond *item_del;	/* signals space now available for writing */
-  GCond *event_done;	/* upstream event signaller */
-
-  GTimeVal *timeval;	/* the timeout for the queue locking */
-  GQueue *events;	/* upstream events get decoupled here */
-
-  GstCaps *negotiated_caps;
-
-  GMutex *event_lock;	/* lock when handling the events queue */
 
   gpointer _gst_reserved[GST_PADDING - 1];
 };

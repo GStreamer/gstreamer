@@ -324,7 +324,6 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
       return FALSE;
     case GST_EVENT_EOS:
     case GST_EVENT_FLUSH:
-    case GST_EVENT_EMPTY:
     case GST_EVENT_DISCONTINUOUS:
       GST_WRITE_UINT64_BE (h + 8, GST_EVENT_TIMESTAMP (event));
       pl_length = 0;
@@ -354,9 +353,6 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
     case GST_EVENT_SEGMENT_DONE:
     case GST_EVENT_SIZE:
     case GST_EVENT_RATE:
-    case GST_EVENT_FILLER:
-    case GST_EVENT_TS_OFFSET:
-    case GST_EVENT_INTERRUPT:
     case GST_EVENT_NAVIGATION:
     case GST_EVENT_TAG:
       g_warning ("Unhandled event type %d, ignoring", GST_EVENT_TYPE (event));
@@ -489,7 +485,6 @@ gst_dp_event_from_packet (guint header_length, const guint8 * header,
       return FALSE;
     case GST_EVENT_EOS:
     case GST_EVENT_FLUSH:
-    case GST_EVENT_EMPTY:
     case GST_EVENT_DISCONTINUOUS:
       event = gst_event_new (type);
       GST_EVENT_TIMESTAMP (event) = GST_DP_HEADER_TIMESTAMP (header);
@@ -527,9 +522,6 @@ gst_dp_event_from_packet (guint header_length, const guint8 * header,
     case GST_EVENT_SEGMENT_DONE:
     case GST_EVENT_SIZE:
     case GST_EVENT_RATE:
-    case GST_EVENT_FILLER:
-    case GST_EVENT_TS_OFFSET:
-    case GST_EVENT_INTERRUPT:
     case GST_EVENT_NAVIGATION:
     case GST_EVENT_TAG:
       g_warning ("Unhandled event type %d, ignoring", GST_EVENT_TYPE (event));

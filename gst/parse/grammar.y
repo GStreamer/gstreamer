@@ -13,6 +13,7 @@
 #include "../gstinfo.h"
 #include "../gsterror.h"
 #include "../gsturi.h"
+#include "../gstutils.h"
 #include "../gstvalue.h"
 #include "types.h"
 
@@ -285,7 +286,7 @@ gst_parse_free_link (link_t *link)
   g_slist_foreach (link->sink_pads, (GFunc) gst_parse_strfree, NULL);
   g_slist_free (link->src_pads);
   g_slist_free (link->sink_pads);
-  if (link->caps) gst_caps_free (link->caps);
+  if (link->caps) gst_caps_unref (link->caps);
   gst_parse_link_free (link);  
 }
 static void
@@ -351,7 +352,7 @@ gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
     g_signal_handler_disconnect (src, link->signal_id);
     g_free (link->src_pad);
     g_free (link->sink_pad);
-    if (link->caps) gst_caps_free (link->caps);
+    if (link->caps) gst_caps_unref (link->caps);
     if (!gst_element_is_locked_state (src))
       gst_parse_element_lock (link->sink, FALSE);
     g_free (link);
@@ -362,7 +363,7 @@ static gboolean
 gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad, 
                                 GstElement *sink, const gchar *sink_pad, GstCaps *caps)
 {
-  GList *templs = gst_element_get_pad_template_list (src);
+  GList *templs = gst_element_class_get_pad_template_list (GST_ELEMENT_GET_CLASS (src));
 	 
   for (; templs; templs = templs->next) {
     GstPadTemplate *templ = (GstPadTemplate *) templs->data;

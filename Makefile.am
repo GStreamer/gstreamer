@@ -8,13 +8,17 @@ SUBDIRS_DOCS =
 endif
 
 if BUILD_TESTS
-SUBDIRS_TESTS = tests testsuite
+## SUBDIRS_TESTS = tests testsuite
+## FIXME: write tests from scratch
+SUBDIRS_TESTS =
 else
 SUBDIRS_TESTS =
 endif
 
 if BUILD_EXAMPLES
-SUBDIRS_EXAMPLES = examples
+## FIXME: write examples from scratch
+# SUBDIRS_EXAMPLES = examples
+SUBDIRS_EXAMPLES =
 else
 SUBDIRS_EXAMPLES =
 endif

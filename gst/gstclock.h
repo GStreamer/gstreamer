@@ -55,6 +55,13 @@ G_STMT_START { 						\
   (tv).tv_usec = ((t) - (tv).tv_sec * GST_SECOND) / GST_USECOND;	\
 } G_STMT_END
 
+#define GST_TIMESPEC_TO_TIME(ts)		((ts).tv_sec * GST_SECOND + (ts).tv_nsec * GST_NSECOND)
+#define GST_TIME_TO_TIMESPEC(t,ts)			\
+G_STMT_START { 						\
+  (ts).tv_sec  =  (t) / GST_SECOND;			\
+  (ts).tv_usec = ((t) - (ts).tv_sec * GST_SECOND) / GST_NSECOND;	\
+} G_STMT_END
+
 #define GST_CLOCK_ENTRY_TRACE_NAME "GstClockEntry"
 
 typedef struct _GstClockEntry 	GstClockEntry;
@@ -102,7 +109,8 @@ typedef enum
   GST_CLOCK_TIMEOUT 	= 1,
   GST_CLOCK_EARLY 	= 2,
   GST_CLOCK_ERROR 	= 3,
-  GST_CLOCK_UNSUPPORTED	= 4
+  GST_CLOCK_UNSUPPORTED	= 4,
+  GST_CLOCK_OK		= 5
 } GstClockReturn;
 
 typedef enum
@@ -125,7 +133,6 @@ struct _GstClock {
   /* --- protected --- */
   GstClockTime	 start_time;
   GstClockTime	 last_time;
-  gint64	 max_diff;
 
   /* --- private --- */
   guint64	 resolution;
@@ -134,9 +141,6 @@ struct _GstClock {
   GCond		*active_cond;
   gboolean	 stats;
 
-  GstClockTime	 last_event;
-  GstClockTime	 max_event_diff;
-  
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -175,9 +179,6 @@ void 			gst_clock_reset			(GstClock *clock);
 gboolean		gst_clock_handle_discont	(GstClock *clock, guint64 time);
 
 GstClockTime		gst_clock_get_time		(GstClock *clock);
-GstClockTime		gst_clock_get_event_time	(GstClock *clock);
-GstClockTime		gst_clock_get_event_time_delay	(GstClock *clock, GstClockTime delay);
-
 
 GstClockID		gst_clock_get_next_id		(GstClock *clock);
 

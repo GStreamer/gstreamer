@@ -515,7 +515,8 @@ gst_index_gtype_resolver (GstIndex * index, GstObject * writer,
     gchar ** writer_string, gpointer data)
 {
   if (GST_IS_PAD (writer)) {
-    GstElement *element = gst_pad_get_parent (GST_PAD (writer));
+    GstElement *element =
+        (GstElement *) gst_object_get_parent (GST_OBJECT (writer));
 
     *writer_string = g_strdup_printf ("%s.%s",
         g_type_name (G_OBJECT_TYPE (element)), gst_object_get_name (writer));

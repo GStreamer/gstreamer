@@ -79,6 +79,8 @@ struct _GstFakeSrc {
   gboolean 	 loop_based;
   gboolean 	 eos;
 
+  GstTask	*task;
+
   GstFakeSrcOutputType output;
   GstFakeSrcDataType   data;
   GstFakeSrcSizeType   sizetype;

@@ -252,7 +252,7 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
 
   interfaces = g_type_interfaces (type, &n_interfaces);
   for (i = 0; i < n_interfaces; i++) {
-    __gst_element_factory_add_interface (factory, g_type_name (interfaces[i]));
+    //__gst_element_factory_add_interface (factory, g_type_name (interfaces[i]));
   }
   g_free (interfaces);
 

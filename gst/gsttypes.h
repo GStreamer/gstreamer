@@ -34,9 +34,12 @@ typedef struct _GstElement GstElement;
 typedef struct _GstElementClass GstElementClass;
 typedef struct _GstBin GstBin;
 typedef struct _GstBinClass GstBinClass;
+typedef struct _GstPipeline GstPipeline;
+typedef struct _GstPipelineClass GstPipelineClass;
 typedef struct _GstScheduler GstScheduler;
 typedef struct _GstSchedulerClass GstSchedulerClass;
 typedef struct _GstEvent GstEvent;
+typedef struct _GstMessage GstMessage;
 
 typedef enum {
   GST_STATE_VOID_PENDING        = 0,

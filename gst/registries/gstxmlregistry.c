@@ -814,7 +814,7 @@ gst_xml_registry_parse_element_factory (GMarkupParseContext * context,
   } else if (!strcmp (tag, "interface")) {
     gchar *tmp = g_strndup (text, text_len);
 
-    __gst_element_factory_add_interface (factory, tmp);
+    //__gst_element_factory_add_interface (factory, tmp);
     g_free (tmp);
   }
 
@@ -1040,8 +1040,8 @@ gst_xml_registry_end_element (GMarkupParseContext * context,
         xmlregistry->name_template = NULL;
         xmlregistry->caps = NULL;
 
-        __gst_element_factory_add_pad_template (GST_ELEMENT_FACTORY
-            (xmlregistry->current_feature), template);
+        //__gst_element_factory_add_pad_template (GST_ELEMENT_FACTORY
+        //    (xmlregistry->current_feature), template);
         xmlregistry->state = GST_XML_REGISTRY_FEATURE;
         xmlregistry->parser = gst_xml_registry_parse_element_factory;
       }

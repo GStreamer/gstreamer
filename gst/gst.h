@@ -42,7 +42,9 @@
 #include <gst/gstindex.h>
 #include <gst/gstinfo.h>
 #include <gst/gstinterface.h>
+#include <gst/gstiterator.h>
 #include <gst/gstmarshal.h>
+#include <gst/gstmessage.h>
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
 #include <gst/gstpipeline.h>
@@ -52,7 +54,7 @@
 #include <gst/gstsystemclock.h>
 #include <gst/gsttag.h>
 #include <gst/gsttaginterface.h>
-#include <gst/gstthread.h>
+#include <gst/gsttask.h>
 #include <gst/gsttrace.h>
 #include <gst/gsttypefind.h>
 #include <gst/gsturi.h>

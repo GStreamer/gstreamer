@@ -535,9 +535,8 @@ gst_register_core_elements (GstPlugin * plugin)
           GST_TYPE_BIN) ||
       !gst_element_register (plugin, "pipeline", GST_RANK_PRIMARY,
           GST_TYPE_PIPELINE) ||
-      !gst_element_register (plugin, "thread", GST_RANK_PRIMARY,
-          GST_TYPE_THREAD) ||
-      !gst_element_register (plugin, "queue", GST_RANK_NONE, GST_TYPE_QUEUE))
+      !gst_element_register (plugin, "queue", GST_RANK_NONE, GST_TYPE_QUEUE)
+      )
     g_assert_not_reached ();
 
   return TRUE;
@@ -616,6 +615,7 @@ init_post (void)
   _gst_plugin_initialize ();
   _gst_event_initialize ();
   _gst_buffer_initialize ();
+  _gst_message_initialize ();
   _gst_tag_initialize ();
 
 #ifndef GST_DISABLE_REGISTRY
@@ -838,50 +838,6 @@ gboolean
 gst_has_threads (void)
 {
   return TRUE;
-}
-
-
-static GSList *mainloops = NULL;
-
-/**
- * gst_main:
- *
- * Enters the main GStreamer processing loop.
- *
- * This function duplicates functionality in glib, and will be removed
- * during the 0.9 development series.
- */
-void
-gst_main (void)
-{
-  GMainLoop *loop;
-
-  loop = g_main_loop_new (NULL, FALSE);
-  mainloops = g_slist_prepend (mainloops, loop);
-
-  g_main_loop_run (loop);
-}
-
-/**
- * gst_main_quit:
- *
- * Exits the main GStreamer processing loop.
- *
- * This function duplicates functionality in glib, and will be removed
- * during the 0.9 development series.
- */
-void
-gst_main_quit (void)
-{
-  if (!mainloops)
-    g_error ("Quit more loops than there are");
-  else {
-    GMainLoop *loop = mainloops->data;
-
-    mainloops = g_slist_delete_link (mainloops, mainloops);
-    g_main_loop_quit (loop);
-    g_main_loop_unref (loop);
-  }
 }
 
 /**

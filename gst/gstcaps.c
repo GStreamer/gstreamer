@@ -26,10 +26,12 @@
 #include "gst_private.h"
 #include <gst/gst.h>
 
+#define DEBUG_REFCOUNT
+
 #define CAPS_POISON(caps) G_STMT_START{ \
   if (caps) { \
     GstCaps *_newcaps = gst_caps_copy (caps); \
-    gst_caps_free(caps); \
+    gst_caps_unref(caps); \
     caps = _newcaps; \
   } \
 } G_STMT_END
@@ -56,7 +58,7 @@ gst_caps_get_type (void)
   if (!gst_caps_type) {
     gst_caps_type = g_boxed_type_register_static ("GstCaps",
         (GBoxedCopyFunc) gst_caps_copy_conditional,
-        (GBoxedFreeFunc) gst_caps_free);
+        (GBoxedFreeFunc) gst_caps_unref);
 
     g_value_register_transform_func (gst_caps_type,
         G_TYPE_STRING, gst_caps_transform_to_string);
@@ -80,8 +82,13 @@ gst_caps_new_empty (void)
 {
   GstCaps *caps = g_new0 (GstCaps, 1);
 
+  gst_atomic_int_init (&(caps)->refcount, 1);
   caps->type = GST_TYPE_CAPS;
   caps->structs = g_ptr_array_new ();
+
+#ifdef DEBUG_REFCOUNT
+  GST_CAT_LOG (GST_CAT_CAPS, "created caps %p", caps);
+#endif
 
   return caps;
 }
@@ -213,15 +220,8 @@ gst_caps_copy (const GstCaps * caps)
   return newcaps;
 }
 
-/**
- * gst_caps_free:
- * @caps: the #GstCaps to free
- *
- * Frees a #GstCaps and all its structures and the structures'
- * values.
- */
-void
-gst_caps_free (GstCaps * caps)
+static void
+_gst_caps_free (GstCaps * caps)
 {
   GstStructure *structure;
   int i;
@@ -236,7 +236,80 @@ gst_caps_free (GstCaps * caps)
 #ifdef USE_POISONING
   memset (caps, 0xff, sizeof (GstCaps));
 #endif
+  gst_atomic_int_destroy (&(caps)->refcount);
   g_free (caps);
+}
+
+GstCaps *
+gst_caps_copy_on_write (GstCaps * caps)
+{
+  GstCaps *copy;
+
+  g_return_val_if_fail (caps != NULL, NULL);
+
+  /* we are the only instance reffing this caps */
+  if (gst_atomic_int_read (&caps->refcount) == 1)
+    return caps;
+
+  /* else copy */
+  copy = gst_caps_copy (caps);
+  gst_caps_unref (caps);
+
+  return copy;
+}
+
+GstCaps *
+gst_caps_ref (GstCaps * caps)
+{
+  g_return_val_if_fail (caps != NULL, NULL);
+
+#ifdef DEBUG_REFCOUNT
+  GST_CAT_LOG (GST_CAT_CAPS, "%p %d->%d", caps,
+      GST_CAPS_REFCOUNT_VALUE (caps), GST_CAPS_REFCOUNT_VALUE (caps) + 1);
+#endif
+
+  gst_atomic_int_inc (&caps->refcount);
+
+  return caps;
+}
+
+GstCaps *
+gst_caps_ref_by_count (GstCaps * caps, gint count)
+{
+  g_return_val_if_fail (caps != NULL, NULL);
+
+#ifdef DEBUG_REFCOUNT
+  GST_CAT_LOG (GST_CAT_CAPS, "%p %d->%d", caps,
+      GST_CAPS_REFCOUNT_VALUE (caps), GST_CAPS_REFCOUNT_VALUE (caps) + count);
+#endif
+
+  gst_atomic_int_add (&caps->refcount, count);
+
+  return caps;
+}
+
+/**
+ * gst_caps_unref:
+ * @caps: the #GstCaps to unref
+ *
+ * Unref a #GstCaps and and free all its structures and the 
+ * structures' values when the refcount reaches 0.
+ */
+void
+gst_caps_unref (GstCaps * caps)
+{
+  g_return_if_fail (caps != NULL);
+  g_return_if_fail (GST_CAPS_REFCOUNT_VALUE (caps) > 0);
+
+#ifdef DEBUG_REFCOUNT
+  GST_CAT_LOG (GST_CAT_CAPS, "%p %d->%d", caps,
+      GST_CAPS_REFCOUNT_VALUE (caps), GST_CAPS_REFCOUNT_VALUE (caps) - 1);
+#endif
+
+  /* if we ended up with the refcount at zero, free the caps */
+  if (gst_atomic_int_dec_and_test (&caps->refcount)) {
+    _gst_caps_free (caps);
+  }
 }
 
 /**
@@ -531,25 +604,6 @@ gst_caps_is_empty (const GstCaps * caps)
   return (caps->structs == NULL) || (caps->structs->len == 0);
 }
 
-/**
- * gst_caps_is_chained:
- * @caps: the @GstCaps to test
- *
- * Determines if @caps contains multiple #GstStructures.
- *
- * This function is deprecated, and should not be used in new code.
- * Use #gst_caps_is_simple() instead.
- *
- * Returns: TRUE if @caps contains more than one structure
- */
-gboolean
-gst_caps_is_chained (const GstCaps * caps)
-{
-  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
-
-  return (caps->structs->len > 1);
-}
-
 static gboolean
 gst_caps_is_fixed_foreach (GQuark field_id, GValue * value, gpointer unused)
 {
@@ -675,7 +729,7 @@ gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
 
   caps = gst_caps_subtract (subset, superset);
   ret = gst_caps_is_empty (caps);
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
   return ret;
 }
 
@@ -835,6 +889,29 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
     return gst_caps_copy (caps1);
 
   dest = gst_caps_new_empty ();
+  /* run zigzag on top line first
+   *  
+   * 1 2 4 ..
+   * 3 5 ..
+   * 6 ..
+   * ..
+   *
+   */
+#if 0
+  for (i = 0; i < caps1->structs->len; i++) {
+    struct1 = gst_caps_get_structure (caps1, i);
+    for (j = 0; j < caps2->structs->len; j++) {
+    }
+  }
+#endif
+  /* run zigzag on right line
+   *  
+   * ..     1
+   * ..   2 4
+   * .. 3 5 6
+   */
+
+  /* FIXME use loop that preserves the order better */
   for (i = 0; i < caps1->structs->len; i++) {
     struct1 = gst_caps_get_structure (caps1, i);
     for (j = 0; j < caps2->structs->len; j++) {
@@ -951,7 +1028,7 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
   for (i = 0; i < subtrahend->structs->len; i++) {
     sub = gst_caps_get_structure (subtrahend, i);
     if (dest) {
-      gst_caps_free (src);
+      gst_caps_unref (src);
       src = dest;
     }
     dest = gst_caps_new_empty ();
@@ -975,12 +1052,12 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
       }
     }
     if (gst_caps_is_empty (dest)) {
-      gst_caps_free (src);
+      gst_caps_unref (src);
       return dest;
     }
   }
 
-  gst_caps_free (src);
+  gst_caps_unref (src);
   gst_caps_do_simplify (dest);
   return dest;
 }
@@ -1340,7 +1417,7 @@ gst_caps_replace (GstCaps ** caps, GstCaps * newcaps)
 #endif
 #endif
   if (*caps)
-    gst_caps_free (*caps);
+    gst_caps_unref (*caps);
   *caps = newcaps;
 }
 
@@ -1454,7 +1531,7 @@ gst_caps_from_string (const gchar * string)
   if (gst_caps_from_string_inplace (caps, string)) {
     return caps;
   } else {
-    gst_caps_free (caps);
+    gst_caps_unref (caps);
     return NULL;
   }
 }

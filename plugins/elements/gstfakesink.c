@@ -113,7 +113,8 @@ static void gst_fakesink_get_property (GObject * object, guint prop_id,
 
 static GstElementStateReturn gst_fakesink_change_state (GstElement * element);
 
-static void gst_fakesink_chain (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_fakesink_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_fakesink_event (GstPad * pad, GstEvent * event);
 
 static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
 
@@ -138,6 +139,8 @@ gst_fakesink_class_init (GstFakeSinkClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fakesink_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesink_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_SINKS,
       g_param_spec_int ("num_sinks", "Number of sinks",
@@ -169,9 +172,6 @@ gst_fakesink_class_init (GstFakeSinkClass * klass)
       gst_marshal_VOID__BOXED_OBJECT, G_TYPE_NONE, 2,
       GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE, GST_TYPE_PAD);
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fakesink_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesink_get_property);
-
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_fakesink_request_new_pad);
   gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_fakesink_set_clock);
@@ -189,6 +189,7 @@ gst_fakesink_init (GstFakeSink * fakesink)
       "sink");
   gst_element_add_pad (GST_ELEMENT (fakesink), pad);
   gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_chain));
+  gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_event));
 
   fakesink->silent = FALSE;
   fakesink->dump = FALSE;
@@ -196,8 +197,6 @@ gst_fakesink_init (GstFakeSink * fakesink)
   fakesink->last_message = NULL;
   fakesink->state_error = FAKESINK_STATE_ERROR_NONE;
   fakesink->signal_handoffs = FALSE;
-
-  GST_FLAG_SET (fakesink, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
@@ -308,44 +307,71 @@ gst_fakesink_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static void
-gst_fakesink_chain (GstPad * pad, GstData * _data)
+static gboolean
+gst_fakesink_event (GstPad * pad, GstEvent * event)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstFakeSink *fakesink;
-
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  gboolean result = TRUE;
 
   fakesink = GST_FAKESINK (GST_OBJECT_PARENT (pad));
 
-  if (GST_IS_EVENT (buf)) {
-    GstEvent *event = GST_EVENT (buf);
+  GST_STREAM_LOCK (pad);
 
-    if (!fakesink->silent) {
-      g_free (fakesink->last_message);
+  if (!fakesink->silent) {
+    g_free (fakesink->last_message);
 
-      fakesink->last_message =
-          g_strdup_printf ("chain   ******* (%s:%s)E (type: %d) %p",
-          GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE (event), event);
+    fakesink->last_message =
+        g_strdup_printf ("chain   ******* (%s:%s)E (type: %d) %p",
+        GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE (event), event);
 
-      g_object_notify (G_OBJECT (fakesink), "last_message");
-    }
-
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_DISCONTINUOUS:
-        if (fakesink->sync && fakesink->clock) {
-          gint64 value = GST_EVENT_DISCONT_OFFSET (event, 0).value;
-
-          gst_element_set_time (GST_ELEMENT (fakesink), value);
-        }
-      default:
-        gst_pad_event_default (pad, event);
-        break;
-    }
-    return;
+    g_object_notify (G_OBJECT (fakesink), "last_message");
   }
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+    {
+      gst_element_finish_preroll (GST_ELEMENT (fakesink),
+          GST_STREAM_GET_LOCK (pad));
+      gst_pipeline_post_message (GST_ELEMENT_MANAGER (fakesink),
+          gst_message_new_eos (GST_OBJECT (fakesink)));
+      break;
+    }
+    case GST_EVENT_DISCONTINUOUS:
+      if (fakesink->sync && fakesink->clock) {
+        //gint64 value = GST_EVENT_DISCONT_OFFSET (event, 0).value;
+      }
+    default:
+      result = gst_pad_event_default (pad, event);
+      break;
+  }
+  GST_STREAM_UNLOCK (pad);
+
+  return result;
+}
+
+static GstFlowReturn
+gst_fakesink_chain (GstPad * pad, GstBuffer * buffer)
+{
+  GstBuffer *buf = GST_BUFFER (buffer);
+  GstFakeSink *fakesink;
+  GstFlowReturn result = GST_FLOW_OK;
+  GstCaps *caps;
+
+  fakesink = GST_FAKESINK (GST_OBJECT_PARENT (pad));
+
+  caps = gst_buffer_get_caps (buffer);
+  if (caps && caps != GST_PAD_CAPS (pad)) {
+    gst_pad_set_caps (pad, caps);
+  }
+
+  /* grab streaming lock to synchronize with event method */
+  GST_STREAM_LOCK (pad);
+
+  result =
+      gst_element_finish_preroll (GST_ELEMENT (fakesink),
+      GST_STREAM_GET_LOCK (pad));
+  if (result != GST_FLOW_OK)
+    goto exit;
 
   if (fakesink->sync && fakesink->clock) {
     gst_element_wait (GST_ELEMENT (fakesink), GST_BUFFER_TIMESTAMP (buf));
@@ -374,12 +400,17 @@ gst_fakesink_chain (GstPad * pad, GstData * _data)
     gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   }
 
+exit:
+  GST_STREAM_UNLOCK (pad);
   gst_buffer_unref (buf);
+
+  return result;
 }
 
 static GstElementStateReturn
 gst_fakesink_change_state (GstElement * element)
 {
+  GstElementStateReturn ret = GST_STATE_SUCCESS;
   GstFakeSink *fakesink = GST_FAKESINK (element);
 
   switch (GST_STATE_TRANSITION (element)) {
@@ -390,6 +421,8 @@ gst_fakesink_change_state (GstElement * element)
     case GST_STATE_READY_TO_PAUSED:
       if (fakesink->state_error == FAKESINK_STATE_ERROR_READY_PAUSED)
         goto error;
+      /* need to complete preroll before this state change completes */
+      ret = GST_STATE_ASYNC;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       if (fakesink->state_error == FAKESINK_STATE_ERROR_PAUSED_PLAYING)
@@ -412,9 +445,9 @@ gst_fakesink_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
-  return GST_STATE_SUCCESS;
+  return ret;
 
 error:
   GST_ELEMENT_ERROR (element, CORE, STATE_CHANGE, (NULL), (NULL));

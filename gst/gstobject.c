@@ -179,7 +179,10 @@ gst_object_class_init (GstObjectClass * klass)
 static void
 gst_object_init (GstObject * object)
 {
+  //object->lock = g_new0(GStaticRecMutex, 1);
+  //g_static_rec_mutex_init (object->lock);
   object->lock = g_mutex_new ();
+
   object->parent = NULL;
   object->name = NULL;
 
@@ -225,6 +228,7 @@ gst_object_ref (GstObject * object)
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "ref %d->%d",
       G_OBJECT (object)->ref_count, G_OBJECT (object)->ref_count + 1);
 
+  /* FIXME, not threadsafe */
   g_object_ref (G_OBJECT (object));
   return object;
 }
@@ -245,6 +249,7 @@ gst_object_unref (GstObject * object)
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unref %d->%d",
       G_OBJECT (object)->ref_count, G_OBJECT (object)->ref_count - 1);
 
+  /* FIXME, not threadsafe */
   g_object_unref (G_OBJECT (object));
 }
 
@@ -325,7 +330,9 @@ gst_object_finalize (GObject * object)
 
   g_free (gstobject->name);
 
+  //g_static_rec_mutex_free (gstobject->lock);
   g_mutex_free (gstobject->lock);
+  g_free (gstobject->lock);
 
 #ifndef GST_DISABLE_TRACE
   {
@@ -342,6 +349,8 @@ gst_object_finalize (GObject * object)
   parent_class->finalize (object);
 }
 
+static GStaticRecMutex dispatch_mutex = G_STATIC_REC_MUTEX_INIT;
+
 /* Changing a GObject property of a GstObject will result in "deep_notify"
  * signals being emitted by the object itself, as well as in each parent
  * object. This is so that an application can connect a listener to the
@@ -354,6 +363,7 @@ gst_object_dispatch_properties_changed (GObject * object,
   GstObject *gst_object;
   guint i;
 
+  g_static_rec_mutex_lock (&dispatch_mutex);
   /* do the standard dispatching */
   G_OBJECT_CLASS (parent_class)->dispatch_properties_changed (object, n_pspecs,
       pspecs);
@@ -367,6 +377,7 @@ gst_object_dispatch_properties_changed (GObject * object,
           GST_OBJECT_NAME (object) ? GST_OBJECT_NAME (object) : "(null)",
           GST_OBJECT_NAME (gst_object) ? GST_OBJECT_NAME (gst_object) :
           "(null)", pspecs[i]->name);
+      /* FIXME, not thread safe */
       g_signal_emit (gst_object, gst_object_signals[DEEP_NOTIFY],
           g_quark_from_string (pspecs[i]->name), (GstObject *) object,
           pspecs[i]);
@@ -374,6 +385,7 @@ gst_object_dispatch_properties_changed (GObject * object,
 
     gst_object = GST_OBJECT_PARENT (gst_object);
   }
+  g_static_rec_mutex_unlock (&dispatch_mutex);
 }
 
 /** 
@@ -481,13 +493,19 @@ gst_object_set_name (GstObject * object, const gchar * name)
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
 
+  GST_LOCK (object);
   if (object->name != NULL)
     g_free (object->name);
 
   if (name != NULL)
     object->name = g_strdup (name);
-  else
+  else {
+    GST_UNLOCK (object);
     gst_object_set_name_default (object);
+    GST_LOCK (object);
+  }
+
+  GST_UNLOCK (object);
 }
 
 /**
@@ -501,9 +519,15 @@ gst_object_set_name (GstObject * object, const gchar * name)
 const gchar *
 gst_object_get_name (GstObject * object)
 {
-  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
+  const gchar *result = NULL;
 
-  return object->name;
+  g_return_val_if_fail (GST_IS_OBJECT (object), result);
+
+  GST_LOCK (object);
+  result = object->name;
+  GST_UNLOCK (object);
+
+  return result;
 }
 
 /**
@@ -519,17 +543,18 @@ gst_object_get_name (GstObject * object)
 void
 gst_object_set_parent (GstObject * object, GstObject * parent)
 {
-  g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
-  g_return_if_fail (parent != NULL);
   g_return_if_fail (GST_IS_OBJECT (parent));
   g_return_if_fail (object != parent);
   g_return_if_fail (object->parent == NULL);
 
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "set parent (ref and sink)");
+
+  GST_LOCK (object);
   gst_object_ref (object);
   gst_object_sink (object);
   object->parent = parent;
+  GST_UNLOCK (object);
 
   g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_SET], 0, parent);
 }
@@ -545,10 +570,15 @@ gst_object_set_parent (GstObject * object, GstObject * parent)
 GstObject *
 gst_object_get_parent (GstObject * object)
 {
-  g_return_val_if_fail (object != NULL, NULL);
-  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
+  GstObject *result = NULL;
 
-  return object->parent;
+  g_return_val_if_fail (GST_IS_OBJECT (object), result);
+
+  GST_LOCK (object);
+  result = object->parent;
+  GST_UNLOCK (object);
+
+  return result;
 }
 
 /**
@@ -560,17 +590,24 @@ gst_object_get_parent (GstObject * object)
 void
 gst_object_unparent (GstObject * object)
 {
-  g_return_if_fail (object != NULL);
-  g_return_if_fail (GST_IS_OBJECT (object));
-  if (object->parent == NULL)
-    return;
+  GstObject *parent;
 
+  g_return_if_fail (GST_IS_OBJECT (object));
+
+  GST_LOCK (object);
+  parent = object->parent;
+
+  if (parent == NULL) {
+    GST_UNLOCK (object);
+    return;
+  }
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unparent");
+  object->parent = NULL;
+  GST_UNLOCK (object);
 
   g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_UNSET], 0,
-      object->parent);
+      parent);
 
-  object->parent = NULL;
   gst_object_unref (object);
 }
 
@@ -593,7 +630,7 @@ gst_object_check_uniqueness (GList * list, const gchar * name)
 
     list = g_list_next (list);
 
-    if (strcmp (GST_OBJECT_NAME (child), name) == 0)
+    if (strcmp (gst_object_get_name (child), name) == 0)
       return FALSE;
   }
 

@@ -26,6 +26,7 @@
 
 #include <gst/gstdata.h>
 #include <gst/gstclock.h>
+#include <gst/gstcaps.h>
 
 G_BEGIN_DECLS
 
@@ -44,10 +45,8 @@ extern GType _gst_buffer_type;
 
 #define GST_BUFFER_REFCOUNT(buf)		GST_DATA_REFCOUNT(buf)
 #define GST_BUFFER_REFCOUNT_VALUE(buf)		GST_DATA_REFCOUNT_VALUE(buf)
-#ifndef GST_DISABLE_DEPRECATED
 #define GST_BUFFER_COPY_FUNC(buf)		GST_DATA_COPY_FUNC(buf)
 #define GST_BUFFER_FREE_FUNC(buf)		GST_DATA_FREE_FUNC(buf)
-#endif
 
 #define GST_BUFFER_FLAGS(buf)                   GST_DATA_FLAGS(buf)
 #define GST_BUFFER_FLAG_IS_SET(buf,flag)        GST_DATA_FLAG_IS_SET (buf, flag)
@@ -59,6 +58,7 @@ extern GType _gst_buffer_type;
 #define GST_BUFFER_MAXSIZE(buf)			(GST_BUFFER(buf)->maxsize)
 #define GST_BUFFER_TIMESTAMP(buf)		(GST_BUFFER(buf)->timestamp)
 #define GST_BUFFER_DURATION(buf)		(GST_BUFFER(buf)->duration)
+#define GST_BUFFER_CAPS(buf)			(GST_BUFFER(buf)->caps)
 #define GST_BUFFER_OFFSET(buf)			(GST_BUFFER(buf)->offset)
 #define GST_BUFFER_OFFSET_END(buf)		(GST_BUFFER(buf)->offset_end)
 #define GST_BUFFER_FREE_DATA_FUNC(buf)          (GST_BUFFER(buf)->free_data)
@@ -95,13 +95,14 @@ extern GType _gst_buffer_type;
 typedef enum {
   GST_BUFFER_READONLY   = GST_DATA_READONLY,
   GST_BUFFER_SUBBUFFER  = GST_DATA_FLAG_LAST,
-  GST_BUFFER_ORIGINAL,
-  GST_BUFFER_DONTFREE,
-  GST_BUFFER_KEY_UNIT,		/* deprecated, use reverse DELTA_UNIT */
-  GST_BUFFER_DONTKEEP,
-  GST_BUFFER_IN_CAPS,
-  GST_BUFFER_DELTA_UNIT,	/* this unit depends on a previous unit */
-  GST_BUFFER_FLAG_LAST	= GST_DATA_FLAG_LAST + 8
+  GST_BUFFER_ORIGINAL,		/* original data, not copied, not currently used  */
+  GST_BUFFER_DONTFREE,		/* buffer data is managed by somebody else and cannot be freeed */
+  GST_BUFFER_KEY_UNIT,		/* sync point in the stream, DEPRECATED, use DELTA_UNIT for non-KEY_UNIT buffers */
+  GST_BUFFER_DISCONT,		/* buffer is first after discontinuity in the stream */
+  GST_BUFFER_IN_CAPS,		/* buffer is also part of caps */
+  GST_BUFFER_GAP,		/* buffer has been created to fill a gap in the stream */
+  GST_BUFFER_DELTA_UNIT,	/* can't be used as sync point in stream */
+  GST_BUFFER_FLAG_LAST 	= GST_DATA_FLAG_LAST + 8
 } GstBufferFlag;
 
 struct _GstBuffer {
@@ -115,6 +116,9 @@ struct _GstBuffer {
   /* timestamp */
   GstClockTime		 timestamp;
   GstClockTime		 duration;
+
+  /* the media type of this buffer */
+  GstCaps		*caps;
 
   /* media specific offset
    * for video frames, this could be the number of frames,
@@ -148,17 +152,18 @@ G_STMT_START {						\
 #define		gst_buffer_ref_by_count(buf,c)	GST_BUFFER (gst_data_ref_by_count (GST_DATA (buf), c))
 #define		gst_buffer_unref(buf)		gst_data_unref (GST_DATA (buf))
 /* copy buffer */
-void		gst_buffer_stamp		(GstBuffer *dest, const GstBuffer *src);
 #define		gst_buffer_copy(buf)		GST_BUFFER (gst_data_copy (GST_DATA (buf)))
 #define		gst_buffer_is_writable(buf)	gst_data_is_writable (GST_DATA (buf))
 #define		gst_buffer_copy_on_write(buf)   GST_BUFFER (gst_data_copy_on_write (GST_DATA (buf)))
+
+GstCaps*	gst_buffer_get_caps		(GstBuffer *buffer);
+void		gst_buffer_set_caps		(GstBuffer *buffer, GstCaps *caps);
 
 /* creating a subbuffer */
 GstBuffer*	gst_buffer_create_sub		(GstBuffer *parent, guint offset, guint size);
 
 /* merge, span, or append two buffers, intelligently */
 GstBuffer*	gst_buffer_merge		(GstBuffer *buf1, GstBuffer *buf2);
-GstBuffer*	gst_buffer_join			(GstBuffer *buf1, GstBuffer *buf2);
 gboolean	gst_buffer_is_span_fast		(GstBuffer *buf1, GstBuffer *buf2);
 GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len);
 

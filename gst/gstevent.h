@@ -38,22 +38,17 @@ typedef enum {
   GST_EVENT_UNKNOWN		= 0,
   GST_EVENT_EOS			= 1,
   GST_EVENT_FLUSH		= 2,
-  GST_EVENT_EMPTY		= 3,
+  GST_EVENT_CAPS		= 3,
   GST_EVENT_DISCONTINUOUS	= 4,
-  /*GST_EVENT_NEW_MEDIA		= 5, <- removed */
-  GST_EVENT_QOS			= 6,
-  GST_EVENT_SEEK		= 7,
-  GST_EVENT_SEEK_SEGMENT	= 8,
-  GST_EVENT_SEGMENT_DONE	= 9,
-  GST_EVENT_SIZE		= 10,
-  GST_EVENT_RATE		= 11,
-  GST_EVENT_FILLER		= 12,
-  GST_EVENT_TS_OFFSET		= 13,
-  GST_EVENT_INTERRUPT		= 14,
-  GST_EVENT_NAVIGATION		= 15,
-  GST_EVENT_TAG			= 16
+  GST_EVENT_QOS			= 5,
+  GST_EVENT_SEEK		= 6,
+  GST_EVENT_SEEK_SEGMENT	= 7,
+  GST_EVENT_SEGMENT_DONE	= 8,
+  GST_EVENT_SIZE		= 9,
+  GST_EVENT_RATE		= 10,
+  GST_EVENT_NAVIGATION		= 11,
+  GST_EVENT_TAG			= 12
 } GstEventType;
-#define GST_EVENT_ANY GST_EVENT_NAVIGATION
 
 #define GST_EVENT_TRACE_NAME	"GstEvent"
 
@@ -87,7 +82,6 @@ typedef struct
   GstEventFlag	flags;
 } GstEventMask;
 
-#ifndef GST_DISABLE_DEPRECATED
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_EVENT_MASK_FUNCTION(type,functionname, ...)      \
 static const GstEventMask*                              \
@@ -110,7 +104,6 @@ functionname (type pad)					\
   };							\
   return masks;						\
 }
-#endif
 #endif
 
 /* seek events, extends GstEventFlag */

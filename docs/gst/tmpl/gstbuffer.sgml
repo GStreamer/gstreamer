@@ -348,10 +348,28 @@ If the refcount is 1, this function just returns the original buffer.
 
 </para>
 
+<<<<<<< gstbuffer.sgml
+@GST_BUFFER_READONLY: the buffer is read-only.
+@GST_BUFFER_SUBBUFFER: the buffer is a subbuffer, the parent buffer can be 
+                       found with the GST_BUFFER_POOL_PRIVATE() macro.
+@GST_BUFFER_ORIGINAL: buffer is not a copy of another buffer.
+@GST_BUFFER_DONTFREE: do not try to free the data when this buffer is 
+                      unreferenced.
+@GST_BUFFER_KEY_UNIT: the buffer holds a key unit, a unit that can be 
+                      decoded independently of other buffers.
+@GST_BUFFER_DONTKEEP: 
+<<<<<<< gstbuffer.sgml
+@GST_BUFFER_IN_CAPS: 
+=======
+@GST_BUFFER_IN_CAPS: the buffer has been added as a field in a #GstCaps.
+>>>>>>> 1.44
+@GST_BUFFER_FLAG_LAST: additional flags can be added starting from this flag.
+=======
 @buf1: 
 @buf2: 
 @Returns: 
 
+>>>>>>> 1.48
 
 <!-- ##### FUNCTION gst_buffer_default_free ##### -->
 <para>

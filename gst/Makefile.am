@@ -1,10 +1,6 @@
 lib_LTLIBRARIES = libgstreamer-@GST_MAJORMINOR@.la
 AS_LIBTOOL_LIB = libgstreamer-@GST_MAJORMINOR@
-if GST_DISABLE_OMEGA_COTHREADS
 noinst_LTLIBRARIES =
-else
-noinst_LTLIBRARIES = libcothreads.la
-endif
 
 #GST_INSTRUMENT_FLAGS = -finstrument-functions -DGST_ENABLE_FUNC_INSTRUMENTATION
 
@@ -66,8 +62,8 @@ else
 GST_URI_SRC = gsturi.c
 endif
 
-SUBDIRS = $(GST_PARSE_DIRS) $(GST_REGISTRY_DIRS) . autoplug elements schedulers $(GST_INDEX_DIRS) 
-DIST_SUBDIRS = autoplug elements parse registries schedulers indexers
+SUBDIRS = $(GST_PARSE_DIRS) $(GST_REGISTRY_DIRS) . elements schedulers $(GST_INDEX_DIRS) 
+DIST_SUBDIRS = elements parse registries schedulers indexers
 
 # make variables for all generated source and header files to make the
 # distinction clear
@@ -85,6 +81,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstatomic.c		\
 	gstbin.c		\
 	gstbuffer.c		\
+	gstbus.c		\
 	gstcaps.c		\
 	gstclock.c		\
 	gstcpu.c		\
@@ -98,20 +95,22 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	$(GST_INDEX_SRC)	\
 	gstinfo.c		\
 	gstinterface.c		\
+	gstiterator.c		\
 	gstmemchunk.c		\
+	gstmessage.c		\
 	gstpad.c		\
 	gstpipeline.c		\
 	gstplugin.c		\
 	gstpluginfeature.c	\
 	gstprobe.c		\
-	gstqueue.c		\
 	gstquery.c		\
+	gstqueue.c		\
 	gstscheduler.c		\
 	gststructure.c		\
 	gstsystemclock.c	\
 	gsttag.c		\
 	gsttaginterface.c	\
-	gstthread.c		\
+	gsttask.c		\
 	$(GST_TRACE_SRC)	\
 	gsttrashstack.c		\
 	gsttypefind.c		\
@@ -158,6 +157,7 @@ gst_headers =			\
 	gstobject.h		\
 	gstbin.h		\
 	gstbuffer.h		\
+	gstbus.h		\
 	gstcaps.h		\
 	gstclock.h		\
 	gstcompat.h		\
@@ -171,21 +171,22 @@ gst_headers =			\
 	gstindex.h		\
 	gstinfo.h		\
 	gstinterface.h		\
+	gstiterator.h		\
 	gstmacros.h		\
 	gstmemchunk.h		\
+	gstmessage.h		\
 	gstpad.h		\
 	gstpipeline.h		\
 	gstplugin.h		\
 	gstpluginfeature.h	\
 	gstprobe.h		\
-	gstqueue.h		\
 	gstquery.h		\
+	gstqueue.h		\
 	gstscheduler.h		\
 	gststructure.h		\
 	gstsystemclock.h	\
 	gsttag.h		\
 	gsttaginterface.h	\
-	gstthread.h		\
 	gsttrace.h		\
 	gsttrashstack.h		\
 	gsttypefind.h		\

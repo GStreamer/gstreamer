@@ -55,13 +55,30 @@ typedef enum
   GST_OBJECT_FLAG_LAST   = 4
 } GstObjectFlags;
 
+#ifdef USE_REC_LOCKS
+ #define GST_LOCK(obj)			(g_static_rec_mutex_lock(GST_OBJECT(obj)->lock))
+ #define GST_TRYLOCK(obj)		(g_static_rec_mutex_trylock(GST_OBJECT(obj)->lock))
+ #define GST_UNLOCK(obj)		(g_static_rec_mutex_unlock(GST_OBJECT(obj)->lock))
+ #define GST_GET_LOCK(obj)		(g_static_mutex_get_mutex(&GST_OBJECT(obj)->lock->mutex))
+ #define GST_LOCK_TYPE GStaticRecMutex
+ #define GST_LOCK_CREATE g_static_rec_mutex_new()
+#else
+ #define GST_LOCK(obj)			(g_mutex_lock(GST_OBJECT(obj)->lock))
+ #define GST_TRYLOCK(obj)		(g_mutex_trylock(GST_OBJECT(obj)->lock))
+ #define GST_UNLOCK(obj)		(g_mutex_unlock(GST_OBJECT(obj)->lock))
+ #define GST_GET_LOCK(obj)		(GST_OBJECT(obj)->lock)
+ #define GST_LOCK_TYPE GMutex
+ #define GST_LOCK_CREATE g_mutex_new()
+#endif
+
 struct _GstObject {
   GObject 	object;
 
   gchar 	*name;
 
   /* locking for all sorts of things */
-  GMutex 	*lock;
+  GST_LOCK_TYPE *lock;
+  
   /* this object's parent */
   GstObject 	*parent;
 
@@ -103,11 +120,6 @@ struct _GstObjectClass {
 #define GST_OBJECT_DESTROYED(obj)	(GST_FLAG_IS_SET (obj, GST_DESTROYED))
 #define GST_OBJECT_FLOATING(obj)	(GST_FLAG_IS_SET (obj, GST_FLOATING))
 
-/* CR1: object locking - GObject 2.0 doesn't have threadsafe locking */
-#define GST_LOCK(obj)			(g_mutex_lock(GST_OBJECT(obj)->lock))
-#define GST_TRYLOCK(obj)		(g_mutex_trylock(GST_OBJECT(obj)->lock))
-#define GST_UNLOCK(obj)			(g_mutex_unlock(GST_OBJECT(obj)->lock))
-#define GST_GET_LOCK(obj)		(GST_OBJECT(obj)->lock)
 
 
 /* normal GObject stuff */

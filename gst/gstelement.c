@@ -29,11 +29,12 @@
 #include "gstbin.h"
 #include "gstmarshal.h"
 #include "gsterror.h"
-#include "gstscheduler.h"
 #include "gstevent.h"
 #include "gstutils.h"
 #include "gstinfo.h"
 #include "gst-i18n-lib.h"
+#include "gstscheduler.h"
+#include "gstpipeline.h"
 
 /* Element signals and args */
 enum
@@ -41,9 +42,6 @@ enum
   STATE_CHANGE,
   NEW_PAD,
   PAD_REMOVED,
-  ERROR,
-  EOS,
-  FOUND_TAG,
   NO_MORE_PADS,
   /* add more above */
   LAST_SIGNAL
@@ -64,20 +62,13 @@ static void gst_element_init (GstElement * element);
 static void gst_element_base_class_init (gpointer g_class);
 static void gst_element_base_class_finalize (gpointer g_class);
 
-static void gst_element_real_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_element_real_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 static void gst_element_dispose (GObject * object);
 
 static GstElementStateReturn gst_element_change_state (GstElement * element);
-static void gst_element_error_func (GstElement * element, GstElement * source,
-    GError * error, gchar * debug);
-static void gst_element_found_tag_func (GstElement * element,
-    GstElement * source, const GstTagList * tag_list);
-static GstElementStateReturn gst_element_set_state_func (GstElement * element,
-    GstElementState state);
+static gboolean gst_element_get_state_func (GstElement * element,
+    GstElementState * state, GstElementState * pending, GTimeVal * timeout);
+static void gst_element_set_manager_func (GstElement * element,
+    GstPipeline * manager);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr gst_element_save_thyself (GstObject * object,
@@ -136,29 +127,10 @@ gst_element_class_init (GstElementClass * klass)
       g_signal_new ("pad-removed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstElementClass, pad_removed), NULL, NULL,
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
-  gst_element_signals[ERROR] =
-      g_signal_new ("error", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstElementClass, error), NULL, NULL,
-      gst_marshal_VOID__OBJECT_BOXED_STRING, G_TYPE_NONE, 3, GST_TYPE_ELEMENT,
-      GST_TYPE_G_ERROR, G_TYPE_STRING);
-  gst_element_signals[EOS] =
-      g_signal_new ("eos", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstElementClass, eos), NULL, NULL,
-      gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
-  gst_element_signals[FOUND_TAG] =
-      g_signal_new ("found-tag", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstElementClass, found_tag), NULL, NULL,
-      gst_marshal_VOID__OBJECT_BOXED, G_TYPE_NONE, 2, GST_TYPE_ELEMENT,
-      GST_TYPE_TAG_LIST);
   gst_element_signals[NO_MORE_PADS] =
       g_signal_new ("no-more-pads", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstElementClass, no_more_pads), NULL,
       NULL, gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
-
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_element_real_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_element_real_get_property);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_element_dispose);
 
@@ -169,10 +141,9 @@ gst_element_class_init (GstElementClass * klass)
 #endif
 
   klass->change_state = GST_DEBUG_FUNCPTR (gst_element_change_state);
-  klass->error = GST_DEBUG_FUNCPTR (gst_element_error_func);
-  klass->found_tag = GST_DEBUG_FUNCPTR (gst_element_found_tag_func);
+  klass->get_state = GST_DEBUG_FUNCPTR (gst_element_get_state_func);
+  klass->set_manager = GST_DEBUG_FUNCPTR (gst_element_set_manager_func);
   klass->numpadtemplates = 0;
-  klass->set_state = GST_DEBUG_FUNCPTR (gst_element_set_state_func);
 
   klass->elementfactory = NULL;
 }
@@ -180,14 +151,7 @@ gst_element_class_init (GstElementClass * klass)
 static void
 gst_element_base_class_init (gpointer g_class)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_element_real_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_element_real_get_property);
 
   memset (&element_class->details, 0, sizeof (GstElementDetails));
   element_class->padtemplates = NULL;
@@ -211,36 +175,18 @@ gst_element_init (GstElement * element)
   element->numpads = 0;
   element->numsrcpads = 0;
   element->numsinkpads = 0;
+  element->pads_cookie = 0;
   element->pads = NULL;
-  element->loopfunc = NULL;
-  element->sched = NULL;
+  element->srcpads = NULL;
+  element->sinkpads = NULL;
+  element->manager = NULL;
   element->clock = NULL;
   element->sched_private = NULL;
-  element->state_mutex = g_mutex_new ();
+  element->state_lock = g_mutex_new ();
   element->state_cond = g_cond_new ();
 }
 
-static void
-gst_element_real_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstElementClass *oclass = GST_ELEMENT_GET_CLASS (object);
-
-  if (oclass->set_property)
-    (oclass->set_property) (object, prop_id, value, pspec);
-}
-
-static void
-gst_element_real_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstElementClass *oclass = GST_ELEMENT_GET_CLASS (object);
-
-  if (oclass->get_property)
-    (oclass->get_property) (object, prop_id, value, pspec);
-}
-
-/**
+/** 
  * gst_element_default_error:
  * @object: a #GObject that signalled the error.
  * @orig: the #GstObject that initiated the error.
@@ -263,407 +209,6 @@ gst_element_default_error (GObject * object, GstObject * source, GError * error,
     g_print (_("Additional debug info:\n%s\n"), debug);
 
   g_free (name);
-}
-
-typedef struct
-{
-  const GParamSpec *pspec;
-  GValue value;
-}
-prop_value_t;
-
-static void
-element_set_property (GstElement * element, const GParamSpec * pspec,
-    const GValue * value)
-{
-  prop_value_t *prop_value = g_new0 (prop_value_t, 1);
-
-  prop_value->pspec = pspec;
-  prop_value->value = *value;
-
-  g_async_queue_push (element->prop_value_queue, prop_value);
-}
-
-static void
-element_get_property (GstElement * element, const GParamSpec * pspec,
-    GValue * value)
-{
-  g_mutex_lock (element->property_mutex);
-  g_object_get_property ((GObject *) element, pspec->name, value);
-  g_mutex_unlock (element->property_mutex);
-}
-
-static void
-gst_element_threadsafe_properties_pre_run (GstElement * element)
-{
-  /* need to ref the object because we don't want to lose the object
-   * before the post run function is called */
-  gst_object_ref (GST_OBJECT (element));
-  GST_DEBUG ("locking element %s", GST_OBJECT_NAME (element));
-  g_mutex_lock (element->property_mutex);
-  gst_element_set_pending_properties (element);
-}
-
-static void
-gst_element_threadsafe_properties_post_run (GstElement * element)
-{
-  GST_DEBUG ("unlocking element %s", GST_OBJECT_NAME (element));
-  g_mutex_unlock (element->property_mutex);
-  gst_object_unref (GST_OBJECT (element));
-}
-
-/**
- * gst_element_enable_threadsafe_properties:
- * @element: a #GstElement to enable threadsafe properties on.
- *
- * Installs an asynchronous queue, a mutex and pre- and post-run functions on
- * this element so that properties on the element can be set in a
- * threadsafe way.
- */
-void
-gst_element_enable_threadsafe_properties (GstElement * element)
-{
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  GST_FLAG_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES);
-  element->pre_run_func = gst_element_threadsafe_properties_pre_run;
-  element->post_run_func = gst_element_threadsafe_properties_post_run;
-  if (!element->prop_value_queue)
-    element->prop_value_queue = g_async_queue_new ();
-  if (!element->property_mutex)
-    element->property_mutex = g_mutex_new ();
-}
-
-/**
- * gst_element_disable_threadsafe_properties:
- * @element: a #GstElement to disable threadsafe properties on.
- *
- * Removes the threadsafe properties, post- and pre-run locks from
- * this element.
- */
-void
-gst_element_disable_threadsafe_properties (GstElement * element)
-{
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  GST_FLAG_UNSET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES);
-  element->pre_run_func = NULL;
-  element->post_run_func = NULL;
-  /* let's keep around that async queue */
-}
-
-/**
- * gst_element_set_pending_properties:
- * @element: a #GstElement to set the pending properties on.
- *
- * Sets all pending properties on the threadsafe properties enabled
- * element.
- */
-void
-gst_element_set_pending_properties (GstElement * element)
-{
-  prop_value_t *prop_value;
-
-  while ((prop_value = g_async_queue_try_pop (element->prop_value_queue))) {
-    g_object_set_property ((GObject *) element, prop_value->pspec->name,
-        &prop_value->value);
-    g_value_unset (&prop_value->value);
-    g_free (prop_value);
-  }
-}
-
-/* following 6 functions taken mostly from gobject.c */
-
-/**
- * gst_element_set:
- * @element: a #GstElement to set properties on.
- * @first_property_name: the first property to set.
- * @...: value of the first property, and more properties to set, ending
- *       with NULL.
- *
- * Sets properties on an element. If the element uses threadsafe properties,
- * they will be queued and set on the object when it is scheduled again.
- */
-void
-gst_element_set (GstElement * element, const gchar * first_property_name, ...)
-{
-  va_list var_args;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  va_start (var_args, first_property_name);
-  gst_element_set_valist (element, first_property_name, var_args);
-  va_end (var_args);
-}
-
-/**
- * gst_element_get:
- * @element: a #GstElement to get properties of.
- * @first_property_name: the first property to get.
- * @...: pointer to a variable to store the first property in, as well as
- * more properties to get, ending with NULL.
- *
- * Gets properties from an element. If the element uses threadsafe properties,
- * the element will be locked before getting the given properties.
- */
-void
-gst_element_get (GstElement * element, const gchar * first_property_name, ...)
-{
-  va_list var_args;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  va_start (var_args, first_property_name);
-  gst_element_get_valist (element, first_property_name, var_args);
-  va_end (var_args);
-}
-
-/**
- * gst_element_set_valist:
- * @element: a #GstElement to set properties on.
- * @first_property_name: the first property to set.
- * @var_args: the var_args list of other properties to get.
- *
- * Sets properties on an element. If the element uses threadsafe properties,
- * the property change will be put on the async queue.
- */
-void
-gst_element_set_valist (GstElement * element, const gchar * first_property_name,
-    va_list var_args)
-{
-  const gchar *name;
-  GObject *object;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  object = (GObject *) element;
-
-  GST_CAT_DEBUG (GST_CAT_PROPERTIES,
-      "setting valist of properties starting with %s on element %s",
-      first_property_name, gst_element_get_name (element));
-
-  if (!GST_FLAG_IS_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES)) {
-    g_object_set_valist (object, first_property_name, var_args);
-    return;
-  }
-
-  g_object_ref (object);
-
-  name = first_property_name;
-
-  while (name) {
-    GValue value = { 0, };
-    GParamSpec *pspec;
-    gchar *error = NULL;
-
-    pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), name);
-
-    if (!pspec) {
-      g_warning ("%s: object class `%s' has no property named `%s'",
-          G_STRLOC, G_OBJECT_TYPE_NAME (object), name);
-      break;
-    }
-    if (!(pspec->flags & G_PARAM_WRITABLE)) {
-      g_warning ("%s: property `%s' of object class `%s' is not writable",
-          G_STRLOC, pspec->name, G_OBJECT_TYPE_NAME (object));
-      break;
-    }
-
-    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
-
-    G_VALUE_COLLECT (&value, var_args, 0, &error);
-    if (error) {
-      g_warning ("%s: %s", G_STRLOC, error);
-      g_free (error);
-
-      /* we purposely leak the value here, it might not be
-       * in a sane state if an error condition occoured
-       */
-      break;
-    }
-
-    element_set_property (element, pspec, &value);
-    g_value_unset (&value);
-
-    name = va_arg (var_args, gchar *);
-  }
-
-  g_object_unref (object);
-}
-
-/**
- * gst_element_get_valist:
- * @element: a #GstElement to get properties of.
- * @first_property_name: the first property to get.
- * @var_args: the var_args list of other properties to get.
- *
- * Gets properties from an element. If the element uses threadsafe properties,
- * the element will be locked before getting the given properties.
- */
-void
-gst_element_get_valist (GstElement * element, const gchar * first_property_name,
-    va_list var_args)
-{
-  const gchar *name;
-  GObject *object;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  object = (GObject *) element;
-
-  if (!GST_FLAG_IS_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES)) {
-    g_object_get_valist (object, first_property_name, var_args);
-    return;
-  }
-
-  g_object_ref (object);
-
-  name = first_property_name;
-
-  while (name) {
-    GValue value = { 0, };
-    GParamSpec *pspec;
-    gchar *error;
-
-    pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), name);
-
-    if (!pspec) {
-      g_warning ("%s: object class `%s' has no property named `%s'",
-          G_STRLOC, G_OBJECT_TYPE_NAME (object), name);
-      break;
-    }
-    if (!(pspec->flags & G_PARAM_READABLE)) {
-      g_warning ("%s: property `%s' of object class `%s' is not readable",
-          G_STRLOC, pspec->name, G_OBJECT_TYPE_NAME (object));
-      break;
-    }
-
-    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
-
-    element_get_property (element, pspec, &value);
-
-    G_VALUE_LCOPY (&value, var_args, 0, &error);
-    if (error) {
-      g_warning ("%s: %s", G_STRLOC, error);
-      g_free (error);
-      g_value_unset (&value);
-      break;
-    }
-
-    g_value_unset (&value);
-
-    name = va_arg (var_args, gchar *);
-  }
-
-  g_object_unref (object);
-}
-
-/**
- * gst_element_set_property:
- * @element: a #GstElement to set properties on.
- * @property_name: the first property to get.
- * @value: the #GValue that holds the value to set.
- *
- * Sets a property on an element. If the element uses threadsafe properties,
- * the property will be put on the async queue.
- */
-void
-gst_element_set_property (GstElement * element, const gchar * property_name,
-    const GValue * value)
-{
-  GParamSpec *pspec;
-  GObject *object;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (property_name != NULL);
-  g_return_if_fail (G_IS_VALUE (value));
-
-  object = (GObject *) element;
-
-  GST_CAT_DEBUG (GST_CAT_PROPERTIES, "setting property %s on element %s",
-      property_name, gst_element_get_name (element));
-  if (!GST_FLAG_IS_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES)) {
-    g_object_set_property (object, property_name, value);
-    return;
-  }
-
-  g_object_ref (object);
-
-  pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object),
-      property_name);
-
-  if (!pspec)
-    g_warning ("%s: object class `%s' has no property named `%s'",
-        G_STRLOC, G_OBJECT_TYPE_NAME (object), property_name);
-  else
-    element_set_property (element, pspec, value);
-
-  g_object_unref (object);
-}
-
-/**
- * gst_element_get_property:
- * @element: a #GstElement to get properties of.
- * @property_name: the first property to get.
- * @value: the #GValue to store the property value in.
- *
- * Gets a property from an element. If the element uses threadsafe properties,
- * the element will be locked before getting the given property.
- */
-void
-gst_element_get_property (GstElement * element, const gchar * property_name,
-    GValue * value)
-{
-  GParamSpec *pspec;
-  GObject *object;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (property_name != NULL);
-  g_return_if_fail (G_IS_VALUE (value));
-
-  object = (GObject *) element;
-
-  if (!GST_FLAG_IS_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES)) {
-    g_object_get_property (object, property_name, value);
-    return;
-  }
-
-  g_object_ref (object);
-
-  pspec =
-      g_object_class_find_property (G_OBJECT_GET_CLASS (object), property_name);
-
-  if (!pspec)
-    g_warning ("%s: object class `%s' has no property named `%s'",
-        G_STRLOC, G_OBJECT_TYPE_NAME (object), property_name);
-  else {
-    GValue *prop_value, tmp_value = { 0, };
-
-    /* auto-conversion of the callers value type
-     */
-    if (G_VALUE_TYPE (value) == G_PARAM_SPEC_VALUE_TYPE (pspec)) {
-      g_value_reset (value);
-      prop_value = value;
-    } else if (!g_value_type_transformable (G_PARAM_SPEC_VALUE_TYPE (pspec),
-            G_VALUE_TYPE (value))) {
-      g_warning
-          ("can't retrieve property `%s' of type `%s' as value of type `%s'",
-          pspec->name, g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)),
-          G_VALUE_TYPE_NAME (value));
-      g_object_unref (object);
-      return;
-    } else {
-      g_value_init (&tmp_value, G_PARAM_SPEC_VALUE_TYPE (pspec));
-      prop_value = &tmp_value;
-    }
-    element_get_property (element, pspec, prop_value);
-    if (prop_value != value) {
-      g_value_transform (prop_value, value);
-      g_value_unset (&tmp_value);
-    }
-  }
-
-  g_object_unref (object);
 }
 
 static GstPad *
@@ -714,9 +259,13 @@ gst_element_release_request_pad (GstElement * element, GstPad * pad)
 gboolean
 gst_element_requires_clock (GstElement * element)
 {
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  gboolean result = FALSE;
 
-  return (GST_ELEMENT_GET_CLASS (element)->set_clock != NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
+
+  result = (GST_ELEMENT_GET_CLASS (element)->set_clock != NULL);
+
+  return result;
 }
 
 /**
@@ -730,9 +279,13 @@ gst_element_requires_clock (GstElement * element)
 gboolean
 gst_element_provides_clock (GstElement * element)
 {
+  gboolean result = FALSE;
+
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
-  return (GST_ELEMENT_GET_CLASS (element)->get_clock != NULL);
+  result = (GST_ELEMENT_GET_CLASS (element)->get_clock != NULL);
+
+  return result;
 }
 
 /**
@@ -754,7 +307,9 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
   if (oclass->set_clock)
     oclass->set_clock (element, clock);
 
+  GST_LOCK (element);
   gst_object_replace ((GstObject **) & element->clock, (GstObject *) clock);
+  GST_UNLOCK (element);
 }
 
 /**
@@ -780,232 +335,6 @@ gst_element_get_clock (GstElement * element)
   return NULL;
 }
 
-/**
- * gst_element_clock_wait:
- * @element: a #GstElement.
- * @id: the #GstClock to use.
- * @jitter: the difference between requested time and actual time.
- *
- * Waits for a specific time on the clock.
- *
- * Returns: the #GstClockReturn result of the wait operation.
- */
-GstClockReturn
-gst_element_clock_wait (GstElement * element, GstClockID id,
-    GstClockTimeDiff * jitter)
-{
-  GstClockReturn res;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_CLOCK_ERROR);
-
-  if (GST_ELEMENT_SCHED (element)) {
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "waiting on scheduler clock with id %d");
-    res =
-        gst_scheduler_clock_wait (GST_ELEMENT_SCHED (element), element, id,
-        jitter);
-  } else {
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "no scheduler, returning GST_CLOCK_TIMEOUT");
-    res = GST_CLOCK_TIMEOUT;
-  }
-
-  return res;
-}
-
-#undef GST_CAT_DEFAULT
-#define GST_CAT_DEFAULT GST_CAT_CLOCK
-/**
- * gst_element_get_time:
- * @element: element to query
- *
- * Query the element's time. FIXME: The element must use
- *
- * Returns: the current stream time in #GST_STATE_PLAYING,
- *          the element base time in #GST_STATE_PAUSED,
- *          or #GST_CLOCK_TIME_NONE otherwise.
- */
-/* FIXME: this should always return time on the same scale.  Now it returns
- * the (absolute) base_time in PAUSED and the (current running) time in
- * PLAYING.
- * Solution: have a get_base_time and make the element subtract if it needs
- * to.  In PAUSED return the same as PLAYING, ie. the current timestamp where
- * the element is at according to the provided clock.
- */
-GstClockTime
-gst_element_get_time (GstElement * element)
-{
-  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_CLOCK_TIME_NONE);
-
-  if (element->clock == NULL) {
-    GST_WARNING_OBJECT (element, "element queries time but has no clock");
-    return GST_CLOCK_TIME_NONE;
-  }
-  switch (element->current_state) {
-    case GST_STATE_NULL:
-    case GST_STATE_READY:
-      return GST_CLOCK_TIME_NONE;
-    case GST_STATE_PAUSED:
-      return element->base_time;
-    case GST_STATE_PLAYING:
-      return gst_clock_get_time (element->clock) - element->base_time;
-    default:
-      g_assert_not_reached ();
-      return GST_CLOCK_TIME_NONE;
-  }
-}
-
-/**
- * gst_element_wait:
- * @element: element that should wait
- * @timestamp: what timestamp to wait on
- *
- * Waits until the given relative time stamp for the element has arrived.
- * When this function returns successfully, the relative time point specified
- * in the timestamp has passed for this element.
- * <note>This function can only be called on elements in
- * #GST_STATE_PLAYING</note>
- *
- * Returns: TRUE on success.
- */
-gboolean
-gst_element_wait (GstElement * element, GstClockTime timestamp)
-{
-  GstClockID id;
-  GstClockReturn ret;
-  GstClockTime time;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
-  g_return_val_if_fail (GST_IS_CLOCK (element->clock), FALSE);
-  g_return_val_if_fail (element->current_state == GST_STATE_PLAYING, FALSE);
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
-
-  /* shortcut when we're already late... */
-  time = gst_element_get_time (element);
-  GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, element, "element time %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (time));
-  if (time >= timestamp) {
-    GST_CAT_INFO_OBJECT (GST_CAT_CLOCK, element,
-        "called gst_element_wait (% " GST_TIME_FORMAT ") and was late (%"
-        GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
-        GST_TIME_ARGS (gst_element_get_time (element)));
-    return TRUE;
-  }
-
-  id = gst_clock_new_single_shot_id (element->clock,
-      element->base_time + timestamp);
-  ret = gst_element_clock_wait (element, id, NULL);
-  gst_clock_id_free (id);
-
-  return ret == GST_CLOCK_STOPPED;
-}
-
-/**
- * gst_element_set_time:
- * @element: element to set time on
- * @time: time to set
- *
- * Sets the current time of the element. This function can be used when handling
- * discont events. You can only call this function on an element with a clock in
- * #GST_STATE_PAUSED or #GST_STATE_PLAYING. You might want to have a look at
- * gst_element_adjust_time(), if you want to adjust by a difference as that is
- * more accurate.
- */
-void
-gst_element_set_time (GstElement * element, GstClockTime time)
-{
-  gst_element_set_time_delay (element, time, 0);
-}
-
-/**
- * gst_element_set_time_delay:
- * @element: element to set time on
- * @time: time to set
- * @delay: a delay to discount from the given time
- *
- * Sets the current time of the element to time - delay. This function can be
- * used when handling discont events in elements writing to an external buffer,
- * i. e., an audio sink that writes to a sound card that buffers the sound
- * before playing it. The delay should be the current buffering delay.
- *
- * You can only call this function on an element with a clock in
- * #GST_STATE_PAUSED or #GST_STATE_PLAYING. You might want to have a look at
- * gst_element_adjust_time(), if you want to adjust by a difference as that is
- * more accurate.
- */
-void
-gst_element_set_time_delay (GstElement * element, GstClockTime time,
-    GstClockTime delay)
-{
-  GstClockTime event_time;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (GST_IS_CLOCK (element->clock));
-  g_return_if_fail (element->current_state >= GST_STATE_PAUSED);
-  g_return_if_fail (time >= delay);
-
-  switch (element->current_state) {
-    case GST_STATE_PAUSED:
-      element->base_time = time - delay;
-      break;
-    case GST_STATE_PLAYING:
-      event_time = gst_clock_get_event_time_delay (element->clock, delay);
-      GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, element,
-          "clock time %" GST_TIME_FORMAT ": setting element time to %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (event_time), GST_TIME_ARGS (time));
-      element->base_time = event_time - time;
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-}
-
-/**
- * gst_element_adjust_time:
- * @element: element to adjust time on
- * @diff: difference to adjust
- *
- * Adjusts the current time of the element by the specified difference. This
- * function can be used when handling discont events. You can only call this
- * function on an element with a clock in #GST_STATE_PAUSED or
- * #GST_STATE_PLAYING. It is more accurate than gst_element_set_time().
- */
-void
-gst_element_adjust_time (GstElement * element, GstClockTimeDiff diff)
-{
-  GstClockTime time;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (GST_IS_CLOCK (element->clock));
-  g_return_if_fail (element->current_state >= GST_STATE_PAUSED);
-
-  switch (element->current_state) {
-    case GST_STATE_PAUSED:
-      if (diff < 0 && element->base_time < abs (diff)) {
-        g_warning ("attempted to set the current time of element %s below 0",
-            GST_OBJECT_NAME (element));
-        element->base_time = 0;
-      } else {
-        element->base_time += diff;
-      }
-      break;
-    case GST_STATE_PLAYING:
-      time = gst_clock_get_time (element->clock);
-      if (time < element->base_time - diff) {
-        g_warning ("attempted to set the current time of element %s below 0",
-            GST_OBJECT_NAME (element));
-        element->base_time = time;
-      } else {
-        element->base_time -= diff;
-      }
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-}
-
-#undef GST_CAT_DEFAULT
-
 #ifndef GST_DISABLE_INDEX
 /**
  * gst_element_is_indexable:
@@ -1018,9 +347,13 @@ gst_element_adjust_time (GstElement * element, GstClockTimeDiff diff)
 gboolean
 gst_element_is_indexable (GstElement * element)
 {
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  gboolean result = FALSE;
 
-  return (GST_ELEMENT_GET_CLASS (element)->set_index != NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
+
+  result = (GST_ELEMENT_GET_CLASS (element)->set_index != NULL);
+
+  return result;
 }
 
 /**
@@ -1070,30 +403,6 @@ gst_element_get_index (GstElement * element)
 #endif
 
 /**
- * gst_element_release_locks:
- * @element: a #GstElement to release all locks on.
- *
- * Instruct the element to release all the locks it is holding, such as
- * blocking reads, waiting for the clock, ...
- *
- * Returns: TRUE if the locks could be released.
- */
-gboolean
-gst_element_release_locks (GstElement * element)
-{
-  GstElementClass *oclass;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
-
-  oclass = GST_ELEMENT_GET_CLASS (element);
-
-  if (oclass->release_locks)
-    return oclass->release_locks (element);
-
-  return TRUE;
-}
-
-/**
  * gst_element_add_pad:
  * @element: a #GstElement to add the pad to.
  * @pad: the #GstPad to add to the element.
@@ -1102,20 +411,28 @@ gst_element_release_locks (GstElement * element)
  * see gst_object_set_parent() for refcounting information.
  *
  * Pads are automatically activated when the element is in state PLAYING.
+ *
+ * Returns: TRUE if the pad could be added. This function can fail when
+ * passing bad arguments or when a pad with the same name already existed.
  */
-void
+gboolean
 gst_element_add_pad (GstElement * element, GstPad * pad)
 {
-  g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   /* first check to make sure the pad hasn't already been added to another
    * element */
-  g_return_if_fail (GST_PAD_PARENT (pad) == NULL);
+  g_return_val_if_fail (GST_PAD_PARENT (pad) == NULL, FALSE);
 
+  GST_LOCK (element);
   /* then check to see if there's already a pad by that name here */
-  g_return_if_fail (gst_object_check_uniqueness (element->pads,
-          GST_PAD_NAME (pad)) == TRUE);
+  if (!gst_object_check_uniqueness (element->pads, GST_PAD_NAME (pad))) {
+    g_warning ("Padname %s:%s is not unique in element %s, not adding\n",
+        GST_DEBUG_PAD_NAME (pad), GST_ELEMENT_NAME (element));
+    GST_UNLOCK (element);
+    return FALSE;
+  }
 
   GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element, "adding pad '%s'",
       GST_STR_NULL (GST_OBJECT_NAME (pad)));
@@ -1124,27 +441,34 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   gst_object_set_parent (GST_OBJECT (pad), GST_OBJECT (element));
 
   /* add it to the list */
-  element->pads = g_list_append (element->pads, pad);
-  element->numpads++;
-
   switch (gst_pad_get_direction (pad)) {
     case GST_PAD_SRC:
+      element->srcpads = g_list_prepend (element->srcpads, pad);
       element->numsrcpads++;
       break;
     case GST_PAD_SINK:
+      element->sinkpads = g_list_prepend (element->sinkpads, pad);
       element->numsinkpads++;
       break;
     default:
-      /* can happen for ghost pads */
+      g_assert_not_reached ();
       break;
   }
+  element->pads = g_list_prepend (element->pads, pad);
+  element->numpads++;
+  element->pads_cookie++;
+  GST_UNLOCK (element);
 
-  /* activate element when we are playing */
+  GST_STATE_LOCK (element);
+  /* activate pad when we are playing */
   if (GST_STATE (element) == GST_STATE_PLAYING)
     gst_pad_set_active (pad, TRUE);
+  GST_STATE_UNLOCK (element);
 
   /* emit the NEW_PAD signal */
   g_signal_emit (G_OBJECT (element), gst_element_signals[NEW_PAD], 0, pad);
+
+  return TRUE;
 }
 
 /**
@@ -1168,13 +492,12 @@ gst_element_add_ghost_pad (GstElement * element, GstPad * pad,
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  /* then check to see if there's already a pad by that name here */
-  g_return_val_if_fail (gst_object_check_uniqueness (element->pads,
-          name) == TRUE, NULL);
-
   ghostpad = gst_ghost_pad_new (name, pad);
 
-  gst_element_add_pad (element, ghostpad);
+  if (!gst_element_add_pad (element, ghostpad)) {
+    gst_object_unref (GST_OBJECT (ghostpad));
+    ghostpad = NULL;
+  }
 
   return ghostpad;
 }
@@ -1198,53 +521,37 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
   g_return_if_fail (GST_PAD_PARENT (pad) == element);
 
   if (GST_IS_REAL_PAD (pad)) {
-    /* unlink if necessary */
+    /* unlink */
     if (GST_RPAD_PEER (pad) != NULL) {
       gst_pad_unlink (pad, GST_PAD (GST_RPAD_PEER (pad)));
     }
-    gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), NULL);
   } else if (GST_IS_GHOST_PAD (pad)) {
     g_object_set (pad, "real-pad", NULL, NULL);
   }
 
+  GST_LOCK (element);
   /* remove it from the list */
-  element->pads = g_list_remove (element->pads, pad);
-  element->numpads--;
   switch (gst_pad_get_direction (pad)) {
     case GST_PAD_SRC:
+      element->srcpads = g_list_remove (element->srcpads, pad);
       element->numsrcpads--;
       break;
     case GST_PAD_SINK:
+      element->sinkpads = g_list_remove (element->sinkpads, pad);
       element->numsinkpads--;
       break;
     default:
       /* can happen for ghost pads */
       break;
   }
+  element->pads = g_list_remove (element->pads, pad);
+  element->numpads--;
+  element->pads_cookie++;
+  GST_UNLOCK (element);
 
   g_signal_emit (G_OBJECT (element), gst_element_signals[PAD_REMOVED], 0, pad);
 
   gst_object_unparent (GST_OBJECT (pad));
-}
-
-/**
- * gst_element_remove_ghost_pad:
- * @element: a #GstElement to remove the ghost pad from.
- * @pad: ghost #GstPad to remove.
- *
- * Removes a ghost pad from an element. Deprecated, use gst_element_remove_pad()
- * instead.
- */
-void
-gst_element_remove_ghost_pad (GstElement * element, GstPad * pad)
-{
-  g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (GST_IS_GHOST_PAD (pad));
-
-  g_warning ("gst_element_remove_ghost_pad is deprecated.\n"
-      "Use gst_element_remove_pad instead.");
-
-  gst_element_remove_pad (element, pad);
 }
 
 /**
@@ -1291,6 +598,12 @@ gst_element_get_pad (GstElement * element, const gchar * name)
   return pad;
 }
 
+static gint
+pad_compare_name (GstPad * pad1, const gchar * name)
+{
+  return strcmp (GST_PAD_NAME (pad1), name);
+}
+
 /**
  * gst_element_get_static_pad:
  * @element: a #GstElement to find a static pad of.
@@ -1304,28 +617,28 @@ gst_element_get_pad (GstElement * element, const gchar * name)
 GstPad *
 gst_element_get_static_pad (GstElement * element, const gchar * name)
 {
-  GList *walk;
+  GList *find;
+  GstPad *result = NULL;
 
-  g_return_val_if_fail (element != NULL, NULL);
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
+  g_return_val_if_fail (name != NULL, result);
 
-  walk = element->pads;
-  while (walk) {
-    GstPad *pad;
-
-    pad = GST_PAD (walk->data);
-    if (strcmp (GST_PAD_NAME (pad), name) == 0) {
-      GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "found pad %s:%s",
-          GST_DEBUG_PAD_NAME (pad));
-      return pad;
-    }
-    walk = g_list_next (walk);
+  GST_LOCK (element);
+  find =
+      g_list_find_custom (element->pads, name, (GCompareFunc) pad_compare_name);
+  if (find) {
+    result = GST_PAD (find->data);
   }
+  GST_UNLOCK (element);
 
-  GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "no such pad '%s' in element \"%s\"",
-      name, GST_OBJECT_NAME (element));
-  return NULL;
+  if (result == NULL) {
+    GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "no such pad '%s' in element \"%s\"",
+        name, GST_OBJECT_NAME (element));
+  } else {
+    GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "found pad %s:%s",
+        GST_DEBUG_PAD_NAME (result));
+  }
+  return result;
 }
 
 /**
@@ -1349,18 +662,21 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
   gint n;
   const gchar *data;
   gchar *str, *endptr = NULL;
+  GstElementClass *class;
 
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
+  class = GST_ELEMENT_GET_CLASS (element);
+
   if (strstr (name, "%")) {
-    templ = gst_element_get_pad_template (element, name);
+    templ = gst_element_class_get_pad_template (class, name);
     req_name = NULL;
     if (templ)
       templ_found = TRUE;
   } else {
-    list = gst_element_get_pad_template_list (element);
+    list = gst_element_class_get_pad_template_list (class);
     while (!templ_found && list) {
       templ = (GstPadTemplate *) list->data;
       if (templ->presence == GST_PAD_REQUEST) {
@@ -1414,11 +730,17 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
 const GList *
 gst_element_get_pad_list (GstElement * element)
 {
-  g_return_val_if_fail (element != NULL, NULL);
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  const GList *result = NULL;
+
+  g_return_val_if_fail (element != NULL, result);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
+
+  g_warning ("calling gst_element_get_pad_list is MT unsafe!!");
 
   /* return the list of pads */
-  return element->pads;
+  result = element->pads;
+
+  return result;
 }
 
 /**
@@ -1521,723 +843,41 @@ gst_element_class_get_pad_template (GstElementClass * element_class,
   return NULL;
 }
 
-/**
- * gst_element_get_pad_template_list:
- * @element: a #GstElement to get pad templates of.
- *
- * Retrieves a list of the pad templates associated with the element.
- * (FIXME: Should be deprecated in favor of
- *  gst_element_class_get_pad_template_list).
- *
- * Returns: the #GList of padtemplates.
- */
-GList *
-gst_element_get_pad_template_list (GstElement * element)
-{
-  g_return_val_if_fail (element != NULL, NULL);
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-
-  return GST_ELEMENT_GET_CLASS (element)->padtemplates;
-}
-
-/**
- * gst_element_get_pad_template:
- * @element: a #GstElement to get the pad template of.
- * @name: the name of the #GstPadTemplate to get.
- *
- * Retrieves a padtemplate from this element with the
- * given name.
- * (FIXME: Should be deprecated in favor of gst_element_class_get_pad_template).
- *
- * Returns: the #GstPadTemplate with the given name, or NULL if none was found.
- * No unreferencing is necessary.
- */
-GstPadTemplate *
-gst_element_get_pad_template (GstElement * element, const gchar * name)
-{
-  g_return_val_if_fail (element != NULL, NULL);
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-  g_return_val_if_fail (name != NULL, NULL);
-
-  return gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (element),
-      name);
-}
-
-/**
- * gst_element_get_compatible_pad_template:
- * @element: a #GstElement to get a compatible pad template for.
- * @compattempl: the #GstPadTemplate to find a compatible template for.
- *
- * Retrieves a pad template from @element that is compatible with @compattempl.
- * Pads from compatible templates can be linked together.
- *
- * Returns: a compatible #GstPadTemplate, or NULL if none was found. No
- * unreferencing is necessary.
- */
-GstPadTemplate *
-gst_element_get_compatible_pad_template (GstElement * element,
-    GstPadTemplate * compattempl)
-{
-  GstPadTemplate *newtempl = NULL;
-  GList *padlist;
-
-  g_return_val_if_fail (element != NULL, NULL);
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-  g_return_val_if_fail (compattempl != NULL, NULL);
-
-  padlist = gst_element_get_pad_template_list (element);
-
-  GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-      "Looking for a suitable pad template in %s out of %d templates...",
-      GST_ELEMENT_NAME (element), g_list_length (padlist));
-
-  while (padlist) {
-    GstPadTemplate *padtempl = (GstPadTemplate *) padlist->data;
-    GstCaps *intersection;
-
-    /* Ignore name
-     * Ignore presence
-     * Check direction (must be opposite)
-     * Check caps
-     */
-    GST_CAT_LOG (GST_CAT_CAPS,
-        "checking pad template %s", padtempl->name_template);
-    if (padtempl->direction != compattempl->direction) {
-      GST_CAT_DEBUG (GST_CAT_CAPS,
-          "compatible direction: found %s pad template \"%s\"",
-          padtempl->direction == GST_PAD_SRC ? "src" : "sink",
-          padtempl->name_template);
-
-      intersection = gst_caps_intersect (GST_PAD_TEMPLATE_CAPS (compattempl),
-          GST_PAD_TEMPLATE_CAPS (padtempl));
-
-      GST_CAT_DEBUG (GST_CAT_CAPS, "caps are %scompatible",
-          (intersection ? "" : "not "));
-
-      if (!gst_caps_is_empty (intersection))
-        newtempl = padtempl;
-      gst_caps_free (intersection);
-      if (newtempl)
-        break;
-    }
-
-    padlist = g_list_next (padlist);
-  }
-  if (newtempl)
-    GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-        "Returning new pad template %p", newtempl);
-  else
-    GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "No compatible pad template found");
-
-  return newtempl;
-}
-
-/**
- * gst_element_get_pad_from_template:
- * @element: a #GstElement.
- * @templ: a #GstPadTemplate belonging to @element.
- *
- * Gets a pad from @element described by @templ. If the presence of @templ is
- * #GST_PAD_REQUEST, requests a new pad. Can return %NULL for #GST_PAD_SOMETIMES
- * templates.
- *
- * Returns: the #GstPad, or NULL if one could not be found or created.
- */
-static GstPad *
-gst_element_get_pad_from_template (GstElement * element, GstPadTemplate * templ)
-{
-  GstPad *ret = NULL;
-  GstPadPresence presence;
-
-  /* If this function is ever exported, we need check the validity of `element'
-   * and `templ', and to make sure the template actually belongs to the
-   * element. */
-
-  presence = GST_PAD_TEMPLATE_PRESENCE (templ);
-
-  switch (presence) {
-    case GST_PAD_ALWAYS:
-    case GST_PAD_SOMETIMES:
-      ret = gst_element_get_static_pad (element, templ->name_template);
-      if (!ret && presence == GST_PAD_ALWAYS)
-        g_warning
-            ("Element %s has an ALWAYS template %s, but no pad of the same name",
-            GST_OBJECT_NAME (element), templ->name_template);
-      break;
-
-    case GST_PAD_REQUEST:
-      ret = gst_element_request_pad (element, templ, NULL);
-      break;
-  }
-
-  return ret;
-}
-
-/**
- * gst_element_request_compatible_pad:
- * @element: a #GstElement.
- * @templ: the #GstPadTemplate to which the new pad should be able to link.
- *
- * Requests a pad from @element. The returned pad should be unlinked and
- * compatible with @templ. Might return an existing pad, or request a new one.
- *
- * Returns: a #GstPad, or %NULL if one could not be found or created.
- */
-GstPad *
-gst_element_request_compatible_pad (GstElement * element,
-    GstPadTemplate * templ)
-{
-  GstPadTemplate *templ_new;
-  GstPad *pad = NULL;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-  g_return_val_if_fail (GST_IS_PAD_TEMPLATE (templ), NULL);
-
-  /* FIXME: should really loop through the templates, testing each for
-     compatibility and pad availability. */
-  templ_new = gst_element_get_compatible_pad_template (element, templ);
-  if (templ_new)
-    pad = gst_element_get_pad_from_template (element, templ_new);
-
-  /* This can happen for non-request pads. No need to unref. */
-  if (pad && GST_PAD_PEER (pad))
-    pad = NULL;
-
-  return pad;
-}
-
-/**
- * gst_element_get_compatible_pad_filtered:
- * @element: a #GstElement in which the pad should be found.
- * @pad: the #GstPad to find a compatible one for.
- * @filtercaps: the #GstCaps to use as a filter.
- *
- * Looks for an unlinked pad to which the given pad can link. It is not
- * guaranteed that linking the pads will work, though it should work in most
- * cases.
- *
- * Returns: the #GstPad to which a link can be made, or %NULL if one cannot be
- * found.
- */
-GstPad *
-gst_element_get_compatible_pad_filtered (GstElement * element, GstPad * pad,
-    const GstCaps * filtercaps)
-{
-  const GList *pads;
-  GstPadTemplate *templ;
-  GstCaps *templcaps;
-  GstPad *foundpad = NULL;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-      "finding pad in %s compatible with %s:%s and filter %" GST_PTR_FORMAT,
-      GST_ELEMENT_NAME (element), GST_DEBUG_PAD_NAME (pad), filtercaps);
-
-  /* let's use the real pad */
-  pad = (GstPad *) GST_PAD_REALIZE (pad);
-  g_return_val_if_fail (pad != NULL, NULL);
-  g_return_val_if_fail (GST_RPAD_PEER (pad) == NULL, NULL);
-
-  /* try to get an existing unlinked pad */
-  pads = gst_element_get_pad_list (element);
-  while (pads) {
-    GstPad *current = GST_PAD (pads->data);
-
-    GST_CAT_LOG (GST_CAT_ELEMENT_PADS, "examing pad %s:%s",
-        GST_DEBUG_PAD_NAME (current));
-    if (GST_PAD_PEER (current) == NULL &&
-        gst_pad_can_link_filtered (pad, current, filtercaps)) {
-      GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-          "found existing unlinked pad %s:%s", GST_DEBUG_PAD_NAME (current));
-      return current;
-    }
-    pads = g_list_next (pads);
-  }
-
-  /* try to create a new one */
-  /* requesting is a little crazy, we need a template. Let's create one */
-  templcaps = gst_pad_get_caps (pad);
-  if (filtercaps != NULL) {
-    GstCaps *temp;
-
-    temp = gst_caps_intersect (filtercaps, templcaps);
-    gst_caps_free (templcaps);
-    templcaps = temp;
-  }
-
-  templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad),
-      GST_PAD_DIRECTION (pad), GST_PAD_ALWAYS, templcaps);
-  foundpad = gst_element_request_compatible_pad (element, templ);
-  gst_object_unref (GST_OBJECT (templ));
-
-  if (foundpad) {
-    GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-        "found existing request pad %s:%s", GST_DEBUG_PAD_NAME (foundpad));
-    return foundpad;
-  }
-
-  GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element,
-      "Could not find a compatible pad to link to %s:%s",
-      GST_DEBUG_PAD_NAME (pad));
-  return NULL;
-}
-
-/**
- * gst_element_get_compatible_pad:
- * @element: a #GstElement in which the pad should be found.
- * @pad: the #GstPad to find a compatible one for.
- *
- * Looks for an unlinked pad to which the given pad can link to.
- * It is not guaranteed that linking the pads will work, though
- * it should work in most cases.
- *
- * Returns: the #GstPad to which a link can be made, or %NULL if one
- * could not be found.
- */
-GstPad *
-gst_element_get_compatible_pad (GstElement * element, GstPad * pad)
-{
-  return gst_element_get_compatible_pad_filtered (element, pad, NULL);
-}
-
-/**
- * gst_element_link_pads_filtered:
- * @src: a #GstElement containing the source pad.
- * @srcpadname: the name of the #GstPad in source element or NULL for any pad.
- * @dest: the #GstElement containing the destination pad.
- * @destpadname: the name of the #GstPad in destination element or NULL for any pad.
- * @filtercaps: the #GstCaps to use as a filter.
- *
- * Links the two named pads of the source and destination elements.
- * Side effect is that if one of the pads has no parent, it becomes a
- * child of the parent of the other element.  If they have different
- * parents, the link fails.
- *
- * Returns: TRUE if the pads could be linked, FALSE otherwise.
- */
-gboolean
-gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
-    GstElement * dest, const gchar * destpadname, const GstCaps * filtercaps)
-{
-  const GList *srcpads, *destpads, *srctempls, *desttempls, *l;
-  GstPad *srcpad, *destpad;
-  GstPadTemplate *srctempl, *desttempl;
-
-  /* checks */
-  g_return_val_if_fail (GST_IS_ELEMENT (src), FALSE);
-  g_return_val_if_fail (GST_IS_ELEMENT (dest), FALSE);
-
-  GST_CAT_INFO (GST_CAT_ELEMENT_PADS,
-      "trying to link element %s:%s to element %s:%s", GST_ELEMENT_NAME (src),
-      srcpadname ? srcpadname : "(any)", GST_ELEMENT_NAME (dest),
-      destpadname ? destpadname : "(any)");
-
-  /* now get the pads we're trying to link and a list of all remaining pads */
-  if (srcpadname) {
-    srcpad = gst_element_get_pad (src, srcpadname);
-    if (!srcpad) {
-      GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no pad %s:%s",
-          GST_ELEMENT_NAME (src), srcpadname);
-      return FALSE;
-    } else {
-      if (!(GST_PAD_DIRECTION (srcpad) == GST_PAD_SRC)) {
-        GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is no src pad",
-            GST_DEBUG_PAD_NAME (srcpad));
-        return FALSE;
-      }
-      if (GST_PAD_PEER (srcpad) != NULL) {
-        GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is already linked",
-            GST_DEBUG_PAD_NAME (srcpad));
-        return FALSE;
-      }
-    }
-    srcpads = NULL;
-  } else {
-    srcpads = gst_element_get_pad_list (src);
-    srcpad = srcpads ? (GstPad *) GST_PAD_REALIZE (srcpads->data) : NULL;
-  }
-  if (destpadname) {
-    destpad = gst_element_get_pad (dest, destpadname);
-    if (!destpad) {
-      GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no pad %s:%s",
-          GST_ELEMENT_NAME (dest), destpadname);
-      return FALSE;
-    } else {
-      if (!(GST_PAD_DIRECTION (destpad) == GST_PAD_SINK)) {
-        GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is no sink pad",
-            GST_DEBUG_PAD_NAME (destpad));
-        return FALSE;
-      }
-      if (GST_PAD_PEER (destpad) != NULL) {
-        GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is already linked",
-            GST_DEBUG_PAD_NAME (destpad));
-        return FALSE;
-      }
-    }
-    destpads = NULL;
-  } else {
-    destpads = gst_element_get_pad_list (dest);
-    destpad = destpads ? (GstPad *) GST_PAD_REALIZE (destpads->data) : NULL;
-  }
-
-  if (srcpadname && destpadname) {
-    /* two explicitly specified pads */
-    return gst_pad_link_filtered (srcpad, destpad, filtercaps);
-  }
-  if (srcpad) {
-    /* loop through the allowed pads in the source, trying to find a
-     * compatible destination pad */
-    GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-        "looping through allowed src and dest pads");
-    do {
-      GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "trying src pad %s:%s",
-          GST_DEBUG_PAD_NAME (srcpad));
-      if ((GST_PAD_DIRECTION (srcpad) == GST_PAD_SRC) &&
-          (GST_PAD_PEER (srcpad) == NULL)) {
-        GstPad *temp = destpadname ? destpad :
-            gst_element_get_compatible_pad_filtered (dest, srcpad,
-            filtercaps);
-
-        if (temp && gst_pad_link_filtered (srcpad, temp, filtercaps)) {
-          GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s",
-              GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (temp));
-          return TRUE;
-        }
-      }
-      /* find a better way for this mess */
-      if (srcpads) {
-        srcpads = g_list_next (srcpads);
-        if (srcpads)
-          srcpad = (GstPad *) GST_PAD_REALIZE (srcpads->data);
-      }
-    } while (srcpads);
-  }
-  if (srcpadname) {
-    GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no link possible from %s:%s to %s",
-        GST_DEBUG_PAD_NAME (srcpad), GST_ELEMENT_NAME (dest));
-    return FALSE;
-  }
-  if (destpad) {
-    /* loop through the existing pads in the destination */
-    do {
-      GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "trying dest pad %s:%s",
-          GST_DEBUG_PAD_NAME (destpad));
-      if ((GST_PAD_DIRECTION (destpad) == GST_PAD_SINK) &&
-          (GST_PAD_PEER (destpad) == NULL)) {
-        GstPad *temp = gst_element_get_compatible_pad_filtered (src, destpad,
-            filtercaps);
-
-        if (temp && gst_pad_link_filtered (temp, destpad, filtercaps)) {
-          GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s",
-              GST_DEBUG_PAD_NAME (temp), GST_DEBUG_PAD_NAME (destpad));
-          return TRUE;
-        }
-      }
-      if (destpads) {
-        destpads = g_list_next (destpads);
-        if (destpads)
-          destpad = (GstPad *) GST_PAD_REALIZE (destpads->data);
-      }
-    } while (destpads);
-  }
-  if (destpadname) {
-    GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no link possible from %s to %s:%s",
-        GST_ELEMENT_NAME (src), GST_DEBUG_PAD_NAME (destpad));
-    return FALSE;
-  }
-
-  GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-      "we might have request pads on both sides, checking...");
-  srctempls = gst_element_get_pad_template_list (src);
-  desttempls = gst_element_get_pad_template_list (dest);
-
-  if (srctempls && desttempls) {
-    while (srctempls) {
-      srctempl = (GstPadTemplate *) srctempls->data;
-      if (srctempl->presence == GST_PAD_REQUEST) {
-        for (l = desttempls; l; l = l->next) {
-          desttempl = (GstPadTemplate *) l->data;
-          if (desttempl->presence == GST_PAD_REQUEST &&
-              desttempl->direction != srctempl->direction) {
-            if (gst_caps_is_always_compatible (gst_pad_template_get_caps
-                    (srctempl), gst_pad_template_get_caps (desttempl))) {
-              srcpad =
-                  gst_element_get_request_pad (src, srctempl->name_template);
-              destpad =
-                  gst_element_get_request_pad (dest, desttempl->name_template);
-              if (gst_pad_link_filtered (srcpad, destpad, filtercaps)) {
-                GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-                    "linked pad %s:%s to pad %s:%s",
-                    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
-                return TRUE;
-              }
-              /* it failed, so we release the request pads */
-              gst_element_release_request_pad (src, srcpad);
-              gst_element_release_request_pad (dest, destpad);
-            }
-          }
-        }
-      }
-      srctempls = srctempls->next;
-    }
-  }
-
-  GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no link possible from %s to %s",
-      GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (dest));
-  return FALSE;
-}
-
-/**
- * gst_element_link_filtered:
- * @src: a #GstElement containing the source pad.
- * @dest: the #GstElement containing the destination pad.
- * @filtercaps: the #GstCaps to use as a filter.
- *
- * Links @src to @dest, filtered by @filtercaps. The link must be from source to
- * destination; the other direction will not be tried. The function looks for
- * existing pads that aren't linked yet. It will request new pads if necessary.
- * If multiple links are possible, only one is established.
- *
- * Returns: TRUE if the elements could be linked, FALSE otherwise.
- */
-gboolean
-gst_element_link_filtered (GstElement * src, GstElement * dest,
-    const GstCaps * filtercaps)
-{
-  return gst_element_link_pads_filtered (src, NULL, dest, NULL, filtercaps);
-}
-
-/**
- * gst_element_link_many:
- * @element_1: the first #GstElement in the link chain.
- * @element_2: the second #GstElement in the link chain.
- * @...: the NULL-terminated list of elements to link in order.
- *
- * Chain together a series of elements. Uses gst_element_link().
- *
- * Returns: TRUE on success, FALSE otherwise.
- */
-gboolean
-gst_element_link_many (GstElement * element_1, GstElement * element_2, ...)
-{
-  va_list args;
-
-  g_return_val_if_fail (element_1 != NULL && element_2 != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_ELEMENT (element_1) &&
-      GST_IS_ELEMENT (element_2), FALSE);
-
-  va_start (args, element_2);
-
-  while (element_2) {
-    if (!gst_element_link (element_1, element_2))
-      return FALSE;
-
-    element_1 = element_2;
-    element_2 = va_arg (args, GstElement *);
-  }
-
-  va_end (args);
-
-  return TRUE;
-}
-
-/**
- * gst_element_link:
- * @src: a #GstElement containing the source pad.
- * @dest: the #GstElement containing the destination pad.
- *
- * Links @src to @dest with no filter caps. See gst_element_link_filtered() for
- * more information.
- *
- * Returns: TRUE if the elements could be linked, FALSE otherwise.
- */
-gboolean
-gst_element_link (GstElement * src, GstElement * dest)
-{
-  return gst_element_link_pads_filtered (src, NULL, dest, NULL, NULL);
-}
-
-/**
- * gst_element_link_pads:
- * @src: a #GstElement containing the source pad.
- * @srcpadname: the name of the #GstPad in the source element.
- * @dest: the #GstElement containing the destination pad.
- * @destpadname: the name of the #GstPad in destination element.
- *
- * Links the two named pads of the source and destination elements.
- * Side effect is that if one of the pads has no parent, it becomes a
- * child of the parent of the other element.  If they have different
- * parents, the link fails.
- *
- * Returns: TRUE if the pads could be linked, FALSE otherwise.
- */
-gboolean
-gst_element_link_pads (GstElement * src, const gchar * srcpadname,
-    GstElement * dest, const gchar * destpadname)
-{
-  return gst_element_link_pads_filtered (src, srcpadname, dest, destpadname,
-      NULL);
-}
-
-/**
- * gst_element_unlink_pads:
- * @src: a #GstElement containing the source pad.
- * @srcpadname: the name of the #GstPad in source element.
- * @dest: a #GstElement containing the destination pad.
- * @destpadname: the name of the #GstPad in destination element.
- *
- * Unlinks the two named pads of the source and destination elements.
- */
-void
-gst_element_unlink_pads (GstElement * src, const gchar * srcpadname,
-    GstElement * dest, const gchar * destpadname)
-{
-  GstPad *srcpad, *destpad;
-
-  g_return_if_fail (src != NULL);
-  g_return_if_fail (GST_IS_ELEMENT (src));
-  g_return_if_fail (srcpadname != NULL);
-  g_return_if_fail (dest != NULL);
-  g_return_if_fail (GST_IS_ELEMENT (dest));
-  g_return_if_fail (destpadname != NULL);
-
-  /* obtain the pads requested */
-  srcpad = gst_element_get_pad (src, srcpadname);
-  if (srcpad == NULL) {
-    GST_WARNING_OBJECT (src, "source element has no pad \"%s\"", srcpadname);
-    return;
-  }
-  destpad = gst_element_get_pad (dest, destpadname);
-  if (srcpad == NULL) {
-    GST_WARNING_OBJECT (dest, "destination element has no pad \"%s\"",
-        destpadname);
-    return;
-  }
-
-  /* we're satisified they can be unlinked, let's do it */
-  gst_pad_unlink (srcpad, destpad);
-}
-
-/**
- * gst_element_unlink_many:
- * @element_1: the first #GstElement in the link chain.
- * @element_2: the second #GstElement in the link chain.
- * @...: the NULL-terminated list of elements to unlink in order.
- *
- * Unlinks a series of elements. Uses gst_element_unlink().
- */
-void
-gst_element_unlink_many (GstElement * element_1, GstElement * element_2, ...)
-{
-  va_list args;
-
-  g_return_if_fail (element_1 != NULL && element_2 != NULL);
-  g_return_if_fail (GST_IS_ELEMENT (element_1) && GST_IS_ELEMENT (element_2));
-
-  va_start (args, element_2);
-
-  while (element_2) {
-    gst_element_unlink (element_1, element_2);
-
-    element_1 = element_2;
-    element_2 = va_arg (args, GstElement *);
-  }
-
-  va_end (args);
-}
-
-/**
- * gst_element_unlink:
- * @src: the source #GstElement to unlink.
- * @dest: the sink #GstElement to unlink.
- *
- * Unlinks all source pads of the source element with all sink pads
- * of the sink element to which they are linked.
- */
-void
-gst_element_unlink (GstElement * src, GstElement * dest)
-{
-  const GList *srcpads;
-  GstPad *pad;
-
-  g_return_if_fail (GST_IS_ELEMENT (src));
-  g_return_if_fail (GST_IS_ELEMENT (dest));
-
-  GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "unlinking \"%s\" and \"%s\"",
-      GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (dest));
-
-  srcpads = gst_element_get_pad_list (src);
-
-  while (srcpads) {
-    pad = GST_PAD (srcpads->data);
-
-    /* we only care about real src pads */
-    if (GST_IS_REAL_PAD (pad) && GST_PAD_IS_SRC (pad)) {
-      GstPad *peerpad = GST_PAD_PEER (pad);
-
-      /* see if the pad is connected and is really a pad
-       * of dest */
-      if (peerpad && (GST_OBJECT_PARENT (peerpad) == (GstObject *) dest)) {
-        gst_pad_unlink (pad, peerpad);
-      }
-    }
-
-    srcpads = g_list_next (srcpads);
-  }
-}
-
-static void
-gst_element_error_func (GstElement * element, GstElement * source,
-    GError * error, gchar * debug)
-{
-  GstObject *parent = GST_OBJECT_PARENT (element);
-
-  /* tell the parent */
-  if (parent) {
-    gst_object_ref (GST_OBJECT (element));
-    gst_object_ref (parent);
-    GST_CAT_DEBUG (GST_CAT_ERROR_SYSTEM,
-        "forwarding error \"%s\" from %s to %s", error->message,
-        GST_ELEMENT_NAME (element), GST_OBJECT_NAME (parent));
-
-    g_signal_emit (G_OBJECT (parent),
-        gst_element_signals[ERROR], 0, source, error, debug);
-    GST_CAT_DEBUG (GST_CAT_ERROR_SYSTEM, "forwarded error \"%s\" from %s to %s",
-        error->message, GST_ELEMENT_NAME (element), GST_OBJECT_NAME (parent));
-    gst_object_unref (GST_OBJECT (element));
-    gst_object_unref (GST_OBJECT (parent));
-  }
-}
-
 static GstPad *
 gst_element_get_random_pad (GstElement * element, GstPadDirection dir)
 {
-  GList *pads = element->pads;
+  GstPad *result = NULL;
+  GList *pads;
 
   GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "getting a random pad");
-  while (pads) {
+
+  GST_LOCK (element);
+  switch (dir) {
+    case GST_PAD_SRC:
+      pads = element->srcpads;
+    case GST_PAD_SINK:
+      pads = element->sinkpads;
+    default:
+      g_warning ("unknown pad direction");
+      return NULL;
+  }
+  for (; pads; pads = g_list_next (pads)) {
     GstPad *pad = GST_PAD (pads->data);
 
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "checking pad %s:%s",
         GST_DEBUG_PAD_NAME (pad));
 
-    if (GST_PAD_DIRECTION (pad) == dir) {
-      if (GST_PAD_IS_LINKED (pad)) {
-        return pad;
-      } else {
-        GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is not linked",
-            GST_DEBUG_PAD_NAME (pad));
-      }
+    if (GST_PAD_IS_LINKED (pad)) {
+      result = pad;
+      break;
     } else {
-      GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is in wrong direction",
+      GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is not linked",
           GST_DEBUG_PAD_NAME (pad));
     }
-
-    pads = g_list_next (pads);
   }
-  return NULL;
+  GST_UNLOCK (element);
+
+  return result;
 }
 
 /**
@@ -2476,6 +1116,27 @@ gst_element_convert (GstElement * element,
   return FALSE;
 }
 
+gboolean
+gst_element_post_message (GstElement * element, GstMessage * message)
+{
+  GstPipeline *manager;
+  gboolean result = FALSE;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
+  g_return_val_if_fail (message != NULL, result);
+
+  manager = element->manager;
+
+  if (manager == NULL) {
+    gst_data_unref (GST_DATA (message));
+    return result;
+  }
+
+  result = gst_pipeline_post_message (manager, message);
+
+  return result;
+}
+
 /**
  * _gst_element_error_printf:
  * @format: the printf-like format to use, or NULL
@@ -2549,18 +1210,6 @@ void gst_element_error_full
       GST_ELEMENT_NAME (element), sent_message);
   error = g_error_new_literal (domain, code, sent_message);
 
-  /* if the element was already in error, stop now */
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_IN_ERROR)) {
-    GST_CAT_INFO (GST_CAT_ERROR_SYSTEM, "recursive ERROR detected in %s",
-        GST_ELEMENT_NAME (element));
-    g_free (sent_message);
-    if (debug)
-      g_free (debug);
-    return;
-  }
-
-  GST_FLAG_SET (element, GST_ELEMENT_IN_ERROR);
-
   /* emit the signal, make sure the element stays available */
   gst_object_ref (GST_OBJECT (element));
   name = gst_object_get_path_string (GST_OBJECT (element));
@@ -2571,33 +1220,16 @@ void gst_element_error_full
     sent_debug = NULL;
   g_free (debug);
   g_free (name);
-  g_signal_emit (G_OBJECT (element), gst_element_signals[ERROR], 0, element,
-      error, sent_debug);
+
+  gst_element_post_message (element,
+      gst_message_new_error (GST_OBJECT (element), error, sent_debug));
+
   GST_CAT_INFO (GST_CAT_ERROR_SYSTEM, "signalled error in %s: %s",
       GST_ELEMENT_NAME (element), sent_message);
-
-  /* tell the scheduler */
-  if (element->sched) {
-    gst_scheduler_error (element->sched, element);
-  }
-
-  if (GST_STATE (element) == GST_STATE_PLAYING) {
-    GstElementStateReturn ret;
-
-    ret = gst_element_set_state (element, GST_STATE_PAUSED);
-    if (ret != GST_STATE_SUCCESS) {
-      g_warning ("could not PAUSE element \"%s\" after error, help!",
-          GST_ELEMENT_NAME (element));
-    }
-  }
-
-  GST_FLAG_UNSET (element, GST_ELEMENT_IN_ERROR);
 
   /* cleanup */
   gst_object_unref (GST_OBJECT (element));
   g_free (sent_message);
-  g_free (sent_debug);
-  g_error_free (error);
 }
 
 /**
@@ -2615,9 +1247,15 @@ void gst_element_error_full
 gboolean
 gst_element_is_locked_state (GstElement * element)
 {
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  gboolean result = FALSE;
 
-  return GST_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE) ? TRUE : FALSE;
+  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
+
+  GST_LOCK (element);
+  result = GST_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE) ? TRUE : FALSE;
+  GST_UNLOCK (element);
+
+  return result;
 }
 
 /**
@@ -2635,10 +1273,11 @@ gst_element_set_locked_state (GstElement * element, gboolean locked_state)
 
   g_return_if_fail (GST_IS_ELEMENT (element));
 
+  GST_LOCK (element);
   old = GST_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
 
   if (old == locked_state)
-    return;
+    goto exit;
 
   if (locked_state) {
     GST_CAT_DEBUG (GST_CAT_STATES, "locking state of element %s",
@@ -2649,6 +1288,9 @@ gst_element_set_locked_state (GstElement * element, gboolean locked_state)
         GST_ELEMENT_NAME (element));
     GST_FLAG_UNSET (element, GST_ELEMENT_LOCKED_STATE);
   }
+
+exit:
+  GST_UNLOCK (element);
 }
 
 /**
@@ -2680,34 +1322,135 @@ gst_element_sync_state_with_parent (GstElement * element)
   return TRUE;
 }
 
+static gboolean
+gst_element_get_state_func (GstElement * element,
+    GstElementState * state, GstElementState * pending, GTimeVal * timeout)
+{
+  gboolean ret = FALSE;
+  GstElementState old_pending;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+
+  GST_STATE_LOCK (element);
+  old_pending = GST_STATE_PENDING (element);
+  if (old_pending != GST_STATE_VOID_PENDING) {
+    if (!GST_STATE_TIMED_WAIT (element, timeout)) {
+      /* timeout triggered */
+      if (state)
+        *state = GST_STATE (element);
+      if (pending)
+        *pending = GST_STATE_PENDING (element);
+      ret = FALSE;
+    } else {
+      /* could be success or failure, we could check here if the
+       * state is equal to the old pending state */
+    }
+  }
+  /* if nothing is pending anymore we can return TRUE and
+   * set the values of the current and panding state */
+  if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING) {
+    if (state)
+      *state = GST_STATE (element);
+    if (pending)
+      *pending = GST_STATE_VOID_PENDING;
+    ret = TRUE;
+  }
+  GST_STATE_UNLOCK (element);
+
+  return ret;
+}
+
+
 /**
  * gst_element_get_state:
  * @element: a #GstElement to get the state of.
+ * @state: a pointer to #GstElementState to hold the state. Can be NULL.
+ * @pending: a pointer to #GstElementState to hold the pending state.
+ *           Can be NULL.
+ * @timeout: a #GTimeVal to specify the timeout for an async
+ *           state change.
  *
  * Gets the state of the element.
  *
- * Returns: the #GstElementState of the element.
+ * Returns: TRUE if the element has no more pending state, FALSE
+ *          if the element is still performing a state change.
  */
-GstElementState
-gst_element_get_state (GstElement * element)
+gboolean
+gst_element_get_state (GstElement * element,
+    GstElementState * state, GstElementState * pending, GTimeVal * timeout)
 {
-  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_VOID_PENDING);
+  GstElementClass *oclass;
 
-  return GST_STATE (element);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+
+  oclass = GST_ELEMENT_GET_CLASS (element);
+
+  if (oclass->get_state)
+    return (oclass->get_state) (element, state, pending, timeout);
+
+  return FALSE;
 }
 
 /**
- * gst_element_wait_state_change:
- * @element: a #GstElement to wait for a state change on.
+ * gst_element_abort_state:
+ * @element: a #GstElement to abort the state of.
  *
- * Waits and blocks until the element changed its state.
+ * Abort the state change of the element. This function is used
+ * by elements that do asynchronous state changes and find out 
+ * something is wrong.
  */
 void
-gst_element_wait_state_change (GstElement * element)
+gst_element_abort_state (GstElement * element)
 {
-  g_mutex_lock (element->state_mutex);
-  g_cond_wait (element->state_cond, element->state_mutex);
-  g_mutex_unlock (element->state_mutex);
+  GstElementState pending;
+
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  pending = GST_STATE_PENDING (element);
+
+  if (pending != GST_STATE_VOID_PENDING) {
+    GstElementState old_state = GST_STATE (element);
+
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+        "aborting state from %s to %s", gst_element_state_get_name (old_state),
+        gst_element_state_get_name (pending));
+
+    GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
+
+    g_cond_broadcast (GST_STATE_GET_COND (element));
+  }
+}
+
+/**
+ * gst_element_commit_state:
+ * @element: a #GstElement to commit the state of.
+ *
+ * Commit the state change of the element. This function is used
+ * by elements that do asynchronous state changes.
+ */
+void
+gst_element_commit_state (GstElement * element)
+{
+  GstElementState pending;
+
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  pending = GST_STATE_PENDING (element);
+
+  if (pending != GST_STATE_VOID_PENDING) {
+    GstElementState old_state = GST_STATE (element);
+
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+        "commiting state from %s to %s", gst_element_state_get_name (old_state),
+        gst_element_state_get_name (pending));
+
+    GST_STATE (element) = pending;
+    GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
+
+    g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
+        0, old_state, pending);
+    g_cond_broadcast (GST_STATE_GET_COND (element));
+  }
 }
 
 /**
@@ -2725,164 +1468,106 @@ gst_element_wait_state_change (GstElement * element)
 GstElementStateReturn
 gst_element_set_state (GstElement * element, GstElementState state)
 {
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
-  GstElementStateReturn ret;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
-  GST_DEBUG_OBJECT (element, "setting state to %s",
-      gst_element_state_get_name (state));
-  klass = GST_ELEMENT_GET_CLASS (element);
-  g_return_val_if_fail (klass->set_state, GST_STATE_FAILURE);
-
-  /* a set_state function is mandatory */
-  gst_object_ref (GST_OBJECT (element));
-  ret = klass->set_state (element, state);
-  gst_object_unref (GST_OBJECT (element));
-
-  return ret;
-}
-
-static GstElementStateReturn
-gst_element_set_state_func (GstElement * element, GstElementState state)
-{
   GstElementClass *oclass;
-  GstElementState curpending;
+  GstElementState current;
   GstElementStateReturn return_val = GST_STATE_SUCCESS;
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
-  /* start with the current state */
-  curpending = GST_STATE (element);
-
-  if (state == curpending) {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-        "element is already in requested state %s, returning",
-        gst_element_state_get_name (state));
-    return GST_STATE_SUCCESS;
-  }
-
   /* reentrancy issues with signals in change_state) */
   gst_object_ref (GST_OBJECT (element));
+
+  /* get the element state lock */
+  GST_STATE_LOCK (element);
+
+  /* start with the current state */
+  current = GST_STATE (element);
+
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "setting state from %s to %s",
-      gst_element_state_get_name (curpending),
-      gst_element_state_get_name (state));
+      gst_element_state_get_name (current), gst_element_state_get_name (state));
 
-  /* loop until the final requested state is set */
+  /* We always perform at least one state change, even if the 
+   * current state is equal to the required state. This is needed
+   * for bins that sync their children. */
+  do {
+    GstElementState pending;
 
-  while (GST_STATE (element) != state
-      && GST_STATE (element) != GST_STATE_VOID_PENDING) {
-    /* move the curpending state in the correct direction */
-    if (curpending < state)
-      curpending <<= 1;
+    /* calculate the pending state */
+    if (current < state)
+      pending = current << 1;
+    else if (current > state)
+      pending = current >> 1;
     else
-      curpending >>= 1;
+      pending = current;
 
     /* set the pending state variable */
-    GST_STATE_PENDING (element) = curpending;
+    GST_STATE_PENDING (element) = pending;
 
-    if (curpending != state) {
+    if (pending != state) {
       GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
           "intermediate: setting state from %s to %s",
-          gst_element_state_get_name (GST_STATE (element)),
-          gst_element_state_get_name (curpending));
+          gst_element_state_get_name (current),
+          gst_element_state_get_name (pending));
     } else {
       GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-          "start: setting current state %s again",
-          gst_element_state_get_name (GST_STATE (element)));
+          "final: setting state from %s to %s",
+          gst_element_state_get_name (current),
+          gst_element_state_get_name (pending));
     }
 
     /* call the state change function so it can set the state */
     if (oclass->change_state)
       return_val = (oclass->change_state) (element);
+    else
+      return_val = GST_STATE_FAILURE;
 
     switch (return_val) {
       case GST_STATE_FAILURE:
         GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
             "have failed change_state return");
+        /* state change failure exits the loop */
+        gst_element_abort_state (element);
         goto exit;
       case GST_STATE_ASYNC:
         GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
             "element will change state async");
+        /* an async state change exits the loop, we can only
+         * go to the next state change when this one completes. */
         goto exit;
       case GST_STATE_SUCCESS:
-        /* Last thing we do is verify that a successful state change really
-         * did change the state... */
-        /* if it did not, this is an error - fix the element that does this */
-        if (GST_STATE (element) != curpending) {
-          g_warning ("element %s claimed state-change success,"
-              "but state didn't change to %s. State is %s (%s pending), "
-              "fix the element",
-              GST_ELEMENT_NAME (element),
-              gst_element_state_get_name (curpending),
-              gst_element_state_get_name (GST_STATE (element)),
-              gst_element_state_get_name (GST_STATE_PENDING (element)));
-          return_val = GST_STATE_FAILURE;
-          goto exit;
-        }
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+            "element changed state successfuly");
+        /* we can commit the state now and proceed to the next state */
+        gst_element_commit_state (element);
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "commited state");
         break;
       default:
         /* somebody added a GST_STATE_ and forgot to do stuff here ! */
         g_assert_not_reached ();
     }
+    /* get the current state of the element and see if we need to do more
+     * state changes */
+    current = GST_STATE (element);
   }
+  while (current != state);
 
 exit:
+  GST_STATE_UNLOCK (element);
+
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "exit state change");
+
   gst_object_unref (GST_OBJECT (element));
 
   return return_val;
 }
 
 static gboolean
-gst_element_negotiate_pads (GstElement * element)
-{
-  GList *pads;
-
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, element, "negotiating pads");
-
-  for (pads = GST_ELEMENT_PADS (element); pads; pads = g_list_next (pads)) {
-    GstPad *pad = GST_PAD (pads->data);
-
-    if (!GST_IS_REAL_PAD (pad))
-      continue;
-
-    /* if we have a link on this pad and it doesn't have caps
-     * allready, try to negotiate */
-    if (!gst_pad_is_negotiated (pad)) {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, element,
-          "perform negotiate for %s:%s", GST_DEBUG_PAD_NAME (pad));
-      if (gst_pad_renegotiate (pad) == GST_PAD_LINK_REFUSED)
-        return FALSE;
-    }
-  }
-
-  return TRUE;
-}
-
-static void
-gst_element_clear_pad_caps (GstElement * element)
-{
-  GList *pads = GST_ELEMENT_PADS (element);
-
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, element, "clearing pad caps");
-
-  while (pads) {
-    GstPad *pad = GST_PAD (pads->data);
-
-    gst_pad_unnegotiate (pad);
-    if (GST_IS_REAL_PAD (pad)) {
-      gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), NULL);
-    }
-
-    pads = g_list_next (pads);
-  }
-}
-
-static void
 gst_element_pads_activate (GstElement * element, gboolean active)
 {
   GList *pads = element->pads;
+  gboolean result = TRUE;
 
-  while (pads) {
+  while (pads && result) {
     GstPad *pad = GST_PAD (pads->data);
 
     pads = g_list_next (pads);
@@ -2890,16 +1575,18 @@ gst_element_pads_activate (GstElement * element, gboolean active)
     if (!GST_IS_REAL_PAD (pad))
       continue;
 
-    gst_pad_set_active (pad, active);
+    result &= gst_pad_set_active (pad, active);
   }
+
+  return result;
 }
 
 static GstElementStateReturn
 gst_element_change_state (GstElement * element)
 {
-  GstElementState old_state, old_pending;
-  GstObject *parent;
-  gint old_transition;
+  GstElementState old_state;
+  gint old_pending, old_transition;
+  GstElementStateReturn result = GST_STATE_SUCCESS;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
@@ -2916,56 +1603,33 @@ gst_element_change_state (GstElement * element)
     return GST_STATE_SUCCESS;
   }
 
-  /* we need to ref the object because of reentrancy issues with the signal
-   * handlers (including those in pads and gst_bin_child_state_change */
-  gst_object_ref (GST_OBJECT (element));
   GST_CAT_LOG_OBJECT (GST_CAT_STATES, element,
       "default handler tries setting state from %s to %s (%04x)",
       gst_element_state_get_name (old_state),
       gst_element_state_get_name (old_pending), old_transition);
 
-  /* we set the state change early for the negotiation functions */
-  GST_STATE (element) = old_pending;
-  GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
-
   switch (old_transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
-      if (element->clock) {
-        GstClockTimeDiff time = gst_clock_get_event_time (element->clock);
-
-        g_assert (time >= element->base_time);
-        element->base_time = time - element->base_time;
-        GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, element, "setting base time to %"
-            G_GINT64_FORMAT, element->base_time);
+    case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+      if (!gst_element_pads_activate (element, TRUE)) {
+        result = GST_STATE_FAILURE;
       }
-      gst_element_pads_activate (element, FALSE);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
-      gst_element_pads_activate (element, TRUE);
-      if (element->clock) {
-        GstClockTime time = gst_clock_get_event_time (element->clock);
-
-        element->base_time = time - element->base_time;
-        GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, element, "setting base time to %"
-            GST_TIME_FORMAT, GST_TIME_ARGS (element->base_time));
+      if (GST_ELEMENT_MANAGER (element)) {
+        element->base_time =
+            GST_ELEMENT (GST_ELEMENT_MANAGER (element))->base_time;
       }
       break;
-      /* if we are going to paused, we try to negotiate the pads */
-    case GST_STATE_READY_TO_PAUSED:
-      g_assert (element->base_time == 0);
-      if (!gst_element_negotiate_pads (element)) {
-        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-            "failed state change, could not negotiate pads");
-        goto failure;
-      }
+    case GST_STATE_PLAYING_TO_PAUSED:
       break;
-      /* going to the READY state clears all pad caps */
-      /* FIXME: Why doesn't this happen on READY => NULL? -- Company */
     case GST_STATE_PAUSED_TO_READY:
       element->base_time = 0;
-      gst_element_clear_pad_caps (element);
+      if (!gst_element_pads_activate (element, FALSE)) {
+        result = GST_STATE_FAILURE;
+      }
       break;
-    case GST_STATE_NULL_TO_READY:
     case GST_STATE_READY_TO_NULL:
       break;
     default:
@@ -2980,46 +1644,7 @@ gst_element_change_state (GstElement * element)
       break;
   }
 
-  parent = GST_ELEMENT_PARENT (element);
-
-  GST_CAT_LOG_OBJECT (GST_CAT_STATES, element,
-      "signaling state change from %s to %s",
-      gst_element_state_get_name (old_state),
-      gst_element_state_get_name (GST_STATE (element)));
-
-  /* tell the scheduler if we have one */
-  if (element->sched) {
-    if (gst_scheduler_state_transition (element->sched, element,
-            old_transition) != GST_STATE_SUCCESS) {
-      GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-          "scheduler could not change state");
-      goto failure;
-    }
-  }
-
-  /* tell our parent about the state change */
-  if (parent && GST_IS_BIN (parent)) {
-    gst_bin_child_state_change (GST_BIN (parent), old_state,
-        GST_STATE (element), element);
-  }
-  /* at this point the state of the element could have changed again */
-
-  g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
-      0, old_state, GST_STATE (element));
-
-  /* signal the state change in case somebody is waiting for us */
-  g_cond_signal (element->state_cond);
-
-  gst_object_unref (GST_OBJECT (element));
-  return GST_STATE_SUCCESS;
-
-failure:
-  /* undo the state change */
-  GST_STATE (element) = old_state;
-  GST_STATE_PENDING (element) = old_pending;
-  gst_object_unref (GST_OBJECT (element));
-
-  return GST_STATE_FAILURE;
+  return result;
 }
 
 /**
@@ -3055,22 +1680,14 @@ gst_element_dispose (GObject * object)
   element->numsrcpads = 0;
   element->numsinkpads = 0;
   element->numpads = 0;
-  if (element->state_mutex)
-    g_mutex_free (element->state_mutex);
-  element->state_mutex = NULL;
   if (element->state_cond)
     g_cond_free (element->state_cond);
   element->state_cond = NULL;
 
-  if (element->prop_value_queue)
-    g_async_queue_unref (element->prop_value_queue);
-  element->prop_value_queue = NULL;
-  if (element->property_mutex)
-    g_mutex_free (element->property_mutex);
-  element->property_mutex = NULL;
-
-  gst_object_replace ((GstObject **) & element->sched, NULL);
+  gst_object_replace ((GstObject **) & element->manager, NULL);
   gst_object_replace ((GstObject **) & element->clock, NULL);
+
+  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose parent");
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -3210,425 +1827,76 @@ gst_element_restore_thyself (GstObject * object, xmlNodePtr self)
 }
 #endif /* GST_DISABLE_LOADSAVE */
 
-/**
- * gst_element_yield:
- * @element: a #GstElement to yield.
- *
- * Requests a yield operation for the element. The scheduler will typically
- * give control to another element.
- */
-void
-gst_element_yield (GstElement * element)
+static void
+gst_element_set_manager_func (GstElement * element, GstPipeline * manager)
 {
-  if (GST_ELEMENT_SCHED (element)) {
-    gst_scheduler_yield (GST_ELEMENT_SCHED (element), element);
-  }
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, element, "setting manager to %p",
+      manager);
+
+  GST_LOCK (element);
+  gst_object_replace ((GstObject **) & GST_ELEMENT_MANAGER (element),
+      GST_OBJECT (manager));
+  GST_UNLOCK (element);
 }
 
 /**
- * gst_element_interrupt:
- * @element: a #GstElement to interrupt.
+ * gst_element_set_manager:
+ * @element: a #GstElement to set the manager of.
+ * @manager: the #GstManager to set.
  *
- * Requests the scheduler of this element to interrupt the execution of
- * this element and scheduler another one.
- *
- * Returns: TRUE if the element should exit its chain/loop/get
- * function ASAP, depending on the scheduler implementation.
- */
-gboolean
-gst_element_interrupt (GstElement * element)
-{
-  if (GST_ELEMENT_SCHED (element)) {
-    return gst_scheduler_interrupt (GST_ELEMENT_SCHED (element), element);
-  } else
-    return TRUE;
-}
-
-/**
- * gst_element_set_scheduler:
- * @element: a #GstElement to set the scheduler of.
- * @sched: the #GstScheduler to set.
- *
- * Sets the scheduler of the element.  For internal use only, unless you're
+ * Sets the manager of the element.  For internal use only, unless you're
  * writing a new bin subclass.
  */
 void
-gst_element_set_scheduler (GstElement * element, GstScheduler * sched)
+gst_element_set_manager (GstElement * element, GstPipeline * manager)
 {
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, element, "setting scheduler to %p",
-      sched);
-
-  gst_object_replace ((GstObject **) & GST_ELEMENT_SCHED (element),
-      GST_OBJECT (sched));
-}
-
-/**
- * gst_element_get_scheduler:
- * @element: a #GstElement to get the scheduler of.
- *
- * Returns the scheduler of the element.
- *
- * Returns: the element's #GstScheduler.
- */
-GstScheduler *
-gst_element_get_scheduler (GstElement * element)
-{
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-
-  return GST_ELEMENT_SCHED (element);
-}
-
-/**
- * gst_element_set_loop_function:
- * @element: a #GstElement to set the loop function of.
- * @loop: Pointer to #GstElementLoopFunction.
- *
- * This sets the loop function for the element.  The function pointed to
- * can deviate from the GstElementLoopFunction definition in type of
- * pointer only.
- *
- * NOTE: in order for this to take effect, the current loop function *must*
- * exit.  Assuming the loop function itself is the only one who will cause
- * a new loopfunc to be assigned, this should be no problem.
- */
-void
-gst_element_set_loop_function (GstElement * element,
-    GstElementLoopFunction loop)
-{
-  gboolean need_notify = FALSE;
+  GstElementClass *oclass;
 
   g_return_if_fail (GST_IS_ELEMENT (element));
 
-  /* if the element changed from loop based to chain/get based
-   * or vice versa, we need to inform the scheduler about that */
-  if ((element->loopfunc == NULL && loop != NULL) ||
-      (element->loopfunc != NULL && loop == NULL)) {
-    need_notify = TRUE;
-  }
+  oclass = GST_ELEMENT_GET_CLASS (element);
 
-  /* set the loop function */
-  element->loopfunc = loop;
-
-  if (need_notify) {
-    /* set the NEW_LOOPFUNC flag so everyone knows to go try again */
-    GST_FLAG_SET (element, GST_ELEMENT_NEW_LOOPFUNC);
-
-    if (GST_ELEMENT_SCHED (element)) {
-      gst_scheduler_scheduling_change (GST_ELEMENT_SCHED (element), element);
-    }
-  }
-}
-static inline void
-gst_element_emit_found_tag (GstElement * element, GstElement * source,
-    const GstTagList * tag_list)
-{
-  gst_object_ref (GST_OBJECT (element));
-  g_signal_emit (element, gst_element_signals[FOUND_TAG], 0, source, tag_list);
-  gst_object_unref (GST_OBJECT (element));
-}
-static void
-gst_element_found_tag_func (GstElement * element, GstElement * source,
-    const GstTagList * tag_list)
-{
-  /* tell the parent */
-  if (GST_OBJECT_PARENT (element)) {
-    GST_CAT_LOG_OBJECT (GST_CAT_EVENT, element, "forwarding tag event to %s",
-        GST_OBJECT_NAME (GST_OBJECT_PARENT (element)));
-    gst_element_emit_found_tag (GST_ELEMENT (GST_OBJECT_PARENT (element)),
-        source, tag_list);
-  }
+  if (oclass->set_manager)
+    oclass->set_manager (element, manager);
 }
 
 /**
- * gst_element_found_tags:
- * @element: the element that found the tags
- * @tag_list: the found tags
+ * gst_element_get_manager:
+ * @element: a #GstElement to get the manager of.
  *
- * This function emits the found_tags signal. This is a recursive signal, so
- * every parent will emit that signal, too, before this function returns.
- * Only emit this signal, when you extracted these tags out of the data stream,
- * not when you handle an event.
+ * Returns the manager of the element.
+ *
+ * Returns: the element's #GstPipeline.
  */
-void
-gst_element_found_tags (GstElement * element, const GstTagList * tag_list)
+GstPipeline *
+gst_element_get_manager (GstElement * element)
 {
-  gst_element_emit_found_tag (element, element, tag_list);
+  GstPipeline *result = NULL;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
+
+  GST_LOCK (element);
+  result = GST_ELEMENT_MANAGER (element);
+  GST_UNLOCK (element);
+
+  return result;
 }
 
-/**
- * gst_element_found_tags_for_pad:
- * @element: element that found the tag
- * @pad: src pad the tags correspond to
- * @timestamp: time the tags were found
- * @list: the taglist
- *
- * This is a convenience routine for tag finding. Most of the time you only
- * want to push the found tags down one pad, in that case this function is for
- * you. It takes ownership of the taglist, emits the found-tag signal and
- * pushes a tag event down the pad.
- * <note>This function may not be used in a #GstPadGetFunction, because it calls
- * gst_pad_push(). In those functions, call gst_element_found_tags(), create a
- * tag event with gst_event_new_tag() and return that from your
- * #GstPadGetFunction.</note>
- */
-void
-gst_element_found_tags_for_pad (GstElement * element, GstPad * pad,
-    GstClockTime timestamp, GstTagList * list)
+GstTask *
+gst_element_create_task (GstElement * element, GstTaskFunction func,
+    gpointer data)
 {
-  GstEvent *tag_event;
+  GstPipeline *pipeline;
+  GstTask *result = NULL;
 
-  g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
-  g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
-  g_return_if_fail (element == GST_PAD_PARENT (pad));
-  g_return_if_fail (list != NULL);
-
-  tag_event = gst_event_new_tag (list);
-  GST_EVENT_TIMESTAMP (tag_event) = timestamp;
-  gst_element_found_tags (element, gst_event_tag_get_list (tag_event));
-  if (GST_PAD_IS_USABLE (pad)) {
-    gst_pad_push (pad, GST_DATA (tag_event));
-  } else {
-    gst_data_unref (GST_DATA (tag_event));
+  GST_LOCK (element);
+  pipeline = GST_ELEMENT_MANAGER (element);
+  if (pipeline) {
+    result = gst_scheduler_create_task (pipeline->scheduler, func, data);
   }
-}
+  GST_UNLOCK (element);
 
-static inline void
-gst_element_set_eos_recursive (GstElement * element)
-{
-  /* this function is only called, when we were in PLAYING before. So every
-     parent that's PAUSED was PLAYING before. That means it has reached EOS. */
-  GstElement *parent;
-
-  GST_CAT_DEBUG (GST_CAT_EVENT, "setting recursive EOS on %s",
-      GST_OBJECT_NAME (element));
-  g_signal_emit (G_OBJECT (element), gst_element_signals[EOS], 0);
-
-  if (!GST_OBJECT_PARENT (element))
-    return;
-
-  parent = GST_ELEMENT (GST_OBJECT_PARENT (element));
-  if (GST_STATE (parent) == GST_STATE_PAUSED)
-    gst_element_set_eos_recursive (parent);
-}
-
-/**
- * gst_element_set_eos:
- * @element: a #GstElement to set to the EOS state.
- *
- * Perform the actions needed to bring the element in the EOS state.
- */
-void
-gst_element_set_eos (GstElement * element)
-{
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  GST_CAT_DEBUG (GST_CAT_EVENT, "setting EOS on element %s",
-      GST_OBJECT_NAME (element));
-
-  if (GST_STATE (element) == GST_STATE_PLAYING) {
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_eos_recursive (element);
-  } else {
-    g_signal_emit (G_OBJECT (element), gst_element_signals[EOS], 0);
-  }
-}
-
-
-/**
- * gst_element_state_get_name:
- * @state: a #GstElementState to get the name of.
- *
- * Gets a string representing the given state.
- *
- * Returns: a string with the name of the state.
- */
-const gchar *
-gst_element_state_get_name (GstElementState state)
-{
-  switch (state) {
-#ifdef GST_DEBUG_COLOR
-    case GST_STATE_VOID_PENDING:
-      return "NONE_PENDING";
-      break;
-    case GST_STATE_NULL:
-      return "\033[01;34mNULL\033[00m";
-      break;
-    case GST_STATE_READY:
-      return "\033[01;31mREADY\033[00m";
-      break;
-    case GST_STATE_PLAYING:
-      return "\033[01;32mPLAYING\033[00m";
-      break;
-    case GST_STATE_PAUSED:
-      return "\033[01;33mPAUSED\033[00m";
-      break;
-    default:
-      /* This is a memory leak */
-      return g_strdup_printf ("\033[01;35;41mUNKNOWN!\033[00m(%d)", state);
-#else
-    case GST_STATE_VOID_PENDING:
-      return "NONE_PENDING";
-      break;
-    case GST_STATE_NULL:
-      return "NULL";
-      break;
-    case GST_STATE_READY:
-      return "READY";
-      break;
-    case GST_STATE_PLAYING:
-      return "PLAYING";
-      break;
-    case GST_STATE_PAUSED:
-      return "PAUSED";
-      break;
-    default:
-      return "UNKNOWN!";
-#endif
-  }
-  return "";
-}
-
-static void
-gst_element_populate_std_props (GObjectClass * klass, const gchar * prop_name,
-    guint arg_id, GParamFlags flags)
-{
-  GQuark prop_id = g_quark_from_string (prop_name);
-  GParamSpec *pspec;
-
-  static GQuark fd_id = 0;
-  static GQuark blocksize_id;
-  static GQuark bytesperread_id;
-  static GQuark dump_id;
-  static GQuark filesize_id;
-  static GQuark mmapsize_id;
-  static GQuark location_id;
-  static GQuark offset_id;
-  static GQuark silent_id;
-  static GQuark touch_id;
-
-  if (!fd_id) {
-    fd_id = g_quark_from_static_string ("fd");
-    blocksize_id = g_quark_from_static_string ("blocksize");
-    bytesperread_id = g_quark_from_static_string ("bytesperread");
-    dump_id = g_quark_from_static_string ("dump");
-    filesize_id = g_quark_from_static_string ("filesize");
-    mmapsize_id = g_quark_from_static_string ("mmapsize");
-    location_id = g_quark_from_static_string ("location");
-    offset_id = g_quark_from_static_string ("offset");
-    silent_id = g_quark_from_static_string ("silent");
-    touch_id = g_quark_from_static_string ("touch");
-  }
-
-  if (prop_id == fd_id) {
-    pspec = g_param_spec_int ("fd", "File-descriptor",
-        "File-descriptor for the file being read", 0, G_MAXINT, 0, flags);
-  } else if (prop_id == blocksize_id) {
-    pspec = g_param_spec_ulong ("blocksize", "Block Size",
-        "Block size to read per buffer", 0, G_MAXULONG, 4096, flags);
-
-  } else if (prop_id == bytesperread_id) {
-    pspec = g_param_spec_int ("bytesperread", "Bytes per read",
-        "Number of bytes to read per buffer", G_MININT, G_MAXINT, 0, flags);
-
-  } else if (prop_id == dump_id) {
-    pspec = g_param_spec_boolean ("dump", "Dump",
-        "Dump bytes to stdout", FALSE, flags);
-
-  } else if (prop_id == filesize_id) {
-    pspec = g_param_spec_int64 ("filesize", "File Size",
-        "Size of the file being read", 0, G_MAXINT64, 0, flags);
-
-  } else if (prop_id == mmapsize_id) {
-    pspec = g_param_spec_ulong ("mmapsize", "mmap() Block Size",
-        "Size in bytes of mmap()d regions", 0, G_MAXULONG, 4 * 1048576, flags);
-
-  } else if (prop_id == location_id) {
-    pspec = g_param_spec_string ("location", "File Location",
-        "Location of the file to read", NULL, flags);
-
-  } else if (prop_id == offset_id) {
-    pspec = g_param_spec_int64 ("offset", "File Offset",
-        "Byte offset of current read pointer", 0, G_MAXINT64, 0, flags);
-
-  } else if (prop_id == silent_id) {
-    pspec = g_param_spec_boolean ("silent", "Silent", "Don't produce events",
-        FALSE, flags);
-
-  } else if (prop_id == touch_id) {
-    pspec = g_param_spec_boolean ("touch", "Touch read data",
-        "Touch data to force disk read before " "push ()", TRUE, flags);
-  } else {
-    g_warning ("Unknown - 'standard' property '%s' id %d from klass %s",
-        prop_name, arg_id, g_type_name (G_OBJECT_CLASS_TYPE (klass)));
-    pspec = NULL;
-  }
-
-  if (pspec) {
-    g_object_class_install_property (klass, arg_id, pspec);
-  }
-}
-
-/**
- * gst_element_class_install_std_props:
- * @klass: the #GstElementClass to add the properties to.
- * @first_name: the name of the first property.
- * in a NULL terminated
- * @...: the id and flags of the first property, followed by
- * further 'name', 'id', 'flags' triplets and terminated by NULL.
- *
- * Adds a list of standardized properties with types to the @klass.
- * the id is for the property switch in your get_prop method, and
- * the flags determine readability / writeability.
- **/
-void
-gst_element_class_install_std_props (GstElementClass * klass,
-    const gchar * first_name, ...)
-{
-  const char *name;
-
-  va_list args;
-
-  g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
-
-  va_start (args, first_name);
-
-  name = first_name;
-
-  while (name) {
-    int arg_id = va_arg (args, int);
-    int flags = va_arg (args, int);
-
-    gst_element_populate_std_props ((GObjectClass *) klass, name, arg_id,
-        flags);
-
-    name = va_arg (args, char *);
-  }
-
-  va_end (args);
-}
-
-/**
- * gst_element_get_managing_bin:
- * @element: a #GstElement to get the managing bin of.
- *
- * Gets the managing bin (a pipeline or a thread, for example) of an element.
- *
- * Returns: the #GstBin, or NULL on failure.
- **/
-GstBin *
-gst_element_get_managing_bin (GstElement * element)
-{
-  GstBin *bin;
-
-  g_return_val_if_fail (element != NULL, NULL);
-
-  bin = GST_BIN (gst_object_get_parent (GST_OBJECT (element)));
-
-  while (bin && !GST_FLAG_IS_SET (GST_OBJECT (bin), GST_BIN_FLAG_MANAGER))
-    bin = GST_BIN (gst_object_get_parent (GST_OBJECT (bin)));
-
-  return bin;
+  return result;
 }

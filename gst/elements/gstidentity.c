@@ -99,7 +99,8 @@ static void gst_identity_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstElementStateReturn gst_identity_change_state (GstElement * element);
 
-static void gst_identity_chain (GstPad * pad, GstData * _data);
+static gboolean gst_identity_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_identity_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_identity_set_clock (GstElement * element, GstClock * clock);
 
 
@@ -137,6 +138,9 @@ gst_identity_class_init (GstIdentityClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_identity_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_identity_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOOP_BASED,
       g_param_spec_boolean ("loop-based", "Loop-based",
@@ -185,8 +189,6 @@ gst_identity_class_init (GstIdentityClass * klass)
       GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_identity_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_identity_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_identity_get_property);
 
   gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_identity_set_clock);
   gstelement_class->change_state =
@@ -203,15 +205,13 @@ gst_identity_init (GstIdentity * identity)
   gst_element_add_pad (GST_ELEMENT (identity), identity->sinkpad);
   gst_pad_set_chain_function (identity->sinkpad,
       GST_DEBUG_FUNCPTR (gst_identity_chain));
-  gst_pad_set_link_function (identity->sinkpad, gst_pad_proxy_pad_link);
-  gst_pad_set_getcaps_function (identity->sinkpad, gst_pad_proxy_getcaps);
+  gst_pad_set_event_function (identity->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_identity_event));
 
   identity->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
       "src");
   gst_element_add_pad (GST_ELEMENT (identity), identity->srcpad);
-  gst_pad_set_link_function (identity->srcpad, gst_pad_proxy_pad_link);
-  gst_pad_set_getcaps_function (identity->srcpad, gst_pad_proxy_getcaps);
 
   identity->loop_based = DEFAULT_LOOP_BASED;
   identity->sleep_time = DEFAULT_SLEEP_TIME;
@@ -225,8 +225,6 @@ gst_identity_init (GstIdentity * identity)
   identity->dump = DEFAULT_DUMP;
   identity->last_message = NULL;
   identity->srccaps = NULL;
-
-  GST_FLAG_SET (identity, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
@@ -237,35 +235,37 @@ gst_identity_set_clock (GstElement * element, GstClock * clock)
   gst_object_replace ((GstObject **) & identity->clock, (GstObject *) clock);
 }
 
-
-static void
-gst_identity_chain (GstPad * pad, GstData * _data)
+static gboolean
+gst_identity_event (GstPad * pad, GstEvent * event)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstIdentity *identity;
-  guint i;
-
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
 
   identity = GST_IDENTITY (gst_pad_get_parent (pad));
 
-  if (GST_IS_EVENT (buf)) {
-    GstEvent *event = GST_EVENT (buf);
+  if (!identity->silent) {
+    g_free (identity->last_message);
 
-    if (!identity->silent) {
-      g_free (identity->last_message);
+    identity->last_message =
+        g_strdup_printf ("chain   ******* (%s:%s)E (type: %d) %p",
+        GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE (event), event);
 
-      identity->last_message =
-          g_strdup_printf ("chain   ******* (%s:%s)E (type: %d) %p",
-          GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE (event), event);
-
-      g_object_notify (G_OBJECT (identity), "last_message");
-    }
-    gst_pad_event_default (pad, event);
-    return;
+    g_object_notify (G_OBJECT (identity), "last_message");
   }
+  return gst_pad_push_event (identity->srcpad, event);
+}
+
+static GstFlowReturn
+gst_identity_chain (GstPad * pad, GstBuffer * buffer)
+{
+  GstBuffer *buf = GST_BUFFER (buffer);
+  GstIdentity *identity;
+  guint i;
+
+  g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
+
+  identity = GST_IDENTITY (gst_pad_get_parent (pad));
 
   /* see if we need to do perfect stream checking */
   /* invalid timestamp drops us out of check.  FIXME: maybe warn ? */
@@ -302,7 +302,7 @@ gst_identity_chain (GstPad * pad, GstData * _data)
       gst_buffer_unref (buf);
       GST_ELEMENT_ERROR (identity, CORE, FAILED,
           (_("Failed after iterations as requested.")), (NULL));
-      return;
+      return GST_FLOW_ERROR;
     }
   }
 
@@ -319,7 +319,7 @@ gst_identity_chain (GstPad * pad, GstData * _data)
           GST_BUFFER_OFFSET_END (buf), GST_BUFFER_FLAGS (buf), buf);
       g_object_notify (G_OBJECT (identity), "last-message");
       gst_buffer_unref (buf);
-      return;
+      return GST_FLOW_OK;
     }
   }
   if (identity->dump) {
@@ -365,37 +365,33 @@ gst_identity_chain (GstPad * pad, GstData * _data)
     }
 
     identity->bytes_handled += GST_BUFFER_SIZE (buf);
-    gst_pad_push (identity->srcpad, GST_DATA (buf));
+    gst_pad_push (identity->srcpad, buf);
 
     if (identity->sleep_time)
       g_usleep (identity->sleep_time);
   }
+  return GST_FLOW_OK;
 }
 
+#if 0
 static void
 gst_identity_loop (GstElement * element)
 {
   GstIdentity *identity;
   GstBuffer *buf;
+  GstFlowReturn ret;
 
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_IDENTITY (element));
 
   identity = GST_IDENTITY (element);
 
-  buf = GST_BUFFER (gst_pad_pull (identity->sinkpad));
-  if (GST_IS_EVENT (buf)) {
-    GstEvent *event = GST_EVENT (buf);
-
-    if (GST_EVENT_IS_INTERRUPT (event)) {
-      gst_event_unref (event);
-    } else {
-      gst_pad_event_default (identity->sinkpad, event);
-    }
-  } else {
-    gst_identity_chain (identity->sinkpad, GST_DATA (buf));
+  ret = gst_pad_pull (identity->sinkpad, &buf);
+  if (ret == GST_FLOW_OK) {
+    gst_identity_chain (identity->sinkpad, buf);
   }
 }
+#endif
 
 static void
 gst_identity_set_property (GObject * object, guint prop_id,
@@ -412,12 +408,9 @@ gst_identity_set_property (GObject * object, guint prop_id,
     case ARG_LOOP_BASED:
       identity->loop_based = g_value_get_boolean (value);
       if (identity->loop_based) {
-        gst_element_set_loop_function (GST_ELEMENT (identity),
-            gst_identity_loop);
         gst_pad_set_chain_function (identity->sinkpad, NULL);
       } else {
         gst_pad_set_chain_function (identity->sinkpad, gst_identity_chain);
-        gst_element_set_loop_function (GST_ELEMENT (identity), NULL);
       }
       break;
     case ARG_SLEEP_TIME:

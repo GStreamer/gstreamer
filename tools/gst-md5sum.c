@@ -25,7 +25,8 @@ idle_func (gpointer data)
   }
 
   g_get_current_time (&tfthen);
-  busy = gst_bin_iterate (GST_BIN (data));
+  //busy = gst_bin_iterate (GST_BIN (data));
+  busy = FALSE;
   iterations++;
   g_get_current_time (&tfnow);
 
@@ -36,7 +37,7 @@ idle_func (gpointer data)
   max = MAX (max, diff);
 
   if (!busy) {
-    gst_main_quit ();
+    //gst_main_quit ();
     /*
        g_print ("execution ended after %llu iterations (sum %llu ns, average %llu ns, min %llu ns, max %llu ns)\n", 
        iterations, sum, sum/iterations, min, max);
@@ -76,7 +77,7 @@ main (int argc, char *argv[])
 
   /* Check if we have an element already that is called md5sink0
      in the pipeline; if not, add one */
-  pipeline = (GstElement *) gst_parse_launchv ((const gchar **) argvn, &error);
+  //pipeline = (GstElement *) gst_parse_launchv ((const gchar **) argvn, &error);
   if (!pipeline) {
     if (error) {
       g_warning ("pipeline could not be constructed: %s\n", error->message);
@@ -115,22 +116,17 @@ main (int argc, char *argv[])
         : NULL;
 
     g_signal_connect (pipeline, "deep_notify",
-        G_CALLBACK (gst_element_default_deep_notify), exclude_list);
+        G_CALLBACK (gst_object_default_deep_notify), exclude_list);
   }
-  g_signal_connect (pipeline, "error",
-      G_CALLBACK (gst_element_default_error), NULL);
+  //g_signal_connect (pipeline, "error",
+  //    G_CALLBACK (gst_object_default_error), NULL);
 
   if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS) {
     g_warning ("pipeline doesn't want to play\n");
     return 0;
   }
 
-  if (!GST_FLAG_IS_SET (GST_OBJECT (pipeline), GST_BIN_SELF_SCHEDULABLE)) {
-    g_idle_add (idle_func, pipeline);
-    gst_main ();
-  } else {
-    gst_element_wait_state_change (pipeline);
-  }
+  gst_main ();
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 

@@ -1,41 +1,7 @@
 2004-12-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
-	* autogen.sh:
-	  remove patch if autopoint fails
-
-2004-12-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
-
-	* docs/gst/gstreamer-sections.txt:
-	  Document Thomas' addition, fix build, make Luis the sheriff happy.
-
-2004-12-07  Thomas Vander Stichele  <thomas at apestaart dot org>
-
-	* gst/gstplugin.c:
-	* gst/gstplugin.h:
-	  add accessor for version field
-
-2004-12-06  Thomas Vander Stichele  <thomas at apestaart dot org>
-
-	submitted by: Luca Ferretti <elle.uca@infinito.it>
-
-	* po/LINGUAS:
-	* po/it.po:
-	  New tranlation added: Italian
-
-2004-12-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
-
-	* gst/gstpad.c: (gst_pad_is_negotiated),
-	(gst_pad_get_negotiated_caps):
-	  GST_RPAD_* will only operate on a RealPad (it casts the pointer,
-	  it doesn't actually check the contents), so be sure to hand it
-	  a RealPad else we'll crash.
-
-2004-12-03  Wim Taymans  <wim@fluendo.com>
-
-	* gst/gstqueue.c: (gst_queue_init), (gst_queue_getcaps),
-	(gst_queue_link), (gst_queue_handle_src_query):
-	Reverted to 1.110 until this makes the testsuite and various
-	apps work.
+	* commited Wim's preliminary work according to his design to
+	  BRANCH-THREADED
 
 2004-12-01  Christian Fredrik Kalager Schaller christian@fluendo.com 
 
@@ -594,7 +560,6 @@
 	* gst/elements/gstidentity.h:
 	Added datarate properties to limit the datarate.
 
->>>>>>> 1.808
 2004-08-25  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/autoplug/gstspider.c: (plugin_init):

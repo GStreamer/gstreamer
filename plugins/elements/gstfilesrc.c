@@ -170,11 +170,12 @@ static void gst_filesrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_filesrc_check_filesize (GstFileSrc * src);
-static GstData *gst_filesrc_get (GstPad * pad);
+static GstFlowReturn gst_filesrc_get (GstPad * pad, GstBuffer ** buffer);
 static gboolean gst_filesrc_srcpad_event (GstPad * pad, GstEvent * event);
 static gboolean gst_filesrc_srcpad_query (GstPad * pad, GstQueryType type,
     GstFormat * format, gint64 * value);
 
+static gboolean gst_filesrc_activate (GstPad * pad, gboolean active);
 static GstElementStateReturn gst_filesrc_change_state (GstElement * element);
 
 static void gst_filesrc_uri_handler_init (gpointer g_iface,
@@ -214,6 +215,8 @@ gst_filesrc_class_init (GstFileSrcClass * klass)
 
   gobject_class = (GObjectClass *) klass;
 
+  gobject_class->set_property = gst_filesrc_set_property;
+  gobject_class->get_property = gst_filesrc_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
       g_param_spec_int ("fd", "File-descriptor",
@@ -235,8 +238,6 @@ gst_filesrc_class_init (GstFileSrcClass * klass)
           "Touch data to force disk read", FALSE, G_PARAM_READWRITE));
 
   gobject_class->dispose = gst_filesrc_dispose;
-  gobject_class->set_property = gst_filesrc_set_property;
-  gobject_class->get_property = gst_filesrc_get_property;
 
   gstelement_class->change_state = gst_filesrc_change_state;
 }
@@ -248,6 +249,7 @@ gst_filesrc_init (GstFileSrc * src)
       gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
       "src");
   gst_pad_set_get_function (src->srcpad, gst_filesrc_get);
+  gst_pad_set_activate_function (src->srcpad, gst_filesrc_activate);
   gst_pad_set_event_function (src->srcpad, gst_filesrc_srcpad_event);
   gst_pad_set_event_mask_function (src->srcpad, gst_filesrc_get_event_mask);
   gst_pad_set_query_function (src->srcpad, gst_filesrc_srcpad_query);
@@ -672,7 +674,7 @@ gst_filesrc_get_read (GstFileSrc * src)
   if (ret == 0) {
     GST_DEBUG ("non-regular file hits EOS");
     gst_buffer_unref (buf);
-    gst_element_set_eos (GST_ELEMENT (src));
+    //gst_element_set_eos (GST_ELEMENT (src));
     return GST_DATA (gst_event_new (GST_EVENT_EOS));
   }
   readsize = ret;
@@ -686,20 +688,22 @@ gst_filesrc_get_read (GstFileSrc * src)
   return GST_DATA (buf);
 }
 
-static GstData *
-gst_filesrc_get (GstPad * pad)
+static GstFlowReturn
+gst_filesrc_get (GstPad * pad, GstBuffer ** buffer)
 {
   GstFileSrc *src;
+  GstData *data;
 
-  g_return_val_if_fail (pad != NULL, NULL);
   src = GST_FILESRC (gst_pad_get_parent (pad));
-  g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_FILESRC_OPEN), NULL);
+
+  g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_FILESRC_OPEN),
+      GST_FLOW_WRONG_STATE);
 
   /* check for flush */
   if (src->need_flush) {
     src->need_flush = FALSE;
     GST_DEBUG_OBJECT (src, "sending flush");
-    return GST_DATA (gst_event_new_flush ());
+    gst_pad_push_event (pad, gst_event_new_flush ());
   }
   /* check for seek */
   if (src->need_discont) {
@@ -710,7 +714,7 @@ gst_filesrc_get (GstPad * pad)
         gst_event_new_discontinuous (src->need_discont > 1, GST_FORMAT_BYTES,
         (guint64) src->curoffset, GST_FORMAT_UNDEFINED);
     src->need_discont = 0;
-    return GST_DATA (event);
+    gst_pad_push_event (pad, event);
   }
 
   /* check for EOF if it's a regular file */
@@ -721,20 +725,31 @@ gst_filesrc_get (GstPad * pad)
         GST_DEBUG_OBJECT (src, "eos %" G_GINT64_FORMAT " %" G_GINT64_FORMAT,
             src->curoffset, src->filelen);
       }
-      gst_element_set_eos (GST_ELEMENT (src));
-      return GST_DATA (gst_event_new (GST_EVENT_EOS));
+      //gst_element_set_eos (GST_ELEMENT (src));
+      gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
+      return GST_FLOW_WRONG_STATE;
 
     }
   }
 #ifdef HAVE_MMAP
   if (src->using_mmap) {
-    return gst_filesrc_get_mmap (src);
+    data = gst_filesrc_get_mmap (src);
   } else {
-    return gst_filesrc_get_read (src);
+    data = gst_filesrc_get_read (src);
   }
 #else
-  return gst_filesrc_get_read (src);
+  data = gst_filesrc_get_read (src);
 #endif
+  if (data == NULL)
+    return GST_FLOW_ERROR;
+
+  if (GST_IS_EVENT (data)) {
+    gst_pad_push_event (pad, GST_EVENT (data));
+  } else {
+    *buffer = GST_BUFFER (data);
+  }
+
+  return GST_FLOW_OK;
 }
 
 /* TRUE if the filesize of the file was updated */
@@ -848,10 +863,69 @@ gst_filesrc_close_file (GstFileSrc * src)
   GST_FLAG_UNSET (src, GST_FILESRC_OPEN);
 }
 
+static void
+gst_filesrc_loop (GstElement * element)
+{
+  GstFileSrc *filesrc;
+  GstFlowReturn result;
+  GstBuffer *buffer;
+
+  filesrc = GST_FILESRC (element);
+
+  result = gst_filesrc_get (filesrc->srcpad, &buffer);
+  if (result != GST_FLOW_OK) {
+    gst_task_stop (filesrc->task);
+    return;
+  }
+  result = gst_pad_push (filesrc->srcpad, buffer);
+  if (result != GST_FLOW_OK) {
+    gst_task_stop (filesrc->task);
+  }
+}
+
+
+static gboolean
+gst_filesrc_activate (GstPad * pad, gboolean active)
+{
+  gboolean result = FALSE;
+  GstFileSrc *filesrc;
+
+  filesrc = GST_FILESRC (GST_OBJECT_PARENT (pad));
+
+  if (active) {
+    /* try to start the task */
+    GST_STREAM_LOCK (pad);
+    filesrc->task = gst_element_create_task (GST_ELEMENT (filesrc),
+        (GstTaskFunction) gst_filesrc_loop, filesrc);
+
+    if (filesrc->task) {
+      gst_task_start (filesrc->task);
+      result = TRUE;
+    } else {
+      result = FALSE;
+    }
+    GST_STREAM_UNLOCK (pad);
+  } else {
+    /* step 1, unblock clock sync (if any) */
+
+    /* step 2, make sure streaming finishes */
+    GST_STREAM_LOCK (pad);
+    /* step 3, stop the task */
+    gst_task_stop (filesrc->task);
+    gst_object_unref (GST_OBJECT (filesrc->task));
+    GST_STREAM_UNLOCK (pad);
+
+    result = TRUE;
+  }
+  return result;
+}
+
 
 static GstElementStateReturn
 gst_filesrc_change_state (GstElement * element)
 {
+  GstElementStateReturn result = GST_STATE_SUCCESS;
+
   GstFileSrc *src = GST_FILESRC (element);
 
   switch (GST_STATE_TRANSITION (element)) {
@@ -865,6 +939,16 @@ gst_filesrc_change_state (GstElement * element)
           return GST_STATE_FAILURE;
       }
       src->need_discont = 2;
+
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      break;
+  }
+
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (GST_FLAG_IS_SET (element, GST_FILESRC_OPEN))
@@ -874,10 +958,7 @@ gst_filesrc_change_state (GstElement * element)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return result;
 }
 
 static gboolean
