@@ -1519,8 +1519,8 @@ _gst_pad_default_fixate_foreach (GQuark field_id, GValue *value,
     gpointer s)
 {
   GstStructure *structure = (GstStructure *)s;
-
   GType type = G_VALUE_TYPE (value);
+  
   if (G_TYPE_IS_FUNDAMENTAL (type) || type == GST_TYPE_FOURCC) return TRUE;
 
   if (type == GST_TYPE_INT_RANGE) {
@@ -1533,7 +1533,11 @@ _gst_pad_default_fixate_foreach (GQuark field_id, GValue *value,
         G_TYPE_DOUBLE, gst_value_get_double_range_min (value), NULL);
     return FALSE;
   }
-  /* FIXME list */
+  if (type == GST_TYPE_LIST) {
+    gst_structure_set_value (structure, g_quark_to_string (field_id),
+        gst_value_list_get_value (value, 0));
+    return FALSE;
+  }
 
   g_critical ("don't know how to fixate type %s", g_type_name(type));
   return TRUE;
