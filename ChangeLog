@@ -1,3 +1,8 @@
+2004-08-02  Johan Dahlin  <johan@gnome.org>
+
+	* gst/multipart/multipartmux.c (gst_multipart_mux_next_buffer):
+	fix debugging log
+
 2004-07-30  David Schleef  <ds@schleef.org>
 
 	* gst/videomixer/Makefile.am: Fix things that should have been
