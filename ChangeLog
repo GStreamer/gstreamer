@@ -1,3 +1,8 @@
+2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* testsuite/embed/Makefile.am:
+	  Fix buildbot.
+
 2005-01-09  Gergely Nagy  <algernon@bonehunter.rulez.org>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
