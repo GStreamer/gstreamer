@@ -143,7 +143,6 @@ gst_tcp_gdp_read_header (GstElement * this, int socket)
   GstBuffer *buffer;
 
   header = g_malloc (header_length);
-
   readsize = header_length;
 
   GST_DEBUG_OBJECT (this, "Reading %d bytes for buffer packet header",
@@ -152,11 +151,13 @@ gst_tcp_gdp_read_header (GstElement * this, int socket)
   /* if we read 0 bytes, and we're blocking, we hit eos */
   if (ret == 0) {
     GST_DEBUG ("blocking read returns 0, EOS");
+    g_free (header);
     gst_element_set_eos (GST_ELEMENT (this));
     return GST_DATA (gst_event_new (GST_EVENT_EOS));
   }
   if (ret < 0) {
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
+    g_free (header);
     return NULL;
   }
   if (ret != readsize) {
@@ -173,6 +174,7 @@ gst_tcp_gdp_read_header (GstElement * this, int socket)
   GST_DEBUG_OBJECT (this, "validated buffer packet header");
 
   buffer = gst_dp_buffer_from_header (header_length, header);
+  g_free (header);
 
   GST_DEBUG_OBJECT (this, "created new buffer %p from packet header", buffer);
   return GST_DATA (buffer);
@@ -192,11 +194,12 @@ gst_tcp_gdp_read_caps (GstElement * this, int socket)
   gchar *string;
 
   header = g_malloc (header_length);
-
   readsize = header_length;
+
   GST_LOG_OBJECT (this, "Reading %d bytes for caps packet header", readsize);
   ret = read (socket, header, readsize);
   if (ret < 0) {
+    g_free (header);
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
     return NULL;
   }
@@ -240,10 +243,11 @@ gst_tcp_gdp_read_caps (GstElement * this, int socket)
   caps = gst_dp_caps_from_packet (header_length, header, payload);
   string = gst_caps_to_string (caps);
   GST_DEBUG_OBJECT (this, "retrieved GDP caps from packet payload: %s", string);
+  g_free (string);
 
   g_free (header);
   g_free (payload);
-  g_free (string);
+
   return caps;
 }
 
@@ -265,6 +269,7 @@ gst_tcp_gdp_write_header (GstElement * this, int socket, GstBuffer * buffer,
 
   GST_LOG_OBJECT (this, "writing %d bytes for GDP buffer header", length);
   wrote = gst_tcp_socket_write (socket, header, length);
+  g_free (header);
   if (wrote != length) {
     if (fatal)
       GST_ELEMENT_ERROR (this, RESOURCE, WRITE,
@@ -297,6 +302,8 @@ gst_tcp_gdp_write_caps (GstElement * this, int socket, const GstCaps * caps,
   GST_LOG_OBJECT (this, "writing %d bytes for GDP caps header", length);
   wrote = gst_tcp_socket_write (socket, header, length);
   if (wrote != length) {
+    g_free (header);
+    g_free (payload);
     if (fatal)
       GST_ELEMENT_ERROR (this, RESOURCE, WRITE,
           (_("Error while sending gdp header data to \"%s:%d\"."), host, port),
@@ -306,8 +313,10 @@ gst_tcp_gdp_write_caps (GstElement * this, int socket, const GstCaps * caps,
   }
 
   length = gst_dp_header_payload_length (header);
+  g_free (header);
   GST_LOG_OBJECT (this, "writing %d bytes for GDP caps payload", length);
   wrote = gst_tcp_socket_write (socket, payload, length);
+  g_free (payload);
   if (wrote != length) {
     if (fatal)
       GST_ELEMENT_ERROR (this, RESOURCE, WRITE,

@@ -279,6 +279,7 @@ gst_tcpclientsrc_get (GstPad * pad)
   ret = gst_tcp_socket_read (src->sock_fd, GST_BUFFER_DATA (buf), readsize);
   if (ret < 0) {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
+    gst_buffer_unref (buf);
     return NULL;
   }
 
