@@ -247,6 +247,11 @@ HAVE_VORBIS=no, )
 dnl check for gtkdoc
 AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, true, false)
 
+dnl check for db2html
+AC_CHECK_PROG(HAVE_DB2HTML, db2html, true, false)
+AC_CHECK_PROG(HAVE_DB2PS, db2ps, true, false)
+AC_CHECK_PROG(HAVE_DB2PDF, db2pdf, true, false)
+
 
 dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
@@ -371,6 +376,9 @@ AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGLADE_GNOME, test "x$HAVE_LIBGLADE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBXV,          test "x$HAVE_LIBXV" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
+AM_CONDITIONAL(HAVE_DB2HTML,        $HAVE_DB2HTML)
+AM_CONDITIONAL(HAVE_DB2PDF,         $HAVE_DB2PDF)
+AM_CONDITIONAL(HAVE_DB2PS,          $HAVE_DB2PS)
 
 
 dnl FIXME: having to AC_SUBST these is messy.  Not sure if CPPFLAGS and LDFLAGS
@@ -466,6 +474,8 @@ tools/Makefile
 docs/Makefile
 docs/gst/Makefile
 docs/gst/gstreamer.types
+docs/manual/Makefile
+docs/manual/images/Makefile
 stamp.h
 gstreamer-config
 gstreamer.spec])

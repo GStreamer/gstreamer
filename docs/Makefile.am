@@ -1,4 +1,5 @@
-SUBDIRS = 
+SUBDIRS = manual
+
 if HAVE_GTK_DOC
   SUBDIRS += gst 
 endif

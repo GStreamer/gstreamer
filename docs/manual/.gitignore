@@ -2,3 +2,10 @@ Makefile
 Makefile.in
 *.bak
 .deps
+gstreamer-manual
+gstreamer-manual.pdf
+gstreamer-manual.ps
+gstreamer-manual.dvi
+gstreamer-manual.tex
+gstreamer-manual.log
+gstreamer-manual.aux

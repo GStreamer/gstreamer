@@ -1,1 +1,4 @@
 *.png
+*.eps
+Makefile.in
+Makefile
