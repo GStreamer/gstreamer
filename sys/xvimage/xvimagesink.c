@@ -629,7 +629,7 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink, GstPad * pad)
 
 /* This function generates a caps with all supported format by the first
    Xv grabable port we find. We store each one of the supported formats in a
-   format list and append the format to a newly created caps that we return 
+   format list and append the format to a newly created caps that we return
    If this function does not return NULL because of an error, it also grabs
    the port via XvGrabPort */
 static GstCaps *
@@ -732,7 +732,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
             "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
             "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
 
-        /* For RGB caps we store them and the image 
+        /* For RGB caps we store them and the image
            format so that we can get back the format
            when sinkconnect will give us a caps without
            format property */
@@ -780,9 +780,9 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
   return caps;
 }
 
-/* This function get the X Display and global infos about it. Everything is
+/* This function gets the X Display and global info about it. Everything is
    stored in our object and will be cleaned when the object is disposed. Note
-   here that caps for supported format are generated without any window or 
+   here that caps for supported format are generated without any window or
    image creation */
 static GstXContext *
 gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)

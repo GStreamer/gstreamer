@@ -617,9 +617,9 @@ gst_ximagesink_handle_xevents (GstXImageSink * ximagesink, GstPad * pad)
   g_mutex_unlock (ximagesink->x_lock);
 }
 
-/* This function get the X Display and global infos about it. Everything is
+/* This function gets the X Display and global info about it. Everything is
    stored in our object and will be cleaned when the object is disposed. Note
-   here that caps for supported format are generated without any window or 
+   here that caps for supported format are generated without any window or
    image creation */
 static GstXContext *
 gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
@@ -837,8 +837,7 @@ gst_ximagesink_sink_link (GstPad * pad, const GstCaps * caps)
 
   if ((ximagesink->ximage)
       && ((GST_VIDEOSINK_WIDTH (ximagesink) != ximagesink->ximage->width)
-          || (GST_VIDEOSINK_HEIGHT (ximagesink) !=
-              ximagesink->ximage->height))) {
+          || (GST_VIDEOSINK_HEIGHT (ximagesink) != ximagesink->ximage->height))) {
     /* We renew our ximage only if size changed */
     gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
 
@@ -1079,7 +1078,7 @@ gst_ximagesink_navigation_send_event (GstNavigation * navigation,
   event = gst_event_new (GST_EVENT_NAVIGATION);
   event->event_data.structure.structure = structure;
 
-  /* We are not converting the pointer coordinates as there's no hardware 
+  /* We are not converting the pointer coordinates as there's no hardware
      scaling done here. The only possible scaling is done by videoscale and
      videoscale will have to catch those events and tranform the coordinates
      to match the applied scaling. So here we just add the offset if the image
@@ -1170,7 +1169,7 @@ gst_ximagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
     xwindow->gc = XCreateGC (ximagesink->xcontext->disp, xwindow->win, 0, NULL);
     g_mutex_unlock (ximagesink->x_lock);
 
-    /* If that new window geometry differs from our one we try to 
+    /* If that new window geometry differs from our one we try to
        renegotiate caps */
     if (gst_pad_is_negotiated (GST_VIDEOSINK_PAD (ximagesink)) &&
         (xwindow->width != GST_VIDEOSINK_WIDTH (ximagesink) ||

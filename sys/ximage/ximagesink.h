@@ -16,7 +16,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
- 
+
 #ifndef __GST_XIMAGESINK_H__
 #define __GST_XIMAGESINK_H__
 
@@ -61,22 +61,22 @@ typedef struct _GstXImageSinkClass GstXImageSinkClass;
 /* Global X Context stuff */
 struct _GstXContext {
   Display *disp;
-  
+
   Screen *screen;
   gint screen_num;
-  
+
   Visual *visual;
-  
+
   Window root;
-  
+
   gulong white, black;
-  
+
   gint depth;
   gint bpp;
   gint endianness;
-  
+
   gboolean use_xshm;
-  
+
   GstCaps *caps;
 };
 
@@ -92,13 +92,13 @@ struct _GstXWindow {
 struct _GstXImage {
   /* Reference to the ximagesink we belong to */
   GstXImageSink *ximagesink;
-  
+
   XImage *ximage;
-  
+
 #ifdef HAVE_XSHM
   XShmSegmentInfo SHMInfo;
 #endif /* HAVE_XSHM */
-  
+
   gint width, height, size;
 };
 
@@ -107,23 +107,23 @@ struct _GstXImageSink {
   GstVideoSink videosink;
 
   char *display_name;
-  
+
   GstXContext *xcontext;
   GstXWindow *xwindow;
   GstXImage *ximage;
   GstXImage *cur_image;
-  
+
   gdouble framerate;
   GMutex *x_lock;
-  
+
   /* Unused */
   gint pixel_width, pixel_height;
- 
+
   GstClockTime time;
-  
+
   GMutex *pool_lock;
   GSList *image_pool;
-  
+
   gboolean synchronous;
   gboolean sw_scaling_failed;
 };

@@ -16,7 +16,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
- 
+
 #ifndef __GST_XVIMAGESINK_H__
 #define __GST_XVIMAGESINK_H__
 
@@ -58,35 +58,35 @@ typedef struct _GstXContext GstXContext;
 typedef struct _GstXWindow GstXWindow;
 typedef struct _GstXvImage GstXvImage;
 typedef struct _GstXvImageFormat GstXvImageFormat;
-  
+
 typedef struct _GstXvImageSink GstXvImageSink;
 typedef struct _GstXvImageSinkClass GstXvImageSinkClass;
 
 /* Global X Context stuff */
 struct _GstXContext {
   Display *disp;
-  
+
   Screen *screen;
   gint screen_num;
-  
+
   Visual *visual;
-  
+
   Window root;
-  
+
   gulong white, black;
-  
+
   gint depth;
   gint bpp;
   gint endianness;
-  
+
   gboolean use_xshm;
-  
+
   XvPortID xv_port_id;
   gint im_format;
-  
+
   GList *formats_list;
   GList *channels_list;
-  
+
   GstCaps *caps;
 };
 
@@ -108,42 +108,42 @@ struct _GstXvImageFormat {
 struct _GstXvImage {
   /* Reference to the xvimagesink we belong to */
   GstXvImageSink *xvimagesink;
-  
+
   XvImage *xvimage;
-  
+
 #ifdef HAVE_XSHM
   XShmSegmentInfo SHMInfo;
 #endif /* HAVE_XSHM */
-  
+
   gint width, height, size;
 };
 
 struct _GstXvImageSink {
   /* Our element stuff */
   GstVideoSink videosink;
-  
+
   char *display_name;
-  
+
   GstXContext *xcontext;
   GstXWindow *xwindow;
   GstXvImage *xvimage;
   GstXvImage *cur_image;
-  
+
   gdouble framerate;
-  
+
   gint brightness;
   gint contrast;
   gint hue;
   gint saturation;
   gboolean cb_changed;
-  
+
   GMutex *x_lock;
-  
+
   /* Unused */
   gint pixel_width, pixel_height;
 
   GstClockTime time;
- 
+
   GMutex *pool_lock;
   GSList *image_pool;
 
