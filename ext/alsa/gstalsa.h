@@ -63,8 +63,23 @@ typedef GstAlsaClass GstAlsaSrcClass;
 enum {
   GST_ALSA_OPEN = GST_ELEMENT_FLAG_LAST,
   GST_ALSA_RUNNING,
+  GST_ALSA_CAPS_NEGO,
   GST_ALSA_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 3,
 };
+typedef enum {
+  GST_ALSA_CAPS_PAUSE = 0,
+  GST_ALSA_CAPS_RESUME,
+  GST_ALSA_CAPS_SYNC_START
+  /* add more */
+} GstAlsaPcmCaps;
+#define GST_ALSA_CAPS_IS_SET(obj, flag)		(GST_ALSA (obj)->pcm_caps & (1<<(flag)))
+#define GST_ALSA_CAPS_SET(obj, flag, set)	G_STMT_START{  \
+  if (set) { \
+    (GST_ALSA (obj)->pcm_caps |= (1<<(flag))); \
+  } else { \
+    (GST_ALSA (obj)->pcm_caps &= ~(1<<(flag))); \
+  } \
+}G_STMT_END
 
 typedef struct {
   GstPad *pad;
@@ -72,7 +87,11 @@ typedef struct {
   guint8 *data;
   guint8 offset;
 } GstAlsaPad;
-
+typedef struct {
+  snd_pcm_format_t format;
+  guint rate;
+  gint channels;  
+} GstAlsaFormat;
 struct _GstAlsa {
   GstElement parent;
 
@@ -82,12 +101,10 @@ struct _GstAlsa {
   gchar *device;
   snd_pcm_stream_t stream;
   snd_pcm_t *handle;
+  guint pcm_caps;
   snd_output_t *out;
 
-  snd_pcm_format_t format;
-  guint rate;
-  gint channels;
-  gboolean caps_set;
+  GstAlsaFormat *format; /* NULL if undefined */
 
   /* latency / performance parameters */
   snd_pcm_uframes_t period_size;

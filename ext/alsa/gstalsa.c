@@ -58,7 +58,7 @@ static GstElementDetails gst_alsa_sink_details = {
   "Output to a sound card via ALSA",
   VERSION,
   "Thomas Nyberg <thomas@codefactory.se>, "
-  "Andy Wingo <apwingo@eos.ncsu.edu>"
+  "Andy Wingo <apwingo@eos.ncsu.edu>, "
   "Benjamin Otte <in7y118@public.uni-hamburg.de>",
   "(C) 2001-2003"
 };
@@ -71,7 +71,7 @@ static GstElementDetails gst_alsa_src_details = {
   "Read from a sound card via ALSA",
   VERSION,
   "Thomas Nyberg <thomas@codefactory.se>, "
-  "Andy Wingo <apwingo@eos.ncsu.edu>"
+  "Andy Wingo <apwingo@eos.ncsu.edu>, "
   "Benjamin Otte <in7y118@public.uni-hamburg.de>",
   "(C) 2001-2003"
 };
@@ -279,14 +279,11 @@ gst_alsa_init (GstAlsa *this)
   gint i;
   /* init values */
   this->handle = NULL;
-  this->channels = 1;
-  this->caps_set = FALSE;
 
   GST_FLAG_SET (this, GST_ELEMENT_THREAD_SUGGESTED);
 
   if (G_OBJECT_TYPE (this) == GST_TYPE_ALSA_SRC) {
     this->stream = SND_PCM_STREAM_CAPTURE;
-    this->format = SND_PCM_FORMAT_S16;        /* native endian */
     gst_element_set_loop_function (GST_ELEMENT (this), gst_alsa_src_loop);
     this->pads[0].pad = gst_pad_new_from_template (gst_alsa_src_pad_factory (), "src");
     gst_pad_set_bufferpool_function(this->pads[0].pad, gst_alsa_src_get_buffer_pool);
@@ -294,10 +291,8 @@ gst_alsa_init (GstAlsa *this)
     /* set the rate to a sensible value. we can't have gobject construct this
        manually since it only really makes sense on src elements. the rate can
        be changed later through the gobject set property function. */
-    this->rate = 44100;
   } else if (G_OBJECT_TYPE (this) == GST_TYPE_ALSA_SINK) {
     this->stream = SND_PCM_STREAM_PLAYBACK;
-    this->format = SND_PCM_FORMAT_UNKNOWN; /* we don't know until caps are set */
     gst_element_set_loop_function (GST_ELEMENT (this), gst_alsa_sink_loop);
     this->pads[0].pad = gst_pad_new_from_template (gst_alsa_sink_pad_factory (), "sink");
     this->pads[0].bs = gst_bytestream_new (this->pads[0].pad);
@@ -328,17 +323,17 @@ gst_alsa_set_property (GObject *object, guint prop_id, const GValue *value,
   case ARG_FORMAT:
     /* setting this property only makes sense on sources */
     if (G_OBJECT_TYPE (this) == GST_TYPE_ALSA_SRC)
-      this->format = g_value_get_enum (value);
+      this->format->format = g_value_get_enum (value);
     break;
   case ARG_CHANNELS:
     /* setting this property only makes sense on sources */
     if (G_OBJECT_TYPE (this) == GST_TYPE_ALSA_SRC)
-      this->channels = g_value_get_int (value);
+      this->format->channels = g_value_get_int (value);
     break;
   case ARG_RATE:
     /* setting this property only makes sense on sources */
     if (G_OBJECT_TYPE (this) == GST_TYPE_ALSA_SRC)
-      this->rate = g_value_get_int (value);
+      this->format->rate = g_value_get_int (value);
     break;
   case ARG_PERIODCOUNT:
     g_return_if_fail (!GST_FLAG_IS_SET (this, GST_ALSA_RUNNING));
@@ -383,13 +378,13 @@ gst_alsa_get_property (GObject *object, guint prop_id, GValue *value,
     g_value_set_string (value, this->device);
     break;
   case ARG_FORMAT:
-    g_value_set_enum (value, this->format);
+    g_value_set_enum (value, this->format ? this->format->format : SND_PCM_FORMAT_UNKNOWN);
     break;
   case ARG_CHANNELS:
-    g_value_set_int (value, this->channels);
+    g_value_set_int (value, this->format ? this->format->channels : 2);
     break;
   case ARG_RATE:
-    g_value_set_int (value, this->rate);
+    g_value_set_int (value, this->format ? this->format->rate : 44100);
     break;
   case ARG_PERIODCOUNT:
     g_value_set_int (value, this->period_count);
@@ -474,9 +469,6 @@ gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *templ,
   g_return_val_if_fail ((this = GST_ALSA (element)), NULL);
   g_return_val_if_fail (!GST_FLAG_IS_SET (element, GST_ALSA_RUNNING), NULL);
 
-  /* you can't request a pad if the non-request pad already has more than 1 channel */
-  g_return_val_if_fail (this->channels <= element->numpads, NULL);
-
   if (name) {
     /* locate the channel number in the requested pad name. to do so look at
        where the % (which begins the %d) is in the template name. */
@@ -516,15 +508,19 @@ found_channel:
   return this->pads[channel].pad;
 }
 
-/* gets the matching alsa format or SND_PCM_FORMAT_UNKNOWN if none matches */
-static snd_pcm_format_t
+/* gets the matching alsa format or NULL if none matches */
+static GstAlsaFormat *
 gst_alsa_get_format (GstCaps *caps)
 {
   const gchar *format_name;
+  GstAlsaFormat *ret;
+
+  if (!(ret = g_new (GstAlsaFormat, 1)))
+    return NULL;
 
   /* we have to differentiate between int and float formats */
   if (!gst_caps_get_string (caps, "format", &format_name))
-    return SND_PCM_FORMAT_UNKNOWN;
+    goto error;
 
   if (strncmp (format_name, "int", 3) == 0) {
     gboolean sign;
@@ -537,36 +533,40 @@ gst_alsa_get_format (GstCaps *caps)
                        "law", &law,
                        "signed", &sign,
                        NULL))
-        return SND_PCM_FORMAT_UNKNOWN;
+        goto error;
 	
     /* extract endianness if needed */
     if (width > 8) {
       if (!gst_caps_get (caps,
                          "endianness", &endianness,
                          NULL))
-        return SND_PCM_FORMAT_UNKNOWN;      
-    } else {
+        goto error;
+      } else {
       endianness = G_BYTE_ORDER;
     }
     
     /* find corresponding alsa format */
     switch (law) {
-      case 0: return snd_pcm_build_linear_format (depth, width, sign ? 0 : 1, endianness == G_LITTLE_ENDIAN ? 0 : 1);
+      case 0: 
+	ret->format = snd_pcm_build_linear_format (depth, width, sign ? 0 : 1, endianness == G_LITTLE_ENDIAN ? 0 : 1);
+        break;
       case 1: 
         if (width == 8 && depth == 8 && sign == FALSE) {
-          return SND_PCM_FORMAT_MU_LAW;
+          ret->format = SND_PCM_FORMAT_MU_LAW;
+	  break;
         } else {
-          return SND_PCM_FORMAT_UNKNOWN;
+          goto error;
         }
       case 2: 
         if (width == 8 && depth == 8 && sign == FALSE) {
-          return SND_PCM_FORMAT_A_LAW;
+          ret->format = SND_PCM_FORMAT_A_LAW;
+	  break;
         } else {
-          return SND_PCM_FORMAT_UNKNOWN;
+          goto error;
         }
-      default: return SND_PCM_FORMAT_UNKNOWN;
+      default: 
+        goto error;
     }
-
   } else if (strncmp (format_name, "float", 5) == 0) {
     gchar *layout;
     gfloat intercept, slope;
@@ -576,27 +576,54 @@ gst_alsa_get_format (GstCaps *caps)
                              "intercept", &intercept,
                              "slope", &slope,
                              NULL))
-      return SND_PCM_FORMAT_UNKNOWN;
+      goto error;
     if (intercept != 0.0f || slope != 1.0f) {
-      return SND_PCM_FORMAT_UNKNOWN;      
+      goto error;
     }
-	/* match layout to format wrt to endianness */
+    /* match layout to format wrt to endianness */
     if (strncmp (layout, "gfloat", 6) == 0) {
-      if (G_BYTE_ORDER == G_LITTLE_ENDIAN) return SND_PCM_FORMAT_FLOAT_LE;
-      if (G_BYTE_ORDER == G_BIG_ENDIAN) return SND_PCM_FORMAT_FLOAT_BE;
-      return SND_PCM_FORMAT_FLOAT;
+      if (G_BYTE_ORDER == G_LITTLE_ENDIAN) {
+	ret->format = SND_PCM_FORMAT_FLOAT_LE;
+      } else if (G_BYTE_ORDER == G_BIG_ENDIAN) {
+        ret->format = SND_PCM_FORMAT_FLOAT_BE;
+      } else {
+        ret->format = SND_PCM_FORMAT_FLOAT;
+      }
     } else if (strncmp (layout, "gdouble", 7) == 0) {
-      if (G_BYTE_ORDER == G_LITTLE_ENDIAN) return SND_PCM_FORMAT_FLOAT64_LE;
-      if (G_BYTE_ORDER == G_BIG_ENDIAN) return SND_PCM_FORMAT_FLOAT64_BE;
-      return SND_PCM_FORMAT_FLOAT64;
+      if (G_BYTE_ORDER == G_LITTLE_ENDIAN) {
+	ret->format = SND_PCM_FORMAT_FLOAT64_LE;
+      } else if (G_BYTE_ORDER == G_BIG_ENDIAN) {
+        ret->format = SND_PCM_FORMAT_FLOAT64_BE;
+      } else {
+        ret->format = SND_PCM_FORMAT_FLOAT64;
+      }
     } else {
-      return SND_PCM_FORMAT_UNKNOWN;
+      goto error;
     }
   }
 
-  return SND_PCM_FORMAT_UNKNOWN;
+  /* get rate and channels */
+  if (!gst_caps_get (caps, "rate", &ret->rate,
+                           "channels", &ret->channels,
+                           NULL))
+    goto error;
+  
+  return ret;
+  
+error:
+  g_free (ret);
+  return NULL;
 }
 
+static inline gboolean
+gst_alsa_formats_match (GstAlsaFormat *one, GstAlsaFormat *two)
+{
+  if (one == two) return TRUE;
+  if (one == NULL || two == NULL) return FALSE;
+  return (one->format == two->format) && 
+         (one->rate == two->rate) && 
+         (one->channels == two->channels);
+}
 /* get props for a spec */
 static GstProps *
 gst_alsa_get_props (snd_pcm_format_t format)
@@ -695,7 +722,7 @@ gst_alsa_caps (snd_pcm_format_t format, gint rate, gint channels)
       if (props != NULL) {
         add_channels (props, rate, channels);
         ret_caps = gst_caps_append (ret_caps, gst_caps_new (g_strdup (snd_pcm_format_name (i)),
-		      													"audio/raw", props));
+                                    "audio/raw", props));
       }
     }
   }
@@ -708,8 +735,7 @@ GstPadLinkReturn
 gst_alsa_link (GstPad *pad, GstCaps *caps)
 {
   GstAlsa *this;
-  snd_pcm_format_t format;
-  gint rate, channels;
+  GstAlsaFormat *format;
 
   g_return_val_if_fail (caps != NULL, GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (pad != NULL, GST_PAD_LINK_REFUSED);
@@ -722,33 +748,42 @@ gst_alsa_link (GstPad *pad, GstCaps *caps)
         return GST_PAD_LINK_REFUSED;
 
     format = gst_alsa_get_format (caps);
-    GST_DEBUG (GST_CAT_CAPS, "found format %s\n", snd_pcm_format_name (format));
-    /* FIXME: allow changing the format here, even by retrying caps on other pads */
-    if (format == SND_PCM_FORMAT_UNKNOWN || (this->format != SND_PCM_FORMAT_UNKNOWN && this->format != format))
-      return GST_PAD_LINK_REFUSED;
-    if (!gst_caps_get (caps, "rate", &rate,
-                             "channels", &channels,
-                             NULL))
-      return GST_PAD_LINK_REFUSED;
-    if (this->format != SND_PCM_FORMAT_UNKNOWN && this->rate != rate)
-      return GST_PAD_LINK_REFUSED;
-    if (this->format != SND_PCM_FORMAT_UNKNOWN && ((this->channels > 1 || channels > 1)))
-      return GST_PAD_LINK_REFUSED;
-
-    if (this->format == SND_PCM_FORMAT_UNKNOWN) {
-      this->channels = channels;
-    } else {
-      this->channels++;
+    if (format == NULL)
+      return GST_PAD_LINK_DELAYED;
+    
+    GST_DEBUG (GST_CAT_CAPS, "found format %s\n", snd_pcm_format_name (format->format));
+    
+    if (gst_alsa_formats_match (this->format, format)) {
+      g_free (format);
+      return GST_PAD_LINK_OK;
     }
-    this->format = format;
-    this->rate = rate;
 
-    /* sync the params */
-    if (GST_FLAG_IS_SET (this, GST_ALSA_RUNNING)) gst_alsa_stop_audio (this);
-    if (GST_FLAG_IS_SET (this, GST_ALSA_OPEN))    gst_alsa_close_audio (this);
+    if (!GST_FLAG_IS_SET (this, GST_ALSA_CAPS_NEGO)) {
+      gint i;
 
-    if (!gst_alsa_open_audio (this))  return GST_PAD_LINK_REFUSED;
-    if (!gst_alsa_start_audio (this)) return GST_PAD_LINK_REFUSED;
+      GST_FLAG_SET (this, GST_ALSA_CAPS_NEGO);
+
+      for (i = 0; i < ((GstElement *) this)->numpads; i++) {
+        g_assert (this->pads[i].pad != NULL);
+        if (this->pads[i].pad == pad)
+	  continue;
+        if (gst_pad_try_set_caps (this->pads[i].pad, gst_caps_ref (caps)) == GST_PAD_LINK_REFUSED) {
+          g_free (format);
+          return GST_PAD_LINK_REFUSED;
+        }
+      }
+    
+      GST_FLAG_UNSET (this, GST_ALSA_CAPS_NEGO);
+      g_free (this->format);
+      this->format = format;
+
+      /* sync the params */
+      if (GST_FLAG_IS_SET (this, GST_ALSA_RUNNING)) gst_alsa_stop_audio (this);
+      if (GST_FLAG_IS_SET (this, GST_ALSA_OPEN))    gst_alsa_close_audio (this);
+
+      if (!gst_alsa_open_audio (this))  return GST_PAD_LINK_REFUSED;
+      if (!gst_alsa_start_audio (this)) return GST_PAD_LINK_REFUSED;
+    }
 
     return GST_PAD_LINK_OK;
   }
@@ -763,8 +798,8 @@ gst_alsa_src_get_buffer_pool (GstPad *pad)
 
   GstAlsa *this = GST_ALSA (gst_pad_get_parent (pad));
 
-  width = snd_pcm_format_physical_width (this->format);
-  bytes_per_frame = ( width / 8 ) * (GST_ELEMENT (this)->numpads == 1 ? this->channels : 1);
+  width = snd_pcm_format_physical_width (this->format->format);
+  bytes_per_frame = ( width / 8 ) * (GST_ELEMENT (this)->numpads == 1 ? this->format->channels : 1);
 
   /* FIXME : is this right ? constant size buffers are probably a good thing,
      but what if the size changes (e.g. during xrun autorecovery) ? */
@@ -782,22 +817,29 @@ gst_alsa_change_state (GstElement *element)
 
   switch (GST_STATE_TRANSITION (element)) {
   case GST_STATE_NULL_TO_READY:
-    if (GST_FLAG_IS_SET (element, GST_ALSA_OPEN) == FALSE)
+    if (!GST_FLAG_IS_SET (element, GST_ALSA_OPEN))
       if (!gst_alsa_open_audio (this))
         return GST_STATE_FAILURE;
     break;
   case GST_STATE_READY_TO_PAUSED:
-    break;
-  case GST_STATE_PAUSED_TO_PLAYING:
-    if (GST_FLAG_IS_SET (element, GST_ALSA_RUNNING) == FALSE)
+    if (!GST_FLAG_IS_SET (element, GST_ALSA_RUNNING))
       if (!gst_alsa_start_audio (this))
         return GST_STATE_FAILURE;
-
+    break;
+  case GST_STATE_PAUSED_TO_PLAYING:
+    if (snd_pcm_state (this->handle) == SND_PCM_STATE_PAUSED)
+      snd_pcm_pause (this->handle, 0);
+    break;
   case GST_STATE_PLAYING_TO_PAUSED:
+    if (GST_ALSA_CAPS_IS_SET(this, GST_ALSA_CAPS_PAUSE)) {
+    if (snd_pcm_state (this->handle) == SND_PCM_STATE_RUNNING)
+      snd_pcm_pause (this->handle, 1);
+      break;
+    }
+    /* if device doesn't know how to pause, we just stop */
+  case GST_STATE_PAUSED_TO_READY:
     if (GST_FLAG_IS_SET (element, GST_ALSA_RUNNING))
       gst_alsa_drain_audio (this);
-    break;
-  case GST_STATE_PAUSED_TO_READY:
     break;
   case GST_STATE_READY_TO_NULL:
     if (GST_FLAG_IS_SET (element, GST_ALSA_OPEN))
@@ -821,21 +863,21 @@ gst_alsa_do_mmap (GstAlsa *this, snd_pcm_sframes_t *avail)
 {
   snd_pcm_uframes_t offset;
   snd_pcm_channel_area_t *dst, *src, *areas;
-  int i, err, width = snd_pcm_format_physical_width (this->format);
+  int i, err, width = snd_pcm_format_physical_width (this->format->format);
 
   /* areas points to the memory areas that belong to gstreamer. */
-  areas = src = dst = calloc(this->channels, sizeof(snd_pcm_channel_area_t));
+  areas = src = dst = calloc(this->format->channels, sizeof(snd_pcm_channel_area_t));
 
   if (((GstElement *) this)->numpads == 1) {
     /* interleaved */
-    for (i = 0; i < this->channels; i++) {
+    for (i = 0; i < this->format->channels; i++) {
       areas[i].addr = this->pads[0].data;
       areas[i].first = i * width;
-      areas[i].step = this->channels * width;
+      areas[i].step = this->format->channels * width;
     }
   } else {
     /* noninterleaved */
-    for (i = 0; i < this->channels; i++) {
+    for (i = 0; i < this->format->channels; i++) {
       areas[i].addr = this->pads[i].data;
       areas[i].first = 0;
       areas[i].step = width;
@@ -849,7 +891,7 @@ gst_alsa_do_mmap (GstAlsa *this, snd_pcm_sframes_t *avail)
     return -1;
   }
 
-  if ((err = snd_pcm_areas_copy (dst, offset, src, 0, this->channels, *avail, this->format)) < 0) {
+  if ((err = snd_pcm_areas_copy (dst, offset, src, 0, this->format->channels, *avail, this->format->format)) < 0) {
     snd_pcm_mmap_commit (this->handle, offset, 0);
     g_warning ("gstalsa: data copy failed: %s", snd_strerror (err));
     return -1;
@@ -875,7 +917,6 @@ gst_alsa_update_avail (GstAlsa *this)
   }
   return avail;
 }
-
 /* returns TRUE, if the loop should go on */
 inline static gboolean
 gst_alsa_pcm_wait (GstAlsa *this)
@@ -898,6 +939,34 @@ gst_alsa_pcm_wait (GstAlsa *this)
   return TRUE;
 }
 
+/**
+ * error out or make sure we're in SND_PCM_STATE_RUNNING afterwards 
+ * return FALSE if we're not
+ */
+inline static gboolean
+gst_alsa_start (GstAlsa *this)
+{
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "Starting playback");
+
+  switch (snd_pcm_state(this->handle)) {
+    case SND_PCM_STATE_XRUN:
+      gst_alsa_xrun_recovery (this);
+      return gst_alsa_start (this);
+    case SND_PCM_STATE_PREPARED:
+      ERROR_CHECK (snd_pcm_start(this->handle), "error starting playback: %s");
+      break;
+    case SND_PCM_STATE_PAUSED:
+      ERROR_CHECK (snd_pcm_pause (this->handle, 0), "error unpausing: %s");
+      break;
+    case SND_PCM_STATE_RUNNING:
+      break;
+    default:
+      /* it's a bug when we get here */
+      g_assert_not_reached ();
+      break;
+  }
+  return TRUE;
+}
 static void
 gst_alsa_sink_loop (GstElement *element)
 {
@@ -909,7 +978,7 @@ gst_alsa_sink_loop (GstElement *element)
   g_return_if_fail (this != NULL);
 
   /* caps nego: fetch 1 byte from every pad */
-  if (this->format == SND_PCM_FORMAT_UNKNOWN) {
+  if (this->format == NULL) {
     GST_DEBUG (GST_CAT_NEGOTIATION, "starting caps negotiation");
     for (i = 0; i < element->numpads; i++) {
       g_assert (this->pads[i].pad != NULL);
@@ -919,7 +988,7 @@ gst_alsa_sink_loop (GstElement *element)
       if (num_bytes == 0)
         return;
     }
-    if (this->format == SND_PCM_FORMAT_UNKNOWN) {
+    if (this->format == NULL) {
       gst_element_error (GST_ELEMENT (this), "alsasink: No caps available");
     }
   }
@@ -930,7 +999,7 @@ sink_restart:
   if (avail == -EPIPE) goto sink_restart;
   if (avail < 0) return;
   if (avail > 0) {
-    int width = snd_pcm_format_physical_width (this->format);
+    int width = snd_pcm_format_physical_width (this->format->format);
     
     /* Not enough space. We grab data nonetheless and sleep afterwards */
     if (avail < this->period_size) {
@@ -938,7 +1007,7 @@ sink_restart:
     }
     
     /* check how many bytes we still have in all our bytestreams */
-    bytes = avail * ( width / 8 ) * (element->numpads == 1 ? this->channels : 1);
+    bytes = avail * ( width / 8 ) * (element->numpads == 1 ? this->format->channels : 1);
     for (i = 0; i < element->numpads; i++) {
       g_assert (this->pads[i].pad != NULL);
       do {
@@ -948,31 +1017,35 @@ sink_restart:
         return;
       bytes = MIN (bytes, num_bytes);
     }
-    avail = bytes / (width / 8 ) / (element->numpads == 1 ? this->channels : 1);
-
-    /* FIXME: lotsa stuff can have happened while fetching data. Do we need to check something? */
+    avail = bytes / (width / 8 ) / (element->numpads == 1 ? this->format->channels : 1);
 
     /* wait until the hw buffer has enough space */
-    while ((avail2 = gst_alsa_update_avail (this)) < avail) {
-      if (avail2 == -EPIPE) goto sink_restart;
-      if (avail < 0) return;
+    while (gst_element_get_state (element) == GST_STATE_PLAYING && (avail2 = gst_alsa_update_avail (this)) < avail) {
+      if (avail2 <= -EPIPE) goto sink_restart;
+      if (avail2 < 0) return;
+      if (avail2 < avail && snd_pcm_state(this->handle) != SND_PCM_STATE_RUNNING)
+	if (!gst_alsa_start (this)) return;
       if (gst_alsa_pcm_wait (this) == FALSE)
         return;
     }
+
+    if (gst_element_get_state (element) != GST_STATE_PLAYING)
+      return;
+    /* FIXME: lotsa stuff can have happened while fetching data. Do we need to check something? */
+
+  
     /* put this data into alsa */
     if ((copied = gst_alsa_do_mmap (this, &avail)) < 0)
       return;
 
     /* flush the data */
-    bytes = copied * ( width / 8 ) * (element->numpads == 1 ? this->channels : 1);
+    bytes = copied * ( width / 8 ) * (element->numpads == 1 ? this->format->channels : 1);
     for (i = 0; i < element->numpads; i++)
       gst_bytestream_flush (this->pads[i].bs, bytes);
+  }
 
-    /* BUG: we start the stream explicitly, autostart doesn't work correctly (alsa 0.9.0rc7) */
-    if (snd_pcm_state(this->handle) == SND_PCM_STATE_PREPARED && snd_pcm_avail_update (this->handle) == 0) {
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "Explicitly starting playback");
-      snd_pcm_start(this->handle);
-    }
+  if (snd_pcm_state(this->handle) != SND_PCM_STATE_RUNNING && snd_pcm_avail_update (this->handle) == 0) {
+    gst_alsa_start (this);
   }
 
 }
@@ -991,16 +1064,22 @@ gst_alsa_src_loop (GstElement *element)
   g_return_if_fail (this != NULL);
 
   /* set the caps on all pads */
-  if (!this->caps_set) {
+  if (!this->format) {
+    if (!(this->format = g_new (GstAlsaFormat, 1))) {
+      gst_element_error (element, "No more memory");
+    }
+    /* FIXME: make this settable */
+    this->format->format = SND_PCM_FORMAT_S16;
+    this->format->rate = 44100;
+    this->format->channels = (element->numpads == 1) ? 2 : element->numpads;
     GST_DEBUG (GST_CAT_NEGOTIATION, "starting caps negotiationgst_alsa_pcm_wait");
-    caps = gst_alsa_caps (this->format, this->rate, this->channels);
+    caps = gst_alsa_caps (this->format->format, this->format->rate, this->format->channels);
     for (i = 0; i < element->numpads; i++) {
       if (gst_pad_try_set_caps (this->pads[i].pad, caps) <= 0) {
         GST_DEBUG (GST_CAT_NEGOTIATION, "setting caps (%p) in alsasrc (%p) on pad %d failed", caps, this, i);
         return;
       }
     }
-    this->caps_set = TRUE;
   }
 
 src_restart:
@@ -1008,13 +1087,14 @@ src_restart:
   while ((avail = gst_alsa_update_avail (this)) < this->period_size) {
     if (avail == -EPIPE) goto src_restart;
     if (avail < 0) return;
+    if (snd_pcm_state(this->handle) != SND_PCM_STATE_RUNNING) break;
     /* wait */
     if (gst_alsa_pcm_wait (this) == FALSE)
       return;
   }
   if (avail > 0) {
-    int width = snd_pcm_format_physical_width (this->format);
-    int bytes_per_frame = ( width / 8 ) * (element->numpads == 1 ? this->channels : 1);
+    int width = snd_pcm_format_physical_width (this->format->format);
+    int bytes_per_frame = ( width / 8 ) * (element->numpads == 1 ? this->format->channels : 1);
     if ((copied = gst_alsa_do_mmap (this, &avail)) < 0)
       return;
       
@@ -1043,12 +1123,12 @@ src_restart:
     }
 
     pool = NULL;
+  }
 
-    /* BUG: we start the stream explicitly, autostart doesn't work correctly (alsa 0.9.0rc7) */
-    if (snd_pcm_state(this->handle) == SND_PCM_STATE_PREPARED && snd_pcm_avail_update (this->handle) == 0) {
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "Explicitly starting capture");
-      snd_pcm_start(this->handle);
-    }
+  /* BUG: we start the stream explicitly, autostart doesn't work correctly (alsa 0.9.0rc7) */
+  if (snd_pcm_state(this->handle) == SND_PCM_STATE_PREPARED && snd_pcm_avail_update (this->handle) == 0) {
+    GST_DEBUG (GST_CAT_PLUGIN_INFO, "Explicitly starting capture");
+    snd_pcm_start(this->handle);
   }
 }
 
@@ -1101,11 +1181,17 @@ gst_alsa_sink_check_event (GstAlsa *this, gint pad_nr)
   gst_bytestream_get_status (this->pads[pad_nr].bs, &avail, &event);
 
   if (event) {
-    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-      gst_element_set_eos (GST_ELEMENT (this));
-      cont = FALSE;
-    } else {
-      g_warning ("GstAlsaSink: got an unknown event (Type: %d)", GST_EVENT_TYPE (event));
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_EOS:
+        gst_element_set_eos (GST_ELEMENT (this));
+        cont = FALSE;
+        break;
+      case GST_EVENT_INTERRUPT:
+	cont = FALSE;
+        break;
+      default:
+        g_warning ("GstAlsaSink: got an unknown event (Type: %d)", GST_EVENT_TYPE (event));
+        break;
     }
     gst_event_unref (event);
   } else {
@@ -1135,7 +1221,11 @@ gst_alsa_open_audio (GstAlsa *this)
   GST_FLAG_SET (this, GST_ALSA_OPEN);
   return TRUE;
 }
-/* you must set all hw parameters at once - thx ALSA for not documenting this */
+/**
+ * You must set all hw parameters at once and can't use already set params and
+ * change them.
+ * Thx ALSA for not documenting this
+ */
 static gboolean
 gst_alsa_set_hw_params (GstAlsa *this)
 {
@@ -1145,13 +1235,13 @@ gst_alsa_set_hw_params (GstAlsa *this)
   unsigned int count_min, count_max;
   
   /* whether to use default values when setting params */
-  gboolean def = (this->format == SND_PCM_FORMAT_UNKNOWN); 
+  gboolean def = (this->format == NULL); 
 
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (this->handle != NULL, FALSE);
 
   GST_INFO (GST_CAT_PLUGIN_INFO, "Preparing channel: %s %dHz, %d channels\n",
-            snd_pcm_format_name (this->format), this->rate, this->channels);
+            snd_pcm_format_name (this->format->format), this->format->rate, this->format->channels);
 
   snd_pcm_hw_params_alloca (&hw_params);
   ERROR_CHECK (snd_pcm_hw_params_any (this->handle, hw_params),
@@ -1169,12 +1259,12 @@ gst_alsa_set_hw_params (GstAlsa *this)
   ERROR_CHECK (snd_pcm_hw_params_set_access_mask (this->handle, hw_params, mask),
                "The Gstreamer ALSA plugin does not support your hardware. Error: %s");
   
-  ERROR_CHECK (snd_pcm_hw_params_set_format (this->handle, hw_params, def ? SND_PCM_FORMAT_S16 : this->format),
-               "Sample format (%s) not available: %s", snd_pcm_format_name (def ? SND_PCM_FORMAT_S16 : this->format));
-  ERROR_CHECK (snd_pcm_hw_params_set_channels (this->handle, hw_params, this->channels),
-               "Channels count (%d) not available: %s", this->channels);
-  ERROR_CHECK (snd_pcm_hw_params_set_rate (this->handle, hw_params, def ? 44100 : this->rate, 0),
-                 "error setting rate (%d): %s", def ? 44100 : this->rate);
+  ERROR_CHECK (snd_pcm_hw_params_set_format (this->handle, hw_params, def ? SND_PCM_FORMAT_S16 : this->format->format),
+               "Sample format (%s) not available: %s", snd_pcm_format_name (def ? SND_PCM_FORMAT_S16 : this->format->format));
+  ERROR_CHECK (snd_pcm_hw_params_set_channels (this->handle, hw_params, def ? ((GstElement *) this)->numpads : this->format->channels),
+               "Channels count (%d) not available: %s", def ? ((GstElement *) this)->numpads : this->format->channels);
+  ERROR_CHECK (snd_pcm_hw_params_set_rate (this->handle, hw_params, def ? 44100 : this->format->rate, 0),
+                 "error setting rate (%d): %s", def ? 44100 : this->format->rate);
 
   if (snd_pcm_hw_params_get_period_size_min (hw_params, &size_min, 0) < 0) size_min = this->period_size;
   if (snd_pcm_hw_params_get_period_size_max (hw_params, &size_max, 0) < 0) size_max = this->period_size;
@@ -1194,6 +1284,11 @@ gst_alsa_set_hw_params (GstAlsa *this)
   ERROR_CHECK (snd_pcm_hw_params (this->handle, hw_params),
                "Could not set hardware parameters: %s");
 
+  /* now get the pcm caps */
+  GST_ALSA_CAPS_SET (this, GST_ALSA_CAPS_PAUSE, snd_pcm_hw_params_can_pause (hw_params));
+  GST_ALSA_CAPS_SET (this, GST_ALSA_CAPS_RESUME, snd_pcm_hw_params_can_resume (hw_params));
+  GST_ALSA_CAPS_SET (this, GST_ALSA_CAPS_SYNC_START, snd_pcm_hw_params_can_sync_start (hw_params));
+  
   return TRUE;
 }
 static gboolean
@@ -1211,7 +1306,8 @@ gst_alsa_set_sw_params (GstAlsa *this)
                "could not set silence threshold: %s");
   ERROR_CHECK (snd_pcm_sw_params_set_avail_min (this->handle, sw_params, this->period_size),
                "could not set avail min: %s");
-  ERROR_CHECK (snd_pcm_sw_params_set_start_threshold (this->handle, sw_params, 1),
+  /* we start explicitly */
+  ERROR_CHECK (snd_pcm_sw_params_set_start_threshold (this->handle, sw_params, this->period_size * this->period_count + 1),
                "could not set start mode: %s");
   ERROR_CHECK (snd_pcm_sw_params_set_stop_threshold (this->handle, sw_params, this->period_size * this->period_count),
                "could not set stop mode: %s");
