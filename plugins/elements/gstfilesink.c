@@ -241,7 +241,7 @@ gst_filesink_open_file (GstFileSink *sink)
   if (sink->file == NULL) {
     perror ("open");
     gst_element_error (GST_ELEMENT (sink), g_strconcat("Error opening file \"",
-      gst_filesink_getcurrentfilename(sink), "\": ", sys_errlist[errno], NULL));
+      gst_filesink_getcurrentfilename(sink), "\": ", g_strerror(errno), NULL));
     return FALSE;
   } 
 
@@ -261,7 +261,7 @@ gst_filesink_close_file (GstFileSink *sink)
   {
     perror ("close");
     gst_element_error (GST_ELEMENT (sink), g_strconcat("Error closing file \"",
-      gst_filesink_getcurrentfilename(sink), "\": ", sys_errlist[errno], NULL));
+      gst_filesink_getcurrentfilename(sink), "\": ", g_strerror(errno), NULL));
   }
   else {
     GST_FLAG_UNSET (sink, GST_FILESINK_OPEN);
@@ -286,7 +286,7 @@ gst_filesink_handle_event (GstPad *pad, GstEvent *event)
         if (fflush(filesink->file))
           gst_element_error(GST_ELEMENT(filesink),
             "Error flushing the buffer cache of file \'%s\' to disk: %s",
-            gst_filesink_getcurrentfilename(filesink), sys_errlist[errno]);
+            gst_filesink_getcurrentfilename(filesink), g_strerror(errno));
 
       if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
         g_warning("Any other then byte-offset seeking is not supported!\n");
@@ -332,7 +332,7 @@ gst_filesink_handle_event (GstPad *pad, GstEvent *event)
       if (fflush(filesink->file))
         gst_element_error(GST_ELEMENT(filesink),
           "Error flushing the buffer cache of file \'%s\' to disk: %s",
-          gst_filesink_getcurrentfilename(filesink), sys_errlist[errno]);
+          gst_filesink_getcurrentfilename(filesink), g_strerror(errno));
       break;
     default:
       gst_pad_event_default (pad, event);
