@@ -424,7 +424,7 @@ gst_multifdsink_add (GstMultiFdSink * sink, int fd)
   gint flags, res;
   struct stat statbuf;
 
-  GST_DEBUG_OBJECT (sink, "adding client on fd %d", fd);
+  GST_DEBUG_OBJECT (sink, "[fd %5d] adding client", fd);
 
   /* create client datastructure */
   client = g_new0 (GstTCPClient, 1);
@@ -452,7 +452,7 @@ gst_multifdsink_add (GstMultiFdSink * sink, int fd)
   if (clink != NULL) {
     client->status = GST_CLIENT_STATUS_DUPLICATE;
     g_mutex_unlock (sink->clientslock);
-    GST_WARNING_OBJECT (sink, "duplicate client with fd %d found", fd);
+    GST_WARNING_OBJECT (sink, "[fd %5d] duplicate client found, refusing", fd);
     g_signal_emit (G_OBJECT (sink),
         gst_multifdsink_signals[SIGNAL_CLIENT_REMOVED], 0, fd, client->status);
     g_free (client);
@@ -492,7 +492,7 @@ gst_multifdsink_remove (GstMultiFdSink * sink, int fd)
 {
   GList *clink;
 
-  GST_DEBUG_OBJECT (sink, "removing client on fd %d", fd);
+  GST_DEBUG_OBJECT (sink, "[fd %5d] removing client", fd);
 
   g_mutex_lock (sink->clientslock);
   clink = g_hash_table_lookup (sink->fd_hash, &fd);
@@ -503,7 +503,7 @@ gst_multifdsink_remove (GstMultiFdSink * sink, int fd)
     gst_multifdsink_remove_client_link (sink, clink);
     SEND_COMMAND (sink, CONTROL_RESTART);
   } else {
-    GST_WARNING_OBJECT (sink, "no client with fd %d found!", fd);
+    GST_WARNING_OBJECT (sink, "[fd %5d] no client with this fd found!", fd);
   }
   g_mutex_unlock (sink->clientslock);
 }
@@ -578,7 +578,7 @@ gst_multifdsink_get_stats (GstMultiFdSink * sink, int fd)
 
   /* python doesn't like a NULL pointer yet */
   if (result == NULL) {
-    GST_WARNING_OBJECT (sink, "no client with fd %d found!", fd);
+    GST_WARNING_OBJECT (sink, "[fd %5d] no client with this found!", fd);
     result = g_value_array_new (0);
   }
 
@@ -605,29 +605,28 @@ gst_multifdsink_remove_client_link (GstMultiFdSink * sink, GList * link)
   /* FIXME: if we keep track of ip we can log it here and signal */
   switch (client->status) {
     case GST_CLIENT_STATUS_OK:
-      GST_WARNING_OBJECT (sink, "removing client %p with fd %d for no reason",
-          client, fd);
+      GST_WARNING_OBJECT (sink, "[fd %5d] removing client %p for no reason",
+          fd, client);
       break;
     case GST_CLIENT_STATUS_CLOSED:
-      GST_DEBUG_OBJECT (sink, "removing client %p with fd %d because of close",
-          client, fd);
+      GST_DEBUG_OBJECT (sink, "[fd %5d] removing client %p because of close",
+          fd, client);
       break;
     case GST_CLIENT_STATUS_REMOVED:
       GST_DEBUG_OBJECT (sink,
-          "removing client %p with fd %d because the app removed it", client,
-          fd);
+          "[fd %5d] removing client %p because the app removed it", fd, client);
       break;
     case GST_CLIENT_STATUS_SLOW:
       GST_INFO_OBJECT (sink,
-          "removing client %p with fd %d because it was too slow", client, fd);
+          "[fd %5d] removing client %p because it was too slow", fd, client);
       break;
     case GST_CLIENT_STATUS_ERROR:
       GST_WARNING_OBJECT (sink,
-          "removing client %p with fd %d because of error", client, fd);
+          "[fd %5d] removing client %p because of error", fd, client);
       break;
     default:
       GST_WARNING_OBJECT (sink,
-          "removing client %p with fd %d with invalid reason", client, fd);
+          "[fd %5d] removing client %p with invalid reason", fd, client);
       break;
   }
 
@@ -653,7 +652,7 @@ gst_multifdsink_remove_client_link (GstMultiFdSink * sink, GList * link)
 
   if (!g_hash_table_remove (sink->fd_hash, &client->fd.fd)) {
     GST_WARNING_OBJECT (sink,
-        "error removing client %p with fd %d from hash", client, fd);
+        "[fd %5d] error removing client %p from hash", client->fd.fd, client);
   }
   sink->clients = g_list_delete_link (sink->clients, link);
 
@@ -676,25 +675,25 @@ gst_multifdsink_handle_client_read (GstMultiFdSink * sink,
   fd = client->fd.fd;
 
   if (ioctl (fd, FIONREAD, &avail) < 0) {
-    GST_WARNING_OBJECT (sink, "ioctl failed for fd %d: %s",
-        fd, g_strerror (errno));
+    GST_WARNING_OBJECT (sink, "[fd %5d] ioctl failed: %s (%d)",
+        fd, g_strerror (errno), errno);
     client->status = GST_CLIENT_STATUS_ERROR;
     ret = FALSE;
     return ret;
   }
 
-  GST_DEBUG_OBJECT (sink, "select reports client read on fd %d of %d bytes",
+  GST_DEBUG_OBJECT (sink, "[fd %5d] select reports client read of %d bytes",
       fd, avail);
 
   ret = TRUE;
 
   if (avail == 0) {
     /* client sent close, so remove it */
-    GST_DEBUG_OBJECT (sink, "client asked for close, removing on fd %d", fd);
+    GST_DEBUG_OBJECT (sink, "[fd %5d] client asked for close, removing", fd);
     client->status = GST_CLIENT_STATUS_CLOSED;
     ret = FALSE;
   } else if (avail < 0) {
-    GST_WARNING_OBJECT (sink, "avail < 0, removing on fd %d", fd);
+    GST_WARNING_OBJECT (sink, "[fd %5d] avail < 0, removing", fd);
     client->status = GST_CLIENT_STATUS_ERROR;
     ret = FALSE;
   } else {
@@ -708,18 +707,18 @@ gst_multifdsink_handle_client_read (GstMultiFdSink * sink,
       /* this is the maximum we can read */
       gint to_read = MIN (avail, 512);
 
-      GST_DEBUG_OBJECT (sink, "client on fd %d wants us to read %d bytes",
+      GST_DEBUG_OBJECT (sink, "[fd %5d] client wants us to read %d bytes",
           fd, to_read);
 
       nread = read (fd, dummy, to_read);
       if (nread < -1) {
-        GST_WARNING_OBJECT (sink, "could not read bytes from fd %d: %s",
-            fd, g_strerror (errno));
+        GST_WARNING_OBJECT (sink, "[fd %5d] could not read %d bytes: %s (%d)",
+            fd, to_read, g_strerror (errno), errno);
         client->status = GST_CLIENT_STATUS_ERROR;
         ret = FALSE;
         break;
       } else if (nread == 0) {
-        GST_WARNING_OBJECT (sink, "fd %d: gave 0 bytes in read, removing", fd);
+        GST_WARNING_OBJECT (sink, "[fd %5d] 0 bytes in read, removing", fd);
         client->status = GST_CLIENT_STATUS_ERROR;
         ret = FALSE;
         break;
@@ -741,8 +740,8 @@ gst_multifdsink_client_queue_data (GstMultiFdSink * sink, GstTCPClient * client,
   GST_BUFFER_DATA (buf) = data;
   GST_BUFFER_SIZE (buf) = len;
 
-  GST_LOG_OBJECT (sink, "Queueing data of length %d for fd %d",
-      len, client->fd.fd);
+  GST_LOG_OBJECT (sink, "[fd %5d] queueing data of length %d",
+      client->fd.fd, len);
 
   client->sending = g_slist_append (client->sending, buf);
 
@@ -759,8 +758,8 @@ gst_multifdsink_client_queue_caps (GstMultiFdSink * sink, GstTCPClient * client,
   gchar *string;
 
   string = gst_caps_to_string (caps);
-  GST_DEBUG_OBJECT (sink, "Queueing caps %s for fd %d through GDP", string,
-      client->fd.fd);
+  GST_DEBUG_OBJECT (sink, "[fd %5d] Queueing caps %s through GDP",
+      client->fd.fd, string);
   g_free (string);
 
   if (!gst_dp_packet_from_caps (caps, 0, &length, &header, &payload)) {
@@ -796,14 +795,14 @@ gst_multifdsink_client_queue_buffer (GstMultiFdSink * sink,
 
     if (!gst_dp_header_from_buffer (buffer, 0, &len, &header)) {
       GST_DEBUG_OBJECT (sink,
-          "could not create header, removing client on fd %d", client->fd.fd);
+          "[fd %5d] could not create header, removing client", client->fd.fd);
       return FALSE;
     }
     gst_multifdsink_client_queue_data (sink, client, header, len);
   }
 
-  GST_LOG_OBJECT (sink, "Queueing buffer of length %d for fd %d",
-      GST_BUFFER_SIZE (buffer), client->fd.fd);
+  GST_LOG_OBJECT (sink, "[fd %5d] queueing buffer of length %d",
+      client->fd.fd, GST_BUFFER_SIZE (buffer));
 
   gst_buffer_ref (buffer);
   client->sending = g_slist_append (client->sending, buffer);
@@ -822,7 +821,7 @@ gst_multifdsink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
       /* if the buffer at the head of the queue is a sync point we can proceed,
        * else we need to skip the buffer and wait for a new one */
       GST_LOG_OBJECT (sink,
-          "New client on fd %d, bufpos %d, waiting for keyframe", client->fd.fd,
+          "[fd %5d] new client, bufpos %d, waiting for keyframe", client->fd.fd,
           client->bufpos);
 
       /* the client is not yet alligned to a buffer */
@@ -836,14 +835,14 @@ gst_multifdsink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
           /* get the buffer for the client */
           buf = g_array_index (sink->bufqueue, GstBuffer *, i);
           if (is_sync_frame (sink, buf)) {
-            GST_LOG_OBJECT (sink, "New client on fd %d found sync",
+            GST_LOG_OBJECT (sink, "[fd %5d] new client, found sync",
                 client->fd.fd);
             result = i;
             goto done;
           } else {
             /* client is not on a buffer, need to skip this buffer and
              * wait some more */
-            GST_LOG_OBJECT (sink, "New client on fd %d skipping buffer",
+            GST_LOG_OBJECT (sink, "[fd %5d] new client, skipping buffer",
                 client->fd.fd);
             client->bufpos--;
           }
@@ -860,7 +859,7 @@ gst_multifdsink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
        * the algorithm should behave as GST_SYNC_METHOD_WAIT */
       gint i, len;
 
-      GST_LOG_OBJECT (sink, "New client on fd %d, bufpos %d, bursting keyframe",
+      GST_LOG_OBJECT (sink, "[fd %5d] new client, bufpos %d, bursting keyframe",
           client->fd.fd, client->bufpos);
 
       /* take length of queued buffers */
@@ -899,23 +898,23 @@ done:
  *
  * The strategy is as follows, for each client we maintain a queue of GstBuffers
  * that contain the raw bytes we need to send to the client. In the case of the
- * GDP protocol, we create buffers out of the header bytes so that we can only focus
- * on sending buffers.
+ * GDP protocol, we create buffers out of the header bytes so that we can only
+ * focus on sending buffers.
  *
- * We first check to see if we need to send caps (in GDP) and streamheaders. If so,
- * we queue them. 
+ * We first check to see if we need to send caps (in GDP) and streamheaders.
+ * If so, we queue them.
  *
- * Then we run into the main loop that tries to send as many buffers as possible. It
- * will first exhaust the client->sending queue and if the queue is empty, it will
- * pick a buffer from the global queue.
- * 
- * Sending the Buffers from the client->sending queue is basically writing the bytes
- * to the socket and maintaining a count of the bytes that were sent. When the buffer
- * is completely sent, it is removed from the client->sending queue and we try to pick
- * a new buffer for sending.
+ * Then we run into the main loop that tries to send as many buffers as
+ * possible. It will first exhaust the client->sending queue and if the queue
+ * is empty, it will pick a buffer from the global queue.
  *
- * When the sending returns a partial buffer we stop sending more data as the next send
- * operation could block.
+ * Sending the Buffers from the client->sending queue is basically writing
+ * the bytes to the socket and maintaining a count of the bytes that were
+ * sent. When the buffer is completely sent, it is removed from the
+ * client->sending queue and we try to pick a new buffer for sending.
+ *
+ * When the sending returns a partial buffer we stop sending more data as
+ * the next send operation could block.
  *
  * This functions returns FALSE if some error occured.
  */
@@ -1001,8 +1000,8 @@ gst_multifdsink_handle_client_write (GstMultiFdSink * sink,
         /* grab buffer */
         buf = g_array_index (sink->bufqueue, GstBuffer *, client->bufpos);
         client->bufpos--;
-        GST_LOG_OBJECT (sink, "client %p with fd %d at position %d",
-            client, fd, client->bufpos);
+        GST_LOG_OBJECT (sink, "[fd %5d] client %p at position %d",
+            fd, client, client->bufpos);
 
         /* queueing a buffer will ref it */
         gst_multifdsink_client_queue_buffer (sink, client, buf);
@@ -1040,10 +1039,15 @@ gst_multifdsink_handle_client_write (GstMultiFdSink * sink,
         if (errno == EAGAIN) {
           /* nothing serious, resource was unavailable, try again later */
           more = FALSE;
+        } else if (errno == ECONNRESET) {
+          GST_DEBUG_OBJECT (sink, "[fd %5d] connection reset by peer, removing",
+              fd);
+          client->status = GST_CLIENT_STATUS_CLOSED;
+          return FALSE;
         } else {
           GST_WARNING_OBJECT (sink,
-              "could not write, removing client on fd %d: %s", fd,
-              g_strerror (errno));
+              "[fd %5d] could not write, removing client: %s (%d)", fd,
+              g_strerror (errno), errno);
           client->status = GST_CLIENT_STATUS_ERROR;
           return FALSE;
         }
@@ -1082,12 +1086,12 @@ gst_multifdsink_recover_client (GstMultiFdSink * sink, GstTCPClient * client)
   gint newbufpos;
 
   GST_WARNING_OBJECT (sink,
-      "client %p with fd %d is lagging at %d, recover using policy %d", client,
-      client->fd.fd, client->bufpos, sink->recover_policy);
+      "[fd %5d] client %p is lagging at %d, recover using policy %d",
+      client->fd.fd, client, client->bufpos, sink->recover_policy);
 
   switch (sink->recover_policy) {
     case GST_RECOVER_POLICY_NONE:
-      /* do nothing, client will catch up or get kicked out when it reaches 
+      /* do nothing, client will catch up or get kicked out when it reaches
        * the hard max */
       newbufpos = client->bufpos;
       break;
@@ -1170,8 +1174,8 @@ gst_multifdsink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
     next = g_list_next (clients);
 
     client->bufpos++;
-    GST_LOG_OBJECT (sink, "client %p with fd %d at position %d",
-        client, client->fd.fd, client->bufpos);
+    GST_LOG_OBJECT (sink, "[fd %5d] client %p at position %d",
+        client->fd.fd, client, client->bufpos);
     /* check soft max if needed, recover client */
     if (sink->units_soft_max > 0 && client->bufpos >= sink->units_soft_max) {
       gint newpos;
@@ -1180,12 +1184,12 @@ gst_multifdsink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
       if (newpos != client->bufpos) {
         client->bufpos = newpos;
         client->discont = TRUE;
-        GST_INFO_OBJECT (sink, "client %p with fd %d position reset to %d",
-            client, client->fd.fd, client->bufpos);
+        GST_INFO_OBJECT (sink, "[fd %5d] client %p position reset to %d",
+            client->fd.fd, client, client->bufpos);
       } else {
         GST_INFO_OBJECT (sink,
-            "client %p with fd %d not recovering position", client,
-            client->fd.fd);
+            "[fd %5d] client %p not recovering position",
+            client->fd.fd, client);
       }
     }
     /* check hard max and timeout, remove client */
@@ -1193,8 +1197,8 @@ gst_multifdsink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
         (sink->timeout > 0
             && now - client->last_activity_time > sink->timeout)) {
       /* remove client */
-      GST_WARNING_OBJECT (sink, "client %p with fd %d is too slow, removing",
-          client, client->fd.fd);
+      GST_WARNING_OBJECT (sink, "[fd %5d] client %p is too slow, removing",
+          client->fd.fd, client);
       /* remove the client, the fd set will be cleared and the select thread will
        * be signaled */
       client->status = GST_CLIENT_STATUS_SLOW;
@@ -1296,7 +1300,8 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
 
     /* < 0 is an error, 0 just means a timeout happened, which is impossible */
     if (result < 0) {
-      GST_WARNING_OBJECT (sink, "wait failed: %s", g_strerror (errno));
+      GST_WARNING_OBJECT (sink, "wait failed: %s (%d)", g_strerror (errno),
+          errno);
       if (errno == EBADF) {
         /* ok, so one or more of the fds is invalid. We loop over them to find
          * the ones that give an error to the F_GETFL fcntl. */
@@ -1314,8 +1319,8 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
 
           res = fcntl (fd, F_GETFL, &flags);
           if (res == -1) {
-            GST_WARNING_OBJECT (sink, "fnctl failed for %d, removing: %s",
-                fd, g_strerror (errno));
+            GST_WARNING_OBJECT (sink, "fnctl failed for %d, removing: %s (%d)",
+                fd, g_strerror (errno), errno);
             if (errno == EBADF) {
               client->status = GST_CLIENT_STATUS_ERROR;
               gst_multifdsink_remove_client_link (sink, clients);
@@ -1332,7 +1337,7 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
       } else {
         /* this is quite bad... */
         GST_ELEMENT_ERROR (sink, RESOURCE, READ, (NULL),
-            ("select failed: %s", g_strerror (errno)));
+            ("select failed: %s (%d)", g_strerror (errno), errno));
         return;
       }
     } else {
