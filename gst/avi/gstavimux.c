@@ -442,9 +442,9 @@ done:
 }
 
 static void
-gst_avimux_pad_connect (GstPad   *pad,
-                        GstPad   *peer,
-                        gpointer  data)
+gst_avimux_pad_link (GstPad   *pad,
+                     GstPad   *peer,
+                     gpointer  data)
 {
   GstAviMux *avimux = GST_AVIMUX(data);
   const gchar *padname = gst_pad_get_name (pad);
@@ -468,8 +468,8 @@ gst_avimux_pad_connect (GstPad   *pad,
 
 static void
 gst_avimux_pad_unlink (GstPad   *pad,
-                           GstPad   *peer,
-                           gpointer  data)
+                       GstPad   *peer,
+                       gpointer  data)
 {
   GstAviMux *avimux = GST_AVIMUX(data);
   const gchar *padname = gst_pad_get_name (pad);
@@ -531,7 +531,7 @@ gst_avimux_request_new_pad (GstElement     *element,
   }
 
   g_signal_connect(newpad, "linked",
-    G_CALLBACK(gst_avimux_pad_connect), (gpointer)avimux);
+    G_CALLBACK(gst_avimux_pad_link), (gpointer)avimux);
   g_signal_connect(newpad, "unlinked",
     G_CALLBACK(gst_avimux_pad_unlink), (gpointer)avimux);
   gst_pad_set_link_function (newpad, gst_avimux_sinkconnect);
@@ -925,7 +925,7 @@ gst_avimux_start_file (GstAviMux *avimux)
   avimux->idx = NULL;
 
   /* header */
-  avimux->avi_hdr.streams = avimux->video_pad_connected?1:0 + avimux->audio_pad_connected?1:0;
+  avimux->avi_hdr.streams = (avimux->video_pad_connected?1:0) + (avimux->audio_pad_connected?1:0);
   avimux->is_bigfile = FALSE;
 
   header = gst_avimux_riff_get_avi_header(avimux);
