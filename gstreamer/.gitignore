@@ -1,0 +1,9 @@
+Makefile
+Makefile.in
+*.o
+*.lo
+*.la
+*.so
+.libs
+.deps
+gstreamer.c

@@ -1,0 +1,56 @@
+%define pygtk_ver @PYGTK_VERSION@
+%define gstversion %(pkg-config --modversion gstreamer)
+
+Summary: The sources for the Python GStreamer extension module.
+Name: gst-python
+Version: @VERSION@
+Release: 2
+Source: http://gstreamer.net/ blah_blah_blah /gst-python-%{version}.tar.gz
+Copyright: LGPL
+Group: Development/Languages
+BuildRoot: /var/tmp/gst--python-root
+Packager: David I. Lehn <dlehn@vt.edu>
+BuildRequires: pygtk2-devel = %{pygtk_ver}
+BuildRequires: python2-devel
+BuildRequires: gtk2-devel >= @GTK_VERSION@
+BuildRequires: libgnomecanvas-devel >= @LIBGNOMECANVAS_VERSION@
+BuildRequires: libgnome-devel >= @LIBGNOME_VERSION@
+
+%description
+The gst-python package contains the source packages for the
+GStreamer Python bindings.
+
+%package gst-python
+Version: %{version}
+Summary: Python bindings for GStreamer.
+Group: Development/Languages
+Requires: gnome-python2 = %{version}
+Requires: gtk2 >= @GTK_VERSION@
+Requires: gstreamer >= %{gstversion}
+
+%description gst-python
+This module contains a wrapper that allows GStreamer applications
+to be written in Python.
+
+%prep
+%setup -q -n gst-python-%{version}
+export PYTHON=/usr/bin/python2.2
+CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{_prefix}
+
+%build
+make
+
+%install
+rm -rf $RPM_BUILD_ROOT
+make DESTDIR=$RPM_BUILD_ROOT install
+
+%files
+%defattr(644,root,root,755)
+%doc AUTHORS ChangeLog README NEWS examples/gstreamer
+%dir %{_prefix}/lib/python?.?/site-packages/gstreamer/
+%{_prefix}/lib/python?.?/site-packages/gstreamer/__init__.*
+%{_prefix}/lib/python?.?/site-packages/gstreamer/_gstreamermodule.so
+
+%changelog
+* Sat Mar 23 2002 David I. Lehn <dlehn@vt.edu>
+- new gst-python package based on pygtk and gconf binding packages

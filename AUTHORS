@@ -1,0 +1,10 @@
+gst-python authors:
+
+David I. Lehn  <dlehn@vt.edu>
+
+
+Much of the framework for gst-python stolen from gtk and gconf bindings by:
+
+James Henstridge  <james@daa.com.au>
+Johan Dahlin  <jdahlin@telia.com>
+Matt Wilson  <msw@redhat.com>

@@ -1,0 +1,4 @@
+2002-03-23  David I. Lehn  <dlehn@vt.edu>
+
+	* stole binding framework from gnome-python && gconf
+	* adapted to gstreamer
