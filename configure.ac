@@ -222,8 +222,7 @@ fi
 AM_CONDITIONAL(GST_GCOV_ENABLED, test x$enable_gcov = xyes)
 
 dnl Check for some compiler flags that optimize our code.
-dnl Only enable this for CVS builds for now
-if test "x$GST_CVS" = "xyes"; then
+if test "x$GCC" = xyes; then
   AS_COMPILER_FLAG(-fno-common,GST_INT_CFLAGS="$GST_INT_CFLAGS -fno-common",)
 fi
 
