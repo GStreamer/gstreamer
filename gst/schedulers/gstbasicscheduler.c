@@ -245,7 +245,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_plugin_set_longname (plugin, "A basic scheduler");
 
   factory = gst_scheduler_factory_new (COTHREADS_NAME,
-	                              "A basic scheduler, it uses "COTHREADS_NAME" cothreads",
+	                              "A basic scheduler using "COTHREADS_NAME" cothreads",
 		                      gst_basic_scheduler_get_type());
 
   if (factory != NULL) {
