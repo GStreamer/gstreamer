@@ -205,16 +205,6 @@ A function that will be called when pulling a buffer.
 @Returns: the #GstBuffer pulled.
 
 
-<!-- ##### USER_FUNCTION GstPadBufferPoolFunction ##### -->
-<para>
-A function that will be called when a buffer pool is requested
-from this pad.
-</para>
-
-@pad: the #GstPad to which the buffer pool is associated.
-@Returns: the #GstBufferPool associated with this pad.
-
-
 <!-- ##### USER_FUNCTION GstPadGetCapsFunction ##### -->
 <para>
 Returns the capabilities of the specified pad. By default this function
@@ -222,8 +212,9 @@ will return the pad template capabilities, but can optionally be overridden.
 </para>
 
 @pad: the #GstPad to get the capabilities of.
-@caps: the peer's #GstCaps, can be used to filter the capabilities.
 @Returns: the #GstCaps of the pad.
+<!-- # Unused Parameters # -->
+@caps: the peer's #GstCaps, can be used to filter the capabilities.
 
 
 <!-- ##### USER_FUNCTION GstPadEventFunction ##### -->
@@ -446,15 +437,6 @@ Flags for the pad.
 
 @pad: 
 @get: 
-
-
-<!-- ##### FUNCTION gst_pad_set_bufferpool_function ##### -->
-<para>
-
-</para>
-
-@pad: 
-@bufpool: 
 
 
 <!-- ##### FUNCTION gst_pad_set_link_function ##### -->
@@ -696,15 +678,6 @@ Flags for the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_get_bufferpool ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_pad_load_and_link ##### -->
 <para>
 
@@ -743,15 +716,6 @@ Flags for the pad.
 
 
 <!-- ##### FUNCTION gst_pad_get_allowed_caps ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_recalc_allowed_caps ##### -->
 <para>
 
 </para>
@@ -1072,9 +1036,10 @@ The realpad object
 
 @pad: 
 @caps: 
-@filter: 
+@appfixatefunc: 
 @appfilter: 
 @getcapsfunc: 
+@fixatefunc: 
 @direction: 
 @linkfunc: 
 @unlinkfunc: 
@@ -1093,8 +1058,10 @@ The realpad object
 @formatsfunc: 
 @querytypefunc: 
 @intlinkfunc: 
-@bufferpoolfunc: 
+@bufferallocfunc: 
 @probedisp: 
+@link: 
+@explicit_caps: 
 @_gst_reserved: 
 
 <!-- ##### MACRO GST_RPAD_DIRECTION ##### -->
@@ -1129,14 +1096,6 @@ Get the chain function of the real pad.
 @pad: the real pad to query.
 
 
-<!-- ##### MACRO GST_RPAD_FILTER ##### -->
-<para>
-Get the filter from the pad
-</para>
-
-@pad: the pad to query
-
-
 <!-- ##### MACRO GST_RPAD_APPFILTER ##### -->
 <para>
 Get the application filter for this pad
@@ -1148,14 +1107,6 @@ Get the application filter for this pad
 <!-- ##### MACRO GST_RPAD_GETFUNC ##### -->
 <para>
 Get get getfunction of the real pad.
-</para>
-
-@pad: the real pad to query.
-
-
-<!-- ##### MACRO GST_RPAD_BUFFERPOOLFUNC ##### -->
-<para>
-Get the bufferpoolfunction from the real pad.
 </para>
 
 @pad: the real pad to query.

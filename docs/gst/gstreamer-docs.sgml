@@ -31,7 +31,6 @@
 <!ENTITY GstTypeFind SYSTEM "xml/gsttypefind.xml">
 <!ENTITY GstTypeFindFactory SYSTEM "xml/gsttypefindfactory.xml">
 <!ENTITY GstCaps SYSTEM "xml/gstcaps.xml">
-<!ENTITY GstProps SYSTEM "xml/gstprops.xml">
 <!ENTITY GstClock SYSTEM "xml/gstclock.xml">
 <!ENTITY GstSystemClock SYSTEM "xml/gstsystemclock.xml">
 <!ENTITY GstUtils SYSTEM "xml/gstutils.xml">
@@ -102,7 +101,6 @@ with some more specialized elements.</para>
     &GstPlugin;
     &GstPluginFeature;
     &GstProbe;
-    &GstProps;
     &GstQuery;
 <!-- no API docs
     &GstQueue; -->

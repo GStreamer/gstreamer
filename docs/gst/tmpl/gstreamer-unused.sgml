@@ -2119,7 +2119,7 @@ candidate.
 
 </para>
 
-@klass:
+@klass: 
 
 <!-- ##### MACRO GST_EVENT_DISCONT_FLUSH ##### -->
 <para>
@@ -4286,6 +4286,7 @@ A type that can be used to indicate a filename.
 
 </para>
 
+
 <!-- ##### ARG GstAggregator:sched ##### -->
 <para>
 
@@ -4758,6 +4759,16 @@ Get the size of the file.
 @gstelement: the object which received the signal.
 @arg1: 
 @arg2: 
+
+<!-- ##### SIGNAL GstElement::error-2 ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: 
+@arg2: 
+@arg3: 
 
 <!-- ##### SIGNAL GstElement::event ##### -->
 <para>
@@ -5951,15 +5962,6 @@ Query the element for the current mime type
 
 </para>
 
-
-<!-- ##### SIGNAL GstXML::object-loaded ##### -->
-<para>
-
-</para>
-
-@gstxml: the object which received the signal.
-@arg1: 
-@arg2: 
 
 <!-- ##### USER_FUNCTION GstXMLRegistryAddPathList ##### -->
 <para>
@@ -8012,6 +8014,15 @@ safely be modified.
 @resolver: 
 @user_data: 
 
+<!-- ##### FUNCTION gst_caps_debug ##### -->
+<para>
+
+</para>
+
+@caps: 
+@string: 
+@label: 
+
 <!-- ##### FUNCTION gst_caps_destroy ##### -->
 <para>
 
@@ -8906,13 +8917,6 @@ of an element he doesn't need anymore.
 @...: 
 @format: 
 @args...: 
-
-<!-- ##### FUNCTION gst_init_get_popt_table ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 <!-- ##### FUNCTION gst_link_get_type ##### -->
 <para>

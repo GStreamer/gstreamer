@@ -87,15 +87,6 @@ The padtemplate object.
 </para>
 
 
-<!-- ##### SIGNAL GstPadTemplate::pad-created ##### -->
-<para>
-This signal is fired when an element creates a pad from this 
-template.
-</para>
-
-@gstpadtemplate: the object which received the signal.
-@arg1: The pad that was created.
-
 <!-- ##### ENUM GstPadTemplateFlags ##### -->
 <para>
 Flags for the padtemplate
@@ -136,38 +127,6 @@ Get the presence of the padtemplate.
 @templ: the template to query
 
 
-<!-- ##### MACRO GST_PAD_TEMPLATE_NEW ##### -->
-<para>
-Create a new padtemplate.
-</para>
-
-@padname: the nametemplate for the pads that will be created with this template
-@dir: the direction of the pads.
-@pres: the presence of the pads.
-@...: the capabilities of this padtemplate usually created with GST_CAPS_NEW()
-
-
-<!-- ##### MACRO GST_PAD_TEMPLATE_FACTORY ##### -->
-<para>
-Create a factory for a padtemplate. This can be used if you only want one instance
-of the padtemplate. Use GST_PAD_TEMPLATE_GET() to get the unique padtemplate.
-</para>
-
-@name: th name of the factory
-@padname: the nametemplate of the pads
-@dir: the direction of the pads.
-@pres: the presence of the pads.
-@...: the capabilities of this padtemplate, usually created with GST_CAPS_NEW()
-
-
-<!-- ##### MACRO GST_PAD_TEMPLATE_GET ##### -->
-<para>
-Get the padtemplate of the factory created with GST_PAD_TEMPLATE_FACTORY()
-</para>
-
-@fact: the factory name to get the padtemplate from.
-
-
 <!-- ##### MACRO GST_PAD_TEMPLATE_IS_FIXED ##### -->
 <para>
 Check if the properties of the padtemplate are fixed
@@ -185,8 +144,9 @@ Check if the properties of the padtemplate are fixed
 @direction: 
 @presence: 
 @caps: 
-@Varargs: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@Varargs: 
 
 
 <!-- ##### FUNCTION gst_pad_template_get_caps ##### -->
@@ -207,4 +167,13 @@ Check if the properties of the padtemplate are fixed
 @name: 
 @Returns: 
 
+
+<!-- ##### SIGNAL GstPadTemplate::pad-created ##### -->
+<para>
+This signal is fired when an element creates a pad from this 
+template.
+</para>
+
+@gstpadtemplate: the object which received the signal.
+@arg1: The pad that was created.
 

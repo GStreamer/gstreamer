@@ -55,9 +55,10 @@ gst_mem_chunk_free
 <FILE>gst</FILE>
 <TITLE>Gst</TITLE>
 gst_init
+gst_init_get_popt_table
 gst_init_with_popt_table
 gst_init_check
-gst_init_get_popt_table
+gst_init_check_with_popt_table
 gst_version
 gst_main
 gst_main_quit

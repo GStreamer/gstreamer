@@ -90,6 +90,14 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 @argv: 
 
 
+<!-- ##### FUNCTION gst_init_get_popt_table ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_init_with_popt_table ##### -->
 <para>
 
@@ -99,6 +107,7 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 @argv: 
 @popt_options: 
 <!-- # Unused Parameters # -->
+@Param3: 
 @Returns: 
 
 
@@ -110,6 +119,19 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 @argc: 
 @argv: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_init_check_with_popt_table ##### -->
+<para>
+
+</para>
+
+@argc: 
+@argv: 
+@popt_options: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@Param3: 
 
 
 <!-- ##### FUNCTION gst_version ##### -->

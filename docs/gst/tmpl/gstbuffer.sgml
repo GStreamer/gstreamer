@@ -294,17 +294,6 @@ A convenience function to set the data and size on a buffer
 @size: The size to set on the buffer
 
 
-<!-- ##### FUNCTION gst_buffer_new_from_pool ##### -->
-<para>
-
-</para>
-
-@pool: 
-@offset: 
-@size: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_buffer_default_free ##### -->
 <para>
 

@@ -118,183 +118,14 @@ The GType of the caps boxed type, for use in GValues.
 
 
 
-<!-- ##### MACRO GST_CAPS_NEW ##### -->
-<para>
-A convenience macro to create a new GstCaps structure.
-</para>
-
-@name: the name of the caps structure
-@type: the mime type of the caps structure
-@...: the properties of this caps stucture.
-
-
-<!-- ##### MACRO GST_CAPS_FACTORY ##### -->
-<para>
-A convenience macro to create a GstCaps factory.
-</para>
-
-@factoryname: the name of the factory
-@...: the caps to create with this factory, usualy specified
-with GST_CAPS_NEW()
-
-
-<!-- ##### MACRO GST_CAPS_GET ##### -->
-<para>
-A convenience macro to get a GstCaps from the given capsfactory.
-</para>
-
-@fact: the factory to use.
-
-
 <!-- ##### STRUCT GstCaps ##### -->
 <para>
 The gstcaps structure
 </para>
 
-@name: the name of the capability, for the application
-@id: the typeid of the capability
+@type: 
 @flags: 
-@refcount: a refcounter for this caps structure
-@properties: the properties of the capability
-@next: a pointer to the next caps.
-
-<!-- ##### ENUM GstCapsFlags ##### -->
-<para>
-Flags for this caps.
-</para>
-
-@GST_CAPS_UNUSED: 
-@GST_CAPS_FLOATING: the caps is not owned by anyone
-
-<!-- ##### MACRO GST_CAPS_FLAGS ##### -->
-<para>
-Get the flags of the caps
-</para>
-
-@caps: The caps to get the flags of
-
-
-<!-- ##### MACRO GST_CAPS_FLAG_IS_SET ##### -->
-<para>
-Test is a flag is set
-</para>
-
-@caps: The caps to test
-@flag: The flag to check
-
-
-<!-- ##### MACRO GST_CAPS_FLAG_SET ##### -->
-<para>
-Set a flag on the caps
-</para>
-
-@caps: The caps to modify
-@flag: The flag to set
-
-
-<!-- ##### MACRO GST_CAPS_FLAG_UNSET ##### -->
-<para>
-Unset a flag on the caps
-</para>
-
-@caps: The caps to modify
-@flag: The flag to unset
-
-
-<!-- ##### MACRO GST_CAPS_IS_FLOATING ##### -->
-<para>
-Test if a caps is floating
-</para>
-
-@caps: The caps to test
-
-
-<!-- ##### MACRO GST_CAPS_IS_CHAINED ##### -->
-<para>
-Check if the GstCaps is chained.
-</para>
-
-@caps: the caps to query
-
-
-<!-- ##### MACRO GST_CAPS_IS_FIXED ##### -->
-<para>
-Check if the GstCaps has fixed properties, ie. it has no ranges or lists.
-</para>
-
-@caps: the caps to query
-
-
-<!-- ##### MACRO GST_CAPS_NEXT ##### -->
-<para>
-Get a pointer to the next chained caps
-</para>
-
-@caps: The caps to query
-
-
-<!-- ##### MACRO GST_CAPS_PROPERTIES ##### -->
-<para>
-Get the properties of the caps
-</para>
-
-@caps: The caps to query
-
-
-<!-- ##### MACRO GST_CAPS_REFCOUNT ##### -->
-<para>
-Get the refcount of the caps.
-</para>
-
-@caps: The caps to query
-
-
-<!-- ##### MACRO GST_CAPS_TRACE_NAME ##### -->
-<para>
-The name used for tracing
-</para>
-
-
-
-<!-- ##### FUNCTION gst_caps_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@mime: 
-@props: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_new_id ##### -->
-<para>
-
-</para>
-
-@name: 
-@id: 
-@props: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_ref ##### -->
-<para>
-
-</para>
-
-@caps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_unref ##### -->
-<para>
-
-</para>
-
-@caps: 
-@Returns: 
-
+@structs: 
 
 <!-- ##### FUNCTION gst_caps_copy ##### -->
 <para>
@@ -314,51 +145,16 @@ The name used for tracing
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_caps_copy_on_write ##### -->
-<para>
-
-</para>
-
-@caps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_chain ##### -->
-<para>
-
-</para>
-
-@caps: 
-@Varargs: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_caps_append ##### -->
 <para>
 
 </para>
 
+@caps1: 
+@caps2: 
+<!-- # Unused Parameters # -->
 @caps: 
 @capstoadd: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_prepend ##### -->
-<para>
-
-</para>
-
-@caps: 
-@capstoadd: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_next ##### -->
-<para>
-
-</para>
-
-@caps: 
 @Returns: 
 
 
@@ -367,80 +163,10 @@ The name used for tracing
 
 </para>
 
-@oldcaps: 
+@caps: 
 @newcaps: 
-
-
-<!-- ##### FUNCTION gst_caps_replace_sink ##### -->
-<para>
-
-</para>
-
+<!-- # Unused Parameters # -->
 @oldcaps: 
-@newcaps: 
-
-
-<!-- ##### FUNCTION gst_caps_sink ##### -->
-<para>
-
-</para>
-
-@caps: 
-
-
-<!-- ##### FUNCTION gst_caps_set_name ##### -->
-<para>
-
-</para>
-
-@caps: 
-@name: 
-
-
-<!-- ##### FUNCTION gst_caps_get_name ##### -->
-<para>
-
-</para>
-
-@caps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_set_mime ##### -->
-<para>
-
-</para>
-
-@caps: 
-@mime: 
-
-
-<!-- ##### FUNCTION gst_caps_get_mime ##### -->
-<para>
-
-</para>
-
-@caps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_set_props ##### -->
-<para>
-
-</para>
-
-@caps: 
-@props: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_get_props ##### -->
-<para>
-
-</para>
-
-@caps: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_caps_is_always_compatible ##### -->
@@ -448,40 +174,12 @@ The name used for tracing
 
 </para>
 
+@caps1: 
+@caps2: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @fromcaps: 
 @tocaps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_has_property ##### -->
-<para>
-Check if the GstCaps has a property with the given name
-</para>
-
-@caps: the caps to query
-@name: the name of the property
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_has_fixed_property ##### -->
-<para>
-Check if the GstCaps has a fixed property with the given name
-</para>
-
-@caps: the caps to query
-@name: the name of the property
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_has_property_typed ##### -->
-<para>
-Check if the GstCaps has a property with the given type
-</para>
-
-@caps: the caps to query
-@name: the name of the property
-@type: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_caps_normalize ##### -->
@@ -493,24 +191,6 @@ Check if the GstCaps has a property with the given type
 @Returns: 
 
 
-<!-- ##### MACRO gst_caps_set ##### -->
-<para>
-Set a property of a caps structure.
-</para>
-
-@caps: the caps structure to modify
-@...: the new value of the property
-
-
-<!-- ##### MACRO gst_caps_get ##### -->
-<para>
-Get key/value pairs from the given GstCaps.
-</para>
-
-@caps: the caps to get the values from
-@...: a pointer to the variable that can hold the result followed by more key/value pairs.
-
-
 <!-- ##### FUNCTION gst_caps_intersect ##### -->
 <para>
 
@@ -519,66 +199,6 @@ Get key/value pairs from the given GstCaps.
 @caps1: 
 @caps2: 
 @Returns: 
-
-
-<!-- ##### MACRO gst_caps_get_boolean ##### -->
-<para>
-Get the value of the named property as a boolean.
-</para>
-
-@caps: the caps to query
-@name: the name of the property to get
-@res: a pointer to a gboolean to store the result
-
-
-<!-- ##### FUNCTION gst_caps_get_by_name ##### -->
-<para>
-
-</para>
-
-@caps: 
-@name: 
-@Returns: 
-
-
-<!-- ##### MACRO gst_caps_get_fourcc_int ##### -->
-<para>
-Get the value of the named property as a fourcc.
-</para>
-
-@caps: the caps to query
-@name: the name of the property to get
-@res: a pointer to a guint32 to store the fourcc value
-
-
-<!-- ##### MACRO gst_caps_get_int ##### -->
-<para>
-Get the value of the named property as an int.
-</para>
-
-@caps: the caps to query
-@name: the name of the property to get
-@res: a pointer to a gint to store the value
-
-
-<!-- ##### MACRO gst_caps_get_string ##### -->
-<para>
-Get the value of the named property as a string.
-</para>
-
-@caps: the caps to query
-@name: the name of the property to get
-@res: a pointer to a gchar* to store the string
-
-
-<!-- ##### MACRO gst_caps_get_float ##### -->
-<para>
-Get the value of the named property as a float.
-</para>
-
-@caps: the caps to query
-@name: the name of the property to get
-@res: a pointer to a gfloat to store the result
 
 
 <!-- ##### FUNCTION gst_caps_save_thyself ##### -->
@@ -600,12 +220,13 @@ Get the value of the named property as a float.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_caps_debug ##### -->
+<!-- ##### FUNCTION gst_caps_union ##### -->
 <para>
 
 </para>
 
-@caps: 
-@label: 
+@caps1: 
+@caps2: 
+@Returns: 
 
 

@@ -1,3 +1,22 @@
+2004-01-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/gstreamer-docs.sgml: remove props
+	* docs/gst/gstreamer-sections.txt: remove props
+	* docs/gst/tmpl/gst.sgml:
+	* docs/gst/tmpl/gstbin.sgml:
+	* docs/gst/tmpl/gstbuffer.sgml:
+	* docs/gst/tmpl/gstcaps.sgml:
+	* docs/gst/tmpl/gstclock.sgml:
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gstindex.sgml:
+	* docs/gst/tmpl/gstobject.sgml:
+	* docs/gst/tmpl/gstpad.sgml:
+	* docs/gst/tmpl/gstpadtemplate.sgml:
+	* docs/gst/tmpl/gstreamer-unused.sgml:
+	* docs/gst/tmpl/gstthread.sgml:
+	* docs/gst/tmpl/gstxml.sgml:
+	  sync with code reorganization
+
 2004-01-07  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstelement.c: (gst_element_get_compatible_pad_filtered):
