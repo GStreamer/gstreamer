@@ -107,7 +107,7 @@ typedef enum
   DVDNAVSRC_DOMAIN_FP,          /* First Play domain. */
   DVDNAVSRC_DOMAIN_VMGM,        /* Video Management Menu domain */
   DVDNAVSRC_DOMAIN_VTSM,        /* Video Title Menu domain. */
-  DVDNAVSRC_DOMAIN_VTS,         /* Video Title domain. */
+  DVDNAVSRC_DOMAIN_VTS          /* Video Title domain. */
 }
 DVDNavSrcDomainType;
 
@@ -199,7 +199,7 @@ typedef enum
 {
   DVDNAVSRC_OPEN = GST_ELEMENT_FLAG_LAST,
 
-  DVDNAVSRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
+  DVDNAVSRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2
 }
 DVDNavSrcFlags;
 

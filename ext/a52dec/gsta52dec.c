@@ -52,7 +52,7 @@ enum
 enum
 {
   ARG_0,
-  ARG_DRC,
+  ARG_DRC
 };
 
 /*

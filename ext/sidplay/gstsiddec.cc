@@ -47,8 +47,8 @@ enum
   ARG_MOS8580,
   ARG_FORCE_SPEED,
   ARG_BLOCKSIZE,
-  ARG_METADATA,
-  /* FILL ME */
+  ARG_METADATA
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -72,7 +72,7 @@ enum
 {
   SID_STATE_NEED_TUNE = 1,
   SID_STATE_LOAD_TUNE = 2,
-  SID_STATE_PLAY_TUNE = 3,
+  SID_STATE_PLAY_TUNE = 3
 };
 
 #define GST_TYPE_SID_CLOCK (gst_sid_clock_get_type())
