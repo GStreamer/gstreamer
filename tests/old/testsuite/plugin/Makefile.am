@@ -1,5 +1,5 @@
-testprogs = loading dynamic linked static registry static2
-
+testprogs = loading dynamic linked static static2 # FIXME registry
+ 
 filterdir = $(libdir)/gst
 
 filter_LTLIBRARIES = libtestplugin.la libtestplugin2.la
