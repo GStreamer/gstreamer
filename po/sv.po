@@ -1,0 +1,2726 @@
+# Swedish messages for gst-plugins.
+# Copyright (C) 2004 Free Software Foundation, Inc.
+# Christian Rose <menthos@menthos.com>, 2004.
+#
+# $Id: sv.po,v 1.7 2004/04/20 16:42:17 thomasvs Exp $
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins 0.7.6\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2004-04-14 20:54+0200\n"
+"PO-Revision-Date: 2004-03-17 17:22+0100\n"
+"Last-Translator: Christian Rose <menthos@menthos.com>\n"
+"Language-Team: Swedish <sv@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ext/audiofile/gstafsink.c:345 ext/sndfile/gstsf.c:618
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Kunde inte öppna filen \"%s\" för skrivning."
+
+#: ext/audiofile/gstafsink.c:367 ext/audiofile/gstafsrc.c:372
+#, c-format
+msgid "Error closing file \"%s\"."
+msgstr "Fel vid stängning av filen \"%s\"."
+
+#: ext/audiofile/gstafsrc.c:319
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Kunde inte öppna filen \"%s\" för läsning."
+
+#: ext/cdparanoia/gstcdparanoia.c:643 ext/cdparanoia/gstcdparanoia.c:659
+msgid "Could not open CD device for reading."
+msgstr "Kunde inte öppna cd-enheten för läsning."
+
+#: ext/gnomevfs/gstgnomevfssrc.c:1066 ext/gnomevfs/gstgnomevfssrc.c:1089
+#, c-format
+msgid "Could not open vfs file \"%s\" for reading."
+msgstr "Kunde inte öppna vfs-filen \"%s\" för läsning."
+
+#: ext/gnomevfs/gstgnomevfssink.c:343
+#, c-format
+msgid "Could not open vfs file \"%s\" for writing."
+msgstr "Kunde inte öppna vfs-filen \"%s\" för skrivning."
+
+#: ext/gnomevfs/gstgnomevfssink.c:350
+#, fuzzy
+msgid "No filename given"
+msgstr "Inget filnamn angivet."
+
+#: ext/gnomevfs/gstgnomevfssink.c:375
+#, c-format
+msgid "Could not close vfs file \"%s\"."
+msgstr "Kunde inte stänga vfs-filen \"%s\"."
+
+#: ext/sndfile/gstsf.c:579
+msgid "No filename specified."
+msgstr "Inget filnamn angivet."
+
+#: ext/sndfile/gstsf.c:832
+#, c-format
+msgid "Could not write to file \"%s\"."
+msgstr "Kunde inte skriva till filen \"%s\"."
+
+#: gst/avi/gstavimux.c:1052
+msgid "No or invalid input audio, AVI stream will be corrupt."
+msgstr "Inget eller ogiltigt inljud. AVI-flödet kommer att skadas."
+
+#: sys/dxr3/dxr3audiosink.c:297
+#, c-format
+msgid "Could not open audio device \"%s\" for writing."
+msgstr "Kunde inte öppna ljudenheten \"%s\" för skrivning."
+
+#: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:282
+#, c-format
+msgid "Could not open control device \"%s\" for writing."
+msgstr "Kunde inte öppna styrenheten \"%s\" för skrivning."
+
+#: sys/dxr3/dxr3audiosink.c:342
+#, c-format
+msgid "Could not configure audio device \"%s\"."
+msgstr "Kunde inte konfigurera ljudenheten \"%s\"."
+
+#: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
+#, c-format
+msgid "Could not set audio device \"%s\" to %d Hz."
+msgstr "Kan inte ställa in ljudenheten \"%s\" till %d Hz."
+
+#: sys/dxr3/dxr3audiosink.c:421
+#, c-format
+msgid "Could not close audio device \"%s\"."
+msgstr "Kunde inte stänga ljudenheten \"%s\"."
+
+#: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:307
+#, c-format
+msgid "Could not close control device \"%s\"."
+msgstr "Kunde inte stänga styrenheten \"%s\"."
+
+#: sys/dxr3/dxr3videosink.c:270
+#, c-format
+msgid "Could not open video device \"%s\" for writing."
+msgstr "Kunde inte öppna videoenheten \"%s\" för skrivning."
+
+#: sys/dxr3/dxr3videosink.c:300
+#, c-format
+msgid "Could not close video device \"%s\"."
+msgstr "Kunde inte stänga vidoeenheten \"%s\"."
+
+#: sys/dxr3/dxr3videosink.c:452 sys/v4l2/v4l2src_calls.c:123
+#, c-format
+msgid "Could not write to device \"%s\"."
+msgstr "Kunde inte skriva till enheten \"%s\"."
+
+#: sys/oss/gstosselement.c:700
+#, c-format
+msgid "OSS device \"%s\" is already in use by another program."
+msgstr "OSS-enheten \"%s\" används redan av ett annat program."
+
+#: sys/oss/gstosselement.c:707 sys/oss/gstosselement.c:711
+#, c-format
+msgid "Could not access device \"%s\", check its permissions."
+msgstr "Kunde inte komma åt enheten \"%s\". Kontrollera dess rättigheter."
+
+#: sys/oss/gstosselement.c:718
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "Enheten \"%s\" finns inte."
+
+#: sys/oss/gstosselement.c:725
+#, c-format
+msgid "Could not open device \"%s\" for writing."
+msgstr "Kunde inte öppna enheten \"%s\" för skrivning."
+
+#: sys/oss/gstosselement.c:729
+#, c-format
+msgid "Could not open device \"%s\" for reading."
+msgstr "Kunde inte öppna enheten \"%s\" för läsning."
+
+#: sys/oss/gstosselement.c:1092
+msgid "Your oss device could not be probed correctly"
+msgstr ""
+
+#: sys/oss/gstossmixer.c:83
+msgid "Volume"
+msgstr "Volym"
+
+#: sys/oss/gstossmixer.c:84
+msgid "Bass"
+msgstr "Bass"
+
+#: sys/oss/gstossmixer.c:85
+msgid "Treble"
+msgstr "Diskant"
+
+#: sys/oss/gstossmixer.c:86
+msgid "Synth"
+msgstr "Synt"
+
+#: sys/oss/gstossmixer.c:87
+msgid "PCM"
+msgstr "PCM"
+
+#: sys/oss/gstossmixer.c:88
+msgid "Speaker"
+msgstr "Högtalare"
+
+#: sys/oss/gstossmixer.c:89
+msgid "Line-in"
+msgstr "Linje-in"
+
+#: sys/oss/gstossmixer.c:90
+msgid "Microphone"
+msgstr "Mikrofon"
+
+#: sys/oss/gstossmixer.c:91
+msgid "CD"
+msgstr "Cd"
+
+#: sys/oss/gstossmixer.c:92
+msgid "Mixer"
+msgstr "Mixer"
+
+#: sys/oss/gstossmixer.c:93
+msgid "PCM-2"
+msgstr "PCM-2"
+
+#: sys/oss/gstossmixer.c:94
+msgid "Record"
+msgstr "Spela in"
+
+#: sys/oss/gstossmixer.c:95
+msgid "In-gain"
+msgstr "Införstärkning"
+
+#: sys/oss/gstossmixer.c:96
+msgid "Out-gain"
+msgstr "Utförstärkning"
+
+#: sys/oss/gstossmixer.c:97
+msgid "Line-1"
+msgstr "Linje-1"
+
+#: sys/oss/gstossmixer.c:98
+msgid "Line-2"
+msgstr "Linje-2"
+
+#: sys/oss/gstossmixer.c:99
+msgid "Line-3"
+msgstr "Linje-3"
+
+#: sys/oss/gstossmixer.c:100
+msgid "Digital-1"
+msgstr "Digital-1"
+
+#: sys/oss/gstossmixer.c:101
+msgid "Digital-2"
+msgstr "Digital-2"
+
+#: sys/oss/gstossmixer.c:102
+msgid "Digital-3"
+msgstr "Digital-3"
+
+#: sys/oss/gstossmixer.c:103
+msgid "Phone-in"
+msgstr "Tele-in"
+
+#: sys/oss/gstossmixer.c:104
+msgid "Phone-out"
+msgstr "Tele-ut"
+
+#: sys/oss/gstossmixer.c:105
+msgid "Video"
+msgstr "Video"
+
+#: sys/oss/gstossmixer.c:106
+msgid "Radio"
+msgstr "Radio"
+
+#: sys/oss/gstossmixer.c:107
+msgid "Monitor"
+msgstr "Monitor"
+
+#: sys/v4l/v4l_calls.c:114
+msgid "No device specified."
+msgstr "Ingen enheten angiven."
+
+#: sys/v4l/v4l_calls.c:122 sys/v4l2/v4l2_calls.c:395
+#, c-format
+msgid "Could not open device \"%s\" for reading and writing."
+msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
+
+#: sys/v4l/v4l_calls.h:47
+msgid "Device is not open."
+msgstr "Enheten är inte öppen."
+
+#: sys/v4l/v4l_calls.h:56
+msgid "Device is open."
+msgstr "Enheten är öppen."
+
+#: sys/v4l2/v4l2_calls.c:409
+#, c-format
+msgid "Device \"%s\" is not a capture device."
+msgstr "Enheten \"%s\" är ingen fångstenhet."
+
+#: sys/v4l2/v4l2src_calls.c:255
+#, c-format
+msgid "Could not get buffers from device \"%s\"."
+msgstr "Kunde inte få tag i buffertar från enheten \"%s\"."
+
+#: sys/v4l2/v4l2src_calls.c:264
+#, c-format
+msgid "Could not get enough buffers from device \"%s\"."
+msgstr "Kunde inte få tag i tillräckligt många buffertar från enheten \"%s\"."
+
+#~ msgid "Line"
+#~ msgstr "Linje"
+
+#~ msgid "Digital"
+#~ msgstr "Digital"
+
+#~ msgid "Phone in"
+#~ msgstr "Tele in"
+
+#~ msgid "Phone out"
+#~ msgstr "Tele ut"
+
+#~ msgid "Address of the server to contact for CD queries"
+#~ msgstr "Adress till servern som ska kontaktas för cd-frågor"
+
+#~ msgid "Information to send to server"
+#~ msgstr "Information att skicka till server"
+
+#~ msgid "Port"
+#~ msgstr "Port"
+
+#~ msgid "Server name"
+#~ msgstr "Servernamn"
+
+#~ msgid "Server type"
+#~ msgstr "Servertyp"
+
+#~ msgid "The hostname that will be sent with all queries"
+#~ msgstr "Värdnamnet som kommer att skickas med alla frågor"
+
+#~ msgid "The port that the server is running the database on"
+#~ msgstr "Porten som servern kör databasen på"
+
+#~ msgid ""
+#~ "There was an error displaying help: \n"
+#~ "%s"
+#~ msgstr ""
+#~ "Det uppstod ett fel vid visning av hjälp: \n"
+#~ "%s"
+
+#~ msgid "Login Information"
+#~ msgstr "Inloggningsinformation"
+
+#~ msgid "Sen_d no information"
+#~ msgstr "Ski_cka ingen information"
+
+#~ msgid "Send real _information"
+#~ msgstr "Skicka verklig _information"
+
+#~ msgid "Send _other information:"
+#~ msgstr "Skicka _annan information:"
+
+#~ msgid "_Name:"
+#~ msgstr "_Namn:"
+
+#~ msgid "Hostna_me:"
+#~ msgstr "Värdna_mn:"
+
+#~ msgid "Server"
+#~ msgstr "Server"
+
+#~ msgid "Location"
+#~ msgstr "Plats"
+
+#~ msgid "_Update Server List"
+#~ msgstr "_Uppdatera serverlistan"
+
+#~ msgid "Other _server:"
+#~ msgstr "Annan _server:"
+
+#~ msgid "Hos_tname:"
+#~ msgstr "Vä_rdnamn:"
+
+#~ msgid "_Port:"
+#~ msgstr "_Port:"
+
+#~ msgid "CD Database Preferences"
+#~ msgstr "Inställningar för cd-databas"
+
+#~ msgid "Unknown / Unknown"
+#~ msgstr "Okänd / Okänd"
+
+#~ msgid "Unknown"
+#~ msgstr "Okänd"
+
+#~ msgid "Multiple matches..."
+#~ msgstr "Flera träffar..."
+
+#~ msgid "Category"
+#~ msgstr "Kategori"
+
+#~ msgid "Disc ID"
+#~ msgstr "Skiv-ID"
+
+#~ msgid "Artist and Title"
+#~ msgstr "Artist och titel"
+
+#~ msgid "Unknown track"
+#~ msgstr "Okänt spår"
+
+#~ msgid "CD Database"
+#~ msgstr "Cd-databas"
+
+#~ msgid "Modify your CD database preferences"
+#~ msgstr "Ändra dina inställningar för cd-databas"
+
+#~ msgid "Blues"
+#~ msgstr "Blues"
+
+#~ msgid "Classical Rock"
+#~ msgstr "Klassisk rock"
+
+#~ msgid "Country"
+#~ msgstr "Country"
+
+#~ msgid "Dance"
+#~ msgstr "Dance"
+
+#~ msgid "Disco"
+#~ msgstr "Disco"
+
+#~ msgid "Funk"
+#~ msgstr "Funk"
+
+#~ msgid "Grunge"
+#~ msgstr "Grunge"
+
+#~ msgid "Hip-Hop"
+#~ msgstr "Hip-Hop"
+
+#~ msgid "Jazz"
+#~ msgstr "Jazz"
+
+#~ msgid "Metal"
+#~ msgstr "Metal"
+
+#~ msgid "New Age"
+#~ msgstr "New Age"
+
+#~ msgid "Oldies"
+#~ msgstr "Gamla godingar"
+
+#~ msgid "Other"
+#~ msgstr "Annat"
+
+#~ msgid "Pop"
+#~ msgstr "Pop"
+
+#~ msgid "R&B"
+#~ msgstr "R&B"
+
+#~ msgid "Rap"
+#~ msgstr "Rap"
+
+#~ msgid "Reggae"
+#~ msgstr "Reggae"
+
+#~ msgid "Rock"
+#~ msgstr "Rock"
+
+#~ msgid "Techno"
+#~ msgstr "Techno"
+
+#~ msgid "Industrial"
+#~ msgstr "Industrial"
+
+#~ msgid "Alternative"
+#~ msgstr "Alternativmusik"
+
+#~ msgid "Ska"
+#~ msgstr "Ska"
+
+#~ msgid "Death Metal"
+#~ msgstr "Death Metal"
+
+#~ msgid "Pranks"
+#~ msgstr "Pranks"
+
+#~ msgid "Soundtrack"
+#~ msgstr "Filmmusik"
+
+#~ msgid "Euro-Techno"
+#~ msgstr "Euro-Techno"
+
+#~ msgid "Ambient"
+#~ msgstr "Ambient"
+
+#~ msgid "Trip-Hop"
+#~ msgstr "Trip-Hop"
+
+#~ msgid "Vocal"
+#~ msgstr "Vocal"
+
+#~ msgid "Jazz+Funk"
+#~ msgstr "Jazz+Funk"
+
+#~ msgid "Fusion"
+#~ msgstr "Fusion"
+
+#~ msgid "Trance"
+#~ msgstr "Trance"
+
+#~ msgid "Classical"
+#~ msgstr "Klassiskt"
+
+#~ msgid "Instrumental"
+#~ msgstr "Instrumentellt"
+
+#~ msgid "Acid"
+#~ msgstr "Acid"
+
+#~ msgid "House"
+#~ msgstr "House"
+
+#~ msgid "Game"
+#~ msgstr "Spel"
+
+#~ msgid "Sound Clip"
+#~ msgstr "Ljudklipp"
+
+#~ msgid "Gospel"
+#~ msgstr "Gospel"
+
+#~ msgid "Noise"
+#~ msgstr "Brus"
+
+#~ msgid "Alt"
+#~ msgstr "Alt"
+
+#~ msgid "Soul"
+#~ msgstr "Soul"
+
+#~ msgid "Punk"
+#~ msgstr "Punk"
+
+#~ msgid "Space"
+#~ msgstr "Space"
+
+#~ msgid "Meditative"
+#~ msgstr "Meditativt"
+
+#~ msgid "Instrumental Pop"
+#~ msgstr "Instrumentell pop"
+
+#~ msgid "Instrumental Rock"
+#~ msgstr "Instrumentell rock"
+
+#~ msgid "Ethnic"
+#~ msgstr "Folkmusik"
+
+#~ msgid "Gothic"
+#~ msgstr "Gotiskt"
+
+#~ msgid "Darkwave"
+#~ msgstr "Darkwave"
+
+#~ msgid "Techno-Industrial"
+#~ msgstr "Techno-Industrial"
+
+#~ msgid "Electronic"
+#~ msgstr "Electroniskt"
+
+#~ msgid "Pop-Folk"
+#~ msgstr "Pop-Folk"
+
+#~ msgid "Eurodance"
+#~ msgstr "Eurodance"
+
+#~ msgid "Dream"
+#~ msgstr "Dream"
+
+#~ msgid "Southern Rock"
+#~ msgstr "Southern Rock"
+
+#~ msgid "Comedy"
+#~ msgstr "Komedi"
+
+#~ msgid "Cult"
+#~ msgstr "Kult"
+
+#~ msgid "Gangsta Rap"
+#~ msgstr "Gangsta Rap"
+
+#~ msgid "Top 40"
+#~ msgstr "Topp 40"
+
+#~ msgid "Christian Rap"
+#~ msgstr "Kristen rap"
+
+#~ msgid "Pop/Funk"
+#~ msgstr "Pop/Funk"
+
+#~ msgid "Jungle"
+#~ msgstr "Jungle"
+
+#~ msgid "Native American"
+#~ msgstr "Amerikansk urbefolkning"
+
+#~ msgid "Cabaret"
+#~ msgstr "Kabaré"
+
+#~ msgid "New Wave"
+#~ msgstr "New Wave"
+
+#~ msgid "Psychedelic"
+#~ msgstr "Psykedeliskt"
+
+#~ msgid "Rave"
+#~ msgstr "Rejv"
+
+#~ msgid "Showtunes"
+#~ msgstr "Showtunes"
+
+#~ msgid "Trailer"
+#~ msgstr "Trailer"
+
+#~ msgid "Lo-Fi"
+#~ msgstr "Lo-Fi"
+
+#~ msgid "Tribal"
+#~ msgstr "Tribal"
+
+#~ msgid "Acid Punk"
+#~ msgstr "Acid Punk"
+
+#~ msgid "Acid Jazz"
+#~ msgstr "Acid Jazz"
+
+#~ msgid "Polka"
+#~ msgstr "Polka"
+
+#~ msgid "Retro"
+#~ msgstr "Retro"
+
+#~ msgid "Musical"
+#~ msgstr "Musikal"
+
+#~ msgid "Rock & Roll"
+#~ msgstr "Rock & Roll"
+
+#~ msgid "Hard Rock"
+#~ msgstr "Hårdrock"
+
+#~ msgid "Folk"
+#~ msgstr "Folk"
+
+#~ msgid "Folk/Rock"
+#~ msgstr "Folk/Rock"
+
+#~ msgid "National Folk"
+#~ msgstr "Nationell Folk"
+
+#~ msgid "Swing"
+#~ msgstr "Swing"
+
+#~ msgid "Fast-Fusion"
+#~ msgstr "Fast-Fusion"
+
+#~ msgid "Bebop"
+#~ msgstr "Bebop"
+
+#~ msgid "Latin"
+#~ msgstr "Latinskt"
+
+#~ msgid "Revival"
+#~ msgstr "Uppväckelse"
+
+#~ msgid "Celtic"
+#~ msgstr "Keltiskt"
+
+#~ msgid "Bluegrass"
+#~ msgstr "Bluegrass"
+
+#~ msgid "Avantgarde"
+#~ msgstr "Avantgarde"
+
+#~ msgid "Gothic Rock"
+#~ msgstr "Gotisk rock"
+
+#~ msgid "Progressive Rock"
+#~ msgstr "Progressiv rock"
+
+#~ msgid "Psychedelic Rock"
+#~ msgstr "Psykedelisk rock"
+
+#~ msgid "Symphonic Rock"
+#~ msgstr "Symfonisk rock"
+
+#~ msgid "Slow Rock"
+#~ msgstr "Slow Rock"
+
+#~ msgid "Big Band"
+#~ msgstr "Big Band"
+
+#~ msgid "Chorus"
+#~ msgstr "Kör"
+
+#~ msgid "Easy Listening"
+#~ msgstr "Lättlyssnat"
+
+#~ msgid "Acoustic"
+#~ msgstr "Akustiskt"
+
+#~ msgid "Humour"
+#~ msgstr "Humor"
+
+#~ msgid "Speech"
+#~ msgstr "Tal"
+
+#~ msgid "Chanson"
+#~ msgstr "Chanson"
+
+#~ msgid "Opera"
+#~ msgstr "Opera"
+
+#~ msgid "Chamber Music"
+#~ msgstr "Kammarmusik"
+
+#~ msgid "Sonata"
+#~ msgstr "Sonat"
+
+#~ msgid "Symphony"
+#~ msgstr "Symfoni"
+
+#~ msgid "Booty Bass"
+#~ msgstr "Booty Bass"
+
+#~ msgid "Primus"
+#~ msgstr "Primus"
+
+#~ msgid "Porn Groove"
+#~ msgstr "Porn Groove"
+
+#~ msgid "Satire"
+#~ msgstr "Satir"
+
+#~ msgid "Slow Jam"
+#~ msgstr "Slow Jam"
+
+#~ msgid "Club"
+#~ msgstr "Klubb"
+
+#~ msgid "Tango"
+#~ msgstr "Tango"
+
+#~ msgid "Samba"
+#~ msgstr "Samba"
+
+#~ msgid "Folklore"
+#~ msgstr "Folklore"
+
+#~ msgid "Ballad"
+#~ msgstr "Ballad"
+
+#~ msgid "Power Ballad"
+#~ msgstr "Power Ballad"
+
+#~ msgid "Rhythmic Soul"
+#~ msgstr "Rhythmic Soul"
+
+#~ msgid "Freestyle"
+#~ msgstr "Freestyle"
+
+#~ msgid "Duet"
+#~ msgstr "Duett"
+
+#~ msgid "Punk Rock"
+#~ msgstr "Punkrock"
+
+#~ msgid "Drum Solo"
+#~ msgstr "Trumsolo"
+
+#~ msgid "A Cappella"
+#~ msgstr "A cappella"
+
+#~ msgid "Euro-House"
+#~ msgstr "Euro-House"
+
+#~ msgid "Dance Hall"
+#~ msgstr "Dance Hall"
+
+#~ msgid "Goa"
+#~ msgstr "Goa"
+
+#~ msgid "Drum & Bass"
+#~ msgstr "Drum & Bass"
+
+#~ msgid "Club-House"
+#~ msgstr "Club-House"
+
+#~ msgid "Hardcore"
+#~ msgstr "Hardcore"
+
+#~ msgid "Terror"
+#~ msgstr "Terror"
+
+#~ msgid "Indie"
+#~ msgstr "Indie"
+
+#~ msgid "BritPop"
+#~ msgstr "BritPop"
+
+#~ msgid "Negerpunk"
+#~ msgstr "Negerpunk"
+
+#~ msgid "Polsk Punk"
+#~ msgstr "Polsk Punk"
+
+#~ msgid "Beat"
+#~ msgstr "Beat"
+
+#~ msgid "Christian Gangsta Rap"
+#~ msgstr "Kristen gangsta rap"
+
+#~ msgid "Heavy Metal"
+#~ msgstr "Heavy Metal"
+
+#~ msgid "Black Metal"
+#~ msgstr "Black Metal"
+
+#~ msgid "Crossover"
+#~ msgstr "Crossover"
+
+#~ msgid "Contemporary Christian"
+#~ msgstr "Modern kristen"
+
+#~ msgid "Christian Rock"
+#~ msgstr "Kristen rock"
+
+#~ msgid "Merengue"
+#~ msgstr "Merengue"
+
+#~ msgid "Salsa"
+#~ msgstr "Salsa"
+
+#~ msgid "Thrash Metal"
+#~ msgstr "Thrash Metal"
+
+#~ msgid "Anime"
+#~ msgstr "Anime"
+
+#~ msgid "JPop"
+#~ msgstr "JPop"
+
+#~ msgid "Synthpop"
+#~ msgstr "Synthpop"
+
+#~ msgid "Nu-Metal"
+#~ msgstr "Nu-Metal"
+
+#~ msgid "Art Rock"
+#~ msgstr "Art rock"
+
+#~ msgid "Editing Disc ID: %s"
+#~ msgstr "Redigerar skivid: %s"
+
+#~ msgid "Editing Disc ID: "
+#~ msgstr "Redigerar skivid: "
+
+#~ msgid "_Artist:"
+#~ msgstr "_Artist:"
+
+#~ msgid "Disc _Title:"
+#~ msgstr "Skiv_titel:"
+
+#~ msgid "Show advanced disc options"
+#~ msgstr "Visa avancerade skivalternativ"
+
+#~ msgid "Hide advanced disc options"
+#~ msgstr "Dölj avancerade skivalternativ"
+
+#~ msgid "_Disc comments:"
+#~ msgstr "_Skivkommentarer:"
+
+#~ msgid "_Genre:"
+#~ msgstr "_Genre:"
+
+#~ msgid "_Year:"
+#~ msgstr "_År:"
+
+#~ msgid "Title"
+#~ msgstr "Titel"
+
+#~ msgid "Length"
+#~ msgstr "Längd"
+
+#~ msgid "Show advanced track options"
+#~ msgstr "Visa avancerade spåralternativ"
+
+#~ msgid "Hide advanced track options"
+#~ msgstr "Dölj avancerade spåralternativ"
+
+#~ msgid "_Extra track data:"
+#~ msgstr "_Extra spårdata:"
+
+#~ msgid "Time Line"
+#~ msgstr "Tidslinje"
+
+#~ msgid "Line for displaying the time elapsed for the current track"
+#~ msgstr "Linje för visning av den tid som gått tid för aktuellt spår"
+
+#~ msgid "Info Line"
+#~ msgstr "Informationsrad"
+
+#~ msgid "Line for displaying information"
+#~ msgstr "Rad för visning av information"
+
+#~ msgid "Artist Line"
+#~ msgstr "Artistrad"
+
+#~ msgid "Line for displaying the name of the artist"
+#~ msgstr "Rad för visning av namnet på artisten"
+
+#~ msgid "Album Line"
+#~ msgstr "Albumrad"
+
+#~ msgid "Line for displaying the name of the album"
+#~ msgstr "Rad för visning av namnet på albumet"
+
+#~ msgid "Play"
+#~ msgstr "Spela"
+
+#~ msgid "Pause"
+#~ msgstr "Paus"
+
+#~ msgid "Playing %s - %s"
+#~ msgstr "Spelar %s - %s"
+
+#~ msgid "Unknown Artist"
+#~ msgstr "Okänd artist"
+
+#~ msgid "Unknown Album"
+#~ msgstr "Okänt album"
+
+#~ msgid "Playing"
+#~ msgstr "Spelar"
+
+#~ msgid "Paused"
+#~ msgstr "Gör paus"
+
+#~ msgid "CD Player"
+#~ msgstr "Cd-spelare"
+
+#~ msgid "Stopped"
+#~ msgstr "Stoppad"
+
+#~ msgid "Disc error"
+#~ msgstr "Skivfel"
+
+#~ msgid "No disc"
+#~ msgstr "Ingen skiva"
+
+#~ msgid "Data CD"
+#~ msgstr "Data-cd"
+
+#~ msgid "No Cdrom"
+#~ msgstr "Ingen cd-rom"
+
+#~ msgid "Drive Error"
+#~ msgstr "Enhetsfel"
+
+#~ msgid "You do not seem to have permission to access %s."
+#~ msgstr "Du verkar inte ha rättighet att komma åt %s."
+
+#~ msgid "Unknown artist"
+#~ msgstr "Okänd artist"
+
+#~ msgid "Unknown disc"
+#~ msgstr "Okänd skiva"
+
+#~ msgid "%d - Unknown"
+#~ msgstr "%d - okänd"
+
+#~ msgid "P_revious track"
+#~ msgstr "F_öregående spår"
+
+#~ msgid "_Stop"
+#~ msgstr "_Stopp"
+
+#~ msgid "_Play / Pause"
+#~ msgstr "S_pela/Paus"
+
+#~ msgid "_Next track"
+#~ msgstr "_Nästa spår"
+
+#~ msgid "_Eject disc"
+#~ msgstr "_Mata ut skiva"
+
+#~ msgid "_Help"
+#~ msgstr "_Hjälp"
+
+#~ msgid "_About CD player"
+#~ msgstr "_Om cd-spelare"
+
+#~ msgid "Set device"
+#~ msgstr "Ställ in enhet"
+
+#~ msgid "No CD device"
+#~ msgstr "Ingen cd-enhet"
+
+#~ msgid "_Details"
+#~ msgstr "_Detaljer"
+
+#~ msgid "_Set device"
+#~ msgstr "_Ställ in enhet"
+
+#~ msgid "Invalid CD device"
+#~ msgstr "Ogiltig cd-enhet"
+
+#~ msgid "Volume control"
+#~ msgstr "Volymkontroll"
+
+#~ msgid "Position"
+#~ msgstr "Position"
+
+#~ msgid "Open track editor"
+#~ msgstr "Öppna spårredigerare"
+
+#~ msgid "Track editor"
+#~ msgstr "Spårredigerare"
+
+#~ msgid "Open preferences"
+#~ msgstr "Öppna inställningar"
+
+#~ msgid "Preferences"
+#~ msgstr "Inställningar"
+
+#~ msgid "Track List"
+#~ msgstr "Spårlista"
+
+#~ msgid "Previous track"
+#~ msgstr "Föregående spår"
+
+#~ msgid "Previous"
+#~ msgstr "Föregående"
+
+#~ msgid "Rewind"
+#~ msgstr "Spola tillbaka"
+
+#~ msgid "Play / Pause"
+#~ msgstr "Spela/Paus"
+
+#~ msgid "Stop"
+#~ msgstr "Stopp"
+
+#~ msgid "Fast forward"
+#~ msgstr "Snabbspola"
+
+#~ msgid "Next track"
+#~ msgstr "Nästa spår"
+
+#~ msgid "Eject CD"
+#~ msgstr "Mata ut cd"
+
+#~ msgid "Eject"
+#~ msgstr "Mata ut"
+
+#~ msgid "CD device to use"
+#~ msgstr "Cd-enhet att använda"
+
+#~ msgid "Only start if there isn't already a CD player application running"
+#~ msgstr "Starta endast om det inte finns ett annat cd-spelarprogram som kör"
+
+#~ msgid "Play the CD on startup"
+#~ msgstr "Spela cd-skivan vid uppstart"
+
+#~ msgid "Cannot create player"
+#~ msgstr "Kan inte skapa spelare"
+
+#~ msgid "Play audio CDs"
+#~ msgstr "Spela ljud-cd"
+
+#~ msgid "CD player theme"
+#~ msgstr "Cd-spelartema"
+
+#~ msgid "Device path"
+#~ msgstr "Enhetssökväg"
+
+#~ msgid "Record sound clips"
+#~ msgstr "Spela in ljudklipp"
+
+#~ msgid "Sound Recorder"
+#~ msgstr "Ljudinspelare"
+
+#~ msgid "About"
+#~ msgstr "Om"
+
+#~ msgid "Close"
+#~ msgstr "Stäng"
+
+#~ msgid "Close this window"
+#~ msgstr "Stäng detta fönster"
+
+#~ msgid "Contents"
+#~ msgstr "Innehåll"
+
+#~ msgid "Create a new sample"
+#~ msgstr "Skapa ett nytt ljudklipp"
+
+#~ msgid "File Information"
+#~ msgstr "Filinformation"
+
+#~ msgid "File _Information"
+#~ msgstr "Fil_information"
+
+#~ msgid "Main toolbar"
+#~ msgstr "Huvudverktygsrad"
+
+#~ msgid "New"
+#~ msgstr "Nytt"
+
+#~ msgid "Open"
+#~ msgstr "Öppna"
+
+#~ msgid "Open a file"
+#~ msgstr "Öppna en fil"
+
+#~ msgid "Play sound"
+#~ msgstr "Spela ljud"
+
+#~ msgid "Quit"
+#~ msgstr "Avsluta"
+
+#~ msgid "Quit the application"
+#~ msgstr "Avsluta programmet"
+
+#~ msgid "Recent _Files"
+#~ msgstr "Senaste _filer"
+
+#~ msgid "Record sound"
+#~ msgstr "Spela in ljud"
+
+#~ msgid "Run Mixer"
+#~ msgstr "Kör mixer"
+
+#~ msgid "Run _Mixer"
+#~ msgstr "Kör _mixer"
+
+#~ msgid "Run the audio mixer"
+#~ msgstr "Kör ljudmixern"
+
+#~ msgid "Save"
+#~ msgstr "Spara"
+
+#~ msgid "Save As"
+#~ msgstr "Spara som"
+
+#~ msgid "Save _As..."
+#~ msgstr "Spara so_m..."
+
+#~ msgid "Save the current file"
+#~ msgstr "Spara den aktuella filen"
+
+#~ msgid "Save the current file with a different name"
+#~ msgstr "Spara den aktuella filen med ett annat namn"
+
+#~ msgid "Show information about the current file"
+#~ msgstr "Visa information om den aktuella filen"
+
+#~ msgid "Show information for Sound Recorder"
+#~ msgstr "Visa information för ljudinspelaren"
+
+#~ msgid "Stop sound"
+#~ msgstr "Stoppa ljud"
+
+#~ msgid "_About"
+#~ msgstr "_Om"
+
+#~ msgid "_Close Window"
+#~ msgstr "S_täng fönster"
+
+#~ msgid "_Contents"
+#~ msgstr "_Innehåll"
+
+#~ msgid "_Control"
+#~ msgstr "_Kontroll"
+
+#~ msgid "_File"
+#~ msgstr "_Fil"
+
+#~ msgid "_New"
+#~ msgstr "_Nytt"
+
+#~ msgid "_Open..."
+#~ msgstr "_Öppna..."
+
+#~ msgid "_Play"
+#~ msgstr "_Spela"
+
+#~ msgid "_Quit"
+#~ msgstr "_Avsluta"
+
+#~ msgid "_Record"
+#~ msgstr "Spela _in"
+
+#~ msgid "_Save"
+#~ msgstr "_Spara"
+
+#~ msgid "hours"
+#~ msgstr "timmar"
+
+#~ msgid "hour"
+#~ msgstr "timme"
+
+#~ msgid "minutes"
+#~ msgstr "minuter"
+
+#~ msgid "minute"
+#~ msgstr "minut"
+
+#~ msgid "seconds"
+#~ msgstr "sekunder"
+
+#~ msgid "second"
+#~ msgstr "sekund"
+
+#~ msgid "Ready"
+#~ msgstr "Klar"
+
+#~ msgid "Save file as"
+#~ msgstr "Spara fil som"
+
+#~ msgid "%s is not installed in the path."
+#~ msgstr "%s är inte installerad i sökvägen."
+
+#~ msgid "There was an error starting %s: %s"
+#~ msgstr "Det uppstod ett fel vid start av %s: %s"
+
+#~ msgid "%s (Has not been saved)"
+#~ msgstr "%s (Har inte sparats)"
+
+#~ msgid "Unknown size"
+#~ msgstr "Okänd storlek"
+
+#~ msgid "%.1f kHz"
+#~ msgstr "%.1f kHz"
+
+#~ msgid "%.0f kb/s"
+#~ msgstr "%.0f kb/s"
+
+#~ msgid "1 (mono)"
+#~ msgstr "1 (mono)"
+
+#~ msgid "2 (stereo)"
+#~ msgstr "2 (stereo)"
+
+#~ msgid "%s Information"
+#~ msgstr "Information om %s"
+
+#~ msgid "Folder:"
+#~ msgstr "Mapp:"
+
+#~ msgid "Filename:"
+#~ msgstr "Filnamn:"
+
+#~ msgid "File size:"
+#~ msgstr "Filstorlek:"
+
+#~ msgid "Audio Information"
+#~ msgstr "Ljudinformation"
+
+#~ msgid "Song length:"
+#~ msgstr "Låtlängd:"
+
+#~ msgid "Number of channels:"
+#~ msgstr "Antal kanaler:"
+
+#~ msgid "Sample rate:"
+#~ msgstr "Samplingsfrekvens:"
+
+#~ msgid "Bit rate:"
+#~ msgstr "Bithastighet:"
+
+#~ msgid "Playing..."
+#~ msgstr "Spelar upp..."
+
+#~ msgid "%s.%s - Sound Recorder"
+#~ msgstr "%s.%s - Ljudinspelare"
+
+#~ msgid "Recording..."
+#~ msgstr "Spelar in..."
+
+#~ msgid "Record as"
+#~ msgstr "Spela in som"
+
+#~ msgid "File information"
+#~ msgstr "Filinformation"
+
+#~ msgid "<none>"
+#~ msgstr "<ingen>"
+
+#~ msgid "Length:"
+#~ msgstr "Längd:"
+
+#~ msgid "Adjust the volume level"
+#~ msgstr "Justera nivån på volymen"
+
+#~ msgid "Volume Control"
+#~ msgstr "Volymkontroll"
+
+#~ msgid "%s Slider"
+#~ msgstr "%s-skjutreglage"
+
+#~ msgid "Channel %d of %s Slider"
+#~ msgstr "Kanal %d för %s-skjutreglage"
+
+#~ msgid "%s Slider %d"
+#~ msgstr "%s-skjutreglage %d"
+
+#~ msgid "Lock"
+#~ msgstr "Lås"
+
+#~ msgid "%s Lock"
+#~ msgstr "%s-lås"
+
+# jdahlin vill ha "tyst" istället för "tysta"
+#~ msgid "Mute"
+#~ msgstr "Tyst"
+
+#~ msgid "%s Mute"
+#~ msgstr "%s tyst"
+
+#~ msgid "Rec."
+#~ msgstr "Insp."
+
+#~ msgid "%s Record"
+#~ msgstr "%s-inspelning"
+
+#~ msgid "GStreamer Volume Control"
+#~ msgstr "GStreamer-volymkontroll"
+
+#~ msgid "Sorry, no mixer elements and/or devices found"
+#~ msgstr "Tyvärr, inga mixerelement och/eller mixerenheter hittades"
+
+#~ msgid "Failure instantiating main window"
+#~ msgstr "Misslyckades med att instantiera huvudfönstret"
+
+#~ msgid "Configure defaults for GStreamer applications"
+#~ msgstr "Konfigurera standardalternativ för GStreamer-program"
+
+#~ msgid "Multimedia Systems Selector"
+#~ msgstr "Väljare för multimediasystem"
+
+#~ msgid "*"
+#~ msgstr "*"
+
+#~ msgid "<b>Default Sink</b>"
+#~ msgstr "<b>Standardutgång</b>"
+
+#~ msgid "<b>Default Source</b>"
+#~ msgstr "<b>Standardkälla</b>"
+
+#~ msgid "Audio"
+#~ msgstr "Ljud"
+
+#~ msgid "Click Ok to finish."
+#~ msgstr "Klicka på OK för att slutföra."
+
+#~ msgid "GStreamer Preferences"
+#~ msgstr "Inställningar för GStreamer"
+
+#~ msgid "Pipe_line:"
+#~ msgstr "Pipe_line:"
+
+#~ msgid "Te_st"
+#~ msgstr "Te_sta"
+
+#~ msgid "Testing Pipeline"
+#~ msgstr "Testar pipeline"
+
+#~ msgid "_Input:"
+#~ msgstr "_Ingång:"
+
+#~ msgid "_Output:"
+#~ msgstr "_Utgång:"
+
+#~ msgid "_Pipeline:"
+#~ msgstr "_Pipeline:"
+
+#~ msgid "_Test"
+#~ msgstr "_Testa"
+
+#~ msgid "Custom"
+#~ msgstr "Anpassad"
+
+#~ msgid "Failed to construct test pipeline for '%s'"
+#~ msgstr "Misslyckades med att konstruera testpipeline för \"%s\""
+
+#~ msgid "There was an error displaying help: %s"
+#~ msgstr "Det uppstod ett fel vid visning av hjälp: %s"
+
+#~ msgid "Editing profile \"%s\""
+#~ msgstr "Redigerar profilen \"%s\""
+
+#~ msgid "<not named>"
+#~ msgstr "<inte namngiven>"
+
+#~ msgid "<not described>"
+#~ msgstr "<inte beskriven>"
+
+#~ msgid "There was an error getting the list of gm_audio profiles. (%s)\n"
+#~ msgstr ""
+#~ "Det uppstod ett fel vid hämtandet av listan med gm_audio-profiler. (%s)\n"
+
+#~ msgid ""
+#~ "There was an error subscribing to notification of terminal profile list "
+#~ "changes. (%s)\n"
+#~ msgstr ""
+#~ "Det uppstod ett problem vid prenumeration på notifiering av ändringar i "
+#~ "terminalprofilslistan. (%s)\n"
+
+#~ msgid "There was an error forgetting profile dir %s. (%s)\n"
+#~ msgstr "Det uppstod ett fel vid glömmandet av profilkatalogen %s. (%s)\n"
+
+#~ msgid "<no description>"
+#~ msgstr "<ingen beskrivning>"
+
+#~ msgid "identity"
+#~ msgstr "identitet"
+
+#~ msgid "wav"
+#~ msgstr "wav"
+
+#~ msgid "_Edit"
+#~ msgstr "_Redigera"
+
+#~ msgid "You must select one or more profiles to delete."
+#~ msgstr "Du måste välja en eller flera profiler att ta bort."
+
+#~ msgid "Delete these two profiles?\n"
+#~ msgstr "Ta bort dessa två profiler?\n"
+
+#~ msgid "Delete these %d profiles?\n"
+#~ msgstr "Ta bort dessa %d profiler?\n"
+
+#~ msgid "Delete profile \"%s\"?"
+#~ msgstr "Ta bort profilen \"%s\"?"
+
+#~ msgid "Delete Profile"
+#~ msgstr "Ta bort profil"
+
+#~ msgid "Edit GMAudio Profiles"
+#~ msgstr "Redigera GMAudio-profiler"
+
+#~ msgid "_Profiles:"
+#~ msgstr "_Profiler:"
+
+#~ msgid "You already have a profile called \"%s\""
+#~ msgstr "Du har redan en profil med namnet \"%s\""
+
+#~ msgid "GConf Error (FIXME): %s\n"
+#~ msgstr "GConf-fel (FIXAMIG): %s\n"
+
+#~ msgid ""
+#~ "The file \"%s\" is missing. This indicates that the application is "
+#~ "installed incorrectly, so the dialog can't be displayed."
+#~ msgstr ""
+#~ "Filen \"%s\" saknas. Detta tyder på att programmet är felaktigt "
+#~ "installerat så att dialogfönstret därför inte kan visas."
+
+#~ msgid "Edit Audio Profile"
+#~ msgstr "Redigera ljudprofil"
+
+#~ msgid "File _Extension:"
+#~ msgstr "Fil_ändelse:"
+
+#~ msgid "New Profile"
+#~ msgstr "Ny profil"
+
+#~ msgid "Profile Description:"
+#~ msgstr "Profilbeskrivning:"
+
+#~ msgid "Profile _Description:"
+#~ msgstr "Profil_beskrivning:"
+
+#~ msgid "Profile _name:"
+#~ msgstr "Profil_namn:"
+
+#~ msgid "_Active ?"
+#~ msgstr "_Aktiv?"
+
+#~ msgid "_Create"
+#~ msgstr "_Skapa"
+
+#~ msgid "_GStreamer Pipeline:"
+#~ msgstr "_GStreamer-rörledning:"
+
+#~ msgid "_Profile name:"
+#~ msgstr "_Profilnamn:"
+
+#~ msgid "A description for the audio profile"
+#~ msgstr "En beskrivning för ljudprofilen"
+
+#~ msgid ""
+#~ "A description of the profile, containing more information and describing "
+#~ "when to use this profile."
+#~ msgstr ""
+#~ "En beskrivning av profilen som innehåller mer information och beskriver "
+#~ "när profilen ska användas."
+
+#~ msgid ""
+#~ "A filename extension to be used when storing files encoded with this "
+#~ "profile."
+#~ msgstr ""
+#~ "En filändelse som ska användas då filer som är kodade med denna profil "
+#~ "lagras."
+
+#~ msgid "A partial GStreamer pipeline to use for this profile."
+#~ msgstr ""
+#~ "En ofullständig GStreamer-rörledning som ska användas för denna profil."
+
+#~ msgid "A short name for the audio profile"
+#~ msgstr "Ett kort namn för ljudprofilen"
+
+#~ msgid ""
+#~ "A short name for the audio profile, to be used in selections and uniquely "
+#~ "identifying the profile."
+#~ msgstr ""
+#~ "Ett kort namn för ljudprofilen som kan användas i markeringar och som "
+#~ "unikt identifierar profilen."
+
+#~ msgid ""
+#~ "List of audio recording profiles. The list contains strings naming "
+#~ "subdirectories relative to /system/gstreamer/audio/profiles."
+#~ msgstr ""
+#~ "Lista med ljudinspelningsprofiler. Listan innehåller strängar som anger "
+#~ "underkataloger relativa till /system/gstreamer/audio/profiles."
+
+#~ msgid "List of profiles"
+#~ msgstr "Lista med profiler"
+
+#~ msgid "The default file extension for this profile"
+#~ msgstr "Standardfiländelsen för denna profil"
+
+#~ msgid "The partial GStreamer pipeline used"
+#~ msgstr "Den ofullständiga GSTreamer-rörledning som används"
+
+#~ msgid "Whether or not this profile is to be used"
+#~ msgstr "Huruvida denna profil ska användas eller inte"
+
+#~ msgid "Whether or not to use and display this profile."
+#~ msgstr "Huruvida denna profil ska användas och visas eller inte."
+
+#~ msgid ""
+#~ "Cannot connect to sound daemon.\n"
+#~ "Please run 'esd' at a command prompt."
+#~ msgstr ""
+#~ "Kan inte ansluta till ljuddemonen.\n"
+#~ "Kör \"esd\" vid en kommandorad."
+
+#~ msgid "Specify the X position of the meter."
+#~ msgstr "Ange X-position för mätaren."
+
+#~ msgid "X-Position"
+#~ msgstr "X-position"
+
+#~ msgid "Specify the Y position of the meter."
+#~ msgstr "Ange Y-position för mätaren."
+
+#~ msgid "Y-Position"
+#~ msgstr "Y-position"
+
+#~ msgid "Connect to the esd server on this host."
+#~ msgstr "Anslut till esd-servern på denna dator."
+
+#~ msgid "ESD Server Host"
+#~ msgstr "ESD-serverdator"
+
+#~ msgid "Open a vertical version of the meter."
+#~ msgstr "Öppna en lodrät version av mätaren."
+
+#~ msgid "Act as recording level meter."
+#~ msgstr "Bli en inspelningsnivåmätare."
+
+#~ msgid "Host is %s\n"
+#~ msgstr "Värddatorn är %s\n"
+
+#~ msgid "Recording level"
+#~ msgstr "Inspelningsnivå"
+
+#~ msgid "Volume Meter"
+#~ msgstr "Volymmätare"
+
+#~ msgid "Monitor the recording input volume"
+#~ msgstr "Övervaka inspelningsvolymen"
+
+#~ msgid "Recording level monitor"
+#~ msgstr "Inspelningsnivåmätare"
+
+#~ msgid "Monitor the sound output volume"
+#~ msgstr "Övervaka ljudvolymen"
+
+#~ msgid "Volume monitor"
+#~ msgstr "Volymmätare"
+
+#~ msgid "GStreamer"
+#~ msgstr "GStreamer"
+
+#~ msgid "_Replace"
+#~ msgstr "_Ersätt"
+
+#~ msgid ""
+#~ "A file named \"%s\" already exists.\n"
+#~ "Do you want to replace it with the one you are saving?"
+#~ msgstr ""
+#~ "Det finns redan en fil med namnet \"%s\".\n"
+#~ "Vill du ersätta den med den du håller på att spara?"
+
+#~ msgid "Unknown extension, doing nothing"
+#~ msgstr "Okänd ändelse, gör ingenting"
+
+#~ msgid "Could not build pipeline"
+#~ msgstr "Kunde inte bygga rörledning"
+
+#~ msgid "Saving %s..."
+#~ msgstr "Sparar %s..."
+
+#~ msgid "Slider"
+#~ msgstr "Skjutreglage"
+
+#~ msgid "Sliders"
+#~ msgstr "Skjutreglage"
+
+#~ msgid "%s - Sound Recorder"
+#~ msgstr "%s - Ljudinspelare"
+
+#~ msgid "Edit"
+#~ msgstr "Redigera"
+
+#~ msgid "Profiles:"
+#~ msgstr "Profiler:"
+
+#~ msgid "Profile:"
+#~ msgstr "Profil:"
+
+#~ msgid "Profiles"
+#~ msgstr "Profiler"
+
+#~ msgid "Profile"
+#~ msgstr "Profil"
+
+#~ msgid "_Active?"
+#~ msgstr "_Aktiv?"
+
+#~ msgid "_Active"
+#~ msgstr "_Aktiv"
+
+#~ msgid "DAC"
+#~ msgstr "DAC"
+
+#~ msgid "FM"
+#~ msgstr "FM"
+
+#~ msgid "DSP Input"
+#~ msgstr "DSP-ingång"
+
+#~ msgid "MIC"
+#~ msgstr "Mik"
+
+#~ msgid "Phone"
+#~ msgstr "Tele"
+
+#~ msgid "Mono"
+#~ msgstr "Mono"
+
+#~ msgid "Aux"
+#~ msgstr "Aux"
+
+#~ msgid "Center Input"
+#~ msgstr "Mitteningång"
+
+#~ msgid "Woofer Input"
+#~ msgstr "Basingång"
+
+#~ msgid "Surround Input"
+#~ msgstr "Surroundingång"
+
+#~ msgid "Master"
+#~ msgstr "Övergripande"
+
+#~ msgid "Master Mono"
+#~ msgstr "Övergripande mono"
+
+#~ msgid "Master Digital"
+#~ msgstr "Övergripande digial"
+
+#~ msgid "Headphone"
+#~ msgstr "Hörlurar"
+
+#~ msgid "Phone Output"
+#~ msgstr "Teleutgång"
+
+#~ msgid "Center"
+#~ msgstr "Mittenutgång"
+
+#~ msgid "Woofer"
+#~ msgstr "Basutgång"
+
+#~ msgid "Surround"
+#~ msgstr "Surroundutgång"
+
+#~ msgid "DSP Output"
+#~ msgstr "DSP-utgång"
+
+#~ msgid "Equalizer"
+#~ msgstr "Equalizer"
+
+#~ msgid "Fader"
+#~ msgstr "Dämpare"
+
+#~ msgid "Effect"
+#~ msgstr "Effekt"
+
+#~ msgid "3D Effect"
+#~ msgstr "3D-effekt"
+
+#~ msgid "Mic Gain"
+#~ msgstr "Mik.förstärkning"
+
+#~ msgid "Input Gain"
+#~ msgstr "Införstärkning"
+
+#~ msgid "Analog Loopback"
+#~ msgstr "Analog återkoppling"
+
+#~ msgid "Digital Loopback"
+#~ msgstr "Digital återkoppling"
+
+#~ msgid "Vol  "
+#~ msgstr "Volym"
+
+#~ msgid "Bass "
+#~ msgstr "Bas"
+
+#~ msgid "Trebl"
+#~ msgstr "Diskant"
+
+#~ msgid "Pcm  "
+#~ msgstr "Pcm"
+
+#~ msgid "Spkr "
+#~ msgstr "Högt."
+
+#~ msgid "Line "
+#~ msgstr "Linje"
+
+#~ msgid "Mic  "
+#~ msgstr "Mikrofon"
+
+#~ msgid "CD   "
+#~ msgstr "Cd   "
+
+#~ msgid "Mix  "
+#~ msgstr "Mixer"
+
+#~ msgid "Pcm2 "
+#~ msgstr "Pcm2"
+
+#~ msgid "Rec  "
+#~ msgstr "Insp."
+
+#~ msgid "OGain"
+#~ msgstr "Utförst."
+
+#~ msgid "Help"
+#~ msgstr "Hjälp"
+
+#~ msgid "Mixer device to use"
+#~ msgstr "Mixerenhet att använda"
+
+#~ msgid "Invalid mixer device"
+#~ msgstr "Ogiltig mixerenhet"
+
+#~ msgid "left %s"
+#~ msgstr "vänster %s"
+
+#~ msgid "Right %s"
+#~ msgstr "Höger %s"
+
+#~ msgid "A mixer for sound devices"
+#~ msgstr "En mixer för ljudenheter"
+
+#~ msgid "Shown"
+#~ msgstr "Visas"
+
+#~ msgid "Mixer label"
+#~ msgstr "Mixeretikett"
+
+#~ msgid "_Reset labels to their defaults"
+#~ msgstr "_Återställ etiketter till deras standardvärden"
+
+#~ msgid "Sound Recorder:"
+#~ msgstr "Ljudinspelare:"
+
+#~ msgid "Don't show this message again."
+#~ msgstr "Visa inte detta meddelande igen."
+
+#~ msgid ""
+#~ "Could not find '%s'.\n"
+#~ "Set the correct path to sox inpreferences under the tab 'paths'.\n"
+#~ "\n"
+#~ "If you don't have sox, you will not be able to record or do any effects."
+#~ msgstr ""
+#~ "Kunde inte hitta \"%s\".\n"
+#~ "Ställ in korrekt sökväg till sox i inställningarna under fliken \"sökvägar"
+#~ "\".\n"
+#~ "\n"
+#~ "Om du inte har sox kommer du inte att kunna spela in eller göra några "
+#~ "effekter."
+
+#~ msgid "Converting file..."
+#~ msgstr "Konverterar fil..."
+
+#~ msgid "Cancel"
+#~ msgstr "Avbryt"
+
+#~ msgid "Audioformat: "
+#~ msgstr "Ljudformat: "
+
+#~ msgid "Sample rate: "
+#~ msgstr "Samplingsfrekvens: "
+
+#~ msgid "Channels: "
+#~ msgstr "Kanaler: "
+
+#~ msgid "Cancel open"
+#~ msgstr "Avbryt öppnande"
+
+#~ msgid "Select a sound file"
+#~ msgstr "Välj en ljudfil"
+
+#~ msgid "%s is not installed in the path"
+#~ msgstr "%s är inte installerad i sökvägen"
+
+#~ msgid "Undoing all changes..."
+#~ msgstr "Ångrar alla ändringar..."
+
+#~ msgid ""
+#~ "'%s' is a folder.\n"
+#~ "Please select a sound file to be opened."
+#~ msgstr ""
+#~ "\"%s\" är en mapp.\n"
+#~ "Välj en ljudfil att öppna."
+
+#~ msgid ""
+#~ "File '%s' doesn't exist.\n"
+#~ "Please select an existing sound file to be opened."
+#~ msgstr ""
+#~ "Filen \"%s\" finns inte.\n"
+#~ "Välj en existerande ljudfil att öppna."
+
+#~ msgid "File '%s isn't a valid sound file."
+#~ msgstr "Filen \"%s\" är inte en giltig ljudfil."
+
+#~ msgid ""
+#~ "'%s' is a folder.\n"
+#~ "Please enter another filename."
+#~ msgstr ""
+#~ "\"%s\" är en mapp.\n"
+#~ "Ange ett annat filnamn."
+
+#~ msgid ""
+#~ "<b>File '%s' already exists.</b>\n"
+#~ "Do you want to overwrite it?"
+#~ msgstr ""
+#~ "<b>Filen \"%s\" finns redan.</b>\n"
+#~ "Vill du skriva över den?"
+
+#~ msgid "Cancel save"
+#~ msgstr "Avbryt sparande"
+
+#~ msgid "Overwrite"
+#~ msgstr "Skriv över"
+
+#~ msgid "Error saving '%s'"
+#~ msgstr "Fel vid sparande av \"%s\""
+
+#~ msgid ""
+#~ "<b>Do you want to save the changes you made to \"%s\"?</b>\n"
+#~ "\n"
+#~ "Your changes will be lost if you don't save them."
+#~ msgstr ""
+#~ "<b>Vill du spara ändringarna som du har gjort i \"%s\"?</b>\n"
+#~ "\n"
+#~ "Ändringarna går förlorade om du inte sparar dem."
+
+#~ msgid "Do_n't save"
+#~ msgstr "Spara i_nte"
+
+#~ msgid "Save %s?"
+#~ msgstr "Spara %s?"
+
+#~ msgid "Saving..."
+#~ msgstr "Sparar..."
+
+#~ msgid ""
+#~ "The size of the current sample is more than\n"
+#~ "%i Mb!"
+#~ msgstr ""
+#~ "Storleken på det aktuella ljudklippet är mer\n"
+#~ "än %i MB!"
+
+#~ msgid "Save sound file"
+#~ msgstr "Spara ljudfil"
+
+#~ msgid ""
+#~ "The sound device is not ready. Please check that there isn't\n"
+#~ "another program running that is using the device."
+#~ msgstr ""
+#~ "Ljudenheten är inte klar. Kontrollera att inte ett annat\n"
+#~ "program är igång som blockerar enheten."
+
+#~ msgid "Add echo"
+#~ msgstr "Lägg till eko"
+
+#~ msgid "Add echo to the current sample"
+#~ msgstr "Lägg till eko till det aktuella ljudklippet"
+
+#~ msgid "Echo"
+#~ msgstr "Eko"
+
+#~ msgid "_Undo All"
+#~ msgstr "_Ångra alla"
+
+#~ msgid "Undo all changes made on the current sample"
+#~ msgstr "Ångra alla ändringar gjorda på det aktuella ljudklippet"
+
+#~ msgid "Effects"
+#~ msgstr "Effekter"
+
+#~ msgid "16bit PCM"
+#~ msgstr "16-bitars PCM"
+
+#~ msgid "8bit PCM"
+#~ msgstr "8-bitars PCM"
+
+#~ msgid "stereo"
+#~ msgstr "stereo"
+
+#~ msgid "mono"
+#~ msgstr "mono"
+
+#~ msgid "Create new sample"
+#~ msgstr "Skapa nytt ljudklipp"
+
+#~ msgid "Play current sample"
+#~ msgstr "Spela upp det aktuella ljudklippet"
+
+#~ msgid "Stop playing/recording"
+#~ msgstr "Sluta spela upp/in"
+
+#~ msgid "Start recording"
+#~ msgstr "Påbörja inspelning"
+
+#~ msgid "Audio format: "
+#~ msgstr "Ljudformat: "
+
+#~ msgid "File '%s' doesn't exist; using default."
+#~ msgstr "Filen \"%s\" finns inte; använder standardval."
+
+#~ msgid "File '%s' isn't a supported soundfile."
+#~ msgstr "Filen \"%s\" är inte en ljudfil som stöds."
+
+#~ msgid "translator_credits"
+#~ msgstr ""
+#~ "Christian Rose\n"
+#~ "Skicka synpunkter på översättningen till sv@li.org"
+
+#~ msgid "translator-credits"
+#~ msgstr ""
+#~ "Christian Rose\n"
+#~ "Skicka synpunkter på översättningen till sv@li.org"
+
+#~ msgid "Sound Recorder Preferences"
+#~ msgstr "Inställningar för ljudinspelare"
+
+#~ msgid "Recording"
+#~ msgstr "Inspelning"
+
+#~ msgid "Time"
+#~ msgstr "Tid"
+
+#~ msgid "_Recording timeout: "
+#~ msgstr "_Inspelningstimeout: "
+
+#~ msgid "_Stop recording on timeout"
+#~ msgstr "S_tanna inspelning vid time-out"
+
+#~ msgid "_Open save dialog when recording is finished"
+#~ msgstr "_Öppna spardialog när inspelningen är klar"
+
+#~ msgid "Size"
+#~ msgstr "Storlek"
+
+#~ msgid "Show warning _message if size (MB) of sample becomes bigger than:"
+#~ msgstr ""
+#~ "Visa varnings_meddelande om ljudklippets storlek (MB) blir större än:"
+
+#~ msgid "Sto_p recording if size (MB) of sample becomes bigger than:"
+#~ msgstr "Sta_nna inspelning om ljudklippets storlek (MB) blir större än:"
+
+#~ msgid "Repetition"
+#~ msgstr "Repetition"
+
+#~ msgid "_Repeat the sound"
+#~ msgstr "_Upprepa ljudet"
+
+#~ msgid "Repeat _forever"
+#~ msgstr "Upprepa _för evigt"
+
+#~ msgid "_Number of times:"
+#~ msgstr "_Antal gånger:"
+
+#~ msgid "Paths"
+#~ msgstr "Sökvägar"
+
+#~ msgid "Program files"
+#~ msgstr "Programfiler"
+
+#~ msgid "_Path to sox:"
+#~ msgstr "_Sökväg till sox:"
+
+#~ msgid "_Apply"
+#~ msgstr "_Verkställ"
+
+#~ msgid "Folders"
+#~ msgstr "Mappar"
+
+#~ msgid "_Temporary folder:"
+#~ msgstr "_Temporär mapp:"
+
+#~ msgid "Apply"
+#~ msgstr "Verkställ"
+
+#~ msgid "Sound"
+#~ msgstr "Ljud"
+
+#~ msgid "Audio format:"
+#~ msgstr "Ljudformat:"
+
+#~ msgid "8 _bit PCM"
+#~ msgstr "8-_bitars PCM"
+
+#~ msgid "16 b_it PCM"
+#~ msgstr "16-b_itars PCM"
+
+#~ msgid "S_ample rate:"
+#~ msgstr "S_amplingsfrekvens:"
+
+#~ msgid "Mono or Stereo:"
+#~ msgstr "Mono eller stereo:"
+
+#~ msgid "_Mono"
+#~ msgstr "_Mono"
+
+#~ msgid "_Stereo"
+#~ msgstr "_Stereo"
+
+#~ msgid "Stereo"
+#~ msgstr "Stereo"
+
+#~ msgid "Specify the geometry of the main window"
+#~ msgstr "Ange huvudfönstrets geometri"
+
+#~ msgid "GEOMETRY"
+#~ msgstr "GEOMETRI"
+
+#~ msgid "Specify a file to be opened"
+#~ msgstr "Ange en fil att öppna"
+
+#~ msgid "Specify a file to start recording"
+#~ msgstr "Ange en fil att börja spela in till"
+
+#~ msgid "Specify a file to start playing"
+#~ msgstr "Ange en fil att börja spela upp"
+
+#~ msgid "Sound recorder"
+#~ msgstr "Ljudinspelare"
+
+#~ msgid "Audio format: 8bit PCM"
+#~ msgstr "Ljudformat: 8-bitars PCM"
+
+#~ msgid "Audio format: 16bit PCM"
+#~ msgstr "Ljudformat: 16-bitars PCM"
+
+#~ msgid "Sample rate: %s"
+#~ msgstr "Samplingsfrekvens: %s"
+
+#~ msgid "Channels: mono"
+#~ msgstr "Kanaler: mono"
+
+#~ msgid "Channels: stereo"
+#~ msgstr "Kanaler: stereo"
+
+#~ msgid "Adding echo to sample..."
+#~ msgstr "Lägger till eko till ljudklippet..."
+
+#~ msgid "Send _other information"
+#~ msgstr "Skicka _annan information"
+
+#~ msgid "_Name"
+#~ msgstr "_Namn"
+
+#~ msgid "Hostname:"
+#~ msgstr "Värdnamn:"
+
+#~ msgid "Update Server List"
+#~ msgstr "Uppdatera serverlistan"
+
+#~ msgid "Hostname"
+#~ msgstr "Värdnamn"
+
+#~ msgid "Info to send to server"
+#~ msgstr "Information att skicka till server"
+
+#~ msgid ""
+#~ "This key specifies which user info will be sent to the server to contact "
+#~ "for CD queries. Possible values are 0 (no info), 1 (real info) and 3 "
+#~ "(other info)."
+#~ msgstr ""
+#~ "Denna nyckel anger vilken användarinformation som kommer att skickas till "
+#~ "servern som kontaktas för cd-frågor. Möjliga värden är 0 (ingen "
+#~ "information), 1 (verklig information) och 3 (annan information)."
+
+#~ msgid "Send _no info"
+#~ msgstr "Skicka in_gen information"
+
+#~ msgid "Send real _info"
+#~ msgstr "Skicka verklig _information"
+
+#~ msgid "Send _other info..."
+#~ msgstr "Skicka _annan information..."
+
+#~ msgid "_Hostname:"
+#~ msgstr "_Värdnamn:"
+
+#~ msgid "Information Line"
+#~ msgstr "Informationsrad"
+
+#~ msgid "Default Sink"
+#~ msgstr "Standardutgång"
+
+#~ msgid "Sink"
+#~ msgstr "Utgång"
+
+#~ msgid "Default Source"
+#~ msgstr "Standardkälla"
+
+#~ msgid "Click OK to finish."
+#~ msgstr "Klicka på OK för att slutföra."
+
+#~ msgid "Pipeline:"
+#~ msgstr "Pipeline:"
+
+#~ msgid "Te_st..."
+#~ msgstr "Te_sta..."
+
+#~ msgid "Test"
+#~ msgstr "Testa"
+
+#~ msgid "Test..."
+#~ msgstr "Testa..."
+
+#~ msgid "_Test..."
+#~ msgstr "_Testa..."
+
+#~ msgid "Audio _Input:"
+#~ msgstr "Ljud_ingång:"
+
+#~ msgid "Video _Output:"
+#~ msgstr "Video_utgång:"
+
+#~ msgid "Play when the CD player starts"
+#~ msgstr "Spela då cd-spelaren startar"
+
+#~ msgid "Should the CD be ejected when the CD player quits"
+#~ msgstr "Ska cd-skivan matas ut då cd-spelaren avslutas"
+
+#~ msgid "CD Player _Device:"
+#~ msgstr "Cd-spelar_enhet:"
+
+#~ msgid "CD Player Behaviour"
+#~ msgstr "Cd-spelarbeteende"
+
+#~ msgid "Action on application exit"
+#~ msgstr "Åtgärd vid programavslut"
+
+#~ msgid "Action on start"
+#~ msgstr "Åtgärd vid start"
+
+#~ msgid "Should the CD player attempt to shut the CD drive on start up?"
+#~ msgstr "Ska cd-spelaren försöka stänga cd-enheten vid uppstart?"
+
+#~ msgid "Shut the CD tray on start"
+#~ msgstr "Stäng cd-luckan vid start"
+
+#~ msgid ""
+#~ "What action should the CD player perform on exit? 0 = Nothing, 1 = Stop "
+#~ "playing, 2 = Eject the CD, 3 = Attempt to close the tray"
+#~ msgstr ""
+#~ "Vilken åtgärd ska cd-spelaren utföra vid avslut? 0 = ingenting, 1 = sluta "
+#~ "spela, 2 = mata ut cd-skivan, 3 = försök stänga luckan"
+
+#~ msgid ""
+#~ "What action should the CD player perform on start up? 0 = Nothing, 1 = "
+#~ "Start playing, 2 = Stop playing"
+#~ msgstr ""
+#~ "Vilken åtgärd ska cd-spelaren utföra vid uppstart? 0 = ingenting, 1 = "
+#~ "börja spela, 2 = sluta spela"
+
+#~ msgid "Do _nothing"
+#~ msgstr "Gör i_nget"
+
+#~ msgid "Do nothing when CD Player starts"
+#~ msgstr "Gör ingenting då cd-spelaren startar"
+
+#~ msgid "Start _playing CD"
+#~ msgstr "Börja s_pela cd"
+
+#~ msgid "_Stop playing CD"
+#~ msgstr "_Sluta spela cd"
+
+#~ msgid "Stop playing CD when CD Player starts"
+#~ msgstr "Stoppa uppspelning av cd-skiva då cd-spelaren startar"
+
+#~ msgid "Attempt to _close CD tray"
+#~ msgstr "Försök s_tänga cd-luckan"
+
+#~ msgid "When CD player quits"
+#~ msgstr "Då cd-spelaren avslutas"
+
+#~ msgid "Do not_hing"
+#~ msgstr "Gör in_get"
+
+#~ msgid "Do nothing when CD Player exits"
+#~ msgstr "Gör ingenting då cd-spelaren avslutas"
+
+#~ msgid "S_top playing CD"
+#~ msgstr "S_luta spela cd"
+
+#~ msgid "Attempt to _open CD tray"
+#~ msgstr "Försök att _öppna cd-luckan"
+
+#~ msgid "Attempt to c_lose CD tray"
+#~ msgstr "Försök att st_änga cd-luckan"
+
+#~ msgid "Theme name"
+#~ msgstr "Temanamn"
+
+#~ msgid "Rythmic Soul"
+#~ msgstr "Rythmic Soul"
+
+#~ msgid "Folder"
+#~ msgstr "Mapp"
+
+#~ msgid "Folders:"
+#~ msgstr "Mappar:"
+
+#~ msgid "Audio Information:"
+#~ msgstr "Ljudinformation:"
+
+#~ msgid "Testing..."
+#~ msgstr "Testar..."
+
+#~ msgid "Copyright (C) 2001, 2002"
+#~ msgstr "Copyright © 2001, 2002"
+
+#~ msgid "About Sound Recorder"
+#~ msgstr "Om ljudinspelaren"
+
+#~ msgid "Run mixer"
+#~ msgstr "Kör mixer"
+
+#~ msgid "%s (Has not been saved"
+#~ msgstr "%s (Har inte sparats"
+
+#~ msgid "Unknown length"
+#~ msgstr "Okänd längd"
+
+#~ msgid "%.1f khz/s"
+#~ msgstr "%.1f kHz/s"
+
+#~ msgid "File Information:"
+#~ msgstr "Filinformation:"
+
+#~ msgid "Directory:"
+#~ msgstr "Katalog:"
+
+#~ msgid "don't restore mixer-settings from configuration"
+#~ msgstr "återställ inte mixerinställningar från konfigurationen"
+
+#~ msgid "restore mixer-settings from configuration"
+#~ msgstr "återställ mixerinställningar från konfigurationen"
+
+#~ msgid "initialise the mixer(s) from stored configuration and exit"
+#~ msgstr "initiera mixern (mixrarna) från sparade inställningar och avsluta"
+
+#~ msgid "don't save (modified) mixer-settings into configuration"
+#~ msgstr "spara inte (modifierade) mixerinställningar till konfigurationen"
+
+#~ msgid "Recording Level Monitor"
+#~ msgstr "Inspelningsnivåmätare"
+
+#~ msgid "Volume Monitor"
+#~ msgstr "Volymmätare"
+
+#~ msgid "On startup"
+#~ msgstr "Vid uppstart"
+
+#~ msgid "Restore saved mixer levels on startup"
+#~ msgstr "Återställ sparade mixernivåer vid uppstart"
+
+#~ msgid "GUI"
+#~ msgstr "Grafiskt användargränssnitt"
+
+#~ msgid "Show mixer icons"
+#~ msgstr "Visa mixerikoner"
+
+#~ msgid "Show mixer labels"
+#~ msgstr "Visa mixeretiketter"
+
+#~ msgid "Labels"
+#~ msgstr "Etiketter"
+
+#~ msgid "CDDB"
+#~ msgstr "CDDB"
+
+#~ msgid "CDDB Properties"
+#~ msgstr "Egenskaper för CDDB"
+
+#~ msgid "%s is not a CDROM drive\n"
+#~ msgstr "%s är ingen cdrom-enhet\n"
+
+#~ msgid "%s is a CDROM drive\n"
+#~ msgstr "%s är en cdrom-enhet\n"
+
+#~ msgid "%s is not a CDROM drive"
+#~ msgstr "%s är ingen cdrom-enhet"
+
+#~ msgid "(%s): ioctl failed: %s"
+#~ msgstr "(%s): ioctl misslyckades: %s"
+
+#~ msgid "(%s): Drive not ready"
+#~ msgstr "(%s): Enheten är inte redo"
+
+#~ msgid "(%s): Drive still not ready"
+#~ msgstr "(%s): Enheten är fortfarande inte redo"
+
+#~ msgid "(%s) ioctl failed %s"
+#~ msgstr "(%s) ioctl misslyckades %s"
+
+#~ msgid "Open mixer"
+#~ msgstr "Öppna mixer"
+
+#~ msgid "Change volume"
+#~ msgstr "Ändra volym"
+
+#~ msgid "Left %s"
+#~ msgstr "Vänster %s"
+
+#~ msgid ""
+#~ "Could not find '%s'.\n"
+#~ "Set the correct path to sox in preferences under the tab 'paths'.\n"
+#~ "\n"
+#~ "If you don't have sox, you will not be able to record or do any effects."
+#~ msgstr ""
+#~ "Kunde inte hitta \"%s\".\n"
+#~ "Ställ in korrekt sökväg till sox i inställningarna under fliken \"sökvägar"
+#~ "\".\n"
+#~ "\n"
+#~ "Om du inte har sox kommer du inte att kunna spela in eller göra några "
+#~ "effekter."
+
+#~ msgid "%s%s"
+#~ msgstr "%s%s"
+
+#~ msgid "Rec"
+#~ msgstr "Insp"
+
+#~ msgid "Don't quit"
+#~ msgstr "Avsluta inte"
+
+#~ msgid "Undo all changes"
+#~ msgstr "Ångra alla ändringar"
+
+#~ msgid "Show time"
+#~ msgstr "Visa tid"
+
+#~ msgid "Show sound information"
+#~ msgstr "Visa ljudinformation"
+
+#~ msgid "Info"
+#~ msgstr "Info"
+
+#~ msgid "Information"
+#~ msgstr "Information"
+
+#~ msgid "Play-repeating"
+#~ msgstr "Uppspelningsrepetering"
+
+#~ msgid "Main window"
+#~ msgstr "Huvudfönster"
+
+#~ msgid "User interface"
+#~ msgstr "Användargränssnitt"
+
+#~ msgid ""
+#~ "You havn't entered a sox command; you will not be able to record.\n"
+#~ "Do you want to use it anyway?"
+#~ msgstr ""
+#~ "Du har inte angivit ett sox-kommando; du kommer inte att kunna spela in.\n"
+#~ "Vill du använda det ändå?"
+
+#~ msgid ""
+#~ "File %s in 'sox command' does not exist.\n"
+#~ "Do you want to use it anyway?"
+#~ msgstr ""
+#~ "Filen %s i \"sox-kommandot\" finns inte.\n"
+#~ "Vill du använda det ändå?"
+
+#~ msgid ""
+#~ "You havn't entered a mixer command; you will not be able to start the "
+#~ "mixer.\n"
+#~ "Do you want to use it anyway?"
+#~ msgstr ""
+#~ "Du har inte angivit ett mixerkommando; du kommer inte att kunna starta "
+#~ "mixern.\n"
+#~ "Vill du använda det ändå?"
+
+#~ msgid ""
+#~ "File %s in 'mixer command' does not exist.\n"
+#~ "Do you want to use it anyway?"
+#~ msgstr ""
+#~ "Filen %s i \"mixer-kommandot\" finns inte.\n"
+#~ "Vill du använda det ändå?"
+
+#~ msgid ""
+#~ "You havn't entered a temp dir. You will not be able to record.\n"
+#~ "Do you want to use it anyway?"
+#~ msgstr ""
+#~ "Du har inte angivit en temp-katalog. Du kommer inte att kunna spela in.\n"
+#~ "Vill du använda det ändå?"
+
+#~ msgid ""
+#~ "Temp directory %s is a file.\n"
+#~ "Do you want to use it anyway?"
+#~ msgstr ""
+#~ "Temp-katalogen %s är en fil.\n"
+#~ "Vill du använda den ändå?"
+
+#~ msgid ""
+#~ "You don't have the correct permissions (read & write) for temp directory %"
+#~ "s.\n"
+#~ "Do you want to use it anyway?"
+#~ msgstr ""
+#~ "Du har inte rätt läs- och skrivrättigheter för den temporära katalogen %"
+#~ "s.\n"
+#~ "Vill du använda den ändå?"
+
+#~ msgid ""
+#~ "Directory %s does not exist.\n"
+#~ "Do want to use it anyway?"
+#~ msgstr ""
+#~ "Katalogen %s finns inte.\n"
+#~ "Vill du använda den ändå?"
+
+#~ msgid "File '%s' isn't a valid sound file."
+#~ msgstr "Filen \"%s\" är inte en giltig ljudfil."
+
+#~ msgid "File not saved. Do you want to save it?"
+#~ msgstr "Filen är inte sparad. Vill du spara den?"
+
+#~ msgid "Exit"
+#~ msgstr "Avsluta"
+
+#~ msgid "Monitor the recording intput volume"
+#~ msgstr "Övervaka inspelningsvolymen"
+
+#~ msgid "Ready for command: %s\n"
+#~ msgstr "Klar för kommando: %s\n"
+
+#~ msgid "Connecting [%s]\n"
+#~ msgstr "Ansluter [%s]\n"
+
+#~ msgid "Querying server [%s]\n"
+#~ msgstr "Frågar server [%s]\n"
+
+#~ msgid "Waiting for reply [%s]\n"
+#~ msgstr "Väntar på svar [%s]\n"
+
+#~ msgid "Replace"
+#~ msgstr "Ersätt"
+
+#~ msgid "Reading reply [%s]\n"
+#~ msgstr "Läser svar [%s]\n"
+
+#~ msgid "Disconnecting [%s]\n"
+#~ msgstr "Kopplar ner [%s]\n"
+
+#~ msgid "Error querying [%s]\n"
+#~ msgstr "Fel vid förfrågan [%s]\n"
+
+#~ msgid "No match found for %s\n"
+#~ msgstr "Ingen träff hittad för %s\n"
+
+#~ msgid "Timeout: %s\n"
+#~ msgstr "Time-out: %s\n"
+
+#~ msgid "Inactive. %s\n"
+#~ msgstr "Inaktiv. %s\n"
+
+#~ msgid "Refresh List"
+#~ msgstr "Uppdatera lista"
+
+#~ msgid "Server Settings"
+#~ msgstr "Serverinställningar"
+
+#~ msgid "Address"
+#~ msgstr "Adress"
+
+#~ msgid "Use HTTP"
+#~ msgstr "Använd HTTP"
+
+#~ msgid "Proxy"
+#~ msgstr "Proxy"
+
+#~ msgid "Use proxy authentication"
+#~ msgstr "Använd proxyserverautentisering"
+
+#~ msgid "Username"
+#~ msgstr "Användarnamn"
+
+#~ msgid "Password"
+#~ msgstr "Lösenord"
+
+#~ msgid "Use SOCKS"
+#~ msgstr "Använd SOCKS"
+
+#~ msgid "CDDB Data"
+#~ msgstr "CDDB-data"
+
+#~ msgid "Error reading $HOME/.cddbslave."
+#~ msgstr "Fel vid läsning av $HOME/.cddbslave."
+
+#~ msgid "Delete CDDB Entry?"
+#~ msgstr "Ta bort CDDB-post?"
+
+#~ msgid "CDDB Status"
+#~ msgstr "CDDB-status"
+
+#~ msgid "Get CDDB Now"
+#~ msgstr "Hämta CDDB nu"
+
+#~ msgid "trk-e"
+#~ msgstr "spr-e"
+
+#~ msgid "trk-r"
+#~ msgstr "spr-r"
+
+#~ msgid "dsc-e"
+#~ msgstr "skv-e"
+
+#~ msgid "dsc-r"
+#~ msgstr "skv-r"
+
+#~ msgid "loop-cd"
+#~ msgstr "loop-cd"
+
+#~ msgid "loop-t"
+#~ msgstr "loop-t"
+
+#~ msgid "normal"
+#~ msgstr "normal"
+
+#~ msgid "random"
+#~ msgstr "blanda"
+
+#~ msgid "-adobe-helvetica-medium-r-normal-*-*-100-*-*-p-*-*-*"
+#~ msgstr "-adobe-helvetica-medium-r-normal-*-*-100-*-*-p-*-*-*"
+
+#~ msgid "Skip backwards"
+#~ msgstr "Hoppa bakåt"
+
+#~ msgid "Skip forwards"
+#~ msgstr "Hoppa framåt"
+
+#~ msgid "Volume Up"
+#~ msgstr "Höj volymen"
+
+#~ msgid "(Scanning)"
+#~ msgstr "(Söker)"
+
+#~ msgid "Cannot load requested font. Reloading default font."
+#~ msgstr "Kan inte läsa in begärt typsnitt. Läser om standardtypsnittet."
+
+#~ msgid "Cannot load default Helvetica font. Loading any fixed width font."
+#~ msgstr ""
+#~ "Kan inte läsa in standardtypsnittet Helvetica. Läser in något typsnitt "
+#~ "med fast breddsteg."
+
+#~ msgid "Cannot load fixed width font. Exiting."
+#~ msgstr "Kan inte läsa in typsnitt med fast breddsteg. Avslutar."
+
+#~ msgid "Filename of the CD device"
+#~ msgstr "CD-enhetens filnamn"
+
+#~ msgid "FILE"
+#~ msgstr "FIL"
+
+#~ msgid "Trk"
+#~ msgstr "Spår"
+
+#~ msgid "Disc Information (%02u:%02u minutes)"
+#~ msgstr "Skivinformation (%02u.%02u minuter)"
+
+#~ msgid "Playlist"
+#~ msgstr "Spellista"
+
+#~ msgid "Submit"
+#~ msgstr "Skicka"
+
+#~ msgid ""
+#~ "Submit information about\n"
+#~ "'%s'"
+#~ msgstr ""
+#~ "Skicka information om\n"
+#~ "\"%s\""
+
+#~ msgid ""
+#~ "Error accessing cdrom device.\n"
+#~ "Please check to make sure cdrom drive support\n"
+#~ "is compiled into the kernel, and that you have\n"
+#~ "permission to access the device.\n"
+#~ "\n"
+#~ "Reason: %s\n"
+#~ msgstr ""
+#~ "Fel vid åtkomst av cdrom-enheten.\n"
+#~ "Kontrollera att cdrom-stödet är inkompilerat i\n"
+#~ "kärnan och att du har rättigheter att komma åt\n"
+#~ "enheten.\n"
+#~ "\n"
+#~ "Anledning: %s\n"
+
+#~ msgid "Track %d"
+#~ msgstr "Spår %d"
+
+#~ msgid "Preferences..."
+#~ msgstr "Inställningar..."
+
+#~ msgid "Track Editor..."
+#~ msgstr "Spårredigerare..."
+
+#~ msgid "Mixer Command"
+#~ msgstr "Mixerkommando"
+
+#~ msgid "Track/title color"
+#~ msgstr "Färg på spår/titel"
+
+#~ msgid "Track/title font"
+#~ msgstr "Typsnitt på spår/titel"
+
+#~ msgid "Show handles (restart required)"
+#~ msgstr "Visa handtag (kräver omstart)"
+
+#~ msgid "Show tooltips"
+#~ msgstr "Visa verktygstips"
+
+#~ msgid "Use alternate method to play CD"
+#~ msgstr "Använd alternativ metod för att spela CD"
+
+#~ msgid "Use squared law volume control"
+#~ msgstr "Använd kvadreringsreglerad volymkontroll"
+
+#~ msgid "On exit"
+#~ msgstr "Vid avslutning"
+
+#~ msgid "Key"
+#~ msgstr "Tangent"
+
+#~ msgid "Click here to change (restart required):"
+#~ msgstr "Klicka här för att ändra (kräver omstart):"
+
+#~ msgid "Keybindings"
+#~ msgstr "Tangentkombinationer"
+
+#~ msgid "-adobe-helvetica-medium-r-normal-*-*-120-*-*-p-*-*-*"
+#~ msgstr "-adobe-helvetica-medium-r-normal-*-*-120-*-*-p-*-*-*"
+
+#~ msgid "-*-fixed-*-*-*-*-*-*-*-*-*-*-*-*"
+#~ msgstr "-*-fixed-*-*-*-*-*-*-*-*-*-*-*-*"
+
+#~ msgid "ESD Recording Level"
+#~ msgstr "ESD-inspelningsnivå"
+
+#~ msgid "A Volume Unit Meter for ESD"
+#~ msgstr "En volymenhetsmätare för ESD"
+
+#~ msgid "ESD Volume Meter"
+#~ msgstr "ESD-volymmätare"
+
+#~ msgid "Increase speed"
+#~ msgstr "Öka hastigheten"
+
+#~ msgid "Increase the speed of the current sample"
+#~ msgstr "Öka hastigheten på det aktuella ljudklippet"
+
+#~ msgid "Decrease speed"
+#~ msgstr "Sänk hastigheten"
+
+#~ msgid "Decrease the speed of the current sample"
+#~ msgstr "Sänk hastigheten på det aktuella ljudklippet"
+
+#~ msgid "Remove echo"
+#~ msgstr "Ta bort eko"
+
+#~ msgid "Remove echo from the current sample"
+#~ msgstr "Ta bort ekot från det aktuella ljudklippet"
+
+#~ msgid "Making backup..."
+#~ msgstr "Gör säkerhetskopia..."
+
+#~ msgid "Please wait..."
+#~ msgstr "Var vänlig vänta..."
+
+#~ msgid "Error saving sound file!"
+#~ msgstr "Fel vid sparning av ljudfil!"
+
+#~ msgid "Error! Wrong page number. (shouldn't happen)\n"
+#~ msgstr "Fel! Ogiltigt sidonummer. (borde inte hända)\n"
+
+#~ msgid "_Preferences..."
+#~ msgstr "_Inställningar..."
+
+#~ msgid "_Program"
+#~ msgstr "_Program"
+
+#~ msgid "Couldn't record!"
+#~ msgstr "Kunde inte spela in!"
+
+#~ msgid "Select a .wav file"
+#~ msgstr "Välj en .wav-fil"
+
+#~ msgid "Error saving . wav file"
+#~ msgstr "Fel vid sparning av .wav-fil"
+
+#~ msgid "untitled.wav"
+#~ msgstr "namnlös.wav"
+
+#~ msgid "TV set"
+#~ msgstr "Teve"
