@@ -64,6 +64,7 @@ struct _GstFFMpegEncClass
 
   AVCodec *in_plugin;
   GstPadTemplate *srctempl, *sinktempl;
+  GstCaps *sinkcaps;
 };
 
 typedef struct
@@ -130,8 +131,9 @@ static void gst_ffmpegenc_base_init (GstFFMpegEncClass * klass);
 static void gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc);
 static void gst_ffmpegenc_dispose (GObject * object);
 
-static GstPadLinkReturn
-gst_ffmpegenc_connect (GstPad * pad, const GstCaps * caps);
+static GstPadLinkReturn gst_ffmpegenc_link (GstPad * pad,
+    const GstCaps * caps);
+static GstCaps * gst_ffmpegenc_getcaps (GstPad * pad);
 static void gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data);
 static void gst_ffmpegenc_chain_audio (GstPad * pad, GstData * _data);
 
@@ -154,7 +156,6 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
   GstFFMpegEncClassParams *params;
   GstElementDetails details;
   GstPadTemplate *srctempl, *sinktempl;
-  AVCodecContext *ctx;
 
   params = g_hash_table_lookup (enc_global_plugins,
       GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
@@ -178,28 +179,6 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
   g_free (details.klass);
   g_free (details.description);
 
-  /* get pix_fmt for this encoder */
-  if (params->in_plugin->type == CODEC_TYPE_VIDEO &&
-      (ctx = avcodec_alloc_context ()) != NULL) {
-    ctx->width = 384;
-    ctx->height = 288;
-    ctx->frame_rate_base = DEFAULT_FRAME_RATE_BASE;
-    ctx->frame_rate = 25 * DEFAULT_FRAME_RATE_BASE;
-    ctx->bit_rate = 350 * 1000;
-    /* makes it silent */
-    ctx->strict_std_compliance = -1;
-
-    if (avcodec_open (ctx, params->in_plugin) >= 0) {
-      gst_caps_free (params->sinkcaps);
-      ctx->width = -1;
-      params->sinkcaps =
-          gst_ffmpeg_codectype_to_caps (params->in_plugin->type, ctx);
-    }
-    /* FIXME: ffmpeg likes to crash on this */
-    //avcodec_close (ctx);
-    av_free (ctx);
-  }
-
   /* pad templates */
   sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
       GST_PAD_ALWAYS, params->sinkcaps);
@@ -212,6 +191,7 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
   klass->in_plugin = params->in_plugin;
   klass->srctempl = srctempl;
   klass->sinktempl = sinktempl;
+  klass->sinkcaps = NULL;
 }
 
 static void
@@ -262,7 +242,8 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
 
   /* setup pads */
   ffmpegenc->sinkpad = gst_pad_new_from_template (oclass->sinktempl, "sink");
-  gst_pad_set_link_function (ffmpegenc->sinkpad, gst_ffmpegenc_connect);
+  gst_pad_set_link_function (ffmpegenc->sinkpad, gst_ffmpegenc_link);
+  gst_pad_set_getcaps_function (ffmpegenc->sinkpad, gst_ffmpegenc_getcaps);
   ffmpegenc->srcpad = gst_pad_new_from_template (oclass->srctempl, "src");
   gst_pad_use_explicit_caps (ffmpegenc->srcpad);
 
@@ -304,8 +285,68 @@ gst_ffmpegenc_dispose (GObject * object)
   av_free (ffmpegenc->picture);
 }
 
+static GstCaps *
+gst_ffmpegenc_getcaps (GstPad * pad)
+{
+  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) gst_pad_get_parent (pad);
+  GstFFMpegEncClass *oclass =
+      (GstFFMpegEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
+  AVCodecContext *ctx;
+  enum PixelFormat pixfmt;
+  GstCaps *caps = NULL;
+
+  /* audio needs no special care */
+  if (oclass->in_plugin->type == CODEC_TYPE_AUDIO) {
+    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  }
+
+  /* cached */
+  if (oclass->sinkcaps) {
+    return gst_caps_copy (oclass->sinkcaps);
+  }
+
+  /* create cache etc. */
+  ctx = avcodec_alloc_context ();
+  if (!ctx) {
+    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  }
+
+  /* set some default properties */
+  ctx->width = 384;
+  ctx->height = 288;
+  ctx->frame_rate_base = DEFAULT_FRAME_RATE_BASE;
+  ctx->frame_rate = 25 * DEFAULT_FRAME_RATE_BASE;
+  ctx->bit_rate = 350 * 1000;
+  /* makes it silent */
+  ctx->strict_std_compliance = -1;
+
+  for (pixfmt = 0; pixfmt < PIX_FMT_NB; pixfmt++) {
+    ctx->pix_fmt = pixfmt;
+    if (avcodec_open (ctx, oclass->in_plugin) >= 0 &&
+        ctx->pix_fmt == pixfmt) {
+      ctx->width = -1;
+      if (!caps)
+        caps = gst_caps_new_empty ();
+      gst_caps_append (caps,
+          gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type, ctx));
+    }
+    /* FIXME: ffmpeg likes to crash on this */
+    avcodec_close (ctx);
+  }
+  av_free (ctx);
+
+  /* make sure we have something */
+  if (!caps) {
+    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  }
+
+  oclass->sinkcaps = gst_caps_copy (caps);
+
+  return caps;
+}
+
 static GstPadLinkReturn
-gst_ffmpegenc_connect (GstPad * pad, const GstCaps * caps)
+gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
 {
   GstCaps *other_caps;
   GstCaps *allowed_caps;

@@ -1,3 +1,11 @@
+2004-12-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_base_init),
+	(gst_ffmpegenc_init), (gst_ffmpegenc_getcaps),
+	(gst_ffmpegenc_link):
+	  Move setup of sink caps (accepted formats) to a separate function
+	  rather than doing it on initialization.
+
 2004-12-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
