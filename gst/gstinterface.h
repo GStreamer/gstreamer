@@ -20,57 +20,60 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_INTERFACE_H__
-#define __GST_INTERFACE_H__
+#ifndef __GST_IMPLEMENTS_INTERFACE_H__
+#define __GST_IMPLEMENTS_INTERFACE_H__
 
 #include <gst/gstelement.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_INTERFACE \
-  (gst_interface_get_type ())
-#define GST_INTERFACE(obj) \
-  (GST_INTERFACE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_INTERFACE, GstInterface))
-#define GST_INTERFACE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_INTERFACE, GstInterfaceClass))
-#define GST_IS_INTERFACE(obj) \
-  (GST_INTERFACE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_INTERFACE))
-#define GST_IS_INTERFACE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_INTERFACE))
-#define GST_INTERFACE_GET_CLASS(inst) \
-  (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_INTERFACE, GstInterfaceClass))
+#define GST_TYPE_IMPLEMENTS_INTERFACE \
+  (gst_implements_interface_get_type ())
+#define GST_IMPLEMENTS_INTERFACE(obj) \
+  (GST_INTERFACE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_IMPLEMENTS_INTERFACE, \
+				      GstImplementsInterface))
+#define GST_IMPLEMENTS_INTERFACE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_IMPLEMENTS_INTERFACE, \
+			    GstImplementsInterfaceClass))
+#define GST_IS_IMPLEMENTS_INTERFACE(obj) \
+  (GST_INTERFACE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_IMPLEMENTS_INTERFACE))
+#define GST_IS_IMPLEMENTS_INTERFACE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_IMPLEMENTS_INTERFACE))
+#define GST_IMPLEMENTS_INTERFACE_GET_CLASS(inst) \
+  (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_IMPLEMENTS_INTERFACE, \
+				  GstImplementsInterfaceClass))
 
-typedef struct _GstInterface GstInterface;
+typedef struct _GstImplementsInterface GstImplementsInterface;
 
 /* This small extra virtual function is here to provide an
  * interface functionality on a per-instance basis rather
  * than a per-class basis, which is the case for glib.
  */
-typedef struct _GstInterfaceClass {
+typedef struct _GstImplementsInterfaceClass {
   GTypeInterface parent;
 
   /* virtual functions */
-  gboolean (* supported) (GstInterface *iface,
-			  GType         iface_type);
+  gboolean (* supported) (GstImplementsInterface *iface,
+			  GType                   iface_type);
 
   GST_CLASS_PADDING
-} GstInterfaceClass;
+} GstImplementsInterfaceClass;
 
-#define GST_INTERFACE_CHECK_INSTANCE_CAST(obj, type, cast_t) \
-  ((cast_t *) gst_interface_cast ((obj), (type)))
-#define GST_INTERFACE_CHECK_INSTANCE_TYPE(obj, type) \
-  (gst_interface_check ((obj), (type)))
+#define GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST(obj, type, cast_t) \
+  ((cast_t *) gst_implements_interface_cast ((obj), (type)))
+#define GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_TYPE(obj, type) \
+  (gst_implements_interface_check ((obj), (type)))
 
-GType		gst_interface_get_type		(void);
+GType	 gst_implements_interface_get_type    (void);
 
 /* wrapper functions to check for functionality implementation */
-gboolean	gst_element_implements_interface(GstElement *element,
-						 GType       iface_type);
-GstInterface *	gst_interface_cast		(gpointer    from,
-						 GType       type);
-gboolean	gst_interface_check		(gpointer    from,
-						 GType       type);
+gboolean gst_element_implements_interface     (GstElement *element,
+					       GType       iface_type);
+gpointer gst_implements_interface_cast	      (gpointer    from,
+					       GType       type);
+gboolean gst_implements_interface_check	      (gpointer    from,
+					       GType       type);
 
 G_END_DECLS
 
-#endif /* __GST_INTERFACE_H__ */
+#endif /* __GST_IMPLEMENTS_INTERFACE_H__ */
