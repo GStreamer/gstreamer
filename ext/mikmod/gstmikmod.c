@@ -25,7 +25,7 @@
 
 GstElementDetails mikmod_details = {
   "MikMod",
-  "Audio/Module",
+  "Codec/Audio/Decoder",
   "Module decoder based on libmikmod",
   VERSION,
   "Jeremy SIMON <jsimon13@yahoo.fr>",
