@@ -804,13 +804,16 @@ find_index_for (const gchar *name, const gchar **attribute_names)
 }
 
 static void
-gst_xml_registry_start_element (GMarkupParseContext *context, const gchar *element_name,
-	                       const gchar **attribute_names, const gchar **attribute_values,
-			       gpointer user_data, GError **error)
+gst_xml_registry_start_element (GMarkupParseContext *context, 
+                                const gchar *element_name,
+	                        const gchar **attribute_names, 
+				const gchar **attribute_values,
+			        gpointer user_data, GError **error)
 {
   GstXMLRegistry *xmlregistry = GST_XML_REGISTRY (user_data);
 
-  xmlregistry->open_tags = g_list_prepend (xmlregistry->open_tags, g_strdup (element_name));
+  xmlregistry->open_tags = g_list_prepend (xmlregistry->open_tags, 
+                                           g_strdup (element_name));
 
   switch (xmlregistry->state) {
     case GST_XML_REGISTRY_NONE:
@@ -822,7 +825,7 @@ gst_xml_registry_start_element (GMarkupParseContext *context, const gchar *eleme
       if (!strncmp (element_name, "plugin", 6)) {
 	xmlregistry->state = GST_XML_REGISTRY_PLUGIN;
 	xmlregistry->parser = gst_xml_registry_parse_plugin;
-	xmlregistry->current_plugin = (GstPlugin *)g_new0 (GstPlugin, 1);
+	xmlregistry->current_plugin = (GstPlugin *) g_new0 (GstPlugin, 1);
       }
       break;
     case GST_XML_REGISTRY_PLUGIN:
@@ -906,7 +909,8 @@ gst_xml_registry_start_element (GMarkupParseContext *context, const gchar *eleme
           break;
 	sscanf (attribute_values[index], "%d", &value);
 	gst_props_add_entry (xmlregistry->props, 
-			gst_props_entry_new (attribute_values[name_index], GST_PROPS_INT (value)));
+			     gst_props_entry_new (attribute_values[name_index], 
+			                          GST_PROPS_INT (value)));
       }
       else if (!strncmp (element_name, "range", 5)) {
 	gint min, max;
@@ -982,7 +986,8 @@ gst_xml_registry_start_element (GMarkupParseContext *context, const gchar *eleme
 }
 
 static void
-gst_xml_registry_end_element (GMarkupParseContext *context, const gchar *element_name,
+gst_xml_registry_end_element (GMarkupParseContext *context, 
+                              const gchar *element_name,
 			      gpointer user_data, GError **error)
 {
   GstXMLRegistry *xmlregistry = GST_XML_REGISTRY (user_data);
@@ -1103,8 +1108,10 @@ gst_xml_registry_error (GMarkupParseContext *context, GError *error,
 }
 
 static void
-gst_xml_registry_paths_start_element (GMarkupParseContext *context, const gchar *element_name,
-                                      const gchar **attribute_names, const gchar **attribute_values,
+gst_xml_registry_paths_start_element (GMarkupParseContext *context, 
+                                      const gchar *element_name,
+                                      const gchar **attribute_names, 
+				      const gchar **attribute_values,
                                       gpointer user_data, GError **error)
 {
   GstXMLRegistry *xmlregistry = GST_XML_REGISTRY (user_data);
@@ -1131,7 +1138,8 @@ gst_xml_registry_paths_start_element (GMarkupParseContext *context, const gchar 
 }
 
 static void
-gst_xml_registry_paths_end_element (GMarkupParseContext *context, const gchar *element_name,
+gst_xml_registry_paths_end_element (GMarkupParseContext *context, 
+                                    const gchar *element_name,
                                     gpointer user_data, GError **error)
 {
   GstXMLRegistry *xmlregistry = GST_XML_REGISTRY (user_data);
@@ -1176,7 +1184,8 @@ G_STMT_START{ 							\
 }G_STMT_END
 
 static gboolean
-gst_xml_registry_save_props_func (GstPropsEntry *entry, GstXMLRegistry *xmlregistry)
+gst_xml_registry_save_props_func (GstPropsEntry *entry, 
+                                  GstXMLRegistry *xmlregistry)
 {
   const gchar *name;
 
@@ -1447,7 +1456,8 @@ gst_xml_registry_save (GstRegistry *registry)
 }
 
 static GList*
-gst_xml_registry_rebuild_recurse (GstXMLRegistry *registry, const gchar *directory)
+gst_xml_registry_rebuild_recurse (GstXMLRegistry *registry, 
+                                  const gchar *directory)
 {
   GDir *dir;
   GList *ret = NULL;
@@ -1497,9 +1507,12 @@ gst_xml_registry_rebuild (GstRegistry *registry)
   while (walk) {
     gchar *path = (gchar *) walk->data;
     
-    GST_INFO (GST_CAT_PLUGIN_LOADING, "Rebuilding registry %p in directory %s...", registry, path);
+    GST_INFO (GST_CAT_PLUGIN_LOADING, 
+	      "Rebuilding registry %p in directory %s...", registry, path);
 
-    plugins = g_list_concat (plugins, gst_xml_registry_rebuild_recurse (xmlregistry, path));
+    plugins = g_list_concat (plugins, 
+	                     gst_xml_registry_rebuild_recurse (xmlregistry, 
+			                                       path));
 
     walk = g_list_next (walk);
   }
@@ -1532,12 +1545,15 @@ gst_xml_registry_rebuild (GstRegistry *registry)
   walk = plugins;
   while (walk) {
     if (gst_plugin_load_plugin (GST_PLUGIN (walk->data), &error)) {
-      g_warning ("Bizarre behavior: plugin %s actually loaded", ((GstPlugin*)walk->data)->filename);
+      g_warning ("Bizarre behavior: plugin %s actually loaded", 
+	         ((GstPlugin *) walk->data)->filename);
     } else {
       GST_INFO (GST_CAT_PLUGIN_LOADING, "Plugin %s failed to load: %s", 
-                ((GstPlugin*)walk->data)->filename, error->message);
+                ((GstPlugin *) walk->data)->filename, error->message);
+      g_print ("Plugin %s failed to load\n",
+                ((GstPlugin *) walk->data)->filename);
 
-      g_free (((GstPlugin*)walk->data)->filename);
+      g_free (((GstPlugin *) walk->data)->filename);
       g_free (walk->data);
       g_error_free (error);
       error = NULL;
