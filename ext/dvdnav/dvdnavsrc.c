@@ -52,8 +52,8 @@ struct _DVDNavSrc {
 
   /* location */
   gchar *location;
-
   gboolean new_seek;
+  GstBufferPool *bufferpool;
 
   int title, chapter, angle;
   dvdnav_t *dvdnav;
@@ -173,6 +173,8 @@ dvdnavsrc_init (DVDNavSrc *dvdnavsrc)
   gst_element_add_pad (GST_ELEMENT (dvdnavsrc), dvdnavsrc->srcpad);
   //gst_pad_set_event_function (dvdnavsrc->srcpad, dvdnavsrc_event);
 
+  dvdnavsrc->bufferpool = gst_buffer_pool_get_default (DVD_VIDEO_LB_LEN, 2);
+
   dvdnavsrc->location = g_strdup("/dev/dvd");
   dvdnavsrc->new_seek = FALSE;
   dvdnavsrc->title = 1;
@@ -187,6 +189,7 @@ dvdnavsrc_destroy (DVDNavSrc *dvdnavsrc)
 {
   /* FIXME */
   g_print("FIXME\n");
+  gst_buffer_pool_destroy (dvdnavsrc->bufferpool);
 }
 #endif
 
@@ -418,11 +421,17 @@ dvdnavsrc_loop (GstElement *element)
   while (!done) {
     int event, len;
     GstBuffer *buf;
-    unsigned char *data;
+    guint8 *data;
 
-    /* allocate the space for the buffer data */
+    /* allocate a pool for the buffer data */
     /* FIXME: mem leak on non BLOCK_OK events */
-    data = g_malloc (DVD_VIDEO_LB_LEN);
+    buf = gst_buffer_new_from_pool (src->bufferpool, DVD_VIDEO_LB_LEN, 0);
+    if (!buf) {
+      gst_element_error (GST_ELEMENT(src),
+          "Failed to create a new GstBuffer");
+      return;
+    }
+    data = GST_BUFFER_DATA(buf);
 
     if (dvdnav_get_next_block (src->dvdnav, data, &event, &len) != DVDNAV_STATUS_OK) {
       fprintf (stderr, "dvdnav_get_next_block error: %s\n", dvdnav_err_to_string(src->dvdnav));
@@ -431,14 +440,9 @@ dvdnavsrc_loop (GstElement *element)
 
     switch (event) {
       case DVDNAV_BLOCK_OK:
-        /* create the buffer */
-        /* FIXME: should eventually use a bufferpool for this */
-        buf = gst_buffer_new ();
-        g_return_if_fail (buf);
-
-        GST_BUFFER_DATA (buf) = data;
-        GST_BUFFER_SIZE (buf) = DVD_VIDEO_LB_LEN;
-        gst_pad_push(src->srcpad, buf);
+        g_return_if_fail (GST_BUFFER_DATA(buf) != NULL);
+        g_return_if_fail (GST_BUFFER_SIZE(buf) == DVD_VIDEO_LB_LEN);
+        gst_pad_push (src->srcpad, buf);
         break;
       case DVDNAV_NOP:
         printf("dvdnav: received NOP event\n");
@@ -589,13 +593,14 @@ dvdnavsrc_open (DVDNavSrc *src)
     fprintf( stderr, "dvdnav_open error: %s location: %s\n", dvdnav_err_to_string(src->dvdnav), src->location);
     return FALSE;
   }
-  if (dvdnavsrc_tca_seek(src,
+
+  GST_FLAG_SET (src, DVDNAVSRC_OPEN);
+
+  if (!dvdnavsrc_tca_seek(src,
       src->title,
       src->chapter,
       src->angle))
     return FALSE;
-
-  GST_FLAG_SET (src, DVDNAVSRC_OPEN);
   
   return TRUE;
 }
@@ -633,9 +638,10 @@ dvdnavsrc_change_state (GstElement *element)
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
-      if (!GST_FLAG_IS_SET (element, DVDNAVSRC_OPEN)) {
-        if (!dvdnavsrc_open (src))
+      if (!dvdnavsrc_is_open (src)) {
+        if (!dvdnavsrc_open (src)) {
           return GST_STATE_FAILURE;
+        }
       }
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
@@ -643,8 +649,11 @@ dvdnavsrc_change_state (GstElement *element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
-      if (GST_FLAG_IS_SET (element, DVDNAVSRC_OPEN))
-        dvdnavsrc_close (src);
+      if (dvdnavsrc_is_open (src)) {
+        if (!dvdnavsrc_close (src)) {
+          return GST_STATE_FAILURE;
+        }
+      }
       break;
     case GST_STATE_READY_TO_NULL:
       break;
