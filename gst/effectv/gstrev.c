@@ -4,15 +4,6 @@
  * EffecTV:
  * Copyright (C) 2001 FUKUCHI Kentarou
  *
- * EffecTV is free software. We release this product under the terms of the
- * GNU General Public License version 2. The license is included in the file
- * COPYING.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- */
-/*
  * EffecTV - Realtime Digital Video Effector
  * Copyright (C) 2001 FUKUCHI Kentarou
  *
@@ -22,13 +13,31 @@
  *
  * This effect acts like a waveform monitor on each line.
  * It was originally done by deflecting the electron beam on a monitor using
- * additional electromagnets on the yoke of a b/w CRT. Here it is emulated digitally.
+ * additional electromagnets on the yoke of a b/w CRT. 
+ * Here it is emulated digitally.
 
- * Experimaental tapes were made with this system by Bill and Louise Etra and Woody and Steina Vasulka
+ * Experimaental tapes were made with this system by Bill and 
+ * Louise Etra and Woody and Steina Vasulka
 
  * The line spacing can be controlled using the 1 and 2 Keys.
  * The gain is controlled using the 3 and 4 keys.
  * The update rate is controlled using the 0 and - keys.
+ 
+ * EffecTV is free software. This library is free software;
+ * you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 
 #include <math.h>

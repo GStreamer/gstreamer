@@ -3,7 +3,7 @@
  *
  * dice.c: a 'dicing' effect
  *  copyright (c) 2001 Sam Mertens.  This code is subject to the provisions of
- *  the GNU Public License.
+ *  the GNU Library Public License.
  *
  * I suppose this looks similar to PuzzleTV, but it's not. The screen is
  * divided into small squares, each of which is rotated either 0, 90, 180 or
