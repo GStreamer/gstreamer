@@ -381,6 +381,8 @@ gst_gnomevfssrc_dispose (GObject * object)
 
   g_free (src->filename);
   src->filename = NULL;
+  g_mutex_free (src->audiocast_udpdata_mutex);
+  g_mutex_free (src->audiocast_queue_mutex);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
