@@ -904,11 +904,14 @@ gst_element_real_destroy (GtkObject *object)
 
   GST_DEBUG_ELEMENT (GST_CAT_REFCOUNTING, element, "destroy\n");
 
-  pads = element->pads;
-  while (pads) {
-    pad = GST_PAD (pads->data);
-    gst_object_unparent (GST_OBJECT (pad));
-    pads = g_list_next (pads);
+  if (element->pads) {
+    pads = g_list_copy (element->pads);
+    while (pads) {
+      pad = GST_PAD (pads->data);
+      gst_object_unparent (GST_OBJECT (pad));
+      pads = g_list_next (pads);
+    }
+    g_list_free (pads);
   }
 
   g_list_free (element->pads);

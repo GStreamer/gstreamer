@@ -60,6 +60,8 @@ enum {
 static void			gst_thread_class_init		(GstThreadClass *klass);
 static void			gst_thread_init			(GstThread *thread);
 
+static void 			gst_thread_real_destroy 	(GtkObject *gtk_object);
+
 static void			gst_thread_set_arg		(GtkObject *object, GtkArg *arg, guint id);
 static void			gst_thread_get_arg		(GtkObject *object, GtkArg *arg, guint id);
 
@@ -113,6 +115,8 @@ gst_thread_class_init (GstThreadClass *klass)
   gtk_object_add_arg_type ("GstThread::create_thread", GTK_TYPE_BOOL,
                            GTK_ARG_READWRITE, ARG_CREATE_THREAD);
 
+  gtkobject_class->destroy =		gst_thread_real_destroy;
+
   gstobject_class->save_thyself =	gst_thread_save_thyself;
   gstobject_class->restore_thyself =	gst_thread_restore_thyself;
 
@@ -147,6 +151,22 @@ gst_thread_init (GstThread *thread)
 //  gst_element_set_manager(GST_ELEMENT(thread),GST_ELEMENT(thread));
 }
 
+static void
+gst_thread_real_destroy (GtkObject *gtk_object)
+{
+  GstThread *thread = GST_THREAD (gtk_object);
+
+  GST_DEBUG (GST_CAT_REFCOUNTING,"destroy()\n");
+
+  g_mutex_free (thread->lock);
+  g_cond_free (thread->cond);
+
+  gst_object_destroy (GST_ELEMENT_SCHED(thread));
+  gst_object_unref (GST_ELEMENT_SCHED(thread));
+
+  if (GTK_OBJECT_CLASS (parent_class)->destroy)
+    GTK_OBJECT_CLASS (parent_class)->destroy (gtk_object);
+}
 
 static void
 gst_thread_set_arg (GtkObject *object,
