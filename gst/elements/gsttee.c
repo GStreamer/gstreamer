@@ -115,13 +115,17 @@ gst_tee_class_init (GstTeeClass *klass)
   gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR(gst_tee_request_new_pad);
 }
 
-static gboolean 
+static GstPadConnectReturn 
 gst_tee_sinkconnect (GstPad *pad, GstCaps *caps) 
 {
   GstTee *tee;
   GList *pads;
   
   tee = GST_TEE (gst_pad_get_parent (pad));
+
+  if (!GST_CAPS_IS_FIXED (caps)) {
+    return GST_PAD_CONNECT_DELAYED;
+  }
 
   /* go through all the src pads */
   pads = gst_element_get_pad_list (GST_ELEMENT (tee));
@@ -134,10 +138,10 @@ gst_tee_sinkconnect (GstPad *pad, GstCaps *caps)
       continue;
 
     if (!(gst_pad_try_set_caps (outpad, caps))) {
-      return FALSE;
+      return GST_PAD_CONNECT_REFUSED;
     }
   }
-  return TRUE;
+  return GST_PAD_CONNECT_OK;
 }
 
 static void 
@@ -261,7 +265,7 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
   tee = GST_TEE (gst_pad_get_parent (pad));
 /*  gst_trace_add_entry (NULL, 0, buf, "tee buffer");*/
 
-  gst_buffer_ref_by_count (buf, GST_ELEMENT (tee)->numsrcpads);
+  gst_buffer_ref_by_count (buf, GST_ELEMENT (tee)->numsrcpads - 1);
   
   pads = gst_element_get_pad_list (GST_ELEMENT (tee));
 
