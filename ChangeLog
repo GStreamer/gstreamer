@@ -1,5 +1,16 @@
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* sys/v4l2/v4l2_calls.c: (gst_v4l2_get_capabilities),
+	(gst_v4l2_fill_lists), (gst_v4l2_open), (gst_v4l2_get_norm),
+	(gst_v4l2_set_norm), (gst_v4l2_get_input), (gst_v4l2_set_input),
+	(gst_v4l2_get_output), (gst_v4l2_set_output),
+	(gst_v4l2_get_frequency), (gst_v4l2_set_frequency),
+	(gst_v4l2_signal_strength), (gst_v4l2_get_attribute),
+	(gst_v4l2_set_attribute):
+        update to new error handling
+
+2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* ext/sidplay/gstsiddec.cc:
 	* gst/modplug/gstmodplug.cc:
           parenthese NULL because C++ seems angry about it

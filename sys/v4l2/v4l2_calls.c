@@ -55,9 +55,9 @@ gst_v4l2_get_capabilities (GstV4l2Element *v4l2element)
 	GST_V4L2_CHECK_OPEN(v4l2element);
 
 	if (ioctl(v4l2element->video_fd, VIDIOC_QUERYCAP, &(v4l2element->vcap)) < 0) {
-		gst_element_error(GST_ELEMENT(v4l2element),
-			"Error getting %s capabilities: %s",
-			v4l2element->device, g_strerror(errno));
+		gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+			("Error getting %s capabilities: %s",
+			 v4l2element->device, g_strerror(errno)));
 		return FALSE;
 	}
 
@@ -99,10 +99,10 @@ gst_v4l2_fill_lists (GstV4l2Element *v4l2element)
 				if (errno == EINVAL)
 					break; /* end of enumeration */
 				else {
-					gst_element_error(GST_ELEMENT(v4l2element),
-						"Failed to get no. %d in input enumeration for %s: %s",
+					gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+						           ("Failed to get %d in input enumeration for %s: %s",
 						n, v4l2element->device,
-						g_strerror(errno));
+						g_strerror (errno)));
 					return FALSE;
 				}
 			}
@@ -122,11 +122,11 @@ gst_v4l2_fill_lists (GstV4l2Element *v4l2element)
 				vtun.index = input.tuner;
 				if (ioctl(v4l2element->video_fd, VIDIOC_G_TUNER,
 					  &vtun) < 0) {
-					gst_element_error(GST_ELEMENT(v4l2element),
-						"Failed to get tuner %d settings on %s: %s",
+					gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+						("Failed to get tuner %d settings on %s: %s",
 						input.tuner,
 						v4l2element->device,
-						g_strerror(errno));
+						g_strerror (errno)));
 					g_object_unref(G_OBJECT(channel));
 					return FALSE;
 				}
@@ -161,10 +161,10 @@ gst_v4l2_fill_lists (GstV4l2Element *v4l2element)
 				if (errno == EINVAL)
 					break; /* end of enumeration */
 				else {
-					gst_element_error(GST_ELEMENT(v4l2element),
-						"Failed to get no. %d in output enumeration for %s: %s",
+					gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+						           ("Failed to get %d in output enumeration for %s: %s",
 						n, v4l2element->device,
-						g_strerror(errno));
+						g_strerror (errno)));
 					return FALSE;
 				}
 			}
@@ -200,9 +200,10 @@ gst_v4l2_fill_lists (GstV4l2Element *v4l2element)
 			if (errno == EINVAL)
 				break; /* end of enumeration */
 			else {
-				gst_element_error(GST_ELEMENT(v4l2element),
-					"Failed to get no. %d in norm enumeration for %s: %s",
-					n, v4l2element->device, g_strerror(errno));
+					gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+						           ("Failed to get %d in norm enumeration for %s: %s",
+						n, v4l2element->device,
+						g_strerror (errno)));
 				return FALSE;
 			}
 		}
@@ -236,9 +237,10 @@ gst_v4l2_fill_lists (GstV4l2Element *v4l2element)
 				else
 					break;
 			} else {
-				gst_element_error(GST_ELEMENT(v4l2element),
-					"Failed to get no. %d in control enumeration for %s: %s",
-					n, v4l2element->device, g_strerror(errno));
+				gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+						   ("Failed to get %d in control enumeration for %s: %s",
+						n, v4l2element->device,
+						g_strerror (errno)));
 				return FALSE;
 			}
 		}
@@ -287,9 +289,10 @@ gst_v4l2_fill_lists (GstV4l2Element *v4l2element)
 					if (errno == EINVAL)
 						break; /* end of enumeration */
 					else {
-						gst_element_error(GST_ELEMENT(v4l2element),
-							"Failed to get no. %d in menu %d enumeration for %s: %s",
-							i, n, v4l2element->device, g_strerror(errno));
+						gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+						           ("Failed to get %d in menu enumeration for %s: %s",
+						n, v4l2element->device,
+						g_strerror (errno)));
 						return FALSE;
 					}
 				}
@@ -406,9 +409,9 @@ gst_v4l2_open (GstV4l2Element *v4l2element)
 	/* open the device */
 	v4l2element->video_fd = open(v4l2element->device, O_RDWR);
 	if (!GST_V4L2_IS_OPEN(v4l2element)) {
-		gst_element_error(GST_ELEMENT(v4l2element),
-			"Failed to open device %s: %s",
-			v4l2element->device, g_strerror(errno));
+		gst_element_error (v4l2element, RESOURCE, OPEN_READ_WRITE,
+                                   (_("Could not open device \"%s\" for reading and writing"), v4l2element->device),
+                                   GST_ERROR_SYSTEM);
 		goto error;
 	}
 
@@ -420,9 +423,9 @@ gst_v4l2_open (GstV4l2Element *v4l2element)
 	/* do we need to be a capture device? */
 	if (GST_IS_V4L2SRC(v4l2element) &&
 	    !(v4l2element->vcap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-		gst_element_error(GST_ELEMENT(v4l2element),
-				  "Not a capture device (0x%x)",
-				  v4l2element->vcap.capabilities);
+		gst_element_error (v4l2element, RESOURCE, NOT_FOUND,
+                                   (_("Device \"%s\" is not a capture device"), v4l2element->device),
+				   ("Capabilities: 0x%x", v4l2element->vcap.capabilities));
 		goto error;
 	}
 
@@ -489,9 +492,9 @@ gst_v4l2_get_norm (GstV4l2Element *v4l2element,
 	GST_V4L2_CHECK_OPEN(v4l2element);
 
 	if (ioctl(v4l2element->video_fd, VIDIOC_G_STD, norm) < 0) {
-		gst_element_error(GST_ELEMENT(v4l2element),
-			"Failed to get the current norm for device %s: %s",
-			v4l2element->device, g_strerror(errno));
+		gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+			("Failed to get the current norm for device %s: %s",
+			 v4l2element->device, g_strerror(errno)));
 		return FALSE;
 	}
 
@@ -514,9 +517,9 @@ gst_v4l2_set_norm (GstV4l2Element *v4l2element,
 	GST_V4L2_CHECK_NOT_ACTIVE(v4l2element);
 
 	if (ioctl(v4l2element->video_fd, VIDIOC_S_STD, &norm) < 0) {
-		gst_element_error(GST_ELEMENT(v4l2element),
-			"Failed to set norm 0x%llx for device %s: %s",
-			norm, v4l2element->device, g_strerror(errno));
+		gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+			("Failed to set norm 0x%llx for device %s: %s",
+			 norm, v4l2element->device, g_strerror(errno)));
 		return FALSE;
 	}
 
@@ -540,9 +543,9 @@ gst_v4l2_get_input (GstV4l2Element *v4l2element,
 	GST_V4L2_CHECK_OPEN(v4l2element);
 
 	if (ioctl(v4l2element->video_fd, VIDIOC_G_INPUT, &n) < 0) {
-		gst_element_error(GST_ELEMENT(v4l2element),
-			"Failed to get current input on device %s: %s",
-			v4l2element->device, g_strerror(errno));
+		gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+			("Failed to get current input on device %s: %s",
+			v4l2element->device, g_strerror(errno)));
 		return FALSE;
 	}
 
@@ -567,9 +570,9 @@ gst_v4l2_set_input (GstV4l2Element *v4l2element,
 	GST_V4L2_CHECK_NOT_ACTIVE(v4l2element);
 
 	if (ioctl(v4l2element->video_fd, VIDIOC_S_INPUT, &input) < 0) {
-		gst_element_error(GST_ELEMENT(v4l2element),
-			"Failed to set input %d on device %s: %s",
-			input, v4l2element->device, g_strerror(errno));
+		gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+			("Failed to set input %d on device %s: %s",
+			 input, v4l2element->device, g_strerror(errno)));
 		return FALSE;
 	}
 
@@ -593,9 +596,9 @@ gst_v4l2_get_output (GstV4l2Element *v4l2element,
 	GST_V4L2_CHECK_OPEN(v4l2element);
 
 	if (ioctl(v4l2element->video_fd, VIDIOC_G_OUTPUT, &n) < 0) {
-		gst_element_error(GST_ELEMENT(v4l2element),
-			"Failed to get current output on device %s: %s",
-			v4l2element->device, g_strerror(errno));
+		gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+			("Failed to get current output on device %s: %s",
+			 v4l2element->device, g_strerror(errno)));
 		return FALSE;
 	}
 
@@ -620,9 +623,9 @@ gst_v4l2_set_output (GstV4l2Element *v4l2element,
 	GST_V4L2_CHECK_NOT_ACTIVE(v4l2element);
 
 	if (ioctl(v4l2element->video_fd, VIDIOC_S_OUTPUT, &output) < 0) {
-		gst_element_error(GST_ELEMENT(v4l2element),
-			"Failed to set output %d on device %s: %s",
-			output, v4l2element->device, g_strerror(errno));
+		gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+			("Failed to set output %d on device %s: %s",
+			 output, v4l2element->device, g_strerror(errno)));
 		return FALSE;
 	}
 
@@ -648,9 +651,9 @@ gst_v4l2_get_frequency (GstV4l2Element *v4l2element,
 
 	freq.tuner = tunernum;
 	if (ioctl(v4l2element->video_fd, VIDIOC_G_FREQUENCY, &freq) < 0) {
-		gst_element_error(GST_ELEMENT(v4l2element),
-			"Failed to get current tuner frequency for device %s: %s",
-			v4l2element->device, g_strerror(errno));
+		gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+			("Failed to get current tuner frequency for device %s: %s",
+			v4l2element->device, g_strerror(errno)));
 		return FALSE;
 	}
 
@@ -683,9 +686,9 @@ gst_v4l2_set_frequency (GstV4l2Element *v4l2element,
 	freq.frequency = frequency;
 
 	if (ioctl(v4l2element->video_fd, VIDIOC_S_FREQUENCY, &freq) < 0) {
-		gst_element_error(GST_ELEMENT(v4l2element),
-			"Failed to set tuner frequency to %lu for device %s: %s",
-			frequency, v4l2element->device, g_strerror(errno));
+		gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+			("Failed to set tuner frequency to %lu for device %s: %s",
+			frequency, v4l2element->device, g_strerror(errno)));
 		return FALSE;
 	}
 
@@ -711,9 +714,9 @@ gst_v4l2_signal_strength (GstV4l2Element *v4l2element,
 
 	tuner.index = tunernum;
 	if (ioctl(v4l2element->video_fd, VIDIOC_G_TUNER, &tuner) < 0) {
-		gst_element_error(GST_ELEMENT(v4l2element),
-			"Failed to get signal strength for device %s: %s",
-			v4l2element->device, g_strerror(errno));
+		gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+			("Failed to get signal strength for device %s: %s",
+			 v4l2element->device, g_strerror(errno)));
 		return FALSE;
 	}
 
@@ -743,9 +746,9 @@ gst_v4l2_get_attribute	(GstV4l2Element *v4l2element,
 	control.id = attribute_num;
 
 	if (ioctl(v4l2element->video_fd, VIDIOC_G_CTRL, &control) < 0) {
-		gst_element_error(GST_ELEMENT(v4l2element),
-			"Failed to get value for control %d on device %s: %s",
-			attribute_num, v4l2element->device, g_strerror(errno));
+		gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+			("Failed to get value for control %d on device %s: %s",
+			 attribute_num, v4l2element->device, g_strerror(errno)));
 		return FALSE;
 	}
 
@@ -776,9 +779,9 @@ gst_v4l2_set_attribute	(GstV4l2Element *v4l2element,
 	control.value = value;
 
 	if (ioctl(v4l2element->video_fd, VIDIOC_S_CTRL, &control) < 0) {
-		gst_element_error(GST_ELEMENT(v4l2element),
-			"Failed to set value %d for control %d on device %s: %s",
-			value, attribute_num, v4l2element->device, g_strerror(errno));
+		gst_element_error (v4l2element, RESOURCE, SETTINGS, NULL,
+			("Failed to set value %d for control %d on device %s: %s",
+			value, attribute_num, v4l2element->device, g_strerror(errno)));
 		return FALSE;
 	}
 
