@@ -827,10 +827,12 @@ gst_pad_disconnect (GstPad *srcpad,
     GST_RPAD_FILTER (realsrc) = NULL;
   }
 
-  /* now tell the scheduler, the schedulers on both paths are guaranteed to be the same,
-   * so we can just take one */
-  if (src_sched && src_sched == sink_sched)
+  /* now tell the scheduler */
+  if (src_sched) 
     gst_scheduler_pad_disconnect (src_sched, 
+	                          GST_PAD_CAST (realsrc), GST_PAD_CAST (realsink));
+  else if (sink_sched)
+    gst_scheduler_pad_disconnect (sink_sched, 
 	                          GST_PAD_CAST (realsrc), GST_PAD_CAST (realsink));
 
   /* hold a reference, as they can go away in the signal handlers */
@@ -1018,8 +1020,7 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
   src_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsrc));
   sink_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsink));
 
-  /* now tell the scheduler, the schedulers on both paths have to be the same,
-   * so we can just take one */
+  /* now tell the scheduler */
   if (src_sched) 
     gst_scheduler_pad_connect (src_sched, 
 	                       GST_PAD_CAST (realsrc), GST_PAD_CAST (realsink));

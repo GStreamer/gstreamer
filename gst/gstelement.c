@@ -2475,7 +2475,7 @@ gst_element_set_scheduler (GstElement *element,
   
   GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting scheduler to %p", sched);
 
-  element->sched = sched;
+  GST_ELEMENT_SCHED (element) = sched;
 }
 
 /**
@@ -2491,7 +2491,7 @@ gst_element_get_scheduler (GstElement *element)
 {
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
-  return element->sched;
+  return GST_ELEMENT_SCHED (element);
 }
 
 /**

@@ -1018,26 +1018,12 @@ gst_basic_scheduler_add_element (GstScheduler * sched, GstElement * element)
   GstSchedulerChain *chain;
   GstBasicScheduler *bsched = GST_BASIC_SCHEDULER (sched);
 
-  /* if it's already in this scheduler, don't bother doing anything */
-  if (GST_ELEMENT_SCHED (element) == sched)
-    return;
-
   GST_INFO (GST_CAT_SCHEDULING, "adding element \"%s\" to scheduler", GST_ELEMENT_NAME (element));
 
-  /* if the element already has a scheduler something went wrong */
-  if (GST_ELEMENT_SCHED (element)) {
-    GST_ERROR (element, "grave error");
-    return;
-  }
-
-  /* set the sched pointer in the element itself */
-  GST_ELEMENT_SCHED (element) = sched;
-  
   /* only deal with elements after this point, not bins */
   /* exception is made for Bin's that are schedulable, like the autoplugger */
   if (GST_IS_BIN (element) && !GST_FLAG_IS_SET (element, GST_BIN_SELF_SCHEDULABLE))
     return;
-
 
   /* first add it to the list of elements that are to be scheduled */
   bsched->elements = g_list_prepend (bsched->elements, element);
@@ -1098,7 +1084,6 @@ gst_basic_scheduler_remove_element (GstScheduler * sched, GstElement * element)
 
     /* unset the scheduler pointer in the element */
   }
-  GST_ELEMENT_SCHED (element) = NULL;
 }
 
 static GstElementStateReturn

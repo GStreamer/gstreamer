@@ -202,6 +202,13 @@ gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
   g_return_if_fail (GST_IS_SCHEDULER (sched));
   g_return_if_fail (GST_IS_ELEMENT (element));
 
+  /* if it's already in this scheduler, don't bother doing anything */
+  if (GST_ELEMENT_SCHED (element) == sched)
+    return;
+
+  /* if it's not inside this scheduler, it has to be NULL */
+  g_assert (GST_ELEMENT_SCHED (element) == NULL);
+
   if (element->getclockfunc) {
     sched->clock_providers = g_list_prepend (sched->clock_providers, element);
     GST_DEBUG (GST_CAT_CLOCK, "added clock provider %s", GST_ELEMENT_NAME (element));
@@ -211,7 +218,7 @@ gst_scheduler_add_element (GstScheduler *sched, GstElement *element)
     GST_DEBUG (GST_CAT_CLOCK, "added clock receiver %s", GST_ELEMENT_NAME (element));
   }
 
-  /* gst_element_set_scheduler (element, sched); */
+  gst_element_set_scheduler (element, sched);
 
   if (CLASS (sched)->add_element)
     CLASS (sched)->add_element (sched, element);
@@ -233,10 +240,10 @@ gst_scheduler_remove_element (GstScheduler *sched, GstElement *element)
   sched->clock_providers = g_list_remove (sched->clock_providers, element);
   sched->clock_receivers = g_list_remove (sched->clock_receivers, element);
 
-  /* gst_element_set_scheduler (element, NULL); */
-
   if (CLASS (sched)->remove_element)
     CLASS (sched)->remove_element (sched, element);
+
+  gst_element_set_scheduler (element, NULL); 
 }
 
 /**

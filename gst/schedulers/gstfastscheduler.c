@@ -675,19 +675,7 @@ gst_fast_scheduler_add_element (GstScheduler * sched, GstElement * element)
   GstSchedulerChain *chain;
   GstFastScheduler *bsched = GST_FAST_SCHEDULER (sched);
 
-  /* if it's already in this scheduler, don't bother doing anything */
-  if (GST_ELEMENT_SCHED (element) == sched)
-    return;
-
   GST_INFO (GST_CAT_SCHEDULING, "adding element \"%s\" to scheduler", GST_ELEMENT_NAME (element));
-
-  /* if the element already has a different scheduler, remove the element from it */
-  if (GST_ELEMENT_SCHED (element)) {
-    gst_fast_scheduler_remove_element (GST_ELEMENT_SCHED (element), element);
-  }
-
-  /* set the sched pointer in the element itself */
-  GST_ELEMENT_SCHED (element) = sched;
 
   /* only deal with elements after this point, not bins */
   /* exception is made for Bin's that are schedulable, like the autoplugger */
@@ -743,9 +731,6 @@ gst_fast_scheduler_remove_element (GstScheduler * sched, GstElement * element)
     /* remove it from the list of elements */
     bsched->elements = g_list_remove (bsched->elements, element);
     bsched->num_elements--;
-
-    /* unset the scheduler pointer in the element */
-    GST_ELEMENT_SCHED (element) = NULL;
   }
 }
 
