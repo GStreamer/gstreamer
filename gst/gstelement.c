@@ -148,6 +148,8 @@ gst_element_class_init (GstElementClass *klass)
 
   klass->change_state =			GST_DEBUG_FUNCPTR(gst_element_change_state);
   klass->elementfactory = NULL;
+  klass->padtemplates = NULL;
+  klass->numpadtemplates = 0;
 }
 
 static void
@@ -412,9 +414,14 @@ gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (GST_IS_GHOST_PAD (pad));
 
   // FIXME this is redundant?
+  // wingo 10-july-2001: I don't think so, you have to actually remove the pad
+  // from the element. gst_pad_remove_ghost_pad just removes the ghostpad from
+  // the real pad's ghost pad list
+  gst_pad_remove_ghost_pad (GST_PAD (GST_PAD_REALIZE (pad)), pad);
+  gst_element_remove_pad (element, pad);
 }
 
 
@@ -474,6 +481,27 @@ gst_element_get_pad_list (GstElement *element)
 }
 
 /**
+ * gst_element_class_add_padtemplate:
+ * @klass: element class to add padtemplate to
+ * @templ: padtemplate to add
+ *
+ * Add a padtemplate to an element class. This is useful if you have derived a custom
+ * bin and wish to provide an on-request pad at runtime. Plugin writers should use
+ * gst_elementfactory_add_padtemplate instead.
+ */
+void
+gst_element_class_add_padtemplate (GstElementClass *klass, GstPadTemplate *templ)
+{
+  g_return_if_fail (klass != NULL);
+  g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
+  g_return_if_fail (templ != NULL);
+  g_return_if_fail (GST_IS_PADTEMPLATE (templ));
+  
+  klass->padtemplates = g_list_append (klass->padtemplates, templ);
+  klass->numpadtemplates++;
+}
+
+/**
  * gst_element_get_padtemplate_list:
  * @element: element to get padtemplates of
  *
@@ -491,10 +519,7 @@ gst_element_get_padtemplate_list (GstElement *element)
 
   oclass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS(element));
 
-  if (oclass->elementfactory == NULL) return NULL;
-
-  /* return the list of pads */
-  return oclass->elementfactory->padtemplates;
+  return oclass->padtemplates;
 }
 
 /**
@@ -900,7 +925,7 @@ gst_element_shutdown (GObject *object)
     gst_bin_remove (GST_BIN (GST_OBJECT_PARENT (element)), element);
 
   if (G_OBJECT_CLASS (parent_class)->shutdown)
-    G_OBJECT_CLASS (parent_class)->shutdown ((GObject *)object);
+    G_OBJECT_CLASS (parent_class)->shutdown (G_OBJECT (object));
 }
 
 static void
@@ -1130,7 +1155,7 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
 	}
         child = child->next;
       }
-      gst_util_set_object_arg (G_OBJECT (element), name, value);
+      gst_util_set_object_arg ((GObject *)G_OBJECT (element), name, value);
     }
     children = children->next;
   }

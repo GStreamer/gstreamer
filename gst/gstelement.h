@@ -153,7 +153,10 @@ struct _GstElementClass {
 
   /* the elementfactory that created us */
   GstElementFactory *elementfactory;
-
+  /* templates for our pads */
+  GList *padtemplates;
+  gint numpadtemplates;
+  
   /* signal callbacks */
   void (*state_change)		(GstElement *element,GstElementState state);
   void (*new_pad)		(GstElement *element,GstPad *pad);
@@ -191,6 +194,8 @@ struct _GstElementFactory {
   GList *padtemplates;
   guint16 numpadtemplates;
 };
+
+void			gst_element_class_add_padtemplate	(GstElementClass *element, GstPadTemplate *templ);
 
 GType			gst_element_get_type		(void);
 GstElement*		gst_element_new			(void);
