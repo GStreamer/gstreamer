@@ -57,6 +57,11 @@ static void                  gst_v4lmjpegsrc_class_init   (GstV4lMjpegSrcClass *
 static void                  gst_v4lmjpegsrc_init         (GstV4lMjpegSrc *v4lmjpegsrc);
 
 /* pad/buffer functions */
+static gboolean              gst_v4lmjpegsrc_srcconvert   (GstPad         *pad,
+                                                           GstFormat      src_format,
+                                                           gint64         src_value,
+                                                           GstFormat      *dest_format,
+                                                           gint64         *dest_value);
 static GstPadConnectReturn   gst_v4lmjpegsrc_srcconnect   (GstPad         *pad,
                                                            GstCaps        *caps);
 static GstBuffer*            gst_v4lmjpegsrc_get          (GstPad         *pad);
@@ -182,6 +187,7 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
 
   gst_pad_set_get_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_get);
   gst_pad_set_connect_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_srcconnect);
+  gst_pad_set_convert_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_srcconvert);
 
   v4lmjpegsrc->bufferpool = gst_buffer_pool_new(
 		  			NULL,
@@ -206,6 +212,65 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
 
   v4lmjpegsrc->numbufs = 64;
   v4lmjpegsrc->bufsize = 256;
+}
+
+
+static gboolean
+gst_v4lmjpegsrc_srcconvert (GstPad    *pad,
+                            GstFormat  src_format,
+                            gint64     src_value,
+                            GstFormat *dest_format,
+                            gint64    *dest_value)
+{
+  GstV4lMjpegSrc *v4lmjpegsrc;
+  gint norm;
+  gdouble fps;
+
+  v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));
+
+  if (!GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lmjpegsrc)))
+    return FALSE;
+
+  if (!gst_v4l_get_chan_norm(GST_V4LELEMENT(v4lmjpegsrc), NULL, &norm))
+    return FALSE;
+
+  if (norm == VIDEO_MODE_NTSC)
+    fps = 30000/1001;
+  else
+    fps = 25.;
+
+  switch (src_format) {
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_UNITS;
+          /* fall-through */
+        case GST_FORMAT_UNITS:
+          *dest_value = src_value * fps / GST_SECOND;
+          break;
+        default:
+          return FALSE;
+      }
+      break;
+
+    case GST_FORMAT_UNITS:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_TIME;
+          /* fall-through */
+        case GST_FORMAT_TIME:
+          *dest_value = src_value * GST_SECOND / fps;
+          break;
+        default:
+          return FALSE;
+      }
+      break;
+
+    default:
+      return FALSE;
+  }
+
+  return TRUE;
 }
 
 
