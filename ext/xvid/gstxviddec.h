@@ -21,7 +21,6 @@
 #define __GST_XVIDDEC_H__
 
 #include <gst/gst.h>
-#include <xvid.h>
 #include "gstxvid.h"
 
 #ifdef __cplusplus
@@ -53,7 +52,7 @@ struct _GstXvidDec {
   void *handle;
 
   /* video (output) settings */
-  gint csp, bpp;
+  gint csp, bpp, stride;
   gint width, height;
   double fps;
 };

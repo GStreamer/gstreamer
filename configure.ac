@@ -1289,21 +1289,30 @@ GST_CHECK_FEATURE(VORBIS, [vorbis plug-in], vorbisenc vorbisdec, [
 dnl *** XVID ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVID, true)
 GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
-  HAVE_XVID=yes
-  AC_CHECK_HEADER(xvid.h, ,
-                  [ AC_MSG_WARN([Xvid headers not found]) &&
-                    HAVE_XVID=no ] )
-  LIBS="-lm"
-  AC_CHECK_LIB(xvidcore, xvid_encore, ,
-               [ AC_MSG_WARN([Xvid encore libs not found]) &&
-                 HAVE_XVID=no ] )
-  AC_CHECK_LIB(xvidcore, xvid_decore, ,
-               [ AC_MSG_WARN([Xvid decore libs not found]) &&
-                 HAVE_XVID=no ] )
-  if test x$HAVE_XVID = xyes; then
-    XVID_LIBS="-lxvidcore -lm"
-    AC_SUBST(XVID_LIBS)
-  fi
+  HAVE_XVID=no
+  AC_CHECK_HEADER(xvid.h, [
+    OLD_LIBS="$LIBS"
+    LIBS="-lm"
+    AC_CHECK_LIB(xvidcore, xvid_encore, [
+      AC_CHECK_LIB(xvidcore, xvid_decore, [
+        AC_CHECK_LIB(xvidcore, xvid_global, [
+          AC_MSG_CHECKING([for uptodate XviD API version])
+          AC_TRY_RUN([
+#include <xvid.h>
+#if XVID_API != XVID_MAKE_API(4,0)
+#error "Incompatible XviD API version"
+#endif
+int main () { return 0; }
+          ],[ AC_MSG_RESULT(yes)
+            XVID_LIBS="-lxvidcore -lm"
+            AC_SUBST(XVID_LIBS)
+            HAVE_XVID=yes
+          ], AC_MSG_RESULT(no) )
+        ], )
+      ], )
+    ], )
+    LIBS="$OLD_LIBS"
+  ], )
 ])
 
 

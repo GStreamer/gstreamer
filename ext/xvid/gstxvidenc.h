@@ -48,11 +48,15 @@ struct _GstXvidEnc {
   /* pads */
   GstPad *sinkpad, *srcpad;
 
-  /* quality of encoded JPEG image */
-  gulong bitrate;
+  /* encoding profile */
+  gint profile;
 
-  /* size of the JPEG buffers */
-  gulong buffer_size;
+  /* quality of encoded image */
+  gint bitrate;
+  gint buffer_size;
+
+  /* max number of B frames between I/P */
+  gint max_b_frames;
 
   /* max key interval */
   gint max_key_interval;
@@ -60,8 +64,8 @@ struct _GstXvidEnc {
   /* xvid handle */
   void *handle;
   gint csp;
-  gint width, height;
-  double fps;
+  gint width, height, stride;
+  gdouble fps;
 };
 
 struct _GstXvidEncClass {
