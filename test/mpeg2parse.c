@@ -168,6 +168,7 @@ int main(int argc,char *argv[]) {
   gst_init(&argc,&argv);
   gnome_init("MPEG2 Video player","0.0.1",argc,argv);
   gst_plugin_load("mpeg2parse");
+  //gst_plugin_load("mpeg1parse");
 
   pipeline = gst_pipeline_new("pipeline");
   g_return_if_fail(pipeline != NULL);
@@ -187,6 +188,7 @@ int main(int argc,char *argv[]) {
   g_print("should be using file '%s'\n",argv[1]);
 
   parse = gst_elementfactory_make("mpeg2parse","parse");
+  //parse = gst_elementfactory_make("mpeg1parse","parse");
   g_return_if_fail(parse != NULL);
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));

@@ -49,7 +49,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
 
     // construct queue and connect everything in the main pipelie
     audio_queue = gst_elementfactory_make("queue","audio_queue");
-    gtk_object_set(GTK_OBJECT(audio_queue),"max_level",30,NULL);
+    gtk_object_set(GTK_OBJECT(audio_queue),"max_level",300,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_queue));
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_thread));
     gst_pad_connect(pad,
@@ -67,14 +67,14 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
   //} else if (0) {
 
     gst_plugin_load("mp1videoparse");
-    //gst_plugin_load("mpeg_play");
-    gst_plugin_load("mpeg2play");
+    gst_plugin_load("mpeg_play");
+    //gst_plugin_load("mpeg2play");
     gst_plugin_load("videosink");
     // construct internal pipeline elements
     parse_video = gst_elementfactory_make("mp1videoparse","parse_video");
     g_return_if_fail(parse_video != NULL);
-    //decode_video = gst_elementfactory_make("mpeg_play","decode_video");
-    decode_video = gst_elementfactory_make("mpeg2play","decode_video");
+    decode_video = gst_elementfactory_make("mpeg_play","decode_video");
+    //decode_video = gst_elementfactory_make("mpeg2play","decode_video");
     g_return_if_fail(decode_video != NULL);
     show = gst_elementfactory_make("videosink","show");
     g_return_if_fail(show != NULL);
@@ -102,7 +102,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
 
     // construct queue and connect everything in the main pipeline
     video_queue = gst_elementfactory_make("queue","video_queue");
-    gtk_object_set(GTK_OBJECT(video_queue),"max_level",30,NULL);
+    gtk_object_set(GTK_OBJECT(video_queue),"max_level",300,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_queue));
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_thread));
     gst_pad_connect(pad,

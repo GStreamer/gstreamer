@@ -32,13 +32,13 @@
 
 #include "yuv2rgb.h"
 
-static GstBuffer *gst_colorspace_yuv422P_to_rgb32(GstBuffer *src, GstColorSpaceParameters *params);
-static GstBuffer *gst_colorspace_yuv422P_to_bgr32(GstBuffer *src, GstColorSpaceParameters *params);
-static GstBuffer *gst_colorspace_yuv422P_to_bgr32_mmx(GstBuffer *src, GstColorSpaceParameters *params);
-static GstBuffer *gst_colorspace_yuv422P_to_rgb24(GstBuffer *src, GstColorSpaceParameters *params);
-static GstBuffer *gst_colorspace_yuv422P_to_bgr24(GstBuffer *src, GstColorSpaceParameters *params);
-static GstBuffer *gst_colorspace_yuv422P_to_rgb16(GstBuffer *src, GstColorSpaceParameters *params);
-static GstBuffer *gst_colorspace_yuv422P_to_bgr16_mmx(GstBuffer *src, GstColorSpaceParameters *params);
+static GstBuffer *gst_colorspace_yuv420P_to_rgb32(GstBuffer *src, GstColorSpaceParameters *params);
+static GstBuffer *gst_colorspace_yuv420P_to_bgr32(GstBuffer *src, GstColorSpaceParameters *params);
+static GstBuffer *gst_colorspace_yuv420P_to_bgr32_mmx(GstBuffer *src, GstColorSpaceParameters *params);
+static GstBuffer *gst_colorspace_yuv420P_to_rgb24(GstBuffer *src, GstColorSpaceParameters *params);
+static GstBuffer *gst_colorspace_yuv420P_to_bgr24(GstBuffer *src, GstColorSpaceParameters *params);
+static GstBuffer *gst_colorspace_yuv420P_to_rgb16(GstBuffer *src, GstColorSpaceParameters *params);
+static GstBuffer *gst_colorspace_yuv420P_to_bgr16_mmx(GstBuffer *src, GstColorSpaceParameters *params);
 
 static void gst_colorspace_yuv_to_rgb16(GstColorSpaceYUVTables *tables,
 	    				unsigned char *lum,
@@ -79,23 +79,23 @@ static GstColorSpaceYUVTables * gst_colorspace_init_yuv(long depth,
 GstColorSpaceConverter gst_colorspace_yuv2rgb_get_converter(GstColorSpace src, GstColorSpace dest) {
   DEBUG("gst_colorspace_yuv2rgb_get_converter %d\n", dest);
   switch(src) {
-    case GST_COLORSPACE_YUV422P:
+    case GST_COLORSPACE_YUV420P:
       switch(dest) {
         case GST_COLORSPACE_BGR32:
-          //return gst_colorspace_yuv422P_to_bgr32;
-          return gst_colorspace_yuv422P_to_bgr32_mmx;
+          //return gst_colorspace_yuv420P_to_bgr32;
+          return gst_colorspace_yuv420P_to_bgr32_mmx;
         case GST_COLORSPACE_RGB32:
-          return gst_colorspace_yuv422P_to_rgb32;
+          return gst_colorspace_yuv420P_to_rgb32;
         case GST_COLORSPACE_RGB24:
-          return gst_colorspace_yuv422P_to_rgb24;
+          return gst_colorspace_yuv420P_to_rgb24;
         case GST_COLORSPACE_BGR24:
-          return gst_colorspace_yuv422P_to_bgr24;
+          return gst_colorspace_yuv420P_to_bgr24;
         case GST_COLORSPACE_RGB555:
         case GST_COLORSPACE_RGB565:
         case GST_COLORSPACE_BGR555:
-          return gst_colorspace_yuv422P_to_rgb16;
+          return gst_colorspace_yuv420P_to_rgb16;
         case GST_COLORSPACE_BGR565:
-          return gst_colorspace_yuv422P_to_bgr16_mmx;
+          return gst_colorspace_yuv420P_to_bgr16_mmx;
 	default:
 	  break;
       }
@@ -107,12 +107,12 @@ GstColorSpaceConverter gst_colorspace_yuv2rgb_get_converter(GstColorSpace src, G
   return NULL;
 }
 
-static GstBuffer *gst_colorspace_yuv422P_to_bgr32(GstBuffer *src, GstColorSpaceParameters *params) {
+static GstBuffer *gst_colorspace_yuv420P_to_bgr32(GstBuffer *src, GstColorSpaceParameters *params) {
   static GstColorSpaceYUVTables *color_tables = NULL;
   int size;
   GstBuffer *buf = NULL;
   guchar *out;
-  DEBUG("gst_colorspace_yuv422P_to_bgr32\n");
+  DEBUG("gst_colorspace_yuv420P_to_bgr32\n");
 
   g_return_val_if_fail(params != NULL, NULL);
 
@@ -142,12 +142,12 @@ static GstBuffer *gst_colorspace_yuv422P_to_bgr32(GstBuffer *src, GstColorSpaceP
   else return src;
 }
 
-static GstBuffer *gst_colorspace_yuv422P_to_rgb32(GstBuffer *src, GstColorSpaceParameters *params) {
+static GstBuffer *gst_colorspace_yuv420P_to_rgb32(GstBuffer *src, GstColorSpaceParameters *params) {
   static GstColorSpaceYUVTables *color_tables = NULL;
   int size;
   GstBuffer *buf = NULL;
   guchar *out;
-  DEBUG("gst_colorspace_yuv422P_to_rgb32\n");
+  DEBUG("gst_colorspace_yuv420P_to_rgb32\n");
 
   g_return_val_if_fail(params != NULL, NULL);
 
@@ -177,12 +177,12 @@ static GstBuffer *gst_colorspace_yuv422P_to_rgb32(GstBuffer *src, GstColorSpaceP
   else return src;
 }
 
-static GstBuffer *gst_colorspace_yuv422P_to_bgr24(GstBuffer *src, GstColorSpaceParameters *params) {
+static GstBuffer *gst_colorspace_yuv420P_to_bgr24(GstBuffer *src, GstColorSpaceParameters *params) {
   static GstColorSpaceYUVTables *color_tables = NULL;
   int size;
   GstBuffer *buf = NULL;
   guchar *out;
-  DEBUG("gst_colorspace_yuv422P_to_bgr24\n");
+  DEBUG("gst_colorspace_yuv420P_to_bgr24\n");
 
   g_return_val_if_fail(params != NULL, NULL);
 
@@ -211,12 +211,12 @@ static GstBuffer *gst_colorspace_yuv422P_to_bgr24(GstBuffer *src, GstColorSpaceP
   else return src;
 }
 
-static GstBuffer *gst_colorspace_yuv422P_to_rgb24(GstBuffer *src, GstColorSpaceParameters *params) {
+static GstBuffer *gst_colorspace_yuv420P_to_rgb24(GstBuffer *src, GstColorSpaceParameters *params) {
   static GstColorSpaceYUVTables *color_tables = NULL;
   int size;
   GstBuffer *buf = NULL;
   guchar *out;
-  DEBUG("gst_colorspace_yuv422P_to_rgb24\n");
+  DEBUG("gst_colorspace_yuv420P_to_rgb24\n");
 
   g_return_val_if_fail(params != NULL, NULL);
 
@@ -246,10 +246,10 @@ static GstBuffer *gst_colorspace_yuv422P_to_rgb24(GstBuffer *src, GstColorSpaceP
   else return src;
 }
 
-static GstBuffer *gst_colorspace_yuv422P_to_rgb16(GstBuffer *src, GstColorSpaceParameters *params) {
+static GstBuffer *gst_colorspace_yuv420P_to_rgb16(GstBuffer *src, GstColorSpaceParameters *params) {
   static GstColorSpaceYUVTables *color_tables = NULL;
   int size;
-  DEBUG("gst_colorspace_yuv422P_to_rgb16\n");
+  DEBUG("gst_colorspace_yuv420P_to_rgb16\n");
 
   g_return_val_if_fail(params != NULL, NULL);
   g_return_val_if_fail(params->visual != NULL, NULL);
@@ -274,11 +274,11 @@ static GstBuffer *gst_colorspace_yuv422P_to_rgb16(GstBuffer *src, GstColorSpaceP
 static mmx_t MMX16_redmask   = (mmx_t)(long long)0xf800f800f800f800LL;             //dd    07c00 7c00h, 07c007c00h
 static mmx_t MMX16_grnmask   = (mmx_t)(long long)0x07e007e007e007e0LL;                 //dd    003e0 03e0h, 003e003e0h
 
-static GstBuffer *gst_colorspace_yuv422P_to_bgr32_mmx(GstBuffer *src, GstColorSpaceParameters *params) {
+static GstBuffer *gst_colorspace_yuv420P_to_bgr32_mmx(GstBuffer *src, GstColorSpaceParameters *params) {
   int size;
   GstBuffer *buf = NULL;
   guchar *out;
-  DEBUG("gst_colorspace_yuv422P_to_rgb32_mmx\n");
+  DEBUG("gst_colorspace_yuv420P_to_rgb32_mmx\n");
 
   g_return_val_if_fail(params != NULL, NULL);
 
@@ -304,9 +304,9 @@ static GstBuffer *gst_colorspace_yuv422P_to_bgr32_mmx(GstBuffer *src, GstColorSp
   }
   else return src;
 }
-static GstBuffer *gst_colorspace_yuv422P_to_bgr16_mmx(GstBuffer *src, GstColorSpaceParameters *params) {
+static GstBuffer *gst_colorspace_yuv420P_to_bgr16_mmx(GstBuffer *src, GstColorSpaceParameters *params) {
   int size;
-  DEBUG("gst_colorspace_yuv422P_to_bgr16_mmx \n");
+  DEBUG("gst_colorspace_yuv420P_to_bgr16_mmx \n");
 
   g_return_val_if_fail(params != NULL, NULL);
 
@@ -319,6 +319,7 @@ static GstBuffer *gst_colorspace_yuv422P_to_bgr16_mmx(GstBuffer *src, GstColorSp
                         params->outbuf,
 			params->height,
 			params->width);
+  DEBUG("gst_colorspace_yuv420P_to_bgr16_mmx done\n");
 
   return src;
 }
@@ -772,9 +773,11 @@ gst_colorspace_yuv_to_bgr16_mmx(tables, lum, cr, cb, out, rows, cols)
 
     int y, x; 
 
+    DEBUG("gst_colorspace_yuv420P_to_bgr16_mmx %p %p %p\n", lum, cr, cb);
+
     for (y=rows>>1; y; y--) {
       for (x=cols8; x; x--) {
-
+	
         movd_m2r(*(mmx_t *)cb, mm0);		// 4 Cb     0  0  0  0 u3 u2 u1 u0
         pxor_r2r(mm7, mm7);
         movd_m2r(*(mmx_t *)cr, mm1);		// 4 Cr     0  0  0  0 v3 v2 v1 v0

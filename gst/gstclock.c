@@ -18,7 +18,7 @@
  */
 
 #include <sys/time.h>
-#define DEBUG_ENABLED
+//#define DEBUG_ENABLED
 #include <gstclock.h>
 
 static GstClock *the_system_clock = NULL;
@@ -54,7 +54,7 @@ GstClock *gst_clock_get_system() {
 
 void gst_clock_register(GstClock *clock, GstObject *obj) {
   if (GST_IS_SINK(obj)) {
-    DEBUG("gst_clock: registered sink object 0x%p\n", obj);
+    DEBUG("gst_clock: setting registered sink object 0x%p\n", obj);
     clock->sinkobjects = g_list_append(clock->sinkobjects, obj);
     num++;
   }
@@ -89,6 +89,7 @@ void gst_clock_wait(GstClock *clock, GstClockTime time, GstObject *obj) {
   GstClockTimeDiff diff;
   GList *elements;
 
+  DEBUG("gst_clock: requesting clock object 0x%p\n", obj);
   g_mutex_lock(clock->lock);
   elements = clock->sinkobjects;
   while (elements && clock->locking) {

@@ -324,6 +324,7 @@ gst/xml/Makefile
 libs/Makefile
 libs/riff/Makefile
 libs/colorspace/Makefile
+libs/videoscale/Makefile
 libs/getbits/Makefile
 plugins/Makefile
 plugins/au/Makefile
@@ -355,6 +356,7 @@ plugins/visualization/vumeter/Makefile
 plugins/visualization/synaesthesia/Makefile
 plugins/visualization/smoothwave/Makefile
 plugins/videosink/Makefile
+plugins/videoscale/Makefile
 plugins/dvdsrc/Makefile
 plugins/vcdsrc/Makefile
 plugins/cobin/Makefile
