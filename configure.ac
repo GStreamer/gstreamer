@@ -346,7 +346,7 @@ GST_PLUGINS_ALL="\
 	flx \
 	goom \
 	id3 \
-	intfloat \
+	interleave \
 	law \
 	level \
 	matroska \
@@ -359,7 +359,6 @@ GST_PLUGINS_ALL="\
 	mpegaudioparse \
 	mpegstream \
 	monoscope \
-	oneton \
 	overlay \
 	passthrough \
 	playondemand \
@@ -1559,7 +1558,7 @@ gst/filter/Makefile
 gst/flx/Makefile
 gst/goom/Makefile
 gst/id3/Makefile
-gst/intfloat/Makefile
+gst/interleave/Makefile
 gst/law/Makefile
 gst/level/Makefile
 gst/matroska/Makefile
@@ -1574,7 +1573,6 @@ gst/mpegstream/Makefile
 gst/modplug/Makefile
 gst/modplug/libmodplug/Makefile
 gst/monoscope/Makefile
-gst/oneton/Makefile
 gst/overlay/Makefile
 gst/passthrough/Makefile
 gst/playondemand/Makefile
