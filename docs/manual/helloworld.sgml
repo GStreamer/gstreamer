@@ -43,7 +43,7 @@ main (int argc, char *argv[])
   decoder = gst_elementfactory_make ("mpg123", "decoder");
   
   /* and an audio sink */
-  audiosink = gst_elementfactory_make ("audiosink", "play_audio");
+  audiosink = gst_elementfactory_make ("osssink", "play_audio");
 
   /* add objects to the main pipeline */
   gst_bin_add (GST_BIN (pipeline), disksrc);
