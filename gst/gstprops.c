@@ -28,6 +28,7 @@
 #include "gstmemchunk.h"
 
 GType _gst_props_type;
+GType _gst_props_entry_type;
 
 #define GST_PROPS_ENTRY_IS_VARIABLE(a)	(((GstPropsEntry*)(a))->propstype > GST_PROPS_VAR_TYPE)
 
@@ -129,6 +130,10 @@ _gst_props_initialize (void)
   g_value_register_transform_func (_gst_props_type,
                                    G_TYPE_STRING,
                                    transform_func);
+
+  _gst_props_entry_type = g_boxed_type_register_static ("GstPropsEntry",
+	                    (GBoxedCopyFunc) gst_props_entry_copy,
+	                    (GBoxedFreeFunc) gst_props_entry_destroy);
 }
 
 static void
