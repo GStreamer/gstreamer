@@ -74,7 +74,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="../../../gstreamer/win32;../../../gstreamer;../../../gstreamer/libs;../../../glib;../../../glib/glib;../../../glib/gmodule;&quot;../../gst-libs&quot;;../../../popt/include;../../../libxml2/include/libxml2"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;passthrgouh_EXPORTS;HAVE_CONFIG_H;_USE_MATH_DEFINES"
+				PreprocessorDefinitions="WIN32;NDEBUG;GST_DISABLE_GST_DEBUG;_WINDOWS;_USRDLL;passthrgouh_EXPORTS;HAVE_CONFIG_H;_USE_MATH_DEFINES"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -126,7 +126,7 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath=".\gstpassthrgouh.c">
+				RelativePath=".\gstpassthrough.c">
 			</File>
 		</Filter>
 		<Filter
@@ -137,7 +137,7 @@
 				RelativePath=".\filter.func">
 			</File>
 			<File
-				RelativePath=".\gstpassthrgouh.h">
+				RelativePath=".\gstpassthrough.h">
 			</File>
 		</Filter>
 		<Filter
