@@ -25,7 +25,6 @@
 #include <string.h>
 #include "media-info.h"
 #include "media-info-priv.h"
-#include "media-info-marshal.h"
 
 static void	gst_media_info_class_init	(GstMediaInfoClass *klass);
 static void	gst_media_info_instance_init	(GstMediaInfo *info);
@@ -147,7 +146,7 @@ gst_media_info_class_init (GstMediaInfoClass *klass)
 		  G_SIGNAL_RUN_LAST,
 		  G_STRUCT_OFFSET (GstMediaInfoClass, media_info_signal),
 		  NULL, NULL,
-		  gst_media_info_marshal_VOID__VOID,
+		  gst_marshal_VOID__VOID,
 		  G_TYPE_NONE, 0);
 }
 
@@ -161,7 +160,7 @@ gst_media_info_instance_init (GstMediaInfo *info)
 
   if (!_media_info_inited) { gst_media_info_init (); }
 
-  gmip_init (info->priv);
+  gmip_init (info->priv, error);
   gmip_reset (info->priv);
 }
 
