@@ -1,4 +1,4 @@
-examples = seek
+examples = seek spider_seek
 
 noinst_PROGRAMS = $(examples)
 

@@ -58,6 +58,37 @@ setup_dynamic_connection (GstElement *element, const gchar *padname, GstPad *tar
 }
 
 static GstElement*
+make_wav_pipeline (const gchar *location) 
+{
+  GstElement *pipeline;
+  GstElement *src, *decoder, *audiosink;
+  GstPad *seekable;
+  
+  pipeline = gst_pipeline_new ("app");
+
+  src = gst_element_factory_make (SOURCE, "src");
+  decoder = gst_element_factory_make ("wavparse", "decoder");
+  audiosink = gst_element_factory_make ("osssink", "sink");
+  //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
+
+  g_object_set (G_OBJECT (src), "location", location, NULL);
+
+  gst_bin_add (GST_BIN (pipeline), src);
+  gst_bin_add (GST_BIN (pipeline), decoder);
+  gst_bin_add (GST_BIN (pipeline), audiosink);
+
+  gst_element_connect (src, decoder);
+  gst_element_connect (decoder, audiosink);
+
+  seekable = gst_element_get_pad (decoder, "src");
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, seekable);
+  rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (decoder, "sink"));
+
+  return pipeline;
+}
+
+static GstElement*
 make_flac_pipeline (const gchar *location) 
 {
   GstElement *pipeline;
@@ -625,6 +656,8 @@ main (int argc, char **argv)
     pipeline = make_sid_pipeline (argv[2]);
   else if (atoi (argv[1]) == 6) 
     pipeline = make_flac_pipeline (argv[2]);
+  else if (atoi (argv[1]) == 7) 
+    pipeline = make_wav_pipeline (argv[2]);
 
   /* initialize gui elements ... */
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
