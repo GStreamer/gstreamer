@@ -113,14 +113,17 @@ static void 		gst_basic_scheduler_reset 		(GstScheduler *sched);
 static void		gst_basic_scheduler_add_element		(GstScheduler *sched, GstElement *element);
 static void     	gst_basic_scheduler_remove_element	(GstScheduler *sched, GstElement *element);
 static GstElementStateReturn  
-			gst_basic_scheduler_state_transition	(GstScheduler *sched, GstElement *element, gint transition);
+			gst_basic_scheduler_state_transition	(GstScheduler *sched, GstElement *element,
+								 gint transition);
 static void 		gst_basic_scheduler_lock_element 	(GstScheduler *sched, GstElement *element);
 static void 		gst_basic_scheduler_unlock_element 	(GstScheduler *sched, GstElement *element);
 static gboolean		gst_basic_scheduler_yield 		(GstScheduler *sched, GstElement *element);
 static gboolean		gst_basic_scheduler_interrupt 		(GstScheduler *sched, GstElement *element);
 static void 		gst_basic_scheduler_error	 	(GstScheduler *sched, GstElement *element);
-static void     	gst_basic_scheduler_pad_link		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
-static void     	gst_basic_scheduler_pad_unlink 	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
+static void     	gst_basic_scheduler_pad_link		(GstScheduler *sched, GstPad *srcpad,
+								 GstPad *sinkpad);
+static void     	gst_basic_scheduler_pad_unlink 		(GstScheduler *sched, GstPad *srcpad,
+								 GstPad *sinkpad);
 static GstPad*  	gst_basic_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
 static GstClockReturn	gst_basic_scheduler_clock_wait	 	(GstScheduler *sched, GstElement *element,
 								 GstClockID id, GstClockTimeDiff *jitter);
@@ -209,7 +212,7 @@ gst_basic_scheduler_class_init (GstBasicSchedulerClass * klass)
   gstscheduler_class->yield	 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_yield);
   gstscheduler_class->interrupt 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_interrupt);
   gstscheduler_class->error	 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_error);
-  gstscheduler_class->pad_link 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_link);
+  gstscheduler_class->pad_link 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_link);
   gstscheduler_class->pad_unlink 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_unlink);
   gstscheduler_class->pad_select	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_select);
   gstscheduler_class->clock_wait	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_clock_wait);
@@ -748,14 +751,17 @@ gst_basic_scheduler_chain_destroy (GstSchedulerChain * chain)
 static void
 gst_basic_scheduler_chain_add_element (GstSchedulerChain * chain, GstElement * element)
 {
-  GST_INFO (GST_CAT_SCHEDULING, "adding element \"%s\" to chain %p", GST_ELEMENT_NAME (element),
-	    chain);
-
   /* set the sched pointer for the element */
   element->sched = GST_SCHEDULER (chain->sched);
 
-  /* add the element to the list of 'disabled' elements */
-  chain->disabled = g_list_prepend (chain->disabled, element);
+  /* add the element to either the main list or the disabled list */
+  if (GST_STATE(element) == GST_STATE_PLAYING) {
+    GST_INFO (GST_CAT_SCHEDULING, "adding element \"%s\" to chain %p enabled", GST_ELEMENT_NAME (element),chain);
+    chain->elements = g_list_prepend (chain->elements, element);
+  } else {
+    GST_INFO (GST_CAT_SCHEDULING, "adding element \"%s\" to chain %p disabled", GST_ELEMENT_NAME (element),chain);
+    chain->disabled = g_list_prepend (chain->disabled, element);
+  }
   chain->num_elements++;
 
   /* notify the scheduler that something changed */
