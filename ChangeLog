@@ -1,5 +1,9 @@
 2004-03-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-plugins.spec.in: clean up spec file
+
+2004-03-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/gst/video/Makefile.am:
 	* gst-libs/gst/video/gstvideosink.c:
 	* gst-libs/gst/video/gstvideosink.h:
