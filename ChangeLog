@@ -1,3 +1,10 @@
+2004-07-27  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* win32/gstgetbits.vcproj:
+	* win32/gstgetbits.def:
+	* win32/msvc71.sln:
+	  add support for the getbits plugin
+    
 2004-07-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstvalue.c: (gst_value_transform_double_fraction),

@@ -1,0 +1,4 @@
+EXPORTS
+	gst_plugin_desc
+    gst_getbits_init
+    gst_getbits_newbuf
