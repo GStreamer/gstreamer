@@ -26,7 +26,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+
 #include <gst/gst.h>
+#include <gst/bytestream/bytestream.h>
+	
+#include "modplug_types.h"	
 
 #define GST_TYPE_MODPLUG \
   (gst_modplug_get_type())
@@ -43,7 +47,8 @@ extern "C" {
 struct _GstModPlug {
   GstElement element;
   GstPad *sinkpad, *srcpad;
-  GstBuffer *Buffer;
+  guint8 *buffer_in;
+  GstByteStream *bs;
 
   const gchar *songname;
   gboolean reverb;
