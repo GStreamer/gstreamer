@@ -22,7 +22,6 @@
 
 #include <sys/time.h>
 
-/* #define GST_DEBUG_ENABLED */
 #include "gst_private.h"
 #include "gstlog.h"
 
@@ -32,6 +31,7 @@ static GstClock *_the_system_clock = NULL;
 
 static void			gst_system_clock_class_init	(GstSystemClockClass *klass);
 static void			gst_system_clock_init		(GstSystemClock *clock);
+static void 			gst_system_clock_dispose 	(GObject *object);
 
 static GstClockTime		gst_system_clock_get_internal_time	(GstClock *clock);
 static guint64			gst_system_clock_get_resolution (GstClock *clock);
@@ -81,6 +81,8 @@ gst_system_clock_class_init (GstSystemClockClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_CLOCK);
 
+  gobject_class->dispose	 	= gst_system_clock_dispose;
+
   gstclock_class->get_internal_time 	= gst_system_clock_get_internal_time;
   gstclock_class->get_resolution 	= gst_system_clock_get_resolution;
   gstclock_class->wait		 	= gst_system_clock_wait;
@@ -95,6 +97,14 @@ gst_system_clock_init (GstSystemClock *clock)
 {
 }
 
+static void
+gst_system_clock_dispose (GObject *object)
+{
+  g_warning ("disposing systemclock!");
+
+  /* no parent dispose here, this is bad enough already */
+}
+
 /**
  * gst_system_clock_obtain 
  *
@@ -105,15 +115,21 @@ gst_system_clock_init (GstSystemClock *clock)
 GstClock*
 gst_system_clock_obtain (void)
 {
-  if (_the_system_clock == NULL) {
-    _the_system_clock = GST_CLOCK (g_object_new (GST_TYPE_SYSTEM_CLOCK, NULL));
-    
-    gst_object_set_name (GST_OBJECT (_the_system_clock), "GstSystemClock");
+  GstClock *clock = _the_system_clock;
 
-    gst_object_ref (GST_OBJECT (_the_system_clock));
-    gst_object_sink (GST_OBJECT (_the_system_clock));
+  if (clock == NULL) {
+    clock = GST_CLOCK (g_object_new (GST_TYPE_SYSTEM_CLOCK, NULL));
+    
+    gst_object_set_name (GST_OBJECT (clock), "GstSystemClock");
+
+    gst_object_ref (GST_OBJECT (clock));
+    gst_object_sink (GST_OBJECT (clock));
+
+    _the_system_clock = clock;
   }
-  return _the_system_clock;
+  gst_object_ref (GST_OBJECT (clock));
+
+  return clock;
 }
 
 static GstClockTime
