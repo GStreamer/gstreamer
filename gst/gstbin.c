@@ -135,6 +135,9 @@ gst_bin_init (GstBin * bin)
 
   bin->numchildren = 0;
   bin->children = NULL;
+
+  bin->iterate_mutex = g_mutex_new ();
+  bin->iterate_cond = g_cond_new ();
 }
 
 /**
@@ -850,9 +853,10 @@ gst_bin_iterate (GstBin * bin)
   if (!running) {
     if (GST_STATE (bin) == GST_STATE_PLAYING && GST_STATE_PENDING (bin) == GST_STATE_VOID_PENDING) {
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, bin,
-			 "waiting for child shutdown after useless iteration");
-      gst_element_wait_state_change (GST_ELEMENT (bin));
-      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, bin, "child shutdown");
+			 "polling for child shutdown after useless iteration");
+      usleep (1);
+      //gst_element_wait_state_change (GST_ELEMENT (bin));
+      running = TRUE;
     }
   }
 
