@@ -87,10 +87,12 @@ typedef struct _GstStaticPadTemplate GstStaticPadTemplate;
 typedef struct _GstPadLink GstPadLink;
 
 typedef enum {
-  GST_PAD_LINK_NOSCHED       = -3,	/* pads cannot cooperate in scheduling */
-  GST_PAD_LINK_NOFORMAT      = -2,	/* pads do not have common format */
-  GST_PAD_LINK_REFUSED       = -1,	/* refused for some reason */
-  GST_PAD_LINK_OK            =  0,	/* link ok */
+  GST_PAD_LINK_NOSCHED          = -5,	/* pads cannot cooperate in scheduling */
+  GST_PAD_LINK_NOFORMAT         = -4,	/* pads do not have common format */
+  GST_PAD_LINK_REFUSED          = -3,	/* refused for some reason */
+  GST_PAD_LINK_WRONG_DIRECTION  = -2,	/* pads have wrong direction */
+  GST_PAD_LINK_WAS_LINKED       = -1,	/* pad was already linked */
+  GST_PAD_LINK_OK               =  0,	/* link ok */
 } GstPadLinkReturn;
 
 #define GST_PAD_LINK_FAILED(ret) (ret < GST_PAD_LINK_OK)
@@ -223,6 +225,7 @@ struct _GstRealPad {
   GstPadEventMaskFunction	 eventmaskfunc;
 
   GList 			*ghostpads;
+  guint32			 ghostpads_cookie;
 
   /* query/convert/formats functions */
   GstPadConvertFunction		 convertfunc;
@@ -458,6 +461,7 @@ gboolean		gst_pad_unlink				(GstPad *srcpad, GstPad *sinkpad);
 gboolean		gst_pad_is_linked			(GstPad *pad);
 
 GstPad*			gst_pad_get_peer			(GstPad *pad);
+GstPad*			gst_pad_realize				(GstPad *pad);
 
 /* capsnego functions */
 void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps);

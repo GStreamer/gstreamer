@@ -61,12 +61,17 @@ _gst_message_copy (GstMessage * message)
 {
   GstMessage *copy;
 
+  GST_CAT_INFO (GST_CAT_MESSAGE, "copy message %p", message);
+
   copy = gst_mem_chunk_alloc (chunk);
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_message_trace, copy);
 #endif
 
   memcpy (copy, message, sizeof (GstMessage));
+  if (GST_MESSAGE_SRC (copy)) {
+    gst_object_ref (GST_MESSAGE_SRC (copy));
+  }
 
   /* FIXME copy/ref additional fields */
   switch (GST_MESSAGE_TYPE (message)) {

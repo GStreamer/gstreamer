@@ -258,36 +258,34 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   GstPipeline *manager;
   gchar *elem_name;
 
-  GST_LOCK (element);
-  /* the element must not already have a parent */
-  if (G_UNLIKELY (GST_ELEMENT_PARENT (element) != NULL))
-    goto had_parent;
-
-  elem_name = g_strdup (GST_ELEMENT_NAME (element));
-  GST_UNLOCK (element);
-
-  GST_LOCK (bin);
   /* we obviously can't add ourself to ourself */
   if (G_UNLIKELY (GST_ELEMENT_CAST (element) == GST_ELEMENT_CAST (bin)))
     goto adding_itself;
 
+  GST_LOCK (element);
+  elem_name = g_strdup (GST_ELEMENT_NAME (element));
+  GST_UNLOCK (element);
+
+  GST_LOCK (bin);
   /* then check to see if the element's name is already taken in the bin,
-   * we can safely take the lock here. We can leave the element locked
-   * as it will not be in the bin. This check is probably bogus because
+   * we can safely take the lock here. This check is probably bogus because
    * you can safely change the element name after adding it to the bin. */
   if (G_UNLIKELY (gst_object_check_uniqueness (bin->children,
               elem_name) == FALSE))
     goto duplicate_name;
 
-  manager = GST_ELEMENT (bin)->manager;
-  gst_element_set_manager (element, manager);
-
   /* set the element's parent and add the element to the bin's list of children */
-  gst_object_set_parent (GST_OBJECT (element), GST_OBJECT (bin));
+  if (G_UNLIKELY (!gst_object_set_parent (GST_OBJECT (element),
+              GST_OBJECT (bin))))
+    goto had_parent;
 
   bin->children = g_list_prepend (bin->children, element);
   bin->numchildren++;
   bin->children_cookie++;
+
+  manager = GST_ELEMENT (bin)->manager;
+  gst_element_set_manager (element, manager);
+
   GST_UNLOCK (bin);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin, "added element \"%s\"",
@@ -299,21 +297,21 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   return TRUE;
 
   /* ERROR handling here */
-had_parent:
-  g_warning ("Element %s already has parent %p", GST_ELEMENT_NAME (element),
-      bin);
-  GST_UNLOCK (element);
-  return FALSE;
-
 adding_itself:
+  GST_LOCK (bin);
   g_warning ("Cannot add bin %s to itself", GST_ELEMENT_NAME (bin));
   GST_UNLOCK (bin);
-  g_free (elem_name);
   return FALSE;
 
 duplicate_name:
   g_warning ("Name %s is not unique in bin %s, not adding",
       elem_name, GST_ELEMENT_NAME (bin));
+  GST_UNLOCK (bin);
+  g_free (elem_name);
+  return FALSE;
+
+had_parent:
+  g_warning ("Element %s already has parent", elem_name);
   GST_UNLOCK (bin);
   g_free (elem_name);
   return FALSE;
@@ -364,18 +362,12 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
 {
   gchar *elem_name;
 
-  /* the element must have its parent set to the current bin */
   GST_LOCK (element);
-  /* the element must not already have a parent */
-  if (G_UNLIKELY (GST_ELEMENT_PARENT (element) != GST_ELEMENT_CAST (bin)))
-    goto wrong_parent;
-
   elem_name = g_strdup (GST_ELEMENT_NAME (element));
   GST_UNLOCK (element);
 
   GST_LOCK (bin);
-  /* the element must be in the bin's list of children, is this
-   * check redundant with PARENT checking? */
+  /* the element must be in the bin's list of children */
   if (G_UNLIKELY (g_list_find (bin->children, element) == NULL))
     goto not_in_bin;
 
@@ -391,17 +383,15 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
 
   gst_element_set_manager (element, NULL);
 
-  /* we should ref here to avoid bad app behaviour.. */
+  /* we ref here because after the _unparent() the element can be disposed
+   * and we still need it to fire a signal. */
+  gst_object_ref (GST_OBJECT (element));
   gst_object_unparent (GST_OBJECT (element));
 
   g_signal_emit (G_OBJECT (bin), gst_bin_signals[ELEMENT_REMOVED], 0, element);
+  gst_object_unref (GST_OBJECT (element));
 
   return TRUE;
-
-wrong_parent:
-  g_warning ("Element %s is not in bin %p", GST_ELEMENT_NAME (element), bin);
-  GST_UNLOCK (element);
-  return FALSE;
 
 not_in_bin:
   g_warning ("Element %s is not in bin %s", elem_name, GST_ELEMENT_NAME (bin));
@@ -454,43 +444,6 @@ no_function:
   return FALSE;
 }
 
-/* 
- * bin iterator 
- */
-typedef struct _GstBinIterator
-{
-  GstIterator iterator;
-  GstBin *bin;
-  GList *list;                  /* pointer in list */
-} GstBinIterator;
-
-static GstIteratorResult
-gst_bin_iterator_next (GstBinIterator * it, GstElement ** elem)
-{
-  if (it->list == NULL)
-    return GST_ITERATOR_DONE;
-
-  *elem = GST_ELEMENT (it->list->data);
-  gst_object_ref (GST_OBJECT (*elem));
-
-  it->list = g_list_next (it->list);
-
-  return GST_ITERATOR_OK;
-}
-
-static void
-gst_bin_iterator_resync (GstBinIterator * it)
-{
-  it->list = it->bin->children;
-}
-
-static void
-gst_bin_iterator_free (GstBinIterator * it)
-{
-  gst_object_unref (GST_OBJECT (it->bin));
-  g_free (it);
-}
-
 /**
  * gst_bin_iterate_elements:
  * @bin: #Gstbin to iterate the elements of
@@ -507,24 +460,22 @@ gst_bin_iterator_free (GstBinIterator * it)
 GstIterator *
 gst_bin_iterate_elements (GstBin * bin)
 {
-  GstBinIterator *result;
+  GstIterator *result;
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
 
-  /* ne need to lock, nothing can change here */
-  result = (GstBinIterator *) gst_iterator_new (sizeof (GstBinIterator),
-      GST_GET_LOCK (bin),
-      &bin->children_cookie,
-      (GstIteratorNextFunction) gst_bin_iterator_next,
-      (GstIteratorResyncFunction) gst_bin_iterator_resync,
-      (GstIteratorFreeFunction) gst_bin_iterator_free);
-
   GST_LOCK (bin);
-  result->bin = GST_BIN (gst_object_ref (GST_OBJECT (bin)));
-  result->list = bin->children;
+  gst_object_ref (GST_OBJECT (bin));
+  result = gst_iterator_new_list (GST_GET_LOCK (bin),
+      &bin->children_cookie,
+      &bin->children,
+      bin,
+      (GstIteratorRefFunction) gst_object_ref,
+      (GstIteratorUnrefFunction) gst_object_unref,
+      (GstIteratorDisposeFunction) gst_object_unref);
   GST_UNLOCK (bin);
 
-  return GST_ITERATOR (result);
+  return result;
 }
 
 /* returns 0 if the element is a sink, this is made so that
@@ -735,22 +686,22 @@ gst_bin_change_state (GstElement * element)
         /* FIXME does not work for bins etc */
         peer_elem = GST_ELEMENT (gst_object_get_parent (GST_OBJECT (peer)));
 
-        GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-            "adding element %s to queue", gst_element_get_name (peer_elem));
+        if (peer_elem) {
+          GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+              "adding element %s to queue", gst_element_get_name (peer_elem));
 
-        /* ref before pushing on the queue */
-        gst_object_ref (GST_OBJECT (peer_elem));
-        g_queue_push_tail (elem_queue, peer_elem);
+          /* is reffed before pushing on the queue */
+          g_queue_push_tail (elem_queue, peer_elem);
+        }
+        gst_object_unref (GST_OBJECT (peer));
       } else {
         GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
             "pad %s:%s does not have a peer", GST_DEBUG_PAD_NAME (pad));
       }
     }
 
-    if (GST_FLAG_IS_SET (qelement, GST_ELEMENT_LOCKED_STATE)) {
-      gst_object_unref (GST_OBJECT (qelement));
-      continue;
-    }
+    if (GST_FLAG_IS_SET (qelement, GST_ELEMENT_LOCKED_STATE))
+      goto next_element;
 
     /* FIXME handle delayed elements like src and loop based
      * elements */
@@ -774,8 +725,6 @@ gst_bin_change_state (GstElement * element)
             GST_ELEMENT_NAME (qelement),
             pending, gst_element_state_get_name (pending));
         ret = GST_STATE_FAILURE;
-        /* release refcounts in queue */
-        g_queue_foreach (elem_queue, (GFunc) gst_object_unref, NULL);
         /* release refcount of element we popped off the queue */
         gst_object_unref (GST_OBJECT (qelement));
         goto exit;
@@ -783,6 +732,7 @@ gst_bin_change_state (GstElement * element)
         g_assert_not_reached ();
         break;
     }
+  next_element:
     gst_object_unref (GST_OBJECT (qelement));
   }
 
@@ -807,6 +757,8 @@ gst_bin_change_state (GstElement * element)
       gst_element_state_get_name (GST_STATE (element)));
 
 exit:
+  /* release refcounts in queue, should normally be empty */
+  g_queue_foreach (elem_queue, (GFunc) gst_object_unref, NULL);
   g_queue_free (elem_queue);
 
   return ret;
@@ -820,6 +772,8 @@ gst_bin_dispose (GObject * object)
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
+  /* ref to not hit 0 again */
+  gst_object_ref (GST_OBJECT (object));
   gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
 
   while (bin->children) {

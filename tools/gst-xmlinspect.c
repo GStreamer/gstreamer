@@ -576,7 +576,7 @@ print_element_info (GstElementFactory * factory)
   if (element->numpads) {
     const GList *pads;
 
-    pads = gst_element_get_pad_list (element);
+    pads = element->pads;
     while (pads) {
       pad = GST_PAD (pads->data);
       pads = g_list_next (pads);

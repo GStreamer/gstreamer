@@ -603,7 +603,7 @@ print_pad_info (GstElement * element)
     return;
   }
 
-  pads = gst_element_get_pad_list (element);
+  pads = element->pads;
   while (pads) {
     pad = GST_PAD (pads->data);
     pads = g_list_next (pads);

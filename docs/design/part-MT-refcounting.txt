@@ -208,6 +208,9 @@ Objects
       GST_UNLOCK (pad);
       ... use peer ...
 
+      if (peer)
+        gst_object_unref (GST_OBJECT (peer));
+
     Note that after releasing the lock the peer might not actually be the peer anymore
     of the pad. If you need to be sure it is, you need to extend the critical section
     to include the operations on the peer.
@@ -219,12 +222,12 @@ Objects
   public fields manually.
 
   All accessor methods that return an object should increase the refcount of the returned
-  object. The called should _unref the object after usage. Each method should state this
+  object. The called should _unref() the object after usage. Each method should state this
   refcounting policy in the documentation.
 
 * Accessing lists
 
-  If the object property is a list concurrent list iteration is needed to get the
+  If the object property is a list, concurrent list iteration is needed to get the
   contents of the list. GStreamer uses the cookie mechanism to mark the last update 
   of a list. The list and the cookie are protected by the same lock. Each update to 
   a list requires the following actions:
@@ -286,7 +289,33 @@ Objects
 
 * GstIterator
 
-  GstIterator provides an easier way of retrieving elements in a concurrent list. See
-  the documentation of the GstIterator class.
+  GstIterator provides an easier way of retrieving elements in a concurrent list. 
+  The followgin code example is equivalent to the previous example.
   
+  Example:
+    
+    it = _get_iterator(object);
+    while (!done) {
+      switch (gst_iterator_next (it, &item)) {
+        case GST_ITERATOR_OK:
 
+          ... use/change item here...
+
+          /* release item here */
+          gst_object_unref (item);
+	  break;
+        case GST_ITERATOR_RESYNC:
+          /* handle rollback caused by concurrent modification 
+	   * of the list here */
+
+	  ...rollback changes to items...
+
+	  /* resync iterator to start again */
+	  gst_iterator_resync (it);
+	  break;
+        case GST_ITERATOR_DONE:
+	  done = TRUE;
+	  break;
+      }
+    }
+    gst_iterator_free (it);

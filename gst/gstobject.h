@@ -29,6 +29,7 @@
 
 #include <glib-object.h>	/* note that this gets wrapped in __GST_OBJECT_H__ */
 
+#include <gst/gstatomic.h>
 #include <gst/gsttypes.h>
 
 G_BEGIN_DECLS
@@ -42,6 +43,7 @@ GST_EXPORT GType _gst_object_type;
 #define GST_OBJECT(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_OBJECT, GstObject))
 #define GST_OBJECT_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_OBJECT, GstObjectClass))
 #define GST_OBJECT_CAST(obj)		((GstObject*)(obj))
+#define GST_OBJECT_CLASS_CAST(klass)	((GstObjectClass*)(klass))
 
 /* make sure we don't change the object size but stil make it compile
  * without libxml */
@@ -51,11 +53,15 @@ GST_EXPORT GType _gst_object_type;
 
 typedef enum
 {
-  GST_OBJECT_DESTROYED   = 0,
+  GST_OBJECT_DISPOSING   = 0,
+  GST_OBJECT_DESTROYED   = 1,
   GST_OBJECT_FLOATING,
 
   GST_OBJECT_FLAG_LAST   = 4
 } GstObjectFlags;
+
+#define GST_OBJECT_REFCOUNT(caps)               ((GST_OBJECT_CAST(caps))->refcount)
+#define GST_OBJECT_REFCOUNT_VALUE(caps)         (gst_atomic_int_read (&(GST_OBJECT_CAST(caps))->refcount))
 
 /* we do a GST_OBJECT_CAST to avoid type checking, better call these
  * function with a valid object! */
@@ -67,8 +73,9 @@ typedef enum
 #define GST_OBJECT_NAME(obj)		(GST_OBJECT_CAST(obj)->name)
 #define GST_OBJECT_PARENT(obj)		(GST_OBJECT_CAST(obj)->parent)
 
+/* for the flags we double-not to make them comparable to TRUE and FALSE */
 #define GST_FLAGS(obj)			(GST_OBJECT_CAST (obj)->flags)
-#define GST_FLAG_IS_SET(obj,flag)	(GST_FLAGS (obj) & (1<<(flag)))
+#define GST_FLAG_IS_SET(obj,flag)	(!!(GST_FLAGS (obj) & (1<<(flag))))
 #define GST_FLAG_SET(obj,flag)		G_STMT_START{ (GST_FLAGS (obj) |= (1<<(flag))); }G_STMT_END
 #define GST_FLAG_UNSET(obj,flag)	G_STMT_START{ (GST_FLAGS (obj) &= ~(1<<(flag))); }G_STMT_END
 
@@ -78,15 +85,24 @@ typedef enum
 struct _GstObject {
   GObject 	 object;
 
+  /*< public >*/
+  GstAtomicInt	 refcount;
+
   /*< public >*/ /* with LOCK */
   GMutex	*lock; 		/* locking for all sorts of things */
   gchar 	*name; 		/* name */
-  GstObject 	*parent; 	/* this object's parent */
+  GstObject 	*parent; 	/* this object's parent, no refcount is held for the parent. */
   guint32 	 flags;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
+
+
+#define GST_CLASS_LOCK(obj)		(g_mutex_lock(GST_OBJECT_CLASS_CAST(obj)->lock))
+#define GST_CLASS_TRYLOCK(obj)		(g_mutex_trylock(GST_OBJECT_CLASS_CAST(obj)->lock))
+#define GST_CLASS_UNLOCK(obj)		(g_mutex_unlock(GST_OBJECT_CLASS_CAST(obj)->lock))
+#define GST_CLASS_GET_LOCK(obj)		(GST_OBJECT_CLASS_CAST(obj)->lock)
 
 /* signal_object is used to signal to the whole class */
 struct _GstObjectClass {
@@ -94,6 +110,8 @@ struct _GstObjectClass {
 
   gchar		*path_string_separator;
   GObject	*signal_object;
+
+  GMutex	*lock;
 
   /* signals */
   void		(*parent_set)		(GstObject *object, GstObject *parent);
@@ -111,9 +129,6 @@ struct _GstObjectClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-
-
-
 /* normal GObject stuff */
 GType		gst_object_get_type		(void);
 
@@ -122,7 +137,7 @@ void		gst_object_set_name		(GstObject *object, const gchar *name);
 gchar* 		gst_object_get_name		(GstObject *object);
 
 /* parentage routines */
-void		gst_object_set_parent		(GstObject *object, GstObject *parent);
+gboolean	gst_object_set_parent		(GstObject *object, GstObject *parent);
 GstObject*	gst_object_get_parent		(GstObject *object);
 void		gst_object_unparent		(GstObject *object);
 
@@ -131,7 +146,7 @@ void            gst_object_default_deep_notify 	(GObject *object, GstObject *ori
 
 /* refcounting + life cycle */
 GstObject *	gst_object_ref			(GstObject *object);
-void 		gst_object_unref		(GstObject *object);
+GstObject *	gst_object_unref		(GstObject *object);
 void 		gst_object_sink			(GstObject *object);
 
 /* replace object pointer */

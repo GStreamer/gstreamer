@@ -289,25 +289,51 @@ gst_parse_free_link (link_t *link)
   if (link->caps) gst_caps_unref (link->caps);
   gst_parse_link_free (link);  
 }
+
 static void
 gst_parse_element_lock (GstElement *element, gboolean lock)
 {
   GstPad *pad;
-  GList *walk = (GList *) gst_element_get_pad_list (element);
+  GstIterator *pads;
   gboolean unlocked_peer = FALSE;
+  gboolean done = FALSE;
+  GList *walk;
   
   if (gst_element_is_locked_state (element) == lock)
     return;
+
   /* check if we have an unlocked peer */
-  for (; walk; walk = walk->next) {
-    pad = (GstPad *) GST_PAD_REALIZE (walk->data);
-    if (GST_PAD_IS_SINK (pad) && GST_PAD_PEER (pad) &&
-        !gst_element_is_locked_state (GST_PAD_PARENT (GST_PAD_PEER (pad)))) {
-      unlocked_peer = TRUE;
-      break;
+  pads = gst_element_iterate_pads (element);
+  while (!done) {
+    gpointer data;
+    switch (gst_iterator_next (pads, &data)) {
+      case GST_ITERATOR_OK:
+      {
+        GstPad *pad = GST_PAD_CAST (data);
+
+	pad = gst_pad_realize (pad);
+        if (GST_PAD_IS_SINK (pad) && GST_PAD_PEER (pad) &&
+            !gst_element_is_locked_state (GST_PAD_PARENT (GST_PAD_PEER (pad)))) {
+          unlocked_peer = TRUE;
+	  done = TRUE;
+        }
+	gst_object_unref (GST_OBJECT (pad));
+        break;
+      }
+      case GST_ITERATOR_RESYNC:
+        unlocked_peer = FALSE;
+        gst_iterator_resync (pads);
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
     }
-  }  
-  
+  }
+  gst_iterator_free (pads);
+
   if (!(lock && unlocked_peer)) {
     GST_CAT_DEBUG (GST_CAT_PIPELINE, "setting locked state on element");
     gst_element_set_locked_state (element, lock);
@@ -325,7 +351,7 @@ gst_parse_element_lock (GstElement *element, gboolean lock)
   }
   
   /* check if there are other pads to (un)lock */
-  walk = (GList *) gst_element_get_pad_list (element);
+  walk = (GList *) element->pads;
   for  (; walk; walk = walk->next) {
     pad = (GstPad *) GST_PAD_REALIZE (walk->data);
     if (GST_PAD_IS_SRC (pad) && GST_PAD_PEER (pad)) {

@@ -279,7 +279,7 @@ GstTask*		gst_element_create_task		(GstElement *element, GstTaskFunction func, g
 
 /* pad management */
 gboolean		gst_element_add_pad		(GstElement *element, GstPad *pad);
-void			gst_element_remove_pad		(GstElement *element, GstPad *pad);
+gboolean		gst_element_remove_pad		(GstElement *element, GstPad *pad);
 GstPad *		gst_element_add_ghost_pad	(GstElement *element, GstPad *pad, const gchar *name);
 void			gst_element_no_more_pads	(GstElement *element);
 
@@ -288,8 +288,6 @@ GstPad* 		gst_element_get_static_pad 	(GstElement *element, const gchar *name);
 GstPad*			gst_element_get_request_pad	(GstElement *element, const gchar *name);
 void			gst_element_release_request_pad	(GstElement *element, GstPad *pad);
 
-G_CONST_RETURN GList*
-			gst_element_get_pad_list	(GstElement *element);
 GstIterator*		gst_element_iterate_pads	(GstElement *element);
 
 /* event/query/format stuff */

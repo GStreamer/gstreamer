@@ -35,6 +35,10 @@ typedef enum {
 
 typedef struct _GstIterator GstIterator;
 
+typedef void		  (*GstIteratorRefFunction)	(gpointer item);
+typedef void		  (*GstIteratorUnrefFunction)	(gpointer item);
+typedef void		  (*GstIteratorDisposeFunction)	(gpointer owner);
+
 typedef GstIteratorResult (*GstIteratorNextFunction)	(GstIterator *it, gpointer *result);
 typedef void		  (*GstIteratorResyncFunction)	(GstIterator *it);
 typedef void		  (*GstIteratorFreeFunction)	(GstIterator *it);
@@ -49,7 +53,7 @@ struct _GstIterator {
   GstIteratorResyncFunction resync;
   GstIteratorFreeFunction free;
 
-  GMutex *lock;	
+  GMutex   *lock;	
   guint32   cookie;		/* cookie of the iterator */
   guint32  *master_cookie;	/* pointer to guint32 holding the cookie when this
 				   iterator was created */
@@ -62,9 +66,13 @@ GstIterator* 		gst_iterator_new		(guint size,
   							 GstIteratorResyncFunction resync,
   							 GstIteratorFreeFunction free);
 
-GstIterator*		gst_iterator_new_list		(GMutex *lock,
+GstIterator* 		gst_iterator_new_list		(GMutex *lock, 
 							 guint32 *master_cookie,
-							 GList *list);
+							 GList **list,
+							 gpointer owner,
+  							 GstIteratorRefFunction ref,
+  							 GstIteratorUnrefFunction unref,
+  							 GstIteratorDisposeFunction free);
 
 GstIteratorResult	gst_iterator_next		(GstIterator *it, gpointer *result);
 void			gst_iterator_resync		(GstIterator *it);

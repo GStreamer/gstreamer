@@ -31,3 +31,53 @@ element flags should be cross-checked with the header, as there are currently tw
 _FLAGS_ in the middle.
 
 FIXME: check flags for consistency.
+
+Drawing conventions
+===================
+
+When drawing pictures the folowing conventions apply:
+
+objects
+-------
+
+Objects are drawn with a box like
+  +------+
+  |      |
+  +------+
+  
+
+pointers
+--------
+
+a pointer to an object.
+      +-----+
+ *--->|     |
+      +-----+
+
+an invalid pointer, this is a pointer that should not be used.
+
+ *-//->
+
+
+elements
+--------
+
+  +----------+
+  | name     |
+ sink       src
+  +----------+
+
+pad links
+---------
+
+  -----+    +---
+       |    |
+      src--sink
+  -----+    +---
+
+
+
+
+
+
+

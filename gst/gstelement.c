@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2004 Wim Taymans <wim@fluendo.com>
  *
  * gstelement.c: The base element, all elements derive from this
  *
@@ -441,6 +441,7 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
     goto had_parent;
 
   GST_LOCK (element);
+  /* locking pad to look at the name */
   GST_LOCK (pad);
   /* then check to see if there's already a pad by that name here */
   if (G_UNLIKELY (!gst_object_check_uniqueness (element->pads,
@@ -551,20 +552,25 @@ gst_element_add_ghost_pad (GstElement * element, GstPad * pad,
  * Removes @pad from @element. @pad will be destroyed if it has not been
  * referenced elsewhere.
  *
+ * Returns: TRUE if the pad could be removed. Can return FALSE if the
+ * pad is not belonging to the provided element or when wrong parameters
+ * are passed to this function.
+ *
  * MT safe.
  */
-void
+gboolean
 gst_element_remove_pad (GstElement * element, GstPad * pad)
 {
   GstElement *current_parent;
 
-  g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   current_parent = gst_pad_get_parent (pad);
   if (G_UNLIKELY (current_parent != element))
     goto not_our_pad;
 
+  /* FIXME, is this redundant with pad disposal? */
   if (GST_IS_REAL_PAD (pad)) {
     GstPad *peer = gst_pad_get_peer (pad);
 
@@ -573,7 +579,10 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
       /* window for MT unsafeness, someone else could unlink here
        * and then we call unlink with wrong pads. The unlink
        * function would catch this and safely return failed. */
-      gst_pad_unlink (pad, GST_PAD_CAST (peer));
+      if (GST_PAD_IS_SRC (pad))
+        gst_pad_unlink (pad, GST_PAD_CAST (peer));
+      else
+        gst_pad_unlink (GST_PAD_CAST (peer), pad);
       gst_object_unref (GST_OBJECT (peer));
     }
   } else if (GST_IS_GHOST_PAD (pad)) {
@@ -604,7 +613,7 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
 
   gst_object_unparent (GST_OBJECT (pad));
 
-  return;
+  return TRUE;
 
 not_our_pad:
   {
@@ -618,7 +627,7 @@ not_our_pad:
     GST_UNLOCK (element);
     GST_UNLOCK (pad);
     g_free (parent_name);
-    return;
+    return FALSE;
   }
 }
 
@@ -642,36 +651,16 @@ gst_element_no_more_pads (GstElement * element)
   g_signal_emit (element, gst_element_signals[NO_MORE_PADS], 0);
 }
 
-/**
- * gst_element_get_pad:
- * @element: a #GstElement.
- * @name: the name of the pad to retrieve.
- *
- * Retrieves a pad from @element by name. Tries gst_element_get_static_pad()
- * first, then gst_element_get_request_pad().
- *
- * Returns: the #GstPad if found, otherwise %NULL.
- */
-GstPad *
-gst_element_get_pad (GstElement * element, const gchar * name)
-{
-  GstPad *pad;
-
-  g_return_val_if_fail (element != NULL, NULL);
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-  g_return_val_if_fail (name != NULL, NULL);
-
-  pad = gst_element_get_static_pad (element, name);
-  if (!pad)
-    pad = gst_element_get_request_pad (element, name);
-
-  return pad;
-}
-
 static gint
 pad_compare_name (GstPad * pad1, const gchar * name)
 {
-  return strcmp (GST_PAD_NAME (pad1), name);
+  gint result;
+
+  GST_LOCK (pad1);
+  result = strcmp (GST_PAD_NAME (pad1), name);
+  GST_UNLOCK (pad1);
+
+  return result;
 }
 
 /**
@@ -682,7 +671,10 @@ pad_compare_name (GstPad * pad1, const gchar * name)
  * Retrieves a pad from @element by name. This version only retrieves
  * already-existing (i.e. 'static') pads.
  *
- * Returns: the requested #GstPad if found, otherwise NULL.
+ * Returns: the requested #GstPad if found, otherwise NULL. unref after
+ * usage.
+ *
+ * MT safe.
  */
 GstPad *
 gst_element_get_static_pad (GstElement * element, const gchar * name)
@@ -690,24 +682,26 @@ gst_element_get_static_pad (GstElement * element, const gchar * name)
   GList *find;
   GstPad *result = NULL;
 
-  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
-  g_return_val_if_fail (name != NULL, result);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
 
   GST_LOCK (element);
   find =
       g_list_find_custom (element->pads, name, (GCompareFunc) pad_compare_name);
   if (find) {
     result = GST_PAD (find->data);
+    gst_object_ref (GST_OBJECT (result));
   }
-  GST_UNLOCK (element);
 
   if (result == NULL) {
     GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "no such pad '%s' in element \"%s\"",
-        name, GST_OBJECT_NAME (element));
+        name, GST_ELEMENT_NAME (element));
   } else {
     GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "found pad %s:%s",
-        GST_DEBUG_PAD_NAME (result));
+        GST_ELEMENT_NAME (element), name);
   }
+  GST_UNLOCK (element);
+
   return result;
 }
 
@@ -749,7 +743,6 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
   gchar *str, *endptr = NULL;
   GstElementClass *class;
 
-  g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
@@ -804,29 +797,59 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
 }
 
 /**
- * gst_element_get_pad_list:
- * @element: a #GstElement to get pads of.
+ * gst_element_get_pad:
+ * @element: a #GstElement.
+ * @name: the name of the pad to retrieve.
  *
- * Retrieves a list of @element's pads. The list must not be modified by the
- * calling code.
+ * Retrieves a pad from @element by name. Tries gst_element_get_static_pad()
+ * first, then gst_element_get_request_pad().
  *
- * Returns: the #GList of pads.
+ * Returns: the #GstPad if found, otherwise %NULL. Unref after usage.
  */
-const GList *
-gst_element_get_pad_list (GstElement * element)
+GstPad *
+gst_element_get_pad (GstElement * element, const gchar * name)
 {
-  const GList *result = NULL;
+  GstPad *pad;
 
-  g_return_val_if_fail (element != NULL, result);
-  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
 
-  g_warning ("calling gst_element_get_pad_list is MT unsafe!!");
+  pad = gst_element_get_static_pad (element, name);
+  if (!pad)
+    pad = gst_element_get_request_pad (element, name);
 
-  /* return the list of pads */
-  result = element->pads;
+  return pad;
+}
+
+/**
+ * gst_element_iterate_pads:
+ * @element: a #GstElement to iterate pads of.
+ *
+ * Retrieves an iterattor of @element's pads. 
+ *
+ * Returns: the #GstIterator of pads.
+ */
+GstIterator *
+gst_element_iterate_pads (GstElement * element)
+{
+  GstIterator *result;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+
+  GST_LOCK (element);
+  gst_object_ref (GST_OBJECT (element));
+  result = gst_iterator_new_list (GST_GET_LOCK (element),
+      &element->pads_cookie,
+      &element->pads,
+      element,
+      (GstIteratorRefFunction) gst_object_ref,
+      (GstIteratorUnrefFunction) gst_object_unref,
+      (GstIteratorDisposeFunction) gst_object_unref);
+  GST_UNLOCK (element);
 
   return result;
 }
+
 
 /**
  * gst_element_class_add_pad_template:
@@ -885,7 +908,6 @@ gst_element_class_set_details (GstElementClass * klass,
 GList *
 gst_element_class_get_pad_template_list (GstElementClass * element_class)
 {
-  g_return_val_if_fail (element_class != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT_CLASS (element_class), NULL);
 
   return element_class->padtemplates;
@@ -910,7 +932,6 @@ gst_element_class_get_pad_template (GstElementClass * element_class,
 {
   GList *padlist;
 
-  g_return_val_if_fail (element_class != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT_CLASS (element_class), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
@@ -949,17 +970,23 @@ gst_element_get_random_pad (GstElement * element, GstPadDirection dir)
   for (; pads; pads = g_list_next (pads)) {
     GstPad *pad = GST_PAD (pads->data);
 
+    GST_LOCK (pad);
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "checking pad %s:%s",
         GST_DEBUG_PAD_NAME (pad));
 
     if (GST_PAD_IS_LINKED (pad)) {
+      GST_UNLOCK (pad);
       result = pad;
       break;
     } else {
       GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is not linked",
           GST_DEBUG_PAD_NAME (pad));
     }
+    GST_UNLOCK (pad);
   }
+  if (result)
+    gst_object_ref (GST_OBJECT (result));
+
   GST_UNLOCK (element);
 
   return result;
@@ -973,27 +1000,38 @@ gst_element_get_random_pad (GstElement * element, GstPadDirection dir)
  * If the element doesn't implement an event masks function,
  * the query will be forwarded to a random linked sink pad.
  *
- * Returns: An array of #GstEventMask elements.
+ * Returns: An array of #GstEventMask elements. The array 
+ * cannot be modified or freed.
+ *
+ * MT safe.
  */
 const GstEventMask *
 gst_element_get_event_masks (GstElement * element)
 {
   GstElementClass *oclass;
+  const GstEventMask *result = NULL;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
-  if (oclass->get_event_masks)
-    return oclass->get_event_masks (element);
-  else {
+  if (oclass->get_event_masks) {
+    result = oclass->get_event_masks (element);
+  } else {
     GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
 
-    if (pad)
-      return gst_pad_get_event_masks (GST_PAD_PEER (pad));
+    if (pad) {
+      GstPad *peer = gst_pad_get_peer (pad);
+
+      if (peer) {
+        result = gst_pad_get_event_masks (peer);
+        gst_object_unref (GST_OBJECT (peer));
+      }
+      gst_object_unref (GST_OBJECT (pad));
+    }
   }
 
-  return NULL;
+  return result;
 }
 
 /**
@@ -1003,34 +1041,47 @@ gst_element_get_event_masks (GstElement * element)
  *
  * Sends an event to an element. If the element doesn't
  * implement an event handler, the event will be forwarded
- * to a random sink pad.
+ * to a random sink pad. This function takes owership of the
+ * provided event so you should _ref it if you want to reuse
+ * the event after this call.
  *
  * Returns: TRUE if the event was handled.
+ *
+ * MT safe.
  */
 gboolean
 gst_element_send_event (GstElement * element, GstEvent * event)
 {
   GstElementClass *oclass;
+  gboolean result = FALSE;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
-  if (oclass->send_event)
-    return oclass->send_event (element, event);
-  else {
+  if (oclass->send_event) {
+    result = oclass->send_event (element, event);
+  } else {
     GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
 
     if (pad) {
-      GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "sending event to random pad %s:%s",
-          GST_DEBUG_PAD_NAME (pad));
-      return gst_pad_send_event (GST_PAD_PEER (pad), event);
+      GstPad *peer = gst_pad_get_peer (pad);
+
+      if (peer) {
+        GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+            "sending event to random pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+
+        result = gst_pad_send_event (peer, event);
+        gst_object_unref (GST_OBJECT (peer));
+      }
+      gst_object_unref (GST_OBJECT (pad));
     }
   }
   GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "can't send event on element %s",
       GST_ELEMENT_NAME (element));
-  return FALSE;
+
+  return result;
 }
 
 /**
@@ -1042,13 +1093,18 @@ gst_element_send_event (GstElement * element, GstEvent * event)
  * Sends a seek event to an element.
  *
  * Returns: TRUE if the event was handled.
+ *
+ * MT safe.
  */
 gboolean
 gst_element_seek (GstElement * element, GstSeekType seek_type, guint64 offset)
 {
   GstEvent *event = gst_event_new_seek (seek_type, offset);
+  gboolean result;
 
-  return gst_element_send_event (element, event);
+  result = gst_element_send_event (element, event);
+
+  return result;
 }
 
 /**
@@ -1059,27 +1115,38 @@ gst_element_seek (GstElement * element, GstSeekType seek_type, guint64 offset)
  * If the element doesn't implement a query types function,
  * the query will be forwarded to a random sink pad.
  *
- * Returns: An array of #GstQueryType elements.
+ * Returns: An array of #GstQueryType elements that should not
+ * be freed or modified.
+ *
+ * MT safe.
  */
 const GstQueryType *
 gst_element_get_query_types (GstElement * element)
 {
   GstElementClass *oclass;
+  const GstQueryType *result = NULL;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
-  if (oclass->get_query_types)
-    return oclass->get_query_types (element);
-  else {
+  if (oclass->get_query_types) {
+    result = oclass->get_query_types (element);
+  } else {
     GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
 
-    if (pad)
-      return gst_pad_get_query_types (GST_PAD_PEER (pad));
-  }
+    if (pad) {
+      GstPad *peer = gst_pad_get_peer (pad);
 
-  return NULL;
+      if (peer) {
+        result = gst_pad_get_query_types (peer);
+
+        gst_object_unref (GST_OBJECT (peer));
+      }
+      gst_object_unref (GST_OBJECT (pad));
+    }
+  }
+  return result;
 }
 
 /**
@@ -1102,6 +1169,7 @@ gst_element_query (GstElement * element, GstQueryType type,
     GstFormat * format, gint64 * value)
 {
   GstElementClass *oclass;
+  gboolean result = FALSE;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (format != NULL, FALSE);
@@ -1109,19 +1177,30 @@ gst_element_query (GstElement * element, GstQueryType type,
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
-  if (oclass->query)
-    return oclass->query (element, type, format, value);
-  else {
+  if (oclass->query) {
+    result = oclass->query (element, type, format, value);
+  } else {
     GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SRC);
 
-    if (pad)
-      return gst_pad_query (pad, type, format, value);
-    pad = gst_element_get_random_pad (element, GST_PAD_SINK);
-    if (pad)
-      return gst_pad_query (GST_PAD_PEER (pad), type, format, value);
-  }
+    if (pad) {
+      result = gst_pad_query (pad, type, format, value);
 
-  return FALSE;
+      gst_object_unref (GST_OBJECT (pad));
+    } else {
+      pad = gst_element_get_random_pad (element, GST_PAD_SINK);
+      if (pad) {
+        GstPad *peer = gst_pad_get_peer (pad);
+
+        if (peer) {
+          result = gst_pad_query (peer, type, format, value);
+
+          gst_object_unref (GST_OBJECT (peer));
+        }
+        gst_object_unref (GST_OBJECT (pad));
+      }
+    }
+  }
+  return result;
 }
 
 /**
@@ -1138,21 +1217,30 @@ const GstFormat *
 gst_element_get_formats (GstElement * element)
 {
   GstElementClass *oclass;
+  const GstFormat *result = NULL;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
-  if (oclass->get_formats)
-    return oclass->get_formats (element);
-  else {
+  if (oclass->get_formats) {
+    result = oclass->get_formats (element);
+  } else {
     GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
 
-    if (pad)
-      return gst_pad_get_formats (GST_PAD_PEER (pad));
+    if (pad) {
+      GstPad *peer = gst_pad_get_peer (pad);
+
+      if (peer) {
+        result = gst_pad_get_formats (peer);
+
+        gst_object_unref (GST_OBJECT (peer));
+      }
+      gst_object_unref (GST_OBJECT (pad));
+    }
   }
 
-  return NULL;
+  return result;
 }
 
 /**
@@ -1175,6 +1263,7 @@ gst_element_convert (GstElement * element,
     GstFormat * dest_format, gint64 * dest_value)
 {
   GstElementClass *oclass;
+  gboolean result = FALSE;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (dest_format != NULL, FALSE);
@@ -1187,36 +1276,53 @@ gst_element_convert (GstElement * element,
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
-  if (oclass->convert)
-    return oclass->convert (element,
+  if (oclass->convert) {
+    result = oclass->convert (element,
         src_format, src_value, dest_format, dest_value);
-  else {
+  } else {
     GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
 
-    if (pad)
-      return gst_pad_convert (GST_PAD_PEER (pad),
-          src_format, src_value, dest_format, dest_value);
-  }
+    if (pad) {
+      GstPad *peer = gst_pad_get_peer (pad);
 
-  return FALSE;
+      if (peer) {
+        result = gst_pad_convert (peer,
+            src_format, src_value, dest_format, dest_value);
+
+        gst_object_unref (GST_OBJECT (peer));
+      }
+      gst_object_unref (GST_OBJECT (pad));
+    }
+  }
+  return result;
 }
 
-/* MT safe */
+/**
+ * gst_element_post_message:
+ * @element: a #GstElement posting the message
+ * @message: a #GstMessage to post
+ *
+ * Post a message on the elements #GstBus.
+ *
+ * Returns: TRUE if the message was successfuly posted.
+ *
+ * MT safe.
+ */
 gboolean
 gst_element_post_message (GstElement * element, GstMessage * message)
 {
   GstPipeline *manager;
   gboolean result = FALSE;
 
-  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
-  g_return_val_if_fail (message != NULL, result);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (message != NULL, FALSE);
 
   GST_LOCK (element);
   manager = element->manager;
   if (manager == NULL) {
     GST_UNLOCK (element);
     gst_data_unref (GST_DATA (message));
-    return result;
+    return FALSE;
   }
   gst_object_ref (GST_OBJECT (manager));
   GST_UNLOCK (element);
@@ -1234,6 +1340,8 @@ gst_element_post_message (GstElement * element, GstMessage * message)
  * This function is only used internally by the #gst_element_error macro.
  *
  * Returns: a newly allocated string, or NULL if the format was NULL or ""
+ *
+ * MT safe.
  */
 gchar *
 _gst_element_error_printf (const gchar * format, ...)
@@ -1268,6 +1376,8 @@ _gst_element_error_printf (const gchar * format, ...)
  * Signals an error condition on an element.
  * This function is used internally by elements.
  * It results in the "error" signal.
+ *
+ * MT safe.
  */
 void gst_element_error_full
     (GstElement * element, GQuark domain, gint code, gchar * message,
@@ -1363,6 +1473,8 @@ gst_element_is_locked_state (GstElement * element)
  *
  * Returns: TRUE if the state was changed, FALSE if bad params were given or
  * the element was already in the correct state.
+ *
+ * MT safe.
  */
 gboolean
 gst_element_set_locked_state (GstElement * element, gboolean locked_state)
@@ -1386,6 +1498,8 @@ gst_element_set_locked_state (GstElement * element, gboolean locked_state)
         GST_ELEMENT_NAME (element));
     GST_FLAG_UNSET (element, GST_ELEMENT_LOCKED_STATE);
   }
+  GST_UNLOCK (element);
+
   return TRUE;
 
 was_ok:
@@ -1423,6 +1537,7 @@ gst_element_sync_state_with_parent (GstElement * element)
   return TRUE;
 }
 
+/* MT safe */
 static gboolean
 gst_element_get_state_func (GstElement * element,
     GstElementState * state, GstElementState * pending, GTimeVal * timeout)
@@ -1461,7 +1576,6 @@ gst_element_get_state_func (GstElement * element,
   return ret;
 }
 
-
 /**
  * gst_element_get_state:
  * @element: a #GstElement to get the state of.
@@ -1475,21 +1589,24 @@ gst_element_get_state_func (GstElement * element,
  *
  * Returns: TRUE if the element has no more pending state, FALSE
  *          if the element is still performing a state change.
+ *
+ * MT safe.
  */
 gboolean
 gst_element_get_state (GstElement * element,
     GstElementState * state, GstElementState * pending, GTimeVal * timeout)
 {
   GstElementClass *oclass;
+  gboolean result = FALSE;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
   if (oclass->get_state)
-    return (oclass->get_state) (element, state, pending, timeout);
+    result = (oclass->get_state) (element, state, pending, timeout);
 
-  return FALSE;
+  return result;
 }
 
 /**
@@ -1499,6 +1616,10 @@ gst_element_get_state (GstElement * element,
  * Abort the state change of the element. This function is used
  * by elements that do asynchronous state changes and find out 
  * something is wrong.
+ *
+ * This function should be called with the STATE_LOCK held.
+ *
+ * MT safe.
  */
 void
 gst_element_abort_state (GstElement * element)
@@ -1528,6 +1649,10 @@ gst_element_abort_state (GstElement * element)
  *
  * Commit the state change of the element. This function is used
  * by elements that do asynchronous state changes.
+ *
+ * This function can only be called with the STATE_LOCK held.
+ *
+ * MT safe.
  */
 void
 gst_element_commit_state (GstElement * element)
@@ -1563,8 +1688,9 @@ gst_element_commit_state (GstElement * element)
  * requested state by going through all the intermediary states and calling
  * the class's state change function for each.
  *
- * Returns: TRUE if the state was successfully set.
- * (using #GstElementStateReturn).
+ * Returns: Result of the state change using #GstElementStateReturn.
+ *
+ * MT safe.
  */
 GstElementStateReturn
 gst_element_set_state (GstElement * element, GstElementState state)
@@ -1574,9 +1700,6 @@ gst_element_set_state (GstElement * element, GstElementState state)
   GstElementStateReturn return_val = GST_STATE_SUCCESS;
 
   oclass = GST_ELEMENT_GET_CLASS (element);
-
-  /* reentrancy issues with signals in change_state) */
-  gst_object_ref (GST_OBJECT (element));
 
   /* get the element state lock */
   GST_STATE_LOCK (element);
@@ -1657,17 +1780,18 @@ exit:
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "exit state change");
 
-  gst_object_unref (GST_OBJECT (element));
-
   return return_val;
 }
 
+/* is called with STATE_LOCK */
+/* FIXME make MT safe */
 static gboolean
 gst_element_pads_activate (GstElement * element, gboolean active)
 {
-  GList *pads = element->pads;
+  GList *pads;
   gboolean result = TRUE;
 
+  pads = element->pads;
   while (pads && result) {
     GstPad *pad = GST_PAD (pads->data);
 
@@ -1682,6 +1806,8 @@ gst_element_pads_activate (GstElement * element, gboolean active)
   return result;
 }
 
+/* is called with STATE_LOCK */
+/* FIXME make MT safe */
 static GstElementStateReturn
 gst_element_change_state (GstElement * element)
 {
@@ -1771,6 +1897,8 @@ gst_element_dispose (GObject * object)
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose");
 
+  /* ref so we don't hit 0 again */
+  gst_object_ref (GST_OBJECT (object));
   gst_element_set_state (element, GST_STATE_NULL);
 
   /* first we break all our links with the ouside */
@@ -1778,15 +1906,18 @@ gst_element_dispose (GObject * object)
     gst_element_remove_pad (element, GST_PAD (element->pads->data));
   }
 
-  element->numsrcpads = 0;
-  element->numsinkpads = 0;
-  element->numpads = 0;
+  g_assert (element->pads == 0);
+
+  GST_LOCK (element);
+  gst_object_replace ((GstObject **) & element->manager, NULL);
+  gst_object_replace ((GstObject **) & element->clock, NULL);
+  GST_UNLOCK (element);
+
+  GST_STATE_LOCK (element);
   if (element->state_cond)
     g_cond_free (element->state_cond);
   element->state_cond = NULL;
-
-  gst_object_replace ((GstObject **) & element->manager, NULL);
-  gst_object_replace ((GstObject **) & element->clock, NULL);
+  GST_STATE_UNLOCK (element);
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose parent");
 
@@ -1936,9 +2067,9 @@ gst_element_set_manager_func (GstElement * element, GstPipeline * manager)
   GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, element, "setting manager to %p",
       manager);
 
+  /* setting the manager cannot increase the refcount */
   GST_LOCK (element);
-  gst_object_replace ((GstObject **) & GST_ELEMENT_MANAGER (element),
-      GST_OBJECT (manager));
+  GST_ELEMENT_MANAGER (element) = manager;
   GST_UNLOCK (element);
 }
 
@@ -1949,6 +2080,8 @@ gst_element_set_manager_func (GstElement * element, GstPipeline * manager)
  *
  * Sets the manager of the element.  For internal use only, unless you're
  * writing a new bin subclass.
+ *
+ * MT safe.
  */
 void
 gst_element_set_manager (GstElement * element, GstPipeline * manager)
@@ -1967,9 +2100,9 @@ gst_element_set_manager (GstElement * element, GstPipeline * manager)
  * gst_element_get_manager:
  * @element: a #GstElement to get the manager of.
  *
- * Returns the manager of the element.
+ * Returns the manager of the element. 
  *
- * Returns: the element's #GstPipeline.
+ * Returns: the element's #GstPipeline. unref after usage.
  *
  * MT safe.
  */
@@ -1982,6 +2115,7 @@ gst_element_get_manager (GstElement * element)
 
   GST_LOCK (element);
   result = GST_ELEMENT_MANAGER (element);
+  gst_object_ref (GST_OBJECT (result));
   GST_UNLOCK (element);
 
   return result;

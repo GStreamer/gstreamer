@@ -30,6 +30,17 @@
 #include "gsttrace.h"
 #endif
 
+#define DEBUG_REFCOUNT
+#define REFCOUNT_HACK
+
+#ifdef REFCOUNT_HACK
+#define PATCH_REFCOUNT(obj)    ((GObject*)(obj))->ref_count = 100000;
+#define PATCH_REFCOUNT1(obj)    ((GObject*)(obj))->ref_count = 1;
+#else
+#define PATCH_REFCOUNT(obj)
+#define PATCH_REFCOUNT1(obj)
+#endif
+
 /* Object signals and args */
 enum
 {
@@ -162,6 +173,7 @@ gst_object_class_init (GstObjectClass * klass)
       G_TYPE_PARAM);
 
   klass->path_string_separator = "/";
+  klass->lock = g_mutex_new ();
 
   klass->signal_object = g_object_new (gst_signal_object_get_type (), NULL);
 
@@ -183,6 +195,10 @@ gst_object_init (GstObject * object)
 
   object->parent = NULL;
   object->name = NULL;
+  gst_atomic_int_init (&(object)->refcount, 1);
+#ifdef REFCOUNT_HACK
+  PATCH_REFCOUNT (object);
+#endif
 
   object->flags = 0;
   GST_FLAG_SET (object, GST_OBJECT_FLOATING);
@@ -229,11 +245,25 @@ gst_object_ref (GstObject * object)
 {
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
+#ifdef DEBUG_REFCOUNT
+#ifdef REFCOUNT_HACK
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "ref %d->%d",
-      G_OBJECT (object)->ref_count, G_OBJECT (object)->ref_count + 1);
+      GST_OBJECT_REFCOUNT_VALUE (object),
+      GST_OBJECT_REFCOUNT_VALUE (object) + 1);
+#else
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "ref %d->%d",
+      ((GObject *) object)->ref_count, ((GObject *) object)->ref_count + 1);
+#endif
+#endif
 
+#ifdef REFCOUNT_HACK
+  gst_atomic_int_inc (&object->refcount);
+  PATCH_REFCOUNT (object);
+#else
   /* FIXME, not MT safe because glib is not MT safe */
-  g_object_ref (G_OBJECT (object));
+  g_object_ref (object);
+#endif
+
   return object;
 }
 
@@ -244,18 +274,50 @@ gst_object_ref (GstObject * object)
  * Decrements the refence count on the object.  If reference count hits
  * zero, destroy the object. This function does not take the lock
  * on the object as it relies on atomic refcounting.
+ *
+ * The unref method should never be called with the LOCK held since
+ * this might deadlock the dispose function.
+ * 
+ * Returns: NULL, so that constructs like
+ *
+ *   object = gst_object_unref (object);
+ *
+ *  automatically clear the input object pointer.
  */
-void
+GstObject *
 gst_object_unref (GstObject * object)
 {
-  g_return_if_fail (GST_IS_OBJECT (object));
-  g_return_if_fail (G_OBJECT (object)->ref_count > 0);
+  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
+#ifdef REFCOUNT_HACK
+  g_return_val_if_fail (GST_OBJECT_REFCOUNT_VALUE (object) > 0, NULL);
+#else
+  g_return_val_if_fail (((GObject *) object)->ref_count > 0, NULL);
+#endif
+
+#ifdef DEBUG_REFCOUNT
+#ifdef REFCOUNT_HACK
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unref %d->%d",
-      G_OBJECT (object)->ref_count, G_OBJECT (object)->ref_count - 1);
+      GST_OBJECT_REFCOUNT_VALUE (object),
+      GST_OBJECT_REFCOUNT_VALUE (object) - 1);
+#else
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unref %d->%d",
+      ((GObject *) object)->ref_count, ((GObject *) object)->ref_count - 1);
+#endif
+#endif
 
-  /* FIXME, not MT safe because glib is not MT safe */
-  g_object_unref (G_OBJECT (object));
+#ifdef REFCOUNT_HACK
+  if (G_UNLIKELY (gst_atomic_int_dec_and_test (&object->refcount))) {
+    PATCH_REFCOUNT1 (object);
+    g_object_unref (object);
+  } else {
+    PATCH_REFCOUNT (object);
+  }
+#else
+  g_object_unref (object);
+#endif
+
+  return NULL;
 }
 
 /**
@@ -279,11 +341,14 @@ gst_object_sink (GstObject * object)
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "sink");
 
   GST_LOCK (object);
-  if (GST_OBJECT_IS_FLOATING (object)) {
+  if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
     GST_FLAG_UNSET (object, GST_OBJECT_FLOATING);
+    GST_UNLOCK (object);
     gst_object_unref (object);
+  } else {
+    GST_UNLOCK (object);
   }
-  GST_UNLOCK (object);
+  return;
 }
 
 /**
@@ -304,13 +369,23 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
   g_return_if_fail (*oldobj == NULL || GST_IS_OBJECT (*oldobj));
   g_return_if_fail (newobj == NULL || GST_IS_OBJECT (newobj));
 
+#ifdef DEBUG_REFCOUNT
+#ifdef REFCOUNT_HACK
+  GST_CAT_LOG (GST_CAT_REFCOUNTING, "replace %s (%d) with %s (%d)",
+      *oldobj ? GST_STR_NULL (GST_OBJECT_NAME (*oldobj)) : "(NONE)",
+      *oldobj ? GST_OBJECT_REFCOUNT_VALUE (*oldobj) : 0,
+      newobj ? GST_STR_NULL (GST_OBJECT_NAME (newobj)) : "(NONE)",
+      newobj ? GST_OBJECT_REFCOUNT_VALUE (newobj) : 0);
+#else
   GST_CAT_LOG (GST_CAT_REFCOUNTING, "replace %s (%d) with %s (%d)",
       *oldobj ? GST_STR_NULL (GST_OBJECT_NAME (*oldobj)) : "(NONE)",
       *oldobj ? G_OBJECT (*oldobj)->ref_count : 0,
       newobj ? GST_STR_NULL (GST_OBJECT_NAME (newobj)) : "(NONE)",
       newobj ? G_OBJECT (newobj)->ref_count : 0);
+#endif
+#endif
 
-  if (*oldobj != newobj) {
+  if (G_UNLIKELY (*oldobj != newobj)) {
     if (newobj)
       gst_object_ref (newobj);
     if (*oldobj)
@@ -320,15 +395,23 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
   }
 }
 
+/* dispose is called when the object has to release all links
+ * to other objects */
 static void
 gst_object_dispose (GObject * object)
 {
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
+  GST_LOCK (object);
   GST_FLAG_SET (GST_OBJECT (object), GST_OBJECT_DESTROYED);
   GST_OBJECT_PARENT (object) = NULL;
+  GST_UNLOCK (object);
 
-  parent_class->dispose (object);
+  /* need to patch refcount so it is finalized */
+  PATCH_REFCOUNT1 (object)
+
+      parent_class->dispose (object);
+
 }
 
 /* finalize is called when the object has to free its resources */
@@ -359,49 +442,62 @@ gst_object_finalize (GObject * object)
   parent_class->finalize (object);
 }
 
-/* FIXME a class wide mutex is enough */
-static GStaticRecMutex dispatch_mutex = G_STATIC_REC_MUTEX_INIT;
-
 /* Changing a GObject property of a GstObject will result in "deep_notify"
  * signals being emitted by the object itself, as well as in each parent
  * object. This is so that an application can connect a listener to the
  * top-level bin to catch property-change notifications for all contained
- * elements. */
+ * elements. 
+ *
+ * This function is not MT safe in glib so we need to lock it with a 
+ * classwide mutex.
+ *
+ * MT safe.
+ */
 static void
 gst_object_dispatch_properties_changed (GObject * object,
     guint n_pspecs, GParamSpec ** pspecs)
 {
   GstObject *gst_object, *parent, *old_parent;
   guint i;
-  const gchar *name;
-
-  g_static_rec_mutex_lock (&dispatch_mutex);
-  /* do the standard dispatching */
-  G_OBJECT_CLASS (parent_class)->dispatch_properties_changed (object, n_pspecs,
-      pspecs);
+  gchar *name, *debug_name;
+  GstObjectClass *klass;
 
   /* we fail when this is not a GstObject */
   g_return_if_fail (GST_IS_OBJECT (object));
 
+  klass = GST_OBJECT_GET_CLASS (object);
+
+  GST_CLASS_LOCK (klass);
+  /* do the standard dispatching */
+  PATCH_REFCOUNT (object);
+  G_OBJECT_CLASS (parent_class)->dispatch_properties_changed (object, n_pspecs,
+      pspecs);
+  PATCH_REFCOUNT (object);
+
   gst_object = GST_OBJECT_CAST (object);
   name = gst_object_get_name (gst_object);
+  debug_name = GST_STR_NULL (name);
 
   /* now let the parent dispatch those, too */
   parent = gst_object_get_parent (gst_object);
   while (parent) {
     /* for debugging ... */
     gchar *parent_name = gst_object_get_name (parent);
+    gchar *debug_parent_name = GST_STR_NULL (parent_name);
 
     /* need own category? */
     for (i = 0; i < n_pspecs; i++) {
       GST_CAT_LOG (GST_CAT_EVENT, "deep notification from %s to %s (%s)",
-          name ? name : "(null)",
-          parent_name ? parent_name : "(null)", pspecs[i]->name);
+          debug_name, debug_parent_name, pspecs[i]->name);
 
-      /* FIXME, not MT safe because of glib */
+      /* not MT safe because of glib, fixed by taking class lock higher up */
+      PATCH_REFCOUNT (parent);
+      PATCH_REFCOUNT (object);
       g_signal_emit (parent, gst_object_signals[DEEP_NOTIFY],
           g_quark_from_string (pspecs[i]->name), GST_OBJECT_CAST (object),
           pspecs[i]);
+      PATCH_REFCOUNT (parent);
+      PATCH_REFCOUNT (object);
     }
     g_free (parent_name);
 
@@ -409,7 +505,8 @@ gst_object_dispatch_properties_changed (GObject * object,
     parent = gst_object_get_parent (old_parent);
     gst_object_unref (old_parent);
   }
-  g_static_rec_mutex_unlock (&dispatch_mutex);
+  g_free (name);
+  GST_CLASS_UNLOCK (klass);
 }
 
 /** 
@@ -425,6 +522,8 @@ gst_object_dispatch_properties_changed (GObject * object,
  * strings that should be excluded from the notify.
  * The default handler will print the new value of the property 
  * using g_print.
+ *
+ * MT safe.
  */
 void
 gst_object_default_deep_notify (GObject * object, GstObject * orig,
@@ -564,45 +663,48 @@ gst_object_get_name (GstObject * object)
  * Sets the parent of @object. The object's reference count will be incremented,
  * and any floating reference will be removed (see gst_object_sink()).
  *
+ * This function takes the object lock.
+ *
  * Causes the parent-set signal to be emitted.
+ *
+ * Returns: TRUE if the parent could be set or FALSE when the object
+ * already had a parent, the object and parent are the same or wrong
+ * parameters were provided.
  *
  * MT safe.
  */
-void
+gboolean
 gst_object_set_parent (GstObject * object, GstObject * parent)
 {
-  g_return_if_fail (GST_IS_OBJECT (object));
-  g_return_if_fail (GST_IS_OBJECT (parent));
-  g_return_if_fail (object != parent);
+  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
+  g_return_val_if_fail (GST_IS_OBJECT (parent), FALSE);
+  g_return_val_if_fail (object != parent, FALSE);
 
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "set parent (ref and sink)");
 
-  /* no need to hold locks here as object is either floating and
-   * owned by this thread only or has a refcount bigger than 1 when
-   * concurrent access is performed */
-  gst_object_ref (object);
   GST_LOCK (object);
-  if G_UNLIKELY
-    (object->parent != NULL)
-        goto had_parent;
+  if (G_UNLIKELY (object->parent != NULL))
+    goto had_parent;
 
   /* sink object, we don't call our own function because we don't
-   * need to release/acquire the lock needlessly */
-  if (GST_OBJECT_IS_FLOATING (object)) {
-    GST_FLAG_UNSET (object, GST_OBJECT_FLOATING);
-    gst_object_unref (object);
-  }
+   * need to release/acquire the lock needlessly or touch the refcount
+   * in the floating case. */
   object->parent = parent;
-  GST_UNLOCK (object);
+  if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
+    GST_FLAG_UNSET (object, GST_OBJECT_FLOATING);
+    GST_UNLOCK (object);
+  } else {
+    GST_UNLOCK (object);
+    gst_object_ref (object);
+  }
 
   g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_SET], 0, parent);
-  return;
+  return TRUE;
 
 had_parent:
   GST_UNLOCK (object);
-  g_critical ("object already had a parent");
 
-  return;
+  return FALSE;
 }
 
 /**
@@ -626,7 +728,7 @@ gst_object_get_parent (GstObject * object)
 
   GST_LOCK (object);
   result = object->parent;
-  if (result)
+  if (G_LIKELY (result))
     gst_object_ref (result);
   GST_UNLOCK (object);
 
@@ -653,17 +755,18 @@ gst_object_unparent (GstObject * object)
   GST_LOCK (object);
   parent = object->parent;
 
-  if G_LIKELY
-    (parent != NULL) {
+  if (G_LIKELY (parent != NULL)) {
     GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unparent");
     object->parent = NULL;
-    }
-  GST_UNLOCK (object);
+    GST_UNLOCK (object);
 
-  g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_UNSET], 0,
-      parent);
+    g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_UNSET], 0,
+        parent);
 
-  gst_object_unref (object);
+    gst_object_unref (object);
+  } else {
+    GST_UNLOCK (object);
+  }
 }
 
 /**
@@ -835,7 +938,8 @@ gst_object_get_path_string (GstObject * object)
       parent = gst_object_get_parent (object);
       /* add parents to list, refcount remains increased while
        * we handle the object */
-      parentage = g_slist_prepend (parentage, parent);
+      if (parent)
+        parentage = g_slist_prepend (parentage, parent);
     } else {
       break;
     }

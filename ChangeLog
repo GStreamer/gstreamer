@@ -1,3 +1,63 @@
+2004-12-13  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-MT-refcounting.txt:
+	* docs/design/part-conventions.txt:
+	* gst/gstbin.c: (gst_bin_set_index), (gst_bin_set_clock),
+	(gst_bin_add_func), (gst_bin_remove_func),
+	(gst_bin_iterate_elements), (gst_bin_change_state),
+	(gst_bin_dispose), (gst_bin_get_by_name_recurse_up):
+	* gst/gstcaps.c:
+	* gst/gstelement.c: (gst_element_add_pad),
+	(gst_element_remove_pad), (pad_compare_name),
+	(gst_element_get_static_pad), (gst_element_get_request_pad),
+	(gst_element_get_pad), (gst_element_iterate_pads),
+	(gst_element_class_get_pad_template_list),
+	(gst_element_class_get_pad_template), (gst_element_get_random_pad),
+	(gst_element_get_event_masks), (gst_element_send_event),
+	(gst_element_seek), (gst_element_get_query_types),
+	(gst_element_query), (gst_element_get_formats),
+	(gst_element_convert), (gst_element_post_message),
+	(gst_element_set_locked_state), (gst_element_get_state),
+	(gst_element_set_state), (gst_element_pads_activate),
+	(gst_element_dispose), (gst_element_set_manager_func),
+	(gst_element_get_manager):
+	* gst/gstelement.h:
+	* gst/gstiterator.c: (gst_iterator_new), (gst_list_iterator_next),
+	(gst_list_iterator_resync), (gst_list_iterator_free),
+	(gst_iterator_new_list):
+	* gst/gstiterator.h:
+	* gst/gstmessage.c: (_gst_message_copy):
+	* gst/gstobject.c: (gst_object_class_init), (gst_object_init),
+	(gst_object_ref), (gst_object_unref), (gst_object_sink),
+	(gst_object_replace), (gst_object_dispose),
+	(gst_object_dispatch_properties_changed), (gst_object_set_name),
+	(gst_object_set_parent), (gst_object_get_parent),
+	(gst_object_unparent), (gst_object_check_uniqueness),
+	(gst_object_get_path_string):
+	* gst/gstobject.h:
+	* gst/gstpad.c: (gst_pad_dispose), (gst_pad_set_active),
+	(gst_pad_is_active), (gst_pad_set_blocked_async),
+	(gst_pad_is_blocked), (gst_pad_unlink), (gst_pad_is_linked),
+	(gst_pad_link_prepare_filtered), (gst_pad_link_filtered),
+	(gst_pad_get_real_parent), (gst_pad_relink_filtered),
+	(gst_pad_get_peer), (gst_pad_realize), (gst_pad_get_allowed_caps),
+	(gst_pad_alloc_buffer), (gst_pad_push), (gst_pad_pull),
+	(gst_pad_pull_range), (gst_pad_push_event):
+	* gst/gstpad.h:
+	* gst/gstpipeline.c: (gst_pipeline_init), (gst_pipeline_dispose),
+	(is_eos), (pipeline_bus_handler):
+	* gst/gstutils.c: (gst_element_get_compatible_pad_filtered),
+	(gst_element_link_pads_filtered), (gst_element_unlink):
+	* gst/parse/grammar.y:
+	* tools/gst-compprep.c: (main):
+	* tools/gst-inspect.c: (print_pad_info):
+	* tools/gst-launch.c: (main):
+	* tools/gst-xmlinspect.c: (print_element_info):
+	More MT fixes, added design document describing refcounting
+	policies used in GStreamer and locking involved.
+	Fixed unsafe ghostpad dereffing.
+	Removed old unsafe methods.
+
 2004-12-10  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-MT-refcounting.txt:

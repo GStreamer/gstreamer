@@ -133,6 +133,7 @@ gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
   gst_bus_set_sync_handler (pipeline->bus,
       (GstBusSyncHandler) pipeline_bus_handler, pipeline);
   pipeline->eosed = NULL;
+  /* we are our own manager */
   GST_ELEMENT_MANAGER (pipeline) = pipeline;
 }
 
@@ -144,6 +145,10 @@ gst_pipeline_dispose (GObject * object)
   g_assert (GST_IS_SCHEDULER (pipeline->scheduler));
 
   gst_scheduler_reset (pipeline->scheduler);
+  gst_object_replace ((GstObject **) & pipeline->bus, NULL);
+  gst_object_replace ((GstObject **) & pipeline->scheduler, NULL);
+  gst_object_replace ((GstObject **) & pipeline->fixed_clock, NULL);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -165,26 +170,27 @@ is_eos (GstPipeline * pipeline)
         GList *eosed;
         GstElementState state, pending;
         gboolean complete;
+        gchar *name;
 
         complete = gst_element_get_state (element, &state, &pending, NULL);
+        name = gst_element_get_name (element);
 
         if (!complete) {
-          GST_DEBUG ("element %s still performing state change",
-              gst_element_get_name (element));
+          GST_DEBUG ("element %s still performing state change", name);
           result = FALSE;
           done = TRUE;
-          break;
+          goto done;
         } else if (state != GST_STATE_PLAYING) {
-          GST_DEBUG ("element %s not playing %d %d",
-              gst_element_get_name (element), GST_STATE (element),
-              GST_STATE_PENDING (element));
-          break;
+          GST_DEBUG ("element %s not playing %d %d", name, state, pending);
+          goto done;
         }
         eosed = g_list_find (pipeline->eosed, element);
         if (!eosed) {
           result = FALSE;
           done = TRUE;
         }
+      done:
+        g_free (name);
         gst_object_unref (GST_OBJECT (element));
         break;
       }
@@ -200,6 +206,7 @@ is_eos (GstPipeline * pipeline)
         break;
     }
   }
+  gst_iterator_free (sinks);
   return result;
 }
 
@@ -225,7 +232,9 @@ pipeline_bus_handler (GstBus * bus, GstMessage * message,
         }
         /* we drop all EOS messages */
         result = GST_BUS_DROP;
+        gst_message_unref (message);
       }
+      break;
     case GST_MESSAGE_ERROR:
       break;
     default:

@@ -58,6 +58,78 @@ gst_iterator_new (guint size,
   return result;
 }
 
+/*
+ * list iterator
+ */
+typedef struct _GstListIterator
+{
+  GstIterator iterator;
+  gpointer owner;
+  GList **orig;
+  GList *list;                  /* pointer in list */
+  GstIteratorRefFunction reffunc;
+  GstIteratorUnrefFunction unreffunc;
+  GstIteratorDisposeFunction freefunc;
+} GstListIterator;
+
+static GstIteratorResult
+gst_list_iterator_next (GstListIterator * it, gpointer * elem)
+{
+  if (it->list == NULL)
+    return GST_ITERATOR_DONE;
+
+  *elem = it->list->data;
+  if (it->reffunc) {
+    it->reffunc (*elem);
+  }
+  it->list = g_list_next (it->list);
+
+  return GST_ITERATOR_OK;
+}
+
+static void
+gst_list_iterator_resync (GstListIterator * it)
+{
+  it->list = *it->orig;
+}
+
+static void
+gst_list_iterator_free (GstListIterator * it)
+{
+  if (it->freefunc) {
+    it->freefunc (it->owner);
+  }
+  g_free (it);
+}
+
+GstIterator *
+gst_iterator_new_list (GMutex * lock,
+    guint32 * master_cookie,
+    GList ** list,
+    gpointer owner,
+    GstIteratorRefFunction ref,
+    GstIteratorUnrefFunction unref, GstIteratorDisposeFunction free)
+{
+  GstListIterator *result;
+
+  /* no need to lock, nothing can change here */
+  result = (GstListIterator *) gst_iterator_new (sizeof (GstListIterator),
+      lock,
+      master_cookie,
+      (GstIteratorNextFunction) gst_list_iterator_next,
+      (GstIteratorResyncFunction) gst_list_iterator_resync,
+      (GstIteratorFreeFunction) gst_list_iterator_free);
+
+  result->owner = owner;
+  result->orig = list;
+  result->list = *list;
+  result->reffunc = ref;
+  result->unreffunc = unref;
+  result->freefunc = free;
+
+  return GST_ITERATOR (result);
+}
+
 GstIteratorResult
 gst_iterator_next (GstIterator * it, gpointer * elem)
 {
