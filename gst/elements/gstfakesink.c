@@ -46,6 +46,7 @@ enum {
   ARG_NUM_SINKS,
   ARG_SILENT,
   ARG_DUMP,
+  ARG_LAST_MESSAGE,
 };
 
 GST_PADTEMPLATE_FACTORY (fakesink_sink_factory,
@@ -107,6 +108,10 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_SINKS,
     g_param_spec_int ("num_sinks", "num_sinks", "num_sinks",
                       1, G_MAXINT, 1, G_PARAM_READABLE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
+    g_param_spec_string ("last_message", "last_message", "last_message",
+                         NULL, G_PARAM_READABLE));
+
 
   gst_element_install_std_props (
 	  GST_ELEMENT_CLASS (klass),
@@ -136,6 +141,7 @@ gst_fakesink_init (GstFakeSink *fakesink)
 
   fakesink->silent = FALSE;
   fakesink->dump = FALSE;
+  fakesink->last_message = NULL;
 }
 
 static GstPad*
@@ -202,6 +208,9 @@ gst_fakesink_get_property (GObject *object, guint prop_id, GValue *value, GParam
     case ARG_DUMP:
       g_value_set_boolean (value, sink->dump);
       break;
+    case ARG_LAST_MESSAGE:
+      g_value_set_string (value, sink->last_message);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -219,16 +228,14 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
 
   fakesink = GST_FAKESINK (gst_pad_get_parent (pad));
 
-  /*
-  if (GST_IS_EVENT (buf)) {
-    gst_pad_event_default (pad, GST_EVENT (buf));
-    return;
-  }
-  */
-
   if (!fakesink->silent) { 
-    gst_element_info (GST_ELEMENT (fakesink), "chain   ******* (%s:%s)< (%d bytes, %lld) %p",
+    if (fakesink->last_message) 
+      g_free (fakesink->last_message);
+
+    fakesink->last_message = g_strdup_printf ("chain   ******* (%s:%s)< (%d bytes, %lld) %p",
 		GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
+    
+    g_object_notify (G_OBJECT (fakesink), "last_message");
   }
 
   g_signal_emit (G_OBJECT (fakesink), gst_fakesink_signals[SIGNAL_HANDOFF], 0, buf, pad);

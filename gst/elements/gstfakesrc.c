@@ -60,7 +60,8 @@ enum {
   ARG_EOS,
   ARG_SILENT,
   ARG_DUMP,
-  ARG_PARENTSIZE
+  ARG_PARENTSIZE,
+  ARG_LAST_MESSAGE,
 };
 
 GST_PADTEMPLATE_FACTORY (fakesrc_src_factory,
@@ -231,6 +232,9 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_EOS,
     g_param_spec_boolean("eos","eos","eos",
                          TRUE,G_PARAM_READWRITE)); /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
+    g_param_spec_string ("last_message", "last_message", "last_message",
+                         NULL, G_PARAM_READABLE)); 
 
   gst_element_install_std_props (
 	  GST_ELEMENT_CLASS (klass),
@@ -277,6 +281,7 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
   fakesrc->sizemax = 4096;
   fakesrc->parent = NULL;
   fakesrc->parentsize = 4096 * 10;
+  fakesrc->last_message = NULL;
 }
 
 static GstPad*
@@ -424,7 +429,7 @@ gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       break;
     case ARG_EOS:
       src->eos = g_value_get_boolean (value);
-GST_INFO (0, "will EOS on next buffer");
+      GST_INFO (0, "will EOS on next buffer");
       break;
     case ARG_SILENT:
       src->silent = g_value_get_boolean (value);
@@ -489,6 +494,9 @@ gst_fakesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
       break;
     case ARG_DUMP:
       g_value_set_boolean (value, src->dump);
+      break;
+    case ARG_LAST_MESSAGE:
+      g_value_set_string (value, src->last_message);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -666,9 +674,13 @@ gst_fakesrc_get(GstPad *pad)
   GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
 
   if (!src->silent) {
-    gst_element_info (GST_ELEMENT (src), 
-		      "get      ******* (%s:%s)> (%d bytes, %llu)",
+    if (src->last_message)
+      g_free (src->last_message);
+
+    src->last_message = g_strdup_printf ("get      ******* (%s:%s)> (%d bytes, %llu)",
                       GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+
+    g_object_notify (G_OBJECT (src), "last_message");
   }
 
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, src, "pre handoff emit\n");
@@ -719,8 +731,13 @@ gst_fakesrc_loop(GstElement *element)
     GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
 
     if (!src->silent) {
-      gst_element_info (element, "fakesrc:  loop    ******* (%s:%s)  > (%d bytes, %llu)",
-                          GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+      if (src->last_message)
+        g_free (src->last_message);
+
+      src->last_message = g_strdup_printf ("fakesrc:  loop    ******* (%s:%s)  > (%d bytes, %llu)",
+                      GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+
+      g_object_notify (G_OBJECT (src), "last_message");
     }
 
     g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
