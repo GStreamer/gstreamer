@@ -170,7 +170,7 @@ gst_flacdec_class_init (FlacDecClass * klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gobject_class->dispose = gst_flacdec_dispose;
-  
+
   gstelement_class->change_state = gst_flacdec_change_state;
 }
 
@@ -467,7 +467,7 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder * decoder,
 
     flacdec->need_discont = FALSE;
 
-    if (!GST_PAD_CAPS (flacdec->srcpad)) {
+    if (GST_PAD_CAPS (flacdec->srcpad)) {
       if (flacdec->seek_pending) {
         flacdec->total_samples = flacdec->seek_value;
       }
@@ -511,6 +511,8 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder * decoder,
     GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
     GST_BUFFER_TIMESTAMP (outbuf) =
         flacdec->total_samples * GST_SECOND / frame->header.sample_rate;
+    GST_BUFFER_DURATION (outbuf) =
+        samples * GST_SECOND / frame->header.sample_rate;
 
     if (depth == 8) {
       guint8 *outbuffer = (guint8 *) GST_BUFFER_DATA (outbuf);
