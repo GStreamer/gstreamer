@@ -1,9 +1,13 @@
+# the standard variables don't make sense for an uninstalled copy
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../gst-libs/gst
+includedir=${pcfiledir}/../gst-libs
+
 Name: GStreamer Uninstalled Media-Specific Libraries
 Description: Streaming-media framework media-specific libraries, not installed
 Version: @VERSION@
-Requires: gstreamer = @VERSION@
-Libs: -L${pcfiledir}/../gst-libs/gst/gconf \
-	-L${pcfiledir}/../gst-libs/gst/audio \
-	-L${pcfiledir}/../gst-libs/gst/video \
-	-L${pcfiledir}/../gst-libs/gst/play
-Cflags: -I${pcfiledir}/../gst-libs
+Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
+
+Libs: -L${libdir}/audio -L${libdir}/video
+Cflags: -I${includedir}

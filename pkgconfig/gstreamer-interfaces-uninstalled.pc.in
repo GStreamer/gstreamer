@@ -1,13 +1,13 @@
 # the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
-libdir=${pcfiledir}
-includedir=${pcfiledir}
+libdir=${pcfiledir}/../gst-libs/gst
+includedir=${pcfiledir}/../gst-libs
 
 Name: GStreamer Interfaces library, uninstalled
 Description: Streaming-media framework, interfaces library, not installed
-Requires: gstreamer >= @VERSION@
+Requires: gstreamer-@GST_MAJORMINOR@ >= @VERSION@
 Version: @VERSION@
 
-Libs: ${pcfiledir}/../gst-libs/gst/libgstinterfaces-@GST_MAJORMINOR@.la
-Cflags: -I${pcfiledir}/../gst-libs
+Libs: ${libdir}/libgstinterfaces-@GST_MAJORMINOR@.la
+Cflags: -I${includedir}
