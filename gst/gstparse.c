@@ -227,6 +227,7 @@ make_connections (graph_t *g, GError **error)
   GstElement *src, *sink;
   GstPad *p1, *p2;
   GstPadTemplate *pt1, *pt2;
+  GstCaps *caps;
   
   l = g->connections;
   while (l) {
@@ -260,6 +261,8 @@ make_connections (graph_t *g, GError **error)
     
     a = c->src_pads;
     b = c->sink_pads;
+    caps = c->caps;
+    gst_caps_debug (caps, "foo");
     /* g_print ("a: %p, b: %p\n", a, b); */
     if (a && b) {
       /* balanced multipad connection */
@@ -285,7 +288,7 @@ make_connections (graph_t *g, GError **error)
           g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_connect), dc);
         } else if (!p1) {
           goto could_not_get_pad_a;
-        } else if (!gst_pad_connect (p1, p2)) {
+        } else if (!gst_pad_connect_filtered (p1, p2, caps)) {
           goto could_not_connect_pads;
         }
         a = g_list_next (a);
@@ -340,7 +343,7 @@ make_connections (graph_t *g, GError **error)
         goto could_not_get_pad_a;
       }
       
-      if (!gst_pad_connect (p1, p2)) {
+      if (!gst_pad_connect_filtered (p1, p2, caps)) {
         goto could_not_connect_pads;
       }
     } else if (b) {
@@ -351,11 +354,11 @@ make_connections (graph_t *g, GError **error)
       if (!(p1 = gst_element_get_compatible_pad (src, p2))) {
         goto could_not_get_compatible_to_b;
       }
-      if (!gst_pad_connect (p1, p2)) {
+      if (!gst_pad_connect_filtered (p1, p2, caps)) {
         goto could_not_connect_pads;
       }
     } else {
-      if (!gst_element_connect (src, sink)) {
+      if (!gst_element_connect_filtered (src, sink, caps)) {
         goto could_not_connect_elements;
       }
     }

@@ -23,7 +23,7 @@ static int yyerror (const char *s);
 }
 
 %token <s> IDENTIFIER
-%token <c> CONNECTION BCONNECTION
+%token <c> CONNECTION BCONNECTION FCONNECTION
 %token <v> VALUE
 
 %type <s> id
@@ -114,6 +114,7 @@ connection:     CONNECTION
 
 rconnection:   '!'                   { $$ = g_new0 (connection_t, 1); }
         |       BCONNECTION          { $$ = $1; }
+        |       FCONNECTION          { $$ = $1; }
         |       id ',' rconnection ',' id 
                                      { $$ = $3;
                                        $$->src_pads = g_list_prepend ($$->src_pads, $1);

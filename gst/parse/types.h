@@ -23,6 +23,7 @@ typedef struct {
     int sink_index;
     GList *src_pads;
     GList *sink_pads;
+    GstCaps *caps;
 } connection_t;
 
 typedef struct _graph_t graph_t;

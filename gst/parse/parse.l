@@ -34,11 +34,22 @@ _double [-+]?[[:digit:]]+"."*[[:digit:]]*
 _number {_integer}|{_double}
 _boolean "true"|"false"|"TRUE"|"FALSE"
 _identifier [[:alpha:]][[:alnum:]\-_%:]*
+_char ([^[:space:]])|("\\".)
+_string {_char}+|("\""([^\"]|"\\\"")*"\"")
+_comma [[:space:]]*","[[:space:]]*
+_assign [[:space:]]*"="[[:space:]]*
+_caps_type_string "fourcc"|"string"
+_caps_type_double "float"
+_caps_string {_string}{_assign}{_caps_type_string}[[:space:]]+{_string}
+_caps_int {_string}{_assign}"int"[[:space:]]+{_integer}
+_caps_double {_string}{_assign}{_caps_type_double}[[:space:]]+{_double}
+_caps_boolean {_string}{_assign}"boolean"[[:space:]]+{_boolean}
+_caps_pair {_caps_string}|{_caps_int}|{_caps_double}|{_caps_boolean}
+_caps {_string}({_comma}{_caps_pair})*
 _lconnection ({_identifier}\.)?{_identifier}!
 _rconnection !({_identifier}\.)?{_identifier}
 _bconnection ({_identifier}\.)?{_identifier}!({_identifier}\.)?{_identifier}
-_char ([^[:space:]])|("\\".)
-_string {_char}+|("\""([^\"]|"\\\"")*"\"")
+_fconnection ({_identifier}\.)?{_identifier}!{_caps}!({_identifier}\.)?{_identifier}
 
 %x value
 %option noyywrap
@@ -143,6 +154,96 @@ _string {_char}+|("\""([^\"]|"\\\"")*"\"")
     }
 
     return BCONNECTION;
+}
+
+{_fconnection} {
+    gchar *d1, *d2, *q1, *q2, *a1, *m1;
+    gchar *mime;
+    GstProps *props;
+
+    lvalp->c = g_new0 (connection_t, 1);
+    PRINT ("An fconnection: %s\n", yytext);
+    q1 = strchr (yytext, '!');
+    d1 = strchr (yytext, '.');
+    q2 = strchr (q1+1, '!');
+    d2 = strchr (q2, '.');
+    if (d1 && d1 < q1) {
+        lvalp->c->src_name = g_strndup (yytext, d1 - yytext);
+        lvalp->c->src_pads = g_list_append (lvalp->c->src_pads, g_strndup (d1 + 1, q1 - d1 - 1));
+    } else {
+        lvalp->c->src_pads = g_list_append (lvalp->c->src_pads, g_strndup (yytext, q1 - yytext));
+    }
+    
+    if (d2) {
+        lvalp->c->sink_name = g_strndup (q2 + 1, d2 - q2 - 1);
+        lvalp->c->sink_pads = g_list_append (lvalp->c->sink_pads, g_strdup (d2 + 1));
+    } else {
+        lvalp->c->sink_pads = g_list_append (lvalp->c->sink_pads, g_strdup (q2 + 1));
+    }
+    /* parse mime type */
+    m1 = strchr (q1 + 1, ',');
+    mime = g_strndup (q1 + 1, m1 - q1 - 1);
+
+    props = gst_props_empty_new ();
+
+    a1 = strchr (m1 + 1, ',');
+    if (a1 == NULL)
+      a1 = q2;
+
+    while (a1 && a1 <= q2) {
+      gchar *key, *t, *v;
+      gchar *k1, *k2;
+      GstPropsEntry *entry = NULL;
+
+      k1 = strchr (m1, '=');
+      key = g_strstrip (g_strndup (m1 + 1, k1 - m1 -1));
+
+      k1++;
+
+      while (g_ascii_isspace (*k1)) k1++;
+
+      k2 = strchr (k1, ' ');
+      t = g_strstrip (g_strndup (k1, k2 - k1));
+
+      while (g_ascii_isspace (*k2)) k2++;
+
+      v = g_strstrip (g_strndup (k2, a1 - k2));
+
+      if (!strcmp (t, "string")) {
+        entry = gst_props_entry_new (key, GST_PROPS_STRING (v));
+      }
+      else if (!strcmp (t, "fourcc")) {
+        entry = gst_props_entry_new (key, GST_PROPS_FOURCC (GST_STR_FOURCC(v)));
+      }
+      else if (!strcmp (t, "float")) {
+        gfloat f;
+	sscanf (v, "%f", &f);
+        entry = gst_props_entry_new (key, GST_PROPS_FLOAT (f));
+      }
+      else if (!strcmp (t, "int")) {
+        gint i;
+	sscanf (v, "%d", &i);
+        entry = gst_props_entry_new (key, GST_PROPS_INT (i));
+      }
+      else if (!strcmp (t, "boolean")) {
+        gboolean b;
+        b = (!strcmp (v, "true") || ! strcmp (v, "TRUE"));
+        entry = gst_props_entry_new (key, GST_PROPS_BOOLEAN (b));
+      }
+      gst_props_add_entry (props, entry);
+      
+      m1 = a1;
+      if (a1 < q2) {
+        a1 = strchr (m1 + 1, ',');
+        if (a1 == NULL) 
+          a1 = q2;
+      }
+      else
+        break;
+    }
+    lvalp->c->caps = gst_caps_new ("parse_caps", mime, props);
+
+    return FCONNECTION;
 }
 
 {_identifier} {
