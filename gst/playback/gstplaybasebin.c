@@ -166,7 +166,6 @@ static void
 gst_play_base_bin_init (GstPlayBaseBin * play_base_bin)
 {
   play_base_bin->uri = NULL;
-  play_base_bin->threaded = FALSE;
   play_base_bin->need_rebuild = TRUE;
   play_base_bin->source = NULL;
   play_base_bin->decoder = NULL;
@@ -282,6 +281,7 @@ unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
   /* add the stream to the list */
   info = gst_stream_info_new (GST_OBJECT (pad), GST_STREAM_TYPE_UNKNOWN,
       NULL, caps);
+  info->origin = GST_OBJECT (pad);
   play_base_bin->streaminfo = g_list_append (play_base_bin->streaminfo, info);
 
   g_free (capsstr);
@@ -301,6 +301,7 @@ add_element_stream (GstElement * element, GstPlayBaseBin * play_base_bin)
   info =
       gst_stream_info_new (GST_OBJECT (element), GST_STREAM_TYPE_ELEMENT,
       NULL, NULL);
+  info->origin = GST_OBJECT (element);
   play_base_bin->streaminfo = g_list_append (play_base_bin->streaminfo, info);
 }
 
@@ -393,11 +394,41 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
 
   /* add the stream to the list */
   info = gst_stream_info_new (GST_OBJECT (srcpad), type, NULL, caps);
+  info->origin = GST_OBJECT (pad);
   play_base_bin->streaminfo = g_list_append (play_base_bin->streaminfo, info);
 
   /* signal the no more pads after adding the stream */
   if (last)
     no_more_pads (NULL, play_base_bin);
+}
+
+/* signal fired when decodebin has removed a raw pad. We remove
+ * the preroll element if needed and the appropriate streaminfo.
+ */
+static void
+removed_decoded_pad (GstElement * element, GstPad * pad,
+    GstPlayBaseBin * play_base_bin)
+{
+  GList *streams;
+
+  GST_DEBUG ("removing decoded pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+
+  /* first find the stream to decode this pad */
+  streams = play_base_bin->streaminfo;
+  while (streams) {
+    GstStreamInfo *info = GST_STREAM_INFO (streams->data);
+
+    if (info->origin == GST_OBJECT (pad)) {
+      GST_DEBUG ("removing stream %p", info);
+      play_base_bin->streaminfo =
+          g_list_remove (play_base_bin->streaminfo, info);
+      g_object_unref (info);
+      return;
+    } else {
+      GST_DEBUG ("skipping stream %p", info);
+    }
+    streams = g_list_next (streams);
+  }
 }
 
 /*
@@ -447,6 +478,8 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
 
   if (!play_base_bin->need_rebuild)
     return TRUE;
+
+  play_base_bin->threaded = FALSE;
 
   /* keep ref to old souce in case creating the new source fails */
   old_src = play_base_bin->source;
@@ -537,7 +570,7 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
 
   {
     gboolean res;
-    gint sig1, sig2, sig3, sig4, sig5;
+    gint sig1, sig2, sig3, sig4, sig5, sig6;
 
     /* now create the decoder element */
     play_base_bin->decoder = gst_element_factory_make ("decodebin", "decoder");
@@ -559,11 +592,13 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
     }
     sig1 = g_signal_connect (G_OBJECT (play_base_bin->decoder),
         "new-decoded-pad", G_CALLBACK (new_decoded_pad), play_base_bin);
-    sig2 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "no-more-pads",
+    sig2 = g_signal_connect (G_OBJECT (play_base_bin->decoder),
+        "removed-decoded-pad", G_CALLBACK (removed_decoded_pad), play_base_bin);
+    sig3 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "no-more-pads",
         G_CALLBACK (no_more_pads), play_base_bin);
-    sig3 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "unknown-type",
+    sig4 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "unknown-type",
         G_CALLBACK (unknown_type), play_base_bin);
-    sig4 = g_signal_connect (G_OBJECT (play_base_bin->thread), "error",
+    sig5 = g_signal_connect (G_OBJECT (play_base_bin->thread), "error",
         G_CALLBACK (thread_error), error);
 
     /* either when the queues are filled or when the decoder element has no more
@@ -575,7 +610,7 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
       GList *prerolls;
 
       GST_DEBUG ("waiting for preroll...");
-      sig5 = g_signal_connect (G_OBJECT (play_base_bin->thread),
+      sig6 = g_signal_connect (G_OBJECT (play_base_bin->thread),
           "state-change", G_CALLBACK (state_change), play_base_bin);
       g_cond_wait (play_base_bin->preroll_cond, play_base_bin->preroll_lock);
       GST_DEBUG ("preroll done !");
@@ -595,16 +630,18 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
       }
     } else {
       GST_DEBUG ("state change failed, media cannot be loaded");
-      sig5 = 0;
+      sig6 = 0;
     }
     g_mutex_unlock (play_base_bin->preroll_lock);
 
-    if (sig5 != 0)
-      g_signal_handler_disconnect (G_OBJECT (play_base_bin->thread), sig5);
-    g_signal_handler_disconnect (G_OBJECT (play_base_bin->thread), sig4);
+    if (sig6 != 0)
+      g_signal_handler_disconnect (G_OBJECT (play_base_bin->thread), sig6);
+
+    g_signal_handler_disconnect (G_OBJECT (play_base_bin->thread), sig5);
+    g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig4);
     g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig3);
-    g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig2);
-    g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig1);
+    //g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig2);
+    //g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig1);
 
     play_base_bin->need_rebuild = FALSE;
   }

@@ -49,6 +49,7 @@ struct _GstStreamInfo {
   GstStreamType	 type;
   gchar 	*decoder;
   gboolean	 mute;
+  GstObject 	*origin;
   GstCaps	*caps;
 };
 

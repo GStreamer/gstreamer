@@ -147,6 +147,7 @@ static void
 gst_stream_info_init (GstStreamInfo * stream_info)
 {
   stream_info->object = NULL;
+  stream_info->origin = NULL;
   stream_info->type = GST_STREAM_TYPE_UNKNOWN;
   stream_info->decoder = NULL;
   stream_info->mute = FALSE;
@@ -165,6 +166,7 @@ gst_stream_info_new (GstObject * object,
   info->object = object;
   info->type = type;
   info->decoder = g_strdup (decoder);
+  info->origin = object;
   if (caps) {
     info->caps = gst_caps_copy (caps);
   }
@@ -181,6 +183,7 @@ gst_stream_info_dispose (GObject * object)
 
   gst_object_unref (stream_info->object);
   stream_info->object = NULL;
+  stream_info->origin = NULL;
   stream_info->type = GST_STREAM_TYPE_UNKNOWN;
   g_free (stream_info->decoder);
   stream_info->decoder = NULL;
