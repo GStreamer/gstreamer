@@ -61,6 +61,7 @@ typedef enum {
   GST_BUFFER_EOS		= (1 << 1),
   GST_BUFFER_ORIGINAL		= (1 << 2),
   GST_BUFFER_DONTFREE		= (1 << 3),
+  GST_BUFFER_FLUSH		= (1 << 4),
 } GstBufferFlags;
 
 

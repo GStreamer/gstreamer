@@ -163,14 +163,14 @@ void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
 
   if (queue->level_buffers >= queue->max_buffers) {
     DEBUG("queue: %s waiting %d\n", name, queue->level_buffers);
-    GST_UNLOCK(queue);
     while (queue->level_buffers >= queue->max_buffers) {
+      GST_UNLOCK(queue);
       g_mutex_lock(queue->fulllock);
       STATUS("O");
       g_cond_wait(queue->fullcond,queue->fulllock);
       g_mutex_unlock(queue->fulllock);
+      GST_LOCK(queue);
     }
-    GST_LOCK(queue);
     DEBUG("queue: %s waiting done %d\n", name, queue->level_buffers);
   }
   
@@ -218,14 +218,14 @@ void gst_queue_push(GstConnection *connection) {
   DEBUG("queue: %s push %d\n", name, queue->level_buffers);
 
   if (!queue->level_buffers) {
-    GST_UNLOCK(queue);
     while (!queue->level_buffers) {
+      GST_UNLOCK(queue);
       g_mutex_lock(queue->emptylock);
       STATUS("U");
       g_cond_wait(queue->emptycond,queue->emptylock);
       g_mutex_unlock(queue->emptylock);
+      GST_LOCK(queue);
     }
-    GST_LOCK(queue);
   }
 
   front = queue->queue;

@@ -46,6 +46,7 @@ enum {
   ARG_LOCATION,
   ARG_BYTESPERREAD,
   ARG_OFFSET,
+  ARG_SIZE,
 };
 
 
@@ -101,6 +102,8 @@ gst_disksrc_class_init(GstDiskSrcClass *klass) {
                           GTK_ARG_READWRITE, ARG_BYTESPERREAD);
   gtk_object_add_arg_type("GstDiskSrc::offset", GTK_TYPE_INT,
                           GTK_ARG_READWRITE, ARG_OFFSET);
+  gtk_object_add_arg_type("GstDiskSrc::size", GTK_TYPE_INT,
+                          GTK_ARG_READABLE, ARG_SIZE);
 
   gtkobject_class->set_arg = gst_disksrc_set_arg;
   gtkobject_class->get_arg = gst_disksrc_get_arg;
@@ -121,6 +124,8 @@ static void gst_disksrc_init(GstDiskSrc *disksrc) {
   disksrc->curoffset = 0;
   disksrc->bytes_per_read = 4096;
   disksrc->seq = 0;
+  disksrc->size = 0;
+  disksrc->new_seek = FALSE;
 }
 
 
@@ -153,6 +158,7 @@ static void gst_disksrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
     case ARG_OFFSET:
       src->curoffset = GTK_VALUE_INT(*arg);
       lseek(src->fd,src->curoffset, SEEK_SET);
+      src->new_seek = TRUE;
       break;
     default:
       break;
@@ -175,6 +181,9 @@ static void gst_disksrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
       break;
     case ARG_OFFSET:
       GTK_VALUE_INT(*arg) = src->curoffset;
+      break;
+    case ARG_SIZE:
+      GTK_VALUE_INT(*arg) = src->size;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;
@@ -203,19 +212,32 @@ void gst_disksrc_push(GstSrc *src) {
 
   /* read it in from the file */
   readbytes = read(disksrc->fd,GST_BUFFER_DATA(buf),disksrc->bytes_per_read);
-  if (readbytes == 0) {
+  if (readbytes == -1) {
+    perror("read()");
+    gst_buffer_unref(buf);
+    return;
+  }
+  else if (readbytes == 0) {
     gst_src_signal_eos(GST_SRC(disksrc));
-		gst_buffer_unref(buf);
+    gst_buffer_unref(buf);
     return;
   }
 
   /* if we didn't get as many bytes as we asked for, we're at EOF */
   if (readbytes < disksrc->bytes_per_read)
-    GST_BUFFER_FLAG_SET(buf,GST_BUFFER_EOS);
+    GST_BUFFER_FLAG_SET(buf, GST_BUFFER_EOS);
+
+  /* if we have a new buffer froma seek, mark it */
+  if (disksrc->new_seek) {
+    GST_BUFFER_FLAG_SET(buf, GST_BUFFER_FLUSH);
+    disksrc->new_seek = FALSE;
+  }
+
   GST_BUFFER_OFFSET(buf) = disksrc->curoffset;
   GST_BUFFER_SIZE(buf) = readbytes;
   disksrc->curoffset += readbytes;
 
+  DEBUG("pushing with offset %lu\n", GST_BUFFER_OFFSET(buf));
   /* we're done, push the buffer off now */
   gst_pad_push(disksrc->srcpad,buf);
 }
@@ -223,6 +245,7 @@ void gst_disksrc_push(GstSrc *src) {
 
 /* open the file, necessary to go to RUNNING state */
 static gboolean gst_disksrc_open_file(GstDiskSrc *src) {
+  struct stat f_stat;
   g_return_val_if_fail(!GST_FLAG_IS_SET(src,GST_DISKSRC_OPEN), FALSE);
 
   /* open the file */
@@ -231,6 +254,13 @@ static gboolean gst_disksrc_open_file(GstDiskSrc *src) {
     perror("open()");
     gst_element_error(GST_ELEMENT(src),"opening file");
     return FALSE;
+  }
+  if (fstat(src->fd, &f_stat) < 0) {
+    perror("fstat()");
+  }
+  else {
+    src->size = f_stat.st_size;
+    DEBUG("gstdisksrc: file size %ld\n", src->size);
   }
   GST_FLAG_SET(src,GST_DISKSRC_OPEN);
   return TRUE;
@@ -247,6 +277,7 @@ static void gst_disksrc_close_file(GstDiskSrc *src) {
   src->fd = 0;
   src->curoffset = 0;
   src->seq = 0;
+  src->size = 0;
 
   GST_FLAG_UNSET(src,GST_DISKSRC_OPEN);
 }

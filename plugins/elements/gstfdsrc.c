@@ -198,7 +198,8 @@ void gst_fdsrc_push(GstSrc *src) {
 
   /* if we didn't get as many bytes as we asked for, we're at EOF */
   if (readbytes < fdsrc->bytes_per_read) {
-    // FIXME: set the buffer's EOF bit here
+    // set the buffer's EOF bit here
+    GST_BUFFER_FLAG_SET(buf,GST_BUFFER_EOS);
   }
   GST_BUFFER_OFFSET(buf) = fdsrc->curoffset;
   GST_BUFFER_SIZE(buf) = readbytes;

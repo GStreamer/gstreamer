@@ -7,8 +7,7 @@
 #  include <config.h>
 #endif
 
-#include <gnome.h>
-#include <gst/gst.h>
+#include "gstplay.h"
 
 #include "interface.h"
 #include "support.h"
@@ -17,19 +16,104 @@
 
 extern gboolean _gst_plugin_spew;
 gboolean idle_func(gpointer data);
-GstElement *show;
+GstElement *show, *audio_play;
 GstElement *src;
 GstPipeline *pipeline;
+GstElement *parse = NULL;
+GstPlayState state;
+gboolean picture_shown = FALSE;
+guchar statusline[200];
+guchar *statustext = "stopped";
 
-void eof(GstSrc *src) {
-  g_print("have eos, quitting\n");
-  exit(0);
+static void frame_displayed(GstSrc *asrc) 
+{
+  int size, time, frame_time = 0, src_pos;
+  guint mux_rate;
+  static int prev_time = -1;
+
+  mux_rate = gst_util_get_int_arg(GTK_OBJECT(parse),"mux_rate");
+  size = gst_util_get_int_arg(GTK_OBJECT(src),"size");
+  time = (size*8)/mux_rate;
+  frame_time = gst_util_get_int_arg(GTK_OBJECT(show),"frame_time");
+  src_pos = gst_util_get_int_arg(GTK_OBJECT(src),"offset");
+  frame_time = (src_pos*8)/mux_rate;
+
+  if (frame_time >= prev_time)  {
+    
+    g_snprintf(statusline, 200, "%02d:%02d / %02d:%02d\n", 
+		  frame_time/60, frame_time%60,
+		  time/60, time%60);
+
+    //printf("%d %d %g\n", frame_time, size, frame_time*100.0/size);
+
+    update_status_area();
+    if (state == GSTPLAY_PLAYING)
+      update_slider(src_pos*100.0/size);
+  }
+  picture_shown = TRUE;
+
+  prev_time = frame_time;
 }
 
-void have_type(GstSink *sink) {
+gboolean idle_func(gpointer data) {
+  gst_src_push(GST_SRC(data));
+  return TRUE;
+}
+
+static void eof(GstSrc *src) {
+  change_state(GSTPLAY_PAUSE);
+  picture_shown = TRUE;
+}
+
+void show_next_picture() {
+  picture_shown = FALSE;
+  while (!picture_shown) {
+    gst_src_push(GST_SRC(src));
+    gtk_main_iteration_do(FALSE);
+  }
+}
+
+void mute_audio(gboolean mute) {
+  gtk_object_set(GTK_OBJECT(audio_play),"mute",mute,NULL);
+}
+
+void change_state(GstPlayState new_state) {
+
+  if (new_state == state) return;
+  switch (new_state) { 
+    case GSTPLAY_PLAYING:
+      mute_audio(FALSE);
+      statustext = "playing";
+      update_status_area();
+      gtk_idle_add(idle_func,src);
+      state = GSTPLAY_PLAYING;
+      update_buttons(0);
+      break;
+    case GSTPLAY_PAUSE:
+      statustext = "paused";
+      update_status_area();
+      if (state != GSTPLAY_STOPPED) gtk_idle_remove_by_data(src);
+      mute_audio(TRUE);
+      state = GSTPLAY_PAUSE;
+      update_buttons(1);
+      break;
+    case GSTPLAY_STOPPED:
+      if (state != GSTPLAY_PAUSE) gtk_idle_remove_by_data(src);
+      statustext = "stopped";
+      update_status_area();
+      mute_audio(TRUE);
+      state = GSTPLAY_STOPPED;
+      gtk_object_set(GTK_OBJECT(src),"offset",0,NULL);
+      update_buttons(2);
+      update_slider(0.0);
+      show_next_picture();
+      break;
+  }
+}
+
+static void have_type(GstSink *sink) {
   gint type;
   GstType *gsttype;
-  GstElement *parse = NULL;
   
   type = gst_util_get_int_arg(GTK_OBJECT(sink),"type");
   gsttype = gst_type_find_by_id(type);
@@ -57,7 +141,7 @@ void have_type(GstSink *sink) {
                        GTK_SIGNAL_FUNC(avi_new_pad_created),pipeline);
   }
   else if (strstr(gsttype->mime, "mpeg1")) {
-    mpeg1_setup_video_thread(gst_element_get_pad(src,"src"), show, pipeline);
+    mpeg1_setup_video_thread(gst_element_get_pad(src,"src"), show, GST_ELEMENT(pipeline));
   }
   else {
     g_print("unknown media type\n");
@@ -82,21 +166,27 @@ main (int argc, char *argv[])
   bindtextdomain (PACKAGE, PACKAGE_LOCALE_DIR);
   textdomain (PACKAGE);
 
+  gtk_init(&argc,&argv);
   gnome_init ("gstreamer", VERSION, argc, argv);
   gst_init(&argc,&argv);
   gst_plugin_load("mpeg1parse");
   gst_plugin_load("mpeg2parse");
   gst_plugin_load("mp1videoparse");
   gst_plugin_load("mp3parse");
-  gst_plugin_load("parsewav");
-  gst_plugin_load("parseavi");
+  //gst_plugin_load("parsewav");
+  //gst_plugin_load("parseavi");
   gst_plugin_load("videosink");
+
+  g_snprintf(statusline, 200, "seeking"); 
 
   show = gst_elementfactory_make("videosink","show");
   g_return_val_if_fail(show != NULL, -1);
-
   window1 = create_window1 (gst_util_get_widget_arg(GTK_OBJECT(show),"widget"));
   gtk_widget_show (window1);
+  gtk_signal_connect(GTK_OBJECT(show),"frame_displayed",
+                       GTK_SIGNAL_FUNC(frame_displayed),NULL);
+
+  audio_play = gst_elementfactory_make("audiosink","play_audio");
 
   pipeline = gst_pipeline_new("pipeline");
   g_return_val_if_fail(pipeline != NULL, -1);
@@ -105,6 +195,8 @@ main (int argc, char *argv[])
   g_return_val_if_fail(src != NULL, -1);
   gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
   g_print("should be using file '%s'\n",argv[1]);
+
+  gtk_window_set_title (GTK_WINDOW (window1), g_strdup_printf("GStreamer Media player - %s", argv[1]));
 
   typefind = gst_elementfactory_make("typefind","typefind");
   g_return_val_if_fail(typefind != NULL, -1);
@@ -126,16 +218,11 @@ main (int argc, char *argv[])
   g_print("setting to RUNNING state\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_RUNNING);
 
-  /*
-   * The following code was added by Glade to create one of each component
-   * (except popup menus), just so that you see something after building
-   * the project. Delete any components that you don't want shown initially.
-   */
+  state = GSTPLAY_STOPPED;
 
-  while (1) {
-    gst_src_push(GST_SRC(src));
-  }
+  change_state(GSTPLAY_PLAYING);
 
+  gtk_main();
   return 0;
 }
 

@@ -17,6 +17,14 @@
 #include "interface.h"
 #include "support.h"
 
+GtkWidget *drawingarea1;
+GtkObject *adjustment;
+GtkWidget *button6;
+GtkWidget *button7;
+GtkWidget *button8;
+extern guchar statusline[];
+extern guchar *statustext;
+
 static GnomeUIInfo file1_menu_uiinfo[] =
 {
   {
@@ -132,11 +140,7 @@ create_window1 (GtkWidget *video_element)
   GtkWidget *handlebox1;
   GtkWidget *toolbar1;
   GtkWidget *tmp_toolbar_icon;
-  GtkWidget *button6;
-  GtkWidget *button7;
-  GtkWidget *button8;
   GtkWidget *vseparator1;
-  GtkObject *adjustment;
 
   window1 = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_object_set_data (GTK_OBJECT (window1), "window1", window1);
@@ -235,7 +239,7 @@ create_window1 (GtkWidget *video_element)
   gtk_widget_show (vbox2);
   gtk_box_pack_start (GTK_BOX (vbox1), vbox2, FALSE, TRUE, 0);
 
-  adjustment = gtk_adjustment_new (0, 0, 100, 1, 10, 10);
+  adjustment = gtk_adjustment_new (0, 0.0, 110.0, 1, 10.0, 10.0);
   hscale1 = gtk_hscale_new (GTK_ADJUSTMENT (adjustment));
   gtk_widget_ref (hscale1);
   gtk_object_set_data_full (GTK_OBJECT (window1), "hscale1", hscale1,
@@ -270,7 +274,7 @@ create_window1 (GtkWidget *video_element)
 
   tmp_toolbar_icon = create_pixmap (window1, "pixmaps/play.xpm", TRUE);
   button6 = gtk_toolbar_append_element (GTK_TOOLBAR (toolbar1),
-                                GTK_TOOLBAR_CHILD_BUTTON,
+                                GTK_TOOLBAR_CHILD_TOGGLEBUTTON,
                                 NULL,
                                 _("button6"),
                                 NULL, NULL,
@@ -280,9 +284,12 @@ create_window1 (GtkWidget *video_element)
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (button6);
 
+  gtk_signal_connect (GTK_OBJECT (button6), "toggled",
+                            GTK_SIGNAL_FUNC (on_toggle_play_toggled), NULL);
+
   tmp_toolbar_icon = create_pixmap (window1, "pixmaps/pause.xpm", TRUE);
   button7 = gtk_toolbar_append_element (GTK_TOOLBAR (toolbar1),
-                                GTK_TOOLBAR_CHILD_BUTTON,
+                                GTK_TOOLBAR_CHILD_TOGGLEBUTTON,
                                 NULL,
                                 _("button7"),
                                 NULL, NULL,
@@ -292,9 +299,12 @@ create_window1 (GtkWidget *video_element)
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (button7);
 
+  gtk_signal_connect (GTK_OBJECT (button7), "toggled",
+                            GTK_SIGNAL_FUNC (on_toggle_pause_toggled), NULL);
+
   tmp_toolbar_icon = create_pixmap (window1, "pixmaps/stop.xpm", TRUE);
   button8 = gtk_toolbar_append_element (GTK_TOOLBAR (toolbar1),
-                                GTK_TOOLBAR_CHILD_BUTTON,
+                                GTK_TOOLBAR_CHILD_TOGGLEBUTTON,
                                 NULL,
                                 _("button8"),
                                 NULL, NULL,
@@ -304,6 +314,9 @@ create_window1 (GtkWidget *video_element)
                             (GtkDestroyNotify) gtk_widget_unref);
   gtk_widget_show (button8);
 
+  gtk_signal_connect (GTK_OBJECT (button8), "toggled",
+                            GTK_SIGNAL_FUNC (on_toggle_stop_toggled), NULL);
+
   vseparator1 = gtk_vseparator_new ();
   gtk_widget_ref (vseparator1);
   gtk_object_set_data_full (GTK_OBJECT (window1), "vseparator1", vseparator1,
@@ -312,7 +325,81 @@ create_window1 (GtkWidget *video_element)
   gtk_toolbar_append_widget (GTK_TOOLBAR (toolbar1), vseparator1, NULL, NULL);
   gtk_widget_set_usize (vseparator1, 8, 21);
 
+  drawingarea1 = gtk_drawing_area_new ();
+  gtk_widget_ref (drawingarea1);
+  gtk_object_set_data_full (GTK_OBJECT (window1), "drawingarea1", drawingarea1,
+	                            (GtkDestroyNotify) gtk_widget_unref);
+  gtk_widget_show (drawingarea1);
+  gtk_box_pack_start (GTK_BOX (vbox1), drawingarea1, FALSE, TRUE, 1);
+  gtk_widget_set_usize (drawingarea1, -2, 21);
+
+  gtk_signal_connect (GTK_OBJECT (drawingarea1), "configure_event",
+                         GTK_SIGNAL_FUNC (on_drawingarea1_configure_event),
+	                        NULL);
 
   return window1;
 }
 
+void update_buttons(int active) 
+{
+  gtk_signal_handler_block_by_func(GTK_OBJECT(button6),
+                         GTK_SIGNAL_FUNC (on_toggle_play_toggled),
+	                 NULL);
+  gtk_signal_handler_block_by_func(GTK_OBJECT(button7),
+                         GTK_SIGNAL_FUNC (on_toggle_pause_toggled),
+	                 NULL);
+  gtk_signal_handler_block_by_func(GTK_OBJECT(button8),
+                         GTK_SIGNAL_FUNC (on_toggle_stop_toggled),
+	                 NULL);
+
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button6), FALSE);
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button7), FALSE);
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button8), FALSE);
+
+  if (active == 0) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button6), TRUE);
+  }
+  else if (active == 1) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button7), TRUE);
+  }
+  else if (active == 2) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button8), TRUE);
+  }
+
+  gtk_signal_handler_unblock_by_func(GTK_OBJECT(button6),
+                         GTK_SIGNAL_FUNC (on_toggle_play_toggled),
+	                 NULL);
+  gtk_signal_handler_unblock_by_func(GTK_OBJECT(button7),
+                         GTK_SIGNAL_FUNC (on_toggle_pause_toggled),
+	                 NULL);
+  gtk_signal_handler_unblock_by_func(GTK_OBJECT(button8),
+                         GTK_SIGNAL_FUNC (on_toggle_stop_toggled),
+	                 NULL);
+}
+
+void update_slider(gfloat value) 
+{
+  gtk_signal_handler_block_by_func(adjustment,
+                         GTK_SIGNAL_FUNC (on_hscale1_value_changed),
+	                 NULL);
+  gtk_adjustment_set_value(GTK_ADJUSTMENT(adjustment), value);
+  gtk_signal_handler_unblock_by_func(adjustment,
+                         GTK_SIGNAL_FUNC (on_hscale1_value_changed),
+	                 NULL);
+}
+
+void update_status_area() 
+{
+  GtkWidget *widget = drawingarea1;
+
+  gdk_draw_rectangle(widget->window,
+                     widget->style->black_gc,
+                     TRUE, 0,
+		     0,
+                     widget->allocation.width,
+                     widget->allocation.height);
+
+  gdk_draw_string(widget->window,widget->style->font,widget->style->white_gc, 8, 15, statustext);
+  gdk_draw_string(widget->window,widget->style->font,widget->style->white_gc, widget->allocation.width-100, 15, statusline);
+  
+}

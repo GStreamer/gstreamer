@@ -7,6 +7,11 @@ void eof(GstSrc *src) {
   exit(0);
 }
 
+gboolean idle_func(gpointer data) {
+  gst_src_push(GST_SRC(data));
+  return TRUE;
+}
+
 void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
   GstElement *parse_audio, *parse_video, *decode, *decode_video, *play, *show;
   GstElement *audio_queue, *video_queue;
@@ -165,6 +170,7 @@ int main(int argc,char *argv[]) {
 
   g_print("have %d args\n",argc);
 
+  gtk_init(&argc,&argv);
   gst_init(&argc,&argv);
   gnome_init("MPEG2 Video player","0.0.1",argc,argv);
   gst_plugin_load("mpeg2parse");
@@ -204,7 +210,7 @@ int main(int argc,char *argv[]) {
   g_print("setting to RUNNING state\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_RUNNING);
 
-  while (1) {
-    gst_src_push(GST_SRC(src));
-  }
+  gtk_idle_add(idle_func,src);
+
+  gtk_main();
 }

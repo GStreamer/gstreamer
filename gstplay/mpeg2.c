@@ -1,5 +1,5 @@
 
-#define BUFFER 1
+#define BUFFER 15
 #define VIDEO_DECODER "mpeg2play"
 
 #ifdef HAVE_CONFIG_H
@@ -13,11 +13,11 @@
 
 
 extern gboolean _gst_plugin_spew;
-extern GstElement *show;
+extern GstElement *show, *audio_play;
 
 void mpeg2_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) 
 {
-  GstElement *parse_audio, *decode, *play;
+  GstElement *parse_audio, *decode;
   GstElement *audio_queue;
   GstElement *audio_thread;
 
@@ -25,7 +25,7 @@ void mpeg2_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
 
   // connect to audio pad
   //if (0) {
-  if (strncmp(gst_pad_get_name(pad), "private_stream_1.0", 18) == 0) {
+  if (strncmp(gst_pad_get_name(pad), "private_stream_1.0", 18) == 0 && audio_play) {
     gst_plugin_load("ac3parse");
     gst_plugin_load("ac3dec");
     // construct internal pipeline elements
@@ -33,15 +33,13 @@ void mpeg2_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
     g_return_if_fail(parse_audio != NULL);
     decode = gst_elementfactory_make("ac3dec","decode_audio");
     g_return_if_fail(decode != NULL);
-    play = gst_elementfactory_make("audiosink","play_audio");
-    g_return_if_fail(play != NULL);
 
     // create the thread and pack stuff into it
     audio_thread = gst_thread_new("audio_thread");
     g_return_if_fail(audio_thread != NULL);
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(parse_audio));
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(decode));
-    gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(play));
+    gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(audio_play));
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),
@@ -49,7 +47,7 @@ void mpeg2_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
     gst_pad_connect(gst_element_get_pad(parse_audio,"src"),
                     gst_element_get_pad(decode,"sink"));
     gst_pad_connect(gst_element_get_pad(decode,"src"),
-                    gst_element_get_pad(play,"sink"));
+                    gst_element_get_pad(audio_play,"sink"));
 
     // construct queue and connect everything in the main pipelie
     audio_queue = gst_elementfactory_make("queue","audio_queue");
@@ -70,7 +68,7 @@ void mpeg2_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
   }
   // connect to audio pad
   //if (0) {
-  if (strncmp(gst_pad_get_name(pad), "audio_", 6) == 0) {
+  if (strncmp(gst_pad_get_name(pad), "audio_", 6) == 0 && audio_play) {
     gst_plugin_load("mp3parse");
     gst_plugin_load("mpg123");
     // construct internal pipeline elements
@@ -78,15 +76,13 @@ void mpeg2_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
     g_return_if_fail(parse_audio != NULL);
     decode = gst_elementfactory_make("mpg123","decode_audio");
     g_return_if_fail(decode != NULL);
-    play = gst_elementfactory_make("audiosink","play_audio");
-    g_return_if_fail(play != NULL);
 
     // create the thread and pack stuff into it
     audio_thread = gst_thread_new("audio_thread");
     g_return_if_fail(audio_thread != NULL);
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(parse_audio));
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(decode));
-    gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(play));
+    gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(audio_play));
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),
@@ -94,7 +90,7 @@ void mpeg2_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
     gst_pad_connect(gst_element_get_pad(parse_audio,"src"),
                     gst_element_get_pad(decode,"sink"));
     gst_pad_connect(gst_element_get_pad(decode,"src"),
-                    gst_element_get_pad(play,"sink"));
+                    gst_element_get_pad(audio_play,"sink"));
 
     // construct queue and connect everything in the main pipelie
     audio_queue = gst_elementfactory_make("queue","audio_queue");

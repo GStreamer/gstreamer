@@ -62,6 +62,7 @@ struct _GstAudioSink {
   gint format;
   gint channels;
   gint frequency;
+  gboolean mute;
 };
 
 struct _GstAudioSinkClass {

@@ -47,16 +47,23 @@ static gboolean gst_audiosink_stop(GstElement *element);
 static gboolean gst_audiosink_change_state(GstElement *element,
                                            GstElementState state);
 
+static void gst_audiosink_set_arg(GtkObject *object,GtkArg *arg,guint id);
+static void gst_audiosink_get_arg(GtkObject *object,GtkArg *arg,guint id);
+
 void gst_audiosink_chain(GstPad *pad,GstBuffer *buf);
 
 /* AudioSink signals and args */
 enum {
-  HANDOFF,
+  SIGNAL_HANDOFF,
   LAST_SIGNAL
 };
 
 enum {
   ARG_0,
+  ARG_MUTE,
+  ARG_FORMAT,
+  ARG_CHANNELS,
+  ARG_FREQUENCY,
   /* FILL ME */
 };
 
@@ -104,7 +111,19 @@ gst_audiosink_class_init(GstAudioSinkClass *klass) {
 
   parent_class = gtk_type_class(GST_TYPE_FILTER);
 
-  gst_audiosink_signals[HANDOFF] =
+  gtk_object_add_arg_type("GstAudioSink::mute", GTK_TYPE_BOOL,
+                           GTK_ARG_READWRITE, ARG_MUTE);
+  gtk_object_add_arg_type("GstAudioSink::format", GTK_TYPE_INT,
+                           GTK_ARG_READWRITE, ARG_FORMAT);
+  gtk_object_add_arg_type("GstAudioSink::channels", GTK_TYPE_INT,
+                           GTK_ARG_READWRITE, ARG_CHANNELS);
+  gtk_object_add_arg_type("GstAudioSink::frequency", GTK_TYPE_INT,
+                           GTK_ARG_READWRITE, ARG_FREQUENCY);
+
+  gtkobject_class->set_arg = gst_audiosink_set_arg;
+  gtkobject_class->get_arg = gst_audiosink_get_arg;
+
+  gst_audiosink_signals[SIGNAL_HANDOFF] =
     gtk_signal_new("handoff",GTK_RUN_LAST,gtkobject_class->type,
                    GTK_SIGNAL_OFFSET(GstAudioSinkClass,handoff),
                    gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
@@ -192,7 +211,7 @@ void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
     }
   }
 
-  gtk_signal_emit(GTK_OBJECT(audiosink),gst_audiosink_signals[HANDOFF],
+  gtk_signal_emit(GTK_OBJECT(audiosink),gst_audiosink_signals[SIGNAL_HANDOFF],
                   audiosink);
   if (GST_BUFFER_DATA(buf) != NULL) {
     gst_trace_add_entry(NULL,0,buf,"audiosink: writing to soundcard");
@@ -204,7 +223,8 @@ void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
       audiosink->clocktime = (info.bytes*1000000LL)/(audiosink->frequency*audiosink->channels);
       //g_print("audiosink: bytes sent %d time %llu\n", info.bytes, audiosink->clocktime);
       gst_clock_set(audiosink->clock, audiosink->clocktime);
-      write(audiosink->fd,GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
+      if (!audiosink->mute)
+        write(audiosink->fd,GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
       //audiosink->clocktime +=  (1000000LL*GST_BUFFER_SIZE(buf)/(audiosink->channels*
 //		              (audiosink->format/8)*(audiosink->frequency)));
     //g_print("audiosink: writing to soundcard ok\n");
@@ -216,31 +236,57 @@ void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
   //g_print("a done\n");
 }
 
-void gst_audiosink_set_format(GstAudioSink *audiosink,gint format) {
-  g_return_if_fail(audiosink != NULL);
-  g_return_if_fail(GST_IS_AUDIOSINK(audiosink));
+static void gst_audiosink_set_arg(GtkObject *object,GtkArg *arg,guint id) {
+  GstAudioSink *audiosink;
 
-  audiosink->format = format;
-  
-  gst_audiosink_sync_parms(audiosink);
+  /* it's not null if we got it, but it might not be ours */
+  g_return_if_fail(GST_IS_AUDIOSINK(object));
+  audiosink = GST_AUDIOSINK(object);
+
+  switch(id) {
+    case ARG_MUTE:
+      audiosink->mute = GTK_VALUE_BOOL(*arg);
+      break;
+    case ARG_FORMAT:
+      audiosink->format = GTK_VALUE_INT(*arg);
+      gst_audiosink_sync_parms(audiosink);
+      break;
+    case ARG_CHANNELS:
+      audiosink->channels = GTK_VALUE_INT(*arg);
+      gst_audiosink_sync_parms(audiosink);
+      break;
+    case ARG_FREQUENCY:
+      audiosink->frequency = GTK_VALUE_INT(*arg);
+      gst_audiosink_sync_parms(audiosink);
+      break;
+    default:
+      break;
+  }
 }
 
-void gst_audiosink_set_channels(GstAudioSink *audiosink,gint channels) {
-  g_return_if_fail(audiosink != NULL);
-  g_return_if_fail(GST_IS_AUDIOSINK(audiosink));
+static void gst_audiosink_get_arg(GtkObject *object,GtkArg *arg,guint id) {
+  GstAudioSink *audiosink;
 
-  audiosink->channels = channels;
-  
-  gst_audiosink_sync_parms(audiosink);
-}
+  /* it's not null if we got it, but it might not be ours */
+  g_return_if_fail(GST_IS_AUDIOSINK(object));
+  audiosink = GST_AUDIOSINK(object);
 
-void gst_audiosink_set_frequency(GstAudioSink *audiosink,gint frequency) {
-  g_return_if_fail(audiosink != NULL);
-  g_return_if_fail(GST_IS_AUDIOSINK(audiosink));
-
-  audiosink->frequency = frequency;
-  
-  gst_audiosink_sync_parms(audiosink);
+  switch(id) {
+    case ARG_MUTE:
+      GTK_VALUE_BOOL(*arg) = audiosink->mute;
+      break;
+    case ARG_FORMAT:
+      GTK_VALUE_INT(*arg) = audiosink->format;
+      break;
+    case ARG_CHANNELS:
+      GTK_VALUE_INT(*arg) = audiosink->channels;
+      break;
+    case ARG_FREQUENCY:
+      GTK_VALUE_INT(*arg) = audiosink->frequency;
+      break;
+    default:
+      break;
+  }
 }
 
 static gboolean gst_audiosink_open_audio(GstAudioSink *sink) {

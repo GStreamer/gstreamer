@@ -664,7 +664,7 @@ gst_colorspace_yuv_to_rgb32(tables, lum, cb, cr, out, rows, cols)
 }
 
 #ifdef HAVE_LIBMMX
-
+static mmx_t MMX_10w           = (mmx_t)(long long)0x000D000D000D000DLL;                     //dd    00080 0080h, 000800080h
 static mmx_t MMX_80w           = (mmx_t)(long long)0x0080008000800080LL;                     //dd    00080 0080h, 000800080h
 
 static mmx_t MMX_00FFw         = (mmx_t)(long long)0x00ff00ff00ff00ffLL;                     //dd    000FF 00FFh, 000FF00FFh
@@ -719,10 +719,10 @@ gst_colorspace_yuv_to_bgr16_mmx(tables, lum, cr, cb, out, rows, cols)
         pmullw_m2r(MMX16_Vgrncoeff, mm3);	// Cr2green
         movq_m2r(*(mmx_t *)lum, mm7); 		// L2
         pmullw_m2r(MMX16_Vredcoeff, mm1);	// Cr2red
-        // "psubw          MMX_10w,                %%mm6\n"
+        psubw_m2r(MMX_10w, mm6);
         psrlw_i2r(8, mm7);			// L2           00 L7 00 L5 00 L3 00 L1
         pmullw_m2r(MMX16_Ycoeff, mm6);		// lum1
-        // "psubw          MMX_10w,                %%mm7\n" // L2
+        psubw_m2r(MMX_10w, mm7);
         paddw_r2r(mm3, mm2);			// Cb2green + Cr2green == green
         pmullw_m2r(MMX16_Ycoeff, mm7);		// lum2
 
@@ -761,6 +761,7 @@ gst_colorspace_yuv_to_bgr16_mmx(tables, lum, cr, cb, out, rows, cols)
         packuswb_r2r(mm5, mm5);
         packuswb_r2r(mm7, mm7);
         pand_m2r(MMX_00FFw, mm6);  		// L3
+        psubw_m2r(MMX_10w, mm6);
         punpcklbw_r2r(mm3, mm3);
          //                              "psubw          MMX_10w,                        %%mm6\n"  // L3
         punpcklbw_r2r(mm5, mm5);
@@ -778,6 +779,7 @@ gst_colorspace_yuv_to_bgr16_mmx(tables, lum, cr, cb, out, rows, cols)
         movq_r2r(mm4, mm5);
          //                              "psubw          MMX_10w,                        %%mm7\n"                // L4
         punpcklwd_r2r(mm3, mm4);
+        psubw_m2r(MMX_10w, mm7);
         pmullw_m2r(MMX16_Ycoeff, mm7);    	// lum4
         punpckhwd_r2r(mm3, mm5);
 

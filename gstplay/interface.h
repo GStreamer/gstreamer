@@ -3,3 +3,6 @@
  */
 
 GtkWidget* create_window1 (GtkWidget *video_element);
+void update_status_area();
+void update_slider(gfloat value);
+void update_buttons(int active);

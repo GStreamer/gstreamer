@@ -7,7 +7,7 @@ INCLUDES = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir) \
 bin_PROGRAMS = gstplay
 
 gstplay_SOURCES = \
-	main.c \
+	gstplay.c \
 	mpeg1.c mpeg2.c avi.c\
 	support.c support.h \
 	interface.c interface.h \

@@ -151,7 +151,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gtk_object_set(GTK_OBJECT(smooth),"tolerance",9,NULL);
     encode = gst_elementfactory_make("mpeg2enc","encode");
     g_return_if_fail(encode != NULL);
-    gtk_object_set(GTK_OBJECT(encode),"frames_per_second",29.97,NULL);
+    gtk_object_set(GTK_OBJECT(encode),"frames_per_second",24.0,NULL);
     //encode = gst_elementfactory_make("mpeg1encoder","encode");
     //gtk_object_set(GTK_OBJECT(show),"width",640, "height", 480,NULL);
 
