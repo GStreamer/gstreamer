@@ -19,7 +19,6 @@
 
 #include "v4l_calls.h"
 
-#if 0
 static GstElementDetails gst_v4lelement_details = {
   "Generic video4linux Element",
   "None/Video",
@@ -28,7 +27,6 @@ static GstElementDetails gst_v4lelement_details = {
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",
   "(C) 2001",
 };
-#endif
 
 /* V4lElement signals and args */
 enum {
@@ -564,15 +562,14 @@ static gboolean
 plugin_init (GModule   *module,
              GstPlugin *plugin)
 {
-#if 0
   GstElementFactory *factory;
 
   /* create an elementfactory for the v4lelement */
-  factory = gst_elementfactory_new("v4lelement",GST_TYPE_V4LELEMENT,
+  factory = gst_elementfactory_new("v4lelement", GST_TYPE_V4LELEMENT,
                                    &gst_v4lelement_details);
   g_return_val_if_fail(factory != NULL, FALSE);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-#endif
+
   return TRUE;
 }
 
