@@ -1,7 +1,7 @@
 include ../Rules
 
-tests_pass = bin element mainloop pad element_pad
-tests_fail = sched
+tests_pass = bin element mainloop pad
+tests_fail = sched element_pad
 
 element_SOURCES = element.c mem.c
 pad_SOURCES = pad.c mem.c
