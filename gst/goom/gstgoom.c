@@ -114,6 +114,7 @@ static void		gst_goom_chain		(GstPad *pad, GstData *_data);
 
 static GstPadLinkReturn gst_goom_sinkconnect 	(GstPad *pad, const GstCaps *caps);
 static GstPadLinkReturn gst_goom_srcconnect 	(GstPad *pad, const GstCaps *caps);
+static GstCaps *        gst_goom_src_fixate 	(GstPad *pad, const GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 
@@ -184,6 +185,7 @@ gst_goom_init (GstGOOM *goom)
   gst_pad_set_link_function (goom->sinkpad, gst_goom_sinkconnect);
 
   gst_pad_set_link_function (goom->srcpad, gst_goom_srcconnect);
+  gst_pad_set_fixate_function (goom->srcpad, gst_goom_src_fixate);
 
   goom->width = 320;
   goom->height = 200;
@@ -234,6 +236,33 @@ gst_goom_srcconnect (GstPad *pad, const GstCaps *caps)
   goom->srcnegotiated = TRUE;
 
   return GST_PAD_LINK_OK;
+}
+
+static GstCaps *
+gst_goom_src_fixate (GstPad *pad, const GstCaps *caps)
+{
+  GstCaps *newcaps;
+  GstStructure *structure;
+
+  if (!gst_caps_is_simple (caps)) return NULL;
+
+  newcaps = gst_caps_copy (caps);
+  structure = gst_caps_get_structure (newcaps, 0);
+
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 320)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "height", 240)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
+        30.0)) {
+    return newcaps;
+  }
+
+  /* failed to fixate */
+  gst_caps_free (newcaps);
+  return NULL;
 }
 
 static void
