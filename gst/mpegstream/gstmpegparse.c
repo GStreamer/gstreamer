@@ -468,8 +468,11 @@ gst_mpeg_parse_loop (GstElement *element)
       CLASS (mpeg_parse)->send_data (mpeg_parse, data, time);
 
     if (mpeg_parse->clock && mpeg_parse->sync && !mpeg_parse->discont_pending) {
+      GstClockID id = gst_clock_new_single_shot_id (mpeg_parse->clock, time);
+
       GST_DEBUG (GST_CAT_CLOCK, "syncing mpegparse");
-      gst_element_clock_wait (GST_ELEMENT (mpeg_parse), mpeg_parse->clock, time, NULL);
+      gst_element_clock_wait (GST_ELEMENT (mpeg_parse), id, NULL);
+      gst_clock_id_free (id);
     }
 
     if (mpeg_parse->current_scr != -1)
@@ -510,7 +513,7 @@ gst_mpeg_parse_get_src_formats (GstPad *pad)
 {
   static const GstFormat formats[] = {
     GST_FORMAT_BYTES,
-    GST_FORMAT_TIME,
+    GST_FORMAT_TIME,		
     0 
   };
   return formats;
