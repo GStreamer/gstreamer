@@ -68,7 +68,7 @@ gst_navigation_send_event (GstNavigation *navigation, GstCaps *caps)
   GstNavigationClass *klass = GST_NAVIGATION_GET_CLASS (navigation);
 
   if (klass->send_event) {
-    return klass->send_event (navigation, caps);
+    klass->send_event (navigation, caps);
   }
 }
 
