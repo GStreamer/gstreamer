@@ -218,9 +218,38 @@ gst_asf_demux_loop (GstElement * element)
     case GST_ASF_DEMUX_STATE_HEADER:
       gst_asf_demux_process_object (asf_demux);
       break;
-    case GST_ASF_DEMUX_STATE_DATA:
+    case GST_ASF_DEMUX_STATE_DATA:{
+      guint64 start_off = gst_bytestream_tell (asf_demux->bs), end_off;
+
+      /* make sure a full packet is actually available */
+      if (asf_demux->packet_size != (guint32) - 1)
+        do {
+          guint32 remaining;
+          GstEvent *event;
+          guint got_bytes;
+          guint8 *data;
+
+          if ((got_bytes = gst_bytestream_peek_bytes (asf_demux->bs, &data,
+                      asf_demux->packet_size)) == asf_demux->packet_size)
+            break;
+          gst_bytestream_get_status (asf_demux->bs, &remaining, &event);
+
+          if (!gst_asf_demux_handle_sink_event (asf_demux, event, remaining))
+            return;
+        } while (1);
+
+      /* now handle data */
       gst_asf_demux_handle_data (asf_demux);
+
+      /* align by packet size */
+      end_off = gst_bytestream_tell (asf_demux->bs);
+      if (asf_demux->packet_size != (guint32) - 1 &&
+          end_off - start_off < asf_demux->packet_size) {
+        gst_bytestream_flush_fast (asf_demux->bs,
+            asf_demux->packet_size - (end_off - start_off));
+      }
       break;
+    }
     case GST_ASF_DEMUX_STATE_EOS:
       gst_pad_event_default (asf_demux->sinkpad, gst_event_new (GST_EVENT_EOS));
       break;
