@@ -1,3 +1,7 @@
+2004-02-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac: use GST_ARCH to detect architecture
+
 2004-02-12  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/vbidec/vbiscreen.c: Fixing thomasvs fixes. Missing header.
