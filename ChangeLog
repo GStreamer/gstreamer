@@ -1,3 +1,10 @@
+2004-01-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_parse_syshead),
+	(gst_mpeg_demux_parse_packet), (gst_mpeg_demux_parse_pes):
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_parse_packhead):
+	  Fix more integer overflows. Again, see #126967.
+
 2004-01-03  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/mpeg2dec/gstmpeg2dec.c:

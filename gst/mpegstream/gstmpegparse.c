@@ -308,10 +308,10 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     guint32 scr_ext;
 
     /* :2=01 ! scr:3 ! marker:1==1 ! scr:15 ! marker:1==1 ! scr:15 */
-    scr  = (scr1 & 0x38000000) << 3;
-    scr |= (scr1 & 0x03fff800) << 4;
-    scr |= (scr1 & 0x000003ff) << 5;
-    scr |= (scr2 & 0xf8000000) >> 27;
+    scr  = ((guint64) scr1 & 0x38000000) << 3;
+    scr |= ((guint64) scr1 & 0x03fff800) << 4;
+    scr |= ((guint64) scr1 & 0x000003ff) << 5;
+    scr |= ((guint64) scr2 & 0xf8000000) >> 27;
 
     scr_ext = (scr2 & 0x03fe0000) >> 17;
 
@@ -325,17 +325,17 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     new_rate = (GUINT32_FROM_BE ((*(guint32 *) buf)) & 0xfffffc00) >> 10;
   }
   else {
-    scr  = (scr1 & 0x0e000000) << 5;
-    scr |= (scr1 & 0x00fffe00) << 6;
-    scr |= (scr1 & 0x000000ff) << 7;
-    scr |= (scr2 & 0xfe000000) >> 25;
+    scr  = ((guint64) scr1 & 0x0e000000) << 5;
+    scr |= ((guint64) scr1 & 0x00fffe00) << 6;
+    scr |= ((guint64) scr1 & 0x000000ff) << 7;
+    scr |= ((guint64) scr2 & 0xfe000000) >> 25;
 
     buf += 5;
     /* we do this byte by byte because buf[3] might be outside of buf's
      * memory space */
-    new_rate = (buf[0] & 0x7f) << 15;
-    new_rate |= buf[1] << 7;
-    new_rate |= buf[2] >> 1;
+    new_rate  = ((gint32) buf[0] & 0x7f) << 15;
+    new_rate |= ((gint32) buf[1]) << 7;
+    new_rate |=           buf[2]  >> 1;
   }
 
   scr_orig = scr;

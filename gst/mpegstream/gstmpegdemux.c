@@ -400,7 +400,7 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       }
 
       STD_buffer_bound_scale = *buf & 0x20;
-      STD_buffer_size_bound = (*buf++ & 0x1F) << 8;
+      STD_buffer_size_bound = ((guint16)(*buf++ & 0x1F)) << 8;
       STD_buffer_size_bound |= *buf++;
 
       if (STD_buffer_bound_scale == 0) {
@@ -557,7 +557,7 @@ gst_mpeg_demux_parse_packet (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
         GST_DEBUG ("have STD");
 
         STD_buffer_bound_scale =  bits & 0x20;
-        STD_buffer_size_bound  = (bits & 0x1F) << 8;
+        STD_buffer_size_bound  = ((guint16)(bits & 0x1F)) << 8;
         STD_buffer_size_bound |=  *buf++;
 
         headerlen += 2;
@@ -566,29 +566,29 @@ gst_mpeg_demux_parse_packet (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
         switch (bits & 0x30) {
 	  case 0x20:
             /* pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
-            pts  = (bits & 0x0E)   << 29;
-            pts |=  *buf++         << 22;
-            pts |= (*buf++ & 0xFE) << 14;
-            pts |=  *buf++         <<  7;
-            pts |= (*buf++ & 0xFE) >>  1;
+            pts  = ((guint64)(bits & 0x0E)  ) << 29;
+            pts |= ((guint64) *buf++        ) << 22;
+            pts |= ((guint64)(*buf++ & 0xFE)) << 14;
+            pts |= ((guint64) *buf++        ) <<  7;
+            pts |= ((guint64)(*buf++ & 0xFE)) >>  1;
 
             GST_DEBUG ("PTS = %" G_GUINT64_FORMAT, pts);
             headerlen += 5;
 	    goto done;
 	  case 0x30:
             /* pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
-            pts  = (bits & 0x0E)   << 29;
-            pts |=  *buf++         << 22;
-            pts |= (*buf++ & 0xFE) << 14;
-            pts |=  *buf++         <<  7;
-            pts |= (*buf++ & 0xFE) >>  1;
+            pts  = ((guint64)(bits & 0x0E)  ) << 29;
+            pts |= ((guint64) *buf++        ) << 22;
+            pts |= ((guint64)(*buf++ & 0xFE)) << 14;
+            pts |= ((guint64) *buf++        ) <<  7;
+            pts |= ((guint64)(*buf++ & 0xFE)) >>  1;
 
             /* sync:4 ! pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
-            dts  = (*buf++ & 0x0E) << 29;
-            dts |=  *buf++         << 22;
-            dts |= (*buf++ & 0xFE) << 14;
-            dts |=  *buf++         <<  7;
-            dts |= (*buf++ & 0xFE) >>  1;
+            dts  = ((guint64)(*buf++ & 0x0E)) << 29;
+            dts |= ((guint64) *buf++        ) << 22;
+            dts |= ((guint64)(*buf++ & 0xFE)) << 14;
+            dts |= ((guint64) *buf++        ) <<  7;
+            dts |= ((guint64)(*buf++ & 0xFE)) >>  1;
 
             GST_DEBUG ("PTS = %" G_GUINT64_FORMAT ", DTS = %" G_GUINT64_FORMAT, pts, dts);
             headerlen += 10;
@@ -767,9 +767,9 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     if ((flags2 & 0x10)) {
       guint32 es_rate;
 
-      es_rate  = (*buf++ & 0x07) << 14;
-      es_rate |= (*buf++       ) << 7;
-      es_rate |= (*buf++ & 0xFE) >> 1;
+      es_rate  = ((guint32)(*buf++ & 0x07)) << 14;
+      es_rate |= ((guint32)(*buf++       )) << 7;
+      es_rate |= ((guint32)(*buf++ & 0xFE)) >> 1;
       GST_DEBUG ("%x ES Rate found", id);
     }
     /* FIXME: lots of PES parsing missing here... */
