@@ -73,21 +73,21 @@ _gst_plugin_initialize (void)
   _gst_plugin_paths = g_list_prepend (_gst_plugin_paths, PLUGINS_DIR);
 
   /* if this is set, we add build-directory paths to the list */
-#ifdef PLUGINS_USE_SRCDIR
+#ifdef PLUGINS_USE_BUILDDIR
   /* the catch-all plugins directory */
   _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
-                                      PLUGINS_SRCDIR "/plugins");
+                                      PLUGINS_BUILDDIR "/plugins");
   /* the libreary directory */
   _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
-                                      PLUGINS_SRCDIR "/libs");
+                                      PLUGINS_BUILDDIR "/libs");
   /* location libgstelements.so */
   _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
-                                      PLUGINS_SRCDIR "/gst/elements");
+                                      PLUGINS_BUILDDIR "/gst/elements");
   _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
-                                      PLUGINS_SRCDIR "/gst/types");
+                                      PLUGINS_BUILDDIR "/gst/types");
   _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
-                                      PLUGINS_SRCDIR "/gst/autoplug");
-#endif /* PLUGINS_USE_SRCDIR */
+                                      PLUGINS_BUILDDIR "/gst/autoplug");
+#endif /* PLUGINS_USE_BUILDDIR */
 
   doc = xmlParseFile (GST_CONFIG_DIR"/reg.xml");
 

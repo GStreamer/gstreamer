@@ -723,14 +723,14 @@ AC_ARG_ENABLE(atomic,
 esac], 
 [USE_ATOMIC_H=$HAVE_ATOMIC_H]) dnl Default value
 
-AC_ARG_ENABLE(plugin-srcdir,
-[  --enable-plugin-srcdir       allow tests/demos to use non-installed plugins ],
+AC_ARG_ENABLE(plugin-builddir,
+[  --enable-plugin-builddir     allow tests/demos to use non-installed plugins ],
 [case "${enableval}" in
-  yes) PLUGINS_USE_SRCDIR=yes ;;
-  no)  PLUGINS_USE_SRCDIR=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-plugin-srcdir) ;;
+  yes) PLUGINS_USE_BUILDDIR=yes ;;
+  no)  PLUGINS_USE_BUILDDIR=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-plugin-builddir) ;;
 esac], 
-[PLUGINS_USE_SRCDIR=no]) dnl Default value
+[PLUGINS_USE_BUILDDIR=no]) dnl Default value
 
 AC_ARG_ENABLE(debug,
 [  --enable-debug               compile with -g debugging info],
@@ -869,8 +869,8 @@ if test "x$USE_ATOMIC_H" = xyes; then
   AC_DEFINE(HAVE_ATOMIC_H, 1, [Define if atomic.h header file is available])
 fi
 
-if test "x$PLUGINS_USE_SRCDIR" = xyes; then
-  AC_DEFINE(PLUGINS_USE_SRCDIR, 1, [Define if plugins should be loaded from the build tree - only developers should use this])
+if test "x$PLUGINS_USE_BUILDDIR" = xyes; then
+  AC_DEFINE(PLUGINS_USE_BUILDDIR, 1, [Define if plugins should be loaded from the build tree - only developers should use this])
 fi
 
 if test "x$USE_DEBUG" = xyes; then
@@ -1012,7 +1012,7 @@ AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
 AM_CONDITIONAL(HAVE_AVIFILE,        test "x$HAVE_AVIFILE" = "xyes")
 AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME, test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGSM,         test "x$HAVE_LIBGSM" = "xyes")
-AM_CONDITIONAL(PLUGINS_USE_SRCDIR,  test "x$PLUGINS_USE_SRCDIR" = "xyes")
+AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
 
 
 dnl ############################
@@ -1037,9 +1037,9 @@ AC_DEFINE_UNQUOTED(PLUGINS_DIR,"$PLUGINS_DIR")
 AC_SUBST(PLUGINS_DIR)
 
 dnl Set location of uninstalled plugin directory
-PLUGINS_SRCDIR=`pwd`/$srcdir
-AC_DEFINE_UNQUOTED(PLUGINS_SRCDIR,"$PLUGINS_SRCDIR")
-AC_SUBST(PLUGINS_SRCDIR)
+PLUGINS_BUILDDIR=${builddir}
+AC_DEFINE_UNQUOTED(PLUGINS_BUILDDIR,"$PLUGINS_BUILDDIR")
+AC_SUBST(PLUGINS_BUILDDIR)
 
 
 
