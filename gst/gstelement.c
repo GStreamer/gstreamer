@@ -2918,9 +2918,9 @@ gst_element_pads_activate (GstElement * element, gboolean active)
 static GstElementStateReturn
 gst_element_change_state (GstElement * element)
 {
-  GstElementState old_state;
+  GstElementState old_state, old_pending;
   GstObject *parent;
-  gint old_pending, old_transition;
+  gint old_transition;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 

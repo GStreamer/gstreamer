@@ -665,11 +665,14 @@ static void
 gst_bin_child_state_change_func (GstBin * bin, GstElementState oldstate,
     GstElementState newstate, GstElement * child)
 {
+  GstElementState old = 0, new = 0;
   gint old_idx = 0, new_idx = 0, i;
 
-  while (oldstate >>= 1)
+  old = oldstate;
+  new = newstate;
+  while (old >>= 1)
     old_idx++;
-  while (newstate >>= 1)
+  while (new >>= 1)
     new_idx++;
 
   GST_LOCK (bin);
