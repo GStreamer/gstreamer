@@ -4,7 +4,8 @@
 gboolean playing;
 
 /* example based on helloworld by thomas@apestaart.org
-   demonstrates the adder plugin and the volume envelope plugin */
+   demonstrates the adder plugin and the volume envelope plugin 
+   work in progress but do try it out */
 
 /* eos will be called when the src element has an end of stream */
 void eos(GstElement *element) 
@@ -120,22 +121,17 @@ int main(int argc,char *argv[])
 
   /* register the volume envelope */
 
-  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "0:0.0001", NULL);
-  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "2:1", NULL);
-  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "4:1", NULL);
-  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "5:.1", NULL);
-  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "6:1", NULL);
-  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "7:.1", NULL);
-  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "8:1", NULL);
-  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "15:0.8", NULL);
+  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "0:0.000001", NULL);
+  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "5:0.000001", NULL);
+  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "10:1", NULL);
+  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "15:1", NULL);
+  gtk_object_set(GTK_OBJECT(volenv1), "controlpoint", "20:0.000001", NULL);
 
-  gtk_object_set(GTK_OBJECT(volenv2), "controlpoint", "0:0.001", NULL);
-  gtk_object_set(GTK_OBJECT(volenv2), "controlpoint", "4:0.001", NULL);
+  gtk_object_set(GTK_OBJECT(volenv2), "controlpoint", "0:1", NULL);
   gtk_object_set(GTK_OBJECT(volenv2), "controlpoint", "5:1", NULL);
-  gtk_object_set(GTK_OBJECT(volenv2), "controlpoint", "6:.1", NULL);
-  gtk_object_set(GTK_OBJECT(volenv2), "controlpoint", "7:1", NULL);
-  gtk_object_set(GTK_OBJECT(volenv2), "controlpoint", "8:.1", NULL);
-  gtk_object_set(GTK_OBJECT(volenv2), "controlpoint", "15:0.001", NULL);
+  gtk_object_set(GTK_OBJECT(volenv2), "controlpoint", "10:0.000001", NULL);
+  gtk_object_set(GTK_OBJECT(volenv2), "controlpoint", "15:0.000001", NULL);
+  gtk_object_set(GTK_OBJECT(volenv2), "controlpoint", "20:1", NULL);
 
   /* start playing */
   gst_element_set_state(main_bin, GST_STATE_PLAYING);
