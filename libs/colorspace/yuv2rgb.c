@@ -34,6 +34,8 @@
 
 #include "yuv2rgb.h"
 
+
+static void gst_colorspace_yuv420P_to_bgr16_mmx(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);
 static void gst_colorspace_yuv420P_to_rgb32(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);
 static void gst_colorspace_yuv420P_to_bgr32(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);
 static void gst_colorspace_yuv420P_to_bgr32_mmx(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);
@@ -67,7 +69,7 @@ static void gst_colorspace_yuv_to_bgr32_mmx(GstColorSpaceYUVTables *tables,
 	        			unsigned char *cb,
 		  			unsigned char *out,
 		    			int cols, int rows);
-static void gst_colorspace_yuv_to_bgr16_mmx(GstColorSpaceYUVTables *tables,
+extern void gst_colorspace_yuv_to_bgr16_mmx(GstColorSpaceYUVTables *tables,
 	    				unsigned char *lum,
 	      				unsigned char *cr,
 	        			unsigned char *cb,
@@ -213,8 +215,6 @@ static void gst_colorspace_yuv420P_to_rgb16(GstColorSpaceConverter *space, unsig
 }
 
 #ifdef HAVE_LIBMMX
-static mmx_t MMX16_redmask   = (mmx_t)(long long)0xf800f800f800f800LL;             //dd    07c00 7c00h, 07c007c00h
-static mmx_t MMX16_grnmask   = (mmx_t)(long long)0x07e007e007e007e0LL;                 //dd    003e0 03e0h, 003e003e0h
 
 static void gst_colorspace_yuv420P_to_bgr32_mmx(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
   int size;
@@ -663,192 +663,16 @@ gst_colorspace_yuv_to_rgb32(tables, lum, cb, cr, out, rows, cols)
 }
 
 #ifdef HAVE_LIBMMX
-static mmx_t MMX_10w           = (mmx_t)(long long)0x000D000D000D000DLL;                     //dd    00080 0080h, 000800080h
 static mmx_t MMX_80w           = (mmx_t)(long long)0x0080008000800080LL;                     //dd    00080 0080h, 000800080h
 
 static mmx_t MMX_00FFw         = (mmx_t)(long long)0x00ff00ff00ff00ffLL;                     //dd    000FF 00FFh, 000FF00FFh
 static mmx_t MMX_FF00w         = (mmx_t)(long long)0xff00ff00ff00ff00LL;                     //dd    000FF 00FFh, 000FF00FFh
-
-static mmx_t MMX16_Vredcoeff   = (mmx_t)(long long)0x0066006600660066LL;                     //dd    00066 0066h, 000660066h
-static mmx_t MMX16_Ublucoeff   = (mmx_t)(long long)0x0081008100810081LL;                     //dd    00081 0081h, 000810081h
-static mmx_t MMX16_Ugrncoeff   = (mmx_t)(long long)0xffe8ffe8ffe8ffe8LL;             //dd    0FFE7 FFE7h, 0FFE7FFE7h
-static mmx_t MMX16_Vgrncoeff   = (mmx_t)(long long)0xffcdffcdffcdffcdLL;             //dd    0FFCC FFCCh, 0FFCCFFCCh
-
-static mmx_t MMX16_Ycoeff      = (mmx_t)(long long)0x004a004a004a004aLL;                     //dd    0004A 004Ah, 0004A004Ah
-
 
 static mmx_t MMX32_Vredcoeff     = (mmx_t)(long long)0x0059005900590059LL;  
 static mmx_t MMX32_Ubluecoeff    = (mmx_t)(long long)0x0072007200720072LL;    
 static mmx_t MMX32_Ugrncoeff     = (mmx_t)(long long)0xffeaffeaffeaffeaLL; 
 static mmx_t MMX32_Vgrncoeff     = (mmx_t)(long long)0xffd2ffd2ffd2ffd2LL;  
 
-static void
-gst_colorspace_yuv_to_bgr16_mmx(tables, lum, cr, cb, out, rows, cols)
-  GstColorSpaceYUVTables *tables;
-  unsigned char *lum;
-  unsigned char *cr;
-  unsigned char *cb;
-  unsigned char *out;
-  int cols, rows;
-
-{
-    unsigned short *row1 = (unsigned short* )out;         // 32 bit target
-    int cols8 = cols>>3;
-
-    int y, x; 
-
-    DEBUG("gst_colorspace_yuv420P_to_bgr16_mmx %p %p %p\n", lum, cr, cb);
-
-    for (y=rows>>1; y; y--) {
-      for (x=cols8; x; x--) {
-	
-        movd_m2r(*(mmx_t *)cr, mm0);		// 4 Cr     0  0  0  0 u3 u2 u1 u0
-        pxor_r2r(mm7, mm7);
-        movd_m2r(*(mmx_t *)cb, mm1);		// 4 Cb     0  0  0  0 v3 v2 v1 v0
-        punpcklbw_r2r(mm7, mm0);		// 4 W cb   0 u3  0 u2  0 u1  0 u0
-        punpcklbw_r2r(mm7, mm1);		// 4 W cr   0 v3  0 v2  0 v1  0 v0
-        psubw_m2r(MMX_80w, mm0);
-        psubw_m2r(MMX_80w, mm1);
-        movq_r2r(mm0, mm2);			// Cb       0 u3  0 u2  0 u1  0 u0
-        movq_r2r(mm1, mm3);			// Cr
-        pmullw_m2r(MMX16_Ugrncoeff, mm2);	// Cb2green 0 R3  0 R2  0 R1  0 R0
-        movq_m2r(*(mmx_t *)lum, mm6);		// L1      l7 L6 L5 L4 L3 L2 L1 L0
-        pmullw_m2r(MMX16_Ublucoeff, mm0);	// Cb2blue
-        pand_m2r(MMX_00FFw, mm6);		// L1      00 L6 00 L4 00 L2 00 L0
-        pmullw_m2r(MMX16_Vgrncoeff, mm3);	// Cr2green
-        movq_m2r(*(mmx_t *)lum, mm7); 		// L2
-        pmullw_m2r(MMX16_Vredcoeff, mm1);	// Cr2red
-        psubw_m2r(MMX_10w, mm6);
-        psrlw_i2r(8, mm7);			// L2           00 L7 00 L5 00 L3 00 L1
-        pmullw_m2r(MMX16_Ycoeff, mm6);		// lum1
-        psubw_m2r(MMX_10w, mm7);
-        paddw_r2r(mm3, mm2);			// Cb2green + Cr2green == green
-        pmullw_m2r(MMX16_Ycoeff, mm7);		// lum2
-
-        movq_r2r(mm6, mm4);			// lum1
-        paddw_r2r(mm0, mm6);			// lum1 +blue 00 B6 00 B4 00 B2 00 B0
-        movq_r2r(mm4, mm5);  			// lum1
-        paddw_r2r(mm1, mm4);  			// lum1 +red  00 R6 00 R4 00 R2 00 R0
-        paddw_r2r(mm2, mm5);  			// lum1 +green 00 G6 00 G4 00 G2 00 G0
-        psraw_i2r(6, mm4);  			// R1 0 .. 64
-        movq_r2r(mm7, mm3);  			// lum2                       00 L7 00 L5 00 L3 00 L1
-        psraw_i2r(6, mm5);  			// G1  - .. +
-        paddw_r2r(mm0, mm7);  			// Lum2 +blue 00 B7 00 B5 00 B3 00 B1
-        psraw_i2r(6, mm6);  			// B1         0 .. 64
-        packuswb_r2r(mm4, mm4);  		// R1 R1
-        packuswb_r2r(mm5, mm5);  		// G1 G1
-        packuswb_r2r(mm6, mm6);  		// B1 B1
-        punpcklbw_r2r(mm4, mm4);
-        punpcklbw_r2r(mm5, mm5);
-
-        pand_m2r(MMX16_redmask, mm4);
-        psllw_i2r(3, mm5);  			// GREEN       1
-        punpcklbw_r2r(mm6, mm6);
-        pand_m2r(MMX16_grnmask, mm5);
-        pand_m2r(MMX16_redmask, mm6);
-        por_r2r(mm5, mm4); 			//
-        psrlw_i2r(11, mm6);                	// BLUE        1
-        movq_r2r(mm3, mm5); 			// lum2
-        paddw_r2r(mm1, mm3);        		// lum2 +red      00 R7 00 R5 00 R3 00 R1
-        paddw_r2r(mm2, mm5); 			// lum2 +green 00 G7 00 G5 00 G3 00 G1
-        psraw_i2r(6, mm3); 			// R2
-        por_r2r(mm6, mm4); 			// MM4
-        psraw_i2r(6, mm5); 			// G2
-        movq_m2r(*(mmx_t *)(lum+cols), mm6); 	// L3 load lum2
-        psraw_i2r(6, mm7);
-        packuswb_r2r(mm3, mm3);
-        packuswb_r2r(mm5, mm5);
-        packuswb_r2r(mm7, mm7);
-        pand_m2r(MMX_00FFw, mm6);  		// L3
-        psubw_m2r(MMX_10w, mm6);
-        punpcklbw_r2r(mm3, mm3);
-         //                              "psubw          MMX_10w,                        %%mm6\n"  // L3
-        punpcklbw_r2r(mm5, mm5);
-        pmullw_m2r(MMX16_Ycoeff, mm6);  	// lum3
-        punpcklbw_r2r(mm7, mm7);
-        psllw_i2r(3, mm5);  			// GREEN 2
-        pand_m2r(MMX16_redmask, mm7);
-        pand_m2r(MMX16_redmask, mm3);
-        psrlw_i2r(11, mm7);  			// BLUE  2
-        pand_m2r(MMX16_grnmask, mm5);
-        por_r2r(mm7, mm3);
-        movq_m2r(*(mmx_t *)(lum+cols), mm7); 	// L4 load lum2
-        por_r2r(mm5, mm3);     			//
-        psrlw_i2r(8, mm7);    			// L4
-        movq_r2r(mm4, mm5);
-         //                              "psubw          MMX_10w,                        %%mm7\n"                // L4
-        punpcklwd_r2r(mm3, mm4);
-        psubw_m2r(MMX_10w, mm7);
-        pmullw_m2r(MMX16_Ycoeff, mm7);    	// lum4
-        punpckhwd_r2r(mm3, mm5);
-
-        movq_r2m(mm4, *(row1)); 		// write row1
-        movq_r2m(mm5, *(row1+4)); 		// write row1
-
-        movq_r2r(mm6, mm4);        		// Lum3
-        paddw_r2r(mm0, mm6);                	// Lum3 +blue
-
-        movq_r2r(mm4, mm5);                     // Lum3
-        paddw_r2r(mm1, mm4);       		// Lum3 +red
-        paddw_r2r(mm2, mm5);                    // Lum3 +green
-        psraw_i2r(6, mm4);
-        movq_r2r(mm7, mm3);                     // Lum4
-        psraw_i2r(6, mm5);
-        paddw_r2r(mm0, mm7);                   	// Lum4 +blue
-        psraw_i2r(6, mm6);                        	// Lum3 +blue
-        movq_r2r(mm3, mm0);  			// Lum4
-        packuswb_r2r(mm4, mm4);
-        paddw_r2r(mm1, mm3);  			// Lum4 +red
-        packuswb_r2r(mm5, mm5);
-        paddw_r2r(mm2, mm0);         		// Lum4 +green
-        packuswb_r2r(mm6, mm6);
-        punpcklbw_r2r(mm4, mm4);
-        punpcklbw_r2r(mm5, mm5);
-        punpcklbw_r2r(mm6, mm6);
-        psllw_i2r(3, mm5); 			// GREEN 3
-        pand_m2r(MMX16_redmask, mm4);
-        psraw_i2r(6, mm3); 			// psr 6
-        psraw_i2r(6, mm0);
-        pand_m2r(MMX16_redmask, mm6); 		// BLUE
-        pand_m2r(MMX16_grnmask, mm5);
-        psrlw_i2r(11, mm6);  			// BLUE  3
-        por_r2r(mm5, mm4);
-        psraw_i2r(6, mm7);
-        por_r2r(mm6, mm4);
-        packuswb_r2r(mm3, mm3);
-        packuswb_r2r(mm0, mm0);
-        packuswb_r2r(mm7, mm7);
-        punpcklbw_r2r(mm3, mm3);
-        punpcklbw_r2r(mm0, mm0);
-        punpcklbw_r2r(mm7, mm7);
-        pand_m2r(MMX16_redmask, mm3);
-        pand_m2r(MMX16_redmask, mm7); 		// BLUE
-        psllw_i2r(3, mm0); 			// GREEN 4
-        psrlw_i2r(11, mm7);
-        pand_m2r(MMX16_grnmask, mm0);
-        por_r2r(mm7, mm3);
-        por_r2r(mm0, mm3);
-
-        movq_r2r(mm4, mm5);
-
-        punpcklwd_r2r(mm3, mm4);
-        punpckhwd_r2r(mm3, mm5);
-
-        movq_r2m(mm4, *(row1+cols));
-        movq_r2m(mm5, *(row1+cols+4));
-
-        lum+=8;
-        cr+=4;
-        cb+=4;
-        row1 +=8;
-      }
-      lum += cols;
-      row1 += cols;
-    }
-
-    emms();
-
-}
 static void
 gst_colorspace_yuv_to_bgr32_mmx(tables, lum, cr, cb, out, rows, cols)
   GstColorSpaceYUVTables *tables;
