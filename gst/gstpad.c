@@ -4076,11 +4076,15 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
 {
   gboolean success = FALSE;
   GstRealPad *rpad;
+  GstElement *parent;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
+  parent = gst_pad_get_parent (pad);
+  g_return_val_if_fail (GST_STATE (parent) >= GST_STATE_PAUSED, FALSE);
 
   rpad = GST_PAD_REALIZE (pad);
+
 
   if (GST_EVENT_SRC (event) == NULL)
     GST_EVENT_SRC (event) = gst_object_ref (GST_OBJECT (rpad));
