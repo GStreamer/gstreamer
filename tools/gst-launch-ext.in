@@ -120,7 +120,7 @@ read_config ($0);
   "vob", "mpegdemux name=demux ! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }  { demux. ! queue ! a52dec ! $cfg{AUDIOSINK} }",
   "wav", "wavparse ! $cfg{AUDIOSINK}",
   "wm", "asfdemux name=demux ! { queue ! ffmpegdecall ! $cfg{VIDEOSINK} } { demux. ! queue ! mad ! $cfg{AUDIOSINK} }",
-  "wma", "asfdemux name=demux ! { queue ! ffmpegdecall ! $cfg{VIDEOSINK} } { demux. ! queue ! mad ! $cfg{AUDIOSINK} }",
+  "wma", "asfdemux name=demux ! spider ! $cfg{AUDIOSINK}",
   "wmv", "asfdemux name=demux ! { queue ! ffmpegdecall ! $cfg{VIDEOSINK} } { demux. ! queue ! mad ! $cfg{AUDIOSINK} }",
 );
 
