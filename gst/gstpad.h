@@ -147,6 +147,7 @@ typedef const GstEventMask*	(*GstPadEventMaskFunction)	(GstPad *pad);
 typedef const GstQueryType*	(*GstPadQueryTypeFunction)	(GstPad *pad);
 
 typedef GstPadLinkReturn	(*GstPadLinkFunction) 		(GstPad *pad, GstCaps *caps);
+typedef void			(*GstPadUnlinkFunction) 	(GstPad *pad);
 typedef GstCaps*		(*GstPadGetCapsFunction) 	(GstPad *pad, GstCaps *caps);
 typedef GstBufferPool*		(*GstPadBufferPoolFunction) 	(GstPad *pad);
 
@@ -189,6 +190,7 @@ struct _GstRealPad {
   GstPadDirection 		 direction;
 
   GstPadLinkFunction 		 linkfunc;
+  GstPadUnlinkFunction 		 unlinkfunc;
   GstRealPad 			*peer;
 
   gpointer 			 sched_private;
@@ -264,6 +266,7 @@ struct _GstGhostPadClass {
 #define GST_RPAD_EVENTMASKFUNC(pad)	(((GstRealPad *)(pad))->eventmaskfunc)
 
 #define GST_RPAD_LINKFUNC(pad)		(((GstRealPad *)(pad))->linkfunc)
+#define GST_RPAD_UNLINKFUNC(pad)	(((GstRealPad *)(pad))->unlinkfunc)
 #define GST_RPAD_GETCAPSFUNC(pad)	(((GstRealPad *)(pad))->getcapsfunc)
 #define GST_RPAD_BUFFERPOOLFUNC(pad)	(((GstRealPad *)(pad))->bufferpoolfunc)
 
@@ -426,6 +429,7 @@ const GstEventMask*	gst_pad_get_event_masks_default		(GstPad *pad);
 void			gst_pad_set_link_function		(GstPad *pad, GstPadLinkFunction link);
 gboolean                gst_pad_can_link            		(GstPad *srcpad, GstPad *sinkpad);
 gboolean                gst_pad_can_link_filtered   		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
+void			gst_pad_set_unlink_function		(GstPad *pad, GstPadUnlinkFunction unlink);
 
 gboolean                gst_pad_link             		(GstPad *srcpad, GstPad *sinkpad);
 gboolean                gst_pad_link_filtered       		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);

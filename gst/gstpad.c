@@ -761,6 +761,26 @@ gst_pad_set_link_function (GstPad *pad,
 }
 
 /**
+ * gst_pad_set_unlink_function:
+ * @pad: a #GstPad to set the unlink function for.
+ * @unlink: the #GstPadUnlinkFunction to set.
+ *
+ * Sets the given unlink function for the pad. It will be called
+ * when the pad is unlinked.
+ */
+void
+gst_pad_set_unlink_function (GstPad *pad,
+		              GstPadUnlinkFunction unlink)
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+
+  GST_RPAD_UNLINKFUNC (pad) = unlink;
+  GST_CAT_DEBUG (GST_CAT_PADS, "unlinkfunc for %s:%s set to %s",
+             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (unlink));
+}
+
+/**
  * gst_pad_set_getcaps_function:
  * @pad: a #GstPad to set the getcaps function for.
  * @getcaps: the #GstPadGetCapsFunction to set.
@@ -840,6 +860,13 @@ gst_pad_unlink (GstPad *srcpad,
   }
   g_return_if_fail ((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC) &&
                     (GST_RPAD_DIRECTION (realsink) == GST_PAD_SINK));
+
+  if (GST_RPAD_UNLINKFUNC (srcpad)) {
+    GST_RPAD_UNLINKFUNC (srcpad) (srcpad);
+  }
+  if (GST_RPAD_UNLINKFUNC (sinkpad)) {
+    GST_RPAD_UNLINKFUNC (sinkpad) (sinkpad);
+  }
 
   /* get the schedulers before we unlink */
   src_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsrc));
