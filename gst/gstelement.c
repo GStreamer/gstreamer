@@ -909,7 +909,7 @@ gst_element_real_destroy (GtkObject *object)
     orig = pads = g_list_copy (element->pads);
     while (pads) {
       pad = GST_PAD (pads->data);
-      gst_object_unparent (GST_OBJECT (pad));
+      gst_object_destroy (GST_OBJECT (pad));
       pads = g_list_next (pads);
     }
     g_list_free (orig);
