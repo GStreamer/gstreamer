@@ -68,8 +68,6 @@
 	:								\
 	GST_CAPS_NEW (name,						\
 		      mimetype,						\
-		      "rate",     GST_PROPS_INT_RANGE (8000, 96000),	\
-		      "channels", GST_PROPS_INT_RANGE (1, 2) ,		\
 		      ##props)
 
 /* Convert a FFMPEG codec ID and optional AVCodecContext
@@ -233,7 +231,8 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
     case CODEC_ID_DVAUDIO:
         caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_dvaudio",
-                                    "audio/x-dv"
+                                    "audio/x-dv",
+				    NULL
                                    );
         break;
 
@@ -405,12 +404,14 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
     case CODEC_ID_PCM_MULAW:
       caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_mulawaudio",
-                                  "audio/x-mulaw");
+                                  "audio/x-mulaw",
+				  NULL);
       break;
 
     case CODEC_ID_PCM_ALAW:
       caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_alawaudio",
-                                  "audio/x-alaw");
+                                  "audio/x-alaw",
+				  NULL);
       break;
 
     case CODEC_ID_ADPCM_IMA_QT:
@@ -733,8 +734,12 @@ gst_ffmpeg_caps_to_extradata (GstCaps        *caps,
           context->extradata = (guint8 *) g_malloc0 (6);        
           gst_caps_get_int (caps, "flags1", &value);
           ((guint8 *) context->extradata)[0] = value;
+          ((guint8 *) context->extradata)[1] = value >> 8;
+          ((guint8 *) context->extradata)[2] = value >> 16;
+          ((guint8 *) context->extradata)[3] = value >> 24;
           gst_caps_get_int (caps, "flags2", &value);
           ((guint8 *) context->extradata)[4] = value; 
+          ((guint8 *) context->extradata)[5] = value >> 8;
           context->extradata_size = 6;
           break;
         default:
