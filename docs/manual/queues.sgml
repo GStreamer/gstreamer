@@ -24,7 +24,11 @@
   </para>
   <figure float="1" id="sec-queues-img">
     <title>a two-threaded decoder with a queue</title>
-    <graphic fileref="images/queue" format="png"></graphic>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="images/queue" format="PNG">
+      </imageobject>
+    </mediaobject>  
   </figure>
 
   <para> 

@@ -88,7 +88,12 @@
     </para>
     <figure float="1" id="sec-mime-img">
       <title>The Hello world pipeline with MIME types</title>
-      <graphic fileref="images/mime-world" format="png"></graphic>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/mime-world" format="PNG">
+        </imageobject>
+      </mediaobject>  
+
     </figure>
     <para>
       We will see how you can create an element based on the MIME types

@@ -7,7 +7,11 @@
 
   <figure float="1" id="sec-connection">
     <title>Visualisation of three connected elements</title>
-      <graphic fileref="images/connected-elements" format="png"></graphic>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/connected-elements" format="PNG">
+        </imageobject>
+      </mediaobject>
   </figure>
   <para> 
     By connecting these three elements, we have created a very simple pipeline. The effect
