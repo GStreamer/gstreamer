@@ -961,7 +961,7 @@ static gboolean
 gst_alsa_sink_process (GstAlsa *this, snd_pcm_uframes_t frames)
 {
     guint8 *peeked;
-    guint32 len, avail, num_peeked;
+    guint32 len, avail, num_peeked = 0;
     GstEvent *event = NULL;
     GstAlsaPad *alsa_pad;
     GList *l;
@@ -976,14 +976,34 @@ gst_alsa_sink_process (GstAlsa *this, snd_pcm_uframes_t frames)
         if (! alsa_pad->bs)
             alsa_pad->bs = gst_bytestream_new(alsa_pad->pad);
 
-        num_peeked = gst_bytestream_peek_bytes (alsa_pad->bs, &peeked, frames);
-        if (num_peeked < frames) {
-            g_warning("could not make initial pull of %d bytes on pad %s:%s",
-                      (int)frames,
-                      GST_DEBUG_PAD_NAME(alsa_pad->pad));
-            gst_element_set_eos (GST_ELEMENT(this));
-            return FALSE;
-        }
+		while (num_peeked == 0) {
+        	num_peeked = gst_bytestream_peek_bytes (alsa_pad->bs, &peeked, frames);
+	        if (num_peeked == 0) {
+    	        gst_bytestream_get_status(alsa_pad->bs, &avail, &event);
+        	    if (event) {
+            	    if (GST_EVENT_TYPE(event) == GST_EVENT_EOS) {
+                	    /* really, we should just cut this pad out of the graph. let
+                    	   me know when this is needed ;) */
+
+	                    gst_element_set_eos(GST_ELEMENT(this));
+    	                gst_event_unref(event);
+        	            return TRUE;
+					} else {
+	            	    g_warning("GstAlsaSink: got an unknown event (Type: %d)", GST_EVENT_TYPE(event));
+					}
+    	        } else {
+        	        /* the element at the top of the chain did not emit an eos
+            	     * event. this is a Bug(tm) */
+                	g_assert_not_reached();
+				}
+			} else if (num_peeked < frames) {
+        	    g_warning("could not make initial pull of %d bytes on pad %s:%s",
+            	          (int)frames,
+                	      GST_DEBUG_PAD_NAME(alsa_pad->pad));
+	            gst_element_set_eos (GST_ELEMENT(this));
+    	        return FALSE;
+        	}
+		}
 
         if (!this->sample_bytes) {
             g_critical ("alsa plugin requires a pipeline that can adequately set caps.");
@@ -1004,27 +1024,22 @@ gst_alsa_sink_process (GstAlsa *this, snd_pcm_uframes_t frames)
         if (num_peeked == 0) {
             gst_bytestream_get_status(alsa_pad->bs, &avail, &event);
             if (event) {
-                g_warning("got an event on alsasink");
                 if (GST_EVENT_TYPE(event) == GST_EVENT_EOS) {
                     /* really, we should just cut this pad out of the graph. let
                        me know when this is needed ;) */
 
-                    num_peeked = gst_bytestream_peek_bytes(alsa_pad->bs, &peeked, avail);
-                    if (num_peeked && peeked)
-                        memcpy(alsa_pad->access_addr, peeked, avail);
-
                     gst_element_set_eos(GST_ELEMENT(this));
                     gst_event_unref(event);
                     return TRUE;
-                }
+                } else {
+	                g_warning("GstAlsaSink: got an unknown event (Type: %d)", GST_EVENT_TYPE(event));
+				}
             } else {
                 /* the element at the top of the chain did not emit an eos
                  * event. this is a Bug(tm) */
                 g_assert_not_reached();
             }
-        }
-
-        if (num_peeked && peeked && alsa_pad->access_addr) {
+        } else if (peeked && alsa_pad->access_addr) {
             memcpy(alsa_pad->access_addr, peeked, num_peeked);
             gst_bytestream_flush(alsa_pad->bs, num_peeked);
         } else {
@@ -1074,7 +1089,7 @@ gst_alsa_set_params (GstAlsa *this)
     g_return_val_if_fail(this != NULL, FALSE);
     g_return_val_if_fail(this->handle != NULL, FALSE);
 
-    g_print("Preparing channel: %s %dHz, %d channels\n",
+    DEBUG("Preparing channel: %s %dHz, %d channels\n",
             snd_pcm_format_name(this->format),
             this->rate, this->channels);
 
@@ -1095,10 +1110,11 @@ gst_alsa_set_params (GstAlsa *this)
     mask = alloca(snd_pcm_access_mask_sizeof());
     snd_pcm_access_mask_none(mask);
 
-    if (this->data_interleaved)
-        snd_pcm_access_mask_set(mask, SND_PCM_ACCESS_MMAP_INTERLEAVED);
-
-    snd_pcm_access_mask_set(mask, SND_PCM_ACCESS_MMAP_NONINTERLEAVED);
+    if (this->data_interleaved) {
+    	snd_pcm_access_mask_set(mask, SND_PCM_ACCESS_MMAP_INTERLEAVED);
+	} else {
+    	snd_pcm_access_mask_set(mask, SND_PCM_ACCESS_MMAP_NONINTERLEAVED);
+	}
     ret = snd_pcm_hw_params_set_access_mask(this->handle, hw_param, mask);
     if (ret < 0) {
         g_warning("the gstreamer alsa plugin does not support your hardware.");
@@ -1241,7 +1257,7 @@ gst_alsa_open_audio(GstAlsa *this)
     if (this->handle)
         gst_alsa_close_audio(this);
 
-    g_print("Opening alsa device \"%s\" for %s...\n", this->device,
+    DEBUG("Opening alsa device \"%s\" for %s...\n", this->device,
             this->stream==SND_PCM_STREAM_PLAYBACK ? "playback" : "capture");
 
     ret = snd_output_stdio_attach(&this->out, stdout, 0);
