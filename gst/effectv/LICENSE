@@ -12,14 +12,3 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
  * A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
-
-#include <gst/gst.h>
-
-GType gst_edgetv_get_type (void);
-extern GstElementDetails gst_edgetv_details;
-
-GType gst_agingtv_get_type (void);
-extern GstElementDetails gst_agingtv_details;
-
-extern GstPadTemplate *gst_effectv_sink_factory ();
-extern GstPadTemplate *gst_effectv_src_factory ();

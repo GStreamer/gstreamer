@@ -1,20 +1,16 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * EffecTV:
+ * Copyright (C) 2001 FUKUCHI Kentarou
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * EffecTV is free software. We release this product under the terms of the
+ * GNU General Public License version 2. The license is included in the file
+ * COPYING.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
 #include <string.h>
@@ -76,7 +72,7 @@ GstElementDetails gst_agingtv_details = {
   "Aply aging effect on video",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2002",
+  "(C) 2001 FUKUCHI Kentarou",
 };
 
 
