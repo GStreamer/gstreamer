@@ -706,6 +706,7 @@ gst_alsa_get_caps_internal (snd_pcm_format_t format)
       return NULL;
 
     return gst_caps_new_simple ("audio/x-raw-float",
+        "buffer-frames", GST_TYPE_INT_RANGE, 0, G_MAXINT,
         "width", G_TYPE_INT, (gint) snd_pcm_format_width (format),
         "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
   }

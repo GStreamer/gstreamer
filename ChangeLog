@@ -1,3 +1,25 @@
+2004-11-09  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_get_caps_internal):
+	  buffer-frames property was missing
+	* ext/arts/gst_arts.c:
+	  rate missing from sinkcaps
+	* ext/audiofile/gstafparse.c:
+	* ext/audiofile/gstafsink.c:
+	* ext/audiofile/gstafsrc.c:
+	* ext/swfdec/gstswfdec.c:
+	  int audio doesn't know buffer-frames
+	* ext/cdparanoia/gstcdparanoia.c:
+	  int audio doesn't know chunksize either
+	* ext/nas/nassink.c:
+	  it's endianness, not endianess
+	* gst-libs/gst/audio/audio.h:
+	  make float standard pad template caps really describe float
+	* gst/law/mulaw.c: (linear_factory):
+	  signed only, please
+	* gst/mpegstream/gstdvddemux.c:
+	  widths of 20 are not valid
+
 2004-11-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	Submitted by: Luca Ferretti <elle.uca@infinito.it>

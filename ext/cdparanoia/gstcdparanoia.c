@@ -61,11 +61,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "endianness = (int) BYTE_ORDER, "
         "signed = (boolean) true, "
         "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) 44100, "
-        "channels = (int) 2, "
-        "chunksize = (int) " G_STRINGIFY (CD_FRAMESIZE_RAW)
-    )
+        "depth = (int) 16, " "rate = (int) 44100, " "channels = (int) 2")
     );
 
 
