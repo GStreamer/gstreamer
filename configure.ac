@@ -3,7 +3,8 @@ AC_CANONICAL_TARGET([])
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gstreamer, GST_VERSION, 0, 5, 1, 1, GST_ERROR="-Wall", GST_ERROR="-Wall -Werror")
+AS_VERSION(gstreamer, GST_VERSION, 0, 5, 1, 1, GST_CVS="no", GST_CVS="yes")
+
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
@@ -11,6 +12,10 @@ AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 dnl our libraries and install dirs use major.minor as a version
 GST_MAJORMINOR=$GST_VERSION_MAJOR.$GST_VERSION_MINOR
 AC_SUBST(GST_MAJORMINOR)
+
+AC_PROG_CC
+dnl For interactive UNIX (a Sun thing)
+AC_ISC_POSIX
 
 dnl CURRENT, REVISION, AGE
 dnl - library source changed -> increment REVISION
@@ -26,12 +31,21 @@ dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
 ACLOCAL="$ACLOCAL -I common/m4 $ACLOCAL_FLAGS"
 
-AC_PROG_CC
-dnl For interactive UNIX (a Sun thing)
-AC_ISC_POSIX
 AM_PROG_CC_STDC
 AM_PROG_AS
 AS="${CC}"
+
+dnl decide on error flags
+AS_COMPILER(COMPILER)
+if test "x$COMPILER" = "xforte"; then
+  GST_ERROR=
+else
+  if test "x$GST_CVS"="xyes"; then
+    GST_ERROR="-Wall -Werror"
+  else
+    GST_ERROR="-Wall"
+  fi
+fi
 
 dnl We disable static building for development, for time savings
 dnl *NOTE*: dnl this line before release, so release does static too
@@ -420,7 +434,7 @@ GST_INT_CFLAGS="$GST_INT_CFLAGS -I\$(top_srcdir)/libs -I\$(top_srcdir)/include"
 AC_SUBST(GST_CFLAGS, "$LIBGST_CFLAGS $GST_INT_CFLAGS")
 AC_SUBST(GST_LIBS, "$LIBGST_LIBS $GST_INT_LIBS")
 
-GST_PLUGIN_LDFLAGS='-module -avoid-version'
+GST_PLUGIN_LDFLAGS="-module -avoid-version"
 AC_SUBST(GST_PLUGIN_LDFLAGS, "$GST_PLUGIN_LDFLAGS")
 
 AC_CONFIG_SUBDIRS(libs/ext/cothreads)
