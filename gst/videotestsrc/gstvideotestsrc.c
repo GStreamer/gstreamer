@@ -193,9 +193,33 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
   GST_DEBUG (0, "gst_videotestsrc_srcconnect");
   videotestsrc = GST_VIDEOTESTSRC (gst_pad_get_parent (pad));
 
-  videotestsrc->fourcc = paintinfo_find_by_caps(caps);
-  if(!videotestsrc->fourcc){
-    return GST_PAD_LINK_DELAYED;
+  for ( ; caps != NULL; caps = caps->next) {
+    GstCaps *caps1 = gst_caps_copy_1(caps);
+    GstPadLinkReturn ret;
+
+    ret = gst_pad_try_set_caps(pad, caps1);
+
+    if (ret != GST_PAD_LINK_OK &&
+        ret != GST_PAD_LINK_DONE) {
+      gst_caps_unref(caps1);
+      continue;
+    }
+
+    videotestsrc->fourcc = paintinfo_find_by_caps(caps1);
+    if (!videotestsrc->fourcc) {
+      gst_caps_unref(caps1);
+      continue;
+    }
+
+    /* if we get here, it's allright */
+    gst_caps_unref(caps1);
+    break;
+  }
+
+  if (caps == NULL) {
+    GST_DEBUG (GST_CAT_PLUGIN_ERRORS,
+	       "videotestsrc: no suitable opposite-side caps found");
+    return GST_PAD_LINK_REFUSED;
   }
 
   GST_DEBUG (0,"videotestsrc: using fourcc element %p %s\n",
@@ -208,7 +232,7 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG (0, "size %d x %d", videotestsrc->width, videotestsrc->height);
 
-  return GST_PAD_LINK_OK;
+  return GST_PAD_LINK_DONE;
 }
 
 static GstElementStateReturn
