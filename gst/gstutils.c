@@ -36,7 +36,7 @@
  * Dumps the memory block into a hex representation. Useful for debugging.
  */
 void
-gst_util_dump_mem (guchar * mem, guint size)
+gst_util_dump_mem (const guchar * mem, guint size)
 {
   guint i, j;
   GString *string = g_string_sized_new (50);

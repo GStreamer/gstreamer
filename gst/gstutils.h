@@ -32,7 +32,7 @@ G_BEGIN_DECLS
 void		gst_util_set_value_from_string	(GValue *value, const gchar *value_str);
 void 		gst_util_set_object_arg 	(GObject *object, const gchar *name, const gchar *value);
 	
-void 		gst_util_dump_mem		(guchar *mem, guint size);
+void 		gst_util_dump_mem		(const guchar *mem, guint size);
 
 void 		gst_print_pad_caps 		(GString *buf, gint indent, GstPad *pad);
 void 		gst_print_element_args 		(GString *buf, gint indent, GstElement *element);

@@ -1,3 +1,9 @@
+2004-03-22  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstutils.c: (gst_util_dump_mem):
+	* gst/gstutils.h:
+	  first argument of gst_util_dump_mem should be const
+
 2004-03-22  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gstvalue.h: Clean up a little bit.
