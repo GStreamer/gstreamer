@@ -63,7 +63,7 @@ struct _GstPluginDesc {
   gchar *license;			/* effective license of plugin */
   gchar *package;			/* package plugin belongs to */
   gchar *origin;			/* URL to provider of plugin */
-  
+
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -71,25 +71,25 @@ struct _GstPlugin {
   GstPluginDesc	desc;
 
   gchar *	filename;
-  GList *	features;		/* list of features provided */
-  gint 		numfeatures;
+  GList *	features;	/* list of features provided */
+  gint		numfeatures;
 
-  gpointer 	manager;		/* managing registry */
-  GModule *	module;			/* contains the module if the plugin is loaded */
+  gpointer	manager;	/* managing registry */
+  GModule *	module;		/* contains the module if plugin is loaded */
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
 #define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,package,origin)	\
-GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {		      	\
+GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
   major,						\
   minor,						\
   name,							\
-  description,	      					\
+  description,						\
   init,							\
   NULL,							\
   version,						\
-  license,					      	\
+  license,						\
   package,						\
   origin,						\
   GST_PADDING_INIT				        \
@@ -102,18 +102,18 @@ _gst_plugin_static_init__ ##init (void)			\
   static GstPluginDesc plugin_desc_ = {			\
     major,						\
     minor,						\
-    name,		      				\
-    description,	      	      			\
-    init,				      		\
-    NULL,					      	\
+    name,						\
+    description,					\
+    init,						\
+    NULL,						\
     version,						\
-    license,					      	\
+    license,						\
     package,						\
     origin,						\
     GST_PADDING_INIT				        \
   };							\
   _gst_plugin_register_static (&plugin_desc_);		\
-}			
+}
 
 #define GST_LICENSE_UNKNOWN "unknown"
 
@@ -125,22 +125,23 @@ typedef gboolean        (*GstPluginFilter)              (GstPlugin *plugin,
 #define GST_TYPE_PLUGIN   (gst_plugin_get_type())
 GType                   gst_plugin_get_type             (void);
 void			_gst_plugin_initialize		(void);
-void 			_gst_plugin_register_static 	(GstPluginDesc *desc);
+void			_gst_plugin_register_static	(GstPluginDesc *desc);
 
 G_CONST_RETURN gchar*	gst_plugin_get_name		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_description	(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_filename		(GstPlugin *plugin);
+G_CONST_RETURN gchar*	gst_plugin_get_version		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_license		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_package		(GstPlugin *plugin);
-G_CONST_RETURN gchar*	gst_plugin_get_origin      	(GstPlugin *plugin);
+G_CONST_RETURN gchar*	gst_plugin_get_origin		(GstPlugin *plugin);
 GModule *		gst_plugin_get_module		(GstPlugin *plugin);
 gboolean		gst_plugin_is_loaded		(GstPlugin *plugin);
 
-GList*			gst_plugin_feature_filter	(GstPlugin *plugin, 
+GList*			gst_plugin_feature_filter	(GstPlugin *plugin,
 							 GstPluginFeatureFilter filter,
 							 gboolean first,
 							 gpointer user_data);
-GList*			gst_plugin_list_feature_filter	(GList *list, 
+GList*			gst_plugin_list_feature_filter	(GList *list,
 							 GstPluginFeatureFilter filter,
 							 gboolean first,
 							 gpointer user_data);
@@ -149,15 +150,15 @@ gboolean		gst_plugin_name_filter		(GstPlugin *plugin, const gchar *name);
 GList*			gst_plugin_get_feature_list	(GstPlugin *plugin);
 GstPluginFeature*	gst_plugin_find_feature		(GstPlugin *plugin, const gchar *name, GType type);
 
-gboolean 		gst_plugin_check_file		(const gchar *filename, GError** error);
-GstPlugin * 		gst_plugin_load_file		(const gchar *filename, GError** error);
-gboolean 		gst_plugin_unload_plugin	(GstPlugin *plugin);
+gboolean		gst_plugin_check_file		(const gchar *filename, GError** error);
+GstPlugin *		gst_plugin_load_file		(const gchar *filename, GError** error);
+gboolean		gst_plugin_unload_plugin	(GstPlugin *plugin);
 
 void			gst_plugin_add_feature		(GstPlugin *plugin, GstPluginFeature *feature);
 
 /* shortcuts to load from the registry pool */
-gboolean 		gst_plugin_load			(const gchar *name);
-gboolean 		gst_library_load		(const gchar *name);
+gboolean		gst_plugin_load			(const gchar *name);
+gboolean		gst_library_load		(const gchar *name);
 
 G_END_DECLS
 

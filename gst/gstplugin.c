@@ -579,6 +579,22 @@ gst_plugin_get_filename (GstPlugin * plugin)
 }
 
 /**
+ * gst_plugin_get_version:
+ * @plugin: plugin to get the version of
+ *
+ * get the version of the plugin
+ *
+ * Returns: the version of the plugin
+ */
+G_CONST_RETURN gchar *
+gst_plugin_get_version (GstPlugin * plugin)
+{
+  g_return_val_if_fail (plugin != NULL, NULL);
+
+  return plugin->desc.version;
+}
+
+/**
  * gst_plugin_get_license:
  * @plugin: plugin to get the license of
  *

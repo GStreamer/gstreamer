@@ -1,6 +1,13 @@
+2004-12-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstplugin.c:
+	* gst/gstplugin.h:
+	  add accessor for version field
+
 2004-12-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	submitted by: Luca Ferretti <elle.uca@infinito.it>
+
 	* po/LINGUAS:
 	* po/it.po:
 	  New tranlation added: Italian
