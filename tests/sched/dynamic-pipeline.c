@@ -35,8 +35,7 @@ int main (int argc, char *argv[])
     // make a new pipeline
     gst_bin_add (GST_BIN(pipe2), fakesink2);
     
-    // change the new pipeline's state to READY (is this necessary?)
-    gst_element_set_state(pipe2, GST_STATE_READY);
+    // don't change the new pipeline's state, it should change on the bin_add
     gst_bin_add (GST_BIN(pipe2), fakesrc);
     gst_element_connect(fakesrc, "src", fakesink2, "sink");
     
