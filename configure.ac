@@ -432,10 +432,9 @@ GST_CHECK_FEATURE(AALIB, [aasink plugin], aasink, [
 ])
 
 dnl *** alsa ***
-dnl FIXME: check if the version should be 0.9.0 or 0.5.0
 translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
 GST_CHECK_FEATURE(ALSA, [alsa plugins], gstalsa, [
-AM_PATH_ALSA(0.5.0, HAVE_ALSA=yes, HAVE_ALSA=no)
+AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
 ])
 
 dnl *** arts ***
@@ -559,6 +558,12 @@ dnl *** mpeg2dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
 GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
   GST_CHECK_LIBHEADER(MPEG2DEC, mpeg2, mpeg2_init,, mpeg2dec/mpeg2.h, MPEG2DEC_LIBS="-lmpeg2")
+])
+
+dnl *** OSS audio ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OSS, true)
+GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
+  AC_CHECK_HEADER(sys/soundcard.h)
 ])
 
 dnl *** quicktime ***
@@ -743,19 +748,6 @@ AC_CHECK_LIB(Xv, XvQueryExtension,
 LIBS=${xvsave_LIBS}
 AC_CHECK_HEADER(X11/extensions/Xv.h, :, HAVE_LIBXV=no)
 AC_CHECK_HEADER(X11/extensions/Xvlib.h, :, HAVE_LIBXV=no)
-
-dnl Check for OSS audio
-AC_CHECK_HEADER(sys/soundcard.h, HAVE_OSS=yes, HAVE_OSS=no)
-
-dnl Check for xaudio
-AC_CHECK_HEADER(xaudio/decoder.h,
-  AC_DEFINE(HAVE_XAUDIO, 1, [Define if xaudio is available])
-  HAVE_XAUDIO="yes",
-  AC_MSG_WARN(
-***** NOTE: These plugins won't be built: gstxa
-)
-  HAVE_XAUDIO="no",
-)
 
 dnl Check for linux/cdrom.h
 AC_CHECK_HEADER(linux/cdrom.h,
