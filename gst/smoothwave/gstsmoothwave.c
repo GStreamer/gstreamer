@@ -28,11 +28,8 @@
 static GstElementDetails gst_smoothwave_details = {
   "Smooth waveform",
   "Visualization",
-  "LGPL",
   "Fading grayscale waveform display",
-  VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
 };
 
 
@@ -49,7 +46,7 @@ enum {
   ARG_WIDGET,
 };
 
-
+static void     gst_smoothwave_base_init        (gpointer g_class);
 static void	gst_smoothwave_class_init	(GstSmoothWaveClass *klass);
 static void	gst_smoothwave_init		(GstSmoothWave *smoothwave);
 
@@ -69,7 +66,8 @@ gst_smoothwave_get_type (void)
 
   if (!smoothwave_type) {
     static const GTypeInfo smoothwave_info = {
-      sizeof(GstSmoothWaveClass),      NULL,
+      sizeof(GstSmoothWaveClass),
+      gst_smoothwave_base_init,
       NULL,
       (GClassInitFunc)gst_smoothwave_class_init,
       NULL,
@@ -81,6 +79,14 @@ gst_smoothwave_get_type (void)
     smoothwave_type = g_type_register_static(GST_TYPE_ELEMENT, "GstSmoothWave", &smoothwave_info, 0);
   }
   return smoothwave_type;
+}
+
+static void
+gst_smoothwave_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_smoothwave_details);
 }
 
 static void
@@ -288,23 +294,22 @@ gst_smoothwave_get_property (GObject *object, guint prop_id, GValue *value, GPar
 
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the smoothwave element */
-  factory = gst_element_factory_new("smoothwave",GST_TYPE_SMOOTHWAVE,
-                                   &gst_smoothwave_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "smoothwave", GST_RANK_NONE, GST_TYPE_SMOOTHWAVE))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "smoothwave",
-  plugin_init
-};
+  "Fading greyscale waveform display",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
