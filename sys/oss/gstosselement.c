@@ -1,8 +1,9 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wim.taymans@chello.be>
+ *                    2004 Toni Willberg <toniw@iki.fi>
  *
- * gstosssink.c: 
+ * gstosselement.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -1060,15 +1061,31 @@ gst_osselement_probe_caps (GstOssElement * oss)
   GstStructure *structure;
   unsigned int format_bit;
   unsigned int format_mask;
+
   GstCaps *caps;
+
+  gboolean mono_supported = FALSE;
+  gboolean stereo_supported = FALSE;
+  int n_channels;
 
   if (oss->probed_caps != NULL)
     return;
   if (oss->fd == -1)
     return;
 
+
   /* FIXME test make sure we're not currently playing */
-  /* FIXME test both mono and stereo */
+
+  /* check if the device supports mono, stereo or both */
+  n_channels = 1;
+  ret = ioctl (oss->fd, SNDCTL_DSP_CHANNELS, &n_channels);
+  if (n_channels == 1)
+    mono_supported = TRUE;
+
+  n_channels = 2;
+  ret = ioctl (oss->fd, SNDCTL_DSP_CHANNELS, &n_channels);
+  if (n_channels == 2)
+    stereo_supported = TRUE;
 
   format_mask = AFMT_U8 | AFMT_S16_LE | AFMT_S16_BE | AFMT_S8 |
       AFMT_U16_LE | AFMT_U16_BE;
@@ -1084,7 +1101,12 @@ gst_osselement_probe_caps (GstOssElement * oss)
       probe = g_new0 (GstOssProbe, 1);
       probe->fd = oss->fd;
       probe->format = format_bit;
-      probe->n_channels = 2;
+
+      if (stereo_supported) {
+        probe->n_channels = 2;
+      } else {
+        probe->n_channels = 1;
+      }
 
       ret = gst_osselement_rate_probe_check (probe);
       if (probe->min == -1 || probe->max == -1) {
@@ -1118,7 +1140,21 @@ gst_osselement_probe_caps (GstOssElement * oss)
       g_free (probe);
 
       structure = gst_osselement_get_format_structure (format_bit);
-      gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+
+      if (mono_supported && stereo_supported) {
+        gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE, 1, 2,
+            NULL);
+      } else if (mono_supported) {
+        gst_structure_set (structure, "channels", G_TYPE_INT, 1, NULL);
+      } else if (stereo_supported) {
+        gst_structure_set (structure, "channels", G_TYPE_INT, 2, NULL);
+      } else {
+        /* falling back to [1,2] because we don't know what breaks if we abort here */
+        GST_ERROR (_("Your OSS device doesn't support mono or stereo."));
+        gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE, 1, 2,
+            NULL);
+      }
+
       gst_structure_set_value (structure, "rate", &rate_value);
       g_value_unset (&rate_value);
 
