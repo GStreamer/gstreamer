@@ -1,0 +1,84 @@
+
+case 1) 
+
+(--------------------------------------------------)
+! bin                                              !
+! (--------)         (--------)         (--------) !
+! ! fakesrc!         !identity!         !fakesink! !
+! !   1   src ----- sink  1  src ---- sink   1   ! !
+! (--------)         (--------)         (--------) !
+!                                                  !
+! (--------)         (--------)         (--------) !
+! !fakesrc !         !identity!         !fakesink! !
+! !   2   src ----- sink  2  src ---- sink   2   ! !
+! (--------)         (--------)         (--------) !
+(--------------------------------------------------)
+
+  just two scheduled chains in a single bin.
+
+.scheduling.
+  
+  we have two chains here fs1-i1-fsk1 and fs2-i2-fsk2
+  fakesrc1 will output 1 buffer, fakesrc2 3 buffers
+
+.eos.
+
+  fs1 will call gst_pad_set_eos (src, TRUE) on its srcpad
+  in the _get function and returns a NULL buffer.
+
+  gst_pad_set_eos will recurse down the pipeline and set
+  all the pads in i1 and fsk1 to EOS too. none of these elements
+  override the default behaviour so gst_pad_set_eos returns TRUE.
+
+  fakesrc signals EOS.  since an element in chain1 has signales
+  EOS, chain1 becomes EOS. All the elements in the chain are set
+  to the READY state and the chain is not scheduled anymore because
+  its EOS flag is on.
+
+  the same procedure happens for chain2. At that point, the bin 
+  has no chains to schedule and so it fires EOS.
+
+
+case 2) 
+
+(---------------------------------------------------)
+! bin                                               !
+! (--------)         (--------)         (---------) !
+! ! disksrc!         ! mpg123 !         !audiosink! !
+! !   1   src ----- sink  1  src ---- sink   1    ! !
+! (--------)         (--------)         (---------) !
+!                                                   !
+! (--------)         (--------)         (---------) !
+! !disksrc !         ! mpg123 !         !audiosink! !
+! !   2   src ----- sink  2  src ---- sink   2    ! !
+! (--------)         (--------)         (---------) !
+(---------------------------------------------------)
+
+  same as case 1, an mp3 mixer where the mixing is performed
+  in hardware (in the audiosink).
+  we want to show how the EOS state can be undone.
+
+.scheduling.
+  
+  we have two chains here ds1-mpg1-ask1 and ds2-mpg2-ask2
+  the song in chain1 is about to end, chain2 has just begun
+  playing a song.
+
+.eos.
+
+  disksrc1 will set the src pad to EOS with gst_pad_set_eos (pad, TRUE)
+  the call recurses up and down, disksrc1 signals EOS. the chain with
+  disksrc1 becomes EOS and is excluded from the scheduling algorithm.
+  disksrc1 is set to the READY state.
+
+  the user then changes the location of disksrc1 to the new mp3 song.
+  The user then sets the element state of disksrc to PLAYING. disksrc
+  performs gst_pad_set_eos (pad, FALSE)
+
+  the call recurses up and down and returns TRUE. chain1 is set to !EOS
+  so that it will be scheduled again.
+
+  disksrc1 is set to PLAYING and the new mp3 is playing again.
+
+ 
+
