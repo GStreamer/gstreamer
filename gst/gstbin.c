@@ -34,6 +34,7 @@
 GstElementDetails gst_bin_details = {
   "Generic bin",
   "Generic/Bin",
+  "LGPL",
   "Simple container object",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",

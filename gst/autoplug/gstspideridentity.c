@@ -27,8 +27,9 @@
 
 GstElementDetails gst_spider_identity_details = {
   "SpiderIdentity",
-  "Filter/Autoplug",
-  "connection between spider and outside elements",
+  "Generic",
+  "LGPL",
+  "Connection between spider and outside elements",
   VERSION,
   "Benjamin Otte <in7y118@public.uni-hamburg.de>",
   "(C) 2002",

@@ -33,6 +33,7 @@
 GstElementDetails gst_type_find_details = {
   "TypeFind",
   "Generic",
+  "LGPL",
   "Finds the media type of a stream",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>"
