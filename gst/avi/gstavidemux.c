@@ -996,7 +996,7 @@ gst_avi_demux_sync_streams (GstAviDemux *avi_demux, guint64 time)
 static gboolean
 gst_avi_demux_send_event (GstElement *element, GstEvent *event)
 {
-  GList *pads;
+  const GList *pads;
 
   pads = gst_element_get_pad_list (element);
 
