@@ -13,6 +13,7 @@ struct probe_context {
   gint        total_ls;
 
   GstCaps    *metadata;
+  GstCaps    *tags;
   GstCaps    *caps;
 };
 
@@ -25,7 +26,9 @@ print_metadata (GstCaps *caps)
     return;
   }
 
-  if (!strcmp (gst_caps_get_mime (caps), "application/x-gst-metadata")) {
+  if (!strcmp (gst_caps_get_mime (caps), "application/x-gst-metadata") ||
+      !strcmp (gst_caps_get_mime (caps), "application/x-gst-tags"))
+  {
     GstProps *props = caps->properties;
     GList *walk = props->properties;
 
@@ -147,7 +150,12 @@ deep_notify (GObject *object, GstObject *origin,
     g_object_get_property (G_OBJECT (origin), pspec->name, &value);
     context->metadata = g_value_peek_pointer (&value);
   }
-  else if (!strcmp (pspec->name, "caps")) {
+  else if (!strcmp (pspec->name, "tags")) {
+    
+    g_value_init (&value, pspec->value_type);
+    g_object_get_property (G_OBJECT (origin), pspec->name, &value);
+    context->tags = g_value_peek_pointer (&value);
+  } else if (!strcmp (pspec->name, "caps")) {
     if (GST_IS_PAD (origin) && GST_PAD (origin) == context->pad) {
       g_value_init (&value, pspec->value_type);
       g_object_get_property (G_OBJECT (origin), pspec->name, &value);
@@ -186,6 +194,7 @@ collect_logical_stream_properties (struct probe_context *context, gint stream)
     if (count > 10) break;
   }
   
+  print_metadata (context->tags);
   print_metadata (context->metadata);
   print_format (context->caps);
   print_lbs_info (context, stream);
