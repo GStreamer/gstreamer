@@ -424,7 +424,7 @@ gst_a52dec_loop (GstElement * element)
   }
 
   /* process */
-  flags = a52dec->request_channels | A52_ADJUST_LEVEL;
+  flags = a52dec->request_channels;     /* | A52_ADJUST_LEVEL; */
   a52dec->level = 1;
 
   if (a52_frame (a52dec->state, data, &flags, &a52dec->level, a52dec->bias)) {
@@ -501,7 +501,7 @@ gst_a52dec_change_state (GstElement * element)
       a52dec->request_channels = A52_3F2R | A52_LFE;
       a52dec->using_channels = A52_CHANNEL;
       a52dec->level = 1;
-      a52dec->bias = 384;
+      a52dec->bias = 0;
       a52dec->last_ts = 0;
       a52dec->current_ts = 0;
       a52dec->last_timestamp = 0;
