@@ -34,46 +34,58 @@ static gint i;
 static gboolean b;
 static gchar *s;
 
-#define TEST_CHECK_FAIL(condition) G_STMT_START{ \
-  if (condition) { \
-    g_print ("TEST %2d line %3d    OK\n", test, __LINE__); \
-  } else { \
-    g_print ("TEST %2d line %3d  FAILED : %s\n", test, __LINE__, #condition); \
-    return -test; \
-  } \
+#define TEST_CHECK_FAIL(condition) G_STMT_START{			\
+  if (condition) {							\
+    g_print ("TEST %2d line %3d    OK\n", test, __LINE__);		\
+  } else {								\
+    g_print ("TEST %2d line %3d  FAILED : %s\n", test, __LINE__,	\
+        #condition);							\
+    return -test;							\
+  }									\
 }G_STMT_END
-#define TEST_START(pipeline) G_STMT_START{ \
-  g_print ("TEST %2d line %3d  START   : %s\n", ++test, __LINE__, pipeline); \
-  cur = gst_parse_launch (pipeline, &error); \
-  if (error == NULL) { \
-    g_print ("TEST %2d line %3d CREATED\n", test, __LINE__); \
-  } else { \
-    g_print ("TEST %2d line %3d  FAILED  : %s\n", test, __LINE__, error->message); \
-    g_error_free (error); \
-    return -test; \
-  } \
+
+#define TEST_START(pipeline) G_STMT_START{				\
+  g_print ("TEST %2d line %3d  START   : %s\n", ++test, __LINE__,	\
+      pipeline);							\
+  cur = gst_parse_launch (pipeline, &error);				\
+  if (error == NULL) {							\
+    g_print ("TEST %2d line %3d CREATED\n", test, __LINE__);		\
+  } else {								\
+    g_print ("TEST %2d line %3d  FAILED  : %s\n", test, __LINE__,	\
+        error->message);						\
+    g_error_free (error);						\
+    return -test;							\
+  }									\
 }G_STMT_END
-#define TEST_OK G_STMT_START{ \
-  gst_object_unref (GST_OBJECT (cur)); \
-  cur = NULL; \
-  g_print ("TEST %2d line %3d COMPLETE\n", test, __LINE__); \
+
+#define TEST_OK G_STMT_START{						\
+  gst_object_unref (GST_OBJECT (cur));					\
+  cur = NULL;								\
+  g_print ("TEST %2d line %3d COMPLETE\n", test, __LINE__);		\
 }G_STMT_END
-#define TEST_RUN G_STMT_START{ \
-  alarm(10); \
-  g_print ("TEST %2d line %3d   RUN\n", test, __LINE__); \
-  if (gst_element_set_state (cur, GST_STATE_PLAYING) == GST_STATE_FAILURE) { \
-    g_print ("TEST %2d line %3d  FAILED  : pipeline could not be set to state PLAYING\n", test, __LINE__); \
-    return -test; \
-  } \
-  iterations = 0; \
-  while (gst_bin_iterate (GST_BIN (cur))) iterations++; \
-  if (gst_element_set_state (cur, GST_STATE_NULL) == GST_STATE_FAILURE) { \
-    g_print ("TEST %2d line %3d  FAILED  : pipeline could not be reset to state NULL\n", test, __LINE__); \
-    return -test; \
-  } \
-  g_print ("TEST %2d line %3d STOPPED  : %u iterations\n", test, __LINE__, iterations); \
-  alarm(0); \
+
+#define TEST_RUN G_STMT_START{						\
+  alarm(10);								\
+  g_print ("TEST %2d line %3d   RUN\n", test, __LINE__);		\
+  if (gst_element_set_state (cur, GST_STATE_PLAYING)			\
+      == GST_STATE_FAILURE) {						\
+    g_print ("TEST %2d line %3d  FAILED  : "				\
+        "pipeline could not be set to PLAYING\n", test, __LINE__);	\
+    return -test;							\
+  }									\
+  iterations = 0;							\
+  while (gst_bin_iterate (GST_BIN (cur))) iterations++;			\
+  if (gst_element_set_state (cur, GST_STATE_NULL)			\
+      == GST_STATE_FAILURE) {						\
+    g_print ("TEST %2d line %3d  FAILED  : "				\
+        "pipeline could not be reset to state NULL\n", test, __LINE__);	\
+    return -test;							\
+  }									\
+  g_print ("TEST %2d line %3d STOPPED  : %u iterations\n",		\
+      test, __LINE__, iterations);					\
+  alarm(0);								\
 }G_STMT_END
+
 #define PIPELINE1  "fakesrc"
 #define PIPELINE2  "fakesrc name=donald num-buffers= 27 silent =TruE sizetype = 3 eos  =    falSe data=   Subbuffer\\ data"
 #define PIPELINE3  "fakesrc identity fakesink"
@@ -88,7 +100,6 @@ static gchar *s;
 #define PIPELINE9  "fakesrc num-buffers=4 ! test. fakesink name=test"
 #define PIPELINE10 "( fakesrc num-buffers=\"4\" ! ) identity ! fakesink"
 #define PIPELINE11 "fakesink name = sink identity name=id ( fakesrc num-buffers=\"4\" ! id. ) id. ! sink."
-
 
 gint
 main (gint argc, gchar * argv[])
@@ -107,7 +118,8 @@ main (gint argc, gchar * argv[])
   /**
    * checks:
    * - properties works
-   * - string, int, boolean and enums can be properly set (note: eos should be false)
+   * - string, int, boolean and enums can be properly set
+   *   (note: eos should be false)
    * - first test of escaping strings
    */
   TEST_START (PIPELINE2);

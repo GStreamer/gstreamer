@@ -984,7 +984,10 @@ static GstStructureAbbreviation gst_structure_abbrs[] = {
   {"f", G_TYPE_FLOAT},
   {"double", G_TYPE_DOUBLE},
   {"d", G_TYPE_DOUBLE},
+/* these are implemented with strcmp below */
+//{ "buffer",   GST_TYPE_BUFFER },
 //{ "fourcc",   GST_TYPE_FOURCC },
+//{ "4",   GST_TYPE_FOURCC },
   {"boolean", G_TYPE_BOOLEAN},
   {"bool", G_TYPE_BOOLEAN},
   {"b", G_TYPE_BOOLEAN},

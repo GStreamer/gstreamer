@@ -540,7 +540,7 @@ gst_thread_child_state_change (GstBin * bin, GstElementState oldstate,
       gst_element_state_get_name (newstate));
   if (parent_class->child_state_change)
     parent_class->child_state_change (bin, oldstate, newstate, element);
-  /* We'll wake up the main thread now. Note that we can't lock the thread here, 
+  /* We'll wake up the main thread now. Note that we can't lock the thread here,
      because we might be called from inside gst_thread_change_state when holding
      the lock. But this doesn't cause any problems. */
   if (newstate == GST_STATE_PLAYING)

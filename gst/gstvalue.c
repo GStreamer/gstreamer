@@ -53,7 +53,6 @@ struct _GstValueSubtractInfo
 };
 
 GType gst_type_fourcc;
-GType gst_type_fourcc;
 GType gst_type_int_range;
 GType gst_type_double_range;
 GType gst_type_list;
@@ -64,9 +63,9 @@ static GArray *gst_value_union_funcs;
 static GArray *gst_value_intersect_funcs;
 static GArray *gst_value_subtract_funcs;
 
-/********/
-/* list */
-/********/
+/********
+ * list *
+ ********/
 
 /* two helper functions to serialize/stringify any type of list
  * regular lists are done with { }, fixed lists with < >
@@ -399,8 +398,9 @@ gst_value_deserialize_fixed_list (GValue * dest, const char *s)
   return FALSE;
 }
 
-/*************************************/
-/* fourcc */
+/**********
+ * fourcc *
+ **********/
 
 static void
 gst_value_init_fourcc (GValue * value)
@@ -530,8 +530,9 @@ gst_value_deserialize_fourcc (GValue * dest, const char *s)
   return ret;
 }
 
-/*************************************/
-/* int range */
+/*************
+ * int range *
+ *************/
 
 static void
 gst_value_init_int_range (GValue * value)
@@ -602,7 +603,7 @@ gst_value_set_int_range (GValue * value, int start, int end)
  *
  * Gets the minimum of the range specified by @value.
  *
- * Returns: the minumum of the range
+ * Returns: the minimum of the range
  */
 int
 gst_value_get_int_range_min (const GValue * value)
@@ -659,8 +660,9 @@ gst_value_deserialize_int_range (GValue * dest, const char *s)
   return FALSE;
 }
 
-/*************************************/
-/* double range */
+/****************
+ * double range *
+ ****************/
 
 static void
 gst_value_init_double_range (GValue * value)
@@ -795,8 +797,9 @@ gst_value_deserialize_double_range (GValue * dest, const char *s)
   return FALSE;
 }
 
-/*************************************/
-/* GstCaps */
+/***********
+ * GstCaps *
+ ***********/
 
 /**
  * gst_value_set_caps:
@@ -830,8 +833,9 @@ gst_value_get_caps (const GValue * value)
   return (GstCaps *) g_value_get_boxed (value);
 }
 
-/*************************************/
-/* GstBuffer */
+/*************
+ * GstBuffer *
+ *************/
 
 static int
 gst_value_compare_buffer (const GValue * value1, const GValue * value2)
@@ -910,8 +914,9 @@ gst_value_deserialize_buffer (GValue * dest, const char *s)
 }
 
 
-/*************************************/
-/* boolean */
+/***********
+ * boolean *
+ ***********/
 
 static int
 gst_value_compare_boolean (const GValue * value1, const GValue * value2)
@@ -950,8 +955,9 @@ gst_value_deserialize_boolean (GValue * dest, const char *s)
   return ret;
 }
 
-/*************************************/
-/* ints */
+/*******
+ * int *
+ *******/
 
 static int
 gst_strtoll (const char *s, char **end, int base)
@@ -1102,8 +1108,9 @@ CREATE_USERIALIZATION (uint, UINT)
 CREATE_USERIALIZATION (uint64, UINT64)
 CREATE_USERIALIZATION (ulong, ULONG)
 
-/*************************************/
-/* double */
+/**********
+ * double *
+ **********/
      static int
          gst_value_compare_double (const GValue * value1, const GValue * value2)
 {
@@ -1150,8 +1157,9 @@ gst_value_deserialize_double (GValue * dest, const char *s)
   return ret;
 }
 
-/*************************************/
-/* float */
+/*********
+ * float *
+ *********/
 
 static int
 gst_value_compare_float (const GValue * value1, const GValue * value2)
@@ -1201,8 +1209,9 @@ gst_value_deserialize_float (GValue * dest, const char *s)
   return ret;
 }
 
-/*************************************/
-/* string */
+/**********
+ * string *
+ **********/
 
 static int
 gst_value_compare_string (const GValue * value1, const GValue * value2)
@@ -1283,8 +1292,9 @@ gst_value_deserialize_string (GValue * dest, const char *s)
   return TRUE;
 }
 
-/*************************************/
-/* enums */
+/********
+ * enum *
+ ********/
 
 static int
 gst_value_compare_enum (const GValue * value1, const GValue * value2)
@@ -1345,8 +1355,9 @@ gst_value_deserialize_enum (GValue * dest, const char *s)
   return TRUE;
 }
 
-/*************************************/
-/* unions */
+/*********
+ * union *
+ *********/
 
 static gboolean
 gst_value_union_int_int_range (GValue * dest, const GValue * src1,
@@ -1388,8 +1399,9 @@ gst_value_union_int_range_int_range (GValue * dest, const GValue * src1,
   return FALSE;
 }
 
-/*************************************/
-/* intersection */
+/****************
+ * intersection *
+ ****************/
 
 static gboolean
 gst_value_intersect_int_int_range (GValue * dest, const GValue * src1,
@@ -1512,8 +1524,9 @@ gst_value_intersect_list (GValue * dest, const GValue * value1,
   return ret;
 }
 
-/*************************************/
-/* subtraction */
+/***************
+ * subtraction *
+ ***************/
 
 static gboolean
 gst_value_subtract_int_int_range (GValue * dest, const GValue * minuend,
@@ -1764,7 +1777,9 @@ gst_value_subtract_list (GValue * dest, const GValue * minuend,
 }
 
 
-/*************************************/
+/**************
+ * comparison *
+ **************/
 
 /**
  * gst_value_can_compare:

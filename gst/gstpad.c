@@ -1482,6 +1482,7 @@ gst_pad_try_set_caps (GstPad * pad, const GstCaps * caps)
     return GST_PAD_LINK_OK;
   }
 
+  GST_CAT_INFO_OBJECT (GST_CAT_CAPS, pad, "caps %" GST_PTR_FORMAT, caps);
   /* setting non-fixed caps on a pad is not allowed */
   if (!gst_caps_is_fixed (caps)) {
     GST_CAT_INFO (GST_CAT_CAPS,

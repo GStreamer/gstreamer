@@ -2726,6 +2726,8 @@ gst_element_set_state (GstElement * element, GstElementState state)
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
+  GST_DEBUG_OBJECT (element, "setting state to %s",
+      gst_element_state_get_name (state));
   klass = GST_ELEMENT_GET_CLASS (element);
   /* a set_state function is mandatory */
   g_return_val_if_fail (klass->set_state, GST_STATE_FAILURE);

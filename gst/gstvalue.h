@@ -84,91 +84,93 @@ extern GType gst_type_double_range;
 extern GType gst_type_list;
 extern GType gst_type_fixed_list;
 
-void                     gst_value_register                (const GstValueTable   *table);
-void                     gst_value_init_and_copy           (GValue                *dest,
-							    const GValue          *src);
+void		gst_value_register		(const GstValueTable   *table);
+void		gst_value_init_and_copy		(GValue                *dest,
+						 const GValue          *src);
 
-gchar *                  gst_value_serialize               (const GValue          *value);
-gboolean                 gst_value_deserialize             (GValue                *dest,
-							    const gchar           *src);
+gchar *		gst_value_serialize		(const GValue          *value);
+gboolean	gst_value_deserialize		(GValue                *dest,
+						 const gchar           *src);
 
 /* list */
-void                     gst_value_list_append_value       (GValue                *value,
-							    const GValue          *append_value);
-void                     gst_value_list_prepend_value      (GValue                *value,
-							    const GValue          *prepend_value);
-void                     gst_value_list_concat             (GValue                *dest,
-							    const GValue          *value1,
-							    const GValue          *value2);
-guint                    gst_value_list_get_size           (const GValue          *value);
-G_CONST_RETURN GValue *  gst_value_list_get_value          (const GValue          *value,
-							    guint                  index);
+void		gst_value_list_append_value	(GValue		*value,
+						 const GValue	*append_value);
+void		gst_value_list_prepend_value	(GValue		*value,
+						 const GValue	*prepend_value);
+void		gst_value_list_concat		(GValue		*dest,
+						 const GValue   *value1,
+						 const GValue	*value2);
+guint		gst_value_list_get_size		(const GValue	*value);
+G_CONST_RETURN GValue *
+		gst_value_list_get_value	(const GValue	*value,
+						 guint		index);
 
 /* fourcc */
-void                     gst_value_set_fourcc              (GValue                *value,
-							    guint32                fourcc);
-guint32                  gst_value_get_fourcc              (const GValue          *value);
+void		gst_value_set_fourcc		(GValue		*value,
+						 guint32	fourcc);
+guint32		gst_value_get_fourcc		(const GValue   *value);
 
 /* int range */
-void                     gst_value_set_int_range           (GValue                *value,
-							    int                    start,
-							    int                    end);
-int                      gst_value_get_int_range_min       (const GValue          *value);
-int                      gst_value_get_int_range_max       (const GValue          *value);
+void		gst_value_set_int_range		(GValue		*value,
+						 int		start,
+						 int		end);
+int		gst_value_get_int_range_min	(const GValue	*value);
+int		gst_value_get_int_range_max	(const GValue	*value);
 
 /* double range */
-void                     gst_value_set_double_range        (GValue                *value,
-						            double                 start,
-							    double                 end);
-double                   gst_value_get_double_range_min    (const GValue          *value);
-double                   gst_value_get_double_range_max    (const GValue          *value);
+void		gst_value_set_double_range	(GValue		*value,
+						 double		start,
+						 double		end);
+double		gst_value_get_double_range_min	(const GValue	*value);
+double		gst_value_get_double_range_max	(const GValue	*value);
 
 /* caps */
-G_CONST_RETURN GstCaps * gst_value_get_caps                (const GValue          *value);
-void                     gst_value_set_caps                (GValue                *value,
-						            const GstCaps         *caps);
+G_CONST_RETURN GstCaps *
+		gst_value_get_caps		(const GValue	*value);
+void		gst_value_set_caps		(GValue		*value,
+						 const GstCaps  *caps);
 
 /* compare */
-int                      gst_value_compare                 (const GValue          *value1,
-							    const GValue          *value2);
-gboolean                 gst_value_can_compare             (const GValue          *value1,
-						   	    const GValue          *value2);
+int		gst_value_compare		(const GValue	*value1,
+						 const GValue	*value2);
+gboolean	gst_value_can_compare		(const GValue	*value1,
+						 const GValue	*value2);
 
 /* union */
-gboolean                 gst_value_union                   (GValue                *dest,
-							    const GValue          *value1,
-						   	    const GValue          *value2);
-gboolean                 gst_value_can_union               (const GValue          *value1,
-						   	    const GValue          *value2);
-void                     gst_value_register_union_func     (GType                 type1,
-							    GType                 type2,
-							    GstValueUnionFunc     func);
+gboolean	gst_value_union			(GValue		*dest,
+						 const GValue	*value1,
+						 const GValue	*value2);
+gboolean	gst_value_can_union		(const GValue	*value1,
+						 const GValue   *value2);
+void		gst_value_register_union_func	(GType		type1,
+						 GType		type2,
+						 GstValueUnionFunc func);
 
 /* intersection */
-gboolean                 gst_value_intersect               (GValue                *dest,
-							    const GValue          *value1,
-							    const GValue          *value2);
-gboolean                 gst_value_can_intersect           (const GValue          *value1,
-							    const GValue          *value2);
-void                     gst_value_register_intersect_func (GType                 type1,
-							    GType                 type2,
-							    GstValueIntersectFunc func);
+gboolean	gst_value_intersect		(GValue		*dest,
+						 const GValue	*value1,
+						 const GValue	*value2);
+gboolean	gst_value_can_intersect		(const GValue	*value1,
+						 const GValue	*value2);
+void		gst_value_register_intersect_func (GType	type1,
+						GType		type2,
+						GstValueIntersectFunc func);
 
 /* subtraction */
-gboolean		 gst_value_subtract		   (GValue		  *dest,
-							    const GValue      	  *minuend,
-							    const GValue      	  *subtrahend);
-gboolean		 gst_value_can_subtract		   (const GValue      	  *minuend,
-							    const GValue      	  *subtrahend);
-void                     gst_value_register_subtract_func  (GType                 minuend_type,
-							    GType                 subtrahend_type,
-							    GstValueSubtractFunc  func);
+gboolean	gst_value_subtract		(GValue		*dest,
+						 const GValue	*minuend,
+						 const GValue	*subtrahend);
+gboolean	gst_value_can_subtract		(const GValue	*minuend,
+						 const GValue	*subtrahend);
+void		gst_value_register_subtract_func (GType		minuend_type,
+						GType		subtrahend_type,
+						GstValueSubtractFunc func);
 
 /* fixation */
-gboolean                 gst_type_is_fixed                 (GType type);
+gboolean	gst_type_is_fixed		(GType type);
 
 /* private */
-void                     _gst_value_initialize (void);
+void		_gst_value_initialize		(void);
 
 G_END_DECLS
 
