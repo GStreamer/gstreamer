@@ -25,7 +25,8 @@ _identifier [[:alpha:]][[:alnum:]\-_%]*
 _lconnection ({_identifier}\.)?{_identifier}!
 _rconnection !({_identifier}\.)?{_identifier}
 _bconnection ({_identifier}\.)?{_identifier}!({_identifier}\.)?{_identifier}
-_string ([^[:space:]\"]|"\\\"")+|("\""([^\"]|"\\\"")*"\"")
+_char ([^[:space:]])|("\\".)
+_string {_char}+|("\""([^\"]|"\\\"")*"\"")
 
 %x value
 %option noyywrap
@@ -65,6 +66,7 @@ _string ([^[:space:]\"]|"\\\"")+|("\""([^\"]|"\\\"")*"\"")
             yytext++;
             *(yytext + strlen (yytext) - 1) = '\0';
         }
+        _gst_parse_unescape (yytext);
         PRINT ("A string: \"%s\"\n", yytext);
         lvalp->v = g_new0 (GValue, 1);
         g_value_init (lvalp->v, G_TYPE_STRING);

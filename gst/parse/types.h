@@ -41,3 +41,5 @@ struct _graph_t {
 
 graph_t * _gst_parse_launch (const gchar *str, GError **error);
 
+gchar *_gst_parse_escape (const gchar *str);
+void _gst_parse_unescape (gchar *str);
