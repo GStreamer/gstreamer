@@ -33,6 +33,7 @@
 #include "gst/gst-i18n-plugin.h"
 
 #include "gstgnomevfs.h"
+#include "gstgnomevfsuri.h"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -83,16 +84,18 @@ typedef struct _GstGnomeVFSSrcClass GstGnomeVFSSrcClass;
 struct _GstGnomeVFSSrc
 {
   GstElement element;
+
   /* pads */
   GstPad *srcpad;
 
-  /* filename */
-  gchar *filename;
   /* uri */
   GnomeVFSURI *uri;
+  gchar *uri_name;
 
   /* handle */
   GnomeVFSHandle *handle;
+  gboolean own_handle;
+
   /* Seek stuff */
   gboolean need_flush;
 
@@ -199,6 +202,9 @@ static void gst_gnomevfssrc_class_init (GstGnomeVFSSrcClass * klass);
 static void gst_gnomevfssrc_init (GstGnomeVFSSrc * gnomevfssrc);
 static void gst_gnomevfssrc_dispose (GObject * object);
 
+static void gst_gnomevfssrc_uri_handler_init (gpointer g_iface,
+    gpointer iface_data);
+
 static void gst_gnomevfssrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gnomevfssrc_get_property (GObject * object, guint prop_id,
@@ -240,10 +246,17 @@ gst_gnomevfssrc_get_type (void)
       0,
       (GInstanceInitFunc) gst_gnomevfssrc_init,
     };
+    static const GInterfaceInfo urihandler_info = {
+      gst_gnomevfssrc_uri_handler_init,
+      NULL,
+      NULL
+    };
 
     gnomevfssrc_type =
         g_type_register_static (GST_TYPE_ELEMENT,
         "GstGnomeVFSSrc", &gnomevfssrc_info, 0);
+    g_type_add_interface_static (gnomevfssrc_type, GST_TYPE_URI_HANDLER,
+        &urihandler_info);
   }
   return gnomevfssrc_type;
 }
@@ -332,6 +345,7 @@ gst_gnomevfssrc_init (GstGnomeVFSSrc * gnomevfssrc)
   gst_element_add_pad (GST_ELEMENT (gnomevfssrc), gnomevfssrc->srcpad);
 
   gnomevfssrc->uri = NULL;
+  gnomevfssrc->uri_name = NULL;
   gnomevfssrc->handle = NULL;
   gnomevfssrc->curoffset = 0;
   gnomevfssrc->bytes_per_read = 4096;
@@ -380,21 +394,77 @@ gst_gnomevfssrc_dispose (GObject * object)
   }
   g_static_mutex_unlock (&count_lock);
 
-  g_free (src->filename);
-  src->filename = NULL;
+  if (src->uri) {
+    gnome_vfs_uri_unref (src->uri);
+    src->uri = NULL;
+  }
+
+  if (src->uri_name) {
+    g_free (src->uri_name);
+    src->uri_name = NULL;
+  }
+
   g_mutex_free (src->audiocast_udpdata_mutex);
   g_mutex_free (src->audiocast_queue_mutex);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
+static guint
+gst_gnomevfssrc_uri_get_type (void)
+{
+  return GST_URI_SRC;
+}
+
+static gchar **
+gst_gnomevfssrc_uri_get_protocols (void)
+{
+  static gchar **protocols = NULL;
+
+  if (!protocols)
+    protocols = gst_gnomevfs_get_supported_uris (GNOME_VFS_OPEN_READ);
+
+  return protocols;
+}
+
+static const gchar *
+gst_gnomevfssrc_uri_get_uri (GstURIHandler * handler)
+{
+  GstGnomeVFSSrc *src = GST_GNOMEVFSSRC (handler);
+
+  return src->uri_name;
+}
+
+static gboolean
+gst_gnomevfssrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+{
+  GstGnomeVFSSrc *src = GST_GNOMEVFSSRC (handler);
+
+  if (GST_STATE (src) == GST_STATE_PLAYING ||
+      GST_STATE (src) == GST_STATE_PAUSED)
+    return FALSE;
+
+  g_object_set (G_OBJECT (src), "location", uri, NULL);
+
+  return TRUE;
+}
+
+static void
+gst_gnomevfssrc_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = gst_gnomevfssrc_uri_get_type;
+  iface->get_protocols = gst_gnomevfssrc_uri_get_protocols;
+  iface->get_uri = gst_gnomevfssrc_uri_get_uri;
+  iface->set_uri = gst_gnomevfssrc_uri_set_uri;
+}
 
 static void
 gst_gnomevfssrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstGnomeVFSSrc *src;
-  const gchar *location;
   gchar cwd[PATH_MAX];
 
   /* it's not null if we got it, but it might not be ours */
@@ -405,42 +475,51 @@ gst_gnomevfssrc_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_LOCATION:
       /* the element must be stopped or paused in order to do this */
-      if (GST_STATE (src) == GST_STATE_PLAYING)
+      if (GST_STATE (src) == GST_STATE_PLAYING ||
+          GST_STATE (src) == GST_STATE_PAUSED)
         break;
 
-      g_free (src->filename);
+      if (src->uri) {
+        gnome_vfs_uri_unref (src->uri);
+        src->uri = NULL;
+      }
+      if (src->uri_name) {
+        g_free (src->uri_name);
+        src->uri_name = NULL;
+      }
 
-      /* clear the filename if we get a NULL */
-      if (g_value_get_string (value) == NULL) {
-        gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
-        src->filename = NULL;
-      } else {
-        /* otherwise set the new filename */
-        location = g_value_get_string (value);
-        /* if it's not a proper uri, default to file: -- this
-         * is a crude test */
+      if (g_value_get_string (value)) {
+        const gchar *location = g_value_get_string (value);
+
         if (!strchr (location, ':')) {
           gchar *newloc = gnome_vfs_escape_path_string (location);
 
           if (*newloc == '/')
-            src->filename = g_strdup_printf ("file://%s", newloc);
+            src->uri_name = g_strdup_printf ("file://%s", newloc);
           else
-            src->filename =
+            src->uri_name =
                 g_strdup_printf ("file://%s/%s", getcwd (cwd, PATH_MAX),
                 newloc);
           g_free (newloc);
         } else
-          src->filename = g_strdup (g_value_get_string (value));
-      }
+          src->uri_name = g_strdup (location);
 
-      if ((GST_STATE (src) == GST_STATE_PAUSED)
-          && (src->filename != NULL)) {
-        gst_gnomevfssrc_close_file (src);
-        gst_gnomevfssrc_open_file (src);
+        src->uri = gnome_vfs_uri_new (src->uri_name);
       }
       break;
     case ARG_HANDLE:
-      src->handle = g_value_get_pointer (value);
+      if (GST_STATE (src) == GST_STATE_NULL ||
+          GST_STATE (src) == GST_STATE_READY) {
+        if (src->uri) {
+          gnome_vfs_uri_unref (src->uri);
+          src->uri = NULL;
+        }
+        if (src->uri_name) {
+          g_free (src->uri_name);
+          src->uri_name = NULL;
+        }
+        src->handle = g_value_get_pointer (value);
+      }
       break;
     case ARG_BYTESPERREAD:
       src->bytes_per_read = g_value_get_int (value);
@@ -467,7 +546,7 @@ gst_gnomevfssrc_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case ARG_LOCATION:
-      g_value_set_string (value, src->filename);
+      g_value_set_string (value, src->uri_name);
       break;
     case ARG_BYTESPERREAD:
       g_value_set_int (value, src->bytes_per_read);
@@ -1059,43 +1138,38 @@ gst_gnomevfssrc_open_file (GstGnomeVFSSrc * src)
 
   g_return_val_if_fail (!GST_FLAG_IS_SET (src, GST_GNOMEVFSSRC_OPEN), FALSE);
 
-  if (src->filename) {
-    /* create the uri */
-    src->uri = gnome_vfs_uri_new (src->filename);
-    if (!src->uri) {
-      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-          (_("Could not open vfs file \"%s\" for reading."), src->filename),
-          GST_ERROR_SYSTEM);
-      return FALSE;
-    }
-  }
-
   if (!audiocast_init (src))
     return FALSE;
 
   gst_gnomevfssrc_push_callbacks (src);
 
-  if (src->filename)
+  if (src->uri != NULL) {
     result = gnome_vfs_open_uri (&(src->handle), src->uri, GNOME_VFS_OPEN_READ);
-  else
-    result = GNOME_VFS_OK;
-  if (result != GNOME_VFS_OK) {
-    char *escaped;
+    if (result != GNOME_VFS_OK) {
+      gchar *filename = gnome_vfs_uri_to_string (src->uri,
+          GNOME_VFS_URI_HIDE_PASSWORD);
 
-    gst_gnomevfssrc_pop_callbacks (src);
-    audiocast_thread_kill (src);
+      gst_gnomevfssrc_pop_callbacks (src);
+      audiocast_thread_kill (src);
 
-    escaped = gnome_vfs_unescape_string_for_display (src->filename);
+      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+          (_("Could not open vfs file \"%s\" for reading."), filename),
+          (gnome_vfs_result_to_string (result)));
+      g_free (filename);
+      return FALSE;
+    }
+    src->own_handle = TRUE;
+  } else if (!src->handle) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        (_("Could not open vfs file \"%s\" for reading."), escaped),
-        (gnome_vfs_result_to_string (result)));
-    g_free (escaped);
+        (_("No filename given.")), (NULL));
     return FALSE;
+  } else {
+    src->own_handle = FALSE;
   }
 
   info = gnome_vfs_file_info_new ();
-  if (gnome_vfs_get_file_info_from_handle (src->handle, info,
-          GNOME_VFS_FILE_INFO_DEFAULT)
+  if ((result = gnome_vfs_get_file_info_from_handle (src->handle,
+              info, GNOME_VFS_FILE_INFO_DEFAULT))
       == GNOME_VFS_OK) {
     if (info->valid_fields & GNOME_VFS_FILE_INFO_FIELDS_SIZE)
       src->size = info->size;
@@ -1107,8 +1181,6 @@ gst_gnomevfssrc_open_file (GstGnomeVFSSrc * src)
   GST_DEBUG ("size %" G_GINT64_FORMAT, src->size);
 
   audiocast_do_notifications (src);
-
-  GST_DEBUG ("open result: %s", gnome_vfs_result_to_string (result));
 
   if (gnome_vfs_seek (src->handle, GNOME_VFS_SEEK_CURRENT, 0)
       == GNOME_VFS_OK) {
@@ -1130,10 +1202,9 @@ gst_gnomevfssrc_close_file (GstGnomeVFSSrc * src)
   gst_gnomevfssrc_pop_callbacks (src);
   audiocast_thread_kill (src);
 
-  if (src->filename) {
+  if (src->own_handle) {
     gnome_vfs_close (src->handle);
-
-    gnome_vfs_uri_unref (src->uri);
+    src->handle = NULL;
   }
   src->size = 0;
   src->curoffset = 0;

@@ -1,8 +1,6 @@
 /* GStreamer
  * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
  *
- * gnomevfs.c: register gnomevfs elements
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -19,37 +17,16 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
 
-#include "gst/gst-i18n-plugin.h"
+#ifndef __GST_GNOME_VFS_URI_H__
+#define __GST_GNOME_VFS_URI_H__
 
-#include "gstgnomevfs.h"
 #include <libgnomevfs/gnome-vfs.h>
-#include <gst/gst.h>
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gnome_vfs_init ();
+G_BEGIN_DECLS
 
-  if (!gst_element_register (plugin, "gnomevfssrc",
-          GST_RANK_SECONDARY, gst_gnomevfssrc_get_type ()) ||
-      !gst_element_register (plugin, "gnomevfssink",
-          GST_RANK_SECONDARY, gst_gnomevfssink_get_type ())) {
-    return FALSE;
-  }
-#ifdef ENABLE_NLS
-  setlocale (LC_ALL, "");
-  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
-#endif /* ENABLE_NLS */
+gchar **gst_gnomevfs_get_supported_uris	(GnomeVFSOpenMode mode);
 
-  return TRUE;
-}
+G_END_DECLS
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "gnomevfs",
-    "elements to access the Gnome vfs",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
+#endif /* __GST_GNOME_VFS_URI_H__ */
