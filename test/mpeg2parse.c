@@ -131,7 +131,7 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     appwindow = gnome_app_new("MPEG player","MPEG player");
     gnome_app_set_contents(GNOME_APP(appwindow),
-      	        gst_util_get_pointer_arg(GTK_OBJECT(show),"widget"));
+      	        gst_util_get_pointer_arg(G_OBJECT(show),"widget"));
 		gtk_widget_show_all(appwindow);
 
     // create the thread and pack stuff into it
@@ -174,6 +174,12 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 int main(int argc,char *argv[]) {
   GstPipeline *pipeline;
   GstElement *src, *parse;
+
+  if (argc < 2)
+    {
+      g_printerr ("usage: mpeg2parse vobfile.vob\n");
+      return 1;
+    }
 
   g_print("have %d args\n",argc);
 
