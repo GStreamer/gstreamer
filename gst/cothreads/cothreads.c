@@ -21,6 +21,7 @@
 
 #include "cothreads-private.h"
 
+#define HAVE_LINUXTHREADS
 
 #ifdef HAVE_LINUXTHREADS
 static cothread_attr cothread_attr_default = 

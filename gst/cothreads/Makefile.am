@@ -12,13 +12,15 @@ libgstcothreads_la_SOURCES = cothreads.c cothread-stack.c cothreads.h
 libgstcothreads_la_LIBADD = libpth-mctx.la $(GLIB_LIBS)
 libgstcothreads_la_CFLAGS = $(GLIB_CFLAGS)
 
-noinst_PROGRAMS = test-pth test-pth-pthreads test-pthreads test-pth-pthreads2
+noinst_PROGRAMS = test-pth test-pth-pthreads test-pthreads test-pth-pthreads2 test-cothreads
 noinst_HEADERS = linuxthreads.h cothreads-private.h cothreads.h
 
 test_pth_LDADD = libpth-mctx.la
 test_pth_pthreads_LDADD = libpth-mctx.la -lpthread
 test_pthreads_LDADD = -lpthread
 test_pth_pthreads2_LDADD = -lpthread libpth-mctx.la
+test_cothreads_CFLAGS = $(GLIB_CFLAGS)
+test_cothreads_LDADD = libgstcothreads.la
 
 BUILT_SOURCES = pth_p.h
 
