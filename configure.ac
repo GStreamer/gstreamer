@@ -682,7 +682,6 @@ tests/sched/Makefile
 tests/threadstate/Makefile
 testsuite/Makefile
 testsuite/bins/Makefile
-testsuite/bytestream/Makefile
 testsuite/caps/Makefile
 testsuite/cleanup/Makefile
 testsuite/clock/Makefile
