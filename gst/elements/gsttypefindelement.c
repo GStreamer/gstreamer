@@ -434,6 +434,9 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
   TypeFindEntry *entry;
   GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
 
+  GST_DEBUG_OBJECT (typefind, "got event %d in mode %d", GST_EVENT_TYPE (event),
+      typefind->mode);
+
   switch (typefind->mode) {
     case MODE_TYPEFIND:
       switch (GST_EVENT_TYPE (event)) {
@@ -478,6 +481,9 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
             gst_event_unref (event);
           }
         }
+      } else if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+        push_buffer_store (typefind);
+        gst_pad_event_default (pad, event);
       } else {
         gst_event_unref (event);
       }

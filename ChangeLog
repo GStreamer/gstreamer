@@ -1,3 +1,11 @@
+2004-10-08  Wim Taymans  <wim at fluendo dot com>
+
+	* gst/elements/gsttypefindelement.c:
+	(gst_type_find_element_handle_event):
+	Handle EOS events when doing the transition from
+	typefind to data passing. This should fix the
+	infinite loops in short files.
+
 2004-10-07  Wim Taymans  <wim at fluendo dot com>
 
 	* gst/gstthread.c: (gst_thread_change_state),
