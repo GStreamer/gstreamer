@@ -152,7 +152,7 @@ struct minimal_stackframe {
     __asm__("copy %0,%%sp\n\t" : : "r"(stackpointer));
 
 #define GST_ARCH_CALL(target) \
-    __asm__("copy $1,%%r22\n\t"		/* set call address */ \
+    __asm__("copy %0,%%r22\n\t"		/* set call address */ \
             ".CALL\n\t"			/* call pseudo insn (why?) */ \
             "bl $$dyncall,%%r31\n\t" : : "r"(target));
 
