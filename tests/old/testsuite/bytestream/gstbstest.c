@@ -21,6 +21,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <gst/gst.h>
 #include <libs/bytestream/gstbytestream.h>
@@ -34,21 +35,6 @@
 typedef struct _GstBsTest GstBsTest;
 typedef struct _GstBsTestClass GstBsTestClass;
 
-typedef enum
-{
-  BSTEST_SIZETYPE_FIXED = 1,
-  BSTEST_SIZETYPE_RANDOM
-}
-GstBsTestSizeType;
-
-typedef enum
-{
-  BSTEST_ACCESSTYPE_READ = 1,
-  BSTEST_ACCESSTYPE_PEEK_READ,
-  BSTEST_ACCESSTYPE_PEEK_READRAND,
-}
-GstBsTestAccessType;
-
 struct _GstBsTest
 {
   GstElement element;
@@ -57,12 +43,13 @@ struct _GstBsTest
   GstPad *srcpad;
 
   GstByteStream *bs;
-  GstBsTestSizeType sizetype;
-  GstBsTestAccessType accesstype;
-  guint sizemin;
-  guint sizemax;
-  gint count;
-  gboolean silent;
+  
+  gchar 	*accesspattern;
+  gchar		**patterns;
+  guint 	sizemin;
+  guint 	sizemax;
+  gint 		count;
+  gboolean 	silent;
 };
 
 struct _GstBsTestClass
@@ -93,12 +80,11 @@ enum
 enum
 {
   ARG_0,
-  ARG_SIZETYPE,
   ARG_SIZEMIN,
   ARG_SIZEMAX,
-  ARG_ACCESSTYPE,
   ARG_COUNT,
   ARG_SILENT,
+  ARG_ACCESSPATTERN,
 };
 
 
@@ -117,40 +103,6 @@ static GstElementClass *parent_class = NULL;
 
 // static guint gst_bstest_signals[LAST_SIGNAL] = { 0 };
 
-#define GST_TYPE_BSTEST_SIZETYPE (gst_bstest_sizetype_get_type())
-static GType
-gst_bstest_sizetype_get_type (void)
-{
-  static GType bstest_sizetype_type = 0;
-  static GEnumValue bstest_sizetype[] = {
-    {BSTEST_SIZETYPE_FIXED,  "1", "Fixed size buffers (sizemax sized)"},
-    {BSTEST_SIZETYPE_RANDOM, "2", "Random sized buffers (sizemin <= size <= sizemax)"},
-    {0, NULL, NULL},
-  };
-
-  if (!bstest_sizetype_type) {
-    bstest_sizetype_type = g_enum_register_static ("GstBsTestSizeType", bstest_sizetype);
-  }
-  return bstest_sizetype_type;
-}
-
-#define GST_TYPE_BSTEST_ACCESSTYPE (gst_bstest_accesstype_get_type())
-static GType
-gst_bstest_accesstype_get_type (void)
-{
-  static GType bstest_accesstype_type = 0;
-  static GEnumValue bstest_accesstype[] = {
-    {BSTEST_ACCESSTYPE_READ,           "1", "Read data"},
-    {BSTEST_ACCESSTYPE_PEEK_READ,      "2", "Peek data, read data (same size)"},
-    {BSTEST_ACCESSTYPE_PEEK_READRAND,  "3", "Peek data, read data (different size)"},
-    {0, NULL, NULL},
-  };
-
-  if (!bstest_accesstype_type) {
-    bstest_accesstype_type = g_enum_register_static ("GstBsTestAccessType", bstest_accesstype);
-  }
-  return bstest_accesstype_type;
-}
 GType
 gst_bstest_get_type (void)
 {
@@ -184,20 +136,15 @@ gst_bstest_class_init (GstBsTestClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZETYPE,
-				   g_param_spec_enum ("sizetype", "sizetype", "sizetype",
-						      GST_TYPE_BSTEST_SIZETYPE,
-						      BSTEST_SIZETYPE_FIXED, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZEMIN,
 				   g_param_spec_int ("sizemin", "sizemin", "sizemin", 0, G_MAXINT,
 						     0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZEMAX,
 				   g_param_spec_int ("sizemax", "sizemax", "sizemax", 0, G_MAXINT,
 						     384, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACCESSTYPE,
-				   g_param_spec_enum ("accesstype", "accesstype", "accesstype",
-						      GST_TYPE_BSTEST_ACCESSTYPE,
-						      BSTEST_ACCESSTYPE_READ, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACCESSPATTERN,
+				   g_param_spec_string ("accesspattern", "accesspattern", "accesspattern",
+						      "r", G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_COUNT,
 				   g_param_spec_uint ("count", "count", "count",
 						      0, G_MAXUINT, 0, G_PARAM_READWRITE));
@@ -245,26 +192,36 @@ gst_bstest_init (GstBsTest * bstest)
 
   gst_element_set_loop_function (GST_ELEMENT (bstest), gst_bstest_loop);
 
-  bstest->sizetype = BSTEST_SIZETYPE_FIXED;
   bstest->sizemin = 0;
   bstest->sizemax = 384;
-  bstest->accesstype = BSTEST_ACCESSTYPE_READ;
+  bstest->accesspattern = g_strdup ("r");
+  bstest->patterns = g_strsplit (bstest->accesspattern, ":", 0);
   bstest->count = 5;
   bstest->silent = FALSE;
   bstest->bs = NULL;
 }
 
 static guint
-gst_bstest_get_size (GstBsTest *bstest)
+gst_bstest_get_size (GstBsTest *bstest, gchar *sizestring, guint prevsize)
 {
-  switch (bstest->sizetype) {
-    case BSTEST_SIZETYPE_FIXED:
-      return bstest->sizemax;
-      break;
-    case BSTEST_SIZETYPE_RANDOM:
-      return bstest->sizemin + (guint8)(((gfloat)bstest->sizemax)*rand()/(RAND_MAX + (gfloat)bstest->sizemin));
-      break;
+  guint size;
+
+  if (sizestring[0] == 0) {
+    size = bstest->sizemax;
   }
+  else if (sizestring[0] == 'r') {
+    size = bstest->sizemin + (guint8)(((gfloat)bstest->sizemax)*rand()/(RAND_MAX + (gfloat)bstest->sizemin));
+  }
+  else if (sizestring[0] == '<') {
+    size = prevsize;
+  }
+  else {
+    size = atoi (sizestring);
+  }
+
+  if (size == 0) size++;
+
+  return size;
 }
 
 static void
@@ -272,7 +229,6 @@ gst_bstest_loop (GstElement * element)
 {
   GstBsTest *bstest;
   GstBuffer *buf = NULL;
-  gint i;
 
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_BSTEST (element));
@@ -281,43 +237,41 @@ gst_bstest_loop (GstElement * element)
 
 /* THIS IS THE BUFFER BASED ONE */
   do {
-    for (i = 0; i < bstest->count; i++) {
-      guint size;
+    guint size = 0;
+    guint i = 0;
 
-      size = gst_bstest_get_size (bstest);
-      if (size == 0) {
-	buf = gst_buffer_new ();
-      }
-      else {
+    while (bstest->patterns[i]) {
+      buf = NULL;
 
-	switch (bstest->accesstype) {
-          case BSTEST_ACCESSTYPE_PEEK_READ:
-            if (!bstest->silent) g_print ("bstest: ***** peek %d bytes\n", size);
-            gst_bytestream_peek_bytes (bstest->bs, size);
-	    // fall though
-          case BSTEST_ACCESSTYPE_READ:
-            if (!bstest->silent) g_print ("bstest: ***** read %d bytes\n", size);
-            buf = gst_bytestream_read (bstest->bs, size);
-	    break;
-          case BSTEST_ACCESSTYPE_PEEK_READRAND:
-            if (!bstest->silent) g_print ("bstest: ***** peek %d bytes\n", size);
-            gst_bytestream_peek_bytes (bstest->bs, size);
-            size = gst_bstest_get_size (bstest);
-            if (!bstest->silent) g_print ("bstest: ***** read %d bytes\n", size);
-            if (size == 0) {
-	      buf = gst_buffer_new ();
-            }
-	    else {
-              buf = gst_bytestream_read (bstest->bs, size);
-	    }
-	    break;
-	}
+      if (bstest->patterns[i][0] == 'r') {
+	size = gst_bstest_get_size (bstest, &bstest->patterns[i][1], size);
+        if (!bstest->silent) g_print ("bstest: ***** read %d bytes\n", size);
+        buf = gst_bytestream_read (bstest->bs, size);
       }
-      if (!buf)
-	g_print ("BUFFER IS BOGUS\n");
-      else 
+      else if (bstest->patterns[i][0] == 'f') {
+	size = gst_bstest_get_size (bstest, &bstest->patterns[i][1], size);
+        if (!bstest->silent) g_print ("bstest: ***** flush %d bytes\n", size);
+        gst_bytestream_flush (bstest->bs, size);
+      }
+      else if (!strncmp (bstest->patterns[i], "pb", 2)) {
+	size = gst_bstest_get_size (bstest, &bstest->patterns[i][2], size);
+        if (!bstest->silent) g_print ("bstest: ***** peek bytes %d bytes\n", size);
+        gst_bytestream_peek_bytes (bstest->bs, size);
+      }
+      else if (bstest->patterns[i][0] == 'p') {
+	size = gst_bstest_get_size (bstest, &bstest->patterns[i][1], size);
+        if (!bstest->silent) g_print ("bstest: ***** peek %d bytes\n", size);
+        buf = gst_bytestream_peek (bstest->bs, size);
+	gst_buffer_unref (buf);
+	buf = NULL;
+      }
+
+      if (buf)
         gst_pad_push (bstest->srcpad, buf);
+      
+      i++;
     }
+    
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
 }
 
@@ -332,17 +286,25 @@ gst_bstest_set_property (GObject * object, guint prop_id, const GValue * value, 
   bstest = GST_BSTEST (object);
 
   switch (prop_id) {
-    case ARG_SIZETYPE:
-      bstest->sizetype = g_value_get_int (value);
-      break;
     case ARG_SIZEMIN:
       bstest->sizemin = g_value_get_int (value);
       break;
     case ARG_SIZEMAX:
       bstest->sizemax = g_value_get_int (value);
       break;
-    case ARG_ACCESSTYPE:
-      bstest->accesstype = g_value_get_int (value);
+    case ARG_ACCESSPATTERN:
+      if (bstest->accesspattern) {
+	g_free (bstest->accesspattern);
+	g_strfreev (bstest->patterns);
+      }
+      if (g_value_get_string (value) == NULL) {
+        gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
+        bstest->accesspattern = NULL;
+        /* otherwise set the new filename */
+      } else {
+        bstest->accesspattern = g_strdup (g_value_get_string (value));
+        bstest->patterns = g_strsplit (bstest->accesspattern, ":", 0);
+      }
       break;
     case ARG_COUNT:
       bstest->count = g_value_get_uint (value);
@@ -367,17 +329,14 @@ gst_bstest_get_property (GObject * object, guint prop_id, GValue * value, GParam
   bstest = GST_BSTEST (object);
 
   switch (prop_id) {
-    case ARG_SIZETYPE:
-      g_value_set_int (value, bstest->sizetype);
-      break;
     case ARG_SIZEMIN:
       g_value_set_int (value, bstest->sizemin);
       break;
     case ARG_SIZEMAX:
       g_value_set_int (value, bstest->sizemax);
       break;
-    case ARG_ACCESSTYPE:
-      g_value_set_int (value, bstest->accesstype);
+    case ARG_ACCESSPATTERN:
+      g_value_set_string (value, bstest->accesspattern);
       break;
     case ARG_COUNT:
       g_value_set_uint (value, bstest->count);
