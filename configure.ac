@@ -164,7 +164,7 @@ GST_PLUGINS_ALL="\
         ac3parse adder audioscale auparse avi chart\
         cutter deinterlace flx goom intfloat law level\
         median mpeg1enc mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub\
-        mpegaudio mpegaudioparse mpegstream mpegtypes\
+        mpegaudio mpegaudioparse mpegstream mpegtypes modplug\
         passthrough playondemand rtjpeg silence sine\
         smooth spectrum speed stereo stereomono\
         synaesthesia udp videoscale volenv volume vumeter wavparse y4m"
@@ -732,6 +732,8 @@ gst/mpegaudio/Makefile
 gst/mpegaudioparse/Makefile
 gst/mpegstream/Makefile
 gst/mpegtypes/Makefile
+gst/modplug/Makefile
+gst/modplug/libmodplug/Makefile
 gst/passthrough/Makefile
 gst/playondemand/Makefile
 gst/rtjpeg/Makefile
