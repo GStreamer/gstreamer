@@ -610,6 +610,7 @@ gst_wavparse_parse_fmt (GstWavParse *wavparse, guint size)
         "channels", G_TYPE_INT, wavparse->channels,
         NULL);
     }
+      break;
 			
     case GST_RIFF_WAVE_FORMAT_PCM:
       caps = gst_caps_new_simple ("audio/x-raw-int",

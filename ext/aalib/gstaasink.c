@@ -239,6 +239,32 @@ gst_aasink_class_init (GstAASinkClass *klass)
   gstelement_class->set_clock    = gst_aasink_set_clock;
 }
 
+static GstCaps *
+gst_aasink_fixate (GstPad *pad, const GstCaps *caps)
+{
+  GstStructure *structure;
+  GstCaps *newcaps;
+
+  if (gst_caps_get_size (caps) > 1) return NULL;
+
+  newcaps = gst_caps_copy (caps);
+  structure = gst_caps_get_structure (newcaps, 0);
+
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 320)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "height", 240)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
+                                                      30.0)) {
+    return newcaps;
+  }
+
+  gst_caps_free (newcaps);
+  return NULL;
+}
+
 static GstPadLinkReturn
 gst_aasink_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
@@ -278,6 +304,7 @@ gst_aasink_init (GstAASink *aasink)
   gst_element_add_pad (GST_ELEMENT (aasink), aasink->sinkpad);
   gst_pad_set_chain_function (aasink->sinkpad, gst_aasink_chain);
   gst_pad_set_link_function (aasink->sinkpad, gst_aasink_sinkconnect);
+  gst_pad_set_fixate_function (aasink->sinkpad, gst_aasink_fixate);
 
   memcpy(&aasink->ascii_surf, &aa_defparams, sizeof (struct aa_hardware_params));
   aasink->ascii_parms.bright = 0;
