@@ -1,5 +1,11 @@
 2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_parse_packhead):
+	  MPEG2 has a useful rate property, so we can actually use that.
+	  For MPEG-1, continue using the bytes/time properties.
+
+2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst-libs/gst/riff/riff-media.c:
 	(gst_riff_create_video_caps_with_data),
 	(gst_riff_create_video_template_caps):
