@@ -230,6 +230,7 @@ gst_ffmpegcsp_pad_link (GstPad * pad, const GstCaps * caps)
           gst_value_get_fraction_denominator (par), NULL);
     }
     ret = gst_pad_try_set_caps (otherpad, caps);
+    gst_caps_free (caps);
     if (GST_PAD_LINK_FAILED (ret)) {
       return ret;
     }
