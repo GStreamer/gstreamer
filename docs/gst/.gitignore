@@ -5,6 +5,9 @@ sgml
 gstreamer.signals
 gstreamer.types
 gstreamer.html
+gstreamer.prerequisites
+gstreamer.interfaces
+gstreamer.hierarchy
 gstreamer-unused.txt
 gstreamer-undocumented.txt
 gstreamer-decl-list.txt
@@ -12,6 +15,13 @@ gstreamer-decl.txt
 gstreamer-scan.c
 gstreamer-scan
 gstreamer.args
+tmpl.stamp
+tmpl-build.stamp
+sgml.stamp
+sgml-build.stamp
+scan-build.stamp
+html.stamp
+html-build.stamp
 *.tgz
 *.tex
 *.log
