@@ -404,6 +404,7 @@ gst_structure_set_valist (GstStructure * structure,
   int i;
   double d;
   char *s;
+  gpointer p;
 
   g_return_if_fail (structure != NULL);
   g_return_if_fail (IS_MUTABLE (structure));
@@ -439,6 +440,12 @@ gst_structure_set_valist (GstStructure * structure,
 
         g_value_init (&field.value, G_TYPE_STRING);
         g_value_set_string (&field.value, s);
+        break;
+      case G_TYPE_POINTER:
+        p = va_arg (varargs, gpointer);
+
+        g_value_init (&field.value, G_TYPE_POINTER);
+        g_value_set_pointer (&field.value, p);
         break;
       default:
         if (type == GST_TYPE_FOURCC) {

@@ -1,5 +1,16 @@
 2005-03-22  Wim Taymans  <wim@fluendo.com>
 
+	* check/Makefile.am:
+	* check/gst/gstmessage.c: (START_TEST), (gst_data_suite), (main):
+	* gst/gststructure.c: (gst_structure_set_valist),
+	(gst_structure_copy_conditional):
+	Activated more tests.
+	Added message test.
+	Added G_TYPE_POINTER to GstStructure.
+	
+
+2005-03-22  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-TODO.txt:
 	* docs/design/part-events.txt:
 	* docs/design/part-gstbin.txt:

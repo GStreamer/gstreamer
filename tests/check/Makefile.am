@@ -20,11 +20,13 @@ CLEANFILES = core.*
 
 TESTS = $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@ \
 	gst/gstbin	     	\
-    gst/gstbus          \
+        gst/gstbus          \
 	gst/gstcaps     	\
 	gst/gstdata		\
 	gst/gstiterator 	\
+	gst/gstmessage	 	\
 	gst/gstobject		\
+	gst/gstpad		\
 	gst/gstsystemclock	\
 	gst-libs/gdp	
 
