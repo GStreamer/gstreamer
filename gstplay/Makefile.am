@@ -13,12 +13,19 @@ glade_DATA = gstmediaplay.glade play.xpm stop.xpm pause.xpm
 
 libgstmediaplay_la_SOURCES = \
 	gstplay.c \
-	gstmediaplay.c gstmediaplay.h \
-	gststatusarea.c gststatusarea.h \
-	callbacks.c callbacks.h 
+	gstmediaplay.c \
+	gststatusarea.c \
+	callbacks.c
 
 gstmediaplay_SOURCES = \
 	main.c 
+
+noinst_HEADERS = \
+	gstmediaplay.h \
+	gststatusarea.h \
+	callbacks.h \
+	gstplay.h \
+	gstplayprivate.h
 
 
 CFLAGS += -O2 -Wall -DDATADIR=\""$(gladedir)/"\"
