@@ -239,7 +239,7 @@ gst_alsa_src_set_caps (GstAlsaSrc *src, gboolean aggressive)
   if (all_caps == NULL) return FALSE;
   /* now intersect this with all caps of the peers... */
   for (i = 0; i < GST_ELEMENT (src)->numpads; i++) {
-    all_caps = gst_caps_intersect (all_caps, gst_pad_get_caps (this->pad[i]));
+    all_caps = gst_caps_intersect (all_caps, gst_pad_get_allowed_caps (this->pad[i]));
     if (all_caps == NULL) {
       GST_DEBUG ("No compatible caps found in alsasrc (%s)", GST_ELEMENT_NAME (this));
       return FALSE;

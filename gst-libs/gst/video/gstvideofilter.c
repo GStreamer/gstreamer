@@ -411,7 +411,7 @@ void gst_videofilter_set_output_size(GstVideofilter *videofilter,
   videofilter->to_buf_size = (videofilter->to_width * videofilter->to_height
       * videofilter->format->bpp)/8;
 
-  srccaps = gst_caps_copy(gst_pad_get_caps(videofilter->srcpad));
+  srccaps = gst_caps_copy (gst_pad_get_negotiated_caps(videofilter->srcpad));
   structure = gst_caps_get_structure (srccaps, 0);
 
   gst_structure_set (structure, "width", G_TYPE_INT, width,
