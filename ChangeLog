@@ -1,5 +1,9 @@
 2004-11-23  Johan Dahlin  <johan@gnome.org>
 
+	* gst/gstmodule.c: sink GstObject, much like GtkObject
+
+2004-11-23  Johan Dahlin  <johan@gnome.org>
+
 	* examples/gst/play.py:
 	* gst/gst-types.defs:
 	* gst/gst.override:

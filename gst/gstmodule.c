@@ -62,6 +62,15 @@ python_do_pending_calls(gpointer data)
     return TRUE;
 }
 
+static void
+sink_gstobject(GObject *object)
+{
+     if (GST_OBJECT_FLOATING(object)) {
+	  g_object_ref(object);
+	  gst_object_sink(GST_OBJECT(object));
+     }
+}
+
 DL_EXPORT(void)
 init_gst (void)
 {
@@ -71,6 +80,7 @@ init_gst (void)
      char **argv;
 
      init_pygobject ();
+
      /* pull in arguments */
      av = PySys_GetObject ("argv");
      if (av != NULL) {
@@ -102,6 +112,8 @@ init_gst (void)
 	       g_free (argv[i]);
 	  g_free (argv);
      }
+
+     pygobject_register_sinkfunc(GST_TYPE_OBJECT, sink_gstobject);
 
      m = Py_InitModule ("_gst", pygst_functions);
      d = PyModule_GetDict (m);
