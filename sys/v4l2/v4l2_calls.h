@@ -40,7 +40,7 @@
   if (!GST_V4L2_IS_OPEN(element))				\
   {								\
     GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,		\
-      (_("Device is not open")), NULL);                         \
+      (_("Device is not open.")), (NULL));                      \
     return FALSE;						\
   }
 
@@ -49,7 +49,7 @@
   if (GST_V4L2_IS_OPEN(element))				\
   {								\
     GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,		\
-      (_("Device is open")), NULL);                             \
+      (_("Device is open.")), (NULL));                          \
     return FALSE;						\
   }
 
@@ -58,7 +58,7 @@
   if (!GST_V4L2_IS_OVERLAY(element))				\
   {								\
     GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,             \
-      NULL, ("Device cannot handle overlay"));                  \
+      (NULL), ("Device cannot handle overlay"));                \
     return FALSE;						\
   }
 
@@ -67,7 +67,7 @@
   if (!GST_V4L2_IS_ACTIVE(element))				\
   {								\
     GST_ELEMENT_ERROR (element, RESOURCE, SETTINGS,             \
-      NULL, ("Device is not in streaming mode"));               \
+      (NULL), ("Device is not in streaming mode"));             \
     return FALSE;						\
   }
 
@@ -76,7 +76,7 @@
   if (GST_V4L2_IS_ACTIVE(element))				\
   {								\
     GST_ELEMENT_ERROR (element, RESOURCE, SETTINGS,             \
-      NULL, ("Device is in streaming mode"));                   \
+      (NULL), ("Device is in streaming mode"));                 \
     return FALSE;						\
   }
 

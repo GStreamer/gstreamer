@@ -549,7 +549,7 @@ gst_flacenc_chain (GstPad *pad, GstData *_data)
   }
 
   if (!flacenc->negotiated) {
-    GST_ELEMENT_ERROR (flacenc, CORE, NEGOTIATION, NULL,
+    GST_ELEMENT_ERROR (flacenc, CORE, NEGOTIATION, (NULL),
 		       ("format wasn't negotiated before chain function"));
     return;
   }

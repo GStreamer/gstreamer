@@ -299,7 +299,7 @@ gst_goom_chain (GstPad *pad, GstData *_data)
   }
 
   if (goom->channels == 0) {
-    GST_ELEMENT_ERROR (goom, CORE, NEGOTIATION, NULL,
+    GST_ELEMENT_ERROR (goom, CORE, NEGOTIATION, (NULL),
                        ("format wasn't negotiated before chain function"));
 
     goto done;

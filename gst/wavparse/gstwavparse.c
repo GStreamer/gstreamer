@@ -636,7 +636,7 @@ gst_wavparse_parse_fmt (GstWavParse *wavparse, guint size)
       break;
 			
     default:
-      GST_ELEMENT_ERROR (wavparse, STREAM, NOT_IMPLEMENTED, NULL, ("format %d not handled", wavparse->format));
+      GST_ELEMENT_ERROR (wavparse, STREAM, NOT_IMPLEMENTED, (NULL), ("format %d not handled", wavparse->format));
       return;
     }
 
@@ -731,7 +731,7 @@ gst_wavparse_loop (GstElement *element)
         if (event && GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
           gst_pad_event_default (wavparse->sinkpad, event);
         } else {
-          GST_ELEMENT_ERROR (element, RESOURCE, READ, NULL, NULL);
+          GST_ELEMENT_ERROR (element, RESOURCE, READ, (NULL), (NULL));
         }
 	return;
       }
@@ -808,7 +808,7 @@ gst_wavparse_loop (GstElement *element)
   case GST_WAVPARSE_START:
     if (chunk.id != GST_RIFF_TAG_RIFF &&
 				chunk.type != GST_RIFF_RIFF_WAVE) {
-      GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, NULL,
+      GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
                            ("chunk.id %08x chunk.type %08x", chunk.id, chunk.type));
       return;
     }

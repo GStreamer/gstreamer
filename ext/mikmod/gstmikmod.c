@@ -294,7 +294,7 @@ gst_mikmod_loop (GstElement *element)
   
   if (!GST_PAD_CAPS (mikmod->srcpad)) {
     if (gst_mikmod_negotiate (mikmod) <= 0) {
-      GST_ELEMENT_ERROR (mikmod, CORE, NEGOTIATION, NULL, NULL);
+      GST_ELEMENT_ERROR (mikmod, CORE, NEGOTIATION, (NULL), (NULL));
       return;
     }
   }

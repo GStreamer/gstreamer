@@ -295,7 +295,7 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
       gst_buffer_unref (sub);
     } else {
       /* FIXME: does that work well with FLAC files containing ID3v2 tags ? */
-      GST_ELEMENT_ERROR (tag, STREAM, WRONG_TYPE, NULL, NULL);
+      GST_ELEMENT_ERROR (tag, STREAM, WRONG_TYPE, (NULL), (NULL));
     }
   }
 
@@ -464,7 +464,7 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
       g_warning ("No tags found\n");
       buffer = gst_buffer_new_and_alloc (12);
       if (buffer == NULL) {
-	GST_ELEMENT_ERROR (tag, CORE, TOO_LAZY, NULL,
+	GST_ELEMENT_ERROR (tag, CORE, TOO_LAZY, (NULL),
 			   ("Error creating 12-byte buffer for padding block"));
       }
       bzero (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
@@ -481,7 +481,7 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
 						     sizeof (header), NULL);
       gst_tag_list_free (merged_tags);
       if (buffer == NULL) {
-	GST_ELEMENT_ERROR (tag, CORE, TAG, NULL, ("Error converting tag list to vorbiscomment buffer"));
+	GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL), ("Error converting tag list to vorbiscomment buffer"));
 	return;
       }
       size = GST_BUFFER_SIZE (buffer) - 4;
@@ -490,7 +490,7 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
 	 * while the vorbis specs allow more than that. Shouldn't 
 	 * be a real world problem though
 	 */
-	GST_ELEMENT_ERROR (tag, CORE, TAG, NULL, ("Vorbis comment of size %d too long", size));
+	GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL), ("Vorbis comment of size %d too long", size));
 	return;
       } 
     }

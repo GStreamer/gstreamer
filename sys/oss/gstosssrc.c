@@ -305,13 +305,13 @@ gst_osssrc_get (GstPad *pad)
     /* nothing was negotiated, we can decide on a format */
     if (!gst_osssrc_negotiate (pad)) {
       gst_buffer_unref (buf);
-      GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, NULL, NULL);
+      GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL), (NULL));
       return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
     }
   }
   if (GST_OSSELEMENT (src)->bps == 0) {
     gst_buffer_unref (buf);
-    GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, NULL,
+    GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL),
                        ("format wasn't negotiated before chain function"));
     return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
   }
@@ -320,7 +320,7 @@ gst_osssrc_get (GstPad *pad)
                     src->buffersize);
   if (readbytes < 0) {
     gst_buffer_unref (buf);
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, NULL, GST_ERROR_SYSTEM);
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
     return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
   }
 

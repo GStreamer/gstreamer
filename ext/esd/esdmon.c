@@ -267,7 +267,7 @@ gst_esdmon_get (GstPad *pad)
           "channels",   G_TYPE_INT,	esdmon->channels
         )) <= 0)
     {
-      GST_ELEMENT_ERROR (esdmon, CORE, NEGOTIATION, NULL, NULL);
+      GST_ELEMENT_ERROR (esdmon, CORE, NEGOTIATION, (NULL), (NULL));
       return NULL;
     }
   }

@@ -250,7 +250,8 @@ int gst_dv1394src_iso_receive(raw1394handle_t handle,int channel,size_t len,quad
               if (gst_pad_try_set_caps (dv1394src->srcpad, 
                     gst_caps_new_simple ("video/dv",
                       "format", G_TYPE_STRING, "PAL", NULL)) <= 0) {
-		GST_ELEMENT_ERROR (dv1394src, CORE, NEGOTIATION, NULL, ("Could not set source caps for PAL"));
+		GST_ELEMENT_ERROR (dv1394src, CORE, NEGOTIATION, (NULL),
+                                   ("Could not set source caps for PAL"));
                 return 0;
               }
             } else {
@@ -260,7 +261,8 @@ int gst_dv1394src_iso_receive(raw1394handle_t handle,int channel,size_t len,quad
               if (gst_pad_try_set_caps (dv1394src->srcpad, 
                     gst_caps_new_simple ("video/dv",
                       "format", G_TYPE_STRING, "NTSC", NULL)) <= 0) {
-                GST_ELEMENT_ERROR (dv1394src, CORE, NEGOTIATION, NULL, ("Could not set source caps for NTSC"));
+                GST_ELEMENT_ERROR (dv1394src, CORE, NEGOTIATION, (NULL),
+                                   ("Could not set source caps for NTSC"));
                 return 0;
               }
             }

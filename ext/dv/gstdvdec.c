@@ -783,7 +783,7 @@ gst_dvdec_loop (GstElement *element)
           dvdec->bpp = 2;
 	}
     } else {
-      GST_ELEMENT_ERROR (element, CORE, NEGOTIATION, NULL, NULL);
+      GST_ELEMENT_ERROR (element, CORE, NEGOTIATION, (NULL), (NULL));
       return;
     }
   }

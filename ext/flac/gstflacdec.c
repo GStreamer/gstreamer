@@ -305,7 +305,7 @@ gst_flacdec_error_callback (const FLAC__SeekableStreamDecoder *decoder,
       break;
   }
 
-  GST_ELEMENT_ERROR (flacdec, STREAM, DECODE, NULL, (error));
+  GST_ELEMENT_ERROR (flacdec, STREAM, DECODE, (NULL), (error));
 }
 
 static FLAC__SeekableStreamDecoderSeekStatus 	
@@ -535,7 +535,7 @@ gst_flacdec_loop (GstElement *element)
     GST_DEBUG ("flacdec: initializing decoder");    
     res = FLAC__seekable_stream_decoder_init (flacdec->decoder);
     if (res != FLAC__SEEKABLE_STREAM_DECODER_OK) {
-      GST_ELEMENT_ERROR (flacdec, LIBRARY, INIT, NULL,
+      GST_ELEMENT_ERROR (flacdec, LIBRARY, INIT, (NULL),
                          (FLAC__SeekableStreamDecoderStateString[res]));
       return;
     }
