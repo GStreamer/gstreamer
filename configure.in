@@ -810,6 +810,7 @@ plugins/oss/Makefile
 plugins/rtp/Makefile
 plugins/rtp/rtpsend/Makefile
 plugins/mulaw/Makefile
+plugins/alaw/Makefile
 plugins/filters/Makefile
 plugins/filters/smooth/Makefile
 plugins/filters/median/Makefile
@@ -841,6 +842,7 @@ plugins/esd/Makefile
 plugins/esd/esdsink/Makefile
 plugins/artsd/Makefile
 plugins/xmms/Makefile
+plugins/mulaw/Makefile
 gstplay/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
 test/Makefile
