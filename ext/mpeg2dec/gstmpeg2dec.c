@@ -305,7 +305,7 @@ static gboolean
 gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
 {
   GstCaps *allowed;
-  GstCaps *trylist;
+  GstCaps *intersect, *trylist, *head, *to_intersect;
 
   /* we what we are allowed to do */
   allowed = gst_pad_get_allowed_caps (mpeg2dec->srcpad);
@@ -318,18 +318,23 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
 	      );
   }
 
+  to_intersect = GST_CAPS_NEW (
+                   "mpeg2dec_negotiate",
+                      "video/raw",
+                      "width",        GST_PROPS_INT (mpeg2dec->width),
+ 	              "height",       GST_PROPS_INT (mpeg2dec->height),
+                      "pixel_width",  GST_PROPS_INT (mpeg2dec->pixel_width),
+ 	              "pixel_height", GST_PROPS_INT (mpeg2dec->pixel_height)
+                 );
+
   /* try to fix our height */
-  trylist = gst_caps_intersect (allowed,
-                                GST_CAPS_NEW (
-                                  "mpeg2dec_negotiate",
-                                     "video/raw",
-                          	     "width",        GST_PROPS_INT (mpeg2dec->width),
- 	                             "height",       GST_PROPS_INT (mpeg2dec->height),
-                          	     "pixel_width",  GST_PROPS_INT (mpeg2dec->pixel_width),
- 	                             "pixel_height", GST_PROPS_INT (mpeg2dec->pixel_height)
-                                ));
+  intersect = gst_caps_intersect (allowed, to_intersect);
+  gst_caps_unref (allowed);
+  gst_caps_unref (to_intersect);
+
   /* prepare for looping */
-  trylist = gst_caps_normalize (trylist);
+  head = trylist = gst_caps_normalize (intersect);
+  gst_caps_unref (intersect);
 
   while (trylist) {
     GstCaps *to_try = gst_caps_copy_1 (trylist);
@@ -349,8 +354,11 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
       }
       break;
     }
+
     trylist = trylist->next;
   }
+  gst_caps_unref (head);
+
   /* oops list exhausted and nothing was found... */
   if (!trylist) {
     return FALSE;
@@ -379,10 +387,7 @@ update_streaminfo (GstMpeg2dec *mpeg2dec)
                        "application/x-gst-streaminfo",
                         props);
 
-  if (mpeg2dec->streaminfo)
-    gst_caps_unref (mpeg2dec->streaminfo);
-
-  mpeg2dec->streaminfo = caps;
+  gst_caps_replace_sink (&mpeg2dec->streaminfo, caps);
   g_object_notify (G_OBJECT (mpeg2dec), "streaminfo");
 }
 
@@ -1067,6 +1072,7 @@ gst_mpeg2dec_change_state (GstElement *element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       gst_mpeg2dec_close_decoder (mpeg2dec);
+      gst_caps_replace (&mpeg2dec->streaminfo, NULL);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
