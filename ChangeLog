@@ -1,3 +1,18 @@
+2004-04-11  Benjamin Otte  <otte@gnome.org>
+
+	* gst/schedulers/gstbasicscheduler.c: (plugin_init):
+	  rename categories to basic_*
+	* gst/schedulers/gstbasicscheduler.c: 
+	(gst_basic_scheduler_chain_wrapper),
+	(gst_basic_scheduler_chainhandler_proxy),
+	(gst_basic_scheduler_gethandler_proxy),
+	(gst_basic_scheduler_eventhandler_proxy):
+	  debugging category fixes - put common stuff in log category
+	* gst/schedulers/gstbasicscheduler.c: 
+	(gst_basic_scheduler_chain_elements):
+	  dirty fix: call gst_basic_scheduler_cothreaded_chain when already
+	  active and linking two active chains
+
 2004-04-10  Benjamin Otte  <otte@gnome.org>
 
 	* docs/pwg/intro-preface.xml:

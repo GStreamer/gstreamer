@@ -265,9 +265,9 @@ plugin_init (GstPlugin * plugin)
 {
   GstSchedulerFactory *factory;
 
-  GST_DEBUG_CATEGORY_INIT (debug_dataflow, "dataflow", 0,
+  GST_DEBUG_CATEGORY_INIT (debug_dataflow, "basic_dataflow", 0,
       "basic scheduler dataflow");
-  GST_DEBUG_CATEGORY_INIT (debug_scheduler, "scheduler", 0,
+  GST_DEBUG_CATEGORY_INIT (debug_scheduler, "basic_scheduler", 0,
       "basic scheduler general information");
 
   factory = gst_scheduler_factory_new ("basic" COTHREADS_NAME,
@@ -388,7 +388,7 @@ gst_basic_scheduler_chain_wrapper (int argc, char **argv)
     SCHED (element)->current = NULL;
   }
 
-  GST_DEBUG ("leaving chain wrapper of element %s", name);
+  GST_CAT_DEBUG (debug_dataflow, "leaving chain wrapper of element %s", name);
   gst_object_unref (GST_OBJECT (element));
 
   return 0;
@@ -455,7 +455,6 @@ gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstData * data)
   parent = GST_PAD_PARENT (pad);
   peer = GST_RPAD_PEER (pad);
 
-  GST_DEBUG ("entered chainhandler proxy of %s:%s", GST_DEBUG_PAD_NAME (pad));
   GST_CAT_DEBUG (debug_dataflow, "putting buffer %p in peer \"%s:%s\"'s pen",
       data, GST_DEBUG_PAD_NAME (peer));
 
@@ -492,7 +491,8 @@ gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstData * data)
 
   do_element_switch (parent);
 
-  GST_DEBUG ("leaving chainhandler proxy of %s:%s", GST_DEBUG_PAD_NAME (pad));
+  GST_CAT_DEBUG (debug_dataflow, "leaving chainhandler proxy of %s:%s",
+      GST_DEBUG_PAD_NAME (pad));
 }
 
 static void
@@ -526,7 +526,8 @@ gst_basic_scheduler_gethandler_proxy (GstPad * pad)
   GstElement *parent;
   GstRealPad *peer;
 
-  GST_DEBUG ("entering gethandler proxy of %s:%s", GST_DEBUG_PAD_NAME (pad));
+  GST_CAT_DEBUG (debug_dataflow, "entering gethandler proxy of %s:%s",
+      GST_DEBUG_PAD_NAME (pad));
 
   parent = GST_PAD_PARENT (pad);
   peer = GST_RPAD_PEER (pad);
@@ -557,7 +558,8 @@ gst_basic_scheduler_gethandler_proxy (GstPad * pad)
   data = GST_RPAD_BUFPEN (pad);
   GST_RPAD_BUFPEN (pad) = NULL;
 
-  GST_DEBUG ("leaving gethandler proxy of %s:%s", GST_DEBUG_PAD_NAME (pad));
+  GST_CAT_DEBUG (debug_dataflow, "leaving gethandler proxy of %s:%s",
+      GST_DEBUG_PAD_NAME (pad));
 
   return data;
 }
@@ -567,7 +569,7 @@ gst_basic_scheduler_eventhandler_proxy (GstPad * srcpad, GstEvent * event)
 {
   gboolean flush;
 
-  GST_INFO ("intercepting event %d on pad %s:%s",
+  GST_CAT_INFO (debug_dataflow, "intercepting event %d on pad %s:%s",
       GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (srcpad));
 
   /* figure out if we need to flush */
@@ -587,10 +589,10 @@ gst_basic_scheduler_eventhandler_proxy (GstPad * srcpad, GstEvent * event)
   if (flush) {
     GstData *data = GST_RPAD_BUFPEN (srcpad);
 
-    GST_INFO ("event is flush");
+    GST_CAT_INFO (debug_dataflow, "event is flush");
 
     if (data) {
-      GST_INFO ("need to clear some buffers");
+      GST_CAT_INFO (debug_dataflow, "need to clear some buffers");
 
       gst_data_unref (data);
       GST_RPAD_BUFPEN (srcpad) = NULL;
@@ -964,10 +966,11 @@ gst_basic_scheduler_chain_elements (GstBasicScheduler * sched,
     chain1->elements =
         g_list_concat (chain1->elements, g_list_copy (chain2->elements));
     chain1->num_elements += chain2->num_elements;
-    /* FIXME chain changed here */
-/*    gst_basic_scheduler_cothreaded_chain(chain->sched->parent,chain); */
-
     gst_basic_scheduler_chain_destroy (chain2);
+    if (sched->context)
+
+      gst_basic_scheduler_cothreaded_chain (GST_BIN (GST_SCHEDULER (chain1->
+                  sched)->parent), chain1);
 
     /* otherwise one has a chain already, the other doesn't */
   } else {
