@@ -2,7 +2,7 @@
 
 
 int main(int argc,char *argv[]) {
-  GstElementFactory *srcfactory, *parsefactory, *decodefactory, *playfactory;
+  GstElementFactory *srcfactory, *decodefactory, *playfactory;
   GstElement *pipeline, *src, *decode, *play;
   GstPad *infopad;
 
