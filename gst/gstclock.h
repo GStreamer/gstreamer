@@ -45,8 +45,18 @@ typedef guint64 	GstClockTime;
 typedef gint64 		GstClockTimeDiff;
 typedef gpointer 	GstClockID;
 
-#define GST_CLOCK_DIFF(s, e) 	(GstClockTimeDiff)((s)-(e))
-#define GST_TIMEVAL_TO_TIME(tv)	((tv).tv_sec * (guint64) G_USEC_PER_SEC + (tv).tv_usec)
+#define GST_SECOND  ((guint64)G_USEC_PER_SEC)
+#define GST_MSECOND ((guint64)GST_SECOND/1000LL)
+#define GST_USECOND ((guint64)GST_SECOND/1000000LL)
+#define GST_NSECOND ((guint64)GST_SECOND/1000000000LL)
+
+#define GST_CLOCK_DIFF(s, e) 		(GstClockTimeDiff)((s)-(e))
+#define GST_TIMEVAL_TO_TIME(tv)		((tv).tv_sec * GST_SECOND + (tv).tv_usec * GST_USECOND)
+#define GST_TIME_TO_TIMEVAL(t,tv)			\
+G_STMT_START { 						\
+  (tv).tv_sec  = (t) / GST_SECOND;			\
+  (tv).tv_usec = ((t) / GST_USECOND) % GST_SECOND;	\
+} G_STMT_END
 
 typedef struct _GstClock 	GstClock;
 typedef struct _GstClockClass 	GstClockClass;
@@ -66,6 +76,7 @@ struct _GstClock {
 
   GstClockTime	 start_time;
   GstClockTime	 last_time;
+  gboolean 	 accept_discont;
   gdouble 	 speed;
   gboolean 	 active;
   GList		*entries;
@@ -95,18 +106,19 @@ gdouble 		gst_clock_get_speed		(GstClock *clock);
 void 			gst_clock_set_active		(GstClock *clock, gboolean active);
 gboolean 		gst_clock_is_active		(GstClock *clock);
 void 			gst_clock_reset			(GstClock *clock);
+gboolean		gst_clock_handle_discont	(GstClock *clock, guint64 time);
 gboolean 		gst_clock_async_supported	(GstClock *clock);
 
 GstClockTime		gst_clock_get_time		(GstClock *clock);
 
-GstClockReturn		gst_clock_wait			(GstClock *clock, GstClockTime time);
+GstClockReturn		gst_clock_wait			(GstClock *clock, GstClockTime time, GstClockTimeDiff *jitter);
 GstClockID		gst_clock_wait_async		(GstClock *clock, GstClockTime time, 
 						 	 GstClockCallback func, gpointer user_data);
 void			gst_clock_cancel_wait_async	(GstClock *clock, GstClockID id);
 GstClockID		gst_clock_notify_async		(GstClock *clock, GstClockTime interval, 
 						 	 GstClockCallback func, gpointer user_data);
 void 			gst_clock_remove_notify_async	(GstClock *clock, GstClockID id);
-GstClockReturn		gst_clock_wait_id		(GstClock *clock, GstClockID id);
+GstClockReturn		gst_clock_wait_id		(GstClock *clock, GstClockID id, GstClockTimeDiff *jitter);
 
 GstClockID		gst_clock_get_next_id		(GstClock *clock);
 void			gst_clock_unlock_id		(GstClock *clock, GstClockID id);

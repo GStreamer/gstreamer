@@ -100,7 +100,7 @@ struct _GstSchedulerClass {
   void 			(*pad_disconnect)	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
   void 			(*pad_select)		(GstScheduler *sched, GList *padlist);
   GstClockReturn	(*clock_wait)		(GstScheduler *sched, GstElement *element,
-		  				 GstClock *clock, GstClockTime time);
+		  				 GstClock *clock, GstClockTime time, GstClockTimeDiff *jitter);
   GstSchedulerState 	(*iterate)		(GstScheduler *sched);
   /* for debugging */
   void 			(*show)			(GstScheduler *sched);
@@ -129,7 +129,7 @@ void			gst_scheduler_pad_connect	(GstScheduler *sched, GstPad *srcpad, GstPad *s
 void			gst_scheduler_pad_disconnect	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 GstPad*                 gst_scheduler_pad_select 	(GstScheduler *sched, GList *padlist);
 GstClockReturn		gst_scheduler_clock_wait	(GstScheduler *sched, GstElement *element,
-							 GstClock *clock, GstClockTime time);
+							 GstClock *clock, GstClockTime time, GstClockTimeDiff *jitter);
 gboolean		gst_scheduler_iterate		(GstScheduler *sched);
 
 void			gst_scheduler_use_clock		(GstScheduler *sched, GstClock *clock);

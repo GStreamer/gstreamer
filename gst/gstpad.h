@@ -112,32 +112,36 @@ typedef struct _GstGhostPadClass GstGhostPadClass;
 
 
 typedef enum {
-  GST_REGION_VOID,
-  GST_REGION_OFFSET_LEN,
-  GST_REGION_TIME_LEN,
-} GstRegionType;
-
-typedef enum {
   GST_PAD_CONNECT_REFUSED = -1,
   GST_PAD_CONNECT_DELAYED =  0,
   GST_PAD_CONNECT_OK      =  1,
   GST_PAD_CONNECT_DONE    =  2,
 } GstPadConnectReturn;
 
+typedef enum {
+  GST_PAD_QUERY_TOTAL,
+  GST_PAD_QUERY_POSITION,
+  GST_PAD_QUERY_LATENCY,
+} GstPadQueryType;
+ 
 /* this defines the functions used to chain buffers
  * pad is the sink pad (so the same chain function can be used for N pads)
  * buf is the buffer being passed */
 typedef void 			(*GstPadChainFunction) 		(GstPad *pad,GstBuffer *buf);
 typedef GstBuffer*		(*GstPadGetFunction) 		(GstPad *pad);
 typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
+typedef gboolean		(*GstPadConvertFunction)	(GstPad *pad, 
+		 						 GstSeekType src_format,  gint64  src_value,
+								 GstSeekType *dest_format, gint64 *dest_value);
+typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstPadQueryType type,
+		 						 GstSeekType *format, gint64  *value);
+typedef GList*			(*GstPadIntConnFunction)	(GstPad *pad);
 
-typedef GstBuffer*		(*GstPadGetRegionFunction) 	(GstPad *pad, GstRegionType type, 
-								 guint64 offset, guint64 len);
-typedef GstBuffer*		(*GstPadPullRegionFunction) 	(GstPad *pad, GstRegionType type, 
-								 guint64 offset, guint64 len);
 typedef GstPadConnectReturn	(*GstPadConnectFunction) 	(GstPad *pad, GstCaps *caps);
 typedef GstCaps*		(*GstPadGetCapsFunction) 	(GstPad *pad, GstCaps *caps);
 typedef GstBufferPool*		(*GstPadBufferPoolFunction) 	(GstPad *pad);
+
+typedef gboolean 		(*GstPadDispatcherFunc) 	(GstPad *pad, gpointer data);
 
 typedef enum {
   GST_PAD_UNKNOWN,
@@ -178,10 +182,6 @@ struct _GstRealPad {
   GstRealPad 			*peer;
 
   GstBuffer 			*bufpen;
-  /* CR1: FIXME: regiontype should go away */
-  GstRegionType 		regiontype;
-  guint64 			offset;
-  guint64 			len;
 
   GstPadChainFunction 		chainfunc;
   GstPadChainFunction 		chainhandler;
@@ -190,9 +190,9 @@ struct _GstRealPad {
 
   GstPadEventFunction		eventfunc;
   GstPadEventFunction		eventhandler;
-
-  GstPadGetRegionFunction 	getregionfunc;
-  GstPadPullRegionFunction 	pullregionfunc;
+  GstPadConvertFunction		convertfunc;
+  GstPadQueryFunction		queryfunc;
+  GstPadIntConnFunction		intconnfunc;
 
   GstPadGetCapsFunction 	getcapsfunc;
   GstPadConnectFunction 	connectfunc;
@@ -247,17 +247,13 @@ struct _GstGhostPadClass {
 #define GST_RPAD_GETHANDLER(pad)	(((GstRealPad *)(pad))->gethandler)
 #define GST_RPAD_EVENTFUNC(pad)		(((GstRealPad *)(pad))->eventfunc)
 #define GST_RPAD_EVENTHANDLER(pad)	(((GstRealPad *)(pad))->eventhandler)
-
-#define GST_RPAD_GETREGIONFUNC(pad)	(((GstRealPad *)(pad))->getregionfunc)
-#define GST_RPAD_PULLREGIONFUNC(pad)	(((GstRealPad *)(pad))->pullregionfunc)
+#define GST_RPAD_CONVERTFUNC(pad)	(((GstRealPad *)(pad))->convertfunc)
+#define GST_RPAD_QUERYFUNC(pad)		(((GstRealPad *)(pad))->queryfunc)
+#define GST_RPAD_INTCONNFUNC(pad)	(((GstRealPad *)(pad))->intconnfunc)
 
 #define GST_RPAD_CONNECTFUNC(pad)	(((GstRealPad *)(pad))->connectfunc)
 #define GST_RPAD_GETCAPSFUNC(pad)	(((GstRealPad *)(pad))->getcapsfunc)
 #define GST_RPAD_BUFFERPOOLFUNC(pad)	(((GstRealPad *)(pad))->bufferpoolfunc)
-
-#define GST_RPAD_REGIONTYPE(pad)	(((GstRealPad *)(pad))->regiontype)
-#define GST_RPAD_OFFSET(pad)		(((GstRealPad *)(pad))->offset)
-#define GST_RPAD_LEN(pad)		(((GstRealPad *)(pad))->len)
 
 /* GstGhostPad */
 #define GST_GPAD_REALPAD(pad)		(((GstGhostPad *)(pad))->realpad)
@@ -342,17 +338,20 @@ GType			gst_pad_get_type			(void);
 GType			gst_real_pad_get_type			(void);
 GType			gst_ghost_pad_get_type			(void);
 
-GstPad*			gst_pad_new				(gchar *name, GstPadDirection direction);
+GstPad*			gst_pad_new				(const gchar *name, GstPadDirection direction);
 #define			gst_pad_destroy(pad)			gst_object_destroy (GST_OBJECT (pad))
-GstPad*			gst_pad_new_from_template		(GstPadTemplate *templ, gchar *name);
+GstPad*			gst_pad_new_from_template		(GstPadTemplate *templ, const gchar *name);
+GstPad*			gst_pad_custom_new			(GType type, const gchar *name, GstPadDirection direction);
+GstPad*			gst_pad_custom_new_from_template	(GType type, GstPadTemplate *templ, const gchar *name);
 
 GstPadDirection		gst_pad_get_direction			(GstPad *pad);
 
 void			gst_pad_set_chain_function		(GstPad *pad, GstPadChainFunction chain);
 void			gst_pad_set_get_function		(GstPad *pad, GstPadGetFunction get);
 void			gst_pad_set_event_function		(GstPad *pad, GstPadEventFunction event);
-
-void			gst_pad_set_getregion_function		(GstPad *pad, GstPadGetRegionFunction getregion);
+void			gst_pad_set_convert_function		(GstPad *pad, GstPadConvertFunction convert);
+void			gst_pad_set_query_function		(GstPad *pad, GstPadQueryFunction query);
+void			gst_pad_set_internal_connection_function	(GstPad *pad, GstPadIntConnFunction intconn);
 
 void			gst_pad_set_connect_function		(GstPad *pad, GstPadConnectFunction connect);
 void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps);
@@ -411,22 +410,33 @@ void			gst_pad_push				(GstPad *pad, GstBuffer *buf);
 #endif
 #if 1
 GstBuffer*		gst_pad_pull				(GstPad *pad);
-GstBuffer*		gst_pad_pullregion			(GstPad *pad, GstRegionType type, 
-								 guint64 offset, guint64 len);
 #else
 #define gst_pad_pull(pad) \
   ( (((GstRealPad *)(pad))->peer->gethandler) ? \
 (((GstRealPad *)(pad))->peer->gethandler)((GstPad *)(((GstRealPad *)(pad))->peer)) : \
 NULL )
-#define gst_pad_pullregion(pad,type,offset,len) \
-  ( (((GstRealPad *)(pad))->peer->pullregionfunc) ? \
-(((GstRealPad *)(pad))->peer->pullregionfunc)((GstPad *)(((GstRealPad *)(pad))->peer),(type),(offset),(len)) : \
-NULL )
 #endif
 
 gboolean		gst_pad_send_event			(GstPad *pad, GstEvent *event);
-void 			gst_pad_event_default			(GstPad *pad, GstEvent *event);
+gboolean		gst_pad_event_default			(GstPad *pad, GstEvent *event);
 
+gboolean		gst_pad_convert				(GstPad *pad, 
+		 						 GstFormat src_format,  gint64  src_value,
+								 GstFormat *dest_format, gint64 *dest_value);
+gboolean		gst_pad_convert_default 		(GstPad *pad,
+		                        			 GstFormat src_format,  gint64  src_value,
+					                         GstFormat *dest_format, gint64 *dest_value);
+
+gboolean		gst_pad_query				(GstPad *pad, GstPadQueryType type,
+								 GstFormat *format, gint64 *value);
+gboolean 		gst_pad_query_default 			(GstPad *pad, GstPadQueryType type,
+		                      				 GstFormat *format, gint64 *value);
+
+GList*			gst_pad_get_internal_connections	(GstPad *pad);
+GList*	 		gst_pad_get_internal_connections_default (GstPad *pad);
+	
+gboolean 		gst_pad_dispatcher 			(GstPad *pad, GstPadDispatcherFunc dispatch, 
+								 gpointer data);
 
 
 GstBuffer*		gst_pad_peek				(GstPad *pad);

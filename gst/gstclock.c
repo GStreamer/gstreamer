@@ -258,10 +258,12 @@ gst_clock_set_active (GstClock *clock, gboolean active)
 
   GST_LOCK (clock);
   if (active) {
-    clock->start_time = time - clock->last_time;;
+    clock->start_time = time - clock->last_time;
+    clock->accept_discont = TRUE;
   }
   else {
     clock->last_time = time - clock->start_time;
+    clock->accept_discont = FALSE;
   }
   GST_UNLOCK (clock);
 
@@ -284,6 +286,39 @@ gst_clock_is_active (GstClock *clock)
   g_return_val_if_fail (GST_IS_CLOCK (clock), FALSE);
 
   return clock->active;
+}
+
+gboolean
+gst_clock_handle_discont (GstClock *clock, guint64 time)
+{
+  GstClockTime itime = 0LL;
+  
+  GST_DEBUG (GST_CAT_CLOCK, "clock discont %llu %llu %d\n", time, clock->start_time, clock->accept_discont);
+
+  GST_LOCK (clock);
+  if (clock->accept_discont) {
+    if (CLASS (clock)->get_internal_time) {
+      itime = CLASS (clock)->get_internal_time (clock);
+    }
+  }
+  else {
+    GST_UNLOCK (clock);
+    GST_DEBUG (GST_CAT_CLOCK, "clock discont refused %llu %llu\n", time, clock->start_time);
+    return FALSE;
+  }
+
+  clock->start_time = itime - time;
+  clock->last_time = time;
+  clock->accept_discont = FALSE;
+  GST_UNLOCK (clock);
+
+  GST_DEBUG (GST_CAT_CLOCK, "new time %llu\n", gst_clock_get_time (clock));
+
+  g_mutex_lock (clock->active_mutex);	
+  g_cond_broadcast (clock->active_cond);	
+  g_mutex_unlock (clock->active_mutex);	
+
+  return TRUE;
 }
 
 /**
@@ -311,7 +346,7 @@ gst_clock_get_time (GstClock *clock)
       ret = CLASS (clock)->get_internal_time (clock) - clock->start_time;
     }
     /* make sure the time is increasing, else return last_time */
-    if (ret < clock->last_time) {
+    if ((gint64) ret < (gint64) clock->last_time) {
       ret = clock->last_time;
     }
     else {
@@ -355,7 +390,7 @@ gst_clock_wait_async_func (GstClock *clock, GstClockTime time,
  * Returns: the #GstClockReturn result of the operation.
  */
 GstClockReturn
-gst_clock_wait (GstClock *clock, GstClockTime time)
+gst_clock_wait (GstClock *clock, GstClockTime time, GstClockTimeDiff *jitter)
 {
   GstClockID id;
   GstClockReturn res;
@@ -363,7 +398,7 @@ gst_clock_wait (GstClock *clock, GstClockTime time)
   g_return_val_if_fail (GST_IS_CLOCK (clock), GST_CLOCK_STOPPED);
 
   id = gst_clock_wait_async_func (clock, time, NULL, NULL);
-  res = gst_clock_wait_id (clock, id);
+  res = gst_clock_wait_id (clock, id, jitter);
 
   return res;
 }
@@ -460,12 +495,13 @@ gst_clock_unlock_func (GstClock *clock, GstClockTime time, GstClockID id, gpoint
  * Returns: result of the operation.
  */
 GstClockReturn
-gst_clock_wait_id (GstClock *clock, GstClockID id)
+gst_clock_wait_id (GstClock *clock, GstClockID id, GstClockTimeDiff *jitter)
 {
   GstClockReturn res = GST_CLOCK_TIMEOUT;
   GstClockEntry *entry = (GstClockEntry *) id;
   GstClockTime current_real, current, target;
   GTimeVal timeval;
+  GstClockTimeDiff this_jitter;
   
   g_return_val_if_fail (GST_IS_CLOCK (clock), GST_CLOCK_ERROR);
   g_return_val_if_fail (entry, GST_CLOCK_ERROR);
@@ -479,15 +515,23 @@ gst_clock_wait_id (GstClock *clock, GstClockID id)
   entry->func = gst_clock_unlock_func;
   target = GST_CLOCK_ENTRY_TIME (entry) - current + current_real;
 
-  GST_DEBUG (GST_CAT_CLOCK, "%llu %llu %llu\n", target, current, current_real); 
+  GST_DEBUG (GST_CAT_CLOCK, "real_target %llu, current_real %llu, target %llu, now %llu\n", 
+		  target, current_real, GST_CLOCK_ENTRY_TIME (entry), current); 
   
   if (target > current_real) {
-    timeval.tv_usec = target % 1000000;
-    timeval.tv_sec = target / 1000000;
-
+    GST_TIME_TO_TIMEVAL (target, timeval);
     GST_CLOCK_ENTRY_TIMED_WAIT (entry, &timeval);
+    current = gst_clock_get_time (clock);
+    this_jitter = current - GST_CLOCK_ENTRY_TIME (entry);
+  }
+  else {
+    res = GST_CLOCK_EARLY;
+    this_jitter = target - current_real;
   }
   GST_CLOCK_ENTRY_UNLOCK (entry);
+
+  if (jitter)
+    *jitter = this_jitter;
 
   gst_clock_free_entry (clock, entry);
 

@@ -435,8 +435,6 @@ print_element_info (GstElementFactory *factory)
         printf("      Has chainfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->chainfunc));
       if (realpad->getfunc)
         printf("      Has getfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->getfunc));
-      if (realpad->getregionfunc)
-        printf("      Has getregionfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->getregionfunc));
 
       if (pad->padtemplate)
         printf("    Pad Template: '%s'\n",pad->padtemplate->name_template);

@@ -117,7 +117,7 @@ static void     	gst_basic_scheduler_pad_connect		(GstScheduler *sched, GstPad *
 static void     	gst_basic_scheduler_pad_disconnect 	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 static GstPad*  	gst_basic_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
 static GstClockReturn	gst_basic_scheduler_clock_wait	 	(GstScheduler *sched, GstElement *element,
-								 GstClock *clock, GstClockTime time);
+								 GstClock *clock, GstClockTime time, GstClockTimeDiff *jitter);
 static GstSchedulerState
 			gst_basic_scheduler_iterate    		(GstScheduler *sched);
 
@@ -289,7 +289,6 @@ gst_basic_scheduler_chain_wrapper (int argc, char *argv[])
 	buf = gst_pad_pull (pad);
 	if (buf) {
 	  if (GST_IS_EVENT (buf) && !GST_ELEMENT_IS_EVENT_AWARE (element)) {
-	    /*gst_pad_event_default (pad, GST_EVENT (buf)); */
 	    gst_pad_send_event (pad, GST_EVENT (buf));
 	  }
 	  else {
@@ -299,12 +298,6 @@ gst_basic_scheduler_chain_wrapper (int argc, char *argv[])
 	    GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function of element %s done", name);
 	  }
 	}
-	/* 
-	else {
-          gst_element_error (element, "NULL buffer detected. Is \"%s:%s\" connected?",
-			  name, GST_PAD_NAME (pad), NULL);
-	}
-	*/
       }
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
@@ -341,27 +334,13 @@ gst_basic_scheduler_src_wrapper (int argc, char *argv[])
       pads = g_list_next (pads);
       if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SRC) {
 	GST_DEBUG (GST_CAT_DATAFLOW, "calling _getfunc for %s:%s", GST_DEBUG_PAD_NAME (realpad));
-	if (realpad->regiontype != GST_REGION_VOID) {
-	  g_return_val_if_fail (GST_RPAD_GETREGIONFUNC (realpad) != NULL, 0);
-/*          if (GST_RPAD_GETREGIONFUNC(realpad) == NULL)		   */	
-/*            fprintf(stderr,"error, no getregionfunc in \"%s\"\n", name); */
-/*          else							   */
-	  buf =
-	    (GST_RPAD_GETREGIONFUNC (realpad)) (GST_PAD_CAST (realpad), realpad->regiontype,
-						realpad->offset, realpad->len);
-	  realpad->regiontype = GST_REGION_VOID;
+	g_return_val_if_fail (GST_RPAD_GETFUNC (realpad) != NULL, 0);
+	buf = GST_RPAD_GETFUNC (realpad) (GST_PAD_CAST (realpad));
+	if (buf) {
+	  GST_DEBUG (GST_CAT_DATAFLOW, "calling gst_pad_push on pad %s:%s",
+		     GST_DEBUG_PAD_NAME (realpad));
+	  gst_pad_push (GST_PAD_CAST (realpad), buf);
 	}
-	else {
-	  g_return_val_if_fail (GST_RPAD_GETFUNC (realpad) != NULL, 0);
-/*          if (GST_RPAD_GETFUNC(realpad) == NULL)			*/
-/*            fprintf(stderr,"error, no getfunc in \"%s\"\n", name);	*/
-/*          else							*/
-	  buf = GST_RPAD_GETFUNC (realpad) (GST_PAD_CAST (realpad));
-	}
-
-	GST_DEBUG (GST_CAT_DATAFLOW, "calling gst_pad_push on pad %s:%s",
-		   GST_DEBUG_PAD_NAME (realpad));
-	gst_pad_push (GST_PAD_CAST (realpad), buf);
       }
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
@@ -483,46 +462,6 @@ gst_basic_scheduler_gethandler_proxy (GstPad * pad)
   return buf;
 }
 
-static GstBuffer *
-gst_basic_scheduler_pullregionfunc_proxy (GstPad * pad, GstRegionType type, guint64 offset, guint64 len)
-{
-  GstBuffer *buf;
-  GstElement *parent;
-  GstRealPad *peer;
-
-  parent = GST_PAD_PARENT (pad);
-  peer = GST_RPAD_PEER (pad);
-
-  GST_DEBUG_ENTER ("%s:%s,%d,%lld,%lld", GST_DEBUG_PAD_NAME (pad), type, offset, len);
-
-  /* put the region info into the pad */
-  GST_RPAD_REGIONTYPE (pad) = type;
-  GST_RPAD_OFFSET (pad) = offset;
-  GST_RPAD_LEN (pad) = len;
-
-  /* FIXME this should be bounded */
-  /* we will loop switching to the peer until it's filled up the bufferpen */
-  while (GST_RPAD_BUFPEN (pad) == NULL) {
-    GST_DEBUG (GST_CAT_DATAFLOW, "switching to %p to fill bufpen",
-	       GST_ELEMENT_THREADSTATE (parent));
-
-    do_element_switch (parent);
-
-    /* we may no longer be the same pad, check. */
-    if (GST_RPAD_PEER (peer) != (GstRealPad *) pad) {
-      GST_DEBUG (GST_CAT_DATAFLOW, "new pad in mid-switch!");
-      pad = (GstPad *) GST_RPAD_PEER (peer);
-    }
-  }
-  GST_DEBUG (GST_CAT_DATAFLOW, "done switching");
-
-  /* now grab the buffer from the pen, clear the pen, and return the buffer */
-  buf = GST_RPAD_BUFPEN (pad);
-  GST_RPAD_BUFPEN (pad) = NULL;
-  return buf;
-}
-
-
 static gboolean
 gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
 {
@@ -607,7 +546,6 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
 	  GST_DEBUG (GST_CAT_SCHEDULING, "copying get function into pull proxy for %s:%s",
 		     GST_DEBUG_PAD_NAME (pad));
 	  GST_RPAD_GETHANDLER (pad) = GST_RPAD_GETFUNC (pad);
-	  GST_RPAD_PULLREGIONFUNC (pad) = GST_RPAD_GETREGIONFUNC (pad);
 	}
 
       }
@@ -622,7 +560,6 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
 	  GST_DEBUG (GST_CAT_SCHEDULING, "setting cothreaded pull proxy for srcpad %s:%s",
 	     GST_DEBUG_PAD_NAME (pad));
 	  GST_RPAD_GETHANDLER (pad) = GST_DEBUG_FUNCPTR (gst_basic_scheduler_gethandler_proxy);
-	  GST_RPAD_PULLREGIONFUNC (pad) = GST_DEBUG_FUNCPTR (gst_basic_scheduler_pullregionfunc_proxy);
 	}
       }
     }
@@ -1116,10 +1053,12 @@ gst_basic_scheduler_yield (GstScheduler *sched, GstElement *element)
 static gboolean
 gst_basic_scheduler_interrupt (GstScheduler *sched, GstElement *element)
 {
+  GstElement *current = SCHED (element)->current;
+	 
   GST_FLAG_SET (element, GST_ELEMENT_COTHREAD_STOPPING);
 
-  if (element->post_run_func)
-    element->post_run_func (element);
+  if (current->post_run_func)
+    current->post_run_func (current);
 
   SCHED (element)->current = NULL;
   do_cothread_switch (do_cothread_get_main (((GstBasicScheduler *) sched)->context));
@@ -1257,9 +1196,9 @@ gst_basic_scheduler_pad_select (GstScheduler * sched, GList * padlist)
 
 static GstClockReturn
 gst_basic_scheduler_clock_wait (GstScheduler *sched, GstElement *element,
-				GstClock *clock, GstClockTime time)
+				GstClock *clock, GstClockTime time, GstClockTimeDiff *jitter)
 {
-  return gst_clock_wait (clock, time);
+  return gst_clock_wait (clock, time, jitter);
 }
 
 static GstSchedulerState

@@ -25,23 +25,22 @@
 #define __GST_EVENT_H__
 
 #include <gst/gsttypes.h>
-#include <gst/gstelement.h>
-#include <gst/gstobject.h>
 #include <gst/gstdata.h>
 #include <gst/gstcaps.h>
+#include <gst/gstformat.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 typedef enum {
   GST_EVENT_UNKNOWN,
   GST_EVENT_EOS,
   GST_EVENT_FLUSH,
   GST_EVENT_EMPTY,
-  GST_EVENT_SEEK,
   GST_EVENT_DISCONTINUOUS,
   GST_EVENT_NEW_MEDIA,
+  GST_EVENT_QOS,
+  GST_EVENT_SEEK,
+  GST_EVENT_FILLER,
 } GstEventType;
 
 extern GType _gst_event_type;
@@ -54,20 +53,45 @@ extern GType _gst_event_type;
 #define GST_EVENT_TIMESTAMP(event)	(GST_EVENT(event)->timestamp)
 #define GST_EVENT_SRC(event)		(GST_EVENT(event)->src)
 
+#define GST_SEEK_FORMAT_SHIFT	0
+#define GST_SEEK_METHOD_SHIFT	16
+#define GST_SEEK_FLAGS_SHIFT	20
+#define GST_SEEK_FORMAT_MASK	0x0000ffff
+#define GST_SEEK_METHOD_MASK	0x000f0000
+#define GST_SEEK_FLAGS_MASK	0xfff00000
+
 /* seek events */
 typedef enum {
-  GST_SEEK_ANY,
-  GST_SEEK_TIMEOFFSET_CUR,
-  GST_SEEK_TIMEOFFSET_SET,
-  GST_SEEK_TIMEOFFSET_END,
-  GST_SEEK_BYTEOFFSET_SET,
-  GST_SEEK_BYTEOFFSET_CUR,
-  GST_SEEK_BYTEOFFSET_END,
+  GST_SEEK_METHOD_CUR		= (1 << GST_SEEK_METHOD_SHIFT),
+  GST_SEEK_METHOD_SET		= (2 << GST_SEEK_METHOD_SHIFT),
+  GST_SEEK_METHOD_END		= (3 << GST_SEEK_METHOD_SHIFT),
+
+  GST_SEEK_FLAG_FLUSH		= (1 << (GST_SEEK_FLAGS_SHIFT + 0)),
+  GST_SEEK_FLAG_ACCURATE	= (1 << (GST_SEEK_FLAGS_SHIFT + 1)),
 } GstSeekType;
 
-#define GST_EVENT_SEEK_TYPE(event)	(GST_EVENT(event)->event_data.seek.type)
-#define GST_EVENT_SEEK_OFFSET(event)	(GST_EVENT(event)->event_data.seek.offset)
-#define GST_EVENT_SEEK_FLUSH(event)	(GST_EVENT(event)->event_data.seek.flush)
+typedef enum {
+  GST_SEEK_CERTAIN,
+  GST_SEEK_FUZZY,
+} GstSeekAccuracy;
+
+typedef struct
+{
+  GstFormat 	format;
+  gint64	value;
+} GstFormatValue;
+
+#define GST_EVENT_SEEK_TYPE(event)		(GST_EVENT(event)->event_data.seek.type)
+#define GST_EVENT_SEEK_FORMAT(event)		(GST_EVENT_SEEK_TYPE(event) & GST_SEEK_FORMAT_MASK)
+#define GST_EVENT_SEEK_METHOD(event)		(GST_EVENT_SEEK_TYPE(event) & GST_SEEK_METHOD_MASK)
+#define GST_EVENT_SEEK_FLAGS(event)		(GST_EVENT_SEEK_TYPE(event) & GST_SEEK_FLAGS_MASK)
+#define GST_EVENT_SEEK_OFFSET(event)		(GST_EVENT(event)->event_data.seek.offset)
+#define GST_EVENT_SEEK_ACCURACY(event)		(GST_EVENT(event)->event_data.seek.accuracy)
+
+#define GST_EVENT_DISCONT_NEW_MEDIA(event)	(GST_EVENT(event)->event_data.discont.new_media)
+#define GST_EVENT_DISCONT_FLUSH(event)		(GST_EVENT(event)->event_data.discont.flush)
+#define GST_EVENT_DISCONT_OFFSET(event,i)	(GST_EVENT(event)->event_data.discont.offsets[i])
+#define GST_EVENT_DISCONT_OFFSET_LEN(event)	(GST_EVENT(event)->event_data.discont.noffsets)
 
 struct _GstEvent {
   GstData data;
@@ -78,27 +102,37 @@ struct _GstEvent {
 
   union {
     struct {
-      GstSeekType type;
-      gint64      offset;
-      gboolean	  flush;
+      GstSeekType 	type;
+      gint64      	offset;
+      GstSeekAccuracy 	accuracy;
     } seek;
+    struct {
+      GstFormatValue 	offsets[8];
+      gint      	noffsets;
+      gboolean		new_media;
+      gboolean		flush;
+      GstSeekAccuracy 	accuracy;
+    } discont;
   } event_data;
 };
 
-void 		_gst_event_initialize 	(void);
+void 		_gst_event_initialize 		(void);
 	
-GstEvent*	gst_event_new	        (GstEventType type);
-GstEvent*	gst_event_copy	        (GstEvent *event);
-void		gst_event_free 		(GstEvent *event);
+GstEvent*	gst_event_new	        	(GstEventType type);
+GstEvent*	gst_event_copy	        	(GstEvent *event);
+void		gst_event_free 			(GstEvent *event);
 
 /* seek events */
-GstEvent*	gst_event_new_seek	(GstSeekType type, gint64 offset, gboolean flush);
+GstEvent*	gst_event_new_seek		(GstSeekType type, gint64 offset);
+GstEvent*	gst_event_new_discontinuous	(gboolean new_media,
+						 GstFormat format1, ...);
+gboolean	gst_event_discont_get_value	(GstEvent *event, GstFormat format, gint64 *value);
+
+#define		gst_event_new_filler()		gst_event_new(GST_EVENT_FILLER)
 
 /* flush events */
-#define		gst_event_new_flush()	gst_event_new(GST_EVENT_FLUSH)
+#define		gst_event_new_flush()		gst_event_new(GST_EVENT_FLUSH)
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_EVENT_H__ */

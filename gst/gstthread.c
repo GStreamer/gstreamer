@@ -318,7 +318,7 @@ gst_thread_change_state (GstElement * element)
        * to perform each elements' change_state() (by calling gstbin.c::
        * change_state()).
        * + the pending state was already set by gstelement.c::set_state()
-       * + find every queue we manage, and signal its empty and full conditions
+       * + unlock all elements so the bottom half can start the state change.
        */ 
       g_mutex_lock (thread->lock);
 
@@ -326,65 +326,45 @@ gst_thread_change_state (GstElement * element)
 
       while (elements) {
 	GstElement *element = GST_ELEMENT (elements->data);
+	GList *pads;
+	
 
 	g_assert (element);
-	THR_DEBUG ("  element \"%s\"", GST_ELEMENT_NAME (element));
+	THR_DEBUG ("  waking element \"%s\"", GST_ELEMENT_NAME (element));
 	elements = g_list_next (elements);
-	if (GST_IS_QUEUE (element)) {
-          GstQueue *queue = GST_QUEUE (element);
-  /* FIXME make this more efficient by only waking queues that are asleep
-   *  FIXME and only waking the appropriate condition (depending on if it's
-   *  FIXME on up- or down-stream side)
-   * FIXME also make this more efficient by keeping list of managed queues
-   */
-	  THR_DEBUG ("waking queue \"%s\"", GST_ELEMENT_NAME (element));
-	  g_mutex_lock (queue->qlock);
-	  GST_STATE_PENDING (element) = GST_STATE_PAUSED;
-	  g_cond_signal (queue->not_full);
-	  g_cond_signal (queue->not_empty);
-	  g_mutex_unlock (queue->qlock);
+
+	if (!gst_element_release_locks (element)) {
+          g_warning ("element %s could not release locks", GST_ELEMENT_NAME (element));
 	}
-	else {
-	  GList *pads = GST_ELEMENT_PADS (element);
 
-	  while (pads) {
-	    GstRealPad *peer = GST_REAL_PAD (GST_PAD_PEER (pads->data));
-	    GstElement *peerelement;
+	pads = GST_ELEMENT_PADS (element);
 
-	    pads = g_list_next (pads);
+	while (pads) {
+	  GstRealPad *peer = GST_REAL_PAD (GST_PAD_PEER (pads->data));
+	  GstElement *peerelement;
 
-	    if (!peer)
-	      continue;
+	  pads = g_list_next (pads);
 
-	    peerelement = GST_PAD_PARENT (peer);
-	    if (!peerelement)
-	      continue;		/* deal with case where there's no peer */
+	  if (!peer)
+	    continue;
 
-	    if (!GST_FLAG_IS_SET (peerelement, GST_ELEMENT_DECOUPLED)) {
-	      GST_DEBUG (GST_CAT_THREAD, "peer element isn't DECOUPLED");
-	      continue;
-	    }
+	  peerelement = GST_PAD_PARENT (peer);
+	  if (!peerelement)
+	    continue;		/* deal with case where there's no peer */
 
-	    /* FIXME this needs to go away eventually */
-	    if (!GST_IS_QUEUE (peerelement)) {
-	      GST_DEBUG (GST_CAT_THREAD, "peer element isn't a Queue");
-	      continue;
-	    }
+	  if (!GST_FLAG_IS_SET (peerelement, GST_ELEMENT_DECOUPLED)) {
+	    GST_DEBUG (GST_CAT_THREAD, "peer element isn't DECOUPLED");
+	    continue;
+	  }
 
-	    if (GST_ELEMENT_SCHED (peerelement) != GST_ELEMENT_SCHED (thread)) {
-	      GstQueue *queue = GST_QUEUE (peerelement);
-
-	      THR_DEBUG ("  element \"%s\" has pad cross sched boundary", GST_ELEMENT_NAME (element));
-	      /* FIXME!! */
-	      g_mutex_lock (queue->qlock);
-	      g_cond_signal (queue->not_full);
-	      g_cond_signal (queue->not_empty);
-	      g_mutex_unlock (queue->qlock);
+	  if (GST_ELEMENT_SCHED (peerelement) != GST_ELEMENT_SCHED (thread)) {
+	    THR_DEBUG ("  element \"%s\" has pad cross sched boundary", GST_ELEMENT_NAME (element));
+	    if (!gst_element_release_locks (element)) {
+              g_warning ("element %s could not release locks", GST_ELEMENT_NAME (element));
 	    }
 	  }
 	}
 
-        gst_element_disable_threadsafe_properties (element);
       }
       THR_DEBUG ("telling thread to pause, signaling");
       g_cond_signal (thread->cond);
@@ -392,6 +372,12 @@ gst_thread_change_state (GstElement * element)
       g_cond_wait (thread->cond, thread->lock);
       THR_DEBUG ("got ack");
       g_mutex_unlock (thread->lock);
+
+      elements = gst_bin_get_list (GST_BIN (thread));
+      while (elements) {
+        gst_element_disable_threadsafe_properties ((GstElement*)elements->data);
+        elements = g_list_next (elements);
+      }
       break;
     }
     case GST_STATE_READY_TO_NULL:

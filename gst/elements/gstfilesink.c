@@ -271,24 +271,29 @@ gst_filesink_handle_event (GstPad *pad, GstEvent *event)
   switch (type) {
     case GST_EVENT_SEEK:
       /* we need to seek */
-      if (GST_EVENT_SEEK_FLUSH(event))
+      if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH)
         if (fflush(filesink->file))
           gst_element_error(GST_ELEMENT(filesink),
             "Error flushing the buffer cache of file \'%s\' to disk: %s",
             gst_filesink_getcurrentfilename(filesink), sys_errlist[errno]);
-      switch (GST_EVENT_SEEK_TYPE(event))
+
+      if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
+        g_warning("Any other then byte-offset seeking is not supported!\n");
+      }
+
+      switch (GST_EVENT_SEEK_METHOD(event))
       {
-        case GST_SEEK_BYTEOFFSET_SET:
+        case GST_SEEK_METHOD_SET:
           fseek(filesink->file, GST_EVENT_SEEK_OFFSET(event), SEEK_SET);
           break;
-        case GST_SEEK_BYTEOFFSET_CUR:
+        case GST_SEEK_METHOD_CUR:
           fseek(filesink->file, GST_EVENT_SEEK_OFFSET(event), SEEK_CUR);
           break;
-        case GST_SEEK_BYTEOFFSET_END:
+        case GST_SEEK_METHOD_END:
           fseek(filesink->file, GST_EVENT_SEEK_OFFSET(event), SEEK_END);
           break;
         default:
-          g_warning("Any other then byte-offset seeking is not supported!\n");
+          g_warning("unkown seek method!\n");
           break;
       }
       break;

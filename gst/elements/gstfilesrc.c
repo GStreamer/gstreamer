@@ -110,6 +110,8 @@ static void		gst_filesrc_get_property	(GObject *object, guint prop_id,
 
 static GstBuffer *	gst_filesrc_get			(GstPad *pad);
 static gboolean 	gst_filesrc_srcpad_event 	(GstPad *pad, GstEvent *event);
+static gboolean 	gst_filesrc_srcpad_query 	(GstPad *pad, GstPadQueryType type,
+		         				 GstSeekType *format, gint64 *value);
 
 static GstElementStateReturn	gst_filesrc_change_state	(GstElement *element);
 
@@ -184,8 +186,9 @@ static void
 gst_filesrc_init (GstFileSrc *src)
 {
   src->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_pad_set_get_function (src->srcpad,gst_filesrc_get);
-  gst_pad_set_event_function (src->srcpad,gst_filesrc_srcpad_event);
+  gst_pad_set_get_function (src->srcpad, gst_filesrc_get);
+  gst_pad_set_event_function (src->srcpad, gst_filesrc_srcpad_event);
+  gst_pad_set_query_function (src->srcpad, gst_filesrc_srcpad_query);
   gst_element_add_pad (GST_ELEMENT (src), src->srcpad);
 
   src->pagesize = getpagesize();
@@ -201,7 +204,7 @@ gst_filesrc_init (GstFileSrc *src)
   src->mapbuf = NULL;
   src->mapsize = 4 * 1024 * 1024;		/* default is 4MB */
 
-  src->map_regions = g_tree_new(gst_filesrc_bufcmp);
+  src->map_regions = g_tree_new (gst_filesrc_bufcmp);
   src->map_regions_lock = g_mutex_new();
 
   src->seek_happened = FALSE;
@@ -445,12 +448,19 @@ gst_filesrc_get (GstPad *pad)
 
   /* check for seek */
   if (src->seek_happened) {
+    GstEvent *event;
+
     src->seek_happened = FALSE;
-    return GST_BUFFER (gst_event_new (GST_EVENT_DISCONTINUOUS));
+    GST_DEBUG (GST_CAT_EVENT, "filesrc sending discont\n");
+    event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset, NULL);
+    GST_EVENT_DISCONT_FLUSH (event) = src->need_flush;
+    src->need_flush = FALSE;
+    return GST_BUFFER (event);
   }
   /* check for flush */
   if (src->need_flush) {
     src->need_flush = FALSE;
+    GST_DEBUG (GST_CAT_EVENT, "filesrc sending flush\n");
     return GST_BUFFER (gst_event_new_flush ());
   }
 
@@ -645,6 +655,7 @@ gst_filesrc_change_state (GstElement *element)
     case GST_STATE_READY_TO_PAUSED:
     case GST_STATE_PAUSED_TO_READY:
       src->curoffset = 0;
+      src->seek_happened = TRUE;
     default:
       break;
   }
@@ -656,20 +667,49 @@ gst_filesrc_change_state (GstElement *element)
 }
 
 static gboolean
+gst_filesrc_srcpad_query (GstPad *pad, GstPadQueryType type,
+		          GstFormat *format, gint64 *value)
+{
+  GstFileSrc *src = GST_FILESRC (GST_PAD_PARENT (pad));
+
+  switch (type) {
+    case GST_PAD_QUERY_TOTAL:
+      if (*format != GST_FORMAT_BYTES) {
+	return FALSE;
+      }
+      *value = src->filelen;
+      break;
+    case GST_PAD_QUERY_POSITION:
+      if (*format != GST_FORMAT_BYTES) {
+	return FALSE;
+      }
+      *value = src->curoffset;
+      break;
+    default:
+      return FALSE;
+      break;
+  }
+  return TRUE;
+}
+
+static gboolean
 gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
 {
-  GstFileSrc *src = GST_FILESRC(GST_PAD_PARENT(pad));
+  GstFileSrc *src = GST_FILESRC (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      switch (GST_EVENT_SEEK_TYPE (event)) {
-        case GST_SEEK_BYTEOFFSET_SET:
+      if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
+	return FALSE;
+      }
+      switch (GST_EVENT_SEEK_METHOD (event)) {
+        case GST_SEEK_METHOD_SET:
           src->curoffset = (guint64) GST_EVENT_SEEK_OFFSET (event);
 	  break;
-        case GST_SEEK_BYTEOFFSET_CUR:
+        case GST_SEEK_METHOD_CUR:
           src->curoffset += GST_EVENT_SEEK_OFFSET (event);
 	  break;
-        case GST_SEEK_BYTEOFFSET_END:
+        case GST_SEEK_METHOD_END:
           src->curoffset = src->filelen - ABS (GST_EVENT_SEEK_OFFSET (event));
 	  break;
 	default:
@@ -678,9 +718,7 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
       }
       g_object_notify (G_OBJECT (src), "offset");  
       src->seek_happened = TRUE;
-      src->need_flush = GST_EVENT_SEEK_FLUSH(event);
-      gst_event_free (event);
-      /* push a discontinuous event? */
+      src->need_flush = GST_EVENT_SEEK_FLAGS(event) & GST_SEEK_FLAG_FLUSH;
       break;
     case GST_EVENT_FLUSH:
       src->need_flush = TRUE;

@@ -548,12 +548,13 @@ gst_scheduler_auto_clock (GstScheduler *sched)
  * Returns: the status of the operation
  */
 GstClockReturn
-gst_scheduler_clock_wait (GstScheduler *sched, GstElement *element, GstClock *clock, GstClockTime time)
+gst_scheduler_clock_wait (GstScheduler *sched, GstElement *element, GstClock *clock, GstClockTime time,
+		GstClockTimeDiff *jitter)
 {
   g_return_val_if_fail (GST_IS_SCHEDULER (sched), GST_CLOCK_ERROR);
 
   if (CLASS (sched)->clock_wait)
-    return CLASS (sched)->clock_wait (sched, element, clock, time);
+    return CLASS (sched)->clock_wait (sched, element, clock, time, jitter);
 
   return GST_CLOCK_TIMEOUT;
 }

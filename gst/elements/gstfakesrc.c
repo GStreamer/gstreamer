@@ -322,7 +322,7 @@ gst_fakesrc_event_handler (GstPad *pad, GstEvent *event)
     case GST_EVENT_SEEK:
       src->buffer_count = GST_EVENT_SEEK_OFFSET (event);
 
-      if (!GST_EVENT_SEEK_FLUSH (event)) {
+      if (!GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
         gst_event_free (event);
         break;
       }

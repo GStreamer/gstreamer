@@ -183,6 +183,7 @@ gst_element_init (GstElement *element)
   element->pads = NULL;
   element->loopfunc = NULL;
   element->sched = NULL;
+  element->clock = NULL;
   element->sched_private = NULL;
   element->state_mutex = g_mutex_new ();
   element->state_cond = g_cond_new ();
@@ -223,9 +224,8 @@ gst_element_dispatch_properties_changed (GObject     *object,
   G_OBJECT_CLASS (parent_class)->dispatch_properties_changed (object, n_pspecs, pspecs);
 
   /* now let the parent dispatch those, too */
-  gst_object = GST_OBJECT (object);
-  while (gst_object)
-  {
+  gst_object = GST_OBJECT_PARENT (object);
+  while (gst_object) {
     /* need own category? */
     for (i = 0; i < n_pspecs; i++) {
       GST_DEBUG (GST_CAT_EVENT, "deep notification from %s to %s (%s)", GST_OBJECT_NAME (object), 
@@ -266,7 +266,7 @@ static void
 gst_element_threadsafe_properties_pre_run (GstElement *element)
 {
   GST_DEBUG (GST_CAT_THREAD, "locking element %s", GST_OBJECT_NAME (element));
-  g_mutex_lock (element->property_mutex);
+  //g_mutex_lock (element->property_mutex);
   gst_element_set_pending_properties (element);
 }
 
@@ -274,7 +274,7 @@ static void
 gst_element_threadsafe_properties_post_run (GstElement *element)
 {
   GST_DEBUG (GST_CAT_THREAD, "unlocking element %s", GST_OBJECT_NAME (element));
-  g_mutex_unlock (element->property_mutex);
+  //g_mutex_unlock (element->property_mutex);
 }
 
 void
@@ -678,6 +678,8 @@ gst_element_set_clock (GstElement *element, GstClock *clock)
 
   if (element->setclockfunc)
     element->setclockfunc (element, clock);
+
+  element->clock = clock;
 }
 
 /**
@@ -711,16 +713,41 @@ gst_element_get_clock (GstElement *element)
  * Returns: the #GstClockReturn result of the wait operation
  */
 GstClockReturn
-gst_element_clock_wait (GstElement *element, GstClock *clock, GstClockTime time)
+gst_element_clock_wait (GstElement *element, GstClock *clock, GstClockTime time, GstClockTimeDiff *jitter)
 {
+  GstClockReturn res;
+
   g_return_val_if_fail (element != NULL, GST_CLOCK_ERROR);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_CLOCK_ERROR);
 
   if (GST_ELEMENT_SCHED (element)) {
-    return gst_scheduler_clock_wait (GST_ELEMENT_SCHED (element), element, clock, time);
+    res = gst_scheduler_clock_wait (GST_ELEMENT_SCHED (element), element, clock, time, jitter);
   }
   else 
-    return GST_CLOCK_TIMEOUT;
+    res = GST_CLOCK_TIMEOUT;
+
+  return res;
+}
+
+
+/**
+ * gst_element_release_locks:
+ * @element: an element 
+ *
+ * Instruct the element to release all the locks it is holding, ex
+ * blocking reads, waiting for the clock, ...
+ *
+ * Returns: TRUE if the locks could be released.
+ */
+gboolean
+gst_element_release_locks (GstElement *element)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+
+  if (CLASS (element)->release_locks)
+    return CLASS (element)->release_locks (element);
+  
+  return TRUE;
 }
 
 /**

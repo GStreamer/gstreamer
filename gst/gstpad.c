@@ -31,6 +31,15 @@
 #include "gstscheduler.h"
 #include "gstevent.h"
 
+enum {
+  TEMPL_PAD_CREATED,
+  /* FILL ME */
+  TEMPL_LAST_SIGNAL
+};
+
+static GstObject *padtemplate_parent_class = NULL;
+static guint gst_pad_template_signals[TEMPL_LAST_SIGNAL] = { 0 };
+
 GType _gst_pad_type = 0;
 
 /***** Start with the base GstPad class *****/
@@ -206,11 +215,9 @@ gst_real_pad_init (GstRealPad *pad)
 
   pad->chainfunc = NULL;
   pad->getfunc = NULL;
-  pad->getregionfunc = NULL;
 
   pad->chainhandler = GST_DEBUG_FUNCPTR (gst_pad_push_func);
   pad->gethandler = NULL;
-  pad->pullregionfunc = NULL;
 
   pad->bufferpoolfunc = NULL;
   pad->ghostpads = NULL;
@@ -218,6 +225,12 @@ gst_real_pad_init (GstRealPad *pad)
 
   pad->connectfunc = NULL;
   pad->getcapsfunc = NULL;
+
+  pad->convertfunc 	= gst_pad_convert_default;
+  pad->eventfunc 	= gst_pad_event_default;
+  pad->convertfunc 	= gst_pad_convert_default;
+  pad->queryfunc 	= gst_pad_query_default;
+  pad->intconnfunc 	= gst_pad_get_internal_connections_default;
 }
 
 static void
@@ -259,6 +272,32 @@ gst_real_pad_get_property (GObject *object, guint prop_id, GValue *value, GParam
 
 
 /**
+ * gst_pad_custom_new:
+ * @type: the type of the pad
+ * @name: name of new pad
+ * @direction: either GST_PAD_SRC or GST_PAD_SINK
+ *
+ * Create a new pad with given name from the given type.
+ *
+ * Returns: new pad
+ */
+GstPad*
+gst_pad_custom_new (GType type, const gchar *name,
+	            GstPadDirection direction)
+{
+  GstRealPad *pad;
+
+  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (direction != GST_PAD_UNKNOWN, NULL);
+
+  pad = g_object_new (type, NULL);
+  gst_object_set_name (GST_OBJECT (pad), name);
+  GST_RPAD_DIRECTION (pad) = direction;
+
+  return GST_PAD (pad);
+}
+
+/**
  * gst_pad_new:
  * @name: name of new pad
  * @direction: either GST_PAD_SRC or GST_PAD_SINK
@@ -268,19 +307,38 @@ gst_real_pad_get_property (GObject *object, guint prop_id, GValue *value, GParam
  * Returns: new pad
  */
 GstPad*
-gst_pad_new (gchar *name,
+gst_pad_new (const gchar *name,
 	     GstPadDirection direction)
 {
-  GstRealPad *pad;
+  return gst_pad_custom_new (gst_real_pad_get_type (), name, direction);
+}
+/**
+ * gst_pad_custom_new_from_template:
+ * @type: the custom GType for this pad
+ * @templ: the pad template to use
+ * @name: the name of the element
+ *
+ * Create a new pad with given name from the given template.
+ *
+ * Returns: new pad
+ */
+GstPad*
+gst_pad_custom_new_from_template (GType type, GstPadTemplate *templ,
+		           	  const gchar *name)
+{
+  GstPad *pad;
 
   g_return_val_if_fail (name != NULL, NULL);
-  g_return_val_if_fail (direction != GST_PAD_UNKNOWN, NULL);
+  g_return_val_if_fail (templ != NULL, NULL);
 
-  pad = g_object_new (gst_real_pad_get_type (), NULL);
-  gst_object_set_name (GST_OBJECT (pad), name);
-  GST_RPAD_DIRECTION (pad) = direction;
+  pad = gst_pad_new (name, templ->direction);
+  
+  gst_object_ref (GST_OBJECT (templ));
+  GST_PAD_PAD_TEMPLATE (pad) = templ;
 
-  return GST_PAD (pad);
+  g_signal_emit (G_OBJECT (templ), gst_pad_template_signals[TEMPL_PAD_CREATED], 0, pad);
+  
+  return pad;
 }
 
 /**
@@ -294,19 +352,9 @@ gst_pad_new (gchar *name,
  */
 GstPad*
 gst_pad_new_from_template (GstPadTemplate *templ,
-		           gchar *name)
+		           const gchar *name)
 {
-  GstPad *pad;
-
-  g_return_val_if_fail (name != NULL, NULL);
-  g_return_val_if_fail (templ != NULL, NULL);
-
-  pad = gst_pad_new (name, templ->direction);
-  
-  gst_object_ref (GST_OBJECT (templ));
-  GST_PAD_PAD_TEMPLATE (pad) = templ;
-  
-  return pad;
+  return gst_pad_custom_new_from_template (gst_real_pad_get_type (), templ, name);
 }
 
 /**
@@ -418,23 +466,42 @@ gst_pad_set_event_function (GstPad *pad,
 }
 
 /**
- * gst_pad_set_getregion_function:
- * @pad: the pad to set the getregion function for
- * @getregion: the getregion function
+ * gst_pad_set_convert_function:
+ * @pad: the pad to set the event handler for
+ * @convert: the convert function
  *
- * Set the given getregion function for the pad.
+ * Set the given convert function for the pad.
  */
 void
-gst_pad_set_getregion_function (GstPad *pad,
-				GstPadGetRegionFunction getregion)
+gst_pad_set_convert_function (GstPad *pad,
+                              GstPadConvertFunction convert)
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
-  GST_RPAD_GETREGIONFUNC(pad) = getregion;
-  GST_DEBUG (GST_CAT_PADS, "getregionfunc for %s:%s set to %s",
-             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (getregion));
+  GST_RPAD_CONVERTFUNC(pad) = convert;
+  GST_DEBUG (GST_CAT_PADS, "convertfunc for %s:%s  set to %s",
+             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (convert));
 }
+
+/**
+ * gst_pad_set_query_function:
+ * @pad: the pad to set the event handler for
+ * @query: the query function
+ *
+ * Set the given query function for the pad.
+ */
+void
+gst_pad_set_query_function (GstPad *pad, GstPadQueryFunction query)
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+
+  GST_RPAD_QUERYFUNC(pad) = query;
+  GST_DEBUG (GST_CAT_PADS, "queryfunc for %s:%s  set to %s",
+             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (query));
+}
+
 
 /**
  * gst_pad_set_connect_function:
@@ -1832,56 +1899,6 @@ gst_pad_pull (GstPad *pad)
 }
 #endif
 
-#ifndef gst_pad_pullregion
-/**
- * gst_pad_pullregion:
- * @pad: the pad to pull the region from
- * @type: the regiontype
- * @offset: the offset/start of the buffer to pull
- * @len: the length of the buffer to pull
- *
- * Pull a buffer region from the peer pad. The region to pull can be 
- * specified with a offset/lenght pair or with a start/legnth time
- * indicator as specified by the type parameter.
- *
- * Returns: a new buffer from the peer pad with data in the specified
- * region.
- */
-GstBuffer*
-gst_pad_pullregion (GstPad *pad, GstRegionType type, guint64 offset, guint64 len) 
-{
-  GstRealPad *peer;
-  GstBuffer *result = NULL;
-  
-  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, NULL);
-
-  do {
-    peer = GST_RPAD_PEER(pad);
-    g_return_val_if_fail (peer != NULL, NULL);
-
-    if (result) 
-      gst_buffer_unref (result);
-
-    GST_DEBUG_ENTER("(%s:%s,%d,%lld,%lld)",GST_DEBUG_PAD_NAME(pad),type,offset,len);
-
-    if (peer->pullregionfunc) {
-      GST_DEBUG (GST_CAT_DATAFLOW, "calling pullregionfunc &%s of peer pad %s:%s",
-          GST_DEBUG_FUNCPTR_NAME (peer->pullregionfunc), GST_DEBUG_PAD_NAME(GST_PAD_CAST (peer)));
-      result = (peer->pullregionfunc) (GST_PAD_CAST (peer), type, offset, len);
-    } else {
-      GST_DEBUG (GST_CAT_DATAFLOW,"no pullregionfunc");
-      result = NULL;
-      break;
-    }
-  }
-  /* FIXME */
-  while (result && !(GST_BUFFER_OFFSET (result) == offset && 
-	   GST_BUFFER_SIZE (result) == len));
-
-  return result;
-}
-#endif
-
 /**
  * gst_pad_peek:
  * @pad: the pad to peek
@@ -1958,15 +1975,6 @@ gst_pad_selectv (GstPad *pad, ...)
  */
 static void		gst_pad_template_class_init	(GstPadTemplateClass *klass);
 static void		gst_pad_template_init		(GstPadTemplate *templ);
-
-enum {
-  TEMPL_PAD_CREATED,
-  /* FILL ME */
-  TEMPL_LAST_SIGNAL
-};
-
-static GstObject *padtemplate_parent_class = NULL;
-static guint gst_pad_template_signals[TEMPL_LAST_SIGNAL] = { 0 };
 
 GType
 gst_pad_template_get_type (void)
@@ -2238,7 +2246,72 @@ gst_ghost_pad_new (gchar *name,
   return GST_PAD (ghostpad);
 }
 
-static void 
+/**
+ * gst_pad_get_internal_connections_default:
+ * @pad: the pad to get the internal connections of
+ *
+ * Get a GList of pads that this pad is connected to internally
+ * to the parent element.
+ *
+ * Returns: a GList of pads, g_list_free after use.
+ */
+GList*
+gst_pad_get_internal_connections_default (GstPad *pad)
+{
+  GList *res = NULL;
+  GstElement *parent;
+  GList *parent_pads;
+  GstPadDirection direction;
+  GstRealPad *rpad;
+  
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  rpad = GST_PAD_REALIZE (pad);
+  direction = rpad->direction;
+
+  parent = GST_PAD_PARENT (rpad);
+  parent_pads = parent->pads;
+
+  while (parent_pads) {
+    GstRealPad *parent_pad = GST_PAD_REALIZE (parent_pads->data);
+    
+    if (parent_pad->direction != direction) {
+      res = g_list_prepend (res, parent_pad);
+    }
+    
+    parent_pads = g_list_next (parent_pads);
+  }
+
+  return res;
+}
+
+/**
+ * gst_pad_get_internal_connections:
+ * @pad: the pad to get the internal connections of
+ *
+ * Get a GList of pads that this pad is connected to internally
+ * to the parent element.
+ *
+ * Returns: a GList of pads, g_list_free after use.
+ */
+GList*
+gst_pad_get_internal_connections (GstPad *pad)
+{
+  GList *res = NULL;
+  GstRealPad *rpad;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  rpad = GST_PAD_REALIZE (pad);
+
+  if (GST_RPAD_INTCONNFUNC (rpad))
+    res = GST_RPAD_INTCONNFUNC (rpad) (GST_PAD_CAST (rpad));
+
+  return res;
+}
+
+
+static gboolean 
 gst_pad_event_default_dispatch (GstPad *pad, GstElement *element, GstEvent *event)
 {
   GList *pads = element->pads;
@@ -2255,10 +2328,13 @@ gst_pad_event_default_dispatch (GstPad *pad, GstElement *element, GstEvent *even
       else {
 	GstPad *peerpad = GST_PAD_CAST (GST_RPAD_PEER (eventpad));
 
-        gst_pad_send_event (peerpad, gst_event_copy (event));
+	/* we only send the event on one pad, multi-sinkpad elements should implement
+	 * a handler */
+        return gst_pad_send_event (peerpad, event);
       }
     }
   }
+  return TRUE;
 }
 
 /**
@@ -2267,8 +2343,10 @@ gst_pad_event_default_dispatch (GstPad *pad, GstElement *element, GstEvent *even
  * @event: the event to handle
  *
  * Invoke the default event handler for the given pad.
+ *
+ * Returns: TRUE if the event was sent succesfully.
  */
-void 
+gboolean 
 gst_pad_event_default (GstPad *pad, GstEvent *event)
 {
   GstElement *element = GST_PAD_PARENT (pad);
@@ -2282,11 +2360,61 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
       /* we have to try to schedule another element because this one is disabled */
       gst_element_yield (element);
       break;
+    case GST_EVENT_DISCONTINUOUS:
+    {
+      guint64 time;
+      
+      if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &time)) {
+	if (element->setclockfunc && element->clock) {
+	  gst_clock_handle_discont (element->clock, time); 
+	}
+      }
+    }
     case GST_EVENT_FLUSH:
     default:
-      gst_pad_event_default_dispatch (pad, element, event);
-      break;
+      return gst_pad_event_default_dispatch (pad, element, event);
   }
+  return TRUE;
+}
+
+/**
+ * gst_pad_dispatcher:
+ * @pad: the pad to dispatch
+ * @dispatch: the GstDispatcherFunc to call
+ * @data: data passed to the dispatcher function.
+ *
+ * Invoke the given dispatcher function on all internally connected
+ * pads of the given pad. The GstPadDispatcherFunc should return
+ * TRUE when no further pads need to be preocessed.
+ *
+ * Returns: TRUE if one of the dispatcher functions returned TRUE.
+ */
+gboolean
+gst_pad_dispatcher (GstPad *pad, GstPadDispatcherFunc dispatch, gpointer data)
+{
+  gboolean res = FALSE;
+  GList *int_pads, *orig;
+  
+  g_return_val_if_fail (pad, FALSE);
+  g_return_val_if_fail (data, FALSE);
+
+  orig = int_pads = gst_pad_get_internal_connections (pad);
+
+  while (int_pads) {
+    GstRealPad *int_rpad = GST_PAD_REALIZE (int_pads->data);
+    GstRealPad *int_peer = GST_RPAD_PEER (int_rpad);
+
+    if (int_peer && GST_PAD_IS_CONNECTED (int_peer)) {
+      res = dispatch (GST_PAD_CAST (int_peer), data);
+      if (res)
+        break;
+    }
+    int_pads = g_list_next (int_pads);
+  }
+
+  g_list_free (orig);
+  
+  return res;
 }
 
 /**
@@ -2301,9 +2429,12 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
 gboolean
 gst_pad_send_event (GstPad *pad, GstEvent *event)
 {
-  gboolean handled = FALSE;
+  gboolean success = FALSE;
 
   g_return_val_if_fail (event, FALSE);
+
+  if (!pad || (GST_PAD_IS_SINK (pad) && !GST_PAD_IS_CONNECTED (pad))) 
+    return FALSE;
 
   if (GST_EVENT_SRC (event) == NULL)
     GST_EVENT_SRC (event) = gst_object_ref (GST_OBJECT (pad));
@@ -2312,17 +2443,166 @@ gst_pad_send_event (GstPad *pad, GstEvent *event)
 		  GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (pad));
 
   if (GST_RPAD_EVENTFUNC (pad))
-    handled = GST_RPAD_EVENTFUNC (pad) (pad, event);
+    success = GST_RPAD_EVENTFUNC (pad) (pad, event);
   else {
     GST_DEBUG(GST_CAT_EVENT, "there's no event function for pad %s:%s", GST_DEBUG_PAD_NAME (pad));
   }
 
-  if (!handled) {
-    GST_DEBUG(GST_CAT_EVENT, "proceeding with default event behavior here");
-    gst_pad_event_default (pad, event);
-    handled = TRUE;
-  }
-
-  return handled;
+  return success;
 }
 
+typedef struct 
+{
+  GstFormat	 src_format;
+  gint64	 src_value;
+  GstFormat	 *dest_format;
+  gint64	 *dest_value;
+} GstPadConvertData;
+
+static gboolean
+gst_pad_convert_dispatcher (GstPad *pad, GstPadConvertData *data)
+{
+  return gst_pad_convert (pad, data->src_format, data->src_value, 
+		  	       data->dest_format, data->dest_value);
+}
+
+/**
+ * gst_pad_convert_default:
+ * @pad: the pad to invoke the default converter on
+ * @src_format: the source format
+ * @src_value: the source value
+ * @dest_format: a pointer to the destination format
+ * @dest_value: a pointer to the destination value
+ *
+ * Invoke the default converter on a pad. This will forward the
+ * call to the pad obtained using the internal connection of
+ * the element.
+ *
+ * Returns: TRUE if the conversion could be performed.
+ */
+gboolean
+gst_pad_convert_default (GstPad *pad, 
+	        	 GstFormat src_format,  gint64  src_value,
+	        	 GstFormat *dest_format, gint64 *dest_value)
+{
+  GstPadConvertData data;
+
+  g_return_val_if_fail (pad, FALSE);
+  g_return_val_if_fail (dest_format, FALSE);
+  g_return_val_if_fail (dest_value, FALSE);
+
+  data.src_format = src_format;
+  data.src_value = src_value;
+  data.dest_format = dest_format;
+  data.dest_value = dest_value;
+
+  return gst_pad_dispatcher (pad, (GstPadDispatcherFunc) gst_pad_convert_dispatcher, &data);
+}
+
+/**
+ * gst_pad_convert:
+ * @pad: the pad to invoke the converter on
+ * @src_format: the source format
+ * @src_value: the source value
+ * @dest_format: a pointer to the destination format
+ * @dest_value: a pointer to the destination value
+ *
+ * Invoke a conversion on the pad. 
+ *
+ * Returns: TRUE if the conversion could be performed.
+ */
+gboolean
+gst_pad_convert (GstPad *pad, 
+	         GstFormat src_format,  gint64  src_value,
+	         GstFormat *dest_format, gint64 *dest_value)
+{
+  GstRealPad *rpad;
+  
+  g_return_val_if_fail (pad, FALSE);
+  g_return_val_if_fail (dest_format, FALSE);
+  g_return_val_if_fail (dest_value, FALSE);
+
+  rpad = GST_PAD_REALIZE (pad);
+
+  g_return_val_if_fail (rpad, FALSE);
+
+  if (GST_RPAD_CONVERTFUNC (rpad)) {
+    return GST_RPAD_CONVERTFUNC (rpad) (GST_PAD_CAST (rpad), src_format, src_value, dest_format, dest_value);
+  }
+
+  return FALSE;
+}
+
+typedef struct 
+{
+  GstPadQueryType type;
+  GstFormat	 *format;
+  gint64	 *value;
+} GstPadQueryData;
+
+static gboolean
+gst_pad_query_dispatcher (GstPad *pad, GstPadQueryData *data)
+{
+  return gst_pad_query (pad, data->type, data->format, data->value);
+}
+
+/**
+ * gst_pad_query_default:
+ * @pad: the pad to invoke the default query on
+ * @type: the type of query to perform
+ * @format: a pointer to the format of the query
+ * @value: a pointer to the result of the query
+ *
+ * Invoke the default query function on a pad. 
+ *
+ * Returns: TRUE if the query could be performed.
+ */
+gboolean
+gst_pad_query_default (GstPad *pad, GstPadQueryType type,
+	               GstFormat *format,  gint64 *value)
+{
+  GstPadQueryData data;
+
+  g_return_val_if_fail (pad, FALSE);
+  g_return_val_if_fail (format, FALSE);
+  g_return_val_if_fail (value, FALSE);
+
+  data.type = type;
+  data.format = format;
+  data.value = value;
+
+  return gst_pad_dispatcher (pad, (GstPadDispatcherFunc) gst_pad_query_dispatcher, &data);
+}
+
+/**
+ * gst_pad_query:
+ * @pad: the pad to invoke the query on
+ * @type: the type of query to perform
+ * @format: a pointer to the format of the query
+ * @value: a pointer to the result of the query
+ *
+ * Query a pad for one of the available GstPadQuery properties.
+ *
+ * Returns: TRUE if the query could be performed.
+ */
+gboolean
+gst_pad_query (GstPad *pad, GstPadQueryType type,
+	       GstFormat *format, gint64 *value) 
+{
+  GstRealPad *rpad;
+  
+  if (pad == NULL)
+    return FALSE;
+
+  g_return_val_if_fail (format, FALSE);
+  g_return_val_if_fail (value, FALSE);
+
+  rpad = GST_PAD_REALIZE (pad);
+
+  g_return_val_if_fail (rpad, FALSE);
+
+  if (GST_RPAD_QUERYFUNC (rpad))
+    return GST_RPAD_QUERYFUNC (rpad) (GST_PAD_CAST (pad), type, format, value);
+
+  return FALSE;
+}

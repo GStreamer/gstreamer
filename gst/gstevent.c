@@ -25,6 +25,8 @@
 #include "gst/gstevent.h"
 #include <string.h>		/* memcpy */
 
+/* #define MEMPROF */
+
 GType _gst_event_type;
 
 static GMemChunk *_gst_event_chunk;
@@ -71,9 +73,13 @@ gst_event_new (GstEventType type)
 {
   GstEvent *event;
 
+#ifndef MEMPROF
   g_mutex_lock (_gst_event_chunk_lock);
   event = g_mem_chunk_alloc (_gst_event_chunk);
   g_mutex_unlock (_gst_event_chunk_lock);
+#else
+  event = g_new0(GstEvent, 1);
+#endif
   GST_INFO (GST_CAT_EVENT, "creating new event %p", event);
 
   GST_DATA_TYPE (event) = _gst_event_type;
@@ -97,9 +103,13 @@ gst_event_copy (GstEvent *event)
 {
   GstEvent *copy;
 
+#ifndef MEMPROF
   g_mutex_lock (_gst_event_chunk_lock);
   copy = g_mem_chunk_alloc (_gst_event_chunk);
   g_mutex_unlock (_gst_event_chunk_lock);
+#else
+  copy = g_new0(GstEvent, 1);
+#endif
 
   memcpy (copy, event, sizeof (GstEvent));
   
@@ -127,7 +137,11 @@ gst_event_free (GstEvent* event)
     default:
       break;
   }
+#ifndef MEMPROF
   g_mem_chunk_free (_gst_event_chunk, event);
+#else
+  g_free (event);
+#endif
   g_mutex_unlock (_gst_event_chunk_lock);
 }
 
@@ -142,16 +156,65 @@ gst_event_free (GstEvent* event)
  * Returns: A new seek event.
  */
 GstEvent*       
-gst_event_new_seek (GstSeekType type, gint64 offset, gboolean flush)
+gst_event_new_seek (GstSeekType type, gint64 offset)
 {
   GstEvent *event;
 
   event = gst_event_new (GST_EVENT_SEEK);
   GST_EVENT_SEEK_TYPE (event) = type;
   GST_EVENT_SEEK_OFFSET (event) = offset;
-  GST_EVENT_SEEK_FLUSH (event) = flush;
 
   return event;
 }
+
+GstEvent*
+gst_event_new_discontinuous (gboolean new_media, GstSeekType format1, ...)
+{
+  va_list var_args;
+  GstEvent *event;
+  gint count = 0;
+
+  event = gst_event_new (GST_EVENT_DISCONTINUOUS);
+  GST_EVENT_DISCONT_NEW_MEDIA (event) = new_media;
+
+  va_start (var_args, format1);
+	        
+  while (format1) {
+
+    GST_EVENT_DISCONT_OFFSET (event, count).format = format1 & GST_SEEK_FORMAT_MASK;
+    GST_EVENT_DISCONT_OFFSET (event, count).value = va_arg (var_args, gint64);
+
+    format1 = va_arg (var_args, GstSeekType);
+
+    count++;
+  }
+  va_end (var_args);
+
+  GST_EVENT_DISCONT_OFFSET_LEN (event) = count;
+		    
+  return event;
+}
+
+gboolean
+gst_event_discont_get_value (GstEvent *event, GstSeekType type, gint64 *value)
+{
+  gint i, n;
+
+  g_return_val_if_fail (event, FALSE);
+  g_return_val_if_fail (value, FALSE);
+
+  n = GST_EVENT_DISCONT_OFFSET_LEN (event);
+
+  for (i = 0; i < n; i++) {
+    if (GST_EVENT_DISCONT_OFFSET(event,i).format == type) {
+      *value = GST_EVENT_DISCONT_OFFSET(event,i).value;
+      return TRUE;
+    }
+  }
+  
+  return FALSE;
+}
+
+
 
 

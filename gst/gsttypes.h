@@ -29,5 +29,10 @@ typedef enum {
   GST_STATE_ASYNC               = 2,
 } GstElementStateReturn;
 
+typedef enum {
+  GST_RESULT_OK,
+  GST_RESULT_NOK,
+  GST_RESULT_NOT_IMPL,
+} GstResult;
 
 #endif

@@ -82,9 +82,13 @@ static void			gst_queue_chain			(GstPad *pad, GstBuffer *buf);
 static GstBuffer *		gst_queue_get			(GstPad *pad);
 static GstBufferPool* 		gst_queue_get_bufferpool 	(GstPad *pad);
 	
-static void			gst_queue_locked_flush			(GstQueue *queue);
+static gboolean 		gst_queue_handle_src_event 	(GstPad *pad, GstEvent *event);
+
+
+static void			gst_queue_locked_flush		(GstQueue *queue);
 
 static GstElementStateReturn	gst_queue_change_state		(GstElement *element);
+static gboolean			gst_queue_release_locks		(GstElement *element);
 
   
 #define GST_TYPE_QUEUE_LEAKY (queue_leaky_get_type())
@@ -157,7 +161,8 @@ gst_queue_class_init (GstQueueClass *klass)
   gobject_class->set_property 		= GST_DEBUG_FUNCPTR (gst_queue_set_property);
   gobject_class->get_property 		= GST_DEBUG_FUNCPTR (gst_queue_get_property);
 
-  gstelement_class->change_state = GST_DEBUG_FUNCPTR(gst_queue_change_state);
+  gstelement_class->change_state  = GST_DEBUG_FUNCPTR(gst_queue_change_state);
+  gstelement_class->release_locks = GST_DEBUG_FUNCPTR(gst_queue_release_locks);
 }
 
 static GstPadConnectReturn
@@ -207,6 +212,7 @@ gst_queue_init (GstQueue *queue)
   gst_element_add_pad (GST_ELEMENT (queue), queue->srcpad);
   gst_pad_set_connect_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_connect));
   gst_pad_set_getcaps_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_getcaps));
+  gst_pad_set_event_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_handle_src_event));
 
   queue->leaky = GST_QUEUE_NO_LEAK;
   queue->queue = NULL;
@@ -301,6 +307,9 @@ restart:
 	GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "eos in on %s %d\n", 
 			   GST_ELEMENT_NAME (queue), queue->level_buffers);
 	break;
+      case GST_EVENT_DISCONTINUOUS:
+        //gst_queue_locked_flush (queue);
+	break;
       default:
 	/*gst_pad_event_default (pad, GST_EVENT (buf)); */
 	break;
@@ -350,7 +359,8 @@ restart:
     while (queue->level_buffers == queue->size_buffers) {
       /* if there's a pending state change for this queue or its manager, switch */
       /* back to iterator so bottom half of state change executes */
-      while (GST_STATE_PENDING (queue) != GST_STATE_VOID_PENDING) {
+      //while (GST_STATE_PENDING (queue) != GST_STATE_VOID_PENDING) {
+      if (queue->interrupt) {
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!");
         g_mutex_unlock (queue->qlock);
 	if (gst_element_interrupt (GST_ELEMENT (queue)))
@@ -435,7 +445,8 @@ restart:
     /* if there's a pending state change for this queue or its manager, switch
      * back to iterator so bottom half of state change executes
      */ 
-    while (GST_STATE_PENDING (queue) != GST_STATE_VOID_PENDING) {
+    //while (GST_STATE_PENDING (queue) != GST_STATE_VOID_PENDING) {
+    if (queue->interrupt) {
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!");
       g_mutex_unlock (queue->qlock);
       if (gst_element_interrupt (GST_ELEMENT (queue)))
@@ -507,6 +518,51 @@ restart:
   return buf;
 }
 
+
+static gboolean
+gst_queue_handle_src_event (GstPad *pad, GstEvent *event)
+{
+  GstQueue *queue;
+
+  queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
+
+  g_mutex_lock (queue->qlock);
+
+  if (gst_element_get_state (GST_ELEMENT (queue)) == GST_STATE_PLAYING) {
+    g_warning ("queue event in playing state");
+  }
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH:
+      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "FLUSH event, flushing queue\n");
+      gst_queue_locked_flush (queue);
+      break;
+    case GST_EVENT_SEEK:
+      gst_queue_locked_flush (queue);
+    default:
+      gst_pad_event_default (pad, event); 
+      break;
+  }
+  g_mutex_unlock (queue->qlock);
+  return TRUE;
+}
+
+static gboolean
+gst_queue_release_locks (GstElement *element)
+{
+  GstQueue *queue;
+
+  queue = GST_QUEUE (element);
+
+  g_mutex_lock (queue->qlock);
+  queue->interrupt = TRUE;
+  g_cond_signal (queue->not_full);
+  g_cond_signal (queue->not_empty); 
+  g_mutex_unlock (queue->qlock);
+
+  return TRUE;
+}
+
 static GstElementStateReturn
 gst_queue_change_state (GstElement *element)
 {
@@ -543,6 +599,7 @@ gst_queue_change_state (GstElement *element)
 
       return GST_STATE_FAILURE;
     }
+    queue->interrupt = FALSE;
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);

@@ -130,6 +130,7 @@ struct _GstElement {
   gpointer		sched_private;
   GstElementSetClockFunction setclockfunc;
   GstElementGetClockFunction getclockfunc;
+  GstClock		*clock;
 
   /* element pads */
   guint16 		numpads;
@@ -169,6 +170,7 @@ struct _GstElementClass {
   void (*get_property)	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
   /* vtable*/
+  gboolean		(*release_locks)	(GstElement *element);
   /* change the element state */
   GstElementStateReturn (*change_state)		(GstElement *element);
   /* request a new pad */
@@ -211,7 +213,10 @@ GstObject*              gst_element_get_parent          (GstElement *element);
 
 GstClock*		gst_element_get_clock 		(GstElement *element);
 void			gst_element_set_clock 		(GstElement *element, GstClock *clock);
-GstClockReturn		gst_element_clock_wait 		(GstElement *element, GstClock *clock, GstClockTime time);
+GstClockReturn		gst_element_clock_wait 		(GstElement *element, GstClock *clock, 
+							 GstClockTime time, GstClockTimeDiff *jitter);
+
+gboolean		gst_element_release_locks	(GstElement *element);
 
 void			gst_element_yield		(GstElement *element);
 gboolean		gst_element_interrupt		(GstElement *element);

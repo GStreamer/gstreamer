@@ -58,6 +58,7 @@ gst_bytestream_new (GstPad * pad)
   bs->listavail = 0;
   bs->assembled = NULL;
   bs->offset = 0LL;
+  bs->in_seek = FALSE;
 
   return bs;
 }
@@ -122,7 +123,9 @@ gst_bytestream_get_next_buf (GstByteStream * bs)
   GstBuffer *nextbuf, *lastbuf, *headbuf;
   GSList *end;
 
-  g_assert (!bs->event);
+  /* if there is an event pending, return FALSE */
+  if (bs->event)
+    return FALSE;
 
   bs_print ("get_next_buf: pulling buffer");
   nextbuf = gst_pad_pull (bs->pad);
@@ -429,33 +432,30 @@ gst_bytestream_flush_fast (GstByteStream * bs, guint32 len)
 }
 
 gboolean
-gst_bytestream_seek (GstByteStream *bs, GstSeekType type, gint64 offset)
+gst_bytestream_seek (GstByteStream *bs, gint64 offset, GstSeekType method)
 {
-  GstRealPad *peer = GST_RPAD_PEER (bs->pad);
-  guint32 waiting;
-  GstEvent *event = NULL;
-  GstBuffer *headbuf;
+  GstRealPad *peer;
+  
+  g_return_val_if_fail (bs != NULL, FALSE);
+  
+  peer = GST_RPAD_PEER (bs->pad);
 
-  if (gst_pad_send_event (GST_PAD (peer), gst_event_new_seek (type, offset, TRUE))) {
-    
+  bs_print ("bs: send event\n");
+  if (gst_pad_send_event (GST_PAD (peer), gst_event_new_seek (
+				  GST_FORMAT_BYTES | 
+				  (method & GST_SEEK_METHOD_MASK) | 
+				  GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, 
+				  offset))) 
+  {
     gst_bytestream_flush_fast (bs, bs->listavail);
 
-    while (!gst_bytestream_get_next_buf(bs)) {
-      gst_bytestream_get_status(bs, &waiting, &event);
-
-      /* it is valid for a seek to cause eos, so lets say it succeeded */
-      if (GST_EVENT_TYPE(event) == GST_EVENT_EOS){
-        bs->offset = 0LL;
-        return TRUE;
-      }
-    }
-
-    headbuf = GST_BUFFER (bs->buflist->data);
-    /* we have a new offset */
-    bs->offset = GST_BUFFER_OFFSET(headbuf);
+    /* we set the seek flag here. We cannot pull the pad here
+     * bacause a seek might occur outisde of the pads cothread context */
+    bs->in_seek = TRUE;
     
     return TRUE;
   }
+  bs_print ("bs: send event failed\n");
   return FALSE;
 }
 

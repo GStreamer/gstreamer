@@ -75,6 +75,7 @@ struct _GstQueue {
 
   gint leaky;		/* whether the queue is leaky, and if so at which end */
   gboolean may_deadlock; /* it the queue should fail on possible deadlocks */
+  gboolean interrupt;
 
   GMutex *qlock;	/* lock for queue (vs object lock) */
   /* we are single reader and single writer queue */

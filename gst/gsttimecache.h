@@ -88,14 +88,14 @@ struct _GstTimeCache {
 GType			gst_time_cache_get_type		(void);
 GstTimeCache*		gst_time_cache_new		(void);
 
-gint			gst_time_cache_get_group		(GstTimeCache *tc);
-gint			gst_time_cache_new_group		(GstTimeCache *tc);
-gboolean		gst_time_cache_set_group		(GstTimeCache *tc, gint groupnum);
+gint			gst_time_cache_get_group	(GstTimeCache *tc);
+gint			gst_time_cache_new_group	(GstTimeCache *tc);
+gboolean		gst_time_cache_set_group	(GstTimeCache *tc, gint groupnum);
 
 void			gst_time_cache_set_certainty	(GstTimeCache *tc, GstTimeCacheCertainty certainty);
 GstTimeCacheCertainty	gst_time_cache_get_certainty	(GstTimeCache *tc);
 
-void			gst_time_cache_add_entry		(GstTimeCache *tc, guint64 location, gint64 timestamp);
+void			gst_time_cache_add_entry	(GstTimeCache *tc, guint64 location, gint64 timestamp);
 
 gboolean		gst_time_cache_find_location	(GstTimeCache *tc, guint64 location, gint64 *timestamp);
 gboolean		gst_time_cache_find_timestamp	(GstTimeCache *tc, gint64 timestamp, guint64 *location);

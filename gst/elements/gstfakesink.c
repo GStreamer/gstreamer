@@ -149,6 +149,8 @@ gst_fakesink_init (GstFakeSink *fakesink)
   fakesink->last_message = NULL;
 
   GST_ELEMENT (fakesink)->setclockfunc    = gst_fakesink_set_clock;
+
+  GST_FLAG_SET (fakesink, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
@@ -251,8 +253,26 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
 
   fakesink = GST_FAKESINK (gst_pad_get_parent (pad));
 
-  if (fakesink->sync) { 
-    gst_element_clock_wait (GST_ELEMENT (fakesink), fakesink->clock, GST_BUFFER_TIMESTAMP (buf));
+  if (GST_IS_EVENT (buf)) {
+    GstEvent *event = GST_EVENT (buf);
+	  
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_DISCONTINUOUS:
+        if (fakesink->sync && fakesink->clock) { 
+          gint64 value = GST_EVENT_DISCONT_OFFSET (event, 0).value;
+          gst_clock_handle_discont (fakesink->clock, value);
+	}
+      default:
+	gst_pad_event_default (pad, event);
+        break;
+    }
+
+    gst_event_free (event);
+    return;
+  }
+
+  if (fakesink->sync && fakesink->clock) { 
+    gst_element_clock_wait (GST_ELEMENT (fakesink), fakesink->clock, GST_BUFFER_TIMESTAMP (buf), NULL);
   }
 
   if (!fakesink->silent) { 

@@ -43,6 +43,9 @@ struct _GstByteStream {
 
   /* this is needed for gst_bytestream_tell */
   guint64	offset;
+
+  /* if we are in the seek state (waiting for DISCONT) */
+  gboolean	in_seek;
 };
 
 GstByteStream*		gst_bytestream_new		(GstPad *pad);
@@ -50,7 +53,7 @@ void			gst_bytestream_destroy		(GstByteStream *bs);
 
 guint32			gst_bytestream_read		(GstByteStream *bs, GstBuffer** buf, guint32 len);
 guint64			gst_bytestream_tell		(GstByteStream *bs);
-gboolean		gst_bytestream_seek		(GstByteStream *bs, GstSeekType type, gint64 offset);
+gboolean		gst_bytestream_seek		(GstByteStream *bs, gint64 offset, GstSeekType type);
 guint32			gst_bytestream_peek		(GstByteStream *bs, GstBuffer** buf, guint32 len);
 guint32			gst_bytestream_peek_bytes	(GstByteStream *bs, guint8** data, guint32 len);
 gboolean		gst_bytestream_flush		(GstByteStream *bs, guint32 len);

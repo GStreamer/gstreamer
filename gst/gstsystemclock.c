@@ -108,14 +108,16 @@ static GstClockTime
 gst_system_clock_get_internal_time (GstClock *clock)
 {
   GTimeVal timeval;
+
   g_get_current_time (&timeval);
+  
   return GST_TIMEVAL_TO_TIME (timeval);
 }
 
 static guint64
 gst_system_clock_get_resolution (GstClock *clock)
 {
-  return 1;
+  return 1 * GST_USECOND;
 }
 
 
