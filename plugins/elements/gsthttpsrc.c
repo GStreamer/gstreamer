@@ -54,8 +54,8 @@ enum {
 static void 			gst_httpsrc_class_init	(GstHttpSrcClass *klass);
 static void 			gst_httpsrc_init	(GstHttpSrc *httpsrc);
 
-static void 			gst_httpsrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
-static void 			gst_httpsrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void 			gst_httpsrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void 			gst_httpsrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static GstElementStateReturn	gst_httpsrc_change_state	(GstElement *element);
 
 static GstBuffer *		gst_httpsrc_get		(GstPad *pad);
@@ -67,23 +67,23 @@ static void			gst_httpsrc_close_url	(GstHttpSrc *src);
 static GstElementClass *parent_class = NULL;
 //static guint gst_httpsrc_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_httpsrc_get_type (void) 
 {
-  static GtkType httpsrc_type = 0;
+  static GType httpsrc_type = 0;
 
   if (!httpsrc_type) {
-    static const GtkTypeInfo httpsrc_info = {
-      "GstHttpSrc",
+    static const GTypeInfo httpsrc_info = {
+      sizeof(GstHttpSrcClass),      NULL,
+      NULL,
+      (GClassInitFunc)gst_httpsrc_class_init,
+      NULL,
+      NULL,
       sizeof(GstHttpSrc),
-      sizeof(GstHttpSrcClass),
-      (GtkClassInitFunc)gst_httpsrc_class_init,
-      (GtkObjectInitFunc)gst_httpsrc_init,
-      (GtkArgSetFunc)gst_httpsrc_set_arg,
-      (GtkArgGetFunc)gst_httpsrc_get_arg,
-      (GtkClassInitFunc)NULL,
+      0,
+      (GInstanceInitFunc)gst_httpsrc_init,
     };
-    httpsrc_type = gtk_type_unique (GST_TYPE_ELEMENT, &httpsrc_info);
+    httpsrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstHttpSrc", &httpsrc_info, 0);
   }
   return httpsrc_type;
 }
@@ -91,22 +91,24 @@ gst_httpsrc_get_type (void)
 static void
 gst_httpsrc_class_init (GstHttpSrcClass *klass) 
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
 
-  gtk_object_add_arg_type ("GstHttpSrc::location", GTK_TYPE_STRING,
-                           GTK_ARG_READWRITE, ARG_LOCATION);
-  gtk_object_add_arg_type ("GstHttpSrc::bytesperread", GTK_TYPE_INT,
-                           GTK_ARG_READWRITE, ARG_BYTESPERREAD);
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATION,
+    g_param_spec_string("location","location","location",
+                        NULL, G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BYTESPERREAD,
+    g_param_spec_int("bytesperread","bytesperread","bytesperread",
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
 
-  gtkobject_class->set_arg = gst_httpsrc_set_arg;
-  gtkobject_class->get_arg = gst_httpsrc_get_arg;
+  gobject_class->set_property = gst_httpsrc_set_property;
+  gobject_class->get_property = gst_httpsrc_get_property;
 
   gstelement_class->change_state = gst_httpsrc_change_state;
 }
@@ -197,7 +199,7 @@ gst_httpsrc_close_url (GstHttpSrc *src)
 }
 
 static void 
-gst_httpsrc_set_arg (GtkObject *object, GtkArg *arg, guint id) 
+gst_httpsrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec) 
 {
   GstHttpSrc *src;
 
@@ -206,23 +208,23 @@ gst_httpsrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
   
   src = GST_HTTPSRC (object);
 
-  switch(id) {
+  switch (prop_id) {
     case ARG_LOCATION:
       /* the element must not be playing in order to do this */
       g_return_if_fail (GST_STATE (src) < GST_STATE_PLAYING);
 
       if (src->url) g_free (src->url);
       /* clear the url if we get a NULL (is that possible?) */
-      if (GTK_VALUE_STRING (*arg) == NULL) {
+      if (g_value_get_string (value) == NULL) {
         gst_element_set_state (GST_ELEMENT (object),GST_STATE_NULL);
         src->url = NULL;
       /* otherwise set the new url */
       } else {
-        src->url = g_strdup (GTK_VALUE_STRING (*arg));
+        src->url = g_strdup (g_value_get_string (value));
       }
       break;
     case ARG_BYTESPERREAD:
-      src->bytes_per_read = GTK_VALUE_INT (*arg);
+      src->bytes_per_read = g_value_get_int (value);
       break;
     default:
       break;
@@ -230,7 +232,7 @@ gst_httpsrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
 }
 
 static void 
-gst_httpsrc_get_arg (GtkObject *object, GtkArg *arg, guint id) 
+gst_httpsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec) 
 {
   GstHttpSrc *httpsrc;
 
@@ -239,15 +241,15 @@ gst_httpsrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
   
   httpsrc = GST_HTTPSRC (object);
                           
-  switch (id) {
+  switch (prop_id) {
     case ARG_LOCATION:
-      GTK_VALUE_STRING (*arg) = httpsrc->url;
+      g_value_set_string (value, httpsrc->url);
       break;
     case ARG_BYTESPERREAD:
-      GTK_VALUE_INT (*arg) = httpsrc->bytes_per_read;
+      g_value_set_int (value, httpsrc->bytes_per_read);
       break;
     default:
-      arg->type = GTK_TYPE_INVALID;
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

@@ -91,26 +91,13 @@ gst_object_class_init (GstObjectClass *klass)
 
   parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
-/*
   gst_object_signals[PARENT_SET] =
-    g_signal_newc ("parent_set", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
-                    G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
-                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                    GST_TYPE_OBJECT);
-  gst_object_signals[OBJECT_SAVED] =
-    g_signal_newc ("object_saved", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
-                    G_STRUCT_OFFSET (GstObjectClass, object_saved), NULL, NULL,
-                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                    G_TYPE_POINTER);
-*/
-
-  gst_object_signals[PARENT_SET] =
-    g_signal_newc("parent_set", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+    g_signal_newc("parent_set", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
                   g_cclosure_marshal_VOID__OBJECT,G_TYPE_NONE,1,
                   G_TYPE_OBJECT);
   gst_object_signals[OBJECT_SAVED] =
-    g_signal_newc("object_saved", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+    g_signal_newc("object_saved", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, object_saved), NULL, NULL,
                   g_cclosure_marshal_VOID__OBJECT,G_TYPE_NONE,1,
                   G_TYPE_OBJECT);
@@ -618,9 +605,8 @@ gst_signal_object_class_init (GstSignalObjectClass *klass)
   parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
   gst_signal_object_signals[SO_OBJECT_LOADED] =
-    g_signal_newc("object_loaded", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+    g_signal_newc("object_loaded", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
-                  NULL, NULL,
                   gst_marshal_VOID__OBJECT_POINTER,G_TYPE_NONE,2,
                   G_TYPE_OBJECT,G_TYPE_POINTER);
 }

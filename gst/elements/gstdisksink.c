@@ -51,8 +51,8 @@ enum {
 static void	gst_disksink_class_init	(GstDiskSinkClass *klass);
 static void	gst_disksink_init	(GstDiskSink *disksink);
 
-static void	gst_disksink_set_arg	(GtkObject *object, GtkArg *arg, guint id);
-static void	gst_disksink_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void	gst_disksink_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void	gst_disksink_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static gboolean gst_disksink_open_file 	(GstDiskSink *sink);
 static void 	gst_disksink_close_file (GstDiskSink *sink);
@@ -64,23 +64,23 @@ static GstElementStateReturn gst_disksink_change_state (GstElement *element);
 static GstElementClass *parent_class = NULL;
 static guint gst_disksink_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_disksink_get_type (void) 
 {
-  static GtkType disksink_type = 0;
+  static GType disksink_type = 0;
 
   if (!disksink_type) {
-    static const GtkTypeInfo disksink_info = {
-      "GstDiskSink",
+    static const GTypeInfo disksink_info = {
+      sizeof(GstDiskSinkClass),      NULL,
+      NULL,
+      (GClassInitFunc)gst_disksink_class_init,
+      NULL,
+      NULL,
       sizeof(GstDiskSink),
-      sizeof(GstDiskSinkClass),
-      (GtkClassInitFunc)gst_disksink_class_init,
-      (GtkObjectInitFunc)gst_disksink_init,
-      (GtkArgSetFunc)gst_disksink_set_arg,
-      (GtkArgGetFunc)gst_disksink_get_arg,
-      (GtkClassInitFunc)NULL,	/* deprecated, do not use ! */
+      0,
+      (GInstanceInitFunc)gst_disksink_init,
     };
-    disksink_type = gtk_type_unique (GST_TYPE_ELEMENT, &disksink_info);
+    disksink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstDiskSink", &disksink_info, 0);
   }
   return disksink_type;
 }
@@ -88,27 +88,25 @@ gst_disksink_get_type (void)
 static void
 gst_disksink_class_init (GstDiskSinkClass *klass) 
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gtk_object_add_arg_type ("GstDiskSink::location", GST_TYPE_FILENAME,
-                           GTK_ARG_READWRITE, ARG_LOCATION);
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATION,
+    g_param_spec_enum("location","location","location",
+                      GST_TYPE_FILENAME,0,G_PARAM_READWRITE)); // CHECKME!
 
   gst_disksink_signals[SIGNAL_HANDOFF] =
-    gtk_signal_new ("handoff", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstDiskSinkClass, handoff),
-                    gtk_marshal_NONE__NONE, GTK_TYPE_NONE, 0);
+    g_signal_newc ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstDiskSinkClass, handoff), NULL, NULL,
+                    g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
-  gtk_object_class_add_signals (gtkobject_class, gst_disksink_signals,
-                                    LAST_SIGNAL);
-
-  gtkobject_class->set_arg = gst_disksink_set_arg;
-  gtkobject_class->get_arg = gst_disksink_get_arg;
+  gobject_class->set_property = gst_disksink_set_property;
+  gobject_class->get_property = gst_disksink_get_property;
 
   gstelement_class->change_state = gst_disksink_change_state;
 }
@@ -126,21 +124,21 @@ gst_disksink_init (GstDiskSink *disksink)
 }
 
 static void
-gst_disksink_set_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_disksink_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstDiskSink *sink;
 
   /* it's not null if we got it, but it might not be ours */
   sink = GST_DISKSINK (object);
 
-  switch(id) {
+  switch (prop_id) {
     case ARG_LOCATION:
       /* the element must be stopped or paused in order to do this */
       g_return_if_fail ((GST_STATE (sink) < GST_STATE_PLAYING)
                       || (GST_STATE (sink) == GST_STATE_PAUSED));
       if (sink->filename)
 	g_free (sink->filename);
-      sink->filename = g_strdup (GTK_VALUE_STRING (*arg));
+      sink->filename = g_strdup (g_value_get_string (value));
       if ( (GST_STATE (sink) == GST_STATE_PAUSED) 
         && (sink->filename != NULL))
       {
@@ -155,7 +153,7 @@ gst_disksink_set_arg (GtkObject *object, GtkArg *arg, guint id)
 }
 
 static void   
-gst_disksink_get_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_disksink_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstDiskSink *sink;
  
@@ -164,12 +162,12 @@ gst_disksink_get_arg (GtkObject *object, GtkArg *arg, guint id)
  
   sink = GST_DISKSINK (object);
   
-  switch (id) {
+  switch (prop_id) {
     case ARG_LOCATION:
-      GTK_VALUE_STRING (*arg) = sink->filename;
+      g_value_set_string (value, sink->filename);
       break;
     default:
-      arg->type = GTK_TYPE_INVALID;
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -237,7 +235,7 @@ gst_disksink_chain (GstPad *pad, GstBuffer *buf)
   }
   gst_buffer_unref (buf);
 
-  gtk_signal_emit (GTK_OBJECT (disksink), gst_disksink_signals[SIGNAL_HANDOFF],
+  g_signal_emit (G_OBJECT (disksink), gst_disksink_signals[SIGNAL_HANDOFF], 0,
 	                      disksink);
 }
 

@@ -83,8 +83,8 @@ static GstPadTemplate *src_temp;
 static void gst_sinesrc_class_init(GstSineSrcClass *klass);
 static void gst_sinesrc_init(GstSineSrc *src);
 static GstPadNegotiateReturn gst_sinesrc_negotiate (GstPad *pad, GstCaps **caps, gpointer *data); 
-static void gst_sinesrc_set_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_sinesrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
+static void gst_sinesrc_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void gst_sinesrc_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 //static gboolean gst_sinesrc_change_state(GstElement *element,
 //                                          GstElementState state);
 //static void gst_sinesrc_close_audio(GstSineSrc *src);
@@ -99,51 +99,57 @@ static GstBuffer * gst_sinesrc_get(GstPad *pad);
 static GstElementClass *parent_class = NULL;
 //static guint gst_sinesrc_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_sinesrc_get_type(void) {
-  static GtkType sinesrc_type = 0;
+  static GType sinesrc_type = 0;
 
   if (!sinesrc_type) {
-    static const GtkTypeInfo sinesrc_info = {
-      "GstSineSrc",
+    static const GTypeInfo sinesrc_info = {
+      sizeof(GstSineSrcClass),      NULL,
+      NULL,
+      (GClassInitFunc)gst_sinesrc_class_init,
+      NULL,
+      NULL,
       sizeof(GstSineSrc),
-      sizeof(GstSineSrcClass),
-      (GtkClassInitFunc)gst_sinesrc_class_init,
-      (GtkObjectInitFunc)gst_sinesrc_init,
-      (GtkArgSetFunc)gst_sinesrc_set_arg,
-      (GtkArgGetFunc)gst_sinesrc_get_arg,
-      (GtkClassInitFunc)NULL,
+      0,
+      (GInstanceInitFunc)gst_sinesrc_init,
     };
-    sinesrc_type = gtk_type_unique(GST_TYPE_ELEMENT,&sinesrc_info);
+    sinesrc_type = g_type_register_static(GST_TYPE_ELEMENT, "GstSineSrc", &sinesrc_info, 0);
   }
   return sinesrc_type;
 }
 
 static void
 gst_sinesrc_class_init(GstSineSrcClass *klass) {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  gtk_object_add_arg_type("GstSineSrc::volume", GTK_TYPE_DOUBLE,
-                          GTK_ARG_READWRITE, ARG_VOLUME);
-  gtk_object_add_arg_type("GstSineSrc::format", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_FORMAT);
-  gtk_object_add_arg_type("GstSineSrc::samplerate", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_SAMPLERATE);
-  gtk_object_add_arg_type("GstSineSrc::tablesize", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_TABLESIZE);
-  gtk_object_add_arg_type("GstSineSrc::freq", GTK_TYPE_DOUBLE,
-                          GTK_ARG_READWRITE, ARG_FREQ);
-  gtk_object_add_arg_type("GstSineSrc::buffersize", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_BUFFER_SIZE);
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VOLUME,
+    g_param_spec_double("volume","volume","volume",
+                        G_MINDOUBLE,G_MAXDOUBLE,0,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FORMAT,
+    g_param_spec_int("format","format","format",
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SAMPLERATE,
+    g_param_spec_int("samplerate","samplerate","samplerate",
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TABLESIZE,
+    g_param_spec_int("tablesize","tablesize","tablesize",
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQ,
+    g_param_spec_double("freq","freq","freq",
+                        G_MINDOUBLE,G_MAXDOUBLE,0,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFFER_SIZE,
+    g_param_spec_int("buffersize","buffersize","buffersize",
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
                           
-  gtkobject_class->set_arg = gst_sinesrc_set_arg;
-  gtkobject_class->get_arg = gst_sinesrc_get_arg;
+  gobject_class->set_property = gst_sinesrc_set_property;
+  gobject_class->get_property = gst_sinesrc_get_property;
 
 //  gstelement_class->change_state = gst_sinesrc_change_state;
 }
@@ -246,42 +252,42 @@ gst_sinesrc_get(GstPad *pad)
 }
 
 static void 
-gst_sinesrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
+gst_sinesrc_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec) {
   GstSineSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail(GST_IS_SINESRC(object));
   src = GST_SINESRC(object);
 
-  switch (id) {
+  switch (prop_id) {
     case ARG_VOLUME:
-      if (GTK_VALUE_DOUBLE(*arg) < 0.0 || GTK_VALUE_DOUBLE(*arg) > 1.0)
+      if (g_value_get_double (value) < 0.0 || g_value_get_double (value) > 1.0)
         break;
-      src->volume = GTK_VALUE_DOUBLE(*arg);
+      src->volume = g_value_get_double (value);
       gst_sinesrc_update_vol_scale(src);
       break;
     case ARG_FORMAT:
-      src->format = GTK_VALUE_INT(*arg);
+      src->format = g_value_get_int (value);
       src->newcaps=TRUE;
       break;
     case ARG_SAMPLERATE:
-      src->samplerate = GTK_VALUE_INT(*arg);
+      src->samplerate = g_value_get_int (value);
       src->newcaps=TRUE;
       gst_sinesrc_update_table_inc(src);
       break;
     case ARG_FREQ: {
-      if (GTK_VALUE_DOUBLE(*arg) <= 0.0 || GTK_VALUE_DOUBLE(*arg) > src->samplerate/2)
+      if (g_value_get_double (value) <= 0.0 || g_value_get_double (value) > src->samplerate/2)
         break;
-      src->freq = GTK_VALUE_DOUBLE(*arg);
+      src->freq = g_value_get_double (value);
       gst_sinesrc_update_table_inc(src);
       break;
     case ARG_TABLESIZE:
-      src->table_size = GTK_VALUE_INT(*arg);
+      src->table_size = g_value_get_int (value);
       gst_sinesrc_populate_sinetable(src);
       gst_sinesrc_update_table_inc(src);
       break;
     case ARG_BUFFER_SIZE:
-      src->buffer_size = GTK_VALUE_INT(*arg);
+      src->buffer_size = g_value_get_int (value);
       break;
     }
     default:
@@ -290,34 +296,34 @@ gst_sinesrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
 }
 
 static void 
-gst_sinesrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
+gst_sinesrc_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec) {
   GstSineSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail(GST_IS_SINESRC(object));
   src = GST_SINESRC(object);
 
-  switch (id) {
+  switch (prop_id) {
     case ARG_VOLUME:
-      GTK_VALUE_DOUBLE(*arg) = src->volume;
+      g_value_set_double (value, src->volume);
       break;
     case ARG_FORMAT:
-      GTK_VALUE_INT(*arg) = src->format;
+      g_value_set_int (value, src->format);
       break;
     case ARG_SAMPLERATE:
-      GTK_VALUE_INT(*arg) = src->samplerate;
+      g_value_set_int (value, src->samplerate);
       break;
     case ARG_FREQ:
-      GTK_VALUE_DOUBLE(*arg) = src->freq;
+      g_value_set_double (value, src->freq);
       break;
     case ARG_TABLESIZE:
-      GTK_VALUE_INT(*arg) = src->table_size;
+      g_value_set_int (value, src->table_size);
       break;
     case ARG_BUFFER_SIZE:
-      GTK_VALUE_INT(*arg) = src->buffer_size;
+      g_value_set_int (value, src->buffer_size);
       break;
     default:
-      arg->type = GTK_TYPE_INVALID;
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

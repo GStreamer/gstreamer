@@ -59,8 +59,8 @@ enum {
 static void 			gst_pipefilter_class_init	(GstPipefilterClass *klass);
 static void 			gst_pipefilter_init		(GstPipefilter *pipefilter);
 
-static void 			gst_pipefilter_set_arg		(GtkObject *object, GtkArg *arg, guint id);
-static void 			gst_pipefilter_get_arg		(GtkObject *object, GtkArg *arg, guint id);
+static void 			gst_pipefilter_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void 			gst_pipefilter_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static GstBuffer*		gst_pipefilter_get		(GstPad *pad);
 static void 			gst_pipefilter_chain		(GstPad *pad, GstBuffer *buf);
@@ -71,23 +71,23 @@ static GstElementStateReturn 	gst_pipefilter_change_state	(GstElement *element);
 static GstElementClass *parent_class = NULL;
 //static guint gst_pipefilter_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_pipefilter_get_type (void)
 {
-  static GtkType pipefilter_type = 0;
+  static GType pipefilter_type = 0;
 
   if (!pipefilter_type) {
-    static const GtkTypeInfo pipefilter_info = {
-      "GstPipefilter",
+    static const GTypeInfo pipefilter_info = {
+      sizeof(GstPipefilterClass),      NULL,
+      NULL,
+      (GClassInitFunc)gst_pipefilter_class_init,
+      NULL,
+      NULL,
       sizeof(GstPipefilter),
-      sizeof(GstPipefilterClass),
-      (GtkClassInitFunc)gst_pipefilter_class_init,
-      (GtkObjectInitFunc)gst_pipefilter_init,
-      (GtkArgSetFunc)gst_pipefilter_set_arg,
-      (GtkArgGetFunc)gst_pipefilter_get_arg,
-      (GtkClassInitFunc)NULL,
+      0,
+      (GInstanceInitFunc)gst_pipefilter_init,
     };
-    pipefilter_type = gtk_type_unique(GST_TYPE_ELEMENT,&pipefilter_info);
+    pipefilter_type = g_type_register_static(GST_TYPE_ELEMENT, "GstPipefilter", &pipefilter_info, 0);
   }
   return pipefilter_type;
 }
@@ -95,21 +95,22 @@ gst_pipefilter_get_type (void)
 static void 
 gst_pipefilter_class_init (GstPipefilterClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
   gstelement_class->change_state = gst_pipefilter_change_state;
 
-  gtk_object_add_arg_type("GstPipefilter::command", GTK_TYPE_STRING,
-                          GTK_ARG_READWRITE, ARG_COMMAND);
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_COMMAND,
+    g_param_spec_string("command","command","command",
+                        NULL, G_PARAM_READWRITE)); // CHECKME
 
-  gtkobject_class->set_arg = gst_pipefilter_set_arg;  
-  gtkobject_class->get_arg = gst_pipefilter_get_arg;
+  gobject_class->set_property = gst_pipefilter_set_property;  
+  gobject_class->get_property = gst_pipefilter_get_property;
 }
 
 static void
@@ -219,7 +220,7 @@ gst_pipefilter_chain (GstPad *pad,GstBuffer *buf)
 }
 
 static void
-gst_pipefilter_set_arg (GtkObject *object,GtkArg *arg,guint id)
+gst_pipefilter_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstPipefilter *pipefilter;
 
@@ -227,10 +228,10 @@ gst_pipefilter_set_arg (GtkObject *object,GtkArg *arg,guint id)
   g_return_if_fail(GST_IS_PIPEFILTER(object));
   pipefilter = GST_PIPEFILTER(object);
 
-  switch(id) {
+  switch (prop_id) {
     case ARG_COMMAND:
-      pipefilter->orig_command = g_strdup(GTK_VALUE_STRING(*arg));
-      pipefilter->command = g_strsplit(GTK_VALUE_STRING(*arg), " ", 0);
+      pipefilter->orig_command = g_strdup(g_value_get_string (value));
+      pipefilter->command = g_strsplit(g_value_get_string (value), " ", 0);
       break;
     default:
       break;
@@ -238,7 +239,7 @@ gst_pipefilter_set_arg (GtkObject *object,GtkArg *arg,guint id)
 }
 
 static void
-gst_pipefilter_get_arg (GtkObject *object,GtkArg *arg,guint id)
+gst_pipefilter_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstPipefilter *pipefilter;
 
@@ -246,12 +247,12 @@ gst_pipefilter_get_arg (GtkObject *object,GtkArg *arg,guint id)
   g_return_if_fail(GST_IS_PIPEFILTER(object));
   pipefilter = GST_PIPEFILTER(object);
 
-  switch (id) {
+  switch (prop_id) {
     case ARG_COMMAND:
-      GTK_VALUE_STRING(*arg) = pipefilter->orig_command;
+      g_value_set_string (value, pipefilter->orig_command);
       break;
     default:
-      arg->type = GTK_TYPE_INVALID;
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

@@ -77,7 +77,7 @@ gst_autoplug_class_init(GstAutoplugClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
   gst_autoplug_signals[NEW_OBJECT] =
-    g_signal_newc ("new_object", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+    g_signal_newc ("new_object", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstAutoplugClass, new_object), NULL, NULL,
                     g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                     GST_TYPE_OBJECT);

@@ -40,13 +40,13 @@ GstElementDetails gst_fdsink_details;
 #define GST_TYPE_FDSINK \
   (gst_fdsink_get_type())
 #define GST_FDSINK(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_FDSINK,GstFdSink))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FDSINK,GstFdSink))
 #define GST_FDSINK_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_FDSINK,GstFdSinkClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FDSINK,GstFdSinkClass))
 #define GST_IS_FDSINK(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_FDSINK))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FDSINK))
 #define GST_IS_FDSINK_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FDSINK))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FDSINK))
 
 typedef struct _GstFdSink GstFdSink;
 typedef struct _GstFdSinkClass GstFdSinkClass;
@@ -63,7 +63,7 @@ struct _GstFdSinkClass {
   GstElementClass parent_class;
 };
 
-GtkType gst_fdsink_get_type(void);
+GType gst_fdsink_get_type(void);
 
 
 #ifdef __cplusplus

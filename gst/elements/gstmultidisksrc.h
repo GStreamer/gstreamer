@@ -35,13 +35,13 @@ GstElementDetails gst_multidisksrc_details;
 #define GST_TYPE_MULTIDISKSRC \
   (gst_multidisksrc_get_type())
 #define GST_MULTIDISKSRC(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_MULTIDISKSRC,GstMultiDiskSrc))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MULTIDISKSRC,GstMultiDiskSrc))
 #define GST_MULTIDISKSRC_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_MULTIDISKSRC,GstMultiDiskSrcClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MULTIDISKSRC,GstMultiDiskSrcClass))
 #define GST_IS_MULTIDISKSRC(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_MULTIDISKSRC))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULTIDISKSRC))
 #define GST_IS_MULTIDISKSRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTIDISKSRC))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTIDISKSRC))
 
 typedef enum {
   GST_MULTIDISKSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
@@ -75,7 +75,7 @@ struct _GstMultiDiskSrcClass {
   void (*new_file)  (GstMultiDiskSrc *multidisksrc, gchar *newfilename);
 };
 
-GtkType gst_multidisksrc_get_type(void);
+GType gst_multidisksrc_get_type(void);
 
 #ifdef __cplusplus
 }

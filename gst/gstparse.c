@@ -278,8 +278,8 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
           GST_DEBUG(0,"SETTING UP dynamic connection %s:%s and %s:%s\n",gst_element_get_name (previous),
 			  srcpadname,GST_DEBUG_PAD_NAME(sinkpad));
 
-	  gtk_signal_connect (G_OBJECT (previous), "new_pad", dynamic_connect, connect);
-	  gtk_signal_connect (G_OBJECT (previous), "new_ghost_pad", dynamic_connect, connect);
+	  g_signal_connectc (G_OBJECT (previous), "new_pad", dynamic_connect, connect, FALSE);
+	  g_signal_connectc (G_OBJECT (previous), "new_ghost_pad", dynamic_connect, connect, FALSE);
         }
         else {
           GST_DEBUG(0,"CONNECTING %s:%s and %s:%s\n",GST_DEBUG_PAD_NAME(srcpad),GST_DEBUG_PAD_NAME(sinkpad));
@@ -294,8 +294,7 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
       // thomas: if we're the first element, connect eos signal
       if (elementcount == 1) 
       {
-        gtk_signal_connect (G_OBJECT (element), "eos",
-                      GTK_SIGNAL_FUNC (have_eos), NULL);
+        g_signal_connectc (G_OBJECT (element), "eos", have_eos, NULL, FALSE);
 
       }
       // if we're the first element, ghost all the sinkpads

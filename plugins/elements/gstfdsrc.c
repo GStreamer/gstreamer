@@ -57,8 +57,8 @@ enum {
 static void		gst_fdsrc_class_init	(GstFdSrcClass *klass);
 static void		gst_fdsrc_init		(GstFdSrc *fdsrc);
 
-static void		gst_fdsrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
-static void		gst_fdsrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void		gst_fdsrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void		gst_fdsrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static GstBuffer *	gst_fdsrc_get		(GstPad *pad);
 
@@ -66,23 +66,23 @@ static GstBuffer *	gst_fdsrc_get		(GstPad *pad);
 static GstElementClass *parent_class = NULL;
 //static guint gst_fdsrc_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_fdsrc_get_type (void) 
 {
-  static GtkType fdsrc_type = 0;
+  static GType fdsrc_type = 0;
 
   if (!fdsrc_type) {
-    static const GtkTypeInfo fdsrc_info = {
-      "GstFdSrc",
+    static const GTypeInfo fdsrc_info = {
+      sizeof(GstFdSrcClass),      NULL,
+      NULL,
+      (GClassInitFunc)gst_fdsrc_class_init,
+      NULL,
+      NULL,
       sizeof(GstFdSrc),
-      sizeof(GstFdSrcClass),
-      (GtkClassInitFunc)gst_fdsrc_class_init,
-      (GtkObjectInitFunc)gst_fdsrc_init,
-      (GtkArgSetFunc)gst_fdsrc_set_arg,
-      (GtkArgGetFunc)gst_fdsrc_get_arg,
-      (GtkClassInitFunc)NULL,
+      0,
+      (GInstanceInitFunc)gst_fdsrc_init,
     };
-    fdsrc_type = gtk_type_unique (GST_TYPE_ELEMENT, &fdsrc_info);
+    fdsrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFdSrc", &fdsrc_info, 0);
   }
   return fdsrc_type;
 }
@@ -90,21 +90,24 @@ gst_fdsrc_get_type (void)
 static void
 gst_fdsrc_class_init (GstFdSrcClass *klass) 
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  gtk_object_add_arg_type ("GstFdSrc::location", GST_TYPE_FILENAME,
-                           GTK_ARG_WRITABLE, ARG_LOCATION);
-  gtk_object_add_arg_type ("GstFdSrc::bytesperread", GTK_TYPE_INT,
-                           GTK_ARG_READWRITE, ARG_BYTESPERREAD);
-  gtk_object_add_arg_type ("GstFdSrc::offset", GTK_TYPE_INT,
-                           GTK_ARG_READABLE, ARG_OFFSET);
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATION,
+    g_param_spec_enum("location","location","location",
+                      GST_TYPE_FILENAME,0,G_PARAM_WRITABLE)); // CHECKME!
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BYTESPERREAD,
+    g_param_spec_int("bytesperread","bytesperread","bytesperread",
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OFFSET,
+    g_param_spec_int("offset","offset","offset",
+                     G_MININT,G_MAXINT,0,G_PARAM_READABLE)); // CHECKME
 
-  gtkobject_class->set_arg = gst_fdsrc_set_arg;
-  gtkobject_class->get_arg = gst_fdsrc_get_arg;
+  gobject_class->set_property = gst_fdsrc_set_property;
+  gobject_class->get_property = gst_fdsrc_get_property;
 }
 
 static void gst_fdsrc_init(GstFdSrc *fdsrc) {
@@ -120,7 +123,7 @@ static void gst_fdsrc_init(GstFdSrc *fdsrc) {
 
 
 static void 
-gst_fdsrc_set_arg (GtkObject *object, GtkArg *arg, guint id) 
+gst_fdsrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec) 
 {
   GstFdSrc *src;
   int fd;
@@ -130,23 +133,23 @@ gst_fdsrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
   
   src = GST_FDSRC (object);
 
-  switch(id) {
+  switch (prop_id) {
     case ARG_LOCATION:
       /* the element must not be playing in order to do this */
       g_return_if_fail (GST_STATE (src) < GST_STATE_PLAYING);
 
       /* if we get a NULL, consider it to be a fd of 0 */
-      if (GTK_VALUE_STRING (*arg) == NULL) {
+      if (g_value_get_string (value) == NULL) {
         gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
         src->fd = 0;
       /* otherwise set the new filename */
       } else {
-        if (sscanf (GTK_VALUE_STRING (*arg), "%d", &fd))
+        if (sscanf (g_value_get_string (value), "%d", &fd))
           src->fd = fd;
       }
       break;
     case ARG_BYTESPERREAD:
-      src->bytes_per_read = GTK_VALUE_INT (*arg);
+      src->bytes_per_read = g_value_get_int (value);
       break;
     default:
       break;
@@ -154,7 +157,7 @@ gst_fdsrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
 }
 
 static void 
-gst_fdsrc_get_arg (GtkObject *object, GtkArg *arg, guint id) 
+gst_fdsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec) 
 {
   GstFdSrc *src;
 
@@ -163,15 +166,15 @@ gst_fdsrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
   
   src = GST_FDSRC (object);
 
-  switch (id) {
+  switch (prop_id) {
     case ARG_BYTESPERREAD:
-      GTK_VALUE_INT (*arg) = src->bytes_per_read;
+      g_value_set_int (value, src->bytes_per_read);
       break;
     case ARG_OFFSET:
-      GTK_VALUE_INT (*arg) = src->curoffset;
+      g_value_set_int (value, src->curoffset);
       break;
     default:
-      arg->type = GTK_TYPE_INVALID;
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

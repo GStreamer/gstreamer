@@ -33,13 +33,13 @@ GstElementDetails gst_autoplugcache_details = {
 #define GST_TYPE_AUTOPLUGCACHE \
   (gst_autoplugcache_get_type())
 #define GST_AUTOPLUGCACHE(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_AUTOPLUGCACHE,GstAutoplugCache))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUTOPLUGCACHE,GstAutoplugCache))
 #define GST_AUTOPLUGCACHE_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_AUTOPLUGCACHE,GstAutoplugCacheClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUTOPLUGCACHE,GstAutoplugCacheClass))
 #define GST_IS_AUTOPLUGCACHE(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_AUTOPLUGCACHE))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUTOPLUGCACHE))
 #define GST_IS_AUTOPLUGCACHE_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUTOPLUGCACHE))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUTOPLUGCACHE))
 
 typedef struct _GstAutoplugCache GstAutoplugCache;
 typedef struct _GstAutoplugCacheClass GstAutoplugCacheClass;
@@ -85,8 +85,8 @@ enum {
 static void			gst_autoplugcache_class_init	(GstAutoplugCacheClass *klass);
 static void			gst_autoplugcache_init		(GstAutoplugCache *cache);
 
-static void			gst_autoplugcache_set_arg	(GtkObject *object, GtkArg *arg, guint id);
-static void			gst_autoplugcache_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void			gst_autoplugcache_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void			gst_autoplugcache_get_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 
 static void			gst_autoplugcache_loop		(GstElement *element);
 
@@ -98,22 +98,23 @@ static GstElementStateReturn	gst_autoplugcache_change_state	(GstElement *element
 static GstElementClass *parent_class = NULL;
 static guint gst_autoplugcache_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_autoplugcache_get_type(void) {
-  static GtkType autoplugcache_type = 0;
+  static GType autoplugcache_type = 0;
 
   if (!autoplugcache_type) {
-    static const GtkTypeInfo autoplugcache_info = {
-      "GstAutoplugCache",
-      sizeof(GstAutoplugCache),
+    static const GTypeInfo autoplugcache_info = {
       sizeof(GstAutoplugCacheClass),
-      (GtkClassInitFunc)gst_autoplugcache_class_init,
-      (GtkObjectInitFunc)gst_autoplugcache_init,
-      (GtkArgSetFunc)gst_autoplugcache_set_arg,
-      (GtkArgGetFunc)gst_autoplugcache_get_arg,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_autoplugcache_class_init,
+      NULL,
+      NULL,
+      sizeof(GstAutoplugCache),
+      0,
+      (GInstanceInitFunc)gst_autoplugcache_init,
     };
-    autoplugcache_type = gtk_type_unique (GST_TYPE_ELEMENT, &autoplugcache_info);
+    autoplugcache_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAutoplugCache", &autoplugcache_info, 0);
   }
   return autoplugcache_type;
 }
@@ -121,34 +122,36 @@ gst_autoplugcache_get_type(void) {
 static void
 gst_autoplugcache_class_init (GstAutoplugCacheClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gst_autoplugcache_signals[FIRST_BUFFER] =
-    gtk_signal_new ("first_buffer", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstAutoplugCacheClass, first_buffer),
-                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
-                    GTK_TYPE_POINTER);
+    g_signal_newc ("first_buffer", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstAutoplugCacheClass, first_buffer), NULL, NULL,
+                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    G_TYPE_POINTER);
   gst_autoplugcache_signals[CACHE_EMPTY] =
-    gtk_signal_new ("cache_empty", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstAutoplugCacheClass, cache_empty),
-                    gtk_marshal_NONE__NONE, GTK_TYPE_NONE, 0);
-  gtk_object_class_add_signals (gtkobject_class, gst_autoplugcache_signals, LAST_SIGNAL);
+    g_signal_newc ("cache_empty", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstAutoplugCacheClass, cache_empty), NULL, NULL,
+                    g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
-  gtk_object_add_arg_type ("GstAutoplugCache::buffer_count", GTK_TYPE_INT,
-                           GTK_ARG_READABLE, ARG_BUFFER_COUNT);
-  gtk_object_add_arg_type ("GstAutoplugCache::caps_proxy", GTK_TYPE_BOOL,
-                           GTK_ARG_READWRITE, ARG_CAPS_PROXY);
-  gtk_object_add_arg_type ("GstAutoplugCache::reset", GTK_TYPE_BOOL,
-                           GTK_ARG_WRITABLE, ARG_RESET);
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFFER_COUNT,
+    g_param_spec_enum("buffer_count","buffer_count","buffer_count",
+                      G_TYPE_INT,0,G_PARAM_READABLE)); // CHECKME!
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CAPS_PROXY,
+    g_param_spec_boolean("caps_proxy","caps_proxy","caps_proxy",
+                         FALSE,G_PARAM_READWRITE)); // CHECKME!
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_RESET,
+    g_param_spec_boolean("reset","reset","reset",
+                         FALSE,G_PARAM_WRITABLE)); // CHECKME!
 
-  gtkobject_class->set_arg = gst_autoplugcache_set_arg;
-  gtkobject_class->get_arg = gst_autoplugcache_get_arg;
+  gobject_class->set_property = gst_autoplugcache_set_property;
+  gobject_class->get_property = gst_autoplugcache_get_property;
 
   gstelement_class->change_state = gst_autoplugcache_change_state;
 }
@@ -193,7 +196,7 @@ gst_autoplugcache_loop (GstElement *element)
    * buffer, i.e. the end of the list.
    * If the playout pointer does not have a prev (towards the most recent) buffer 
    * (== NULL), a buffer must be pulled from the sink pad and added to the cache.
-   * When the playout pointer gets reset (as in a set_arg), the cache is walked
+   * When the playout pointer gets reset (as in a set_property), the cache is walked
    * without problems, because the playout pointer has a non-NULL next.  When
    * the playout pointer hits the end of cache again it has to start pulling.
    */
@@ -212,7 +215,7 @@ gst_autoplugcache_loop (GstElement *element)
       // set the current_playout pointer
       cache->current_playout = cache->cache;
 
-      gtk_signal_emit (GTK_OBJECT(cache), gst_autoplugcache_signals[FIRST_BUFFER], buf);
+      g_signal_emit (G_OBJECT(cache), gst_autoplugcache_signals[FIRST_BUFFER], 0, buf);
 
       // send the buffer on its way
       gst_pad_push (cache->srcpad, buf);
@@ -226,7 +229,7 @@ gst_autoplugcache_loop (GstElement *element)
         int oldstate = GST_STATE(cache);
         GST_DEBUG(0,"at front of cache, about to pull, but firing signal\n");
         gst_object_ref (GST_OBJECT (cache));
-        gtk_signal_emit (GTK_OBJECT(cache), gst_autoplugcache_signals[CACHE_EMPTY], NULL);
+        g_signal_emit (G_OBJECT(cache), gst_autoplugcache_signals[CACHE_EMPTY], 0, NULL);
         if (GST_STATE(cache) != oldstate) {
           gst_object_ref (GST_OBJECT (cache));
           GST_DEBUG(GST_CAT_AUTOPLUG, "state changed during signal, aborting\n");
@@ -256,7 +259,7 @@ gst_autoplugcache_loop (GstElement *element)
       cache->current_playout = g_list_previous (cache->current_playout);
 
       if (cache->fire_first) {
-        gtk_signal_emit (GTK_OBJECT(cache), gst_autoplugcache_signals[FIRST_BUFFER], buf);
+        g_signal_emit (G_OBJECT(cache), gst_autoplugcache_signals[FIRST_BUFFER], 0, buf);
         cache->fire_first = FALSE;
       }
 
@@ -294,15 +297,15 @@ gst_autoplugcache_change_state (GstElement *element)
 }
 
 static void
-gst_autoplugcache_set_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_autoplugcache_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstAutoplugCache *cache;
 
   cache = GST_AUTOPLUGCACHE (object);
 
-  switch (id) {
+  switch (prop_id) {
     case ARG_CAPS_PROXY:
-      cache->caps_proxy = GTK_VALUE_BOOL(*arg);
+      cache->caps_proxy = g_value_get_boolean (value);
 GST_DEBUG(0,"caps_proxy is %d\n",cache->caps_proxy);
       if (cache->caps_proxy) {
         gst_pad_set_negotiate_function (cache->sinkpad, GST_DEBUG_FUNCPTR(gst_autoplugcache_nego_sink));
@@ -314,7 +317,7 @@ GST_DEBUG(0,"caps_proxy is %d\n",cache->caps_proxy);
       break;
     case ARG_RESET:
       // no idea why anyone would set this to FALSE, but just in case ;-)
-      if (GTK_VALUE_BOOL(*arg)) {
+      if (g_value_get_boolean (value)) {
         GST_DEBUG(0,"resetting playout pointer\n");
         // reset the playout pointer to the begining again
         cache->current_playout = cache->cache_start;
@@ -330,20 +333,20 @@ GST_DEBUG(0,"caps_proxy is %d\n",cache->caps_proxy);
 }
 
 static void
-gst_autoplugcache_get_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_autoplugcache_get_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstAutoplugCache *cache;
 
   cache = GST_AUTOPLUGCACHE (object);
 
-  switch (id) {
+  switch (prop_id) {
     case ARG_BUFFER_COUNT:
-      GTK_VALUE_INT(*arg) = cache->buffer_count;
+      g_value_set_int (value, cache->buffer_count);
       break;
     case ARG_CAPS_PROXY:
-      GTK_VALUE_BOOL(*arg) = cache->caps_proxy;
+      g_value_set_boolean (value, cache->caps_proxy);
     default:
-      arg->type = GTK_TYPE_INVALID;
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

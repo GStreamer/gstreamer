@@ -33,13 +33,13 @@ extern "C" {
 #define GST_TYPE_STATIC_AUTOPLUG_RENDER \
   (gst_static_autoplug_render_get_type())
 #define GST_STATIC_AUTOPLUG_RENDER(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_STATIC_AUTOPLUG_RENDER,GstStaticAutoplugRender))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_STATIC_AUTOPLUG_RENDER,GstStaticAutoplugRender))
 #define GST_STATIC_AUTOPLUG_RENDER_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_STATIC_AUTOPLUG_RENDER,GstStaticAutoplugRenderClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_STATIC_AUTOPLUG_RENDER,GstStaticAutoplugRenderClass))
 #define GST_IS_STATIC_AUTOPLUG_RENDER(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_STATIC_AUTOPLUG_RENDER))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_STATIC_AUTOPLUG_RENDER))
 #define GST_IS_STATIC_AUTOPLUG_RENDER_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_STATIC_AUTOPLUG_RENDER))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_STATIC_AUTOPLUG_RENDER))
 
 typedef struct _GstStaticAutoplugRender GstStaticAutoplugRender;
 typedef struct _GstStaticAutoplugRenderClass GstStaticAutoplugRenderClass;
@@ -53,7 +53,7 @@ struct _GstStaticAutoplugRenderClass {
 };
 
 
-GtkType			gst_static_autoplug_render_get_type		(void);
+GType			gst_static_autoplug_render_get_type		(void);
 
 #ifdef __cplusplus
 }

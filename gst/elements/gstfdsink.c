@@ -49,31 +49,31 @@ enum {
 static void gst_fdsink_class_init	(GstFdSinkClass *klass);
 static void gst_fdsink_init		(GstFdSink *fdsink);
 
-static void gst_fdsink_set_arg		(GtkObject *object, GtkArg *arg, guint id);
-static void gst_fdsink_get_arg		(GtkObject *object, GtkArg *arg, guint id);
+static void gst_fdsink_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void gst_fdsink_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static void gst_fdsink_chain		(GstPad *pad,GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_fdsink_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_fdsink_get_type (void) 
 {
-  static GtkType fdsink_type = 0;
+  static GType fdsink_type = 0;
 
   if (!fdsink_type) {
-    static const GtkTypeInfo fdsink_info = {
-      "GstFdSink",
+    static const GTypeInfo fdsink_info = {
+      sizeof(GstFdSinkClass),      NULL,
+      NULL,
+      (GClassInitFunc)gst_fdsink_class_init,
+      NULL,
+      NULL,
       sizeof(GstFdSink),
-      sizeof(GstFdSinkClass),
-      (GtkClassInitFunc)gst_fdsink_class_init,
-      (GtkObjectInitFunc)gst_fdsink_init,
-      (GtkArgSetFunc)gst_fdsink_set_arg,
-      (GtkArgGetFunc)gst_fdsink_get_arg,
-      (GtkClassInitFunc)NULL,
+      0,
+      (GInstanceInitFunc)gst_fdsink_init,
     };
-    fdsink_type = gtk_type_unique (GST_TYPE_ELEMENT, &fdsink_info);
+    fdsink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFdSink", &fdsink_info, 0);
   }
   return fdsink_type;
 }
@@ -81,17 +81,18 @@ gst_fdsink_get_type (void)
 static void
 gst_fdsink_class_init (GstFdSinkClass *klass) 
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gtk_object_add_arg_type ("GstFdSink::fd", GTK_TYPE_INT,
-                           GTK_ARG_READWRITE, ARG_FD);
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FD,
+    g_param_spec_int("fd","fd","fd",
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
 
-  gtkobject_class->set_arg = gst_fdsink_set_arg;
-  gtkobject_class->get_arg = gst_fdsink_get_arg;
+  gobject_class->set_property = gst_fdsink_set_property;
+  gobject_class->get_property = gst_fdsink_get_property;
 }
 
 static void 
@@ -126,7 +127,7 @@ gst_fdsink_chain (GstPad *pad, GstBuffer *buf)
 }
 
 static void 
-gst_fdsink_set_arg (GtkObject *object, GtkArg *arg, guint id) 
+gst_fdsink_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec) 
 {
   GstFdSink *fdsink;
    
@@ -135,9 +136,9 @@ gst_fdsink_set_arg (GtkObject *object, GtkArg *arg, guint id)
   
   fdsink = GST_FDSINK (object);
 
-  switch(id) {
+  switch (prop_id) {
     case ARG_FD:
-      fdsink->fd = GTK_VALUE_INT (*arg);
+      fdsink->fd = g_value_get_int (value);
       break;
     default:
       break;
@@ -145,7 +146,7 @@ gst_fdsink_set_arg (GtkObject *object, GtkArg *arg, guint id)
 }
 
 static void 
-gst_fdsink_get_arg (GtkObject *object, GtkArg *arg, guint id) 
+gst_fdsink_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec) 
 {
   GstFdSink *fdsink;
    
@@ -154,9 +155,9 @@ gst_fdsink_get_arg (GtkObject *object, GtkArg *arg, guint id)
   
   fdsink = GST_FDSINK (object);
 
-  switch(id) {
+  switch (prop_id) {
     case ARG_FD:
-      GTK_VALUE_INT (*arg) = fdsink->fd;
+      g_value_set_int (value, fdsink->fd);
       break;
     default:
       break;

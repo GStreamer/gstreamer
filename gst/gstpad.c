@@ -140,27 +140,27 @@ gst_real_pad_class_init (GstRealPadClass *klass)
   real_pad_parent_class = g_type_class_ref(GST_TYPE_PAD);
 
   gst_real_pad_signals[REAL_SET_ACTIVE] =
-    g_signal_newc ("set_active", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+    g_signal_newc ("set_active", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstRealPadClass, set_active), NULL, NULL,
                     g_cclosure_marshal_VOID__BOOLEAN, G_TYPE_NONE, 1,
                     G_TYPE_BOOLEAN);
   gst_real_pad_signals[REAL_CAPS_CHANGED] =
-    g_signal_newc ("caps_changed", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+    g_signal_newc ("caps_changed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstRealPadClass, caps_changed), NULL, NULL,
                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
   gst_real_pad_signals[REAL_CAPS_NEGO_FAILED] =
-    g_signal_newc ("caps_nego_failed", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+    g_signal_newc ("caps_nego_failed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstRealPadClass, caps_nego_failed), NULL, NULL,
                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
   gst_real_pad_signals[REAL_CONNECTED] =
-    g_signal_newc ("connected", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+    g_signal_newc ("connected", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstRealPadClass, connected), NULL, NULL,
                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
   gst_real_pad_signals[REAL_DISCONNECTED] =
-    g_signal_newc ("disconnected", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+    g_signal_newc ("disconnected", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstRealPadClass, disconnected), NULL, NULL,
                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
@@ -1595,7 +1595,7 @@ gst_padtemplate_class_init (GstPadTemplateClass *klass)
   padtemplate_parent_class = g_type_class_ref(GST_TYPE_OBJECT);
 
   gst_padtemplate_signals[TEMPL_PAD_CREATED] =
-    g_signal_newc ("pad_created", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+    g_signal_newc ("pad_created", G_SIGNAL_RUN_LAST, G_TYPE_FROM_CLASS(klass),
                     G_STRUCT_OFFSET (GstPadTemplateClass, pad_created), NULL, NULL,
                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     GST_TYPE_PAD);

@@ -40,13 +40,13 @@ GstElementDetails gst_identity_details;
 #define GST_TYPE_IDENTITY \
   (gst_identity_get_type())
 #define GST_IDENTITY(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_IDENTITY,GstIdentity))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_IDENTITY,GstIdentity))
 #define GST_IDENTITY_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_IDENTITY,GstIdentityClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_IDENTITY,GstIdentityClass))
 #define GST_IS_IDENTITY(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_IDENTITY))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_IDENTITY))
 #define GST_IS_IDENTITY_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_IDENTITY))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_IDENTITY))
 
 typedef struct _GstIdentity GstIdentity;
 typedef struct _GstIdentityClass GstIdentityClass;
@@ -67,7 +67,7 @@ struct _GstIdentityClass {
   GstElementClass parent_class;
 };
 
-GtkType gst_identity_get_type(void);
+GType gst_identity_get_type(void);
 
 
 #ifdef __cplusplus

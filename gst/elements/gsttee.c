@@ -63,7 +63,7 @@ static void 	gst_tee_init		(GstTee *tee);
 
 static GstPad* 	gst_tee_request_new_pad (GstElement *element, GstPadTemplate *temp);
 
-static void 	gst_tee_get_arg 	(GtkObject *object, GtkArg *arg, guint id);
+static void 	gst_tee_get_property 	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static void  	gst_tee_chain 		(GstPad *pad, GstBuffer *buf);
 
@@ -71,22 +71,22 @@ static GstElementClass *parent_class = NULL;
 //static guint gst_tee_signals[LAST_SIGNAL] = { 0 };
 static GstPadTemplate *gst_tee_src_template;
 
-GtkType
+GType
 gst_tee_get_type(void) {
-  static GtkType tee_type = 0;
+  static GType tee_type = 0;
 
   if (!tee_type) {
-    static const GtkTypeInfo tee_info = {
-      "GstTee",
+    static const GTypeInfo tee_info = {
+      sizeof(GstTeeClass),      NULL,
+      NULL,
+      (GClassInitFunc)gst_tee_class_init,
+      NULL,
+      NULL,
       sizeof(GstTee),
-      sizeof(GstTeeClass),
-      (GtkClassInitFunc)gst_tee_class_init,
-      (GtkObjectInitFunc)gst_tee_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      0,
+      (GInstanceInitFunc)gst_tee_init,
     };
-    tee_type = gtk_type_unique (GST_TYPE_ELEMENT, &tee_info);
+    tee_type = g_type_register_static (GST_TYPE_ELEMENT, "GstTee", &tee_info, 0);
   }
   return tee_type;
 }
@@ -94,18 +94,19 @@ gst_tee_get_type(void) {
 static void
 gst_tee_class_init (GstTeeClass *klass) 
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  gtk_object_add_arg_type ("GstTee::num_pads", GTK_TYPE_INT,
-                            GTK_ARG_READABLE, ARG_NUM_PADS);
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUM_PADS,
+    g_param_spec_int("num_pads","num_pads","num_pads",
+                     G_MININT,G_MAXINT,0,G_PARAM_READABLE)); // CHECKME
 
-  gtkobject_class->get_arg = gst_tee_get_arg;
+  gobject_class->get_property = gst_tee_get_property;
 
   gstelement_class->request_new_pad = gst_tee_request_new_pad;
 }
@@ -149,7 +150,7 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ)
 }
 
 static void
-gst_tee_get_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_tee_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstTee *tee;
 
@@ -158,9 +159,9 @@ gst_tee_get_arg (GtkObject *object, GtkArg *arg, guint id)
 
   tee = GST_TEE (object);
 
-  switch(id) {
+  switch (prop_id) {
     case ARG_NUM_PADS:
-      GTK_VALUE_INT (*arg) = tee->numsrcpads;
+      g_value_set_int (value, tee->numsrcpads);
       break;
     default:
       break;

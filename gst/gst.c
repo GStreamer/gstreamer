@@ -63,16 +63,19 @@ gst_init (int *argc, char **argv[])
 
   if (!g_thread_supported ()) g_thread_init (NULL);
 
+  g_type_init(0);
+
   /* Only initialise gtk fully if we have an X display.
    * FIXME: this fails if the display is specified differently, eg, by
    * a command line parameter. This is okay though, since this is only
    * a quick hack and should be replaced when we move to gobject.*/
+/*
   display = g_getenv("DISPLAY");
   if (display == NULL) {
     gtk_type_init ();
   } else {
     gtk_init (argc,argv);
-  }
+  }*/
 
   if (!gst_init_check (argc,argv)) {
     exit (0);
@@ -269,7 +272,7 @@ gst_init_check (int     *argc,
 void 
 gst_main (void) 
 {
-  gtk_main ();
+//  gtk_main ();
 }
 
 /**
@@ -280,5 +283,5 @@ gst_main (void)
 void 
 gst_main_quit (void) 
 {
-  gtk_main_quit ();
+//  gtk_main_quit ();
 }

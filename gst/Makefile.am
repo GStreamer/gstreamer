@@ -15,6 +15,8 @@ EXTRA_libgst_la_SOURCES =	\
 libgst_la_SOURCES =		\
 	cothreads.c		\
 	gst.c			\
+	gstobject.c		\
+	gstmarshal.c		\
 	gstautoplug.c		\
 	gstbin.c		\
 	gstbuffer.c		\
@@ -27,7 +29,6 @@ libgst_la_SOURCES =		\
 	gstextratypes.c		\
 	gstinfo.c		\
 	gstmeta.c		\
-	gstobject.c		\
 	gstpad.c		\
 	gstpipeline.c		\
 	gstplugin.c		\

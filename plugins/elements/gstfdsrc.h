@@ -40,13 +40,13 @@ GstElementDetails gst_fdsrc_details;
 #define GST_TYPE_FDSRC \
   (gst_fdsrc_get_type())
 #define GST_FDSRC(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_FDSRC,GstFdSrc))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FDSRC,GstFdSrc))
 #define GST_FDSRC_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_FDSRC,GstFdSrcClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FDSRC,GstFdSrcClass))
 #define GST_IS_FDSRC(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_FDSRC))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FDSRC))
 #define GST_IS_FDSRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FDSRC))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FDSRC))
 
 
 typedef struct _GstFdSrc GstFdSrc;
@@ -70,7 +70,7 @@ struct _GstFdSrcClass {
   GstElementClass parent_class;
 };
 
-GtkType gst_fdsrc_get_type(void);
+GType gst_fdsrc_get_type(void);
 
 #ifdef __cplusplus
 }

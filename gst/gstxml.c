@@ -70,7 +70,7 @@ gst_xml_class_init (GstXMLClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
   gst_xml_signals[OBJECT_LOADED] =
-    g_signal_newc ("object_loaded", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+    g_signal_newc ("object_loaded", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstXMLClass, object_loaded), NULL, NULL,
                     gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
                     GST_TYPE_OBJECT, G_TYPE_POINTER);

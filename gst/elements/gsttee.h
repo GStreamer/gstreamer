@@ -36,13 +36,13 @@ extern GstElementDetails gst_tee_details;
 #define GST_TYPE_TEE \
   (gst_tee_get_type())
 #define GST_TEE(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_TEE,GstTee))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TEE,GstTee))
 #define GST_TEE_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_TEE,GstTeeClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TEE,GstTeeClass))
 #define GST_IS_TEE(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_TEE))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TEE))
 #define GST_IS_TEE_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_TEE))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TEE))
 
 typedef struct _GstTee 		GstTee;
 typedef struct _GstTeeClass 	GstTeeClass;
@@ -60,7 +60,7 @@ struct _GstTeeClass {
   GstElementClass parent_class;
 };
 
-GtkType 	gst_tee_get_type	(void);
+GType 	gst_tee_get_type	(void);
 
 gboolean 	gst_tee_factory_init 	(GstElementFactory *factory);
 

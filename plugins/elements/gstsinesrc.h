@@ -39,13 +39,13 @@ GstElementDetails gst_sinesrc_details;
 #define GST_TYPE_SINESRC \
   (gst_sinesrc_get_type())
 #define GST_SINESRC(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_SINESRC,GstSineSrc))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SINESRC,GstSineSrc))
 #define GST_SINESRC_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_SINESRC,GstSineSrcClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SINESRC,GstSineSrcClass))
 #define GST_IS_SINESRC(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_SINESRC))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SINESRC))
 #define GST_IS_SINESRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_SINESRC))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SINESRC))
 
 typedef struct _GstSineSrc GstSineSrc;
 typedef struct _GstSineSrcClass GstSineSrcClass;
@@ -85,7 +85,7 @@ struct _GstSineSrcClass {
   GstElementClass parent_class;
 };
 
-GtkType gst_sinesrc_get_type(void);
+GType gst_sinesrc_get_type(void);
 gboolean gst_sinesrc_factory_init (GstElementFactory *factory);
 
 #ifdef __cplusplus
