@@ -1,3 +1,12 @@
+2004-11-03  Wim Taymans  <wim@fluendo.com>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpegcsp_avpicture_fill):
+	* gst/ffmpegcolorspace/imgconvert.c: (avpicture_get_size),
+	(avpicture_alloc):
+	* gst/ffmpegcolorspace/imgconvert_template.h:
+	Use correct _fill function to get correct strides.
+
 2004-11-02  David Schleef  <ds@schleef.org>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),

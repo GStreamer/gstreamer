@@ -30,6 +30,7 @@
 
 #include "avcodec.h"
 #include "dsputil.h"
+#include "gstffmpegcodecmap.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -260,98 +261,6 @@ avcodec_get_pix_fmt (const char *name)
   return i;
 }
 
-/* Picture field are filled with 'ptr' addresses. Also return size */
-int
-avpicture_fill (AVPicture * picture, uint8_t * ptr,
-    int pix_fmt, int width, int height)
-{
-  int size, w2, h2, size2;
-  PixFmtInfo *pinfo;
-
-  pinfo = &pix_fmt_info[pix_fmt];
-  size = width * height;
-  switch (pix_fmt) {
-    case PIX_FMT_YUV420P:
-    case PIX_FMT_YUV422P:
-    case PIX_FMT_YUV444P:
-    case PIX_FMT_YUV410P:
-    case PIX_FMT_YUV411P:
-    case PIX_FMT_YUVJ420P:
-    case PIX_FMT_YUVJ422P:
-    case PIX_FMT_YUVJ444P:
-      w2 = (width + (1 << pinfo->x_chroma_shift) - 1) >> pinfo->x_chroma_shift;
-      h2 = (height + (1 << pinfo->y_chroma_shift) - 1) >> pinfo->y_chroma_shift;
-      size2 = w2 * h2;
-      picture->data[0] = ptr;
-      picture->data[1] = picture->data[0] + size;
-      picture->data[2] = picture->data[1] + size2;
-      picture->linesize[0] = width;
-      picture->linesize[1] = w2;
-      picture->linesize[2] = w2;
-      return size + 2 * size2;
-    case PIX_FMT_RGB24:
-    case PIX_FMT_BGR24:
-      picture->data[0] = ptr;
-      picture->data[1] = NULL;
-      picture->data[2] = NULL;
-      picture->linesize[0] = width * 3;
-      return size * 3;
-    case PIX_FMT_RGBA32:
-      picture->data[0] = ptr;
-      picture->data[1] = NULL;
-      picture->data[2] = NULL;
-      picture->linesize[0] = width * 4;
-      return size * 4;
-    case PIX_FMT_RGB555:
-    case PIX_FMT_RGB565:
-    case PIX_FMT_YUV422:
-      picture->data[0] = ptr;
-      picture->data[1] = NULL;
-      picture->data[2] = NULL;
-      picture->linesize[0] = width * 2;
-      return size * 2;
-    case PIX_FMT_UYVY422:
-      picture->data[0] = ptr;
-      picture->data[1] = NULL;
-      picture->data[2] = NULL;
-      picture->linesize[0] = width * 2;
-      return size * 2;
-    case PIX_FMT_UYVY411:
-      picture->data[0] = ptr;
-      picture->data[1] = NULL;
-      picture->data[2] = NULL;
-      picture->linesize[0] = width + width / 2;
-      return size + size / 2;
-    case PIX_FMT_GRAY8:
-      picture->data[0] = ptr;
-      picture->data[1] = NULL;
-      picture->data[2] = NULL;
-      picture->linesize[0] = width;
-      return size;
-    case PIX_FMT_MONOWHITE:
-    case PIX_FMT_MONOBLACK:
-      picture->data[0] = ptr;
-      picture->data[1] = NULL;
-      picture->data[2] = NULL;
-      picture->linesize[0] = (width + 7) >> 3;
-      return picture->linesize[0] * height;
-    case PIX_FMT_PAL8:
-      size2 = (size + 3) & ~3;
-      picture->data[0] = ptr;
-      picture->data[1] = ptr + size2;   /* palette is stored here as 256 32 bit words */
-      picture->data[2] = NULL;
-      picture->linesize[0] = width;
-      picture->linesize[1] = 4;
-      return size2 + 256 * 4;
-    default:
-      picture->data[0] = NULL;
-      picture->data[1] = NULL;
-      picture->data[2] = NULL;
-      picture->data[3] = NULL;
-      return -1;
-  }
-}
-
 int
 avpicture_layout (const AVPicture * src, int pix_fmt, int width, int height,
     unsigned char *dest, int dest_size)
@@ -409,7 +318,8 @@ avpicture_get_size (int pix_fmt, int width, int height)
 {
   AVPicture dummy_pict;
 
-  return avpicture_fill (&dummy_pict, NULL, pix_fmt, width, height);
+  return gst_ffmpegcsp_avpicture_fill (&dummy_pict, NULL, pix_fmt, width,
+      height);
 }
 
 /**
@@ -1861,7 +1771,7 @@ avpicture_alloc (AVPicture * picture, int pix_fmt, int width, int height)
   ptr = av_malloc (size);
   if (!ptr)
     goto fail;
-  avpicture_fill (picture, ptr, pix_fmt, width, height);
+  gst_ffmpegcsp_avpicture_fill (picture, ptr, pix_fmt, width, height);
   return 0;
 fail:
   memset (picture, 0, sizeof (AVPicture));
@@ -2254,6 +2164,7 @@ deinterlace_line (uint8_t * dst,
   }
   for (; size > 3; size -= 4) {
     DEINT_LINE_LUM lum_m4 += 4;
+
     lum_m3 += 4;
     lum_m2 += 4;
     lum_m1 += 4;
@@ -2298,6 +2209,7 @@ deinterlace_line_inplace (uint8_t * lum_m4, uint8_t * lum_m3, uint8_t * lum_m2,
   }
   for (; size > 3; size -= 4) {
     DEINT_INPLACE_LINE_LUM lum_m4 += 4;
+
     lum_m3 += 4;
     lum_m2 += 4;
     lum_m1 += 4;

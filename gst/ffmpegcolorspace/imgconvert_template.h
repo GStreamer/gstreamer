@@ -256,6 +256,7 @@ static void glue(RGB_NAME, _to_yuv420p)(AVPicture *dst, const AVPicture *src,
             cb[0] = RGB_TO_U_CCIR(r1, g1, b1, 2);
             cr[0] = RGB_TO_V_CCIR(r1, g1, b1, 2);
 
+
             cb++;
             cr++;
             p += -wrap3 + 2 * BPP;

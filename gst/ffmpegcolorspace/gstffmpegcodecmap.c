@@ -726,6 +726,7 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
     case PIX_FMT_RGB555:
     case PIX_FMT_RGB565:
     case PIX_FMT_YUV422:
+    case PIX_FMT_UYVY422:
       stride = ROUND_UP_4 (width * 2);
       size = stride * height;
       picture->data[0] = ptr;
@@ -733,6 +734,13 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
       picture->data[2] = NULL;
       picture->linesize[0] = stride;
       return size;
+    case PIX_FMT_UYVY411:
+      /* FIXME, probably not the right stride */
+      picture->data[0] = ptr;
+      picture->data[1] = NULL;
+      picture->data[2] = NULL;
+      picture->linesize[0] = width + width / 2;
+      return size + size / 2;
     case PIX_FMT_GRAY8:
       stride = ROUND_UP_4 (width);
       size = stride * height;
