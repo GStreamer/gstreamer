@@ -70,10 +70,9 @@ gst_v4lmjpegsrc_queue_frame (GstV4lMjpegSrc *v4lmjpegsrc,
 
   if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_QBUF_CAPT, &num) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_DEVICE,
-      g_strdup(_("Unable to set parameters on video device")),
-      g_strdup_printf("Error queueing a buffer (%d): %s",
-                      num, g_strerror(errno)));
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Error queueing a buffer (%d): %s",
+      num, g_strerror(errno));
     return FALSE;
   }
 
@@ -103,10 +102,9 @@ gst_v4lmjpegsrc_sync_next_frame (GstV4lMjpegSrc *v4lmjpegsrc,
   while (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd,
                MJPIOC_SYNC, &(v4lmjpegsrc->bsync)) < 0) {
     if (errno != EINTR) {
-      gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_DEVICE,
-        g_strdup(_("Unable to set parameters on video device")),
-        g_strdup_printf("Error syncing on a buffer: %s",
-                        g_strerror(errno)));
+      gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+        "Error syncing on a buffer: %s",
+        g_strerror(errno));
       return FALSE;
     }
     DEBUG("Sync got interrupted");
@@ -153,10 +151,9 @@ gst_v4lmjpegsrc_set_input_norm (GstV4lMjpegSrc       *v4lmjpegsrc,
 
       if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_G_STATUS, &bstat) < 0)
       {
-        gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_DEVICE,
-          g_strdup(_("Unable to get informations from video device")),
-          g_strdup_printf("Error getting device status: %s",
-                          g_strerror(errno)));
+        gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+          "Error getting device status: %s",
+          g_strerror(errno));
         return FALSE;
       }
 
@@ -174,9 +171,8 @@ gst_v4lmjpegsrc_set_input_norm (GstV4lMjpegSrc       *v4lmjpegsrc,
     /* check */
     if (input == V4L_MJPEG_INPUT_AUTO || norm == VIDEO_MODE_AUTO)
     {
-      gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_UNKNOWN,
-	g_strdup(_("An unknown error occured")),
-        g_strdup("Unable to auto-detect an input"));
+      gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+        "Unable to auto-detect an input");
       return FALSE;
     }
 
@@ -190,10 +186,9 @@ gst_v4lmjpegsrc_set_input_norm (GstV4lMjpegSrc       *v4lmjpegsrc,
 
     if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_G_STATUS, &bstat) < 0)
     {
-      gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_DEVICE,
-	g_strdup(_("Unable to get informations from video device")),
-        g_strdup_printf("Error getting device status: %s",
-                        g_strerror(errno)));
+      gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+        "Error getting device status: %s",
+        g_strerror(errno));
       return FALSE;
     }
 
@@ -206,10 +201,9 @@ gst_v4lmjpegsrc_set_input_norm (GstV4lMjpegSrc       *v4lmjpegsrc,
     }
     else
     {
-      gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_UNKNOWN,
-	g_strdup(_("An unknown error occured")),
-        g_strdup_printf("No signal found on input %s",
-                        input_name[input]));
+      gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+        "No signal found on input %s",
+        input_name[input]);
       return FALSE;
     }
   }
@@ -265,10 +259,9 @@ gst_v4lmjpegsrc_set_capture (GstV4lMjpegSrc *v4lmjpegsrc,
   /* Query params for capture */
   if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_G_PARAMS, &bparm) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_DEVICE,
-      g_strdup(_("Unable to get informations from video device")),
-      g_strdup_printf("Error getting video parameters: %s",
-                      g_strerror(errno)));
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Error getting video parameters: %s",
+      g_strerror(errno));
     return FALSE;
   }
 
@@ -294,10 +287,9 @@ gst_v4lmjpegsrc_set_capture (GstV4lMjpegSrc *v4lmjpegsrc,
   /* Set params for capture */
   if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_S_PARAMS, &bparm) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_DEVICE,
-      g_strdup(_("Unable to set parameters on video device")),
-      g_strdup_printf("Error setting video parameters: %s",
-                      g_strerror(errno)));
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Error setting video parameters: %s",
+      g_strerror(errno));
     return FALSE;
   }
 
@@ -341,10 +333,9 @@ gboolean gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc *v4lmjpegsrc,
   /* Query params for capture */
   if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_G_PARAMS, &bparm) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_DEVICE,
-      g_strdup(_("Unable to get informations from video device")),
-      g_strdup_printf("Error getting video parameters: %s",
-                      g_strerror(errno)));
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Error getting video parameters: %s",
+      g_strerror(errno));
     return FALSE;
   }
 
@@ -379,26 +370,23 @@ gboolean gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc *v4lmjpegsrc,
 
   if (width + x_offset > maxwidth)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_UNKNOWN,
-      g_strdup(_("An unknown error occured")),
-      g_strdup_printf("Image width+offset (%d) bigger than maximum (%d)",
-                      width + x_offset, maxwidth));
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Image width+offset (%d) bigger than maximum (%d)",
+      width + x_offset, maxwidth);
     return FALSE;
   }
   if ((width%(bparm.HorDcm*16))!=0) 
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_UNKNOWN,
-      g_strdup(_("An unknown error occured")),
-      g_strdup_printf("Image width (%d) not multiple of %d (required for JPEG)",
-                      width, bparm.HorDcm*16));
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Image width (%d) not multiple of %d (required for JPEG)",
+      width, bparm.HorDcm*16);
     return FALSE;
   }
   if (height + y_offset > (norm==VIDEO_MODE_NTSC ? 480 : 576)) 
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_UNKNOWN,
-      g_strdup(_("An unknown error occured")),
-      g_strdup_printf("Image height+offset (%d) bigger than maximum (%d)",
-                      height + y_offset, (norm==VIDEO_MODE_NTSC ? 480 : 576)));
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Image height+offset (%d) bigger than maximum (%d)",
+      height + y_offset, (norm==VIDEO_MODE_NTSC ? 480 : 576));
     return FALSE;
   }
   /* RJ: Image height must only be a multiple of 8, but geom_height
@@ -406,10 +394,9 @@ gboolean gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc *v4lmjpegsrc,
    */
   if ((height%(bparm.VerDcm*16))!=0) 
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_UNKNOWN,
-      g_strdup(_("An unknown error occured")),
-      g_strdup_printf("Image height (%d) not multiple of %d (required for JPEG)"
-                      ,height, bparm.VerDcm*16));
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Image height (%d) not multiple of %d (required for JPEG)",
+      height, bparm.VerDcm*16);
     return FALSE;
   }
 
@@ -430,10 +417,9 @@ gboolean gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc *v4lmjpegsrc,
   /* Set params for capture */
   if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_S_PARAMS, &bparm) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_DEVICE,
-      g_strdup(_("Unable to set parameters on video device")),
-      g_strdup_printf("Error setting video parameters: %s",
-                      g_strerror(errno)));
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Error setting video parameters: %s",
+      g_strerror(errno));
     return FALSE;
   }
 
@@ -458,19 +444,17 @@ gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc *v4lmjpegsrc)
   if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd,
             MJPIOC_REQBUFS, &(v4lmjpegsrc->breq)) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_DEVICE,
-      g_strdup(_("Unable to get informations from video device")),
-      g_strdup_printf("Error requesting video buffers: %s",
-                      g_strerror(errno)));
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Error requesting video buffers: %s",
+      g_strerror(errno));
     return FALSE;
   }
 
   if (v4lmjpegsrc->breq.count < MIN_BUFFERS_QUEUED)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_UNKNOWN,
-      g_strdup(_("An unknown error occured")),
-      g_strdup_printf("Too little buffers. We got %lu, we want at least %d",
-                      v4lmjpegsrc->breq.count, MIN_BUFFERS_QUEUED));
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Too little buffers. We got %d, we want at least %d",
+      v4lmjpegsrc->breq.count, MIN_BUFFERS_QUEUED);
     return FALSE;
   }
 
@@ -495,10 +479,9 @@ gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc *v4lmjpegsrc)
     PROT_READ|PROT_WRITE, MAP_SHARED, GST_V4LELEMENT(v4lmjpegsrc)->video_fd, 0);
   if (GST_V4LELEMENT(v4lmjpegsrc)->buffer == MAP_FAILED)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_UNKNOWN,
-      g_strdup(_("An unknown error occured")),
-      g_strdup_printf("Error mapping video buffers: %s",
-                      g_strerror(errno)));
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Error mapping video buffers: %s",
+      g_strerror(errno));
     GST_V4LELEMENT(v4lmjpegsrc)->buffer = NULL;
     return FALSE;
   }
@@ -639,11 +622,10 @@ gst_v4lmjpegsrc_requeue_frame (GstV4lMjpegSrc *v4lmjpegsrc,
   g_mutex_lock(v4lmjpegsrc->mutex_queue_state);
 
   if (v4lmjpegsrc->frame_queue_state[num] != QUEUE_STATE_SYNCED) {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_UNKNOWN,
-      g_strdup(_("An unknown error occured")),
-      g_strdup_printf("Invalid state %d (expected %d), can't requeue",
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+                      "Invalid state %d (expected %d), can't requeue",
                       v4lmjpegsrc->frame_queue_state[num],
-                      QUEUE_STATE_SYNCED));
+                      QUEUE_STATE_SYNCED);
     return FALSE;
   }
 

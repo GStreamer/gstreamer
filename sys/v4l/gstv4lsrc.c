@@ -578,9 +578,8 @@ gst_v4lsrc_get (GstPad *pad)
   buf = gst_buffer_new_from_pool(v4lsrc->bufferpool, 0, 0);
   if (!buf)
   {
-    gst_element_error(GST_ELEMENT(v4lsrc), GST_ERROR_INTERNAL,
-      g_strdup(_("An internal error occured")),
-      g_strdup("Failed to create a new GstBuffer"));
+    gst_element_error(GST_ELEMENT(v4lsrc),
+      "Failed to create a new GstBuffer");
     return NULL;
   }
 
@@ -812,9 +811,8 @@ gst_v4lsrc_buffer_free (GstBufferPool *pool, GstBuffer *buf, gpointer user_data)
     }
 
   if (n == v4lsrc->mbuf.frames)
-    gst_element_error(GST_ELEMENT(v4lsrc), GST_ERROR_INTERNAL,
-      g_strdup(_("An internal error occured")),
-      g_strdup("Couldn\'t find the buffer"));
+    gst_element_error(GST_ELEMENT(v4lsrc),
+      "Couldn\'t find the buffer");
 
   /* free struct */
   gst_buffer_default_free(buf);

@@ -508,9 +508,7 @@ gst_vorbisfile_loop (GstElement *element)
     /* open our custom vorbisfile data object with the callbacks we provide */
     if (ov_open_callbacks (vorbisfile, &vorbisfile->vf, NULL, 0, 
 			   vorbisfile_ov_callbacks) < 0) {
-      gst_element_gerror(element, GST_ERROR_UNKNOWN,
-        g_strdup ("unconverted error, file a bug"),
-        g_strdup_printf("this is not a vorbis file"));
+      gst_element_error (element, "this is not a vorbis file");
       return;
     }
     vorbisfile->need_discont = TRUE;

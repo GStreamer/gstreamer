@@ -59,18 +59,15 @@ gst_v4l_set_overlay (GstV4lElement *v4lelement,
   switch (system(buff))
   {
     case -1:
-      gst_element_error(GST_ELEMENT(v4lelement), GST_ERROR_UNKNOWN,
-        g_strdup(_("Unknown error occured")),
-        g_strdup_printf("Could not start v4l-conf: %s", g_strerror(errno)));
+      gst_element_error(GST_ELEMENT(v4lelement),
+        "Could not start v4l-conf: %s", g_strerror(errno));
       g_free(buff);
       return FALSE;
     case 0:
       break;
     default:
-      gst_element_error(GST_ELEMENT(v4lelement), GST_ERROR_UNKNOWN,
-        g_strdup(_("Unknown error occured")),
-        g_strdup_printf("v4l-conf failed to run correctly: %s",
-		        g_strerror(errno)));
+      gst_element_error(GST_ELEMENT(v4lelement),
+        "v4l-conf failed to run correctly: %s", g_strerror(errno));
       g_free(buff);
       return FALSE;
   }
@@ -123,10 +120,9 @@ gst_v4l_set_window (GstElement        *element,
 
   if (ioctl(v4lelement->video_fd, VIDIOCSWIN, &vwin) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lelement), GST_ERROR_DEVICE,
-      g_strdup (_("Unable to set parameters on video device")),
-      g_strdup_printf("Failed to set the video window: %s",
-                      g_strerror(errno)));
+    gst_element_error(GST_ELEMENT(v4lelement),
+      "Failed to set the video window: %s",
+      g_strerror(errno));
     return FALSE;
   }
 
@@ -152,10 +148,9 @@ gst_v4l_enable_overlay (GstV4lElement *v4lelement,
 
   if (ioctl(v4lelement->video_fd, VIDIOCCAPTURE, &doit) < 0)
   {
-    gst_element_error(GST_ELEMENT(v4lelement), GST_ERROR_DEVICE,
-      g_strdup(_("Unable to set parameters on video device")),
-      g_strdup_printf("Failed to %s overlay display: %s",
-                      enable?"enable":"disable", g_strerror(errno)));
+    gst_element_error(GST_ELEMENT(v4lelement),
+      "Failed to %s overlay display: %s",
+      enable?"enable":"disable", g_strerror(errno));
     return FALSE;
   }
 

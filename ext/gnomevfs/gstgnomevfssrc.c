@@ -510,11 +510,10 @@ static int audiocast_init(GstGnomeVFSSrc *src)
 		char *escaped;
 
 		escaped = gnome_vfs_unescape_string_for_display (src->filename);
-		gst_element_gerror(GST_ELEMENT(src), GST_ERROR_UNKNOWN,
-		  g_strdup ("unconverted error, file a bug"),
-		  g_strdup_printf("opening vfs file \"%s\" (%s)",
+		gst_element_error(GST_ELEMENT(src),
+				  "opening vfs file \"%s\" (%s)",
 				  escaped,
-				  "unable to register UDP port"));
+				  "unable to register UDP port");
 		g_free (escaped);
 		close(src->audiocast_fd);
 		return FALSE;
@@ -533,11 +532,10 @@ static int audiocast_init(GstGnomeVFSSrc *src)
 	if (error != NULL) {
 		char *escaped;
 		escaped = gnome_vfs_unescape_string_for_display (src->filename);
-		gst_element_gerror(GST_ELEMENT(src), GST_ERROR_UNKNOWN,
-		  g_strdup ("unconverted error, file a bug"),
-		  g_strdup_printf("opening vfs file \"%s\" (unable to create thread: %s)",
+		gst_element_error(GST_ELEMENT(src),
+				  "opening vfs file \"%s\" (unable to create thread: %s)",
 				  escaped,
-				  error->message));
+				  error->message);
 		g_free (escaped);
 		close(src->audiocast_fd);
 		return FALSE;
@@ -1043,9 +1041,8 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 	/* create the uri */
 	src->uri = gnome_vfs_uri_new(src->filename);
 	if (!src->uri) {
-		gst_element_gerror(GST_ELEMENT(src), GST_ERROR_UNKNOWN,
-		  g_strdup ("unconverted error, file a bug"),
-		  g_strdup_printf("error crerating uri \"%s\" (%s)", src->filename, strerror (errno)));
+		gst_element_error(GST_ELEMENT(src), "creating uri \"%s\" (%s)",
+				  src->filename, strerror (errno));
 		return FALSE;
 	}
 
@@ -1064,11 +1061,10 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 		audiocast_thread_kill(src);
 
 		escaped = gnome_vfs_unescape_string_for_display (src->filename);
-		gst_element_gerror(GST_ELEMENT(src), GST_ERROR_UNKNOWN,
-		  g_strdup ("unconverted error, file a bug"),
-		  g_strdup_printf("opening vfs file \"%s\" (%s)",
+		gst_element_error(GST_ELEMENT(src),
+				  "opening vfs file \"%s\" (%s)",
 				  escaped,
-				  gnome_vfs_result_to_string(result)));
+				  gnome_vfs_result_to_string(result));
 		g_free (escaped);
 		return FALSE;
 	}

@@ -502,9 +502,8 @@ gst_v4lmjpegsrc_get (GstPad *pad)
   buf = gst_buffer_new_from_pool(v4lmjpegsrc->bufferpool, 0, 0);
   if (!buf)
   {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_UNKNOWN,
-      g_strdup(_("An unknown error occured")),
-      g_strdup("Failed to create a new GstBuffer"));
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Failed to create a new GstBuffer");
     return NULL;
   }
 
@@ -841,9 +840,8 @@ gst_v4lmjpegsrc_buffer_free (GstBufferPool *pool, GstBuffer *buf, gpointer user_
     }
 
   if (n == v4lmjpegsrc->breq.count)
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc), GST_ERROR_UNKNOWN,
-      g_strdup(_("An unknown error occured")),
-      g_strdup("Couldn't find the buffer"));
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Couldn't find the buffer");
 
   /* free the buffer struct et all */
   gst_buffer_default_free(buf);

@@ -334,10 +334,9 @@ gst_audio_convert_chain (GstPad *pad, GstBuffer *buf)
 
   if (!this->caps_set[1]) {
     if (!gst_audio_convert_set_caps (this->src)) {
-      gst_element_gerror(GST_ELEMENT (this), GST_ERROR_UNKNOWN,
-        g_strdup ("unconverted error, file a bug"),
-        g_strdup_printf("AudioConvert: could not set caps on pad %s",
-                        GST_PAD_NAME(this->src)));
+      gst_element_error (GST_ELEMENT (this),
+                         "AudioConvert: could not set caps on pad %s",
+                         GST_PAD_NAME(this->src));
       return;
     }
   }
