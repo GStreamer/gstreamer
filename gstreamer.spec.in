@@ -16,7 +16,7 @@ BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 Requires: 	glib2 >= %_glib2
 Requires: 	libxml2 >= %_libxml2
 BuildRequires: 	glib2-devel >= %_glib2
-BuildRequires: 	libxml2 >= %_libxml2
+BuildRequires: 	libxml2-devel >= %_libxml2
 BuildRequires: 	nasm => 0.90
 BuildRequires: 	bison
 
@@ -59,6 +59,8 @@ plugins.
 Summary: Libraries and include files for GStreamer streaming-media framework
 Group: Development/Libraries
 Requires: %{name} = %{version}
+Requires: glib2-devel >= %_glib2
+Requires: libxml2-devel >= %_libxml2
 
 %description devel
 GStreamer is a streaming-media framework, based on graphs of filters which
