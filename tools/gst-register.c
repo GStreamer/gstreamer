@@ -132,7 +132,7 @@ int main (int argc,char *argv[])
 
     dir_list = gst_registry_get_path_list(registry);
     for(iter = dir_list; iter; iter = iter->next) {
-      dir = g_build_filename((const char *)iter->data, "scripts");
+      dir = g_build_filename((const char *)iter->data, "register-scripts");
       spawn_all_in_dir(dir);
       g_free(dir);
     }
