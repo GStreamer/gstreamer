@@ -259,6 +259,8 @@ gst_vorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
     }
   }
 
+  //gst_util_dump_mem (data, got_bytes);
+
   memcpy (ptr, data, got_bytes);
   gst_bytestream_flush_fast (vorbisfile->bs, got_bytes);
 
