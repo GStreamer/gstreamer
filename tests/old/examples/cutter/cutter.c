@@ -16,9 +16,14 @@
 #define DEBUG
 
 gboolean        playing = TRUE;
+gboolean	cut_start_signalled = FALSE;
+gboolean	cut_stop_signalled = FALSE;
+
 int             id = 0;                 /* increment this for each new cut */
 GstElement      *main_bin;
 GstElement	*audiosrc;
+GstElement      *queue;
+GstElement      *thread;
 GstElement      *cutter;
 GstElement      *disksink;
 GstElement      *encoder;
@@ -32,8 +37,9 @@ void cut_start (GstElement *element)
   /* we should pause the pipeline, disconnect cutter and disksink
    * create a new disksink to a real file, reconnect, and set to play
    */
-  g_print ("DEBUG: cut_start: main_bin paused\n");
+  g_print ("DEBUG: cut_start: main_bin pausing\n");
   gst_element_set_state (main_bin, GST_STATE_PAUSED);
+  g_print ("DEBUG: cut_start: main_bin paused\n");
 
   sprintf (buffer, "/tmp/test%d.wav", id);
   g_print ("DEBUG: cut_start: setting new location to %s\n", buffer);
@@ -44,6 +50,12 @@ void cut_start (GstElement *element)
   ++id;
   g_print ("start_cut_signal done\n");
   return;
+}
+
+void cut_start_signal (GstElement *element)
+{
+  g_print ("\nDEBUG: main: cut start signal\n");
+  cut_start_signalled = TRUE;
 }
 
 void cut_stop (GstElement *element)
@@ -61,6 +73,12 @@ void cut_stop (GstElement *element)
   gst_element_set_state (main_bin, GST_STATE_PLAYING);
   g_print ("stop_cut_signal done\n");
   return;
+}
+
+void cut_stop_signal (GstElement *element)
+{
+  g_print ("\nDEBUG: main: cut stop signal\n");
+  cut_stop_signalled = TRUE;
 }
 
 int main (int argc, char *argv[]) 
@@ -107,40 +125,68 @@ int main (int argc, char *argv[])
 
   gtk_object_set (GTK_OBJECT (disksink), "location", "/dev/null", NULL);
 
+  thread = gst_thread_new ("thread");
+  g_assert (thread != NULL);
+  
   /* create main bin */
   main_bin = gst_pipeline_new ("bin");
+  g_assert (main_bin != NULL);
+
+  queue = gst_elementfactory_make ("queue", "queue");
 
   /* add elements to bin */
-  gst_bin_add (GST_BIN (main_bin), cutter);
   gst_bin_add (GST_BIN (main_bin), audiosrc);
-  gst_bin_add (GST_BIN (main_bin), encoder);
-  gst_bin_add (GST_BIN (main_bin), disksink);
+  gst_bin_add (GST_BIN (thread), queue);
+
+  gst_bin_add (GST_BIN (thread), cutter);
+  gst_bin_add (GST_BIN (thread), encoder);
+  gst_bin_add (GST_BIN (thread), disksink);
 
   /* connect adder and disksink */
 
   gst_pad_connect (gst_element_get_pad (audiosrc, "src"),
-                   gst_element_get_pad (cutter,"sink"));
+                   gst_element_get_pad (queue, "sink"));
+
+  gst_pad_connect (gst_element_get_pad (queue, "src"),
+                   gst_element_get_pad (cutter, "sink"));
   gst_pad_connect (gst_element_get_pad (cutter, "src"),
                    gst_element_get_pad (encoder, "sink"));
   gst_pad_connect (gst_element_get_pad (encoder, "src"),
                    gst_element_get_pad (disksink, "sink"));
 
+  gst_bin_add (GST_BIN (main_bin), thread);
+
   /* set signal handlers */
   g_print ("setting signal handlers\n");
   gtk_signal_connect (GTK_OBJECT(cutter), "cut_start",
-                      GTK_SIGNAL_FUNC(cut_start), NULL);
+                      GTK_SIGNAL_FUNC(cut_start_signal), NULL);
   gtk_signal_connect (GTK_OBJECT(cutter), "cut_stop",
-                      GTK_SIGNAL_FUNC(cut_stop), NULL);
+                      GTK_SIGNAL_FUNC(cut_stop_signal), NULL);
 
   /* start playing */
   g_print ("setting to play\n");
   gst_element_set_state (main_bin, GST_STATE_PLAYING);
-
+/*
+  g_print ("setting thread to play\n");
+  gst_element_set_state (GST_ELEMENT (thread), GST_STATE_PLAYING);
+*/
   while (playing) 
   {
-//      g_print ("> ");
+      g_print ("> ");
       gst_bin_iterate (GST_BIN (main_bin));
-//      g_print (" <");
+      g_print (" <");
+      if (cut_start_signalled)
+      {
+        g_print ("\nDEBUG: main: cut_start_signalled true !\n");
+        cut_start (cutter);
+	cut_start_signalled = FALSE;
+      }
+      if (cut_stop_signalled)
+      {
+        g_print ("\nDEBUG: main: cut_stop_signalled true !\n");
+        cut_stop (cutter);
+	cut_stop_signalled = FALSE;
+      }
   }
   g_print ("we're done iterating.\n");
   /* stop the bin */
