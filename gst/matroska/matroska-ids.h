@@ -97,7 +97,14 @@
 #define GST_MATROSKA_ID_CUECLUSTERPOSITION 0xF1
 
 /* IDs in the tags master */
-/* TODO */
+#define GST_MATROSKA_ID_TAG        0x7373
+
+/* in the tag master */
+#define GST_MATROSKA_ID_SIMPLETAG  0x67C8
+
+/* in the simpletag master */
+#define GST_MATROSKA_ID_TAGNAME    0x45A3
+#define GST_MATROSKA_ID_TAGSTRING  0x4487
 
 /* IDs in the seekhead master */
 #define GST_MATROSKA_ID_SEEKENTRY  0x4DBB
@@ -142,6 +149,20 @@
 #define GST_MATROSKA_CODEC_ID_AUDIO_MPEG2        "A_AAC/MPEG2/"
 #define GST_MATROSKA_CODEC_ID_AUDIO_MPEG4        "A_AAC/MPEG4/"
 /* TODO: AC3-9/10 (?), Real, Musepack, Quicktime */
+
+/*
+ * Matrodka tags. Strings.
+ */
+
+#define GST_MATROSKA_TAG_ID_TITLE    "TITLE"
+#define GST_MATROSKA_TAG_ID_AUTHOR   "AUTHOR"
+#define GST_MATROSKA_TAG_ID_ALBUM    "ALBUM"
+#define GST_MATROSKA_TAG_ID_COMMENTS "COMMENTS"
+#define GST_MATROSKA_TAG_ID_BITSPS   "BITSPS"
+#define GST_MATROSKA_TAG_ID_ENCODER  "ENCODER"
+#define GST_MATROSKA_TAG_ID_DATE     "DATE"
+#define GST_MATROSKA_TAG_ID_ISRC     "ISRC"
+#define GST_MATROSKA_TAG_ID_COPYRIGHT "COPYRIGHT"
 
 /*
  * Enumerations for various types (mapping from binary

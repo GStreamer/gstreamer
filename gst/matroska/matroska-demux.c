@@ -1471,6 +1471,37 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux,
   gboolean res = TRUE;
   guint32 id;
   guint64 length = 0;
+  struct
+  {
+    gchar *matroska_tagname;
+    gchar *gstreamer_tagname;
+  }
+  tag_conv[] =
+  {
+    {
+    GST_MATROSKA_TAG_ID_TITLE, GST_TAG_TITLE}
+    , {
+    GST_MATROSKA_TAG_ID_AUTHOR, GST_TAG_ARTIST}
+    , {
+    GST_MATROSKA_TAG_ID_ALBUM, GST_TAG_ALBUM}
+    , {
+    GST_MATROSKA_TAG_ID_COMMENTS, GST_TAG_COMMENT}
+    , {
+    GST_MATROSKA_TAG_ID_BITSPS, GST_TAG_BITRATE}
+    , {
+    GST_MATROSKA_TAG_ID_ENCODER, GST_TAG_ENCODER}
+    , {
+    GST_MATROSKA_TAG_ID_DATE, GST_TAG_DATE}
+    , {
+    GST_MATROSKA_TAG_ID_ISRC, GST_TAG_ISRC}
+    , {
+    GST_MATROSKA_TAG_ID_COPYRIGHT, GST_TAG_COPYRIGHT}
+    , {
+    NULL, NULL}
+  };
+  gint i;
+  gboolean have_tags = FALSE;
+  GstTagList *taglist = gst_tag_list_new ();
 
   if (prevent_eos) {
     length = gst_bytestream_length (ebml->bs);
@@ -1492,8 +1523,122 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux,
     }
 
     switch (id) {
+      case GST_MATROSKA_ID_TAG:
+        if (!gst_ebml_read_master (ebml, &id)) {
+          res = FALSE;
+          break;
+        }
+
+        while (res) {
+          /* read all sub-entries */
+          if (prevent_eos && length == gst_bytestream_tell (ebml->bs)) {
+            res = FALSE;
+            break;
+          } else if (!(id = gst_ebml_peek_id (ebml, &demux->level_up))) {
+            res = FALSE;
+            break;
+          } else if (demux->level_up) {
+            demux->level_up--;
+            break;
+          }
+
+          switch (id) {
+            case GST_MATROSKA_ID_SIMPLETAG:{
+              gchar *tag = NULL, *value = NULL;
+
+              if (!gst_ebml_read_master (ebml, &id)) {
+                res = FALSE;
+                break;
+              }
+
+              while (res) {
+                /* read all sub-entries */
+                if (prevent_eos && length == gst_bytestream_tell (ebml->bs)) {
+                  res = FALSE;
+                  break;
+                } else if (!(id = gst_ebml_peek_id (ebml, &demux->level_up))) {
+                  res = FALSE;
+                  break;
+                } else if (demux->level_up) {
+                  demux->level_up--;
+                  break;
+                }
+
+                switch (id) {
+                  case GST_MATROSKA_ID_TAGNAME:
+                    g_free (tag);
+                    res = gst_ebml_read_ascii (ebml, &id, &tag);
+                    break;
+
+                  case GST_MATROSKA_ID_TAGSTRING:
+                    g_free (value);
+                    res = gst_ebml_read_utf8 (ebml, &id, &value);
+                    break;
+
+                  default:
+                    GST_WARNING ("Unknown entry 0x%x in metadata collection",
+                        id);
+                    /* fall-through */
+
+                  case GST_EBML_ID_VOID:
+                    if (!gst_ebml_read_skip (ebml))
+                      res = FALSE;
+                    break;
+                }
+
+                if (demux->level_up) {
+                  demux->level_up--;
+                  break;
+                }
+              }
+
+              if (tag && value) {
+                for (i = 0; tag_conv[i].matroska_tagname != NULL; i++) {
+                  if (!strcmp (tag_conv[i].matroska_tagname, tag)) {
+                    GValue src = { 0 }
+                    , dest =
+                    {
+                    0};
+                    const gchar *type = tag_conv[i].gstreamer_tagname;
+                    GType dest_type = gst_tag_get_type (type);
+
+                    g_value_init (&src, G_TYPE_STRING);
+                    g_value_set_string (&src, value);
+                    g_value_init (&dest, dest_type);
+                    g_value_transform (&src, &dest);
+                    g_value_unset (&src);
+                    gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND,
+                        type, &dest, NULL);
+                    g_value_unset (&dest);
+                    have_tags = TRUE;
+                    break;
+                  }
+                }
+              }
+              g_free (tag);
+              g_free (value);
+              break;
+            }
+
+            default:
+              GST_WARNING ("Unknown entry 0x%x in metadata collection", id);
+              /* fall-through */
+
+            case GST_EBML_ID_VOID:
+              if (!gst_ebml_read_skip (ebml))
+                res = FALSE;
+              break;
+          }
+
+          if (demux->level_up) {
+            demux->level_up--;
+            break;
+          }
+        }
+        break;
+
       default:
-        GST_WARNING ("metadata unimplemented");
+        GST_WARNING ("Unknown entry 0x%x in metadata header", id);
         /* fall-through */
 
       case GST_EBML_ID_VOID:
@@ -1506,6 +1651,22 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux,
       demux->level_up--;
       break;
     }
+  }
+
+  if (have_tags) {
+    const GList *padlist;
+
+    /* let the world know about this wonderful thing */
+    for (padlist = gst_element_get_pad_list (GST_ELEMENT (ebml));
+        padlist != NULL; padlist = padlist->next) {
+      if (GST_PAD_IS_SRC (padlist->data) && GST_PAD_IS_USABLE (padlist->data)) {
+        gst_pad_push (GST_PAD (padlist->data),
+            GST_DATA (gst_event_new_tag (taglist)));
+      }
+    }
+    gst_element_found_tags (GST_ELEMENT (ebml), taglist);
+  } else {
+    gst_tag_list_free (taglist);
   }
 
   return res;
