@@ -12,7 +12,7 @@ noinst_PROGRAMS = qtest $(GNOME_PROGS) record mp3 teardown buffer mp3parse \
 		  mp3play ac3parse ac3play dvdcat fake cobin \
 		  vidcapture avi2mpg mp2tomp1 mp1tomp1 pipetest \
 		  vidcapture2 mp2toavi mp3tovorbis xmmstest \
-		  mp3mad
+		  mp3mad lat
 
 SUBDIRS = xml bindings
 
