@@ -17,7 +17,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_SDLVIDEOSINK_H__
 #define __GST_SDLVIDEOSINK_H__
 
@@ -25,10 +24,7 @@
 
 #include <SDL.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_SDLVIDEOSINK \
   (gst_sdlvideosink_get_type())
@@ -53,16 +49,20 @@ typedef struct _GstSDLVideoSinkClass GstSDLVideoSinkClass;
 struct _GstSDLVideoSink {
   GstVideoSink videosink;
 
-  gulong format;
-  gint image_width, image_height;   /* the size of the incoming YUV stream */
-  gint window_id;
+  guint32 format;
+  gint width, height;   /* the size of the incoming YUV stream */
+  XID xwindow_id;
+
+  gboolean init;
 
   GstCaps *capslist;
 
-  unsigned char *yuv[3];
   SDL_Surface *screen;
-  SDL_Overlay *yuv_overlay;
+  SDL_Overlay *overlay;
   SDL_Rect rect;
+
+  GMutex *lock;
+  GstBufferPool *bufferpool;
 };
 
 struct _GstSDLVideoSinkClass {
@@ -72,9 +72,6 @@ struct _GstSDLVideoSinkClass {
 
 GType gst_sdlsink_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_SDLVIDEOSINK_H__ */
