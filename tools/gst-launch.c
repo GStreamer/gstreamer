@@ -133,14 +133,16 @@ fault_handler_sighandler (int signum)
 {
   fault_restore ();
 
-  if (signum == SIGSEGV) {
-    g_print ("Caught SIGSEGV\n");
-  }
-  else if (signum == SIGQUIT){
-    g_print ("Caught SIGQUIT\n");
-  }
-  else {
-    g_print ("signo:  %d\n", signum);
+  switch (signum) {
+    case SIGSEGV:
+      g_print ("Caught SIGSEGV\n");
+      break;
+    case SIGQUIT:
+      g_print ("Caught SIGQUIT\n");
+      break;
+    default:
+      g_print ("signo:  %d\n", signum);
+      break;
   }
 
   fault_spin();
@@ -153,16 +155,18 @@ fault_handler_sigaction (int signum, siginfo_t *si, void *misc)
 {
   fault_restore ();
 
-  if (si->si_signo == SIGSEGV) {
-    g_print ("Caught SIGSEGV accessing address %p\n", si->si_addr);
-  }
-  else if (si->si_signo == SIGQUIT){
-    g_print ("Caught SIGQUIT\n");
-  }
-  else {
-    g_print ("signo:  %d\n", si->si_signo);
-    g_print ("errno:  %d\n", si->si_errno);
-    g_print ("code:   %d\n", si->si_code);
+  switch (si->si_signo) {
+    case SIGSEGV:
+      g_print ("Caught SIGSEGV accessing address %p\n", si->si_addr);
+      break;
+    case SIGQUIT:
+      g_print ("Caught SIGQUIT\n");
+      break;
+    default:
+      g_print ("signo:  %d\n", si->si_signo);
+      g_print ("errno:  %d\n", si->si_errno);
+      g_print ("code:   %d\n", si->si_code);
+      break;
   }
 
   fault_spin();
@@ -194,8 +198,8 @@ fault_restore (void)
   memset (&action, 0, sizeof (action));
   action.sa_handler = SIG_DFL;
 
-  sigaction(SIGSEGV, &action, NULL);
-  sigaction(SIGQUIT, &action, NULL);
+  sigaction (SIGSEGV, &action, NULL);
+  sigaction (SIGQUIT, &action, NULL);
 }
 
 static void 
@@ -245,7 +249,33 @@ sigint_restore (void)
   memset (&action, 0, sizeof (action));
   action.sa_handler = SIG_DFL;
 
-  sigaction(SIGINT, &action, NULL);
+  sigaction (SIGINT, &action, NULL);
+}
+
+static void
+play_handler (int signum)
+{
+  switch (signum) {
+    case SIGUSR1:
+      g_print ("Caught SIGUSR1 - Play request\n");
+      gst_element_set_state (pipeline, GST_STATE_PLAYING);
+      break;
+    case SIGUSR2:
+      g_print ("Caught SIGUSR2 - Stop request\n");
+      gst_element_set_state (pipeline, GST_STATE_NULL);
+      break;
+  }
+}
+
+static void
+play_signal_setup(void)
+{
+  struct sigaction action;
+
+  memset (&action, 0, sizeof (action));
+  action.sa_handler = play_handler;
+  sigaction (SIGUSR1, &action, NULL);
+  sigaction (SIGUSR2, &action, NULL);
 }
 
 int
@@ -308,6 +338,7 @@ main(int argc, char *argv[])
     fault_setup();
 
   sigint_setup();
+  play_signal_setup();
   
   if (trace) {
     if (!gst_alloc_trace_available()) {

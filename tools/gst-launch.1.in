@@ -192,6 +192,15 @@ Ranges are in this format:  [ PROPERTY, PROPERTY ]
 .br
 Lists use this format:      ( PROPERTY \fI[, PROPERTY ...]\fR )
 
+.SH "PIPELINE CONTROL"
+
+A pipeline can be controlled by signals. SIGUSR2 will stop the pipeline
+(GST_STATE_NULL); SIGUSR1 will put it back to play (GST_STATE_PLAYING).
+By default, the pipeline will start in the playing state.
+.br
+There are currently no signals defined to go into the ready or pause
+(GST_STATE_READY and GST_STATE_PAUSED) state explicitely.
+
 .SH "PIPELINE EXAMPLES"
 
 The examples below assume that you have the correct plug-ins available.
