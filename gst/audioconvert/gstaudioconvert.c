@@ -117,6 +117,13 @@ GST_STATIC_CAPS ( \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
     "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
+    "width = (int) 24, " \
+    "depth = (int) [ 1, 24 ], " \
+    "signed = (boolean) { true, false }; " \
+  "audio/x-raw-int, " \
+    "rate = (int) [ 1, MAX ], " \
+    "channels = (int) [ 1, 8 ], " \
+    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
     "width = (int) 32, " \
     "depth = (int) [ 1, 32 ], " \
     "signed = (boolean) { true, false }; " \
@@ -706,6 +713,23 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert * this,
                 this->sinkcaps.endianness, GUINT16_FROM_LE, GUINT16_FROM_BE);
           }
           break;
+        case 24:
+        {
+          /* Read 24-bits LE/BE into signed 64 host-endian */
+          if (this->sinkcaps.endianness == G_LITTLE_ENDIAN) {
+            cur = src[0] | (src[1] << 8) | (src[2] << 16);
+          } else {
+            cur = src[2] | (src[1] << 8) | (src[0] << 16);
+          }
+
+          /* Sign extend */
+          if ((this->sinkcaps.sign)
+              && (cur & (1 << (this->sinkcaps.depth - 1))))
+            cur |= ((gint64) (-1)) ^ ((1 << this->sinkcaps.depth) - 1);
+
+          src -= 3;
+        }
+          break;
         case 32:
           if (this->sinkcaps.sign) {
             CONVERT_TO (cur, src, gint32, this->sinkcaps.sign,
@@ -747,9 +771,9 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert * this,
   return ret;
 }
 
-#define POPULATE(format, be_func, le_func) G_STMT_START{			\
+#define POPULATE(out, format, be_func, le_func) G_STMT_START{			\
   format val;									\
-  format* p = (format *) dest;							\
+  format* p = (format *) out;							\
   int_value >>= (32 - this->srccaps.depth);					\
   if (this->srccaps.sign) {							\
     val = (format) int_value;							\
@@ -768,7 +792,7 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert * this,
   };                                                                           \
   *p = val;                                                                    \
   p ++;                                                                        \
-  dest = (guint8 *) p;                                                         \
+  out = (guint8 *) p;                                                          \
 }G_STMT_END
 
 static GstBuffer *
@@ -802,23 +826,45 @@ gst_audio_convert_buffer_from_default_format (GstAudioConvert * this,
       switch (this->srccaps.width) {
         case 8:
           if (this->srccaps.sign) {
-            POPULATE (gint8, GINT8_IDENTITY, GINT8_IDENTITY);
+            POPULATE (dest, gint8, GINT8_IDENTITY, GINT8_IDENTITY);
           } else {
-            POPULATE (guint8, GUINT8_IDENTITY, GUINT8_IDENTITY);
+            POPULATE (dest, guint8, GUINT8_IDENTITY, GUINT8_IDENTITY);
           }
           break;
         case 16:
           if (this->srccaps.sign) {
-            POPULATE (gint16, GINT16_TO_BE, GINT16_TO_LE);
+            POPULATE (dest, gint16, GINT16_TO_BE, GINT16_TO_LE);
           } else {
-            POPULATE (guint16, GUINT16_TO_BE, GUINT16_TO_LE);
+            POPULATE (dest, guint16, GUINT16_TO_BE, GUINT16_TO_LE);
           }
+          break;
+        case 24:
+        {
+          guint8 tmp[4];
+          guint8 *tmpp = tmp;
+
+          /* Write out big endian array */
+          if (this->srccaps.sign) {
+            POPULATE (tmpp, gint32, GINT32_TO_BE, GINT32_TO_BE);
+          } else {
+            POPULATE (tmpp, guint32, GUINT32_TO_BE, GUINT32_TO_BE);
+          }
+
+          if (this->srccaps.endianness == G_LITTLE_ENDIAN) {
+            dest[2] = tmp[1];
+            dest[1] = tmp[2];
+            dest[0] = tmp[3];
+          } else {
+            memcpy (dest, tmp + 1, 3);
+          }
+          dest += 3;
+        }
           break;
         case 32:
           if (this->srccaps.sign) {
-            POPULATE (gint32, GINT32_TO_BE, GINT32_TO_LE);
+            POPULATE (dest, gint32, GINT32_TO_BE, GINT32_TO_LE);
           } else {
-            POPULATE (guint32, GUINT32_TO_BE, GUINT32_TO_LE);
+            POPULATE (dest, guint32, GUINT32_TO_BE, GUINT32_TO_LE);
           }
           break;
         default:
