@@ -1,3 +1,8 @@
+2004-08-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* po/uk.po:
+	  updated translation
+
 2004-07-30  David Schleef  <ds@schleef.org>
 
 	* gst/gstatomic_impl.h: Enable atomic code for x86_64
