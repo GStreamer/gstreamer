@@ -90,6 +90,7 @@ read_config ();
   "ogg", "vorbisdec ! $cfg{AUDIOSINK}",
   "sid", "siddec ! $cfg{AUDIOSINK}",
   "vob", "mpegdemux video_%02d! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }  mpegdemux0.private_stream_1_%02d! { queue ! a52dec ! $cfg{AUDIOSINK} }",
+  "swf", "swfdec video_%02d! { queue ! colorspace ! $cfg{VIDEOSINK} }  swfdec0.audio_%02d! { queue ! $cfg{AUDIOSINK} }",
 );
 
 if ($cfg{VISUALIZER}) {
