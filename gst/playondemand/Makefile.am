@@ -7,4 +7,11 @@ libgstplayondemand_la_CFLAGS = $(GST_CFLAGS)
 
 noinst_HEADERS = gstplayondemand.h filter.func
 
-# EXTRA_DIST = README
+if HAVE_GTK
+noinst_PROGRAMS = demo-mp3
+endif
+
+demo_mp3_SOURCES = demo-mp3.c
+demo_mp3_CFLAGS  = $(GST_CFLAGS) $(GTK_CFLAGS)
+demo_mp3_LDFLAGS = $(GST_LIBS) $(GTK_LIBS)
+
