@@ -57,8 +57,8 @@ GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
-    "wavparse_wav",   
-    "audio/x-wav",  
+    "wavparse_wav",
+    "audio/x-wav",
     NULL
   )
 )
@@ -68,14 +68,14 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
-    "wavparse_raw",   
-    "audio/raw",  
+    "wavparse_raw",
+    "audio/raw",
       "format",            GST_PROPS_STRING ("int"),
        "law",              GST_PROPS_INT (0),
        "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
        "signed",           GST_PROPS_LIST (
-       			     GST_PROPS_BOOLEAN (FALSE),
-       			     GST_PROPS_BOOLEAN (TRUE)
+				GST_PROPS_BOOLEAN (FALSE),
+				GST_PROPS_BOOLEAN (TRUE)
 			   ),
        "width",            GST_PROPS_LIST (
 	                     GST_PROPS_INT (8),
@@ -85,14 +85,19 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
 	                     GST_PROPS_INT (8),
 	                     GST_PROPS_INT (16)
 			   ),
-       "rate",             GST_PROPS_INT_RANGE (8000, 48000), 
+       "rate",             GST_PROPS_INT_RANGE (8000, 48000),
        "channels",         GST_PROPS_INT_RANGE (1, 2)
+  ),
+  GST_CAPS_NEW (
+    "wavparse_mp3",
+    "audio/x-mp3",
+    NULL
   )
 )
 
 /* typefactory for 'wav' */
-static GstTypeDefinition 
-wavdefinition = 
+static GstTypeDefinition
+wavdefinition =
 {
   "wavparse_audio/x-wav",
   "audio/x-wav",
@@ -164,7 +169,7 @@ gst_wavparse_init (GstWavParse *wavparse)
   gst_element_add_pad (GST_ELEMENT (wavparse), wavparse->srcpad);
   gst_pad_set_formats_function (wavparse->srcpad, gst_wavparse_get_formats);
   gst_pad_set_convert_function (wavparse->srcpad, gst_wavparse_pad_convert);
-  gst_pad_set_query_type_function (wavparse->srcpad, 
+  gst_pad_set_query_type_function (wavparse->srcpad,
 		                   gst_wavparse_get_query_types);
   gst_pad_set_query_function (wavparse->srcpad, gst_wavparse_pad_query);
 
@@ -192,6 +197,30 @@ wav_type_find (GstBuffer *buf, gpointer private)
 }
 
 
+/* set timestamp on outgoing buffer
+ * returns TRUE if a timestamp was set
+ */
+static gboolean
+gst_wavparse_set_timestamp (GstWavParse *wavparse, GstBuffer *buf)
+{
+  gboolean retval = FALSE;
+
+  /* only do timestamps on linear audio */
+  switch (wavparse->format)
+  {
+    case GST_RIFF_WAVE_FORMAT_PCM:
+      GST_BUFFER_TIMESTAMP (buf) = wavparse->offset * GST_SECOND
+	                         / wavparse->rate;
+      wavparse->offset += GST_BUFFER_SIZE (buf) * 8
+		        / (wavparse->width * wavparse->channels);
+      retval = TRUE;
+      break;
+    default:
+      break;
+  }
+  return retval;
+}
+
 static void
 gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 {
@@ -215,20 +244,22 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
   /* we're in the data region */
   if (wavparse->state == GST_WAVPARSE_DATA) {
     /* if we're expected to see a new chunk in this buffer */
-    if ((wavparse->riff_nextlikely - GST_BUFFER_OFFSET (buf)) < GST_BUFFER_SIZE (buf)) {
-	    
-      GST_BUFFER_SIZE (buf) = wavparse->riff_nextlikely - GST_BUFFER_OFFSET (buf);
-      
+    if ((wavparse->riff_nextlikely - GST_BUFFER_OFFSET (buf))
+	< GST_BUFFER_SIZE (buf)) {
+      GST_BUFFER_SIZE (buf) = wavparse->riff_nextlikely
+	                    - GST_BUFFER_OFFSET (buf);
+
       wavparse->state = GST_WAVPARSE_OTHER;
       /* I suppose we could signal an EOF at this point, but that may be
          premature.  We've stopped data flow, that's the main thing. */
-    } 
+    }
 
-    GST_BUFFER_TIMESTAMP (buf) = wavparse->offset * GST_SECOND / wavparse->rate;
-    wavparse->offset += GST_BUFFER_SIZE (buf) * 8 / wavparse->width / wavparse->channels;
+    gst_wavparse_set_timestamp (wavparse, buf);
 
     if (GST_PAD_IS_USABLE (wavparse->srcpad))
       gst_pad_push (wavparse->srcpad, buf);
+    else
+      gst_buffer_unref (buf);
     return;
   }
 
@@ -250,7 +281,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 
     /* create a new RIFF parser */
     wavparse->riff = gst_riff_new ();
-    
+
     /* give it the current buffer to start parsing */
     retval = gst_riff_next_buffer (wavparse->riff, buf, 0);
     buffer_riffed = TRUE;
@@ -287,8 +318,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 
     /* if we've got something, deal with it */
     if (fmt != NULL) {
-      GstCaps *caps;
-
+      GstCaps *caps = NULL;
 
       /* we can gather format information now */
       format = (GstWavParseFormat *)((guchar *) GST_BUFFER_DATA (buf) + fmt->offset);
@@ -297,20 +327,37 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
       wavparse->rate     = GUINT32_FROM_LE(format->dwSamplesPerSec);
       wavparse->channels = GUINT16_FROM_LE(format->wChannels);
       wavparse->width    = GUINT16_FROM_LE(format->wBitsPerSample);
-      
+      wavparse->format	 = GINT16_FROM_LE(format->wFormatTag);
+
       /* set the caps on the src pad */
-      caps = GST_CAPS_NEW (
+      /* FIXME: handle all of the other formats as well */
+      switch (wavparse->format)
+      {
+        case GST_RIFF_WAVE_FORMAT_PCM:
+          caps = GST_CAPS_NEW (
 			"parsewav_src",
 			"audio/raw",
 			"format",	GST_PROPS_STRING ("int"),
 			  "law",	GST_PROPS_INT (0),		/*FIXME */
 			  "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
-        		  "signed",     GST_PROPS_BOOLEAN ((wavparse->width > 8) ? TRUE : FALSE),
+			  "signed",     GST_PROPS_BOOLEAN ((wavparse->width > 8) ? TRUE : FALSE),
 			  "width",	GST_PROPS_INT (wavparse->width),
 			  "depth",	GST_PROPS_INT (wavparse->width),
 			  "rate",	GST_PROPS_INT (wavparse->rate),
 			  "channels",	GST_PROPS_INT (wavparse->channels)
-		      );
+		);
+	  break;
+        case GST_RIFF_WAVE_FORMAT_MPEGL12:
+        case GST_RIFF_WAVE_FORMAT_MPEGL3:
+	  caps = GST_CAPS_NEW (
+			"parsewav_src",
+			"audio/x-mp3",
+			NULL
+		);
+	  break;
+	default:
+	  g_warning ("wavparse: format %d not handled", wavparse->format);
+      }
 
       if (gst_pad_try_set_caps (wavparse->srcpad, caps) <= 0) {
         gst_element_error (GST_ELEMENT (wavparse), "Could not set caps");
@@ -318,7 +365,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
       }
 
       GST_DEBUG (0, "frequency %d, channels %d",
-		 wavparse->rate, wavparse->channels); 
+		 wavparse->rate, wavparse->channels);
 
       /* we're now looking for the data chunk */
       wavparse->state = GST_WAVPARSE_CHUNK_DATA;
@@ -355,19 +402,22 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
       /* now we construct a new buffer for the remainder */
       subsize = size - datachunk->offset;
       GST_DEBUG (0, "sending last %ld bytes along as audio", subsize);
-      
+
       newbuf = gst_buffer_new ();
       GST_BUFFER_DATA (newbuf) = g_malloc (subsize);
       GST_BUFFER_SIZE (newbuf) = subsize;
-      GST_BUFFER_TIMESTAMP (newbuf) = wavparse->offset * GST_SECOND / wavparse->rate;
-      wavparse->offset += subsize * 8 / wavparse->width / wavparse->channels;
-      
-      memcpy (GST_BUFFER_DATA (newbuf), GST_BUFFER_DATA (buf) + datachunk->offset, subsize);
+
+      gst_wavparse_set_timestamp (wavparse, newbuf);
+
+      memcpy (GST_BUFFER_DATA (newbuf),
+	      GST_BUFFER_DATA (buf) + datachunk->offset, subsize);
 
       gst_buffer_unref (buf);
 
       if (GST_PAD_IS_USABLE (wavparse->srcpad))
         gst_pad_push (wavparse->srcpad, newbuf);
+      else
+	gst_buffer_unref (newbuf);
 
       /* now we're ready to go, the next buffer should start data */
       wavparse->state = GST_WAVPARSE_DATA;
