@@ -140,3 +140,13 @@ gst_audio_highest_sample_value (GstPad* pad)
   /* example : 16 bit, signed : samples between -32768 and 32767 */
   return ((long) (1 << width));
 }
+
+gboolean 
+gst_audio_is_buffer_framed (GstPad* pad, GstBuffer* buf)
+/* check if the buffer size is a whole multiple of the frame size */
+{
+  if (GST_BUFFER_SIZE (buf) % gst_audio_frame_byte_size (pad) == 0)
+    return TRUE;
+  else
+    return FALSE;
+}

@@ -40,3 +40,6 @@ double 		gst_audio_length 		(GstPad* pad, GstBuffer* buf);
 /* calculate highest possible sample value based on capabilities of pad */
 long 		gst_audio_highest_sample_value 	(GstPad* pad);
 
+/* check if the buffer size is a whole multiple of the frame size */
+gboolean	gst_audio_is_buffer_framed 	(GstPad* pad, GstBuffer* buf);
+
