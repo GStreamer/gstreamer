@@ -47,6 +47,9 @@ typedef struct _GstXMLRegistryClass GstXMLRegistryClass;
 typedef enum {
   GST_XML_REGISTRY_NONE,
   GST_XML_REGISTRY_TOP,
+  GST_XML_REGISTRY_PATHS,
+  GST_XML_REGISTRY_PATH,
+  GST_XML_REGISTRY_PATHS_DONE,
   GST_XML_REGISTRY_PLUGIN,
   GST_XML_REGISTRY_FEATURE,
   GST_XML_REGISTRY_PADTEMPLATE,
@@ -60,11 +63,8 @@ typedef enum {
   GST_XML_REGISTRY_WRITE,
 } GstXMLRegistryMode;
 
-enum {
-    GST_XML_REGISTRY_OPEN = (1 << 1)
-};
-
 typedef void	 (*GstXMLRegistryGetPerms)	(GstXMLRegistry      *registry);
+typedef void	 (*GstXMLRegistryAddPathList)	(GstXMLRegistry      *registry);
 typedef gboolean (*GstXMLRegistryParser) 	(GMarkupParseContext *context,
                                                  const gchar	      *tag,
                                                  const gchar         *text,
@@ -113,6 +113,7 @@ struct _GstXMLRegistryClass {
   GstRegistryClass	 parent_class;
 
   GstXMLRegistryGetPerms get_perms_func;
+  GstXMLRegistryAddPathList add_path_list_func;
   GstXMLRegistryOpen	 open_func;
   GstXMLRegistryLoad	 load_func;
   GstXMLRegistrySave	 save_func;

@@ -11,10 +11,10 @@ create_bin (void)
   GstElement *element;
 
   bin = gst_bin_new ("testbin");
-  element = gst_element_new ();
+  element = gst_element_factory_make ("fakesrc", NULL);
   gst_element_set_name (element, "test1");
   gst_bin_add (GST_BIN (bin), element);
-  element = gst_element_new ();
+  element = gst_element_factory_make ("fakesrc", NULL);
   gst_element_set_name (element, "test2");
   gst_bin_add (GST_BIN (bin), element);
 
@@ -28,16 +28,12 @@ create_bin_ghostpads (void)
   GstElement *element1, *element2;
 
   bin = gst_bin_new ("testbin");
-  element1 = gst_element_new ();
-  gst_element_set_name (element1, "test1");
-  gst_element_add_pad (element1, gst_pad_new ("src1", GST_PAD_SRC));
+  element1 = gst_element_factory_make ("identity", NULL);
   gst_bin_add (GST_BIN (bin), element1);
-  element2 = gst_element_new ();
-  gst_element_set_name (element2, "test2");
-  gst_element_add_pad (element2, gst_pad_new ("sink1", GST_PAD_SINK));
+  element2 = gst_element_factory_make ("fakesink", NULL);
   gst_bin_add (GST_BIN (bin), element2);
-  gst_element_connect (element1, "src1", element2, "sink1");
-  gst_element_add_ghost_pad (bin, gst_element_get_pad (element2, "sink1"), "ghost_sink");
+  gst_element_connect_pads (element1, "src", element2, "sink");
+  gst_element_add_ghost_pad (bin, gst_element_get_pad (element1, "sink"), "ghost_sink");
 
   return bin;
 }
@@ -49,7 +45,7 @@ add_remove_test1 (void)
   GstElement *element;
 
   bin = gst_bin_new ("testbin");
-  element = gst_element_new ();
+  element = gst_element_factory_make ("fakesrc", NULL);
   gst_element_set_name (element, "test1");
   g_assert (GST_OBJECT_FLOATING (element));
   gst_bin_add (GST_BIN (bin), element);
@@ -66,7 +62,7 @@ add_remove_test2 (void)
   GstElement *element;
 
   bin = gst_bin_new ("testbin");
-  element = gst_element_new ();
+  element = gst_element_factory_make ("fakesrc", NULL);
   gst_element_set_name (element, "test1");
   gst_object_ref (GST_OBJECT (element));
   g_assert (GST_OBJECT_FLOATING (element));
@@ -90,7 +86,7 @@ add_remove_test3 (void)
   GstElement *element;
 
   bin = gst_bin_new ("testbin");
-  element = gst_element_new ();
+  element = gst_element_factory_make ("fakesrc", NULL);
   gst_element_set_name (element, "test1");
   g_assert (GST_OBJECT_FLOATING (element));
   gst_bin_add (GST_BIN (bin), element);
@@ -109,7 +105,7 @@ add_remove_test4 (void)
   GstElement *element;
 
   bin = gst_bin_new ("testbin");
-  element = gst_element_new ();
+  element = gst_element_factory_make ("fakesrc", NULL);
   gst_element_set_name (element, "test1");
   g_assert (GST_OBJECT_FLOATING (element));
   gst_bin_add (GST_BIN (bin), element);

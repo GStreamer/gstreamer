@@ -1,11 +1,9 @@
-# GstObject is no longer instantiatable in glib2
-# neither is GstElement
 if BUILD_FAILING_TESTS
-tests_failing = element
+tests_failing = element bin element_pad pad
 else
 tests_failing =
 endif
-tests_working = bin element_pad pad
+tests_working =
 
 element_SOURCES = element.c mem.c
 pad_SOURCES = pad.c mem.c

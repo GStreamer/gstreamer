@@ -195,15 +195,26 @@ gst_registry_unload (GstRegistry *registry)
  * gst_registry_add_path:
  * @registry: the registry to add the path to
  *
- * Add the given pathstring to the registry. The syntax of the
- * pathstring is specific to the registry.
+ * Add the given path to the registry. The syntax of the
+ * path is specific to the registry. If the path has already been
+ * added, do nothing.
  */
 void
 gst_registry_add_path (GstRegistry *registry, const gchar *path)
 {
+  GList *l;
+
   g_return_if_fail (GST_IS_REGISTRY (registry));
   g_return_if_fail (path != NULL);
 
+  l = registry->paths;
+  while (l) {
+    if (strcmp (l->data, path) == 0)
+      return;
+
+    l = g_list_next (l);
+  }
+  
   registry->paths = g_list_append (registry->paths, g_strdup (path));
 }
 

@@ -14,13 +14,13 @@ main (int argc, char *argv[])
   g_print ("%d plugins loaded\n", numplugins);
   g_mem_chunk_info ();
 
-  plugin = gst_registry_pool_find_plugin ("ossaudio");
+  plugin = gst_registry_pool_find_plugin ("testplugin");
   g_assert (plugin != NULL);
 
   g_print ("%d features in plugin\n", g_list_length (gst_plugin_get_feature_list (plugin)));
 
 
-  g_print ("ossaudio: %p  loaded: %s\n", plugin, (gst_plugin_is_loaded (plugin) ? "true": "false"));
+  g_print ("testplugin: %p  loaded: %s\n", plugin, (gst_plugin_is_loaded (plugin) ? "true": "false"));
   
   loaded = gst_plugin_load_plugin (plugin);
   g_assert (loaded == TRUE);
@@ -30,9 +30,9 @@ main (int argc, char *argv[])
 
   g_mem_chunk_info ();
 
-  plugin = gst_registry_pool_find_plugin ("ossaudio");
+  plugin = gst_registry_pool_find_plugin ("testplugin");
   g_assert (plugin != NULL);
-  g_print ("ossaudio: %p  loaded: %s\n", plugin, (gst_plugin_is_loaded (plugin) ? "true": "false"));
+  g_print ("testplugin: %p  loaded: %s\n", plugin, (gst_plugin_is_loaded (plugin) ? "true": "false"));
 
   g_print ("%d features in plugin\n", g_list_length (gst_plugin_get_feature_list (plugin)));
 
@@ -46,9 +46,9 @@ main (int argc, char *argv[])
 
   g_mem_chunk_info ();
 
-  plugin = gst_registry_pool_find_plugin ("ossaudio");
+  plugin = gst_registry_pool_find_plugin ("testplugin");
   g_assert (plugin != NULL);
-  g_print ("ossaudio: %p  loaded: %s\n", plugin, (gst_plugin_is_loaded (plugin) ? "true": "false"));
+  g_print ("testplugin: %p  loaded: %s\n", plugin, (gst_plugin_is_loaded (plugin) ? "true": "false"));
 
   return 0;
 }

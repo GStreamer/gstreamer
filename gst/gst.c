@@ -40,6 +40,7 @@ gchar *_gst_progname;
 gboolean _gst_registry_auto_load = TRUE;
 static GstRegistry *_global_registry;
 static GstRegistry *_user_registry;
+static gboolean _gst_registry_fixed = FALSE;
 
 extern gint _gst_trace_on;
 
@@ -287,12 +288,9 @@ init_pre (void)
   gst_registry_add_path (_global_registry, PLUGINS_DIR);
 #endif /* PLUGINS_USE_BUILDDIR */
 
-  gst_registry_pool_add (_global_registry, 100);
-
   homedir = g_get_home_dir ();
   user_reg = g_strjoin ("/", homedir, LOCAL_REGISTRY_FILE, NULL);
   _user_registry = gst_xml_registry_new ("user_registry", user_reg);
-  gst_registry_pool_add (_user_registry, 50);
 
   g_free (user_reg);
 }
@@ -368,6 +366,21 @@ init_post (void)
   _gst_event_initialize ();
   _gst_buffer_initialize ();
   _gst_buffer_pool_initialize ();
+
+  if (!_gst_registry_fixed) {
+    /* don't override command-line options */
+    if (g_getenv ("GST_REGISTRY")) {
+      g_object_set (_user_registry, "location", g_getenv ("GST_REGISTRY"), NULL);
+      _gst_registry_fixed = TRUE;
+    }
+  }
+
+  if (!_gst_registry_fixed) {
+    gst_registry_pool_add (_global_registry, 100);
+    gst_registry_pool_add (_user_registry, 50);
+  } else {
+    gst_registry_pool_add (_user_registry, 50);
+  }
 
   if (_gst_registry_auto_load) {
     gst_registry_pool_load_all ();
@@ -465,7 +478,8 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
       gst_scheduler_factory_set_default_name (arg);
       break;
     case ARG_REGISTRY:
-      GST_XML_REGISTRY (_global_registry)->location = g_strdup (arg);
+      g_object_set (G_OBJECT (_user_registry), "location", arg, NULL);
+      _gst_registry_fixed = TRUE;
       break;
     default:
       g_warning ("option %d not recognized", option->val);

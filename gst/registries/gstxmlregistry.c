@@ -62,11 +62,11 @@ static gboolean		gst_xml_registry_save 			(GstRegistry *registry);
 static gboolean 	gst_xml_registry_rebuild 		(GstRegistry *registry);
 
 static void	 	gst_xml_registry_get_perms_func 	(GstXMLRegistry *registry);
+static void		gst_xml_registry_add_path_list_func	(GstXMLRegistry *registry);
 static gboolean 	gst_xml_registry_open_func 		(GstXMLRegistry *registry, GstXMLRegistryMode mode);
 static gboolean 	gst_xml_registry_load_func 		(GstXMLRegistry *registry, gchar *data, gssize *size);
 static gboolean 	gst_xml_registry_save_func 		(GstXMLRegistry *registry, gchar *format, ...);
 static gboolean 	gst_xml_registry_close_func 		(GstXMLRegistry *registry);
-
 
 static GstRegistryReturn gst_xml_registry_load_plugin		(GstRegistry *registry, GstPlugin *plugin);
 
@@ -94,6 +94,23 @@ static void 		gst_xml_registry_error          	(GMarkupParseContext *context,
 		                           			 GError              *error,
 					                         gpointer             user_data);
 
+
+static void 		gst_xml_registry_paths_start_element  	(GMarkupParseContext *context,
+		                           			 const gchar         *element_name,
+					                         const gchar        **attribute_names,
+							         const gchar        **attribute_values,
+							         gpointer             user_data,
+							         GError             **error);
+static void 		gst_xml_registry_paths_end_element    	(GMarkupParseContext *context,
+		                           			 const gchar         *element_name,
+					                         gpointer             user_data,
+							         GError             **error);
+static void 		gst_xml_registry_paths_text           	(GMarkupParseContext *context,
+		                           			 const gchar         *text,
+					                         gsize                text_len,  
+							         gpointer             user_data,
+							         GError             **error);
+
 static GstRegistryClass *parent_class = NULL;
 /* static guint gst_xml_registry_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -105,6 +122,16 @@ gst_xml_registry_parser =
   gst_xml_registry_text,
   gst_xml_registry_passthrough,
   gst_xml_registry_error,
+};
+
+static const GMarkupParser 
+gst_xml_registry_paths_parser = 
+{
+  gst_xml_registry_paths_start_element,
+  gst_xml_registry_paths_end_element,
+  gst_xml_registry_paths_text,
+  NULL,
+  NULL
 };
 
 
@@ -159,6 +186,7 @@ gst_xml_registry_class_init (GstXMLRegistryClass *klass)
   gstregistry_class->load_plugin	= GST_DEBUG_FUNCPTR (gst_xml_registry_load_plugin);
 
   gstxmlregistry_class->get_perms_func 	= GST_DEBUG_FUNCPTR (gst_xml_registry_get_perms_func);
+  gstxmlregistry_class->add_path_list_func = GST_DEBUG_FUNCPTR (gst_xml_registry_add_path_list_func);
   gstxmlregistry_class->open_func 	= GST_DEBUG_FUNCPTR (gst_xml_registry_open_func);
   gstxmlregistry_class->load_func 	= GST_DEBUG_FUNCPTR (gst_xml_registry_load_func);
   gstxmlregistry_class->save_func 	= GST_DEBUG_FUNCPTR (gst_xml_registry_save_func);
@@ -222,6 +250,9 @@ gst_xml_registry_set_property (GObject* object, guint prop_id,
 
       if (CLASS (object)->get_perms_func)
         CLASS (object)->get_perms_func (registry);
+
+      if (CLASS (object)->add_path_list_func)
+        CLASS (object)->add_path_list_func (registry);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -307,6 +338,46 @@ static void gst_xml_registry_get_perms_func (GstXMLRegistry *registry)
   }
 }
       
+static void
+gst_xml_registry_add_path_list_func (GstXMLRegistry *registry)
+{
+  FILE *reg;
+  GMarkupParseContext *context;
+  gchar *text;
+  gssize size;
+  GError *error = NULL;
+
+  context = g_markup_parse_context_new (&gst_xml_registry_paths_parser, 0, registry, NULL);
+
+  if (! (reg = fopen (registry->location, "r"))) {
+    return;
+  }
+
+  text = g_malloc (BLOCK_SIZE);
+
+  size = fread (text, 1, BLOCK_SIZE, reg);
+
+  while (size) {
+    g_markup_parse_context_parse (context, text, size, &error);
+
+    if (error) {
+      fprintf(stderr, "ERROR: parsing registry: %s\n", error->message);
+      g_free (text);
+      fclose (reg);
+      return;
+    }
+
+    if (registry->state == GST_XML_REGISTRY_PATHS_DONE)
+      break;
+
+    size = fread (text, 1, BLOCK_SIZE, reg);
+  }
+
+  fclose (reg);
+
+  g_free (text);
+}
+
 static gboolean
 plugin_times_older_than_recurse(gchar *path, time_t regtime)
 {
@@ -360,16 +431,9 @@ plugin_times_older_than(GList *paths, time_t regtime)
   return TRUE;
 }
 
-static void
-plugin_added_func (GstRegistry *registry, GstPlugin *plugin, gpointer user_data)
-{
-  GST_INFO (GST_CAT_PLUGIN_LOADING, "added plugin %s with %d features\n", plugin->name, plugin->numfeatures);
-}
-
 static gboolean
 gst_xml_registry_open_func (GstXMLRegistry *registry, GstXMLRegistryMode mode)
 {
-  gulong handler_id;
   GstRegistry *gst_registry;
   GList *paths;
 
@@ -384,12 +448,7 @@ gst_xml_registry_open_func (GstXMLRegistry *registry, GstXMLRegistryMode mode)
     if (!plugin_times_older_than (paths, get_time (registry->location))) {
       GST_INFO (GST_CAT_GST_INIT, "Registry out of date, rebuilding...");
       
-      handler_id = g_signal_connect (registry, "plugin_added", 
-                                     G_CALLBACK (plugin_added_func), NULL);
-
       gst_registry_rebuild (gst_registry);
-
-      g_signal_handler_disconnect (registry, handler_id);
 
       if (gst_registry->flags & GST_REGISTRY_WRITABLE) {
         gst_registry_save (gst_registry);
@@ -452,12 +511,14 @@ gst_xml_registry_close_func (GstXMLRegistry *registry)
 static gboolean
 gst_xml_registry_load (GstRegistry *registry)
 {
-  GstXMLRegistry *xmlregistry = GST_XML_REGISTRY (registry);
+  GstXMLRegistry *xmlregistry;
   gchar *text;
   gssize size;
   GError *error = NULL;
   GTimer *timer;
   gdouble seconds;
+
+  xmlregistry = GST_XML_REGISTRY (registry);
 
   timer = g_timer_new();
   
@@ -475,16 +536,18 @@ gst_xml_registry_load (GstRegistry *registry)
   while (size) {
     g_markup_parse_context_parse (xmlregistry->context, text, size, &error);
 
+    if (error) {
+      fprintf(stderr, "ERROR: parsing registry: %s\n", error->message);
+      g_free (text);
+      CLASS (xmlregistry)->close_func (xmlregistry);
+      return FALSE;
+    }
+
     size = BLOCK_SIZE;
     CLASS (xmlregistry)->load_func (xmlregistry, text, &size);
   }
 
   g_free (text);
-
-  if (error) {
-    fprintf(stderr, "ERROR: parsing registry: %s\n", error->message);
-    return FALSE;
-  }
 
   g_timer_stop (timer);
 
@@ -974,6 +1037,67 @@ gst_xml_registry_error (GMarkupParseContext *context, GError *error,
 {
   g_print ("error %s\n", error->message);
 }
+
+static void
+gst_xml_registry_paths_start_element (GMarkupParseContext *context, const gchar *element_name,
+                                      const gchar **attribute_names, const gchar **attribute_values,
+                                      gpointer user_data, GError **error)
+{
+  GstXMLRegistry *xmlregistry = GST_XML_REGISTRY (user_data);
+
+  switch (xmlregistry->state) {
+    case GST_XML_REGISTRY_NONE:
+      if (!strcmp (element_name, "GST-PluginRegistry")) {
+	xmlregistry->state = GST_XML_REGISTRY_TOP;
+      }
+      break;
+    case GST_XML_REGISTRY_TOP:
+      if (!strcmp (element_name, "gst-registry-paths")) {
+	xmlregistry->state = GST_XML_REGISTRY_PATHS;
+      }
+      break;
+    case GST_XML_REGISTRY_PATHS:
+      if (!strcmp (element_name, "path")) {
+	xmlregistry->state = GST_XML_REGISTRY_PATH;
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+static void
+gst_xml_registry_paths_end_element (GMarkupParseContext *context, const gchar *element_name,
+                                    gpointer user_data, GError **error)
+{
+  GstXMLRegistry *xmlregistry = GST_XML_REGISTRY (user_data);
+
+  switch (xmlregistry->state) {
+    case GST_XML_REGISTRY_PATH:
+      if (!strcmp (element_name, "path")) {
+	xmlregistry->state = GST_XML_REGISTRY_PATHS;
+      }
+      break;
+    case GST_XML_REGISTRY_PATHS:
+      if (!strcmp (element_name, "gst-plugin-paths")) {
+	xmlregistry->state = GST_XML_REGISTRY_PATHS_DONE;
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+static void
+gst_xml_registry_paths_text (GMarkupParseContext *context, const gchar *text,
+                             gsize text_len, gpointer user_data, GError **error)
+{
+  GstXMLRegistry *xmlregistry = GST_XML_REGISTRY (user_data);
+  
+  if (xmlregistry->state == GST_XML_REGISTRY_PATH)
+    gst_registry_add_path (GST_REGISTRY (xmlregistry), g_strndup (text, text_len));
+}
+
 /*
  * Save
  */
@@ -1220,11 +1344,22 @@ gst_xml_registry_save (GstRegistry *registry)
     return FALSE;
   }
 
-  walk = g_list_last (registry->plugins);
-
   CLASS (xmlregistry)->save_func (xmlregistry, "<?xml version=\"1.0\"?>\n");
   CLASS (xmlregistry)->save_func (xmlregistry, "<GST-PluginRegistry>\n");
   
+  walk = g_list_last (gst_registry_get_path_list (GST_REGISTRY (registry)));
+  
+  CLASS (xmlregistry)->save_func (xmlregistry, "<gst-plugin-paths>\n");
+  while (walk) {
+    CLASS (xmlregistry)->save_func (xmlregistry, "<path>");
+    CLASS (xmlregistry)->save_func (xmlregistry, (gchar*)walk->data);
+    CLASS (xmlregistry)->save_func (xmlregistry, "</path>\n");
+    walk = g_list_previous (walk);
+  }
+  CLASS (xmlregistry)->save_func (xmlregistry, "</gst-plugin-paths>\n");
+
+  walk = g_list_last (registry->plugins);
+
   while (walk) {
     GstPlugin *plugin = GST_PLUGIN (walk->data);
 
