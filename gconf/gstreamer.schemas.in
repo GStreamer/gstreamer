@@ -5,7 +5,7 @@
       <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/audiosink</applyto>
       <owner>gstreamer</owner>
       <type>string</type>
-      <default>osssink</default>
+      <default>@DEFAULT_AUDIOSINK@</default>
       <locale name="C">
         <short>default GStreamer audiosink</short>
         <long>GStreamer can play audio using any number of output elements.  Some possible choices are osssink, esdsink and alsasink.  The audiosink can be a partial pipeline instead of just one element.</long>
@@ -16,7 +16,7 @@
       <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/videosink</applyto>
       <owner>gstreamer</owner>
       <type>string</type>
-      <default>xvimagesink</default>
+      <default>@DEFAULT_VIDEOSINK@</default>
       <locale name="C">
         <short>default GStreamer videosink</short>
         <long>GStreamer can play video using any number of output elements.  Some possible choices are xvideosink, sdlvideosink and aasink.  The videosink can be a partial pipeline instead of just one element.</long>
@@ -27,7 +27,7 @@
       <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/audiosrc</applyto>
       <owner>gstreamer</owner>
       <type>string</type>
-      <default>osssrc</default>
+      <default>@DEFAULT_AUDIOSRC@</default>
       <locale name="C">
         <short>default GStreamer audio source</short>
         <long>GStreamer can record audio using any number of input elements.  Some possible choices are osssrc, esdsrc and alsasrc.  The audio source can be a partial pipeline instead of just one element.</long>
@@ -38,7 +38,7 @@
       <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/videosrc</applyto>
       <owner>gstreamer</owner>
       <type>string</type>
-      <default>v4lsrc</default>
+      <default>@DEFAULT_VIDEOSRC@</default>
       <locale name="C">
         <short>default GStreamer video source</short>
         <long>GStreamer can record video from any number of input elements.  Some possible choices are v4lsrc and videotestsrc. The video source can be a partial pipeline instead of just one element.</long>
@@ -49,7 +49,7 @@
       <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/visualization</applyto>
       <owner>gstreamer</owner>
       <type>string</type>
-      <default>goom</default>
+      <default>@DEFAULT_VISUALIZER@</default>
       <locale name="C">
         <short>default GStreamer visualization plugin</short>
         <long>GStreamer can put visualization plugins in a pipeline to transform audio stream in video frames. Default is goom but more visualization plugins will be ported soon. The visualization plugin can be a partial pipeline instead of just one element.</long>
