@@ -1,7 +1,6 @@
-testprogs = element.py
+tests = element.py
 
-TESTS = $(testprogs)
+check-local:
+	$(PYTHON) runtests.py
 
-check_SCRIPTS = $(testprogs)
-
-EXTRA_DIST = $(testprogs)
+EXTRA_DIST = $(tests) runtests.py
