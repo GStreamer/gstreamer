@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
  *
- * gstvorbistagsetter.c: plugin for reading / modifying vorbis tags
+ * gstid3tag.c: plugin for reading / modifying id3 tags
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

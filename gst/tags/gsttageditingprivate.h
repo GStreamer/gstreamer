@@ -21,7 +21,7 @@
 #ifndef __GST_OGG_PLUGINS_H__
 #define __GST_OGG_PLUGINS_H__
 
-#include "gsttagediting.h"
+#include <gst/tag/tag.h>
 
 G_BEGIN_DECLS
   

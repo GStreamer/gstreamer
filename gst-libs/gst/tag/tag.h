@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __GST_TAG_EDITING_H__
-#define __GST_TAG_EDITING_H__
+#ifndef __GST_TAG_H__
+#define __GST_TAG_H__
 
 #include <gst/gst.h>
 
@@ -59,4 +59,4 @@ G_CONST_RETURN gchar *	gst_tag_to_id3_tag			(const gchar *		gst_tag);
 
 G_END_DECLS
 
-#endif /* __GST_TAG_EDITING_H__ */
+#endif /* __GST_TAG_H__ */
