@@ -1,8 +1,8 @@
-diff -urN ffmpeg.patch/libavformat/allformats.c ffmpeg/libavformat/allformats.c
---- ffmpeg.patch/libavformat/allformats.c	2002-11-05 01:38:06.000000000 +0100
-+++ ffmpeg/libavformat/allformats.c	2003-01-16 17:31:13.000000000 +0100
-@@ -38,13 +38,13 @@
-     asf_init();
+diff -ur ffmpeg-vanilla/libavformat/allformats.c ffmpeg/libavformat/allformats.c
+--- ffmpeg-vanilla/libavformat/allformats.c	Thu May 29 18:34:46 2003
++++ ffmpeg/libavformat/allformats.c	Thu May 29 19:02:01 2003
+@@ -40,13 +40,13 @@
+ #endif
      avienc_init();
      avidec_init();
 -    wav_init();
@@ -14,13 +14,13 @@ diff -urN ffmpeg.patch/libavformat/allformats.c ffmpeg/libavformat/allformats.c
      jpeg_init();
 -    dv_init();
 +    avf_dv_init();
-     
- #ifdef CONFIG_VORBIS
-     ogg_init();
-diff -urN ffmpeg.patch/libavformat/avformat.h ffmpeg/libavformat/avformat.h
---- ffmpeg.patch/libavformat/avformat.h	2002-12-04 11:04:03.000000000 +0100
-+++ ffmpeg/libavformat/avformat.h	2003-01-16 17:31:14.000000000 +0100
-@@ -228,7 +228,7 @@
+     fourxm_init();
+ 
+     av_register_output_format(&yuv4mpegpipe_oformat);
+diff -ur ffmpeg-vanilla/libavformat/avformat.h ffmpeg/libavformat/avformat.h
+--- ffmpeg-vanilla/libavformat/avformat.h	Thu May 29 18:34:46 2003
++++ ffmpeg/libavformat/avformat.h	Thu May 29 19:02:09 2003
+@@ -311,7 +311,7 @@
  int au_init(void);
  
  /* wav.c */
@@ -29,7 +29,7 @@ diff -urN ffmpeg.patch/libavformat/avformat.h ffmpeg/libavformat/avformat.h
  
  /* raw.c */
  int raw_init(void);
-@@ -237,7 +237,7 @@
+@@ -320,7 +320,7 @@
  int ogg_init(void);
  
  /* dv.c */
@@ -38,22 +38,22 @@ diff -urN ffmpeg.patch/libavformat/avformat.h ffmpeg/libavformat/avformat.h
  
  /* ffm.c */
  int ffm_init(void);
-diff -urN ffmpeg.patch/libavformat/dv.c ffmpeg/libavformat/dv.c
---- ffmpeg.patch/libavformat/dv.c	2002-11-11 10:05:57.000000000 +0100
-+++ ffmpeg/libavformat/dv.c	2003-01-16 17:31:15.000000000 +0100
-@@ -126,7 +126,7 @@
+diff -ur ffmpeg-vanilla/libavformat/dv.c ffmpeg/libavformat/dv.c
+--- ffmpeg-vanilla/libavformat/dv.c	Thu May 29 18:34:46 2003
++++ ffmpeg/libavformat/dv.c	Thu May 29 19:01:16 2003
+@@ -138,7 +138,7 @@
+     dv_write_trailer,
  };
- #endif
  
 -int dv_init(void)
 +int avf_dv_init(void)
  {
      av_register_input_format(&dv_iformat);
-     //    av_register_output_format(&dv_oformat);
-diff -urN ffmpeg.patch/libavformat/wav.c ffmpeg/libavformat/wav.c
---- ffmpeg.patch/libavformat/wav.c	2002-11-11 10:09:06.000000000 +0100
-+++ ffmpeg/libavformat/wav.c	2003-01-16 17:31:16.000000000 +0100
-@@ -318,7 +318,7 @@
+     av_register_output_format(&dv_oformat);
+diff -ur ffmpeg-vanilla/libavformat/wav.c ffmpeg/libavformat/wav.c
+--- ffmpeg-vanilla/libavformat/wav.c	Thu May 29 18:34:46 2003
++++ ffmpeg/libavformat/wav.c	Thu May 29 19:02:32 2003
+@@ -334,7 +334,7 @@
      wav_write_trailer,
  };
  
@@ -62,26 +62,3 @@ diff -urN ffmpeg.patch/libavformat/wav.c ffmpeg/libavformat/wav.c
  {
      av_register_input_format(&wav_iformat);
      av_register_output_format(&wav_oformat);
-}
---- ffmpeg/libavformat/grab.c-	Fri Apr  4 23:14:14 2003
-+++ ffmpeg/libavformat/grab.c	Sat Apr  5 23:15:38 2003
-@@ -17,6 +17,19 @@
-  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-  */
- #include "avformat.h"
-+/* Because of some really cool feature in video4linux1, also known as
-+ * 'not including sys/types.h and sys/time.h', we had to include it
-+ * ourselves. In all their intelligence, these people decided to fix
-+ * this in the next version (video4linux2) in such a cool way that it
-+ * breaks all compilations of old stuff...
-+ * The real problem is actually that linux/time.h doesn't use proper
-+ * macro checks before defining types like struct timeval. The proper
-+ * fix here is to either fuck the kernel header (which is what we do
-+ * by defining _LINUX_TIME_H, an innocent little hack) or by fixing it
-+ * upstream, which I'll consider doing later on. If you get compiler
-+ * errors here, check your linux/time.h && sys/time.h header setup.
-+ */
-+#define _LINUX_TIME_H
- #include <linux/videodev.h>
- #include <unistd.h>
- #include <fcntl.h>
