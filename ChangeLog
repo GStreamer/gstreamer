@@ -1,3 +1,37 @@
+2004-11-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/cdxaparse/Makefile.am:
+	* gst/cdxaparse/gstcdxaparse.c: (gst_cdxaparse_get_type),
+	(gst_cdxaparse_class_init), (gst_cdxaparse_init),
+	(gst_cdxaparse_loop), (gst_cdxaparse_change_state), (plugin_init):
+	* gst/cdxaparse/gstcdxaparse.h:
+	* gst/cdxaparse/gstcdxastrip.c: (gst_cdxastrip_get_type),
+	(gst_cdxastrip_base_init), (gst_cdxastrip_class_init),
+	(gst_cdxastrip_init), (gst_cdxastrip_get_src_formats),
+	(gst_cdxastrip_get_src_query_types),
+	(gst_cdxastrip_handle_src_query), (gst_cdxastrip_get_event_mask),
+	(gst_cdxastrip_handle_src_event), (gst_cdxastrip_strip),
+	(gst_cdxastrip_sync), (gst_cdxastrip_handle_event),
+	(gst_cdxastrip_chain), (gst_cdxastrip_change_state):
+	* gst/cdxaparse/gstcdxastrip.h:
+	  SVCD/VCD header stripping separated from CDXA image parsing.
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find),
+	(plugin_init):
+	  Add VCD/SVCD header typefinding for VCD/SVCD.
+	* sys/vcd/vcdsrc.c: (gst_vcdsrc_get_type), (gst_vcdsrc_base_init),
+	(gst_vcdsrc_class_init), (gst_vcdsrc_init),
+	(gst_vcdsrc_set_property), (gst_vcdsrc_get_property),
+	(gst_vcdsrc_get_event_mask), (gst_vcdsrc_get_query_types),
+	(gst_vcdsrc_get_formats), (gst_vcdsrc_srcpad_event),
+	(gst_vcdsrc_srcpad_query), (gst_vcdsrc_get),
+	(gst_vcdsrc_open_file), (gst_vcdsrc_close_file),
+	(gst_vcdsrc_change_state), (gst_vcdsrc_msf),
+	(gst_vcdsrc_recalculate), (gst_vcdsrc_uri_get_type),
+	(gst_vcdsrc_uri_get_protocols), (gst_vcdsrc_uri_get_uri),
+	(gst_vcdsrc_uri_set_uri), (gst_vcdsrc_uri_handler_init):
+	* sys/vcd/vcdsrc.h:
+	  Fix up, add seeking, querying, URI interface. Works in totem now.
+
 2004-11-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
