@@ -1544,7 +1544,7 @@
 	* docs/manual/links-api.xml: 
           fixes for out of date info, incorrect info and grammar
 
-2004-07-15  Zaheer Abbas Merali  <zaheerabbas at merali dot>
+2004-07-15  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* docs/manual/pads.xml:
 	* docs/manual/pads-api.xml: grammar fix
@@ -1623,7 +1623,7 @@
 	* docs/manual/motivation.xml:
 	Bonobo is no longer "emerging" and added sentence regarding tcp plugins
 
-2004-07-15  Zaheer Abbas Merali  <zaheerabbas at merali.org>
+2004-07-15  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* docs/manual/motivation.xml: Fix spelling
 
@@ -2194,7 +2194,7 @@
 	* libs/gst/bytestream/filepad.h:
 	  add 2 new functions
 
-2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali.org>
+2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* docs/gst/gstreamer-sections.txt:
 	remove from docs, the define that Benjamin removed from gstelement.h
