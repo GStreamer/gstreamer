@@ -419,19 +419,27 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
     }
     else if (!strcmp (mimetype, "audio/x-mp3"))
     {
-      gint layer;
+      gint layer = 3;
 
-      gst_caps_get_int(caps, "layer", &layer);
+      if (gst_caps_has_property(caps, "layer"))
+        gst_caps_get_int(caps, "layer", &layer);
+      else
+        GST_DEBUG(GST_CAT_PLUGIN_INFO,
+                  "No layer specified, assuming layer 3");
 
       /* we don't need to do anything here, compressed mp3 contains it all */
       avimux->auds.format      = (layer == 3?
                                    GST_RIFF_WAVE_FORMAT_MPEGL3 : 
 				   GST_RIFF_WAVE_FORMAT_MPEGL12);
+      avimux->auds_hdr.scale = avimux->auds_hdr.samplesize = 1;
+      avimux->auds_hdr.rate = avimux->auds.av_bps = 0;
       goto done;
     }
     else if (!strcmp (mimetype, "application/x-ogg"))
     {
       avimux->auds.format = GST_RIFF_WAVE_FORMAT_VORBIS1;
+      avimux->auds_hdr.scale = avimux->auds_hdr.samplesize = 1;
+      avimux->auds_hdr.rate = avimux->auds.av_bps = 0;
       goto done;
     }
   }
@@ -969,8 +977,14 @@ gst_avimux_stop_file (GstAviMux *avimux)
   /* set rate and everything having to do with that */
   avimux->avi_hdr.us_frame = avimux->vids_hdr.scale = 1000000/avimux->framerate;
   avimux->avi_hdr.max_bps = 0;
-  if (avimux->audio_pad_connected)
+  if (avimux->audio_pad_connected) {
+    /* calculate bps if needed */
+    if (!avimux->auds.av_bps) {
+      g_warning("Bps calculation needed!");
+      avimux->auds_hdr.rate = avimux->auds.av_bps * avimux->auds_hdr.scale;
+    }
     avimux->avi_hdr.max_bps += avimux->auds.av_bps;
+  }
   if (avimux->video_pad_connected)
     avimux->avi_hdr.max_bps += ((avimux->vids.bit_cnt+7)/8) *
 				avimux->framerate *

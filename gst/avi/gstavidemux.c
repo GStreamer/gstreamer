@@ -127,7 +127,7 @@ GST_PAD_TEMPLATE_FACTORY (src_audio_templ,
     "audio/raw",
       "format",           GST_PROPS_STRING ("int"),
       "law",              GST_PROPS_INT (0),
-      "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
+      "endianness",       GST_PROPS_INT (G_LITTLE_ENDIAN),
       "signed",           GST_PROPS_LIST (
       			    GST_PROPS_BOOLEAN (TRUE),
       			    GST_PROPS_BOOLEAN (FALSE)
@@ -786,7 +786,7 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
                               gst_props_new (
                                 "format",     GST_PROPS_STRING ("int"),
                                 "law",        GST_PROPS_INT (0),
-                                "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+                                "endianness", GST_PROPS_INT (G_LITTLE_ENDIAN),
                                 "signed",     GST_PROPS_BOOLEAN ((GUINT16_FROM_LE (strf->size) != 8)),
                                 "width",      GST_PROPS_INT ((GUINT16_FROM_LE (strf->blockalign)*8) /
                                                               GUINT16_FROM_LE (strf->channels)),
