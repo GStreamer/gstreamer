@@ -12,6 +12,7 @@
 <!ENTITY SRCNSINK SYSTEM "srcnsink.xml">
 <!ENTITY STATEMANAGE SYSTEM "statemanage.xml">
 <!ENTITY CHECKLIST SYSTEM "checklist.xml">
+<!ENTITY DPARAMS SYSTEM "dparams.xml">
 <!ENTITY GStreamer "<application>GStreamer</application>">
 ]>
 
@@ -747,6 +748,67 @@
 
   </part>
 
+<!-- ############ part ############# -->
+
+  <part id="dparams"><title>Supporting Dynamic Parameters</title>
+    <partintro>
+      <para>
+        Sometimes object properties are not powerful enough to control the 
+        parameters that affect the behaviour of your element.  When this is
+        the case you can expose these parameters as Dynamic Parameters
+        which can be manipulated by any Dynamic Parameters aware application.      
+      </para>
+      <para>
+        Throughout this section, the term dparams will be used as an abbreviation for Dynamic Parameters.
+      </para>
+    </partintro>
+    <sect2 id="sect-dparams-compare">
+      <title>Comparing Dynamic Parameters with GObject Properties</title>
+      <para>
+        Your first exposure to dparams may be to convert an existing element from
+        using object properties to using dparams. The following table gives an overview
+        of the difference between these approaches.  The significance of these 
+        differences should become apparent later on.
+      </para>
+      <informaltable frame="all">
+        <tgroup cols="3">
+        <thead>
+          <row>
+            <entry></entry>
+            <entry>Object Properties</entry>
+            <entry>Dynamic Parameters</entry>
+          </row>
+        </thead>
+        <tbody>
+        <row>
+          <entry><emphasis>Parameter definition</emphasis></entry>
+          <entry>Class level at compile time</entry>
+          <entry>Any level at run time</entry>
+        </row>
+        <row>
+          <entry><emphasis>Getting and setting</emphasis></entry>
+          <entry>Implemented by element subclass as functions</entry>
+          <entry>Handled entirely by dparams subsystem</entry>
+        </row>
+        <row>
+          <entry><emphasis>Extra objects required</emphasis></entry>
+          <entry>None - all functionality is derived from base GObject</entry>
+          <entry>Element needs to create and store a <filename>GstDParamManager</filename> at object creation</entry>
+        </row>
+        <row>
+          <entry><emphasis>Frequency and resolution of updates</emphasis></entry>
+          <entry>Object properties will only be updated between calls to _get, _chain or _loop</entry>
+          <entry>dparams can be updated at any rate independant of calls to _get, _chain or _loop 
+            up to sample-level accuracy</entry>
+        </row>
+        </tbody>
+        </tgroup>
+      </informaltable>
+    </sect2>
+    
+    &DPARAMS;
+  </part>
+  
 <!-- ############ part ############# -->
 
   <part id="test-app"><title>Building a simple test application</title>

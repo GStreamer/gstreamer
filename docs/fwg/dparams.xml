@@ -1,0 +1,380 @@
+<chapter id="cha-dparam-start">
+  <title>Getting Started</title>
+
+  <para>
+    The dparams subsystem is contained within the <filename>gstcontrol</filename> library.
+    You need to include the header in your element's source file:
+  </para>
+  <programlisting>
+  #include &lt;gst/control/control.h&gt;
+  </programlisting>
+  
+  <para>
+    Even though the <filename>gstcontrol</filename> library may be linked into the host
+    application, you should make sure it is loaded in your <filename>plugin_init</filename> 
+    function:
+  </para>
+  <programlisting>
+  static gboolean
+  plugin_init (GModule *module, GstPlugin *plugin)
+  {
+    ...
+    
+    /* load dparam support library */
+    if (!gst_library_load ("gstcontrol"))
+    {
+      gst_info ("example: could not load support library: 'gstcontrol'\n");
+      return FALSE;
+    }
+    
+    ...
+  }
+  </programlisting>
+  
+  <para>
+    You need to store an instance of <filename>GstDParamManager</filename> in your element's struct:
+  </para>
+  <programlisting>
+  struct _GstExample {
+    GstElement element;
+    ...
+    
+    GstDParamManager *dpman;
+    
+    ...
+  };
+  </programlisting>
+  
+  <para>
+    The <filename>GstDParamManager</filename> can be initialised in your element's
+    init function:
+  </para>
+  <programlisting>
+  static void
+  gst_example_init (GstExample *example)
+  {
+    ...
+    
+    example-&gt;dpman = gst_dpman_new ("example_dpman", GST_ELEMENT(example));
+    
+    ...
+  }
+  </programlisting>
+  
+</chapter>
+
+<chapter id="cha-dparam-define">
+  <title>Defining Parameter Specificiations</title>
+  <para>
+    You can define the dparams you need anywhere within your element but will usually
+    need to do so in only a couple of places:
+    <itemizedlist>
+      <listitem>
+        In the element <filename>init</filename> function, 
+        just after the call to <filename>gst_dpman_new</filename>
+      </listitem>
+      <listitem>
+        Whenever a new pad is created so that parameters can affect data going into
+        or out of a specific pad. An example of this would be a mixer element where 
+        a seperate volume parameter is needed on every pad.
+      </listitem>
+    </itemizedlist>
+  </para>
+  <para>
+    There are three different ways the dparams subsystem can pass parameters into your element.
+    Which one you use will depend on how that parameter is used within your element.
+    Each of these methods has its own function to define a required dparam:
+    <itemizedlist>
+      <listitem><filename>gst_dpman_add_required_dparam_direct</filename></listitem>
+      <listitem><filename>gst_dpman_add_required_dparam_callback</filename></listitem>
+      <listitem><filename>gst_dpman_add_required_dparam_array</filename></listitem>
+    </itemizedlist>
+    These functions will return TRUE if the required dparam was added successfully.  
+    </para>
+    <para>
+    The following function will be used as an example.
+    <programlisting>
+  gboolean 
+  gst_dpman_add_required_dparam_direct (GstDParamManager *dpman, 
+                                        GParamSpec *param_spec,
+                                        gboolean is_log,
+                                        gboolean is_rate,
+                                        gpointer update_data)
+    </programlisting>
+    The common parameters to these functions are:
+    <itemizedlist>
+      <listitem><filename>GstDParamManager *dpman</filename> the element's dparam manager</listitem>
+      <listitem><filename>GParamSpec *param_spec</filename> the param spec which defines the required dparam</listitem>
+      <listitem>
+        <filename>gboolean is_log</filename> whether this dparam value should be 
+        interpreted on a log scale (such as a frequency or a decibel value)
+      </listitem>
+      <listitem>
+        <filename>gboolean is_rate</filename> whether this dparam value is a proportion of the
+        sample rate.  For example with a sample rate of 44100, 0.5 would be 22050 Hz and 0.25 would be 11025 Hz.
+      </listitem>
+    </itemizedlist>
+  </para>
+  <sect2 id="sect-dparam-direct">
+    <title>Direct Method</title>
+    <para>
+      This method is the simplest and has the lowest overhead for parameters which change 
+      less frequently than the sample rate.  First you need somewhere to store the parameter - 
+      this will usually be in your element's stuct.
+    </para>
+    <programlisting>
+  struct _GstExample {
+    GstElement element;
+    ...
+    
+    GstDParamManager *dpman;
+    gfloat volume;
+    ...
+  };
+    </programlisting>
+    <para>
+      Then to define the required dparam just call <filename>gst_dpman_add_required_dparam_direct</filename>
+      and pass in the location of the parameter to change.  
+      In this case the location is <filename>&amp;(example-&gt;volume)</filename>.
+    </para>
+    <programlisting>
+  gst_dpman_add_required_dparam_direct (
+    example-&gt;dpman, 
+    g_param_spec_float("volume","Volume","Volume of the audio",
+                       0.0, 1.0, 0.8, G_PARAM_READWRITE),
+    FALSE,
+    FALSE,
+    &amp;(example-&gt;volume)
+  );
+    </programlisting>
+    <para>
+      You can now use <filename>example-&gt;volume</filename> anywhere in your element knowing
+      that it will always contain the correct value to use.
+    </para>
+  </sect2>
+  <sect2 id="sect-dparam-callback">
+    <title>Callback Method</title>
+    <para>
+      This should be used if the you have other values to calculate whenever a parameter changes.
+      If you used the direct method you wouldn't know if a parameter had changed so you would have to
+      recalculate the other values every time you needed them. By using the callback method, other values
+      only have to be recalculated when the dparam value actually changes.
+    </para>
+    <para>
+      The following code illustrates an instance where you might want to use the callback method.
+      If you had a volume dparam which was represented by a gfloat number, your element may only deal
+      with integer arithmatic.  The callback could be used to calculate the integer scaler when the volume
+      changes.  First you will need somewhere to store these values.
+    </para>
+    <programlisting>
+  struct _GstExample {
+    GstElement element;
+    ...
+    
+    GstDParamManager *dpman;
+    gfloat volume_f;
+    gint   volume_i;
+    ...
+  };
+    </programlisting>
+    <para>
+      When the required dparam is defined, the callback function <filename>gst_example_update_volume</filename>
+      and some user data (which in this case is our element instance) is passed in to the call to 
+      <filename>gst_dpman_add_required_dparam_callback</filename>.
+    </para>
+    <programlisting>
+  gst_dpman_add_required_dparam_callback (
+    example-&gt;dpman, 
+    g_param_spec_float("volume","Volume","Volume of the audio",
+                       0.0, 1.0, 0.8, G_PARAM_READWRITE),
+    FALSE,
+    FALSE,
+    gst_example_update_volume, 
+    example
+  );
+    </programlisting>
+    <para>
+      The callback function needs to conform to this signiture
+    </para>
+    <programlisting>
+typedef void (*GstDPMUpdateFunction) (GValue *value, gpointer data);
+    </programlisting>
+    <para>
+      In our example the callback function looks like this
+    </para>
+    <programlisting>
+static void
+gst_example_update_volume(GValue *value, gpointer data)
+{
+  GstExample *example = (GstExample*)data;
+  g_return_if_fail(GST_IS_EXAMPLE(example));
+
+  example-&gt;volume_f = g_value_get_float(value);
+  example-&gt;volume_i = example-&gt;volume_f * 8192;
+}
+    </programlisting>
+    <para>
+      Now <filename>example-&gt;volume_i</filename> can be used elsewhere and it will always contain the correct value.
+    </para>
+  </sect2>
+  <sect2 id="sect-dparam-array">
+    <title>Array Method</title>
+    <para>
+      This method is quite different from the other two.  It could be thought of as
+      a specialised method which should only be used if you need the advantages that it
+      provides.  Instead of giving the element a single value it provides an array of values
+      where each item in the array corresponds to a sample of audio in your buffer.
+      There are a couple of reasons why this might be useful.
+    </para>
+
+    <itemizedlist>
+      <listitem>
+        Certain optimisations may be possible since you can iterate over your dparams array 
+        and your buffer data together.
+      </listitem>
+      <listitem>
+        Some dparams may be able to interpolate changing values at the sample rate. This would allow
+        the array to contain very smoothly changing values which may be required for the stability
+        and quality of some DSP algorithms.
+      </listitem>
+    </itemizedlist>
+    <para>
+      The array method is currently the least mature of the three methods and is not yet ready to be
+      used in elements, but plugin writers should be aware of its existance for the future.
+    </para>
+  </sect2>
+</chapter>
+
+<chapter id="cha-dparam-loop">
+  <title>The Data Processing Loop</title>
+  <para>
+    This is the most critical aspect of the dparams subsystem as it relates to elements.
+    In a traditional audio processing loop, a <filename>for</filename> loop will usually iterate over each
+    sample in the buffer, processing one sample at a time until the buffer is finished.
+    A simplified loop with no error checking might look something like this.
+  </para>
+  <programlisting>
+static void
+example_chain (GstPad *pad, GstBuffer *buf)
+{
+  ...
+  gfloat *float_data;
+  int j;
+  GstExample *example = GST_EXAMPLE(GST_OBJECT_PARENT (pad));
+  int num_samples = GST_BUFFER_SIZE(buf)/sizeof(gfloat);
+  float_data = (gfloat *)GST_BUFFER_DATA(buf);
+  ...
+  for (j = 0; j &lt; num_samples; j++) {
+    float_data[j] *= example-&gt;volume;
+  }
+  ...
+}
+  </programlisting>
+  <para>
+    To make this dparams aware, a couple of changes are needed.
+  </para>
+  <programlisting>
+static void
+example_chain (GstPad *pad, GstBuffer *buf)
+{
+  ...
+  int j = 0;
+  GstExample *example = GST_EXAMPLE(GST_OBJECT_PARENT (pad));
+  int num_samples = GST_BUFFER_SIZE(buf)/sizeof(gfloat);
+  gfloat *float_data = (gfloat *)GST_BUFFER_DATA(buf);
+  int frame_countdown = GST_DPMAN_PREPROCESS(example-&gt;dpman, num_samples, GST_BUFFER_TIMESTAMP(buf));
+  ...
+  while (GST_DPMAN_PROCESS_COUNTDOWN(example-&gt;dpman, frame_countdown, j)) {
+    float_data[j++] *= example-&gt;volume;
+  }
+  ...
+}
+  </programlisting>
+  <para>
+    The biggest changes here are 2 new macros, <filename>GST_DPMAN_PREPROCESS</filename> 
+    and <filename>GST_DPMAN_PROCESS_COUNTDOWN</filename>.
+    You will also notice that the for loop has become a while loop.  <filename>GST_DPMAN_PROCESS_COUNTDOWN</filename>
+    is called as the condition for the while loop so that any required dparams can be updated in the 
+    middle of a buffer if required. This is because one of the required behaviours of dparams is that they
+    can be <emphasis>sample accurate</emphasis>.  This means that parameters change at the exact timestamp
+    that they are supposed to - not after the buffer has finished being processed.
+  </para>
+  <para>
+    It may be alarming to see a macro as the condition for a while loop, but it is actually very efficient.
+    The macro expands to the following.
+  </para>
+  <programlisting>
+#define GST_DPMAN_PROCESS_COUNTDOWN(dpman, frame_countdown, frame_count) \
+				(frame_countdown-- || \
+				(frame_countdown = GST_DPMAN_PROCESS(dpman, frame_count)))
+  </programlisting>
+  <para>
+    So as long as <filename>frame_countdown</filename> is greater than 0, <filename>GST_DPMAN_PROCESS</filename>
+    will not be called at all.
+    Also in many cases, <filename>GST_DPMAN_PROCESS</filename> will do nothing and simply 
+    return 0, meaning that there is no more data in the buffer to process.
+  </para>
+  <para>
+    The macro <filename>GST_DPMAN_PREPROCESS</filename> will do the following:
+    <itemizedlist>
+      <listitem>
+        Update any dparams which are due to be updated.
+      </listitem>
+      <listitem>
+        Calculate how many samples should be processed before the next required update
+      </listitem>
+      <listitem>
+        Return the number of samples until next update, or the number of samples in the buffer - 
+        whichever is less.
+      </listitem>
+    </itemizedlist>
+    In fact <filename>GST_DPMAN_PROCESS</filename> may do the same things as <filename>GST_DPMAN_PREPROCESS</filename>
+    depending on the mode that the dparam manager is running in (see below).
+  </para>
+  <sect2 id="sect-dparam-modes">
+    <title>DParam Manager Modes</title>
+    <para>
+      A brief explanation of dparam manager modes might be useful here even though it doesn't generally affect
+      the way your element is written. There are different ways media applications will be used which
+      require that an element's parameters be updated in differently. These include:
+      <itemizedlist>
+        <listitem>
+          <emphasis>Timelined</emphasis> - all parameter changes are known in advance before the pipeline is run.
+        </listitem>
+        <listitem>
+          <emphasis>Realtime low-latency</emphasis> - Nothing is known ahead of time about when a parameter 
+          might change.  Changes need to be propagated to the element as soon as possible.
+        </listitem>
+      </itemizedlist>
+      When a dparam-aware application gets the dparam manager for an element, the first thing it will do
+      is set the dparam manager mode.  Current modes are <filename>"synchronous"</filename>
+      and <filename>"asynchronous"</filename>.  
+    </para>
+    <para>
+      If you are in a realtime low-latency situation then the <filename>"synchronous"</filename> mode is appropriate.
+      During <filename>GST_DPMAN_PREPROCESS</filename> this mode will poll all dparams for required updates
+      and propagate them. <filename>GST_DPMAN_PROCESS</filename> will do nothing in this mode.
+      To then achieve the desired latency, the size of the buffers needs to be reduced so that the dparams will be
+      polled for updates at the desired frequency.
+    </para>
+    <para>
+      In a timelined situation, the <filename>"asynchronous"</filename> mode will be required.  This mode
+      hasn't actually been implemented yet but will be described anyway.  
+      The <filename>GST_DPMAN_PREPROCESS</filename> call will precalculate when and how often each dparam needs
+      to update for the duration of the current buffer.  From then on <filename>GST_DPMAN_PROCESS</filename> will
+      propagate the calculated updates each time it is called until end of the buffer.  If the application is rendering
+      to disk in non-realtime, the render could be sped up by increasing the buffer size. In the <filename>"asynchronous"</filename>
+      mode this could be done without affecting the sample accuracy of the parameter updates
+    </para>
+  </sect2>
+  <sect2 id="sect-dparam-audio-video">
+    <title>DParam Manager Modes</title>
+    <para>
+      All of the explanation so far has presumed that the buffer contains audio data with many samples.
+      Video should be regarded differently since a video buffer often contains only 1 frame.  In this case
+      some of the complexity of dparams isn't required but the other benefits still make it useful for video
+      parameters.  If a buffer only contains one frame of video, only a single call to <filename>GST_DPMAN_PREPROCESS</filename>
+      should be required. For more than one frame per buffer, treat it the same as the audio case.
+    </para>
+  </sect2>
+</chapter>
