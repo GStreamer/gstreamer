@@ -954,7 +954,7 @@ print_plugin_info (GstPlugin * plugin)
   n_print ("Plugin Details:\n");
   n_print ("  Name:\t\t%s\n", plugin->desc.name);
   n_print ("  Description:\t%s\n", plugin->desc.description);
-  n_print ("  Filename:\t%s\n", plugin->filename);
+  n_print ("  Filename:\t%s\n", plugin->filename ? plugin->filename : "(null)");
   n_print ("  Version:\t%s\n", plugin->desc.version);
   n_print ("  License:\t%s\n", plugin->desc.license);
   n_print ("  Package:\t%s\n", plugin->desc.package);
