@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/xoverlay/xoverlay.h>
+#include <gst/play/playenumtypes.h>
 
 /* GError stuff */
 

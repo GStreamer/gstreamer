@@ -1,5 +1,22 @@
 2004-02-03  David I. Lehn  <dlehn@users.sourceforge.net>
 
+	* gst-libs/gst/colorbalance/Makefile.am:
+	* gst-libs/gst/colorbalance/colorbalance.h:
+	* gst-libs/gst/mixer/Makefile.am:
+	* gst-libs/gst/mixer/mixer.h:
+	* gst-libs/gst/play/Makefile.am:
+	* gst-libs/gst/play/play.h:
+	* gst-libs/gst/tuner/Makefile.am:
+	* gst-libs/gst/tuner/tuner.h:
+	Generate enum type code with glib-mkenums.
+	* gst-libs/gst/colorbalance/.cvsignore:
+	* gst-libs/gst/mixer/.cvsignore:
+	* gst-libs/gst/play/.cvsignore:
+	* gst-libs/gst/tuner/.cvsignore:
+	Ignore generated files.
+
+2004-02-03  David I. Lehn  <dlehn@users.sourceforge.net>
+
 	* gst-libs/gst/audio/.cvsignore:
 	Ignore generated file.
 	* gst-libs/gst/audio/Makefile.am:
