@@ -40,6 +40,6 @@
     threshold_dB += 1;
   }
 /*  printf ("RMS in dB (for 16bit) : %f\n", RMS_dB); */
-    printf ("%f %f\n", timepoint, RMS_dB);
+    printf ("%f s %f dB\n", timepoint, RMS_dB);
 }
 

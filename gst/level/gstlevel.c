@@ -172,41 +172,46 @@ gst_level_chain (GstPad *pad, GstBuffer *buf)
 
   in_data = (gint16 *) GST_BUFFER_DATA(buf);
   outbuf = gst_buffer_new();
-  GST_BUFFER_DATA (outbuf) = (gchar*) g_new (gint16, GST_BUFFER_SIZE(buf)/2);
-  GST_BUFFER_SIZE (outbuf) = GST_BUFFER_SIZE(buf);
+  GST_BUFFER_DATA (outbuf) = (gchar *) g_new (gint16, 
+                                              GST_BUFFER_SIZE (buf) / 2);
+  GST_BUFFER_SIZE (outbuf) = GST_BUFFER_SIZE (buf);
 
-  out_data = (gint16*)GST_BUFFER_DATA(outbuf);
+  out_data = (gint16 *) GST_BUFFER_DATA (outbuf);
   
+  g_print ("%s: ", gst_element_get_name (GST_ELEMENT (filter)));
   switch (width) {
     case 16:
-	gst_level_fast_16bit_chain(in_data,&out_data,GST_BUFFER_SIZE(buf)/2);
+	gst_level_fast_16bit_chain (in_data, &out_data,
+	                            GST_BUFFER_SIZE (buf) / 2);
 	break;
     case 8:
-	gst_level_fast_8bit_chain((gint8*)in_data,(gint8**)&out_data,GST_BUFFER_SIZE(buf));
+	gst_level_fast_8bit_chain ((gint8 *) in_data,
+	                           (gint8 **) &out_data, GST_BUFFER_SIZE(buf));
 	break;
   }
-  gst_buffer_unref(buf);
-  gst_pad_push(filter->srcpad,outbuf);
+  gst_buffer_unref (buf);
+  gst_pad_push (filter->srcpad,outbuf);
 }
 
 static void inline
-gst_level_fast_16bit_chain(gint16* in_data, gint16** out_data, 
-			         guint num_samples)
+gst_level_fast_16bit_chain (gint16* in_data, gint16** out_data, 
+			    guint num_samples)
 #include "filter.func"
 
 static void inline
-gst_level_fast_8bit_chain(gint8* in_data, gint8** out_data,
-                                guint num_samples)
+gst_level_fast_8bit_chain (gint8* in_data, gint8** out_data,
+                           guint num_samples)
 #include "filter.func"
 
 static void
-gst_level_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_level_set_property (GObject *object, guint prop_id, 
+                        const GValue *value, GParamSpec *pspec)
 {
   GstLevel *filter;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_LEVEL(object));
-  filter = GST_LEVEL(object);
+  g_return_if_fail (GST_IS_LEVEL (object));
+  filter = GST_LEVEL (object);
 
   switch (prop_id) {
     default:
@@ -215,13 +220,14 @@ gst_level_set_property (GObject *object, guint prop_id, const GValue *value, GPa
 }
 
 static void
-gst_level_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_level_get_property (GObject *object, guint prop_id, 
+                        GValue *value, GParamSpec *pspec)
 {
   GstLevel *filter;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_LEVEL(object));
-  filter = GST_LEVEL(object);
+  g_return_if_fail (GST_IS_LEVEL (object));
+  filter = GST_LEVEL (object);
 
   switch (prop_id) {
     default:
@@ -264,9 +270,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_element_factory_new("level",GST_TYPE_LEVEL,
-                                   &level_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
+  factory = gst_element_factory_new ("level", GST_TYPE_LEVEL,
+                                     &level_details);
+  g_return_val_if_fail (factory != NULL, FALSE);
   
   gst_element_factory_add_pad_template (factory, level_src_factory ());
   gst_element_factory_add_pad_template (factory, level_sink_factory ());
