@@ -14,30 +14,3 @@ The <classname>GstFakeSrc</classname> generates empty buffers. (fakesrc)
 
 </para>
 
-<!-- ##### SIGNAL GstFakeSrc::handoff ##### -->
-<para>
-
-</para>
-
-@gstfakesrc: the object which received the signal.
-
-<!-- ##### ARG GstFakeSrc:num_sources ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstFakeSrc:loop_based ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstFakeSrc:output ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstFakeSrc:patern ##### -->
-<para>
-
-</para>
-

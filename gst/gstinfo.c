@@ -65,6 +65,20 @@ static gchar *_gst_info_category_strings[] = {
   "XML",
 };
 
+/**
+ * gst_default_info_handler:
+ * @category: category of the INFO message
+ * @file: the file the INFO occurs in
+ * @function: the function the INFO occurs in
+ * @line: the line number in the file
+ * @debug_string: the current debug_string in the function, if any
+ * @element: pointer to the #GstElement in question
+ * @string: the actual INFO string
+ *
+ * Prints out the INFO mesage in a variant of the following form:
+ *
+ *   INFO:gst_function:542(args): [elementname] something neat happened
+ */
 void
 gst_default_info_handler (gint category, gchar *file, gchar *function,
                            gint line, gchar *debug_string,
@@ -87,6 +101,13 @@ gst_default_info_handler (gint category, gchar *file, gchar *function,
   g_free(string);
 }
 
+/**
+ * gst_info_set_categories:
+ * @categories: bitmask of INFO categories to enable
+ *
+ * Enable the output of INFO categories based on the given bitmask.
+ * The bit for any given category is (1 << GST_CAT_...).
+ */
 void
 gst_info_set_categories (guint32 categories) {
   _gst_info_categories = categories;
@@ -94,11 +115,23 @@ gst_info_set_categories (guint32 categories) {
     GST_INFO (0, "setting INFO categories to 0x%08X\n",categories);
 }
 
+/**
+ * gst_info_get_categories:
+ *
+ * Returns: the current bitmask of enabled INFO categories
+ * The bit for any given category is (1 << GST_CAT_...).
+ */
 guint32
 gst_info_get_categories () {
   return _gst_info_categories;
 }
 
+/**
+ * gst_info_enable_category:
+ * @category: the category to enable
+ *
+ * Enables the given GST_CAT_... INFO category.
+ */
 void
 gst_info_enable_category (gint category) {
   _gst_info_categories |= (1 << category);
@@ -106,6 +139,12 @@ gst_info_enable_category (gint category) {
     GST_INFO (0, "setting INFO categories to 0x%08X\n",_gst_info_categories);
 }
 
+/**
+ * gst_info_disable_category:
+ * @category: the category to disable
+ *
+ * Disables the given GST_CAT_... INFO category.
+ */
 void
 gst_info_disable_category (gint category) {
   _gst_info_categories &= ~ (1 << category);
@@ -119,6 +158,13 @@ gst_info_disable_category (gint category) {
 guint32 _gst_debug_categories = 0x00000000;
 
 
+/**
+ * gst_debug_set_categories:
+ * @categories: bitmask of DEBUG categories to enable
+ *
+ * Enable the output of DEBUG categories based on the given bitmask.
+ * The bit for any given category is (1 << GST_CAT_...).
+ */
 void
 gst_debug_set_categories (guint32 categories) {
   _gst_debug_categories = categories;
@@ -126,11 +172,23 @@ gst_debug_set_categories (guint32 categories) {
     GST_INFO (0, "setting DEBUG categories to 0x%08X\n",categories);
 }
 
+/**
+ * gst_debug_get_categories:
+ *
+ * Returns: the current bitmask of enabled DEBUG categories
+ * The bit for any given category is (1 << GST_CAT_...).
+ */
 guint32
 gst_debug_get_categories () {
   return _gst_debug_categories;
 }
 
+/**
+ * gst_debug_enable_category:
+ * @category: the category to enable
+ *
+ * Enables the given GST_CAT_... DEBUG category.
+ */
 void
 gst_debug_enable_category (gint category) {
   _gst_debug_categories |= (1 << category);
@@ -138,6 +196,12 @@ gst_debug_enable_category (gint category) {
     GST_INFO (0, "setting DEBUG categories to 0x%08X\n",_gst_debug_categories);
 }
 
+/**
+ * gst_debug_disable_category:
+ * @category: the category to disable
+ *
+ * Disables the given GST_CAT_... DEBUG category.
+ */
 void
 gst_debug_disable_category (gint category) {
   _gst_debug_categories &= ~ (1 << category);
@@ -145,6 +209,12 @@ gst_debug_disable_category (gint category) {
     GST_INFO (0, "setting DEBUG categories to 0x%08X\n",_gst_debug_categories);
 }
 
+/**
+ * gst_get_category_name:
+ * @category: the category to return the name of
+ *
+ * Returns: string containing the name of the category
+ */
 const gchar *
 gst_get_category_name (gint category) {
   if ((category >= 0) && (category < GST_CAT_MAX_CATEGORY))
@@ -158,6 +228,25 @@ gst_get_category_name (gint category) {
 /***** ERROR system *****/
 GstErrorHandler _gst_error_handler = gst_default_error_handler;
 
+/**
+ * gst_default_error_handler:
+ * @file: the file the ERROR occurs in
+ * @function: the function the INFO occurs in
+ * @line: the line number in the file
+ * @debug_string: the current debug_string in the function, if any
+ * @element: pointer to the #GstElement in question
+ * @object: pointer to a related object
+ * @string: the actual ERROR string
+ *
+ * Prints out the given ERROR string in a variant of the following format:
+ *
+ * ***** GStreamer ERROR ***** in file gstsomething.c at gst_function:399(arg)
+ * Element: /pipeline/thread/element.src
+ * Error: peer is null!
+ * ***** attempting to stack trace.... *****
+ *
+ * At the end, it attempts to print the stack trace via GDB.
+ */
 void
 gst_default_error_handler (gchar *file, gchar *function,
                            gint line, gchar *debug_string,

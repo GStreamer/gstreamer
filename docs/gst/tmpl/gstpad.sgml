@@ -537,8 +537,3 @@ Indicates when this pad will become available
 @Returns: 
 
 
-<!-- ##### ARG GstPad:active ##### -->
-<para>
-Indicates this pad is active
-</para>
-

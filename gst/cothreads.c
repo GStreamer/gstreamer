@@ -45,7 +45,7 @@ pthread_key_t _cothread_key = -1;
 /**
  * cothread_init:
  *
- * create and initialize a new cotread context 
+ * Create and initialize a new cothread context 
  *
  * Returns: the new cothread context
  */
@@ -90,7 +90,7 @@ cothread_init (void)
  * cothread_create:
  * @ctx: the cothread context
  *
- * create a new cotread state in the given context
+ * Create a new cothread state in the given context
  *
  * Returns: the new cothread state
  */
@@ -136,8 +136,8 @@ cothread_create (cothread_context *ctx)
  * cothread_setfunc:
  * @thread: the cothread state
  * @func: the function to call
- * @argc: the argument count for the cothread function
- * @argv: the arguments for the cothread function
+ * @argc: argument count for the cothread function
+ * @argv: arguments for the cothread function
  *
  * Set the cothread function
  */
@@ -153,6 +153,11 @@ cothread_setfunc (cothread_state *thread,
   thread->pc = (int *)func;
 }
 
+/**
+ * cothread_main:
+ * @ctx: cothread context to find main thread of
+ *
+ * Returns: the #cothread_state of the main (0th) thread
 static cothread_state*
 cothread_main(cothread_context *ctx) 
 {
@@ -226,9 +231,9 @@ cothread_get_data (cothread_state *thread,
 
 /**
  * cothread_switch:
- * @thread: the cothread state
+ * @thread: cothread state to switch to
  *
- * switches to the given cothread state
+ * Switches to the given cothread state
  */
 void 
 cothread_switch (cothread_state *thread) 

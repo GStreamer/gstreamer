@@ -21,19 +21,3 @@ The default queue length is set to 10.
 
 </para>
 
-<!-- ##### ARG GstQueue:level ##### -->
-<para>
-Get the number of buffers in the queue.
-</para>
-
-<!-- ##### ARG GstQueue:max_level ##### -->
-<para>
-Specify the maximum number of buffers in the queue before the queue
-blocks.
-</para>
-
-<!-- ##### ARG GstQueue:block ##### -->
-<para>
-
-</para>
-

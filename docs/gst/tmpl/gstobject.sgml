@@ -174,11 +174,3 @@ This macro releases a lock on the object.
 @Returns: 
 
 
-<!-- ##### SIGNAL GstObject::parent-set ##### -->
-<para>
-
-</para>
-
-@gstobject: the object which received the signal.
-@arg1: the new parent
-
