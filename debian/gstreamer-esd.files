@@ -1,1 +1,2 @@
-usr/lib/gst/libesdsink.*
+usr/lib/gst/libesdsink.so
+usr/lib/gst/libesdmon.so

@@ -1,2 +1,2 @@
-usr/lib/gst/libgstossaudio.*
-usr/lib/gst/libgstosshelper.*
+usr/lib/gst/libgstossaudio.so
+usr/lib/gst/libgstosshelper.so

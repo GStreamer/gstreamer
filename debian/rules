@@ -31,18 +31,27 @@ setup-links:
 export DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 export DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
+ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
+	confflags += --build $(DEB_HOST_GNU_TYPE)
+else
+	confflags += --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
+endif
+
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
+
+	# make sure we're using a ltmain.sh that can handle relinking
+	# in case autogen.sh (and libtoolize) was run
+	cp ltmain-fixed.sh ltmain.sh
+
 	# Add here commands to configure the package.
 	./configure \
-		--build=$(DEB_BUILD_GNU_TYPE) \
-		--host=$(DEB_HOST_GNU_TYPE) \
+		$(confflags) \
 		--prefix=/usr \
 		--mandir=\$${prefix}/share/man \
 		--infodir=\$${prefix}/share/info \
 		--sysconfdir=/etc \
-		--with-configdir=/etc/gstreamer \
 		--disable-plugin-builddir \
 		--disable-tests \
 		--disable-examples \
