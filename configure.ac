@@ -702,7 +702,6 @@ libs/gst/bytestream/Makefile
 libs/gst/getbits/Makefile
 libs/gst/putbits/Makefile
 libs/gst/control/Makefile
-gstplay/Makefile
 test/Makefile
 test/xml/Makefile
 test/bindings/Makefile
