@@ -179,9 +179,34 @@ gst_loader_load_animation (FILE *f, GError **error)
   GST_LOG_OBJECT (ani, "load_animation succeeded");
   return GDK_PIXBUF_ANIMATION (ani);
 }
+static GdkPixbuf *
+gst_loader_load (FILE *f, GError **error)
+{
+  GdkPixbufAnimation *ani;
+  GdkPixbuf *pixbuf;
+  
+  ani = gst_loader_load_animation (f, error);
+  if (ani == NULL)
+    return NULL;
+
+  pixbuf = gdk_pixbuf_animation_get_static_image (ani);
+  if (!pixbuf) {
+    GST_ERROR_OBJECT (ani, "Could not get an image in _pixbuf_load");
+    g_object_unref (ani);
+    g_set_error (error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE, 
+	    "Could not get an image from file.");
+    return NULL;
+  }
+
+  g_object_ref (pixbuf);
+  g_object_unref (ani);
+
+  return pixbuf;
+}
 void
 fill_vtable (GdkPixbufModule *module)
 {
+  module->load = gst_loader_load;
   module->begin_load = gst_loader_begin_load;
   module->load_increment = gst_loader_load_increment;
   module->stop_load = gst_loader_stop_load;
@@ -206,8 +231,9 @@ fill_info (GdkPixbufFormat *info)
   };
   
   static gchar *mime_types[] = {
-    "video/avi", "video/x-avi",
+    "video/avi", "video/x-avi", "video/x-msvideo",
     "video/mpeg",
+    "video/quicktime", 
     NULL
   };
 

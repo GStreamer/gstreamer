@@ -124,45 +124,6 @@ gst_gdk_animation_is_static_image (GdkPixbufAnimation *animation)
   return FALSE;
 }
 
-static GdkPixbuf*
-gst_gdk_animation_get_static_image (GdkPixbufAnimation *animation)
-{
-  GstGdkAnimation *ani = GST_GDK_ANIMATION (animation);
-  GTimeVal tv;
-
-  if (!ani->pixbuf) {
-    GST_LOG_OBJECT (ani, "trying to create pixbuf");
-    g_get_current_time (&tv);
-    GdkPixbufAnimationIter *iter = gdk_pixbuf_animation_get_iter (animation, &tv);
-    if (iter) {
-      guint64 length;
-      GstFormat time = GST_FORMAT_TIME;
-
-      if (!gst_element_query (gst_bin_get_by_name (GST_BIN (
-			GST_GDK_ANIMATION_ITER (iter)->pipeline), "sink"),
-			GST_QUERY_TOTAL, &time, &length)) {
-	length = 0;
-      }
-      if (length > 120 * GST_SECOND) {
-	length = 120 * GST_SECOND;
-      } else if (length < 120 * GST_SECOND && length >= 10 * GST_SECOND) {
-	length = length / 2;
-      }
-      g_assert (time == GST_FORMAT_TIME);
-      if (length > 0)
-	g_time_val_add (&tv, length * 1000 / GST_SECOND);
-      GST_LOG_OBJECT (ani, "using time offset %"G_GUINT64_FORMAT" for creating static image",
-		      length);
-      gdk_pixbuf_animation_iter_advance (GDK_PIXBUF_ANIMATION_ITER (iter), &tv);
-      ani->pixbuf = gdk_pixbuf_animation_iter_get_pixbuf (iter);
-      g_object_ref (ani->pixbuf);
-    } else {
-      GST_DEBUG_OBJECT (ani, "Could not get an iterator. No pixbuf available");
-    }
-  }
-  return ani->pixbuf;
-}
-
 static void
 gst_gdk_animation_get_size (GdkPixbufAnimation *anim, gint *width, int *height)
 {
@@ -238,8 +199,6 @@ gst_gdk_animation_iter_init (GTypeInstance *instance, gpointer g_class)
 
   iter->buffers = g_queue_new ();
   iter->eos = FALSE;
-  /* workaround for loads of demuxers that don't handle seeks before initializing... */
-  iter->just_seeked = TRUE;
 }
 static void
 gst_gdk_animation_iter_finalize (GObject *object)
@@ -275,7 +234,7 @@ got_handoff (GstElement *fakesink, GstBuffer *buffer, GstPad *pad, GstGdkAnimati
 static gboolean
 gst_gdk_animation_iter_create_pipeline (GstGdkAnimationIter *iter)
 {
-  GstElement *src, *autoplugger, *sink, *colorspace;
+  GstElement *src, *typefind, *autoplugger, *sink, *colorspace;
   GstCaps *caps = GST_CAPS_NEW ("pixbuf_filter",
 				"video/x-raw-rgb", 
 				  "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
@@ -304,10 +263,17 @@ gst_gdk_animation_iter_create_pipeline (GstGdkAnimationIter *iter)
     g_free (filename);
   }
 
+  /* add typefind for correct typefinding */
+  if ((typefind = gst_element_factory_make ("typefind", "typefind"))) {
+    gst_bin_add (GST_BIN (iter->pipeline), typefind);
+    if (!gst_element_link (src, typefind))
+      goto error;
+  }
+
   if (!(autoplugger = gst_element_factory_make ("spider", "autoplugger")))
     goto error;
   gst_bin_add (GST_BIN (iter->pipeline), autoplugger);
-  if (!gst_element_link (src, autoplugger))
+  if (!gst_element_link (typefind, autoplugger))
     goto error;
 
   /* add ffcolorspace if available so we get svq1, too */
@@ -317,7 +283,6 @@ gst_gdk_animation_iter_create_pipeline (GstGdkAnimationIter *iter)
       goto error;
     autoplugger = colorspace;
   }
-
   
   if (!(colorspace = gst_element_factory_make ("colorspace", "colorspace")))
     goto error;
@@ -468,23 +433,23 @@ gst_gdk_animation_iter_advance (GdkPixbufAnimationIter *anim_iter, const GTimeVa
   GstGdkAnimationIter *iter = GST_GDK_ANIMATION_ITER (anim_iter);
 
   /* compute timestamp that next buffer must match */
-  GST_DEBUG_OBJECT (iter, "advancing to %ld:%ld (started at %ld:%ld)", 
-		    current_time->tv_sec, current_time->tv_usec, iter->start.tv_sec, iter->start.tv_usec);
   offset = ((GstClockTime) current_time->tv_sec - iter->start.tv_sec) * GST_SECOND;
   if (iter->start.tv_usec > current_time->tv_usec) {
     offset -= ((GstClockTime) iter->start.tv_usec - current_time->tv_usec) * GST_SECOND / G_USEC_PER_SEC;
   } else {
     offset += ((GstClockTime) current_time->tv_usec - iter->start.tv_usec) * GST_SECOND / G_USEC_PER_SEC;
   }
+  GST_DEBUG_OBJECT (iter, "advancing to %ld:%ld (started at %ld:%ld) need offset %"G_GUINT64_FORMAT, 
+		    current_time->tv_sec, current_time->tv_usec, iter->start.tv_sec, iter->start.tv_usec, offset);
   if (!iter->just_seeked &&
       offset - iter->last_timestamp > GST_GDK_MAX_DELAY_TO_SEEK) {
     GST_INFO_OBJECT (iter, "current pipeline timestamp is too old (%"G_GUINT64_FORMAT
-		     " vs %"G_GUINT64_FORMAT"), seeking", iter->last_timestamp, offset);
+		     " vs %"G_GUINT64_FORMAT"), seeking there", iter->last_timestamp, offset);
     if (gst_element_send_event (gst_bin_get_by_name (GST_BIN (iter->pipeline), "sink"),
 		gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
 				    GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, 
-			offset - GST_SECOND / 10))) {
-	iter->last_timestamp = offset - GST_SECOND / 10;
+			offset))) {
+	iter->last_timestamp = offset;
 	iter->just_seeked = TRUE;
       } else {
 	GST_WARNING_OBJECT (iter, "seek to %"G_GUINT64_FORMAT" didn't work. Iterating there...", 
@@ -566,4 +531,67 @@ gst_gdk_animation_iter_on_currently_loading_frame (GdkPixbufAnimationIter *anim_
     return FALSE;
   
   return TRUE;
+}
+static GdkPixbuf*
+gst_gdk_animation_get_static_image (GdkPixbufAnimation *animation)
+{
+  GstGdkAnimation *ani = GST_GDK_ANIMATION (animation);
+  GTimeVal tv;
+
+  if (!ani->pixbuf) {
+    GST_LOG_OBJECT (ani, "trying to create pixbuf");
+    g_get_current_time (&tv);
+    GstGdkAnimationIter *iter = GST_GDK_ANIMATION_ITER (
+	    gdk_pixbuf_animation_get_iter (animation, &tv));
+    if (iter) {
+      guint64 offset;
+      GstBuffer *buf;
+      GstFormat time = GST_FORMAT_TIME;
+
+      if (!gst_element_query (gst_bin_get_by_name (GST_BIN (
+			iter->pipeline), "sink"),
+			GST_QUERY_TOTAL, &time, &offset)) {
+	offset = 0;
+      }
+      if (offset > 120 * GST_SECOND) {
+	offset = 120 * GST_SECOND;
+      } else if (offset < 120 * GST_SECOND && offset >= 10 * GST_SECOND) {
+	offset = offset / 2;
+      }
+      g_assert (time == GST_FORMAT_TIME);
+      GST_LOG_OBJECT (ani, "using time offset %"G_GUINT64_FORMAT" for creating static image",
+		      offset);
+      while ((buf = g_queue_pop_head (iter->buffers)) != NULL) {
+	gst_data_unref (GST_DATA (buf));
+      }
+      /* now we do evil stuff, be sure to get rid of the iterator afterwards */
+      if (!gst_element_send_event (gst_bin_get_by_name (GST_BIN (iter->pipeline), "sink"),
+		  gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
+			  GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, offset))) {
+	GST_INFO_OBJECT (ani, "seeking didn't work. Using next image");
+      }
+
+      do {
+	if (g_queue_is_empty (iter->buffers)) {
+	  if (iter->eos)
+	    return FALSE;
+	  if (gst_gdk_animation_get_more_buffers (iter))
+	    continue;
+	}
+      } while (FALSE);
+      if (!g_queue_is_empty (iter->buffers)) {
+	gst_gdk_animation_iter_create_pixbuf (iter);
+	ani->pixbuf = gst_gdk_animation_iter_get_pixbuf (GDK_PIXBUF_ANIMATION_ITER (iter));
+	g_object_ref (ani->pixbuf);
+      } else {
+	g_assert (ani->pixbuf == NULL);
+      }
+      /* DiE iterator, DiE */
+      g_object_unref (iter);
+    } else {
+      GST_DEBUG_OBJECT (ani, "Could not get an iterator. No pixbuf available");
+    }
+  }
+  GST_LOG_OBJECT (ani, "Returning pixbuf %p\n", ani->pixbuf);
+  return ani->pixbuf;
 }
