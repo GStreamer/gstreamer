@@ -2662,7 +2662,7 @@ void
 gst_element_set_eos (GstElement *element)
 {
   GstElement *parent;
-  GstElementState parent_state;
+  GstElementState parent_state = GST_STATE_NULL;
  
   g_return_if_fail (GST_IS_ELEMENT (element));
 
