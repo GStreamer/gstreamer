@@ -63,7 +63,7 @@ struct _GstTheoraDecClass
 
 static GstElementDetails theora_dec_details = {
   "TheoraDec",
-  "Filter/Decoder/Video",
+  "Codec/Decoder/Video",
   "decode raw theora streams to raw YUV video",
   "Benjamin Otte <in7y118@public.uni-hamburg.de>",
 };

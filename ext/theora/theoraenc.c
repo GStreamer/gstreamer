@@ -80,7 +80,7 @@ enum
 
 static GstElementDetails theora_enc_details = {
   "TheoraEnc",
-  "Filter/Encoder/Video",
+  "Codec/Encoder/Video",
   "encode raw YUV video to a theora stream",
   "Wim Taymans <wim@fluendo.com>",
 };
