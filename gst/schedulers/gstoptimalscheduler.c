@@ -2607,6 +2607,8 @@ gst_opt_scheduler_iterate (GstScheduler * sched)
       /* don't schedule any more chains when in error */
       if (osched->state == GST_OPT_SCHEDULER_STATE_ERROR) {
         GST_ERROR_OBJECT (sched, "in error state");
+        /* unref the chain here as we move out of the while loop */
+        unref_chain (chain);
         break;
       } else if (osched->state == GST_OPT_SCHEDULER_STATE_INTERRUPTED) {
         GST_DEBUG_OBJECT (osched, "got interrupted, continue with next chain");

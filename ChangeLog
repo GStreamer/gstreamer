@@ -1,3 +1,11 @@
+2004-11-02  Sebastien Cote <sc5 at hermes.usherb.ca>
+
+	* gst/schedulers/gstoptimalscheduler.c: (add_to_group),
+	(gst_opt_scheduler_iterate):
+	Aplied patch #154061. Running a pipeline in which an element 
+	calls GST_ELEMENT_ERROR in the chain function, the opt 
+	scheduler doesn't unref the chain so it never gets freed.
+
 2004-11-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gststructure.c: (gst_structure_get_abbrs),
