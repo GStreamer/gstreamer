@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-02-04 19:40+0100\n"
+"POT-Creation-Date: 2004-02-04 23:10+0100\n"
 "PO-Revision-Date: 2004-01-13 12:03+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -40,8 +40,8 @@ msgid ""
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
 "Lijst van categorie_naam=niveau paren, gescheiden door dubbele punten, om "
-"specifieke niveau's in te stellen voor de individuele categorieën."
-"Voorbeeld:GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+"specifieke niveau's in te stellen voor de individuele categorieën.Voorbeeld:"
+"GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 #: gst/gst.c:124
 msgid "CATEGORIES"
@@ -536,36 +536,36 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/elements/gstfilesink.c:237 gst/elements/gstfilesrc.c:656
+#: gst/elements/gstfilesink.c:248 gst/elements/gstfilesrc.c:674
 msgid "No filename specified."
 msgstr "Geen bestandsnaam gegeven."
 
-#: gst/elements/gstfilesink.c:244
+#: gst/elements/gstfilesink.c:255
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kon bestand \"%s\" niet openen om te schrijven."
 
-#: gst/elements/gstfilesink.c:264
+#: gst/elements/gstfilesink.c:275
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Fout bij het sluiten van bestand \"%s\"."
 
-#: gst/elements/gstfilesink.c:331 gst/elements/gstfilesink.c:363
-#: gst/elements/gstfilesink.c:415
+#: gst/elements/gstfilesink.c:342 gst/elements/gstfilesink.c:374
+#: gst/elements/gstfilesink.c:426
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Fout bij het schrijven naar bestand \"%s\"."
 
-#: gst/elements/gstfilesrc.c:663
+#: gst/elements/gstfilesrc.c:681
 msgid "No file specified for reading."
 msgstr "Geen bestandsnaam gegeven om te lezen."
 
-#: gst/elements/gstfilesrc.c:678 gst/elements/gstmultidisksrc.c:244
+#: gst/elements/gstfilesrc.c:696 gst/elements/gstmultidisksrc.c:244
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kon bestand \"%s\" niet openen om te lezen."
 
-#: gst/elements/gstfilesrc.c:689
+#: gst/elements/gstfilesrc.c:707
 #, c-format
 msgid "File \"%s\" isn't a regular file."
 msgstr "Bestand \"%s\" is geen gewoon bestand."
