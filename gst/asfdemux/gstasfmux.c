@@ -30,8 +30,14 @@
  *   -- truth hurts.
  */
 
-/* soad_ff.asf: 0x227
- * soad.asf   : 0x241
+/* stream doesn't work (local storage does - differences):
+ * - 0x046, 4 byte # file size (byte)
+ * - 0x056, 2 byte # num_packets (count)
+ * - 0x05E, 5 byte # duration (ms)
+ * - 0x066, 5 byte # duration (ms)
+ * - 0x076, 1 byte # streamable vs. seekable flag
+ * - 0x21F, 4 byte # data size (byte)
+ * - 0x237, 3 byte # num_packets (count)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -631,6 +637,7 @@ gst_asfmux_can_seek (GstAsfMux *asfmux)
 {
   const GstEventMask *masks = gst_pad_get_event_masks (GST_PAD_PEER (asfmux->srcpad));
 
+  /* this is for stream or file-storage */
   while (masks->type != 0) {
     if (masks->type == GST_EVENT_SEEK) {
       return TRUE;
@@ -638,6 +645,13 @@ gst_asfmux_can_seek (GstAsfMux *asfmux)
   }
 
   return FALSE;
+}
+
+static gboolean
+gst_asfmux_is_stream (GstAsfMux *asfmux)
+{
+  /* this is for RTP */
+  return FALSE; /*!gst_asfmux_can_seek (asfmux)*/
 }
 
 /* handle events (search) */
@@ -951,7 +965,7 @@ gst_asfmux_file_start (GstAsfMux *asfmux,
     duration = 0;
   }
 
-  if (!gst_asfmux_can_seek (asfmux)) {
+  if (gst_asfmux_is_stream (asfmux)) {
     /* start of stream (length will be patched later) */
     gst_asfmux_put_chunk (header, asfmux, 0x4824, 0, 0xc00);
   }
@@ -1079,7 +1093,7 @@ gst_asfmux_file_start (GstAsfMux *asfmux,
   /* patch the header size fields */
   header_pos = GST_BUFFER_SIZE (header);
   header_size = header_pos - header_offset;
-  if (!gst_asfmux_can_seek (asfmux)) {
+  if (gst_asfmux_is_stream (asfmux)) {
     header_size += 8 + 30 + 50;
 
     GST_BUFFER_SIZE (header) = header_offset - 10 - 30;
@@ -1110,13 +1124,13 @@ gst_asfmux_file_start (GstAsfMux *asfmux,
 static void
 gst_asfmux_file_stop (GstAsfMux *asfmux)
 {
-  if (!gst_asfmux_can_seek (asfmux)) {
+  if (gst_asfmux_is_stream (asfmux)) {
     /* send EOS chunk */
     GstBuffer *footer = gst_buffer_new_and_alloc (16);
     GST_BUFFER_SIZE (footer) = 0;
     gst_asfmux_put_chunk (footer, asfmux, 0x4524, 0, 0); /* end of stream */
     gst_pad_push (asfmux->srcpad, footer);
-  } else {
+  } else if (gst_asfmux_can_seek (asfmux)) {
     /* rewrite an updated header */
     guint64 filesize;
     GstFormat fmt = GST_FORMAT_BYTES;
@@ -1142,7 +1156,7 @@ gst_asfmux_packet_header (GstAsfMux *asfmux)
   header = gst_buffer_new_and_alloc (GST_ASF_PACKET_HEADER_SIZE + 2 + 12);
   GST_BUFFER_SIZE (header) = 0;
 
-  if (!gst_asfmux_can_seek (asfmux)) {
+  if (gst_asfmux_is_stream (asfmux)) {
     gst_asfmux_put_chunk (header, asfmux, 0x4424, GST_ASF_PACKET_SIZE, 0);
   }
 
