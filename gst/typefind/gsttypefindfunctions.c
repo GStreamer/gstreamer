@@ -1371,7 +1371,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *mpeg_video_exts[] = { "mpv", "mpeg", "mpg", NULL };
   static gchar *ogg_exts[] = { "ogg", "ogm", NULL };
   static gchar *qt_exts[] = { "mov", NULL };
-  static gchar *rm_exts[] = { "ra", "ram", "rm", NULL };
+  static gchar *rm_exts[] = { "ra", "ram", "rm", "rmvb", NULL };
   static gchar *swf_exts[] = { "swf", "swfl", NULL };
   static gchar *utf8_exts[] = { "txt", NULL };
   static gchar *wav_exts[] = { "wav", NULL };
@@ -1385,7 +1385,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *bmp_exts[] = { "bmp", NULL };
   static gchar *tiff_exts[] = { "tif", "tiff", NULL };
   static gchar *matroska_exts[] = { "mkv", "mka", NULL };
-  static gchar *dv_exts[] = { "dv", NULL };
+  static gchar *dv_exts[] = { "dv", "dif", NULL };
   static gchar *sid_exts[] = { "sid", NULL };
   static gchar *xcf_exts[] = { "xcf", NULL };
   static gchar *mng_exts[] = { "mng", NULL };
