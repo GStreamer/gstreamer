@@ -34,7 +34,7 @@
  */
 static GstElementDetails dvdec_details = {
   "DV (smpte314) decoder plugin",
-  "Decoder/DV",
+  "Codec/Video/Decoder/DV",
   "LGPL",
   "Uses libdv to decode DV video (libdv.sourceforge.net)",
   VERSION,
