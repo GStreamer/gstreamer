@@ -46,6 +46,18 @@ GstCaps *gst_riff_create_iavs_caps  (guint32             codec_fcc,
 				     char **codec_name);
 
 /*
+ * Extended...
+ */
+
+GstCaps *
+gst_riff_create_video_caps_with_data (guint32              codec_fcc,
+				      gst_riff_strh      * strh,
+				      gst_riff_strf_vids * strf,
+				      GstBuffer          * strf_data,
+				      GstBuffer          * strd_data,
+				      char              ** codec_name);
+
+/*
  * Create template caps (includes all known types).
  */
 

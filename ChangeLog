@@ -1,3 +1,35 @@
+2004-04-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	reviewed by: <delete if not using a buddy>
+
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_video_caps_with_data),
+	(gst_riff_create_video_caps), (gst_riff_create_audio_caps),
+	(gst_riff_create_video_template_caps),
+	(gst_riff_create_audio_template_caps):
+	* gst-libs/gst/riff/riff-media.h:
+	* gst-libs/gst/riff/riff-read.c:
+	(gst_riff_read_strf_vids_with_data), (gst_riff_read_strf_vids):
+	* gst-libs/gst/riff/riff-read.h:
+	* gst/avi/gstavidemux.c: (gst_avi_demux_add_stream):
+	  Add MS RLE support. I added some functions to read out strf chunks
+	  into strf chunks and the data behind it. This is usually color
+	  palettes (as in RLE, but also in 8-bit RGB). Also use those during
+	  caps creation. Lastly, add ADPCM (similar to wavparse - which
+	  should eventually be rifflib based).
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_class_init),
+	(gst_matroska_demux_init), (gst_matroska_demux_reset):
+	* gst/matroska/matroska-demux.h:
+	  Remove placeholders for some prehistoric tagging system. Didn't add
+	  support for any tag system really anyway.
+	* gst/qtdemux/qtdemux.c:
+	  Add support for audio/x-m4a (MPEG-4) through spider.
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_parse_fmt),
+	(gst_wavparse_loop):
+	  ADPCM support (#135862). Increase max. buffer size because we
+	  cannot split buffers for ADPCM (screws references) and I've seen
+	  files with 2048 byte chunks. 4096 seems safe for now.
+
 2004-04-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: bump nano to 1

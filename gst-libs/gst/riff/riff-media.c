@@ -26,9 +26,24 @@
 #include "riff-ids.h"
 #include "riff-media.h"
 
+/**
+ * gst_riff_create_video_caps_with_data:
+ * @codec_fcc: fourCC codec for this codec.
+ * @strh: pointer to the strh stream header structure.
+ * @strf: pointer to the strf stream header structure, including any
+ *        data that is within the range of strf.size, but excluding any
+ *        additional data withint this chunk but outside strf.size.
+ * @strf_data: a #GstBuffer containing the additional data in the strf
+ *             chunk outside reach of strf.size. Ususally a palette.
+ * @strd_data: a #GstBuffer containing the data in the strd stream header
+ *             chunk. Usually codec initialization data.
+ * @codec_name: if given, will be filled with a human-readable codec name.
+ */
+
 GstCaps *
-gst_riff_create_video_caps (guint32 codec_fcc,
-    gst_riff_strh * strh, gst_riff_strf_vids * strf, char **codec_name)
+gst_riff_create_video_caps_with_data (guint32 codec_fcc,
+    gst_riff_strh * strh, gst_riff_strf_vids * strf,
+    GstBuffer * strf_data, GstBuffer * strd_data, char **codec_name)
 {
   GstCaps *caps = NULL;
 
@@ -39,6 +54,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       if (codec_name)
         *codec_name = g_strdup ("Uncompressed planar YUV 4:2:0");
       break;
+
     case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
       caps = gst_caps_new_simple ("video/x-raw-yuv",
           "format", GST_TYPE_FOURCC, codec_fcc, NULL);
@@ -51,6 +67,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       if (codec_name)
         *codec_name = g_strdup ("Motion JPEG");
       break;
+
     case GST_MAKE_FOURCC ('J', 'P', 'E', 'G'): /* generic (mostly RGB) MJPEG */
       caps = gst_caps_new_simple ("image/jpeg", NULL);
       if (codec_name)
@@ -84,31 +101,37 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       if (codec_name)
         *codec_name = g_strdup ("ITU H.26n");
       break;
+
     case GST_MAKE_FOURCC ('i', '2', '6', '3'):
       caps = gst_caps_new_simple ("video/x-h263", NULL);
       if (codec_name)
         *codec_name = g_strdup ("ITU H.263");
       break;
+
     case GST_MAKE_FOURCC ('L', '2', '6', '3'):
       caps = gst_caps_new_simple ("video/x-h263", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Lead H.263");
       break;
+
     case GST_MAKE_FOURCC ('M', '2', '6', '3'):
       caps = gst_caps_new_simple ("video/x-h263", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Microsoft H.263");
       break;
+
     case GST_MAKE_FOURCC ('V', 'D', 'O', 'W'):
       caps = gst_caps_new_simple ("video/x-h263", NULL);
       if (codec_name)
         *codec_name = g_strdup ("VDOLive");
       break;
+
     case GST_MAKE_FOURCC ('V', 'I', 'V', 'O'):
       caps = gst_caps_new_simple ("video/x-h263", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Vivo H.263");
       break;
+
     case GST_MAKE_FOURCC ('x', '2', '6', '3'):
       caps = gst_caps_new_simple ("video/x-h263", NULL);
       if (codec_name)
@@ -124,6 +147,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       if (codec_name)
         *codec_name = g_strdup ("DivX MS-MPEG-4 Version 3");
       break;
+
     case GST_MAKE_FOURCC ('d', 'i', 'v', 'x'):
     case GST_MAKE_FOURCC ('D', 'I', 'V', 'X'):
       caps = gst_caps_new_simple ("video/x-divx",
@@ -131,6 +155,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       if (codec_name)
         *codec_name = g_strdup ("DivX MPEG-4 Version 4");
       break;
+
     case GST_MAKE_FOURCC ('D', 'X', '5', '0'):
       caps = gst_caps_new_simple ("video/x-divx",
           "divxversion", G_TYPE_INT, 5, NULL);
@@ -220,6 +245,40 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("MS video v1");
       break;
 
+    case GST_MAKE_FOURCC ('R', 'L', 'E', ' '):
+    case GST_MAKE_FOURCC ('m', 'r', 'l', 'e'):
+    case GST_MAKE_FOURCC (0x1, 0x0, 0x0, 0x0): /* why, why, why? */
+      caps = gst_caps_new_simple ("video/x-rle",
+          "layout", G_TYPE_STRING, "microsoft", NULL);
+      if (strf_data && GST_BUFFER_SIZE (strf_data) >= 256 * 4) {
+        GstBuffer *copy = gst_buffer_copy (strf_data);
+        GValue value = { 0 };
+
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+        gint n;
+        guint32 *data = (guint32 *) GST_BUFFER_DATA (copy);
+
+        /* own endianness */
+        for (n = 0; n < 256; n++)
+          data[n] = GUINT32_FROM_LE (data[n]);
+#endif
+        g_value_init (&value, GST_TYPE_BUFFER);
+        g_value_set_boxed (&value, copy);
+        gst_structure_set_value (gst_caps_get_structure (caps, 0),
+            "palette_data", &value);
+        g_value_unset (&value);
+        gst_buffer_unref (copy);
+      }
+      if (strf) {
+        gst_caps_set_simple (caps,
+            "depth", G_TYPE_INT, (gint) strf->bit_cnt, NULL);
+      } else {
+        gst_caps_set_simple (caps, "depth", GST_TYPE_INT_RANGE, 1, 64, NULL);
+      }
+      if (codec_name)
+        *codec_name = g_strdup ("Mcrosoft RLE");
+      break;
+
     default:
       GST_WARNING ("Unkown video fourcc " GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_fcc));
@@ -246,6 +305,14 @@ gst_riff_create_video_caps (guint32 codec_fcc,
   }
 
   return caps;
+}
+
+GstCaps *
+gst_riff_create_video_caps (guint32 codec_fcc,
+    gst_riff_strh * strh, gst_riff_strf_vids * strf, char **codec_name)
+{
+  return gst_riff_create_video_caps_with_data (codec_fcc,
+      strh, strf, NULL, NULL, codec_name);
 }
 
 GstCaps *
@@ -287,6 +354,13 @@ gst_riff_create_audio_caps (guint16 codec_id,
       }
       if (codec_name)
         *codec_name = g_strdup ("Uncompressed PCM audio");
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_ADPCM:
+      caps = gst_caps_new_simple ("audio/x-adpcm",
+          "layout", G_TYPE_STRING, "microsoft", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("ADPCM audio");
       break;
 
     case GST_RIFF_WAVE_FORMAT_MULAW:
@@ -394,6 +468,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('3', 'I', 'V', '1'),
     GST_MAKE_FOURCC ('c', 'v', 'i', 'd'),
     GST_MAKE_FOURCC ('m', 's', 'v', 'c'),
+    GST_MAKE_FOURCC ('R', 'L', 'E', ' '),
     /* FILL ME */
     0
   };
@@ -421,6 +496,7 @@ gst_riff_create_audio_template_caps (void)
     GST_RIFF_WAVE_FORMAT_A52,
     GST_RIFF_WAVE_FORMAT_ALAW,
     GST_RIFF_WAVE_FORMAT_MULAW,
+    GST_RIFF_WAVE_FORMAT_ADPCM,
     /* FILL ME */
     0
   };
