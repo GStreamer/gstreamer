@@ -1,3 +1,8 @@
+2004-04-03  Benjamin Otte  <otte@gnome.org>
+
+	* docs/pwg/building-boiler.xml:
+	  add cvs login line and s/anonymous/anoncvs/
+
 2004-04-03  Tim-Phillip Müller  <t.i.m@zen.co.uk>
 
 	reviewed by Benjamin Otte  <otte@gnome.org>
