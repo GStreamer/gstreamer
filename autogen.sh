@@ -74,6 +74,9 @@ fi
 # now remove the cache, because it can be considered dangerous in this case
 rm -f config.cache
 
+# For busy application developers (Hadess)
+# ./configure --enable-maintainer-mode --enable-debug --enable-debug-verbose --disable-docs-build "$@"
+
 ./configure --enable-maintainer-mode --enable-plugin-srcdir --enable-debug --enable-debug-verbose "$@"
 
 echo 
