@@ -222,10 +222,12 @@ gst_tcpclientsrc_get (GstPad * pad)
   if (src->buffer_after_discont) {
     buf = src->buffer_after_discont;
     GST_LOG_OBJECT (src,
-        "Returning buffer after discont of size %d with timestamp %"
-        GST_TIME_FORMAT " and duration %" GST_TIME_FORMAT,
+        "Returning buffer after discont of size %d, ts %"
+        GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT
+        ", offset %" G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT,
         GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
+        GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf));
     src->buffer_after_discont = NULL;
     return GST_DATA (buf);
   }
@@ -295,8 +297,9 @@ gst_tcpclientsrc_get (GstPad * pad)
   readsize = ret;
   GST_BUFFER_SIZE (buf) = readsize;
   GST_BUFFER_MAXSIZE (buf) = readsize;
-  GST_BUFFER_OFFSET (buf) = src->curoffset;
-  GST_BUFFER_OFFSET_END (buf) = src->curoffset + readsize;
+
+  /* FIXME: we could decide to set OFFSET and OFFSET_END for non-protocol
+   * streams to mean the bytes processed */
 
   /* if this is our first buffer, we need to send a discont with the
    * given timestamp or the current offset, and store the buffer for
@@ -329,10 +332,12 @@ gst_tcpclientsrc_get (GstPad * pad)
 
   src->curoffset += readsize;
   GST_LOG_OBJECT (src,
-      "Returning buffer of size %d with timestamp %" GST_TIME_FORMAT
-      " and duration %" GST_TIME_FORMAT, readsize,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+      "Returning buffer from _get of size %d, ts %"
+      GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT
+      ", offset %" G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT,
+      GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
+      GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf));
   return GST_DATA (buf);
 }
 
