@@ -343,6 +343,7 @@ GstPadEOSFunction
 
 GstPadPushFunction
 GstPadPullFunction
+GstRegionType
 GstPadPullRegionFunction
 
 GstPadDirection
@@ -374,13 +375,15 @@ gst_pad_connect
 gst_pad_disconnect
 gst_pad_push
 gst_pad_pull
-gst_pad_pull_region
 gst_pad_pullregion
-gst_pad_select
 gst_pad_set_eos
 gst_pad_handle_qos
 gst_pad_eos
 gst_pad_load_and_connect
+
+GST_RPAD_LEN
+GST_RPAD_OFFSET
+GST_RPAD_REGIONTYPE
 
 GstRealPad
 GST_RPAD_DIRECTION
@@ -734,7 +737,6 @@ GST_DISKSRC
 GST_DISKSRC_CLASS
 GST_IS_DISKSRC
 GST_IS_DISKSRC_CLASS
-gst_disksrc_details
 </SECTION>
 
 <SECTION>

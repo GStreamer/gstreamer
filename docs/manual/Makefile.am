@@ -20,6 +20,7 @@ sgml_files = gstreamer-manual.sgml \
              motivation.sgml \
              plugins.sgml \
              programs.sgml \
+             debugging.sgml \
              queues.sgml \
              states.sgml \
              threads.sgml \

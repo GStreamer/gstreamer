@@ -65,11 +65,11 @@ static GstPadFactory sink_factory = {
   "example_sink",				/* The name of the caps */
      "unknown/unknown",				/* The overall MIME/type */
      "foo",	GST_PROPS_INT (1),		/* An integer property */
-     "bar",	GST_PROPS_BOOLEAN (TRUE)	/* A boolean */
+     "bar",	GST_PROPS_BOOLEAN (TRUE),	/* A boolean */
      "baz",	GST_PROPS_LIST (		/* A list of values for */
 			GST_PROPS_INT (1),
-			GST_PROPS_INT (3),
-		),
+			GST_PROPS_INT (3)
+		)
   ),
   NULL				/* All factories must be NULL-terminated */
 };
@@ -165,6 +165,18 @@ gst_example_class_init (GstExampleClass *klass)
   gtk_object_add_arg_type("GstExample::active", GTK_TYPE_INT,
                           GTK_ARG_READWRITE, ARG_ACTIVE);
 
+  /* Here we add a signal to the object. This is avery useless signal
+   * called asdf. The signal will also pass a pointer to the listeners
+   * which happens to be the example element itself */
+  gst_example_signals[ASDF] =
+    gtk_signal_new("asdf", GTK_RUN_LAST, gtkobject_class->type,
+                   GTK_SIGNAL_OFFSET (GstExampleClass, asdf),
+                   gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                   GST_TYPE_EXAMPLE);
+
+  gtk_object_class_add_signals (gtkobject_class, gst_example_signals,
+                                LAST_SIGNAL);
+
   /* The last thing is to provide the functions that implement get and set
    * of arguments.
    */
@@ -221,7 +233,6 @@ gst_example_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
   g_return_if_fail(buf != NULL);
-  g_return_if_fail(GST_IS_BUFFER(buf));
 
   /* We need to get a pointer to the element this pad belogs to. */
   example = GST_EXAMPLE(gst_pad_get_parent (pad));
@@ -253,6 +264,10 @@ gst_example_chain (GstPad *pad, GstBuffer *buf)
      * in the element's structure.
      */
     gst_pad_push(example->srcpad,outbuf);
+
+    /* For fun we'll emit our useless signal here */
+    gtk_signal_emit (GTK_OBJECT (example), gst_example_signals[ASDF],
+                     example);
 
   /* If we're not doing something, just send the original incoming buffer. */
   } else {

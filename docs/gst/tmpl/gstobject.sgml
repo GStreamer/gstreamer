@@ -101,26 +101,26 @@ This macro releases a lock on the object.
 
 <!-- ##### MACRO GST_GET_LOCK ##### -->
 <para>
-
+Acquire a reference to the mutex of this object.
 </para>
 
-@obj: 
+@obj: Object to get the mutex of.
 
 
 <!-- ##### MACRO GST_OBJECT_PARENT ##### -->
 <para>
-
+Get the parent of this object
 </para>
 
-@obj: 
+@obj: Object to get the parent of.
 
 
 <!-- ##### MACRO GST_OBJECT_NAME ##### -->
 <para>
-
+Get the name of this object
 </para>
 
-@obj: 
+@obj: Object to get the name of.
 
 
 <!-- ##### FUNCTION gst_object_new ##### -->

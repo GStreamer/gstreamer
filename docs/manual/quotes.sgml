@@ -15,8 +15,8 @@
       <term>16 Feb 2001</term>
       <listitem>
         <para>
-        <emphasis>wtay:
-        I shipped a few commerical products to >40000 people now but 
+        <emphasis>wtay:</emphasis>
+        I shipped a few commerical products to &gt;40000 people now but 
         GStreamer is way more exciting...
         </para>
       </listitem>
@@ -26,7 +26,7 @@
       <listitem>
         <para>
         *
-        <emphasis>tool-man</emphasis
+        <emphasis>tool-man</emphasis>
         is a gstreamer groupie
         </para>
       </listitem>

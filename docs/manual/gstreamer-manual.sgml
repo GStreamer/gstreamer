@@ -23,6 +23,7 @@
 
 <!ENTITY XML SYSTEM "xml.sgml">
 <!ENTITY PLUGINS SYSTEM "plugins.sgml">
+<!ENTITY DEBUGGING SYSTEM "debugging.sgml">
 <!ENTITY PROGRAMS SYSTEM "programs.sgml">
 <!ENTITY COMPONENTS SYSTEM "components.sgml">
 <!ENTITY QUOTES SYSTEM "quotes.sgml">
@@ -183,8 +184,11 @@
     <partintro>
       <para>
         <application>GStreamer</application> comes prepackaged with a few programs.
+	and some usefull debugging options.
       </para>
     </partintro>
+
+      &DEBUGGING;
 
       &PROGRAMS;
 

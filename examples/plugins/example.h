@@ -54,6 +54,9 @@ typedef struct _GstExampleClass GstExampleClass;
 
 struct _GstExampleClass {
   GstElementClass parent_class;
+
+  /* signals */
+  void (*asdf) (GstElement *element, GstExample *example);
 };
 
 /* Five standard preprocessing macros are used in the Gtk+ object system.
