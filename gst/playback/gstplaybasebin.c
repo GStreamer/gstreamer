@@ -1126,9 +1126,9 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
 
     /* don't add yet, because we will preroll, and subs shouldn't
      * preroll (we shouldn't preroll more than once source). */
+    gst_element_set_state (subbin, GST_STATE_PAUSED);
     new_decoded_pad (subbin, gst_element_get_pad (subbin, "src"), FALSE,
         play_base_bin);
-    gst_element_set_state (subbin, GST_STATE_PAUSED);
   }
 
   /* now see if the source element emits raw audio/video all by itself,
