@@ -86,7 +86,9 @@ main (int argc,char *argv[])
 
   gtk_widget_show_all(appwindow);
 
+#ifndef GST_DISABLE_LOADSAVE
   xmlSaveFile("dvshow.xml",gst_xml_write(GST_ELEMENT(bin)));
+#endif
 
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_PLAYING);
 

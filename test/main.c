@@ -140,7 +140,9 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstPlayInfo *info)
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
       
+#ifndef GST_DISABLE_LOADSAVE
   xmlSaveFile("xmlTest.gst", gst_xml_write (GST_ELEMENT (pipeline)));
+#endif
 }
 
 
