@@ -15,7 +15,7 @@
 #include <math.h>
 
 #include <gst/gst.h>
-#include "gstidct.h"
+#include <gst/idct/idct.h>
 #include "dct.h"
 
 
