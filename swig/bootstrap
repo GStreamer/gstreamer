@@ -1,8 +1,0 @@
-#!/bin/bash
-if test ! -e Gst.so
-then
-  ln -s blib/arch/auto/Gst/Gst.so
-fi
-swig -perl5 Gst.i && \
-perl Makefile.PL && \
-make
