@@ -1,0 +1,167 @@
+Mimetypes in GStreamer
+======================
+
+1) What is a mimetype
+---------------------
+A mimetype is a combination of two (short) strings (words), the content
+type and the content subtype, that make up a pair that describes a file
+content type. In multimedia, mime types are used to describe the media
+streamtype . In GStreamer, obsiously, we use mimetypes in the same way.
+They are part of a GstCaps, that describes a media stream. Besides a
+mimetype, a GstCaps also contains stream properties (GstProps), which
+are combinations of key/value pairs, and a name.
+
+An example of a mimetype is 'video/mpeg'. A corresponding GstCaps could
+be created using:
+GstCaps *caps = gst_caps_new("video_mpeg_type",
+                             "video/mpeg",
+                             gst_props_new("width",  GST_PROPS_INT(384),
+                                           "height", GST_PROPS_INT(288),
+                                           NULL));
+
+Obviously, mimetypes and their corresponding properties are of major
+importance in GStreamer for uniquely identifying media streams.
+
+2) The problems
+---------------
+Some streams may have mimetypes or GstCaps that do not fully describe
+the stream. In most cases, this is not a problem, though. For a stream
+that contains Ogg/Vorbis data, we don't need to know the samplerate of
+the raw audio stream, for example, since we can't play it back anyway.
+The samplerate _is_ important for _raw_ audio, so a decoder would need
+to retrieve the samplerate from the Ogg/Vorbis stream headers (that are
+part of the bytestream) in order to pass it on in the GstCaps that
+belongs to the decoded audio ('audio/raw').
+
+Another problem is that many media types can be defined in multiple ways.
+For example, MJPEG video can be defined as video/jpeg, video/mjpeg,
+image/jpeg, video/avi with a compression of (fourcc) MJPG, etc. None of
+these is really official, since there isn't an official mimetype for
+encoded MJPEG video.
+
+The main focus of this document is to propose a standardized set of
+mimetypes and properties that will be used by the GStreamer plugins.
+
+3) Different types of streams
+-----------------------------
+There are several types of media streams. The most important distinction
+will be container formats, audio codecs and video codecs. Container
+formats are bytestreams that contain one or more substreams inside it,
+and don't provide any direct media data itself. Examples are Quicktime,
+AVI or MPEG (bytestream). They mostly contain of a set of headers that
+define the media stream(s) that is packed inside the container and the
+media data itself.
+Video codecs and audio codecs describe encoded audio or video data.
+Examples are MPEG-1 video, DivX ;-) video, MPEG-1 layer 3 (MP3) audio
+or Ogg/Vorbis audio. Actually, Ogg is a container format too (for Vorbis
+audio), but these are usually used in conjunction with each other.
+
+3a) Container formats
+1 - AVI (Microsoft RIFF/AVI)
+  mimetype: video/x-msvideo
+2 - Quicktime (Apple)
+  mimetype: video/x-quicktime
+3 - MPEG (MPEG LA)
+  mimetype: video/mpeg
+  properties: 'systemstream' = 1 (INT)
+4 - ASF (Microsoft)
+  mimetype: video/x-asf
+5 - WAV (PCM)
+  mimetype: audio/x-wav
+6 - RealMedia (Real)
+  mimetype: video/realmedia
+7 - DV (Digital Video)
+  mimetype: video/dv
+  properties: 'systemstream' = 1 (INT)
+8 - Ogg
+  mimetypes: media/ogg
+
+3b) Video codecs
+For convenience, the fourcc codes used in the AVI container format will be
+listed along with the mimetype and optional properties. All video codecs
+share the properties 'width' and 'height', both INT, which define the size
+of the frame (in pixels).
+1a - Raw Video (YUV/YCbCr)
+  mimetype: video/raw
+  properties: 'format' = 'XXXX' (fourcc)
+  known fourccs: YUY2, IYUV/I420, Y41P, etc.
+1b - Raw Video (RGB)
+  mimetype: video/raw
+  properties: 'format' = 'RGB ' (fourcc)
+              'endianness' = 1234/4321 (INT) <- endianness
+              'r_mask' = bitmask (0x..) (INT) <- red pixel mask
+              'g_mask' = bitmask (0x..) (INT) <- green pixel mask
+              'b_mask' = bitmask (0x..) (INT) <- blue pixel mask
+              'depth' = 15/16/24/32 (INT) <- bits per pixel (depth)
+              'bpp' = 16/24/32 (INT) <- bits per pixel (in memory)
+2 - MPEG-1, -2 and -4 video (ISO/LA MPEG)
+  mimetype: video/mpeg
+  properties: 'systemstream' = 0 (INT)
+              'mpegversion' = 1/2/4 (INT)
+  known fourccs: MPEG, MPGI
+3 - DivX ;-) 3.x, 4.x and 5.x video
+  mimetype: video/divx
+  properties: 'divxversion' = 3/4/5 (INT)
+  known fourccs: DIV3, DIV4, DIV5, DIVX, DX50, DIVX, divx
+4 - Microsoft MPEG 4.1, 4.2 and 4.3
+  mimetype: video/x-msmpeg
+  properties: 'mpegversion' = 41/42/43 (INT)
+  known fourccs: MPG4, MP42, MP43
+5 - Motion-JPEG (official and extended)
+  mimetype: video/jpeg
+  known fourccs: MJPG (YUY2 MJPEG), JPEG (any), PIXL (Pinnacle/Miro), VIXL
+6 - Sorensen (Quicktime - SVQ1/SVQ3)
+  mimetypes: video/x-svq
+  properties: 'svqversion' = 1/3 (INT)
+7 - H263 and related codecs
+  mimetype: video/h263
+  known fourccs: H263, i263, M263, x263, VDOW, VIVO
+8 - RealVideo (Real)
+  mimetype: video/realvideo
+9 - Digital Video (DV)
+  mimetype: video/dv
+  properties: 'systemstream' = 0 (INT)
+  known fourccs: DVSD, dvsd
+10 - Windows Media Video 1 and 2 (WMV)
+  mimetype: video/wmv
+  properties: 'wmvversion' = 1/2 (INT)
+11 - XviD
+  mimetype: video/xvid
+  known fourccs: xvid, XVID
+12 - 3IVX
+  mimetype: video/3ivx
+  known fourccs: 3IV1, 3IV2
+13 - Ogg/Tarkin
+  mimetype: video/x-ogg-tarkin
+14 - Ogg/Theora
+  mimetype: video/x-ogg-theora
+
+3c) Audio Codecs
+for convenience, the two-byte hexcodes (as are being used for identification
+in AVI files) are also given
+1 - Raw Audio
+  mimetype: audio/raw
+  properties: 'rate' = X (INT) <- samplerate
+              'width' = X (INT) <- audio bitsize
+              'depth' = X (INT) <- same?
+              'law' = 0/1/2 (INT) <- no law (0), alaw (1) or mulaw (2)
+              'signedness' = X (BOOLEAN)
+              'channels' = X (INT) <- number of audio channels
+              'endianness' = 1234/4321 <- endianness of audio stream
+2 - MPEG-1 layer 1/2/3 audio
+  mimetype: audio/mpeg
+  properties: 'mpegversion' = 1/2/3 (INT)
+3 - Ogg/Vorbis
+  mimetype: application/x-ogg
+4 - Windows Media Audio 1 and 2 (WMA)
+  mimetype: audio/wma
+5 - AC3
+  mimetype: audio/ac3
+
+4 - Status of this document
+---------------------------
+This document is currently under construction and the types listed in here
+are purely imaginary. Don't take this as your starting point (yet).
+
+Blame Ronald Bultje <rbultje@ronald.bitfreak.net> aka BBB for any mistakes
+in this document.
