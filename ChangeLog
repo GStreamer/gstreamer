@@ -1,5 +1,11 @@
 2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
 
+	* win32/gstelements.vcproj:
+	* win32/gstoptimalscheduler.vcproj:
+	  fixes for the Release build
+    
+2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* win32/config.h:
 	  update the version number
     
