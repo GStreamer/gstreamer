@@ -99,20 +99,10 @@ struct _GstMPEGDemux {
 
   /* stream output pads */
   GstPad *private_1_pad[NUM_PRIVATE_1_PADS];	/* up to 8 ac3 audio tracks */
-  gulong private_1_PTS[NUM_PRIVATE_1_PADS];
-
   GstPad *subtitle_pad[NUM_SUBTITLE_PADS];
-  gulong subtitle_offset[NUM_SUBTITLE_PADS];
-
   GstPad *private_2_pad;
-  gulong private_2_offset;
-
   GstPad *video_pad[NUM_VIDEO_PADS];
-  gint64 video_PTS[NUM_VIDEO_PADS];
-
   GstPad *audio_pad[NUM_AUDIO_PADS];
-  gint64 audio_PTS[NUM_AUDIO_PADS];
-
 };
 
 struct _GstMPEGDemuxClass {

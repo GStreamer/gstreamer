@@ -46,7 +46,7 @@ extern "C" {
 
 #define GST_MPEG_PARSE_IS_MPEG2(parse) (GST_MPEG_PACKETIZE_IS_MPEG2 (GST_MPEG_PARSE (parse)->packetize))
 
-#define MPEGTIME_TO_GSTTIME(time) (((time) * GST_SECOND) / 90000LL)
+#define MPEGTIME_TO_GSTTIME(time) (((time) * (GST_MSECOND/10)) / 9LL)
 
 typedef struct _GstMPEGParse GstMPEGParse;
 typedef struct _GstMPEGParseClass GstMPEGParseClass;
@@ -59,9 +59,12 @@ struct _GstMPEGParse {
   GstMPEGPacketize *packetize;
 
   /* pack header values */
-  guint32	 bit_rate;
+  guint32	 mux_rate;
   guint64	 current_scr;
-  guint64	 previous_scr;
+  guint64	 next_scr;
+  guint64	 bytes_since_scr;
+
+  gint64	 adjust;
 
   gboolean	 discont_pending;
   gboolean	 scr_pending;

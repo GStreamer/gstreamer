@@ -174,11 +174,12 @@ gst_mpeg_parse_init (GstMPEGParse *mpeg_parse)
   /* initialize parser state */
   mpeg_parse->packetize = NULL;
   mpeg_parse->current_scr = 0;
-  mpeg_parse->previous_scr = 0;
+  mpeg_parse->bytes_since_scr = 0;
+  mpeg_parse->adjust = 0;
   mpeg_parse->sync = FALSE;
 
   /* zero counters (should be done at RUNNING?) */
-  mpeg_parse->bit_rate = 0;
+  mpeg_parse->mux_rate = 0;
   mpeg_parse->discont_pending = FALSE;
   mpeg_parse->scr_pending = TRUE;
   mpeg_parse->provided_clock = gst_mpeg_clock_new ("MPEGParseClock", 
@@ -212,7 +213,7 @@ gst_mpeg_parse_get_time (GstClock *clock, gpointer data)
 {   
   GstMPEGParse *parse = GST_MPEG_PARSE (data);
 
-  return MPEGTIME_TO_GSTTIME (parse->previous_scr);
+  return MPEGTIME_TO_GSTTIME (parse->current_scr);
 }
 
 static void
@@ -242,9 +243,12 @@ gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data, GstClockTime 
     }
 
     GST_BUFFER_TIMESTAMP (data) = time;
-    GST_DEBUG (0, "mpeg_parse: current_scr %lld", time);
+    GST_DEBUG (0, "current_scr %lld", time);
 
-    gst_pad_push (mpeg_parse->srcpad, GST_BUFFER (data));
+    if (GST_PAD_IS_USABLE (mpeg_parse->srcpad))
+      gst_pad_push (mpeg_parse->srcpad, GST_BUFFER (data));
+    else
+      gst_data_unref (data);
   }
 }
 
@@ -256,18 +260,21 @@ gst_mpeg_parse_handle_discont (GstMPEGParse *mpeg_parse)
   event = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
 		  MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr), NULL);
 
-  gst_pad_push (mpeg_parse->srcpad, GST_BUFFER (event));
+  if (GST_PAD_IS_USABLE (mpeg_parse->srcpad))
+    gst_pad_push (mpeg_parse->srcpad, GST_BUFFER (event));
+  else
+    gst_event_unref (event);
 }
 
 static gboolean
 gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 {
   guint8 *buf;
-  guint64 scr;
+  guint64 scr, scr_adj;
   guint32 scr1, scr2;
   guint32 new_rate;
 
-  GST_DEBUG (0, "mpeg_parse: in parse_packhead");
+  GST_DEBUG (0, "in parse_packhead");
 
   buf = GST_BUFFER_DATA (buffer);
   buf += 4;
@@ -276,51 +283,74 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   scr2 = GUINT32_FROM_BE (*(guint32*) (buf+4));
 
   if (GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize)) {
+    guint32 scr_ext;
 
     /* :2=01 ! scr:3 ! marker:1==1 ! scr:15 ! marker:1==1 ! scr:15 */
     scr  = (scr1 & 0x38000000) << 3;
     scr |= (scr1 & 0x03fff800) << 4;
     scr |= (scr1 & 0x000003ff) << 5;
     scr |= (scr2 & 0xf8000000) >> 27;
-    
+
+    scr_ext = (scr2 & 0x03fe0000) >> 17;
+
+    scr = (scr * 300 + scr_ext % 300) / 300;
+
+    GST_DEBUG (0, "%lld %d, %08x %08x %lld diff: %lld", 
+		    scr, scr_ext, scr1, scr2, mpeg_parse->bytes_since_scr, 
+		    scr - mpeg_parse->current_scr);
+
+    mpeg_parse->bytes_since_scr = 0;
+
     buf += 6;
     new_rate = (GUINT32_FROM_BE ((*(guint32 *) buf)) & 0xfffffc00) >> 10;
-    //new_rate *= 133; /* FIXME trial and error */
-    new_rate *= 223; /* FIXME trial and error */
   }
   else {
     scr  = (scr1 & 0x0e000000) << 5;
     scr |= (scr1 & 0x00fffe00) << 6;
     scr |= (scr1 & 0x000000ff) << 7;
     scr |= (scr2 & 0xfe000000) >> 25;
+
+    mpeg_parse->bytes_since_scr = 0;
     
     buf += 5;
     new_rate = (GUINT32_FROM_BE ((*(guint32 *) buf)) & 0x7ffffe00) >> 9;
-    new_rate *= 400;
   }
 
-  mpeg_parse->previous_scr = mpeg_parse->current_scr;
+  scr_adj = scr + mpeg_parse->adjust;
+
+  GST_DEBUG (0, "SCR is %llu (%llu) next: %lld (%lld) diff: %lld (%lld)", 
+		  scr, 
+		  MPEGTIME_TO_GSTTIME (scr),
+		  mpeg_parse->next_scr,
+		  MPEGTIME_TO_GSTTIME (mpeg_parse->next_scr),
+		  scr - mpeg_parse->next_scr,
+		  MPEGTIME_TO_GSTTIME (scr) -
+		  MPEGTIME_TO_GSTTIME (mpeg_parse->next_scr));
+
+  if (ABS ((gint64)mpeg_parse->next_scr - (gint64)(scr_adj)) > 10000) {
+    GST_DEBUG (0, "discontinuity detected; expected: %llu got: %llu real:%lld adjust:%lld", 
+           mpeg_parse->next_scr, scr_adj, scr, mpeg_parse->adjust);
+
+    mpeg_parse->adjust = mpeg_parse->next_scr - scr;
+    scr = mpeg_parse->next_scr;
+
+    GST_DEBUG (0, "new adjust: %lld", mpeg_parse->adjust);
+  }
+  else {
+    scr = scr_adj;
+  }
+
   mpeg_parse->current_scr = scr;
-
-  GST_DEBUG (0, "mpeg_parse: SCR is %llu (%llu)", scr, 
-		  MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr));
-
-  if (mpeg_parse->previous_scr > mpeg_parse->current_scr) {
-    GST_DEBUG (0, "mpeg_parse: discontinuity detected %llu (%llu)", 
-           mpeg_parse->previous_scr, mpeg_parse->current_scr);
-    mpeg_parse->discont_pending = TRUE;
-  }
 		  
   mpeg_parse->scr_pending = FALSE;
 
-  if (mpeg_parse->bit_rate != new_rate) {
-    mpeg_parse->bit_rate = new_rate;
+  if (mpeg_parse->mux_rate != new_rate) {
+    mpeg_parse->mux_rate = new_rate;
 
     g_object_notify (G_OBJECT (mpeg_parse), "bitrate");
   }
 
-  GST_DEBUG (0, "mpeg_parse: stream is %1.3fMbs",
-	     (mpeg_parse->bit_rate) / 1000000.0);
+  GST_DEBUG (0, "stream is %1.3fMbs", (mpeg_parse->mux_rate * 400) / 1000000.0);
 
   return TRUE;
 }
@@ -342,7 +372,7 @@ gst_mpeg_parse_loop (GstElement *element)
   if (GST_IS_BUFFER (data)) {
     GstBuffer *buffer = GST_BUFFER (data);
 
-    GST_DEBUG (0, "mpeg2demux: have chunk 0x%02X", id);
+    GST_DEBUG (0, "have chunk 0x%02X", id);
 
     switch (id) {
       case 0xba:
@@ -357,7 +387,7 @@ gst_mpeg_parse_loop (GstElement *element)
 	break;
       default:
         if (mpeg2 && ((id < 0xBD) || (id > 0xFE))) {
-          g_warning ("mpeg2demux: ******** unknown id 0x%02X", id); 
+          g_warning ("******** unknown id 0x%02X", id); 
         }
 	else {
 	  if (mpeg2) {
@@ -415,7 +445,11 @@ gst_mpeg_parse_loop (GstElement *element)
       }
       gst_buffer_unref (GST_BUFFER (data));
       return;
+
     }
+
+    size = GST_BUFFER_SIZE (data);
+    mpeg_parse->bytes_since_scr += size;
 
     if (CLASS (mpeg_parse)->send_data)
       CLASS (mpeg_parse)->send_data (mpeg_parse, data, time);
@@ -425,10 +459,29 @@ gst_mpeg_parse_loop (GstElement *element)
       gst_element_clock_wait (GST_ELEMENT (mpeg_parse), mpeg_parse->clock, time, NULL);
     }
 
-    size = GST_BUFFER_SIZE (data);
-    
-    /* we are interpolating the scr here */
-    /* mpeg_parse->current_scr += ((size * 90000LL) / (mpeg_parse->bit_rate)); */
+    {
+      guint64 scr, bss, br;
+
+      scr = mpeg_parse->current_scr;
+      bss = mpeg_parse->bytes_since_scr;
+      br = mpeg_parse->mux_rate * 50;
+      
+      if (GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize)) {
+        /* 
+	 * The mpeg spec says something like this, but that doesn't really work:
+	 *
+	 * mpeg_parse->next_scr = (scr * br + bss * 90000LL) / (90000LL + br);
+	 */
+        mpeg_parse->next_scr = scr + (bss * 90000LL) / br;
+      }
+      else {
+        /* we are interpolating the scr here */
+        mpeg_parse->next_scr = scr + (bss * 90000LL) / br;
+      }
+
+      GST_DEBUG (0, "size: %lld, total since SCR: %lld, next SCR: %lld", 
+		       size, bss, mpeg_parse->next_scr);
+    }
   }
 }
 
@@ -472,7 +525,7 @@ gst_mpeg_parse_handle_src_query (GstPad *pad, GstPadQueryType type,
           GstFormat peer_format;
 	  gint64 peer_value;
 
-	  if (mpeg_parse->bit_rate == 0) 
+	  if (mpeg_parse->mux_rate == 0) 
 	    return FALSE;
 
 	  peer_format = GST_FORMAT_BYTES;
@@ -480,7 +533,7 @@ gst_mpeg_parse_handle_src_query (GstPad *pad, GstPadQueryType type,
 			     GST_PAD_QUERY_TOTAL, &peer_format, &peer_value)) 
 	  {
             /* multiply bywith 8 because vbr is in bits/second */
-            *value = peer_value * 8 * GST_SECOND / mpeg_parse->bit_rate;
+            *value = peer_value * GST_SECOND / (mpeg_parse->mux_rate * 50);
           }
 	  else 
 	    res = FALSE;
@@ -543,7 +596,7 @@ gst_mpeg_parse_handle_src_event (GstPad *pad, GstEvent *event)
 
       if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
       }
-      desired_offset = mpeg_parse->bit_rate * GST_EVENT_SEEK_OFFSET (event) / (8 * GST_SECOND);
+      desired_offset = mpeg_parse->mux_rate * 50 * GST_EVENT_SEEK_OFFSET (event) / (GST_SECOND);
 
       if (!gst_bytestream_seek (mpeg_parse->packetize->bs, desired_offset, GST_SEEK_METHOD_SET)) {
         gst_event_unref (event);
@@ -596,7 +649,7 @@ gst_mpeg_parse_get_property (GObject *object, guint prop_id, GValue *value, GPar
 
   switch (prop_id) {
     case ARG_BIT_RATE: 
-      g_value_set_uint (value, mpeg_parse->bit_rate); 
+      g_value_set_uint (value, mpeg_parse->mux_rate * 400); 
       break;
     case ARG_MPEG2:
       if (mpeg_parse->packetize)
