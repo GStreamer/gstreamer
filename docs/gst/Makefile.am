@@ -35,7 +35,6 @@ tmpl_sources =				\
 	tmpl/gstbufferpool.sgml         \
 	tmpl/gstdisksrc.sgml            \
 	tmpl/gstelement.sgml            \
-	tmpl/gstesdsink.sgml            \
 	tmpl/gstfakesink.sgml           \
 	tmpl/gstfakesrc.sgml            \
 	tmpl/gstfdsink.sgml             \
