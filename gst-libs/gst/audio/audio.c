@@ -35,7 +35,7 @@ gst_audio_frame_byte_size (GstPad* pad)
 
   int width = 0;
   int channels = 0;
-  GstCaps *caps;
+  const GstCaps *caps = NULL;
   GstStructure *structure;
 
   /* get caps of pad */
@@ -82,7 +82,7 @@ gst_audio_frame_rate (GstPad *pad)
  * returns 0 if failed, rate if success
  */
 {
-  GstCaps *caps = NULL;
+  const GstCaps *caps = NULL;
   gint rate;
   GstStructure *structure;
 
@@ -117,7 +117,7 @@ gst_audio_length (GstPad* pad, GstBuffer* buf)
 
   double length;
 
-  GstCaps *caps = NULL;
+  const GstCaps *caps = NULL;
   GstStructure *structure;
 
   g_assert (GST_IS_BUFFER (buf));
@@ -156,7 +156,7 @@ gst_audio_highest_sample_value (GstPad* pad)
 {
   gboolean is_signed = FALSE;
   gint width = 0;
-  GstCaps *caps = NULL;
+  const GstCaps *caps = NULL;
   GstStructure *structure;
   
   caps = GST_PAD_CAPS (pad);
