@@ -83,6 +83,12 @@ else
   HAVE_NASM="yes"
 fi
 
+dnl fix pkg-config's broken default search path
+if test -z $PKG_CONFIG_PATH; then
+  PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig
+fi
+export PKG_CONFIG_PATH
+
 dnl Check for pkgconfig
 AC_CHECK_PROG(HAVE_PKGCONFIG, pkg-config, true, false)
 
@@ -202,8 +208,9 @@ dnl ====================================
 
 dnl Check for glib2
 GST_CHECK_FEATURE(GLIB2, [use of glib-2.0 and GObject], , [
-  PKG_CHECK_MODULES(GLIB2, glib-2.0 gobject-2.0 gthread-2.0 gmodule-2.0,
+  PKG_CHECK_MODULES(GLIB2, glib-2.0 gobject-2.0 gmodule-2.0,
     HAVE_GLIB2=yes,HAVE_GLIB2=no)
+  GST_PKG_DEPS="glib-2.0 gobject-2.0 gmodule-2.0"
   AC_SUBST(GLIB2_LIBS)
   AC_SUBST(GLIB2_CFLAGS)
 ], disabled, [
@@ -216,6 +223,8 @@ GST_CHECK_FEATURE(GLIB2, [use of glib-2.0 and GObject], , [
 AC_SUBST(USE_GLIB2)
 
 if test x$USE_GLIB2 = xno; then
+  GST_PKG_DEPS="glib >= 1.2.0, gtk+ >= 1.2.0"
+  
   dnl Check for glib and gtk
   AM_PATH_GLIB(1.2.0,,
               AC_MSG_ERROR(Cannot find glib: Is glib-config in path?),
@@ -227,6 +236,8 @@ if test x$USE_GLIB2 = xno; then
   CORE_LIBS="$CORE_LIBS $GLIB_LIBS $GTK_LIBS"
   CORE_CFLAGS="$CORE_CFLAGS $GLIB_CFLAGS $GTK_CFLAGS"
 else
+  GST_PKG_DEPS="glib-2.0 gobject-2.0 gmodule-2.0"
+  
   PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK=yes, HAVE_GTK=no)
 
   GTK_FLAGS=$GTK2_CFLAGS
@@ -238,6 +249,7 @@ else
   AC_SUBST(USE_GNOME2)
 fi
 
+AC_SUBST(GST_PKG_DEPS)
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_CFLAGS)
 
@@ -352,6 +364,14 @@ if test x$HAVE_ALSA = xno; then
   ALSA_CFLAGS=
   ALSA_LIBS=
 fi
+
+GST_CHECK_FEATURE(JACK, [jack audio connection kit], jack, [
+  PKG_CHECK_MODULES(JACK, jack,
+    HAVE_JACK=yes,HAVE_JACK=no)
+  AC_SUBST(JACK_LIBS)
+  AC_SUBST(JACK_CFLAGS)
+])
+dnl AC_SUBST(USE_JACK)
 
 dnl Check for libaudiofile
 GST_CHECK_FEATURE(LIBAUDIOFILE, [use gdk pixbuf], afsink afsrc, [
@@ -1087,8 +1107,6 @@ PLUGINS_BUILDDIR=${builddir}
 AC_DEFINE_UNQUOTED(PLUGINS_BUILDDIR,"$PLUGINS_BUILDDIR")
 AC_SUBST(PLUGINS_BUILDDIR)
 
-
-
 dnl ##############################
 dnl # Set up the defaults cflags #
 dnl ##############################
@@ -1194,6 +1212,7 @@ plugins/avi/winaudio/Makefile
 plugins/flx/Makefile
 plugins/festival/Makefile
 plugins/flac/Makefile
+plugins/jack/Makefile
 plugins/jpeg/Makefile
 plugins/mp3decode/Makefile
 plugins/mp3decode/types/Makefile
