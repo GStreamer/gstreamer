@@ -131,7 +131,7 @@ LADSPAPluginSearch (LADSPAPluginSearchCallbackFunction fCallbackFunction)
     if (*pcStart == ':')
       pcStart++;
   }
-  g_free (pcLADSPAPath);
+  g_free ((gpointer) pcLADSPAPath);
 }
 
 /*****************************************************************************/
