@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __VORBISENC_H__
-#define __VORBISENC_H__
+#ifndef __OGGVORBISENC_H__
+#define __OGGVORBISENC_H__
 
 
 #include <gst/gst.h>
@@ -30,25 +30,30 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#define GST_TYPE_VORBISENC \
-  (vorbisenc_get_type())
-#define GST_VORBISENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VORBISENC,VorbisEnc))
-#define GST_VORBISENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VORBISENC,VorbisEncClass))
-#define GST_IS_VORBISENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VORBISENC))
-#define GST_IS_VORBISENC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VORBISENC))
+#define GST_TYPE_OGGVORBISENC \
+  (oggvorbisenc_get_type())
+#define GST_OGGVORBISENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OGGVORBISENC,OggVorbisEnc))
+#define GST_OGGVORBISENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OGGVORBISENC,OggVorbisEncClass))
+#define GST_IS_OGGVORBISENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OGGVORBISENC))
+#define GST_IS_OGGVORBISENC_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OGGVORBISENC))
 
-typedef struct _VorbisEnc VorbisEnc;
-typedef struct _VorbisEncClass VorbisEncClass;
+typedef struct _OggVorbisEnc OggVorbisEnc;
+typedef struct _OggVorbisEncClass OggVorbisEncClass;
 
-struct _VorbisEnc {
+struct _OggVorbisEnc {
   GstElement 	   element;
 
   GstPad          *sinkpad,
                   *srcpad;
+
+  ogg_stream_state os; /* take physical pages, weld into a logical
+			                              stream of packets */
+  ogg_page         og; /* one Ogg bitstream page.  Vorbis packets are inside */
+  ogg_packet       op; /* one raw packet of data for decode */
 
   vorbis_info      vi; /* struct that stores all the static vorbis bitstream
 				                            settings */
@@ -65,6 +70,7 @@ struct _VorbisEnc {
   gint             max_bitrate;
   gfloat           quality;
   gboolean	   quality_set;
+  gint             serial;
 
   gint             channels;
   gint             frequency;
@@ -79,11 +85,11 @@ struct _VorbisEnc {
   gchar		  *last_message;
 };
 
-struct _VorbisEncClass {
+struct _OggVorbisEncClass {
   GstElementClass parent_class;
 };
 
-GType vorbisenc_get_type(void);
+GType oggvorbisenc_get_type(void);
 
 
 #ifdef __cplusplus
@@ -91,4 +97,4 @@ GType vorbisenc_get_type(void);
 #endif /* __cplusplus */
 
 
-#endif /* __VORBISENC_H__ */
+#endif /* __OGGVORBISENC_H__ */

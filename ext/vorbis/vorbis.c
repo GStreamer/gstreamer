@@ -22,6 +22,7 @@
 #endif
 
 #include "vorbisenc.h"
+#include "oggvorbisenc.h"
 #include "vorbisdec.h"
 
 GST_DEBUG_CATEGORY (vorbisdec_debug);
@@ -36,6 +37,10 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_element_register (plugin, "vorbisenc", GST_RANK_NONE,
+          GST_TYPE_OGGVORBISENC))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "rawvorbisenc", GST_RANK_NONE,
           GST_TYPE_VORBISENC))
     return FALSE;
 
