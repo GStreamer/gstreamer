@@ -1,3 +1,8 @@
+2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/gst-i18n-plugin.h:
+          add skeleton i18n stuff, but needs to be further implemented
+
 2004-01-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* examples/gstplay/player.c: (main):
