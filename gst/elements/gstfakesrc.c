@@ -134,7 +134,8 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
   gst_fakesrc_signals[SIGNAL_HANDOFF] =
     gtk_signal_new ("handoff", GTK_RUN_LAST, gtkobject_class->type,
                     GTK_SIGNAL_OFFSET (GstFakeSrcClass, handoff),
-                    gtk_marshal_NONE__NONE, GTK_TYPE_NONE, 0);
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GTK_TYPE_POINTER);
 
   gtk_object_class_add_signals (gtkobject_class, gst_fakesrc_signals,
                                 LAST_SIGNAL);
@@ -299,7 +300,7 @@ gst_fakesrc_get(GstPad *pad)
   buf = gst_buffer_new();
 
   gtk_signal_emit (GTK_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF],
-                                  src);
+                   buf);
 
   return buf;
 }
@@ -343,7 +344,7 @@ gst_fakesrc_loop(GstElement *element)
         g_print("fakesrc: ******* (%s:%s)> \n",GST_DEBUG_PAD_NAME(pad));
 
       gtk_signal_emit (GTK_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF],
-                                  src);
+                       buf);
       gst_pad_push (pad, buf);
 
       pads = g_slist_next (pads);
