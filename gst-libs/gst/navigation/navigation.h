@@ -48,6 +48,7 @@ typedef struct _GstNavigationClass {
   /* virtual functions */
   void (*send_event) (GstNavigation *navigation, GstCaps *caps);
   
+  GST_CLASS_PADDING
 } GstNavigationClass;
 
 GType		gst_navigation_get_type	(void);
