@@ -865,12 +865,44 @@ gst_props_add_entry (GstProps *props, GstPropsEntry *entry)
   g_return_if_fail (props);
   g_return_if_fail (entry);
 
+  /* only variable properties can change the fixed flag */
   if (GST_PROPS_IS_FIXED (props) && GST_PROPS_ENTRY_IS_VARIABLE (entry)) {
     GST_PROPS_FLAG_UNSET (props, GST_PROPS_FIXED);
   }
   props->properties = g_list_insert_sorted (props->properties, entry, props_compare_func);
 }
 
+static void
+gst_props_remove_entry_by_id (GstProps *props, GQuark propid)
+{
+  GList *properties;
+  gboolean found;
+  
+  /* assume fixed */
+  GST_PROPS_FLAG_SET (props, GST_PROPS_FIXED);
+
+  found = FALSE;
+
+  properties = props->properties;
+  while (properties) {
+    GList *current = properties;
+    GstPropsEntry *lentry = (GstPropsEntry *) current->data;
+    
+    properties = g_list_next (properties);
+
+    if (lentry->propid == propid) {
+      found = TRUE;
+      g_list_delete_link (props->properties, current);
+    }
+    else if (GST_PROPS_ENTRY_IS_VARIABLE (lentry)) {
+      GST_PROPS_FLAG_UNSET (props, GST_PROPS_FIXED);
+      /* no need to check for further variable entries
+       * if we already removed the entry */
+      if (found)
+	break;
+    }
+  }
+}
 /**
  * gst_props_remove_entry:
  * @props: the property to remove the entry from
@@ -884,7 +916,7 @@ gst_props_remove_entry (GstProps *props, GstPropsEntry *entry)
   g_return_if_fail (props != NULL);
   g_return_if_fail (entry != NULL);
 
-  props->properties = g_list_remove (props->properties, entry);
+  gst_props_remove_entry_by_id (props, entry->propid);
 }
 
 /**
@@ -897,18 +929,13 @@ gst_props_remove_entry (GstProps *props, GstPropsEntry *entry)
 void
 gst_props_remove_entry_by_name (GstProps *props, const gchar *name)
 {
-  GList *lentry;
   GQuark quark;
 
   g_return_if_fail (props != NULL);
   g_return_if_fail (name != NULL);
 
   quark = g_quark_from_string (name);
-
-  lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
-  if (lentry) {
-    gst_props_remove_entry (props, (GstPropsEntry *)lentry->data);
-  }
+  gst_props_remove_entry_by_id (props, quark);
 }
 
 /**
@@ -949,7 +976,8 @@ gst_props_debug (GstProps *props)
     return;
   }
 	  
-  GST_DEBUG (GST_CAT_PROPERTIES, "props %p, refcount %d, flags %d", props, props->refcount, props->flags);
+  GST_DEBUG (GST_CAT_PROPERTIES, "props %p, refcount %d, flags %d", 
+		  props, props->refcount, props->flags);
 
   g_list_foreach (props->properties, (GFunc) gst_props_debug_entry, NULL);
 }
@@ -1237,26 +1265,66 @@ GstProps*
 gst_props_set (GstProps *props, const gchar *name, ...)
 {
   GQuark quark;
-  GList *lentry;
+  GList *properties;
   va_list var_args;
+  gboolean found;
+  gboolean was_fixed;
 
   g_return_val_if_fail (props != NULL, NULL);
 
+  found = FALSE;
+  was_fixed = GST_PROPS_IS_FIXED (props);
+  GST_PROPS_FLAG_SET (props, GST_PROPS_FIXED);
+
   quark = g_quark_from_string (name);
-
-  lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
-
-  if (lentry) {
+  /* this looks a little complicated but the idea is to get
+   * out of the loop ASAP. Changing the entry to a variable
+   * property immediatly marks the props as non-fixed.
+   * changing the entry to fixed when the props was fixed 
+   * does not change the props and we can get out of the loop
+   * as well.
+   * When changing the entry to a fixed entry, we need to 
+   * see if all entries are fixed before we can decide the props
+   */
+  properties = props->properties;
+  while (properties) {
     GstPropsEntry *entry;
 
-    entry = (GstPropsEntry *)lentry->data;
+    entry = (GstPropsEntry *) properties->data;
 
-    va_start (var_args, name);
-    gst_props_entry_clean (entry);
-    GST_PROPS_ENTRY_FILL (entry, var_args);
-    va_end (var_args);
+    if (entry->propid == quark) {
+      found = TRUE;
+
+      va_start (var_args, name);
+      gst_props_entry_clean (entry);
+      GST_PROPS_ENTRY_FILL (entry, var_args);
+      va_end (var_args);
+
+      /* if the props was fixed and we changed this entry
+       * with a fixed entry, we can stop now as the global
+       * props flag cannot change */
+      if (was_fixed && !GST_PROPS_ENTRY_IS_VARIABLE (entry))
+	break;
+      /* if we already found a non fixed entry we can exit */
+      if (!GST_PROPS_IS_FIXED (props))
+	break;
+      /* if the entry is variable, we'll get out of the loop
+       * in the next statement */
+      /* if the entry is fixed we have to check all other
+       * entries before we can decide if the props are fixed */
+    }
+
+    if (GST_PROPS_ENTRY_IS_VARIABLE (entry)) {
+      /* mark the props as variable */
+      GST_PROPS_FLAG_UNSET (props, GST_PROPS_FIXED);
+      /* if we already changed the entry, we can stop now */
+      if (found)
+        break;
+    }
+    properties = g_list_next (properties);
   }
-  else {
+
+  if (!found) {
     g_warning ("gstprops: no property '%s' to change\n", name);
   }
 
@@ -2424,7 +2492,9 @@ gst_props_normalize (GstProps *props)
 	GList *lentry;
 
 	newprops = gst_props_copy (props);
-        lentry = g_list_find_custom (newprops->properties, GINT_TO_POINTER (list_entry->propid), props_find_func);
+        lentry = g_list_find_custom (newprops->properties, 
+			             GINT_TO_POINTER (list_entry->propid), 
+				     props_find_func);
 	if (lentry) {
           GList *new_list;
 

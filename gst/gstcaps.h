@@ -37,23 +37,24 @@ extern GType _gst_caps_type;
 #define GST_TYPE_CAPS  (_gst_caps_type)
 
 typedef enum {
-  GST_CAPS_FIXED 	= (1 << 0),	/* caps has no variable properties */
+  GST_CAPS_UNUSED 	= (1 << 0),	/* unused flag */
   GST_CAPS_FLOATING 	= (1 << 1)	/* caps is floating */
 } GstCapsFlags;
 
 #define GST_CAPS(caps)  	((GstCaps *)(caps))
 
 #define GST_CAPS_FLAGS(caps)		((caps)->flags)
-#define GST_CAPS_FLAG_IS_SET(caps,flag)	(GST_CAPS_FLAGS (caps) & flag)
-#define GST_CAPS_FLAG_SET(caps,flag)	(GST_CAPS_FLAGS (caps) |= (flag))
+#define GST_CAPS_FLAG_IS_SET(caps,flag)	(GST_CAPS_FLAGS (caps) &   (flag))
+#define GST_CAPS_FLAG_SET(caps,flag)	(GST_CAPS_FLAGS (caps) |=  (flag))
 #define GST_CAPS_FLAG_UNSET(caps,flag)	(GST_CAPS_FLAGS (caps) &= ~(flag))
 
 #define GST_CAPS_REFCOUNT(caps)		((caps)->refcount)
 #define GST_CAPS_PROPERTIES(caps)  	((caps)->properties)
 #define GST_CAPS_NEXT(caps)  		((caps)->next)
 
-#define GST_CAPS_IS_FIXED(caps)		(GST_CAPS_FLAGS (caps) & GST_CAPS_FIXED)
-#define GST_CAPS_IS_FLOATING(caps)	(GST_CAPS_FLAGS (caps) & GST_CAPS_FLOATING)
+#define GST_CAPS_IS_FIXED(caps)		(((caps)->properties == NULL) || \
+					 (GST_PROPS_IS_FIXED ((caps)->properties)))
+#define GST_CAPS_IS_FLOATING(caps)	(GST_CAPS_FLAG_IS_SET ((caps), GST_CAPS_FLOATING))
 #define GST_CAPS_IS_CHAINED(caps)  	(GST_CAPS_NEXT (caps) != NULL)
 
 struct _GstCaps {

@@ -101,15 +101,15 @@ typedef enum {
 } GstPropsFlags;
 
 #define GST_PROPS_FLAGS(props)            ((props)->flags)
-#define GST_PROPS_FLAG_IS_SET(props,flag) (GST_PROPS_FLAGS (props) & flag)
-#define GST_PROPS_FLAG_SET(props,flag)    (GST_PROPS_FLAGS (props) |= (flag))
+#define GST_PROPS_FLAG_IS_SET(props,flag) (GST_PROPS_FLAGS (props) &   (flag))
+#define GST_PROPS_FLAG_SET(props,flag)    (GST_PROPS_FLAGS (props) |=  (flag))
 #define GST_PROPS_FLAG_UNSET(props,flag)  (GST_PROPS_FLAGS (props) &= ~(flag))
 
 #define GST_PROPS_REFCOUNT(props)         ((props)->refcount)
 #define GST_PROPS_PROPERTIES(props)       ((props)->properties)
 
-#define GST_PROPS_IS_FIXED(props)         (GST_PROPS_FLAGS (props) & GST_PROPS_FIXED)
-#define GST_PROPS_IS_FLOATING(props)      (GST_PROPS_FLAGS (props) & GST_PROPS_FLOATING)
+#define GST_PROPS_IS_FIXED(props)         (GST_PROPS_FLAG_IS_SET ((props), GST_PROPS_FIXED))
+#define GST_PROPS_IS_FLOATING(props)      (GST_PROPS_FLAG_IS_SET ((props), GST_PROPS_FLOATING))
 
 struct _GstProps {
   gint   refcount;

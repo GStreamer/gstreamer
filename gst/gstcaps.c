@@ -253,7 +253,7 @@ gst_caps_new_id (const gchar *name, const guint16 id, GstProps *props)
   gst_alloc_trace_new (_gst_caps_trace, caps);
 #endif
 
-  GST_DEBUG (GST_CAT_CAPS, "new %p", caps);
+  GST_DEBUG (GST_CAT_CAPS, "new %p, props %p", caps, props);
 
   gst_props_ref (props);
   gst_props_sink (props);
@@ -264,11 +264,6 @@ gst_caps_new_id (const gchar *name, const guint16 id, GstProps *props)
   caps->next = NULL;
   caps->refcount = 1;
   GST_CAPS_FLAG_SET (caps, GST_CAPS_FLOATING);
-
-  if (props && !GST_PROPS_IS_FIXED (props))
-    GST_CAPS_FLAG_UNSET (caps, GST_CAPS_FIXED);
-  else
-    GST_CAPS_FLAG_SET (caps, GST_CAPS_FIXED);
 
   return caps;
 }
@@ -348,10 +343,7 @@ void
 gst_caps_debug (GstCaps *caps, const gchar *label)
 {
   GST_DEBUG_ENTER ("caps debug: %s", label);
-  if (caps && caps->refcount == 0) {
-    g_warning ("Warning: refcount of caps %s is 0", label);
-    return;
-  }
+
   while (caps) {
     GST_DEBUG (GST_CAT_CAPS, "caps: %p %s %s (%sfixed) (refcount %d) %s", 
 	       caps, caps->name, gst_caps_get_mime (caps), 
@@ -644,11 +636,6 @@ gst_caps_set_props (GstCaps *caps, GstProps *props)
   g_return_val_if_fail (caps != NULL, caps);
 
   gst_props_replace_sink (&caps->properties, props);
-
-  if (props && !GST_PROPS_IS_FIXED (props))
-    GST_CAPS_FLAG_UNSET (caps, GST_CAPS_FIXED);
-  else
-    GST_CAPS_FLAG_SET (caps, GST_CAPS_FIXED);
 
   return caps;
 }
@@ -1078,7 +1065,6 @@ gst_caps_load_thyself (xmlNodePtr parent)
       xmlNodePtr subfield = field->xmlChildrenNode;
       GstCaps *caps;
       gchar *content;
-      GstCapsFlags fixed = GST_CAPS_FIXED;
 
       caps = gst_mem_chunk_alloc0 (_gst_caps_chunk);
 #ifndef GST_DISABLE_TRACE
@@ -1104,13 +1090,10 @@ gst_caps_load_thyself (xmlNodePtr parent)
 	  gst_props_ref (props);
 	  gst_props_sink (props);
           caps->properties = props;
-
-          fixed &= (GST_PROPS_IS_FIXED (caps->properties) ? GST_CAPS_FIXED : 0 );
         }
 	
         subfield = subfield->next;
       }
-      GST_CAPS_FLAG_SET (caps, fixed);
 
       result = gst_caps_append (result, caps);
     }
