@@ -1,6 +1,6 @@
 dnl autoconf configuration file for plugins 
 AC_INIT
-AC_CONFIG_SRCDIR([configure.ac])
+AC_CONFIG_SRCDIR([COPYING])
 
 AC_CANONICAL_TARGET([])
 
@@ -15,7 +15,7 @@ GST_VERSION_RELEASE=`date +%Y%m%d`
 
 GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
 
-PACKAGE=gstreamer-plugins
+PACKAGE=gst-plugins
 VERSION=$GST_VERSION
 
 AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
@@ -30,6 +30,9 @@ GST_CURRENT=1
 GST_REVISION=0
 GST_AGE=0
 GST_LIBVERSION=$GST_CURRENT:$GST_REVISION:$GST_AGE
+
+dnl check for gstreamer
+PKG_CHECK_MODULES(GST, gstreamer >= 0.3.0)
 
 AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 dnl Add parameters for aclocal
@@ -400,6 +403,24 @@ dnl ==========================================================================
 dnl ========================= End macro definitions ==========================
 dnl ==========================================================================
 
+dnl ==========================================================================
+dnl ============================= sys plugins ================================
+dnl ==========================================================================
+
+
+dnl *** OSS audio ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OSS, true)
+GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
+  AC_CHECK_HEADER(sys/soundcard.h, HAVE_OSS="yes", HAVE_OSS="no")
+])
+
+dnl *** VGA ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_VGASINK, true)
+GST_CHECK_FEATURE(VGA, [VGA sink], vgavideosink, [
+  AC_CHECK_HEADER(asm/vga.h, HAVE_VGASINK="yes", HAVE_VGASINK="no")
+])
+
+
 
 dnl Next, check for the optional libraries:
 dnl These are all libraries used in building plugins
@@ -549,12 +570,6 @@ dnl *** mpeg2dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
 GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
   GST_CHECK_LIBHEADER(MPEG2DEC, mpeg2, mpeg2_init,, mpeg2dec/mpeg2.h, MPEG2DEC_LIBS="-lmpeg2")
-])
-
-dnl *** OSS audio ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_OSS, true)
-GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
-  AC_CHECK_HEADER(sys/soundcard.h, HAVE_OSS="yes", HAVE_OSS="no")
 ])
 
 dnl *** quicktime ***
@@ -983,14 +998,6 @@ if test "x$HAVE_LIBXV" = xyes; then
   AC_DEFINE(HAVE_LIBXV)
 fi
 
-if test "x$HAVE_OSS" = xyes; then
-  AC_DEFINE(HAVE_OSS)
-fi
-
-if test "x$HAVE_XAUDIO" = xyes; then
-  AC_DEFINE(HAVE_XAUDIO)
-fi
-
 if test "x$HAVE_LIBMAD" = xyes; then
   AC_DEFINE(HAVE_LIBMAD)
 fi
@@ -1192,25 +1199,26 @@ dnl components/bonobo-gstmediaplay/Makefile
 dnl someone should fix this test/misc/Makefile
 dnl wtay fix this: testsuite/threads/Makefile
 dnl testsuite/refcounting/Makefile
+dnl libs/Makefile
+dnl libs/riff/Makefile
+dnl libs/getbits/Makefile
+dnl libs/putbits/Makefile
+dnl libs/idct/Makefile
+dnl libs/audio/Makefile
+dnl libs/bytestream/Makefile
+dnl libs/control/Makefile
+dnl libs/resample/Makefile
+dnl stamp.h
+dnl echo "$infomessages", infomessages="$infomessages"
 AC_OUTPUT(
 Makefile
-sys/vgasink/Makefile
-sys/vcdsrc/Makefile
-sys/xvideosink/Makefile
-sys/v4l/Makefile
-sys/qcam/Makefile
 sys/Makefile
-libs/Makefile
-libs/riff/Makefile
-libs/getbits/Makefile
-libs/putbits/Makefile
-libs/idct/Makefile
-libs/audio/Makefile
-libs/bytestream/Makefile
-libs/control/Makefile
-libs/resample/Makefile
-stamp.h
-echo "$infomessages", infomessages="$infomessages"
+sys/oss/Makefile
+sys/qcam/Makefile
+sys/v4l/Makefile
+sys/vcdsrc/Makefile
+sys/vgasink/Makefile
+sys/xvideosink/Makefile
 )
 
 echo -e "configure: *** Plugins that will be built : $GST_PLUGINS_YES"
