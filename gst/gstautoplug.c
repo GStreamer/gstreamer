@@ -176,9 +176,13 @@ construct_path (gst_autoplug_node *rgnNodes, gpointer factory)
 
   while (current != NULL)
   { 
-    gpointer next;
+    gpointer next = NULL;
+    
     next = rgnNodes[find_factory(rgnNodes, current)].iPrev;
-    if (next) factories = g_list_prepend (factories, current);
+    if (next) {
+      factories = g_list_prepend (factories, current);
+      DEBUG ("%s %p\n", current->name, next);
+    }
     current = next;
   }
   return factories;

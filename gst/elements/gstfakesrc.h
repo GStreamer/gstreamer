@@ -33,6 +33,16 @@ extern "C" {
 
 GstElementDetails gst_fakesrc_details;
 
+typedef enum {
+  FAKESRC_FIRST_LAST_LOOP = 1,
+  FAKESRC_LAST_FIRST_LOOP,
+  FAKESRC_PING_PONG,
+  FAKESRC_ORDERED_RANDOM,
+  FAKESRC_RANDOM,
+  FAKESRC_PATERN_LOOP,
+  FAKESRC_PING_PONG_PATERN,
+  FAKESRC_GET_ALWAYS_SUCEEDS,
+} GstFakeSrcOutputType;
 
 #define GST_TYPE_FAKESRC \
   (gst_fakesrc_get_type())
@@ -54,6 +64,9 @@ struct _GstFakeSrc {
   gboolean loop_based;
   gint numsrcpads;
   GSList *srcpads;
+  GstFakeSrcOutputType output;
+  gchar *patern;
+  GList *paternlist;
 };
 
 struct _GstFakeSrcClass {

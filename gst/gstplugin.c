@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "gstdebug.h"
 #include "gstplugin.h"
 
 
@@ -82,7 +83,7 @@ _gst_plugin_initialize (void)
   doc = xmlParseFile ("/etc/gstreamer/reg.xml");
 
   if (!doc || strcmp (doc->root->name, "GST-PluginRegistry")) {
-    g_print ("gstplugin: registry needs rebuild\n");
+    g_warning ("gstplugin: registry needs rebuild\n");
     gst_plugin_load_all ();
     return;
   }
@@ -183,6 +184,7 @@ gst_plugin_remove (GstPlugin *plugin)
     gst_elementfactory_destroy ((GstElementFactory*)(factories->data));
     factories = g_list_next(factories);
   }
+  
   _gst_plugins = g_list_remove(_gst_plugins, plugin);
   g_free (plugin);
 }
@@ -244,7 +246,7 @@ gst_plugin_load_absolute (gchar *name)
   struct stat file_status;
 
   if (g_module_supported() == FALSE) {
-    g_print("gstplugin: wow, you built this on a platform without dynamic loading???\n");
+    g_warning("gstplugin: wow, you built this on a platform without dynamic loading???\n");
     return FALSE;
   }
 
@@ -257,7 +259,7 @@ gst_plugin_load_absolute (gchar *name)
   if (module != NULL) {
     if (g_module_symbol(module,"plugin_init",(gpointer *)&initfunc)) {
       if ((plugin = (initfunc)(module))) {
-        g_print("gstplugin: plugin %s loaded\n", plugin->name);
+        DEBUG("gstplugin: plugin %s loaded\n", plugin->name);
         plugin->filename = g_strdup(name);
         plugin->loaded = TRUE;
         _gst_modules = g_list_prepend(_gst_modules,module);
@@ -404,14 +406,14 @@ gst_plugin_load_elementfactory (gchar *name)
       if (!strcmp(factory->name,name)) {
 	if (!plugin->loaded) {
           gchar *filename = g_strdup (plugin->filename);
-	  g_print("gstplugin: loading element factory %s from plugin %s\n", name, plugin->name);
+	  DEBUG("gstplugin: loading element factory %s from plugin %s\n", name, plugin->name);
 	  gst_plugin_remove(plugin);
 	  if (!gst_plugin_load_absolute(filename)) {
-	    g_print("gstplugin: error loading element factory %s from plugin %s\n", name, plugin->name);
+	    DEBUG("gstplugin: error loading element factory %s from plugin %s\n", name, plugin->name);
 	  }
 	  g_free (filename);
-	  factory = gst_plugin_find_elementfactory(name);
 	}
+	factory = gst_plugin_find_elementfactory(name);
         return factory;
       }
       factories = g_list_next(factories);
@@ -446,10 +448,10 @@ gst_plugin_load_typefactory (gchar *mime)
       if (!strcmp(factory->mime,mime)) {
 	if (!plugin->loaded) {
           gchar *filename = g_strdup (plugin->filename);
-	  g_print("gstplugin: loading type factory for \"%s\" from plugin %s\n", mime, plugin->name);
+	  DEBUG("gstplugin: loading type factory for \"%s\" from plugin %s\n", mime, plugin->name);
 	  gst_plugin_remove(plugin);
 	  if (!gst_plugin_load_absolute(filename)) {
-	    g_print("gstplugin: error loading type factory \"%s\" from plugin %s\n", mime, plugin->name);
+	    DEBUG("gstplugin: error loading type factory \"%s\" from plugin %s\n", mime, plugin->name);
 	  }
 	  g_free (filename);
 	}
@@ -616,6 +618,6 @@ gst_plugin_load_thyself (xmlNodePtr parent)
 
     kinderen = kinderen->next;
   }
-  g_print("gstplugin: added %d registered factories and %d types\n", elementcount, typecount);
+  DEBUG("gstplugin: added %d registered factories and %d types\n", elementcount, typecount);
 }
 

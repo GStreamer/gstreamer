@@ -99,6 +99,7 @@ gst_element_class_init (GstElementClass *klass)
   gtk_object_class_add_signals (gtkobject_class, gst_element_signals, LAST_SIGNAL);
 
   klass->change_state = gst_element_change_state;
+  klass->elementfactory = NULL;
 
   gtkobject_class->destroy = gst_element_real_destroy;
 }
@@ -242,6 +243,30 @@ gst_element_get_pad_list (GstElement *element)
 }
 
 /**
+ * gst_element_get_padtemplate_list:
+ * @element: element to get padtemplates of
+ *
+ * Retrieve a list of the padtemplates associated with the element.
+ *
+ * Returns: GList of padtemplates
+ */
+GList*
+gst_element_get_padtemplate_list (GstElement *element)
+{
+  GstElementClass *oclass;
+
+  g_return_val_if_fail (element != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+
+  oclass = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
+
+  if (oclass->elementfactory == NULL) return NULL;
+
+  /* return the list of pads */
+  return oclass->elementfactory->padtemplates;
+}
+
+/**
  * gst_element_connect:
  * @src: element containing source pad
  * @srcpadname: name of pad in source element
@@ -346,7 +371,9 @@ gst_element_set_state (GstElement *element, GstElementState state)
 
     /* if that outright didn't work, we need to bail right away */
     /* NOTE: this will bail on ASYNC as well! */
-    if (return_val != GST_STATE_SUCCESS) return return_val;
+    if (return_val != GST_STATE_SUCCESS &&
+        return_val != GST_STATE_ASYNC) 
+      return return_val;
   }
 
   /* this is redundant, really, it will always return SUCCESS */
@@ -508,16 +535,6 @@ gst_element_save_thyself (GstElement *element,
     xmlNewChild (self, NULL, "version", factory->details->version);
   }
 
-  pads = element->pads;
-  while (pads) {
-    xmlNodePtr padtag = xmlNewChild (self, NULL, "pad", NULL);
-    pad = GST_PAD (pads->data);
-    // figure out if it's a direct pad or a ghostpad
-    if (GST_ELEMENT (pad->parent) == element)
-      gst_pad_save_thyself (pad, padtag);
-    pads = g_list_next (pads);
-  }
-
   // output all args to the element
   type = GTK_OBJECT_TYPE (element);
   while (type != GTK_TYPE_INVALID) {
@@ -582,6 +599,17 @@ gst_element_save_thyself (GstElement *element,
     type = gtk_type_parent (type);
   }
 
+  pads = element->pads;
+  while (pads) {
+    xmlNodePtr padtag = xmlNewChild (self, NULL, "pad", NULL);
+    pad = GST_PAD (pads->data);
+    // figure out if it's a direct pad or a ghostpad
+    if (GST_ELEMENT (pad->parent) == element)
+      gst_pad_save_thyself (pad, padtag);
+    pads = g_list_next (pads);
+  }
+
+
   if (oclass->save_thyself)
     (oclass->save_thyself)(element, self);
 
@@ -630,14 +658,11 @@ gst_element_load_thyself (xmlNodePtr parent,
 
   g_hash_table_insert (elements, g_strdup (gst_element_get_name (element)), element);
 
-  // we have the element now, set the arguments and pads
+  // we have the element now, set the arguments 
   children = parent->childs;
 
   while (children) {
-    if (!strcmp (children->name, "pad")) {
-      gst_pad_load_and_connect (children, GST_OBJECT(element), elements);
-    }
-    else if (!strcmp (children->name, "arg")) {
+    if (!strcmp (children->name, "arg")) {
       xmlNodePtr child = children->childs;
 
       while (child) {
@@ -721,6 +746,15 @@ gst_element_load_thyself (xmlNodePtr parent,
 
 	}
       }
+    }
+    children = children->next;
+  }
+  // we have the element now, set the pads
+  children = parent->childs;
+
+  while (children) {
+    if (!strcmp (children->name, "pad")) {
+      gst_pad_load_and_connect (children, GST_OBJECT(element), elements);
     }
     children = children->next;
   }

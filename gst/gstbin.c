@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#define GST_DEBUG_ENABLED
+//#define GST_DEBUG_ENABLED
 
 #include "gstbin.h"
 #include "gstdebug.h"
@@ -130,6 +130,7 @@ gst_bin_init (GstBin *bin)
 
   bin->numchildren = 0;
   bin->children = NULL;
+  bin->chains = NULL;
 // FIXME temporary testing measure
 //  bin->use_cothreads = TRUE;
 }

@@ -39,18 +39,17 @@ enum {
 };
 
 
-static void gst_pad_class_init(GstPadClass *klass);
-static void gst_pad_init(GstPad *pad);
+static void 	gst_pad_class_init		(GstPadClass *klass);
+static void 	gst_pad_init			(GstPad *pad);
 
-static void gst_pad_set_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_pad_get_arg(GtkObject *object,GtkArg *arg,guint id);
+static void 	gst_pad_set_arg			(GtkObject *object,GtkArg *arg,guint id);
+static void 	gst_pad_get_arg			(GtkObject *object,GtkArg *arg,guint id);
 
-static void gst_pad_real_destroy(GtkObject *object);
+static void 	gst_pad_real_destroy		(GtkObject *object);
 
-static void gst_pad_push_func(GstPad *pad, GstBuffer *buf);
+static void 	gst_pad_push_func		(GstPad *pad, GstBuffer *buf);
 
-
-static GstObject *parent_class = NULL;
+static GstObject *pad_parent_class = NULL;
 static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
@@ -80,7 +79,7 @@ gst_pad_class_init (GstPadClass *klass)
 
   gtkobject_class = (GtkObjectClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_OBJECT);
+  pad_parent_class = gtk_type_class(GST_TYPE_OBJECT);
 
   gst_pad_signals[SET_ACTIVE] =
     gtk_signal_new ("set_active", GTK_RUN_LAST, gtkobject_class->type,
@@ -119,6 +118,8 @@ gst_pad_init (GstPad *pad)
   pad->parent = NULL;
   pad->ghostparents = NULL;
   pad->caps = NULL;
+
+  pad->padtemplate = NULL;
 }
 
 static void
@@ -205,6 +206,7 @@ gst_pad_new_from_template (GstPadTemplate *temp,
 
   pad = gst_pad_new (name, temp->direction);
   pad->caps = temp->caps;
+  pad->padtemplate = temp;
 
   return pad;
 }
@@ -314,7 +316,7 @@ gst_pad_set_getregion_function (GstPad *pad,
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
 
-  g_print("gstpad: pad setting getregion function\n");
+  DEBUG("gstpad: pad setting getregion function\n");
 
   pad->getregionfunc = getregion;
 }
@@ -625,11 +627,11 @@ gst_pad_connect (GstPad *srcpad,
       g_warning ("gstpad: connecting incompatible pads (%s:%s) and (%s:%s)\n",
 		    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
     else
-      g_print ("gstpad: connecting compatible pads (%s:%s) and (%s:%s)\n",
+      DEBUG ("gstpad: connecting compatible pads (%s:%s) and (%s:%s)\n",
 		    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
   }
   else
-    g_print ("gstpad: could not check capabilities of pads (%s:%s) and (%s:%s)\n", 
+    DEBUG ("gstpad: could not check capabilities of pads (%s:%s) and (%s:%s)\n", 
 		    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
   /* first set peers */
@@ -910,6 +912,53 @@ gst_pad_ghost_save_thyself (GstPad *pad,
   return self;
 }
 
+#ifndef gst_pad_push
+void gst_pad_push(GstPad *pad,GstBuffer *buf) {
+  DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
+  if (pad->peer->pushfunc) {
+    DEBUG("calling pushfunc &%s of peer pad %s:%s\n",
+          GST_DEBUG_FUNCPTR_NAME(pad->peer->pushfunc),GST_DEBUG_PAD_NAME(pad->peer));
+    (pad->peer->pushfunc)(pad->peer,buf);
+  } else
+    DEBUG("no pushfunc\n");
+}
+#endif
+
+#ifndef gst_pad_pull
+GstBuffer *gst_pad_pull(GstPad *pad) {
+  GstPad *peer = pad->peer;
+  DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
+  if (peer->pullfunc) {
+    DEBUG("calling pullfunc &%s (@%p) of peer pad %s:%s\n",
+      GST_DEBUG_FUNCPTR_NAME(peer->pullfunc),&peer->pullfunc,GST_DEBUG_PAD_NAME(peer));
+    return (peer->pullfunc)(peer);
+  } else {
+    DEBUG("no pullfunc for peer pad %s:%s at %p\n",GST_DEBUG_PAD_NAME(peer),&peer->pullfunc);
+    return NULL;
+  }
+}
+#endif
+
+#ifndef gst_pad_pullregion
+GstBuffer *gst_pad_pullregion(GstPad *pad,gulong offset,gulong size) {
+  DEBUG_ENTER("(%s:%s,%ld,%ld)",GST_DEBUG_PAD_NAME(pad),offset,size);
+  if (pad->peer->pullregionfunc) {
+    DEBUG("calling pullregionfunc &%s of peer pad %s:%s\n",
+          GST_DEBUG_FUNCPTR_NAME(pad->peer->pullregionfunc),GST_DEBUG_PAD_NAME(pad->peer));
+    return (pad->peer->pullregionfunc)(pad->peer,offset,size);
+  } else {
+    DEBUG("no pullregionfunc\n");
+    return NULL;
+  }
+}
+#endif
+
+/************************************************************************
+ * 
+ * templates
+ *
+ */
+
 GstPadTemplate*   
 gst_padtemplate_new (GstPadFactory *factory) 
 {
@@ -1008,46 +1057,3 @@ gst_padtemplate_load_thyself (xmlNodePtr parent)
   return factory;
 }
 
-
-
-
-#ifndef gst_pad_push
-void gst_pad_push(GstPad *pad,GstBuffer *buf) {
-  DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
-  if (pad->peer->pushfunc) {
-    DEBUG("calling pushfunc &%s of peer pad %s:%s\n",
-          GST_DEBUG_FUNCPTR_NAME(pad->peer->pushfunc),GST_DEBUG_PAD_NAME(pad->peer));
-    (pad->peer->pushfunc)(pad->peer,buf);
-  } else
-    DEBUG("no pushfunc\n");
-}
-#endif
-
-#ifndef gst_pad_pull
-GstBuffer *gst_pad_pull(GstPad *pad) {
-  GstPad *peer = pad->peer;
-  DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
-  if (peer->pullfunc) {
-    DEBUG("calling pullfunc &%s (@%p) of peer pad %s:%s\n",
-      GST_DEBUG_FUNCPTR_NAME(peer->pullfunc),&peer->pullfunc,GST_DEBUG_PAD_NAME(peer));
-    return (peer->pullfunc)(peer);
-  } else {
-    DEBUG("no pullfunc for peer pad %s:%s at %p\n",GST_DEBUG_PAD_NAME(peer),&peer->pullfunc);
-    return NULL;
-  }
-}
-#endif
-
-#ifndef gst_pad_pullregion
-GstBuffer *gst_pad_pullregion(GstPad *pad,gulong offset,gulong size) {
-  DEBUG_ENTER("(%s:%s,%ld,%ld)",GST_DEBUG_PAD_NAME(pad),offset,size);
-  if (pad->peer->pullregionfunc) {
-    DEBUG("calling pullregionfunc &%s of peer pad %s:%s\n",
-          GST_DEBUG_FUNCPTR_NAME(pad->peer->pullregionfunc),GST_DEBUG_PAD_NAME(pad->peer));
-    return (pad->peer->pullregionfunc)(pad->peer,offset,size);
-  } else {
-    DEBUG("no pullregionfunc\n");
-    return NULL;
-  }
-}
-#endif

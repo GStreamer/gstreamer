@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#define GST_DEBUG_ENABLED
+//#define GST_DEBUG_ENABLED
 
 #include "gstscheduler.h"
 #include "gstdebug.h"
@@ -268,6 +268,7 @@ gst_schedule_chained_chain (GstBin *bin, _GstBinChain *chain) {
   GList *pads;
   GstPad *pad;
 
+  DEBUG("chain entered\n");
   // walk through all the elements
   elements = chain->elements;
   while (elements) {
@@ -306,8 +307,9 @@ static void gst_bin_schedule_cleanup(GstBin *bin) {
 
     g_free(chain);
   }
-
   g_list_free(bin->chains);
+
+  bin->chains = NULL;
 }
 
 void gst_bin_schedule_func(GstBin *bin) {

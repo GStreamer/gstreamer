@@ -26,6 +26,7 @@
 
 #include <string.h>
 
+#include "gstdebug.h"
 #include "gsttype.h"
 #include "gstplugin.h"
 
@@ -64,7 +65,7 @@ gst_type_register (GstTypeFactory *factory)
 
   g_return_val_if_fail (factory != NULL, 0);
 
-  //g_print("gsttype: type register %s\n", factory->mime);
+  DEBUG("type register %s\n", factory->mime);
   id = gst_type_find_by_mime (factory->mime);
   
   if (!id) {
@@ -227,7 +228,7 @@ gst_type_typefind_dummy (GstBuffer *buffer, gpointer priv)
   guint16 typeid;
   GSList *funcs;
 
-  g_print ("gsttype: need to load typefind function\n");
+  DEBUG ("gsttype: need to load typefind function for %s\n", type->mime);
 
   type->typefindfuncs = NULL;
   gst_plugin_load_typefactory (type->mime);

@@ -47,6 +47,8 @@ extern "C" {
 
 typedef struct _GstPad GstPad;
 typedef struct _GstPadClass GstPadClass;
+typedef struct _GstPadTemplate GstPadTemplate;
+typedef struct _GstPadTemplateClass GstPadTemplateClass;
 
 /* this defines the functions used to chain buffers
  * pad is the sink pad (so the same chain function can be used for N pads)
@@ -98,6 +100,8 @@ struct _GstPad {
 
   GstObject *parent;
   GList *ghostparents;
+
+  GstPadTemplate *padtemplate;	// the template for this pad
 };
 
 struct _GstPadClass {
@@ -109,20 +113,34 @@ struct _GstPadClass {
   void (*eos)		(GstPad *pad);
 };
 
+/* template */
+#define GST_TYPE_PADTEMPLATE           	(gst_padtemplate_get_type ())
+#define GST_PADTEMPLATE(obj)           	(GTK_CHECK_CAST ((obj), GST_TYPE_PADTEMPLATE,GstPad))
+#define GST_PADTEMPLATE_CLASS(klass)   	(GTK_CHECK_CLASS_CAST ((klass), GST_TYPE_PADTEMPLATE,GstPadClass))
+#define GST_IS_PADTEMPLATE(obj)        	(GTK_CHECK_TYPE ((obj), GST_TYPE_PADTEMPLATE))
+#define GST_IS_PADTEMPLATE_CLASS(obj)  	(GTK_CHECK_CLASS_TYPE ((klass), GST_TYPE_PADTEMPLATE))
+
 typedef enum {
   GST_PAD_ALWAYS,
   GST_PAD_SOMETIMES,
 } GstPadPresence;
 
-typedef struct _GstPadTemplate GstPadTemplate;
-
-/* template */
 struct _GstPadTemplate {
+  GstObject 	  object;
+
   gchar           *name_template;
   GstPadDirection direction;
   GstPadPresence  presence;
   GstCaps  	  *caps;
 };
+
+struct _GstPadTemplateClass {
+  GstObjectClass parent_class;
+
+  /* signal callbacks */
+  void (*pad_created)	(GstPadTemplate *temp, GstPad *pad);
+};
+
 
 /* factory */
 typedef gpointer GstPadFactoryEntry;
@@ -186,7 +204,9 @@ xmlNodePtr 		gst_pad_save_thyself		(GstPad *pad, xmlNodePtr parent);
 void 			gst_pad_load_and_connect	(xmlNodePtr parent, GstObject *element, GHashTable *elements);
 
 
-/* factory */
+/* templates and factories */
+GtkType 		gst_padtemplate_get_type	(void);
+
 GstPadTemplate*		gst_padtemplate_new		(GstPadFactory *factory);
 GstPadTemplate*		gst_padtemplate_create		(gchar *name_template, 
 		                                         GstPadDirection direction, GstPadPresence presence,

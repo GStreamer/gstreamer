@@ -46,7 +46,7 @@ gst_elementfactory_destroy (GstElementFactory *factory)
 
   _gst_elementfactories = g_list_remove (_gst_elementfactories, factory);
 
-  g_free (factory);
+  // we don't free the struct bacause someone might  have a handle to it..
 }
 
 /**
@@ -159,7 +159,7 @@ gst_elementfactory_create (GstElementFactory *factory,
   // attempt to set the elemenfactory class pointer if necessary
   oclass = GST_ELEMENT_CLASS(GTK_OBJECT(element)->klass);
   if (oclass->elementfactory == NULL) {
-    g_print ("gstelementfactory: class %s\n", factory->name);
+    DEBUG ("gstelementfactory: class %s\n", factory->name);
     oclass->elementfactory = factory;
   }
 
