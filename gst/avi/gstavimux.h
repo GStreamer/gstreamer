@@ -69,6 +69,7 @@ struct _GstAviMux {
   gboolean write_header;
   gboolean restart;
   guint32 audio_size;
+  guint64 audio_time;
 
   /* video header */
   gst_riff_strh vids_hdr;

@@ -81,12 +81,12 @@ GST_PAD_TEMPLATE_FACTORY (video_sink_factory,
   GST_PAD_SINK,
   GST_PAD_REQUEST,
   GST_CAPS_NEW (
-    "avimux_sink_video",
+    "avimux_sink_video_avi",
     "video/avi",
       "format",   GST_PROPS_STRING ("strf_vids")
   ),
   GST_CAPS_NEW (
-    "avimux_sink_video",
+    "avimux_sink_video_yuv",
     "video/raw",
       "format", GST_PROPS_LIST (
                   GST_PROPS_FOURCC (GST_MAKE_FOURCC('Y','U','Y','2')),
@@ -97,7 +97,7 @@ GST_PAD_TEMPLATE_FACTORY (video_sink_factory,
       "height", GST_PROPS_INT_RANGE (16, 4096)
   ),
   GST_CAPS_NEW (
-    "avimux_sink_video",
+    "avimux_sink_video_rgb",
     "video/raw",
       "format", GST_PROPS_FOURCC (GST_MAKE_FOURCC('R','G','B',' ')),
       "width",  GST_PROPS_INT_RANGE (16, 4096),
@@ -116,8 +116,20 @@ GST_PAD_TEMPLATE_FACTORY (video_sink_factory,
                 )
   ),
   GST_CAPS_NEW (
-    "avimux_sink_video",
+    "avimux_sink_video_jpeg",
     "video/jpeg",
+      "width",  GST_PROPS_INT_RANGE (16, 4096),
+      "height", GST_PROPS_INT_RANGE (16, 4096)
+  ),
+  GST_CAPS_NEW (
+    "avimux_sink_video_divx",
+    "video/divx",
+      "width",  GST_PROPS_INT_RANGE (16, 4096),
+      "height", GST_PROPS_INT_RANGE (16, 4096)
+  ),
+  GST_CAPS_NEW (
+    "avimux_sink_video_xvid",
+    "video/xvid",
       "width",  GST_PROPS_INT_RANGE (16, 4096),
       "height", GST_PROPS_INT_RANGE (16, 4096)
   )
@@ -390,14 +402,24 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
           break;
       }
     }
-    else if (!strcmp (mimetype, "video/jpeg"))
+    else if (!strcmp (mimetype, "video/jpeg") ||
+             !strcmp (mimetype, "video/xvid") ||
+             !strcmp (mimetype, "video/divx"))
     {
       avimux->vids.size        = sizeof(gst_riff_strf_vids);
       gst_caps_get (caps, "width", &avimux->vids.width,
 		          "height", &avimux->vids.height, NULL);
       avimux->vids.planes      = 1;
       avimux->vids.bit_cnt     = 24;
-      avimux->vids_hdr.fcc_handler = avimux->vids.compression = GST_MAKE_FOURCC('M','J','P','G');
+
+      if (!strcmp (mimetype, "video/jpeg"))
+        avimux->vids.compression = GST_MAKE_FOURCC('M','J','P','G');
+      else if (!strcmp (mimetype, "video/divx"))
+        avimux->vids.compression = GST_MAKE_FOURCC('D','I','V','X');
+      else if (!strcmp (mimetype, "video/xvid"))
+        avimux->vids.compression = GST_MAKE_FOURCC('X','V','I','D');
+
+      avimux->vids_hdr.fcc_handler = avimux->vids.compression;
       avimux->avi_hdr.width = avimux->vids.width;
       avimux->avi_hdr.height = avimux->vids.height;
       avimux->vids.image_size  = avimux->vids.height * avimux->vids.width;
@@ -921,6 +943,7 @@ gst_avimux_start_file (GstAviMux *avimux)
   avimux->num_frames = 0;
   avimux->numx_frames = 0;
   avimux->audio_size = 0;
+  avimux->audio_time = 0;
   avimux->avix_start = 0;
 
   avimux->idx_index = 0;
@@ -980,7 +1003,7 @@ gst_avimux_stop_file (GstAviMux *avimux)
   if (avimux->audio_pad_connected) {
     /* calculate bps if needed */
     if (!avimux->auds.av_bps) {
-      g_warning("Bps calculation needed!");
+      avimux->auds.av_bps = GST_SECOND * ((1. * avimux->audio_size) / avimux->audio_time);
       avimux->auds_hdr.rate = avimux->auds.av_bps * avimux->auds_hdr.scale;
     }
     avimux->avi_hdr.max_bps += avimux->auds.av_bps;
@@ -1133,6 +1156,7 @@ gst_avimux_do_audio_buffer (GstAviMux *avimux)
   {
     avimux->data_size += total_size;
     avimux->audio_size += GST_BUFFER_SIZE(data);
+    avimux->audio_time += GST_BUFFER_DURATION(data);
     gst_avimux_add_index(avimux, "01wb", 0x0, total_size);
   }
 
@@ -1223,8 +1247,14 @@ gst_avimux_do_one_buffer (GstAviMux *avimux)
     else
       gst_avimux_do_audio_buffer(avimux);
   }
-  else
+  else {
+    /* simply finish off the file and send EOS */
+    gst_avimux_stop_file(avimux);
+    gst_pad_push(avimux->srcpad,
+                 GST_BUFFER(gst_event_new(GST_EVENT_EOS)));
+    gst_element_set_eos(GST_ELEMENT(avimux));
     return FALSE;
+  }
 
   return TRUE;
 }
@@ -1313,7 +1343,6 @@ gst_avimux_change_state (GstElement *element)
     case GST_STATE_PLAYING_TO_PAUSED:
       /* this function returns TRUE while it handles buffers */
       while (gst_avimux_do_one_buffer(avimux));
-      gst_avimux_stop_file(avimux);
       break;
     case GST_STATE_PAUSED_TO_READY:
       break;
