@@ -196,12 +196,6 @@ else
 RAW1394_DIR=
 endif
 
-if USE_RTP
-RTP_DIR=rtp
-else
-RTP_DIR=
-endif
-
 if USE_SDL
 SDL_DIR=sdl
 else
@@ -271,7 +265,7 @@ SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
 	$(LADSPA_DIR) $(LAME_DIR) $(LCS_DIR) \
 	$(LIBDV_DIR) $(LIBFAME_DIR) $(LIBPNG_DIR) \
 	$(MAD_DIR) $(MIKMOD_DIR) $(MJPEGTOOLS_DIR) $(MPEG2DEC_DIR) \
-	$(OPENQUICKTIME_DIR) $(RAW1394_DIR) $(RTP_DIR) \
+	$(OPENQUICKTIME_DIR) $(RAW1394_DIR) \
 	$(SDL_DIR) $(SHOUT_DIR) $(SIDPLAY_DIR) \
 	$(SMOOTHWAVE_DIR) $(SWFDEC_DIR) $(TARKIN_DIR) \
 	$(VORBIS_DIR) $(XMMS_DIR) $(SNAPSHOT_DIR)
@@ -285,6 +279,6 @@ DIST_SUBDIRS=\
 	hermes http ivorbis jack jpeg \
 	ladspa lame lcs libfame libpng \
 	mad mikmod mjpegtools mpeg2dec \
-	openquicktime raw1394 rtp \
+	openquicktime raw1394 \
 	sdl snapshot shout shout2 sidplay \
 	smoothwave swfdec tarkin vorbis xmms

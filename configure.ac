@@ -73,12 +73,10 @@ GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plug-ins],,
 [
   AC_MSG_WARN(building experimental plug-ins)
   USE_TARKIN="yes"
-  USE_RTP="yes"
   USE_SHOUT2="yes"
 ],[
   AC_MSG_NOTICE(not building experimental plug-ins)
   USE_TARKIN="no"
-  USE_RTP="no"
   USE_SHOUT2="no"
 ])
 
@@ -762,22 +760,6 @@ GST_CHECK_FEATURE(RAW1394, [raw1394 library], dv1394src, [
   AC_SUBST(RAW1394_LIBS)
 ])
 
-dnl *** rtp ***
-dnl FIXME : adapt and make it work
-translit(dnm, m, l) AM_CONDITIONAL(USE_RTP, true)
-GST_CHECK_FEATURE(RTP, [RTP library], rtpenc rtpdec,[
-  AC_CHECK_LIB(ortp, ortp_init, HAVE_RTP=yes, HAVE_RTP=no, $GST_CFLAGS $GST_LIBS)
-  RTP_LIBS="-lortp"
-  AC_SUBST(RTP_LIBS)
-])
-
-dnl FIXME header check needs to use GLIB_CFLAGS in order to succeed for rtp
-dnl can use GST_* which should have GLIB_* info
-dnl AC_CHECK_HEADERS(rtp/rtp.h, HAVE_LIBRTP=yes, HAVE_LIBRTP=no)
-dnl AC_CHECK_HEADERS(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
-dnl AC_CHECK_HEADERS(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
-dnl AC_CHECK_HEADERS(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
-
 dnl *** SDL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SDL, true)
 GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink, [
@@ -1056,6 +1038,7 @@ gst/passthrough/Makefile
 gst/playondemand/Makefile
 gst/qtdemux/Makefile
 gst/rtjpeg/Makefile
+gst/rtp/Makefile
 gst/silence/Makefile
 gst/sine/Makefile
 gst/smooth/Makefile
@@ -1120,7 +1103,6 @@ ext/mjpegtools/Makefile
 ext/mpeg2dec/Makefile
 ext/openquicktime/Makefile
 ext/raw1394/Makefile
-ext/rtp/Makefile
 ext/sdl/Makefile
 ext/shout/Makefile
 ext/shout2/Makefile
