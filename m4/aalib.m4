@@ -1,4 +1,5 @@
 # Configure paths for AALIB
+# touched up for clean output by Thomas Vander Stichele
 # Jan Hubicka 4/22/2001
 # stolen from Sam Lantinga 9/21/99
 # stolen from Manish Singh
@@ -13,12 +14,20 @@ AC_DEFUN(AM_PATH_AALIB,
 [dnl 
 dnl Get the cflags and libraries from the aalib-config script
 dnl
-AC_ARG_WITH(aalib-prefix,[  --with-aalib-prefix=PFX   Prefix where AALIB is installed (optional)],
-            aalib_prefix="$withval", aalib_prefix="")
-AC_ARG_WITH(aalib-exec-prefix,[  --with-aalib-exec-prefix=PFX Exec prefix where AALIB is installed (optional)],
-            aalib_exec_prefix="$withval", aalib_exec_prefix="")
-AC_ARG_ENABLE(aalibtest, [  --disable-aalibtest       Do not try to compile and run a test AALIB program],
-		    , enable_aalibtest=yes)
+AC_ARG_WITH(aalib-prefix,
+  AC_HELP_STRING([--with-aalib-prefix=PFX],
+                 [Prefix where AALIB is installed (optional)]),
+  aalib_prefix="$withval", aalib_prefix="")
+
+AC_ARG_WITH(aalib-exec-prefix,
+  AC_HELP_STRING([--with-aalib-exec-prefix=PFX],
+                 [Exec prefix where AALIB is installed (optional)]),
+  aalib_exec_prefix="$withval", aalib_exec_prefix="")
+
+AC_ARG_ENABLE(aalibtest, 
+  AC_HELP_STRING([--disable-aalibtest],
+                 [Do not try to compile and run a test AALIB program]),
+  , enable_aalibtest=yes)
 
   if test x$aalib_exec_prefix != x ; then
      aalib_args="$aalib_args --exec-prefix=$aalib_exec_prefix"
