@@ -1209,12 +1209,12 @@ AC_SUBST(LAME_CFLAGS)
 AC_SUBST(LAME_LIBS)
 
 dnl *** MAS (TODO) ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_MAS, true)
-GST_CHECK_FEATURE(MAS, [mas], mas, [
-   GST_CHECK_CONFIGPROG(MAS, mas-config)
-   AC_SUBST(MAS_CFLAGS)
-   AC_SUBST(MAS_LIBS)
-])
+dnl translit(dnm, m, l) AM_CONDITIONAL(USE_MAS, true)
+dnl GST_CHECK_FEATURE(MAS, [mas], mas, [
+dnl   GST_CHECK_CONFIGPROG(MAS, mas-config)
+dnl   AC_SUBST(MAS_CFLAGS)
+dnl   AC_SUBST(MAS_LIBS)
+dnl ])
 
 dnl *** libcaca ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBCACA, true)
@@ -1962,7 +1962,7 @@ ext/libpng/Makefile
 ext/librfb/Makefile
 ext/libvisual/Makefile
 ext/mad/Makefile
-ext/mas/Makefile
+dnl ext/mas/Makefile
 ext/mikmod/Makefile
 ext/mpeg2dec/Makefile
 ext/mpeg2enc/Makefile
