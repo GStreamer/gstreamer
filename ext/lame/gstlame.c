@@ -347,6 +347,22 @@ gst_lame_class_init (GstLameClass * klass)
   gstelement_class->change_state = gst_lame_change_state;
 }
 
+static GstCaps *
+gst_lame_src_getcaps (GstPad * pad)
+{
+  GstLame *lame;
+  GstCaps *caps;
+
+  lame = GST_LAME (gst_pad_get_parent (pad));
+  caps = gst_caps_new_simple ("audio/mpeg",
+      "mpegversion", G_TYPE_INT, 1,
+      "layer", G_TYPE_INT, 3,
+      "rate", G_TYPE_INT, lame->samplerate,
+      "channels", G_TYPE_INT, lame->num_channels, NULL);
+
+  return caps;
+}
+
 static GstPadLinkReturn
 gst_lame_src_link (GstPad * pad, const GstCaps * caps)
 {
@@ -441,7 +457,7 @@ gst_lame_init (GstLame * lame)
       (&gst_lame_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (lame), lame->srcpad);
   gst_pad_set_link_function (lame->srcpad, gst_lame_src_link);
-
+  gst_pad_set_getcaps_function (lame->srcpad, gst_lame_src_getcaps);
   GST_FLAG_SET (lame, GST_ELEMENT_EVENT_AWARE);
 
   GST_DEBUG ("setting up lame encoder");
