@@ -474,7 +474,8 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
 static void
 gst_vorbisenc_metadata_set1 (const GstTagList *list, const gchar *tag, gpointer vorbisenc)
 {
-  gchar *vorbistag, *vorbisvalue;
+  gchar *vorbistag = NULL;
+  gchar *vorbisvalue = NULL;
   guint i, count;
   VorbisEnc *enc = GST_VORBISENC (vorbisenc);
 
