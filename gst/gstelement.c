@@ -474,7 +474,11 @@ gst_element_set_valist (GstElement *element, const gchar *first_property_name, v
   
   g_return_if_fail (GST_IS_ELEMENT (element));
   
-  object = (GObject*)element;
+  object = (GObject *) element;
+
+  GST_DEBUG (GST_CAT_PROPERTIES, 
+	     "setting valist of properties starting with %s on element %s",
+	     first_property_name, gst_element_get_name (element));
 
   if (!GST_FLAG_IS_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES)) {
     g_object_set_valist (object, first_property_name, var_args);
@@ -617,7 +621,8 @@ gst_element_get_valist (GstElement *element, const gchar *first_property_name, v
  * the property will be put on the async queue.
  */
 void
-gst_element_set_property (GstElement *element, const gchar *property_name, const GValue *value)
+gst_element_set_property (GstElement *element, const gchar *property_name, 
+		          const GValue *value)
 {
   GParamSpec *pspec;
   GObject *object;
@@ -626,8 +631,10 @@ gst_element_set_property (GstElement *element, const gchar *property_name, const
   g_return_if_fail (property_name != NULL);
   g_return_if_fail (G_IS_VALUE (value));
   
-  object = (GObject*)element;
+  object = (GObject*) element;
 
+  GST_DEBUG (GST_CAT_PROPERTIES, "setting property %s on element %s",
+	     property_name, gst_element_get_name (element));
   if (!GST_FLAG_IS_SET (element, GST_ELEMENT_USE_THREADSAFE_PROPERTIES)) {
     g_object_set_property (object, property_name, value);
     return;
@@ -635,7 +642,8 @@ gst_element_set_property (GstElement *element, const gchar *property_name, const
 
   g_object_ref (object);
   
-  pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), property_name);
+  pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), 
+		                        property_name);
   
   if (!pspec)
     g_warning ("%s: object class `%s' has no property named `%s'",
@@ -1488,18 +1496,19 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
 
   /* checks */
   g_return_val_if_fail (src != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_ELEMENT(src), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (src), FALSE);
   g_return_val_if_fail (dest != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_ELEMENT(dest), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (dest), FALSE);
 
   GST_DEBUG (GST_CAT_ELEMENT_PADS, "trying to connect element %s to element %s",
              GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (dest));
    
-  /* loop through the existing pads in the source */
   srcpads = gst_element_get_pad_list (src);
   destpads = gst_element_get_pad_list (dest);
 
   if (srcpads || destpads) {
+    /* loop through the existing pads in the source, trying to find a
+     * compatible destination pad */
     while (srcpads) {
       srcpad = (GstPad *) GST_PAD_REALIZE (srcpads->data);
       if ((GST_RPAD_DIRECTION (srcpad) == GST_PAD_SRC) &&

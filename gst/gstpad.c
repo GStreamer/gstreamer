@@ -1441,14 +1441,15 @@ gst_pad_try_reconnect_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad,
 
   /* optinally clear the caps */
   if (clear) {
-    GST_INFO (GST_CAT_PADS, "reconnect filtered %s:%s and %s:%s, clearing caps",
+    GST_INFO (GST_CAT_PADS, 
+	      "start reconnect filtered %s:%s and %s:%s, clearing caps",
               GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
 
     GST_PAD_CAPS (GST_PAD (realsrc)) = NULL;
     GST_PAD_CAPS (GST_PAD (realsink)) = NULL;
   }
   else {
-    GST_INFO (GST_CAT_PADS, "reconnect filtered %s:%s and %s:%s",
+    GST_INFO (GST_CAT_PADS, "start reconnect filtered %s:%s and %s:%s",
         GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
   }
 

@@ -662,7 +662,7 @@ gst_caps_intersect_func (GstCaps *caps1, GstCaps *caps2)
   GstProps *props;
 
   if (caps1->id != caps2->id) {
-    GST_DEBUG (GST_CAT_CAPS,"mime types differ (%s to %s)",
+    GST_DEBUG (GST_CAT_CAPS, "mime types differ (%s to %s)",
 	       gst_type_find_by_id (caps1->id)->mime, 
 	       gst_type_find_by_id (caps2->id)->mime);
     return NULL;
@@ -685,8 +685,8 @@ gst_caps_intersect_func (GstCaps *caps1, GstCaps *caps2)
 
 /**
  * gst_caps_intersect:
- * @caps1: a capabilty
- * @caps2: a capabilty
+ * @caps1: a capability
+ * @caps2: a capability
  *
  * Make the intersection between two caps.
  *
@@ -698,6 +698,9 @@ gst_caps_intersect (GstCaps *caps1, GstCaps *caps2)
 {
   GstCaps *result = NULL, *walk = NULL;
 
+  /* printing the name is not useful here since caps can be chained */
+  GST_DEBUG (GST_CAT_CAPS, "intersecting caps %p and %p", caps1, caps2);
+		  
   if (caps1 == NULL) {
     GST_DEBUG (GST_CAT_CAPS, "first caps is NULL, return other caps");
     return gst_caps_copy (caps2);
