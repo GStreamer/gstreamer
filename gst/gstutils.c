@@ -351,7 +351,7 @@ gst_util_set_object_arg (GObject * object, const gchar * name, const gchar * val
     }
 
     GST_DEBUG (0, "paramspec->flags is %d, paramspec->value_type is %d\n",
-	       paramspec->flags, paramspec->value_type);
+	       paramspec->flags, (gint) paramspec->value_type);
 
     if (paramspec->flags & G_PARAM_WRITABLE) {
       switch (paramspec->value_type) {
