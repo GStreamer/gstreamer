@@ -69,6 +69,7 @@ Ogg/Vorbis audio. Actually, Ogg is a container format too (for Vorbis
 audio), but these are usually used in conjunction with each other.
 
 3a) Container formats
+---------------------
 1 - AVI (Microsoft RIFF/AVI)
   mimetype: video/avi
 
@@ -86,12 +87,12 @@ audio), but these are usually used in conjunction with each other.
   mimetype: audio/x-wav
 
 6 - RealMedia (Real)
-  mimetype: audio/x-pn-realaudio
+  mimetype: video/x-pn-realvideo
+  properties: 'systemstream' = TRUE (BOOLEAN)
 
 7 - DV (Digital Video)
-  mimetype: video/dv
+  mimetype: video/x-dv
   properties: 'systemstream' = TRUE (BOOLEAN)
-              'format' = "PAL"/"NTSC" (STRING)
 
 8 - Ogg (Xiph)
   mimetype: application/ogg
@@ -102,9 +103,31 @@ audio), but these are usually used in conjunction with each other.
 10 - Shockwave (Macromedia)
   mimetype: application/x-shockwave-flash
 
+11 - AU audio (Sun)
+  mimetype: audio/x-au
+
+12 - Mod audio
+  mimetype: audio/x-mod
+
+13 - FLX video (?)
+  mimetype: video/x-fli
+
+14 - Monkeyaudio
+  mimetype: application/x-ape
+
+15 - AIFF audio
+  mimetype: audio/x-aiff
+
+16 - SID audio
+  mimetype: audio/x-sid
+
 Please note that we try to keep these mimetypes as similar as possible
 to what's used as standard mimetypes in Gnome (Gnome-VFS/Nautilus) and
 KDE (Konqueror).
+
+Current problems: there's a very thin line between audio codecs and
+audio containers (take mp3 vs. sid, etc.) - this is just a per-case
+thing right now and needs to be documented further.
 
 3b) Video codecs
 For convenience, the fourcc codes used in the AVI container format will be
@@ -114,6 +137,7 @@ Preface - (optional) properties for all video formats:
   'width' = X (INT)
   'height' = X (INT)
   'pixel_width' and 'pixel_height' = X (2xINT, together aspect ratio)
+  'framerate' = X (FLOAT)
 
 1 - Raw Video (YUV/YCbCr)
   mimetype: video/x-raw-yuv
@@ -139,11 +163,14 @@ Preface - (optional) properties for all video formats:
   YUV9: planar, Y-U-V order, U/V hor+ver 4x subsampled (YUV-4:1:0, 9bpp)
   YVU9: planar, Y-V-U order, U/V hor+ver 4x subsampled (YUV-4:1:0, 9bpp)
 
+  Y800: one-plane (Y-only, YUV-4:0:0, 8bpp)
+
   See http://www.fourcc.org/ for more information.
 
   Note: YUV-4:4:4 (both planar and packed, in multiple orders) are missing.
 
-2 - Raw Video (RGB)
+2) Raw Video (RGB)
+-------------------
   mimetype: video/x-raw-rgb
   properties: 'endianness' = 1234/4321 (INT) <- endianness
               'depth' = 15/16/24 (INT) <- bits per pixel (depth)
@@ -205,7 +232,7 @@ Preface - (optional) properties for all video formats:
 
 5 - Microsoft MPEG 4.1, 4.2 and 4.3
   mimetype: video/x-msmpeg
-  optional properties: 'mpegversion' = 41/42/43 (INT)
+  optional properties: 'msmpegversion' = 41/42/43 (INT)
   known fourccs: MPG4, MP42, MP43
 
 6 - Motion-JPEG (official and extended)
@@ -222,10 +249,11 @@ Preface - (optional) properties for all video formats:
 
 9 - RealVideo (Real)
   mimetype: video/x-pn-realvideo
+  properties: 'systemstream' = FALSE (BOOLEAN)
   known fourccs: RV10, RV20, RV30
 
 10 - Digital Video (DV)
-  mimetype: video/dv
+  mimetype: video/x-dv
   properties: 'systemstream' = FALSE (BOOLEAN)
   known fourccs: DVSD, dvsd
 
@@ -265,11 +293,20 @@ Preface - (optional) properties for all video formats:
   mimetype: video/x-indeo
   properties: 'indeoversion' = 3 (INT)
 
-TODO: colorspace identifications for MJPEG? How? Move MPEG4-compatible codecs
-      over to video/mpeg with a subtype (xvid, divx3, divx4, divx5, iso, ...)?
-      interlacing?
+21 - Portable Network Graphics (PNG)
+  mimetype: video/x-png
+
+TODO: subsampling information for YUV?
+
+TODO: colorspace identifications for MJPEG? How?
+
+TODO: how to distinguish MJPEG-A/B (Quicktime) and lossless JPEG?
+
+TODO: divx4/divx5/xvid/3ivx/mpeg-4 - how to make them overlap? (all 
+      ISO MPEG-4 compatible)
 
 3c) Audio Codecs
+----------------
 for convenience, the two-byte hexcodes (as are being used for identification
 in AVI files) are also given
 
@@ -281,14 +318,15 @@ Preface - (optional) properties for all audio formats:
   mimetype: audio/x-raw-int
   properties: 'width' = X (INT) <- memory bits per sample
               'depth' = X (INT) <- used bits per sample
-              'signedness' = X (BOOLEAN)
+              'signed' = X (BOOLEAN)
               'endianness' = 1234/4321 (INT)
 
 2 - Raw Audio (floating point format)
   mimetype: audio/x-raw-float
-  properties: 'layout' = "gdouble" and "gfloat" (STRING)
-              'intercept' = X (FLOAT)
-              'slope' = X (FLOAT)
+  properties: 'depth' = X (INT) <- 32=float, 64=double
+              'endianness' = 1234/4321 (INT) <- use G_BIG/LITTLE_ENDIAN!
+              'slope' = X (FLOAT, normally 1.0)
+              'intercept' = X (FLOAT, normally 0.0)
 
 3 - Alaw Raw Audio
   mimetype: audio/x-alaw
@@ -309,7 +347,7 @@ Preface - (optional) properties for all audio formats:
   properties: 'wmaversion' = 1/2 (INT)
 
 8 - AC3
-  mimetype: audio/x-a52
+  mimetype: audio/x-ac3
 
 9 - FLAC (Free Lossless Audio Codec)
   mimetype: audio/x-flac
@@ -331,17 +369,50 @@ Preface - (optional) properties for all audio formats:
         example, each sample is 4 bit, and 8 samples are packed
         together per channel in the bytestream. For the others,
         refer to technical documentation.
+        We probably want to distinguish these differently, but
+        I don't know how, yet.
 
 13 - RealAudio (Real)
   mimetype: audio/x-pn-realaudio
   properties: 'bitrate' = 14400/28800 (INT)
 
 14 - DV Audio
-  mimetype: audio/dv
+  mimetype: audio/x-dv
+
+15 - GSM Audio
+  mimetype: audio/x-gsm
+
+16 - Speex audio
+  mimetype: audio/x-speex
 
 TODO: adpcm/dv needs confirmation from someone with knowledge...
 
-4 - Status of this document
+3d) Plugin Guidelines
+---------------------
+So, a short bit on what plugins should do. Above, I've stated that
+audio properties like "channels" and "rate" or video properties like
+"width" and "height" are all optional. This doesn't mean you can
+just simply omit them and everything will still work!
+
+An example is the best way to explain all this. AVI needs the width,
+height, rate and channels for the AVI header. So if these properties
+are missing, avimux cannot work. On the other hand, MPEG doesn't have
+such properties in its header and would thus need to parse the stream
+in order to find them out; we don't want that either (a plugin does
+one job). So normally, mpegdemux and avimux wouldn't allow transcoding.
+To solve this problem, there are stream parser elements (such as
+mpegaudioparse, ac3parse and mpeg1videoparse).
+
+Conclusions to draw from here: a plugin gives info it can provide as
+seen from its own task/job. If it can't, other elements might still
+need it and a stream parser needs to be written if it doesn't already
+exist.
+
+On properties that can be described by one of these (properties such
+as 'width', 'height', 'fps', etc.): they're forbidden and should be
+handled using filtered caps.
+
+4) Status of this document
 ---------------------------
 Not all plugins strictly follow these guidelines yet, but these are the
 official types. Plugins not following these specs either use extensions
