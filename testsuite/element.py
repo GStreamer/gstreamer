@@ -9,17 +9,7 @@ class ElementTest(unittest.TestCase):
     name = 'fakesink'
     alias = 'sink'
     
-    def testBadConstruct(self):
-        self.assertRaises(TypeError, gst.Element)
-        self.assertRaises(TypeError, gst.Element, None)
-
     def testGoodConstructor(self):
-        element = gst.Element(self.name, self.alias)
-        assert element is not None, 'element is None'
-        assert isinstance(element, gst.Element)
-        assert element.get_name() == self.alias
-
-    def testGoodConstructor2(self):
         element = gst.element_factory_make(self.name, self.alias)
         assert element is not None, 'element is None'
         assert isinstance(element, gst.Element)
@@ -37,7 +27,7 @@ class FakeSinkTest(ElementTest):
     name = 'fakesink'
     alias = 'sink'
     def setUp(self):
-        self.element = gst.Element('fakesink', 'sink')
+        self.element = gst.element_factory_make('fakesink', 'sink')
 
     def checkError(self, old_state, state, name):
         assert self.element.get_state() == gst.STATE_NULL
@@ -163,10 +153,6 @@ class QueueTest(unittest.TestCase):
         queue = gst.element_factory_make('queue')
         assert isinstance(queue, gst.Queue)
         assert queue.get_name() == 'queue0'
-
-        #queue = gst.Element('queue')
-        #assert isinstance(queue, gst.Queue)
-        #assert queue.get_name() == 'queue0'
 
 if __name__ == "__main__":
     unittest.main()

@@ -17,9 +17,9 @@ class ThreadConstructor(unittest.TestCase):
 class Pipeline(unittest.TestCase):
     def setUp(self):
         self.pipeline = gst.Pipeline('test-pipeline')
-        source = gst.Element('fakesrc', 'source')
+        source = gst.element_factory_make('fakesrc', 'source')
         source.set_property('num-buffers', 5)
-        sink = gst.Element('fakesink', 'sink')
+        sink = gst.element_factory_make('fakesink', 'sink')
         self.pipeline.add_many(source, sink)
         gst.element_link_many(source, sink)
 
