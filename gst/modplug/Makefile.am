@@ -11,4 +11,3 @@ SUBDIRS=libmodplug
 
 noinst_HEADERS = gstmodplug.h
 
-EXTRA_DIST = README
