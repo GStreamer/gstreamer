@@ -30,10 +30,13 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#define GST_DATA(data)		(GstData*)(data)
+#define GST_DATA_TYPE(data)	(((GstData*)(data))->type)
+
 typedef struct _GstData GstData;
 
 struct _GstData {
-  GstDataType type;
+  GType type;
 };
 
 #ifdef __cplusplus
