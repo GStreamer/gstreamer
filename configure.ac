@@ -336,6 +336,7 @@ GST_PLUGINS_ALL="\
 	auparse \
 	avi \
 	cdxaparse \
+	cdaudio \
 	chart \
 	colorspace \
 	cutter \
@@ -1881,6 +1882,7 @@ ext/alsa/Makefile
 ext/arts/Makefile
 ext/artsd/Makefile
 ext/audiofile/Makefile
+ext/cdaudio/Makefile
 ext/cdparanoia/Makefile
 ext/dirac/Makefile
 ext/divx/Makefile
