@@ -1467,7 +1467,7 @@ gst_pad_try_set_caps (GstPad *pad, GstCaps *caps)
  */
 static gboolean
 gst_pad_try_relink_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad, 
-                                     GstCaps *filtercaps, gboolean clear)
+                                  GstCaps *filtercaps, gboolean clear)
 {
   GstCaps *srccaps, *sinkcaps;
   GstCaps *intersection = NULL;
@@ -1485,8 +1485,11 @@ gst_pad_try_relink_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad,
 	      "start relink filtered %s:%s and %s:%s, clearing caps",
               GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
 
+    /* FIXME does this leak? */
     GST_PAD_CAPS (GST_PAD (realsrc)) = NULL;
     GST_PAD_CAPS (GST_PAD (realsink)) = NULL;
+    GST_RPAD_FILTER (realsrc) = NULL; 
+    GST_RPAD_FILTER (realsink) = NULL; 
   }
   else {
     GST_INFO (GST_CAT_PADS, "start relink filtered %s:%s and %s:%s",
@@ -1522,8 +1525,10 @@ gst_pad_try_relink_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad,
 
     /* then filter this against the app filter */
     if (filtercaps) {
-      GstCaps *filtered_intersection = gst_caps_intersect (intersection, 
-	                                                   filtercaps);
+      GstCaps *filtered_intersection;
+      
+      filtered_intersection = gst_caps_intersect (intersection, 
+	                                          filtercaps);
 
       /* get rid of the old intersection here */
       gst_caps_unref (intersection);
@@ -1576,6 +1581,9 @@ gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad)
     
   g_return_val_if_fail (GST_RPAD_PEER (realsrc) != NULL, FALSE);
   g_return_val_if_fail (GST_RPAD_PEER (realsink) == realsrc, FALSE);
+
+  GST_INFO (GST_CAT_PADS, "perform negotiate for link %s:%s-%s:%s",
+              GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
 
   filter = GST_RPAD_APPFILTER (realsrc);
   if (filter) {
@@ -1896,6 +1904,7 @@ gst_pad_recalc_allowed_caps (GstPad *pad)
 
   GST_DEBUG (GST_CAT_PROPERTIES, "set allowed caps of %s:%s", 
              GST_DEBUG_PAD_NAME (pad));
+
 
   peer = GST_RPAD_PEER (pad);
   if (peer)
