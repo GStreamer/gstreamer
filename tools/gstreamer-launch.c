@@ -79,6 +79,8 @@ gint parse_cmdline(int argc,char *argv[],GstBin *parent) {
 
   while (i < argc) {
     arg = argv[i];
+    // FIXME this is a lame solution for problems with the first parser
+    if (arg == NULL) { i++;continue; }
     len = strlen(arg);
     element = NULL;
     DEBUG("** ARGUMENT is '%s'\n",arg);
@@ -166,10 +168,18 @@ gint parse_cmdline(int argc,char *argv[],GstBin *parent) {
         if (arg[0] == '(') {
           // create a bin and add it to the current parent
           element = gst_bin_new(g_strdup_printf("bin%d",bincount++));
+          if (!element) {
+            fprintf(stderr,"Couldn't create a bin!\n");
+            exit(-1);
+          }
           VERBOSE("CREATED bin %s\n",gst_element_get_name(element));
         } else if (arg[0] == '{') {
           // create a thread and add it to the current parent
           element = gst_thread_new(g_strdup_printf("thread%d",threadcount++));
+          if (!element) {
+            fprintf(stderr,"Couldn't create a thread!\n");
+            exit(-1);
+          }
           VERBOSE("CREATED thread %s\n",gst_element_get_name(element));
         }
 
@@ -179,6 +189,10 @@ gint parse_cmdline(int argc,char *argv[],GstBin *parent) {
 	// we have an element
         DEBUG("attempting to create element '%s'\n",arg);
         element = gst_elementfactory_make(arg,unique_name(arg));
+        if (!element) {
+          fprintf(stderr,"Couldn't create a '%s', no such element or need to run gstraemer-register?\n",arg);
+          exit(-1);
+        }
         VERBOSE("CREATED element %s\n",gst_element_get_name(element));
         DEBUG("created element %s\n",gst_element_get_name(element));
       }
@@ -334,7 +348,6 @@ gint parse(int argc,char *argv[],GstBin *parent) {
 int main(int argc,char *argv[]) {
   GstElement *pipeline;
   int firstarg;
-  guint i;
 
   gst_init(&argc,&argv);
 
