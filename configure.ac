@@ -424,6 +424,7 @@ libs/gst/bytestream/Makefile
 libs/gst/getbits/Makefile
 libs/gst/putbits/Makefile
 libs/gst/control/Makefile
+libs/ext/Makefile
 tests/Makefile
 tests/bufspeed/Makefile
 tests/memchunk/Makefile
