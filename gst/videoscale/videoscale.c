@@ -146,6 +146,9 @@ videoscale_find_by_caps(GstCaps *caps)
 void
 gst_videoscale_setup (GstVideoscale *videoscale)
 {
+  g_return_if_fail (GST_IS_VIDEOSCALE (videoscale));
+  g_return_if_fail (videoscale->format != NULL);
+
   GST_DEBUG ("format=%p \"%s\" from %dx%d to %dx%d",
 		videoscale->format, videoscale->format->fourcc,
 		videoscale->from_width, videoscale->from_height,
@@ -171,6 +174,7 @@ gst_videoscale_setup (GstVideoscale *videoscale)
   videoscale->to_buf_size = (videoscale->to_width * videoscale->to_height
 		  * videoscale->format->depth) / 8;
 
+  videoscale->passthru = FALSE;
   videoscale->inited = TRUE;
 }
 
