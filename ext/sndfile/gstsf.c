@@ -30,21 +30,15 @@
 static GstElementDetails sfsrc_details = {
   "Sndfile Source",
   "Source/Audio",
-  "LGPL",
   "Read audio streams from disk using libsndfile",
-  VERSION,
   "Andy Wingo <wingo at pobox dot com>",
-  "(C) 2003"
 };
 
 static GstElementDetails sfsink_details = {
   "Sndfile Sink",
   "Sink/Audio",
-  "LGPL",
   "Write audio streams to disk using libsndfile",
-  VERSION,
   "Andy Wingo <wingo at pobox dot com>",
-  "(C) 2003"
 };
 
 enum {
@@ -148,6 +142,8 @@ gst_sf_minor_types_get_type (void)
   return sf_minor_types_type;
 }
 
+static void             gst_sfsrc_base_init    (gpointer g_class);
+static void             gst_sfsink_base_init   (gpointer g_class);
 static void		gst_sf_class_init	(GstSFClass *klass);
 static void		gst_sf_init		(GstSF *this);
 static void		gst_sf_dispose		(GObject *object);
@@ -208,7 +204,8 @@ gst_sfsrc_get_type (void)
 
   if (!sfsrc_type) {
     static const GTypeInfo sfsrc_info = {
-      sizeof (GstSFClass),      NULL,
+      sizeof (GstSFClass),
+      gst_sfsrc_base_init,
       NULL,
       (GClassInitFunc) gst_sf_class_init,
       NULL,
@@ -229,7 +226,8 @@ gst_sfsink_get_type (void)
 
   if (!sfsink_type) {
     static const GTypeInfo sfsink_info = {
-      sizeof (GstSFClass),      NULL,
+      sizeof (GstSFClass),
+      gst_sfsink_base_init,
       NULL,
       (GClassInitFunc) gst_sf_class_init,
       NULL,
@@ -241,6 +239,24 @@ gst_sfsink_get_type (void)
     sfsink_type = g_type_register_static (GST_TYPE_SF, "GstSFSink", &sfsink_info, 0);
   }
   return sfsink_type;
+}
+
+static void
+gst_sfsrc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sf_src_factory));
+  gst_element_class_set_details (element_class, &sfsrc_details);
+}
+
+static void
+gst_sfsink_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sf_sink_factory));
+  gst_element_class_set_details (element_class, &sfsink_details);
 }
 
 static void
@@ -784,10 +800,8 @@ gst_sf_loop (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-  
   if (!gst_library_load ("gstaudio"))
     return FALSE;
 
@@ -795,24 +809,23 @@ plugin_init (GModule *module, GstPlugin *plugin)
                            GST_DEBUG_FG_WHITE | GST_DEBUG_BG_GREEN | GST_DEBUG_BOLD,
                            "libsndfile plugin");
 
-  factory = gst_element_factory_new ("sfsrc", GST_TYPE_SFSRC,
-                                     &sfsrc_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sf_src_factory));
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  
-  factory = gst_element_factory_new ("sfsink", GST_TYPE_SFSINK,
-                                     &sfsink_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sf_sink_factory));
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  
+  if (!gst_element_register (plugin, "sfsrc", GST_RANK_NONE, GST_TYPE_SFSRC))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "sfsink", GST_RANK_NONE, GST_TYPE_SFSINK))
+    return FALSE;
+
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gstsf",
-  plugin_init
-};
+  "Sndfile plugin library",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
