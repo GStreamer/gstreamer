@@ -645,8 +645,8 @@ gst_matroska_mux_request_new_pad (GstElement * element,
 
   pad = gst_pad_new_from_template (templ, name);
   g_free (name);
-  gst_element_add_pad (element, pad);
   gst_pad_set_link_function (pad, linkfunc);
+  gst_element_add_pad (element, pad);
   context->index = mux->num_streams++;
   mux->sink[context->index].track = context;
   context->pad = pad;
@@ -1131,6 +1131,11 @@ gst_matroska_mux_loop (GstElement * element)
 {
   GstMatroskaMux *mux = GST_MATROSKA_MUX (element);
   guint i;
+
+  if (gst_matroska_mux_prepare_data (mux) == -1) {
+    GST_ELEMENT_ERROR (element, STREAM, MUX, (NULL), ("No data"));
+    return;
+  }
 
   /* start with a header */
   if (mux->state == GST_MATROSKA_MUX_STATE_START) {
