@@ -35,6 +35,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <errno.h>
+#include "gst/gst-i18n-plugin.h"
 
 /* taken from linux/cdrom.h */
 #define CD_MSF_OFFSET       150	/* MSF numbering offset of first frame */
@@ -205,6 +206,7 @@ cdparanoia_base_init (gpointer g_class)
 	gst_element_class_add_pad_template (element_class, 
 	  gst_static_pad_template_get (&cdparanoia_src_template));
 	gst_element_class_set_details (element_class, &cdparanoia_details);
+
 }
 
 static void
@@ -632,7 +634,9 @@ cdparanoia_open (CDParanoia *src)
 
   /* fail if the device couldn't be found */
   if (src->d == NULL) {
-    GST_DEBUG ("couldn't open device");
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+                       (_("Could not open CD device for reading")),
+                       ("cdda_identify failed"));
     return FALSE;
   }
 
@@ -647,7 +651,9 @@ cdparanoia_open (CDParanoia *src)
 
   /* open the disc */
   if (cdda_open (src->d)) {
-    GST_DEBUG ("couldn't open disc");
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+                       (_("Could not open CD device for reading")),
+                       ("cdda_open failed"));
     cdda_close (src->d);
     src->d = NULL;
     return FALSE;
@@ -686,7 +692,7 @@ cdparanoia_open (CDParanoia *src)
   /* create the paranoia struct and set it up */
   src->p = paranoia_init (src->d);
   if (src->p == NULL) {
-    GST_DEBUG ("couldn't create paranoia struct");
+    GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL), (NULL));
     return FALSE;
   }
 
@@ -800,9 +806,9 @@ cdparanoia_event (GstPad *pad, GstEvent *event)
   src = CDPARANOIA (gst_pad_get_parent (pad));
 
   if (!GST_FLAG_IS_SET (src, CDPARANOIA_OPEN)) {
-		g_print ("Not open\n");
+    GST_DEBUG ("device not open, cannot handle event");
     goto error;
-	}
+  }
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
