@@ -1,5 +1,12 @@
 2004-03-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_formatid_to_caps):
+	  Fix quicktime type recognition in ffmpeg. We returned a bogus
+	  caps, which caused ffdemux_quicktime to be chosen over qtdemux.
+	  This fixes that.
+
+2004-03-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* configure.ac:
 	  Brackets cause autoconf errors. So remove them.
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_add):

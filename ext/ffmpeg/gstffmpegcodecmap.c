@@ -908,7 +908,7 @@ gst_ffmpeg_formatid_to_caps (const gchar *format_name)
   } else if (!strcmp (format_name, "au")) {
     caps = gst_caps_new_simple ("audio/x-au",
 	NULL);
-  } else if (!strcmp (format_name, "mov")) {
+  } else if (!strcmp (format_name, "mov_mp4_m4a_3gp")) {
     caps = gst_caps_new_simple ("video/quicktime",
 	NULL);
   } else if (!strcmp (format_name, "dv")) {
@@ -917,6 +917,9 @@ gst_ffmpeg_formatid_to_caps (const gchar *format_name)
 	NULL);
   } else if (!strcmp (format_name, "4xm")) {
     caps = gst_caps_new_simple ("video/x-4xm",
+	NULL);
+  } else if (!strcmp (format_name, "matroska")) {
+    caps = gst_caps_new_simple ("video/x-matroska",
 	NULL);
   } else {
     gchar *name;
