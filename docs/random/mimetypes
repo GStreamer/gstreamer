@@ -326,6 +326,12 @@ framerate = 0 - MAXFLOAT (FLOAT)
      Encoder:
      Decoder:
 
+20 - Cinepak
+     MIME type: video/x-cinepak
+     Properties:
+     Encoder:
+     Decoder:
+
 TODO: subsampling information for YUV?
 
 TODO: colorspace identifications for MJPEG? How?
