@@ -3,7 +3,7 @@ filterdir = $(libdir)/gst
 filter_LTLIBRARIES = libgstvideoscale.la
 
 if HAVE_CPU_I386
-SCALER = gstscale_x86.c
+SCALER = gstscale_x86.c gstscale_x86_asm.s
 else
 SCALER =
 endif
@@ -16,4 +16,4 @@ libgstvideoscaleinclude_HEADERS = gstvideoscale.h
 noinst_HEADERS = gstscale_x86.h
 
 #CFLAGS += -S -O1 $(FOMIT_FRAME_POINTER) -funroll-all-loops -finline-functions -ffast-math
-CFLAGS = -g $(GLIB_CFLAGS) $(GST_CFLAGS) $(XML_CFLAGS) -O5 -fomit-frame-pointer -ffast-math
+CFLAGS = $(GLIB_CFLAGS) $(GST_CFLAGS) $(XML_CFLAGS) -O5 -fomit-frame-pointer -ffast-math
