@@ -35,6 +35,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
 #define GST_IS_PLAY_BIN(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PLAY_BIN))
 #define GST_IS_PLAY_BIN_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PLAY_BIN))
 
+#define VOLUME_MAX_DOUBLE 4.0
+
 typedef struct _GstPlayBin GstPlayBin;
 typedef struct _GstPlayBinClass GstPlayBinClass;
 
@@ -45,6 +47,8 @@ struct _GstPlayBin
   GstElement *audio_sink;
   GstElement *video_sink;
   GstElement *visualisation;
+  GstElement *volume_element;
+  float volume;
 
   GList *sinks;
 
@@ -63,6 +67,7 @@ enum
   ARG_AUDIO_SINK,
   ARG_VIDEO_SINK,
   ARG_VIS_PLUGIN,
+  ARG_VOLUME
 };
 
 /* signals */
@@ -159,6 +164,9 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       g_param_spec_object ("vis-plugin", "Vis plugin",
           "the visualization element to use (NULL = none)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (gobject_klass), ARG_VOLUME,
+      g_param_spec_double ("volume", "volume", "volume",
+          0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE));
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_bin_dispose);
 
@@ -182,6 +190,8 @@ gst_play_bin_init (GstPlayBin * play_bin)
   play_bin->video_sink = NULL;
   play_bin->audio_sink = NULL;
   play_bin->visualisation = NULL;
+  play_bin->volume_element = NULL;
+  play_bin->volume = 1.0;
   play_bin->seekables = NULL;
   play_bin->sinks = NULL;
 
@@ -220,6 +230,13 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
     case ARG_VIS_PLUGIN:
       play_bin->visualisation = g_value_get_object (value);
       break;
+    case ARG_VOLUME:
+      play_bin->volume = g_value_get_double (value);
+      if (play_bin->volume_element) {
+        g_object_set (G_OBJECT (play_bin->volume_element), "volume",
+            play_bin->volume, NULL);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -245,6 +262,9 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_VIS_PLUGIN:
       g_value_set_object (value, play_bin->visualisation);
+      break;
+    case ARG_VOLUME:
+      g_value_set_float (value, play_bin->volume);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -290,9 +310,15 @@ gen_audio_element (GstPlayBin * play_bin)
   GstElement *element;
   GstElement *conv;
   GstElement *sink;
+  GstElement *volume;
 
   element = gst_bin_new ("abin");
   conv = gst_element_factory_make ("audioconvert", "aconv");
+
+  volume = gst_element_factory_make ("volume", "volume");
+  g_object_set (G_OBJECT (volume), "volume", play_bin->volume, NULL);
+  play_bin->volume_element = volume;
+
   if (play_bin->audio_sink) {
     sink = play_bin->audio_sink;
   } else {
@@ -302,8 +328,11 @@ gen_audio_element (GstPlayBin * play_bin)
   play_bin->seekables = g_list_prepend (play_bin->seekables, sink);
 
   gst_bin_add (GST_BIN (element), conv);
+  gst_bin_add (GST_BIN (element), volume);
   gst_bin_add (GST_BIN (element), sink);
-  gst_element_link_pads (conv, "src", sink, "sink");
+
+  gst_element_link_pads (conv, "src", volume, "sink");
+  gst_element_link_pads (volume, "src", sink, "sink");
 
   gst_element_add_ghost_pad (element,
       gst_element_get_pad (conv, "sink"), "sink");
