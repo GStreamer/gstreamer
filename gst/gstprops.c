@@ -1246,7 +1246,6 @@ gst_props_entry_get_safe (const GstPropsEntry *entry, ...)
 static gboolean
 gst_props_getv (GstProps *props, gboolean safe, gchar *first_name, va_list var_args)
 {
-  g_print ("DEBUG: first_name: %s, var_args %p\n", first_name, var_args);
   while (first_name) {
     const GstPropsEntry *entry = gst_props_get_entry (props, first_name);
     gboolean result;
@@ -1256,7 +1255,6 @@ gst_props_getv (GstProps *props, gboolean safe, gchar *first_name, va_list var_a
     if (!result) return FALSE;
 
     first_name = va_arg (var_args, gchar *);
-  g_print ("DEBUG: first_name: %s, var_args %p\n", first_name, var_args);
   }
   return TRUE;
 }
@@ -1278,9 +1276,7 @@ gst_props_get (GstProps *props, gchar *first_name, ...)
   va_list var_args;
   gboolean ret;
 
-  g_print ("DEBUG: first_name: %s, var_args %p\n", first_name, var_args);
   va_start (var_args, first_name);
-  g_print ("DEBUG: first_name: %s, var_args %p\n", first_name, var_args);
   ret = gst_props_getv (props, FALSE, first_name, var_args);
   va_end (var_args);
 
