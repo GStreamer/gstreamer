@@ -306,6 +306,7 @@ gst_riff_read_seek (GstRiffRead * riff, guint64 offset)
     GST_WARNING ("Unexpected event before seek");
     if (!gst_riff_read_use_event (riff, event))
       return NULL;
+    event = NULL;
   }
 
   if (remaining)
