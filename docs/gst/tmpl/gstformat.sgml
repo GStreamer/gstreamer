@@ -44,6 +44,7 @@ A convenience function to define a function that returns an array
 of formats.
 </para>
 
+@type: The type of the first argument of the function
 @functionname: The name of the function
 @...: comma separated list of functions closed with 0
 

@@ -247,10 +247,12 @@ Destroy the scheduler
 
 @sched: 
 @element: 
-@clock: 
-@time: 
+@id: 
 @jitter: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@clock: 
+@time: 
 
 
 <!-- ##### FUNCTION gst_scheduler_iterate ##### -->

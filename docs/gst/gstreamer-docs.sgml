@@ -24,6 +24,7 @@
 <!entity GstPipeline SYSTEM "sgml/gstpipeline.sgml">
 <!entity GstPlugin SYSTEM "sgml/gstplugin.sgml">
 <!entity GstPluginFeature SYSTEM "sgml/gstpluginfeature.sgml">
+<!entity GstQuery SYSTEM "sgml/gstquery.sgml">
 <!entity GstThread SYSTEM "sgml/gstthread.sgml">
 <!entity GstRegistry SYSTEM "sgml/gstregistry.sgml">
 <!entity GstScheduler SYSTEM "sgml/gstscheduler.sgml">
@@ -109,6 +110,7 @@ with some more specialized elements.</para>
     &GstProbe;
     &GstProps;
     &GstQueue;
+    &GstQuery;
     &GstRegistry;
     &GstScheduler;
     &GstSchedulerFactory;

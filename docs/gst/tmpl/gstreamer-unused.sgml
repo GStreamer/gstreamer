@@ -1449,6 +1449,39 @@ g_print messages.
 </para>
 
 
+<!-- ##### MACRO GST_ATOMIC_SWAP ##### -->
+<para>
+Atomically swap the value of the #GstAtomicSwap with a new value
+</para>
+
+@swap: a reference to a #GstAtomicSwap
+@val: the new value
+
+<!-- ##### MACRO GST_ATOMIC_SWAP_GET ##### -->
+<para>
+Atomically swap the value of the #GstAtomicSwap with a new value and
+get the old value.
+</para>
+
+@swap: a reference to a #GstAtomicSwap
+@val: the new value
+@res: the old value
+
+<!-- ##### MACRO GST_ATOMIC_SWAP_INIT ##### -->
+<para>
+Initialize an atomic swap structure
+</para>
+
+@swap: a reference to a #GstAtomicSwap
+@val: the initial value
+
+<!-- ##### MACRO GST_ATOMIC_SWAP_VALUE ##### -->
+<para>
+Get the value of a #GstAtomicSwap
+</para>
+
+@swap: a reference to a #GstAtomicSwap
+
 <!-- ##### MACRO GST_AUDIOSINK ##### -->
 <para>
 
@@ -4027,6 +4060,13 @@ Specify the current offset in the file.
 @GST_ASYNCDISKSRC_OPEN: 
 @GST_ASYNCDISKSRC_FLAG_LAST: 
 
+<!-- ##### STRUCT GstAtomicSwap ##### -->
+<para>
+The structure to handle values that can be swapped atomically
+</para>
+
+@lock: 
+
 <!-- ##### STRUCT GstAudioSink ##### -->
 <para>
 
@@ -4909,6 +4949,14 @@ Specify the location of the file. The location must be a fully qualified URL.
 </para>
 
 
+<!-- ##### STRUCT GstMemChunkElement ##### -->
+<para>
+An entry in the memchunk area
+</para>
+
+@link: 
+@area: 
+
 <!-- ##### STRUCT GstMeta ##### -->
 <para>
 
@@ -5062,6 +5110,22 @@ The function that will be called when a QoS message is sent.
 
 @pad: the pad that sent the QoS message
 @qos_message: the message
+
+<!-- ##### ENUM GstPadQueryType ##### -->
+<para>
+The different supported query types.
+</para>
+
+@GST_PAD_QUERY_NONE: 
+@GST_PAD_QUERY_TOTAL: Query the total stream time.
+@GST_PAD_QUERY_POSITION: Query the current stream position.
+@GST_PAD_QUERY_LATENCY: Query the latency on the pad.
+@GST_PAD_QUERY_JITTER: Query the average jitter beteen optimal processing 
+                       and current processing.
+@GST_PAD_QUERY_START: Query for the configured start time for segmented seek
+@GST_PAD_QUERY_SEGMENT_END: Query the end position of the currently 
+                            executing segment.
+@GST_PAD_QUERY_RATE: Query at which rate this pad will process data.
 
 <!-- ##### STRUCT GstPadTemplateClass ##### -->
 <para>
@@ -8575,6 +8639,24 @@ Call the EOS function of the pad
 
 @pad: 
 @qos_message: 
+
+<!-- ##### FUNCTION gst_pad_handles_event ##### -->
+<para>
+
+</para>
+
+@pad: 
+@mask: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_handles_format ##### -->
+<para>
+
+</para>
+
+@pad: 
+@format: 
+@Returns: 
 
 <!-- ##### FUNCTION gst_pad_negotiate_proxy ##### -->
 <para>

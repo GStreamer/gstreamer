@@ -110,6 +110,7 @@ flags for an association entry
 
 @GST_ACCOCIATION_FLAG_NONE: no flags
 @GST_ACCOCIATION_FLAG_KEY_UNIT: this entry marks a key unit.
+@GST_ACCOCIATION_FLAG_LAST: 
 
 <!-- ##### MACRO GST_INDEX_FORMAT_FORMAT ##### -->
 <para>
@@ -307,6 +308,7 @@ The GstIndex object
 @index: 
 @id: 
 @method: 
+@flags: 
 @format: 
 @value: 
 @Returns: 
@@ -320,6 +322,7 @@ The GstIndex object
 @index: 
 @id: 
 @method: 
+@flags: 
 @format: 
 @value: 
 @func: 

@@ -457,10 +457,12 @@ Sets the name of the element, getting rid of the old name if there was one.
 </para>
 
 @element: 
-@clock: 
-@time: 
+@id: 
 @jitter: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@clock: 
+@time: 
 
 
 <!-- ##### FUNCTION gst_element_provides_clock ##### -->

@@ -40,19 +40,12 @@ GST_ATOMIC_INT_READ
 GST_ATOMIC_INT_INC
 GST_ATOMIC_INT_DEC_AND_TEST
 GST_ATOMIC_INT_ADD
-GstAtomicSwap
-GST_ATOMIC_SWAP_VALUE
-GST_ATOMIC_SWAP_INIT
-GST_ATOMIC_SWAP
-GST_ATOMIC_SWAP_GET
 <SUBSECTION Standard>
-GST_ATOMIC_LOCK
 </SECTION>
 
 <SECTION>
 <FILE>gstmemchunk</FILE>
 GstMemChunk
-GstMemChunkElement
 gst_mem_chunk_new
 gst_mem_chunk_destroy
 gst_mem_chunk_alloc
@@ -815,6 +808,12 @@ gst_object_flags_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gstquery</FILE>
+GstQueryType
+GST_QUERY_TYPE_FUNCTION
+</SECTION>
+
+<SECTION>
 <FILE>gstpad</FILE>
 <TITLE>GstPad</TITLE>
 GST_PAD_NAME
@@ -845,12 +844,13 @@ GstPadConvertFunction
 GstPadDispatcherFunction
 GstPadIntConnFunction
 
-GstPadQueryType
 GstPadQueryFunction
 GstPadEventMaskFunction
 GstPadFormatsFunction
 GstPadQueryTypeFunction
 GST_PAD_QUERY_TYPE_FUNCTION
+GST_PAD_FORMATS_FUNCTION
+GST_PAD_EVENT_MASK_FUNCTION
 
 GstPadDirection
 GstPadFlags
@@ -908,7 +908,6 @@ gst_pad_event_default
 gst_pad_set_event_function
 gst_pad_get_event_masks
 gst_pad_get_event_masks_default
-gst_pad_handles_event
 gst_pad_set_event_mask_function
 
 gst_pad_set_convert_function
@@ -916,7 +915,6 @@ gst_pad_convert
 gst_pad_convert_default
 gst_pad_get_formats
 gst_pad_get_formats_default
-gst_pad_handles_format
 gst_pad_set_formats_function
 
 gst_pad_get_internal_connections
@@ -1005,8 +1003,6 @@ GST_TYPE_PAD_FLAGS
 gst_pad_flags_get_type
 GST_TYPE_PAD_PRESENCE
 gst_pad_presence_get_type
-GST_TYPE_PAD_QUERY_TYPE
-gst_pad_query_type_get_type
 </SECTION>
 
 <SECTION>

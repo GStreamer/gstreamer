@@ -291,22 +291,6 @@ The signature of the internal pad connection function.
           The caller must call g_list_free() on it after use.
 
 
-<!-- ##### ENUM GstPadQueryType ##### -->
-<para>
-The different supported query types.
-</para>
-
-@GST_PAD_QUERY_NONE: 
-@GST_PAD_QUERY_TOTAL: Query the total stream time.
-@GST_PAD_QUERY_POSITION: Query the current stream position.
-@GST_PAD_QUERY_LATENCY: Query the latency on the pad.
-@GST_PAD_QUERY_JITTER: Query the average jitter beteen optimal processing 
-                       and current processing.
-@GST_PAD_QUERY_START: Query for the configured start time for segmented seek
-@GST_PAD_QUERY_SEGMENT_END: Query the end position of the currently 
-                            executing segment.
-@GST_PAD_QUERY_RATE: Query at which rate this pad will process data.
-
 <!-- ##### USER_FUNCTION GstPadQueryFunction ##### -->
 <para>
 The signature of the query function.
@@ -353,6 +337,26 @@ A convenience macro to construct query type functions
 
 @functionname: the name of the function
 @...: query types, 0 to mark the last element
+
+
+<!-- ##### MACRO GST_PAD_FORMATS_FUNCTION ##### -->
+<para>
+Convenience function to define an array of formats that can be used
+as #GstPadGetFormatsFunction.
+</para>
+
+@functionname: The name of the function
+@...: comma separated list of formats, 0 to mark the end
+
+
+<!-- ##### MACRO GST_PAD_EVENT_MASK_FUNCTION ##### -->
+<para>
+Convenience function to define an array of event masks that can be used
+as #GstPadGetEventMaskFunction.
+</para>
+
+@functionname: The name of the function
+@...: comma separated list of event maks, { 0, } to mark the end
 
 
 <!-- ##### ENUM GstPadDirection ##### -->
@@ -857,16 +861,6 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_handles_event ##### -->
-<para>
-
-</para>
-
-@pad: 
-@mask: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_pad_set_event_mask_function ##### -->
 <para>
 
@@ -926,16 +920,6 @@ Destroy the pad.
 </para>
 
 @pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_handles_format ##### -->
-<para>
-
-</para>
-
-@pad: 
-@format: 
 @Returns: 
 
 

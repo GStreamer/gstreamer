@@ -26,21 +26,6 @@ The GstMemChunk is used to allocate critical resources for #GstBuffer and
 The memchunk structure
 </para>
 
-@swap: 
-@name: 
-@area_size: 
-@chunk_size: 
-@atom_size: 
-@cleanup: 
-@lock: 
-
-<!-- ##### STRUCT GstMemChunkElement ##### -->
-<para>
-An entry in the memchunk area
-</para>
-
-@link: 
-@area: 
 
 <!-- ##### FUNCTION gst_mem_chunk_new ##### -->
 <para>
