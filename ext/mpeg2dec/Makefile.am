@@ -3,7 +3,7 @@ plugindir = $(libdir)/gst
 plugin_LTLIBRARIES = libgstmpeg2dec.la
 
 if HAVE_CPU_I386
-ARCHFLAGS = -m486
+ARCHFLAGS = -mcpu=i486
 else
 ARCHFLAGS = 
 endif
