@@ -181,7 +181,8 @@ gst_identity_loop (GstElement *element)
   
   do {
     buf = gst_pad_pull (identity->sinkpad);
-    g_print("identity: ******* (%s:%s)i \n",GST_DEBUG_PAD_NAME(identity->sinkpad));
+    if (!identity->silent)
+      g_print("identity: ******* (%s:%s)i \n",GST_DEBUG_PAD_NAME(identity->sinkpad));
 
     gst_pad_push (identity->srcpad, buf);
 

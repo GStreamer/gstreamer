@@ -552,8 +552,11 @@ gst_thread_main_loop (void *arg)
           // PLAYING is coming up, so we can now start spinning
           while (GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING)) {
             if (!gst_bin_iterate (GST_BIN (thread))) {
-              GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
-              THR_DEBUG_MAIN("removed spinning state due to failed iteration!\n");
+//              GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
+//              THR_DEBUG_MAIN("removed spinning state due to failed iteration!\n");
+              // FIXME FIXME FIXME this is ugly!
+              THR_DEBUG_MAIN("iteration failed, something very wrong, spinning to let parent sync\n");
+              while (GST_FLAG_IS_SET(thread, GST_THREAD_STATE_SPINNING)) ;
             }
           }
           g_mutex_lock(thread->lock);

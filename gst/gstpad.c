@@ -1304,6 +1304,7 @@ gst_pad_renegotiate (GstPad *pad)
     GST_DEBUG (GST_CAT_NEGOTIATION, "pads aggreed on caps :)\n");
 
   newcaps = GST_PAD_CAPS (pad);
+    g_return_val_if_fail(newcaps != NULL, FALSE);	// FIXME is this valid?
 
     /* here we have some sort of aggreement of the caps */
     GST_PAD_CAPS (currentpad) = gst_caps_ref (newcaps);

@@ -36,7 +36,7 @@ void print_prop(GstPropsEntry *prop,gboolean showname,gchar *pfx) {
       printf("String: %s\n",prop->data.string_data.string);
       break;
     case GST_PROPS_FOURCC_ID:
-      printf("FourCC: %c%c%c%c\n",
+      printf("FourCC: '%c%c%c%c'\n",
              prop->data.fourcc_data & 0xff,prop->data.fourcc_data>>8 & 0xff,
              prop->data.fourcc_data>>16 & 0xff,prop->data.fourcc_data>>24 & 0xff);
       break;
