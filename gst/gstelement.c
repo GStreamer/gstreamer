@@ -2264,11 +2264,11 @@ gst_element_set_state (GstElement *element, GstElementState state)
         /* if it did not, this is an error - fix the element that does this */
 	if (GST_STATE (element) != curpending) {
 	  g_warning ("element %s claimed state-change success,"
-	             "but state didn't change %s, %s <-> %s, fix the element",
+	             "but state didn't change to %s. State is %s (%s pending), fix the element",
 		     GST_ELEMENT_NAME (element),
+	             gst_element_state_get_name (curpending),
 	             gst_element_state_get_name (GST_STATE (element)),
-	             gst_element_state_get_name (GST_STATE_PENDING (element)),
-	             gst_element_state_get_name (curpending));
+	             gst_element_state_get_name (GST_STATE_PENDING (element)));
 	  return GST_STATE_FAILURE;
 	}
         break;
