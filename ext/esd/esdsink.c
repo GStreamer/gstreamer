@@ -1,4 +1,4 @@
-/* Gnome-Streamer
+/* GStreamer
  * Copyright (C) <2001> Richard Boulton <richard-gst@tartarus.org>
  *
  * Based on example.c:
@@ -129,7 +129,7 @@ gst_esdsink_channels_get_type (void)
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_esdsink_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_esdsink_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_esdsink_get_type (void)
@@ -165,19 +165,19 @@ gst_esdsink_class_init (GstEsdsinkClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MUTE,
     g_param_spec_boolean("mute","mute","mute",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEPTH,
     g_param_spec_enum("depth","depth","depth",
-                      GST_TYPE_ESDSINK_DEPTHS,16,G_PARAM_READWRITE)); // CHECKME!
+                      GST_TYPE_ESDSINK_DEPTHS,16,G_PARAM_READWRITE)); /* CHECKME! */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNELS,
     g_param_spec_enum("channels","channels","channels",
-                      GST_TYPE_ESDSINK_CHANNELS,2,G_PARAM_READWRITE)); // CHECKME!
+                      GST_TYPE_ESDSINK_CHANNELS,2,G_PARAM_READWRITE)); /* CHECKME! */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_RATE,
     g_param_spec_int("frequency","frequency","frequency",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HOST,
     g_param_spec_string("host","host","host",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
 
   gobject_class->set_property = gst_esdsink_set_property;
   gobject_class->get_property = gst_esdsink_get_property;
@@ -196,7 +196,7 @@ gst_esdsink_init(GstEsdsink *esdsink)
 
   esdsink->mute = FALSE;
   esdsink->fd = -1;
-  // FIXME: get default from somewhere better than just putting them inline.
+  /* FIXME: get default from somewhere better than just putting them inline. */
   esdsink->format = 16;
   esdsink->depth = 16;
   esdsink->channels = 2;
@@ -212,7 +212,7 @@ gst_esdsink_sync_parms (GstEsdsink *esdsink)
 
   if (esdsink->fd == -1) return TRUE;
 
-  // Need to set fd to use new parameters: only way to do this is to reopen.
+  /* Need to set fd to use new parameters: only way to do this is to reopen. */
   gst_esdsink_close_audio (esdsink);
   return gst_esdsink_open_audio (esdsink);
 }
@@ -352,10 +352,10 @@ GstPluginDesc plugin_desc = {
 static gboolean
 gst_esdsink_open_audio (GstEsdsink *sink)
 {
-  // Name used by esound for this connection.
+  /* Name used by esound for this connection. */
   const char * connname = "GStreamer";
 
-  // Bitmap describing audio format.
+  /* Bitmap describing audio format. */
   esd_format_t esdformat = ESD_STREAM | ESD_PLAY;
 
   g_return_val_if_fail (sink->fd == -1, FALSE);
