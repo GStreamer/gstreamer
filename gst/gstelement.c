@@ -792,7 +792,7 @@ gst_element_clock_wait (GstElement * element, GstClockID id,
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_CLOCK_ERROR);
 
   if (GST_ELEMENT_SCHED (element)) {
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "waiting on scheduler clock");
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "waiting on scheduler clock with id %d");
     res =
         gst_scheduler_clock_wait (GST_ELEMENT_SCHED (element), element, id,
         jitter);
@@ -810,10 +810,18 @@ gst_element_clock_wait (GstElement * element, GstClockID id,
  * gst_element_get_time:
  * @element: element to query
  *
- * Query the element's time. The element must use 
- * 
- * Returns: the current time of the element or #GST_CLOCK_TIME_NONE when there
- *          is no time available.
+ * Query the element's time. FIXME: The element must use
+ *
+ * Returns: the current stream time in #GST_STATE_PLAYING,
+ *          the element base time in #GST_STATE_PAUSED,
+ *          or #GST_CLOCK_TIME_NONE otherwise.
+ */
+/* FIXME: this should always return time on the same scale.  Now it returns
+ * the (absolute) base_time in PAUSED and the (current running) time in
+ * PLAYING.
+ * Solution: have a get_base_time and make the element subtract if it needs
+ * to.  In PAUSED return the same as PLAYING, ie. the current timestamp where
+ * the element is at according to the provided clock.
  */
 GstClockTime
 gst_element_get_time (GstElement * element)
@@ -854,6 +862,7 @@ gst_element_wait (GstElement * element, GstClockTime timestamp)
 {
   GstClockID id;
   GstClockReturn ret;
+  GstClockTime time;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (GST_IS_CLOCK (element->clock), FALSE);
@@ -861,8 +870,11 @@ gst_element_wait (GstElement * element, GstClockTime timestamp)
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
 
   /* shortcut when we're already late... */
-  if (gst_element_get_time (element) >= timestamp) {
-    GST_INFO_OBJECT (element,
+  time = gst_element_get_time (element);
+  GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, element, "element time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (time));
+  if (time >= timestamp) {
+    GST_CAT_INFO_OBJECT (GST_CAT_CLOCK, element,
         "called gst_element_wait (% " GST_TIME_FORMAT ") and was late (%"
         GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
         GST_TIME_ARGS (gst_element_get_time (element)));
