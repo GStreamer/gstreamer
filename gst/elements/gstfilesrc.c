@@ -145,14 +145,16 @@ enum {
 };
 
 
-static void		gst_filesrc_class_init	(GstFileSrcClass *klass);
-static void		gst_filesrc_init	(GstFileSrc *filesrc);
+static void		gst_filesrc_class_init		(GstFileSrcClass *klass);
+static void		gst_filesrc_init		(GstFileSrc *filesrc);
 
-static void		gst_filesrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void		gst_filesrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void		gst_filesrc_set_property	(GObject *object, guint prop_id, 
+							 const GValue *value, GParamSpec *pspec);
+static void		gst_filesrc_get_property	(GObject *object, guint prop_id, 
+							 GValue *value, GParamSpec *pspec);
 
-static GstBuffer *	gst_filesrc_get		(GstPad *pad);
-static gboolean		gst_filesrc_srcpad_event	(GstPad *pad, GstEventType event, gint64 location, guint32 data);
+static GstBuffer *	gst_filesrc_get			(GstPad *pad);
+static gboolean 	gst_filesrc_srcpad_event 	(GstPad *pad, GstEvent *event);
 
 static GstElementStateReturn	gst_filesrc_change_state	(GstElement *element);
 
@@ -477,13 +479,13 @@ gst_filesrc_get (GstPad *pad)
   // check for seek
   if (src->seek_happened) {
     src->seek_happened = FALSE;
-    return gst_event_new(GST_EVENT_DISCONTINUOUS);
+    return GST_BUFFER (gst_event_new(GST_EVENT_DISCONTINUOUS));
   }
 
   // check for EOF
   if (src->curoffset == src->filelen) {
-    gst_element_set_state(src,GST_STATE_PAUSED);
-    return gst_event_new(GST_EVENT_EOS);
+    gst_element_set_state (GST_ELEMENT (src), GST_STATE_PAUSED);
+    return GST_BUFFER (gst_event_new(GST_EVENT_EOS));
   }
 
   // calculate end pointers so we don't have to do so repeatedly later
@@ -535,7 +537,7 @@ gst_filesrc_get (GstPad *pad)
     region.offset = src->curoffset;
     region.size = readsize;
     map = g_tree_search (src->map_regions,
-			 (GCompareFunc) gst_filesrc_search_region_match,
+			 (GSearchFunc) gst_filesrc_search_region_match,
 			 &region);
 
     // if we found an exact match, subbuffer it
@@ -647,22 +649,19 @@ gst_filesrc_change_state (GstElement *element)
 }
 
 static gboolean
-gst_filesrc_srcpad_event(GstPad *pad, GstEventType event, gint64 location, guint32 data)
+gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
 {
   GstFileSrc *src = GST_FILESRC(GST_PAD_PARENT(pad));
 
-  if (event == GST_EVENT_SEEK) {
-    if (data == SEEK_SET) {
-      src->curoffset = (guint64)location;
-    } else if (data == SEEK_CUR) {
-      src->curoffset += (gint64)location;
-    } else if (data == SEEK_END) {
-      src->curoffset = src->filelen - (guint64)location;
-    }
-    src->seek_happened = TRUE;
-    // push a discontinuous event?
-    return TRUE;
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+      src->curoffset = (guint64) GST_EVENT_SEEK_OFFSET (event);
+      src->seek_happened = TRUE;
+      gst_event_free (event);
+      // push a discontinuous event?
+    default:
+      break;
   }
 
-  return FALSE;
+  return TRUE;
 }

@@ -49,8 +49,7 @@ struct _elements_entry {
 
 
 extern GType gst_filesrc_get_type(void);
-
-extern GstElementDetails *gst_filesrc_details;
+extern GstElementDetails gst_filesrc_details;
 
 static struct _elements_entry _elements[] = {
   { "fakesrc", 	    gst_fakesrc_get_type, 	&gst_fakesrc_details,		gst_fakesrc_factory_init },

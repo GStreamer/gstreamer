@@ -148,6 +148,7 @@ gst_aggregator_init (GstAggregator *aggregator)
   aggregator->numsinkpads = 0;
   aggregator->sinkpads = NULL;
   aggregator->silent = FALSE;
+  aggregator->sched = AGGREGATOR_LOOP;
 }
 
 static GstPad*
