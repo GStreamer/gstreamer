@@ -276,7 +276,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
         g_value_set_enum (&v, en->value);
       } else {
         gint i = strtol (value, &endptr, 0);
-	if (*endptr == '\0') {
+	if (endptr && *endptr == '\0') {
           g_value_set_enum (&v, i);
 	} else {
 	  goto error;
