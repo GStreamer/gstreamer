@@ -1294,7 +1294,10 @@ gst_caps_do_simplify (GstCaps * caps)
 xmlNodePtr
 gst_caps_save_thyself (const GstCaps * caps, xmlNodePtr parent)
 {
-  xmlNewChild (parent, NULL, "caps", gst_caps_to_string (caps));
+  char *s = gst_caps_to_string (caps);
+
+  xmlNewChild (parent, NULL, "caps", s);
+  g_free (s);
   return parent;
 }
 

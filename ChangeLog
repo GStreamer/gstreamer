@@ -1,3 +1,8 @@
+2004-07-06  David Schleef  <ds@schleef.org>
+
+	* gst/gstcaps.c: (gst_caps_save_thyself), (gst_caps_load_thyself):
+	Fix memleak.
+
 2004-07-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstplugin.c: (gst_plugin_check_file), (gst_plugin_load_file):
