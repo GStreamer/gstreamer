@@ -1123,3 +1123,17 @@ gst_pad_select(GstPad *nextpad, ...) {
 
   // now switch to the nextpad
 */
+
+
+void
+gst_pad_set_private (GstPad *pad, gpointer private)
+{
+  pad->private = private;
+}
+
+gpointer
+gst_pad_get_private (GstPad *pad)
+{
+  return pad->private;
+}
+
