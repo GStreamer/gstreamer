@@ -317,13 +317,13 @@ gst_v4l_get_chan_names (GstV4lElement * v4lelement)
 
       for (n = 0;; n++) {
         if (n >= vchan.tuners) {
-          vtun.tuner = 0;
+          vtun.tuner = 0;       /* default */
         } else {
           vtun.tuner = n;
-          if (ioctl (v4lelement->video_fd, VIDIOCGTUNER, &vtun) >= 0)
+          if (ioctl (v4lelement->video_fd, VIDIOCGTUNER, &vtun) < 0)
             continue;           /* no more tuners */
           if (strcmp (vtun.name, vchan.name) != 0) {
-            continue;
+            continue;           /* not this one */
           }
         }
         v4lchannel->tuner = n;
