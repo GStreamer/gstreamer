@@ -15,7 +15,7 @@ _gstreamermodule_la_LIBADD = $(GST_LIBS)
 _gstreamermodule_la_LDFLAGS = -module -avoid-version -export-symbols-regex initgstreamer
 nodist__gstreamermodule_la_SOURCES = gstreamer.c
 CLEANFILES = gstreamer.c gstreamer-base.defs gstreamer.defs
-EXTRA_DIST = gstreamer-extra.defs gstreamer.override
+EXTRA_DIST = gstreamer-extra.defs gstreamer.override gstreamer-arg-types.py
 gstreamer.c: gstreamer.defs gstreamer.override
 
 GST_EXCLUDE_INCLUDES=\
@@ -27,14 +27,13 @@ gstreamer-base.defs: $(GST_INCLUDES)
 	$(PYTHON) $(PYGTK_H2DEF) $(GST_INCLUDES) > gstreamer-base.defs
 
 gstreamer.defs: gstreamer-base.defs gstreamer-extra.defs $(top_srcdir)/gstreamer/gstreamer-arg-types.py
-	cat gstreamer-base.defs gstreamer-extra.defs > gstreamer.defs
+	cat gstreamer-base.defs $(srcdir)/gstreamer-extra.defs > gstreamer.defs
 
 .defs.c:
-	(cd $(srcdir) \
-	 && $(PYGTK_CODEGEN) \
-	    --load-types $(top_srcdir)/gstreamer/gstreamer-arg-types.py \
-	    --override $*.override \
-	    --prefix py$* $*.defs) > gen-$*.c \
+	$(PYGTK_CODEGEN) \
+		--load-types $(srcdir)/gstreamer-arg-types.py \
+		--override $(srcdir)/$*.override \
+		--prefix py$* $*.defs > gen-$*.c \
 	&& cp gen-$*.c $*.c \
 	&& rm -f gen-$*.c
 
