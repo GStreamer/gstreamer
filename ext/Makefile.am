@@ -400,7 +400,7 @@ DIST_SUBDIRS=\
 	mpeg2dec \
 	mpeg2enc \
 	mplex \
-	muscibrainz \
+	musicbrainz \
 	ogg \
 	pango \
 	raw1394 \
