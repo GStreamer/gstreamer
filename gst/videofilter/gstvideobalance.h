@@ -50,6 +50,8 @@ struct _GstVideobalance {
   double brightness;
   double hue;
   double saturation;
+  
+  GList *channels;
 };
 
 struct _GstVideobalanceClass {
@@ -61,4 +63,3 @@ GType gst_videobalance_get_type(void);
 G_END_DECLS
 
 #endif /* __GST_VIDEOBALANCE_H__ */
-

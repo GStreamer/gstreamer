@@ -1,3 +1,26 @@
+2004-01-14  Julien MOUTTE <julien@moutte.net>
+
+	* gst-libs/gst/colorbalance/colorbalance.c:
+	(gst_color_balance_class_init): Adding a default type.
+	* gst-libs/gst/colorbalance/colorbalance.h: Adding a macro to access
+	the type.
+	* gst/videofilter/gstvideobalance.c: (gst_videobalance_get_type),
+	(gst_videobalance_dispose), (gst_videobalance_class_init),
+	(gst_videobalance_init), (gst_videobalance_interface_supported),
+	(gst_videobalance_interface_init),
+	(gst_videobalance_colorbalance_list_channels),
+	(gst_videobalance_colorbalance_set_value),
+	(gst_videobalance_colorbalance_get_value),
+	(gst_videobalance_colorbalance_init): Implementing colorbalance
+	interface.
+	* gst/videofilter/gstvideobalance.h: Adding colorbalance channels
+	list.
+	* sys/ximage/ximagesink.c: (gst_ximagesink_set_xwindow_id): Fixing a
+	bug which was triggering a BadAccess X error when setting an overlay
+	before pad was really negotiated.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_colorbalance_init):
+	Using the colorbalance type macro.
+
 2004-01-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/flac/gstflacenc.c: (gst_flacenc_set_metadata),

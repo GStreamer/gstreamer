@@ -32,6 +32,8 @@
 #include <string.h>
 #include <math.h>
 
+#include <gst/colorbalance/colorbalance.h>
+
 /* GstVideobalance signals and args */
 enum {
   /* FILL ME */
@@ -47,6 +49,8 @@ enum {
   /* FILL ME */
 };
 
+static GstVideofilterClass *parent_class = NULL;
+
 static void	gst_videobalance_base_init	(gpointer g_class);
 static void	gst_videobalance_class_init	(gpointer g_class, gpointer class_data);
 static void	gst_videobalance_init		(GTypeInstance *instance, gpointer g_class);
@@ -56,6 +60,11 @@ static void	gst_videobalance_get_property		(GObject *object, guint prop_id, GVal
 
 static void gst_videobalance_planar411(GstVideofilter *videofilter, void *dest, void *src);
 static void gst_videobalance_setup(GstVideofilter *videofilter);
+
+static void gst_videobalance_interface_init (GstImplementsInterfaceClass *klass);
+static void gst_videobalance_colorbalance_init (GstColorBalanceClass *iface);
+
+static void gst_videobalance_dispose (GObject *object);
 
 GType
 gst_videobalance_get_type (void)
@@ -74,8 +83,26 @@ gst_videobalance_get_type (void)
       0,
       gst_videobalance_init,
     };
+    
+    static const GInterfaceInfo iface_info = {
+      (GInterfaceInitFunc) gst_videobalance_interface_init,
+      NULL,
+      NULL,
+    };
+    
+    static const GInterfaceInfo colorbalance_info = {
+      (GInterfaceInitFunc) gst_videobalance_colorbalance_init,
+      NULL,
+      NULL,
+    };
+    
     videobalance_type = g_type_register_static(GST_TYPE_VIDEOFILTER,
         "GstVideobalance", &videobalance_info, 0);
+    
+    g_type_add_interface_static (videobalance_type, GST_TYPE_IMPLEMENTS_INTERFACE,
+                                 &iface_info);
+    g_type_add_interface_static (videobalance_type, GST_TYPE_COLOR_BALANCE,
+                                 &colorbalance_info);
   }
   return videobalance_type;
 }
@@ -109,6 +136,29 @@ gst_videobalance_base_init (gpointer g_class)
 }
 
 static void
+gst_videobalance_dispose (GObject *object)
+{
+  GList *channels = NULL;
+  GstVideobalance *balance;
+
+  balance = GST_VIDEOBALANCE (object);
+  
+  channels = balance->channels;
+  
+  while (channels)
+    {
+      GstColorBalanceChannel *channel = channels->data;
+      g_object_unref (channel);
+      channels = g_list_next (channels);
+    }
+    
+  if (balance->channels)
+    g_list_free (balance->channels);
+  
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
 gst_videobalance_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class;
@@ -117,6 +167,8 @@ gst_videobalance_class_init (gpointer g_class, gpointer class_data)
   gobject_class = G_OBJECT_CLASS (g_class);
   videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
 
+  parent_class = g_type_class_ref (GST_TYPE_VIDEOFILTER);
+  
   g_object_class_install_property(gobject_class, ARG_CONTRAST,
       g_param_spec_double("contrast","Contrast","contrast",
       0, 2, 1, G_PARAM_READWRITE));
@@ -132,6 +184,7 @@ gst_videobalance_class_init (gpointer g_class, gpointer class_data)
 
   gobject_class->set_property = gst_videobalance_set_property;
   gobject_class->get_property = gst_videobalance_get_property;
+  gobject_class->dispose = gst_videobalance_dispose;
 
   videofilter_class->setup = gst_videobalance_setup;
 }
@@ -141,7 +194,10 @@ gst_videobalance_init (GTypeInstance *instance, gpointer g_class)
 {
   GstVideobalance *videobalance = GST_VIDEOBALANCE (instance);
   GstVideofilter *videofilter;
-
+  char *channels[4] = { "HUE", "SATURATION",
+                        "BRIGHTNESS", "CONTRAST" };
+  gint i;
+                        
   GST_DEBUG("gst_videobalance_init");
 
   videofilter = GST_VIDEOFILTER(videobalance);
@@ -151,7 +207,101 @@ gst_videobalance_init (GTypeInstance *instance, gpointer g_class)
   videobalance->brightness = 0;
   videobalance->saturation = 1;
   videobalance->hue = 0;
+                        
+  /* Generate the channels list */
+  for (i = 0; i < (sizeof (channels) / sizeof (char *)); i++)
+    {
+      GstColorBalanceChannel *channel;
+      
+      channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
+      channel->label = g_strdup (channels[i]);
+      channel->min_value = G_MININT;
+      channel->max_value = G_MAXINT;
+      
+      videobalance->channels = g_list_append (videobalance->channels,
+                                              channel);
+    }
 
+}
+
+static gboolean
+gst_videobalance_interface_supported (GstImplementsInterface *iface, GType type)
+{
+  g_assert (type == GST_TYPE_COLOR_BALANCE);
+  return TRUE;
+}
+
+static void
+gst_videobalance_interface_init (GstImplementsInterfaceClass *klass)
+{
+  klass->supported = gst_videobalance_interface_supported;
+}
+
+static const GList *
+gst_videobalance_colorbalance_list_channels (GstColorBalance *balance)
+{
+  GstVideobalance *videobalance = GST_VIDEOBALANCE (balance);
+  
+  g_return_val_if_fail (videobalance != NULL, NULL);
+  g_return_val_if_fail (GST_IS_VIDEOBALANCE (videobalance), NULL);
+  
+  if (videobalance->channels)
+    return videobalance->channels;
+  else
+    return NULL;
+}
+
+static void
+gst_videobalance_colorbalance_set_value (GstColorBalance        *balance,
+                                         GstColorBalanceChannel *channel,
+                                         gint                    value)
+{
+  GstVideobalance *vb = GST_VIDEOBALANCE (balance);
+  
+  g_return_if_fail (vb != NULL);
+  g_return_if_fail (GST_IS_VIDEOBALANCE (vb));
+  g_return_if_fail (channel->label != NULL);
+  
+  if (!g_ascii_strcasecmp (channel->label, "HUE"))
+    vb->hue = (value - G_MININT) * 2 / ((double) G_MAXINT - G_MININT) - 1;
+  else if (!g_ascii_strcasecmp (channel->label, "SATURATION"))
+    vb->saturation = (value - G_MININT) * 2 / ((double) G_MAXINT - G_MININT);
+  else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS"))
+    vb->brightness = (value - G_MININT) * 2 / ((double) G_MAXINT - G_MININT) - 1;
+  else if (!g_ascii_strcasecmp (channel->label, "CONTRAST"))
+    vb->contrast = (value - G_MININT) * 2 / ((double) G_MAXINT - G_MININT);
+}
+
+static gint
+gst_videobalance_colorbalance_get_value (GstColorBalance        *balance,
+                                         GstColorBalanceChannel *channel)
+{
+  GstVideobalance *vb = GST_VIDEOBALANCE (balance);
+  gint value = 0;
+  
+  g_return_val_if_fail (vb != NULL, 0);
+  g_return_val_if_fail (GST_IS_VIDEOBALANCE (vb), 0);
+  g_return_val_if_fail (channel->label != NULL, 0);
+  
+  if (!g_ascii_strcasecmp (channel->label, "HUE"))
+    value = (vb->hue + 1) * ((double) G_MAXINT - G_MININT) / 2 + G_MININT;
+  else if (!g_ascii_strcasecmp (channel->label, "SATURATION"))
+    value = vb->saturation * ((double) G_MAXINT - G_MININT) / 2 + G_MININT;
+  else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS"))
+    value = (vb->brightness + 1) * ((double) G_MAXINT - G_MININT) / 2 + G_MININT;
+  else if (!g_ascii_strcasecmp (channel->label, "CONTRAST"))
+    value = vb->contrast * ((double) G_MAXINT - G_MININT) / 2 + G_MININT;
+  
+  return value;
+}
+
+static void
+gst_videobalance_colorbalance_init (GstColorBalanceClass *iface)
+{
+  GST_COLOR_BALANCE_TYPE (iface) = GST_COLOR_BALANCE_SOFTWARE;
+  iface->list_channels = gst_videobalance_colorbalance_list_channels;
+  iface->set_value = gst_videobalance_colorbalance_set_value;
+  iface->get_value = gst_videobalance_colorbalance_get_value;
 }
 
 static void
