@@ -9,5 +9,5 @@ Description: Streaming media framework, GConf support library, not installed
 Requires: gstreamer >= @VERSION@
 Version: @VERSION@
 
-Libs: ${pcfiledir}/gst-libs/gst/gconf/libgstgconf-@GST_MAJORMINOR@.la
-Cflags: -I${pcfiledir}/gst-libs
+Libs: ${pcfiledir}/../gst-libs/gst/gconf/libgstgconf-@GST_MAJORMINOR@.la
+Cflags: -I${pcfiledir}/../gst-libs

@@ -6,8 +6,8 @@ includedir=${pcfiledir}
 
 Name: GStreamer Play Library, uninstalled
 Description: Streaming-media framework, play libraries, not installed
-Requires: gstreamer >= @VERSION@
+Requires: gstreamer >= @VERSION@ gstreamer-control >= @VERSION@
 Version: @VERSION@
 
-Libs: ${pcfiledir}/../gst-libs/gst/play/libgstplay-@GST_MAJORMINOR@.la -lgstcontrol-@GST_MAJORMINOR@
+Libs: ${pcfiledir}/../gst-libs/gst/play/libgstplay-@GST_MAJORMINOR@.la
 Cflags: -I${pcfiledir}/../gst-libs
