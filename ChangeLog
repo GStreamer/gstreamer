@@ -1,3 +1,15 @@
+2004-03-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/tags/Makefile.am: fix plugin filename
+
+2004-03-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* examples/gstplay/player.c: (got_time_tick), (main):
+	  add error handler
+          display time_tick more readably
+	* gst/mixmatrix/Makefile.am:
+          fix plugin file name
+
 2004-02-29  Christophe Fergeau  <teuf@gnome.org>
 
 	* sys/oss/gstosselement.c: (gst_osselement_probe),
