@@ -1,5 +1,11 @@
 2004-10-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_event),
+	(gst_ogg_demux_push):
+	  Make seeking sort-of exact again (fixes #156387).
+
+2004-10-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/playback/gstplaybasebin.c: (unknown_type),
 	(add_element_stream), (new_decoded_pad),
 	(gst_play_base_bin_change_state):
