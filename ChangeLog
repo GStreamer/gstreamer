@@ -1,10 +1,12 @@
-2005-03-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+2005-03-09  Jamey Hicks  <jamey.hicks@hp.com>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
 	* gst/gstconfig.h.in:
 	* gst/indexers/gstindexers.c: (plugin_init):
 	* gst/registries/gstxmlregistry.h:
-	  Fix libxml-less compilation (--disable-loadsave).
+	  Fix libxml-less compilation (--disable-loadsave), fixes #169123.
 
 2005-03-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
