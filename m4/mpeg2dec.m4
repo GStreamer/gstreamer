@@ -1,6 +1,6 @@
 dnl MPEG2DEC_CHECK-LIBHEADER(FEATURE-NAME, LIB-NAME, LIB-FUNCTION, HEADER-NAME,
 dnl                          ACTION-IF-FOUND, ACTION-IF-NOT-FOUND,
-dnl                          EXTRA-LDFLAGS, EXTRA-CPPFLAGS)
+dnl                          EXTRA-LDFLAGS, EXTRA-CPPFLAGS, INCLUDES)
 dnl
 dnl FEATURE-NAME        - feature name; library and header files are treated
 dnl                       as feature, which we look for
@@ -11,6 +11,8 @@ dnl ACTION-IF-FOUND     - when feature is found then execute given action
 dnl ACTION-IF-NOT-FOUND - when feature is not found then execute given action
 dnl EXTRA-LDFLAGS       - extra linker flags (-L or -l)
 dnl EXTRA-CPPFLAGS      - extra C preprocessor flags, i.e. -I/usr/X11R6/include
+dnl INCLUDES            - Any #include lines which need to be placed before the
+dnl                       header so that it works.
 dnl
 dnl Based on GST_CHECK_LIBHEADER from gstreamer plugins 0.3.1.
 dnl
@@ -22,7 +24,7 @@ AC_DEFUN(MPEG2DEC_CHECK_LIBHEADER,
   if test "x$HAVE_[$1]" = "xyes"; then
     check_libheader_save_CPPFLAGS=$CPPFLAGS
     CPPFLAGS="[$8] $CPPFLAGS"
-    AC_CHECK_HEADER([$4], :, HAVE_[$1]=no)
+    AC_CHECK_HEADER([$4], :, HAVE_[$1]=no, [$9])
     CPPFLAGS=$check_libheader_save_CPPFLAGS
   fi
 
@@ -56,17 +58,33 @@ AC_ARG_WITH(mpeg2dec-prefix,
   mpeg2dec_config_prefix="$withval", mpeg2dec_config_prefix="")
 
 if test x$mpeg2dec_config_prefix = x ; then
+    MPEG2DEC_CHECK_LIBHEADER(CPUACCEL, cpuaccel, mm_accel, mpeg2dec/mm_accel.h)
     MPEG2DEC_CHECK_LIBHEADER(MPEG2DEC, mpeg2, mpeg2_init, mpeg2dec/mpeg2.h,
-    MPEG2DEC_LIBS="-lmpeg2 -lcpuaccel",, -lcpuaccel)
+        MPEG2DEC_LIBS="-lmpeg2 -lcpuaccel",, -lcpuaccel, , [
+            #include <inttypes.h>
+            #include <mpeg2dec/mm_accel.h>
+            #include <mpeg2dec/video_out.h>
+        ])
 else
+    MPEG2DEC_CHECK_LIBHEADER(CPUACCEL, cpuaccel, mm_accel, mpeg2dec/mm_accel.h,
+	    ,, -L$mpeg2dec_config_prefix/lib, -I$mpeg2dec_config_prefix/include)
     MPEG2DEC_CHECK_LIBHEADER(MPEG2DEC, mpeg2, mpeg2_init, mpeg2dec/mpeg2.h, [
             MPEG2DEC_LIBS="-lmpeg2 -lcpuaccel -L$mpeg2dec_config_prefix/lib"
             MPEG2DEC_CFLAGS="-I$mpeg2dec_config_prefix/include"
-        ], , -L$mpeg2dec_config_prefix/lib -lcpuaccel, -I$mpeg2dec_config_prefix/include)
+        ], , -L$mpeg2dec_config_prefix/lib -lcpuaccel,
+	-I$mpeg2dec_config_prefix/include, [
+	    #include <inttypes.h>
+	    #include <mpeg2dec/mm_accel.h>
+            #include <mpeg2dec/video_out.h>
+	])
 fi
  
 if test "x$HAVE_MPEG2DEC" = "xyes"; then
-  ifelse([$1], , :, [$1])
+  if test "x$HAVE_CPUACCEL" = "xyes"; then
+    ifelse([$1], , :, [$1])
+  else
+    ifelse([$2], , :, [$2])
+  fi
 else
   ifelse([$2], , :, [$2])
 fi
