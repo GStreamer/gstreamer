@@ -28,6 +28,10 @@
 #include "gst/riff/riff-ids.h"
 #include "gst/riff/riff-media.h"
 
+#ifndef G_MAXUINT32
+#define G_MAXUINT32 0xffffffff
+#endif
+
 GST_DEBUG_CATEGORY (wavparse_debug);
 #define GST_CAT_DEFAULT (wavparse_debug)
 
