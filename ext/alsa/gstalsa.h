@@ -81,6 +81,8 @@ typedef enum {
   } \
 }G_STMT_END
 
+typedef int (*GstAlsaTransmitFunction) (GstAlsa *this, snd_pcm_sframes_t *avail);
+
 typedef struct {
   GstPad *pad;
   GstByteStream *bs;
@@ -101,10 +103,12 @@ struct _GstAlsa {
   gchar *device;
   snd_pcm_stream_t stream;
   snd_pcm_t *handle;
-  guint pcm_caps;
+  guint pcm_caps; /* capabilities of the pcm device */
   snd_output_t *out;
 
   GstAlsaFormat *format; /* NULL if undefined */
+  gboolean mmap; /* use mmap transmit (fast) or read/write (sloooow) */
+  GstAlsaTransmitFunction transmit;
 
   /* latency / performance parameters */
   snd_pcm_uframes_t period_size;

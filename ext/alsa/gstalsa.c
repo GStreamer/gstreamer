@@ -224,7 +224,8 @@ enum
   ARG_PERIODSIZE,
   ARG_BUFFERSIZE,
   ARG_DEBUG,
-  ARG_AUTORECOVER
+  ARG_AUTORECOVER,
+  ARG_MMAP
 };
 
 static GstElement *parent_class = NULL;
@@ -270,6 +271,9 @@ gst_alsa_class_init (GstAlsaClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_AUTORECOVER,
     g_param_spec_boolean ("autorecover", "Automatic xrun recovery", "When TRUE tries to reduce processor load on xruns",
                           TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MMAP,
+    g_param_spec_boolean ("mmap", "Use mmap'ed access", "Wether to use mmap (faster) or standard read/write (more compatible)",
+                          TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   element_class->change_state = gst_alsa_change_state;
   element_class->request_new_pad = gst_alsa_request_new_pad;
@@ -281,6 +285,7 @@ gst_alsa_init (GstAlsa *this)
   gint i;
   /* init values */
   this->handle = NULL;
+  this->transmit = NULL;
 
   GST_FLAG_SET (this, GST_ELEMENT_THREAD_SUGGESTED);
 
@@ -367,6 +372,9 @@ gst_alsa_set_property (GObject *object, guint prop_id, const GValue *value,
   case ARG_AUTORECOVER:
     this->autorecover = g_value_get_boolean (value);
     return;
+  case ARG_MMAP:
+    this->mmap = g_value_get_boolean (value);
+    return;
   default:
     GST_DEBUG (0, "Unknown arg");
     return;
@@ -413,6 +421,9 @@ gst_alsa_get_property (GObject *object, guint prop_id, GValue *value,
     break;
   case ARG_AUTORECOVER:
     g_value_set_boolean (value, this->autorecover);
+    break;
+  case ARG_MMAP:
+    g_value_set_boolean (value, this->mmap);
     break;
   default:
     GST_DEBUG (0, "Unknown arg");
@@ -941,7 +952,40 @@ gst_alsa_do_mmap (GstAlsa *this, snd_pcm_sframes_t *avail)
 
   return err;
 }
+static int
+gst_alsa_do_read_write (GstAlsa *this, snd_pcm_sframes_t *avail)
+{
+  void *channels[this->format->channels];
+  int err, i;
 
+  if (((GstElement *) this)->numpads == 1) {
+    /* interleaved */
+    if (G_OBJECT_TYPE (this) == GST_TYPE_ALSA_SRC) {
+      err = snd_pcm_readi (this->handle, this->pads[0].data, *avail);
+    } else {
+      err = snd_pcm_writei (this->handle, this->pads[0].data, *avail);
+    }
+  } else {
+    /* noninterleaved */
+    for (i = 0; i < this->format->channels; i++) {
+      channels[i] = this->pads[i].data;
+    }
+    if (G_OBJECT_TYPE (this) == GST_TYPE_ALSA_SRC) {
+      err = snd_pcm_readn (this->handle, channels, *avail);
+    } else {
+      err = snd_pcm_writen (this->handle, channels, *avail);
+    }
+  }
+  /* error handling */
+  if (err < 0) {
+    if (err == -EPIPE) {
+      gst_alsa_xrun_recovery (this);
+      return 0;
+    }
+    g_warning ("error on data access: %s", snd_strerror (err));
+  }
+  return err;
+}
 inline static snd_pcm_sframes_t
 gst_alsa_update_avail (GstAlsa *this)
 {
@@ -1073,7 +1117,7 @@ sink_restart:
 
   
     /* put this data into alsa */
-    if ((copied = gst_alsa_do_mmap (this, &avail)) < 0)
+    if ((copied = this->transmit (this, &avail)) < 0)
       return;
 
     /* flush the data */
@@ -1133,7 +1177,7 @@ src_restart:
   if (avail > 0) {
     int width = snd_pcm_format_physical_width (this->format->format);
     int bytes_per_frame = ( width / 8 ) * (element->numpads == 1 ? this->format->channels : 1);
-    if ((copied = gst_alsa_do_mmap (this, &avail)) < 0)
+    if ((copied = this->transmit (this, &avail)) < 0)
       return;
       
     /* we get the buffer pool once per go round */
@@ -1269,8 +1313,6 @@ gst_alsa_set_hw_params (GstAlsa *this)
 {
   snd_pcm_hw_params_t *hw_params;
   snd_pcm_access_mask_t *mask;
-  snd_pcm_uframes_t size_min, size_max;
-  unsigned int count_min, count_max;
   
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (this->handle != NULL, FALSE);
@@ -1290,9 +1332,9 @@ gst_alsa_set_hw_params (GstAlsa *this)
   mask = alloca (snd_pcm_access_mask_sizeof ());
   snd_pcm_access_mask_none (mask);
   if (GST_ELEMENT (this)->numpads == 1) {
-    snd_pcm_access_mask_set (mask, SND_PCM_ACCESS_MMAP_INTERLEAVED);
+    snd_pcm_access_mask_set (mask, this->mmap ? SND_PCM_ACCESS_MMAP_INTERLEAVED : SND_PCM_ACCESS_RW_INTERLEAVED);
   } else {
-    snd_pcm_access_mask_set (mask, SND_PCM_ACCESS_MMAP_NONINTERLEAVED);
+    snd_pcm_access_mask_set (mask, this->mmap ? SND_PCM_ACCESS_MMAP_NONINTERLEAVED : SND_PCM_ACCESS_RW_NONINTERLEAVED);
   }
   ERROR_CHECK (snd_pcm_hw_params_set_access_mask (this->handle, hw_params, mask),
                "The Gstreamer ALSA plugin does not support your hardware. Error: %s");
@@ -1306,20 +1348,10 @@ gst_alsa_set_hw_params (GstAlsa *this)
                    "error setting rate (%d): %s", this->format->rate);
   }
 
-  if (snd_pcm_hw_params_get_period_size_min (hw_params, &size_min, 0) < 0) size_min = this->period_size;
-  if (snd_pcm_hw_params_get_period_size_max (hw_params, &size_max, 0) < 0) size_max = this->period_size;
-  g_assert (size_max >= size_min);
-  if (size_min > this->period_size) this->period_size = size_min;
-  if (size_max < this->period_size) this->period_size = size_max;
-  ERROR_CHECK (snd_pcm_hw_params_set_period_size (this->handle, hw_params, this->period_size, 0), 
+  ERROR_CHECK (snd_pcm_hw_params_set_periods_near (this->handle, hw_params, &this->period_count, 0), 
+                 "error setting buffer size to %u: %s", (guint) this->period_count);
+  ERROR_CHECK (snd_pcm_hw_params_set_period_size_near (this->handle, hw_params, &this->period_size, 0), 
                "error setting period size to %u frames: %s", (guint) this->period_size);
-  if (snd_pcm_hw_params_get_periods_min (hw_params, &count_min, 0) < 0) count_min = this->period_count;
-  if (snd_pcm_hw_params_get_periods_max (hw_params, &count_max, 0) < 0) count_max = this->period_count;
-  g_assert (count_max >= count_min);
-  if (count_min > this->period_count) this->period_count = count_min;
-  if (count_max < this->period_count) this->period_count = count_max;
-  ERROR_CHECK (snd_pcm_hw_params_set_buffer_size (this->handle, hw_params, this->period_size * this->period_count), 
-                 "error setting buffer size to %u: %s", (guint) (this->period_size * this->period_count));
 
   ERROR_CHECK (snd_pcm_hw_params (this->handle, hw_params),
                "Could not set hardware parameters: %s");
@@ -1328,6 +1360,12 @@ gst_alsa_set_hw_params (GstAlsa *this)
   GST_ALSA_CAPS_SET (this, GST_ALSA_CAPS_PAUSE, snd_pcm_hw_params_can_pause (hw_params));
   GST_ALSA_CAPS_SET (this, GST_ALSA_CAPS_RESUME, snd_pcm_hw_params_can_resume (hw_params));
   GST_ALSA_CAPS_SET (this, GST_ALSA_CAPS_SYNC_START, snd_pcm_hw_params_can_sync_start (hw_params));
+  
+  if (this->mmap) {
+    this->transmit = gst_alsa_do_mmap;
+  } else {
+    this->transmit = gst_alsa_do_read_write;
+  }
   
   return TRUE;
 }
