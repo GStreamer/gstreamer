@@ -120,16 +120,6 @@ else
   HAVE_NASM="yes"
 fi
 
-dnl Check for pkgconfig
-AC_CHECK_PROG(HAVE_PKGCONFIG, pkg-config, true, false)
-
-dnl fix pkg-config's broken default search path
-if test -z $PKG_CONFIG_PATH; then
-  PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig
-  echo "Setting PKG_CONFIG_PATH to $PKG_CONFIG_PATH"
-fi
-export PKG_CONFIG_PATH
-
 dnl check for gstreamer
 PKG_CHECK_MODULES(GST, gstreamer >= 0.3.0)
 
