@@ -75,7 +75,7 @@ GST_PAD_TEMPLATE_FACTORY (src_video_templ,
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
-    "avidemux_src_video",
+    "avidemux_src_video_avi",
     "video/avi",
       "format",  GST_PROPS_LIST (
 	           GST_PROPS_STRING ("strf_vids"),
@@ -86,7 +86,7 @@ GST_PAD_TEMPLATE_FACTORY (src_video_templ,
 
   ),
   GST_CAPS_NEW (
-    "avidemux_src_video",
+    "avidemux_src_video_raw",
     "video/raw",
       "format",  GST_PROPS_LIST (
                    GST_PROPS_FOURCC (GST_MAKE_FOURCC('Y','U','Y','2')),
@@ -96,18 +96,30 @@ GST_PAD_TEMPLATE_FACTORY (src_video_templ,
       "height",         GST_PROPS_INT_RANGE (16, 4096)
   ),
   GST_CAPS_NEW (
-    "avidemux_src_video",
+    "avidemux_src_video_jpeg",
     "video/jpeg",
       "width",   GST_PROPS_INT_RANGE (16, 4096),
       "height",  GST_PROPS_INT_RANGE (16, 4096)
   ),
   GST_CAPS_NEW (
-    "avidemux_src_video",
+    "avidemux_src_video_dv",
     "video/dv",
       "format",  GST_PROPS_LIST (
                    GST_PROPS_STRING ("NTSC"),
                    GST_PROPS_STRING ("PAL")
                  ),
+      "width",   GST_PROPS_INT_RANGE (16, 4096),
+      "height",  GST_PROPS_INT_RANGE (16, 4096)
+  ),
+  GST_CAPS_NEW (
+    "avidemux_src_video_divx",
+    "video/divx",
+      "width",   GST_PROPS_INT_RANGE (16, 4096),
+      "height",  GST_PROPS_INT_RANGE (16, 4096)
+  ),
+  GST_CAPS_NEW (
+    "avidemux_src_video_xvid",
+    "video/xvid",
       "width",   GST_PROPS_INT_RANGE (16, 4096),
       "height",  GST_PROPS_INT_RANGE (16, 4096)
   )
@@ -118,12 +130,12 @@ GST_PAD_TEMPLATE_FACTORY (src_audio_templ,
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
-    "avidemux_src_audio",
+    "avidemux_src_audio_avi",
     "video/avi",
       "format",  GST_PROPS_STRING ("strf_auds")
   ),
   GST_CAPS_NEW (
-    "avidemux_src_audio",
+    "avidemux_src_audio_raw",
     "audio/raw",
       "format",           GST_PROPS_STRING ("int"),
       "law",              GST_PROPS_INT (0),
@@ -144,17 +156,17 @@ GST_PAD_TEMPLATE_FACTORY (src_audio_templ,
       "channels",         GST_PROPS_INT_RANGE (1, 2)
   ),
   GST_CAPS_NEW (
-    "avidemux_src_audio",
+    "avidemux_src_audio_mp3",
     "audio/x-mp3",
       NULL
   ),
   GST_CAPS_NEW (
-    "avidemux_src_audio",
+    "avidemux_src_audio_ac3",
     "audio/a52",
       NULL
   ),
   GST_CAPS_NEW (
-    "avidemux_src_audio",
+    "avidemux_src_audio_vorbis",
     "application/x-ogg",
     NULL
   )
