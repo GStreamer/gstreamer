@@ -388,11 +388,6 @@ gst_play_set_uri (GstPlay *play, const guchar *uri)
 	if (priv->uri)
 		g_free (priv->uri);
 
-	/* see if the file actually exists */
-	file = fopen (uri, "r");
-	if (!file)
-		return GST_PLAY_CANNOT_PLAY;
-
 	/* see if it looks like an URI */
 	if ((uriloc = strstr (uri, ":/"))) {
 	  priv->src = gst_elementfactory_make ("gnomevfssrc", "srcelement");
