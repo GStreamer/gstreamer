@@ -229,9 +229,14 @@ print_tag (const GstTagList *list, const gchar *tag, gpointer unused)
   count = gst_tag_list_get_tag_size (list, tag);
 
   for (i = 0; i < count; i++) {
+    gchar *str;
     
-    gchar *str = g_strdup_value_contents (
-		    gst_tag_list_get_value_index (list, tag, i));
+    if (gst_tag_get_type (tag) == G_TYPE_STRING) {
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &str));
+    } else {
+      str = g_strdup_value_contents (
+	      gst_tag_list_get_value_index (list, tag, i));
+    }
   
     if (i == 0) {
       g_print ("%15s: %s\n", gst_tag_get_nick (tag), str);
