@@ -1,5 +1,18 @@
 2004-01-25  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/videofilter/gstvideobalance.c: (gst_videobalance_dispose),
+	(gst_videobalance_init),
+	(gst_videobalance_colorbalance_list_channels),
+	(gst_videobalance_colorbalance_set_value),
+	(gst_videobalance_colorbalance_get_value),
+	(gst_videobalance_update_properties),
+	(gst_videobalance_update_tables_planar411),
+	(gst_videobalance_planar411):
+	* gst/videofilter/gstvideobalance.h:
+	  Implement lookup-tables. +/- 10x faster.
+
+2004-01-25  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_avih),
 	(gst_avi_demux_stream_odml), (gst_avi_demux_stream_index):
 	  The index reading was broken. The rest worked fine, but the whole

@@ -46,10 +46,13 @@ typedef struct _GstVideobalanceClass GstVideobalanceClass;
 struct _GstVideobalance {
   GstVideofilter videofilter;
 
-  double contrast;
-  double brightness;
-  double hue;
-  double saturation;
+  guint8   *tabley, **tableu, **tablev;
+  gboolean needupdate;
+
+  gdouble contrast;
+  gdouble brightness;
+  gdouble hue;
+  gdouble saturation;
   
   GList *channels;
 };

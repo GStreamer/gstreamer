@@ -141,8 +141,17 @@ gst_videobalance_dispose (GObject *object)
 {
   GList *channels = NULL;
   GstVideobalance *balance;
+  gint i;
 
   balance = GST_VIDEOBALANCE (object);
+
+  for (i = 0; i < 256; i++) {
+    g_free (balance->tableu[i]);
+    g_free (balance->tablev[i]);
+  }
+  g_free (balance->tabley);
+  g_free (balance->tableu);
+  g_free (balance->tablev);
   
   channels = balance->channels;
   
@@ -204,12 +213,21 @@ gst_videobalance_init (GTypeInstance *instance, gpointer g_class)
   videofilter = GST_VIDEOFILTER(videobalance);
 
   /* do stuff */
-  videobalance->contrast = 1;
-  videobalance->brightness = 0;
-  videobalance->saturation = 1;
-  videobalance->hue = 0;
+  videobalance->contrast   = 1.0;
+  videobalance->brightness = 0.0;
+  videobalance->saturation = 1.0;
+  videobalance->hue        = 0.0;
 
+  videobalance->needupdate = FALSE;
   videofilter->passthru = TRUE;
+
+  videobalance->tabley = g_new (guint8, 256);
+  videobalance->tableu = g_new (guint8 *, 256);
+  videobalance->tablev = g_new (guint8 *, 256);
+  for (i = 0; i < 256; i++) {
+    videobalance->tableu[i] = g_new (guint8, 256);
+    videobalance->tablev[i] = g_new (guint8, 256);
+  }
                         
   /* Generate the channels list */
   for (i = 0; i < (sizeof (channels) / sizeof (char *)); i++)
@@ -248,10 +266,7 @@ gst_videobalance_colorbalance_list_channels (GstColorBalance *balance)
   g_return_val_if_fail (videobalance != NULL, NULL);
   g_return_val_if_fail (GST_IS_VIDEOBALANCE (videobalance), NULL);
   
-  if (videobalance->channels)
-    return videobalance->channels;
-  else
-    return NULL;
+  return videobalance->channels;
 }
 
 static void
@@ -267,14 +282,15 @@ gst_videobalance_colorbalance_set_value (GstColorBalance        *balance,
   g_return_if_fail (GST_IS_VIDEOFILTER (vf));
   g_return_if_fail (channel->label != NULL);
   
-  if (!g_ascii_strcasecmp (channel->label, "HUE"))
+  if (!g_ascii_strcasecmp (channel->label, "HUE")) {
     vb->hue = (value + 1000.0) * 2.0 / 2000.0 - 1.0;
-  else if (!g_ascii_strcasecmp (channel->label, "SATURATION"))
+  } else if (!g_ascii_strcasecmp (channel->label, "SATURATION")) {
     vb->saturation = (value + 1000.0) * 2.0 / 2000.0;
-  else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS"))
+  } else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS")) {
     vb->brightness = (value + 1000.0) * 2.0 / 2000.0 - 1.0;
-  else if (!g_ascii_strcasecmp (channel->label, "CONTRAST"))
+  } else if (!g_ascii_strcasecmp (channel->label, "CONTRAST")) {
     vb->contrast = (value + 1000.0) * 2.0 / 2000.0;
+  }
   
   gst_videobalance_update_properties (vb);
 }
@@ -290,14 +306,15 @@ gst_videobalance_colorbalance_get_value (GstColorBalance        *balance,
   g_return_val_if_fail (GST_IS_VIDEOBALANCE (vb), 0);
   g_return_val_if_fail (channel->label != NULL, 0);
   
-  if (!g_ascii_strcasecmp (channel->label, "HUE"))
+  if (!g_ascii_strcasecmp (channel->label, "HUE")) {
     value = (vb->hue + 1) * 2000.0 / 2.0 - 1000.0;
-  else if (!g_ascii_strcasecmp (channel->label, "SATURATION"))
+  } else if (!g_ascii_strcasecmp (channel->label, "SATURATION")) {
     value = vb->saturation * 2000.0 / 2.0 - 1000.0;
-  else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS"))
+  } else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS")) {
     value = (vb->brightness + 1) * 2000.0 / 2.0 - 1000.0;
-  else if (!g_ascii_strcasecmp (channel->label, "CONTRAST"))
+  } else if (!g_ascii_strcasecmp (channel->label, "CONTRAST")) {
     value = vb->contrast * 2000.0 / 2.0 - 1000.0;
+  }
   
   return value;
 }
@@ -314,11 +331,17 @@ gst_videobalance_colorbalance_init (GstColorBalanceClass *iface)
 static void
 gst_videobalance_update_properties (GstVideobalance *videobalance)
 {
-  if (videobalance->contrast == 1.0 && videobalance->brightness == 0.0 &&
-      videobalance->hue == 0.0 && videobalance->saturation == 1.0) {
-    GST_VIDEOFILTER (videobalance)->passthru = TRUE;
+  GstVideofilter *vf = GST_VIDEOFILTER (videobalance);
+
+  videobalance->needupdate = TRUE;
+
+  if (videobalance->contrast == 1.0 &&
+      videobalance->brightness == 0.0 &&
+      videobalance->hue == 0.0 &&
+      videobalance->saturation == 1.0) {
+    vf->passthru = TRUE;
   } else {
-    GST_VIDEOFILTER (videobalance)->passthru = FALSE;
+    vf->passthru = FALSE;
   }
 }
 
@@ -412,6 +435,51 @@ static void gst_videobalance_setup(GstVideofilter *videofilter)
 
 }
 
+/*
+ * look-up tables (LUT).
+ */
+
+static void
+gst_videobalance_update_tables_planar411 (GstVideobalance *vb)
+{
+  gint i, j;
+  gdouble y, u, v, hue_cos, hue_sin;
+
+  /* Y */
+  for (i = 0; i < 256; i++) {
+    y = 16 + ((i - 16) * vb->contrast + vb->brightness * 255);
+    if (y < 0)
+      y = 0;
+    else if (y > 255)
+      y = 255;
+    vb->tabley[i] = rint (y);
+  }
+
+  /* FIXME this is a bogus transformation for hue, but you get
+   * the idea */
+  hue_cos = cos (M_PI * vb->hue);
+  hue_sin = sin (M_PI * vb->hue);
+
+  /* U/V lookup tables are 2D, since we need both U/V for each table
+   * separately. */
+  for (i = -128; i < 128; i++) {
+    for (j = -128; j < 128; j++) {
+      u = 128 + (( i * hue_cos + j * hue_sin) * vb->saturation);
+      v = 128 + ((-i * hue_sin + j * hue_cos) * vb->saturation);
+      if(u < 0)
+        u = 0;
+      else if (u > 255)
+        u = 255;
+      if (v < 0)
+        v = 0;
+      else if (v > 255)
+        v = 255;
+      vb->tableu[i+128][j+128] = rint (u);
+      vb->tablev[i+128][j+128] = rint (v);
+    }
+  }
+}
+
 static void gst_videobalance_planar411(GstVideofilter *videofilter,
     void *dest, void *src)
 {
@@ -423,62 +491,41 @@ static void gst_videobalance_planar411(GstVideofilter *videofilter,
   g_return_if_fail(GST_IS_VIDEOBALANCE(videofilter));
   videobalance = GST_VIDEOBALANCE(videofilter);
 
+  if (videobalance->needupdate) {
+    gst_videobalance_update_tables_planar411 (videobalance);
+    videobalance->needupdate = FALSE;
+  }
+
   width = videofilter->from_width;
   height = videofilter->from_height;
 
   {
-    double Y;
-    double contrast;
-    double brightness;
     guint8 *cdest = dest;
     guint8 *csrc = src;
 
-    contrast = videobalance->contrast;
-    brightness = videobalance->brightness;
-
-    for(y=0;y<height;y++){
-      for(x=0;x<width;x++){
-        Y = csrc[y*width + x];
-        Y = 16 + ((Y-16) * contrast + brightness*255);
-        if(Y<0)Y=0;
-        if(Y>255)Y=255;
-        cdest[y*width + x] = rint(Y);
+    for(y=0;y<height;y++) {
+      for(x=0;x<width;x++) {
+        cdest[y*width + x] = videobalance->tabley[csrc[y*width + x]];
       }
     }
   }
 
   {
-    double u, v;
-    double u1, v1;
-    double saturation;
-    double hue_cos, hue_sin;
+    gint u1, v1;
     guint8 *usrc, *vsrc;
     guint8 *udest, *vdest;
-
-    saturation = videobalance->saturation;
 
     usrc = src + width*height;
     udest = dest + width*height;
     vsrc = src + width*height + (width/2)*(height/2);
     vdest = dest + width*height + (width/2)*(height/2);
 
-    /* FIXME this is a bogus transformation for hue, but you get
-     * the idea */
-    hue_cos = cos(M_PI*videobalance->hue);
-    hue_sin = sin(M_PI*videobalance->hue);
-  
     for(y=0;y<height/2;y++){
       for(x=0;x<width/2;x++){
-        u1 = usrc[y*(width/2) + x] - 128;
-        v1 = vsrc[y*(width/2) + x] - 128;
-        u = 128 + (( u1 * hue_cos + v1 * hue_sin) * saturation);
-        v = 128 + ((-u1 * hue_sin + v1 * hue_cos) * saturation);
-        if(u<0)u=0;
-        if(u>255)u=255;
-        if(v<0)v=0;
-        if(v>255)v=255;
-        udest[y*(width/2) + x] = rint(u);
-        vdest[y*(width/2) + x] = rint(v);
+        u1 = usrc[y*(width/2) + x];
+        v1 = vsrc[y*(width/2) + x];
+        udest[y*(width/2) + x] = videobalance->tableu[u1][v1];
+        vdest[y*(width/2) + x] = videobalance->tablev[u1][v1];
       }
     }
   }
