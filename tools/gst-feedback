@@ -65,3 +65,20 @@ for dirs in /usr/include /usr/local/include /home; do
   fi
 done
 
+echo "+   GSTREAMER PLUG-INS INFORMATION"
+command_output "gst-inspect volume"
+
+echo "++  looking for gstreamer volume plugin in common locations"
+for dirs in /usr/lib /usr/local/lib /home; do
+  if test -d $dirs; then
+    find $dirs -name libgstvolume* | grep so
+  fi
+done
+echo "++  looking for gstreamer headers in common locations"
+for dirs in /usr/include /usr/local/include /home; do
+  if test -d $dirs; then
+    find $dirs -name audio.h
+  fi
+done
+
+
