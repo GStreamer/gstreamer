@@ -645,11 +645,39 @@ gst_vorbisenc_setup (VorbisEnc *vorbisenc)
     ogg_stream_packetin (&vorbisenc->os, &header_code);
 
     /* no need to write out here.  We'll get to that in the main loop */
+    vorbisenc->flush_header = TRUE;
   }
 
   vorbisenc->setup = TRUE;
 
   return TRUE;
+}
+
+static void
+gst_vorbisenc_write_page (VorbisEnc *vorbisenc, ogg_page *page)
+{
+  GstBuffer *outbuf;
+
+  outbuf = gst_buffer_new_and_alloc (page->header_len + 
+			             page->body_len);
+
+  memcpy (GST_BUFFER_DATA (outbuf), page->header, 
+				    page->header_len);
+  memcpy (GST_BUFFER_DATA (outbuf) + page->header_len, 
+			             page->body,
+	        		     page->body_len);
+
+  GST_DEBUG (0, "vorbisenc: encoded buffer of %d bytes", 
+			GST_BUFFER_SIZE (outbuf));
+
+  vorbisenc->bytes_out += GST_BUFFER_SIZE (outbuf);
+
+  if (GST_PAD_IS_USABLE (vorbisenc->srcpad)) {
+    gst_pad_push (vorbisenc->srcpad, outbuf);
+  }
+  else {
+    gst_buffer_unref (outbuf);
+  }
 }
 
 static void
@@ -691,6 +719,18 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
       gst_element_error (GST_ELEMENT (vorbisenc), "encoder not initialized (input is not audio?)");
       return;
     }
+
+    if (vorbisenc->flush_header) {
+      gint result;
+
+      while ((result = ogg_stream_flush(&vorbisenc->os, &vorbisenc->og))) {
+        if (!result) 
+          break;
+
+	gst_vorbisenc_write_page (vorbisenc, &vorbisenc->og);
+      }
+      vorbisenc->flush_header = FALSE;
+    }
   
     /* data to encode */
     data = (gint16 *) GST_BUFFER_DATA (buf);
@@ -731,32 +771,11 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
       /* write out pages (if any) */
       while (!vorbisenc->eos) {
         int result = ogg_stream_pageout (&vorbisenc->os, &vorbisenc->og);
-        GstBuffer *outbuf;
 
         if (result == 0)
 	  break;
 
-
-        outbuf = gst_buffer_new_and_alloc (vorbisenc->og.header_len + 
-			                   vorbisenc->og.body_len);
-
-        memcpy (GST_BUFFER_DATA (outbuf), vorbisenc->og.header, 
-					  vorbisenc->og.header_len);
-        memcpy (GST_BUFFER_DATA (outbuf) + vorbisenc->og.header_len, 
-			                   vorbisenc->og.body,
-	        		           vorbisenc->og.body_len);
-
-        GST_DEBUG (0, "vorbisenc: encoded buffer of %d bytes", 
-			GST_BUFFER_SIZE (outbuf));
-
-        vorbisenc->bytes_out += GST_BUFFER_SIZE (outbuf);
-
-	if (GST_PAD_IS_USABLE (vorbisenc->srcpad)) {
-          gst_pad_push (vorbisenc->srcpad, outbuf);
-	}
-	else {
-          gst_buffer_unref (outbuf);
-	}
+	gst_vorbisenc_write_page (vorbisenc, &vorbisenc->og);
 
         /* this could be set above, but for illustrative purposes, I do
            it here (to show that vorbis does know where the stream ends) */

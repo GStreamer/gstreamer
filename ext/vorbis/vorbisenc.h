@@ -82,6 +82,7 @@ struct _VorbisEnc {
   GstCaps         *metadata;
 
   gboolean         setup;
+  gboolean         flush_header;
   gchar		  *last_message;
 };
 
