@@ -71,6 +71,7 @@ libgstreamer_la_SOURCES =		\
 	gstpipeline.c		\
 	gstplugin.c		\
 	gstpluginfeature.c	\
+	gstprobe.c		\
 	gstprops.c		\
 	gstqueue.c		\
 	gstscheduler.c		\
@@ -117,6 +118,7 @@ gst_headers =			\
 	gstpipeline.h		\
 	gstplugin.h		\
 	gstpluginfeature.h	\
+	gstprobe.h		\
 	gstprops.h		\
 	gstqueue.h		\
 	gstscheduler.h		\
