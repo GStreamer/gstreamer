@@ -389,13 +389,9 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 
   if (GST_IS_EVENT (buf)) {
     g_print ("eos on osssink\n");
-    gst_element_set_state (osssink, GST_STATE_PAUSED);
+    gst_element_set_state (GST_ELEMENT (osssink), GST_STATE_PAUSED);
     gst_event_free (GST_EVENT (buf));
-  }
-
-  if ((in_flush = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLUSH))) {
-    GST_DEBUG (GST_CAT_PLUGIN_INFO,"osssink: flush\n");
-    ioctl (osssink->fd, SNDCTL_DSP_RESET, 0);
+    return;
   }
 
   g_signal_emit (G_OBJECT (osssink), gst_osssink_signals[SIGNAL_HANDOFF], 0,
@@ -589,18 +585,28 @@ gst_osssink_change_state (GstElement *element)
 
   osssink = GST_OSSSINK (element);
 
-  /* if going down into NULL state, close the file if it's open */ 
-  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN))
-      gst_osssink_close_audio (osssink);
-
-  /* otherwise (READY) we need to open the sound card */
-  } else if (GST_STATE_PENDING (element) == GST_STATE_READY) {
-    if (!GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN)) {
-      if (!gst_osssink_open_audio (osssink)) {
-        return GST_STATE_FAILURE;
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      if (!GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN)) {
+        if (!gst_osssink_open_audio (osssink)) {
+          return GST_STATE_FAILURE;
+        }
       }
-    }
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN))
+        ioctl (osssink->fd, SNDCTL_DSP_RESET, 0);
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      break;
+    case GST_STATE_READY_TO_NULL:
+      if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN))
+        gst_osssink_close_audio (osssink);
+      break;
   }
       
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
