@@ -1,6 +1,27 @@
 2004-11-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
+	* gst/apetag/Makefile.am:
+	* gst/apetag/apedemux.c: (gst_ape_demux_get_type),
+	(gst_ape_demux_base_init), (gst_ape_demux_class_init),
+	(gst_ape_demux_init), (gst_ape_demux_get_src_formats),
+	(gst_ape_demux_get_src_query_types),
+	(gst_ape_demux_handle_src_query), (gst_ape_demux_get_event_mask),
+	(gst_ape_demux_handle_src_event), (gst_ape_demux_handle_event),
+	(gst_ape_demux_typefind_peek), (gst_ape_demux_typefind_get_length),
+	(gst_ape_demux_typefind_suggest), (gst_ape_demux_typefind),
+	(gst_ape_demux_parse_tags), (gst_ape_demux_stream_init),
+	(gst_ape_demux_stream_data), (gst_ape_demux_loop),
+	(gst_ape_demux_change_state):
+	* gst/apetag/apedemux.h:
+	* gst/apetag/apetag.c: (plugin_init):
+	* gst/typefind/gsttypefindfunctions.c: (apetag_type_find),
+	(plugin_init):
+	  APE v1/2 tag reader plus typefind function.
+
+2004-11-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_add_element):
 	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find):
 	  Remove hacks for older core. Require newer core version
