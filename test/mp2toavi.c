@@ -189,7 +189,6 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(smooth));
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(videoscale));
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(encode));
-    gst_bin_use_cothreads(GST_BIN(video_thread), FALSE);
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(video_thread),

@@ -141,7 +141,6 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(decode_video));
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(merge_subtitles));
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(show));
-    gst_bin_use_cothreads(GST_BIN(video_thread), FALSE);
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(video_thread),

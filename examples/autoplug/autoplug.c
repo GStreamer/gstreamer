@@ -38,6 +38,7 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
 
   /* and an video sink */
   videosink = gst_elementfactory_make("xvideosink", "play_video");
+  //videosink = gst_elementfactory_make("aasink", "play_video");
   g_assert(videosink != NULL);
 
   autoplug = gst_autoplugfactory_make ("staticrender");

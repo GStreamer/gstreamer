@@ -36,8 +36,6 @@ int main(int argc,char *argv[])
   osssink = gst_elementfactory_make("osssink", "play_audio");
   g_assert(osssink != NULL);
 
-  gst_bin_use_cothreads (GST_BIN (bin), TRUE);
-
   /* add objects to the main pipeline */
   gst_bin_add(GST_BIN(bin), disksrc);
   gst_bin_add(GST_BIN(bin), parse);
