@@ -398,7 +398,11 @@ mp3_type_find (GstTypeFind *tf, gpointer unused)
 	guint prev_layer = 0, prev_bitrate = 0,
 	      prev_channels = 0, prev_samplerate = 0;
 	
-	head_data = gst_type_find_peek (tf, offset, 4);
+	if (offset + 4 <= skipped + size) {
+	  head_data = data + offset - skipped;
+	} else {
+	  head_data = gst_type_find_peek (tf, offset, 4);
+	}
 	if (!head_data)
 	  break;
 	head = GUINT32_FROM_BE(*((guint32 *) head_data));
