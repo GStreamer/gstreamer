@@ -136,6 +136,9 @@ bla:
   test_string ("audio/raw  ,test=(b ) yes");
   test_string ("audio/raw  ,test =( boolean)no");
 
+  /* buffers */
+  test_string ("audio/raw  ,test=(buffer)0123456789abcdef");
+
   /* unfixed props entries */
   test_string ("audio/raw, test= [ 1, 2 ]");
   test_string_fail ("audio/raw, test= [ 1.0 , 2]");

@@ -45,8 +45,7 @@ static void gst_buffer_free_chunk (GstBuffer * buffer);
 void
 _gst_buffer_initialize (void)
 {
-  _gst_buffer_type = g_boxed_type_register_static ("GstBuffer",
-      (GBoxedCopyFunc) gst_data_copy, (GBoxedFreeFunc) gst_data_unref);
+  gst_buffer_get_type ();
 
 #ifndef GST_DISABLE_TRACE
   _gst_buffer_trace = gst_alloc_trace_register (GST_BUFFER_TRACE_NAME);
@@ -61,6 +60,10 @@ _gst_buffer_initialize (void)
 GType
 gst_buffer_get_type (void)
 {
+  if (_gst_buffer_type == 0) {
+    _gst_buffer_type = g_boxed_type_register_static ("GstBuffer",
+        (GBoxedCopyFunc) gst_data_copy, (GBoxedFreeFunc) gst_data_unref);
+  }
   return _gst_buffer_type;
 }
 

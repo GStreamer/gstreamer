@@ -37,7 +37,7 @@ typedef void (*GstBufferFreeDataFunc) (GstBuffer *buffer);
 
 extern GType _gst_buffer_type;
 
-#define GST_TYPE_BUFFER         		(_gst_buffer_type)
+#define GST_TYPE_BUFFER         		(gst_buffer_get_type())
 
 #define GST_BUFFER(buf)         		((GstBuffer *)(buf))
 #define GST_IS_BUFFER(buf)      		(GST_DATA_TYPE(buf) == GST_TYPE_BUFFER)

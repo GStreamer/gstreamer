@@ -1,3 +1,24 @@
+2004-04-12  David Schleef  <ds@schleef.org>
+
+	* gst/gstbuffer.c: (_gst_buffer_initialize), (gst_buffer_get_type),
+	(gst_buffer_free_chunk): Added gst_buffer_get_type() and changed
+	to using it.
+	* gst/gstbuffer.h: Changed GST_BUFFER_TYPE to gst_buffer_get_type()
+	* gst/gstcaps.c: (gst_caps_is_fixed_foreach): Buffer is a fixed type
+	* gst/gstpad.c: (_gst_pad_default_fixate_foreach): same
+	* gst/gststructure.c: (gst_structure_set_valist),
+	(gst_structure_from_abbr), (gst_structure_to_abbr): Add vararg
+	support for buffers.
+	* gst/gsttag.c: (gst_tag_register): Constify a prototype that was
+	intended to be const.
+	* gst/gsttag.h: same
+	* gst/gstvalue.c: (gst_value_serialize_buffer),
+	(gst_value_deserialize_buffer), (_gst_value_initialize):  Add code
+	to (de)serialize buffers.
+	* testsuite/caps/Makefile.am:  Add a bit of buffer testing
+	* testsuite/caps/string-conversions.c: (main):
+	* testsuite/caps/value_serialize.c: add new test
+
 2004-04-11  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/advanced-types.xml:

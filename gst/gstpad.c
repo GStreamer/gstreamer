@@ -1992,7 +1992,8 @@ _gst_pad_default_fixate_foreach (GQuark field_id, GValue * value, gpointer s)
   GstStructure *structure = (GstStructure *) s;
   GType type = G_VALUE_TYPE (value);
 
-  if (G_TYPE_IS_FUNDAMENTAL (type) || type == GST_TYPE_FOURCC)
+  if (G_TYPE_IS_FUNDAMENTAL (type) || type == GST_TYPE_FOURCC ||
+      type == GST_TYPE_BUFFER)
     return TRUE;
 
   if (type == GST_TYPE_INT_RANGE) {

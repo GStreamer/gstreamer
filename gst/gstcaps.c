@@ -531,6 +531,8 @@ gst_caps_is_fixed_foreach (GQuark field_id, GValue * value, gpointer unused)
     return TRUE;
   if (type == GST_TYPE_FOURCC)
     return TRUE;
+  if (type == GST_TYPE_BUFFER)
+    return TRUE;
   return FALSE;
 }
 

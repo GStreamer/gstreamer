@@ -264,8 +264,8 @@ gst_tag_lookup (GQuark entry)
  * This function takes ownership of all supplied variables.
  */
 void
-gst_tag_register (gchar * name, GstTagFlag flag, GType type,
-    gchar * nick, gchar * blurb, GstTagMergeFunc func)
+gst_tag_register (const gchar * name, GstTagFlag flag, GType type,
+    const gchar * nick, const gchar * blurb, GstTagMergeFunc func)
 {
   GQuark key;
   GstTagInfo *info;
@@ -282,8 +282,8 @@ gst_tag_register (gchar * name, GstTagFlag flag, GType type,
   info = g_new (GstTagInfo, 1);
   info->flag = flag;
   info->type = type;
-  info->nick = nick;
-  info->blurb = blurb;
+  info->nick = g_strdup (nick);
+  info->blurb = g_strdup (blurb);
   info->merge_func = func;
 
   TAG_LOCK;

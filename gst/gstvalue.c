@@ -22,6 +22,7 @@
 #endif
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <gst/gst.h>
 #include <gobject/gvaluecollector.h>
@@ -767,6 +768,67 @@ gst_value_get_caps (const GValue * value)
 
   return (GstCaps *) g_value_get_boxed (value);
 }
+
+/*************************************/
+/* GstBuffer */
+
+static char *
+gst_value_serialize_buffer (const GValue * value)
+{
+  guint8 *data;
+  int i;
+  int size;
+  char *string;
+  GstBuffer *buffer = g_value_get_boxed (value);
+
+  data = GST_BUFFER_DATA (buffer);
+  size = GST_BUFFER_SIZE (buffer);
+
+  string = malloc (size * 2 + 1);
+  for (i = 0; i < size; i++) {
+    sprintf (string + i * 2, "%02x", data[i]);
+  }
+  string[size * 2] = 0;
+
+  return string;
+}
+
+static gboolean
+gst_value_deserialize_buffer (GValue * dest, const char *s)
+{
+  GstBuffer *buffer;
+  gboolean ret = TRUE;
+  int len;
+  char ts[3];
+  guint8 *data;
+  int i;
+
+  len = strlen (s);
+  if (len & 1)
+    return FALSE;
+  buffer = gst_buffer_new_and_alloc (len / 2);
+  data = GST_BUFFER_DATA (buffer);
+  for (i = 0; i < len / 2; i++) {
+    if (!isxdigit (s[i * 2]) || !isxdigit (s[i * 2 + 1])) {
+      ret = FALSE;
+      break;
+    }
+    ts[0] = s[i * 2 + 0];
+    ts[1] = s[i * 2 + 1];
+    ts[2] = 0;
+
+    data[i] = strtoul (ts, NULL, 16);
+  }
+
+  if (ret) {
+    g_value_set_boxed (dest, buffer);
+    return TRUE;
+  } else {
+    gst_buffer_unref (buffer);
+    return FALSE;
+  }
+}
+
 
 /*************************************/
 /* boolean */
@@ -1628,6 +1690,35 @@ _gst_value_initialize (void)
     gst_type_list =
         g_type_register_static (G_TYPE_BOXED, "GstValueList", &info, 0);
     gst_value.type = gst_type_list;
+    gst_value_register (&gst_value);
+  }
+
+  {
+#if 0
+    static const GTypeValueTable value_table = {
+      gst_value_init_buffer,
+      NULL,
+      gst_value_copy_buffer,
+      NULL,
+      "i",
+      NULL,                     /*gst_value_collect_buffer, */
+      "p",
+      NULL                      /*gst_value_lcopy_buffer */
+    };
+#endif
+    static GstValueTable gst_value = {
+      0,
+      NULL,                     /*gst_value_compare_buffer, */
+      gst_value_serialize_buffer,
+      gst_value_deserialize_buffer,
+    };
+
+#if 0
+    info.value_table = &value_table;
+    gst_type_fourcc =
+        g_type_register_static (G_TYPE_BOXED, "GstFourcc", &info, 0);
+#endif
+    gst_value.type = GST_TYPE_BUFFER;
     gst_value_register (&gst_value);
   }
 

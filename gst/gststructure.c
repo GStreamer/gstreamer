@@ -406,6 +406,11 @@ gst_structure_set_valist (GstStructure * structure,
 
           g_value_init (&field.value, GST_TYPE_DOUBLE_RANGE);
           gst_value_set_double_range (&field.value, min, max);
+        } else if (type == GST_TYPE_BUFFER) {
+          GstBuffer *buffer = va_arg (varargs, GstBuffer *);
+
+          g_value_init (&field.value, GST_TYPE_BUFFER);
+          g_value_set_boxed (&field.value, buffer);
         } else {
           g_critical ("unimplemented vararg field type %d\n", (int) type);
           return;
@@ -988,6 +993,9 @@ gst_structure_from_abbr (const char *type_name)
   if (strcmp (type_name, "fourcc") == 0 || strcmp (type_name, "4") == 0) {
     return GST_TYPE_FOURCC;
   }
+  if (strcmp (type_name, "buffer") == 0) {
+    return GST_TYPE_BUFFER;
+  }
 
   return g_type_from_name (type_name);
 }
@@ -1008,6 +1016,9 @@ gst_structure_to_abbr (GType type)
   /* FIXME shouldn't be a special case */
   if (type == GST_TYPE_FOURCC) {
     return "fourcc";
+  }
+  if (type == GST_TYPE_BUFFER) {
+    return "buffer";
   }
 
   return g_type_name (type);
