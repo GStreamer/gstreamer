@@ -1,3 +1,15 @@
+2004-05-07  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_build_list):
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_get_type),
+	(gst_alsa_sink_class_init):
+	* ext/alsa/gstalsasink.h:
+	* ext/alsa/gstalsasrc.c: (gst_alsa_src_get_type),
+	(gst_alsa_src_class_init):
+	* ext/alsa/gstalsasrc.h:
+	  Make alsasink/src a subclass of alsamixer so that mixer stuff
+	  shows up in gst-rec. Needs some finetuning.
+
 2004-05-05  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/lame/gstlame.c: (gst_lame_chain):
