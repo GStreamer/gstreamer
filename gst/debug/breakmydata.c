@@ -252,8 +252,8 @@ gst_break_my_data_change_state (GstElement * element)
       (element), GST_STATE_SUCCESS);
 }
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+gboolean
+gst_break_my_data_plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "breakmydata", GST_RANK_NONE,
           GST_TYPE_BREAK_MY_DATA))
@@ -264,9 +264,3 @@ plugin_init (GstPlugin * plugin)
 
   return TRUE;
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "debug",
-    "elements for testing and debugging",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
