@@ -323,12 +323,15 @@ gst_lame_class_init (GstLameClass *klass)
   gstelement_class->change_state = gst_lame_change_state;
 }
 
-static void
-gst_lame_newcaps (GstPad *pad, GstCaps *caps)
+static GstPadConnectReturn
+gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstLame *lame;
 
   lame = GST_LAME (gst_pad_get_parent (pad));
+
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_CONNECT_DELAYED;
 
   lame->samplerate = gst_caps_get_int (caps, "rate");
   lame->num_channels = gst_caps_get_int (caps, "channels");
@@ -347,6 +350,10 @@ gst_lame_newcaps (GstPad *pad, GstCaps *caps)
     gst_element_error (GST_ELEMENT (lame), "could not initialize encoder (wrong parameters?)");
     lame->initialized = FALSE;
   }
+  if (lame->initialized)
+    return GST_PAD_CONNECT_OK;
+
+  return GST_PAD_CONNECT_REFUSED;
 }
 
 static void
@@ -357,11 +364,10 @@ gst_lame_init (GstLame *lame)
   lame->sinkpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (gst_lame_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (lame), lame->sinkpad);
   gst_pad_set_chain_function (lame->sinkpad, gst_lame_chain);
-  gst_pad_set_newcaps_function (lame->sinkpad, gst_lame_newcaps);
+  gst_pad_set_connect_function (lame->sinkpad, gst_lame_sinkconnect);
 
   lame->srcpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (gst_lame_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (lame), lame->srcpad);
-  gst_pad_set_caps (lame->srcpad, gst_pad_get_padtemplate_caps (lame->srcpad));
 
   GST_DEBUG (0, "setting up lame encoder\n");
   lame->lgf = lame_init ();

@@ -248,7 +248,7 @@ gst_mpeg2dec_vo_setup (vo_instance_t * instance, int width, int height)
   mpeg2dec->width = width;
   mpeg2dec->height = height;
 
-  gst_pad_set_caps (mpeg2dec->srcpad, 
+  gst_pad_try_set_caps (mpeg2dec->srcpad, 
 		    gst_caps_new (
 		      "mpeg2dec_caps",
 		      "video/raw",

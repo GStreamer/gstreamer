@@ -150,7 +150,6 @@ gst_a52dec_init (GstA52Dec * a52dec)
   /* create the sink and src pads */
   a52dec->sinkpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->sinkpad);
-  gst_pad_set_caps (a52dec->sinkpad, gst_pad_get_padtemplate_caps (a52dec->sinkpad));
   gst_element_set_loop_function ((GstElement *) a52dec, gst_a52dec_loop);
 
   a52dec->srcpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (src_factory), "src");
@@ -341,17 +340,18 @@ gst_a52dec_reneg (GstPad * pad, int channels, int rate)
 {
   GST_INFO (GST_CAT_PLUGIN_INFO, "a52dec: reneg channels:%d rate:%d\n", channels, rate);
 
-  gst_pad_set_caps (pad, gst_caps_new ("a52dec_src_caps",
-				       "audio/raw",
-				       gst_props_new ("format", 	GST_PROPS_STRING ("int"),
-						      "law", 		GST_PROPS_INT (0),
-						      "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
-						      "signed", 	GST_PROPS_BOOLEAN (TRUE),
-						      "width", 		GST_PROPS_INT (16),
-						      "depth", 		GST_PROPS_INT (16),
-						      "channels", 	GST_PROPS_INT (channels),
-						      "rate", 		GST_PROPS_INT (rate), NULL)
-		    ));
+  gst_pad_try_set_caps (pad, 
+		  GST_CAPS_NEW ("a52dec_src_caps",
+			        "audio/raw",
+				  "format", 	GST_PROPS_STRING ("int"),
+				  "law", 	GST_PROPS_INT (0),
+				  "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
+				  "signed", 	GST_PROPS_BOOLEAN (TRUE),
+				  "width", 	GST_PROPS_INT (16),
+				  "depth", 	GST_PROPS_INT (16),
+				  "channels", 	GST_PROPS_INT (channels),
+				  "rate", 	GST_PROPS_INT (rate))
+		    );
 }
 
 static void

@@ -353,7 +353,7 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
        */
       if (outpad && *outpad == NULL) {
 	*outpad = gst_pad_new_from_template (newtemp, name);
-	gst_pad_set_caps (*outpad, gst_pad_get_padtemplate_caps (*outpad));
+	gst_pad_try_set_caps (*outpad, gst_pad_get_padtemplate_caps (*outpad));
 	gst_element_add_pad (GST_ELEMENT (mpeg_demux), (*outpad));
       }
       else {
@@ -540,7 +540,7 @@ done:
   }
 
   /* create the buffer and send it off to the Other Side */
-  if (GST_PAD_CONNECTED(*outpad) && datalen > 0) {
+  if (GST_PAD_IS_CONNECTED(*outpad) && datalen > 0) {
     /* if this is part of the buffer, create a subbuffer */
     GST_DEBUG (0,"mpeg_demux::parse_packet: creating subbuffer len %d\n", datalen);
 
@@ -737,7 +737,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     if (newtemp) {
       /* create the pad and add it to self */
       (*outpad) = gst_pad_new_from_template (newtemp, name);
-      gst_pad_set_caps((*outpad), gst_pad_get_padtemplate_caps (*outpad));
+      gst_pad_try_set_caps ((*outpad), gst_pad_get_padtemplate_caps (*outpad));
       gst_element_add_pad(GST_ELEMENT(mpeg_demux),(*outpad));
     }
     else {
@@ -748,7 +748,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   }
 
   /* create the buffer and send it off to the Other Side */
-  if (GST_PAD_CONNECTED(*outpad)) {
+  if (GST_PAD_IS_CONNECTED(*outpad)) {
     /* if this is part of the buffer, create a subbuffer */
     GST_DEBUG (0,"mpeg_demux: creating subbuffer len %d\n", datalen);
 
@@ -788,30 +788,30 @@ _forall_pads (GstMPEGDemux *mpeg_demux, GFunc fun, gpointer user_data)
   for (i=0;i<NUM_PRIVATE_1_PADS;i++)
     {
       pad = mpeg_demux->private_1_pad[i];
-      if (pad && GST_PAD_CONNECTED(pad))
+      if (pad && GST_PAD_IS_CONNECTED(pad))
 	(*fun) (pad, user_data);
     }
   for (i=0;i<NUM_SUBTITLE_PADS;i++)
     {
       pad = mpeg_demux->subtitle_pad[i];
-      if (pad && GST_PAD_CONNECTED(pad))
+      if (pad && GST_PAD_IS_CONNECTED(pad))
 	(*fun) (pad, user_data);
     }
 
   pad = mpeg_demux->private_2_pad;
-  if (pad && GST_PAD_CONNECTED(pad))
+  if (pad && GST_PAD_IS_CONNECTED(pad))
     (*fun) (pad, user_data);
     
   for (i=0;i<NUM_VIDEO_PADS;i++)
     {
       pad = mpeg_demux->video_pad[i];
-      if (pad && GST_PAD_CONNECTED(pad))
+      if (pad && GST_PAD_IS_CONNECTED(pad))
 	(*fun) (pad, user_data);
     }
   for (i=0;i<NUM_AUDIO_PADS;i++)
     {
       pad = mpeg_demux->audio_pad[i];
-      if (pad && GST_PAD_CONNECTED(pad))
+      if (pad && GST_PAD_IS_CONNECTED(pad))
 	(*fun) (pad, user_data);
     }
 }

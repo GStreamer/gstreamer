@@ -129,7 +129,6 @@ gst_mad_init (GstMad *mad)
   mad->sinkpad = gst_pad_new_from_template(
 		  GST_PADTEMPLATE_GET (mad_sink_template_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(mad),mad->sinkpad);
-  gst_pad_set_caps (mad->sinkpad, gst_pad_get_padtemplate_caps (mad->sinkpad));
   gst_pad_set_chain_function (mad->sinkpad, GST_DEBUG_FUNCPTR(gst_mad_chain));
 
   mad->srcpad = gst_pad_new_from_template(
@@ -272,7 +271,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
         }
       }
       if (GST_PAD_CAPS (mad->srcpad) == NULL) {
-        gst_pad_set_caps (mad->srcpad,
+        gst_pad_try_set_caps (mad->srcpad,
   	    gst_caps_new (
   	      "mad_src",
     	      "audio/raw",
@@ -292,7 +291,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	         NULL)));
       }
 
-      if (GST_PAD_CONNECTED (mad->srcpad))
+      if (GST_PAD_IS_CONNECTED (mad->srcpad))
         gst_pad_push (mad->srcpad, outbuffer);
       else
         gst_buffer_unref (outbuffer);

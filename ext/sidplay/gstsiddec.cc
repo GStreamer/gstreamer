@@ -374,7 +374,7 @@ gst_siddec_loop (GstElement *element)
     if (siddec->tune->load (siddec->tune_buffer, siddec->tune_len)) {
       if (sidEmuInitializeSong (*siddec->engine, *siddec->tune, siddec->tune_number)) {
 
-	gst_pad_set_caps (siddec->srcpad, 
+	gst_pad_try_set_caps (siddec->srcpad, 
 			  GST_CAPS_NEW (
 			    "siddec_src",
 			    "audio/raw",

@@ -172,7 +172,7 @@ gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data)
     if (!GST_PAD_CAPS (mpeg_parse->srcpad)) {
       gboolean mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
 
-      gst_pad_set_caps (mpeg_parse->srcpad,
+      gst_pad_try_set_caps (mpeg_parse->srcpad,
 		      GST_CAPS_NEW (
     			"mpeg_parse_src",
     			"video/mpeg",
