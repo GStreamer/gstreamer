@@ -25,7 +25,9 @@ main (int argc, char *argv[])
 		}
 	}
 	
+#ifndef GST_DISABLE_LOADSAVE
 	xmlSaveFile ("gstmediaplay.gst", gst_xml_write (gst_play_get_pipeline (play->play)));
+#endif
 	
 	gdk_threads_enter();
 	gst_main();
