@@ -1,3 +1,43 @@
+2004-09-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/dirac/Makefile.am:
+	* ext/dirac/gstdirac.cc:
+	* ext/dirac/gstdiracdec.cc:
+	* ext/dirac/gstdiracdec.h:
+	  Do something. Don't actually know if this works because I don't
+	  have a demuxer yet.
+	* ext/gsm/gstgsmdec.c: (gst_gsmdec_getcaps):
+	  Add channels=1 to caps returned from _getcaps().
+	* ext/ogg/gstogmparse.c: (gst_ogm_audio_parse_get_type),
+	(gst_ogm_video_parse_get_type), (gst_ogm_audio_parse_base_init),
+	(gst_ogm_video_parse_base_init), (gst_ogm_parse_init),
+	(gst_ogm_audio_parse_init), (gst_ogm_video_parse_init),
+	(gst_ogm_parse_sink_convert), (gst_ogm_parse_chain),
+	(gst_ogm_parse_change_state):
+	  Separate between audio/video so ogmaudioparse actually uses the
+	  audio pad templates. Both audio and video work now, including
+	  autoplugging. Also use sometimes-srcpad hack.
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_seek):
+	  Handle events better. Don't hang on infinite loops.
+	* gst/avi/gstavidemux.c: (gst_avi_demux_class_init),
+	(gst_avi_demux_init), (gst_avi_demux_reset),
+	(gst_avi_demux_src_convert), (gst_avi_demux_handle_src_query),
+	(gst_avi_demux_stream_header), (gst_avi_demux_stream_data),
+	(gst_avi_demux_change_state):
+	* gst/avi/gstavidemux.h:
+	  Improve A/V sync. Still not perfect.
+	* gst/matroska/ebml-read.c: (gst_ebml_read_seek),
+	(gst_ebml_read_skip):
+	  Handle events better.
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_handle_sink_event),
+	(gst_qtdemux_loop_header), (qtdemux_parse_trak),
+	(qtdemux_audio_caps):
+	  Add IMA4. Improve event handling. Save offset after a seek when
+	  the headers are at the end of the file so that we don't end up in
+	  an infinite loop.
+	* gst/typefind/gsttypefindfunctions.c: (qt_type_find):
+	  Add low-priority typefind support for files with no length.
+
 2004-09-23  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* testsuite/multifilesink/Makefile.am:
