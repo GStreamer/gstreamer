@@ -1,3 +1,11 @@
+2004-12-02  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/law/alaw-decode.c: (alawdec_getcaps), (alawdec_link):
+	* gst/law/alaw-encode.c: (alawenc_getcaps), (alawenc_link):
+	* gst/law/mulaw-decode.c: (mulawdec_getcaps), (mulawdec_link):
+	* gst/law/mulaw-encode.c: (mulawenc_getcaps), (mulawenc_link):
+	  Fix caps.
+
 2004-12-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/v4l/v4l_calls.c: (gst_v4l_get_chan_names):
