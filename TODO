@@ -8,11 +8,6 @@
 - deal with clocking issues
 - use real chaining where possible
 - factory aliases?
-
-* autoconf testing :
-
-- SDL : seems to be ok now, test
-- rtp : weird problem, can't get it to work with AC_CHECK_HEADER(S)
-- arts : rh72 has artsflowh. in /usr/include/kde/arts
-  	 there's no arts-config
-	 so what do we do to find it ?
+- fix plugins :
+wtay : the proper fix is of course to fix the plugins and 
+implement the cleanup in the state change function..

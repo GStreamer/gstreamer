@@ -96,7 +96,7 @@ fi
 version_check "autoconf" "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 52 || DIE=1
 version_check "automake" "ftp://ftp.gnu.org/pub/gnu/automake/" 1 5 || DIE=1
 version_check "libtool" "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
-version_check "pkg-config" "http://www.freedesktop.org/software/pkgconfig" 0 7 0 || DIE=1
+version_check "pkg-config" "http://www.freedesktop.org/software/pkgconfig" 0 8 0 || DIE=1
 
 if test "$DIE" -eq 1; then
 	exit 1

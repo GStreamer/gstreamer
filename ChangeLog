@@ -1,3 +1,7 @@
+2001-12-11 22:10  thomasvs
+
+	* lots of build fixes for 0.3.0 release
+
 2001-08-15 23:43  cael
 
 	* gstplay/: ChangeLog, gstmediaplay.c, gstplay.c: Added hacky check
