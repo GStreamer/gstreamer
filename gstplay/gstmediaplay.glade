@@ -154,14 +154,13 @@
 		  <class>GtkMenuItem</class>
 		  <name>original_size</name>
 		  <accelerator>
-		    <modifiers>GDK_MOD1_MASK</modifiers>
+		    <modifiers>GDK_CONTROL_MASK</modifiers>
 		    <key>GDK_1</key>
 		    <signal>activate</signal>
 		  </accelerator>
 		  <signal>
 		    <name>activate</name>
 		    <handler>on_original_size_activate</handler>
-		    <data>mplay</data>
 		    <last_modification_time>Sun, 06 May 2001 01:58:18 GMT</last_modification_time>
 		  </signal>
 		  <label>Original Size</label>
@@ -172,7 +171,7 @@
 		  <class>GtkMenuItem</class>
 		  <name>double_size</name>
 		  <accelerator>
-		    <modifiers>GDK_MOD1_MASK</modifiers>
+		    <modifiers>GDK_CONTROL_MASK</modifiers>
 		    <key>GDK_2</key>
 		    <signal>activate</signal>
 		  </accelerator>
@@ -189,7 +188,7 @@
 		  <class>GtkMenuItem</class>
 		  <name>full_screen</name>
 		  <accelerator>
-		    <modifiers>GDK_MOD1_MASK</modifiers>
+		    <modifiers>GDK_CONTROL_MASK</modifiers>
 		    <key>GDK_3</key>
 		    <signal>activate</signal>
 		  </accelerator>
