@@ -1,5 +1,14 @@
 2004-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/mad/gstmad.c: (gst_mad_get_type), (gst_mad_layer_get_type),
+	(gst_mad_mode_get_type), (gst_mad_emphasis_get_type),
+	(gst_mad_get_event_masks), (gst_mad_get_query_types), (index_seek),
+	(normal_seek), (gst_mad_src_event), (gst_mad_handle_event),
+	(gst_mad_check_caps_reset), (gst_mad_chain):
+        add more debugging, only reset caps when we're not in error state
+
+2004-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* ext/mad/gstmad.c: add debugging category, comment + cleanups
 
 2004-04-05  Julio M. Merino Vidal  <jmmv@menta.net>
