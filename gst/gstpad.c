@@ -456,7 +456,6 @@ gst_pad_set_active (GstPad * pad, gboolean active)
   }
   link = GST_RPAD_LINK (realpad);
   if (link) {
-    link->engaged = FALSE;
     if (link->temp_store) {
       GST_CAT_INFO (GST_CAT_PADS,
           "deleting cached buffer from bufpen of pad %s:%s",
@@ -2136,6 +2135,7 @@ gst_pad_link_unnegotiate (GstPadLink * link)
   if (link->caps) {
     gst_caps_free (link->caps);
     link->caps = NULL;
+    link->engaged = FALSE;
     if (GST_RPAD_LINK (link->srcpad) != link) {
       g_warning ("unnegotiating unset link");
     } else {

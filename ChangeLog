@@ -1,5 +1,11 @@
 2004-05-08  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_link_unnegotiate):
+	  mark links as unengaged when unnegotiating instead of deactivating.
+	  This way pads aren't marked as unengaged when going PLAYING=>PAUSED
+
+2004-05-08  Benjamin Otte  <otte@gnome.org>
+
 	* docs/manual/helloworld.xml:
 	  s/audiosink/osssink (patch by Patrick Guimond)
 
