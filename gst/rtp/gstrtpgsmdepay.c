@@ -21,7 +21,7 @@
 #include "gstrtp-common.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_L16parse_details = {
+static GstElementDetails gst_rtp_gsmparse_details = {
   "RTP packet parser",
   "RtpGSMParse",
   "GPL",
@@ -287,7 +287,7 @@ gst_rtpgsmparse_plugin_init (GModule * module, GstPlugin * plugin)
 {
   GstElementFactory *rtpgsmparse;
 
-  rtpgsmparse = gst_element_factory_new ("rtpgsmparse", GST_TYPE_RTP_GSM_PARSE, &gst_rtp_L16parse_details);
+  rtpgsmparse = gst_element_factory_new ("rtpgsmparse", GST_TYPE_RTP_GSM_PARSE, &gst_rtp_gsmparse_details);
   g_return_val_if_fail (rtpgsmparse != NULL, FALSE);
 
   gst_element_factory_add_pad_template (rtpgsmparse, GST_PAD_TEMPLATE_GET (src_factory));
