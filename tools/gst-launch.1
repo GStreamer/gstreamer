@@ -30,6 +30,16 @@ And too play the same song with gnome\-vfs via smb:
 
  gst\-launch gnomevfssrc location=smb://computer/music.mp3 ! mad ! osssink
 
+You can also stream your mpeg 1 system streams from one machine to another using RTP by:
+ 
+ gst\-launch rtprecv media_type=mpeg1_sys ! mpegdemux video_%02d! { queue ! mpeg2dec ! xvideosink } mpegdemux0.audio_%02d! { queue ! mad ! osssink }
+
+on the receiver end and:
+
+ gst\-launch filesrc location=mpeg1system.mpeg ! mpegparse ! rtpsend ip=IPorHostname
+
+on the transmitter end.
+
 Here we convert a Mp3 file into an Ogg Vorbis file:
 
  gst\-launch filesrc location=music.mp3 ! mad ! vorbisenc ! disksink location=music.ogg
