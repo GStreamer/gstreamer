@@ -267,7 +267,7 @@ gst_bpwsinc_sink_connect (GstPad * pad, GstCaps * caps)
 }
 
 static void
-gst_bpwsinc_chain (GstPad * pad, GstBuffer * buf)
+gst_bpwsinc_chain (GstPad *pad, GstBuffer *buf)
 {
   GstBPWSinc *filter;
   gfloat *src;
@@ -284,6 +284,9 @@ gst_bpwsinc_chain (GstPad * pad, GstBuffer * buf)
    * easy; this could be a lot more optimized though
    * to make amends we keep the incoming buffer around and write our
    * output samples there */
+
+  /* get a writable buffer */
+  buf = gst_buffer_copy_on_write (buf);
 
   src = (gfloat *) GST_BUFFER_DATA (buf);
   residue_samples = filter->wing_size * 2 + 1;
