@@ -1,6 +1,13 @@
 /*
  * test for tee element
  * this tests for proxying of caps from tee sink to src's in various situations
+ * it also tests if you get a good, unique pad when requesting a third one
+ * which shows a bug in 0.3.2 :
+ * request pad, get 0
+ * request pad, get 1
+ * remove pad 0, 
+ * request pad, get 1 (number of pads), already exists, assert fail
+ *
  * thomas@apestaart.org
  * originally written for 0.3.2
  */
@@ -135,6 +142,12 @@ main (int argc, char *argv[])
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   gst_bin_iterate (GST_BIN (pipeline));
 
+  /* request another pad */
+  g_print ("Requesting third pad\n");
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  /* in 0.3.2 the next statement gives an assert error */
+  tee_src1 = gst_element_request_pad_by_name (tee, "src%d");
+  
   g_print ("Done !\n");
   return 0;
 }
