@@ -1,5 +1,11 @@
 2004-03-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* sys/oss/gstosselement.c: (gst_osselement_probe_caps),
+	(gst_osselement_rate_check_rate):
+	  probe caps correctly for sound cards that only support one format
+
+2004-03-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* ext/kio/kiosrc.cpp: (process_events):
 	  update handling event processing if inside KDE - untested
 
