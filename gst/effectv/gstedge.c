@@ -148,11 +148,7 @@ gst_edgetv_sinkconnect (GstPad * pad, GstCaps * caps)
   filter->map = (guint32 *)g_malloc (filter->map_width * filter->map_height * sizeof(guint32) * 2);
   bzero(filter->map, filter->map_width * filter->map_height * sizeof(guint32) * 2);
 
-  if (gst_pad_try_set_caps (filter->srcpad, caps)) {
-    return GST_PAD_CONNECT_OK;
-  }
-
-  return GST_PAD_CONNECT_REFUSED;
+  return gst_pad_try_set_caps (filter->srcpad, caps);
 }
 
 static void

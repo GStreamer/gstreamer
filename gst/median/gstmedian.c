@@ -138,10 +138,7 @@ gst_median_sinkconnect (GstPad *pad, GstCaps *caps)
   gst_caps_get_int (caps, "height", &filter->height);
 
   /* forward to the next plugin */
-  if (!gst_pad_try_set_caps(filter->srcpad, gst_caps_copy_1(caps)))
-    return GST_PAD_CONNECT_REFUSED;
-  
-  return GST_PAD_CONNECT_OK;
+  return gst_pad_try_set_caps(filter->srcpad, gst_caps_copy_1(caps));
 }
 
 void gst_median_init (GstMedian *median)

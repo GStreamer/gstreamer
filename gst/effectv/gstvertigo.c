@@ -194,11 +194,7 @@ gst_vertigotv_sinkconnect (GstPad * pad, GstCaps * caps)
   filter->alt_buffer = filter->buffer + area;
   filter->phase = 0;
 
-  if (gst_pad_try_set_caps (filter->srcpad, caps)) {
-    return GST_PAD_CONNECT_OK;
-  }
-
-  return GST_PAD_CONNECT_REFUSED;
+  return gst_pad_try_set_caps (filter->srcpad, caps);
 }
 
 static void

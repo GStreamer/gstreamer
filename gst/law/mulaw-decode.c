@@ -64,13 +64,8 @@ mulawdec_connect_sink (GstPad *pad, GstCaps *caps)
   gst_caps_set(newcaps,"width",GST_PROPS_INT(16));
   gst_caps_set(newcaps,"signed",GST_PROPS_BOOLEAN(TRUE));
 
-  if (GST_CAPS_IS_FIXED (newcaps)) {
-    if (gst_pad_try_set_caps (mulawdec->srcpad, newcaps))
-      return GST_PAD_CONNECT_OK;
-    else
-      return GST_PAD_CONNECT_REFUSED;
-  }
-
+  if (GST_CAPS_IS_FIXED (newcaps))
+    return gst_pad_try_set_caps (mulawdec->srcpad, newcaps);
   return GST_PAD_CONNECT_DELAYED;
 }		
 

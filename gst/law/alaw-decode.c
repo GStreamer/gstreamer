@@ -65,7 +65,7 @@ alawdec_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
   gst_caps_set(tempcaps,"width",GST_PROPS_INT(16));
   gst_caps_set(tempcaps,"signed",GST_PROPS_BOOLEAN(TRUE));
 
-  if (gst_pad_try_set_caps (alawdec->srcpad, tempcaps))
+  if (gst_pad_try_set_caps (alawdec->srcpad, tempcaps) > 0)
   {
     return GST_PAD_NEGOTIATE_AGREE;
   }

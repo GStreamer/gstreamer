@@ -273,7 +273,7 @@ gst_monoscope_chain (GstPad *pad, GstBuffer *bufin)
 		       "height", 	GST_PROPS_INT (monoscope->height)
 		   );
 
-    if (!gst_pad_try_set_caps (monoscope->srcpad, caps)) {
+    if (gst_pad_try_set_caps (monoscope->srcpad, caps) <= 0) {
       gst_element_error (GST_ELEMENT (monoscope), "could not set caps");
       return;
     }

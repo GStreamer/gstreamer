@@ -119,12 +119,7 @@ gst_cutter_connect (GstPad *pad, GstCaps *caps)
   otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
 
   if (GST_CAPS_IS_FIXED (caps)) 
-  {
-    if (!gst_pad_try_set_caps (otherpad, caps))
-      return GST_PAD_CONNECT_REFUSED;
-
-    return GST_PAD_CONNECT_OK;
-  }
+    return gst_pad_try_set_caps (otherpad, caps);
   return GST_PAD_CONNECT_DELAYED;
 }
 

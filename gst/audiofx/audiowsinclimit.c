@@ -171,14 +171,17 @@ gst_lpwsinc_sink_connect (GstPad * pad, GstCaps * caps)
   double sum = 0.0;
   int len = 0;
   GstLPWSinc *filter = GST_LPWSINC (gst_pad_get_parent (pad));
+  GstPadConnectReturn set_retval;
 
   g_assert (GST_IS_PAD (pad));
   g_assert (caps != NULL);
 
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_CONNECT_DELAYED;
-    
-  if (gst_pad_try_set_caps (filter->srcpad, caps)) 
+
+  set_retval = gst_pad_try_set_caps(filter->srcpad, caps);
+  
+  if (set_retval > 0) 
   {
     /* connection works, so init the filter */
     /* FIXME: remember to free it */
@@ -208,11 +211,9 @@ gst_lpwsinc_sink_connect (GstPad * pad, GstCaps * caps)
     /* set up the residue memory space */
     filter->residue = (gfloat *) g_malloc (sizeof (gfloat) * (len * 2 + 1));
     for (i = 0; i <= len * 2; ++i) filter->residue[i] = 0.0;
-
-    return GST_PAD_CONNECT_OK;
   }
 
-  return GST_PAD_CONNECT_REFUSED;
+  return set_retval;
 }
 
 static void

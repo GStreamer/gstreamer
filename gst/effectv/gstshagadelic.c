@@ -160,11 +160,7 @@ gst_shagadelictv_sinkconnect (GstPad * pad, GstCaps * caps)
 
   gst_shagadelic_initialize (filter);
 
-  if (gst_pad_try_set_caps (filter->srcpad, caps)) {
-    return GST_PAD_CONNECT_OK;
-  }
-
-  return GST_PAD_CONNECT_REFUSED;
+  return gst_pad_try_set_caps (filter->srcpad, caps);
 }
 
 static void

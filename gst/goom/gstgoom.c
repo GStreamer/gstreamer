@@ -268,7 +268,7 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
 		       "height", 	GST_PROPS_INT (goom->height)
 		   );
 
-    if (!gst_pad_try_set_caps (goom->srcpad, caps)) {
+    if (gst_pad_try_set_caps (goom->srcpad, caps) <= 0) {
       gst_element_error (GST_ELEMENT (goom), "could not set caps");
       return;
     }

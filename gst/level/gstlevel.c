@@ -132,11 +132,8 @@ gst_level_connect (GstPad *pad, GstCaps *caps)
 	  
   if (GST_CAPS_IS_FIXED (caps)) 
   {
-    if (/* !volume_parse_caps (filter, caps) || */
-	!gst_pad_try_set_caps (otherpad, caps))
-      return GST_PAD_CONNECT_REFUSED;
-		    
-    return GST_PAD_CONNECT_OK;
+    /*if ( !volume_parse_caps (filter, caps) || */
+    return gst_pad_try_set_caps (otherpad, caps);
   }
   return GST_PAD_CONNECT_DELAYED;
 }

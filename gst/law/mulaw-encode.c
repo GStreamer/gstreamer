@@ -65,7 +65,7 @@ mulawenc_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
   gst_caps_set(tempcaps,"width",GST_PROPS_INT(8));
   gst_caps_set(tempcaps,"signed",GST_PROPS_BOOLEAN(FALSE));
 
-  if (gst_pad_try_set_caps (mulawenc->srcpad, tempcaps))
+  if (gst_pad_try_set_caps (mulawenc->srcpad, tempcaps) > 0)
   {
     return GST_PAD_NEGOTIATE_AGREE;
   }

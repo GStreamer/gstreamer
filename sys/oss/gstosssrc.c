@@ -205,7 +205,7 @@ gst_osssrc_get (GstPad *pad)
   }
   if (!GST_PAD_CAPS (pad)) {
     /* set caps on src pad */
-    if (!gst_pad_try_set_caps (src->srcpad, 
+    if (gst_pad_try_set_caps (src->srcpad, 
 		    GST_CAPS_NEW (
     		      "oss_src",
 		      "audio/raw",
@@ -217,7 +217,7 @@ gst_osssrc_get (GstPad *pad)
 		          "depth",      GST_PROPS_INT (src->format),
 		          "rate",       GST_PROPS_INT (src->frequency),
 		          "channels",   GST_PROPS_INT (src->channels)
-        	   ))) 
+        	   )) <= 0) 
     {
       gst_element_error (GST_ELEMENT (src), "could not set caps");
       return NULL;

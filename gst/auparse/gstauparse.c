@@ -268,7 +268,7 @@ gst_auparse_chain (GstPad *pad, GstBuffer *buf)
 			       "width", 	GST_PROPS_INT (depth),
 			       "signed", 	GST_PROPS_BOOLEAN (sign));
 
-    if (!gst_pad_try_set_caps (auparse->srcpad, tempcaps)) {
+    if (gst_pad_try_set_caps (auparse->srcpad, tempcaps) <= 0) {
       gst_buffer_unref (buf);
       gst_element_error (GST_ELEMENT (auparse), "could not set audio caps");
       return;

@@ -695,7 +695,7 @@ gst_dvdec_loop (GstElement *element)
       GstCaps *to_try = gst_caps_copy_1 (trylist);
 
       /* try each format */
-      if (gst_pad_try_set_caps (dvdec->videosrcpad, to_try)) {
+      if (gst_pad_try_set_caps (dvdec->videosrcpad, to_try) > 0) {
 	guint32 fourcc;
 
 	/* it worked, try to find what it was again */

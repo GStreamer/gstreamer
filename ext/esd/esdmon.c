@@ -294,7 +294,7 @@ gst_esdmon_get (GstPad *pad)
   }
   if (!GST_PAD_CAPS (pad)) {
     /* set caps on src pad */
-    if (!gst_pad_try_set_caps (esdmon->srcpad,
+    if (gst_pad_try_set_caps (esdmon->srcpad,
                     GST_CAPS_NEW (
                       "oss_src",
                       "audio/raw",
@@ -306,7 +306,7 @@ gst_esdmon_get (GstPad *pad)
                           "depth",      GST_PROPS_INT (esdmon->depth),
                           "rate",       GST_PROPS_INT (esdmon->frequency),
                           "channels",   GST_PROPS_INT (esdmon->channels)
-                   )))
+                   )) <= 0)
     {
       gst_element_error (GST_ELEMENT (esdmon), "could not set caps");
       return NULL;

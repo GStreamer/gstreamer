@@ -275,7 +275,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 			  "channels",	GST_PROPS_INT (format->wChannels)
 		      );
 
-      if (!gst_pad_try_set_caps (wavparse->srcpad, caps)) {
+      if (gst_pad_try_set_caps (wavparse->srcpad, caps) <= 0) {
         gst_element_error (GST_ELEMENT (wavparse), "Could not set caps");
         return;
       }
