@@ -165,7 +165,7 @@ gst_rtpgsm_caps_nego (GstRtpGSMParse * rtpgsmparse)
   GstCaps *caps;
 
   caps = gst_caps_new_simple ("audio/x-gsm",
-      "rate", G_TYPE_INT, rtpgsmparse->frequency);
+      "rate", G_TYPE_INT, rtpgsmparse->frequency, NULL);
 
   gst_pad_try_set_caps (rtpgsmparse->srcpad, caps);
 }
