@@ -1,3 +1,17 @@
+2004-09-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/asfdemux/gstasfdemux.c: (_read_var_length), (_read_guid),
+	(gst_asf_demux_process_segment), (gst_asf_demux_handle_data),
+	(gst_asf_demux_process_chunk), (gst_asf_demux_handle_sink_event):
+	  Prevent infinite loops. More correct error reporting.
+	* gst/auparse/gstauparse.c: (gst_auparse_chain):
+	  Error out if negotiation fails.
+	* gst/playback/gstplaybasebin.c: (setup_source),
+	(gst_play_base_bin_change_state), (gst_play_base_bin_error),
+	(gst_play_base_bin_found_tag):
+	  Error/tag forwarding. Pre-roll fixes for source errors on state
+	  changes (e.g. "file does not exist") to prevent hangs.
+
 2004-09-21  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* testsuite/multifilesink/Makefile.am:

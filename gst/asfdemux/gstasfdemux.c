@@ -286,15 +286,17 @@ _read_var_length (GstASFDemux * asf_demux, guint8 type, guint32 * rsize)
 
   got_bytes = gst_bytestream_peek_bytes (bs, &var, 4);
 
-  while (got_bytes < 4) {
+  do {
     guint32 remaining;
     GstEvent *event;
 
+    if ((got_bytes = gst_bytestream_peek_bytes (bs, &var, 4)) == 4)
+      break;
     gst_bytestream_get_status (bs, &remaining, &event);
-    gst_event_unref (event);
 
-    got_bytes = gst_bytestream_peek_bytes (bs, &var, 4);
-  }
+    if (!gst_asf_demux_handle_sink_event (asf_demux, event, remaining))
+      return FALSE;
+  } while (1);
 
   switch (type) {
     case 1:
@@ -340,12 +342,13 @@ _read_uint ## bits (GstASFDemux *asf_demux, guint ## bits *ret)	        	\
 }
 
 #define GST_READ_UINT8_LE(x) GST_READ_UINT8(x)
-READ_UINT_BITS_FUNCTION (8)
-    READ_UINT_BITS_FUNCTION (16)
-    READ_UINT_BITS_FUNCTION (32)
-    READ_UINT_BITS_FUNCTION (64)
-#define GET_UINT(a,b)
-     static gboolean _read_guid (GstASFDemux * asf_demux, ASFGuid * guid)
+READ_UINT_BITS_FUNCTION (8);
+READ_UINT_BITS_FUNCTION (16);
+READ_UINT_BITS_FUNCTION (32);
+READ_UINT_BITS_FUNCTION (64);
+
+static gboolean
+_read_guid (GstASFDemux * asf_demux, ASFGuid * guid)
 {
   return (_read_uint32 (asf_demux, &guid->v1) &&
       _read_uint32 (asf_demux, &guid->v2) &&
@@ -764,7 +767,14 @@ gst_asf_demux_process_segment (GstASFDemux * asf_demux,
       if (!gst_asf_demux_process_chunk (asf_demux, packet_info, &segment_info))
         return FALSE;
 
-      frag_size -= segment_info.chunk_size + 1;
+      if (segment_info.chunk_size < frag_size)
+        frag_size -= segment_info.chunk_size + 1;
+      else {
+        GST_ELEMENT_ERROR (asf_demux, STREAM, TOO_LAZY,
+            ("Invalid data in stream"),
+            ("Invalid fragment size indicator in segment"));
+        return FALSE;
+      }
     }
   } else {
     segment_info.chunk_size = frag_size;
@@ -917,7 +927,6 @@ gst_asf_demux_handle_data (GstASFDemux * asf_demux)
     if (!gst_asf_demux_process_segment (asf_demux, &packet_info))
       return FALSE;
   }
-
   /* Skip the padding */
   if (packet_info.padsize > 0)
     gst_bytestream_flush (asf_demux->bs, packet_info.padsize);
@@ -1291,6 +1300,9 @@ gst_asf_demux_process_chunk (GstASFDemux * asf_demux,
       }
 
       gst_pad_push (stream->pad, GST_DATA (stream->payload));
+    } else {
+      gst_buffer_unref (stream->payload);
+      stream->payload = NULL;
     }
 
     stream->frag_offset = 0;
@@ -1349,6 +1361,7 @@ gst_asf_demux_handle_sink_event (GstASFDemux * asf_demux,
     default:
       GST_WARNING_OBJECT (asf_demux, "unhandled event %d",
           GST_EVENT_TYPE (event));
+      ret = FALSE;
       break;
   }
 
