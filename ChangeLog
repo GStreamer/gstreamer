@@ -1,3 +1,9 @@
+2004-11-01  Jan Schmidt  <thaytan@mad.scientist.com>
+	* ext/esd/esdsink.c: (gst_esdsink_class_init),
+	(gst_esdsink_finalize):
+	Use a finalize function, not dispose, and more importantly,
+	call the parent class finalize function too
+
 2004-11-01  Johan Dahlin  <johan@gnome.org>
 
 	* ext/ogg/gstoggdemux.c:
