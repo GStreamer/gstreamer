@@ -1,3 +1,8 @@
+2004-07-12  Benjamin Otte  <otte@gnome.org>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_alloc_buffer):
+	  use bufferpools
+
 2004-07-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/theora/theoradec.c: (gst_theora_dec_class_init),
