@@ -50,6 +50,8 @@ int dladdr(void *address, Dl_info *dl)
 
 extern gchar *_gst_progname;
 
+GStaticPrivate _gst_debug_cothread_index = G_STATIC_PRIVATE_INIT;
+
 
 /***** Categories and colorization *****/
 /* be careful with these, make them match the enum */
@@ -193,7 +195,7 @@ gst_default_debug_handler (gint category, gboolean incore,
   gchar *empty = "";
   gchar *elementname = empty,*location = empty;
   int pid = getpid();
-  int cothread_id = 0; /*FIXME*/
+  int cothread_id = (int) g_static_private_get(&_gst_debug_cothread_index);
 #ifdef GST_DEBUG_COLOR
   int pid_color = pid%6 + 31;
   int cothread_color = (cothread_id < 0) ? 37 : (cothread_id%6 + 31);
@@ -305,7 +307,7 @@ gst_default_info_handler (gint category, gboolean incore,
   gchar *empty = "";
   gchar *elementname = empty,*location = empty;
   int pid = getpid();
-  int cothread_id = 0; /*FIXME*/
+  int cothread_id = (int) g_static_private_get(&_gst_debug_cothread_index);
 #ifdef GST_DEBUG_COLOR
   int pid_color = pid%6 + 31;
   int cothread_color = (cothread_id < 0) ? 37 : (cothread_id%6 + 31);

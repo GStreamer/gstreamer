@@ -95,6 +95,7 @@ enum {
 
 extern const gchar *_gst_category_colors[32];
 
+extern GStaticPrivate _gst_debug_cothread_index;
 
 
 /**********************************************************************
