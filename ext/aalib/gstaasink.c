@@ -382,11 +382,11 @@ gst_aasink_set_property (GObject *object, guint prop_id, const GValue *value, GP
       aasink->ascii_surf.height = g_value_get_int (value);
       break;
     case ARG_DRIVER: {
-      aasink->aa_driver = g_value_get_int (value);
+      aasink->aa_driver = g_value_get_enum (value);
       break;
     }
     case ARG_DITHER: {
-      aasink->ascii_parms.dither = g_value_get_int (value);
+      aasink->ascii_parms.dither = g_value_get_enum (value);
       break;
     }
     case ARG_BRIGHTNESS: {
@@ -432,11 +432,11 @@ gst_aasink_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
       break;
     }
     case ARG_DRIVER: {
-      g_value_set_int (value, aasink->aa_driver);
+      g_value_set_enum (value, aasink->aa_driver);
       break;
     }
     case ARG_DITHER: {
-      g_value_set_int (value, aasink->ascii_parms.dither);
+      g_value_set_enum (value, aasink->ascii_parms.dither);
       break;
     }
     case ARG_BRIGHTNESS: {
@@ -452,11 +452,11 @@ gst_aasink_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
       break;
     }
     case ARG_INVERSION: {
-      g_value_set_int (value, aasink->ascii_parms.inversion);
+      g_value_set_boolean (value, aasink->ascii_parms.inversion);
       break;
     }
     case ARG_RANDOMVAL: {
-      g_value_set_boolean (value, aasink->ascii_parms.randomval);
+      g_value_set_int (value, aasink->ascii_parms.randomval);
       break;
     }
     case ARG_FRAMES_DISPLAYED: {
