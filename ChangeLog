@@ -1,3 +1,13 @@
+2004-07-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_new),
+	(gst_ximagesink_ximage_put), (gst_ximagesink_renegotiate_size),
+	(gst_ximagesink_chain), (gst_ximagesink_buffer_alloc):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new),
+	(gst_xvimagesink_chain), (gst_xvimagesink_buffer_alloc):
+	  Add debugging statements.  Use the sizes as returned by the
+	  *CreateImage calls.
+
 2004-07-26  Johan Dahlin  <johan@gnome.org>
 
 	* gst/tcp/gsttcpclientsrc.c (gst_tcpclientsrc_get): Make sure that
