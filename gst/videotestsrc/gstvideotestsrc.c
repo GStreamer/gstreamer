@@ -53,6 +53,7 @@ enum
   ARG_FOURCC,
   ARG_RATE,
   ARG_TYPE,
+  ARG_SYNC,
   /* FILL ME */
 };
 
@@ -157,6 +158,9 @@ gst_videotestsrc_class_init (GstVideotestsrcClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TYPE,
       g_param_spec_enum ("pattern", "Pattern", "Type of test pattern to generate",
         GST_TYPE_VIDEOTESTSRC_PATTERN, 1, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
+      g_param_spec_boolean ("sync", "Sync", "Synchronize to clock",
+        TRUE, G_PARAM_READWRITE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -296,6 +300,8 @@ gst_videotestsrc_init (GstVideotestsrc * videotestsrc)
   gst_pad_set_get_function (videotestsrc->srcpad, gst_videotestsrc_get);
   gst_pad_set_link_function (videotestsrc->srcpad, gst_videotestsrc_srcconnect);
 
+  videotestsrc->sync = TRUE;
+
   videotestsrc->width = 640;
   videotestsrc->height = 480;
 
@@ -346,19 +352,20 @@ gst_videotestsrc_get (GstPad * pad)
   videotestsrc->make_image (videotestsrc, (void *) GST_BUFFER_DATA (buf),
 			    videotestsrc->width, videotestsrc->height);
   
-  do {
-    GstClockID id;
+  if (videotestsrc->sync){
+    do {
+      GstClockID id;
 
-    videotestsrc->timestamp += videotestsrc->interval;
-    GST_BUFFER_TIMESTAMP (buf) = videotestsrc->timestamp;
+      videotestsrc->timestamp += videotestsrc->interval;
+      GST_BUFFER_TIMESTAMP (buf) = videotestsrc->timestamp;
 
-    if (videotestsrc->clock) {
-      id = gst_clock_new_single_shot_id (videotestsrc->clock, GST_BUFFER_TIMESTAMP (buf));
-      gst_element_clock_wait (GST_ELEMENT (videotestsrc), id, &jitter);
-      gst_clock_id_free (id);
-    }
+      if (videotestsrc->clock) {
+        id = gst_clock_new_single_shot_id (videotestsrc->clock, GST_BUFFER_TIMESTAMP (buf));
+        gst_element_clock_wait (GST_ELEMENT (videotestsrc), id, &jitter);
+        gst_clock_id_free (id);
+      }
+    } while (jitter > 100 * GST_MSECOND);
   }
-  while (jitter > 100 * GST_MSECOND);
 
   return buf;
 }
@@ -419,6 +426,9 @@ gst_videotestsrc_set_property (GObject * object, guint prop_id, const GValue * v
     case ARG_TYPE:
       gst_videotestsrc_set_pattern (src, g_value_get_enum (value));
       break;
+    case ARG_SYNC:
+      src->sync = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -448,6 +458,9 @@ gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value, 
       break;
     case ARG_TYPE:
       g_value_set_enum (value, src->type);
+      break;
+    case ARG_SYNC:
+      g_value_set_boolean (value, src->sync);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

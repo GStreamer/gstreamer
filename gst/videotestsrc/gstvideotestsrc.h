@@ -61,6 +61,7 @@ struct _GstVideotestsrc {
   struct fourcc_list_struct *fourcc;
   
   /* private */
+  gboolean sync;
   gint64 timestamp;
   gint64 interval;
   gint bpp;
