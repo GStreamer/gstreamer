@@ -308,12 +308,12 @@ gst_dvdec_init (GstDVDec * dvdec)
   dvdec->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sink_temp),
       "sink");
-  gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->sinkpad);
   gst_pad_set_query_function (dvdec->sinkpad, NULL);
   gst_pad_set_convert_function (dvdec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_dvdec_sink_convert));
   gst_pad_set_formats_function (dvdec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_dvdec_get_formats));
+  gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->sinkpad);
 
   dvdec->videosrcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&video_src_temp),
@@ -388,6 +388,7 @@ gst_dvdec_get_formats (GstPad * pad)
   static const GstFormat sink_formats[] = {
     GST_FORMAT_BYTES,
     GST_FORMAT_TIME,
+    GST_FORMAT_DEFAULT,
     0
   };
 
@@ -400,7 +401,6 @@ gst_dvdec_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
 {
   gboolean res = TRUE;
   GstDVDec *dvdec;
-  gint scale = 1;
 
   dvdec = GST_DVDEC (gst_pad_get_parent (pad));
 
@@ -413,7 +413,21 @@ gst_dvdec_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+          *dest_value = src_value;
+          break;
+        case GST_FORMAT_DEFAULT:
         case GST_FORMAT_TIME:
+          *dest_format = GST_FORMAT_TIME;
+          if (pad == dvdec->videosrcpad)
+            *dest_value = src_value * GST_SECOND /
+                (720 * dvdec->height * dvdec->bpp * dvdec->framerate /
+                GST_SECOND);
+          else if (pad == dvdec->audiosrcpad)
+            *dest_value = src_value * GST_SECOND /
+                (2 * dvdec->decoder->audio->frequency *
+                dvdec->decoder->audio->num_channels);
+          break;
         default:
           res = FALSE;
       }
@@ -422,18 +436,16 @@ gst_dvdec_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
           if (pad == dvdec->videosrcpad)
-            scale = 720 * dvdec->height * dvdec->bpp;
+            *dest_value = src_value * 720 * dvdec->height * dvdec->bpp *
+                dvdec->framerate / GST_SECOND;
           else if (pad == dvdec->audiosrcpad)
-            scale = dvdec->decoder->audio->num_channels * 2;
-          /* fallthrough */
+            *dest_value = 2 * src_value * dvdec->decoder->audio->frequency *
+                dvdec->decoder->audio->num_channels / GST_SECOND;
+          break;
+        case GST_FORMAT_TIME:
         case GST_FORMAT_DEFAULT:
           *dest_format = GST_FORMAT_TIME;
-          if (pad == dvdec->videosrcpad)
-            *dest_value = src_value * dvdec->framerate * scale / GST_SECOND;
-          else if (pad == dvdec->audiosrcpad)
-            *dest_value =
-                src_value * dvdec->decoder->audio->frequency * scale /
-                GST_SECOND;
+          *dest_value = src_value;
           break;
         default:
           res = FALSE;
@@ -457,6 +469,9 @@ gst_dvdec_sink_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
   if (dvdec->length == 0)
     return FALSE;
 
+  if (*dest_format == GST_FORMAT_DEFAULT)
+    *dest_format = GST_FORMAT_TIME;
+
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
@@ -470,6 +485,9 @@ gst_dvdec_sink_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
           *dest_value = (frame * GST_SECOND) / dvdec->framerate;
           break;
         }
+        case GST_FORMAT_BYTES:
+          *dest_value = src_value;
+          break;
         default:
           res = FALSE;
       }
@@ -486,6 +504,9 @@ gst_dvdec_sink_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
           *dest_value = frame * dvdec->length;
           break;
         }
+        case GST_FORMAT_TIME:
+          *dest_value = src_value;
+          break;
         default:
           res = FALSE;
       }

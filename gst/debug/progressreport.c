@@ -172,6 +172,12 @@ gst_progressreport_report (GstProgressReport * progressreport,
           GST_QUERY_POSITION, &peer_format, &cur_progress)) {
     GstFormat peer_format2 = peer_format;
     gchar *format_name = NULL;
+    gboolean got_total = FALSE;
+
+    if ((gst_pad_query (gst_pad_get_peer (progressreport->sinkpad),
+                GST_QUERY_TOTAL, &peer_format2, &total_progress)) &&
+        (peer_format == peer_format2))
+      got_total = TRUE;
 
     switch (peer_format) {
       case GST_FORMAT_BYTES:
@@ -193,9 +199,7 @@ gst_progressreport_report (GstProgressReport * progressreport,
         break;
     }
 
-    if ((gst_pad_query (gst_pad_get_peer (progressreport->sinkpad),
-                GST_QUERY_TOTAL, &peer_format2, &total_progress)) &&
-        (peer_format == peer_format2)) {
+    if (got_total == TRUE) {
       g_print ("%s (%2d:%2d:%2d): %lld / %lld %s (%3.2g %%)\n",
           gst_object_get_name (GST_OBJECT (progressreport)), hh, mm, ss,
           cur_progress, total_progress, format_name,
