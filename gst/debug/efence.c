@@ -63,14 +63,14 @@ GST_PAD_TEMPLATE_FACTORY (gst_efence_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  NULL		/* no caps */
+  GST_CAPS_ANY
 );
 
 GST_PAD_TEMPLATE_FACTORY (gst_efence_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  NULL		/* no caps */
+  GST_CAPS_ANY
 );
 
 static void	gst_efence_class_init	(GstEFenceClass *klass);
