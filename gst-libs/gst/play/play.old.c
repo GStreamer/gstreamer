@@ -224,6 +224,7 @@ gst_play_get_length_callback (GstPlay *play)
 		g_mutex_lock(play->audio_bin_mutex);
 		query_worked = gst_element_query (play->audio_sink_element, GST_QUERY_TOTAL, &format, &value);
 		g_mutex_unlock(play->audio_bin_mutex);
+		g_message ("getting length from audio sink");
 	}
 	else if (	(play->video_sink_element != NULL) &&
 				(GST_IS_ELEMENT (play->video_sink_element)) ) {
