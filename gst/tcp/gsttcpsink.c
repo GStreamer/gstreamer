@@ -17,7 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "gsttcpsink.h"
 
 #define TCP_DEFAULT_HOST	"localhost"
@@ -45,7 +47,8 @@ enum {
   ARG_0,
   ARG_HOST,
   ARG_PORT,
-  ARG_CONTROL
+  ARG_CONTROL,
+  ARG_MTU
   /* FILL ME */
 };
 
@@ -125,7 +128,9 @@ gst_tcpsink_class_init (GstTCPSink *klass)
   g_object_class_install_property (gobject_class, ARG_CONTROL,
     g_param_spec_enum ("control", "control", "The type of control",
                        GST_TYPE_TCPSINK_CONTROL, CONTROL_TCP, G_PARAM_READWRITE));
-
+  g_object_class_install_property (gobject_class, ARG_MTU,
+                 g_param_spec_int ("mtu", "mtu", "mtu", G_MININT, G_MAXINT,
+                          0, G_PARAM_READWRITE)); /* CHECKME */
   gobject_class->set_property = gst_tcpsink_set_property;
   gobject_class->get_property = gst_tcpsink_get_property;
 
@@ -234,6 +239,8 @@ gst_tcpsink_init (GstTCPSink *tcpsink)
   tcpsink->host = g_strdup (TCP_DEFAULT_HOST);
   tcpsink->port = TCP_DEFAULT_PORT;
   tcpsink->control = CONTROL_TCP;
+  /* should support as minimum 576 for IPV4 and 1500 for IPV6 */
+  tcpsink->mtu = 1500;
   
   tcpsink->clock = NULL;
 }
@@ -242,13 +249,13 @@ static void
 gst_tcpsink_chain (GstPad *pad, GstBuffer *buf)
 {
   GstTCPSink *tcpsink;
-
+ 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
   tcpsink = GST_TCPSINK (GST_OBJECT_PARENT (pad));
-  
+ 
   if (tcpsink->clock) {
     GstClockID id = gst_clock_new_single_shot_id (tcpsink->clock, GST_BUFFER_TIMESTAMP (buf));
 
@@ -288,6 +295,9 @@ gst_tcpsink_set_property (GObject *object, guint prop_id, const GValue *value, G
     case ARG_CONTROL:
         tcpsink->control = g_value_get_enum (value);
       break;
+    case ARG_MTU:
+	tcpsink->mtu = g_value_get_int (value);
+      break;		
     default:
       break;
   }
@@ -311,6 +321,9 @@ gst_tcpsink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
       break;
     case ARG_CONTROL:
       g_value_set_enum (value, tcpsink->control);
+      break;
+    case ARG_MTU:
+      g_value_set_int (value, tcpsink->mtu);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
