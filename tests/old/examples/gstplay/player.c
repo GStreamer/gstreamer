@@ -20,6 +20,7 @@
 #include <gst/play/gstplay.h>
 
 static GMainLoop *loop = NULL;
+static gint64 length = 0;
 
 static void
 got_time_tick (GstPlay *play, gint64 time_nanos)
@@ -31,6 +32,7 @@ static void
 got_stream_length (GstPlay *play, gint64 length_nanos)
 {
   g_message ("got length %llu", length_nanos);
+  length = length_nanos;
 }
 
 static void
@@ -48,7 +50,7 @@ got_eos (GstPlay *play)
 static gboolean
 seek_timer (GstPlay *play)
 {
-  gst_play_seek_to_time (play, 163439850000LL);
+  gst_play_seek_to_time (play, length / 2);
   return FALSE;
 }
 
