@@ -384,7 +384,7 @@ gst_osssrc_sync_parms (GstOssSrc *osssrc)
   audio_buf_info ispace;
   gint frag;
   /* remember : ioctl on samplerate returns the sample rate the card
-   * is actually set to ! Setting it to 44101 KHz could cause it to
+   * is actually set to ! Setting it to 44101 Hz could cause it to
    * be set to 44101, for example
    */
 
@@ -409,7 +409,7 @@ gst_osssrc_sync_parms (GstOssSrc *osssrc)
   ioctl(osssrc->fd, SNDCTL_DSP_GETISPACE, &ispace);
   ioctl(osssrc->fd, SNDCTL_DSP_GETBLKSIZE, &frag);
  
-  g_print("setting sound card to %dKHz %d bit %s (%d bytes buffer, %d fragment)\n",
+  g_print("setting sound card to %dHz %d bit %s (%d bytes buffer, %d fragment)\n",
           osssrc->frequency, osssrc->format,
           (osssrc->channels == 2) ? "stereo" : "mono", ispace.bytes, frag);
 

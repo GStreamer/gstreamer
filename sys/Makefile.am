@@ -1,3 +1,9 @@
+if USE_DXR3
+DXR3_DIR=dxr3
+else
+DXR3_DIR=
+endif
+
 if USE_OSS
 OSS_DIR=oss
 else
@@ -34,8 +40,8 @@ else
 XVIDEO_DIR=
 endif
 
-SUBDIRS=$(OSS_DIR) $(QCAM_DIR) $(V4L_DIR) $(VCD_DIR) \
+SUBDIRS=$(OSS_DIR) $(DXR3_DIR) $(QCAM_DIR) $(V4L_DIR) $(VCD_DIR) \
 	$(VGA_DIR) $(XVIDEO_DIR)
 
-DIST_SUBDIRS=oss qcam v4l vcd vga xvideo videosink
+DIST_SUBDIRS=oss dxr3 qcam v4l vcd vga xvideo videosink
 
