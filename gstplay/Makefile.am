@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 INCLUDES = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir) \
-	           $(shell gnome-config --cflags gnomeui) $(shell gstreamer-config --cflags)
+	           $(shell gnome-config --cflags gnomeui) -I..
 
 
 bin_PROGRAMS = gstmediaplay 
@@ -25,10 +25,10 @@ CFLAGS += -O2 -Wall -DDATADIR=\""$(gladedir)/"\"
 #CFLAGS += -pg -O2 -Wall -DDATADIR=\""$(gladedir)/"\"
 
 gstmediaplay_CFLAGS = $(shell gnome-config --cflags gnomeui) $(shell libglade-config --cflags gnome) \
-		 $(shell gstreamer-config --cflags ) 
+		 -I..
 
 gstmediaplay_LDFLAGS = $(shell gnome-config --libs gnomeui) $(shell libglade-config --libs gnome) \
-		 $(shell gstreamer-config --libs ) ./libgstmediaplay.la
+		 ../gst/libgst.la ./libgstmediaplay.la
 
 
 if HAVE_LIBXV
