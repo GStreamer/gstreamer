@@ -363,7 +363,7 @@ print_element_properties (GstElement *element, gint pfx)
       case G_TYPE_FLOAT: 
       {
 	GParamSpecFloat *pfloat = G_PARAM_SPEC_FLOAT (param);
-        PUT_STRING (pfx + 2, "<range min=\"%g\" max=\"%g\"/>", 
+        PUT_STRING (pfx + 2, "<range min=\"%f\" max=\"%f\"/>", 
 	       pfloat->minimum, pfloat->maximum);
         PUT_ESCAPED (pfx + 2, "default", g_strdup_value_contents (&value));
 	break;
@@ -448,39 +448,48 @@ print_element_dynparamaters (GstElement *element, gint pfx)
   GParamSpec** specs;
   gint x;
     
+  PUT_START_TAG (pfx, "dyn-params");
+
   if((dpman = gst_dpman_get_manager (element))) {
-    PUT_START_TAG (pfx, "dyn-params");
     specs = gst_dpman_list_dparam_specs (dpman);
     for (x = 0; specs[x] != NULL; x++) {
-      g_print ("  %-20.20s: ", g_param_spec_get_name (specs[x]));
+      PUT_START_TAG (pfx + 1, "dyn-param");
+
+      PUT_ESCAPED (pfx + 2, "name", g_param_spec_get_name (specs[x]));
+      PUT_ESCAPED (pfx + 2, "type",  g_type_name (specs[x]->value_type));
+      PUT_ESCAPED (pfx + 2, "nick",  g_param_spec_get_nick (specs[x]));
+      PUT_ESCAPED (pfx + 2, "blurb",  g_param_spec_get_blurb (specs[x]));
 
       switch (G_PARAM_SPEC_VALUE_TYPE (specs[x])) {
         case G_TYPE_INT64: 
-          g_print ("64 Bit Integer (Default %" G_GINT64_FORMAT ", Range %" G_GINT64_FORMAT " -> %" G_GINT64_FORMAT ")", 
-          ((GParamSpecInt64 *) specs[x])->default_value,
-          ((GParamSpecInt64 *) specs[x])->minimum, 
-          ((GParamSpecInt64 *) specs[x])->maximum);
+          PUT_STRING (pfx + 2, "<range min=\"%"G_GINT64_FORMAT"\" max=\"%"G_GINT64_FORMAT"\"/>", 
+                      ((GParamSpecInt64 *) specs[x])->minimum, 
+                      ((GParamSpecInt64 *) specs[x])->maximum);
+          PUT_STRING (pfx + 2, "<default>%"G_GINT64_FORMAT"</default>", 
+                      ((GParamSpecInt64 *) specs[x])->default_value);
           break;
         case G_TYPE_INT: 
-          g_print ("Integer (Default %d, Range %d -> %d)", 
-          ((GParamSpecInt *) specs[x])->default_value,
-          ((GParamSpecInt *) specs[x])->minimum, 
-          ((GParamSpecInt *) specs[x])->maximum);
+          PUT_STRING (pfx + 2, "<range min=\"%d\" max=\"%d\"/>", 
+                      ((GParamSpecInt *) specs[x])->minimum, 
+                      ((GParamSpecInt *) specs[x])->maximum);
+          PUT_STRING (pfx + 2, "<default>%d</default>", 
+                      ((GParamSpecInt *) specs[x])->default_value);
           break;
         case G_TYPE_FLOAT: 
-	  g_print ("Float. Default: %-8.8s %15.7g\n", "",
-            ((GParamSpecFloat *) specs[x])->default_value);
-	  g_print ("%-23.23s Range: %15.7g - %15.7g", "", 
+          PUT_STRING (pfx + 2, "<range min=\"%f\" max=\"%f\"/>", 
             ((GParamSpecFloat *) specs[x])->minimum, 
             ((GParamSpecFloat *) specs[x])->maximum);
+          PUT_STRING (pfx + 2, "<default>%f</default>", 
+            ((GParamSpecFloat *) specs[x])->default_value);
           break;
         default: 
-	  g_print ("unknown %ld", G_PARAM_SPEC_VALUE_TYPE (specs[x]));
+          break;
       }
-      PUT_END_TAG (pfx, "dyn-params");
+      PUT_END_TAG (pfx + 1, "dyn-param");
     }
     g_free (specs);
   }
+  PUT_END_TAG (pfx, "dyn-params");
 }
 
 static void
@@ -524,8 +533,6 @@ print_element_signals (GstElement *element, gint pfx)
         for (j = 0; j < n_params; j++) {
           PUT_ESCAPED (pfx + 3, "type", g_type_name (param_types[j]));
         }
-	if (k == 0)
-          PUT_ESCAPED (pfx + 3, "type", "gpointer");
 
         PUT_END_TAG (pfx + 2, "params");
 
@@ -754,8 +761,7 @@ print_element_info (GstElementFactory *factory)
       PUT_END_TAG (3, "implementation");
 
       if (realpad->caps) {
-        g_print ("    Capabilities:\n");
-	print_caps (realpad->caps, 8);
+	print_caps (realpad->caps, 3);
       }
       PUT_END_TAG (2, "pad");
     }

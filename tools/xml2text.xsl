@@ -1,6 +1,7 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
-<xsl:output method="text" encoding="us-ascii" omit-xml-declaration="yes" indent="no"/>
+ <xsl:output method="text" encoding="us-ascii" omit-xml-declaration="yes" indent="no"/>
+ <xsl:variable name="padding" select="string('                              ')"/>
 
  <xsl:template match="/element">
   <xsl:apply-templates select="name"/>
@@ -11,9 +12,9 @@
   <xsl:apply-templates select="element-implementation"/>
   <xsl:apply-templates select="clocking-interaction"/>
   <xsl:apply-templates select="indexing-capabilities"/>
-  <xsl:apply-templates select="dyn-params"/>
   <xsl:apply-templates select="pads"/>
   <xsl:apply-templates select="element-properties"/>
+  <xsl:apply-templates select="dyn-params"/>
   <xsl:apply-templates select="element-signals"/>
   <xsl:apply-templates select="element-actions"/>
  </xsl:template>
@@ -35,7 +36,27 @@
   <xsl:text>&#10;</xsl:text>
  </xsl:template>
 
+ <xsl:template name="object">
+  <xsl:param name="i"/>
+  <xsl:param name="j"/>
+  <xsl:if test="count($i/*) &gt; 0">
+   <xsl:call-template name="object">
+    <xsl:with-param name="i" select="$i/object"/>
+    <xsl:with-param name="j" select="$j - 1"/>
+   </xsl:call-template>
+   <xsl:value-of select="substring ($padding, 1, $j * 6)"/> 
+   <xsl:text> +----</xsl:text>
+  </xsl:if>
+  <xsl:value-of select="$i/@name"/> 
+  <xsl:text>&#10;</xsl:text>
+ </xsl:template>
+
  <xsl:template match="object">
+  <xsl:call-template name="object">
+   <xsl:with-param name="i" select="."/>
+   <xsl:with-param name="j" select="count(.//object[(*)])"/>
+  </xsl:call-template>
+  <xsl:text>&#10;</xsl:text>
  </xsl:template>
 
  <xsl:template match="pad-templates">
@@ -105,10 +126,22 @@
   <xsl:text>&#10;</xsl:text>
  </xsl:template>
 
+ <xsl:template match="float" mode="list">
+  <xsl:text>         Float: </xsl:text>
+  <xsl:value-of select="@value"/>
+  <xsl:text>&#10;</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="floatrange" mode="list">
+  <xsl:text>         Float range: </xsl:text>
+  <xsl:value-of select="concat(@min, ' - ', @max)"/> 
+  <xsl:text>&#10;</xsl:text>
+ </xsl:template>
+
  <!-- propety entries in normal mode -->
  <xsl:template match="string">
   <xsl:text>         </xsl:text>
-  <xsl:value-of select="@name"/>
+  <xsl:value-of select="substring (concat (@name, $padding), 1, 15)"/>
   <xsl:text>     : String: '</xsl:text>
   <xsl:value-of select="@value"/> 
   <xsl:text>'&#10;</xsl:text>
@@ -116,7 +149,7 @@
 
  <xsl:template match="fourcc">
   <xsl:text>         </xsl:text>
-  <xsl:value-of select="@name"/>
+  <xsl:value-of select="substring (concat (@name, $padding), 1, 15)"/>
   <xsl:text>     : FourCC: '</xsl:text>
   <xsl:value-of select="@hexvalue"/> 
   <xsl:text>'&#10;</xsl:text>
@@ -124,7 +157,7 @@
 
  <xsl:template match="int">
   <xsl:text>         </xsl:text>
-  <xsl:value-of select="@name"/>
+  <xsl:value-of select="substring (concat (@name, $padding), 1, 15)"/>
   <xsl:text>     : Integer: </xsl:text>
   <xsl:value-of select="@value"/> 
   <xsl:text>&#10;</xsl:text>
@@ -132,8 +165,24 @@
 
  <xsl:template match="range"> 		
   <xsl:text>         </xsl:text>
-  <xsl:value-of select="@name"/>
+  <xsl:value-of select="substring (concat (@name, $padding), 1, 15)"/>
   <xsl:text>     : Integer range: </xsl:text>
+  <xsl:value-of select="concat(@min, ' - ', @max)"/> 
+  <xsl:text>&#10;</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="float">
+  <xsl:text>         </xsl:text>
+  <xsl:value-of select="substring (concat (@name, $padding), 1, 15)"/>
+  <xsl:text>     : Float: </xsl:text>
+  <xsl:value-of select="@value"/> 
+  <xsl:text>&#10;</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="floatrange"> 		
+  <xsl:text>         </xsl:text>
+  <xsl:value-of select="substring (concat (@name, $padding), 1, 15)"/>
+  <xsl:text>     : Float range: </xsl:text>
   <xsl:value-of select="concat(@min, ' - ', @max)"/> 
   <xsl:text>&#10;</xsl:text>
  </xsl:template>
@@ -202,12 +251,13 @@
  </xsl:template>
 
  <xsl:template match="dyn-params">
-  <xsl:text>  Dynamic Parameters:&#10;</xsl:text>
+  <xsl:text>Dynamic Parameters:&#10;</xsl:text>
   <xsl:choose>
    <xsl:when test="count(*) = 0">
     <xsl:text>  none&#10;</xsl:text>
    </xsl:when>
    <xsl:otherwise>
+    <xsl:apply-templates select="dyn-param"/>
    </xsl:otherwise>
   </xsl:choose>
   <xsl:text>&#10;</xsl:text>
@@ -327,23 +377,33 @@
   <xsl:text>. (Default </xsl:text>
   <xsl:value-of select="."/>
   <xsl:text>)</xsl:text>
+  <xsl:text>&#10;</xsl:text>
  </xsl:template>
 
- <xsl:template match="element-property">
+ <xsl:template match="range" mode="params">
+  <xsl:value-of select="substring ($padding, 1, 25)"/>
+  <xsl:text>Range : </xsl:text>
+  <xsl:value-of select="concat(@min, ' - ', @max)"/> 
+  <xsl:text>&#10;</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="element-property|dyn-param">
   <xsl:text>  </xsl:text>
-  <xsl:value-of select="name"/>
-  <xsl:text>:&#9;  </xsl:text>
+  <xsl:value-of select="substring (concat(name, $padding), 1, 20)"/>
+  <xsl:text> : </xsl:text>
   <xsl:value-of select="blurb"/>
   <xsl:text>&#10;</xsl:text>
-  <xsl:text>                </xsl:text>
+  <xsl:value-of select="substring ($padding, 1, 25)"/>
   <xsl:value-of select="type"/>
   <xsl:apply-templates select="default"/>
-  <xsl:text>&#10;</xsl:text>
+  <xsl:apply-templates select="range" mode="params"/>
  </xsl:template>
 
  <xsl:template match="params">
   <xsl:for-each select="type">
-   <xsl:text>,&#10;          </xsl:text>
+   <xsl:text>,&#10;</xsl:text>
+   <xsl:value-of select="substring ($padding, 1, 25)"/>
+   <xsl:value-of select="substring ($padding, 1, 20)"/>
    <xsl:value-of select="."/>
    <xsl:text> arg</xsl:text>
    <xsl:value-of select="position()"/>
@@ -351,9 +411,7 @@
  </xsl:template>
 
  <xsl:template match="signal">
-  <xsl:text>  &quot;</xsl:text>
-  <xsl:value-of select="name"/>
-  <xsl:text>&quot; :</xsl:text>
+  <xsl:value-of select="substring (concat('&quot;', name, '&quot;', $padding), 1, 25)"/>
   <xsl:value-of select="return-type"/>
   <xsl:text> user_function </xsl:text>
   <xsl:value-of select="concat ('(', object-type, '* object')"/>
@@ -369,7 +427,10 @@
    <xsl:otherwise>
     <xsl:for-each select="signal">
      <xsl:apply-templates select="."/>
-     <xsl:text>,&#10;        gpointer user_data);&#10;</xsl:text>
+     <xsl:text>,&#10;</xsl:text>
+     <xsl:value-of select="substring ($padding, 1, 25)"/>
+     <xsl:value-of select="substring ($padding, 1, 20)"/>
+     <xsl:text>gpointer user_data);&#10;</xsl:text>
     </xsl:for-each>
    </xsl:otherwise>
   </xsl:choose>
