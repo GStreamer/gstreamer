@@ -1342,7 +1342,7 @@ main (int   argc,
   vector<IBitStream *> inputs;
   job->SetupInputStreams (inputs);
   TestOutputStream *out = new TestOutputStream ();
-  Multiplexor mux (*job, *out);
+  Multiplexor *mux = new Multiplexor(*job, *out);
   return 0;
 }
         ],[
