@@ -369,7 +369,7 @@ gst_cache_add_association (GstCache *tc, gint id, GstAssocFlags flags,
     nassocs++;
     cur_format = va_arg (args, GstFormat);
     if (cur_format)
-      va_arg (args, gint64);
+      value = va_arg (args, gint64);
   }
   va_end (args);
 
