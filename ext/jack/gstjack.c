@@ -308,7 +308,8 @@ gst_jack_request_new_pad (GstElement * element, GstPadTemplate * templ,
   GstJackPad *pad;
   gint count;
 
-  g_return_val_if_fail ((this = GST_JACK (element)), NULL);
+  g_return_val_if_fail (GST_IS_JACK (element), NULL);
+  this = GST_JACK (element);
 
   if (!this->bin)
     pad_list = &this->pads;
