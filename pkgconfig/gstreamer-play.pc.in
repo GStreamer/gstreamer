@@ -5,8 +5,8 @@ includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
 
 Name: GStreamer Play Library
 Description: Streaming-media framework, play libraries
-Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-interfaces-@GST_MAJORMINOR@
+Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-interfaces-@GST_MAJORMINOR@ gstreamer-control-@GST_MAJORMINOR@
 Version: @VERSION@
 
-Libs: -L${libdir} -lgstplay-@GST_MAJORMINOR@ -lgstcontrol-@GST_MAJORMINOR@
+Libs: -L${libdir} -lgstplay-@GST_MAJORMINOR@
 Cflags: -I${includedir}
