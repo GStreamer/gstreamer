@@ -567,7 +567,7 @@ mpeg1_parse_header (GstTypeFind *tf, guint64 offset)
 static void
 mpeg1_sys_type_find (GstTypeFind *tf, gpointer unused)
 {
-  guint8 *data;
+  guint8 *data = NULL;
   guint size = 0;
   guint64 skipped = 0;
 
