@@ -1,4 +1,4 @@
-#include "gstdxr3video.h"
+#include "gstdxr3videosink.h"
 
 
 static GstElementDetails dxr3_video_sink_details = {
