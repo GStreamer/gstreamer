@@ -600,6 +600,9 @@ gst_riff_read_strf_vids_with_data (GstRiffRead * riff,
     if (len > 0) {
       *extradata = gst_buffer_create_sub (buf, strf->size, len);
     }
+  } else if (strf->size > sizeof (gst_riff_strf_vids)) {
+    *extradata = gst_buffer_create_sub (buf,
+        sizeof (gst_riff_strf_vids), strf->size - sizeof (gst_riff_strf_vids));
   }
 
   /* debug */
