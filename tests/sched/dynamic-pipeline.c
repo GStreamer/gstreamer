@@ -24,6 +24,7 @@ int main (int argc, char *argv[])
     
     // initialize cothreads
     gst_element_set_state(pipe1, GST_STATE_PLAYING);
+    gst_bin_iterate (GST_BIN (pipe1));
     gst_element_set_state(pipe1, GST_STATE_READY);
     
     // destroy the fakesink, but keep fakesrc (its state is GST_STATE_READY)
