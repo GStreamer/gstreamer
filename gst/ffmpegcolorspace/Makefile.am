@@ -16,5 +16,6 @@ noinst_HEADERS = \
 	gstffmpegcodecmap.h \
 	imgconvert_template.h \
 	common.h \
+	dsputil.h \
 	mmx.h \
 	avcodec.h
