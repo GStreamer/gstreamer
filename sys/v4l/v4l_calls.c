@@ -121,7 +121,7 @@ gst_v4l_open (GstV4lElement *v4lelement)
   if (!GST_V4L_IS_OPEN(v4lelement))
   {
     gst_element_error (v4lelement, RESOURCE, OPEN_READ_WRITE,
-                       (_("Could not open device \"%s\" for reading"), v4lelement->videodev),
+                       (_("Could not open device \"%s\" for reading and writing"), v4lelement->videodev),
                        GST_ERROR_SYSTEM);
     return FALSE;
   }

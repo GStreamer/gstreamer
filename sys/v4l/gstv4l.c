@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include "gst/gst-i18n-plugin.h"
+
 #include <gst/gst.h>
 
 #include "gstv4lelement.h"
@@ -45,6 +47,12 @@ plugin_init (GstPlugin *plugin)
       !gst_element_register (plugin, "v4lmjpegsink",
 			     GST_RANK_NONE, GST_TYPE_V4LMJPEGSINK))
     return FALSE;
+
+#ifdef ENABLE_NLS
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  textdomain (GETTEXT_PACKAGE);
+#endif /* ENABLE_NLS */
 
   return TRUE;
 }

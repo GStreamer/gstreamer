@@ -1,3 +1,45 @@
+2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* autogen.sh:
+          adding autopoint invocation
+	* Makefile.am:
+	* configure.ac:
+	* gst-libs/gst/gettext.h:
+          adding gettext bits
+	* ext/audiofile/gstafsink.c: (gst_afsink_plugin_init):
+	* ext/audiofile/gstafsrc.c: (gst_afsrc_plugin_init):
+	* ext/gnomevfs/gstgnomevfs.c: (plugin_init):
+	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnomevfssink_open_file),
+	(gst_gnomevfssink_close_file):
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_open_file):
+	* ext/sndfile/gstsf.c: (gst_sf_loop), (plugin_init):
+	* gst-libs/gst/gst-i18n-plugin.h:
+	* gst/avi/gstavi.c: (plugin_init):
+	* sys/dxr3/dxr3init.c: (plugin_init):
+	* sys/dxr3/dxr3videosink.c: (dxr3videosink_write_data):
+	* sys/oss/gstossaudio.c: (plugin_init):
+	* sys/oss/gstosselement.c: (gst_osselement_open_audio):
+	* sys/v4l/gstv4l.c: (plugin_init):
+	* sys/v4l/v4l_calls.c: (gst_v4l_open):
+	* sys/v4l2/gstv4l2.c: (plugin_init):
+	* sys/v4l2/v4l2_calls.c: (gst_v4l2_get_capabilities),
+	(gst_v4l2_fill_lists), (gst_v4l2_get_norm), (gst_v4l2_set_norm),
+	(gst_v4l2_get_input), (gst_v4l2_set_input), (gst_v4l2_get_output),
+	(gst_v4l2_set_output), (gst_v4l2_get_frequency),
+	(gst_v4l2_set_frequency), (gst_v4l2_signal_strength),
+	(gst_v4l2_get_attribute), (gst_v4l2_set_attribute):
+	  make sure locale and translation domain are set
+          fix translated strings 
+	* po/.cvsignore:
+	* po/LINGUAS:
+	* po/Makevars:
+	* po/POTFILES.in:
+	* po/nl.po:
+          put translation files into place
+	* sys/xvideo/imagetest.c: (main):
+	* ext/dv/demo-play.c: (main):
+          fix unnecessary translations
+
 2004-01-19  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* ext/sndfile/gstsf.c:

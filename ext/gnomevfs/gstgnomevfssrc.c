@@ -30,7 +30,7 @@
 #include "config.h"
 #endif
 
-#include "gst/gst-i18n-plugin.h"
+#include "gst-libs/gst/gst-i18n-plugin.h"
 
 #include "gstgnomevfs.h"
 
@@ -1052,7 +1052,7 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 		src->uri = gnome_vfs_uri_new(src->filename);
 		if (!src->uri) {
 			gst_element_error (src, RESOURCE, OPEN_READ,
-                                           (_("Error opening URI \"%s\" for reading"), src->filename), GST_ERROR_SYSTEM);
+                                           (_("Could not open vfs file \"%s\" for reading"), src->filename), GST_ERROR_SYSTEM);
 			return FALSE;
 		}
 	}
@@ -1075,7 +1075,7 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 
 		escaped = gnome_vfs_unescape_string_for_display (src->filename);
 		gst_element_error (src, RESOURCE, OPEN_READ,
-				   (_("Error opening vfs file \"%s\""), escaped),
+				   (_("Could not open vfs file \"%s\" for reading"), escaped),
 				   (gnome_vfs_result_to_string (result)));
 		g_free (escaped);
 		return FALSE;

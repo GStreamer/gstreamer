@@ -23,6 +23,8 @@
 #  include "config.h"
 #endif
 
+#include "gst/gst-i18n-plugin.h"
+
 #include "gstgnomevfs.h"
 #include <gst/gst.h>
 
@@ -35,6 +37,12 @@ plugin_init(GstPlugin *plugin)
 	       GST_RANK_SECONDARY, gst_gnomevfssink_get_type())) {
     return FALSE;
   }
+
+#ifdef ENABLE_NLS
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  textdomain (GETTEXT_PACKAGE);
+#endif /* ENABLE_NLS */
 
   return TRUE;
 }
