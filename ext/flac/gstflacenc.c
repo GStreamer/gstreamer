@@ -475,9 +475,9 @@ gst_flacenc_write_callback (const FLAC__SeekableStreamEncoder *encoder,
   return FLAC__STREAM_ENCODER_OK;
 }
 
-void  add_one_tag (const GstTagList *list, 
-		   const gchar *tag, 
-		   gpointer user_data)
+static void 
+add_one_tag (const GstTagList *list, const gchar *tag, 
+	     gpointer user_data)
 {
       GList *comments;
       GList *it;
