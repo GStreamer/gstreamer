@@ -295,7 +295,7 @@ gst_autoplugger_autoplug(GstAutoplugger *autoplugger,GstPad *srcpad,GstCaps *src
   g_return_val_if_fail(autoplugger->autobin != NULL, FALSE);
   gst_bin_add(GST_BIN(autoplugger),autoplugger->autobin);
 
-gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
+gst_scheduler_show(GST_ELEMENT_SCHED(autoplugger));
 
   // FIXME this is a hack
 //  GST_DEBUG(GST_CAT_AUTOPLUG, "copying failed caps to srcpad %s:%s to ensure renego\n",GST_DEBUG_PAD_NAME(autoplugger->cache_srcpad));
@@ -306,9 +306,9 @@ gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
   // attach the autoplugged bin
   GST_DEBUG(GST_CAT_AUTOPLUG, "attaching the autoplugged bin between the two pads\n");
   gst_pad_connect(srcpad,gst_element_get_pad(autoplugger->autobin,"sink"));
-gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
+gst_scheduler_show(GST_ELEMENT_SCHED(autoplugger));
   gst_pad_connect(gst_element_get_pad(autoplugger->autobin,"src_00"),sinkpad);
-gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
+gst_scheduler_show(GST_ELEMENT_SCHED(autoplugger));
 
   // FIXME try to force the renego
 //  GST_DEBUG(GST_CAT_AUTOPLUG, "trying to force everyone to nego\n");
@@ -440,7 +440,7 @@ gst_autoplugger_typefind_have_type(GstElement *element, GstCaps *caps, GstAutopl
 {
   GST_INFO(GST_CAT_AUTOPLUG, "typefind claims to have a type: %s",gst_caps_get_mime(caps));
 
-gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
+gst_scheduler_show(GST_ELEMENT_SCHED(autoplugger));
 
   autoplugger->paused++;
   if (autoplugger->paused == 1)
@@ -497,7 +497,7 @@ gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
     gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
 
   GST_INFO(GST_CAT_AUTOPLUG, "typefind_have_type finished");
-gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
+gst_scheduler_show(GST_ELEMENT_SCHED(autoplugger));
 }
 
 static void
@@ -515,7 +515,7 @@ if (autoplugger->disable_nocaps) {
   return;
 }
 
-gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
+gst_scheduler_show(GST_ELEMENT_SCHED(autoplugger));
 
   autoplugger->paused++;
   if (autoplugger->paused == 1)
@@ -550,7 +550,7 @@ gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
     gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
 
     GST_INFO(GST_CAT_AUTOPLUG,"here we go into nothingness, hoping the typefind will return us to safety");
-gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
+gst_scheduler_show(GST_ELEMENT_SCHED(autoplugger));
   } else {
 //    // attach the cache_empty handler, since the cache simply isn't needed
 //    g_signal_connect (G_OBJECT(autoplugger->cache),"cache_empty",
