@@ -128,6 +128,8 @@ gst_osselement_base_init (GstOssElementClass *klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
+  klass->device_combinations = NULL;
+
   gst_element_class_set_details (element_class, &gst_osselement_details);
 }
 
@@ -212,7 +214,17 @@ gst_osselement_class_probe_devices (GstOssElementClass *klass,
     GstOssDeviceCombination devices[16];
     gint n;
 
-    klass->device_combinations = NULL;
+    while (klass->device_combinations) {
+      GList *item = klass->device_combinations;
+      GstOssDeviceCombination *combi = item->data;
+
+      klass->device_combinations =
+	g_list_remove (klass->device_combinations, item);
+
+      g_free (combi->dsp);
+      g_free (combi->mixer);
+      g_free (combi);
+    }
 
     /* probe for all /dev entries */
     memset (devices, 0, sizeof (devices));
