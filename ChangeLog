@@ -1,3 +1,8 @@
+2004-01-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* tools/gst-inspect.c: (print_caps):
+	  improve output of caps a bit
+
 2004-01-11  David Schleef  <ds@schleef.org>
 
 	* gst/gstbuffer.c: (gst_buffer_create_sub): Subbuffers should

@@ -9,9 +9,25 @@
 static void
 print_caps (const GstCaps *caps, const gchar *pfx)
 {
-  char *s;
+  char *s, *tmp;
+  char **v;
 
   s = gst_caps_to_string (caps);
+  
+  tmp = g_strdup_printf ("\n  %s", pfx);
+  v = g_strsplit (s, ", ", -1);
+  g_free (s);
+  s = g_strjoinv (tmp, v);
+  g_strfreev (v);
+  g_free (tmp);
+  
+  tmp = g_strdup_printf ("\n%s", pfx);
+  v = g_strsplit (s, "; ", -1);
+  g_free (s);
+  s = g_strjoinv (tmp, v);
+  g_free (tmp);
+  g_strfreev (v);
+  
   g_print ("%s%s\n", pfx, s);
   g_free(s);
 }
