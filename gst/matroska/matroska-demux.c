@@ -1491,8 +1491,7 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux,
     gchar *matroska_tagname;
     gchar *gstreamer_tagname;
   }
-  tag_conv[] =
-  {
+  tag_conv[] = {
     {
     GST_MATROSKA_TAG_ID_TITLE, GST_TAG_TITLE}
     , {
@@ -1611,8 +1610,7 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux,
                 for (i = 0; tag_conv[i].matroska_tagname != NULL; i++) {
                   if (!strcmp (tag_conv[i].matroska_tagname, tag)) {
                     GValue src = { 0 }
-                    , dest =
-                    {
+                    , dest = {
                     0};
                     const gchar *type = tag_conv[i].gstreamer_tagname;
                     GType dest_type = gst_tag_get_type (type);
@@ -2661,10 +2659,10 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext * audiocontext,
         "mpegversion", G_TYPE_INT, mpegversion, NULL);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_TTA)) {
     if (audiocontext != NULL) {
-      caps = gst_caps_new_simple ("audio/x-raw-tta",
+      caps = gst_caps_new_simple ("audio/x-tta",
           "width", G_TYPE_INT, audiocontext->bitdepth, NULL);
     } else {
-      caps = gst_caps_from_string ("audio/x-raw-tta, "
+      caps = gst_caps_from_string ("audio/x-tta, "
           "width = (int) { 8, 16, 24 }");
     }
   } else {
@@ -2754,8 +2752,7 @@ gst_matroska_demux_plugin_init (GstPlugin * plugin)
     /* TODO: Real/Quicktime */
     /* FILLME */
     NULL,
-  }, *audio_id[] =
-  {
+  }, *audio_id[] = {
     GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L1,
         GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L2,
         GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L3,

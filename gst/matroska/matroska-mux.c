@@ -103,7 +103,7 @@ static GstStaticPadTemplate audiosink_templ =
         "endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }, "
         "signed = (boolean) { true, false }, "
         COMMON_AUDIO_CAPS ";"
-        "audio/x-raw-tta, "
+        "audio/x-tta, "
         "width = (int) { 8, 16, 24 }, "
         "channels = (int) { 1, 2 }, " "rate = (int) [ 8000, 96000 ]")
     );
@@ -572,7 +572,7 @@ gst_matroska_mux_audio_pad_link (GstPad * pad, const GstCaps * caps)
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_AC3);
 
     return GST_PAD_LINK_OK;
-  } else if (!strcmp (mimetype, "audio/x-raw-tta")) {
+  } else if (!strcmp (mimetype, "audio/x-tta")) {
     gint width;
 
     /* TTA frame duration */
