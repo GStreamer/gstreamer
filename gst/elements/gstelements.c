@@ -34,6 +34,7 @@
 #include "gsttee.h"
 #include "gstaggregator.h"
 #include "gststatistics.h"
+#include "gstmd5sink.h"
 
 
 struct _elements_entry {
@@ -60,6 +61,7 @@ static struct _elements_entry _elements[] = {
   { "tee",     	    gst_tee_get_type, 		&gst_tee_details,		gst_tee_factory_init },
   { "aggregator",   gst_aggregator_get_type, 	&gst_aggregator_details,	gst_aggregator_factory_init },
   { "statistics",   gst_statistics_get_type, 	&gst_statistics_details,	NULL },
+  { "md5sink",      gst_md5sink_get_type, 	&gst_md5sink_details,		gst_md5sink_factory_init },
   { NULL, 0 },
 };
 

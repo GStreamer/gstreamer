@@ -16,7 +16,8 @@ libgstelements_la_SOURCES =	\
 	gstpipefilter.c		\
 	gsttee.c		\
 	gstaggregator.c		\
-	gststatistics.c
+	gststatistics.c		\
+	gstmd5sink.c
 libgstelements_la_CFLAGS = $(GST_CFLAGS)
 libgstelements_la_LIBADD = $(GST_LIBS)
 libgstelements_la_LDFLAGS = -version-info $(GST_LIBVERSION)
@@ -33,4 +34,5 @@ noinst_HEADERS =		\
 	gsttee.h		\
 	gstaggregator.h		\
 	gststatistics.h	        \
-	gstfilesrc.h
+	gstfilesrc.h		\
+	gstmd5sink.h
