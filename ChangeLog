@@ -1,5 +1,11 @@
 2004-09-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream),
+	(qtdemux_parse_trak):
+	  Don't crash by dividing by zero (see sample movie in #126922).
+
+2004-09-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/qtdemux/qtdemux.c: (qtdemux_audio_caps):
 	  Don't touch non-existing data (fixes crash on file in #140147).
 
