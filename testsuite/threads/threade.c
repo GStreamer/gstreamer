@@ -42,6 +42,7 @@ iterator (GstElement *bin)
 {
   gst_element_set_state (bin, GST_STATE_PLAYING);
   while (gst_bin_iterate (GST_BIN (bin))) g_print ("+");
+  gst_element_set_state (bin, GST_STATE_NULL);
   g_print ("\n");
   done = TRUE;
 }
