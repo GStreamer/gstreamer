@@ -1,3 +1,10 @@
+2004-04-18  Benjamin Otte  <otte@gnome.org>
+
+	* sys/oss/gstosselement.c: (gst_osselement_sync_parms),
+	(gst_osselement_rate_probe_check),
+	(gst_osselement_rate_check_rate), (gst_osselement_rate_add_rate):
+	  get rid of \n in debug output
+
 2004-04-17  Iain <iain@prettypeople.org>
 
 	* gst/wavparse/gstwavparse.c (gst_wavparse_loop): Allow all events,
