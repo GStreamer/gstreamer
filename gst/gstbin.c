@@ -603,6 +603,7 @@ gst_bin_connection_wrapper (int argc,char *argv[])
   DEBUG_ENTER("(%d,\"%s\")",argc,name);
 
   do {
+    DEBUG("Connection checking pads\n");
     pads = element->pads;
     while (pads) {
       pad = GST_PAD (pads->data);
@@ -613,6 +614,8 @@ gst_bin_connection_wrapper (int argc,char *argv[])
       }
       pads = g_list_next(pads);
     }
+    DEBUG("Connection done checking pads, checking COTHREAD_STOPPING on \"%s\"(%p)\n",
+          gst_element_get_name(element),element);
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
   GST_FLAG_UNSET(element,GST_ELEMENT_COTHREAD_STOPPING);
 
@@ -683,6 +686,7 @@ gst_bin_create_plan_func (GstBin *bin)
             gst_element_get_name (GST_ELEMENT (bin)));
       
       bin->need_cothreads = TRUE;
+      DEBUG("NEED COTHREADS, it's \"%s\"'s fault\n",gst_element_get_name(element));
       break;
     }
     // if it's a complex element, use cothreads
@@ -692,6 +696,7 @@ gst_bin_create_plan_func (GstBin *bin)
             gst_element_get_name (GST_ELEMENT (bin)));
 
       bin->need_cothreads = TRUE;
+      DEBUG("NEED COTHREADS, it's \"%s\"'s fault\n",gst_element_get_name(element));
       break;
     }
     // if it has more than one input pad, use cothreads
@@ -709,6 +714,7 @@ gst_bin_create_plan_func (GstBin *bin)
             gst_element_get_name (GST_ELEMENT (bin)));
       
       bin->need_cothreads = TRUE;
+      DEBUG("NEED COTHREADS, it's \"%s\"'s fault\n",gst_element_get_name(element));
       break;
     }
     elements = g_list_next (elements);
@@ -725,8 +731,6 @@ gst_bin_create_plan_func (GstBin *bin)
   bin->numentries = 0;
 
   if (bin->need_cothreads) {
-    DEBUG("NEED COTHREADS\n");
-
     // first create thread context
     if (bin->threadcontext == NULL) {
       bin->threadcontext = cothread_init ();
@@ -903,9 +907,12 @@ gst_bin_iterate_func (GstBin *bin)
   if (bin->need_cothreads) {
     // all we really have to do is switch to the first child
     // FIXME this should be lots more intelligent about where to start
-    
-    GST_FLAG_SET (GST_ELEMENT (bin->children->data), GST_ELEMENT_COTHREAD_STOPPING);
-    cothread_switch (GST_ELEMENT (bin->children->data)->threadstate);
+
+    entry = GST_ELEMENT (bin->children->data);
+    GST_FLAG_SET (entry, GST_ELEMENT_COTHREAD_STOPPING);
+    DEBUG("set COTHREAD_STOPPING flag on \"%s\"(%p)\n",
+          gst_element_get_name(entry),entry);
+    cothread_switch (entry->threadstate);
 
   } else {
     if (bin->numentries <= 0) {

@@ -208,6 +208,8 @@ gst_thread_change_state (GstElement *element)
   gint pending;
 
   g_return_val_if_fail (GST_IS_THREAD(element), FALSE);
+  DEBUG_ENTER("(\"%s\")",gst_element_get_name(element));
+
   thread = GST_THREAD (element);
 
   gst_info("gstthread: thread \"%s\" change state %d\n",
