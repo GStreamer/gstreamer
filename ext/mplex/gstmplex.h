@@ -87,6 +87,10 @@ struct _GstMPlex {
   PS_Stream	*ps_stream;
   gint		 data_rate;
   gint 		 sync_offset;
+
+  gint 		 num_video;
+  gint 		 num_audio;
+  gint 		 num_private1;
 };
 
 struct _GstMPlexClass {

@@ -91,6 +91,28 @@ GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
   )
 )
 
+GST_PAD_TEMPLATE_FACTORY (private_1_sink_factory,
+  "private_stream_1_%d",
+  GST_PAD_SINK,
+  GST_PAD_REQUEST,
+  GST_CAPS_NEW (
+    "sink_private1",
+    "audio/ac3",
+       NULL
+  )
+)
+
+GST_PAD_TEMPLATE_FACTORY (private_2_sink_factory,
+  "private_stream_2",
+  GST_PAD_SINK,
+  GST_PAD_REQUEST,
+  GST_CAPS_NEW (
+    "sink_private2",
+    "unkown/unkown",
+       NULL
+  )
+)
+
 #define GST_TYPE_MPLEX_MUX_FORMAT (gst_mplex_mux_format_get_type())
 static GType
 gst_mplex_mux_format_get_type (void) 
@@ -224,6 +246,35 @@ gst_mplex_init (GstMPlex *mplex)
   (void)mjpeg_default_handler_verbosity(mplex->ostrm->opt_verbosity);
 }
 
+static GstPadConnectReturn
+gst_mplex_video_connect (GstPad *pad, GstCaps *caps)
+{   
+  GstMPlex *mplex;
+  gint version;
+  GstMPlexStream *stream;
+  
+  mplex = GST_MPLEX (gst_pad_get_parent (pad));
+
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_CONNECT_DELAYED;
+
+  stream = (GstMPlexStream *) gst_pad_get_element_private (pad);
+  
+  if (!gst_caps_get_int (caps, "mpegversion", &version)){
+    return GST_PAD_CONNECT_REFUSED;
+  }
+
+  if (version == 2) {
+    stream->type = GST_MPLEX_STREAM_DVD_VIDEO;
+  }
+  else {
+    stream->type = GST_MPLEX_STREAM_VIDEO;
+  }
+
+  return GST_PAD_CONNECT_OK;
+}
+
+
 static GstPad*
 gst_mplex_request_new_pad (GstElement     *element,
                            GstPadTemplate *templ,
@@ -238,14 +289,35 @@ gst_mplex_request_new_pad (GstElement     *element,
   stream = g_new0 (GstMPlexStream, 1);
 
   if (!strncmp (templ->name_template, "audio", 5)) {
-    pad = gst_pad_new ("audio_sink", GST_PAD_SINK);
+    gchar *name = g_strdup_printf (templ->name_template, mplex->num_audio);
+
+    pad = gst_pad_new (name, GST_PAD_SINK);
+    g_free (name);
+
+    stream->type = GST_MPLEX_STREAM_MPA;
+  }
+  else if (!strncmp (templ->name_template, "video", 5)) {
+    gchar *name = g_strdup_printf (templ->name_template, mplex->num_video);
+
+    pad = gst_pad_new (name, GST_PAD_SINK);
+    /* we still need to figure out the mpeg version */
+    gst_pad_set_connect_function (pad, gst_mplex_video_connect);
+    g_free (name);
+
+    stream->type = GST_MPLEX_STREAM_UNKOWN;
+  }
+  else if (!strncmp (templ->name_template, "private_stream_1", 16)) {
+    gchar *name = g_strdup_printf (templ->name_template, mplex->num_private1);
+
+    pad = gst_pad_new (name, GST_PAD_SINK);
+    g_free (name);
 
     stream->type = GST_MPLEX_STREAM_AC3;
   }
-  else if (!strncmp (templ->name_template, "video", 5)) {
-    pad = gst_pad_new ("video_sink", GST_PAD_SINK);
+  else if (!strncmp (templ->name_template, "private_stream_2", 16)) {
+    pad = gst_pad_new ("private_stream_2", GST_PAD_SINK);
 
-    stream->type = GST_MPLEX_STREAM_DVD_VIDEO;
+    stream->type = GST_MPLEX_STREAM_UNKOWN;
   }
   
   if (pad) {
@@ -257,6 +329,11 @@ gst_mplex_request_new_pad (GstElement     *element,
     mplex->streams = g_list_prepend (mplex->streams, stream);
 
     gst_element_add_pad (element, pad);
+    gst_pad_set_element_private (pad, stream);
+  }
+  else {
+    /* no pad, free our stream again */
+    g_free (stream);
   }
 
   return pad;
@@ -275,23 +352,26 @@ gst_mplex_read_callback (BitStream *bitstream, uint8_t *dest, size_t size, void 
   if (stream->eos)
     return 0;
 
-  len = gst_bytestream_peek_bytes (stream->bytestream, &data, size);
-  if (len < size) {
-    guint32 avail= 0;
-    GstEvent *event = NULL;
+  do {
+    len = gst_bytestream_peek_bytes (stream->bytestream, &data, size);
+    if (len < size) {
+      guint32 avail= 0;
+      GstEvent *event = NULL;
     
-    gst_bytestream_get_status (stream->bytestream, &avail, &event);
-    if (event != NULL) {
-      switch (GST_EVENT_TYPE (event)) {
-        case GST_EVENT_EOS:
-	  stream->eos = TRUE;
-	  break;
-	default:
-	  break;
+      gst_bytestream_get_status (stream->bytestream, &avail, &event);
+      if (event != NULL) {
+        switch (GST_EVENT_TYPE (event)) {
+          case GST_EVENT_EOS:
+	    stream->eos = TRUE;
+	    break;
+	  default:
+	    break;
+        }
+        gst_event_unref (event);
       }
-      gst_event_unref (event);
     }
   }
+  while (len == 0);
 
   memcpy (dest, data, len);
   
@@ -337,6 +417,15 @@ gst_mplex_loop (GstElement *element)
         stream->bitstream->open (gst_mplex_read_callback, stream);
 
 	switch (stream->type) {
+	  case GST_MPLEX_STREAM_MPA:
+	  {
+	    MPAStream *mpastream;
+
+            mpastream = new MPAStream(*stream->bitstream, *mplex->ostrm);
+            mpastream->Init(0);
+            stream->elem_stream = mpastream;
+	    break;
+	  }
 	  case GST_MPLEX_STREAM_AC3:
 	  {
 	    AC3Stream *ac3stream;
@@ -353,6 +442,15 @@ gst_mplex_loop (GstElement *element)
             dvdstream = new DVDVideoStream(*stream->bitstream, *mplex->ostrm);
             dvdstream->Init(0);
             stream->elem_stream = dvdstream;
+	    break;
+	  }
+	  case GST_MPLEX_STREAM_VIDEO:
+	  {
+	    VideoStream *videostream;
+
+            videostream = new VideoStream(*stream->bitstream, *mplex->ostrm);
+            videostream->Init(0);
+            stream->elem_stream = videostream;
 	    break;
 	  }
 	  default:
@@ -492,6 +590,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (audio_sink_factory));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (video_sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (private_1_sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (private_2_sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
