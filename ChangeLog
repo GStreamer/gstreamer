@@ -1,5 +1,15 @@
 2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/dvdnav/dvdnavsrc.c: (dvdnavsrc_get_type),
+	(dvdnavsrc_uri_get_type), (dvdnavsrc_uri_get_protocols),
+	(dvdnavsrc_uri_get_uri), (dvdnavsrc_uri_set_uri),
+	(dvdnavsrc_uri_handler_init):
+	  Add DVD-nav URI (dvdnav://) for Totem testing purposes.
+	* gst/playback/gstplaybasebin.c: (gen_source_element):
+	  Add MMS to streaming URIs.
+
+2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* sys/ximage/ximagesink.c: (gst_ximagesink_navigation_send_event):
 	* sys/xvimage/xvimagesink.c:
 	(gst_xvimagesink_navigation_send_event):
