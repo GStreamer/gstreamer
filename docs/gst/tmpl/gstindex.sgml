@@ -137,6 +137,7 @@ flags for an association entry
 @GST_ASSOCIATION_FLAG_NONE: no extra flags
 @GST_ASSOCIATION_FLAG_KEY_UNIT: the entry marks a key unit, a key unit is one
                                 that marks a place where one can randomly seek to.
+@GST_ASSOCIATION_FLAG_DELTA_UNIT: 
 @GST_ASSOCIATION_FLAG_LAST: extra user defined flags should start here.
 
 <!-- ##### MACRO GST_INDEX_FORMAT_FORMAT ##### -->

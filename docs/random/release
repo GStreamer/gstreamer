@@ -99,7 +99,7 @@ TODO :
     bin/bugzilla gstreamer 0.7.5 >> src/htdocs/releases/gstreamer/0.7.5.xml
     then edit it
   - copy  www/htdocs/releases/$(module)/$(version) to RELEASE
-  - copy the list of changes and add them to NEWS
+  - copy the list of changes, bugs fixed, and API changes and add them to NEWS
   - update the ChangeLog and add === release (version) ===
   - update web site docs
     - release-specific docs should go in CVS

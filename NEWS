@@ -1,4 +1,36 @@
-This is GStreamer 0.8.4
+This is GStreamer 0.8.5
+
+Changes since 0.8.4:
+
+      * New Translation: Albanian (sq), Laurent Dhima
+      * first release that works on Windows with MSVC7
+      * fixed lists can now be intersected
+      * transform functions from fraction to double added
+      * optimal scheduler fixes
+      * fixation fixes
+      * filesrc fixes
+      * typefind fixes
+
+Bugs fixed since 0.8.4:
+
+      * 145100 : segfault in gst_pad_call_get_function
+      * 147889 : gst_element_link_pads_filtered may ignore named dest pad ...
+      * 148692 : GstQueue binary compatibility breakage
+      * 149981 : Win32 not included in the source distribution
+      * 150242 : GStreamer doesn't copy some buffer flags correctly
+
+API changes since 0.8.4:
+
+- API additions:
+     
+* A new function, gst_scheduler_register, has been added.
+* A new enum member of GstBufferFlag, GST_BUFFER_DELTA_UNIT has been added.
+ 
+- API depreciations:
+     
+* GstBufferFlag has a deprecated enum member, GST_BUFFER_KEY_UNIT.
+Buffers should be marked with GST_BUFFER_DELTA_UNIT when they're not
+key units instead, since key units are the more common case.
 
 Changes since 0.8.3:
     

@@ -1,3 +1,15 @@
+=== release 0.8.5 ===
+
+2004-08-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.8.5, "Stuttgart"
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/random/release:
+	  updates for release
+
 2004-08-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch by: Wim Taymans (wim@fluendo.com)
