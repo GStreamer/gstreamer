@@ -9,11 +9,11 @@ gstreamer\-launch \- build and run a GStreamer pipeline
 
 A simple commandline looks like:
 
- gstreamer\-launch disksrc location=music.mp3 ! mad ! osssink
+ gstreamer\-launch filesrc location=music.mp3 ! mad ! osssink
 
 This plays an mp3 music file music.mp3 using libmad, and:
 
- gstreamer\-launch disksrc location=music.mp3 ! mp3parse ! mpg123 ! osssink
+ gstreamer\-launch filesrc location=music.mp3 ! mp3parse ! mpg123 ! osssink
 
 Plays and mp3 music file using mpg123
 
@@ -32,27 +32,27 @@ And too play the same song with gnome\-vfs via smb:
 
 Here we convert a Mp3 file into an Ogg Vorbis file:
 
- gstreamer\-launch disksrc location=music.mp3 ! mad ! vorbisenc ! disksink location=music.ogg
+ gstreamer\-launch filesrc location=music.mp3 ! mad ! vorbisenc ! disksink location=music.ogg
 
 Or converting from mp3 to Flac:
- gstreamer-launch filesrc location=claptrap.mp3 ! mad ! flacenc ! disksink location=test.flac
+ gstreamer\-launch filesrc location=claptrap.mp3 ! mad ! flacenc ! disksink location=test.flac
 
 And then we can play that file with:
 
- gstreamer\-launch disksrc location=music.ogg ! vorbisdec ! osssink
+ gstreamer\-launch filesrc location=music.ogg ! vorbisdec ! osssink
 
 Some other useful pipelines are..
 Plays wav files (currently there are no wav encoders):
 
- gstreamer\-launch disksrc location=music.wav ! parsewav ! osssink
+ gstreamer\-launch filesrc location=music.wav ! parsewav ! osssink
 
 Converts wav files into mp3 and ogg files:
 
- gstreamer\-launch disksrc location=music.wav ! parsewav ! vorbisenc ! disksink location=music.ogg
- gstreamer\-launch disksrc location=music.wav ! parsewav ! mpegaudio ! disksink location=music.mp3
+ gstreamer\-launch filesrc location=music.wav ! parsewav ! vorbisenc ! disksink location=music.ogg
+ gstreamer\-launch filesrc location=music.wav ! parsewav ! mpegaudio ! disksink location=music.mp3
 
 Play mpeg movie with the aasink:
- gstreamer-launch filesrc location=JB_FF9_TheGravityOfLove.mpg ! mpegdemux video_00! { queue ! mpeg2dec ! aasink }
+ gstreamer\-launch filesrc location=JB_FF9_TheGravityOfLove.mpg ! mpegdemux video_00! { queue ! mpeg2dec ! aasink }
 
 You can also use lame for mp3 encoding if you have it installed, it does a 
 much better job than mpegaudio.
@@ -71,10 +71,10 @@ Record sound from your sound input and encode it into an ogg file:
 gstreamer\-launch not only handles audio but video as well:
 For mpeg video files (here outputing to aasink) :
 
- gstreamer-launch filesrc location=JB_FF9_TheGravityOfLove.mpg ! mpegdemux video_00! { queue ! mpeg2dec ! aasink }
+ gstreamer\-launch filesrc location=JB_FF9_TheGravityOfLove.mpg ! mpegdemux video_00! { queue ! mpeg2dec ! aasink }
 
 For vob files (here outputting image to sdlvideosink): 
- gstreamer-launch filesrc location=/flflfj.vob ! mpegdemux video_00! { queue ! mpeg2dec ! sdlvideosink }
+ gstreamer\-launch filesrc location=/flflfj.vob ! mpegdemux video_00! { queue ! mpeg2dec ! sdlvideosink }
 
 See other docs, examples, and the source for description on how to
 create a PIPELINE\-DESCRIPTION.
