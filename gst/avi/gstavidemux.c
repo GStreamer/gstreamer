@@ -522,8 +522,9 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
   }
   if (desired_tag) {		/* do we have to test identity? */
     if (desired_tag != chunkid) {
-      g_print ("\n\n *** Error: Expected chunk '%08x', found '%08x'\n",
-	      desired_tag, chunkid);
+      g_print ("\n\n *** Error: Expected chunk '%s', found '%s'\n",
+	      gst_riff_id_to_fourcc (desired_tag),
+	      gst_riff_id_to_fourcc (chunkid));
       return FALSE;
     }
   }
@@ -686,7 +687,10 @@ gst_avi_demux_loop (GstElement *element)
   /* this is basically an infinite loop */
   if (!gst_avidemux_process_chunk (avi_demux, &filepos, GST_RIFF_TAG_RIFF, 0, &chunksize)) {
     gst_element_error (element, "This doesn't appear to be an AVI file");
+    return;
   }
+  /* if we exit the loop we are EOS */
+  gst_pad_event_default (avi_demux->sinkpad, gst_event_new (GST_EVENT_EOS));
 }
 
 static GstElementStateReturn
