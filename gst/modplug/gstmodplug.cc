@@ -359,6 +359,8 @@ gst_modplug_init (GstModPlug *modplug)
   modplug->_16bit          = TRUE;
   modplug->channel         = 2;
   modplug->frequency       = 44100;
+  
+  modplug->state = MODPLUG_STATE_NEED_TUNE;
 }
 
 
@@ -410,6 +412,7 @@ gst_modplug_get_query_types (GstPad *pad)
     GST_QUERY_POSITION,
     (GstQueryType)0
   };
+  
   return gst_modplug_src_query_types;
 }
 
@@ -575,6 +578,29 @@ modplug_negotiate (GstModPlug *modplug)
   return TRUE;
 }
 
+
+static void
+gst_modplug_handle_event (GstModPlug *modplug)
+{
+  guint32 remaining;
+  GstEvent *event;
+
+  gst_bytestream_get_status (modplug->bs, &remaining, &event);
+
+  if (!event) {
+    g_warning ("modplug: no bytestream event");
+    return;
+  }
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_DISCONTINUOUS:
+      gst_bytestream_flush_fast (modplug->bs, remaining);
+    default:
+      gst_pad_event_default (modplug->sinkpad, event);
+      break;
+  }
+}
+
 static void
 gst_modplug_loop (GstElement *element)
 {
@@ -589,8 +615,7 @@ gst_modplug_loop (GstElement *element)
   if (modplug->state == MODPLUG_STATE_NEED_TUNE) 
   {            
 /*    GstBuffer *buf;*/
-    
-    modplug->total_samples = 0;
+       
     modplug->seek_at = -1;
     modplug->need_discont = FALSE;
     modplug->eos = FALSE;
@@ -624,10 +649,21 @@ gst_modplug_loop (GstElement *element)
     }
 */
 
-    modplug->song_size = gst_bytestream_length (modplug->bs);
-  
-    gst_bytestream_peek_bytes (modplug->bs, &modplug->buffer_in,  modplug->song_size);
-    modplug->state = MODPLUG_STATE_LOAD_TUNE; 
+    if (modplug->bs)
+    {
+      guint64 got;
+      
+      modplug->song_size = gst_bytestream_length (modplug->bs);
+
+      got = gst_bytestream_peek_bytes (modplug->bs, &modplug->buffer_in,  modplug->song_size);
+
+      if ( got < modplug->song_size )
+      {
+        gst_modplug_handle_event (modplug);
+        return;
+      }
+      modplug->state = MODPLUG_STATE_LOAD_TUNE; 
+    }  
   }  
   
   if (modplug->state == MODPLUG_STATE_LOAD_TUNE) 
@@ -649,7 +685,7 @@ gst_modplug_loop (GstElement *element)
     modplug->state = MODPLUG_STATE_PLAY_TUNE;
   }
       
-  if (modplug->state == MODPLUG_STATE_PLAY_TUNE) 
+  if (modplug->state == MODPLUG_STATE_PLAY_TUNE && !modplug->eos) 
   {
     if (modplug->seek_at != -1)
     {
@@ -698,8 +734,9 @@ gst_modplug_loop (GstElement *element)
       if (GST_PAD_IS_USABLE (modplug->srcpad))
       {        
         event = gst_event_new (GST_EVENT_EOS);
-        gst_pad_push (modplug->srcpad, GST_BUFFER (event));	      
-        gst_element_set_eos (element);   
+        gst_pad_push (modplug->srcpad, GST_BUFFER (event));
+        gst_element_set_eos (element);
+        modplug->eos = TRUE;
       }
   }
 }
@@ -733,6 +770,7 @@ gst_modplug_change_state (GstElement *element)
       g_free (modplug->buffer_in);
       modplug->audiobuffer = NULL;
       modplug->buffer_in = NULL;
+      gst_caps_unref (modplug->streaminfo);
       modplug->state = MODPLUG_STATE_NEED_TUNE;
       break;
     case GST_STATE_READY_TO_NULL:         
