@@ -147,7 +147,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_AALIB_TRUE@
 @USE_AALIB_TRUE@%files -n gstreamer-aalib
 @USE_AALIB_TRUE@%defattr(-, root, root)
-@USE_AALIB_TRUE@%{prefix}/lib/gst/libaa*
+@USE_AALIB_TRUE@%{prefix}/lib/gst/libgstaa*
 @USE_AALIB_TRUE@
 @USE_AALIB_TRUE@%post -n gstreamer-aalib
 @USE_AALIB_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
@@ -179,7 +179,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_AVIFILE_TRUE@
 @USE_AVIFILE_TRUE@%files -n gstreamer-avi
 @USE_AVIFILE_TRUE@%defattr(-, root, root)
-@USE_AVIFILE_TRUE@%{prefix}/lib/gst/libavi*
+@USE_AVIFILE_TRUE@%{prefix}/lib/gst/libgstavi*
 @USE_AVIFILE_TRUE@%{prefix}/lib/gst/libwin*
 @USE_AVIFILE_TRUE@
 @USE_AVIFILE_TRUE@%post -n gstreamer-avi
@@ -197,7 +197,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_CDPARANOIA_TRUE@
 @USE_CDPARANOIA_TRUE@%files -n gstreamer-cdparanoia
 @USE_CDPARANOIA_TRUE@%defattr(-, root, root)
-@USE_CDPARANOIA_TRUE@%{prefix}/lib/gst/libcdparanoia*
+@USE_CDPARANOIA_TRUE@%{prefix}/lib/gst/libgstcdparanoia*
 @USE_CDPARANOIA_TRUE@
 @USE_CDPARANOIA_TRUE@%post -n gstreamer-cdparanoia
 @USE_CDPARANOIA_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
@@ -229,7 +229,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_GNOME_VFS_TRUE@
 @USE_GNOME_VFS_TRUE@%files -n gstreamer-gnomevfs
 @USE_GNOME_VFS_TRUE@%defattr(-, root, root)
-@USE_GNOME_VFS_TRUE@%{prefix}/lib/gst/libgnomevfs*
+@USE_GNOME_VFS_TRUE@%{prefix}/lib/gst/libgstgnomevfs*
 @USE_GNOME_VFS_TRUE@
 @USE_GNOME_VFS_TRUE@%post -n gstreamer-gnomevfs
 @USE_GNOME_VFS_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
@@ -263,15 +263,15 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_MPEG2DEC_TRUE@
 @USE_MPEG2DEC_TRUE@%files -n gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@%defattr(-, root, root)
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libmpeg1types*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libmpeg1encoder*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libmpegaudio*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libmp1*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libmpegstream*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libmpeg2play*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libmpeg2enc*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libmpeg2subt*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libmp2videoparse*
+@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg1types*
+@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg1encoder*
+@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpegaudio*
+@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmp1*
+@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpegstream*
+@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2play*
+@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2enc*
+@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2subt*
+@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmp2videoparse*
 @USE_MPEG2DEC_TRUE@
 @USE_MPEG2DEC_TRUE@%post -n  gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
@@ -447,7 +447,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_ARTS_TRUE@
 @USE_ARTS_TRUE@%files -n gstreamer-artsd
 @USE_ARTS_TRUE@%defattr(-, root, root)
-@USE_ARTS_TRUE@%{prefix}/lib/gst/artsd*
+@USE_ARTS_TRUE@%{prefix}/lib/gst/libartsd*
 @USE_ARTS_TRUE@
 @USE_ARTS_TRUE@%post -n gstreamer-artsd
 @USE_ARTS_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
@@ -477,7 +477,7 @@ Library for resampling of sound
 
 %files -n gstreamer-resample
 %defattr(-, root, root)
-%{prefix}/lib/gst/libresample*
+%{prefix}/lib/gst/libgstresample*
 
 %post -n gstreamer-resample
 %{prefix}/bin/gstreamer-register --gst-mask=0
@@ -507,7 +507,7 @@ It takes YUV video frames and adds a header in front of it so it can be processe
 
 %files -n gstreamer-lavencode
 %defattr(-, root, root)
-%{prefix}/lib/gst/liblav*
+%{prefix}/lib/gst/libgsty4m*
 
 %post -n gstreamer-lavencode
 %{prefix}/bin/gstreamer-register --gst-mask=0
@@ -645,7 +645,7 @@ Plugin for playing FLI/FLX animations under GStreamer
 
 %files -n gstreamer-flx
 %defattr(-, root, root)
-%{prefix}/lib/gst/libflx*
+%{prefix}/lib/gst/libgstflx*
 
 %post -n gstreamer-flx
 %{prefix}/bin/gstreamer-register --gst-mask=0
@@ -660,7 +660,7 @@ Video deinterlace plugin
 
 %files -n gstreamer-deinterlace
 %defattr(-, root, root)
-%{prefix}/lib/gst/libdeinterlace*
+%{prefix}/lib/gst/libgstdeinterlace*
 
 %post -n gstreamer-deinterlace
 %{prefix}/bin/gstreamer-register --gst-mask=0
@@ -691,7 +691,7 @@ Video deinterlace plugin
 @USE_LAME_TRUE@
 @USE_LAME_TRUE@%files -n gstreamer-lame
 @USE_LAME_TRUE@%defattr(-, root, root)
-@USE_LAME_TRUE@%{prefix}/lib/gst/liblame*
+@USE_LAME_TRUE@%{prefix}/lib/gst/libgstlame*
 @USE_LAME_TRUE@
 @USE_LAME_TRUE@%post -n gstreamer-lame
 @USE_LAME_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
@@ -722,9 +722,9 @@ Various plugins for visual effects to use with audio. Included are Smoothwave, S
 
 %files -n gstreamer-visualisation
 %defattr(-, root, root)
-%{prefix}/lib/gst/libsmooth*
+%{prefix}/lib/gst/libgstsmooth*
 %{prefix}/lib/gst/libgstspectrum*
-%{prefix}/lib/gst/libvu*
+%{prefix}/lib/gst/libgstvu*
 
 %post -n gstreamer-visualisation
 %{prefix}/bin/gstreamer-register --gst-mask=0
@@ -744,7 +744,20 @@ Various plugins for visual effects to use with audio. Included are Smoothwave, S
 @USE_HERMES_TRUE@%post -n gstreamer-xvideosink
 @USE_HERMES_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
 
-
+@USE_HERMES_TRUE@%package -n gstreamer-colorspace
+@USE_HERMES_TRUE@Summary: Gstreamer colorspace conversion plugin
+@USE_HERMES_TRUE@Group: Libraries/Multimedia
+@USE_HERMES_TRUE@Requires: %{name} = %{ver}
+@USE_HERMES_TRUE@Requires: Hermes => 1.3.0
+@USE_HERMES_TRUE@%description -n gstreamer-colorspace
+@USE_HERMES_TRUE@Colorspace plugin based on Hermes library
+@USE_HERMES_TRUE@
+@USE_HERMES_TRUE@%files -n gstreamer-colorspace
+@USE_HERMES_TRUE@%defattr(-, root, root)
+@USE_HERMES_TRUE@%{prefix}/lib/gst/libgstcolorspace*
+@USE_HERMES_TRUE@
+@USE_HERMES_TRUE@%post -n gstreamer-colorspace
+@USE_HERMES_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
 
 %package -n gstreamer-misc
 Summary: GStreamer plugins for various effects
@@ -756,35 +769,30 @@ Plugins for various effects
 
 %files -n gstreamer-misc
 %defattr(-, root, root)
-%{prefix}/lib/gst/libadder*
-%{prefix}/lib/gst/libalaw*
+%{prefix}/lib/gst/libgstadder*
+%{prefix}/lib/gst/libgstalaw*
 %{prefix}/lib/gst/libgstaudio*
-%{prefix}/lib/gst/libcolorspace*
-%{prefix}/lib/gst/libgstautoplug*
-%{prefix}/lib/gst/libgstelements*
-%{prefix}/lib/gst/libgstgetbits*
 %{prefix}/lib/gst/libgstidct*
 %{prefix}/lib/gst/libgstriff*
 %{prefix}/lib/gst/libgstjpeg*
-%{prefix}/lib/gst/libintfloatconvert*
-%{prefix}/lib/gst/liblevel*
-%{prefix}/lib/gst/libmedian*
-%{prefix}/lib/gst/libmono2stereo*
-%{prefix}/lib/gst/libmulaw*
-%{prefix}/lib/gst/libpassthrough*
-%{prefix}/lib/gst/librtjpe*
-%{prefix}/lib/gst/libstereo*
-%{prefix}/lib/gst/libsystem_*
+%{prefix}/lib/gst/libgstintfloatconvert*
+%{prefix}/lib/gst/libgstlevel*
+%{prefix}/lib/gst/libgstmedian*
+%{prefix}/lib/gst/libgstmono2stereo*
+%{prefix}/lib/gst/libgstmulaw*
+%{prefix}/lib/gst/libgstpassthrough*
+%{prefix}/lib/gst/libgstrtjpe*
+%{prefix}/lib/gst/libgststereo*
 %{prefix}/lib/gst/libgstputbits*
-%{prefix}/lib/gst/libvol*
+%{prefix}/lib/gst/libgstvol*
 %{prefix}/lib/gst/libgstparsewav*
 %{prefix}/lib/gst/libgststaticautoplug*
 %{prefix}/lib/gst/libgsttypes*
 %{prefix}/lib/gst/libgstbasicscheduler*
 %{prefix}/lib/gst/libgstbytestream*
 %{prefix}/lib/gst/libgstcontrol*
-%{prefix}/lib/gst/libplayondemand*
-%{prefix}/lib/gst/libspeed*
+%{prefix}/lib/gst/libgstplayondemand*
+%{prefix}/lib/gst/libgstspeed*
 
 %post -n gstreamer-misc
 %{prefix}/bin/gstreamer-register --gst-mask=0
