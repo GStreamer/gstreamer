@@ -1,4 +1,4 @@
-testprogs = cleanup1 cleanup2 cleanup3 cleanup4
+testprogs = cleanup1 cleanup2 cleanup3 cleanup4 cleanup5
 
 TESTS = $(testprogs)
 
@@ -13,3 +13,5 @@ cleanup3_LDADD = $(GST_LIBS)
 cleanup3_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS) $(GLIB_CFLAGS)
 cleanup4_LDADD = $(GST_LIBS) 
 cleanup4_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS) $(GLIB_CFLAGS)
+cleanup5_LDADD = $(GST_LIBS) 
+cleanup5_CFLAGS = $(GST_CFLAGS) $(XML_CFLAGS) $(GLIB_CFLAGS)
