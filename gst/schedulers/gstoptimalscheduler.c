@@ -1177,17 +1177,25 @@ gst_opt_scheduler_unlock_element (GstScheduler *sched, GstElement *element)
 static void
 gst_opt_scheduler_yield (GstScheduler *sched, GstElement *element)
 {
-  //GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+#ifdef USE_COTHREADS
+  /* yield hands control to the main cothread context if the requesting 
+   * element is the entry point of the group */
+  GstOptSchedulerGroup *group;
+  get_group (element, &group);
+  if (group && group->entry == element)
+    do_cothread_switch (do_cothread_get_main (((GstOptScheduler*)sched)->context)); 
+#endif
 }
 
 static gboolean
 gst_opt_scheduler_interrupt (GstScheduler *sched, GstElement *element)
 {
-  //GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
-  
-  g_warning ("interrupt element, implement me");
-
+#ifdef USE_COTHREADS
+  do_cothread_switch (do_cothread_get_main (((GstOptScheduler*)sched)->context)); 
+  return FALSE;
+#else
   return TRUE;
+#endif
 }
 
 static void
