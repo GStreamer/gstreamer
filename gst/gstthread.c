@@ -116,6 +116,10 @@ gst_thread_class_init (GstThreadClass *klass)
 static void 
 gst_thread_init (GstThread *thread) 
 {
+  // we're a manager by default
+  GST_FLAG_SET (thread, GST_BIN_FLAG_MANAGER);
+
+  // default is to create a thread
   GST_FLAG_SET (thread, GST_THREAD_CREATE);
 
   thread->lock = g_mutex_new();

@@ -51,7 +51,8 @@ typedef struct _GstFakeSrcClass GstFakeSrcClass;
 struct _GstFakeSrc {
   GstSrc src;
 
-  GstPad *srcpad;
+  gint numsrcpads;
+  GSList *srcpads;
 };
 
 struct _GstFakeSrcClass {

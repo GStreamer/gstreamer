@@ -64,7 +64,7 @@ static void 			gst_audiosrc_close_audio	(GstAudioSrc *src);
 static gboolean 		gst_audiosrc_open_audio		(GstAudioSrc *src);
 static void 			gst_audiosrc_sync_parms		(GstAudioSrc *audiosrc);
 
-static void 			gst_audiosrc_get		(GstPad *pad);
+static GstBuffer *		gst_audiosrc_get		(GstPad *pad);
 
 static GstSrcClass *parent_class = NULL;
 //static guint gst_audiosrc_signals[LAST_SIGNAL] = { 0 };
@@ -140,27 +140,29 @@ gst_audiosrc_init (GstAudioSrc *audiosrc)
   audiosrc->seq = 0;
 }
 
-void gst_audiosrc_get(GstPad *pad) {
+static GstBuffer *
+gst_audiosrc_get (GstPad *pad)
+{
   GstAudioSrc *src;
   GstBuffer *buf;
   glong readbytes;
 
-  g_return_if_fail(pad != NULL);
+  g_return_val_if_fail (pad != NULL, NULL);
   src = GST_AUDIOSRC(gst_pad_get_parent(pad));
 
 //  g_print("attempting to read something from soundcard\n");
 
   buf = gst_buffer_new ();
-  g_return_if_fail (buf);
+  g_return_val_if_fail (buf, NULL);
   
   GST_BUFFER_DATA (buf) = (gpointer)g_malloc (src->bytes_per_read);
-  
+
   readbytes = read (src->fd,GST_BUFFER_DATA (buf),
                     src->bytes_per_read);
 
   if (readbytes == 0) {
     gst_src_signal_eos (GST_SRC (src));
-    return;
+    return NULL;
   }
 
   GST_BUFFER_SIZE (buf) = readbytes;
@@ -170,8 +172,8 @@ void gst_audiosrc_get(GstPad *pad) {
 
 //  gst_buffer_add_meta(buf,GST_META(newmeta));
 
-  gst_pad_push (pad,buf);
 //  g_print("pushed buffer from soundcard of %d bytes\n",readbytes);
+  return buf;
 }
 
 static void 

@@ -51,13 +51,13 @@ enum {
 };
 
 
-static void gst_fdsrc_class_init	(GstFdSrcClass *klass);
-static void gst_fdsrc_init		(GstFdSrc *fdsrc);
+static void		gst_fdsrc_class_init	(GstFdSrcClass *klass);
+static void		gst_fdsrc_init		(GstFdSrc *fdsrc);
 
-static void gst_fdsrc_set_arg		(GtkObject *object, GtkArg *arg, guint id);
-static void gst_fdsrc_get_arg		(GtkObject *object, GtkArg *arg, guint id);
+static void		gst_fdsrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void		gst_fdsrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 
-static void gst_fdsrc_get		(GstPad *pad);
+static GstBuffer *	gst_fdsrc_get		(GstPad *pad);
 
 
 static GstSrcClass *parent_class = NULL;
@@ -175,28 +175,30 @@ gst_fdsrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
   }
 }
 
-void gst_fdsrc_get(GstPad *pad) {
+static GstBuffer *
+gst_fdsrc_get(GstPad *pad)
+{
   GstFdSrc *src;
   GstBuffer *buf;
   glong readbytes;
 
-  g_return_if_fail(pad != NULL);
+  g_return_val_if_fail (pad != NULL, NULL);
   src = GST_FDSRC(gst_pad_get_parent(pad));
 
   /* create the buffer */
   // FIXME: should eventually use a bufferpool for this
   buf = gst_buffer_new ();
-  g_return_if_fail (buf);
+  g_return_val_if_fail (buf, NULL);
 
   /* allocate the space for the buffer data */
   GST_BUFFER_DATA(buf) = g_malloc(src->bytes_per_read);
-  g_return_if_fail(GST_BUFFER_DATA(buf) != NULL);
+  g_return_val_if_fail(GST_BUFFER_DATA(buf) != NULL, NULL);
 
   /* read it in from the file */
   readbytes = read(src->fd,GST_BUFFER_DATA(buf),src->bytes_per_read);
   if (readbytes == 0) {
     gst_src_signal_eos(GST_SRC(src));
-    return;
+    return NULL;
   }
 
   /* if we didn't get as many bytes as we asked for, we're at EOF */
@@ -208,6 +210,6 @@ void gst_fdsrc_get(GstPad *pad) {
   GST_BUFFER_SIZE(buf) = readbytes;
   src->curoffset += readbytes;
 
-  /* we're done, push the buffer off now */
-  gst_pad_push(pad,buf);
+  /* we're done, return the buffer */
+  return buf;
 }

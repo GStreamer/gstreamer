@@ -52,8 +52,8 @@ typedef struct _GstPadClass GstPadClass;
  * pad is the sink pad (so the same chain function can be used for N pads)
  * buf is the buffer being passed */
 typedef void (*GstPadChainFunction) (GstPad *pad,GstBuffer *buf);
-typedef void (*GstPadGetFunction) (GstPad *pad);
-typedef void (*GstPadGetRegionFunction) (GstPad *pad, gulong offset, gulong size);
+typedef GstBuffer *(*GstPadGetFunction) (GstPad *pad);
+typedef GstBuffer *(*GstPadGetRegionFunction) (GstPad *pad, gulong offset, gulong size);
 typedef void (*GstPadQoSFunction) (GstPad *pad, glong qos_message);
 
 typedef void (*GstPadPushFunction) (GstPad *pad, GstBuffer *buf);

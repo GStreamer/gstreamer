@@ -55,7 +55,7 @@ static void 			gst_httpsrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
 static void 			gst_httpsrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 static GstElementStateReturn	gst_httpsrc_change_state	(GstElement *element);
 
-static void 			gst_httpsrc_get		(GstPad *pad);
+static GstBuffer *		gst_httpsrc_get		(GstPad *pad);
 
 static gboolean			gst_httpsrc_open_url	(GstHttpSrc *src);
 static void			gst_httpsrc_close_url	(GstHttpSrc *src);
@@ -122,12 +122,14 @@ static void gst_httpsrc_init(GstHttpSrc *httpsrc) {
   httpsrc->bytes_per_read = 4096;
 }
 
-static void gst_httpsrc_get(GstPad *pad) {
+static GstBuffer *
+gst_httpsrc_get(GstPad *pad)
+{
   GstHttpSrc *src;
   GstBuffer *buf;
   glong readbytes;
 
-  g_return_if_fail(pad != NULL);
+  g_return_val_if_fail (pad != NULL, NULL);
   src = GST_HTTPSRC(gst_pad_get_parent(pad));
 
   buf = gst_buffer_new();
@@ -136,7 +138,7 @@ static void gst_httpsrc_get(GstPad *pad) {
 
   if (readbytes == 0) {
     gst_src_signal_eos(GST_SRC(src));
-    return;
+    return NULL;
   }
 
   if (readbytes < src->bytes_per_read) {
@@ -146,7 +148,7 @@ static void gst_httpsrc_get(GstPad *pad) {
   GST_BUFFER_SIZE(buf) = readbytes;
   src->curoffset += readbytes;
 
-  gst_pad_push(pad,buf);
+  return buf;
 }
 
 static gboolean 

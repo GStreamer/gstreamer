@@ -109,6 +109,8 @@ gst_element_init (GstElement *element)
   element->current_state = GST_STATE_NULL;
   element->pending_state = -1;
   element->numpads = 0;
+  element->numsrcpads = 0;
+  element->numsinkpads = 0;
   element->pads = NULL;
   element->loopfunc = NULL;
   element->threadstate = NULL;
@@ -151,6 +153,10 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
   /* add it to the list */
   element->pads = g_list_append (element->pads, pad);
   element->numpads++;
+  if (gst_pad_get_direction (pad) == GST_PAD_SRC)
+    element->numsrcpads++;
+  else
+    element->numsinkpads++;
 
   /* emit the NEW_PAD signal */
 //  g_print("emitting NEW_PAD signal, \"%s\"!\n",gst_pad_get_name(pad));

@@ -75,18 +75,24 @@ static inline char *_gst_print_statename(int state) {
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT))
 
 typedef enum {
-  GST_ELEMENT_MULTI_IN		= GST_OBJECT_FLAG_LAST,
+  // element is complex (for some def.) and generally require a cothread
+  GST_ELEMENT_COMPLEX		= GST_OBJECT_FLAG_LAST,
+  // not to be scheduled directly, let others trigger all events
+  GST_ELEMENT_SCHEDULE_PASSIVELY,
+  // this element should be placed in a thread if at all possible
   GST_ELEMENT_THREAD_SUGGESTED,
+  // this element is incable of seeking (FIXME: does this apply to filters?)
   GST_ELEMENT_NO_SEEK,
 
+  // there is a new loopfunction ready for placement
   GST_ELEMENT_NEW_LOOPFUNC,
+  // the cothread holding this element needs to be stopped
   GST_ELEMENT_COTHREAD_STOPPING,
 
   /* use some padding for future expansion */
   GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 8,
 } GstElementFlags;
 
-#define GST_ELEMENT_IS_MULTI_IN(obj)		(GST_FLAG_IS_SET(obj,GST_ELEMENT_MULTI_IN))
 #define GST_ELEMENT_IS_THREAD_SUGGESTED(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_THREAD_SUGGESTED))
 #define GST_ELEMENT_IS_COTHREAD_STOPPING(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_COTHREAD_STOPPING))
 
@@ -110,6 +116,8 @@ struct _GstElement {
   cothread_state *threadstate;
 
   guint16 numpads;
+  guint16 numsrcpads;
+  guint16 numsinkpads;
   GList *pads;
 
   GstElement *manager;

@@ -58,7 +58,7 @@ static void 			gst_disksrc_get_arg		(GtkObject *object, GtkArg *arg, guint id);
 
 static void 			gst_disksrc_close_file		(GstDiskSrc *src);
 
-static void 			gst_disksrc_get			(GstPad *pad);
+static GstBuffer *		gst_disksrc_get			(GstPad *pad);
 
 static GstElementStateReturn 	gst_disksrc_change_state	(GstElement *element);
 
@@ -199,7 +199,7 @@ gst_disksrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
   }
 }
 
-static void 
+static GstBuffer *
 gst_disksrc_get (GstPad *pad) 
 {
   GstDiskSrc *src;
@@ -250,8 +250,8 @@ gst_disksrc_get (GstPad *pad)
 
   DEBUG("pushing %d bytes with offset %d\n", GST_BUFFER_SIZE(buf), GST_BUFFER_OFFSET (buf));
   /* we're done, push the buffer off now */
-  gst_pad_push (pad, buf);
-  DEBUG("pushing %d bytes with offset %d done\n", GST_BUFFER_SIZE(buf), GST_BUFFER_OFFSET (buf));
+  DEBUG("returning %d bytes with offset %d done\n", GST_BUFFER_SIZE(buf), GST_BUFFER_OFFSET (buf));
+  return buf;
 }
 
 

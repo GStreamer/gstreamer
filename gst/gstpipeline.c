@@ -94,6 +94,9 @@ gst_pipeline_class_init (GstPipelineClass *klass)
 static void 
 gst_pipeline_init (GstPipeline *pipeline) 
 {
+  // we're a manager by default
+  GST_FLAG_SET (pipeline, GST_BIN_FLAG_MANAGER);
+
   pipeline->src = NULL;
   pipeline->sinks = NULL;
 }
@@ -345,7 +348,7 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
   base_factories = g_new0(GList *, numsinks);
 
   i = 0;
-  // fase 2, loop over all the sinks.. 
+  // fase 2, loop over all the sinks..
   while (elements) {
     GList *pads;
     GstPad *pad;

@@ -41,7 +41,16 @@ extern GstElementDetails gst_bin_details;
 #define GST_IS_BIN_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_BIN))
 
-#define GST_BIN_FLAG_LAST (GST_ELEMENT_FLAG_LAST + 2)
+typedef enum {
+  // this bin is a manager of child elements, i.e. a pipeline or thread
+  GST_BIN_FLAG_MANAGER		= GST_ELEMENT_FLAG_LAST,
+
+  // we prefer to have cothreads when its an option, over chain-based
+  GST_BIN_FLAG_PREFER_COTHREADS,
+
+  /* padding */
+  GST_BIN_FLAG_LAST		= GST_ELEMENT_FLAG_LAST + 4,
+} GstBinFlags;
 
 typedef struct _GstBin GstBin;
 typedef struct _GstBinClass GstBinClass;
@@ -55,8 +64,10 @@ struct _GstBin {
 
   // iteration state
   gboolean need_cothreads;
+  GList *managed_elements;
+  gint num_managed_elements;
   GList *entries;
-  gint numentries;
+  gint num_entries;
 
   cothread_context *threadcontext;
   gboolean use_cothreads;
@@ -66,28 +77,18 @@ struct _GstBin {
 struct _GstBinClass {
   GstElementClass parent_class;
 
+  /* signals */
   void 		(*object_added) 	(GstObject *object, GstObject *child);
 
   /* change the state of elements of the given type */
   gboolean 	(*change_state_type) 	(GstBin *bin,
                                  	 GstElementState state,
                                  	 GtkType type);
-
   /* create a plan for the execution of the bin */
   void 		(*create_plan) 		(GstBin *bin);
-
   /* run a full iteration of operation */
   void		(*iterate) 		(GstBin *bin);
 };
-
-/* this struct is used for odd scheduling cases */
-typedef struct __GstBinOutsideSchedule {
-  guint32 flags;
-  GstElement *element;
-  GstBin *bin;
-  cothread_state *threadstate;
-  GSList *padlist;
-} _GstBinOutsideSchedule;
 
 
 
@@ -96,22 +97,26 @@ GstElement*	gst_bin_new			(gchar *name);
 #define 	gst_bin_destroy(bin) 		gst_object_destroy(GST_OBJECT(bin))
 
 /* add and remove elements from the bin */
-void 		gst_bin_add			(GstBin *bin, GstElement *element);
-void 		gst_bin_remove			(GstBin *bin, GstElement *element);
+void 		gst_bin_add			(GstBin *bin,
+						 GstElement *element);
+void 		gst_bin_remove			(GstBin *bin,
+						 GstElement *element);
 
 /* retrieve a single element or the list of children */
-GstElement*	gst_bin_get_by_name		(GstBin *bin, gchar *name);
+GstElement*	gst_bin_get_by_name		(GstBin *bin,
+						 gchar *name);
 GList*		gst_bin_get_list		(GstBin *bin);
 
 void 		gst_bin_create_plan		(GstBin *bin);
 gboolean 	gst_bin_set_state_type		(GstBin *bin,
-                                		 GstElementState state,
-                                		 GtkType type);
+						 GstElementState state,
+						 GtkType type);
 
 void 		gst_bin_iterate			(GstBin *bin);
 
 // hack FIXME
-void 		gst_bin_use_cothreads		(GstBin *bin, gboolean enabled);
+void 		gst_bin_use_cothreads		(GstBin *bin,
+						 gboolean enabled);
 
 #ifdef __cplusplus
 }
