@@ -398,30 +398,35 @@ _wrap_gst_caps_new_empty(PyGBoxed *self, PyObject *args, PyObject *kwargs)
 	self->free_on_dealloc = FALSE;
 	
         if (len == 0) {
+		/* 0 length creates a new empty caps */
 		self->boxed = gst_caps_new_empty();
+		goto beach;
 	} else if (len == 1) {
+		/* 1 length is either a string or a structure */
 		item = PyTuple_GetItem(args, 0);
-		if (!PyString_Check(item)) {
-                        PyErr_SetString(PyExc_TypeError, "argument must be a string");
+		if (PyString_Check(item)) {
+			self->boxed = gst_caps_from_string(PyString_AsString(item));
+			goto beach;
+		} else if (!pyg_boxed_check(item, GST_TYPE_STRUCTURE)) {
+                        PyErr_SetString(PyExc_TypeError, "argument must be a string or a GstStructure");
 			return -1;
 		}		
-		self->boxed = gst_caps_from_string(PyString_AsString(item));
-	} else {
-		self->boxed = gst_caps_new_empty();
-        	for (i = 0; i < len; i++)
-        	{
-                	item = PyTuple_GetItem(args, i);
-                	if (!pyg_boxed_check(item, GST_TYPE_STRUCTURE))
-                	{
-                        	PyErr_SetString(PyExc_TypeError, "argument must be a GstStructure");
-				gst_caps_free(self->boxed);
-				return -1;
-			}
-			gst_caps_append_structure(self->boxed, pyg_boxed_get(item, GstStructure));
+	}
+	/* it's either one GstStructure or several whatevers */
+	self->boxed = gst_caps_new_empty();
+       	for (i = 0; i < len; i++)
+       	{
+               	item = PyTuple_GetItem(args, i);
+               	if (!pyg_boxed_check(item, GST_TYPE_STRUCTURE))
+               	{
+                       	PyErr_SetString(PyExc_TypeError, "argument must be a GstStructure");
+			gst_caps_free(self->boxed);
+			return -1;
 		}
+		gst_caps_append_structure(self->boxed, pyg_boxed_get(item, GstStructure));
 	}
 
-
+beach:
 	if (!self->boxed) {
 		PyErr_SetString(PyExc_RuntimeError, "could not create GstCaps object");
 		return -1;

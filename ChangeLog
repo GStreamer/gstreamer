@@ -1,5 +1,11 @@
 2004-08-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gst.override:
+	* testsuite/caps.py:
+	  one item list with structure is valid too
+
+2004-08-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst.defs:
 	* gst/gst.override:
 	* testsuite/caps.py:

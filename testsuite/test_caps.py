@@ -32,6 +32,16 @@ class CapsTest(unittest.TestCase):
 	assert isinstance(caps[0]['width'], int)
         assert caps[0]['width'] == 10
 
+    def testCapsConstructFromStructure(self):
+        struct = gst.structure_from_string('video/x-raw-yuv,width=10')
+        caps = gst.Caps(struct)
+	assert isinstance(caps, gst.Caps)
+        assert len(caps) == 1
+	assert isinstance(caps[0], gst.Structure)
+        assert caps[0].get_name() == 'video/x-raw-yuv'
+	assert isinstance(caps[0]['width'], int)
+        assert caps[0]['width'] == 10
+
     def testCapsConstructFromStructures(self):
         struct1 = gst.structure_from_string('video/x-raw-yuv,width=10')
         struct2 = gst.structure_from_string('video/x-raw-rgb,height=20.0')
