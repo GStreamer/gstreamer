@@ -56,6 +56,7 @@ enum {
   ARG_TRACK,
   ARG_BYTESPERREAD,
   ARG_OFFSET,
+  ARG_MAX_ERRORS,
 };
 
 static void			vcdsrc_class_init	(VCDSrcClass *klass);
@@ -117,6 +118,8 @@ vcdsrc_class_init (VCDSrcClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OFFSET,
     g_param_spec_int("offset","offset","offset",
                      G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MAX_ERRORS,
+    g_param_spec_int("max-errors","","", 0,G_MAXINT,16,G_PARAM_READWRITE));
 
   gobject_class->set_property = vcdsrc_set_property;
   gobject_class->get_property = vcdsrc_get_property;
@@ -139,6 +142,7 @@ vcdsrc_init (VCDSrc *vcdsrc)
   vcdsrc->curoffset = 0;
   vcdsrc->bytes_per_read = VCD_BYTES_PER_SECTOR;
   vcdsrc->seq = 0;
+  vcdsrc->max_errors = 16;
 }
 
 
@@ -174,6 +178,9 @@ vcdsrc_set_property (GObject *object, guint prop_id, const GValue *value, GParam
     case ARG_OFFSET:
       src->curoffset = g_value_get_int (value) / VCD_BYTES_PER_SECTOR;
       break;
+    case ARG_MAX_ERRORS:
+      src->max_errors = g_value_get_int (value);
+      break;
     default:
       break;
   }
@@ -201,6 +208,9 @@ vcdsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *
       break;
     case ARG_OFFSET:
       g_value_set_int (value, src->curoffset * VCD_BYTES_PER_SECTOR);
+      break;
+    case ARG_MAX_ERRORS:
+      g_value_set_int (value, src->max_errors);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -249,16 +259,18 @@ vcdsrc_get (GstPad *pad)
   /* msf->cdmsf_frame0); */
 
   if (ioctl(vcdsrc->fd,CDROMREADRAW,msf)) {
-    if (++error_count > 16)
+    if (++error_count > vcdsrc->max_errors)
       {
-	fprintf (stderr, "End of CD\n");
-	exit(1);
+	gst_element_set_eos (GST_ELEMENT (vcdsrc));
+	return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
       }
 
     fprintf (stderr, "%s while reading raw data from cdrom at %d:%d:%d\n",
 	     strerror (errno),
 	     msf->cdmsf_min0, msf->cdmsf_sec0, msf->cdmsf_frame0);
     vcdsrc->curoffset += 1;
+
+    /* Or we can return a zero-filled buffer.  Which is better? */
     goto read_sector;
   }
 

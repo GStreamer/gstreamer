@@ -80,6 +80,7 @@ struct _VCDSrc {
   gulong bytes_per_read;		/* bytes per read */
 
   gulong seq;				/* buffer sequence number */
+  int max_errors;
 };
 
 struct _VCDSrcClass {
