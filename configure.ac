@@ -2,7 +2,11 @@ AC_INIT
 AC_CANONICAL_TARGET([])
 
 dnl when going to/from release please set the nano (fourth number) right !
+<<<<<<< configure.ac
+AS_VERSION(gstreamer, GST_VERSION, 0, 3, 2, )
+=======
 AS_VERSION(gstreamer, GST_VERSION, 0, 3, 3, 1)
+>>>>>>> 1.138
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(GST, 0, 0, 0, yes)
 
@@ -153,12 +157,6 @@ main() { atomic_t t; atomic_set(&t,0); atomic_inc(&t); atomic_add(1,&t);return 0
     AC_MSG_WARN(Can't check properly for atomic reference counting.  Assuming OK.)
   ])
 fi
-
-dnl ==========================================================================
-dnl ============================= gst plugins ================================
-dnl ==========================================================================
-GST_PLUGIN_LDFLAGS='-module -avoid-version'
-AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
