@@ -137,6 +137,7 @@ main(int argc, char *argv[])
   } else {
     pipeline = (GstElement*) gst_parse_launchv ((const gchar**)argvn, &error);
   }
+  g_free (argvn);
 
   if (!pipeline) {
     if (error)

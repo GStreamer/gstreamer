@@ -3,7 +3,7 @@
 #include <string.h>
 
 static void 
-print_prop (GstPropsEntry *prop, gboolean showname, gchar *pfx) 
+print_prop (GstPropsEntry *prop, gboolean showname, const gchar *pfx) 
 {
   GstPropsType type;
 
@@ -93,7 +93,7 @@ print_prop (GstPropsEntry *prop, gboolean showname, gchar *pfx)
 }
 
 static void 
-print_props (GstProps *properties, gchar *pfx) 
+print_props (GstProps *properties, const gchar *pfx) 
 {
   GList *props;
   GstPropsEntry *prop;
@@ -104,6 +104,32 @@ print_props (GstProps *properties, gchar *pfx)
     props = g_list_next(props);
 
     print_prop(prop,TRUE,pfx);
+  }
+}
+
+static void 
+print_caps (const GstCaps *caps, const gchar *pfx) 
+{
+  while (caps) {
+    GstType *type;
+
+    g_print ("%s'%s': (%sfixed)\n", pfx, caps->name, (caps->fixed ? "" : "NOT "));
+
+    type = gst_type_find_by_id (caps->id);
+    if (type) 
+      g_print ("%s  MIME type: '%s':\n", pfx, type->mime);
+    else
+      g_print ("%s  MIME type: 'unknown/unknown':\n", pfx);
+
+    if (caps->properties) {
+      gchar *prefix = g_strdup_printf ("%s  ", pfx);
+
+      print_props(caps->properties, prefix);
+
+      g_free (prefix);
+    }
+
+    caps = caps->next;
   }
 }
 
@@ -306,8 +332,18 @@ print_element_properties (GstElement *element)
 	break;
       }
       default:
-        if (param->value_type == GST_TYPE_FILENAME)
-          g_print("Filename");
+        if (param->value_type == GST_TYPE_FILENAME) {
+          g_print("%-23.23s Filename", "");
+	}
+        if (param->value_type == GST_TYPE_CAPS) {
+          GstCaps *caps = g_value_peek_pointer (&value);
+
+	  if (!caps) 
+            g_print("%-23.23s Caps (NULL)", "");
+	  else {
+            print_caps (caps, "                           ");
+	  }
+	}
         else if (G_IS_PARAM_SPEC_ENUM (param)) {
           GEnumValue *values;
 	  guint j = 0;
@@ -386,7 +422,6 @@ print_element_info (GstElementFactory *factory)
   GstObjectClass *gstobject_class;
   GstElementClass *gstelement_class;
   GList *pads;
-  GstCaps *caps;
   GstPad *pad;
   GstRealPad *realpad;
   GstPadTemplate *padtemplate;
@@ -443,23 +478,7 @@ print_element_info (GstElementFactory *factory)
 
       if (padtemplate->caps) {
         g_print ("    Capabilities:\n");
-        caps = padtemplate->caps;
-        while (caps) {
- 	  GstType *type;
-
-          g_print ("      '%s':\n",caps->name);
-
-	  type = gst_type_find_by_id (caps->id);
-	  if (type) 
-            g_print ("        MIME type: '%s':\n", type->mime);
-	  else
-            g_print ("        MIME type: 'unknown/unknown':\n");
-
-	  if (caps->properties)
-            print_props(caps->properties, "        ");
-
-	  caps = caps->next;
-        }
+	print_caps (padtemplate->caps, "      ");
       }
 
       g_print ("\n");
@@ -610,23 +629,7 @@ print_element_info (GstElementFactory *factory)
 
       if (realpad->caps) {
         g_print ("    Capabilities:\n");
-        caps = realpad->caps;
-        while (caps) {
-	  GstType *type;
-
-          g_print ("      '%s':\n", caps->name);
-
-	  type = gst_type_find_by_id (caps->id);
-	  if (type) 
-            g_print ("        MIME type: '%s':\n", type->mime);
-	  else
-            g_print ("        MIME type: 'unknown/unknown':\n");
-
-	  if (caps->properties)
-            print_props (caps->properties, "        ");
-
-	  caps = caps->next;
-        }
+	print_caps (realpad->caps, "      ");
       }
     }
   } else
