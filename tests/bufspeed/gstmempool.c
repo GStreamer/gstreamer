@@ -123,7 +123,7 @@ gst_mem_pool_alloc (GstMemPool *mem_pool)
   g_return_val_if_fail (mem_pool != NULL, NULL);
 
 again:
-#ifdef USE_ASM
+#if defined(USE_ASM) && defined(HAVE_CPU_I386)
   __asm__ __volatile__ ("  testl %%eax, %%eax 		\n\t"
   			"  jz 20f 			\n"
 			"10:				\t"
@@ -178,7 +178,7 @@ gst_mem_pool_free (GstMemPool *mem_pool, gpointer mem)
 
   pool = GST_MEM_POOL_LINK (mem);
 
-#ifdef USE_ASM
+#if defined(USE_ASM) && defined(HAVE_CPU_I386)
   __asm__ __volatile__ ( "1:				\t"
 			"  movl %2, (%1) 		\n"
 			POOL_LOCK "cmpxchg %1, %0 	\n\t"
