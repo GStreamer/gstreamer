@@ -25,16 +25,17 @@
 
 #include "tunerchannel.h"
 
-enum {
+enum
+{
   /* FILL ME */
   SIGNAL_FREQUENCY_CHANGED,
   SIGNAL_SIGNAL_CHANGED,
   LAST_SIGNAL
 };
 
-static void gst_tuner_channel_class_init (GstTunerChannelClass *klass);
-static void gst_tuner_channel_init 	 (GstTunerChannel *channel);
-static void gst_tuner_channel_dispose    (GObject         *object);
+static void gst_tuner_channel_class_init (GstTunerChannelClass * klass);
+static void gst_tuner_channel_init (GstTunerChannel * channel);
+static void gst_tuner_channel_dispose (GObject * object);
 
 static GObjectClass *parent_class = NULL;
 static guint signals[LAST_SIGNAL] = { 0 };
@@ -60,40 +61,37 @@ gst_tuner_channel_get_type (void)
 
     gst_tuner_channel_type =
 	g_type_register_static (G_TYPE_OBJECT,
-				"GstTunerChannel",
-				&tuner_channel_info, 0);
+	"GstTunerChannel", &tuner_channel_info, 0);
   }
 
   return gst_tuner_channel_type;
 }
 
 static void
-gst_tuner_channel_class_init (GstTunerChannelClass *klass)
+gst_tuner_channel_class_init (GstTunerChannelClass * klass)
 {
   GObjectClass *object_klass = (GObjectClass *) klass;
 
   parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
   signals[SIGNAL_FREQUENCY_CHANGED] =
-    g_signal_new ("frequency-changed", G_TYPE_FROM_CLASS (klass),
-		  G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstTunerChannelClass,
-				   frequency_changed),
-                  NULL, NULL, g_cclosure_marshal_VOID__ULONG,
-                  G_TYPE_NONE, 1, G_TYPE_ULONG);
+      g_signal_new ("frequency-changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstTunerChannelClass,
+	  frequency_changed),
+      NULL, NULL, g_cclosure_marshal_VOID__ULONG, G_TYPE_NONE, 1, G_TYPE_ULONG);
   signals[SIGNAL_SIGNAL_CHANGED] =
-    g_signal_new ("signal-changed", G_TYPE_FROM_CLASS (klass),
-		  G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstTunerChannelClass,
-				   signal_changed),
-                  NULL, NULL, g_cclosure_marshal_VOID__INT,
-                  G_TYPE_NONE, 1, G_TYPE_INT);
+      g_signal_new ("signal-changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstTunerChannelClass,
+	  signal_changed),
+      NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
   object_klass->dispose = gst_tuner_channel_dispose;
 }
 
 static void
-gst_tuner_channel_init (GstTunerChannel *channel)
+gst_tuner_channel_init (GstTunerChannel * channel)
 {
   channel->label = NULL;
   channel->flags = 0;
@@ -102,7 +100,7 @@ gst_tuner_channel_init (GstTunerChannel *channel)
 }
 
 static void
-gst_tuner_channel_dispose (GObject *object)
+gst_tuner_channel_dispose (GObject * object)
 {
   GstTunerChannel *channel = GST_TUNER_CHANNEL (object);
 

@@ -35,52 +35,47 @@ static GstElementDetails rfc2250_enc_details = {
 #define CLASS(o)	GST_RFC2250_ENC_CLASS (G_OBJECT_GET_CLASS (o))
 
 /* GstRFC2250Enc signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   ARG_BIT_RATE,
   ARG_MPEG2,
   /* FILL ME */
 };
 
-static GstStaticPadTemplate sink_factory =
-GST_STATIC_PAD_TEMPLATE (
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("video/mpeg, "
-      "mpegversion = (int) [ 1, 2 ], "
-      "systemstream = (boolean) FALSE"
-  )
-);
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/mpeg, "
+	"mpegversion = (int) [ 1, 2 ], " "systemstream = (boolean) FALSE")
+    );
 
-static GstStaticPadTemplate src_factory =
-GST_STATIC_PAD_TEMPLATE (
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("video/mpeg, "
-      "mpegversion = (int) [ 1, 2 ], "
-      "systemstream = (boolean) FALSE"
-  )
-);
+static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/mpeg, "
+	"mpegversion = (int) [ 1, 2 ], " "systemstream = (boolean) FALSE")
+    );
 
-static void 	gst_rfc2250_enc_class_init	(GstRFC2250EncClass *klass);
-static void 	gst_rfc2250_enc_base_init	(GstRFC2250EncClass *klass);
-static void 	gst_rfc2250_enc_init		(GstRFC2250Enc *rfc2250_enc);
+static void gst_rfc2250_enc_class_init (GstRFC2250EncClass * klass);
+static void gst_rfc2250_enc_base_init (GstRFC2250EncClass * klass);
+static void gst_rfc2250_enc_init (GstRFC2250Enc * rfc2250_enc);
 static GstElementStateReturn
-		gst_rfc2250_enc_change_state	(GstElement *element);
+gst_rfc2250_enc_change_state (GstElement * element);
 
-static void 	gst_rfc2250_enc_loop 		(GstElement *element);
+static void gst_rfc2250_enc_loop (GstElement * element);
 
-static void 	gst_rfc2250_enc_get_property	(GObject *object, guint prop_id, 
-						 GValue *value, GParamSpec *pspec);
+static void gst_rfc2250_enc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static GstElementClass *parent_class = NULL;
+
 /*static guint gst_rfc2250_enc_signals[LAST_SIGNAL] = { 0 };*/
 
 GType
@@ -90,50 +85,52 @@ gst_rfc2250_enc_get_type (void)
 
   if (!rfc2250_enc_type) {
     static const GTypeInfo rfc2250_enc_info = {
-      sizeof(GstRFC2250EncClass),
-      (GBaseInitFunc)gst_rfc2250_enc_base_init,
+      sizeof (GstRFC2250EncClass),
+      (GBaseInitFunc) gst_rfc2250_enc_base_init,
       NULL,
-      (GClassInitFunc)gst_rfc2250_enc_class_init,
+      (GClassInitFunc) gst_rfc2250_enc_class_init,
       NULL,
       NULL,
-      sizeof(GstRFC2250Enc),
+      sizeof (GstRFC2250Enc),
       0,
-      (GInstanceInitFunc)gst_rfc2250_enc_init,
+      (GInstanceInitFunc) gst_rfc2250_enc_init,
     };
-    rfc2250_enc_type = g_type_register_static(GST_TYPE_ELEMENT, "GstRFC2250Enc", &rfc2250_enc_info, 0);
+    rfc2250_enc_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstRFC2250Enc",
+	&rfc2250_enc_info, 0);
   }
   return rfc2250_enc_type;
 }
 
 static void
-gst_rfc2250_enc_base_init (GstRFC2250EncClass *klass)
+gst_rfc2250_enc_base_init (GstRFC2250EncClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-		gst_static_pad_template_get (&src_factory));
+      gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
-		gst_static_pad_template_get (&sink_factory));
+      gst_static_pad_template_get (&sink_factory));
   gst_element_class_set_details (element_class, &rfc2250_enc_details);
 }
 
 static void
-gst_rfc2250_enc_class_init (GstRFC2250EncClass *klass) 
+gst_rfc2250_enc_class_init (GstRFC2250EncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BIT_RATE,
-    g_param_spec_uint("bit_rate","bit_rate","bit_rate",
-                      0, G_MAXUINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
+      g_param_spec_uint ("bit_rate", "bit_rate", "bit_rate",
+	  0, G_MAXUINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MPEG2,
-    g_param_spec_boolean ("mpeg2", "mpeg2", "is this an mpeg2 stream",
-                          FALSE, G_PARAM_READABLE));
+      g_param_spec_boolean ("mpeg2", "mpeg2", "is this an mpeg2 stream",
+	  FALSE, G_PARAM_READABLE));
 
   gobject_class->get_property = gst_rfc2250_enc_get_property;
 
@@ -141,15 +138,18 @@ gst_rfc2250_enc_class_init (GstRFC2250EncClass *klass)
 }
 
 static void
-gst_rfc2250_enc_init (GstRFC2250Enc *rfc2250_enc)
+gst_rfc2250_enc_init (GstRFC2250Enc * rfc2250_enc)
 {
-  rfc2250_enc->sinkpad = gst_pad_new_from_template(
-		  gst_static_pad_template_get (&sink_factory), "sink");
-  gst_element_add_pad(GST_ELEMENT(rfc2250_enc),rfc2250_enc->sinkpad);
-  gst_element_set_loop_function (GST_ELEMENT (rfc2250_enc), gst_rfc2250_enc_loop);
-  rfc2250_enc->srcpad = gst_pad_new_from_template(
-		  gst_static_pad_template_get (&src_factory), "src");
-  gst_element_add_pad(GST_ELEMENT(rfc2250_enc),rfc2250_enc->srcpad);
+  rfc2250_enc->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&sink_factory),
+      "sink");
+  gst_element_add_pad (GST_ELEMENT (rfc2250_enc), rfc2250_enc->sinkpad);
+  gst_element_set_loop_function (GST_ELEMENT (rfc2250_enc),
+      gst_rfc2250_enc_loop);
+  rfc2250_enc->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&src_factory),
+      "src");
+  gst_element_add_pad (GST_ELEMENT (rfc2250_enc), rfc2250_enc->srcpad);
 
   /* initialize parser state */
   rfc2250_enc->packetize = NULL;
@@ -164,7 +164,7 @@ gst_rfc2250_enc_init (GstRFC2250Enc *rfc2250_enc)
 }
 
 static void
-gst_rfc2250_enc_new_buffer (GstRFC2250Enc *enc)
+gst_rfc2250_enc_new_buffer (GstRFC2250Enc * enc)
 {
   if (enc->packet) {
     gst_pad_push (enc->srcpad, GST_DATA (enc->packet));
@@ -175,7 +175,7 @@ gst_rfc2250_enc_new_buffer (GstRFC2250Enc *enc)
 }
 
 static void
-gst_rfc2250_enc_add_slice (GstRFC2250Enc *enc, GstBuffer *buffer)
+gst_rfc2250_enc_add_slice (GstRFC2250Enc * enc, GstBuffer * buffer)
 {
   gint slice_length = GST_BUFFER_SIZE (buffer);
 
@@ -209,14 +209,17 @@ gst_rfc2250_enc_add_slice (GstRFC2250Enc *enc, GstBuffer *buffer)
       while (slice_length > 0) {
 	GstBuffer *outbuf;
 	GstBuffer *newbuf;
-	outbuf = gst_buffer_create_sub (buffer, offset, MIN (enc->remaining, slice_length));
-        newbuf = gst_buffer_merge (enc->packet, outbuf);
+
+	outbuf =
+	    gst_buffer_create_sub (buffer, offset, MIN (enc->remaining,
+		slice_length));
+	newbuf = gst_buffer_merge (enc->packet, outbuf);
 	slice_length -= GST_BUFFER_SIZE (outbuf);
 	offset += GST_BUFFER_SIZE (outbuf);
 	gst_buffer_unref (outbuf);
 	gst_buffer_unref (newbuf);
 	enc->packet = newbuf;
-        gst_rfc2250_enc_new_buffer (enc);
+	gst_rfc2250_enc_new_buffer (enc);
       }
       gst_buffer_unref (buffer);
     }
@@ -224,7 +227,7 @@ gst_rfc2250_enc_add_slice (GstRFC2250Enc *enc, GstBuffer *buffer)
 }
 
 static void
-gst_rfc2250_enc_loop (GstElement *element)
+gst_rfc2250_enc_loop (GstElement * element)
 {
   GstRFC2250Enc *enc = GST_RFC2250_ENC (element);
   GstData *data;
@@ -235,7 +238,7 @@ gst_rfc2250_enc_loop (GstElement *element)
 
   id = GST_MPEG_PACKETIZE_ID (enc->packetize);
   mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (enc->packetize);
-    
+
   if (GST_IS_BUFFER (data)) {
     GstBuffer *buffer = GST_BUFFER (data);
 
@@ -264,8 +267,8 @@ gst_rfc2250_enc_loop (GstElement *element)
       case SEQUENCE_END_START_CODE:
 	break;
       default:
-        /* do this here because of the long range */
-        if (id >= SLICE_MIN_START_CODE && id <= SLICE_MAX_START_CODE) {
+	/* do this here because of the long range */
+	if (id >= SLICE_MIN_START_CODE && id <= SLICE_MAX_START_CODE) {
 	  enc->flags |= ENC_HAVE_DATA;
 	  gst_rfc2250_enc_add_slice (enc, buffer);
 	  buffer = NULL;
@@ -279,8 +282,7 @@ gst_rfc2250_enc_loop (GstElement *element)
       enc->remaining -= GST_BUFFER_SIZE (buffer);
       gst_buffer_unref (buffer);
     }
-  }
-  else {
+  } else {
     if (enc->packet) {
       gst_pad_push (enc->srcpad, GST_DATA (enc->packet));
       enc->packet = NULL;
@@ -292,20 +294,22 @@ gst_rfc2250_enc_loop (GstElement *element)
 }
 
 static GstElementStateReturn
-gst_rfc2250_enc_change_state (GstElement *element) 
+gst_rfc2250_enc_change_state (GstElement * element)
 {
   GstRFC2250Enc *rfc2250_enc = GST_RFC2250_ENC (element);
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       if (!rfc2250_enc->packetize) {
-        rfc2250_enc->packetize = gst_mpeg_packetize_new (rfc2250_enc->sinkpad, GST_MPEG_PACKETIZE_VIDEO);
+	rfc2250_enc->packetize =
+	    gst_mpeg_packetize_new (rfc2250_enc->sinkpad,
+	    GST_MPEG_PACKETIZE_VIDEO);
       }
       break;
     case GST_STATE_READY_TO_NULL:
       if (rfc2250_enc->packetize) {
-        gst_mpeg_packetize_destroy (rfc2250_enc->packetize);
-        rfc2250_enc->packetize = NULL;
+	gst_mpeg_packetize_destroy (rfc2250_enc->packetize);
+	rfc2250_enc->packetize = NULL;
       }
       break;
     default:
@@ -318,24 +322,26 @@ gst_rfc2250_enc_change_state (GstElement *element)
 }
 
 static void
-gst_rfc2250_enc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_rfc2250_enc_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstRFC2250Enc *rfc2250_enc;
 
   /* it's not null if we got it, but it might not be ours */
-  rfc2250_enc = GST_RFC2250_ENC(object);
+  rfc2250_enc = GST_RFC2250_ENC (object);
 
   switch (prop_id) {
-    case ARG_BIT_RATE: 
-      g_value_set_uint (value, rfc2250_enc->bit_rate); 
+    case ARG_BIT_RATE:
+      g_value_set_uint (value, rfc2250_enc->bit_rate);
       break;
     case ARG_MPEG2:
       if (rfc2250_enc->packetize)
-        g_value_set_boolean (value, GST_MPEG_PACKETIZE_IS_MPEG2 (rfc2250_enc->packetize));
+	g_value_set_boolean (value,
+	    GST_MPEG_PACKETIZE_IS_MPEG2 (rfc2250_enc->packetize));
       else
-        g_value_set_boolean (value, FALSE);
+	g_value_set_boolean (value, FALSE);
       break;
-    default: 
+    default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
@@ -343,8 +349,8 @@ gst_rfc2250_enc_get_property (GObject *object, guint prop_id, GValue *value, GPa
 
 
 gboolean
-gst_rfc2250_enc_plugin_init (GstPlugin *plugin)
+gst_rfc2250_enc_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rfc2250enc",
-			       GST_RANK_NONE, GST_TYPE_RFC2250_ENC);
+      GST_RANK_NONE, GST_TYPE_RFC2250_ENC);
 }

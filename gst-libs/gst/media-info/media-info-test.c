@@ -5,7 +5,7 @@
 #include "media-info.h"
 
 static void
-print_tag (const GstTagList *list, const gchar *tag, gpointer unused)
+print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
 {
   gint i, count;
 
@@ -17,8 +17,8 @@ print_tag (const GstTagList *list, const gchar *tag, gpointer unused)
     if (gst_tag_get_type (tag) == G_TYPE_STRING) {
       g_assert (gst_tag_list_get_string_index (list, tag, i, &str));
     } else {
-      str = g_strdup_value_contents (
-              gst_tag_list_get_value_index (list, tag, i));
+      str =
+	  g_strdup_value_contents (gst_tag_list_get_value_index (list, tag, i));
     }
 
     if (i == 0) {
@@ -32,7 +32,7 @@ print_tag (const GstTagList *list, const gchar *tag, gpointer unused)
 }
 
 static void
-info_print (GstMediaInfoStream *stream)
+info_print (GstMediaInfoStream * stream)
 {
   int i;
   GList *p;
@@ -40,17 +40,15 @@ info_print (GstMediaInfoStream *stream)
 
   g_print ("- mime type: %s\n", stream->mime);
   g_print ("- length: %.3f seconds\n",
-	   (gdouble) stream->length_time / GST_SECOND);
+      (gdouble) stream->length_time / GST_SECOND);
   g_print ("- bitrate: %.3f kbps\n", stream->bitrate / 1000.0);
   g_print ("- number of tracks: %ld\n", stream->length_tracks);
   p = stream->tracks;
-  if (p == NULL)
-  {
+  if (p == NULL) {
     g_print ("- no track information, probably an error\n");
     return;
   }
-  for (i = 0; i < stream->length_tracks; ++i)
-  {
+  for (i = 0; i < stream->length_tracks; ++i) {
     g_print ("- track %d\n", i);
     track = (GstMediaInfoTrack *) p->data;
     g_print ("  - metadata:\n");
@@ -80,16 +78,14 @@ main (int argc, char *argv[])
   gst_init (&argc, &argv);
 
   info = gst_media_info_new (&error);
-  if (error != NULL)
-  {
+  if (error != NULL) {
     g_print ("Error creating media-info object: %s\n", error->message);
     g_error_free (error);
     return -1;
   }
 
   g_assert (G_IS_OBJECT (info));
-  if (!gst_media_info_set_source (info, "gnomevfssrc", &error))
-  {
+  if (!gst_media_info_set_source (info, "gnomevfssrc", &error)) {
     g_print ("Could not set gnomevfssrc as a source\n");
     g_print ("reason: %s\n", error->message);
     g_error_free (error);
@@ -97,19 +93,18 @@ main (int argc, char *argv[])
   }
 
   g_print ("stream: %p, &stream: %p\n", stream, &stream);
-  for (i = 1; i < argc; ++i)
-  {
+  for (i = 1; i < argc; ++i) {
 
     /*
-    stream = gst_media_info_read (info, argv[i], GST_MEDIA_INFO_ALL);
-    */
+       stream = gst_media_info_read (info, argv[i], GST_MEDIA_INFO_ALL);
+     */
     gst_media_info_read_with_idler (info, argv[i], GST_MEDIA_INFO_ALL, &error);
     while (gst_media_info_read_idler (info, &stream, &error) && stream == NULL)
-      /* keep idling */ g_print ("+");
+      /* keep idling */
+      g_print ("+");
     g_print ("\nFILE: %s\n", argv[i]);
     g_print ("stream: %p, &stream: %p\n", stream, &stream);
-    if (error)
-    {
+    if (error) {
       g_print ("Error reading media info: %s\n", error->message);
       g_error_free (error);
     }

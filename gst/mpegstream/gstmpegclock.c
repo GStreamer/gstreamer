@@ -26,19 +26,20 @@
 
 #include "gstmpegclock.h"
 
-static void 		gst_mpeg_clock_class_init 	(GstMPEGClockClass *klass);
-static void 		gst_mpeg_clock_init 		(GstMPEGClock *clock);
+static void gst_mpeg_clock_class_init (GstMPEGClockClass * klass);
+static void gst_mpeg_clock_init (GstMPEGClock * clock);
 
-static GstClockTime	gst_mpeg_clock_get_internal_time 		(GstClock *clock);
+static GstClockTime gst_mpeg_clock_get_internal_time (GstClock * clock);
 
 static GstSystemClockClass *parent_class = NULL;
+
 /* static guint gst_mpeg_clock_signals[LAST_SIGNAL] = { 0 }; */
-  
+
 GType
 gst_mpeg_clock_get_type (void)
-{ 
+{
   static GType clock_type = 0;
-	    
+
   if (!clock_type) {
     static const GTypeInfo clock_info = {
       sizeof (GstMPEGClockClass),
@@ -53,38 +54,40 @@ gst_mpeg_clock_get_type (void)
       NULL
     };
     clock_type = g_type_register_static (GST_TYPE_SYSTEM_CLOCK, "GstMPEGClock",
-                                         &clock_info, 0);
+	&clock_info, 0);
   }
   return clock_type;
 }
 
 
 static void
-gst_mpeg_clock_class_init (GstMPEGClockClass *klass)
+gst_mpeg_clock_class_init (GstMPEGClockClass * klass)
 {
   GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
   GstClockClass *gstclock_class;
 
-  gobject_class = (GObjectClass*) klass;
-  gstobject_class = (GstObjectClass*) klass;
-  gstclock_class = (GstClockClass*) klass;
+  gobject_class = (GObjectClass *) klass;
+  gstobject_class = (GstObjectClass *) klass;
+  gstclock_class = (GstClockClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_SYSTEM_CLOCK);
 
-  gstclock_class->get_internal_time =	gst_mpeg_clock_get_internal_time;
+  gstclock_class->get_internal_time = gst_mpeg_clock_get_internal_time;
 }
 
 static void
-gst_mpeg_clock_init (GstMPEGClock *clock)
+gst_mpeg_clock_init (GstMPEGClock * clock)
 {
   gst_object_set_name (GST_OBJECT (clock), "GstMPEGClock");
 }
 
-GstClock*
-gst_mpeg_clock_new (gchar *name, GstMPEGClockGetTimeFunc func, gpointer user_data)
+GstClock *
+gst_mpeg_clock_new (gchar * name, GstMPEGClockGetTimeFunc func,
+    gpointer user_data)
 {
-  GstMPEGClock *mpeg_clock = GST_MPEG_CLOCK (g_object_new (GST_TYPE_MPEG_CLOCK, NULL));
+  GstMPEGClock *mpeg_clock =
+      GST_MPEG_CLOCK (g_object_new (GST_TYPE_MPEG_CLOCK, NULL));
 
   mpeg_clock->func = func;
   mpeg_clock->user_data = user_data;
@@ -93,10 +96,9 @@ gst_mpeg_clock_new (gchar *name, GstMPEGClockGetTimeFunc func, gpointer user_dat
 }
 
 static GstClockTime
-gst_mpeg_clock_get_internal_time (GstClock *clock)
+gst_mpeg_clock_get_internal_time (GstClock * clock)
 {
   GstMPEGClock *mpeg_clock = GST_MPEG_CLOCK (clock);
 
   return mpeg_clock->func (clock, mpeg_clock->user_data);
 }
-

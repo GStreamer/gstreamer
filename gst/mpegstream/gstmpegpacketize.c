@@ -24,16 +24,16 @@
 /*#define GST_DEBUG_ENABLED */
 #include <gstmpegpacketize.h>
 
-GstMPEGPacketize*
-gst_mpeg_packetize_new (GstPad *pad, GstMPEGPacketizeType type)
+GstMPEGPacketize *
+gst_mpeg_packetize_new (GstPad * pad, GstMPEGPacketizeType type)
 {
   GstMPEGPacketize *new;
 
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-  
+
   new = g_malloc (sizeof (GstMPEGPacketize));
-  
+
   gst_object_ref (GST_OBJECT (pad));
   new->resync = TRUE;
   new->id = 0;
@@ -46,7 +46,7 @@ gst_mpeg_packetize_new (GstPad *pad, GstMPEGPacketizeType type)
 }
 
 void
-gst_mpeg_packetize_destroy (GstMPEGPacketize *packetize)
+gst_mpeg_packetize_destroy (GstMPEGPacketize * packetize)
 {
   g_return_if_fail (packetize != NULL);
 
@@ -56,8 +56,8 @@ gst_mpeg_packetize_destroy (GstMPEGPacketize *packetize)
   g_free (packetize);
 }
 
-static GstData*
-parse_packhead (GstMPEGPacketize *packetize)
+static GstData *
+parse_packhead (GstMPEGPacketize * packetize)
 {
   gint length = 8 + 4;
   guint8 *buf;
@@ -82,8 +82,7 @@ parse_packhead (GstMPEGPacketize *packetize)
     got_bytes = gst_bytestream_peek_bytes (packetize->bs, &buf, length);
     if (got_bytes < length)
       return NULL;
-  }
-  else {
+  } else {
     GST_DEBUG ("packetize::parse_packhead setting mpeg1");
     packetize->MPEG2 = FALSE;
   }
@@ -95,8 +94,8 @@ parse_packhead (GstMPEGPacketize *packetize)
   return GST_DATA (outbuf);
 }
 
-static GstData*
-parse_end (GstMPEGPacketize *packetize)
+static GstData *
+parse_end (GstMPEGPacketize * packetize)
 {
   guint32 got_bytes;
   GstBuffer *outbuf;
@@ -108,8 +107,8 @@ parse_end (GstMPEGPacketize *packetize)
   return GST_DATA (outbuf);
 }
 
-static inline GstData*
-parse_generic (GstMPEGPacketize *packetize)
+static inline GstData *
+parse_generic (GstMPEGPacketize * packetize)
 {
   GstByteStream *bs = packetize->bs;
   guchar *buf;
@@ -119,8 +118,8 @@ parse_generic (GstMPEGPacketize *packetize)
 
   GST_DEBUG ("packetize: in parse_generic");
 
-  got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&buf, length);
-  if (got_bytes < 6) 
+  got_bytes = gst_bytestream_peek_bytes (bs, (guint8 **) & buf, length);
+  if (got_bytes < 6)
     return NULL;
 
   buf += 4;
@@ -129,14 +128,14 @@ parse_generic (GstMPEGPacketize *packetize)
   GST_DEBUG ("packetize: header_length %d", length);
 
   got_bytes = gst_bytestream_read (packetize->bs, &outbuf, length);
-  if (got_bytes < length) 
+  if (got_bytes < length)
     return NULL;
 
   return GST_DATA (outbuf);
 }
 
-static inline GstData*
-parse_chunk (GstMPEGPacketize *packetize)
+static inline GstData *
+parse_chunk (GstMPEGPacketize * packetize)
 {
   GstByteStream *bs = packetize->bs;
   guchar *buf;
@@ -145,30 +144,31 @@ parse_chunk (GstMPEGPacketize *packetize)
   gint chunksize;
   GstBuffer *outbuf = NULL;
 
-  chunksize = gst_bytestream_peek_bytes (bs, (guint8**)&buf, 4096);
+  chunksize = gst_bytestream_peek_bytes (bs, (guint8 **) & buf, 4096);
   if (chunksize == 0)
     return NULL;
 
   offset = 4;
 
-  code = GUINT32_FROM_BE (*((guint32 *)(buf+offset)));
+  code = GUINT32_FROM_BE (*((guint32 *) (buf + offset)));
 
   GST_DEBUG ("code = %08x", code);
 
   while ((code & 0xffffff00) != 0x100L) {
     code = (code << 8) | buf[offset++];
-    
+
     GST_DEBUG ("  code = %08x", code);
 
     if (offset == chunksize) {
-      chunksize = gst_bytestream_peek_bytes (bs, (guint8**)&buf, offset + 4096);
+      chunksize =
+	  gst_bytestream_peek_bytes (bs, (guint8 **) & buf, offset + 4096);
       if (chunksize == 0)
 	return NULL;
       chunksize += offset;
     }
   }
   if (offset > 4) {
-    chunksize = gst_bytestream_read (bs, &outbuf, offset-4);
+    chunksize = gst_bytestream_read (bs, &outbuf, offset - 4);
     if (chunksize == 0)
       return NULL;
   }
@@ -178,7 +178,7 @@ parse_chunk (GstMPEGPacketize *packetize)
 
 /* FIXME mmx-ify me */
 static inline gboolean
-find_start_code (GstMPEGPacketize *packetize)
+find_start_code (GstMPEGPacketize * packetize)
 {
   GstByteStream *bs = packetize->bs;
   guchar *buf;
@@ -186,25 +186,25 @@ find_start_code (GstMPEGPacketize *packetize)
   guint32 code;
   gint chunksize;
 
-  chunksize = gst_bytestream_peek_bytes (bs, (guint8**)&buf, 4096);
+  chunksize = gst_bytestream_peek_bytes (bs, (guint8 **) & buf, 4096);
   if (chunksize < 5)
     return FALSE;
 
   offset = 4;
 
-  code = GUINT32_FROM_BE (*((guint32 *)(buf)));
+  code = GUINT32_FROM_BE (*((guint32 *) (buf)));
 
   GST_DEBUG ("code = %08x %p %08x", code, buf, chunksize);
 
   while ((code & 0xffffff00) != 0x100L) {
     code = (code << 8) | buf[offset++];
-    
+
     GST_DEBUG ("  code = %08x %p %08x", code, buf, chunksize);
 
     if (offset == chunksize) {
       gst_bytestream_flush_fast (bs, offset);
 
-      chunksize = gst_bytestream_peek_bytes (bs, (guint8**)&buf, 4096);
+      chunksize = gst_bytestream_peek_bytes (bs, (guint8 **) & buf, 4096);
       if (chunksize == 0)
 	return FALSE;
 
@@ -218,8 +218,8 @@ find_start_code (GstMPEGPacketize *packetize)
   return TRUE;
 }
 
-GstData*
-gst_mpeg_packetize_read (GstMPEGPacketize *packetize)
+GstData *
+gst_mpeg_packetize_read (GstMPEGPacketize * packetize)
 {
   gboolean got_event = FALSE;
   GstData *outbuf = NULL;
@@ -233,20 +233,20 @@ gst_mpeg_packetize_read (GstMPEGPacketize *packetize)
       GST_DEBUG ("packetize: have chunk 0x%02X", packetize->id);
       if (packetize->type == GST_MPEG_PACKETIZE_SYSTEM) {
 	if (packetize->resync) {
-          if (packetize->id != PACK_START_CODE) {
-            gst_bytestream_flush_fast (packetize->bs, 4);
+	  if (packetize->id != PACK_START_CODE) {
+	    gst_bytestream_flush_fast (packetize->bs, 4);
 	    continue;
 	  }
 
 	  packetize->resync = FALSE;
 	}
-        switch (packetize->id) {
-          case PACK_START_CODE:
-    	    outbuf = parse_packhead (packetize);
+	switch (packetize->id) {
+	  case PACK_START_CODE:
+	    outbuf = parse_packhead (packetize);
 	    if (!outbuf)
 	      got_event = TRUE;
 	    break;
-          case SYS_HEADER_START_CODE:
+	  case SYS_HEADER_START_CODE:
 	    outbuf = parse_generic (packetize);
 	    if (!outbuf)
 	      got_event = TRUE;
@@ -256,22 +256,21 @@ gst_mpeg_packetize_read (GstMPEGPacketize *packetize)
 	    if (!outbuf)
 	      got_event = TRUE;
 	    break;
-          default:
-	    if (packetize->MPEG2 && ((packetize->id < 0xBD) || (packetize->id > 0xFE))) {
-              gst_bytestream_flush (packetize->bs, 4);
-	      g_warning ("packetize: ******** unknown id 0x%02X",packetize->id);
-	    }
-	    else {
+	  default:
+	    if (packetize->MPEG2 && ((packetize->id < 0xBD)
+		    || (packetize->id > 0xFE))) {
+	      gst_bytestream_flush (packetize->bs, 4);
+	      g_warning ("packetize: ******** unknown id 0x%02X",
+		  packetize->id);
+	    } else {
 	      outbuf = parse_generic (packetize);
 	      if (!outbuf)
-	        got_event = TRUE;
+		got_event = TRUE;
 	    }
-        }
-      }
-      else if (packetize->type == GST_MPEG_PACKETIZE_VIDEO) {
+	}
+      } else if (packetize->type == GST_MPEG_PACKETIZE_VIDEO) {
 	outbuf = parse_chunk (packetize);
-      }
-      else {
+      } else {
 	g_assert_not_reached ();
       }
     }
@@ -282,11 +281,11 @@ gst_mpeg_packetize_read (GstMPEGPacketize *packetize)
       gint etype;
 
       gst_bytestream_get_status (packetize->bs, &remaining, &event);
-      etype = event? GST_EVENT_TYPE (event) : GST_EVENT_EOS;
+      etype = event ? GST_EVENT_TYPE (event) : GST_EVENT_EOS;
 
       switch (etype) {
-        case GST_EVENT_DISCONTINUOUS:
-          GST_DEBUG ("packetize: discont\n");
+	case GST_EVENT_DISCONTINUOUS:
+	  GST_DEBUG ("packetize: discont\n");
 	  gst_bytestream_flush_fast (packetize->bs, remaining);
 	  break;
       }

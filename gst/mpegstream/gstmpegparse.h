@@ -26,8 +26,9 @@
 #include "gstmpegpacketize.h"
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_MPEG_PARSE \
@@ -49,71 +50,70 @@ extern "C" {
 #define MPEGTIME_TO_GSTTIME(time) (((time) * (GST_MSECOND/10)) / CLOCK_BASE)
 #define GSTTIME_TO_MPEGTIME(time) (((time) * CLOCK_BASE) / (GST_MSECOND/10))
 
-typedef struct _GstMPEGParse GstMPEGParse;
-typedef struct _GstMPEGParseClass GstMPEGParseClass;
+  typedef struct _GstMPEGParse GstMPEGParse;
+  typedef struct _GstMPEGParseClass GstMPEGParseClass;
 
-struct _GstMPEGParse {
-  GstElement element;
+  struct _GstMPEGParse
+  {
+    GstElement element;
 
-  GstPad 	*sinkpad, *srcpad;
+    GstPad *sinkpad, *srcpad;
 
-  GstMPEGPacketize *packetize;
+    GstMPEGPacketize *packetize;
 
-  /* pack header values */
-  guint32	 mux_rate;
-  guint64	 current_scr;
-  guint64	 next_scr;
-  guint64	 bytes_since_scr;
+    /* pack header values */
+    guint32 mux_rate;
+    guint64 current_scr;
+    guint64 next_scr;
+    guint64 bytes_since_scr;
 
-  gint64	 adjust;
+    gint64 adjust;
 
-  gboolean	 discont_pending;
-  gboolean	 scr_pending;
-  gint		 max_discont;
+    gboolean discont_pending;
+    gboolean scr_pending;
+    gint max_discont;
 
-  GstClock 	*clock;
-  gboolean	 sync;
-  GstClockID	 id;
+    GstClock *clock;
+    gboolean sync;
+    GstClockID id;
 
-  GstIndex	*index;
-  gint		 index_id;
-};
+    GstIndex *index;
+    gint index_id;
+  };
 
-struct _GstMPEGParseClass {
-  GstElementClass parent_class;
+  struct _GstMPEGParseClass
+  {
+    GstElementClass parent_class;
 
-  /* process packet types */
-  gboolean 	(*parse_packhead)	(GstMPEGParse *parse, GstBuffer *buffer);
-  gboolean 	(*parse_syshead)	(GstMPEGParse *parse, GstBuffer *buffer);
-  gboolean 	(*parse_packet)		(GstMPEGParse *parse, GstBuffer *buffer);
-  gboolean 	(*parse_pes)		(GstMPEGParse *parse, GstBuffer *buffer);
+    /* process packet types */
+      gboolean (*parse_packhead) (GstMPEGParse * parse, GstBuffer * buffer);
+      gboolean (*parse_syshead) (GstMPEGParse * parse, GstBuffer * buffer);
+      gboolean (*parse_packet) (GstMPEGParse * parse, GstBuffer * buffer);
+      gboolean (*parse_pes) (GstMPEGParse * parse, GstBuffer * buffer);
 
-  /* optional method to send out the data */
-  void	 	(*send_data)		(GstMPEGParse *parse, GstData *data, GstClockTime time);
-  void	 	(*handle_discont)	(GstMPEGParse *parse);
-};
+    /* optional method to send out the data */
+    void (*send_data) (GstMPEGParse * parse, GstData * data, GstClockTime time);
+    void (*handle_discont) (GstMPEGParse * parse);
+  };
 
-GType gst_mpeg_parse_get_type(void);
+  GType gst_mpeg_parse_get_type (void);
 
-gboolean 	gst_mpeg_parse_plugin_init 		(GstPlugin *plugin);
+  gboolean gst_mpeg_parse_plugin_init (GstPlugin * plugin);
 
-const GstFormat*
-		gst_mpeg_parse_get_src_formats 		(GstPad *pad);
-	
-gboolean 	gst_mpeg_parse_convert_src 		(GstPad *pad, GstFormat src_format, gint64 src_value,
-		            				 GstFormat *dest_format, gint64 *dest_value);
-const GstEventMask*
-		gst_mpeg_parse_get_src_event_masks 	(GstPad *pad);
-gboolean 	gst_mpeg_parse_handle_src_event 	(GstPad *pad, GstEvent *event);
+  const GstFormat *gst_mpeg_parse_get_src_formats (GstPad * pad);
 
-const GstQueryType*
-		gst_mpeg_parse_get_src_query_types 	(GstPad *pad);
-gboolean 	gst_mpeg_parse_handle_src_query		(GstPad *pad, GstQueryType type,
-		                         		 GstFormat *format, gint64 *value);
+  gboolean gst_mpeg_parse_convert_src (GstPad * pad, GstFormat src_format,
+      gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
+  const GstEventMask *gst_mpeg_parse_get_src_event_masks (GstPad * pad);
+  gboolean gst_mpeg_parse_handle_src_event (GstPad * pad, GstEvent * event);
+
+  const GstQueryType *gst_mpeg_parse_get_src_query_types (GstPad * pad);
+  gboolean gst_mpeg_parse_handle_src_query (GstPad * pad, GstQueryType type,
+      GstFormat * format, gint64 * value);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __MPEG_PARSE_H__ */
+#endif				/* __MPEG_PARSE_H__ */

@@ -11,14 +11,15 @@
 #include "gstmpeg2dec.h"
 
 
-void new_frame (char *buf, void *data, uint64_t timestamp)
+void
+new_frame (char *buf, void *data, uint64_t timestamp)
 {
-  g_print(".");
+  g_print (".");
 }
 
 
-int 
-main (int argc, char *argv[]) 
+int
+main (int argc, char *argv[])
 {
   int fd, count = 20000;
   mpeg2dec_t *decoder;
@@ -30,7 +31,7 @@ main (int argc, char *argv[])
   mpeg2_init (decoder, new_frame, NULL);
 
   while (read (fd, buffer, 2048) && count--) {
-    mpeg2_decode_data(decoder, buffer, buffer + 2048);
+    mpeg2_decode_data (decoder, buffer, buffer + 2048);
   }
-  g_print("\n");
+  g_print ("\n");
 }

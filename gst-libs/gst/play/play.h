@@ -16,7 +16,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
- 
+
 #ifndef __GST_PLAY_H__
 #define __GST_PLAY_H__
 
@@ -46,51 +46,43 @@ typedef enum
 typedef struct _GstPlay GstPlay;
 typedef struct _GstPlayClass GstPlayClass;
 typedef struct _GstPlayPrivate GstPlayPrivate;
-  
+
 struct _GstPlay
 {
   GstPipeline pipeline;
-  
+
   GstPlayPrivate *priv;
-  
+
   gpointer _gst_reserved[GST_PADDING];
 };
-  
+
 struct _GstPlayClass
 {
   GstPipelineClass parent_class;
-  
-  void (*time_tick)       (GstPlay *play, gint64 time_nanos);
-  void (*stream_length)   (GstPlay *play, gint64 length_nanos);
-  void (*have_video_size) (GstPlay *play, gint width, gint height);
-  
+
+  void (*time_tick) (GstPlay * play, gint64 time_nanos);
+  void (*stream_length) (GstPlay * play, gint64 length_nanos);
+  void (*have_video_size) (GstPlay * play, gint width, gint height);
+
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType                 gst_play_get_type              (void);
-GstPlay *             gst_play_new                   (GError **error);
+GType gst_play_get_type (void);
+GstPlay *gst_play_new (GError ** error);
 
-gboolean              gst_play_set_data_src          (GstPlay *play,
-                                                      GstElement *data_src);
-gboolean              gst_play_set_video_sink        (GstPlay *play,
-                                                      GstElement *video_sink);
-gboolean              gst_play_set_audio_sink        (GstPlay *play,
-                                                      GstElement *audio_sink);
+gboolean gst_play_set_data_src (GstPlay * play, GstElement * data_src);
+gboolean gst_play_set_video_sink (GstPlay * play, GstElement * video_sink);
+gboolean gst_play_set_audio_sink (GstPlay * play, GstElement * audio_sink);
 
-gboolean              gst_play_set_visualization     (GstPlay *play,
-                                                      GstElement *element);
-gboolean              gst_play_connect_visualization (GstPlay *play,
-                                                      gboolean connect);
+gboolean gst_play_set_visualization (GstPlay * play, GstElement * element);
+gboolean gst_play_connect_visualization (GstPlay * play, gboolean connect);
 
-gboolean              gst_play_set_location          (GstPlay *play,
-                                                      const char *location);
-char *                gst_play_get_location          (GstPlay *play);
+gboolean gst_play_set_location (GstPlay * play, const char *location);
+char *gst_play_get_location (GstPlay * play);
 
-gboolean              gst_play_seek_to_time          (GstPlay *play,
-                                                      gint64 time_nanos);
+gboolean gst_play_seek_to_time (GstPlay * play, gint64 time_nanos);
 
-GstElement *          gst_play_get_sink_element      (GstPlay *play,
-				                      GstElement *element,
-				                      GstPlaySinkType sink_type);
+GstElement *gst_play_get_sink_element (GstPlay * play,
+    GstElement * element, GstPlaySinkType sink_type);
 
 #endif /* __GST_PLAY_H__ */

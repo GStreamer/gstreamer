@@ -25,16 +25,18 @@
 
 #include "tunernorm.h"
 
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-static void gst_tuner_norm_class_init (GstTunerNormClass *klass);
-static void gst_tuner_norm_init       (GstTunerNorm *norm);
-static void gst_tuner_norm_dispose    (GObject      *object);
+static void gst_tuner_norm_class_init (GstTunerNormClass * klass);
+static void gst_tuner_norm_init (GstTunerNorm * norm);
+static void gst_tuner_norm_dispose (GObject * object);
 
 static GObjectClass *parent_class = NULL;
+
 /*static guint signals[LAST_SIGNAL] = { 0 };*/
 
 GType
@@ -58,15 +60,14 @@ gst_tuner_norm_get_type (void)
 
     gst_tuner_norm_type =
 	g_type_register_static (G_TYPE_OBJECT,
-				"GstTunerNorm",
-				&tuner_norm_info, 0);
+	"GstTunerNorm", &tuner_norm_info, 0);
   }
 
   return gst_tuner_norm_type;
 }
 
 static void
-gst_tuner_norm_class_init (GstTunerNormClass *klass)
+gst_tuner_norm_class_init (GstTunerNormClass * klass)
 {
   GObjectClass *object_klass = (GObjectClass *) klass;
 
@@ -76,14 +77,14 @@ gst_tuner_norm_class_init (GstTunerNormClass *klass)
 }
 
 static void
-gst_tuner_norm_init (GstTunerNorm *norm)
+gst_tuner_norm_init (GstTunerNorm * norm)
 {
   norm->label = NULL;
   norm->fps = 0.;
 }
 
 static void
-gst_tuner_norm_dispose (GObject *object)
+gst_tuner_norm_dispose (GObject * object)
 {
   GstTunerNorm *norm = GST_TUNER_NORM (object);
 

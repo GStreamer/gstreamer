@@ -26,8 +26,9 @@
 
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_AC3PARSE \
@@ -41,34 +42,36 @@ extern "C" {
 #define GST_IS_AC3PARSE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AC3PARSE)))
 
-typedef struct _GstAc3Parse GstAc3Parse;
-typedef struct _GstAc3ParseClass GstAc3ParseClass;
+  typedef struct _GstAc3Parse GstAc3Parse;
+  typedef struct _GstAc3ParseClass GstAc3ParseClass;
 
-struct _GstAc3Parse {
-  GstElement element;
+  struct _GstAc3Parse
+  {
+    GstElement element;
 
-  GstPad *sinkpad,*srcpad;
+    GstPad *sinkpad, *srcpad;
 
-  GstBuffer *partialbuf;	/* previous buffer (if carryover) */
-  guint lastframebytes;		/* bytes in previous of last frame so far */
-  guint lastframesize;		/* total length of last frame */
-  guint skip; /* number of frames to skip */
+    GstBuffer *partialbuf;	/* previous buffer (if carryover) */
+    guint lastframebytes;	/* bytes in previous of last frame so far */
+    guint lastframesize;	/* total length of last frame */
+    guint skip;			/* number of frames to skip */
 
-  /* some stream parameters */
-  gint sample_rate;
-  gint channels;
-};
+    /* some stream parameters */
+    gint sample_rate;
+    gint channels;
+  };
 
-struct _GstAc3ParseClass {
-  GstElementClass parent_class;
-};
+  struct _GstAc3ParseClass
+  {
+    GstElementClass parent_class;
+  };
 
-GType gst_ac3parse_get_type(void);
+  GType gst_ac3parse_get_type (void);
 
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __AC3PARSE_H__ */
+#endif				/* __AC3PARSE_H__ */

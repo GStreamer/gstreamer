@@ -26,7 +26,7 @@
 #include <gst/gststructure.h>
 
 int
-gst_audio_frame_byte_size (GstPad* pad)
+gst_audio_frame_byte_size (GstPad * pad)
 {
 /* calculate byte size of an audio frame
  * this should be moved closer to the gstreamer core
@@ -45,20 +45,20 @@ gst_audio_frame_byte_size (GstPad* pad)
 
   if (caps == NULL) {
     /* ERROR: could not get caps of pad */
-    g_warning ("gstaudio: could not get caps of pad %s:%s\n", 
-	       GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
+    g_warning ("gstaudio: could not get caps of pad %s:%s\n",
+	GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
     return 0;
   }
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (structure, "width",    &width);
+  gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "channels", &channels);
-  return (width / 8) * channels; 
+  return (width / 8) * channels;
 }
 
 long
-gst_audio_frame_length (GstPad* pad, GstBuffer* buf)
+gst_audio_frame_length (GstPad * pad, GstBuffer * buf)
 /* calculate length of buffer in frames
  * this should be moved closer to the gstreamer core
  * and be implemented for every mime type IMO
@@ -72,13 +72,13 @@ gst_audio_frame_length (GstPad* pad, GstBuffer* buf)
     /* error */
     return 0;
   /* FIXME: this function assumes the buffer size to be a whole multiple
-   *  	    of the frame byte size
+   *        of the frame byte size
    */
   return GST_BUFFER_SIZE (buf) / frame_byte_size;
 }
 
 long
-gst_audio_frame_rate (GstPad *pad)
+gst_audio_frame_rate (GstPad * pad)
 /*
  * calculate frame rate (based on caps of pad)
  * returns 0 if failed, rate if success
@@ -93,19 +93,18 @@ gst_audio_frame_rate (GstPad *pad)
 
   if (caps == NULL) {
     /* ERROR: could not get caps of pad */
-    g_warning ("gstaudio: could not get caps of pad %s:%s\n", 
-	       GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
+    g_warning ("gstaudio: could not get caps of pad %s:%s\n",
+	GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
     return 0;
-  }
-  else {
+  } else {
     structure = gst_caps_get_structure (caps, 0);
-    gst_structure_get_int  (structure, "rate", &rate);
+    gst_structure_get_int (structure, "rate", &rate);
     return rate;
   }
 }
 
-double 
-gst_audio_length (GstPad* pad, GstBuffer* buf)
+double
+gst_audio_length (GstPad * pad, GstBuffer * buf)
 {
 /* calculate length in seconds
  * of audio buffer buf
@@ -125,20 +124,17 @@ gst_audio_length (GstPad* pad, GstBuffer* buf)
   g_assert (GST_IS_BUFFER (buf));
   /* get caps of pad */
   caps = GST_PAD_CAPS (pad);
-  if (caps == NULL)
-  {
+  if (caps == NULL) {
     /* ERROR: could not get caps of pad */
-    g_warning ("gstaudio: could not get caps of pad %s:%s\n", 
-	       GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
+    g_warning ("gstaudio: could not get caps of pad %s:%s\n",
+	GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
     length = 0.0;
-  }
-  else
-  {
+  } else {
     structure = gst_caps_get_structure (caps, 0);
     bytes = GST_BUFFER_SIZE (buf);
-    gst_structure_get_int  (structure, "width",    &width);
-    gst_structure_get_int  (structure, "channels", &channels);
-    gst_structure_get_int  (structure, "rate",     &rate);
+    gst_structure_get_int (structure, "width", &width);
+    gst_structure_get_int (structure, "channels", &channels);
+    gst_structure_get_int (structure, "rate", &rate);
 
     g_assert (bytes != 0);
     g_assert (width != 0);
@@ -150,8 +146,8 @@ gst_audio_length (GstPad* pad, GstBuffer* buf)
   return length;
 }
 
-long 
-gst_audio_highest_sample_value (GstPad* pad)
+long
+gst_audio_highest_sample_value (GstPad * pad)
 /* calculate highest possible sample value
  * based on capabilities of pad
  */
@@ -160,25 +156,25 @@ gst_audio_highest_sample_value (GstPad* pad)
   gint width = 0;
   const GstCaps *caps = NULL;
   GstStructure *structure;
-  
+
   caps = GST_PAD_CAPS (pad);
-  if (caps == NULL)
-  {
-    g_warning ("gstaudio: could not get caps of pad %s:%s\n", 
-	       GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
+  if (caps == NULL) {
+    g_warning ("gstaudio: could not get caps of pad %s:%s\n",
+	GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
   }
-  
+
   structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int  (structure, "width", &width);
-  gst_structure_get_boolean  (structure, "signed", &is_signed);
-  
-  if (is_signed) --width;
+  gst_structure_get_int (structure, "width", &width);
+  gst_structure_get_boolean (structure, "signed", &is_signed);
+
+  if (is_signed)
+    --width;
   /* example : 16 bit, signed : samples between -32768 and 32767 */
   return ((long) (1 << width));
 }
 
-gboolean 
-gst_audio_is_buffer_framed (GstPad* pad, GstBuffer* buf)
+gboolean
+gst_audio_is_buffer_framed (GstPad * pad, GstBuffer * buf)
 /* check if the buffer size is a whole multiple of the frame size */
 {
   if (GST_BUFFER_SIZE (buf) % gst_audio_frame_byte_size (pad) == 0)
@@ -199,8 +195,8 @@ gst_audio_is_buffer_framed (GstPad* pad, GstBuffer* buf)
  * number of list values, and each of the values, terminating with NULL
  */
 static void
-_gst_audio_structure_set_list (GstStructure *structure, const gchar *fieldname,
-                               GType type, int number, ...)
+_gst_audio_structure_set_list (GstStructure * structure,
+    const gchar * fieldname, GType type, int number, ...)
 {
   va_list varargs;
   GValue value = { 0 };
@@ -214,27 +210,27 @@ _gst_audio_structure_set_list (GstStructure *structure, const gchar *fieldname,
 
   va_start (varargs, number);
 
-  for (j = 0; j < number; ++j)
-  {
+  for (j = 0; j < number; ++j) {
     int i;
     gboolean b;
 
     GValue list_value = { 0 };
 
-    switch (type)
-    {
+    switch (type) {
       case G_TYPE_INT:
-        i = va_arg (varargs, int);
-        g_value_init (&list_value, G_TYPE_INT);
-        g_value_set_int (&list_value, i);
-        break;
+	i = va_arg (varargs, int);
+
+	g_value_init (&list_value, G_TYPE_INT);
+	g_value_set_int (&list_value, i);
+	break;
       case G_TYPE_BOOLEAN:
-        b = va_arg (varargs, gboolean);
-        g_value_init (&list_value, G_TYPE_BOOLEAN);
-        g_value_set_boolean (&list_value, b);
-        break;
-       default:
-        g_warning ("_gst_audio_structure_set_list: LIST of given type not implemented.");
+	b = va_arg (varargs, gboolean);
+	g_value_init (&list_value, G_TYPE_BOOLEAN);
+	g_value_set_boolean (&list_value, b);
+	break;
+      default:
+	g_warning
+	    ("_gst_audio_structure_set_list: LIST of given type not implemented.");
     }
     g_array_append_val (array, list_value);
 
@@ -244,38 +240,38 @@ _gst_audio_structure_set_list (GstStructure *structure, const gchar *fieldname,
 }
 
 void
-gst_audio_structure_set_int (GstStructure *structure, GstAudioFieldFlag flag)
+gst_audio_structure_set_int (GstStructure * structure, GstAudioFieldFlag flag)
 {
   if (flag & GST_AUDIO_FIELD_RATE)
-    gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+    gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+	NULL);
   if (flag & GST_AUDIO_FIELD_CHANNELS)
-    gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+    gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+	NULL);
   if (flag & GST_AUDIO_FIELD_ENDIANNESS)
-    _gst_audio_structure_set_list (structure, "endianness", G_TYPE_INT, 2, G_LITTLE_ENDIAN, G_BIG_ENDIAN, NULL);
+    _gst_audio_structure_set_list (structure, "endianness", G_TYPE_INT, 2,
+	G_LITTLE_ENDIAN, G_BIG_ENDIAN, NULL);
   if (flag & GST_AUDIO_FIELD_WIDTH)
-    _gst_audio_structure_set_list (structure, "width", G_TYPE_INT, 3, 8, 16, 32, NULL);
+    _gst_audio_structure_set_list (structure, "width", G_TYPE_INT, 3, 8, 16, 32,
+	NULL);
   if (flag & GST_AUDIO_FIELD_DEPTH)
     gst_structure_set (structure, "depth", GST_TYPE_INT_RANGE, 1, 32, NULL);
   if (flag & GST_AUDIO_FIELD_SIGNED)
-    _gst_audio_structure_set_list (structure, "signed", G_TYPE_BOOLEAN, 2, TRUE, FALSE, NULL);
+    _gst_audio_structure_set_list (structure, "signed", G_TYPE_BOOLEAN, 2, TRUE,
+	FALSE, NULL);
   if (flag & GST_AUDIO_FIELD_BUFFER_FRAMES)
-    gst_structure_set (structure, "buffer-frames", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+    gst_structure_set (structure, "buffer-frames", GST_TYPE_INT_RANGE, 1,
+	G_MAXINT, NULL);
 }
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "gstaudio",
-  "Support services for audio plugins",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-);
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "gstaudio",
+    "Support services for audio plugins",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN);

@@ -26,7 +26,6 @@
 #include <mpeg2.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_MPEG2DEC \
   (gst_mpeg2dec_get_type())
 #define GST_MPEG2DEC(obj) \
@@ -37,10 +36,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MPEG2DEC))
 #define GST_IS_MPEG2DEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MPEG2DEC))
-
 #define MPEGTIME_TO_GSTTIME(time) (((time) * (GST_MSECOND/10)) / 9LL)
 #define GSTTIME_TO_MPEGTIME(time) (((time) * 9LL) / (GST_MSECOND/10))
-
 typedef struct _GstMpeg2dec GstMpeg2dec;
 typedef struct _GstMpeg2decClass GstMpeg2decClass;
 
@@ -51,54 +48,53 @@ typedef enum
   MPEG2DEC_FORMAT_YV12,
 } Mpeg2decFormat;
 
-typedef enum 
+typedef enum
 {
-  MPEG2DEC_DISC_NONE 		= 0,
+  MPEG2DEC_DISC_NONE = 0,
   MPEG2DEC_DISC_NEW_PICTURE,
   MPEG2DEC_DISC_NEW_KEYFRAME,
 } DiscontState;
 
-struct _GstMpeg2dec {
-  GstElement 	 element;
+struct _GstMpeg2dec
+{
+  GstElement element;
 
   /* pads */
-  GstPad 	*sinkpad,
-  		*srcpad,
-  		*userdatapad;
+  GstPad *sinkpad, *srcpad, *userdatapad;
 
-  mpeg2dec_t 	*decoder;
-  gboolean	 closed;
-  gboolean	 have_fbuf;
+  mpeg2dec_t *decoder;
+  gboolean closed;
+  gboolean have_fbuf;
 
   /* the timestamp of the next frame */
-  DiscontState	 discont_state;
-  gint64	 next_time;
-  gint64	 segment_start;
-  gint64	 segment_end;
+  DiscontState discont_state;
+  gint64 next_time;
+  gint64 segment_start;
+  gint64 segment_end;
 
   /* video state */
   Mpeg2decFormat format;
-  gint		 width;
-  gint		 height;
-  gint		 pixel_width;
-  gint		 pixel_height;
-  gint		 frame_rate_code;
-  gint64	 total_frames;
-  gint64	 frame_period;
-  gboolean	 need_sequence;
+  gint width;
+  gint height;
+  gint pixel_width;
+  gint pixel_height;
+  gint frame_rate_code;
+  gint64 total_frames;
+  gint64 frame_period;
+  gboolean need_sequence;
 
-  GstEvent	*pending_event;
+  GstEvent *pending_event;
 
-  GstIndex	*index;
-  gint		 index_id;
+  GstIndex *index;
+  gint index_id;
 };
 
-struct _GstMpeg2decClass {
+struct _GstMpeg2decClass
+{
   GstElementClass parent_class;
 };
 
-GType gst_mpeg2dec_get_type(void);
+GType gst_mpeg2dec_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_MPEG2DEC_H__ */

@@ -38,140 +38,132 @@
 typedef struct _GstMad GstMad;
 typedef struct _GstMadClass GstMadClass;
 
-struct _GstMad {
-  GstElement	 element;
+struct _GstMad
+{
+  GstElement element;
 
   /* pads */
-  GstPad	*sinkpad, *srcpad;
+  GstPad *sinkpad, *srcpad;
 
   /* state */
   struct mad_stream stream;
   struct mad_frame frame;
   struct mad_synth synth;
-  guchar	*tempbuffer;
-  glong		tempsize;	/* used to keep track of partial buffers */
-  gboolean	need_sync;
-  GstClockTime  last_ts;
-  guint64       base_byte_offset;
-  guint64       bytes_consumed;   /* since the base_byte_offset */
-  guint64	total_samples;  /* the number of samples since the sync point */
+  guchar *tempbuffer;
+  glong tempsize;		/* used to keep track of partial buffers */
+  gboolean need_sync;
+  GstClockTime last_ts;
+  guint64 base_byte_offset;
+  guint64 bytes_consumed;	/* since the base_byte_offset */
+  guint64 total_samples;	/* the number of samples since the sync point */
 
-  gboolean	restart;
-  guint64       segment_start;
+  gboolean restart;
+  guint64 segment_start;
 
   /* info */
   struct mad_header header;
-  gboolean	new_header;
-  guint		framecount;
-  gint		vbr_average; /* average bitrate */
-  guint64	vbr_rate; /* average * framecount */
+  gboolean new_header;
+  guint framecount;
+  gint vbr_average;		/* average bitrate */
+  guint64 vbr_rate;		/* average * framecount */
 
-  gboolean	half;
-  gboolean	ignore_crc;
+  gboolean half;
+  gboolean ignore_crc;
 
-  GstTagList *	tags;
+  GstTagList *tags;
 
   /* negotiated format */
-  gint		rate;
-  gint		channels;
+  gint rate;
+  gint channels;
 
-  GstIndex	*index;
-  gint		 index_id;
+  GstIndex *index;
+  gint index_id;
 
-  gboolean      check_for_xing;
+  gboolean check_for_xing;
 };
 
-struct _GstMadClass {
+struct _GstMadClass
+{
   GstElementClass parent_class;
 };
 
 /* elementfactory information */
-static GstElementDetails gst_mad_details = GST_ELEMENT_DETAILS (
-  "mad mp3 decoder",
-  "Codec/Decoder/Audio",
-  "Uses mad code to decode mp3 streams",
-  "Wim Taymans <wim.taymans@chello.be>"
-);
+static GstElementDetails gst_mad_details =
+GST_ELEMENT_DETAILS ("mad mp3 decoder",
+    "Codec/Decoder/Audio",
+    "Uses mad code to decode mp3 streams",
+    "Wim Taymans <wim.taymans@chello.be>");
 
 
 /* Mad signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   ARG_HALF,
   ARG_IGNORE_CRC,
   ARG_METADATA,
   ARG_STREAMINFO
-  /* FILL ME */
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate mad_src_template_factory =
-GST_STATIC_PAD_TEMPLATE (
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("audio/x-raw-int, "
-      "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-      "signed = (boolean) true, "
-      "width = (int) 16, "
-      "depth = (int) 16, "
-      "rate = (int) [ 11025, 48000 ], "
-      "channels = (int) [ 1, 2 ]"
-  )
-);
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+	"endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
+	"signed = (boolean) true, "
+	"width = (int) 16, "
+	"depth = (int) 16, "
+	"rate = (int) [ 11025, 48000 ], " "channels = (int) [ 1, 2 ]")
+    );
 
 static GstStaticPadTemplate mad_sink_template_factory =
-GST_STATIC_PAD_TEMPLATE (
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("audio/mpeg, "
-      "mpegversion = (int) 1, "
-      "layer = (int) [ 1, 3 ]"
-  )
-);
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/mpeg, "
+	"mpegversion = (int) 1, " "layer = (int) [ 1, 3 ]")
+    );
 
-static void		gst_mad_base_init	(gpointer g_class);
-static void		gst_mad_class_init	(GstMadClass *klass);
-static void		gst_mad_init		(GstMad *mad);
-static void		gst_mad_dispose 	(GObject *object);
+static void gst_mad_base_init (gpointer g_class);
+static void gst_mad_class_init (GstMadClass * klass);
+static void gst_mad_init (GstMad * mad);
+static void gst_mad_dispose (GObject * object);
 
-static void		gst_mad_set_property	(GObject *object, guint prop_id, 
-						 const GValue *value, GParamSpec *pspec);
-static void		gst_mad_get_property	(GObject *object, guint prop_id, 
-						 GValue *value, GParamSpec *pspec);
+static void gst_mad_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_mad_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static gboolean	gst_mad_src_event	(GstPad *pad, GstEvent *event);
-static const GstFormat*
-		gst_mad_get_formats	(GstPad *pad);
-static const GstEventMask*
-		gst_mad_get_event_masks (GstPad *pad);
-static const GstQueryType*
-		gst_mad_get_query_types (GstPad *pad);
+static gboolean gst_mad_src_event (GstPad * pad, GstEvent * event);
+static const GstFormat *gst_mad_get_formats (GstPad * pad);
+static const GstEventMask *gst_mad_get_event_masks (GstPad * pad);
+static const GstQueryType *gst_mad_get_query_types (GstPad * pad);
 
-static gboolean	gst_mad_src_query	(GstPad *pad, GstQueryType type,
-					 GstFormat *format, gint64 *value);
-static gboolean	gst_mad_convert_sink	(GstPad *pad, GstFormat src_format,
-		                         gint64 src_value, GstFormat
-					 *dest_format, gint64 *dest_value);
-static gboolean	gst_mad_convert_src	(GstPad *pad, GstFormat src_format,
-					 gint64 src_value, GstFormat
-					 *dest_format, gint64 *dest_value);
+static gboolean gst_mad_src_query (GstPad * pad, GstQueryType type,
+    GstFormat * format, gint64 * value);
+static gboolean gst_mad_convert_sink (GstPad * pad, GstFormat src_format,
+    gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
+static gboolean gst_mad_convert_src (GstPad * pad, GstFormat src_format,
+    gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
-static void	gst_mad_chain		(GstPad *pad, GstData *_data);
+static void gst_mad_chain (GstPad * pad, GstData * _data);
 
-static GstElementStateReturn
-		gst_mad_change_state (GstElement *element);
+static GstElementStateReturn gst_mad_change_state (GstElement * element);
 
-static void      gst_mad_set_index (GstElement *element, GstIndex *index);
-static GstIndex* gst_mad_get_index (GstElement *element);
+static void gst_mad_set_index (GstElement * element, GstIndex * index);
+static GstIndex *gst_mad_get_index (GstElement * element);
 
 
 static GstElementClass *parent_class = NULL;
+
 /* static guint gst_mad_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
@@ -191,60 +183,64 @@ gst_mad_get_type (void)
       0,
       (GInstanceInitFunc) gst_mad_init,
     };
-    mad_type = g_type_register_static(GST_TYPE_ELEMENT, "GstMad", &mad_info, 0);
+    mad_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstMad", &mad_info, 0);
   }
   return mad_type;
 }
 
 #define GST_TYPE_MAD_LAYER (gst_mad_layer_get_type())
 G_GNUC_UNUSED static GType
-gst_mad_layer_get_type(void) {
+gst_mad_layer_get_type (void)
+{
   static GType mad_layer_type = 0;
   static GEnumValue mad_layer[] = {
-    {0,             "0", "Unknown"},
-    {MAD_LAYER_I,   "1", "I"},
-    {MAD_LAYER_II,  "2", "II"},
+    {0, "0", "Unknown"},
+    {MAD_LAYER_I, "1", "I"},
+    {MAD_LAYER_II, "2", "II"},
     {MAD_LAYER_III, "3", "III"},
     {0, NULL, NULL},
   };
   if (!mad_layer_type) {
-    mad_layer_type = g_enum_register_static("GstMadLayer", mad_layer);
+    mad_layer_type = g_enum_register_static ("GstMadLayer", mad_layer);
   }
   return mad_layer_type;
 }
 
 #define GST_TYPE_MAD_MODE (gst_mad_mode_get_type())
 G_GNUC_UNUSED static GType
-gst_mad_mode_get_type(void) {
+gst_mad_mode_get_type (void)
+{
   static GType mad_mode_type = 0;
   static GEnumValue mad_mode[] = {
-    {-1,                     "-1", "Unknown"},
+    {-1, "-1", "Unknown"},
     {MAD_MODE_SINGLE_CHANNEL, "0", "Single Channel"},
-    {MAD_MODE_DUAL_CHANNEL  , "1", "Dual Channel"},
-    {MAD_MODE_JOINT_STEREO  , "2", "Joint Stereo"},
-    {MAD_MODE_STEREO        , "3", "Stereo"},
-    { 0, NULL, NULL},
+    {MAD_MODE_DUAL_CHANNEL, "1", "Dual Channel"},
+    {MAD_MODE_JOINT_STEREO, "2", "Joint Stereo"},
+    {MAD_MODE_STEREO, "3", "Stereo"},
+    {0, NULL, NULL},
   };
   if (!mad_mode_type) {
-    mad_mode_type = g_enum_register_static("GstMadMode", mad_mode);
+    mad_mode_type = g_enum_register_static ("GstMadMode", mad_mode);
   }
   return mad_mode_type;
 }
 
 #define GST_TYPE_MAD_EMPHASIS (gst_mad_emphasis_get_type())
 G_GNUC_UNUSED static GType
-gst_mad_emphasis_get_type(void) {
+gst_mad_emphasis_get_type (void)
+{
   static GType mad_emphasis_type = 0;
   static GEnumValue mad_emphasis[] = {
-    {-1,                     "-1", "Unknown"},
-    {MAD_EMPHASIS_NONE,       "0", "None"},
-    {MAD_EMPHASIS_50_15_US,   "1", "50/15 Microseconds"},
+    {-1, "-1", "Unknown"},
+    {MAD_EMPHASIS_NONE, "0", "None"},
+    {MAD_EMPHASIS_50_15_US, "1", "50/15 Microseconds"},
     {MAD_EMPHASIS_CCITT_J_17, "2", "CCITT J.17"},
-    {MAD_EMPHASIS_RESERVED,   "3", "Reserved"},
-    { 0, NULL, NULL},
+    {MAD_EMPHASIS_RESERVED, "3", "Reserved"},
+    {0, NULL, NULL},
   };
   if (!mad_emphasis_type) {
-    mad_emphasis_type = g_enum_register_static("GstMadEmphasis", mad_emphasis);
+    mad_emphasis_type = g_enum_register_static ("GstMadEmphasis", mad_emphasis);
   }
   return mad_emphasis_type;
 }
@@ -253,42 +249,42 @@ static void
 gst_mad_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  
+
   gst_element_class_add_pad_template (element_class,
-		  gst_static_pad_template_get (&mad_sink_template_factory));
+      gst_static_pad_template_get (&mad_sink_template_factory));
   gst_element_class_add_pad_template (element_class,
-		  gst_static_pad_template_get (&mad_src_template_factory));
+      gst_static_pad_template_get (&mad_src_template_factory));
   gst_element_class_set_details (element_class, &gst_mad_details);
 }
 static void
-gst_mad_class_init (GstMadClass *klass)
+gst_mad_class_init (GstMadClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*) klass;
-  gstelement_class = (GstElementClass*) klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gobject_class->set_property = gst_mad_set_property;
   gobject_class->get_property = gst_mad_get_property;
   gobject_class->dispose = gst_mad_dispose;
 
   gstelement_class->change_state = gst_mad_change_state;
-  gstelement_class->set_index    = gst_mad_set_index;
-  gstelement_class->get_index    = gst_mad_get_index;
+  gstelement_class->set_index = gst_mad_set_index;
+  gstelement_class->get_index = gst_mad_get_index;
 
   /* init properties */
   /* currently, string representations are used, we might want to change that */
   /* FIXME: descriptions need to be more technical,
    * default values and ranges need to be selected right */
   g_object_class_install_property (gobject_class, ARG_HALF,
-    g_param_spec_boolean ("half", "Half", "Generate PCM at 1/2 sample rate",
-		          FALSE, G_PARAM_READWRITE));
+      g_param_spec_boolean ("half", "Half", "Generate PCM at 1/2 sample rate",
+	  FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_IGNORE_CRC,
-    g_param_spec_boolean ("ignore_crc", "Ignore CRC", "Ignore CRC errors",
-		          FALSE, G_PARAM_READWRITE));
+      g_param_spec_boolean ("ignore_crc", "Ignore CRC", "Ignore CRC errors",
+	  FALSE, G_PARAM_READWRITE));
 
   /* register tags */
 #define GST_TAG_LAYER    "layer"
@@ -296,33 +292,43 @@ gst_mad_class_init (GstMadClass *klass)
 #define GST_TAG_EMPHASIS "emphasis"
 
   gst_tag_register (GST_TAG_LAYER, GST_TAG_FLAG_ENCODED, G_TYPE_UINT,
-                    "layer", "MPEG audio layer", NULL);
+      "layer", "MPEG audio layer", NULL);
   gst_tag_register (GST_TAG_MODE, GST_TAG_FLAG_ENCODED, G_TYPE_STRING,
-                    "mode", "MPEG audio channel mode", NULL);
+      "mode", "MPEG audio channel mode", NULL);
   gst_tag_register (GST_TAG_EMPHASIS, GST_TAG_FLAG_ENCODED, G_TYPE_STRING,
-                    "emphasis", "MPEG audio emphasis", NULL);
+      "emphasis", "MPEG audio emphasis", NULL);
 }
 
 static void
-gst_mad_init (GstMad *mad)
+gst_mad_init (GstMad * mad)
 {
   /* create the sink and src pads */
-  mad->sinkpad = gst_pad_new_from_template(
-		  gst_static_pad_template_get (&mad_sink_template_factory), "sink");
+  mad->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&mad_sink_template_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (mad), mad->sinkpad);
   gst_pad_set_chain_function (mad->sinkpad, GST_DEBUG_FUNCPTR (gst_mad_chain));
-  gst_pad_set_convert_function (mad->sinkpad, GST_DEBUG_FUNCPTR (gst_mad_convert_sink));
-  gst_pad_set_formats_function (mad->sinkpad, GST_DEBUG_FUNCPTR (gst_mad_get_formats));
+  gst_pad_set_convert_function (mad->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_mad_convert_sink));
+  gst_pad_set_formats_function (mad->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_mad_get_formats));
 
-  mad->srcpad = gst_pad_new_from_template(
-		  gst_static_pad_template_get (&mad_src_template_factory), "src");
+  mad->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&mad_src_template_factory), "src");
   gst_element_add_pad (GST_ELEMENT (mad), mad->srcpad);
-  gst_pad_set_event_function (mad->srcpad, GST_DEBUG_FUNCPTR (gst_mad_src_event));
-  gst_pad_set_event_mask_function (mad->srcpad, GST_DEBUG_FUNCPTR (gst_mad_get_event_masks));
-  gst_pad_set_query_function (mad->srcpad, GST_DEBUG_FUNCPTR (gst_mad_src_query));
-  gst_pad_set_query_type_function (mad->srcpad, GST_DEBUG_FUNCPTR (gst_mad_get_query_types));
-  gst_pad_set_convert_function (mad->srcpad, GST_DEBUG_FUNCPTR (gst_mad_convert_src));
-  gst_pad_set_formats_function (mad->srcpad, GST_DEBUG_FUNCPTR (gst_mad_get_formats));
+  gst_pad_set_event_function (mad->srcpad,
+      GST_DEBUG_FUNCPTR (gst_mad_src_event));
+  gst_pad_set_event_mask_function (mad->srcpad,
+      GST_DEBUG_FUNCPTR (gst_mad_get_event_masks));
+  gst_pad_set_query_function (mad->srcpad,
+      GST_DEBUG_FUNCPTR (gst_mad_src_query));
+  gst_pad_set_query_type_function (mad->srcpad,
+      GST_DEBUG_FUNCPTR (gst_mad_get_query_types));
+  gst_pad_set_convert_function (mad->srcpad,
+      GST_DEBUG_FUNCPTR (gst_mad_convert_src));
+  gst_pad_set_formats_function (mad->srcpad,
+      GST_DEBUG_FUNCPTR (gst_mad_get_formats));
   gst_pad_use_explicit_caps (mad->srcpad);
 
   mad->tempbuffer = g_malloc (MAD_BUFFER_MDLEN * 3);
@@ -348,7 +354,7 @@ gst_mad_init (GstMad *mad)
 }
 
 static void
-gst_mad_dispose (GObject *object)
+gst_mad_dispose (GObject * object)
 {
   GstMad *mad = GST_MAD (object);
 
@@ -360,26 +366,26 @@ gst_mad_dispose (GObject *object)
 }
 
 static void
-gst_mad_set_index (GstElement *element, GstIndex *index)
+gst_mad_set_index (GstElement * element, GstIndex * index)
 {
   GstMad *mad = GST_MAD (element);
-  
+
   mad->index = index;
 
   if (index)
     gst_index_get_writer_id (index, GST_OBJECT (element), &mad->index_id);
 }
 
-static GstIndex*
-gst_mad_get_index (GstElement *element)
+static GstIndex *
+gst_mad_get_index (GstElement * element)
 {
   GstMad *mad = GST_MAD (element);
 
   return mad->index;
 }
 
-static const GstFormat*
-gst_mad_get_formats (GstPad *pad)
+static const GstFormat *
+gst_mad_get_formats (GstPad * pad)
 {
   static const GstFormat src_formats[] = {
     GST_FORMAT_BYTES,
@@ -396,20 +402,19 @@ gst_mad_get_formats (GstPad *pad)
   return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
 }
 
-static const GstEventMask*
-gst_mad_get_event_masks (GstPad *pad)
+static const GstEventMask *
+gst_mad_get_event_masks (GstPad * pad)
 {
   static const GstEventMask gst_mad_src_event_masks[] = {
-    { GST_EVENT_SEEK, GST_SEEK_METHOD_SET |
-                      GST_SEEK_FLAG_FLUSH },
-    { 0, }
+    {GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH},
+    {0,}
   };
   return gst_mad_src_event_masks;
 }
 
 static gboolean
-gst_mad_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
-		      GstFormat *dest_format, gint64 *dest_value)
+gst_mad_convert_sink (GstPad * pad, GstFormat src_format, gint64 src_value,
+    GstFormat * dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
   GstMad *mad;
@@ -422,22 +427,22 @@ gst_mad_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-        case GST_FORMAT_TIME:
-          /* multiply by 8 because vbr is in bits/second */
-          *dest_value = src_value * 8 * GST_SECOND / mad->vbr_average;
-          break;
-        default:
-          res = FALSE;
+	case GST_FORMAT_TIME:
+	  /* multiply by 8 because vbr is in bits/second */
+	  *dest_value = src_value * 8 * GST_SECOND / mad->vbr_average;
+	  break;
+	default:
+	  res = FALSE;
       }
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          /* multiply by 8 because vbr is in bits/second */
-          *dest_value = src_value * mad->vbr_average / (8 * GST_SECOND);
-          break;
-        default:
-          res = FALSE;
+	case GST_FORMAT_BYTES:
+	  /* multiply by 8 because vbr is in bits/second */
+	  *dest_value = src_value * mad->vbr_average / (8 * GST_SECOND);
+	  break;
+	default:
+	  res = FALSE;
       }
       break;
     default:
@@ -447,8 +452,8 @@ gst_mad_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
 }
 
 static gboolean
-gst_mad_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
-		     GstFormat *dest_format, gint64 *dest_value)
+gst_mad_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
+    GstFormat * dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
   guint scale = 1;
@@ -462,48 +467,49 @@ gst_mad_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
+	case GST_FORMAT_DEFAULT:
 	  if (bytes_per_sample == 0)
-            return FALSE;
+	    return FALSE;
 	  *dest_value = src_value / bytes_per_sample;
-          break;
-        case GST_FORMAT_TIME:
+	  break;
+	case GST_FORMAT_TIME:
 	{
-          gint byterate = bytes_per_sample * mad->frame.header.samplerate;
+	  gint byterate = bytes_per_sample * mad->frame.header.samplerate;
 
 	  if (byterate == 0)
-            return FALSE;
+	    return FALSE;
 	  *dest_value = src_value * GST_SECOND / byterate;
-          break;
+	  break;
 	}
-        default:
-          res = FALSE;
+	default:
+	  res = FALSE;
       }
       break;
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
-        case GST_FORMAT_BYTES:
+	case GST_FORMAT_BYTES:
 	  *dest_value = src_value * bytes_per_sample;
 	  break;
-        case GST_FORMAT_TIME:
+	case GST_FORMAT_TIME:
 	  if (mad->frame.header.samplerate == 0)
-            return FALSE;
+	    return FALSE;
 	  *dest_value = src_value * GST_SECOND / mad->frame.header.samplerate;
-          break;
-        default:
-          res = FALSE;
+	  break;
+	default:
+	  res = FALSE;
       }
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-        case GST_FORMAT_BYTES:
+	case GST_FORMAT_BYTES:
 	  scale = bytes_per_sample;
 	  /* fallthrough */
-        case GST_FORMAT_DEFAULT:
-	  *dest_value = src_value * scale * mad->frame.header.samplerate / GST_SECOND;
-          break;
-        default:
-          res = FALSE;
+	case GST_FORMAT_DEFAULT:
+	  *dest_value =
+	      src_value * scale * mad->frame.header.samplerate / GST_SECOND;
+	  break;
+	default:
+	  res = FALSE;
       }
       break;
     default:
@@ -512,8 +518,8 @@ gst_mad_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   return res;
 }
 
-static const GstQueryType*
-gst_mad_get_query_types (GstPad *pad)
+static const GstQueryType *
+gst_mad_get_query_types (GstPad * pad)
 {
   static const GstQueryType gst_mad_src_query_types[] = {
     GST_QUERY_TOTAL,
@@ -524,8 +530,8 @@ gst_mad_get_query_types (GstPad *pad)
 }
 
 static gboolean
-gst_mad_src_query (GstPad *pad, GstQueryType type,
-		   GstFormat *format, gint64 *value)
+gst_mad_src_query (GstPad * pad, GstQueryType type,
+    GstFormat * format, gint64 * value)
 {
   gboolean res = TRUE;
   GstMad *mad;
@@ -539,9 +545,9 @@ gst_mad_src_query (GstPad *pad, GstQueryType type,
 	case GST_FORMAT_BYTES:
 	case GST_FORMAT_DEFAULT:
 	case GST_FORMAT_TIME:
-        {
+	{
 	  gint64 peer_value;
-          const GstFormat *peer_formats;
+	  const GstFormat *peer_formats;
 
 	  res = FALSE;
 
@@ -552,19 +558,17 @@ gst_mad_src_query (GstPad *pad, GstQueryType type,
 	    GstFormat peer_format = *peer_formats;
 
 	    /* do the probe */
-            if (gst_pad_query (GST_PAD_PEER (mad->sinkpad), GST_QUERY_TOTAL,
-			       &peer_format, &peer_value))
-	    {
-              GstFormat conv_format;
+	    if (gst_pad_query (GST_PAD_PEER (mad->sinkpad), GST_QUERY_TOTAL,
+		    &peer_format, &peer_value)) {
+	      GstFormat conv_format;
+
 	      /* convert to TIME */
-              conv_format = GST_FORMAT_TIME;
+	      conv_format = GST_FORMAT_TIME;
 	      res = gst_pad_convert (mad->sinkpad,
-				peer_format, peer_value,
-				&conv_format, value);
+		  peer_format, peer_value, &conv_format, value);
 	      /* and to final format */
 	      res &= gst_pad_convert (pad,
-			GST_FORMAT_TIME, *value,
-			format, value);
+		  GST_FORMAT_TIME, *value, format, value);
 	    }
 	    peer_formats++;
 	  }
@@ -582,8 +586,7 @@ gst_mad_src_query (GstPad *pad, GstQueryType type,
 	{
 	  /* we only know about our samples, convert to requested format */
 	  res &= gst_pad_convert (pad,
-			  GST_FORMAT_DEFAULT, mad->total_samples,
-			  format, value);
+	      GST_FORMAT_DEFAULT, mad->total_samples, format, value);
 	  break;
 	}
       }
@@ -596,12 +599,12 @@ gst_mad_src_query (GstPad *pad, GstQueryType type,
 }
 
 static gboolean
-index_seek (GstMad *mad, GstPad *pad, GstEvent *event)
+index_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 {
   /* since we know the exact byteoffset of the frame,
      make sure to try bytes first */
 
-  const GstFormat try_all_formats[] = { 
+  const GstFormat try_all_formats[] = {
     GST_FORMAT_BYTES,
     GST_FORMAT_TIME,
     0
@@ -609,33 +612,31 @@ index_seek (GstMad *mad, GstPad *pad, GstEvent *event)
   const GstFormat *try_formats = try_all_formats;
   const GstFormat *peer_formats;
 
-  GstIndexEntry *entry =
-    gst_index_get_assoc_entry (mad->index, mad->index_id,
-			       GST_INDEX_LOOKUP_BEFORE, 0,
-			       GST_EVENT_SEEK_FORMAT (event),
-			       GST_EVENT_SEEK_OFFSET (event));
+  GstIndexEntry *entry = gst_index_get_assoc_entry (mad->index, mad->index_id,
+      GST_INDEX_LOOKUP_BEFORE, 0,
+      GST_EVENT_SEEK_FORMAT (event),
+      GST_EVENT_SEEK_OFFSET (event));
+
   if (!entry)
     return FALSE;
-  
+
   peer_formats = gst_pad_get_formats (GST_PAD_PEER (mad->sinkpad));
 
   while (gst_formats_contains (peer_formats, *try_formats)) {
     gint64 value;
     GstEvent *seek_event;
-    
+
     if (gst_index_entry_assoc_map (entry, *try_formats, &value)) {
       /* lookup succeeded, create the seek */
 
       GST_DEBUG ("index %s %" G_GINT64_FORMAT
-		     " -> %s %" G_GINT64_FORMAT,
-		     gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
-		     GST_EVENT_SEEK_OFFSET (event),
-		     gst_format_get_details (*try_formats)->nick,
-		     value);
+	  " -> %s %" G_GINT64_FORMAT,
+	  gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
+	  GST_EVENT_SEEK_OFFSET (event),
+	  gst_format_get_details (*try_formats)->nick, value);
 
       seek_event = gst_event_new_seek (*try_formats |
-				       GST_SEEK_METHOD_SET |
-				       GST_SEEK_FLAG_FLUSH, value);
+	  GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, value);
 
       if (gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), seek_event)) {
 	/* seek worked, we're done, loop will exit */
@@ -652,59 +653,57 @@ index_seek (GstMad *mad, GstPad *pad, GstEvent *event)
 }
 
 static gboolean
-normal_seek (GstMad *mad, GstPad *pad, GstEvent *event)
+normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 {
   gint64 src_offset;
   gboolean flush;
   GstFormat format;
   const GstFormat *peer_formats;
   gboolean res;
-  
+
   format = GST_FORMAT_TIME;
-  
+
   /* first bring the src_format to TIME */
   if (!gst_pad_convert (pad,
-			GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event),
-			&format, &src_offset))
-  {
+	  GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event),
+	  &format, &src_offset)) {
     /* didn't work, probably unsupported seek format then */
     return FALSE;
   }
-  
+
   /* shave off the flush flag, we'll need it later */
   flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
-  
+
   /* assume the worst */
   res = FALSE;
-  
+
   peer_formats = gst_pad_get_formats (GST_PAD_PEER (mad->sinkpad));
-  
+
   /* while we did not exhaust our seek formats without result */
   while (peer_formats && *peer_formats && !res) {
     gint64 desired_offset;
-    
+
     format = *peer_formats;
-    
+
     /* try to convert requested format to one we can seek with on the sinkpad */
     if (gst_pad_convert (mad->sinkpad, GST_FORMAT_TIME, src_offset,
-			 &format, &desired_offset))
-      {
-	GstEvent *seek_event;
-	
-	/* conversion succeeded, create the seek */
-	seek_event = gst_event_new_seek (format | GST_SEEK_METHOD_SET | flush,
-					 desired_offset);
-	/* do the seek */
-	if (gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), seek_event)) {
-	  /* seek worked, we're done, loop will exit */
-	  res = TRUE;
-	}
+	    &format, &desired_offset)) {
+      GstEvent *seek_event;
+
+      /* conversion succeeded, create the seek */
+      seek_event = gst_event_new_seek (format | GST_SEEK_METHOD_SET | flush,
+	  desired_offset);
+      /* do the seek */
+      if (gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), seek_event)) {
+	/* seek worked, we're done, loop will exit */
+	res = TRUE;
       }
+    }
     /* at this point, either the seek worked or res == FALSE */
     if (res)
       /* we need to break out of the processing loop on flush */
       mad->restart = flush;
-    
+
     peer_formats++;
   }
 
@@ -712,7 +711,7 @@ normal_seek (GstMad *mad, GstPad *pad, GstEvent *event)
 }
 
 static gboolean
-gst_mad_src_event (GstPad *pad, GstEvent *event)
+gst_mad_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
   GstMad *mad;
@@ -723,11 +722,11 @@ gst_mad_src_event (GstPad *pad, GstEvent *event)
     case GST_EVENT_SEEK_SEGMENT:
       gst_event_ref (event);
       if (gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), event)) {
-        /* seek worked, we're done, loop will exit */
-        res = TRUE;
+	/* seek worked, we're done, loop will exit */
+	res = TRUE;
       }
       break;
-    /* the all-formats seek logic */
+      /* the all-formats seek logic */
     case GST_EVENT_SEEK:
       if (mad->index)
 	res = index_seek (mad, pad, event);
@@ -762,8 +761,8 @@ scale (mad_fixed_t sample)
 
 /* do we need this function? */
 static void
-gst_mad_set_property (GObject *object, guint prop_id,
-		      const GValue *value, GParamSpec *pspec)
+gst_mad_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstMad *mad;
 
@@ -784,8 +783,8 @@ gst_mad_set_property (GObject *object, guint prop_id,
   }
 }
 static void
-gst_mad_get_property (GObject *object, guint prop_id,
-		      GValue *value, GParamSpec *pspec)
+gst_mad_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
   GstMad *mad;
 
@@ -807,7 +806,7 @@ gst_mad_get_property (GObject *object, guint prop_id,
 }
 
 static void
-gst_mad_update_info (GstMad *mad)
+gst_mad_update_info (GstMad * mad)
 {
   gint abr = mad->vbr_average;
   struct mad_header *header = &mad->frame.header;
@@ -832,9 +831,9 @@ G_STMT_START{							\
   }
   mad->vbr_average = (gint) (mad->vbr_rate / mad->framecount);
 
-  CHECK_HEADER (layer,	    "layer");
-  CHECK_HEADER (mode,	    "mode");
-  CHECK_HEADER (emphasis,   "emphasis");
+  CHECK_HEADER (layer, "layer");
+  CHECK_HEADER (mode, "mode");
+  CHECK_HEADER (emphasis, "emphasis");
 
   if (header->bitrate != mad->header.bitrate || mad->new_header) {
     mad->header.bitrate = header->bitrate;
@@ -846,31 +845,31 @@ G_STMT_START{							\
     GEnumValue *mode;
     GEnumValue *emphasis;
 
-    mode = g_enum_get_value (g_type_class_ref (GST_TYPE_MAD_MODE), mad->header.mode);
-    emphasis = g_enum_get_value (g_type_class_ref (GST_TYPE_MAD_EMPHASIS), mad->header.emphasis);
+    mode =
+	g_enum_get_value (g_type_class_ref (GST_TYPE_MAD_MODE),
+	mad->header.mode);
+    emphasis =
+	g_enum_get_value (g_type_class_ref (GST_TYPE_MAD_EMPHASIS),
+	mad->header.emphasis);
     list = gst_tag_list_new ();
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-                      GST_TAG_LAYER, mad->header.layer,
-                      GST_TAG_MODE, mode->value_nick,
-                      GST_TAG_EMPHASIS, emphasis->value_nick,
-                      NULL);
+	GST_TAG_LAYER, mad->header.layer,
+	GST_TAG_MODE, mode->value_nick,
+	GST_TAG_EMPHASIS, emphasis->value_nick, NULL);
     gst_element_found_tags (GST_ELEMENT (mad), list);
     gst_tag_list_free (list);
   }
-
-
 #undef CHECK_HEADER
 
 }
 
 static void
-gst_mad_handle_event (GstPad *pad, GstBuffer *buffer)
+gst_mad_handle_event (GstPad * pad, GstBuffer * buffer)
 {
   GstEvent *event = GST_EVENT (buffer);
   GstMad *mad = GST_MAD (gst_pad_get_parent (pad));
 
-  switch (GST_EVENT_TYPE (event))
-  {
+  switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_DISCONTINUOUS:
     {
       gint n = GST_EVENT_DISCONT_OFFSET_LEN (event);
@@ -878,46 +877,43 @@ gst_mad_handle_event (GstPad *pad, GstBuffer *buffer)
 
       mad->total_samples = 0;
 
-      for (i = 0; i < n; i++)
-      {
+      for (i = 0; i < n; i++) {
 	const GstFormat *formats;
+
 	formats = gst_pad_get_formats (pad);
 
-        if (gst_formats_contains (formats, GST_EVENT_DISCONT_OFFSET(event, i).format))
-        {
-          gint64 value = GST_EVENT_DISCONT_OFFSET (event, i).value;
-          gint64 time;
-          GstFormat format;
-          GstEvent *discont;
+	if (gst_formats_contains (formats, GST_EVENT_DISCONT_OFFSET (event,
+		    i).format)) {
+	  gint64 value = GST_EVENT_DISCONT_OFFSET (event, i).value;
+	  gint64 time;
+	  GstFormat format;
+	  GstEvent *discont;
 
-          /* see how long the input bytes take */
-          format = GST_FORMAT_TIME;
-          if (!gst_pad_convert (pad,
-		                GST_EVENT_DISCONT_OFFSET (event, i).format,
-				value, &format, &time))
-          {
-            time = 0;
-          }
+	  /* see how long the input bytes take */
+	  format = GST_FORMAT_TIME;
+	  if (!gst_pad_convert (pad,
+		  GST_EVENT_DISCONT_OFFSET (event, i).format,
+		  value, &format, &time)) {
+	    time = 0;
+	  }
 
-          /* for now, this is the best we can do to get the total number
+	  /* for now, this is the best we can do to get the total number
 	   * of samples */
-          format = GST_FORMAT_DEFAULT;
-          if (!gst_pad_convert (mad->srcpad,
-		                GST_FORMAT_TIME, time, &format, &mad->total_samples))
-          {
-            mad->total_samples = 0;
-          }
+	  format = GST_FORMAT_DEFAULT;
+	  if (!gst_pad_convert (mad->srcpad,
+		  GST_FORMAT_TIME, time, &format, &mad->total_samples)) {
+	    mad->total_samples = 0;
+	  }
 
-          gst_event_unref (event);
+	  gst_event_unref (event);
 
-          if (GST_PAD_IS_USABLE (mad->srcpad))
-	  {
-            discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-			                           time, NULL);
-            gst_pad_push (mad->srcpad, GST_DATA (discont));
-          }
-          break;
-        }
+	  if (GST_PAD_IS_USABLE (mad->srcpad)) {
+	    discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
+		time, NULL);
+	    gst_pad_push (mad->srcpad, GST_DATA (discont));
+	  }
+	  break;
+	}
       }
       mad->tempsize = 0;
       /* we don't need to restart when we get here */
@@ -932,9 +928,10 @@ gst_mad_handle_event (GstPad *pad, GstBuffer *buffer)
 }
 
 static gboolean
-gst_mad_check_restart (GstMad *mad)
+gst_mad_check_restart (GstMad * mad)
 {
   gboolean yes = mad->restart;
+
   if (mad->restart) {
     mad->restart = FALSE;
     mad->tempsize = 0;
@@ -966,9 +963,10 @@ gst_mad_check_restart (GstMad *mad)
 #define XING_TOC_LENGTH      100
 
 /* check for valid "Xing" VBR header */
-static int is_xhead(unsigned char *buf)
+static int
+is_xhead (unsigned char *buf)
 {
-  return (BE_32(buf) == XING_TAG);
+  return (BE_32 (buf) == XING_TAG);
 }
 
 
@@ -980,32 +978,33 @@ static int is_xhead(unsigned char *buf)
 #define lprintf(x...)
 #endif
 
-static int mpg123_parse_xing_header(struct mad_header *header,
-				    const guint8 *buf, int bufsize, int *bitrate,
-				    int *time)
+static int
+mpg123_parse_xing_header (struct mad_header *header,
+    const guint8 * buf, int bufsize, int *bitrate, int *time)
 {
   int i;
-  guint8 *ptr = (guint8*)buf;
+  guint8 *ptr = (guint8 *) buf;
   double frame_duration;
   int xflags, xframes, xbytes, xvbr_scale;
   int abr;
   guint8 xtoc[XING_TOC_LENGTH];
+
   /* This should be the MPEG Audio version ID 
    * (version 2.5, 2 or 1) least significant byte, but mad doesn't 
    * provide that, so assume it's always MPEG 1
    */
   int lsf_bit = 1;
+
   xframes = xbytes = 0;
 
   /* offset of the Xing header */
-  if ( lsf_bit )
-  {
-    if( header->mode != MAD_MODE_STEREO )
+  if (lsf_bit) {
+    if (header->mode != MAD_MODE_STEREO)
       ptr += (32 + 4);
     else
       ptr += (17 + 4);
   } else {
-    if( header->mode != MAD_MODE_STEREO )
+    if (header->mode != MAD_MODE_STEREO)
       ptr += (17 + 4);
     else
       ptr += (9 + 4);
@@ -1014,67 +1013,71 @@ static int mpg123_parse_xing_header(struct mad_header *header,
   if (ptr >= (buf + bufsize - 4))
     return 0;
 
-  if (is_xhead(ptr))
-  {
-    lprintf("Xing header found\n");
+  if (is_xhead (ptr)) {
+    lprintf ("Xing header found\n");
 
-    ptr += 4; if (ptr >= (buf + bufsize - 4)) return 0;
+    ptr += 4;
+    if (ptr >= (buf + bufsize - 4))
+      return 0;
 
-    xflags = BE_32(ptr);
+    xflags = BE_32 (ptr);
     ptr += 4;
 
-    if (xflags & XING_FRAMES_FLAG)
-    {
-      if (ptr >= (buf + bufsize - 4)) return 0;
-      xframes = BE_32(ptr);
-      lprintf("xframes: %d\n", xframes);
+    if (xflags & XING_FRAMES_FLAG) {
+      if (ptr >= (buf + bufsize - 4))
+	return 0;
+      xframes = BE_32 (ptr);
+      lprintf ("xframes: %d\n", xframes);
       ptr += 4;
     }
-    if (xflags & XING_BYTES_FLAG)
-    {
-      if (ptr >= (buf + bufsize - 4)) return 0;
-      xbytes = BE_32(ptr);
-      lprintf("xbytes: %d\n", xbytes);
-      ptr += 4; 
+    if (xflags & XING_BYTES_FLAG) {
+      if (ptr >= (buf + bufsize - 4))
+	return 0;
+      xbytes = BE_32 (ptr);
+      lprintf ("xbytes: %d\n", xbytes);
+      ptr += 4;
     }
-    if (xflags & XING_TOC_FLAG)
-    {
-      lprintf("toc found\n");
-      if (ptr >= (buf + bufsize - XING_TOC_LENGTH)) return 0;
-      for (i = 0; i < XING_TOC_LENGTH; i++)
-      {
-        xtoc[i] = *(ptr + i);
-	lprintf("%d ", xtoc[i]);
+    if (xflags & XING_TOC_FLAG) {
+      lprintf ("toc found\n");
+      if (ptr >= (buf + bufsize - XING_TOC_LENGTH))
+	return 0;
+      for (i = 0; i < XING_TOC_LENGTH; i++) {
+	xtoc[i] = *(ptr + i);
+	lprintf ("%d ", xtoc[i]);
       }
-      lprintf("\n");
-      ptr += XING_TOC_LENGTH; 
+      lprintf ("\n");
+      ptr += XING_TOC_LENGTH;
     }
 
     xvbr_scale = -1;
     if (xflags & XING_VBR_SCALE_FLAG) {
-      if (ptr >= (buf + bufsize - 4)) return 0;
-      xvbr_scale = BE_32(ptr);
-      lprintf("xvbr_scale: %d\n", xvbr_scale);
+      if (ptr >= (buf + bufsize - 4))
+	return 0;
+      xvbr_scale = BE_32 (ptr);
+      lprintf ("xvbr_scale: %d\n", xvbr_scale);
     }
 
     /* 1 kbit = 1000 bits ! (and not 1024 bits) */
     if (xflags & (XING_FRAMES_FLAG | XING_BYTES_FLAG)) {
       if (header->layer == MAD_LAYER_I) {
-        frame_duration = 384.0 / (double)header->samplerate;
+	frame_duration = 384.0 / (double) header->samplerate;
       } else {
-        int slots_per_frame;
-	slots_per_frame = ((header->layer == MAD_LAYER_III) && !lsf_bit) ? 72 : 144;
-	frame_duration = slots_per_frame * 8.0 / (double)header->samplerate;
+	int slots_per_frame;
+
+	slots_per_frame = ((header->layer == MAD_LAYER_III)
+	    && !lsf_bit) ? 72 : 144;
+	frame_duration = slots_per_frame * 8.0 / (double) header->samplerate;
       }
-      abr = ((double)xbytes * 8.0) / ((double)xframes * frame_duration);
-      lprintf("abr: %d bps\n", abr);
+      abr = ((double) xbytes * 8.0) / ((double) xframes * frame_duration);
+      lprintf ("abr: %d bps\n", abr);
       if (bitrate != NULL) {
 	*bitrate = abr;
       }
       if (time != NULL) {
-	*time = (double)xframes * frame_duration;
-	lprintf("stream_length: %d s, %d min %d s\n", *time,
-		*time / 60, *time % 60);
+	*time = (double) xframes *frame_duration;
+
+	lprintf ("stream_length: %d s, %d min %d s\n", *time,
+	    *time / 60, *time % 60);
       }
     } else {
       /* it's a stupid Xing header */
@@ -1082,15 +1085,16 @@ static int mpg123_parse_xing_header(struct mad_header *header,
     }
     return 1;
   } else {
-    lprintf("Xing header not found\n");
+    lprintf ("Xing header not found\n");
     return 0;
   }
 }
+
 /* End of Xine code */
 
 
 static void
-gst_mad_chain (GstPad *pad, GstData *_data)
+gst_mad_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buffer = GST_BUFFER (_data);
   GstMad *mad;
@@ -1103,8 +1107,7 @@ gst_mad_chain (GstPad *pad, GstData *_data)
   g_return_if_fail (GST_IS_MAD (mad));
 
   /* handle events */
-  if (GST_IS_EVENT (buffer))
-  {
+  if (GST_IS_EVENT (buffer)) {
     gst_mad_handle_event (pad, buffer);
     return;
   }
@@ -1138,8 +1141,7 @@ gst_mad_chain (GstPad *pad, GstData *_data)
 
   /* process the incoming buffer in chunks of maximum MAD_BUFFER_MDLEN bytes;
    * this is the upper limit on processable chunk sizes set by mad */
-  while (size > 0)
-  {
+  while (size > 0) {
     gint tocopy;
     guchar *mad_input_buffer;
 
@@ -1171,25 +1173,23 @@ gst_mad_chain (GstPad *pad, GstData *_data)
 	if (mad->stream.error == MAD_ERROR_BUFLEN) {
 	  break;
 	}
-        if (!MAD_RECOVERABLE (mad->stream.error)) {
-          GST_ELEMENT_ERROR (mad, STREAM, DECODE, (NULL), (NULL));
-          return;
-        }
-	else if (mad->stream.error == MAD_ERROR_LOSTSYNC) {
+	if (!MAD_RECOVERABLE (mad->stream.error)) {
+	  GST_ELEMENT_ERROR (mad, STREAM, DECODE, (NULL), (NULL));
+	  return;
+	} else if (mad->stream.error == MAD_ERROR_LOSTSYNC) {
 	  /* lost sync, force a resync */
 	  signed long tagsize;
 
 	  tagsize = id3_tag_query (mad->stream.this_frame,
-	                          mad->stream.bufend - mad->stream.this_frame);
+	      mad->stream.bufend - mad->stream.this_frame);
 
 	  if (tagsize > mad->tempsize) {
-            GST_INFO ("mad: got partial id3 tag in buffer, skipping");
-	  }
-	  else if (tagsize > 0) {
+	    GST_INFO ("mad: got partial id3 tag in buffer, skipping");
+	  } else if (tagsize > 0) {
 	    struct id3_tag *tag;
 	    id3_byte_t const *data;
 
-            GST_INFO ("mad: got ID3 tag size %ld", tagsize);
+	    GST_INFO ("mad: got ID3 tag size %ld", tagsize);
 
 	    data = mad->stream.this_frame;
 
@@ -1232,14 +1232,12 @@ gst_mad_chain (GstPad *pad, GstData *_data)
 	int frame_len = mad->stream.next_frame - mad->stream.this_frame;
 
 	/* Assume Xing headers can only be the first frame in a mp3 file */
-	if (mpg123_parse_xing_header (&mad->frame.header, 
-				      mad->stream.this_frame, 
-				      frame_len, &bitrate, &time)) {
+	if (mpg123_parse_xing_header (&mad->frame.header,
+		mad->stream.this_frame, frame_len, &bitrate, &time)) {
 	  list = gst_tag_list_new ();
-	  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, 
-			    GST_TAG_DURATION, (gint64)time*1000*1000*1000,
-			    GST_TAG_BITRATE, bitrate,
-			    NULL);
+	  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+	      GST_TAG_DURATION, (gint64) time * 1000 * 1000 * 1000,
+	      GST_TAG_BITRATE, bitrate, NULL);
 	  gst_element_found_tags (GST_ELEMENT (mad), list);
 	  if (GST_PAD_IS_USABLE (mad->srcpad)) {
 	    gst_pad_push (mad->srcpad, GST_DATA (gst_event_new_tag (list)));
@@ -1252,8 +1250,8 @@ gst_mad_chain (GstPad *pad, GstData *_data)
 	goto next;
       }
       nchannels = MAD_NCHANNELS (&mad->frame.header);
-      nsamples  = MAD_NSBSAMPLES (&mad->frame.header) *
-         (mad->stream.options & MAD_OPTION_HALFSAMPLERATE ? 16 : 32);
+      nsamples = MAD_NSBSAMPLES (&mad->frame.header) *
+	  (mad->stream.options & MAD_OPTION_HALFSAMPLERATE ? 16 : 32);
 
 #if MAD_VERSION_MINOR <= 12
       rate = mad->header.sfreq;
@@ -1266,19 +1264,17 @@ gst_mad_chain (GstPad *pad, GstData *_data)
       if (mad->channels != nchannels || mad->rate != rate) {
 	GstCaps *caps;
 
-        if (mad->stream.options & MAD_OPTION_HALFSAMPLERATE)	  
-	  rate >>=1;
+	if (mad->stream.options & MAD_OPTION_HALFSAMPLERATE)
+	  rate >>= 1;
 
 	/* we set the caps even when the pad is not connected so they
 	 * can be gotten for streaminfo */
 	caps = gst_caps_new_simple ("audio/x-raw-int",
-				    "endianness",  G_TYPE_INT, G_BYTE_ORDER,
-				    "signed",      G_TYPE_BOOLEAN, TRUE,
-				    "width",       G_TYPE_INT, 16,
-				    "depth",       G_TYPE_INT, 16,
-				    "rate",        G_TYPE_INT, rate,
-				    "channels",    G_TYPE_INT, nchannels,
-				    NULL);
+	    "endianness", G_TYPE_INT, G_BYTE_ORDER,
+	    "signed", G_TYPE_BOOLEAN, TRUE,
+	    "width", G_TYPE_INT, 16,
+	    "depth", G_TYPE_INT, 16,
+	    "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, nchannels, NULL);
 
 	gst_pad_set_explicit_caps (mad->srcpad, caps);
 	gst_caps_free (caps);
@@ -1287,68 +1283,70 @@ gst_mad_chain (GstPad *pad, GstData *_data)
       }
 
       if (mad->frame.header.samplerate == 0) {
-	g_warning ("mad->frame.header.samplerate is 0; timestamps cannot be calculated");
+	g_warning
+	    ("mad->frame.header.samplerate is 0; timestamps cannot be calculated");
 	time_offset = GST_CLOCK_TIME_NONE;
 	time_duration = GST_CLOCK_TIME_NONE;
-      }
-      else {
+      } else {
 	/* if we have a pending timestamp, we can use it now to calculate the sample offset */
 	if (GST_CLOCK_TIME_IS_VALID (mad->last_ts)) {
-          GstFormat format = GST_FORMAT_DEFAULT;
-          gst_pad_convert (mad->srcpad, GST_FORMAT_TIME, mad->last_ts, &format, &mad->total_samples);
+	  GstFormat format = GST_FORMAT_DEFAULT;
+
+	  gst_pad_convert (mad->srcpad, GST_FORMAT_TIME, mad->last_ts, &format,
+	      &mad->total_samples);
 	  mad->last_ts = GST_CLOCK_TIME_NONE;
 	}
 	time_offset = mad->total_samples * GST_SECOND
-					/ mad->frame.header.samplerate;
-	time_duration = (nsamples * GST_SECOND
-			 / mad->frame.header.samplerate);
+	    / mad->frame.header.samplerate;
+	time_duration = (nsamples * GST_SECOND / mad->frame.header.samplerate);
       }
 
       if (mad->index) {
 	guint64 x_bytes = mad->base_byte_offset + mad->bytes_consumed;
 
 	gst_index_add_association (mad->index, mad->index_id, 0,
-				   GST_FORMAT_BYTES, x_bytes,
-				   GST_FORMAT_TIME, time_offset,
-				   NULL);
+	    GST_FORMAT_BYTES, x_bytes, GST_FORMAT_TIME, time_offset, NULL);
       }
 
       if (GST_PAD_IS_USABLE (mad->srcpad) &&
-	  mad->segment_start <= (time_offset == GST_CLOCK_TIME_NONE ? 0 : time_offset)) {
+	  mad->segment_start <= (time_offset ==
+	      GST_CLOCK_TIME_NONE ? 0 : time_offset)) {
 
 	/* for sample accurate seeking, calculate how many samples
 	   to skip and send the remaining pcm samples */
 
-        GstBuffer *outbuffer;
-        gint16 *outdata;
-        mad_fixed_t const *left_ch, *right_ch;
+	GstBuffer *outbuffer;
+	gint16 *outdata;
+	mad_fixed_t const *left_ch, *right_ch;
 
-        mad_synth_frame (&mad->synth, &mad->frame);
-        left_ch   = mad->synth.pcm.samples[0];
-        right_ch  = mad->synth.pcm.samples[1];
+	mad_synth_frame (&mad->synth, &mad->frame);
+	left_ch = mad->synth.pcm.samples[0];
+	right_ch = mad->synth.pcm.samples[1];
 
-        outbuffer = gst_buffer_new_and_alloc (nsamples * nchannels * 2);
-        outdata = (gint16 *) GST_BUFFER_DATA (outbuffer);
+	outbuffer = gst_buffer_new_and_alloc (nsamples * nchannels * 2);
+	outdata = (gint16 *) GST_BUFFER_DATA (outbuffer);
 
 	GST_BUFFER_TIMESTAMP (outbuffer) = time_offset;
 	GST_BUFFER_DURATION (outbuffer) = time_duration;
 	GST_BUFFER_OFFSET (outbuffer) = mad->total_samples;
 
-        /* output sample(s) in 16-bit signed native-endian PCM */
-        if (nchannels == 1) {
-          gint count = nsamples;
-          while (count--) {
-            *outdata++ = scale(*left_ch++) & 0xffff;
-          }
-	} else {
-          gint count = nsamples;
-          while (count--) {
-            *outdata++ = scale(*left_ch++) & 0xffff;
-            *outdata++ = scale(*right_ch++) & 0xffff;
-          }
-        }
+	/* output sample(s) in 16-bit signed native-endian PCM */
+	if (nchannels == 1) {
+	  gint count = nsamples;
 
-        gst_pad_push (mad->srcpad, GST_DATA (outbuffer));
+	  while (count--) {
+	    *outdata++ = scale (*left_ch++) & 0xffff;
+	  }
+	} else {
+	  gint count = nsamples;
+
+	  while (count--) {
+	    *outdata++ = scale (*left_ch++) & 0xffff;
+	    *outdata++ = scale (*right_ch++) & 0xffff;
+	  }
+	}
+
+	gst_pad_push (mad->srcpad, GST_DATA (outbuffer));
       }
 
       mad->total_samples += nsamples;
@@ -1366,7 +1364,7 @@ gst_mad_chain (GstPad *pad, GstData *_data)
 	goto end;
       }
 
-next:
+    next:
       /* figure out how many bytes mad consumed */
       consumed = mad->stream.next_frame - mad_input_buffer;
       /* move out pointer to where mad want the next data */
@@ -1382,7 +1380,7 @@ end:
 }
 
 static GstElementStateReturn
-gst_mad_change_state (GstElement *element)
+gst_mad_change_state (GstElement * element)
 {
   GstMad *mad;
 
@@ -1409,8 +1407,10 @@ gst_mad_change_state (GstElement *element)
       mad->vbr_rate = 0;
       mad->frame.header.samplerate = 0;
       mad->last_ts = GST_CLOCK_TIME_NONE;
-      if (mad->ignore_crc) options |= MAD_OPTION_IGNORECRC;
-      if (mad->half) options |= MAD_OPTION_HALFSAMPLERATE;
+      if (mad->ignore_crc)
+	options |= MAD_OPTION_IGNORECRC;
+      if (mad->half)
+	options |= MAD_OPTION_HALFSAMPLERATE;
       mad_stream_options (&mad->stream, options);
       break;
     }

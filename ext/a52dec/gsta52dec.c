@@ -57,43 +57,37 @@ enum
  * "audio/a52" and "audio/ac3" are the same format.  The name
  * "ac3" is now deprecated and should not be used in new code.
  */
-static GstStaticPadTemplate sink_factory =
-GST_STATIC_PAD_TEMPLATE (
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("audio/x-ac3")
-);
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-ac3")
+    );
 
-static GstStaticPadTemplate src_factory =
-GST_STATIC_PAD_TEMPLATE (
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("audio/x-raw-int, "
-    "endianness = (int) BYTE_ORDER, "
-    "signed = (boolean) true, "
-    "width = (int) 16, "
-    "depth = (int) 16, "
-    "rate = (int) [ 4000, 48000 ], "
-    "channels = (int) [ 1, 6 ]"
-  )
-);
+static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+	"endianness = (int) BYTE_ORDER, "
+	"signed = (boolean) true, "
+	"width = (int) 16, "
+	"depth = (int) 16, "
+	"rate = (int) [ 4000, 48000 ], " "channels = (int) [ 1, 6 ]")
+    );
 
-static void		gst_a52dec_base_init	(gpointer g_class);
-static void 		gst_a52dec_class_init 	(GstA52DecClass * klass);
-static void 		gst_a52dec_init 	(GstA52Dec * a52dec);
+static void gst_a52dec_base_init (gpointer g_class);
+static void gst_a52dec_class_init (GstA52DecClass * klass);
+static void gst_a52dec_init (GstA52Dec * a52dec);
 
-static void 		gst_a52dec_loop 	(GstElement * element);
-static GstElementStateReturn 
-			gst_a52dec_change_state (GstElement * element);
+static void gst_a52dec_loop (GstElement * element);
+static GstElementStateReturn gst_a52dec_change_state (GstElement * element);
 
-static void 		gst_a52dec_set_property (GObject * object, guint prop_id,
-				    		 const GValue * value, GParamSpec * pspec);
-static void 		gst_a52dec_get_property (GObject * object, guint prop_id,
-				    		 GValue * value, GParamSpec * pspec);
+static void gst_a52dec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_a52dec_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static GstElementClass *parent_class = NULL;
+
 /* static guint gst_a52dec_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
@@ -103,8 +97,8 @@ gst_a52dec_get_type (void)
 
   if (!a52dec_type) {
     static const GTypeInfo a52dec_info = {
-      sizeof (GstA52DecClass), 
-      gst_a52dec_base_init, 
+      sizeof (GstA52DecClass),
+      gst_a52dec_base_init,
       NULL, (GClassInitFunc) gst_a52dec_class_init,
       NULL,
       NULL,
@@ -113,7 +107,8 @@ gst_a52dec_get_type (void)
       (GInstanceInitFunc) gst_a52dec_init,
     };
 
-    a52dec_type = g_type_register_static (GST_TYPE_ELEMENT, "GstA52Dec", &a52dec_info, 0);
+    a52dec_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstA52Dec", &a52dec_info, 0);
   }
   return a52dec_type;
 }
@@ -141,9 +136,8 @@ gst_a52dec_class_init (GstA52DecClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DRC,
-    g_param_spec_boolean ("drc", "Dynamic Range Compression",
-                          "Use Dynamic Range Compression", FALSE,
-                          G_PARAM_READWRITE));
+      g_param_spec_boolean ("drc", "Dynamic Range Compression",
+	  "Use Dynamic Range Compression", FALSE, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_a52dec_set_property;
   gobject_class->get_property = gst_a52dec_get_property;
@@ -155,13 +149,15 @@ static void
 gst_a52dec_init (GstA52Dec * a52dec)
 {
   /* create the sink and src pads */
-  a52dec->sinkpad = gst_pad_new_from_template (
-      gst_element_get_pad_template (GST_ELEMENT (a52dec), "sink"), "sink");
+  a52dec->sinkpad =
+      gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
+	  (a52dec), "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->sinkpad);
   gst_element_set_loop_function ((GstElement *) a52dec, gst_a52dec_loop);
 
-  a52dec->srcpad = gst_pad_new_from_template (
-      gst_element_get_pad_template (GST_ELEMENT (a52dec), "src"), "src");
+  a52dec->srcpad =
+      gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
+	  (a52dec), "src"), "src");
   gst_pad_use_explicit_caps (a52dec->srcpad);
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->srcpad);
 
@@ -190,87 +186,87 @@ float_to_int (float *_f, int16_t * s16, int flags)
   switch (flags) {
     case A52_MONO:
       for (i = 0; i < 256; i++) {
-        s16[5 * i] = s16[5 * i + 1] = s16[5 * i + 2] = s16[5 * i + 3] = 0;
-        s16[5 * i + 4] = convert (f[i]);
+	s16[5 * i] = s16[5 * i + 1] = s16[5 * i + 2] = s16[5 * i + 3] = 0;
+	s16[5 * i + 4] = convert (f[i]);
       }
       break;
     case A52_CHANNEL:
     case A52_STEREO:
     case A52_DOLBY:
       for (i = 0; i < 256; i++) {
-        s16[2 * i] = convert (f[i]);
-        s16[2 * i + 1] = convert (f[i + 256]);
+	s16[2 * i] = convert (f[i]);
+	s16[2 * i + 1] = convert (f[i + 256]);
       }
       break;
     case A52_3F:
       for (i = 0; i < 256; i++) {
-        s16[5 * i] = convert (f[i]);
-        s16[5 * i + 1] = convert (f[i + 512]);
-        s16[5 * i + 2] = s16[5 * i + 3] = 0;
-        s16[5 * i + 4] = convert (f[i + 256]);
+	s16[5 * i] = convert (f[i]);
+	s16[5 * i + 1] = convert (f[i + 512]);
+	s16[5 * i + 2] = s16[5 * i + 3] = 0;
+	s16[5 * i + 4] = convert (f[i + 256]);
       }
       break;
     case A52_2F2R:
       for (i = 0; i < 256; i++) {
-        s16[4 * i] = convert (f[i]);
-        s16[4 * i + 1] = convert (f[i + 256]);
-        s16[4 * i + 2] = convert (f[i + 512]);
-        s16[4 * i + 3] = convert (f[i + 768]);
+	s16[4 * i] = convert (f[i]);
+	s16[4 * i + 1] = convert (f[i + 256]);
+	s16[4 * i + 2] = convert (f[i + 512]);
+	s16[4 * i + 3] = convert (f[i + 768]);
       }
       break;
     case A52_3F2R:
       for (i = 0; i < 256; i++) {
-        s16[5 * i] = convert (f[i]);
-        s16[5 * i + 1] = convert (f[i + 512]);
-        s16[5 * i + 2] = convert (f[i + 768]);
-        s16[5 * i + 3] = convert (f[i + 1024]);
-        s16[5 * i + 4] = convert (f[i + 256]);
+	s16[5 * i] = convert (f[i]);
+	s16[5 * i + 1] = convert (f[i + 512]);
+	s16[5 * i + 2] = convert (f[i + 768]);
+	s16[5 * i + 3] = convert (f[i + 1024]);
+	s16[5 * i + 4] = convert (f[i + 256]);
       }
       break;
     case A52_MONO | A52_LFE:
       for (i = 0; i < 256; i++) {
-        s16[6 * i] = s16[6 * i + 1] = s16[6 * i + 2] = s16[6 * i + 3] = 0;
-        s16[6 * i + 4] = convert (f[i + 256]);
-        s16[6 * i + 5] = convert (f[i]);
+	s16[6 * i] = s16[6 * i + 1] = s16[6 * i + 2] = s16[6 * i + 3] = 0;
+	s16[6 * i + 4] = convert (f[i + 256]);
+	s16[6 * i + 5] = convert (f[i]);
       }
       break;
     case A52_CHANNEL | A52_LFE:
     case A52_STEREO | A52_LFE:
     case A52_DOLBY | A52_LFE:
       for (i = 0; i < 256; i++) {
-        s16[6 * i] = convert (f[i + 256]);
-        s16[6 * i + 1] = convert (f[i + 512]);
-        s16[6 * i + 2] = s16[6 * i + 3] = s16[6 * i + 4] = 0;
-        s16[6 * i + 5] = convert (f[i]);
+	s16[6 * i] = convert (f[i + 256]);
+	s16[6 * i + 1] = convert (f[i + 512]);
+	s16[6 * i + 2] = s16[6 * i + 3] = s16[6 * i + 4] = 0;
+	s16[6 * i + 5] = convert (f[i]);
       }
       break;
     case A52_3F | A52_LFE:
       for (i = 0; i < 256; i++) {
-        s16[6 * i] = convert (f[i + 256]);
-        s16[6 * i + 1] = convert (f[i + 768]);
-        s16[6 * i + 2] = s16[6 * i + 3] = 0;
-        s16[6 * i + 4] = convert (f[i + 512]);
-        s16[6 * i + 5] = convert (f[i]);
+	s16[6 * i] = convert (f[i + 256]);
+	s16[6 * i + 1] = convert (f[i + 768]);
+	s16[6 * i + 2] = s16[6 * i + 3] = 0;
+	s16[6 * i + 4] = convert (f[i + 512]);
+	s16[6 * i + 5] = convert (f[i]);
       }
       break;
     case A52_2F2R | A52_LFE:
       for (i = 0; i < 256; i++) {
-        s16[6 * i] = convert (f[i + 256]);
-        s16[6 * i + 1] = convert (f[i + 512]);
-        s16[6 * i + 2] = convert (f[i + 768]);
-        s16[6 * i + 3] = convert (f[i + 1024]);
-        s16[6 * i + 4] = 0;
-        s16[6 * i + 5] = convert (f[i]);
+	s16[6 * i] = convert (f[i + 256]);
+	s16[6 * i + 1] = convert (f[i + 512]);
+	s16[6 * i + 2] = convert (f[i + 768]);
+	s16[6 * i + 3] = convert (f[i + 1024]);
+	s16[6 * i + 4] = 0;
+	s16[6 * i + 5] = convert (f[i]);
       }
       break;
     case A52_3F2R | A52_LFE:
       for (i = 0; i < 256; i++) {
-        s16[6 * i] = convert (f[i + 256]);
-        s16[6 * i + 1] = convert (f[i + 768]);
-        s16[6 * i + 2] = convert (f[i + 1024]);
-        s16[6 * i + 3] = convert (f[i + 1280]);
-        s16[6 * i + 4] = convert (f[i + 512]);
-        s16[6 * i + 5] = convert (f[i]);
+	s16[6 * i] = convert (f[i + 256]);
+	s16[6 * i + 1] = convert (f[i + 768]);
+	s16[6 * i + 2] = convert (f[i + 1024]);
+	s16[6 * i + 3] = convert (f[i + 1280]);
+	s16[6 * i + 4] = convert (f[i + 512]);
+	s16[6 * i + 5] = convert (f[i]);
       }
       break;
   }
@@ -310,7 +306,8 @@ gst_a52dec_channels (int flags)
 }
 
 static int
-gst_a52dec_push (GstPad * srcpad, int flags, sample_t * _samples, gint64 timestamp)
+gst_a52dec_push (GstPad * srcpad, int flags, sample_t * _samples,
+    gint64 timestamp)
 {
   GstBuffer *buf;
   int chans;
@@ -348,21 +345,19 @@ gst_a52dec_push (GstPad * srcpad, int flags, sample_t * _samples, gint64 timesta
 static void
 gst_a52dec_reneg (GstPad * pad, int channels, int rate)
 {
-  GST_INFO ( "a52dec: reneg channels:%d rate:%d\n", channels, rate);
+  GST_INFO ("a52dec: reneg channels:%d rate:%d\n", channels, rate);
 
-  gst_pad_set_explicit_caps (pad, 
+  gst_pad_set_explicit_caps (pad,
       gst_caps_new_simple ("audio/x-raw-int",
-	"endianness",	G_TYPE_INT, G_BYTE_ORDER,
-	"signed", 	G_TYPE_BOOLEAN, TRUE,
-	"width", 	G_TYPE_INT, 16,
-	"depth", 	G_TYPE_INT, 16,
-	"channels", 	G_TYPE_INT, channels,
-	"rate", 	G_TYPE_INT, rate,
-	NULL));
+	  "endianness", G_TYPE_INT, G_BYTE_ORDER,
+	  "signed", G_TYPE_BOOLEAN, TRUE,
+	  "width", G_TYPE_INT, 16,
+	  "depth", G_TYPE_INT, 16,
+	  "channels", G_TYPE_INT, channels, "rate", G_TYPE_INT, rate, NULL));
 }
 
 static void
-gst_a52dec_handle_event (GstA52Dec *a52dec)
+gst_a52dec_handle_event (GstA52Dec * a52dec)
 {
   guint32 remaining;
   GstEvent *event;
@@ -385,27 +380,26 @@ gst_a52dec_handle_event (GstA52Dec *a52dec)
 
 #if 0
 static void
-gst_a52dec_update_streaminfo (GstA52Dec *a52dec)
+gst_a52dec_update_streaminfo (GstA52Dec * a52dec)
 {
   GstProps *props;
   GstPropsEntry *entry;
-	      
+
   props = gst_props_empty_new ();
-	      
+
   entry = gst_props_entry_new ("bitrate", GST_PROPS_INT (a52dec->bit_rate));
   gst_props_add_entry (props, (GstPropsEntry *) entry);
 
   gst_caps_unref (a52dec->streaminfo);
 
   a52dec->streaminfo = gst_caps_new ("a52dec_streaminfo",
-	                             "application/x-gst-streaminfo",
-				     props);
+      "application/x-gst-streaminfo", props);
   g_object_notify (G_OBJECT (a52dec), "streaminfo");
 }
 #endif
 
 static void
-gst_a52dec_loop (GstElement *element)
+gst_a52dec_loop (GstElement * element)
 {
   GstA52Dec *a52dec;
   guint8 *data;
@@ -429,8 +423,7 @@ gst_a52dec_loop (GstElement *element)
     if (length == 0) {
       /* slide window to next 7 bytesa */
       gst_bytestream_flush_fast (a52dec->bs, 1);
-    }
-    else
+    } else
       break;
 
     /* FIXME this can potentially be an infinite loop, we might
@@ -460,8 +453,7 @@ gst_a52dec_loop (GstElement *element)
   timestamp = gst_bytestream_get_timestamp (a52dec->bs);
   if (timestamp == a52dec->last_ts) {
     timestamp = a52dec->current_ts;
-  }
-  else {
+  } else {
     a52dec->last_ts = timestamp;
   }
 
@@ -483,9 +475,9 @@ gst_a52dec_loop (GstElement *element)
 
   if (need_reneg == TRUE) {
     GST_DEBUG ("a52dec reneg: sample_rate:%d stream_chans:%d using_chans:%d\n",
-        a52dec->sample_rate, a52dec->stream_channels, a52dec->using_channels);
+	a52dec->sample_rate, a52dec->stream_channels, a52dec->using_channels);
     gst_a52dec_reneg (a52dec->srcpad,
-        gst_a52dec_channels (a52dec->using_channels), a52dec->sample_rate);
+	gst_a52dec_channels (a52dec->using_channels), a52dec->sample_rate);
   }
 
   if (a52dec->dynamic_range_compression == FALSE) {
@@ -498,10 +490,10 @@ gst_a52dec_loop (GstElement *element)
       continue;
     }
     /* push on */
-    if (gst_a52dec_push (a52dec->srcpad, a52dec->using_channels, a52dec->samples, timestamp)) {
+    if (gst_a52dec_push (a52dec->srcpad, a52dec->using_channels,
+	    a52dec->samples, timestamp)) {
       g_warning ("a52dec push error\n");
-    }
-    else {
+    } else {
       timestamp += sizeof (int16_t) * 256 * GST_SECOND / a52dec->sample_rate;
     }
   }
@@ -558,7 +550,8 @@ gst_a52dec_change_state (GstElement * element)
 }
 
 static void
-gst_a52dec_set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec * pspec)
+gst_a52dec_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
 {
   GstA52Dec *src;
 
@@ -577,7 +570,8 @@ gst_a52dec_set_property (GObject * object, guint prop_id, const GValue * value, 
 }
 
 static void
-gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value, GParamSpec * pspec)
+gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstA52Dec *src;
 
@@ -602,20 +596,15 @@ plugin_init (GstPlugin * plugin)
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
-  if (!gst_element_register (plugin, "a52dec", GST_RANK_PRIMARY, GST_TYPE_A52DEC))
+  if (!gst_element_register (plugin, "a52dec", GST_RANK_PRIMARY,
+	  GST_TYPE_A52DEC))
     return FALSE;
 
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "a52dec",
-  "Decodes ATSC A/52 encoded audio streams",
-  plugin_init,
-  VERSION,
-  "GPL",
-  GST_PACKAGE,
-  GST_ORIGIN
-);
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "a52dec",
+    "Decodes ATSC A/52 encoded audio streams",
+    plugin_init, VERSION, "GPL", GST_PACKAGE, GST_ORIGIN);

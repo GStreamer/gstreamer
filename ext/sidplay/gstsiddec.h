@@ -28,7 +28,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_SIDDEC \
   (gst_siddec_get_type())
 #define GST_SIDDEC(obj) \
@@ -39,38 +38,37 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SIDDEC))
 #define GST_IS_SIDDEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SIDDEC))
-
 typedef struct _GstSidDec GstSidDec;
 typedef struct _GstSidDecClass GstSidDecClass;
 
-struct _GstSidDec {
-  GstElement 	 element;
+struct _GstSidDec
+{
+  GstElement element;
 
   /* pads */
-  GstPad 	*sinkpad, 
-  		*srcpad;
+  GstPad *sinkpad, *srcpad;
 
-  gint 		 state;
-  guchar	*tune_buffer;
-  gint		 tune_len;
-  gint 		 tune_number;
-  guint64 	 total_bytes;
+  gint state;
+  guchar *tune_buffer;
+  gint tune_len;
+  gint tune_number;
+  guint64 total_bytes;
 
-  emuEngine 	*engine;
-  sidTune 	*tune;
-  emuConfig 	*config;
+  emuEngine *engine;
+  sidTune *tune;
+  emuConfig *config;
 
-  gulong	 blocksize;
+  gulong blocksize;
 
-  GstCaps	*metadata;
+  GstCaps *metadata;
 };
 
-struct _GstSidDecClass {
+struct _GstSidDecClass
+{
   GstElementClass parent_class;
 };
 
 GType gst_siddec_get_type (void);
-	
-G_END_DECLS
 
+G_END_DECLS
 #endif /* __GST_SIDDEC_H__ */

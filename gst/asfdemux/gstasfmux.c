@@ -49,9 +49,7 @@
 #include "gstasfmux.h"
 
 /* elementfactory information */
-static GstElementDetails 
-gst_asfmux_details = 
-{
+static GstElementDetails gst_asfmux_details = {
   "Asf multiplexer",
   "Codec/Muxer",
   "Muxes audio and video streams into an asf stream",
@@ -59,122 +57,114 @@ gst_asfmux_details =
 };
 
 /* AsfMux signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
 };
 
 static GstStaticPadTemplate gst_asfmux_src_template =
-GST_STATIC_PAD_TEMPLATE (
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("video/x-ms-asf")
-);
-    
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-ms-asf")
+    );
+
 static GstStaticPadTemplate gst_asfmux_videosink_template =
-GST_STATIC_PAD_TEMPLATE (
-  "video_%d",
-  GST_PAD_SINK,
-  GST_PAD_REQUEST,
-  GST_STATIC_CAPS (
-    "video/x-raw-yuv, "
-      "format = (fourcc) { YUY2, I420 }, "
-      "width = (int) [ 1, MAX], "
-      "height = (int) [ 1, MAX]; "
-    "video/x-jpeg, "
-      "width = (int) [ 1, MAX], "
-      "height = (int) [ 1, MAX]; "
-    "video/x-divx, "
-      "divxversion = (int) [ 3, 5 ], "
-      "width = (int) [ 1, MAX], "
-      "height = (int) [ 1, MAX]; "
-    "video/x-xvid, "
-      "width = (int) [ 1, MAX], "
-      "height = (int) [ 1, MAX]; "
-    "video/x-3ivx, "
-      "width = (int) [ 1, MAX], "
-      "height = (int) [ 1, MAX]; "
-    "video/x-msmpeg, "
-      "msmpegversion = (int) [ 41, 43 ], "
-      "width = (int) [ 1, MAX], "
-      "height = (int) [ 1, MAX]; "
-    "video/mpeg, "
-      "mpegversion = (int) 1,"
-      "systemstream = (boolean) false,"
-      "width = (int) [ 1, MAX], "
-      "height = (int) [ 1, MAX]; "
-    "video/x-h263, "
-      "width = (int) [ 1, MAX], "
-      "height = (int) [ 1, MAX]; "
-    "video/x-dv, "
-      "systemstream = (boolean) false,"
-      "width = (int) 720,"
-      "height = (int) { 576, 480 };"
-    "video/x-huffyuv, "
-      "width = (int) [ 1, MAX], "
-      "height = (int) [ 1, MAX]"
-  )
-);
-    
+    GST_STATIC_PAD_TEMPLATE ("video_%d",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS ("video/x-raw-yuv, "
+	"format = (fourcc) { YUY2, I420 }, "
+	"width = (int) [ 1, MAX], "
+	"height = (int) [ 1, MAX]; "
+	"video/x-jpeg, "
+	"width = (int) [ 1, MAX], "
+	"height = (int) [ 1, MAX]; "
+	"video/x-divx, "
+	"divxversion = (int) [ 3, 5 ], "
+	"width = (int) [ 1, MAX], "
+	"height = (int) [ 1, MAX]; "
+	"video/x-xvid, "
+	"width = (int) [ 1, MAX], "
+	"height = (int) [ 1, MAX]; "
+	"video/x-3ivx, "
+	"width = (int) [ 1, MAX], "
+	"height = (int) [ 1, MAX]; "
+	"video/x-msmpeg, "
+	"msmpegversion = (int) [ 41, 43 ], "
+	"width = (int) [ 1, MAX], "
+	"height = (int) [ 1, MAX]; "
+	"video/mpeg, "
+	"mpegversion = (int) 1,"
+	"systemstream = (boolean) false,"
+	"width = (int) [ 1, MAX], "
+	"height = (int) [ 1, MAX]; "
+	"video/x-h263, "
+	"width = (int) [ 1, MAX], "
+	"height = (int) [ 1, MAX]; "
+	"video/x-dv, "
+	"systemstream = (boolean) false,"
+	"width = (int) 720,"
+	"height = (int) { 576, 480 };"
+	"video/x-huffyuv, "
+	"width = (int) [ 1, MAX], " "height = (int) [ 1, MAX]")
+    );
+
 static GstStaticPadTemplate gst_asfmux_audiosink_template =
-GST_STATIC_PAD_TEMPLATE (
-  "audio_%d",
-  GST_PAD_SINK,
-  GST_PAD_REQUEST,
-  GST_STATIC_CAPS (
-    "audio/x-raw-int, "
-      "endianness = (int) LITTLE_ENDIAN, "
-      "signed = (boolean) { true, false }, "
-      "width = (int) { 8, 16 }, "
-      "depth = (int) { 8, 16 }, "
-      "rate = (int) [ 1000, 96000 ], "
-      "channels = (int) [ 1, 2]; "
-    "audio/mpeg, "
-      "mpegversion = (int) 1, "
-      "layer = (int) { 1, 3 }, "
-      "rate = (int) [ 1000, 96000 ], "
-      "channels = (int) [ 1, 2]; "
-    "audio/x-vorbis, "
-      "rate = (int) [ 1000, 96000 ], "
-      "channels = (int) [ 1, 2]; "
-    "audio/x-ac3, "
-      "rate = (int) [ 1000, 96000 ], "
-      "channels = (int) [ 1, 2]"
-  )
-);
-    
+    GST_STATIC_PAD_TEMPLATE ("audio_%d",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+	"endianness = (int) LITTLE_ENDIAN, "
+	"signed = (boolean) { true, false }, "
+	"width = (int) { 8, 16 }, "
+	"depth = (int) { 8, 16 }, "
+	"rate = (int) [ 1000, 96000 ], "
+	"channels = (int) [ 1, 2]; "
+	"audio/mpeg, "
+	"mpegversion = (int) 1, "
+	"layer = (int) { 1, 3 }, "
+	"rate = (int) [ 1000, 96000 ], "
+	"channels = (int) [ 1, 2]; "
+	"audio/x-vorbis, "
+	"rate = (int) [ 1000, 96000 ], "
+	"channels = (int) [ 1, 2]; "
+	"audio/x-ac3, "
+	"rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2]")
+    );
+
 #define GST_ASF_PACKET_SIZE 3200
 #define GST_ASF_PACKET_HEADER_SIZE 12
 #define GST_ASF_FRAME_HEADER_SIZE 17
 
-static void     gst_asfmux_base_init                 (gpointer g_class);
-static void 	gst_asfmux_class_init		     (GstAsfMuxClass *klass);
-static void 	gst_asfmux_init			     (GstAsfMux      *asfmux);
+static void gst_asfmux_base_init (gpointer g_class);
+static void gst_asfmux_class_init (GstAsfMuxClass * klass);
+static void gst_asfmux_init (GstAsfMux * asfmux);
 
-static void     gst_asfmux_loop                      (GstElement     *element);
-static gboolean gst_asfmux_handle_event              (GstPad         *pad,
-                                                      GstEvent       *event);
-static GstPad*  gst_asfmux_request_new_pad           (GstElement     *element,
-                                                      GstPadTemplate *templ,
-                                                      const gchar    *name);
-static GstElementStateReturn gst_asfmux_change_state (GstElement     *element);
+static void gst_asfmux_loop (GstElement * element);
+static gboolean gst_asfmux_handle_event (GstPad * pad, GstEvent * event);
+static GstPad *gst_asfmux_request_new_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * name);
+static GstElementStateReturn gst_asfmux_change_state (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
+
 /*static guint gst_asfmux_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
-gst_asfmux_get_type (void) 
+gst_asfmux_get_type (void)
 {
   static GType asfmux_type = 0;
 
   if (!asfmux_type) {
     static const GTypeInfo asfmux_info = {
-      sizeof (GstAsfMuxClass),      
+      sizeof (GstAsfMuxClass),
       gst_asfmux_base_init,
       NULL,
       (GClassInitFunc) gst_asfmux_class_init,
@@ -185,8 +175,7 @@ gst_asfmux_get_type (void)
       (GInstanceInitFunc) gst_asfmux_init,
     };
     asfmux_type = g_type_register_static (GST_TYPE_ELEMENT,
-					  "GstAsfMux",
-					  &asfmux_info, 0);
+	"GstAsfMux", &asfmux_info, 0);
   }
   return asfmux_type;
 }
@@ -206,7 +195,7 @@ gst_asfmux_base_init (gpointer g_class)
 }
 
 static void
-gst_asfmux_class_init (GstAsfMuxClass *klass) 
+gst_asfmux_class_init (GstAsfMuxClass * klass)
 {
   GstElementClass *gstelement_class;
 
@@ -219,23 +208,24 @@ gst_asfmux_class_init (GstAsfMuxClass *klass)
 }
 
 static const GstEventMask *
-gst_asfmux_get_event_masks (GstPad *pad)
+gst_asfmux_get_event_masks (GstPad * pad)
 {
   static const GstEventMask gst_asfmux_sink_event_masks[] = {
-    { GST_EVENT_EOS, 0 },
-    { 0, }
+    {GST_EVENT_EOS, 0},
+    {0,}
   };
 
   return gst_asfmux_sink_event_masks;
 }
 
-static void 
-gst_asfmux_init (GstAsfMux *asfmux) 
+static void
+gst_asfmux_init (GstAsfMux * asfmux)
 {
   gint n;
 
-  asfmux->srcpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&gst_asfmux_src_template), "src");
+  asfmux->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&gst_asfmux_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (asfmux), asfmux->srcpad);
 
   GST_FLAG_SET (GST_ELEMENT (asfmux), GST_ELEMENT_EVENT_AWARE);
@@ -255,13 +245,13 @@ gst_asfmux_init (GstAsfMux *asfmux)
 }
 
 static GstPadLinkReturn
-gst_asfmux_vidsink_link (GstPad *pad, const GstCaps *caps)
+gst_asfmux_vidsink_link (GstPad * pad, const GstCaps * caps)
 {
   GstAsfMux *asfmux;
   GstAsfMuxStream *stream = NULL;
   GstStructure *structure;
   gint n;
-  const gchar* mimetype;
+  const gchar *mimetype;
   gint w, h;
   gboolean ret;
 
@@ -278,7 +268,7 @@ gst_asfmux_vidsink_link (GstPad *pad, const GstCaps *caps)
   g_assert (stream->type == ASF_STREAM_VIDEO);
 
   GST_DEBUG ("asfmux: video sinkconnect triggered on %s",
-	     gst_pad_get_name (pad));
+      gst_pad_get_name (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -286,82 +276,92 @@ gst_asfmux_vidsink_link (GstPad *pad, const GstCaps *caps)
   ret = gst_structure_get_int (structure, "width", &w);
   ret &= gst_structure_get_int (structure, "height", &h);
 
-  if(!ret) return GST_PAD_LINK_REFUSED;
+  if (!ret)
+    return GST_PAD_LINK_REFUSED;
 
   stream->header.video.stream.width = w;
   stream->header.video.stream.height = h;
   stream->header.video.stream.unknown = 2;
   stream->header.video.stream.size = 40;
-  stream->bitrate = 0; /* TODO */
+  stream->bitrate = 0;		/* TODO */
 
   mimetype = gst_structure_get_name (structure);
   if (!strcmp (mimetype, "video/x-raw-yuv")) {
     guint32 format;
 
     ret = gst_structure_get_fourcc (structure, "format", &format);
-    if(!ret) return GST_PAD_LINK_REFUSED;
+    if (!ret)
+      return GST_PAD_LINK_REFUSED;
 
     stream->header.video.format.tag = format;
     switch (format) {
-      case GST_MAKE_FOURCC ('Y','U','Y','2'):
-	stream->header.video.format.depth  = 16;
+      case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
+	stream->header.video.format.depth = 16;
 	stream->header.video.format.planes = 1;
 	break;
-      case GST_MAKE_FOURCC ('I','4','2','0'):
-	stream->header.video.format.depth  = 12;
+      case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+	stream->header.video.format.depth = 12;
 	stream->header.video.format.planes = 3;
 	break;
     }
 
     goto done;
   } else {
-    stream->header.video.format.depth  = 24;
+    stream->header.video.format.depth = 24;
     stream->header.video.format.planes = 1;
-    stream->header.video.format.tag    = 0;
+    stream->header.video.format.tag = 0;
 
     /* find format */
     if (!strcmp (mimetype, "video/x-huffyuv")) {
-      stream->header.video.format.tag = GST_MAKE_FOURCC ('H','F','Y','U');
+      stream->header.video.format.tag = GST_MAKE_FOURCC ('H', 'F', 'Y', 'U');
     } else if (!strcmp (mimetype, "video/x-jpeg")) {
-      stream->header.video.format.tag = GST_MAKE_FOURCC ('M','J','P','G');
+      stream->header.video.format.tag = GST_MAKE_FOURCC ('M', 'J', 'P', 'G');
     } else if (!strcmp (mimetype, "video/x-divx")) {
       gint divxversion;
+
       gst_structure_get_int (structure, "divxversion", &divxversion);
       switch (divxversion) {
 	case 3:
-	  stream->header.video.format.tag = GST_MAKE_FOURCC ('D','I','V','3');
+	  stream->header.video.format.tag =
+	      GST_MAKE_FOURCC ('D', 'I', 'V', '3');
 	  break;
 	case 4:
-	  stream->header.video.format.tag = GST_MAKE_FOURCC ('D','I','V','X');
+	  stream->header.video.format.tag =
+	      GST_MAKE_FOURCC ('D', 'I', 'V', 'X');
 	  break;
 	case 5:
-	  stream->header.video.format.tag = GST_MAKE_FOURCC ('D','X','5','0');
+	  stream->header.video.format.tag =
+	      GST_MAKE_FOURCC ('D', 'X', '5', '0');
 	  break;
       }
     } else if (!strcmp (mimetype, "video/x-xvid")) {
-      stream->header.video.format.tag = GST_MAKE_FOURCC ('X','V','I','D');
+      stream->header.video.format.tag = GST_MAKE_FOURCC ('X', 'V', 'I', 'D');
     } else if (!strcmp (mimetype, "video/x-3ivx")) {
-      stream->header.video.format.tag = GST_MAKE_FOURCC ('3','I','V','2');
+      stream->header.video.format.tag = GST_MAKE_FOURCC ('3', 'I', 'V', '2');
     } else if (!strcmp (mimetype, "video/x-msmpeg")) {
       gint msmpegversion;
+
       gst_structure_get_int (structure, "msmpegversion", &msmpegversion);
       switch (msmpegversion) {
 	case 41:
-	  stream->header.video.format.tag = GST_MAKE_FOURCC ('M','P','G','4');
+	  stream->header.video.format.tag =
+	      GST_MAKE_FOURCC ('M', 'P', 'G', '4');
 	  break;
 	case 42:
-	  stream->header.video.format.tag = GST_MAKE_FOURCC ('M','P','4','2');
+	  stream->header.video.format.tag =
+	      GST_MAKE_FOURCC ('M', 'P', '4', '2');
 	  break;
 	case 43:
-	  stream->header.video.format.tag = GST_MAKE_FOURCC ('M','P','4','3');
+	  stream->header.video.format.tag =
+	      GST_MAKE_FOURCC ('M', 'P', '4', '3');
 	  break;
       }
     } else if (!strcmp (mimetype, "video/x-dv")) {
-      stream->header.video.format.tag = GST_MAKE_FOURCC ('D','V','S','D');
+      stream->header.video.format.tag = GST_MAKE_FOURCC ('D', 'V', 'S', 'D');
     } else if (!strcmp (mimetype, "video/x-h263")) {
-      stream->header.video.format.tag = GST_MAKE_FOURCC ('H','2','6','3');
+      stream->header.video.format.tag = GST_MAKE_FOURCC ('H', '2', '6', '3');
     } else if (!strcmp (mimetype, "video/mpeg")) {
-      stream->header.video.format.tag = GST_MAKE_FOURCC ('M','P','E','G');
+      stream->header.video.format.tag = GST_MAKE_FOURCC ('M', 'P', 'E', 'G');
     }
 
     if (!stream->header.video.format.tag) {
@@ -378,7 +378,7 @@ done:
   stream->header.video.format.width = stream->header.video.stream.width;
   stream->header.video.format.height = stream->header.video.stream.height;
   stream->header.video.format.image_size = stream->header.video.stream.width *
-					   stream->header.video.stream.height;
+      stream->header.video.stream.height;
   stream->header.video.format.xpels_meter = 0;
   stream->header.video.format.ypels_meter = 0;
   stream->header.video.format.num_colors = 0;
@@ -388,12 +388,12 @@ done:
 }
 
 static GstPadLinkReturn
-gst_asfmux_audsink_link (GstPad *pad, const GstCaps *caps)
+gst_asfmux_audsink_link (GstPad * pad, const GstCaps * caps)
 {
   GstAsfMux *asfmux;
   GstAsfMuxStream *stream = NULL;
   gint n;
-  const gchar* mimetype;
+  const gchar *mimetype;
   gint rate, channels;
   gboolean ret;
   GstStructure *structure;
@@ -410,8 +410,7 @@ gst_asfmux_audsink_link (GstPad *pad, const GstCaps *caps)
   g_assert (stream != NULL);
   g_assert (stream->type == ASF_STREAM_AUDIO);
 
-  GST_DEBUG ("asfmux: audio sink_link triggered on %s",
-	     gst_pad_get_name (pad));
+  GST_DEBUG ("asfmux: audio sink_link triggered on %s", gst_pad_get_name (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -419,10 +418,11 @@ gst_asfmux_audsink_link (GstPad *pad, const GstCaps *caps)
   ret = gst_structure_get_int (structure, "channels", &channels);
   ret &= gst_structure_get_int (structure, "rate", &rate);
 
-  if (!ret) return GST_PAD_LINK_REFUSED;
+  if (!ret)
+    return GST_PAD_LINK_REFUSED;
 
   stream->header.audio.sample_rate = rate;
-  stream->header.audio.channels    = channels;
+  stream->header.audio.channels = channels;
 
   mimetype = gst_structure_get_name (structure);
   if (!strcmp (mimetype, "audio/x-raw-int")) {
@@ -434,26 +434,28 @@ gst_asfmux_audsink_link (GstPad *pad, const GstCaps *caps)
     gst_structure_get_int (structure, "depth", &size);
 
     stream->header.audio.block_align = block;
-    stream->header.audio.word_size   = size;
-    stream->header.audio.size        = 0;
+    stream->header.audio.word_size = size;
+    stream->header.audio.size = 0;
 
     /* set some more info straight */
     stream->header.audio.block_align /= 8;
     stream->header.audio.block_align *= stream->header.audio.channels;
     stream->header.audio.byte_rate = stream->header.audio.block_align *
-				     stream->header.audio.sample_rate;
+	stream->header.audio.sample_rate;
     goto done;
   } else {
     stream->header.audio.codec_tag = 0;
 
     if (!strcmp (mimetype, "audio/mpeg")) {
       gint layer = 3;
-      gst_structure_get_int(structure, "layer", &layer);
+
+      gst_structure_get_int (structure, "layer", &layer);
       switch (layer) {
 	case 3:
 	  stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_MPEGL3;
 	  break;
-	case 1: case 2:
+	case 1:
+	case 2:
 	  stream->header.audio.codec_tag = GST_RIFF_WAVE_FORMAT_MPEGL12;
 	  break;
       }
@@ -464,9 +466,9 @@ gst_asfmux_audsink_link (GstPad *pad, const GstCaps *caps)
     }
 
     stream->header.audio.block_align = 1;
-    stream->header.audio.byte_rate   = 8 * 1024;
-    stream->header.audio.word_size   = 16;
-    stream->header.audio.size        = 0;
+    stream->header.audio.byte_rate = 8 * 1024;
+    stream->header.audio.word_size = 16;
+    stream->header.audio.size = 0;
 
     if (!stream->header.audio.codec_tag) {
       return GST_PAD_LINK_REFUSED;
@@ -482,9 +484,7 @@ done:
 }
 
 static void
-gst_asfmux_pad_link (GstPad   *pad,
-                     GstPad   *peer,
-                     gpointer  data)
+gst_asfmux_pad_link (GstPad * pad, GstPad * peer, gpointer data)
 {
   GstAsfMux *asfmux;
   GstAsfMuxStream *stream = NULL;
@@ -506,9 +506,7 @@ gst_asfmux_pad_link (GstPad   *pad,
 }
 
 static void
-gst_asfmux_pad_unlink (GstPad   *pad,
-                       GstPad   *peer,
-                       gpointer  data)
+gst_asfmux_pad_unlink (GstPad * pad, GstPad * peer, gpointer data)
 {
   GstAsfMux *asfmux;
   GstAsfMuxStream *stream = NULL;
@@ -529,10 +527,9 @@ gst_asfmux_pad_unlink (GstPad   *pad,
   stream->connected = FALSE;
 }
 
-static GstPad*
-gst_asfmux_request_new_pad (GstElement     *element,
-			    GstPadTemplate *templ,
-			    const gchar    *req_name)
+static GstPad *
+gst_asfmux_request_new_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * req_name)
 {
   GstAsfMux *asfmux;
   GstPad *newpad;
@@ -572,23 +569,24 @@ gst_asfmux_request_new_pad (GstElement     *element,
   g_free (padname);
 
   g_signal_connect (newpad, "linked",
-    G_CALLBACK (gst_asfmux_pad_link), (gpointer) asfmux);
+      G_CALLBACK (gst_asfmux_pad_link), (gpointer) asfmux);
   g_signal_connect (newpad, "unlinked",
-    G_CALLBACK (gst_asfmux_pad_unlink), (gpointer) asfmux);
+      G_CALLBACK (gst_asfmux_pad_unlink), (gpointer) asfmux);
   gst_pad_set_link_function (newpad, linkfunc);
   gst_element_add_pad (element, newpad);
   gst_pad_set_event_function (newpad, gst_asfmux_handle_event);
   gst_pad_set_event_mask_function (newpad, gst_asfmux_get_event_masks);
-  
+
   return newpad;
 }
 
 /* can we seek? If not, we assume we're streamable */
 static gboolean
-gst_asfmux_can_seek (GstAsfMux *asfmux)
+gst_asfmux_can_seek (GstAsfMux * asfmux)
 {
 #if 0
-  const GstEventMask *masks = gst_pad_get_event_masks (GST_PAD_PEER (asfmux->srcpad));
+  const GstEventMask *masks =
+      gst_pad_get_event_masks (GST_PAD_PEER (asfmux->srcpad));
 
   /* this is for stream or file-storage */
   while (masks != NULL && masks->type != 0) {
@@ -605,35 +603,35 @@ gst_asfmux_can_seek (GstAsfMux *asfmux)
 }
 
 static gboolean
-gst_asfmux_is_stream (GstAsfMux *asfmux)
+gst_asfmux_is_stream (GstAsfMux * asfmux)
 {
   /* this is for RTP */
-  return FALSE; /*!gst_asfmux_can_seek (asfmux)*/
+  return FALSE;			/*!gst_asfmux_can_seek (asfmux) */
 }
 
 /* handle events (search) */
 static gboolean
-gst_asfmux_handle_event (GstPad *pad, GstEvent *event)
+gst_asfmux_handle_event (GstPad * pad, GstEvent * event)
 {
   GstAsfMux *asfmux;
   GstEventType type;
   gint n;
 
   asfmux = GST_ASFMUX (gst_pad_get_parent (pad));
-  
+
   type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
 
   switch (type) {
     case GST_EVENT_EOS:
       /* is this allright? */
       for (n = 0; n < asfmux->num_outputs; n++) {
-        if (asfmux->output[n].pad == pad) {
-          asfmux->output[n].eos = TRUE;
-          break;
-        }
+	if (asfmux->output[n].pad == pad) {
+	  asfmux->output[n].eos = TRUE;
+	  break;
+	}
       }
       if (n == asfmux->num_outputs) {
-        g_warning ("Unknown pad for EOS!");
+	g_warning ("Unknown pad for EOS!");
       }
       break;
     default:
@@ -645,7 +643,7 @@ gst_asfmux_handle_event (GstPad *pad, GstEvent *event)
 
 /* fill the internal queue for each available pad */
 static void
-gst_asfmux_fill_queue (GstAsfMux *asfmux)
+gst_asfmux_fill_queue (GstAsfMux * asfmux)
 {
   GstBuffer *buffer;
   gint n;
@@ -654,22 +652,21 @@ gst_asfmux_fill_queue (GstAsfMux *asfmux)
     GstAsfMuxStream *stream = &asfmux->output[n];
 
     while (stream->queue == NULL &&
-           stream->pad != NULL &&
-           stream->connected == TRUE &&
-           GST_PAD_IS_USABLE (stream->pad) &&
-           stream->eos == FALSE) {
+	stream->pad != NULL &&
+	stream->connected == TRUE &&
+	GST_PAD_IS_USABLE (stream->pad) && stream->eos == FALSE) {
       buffer = GST_BUFFER (gst_pad_pull (stream->pad));
       if (GST_IS_EVENT (buffer)) {
-        gst_asfmux_handle_event (stream->pad, GST_EVENT (buffer));
+	gst_asfmux_handle_event (stream->pad, GST_EVENT (buffer));
       } else {
-        stream->queue = buffer;
+	stream->queue = buffer;
       }
     }
   }
 }
 
 static guint
-gst_asfmux_packet_remaining (GstAsfMux *asfmux)
+gst_asfmux_packet_remaining (GstAsfMux * asfmux)
 {
   guint position;
 
@@ -683,12 +680,11 @@ gst_asfmux_packet_remaining (GstAsfMux *asfmux)
 }
 
 static void
-gst_asfmux_put_buffer (GstBuffer *packet,
-		       guint8    *data,
-		       guint      length)
+gst_asfmux_put_buffer (GstBuffer * packet, guint8 * data, guint length)
 {
   if ((GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet)) >= length) {
     guint8 *pos = GST_BUFFER_DATA (packet) + GST_BUFFER_SIZE (packet);
+
     memcpy (pos, data, length);
     GST_BUFFER_SIZE (packet) += length;
   } else {
@@ -697,12 +693,12 @@ gst_asfmux_put_buffer (GstBuffer *packet,
 }
 
 static void
-gst_asfmux_put_byte (GstBuffer *packet,
-		     guint8     data)
+gst_asfmux_put_byte (GstBuffer * packet, guint8 data)
 {
   if ((GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet)) >= sizeof (data)) {
     guint8 *pos = GST_BUFFER_DATA (packet) + GST_BUFFER_SIZE (packet);
-    * (guint8 *) pos = data;
+
+    *(guint8 *) pos = data;
     GST_BUFFER_SIZE (packet) += 1;
   } else {
     g_warning ("Buffer too small");
@@ -710,12 +706,12 @@ gst_asfmux_put_byte (GstBuffer *packet,
 }
 
 static void
-gst_asfmux_put_le16 (GstBuffer *packet,
-		     guint16    data)
+gst_asfmux_put_le16 (GstBuffer * packet, guint16 data)
 {
   if ((GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet)) >= sizeof (data)) {
     guint8 *pos = GST_BUFFER_DATA (packet) + GST_BUFFER_SIZE (packet);
-    * (guint16 *) pos = GUINT16_TO_LE (data);
+
+    *(guint16 *) pos = GUINT16_TO_LE (data);
     GST_BUFFER_SIZE (packet) += 2;
   } else {
     g_warning ("Buffer too small");
@@ -723,12 +719,12 @@ gst_asfmux_put_le16 (GstBuffer *packet,
 }
 
 static void
-gst_asfmux_put_le32 (GstBuffer *packet,
-		     guint32    data)
+gst_asfmux_put_le32 (GstBuffer * packet, guint32 data)
 {
   if ((GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet)) >= sizeof (data)) {
     guint8 *pos = GST_BUFFER_DATA (packet) + GST_BUFFER_SIZE (packet);
-    * (guint32 *) pos = GUINT32_TO_LE (data);
+
+    *(guint32 *) pos = GUINT32_TO_LE (data);
     GST_BUFFER_SIZE (packet) += 4;
   } else {
     g_warning ("Buffer too small");
@@ -736,12 +732,12 @@ gst_asfmux_put_le32 (GstBuffer *packet,
 }
 
 static void
-gst_asfmux_put_le64 (GstBuffer *packet,
-		     guint64    data)
+gst_asfmux_put_le64 (GstBuffer * packet, guint64 data)
 {
   if ((GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet)) >= sizeof (data)) {
     guint8 *pos = GST_BUFFER_DATA (packet) + GST_BUFFER_SIZE (packet);
-    * (guint64 *) pos = GUINT64_TO_LE (data);
+
+    *(guint64 *) pos = GUINT64_TO_LE (data);
     GST_BUFFER_SIZE (packet) += 8;
   } else {
     g_warning ("Buffer too small");
@@ -749,23 +745,19 @@ gst_asfmux_put_le64 (GstBuffer *packet,
 }
 
 static void
-gst_asfmux_put_time (GstBuffer *packet,
-                     guint64    time)
+gst_asfmux_put_time (GstBuffer * packet, guint64 time)
 {
   gst_asfmux_put_le64 (packet, time + 116444736000000000LLU);
 }
 
 static void
-gst_asfmux_put_guid (GstBuffer   *packet,
-                     ASFGuidHash *hash,
-		     guint8       id)
+gst_asfmux_put_guid (GstBuffer * packet, ASFGuidHash * hash, guint8 id)
 {
   gint n = 0;
   ASFGuid *guid;
 
   /* find GUID */
-  while (hash[n].obj_id != id &&
-         hash[n].obj_id != ASF_OBJ_UNDEFINED) {
+  while (hash[n].obj_id != id && hash[n].obj_id != ASF_OBJ_UNDEFINED) {
     n++;
   }
   guid = &hash[n].guid;
@@ -777,8 +769,7 @@ gst_asfmux_put_guid (GstBuffer   *packet,
 }
 
 static void
-gst_asfmux_put_string (GstBuffer   *packet,
-                       const gchar *str)
+gst_asfmux_put_string (GstBuffer * packet, const gchar * str)
 {
   gunichar2 *utf16_str = g_utf8_to_utf16 (str, strlen (str), NULL, NULL, NULL);
   gint i, len = strlen (str);
@@ -792,19 +783,15 @@ gst_asfmux_put_string (GstBuffer   *packet,
 }
 
 static void
-gst_asfmux_put_flush (GstAsfMux *asfmux)
+gst_asfmux_put_flush (GstAsfMux * asfmux)
 {
-  gst_pad_push (asfmux->srcpad,
-		GST_DATA (gst_event_new_flush ()));
+  gst_pad_push (asfmux->srcpad, GST_DATA (gst_event_new_flush ()));
 }
 
 /* write an asf chunk (only used in streaming case) */
 static void
-gst_asfmux_put_chunk (GstBuffer *packet,
-                      GstAsfMux *asfmux,
-                      guint16    type,
-                      guint      length,
-                      gint       flags)
+gst_asfmux_put_chunk (GstBuffer * packet,
+    GstAsfMux * asfmux, guint16 type, guint length, gint flags)
 {
   gst_asfmux_put_le16 (packet, type);
   gst_asfmux_put_le16 (packet, length + 8);
@@ -814,8 +801,7 @@ gst_asfmux_put_chunk (GstBuffer *packet,
 }
 
 static void
-gst_asfmux_put_wav_header (GstBuffer        *packet,
-                           asf_stream_audio *hdr)
+gst_asfmux_put_wav_header (GstBuffer * packet, asf_stream_audio * hdr)
 {
   gst_asfmux_put_le16 (packet, hdr->codec_tag);
   gst_asfmux_put_le16 (packet, hdr->channels);
@@ -827,8 +813,7 @@ gst_asfmux_put_wav_header (GstBuffer        *packet,
 }
 
 static void
-gst_asfmux_put_vid_header (GstBuffer        *packet,
-                           asf_stream_video *hdr)
+gst_asfmux_put_vid_header (GstBuffer * packet, asf_stream_video * hdr)
 {
   gst_asfmux_put_le32 (packet, hdr->width);
   gst_asfmux_put_le32 (packet, hdr->height);
@@ -837,8 +822,7 @@ gst_asfmux_put_vid_header (GstBuffer        *packet,
 }
 
 static void
-gst_asfmux_put_bmp_header (GstBuffer               *packet,
-                           asf_stream_video_format *hdr)
+gst_asfmux_put_bmp_header (GstBuffer * packet, asf_stream_video_format * hdr)
 {
   gst_asfmux_put_le32 (packet, hdr->size);
   gst_asfmux_put_le32 (packet, hdr->width);
@@ -855,11 +839,10 @@ gst_asfmux_put_bmp_header (GstBuffer               *packet,
 
 /* init header */
 static guint
-gst_asfmux_put_header (GstBuffer   *packet,
-                       ASFGuidHash *hash,
-                       guint8       id)
+gst_asfmux_put_header (GstBuffer * packet, ASFGuidHash * hash, guint8 id)
 {
   guint pos = GST_BUFFER_SIZE (packet);
+
   gst_asfmux_put_guid (packet, hash, id);
   gst_asfmux_put_le64 (packet, 24);
   return pos;
@@ -867,19 +850,17 @@ gst_asfmux_put_header (GstBuffer   *packet,
 
 /* update header size */
 static void
-gst_asfmux_end_header (GstBuffer *packet,
-                       guint      pos)
+gst_asfmux_end_header (GstBuffer * packet, guint pos)
 {
   guint cur = GST_BUFFER_SIZE (packet);
+
   GST_BUFFER_SIZE (packet) = pos + sizeof (ASFGuid);
   gst_asfmux_put_le64 (packet, cur - pos);
   GST_BUFFER_SIZE (packet) = cur;
 }
 
 static void
-gst_asfmux_file_start (GstAsfMux *asfmux,
-                       guint64    file_size,
-                       guint64    data_size)
+gst_asfmux_file_start (GstAsfMux * asfmux, guint64 file_size, guint64 data_size)
 {
   GstBuffer *header = gst_buffer_new_and_alloc (4096);
   guint bitrate;
@@ -890,13 +871,14 @@ gst_asfmux_file_start (GstAsfMux *asfmux,
   bitrate = 0;
   for (n = 0; n < asfmux->num_outputs; n++) {
     GstAsfMuxStream *stream = &asfmux->output[n];
+
     bitrate += stream->bitrate;
   }
 
   GST_BUFFER_SIZE (header) = 0;
   if (asfmux->packet != NULL) {
     duration = GST_BUFFER_DURATION (asfmux->packet) +
-               GST_BUFFER_TIMESTAMP (asfmux->packet);
+	GST_BUFFER_TIMESTAMP (asfmux->packet);
   } else {
     duration = 0;
   }
@@ -909,10 +891,10 @@ gst_asfmux_file_start (GstAsfMux *asfmux,
   gst_asfmux_put_guid (header, asf_object_guids, ASF_OBJ_HEADER);
   /* header length, will be patched after */
   gst_asfmux_put_le64 (header, ~0);
-   /* number of chunks in header */
-  gst_asfmux_put_le32 (header, 3 + /*has_title +*/ asfmux->num_outputs);
-  gst_asfmux_put_byte (header, 1); /* ??? */
-  gst_asfmux_put_byte (header, 2); /* ??? */
+  /* number of chunks in header */
+  gst_asfmux_put_le32 (header, 3 + /*has_title + */ asfmux->num_outputs);
+  gst_asfmux_put_byte (header, 1);	/* ??? */
+  gst_asfmux_put_byte (header, 2);	/* ??? */
 
   /* file header */
   header_offset = GST_BUFFER_SIZE (header);
@@ -920,14 +902,14 @@ gst_asfmux_file_start (GstAsfMux *asfmux,
   gst_asfmux_put_guid (header, asf_object_guids, ASF_OBJ_UNDEFINED);
   gst_asfmux_put_le64 (header, file_size);
   gst_asfmux_put_time (header, 0);
-  gst_asfmux_put_le64 (header, asfmux->num_packets); /* number of packets */
-  gst_asfmux_put_le64 (header, duration / (GST_SECOND / 10000000)); /* end time stamp (in 100ns units) */
-  gst_asfmux_put_le64 (header, duration / (GST_SECOND / 10000000)); /* duration (in 100ns units) */
-  gst_asfmux_put_le64 (header, 0); /* start time stamp */
-  gst_asfmux_put_le32 (header, gst_asfmux_can_seek (asfmux) ? 0x02 : 0x01); /* seekable or streamable */
-  gst_asfmux_put_le32 (header, GST_ASF_PACKET_SIZE); /* packet size */
-  gst_asfmux_put_le32 (header, GST_ASF_PACKET_SIZE); /* packet size */
-  gst_asfmux_put_le32 (header, bitrate); /* Nominal data rate in bps */
+  gst_asfmux_put_le64 (header, asfmux->num_packets);	/* number of packets */
+  gst_asfmux_put_le64 (header, duration / (GST_SECOND / 10000000));	/* end time stamp (in 100ns units) */
+  gst_asfmux_put_le64 (header, duration / (GST_SECOND / 10000000));	/* duration (in 100ns units) */
+  gst_asfmux_put_le64 (header, 0);	/* start time stamp */
+  gst_asfmux_put_le32 (header, gst_asfmux_can_seek (asfmux) ? 0x02 : 0x01);	/* seekable or streamable */
+  gst_asfmux_put_le32 (header, GST_ASF_PACKET_SIZE);	/* packet size */
+  gst_asfmux_put_le32 (header, GST_ASF_PACKET_SIZE);	/* packet size */
+  gst_asfmux_put_le32 (header, bitrate);	/* Nominal data rate in bps */
   gst_asfmux_end_header (header, header_pos);
 
   /* unknown headers */
@@ -940,12 +922,13 @@ gst_asfmux_file_start (GstAsfMux *asfmux,
   /* title and other infos */
 #if 0
   if (has_title) {
-    header_pos = gst_asfmux_put_header (header, asf_object_guids, ASF_OBJ_COMMENT);
-    gst_asfmux_put_le16 (header, 2 * (strlen(title) + 1));
-    gst_asfmux_put_le16 (header, 2 * (strlen(author) + 1));
-    gst_asfmux_put_le16 (header, 2 * (strlen(copyright) + 1));
-    gst_asfmux_put_le16 (header, 2 * (strlen(comment) + 1));
-    gst_asfmux_put_le16 (header, 0); /* rating */
+    header_pos =
+	gst_asfmux_put_header (header, asf_object_guids, ASF_OBJ_COMMENT);
+    gst_asfmux_put_le16 (header, 2 * (strlen (title) + 1));
+    gst_asfmux_put_le16 (header, 2 * (strlen (author) + 1));
+    gst_asfmux_put_le16 (header, 2 * (strlen (copyright) + 1));
+    gst_asfmux_put_le16 (header, 2 * (strlen (comment) + 1));
+    gst_asfmux_put_le16 (header, 0);	/* rating */
     gst_asfmux_put_string (header, title);
     gst_asfmux_put_string (header, author);
     gst_asfmux_put_string (header, copyright);
@@ -960,44 +943,46 @@ gst_asfmux_file_start (GstAsfMux *asfmux,
     guint obj_size = 0;
 
     stream->seqnum = 0;
-    header_pos = gst_asfmux_put_header (header, asf_object_guids, ASF_OBJ_STREAM);
+    header_pos =
+	gst_asfmux_put_header (header, asf_object_guids, ASF_OBJ_STREAM);
 
     switch (stream->type) {
       case ASF_STREAM_AUDIO:
-        obj_size = 18;
-        gst_asfmux_put_guid (header, asf_stream_guids, ASF_STREAM_AUDIO);
-        gst_asfmux_put_guid (header, asf_correction_guids, ASF_CORRECTION_OFF);
-        break;
+	obj_size = 18;
+	gst_asfmux_put_guid (header, asf_stream_guids, ASF_STREAM_AUDIO);
+	gst_asfmux_put_guid (header, asf_correction_guids, ASF_CORRECTION_OFF);
+	break;
       case ASF_STREAM_VIDEO:
-        obj_size = 11 + 40;
-        gst_asfmux_put_guid (header, asf_stream_guids, ASF_STREAM_VIDEO);
-        gst_asfmux_put_guid (header, asf_correction_guids, ASF_CORRECTION_OFF);
-        break;
+	obj_size = 11 + 40;
+	gst_asfmux_put_guid (header, asf_stream_guids, ASF_STREAM_VIDEO);
+	gst_asfmux_put_guid (header, asf_correction_guids, ASF_CORRECTION_OFF);
+	break;
       default:
-        g_assert (0);
+	g_assert (0);
     }
 
-    gst_asfmux_put_le64 (header, 0); /* offset */
-    gst_asfmux_put_le32 (header, obj_size); /* wav header len */
-    gst_asfmux_put_le32 (header, 0); /* additional data len */
-    gst_asfmux_put_le16 (header, n + 1); /* stream number */
-    gst_asfmux_put_le32 (header, 0); /* ??? */
+    gst_asfmux_put_le64 (header, 0);	/* offset */
+    gst_asfmux_put_le32 (header, obj_size);	/* wav header len */
+    gst_asfmux_put_le32 (header, 0);	/* additional data len */
+    gst_asfmux_put_le16 (header, n + 1);	/* stream number */
+    gst_asfmux_put_le32 (header, 0);	/* ??? */
 
     switch (stream->type) {
       case ASF_STREAM_AUDIO:
-        gst_asfmux_put_wav_header (header, &stream->header.audio);
-        break;
+	gst_asfmux_put_wav_header (header, &stream->header.audio);
+	break;
       case ASF_STREAM_VIDEO:
-        gst_asfmux_put_vid_header (header, &stream->header.video.stream);
-        gst_asfmux_put_bmp_header (header, &stream->header.video.format);
-        break;
+	gst_asfmux_put_vid_header (header, &stream->header.video.stream);
+	gst_asfmux_put_bmp_header (header, &stream->header.video.format);
+	break;
     }
 
     gst_asfmux_end_header (header, header_pos);
   }
 
   /* media comments */
-  header_pos = gst_asfmux_put_header (header, asf_object_guids, ASF_OBJ_CODEC_COMMENT);
+  header_pos =
+      gst_asfmux_put_header (header, asf_object_guids, ASF_OBJ_CODEC_COMMENT);
   gst_asfmux_put_guid (header, asf_object_guids, ASF_OBJ_CODEC_COMMENT1);
   gst_asfmux_put_le32 (header, asfmux->num_outputs);
   for (n = 0; n < asfmux->num_outputs; n++) {
@@ -1008,20 +993,20 @@ gst_asfmux_file_start (GstAsfMux *asfmux,
     /* Isn't this wrong? This is UTF16! */
     gst_asfmux_put_le16 (header, strlen (codec) + 1);
     gst_asfmux_put_string (header, codec);
-    gst_asfmux_put_le16 (header, 0); /* no parameters */
+    gst_asfmux_put_le16 (header, 0);	/* no parameters */
 
     /* id */
     switch (stream->type) {
       case ASF_STREAM_AUDIO:
-        gst_asfmux_put_le16 (header, 2);
-        gst_asfmux_put_le16 (header, stream->header.audio.codec_tag);
-        break;
+	gst_asfmux_put_le16 (header, 2);
+	gst_asfmux_put_le16 (header, stream->header.audio.codec_tag);
+	break;
       case ASF_STREAM_VIDEO:
-        gst_asfmux_put_le16 (header, 4);
-        gst_asfmux_put_le32 (header, stream->header.video.format.tag);
-        break;
+	gst_asfmux_put_le16 (header, 4);
+	gst_asfmux_put_le32 (header, stream->header.video.format.tag);
+	break;
       default:
-        g_assert (0);
+	g_assert (0);
     }
   }
   gst_asfmux_end_header (header, header_pos);
@@ -1049,34 +1034,36 @@ gst_asfmux_file_start (GstAsfMux *asfmux,
   gst_asfmux_put_guid (header, asf_object_guids, ASF_OBJ_DATA);
   gst_asfmux_put_le64 (header, data_size);
   gst_asfmux_put_guid (header, asf_object_guids, ASF_OBJ_UNDEFINED);
-  gst_asfmux_put_le64 (header, asfmux->num_packets); /* nb packets */
-  gst_asfmux_put_byte (header, 1); /* ??? */
-  gst_asfmux_put_byte (header, 1); /* ??? */
+  gst_asfmux_put_le64 (header, asfmux->num_packets);	/* nb packets */
+  gst_asfmux_put_byte (header, 1);	/* ??? */
+  gst_asfmux_put_byte (header, 1);	/* ??? */
 
   gst_pad_push (asfmux->srcpad, GST_DATA (header));
   asfmux->write_header = FALSE;
 }
 
 static void
-gst_asfmux_file_stop (GstAsfMux *asfmux)
+gst_asfmux_file_stop (GstAsfMux * asfmux)
 {
   if (gst_asfmux_is_stream (asfmux)) {
     /* send EOS chunk */
     GstBuffer *footer = gst_buffer_new_and_alloc (16);
+
     GST_BUFFER_SIZE (footer) = 0;
-    gst_asfmux_put_chunk (footer, asfmux, 0x4524, 0, 0); /* end of stream */
+    gst_asfmux_put_chunk (footer, asfmux, 0x4524, 0, 0);	/* end of stream */
     gst_pad_push (asfmux->srcpad, GST_DATA (footer));
   } else if (gst_asfmux_can_seek (asfmux)) {
     /* rewrite an updated header */
     guint64 filesize;
     GstFormat fmt = GST_FORMAT_BYTES;
     GstEvent *event;
-    gst_pad_query (asfmux->srcpad, GST_QUERY_POSITION,
-                   &fmt, &filesize);
+
+    gst_pad_query (asfmux->srcpad, GST_QUERY_POSITION, &fmt, &filesize);
     event = gst_event_new_seek (GST_SEEK_METHOD_SET | GST_FORMAT_BYTES, 0);
     gst_pad_push (asfmux->srcpad, GST_DATA (event));
     gst_asfmux_file_start (asfmux, filesize, filesize - asfmux->data_offset);
-    event = gst_event_new_seek (GST_SEEK_METHOD_SET | GST_FORMAT_BYTES, filesize);
+    event =
+	gst_event_new_seek (GST_SEEK_METHOD_SET | GST_FORMAT_BYTES, filesize);
     gst_pad_push (asfmux->srcpad, GST_DATA (event));
   }
 
@@ -1084,7 +1071,7 @@ gst_asfmux_file_stop (GstAsfMux *asfmux)
 }
 
 static GstBuffer *
-gst_asfmux_packet_header (GstAsfMux *asfmux)
+gst_asfmux_packet_header (GstAsfMux * asfmux)
 {
   GstBuffer *packet = asfmux->packet, *header;
   guint flags, padsize = gst_asfmux_packet_remaining (asfmux);
@@ -1099,7 +1086,7 @@ gst_asfmux_packet_header (GstAsfMux *asfmux)
   gst_asfmux_put_byte (header, 0x82);
   gst_asfmux_put_le16 (header, 0);
 
-  flags = 0x01; /* nb segments present */
+  flags = 0x01;			/* nb segments present */
   if (padsize > 0) {
     if (padsize < 256) {
       flags |= 0x08;
@@ -1107,56 +1094,52 @@ gst_asfmux_packet_header (GstAsfMux *asfmux)
       flags |= 0x10;
     }
   }
-  gst_asfmux_put_byte (header, flags); /* flags */
+  gst_asfmux_put_byte (header, flags);	/* flags */
   gst_asfmux_put_byte (header, 0x5d);
   if (flags & 0x10) {
     gst_asfmux_put_le16 (header, padsize - 2);
   } else if (flags & 0x08) {
     gst_asfmux_put_byte (header, padsize - 1);
   }
-  gst_asfmux_put_le32 (header, GST_BUFFER_TIMESTAMP (packet) / (GST_SECOND/1000));
-  gst_asfmux_put_le16 (header, GST_BUFFER_DURATION (packet) / (GST_SECOND/1000));
+  gst_asfmux_put_le32 (header,
+      GST_BUFFER_TIMESTAMP (packet) / (GST_SECOND / 1000));
+  gst_asfmux_put_le16 (header,
+      GST_BUFFER_DURATION (packet) / (GST_SECOND / 1000));
   gst_asfmux_put_byte (header, asfmux->packet_frames | 0x80);
 
   return header;
 }
 
 static void
-gst_asfmux_frame_header (GstAsfMux       *asfmux,
-			 GstAsfMuxStream *stream,
-			 guint            position,
-			 guint            length,
-			 guint            total,
-			 guint64          time,
-			 gboolean         key)
+gst_asfmux_frame_header (GstAsfMux * asfmux,
+    GstAsfMuxStream * stream,
+    guint position, guint length, guint total, guint64 time, gboolean key)
 {
   /* fill in some values for the packet */
   if (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (asfmux->packet))) {
     GST_BUFFER_TIMESTAMP (asfmux->packet) = time;
   }
   GST_BUFFER_DURATION (asfmux->packet) =
-	time - GST_BUFFER_TIMESTAMP (asfmux->packet);
+      time - GST_BUFFER_TIMESTAMP (asfmux->packet);
 
-  gst_asfmux_put_byte (asfmux->packet, (stream->index + 1) | 0x80); //(key ? 0x80 : 0));
+  gst_asfmux_put_byte (asfmux->packet, (stream->index + 1) | 0x80);	//(key ? 0x80 : 0));
   gst_asfmux_put_byte (asfmux->packet, stream->seqnum);
   gst_asfmux_put_le32 (asfmux->packet, position);
   gst_asfmux_put_byte (asfmux->packet, 0x08);
   gst_asfmux_put_le32 (asfmux->packet, total);
-  gst_asfmux_put_le32 (asfmux->packet, time / (GST_SECOND/1000)); /* time in ms */
+  gst_asfmux_put_le32 (asfmux->packet, time / (GST_SECOND / 1000));	/* time in ms */
   gst_asfmux_put_le16 (asfmux->packet, length);
 }
 
 static void
-gst_asfmux_frame_buffer (GstAsfMux *asfmux,
-			 guint8    *data,
-			 guint      length)
+gst_asfmux_frame_buffer (GstAsfMux * asfmux, guint8 * data, guint length)
 {
   gst_asfmux_put_buffer (asfmux->packet, data, length);
   asfmux->packet_frames++;
 }
 
 static void
-gst_asfmux_packet_flush (GstAsfMux *asfmux)
+gst_asfmux_packet_flush (GstAsfMux * asfmux)
 {
   GstBuffer *header, *packet = asfmux->packet;
   guint header_size;
@@ -1165,12 +1148,12 @@ gst_asfmux_packet_flush (GstAsfMux *asfmux)
   header = gst_asfmux_packet_header (asfmux);
   header_size = GST_BUFFER_SIZE (header);
   if (!gst_asfmux_can_seek (asfmux)) {
-    header_size -= 12; /* hack... bah */
+    header_size -= 12;		/* hack... bah */
   }
 
   /* Clear out the padding bytes */
   memset (GST_BUFFER_DATA (packet) + GST_BUFFER_SIZE (packet), 0,
-	  GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet));
+      GST_BUFFER_MAXSIZE (packet) - GST_BUFFER_SIZE (packet));
   GST_BUFFER_SIZE (packet) = GST_ASF_PACKET_SIZE - header_size;
 
   /* send packet over */
@@ -1185,9 +1168,8 @@ gst_asfmux_packet_flush (GstAsfMux *asfmux)
 }
 
 static void
-gst_asfmux_write_buffer (GstAsfMux       *asfmux,
-			 GstAsfMuxStream *stream,
-			 GstBuffer       *buffer)
+gst_asfmux_write_buffer (GstAsfMux * asfmux,
+    GstAsfMuxStream * stream, GstBuffer * buffer)
 {
   guint position = 0, to_write, size = GST_BUFFER_SIZE (buffer), remaining;
 
@@ -1210,9 +1192,10 @@ gst_asfmux_write_buffer (GstAsfMux       *asfmux,
 
     /* write frame header plus data in this packet */
     gst_asfmux_frame_header (asfmux, stream, position, to_write, size,
-			     GST_BUFFER_TIMESTAMP (buffer),
-			     GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_KEY_UNIT));
-    gst_asfmux_frame_buffer (asfmux, GST_BUFFER_DATA (buffer) + position, to_write);
+	GST_BUFFER_TIMESTAMP (buffer),
+	GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_KEY_UNIT));
+    gst_asfmux_frame_buffer (asfmux, GST_BUFFER_DATA (buffer) + position,
+	to_write);
 
     position += to_write;
   }
@@ -1222,7 +1205,7 @@ gst_asfmux_write_buffer (GstAsfMux       *asfmux,
 
 /* take the oldest buffer in our internal queue and push-it */
 static gboolean
-gst_asfmux_do_one_buffer (GstAsfMux *asfmux)
+gst_asfmux_do_one_buffer (GstAsfMux * asfmux)
 {
   gint n, chosen = -1;
 
@@ -1230,9 +1213,9 @@ gst_asfmux_do_one_buffer (GstAsfMux *asfmux)
   for (n = 0; n < asfmux->num_outputs; n++) {
     if (asfmux->output[n].queue != NULL) {
       if (chosen == -1 ||
-          GST_BUFFER_TIMESTAMP (asfmux->output[n].queue) <
-          GST_BUFFER_TIMESTAMP (asfmux->output[chosen].queue)) {
-        chosen = n;
+	  GST_BUFFER_TIMESTAMP (asfmux->output[n].queue) <
+	  GST_BUFFER_TIMESTAMP (asfmux->output[chosen].queue)) {
+	chosen = n;
       }
     }
   }
@@ -1240,26 +1223,26 @@ gst_asfmux_do_one_buffer (GstAsfMux *asfmux)
   if (chosen == -1) {
     /* simply finish off the file and send EOS */
     gst_asfmux_file_stop (asfmux);
-    gst_pad_push (asfmux->srcpad,
-                  GST_DATA (gst_event_new (GST_EVENT_EOS)));
-    gst_element_set_eos (GST_ELEMENT(asfmux));
+    gst_pad_push (asfmux->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
+    gst_element_set_eos (GST_ELEMENT (asfmux));
     return FALSE;
   }
 
   /* do this buffer */
   gst_asfmux_write_buffer (asfmux, &asfmux->output[chosen],
-			   asfmux->output[chosen].queue);
+      asfmux->output[chosen].queue);
 
   /* update stream info after buffer push */
   gst_buffer_unref (asfmux->output[chosen].queue);
-  asfmux->output[chosen].time = GST_BUFFER_TIMESTAMP (asfmux->output[chosen].queue);
+  asfmux->output[chosen].time =
+      GST_BUFFER_TIMESTAMP (asfmux->output[chosen].queue);
   asfmux->output[chosen].queue = NULL;
 
   return TRUE;
 }
 
 static void
-gst_asfmux_loop (GstElement *element)
+gst_asfmux_loop (GstElement * element)
 {
   GstAsfMux *asfmux;
 
@@ -1268,7 +1251,7 @@ gst_asfmux_loop (GstElement *element)
   /* first fill queue (some elements only set caps when
    * flowing data), then write header */
   gst_asfmux_fill_queue (asfmux);
-  
+
   if (asfmux->write_header == TRUE) {
     /* indeed, these are fake values. We need this so that
      * players will read the file. Without these fake values,
@@ -1280,19 +1263,19 @@ gst_asfmux_loop (GstElement *element)
 }
 
 static GstElementStateReturn
-gst_asfmux_change_state (GstElement *element)
+gst_asfmux_change_state (GstElement * element)
 {
   GstAsfMux *asfmux;
   gint transition = GST_STATE_TRANSITION (element), n;
 
   g_return_val_if_fail (GST_IS_ASFMUX (element), GST_STATE_FAILURE);
-  
+
   asfmux = GST_ASFMUX (element);
 
   switch (transition) {
     case GST_STATE_PAUSED_TO_PLAYING:
       for (n = 0; n < asfmux->num_outputs; n++) {
-        asfmux->output[n].eos = FALSE;
+	asfmux->output[n].eos = FALSE;
       }
       break;
   }

@@ -25,9 +25,7 @@
 #include <gst/gst.h>
 
 
-G_BEGIN_DECLS
-
-GstElementDetails dvdreadsrc_details;
+G_BEGIN_DECLS GstElementDetails dvdreadsrc_details;
 
 
 #define GST_TYPE_DVDREADSRC \
@@ -42,27 +40,29 @@ GstElementDetails dvdreadsrc_details;
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DVDREADSRC))
 
 /* NOTE: per-element flags start with 16 for now */
-typedef enum {
-  DVDREADSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
+typedef enum
+{
+  DVDREADSRC_OPEN = GST_ELEMENT_FLAG_LAST,
 
-  DVDREADSRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST+2,
+  DVDREADSRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
 } DVDReadSrcFlags;
 
 typedef struct _DVDReadSrc DVDReadSrc;
 typedef struct _DVDReadSrcPrivate DVDReadSrcPrivate;
 typedef struct _DVDReadSrcClass DVDReadSrcClass;
 
-struct _DVDReadSrc {
+struct _DVDReadSrc
+{
   GstElement element;
   DVDReadSrcPrivate *priv;
 };
 
-struct _DVDReadSrcClass {
+struct _DVDReadSrcClass
+{
   GstElementClass parent_class;
 };
 
-GType dvdreadsrc_get_type(void);
+GType dvdreadsrc_get_type (void);
 
 G_END_DECLS
-
 #endif /* __DVDREADSRC_H__ */

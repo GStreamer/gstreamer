@@ -25,7 +25,8 @@
 
 #include "mixertrack.h"
 
-enum {
+enum
+{
   /* FILL ME */
   SIGNAL_VOLUME_CHANGED,
   SIGNAL_RECORD_TOGGLED,
@@ -33,9 +34,9 @@ enum {
   LAST_SIGNAL
 };
 
-static void gst_mixer_track_class_init (GstMixerTrackClass *klass);
-static void gst_mixer_track_init       (GstMixerTrack      *mixer);
-static void gst_mixer_track_dispose    (GObject            *object);
+static void gst_mixer_track_class_init (GstMixerTrackClass * klass);
+static void gst_mixer_track_init (GstMixerTrack * mixer);
+static void gst_mixer_track_dispose (GObject * object);
 
 static GObjectClass *parent_class = NULL;
 static guint signals[LAST_SIGNAL] = { 0 };
@@ -61,47 +62,46 @@ gst_mixer_track_get_type (void)
 
     gst_mixer_track_type =
 	g_type_register_static (G_TYPE_OBJECT,
-				"GstMixerTrack",
-				&mixer_track_info, 0);
+	"GstMixerTrack", &mixer_track_info, 0);
   }
 
   return gst_mixer_track_type;
 }
 
 static void
-gst_mixer_track_class_init (GstMixerTrackClass *klass)
+gst_mixer_track_class_init (GstMixerTrackClass * klass)
 {
   GObjectClass *object_klass = (GObjectClass *) klass;
 
   parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
   signals[SIGNAL_RECORD_TOGGLED] =
-    g_signal_new ("record_toggled", G_TYPE_FROM_CLASS (klass),
-		  G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstMixerTrackClass,
-				   record_toggled),
-                  NULL, NULL, g_cclosure_marshal_VOID__BOOLEAN,
-                  G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
+      g_signal_new ("record_toggled", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstMixerTrackClass,
+	  record_toggled),
+      NULL, NULL, g_cclosure_marshal_VOID__BOOLEAN,
+      G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
   signals[SIGNAL_MUTE_TOGGLED] =
-    g_signal_new ("mute_toggled", G_TYPE_FROM_CLASS (klass),
-		  G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstMixerTrackClass,
-				   mute_toggled),
-                  NULL, NULL, g_cclosure_marshal_VOID__BOOLEAN,
-                  G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
+      g_signal_new ("mute_toggled", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstMixerTrackClass,
+	  mute_toggled),
+      NULL, NULL, g_cclosure_marshal_VOID__BOOLEAN,
+      G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
   signals[SIGNAL_VOLUME_CHANGED] =
-    g_signal_new ("volume_changed", G_TYPE_FROM_CLASS (klass),
-		  G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstMixerTrackClass,
-				   volume_changed),
-                  NULL, NULL, g_cclosure_marshal_VOID__POINTER,
-                  G_TYPE_NONE, 1, G_TYPE_POINTER);
+      g_signal_new ("volume_changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstMixerTrackClass,
+	  volume_changed),
+      NULL, NULL, g_cclosure_marshal_VOID__POINTER,
+      G_TYPE_NONE, 1, G_TYPE_POINTER);
 
   object_klass->dispose = gst_mixer_track_dispose;
 }
 
 static void
-gst_mixer_track_init (GstMixerTrack *channel)
+gst_mixer_track_init (GstMixerTrack * channel)
 {
   channel->label = NULL;
   channel->min_volume = channel->max_volume = 0;
@@ -110,7 +110,7 @@ gst_mixer_track_init (GstMixerTrack *channel)
 }
 
 static void
-gst_mixer_track_dispose (GObject *object)
+gst_mixer_track_dispose (GObject * object)
 {
   GstMixerTrack *channel = GST_MIXER_TRACK (object);
 
