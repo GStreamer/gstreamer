@@ -2423,7 +2423,7 @@ gst_element_error_full
   error = g_error_new (domain, code, sent_message);
 
   /* if the element was already in error, stop now */
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_ERROR)) {
+  if (GST_FLAG_IS_SET (element, GST_ELEMENT_IN_ERROR)) {
     GST_CAT_INFO (GST_CAT_ERROR_SYSTEM, "recursive ERROR detected in %s",
                   GST_ELEMENT_NAME (element));
     g_free (sent_message);
@@ -2431,7 +2431,7 @@ gst_element_error_full
     return;
   }
 
-  GST_FLAG_SET (element, GST_ELEMENT_ERROR);
+  GST_FLAG_SET (element, GST_ELEMENT_IN_ERROR);
 
   /* emit the signal, make sure the element stays available */
   gst_object_ref (GST_OBJECT (element));
@@ -2463,7 +2463,7 @@ gst_element_error_full
     }
   }
 
-  GST_FLAG_UNSET (element, GST_ELEMENT_ERROR);
+  GST_FLAG_UNSET (element, GST_ELEMENT_IN_ERROR);
 
   /* cleanup */
   gst_object_unref (GST_OBJECT (element));
