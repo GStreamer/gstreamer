@@ -613,8 +613,8 @@ and better.
 
 %files -n gstreamer-mp3
 %defattr(-, root, root)
-%{prefix}/lib/gst/libgstmpg123*
-%{prefix}/lib/gst/libgstmp3parse*
+# %{prefix}/lib/gst/libgstmpg123*
+# %{prefix}/lib/gst/libgstmp3parse*
 %{prefix}/lib/gst/libgstmp3types*
 
 %post -n  gstreamer-mp3
@@ -769,7 +769,6 @@ Plugins for various effects
 %{prefix}/lib/gst/libgstrtjpe*
 %{prefix}/lib/gst/libgststereo*
 %{prefix}/lib/gst/libgstvol*
-%{prefix}/lib/gst/libgsttypes*
 %{prefix}/lib/gst/libgstplayondemand*
 %{prefix}/lib/gst/libgstspeed*
 
