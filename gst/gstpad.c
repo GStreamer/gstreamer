@@ -2894,21 +2894,21 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size)
 
   peer = GST_RPAD_PEER (pad);
 
-  if (!peer)
-    return gst_buffer_new_and_alloc (size);
+  if (peer && peer->bufferallocfunc) {
+    GstBuffer *ret;
 
-  GST_CAT_DEBUG (GST_CAT_BUFFER, "(%s:%s): getting buffer",
-      GST_DEBUG_PAD_NAME (pad));
-
-  if (peer->bufferallocfunc) {
+    GST_CAT_DEBUG (GST_CAT_BUFFER, "(%s:%s): getting buffer",
+        GST_DEBUG_PAD_NAME (pad));
     GST_CAT_DEBUG (GST_CAT_PADS,
         "calling bufferallocfunc &%s (@%p) of peer pad %s:%s",
         GST_DEBUG_FUNCPTR_NAME (peer->bufferallocfunc),
         &peer->bufferallocfunc, GST_DEBUG_PAD_NAME (((GstPad *) peer)));
-    return (peer->bufferallocfunc) (GST_PAD (peer), offset, size);
-  } else {
-    return gst_buffer_new_and_alloc (size);
+
+    ret = (peer->bufferallocfunc) (GST_PAD (peer), offset, size);
+    if (ret)
+      return ret;
   }
+  return gst_buffer_new_and_alloc (size);
 }
 
 static void

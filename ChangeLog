@@ -1,3 +1,12 @@
+2004-07-12  Benjamin Otte  <otte@gnome.org>
+
+	* configure.ac:
+	  require valgrind >= 2.1 (fixes Gentoo bug 53967, see
+	  http://bugs.gentoo.org/show_bug.cgi?id=53967)
+	* gst/gstpad.c: (gst_pad_alloc_buffer):
+	  allow buffer_alloc functions to return NULL and allocate a normal
+	  buffer in that case
+
 2004-07-12  Steve Lhomme  <steve.lhomme@free.fr>
 	* gst/elements/gstfilesink.c:
 	* gst/elements/gstfilesrc.c:
@@ -15,12 +24,12 @@
 	  Update to another gettext public build
 
 2004-07-12  Steve Lhomme  <steve.lhomme@free.fr>
-    * gst/gstplugin.c:
-      Fix an impossible C syntax
-    * win32/config.h:
-      Disable i18n under Windows for the moment
-    * win32/gst-register.vcproj:
-      Use this configuration
+	* gst/gstplugin.c:
+	  Fix an impossible C syntax
+	* win32/config.h:
+	  Disable i18n under Windows for the moment
+	* win32/gst-register.vcproj:
+	  Use this configuration
 
 2004-07-12  Jan Schmidt  <thaytan@mad.scientis.com>
 	* docs/manual/quotes.xml:

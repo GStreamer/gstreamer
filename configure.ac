@@ -436,8 +436,10 @@ esac],
 
 dnl valgrind inclusion
 USE_VALGRIND="$USE_DEBUG"
+VALGRIND_REQ="2.1"
 if test "x$USE_VALGRIND" = xyes; then
-  PKG_CHECK_MODULES(VALGRIND, valgrind, USE_VALGRIND="yes", USE_VALGRIND="no")
+
+  PKG_CHECK_MODULES(VALGRIND, valgrind > $VALGRIND_REQ, USE_VALGRIND="yes", USE_VALGRIND="no")
 fi
 if test "x$USE_VALGRIND" = xyes; then
   AC_DEFINE(HAVE_VALGRIND, 1, [Define if valgrind should be used])
