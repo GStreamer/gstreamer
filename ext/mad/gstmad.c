@@ -171,7 +171,7 @@ static gboolean	gst_mad_convert_src	(GstPad *pad, GstFormat src_format,
 					 gint64 src_value, GstFormat
 					 *dest_format, gint64 *dest_value);
 
-static void	gst_mad_chain		(GstPad *pad, GstBuffer *buffer);
+static void	gst_mad_chain		(GstPad *pad, GstData *_data);
 
 static GstElementStateReturn
 		gst_mad_change_state (GstElement *element);
@@ -1065,7 +1065,7 @@ gst_mad_handle_event (GstPad *pad, GstBuffer *buffer)
 	  {
             discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
 			                           time, NULL);
-            gst_pad_push (mad->srcpad, GST_BUFFER (discont));
+            gst_pad_push (mad->srcpad, GST_DATA (discont));
           }
           break;
         }
@@ -1094,8 +1094,9 @@ gst_mad_check_restart (GstMad *mad)
 }
 
 static void
-gst_mad_chain (GstPad *pad, GstBuffer *buffer)
+gst_mad_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buffer = GST_BUFFER (_data);
   GstMad *mad;
   gchar *data;
   glong size;
@@ -1317,7 +1318,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
           }
         }
 
-        gst_pad_push (mad->srcpad, outbuffer);
+        gst_pad_push (mad->srcpad, GST_DATA (outbuffer));
       }
 
       mad->total_samples += nsamples;

@@ -118,7 +118,7 @@ static void 		dvdreadsrc_init		(DVDReadSrc *dvdreadsrc);
 static void 		dvdreadsrc_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void 		dvdreadsrc_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-/*static GstBuffer *	dvdreadsrc_get		(GstPad *pad); */
+/*static GstData *	dvdreadsrc_get		(GstPad *pad); */
 static void     	dvdreadsrc_loop		(GstElement *element);
 /*static GstBuffer *	dvdreadsrc_get_region	(GstPad *pad,gulong offset,gulong size); */
 
@@ -543,7 +543,7 @@ dvdreadsrc_loop (GstElement *element)
           }
 
           GST_BUFFER_SIZE(buf) = cur_output_size * DVD_VIDEO_LB_LEN;
-          gst_pad_push(priv->srcpad, buf);
+          gst_pad_push(priv->srcpad, GST_DATA (buf));
           priv->cur_pack = next_vobu;
       }
   }
@@ -671,7 +671,7 @@ _read(DVDReadSrcPrivate *priv, int angle, int new_seek, GstBuffer *buf)
     return 0;
 }
 
-static GstBuffer *
+static GstData *
 dvdreadsrc_get (GstPad *pad) 
 {
   DVDReadSrc *dvdreadsrc;

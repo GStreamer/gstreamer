@@ -97,7 +97,7 @@ static GstPadTemplate *sink_temp, *src_temp;
 static void	gst_mp3parse_class_init		(GstMPEGAudioParseClass *klass);
 static void	gst_mp3parse_init		(GstMPEGAudioParse *mp3parse);
 
-static void	gst_mp3parse_chain		(GstPad *pad,GstBuffer *buf);
+static void	gst_mp3parse_chain		(GstPad *pad,GstData *_data);
 static long	bpf_from_header			(GstMPEGAudioParse *parse, unsigned long header);
 static int	head_check			(unsigned long head);
 
@@ -384,8 +384,9 @@ gst_mp3parse_init (GstMPEGAudioParse *mp3parse)
 }
 
 static void
-gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
+gst_mp3parse_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstMPEGAudioParse *mp3parse;
   guchar *data;
   glong size,offset = 0;
@@ -498,7 +499,7 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
 	  GST_BUFFER_DURATION(outbuf) = 8 * (GST_SECOND/1000) * GST_BUFFER_SIZE(outbuf) / mp3parse->bit_rate;
 
           if (GST_PAD_CAPS (mp3parse->srcpad) != NULL) {
-            gst_pad_push(mp3parse->srcpad,outbuf);
+            gst_pad_push(mp3parse->srcpad,GST_DATA (outbuf));
           } else {
             GST_DEBUG ("No capsnego yet, delaying buffer push");
             gst_buffer_unref (outbuf);

@@ -285,7 +285,7 @@ gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data, GstClockTime 
     GST_DEBUG ("current_scr %" G_GINT64_FORMAT, time);
 
     if (GST_PAD_IS_USABLE (mpeg_parse->srcpad))
-      gst_pad_push (mpeg_parse->srcpad, GST_BUFFER (data));
+      gst_pad_push (mpeg_parse->srcpad, GST_DATA (data));
     else
       gst_data_unref (data);
   }
@@ -300,7 +300,7 @@ gst_mpeg_parse_handle_discont (GstMPEGParse *mpeg_parse)
 		  MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr), NULL);
 
   if (GST_PAD_IS_USABLE (mpeg_parse->srcpad))
-    gst_pad_push (mpeg_parse->srcpad, GST_BUFFER (event));
+    gst_pad_push (mpeg_parse->srcpad, GST_DATA (event));
   else
     gst_event_unref (event);
 }

@@ -129,7 +129,7 @@ static void		gst_synaesthesia_set_property	(GObject *object, guint prop_id,
 static void		gst_synaesthesia_get_property	(GObject *object, guint prop_id, 
 						 GValue *value, GParamSpec *pspec);
 
-static void		gst_synaesthesia_chain		(GstPad *pad, GstBuffer *buf);
+static void		gst_synaesthesia_chain		(GstPad *pad, GstData *_data);
 
 static GstElementStateReturn
 			gst_synaesthesia_change_state	(GstElement *element);
@@ -225,8 +225,9 @@ gst_synaesthesia_sinkconnect (GstPad *pad, GstCaps *caps)
 }
 
 static void
-gst_synaesthesia_chain (GstPad *pad, GstBuffer *bufin)
+gst_synaesthesia_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *bufin = GST_BUFFER (_data);
   GstSynaesthesia *synaesthesia;
   GstBuffer *bufout;
   guint32 samples_in;
@@ -308,7 +309,7 @@ gst_synaesthesia_chain (GstPad *pad, GstBuffer *bufin)
 
   synaesthesia->next_time += GST_SECOND / synaesthesia->fps;
 
-  gst_pad_push (synaesthesia->srcpad, bufout);
+  gst_pad_push (synaesthesia->srcpad, GST_DATA (bufout));
 
   gst_buffer_unref (bufin);
 

@@ -145,7 +145,7 @@ static gboolean 	gst_mpeg2dec_convert_src 	(GstPad *pad, GstFormat src_format, g
 static GstElementStateReturn
 			gst_mpeg2dec_change_state	(GstElement *element);
 
-static void		gst_mpeg2dec_chain		(GstPad *pad, GstBuffer *buffer);
+static void		gst_mpeg2dec_chain		(GstPad *pad, GstData *_data);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_mpeg2dec_signals[LAST_SIGNAL] = { 0 };*/
@@ -438,8 +438,9 @@ gst_mpeg2dec_flush_decoder (GstMpeg2dec *mpeg2dec)
 }
 
 static void
-gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
+gst_mpeg2dec_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
   guint32 size;
   guint8 *data, *end;
@@ -649,7 +650,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	  else {
 	    /* TODO set correct offset here based on frame number */
 	    GST_BUFFER_DURATION (outbuf) = mpeg2dec->frame_period;
-	    gst_pad_push (mpeg2dec->srcpad, outbuf);
+	    gst_pad_push (mpeg2dec->srcpad, GST_DATA (outbuf));
 	  }
 	}
 	if (info->discard_fbuf && info->discard_fbuf->id) {
@@ -685,7 +686,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 
         memcpy (GST_BUFFER_DATA (udbuf), info->user_data, info->user_data_len);
 
-        gst_pad_push (mpeg2dec->userdatapad, udbuf);
+        gst_pad_push (mpeg2dec->userdatapad, GST_DATA (udbuf));
       }
     }
   }

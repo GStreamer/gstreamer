@@ -196,7 +196,7 @@ static void			gst_lame_set_property	(GObject *object, guint prop_id,
 		 					 const GValue *value, GParamSpec *pspec);
 static void			gst_lame_get_property	(GObject *object, guint prop_id, 
 							 GValue *value, GParamSpec *pspec);
-static void			gst_lame_chain		(GstPad *pad, GstBuffer *buf);
+static void			gst_lame_chain		(GstPad *pad, GstData *_data);
 static gboolean 		gst_lame_setup 		(GstLame *lame);
 static GstElementStateReturn 	gst_lame_change_state 	(GstElement *element);
 
@@ -715,8 +715,9 @@ gst_lame_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec
 }
 
 static void
-gst_lame_chain (GstPad *pad, GstBuffer *buf)
+gst_lame_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstLame *lame;
   GstBuffer *outbuf;
   gchar *mp3_data = NULL;
@@ -803,7 +804,7 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
     GST_BUFFER_OFFSET (outbuf)    = lame->last_offs;
     GST_BUFFER_DURATION (outbuf)  = lame->last_duration;
 
-    gst_pad_push (lame->srcpad,outbuf);
+    gst_pad_push (lame->srcpad,GST_DATA (outbuf));
 
     lame->last_ts = GST_CLOCK_TIME_NONE;
   }
@@ -812,7 +813,7 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
   }
 
   if (eos) {
-    gst_pad_push (lame->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+    gst_pad_push (lame->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS))));
     gst_element_set_eos (GST_ELEMENT (lame));
   }
 }

@@ -123,7 +123,7 @@ static void 		dvdnavsrc_init		(DVDNavSrc *dvdnavsrc);
 static void 		dvdnavsrc_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void 		dvdnavsrc_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static GstBuffer *	dvdnavsrc_get		(GstPad *pad);
+static GstData *	dvdnavsrc_get		(GstPad *pad);
 /*static GstBuffer *	dvdnavsrc_get_region	(GstPad *pad,gulong offset,gulong size); */
 static gboolean 	dvdnavsrc_event 		(GstPad *pad, GstEvent *event);
 static const GstEventMask*
@@ -831,7 +831,7 @@ dvdnavsrc_print_event (DVDNavSrc *src, guint8 *data, int event, int len)
   }
 }
 
-static GstBuffer *
+static GstData *
 dvdnavsrc_get (GstPad *pad) 
 {
   DVDNavSrc *src;

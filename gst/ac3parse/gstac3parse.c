@@ -120,7 +120,7 @@ static void	gst_ac3parse_class_init	  (GstAc3ParseClass *klass);
 static void	gst_ac3parse_init	  (GstAc3Parse  *ac3parse);
 
 static void	gst_ac3parse_chain	  (GstPad       *pad,
-					   GstBuffer    *buf);
+					   GstData	*data);
 
 static void	gst_ac3parse_set_property (GObject      *object,
 					   guint         prop_id,
@@ -198,8 +198,9 @@ gst_ac3parse_init (GstAc3Parse *ac3parse)
 }
 
 static void
-gst_ac3parse_chain (GstPad *pad, GstBuffer *buf)
+gst_ac3parse_chain (GstPad *pad, GstData *_data)
 {
+  GstBuffer *buf = GST_BUFFER (_data);
   GstAc3Parse *ac3parse;
   guchar *data;
   glong size,offset = 0;
@@ -346,7 +347,7 @@ gst_ac3parse_chain (GstPad *pad, GstBuffer *buf)
 	offset += bpf;
 	if (ac3parse->skip == 0 && GST_PAD_IS_LINKED(ac3parse->srcpad)) {
 	  GST_DEBUG ("ac3parse: pushing buffer of %d bytes",GST_BUFFER_SIZE(outbuf));
-          gst_pad_push(ac3parse->srcpad,outbuf);
+          gst_pad_push(ac3parse->srcpad,GST_DATA (outbuf));
 	}
 	else {
 	  GST_DEBUG ("ac3parse: skipping buffer of %d bytes",GST_BUFFER_SIZE(outbuf));

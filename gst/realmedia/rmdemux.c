@@ -416,7 +416,7 @@ static void gst_rmdemux_loop (GstElement *element)
     for(i=0;i<rmdemux->n_streams;i++){
       GstPad *pad = rmdemux->streams[i]->pad;
       if(pad){
-        gst_pad_push(pad, GST_BUFFER(gst_event_new(GST_EVENT_EOS)));
+        gst_pad_push(pad, GST_DATA(gst_event_new(GST_EVENT_EOS)));
       }
     }
 
@@ -465,7 +465,7 @@ static void gst_rmdemux_loop (GstElement *element)
     stream = gst_rmdemux_get_stream_by_id(rmdemux, id);
 
     if(stream->pad){
-      gst_pad_push(stream->pad, buffer);
+      gst_pad_push(stream->pad, GST_DATA (buffer));
     }
 
     rmdemux->chunk_index++;

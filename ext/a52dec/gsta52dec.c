@@ -351,7 +351,7 @@ gst_a52dec_push (GstPad * srcpad, int flags, sample_t * _samples, gint64 timesta
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
   float_to_int (samples, (int16_t *) GST_BUFFER_DATA (buf), flags);
 
-  gst_pad_push (srcpad, buf);
+  gst_pad_push (srcpad, GST_DATA (buf));
 
   return 0;
 }

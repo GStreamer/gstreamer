@@ -698,7 +698,7 @@ gst_asfmux_fill_queue (GstAsfMux *asfmux)
            stream->connected == TRUE &&
            GST_PAD_IS_USABLE (stream->pad) &&
            stream->eos == FALSE) {
-      buffer = gst_pad_pull (stream->pad);
+      buffer = GST_BUFFER (gst_pad_pull (stream->pad));
       if (GST_IS_EVENT (buffer)) {
         gst_asfmux_handle_event (stream->pad, GST_EVENT (buffer));
       } else {
@@ -843,7 +843,7 @@ static void
 gst_asfmux_put_flush (GstAsfMux *asfmux)
 {
   gst_pad_push (asfmux->srcpad,
-		GST_BUFFER (gst_event_new_flush ()));
+		GST_DATA (gst_event_new_flush ()));
 }
 
 /* write an asf chunk (only used in streaming case) */
@@ -1114,7 +1114,7 @@ gst_asfmux_file_start (GstAsfMux *asfmux,
   gst_asfmux_put_byte (header, 1); /* ??? */
   gst_asfmux_put_byte (header, 1); /* ??? */
 
-  gst_pad_push (asfmux->srcpad, header);
+  gst_pad_push (asfmux->srcpad, GST_DATA (header));
   asfmux->write_header = FALSE;
 }
 
@@ -1126,7 +1126,7 @@ gst_asfmux_file_stop (GstAsfMux *asfmux)
     GstBuffer *footer = gst_buffer_new_and_alloc (16);
     GST_BUFFER_SIZE (footer) = 0;
     gst_asfmux_put_chunk (footer, asfmux, 0x4524, 0, 0); /* end of stream */
-    gst_pad_push (asfmux->srcpad, footer);
+    gst_pad_push (asfmux->srcpad, GST_DATA (footer));
   } else if (gst_asfmux_can_seek (asfmux)) {
     /* rewrite an updated header */
     guint64 filesize;
@@ -1135,10 +1135,10 @@ gst_asfmux_file_stop (GstAsfMux *asfmux)
     gst_pad_query (asfmux->srcpad, GST_QUERY_POSITION,
                    &fmt, &filesize);
     event = gst_event_new_seek (GST_SEEK_METHOD_SET | GST_FORMAT_BYTES, 0);
-    gst_pad_push (asfmux->srcpad, GST_BUFFER (event));
+    gst_pad_push (asfmux->srcpad, GST_DATA (event));
     gst_asfmux_file_start (asfmux, filesize, filesize - asfmux->data_offset);
     event = gst_event_new_seek (GST_SEEK_METHOD_SET | GST_FORMAT_BYTES, filesize);
-    gst_pad_push (asfmux->srcpad, GST_BUFFER (event));
+    gst_pad_push (asfmux->srcpad, GST_DATA (event));
   }
 
   gst_asfmux_put_flush (asfmux);
@@ -1235,8 +1235,8 @@ gst_asfmux_packet_flush (GstAsfMux *asfmux)
   GST_BUFFER_SIZE (packet) = GST_ASF_PACKET_SIZE - header_size;
 
   /* send packet over */
-  gst_pad_push (asfmux->srcpad, header);
-  gst_pad_push (asfmux->srcpad, packet);
+  gst_pad_push (asfmux->srcpad, GST_DATA (header));
+  gst_pad_push (asfmux->srcpad, GST_DATA (packet));
   gst_asfmux_put_flush (asfmux);
   asfmux->num_packets++;
   asfmux->packet_frames = 0;
@@ -1302,7 +1302,7 @@ gst_asfmux_do_one_buffer (GstAsfMux *asfmux)
     /* simply finish off the file and send EOS */
     gst_asfmux_file_stop (asfmux);
     gst_pad_push (asfmux->srcpad,
-                  GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+                  GST_DATA (gst_event_new (GST_EVENT_EOS)));
     gst_element_set_eos (GST_ELEMENT(asfmux));
     return FALSE;
   }

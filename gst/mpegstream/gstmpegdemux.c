@@ -304,7 +304,7 @@ gst_mpeg_demux_handle_discont (GstMPEGParse *mpeg_parse)
       discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
 			current_time, NULL);
 
-      gst_pad_push (mpeg_demux->video_stream[i]->pad, GST_BUFFER (discont));
+      gst_pad_push (mpeg_demux->video_stream[i]->pad, GST_DATA (discont));
     }
     if (mpeg_demux->audio_stream[i] && 
         GST_PAD_IS_USABLE (mpeg_demux->audio_stream[i]->pad))
@@ -314,7 +314,7 @@ gst_mpeg_demux_handle_discont (GstMPEGParse *mpeg_parse)
       discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
 			current_time, NULL);
 
-      gst_pad_push (mpeg_demux->audio_stream[i]->pad, GST_BUFFER (discont));
+      gst_pad_push (mpeg_demux->audio_stream[i]->pad, GST_DATA (discont));
     }
   }
 }
@@ -509,7 +509,7 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
           event  = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
 			MPEGTIME_TO_GSTTIME (time), NULL);
 
-	  gst_pad_push (*outpad, GST_BUFFER (event));
+	  gst_pad_push (*outpad, GST_DATA (event));
 	}
       }
       else {
@@ -710,7 +710,7 @@ done:
     GST_DEBUG ("pushing buffer of len %d id %d, ts %" G_GINT64_FORMAT, 
 		    datalen, id, GST_BUFFER_TIMESTAMP (outbuf));
 
-    gst_pad_push (outpad, outbuf);
+    gst_pad_push (outpad, GST_DATA (outbuf));
   }
 
   return TRUE;
@@ -1004,7 +1004,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
       GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer) + headerlen + 4;
 
-      gst_pad_push(*outpad,outbuf);
+      gst_pad_push(*outpad, GST_DATA (outbuf));
     }
   }
 

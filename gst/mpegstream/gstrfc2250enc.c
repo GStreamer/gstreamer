@@ -158,7 +158,7 @@ static void
 gst_rfc2250_enc_new_buffer (GstRFC2250Enc *enc)
 {
   if (enc->packet) {
-    gst_pad_push (enc->srcpad, enc->packet);
+    gst_pad_push (enc->srcpad, GST_DATA (enc->packet));
   }
   enc->packet = gst_buffer_new ();
   enc->flags = 0;
@@ -263,7 +263,7 @@ gst_rfc2250_enc_loop (GstElement *element)
   }
   else {
     if (enc->packet) {
-      gst_pad_push (enc->srcpad, enc->packet);
+      gst_pad_push (enc->srcpad, GST_DATA (enc->packet));
       enc->packet = NULL;
       enc->flags = 0;
       enc->remaining = enc->MTU;

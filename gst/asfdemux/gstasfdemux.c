@@ -970,7 +970,7 @@ gst_asf_demux_process_chunk (GstASFDemux *asf_demux,
       GST_DEBUG ("Sending strem %d of size %d", stream->id , segment_info->chunk_size);
       
       GST_INFO ( "Pushing pad");
-      gst_pad_push (stream->pad, stream->payload);
+      gst_pad_push (stream->pad, GST_DATA (stream->payload));
     }
 
     stream->frag_offset = 0;
@@ -1020,7 +1020,7 @@ gst_asf_demux_handle_sink_event (GstASFDemux *asf_demux)
 			asf_demux->last_seek, stream->delay, asf_demux->last_seek + stream->delay);
          discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
 			asf_demux->last_seek + stream->delay , NULL);
-	  gst_pad_push (stream->pad, GST_BUFFER (discont));
+	  gst_pad_push (stream->pad, GST_DATA (discont));
 	}
       }
       break;
