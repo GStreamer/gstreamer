@@ -40,9 +40,8 @@ typedef enum {
   GST_RIFF_STATE_MOVI	  	= 4
 } GstRiffParserState;
 
-#define MAKE_FOUR_CC(a,b,c,d) ( ((guint32)a)     | (((guint32)b)<< 8) | \
-                                ((guint32)c)<<16 | (((guint32)d)<<24) )
-																
+#define MAKE_FOUR_CC(a,b,c,d) GST_MAKE_FOURCC(a,b,c,d)
+
 /* RIFF types */
 #define GST_RIFF_RIFF_WAVE MAKE_FOUR_CC('W','A','V','E')
 #define GST_RIFF_RIFF_AVI  MAKE_FOUR_CC('A','V','I',' ')
