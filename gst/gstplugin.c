@@ -204,7 +204,7 @@ gst_plugin_load_plugin (GstPlugin *plugin, GError **error)
     else {
       g_set_error (error,
                    GST_PLUGIN_ERROR,
-                   GST_PLUGIN_ERROR_MODULE,
+                   GST_PLUGIN_ERROR_NOT_A_PLUGIN,
                    "Could not find plugin_desc in \"%s\"",
                    filename);
     }

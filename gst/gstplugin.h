@@ -37,7 +37,8 @@ GQuark gst_plugin_error_quark (void);
 typedef enum
 {
   GST_PLUGIN_ERROR_MODULE,
-  GST_PLUGIN_ERROR_DEPENDENCIES
+  GST_PLUGIN_ERROR_DEPENDENCIES,
+  GST_PLUGIN_ERROR_NOT_A_PLUGIN
 } GstPluginError;
 
 #define GST_PLUGIN(plugin)		((GstPlugin *) (plugin))

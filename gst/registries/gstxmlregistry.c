@@ -1553,8 +1553,10 @@ gst_xml_registry_rebuild (GstRegistry *registry)
     } else {
       GST_INFO (GST_CAT_PLUGIN_LOADING, "Plugin %s failed to load: %s", 
                 ((GstPlugin *) walk->data)->filename, error->message);
-      g_print ("Plugin %s failed to load\n",
-                ((GstPlugin *) walk->data)->filename);
+
+      if (error->code != GST_PLUGIN_ERROR_NOT_A_PLUGIN)
+        g_print ("Plugin %s failed to load\n",
+                 ((GstPlugin *) walk->data)->filename);
 
       g_free (((GstPlugin *) walk->data)->filename);
       g_free (walk->data);
