@@ -108,6 +108,7 @@ gst_mem_chunk_alloc (GstMemChunk *mem_chunk)
   g_return_val_if_fail (mem_chunk != NULL, NULL);
 
 again:
+#ifdef HAVE_I386
   __asm__ __volatile__ ("  testl %%eax, %%eax 		\n\t"
   			"  jz 20f 			\n"
 			"10:				\t"
@@ -122,6 +123,10 @@ again:
 			:"=a" (chunk)
 			:"m" (*mem_chunk), "a" (mem_chunk->free), "d" (mem_chunk->cnt)
 			:"ecx", "ebx");
+#else
+  fprintf(stderr,"This only compiles correctly on i386.  Sorry\n");
+  abort();
+#endif
 
   if (!chunk) {
     /*g_print ("extending\n"); */
@@ -154,10 +159,15 @@ gst_mem_chunk_free (GstMemChunk *mem_chunk, gpointer mem)
 
   chunk = GST_MEM_CHUNK_LINK (mem);
 
+#ifdef HAVE_I386
   __asm__ __volatile__ ( "1:				\t"
 			"  movl %2, (%1) 		\n"
 			CHUNK_LOCK "cmpxchg %1, %0 	\n\t"
 			"  jnz 1b 			\n\t"
 			:
 			:"m" (*mem_chunk), "r" (chunk), "a" (mem_chunk->free));
+#else
+  fprintf(stderr,"This only compiles correctly on i386.  Sorry\n");
+  abort();
+#endif
 }
