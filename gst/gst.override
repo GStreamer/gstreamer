@@ -33,6 +33,7 @@ headers
 #include <gst/gstqueue.h>
 #include <gst/gsttypefind.h>
 #include <gst/gsttag.h>
+#include <gst/gsttaginterface.h>
 
 extern gboolean pygst_data_from_pyobject (PyObject *object, GstData **data);
 
@@ -530,8 +531,11 @@ tag_foreach_func_list (const GstTagList *list,
 		PyErr_SetString(PyExc_KeyError, tag);
 	else if (count == 1)
 		PyList_Append(py_list, PyString_FromString(tag));
+#if 0	
 	else if (count > 1)
 		PyErr_SetString(PyExc_TypeError, "lists are currently unspported");
+#endif
+	
 }
 
 static PyObject*
@@ -544,7 +548,6 @@ _wrap_gst_tag_list_keys(PyGObject *self)
 	gst_tag_list_foreach(GST_TAG_LIST(self->obj),
 			     (GstTagForeachFunc)tag_foreach_func_list,
 			     (gpointer)dict);
-    
 	return dict;
 }
 %%

@@ -877,3 +877,16 @@
    (c-name "GstURIHandler")
    (gtype-id "GST_TYPE_URI_HANDLER")
 )
+
+(define-interface TagSetter
+   (in-module "Gst")
+   (c-name "GstTagSetter")
+   (gtype-id "GST_TYPE_TAG_SETTER")
+)
+
+(define-interface ImplementsInterface
+   (in-module "Gst")
+   (c-name "GstImplementsInterface")
+   (gtype-id "GST_TYPE_IMPLEMENTS_INTERFACE")
+)
+
