@@ -1,3 +1,8 @@
+2004-10-09  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_get):
+	Set element to EOS before sending EOS event
+
 2004-10-08  Wim Taymans  <wim at fluendo dot com>
 
 	* gst/elements/gsttypefindelement.c:

@@ -827,6 +827,7 @@ gst_fakesrc_get (GstPad * pad)
 
   if (src->eos) {
     GST_INFO ("fakesrc is setting eos on pad");
+    gst_element_set_eos (GST_ELEMENT (src));
     return GST_DATA (gst_event_new (GST_EVENT_EOS));
   }
 
