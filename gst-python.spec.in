@@ -10,12 +10,13 @@ Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
 Source: 	http://gstreamer.net/releases/gst-python/gst-python-%{version}.tar.gz
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 
-%define _pygtk	@PYGTK_REQ@
+%define _pygtk	@pygtk_required_version@
+%define _gtk	@gtk_required_version@
 
 Requires: 	python2
+Requires: 	gnome-python2 = %{version}
 Requires: 	pygtk2 >= %_pygtk
 Requires: 	gstreamer >= 0.6.2
-BuildRequires:  pkgconfig
 BuildRequires:	pygtk2-devel = %_pygtk
 BuildRequires:	python2-devel
 
@@ -36,17 +37,15 @@ rm -rf $RPM_BUILD_ROOT
 
 %makeinstall
 
-find $RPM_BUILD_ROOT -type f -name "*.la" -exec rm -f {} ';'
-
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc AUTHORS ChangeLog README NEWS examples/gstreamer
+%doc AUTHORS ChangeLog README NEWS examples/gstreamer/*.py
 %dir %{_libdir}/python?.?/site-packages/gstreamer
 %{_libdir}/python?.?/site-packages/gstreamer/__init__.*
-%{_libdir}/python?.?/site-packages/_gstreamermodule.so
+%{_libdir}/python?.?/site-packages/gstreamer/_gstreamermodule.so
 
 %changelog
 * Wed Jun 11 2003 Thomas Vander Stichele <thomas at apestaart dot org>
