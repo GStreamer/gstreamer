@@ -28,11 +28,8 @@
 static GstElementDetails smooth_details = {
   "Smooth effect",
   "Filter/Video",
-  "LGPL",
   "Apply a smooth filter to an image",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2000",
+  "Wim Taymans <wim.taymans@chello.be>"
 };
 
 
@@ -75,6 +72,7 @@ GST_PAD_TEMPLATE_FACTORY (smooth_sink_factory,
 )
 
 static void	gst_smooth_class_init	(GstSmoothClass *klass);
+static void	gst_smooth_base_init	(GstSmoothClass *klass);
 static void	gst_smooth_init		(GstSmooth *smooth);
 
 static void	gst_smooth_chain	(GstPad *pad, GstData *_data);
@@ -94,7 +92,8 @@ gst_smooth_get_type (void)
 
   if (!smooth_type) {
     static const GTypeInfo smooth_info = {
-      sizeof(GstSmoothClass),      NULL,
+      sizeof(GstSmoothClass),
+      (GBaseInitFunc)gst_smooth_base_init,
       NULL,
       (GClassInitFunc)gst_smooth_class_init,
       NULL,
@@ -106,6 +105,18 @@ gst_smooth_get_type (void)
     smooth_type = g_type_register_static(GST_TYPE_ELEMENT, "GstSmooth", &smooth_info, 0);
   }
   return smooth_type;
+}
+
+static void
+gst_smooth_base_init (GstSmoothClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (smooth_sink_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (smooth_src_factory));
+  gst_element_class_set_details (element_class, &smooth_details);
 }
 
 static void
@@ -326,26 +337,21 @@ gst_smooth_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("smooth",GST_TYPE_SMOOTH,
-                                   &smooth_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (smooth_sink_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (smooth_src_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register(plugin, "smooth",
+			      GST_RANK_NONE, GST_TYPE_SMOOTH);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "smooth",
-  plugin_init
-};
-
+  "Apply a smooth filter to an image",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
