@@ -114,6 +114,10 @@ flxdec_type_find (GstBuffer *buf, gpointer private)
   guchar *data = GST_BUFFER_DATA(buf);
   GstCaps *new;
 
+  if(GST_BUFFER_SIZE(buf) < 134){
+    return NULL;
+  }
+
   /* check magic */
   if ((data[4] == 0x11 || data[4] == 0x12
        || data[4] == 0x30 || data[4] == 0x44) && data[5] == 0xaf) {
