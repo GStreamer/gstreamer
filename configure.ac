@@ -204,7 +204,7 @@ dnl default to building registry in the source tree if we are enabling plugin bu
 if test "x$PLUGINS_USE_BUILDDIR" = "xyes"; then
   GST_CONFIG_DIR=`pwd`
 else
-  GST_CONFIG_DIR=/etc/gstreamer
+  GST_CONFIG_DIR=${sysconfdir}/gstreamer
 fi
 AC_ARG_WITH(configdir,
 AC_HELP_STRING([--with-configdir][specify path to use for plugin and command completion registries]),
@@ -215,6 +215,8 @@ AC_HELP_STRING([--with-configdir][specify path to use for plugin and command com
 esac], 
 [:]) dnl Default value
 
+AS_AC_EXPAND(GST_CONFIG_DIR, $GST_CONFIG_DIR)
+AC_MSG_NOTICE(Using $GST_CONFIG_DIR as configuration dir)
 AC_ARG_ENABLE(tests,
 AC_HELP_STRING([--disable-tests][disable building test apps]),
 [case "${enableval}" in
