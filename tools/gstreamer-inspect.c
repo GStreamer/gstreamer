@@ -266,8 +266,8 @@ print_element_info (GstElementFactory *factory)
 
     g_object_get (G_OBJECT (element), param->name, &value, NULL);
 
-    printf("  %-40.40s: %d",param->name, value.g_type);
-    switch (value.g_type) {
+    printf("  %-40.40s: ",param->name);
+    switch (param->value_type) {
       case G_TYPE_STRING: printf("String (Default \"%s\")", g_value_get_string (&value));break;
       case G_TYPE_BOOLEAN: printf("Boolean (Default %s)", (g_value_get_boolean (&value)?"true":"false"));break;
       case G_TYPE_ULONG: printf("Unsigned Long (Default %lu)", g_value_get_ulong (&value));break;
