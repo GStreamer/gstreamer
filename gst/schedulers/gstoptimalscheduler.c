@@ -1054,6 +1054,8 @@ gst_opt_scheduler_remove_element (GstScheduler *sched, GstElement *element)
   get_group (element, &group);
   if (group) {
     
+    GST_ELEMENT_SCHED_GROUP (element) = NULL;
+
     if (group->chain) {
       GstOptSchedulerChain *chain;
 
