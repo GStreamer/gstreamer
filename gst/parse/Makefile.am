@@ -1,17 +1,16 @@
 noinst_LTLIBRARIES = libgstparse.la
 
-CLEANFILES = grammar.output
+CLEANFILES = grammar.output grammar.tab.h
 
 EXTRA_DIST = grammar.y parse.l types.h
 
 BUILT_SOURCES = grammar.tab.h grammar.tab.c lex._gst_parse_yy.c 
+noinst_HEADERS = grammar.tab.h
 
 libgstparse_la_SOURCES = lex._gst_parse_yy.c grammar.tab.c
 
 libgstparse_la_CFLAGS = $(LIBGST_CFLAGS)
 libgstparse_la_LIBADD = $(LIBGST_LIBS)
-
-noinst_HEADERS = grammar.tab.h
 
 grammar.tab.c grammar.tab.h: grammar.y ../gstmarshal.h
 	$(BISON_PATH) -d -v -p_gst_parse__yy $(srcdir)/grammar.y -o grammar.tab.c
