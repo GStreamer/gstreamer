@@ -2,7 +2,7 @@ Source: gstreamer
 Section: x11
 Priority: optional
 Maintainer: David I. Lehn <dlehn@vt.edu>
-Build-Depends: debhelper (>= 3.0.0), xlibs-dev (>= 4.1.0), xlibs-pic (>= 4.1.0), libxml-dev (>= 1.8.10), zlib1g-dev (>= 1:1.1.3), libghttp-dev (>= 1.0.6), libglib1.2-dev (>= 1.2.8), libgtk1.2-dev (>= 1.2.8), libglade0-dev (>= 0.14), libglade-gnome0-dev (>= 0.14), libesd0-dev (>= 0.2.22), libcdparanoia0-dev (>= 3a9.7), libvorbis-dev (>= 1.0rc2), libgnome-dev (>= 1.2.11), libasound1-dev (>= 0.5.10) | libasound2-dev (>= 0.9), libghttp-dev (>= 1.0.9), libjpeg62-dev (>= 6b), aalib1-dev (>= 1.4p4), libmad0-dev (>= 0.14.1b), hermes1-dev (>= 1.3.1), libarts-dev (>= 2.1.2), libgsm1-dev (>= 1.0.10), libgnome-vfs-dev (>= 1.0.3), libsdl1.2-dev (>= 1.2.2), libaudiofile-dev (>= 0.2.1), libavifile0.6-dev (>= 0.6.0.20011207), festival-dev (>= 1.4.1p), libflac-dev (>= 1.0.2), libmpeg2-0-dev (>= 0.2.0), libmpeg2dec0-dev (>= 0.2.0), pkg-config (>= 0.8.0), libsidplay1-dev (>= 1.36.47), libmikmod2-dev (>= 3.1.9), liba52-dev (>= 0.7.1), libdvdread2 (>= 0.9.1), lame-dev (>= 3.89), liblame0 (>= 3.89)
+Build-Depends: debhelper (>= 3.0.0), xlibs-dev (>= 4.1.0), xlibs-pic (>= 4.1.0), libxml-dev (>= 1.8.10), zlib1g-dev (>= 1:1.1.3), libghttp-dev (>= 1.0.6), libglib1.2-dev (>= 1.2.8), libgtk1.2-dev (>= 1.2.8), libglade0-dev (>= 0.14), libglade-gnome0-dev (>= 0.14), libesd0-dev (>= 0.2.22), libcdparanoia0-dev (>= 3a9.7), libvorbis-dev (>= 1.0rc2), libgnome-dev (>= 1.2.11), libasound1-dev (>= 0.5.10) | libasound2-dev (>= 0.9), libghttp-dev (>= 1.0.9), libjpeg62-dev (>= 6b), aalib1-dev (>= 1.4p4), libmad0-dev (>= 0.14.1b), hermes1-dev (>= 1.3.1), libarts-dev (>= 2.1.2), libgsm1-dev (>= 1.0.10), libgnome-vfs-dev (>= 1.0.3), libsdl1.2-dev (>= 1.2.2), libaudiofile-dev (>= 0.2.1), libavifile0.6-dev (>= 0.6.0.20011207), festival-dev (>= 1.4.1p), libflac-dev (>= 1.0.2), libmpeg2-0-dev (>= 0.2.0), libmpeg2dec0-dev (>= 0.2.0), pkg-config (>= 0.8.0), libsidplay1-dev (>= 1.36.47), libmikmod2-dev (>= 3.1.9), liba52-0-dev (>= 0.7.2), libdvdread2 (>= 0.9.1), lame-dev (>= 3.89), liblame0 (>= 3.89)
 Build-Depends-Indep: debhelper (>= 3.0.0), gtk-doc-tools (>= 0.4), jade (>= 1.2.1), transfig (>= 3.2.3.c), docbook-utils (>= 0.6.9)
 Standards-Version: 3.5.6
 
@@ -10,7 +10,7 @@ Package: libgst1
 Architecture: [alpha arm hppa i386 mips powerpc sparc]
 Section: libs
 Depends: ${shlibs:Depends}
-Suggests: gstreamer-elements, gstreamer-common
+Suggests: gstreamer-core, gstreamer-misc
 Description: Core GStreamer shared library
  Core GStreamer shared library
 
@@ -42,7 +42,7 @@ Package: gstreamer-tools
 Architecture: any
 Section: x11
 Depends: ${shlibs:Depends}
-Suggests: gstreamer-common
+Suggests: gstreamer-misc
 Description: Tools for use with GStreamer
  Tools for use with GStreamer
  .
@@ -53,7 +53,7 @@ Description: Tools for use with GStreamer
 Package: libgstmediaplay0
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-elements, gstreamer-common, gstreamer-oss, gstreamer-colorspace, gstreamer-gnomevfs, gstreamer-x
+Depends: ${shlibs:Depends}, gstreamer-core, gstreamer-misc, gstreamer-oss, gstreamer-colorspace, gstreamer-gnomevfs, gstreamer-x
 Description: GStreamer media player library
  GStreamer media player library
 
@@ -90,17 +90,16 @@ Package: gsteditor
 Architecture: any
 Section: x11
 Depends: ${shlibs:Depends}
-Suggests: gstreamer-common
+Suggests: gstreamer-misc
 Description: GStreamer editor
  GStreamer editor
 
-Package: gstreamer-all-plugins
+Package: gstreamer-all
 Architecture: any
 Section: libs
-Depends: gstreamer-a52dec, gstreamer-aa, gstreamer-alsa, gstreamer-arts, gstreamer-artsd, gstreamer-audiofile, gstreamer-avifile, gstreamer-cdparanoia, gstreamer-colorspace, gstreamer-common, gstreamer-dvd, gstreamer-elements, gstreamer-esd, gstreamer-festival, gstreamer-flac, gstreamer-gnomevfs, gstreamer-gsm, gstreamer-jpeg, gstreamer-lame, gstreamer-mad, gstreamer-mikmod, gstreamer-mpeg2dec, gstreamer-mpg123, gstreamer-oss, gstreamer-sdl, gstreamer-sid, gstreamer-vorbis, gstreamer-x
+Depends: gstreamer-a52dec, gstreamer-aa, gstreamer-alsa, gstreamer-arts, gstreamer-artsd, gstreamer-audiofile, gstreamer-avifile, gstreamer-cdparanoia, gstreamer-colorspace, gstreamer-misc, gstreamer-dvd, gstreamer-core, gstreamer-esd, gstreamer-festival, gstreamer-flac, gstreamer-gnomevfs, gstreamer-gsm, gstreamer-jpeg, gstreamer-lame, gstreamer-mad, gstreamer-mikmod, gstreamer-mpeg2dec, gstreamer-mpg123, gstreamer-oss, gstreamer-sdl, gstreamer-sid, gstreamer-vorbis, gstreamer-x
 Description: Pseudo package for all GStreamer plugins
- Pseudo package which depends on all current GStreamer plugin
- packages.
+ Pseudo package which depends on all current GStreamer plugin packages.
  .
  NOTE: This package depends on many other packages.
 
@@ -182,14 +181,28 @@ Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: colorspace conversion plugin for GStreamer
  colorspace conversion plugin for GStreamer
 
-Package: gstreamer-common
+Package: gstreamer-core
 Architecture: any
 Section: libs
 Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
-Description: Collection of GStreamer plugins
- Collection of various GStreamer plugins
+Description: Core plugins for GStreamer
+ Core plugins for GStreamer
  .
- These plugins have no special dependencies.
+ Includes various basic elements:
+ * file source and sink
+ * tee and aggregator
+ * fake source and sink for testing
+ * identity
+ * http source
+ * pipe filter
+ * statistics
+ .
+ And other important yet plugable pieces:
+ * autoplugging support
+ * standard scheduler
+ * type detection support
+ .
+ These plugins have no external dependencies.
 
 Package: gstreamer-dvd
 Architecture: any
@@ -197,15 +210,6 @@ Section: libs
 Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: DVD plugin for GStreamer
  DVD plugin for GStreamer based on libdvdread.
-
-Package: gstreamer-elements
-Architecture: any
-Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
-Description: Core elements plugin for GStreamer
- Core elements plugin for GStreamer
- .
- These plugins have no special dependencies.
 
 Package: gstreamer-esd
 Architecture: any
@@ -283,6 +287,15 @@ Description: MikMod decoder plugin for GStreamer
  .
  http://www.mikmod.org/
 
+Package: gstreamer-misc
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
+Description: Collection of various GStreamer plugins
+ Collection of various GStreamer plugins
+ .
+ These plugins have no external dependencies.
+
 Package: gstreamer-mpeg2dec
 Architecture: any
 Section: libs
@@ -309,6 +322,15 @@ Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: OSS plugin for GStreamer
  OSS plugin for GStreamer
 
+Package: gstreamer-sdl
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
+Description: SDL videosink plugin for GStreamer
+ SDL videosink plugin for GStreamer
+ .
+ http://www.libsdl.org/
+
 Package: gstreamer-sid
 Architecture: any
 Section: libs
@@ -320,15 +342,6 @@ Description: C64 SID decoder plugin for GStreamer
  .
  http://stud1.tuwien.ac.at/~e9426444/
  http://sidplay2.sourceforge.net/
-
-Package: gstreamer-sdl
-Architecture: any
-Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
-Description: SDL videosink plugin for GStreamer
- SDL videosink plugin for GStreamer
- .
- http://www.libsdl.org/
 
 Package: gstreamer-vorbis
 Architecture: any

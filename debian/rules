@@ -16,7 +16,7 @@ export DH_OPTIONS
 # Link special names to a template file.
 # still need "*.files" to be done by hand
 
-PLUGINS=a52dec aa alsa arts artsd audiofile avifile cdparanoia colorspace common dvd elements esd festival flac gnomevfs gsm jpeg lame mad mikmod mpeg2dec mpg123 oss sdl sid vorbis x
+PLUGINS=a52dec aa alsa arts artsd audiofile avifile cdparanoia colorspace core dvd esd festival flac gnomevfs gsm jpeg lame mad mikmod misc mpeg2dec mpg123 oss sdl sid vorbis x
 
 setup-links:
 	for i in $(PLUGINS); do \
@@ -47,10 +47,14 @@ configure-stamp:
 		--disable-plugin-builddir \
 		--disable-tests \
 		--disable-examples \
-		--enable-docs-build \
+		--disable-docs-build \
 		--disable-plugin-docs \
 		--enable-DEBUG \
 		--enable-debug
+
+		# FIXME reenable when build is less painful
+		#--enable-docs-build \
+		#--disable-plugin-docs \
 
 	touch configure-stamp
 
@@ -74,14 +78,16 @@ clean:
 
 	dh_clean
 
-	rm -rf debian/gstreamer
+	# get rid of the sym links
 	for i in $(PLUGINS); do \
 		rm -f debian/gstreamer-$$i.postinst; \
 		rm -f debian/gstreamer-$$i.postrm; \
 	done
 
-	# FIXME
+	# FIXME some extra clean up
 	rm -rf \
+		debian/gstreamer \
+		docs/gst/gstreamer-scan.o \
 		docs/gst/gstreamer-decl-list.txt \
 		docs/gst/gstreamer-decl.txt \
 		docs/gst/gstreamer.html \
@@ -99,9 +105,18 @@ install: build
 	dh_installdirs
 
 	# Add here commands to install the package into debian/gstreamer.
-	$(MAKE) install prefix=$(CURDIR)/debian/gstreamer/usr
+	$(MAKE) prefix=$(CURDIR)/debian/gstreamer/usr install
+
+	# move around the doc dirs
+	mkdir -p debian/gstreamer/usr/share/doc/gstreamer-doc/html
+	-mv debian/gstreamer/usr/share/gstreamer/gst-plugin-writers-guide \
+	   debian/gstreamer/usr/share/gstreamer/gstreamer-manual \
+	   debian/gstreamer/usr/share/gstreamer/html/gstreamer-libs \
+	   debian/gstreamer/usr/share/gst/html/gstreamer \
+	   debian/gstreamer/usr/share/doc/gstreamer-doc/html
 
 	dh_movefiles --sourcedir=debian/gstreamer
+
 
 # Build architecture-independent files here.
 # Pass -i to all debhelper commands in this target to reduce clutter.
@@ -111,7 +126,7 @@ binary-indep: build install
 	dh_testdir
 	dh_testroot
 #	dh_installdebconf
-	dh_installdocs
+	dh_installdocs -A debian/README.Debian
 	dh_installexamples
 	dh_installmenu
 #	dh_installemacsen
@@ -121,7 +136,7 @@ binary-indep: build install
 	dh_installman
 #	dh_installinfo
 #	dh_undocumented
-	dh_installchangelogs ChangeLog
+	dh_installchangelogs
 	dh_strip
 #	dh_link
 	dh_compress
@@ -144,7 +159,7 @@ binary-arch: build install setup-links
 	dh_testdir
 	dh_testroot
 #	dh_installdebconf
-	dh_installdocs
+	dh_installdocs -A debian/README.Debian
 	dh_installexamples
 	dh_installmenu
 #	dh_installemacsen
@@ -153,8 +168,8 @@ binary-arch: build install setup-links
 #	dh_installcron
 	dh_installman
 #	dh_installinfo
-	dh_undocumented
-	dh_installchangelogs ChangeLog
+#	dh_undocumented
+	dh_installchangelogs
 	dh_strip
 #	dh_link
 	dh_compress

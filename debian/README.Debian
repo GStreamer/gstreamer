@@ -12,10 +12,14 @@ GStreamer is split into a number of base packages:
    gstreamer-doc        documentation
    gstreamer-tools      useful tools
 
+pseudo plugins package:
+
+   gstreamer-all      depends on all the packages below
+
 recommended plugins:
 
-   gstreamer-elements   core plugins
-   gstreamer-common     many independent plugins
+   gstreamer-core     core plugins
+   gstreamer-misc     many independent plugins
 
 optional plugins:
 

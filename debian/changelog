@@ -1,13 +1,36 @@
+gstreamer (0.3.0-3) unstable; urgency=low
+
+  * Remove upstream ChangeLog from packages: 128k changelog.gz per
+    plugin package for 40 packages is too much
+
+ -- David I. Lehn <dlehn@vt.edu>  Tue, 25 Dec 2001 23:36:28 -0500
+
+gstreamer (0.3.0-2) unstable; urgency=low
+
+  * Fix bug that slipped into 0.3.0: s/aasink/xvideosink/ in
+    gstplay/gstplay.c
+
+ -- David I. Lehn <dlehn@vt.edu>  Tue, 25 Dec 2001 17:56:29 -0500
+
 gstreamer (0.3.0-1) unstable; urgency=low
 
-  * New upstream release (lots of changes)
-  * Update Build-Depends versions as needed
+  * New upstream release
+  * Attempt to update various Build-Depends versions
   * Added plugin packages: -a52dec, -dvd, -mikmod, -sid
-  * Added speed and qcam to -common
+  * Renamed -elements to -core
+  * Added to -core: gstbasicscheduler
+  * Moved from -common to -core: gsttypes, autoplug related
+  * Renamed -common to -misc
+  * Added to -misc: speed, qcam, bytesteram, control, silence, sinesrc,
+    mpegstream, playondemand, resample
   * Added gstreamer-guilaunch to gstreamer-tools package
   * Added dependencies on unofficial LAME packages
+  * Use PIC libs for Xv
+  * Disable broken building of PDF/PS docs
+  * Renamed -all-plugins to -all
+  * Disable docs -- too hard to build
 
- -- David I. Lehn <dlehn@vt.edu>  Tue, 11 Dec 2001 21:27:22 -0500
+ -- David I. Lehn <dlehn@vt.edu>  Fri, 21 Dec 2001 12:00:02 -0500
 
 gstreamer (0.2.1-4) unstable; urgency=low
 
