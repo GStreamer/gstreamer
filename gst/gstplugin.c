@@ -438,8 +438,10 @@ gst_plugin_new (const gchar *name, gint major, gint minor)
   plugin->numelements = 0;
   plugin->types = NULL;
   plugin->numtypes = 0;
+#ifndef GST_DISABLE_AUTOPLUG
   plugin->autopluggers = NULL;
   plugin->numautopluggers = 0;
+#endif // GST_DISABLE_AUTOPLUG
   plugin->loaded = TRUE;
 
   return plugin;
@@ -646,6 +648,7 @@ gst_plugin_load_elementfactory (const gchar *name)
   return factory;
 }
 
+#ifndef GST_DISABLE_AUTOPLUG
 static GstAutoplugFactory*
 gst_plugin_find_autoplugfactory (const gchar *name)
 {
@@ -716,6 +719,7 @@ gst_plugin_load_autoplugfactory (const gchar *name)
 
   return factory;
 }
+#endif // GST_DISABLE_AUTOPLUG
 
 /**
  * gst_plugin_load_typefactory:
@@ -811,6 +815,7 @@ gst_plugin_add_type (GstPlugin *plugin, GstTypeFactory *factory)
  *
  * Add an autoplugfactory to the list of those provided by the plugin.
  */
+#ifndef GST_DISABLE_AUTOPLUG
 void
 gst_plugin_add_autoplugger (GstPlugin *plugin, GstAutoplugFactory *factory)
 {
@@ -821,6 +826,7 @@ gst_plugin_add_autoplugger (GstPlugin *plugin, GstAutoplugFactory *factory)
   plugin->autopluggers = g_list_prepend (plugin->autopluggers, factory);
   plugin->numautopluggers++;
 }
+#endif // GST_DISABLE_AUTOPLUG
 
 /**
  * gst_plugin_get_list:
@@ -876,6 +882,7 @@ gst_plugin_save_thyself (xmlNodePtr parent)
 
       elements = g_list_next (elements);
     }
+#ifndef GST_DISABLE_AUTOPLUG
     autopluggers = plugin->autopluggers;
     while (autopluggers) {
       GstAutoplugFactory *factory = (GstAutoplugFactory *)autopluggers->data;
@@ -885,6 +892,7 @@ gst_plugin_save_thyself (xmlNodePtr parent)
 
       autopluggers = g_list_next (autopluggers);
     }
+#endif // GST_DISABLE_AUTOPLUG
     plugins = g_list_next (plugins);
   }
   g_list_free (plugins);
@@ -939,11 +947,13 @@ gst_plugin_load_thyself (xmlNodePtr parent)
 	  gst_plugin_add_factory (plugin, factory);
 	  elementcount++;
 	}
+#ifndef GST_DISABLE_AUTOPLUG
 	else if (!strcmp (field->name, "autoplugfactory")) {
 	  GstAutoplugFactory *factory = gst_autoplugfactory_load_thyself (field);
 	  gst_plugin_add_autoplugger (plugin, factory);
 	  autoplugcount++;
 	}
+#endif // GST_DISABLE_AUTOPLUG
 	else if (!strcmp (field->name, "typefactory")) {
 	  GstTypeFactory *factory = gst_typefactory_load_thyself (field);
 	  gst_plugin_add_type (plugin, factory);
@@ -1006,6 +1016,7 @@ gst_plugin_get_type_list (GstPlugin *plugin)
  *
  * Returns: a GList of factories
  */
+#ifndef GST_DISABLE_AUTOPLUG
 GList*
 gst_plugin_get_autoplug_list (GstPlugin *plugin)
 {
@@ -1013,3 +1024,4 @@ gst_plugin_get_autoplug_list (GstPlugin *plugin)
 
   return plugin->autopluggers;
 }
+#endif // GST_DISABLE_AUTOPLUG

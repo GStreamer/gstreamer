@@ -32,7 +32,9 @@
 #include "gstpipeline.h"
 #include "gstthread.h"
 #include "gstqueue.h"
+#ifndef GST_DISABLE_TYPEFIND
 #include "gsttypefind.h"
+#endif
 
 #define MAX_PATH_SPLIT	16
 
@@ -56,7 +58,9 @@ static gboolean 	gst_init_check 		(int *argc, gchar ***argv);
 void 
 gst_init (int *argc, char **argv[]) 
 {
+#ifndef GST_DISABLE_TRACE
   GstTrace *gst_trace;
+#endif
 
   if (!g_thread_supported ()) g_thread_init (NULL);
 
@@ -97,13 +101,17 @@ gst_init (int *argc, char **argv[])
   gst_elementfactory_new ("pipeline", gst_pipeline_get_type (), &gst_pipeline_details);
   gst_elementfactory_new ("thread", gst_thread_get_type (), &gst_thread_details);
   gst_elementfactory_new ("queue", gst_queue_get_type (), &gst_queue_details);
+#ifndef GST_DISABLE_TYPEFIND
   gst_elementfactory_new ("typefind", gst_typefind_get_type (), &gst_typefind_details);
+#endif
 
+#ifndef GST_DISABLE_TRACE
   _gst_trace_on = 0;
   if (_gst_trace_on) {
     gst_trace = gst_trace_new ("gst.trace",1024);
     gst_trace_set_default (gst_trace);
   }
+#endif // GST_DISABLE_TRACE
 }
 
 static void

@@ -73,7 +73,6 @@ gst_buffer_new(void)
   buffer->maxsize = 0;
   buffer->offset = 0;
   buffer->timestamp = 0;
-//  buffer->metas = NULL;
   buffer->parent = NULL;
   buffer->pool = NULL;
   buffer->free = NULL;
@@ -141,9 +140,6 @@ gst_buffer_create_sub (GstBuffer *parent,
   // again, for lack of better, copy parent's timestamp
   buffer->timestamp = parent->timestamp;
   buffer->maxage = parent->maxage;
-
-  // no metas, this is sane I think
-//  buffer->metas = NULL;
 
   // if the parent buffer is a subbuffer itself, use its parent, a real buffer
   if (parent->parent != NULL)
@@ -214,7 +210,6 @@ gst_buffer_append (GstBuffer *buffer,
  */
 void gst_buffer_destroy (GstBuffer *buffer) 
 {
-//  GSList *metas;
 
   g_return_if_fail (buffer != NULL);
 
@@ -231,16 +226,6 @@ void gst_buffer_destroy (GstBuffer *buffer)
       g_free (GST_BUFFER_DATA (buffer));
     }
   }
-
-/* DEPRACATED!!!
-  // unreference any metadata attached to this buffer
-  metas = buffer->metas;
-  while (metas) {
-    gst_meta_unref ((GstMeta *)(metas->data));
-    metas = g_slist_next (metas);
-  }
-  g_slist_free (buffer->metas);
-*/
 
   // unreference the parent if there is one
   if (buffer->parent != NULL)
@@ -342,88 +327,6 @@ gst_buffer_unref (GstBuffer *buffer)
     }
   }
 }
-
-/**
- * gst_buffer_add_meta:
- * @buffer: the GstBuffer to add the metadata to
- * @meta: the metadata to add to this buffer
- *
- * Add the meta data to the buffer.
- * DEPRACATED!!!
- */
-/* DEPRACATED!!!
-void 
-gst_buffer_add_meta (GstBuffer *buffer, GstMeta *meta) 
-{
-  g_return_if_fail (buffer != NULL);
-  g_return_if_fail (meta != NULL);
-
-  gst_meta_ref (meta);
-  buffer->metas = g_slist_append (buffer->metas,meta);
-}
-*/
-
-/**
- * gst_buffer_get_metas:
- * @buffer: the GstBuffer to get the metadata from
- *
- * Get the metadatas from the buffer.
- * DEPRACATED!!!
- *
- * Returns: a GSList of metadata
- */
-/* DEPRACATED!!!
-GSList*
-gst_buffer_get_metas (GstBuffer *buffer) 
-{
-  g_return_val_if_fail (buffer != NULL, NULL);
-
-  return buffer->metas;
-}
-*/
-
-/**
- * gst_buffer_get_first_meta:
- * @buffer: the GstBuffer to get the metadata from
- *
- * Get the first metadata from the buffer.
- * DEPRACATED!!!
- *
- * Returns: the first metadata from the buffer
- */
-/* DEPRACATED!!!
-GstMeta*
-gst_buffer_get_first_meta (GstBuffer *buffer) 
-{
-  g_return_val_if_fail (buffer != NULL, NULL);
-
-  if (buffer->metas == NULL)
-    return NULL;
-  return GST_META (buffer->metas->data);
-}
-*/
-
-/**
- * gst_buffer_remove_meta:
- * @buffer: the GstBuffer to remove the metadata from
- * @meta: the metadata to remove
- *
- * Remove the given metadata from the buffer.
- * DEPRACATED!!!
- */
-/* DEPRACATED!!!
-void 
-gst_buffer_remove_meta (GstBuffer *buffer, GstMeta *meta) 
-{
-  g_return_if_fail (buffer != NULL);
-  g_return_if_fail (meta != NULL);
-
-  buffer->metas = g_slist_remove (buffer->metas, meta);
-  gst_meta_unref (meta);
-}
-*/
-
-
 
 /**
  * gst_buffer_copy:

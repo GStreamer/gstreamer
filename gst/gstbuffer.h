@@ -25,7 +25,6 @@
 #define __GST_BUFFER_H__
 
 #include <gst/gstobject.h>
-//#include <gst/gstmeta.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -117,9 +116,6 @@ struct _GstBuffer {
   /* max age */
   guint64 maxage;
 
-  /* pointer to metadata, is really lame right now */
-//  GSList *metas;
-
   /* subbuffer support, who's my parent? */
   GstBuffer *parent;
 
@@ -154,14 +150,6 @@ void 		gst_buffer_destroy		(GstBuffer *buffer);
 
 /* copy buffer */
 GstBuffer*	gst_buffer_copy			(GstBuffer *buffer);
-
-/* add, retrieve, and remove metadata from the buffer */
-/* DEPRECATED!!!
-void 		gst_buffer_add_meta		(GstBuffer *buffer, GstMeta *meta);
-void 		gst_buffer_remove_meta		(GstBuffer *buffer, GstMeta *meta);
-GstMeta*	gst_buffer_get_first_meta	(GstBuffer *buffer);
-GSList*		gst_buffer_get_metas		(GstBuffer *buffer);
-*/
 
 #ifdef __cplusplus
 }

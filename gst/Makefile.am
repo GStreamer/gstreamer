@@ -1,5 +1,4 @@
 # cheap trick to build . first...
-SUBDIRS = . types elements autoplug
 
 lib_LTLIBRARIES = libgst.la
 
@@ -40,8 +39,10 @@ endif
 
 if GST_DISABLE_AUTOPLUG
 GST_AUTOPLUG_SRC = 
+GST_AUTOPLUG_DIRS =
 else
 GST_AUTOPLUG_SRC = gstautoplug.c
+GST_AUTOPLUG_DIRS = autoplug
 endif
 
 if GST_DISABLE_TRACE
@@ -49,6 +50,8 @@ GST_TRACE_SRC =
 else
 GST_TRACE_SRC = gsttrace.c
 endif
+
+SUBDIRS = . types elements $(GST_AUTOPLUG_DIRS)
 
 libgst_la_SOURCES =		\
 	cothreads.c		\
@@ -66,7 +69,6 @@ libgst_la_SOURCES =		\
 	gstelementfactory.c	\
 	gstextratypes.c		\
 	gstinfo.c		\
-	gstmeta.c		\
 	gstpad.c		\
 	gstpipeline.c		\
 	gstplugin.c		\
@@ -154,7 +156,6 @@ libgstinclude_HEADERS =		\
 	gstextratypes.h		\
 	gstinfo.h		\
 	gstlog.h		\
-	gstmeta.h		\
 	gstpad.h		\
 	gstpipeline.h		\
 	gstplugin.h		\

@@ -23,8 +23,16 @@
 #ifndef __GST_PARSE_H__
 #define __GST_PARSE_H__
 
+#ifndef GST_DISABLE_PARSE
+
 #include <gst/gstbin.h>
 
 gint	gst_parse_launch	(const gchar *cmdline, GstBin *parent);
+
+#else // GST_DISABLE_PARSE
+
+#pragma GCC poison gst_parse_launch
+
+#endif // GST_DISABLE_PARSE
 
 #endif /* __GST_PARSE_H__ */

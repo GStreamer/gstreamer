@@ -24,6 +24,8 @@
 #ifndef __GST_TRACE_H__
 #define __GST_TRACE_H__
 
+#ifndef GST_DISABLE_TRACE
+
 #include <glib.h>
 
 
@@ -74,5 +76,21 @@ extern gint _gst_trace_on;
 #else
 #define gst_trace_add_entry(trace,seq,data,msg)
 #endif
+
+#else // GST_DISABLE_TRACE
+
+#pragma GCC poison 	gst_trace_new	
+#pragma GCC poison	gst_trace_destroy
+#pragma GCC poison 	gst_trace_flush
+#pragma GCC poison	gst_trace_text_flush
+#pragma GCC poison 	gst_trace_get_size
+#pragma GCC poison 	gst_trace_get_offset
+#pragma GCC poison 	gst_trace_get_remaining
+#pragma GCC poison 	gst_trace_set_default
+#pragma GCC poison 	_gst_trace_add_entry
+#pragma GCC poison 	gst_trace_read_tsc
+#pragma GCC poison 	gst_trace_add_entry
+
+#endif // GST_DISABLE_TRACE
 
 #endif /* __GST_TRACE_H__ */

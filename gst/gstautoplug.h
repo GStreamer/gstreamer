@@ -24,6 +24,8 @@
 #ifndef __GST_AUTOPLUG_H__
 #define __GST_AUTOPLUG_H__
 
+#ifndef GST_DISABLE_AUTOPLUG
+
 #include <gst/gstelement.h>
 
 #ifdef __cplusplus
@@ -104,6 +106,26 @@ GstAutoplugFactory*	gst_autoplugfactory_load_thyself	(xmlNodePtr parent);
 }
 #endif /* __cplusplus */
 
+#else // GST_DISABLE_AUTOPLUG
+
+#pragma GCC poison	gst_autoplug_get_type	
+#pragma GCC poison	gst_autoplug_signal_new_object	
+#pragma GCC poison	gst_autoplug_to_caps
+#pragma GCC poison	gst_autoplug_to_renderers
+
+#pragma GCC poison	gst_autoplugfactory_new
+#pragma GCC poison      gst_autoplugfactory_destroy
+
+#pragma GCC poison	gst_autoplugfactory_find
+#pragma GCC poison	gst_autoplugfactory_get_list
+
+#pragma GCC poison	gst_autoplugfactory_create
+#pragma GCC poison	gst_autoplugfactory_make
+
+#pragma GCC poison	gst_autoplugfactory_save_thyself
+#pragma GCC poison	gst_autoplugfactory_load_thyself
+
+#endif // GST_DISABLE_AUTOPLUG
 
 #endif /* __GST_AUTOPLUG_H__ */
 

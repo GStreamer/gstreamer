@@ -24,6 +24,7 @@
 #ifndef __GST_TYPEFIND_H__
 #define __GST_TYPEFIND_H__
 
+#ifndef GST_DISABLE_TYPEFIND
 
 #include <gst/gstelement.h>
 
@@ -70,5 +71,6 @@ GType gst_typefind_get_type (void);
 }
 #endif /* __cplusplus */
 
+#endif // GST_DISABLE_TYPEFIND
 
 #endif /* __GST_TYPEFIND_H__ */
