@@ -23,7 +23,7 @@
 #include "../gstcheck.h"
 
 
-START_TEST (test_fail_double_append)
+START_TEST (test_double_append)
 {
   GstStructure *s1;
   GstCaps *c1;
@@ -33,13 +33,42 @@ START_TEST (test_fail_double_append)
   gst_caps_append_structure (c1, s1);
   ASSERT_CRITICAL (gst_caps_append_structure (c1, s1));
 }
+
+END_TEST
+START_TEST (test_mutability)
+{
+  GstStructure *s1;
+  GstCaps *c1;
+  gint ret;
+
+  c1 = gst_caps_new_any ();
+  s1 = gst_structure_from_string ("audio/x-raw-int,rate=44100", NULL);
+  gst_structure_set (s1, "rate", G_TYPE_INT, 48000, NULL);
+  gst_caps_append_structure (c1, s1);
+  gst_structure_set (s1, "rate", G_TYPE_INT, 22500, NULL);
+  gst_caps_ref (c1);
+  ASSERT_CRITICAL (gst_structure_set (s1, "rate", G_TYPE_INT, 11250, NULL));
+  fail_unless (gst_structure_get_int (s1, "rate", &ret));
+  fail_unless (ret == 22500);
+  ASSERT_CRITICAL (gst_caps_set_simple (c1, "rate", G_TYPE_INT, 11250, NULL));
+  fail_unless (gst_structure_get_int (s1, "rate", &ret));
+  fail_unless (ret == 22500);
+  gst_caps_unref (c1);
+  gst_structure_set (s1, "rate", G_TYPE_INT, 11250, NULL);
+  fail_unless (gst_structure_get_int (s1, "rate", &ret));
+  fail_unless (ret == 11250);
+  gst_caps_set_simple (c1, "rate", G_TYPE_INT, 1, NULL);
+  fail_unless (gst_structure_get_int (s1, "rate", &ret));
+  fail_unless (ret == 1);
+}
 END_TEST Suite * gst_caps_suite (void)
 {
   Suite *s = suite_create ("GstCaps");
   TCase *tc_chain = tcase_create ("mutability");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_fail_double_append);
+  tcase_add_test (tc_chain, test_double_append);
+  tcase_add_test (tc_chain, test_mutability);
   return s;
 }
 

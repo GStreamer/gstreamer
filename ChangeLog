@@ -1,18 +1,21 @@
-2005-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
-
-	* configure.ac:
-	* docs/gst/Makefile.am:
-	* docs/libs/Makefile.am:
-	  merge from HEAD: add popt to gtk-doc build
-
-2005-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
-
-	* gst/gsterror.c:
-	* gst/gsterror.h:
-	  merge docs from HEAD
-	  remove unused and unneeded error to combat inflation
-
 2005-02-11  Andy Wingo  <wingo@pobox.com>
+
+	* tools/gst-inspect.c (print_field): Change prototype for
+	non-mutating caps_foreach.
+
+	* check/gst/gstobject.c (test_fail_abstract_new): Expect a warning
+	from GLib.
+
+	* check/gst/gstcaps.c (test_double_append): Renamed from
+	test_fail_double_append.
+	(test_mutability): New test, tests that caps and structures are
+	mutable only with refcount 1, or in the case of structures, also
+	when unparented.
+
+	* check/gstcheck.c (gst_check_init): Handle WARNING in addition to
+	CRITICAL.
+	(gst_check_log_critical_func): Print criticals in both the
+	expected and unexpected cases.
 
 	* check/gst/gstcaps.c: New test suite. Only one test at the moment
 	-- this is an infrastructure commit.
@@ -39,6 +42,20 @@
 	testsuite/ directory. Don't use --gst-fatal-warnings though, we
 	have some new mechanisms for that.
 	(TESTS): Added gst/gstcaps.
+
+2005-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am:
+	  merge from HEAD: add popt to gtk-doc build
+
+2005-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gsterror.c:
+	* gst/gsterror.h:
+	  merge docs from HEAD
+	  remove unused and unneeded error to combat inflation
 
 2005-02-10  Wim Taymans  <wim@fluendo.com>
 

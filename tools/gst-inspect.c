@@ -54,7 +54,7 @@ n_print (const char *format, ...)
 }
 
 static gboolean
-print_field (GQuark field, GValue * value, gpointer pfx)
+print_field (GQuark field, const GValue * value, gpointer pfx)
 {
   gchar *str = gst_value_serialize (value);
 

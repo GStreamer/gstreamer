@@ -71,8 +71,7 @@ START_TEST (test_fail_abstract_new)
 {
   GstObject *object;
 
-  object = g_object_new (gst_object_get_type (), NULL);
-  /* this should assert and segfault, but we add fallbacks anyway */
+  ASSERT_CRITICAL (object = g_object_new (gst_object_get_type (), NULL));
   fail_unless (object == NULL, "Created an instance of abstract GstObject");
 }
 

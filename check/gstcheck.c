@@ -52,12 +52,12 @@ void gst_check_log_critical_func
     (const gchar * log_domain, GLogLevelFlags log_level,
     const gchar * message, gpointer user_data)
 {
-  if (!_gst_check_expecting_log)
-    fail ("Unexpected assertion: %s", message);
-
-  if (_gst_check_debug) {
-    g_print (message);
+  if (!_gst_check_expecting_log) {
+    g_print ("\n\nUnexpected critical/warning: %s\n", message);
+    fail ("Unexpected critical/warning: %s", message);
   }
+
+  g_print ("\nExpected critical/warning: %s\n", message);
 
   if (log_level & G_LOG_LEVEL_CRITICAL)
     _gst_check_raised_critical = TRUE;
@@ -74,8 +74,10 @@ gst_check_init (int *argc, char **argv[])
 
   g_log_set_handler (NULL, G_LOG_LEVEL_MESSAGE, gst_check_log_message_func,
       NULL);
-  g_log_set_handler (NULL, G_LOG_LEVEL_CRITICAL, gst_check_log_critical_func,
-      NULL);
-  g_log_set_handler ("GStreamer", G_LOG_LEVEL_CRITICAL,
+  g_log_set_handler (NULL, G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
+      gst_check_log_critical_func, NULL);
+  g_log_set_handler ("GStreamer", G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
+      gst_check_log_critical_func, NULL);
+  g_log_set_handler ("GLib-GObject", G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
       gst_check_log_critical_func, NULL);
 }
