@@ -441,6 +441,14 @@ dnl FIXME : add second check somehow if that is necessary
 dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
 dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
+dnl *** dv ***
+dnl FIXME : check if those GLIB thingies are ok
+translit(dnm, m, l) AM_CONDITIONAL(USE_DV, true)
+GST_CHECK_FEATURE(DV, [dv library], dv, [
+  GST_CHECK_LIBHEADER(DV, dv, dv_init, -lm $GLIB_LIBS $GLIB_CFLAGS, libdv/dv.h, DV_LIBS="-ldv")
+  AC_SUBST(DV_LIBS)
+])
+
 dnl *** dvdread ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVDREAD, true)
 GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdsrc, [
@@ -492,12 +500,7 @@ GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame/lame.h, LAME_LIBS="-lmp3
 ])
 AC_SUBST(LAME_LIBS)
 
-dnl *** libdv ***
-dnl FIXME : check if those GLIB thingies are ok
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDV, true)
-GST_CHECK_FEATURE(LIBDV, [dv library], dv, [
-GST_CHECK_LIBHEADER(LIBDV, dv, dv_init, -lm $GLIB_LIBS $GLIB_CFLAGS, libdv/dv.h, LIBDV_LIBS="-ldv")
-])
+
 dnl FIXME : check if these CPP flags can be dealt with otherwise
 dnl libdvcheck_save_CPPFLAGS="$CPPFLAGS"
 dnl CPPFLAGS="$CPPFLAGS $GLIB_CFLAGS"
@@ -548,18 +551,21 @@ GST_CHECK_FEATURE(RAW1394, [raw1394 library], dv1394src, [
   AC_SUBST(RAW1394_LIBS)
 ])
 
-dnl Check for librtp
+dnl *** rtp ***
 dnl FIXME : adapt and make it work
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBRTP, true)
-GST_CHECK_FEATURE(LIBRTP, [RTP library], rtpenc rtpdec,[
-  AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
+translit(dnm, m, l) AM_CONDITIONAL(USE_RTP, true)
+GST_CHECK_FEATURE(RTP, [RTP library], rtpenc rtpdec,[
+  AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_RTP=yes, HAVE_RTP=no, $GLIB_LIBS $GLIB_CFLAGS)
+  RTP_LIBS="-lrtp"
+  AC_SUBST(RTP_LIBS)
 ])
+
+
 dnl FIXME header check needs to use GLIB_CFLAGS in order to succeed for rtp
 dnl AC_CHECK_HEADERS(rtp/rtp.h, HAVE_LIBRTP=yes, HAVE_LIBRTP=no)
 dnl AC_CHECK_HEADERS(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
 dnl AC_CHECK_HEADERS(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
 dnl AC_CHECK_HEADERS(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
-
 
 dnl *** SDL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SDL, true)
