@@ -93,9 +93,12 @@ gst_gconf_render_bin_from_description (const gchar *description)
   GstElement *bin = NULL;
   GstPad *pad = NULL;
   GError *error = NULL;
+  gchar *desc = NULL;
 
-  /* parse the pipeline */
-  bin = GST_ELEMENT (gst_parse_launch (description, &error));
+  /* parse the pipeline to a bin */
+  desc = g_strdup_printf ("bin.( %s )", description);
+  bin = GST_ELEMENT (gst_parse_launch (desc, &error));
+  g_free (desc);
   if (error)
   {
     g_print ("DEBUG: gstgconf: error parsing pipeline %s\n%s\n",
