@@ -699,6 +699,7 @@ Various plugins for visual effects to use with audio. Included are Smoothwave, S
 %{prefix}/lib/gst/libgstvu*
 %{prefix}/lib/gst/libgstgoom*
 %{prefix}/lib/gst/libchart*
+%{prefix}/lib/gst/libgstmonoscope*
 
 %post -n gstreamer-visualisation
 %{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
