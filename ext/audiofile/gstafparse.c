@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
+#include <string.h>
 #include "gstafparse.h"
 
 
@@ -93,16 +94,6 @@ static void gst_afparse_vf_destroy(AFvirtualfile *vfile);
 static long gst_afparse_vf_seek   (AFvirtualfile *vfile, long offset, int is_relative);
 static long gst_afparse_vf_tell   (AFvirtualfile *vfile);
 
-static GstCaps* gst_afparse_type_find(GstBuffer *buf, gpointer private);
-static GstElementStateReturn gst_afparse_change_state (GstElement *element);
-
-static GstElementClass *parent_class = NULL;
-
-static GstTypeDefinition aftype_definitions[] = {
-  { "aftypes audio/audiofile", "audio/audiofile", ".wav .aiff .aif .aifc", gst_afparse_type_find },
-  { NULL, NULL, NULL, NULL },
-};
-
 GType
 gst_afparse_get_type (void) 
 {
@@ -136,7 +127,6 @@ gst_afparse_class_init (GstAFParseClass *klass)
   gobject_class->set_property = gst_afparse_set_property;
   gobject_class->get_property = gst_afparse_get_property;
 
-  /* gstelement_class->change_state = gst_afparse_change_state;*/
 }
 
 static void 
@@ -183,16 +173,67 @@ gst_afparse_loop(GstElement *element)
   GstBufferPool *bufpool;
   gint numframes, frames_to_bytes, frames_per_read, bytes_per_read;
   guint8 *data;
+  gboolean bypass_afread = TRUE;
+  GstByteStream *bs;
 
   afparse = GST_AFPARSE(element);
 
-  afparse->vfile->closure = gst_bytestream_new(afparse->sinkpad);
-  if (gst_afparse_open_file (afparse)){
-    frames_to_bytes = afparse->channels * afparse->width / 8;
-    frames_per_read = afparse->frames_per_read;
-    bytes_per_read = frames_per_read * frames_to_bytes;
+  afparse->vfile->closure = bs = gst_bytestream_new(afparse->sinkpad);
+
+  /* just stop if we cannot open the file */
+  if (!gst_afparse_open_file (afparse)){
+    gst_bytestream_destroy((GstByteStream*)afparse->vfile->closure);
+    gst_pad_push (afparse->srcpad, GST_BUFFER(gst_event_new (GST_EVENT_EOS)));  
+    gst_element_set_eos (GST_ELEMENT (afparse));
+    return;
+  }
+
+  /* if audiofile changes the data in any way, we have to access
+   * the audio data via afReadFrames. Otherwise we can just access
+   * the data directly. */
+  if (afGetCompression != AF_COMPRESSION_NONE ||
+      afGetByteOrder(afparse->file, AF_DEFAULT_TRACK) != afGetVirtualByteOrder(afparse->file, AF_DEFAULT_TRACK)){
+    int s_format, v_format, s_width, v_width;
+    afGetSampleFormat(afparse->file, AF_DEFAULT_TRACK, &s_format, &s_width);
+    afGetVirtualSampleFormat(afparse->file, AF_DEFAULT_TRACK, &v_format, &v_width);
+    if (s_format != v_format || s_width != v_width){
+      bypass_afread = FALSE;
+    }
+  }
+  if (bypass_afread){
+    g_print("will bypass afReadFrames\n");
+  }
   
-    bufpool = gst_buffer_pool_get_default (bytes_per_read, 8);
+  frames_to_bytes = afparse->channels * afparse->width / 8;
+  frames_per_read = afparse->frames_per_read;
+  bytes_per_read = frames_per_read * frames_to_bytes;
+  
+  bufpool = gst_buffer_pool_get_default (bytes_per_read, 8);
+  afSeekFrame(afparse->file, AF_DEFAULT_TRACK, 0);
+
+  if (bypass_afread){
+    GstEvent     *event = NULL;
+    guint32       waiting;
+    do {
+
+      buf = gst_bytestream_read (bs, bytes_per_read);
+      if (buf == NULL) {
+        /* we need to check for an event. */
+        gst_bytestream_get_status (bs, &waiting, &event);
+        if (event && GST_EVENT_TYPE(event) == GST_EVENT_EOS) {
+          gst_pad_push (afparse->srcpad, GST_BUFFER(gst_event_new (GST_EVENT_EOS)));  
+          gst_element_set_eos (GST_ELEMENT (afparse));
+          break;
+        }
+      }
+
+      gst_pad_push (afparse->srcpad, buf);
+      afparse->timestamp += numframes * 1E9 / afparse->rate;
+    }
+    while (TRUE);
+
+  }
+  else {
     do {
       buf = gst_buffer_new_from_pool (bufpool, 0, 0);
       GST_BUFFER_TIMESTAMP(buf) = afparse->timestamp;
@@ -208,58 +249,20 @@ gst_afparse_loop(GstElement *element)
         gst_element_set_eos (GST_ELEMENT (afparse));
         break;
       }
-
       GST_BUFFER_SIZE(buf) = numframes * frames_to_bytes;
       gst_pad_push (afparse->srcpad, buf);
       afparse->timestamp += numframes * 1E9 / afparse->rate;
     }
     while (TRUE);
-    gst_afparse_close_file (afparse);
-    gst_buffer_pool_unref(bufpool);
   }
+
+  gst_afparse_close_file (afparse);
+  gst_buffer_pool_unref(bufpool);
   
   gst_bytestream_destroy((GstByteStream*)afparse->vfile->closure);
 
 }
 
-static GstBuffer *
-gst_afparse_get (GstPad *pad)
-{
-  GstAFParse *afparse;
-  GstBuffer *buf;
-
-  glong readbytes, readframes;
-  glong frameCount;
-
-  g_return_val_if_fail (pad != NULL, NULL);
-  afparse = GST_AFPARSE (gst_pad_get_parent (pad));
-
-  buf = gst_buffer_new ();
-  g_return_val_if_fail (buf, NULL);
-  
-  GST_BUFFER_DATA (buf) = (gpointer) g_malloc (afparse->bytes_per_read);
- 
-  /* calculate frameCount to read based on file info */
-
-  frameCount = afparse->bytes_per_read / (afparse->channels * afparse->width / 8);
-/*  g_print ("DEBUG: gstafparse: going to read %ld frames\n", frameCount); */
-  readframes = afReadFrames (afparse->file, AF_DEFAULT_TRACK, GST_BUFFER_DATA (buf), frameCount);
-  readbytes = readframes * (afparse->channels * afparse->width / 8);
-  if (readbytes == 0) {
-    gst_element_set_eos (GST_ELEMENT (afparse));
-    return GST_BUFFER (gst_event_new (GST_EVENT_EOS));  
-  }
-  
-  GST_BUFFER_SIZE (buf) = readbytes;
-  GST_BUFFER_OFFSET (buf) = afparse->curoffset;
-
-  afparse->curoffset += readbytes;
-
-  afparse->timestamp += gst_audio_frame_length (afparse->srcpad, buf);
-  GST_BUFFER_TIMESTAMP (buf) = afparse->timestamp * 1E9 / afparse->rate;
-
-  return buf;
-}
 
 static void
 gst_afparse_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -296,7 +299,6 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
-  gint i=0;
   
   factory = gst_element_factory_new ("afparse", GST_TYPE_AFPARSE,
                                     &afparse_details);
@@ -307,14 +309,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
-  while (aftype_definitions[i].name) {
-    GstTypeFactory *type;
-
-    type = gst_type_factory_new (&aftype_definitions[i]);
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
-    i++;
-  }
-    
   /* load audio support library */
   if (!gst_library_load ("gstaudio"))
   {
@@ -416,41 +410,6 @@ gst_afparse_close_file (GstAFParse *afparse)
   }
 }
 
-static GstElementStateReturn
-gst_afparse_change_state (GstElement *element)
-{
-  g_return_val_if_fail (GST_IS_AFPARSE (element), GST_STATE_FAILURE);
-
-  /* if going to NULL then close the file */
-  if (GST_STATE_PENDING (element) == GST_STATE_NULL) 
-  {
-/*    printf ("DEBUG: afparse state change: null pending\n"); */
-    if (GST_FLAG_IS_SET (element, GST_AFPARSE_OPEN))
-    {
-/*      g_print ("DEBUG: trying to close the src file\n"); */
-      gst_afparse_close_file (GST_AFPARSE (element));
-    }
-  } 
-  else if (GST_STATE_PENDING (element) == GST_STATE_READY) 
-  {
-/*    g_print ("DEBUG: afparse: ready state pending.  This shouldn't happen at the *end* of a stream\n"); */
-    if (!GST_FLAG_IS_SET (element, GST_AFPARSE_OPEN)) 
-    {
-/*      g_print ("DEBUG: GST_AFPARSE_OPEN not set\n"); */
-      if (!gst_afparse_open_file (GST_AFPARSE (element)))
-      {
-/*        g_print ("DEBUG: element tries to open file\n"); */
-        return GST_STATE_FAILURE;
-      }
-    }
-  }
-
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
-}
-
 static ssize_t 
 gst_afparse_vf_read (AFvirtualfile *vfile, void *data, size_t nbytes)
 {
@@ -458,7 +417,6 @@ gst_afparse_vf_read (AFvirtualfile *vfile, void *data, size_t nbytes)
   guint8 *bytes;
   GstEvent     *event = NULL;
   guint32       waiting; 
-  gchar *debug_bytes;
   
   while (!(bytes = gst_bytestream_peek_bytes(bs, nbytes))){
     /* handle events */
@@ -543,12 +501,5 @@ gst_afparse_vf_tell   (AFvirtualfile *vfile)
   offset = gst_bytestream_tell(bs);
   g_print("doing tell: %llu\n", offset);
   return offset;
-}
-
-static GstCaps* 
-gst_afparse_type_find(GstBuffer *buf, gpointer private)
-{
-  
-  return NULL;
 }
 
