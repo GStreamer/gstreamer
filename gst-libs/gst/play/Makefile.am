@@ -13,7 +13,7 @@ built_headers = \
 
 library_LTLIBRARIES = libgstplay-@GST_MAJORMINOR@.la
 
-libgstplay_@GST_MAJORMINOR@_la_SOURCES = play.c $(glib_root)-enumtypes.c
+libgstplay_@GST_MAJORMINOR@_la_SOURCES = play.c play-enumtypes.c
 
 libgstplay_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/play
 libgstplay_@GST_MAJORMINOR@include_HEADERS = $(play_headers) $(built_headers)
