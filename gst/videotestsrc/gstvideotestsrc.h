@@ -65,6 +65,7 @@ struct _GstVideotestsrc {
   gint64 interval;
   gint bpp;
   int rate;
+  GstClock *clock;
 
   GstBufferPool *pool;
 
