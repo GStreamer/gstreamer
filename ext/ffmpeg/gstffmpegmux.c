@@ -259,7 +259,7 @@ gst_ffmpegmux_connect (GstPad  *pad,
    * our famous codec mapper */
   for ( ; caps != NULL; caps = caps->next) {
     if (gst_ffmpeg_caps_to_codecid (caps,
-				    &st->codec.codec_id) == CODEC_ID_NONE) {
+				    &st->codec) != CODEC_ID_NONE) {
       ffmpegmux->eos[i] = FALSE;
       return GST_PAD_LINK_OK;
     }
@@ -500,13 +500,13 @@ gst_ffmpegmux_register (GstPlugin *plugin)
 					     srccaps, NULL);
     gst_element_factory_add_pad_template (factory,
 					  params->srctempl);
-    params->audiosinktempl = gst_pad_template_new ("audio_%02d",
+    params->audiosinktempl = gst_pad_template_new ("audio_%d",
 						   GST_PAD_SINK,
 						   GST_PAD_REQUEST,
 						   audiosinkcaps, NULL);
     gst_element_factory_add_pad_template (factory,
 					  params->audiosinktempl);
-    params->videosinktempl = gst_pad_template_new ("video_%02d",
+    params->videosinktempl = gst_pad_template_new ("video_%d",
 						   GST_PAD_SINK,
 						   GST_PAD_REQUEST,
 						   videosinkcaps, NULL);
