@@ -43,9 +43,9 @@ def main():
    filesrc.set_property('location', sys.argv[1])
 
    # now get the decoder
-   decoder = gst_element_factory_make ('vorbisdec', 'parse');
+   decoder = gst_element_factory_make ('vorbisfile', 'parse');
    if not decoder:
-      print 'could not find plugin \"vorbisdec\"'
+      print 'could not find plugin \"vorbisfile\"'
       return -1
 
    # and an audio sink
