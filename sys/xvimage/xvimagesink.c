@@ -1553,6 +1553,9 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
   GstEvent *event;
   double x, y;
 
+  if (!GST_PAD_PEER (GST_VIDEOSINK_PAD (xvimagesink)))
+    return;
+
   event = gst_event_new (GST_EVENT_NAVIGATION);
   event->event_data.structure.structure = structure;
 
