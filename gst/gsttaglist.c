@@ -970,6 +970,7 @@ TAG_MERGE_FUNCS (int64, gint64)
 TAG_MERGE_FUNCS (uint64, guint64)
 TAG_MERGE_FUNCS (float, gfloat)
 TAG_MERGE_FUNCS (double, gdouble)
+TAG_MERGE_FUNCS (pointer, gpointer)
 #undef COPY_FUNC
 #define COPY_FUNC g_strdup
 TAG_MERGE_FUNCS (string, gchar *)

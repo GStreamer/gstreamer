@@ -1,3 +1,32 @@
+2004-07-14  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gsttag.c: Add a tag merge func for pointers. The header was
+	there all along, but the function wasn't. (guile-gstreamer's build
+	system uses the address of the function -- I wasn't actually
+	trying to use this.)
+
+2004-07-14  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstpad.c (gst_pad_try_set_caps): Naive link functions (such
+	as gst_pad_proxy_pad_link) just link to every other pad when they
+	are called. In the case where the graph has cycles, this will mean
+	that a call to try_set_caps will recurse. Allow this recursion
+	and return OK, while we wait for the first try_set_caps to give a
+	proper return value.
+	(gst_pad_link_call_link_functions): Since this function is the
+	only one to set the NEGOTIATING flag on a pad, if the flag is set
+	it means that the link functions have indirectly recursed. If this
+	happens, error out to avoid infinite recursion and an eventual
+	SEGV.
+	(gst_real_pad_class_init): Remove a crufty GtkObject comment.
+	(gst_pad_proxy_getcaps): Intersect the result with the template
+	caps to ensure that the return value is valid.
+
+2004-07-14  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstdata.c (gst_data_is_writable): s/>=/>/. If there is only
+	one refcount, the calling function is the owner of the buffer.
+
 2004-07-14  Wim Taymans  <wim@fluendo.com>
 
 	* gst/schedulers/gstoptimalscheduler.c: (group_dec_link),
@@ -128,6 +157,7 @@
 	* testsuite/clock/signedness.c: (main):
 	  make sure it never will again
 
+>>>>>>> 1.669
 2004-07-11  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstbin.c (gst_bin_add_func): If we're adding an element

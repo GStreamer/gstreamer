@@ -128,7 +128,7 @@ gst_data_is_writable (GstData * data)
 
   refcount = gst_atomic_int_read (&data->refcount);
 
-  if (refcount >= 1)
+  if (refcount > 1)
     return FALSE;
   if (GST_DATA_FLAG_IS_SET (data, GST_DATA_READONLY))
     return FALSE;

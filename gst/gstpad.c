@@ -230,8 +230,6 @@ gst_real_pad_class_init (GstRealPadClass * klass)
       gst_marshal_BOXED__BOXED, GST_TYPE_CAPS, 1,
       GST_TYPE_CAPS | G_SIGNAL_TYPE_STATIC_SCOPE);
 
-/*  gtk_object_add_arg_type ("GstRealPad::active", G_TYPE_BOOLEAN, */
-/*                           GTK_ARG_READWRITE, REAL_ARG_ACTIVE); */
   g_object_class_install_property (G_OBJECT_CLASS (klass), REAL_ARG_ACTIVE,
       g_param_spec_boolean ("active", "Active", "Whether the pad is active.",
           TRUE, G_PARAM_READWRITE));
@@ -1255,25 +1253,27 @@ gst_pad_link_fixate (GstPadLink * link)
 static GstPadLinkReturn
 gst_pad_link_call_link_functions (GstPadLink * link)
 {
-  gboolean negotiating;
-  GstPadLinkReturn res;
+  GstPadLinkReturn res = GST_PAD_LINK_OK;
 
+  /* Detect recursion. */
+  if (GST_PAD_IS_NEGOTIATING (link->srcpad) ||
+      GST_PAD_IS_NEGOTIATING (link->sinkpad)) {
+    GST_ERROR ("The link functions have recursed, please file a bug!");
+    return GST_PAD_LINK_REFUSED;
+  }
+
+  /* Both of the pads are in negotiation, so we set the NEGOTIATING flag on both
+   * of them now to avoid recursion from either pad. */
+  GST_FLAG_SET (link->srcpad, GST_PAD_NEGOTIATING);
+  GST_FLAG_SET (link->sinkpad, GST_PAD_NEGOTIATING);
+
+  /* If this doesn't run, the status is left to the default OK value. */
   if (link->srcnotify && GST_RPAD_LINKFUNC (link->srcpad)) {
     GST_DEBUG ("calling link function on pad %s:%s",
         GST_DEBUG_PAD_NAME (link->srcpad));
 
-    negotiating = GST_FLAG_IS_SET (link->srcpad, GST_PAD_NEGOTIATING);
-
-    /* set the NEGOTIATING flag if not already done */
-    if (!negotiating)
-      GST_FLAG_SET (link->srcpad, GST_PAD_NEGOTIATING);
-
     /* call the link function */
     res = GST_RPAD_LINKFUNC (link->srcpad) (GST_PAD (link->srcpad), link->caps);
-
-    /* unset again after negotiating only if we set it  */
-    if (!negotiating)
-      GST_FLAG_UNSET (link->srcpad, GST_PAD_NEGOTIATING);
 
     GST_DEBUG ("got reply %d from link function on pad %s:%s",
         res, GST_DEBUG_PAD_NAME (link->srcpad));
@@ -1282,27 +1282,17 @@ gst_pad_link_call_link_functions (GstPadLink * link)
       GST_CAT_INFO (GST_CAT_CAPS,
           "pad %s:%s doesn't accept caps %" GST_PTR_FORMAT,
           GST_DEBUG_PAD_NAME (link->srcpad), link->caps);
-      return res;
     }
   }
 
-  if (link->sinknotify && GST_RPAD_LINKFUNC (link->sinkpad)) {
+  if (GST_PAD_LINK_SUCCESSFUL (res) &&
+      link->sinknotify && GST_RPAD_LINKFUNC (link->sinkpad)) {
     GST_DEBUG ("calling link function on pad %s:%s",
         GST_DEBUG_PAD_NAME (link->sinkpad));
-
-    negotiating = GST_FLAG_IS_SET (link->sinkpad, GST_PAD_NEGOTIATING);
-
-    /* set the NEGOTIATING flag if not already done */
-    if (!negotiating)
-      GST_FLAG_SET (link->sinkpad, GST_PAD_NEGOTIATING);
 
     /* call the link function */
     res = GST_RPAD_LINKFUNC (link->sinkpad) (GST_PAD (link->sinkpad),
         link->caps);
-
-    /* unset again after negotiating only if we set it  */
-    if (!negotiating)
-      GST_FLAG_UNSET (link->sinkpad, GST_PAD_NEGOTIATING);
 
     GST_DEBUG ("got reply %d from link function on pad %s:%s",
         res, GST_DEBUG_PAD_NAME (link->sinkpad));
@@ -1311,11 +1301,12 @@ gst_pad_link_call_link_functions (GstPadLink * link)
       GST_CAT_INFO (GST_CAT_CAPS,
           "pad %s:%s doesn't accept caps %" GST_PTR_FORMAT,
           GST_DEBUG_PAD_NAME (link->sinkpad), link->caps);
-      return res;
     }
   }
 
-  return GST_PAD_LINK_OK;
+  GST_FLAG_UNSET (link->srcpad, GST_PAD_NEGOTIATING);
+  GST_FLAG_UNSET (link->sinkpad, GST_PAD_NEGOTIATING);
+  return res;
 }
 
 static GstPadLinkReturn
@@ -1483,7 +1474,13 @@ gst_pad_try_set_caps (GstPad * pad, const GstCaps * caps)
   GstPadLinkReturn ret;
 
   g_return_val_if_fail (GST_IS_REAL_PAD (pad), GST_PAD_LINK_REFUSED);
-  g_return_val_if_fail (!GST_PAD_IS_NEGOTIATING (pad), GST_PAD_LINK_REFUSED);
+
+  GST_LOG_OBJECT (pad, "Trying to set %" GST_PTR_FORMAT, caps);
+
+  if (GST_PAD_IS_NEGOTIATING (pad)) {
+    GST_DEBUG_OBJECT (pad, "Detected a recursion, just returning OK");
+    return GST_PAD_LINK_OK;
+  }
 
   /* setting non-fixed caps on a pad is not allowed */
   if (!gst_caps_is_fixed (caps)) {
@@ -2316,7 +2313,7 @@ gst_pad_proxy_getcaps (GstPad * pad)
 {
   GstElement *element;
   const GList *pads;
-  GstCaps *caps;
+  GstCaps *caps, *intersected;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
@@ -2343,7 +2340,9 @@ gst_pad_proxy_getcaps (GstPad * pad)
     pads = g_list_next (pads);
   }
 
-  return caps;
+  intersected = gst_caps_intersect (caps, gst_pad_get_pad_template_caps (pad));
+  gst_caps_free (caps);
+  return intersected;
 }
 
 /**
@@ -2618,11 +2617,19 @@ gst_pad_get_caps (GstPad * pad)
   GST_CAT_DEBUG (GST_CAT_CAPS, "get pad caps of %s:%s (%p)",
       GST_DEBUG_PAD_NAME (realpad), realpad);
 
-  if (GST_RPAD_GETCAPSFUNC (realpad)) {
+  if (GST_PAD_IS_DISPATCHING (realpad))
+    GST_CAT_DEBUG (GST_CAT_CAPS,
+        "pad %s:%s is already dispatching -- looking for a template",
+        GST_DEBUG_PAD_NAME (realpad));
+
+  if (GST_RPAD_GETCAPSFUNC (realpad) && !GST_PAD_IS_DISPATCHING (realpad)) {
     GstCaps *caps;
 
-    GST_CAT_DEBUG (GST_CAT_CAPS, "using pad getcaps function");
+    GST_CAT_DEBUG (GST_CAT_CAPS, "dispatching to pad getcaps function");
+
+    GST_FLAG_SET (realpad, GST_PAD_DISPATCHING);
     caps = GST_RPAD_GETCAPSFUNC (realpad) (GST_PAD (realpad));
+    GST_FLAG_UNSET (realpad, GST_PAD_DISPATCHING);
 
     if (caps == NULL) {
       g_critical ("pad %s:%s returned NULL caps from getcaps function\n",
