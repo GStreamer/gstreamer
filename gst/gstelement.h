@@ -171,6 +171,7 @@ struct _GstElementClass {
 
   /* vtable*/
   gboolean		(*release_locks)	(GstElement *element);
+  gboolean		(*send_event)		(GstElement *element, GstEvent *event);
   /* change the element state */
   GstElementStateReturn (*change_state)		(GstElement *element);
   /* request a new pad */
@@ -260,6 +261,8 @@ gboolean		gst_element_connect_pads_filtered (GstElement *src, const gchar *srcpa
 							 GstCaps *filtercaps);
 void			gst_element_disconnect_pads	(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
+
+gboolean		gst_element_send_event		(GstElement *element, GstEvent *event);
 
 void			gst_element_set_eos		(GstElement *element);
 

@@ -308,7 +308,7 @@ restart:
 			   GST_ELEMENT_NAME (queue), queue->level_buffers);
 	break;
       case GST_EVENT_DISCONTINUOUS:
-        //gst_queue_locked_flush (queue);
+        gst_queue_locked_flush (queue);
 	break;
       default:
 	/*gst_pad_event_default (pad, GST_EVENT (buf)); */

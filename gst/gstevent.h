@@ -88,7 +88,6 @@ typedef struct
 #define GST_EVENT_SEEK_OFFSET(event)		(GST_EVENT(event)->event_data.seek.offset)
 #define GST_EVENT_SEEK_ACCURACY(event)		(GST_EVENT(event)->event_data.seek.accuracy)
 
-#define GST_EVENT_DISCONT_NEW_MEDIA(event)	(GST_EVENT(event)->event_data.discont.new_media)
 #define GST_EVENT_DISCONT_FLUSH(event)		(GST_EVENT(event)->event_data.discont.flush)
 #define GST_EVENT_DISCONT_OFFSET(event,i)	(GST_EVENT(event)->event_data.discont.offsets[i])
 #define GST_EVENT_DISCONT_OFFSET_LEN(event)	(GST_EVENT(event)->event_data.discont.noffsets)
@@ -109,9 +108,7 @@ struct _GstEvent {
     struct {
       GstFormatValue 	offsets[8];
       gint      	noffsets;
-      gboolean		new_media;
       gboolean		flush;
-      GstSeekAccuracy 	accuracy;
     } discont;
   } event_data;
 };
@@ -122,8 +119,10 @@ GstEvent*	gst_event_new	        	(GstEventType type);
 GstEvent*	gst_event_copy	        	(GstEvent *event);
 void		gst_event_free 			(GstEvent *event);
 
-/* seek events */
+/* seek event */
 GstEvent*	gst_event_new_seek		(GstSeekType type, gint64 offset);
+
+/* discontinous event */
 GstEvent*	gst_event_new_discontinuous	(gboolean new_media,
 						 GstFormat format1, ...);
 gboolean	gst_event_discont_get_value	(GstEvent *event, GstFormat format, gint64 *value);

@@ -63,6 +63,8 @@ static void			gst_element_dispatch_properties_changed (GObject * object, guint n
 
 static void 			gst_element_dispose 		(GObject *object);
 
+static gboolean 		gst_element_send_event_default 	(GstElement *element, GstEvent *event);
+
 static GstElementStateReturn	gst_element_change_state	(GstElement *element);
 static void			gst_element_error_func		(GstElement* element, GstElement *source, gchar *errormsg);
 
@@ -159,6 +161,7 @@ gst_element_class_init (GstElementClass *klass)
   klass->elementfactory 		= NULL;
   klass->padtemplates 			= NULL;
   klass->numpadtemplates 		= 0;
+  klass->send_event	 		= GST_DEBUG_FUNCPTR (gst_element_send_event_default);
 }
 
 static void
@@ -1592,7 +1595,7 @@ gst_element_disconnect (GstElement *src, GstElement *dest)
   srcpads = gst_element_get_pad_list (src);
 
   while (srcpads) {
-    pad = GST_PAD (srcpads->data);
+    pad = GST_PAD_CAST (srcpads->data);
     
     if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC)
       if (GST_OBJECT_PARENT (GST_PAD_PEER (pad)) == (GstObject*) dest)
@@ -1616,6 +1619,39 @@ gst_element_error_func (GstElement* element, GstElement *source, gchar *errormsg
   }
 }
 
+static gboolean
+gst_element_send_event_default (GstElement *element, GstEvent *event)
+{
+  GList *pads = element->pads;
+  gboolean res = FALSE;
+
+  while (pads) {
+    GstPad *pad = GST_PAD_CAST (pads->data);
+    
+    if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
+      if (GST_PAD_IS_CONNECTED (pad)) {
+	res = gst_pad_send_event (GST_PAD_PEER (pad), event);
+	break;
+      }
+    }
+    pads = g_list_next (pads);
+  }
+  return res;
+}
+
+gboolean
+gst_element_send_event (GstElement *element, GstEvent *event)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (event != NULL, FALSE);
+  
+  if (CLASS (element)->send_event)
+    return CLASS (element)->send_event (element, event);
+
+  return FALSE;
+}
+
+
 /**
  * gst_element_error:
  * @element: Element with the error
@@ -1633,7 +1669,6 @@ gst_element_error (GstElement *element, const gchar *error, ...)
   
   /* checks */
   g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (element != NULL);
   g_return_if_fail (error != NULL);
 
   /* create error message */

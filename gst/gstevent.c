@@ -168,14 +168,14 @@ gst_event_new_seek (GstSeekType type, gint64 offset)
 }
 
 GstEvent*
-gst_event_new_discontinuous (gboolean new_media, GstSeekType format1, ...)
+gst_event_new_discontinuous (gboolean flush, GstSeekType format1, ...)
 {
   va_list var_args;
   GstEvent *event;
   gint count = 0;
 
   event = gst_event_new (GST_EVENT_DISCONTINUOUS);
-  GST_EVENT_DISCONT_NEW_MEDIA (event) = new_media;
+  GST_EVENT_DISCONT_FLUSH (event) = flush;
 
   va_start (var_args, format1);
 	        
