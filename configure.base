@@ -208,9 +208,8 @@ dnl ====================================
 
 dnl Check for glib2
 GST_CHECK_FEATURE(GLIB2, [use of glib-2.0 and GObject], , [
-  PKG_CHECK_MODULES(GLIB2, glib-2.0 gobject-2.0 gmodule-2.0,
+  PKG_CHECK_MODULES(GLIB2, glib-2.0 gobject-2.0 gthread-2.0 gmodule-2.0,
     HAVE_GLIB2=yes,HAVE_GLIB2=no)
-  GST_PKG_DEPS="glib-2.0 gobject-2.0 gmodule-2.0"
   AC_SUBST(GLIB2_LIBS)
   AC_SUBST(GLIB2_CFLAGS)
 ], disabled, [
@@ -236,7 +235,7 @@ if test x$USE_GLIB2 = xno; then
   CORE_LIBS="$CORE_LIBS $GLIB_LIBS $GTK_LIBS"
   CORE_CFLAGS="$CORE_CFLAGS $GLIB_CFLAGS $GTK_CFLAGS"
 else
-  GST_PKG_DEPS="glib-2.0 gobject-2.0 gmodule-2.0"
+  GST_PKG_DEPS="glib-2.0 gobject-2.0 gmodule-2.0 gthread-2.0"
   
   PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK=yes, HAVE_GTK=no)
 
