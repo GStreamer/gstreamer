@@ -1,3 +1,11 @@
+2004-01-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/audio/audio.c: (_gst_audio_structure_set_list),
+	(gst_audio_structure_set_int):
+	* gst-libs/gst/audio/audio.h:
+          add helper functions for _getcaps matching the standard audio
+          templates
+
 2004-01-12  David Schleef  <ds@schleef.org>
 
 	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_link):
