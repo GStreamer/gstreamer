@@ -1,5 +1,20 @@
 2004-08-10  Wim Taymans  <wim@fluendo.com>
 
+	* gst/tcp/gstmultifdsink.c: (gst_unit_type_get_type),
+	(gst_client_status_get_type), (gst_multifdsink_class_init),
+	(gst_multifdsink_init), (gst_multifdsink_remove_client_link),
+	(gst_multifdsink_handle_client_read),
+	(gst_multifdsink_handle_client_write),
+	(gst_multifdsink_recover_client), (gst_multifdsink_queue_buffer),
+	(gst_multifdsink_handle_clients), (gst_multifdsink_set_property),
+	(gst_multifdsink_get_property):
+	* gst/tcp/gstmultifdsink.h:
+	* gst/tcp/gsttcp-marshal.list:
+	Starting to prepare for specifying buffer time in other units
+	than buffers. Expose remove reason in signal.
+
+2004-08-10  Wim Taymans  <wim@fluendo.com>
+
 	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_add),
 	(gst_multifdsink_remove), (gst_multifdsink_clear),
 	(gst_multifdsink_remove_client_link),
