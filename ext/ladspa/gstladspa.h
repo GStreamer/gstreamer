@@ -37,6 +37,7 @@ extern "C" {
 
 typedef struct _ladspa_control_info {
   gchar *name;
+  gchar *param_name;
   gfloat lowerbound, upperbound;
   gboolean lower,upper,samplerate;
   gboolean toggled, logarithmic, integer, writable;
@@ -51,19 +52,20 @@ struct _GstLADSPA {
   LADSPA_Descriptor *descriptor;
   LADSPA_Handle *handle;
 
+  GstDParamManager *dpman;
+
   gfloat *controls;
   
   GstPad **sinkpads, 
          **srcpads;
 
-  GstByteStream **bytestreams;
          
   GstBufferPool *bufpool;
 
-  gboolean loopbased, newcaps, activated;
+  gboolean newcaps, activated;
 
   gint samplerate, buffersize, numbuffers;
-  gulong timestamp;
+  gint64 timestamp;
 
 };
 
