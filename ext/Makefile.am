@@ -16,6 +16,18 @@ else
 ALSA_DIR=
 endif
 
+if USE_ARTS
+ARTS_DIR=arts
+else
+ARTS_DIR=
+endif
+
+if USE_ARTSD
+ARTSD_DIR=artsd
+else
+ARTSD_DIR=
+endif
+
 if USE_AUDIOFILE
 AUDIOFILE_DIR=audiofile
 else
