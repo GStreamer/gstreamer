@@ -336,6 +336,7 @@ dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
 	ac3parse \
 	adder \
+	alpha \
 	asfdemux \
 	audioconvert \
 	audioscale \
@@ -366,6 +367,7 @@ GST_PLUGINS_ALL="\
 	mpegaudioparse \
 	mpegstream \
 	monoscope \
+	multipart \
 	overlay \
 	passthrough \
 	playondemand \
@@ -387,10 +389,12 @@ GST_PLUGINS_ALL="\
 	typefind \
 	udp \
 	vbidec \
+	videobox \
 	videocrop \
 	videodrop \
 	videoflip \
 	videofilter \
+	videomixer \
 	videoscale \
 	videotestsrc \
 	volenv \
@@ -1742,6 +1746,7 @@ gst-plugins.spec
 gst/Makefile
 gst/ac3parse/Makefile
 gst/adder/Makefile
+gst/alpha/Makefile
 gst/audioconvert/Makefile
 gst/audioscale/Makefile
 gst/auparse/Makefile
@@ -1774,6 +1779,7 @@ gst/mpegstream/Makefile
 gst/modplug/Makefile
 gst/modplug/libmodplug/Makefile
 gst/monoscope/Makefile
+gst/multipart/Makefile
 gst/overlay/Makefile
 gst/passthrough/Makefile
 gst/playondemand/Makefile
@@ -1795,10 +1801,12 @@ gst/tcp/Makefile
 gst/typefind/Makefile
 gst/udp/Makefile
 gst/vbidec/Makefile
+gst/videobox/Makefile
 gst/videocrop/Makefile
 gst/videodrop/Makefile
 gst/videofilter/Makefile
 gst/videoflip/Makefile
+gst/videomixer/Makefile
 gst/videoscale/Makefile
 gst/videotestsrc/Makefile
 gst/volenv/Makefile

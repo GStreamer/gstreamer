@@ -1,3 +1,70 @@
+2004-05-28  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	* gst/alpha/Makefile.am:
+	* gst/alpha/gstalpha.c: (gst_alpha_method_get_type),
+	(gst_alpha_get_type), (gst_alpha_base_init),
+	(gst_alpha_class_init), (gst_alpha_init), (gst_alpha_set_property),
+	(gst_alpha_get_property), (gst_alpha_sink_link), (gst_alpha_add),
+	(gst_alpha_chroma_key), (gst_alpha_chain),
+	(gst_alpha_change_state), (plugin_init):
+	A plugin to add an alpha channel to I420 video. Can optionally do
+	chroma keying.
+	* gst/multipart/Makefile.am:
+	* gst/multipart/multipart.c: (plugin_init):
+	* gst/multipart/multipartdemux.c: (gst_multipart_demux_base_init),
+	(gst_multipart_demux_class_init), (gst_multipart_demux_init),
+	(gst_multipart_demux_finalize), (gst_multipart_demux_handle_event),
+	(gst_multipart_find_pad_by_mime), (gst_multipart_demux_chain),
+	(gst_multipart_demux_change_state),
+	(gst_multipart_demux_plugin_init):
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_get_type),
+	(gst_multipart_mux_base_init), (gst_multipart_mux_class_init),
+	(gst_multipart_mux_get_sink_event_masks), (gst_multipart_mux_init),
+	(gst_multipart_mux_sinkconnect), (gst_multipart_mux_pad_link),
+	(gst_multipart_mux_pad_unlink),
+	(gst_multipart_mux_request_new_pad),
+	(gst_multipart_mux_handle_src_event),
+	(gst_multipart_mux_next_buffer), (gst_multipart_mux_compare_pads),
+	(gst_multipart_mux_queue_pads), (gst_multipart_mux_loop),
+	(gst_multipart_mux_get_property), (gst_multipart_mux_set_property),
+	(gst_multipart_mux_change_state), (gst_multipart_mux_plugin_init):
+	A Multipart demuxer/muxer. Not sure if it violates specs. Used to
+	send multipart jpeg images to a browser.
+	* gst/videobox/Makefile.am:
+	* gst/videobox/README:
+	* gst/videobox/gstvideobox.c: (gst_video_box_fill_get_type),
+	(gst_video_box_get_type), (gst_video_box_base_init),
+	(gst_video_box_class_init), (gst_video_box_init),
+	(gst_video_box_set_property), (gst_video_box_get_property),
+	(gst_video_box_sink_link), (gst_video_box_i420),
+	(gst_video_box_ayuv), (gst_video_box_chain),
+	(gst_video_box_change_state), (plugin_init):
+	Crops or adds borders around an image. can do alpha channel
+	borders as well.
+	* gst/videomixer/Makefile.am:
+	* gst/videomixer/README:
+	* gst/videomixer/videomixer.c: (gst_videomixer_pad_get_type),
+	(gst_videomixer_pad_base_init), (gst_videomixer_pad_class_init),
+	(gst_videomixer_pad_get_sink_event_masks),
+	(gst_videomixer_pad_get_property),
+	(gst_videomixer_pad_set_property),
+	(gst_videomixer_pad_sinkconnect), (gst_videomixer_pad_link),
+	(gst_videomixer_pad_unlink), (gst_videomixer_pad_init),
+	(gst_video_mixer_background_get_type), (gst_videomixer_get_type),
+	(gst_videomixer_base_init), (gst_videomixer_class_init),
+	(gst_videomixer_init), (gst_videomixer_request_new_pad),
+	(gst_videomixer_handle_src_event),
+	(gst_videomixer_blend_ayuv_i420), (gst_videomixer_fill_checker),
+	(gst_videomixer_fill_color), (gst_videomixer_fill_queues),
+	(gst_videomixer_blend_buffers), (gst_videomixer_update_queues),
+	(gst_videomixer_loop), (gst_videomixer_get_property),
+	(gst_videomixer_set_property), (gst_videomixer_change_state),
+	(plugin_init):
+	Generic video mixer plugin, can handle multiple inputs all with
+	different framerates and video sizes. Is fully alpha channel
+	aware.
+
 2004-05-27  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_build_list):
