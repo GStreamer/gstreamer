@@ -11,7 +11,7 @@ main (int argc, char *argv[])
   plugin = gst_registry_pool_find_plugin ("testplugin");
   g_assert (plugin != NULL);
 
-  g_print ("testplugin: %s\n", plugin->name);
+  g_print ("testplugin: %s\n", gst_plugin_get_name(plugin));
 
   return 0;
 }
