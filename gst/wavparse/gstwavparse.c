@@ -27,6 +27,18 @@ static void		gst_wavparse_init	(GstWavParse *wavparse);
 
 static GstCaps*		wav_type_find		(GstBuffer *buf, gpointer private);
 
+static const GstFormat*	gst_wavparse_get_formats	(GstPad *pad);
+static const GstPadQueryType *
+			gst_wavparse_get_query_types	(GstPad *pad);
+static gboolean		gst_wavparse_pad_query	(GstPad *pad, 
+		                                 GstPadQueryType type,
+						 GstFormat *format, 
+						 gint64 *value);
+static gboolean		gst_wavparse_pad_convert (GstPad *pad,
+						  GstFormat src_format,
+						  gint64 src_value,
+						  GstFormat *dest_format,
+						  gint64 *dest_value);
 static void		gst_wavparse_chain	(GstPad *pad, GstBuffer *buf);
 
 /* elementfactory information */
@@ -134,12 +146,27 @@ gst_wavparse_class_init (GstWavParseClass *klass)
 static void 
 gst_wavparse_init (GstWavParse *wavparse) 
 {
+  /* sink */
   wavparse->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_template_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (wavparse), wavparse->sinkpad);
-  gst_pad_set_chain_function (wavparse->sinkpad, gst_wavparse_chain);
 
+  gst_pad_set_formats_function (wavparse->sinkpad, gst_wavparse_get_formats);
+  gst_pad_set_convert_function (wavparse->sinkpad, gst_wavparse_pad_convert);
+  gst_pad_set_query_type_function (wavparse->sinkpad, 
+		                   gst_wavparse_get_query_types);
+  gst_pad_set_query_function (wavparse->sinkpad, gst_wavparse_pad_query);
+
+  /* source */
   wavparse->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (src_template_factory), "src");
   gst_element_add_pad (GST_ELEMENT (wavparse), wavparse->srcpad);
+  gst_pad_set_formats_function (wavparse->srcpad, gst_wavparse_get_formats);
+  gst_pad_set_convert_function (wavparse->srcpad, gst_wavparse_pad_convert);
+  gst_pad_set_query_type_function (wavparse->srcpad, 
+		                   gst_wavparse_get_query_types);
+  gst_pad_set_query_function (wavparse->srcpad, gst_wavparse_pad_query);
+
+  gst_pad_set_chain_function (wavparse->sinkpad, gst_wavparse_chain);
+
 
   wavparse->riff = NULL;
 
@@ -350,6 +377,116 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
       return;
     }
   }
+}
+
+/* convert and query stuff */
+static const GstFormat *
+gst_wavparse_get_formats (GstPad *pad)
+{
+  static GstFormat formats[] = {
+    GST_FORMAT_TIME,
+    GST_FORMAT_BYTES,
+    GST_FORMAT_UNITS,	/* a "frame", ie a set of samples per Hz */
+    0,
+    0
+  };
+  return formats;
+}
+
+static gboolean
+gst_wavparse_pad_convert (GstPad *pad,
+			  GstFormat src_format, gint64 src_value,
+			  GstFormat *dest_format, gint64 *dest_value)
+{
+  gint bytes_per_sample;
+  glong byterate;
+  GstWavParse *wavparse;
+
+  wavparse = GST_WAVPARSE (gst_pad_get_parent (pad));
+  if (*dest_format == GST_FORMAT_DEFAULT)
+    *dest_format = GST_FORMAT_TIME;
+  
+  bytes_per_sample = wavparse->channels * wavparse->width / 8;
+  if (bytes_per_sample == 0) {
+	  g_warning ("bytes_per_sample is 0, internal error\n");
+	  g_warning ("channels %d,  width %d\n", 
+		     wavparse->channels, wavparse->width);
+	  return FALSE;
+  }
+  byterate = (glong) (bytes_per_sample * wavparse->rate);
+  if (byterate == 0) {
+	  g_warning ("byterate is 0, internal error\n");
+	  return FALSE;
+  }
+  g_print ("DEBUG: bytes per sample: %d\n", bytes_per_sample);
+
+  switch (src_format) {
+    case GST_FORMAT_BYTES:
+      if (*dest_format == GST_FORMAT_UNITS)
+        *dest_value = src_value / bytes_per_sample;
+      else if (*dest_format == GST_FORMAT_TIME)
+        *dest_value = src_value * GST_SECOND / byterate;
+      else
+        return FALSE;
+      break;
+    case GST_FORMAT_UNITS:
+      if (*dest_format == GST_FORMAT_BYTES)
+        *dest_value = src_value * bytes_per_sample;
+      else if (*dest_format == GST_FORMAT_TIME)
+        *dest_value = src_value * GST_SECOND / wavparse->rate;
+      else
+        return FALSE;
+      break;
+    case GST_FORMAT_TIME:
+      if (*dest_format == GST_FORMAT_BYTES)
+	*dest_value = src_value * byterate / GST_SECOND;
+      else if (*dest_format == GST_FORMAT_UNITS)
+        *dest_value = src_value * wavparse->rate /GST_SECOND;
+      else
+        return FALSE;
+      break;
+    default:
+      g_warning ("unhandled format for wavparse\n");
+      break;
+  }
+  return TRUE;
+}
+      
+static const GstPadQueryType *
+gst_wavparse_get_query_types (GstPad *pad)
+{
+  static const GstPadQueryType types[] = {
+    GST_PAD_QUERY_TOTAL,
+    GST_PAD_QUERY_POSITION
+  };
+  return types;
+}
+
+/* handle queries for location and length in requested format */
+static gboolean
+gst_wavparse_pad_query (GstPad *pad, GstPadQueryType type,
+			GstFormat *format, gint64 *value)
+{
+  GstFormat peer_format = GST_FORMAT_BYTES;
+  gint64 peer_value;
+  GstWavParse *wavparse;
+
+  /* probe sink's peer pad, convert value, and that's it :) */
+  /* FIXME: ideally we'd loop over possible formats of peer instead
+   * of only using BYTE */
+  wavparse = GST_WAVPARSE (gst_pad_get_parent (pad));
+  if (!gst_pad_query (GST_PAD_PEER (wavparse->sinkpad), type, 
+		      &peer_format, &peer_value)) {
+    g_warning ("Could not query sink pad's peer\n");
+    return FALSE;
+  }
+  if (!gst_pad_convert (wavparse->sinkpad, peer_format, peer_value,
+		        format, value)) {
+    g_warning ("Could not query sink pad's peer\n");
+    return FALSE;
+  }
+  g_print ("DEBUG: pad_query done, value %lld\n", *value);
+  return TRUE;
 }
 
 
