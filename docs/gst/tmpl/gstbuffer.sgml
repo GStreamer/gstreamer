@@ -317,7 +317,7 @@ A set of buffer flags used to describe properties of a #GstBuffer.
 @GST_BUFFER_KEY_UNIT: the buffer holds a key unit, a unit that can be 
                       decoded independently of other buffers.
 @GST_BUFFER_DONTKEEP: 
-@GST_BUFFER_IN_CAPS: 
+@GST_BUFFER_IN_CAPS: the buffer has been added as a field in a #GstCaps.
 @GST_BUFFER_FLAG_LAST: additional flags can be added starting from this flag.
 
 <!-- ##### FUNCTION gst_buffer_new ##### -->
