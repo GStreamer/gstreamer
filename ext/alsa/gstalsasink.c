@@ -229,7 +229,6 @@ gst_alsa_sink_check_event (GstAlsaSink * sink, gint pad_nr)
               "couldn't extract time from discont event. Bad things might happen!");
         }
 
-
         break;
       }
       default:
@@ -371,19 +370,28 @@ sink_restart:
             gst_alsa_timestamp_to_samples (this,
             GST_BUFFER_TIMESTAMP (sink->buf[i]));
         max_discont = gst_alsa_timestamp_to_samples (this, this->max_discont);
-        if (snd_pcm_delay (this->handle, &sample_diff) != 0) {
-          sample_diff = 0;
-        }
         /* optimization: check if we're using our own clock
          * This optimization is important because if we're using our own clock 
          * gst_element_get_time calls snd_pcm_delay and the following code assumes
          * that both calls return the same value. However they can be wildly 
          * different, since snd_pcm_delay goes deep into the kernel.
          */
-        if (gst_element_get_clock (GST_ELEMENT (this)) ==
-            GST_CLOCK (GST_ALSA (this)->clock)) {
-          expected = this->transmitted;
+        if (gst_element_get_clock (element) == GST_CLOCK (this->clock)) {
+          /* FIXME: this is ugly because of the variables it uses but I don't know a 
+           * better way to get this info */
+          if (element->base_time > this->clock->start_time) {
+            expected =
+                this->transmitted - gst_alsa_timestamp_to_samples (this,
+                element->base_time - this->clock->start_time);
+          } else {
+            expected =
+                this->transmitted + gst_alsa_timestamp_to_samples (this,
+                this->clock->start_time - element->base_time);
+          }
         } else {
+          if (snd_pcm_delay (this->handle, &sample_diff) != 0) {
+            sample_diff = 0;
+          }
           expected =
               gst_alsa_timestamp_to_samples (this,
               gst_element_get_time (GST_ELEMENT (this))) + sample_diff;
