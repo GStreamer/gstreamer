@@ -37,7 +37,7 @@ create_muxer (GstElement *pipeline, gchar *type, gchar *number)
 static void 
 mp2tomp1 (GstElement *parser, GstPad *pad, GstElement *pipeline) 
 {
-  GstElement *parse_audio, *parse_video, *decode, *decode_video, *play, *encode, *audio_resample;
+  GstElement *decode, *decode_video, *play, *encode, *audio_resample;
   GstElement *smooth, *median;
   GstElement *audio_queue, *video_queue;
   GstElement *audio_thread, *video_thread;
@@ -51,9 +51,6 @@ mp2tomp1 (GstElement *parser, GstPad *pad, GstElement *pipeline)
   //if (0) {
   if (strncmp(gst_pad_get_name(pad), "private_stream_1.0", 18) == 0) {
     // construct internal pipeline elements
-    parse_audio = gst_elementfactory_make("ac3parse","parse_audio");
-    g_return_if_fail(parse_audio != NULL);
-    gtk_object_set(GTK_OBJECT(parse_audio),"skip", 15, NULL);
     decode = gst_elementfactory_make("ac3dec","decode_audio");
     g_return_if_fail(decode != NULL);
     audio_resample = gst_elementfactory_make("audioscale","audioscale");
@@ -68,7 +65,6 @@ mp2tomp1 (GstElement *parser, GstPad *pad, GstElement *pipeline)
     // create the thread and pack stuff into it
     audio_thread = gst_thread_new("audio_thread");
     g_return_if_fail(audio_thread != NULL);
-    gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(parse_audio));
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(decode));
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(audio_resample));
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(audio_encode));
@@ -77,9 +73,7 @@ mp2tomp1 (GstElement *parser, GstPad *pad, GstElement *pipeline)
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),
-                              gst_element_get_pad(parse_audio,"sink"),"sink");
-    gst_pad_connect(gst_element_get_pad(parse_audio,"src"),
-                    gst_element_get_pad(decode,"sink"));
+                              gst_element_get_pad(decode,"sink"),"sink");
     gst_pad_connect(gst_element_get_pad(decode,"src"),
                     gst_element_get_pad(audio_resample,"sink"));
     gst_pad_connect(gst_element_get_pad(audio_resample,"src"),
@@ -106,9 +100,7 @@ mp2tomp1 (GstElement *parser, GstPad *pad, GstElement *pipeline)
     //                gst_element_get_pad(merge_subtitles,"subtitle"));
   } else if (strncmp(gst_pad_get_name(pad), "audio_", 6) == 0) {
     // construct internal pipeline elements
-    parse_audio = gst_elementfactory_make("mp3parse","parse_audio");
-    g_return_if_fail(parse_audio != NULL);
-    decode = gst_elementfactory_make("mpg123","decode_audio");
+    decode = gst_elementfactory_make("mad","decode_audio");
     g_return_if_fail(decode != NULL);
     play = gst_elementfactory_make("osssink","play_audio");
     g_return_if_fail(play != NULL);
@@ -116,16 +108,13 @@ mp2tomp1 (GstElement *parser, GstPad *pad, GstElement *pipeline)
     // create the thread and pack stuff into it
     audio_thread = gst_thread_new("audio_thread");
     g_return_if_fail(audio_thread != NULL);
-    gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(parse_audio));
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(decode));
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(play));
 
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),
-                              gst_element_get_pad(parse_audio,"sink"),"sink");
-    gst_pad_connect(gst_element_get_pad(parse_audio,"src"),
-                    gst_element_get_pad(decode,"sink"));
+                              gst_element_get_pad(decode,"sink"),"sink");
     gst_pad_connect(gst_element_get_pad(decode,"src"),
                     gst_element_get_pad(play,"sink"));
 
@@ -148,9 +137,7 @@ mp2tomp1 (GstElement *parser, GstPad *pad, GstElement *pipeline)
 
     //gst_plugin_load("mpeg1encoder");
     // construct internal pipeline elements
-    parse_video = gst_elementfactory_make("mp2videoparse","parse_video");
-    g_return_if_fail(parse_video != NULL);
-    decode_video = gst_elementfactory_make("mpeg2play","decode_video");
+    decode_video = gst_elementfactory_make("mpeg2dec","decode_video");
     g_return_if_fail(decode_video != NULL);
     //merge_subtitles = gst_elementfactory_make("mpeg2subt","merge_subtitles");
     //g_return_if_fail(merge_subtitles != NULL);
@@ -174,13 +161,14 @@ mp2tomp1 (GstElement *parser, GstPad *pad, GstElement *pipeline)
     //gtk_object_set(GTK_OBJECT(show),"width",640, "height", 480,NULL);
 
     muxerpad = create_muxer (pipeline, "video", "00");
+    g_return_if_fail(muxerpad != NULL);
+    
 
     // create the thread and pack stuff into it
     video_thread = gst_thread_new("video_thread");
     g_return_if_fail(video_thread != NULL);
-    gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(parse_video));
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(decode_video));
-    gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(merge_subtitles));
+    //gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(merge_subtitles));
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(median));
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(smooth));
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(videoscale));
@@ -189,9 +177,7 @@ mp2tomp1 (GstElement *parser, GstPad *pad, GstElement *pipeline)
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(video_thread),
-                              gst_element_get_pad(parse_video,"sink"),"sink");
-    gst_pad_connect(gst_element_get_pad(parse_video,"src"),
-                    gst_element_get_pad(decode_video,"sink"));
+                              gst_element_get_pad(decode_video,"sink"),"sink");
     gst_pad_connect(gst_element_get_pad(decode_video,"src"),
                     gst_element_get_pad(median,"sink"));
     gst_pad_connect(gst_element_get_pad(median,"src"),

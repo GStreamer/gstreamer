@@ -267,7 +267,10 @@ gst_static_autoplug_to_render (GstAutoplug *autoplug, GstCaps *srccaps, GstEleme
     pad = GST_PAD_REALIZE (gst_element_get_pad_list (targetelement)->data);
     templ = GST_PAD_PADTEMPLATE (pad);
 
-    caps.sink = GST_PADTEMPLATE_CAPS (templ);
+    if (templ)
+      caps.sink = GST_PADTEMPLATE_CAPS (templ);
+    else 
+      goto next;
 
     GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"autoplugging two caps structures");
 
@@ -283,7 +286,7 @@ gst_static_autoplug_to_render (GstAutoplug *autoplug, GstCaps *srccaps, GstEleme
     }
     else {
     }
-
+next:
     targetelement = va_arg (args, GstElement *);
   }
 
