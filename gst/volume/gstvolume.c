@@ -60,7 +60,7 @@ GST_PAD_TEMPLATE_FACTORY (volume_sink_factory,
   gst_caps_new (
     "volume_float_sink",
     "audio/x-raw-float",
-      GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS
+      GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
   ),
   GST_CAPS_NEW (
     "volume_int_sink",
@@ -81,8 +81,8 @@ GST_PAD_TEMPLATE_FACTORY (volume_src_factory,
   gst_caps_new (
     "volume_float_src",
     "audio/x-raw-float",
-      GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS
-  ), 
+      GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
+  ),
   GST_CAPS_NEW (
     "volume_int_src",
     "audio/x-raw-int",

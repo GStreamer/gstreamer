@@ -124,11 +124,7 @@ create_pipeline (void)
       default:
         g_assert_not_reached ();
     }
-    g_print ("Setting format to: format:     \"float\"\n"
-             "                   layout:     \"%s\"\n"
-             "                   intercept:  0\n"
-             "                   slope:      1\n",
-             sinesrc->width == 32 ? "gfloat" : "gdouble");
+    g_print ("Setting format to float width %d\n", sinesrc->width);
   } else if (last < NUMBER_OF_INT_TESTS + NUMBER_OF_FLOAT_TESTS + NUMBER_OF_LAW_TESTS) {
     gint temp = last - NUMBER_OF_INT_TESTS - NUMBER_OF_FLOAT_TESTS;
     GstElement *law;

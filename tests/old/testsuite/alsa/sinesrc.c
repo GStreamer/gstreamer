@@ -31,7 +31,6 @@ GST_PAD_TEMPLATE_FACTORY (sinesrc_src_factory,
   GST_CAPS_NEW (
     "sinesrc_int_src",
     "audio/raw",
-      "format",   	    GST_PROPS_STRING ("int"),
       "law",            GST_PROPS_INT (0),
       "endianness",	    GST_PROPS_LIST (GST_PROPS_INT (G_LITTLE_ENDIAN), GST_PROPS_INT (G_BIG_ENDIAN)),
       "signed",         GST_PROPS_LIST (GST_PROPS_BOOLEAN (FALSE), GST_PROPS_BOOLEAN (TRUE)),
@@ -43,12 +42,8 @@ GST_PAD_TEMPLATE_FACTORY (sinesrc_src_factory,
   GST_CAPS_NEW (
     "sinesrc_float_src",
     "audio/raw",
-      "format",   	    GST_PROPS_STRING ("float"),
-      "layout",         GST_PROPS_LIST (GST_PROPS_STRING ("gfloat"), GST_PROPS_STRING ("gdouble")),
-      "intercept",	    GST_PROPS_FLOAT (0),
-      "slope",          GST_PROPS_FLOAT (1),
       "channels", 	    GST_PROPS_INT_RANGE (1, 16)
-  )  
+  )
 );
 
 static GstElementClass *parent_class = NULL;
@@ -123,10 +118,8 @@ sinesrc_force_caps (SineSrc *src) {
       caps = GST_CAPS_NEW (
 	      "sinesrc_src_caps",
 	      "audio/raw",
-    	  "format",           GST_PROPS_STRING ("int"),
         "law",              GST_PROPS_INT (0),
         "signed",           GST_PROPS_BOOLEAN (src->sign),
-        "width",            GST_PROPS_INT (src->width),
     	  "depth",            GST_PROPS_INT (src->depth)
 	    );
       if (src->width > 8)
@@ -139,25 +132,14 @@ sinesrc_force_caps (SineSrc *src) {
       caps = GST_CAPS_NEW (
 	      "sinesrc_src_caps",
 	      "audio/raw",
-    	  "format",           GST_PROPS_STRING ("float"),
-        "intercept",        GST_PROPS_FLOAT (0),
-        "slope",            GST_PROPS_FLOAT (1)
+              "endianness", GST_PROPS_INT(src->endianness)
       );
-      if (src->width == 32) {
-        gst_props_add_entry (gst_caps_get_props (caps), 
-                gst_props_entry_new ("layout", 
-                        GST_PROPS_STRING ("gfloat")));
-      } else if (src->width == 64) {
-        gst_props_add_entry (gst_caps_get_props (caps), 
-                gst_props_entry_new ("layout", 
-                        GST_PROPS_STRING ("gdouble")));
-      } else {
-        g_assert_not_reached ();
-      }
       break;
     default:
       g_assert_not_reached();
   }
+  gst_props_add_entry (gst_caps_get_props (caps), 
+          gst_props_entry_new ("width", GST_PROPS_INT (src->width)));
   gst_props_add_entry (gst_caps_get_props (caps), 
           gst_props_entry_new ("rate", GST_PROPS_INT (src->rate)));
   gst_props_add_entry (gst_caps_get_props (caps), 

@@ -62,7 +62,6 @@ struct _GstVolume {
   gboolean mute;
   gint   volume_i, real_vol_i;
   gfloat volume_f, real_vol_f;
-  
 };
 
 struct _GstVolumeClass {
