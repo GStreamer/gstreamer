@@ -404,7 +404,9 @@ gst_ossmixer_build_list (GstOssElement *oss)
   gint i, devmask;
   const GList *pads = gst_element_get_pad_list (GST_ELEMENT (oss));
   GstPadDirection dir = GST_PAD_UNKNOWN;
+#ifdef SOUND_MIXER_INFO
   struct mixer_info minfo;
+#endif
 
   g_return_if_fail (oss->mixer_fd == -1);
 
@@ -433,9 +435,13 @@ gst_ossmixer_build_list (GstOssElement *oss)
   }
 
   /* get name */
+#ifdef SOUND_MIXER_INFO
   if (ioctl (oss->mixer_fd, SOUND_MIXER_INFO, &minfo) == 0) {
     oss->device_name = g_strdup (minfo.name);
   }
+#else
+  oss->device_name = g_strdup ("Unknown");
+#endif
 
   /* build track list */
   for (i = 0; i < SOUND_MIXER_NRDEVICES; i++) {
