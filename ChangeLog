@@ -1,5 +1,9 @@
 2004-07-13  Johan Dahlin  <johan@gnome.org>
 
+	* gst/gst.override (_wrap_gst_pad_query, _wrap_gst_element_query) 
+	(_wrap_gst_pad_convert): Remove exceptions, return Long values
+	(and convert from LongLongs) and clean up a little)
+
 	* testsuite/element.py (QueryTest.testQuery): Another small test
 
 	* gst/gst.override (_wrap_gst_element_query): Ditto

@@ -174,20 +174,16 @@ _wrap_gst_pad_query(PyGObject *self, PyObject *args, PyObject *kwargs)
 	static char *kwlist[] = { "type", "format", NULL };
 	GstQueryType type;
 	GstFormat format;
-	gint64 value;
+	gint64 value = 0;
 	gboolean ret;
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ii:GstPad.query", kwlist, &type, &format))
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+					 "ii:GstPad.query", kwlist,
+					 &type, &format))
 		return NULL;
 	
-	value = 0;
 	ret = gst_pad_query(GST_PAD(self->obj), type, &format, &value);
-	if (!ret) {
-		PyErr_SetString(PyExc_RuntimeError, "query could not be performed");
-		return NULL;
-	}
-	
-	return PyInt_FromLong(value);
+	return PyLong_FromLongLong(value);
 }
 %%
 override gst_element_query kwargs
@@ -197,42 +193,40 @@ _wrap_gst_element_query(PyGObject *self, PyObject *args, PyObject *kwargs)
 	static char *kwlist[] = { "type", "format", NULL };
 	GstQueryType type;
 	GstFormat format;
-	gint64 value;
+	gint64 value = 0;
 	gboolean ret;
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ii:GstElement.query", kwlist, &type, &format))
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+					 "ii:GstElement.query", kwlist,
+					 &type, &format))
 		return NULL;
-	value = 0;
-	ret = gst_element_query(GST_ELEMENT(self->obj), type, &format, &value);
-	if (!ret) {
-		PyErr_SetString(PyExc_RuntimeError, "query could not be performed");
-		return NULL;
-	}
 	
-	return PyInt_FromLong(value);
+	ret = gst_element_query(GST_ELEMENT(self->obj), type, &format, &value);
+	return PyLong_FromLongLong(value);
 }
 %%
 override gst_pad_convert kwargs
 static PyObject *
 _wrap_gst_pad_convert(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
-	static char *kwlist[] = { "src_format", "src_value", "dest_format", NULL };
+	static char *kwlist[] = { "src_format", "src_value",
+				  "dest_format", NULL };
 	GstFormat src_format, dest_format;
 	PyObject *src_value_obj;
-	gint64 src_value, dest_value;
+	gint64 src_value, dest_value = 0;
 	gboolean ret;
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "iOi:GstPad.convert", kwlist, &src_format, &src_value_obj, &dest_format))
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+					 "iOi:GstPad.convert", kwlist,
+					 &src_format, &src_value_obj,
+					 &dest_format))
 		return NULL;
-	src_value = PyLong_AsLongLong(src_value_obj);
-	dest_value = 0;
-	ret = gst_pad_convert(GST_PAD(self->obj), src_format, src_value, &dest_format, &dest_value);
-	if (!ret) {
-		PyErr_SetString(PyExc_RuntimeError, "conversion could not be performed");
-		return NULL;
-	}
 	
-	return PyInt_FromLong(dest_value);
+	src_value = PyLong_AsLongLong(src_value_obj);
+	
+	ret = gst_pad_convert(GST_PAD(self->obj), src_format, src_value,
+			      &dest_format, &dest_value);
+	return PyLong_FromLongLong(dest_value);
 }
 %%
 override gst_element_convert kwargs
