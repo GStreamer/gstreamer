@@ -27,8 +27,6 @@
 
 #include <alsa/asoundlib.h>
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
-#include <glib.h>
 
 #define GST_ALSA_MAX_CHANNELS 64 /* we don't support more than 64 channels */
 #define GST_ALSA_MIN_RATE 8000
@@ -87,9 +85,9 @@ typedef int (*GstAlsaTransmitFunction) (GstAlsa *this, snd_pcm_sframes_t *avail)
 
 typedef struct {
   GstPad *pad;
-  GstByteStream *bs;
-  guint8 *data;
-  guint8 offset;
+  guint8 *data; /* pointer into buffer */
+  guint size; /* sink: bytes left in buffer */
+  GstBuffer *buf; /* current buffer */
 } GstAlsaPad;
 typedef struct {
   snd_pcm_format_t format;
