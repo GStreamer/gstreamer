@@ -526,12 +526,18 @@ gst_matroska_mux_audio_pad_link (GstPad * pad, const GstCaps * caps)
         switch (layer) {
           case 1:
             context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L1);
+            context->default_duration =
+                384 * GST_SECOND / audiocontext->samplerate;
             break;
           case 2:
             context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L2);
+            context->default_duration =
+                1152 * GST_SECOND / audiocontext->samplerate;
             break;
           case 3:
             context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L3);
+            context->default_duration =
+                1152 * GST_SECOND / audiocontext->samplerate;
             break;
         }
         break;
