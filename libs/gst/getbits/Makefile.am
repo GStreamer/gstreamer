@@ -1,4 +1,3 @@
-
 plugin_LTLIBRARIES = libgstgetbits.la
 AS_LIBTOOL_LIB = libgstgstgetbits
 
@@ -28,4 +27,3 @@ install-data-local: as-libtool-install-data-local
 uninstall-local: as-libtool-uninstall-local
 
 include $(top_srcdir)/common/as-libtool.mak
-

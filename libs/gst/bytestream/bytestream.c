@@ -72,7 +72,7 @@ gst_bytestream_exit (GstByteStream * bs)
  *
  * creates a bytestream from the given pad
  *
- * Returns: a new #GstByteStream object
+ * Returns: a new #GstByteStream object.
  */
 GstByteStream *
 gst_bytestream_new (GstPad * pad)
@@ -433,7 +433,7 @@ gst_bytestream_assemble (GstByteStream * bs, guint32 len)
  * @bs: the bytestream to flush
  * @len: the number of bytes to flush
  *
- * Flush len bytes from the bytestream. 
+ * Flush len bytes from the bytestream.
  * This function can return FALSE when the number of
  * bytes could not be flushed due to an event. In that case,
  * you can get the number of available bytes before the event
@@ -660,7 +660,7 @@ gst_bytestream_read (GstByteStream * bs, GstBuffer ** buf, guint32 len)
  * Giving size hints to the peer element might improve performance
  * since less buffers need to be merged.
  *
- * Returns: TRUE if the hint was accepted
+ * Returns: TRUE if the hint was accepted.
  */
 gboolean
 gst_bytestream_size_hint (GstByteStream * bs, guint32 size)
@@ -708,7 +708,7 @@ gst_bytestream_get_status (GstByteStream * bs,
  * the next read could span two or more input buffers with different
  * timestamps.
  *
- * Returns: a timestamp
+ * Returns: a timestamp.
  */
 guint64
 gst_bytestream_get_timestamp (GstByteStream * bs)

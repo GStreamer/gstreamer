@@ -65,7 +65,9 @@ CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*.c
 SCANOBJ_DEPS = $(top_builddir)/libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
 
 # Header files to ignore when scanning.
-IGNORE_HFILES=
+IGNORE_HFILES = \
+	gstgetbits_inl.h \
+	dp-private.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

@@ -15,11 +15,11 @@ typedef void (*GstGetbitsCallback) (gst_getbits_t *gb, void *data);
 /* breaks in structure show alignment on quadword boundaries */
 /* FIXME: need to find out how to force GCC to align this to octwords */
 struct _gst_getbits_t {
-  unsigned char *ptr;		
+  unsigned char *ptr;
   unsigned long *longptr;
   unsigned char *endptr;
   unsigned long length;
-  long bits;	
+  long bits;
   unsigned long dword;
   unsigned long temp;
 
@@ -32,7 +32,7 @@ struct _gst_getbits_t {
   unsigned long (*getbyte)(gst_getbits_t *gb, unsigned long bits);
   unsigned long (*show1bit)(gst_getbits_t *gb, unsigned long bits);
   unsigned long (*showbits)(gst_getbits_t *gb, unsigned long bits);
-  void (*flushbits)(gst_getbits_t *gb, unsigned long bits);	
+  void (*flushbits)(gst_getbits_t *gb, unsigned long bits);
   void (*backbits)(gst_getbits_t *gb, unsigned long bits);
 };
 
@@ -49,11 +49,11 @@ void gst_getbits_newbuf(gst_getbits_t *gb, unsigned char *buffer, unsigned long 
   (-(gb)->bits)&0x7                                                     \
 )
 
-#define gst_getbits_align_byte(gb)                                 
+#define gst_getbits_align_byte(gb)
 
 #define gst_getbits_bufferpos(gb)  ((gb)->ptr)
 
-#define gst_getbits_bytesleft(gb) ((gb)->endptr - (gb)->ptr)        
+#define gst_getbits_bytesleft(gb) ((gb)->endptr - (gb)->ptr)
 
 #define gst_getbits_bitsleft(gb) (((gb)->endptr - (gb)->ptr)*8  - ((-(gb)->bits)&0x7))
 

@@ -1,4 +1,3 @@
-
 plugin_LTLIBRARIES = libgstbytestream.la
 AS_LIBTOOL_LIB = libgstbytestream
 
@@ -18,4 +17,3 @@ install-data-local: as-libtool-install-data-local
 uninstall-local: as-libtool-uninstall-local
 
 include $(top_srcdir)/common/as-libtool.mak
-

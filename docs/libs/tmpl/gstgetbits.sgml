@@ -2,7 +2,7 @@
 gstgetbits
 
 <!-- ##### SECTION Short_Description ##### -->
-Accelerated routines for getting bits from a data stream
+accelerated routines for getting bits from a data stream.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

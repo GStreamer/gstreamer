@@ -78,6 +78,28 @@ swab32
 </SECTION>
 
 <SECTION>
+<FILE>gstbytestream</FILE>
+<INCLUDE>libs/bytestream/bytestream.h</INCLUDE>
+GstByteStream
+gst_bytestream_destroy
+gst_bytestream_flush
+gst_bytestream_flush_fast
+gst_bytestream_get_status
+gst_bytestream_get_timestamp
+gst_bytestream_length
+gst_bytestream_new
+gst_bytestream_peek
+gst_bytestream_peek_bytes
+gst_bytestream_print_status
+gst_bytestream_read
+gst_bytestream_reset
+gst_bytestream_seek
+gst_bytestream_size_hint
+gst_bytestream_tell
+<SUBSECTION Standard>
+</SECTION>
+
+<SECTION>
 <FILE>gstdataprotocol</FILE>
 <INCLUDE>libs/dataprotocol/dataprotocol.h</INCLUDE>
 GstDPHeaderFlag

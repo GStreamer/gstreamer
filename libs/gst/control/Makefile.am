@@ -1,4 +1,3 @@
-
 lib_LTLIBRARIES = libgstcontrol-@GST_MAJORMINOR@.la
 AS_LIBTOOL_LIB = libgstcontrol-@GST_MAJORMINOR@
 
@@ -33,4 +32,3 @@ install-data-local: as-libtool-install-data-local
 uninstall-local: as-libtool-uninstall-local
 
 include $(top_srcdir)/common/as-libtool.mak
-

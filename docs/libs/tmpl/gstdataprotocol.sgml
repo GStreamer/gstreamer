@@ -2,7 +2,7 @@
 gstdataprotocol
 
 <!-- ##### SECTION Short_Description ##### -->
-GStreamer Data Protocol, serializes buffers, caps and events.
+implements GStreamer Data Protocol to serialize buffers, caps and events.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

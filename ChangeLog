@@ -1,5 +1,23 @@
 2004-07-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/libs/Makefile.am:
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* docs/libs/tmpl/gstbytestream.sgml:
+	* docs/libs/tmpl/gstcontrol.sgml:
+	* docs/libs/tmpl/gstdataprotocol.sgml:
+	* docs/libs/tmpl/gstgetbits.sgml:
+	* libs/gst/bytestream/Makefile.am:
+	* libs/gst/bytestream/bytestream.c:
+	* libs/gst/bytestream/bytestream.h:
+	* libs/gst/control/Makefile.am:
+	* libs/gst/dataprotocol/Makefile.am:
+	* libs/gst/getbits/Makefile.am:
+	* libs/gst/getbits/getbits.h:
+	  various doc and style fixes, adding bytestream to libs docs.
+
+2004-07-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/gstreamer-docs.sgml:
 	* docs/libs/Makefile.am:
 	* docs/libs/gstreamer-libs-docs.sgml:

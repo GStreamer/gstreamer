@@ -1,0 +1,178 @@
+<!-- ##### SECTION Title ##### -->
+gstbytestream
+
+<!-- ##### SECTION Short_Description ##### -->
+exposes a stream interface on pads.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstByteStream ##### -->
+<para>
+
+</para>
+
+@pad: 
+@event: 
+@buflist: 
+@headbufavail: 
+@listavail: 
+@assembled: 
+@assembled_len: 
+@offset: 
+@last_ts: 
+@in_seek: 
+@_gst_reserved: 
+
+<!-- ##### FUNCTION gst_bytestream_destroy ##### -->
+<para>
+
+</para>
+
+@bs: 
+
+
+<!-- ##### FUNCTION gst_bytestream_flush ##### -->
+<para>
+
+</para>
+
+@bs: 
+@len: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bytestream_flush_fast ##### -->
+<para>
+
+</para>
+
+@bs: 
+@len: 
+
+
+<!-- ##### FUNCTION gst_bytestream_get_status ##### -->
+<para>
+
+</para>
+
+@bs: 
+@avail_out: 
+@event_out: 
+
+
+<!-- ##### FUNCTION gst_bytestream_get_timestamp ##### -->
+<para>
+
+</para>
+
+@bs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bytestream_length ##### -->
+<para>
+
+</para>
+
+@bs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bytestream_new ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bytestream_peek ##### -->
+<para>
+
+</para>
+
+@bs: 
+@buf: 
+@len: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bytestream_peek_bytes ##### -->
+<para>
+
+</para>
+
+@bs: 
+@data: 
+@len: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bytestream_print_status ##### -->
+<para>
+
+</para>
+
+@bs: 
+
+
+<!-- ##### FUNCTION gst_bytestream_read ##### -->
+<para>
+
+</para>
+
+@bs: 
+@buf: 
+@len: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bytestream_reset ##### -->
+<para>
+
+</para>
+
+@bs: 
+
+
+<!-- ##### FUNCTION gst_bytestream_seek ##### -->
+<para>
+
+</para>
+
+@bs: 
+@offset: 
+@method: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@type: 
+
+
+<!-- ##### FUNCTION gst_bytestream_size_hint ##### -->
+<para>
+
+</para>
+
+@bs: 
+@size: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bytestream_tell ##### -->
+<para>
+
+</para>
+
+@bs: 
+@Returns: 
+
+

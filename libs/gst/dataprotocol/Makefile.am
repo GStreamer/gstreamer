@@ -1,4 +1,3 @@
-
 plugin_LTLIBRARIES = libgstdataprotocol.la
 AS_LIBTOOL_LIB = libgstdataprotocol
 
