@@ -23,7 +23,7 @@
   </authorgroup>
   <abstract>
     <para>Introductory information for the GStreamer Python bindings.</para>
-    <para><ulink url="http://www.gstreamer.net/bindings/python/"/></para>
+    <para><ulink url="http://gstreamer.freedesktop.org/bindings/python.html"/></para>
   </abstract>
   <revhistory>
      <revision>
@@ -134,7 +134,7 @@ Try running examples:
 <title>General API</title>
 <para>
 
-The gst-python bindings are directly generated from the GStreamer headers.  Look at the GStreamer documentation at <ulink url="http://www.gstreamer.net/docs/"/> for general API and programming issues.  In most cases the GStreamer classes and boxed types map directly to Python classes.  The function-based GObject methods also map onto Python methods.
+The gst-python bindings are directly generated from the GStreamer headers.  Look at the GStreamer documentation at <ulink url="http://gstreamer.freedesktop.org/documentation/"/> for general API and programming issues.  In most cases the GStreamer classes and boxed types map directly to Python classes.  The function-based GObject methods also map onto Python methods.
 
 </para>
 </section>

@@ -7,7 +7,7 @@ Group:		Development/Languages
 License: 	LGPL
 URL:            http://gstreamer.net/
 Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
-Source: 	http://gstreamer.net/releases/gst-python/gst-python-%{version}.tar.gz
+Source: 	http://gstreamer.freedesktop.org/src/gst-python/gst-python-%{version}.tar.gz
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 
 %define _pygtk	@pygtk_required_version@
@@ -16,7 +16,7 @@ BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 Requires: 	python2
 Requires: 	gnome-python2 = %{version}
 Requires: 	pygtk2 >= %_pygtk
-Requires: 	gstreamer >= 0.6.2
+Requires: 	gstreamer >= 0.8.1
 BuildRequires:	pygtk2-devel = %_pygtk
 BuildRequires:	python2-devel
 
