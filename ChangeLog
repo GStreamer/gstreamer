@@ -1,3 +1,11 @@
+2004-12-17  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/playback/gstdecodebin.c: (compare_ranks):
+	  make sure the facotries are ordered the same every time even if they
+	  have the same rank by using the name
+	* gst/playback/gstdecodebin.c: (find_compatibles):
+	  make sure we don't add factories to the list twice
+
 2004-12-16  David Schleef  <ds@schleef.org>
 
 	* configure.ac: look for musepack headers as musepack/*.h
