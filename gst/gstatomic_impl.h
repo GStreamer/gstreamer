@@ -253,6 +253,7 @@ gst_atomic_int_add (GstAtomicInt *aint, gint val)
 
   ptr = &(aint->counter);
 
+#if __GNUC__ > 3 || (__GNUC__ >=3 && __GNUC_MINOR__ >= 2)
  __asm__ __volatile__("1: ldstub [%[ptr] + 3], %[lock]\n"
 		      "\torcc %[lock], 0, %%g0\n"
 		      "\tbne 1b\n" /* go back until we have the lock */
@@ -264,6 +265,19 @@ gst_atomic_int_add (GstAtomicInt *aint, gint val)
 		      : [inc] "=&r" (increment), [lock] "=r" (lock)
 		      : "0" (increment), [ptr] "r" (ptr), [val] "r" (val)
 		      );
+#else
+ __asm__ __volatile__("1: ldstub [%3 + 3], %1\n"
+		      "\torcc %1, 0, %%g0\n"
+		      "\tbne 1b\n" /* go back until we have the lock */
+		      "\tld [%3], %0\n"
+		      "\tsra %0, 8, %0\n"
+		      "\tadd %0, %4, %0\n"
+		      "\tsll %0, 8, %1\n"
+		      "\tst %1,[%3]\n" /* Release the lock */
+		      : "=&r" (increment), "=r" (lock)
+		      : "0" (increment), "r" (ptr), "r" (val)
+		      );
+#endif
 }
 
 GST_INLINE_FUNC void
