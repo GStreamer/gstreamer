@@ -51,13 +51,23 @@ property_change_callback (GObject *object, GstObject *orig, GParamSpec *pspec)
   if (pspec->flags & G_PARAM_READABLE) {
     g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
     g_object_get_property (G_OBJECT (orig), pspec->name, &value);
-    str = g_strdup_value_contents (&value);
+    /* fix current bug with g_strdup_value_contents not working with gint64 */
+    if (G_IS_PARAM_SPEC_INT64 (pspec))
+      str = g_strdup_printf ("%lld", g_value_get_int64 (&value));
+    else
+      str = g_strdup_value_contents (&value);
     g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
     g_free (str);
     g_value_unset(&value);
   } else {
     g_warning ("Parameter not readable. What's up with that?");
   }
+}
+
+static void
+error_callback (GObject *object, GstObject *orig, gchar *error)
+{
+  g_print ("ERROR: %s: %s\n", GST_OBJECT_NAME (orig), error);
 }
 
 static GstElement*
@@ -166,6 +176,7 @@ main(int argc, char *argv[])
   }
   
   g_signal_connect (pipeline, "deep_notify", G_CALLBACK (property_change_callback), NULL);
+  g_signal_connect (pipeline, "error", G_CALLBACK (error_callback), NULL);
   
 #ifndef GST_DISABLE_LOADSAVE
   if (save_pipeline) {
