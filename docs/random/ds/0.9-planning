@@ -1,0 +1,111 @@
+
+
+
+Scheduling:
+
+ - remove loop/get/chain from GstElement and add a "iterate" method.
+   The iterate method is called with the event (or events) that
+   triggered it, performs some action, and resets the events (file
+   descriptors becoming readable, semaphores, pads becoming readable
+   or writable, or a time occurs).
+
+ - Add GstLoopElement, GstChainElement, etc. for compatibility.
+
+ - Remove existing state handling and create 2 states, "playing" and
+   "stopped".  "playing" means that the iterate() method of the
+   element may be called, that is, the element is allowed to move
+   buffers, negotiate, etc.  "stopped" means that no gstreamer-ish
+   things happen to an element, only gobject-ish.  A separate
+   reset() method will handle the difference between READY and NULL.
+
+ - Add a flag "ready" to GstElement that is under the control of the
+   element.  If the element is ready to stream, it sets this flag,
+   and the entire pipeline starts streaming.  (This is basically
+   the difference between PAUSED and PLAYING.)  For example, osssink
+   won't set the ready flag until the device is opened and there is
+   a buffer available to write to the device.
+
+ - Scheduling of elements and movement of buffers will be timed by
+   clocks.  
+
+
+
+Example:
+
+ Pipeline: sinesrc ! osssink
+
+ - The application creates the pipeline and sets it to "playing".
+
+ - The clock is created and set to "paused".
+
+ - sinesrc.iterate() decides to watch for the event "src pad
+   negotiation" and sets the available caps on the pad.
+
+ - osssink.iterate() opens device, determines available caps, and
+   sets the available caps on the pad.  Then it decides to wait for
+   "sink pad negotiation".
+
+ - The scheduler realizes that the two elements are waiting for
+   negotiation, so it negotiates the link.
+
+ - sinesrc.iterate() sets the "ready" flag (because it needs no more
+   preparation to stream) and decides to watch for the event "src
+   pad ready to accept buffer".
+
+ - osssink.iterate() decides to watch for the event "sink pad has
+   available buffer".
+
+ - The scheduler realizes that sinesrc.srcpad is now ready, so it
+   calls sinesrc.iterate()
+
+ - sinesrc.iterate() creates a buffer and pushes it, and decides to
+   wait for the same event.
+
+ - The scheduler realizes that osssink.sinkpad now has a buffer, so
+   it calls osssink.iterate().
+
+ - osssink.iterate() is now ready to stream, so it sets the "ready"
+   flag and waits for "time 0".
+
+ - The pipeline is now completely ready, so the clock may be
+   started.  A signal is fired to let the application know this
+   (and possibly change the default behavior).
+
+ - The clock starts with the time 0.  The scheduler realizes this,
+   and decides to schedule osssink.
+
+ - osssink.iterate() is called, and writes the buffer to the device.
+   This starts the clock counting.  (Actually, the buffer could be
+   written by the clock code, since presumably the clock is related
+   to osssink.)  iterate() then waits for "sink pad has available
+   buffer".
+
+ We're now basically in streaming mode.  A streaming cycle:
+
+ - osssink.iterate() decides the audio output buffer is full enough,
+   so it waits for "time X", where X is the time when the output
+   buffer will be below some threshold.
+
+ - osssink.iterate() waits for "sink pad has available buffer"
+
+ - sinesrc.iterate() creates and pushes a buffer, then waits for
+   "src pad ready".
+
+
+ Further ideas:
+
+ - osssink can set a hard deadline time, which means that if it is
+   not scheduled before that time, you'll get a skip.  Skipping
+   involves setting osssink to "not ready" and pauses the clock.
+   Then the scheduler needs to go through the same process as above
+   to start the clock.
+
+ - As a shortcut, osssink can say "I need a buffer on the sinkpad
+   at time X".  This information can be passed upstream, and be used
+   in filters -- filter.sinkpad says "I need a buffer at time X-N",
+   where N is the latency of the filter.
+
+
+
+
+
