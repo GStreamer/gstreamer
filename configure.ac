@@ -268,11 +268,6 @@ if test x$USE_GLIB2 = xno; then
 else
   GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-2.0, gthread-2.0"
   
-  PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK=yes, HAVE_GTK=no)
-
-  GTK_CFLAGS=$GTK2_CFLAGS
-  GTK_LIBS=$GTK2_LIBS
-  
   if $HAVE_GTK_DOC; then  
     AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scangobj, true, false)
     if $HAVE_GTK_DOC; then
@@ -282,16 +277,9 @@ else
       GTK_DOC_SCANOBJ=false
     fi
   fi
-
-  dnl FIXME: check for  gnome2 - this conditional is currently
-  dnl always false.
-  AM_CONDITIONAL(USE_GNOME2, test "x$USE_GNOME2" = "xyes")
-  AC_SUBST(USE_GNOME2)
 fi
 
 AC_SUBST(GST_PKG_DEPS)
-AC_SUBST(GTK_LIBS)
-AC_SUBST(GTK_CFLAGS)
 
 dnl Check for libxml
 if test x$USE_GLIB2 = xno; then
@@ -315,20 +303,6 @@ fi
 AC_SUBST(LIBXML_PKG)
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
-
-if test x$USE_GLIB2 = xyes; then
-  dnl we don't support gnome/gtk with glib2.0 yet
-  GNOME_LIBS=
-  GNOME_CFLAGS=
-  HAVE_GNOME=no
-  AC_MSG_WARN(gnome disabled for glib2.0)
-else
-  dnl Check for libgnome
-  GST_CHECK_CONFIGPROG(GNOME, gnome-config, gnome gnomeui)
-fi
-AC_SUBST(GNOME_LIBS)
-AC_SUBST(GNOME_CFLAGS)
-AC_SUBST(HAVE_GNOME)
 
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
@@ -538,10 +512,6 @@ dnl ################################################
 
 dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
 dnl HAVE_ and it is likely to be easier to stick with the old name
-if test "x$USE_LIBGHTTP" = xyes; then
-  AC_DEFINE(HAVE_LIBGHTTP, 1, [Define if ghttp library is available])
-fi
-
 if test "x$USE_LIBMMX" = xyes; then
   AC_DEFINE(HAVE_LIBMMX, 1, [Define if libmmx is available])
 fi
@@ -569,10 +539,6 @@ dnl
 dnl AC_SUBST(FOMIT_FRAME_POINTER)
 dnl
 
-if test "x$HAVE_LIBXV" = xyes; then
-  AC_DEFINE(HAVE_LIBXV)
-fi
-
 dnl #############################
 dnl # Set automake conditionals #
 dnl #############################
@@ -592,9 +558,6 @@ AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
 AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
 
 AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
-AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
-AM_CONDITIONAL(HAVE_LIBXV,          test "x$HAVE_LIBXV" = "xyes")
-AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
 AM_CONDITIONAL(BUILD_DOCS,          test "x$BUILD_DOCS" = "xyes")
 AM_CONDITIONAL(BUILD_TESTS,         test "x$BUILD_TESTS" = "xyes")
@@ -677,12 +640,6 @@ dnl #########################
 dnl # Make the output files #
 dnl #########################
 
-dnl until ffmpeg is handled by configure plugins/ffmpeg/Makefile
-dnl components/bonobo-gstmediaplay/Makefile
-dnl someone should fix this test/misc/Makefile
-dnl wtay fix this: testsuite/threads/Makefile
-dnl testsuite/refcounting/Makefile
-dnl testsuite/cleanup/Makefile
 AC_OUTPUT(
 Makefile
 include/Makefile
