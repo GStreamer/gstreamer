@@ -213,8 +213,9 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
   if (!filter->have_caps) gst_cutter_get_caps (pad, filter);
 
   in_data = (gint16 *) GST_BUFFER_DATA (buf);
-  GST_DEBUG(GST_CAT_PLUGIN_INFO, "cutter: length of prerec buffer: %.3f sec\n",
-            filter->pre_run_length);
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+             "cutter: length of prerec buffer: %.3f sec\n",
+             filter->pre_run_length);
 
   /* calculate mean square value on buffer */
   switch (filter->width) 
@@ -309,12 +310,12 @@ gst_cutter_8bit_ms (gint8* data, guint num_samples)
 #include "filter.func"
 
 static void
-gst_cutter_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_cutter_set_property (GObject *object, guint prop_id, 
+                         const GValue *value, GParamSpec *pspec)
 {
   GstCutter *filter;
 
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_CUTTER (object));
+  g_return_if_fail (GST_IS_CUTTER (object));
   filter = GST_CUTTER (object);
 
   switch (prop_id)
@@ -351,12 +352,12 @@ gst_cutter_set_property (GObject *object, guint prop_id, const GValue *value, GP
 }
 
 static void
-gst_cutter_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_cutter_get_property (GObject *object, guint prop_id, 
+                         GValue *value, GParamSpec *pspec)
 {
   GstCutter *filter;
 
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_CUTTER(object));
+  g_return_if_fail (GST_IS_CUTTER (object));
   filter = GST_CUTTER (object);
 
   switch (prop_id)
@@ -384,8 +385,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_element_factory_new("cutter",GST_TYPE_CUTTER,
-                                   &cutter_details);
+  factory = gst_element_factory_new ("cutter", GST_TYPE_CUTTER,
+                                     &cutter_details);
   g_return_val_if_fail(factory != NULL, FALSE);
   
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (cutter_src_factory));

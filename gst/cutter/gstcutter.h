@@ -54,8 +54,8 @@ struct _GstCutter
 
   double threshold_level;	/* level below which to cut */
   double threshold_length;	/* how long signal has to remain
-				 * below this level before cutting
-                                 */
+				 * below this level before cutting */
+
   double silent_run_length;	/* how long has it been below threshold ? */
   gboolean silent;
 
@@ -68,13 +68,14 @@ struct _GstCutter
   long max_sample;		/* maximum sample value */
 };
 
-struct _GstCutterClass {
+struct _GstCutterClass 
+{
   GstElementClass parent_class;
   void (*cut_start) (GstCutter* filter);
   void (*cut_stop) (GstCutter* filter);
 };
 
-GType gst_cutter_get_type(void);
+GType gst_cutter_get_type (void);
 
 #ifdef __cplusplus
 }
