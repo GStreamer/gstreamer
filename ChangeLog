@@ -1,3 +1,13 @@
+2004-01-02  David Schleef  <ds@schleef.org>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_init),
+	(gst_ffmpegenc_connect):  Negotiation fixes.
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_negotiate_format):
+	Remove inappropriate gst_caps_free().
+	* sys/ximage/ximagesink.c: (gst_ximagesink_sinkconnect):
+	Reenable Ronald's internal resize code, since the core handles
+	it correctly now.
+
 2004-01-02  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/v4l/gstv4lmjpegsink.c: (gst_v4lmjpegsink_init):
