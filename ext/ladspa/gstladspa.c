@@ -507,7 +507,7 @@ gst_ladspa_connect (GstPad *pad, GstCaps *caps)
      not sure if this is correct. */
   if (GST_CAPS_IS_FIXED (caps)) {
     for (i=0;i<oclass->numsrcpads;i++) {
-      if (! gst_pad_try_set_caps (ladspa->srcpads[i], caps))
+      if (gst_pad_try_set_caps (ladspa->srcpads[i], caps) <= 0)
         return GST_PAD_CONNECT_REFUSED;
     }
   }

@@ -128,7 +128,7 @@ gst_gsmenc_sinkconnect (GstPad *pad, GstCaps *caps)
                               "gsm_gsm",
                               "audio/x-gsm",
                                 "rate",       GST_PROPS_INT (gsmenc->rate)
-                               )))
+                               )) > 0)
   {
     return GST_PAD_CONNECT_OK;
   }

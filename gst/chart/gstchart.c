@@ -350,7 +350,7 @@ gst_chart_chain (GstPad *pad, GstBuffer *bufin)
           /* Check if we need to renegotiate size. */
           if (chart->first_buffer) {
 	    GST_DEBUG (0, "making new pad");
-	    if (!gst_pad_try_set_caps (chart->srcpad,
+	    if (gst_pad_try_set_caps (chart->srcpad,
 			    GST_CAPS_NEW (
 			      "chartsrc",
 			      "video/raw",
@@ -363,7 +363,7 @@ gst_chart_chain (GstPad *pad, GstBuffer *bufin)
 				"blue_mask",	GST_PROPS_INT (0x001f),
 				"width",	GST_PROPS_INT (chart->width),
 				"height",	GST_PROPS_INT (chart->height)
-			    )))
+			    )) <= 0)
 	    {
 	      gst_element_error (GST_ELEMENT (chart), "could not set caps");
 	      return;

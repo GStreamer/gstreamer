@@ -179,6 +179,7 @@ gst_bpwsinc_sink_connect (GstPad * pad, GstCaps * caps)
   double sum = 0.0;
   int len = 0;
   double *kernel_lp, *kernel_hp;
+  GstPadConnectReturn set_retval;
   
   GstBPWSinc *filter = GST_BPWSINC (gst_pad_get_parent (pad));
 
@@ -187,8 +188,10 @@ gst_bpwsinc_sink_connect (GstPad * pad, GstCaps * caps)
 
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_CONNECT_DELAYED;
-    
-  if (gst_pad_try_set_caps (filter->srcpad, caps)) 
+ 
+  set_retval = gst_pad_try_set_caps (filter->srcpad, caps);
+  
+  if (set_retval > 0)
   {
     len = filter->wing_size;
     /* fill the lp kernel */
@@ -259,11 +262,9 @@ gst_bpwsinc_sink_connect (GstPad * pad, GstCaps * caps)
     /* set up the residue memory space */
     filter->residue = (gfloat *) g_malloc (sizeof (gfloat) * (len * 2 + 1));
     for (i = 0; i <= len * 2; ++i) filter->residue[i] = 0.0;
-
-    return GST_PAD_CONNECT_OK;
   }
 
-  return GST_PAD_CONNECT_REFUSED;
+  return set_retval;
 }
 
 static void

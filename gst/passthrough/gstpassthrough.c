@@ -153,9 +153,8 @@ passthrough_connect_sink (GstPad *pad, GstCaps *caps)
     }
   }
 
-  if (GST_CAPS_IS_FIXED (caps) && ! gst_pad_try_set_caps (filter->srcpad, caps))
-    return GST_PAD_CONNECT_REFUSED;
-  
+  if (GST_CAPS_IS_FIXED (caps))
+    return gst_pad_try_set_caps (filter->srcpad, caps);
   return GST_PAD_CONNECT_DELAYED;
 }
 

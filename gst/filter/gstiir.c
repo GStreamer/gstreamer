@@ -164,22 +164,23 @@ static GstPadConnectReturn
 gst_iir_sink_connect (GstPad * pad, GstCaps * caps)
 {
   GstIIR *filter;
+  GstPadConnectReturn set_retval;
   
   filter = GST_IIR (gst_pad_get_parent (pad));
   
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_CONNECT_DELAYED;
-    
-  if (gst_pad_try_set_caps (filter->srcpad, caps)) {
+ 
+  set_retval = gst_pad_try_set_caps(filter->srcpad, caps);  
+  if (set_retval > 0) {
     /* connection works, so init the filter */
     /* FIXME: remember to free it */
     filter->state = (IIR_state *) g_malloc (sizeof (IIR_state));
     IIR_init (filter->state, filter->stages, 
 	      filter->gain, &(filter->A), &(filter->B));
-    return GST_PAD_CONNECT_OK;
   }
 
-  return GST_PAD_CONNECT_REFUSED;
+  return set_retval;
 }
 
 static void

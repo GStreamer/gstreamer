@@ -282,7 +282,7 @@ gst_mixmatrix_set_all_caps (GstMixMatrix *mix)
   for (i=0;i<mix->sinkpadalloc;i++) {
     if (mix->sinkpads[i]) {
       if (GST_PAD_CAPS(mix->sinkpads[i]) == NULL)
-        if (gst_pad_try_set_caps(mix->sinkpads[i],mix->caps) == FALSE) return FALSE;
+        if (gst_pad_try_set_caps(mix->sinkpads[i],mix->caps) <= 0) return FALSE;
     }
   }
 
@@ -290,7 +290,7 @@ gst_mixmatrix_set_all_caps (GstMixMatrix *mix)
   for (i=0;i<mix->srcpadalloc;i++) {
     if (mix->srcpads[i]) {
       if (GST_PAD_CAPS(mix->srcpads[i]) == NULL)
-        if (gst_pad_try_set_caps(mix->srcpads[i],mix->caps) == FALSE) return FALSE;
+        if (gst_pad_try_set_caps(mix->srcpads[i],mix->caps) <= 0) return FALSE;
     }
   }
 
@@ -311,7 +311,7 @@ gst_mixmatrix_connect (GstPad *pad, GstCaps *caps)
   for (i=0;i<mix->srcpadalloc;i++) {
     if (mix->srcpads[i]) {
       if (GST_PAD_CAPS(mix->srcpads[i]) == NULL)
-        if (gst_pad_try_set_caps(mix->srcpads[i], caps) == FALSE) 
+        if (gst_pad_try_set_caps(mix->srcpads[i], caps) <= 0) 
 	  return GST_PAD_CONNECT_REFUSED;
     }
   }

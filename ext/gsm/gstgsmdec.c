@@ -127,7 +127,7 @@ gst_gsmdec_sinkconnect (GstPad *pad, GstCaps *caps)
 			    "depth",      GST_PROPS_INT (16),
 			    "rate",       GST_PROPS_INT (rate),
 			    "channels",   GST_PROPS_INT (1)
-			   )))
+			   )) > 0)
   {
     return GST_PAD_CONNECT_OK;
   }

@@ -341,14 +341,14 @@ gst_video_crop_chain (GstPad *pad, GstBuffer *buffer)
   }
 
   if (GST_PAD_CAPS (video_crop->srcpad) == NULL) {
-    if (!gst_pad_try_set_caps (video_crop->srcpad,
+    if (gst_pad_try_set_caps (video_crop->srcpad,
 			       GST_CAPS_NEW (
 				       "video_crop_caps",
 				       "video/raw",
 				        "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
 				         "width",   GST_PROPS_INT (video_crop->crop_width),
 				         "height",  GST_PROPS_INT (video_crop->crop_height)
-				       )))
+				       )) <= 0)
     {
       gst_element_error (GST_ELEMENT (video_crop), "could not negotiate pads");
       return;

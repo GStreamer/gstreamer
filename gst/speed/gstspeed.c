@@ -121,10 +121,10 @@ speed_connect (GstPad *pad, GstCaps *caps)
   otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
   
   if (GST_CAPS_IS_FIXED (caps)) {
-    if (!speed_parse_caps (filter, caps) || !gst_pad_try_set_caps (otherpad, caps))
+    if (!speed_parse_caps (filter, caps))
       return GST_PAD_CONNECT_REFUSED;
     
-    return GST_PAD_CONNECT_OK;
+    return gst_pad_try_set_caps(otherpad, caps);
   }
   
   return GST_PAD_CONNECT_DELAYED;

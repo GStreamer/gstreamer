@@ -547,7 +547,7 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 					GstCaps *onecaps;
 					for (;lastcaps != NULL; lastcaps = lastcaps->next) {
 						onecaps = gst_caps_copy_1(lastcaps);
-						if (gst_pad_try_set_caps(v4l2src->srcpad, onecaps))
+						if (gst_pad_try_set_caps(v4l2src->srcpad, onecaps) > 0)
 							if (gst_v4l2src_capture_init(v4l2src))
 								return GST_PAD_CONNECT_OK;
 					}

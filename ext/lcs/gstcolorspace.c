@@ -301,7 +301,7 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
   peercaps = gst_caps_intersect (caps, ourcaps); 
   if (peercaps) {
     /* see if the peer likes it too, it should as the caps say so.. */
-    if (gst_pad_try_set_caps (space->srcpad, peercaps)) {
+    if (gst_pad_try_set_caps (space->srcpad, peercaps) > 0) {
       space->type = GST_COLORSPACE_NONE;
       space->disabled = FALSE;
       return GST_PAD_CONNECT_DONE;
@@ -323,7 +323,7 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
    * is accepted by the peer */
   while (peercaps) {
     if (colorspace_setup_converter (space, ourcaps, peercaps)) {
-      if (gst_pad_try_set_caps (space->srcpad, peercaps)) {
+      if (gst_pad_try_set_caps (space->srcpad, peercaps) > 0) {
         space->disabled = FALSE;
         return GST_PAD_CONNECT_DONE;
       }

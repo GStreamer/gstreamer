@@ -206,7 +206,7 @@ gst_tarkindec_chain (GstPad *pad, GstBuffer *buf)
 	    layer = &tarkindec->tarkin_stream->layer->desc;
 
 	    if (!GST_PAD_CAPS (tarkindec->srcpad)) {
-	      if (!gst_pad_try_set_caps (tarkindec->srcpad,
+	      if (gst_pad_try_set_caps (tarkindec->srcpad,
 				      GST_CAPS_NEW (
 				        "tarkin_raw",
 				        "video/raw",
@@ -219,7 +219,7 @@ gst_tarkindec_chain (GstPad *pad, GstBuffer *buf)
 				        "blue_mask",  GST_PROPS_INT (0xff),
 				        "width",      GST_PROPS_INT (layer->width),
 				        "height",     GST_PROPS_INT (layer->height)
-				       )))
+				       )) <= 0)
 	      {
 		gst_element_error (GST_ELEMENT (tarkindec), "could not output format");
 		gst_buffer_unref (buf);
