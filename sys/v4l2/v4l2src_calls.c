@@ -255,26 +255,12 @@ gst_v4l2src_capture_init (GstV4l2Src *v4l2src)
 	GST_V4L2_CHECK_OPEN(GST_V4L2ELEMENT(v4l2src));
 	GST_V4L2_CHECK_NOT_ACTIVE(GST_V4L2ELEMENT(v4l2src));
 
-	/* set num of buffers */
-	if (v4l2src->breq.count > MIN_BUFFERS_QUEUED) {
-		struct v4l2_streamparm p;
-		p.type = v4l2src->format.type;
-
-		/* only if supported */
-		if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd,
-			  VIDIOC_G_PARM, &p) == 0) {
-			p.parm.capture.readbuffers = v4l2src->breq.count;
-			ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd,
-			      VIDIOC_S_PARM, &p);
-			v4l2src->breq.count = p.parm.capture.readbuffers;
-		}
-	}
+	/* request buffer info */
 	if (v4l2src->breq.count < MIN_BUFFERS_QUEUED) {
 		v4l2src->breq.count = MIN_BUFFERS_QUEUED;
 	}
-
-	/* request buffer info */
 	v4l2src->breq.type = v4l2src->format.type;
+	v4l2src->breq.memory = V4L2_MEMORY_MMAP;
 	if (ioctl(GST_V4L2ELEMENT(v4l2src)->video_fd,
 		  VIDIOC_REQBUFS, &v4l2src->breq) < 0) {
 		gst_element_error(GST_ELEMENT(v4l2src),
