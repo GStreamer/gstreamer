@@ -217,7 +217,11 @@ gst_data_ref_by_count (GstData *data, gint count)
  * @data: a #GstData to unreference
  *
  * Decrements the refcount of this data. If the refcount is
- * zero, the data will be freeed.
+ * zero, the data will be freed.
+ *
+ * When you add data to a pipeline, the pipeline takes ownership of the
+ * data.  When the data has been used by some plugin, it must unref()s it.
+ * Applications usually don't need to unref() anything.
  */
 void 
 gst_data_unref (GstData *data) 

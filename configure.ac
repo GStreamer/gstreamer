@@ -218,14 +218,10 @@ AC_HELP_STRING([--enable-profiling],[adds -pg to compiler commandline, for profi
 esac], 
 [USE_PROFILING=no]) dnl Default value
 
-dnl default to building registry in the source tree if we are enabling plugin build dir
-if test "x$PLUGINS_USE_BUILDDIR" = "xyes"; then
-  GST_CONFIG_DIR=`pwd`
-else
-  GST_CONFIG_DIR=${sysconfdir}/gstreamer
-fi
+dnl set up a configuration dir
+GST_CONFIG_DIR=${sysconfdir}/gstreamer
 AC_ARG_WITH(configdir,
-AC_HELP_STRING([--with-configdir],[specify path to use for plugin and command completion registries]),
+AC_HELP_STRING([--with-configdir],[specify path to use for configuration files]),
 [case "${withval}" in
   yes) AC_MSG_ERROR(bad value ${withval} for --with-configdir) ;;
   no) AC_MSG_ERROR(bad value ${withval} for --with-configdir) ;;
@@ -235,6 +231,27 @@ esac],
 
 AS_AC_EXPAND(GST_CONFIG_DIR, $GST_CONFIG_DIR)
 AC_MSG_NOTICE(Using $GST_CONFIG_DIR as configuration dir)
+
+
+dnl use a cache dir for storing element registry info.
+dnl default to building registry in the source tree if we are enabling plugin build dir
+if test "x$PLUGINS_USE_BUILDDIR" = "xyes"; then
+  GST_CACHE_DIR=`pwd`
+else
+  dnl ${localstatedir} points to PREFIX/var
+  GST_CACHE_DIR=${localstatedir}/cache/gstreamer
+fi
+AC_ARG_WITH(cachedir,
+AC_HELP_STRING([--with-cachedir],[specify path to use for plugin and command completion registries]),
+[case "${withval}" in
+  yes) AC_MSG_ERROR(bad value ${withval} for --with-cachedir) ;;
+  no) AC_MSG_ERROR(bad value ${withval} for --with-cachedir) ;;
+  *) GST_CACHE_DIR="${withval}" ;;
+esac], 
+[:]) dnl Default value
+
+AS_AC_EXPAND(GST_CACHE_DIR, $GST_CACHE_DIR)
+AC_MSG_NOTICE(Using $GST_CACHE_DIR as registry cache dir)
 
 
 dnl building of tests
@@ -357,6 +374,10 @@ dnl ############################
 dnl Set location of configuration dir.
 AC_DEFINE_UNQUOTED(GST_CONFIG_DIR, "$GST_CONFIG_DIR", [Define the configuration directory])
 AC_SUBST(GST_CONFIG_DIR)
+
+dnl Set location of registry dir.
+AC_DEFINE_UNQUOTED(GST_CACHE_DIR, "$GST_CACHE_DIR", [Define the registry directory])
+AC_SUBST(GST_CACHE_DIR)
 
 dnl Set location of plugin directory
 if test "x${prefix}" = "xNONE"; then
