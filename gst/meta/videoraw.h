@@ -50,6 +50,8 @@ struct _MetaDGA {
 	void *base;
 	// the dimensions of the screen
 	int swidth, sheight;
+	// the number of bytes in a line
+	int bytes_per_line;
 };
 
 struct _MetaOverlay {
@@ -63,6 +65,7 @@ struct _MetaOverlay {
 	struct _OverlayClip overlay_clip[32];
 	
 	gboolean did_overlay;
+	gboolean fully_obscured;
 };
 
 struct _MetaVideoRaw {
