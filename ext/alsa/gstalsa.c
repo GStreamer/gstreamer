@@ -5,7 +5,7 @@
  * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
+ * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
  *
@@ -14,7 +14,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
+ * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
@@ -992,7 +992,7 @@ gst_alsa_adjust_rate (gint rate, gboolean aggressive)
 
   if (aggressive)
     return rate;
-  
+
   for (i = 0; i < G_N_ELEMENTS (rates); i++) {
     if (rate >= rates[i])
       return rates[i];
@@ -1020,7 +1020,7 @@ gst_alsa_src_set_caps (GstAlsaSrc *src, gboolean aggressive)
       return FALSE;
     }
   }
-  
+
   /* construct caps */
   caps = GST_CAPS_NEW ("alsasrc caps", "audio/x-raw-int",
 		       "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
@@ -1045,12 +1045,12 @@ gst_alsa_src_set_caps (GstAlsaSrc *src, gboolean aggressive)
     gst_caps_set (caps, "width", GST_PROPS_INT (width));
     gst_caps_set (caps, "depth", GST_PROPS_INT (depth));
     gst_caps_set (caps, "signed", GST_PROPS_BOOLEAN (sign));
-  
+
     gst_props_entry_get_int_range (gst_props_get_entry (GST_CAPS_PROPERTIES (walk), "rate"), &min_rate, &max_rate);
     gst_props_entry_get_int_range (gst_props_get_entry (GST_CAPS_PROPERTIES (walk), "channels"), &min_channels, &max_channels);
     for (rate = max_rate;; rate--) {
       if ((rate = gst_alsa_adjust_rate (rate, aggressive)) < min_rate)
-	break;    
+	break;
       gst_caps_set (caps, "rate", GST_PROPS_INT (rate));
       for (channels = aggressive ? max_channels : MIN (max_channels, 2); channels >= min_channels; channels--) {
         gst_caps_set (caps, "channels", GST_PROPS_INT (channels));
@@ -1058,8 +1058,8 @@ gst_alsa_src_set_caps (GstAlsaSrc *src, gboolean aggressive)
                    sign ? "" : "un", endian, width, depth, channels, rate);
         if (gst_pad_try_set_caps (this->pad[0], caps) != GST_PAD_LINK_REFUSED)
           gst_alsa_link (this->pad[0], caps);
-      
-        if (this->format) {	  
+
+        if (this->format) {
 	  /* try to set caps here */
 	  return TRUE;
 	}
@@ -1223,7 +1223,7 @@ found_channel:
   gst_pad_set_query_function (this->pad[channel], gst_alsa_pad_query);
   gst_pad_set_query_type_function (this->pad[channel], gst_alsa_get_query_types);
   gst_pad_set_formats_function (this->pad[channel], gst_alsa_get_formats);
-  
+
   return this->pad[channel];
 }
 
@@ -1240,45 +1240,34 @@ gst_alsa_get_format (GstCaps *caps)
   /* we have to differentiate between int and float formats */
   mimetype = gst_caps_get_mime (caps);
 
-  if (strcmp (mimetype, "audio/x-raw-int") == 0) {
+  if (! strncmp (mimetype, "audio/x-raw-int", 15)) {
     gboolean sign;
     gint width, depth, endianness;
 
     /* extract the needed information from the caps */
     if (!gst_caps_get (caps,
-                       "width", &width,
-                       "depth", &depth,
-                       "signed", &sign,
-                       NULL))
+           "width", &width, "depth", &depth, "signed", &sign, NULL))
         goto error;
-	
+
     /* extract endianness if needed */
     if (width > 8) {
-      if (!gst_caps_get (caps,
-                         "endianness", &endianness,
-                         NULL))
+      if (!gst_caps_get (caps, "endianness", &endianness, NULL))
         goto error;
-      } else {
+    } else {
       endianness = G_BYTE_ORDER;
     }
-    
-    /* find corresponding alsa format */
+
     ret->format = snd_pcm_build_linear_format (depth, width, sign ? 0 : 1, endianness == G_LITTLE_ENDIAN ? 0 : 1);
-  } else if (strcmp (mimetype, "audio/x-raw-float") == 0) {
-    gint depth;
-    gfloat intercept, slope;
+
+  } else if (! strncmp (mimetype, "audio/x-raw-float", 17)) {
+    gint width;
 
     /* get layout */
-    if (!gst_caps_get (caps, "depth", &depth,
-                             "intercept", &intercept,
-                             "slope", &slope,
-                             NULL))
+    if (!gst_caps_get (caps, "width", &width, NULL))
       goto error;
-    if (intercept != 0.0f || slope != 1.0f) {
-      goto error;
-    }
+
     /* match layout to format wrt to endianness */
-    if (depth == 32) {
+    if (width == 32) {
       if (G_BYTE_ORDER == G_LITTLE_ENDIAN) {
 	ret->format = SND_PCM_FORMAT_FLOAT_LE;
       } else if (G_BYTE_ORDER == G_BIG_ENDIAN) {
@@ -1286,7 +1275,7 @@ gst_alsa_get_format (GstCaps *caps)
       } else {
         ret->format = SND_PCM_FORMAT_FLOAT;
       }
-    } else if (depth == 64) {
+    } else if (width == 64) {
       if (G_BYTE_ORDER == G_LITTLE_ENDIAN) {
 	ret->format = SND_PCM_FORMAT_FLOAT64_LE;
       } else if (G_BYTE_ORDER == G_BIG_ENDIAN) {
@@ -1297,20 +1286,19 @@ gst_alsa_get_format (GstCaps *caps)
     } else {
       goto error;
     }
-  } else if (!strcmp (mimetype, "audio/x-alaw")) {
+  } else if (!strncmp (mimetype, "audio/x-alaw", 12)) {
     ret->format = SND_PCM_FORMAT_A_LAW;
-  } else if (!strcmp (mimetype, "audio/x-mulaw")) {
+  } else if (!strncmp (mimetype, "audio/x-mulaw", 13)) {
     ret->format = SND_PCM_FORMAT_MU_LAW;
-  } 
+  }
 
   /* get rate and channels */
-  if (!gst_caps_get (caps, "rate", &ret->rate,
-                           "channels", &ret->channels,
-                           NULL))
+  if (!gst_caps_get (caps,
+         "rate", &ret->rate, "channels", &ret->channels, NULL))
     goto error;
-  
+
   return ret;
-  
+
 error:
   g_free (ret);
   return NULL;
@@ -1321,8 +1309,8 @@ gst_alsa_formats_match (GstAlsaFormat *one, GstAlsaFormat *two)
 {
   if (one == two) return TRUE;
   if (one == NULL || two == NULL) return FALSE;
-  return (one->format == two->format) && 
-         (one->rate == two->rate) && 
+  return (one->format == two->format) &&
+         (one->rate == two->rate) &&
          (one->channels == two->channels);
 }
 /* get props for a spec */
@@ -1333,7 +1321,6 @@ gst_alsa_get_caps_internal (snd_pcm_format_t format)
 
   if (format == SND_PCM_FORMAT_A_LAW) {
     return GST_CAPS_NEW (name, "audio/x-alaw",
-                          "format", GST_PROPS_STRING ("int"),
                           "law", GST_PROPS_INT(2),
                           "width", GST_PROPS_INT(8),
                           "depth", GST_PROPS_INT(8),
@@ -1341,7 +1328,6 @@ gst_alsa_get_caps_internal (snd_pcm_format_t format)
                           NULL);
   } else if (format == SND_PCM_FORMAT_MU_LAW) {
     return GST_CAPS_NEW (name, "audio/x-mulaw",
-                          "format", GST_PROPS_STRING ("int"),
                           "law", GST_PROPS_INT(1),
                           "width", GST_PROPS_INT(8),
                           "depth", GST_PROPS_INT(8),
@@ -1349,12 +1335,12 @@ gst_alsa_get_caps_internal (snd_pcm_format_t format)
                           NULL);
   } else if (snd_pcm_format_linear (format)) {
     /* int */
-    GstProps *props = gst_props_new ("format", GST_PROPS_STRING ("int"),
-                          "width", GST_PROPS_INT(snd_pcm_format_physical_width (format)),
-                          "depth", GST_PROPS_INT(snd_pcm_format_width (format)),
-                          "law", GST_PROPS_INT(0),
-                          "signed", GST_PROPS_BOOLEAN (snd_pcm_format_signed (format) == 1 ? TRUE : FALSE),
-                          NULL);
+    GstProps *props =
+      gst_props_new ("width",  GST_PROPS_INT(snd_pcm_format_physical_width (format)),
+                     "depth",  GST_PROPS_INT(snd_pcm_format_width (format)),
+                     "law",    GST_PROPS_INT(0),
+                     "signed", GST_PROPS_BOOLEAN (snd_pcm_format_signed (format) == 1 ? TRUE : FALSE),
+                     NULL);
     /* endianness */
     if (snd_pcm_format_physical_width (format) > 8) {
       switch (snd_pcm_format_little_endian (format)) {
@@ -1376,12 +1362,10 @@ gst_alsa_get_caps_internal (snd_pcm_format_t format)
     if (!snd_pcm_format_cpu_endian (format))
       return NULL;
 
-    return GST_CAPS_NEW (name, "audio/x-raw-float",
-                          "depth", GST_PROPS_INT (snd_pcm_format_width (format)),
-                          "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-                          "intercept", GST_PROPS_FLOAT (0.),
-                          "slope", GST_PROPS_FLOAT (1.),
-                          NULL);
+    return GST_CAPS_NEW (name,
+                         "audio/x-raw-float",
+                         "width",      GST_PROPS_INT (snd_pcm_format_width (format)),
+                         "endianness", GST_PROPS_INT (G_BYTE_ORDER));
   }
   return NULL;
 }
@@ -1490,7 +1474,7 @@ gst_alsa_get_caps (GstPad *pad, GstCaps *caps)
     if (snd_pcm_format_mask_test (mask, i)) {
       GstCaps *caps = gst_alsa_get_caps_internal (i);
       /* we can never use a format we can't set caps for */
-      if (caps->properties != NULL) {
+      if (caps != NULL && caps->properties != NULL) {
         add_channels (caps->properties, min_rate, max_rate, min_channels, max_channels);
         ret = gst_caps_append (ret, caps);
       }
