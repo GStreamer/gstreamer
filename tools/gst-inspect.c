@@ -817,6 +817,13 @@ print_element_list (void)
         g_print ("%s:  %s: %s\n", plugin->name, 
 	        GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
       }
+      else if (GST_IS_CACHE_FACTORY (feature)) {
+        GstCacheFactory *factory;
+
+        factory = GST_CACHE_FACTORY (feature);
+        g_print ("%s:  %s: %s\n", plugin->name, 
+	        GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
+      }
       else if (GST_IS_TYPE_FACTORY (feature)) {
         GstTypeFactory *factory;
 
@@ -855,6 +862,7 @@ print_plugin_info (GstPlugin *plugin)
   gint num_autoplug = 0;
   gint num_types = 0;
   gint num_schedulers = 0;
+  gint num_caches = 0;
   gint num_other = 0;
   
   g_print ("Plugin Details:\n");
@@ -884,6 +892,13 @@ print_plugin_info (GstPlugin *plugin)
       factory = GST_AUTOPLUG_FACTORY (feature);
       g_print ("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
       num_autoplug++;
+    }
+    else if (GST_IS_CACHE_FACTORY (feature)) {
+      GstCacheFactory *factory;
+
+      factory = GST_CACHE_FACTORY (feature);
+      g_print ("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
+      num_caches++;
     }
     else if (GST_IS_TYPE_FACTORY (feature)) {
       GstTypeFactory *factory;
@@ -920,6 +935,8 @@ print_plugin_info (GstPlugin *plugin)
     g_print ("  +-- %d types\n", num_types);
   if (num_schedulers > 0)
     g_print ("  +-- %d schedulers\n", num_schedulers);
+  if (num_caches > 0)
+    g_print ("  +-- %d caches\n", num_caches);
   if (num_other > 0)
     g_print ("  +-- %d other objects\n", num_other);
   
