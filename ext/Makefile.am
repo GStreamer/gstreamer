@@ -34,12 +34,6 @@ else
 AUDIOFILE_DIR=
 endif
 
-if USE_AVIFILE
-AVIFILE_DIR=avifile
-else
-AVIFILE_DIR=
-endif
-
 if USE_CDPARANOIA
 CDPARANOIA_DIR=cdparanoia
 else
@@ -110,12 +104,6 @@ if USE_HERMES
 HERMES_DIR=hermes
 else
 HERMES_DIR=
-endif
-
-if USE_HTTP
-HTTP_DIR=http
-else
-HTTP_DIR=
 endif
 
 if USE_JACK
@@ -270,10 +258,10 @@ endif
 
 SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
 	$(ARTS_DIR) $(ARTSC_DIR) $(AUDIOFILE_DIR) \
-	$(AVIFILE_DIR) $(CDPARANOIA_DIR) $(DIVX_DIR) \
+	$(CDPARANOIA_DIR) $(DIVX_DIR) \
 	$(DVDREAD_DIR) $(DVDNAV_DIR) $(ESD_DIR) $(MAS_DIR) \
 	$(FFMPEG_DIR) $(FLAC_DIR) $(GNOMEVFS_DIR) $(GSM_DIR) \
-	$(HERMES_DIR) $(HTTP_DIR) $(JACK_DIR) $(JPEG_DIR) \
+	$(HERMES_DIR) $(JACK_DIR) $(JPEG_DIR) \
 	$(LADSPA_DIR) $(LAME_DIR) $(LCS_DIR) \
 	$(LIBDV_DIR) $(LIBFAME_DIR) $(LIBPNG_DIR) \
 	$(MAD_DIR) $(MIKMOD_DIR) $(MJPEGTOOLS_DIR) $(MPEG2DEC_DIR) \
@@ -284,8 +272,8 @@ SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
 
 DIST_SUBDIRS=\
 	a52dec aalib alsa \
-	arts artsd avifile \
-	audiofile cdparanoia dv \
+	arts artsd \
+	audiofile cdparanoia divx dv \
 	dvdread dvdnav esd mas ffmpeg \
 	flac gnomevfs gsm \
 	hermes http ivorbis jack jpeg \
@@ -294,4 +282,4 @@ DIST_SUBDIRS=\
 	openquicktime raw1394 \
 	sdl snapshot shout shout2 sidplay \
 	smoothwave swfdec tarkin vorbis \
-	xmms xvid
+	xmms xvid 
