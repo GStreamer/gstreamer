@@ -1338,7 +1338,7 @@ gst_pad_link_call_link_functions (GstPadLink * link)
     res = GST_RPAD_LINKFUNC (link->sinkpad) (GST_PAD (link->sinkpad),
         link->caps);
 
-    GST_DEBUG_OBJECT (link->sinkpad, "got reply %d from link function");
+    GST_DEBUG_OBJECT (link->sinkpad, "got reply %d from link function", res);
 
     if (GST_PAD_LINK_FAILED (res)) {
       GST_CAT_INFO_OBJECT (GST_CAT_CAPS, link->sinkpad,

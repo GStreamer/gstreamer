@@ -1,5 +1,10 @@
 2004-09-06  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.c: (gst_pad_link_call_link_functions):
+	Fix debug info.
+
+2004-09-06  Wim Taymans  <wim@fluendo.com>
+
 	* gst/schedulers/gstoptimalscheduler.c: (add_to_group),
 	(remove_from_group):
 	Some more debug info.
