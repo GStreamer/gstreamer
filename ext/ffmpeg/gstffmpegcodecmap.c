@@ -1290,6 +1290,8 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     caps = gst_caps_new_simple ("video/x-4xm", NULL);
   } else if (!strcmp (format_name, "matroska")) {
     caps = gst_caps_new_simple ("video/x-matroska", NULL);
+  } else if (!strcmp (format_name, "mp3")) {
+    caps = gst_caps_new_simple ("application/x-id3", NULL);
   } else {
     gchar *name;
 

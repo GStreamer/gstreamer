@@ -1,3 +1,10 @@
+2004-12-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_formatid_to_caps):
+	  Add ID3 mime. Should partially fix #155274 (although raw mp3
+	  sounds awful, it doesn't parse correctly in the decoder-only
+	  case).
+
 2004-12-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c:
