@@ -43,6 +43,8 @@ static GstRegistry *_user_registry;
 static gboolean _gst_registry_fixed = FALSE;
 static gboolean _gst_use_threads = TRUE;
 
+static gboolean _gst_enable_cpu_opt = TRUE;
+
 static gboolean gst_initialized = FALSE;
 /* this will be set in popt callbacks when a problem has been encountered */
 static gboolean _gst_initialization_failure = FALSE;
@@ -82,6 +84,7 @@ enum {
   ARG_DEBUG_MASK,
   ARG_MASK,
   ARG_MASK_HELP,
+  ARG_DISABLE_CPU_OPT,
   ARG_PLUGIN_SPEW,
   ARG_PLUGIN_PATH,
   ARG_PLUGIN_LOAD,
@@ -105,6 +108,7 @@ static const struct poptOption options[] = {
   {"gst-debug-mask",     NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_DEBUG_MASK,     "debugging bitmask", "MASK"},
   {"gst-mask",           NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_MASK,           "bitmask for both info and debugging", "MASK"},
   {"gst-mask-help",      NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_MASK_HELP,      "how to set the level of diagnostic output (-mask values)", NULL},
+  {"gst-disable-cpu-opt",NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,	  NULL, ARG_DISABLE_CPU_OPT,"Disable accelerated CPU instructions", NULL},
   {"gst-plugin-spew",    NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_PLUGIN_SPEW,    "enable verbose plugin loading diagnostics", NULL},
   {"gst-plugin-path",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_PATH,    "'" G_SEARCHPATH_SEPARATOR_S "'--separated path list for loading plugins", "PATHS"},
   {"gst-plugin-load",    NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_PLUGIN_LOAD,    "comma-separated list of plugins to preload in addition to the list stored in env variable GST_PLUGIN_PATH", "PLUGINS"},
@@ -497,7 +501,7 @@ init_post (void)
   /* register core plugins */
   _gst_plugin_register_static (&plugin_desc);
  
-  _gst_cpu_initialize ();
+  _gst_cpu_initialize (_gst_enable_cpu_opt);
   _gst_props_initialize ();
   _gst_caps_initialize ();
   _gst_plugin_initialize ();
@@ -610,6 +614,9 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
     case ARG_MASK_HELP:
       gst_mask_help ();
       exit (0);
+    case ARG_DISABLE_CPU_OPT:
+      _gst_enable_cpu_opt = FALSE;
+      break;
     case ARG_PLUGIN_SPEW:
       break;
     case ARG_PLUGIN_PATH:

@@ -31,7 +31,7 @@ typedef enum {
   GST_CPU_FLAG_3DNOW    = (1<<3)
 } GstCPUFlags;
 
-void 		_gst_cpu_initialize	(void);
+void 		_gst_cpu_initialize	(gboolean useopt);
 
 GstCPUFlags 	gst_cpu_get_flags	(void);
 

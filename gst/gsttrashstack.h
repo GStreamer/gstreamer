@@ -51,7 +51,7 @@ GST_INLINE_FUNC gpointer 	gst_trash_stack_pop 	(GstTrashStack *stack);
 
 #if defined (GST_CAN_INLINE) || defined (__GST_TRASH_STACK_C__)
 
-#if defined (__i386__) && defined (__GNUC__) && __GNUC__ >= 2 
+#if defined (USE_FAST_STACK_TRASH) && defined (__i386__) && defined (__GNUC__) && __GNUC__ >= 2 
 
 #ifdef GST_CONFIG_NO_SMP
 #define SMP_LOCK ""
