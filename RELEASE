@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer 0.8.2 "Gigantic"
+GStreamer: Release notes for GStreamer 0.8.3 "Oops"
         
 
 The GStreamer team is happy to announce a new release
@@ -22,39 +22,8 @@ Features of this release
     
       * Parallel installability with 0.6.x series
       * Internationalization
-      * New translations in this release: Turkish, Ukrainian, GB English
       * Translations: af, az, en_GB, fr, nl, sr, sv, tr, uk
-      * Fixes for setting elements to NULL to release devices
-      * Windows port
-      * New GStreamer Data Protocol helper library
-      * New GstAdapter, similar to bytestream
-      * Fixes for registry loading plugins with same name
-      * Added no-more-pads signal
-      * Added Fixed List GValue type
-      * Fixes to schedulers
-
-Bugs fixed in this release
-    
-      * 133897 : Internal GStreamer error: seek problem
-      * 134839 : buffers leaked by filesrc, typefind, spider or fakesink
-      * 137710 : When seeking, the sink's time is reset
-      * 138012 : [opt] simple pipeline crashe
-      * 138836 : docs build but won't install
-      * 140015 : GstValue GTypes should not derive from G_TYPE_BOXED
-      * 140156 : ARM port / type reading patches
-      * 140477 : [debug] crash with *:2 while playing alien.mpg
-      * 140594 : Small memory leak int gst_parse_launch()
-      * 140734 : filesrc should handle named pipes/devices
-      * 140743 : Leak in _gst_parse_escape()
-      * 141083 : gstreamer-0.8.1 compile failure with gcc-3.4: error: PIC ...
-      * 141304 : GST_CAPS and GST_IS_CAPS broken
-      * 141317 : Win32 build with newest Microsoft compilers
-      * 141414 : filesink leaks events
-      * 141416 : leak in entrygthread scheduler
-      * 141417 : Memory leak in gthread-cothreads.h
-      * 142304 : The Win32 makefiles clean too much
-      * 142804 : needed change to allow x86 Solaris compile with Forte
-      * 142957 : xmlregistry failes to compile on osx
+      * Hotfix for the switch element
 
 Download
 

@@ -1,6 +1,15 @@
+2004-06-05  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* configure.ac:
+	  bump nano to cvs
+
+=== release 0.8.3 ===
+
 2004-06-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
+	  update libtool versioning
+	  do a new release
 	* docs/gst/tmpl/gstelement.sgml:
 	* docs/gst/tmpl/gsttypes.sgml:
 	* gst/gstinfo.c: (_gst_debug_init):
