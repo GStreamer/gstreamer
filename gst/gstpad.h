@@ -383,7 +383,6 @@ GType			gst_ghost_pad_get_type			(void);
 
 /* creating pads */
 GstPad*			gst_pad_new				(const gchar *name, GstPadDirection direction);
-#define			gst_pad_destroy(pad)			gst_object_destroy (GST_OBJECT (pad))
 GstPad*			gst_pad_new_from_template		(GstPadTemplate *templ, const gchar *name);
 GstPad*			gst_pad_custom_new			(GType type, const gchar *name, GstPadDirection direction);
 GstPad*			gst_pad_custom_new_from_template	(GType type, GstPadTemplate *templ, const gchar *name);

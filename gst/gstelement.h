@@ -228,7 +228,6 @@ void                    gst_element_class_install_std_props	(GstElementClass *kl
 void 			gst_element_default_error		(GObject *object, GstObject *orig, gchar *error);
 
 GType			gst_element_get_type		(void);
-#define			gst_element_destroy(element)	gst_object_destroy (GST_OBJECT (element))
 
 void			gst_element_set_loop_function	(GstElement *element,
 							 GstElementLoopFunction loop);

@@ -104,7 +104,6 @@ struct _GstBinClass {
 
 GType		gst_bin_get_type		(void);
 GstElement*	gst_bin_new			(const gchar *name);
-#define		gst_bin_destroy(bin)		gst_object_destroy(GST_OBJECT(bin))
 
 /* add and remove elements from the bin */
 void		gst_bin_add			(GstBin *bin, GstElement *element);

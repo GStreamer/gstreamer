@@ -256,30 +256,6 @@ gst_object_replace (GstObject **oldobj, GstObject *newobj)
   }
 }
 
-/**
- * gst_object_destroy:
- * @object: GstObject to destroy
- *
- * Destroy the object.
- * 
- */
-void
-gst_object_destroy (GstObject *object)
-{
-  g_return_if_fail (object != NULL);
-  g_return_if_fail (GST_IS_OBJECT (object));
-
-  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy %p '%s'", object, GST_OBJECT_NAME (object));
-
-  if (!GST_OBJECT_DESTROYED (object))
-  {
-    /* need to hold a reference count around all class method
-     * invocations.
-     */
-    g_object_run_dispose (G_OBJECT (object));
-  }
-}
-
 static void
 gst_object_dispose (GObject *object)
 {
