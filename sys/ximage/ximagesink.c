@@ -116,14 +116,13 @@ gst_ximagesink_check_xshm_calls (GstXContext * xcontext)
   error_caught = FALSE;
   handler = XSetErrorHandler (gst_ximagesink_handle_xerror);
 
-  ximage->size = (xcontext->bpp / 8);
-
   /* Trying to create a 1x1 picture */
   ximage->ximage = XShmCreateImage (xcontext->disp, xcontext->visual,
       xcontext->depth, ZPixmap, NULL, &ximage->SHMInfo, 1, 1);
   if (!ximage->ximage)
     goto out;
 
+  ximage->size = ximage->ximage->bytes_per_line;
   ximage->SHMInfo.shmid = shmget (IPC_PRIVATE, ximage->size, IPC_CREAT | 0777);
   ximage->SHMInfo.shmaddr = shmat (ximage->SHMInfo.shmid, 0, 0);
   ximage->ximage->data = ximage->SHMInfo.shmaddr;
@@ -172,11 +171,6 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, gint width, gint height)
 
   g_mutex_lock (ximagesink->x_lock);
 
-  ximage->size =
-      (ximagesink->xcontext->bpp / 8) * ximage->width * ximage->height;
-  GST_DEBUG_OBJECT (ximagesink, "GStreamer's image size is %d, stride %d",
-      ximage->size, ximage->size / ximage->height);
-
 #ifdef HAVE_XSHM
   if (ximagesink->xcontext->use_xshm) {
     ximage->ximage = XShmCreateImage (ximagesink->xcontext->disp,
@@ -209,10 +203,9 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, gint width, gint height)
         ximagesink->xcontext->visual,
         ximagesink->xcontext->depth,
         ZPixmap, 0, NULL,
-        ximage->width, ximage->height,
-        ximagesink->xcontext->bpp, ximage->size / ximage->height);
+        ximage->width, ximage->height, ximagesink->xcontext->bpp, 0);
 
-    /* we passed a bytes_per_line, so we know the size */
+    ximage->size = ximage->ximage->bytes_per_line * ximage->ximage->height;
     ximage->ximage->data = g_malloc (ximage->size);
 
     XSync (ximagesink->xcontext->disp, FALSE);
