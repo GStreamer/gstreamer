@@ -1,3 +1,16 @@
+2004-11-27  Christophe Fergeau  <teuf@gnome.org>
+
+	* gst/playback/gstplaybasebin.c: (setup_source): fixed a caps leak
+	(gst_play_base_bin_change_state): nullify source and decoder when
+	going from READY to NULL so that we don't try to do weird stuff with
+	them when going from NULL to READY
+	* gst/playback/gstplaybin.c: (gst_play_bin_init): use gst_object_unref
+	instead of g_object_unref
+	(gen_video_element), (gen_audio_element): more refcounting fixes, now
+	it should be correct
+	(gst_play_bin_change_state): don't call remove_sinks if we are
+	currently disposing the object
+
 2004-11-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/a52dec/gsta52dec.c: (gst_a52dec_loop):
