@@ -16,94 +16,31 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+#include <config.h>
 
 #include "gstspeexdec.h"
 #include "gstspeexenc.h"
 
-/* elementfactory information */
-extern GstElementDetails gst_speexdec_details;
-extern GstElementDetails gst_speexenc_details;
-
-GstPadTemplate *speexdec_src_template, *speexdec_sink_template; 
-GstPadTemplate *speexenc_src_template, *speexenc_sink_template;
-
-GST_CAPS_FACTORY (speex_caps_factory,
-  GST_CAPS_NEW (
-    "speex_speex",
-    "audio/x-speex",
-      "rate",       GST_PROPS_INT_RANGE (1000, 48000),
-      "channels",   GST_PROPS_INT (1)
-  )
-)
-
-GST_CAPS_FACTORY (raw_caps_factory,
-  GST_CAPS_NEW (
-    "speex_raw",
-    "audio/x-raw-int",
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-      "signed",     GST_PROPS_BOOLEAN (TRUE),
-      "width",      GST_PROPS_INT (16),
-      "depth",      GST_PROPS_INT (16),
-      "rate",       GST_PROPS_INT_RANGE (1000, 48000),
-      "channels",   GST_PROPS_INT (1)
-  )
-)
-
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *dec, *enc;
-  GstCaps *raw_caps, *speex_caps;
+  if (!gst_element_register (plugin, "speexenc", GST_RANK_NONE, GST_TYPE_SPEEXENC))
+    return FALSE;
 
-  /* create an elementfactory for the speexdec element */
-  enc = gst_element_factory_new("speexenc",GST_TYPE_SPEEXENC,
-                                   &gst_speexenc_details);
-  g_return_val_if_fail(enc != NULL, FALSE);
-
-  raw_caps = GST_CAPS_GET (raw_caps_factory);
-  speex_caps = GST_CAPS_GET (speex_caps_factory);
-
-  /* register sink pads */
-  speexenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
-		                              GST_PAD_ALWAYS, 
-					      raw_caps, NULL);
-  gst_element_factory_add_pad_template (enc, speexenc_sink_template);
-
-  /* register src pads */
-  speexenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
-		                             GST_PAD_ALWAYS, 
-					     speex_caps, NULL);
-  gst_element_factory_add_pad_template (enc, speexenc_src_template);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (enc));
-
-  /* create an elementfactory for the speexdec element */
-  dec = gst_element_factory_new("speexdec",GST_TYPE_SPEEXDEC,
-                                   &gst_speexdec_details);
-  g_return_val_if_fail(dec != NULL, FALSE);
-  gst_element_factory_set_rank (dec, GST_ELEMENT_RANK_PRIMARY);
- 
-  /* register sink pads */
-  speexdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
-		                              GST_PAD_ALWAYS, 
-					      speex_caps, NULL);
-  gst_element_factory_add_pad_template (dec, speexdec_sink_template);
-
-  /* register src pads */
-  speexdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
-		                             GST_PAD_ALWAYS, 
-					     raw_caps, NULL);
-  gst_element_factory_add_pad_template (dec, speexdec_src_template);
+  if (!gst_element_register (plugin, "speexdec", GST_RANK_PRIMARY, GST_TYPE_SPEEXDEC))
+    return FALSE;
   
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (dec));
-
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "speex",
-  plugin_init
-};
+  "Speex plugin library",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)

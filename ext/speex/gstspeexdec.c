@@ -25,17 +25,14 @@
 
 #include "gstspeexdec.h"
 
-extern GstPadTemplate *speexdec_src_template, *speexdec_sink_template;
+static GstPadTemplate *speexdec_src_template, *speexdec_sink_template;
 
 /* elementfactory information */
 GstElementDetails gst_speexdec_details = {
   "speex audio decoder",
   "Codec/Audio/Decoder",
-  "LGPL",
   ".speex",
-  VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2000",
 };
 
 /* SpeexDec signals and args */
@@ -49,6 +46,7 @@ enum {
   /* FILL ME */
 };
 
+static void                     gst_speexdec_base_init (gpointer g_class);
 static void			gst_speexdec_class_init	(GstSpeexDec *klass);
 static void			gst_speexdec_init		(GstSpeexDec *speexdec);
 
@@ -64,7 +62,8 @@ gst_speexdec_get_type(void) {
 
   if (!speexdec_type) {
     static const GTypeInfo speexdec_info = {
-      sizeof(GstSpeexDecClass),      NULL,
+      sizeof(GstSpeexDecClass),
+      gst_speexdec_base_init,
       NULL,
       (GClassInitFunc)gst_speexdec_class_init,
       NULL,
@@ -76,6 +75,49 @@ gst_speexdec_get_type(void) {
     speexdec_type = g_type_register_static(GST_TYPE_ELEMENT, "GstSpeexDec", &speexdec_info, 0);
   }
   return speexdec_type;
+}
+
+GST_CAPS_FACTORY (speex_caps_factory,
+  GST_CAPS_NEW (
+    "speex_speex",
+    "audio/x-speex",
+      "rate",       GST_PROPS_INT_RANGE (1000, 48000),
+      "channels",   GST_PROPS_INT (1)
+  )
+)
+
+GST_CAPS_FACTORY (raw_caps_factory,
+  GST_CAPS_NEW (
+    "speex_raw",
+    "audio/x-raw-int",
+      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+      "signed",     GST_PROPS_BOOLEAN (TRUE),
+      "width",      GST_PROPS_INT (16),
+      "depth",      GST_PROPS_INT (16),
+      "rate",       GST_PROPS_INT_RANGE (1000, 48000),
+      "channels",   GST_PROPS_INT (1)
+  )
+)
+
+static void
+gst_speexdec_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstCaps *raw_caps, *speex_caps;
+
+  raw_caps = GST_CAPS_GET (raw_caps_factory);
+  speex_caps = GST_CAPS_GET (speex_caps_factory);
+
+  speexdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
+		                              GST_PAD_ALWAYS, 
+					      speex_caps, NULL);
+  speexdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
+		                             GST_PAD_ALWAYS, 
+					     raw_caps, NULL);
+  gst_element_class_add_pad_template (element_class, speexdec_sink_template);
+  gst_element_class_add_pad_template (element_class, speexdec_src_template);
+
+  gst_element_class_set_details (element_class, &gst_speexdec_details);
 }
 
 static void
