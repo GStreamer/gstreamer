@@ -1,5 +1,11 @@
 2004-02-15  Julien MOUTTE  <julien@moutte.net>
 
+	* gst/switch/gstswitch.c: (gst_switch_change_state),
+	(gst_switch_class_init): Cleaning the sinkpads correctly on state
+	change, mostly the EOS flag.
+
+2004-02-15  Julien MOUTTE  <julien@moutte.net>
+
 	* examples/gstplay/player.c: (got_eos), (main): Adding some 
 	output for debugging.
 	* gst-libs/gst/play/play.c: (gst_play_state_change): Stop our
