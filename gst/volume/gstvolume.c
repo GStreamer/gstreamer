@@ -308,7 +308,8 @@ volume_chain_int16 (GstPad *pad, GstBuffer *buf)
 
   out_buf = gst_buffer_copy_on_write (buf);
 
-  data = (gint16 *)GST_BUFFER_DATA(out_buf);
+  data = (gint16 *) GST_BUFFER_DATA (out_buf);
+  g_assert (data);
   num_samples = GST_BUFFER_SIZE(out_buf)/sizeof(gint16);
   GST_DPMAN_PREPROCESS(filter->dpman, num_samples, GST_BUFFER_TIMESTAMP(out_buf));
   i = 0;
