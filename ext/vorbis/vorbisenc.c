@@ -58,6 +58,19 @@ enum
   ARG_LAST_MESSAGE,
 };
 
+/* FIXME:
+ * vorbis_granule_time was added between 1.0 and 1.0.1; it's too silly
+ * to require a new version for such a simple function, but once we move
+ * beyond 1.0 for other reasons we can remove this copy */
+
+static double
+vorbis_granule_time_copy (vorbis_dsp_state * v, ogg_int64_t granulepos)
+{
+  if (granulepos >= 0)
+    return ((double) granulepos / v->vi->rate);
+  return (-1);
+}
+
 static const GstFormat *
 gst_vorbisenc_get_formats (GstPad * pad)
 {
@@ -683,7 +696,8 @@ gst_vorbisenc_push_packet (VorbisEnc * vorbisenc, ogg_packet * packet)
   GST_BUFFER_OFFSET (outbuf) = vorbisenc->bytes_out;
   GST_BUFFER_OFFSET_END (outbuf) = packet->granulepos;
   GST_BUFFER_TIMESTAMP (outbuf) =
-      vorbis_granule_time (&vorbisenc->vd, packet->granulepos) * GST_SECOND;
+      vorbis_granule_time_copy (&vorbisenc->vd,
+      packet->granulepos) * GST_SECOND;
 
   GST_DEBUG ("vorbisenc: encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
 
