@@ -1,0 +1,242 @@
+I'll use this doc to describe how I think metadata should work from the
+perspective of the application developer and end user, and from that
+extrapolate what we need to provide that.
+
+RATIONALE
+---------
+One of the strong points of GStreamer is that it abstracts library dependencies
+away.  A user is free to choose whatever plug-ins he has, and a developer
+can code to the general API that GStreamer provides without having to deal
+with the underlying codecs.
+
+It is important that GStreamer also handles metadata well and efficiently,
+since more often than not the same libraries are needed to do this.  So
+to avoid applications depending on these libs just to do the metadata,
+we should make sure GStreamer provides a reasonable and fast abstraction
+for this as well.
+
+GOALS
+-----
+- quickly read and write content metadata
+- quickly read stream metadata
+- cache both kinds of data transparently
+- (possibly) provide bins that do this
+- provide a simple API to do this
+
+DEFINITION OF TERMS
+-------------------
+The user or developer using GStreamer is interested in all information that
+describes the stream.  The library handles these two types differently
+however, so I will use the following terms to describe this :
+
+- content metadata
+  every kind of information that is tied to the "concept" of the stream,
+  and not tied to the actual encoding or representation of the stream.
+  - it can be altered without transcoding the stream
+  - it would stay the same for different encodings of the file
+  - describes properties of the information encoded into the stream
+  - examples:
+    - artist, title, author
+    - year, track order, album
+    - comments
+
+- stream metadata
+  every kind of information that is tied to the "codec" or "representation"
+  used.
+  - cannot be altered without transcoding
+  - is the set of parameters the stream has been encoded with
+  - describes properties of the stream itself
+  - examples:
+    - samplerate, bit depth/width, channels
+    - bitrate, encoding mode (e.g. joint stereo)
+    - video size, frames per second, colorspace used
+    - length in time
+    
+
+EXAMPLE PIPELINES
+-----------------
+reading content metadata : filesrc ! id3v1
+  - would read metadata from file
+  - id3v1 immediately causes filesrc to seek until it has found
+    - the (first) metadata
+    - that there is no metadata present
+
+resetting and writing content metadata :
+	filesrc ! id3v1 reset=true artist="Arid" ! filesink
+
+  - effect: clear the current tag and reset it to only have Arid as artist
+  - id3v1 seeks to the right location, clears the tag, and writes the new one
+  - filesrc might not be necessary here
+  - this probably only works when doing an in-place edit
+
+COST
+----
+Querying metadata can be expensive.
+Any application querying for metadata should take this into account and
+make sure that it doesn't block the app unnecessarily while the querying
+happens.
+
+In most cases, querying content data should be fast since it doesn't involve
+decoding
+
+Technical data could be harder and thus might be better done only when needed.
+
+CACHE
+-----
+Getting metadata can be an expensive operation.  It makes sense to cache
+the metadata queried on-disk to provide rapid access to this data.
+It is important however that this is done transparently - the system should
+be able to keep working without it, or keep working when you delete this cache.
+
+The API would provide a function like 
+	gst_metadata_content_read_cached (location) 
+or even 
+	gst_metadata_read_cached (location, GST_METADATA_CONTENT, GST_METADATA_READ_CACHED)
+to try and get the cached metadata.
+
+- check if the file is cached in the metadata cache
+  - if no, then read the metadata and store it in the cache
+  - if yes, then check the file against it's timestamp (or (part of) md5sum ?)
+    - if it was changed, force a new read and store it in the cache
+    - if it wasn't changed, just return the cached metadata
+
+For optimizations, it might also make sense to do 
+	GList * gst_metadata_read_many (GList *locations, ...)
+which would allow the back-end to implement this more efficiently.
+Suppose an application loads a playlist, for example, then this playlist
+could be handed to this function, and a GList of metadata types could
+be returned.
+
+Possible implementations :
+- one large XML file : would end up being too heavy
+- one XML file per dir on system : good compromise; would still make sense
+  to keep this in memory instead of reading and writing it all the time
+  Also, odds are good that users mostly use files from same dir in one app
+  (but not necessarily)
+
+Possible extra niceties :
+- matching of moved files, and a similar move of metadata (through user-space
+  tool ?)
+
+!!! For speed reasons, it might make sense to somehow keep the cache in memory
+instead of reparsing the same cache file each time.
+
+!!! For disk space reasons, it might make sense to have a system cache.
+Not sure if the complexity added is worth it though.
+
+!!! For disk space reasons, we might want to add an upper limit on the size of
+the cache.  For that we might need a timestamp on last retrieval of metadata,
+so that we can drop the old ones.
+
+The cache should use standard glibc.
+FIXME: is it worth it to use gnome-vfs for this ?
+
+STANDARDIZATION OF METADATA
+---------------------------
+Different file formats have different "tags".  It is not always possible
+to map metadata to tags.  Some level of agreement on metadata names is also
+required.
+
+For technical metadata, the names or properties should be fairly standard.
+We also use the same names as used for properties and capabilities in 
+GStreamer.
+
+This means we use
+  - encoded audio
+    - "bitrate" (which is bits per second - use the most correct one,
+             ie. average bitrate for VBR for example)
+
+  - raw audio
+    - "samplerate" - sampling frequency
+    - "channels"
+    - "bitwidth" - how wide is the audio in bits
+
+  - encoded video
+    - "bitrate"
+
+  - raw video
+    (FIXME: I don't know enough about video, are these correct)
+    - "width"
+    - "height"
+    - "colordepth"
+    - "colorspace"
+    - "fps"
+    - "aspectratio"
+
+We must find a way to avoid collision.  A system stream can contain both
+audio and video (-> bitrate) or multiple audio or video streams.  One way
+to do this might be to make a metadata set for a stream a GList of metadata
+for elementary streams.
+
+For content metadata, the standards are less clear.
+Some nice ones to standardize on might be
+  - artist
+  - title
+  - author
+  - year
+  - genre (touchy though)
+  - RMS, inpoint, outpoint (calculated through some formula, used for mixing)
+
+TESTING
+-------
+It is important to write a decent testsuite for this and do speed comparisons
+between the library used and the GStreamer implementation.
+
+
+API
+---
+struct GstMetadata
+{	
+	gchar *location;
+	GstMetadataType type;
+
+	GList *streams;
+	GHashtable *values;
+};
+
+(streams would be a GList of (again) GstMetadata's.  
+ "location" would then be reused to indicate an identifier in the stream.
+ FIXME: is that evil ?)
+
+GstMetadataType - technical, content
+GstMetadataReadType - cached, raw
+
+GstMetadata *
+gst_metadata_read (const char *location,
+                   GstMetadataType type,
+                   GstMetadataReadType read_type);
+GstMetadata *
+gst_metadata_read_props (const char *location,
+                         GList *names,
+                         GstMetadataType type,
+                         GstMetadataReadType read_type);
+GstMetadata *
+gst_metadata_read_cached (const char *location, 
+                          GstMetadataType type,
+                          GstMetadataReadType read_type);
+
+GstMetadata *
+gst_metadata_read_props_cached (...)
+
+GList *
+gst_metadata_read_cached_many (GList *locations, 
+                          GstMetadataType type,
+                          GstMetadataReadType read_type);
+
+GList *
+gst_metadata_read_props_cached_many (GList *locations,
+				     GList *names,
+                                     GstMetadataType type,
+                                     GstMetadataReadType read_type);
+
+GList *
+gst_metadata_content_write (const char *location,
+                            GstMetadata *metadata);
+
+
+SOME USEFUL RESOURCES
+---------------------
+http://www.chin.gc.ca/English/Standards/metadata_multimedia.html
+- describes multimedia data for images
+  distinction between content (descriptive), technical and 
+  administrative metadata
