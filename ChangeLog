@@ -1,3 +1,12 @@
+2004-12-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	* check/gst-libs/.cvsignore:
+	* check/gst-libs/gdp.c:
+	* libs/gst/dataprotocol/Makefile.am:
+	* libs/gst/dataprotocol/dataprotocol-test.c:
+	  Change dataprotocol test to new check
+
 2004-12-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/elements/gstfakesink.c: (gst_fakesink_event):
