@@ -85,7 +85,7 @@ GST_PADTEMPLATE_FACTORY (osssink_sink_factory,
   GST_CAPS_NEW (
     "osssink_sink",
     "audio/raw",
-      "format",     GST_PROPS_STRING ("int"),   // hack
+      "format",     GST_PROPS_STRING ("int"),   /* hack */
       "law",        GST_PROPS_INT (0),
       "endianness", GST_PROPS_INT (G_BYTE_ORDER),
       "signed",     GST_PROPS_LIST (
@@ -181,12 +181,12 @@ gst_osssink_class_init (GstOssSinkClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE,
     g_param_spec_string("device","device","device",
-                        "/dev/dsp",G_PARAM_READWRITE)); // CHECKME!
+                        "/dev/dsp",G_PARAM_READWRITE)); /* CHECKME! */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MUTE,
     g_param_spec_boolean("mute","mute","mute",
                          TRUE,G_PARAM_READWRITE)); 
 
-  // it would be nice to show format in symbolic form, oh well
+  /* it would be nice to show format in symbolic form, oh well */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FORMAT,
     g_param_spec_int ("format","format","format",
                       0, G_MAXINT, AFMT_S16_LE, G_PARAM_READWRITE)); 
@@ -238,7 +238,7 @@ gst_osssink_init (GstOssSink *osssink)
 #else
   osssink->format = AFMT_S16_LE;
 #endif /* WORDS_BIGENDIAN */  
-  //gst_clock_register (osssink->clock, GST_OBJECT (osssink));
+  /* gst_clock_register (osssink->clock, GST_OBJECT (osssink)); */
   osssink->bufsize = 4096;
   osssink->offset = 0LL;
   /* 6 buffers per chunk by default */
@@ -327,6 +327,7 @@ gst_osssink_sync_parms (GstOssSink *osssink)
   gint target_format;
   gint target_channels;
   gint target_frequency;
+  GObject *object;
 
   g_return_val_if_fail (osssink != NULL, FALSE);
   g_return_val_if_fail (GST_IS_OSSSINK (osssink), FALSE);
@@ -362,12 +363,13 @@ gst_osssink_sync_parms (GstOssSink *osssink)
            osssink->frequency, osssink->format,
            (osssink->channels == 2) ? "stereo" : "mono", ospace.bytes, osssink->fragment);
 
-  gst_element_send_event (GST_ELEMENT (osssink), 
-		  gst_event_new_info ("samplerate", GST_PROPS_INT (osssink->frequency), NULL));
-  gst_element_send_event (GST_ELEMENT (osssink), 
-		  gst_event_new_info ("channels", GST_PROPS_INT (osssink->channels), NULL));
-  gst_element_send_event (GST_ELEMENT (osssink), 
-		  gst_event_new_info ("bits", GST_PROPS_INT (osssink->format), NULL));
+  object = G_OBJECT (osssink);
+  g_object_freeze_notify (object);
+  g_object_notify (object, "channels");
+  g_object_notify (object, "frequency");
+  g_object_notify (object, "fragment");
+  g_object_notify (object, "format");
+  g_object_thaw_notify (object);
 
   osssink->fragment_time = (1000000 * osssink->fragment) / osssink->bps;
   GST_INFO (GST_CAT_PLUGIN_INFO, "fragment time %lu %llu\n", osssink->bps, osssink->fragment_time);
@@ -429,7 +431,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 
           /* FIXME, NEW_MEDIA/DISCONT?. Try to get our start point */
           if (osssink->offset == 0LL && buftime != -1LL) {
-            //gst_oss_clock_set_base (GST_OSS_CLOCK (osssink->clock), buftime);
+            /* gst_oss_clock_set_base (GST_OSS_CLOCK (osssink->clock), buftime); */
 	    osssink->offset = buftime;
           }
 
@@ -442,7 +444,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 	  GST_DEBUG (GST_PLUGIN_INFO, "sync %llu %llu %d\n", buftime, time, queued);
 
           granularity = ospace.fragsize;
-          //granularity = size;
+          /* granularity = size; */
           granularity_time = granularity * osssink->fragment_time / ospace.fragsize;
 
           while (size > 0) {
@@ -485,10 +487,18 @@ gst_osssink_set_property (GObject *object, guint prop_id, const GValue *value, G
 
   switch (prop_id) {
     case ARG_DEVICE:
-      osssink->device = g_strdup (g_value_get_string (value));
+      /* disallow changing the device while it is opened
+         get_property("device") should return the right one */
+      if (!GST_FLAG_IS_SET (osssink, GST_OSSSINK_OPEN))
+      {
+	g_free (osssink->device);
+        osssink->device = g_strdup (g_value_get_string (value));
+	g_object_notify (object, "device");
+      }
       break;
     case ARG_MUTE:
       osssink->mute = g_value_get_boolean (value);
+      g_object_notify (osssink, "mute");
       break;
     case ARG_FORMAT:
       osssink->format = g_value_get_int (value);
@@ -507,8 +517,10 @@ gst_osssink_set_property (GObject *object, guint prop_id, const GValue *value, G
       gst_osssink_sync_parms (osssink);
       break;
     case ARG_BUFFER_SIZE:
+      if (osssink->bufsize == g_value_get_int (value)) break;
       osssink->bufsize = g_value_get_int (value);
       osssink->sinkpool = gst_buffer_pool_get_default (osssink->bufsize, 6);
+      g_object_notify (object, "buffer_size");
       break;
     default:
       break;
