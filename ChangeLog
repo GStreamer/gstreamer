@@ -1,5 +1,10 @@
 2004-04-11  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_data):
+	  Handle JUNK chunks inside data section. Prevents warnings.
+
+2004-04-11  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
 	(gst_riff_create_video_template_caps):
 	  Add MS video v1.
