@@ -633,7 +633,7 @@ gst_osselement_sync_parms (GstOssElement * oss)
       (oss->channels == 2) ? "stereo" : "mono", space.bytes, oss->fragment);
 
   oss->fragment_time = (GST_SECOND * oss->fragment_size) / oss->bps;
-  GST_INFO ("fragment time %u %" G_GUINT64_FORMAT "\n",
+  GST_INFO ("fragment time %u %" G_GUINT64_FORMAT,
       oss->bps, oss->fragment_time);
 
   if (target_format != oss->format ||
@@ -1181,7 +1181,7 @@ gst_osselement_rate_probe_check (GstOssProbe * probe)
     int mid;
     int mid_ret;
 
-    GST_DEBUG ("checking [%d,%d]\n", range->min, range->max);
+    GST_DEBUG ("checking [%d,%d]", range->min, range->max);
 
     mid = (range->min + range->max) / 2;
     mid_ret = gst_osselement_rate_check_rate (probe, mid);
@@ -1196,7 +1196,7 @@ gst_osselement_rate_probe_check (GstOssProbe * probe)
 
       exact_rates++;
       if (exact_rates > max_exact_matches) {
-        GST_DEBUG ("got %d exact rates, assuming all are exact\n",
+        GST_DEBUG ("got %d exact rates, assuming all are exact",
             max_exact_matches);
         result = FALSE;
         g_free (range);
@@ -1274,7 +1274,7 @@ gst_osselement_rate_check_rate (GstOssProbe * probe, int irate)
   if (ret < 0)
     return -1;
 
-  GST_DEBUG ("rate %d -> %d\n", irate, rate);
+  GST_DEBUG ("rate %d -> %d", irate, rate);
 
   if (rate == irate - 1 || rate == irate + 1) {
     rate = irate;
@@ -1295,7 +1295,7 @@ gst_osselement_rate_add_rate (GArray * array, int rate)
     if (val == rate)
       return;
   }
-  GST_DEBUG ("supported rate: %d\n", rate);
+  GST_DEBUG ("supported rate: %d", rate);
   g_array_append_val (array, rate);
 }
 
