@@ -565,6 +565,7 @@ gst_tag_list_to_vorbiscomment_buffer (const GstTagList * list,
     memcpy (data, cur, size);
     data += size;
   }
+  g_list_foreach (my_data.entries, (GFunc) g_free, NULL);
   g_list_free (my_data.entries);
   *data = 1;
 
@@ -580,22 +581,28 @@ gst_vorbis_tag_chain (GstPad * pad, GstData * data)
   tag = GST_VORBIS_TAG (gst_pad_get_parent (pad));
 
   if (tag->output == OUTPUT_UNKNOWN) {
+    GstCaps *vorbis_caps = gst_caps_new_simple ("audio/x-vorbis", NULL);
+    GstCaps *tags_caps = gst_caps_new_simple ("application/x-gst-tags", NULL);
+
     /* caps nego */
     do {
-      if (gst_pad_try_set_caps (tag->srcpad,
-              gst_caps_new_simple ("audio/x-vorbis", NULL)) >= 0) {
+      if (gst_pad_try_set_caps (tag->srcpad, vorbis_caps) >= 0) {
         tag->output = OUTPUT_DATA;
-      } else if (gst_pad_try_set_caps (tag->srcpad,
-              gst_caps_new_simple ("application/x-gst-tags", NULL)) >= 0) {
+      } else if (gst_pad_try_set_caps (tag->srcpad, tags_caps) >= 0) {
         tag->output = OUTPUT_TAGS;
       } else {
         const GstCaps *caps =
             gst_static_caps_get (&gst_vorbis_tag_src_template.static_caps);
         if (gst_pad_recover_caps_error (tag->srcpad, caps))
           continue;
+        gst_caps_free (vorbis_caps);
+        gst_caps_free (tags_caps);
         return;
       }
     } while (FALSE);
+
+    gst_caps_free (vorbis_caps);
+    gst_caps_free (tags_caps);
   }
 
   if (GST_BUFFER_SIZE (buffer) == 0)
@@ -607,6 +614,7 @@ gst_vorbis_tag_chain (GstPad * pad, GstData * data)
     GstTagList *list =
         gst_tag_list_from_vorbiscomment_buffer (buffer, "\003vorbis", 7,
         &vendor);
+    const GstTagList *found_tags;
 
     gst_data_unref (data);
     if (list == NULL) {
@@ -616,8 +624,10 @@ gst_vorbis_tag_chain (GstPad * pad, GstData * data)
     }
     gst_element_found_tags_for_pad (GST_ELEMENT (tag), tag->srcpad, 0,
         gst_tag_list_copy (list));
-    gst_tag_list_insert (list, gst_tag_setter_get_list (GST_TAG_SETTER (tag)),
-        gst_tag_setter_get_merge_mode (GST_TAG_SETTER (tag)));
+    found_tags = gst_tag_setter_get_list (GST_TAG_SETTER (tag));
+    if (found_tags)
+      gst_tag_list_insert (list, found_tags,
+          gst_tag_setter_get_merge_mode (GST_TAG_SETTER (tag)));
     data =
         GST_DATA (gst_tag_list_to_vorbiscomment_buffer (list, "\003vorbis", 7,
             vendor));
