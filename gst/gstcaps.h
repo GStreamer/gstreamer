@@ -120,6 +120,7 @@ factoryname (void)                              \
 void		_gst_caps_initialize			(void);
 
 /* creating new caps */
+GType		gst_caps_get_type			(void);
 GstCaps*	gst_caps_new				(const gchar *name, const gchar *mime, GstProps *props);
 GstCaps*	gst_caps_new_id				(const gchar *name, const guint16 id, GstProps *props);
 /* replace pointer to caps, doing proper refcounting */

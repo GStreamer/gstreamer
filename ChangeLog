@@ -1,3 +1,21 @@
+2003-03-16  Christian Meyer  <chrisime@gnome.org>
+
+	* tools/gst-inspect.c
+	(print_prop): Modified to make compile compile with the new introduced
+	              function.
+	* tools/gst-xmlinspect.c
+	(print_prop): ditto.
+
+2003-03-16  Christian Meyer  <chrisime@gnome.org>
+
+	* gst/gstprops.[ch]: Add function gst_props_get_type().
+	* gst/gstprops.[ch], gst/gstutils.c, gst/registries/gstxmlregistry.c:
+	- Rename gst_props_entry_get_type() -> gst_props_entry_get_props_type().
+	- Add gst_props_entry_get_type() (returning the GType).
+	* gst/gstcaps.[ch]: Add function gst_caps_get_type().
+
+	Applied patches from Martin Schulze.
+
 2003-01-09  Thomas Vander Stichele <thomas at apestaart dot org>
 
         * first pass at changing _connect/_disconnect -> _link/_unlink

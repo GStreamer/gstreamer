@@ -304,7 +304,7 @@ gst_print_props (GString *buf, gint indent, GList *props, gboolean showname)
       string_append_indent (buf, 2 + width - strlen (name));
     }
 
-    type = gst_props_entry_get_type (prop);
+    type = gst_props_entry_get_props_type (prop);
     switch (type) {
       case GST_PROPS_INT_TYPE:
       {

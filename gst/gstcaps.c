@@ -90,6 +90,12 @@ _gst_caps_initialize (void)
 #endif
 }
 
+GType
+gst_caps_get_type (void)
+{
+  return _gst_caps_type;
+}
+
 static guint16
 get_type_for_mime (const gchar *mime)
 {

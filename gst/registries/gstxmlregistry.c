@@ -1286,7 +1286,7 @@ gst_xml_registry_save_props_func (GstPropsEntry *entry,
 
   name = gst_props_entry_get_name (entry);
 
-  switch (gst_props_entry_get_type (entry)) {
+  switch (gst_props_entry_get_props_type (entry)) {
     case GST_PROPS_INT_TYPE:
     {
       gint value;
@@ -1338,7 +1338,7 @@ gst_xml_registry_save_props_func (GstPropsEntry *entry,
       break;
     }
     default:
-      g_warning ("trying to save unknown property type %d", gst_props_entry_get_type (entry));
+      g_warning ("trying to save unknown property type %d", gst_props_entry_get_props_type (entry));
       return FALSE;
   }
   return TRUE;
@@ -1354,7 +1354,7 @@ gst_xml_registry_save_props (GstXMLRegistry *xmlregistry, GstProps *props)
   while (proplist) {
     GstPropsEntry *entry = (GstPropsEntry *) proplist->data;
 
-    switch (gst_props_entry_get_type (entry)) {
+    switch (gst_props_entry_get_props_type (entry)) {
       case GST_PROPS_LIST_TYPE: 
       {
 	const GList *list;

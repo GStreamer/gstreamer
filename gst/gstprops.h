@@ -115,6 +115,7 @@ struct _GstProps {
 void 			_gst_props_initialize		(void);
 
 /* creating new properties */
+GType			gst_props_get_type		(void);
 GstProps*		gst_props_new			(const gchar *firstname, ...);
 GstProps*		gst_props_newv			(const gchar *firstname, va_list var_args);
 GstProps*		gst_props_empty_new		(void);
@@ -161,11 +162,12 @@ void		 	gst_props_remove_entry		(GstProps *props, GstPropsEntry *entry);
 void		 	gst_props_remove_entry_by_name	(GstProps *props, const gchar *name);
 
 /* working with props entries */
+GType			gst_props_entry_get_type	(void);
 GstPropsEntry*		gst_props_entry_new		(const gchar *name, ...);
 
 void            	gst_props_entry_destroy		(GstPropsEntry *entry);
 GstPropsEntry*       	gst_props_entry_copy		(const GstPropsEntry *entry);
-GstPropsType		gst_props_entry_get_type	(const GstPropsEntry *entry);
+GstPropsType		gst_props_entry_get_props_type	(const GstPropsEntry *entry);
 const gchar*		gst_props_entry_get_name	(const GstPropsEntry *entry);
 gboolean		gst_props_entry_is_fixed	(const GstPropsEntry *entry);
 
