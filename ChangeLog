@@ -1,3 +1,9 @@
+2004-01-29  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/mpeg1videoparse/gstmp1videoparse.c:
+	(gst_mp1videoparse_real_chain):
+	  Committed wrong version last week... Grr... Didn't notice until now.
+
 2004-01-29  Julien MOUTTE <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_xwindow_new):
