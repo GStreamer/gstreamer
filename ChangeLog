@@ -1,3 +1,12 @@
+2005-01-17  Francis Labonte  <francis_labonte@hotmail.com>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (crop_buffer),
+	(gst_mpeg2dec_alloc_buffer):
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	  Crop if decoding size is not the actual image size (#163676).
+
 2005-01-17  Steve Baker  <steve@stevebaker.org>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
