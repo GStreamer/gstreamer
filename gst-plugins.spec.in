@@ -551,10 +551,10 @@ GStreamer support libraries header files.
 
 ### OSS ###
 @USE_OSS_TRUE@%package -n gstreamer-oss
-@USE_OSS_TRUE@Summary:  GStreamer plug-ins for input and output using OSS.
-@USE_OSS_TRUE@Group:    Libraries/Multimedia
-@USE_OSS_TRUE@Requires: gstreamer-plugins = %{version}
-@USE_OSS_TRUE@Requires: glibc-devel
+@USE_OSS_TRUE@Summary:       GStreamer plug-ins for input and output using OSS.
+@USE_OSS_TRUE@Group:         Libraries/Multimedia
+@USE_OSS_TRUE@Requires:      gstreamer-plugins = %{version}
+@USE_OSS_TRUE@BuildRequires: glibc-devel
 @USE_OSS_TRUE@
 @USE_OSS_TRUE@%description -n gstreamer-oss 
 @USE_OSS_TRUE@Plug-ins for output and input to the OpenSoundSytem audio
@@ -903,6 +903,9 @@ processed with the lavtools from mjpegtools.
 @USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
 
 %changelog
+* Thu Jul 11 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- fixed oss package to buildrequire instead of require glibc headers
+
 * Mon Jul 08 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - fixed -devel package group
 
