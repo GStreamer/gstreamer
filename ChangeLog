@@ -1,3 +1,17 @@
+2004-10-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/Makefile.am:
+	* gst/tcp/fdsetstress.c: (mess_some_more), (run_test), (main):
+	* gst/tcp/gstfdset.c: (nearest_pow), (resize), (ensure_size),
+	(gst_fdset_new), (gst_fdset_free), (gst_fdset_set_mode),
+	(gst_fdset_fd_ctl_write), (gst_fdset_fd_ctl_read),
+	(gst_fdset_fd_has_closed), (gst_fdset_fd_has_error),
+	(gst_fdset_fd_can_read), (gst_fdset_fd_can_write),
+	(gst_fdset_wait):
+	Added more locks around fdset structures. Fixed/reworked
+	the poll array resizing code.
+	Added stress test for fdset.
+
 2004-10-28  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst-libs/gst/audio/gstaudiofilter.c: (gst_audiofilter_link):
