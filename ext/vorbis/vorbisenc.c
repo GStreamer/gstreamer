@@ -109,17 +109,25 @@ gst_vorbisenc_class_init (VorbisEncClass * klass)
   gobject_class->get_property = gst_vorbisenc_get_property;
 }
 
-static void
-gst_vorbisenc_newcaps (GstPad * pad, GstCaps * caps)
+static GstPadConnectReturn
+gst_vorbisenc_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   VorbisEnc *vorbisenc;
 
   vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
 
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_CONNECT_DELAYED;
+
   vorbisenc->channels = gst_caps_get_int (caps, "channels");
   vorbisenc->frequency = gst_caps_get_int (caps, "rate");
 
   gst_vorbisenc_setup (vorbisenc);
+
+  if (vorbisenc->setup)
+    return GST_PAD_CONNECT_OK;
+
+  return GST_PAD_CONNECT_REFUSED;
 }
 
 static void
@@ -128,10 +136,9 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
   vorbisenc->sinkpad = gst_pad_new_from_template (enc_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (vorbisenc), vorbisenc->sinkpad);
   gst_pad_set_chain_function (vorbisenc->sinkpad, gst_vorbisenc_chain);
-  gst_pad_set_newcaps_function (vorbisenc->sinkpad, gst_vorbisenc_newcaps);
+  gst_pad_set_connect_function (vorbisenc->sinkpad, gst_vorbisenc_sinkconnect);
 
   vorbisenc->srcpad = gst_pad_new_from_template (enc_src_template, "src");
-  gst_pad_set_caps (vorbisenc->srcpad, gst_pad_get_padtemplate_caps (vorbisenc->srcpad));
   gst_element_add_pad (GST_ELEMENT (vorbisenc), vorbisenc->srcpad);
 
   vorbisenc->channels = 2;

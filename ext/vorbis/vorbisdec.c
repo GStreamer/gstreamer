@@ -300,18 +300,18 @@ gst_vorbisdec_loop (GstElement * element)
 		gst_event_new_info ("bitrate_window", GST_PROPS_INT (vi.bitrate_window), NULL));
     }
 
-    gst_pad_set_caps (vorbisdec->srcpad,
-		      gst_caps_new ("vorbisdec_src",
+    gst_pad_try_set_caps (vorbisdec->srcpad,
+		      GST_CAPS_NEW ("vorbisdec_src",
 				    "audio/raw",
-				    gst_props_new ("format",     GST_PROPS_STRING ("int"),
-						   "law",        GST_PROPS_INT (0),
-						   "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-						   "signed",     GST_PROPS_BOOLEAN (TRUE),
-						   "width",      GST_PROPS_INT (16),
-						   "depth",      GST_PROPS_INT (16),
-						   "rate",       GST_PROPS_INT (vi.rate),
-						   "channels",   GST_PROPS_INT (vi.channels), 
-						   NULL)));
+				      "format",     GST_PROPS_STRING ("int"),
+				      "law",        GST_PROPS_INT (0),
+				      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+				      "signed",     GST_PROPS_BOOLEAN (TRUE),
+				      "width",      GST_PROPS_INT (16),
+				      "depth",      GST_PROPS_INT (16),
+				      "rate",       GST_PROPS_INT (vi.rate),
+				      "channels",   GST_PROPS_INT (vi.channels)
+				   ));
 
     vorbisdec->convsize = 4096 / vi.channels;
 

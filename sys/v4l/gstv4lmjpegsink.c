@@ -155,13 +155,16 @@ gst_v4lmjpegsink_class_init (GstV4lMjpegSinkClass *klass)
   gstelement_class->change_state = gst_v4lmjpegsink_change_state;
 }
 
-static void
-gst_v4lmjpegsink_newcaps (GstPad  *pad,
+static GstPadConnectReturn
+gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
                           GstCaps *caps)
 {
   GstV4lMjpegSink *v4lmjpegsink;
 
   v4lmjpegsink = GST_V4LMJPEGSINK (gst_pad_get_parent (pad));
+
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_CONNECT_DELAYED;
 
   v4lmjpegsink->width =  gst_caps_get_int (caps, "width");
   v4lmjpegsink->height =  gst_caps_get_int (caps, "height");
@@ -173,6 +176,8 @@ gst_v4lmjpegsink_newcaps (GstPad  *pad,
 
   g_signal_emit (G_OBJECT (v4lmjpegsink), gst_v4lmjpegsink_signals[SIGNAL_HAVE_SIZE], 0,
     v4lmjpegsink->width, v4lmjpegsink->height);
+
+  return GST_PAD_CONNECT_OK;
 }
 
 
@@ -182,7 +187,7 @@ gst_v4lmjpegsink_init (GstV4lMjpegSink *v4lmjpegsink)
   v4lmjpegsink->sinkpad = gst_pad_new_from_template(GST_PADTEMPLATE_GET (sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (v4lmjpegsink), v4lmjpegsink->sinkpad);
   gst_pad_set_chain_function (v4lmjpegsink->sinkpad, gst_v4lmjpegsink_chain);
-  gst_pad_set_newcaps_function (v4lmjpegsink->sinkpad, gst_v4lmjpegsink_newcaps);
+  gst_pad_set_connect_function (v4lmjpegsink->sinkpad, gst_v4lmjpegsink_sinkconnect);
 
   v4lmjpegsink->clock = gst_clock_get_system();
   gst_clock_register(v4lmjpegsink->clock, GST_OBJECT(v4lmjpegsink));

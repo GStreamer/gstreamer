@@ -242,7 +242,6 @@ cdparanoia_init (CDParanoia *cdparanoia)
   cdparanoia->srcpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (cdparanoia_src_factory), "src");
   gst_pad_set_get_function (cdparanoia->srcpad, cdparanoia_get);
-  gst_pad_set_caps (cdparanoia->srcpad, gst_pad_get_padtemplate_caps (cdparanoia->srcpad));
   gst_element_add_pad (GST_ELEMENT (cdparanoia), cdparanoia->srcpad);
 
   cdparanoia->device = "/dev/cdrom";

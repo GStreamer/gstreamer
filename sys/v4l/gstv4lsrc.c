@@ -54,9 +54,10 @@ static void                  gst_v4lsrc_class_init   (GstV4lSrcClass *klass);
 static void                  gst_v4lsrc_init         (GstV4lSrc      *v4lsrc);
 
 /* pad/buffer functions */
-static GstPadNegotiateReturn gst_v4lsrc_negotiate    (GstPad         *pad,
+/*static GstPadNegotiateReturn gst_v4lsrc_negotiate    (GstPad         *pad,
                                                       GstCaps        **caps,
                                                       gpointer       *user_data);
+						      */
 static GstCaps*              gst_v4lsrc_create_caps  (GstV4lSrc      *v4lsrc);
 static GstBuffer*            gst_v4lsrc_get          (GstPad         *pad);
 
@@ -154,7 +155,7 @@ gst_v4lsrc_init (GstV4lSrc *v4lsrc)
   gst_element_add_pad(GST_ELEMENT(v4lsrc), v4lsrc->srcpad);
 
   gst_pad_set_get_function (v4lsrc->srcpad, gst_v4lsrc_get);
-  gst_pad_set_negotiate_function (v4lsrc->srcpad, gst_v4lsrc_negotiate);
+  //gst_pad_set_negotiate_function (v4lsrc->srcpad, gst_v4lsrc_negotiate);
 
   v4lsrc->bufferpool = gst_buffer_pool_new();
   gst_buffer_pool_set_buffer_new_function(v4lsrc->bufferpool, gst_v4lsrc_buffer_new);
@@ -171,6 +172,7 @@ gst_v4lsrc_init (GstV4lSrc *v4lsrc)
 }
 
 
+#if 0
 static GstPadNegotiateReturn
 gst_v4lsrc_negotiate (GstPad   *pad,
                       GstCaps  **caps,
@@ -255,6 +257,7 @@ gst_v4lsrc_negotiate (GstPad   *pad,
 
   return GST_PAD_NEGOTIATE_FAIL;
 }
+#endif
 
 
 static GstCaps*
@@ -361,7 +364,7 @@ gst_v4lsrc_get (GstPad *pad)
   v4lsrc = GST_V4LSRC (gst_pad_get_parent (pad));
 
   if (v4lsrc->init) {
-    gst_pad_set_caps (v4lsrc->srcpad, gst_v4lsrc_create_caps (v4lsrc));
+    gst_pad_try_set_caps (v4lsrc->srcpad, gst_v4lsrc_create_caps (v4lsrc));
     v4lsrc->init = FALSE;
   }
   else {

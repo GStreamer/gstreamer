@@ -76,7 +76,7 @@ GST_PADTEMPLATE_FACTORY (sinesrc_src_factory,
 
 static void 			gst_sinesrc_class_init		(GstSineSrcClass *klass);
 static void 			gst_sinesrc_init		(GstSineSrc *src);
-static void 	gst_sinesrc_newcaps 		(GstPad *pad, GstCaps *caps); 
+static void 			gst_sinesrc_sinkconnect		(GstPad *pad, GstCaps *caps); 
 static void 			gst_sinesrc_set_property	(GObject *object, guint prop_id, 
 								 const GValue *value, GParamSpec *pspec);
 static void 			gst_sinesrc_get_property	(GObject *object, guint prop_id, 
@@ -162,7 +162,6 @@ gst_sinesrc_init (GstSineSrc *src)
   src->srcpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (sinesrc_src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(src), src->srcpad);
-  gst_pad_set_newcaps_function (src->srcpad, gst_sinesrc_newcaps);
   
   gst_pad_set_get_function(src->srcpad, gst_sinesrc_get);
 
@@ -202,17 +201,6 @@ gst_sinesrc_init (GstSineSrc *src)
   gst_sinesrc_populate_sinetable(src);
   gst_sinesrc_update_table_inc(src);
 
-}
-
-static void 
-gst_sinesrc_newcaps (GstPad *pad, GstCaps *caps) 
-{
-  GstSineSrc *src;
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (caps != NULL);
-  src = GST_SINESRC(gst_pad_get_parent (pad));
-  src->samplerate = gst_caps_get_int (caps, "rate");
-  gst_sinesrc_update_table_inc(src);
 }
 
 static GstBuffer *
@@ -410,23 +398,20 @@ gst_sinesrc_force_caps(GstSineSrc *src) {
   
   src->newcaps=FALSE;
 
-  caps = gst_caps_new (
-		    "sinesrc_src_caps",
-		    "audio/raw",
-		     gst_props_new (
-		           "format", 		GST_PROPS_STRING ("int"),
-    			     "law",     	GST_PROPS_INT (0),
-    			     "endianness",     	GST_PROPS_INT (G_BYTE_ORDER),
-    			     "signed",   	GST_PROPS_BOOLEAN (TRUE),
-    			     "width",   	GST_PROPS_INT (16),
-			     "depth", 		GST_PROPS_INT (16),
-			     "rate", 		GST_PROPS_INT (src->samplerate),
-			     "channels", 	GST_PROPS_INT (1),
-			     NULL
-			     )
-		    );
+  caps = GST_CAPS_NEW (
+	   "sinesrc_src_caps",
+	   "audio/raw",
+	    "format", 		GST_PROPS_STRING ("int"),
+    	     "law",     	GST_PROPS_INT (0),
+    	     "endianness",     	GST_PROPS_INT (G_BYTE_ORDER),
+    	     "signed",   	GST_PROPS_BOOLEAN (TRUE),
+    	     "width",   	GST_PROPS_INT (16),
+	     "depth", 		GST_PROPS_INT (16),
+	     "rate", 		GST_PROPS_INT (src->samplerate),
+	     "channels", 	GST_PROPS_INT (1)
+	  );
   
-  gst_pad_set_caps (src->srcpad, caps);
+  gst_pad_try_set_caps (src->srcpad, caps);
 }
 
 static gboolean

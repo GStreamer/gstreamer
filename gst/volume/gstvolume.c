@@ -108,6 +108,7 @@ volume_get_bufferpool (GstPad *pad)
   return gst_pad_get_bufferpool (filter->srcpad);
 }
 
+/*
 static GstPadNegotiateReturn
 volume_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
 {
@@ -135,6 +136,7 @@ volume_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
   
   return gst_pad_negotiate_proxy(pad,filter->srcpad,caps);
 }	
+*/
 
 static gint
 volume_parse_caps (GstVolume *filter, GstCaps *caps)
@@ -231,10 +233,10 @@ static void
 volume_init (GstVolume *filter)
 {
   filter->sinkpad = gst_pad_new_from_template(volume_sink_factory (),"sink");
-  gst_pad_set_negotiate_function(filter->sinkpad,volume_negotiate_sink);
+  //gst_pad_set_negotiate_function(filter->sinkpad,volume_negotiate_sink);
   gst_pad_set_bufferpool_function(filter->sinkpad,volume_get_bufferpool);
   filter->srcpad = gst_pad_new_from_template(volume_src_factory (),"src");
-  gst_pad_set_negotiate_function(filter->srcpad,volume_negotiate_src);
+  //gst_pad_set_negotiate_function(filter->srcpad,volume_negotiate_src);
   
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
   gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);

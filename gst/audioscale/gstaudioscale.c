@@ -161,40 +161,8 @@ gst_audioscale_class_init (AudioscaleClass *klass)
 
 }
 
-static GstPadNegotiateReturn
-audioscale_negotiate_src (GstPad * pad, GstCaps ** caps, gpointer * data)
-{
-  Audioscale *audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
-
-  g_print ("audioscale_negotiate_src\n");
-
-  if (*caps == NULL)
-    return GST_PAD_NEGOTIATE_FAIL;
-
-  *caps = gst_caps_copy_on_write (*caps);
-  gst_caps_set (*caps, "rate", GST_PROPS_INT_RANGE (8000, 48000));
-
-  return gst_pad_negotiate_proxy (pad, audioscale->sinkpad, caps);
-}
-
-static GstPadNegotiateReturn
-audioscale_negotiate_sink (GstPad * pad, GstCaps ** caps, gpointer * data)
-{
-  Audioscale *audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
-
-  g_print ("audioscale_negotiate_sink\n");
-
-  if (*caps == NULL)
-    return GST_PAD_NEGOTIATE_FAIL;
-
-  *caps = gst_caps_copy_on_write (*caps);
-  gst_caps_set (*caps, "rate", GST_PROPS_INT (audioscale->targetfrequency));
-
-  return gst_pad_negotiate_proxy (pad, audioscale->srcpad, caps);
-}
-
-static void
-gst_audioscale_newcaps (GstPad * pad, GstCaps * caps)
+static GstPadConnectReturn
+gst_audioscale_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   Audioscale *audioscale;
   resample_t *r;
@@ -208,6 +176,7 @@ gst_audioscale_newcaps (GstPad * pad, GstCaps * caps)
   resample_reinit(r);
   //g_print("audioscale: unsupported scaling method %d\n", audioscale->method);
   
+  return GST_PAD_CONNECT_OK;
 }
 
 static void *
@@ -228,13 +197,11 @@ gst_audioscale_init (Audioscale *audioscale)
   resample_t *r;
 
   audioscale->sinkpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (sink_template), "sink");
-  gst_pad_set_negotiate_function (audioscale->sinkpad, audioscale_negotiate_sink);
   gst_element_add_pad(GST_ELEMENT(audioscale),audioscale->sinkpad);
   gst_pad_set_chain_function(audioscale->sinkpad,gst_audioscale_chain);
-  gst_pad_set_newcaps_function (audioscale->sinkpad, gst_audioscale_newcaps);
+  gst_pad_set_connect_function (audioscale->sinkpad, gst_audioscale_sinkconnect);
 
   audioscale->srcpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (src_template), "src");
-  gst_pad_set_negotiate_function (audioscale->srcpad, audioscale_negotiate_src);
 
   gst_element_add_pad(GST_ELEMENT(audioscale),audioscale->srcpad);
 

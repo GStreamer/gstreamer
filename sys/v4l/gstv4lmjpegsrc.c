@@ -57,9 +57,11 @@ static void                  gst_v4lmjpegsrc_class_init   (GstV4lMjpegSrcClass *
 static void                  gst_v4lmjpegsrc_init         (GstV4lMjpegSrc *v4lmjpegsrc);
 
 /* pad/buffer functions */
+/*
 static GstPadNegotiateReturn gst_v4lmjpegsrc_negotiate    (GstPad         *pad,
                                                            GstCaps        **caps,
                                                            gpointer       *user_data);
+							   */
 static GstCaps*              gst_v4lmjpegsrc_create_caps  (GstV4lMjpegSrc *v4lmjpegsrc);
 static GstBuffer*            gst_v4lmjpegsrc_get          (GstPad         *pad);
 
@@ -176,7 +178,7 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
   gst_element_add_pad(GST_ELEMENT(v4lmjpegsrc), v4lmjpegsrc->srcpad);
 
   gst_pad_set_get_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_get);
-  gst_pad_set_negotiate_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_negotiate);
+  //gst_pad_set_negotiate_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_negotiate);
 
   v4lmjpegsrc->bufferpool = gst_buffer_pool_new();
   gst_buffer_pool_set_buffer_new_function(v4lmjpegsrc->bufferpool, gst_v4lmjpegsrc_buffer_new);
@@ -205,6 +207,7 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
 
 
 
+/*
 static GstPadNegotiateReturn
 gst_v4lmjpegsrc_negotiate (GstPad   *pad,
                            GstCaps  **caps,
@@ -223,6 +226,7 @@ gst_v4lmjpegsrc_negotiate (GstPad   *pad,
 
   return GST_PAD_NEGOTIATE_FAIL;
 }
+*/
 
 
 static GstCaps*
@@ -253,7 +257,7 @@ gst_v4lmjpegsrc_get (GstPad *pad)
   v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));
 
   if (v4lmjpegsrc->init) {
-    gst_pad_set_caps (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_create_caps (v4lmjpegsrc));
+    gst_pad_try_set_caps (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_create_caps (v4lmjpegsrc));
     v4lmjpegsrc->init = FALSE;
   }
   else {

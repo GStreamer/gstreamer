@@ -151,7 +151,8 @@ RTP_DIR=
 endif
 
 if USE_SDL
-SDL_DIR=sdl
+#SDL_DIR=sdl
+SDL_DIR=
 else
 SDL_DIR=
 endif

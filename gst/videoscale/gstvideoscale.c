@@ -145,6 +145,7 @@ gst_videoscale_class_init (GstVideoscaleClass *klass)
 
 }
 
+/*
 static GstPadNegotiateReturn
 videoscale_negotiate_src (GstPad *pad, GstCaps **caps, gpointer *data)
 {
@@ -176,14 +177,19 @@ videoscale_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer *data)
   
   return GST_PAD_NEGOTIATE_AGREE;
 }
+*/
 
-static void
-gst_videoscale_newcaps (GstPad *pad, GstCaps *caps)
+static GstPadConnectReturn
+gst_videoscale_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstVideoscale *videoscale;
 
-  GST_DEBUG(0,"gst_videoscale_newcaps\n");
+  GST_DEBUG(0,"gst_videoscale_sinkconnect\n");
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
+
+  if (!GST_CAPS_IS_FIXED (caps)) {
+    return GST_PAD_CONNECT_DELAYED;
+  }
 
   videoscale->width = gst_caps_get_int (caps, "width");
   videoscale->height = gst_caps_get_int (caps, "height");
@@ -195,7 +201,7 @@ gst_videoscale_newcaps (GstPad *pad, GstCaps *caps)
 		videoscale->targetheight);
 
   GST_DEBUG(0,"width %d\n",videoscale->targetwidth);
-  gst_pad_set_caps (videoscale->srcpad, 
+  gst_pad_try_set_caps (videoscale->srcpad, 
 		    GST_CAPS_NEW (
 		      "videoscale_src",
 		      "video/raw",
@@ -203,6 +209,8 @@ gst_videoscale_newcaps (GstPad *pad, GstCaps *caps)
 			"width",	GST_PROPS_INT (videoscale->targetwidth),
 			"height",	GST_PROPS_INT (videoscale->targetheight)
 		    ));
+
+  return GST_PAD_CONNECT_OK;
 }
 
 static void
@@ -211,14 +219,14 @@ gst_videoscale_init (GstVideoscale *videoscale)
   GST_DEBUG(0,"gst_videoscale_init\n");
   videoscale->sinkpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (sink_templ), "sink");
-  gst_pad_set_negotiate_function(videoscale->sinkpad,videoscale_negotiate_sink);
+  //gst_pad_set_negotiate_function(videoscale->sinkpad,videoscale_negotiate_sink);
   gst_element_add_pad(GST_ELEMENT(videoscale),videoscale->sinkpad);
   gst_pad_set_chain_function(videoscale->sinkpad,gst_videoscale_chain);
-  gst_pad_set_newcaps_function(videoscale->sinkpad,gst_videoscale_newcaps);
+  gst_pad_set_connect_function(videoscale->sinkpad,gst_videoscale_sinkconnect);
 
   videoscale->srcpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (src_templ), "src");
-  gst_pad_set_negotiate_function(videoscale->srcpad,videoscale_negotiate_src);
+  //gst_pad_set_negotiate_function(videoscale->srcpad,videoscale_negotiate_src);
   gst_element_add_pad(GST_ELEMENT(videoscale),videoscale->srcpad);
 
   videoscale->targetwidth = -1;

@@ -57,7 +57,7 @@ static GstPad* gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *te
 static void gst_alsa_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_alsa_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static GstElementStateReturn gst_alsa_change_state(GstElement *element);
-static GstPadNegotiateReturn gst_alsa_negotiate(GstPad *pad, GstCaps **caps, gpointer *user_data);
+//static GstPadNegotiateReturn gst_alsa_negotiate(GstPad *pad, GstCaps **caps, gpointer *user_data);
 
 static GstCaps* gst_alsa_caps (GstAlsa *this);
 
@@ -305,7 +305,7 @@ gst_alsa_init(GstAlsa *this)
     
     gst_element_add_pad(GST_ELEMENT(this), GST_ALSA_PAD(this->pads)->pad);
     
-    gst_pad_set_negotiate_function(GST_ALSA_PAD(this->pads)->pad, gst_alsa_negotiate);
+    //gst_pad_set_negotiate_function(GST_ALSA_PAD(this->pads)->pad, gst_alsa_negotiate);
     gst_element_set_loop_function(GST_ELEMENT(this), gst_alsa_loop);
 }
 
@@ -358,7 +358,7 @@ gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
     pad->channel = channel;
     pad->pad = gst_pad_new_from_template (templ, newname);
     gst_element_add_pad (GST_ELEMENT (this), pad->pad);
-    gst_pad_set_negotiate_function(pad->pad, gst_alsa_negotiate);
+    //gst_pad_set_negotiate_function(pad->pad, gst_alsa_negotiate);
     
     if (this->data_interleaved && this->pads) {
         gst_element_remove_pad (GST_ELEMENT (this), GST_ALSA_PAD(this->pads)->pad);
@@ -715,6 +715,7 @@ gst_alsa_caps (GstAlsa *this)
 /*
  * Negotiates the caps, "borrowed" from gstosssink.c
  */
+#if 0
 GstPadNegotiateReturn
 gst_alsa_negotiate(GstPad *pad, GstCaps **caps, gpointer *user_data)
 {
@@ -766,6 +767,7 @@ gst_alsa_negotiate(GstPad *pad, GstCaps **caps, gpointer *user_data)
     
     return GST_PAD_NEGOTIATE_FAIL;
 }
+#endif
 
 /* shamelessly stolen from pbd's audioengine. thanks, paul! */
 static void
@@ -878,7 +880,7 @@ gst_alsa_src_process (GstAlsa *this, snd_pcm_uframes_t frames)
         caps = gst_alsa_caps(this);
         l = this->pads;
         while (l) {
-            if (!gst_pad_set_caps (GST_ALSA_PAD(l)->pad, caps)) {
+            if (!gst_pad_try_set_caps (GST_ALSA_PAD(l)->pad, caps)) {
                 g_print ("DANGER WILL ROBINSON!\n");
                 sleep(1);
                 return FALSE;
