@@ -151,20 +151,35 @@ _gst_tag_initialize (void)
 		    _("codec"),
 		    _("codec the data is stored in"),
 		    gst_tag_merge_strings_with_comma);
-  gst_tag_register (GST_TAG_MINIMUM_BITRATE,
-		    G_TYPE_UINT,
-		    _("minimum bitrate"),
-		    _("minimum bitrate in bits/s"),
-		    NULL);
   gst_tag_register (GST_TAG_BITRATE,
 		    G_TYPE_UINT,
 		    _("bitrate"),
 		    _("exact or average bitrate in bits/s"),
 		    NULL);
+  gst_tag_register (GST_TAG_NOMINAL_BITRATE,
+		    G_TYPE_UINT,
+		    _("nominal bitrate"),
+		    _("nominal bitrate in bits/s"),
+		    NULL);
+  gst_tag_register (GST_TAG_MINIMUM_BITRATE,
+		    G_TYPE_UINT,
+		    _("minimum bitrate"),
+		    _("minimum bitrate in bits/s"),
+		    NULL);
   gst_tag_register (GST_TAG_MAXIMUM_BITRATE,
 		    G_TYPE_UINT,
 		    _("maximum bitrate"),
 		    _("maximum bitrate in bits/s"),
+		    NULL);
+  gst_tag_register (GST_TAG_ENCODER_VERSION,
+		    G_TYPE_UINT,
+		    _("encoder version"),
+		    _("version of the encoder used to encode this stream"),
+		    NULL);
+  gst_tag_register (GST_TAG_SERIAL,
+		    G_TYPE_UINT,
+		    _("serial"),
+		    _("serial number of track"),
 		    NULL);
   gst_tag_register (GST_TAG_TRACK_GAIN,
                     G_TYPE_DOUBLE,
@@ -643,6 +658,8 @@ gst_tag_list_add_valist (GstTagList *list, GstTagMergeMode mode, const gchar *ta
     GValue value = { 0, };
     quark = g_quark_from_string (tag);
     info = gst_tag_lookup (quark);
+    if (info == NULL)
+      g_warning ("no GstTag for %s", tag);
     g_return_if_fail (info != NULL);
     g_value_init (&value, info->type);
     G_VALUE_COLLECT (&value, var_args, 0, &error);

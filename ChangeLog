@@ -1,5 +1,12 @@
 2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gsttag.c: (_gst_tag_initialize), (gst_tag_list_add_valist):
+	* gst/gsttag.h:
+          add some tags used in ogg as well
+          fix _ in replaygain tags
+
+2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gsterror.h:
           fix wrong GST_LIBRARY_ERROR_ENCODE addition
 
