@@ -1,3 +1,13 @@
+2004-04-03  Tim-Phillip Müller <t.i.m@zen.co.uk>
+
+	reviewed by Benjamin Otte  <otte@gnome.org>
+
+	* ext/mad/gstid3tag.c: (gst_id3_tag_handle_event):
+	  add missing 'new_media' argument (fixes #138168)
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_handle_seek_event):
+	  add vararg terminator (fixes #138169)
+
 2004-04-02  David Schleef  <ds@schleef.org>
 
 	* ext/gdk_pixbuf/Makefile.am:  Make sure gstgdkanimation.h is

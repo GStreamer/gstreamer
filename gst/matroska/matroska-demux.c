@@ -1099,7 +1099,9 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux)
   if (!(event = gst_ebml_read_seek (ebml, entry->pos + demux->segment_start)))
     return FALSE;
   gst_event_unref (event);      /* byte - we want time */
-  event = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, entry->time);
+  event =
+      gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, entry->time,
+      GST_FORMAT_UNDEFINED);
 
   /* forward to all src pads */
   for (i = 0; i < demux->num_streams; i++) {
