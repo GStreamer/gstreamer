@@ -1064,6 +1064,13 @@ dnl *** FLAC ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_FLAC, true)
 GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flacenc flacdec, [
   GST_CHECK_LIBHEADER(FLAC, FLAC, FLAC__seekable_stream_encoder_new, -lm, FLAC/all.h, FLAC_LIBS="-lFLAC")
+  dnl API change in FLAC 1.1.1, so require that...
+  if test x$HAVE_FLAC = xyes; then
+    AC_CHECK_DECL(FLAC__SEEKABLE_STREAM_ENCODER_TELL_ERROR,
+                  HAVE_FLAC="yes", HAVE_FLAC="no", [
+#include <FLAC/seekable_stream_encoder.h>
+                  ])
+  fi
   AC_SUBST(FLAC_LIBS)
 ])
 
