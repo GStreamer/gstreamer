@@ -406,7 +406,7 @@ gst_xml_make_element (xmlNodePtr cur, GstObject *parent)
   g_return_val_if_fail (element != NULL, NULL);
 
   /* ne need to set the parent on this object bacause the pads */
-  /* will go through the hierarchy to connect to thier peers */
+  /* will go through the hierarchy to link to their peers */
   if (parent)
     gst_object_set_parent (GST_OBJECT (element), parent);
   
