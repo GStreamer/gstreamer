@@ -417,7 +417,9 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
   GstCaps *caps;
 
   /* this should possibly be a property */
-  guint bufsizelimit = 8192;
+  /* this is so big because typefinding is bad.
+   * this is a cruel hack. We need another typefind system */
+  guint bufsizelimit = 150 * 1024;
   
   /* checks - disable for speed */
   g_return_if_fail (ident != NULL);
