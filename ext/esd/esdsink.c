@@ -183,6 +183,7 @@ gst_esdsink_init (GTypeInstance * instance, gpointer g_class)
       GST_OBJECT (esdsink));
   esdsink->sync = TRUE;
   esdsink->fallback = FALSE;
+  esdsink->link_open = FALSE;
 }
 
 #ifdef unused
@@ -201,10 +202,13 @@ gst_esdsink_link (GstPad * pad, const GstCaps * caps)
 
   esdsink->bytes_per_sample = esdsink->channels * (esdsink->depth / 8);
 
-  gst_esdsink_close_audio (esdsink);
-  if (gst_esdsink_open_audio (esdsink)) {
-    esdsink->negotiated = TRUE;
-    return GST_PAD_LINK_OK;
+  if (esdsink->link_open) {
+    gst_esdsink_close_audio (esdsink);
+    if (gst_esdsink_open_audio (esdsink)) {
+      esdsink->negotiated = TRUE;
+      esdsink->link_open = TRUE;
+      return GST_PAD_LINK_OK;
+    }
   }
   /* FIXME: is it supposed to be correct to have closed audio when caps nego 
      failed? */
@@ -457,25 +461,45 @@ gst_esdsink_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
-      if (!gst_esdsink_open_audio (GST_ESDSINK (element))) {
-        return GST_STATE_FAILURE;
-      }
       break;
     case GST_STATE_READY_TO_PAUSED:
+      /* Open and close the link to test it's available */
+      if (!esdsink->link_open) {
+        if (!gst_esdsink_open_audio (GST_ESDSINK (element))) {
+          return GST_STATE_FAILURE;
+        }
+        gst_esdsink_close_audio (GST_ESDSINK (element));
+      }
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
+      if (!esdsink->link_open) {
+        if (!gst_esdsink_open_audio (GST_ESDSINK (element))) {
+          return GST_STATE_FAILURE;
+        }
+        esdsink->link_open = TRUE;
+      }
       gst_audio_clock_set_active (GST_AUDIO_CLOCK (esdsink->provided_clock),
           TRUE);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       gst_audio_clock_set_active (GST_AUDIO_CLOCK (esdsink->provided_clock),
           FALSE);
+      if (esdsink->link_open) {
+        gst_esdsink_close_audio (GST_ESDSINK (element));
+        esdsink->link_open = FALSE;
+      }
       esdsink->resync = TRUE;
       break;
     case GST_STATE_PAUSED_TO_READY:
+      /* Make doubly sure we don't leave our esd connection open
+       * or we'll block the other users
+       */
+      if (esdsink->link_open) {
+        gst_esdsink_close_audio (GST_ESDSINK (element));
+        esdsink->link_open = FALSE;
+      }
       break;
     case GST_STATE_READY_TO_NULL:
-      gst_esdsink_close_audio (GST_ESDSINK (element));
       break;
     default:
       break;

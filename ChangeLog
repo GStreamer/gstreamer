@@ -1,3 +1,9 @@
+2004-06-13  Jan Schmidt  <thaytan@mad.scientist.com>
+	* ext/esd/esdsink.c: (gst_esdsink_change_state):
+	* ext/esd/esdsink.h:
+	Close the esd connection on pause, because esd will just wait -  
+	blocking all other esd clients indefinitely.
+
 2004-06-12  Christophe Fergeau  <teuf@gnome.org>
 
 	* gst/tags/gstvorbistag.c: replaced a g_warning which I added in my

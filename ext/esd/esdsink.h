@@ -58,6 +58,7 @@ struct _GstEsdsink {
   gchar		*host;
   int		 handled;
   int		 bytes_per_sample;
+  gboolean       link_open;
   gboolean	 sync;
   gboolean	 resync;
   gboolean	 fallback;
