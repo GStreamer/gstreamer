@@ -248,7 +248,6 @@ libavcodec_la_SOURCES = \
 	ffmpeg/libavcodec/mem.c \
 	ffmpeg/libavcodec/mjpeg.c \
 	ffmpeg/libavcodec/motion_est.c \
-	ffmpeg/libavcodec/mp3lameaudio.c \
 	ffmpeg/libavcodec/mpeg12.c \
 	ffmpeg/libavcodec/mpegaudio.c \
 	ffmpeg/libavcodec/mpegaudiodec.c \
