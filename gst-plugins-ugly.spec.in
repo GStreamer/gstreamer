@@ -24,8 +24,8 @@ Requires: 	gstreamer >= 0.6.1
 BuildRequires: 	gstreamer-devel >= 0.6.1
 BuildRequires:	gstreamer-tools >= 0.6.1
 
-@USE_ARTS_TRUE@Requires:      kdelibs-sound >= 2
-@USE_ARTS_TRUE@BuildRequires: kdelibs-sound-devel >= 2
+@USE_ARTS_TRUE@Requires:      arts >= 2
+@USE_ARTS_TRUE@BuildRequires: arts-devel >= 2
 @USE_ARTS_TRUE@BuildRequires: gcc-c++
 @USE_AUDIOFILE_TRUE@Requires:      audiofile >= 0.2.1
 @USE_AUDIOFILE_TRUE@BuildRequires: audiofile-devel >= 0.2.1
