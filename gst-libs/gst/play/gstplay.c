@@ -928,7 +928,7 @@ gst_play_get_sink_element (GstPlay *play,
           gboolean has_video_cap = FALSE;
           gboolean has_audio_cap = FALSE;
 
-          caps = gst_pad_get_caps (GST_PAD (pads->data));
+          caps = gst_pad_get_negotiated_caps (GST_PAD (pads->data));
           structure = gst_caps_get_structure (caps, 0);
 
           if (strcmp (gst_structure_get_name (structure),

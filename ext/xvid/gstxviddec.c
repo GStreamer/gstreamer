@@ -364,7 +364,7 @@ g_print ("in: %dx%d\n", xviddec->width, xviddec->height);
   /* re-nego? or just await src nego? */
   if (GST_PAD_CAPS(xviddec->srcpad)) {
     GstPadLinkReturn ret;
-    GstCaps *vscaps = gst_pad_get_caps (GST_PAD_PEER (xviddec->srcpad)), *new;
+    GstCaps *vscaps = gst_pad_get_allowed_caps (xviddec->srcpad), *new;
     gint i, csp;
 
     for (i = 0; i < gst_caps_get_size (vscaps); i++) {

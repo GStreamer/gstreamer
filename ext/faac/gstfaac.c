@@ -315,7 +315,7 @@ gst_faac_sinkconnect (GstPad        *pad,
   /* if the other side was already set-up, redo that */
   if (GST_PAD_CAPS (faac->srcpad))
     return gst_faac_srcconnect (faac->srcpad,
-				gst_pad_get_caps (GST_PAD_PEER (faac->srcpad)));
+        gst_pad_get_allowed_caps (faac->srcpad));
 
   /* else, that'll be done later */
   return GST_PAD_LINK_OK;
