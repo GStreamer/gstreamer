@@ -7,13 +7,14 @@ static GList *rate_pads = NULL;
 static GList *seekable_elements = NULL;
 
 static GstElement *pipeline;
-static guint64 duration, position;
 static GtkAdjustment *adjustment;
+static gboolean stats = FALSE;
+static guint64 duration;
 
 static guint update_id;
 
-#define SOURCE "gnomevfssrc"
-//#define SOURCE "filesrc"
+//#define SOURCE "gnomevfssrc"
+#define SOURCE "filesrc"
 
 #define UPDATE_INTERVAL 500
 
@@ -36,6 +37,8 @@ make_spider_pipeline (const gchar *location, gboolean thread)
   a_thread = gst_thread_new ("a_thread");
   a_queue = gst_element_factory_make ("queue", "a_queue");
   audiosink = gst_element_factory_make ("osssink", "a_sink");
+  //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
+
   v_thread = gst_thread_new ("v_thread");
   v_queue = gst_element_factory_make ("queue", "v_queue");
   videosink = gst_element_factory_make ("xvideosink", "v_sink");
@@ -134,76 +137,87 @@ query_rates (void)
 }
 
 G_GNUC_UNUSED static void
-query_durations (GstElement *element)
+query_durations ()
 {
-  gint i = 0;
+  GList *walk = seekable_elements;
 
-  g_print ("durations %8.8s: ", GST_ELEMENT_NAME (element));
-  while (seek_formats[i].name) {
-    gboolean res;
-    gint64 value;
-    GstFormat format;
+  while (walk) {
+    GstElement *element = GST_ELEMENT (walk->data);
+    gint i = 0;
 
-    format = seek_formats[i].format;
-    res = gst_element_query (element, GST_PAD_QUERY_TOTAL, &format, &value);
-    if (res) {
-      g_print ("%s %13lld | ", seek_formats[i].name, value);
-      if (seek_formats[i].format == GST_FORMAT_TIME)
-	duration = value;
+    g_print ("durations %8.8s: ", GST_ELEMENT_NAME (element));
+    while (seek_formats[i].name) {
+      gboolean res;
+      gint64 value;
+      GstFormat format;
+
+      format = seek_formats[i].format;
+      res = gst_element_query (element, GST_PAD_QUERY_TOTAL, &format, &value);
+      if (res) {
+        g_print ("%s %13lld | ", seek_formats[i].name, value);
+      }
+      else {
+        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
+      }
+      i++;
     }
-    else {
-      g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
-    }
-    i++;
+    g_print (" %s\n", GST_ELEMENT_NAME (element));
+    walk = g_list_next (walk);
   }
-  g_print (" %s\n", GST_ELEMENT_NAME (element));
 }
 
 G_GNUC_UNUSED static void
-query_positions (GstElement *element)
+query_positions ()
 {
-  gint i = 0;
+  GList *walk = seekable_elements;
 
-  g_print ("positions %8.8s: ", GST_ELEMENT_NAME (element));
-  while (seek_formats[i].name) {
-    gboolean res;
-    gint64 value;
-    GstFormat format;
+  while (walk) {
+    GstElement *element = GST_ELEMENT (walk->data);
+    gint i = 0;
 
-    format = seek_formats[i].format;
-    res = gst_element_query (element, GST_PAD_QUERY_POSITION, &format, &value);
-    if (res) {
-      g_print ("%s %13lld | ", seek_formats[i].name, value);
+    g_print ("positions %8.8s: ", GST_ELEMENT_NAME (element));
+    while (seek_formats[i].name) {
+      gboolean res;
+      gint64 value;
+      GstFormat format;
+
+      format = seek_formats[i].format;
+      res = gst_element_query (element, GST_PAD_QUERY_POSITION, &format, &value);
+      if (res) {
+        g_print ("%s %13lld | ", seek_formats[i].name, value);
+      }
+      else {
+        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
+      }
+      i++;
     }
-    else {
-      g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
-    }
-    i++;
+    g_print (" %s\n", GST_ELEMENT_NAME (element));
+    walk = g_list_next (walk);
   }
-  g_print (" %s\n", GST_ELEMENT_NAME (element));
 }
 
 static gboolean
 update_scale (gpointer data) 
 {
-  GList *walk = seekable_elements;
   GstClock *clock;
+  guint64 position;
+  GstFormat format = GST_FORMAT_TIME;
 
+  duration = 0;
   clock = gst_bin_get_clock (GST_BIN (pipeline));
 
-  position = gst_clock_get_time (clock);
-  g_print ("clock:                  %13llu  (%s)\n", position, gst_object_get_name (GST_OBJECT (clock)));
-
-  while (walk) {
-    GstElement *element = GST_ELEMENT (walk->data);
-
-    query_durations (element);
-    query_positions (element);
-
-    walk = g_list_next (walk);
+  if (seekable_elements) {
+    GstElement *element = GST_ELEMENT (seekable_elements->data);
+    gst_element_query (element, GST_PAD_QUERY_TOTAL, &format, &duration);
   }
-  query_rates ();
+  position = gst_clock_get_time (clock);
 
+  if (stats) {
+    g_print ("clock:                  %13llu  (%s)\n", position, gst_object_get_name (GST_OBJECT (clock)));
+    query_durations ();
+    query_positions ();
+    query_rates ();
+  }
   if (duration > 0) {
     gtk_adjustment_set_value (adjustment, position * 100.0 / duration);
   }
@@ -215,9 +229,6 @@ static gboolean
 iterate (gpointer data)
 {
   gboolean res = TRUE;
-
-  if (GST_FLAG_IS_SET (data, GST_BIN_SELF_SCHEDULABLE))
-    return TRUE;
 
   res = gst_bin_iterate (GST_BIN (data));
   if (!res) {
@@ -259,7 +270,8 @@ stop_seek (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
   }
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  gtk_idle_add ((GtkFunction) iterate, pipeline);
+  if (!GST_FLAG_IS_SET (pipeline, GST_BIN_SELF_SCHEDULABLE))
+    gtk_idle_add ((GtkFunction) iterate, pipeline);
   update_id = gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
 
   return FALSE;
@@ -270,7 +282,8 @@ play_cb (GtkButton * button, gpointer data)
 {
   if (gst_element_get_state (pipeline) != GST_STATE_PLAYING) {
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
-    gtk_idle_add ((GtkFunction) iterate, pipeline);
+    if (!GST_FLAG_IS_SET (pipeline, GST_BIN_SELF_SCHEDULABLE))
+      gtk_idle_add ((GtkFunction) iterate, pipeline);
     update_id = gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
   }
 }
@@ -303,6 +316,8 @@ main (int argc, char **argv)
   struct poptOption options[] = {
     {"threaded",  't',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &threaded,   0,
          "Run the pipeline in a toplevel thread", NULL},
+    {"stats",  's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &stats,   0,
+         "Show element stats", NULL},
      POPT_TABLEEND
     };
 
